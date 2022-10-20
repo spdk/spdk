@@ -62,25 +62,134 @@ struct vrdma_cmd_param {
 	} param;
 };
 
-// following sqe/rqe/cqe/ceqe will be same with mlx structure
+struct vrdma_tx_meta_desc {
+    uint32_t reserved1: 4;
+    uint32_t opcode: 4;
+    uint32_t reserved2: 24;
+    uint32_t send_flags: 16;
+    uint32_t req_id: 16;
+    uint32_t length;
+    union {
+        uint32_t imm_data;
+        uint32_t invalid_key;
+    }__attribute__((packed));
+}__attribute__((packed));
 
-// based on mlx sqe
-struct sqe {
+struct vrdma_rdma_rw {
+	uint64_t remote_addr;
+	uint64_t rkey;
+	uint64_t reserved;
+}__attribute__((packed));
+
+struct vrdma_rdma_atomic {
+	uint64_t remote_addr;
+	uint64_t compare_add;
+	uint64_t swap;
+	uint32_t rkey;
+	uint32_t reserved;
+}__attribute__((packed));
+
+struct vrdma_rdma_ud{
+	uint32_t remote_qpn;
+	uint32_t remote_qkey;
+	uint32_t reserved1;
+	uint32_t reserved2;
+}__attribute__((packed));
+
+/*
+ * IO queue buffer descriptor, for any transport type. Preceded by metadata
+ * descriptor.
+ */
+struct vrdma_buf_desc {
+	/* Buffer address bits[31:0] */
+	uint32_t buf_addr_lo;
+
+	/* Buffer address bits[63:32] */
+	uint32_t buf_addr_hi;
+
+	/* length in bytes */
+	uint32_t buf_length;
+
+	/*
+	 * 23:0 : lkey - local memory translation key
+	 * 31:24 : reserved - MBZ
+	 */
+	uint32_t lkey;
+};
+
+/*
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++  vrdma send wqe field  |  mlx send wqe field  |                meaning               +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+          opcode              ctrl seg(opcode)               operation code
+        send_flags           ctrl seg(sm,ce,se)    fence, signaled, solicited, inline
+         req_id             ctrl seg(wqe_index)                  wqe index
+         length                ctrl seg(DS)      total length of wqe, DS can be calculated
+    imm_data/inval_key   ctrl seg(ctrl_general_id)            general identifier
+         rdma_rw              remote addr seg              remote addr info
+       rdma_atomic        remote addr & atomic seg       info for atomic operation
+          ud                  ud addres vector                    UD info
+    inline_data/sgl            data segments          memory pointer and inline data
+*/
+// 128 bytes
+struct vrdma_send_wqe {
+    /* TX meta */
+    struct vrdma_tx_meta_desc meta;
+    union {
+        struct vrdma_rdma_rw rdma_rw;
+        struct vrdma_rdma_atomic rdma_atomic;
+        struct vrdma_rdma_ud ud;
+    }__attribute__((packed));
+    uint32_t reserved[4];
+    union {
+        struct vrdma_buf_desc sgl[4];
+        uint8_t inline_data[64];
+    }__attribute__((packed));
 } __attribute__((packed));
 
-// based on mlx rqe
-struct rqe {
-	
+
+// 64 bytes
+struct vrdma_recv_wqe {
+	uint32_t reserved[8];
+    struct vrdma_buf_desc sgl[2];;
 } __attribute__((packed));
 
-// based on mlx cqe
-struct cqe {
-	
+
+/*
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++     mlx cqe field     |    vrdma cqe field    |                meaning               +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        opcode                  opcode              
+         NONE                   status               cqe status parsed by upper 
+       byte_cnt                 length               byte count of data transferred
+     wqe_counter                req_id                          wqe index
+         qpn                  local_qpn           
+         rqpn                 remote_qpn     
+       immediate               imm_data            immediate field of received messages
+         ??                       ts                  timestamp need to be disscussed?
+*/ 
+// 32 bytres
+struct vrdma_cqe {
+	uint32_t reserved1:16;
+    uint32_t opcode: 8;
+    uint32_t status: 8;
+    uint32_t length;
+    uint32_t reserved2;
+    uint32_t req_id: 16;
+    uint32_t reserved3: 16;
+    uint32_t local_qpn;
+    uint32_t remote_qpn;
+    uint32_t imm_data;
+    uint32_t ts;
 } __attribute__((packed));
 
-// based on mlx eqe
-struct ceqe {
-	
+// 8 bytes
+struct vrdma_ceqe {
+    uint32_t owner: 1;
+	uint32_t reserved1: 7;
+    uint32_t cqn: 24;
+    uint32_t pi: 20;
+    uint32_t reserved2: 12;
 } __attribute__((packed));
 
 /*
@@ -103,8 +212,7 @@ typedef int (*vrdma_admin_destroy_eq_op)(struct vrdma_dev *rdev,
 typedef int (*vrdma_admin_create_pd_op)(struct vrdma_dev *rdev, 
 										struct vrdma_admin_cmd_entry *cmd, 
 										struct vrdma_cmd_param *param);
-typedef int (*vrdma_admin_destroy_pd_op)(struct vrdma_dev *rdev, 
-										struct vrdma_admin_cmd_entry *cmd);
+typedef int (*vrdma_admin_destroy_pd_op)(struct vrdma_dev *rdev,		struct vrdma_admin_cmd_entry *cmd);
 typedef int (*vrdma_admin_create_mr_op)(struct vrdma_dev *rdev, 
 										struct vrdma_admin_cmd_entry *cmd, 
 										struct vrdma_cmd_param *param);
@@ -169,13 +277,13 @@ uint16_t vrdma_fetch_rq_wqes(struct vrdma_dev *dev, uint32_t qp_handle, uint32_t
 //return: the number of cqes vdev can provide, maybe less than num param
 //        0 means failure.
 uint16_t vrdma_gen_cqes(struct vrdma_dev *dev, uint32_t cq_handle, uint32_t idx,
-                        uint16_t num, struct cqe * cqe_list);
+                        uint16_t num, struct vrdma_cqe * cqe_list);
 
 //eqe_list: the place where eqes are stored
 //return: the number of ceqes vdev can provide, maybe less than num param
 //        0 means failure.
 uint16_t vrdma_gen_ceqes(struct vrdma_dev *dev, uint32_t ceq_handle, uint32_t idx,
-                         uint16_t num, struct ceqe * eqe_list);
+                         uint16_t num, struct vrdma_ceqe * eqe_list);
 
 // Generate Interrupt for CEQ:
 bool vrdma_gen_ceq_msi(struct vrdma_dev *dev, uint32_t cqe_vector);

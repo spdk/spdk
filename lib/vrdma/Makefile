@@ -33,6 +33,8 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
+SNAP_LIB_DIR :=/usr/local/snap/lib
+
 SNAP_INC_DIR := $(SPDK_ROOT_DIR)/snap-rdma/src
 SNAP_CTL_INC_DIR :=$(SPDK_ROOT_DIR)/snap-rdma/ctl
 SNAP_RPC_INC_DIR :=$(SPDK_ROOT_DIR)/snap-rdma/rpc
@@ -43,6 +45,6 @@ CFLAGS += -I$(SNAP_INC_DIR) -I$(SNAP_CTL_INC_DIR) -I$(SNAP_RPC_INC_DIR) -I$(SNAP
 C_SRCS = vrdma.c vrdma_admq.c vrdma_controller.c vrdma_emu_mgr.c vrdma_io_mgr.c vrdma_snap.c vrdma_snap_pci_mgr.c vrdma_srv.c
 
 LIBNAME = vrdma
-LOCAL_SYS_LIBS = -libverbs
+LOCAL_SYS_LIBS = -libverbs -L$(SNAP_LIB_DIR) -lsnap-dma -lsnap -lsnap-mr -lsnap-env -lsnap-vrdma -lsnap-virtio-blk-ctrl
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

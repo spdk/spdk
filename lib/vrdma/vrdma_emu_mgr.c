@@ -104,7 +104,7 @@ struct spdk_emu_ctx *spdk_emu_ctx_find_by_emu_name(const char *emu_name)
 
 struct spdk_emu_ctx_ctrl_ops {
     const char *prefix;
-    void (*progress)(void *ctrl); /*Admin queue progress*/
+    int (*progress)(void *ctrl); /*Admin queue progress*/
     void (*progress_mmio)(void *ctrl); /*ctrl bar event progress*/
     int (*progress_io)(void *ctrl);
     int (*progress_io_thread)(void *ctrl, int thread_id);
@@ -426,7 +426,7 @@ spdk_emu_controller_vrdma_create(struct spdk_vrdma_dev *vdev)
     spci = spdk_vrdma_snap_get_snap_pci(attr->emu_manager, attr->pf_id);
     if (!spci)
         goto free_attr;
-    SPDK_ERRLOG("\n lizh spdk_emu_controller_vrdma_create emu_manager %s spci 0x%x pf_id %d\n", attr->emu_manager, spci, attr->pf_id);
+    SPDK_ERRLOG("\n lizh spdk_emu_controller_vrdma_create emu_manager %s spci %p pf_id %d\n", attr->emu_manager, spci, attr->pf_id);
     pthread_mutex_lock(&spdk_emu_list_lock);
     ctx = spdk_emu_ctx_find_by_pci_id(attr->emu_manager,
                            attr->pf_id);

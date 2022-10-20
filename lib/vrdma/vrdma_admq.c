@@ -189,7 +189,7 @@ static void vrdma_aq_query_port(struct vrdma_ctrl *ctrl,
 static void vrdma_aq_query_gid(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
-	struct snap_device *sdev = ctrl->sctrl->sdev;
+	//struct snap_device *sdev = ctrl->sctrl->sdev;
 
 	if (ctrl->srv_ops->vrdma_device_query_gid(&ctrl->dev, aqe)) {
 		aqe->resp.query_gid_resp.err_code =

@@ -95,11 +95,11 @@ static int vrdma_srv_device_create_pd(struct vrdma_dev *rdev,
 }
 
 static int vrdma_srv_device_destroy_pd(struct vrdma_dev *rdev, 
-					struct vrdma_admin_cmd_entry *cmd, 
-					struct vrdma_cmd_param *param)
+					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
 	SPDK_ERRLOG("lizh dummy function vrdma_srv_device_destroy_pd");
+	return 0;
 }
 
 static int vrdma_srv_device_create_mr(struct vrdma_dev *rdev, 
@@ -197,6 +197,7 @@ static const struct vRdmaServiceOps vrdma_srv_ops = {
 	.vrdma_device_create_mr = vrdma_srv_device_create_mr,
 	.vrdma_device_destroy_mr = vrdma_srv_device_destroy_mr,
 	.vrdma_device_create_cq = vrdma_srv_device_create_cq,
+	.vrdma_device_destroy_cq = vrdma_srv_device_destroy_cq,
 	.vrdma_device_create_qp = vrdma_srv_device_create_qp,
 	.vrdma_device_destroy_qp = vrdma_srv_device_destroy_qp,
 	.vrdma_device_query_qp = vrdma_srv_device_query_qp,
