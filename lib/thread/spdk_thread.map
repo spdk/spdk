@@ -15,6 +15,8 @@
 	spdk_thread_get_ctx;
 	spdk_thread_get_cpumask;
 	spdk_thread_set_cpumask;
+	spdk_thread_bind;
+	spdk_thread_is_bound;
 	spdk_thread_get_from_ctx;
 	spdk_thread_poll;
 	spdk_thread_next_poller_expiration;

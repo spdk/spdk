@@ -144,6 +144,9 @@ struct spdk_thread {
 
 	int32_t				lock_count;
 
+	/* spdk_thread is bound to current CPU core. */
+	bool				is_bound;
+
 	/* Indicates whether this spdk_thread currently runs in interrupt. */
 	bool				in_interrupt;
 	bool				poller_unregistered;
@@ -586,6 +589,18 @@ struct spdk_thread *
 spdk_thread_get_app_thread(void)
 {
 	return g_app_thread;
+}
+
+void
+spdk_thread_bind(struct spdk_thread *thread, bool bind)
+{
+	thread->is_bound = bind;
+}
+
+bool
+spdk_thread_is_bound(struct spdk_thread *thread)
+{
+	return thread->is_bound;
 }
 
 void

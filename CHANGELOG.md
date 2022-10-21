@@ -61,6 +61,11 @@ receive and send the I/O management commands.
 New `spdk_nvmf_transport_create_async` was added, it accepts a callback and callback argument.
 `spdk_nvmf_transport_create` is marked deprecated.
 
+### thread
+
+Added two new APIs `spdk_thread_bind` and `spdk_thread_is_bound` to bind or unbind spdk_thread
+to its current CPU core, and check bound status.
+
 ### part
 
 New API `spdk_bdev_part_construct_ext` is added and allows the bdev's UUID to be specified.

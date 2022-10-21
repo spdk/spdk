@@ -249,6 +249,25 @@ struct spdk_thread *spdk_thread_get_app_thread(void);
 void spdk_set_thread(struct spdk_thread *thread);
 
 /**
+ * Bind or unbind spdk_thread to its current CPU core.
+ *
+ * If spdk_thread is bound, it couldn't be rescheduled to other CPU cores until it is unbound.
+ *
+ * \param thread The thread to bind or not.
+ * \param bind true for bind, false for unbind.
+ */
+void spdk_thread_bind(struct spdk_thread *thread, bool bind);
+
+/**
+ * Returns whether the thread is bound to its current CPU core.
+ *
+ * \param thread The thread to query.
+ *
+ * \return true if bound, false otherwise
+ */
+bool spdk_thread_is_bound(struct spdk_thread *thread);
+
+/**
  * Mark the thread as exited, failing all future spdk_thread_send_msg(),
  * spdk_poller_register(), and spdk_get_io_channel() calls. May only be called
  * within an spdk poller or message.

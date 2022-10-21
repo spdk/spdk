@@ -871,7 +871,7 @@ reactor_post_process_lw_thread(struct spdk_reactor *reactor, struct spdk_lw_thre
 		return true;
 	}
 
-	if (spdk_unlikely(lw_thread->resched)) {
+	if (spdk_unlikely(lw_thread->resched && !spdk_thread_is_bound(thread))) {
 		lw_thread->resched = false;
 		_reactor_remove_lw_thread(reactor, lw_thread);
 		_reactor_schedule_thread(thread);
