@@ -151,13 +151,25 @@ bdev module. Refer to test/external_code/README.md and @ref so_linking for furth
 Block devices are considered virtual if they handle I/O requests by routing
 the I/O to other block devices. The canonical example would be a bdev module
 that implements RAID. Virtual bdevs are created in the same way as regular
-bdevs, but take one additional step. The module can look up the underlying
-bdevs it wishes to route I/O to using spdk_bdev_get_by_name(), where the string
-name is provided by the user via an RPC. The module
-then may proceed is normal by opening the bdev to obtain a descriptor, and
-creating I/O channels for the bdev (probably in response to the
-`get_io_channel` callback). The final step is to have the module use its open
-descriptor to call spdk_bdev_module_claim_bdev(), indicating that it is
-consuming the underlying bdev. This prevents other users from opening
-descriptors with write permissions. This effectively 'promotes' the descriptor
-to write-exclusive and is an operation only available to bdev modules.
+bdevs, but take the one additional step of claiming the bdev.
+
+The module can open the underlying bdevs it wishes to route I/O to using
+spdk_bdev_open_ext(), where the string name is provided by the user via an RPC.
+This will return a bdev descriptor that may be used with future calls to
+spdk_bdev_module_claim_bdev() and spdk_bdev_get_io_channel(). The bdev structure
+required by spdk_bdev_module_claim_bdev() may be obtained with
+spdk_bdev_module_open_ext() followed by spdk_bdev_desc_get_bdev().
+
+The descriptor obtained from the successful spdk_bdev_open_ext() may be used
+with spdk_bdev_get_io_channel() to obtain I/O channels for the bdev. This is
+likely done in response to the virtual bdev's `get_io_channel` callback.
+Channels may be obtained before and/or after claiming the underlying
+bdev. Claims are described below.
+
+The final step is to have the module use its open descriptor to call
+spdk_bdev_module_claim_bdev(), indicating that it is consuming the underlying
+bdev. This prevents other users from opening descriptors with write permissions.
+This effectively 'promotes' the descriptor to write-exclusive and is an
+operation only available to bdev modules. If a virtual bdev module wishes to
+prevent a descriptor from being upgraded to read-write,
+spdk_bdev_module_claim_bdev() may be called with a NULL descriptor.
