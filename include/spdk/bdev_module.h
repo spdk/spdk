@@ -1288,6 +1288,25 @@ int spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_
 int spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bdev_io *bdev_io);
 
 /**
+ * Forwards I/O from an spdk_bdev_part to the underlying base bdev.
+ *
+ * This function will apply the offset_blocks the user provided to
+ * spdk_bdev_part_construct to the I/O. The user should not manually
+ * apply this offset before submitting any I/O through this function.
+ *
+ * This function enables user to specify a completion callback. It is required that
+ * the completion callback calls spdk_bdev_io_complete() for the forwarded I/O.
+ *
+ * \param ch The I/O channel associated with the spdk_bdev_part.
+ * \param bdev_io The I/O to be submitted to the underlying bdev.
+ * \param cb Called when the forwarded I/O completes.
+ * \return 0 on success or non-zero if submit request failed.
+ */
+int spdk_bdev_part_submit_request_ext(struct spdk_bdev_part_channel *ch,
+				      struct spdk_bdev_io *bdev_io,
+				      spdk_bdev_io_completion_cb cb);
+
+/**
  * Return a pointer to this part's spdk_bdev.
  *
  * \param part An spdk_bdev_part object.

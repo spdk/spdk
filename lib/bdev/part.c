@@ -238,6 +238,7 @@ bdev_part_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *part_io = cb_arg;
 	uint32_t offset, remapped_offset;
+	spdk_bdev_io_completion_cb cb;
 	int rc, status;
 
 	switch (bdev_io->type) {
@@ -260,20 +261,30 @@ bdev_part_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		break;
 	}
 
-	status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
 
-	spdk_bdev_io_complete(part_io, status);
+	cb = part_io->u.bdev.stored_user_cb;
+	if (cb != NULL) {
+		cb(part_io, success, NULL);
+	} else {
+		status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+
+		spdk_bdev_io_complete(part_io, status);
+	}
+
 	spdk_bdev_free_io(bdev_io);
 }
 
 int
-spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bdev_io *bdev_io)
+spdk_bdev_part_submit_request_ext(struct spdk_bdev_part_channel *ch, struct spdk_bdev_io *bdev_io,
+				  spdk_bdev_io_completion_cb cb)
 {
 	struct spdk_bdev_part *part = ch->part;
 	struct spdk_io_channel *base_ch = ch->base_ch;
 	struct spdk_bdev_desc *base_desc = part->internal.base->desc;
 	uint64_t offset, remapped_offset, remapped_src_offset;
 	int rc = 0;
+
+	bdev_io->u.bdev.stored_user_cb = cb;
 
 	offset = bdev_io->u.bdev.offset_blocks;
 	remapped_offset = offset + part->internal.offset_blocks;
@@ -380,6 +391,12 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 	}
 
 	return rc;
+}
+
+int
+spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	return spdk_bdev_part_submit_request_ext(ch, bdev_io, NULL);
 }
 
 static int

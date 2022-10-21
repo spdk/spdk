@@ -8,6 +8,8 @@ Both of interleaved and separated metadata are now supported by the malloc bdev 
 
 Protection information is now supported by the malloc bdev module.
 
+A new API `spkd_bdev_part_submit_request_ext` was added to specify a custom completion callback.
+
 ### scheduler
 
 Changing scheduler from dynamic back to static is no longer possible,
