@@ -19,6 +19,10 @@ DEFINE_STUB(pmem_memcpy_persist, void *, (void *pmemdest, const void *src, size_
 DEFINE_STUB(pmem_is_pmem, int, (const void *addr, size_t len), 0);
 DEFINE_STUB(pmem_memset_persist, void *, (void *pmemdest, int c, size_t len), NULL);
 #endif
+DEFINE_STUB(spdk_memory_domain_create, int,
+	    (struct spdk_memory_domain **domain, enum spdk_dma_device_type type,
+	     struct spdk_memory_domain_ctx *ctx, const char *id), 0);
+DEFINE_STUB_V(spdk_memory_domain_destroy, (struct spdk_memory_domain *domain));
 
 /* global vars and setup/cleanup functions used for all test functions */
 struct spdk_accel_module_if g_module = {};

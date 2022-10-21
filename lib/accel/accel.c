@@ -10,6 +10,7 @@
 
 #include "accel_internal.h"
 
+#include "spdk/dma.h"
 #include "spdk/env.h"
 #include "spdk/likely.h"
 #include "spdk/log.h"
@@ -35,6 +36,7 @@ static struct spdk_accel_module_if *g_accel_module = NULL;
 static spdk_accel_fini_cb g_fini_cb_fn = NULL;
 static void *g_fini_cb_arg = NULL;
 static bool g_modules_started = false;
+static struct spdk_memory_domain *g_accel_domain;
 
 /* Global list of registered accelerator modules */
 static TAILQ_HEAD(, spdk_accel_module_if) spdk_accel_module_list =
@@ -1080,6 +1082,14 @@ spdk_accel_initialize(void)
 {
 	enum accel_opcode op;
 	struct spdk_accel_module_if *accel_module = NULL;
+	int rc;
+
+	rc = spdk_memory_domain_create(&g_accel_domain, SPDK_DMA_DEVICE_TYPE_ACCEL, NULL,
+				       "SPDK_ACCEL_DMA_DEVICE");
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to create accel memory domain\n");
+		return rc;
+	}
 
 	g_modules_started = true;
 	accel_module_initialize();
@@ -1105,11 +1115,13 @@ spdk_accel_initialize(void)
 			accel_module = _module_find_by_name(g_modules_opc_override[op]);
 			if (accel_module == NULL) {
 				SPDK_ERRLOG("Invalid module name of %s\n", g_modules_opc_override[op]);
-				return -EINVAL;
+				rc = -EINVAL;
+				goto error;
 			}
 			if (accel_module->supports_opcode(op) == false) {
 				SPDK_ERRLOG("Module %s does not support op code %d\n", accel_module->name, op);
-				return -EINVAL;
+				rc = -EINVAL;
+				goto error;
 			}
 			g_modules_opc[op] = accel_module;
 		}
@@ -1128,12 +1140,18 @@ spdk_accel_initialize(void)
 				sizeof(struct accel_io_channel), "accel");
 
 	return 0;
+error:
+	spdk_memory_domain_destroy(g_accel_domain);
+
+	return rc;
 }
 
 static void
 accel_module_finish_cb(void)
 {
 	spdk_accel_fini_cb cb_fn = g_fini_cb_fn;
+
+	spdk_memory_domain_destroy(g_accel_domain);
 
 	cb_fn(g_fini_cb_arg);
 	g_fini_cb_fn = NULL;

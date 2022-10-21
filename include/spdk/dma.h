@@ -30,6 +30,8 @@ enum spdk_dma_device_type {
 	/** DMA devices are capable of performing DMA operations on memory domains using physical or
 	 *  I/O virtual addresses. */
 	SPDK_DMA_DEVICE_TYPE_DMA,
+	/** Virtual memory domain representing memory being transformed by accel framework */
+	SPDK_DMA_DEVICE_TYPE_ACCEL,
 	/**
 	 * Start of the range of vendor-specific DMA device types
 	 */
