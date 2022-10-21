@@ -1215,8 +1215,6 @@ end:
 static void
 job_init_rw(struct bdevperf_job *job, enum job_config_rw rw)
 {
-	srand(getpid());
-
 	switch (rw) {
 	case JOB_CONFIG_RW_READ:
 		job->rw_percentage = 100;
@@ -2157,6 +2155,9 @@ main(int argc, char **argv)
 {
 	struct spdk_app_opts opts = {};
 	int rc;
+
+	/* Use the runtime PID to set the random seed */
+	srand(getpid());
 
 	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "bdevperf";

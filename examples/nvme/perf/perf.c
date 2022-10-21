@@ -745,7 +745,6 @@ register_file(const char *path)
 	entry->io_size_blocks = g_io_size_bytes / blklen;
 
 	if (g_is_random) {
-		srand(getpid());
 		entry->seed = rand();
 		if (g_zipf_theta > 0) {
 			entry->zipf = spdk_zipf_create(entry->size_in_ios, g_zipf_theta, 0);
@@ -1257,8 +1256,11 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	entry->size_in_ios = ns_size / g_io_size_bytes;
 	entry->io_size_blocks = g_io_size_bytes / sector_size;
 
-	if (g_is_random && g_zipf_theta > 0) {
-		entry->zipf = spdk_zipf_create(entry->size_in_ios, g_zipf_theta, 0);
+	if (g_is_random) {
+		entry->seed = rand();
+		if (g_zipf_theta > 0) {
+			entry->zipf = spdk_zipf_create(entry->size_in_ios, g_zipf_theta, 0);
+		}
 	}
 
 	entry->block_size = spdk_nvme_ns_get_extended_sector_size(ns);
@@ -2999,6 +3001,9 @@ main(int argc, char **argv)
 	struct worker_thread *worker, *main_worker;
 	struct spdk_env_opts opts;
 	pthread_t thread_id = 0;
+
+	/* Use the runtime PID to set the random seed */
+	srand(getpid());
 
 	spdk_env_opts_init(&opts);
 	opts.name = "perf";
