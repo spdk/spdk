@@ -61,7 +61,8 @@ static void spdk_thread_exit_wrapper(void *uarg)
 int spdk_io_mgr_init(void)
 {
     struct spdk_cpuset *cpumask;
-    int i, j;
+    uint32_t i;
+    int  j;
     char thread_name[SPDK_IO_MGR_THREAD_NAME_LEN];
 
     app_thread = spdk_get_thread();

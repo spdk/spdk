@@ -34,6 +34,7 @@
 #include "spdk/log.h"
 #include "snap.h"
 #include "snap_vrdma.h"
+#include "snap_virtio_net.h"
 
 struct vrdma_snap_emu_manager {
     struct snap_context *sctx;
@@ -201,7 +202,7 @@ int spdk_vrdma_snap_pci_mgr_init(void)
             goto clear_emu_manager_list;
 
         sctx = snap_open(list[i]);
-        SPDK_ERRLOG("\n lizh spdk_vrdma_snap_pci_mgr_init dev_count %d dev %d sctx 0x%x",
+        SPDK_ERRLOG("\n lizh spdk_vrdma_snap_pci_mgr_init dev_count %d dev %d sctx %p",
         dev_count, i, sctx);
         if (sctx) {
             found_emu_managers = true;
