@@ -51,6 +51,9 @@ DEFINE_STUB(nvme_transport_qpair_iterate_requests, int,
 DEFINE_STUB(nvme_qpair_abort_queued_reqs_with_cbarg, uint32_t,
 	    (struct spdk_nvme_qpair *qpair, void *cmd_cb_arg), 0);
 
+DEFINE_STUB(spdk_nvme_ctrlr_get_admin_qp_failure_reason, spdk_nvme_qp_failure_reason,
+	    (struct spdk_nvme_ctrlr *ctrlr), 0);
+
 static int
 nvme_ns_cmp(struct spdk_nvme_ns *ns1, struct spdk_nvme_ns *ns2)
 {

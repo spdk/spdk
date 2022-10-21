@@ -4,6 +4,7 @@
  */
 
 #include "nvme_internal.h"
+#include "spdk/nvme.h"
 
 int
 spdk_nvme_ctrlr_io_cmd_raw_no_payload_build(struct spdk_nvme_ctrlr *ctrlr,
@@ -546,6 +547,12 @@ nvme_ctrlr_retry_queued_abort(struct spdk_nvme_ctrlr *ctrlr)
 	int rc;
 
 	if (ctrlr->is_resetting || ctrlr->is_destructed || ctrlr->is_failed) {
+		/* Don't resubmit aborts if ctrlr is failing */
+		return;
+	}
+
+	if (spdk_nvme_ctrlr_get_admin_qp_failure_reason(ctrlr) != SPDK_NVME_QPAIR_FAILURE_NONE) {
+		/* Don't resubmit aborts if admin qpair is failed */
 		return;
 	}
 
