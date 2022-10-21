@@ -25,9 +25,18 @@ mkdir -p $VFIOUSER_IO_DIR
 function start_llvm_fuzz() {
 	local fuzzer_type=$1
 	local corpus_dir
-	corpus_dir=/tmp/llvm_fuzz$fuzzer_type
+
+	corpus_dir=$rootdir/../corpus/llvm_vfio_$fuzzer_type
 	mkdir -p $corpus_dir
-	$rootdir/test/app/fuzz/llvm_vfio_fuzz/llvm_vfio_fuzz -m 0x1 -i 0 -F $VFIOUSER_DIR -c $testdir/fuzz_vfio_json.conf -t $TIME -D $corpus_dir -Y $VFIOUSER_IO_DIR -Z $fuzzer_type
+
+	$rootdir/test/app/fuzz/llvm_vfio_fuzz/llvm_vfio_fuzz -m 0x1 \
+		-i 0 \
+		-F $VFIOUSER_DIR \
+		-c $testdir/fuzz_vfio_json.conf \
+		-t $TIME \
+		-D $corpus_dir \
+		-Y $VFIOUSER_IO_DIR \
+		-Z $fuzzer_type
 }
 
 function run_fuzz() {
@@ -59,7 +68,7 @@ fuzzfile=$rootdir/test/app/fuzz/llvm_vfio_fuzz/llvm_vfio_fuzz.c
 fuzz_num=$(($(grep -c "fn =" $fuzzfile) - 1))
 [[ $fuzz_num -ne 0 ]]
 
-trap 'process_shm --id 0; rm -rf /tmp/llvm_fuzz* $VFIOUSER_DIR $VFIOUSER_IO_DIR; exit 1' SIGINT SIGTERM EXIT
+trap 'process_shm --id 0; rm -rf $VFIOUSER_DIR $VFIOUSER_IO_DIR; exit 1' SIGINT SIGTERM EXIT
 
 if [[ $SPDK_TEST_FUZZER_SHORT -eq 1 ]]; then
 	for ((i = 0; i < fuzz_num; i++)); do
@@ -71,5 +80,5 @@ else
 	start_llvm_fuzz $1
 fi
 
-rm -rf /tmp/llvm_fuzz* $VFIOUSER_DIR $VFIOUSER_IO_DIR
+rm -rf $VFIOUSER_DIR $VFIOUSER_IO_DIR
 trap - SIGINT SIGTERM EXIT

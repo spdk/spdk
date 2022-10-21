@@ -10,6 +10,8 @@ source "$rootdir/test/common/autotest_common.sh"
 
 fuzzers=($(get_fuzzer_targets))
 
+mkdir -p $rootdir/../corpus/
+
 for fuzzer in "${fuzzers[@]}"; do
 	case "$fuzzer" in
 		nvmf) run_test "nvmf_fuzz" "$testdir/llvm/$fuzzer/run.sh" ;;
