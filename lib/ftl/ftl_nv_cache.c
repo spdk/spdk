@@ -1329,6 +1329,7 @@ ftl_nv_cache_process(struct spdk_ftl_dev *dev)
 		nv_cache->chunk_free_count--;
 		chunk->md->seq_id = ftl_get_next_seq_id(dev);
 		ftl_chunk_open(chunk);
+		ftl_add_io_activity(dev);
 	}
 
 	if (is_compaction_required(nv_cache) && !TAILQ_EMPTY(&nv_cache->compactor_list)) {
@@ -1338,6 +1339,7 @@ ftl_nv_cache_process(struct spdk_ftl_dev *dev)
 		TAILQ_REMOVE(&nv_cache->compactor_list, comp, entry);
 
 		compaction_process_start(comp);
+		ftl_add_io_activity(dev);
 	}
 
 	ftl_chunk_persist_free_state(nv_cache);

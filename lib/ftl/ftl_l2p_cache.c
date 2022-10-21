@@ -1332,6 +1332,8 @@ ftl_l2p_cache_process_page_sets(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *
 		return -EBUSY;
 	}
 
+	ftl_add_io_activity(dev);
+
 	TAILQ_REMOVE(&cache->deferred_page_set_list, page_set, list_entry);
 	page_set->deferred = 0;
 	page_set->locked = 1;
@@ -1476,6 +1478,8 @@ ftl_l2p_cache_process_eviction(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *c
 	if (cache->l2_pgs_evicting > 512) {
 		return;
 	}
+
+	ftl_add_io_activity(dev);
 
 	page = eviction_get_page(dev, cache);
 	if (spdk_unlikely(!page)) {

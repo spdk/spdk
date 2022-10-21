@@ -233,6 +233,12 @@ ftl_get_core_thread(const struct spdk_ftl_dev *dev)
 	return dev->core_thread;
 }
 
+static inline void
+ftl_add_io_activity(struct spdk_ftl_dev *dev)
+{
+	dev->stats.io_activity_total++;
+}
+
 static inline uint64_t
 ftl_get_num_bands(const struct spdk_ftl_dev *dev)
 {

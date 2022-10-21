@@ -568,6 +568,7 @@ move_run(struct ftl_reloc *reloc, struct ftl_reloc_move *mv)
 
 	case FTL_RELOC_STATE_PIN:
 		move_pin(mv);
+		ftl_add_io_activity(reloc->dev);
 		break;
 
 	case FTL_RELOC_STATE_WRITE:
@@ -577,6 +578,7 @@ move_run(struct ftl_reloc *reloc, struct ftl_reloc_move *mv)
 			break;
 		}
 
+		ftl_add_io_activity(reloc->dev);
 		move_write(reloc, mv);
 		break;
 

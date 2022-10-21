@@ -644,6 +644,7 @@ ftl_process_io_queue(struct spdk_ftl_dev *dev)
 		TAILQ_REMOVE(&dev->rd_sq, io, queue_entry);
 		assert(io->type == FTL_IO_READ);
 		ftl_io_pin(io);
+		ftl_add_io_activity(dev);
 	}
 
 	while (!TAILQ_EMPTY(&dev->wr_sq) && !ftl_nv_cache_throttle(dev)) {
@@ -654,6 +655,7 @@ ftl_process_io_queue(struct spdk_ftl_dev *dev)
 			TAILQ_INSERT_HEAD(&dev->wr_sq, io, queue_entry);
 			break;
 		}
+		ftl_add_io_activity(dev);
 	}
 
 	if (!TAILQ_EMPTY(&dev->unmap_sq) && dev->unmap_qd == 0) {
@@ -669,6 +671,8 @@ ftl_process_io_queue(struct spdk_ftl_dev *dev)
 		 */
 		if (!ftl_process_unmap(io)) {
 			TAILQ_INSERT_HEAD(&dev->unmap_sq, io, queue_entry);
+		} else {
+			ftl_add_io_activity(dev);
 		}
 	}
 
