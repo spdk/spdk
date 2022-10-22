@@ -461,6 +461,7 @@ _idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 	op->batch = batch;
 	op->parent = NULL;
 	op->count = 1;
+	op->crc_dst = NULL;
 
 	return 0;
 }
