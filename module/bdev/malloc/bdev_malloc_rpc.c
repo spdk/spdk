@@ -13,7 +13,7 @@
 
 struct rpc_construct_malloc {
 	char *name;
-	char *uuid;
+	struct spdk_uuid uuid;
 	uint64_t num_blocks;
 	uint32_t block_size;
 	uint32_t optimal_io_boundary;
@@ -23,12 +23,26 @@ static void
 free_rpc_construct_malloc(struct rpc_construct_malloc *r)
 {
 	free(r->name);
-	free(r->uuid);
+}
+
+static int
+decode_mdisk_uuid(const struct spdk_json_val *val, void *out)
+{
+	char *str = NULL;
+	int rc;
+
+	rc = spdk_json_decode_string(val, &str);
+	if (rc == 0) {
+		rc = spdk_uuid_parse(out, str);
+	}
+
+	free(str);
+	return rc;
 }
 
 static const struct spdk_json_object_decoder rpc_construct_malloc_decoders[] = {
 	{"name", offsetof(struct rpc_construct_malloc, name), spdk_json_decode_string, true},
-	{"uuid", offsetof(struct rpc_construct_malloc, uuid), spdk_json_decode_string, true},
+	{"uuid", offsetof(struct rpc_construct_malloc, uuid), decode_mdisk_uuid, true},
 	{"num_blocks", offsetof(struct rpc_construct_malloc, num_blocks), spdk_json_decode_uint64},
 	{"block_size", offsetof(struct rpc_construct_malloc, block_size), spdk_json_decode_uint32},
 	{"optimal_io_boundary", offsetof(struct rpc_construct_malloc, optimal_io_boundary), spdk_json_decode_uint32, true},
@@ -40,8 +54,6 @@ rpc_bdev_malloc_create(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_construct_malloc req = {NULL};
 	struct spdk_json_write_ctx *w;
-	struct spdk_uuid *uuid = NULL;
-	struct spdk_uuid decoded_uuid;
 	struct spdk_bdev *bdev;
 	int rc = 0;
 
@@ -60,16 +72,7 @@ rpc_bdev_malloc_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	if (req.uuid) {
-		if (spdk_uuid_parse(&decoded_uuid, req.uuid)) {
-			spdk_jsonrpc_send_error_response(request, -EINVAL,
-							 "Failed to parse bdev UUID");
-			goto cleanup;
-		}
-		uuid = &decoded_uuid;
-	}
-
-	rc = create_malloc_disk(&bdev, req.name, uuid, req.num_blocks, req.block_size,
+	rc = create_malloc_disk(&bdev, req.name, &req.uuid, req.num_blocks, req.block_size,
 				req.optimal_io_boundary);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
