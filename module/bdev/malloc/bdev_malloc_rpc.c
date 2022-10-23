@@ -6,21 +6,11 @@
 
 #include "bdev_malloc.h"
 #include "spdk/rpc.h"
-#include "spdk/util.h"
-#include "spdk/uuid.h"
 #include "spdk/string.h"
 #include "spdk/log.h"
 
-struct rpc_construct_malloc {
-	char *name;
-	struct spdk_uuid uuid;
-	uint64_t num_blocks;
-	uint32_t block_size;
-	uint32_t optimal_io_boundary;
-};
-
 static void
-free_rpc_construct_malloc(struct rpc_construct_malloc *r)
+free_rpc_construct_malloc(struct malloc_bdev_opts *r)
 {
 	free(r->name);
 }
@@ -41,18 +31,18 @@ decode_mdisk_uuid(const struct spdk_json_val *val, void *out)
 }
 
 static const struct spdk_json_object_decoder rpc_construct_malloc_decoders[] = {
-	{"name", offsetof(struct rpc_construct_malloc, name), spdk_json_decode_string, true},
-	{"uuid", offsetof(struct rpc_construct_malloc, uuid), decode_mdisk_uuid, true},
-	{"num_blocks", offsetof(struct rpc_construct_malloc, num_blocks), spdk_json_decode_uint64},
-	{"block_size", offsetof(struct rpc_construct_malloc, block_size), spdk_json_decode_uint32},
-	{"optimal_io_boundary", offsetof(struct rpc_construct_malloc, optimal_io_boundary), spdk_json_decode_uint32, true},
+	{"name", offsetof(struct malloc_bdev_opts, name), spdk_json_decode_string, true},
+	{"uuid", offsetof(struct malloc_bdev_opts, uuid), decode_mdisk_uuid, true},
+	{"num_blocks", offsetof(struct malloc_bdev_opts, num_blocks), spdk_json_decode_uint64},
+	{"block_size", offsetof(struct malloc_bdev_opts, block_size), spdk_json_decode_uint32},
+	{"optimal_io_boundary", offsetof(struct malloc_bdev_opts, optimal_io_boundary), spdk_json_decode_uint32, true},
 };
 
 static void
 rpc_bdev_malloc_create(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
-	struct rpc_construct_malloc req = {NULL};
+	struct malloc_bdev_opts req = {NULL};
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev;
 	int rc = 0;
@@ -66,14 +56,7 @@ rpc_bdev_malloc_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	if (req.num_blocks == 0) {
-		spdk_jsonrpc_send_error_response(request, -EINVAL,
-						 "Disk num_blocks must be greater than 0");
-		goto cleanup;
-	}
-
-	rc = create_malloc_disk(&bdev, req.name, &req.uuid, req.num_blocks, req.block_size,
-				req.optimal_io_boundary);
+	rc = create_malloc_disk(&bdev, &req);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;

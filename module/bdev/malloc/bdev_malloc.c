@@ -7,16 +7,11 @@
 #include "spdk/stdinc.h"
 
 #include "bdev_malloc.h"
-#include "spdk/bdev.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/accel.h"
-#include "spdk/json.h"
-#include "spdk/thread.h"
-#include "spdk/queue.h"
 #include "spdk/string.h"
 
-#include "spdk/bdev_module.h"
 #include "spdk/log.h"
 
 struct malloc_disk {
@@ -362,18 +357,19 @@ static const struct spdk_bdev_fn_table malloc_fn_table = {
 };
 
 int
-create_malloc_disk(struct spdk_bdev **bdev, const char *name, const struct spdk_uuid *uuid,
-		   uint64_t num_blocks, uint32_t block_size, uint32_t optimal_io_boundary)
+create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 {
 	struct malloc_disk	*mdisk;
 	int rc;
 
-	if (num_blocks == 0) {
+	assert(opts != NULL);
+
+	if (opts->num_blocks == 0) {
 		SPDK_ERRLOG("Disk num_blocks must be greater than 0");
 		return -EINVAL;
 	}
 
-	if (block_size % 512) {
+	if (opts->block_size % 512) {
 		SPDK_ERRLOG("block size must be 512 bytes aligned\n");
 		return -EINVAL;
 	}
@@ -390,7 +386,7 @@ create_malloc_disk(struct spdk_bdev **bdev, const char *name, const struct spdk_
 	 * TODO: need to pass a hint so we know which socket to allocate
 	 *  from on multi-socket systems.
 	 */
-	mdisk->malloc_buf = spdk_zmalloc(num_blocks * block_size, 2 * 1024 * 1024, NULL,
+	mdisk->malloc_buf = spdk_zmalloc(opts->num_blocks * opts->block_size, 2 * 1024 * 1024, NULL,
 					 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (!mdisk->malloc_buf) {
 		SPDK_ERRLOG("malloc_buf spdk_zmalloc() failed\n");
@@ -398,8 +394,8 @@ create_malloc_disk(struct spdk_bdev **bdev, const char *name, const struct spdk_
 		return -ENOMEM;
 	}
 
-	if (name) {
-		mdisk->disk.name = strdup(name);
+	if (opts->name) {
+		mdisk->disk.name = strdup(opts->name);
 	} else {
 		/* Auto-generate a name */
 		mdisk->disk.name = spdk_sprintf_alloc("Malloc%d", malloc_disk_count);
@@ -412,14 +408,14 @@ create_malloc_disk(struct spdk_bdev **bdev, const char *name, const struct spdk_
 	mdisk->disk.product_name = "Malloc disk";
 
 	mdisk->disk.write_cache = 1;
-	mdisk->disk.blocklen = block_size;
-	mdisk->disk.blockcnt = num_blocks;
-	if (optimal_io_boundary) {
-		mdisk->disk.optimal_io_boundary = optimal_io_boundary;
+	mdisk->disk.blocklen = opts->block_size;
+	mdisk->disk.blockcnt = opts->num_blocks;
+	if (opts->optimal_io_boundary) {
+		mdisk->disk.optimal_io_boundary = opts->optimal_io_boundary;
 		mdisk->disk.split_on_optimal_io_boundary = true;
 	}
-	if (uuid) {
-		mdisk->disk.uuid = *uuid;
+	if (!spdk_mem_all_zero(&opts->uuid, sizeof(opts->uuid))) {
+		spdk_uuid_copy(&mdisk->disk.uuid, &opts->uuid);
 	} else {
 		spdk_uuid_generate(&mdisk->disk.uuid);
 	}
