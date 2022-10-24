@@ -507,6 +507,8 @@ allocate_bdev(char *name)
 	bdev->blockcnt = 1024;
 	bdev->blocklen = 512;
 
+	spdk_uuid_generate(&bdev->uuid);
+
 	rc = spdk_bdev_register(bdev);
 	poll_threads();
 	CU_ASSERT(rc == 0);

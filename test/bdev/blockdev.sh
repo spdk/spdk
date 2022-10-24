@@ -5,7 +5,11 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $testdir/nbd_common.sh
 
-shopt -s nullglob extglob
+# nullglob will remove unmatched words containing '*', '?', '[' characters during word splitting.
+# This means that empty alias arrays will be removed instead of printing "[]", which breaks
+# consecutive "jq" calls, as the "aliases" key will have no value and the whole JSON will be
+# invalid. Hence do not enable this option for the duration of the tests in this script.
+shopt -s extglob
 
 rpc_py=rpc_cmd
 conf_file="$testdir/bdev.json"
@@ -626,6 +630,7 @@ CONF
 bdevs=$("$rpc_py" bdev_get_bdevs | jq -r '.[] | select(.claimed == false)')
 bdevs_name=$(echo $bdevs | jq -r '.name')
 bdev_list=($bdevs_name)
+
 hello_world_bdev=${bdev_list[0]}
 trap - SIGINT SIGTERM EXIT
 killprocess "$spdk_tgt_pid"
