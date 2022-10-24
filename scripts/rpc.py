@@ -353,15 +353,21 @@ if __name__ == "__main__":
                                                block_size=args.block_size,
                                                name=args.name,
                                                uuid=args.uuid,
-                                               optimal_io_boundary=args.optimal_io_boundary))
+                                               optimal_io_boundary=args.optimal_io_boundary,
+                                               md_size=args.md_size,
+                                               md_interleave=args.md_interleave))
     p = subparsers.add_parser('bdev_malloc_create', help='Create a bdev with malloc backend')
     p.add_argument('-b', '--name', help="Name of the bdev")
     p.add_argument('-u', '--uuid', help="UUID of the bdev")
     p.add_argument(
         'total_size', help='Size of malloc bdev in MB (float > 0)', type=float)
-    p.add_argument('block_size', help='Block size for this bdev', type=int)
+    p.add_argument('block_size', help='Data block size for this bdev', type=int)
     p.add_argument('-o', '--optimal-io-boundary', help="""Split on optimal IO boundary, in number of
     blocks, default 0 (disabled)""", type=int)
+    p.add_argument('-m', '--md-size', type=int,
+                   help='Metadata size for this bdev (0, 8, 16, 32, 64, or 128). Default is 0.')
+    p.add_argument('-i', '--md-interleave', action='store_true',
+                   help='Metadata location, interleaved if set, and separated if omitted.')
     p.set_defaults(func=bdev_malloc_create)
 
     def bdev_malloc_delete(args):

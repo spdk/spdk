@@ -2790,10 +2790,12 @@ Construct @ref bdev_config_malloc
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Optional | string      | Bdev name to use
-block_size              | Required | number      | Block size in bytes -must be multiple of 512
+block_size              | Required | number      | Data block size in bytes -must be multiple of 512
 num_blocks              | Required | number      | Number of blocks
 uuid                    | Optional | string      | UUID of new bdev
 optimal_io_boundary     | Optional | number      | Split on optimal IO boundary, in number of blocks, default 0
+md_size                 | Optional | number      | Metadata size for this bdev (0, 8, 16, 32, 64, or 128). Default is 0.
+md_interleave           | Optional | boolean     | Metadata location, interleaved if true, and separated if false. Default is false.
 
 #### Result
 

@@ -17,6 +17,7 @@
 struct malloc_disk {
 	struct spdk_bdev		disk;
 	void				*malloc_buf;
+	void				*malloc_md_buf;
 	TAILQ_ENTRY(malloc_disk)	link;
 };
 
@@ -90,6 +91,7 @@ malloc_disk_free(struct malloc_disk *malloc_disk)
 
 	free(malloc_disk->disk.name);
 	spdk_free(malloc_disk->malloc_buf);
+	spdk_free(malloc_disk->malloc_md_buf);
 	free(malloc_disk);
 }
 
@@ -122,10 +124,12 @@ bdev_malloc_check_iov_len(struct iovec *iovs, int iovcnt, size_t nbytes)
 static void
 bdev_malloc_readv(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		  struct malloc_task *task,
-		  struct iovec *iov, int iovcnt, size_t len, uint64_t offset)
+		  struct iovec *iov, int iovcnt, size_t len, uint64_t offset,
+		  void *md_buf, size_t md_len, uint64_t md_offset)
 {
 	int64_t res = 0;
-	void *src = mdisk->malloc_buf + offset;
+	void *src;
+	void *md_src;
 	int i;
 
 	if (bdev_malloc_check_iov_len(iov, iovcnt, len)) {
@@ -134,11 +138,13 @@ bdev_malloc_readv(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		return;
 	}
 
+	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	task->num_outstanding = 0;
+
 	SPDK_DEBUGLOG(bdev_malloc, "read %zu bytes from offset %#" PRIx64 ", iovcnt=%d\n",
 		      len, offset, iovcnt);
 
-	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
-	task->num_outstanding = 0;
+	src = mdisk->malloc_buf + offset;
 
 	for (i = 0; i < iovcnt; i++) {
 		task->num_outstanding++;
@@ -153,15 +159,34 @@ bdev_malloc_readv(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		src += iov[i].iov_len;
 		len -= iov[i].iov_len;
 	}
+
+	if (md_buf == NULL) {
+		return;
+	}
+
+	SPDK_DEBUGLOG(bdev_malloc, "read metadata %zu bytes from offset%#" PRIx64 "\n",
+		      md_len, md_offset);
+
+	md_src = mdisk->malloc_md_buf + md_offset;
+
+	task->num_outstanding++;
+	res = spdk_accel_submit_copy(ch, md_buf, md_src, md_len, 0, malloc_done, task);
+
+	if (res != 0) {
+		malloc_done(task, res);
+	}
 }
 
 static void
 bdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		   struct malloc_task *task,
-		   struct iovec *iov, int iovcnt, size_t len, uint64_t offset)
+		   struct iovec *iov, int iovcnt, size_t len, uint64_t offset,
+		   void *md_buf, size_t md_len, uint64_t md_offset)
 {
+
 	int64_t res = 0;
-	void *dst = mdisk->malloc_buf + offset;
+	void *dst;
+	void *md_dst;
 	int i;
 
 	if (bdev_malloc_check_iov_len(iov, iovcnt, len)) {
@@ -172,6 +197,8 @@ bdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 
 	SPDK_DEBUGLOG(bdev_malloc, "wrote %zu bytes to offset %#" PRIx64 ", iovcnt=%d\n",
 		      len, offset, iovcnt);
+
+	dst = mdisk->malloc_buf + offset;
 
 	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	task->num_outstanding = 0;
@@ -188,6 +215,22 @@ bdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 
 		dst += iov[i].iov_len;
 	}
+
+	if (md_buf == NULL) {
+		return;
+	}
+	SPDK_DEBUGLOG(bdev_malloc, "wrote metadata %zu bytes to offset %#" PRIx64 "\n",
+		      md_len, md_offset);
+
+	md_dst = mdisk->malloc_md_buf + md_offset;
+
+	task->num_outstanding++;
+	res = spdk_accel_submit_copy(ch, md_dst, md_buf, md_len, 0, malloc_done, task);
+
+	if (res != 0) {
+		malloc_done(task, res);
+	}
+
 }
 
 static int
@@ -208,6 +251,7 @@ static int
 _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bdev_io)
 {
 	uint32_t block_size = bdev_io->bdev->blocklen;
+	uint32_t md_size = bdev_io->bdev->md_len;
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -228,7 +272,10 @@ _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bde
 				  bdev_io->u.bdev.iovs,
 				  bdev_io->u.bdev.iovcnt,
 				  bdev_io->u.bdev.num_blocks * block_size,
-				  bdev_io->u.bdev.offset_blocks * block_size);
+				  bdev_io->u.bdev.offset_blocks * block_size,
+				  bdev_io->u.bdev.md_buf,
+				  bdev_io->u.bdev.num_blocks * md_size,
+				  bdev_io->u.bdev.offset_blocks * md_size);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
@@ -238,7 +285,10 @@ _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bde
 				   bdev_io->u.bdev.iovs,
 				   bdev_io->u.bdev.iovcnt,
 				   bdev_io->u.bdev.num_blocks * block_size,
-				   bdev_io->u.bdev.offset_blocks * block_size);
+				   bdev_io->u.bdev.offset_blocks * block_size,
+				   bdev_io->u.bdev.md_buf,
+				   bdev_io->u.bdev.num_blocks * md_size,
+				   bdev_io->u.bdev.offset_blocks * md_size);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_RESET:
@@ -359,7 +409,8 @@ static const struct spdk_bdev_fn_table malloc_fn_table = {
 int
 create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 {
-	struct malloc_disk	*mdisk;
+	struct malloc_disk *mdisk;
+	uint32_t block_size;
 	int rc;
 
 	assert(opts != NULL);
@@ -370,8 +421,27 @@ create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 	}
 
 	if (opts->block_size % 512) {
-		SPDK_ERRLOG("block size must be 512 bytes aligned\n");
+		SPDK_ERRLOG("Data block size must be 512 bytes aligned\n");
 		return -EINVAL;
+	}
+
+	switch (opts->md_size) {
+	case 0:
+	case 8:
+	case 16:
+	case 32:
+	case 64:
+	case 128:
+		break;
+	default:
+		SPDK_ERRLOG("metadata size %u is not supported\n", opts->md_size);
+		return -EINVAL;
+	}
+
+	if (opts->md_interleave) {
+		block_size = opts->block_size + opts->md_size;
+	} else {
+		block_size = opts->block_size;
 	}
 
 	mdisk = calloc(1, sizeof(*mdisk));
@@ -386,12 +456,22 @@ create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 	 * TODO: need to pass a hint so we know which socket to allocate
 	 *  from on multi-socket systems.
 	 */
-	mdisk->malloc_buf = spdk_zmalloc(opts->num_blocks * opts->block_size, 2 * 1024 * 1024, NULL,
+	mdisk->malloc_buf = spdk_zmalloc(opts->num_blocks * block_size, 2 * 1024 * 1024, NULL,
 					 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (!mdisk->malloc_buf) {
 		SPDK_ERRLOG("malloc_buf spdk_zmalloc() failed\n");
 		malloc_disk_free(mdisk);
 		return -ENOMEM;
+	}
+
+	if (!opts->md_interleave && opts->md_size != 0) {
+		mdisk->malloc_md_buf = spdk_zmalloc(opts->num_blocks * opts->md_size, 2 * 1024 * 1024, NULL,
+						    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+		if (!mdisk->malloc_md_buf) {
+			SPDK_ERRLOG("malloc_md_buf spdk_zmalloc() failed\n");
+			malloc_disk_free(mdisk);
+			return -ENOMEM;
+		}
 	}
 
 	if (opts->name) {
@@ -408,8 +488,10 @@ create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 	mdisk->disk.product_name = "Malloc disk";
 
 	mdisk->disk.write_cache = 1;
-	mdisk->disk.blocklen = opts->block_size;
+	mdisk->disk.blocklen = block_size;
 	mdisk->disk.blockcnt = opts->num_blocks;
+	mdisk->disk.md_len = opts->md_size;
+	mdisk->disk.md_interleave = opts->md_interleave;
 	if (opts->optimal_io_boundary) {
 		mdisk->disk.optimal_io_boundary = opts->optimal_io_boundary;
 		mdisk->disk.split_on_optimal_io_boundary = true;
