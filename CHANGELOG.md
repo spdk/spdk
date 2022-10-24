@@ -2,6 +2,13 @@
 
 ## v23.05: (Upcoming Release)
 
+### bdev
+
+A new API `spdk_bdev_module_claim_bdev_desc` was added. Unlike `spdk_bdev_module_claim_bdev`, this
+function requires a bdev descriptor to be passed and the claim is automatically released when the
+descriptor is closed. It allows bdev modules to claim bdevs as a single writer, multiple writers, or
+multiple readers.
+
 ### env
 
 New function `spdk_env_get_main_core` was added.

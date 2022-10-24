@@ -716,6 +716,10 @@ rpc_dump_bdev_info(void *ctx, struct spdk_bdev *bdev)
 
 	spdk_json_write_named_bool(w, "claimed",
 				   (bdev->internal.claim_type != SPDK_BDEV_CLAIM_NONE));
+	if (bdev->internal.claim_type != SPDK_BDEV_CLAIM_NONE) {
+		spdk_json_write_named_string(w, "claim_type",
+					     spdk_bdev_claim_get_name(bdev->internal.claim_type));
+	}
 
 	spdk_json_write_named_bool(w, "zoned", bdev->zoned);
 	if (bdev->zoned) {

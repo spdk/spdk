@@ -6216,7 +6216,7 @@ bdev_copy_split_test(void)
 }
 
 static void
-examine_claim(struct spdk_bdev *bdev)
+examine_claim_v1(struct spdk_bdev *bdev)
 {
 	int rc;
 
@@ -6249,7 +6249,7 @@ examine_locks(void)
 
 	/* Exercise the other path that is taken when examine_config() takes a claim. */
 	memset(&ctx, 0, sizeof(ctx));
-	ctx.examine_config = examine_claim;
+	ctx.examine_config = examine_claim_v1;
 	ctx.examine_disk = examine_no_lock_held;
 	bdev = allocate_bdev_ctx("bdev0", &ctx);
 	CU_ASSERT(ctx.examine_config_count == 1);
@@ -6259,6 +6259,553 @@ examine_locks(void)
 	spdk_bdev_module_release_bdev(bdev);
 	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_NONE);
 	CU_ASSERT(bdev->internal.claim.v1.module == NULL);
+	free_bdev(bdev);
+}
+
+#define UT_ASSERT_CLAIM_V2_COUNT(bdev, expect) \
+	do { \
+		uint32_t len = 0; \
+		struct spdk_bdev_module_claim *claim; \
+		TAILQ_FOREACH(claim, &bdev->internal.claim.v2.claims, link) { \
+			len++; \
+		} \
+		CU_ASSERT(len == expect); \
+	} while (0)
+
+static void
+claim_v2_rwo(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_bdev_desc *desc2;
+	struct spdk_bdev_claim_opts opts;
+	int rc;
+
+	bdev = allocate_bdev("bdev0");
+
+	/* Claim without options */
+	desc = NULL;
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	rc = spdk_bdev_module_claim_bdev_desc(desc, SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE, NULL,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE);
+	CU_ASSERT(desc->claim != NULL);
+	CU_ASSERT(desc->claim->module == &bdev_ut_if);
+	CU_ASSERT(strcmp(desc->claim->name, "") == 0);
+	CU_ASSERT(TAILQ_FIRST(&bdev->internal.claim.v2.claims) == desc->claim);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 1);
+
+	/* Release the claim by closing the descriptor */
+	spdk_bdev_close(desc);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_NONE);
+	CU_ASSERT(TAILQ_EMPTY(&bdev->internal.open_descs));
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 0);
+
+	/* Claim with options */
+	spdk_bdev_claim_opts_init(&opts, sizeof(opts));
+	snprintf(opts.name, sizeof(opts.name), "%s", "claim with options");
+	desc = NULL;
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	rc = spdk_bdev_module_claim_bdev_desc(desc, SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE, &opts,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE);
+	CU_ASSERT(desc->claim != NULL);
+	CU_ASSERT(desc->claim->module == &bdev_ut_if);
+	CU_ASSERT(strcmp(desc->claim->name, "claim with options") == 0);
+	memset(&opts, 0, sizeof(opts));
+	CU_ASSERT(strcmp(desc->claim->name, "claim with options") == 0);
+	CU_ASSERT(TAILQ_FIRST(&bdev->internal.claim.v2.claims) == desc->claim);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 1);
+
+	/* The claim blocks new writers. */
+	desc2 = NULL;
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc2);
+	CU_ASSERT(rc == -EPERM);
+	CU_ASSERT(desc2 == NULL);
+
+	/* New readers are allowed */
+	desc2 = NULL;
+	rc = spdk_bdev_open_ext("bdev0", false, bdev_ut_event_cb, NULL, &desc2);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc2 != NULL);
+	CU_ASSERT(!desc2->write);
+
+	/* No new v2 RWO claims are allowed */
+	rc = spdk_bdev_module_claim_bdev_desc(desc2, SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE, NULL,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == -EPERM);
+
+	/* No new v2 ROM claims are allowed */
+	CU_ASSERT(!desc2->write);
+	rc = spdk_bdev_module_claim_bdev_desc(desc2, SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE, NULL,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == -EPERM);
+	CU_ASSERT(!desc2->write);
+
+	/* No new v2 RWM claims are allowed */
+	spdk_bdev_claim_opts_init(&opts, sizeof(opts));
+	opts.shared_claim_key = (uint64_t)&opts;
+	rc = spdk_bdev_module_claim_bdev_desc(desc2, SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED, &opts,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == -EPERM);
+	CU_ASSERT(!desc2->write);
+
+	/* No new v1 claims are allowed */
+	rc = spdk_bdev_module_claim_bdev(bdev, NULL, &bdev_ut_if);
+	CU_ASSERT(rc == -EPERM);
+
+	/* None of the above changed the existing claim */
+	CU_ASSERT(TAILQ_FIRST(&bdev->internal.claim.v2.claims) == desc->claim);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 1);
+
+	/* Closing the first descriptor now allows a new claim and it is promoted to rw. */
+	spdk_bdev_close(desc);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_NONE);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 0);
+	CU_ASSERT(!desc2->write);
+	rc = spdk_bdev_module_claim_bdev_desc(desc2, SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE, NULL,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc2->claim != NULL);
+	CU_ASSERT(desc2->write);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE);
+	CU_ASSERT(TAILQ_FIRST(&bdev->internal.claim.v2.claims) == desc2->claim);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 1);
+	spdk_bdev_close(desc2);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_NONE);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 0);
+
+	/* Cannot claim with a key */
+	desc = NULL;
+	rc = spdk_bdev_open_ext("bdev0", false, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	spdk_bdev_claim_opts_init(&opts, sizeof(opts));
+	opts.shared_claim_key = (uint64_t)&opts;
+	rc = spdk_bdev_module_claim_bdev_desc(desc, SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE, &opts,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_NONE);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 0);
+	spdk_bdev_close(desc);
+
+	/* Clean up */
+	free_bdev(bdev);
+}
+
+static void
+claim_v2_rom(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_bdev_desc *desc2;
+	struct spdk_bdev_claim_opts opts;
+	int rc;
+
+	bdev = allocate_bdev("bdev0");
+
+	/* Claim without options */
+	desc = NULL;
+	rc = spdk_bdev_open_ext("bdev0", false, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	rc = spdk_bdev_module_claim_bdev_desc(desc, SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE, NULL,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE);
+	CU_ASSERT(desc->claim != NULL);
+	CU_ASSERT(desc->claim->module == &bdev_ut_if);
+	CU_ASSERT(strcmp(desc->claim->name, "") == 0);
+	CU_ASSERT(TAILQ_FIRST(&bdev->internal.claim.v2.claims) == desc->claim);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 1);
+
+	/* Release the claim by closing the descriptor */
+	spdk_bdev_close(desc);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_NONE);
+	CU_ASSERT(TAILQ_EMPTY(&bdev->internal.open_descs));
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_NONE);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 0);
+
+	/* Claim with options */
+	spdk_bdev_claim_opts_init(&opts, sizeof(opts));
+	snprintf(opts.name, sizeof(opts.name), "%s", "claim with options");
+	desc = NULL;
+	rc = spdk_bdev_open_ext("bdev0", false, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	rc = spdk_bdev_module_claim_bdev_desc(desc, SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE, &opts,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE);
+	SPDK_CU_ASSERT_FATAL(desc->claim != NULL);
+	CU_ASSERT(desc->claim->module == &bdev_ut_if);
+	CU_ASSERT(strcmp(desc->claim->name, "claim with options") == 0);
+	memset(&opts, 0, sizeof(opts));
+	CU_ASSERT(strcmp(desc->claim->name, "claim with options") == 0);
+	CU_ASSERT(TAILQ_FIRST(&bdev->internal.claim.v2.claims) == desc->claim);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 1);
+
+	/* The claim blocks new writers. */
+	desc2 = NULL;
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc2);
+	CU_ASSERT(rc == -EPERM);
+	CU_ASSERT(desc2 == NULL);
+
+	/* New readers are allowed */
+	desc2 = NULL;
+	rc = spdk_bdev_open_ext("bdev0", false, bdev_ut_event_cb, NULL, &desc2);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc2 != NULL);
+	CU_ASSERT(!desc2->write);
+
+	/* No new v2 RWO claims are allowed */
+	rc = spdk_bdev_module_claim_bdev_desc(desc2, SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE, NULL,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == -EPERM);
+
+	/* No new v2 RWM claims are allowed */
+	spdk_bdev_claim_opts_init(&opts, sizeof(opts));
+	opts.shared_claim_key = (uint64_t)&opts;
+	rc = spdk_bdev_module_claim_bdev_desc(desc2, SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED, &opts,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == -EPERM);
+	CU_ASSERT(!desc2->write);
+
+	/* No new v1 claims are allowed */
+	rc = spdk_bdev_module_claim_bdev(bdev, NULL, &bdev_ut_if);
+	CU_ASSERT(rc == -EPERM);
+
+	/* None of the above messed up the existing claim */
+	CU_ASSERT(TAILQ_FIRST(&bdev->internal.claim.v2.claims) == desc->claim);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 1);
+
+	/* New v2 ROM claims are allowed and the descriptor stays read-only. */
+	CU_ASSERT(!desc2->write);
+	rc = spdk_bdev_module_claim_bdev_desc(desc2, SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE, NULL,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(!desc2->write);
+	CU_ASSERT(TAILQ_FIRST(&bdev->internal.claim.v2.claims) == desc->claim);
+	CU_ASSERT(TAILQ_NEXT(desc->claim, link) == desc2->claim);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 2);
+
+	/* Claim remains when closing the first descriptor */
+	spdk_bdev_close(desc);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE);
+	CU_ASSERT(!TAILQ_EMPTY(&bdev->internal.open_descs));
+	CU_ASSERT(TAILQ_FIRST(&bdev->internal.claim.v2.claims) == desc2->claim);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 1);
+
+	/* Claim removed when closing the other descriptor */
+	spdk_bdev_close(desc2);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_NONE);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 0);
+	CU_ASSERT(TAILQ_EMPTY(&bdev->internal.open_descs));
+
+	/* Cannot claim with a key */
+	desc = NULL;
+	rc = spdk_bdev_open_ext("bdev0", false, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	spdk_bdev_claim_opts_init(&opts, sizeof(opts));
+	opts.shared_claim_key = (uint64_t)&opts;
+	rc = spdk_bdev_module_claim_bdev_desc(desc, SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE, &opts,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_NONE);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 0);
+	spdk_bdev_close(desc);
+
+	/* Cannot claim with a read-write descriptor */
+	desc = NULL;
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	rc = spdk_bdev_module_claim_bdev_desc(desc, SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE, NULL,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_NONE);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 0);
+	spdk_bdev_close(desc);
+	CU_ASSERT(TAILQ_EMPTY(&bdev->internal.open_descs));
+
+	/* Clean up */
+	free_bdev(bdev);
+}
+
+static void
+claim_v2_rwm(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_bdev_desc *desc2;
+	struct spdk_bdev_claim_opts opts;
+	char good_key, bad_key;
+	int rc;
+
+	bdev = allocate_bdev("bdev0");
+
+	/* Claim without options should fail */
+	desc = NULL;
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	rc = spdk_bdev_module_claim_bdev_desc(desc, SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED, NULL,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_NONE);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 0);
+	CU_ASSERT(desc->claim == NULL);
+
+	/* Claim with options */
+	spdk_bdev_claim_opts_init(&opts, sizeof(opts));
+	snprintf(opts.name, sizeof(opts.name), "%s", "claim with options");
+	opts.shared_claim_key = (uint64_t)&good_key;
+	rc = spdk_bdev_module_claim_bdev_desc(desc, SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED, &opts,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED);
+	SPDK_CU_ASSERT_FATAL(desc->claim != NULL);
+	CU_ASSERT(desc->claim->module == &bdev_ut_if);
+	CU_ASSERT(strcmp(desc->claim->name, "claim with options") == 0);
+	memset(&opts, 0, sizeof(opts));
+	CU_ASSERT(strcmp(desc->claim->name, "claim with options") == 0);
+	CU_ASSERT(TAILQ_FIRST(&bdev->internal.claim.v2.claims) == desc->claim);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 1);
+
+	/* The claim blocks new writers. */
+	desc2 = NULL;
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc2);
+	CU_ASSERT(rc == -EPERM);
+	CU_ASSERT(desc2 == NULL);
+
+	/* New readers are allowed */
+	desc2 = NULL;
+	rc = spdk_bdev_open_ext("bdev0", false, bdev_ut_event_cb, NULL, &desc2);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc2 != NULL);
+	CU_ASSERT(!desc2->write);
+
+	/* No new v2 RWO claims are allowed */
+	rc = spdk_bdev_module_claim_bdev_desc(desc2, SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE, NULL,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == -EPERM);
+
+	/* No new v2 ROM claims are allowed and the descriptor stays read-only. */
+	CU_ASSERT(!desc2->write);
+	rc = spdk_bdev_module_claim_bdev_desc(desc2, SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE, NULL,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == -EPERM);
+	CU_ASSERT(!desc2->write);
+
+	/* No new v1 claims are allowed */
+	rc = spdk_bdev_module_claim_bdev(bdev, NULL, &bdev_ut_if);
+	CU_ASSERT(rc == -EPERM);
+
+	/* No new v2 RWM claims are allowed if the key does not match */
+	spdk_bdev_claim_opts_init(&opts, sizeof(opts));
+	opts.shared_claim_key = (uint64_t)&bad_key;
+	rc = spdk_bdev_module_claim_bdev_desc(desc2, SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED, &opts,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == -EPERM);
+	CU_ASSERT(!desc2->write);
+
+	/* None of the above messed up the existing claim */
+	CU_ASSERT(TAILQ_FIRST(&bdev->internal.claim.v2.claims) == desc->claim);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 1);
+
+	/* New v2 RWM claims are allowed and the descriptor is promoted if the key matches. */
+	spdk_bdev_claim_opts_init(&opts, sizeof(opts));
+	opts.shared_claim_key = (uint64_t)&good_key;
+	CU_ASSERT(!desc2->write);
+	rc = spdk_bdev_module_claim_bdev_desc(desc2, SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED, &opts,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc2->write);
+	CU_ASSERT(TAILQ_NEXT(desc->claim, link) == desc2->claim);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 2);
+
+	/* Claim remains when closing the first descriptor */
+	spdk_bdev_close(desc);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED);
+	CU_ASSERT(!TAILQ_EMPTY(&bdev->internal.open_descs));
+	CU_ASSERT(TAILQ_FIRST(&bdev->internal.claim.v2.claims) == desc2->claim);
+	UT_ASSERT_CLAIM_V2_COUNT(bdev, 1);
+
+	/* Claim removed when closing the other descriptor */
+	spdk_bdev_close(desc2);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_NONE);
+	CU_ASSERT(TAILQ_EMPTY(&bdev->internal.open_descs));
+
+	/* Cannot claim without a key */
+	desc = NULL;
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	spdk_bdev_claim_opts_init(&opts, sizeof(opts));
+	rc = spdk_bdev_module_claim_bdev_desc(desc, SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED, &opts,
+					      &bdev_ut_if);
+	CU_ASSERT(rc == -EINVAL);
+	spdk_bdev_close(desc);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_NONE);
+	CU_ASSERT(TAILQ_EMPTY(&bdev->internal.open_descs));
+
+	/* Clean up */
+	free_bdev(bdev);
+}
+
+static void
+claim_v2_existing_writer(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_bdev_desc *desc2;
+	struct spdk_bdev_claim_opts opts;
+	enum spdk_bdev_claim_type type;
+	enum spdk_bdev_claim_type types[] = {
+		SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE,
+		SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED,
+		SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE
+	};
+	size_t i;
+	int rc;
+
+	bdev = allocate_bdev("bdev0");
+
+	desc = NULL;
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	desc2 = NULL;
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc2);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc2 != NULL);
+
+	for (i = 0; i < SPDK_COUNTOF(types); i++) {
+		type = types[i];
+		spdk_bdev_claim_opts_init(&opts, sizeof(opts));
+		if (type == SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED) {
+			opts.shared_claim_key = (uint64_t)&opts;
+		}
+		rc = spdk_bdev_module_claim_bdev_desc(desc, type, &opts, &bdev_ut_if);
+		if (type == SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE) {
+			CU_ASSERT(rc == -EINVAL);
+		} else {
+			CU_ASSERT(rc == -EPERM);
+		}
+		CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_NONE);
+		rc = spdk_bdev_module_claim_bdev_desc(desc2, type, &opts, &bdev_ut_if);
+		if (type == SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE) {
+			CU_ASSERT(rc == -EINVAL);
+		} else {
+			CU_ASSERT(rc == -EPERM);
+		}
+		CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_NONE);
+	}
+
+	spdk_bdev_close(desc);
+	spdk_bdev_close(desc2);
+
+	/* Clean up */
+	free_bdev(bdev);
+}
+
+static void
+claim_v2_existing_v1(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_bdev_claim_opts opts;
+	enum spdk_bdev_claim_type type;
+	enum spdk_bdev_claim_type types[] = {
+		SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE,
+		SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED,
+		SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE
+	};
+	size_t i;
+	int rc;
+
+	bdev = allocate_bdev("bdev0");
+
+	rc = spdk_bdev_module_claim_bdev(bdev, NULL, &bdev_ut_if);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_EXCL_WRITE);
+
+	desc = NULL;
+	rc = spdk_bdev_open_ext("bdev0", false, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+
+	for (i = 0; i < SPDK_COUNTOF(types); i++) {
+		type = types[i];
+		spdk_bdev_claim_opts_init(&opts, sizeof(opts));
+		if (type == SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED) {
+			opts.shared_claim_key = (uint64_t)&opts;
+		}
+		rc = spdk_bdev_module_claim_bdev_desc(desc, type, &opts, &bdev_ut_if);
+		CU_ASSERT(rc == -EPERM);
+		CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_EXCL_WRITE);
+	}
+
+	spdk_bdev_module_release_bdev(bdev);
+	spdk_bdev_close(desc);
+
+	/* Clean up */
+	free_bdev(bdev);
+}
+
+static void
+claim_v1_existing_v2(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_bdev_claim_opts opts;
+	enum spdk_bdev_claim_type type;
+	enum spdk_bdev_claim_type types[] = {
+		SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE,
+		SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED,
+		SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE
+	};
+	size_t i;
+	int rc;
+
+	bdev = allocate_bdev("bdev0");
+
+	for (i = 0; i < SPDK_COUNTOF(types); i++) {
+		type = types[i];
+
+		desc = NULL;
+		rc = spdk_bdev_open_ext("bdev0", false, bdev_ut_event_cb, NULL, &desc);
+		CU_ASSERT(rc == 0);
+		SPDK_CU_ASSERT_FATAL(desc != NULL);
+
+		/* Get a v2 claim */
+		spdk_bdev_claim_opts_init(&opts, sizeof(opts));
+		if (type == SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED) {
+			opts.shared_claim_key = (uint64_t)&opts;
+		}
+		rc = spdk_bdev_module_claim_bdev_desc(desc, type, &opts, &bdev_ut_if);
+		CU_ASSERT(rc == 0);
+
+		/* Fail to get a v1 claim */
+		rc = spdk_bdev_module_claim_bdev(bdev, NULL, &bdev_ut_if);
+		CU_ASSERT(rc == -EPERM);
+
+		spdk_bdev_close(desc);
+
+		/* Now v1 succeeds */
+		rc = spdk_bdev_module_claim_bdev(bdev, NULL, &bdev_ut_if);
+		CU_ASSERT(rc == 0)
+		spdk_bdev_module_release_bdev(bdev);
+	}
+
+	/* Clean up */
 	free_bdev(bdev);
 }
 
@@ -6325,6 +6872,12 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_copy);
 	CU_ADD_TEST(suite, bdev_copy_split_test);
 	CU_ADD_TEST(suite, examine_locks);
+	CU_ADD_TEST(suite, claim_v2_rwo);
+	CU_ADD_TEST(suite, claim_v2_rom);
+	CU_ADD_TEST(suite, claim_v2_rwm);
+	CU_ADD_TEST(suite, claim_v2_existing_writer);
+	CU_ADD_TEST(suite, claim_v2_existing_v1);
+	CU_ADD_TEST(suite, claim_v1_existing_v2);
 
 	allocate_cores(1);
 	allocate_threads(1);
