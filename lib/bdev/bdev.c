@@ -61,6 +61,18 @@ int __itt_init_ittlib(const char *, __itt_group_id);
  */
 #define SPDK_BDEV_MAX_CHILDREN_COPY_REQS (8)
 
+#define LOG_ALREADY_CLAIMED_ERROR(detail, bdev) \
+	log_already_claimed(SPDK_LOG_ERROR, __LINE__, __func__, detail, bdev)
+#ifdef DEBUG
+#define LOG_ALREADY_CLAIMED_DEBUG(detail, bdev) \
+	log_already_claimed(SPDK_LOG_DEBUG, __LINE__, __func__, detail, bdev)
+#else
+#define LOG_ALREADY_CLAIMED_DEBUG(detail, bdev) do {} while(0)
+#endif
+
+static void log_already_claimed(enum spdk_log_level level, const int line, const char *func,
+				const char *detail, struct spdk_bdev *bdev);
+
 SPDK_LOG_DEPRECATION_REGISTER(bdev_register_examine_thread,
 			      "bdev register and examine on non-app thread", "SPDK 23.05", 0);
 
@@ -7040,6 +7052,31 @@ bdev_start_qos(struct spdk_bdev *bdev)
 	return 0;
 }
 
+static void
+log_already_claimed(enum spdk_log_level level, const int line, const char *func, const char *detail,
+		    struct spdk_bdev *bdev)
+{
+	enum spdk_bdev_claim_type type;
+	const char *typename, *modname;
+	extern struct spdk_log_flag SPDK_LOG_bdev;
+
+	if (level >= SPDK_LOG_INFO && !SPDK_LOG_bdev.enabled) {
+		return;
+	}
+
+	type = bdev->internal.claim_type;
+	typename = "exclusive_write";
+
+	if (type == SPDK_BDEV_CLAIM_EXCL_WRITE) {
+		modname = bdev->internal.claim.v1.module->name;
+		spdk_log(level, __FILE__, line, func, "bdev %s %s: type %s by module %s\n",
+			 bdev->name, detail, typename, modname);
+		return;
+	}
+
+	assert(false);
+}
+
 static int
 bdev_open(struct spdk_bdev *bdev, bool write, struct spdk_bdev_desc *desc)
 {
@@ -7067,8 +7104,7 @@ bdev_open(struct spdk_bdev *bdev, bool write, struct spdk_bdev_desc *desc)
 	}
 
 	if (write && bdev->internal.claim_type != SPDK_BDEV_CLAIM_NONE) {
-		SPDK_ERRLOG("Could not open %s - %s module already claimed it\n",
-			    bdev->name, bdev->internal.claim.v1.module->name);
+		LOG_ALREADY_CLAIMED_ERROR("already claimed", bdev);
 		spdk_spin_unlock(&bdev->internal.spinlock);
 		return -EPERM;
 	}
@@ -7296,8 +7332,7 @@ spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	spdk_spin_lock(&bdev->internal.spinlock);
 
 	if (bdev->internal.claim_type != SPDK_BDEV_CLAIM_NONE) {
-		SPDK_ERRLOG("bdev %s already claimed by module %s\n", bdev->name,
-			    bdev->internal.claim.v1.module->name);
+		LOG_ALREADY_CLAIMED_ERROR("already claimed", bdev);
 		spdk_spin_unlock(&bdev->internal.spinlock);
 		return -EPERM;
 	}
