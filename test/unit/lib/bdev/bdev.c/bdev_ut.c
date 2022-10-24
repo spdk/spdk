@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2017 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk_cunit.h"
@@ -837,6 +837,7 @@ claim_test(void)
 
 	rc = spdk_bdev_module_claim_bdev(bdev, NULL, &bdev_ut_if);
 	CU_ASSERT(rc == 0);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_EXCL_WRITE);
 	CU_ASSERT(bdev->internal.claim.v1.module == &bdev_ut_if);
 
 	/* There should be only one open descriptor and it should still be ro */
@@ -852,6 +853,7 @@ claim_test(void)
 	spdk_bdev_module_release_bdev(bdev);
 	rc = spdk_bdev_module_claim_bdev(bdev, desc, &bdev_ut_if);
 	CU_ASSERT(rc == 0);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_EXCL_WRITE);
 	CU_ASSERT(bdev->internal.claim.v1.module == &bdev_ut_if);
 
 	/* There should be only one open descriptor and it should be rw */
@@ -6241,6 +6243,7 @@ examine_locks(void)
 	bdev = allocate_bdev_ctx("bdev0", &ctx);
 	CU_ASSERT(ctx.examine_config_count == 1);
 	CU_ASSERT(ctx.examine_disk_count == 1);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_NONE);
 	CU_ASSERT(bdev->internal.claim.v1.module == NULL);
 	free_bdev(bdev);
 
@@ -6251,8 +6254,10 @@ examine_locks(void)
 	bdev = allocate_bdev_ctx("bdev0", &ctx);
 	CU_ASSERT(ctx.examine_config_count == 1);
 	CU_ASSERT(ctx.examine_disk_count == 1);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_EXCL_WRITE);
 	CU_ASSERT(bdev->internal.claim.v1.module == &vbdev_ut_if);
 	spdk_bdev_module_release_bdev(bdev);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_NONE);
 	CU_ASSERT(bdev->internal.claim.v1.module == NULL);
 	free_bdev(bdev);
 }

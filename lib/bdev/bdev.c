@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -664,8 +664,8 @@ bdev_examine(struct spdk_bdev *bdev)
 		}
 	}
 
-	module = bdev->internal.claim.v1.module;
-	if (module != NULL) {
+	if (bdev->internal.claim_type != SPDK_BDEV_CLAIM_NONE) {
+		module = bdev->internal.claim.v1.module;
 		if (module->examine_disk) {
 			spdk_spin_lock(&module->internal.spinlock);
 			module->internal.action_in_progress++;
@@ -767,7 +767,7 @@ static struct spdk_bdev *
 _bdev_next_leaf(struct spdk_bdev *bdev)
 {
 	while (bdev != NULL) {
-		if (bdev->internal.claim.v1.module == NULL) {
+		if (bdev->internal.claim_type == SPDK_BDEV_CLAIM_NONE) {
 			return bdev;
 		} else {
 			bdev = TAILQ_NEXT(bdev, internal.link);
@@ -1823,7 +1823,7 @@ bdev_finish_unregister_bdevs_iter(void *cb_arg, int bdeverrno)
 	for (bdev = TAILQ_LAST(&g_bdev_mgr.bdevs, spdk_bdev_list);
 	     bdev; bdev = TAILQ_PREV(bdev, spdk_bdev_list, internal.link)) {
 		spdk_spin_lock(&bdev->internal.spinlock);
-		if (bdev->internal.claim.v1.module != NULL) {
+		if (bdev->internal.claim_type != SPDK_BDEV_CLAIM_NONE) {
 			SPDK_DEBUGLOG(bdev, "Skipping claimed bdev '%s'(<-'%s').\n",
 				      bdev->name, bdev->internal.claim.v1.module->name);
 			spdk_spin_unlock(&bdev->internal.spinlock);
@@ -6724,7 +6724,8 @@ bdev_register(struct spdk_bdev *bdev)
 
 	bdev->internal.status = SPDK_BDEV_STATUS_READY;
 	bdev->internal.measured_queue_depth = UINT64_MAX;
-	bdev->internal.claim.v1.module = NULL;
+	bdev->internal.claim_type = SPDK_BDEV_CLAIM_NONE;
+	memset(&bdev->internal.claim, 0, sizeof(bdev->internal.claim));
 	bdev->internal.qd_poller = NULL;
 	bdev->internal.qos = NULL;
 
@@ -7056,7 +7057,7 @@ bdev_open(struct spdk_bdev *bdev, bool write, struct spdk_bdev_desc *desc)
 		return -ENODEV;
 	}
 
-	if (write && bdev->internal.claim.v1.module) {
+	if (write && bdev->internal.claim_type != SPDK_BDEV_CLAIM_NONE) {
 		SPDK_ERRLOG("Could not open %s - %s module already claimed it\n",
 			    bdev->name, bdev->internal.claim.v1.module->name);
 		spdk_spin_unlock(&bdev->internal.spinlock);
@@ -7285,7 +7286,7 @@ spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 {
 	spdk_spin_lock(&bdev->internal.spinlock);
 
-	if (bdev->internal.claim.v1.module != NULL) {
+	if (bdev->internal.claim_type != SPDK_BDEV_CLAIM_NONE) {
 		SPDK_ERRLOG("bdev %s already claimed by module %s\n", bdev->name,
 			    bdev->internal.claim.v1.module->name);
 		spdk_spin_unlock(&bdev->internal.spinlock);
@@ -7296,6 +7297,7 @@ spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		desc->write = true;
 	}
 
+	bdev->internal.claim_type = SPDK_BDEV_CLAIM_EXCL_WRITE;
 	bdev->internal.claim.v1.module = module;
 
 	spdk_spin_unlock(&bdev->internal.spinlock);
@@ -7308,6 +7310,8 @@ spdk_bdev_module_release_bdev(struct spdk_bdev *bdev)
 	spdk_spin_lock(&bdev->internal.spinlock);
 
 	assert(bdev->internal.claim.v1.module != NULL);
+	assert(bdev->internal.claim_type == SPDK_BDEV_CLAIM_EXCL_WRITE);
+	bdev->internal.claim_type = SPDK_BDEV_CLAIM_NONE;
 	bdev->internal.claim.v1.module = NULL;
 
 	spdk_spin_unlock(&bdev->internal.spinlock);

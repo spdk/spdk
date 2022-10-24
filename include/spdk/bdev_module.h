@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 /** \file
@@ -159,6 +159,17 @@ struct spdk_bdev_module {
 
 		TAILQ_ENTRY(spdk_bdev_module) tailq;
 	} internal;
+};
+
+/** Claim types */
+enum spdk_bdev_claim_type {
+	/* Not claimed. Must not be used to request a claim. */
+	SPDK_BDEV_CLAIM_NONE = 0,
+
+	/**
+	 * Exclusive writer.
+	 */
+	SPDK_BDEV_CLAIM_EXCL_WRITE
 };
 
 /**
@@ -521,6 +532,12 @@ struct spdk_bdev {
 
 		/** The bdev status */
 		enum spdk_bdev_status status;
+
+		/**
+		 * The claim type: used in conjunction with claim. Must hold spinlock on all
+		 * updates.
+		 */
+		enum spdk_bdev_claim_type claim_type;
 
 		/** Which module has claimed this bdev. Must hold spinlock on all updates. */
 		union __bdev_internal_claim {

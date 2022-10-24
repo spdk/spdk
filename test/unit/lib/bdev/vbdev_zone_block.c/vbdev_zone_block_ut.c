@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2019 Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -184,9 +185,12 @@ int
 spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			    struct spdk_bdev_module *module)
 {
-	if (bdev->internal.claim.v1.module != NULL) {
+	if (bdev->internal.claim_type != SPDK_BDEV_CLAIM_NONE) {
+		CU_ASSERT(bdev->internal.claim.v1.module != NULL);
 		return -1;
 	}
+	CU_ASSERT(bdev->internal.claim.v1.module == NULL);
+	bdev->internal.claim_type = SPDK_BDEV_CLAIM_EXCL_WRITE;
 	bdev->internal.claim.v1.module = module;
 	return 0;
 }
@@ -194,7 +198,9 @@ spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 void
 spdk_bdev_module_release_bdev(struct spdk_bdev *bdev)
 {
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_EXCL_WRITE);
 	CU_ASSERT(bdev->internal.claim.v1.module != NULL);
+	bdev->internal.claim_type = SPDK_BDEV_CLAIM_NONE;
 	bdev->internal.claim.v1.module = NULL;
 }
 
