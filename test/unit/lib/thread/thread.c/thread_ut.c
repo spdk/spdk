@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -1777,6 +1778,141 @@ io_device_lookup(void)
 	free_threads();
 }
 
+static enum spin_error g_spin_err;
+static uint32_t g_spin_err_count = 0;
+
+static void
+ut_track_abort(enum spin_error err)
+{
+	g_spin_err = err;
+	g_spin_err_count++;
+}
+
+static void
+spdk_spin(void)
+{
+	struct spdk_spinlock lock;
+
+	g_spin_abort_fn = ut_track_abort;
+
+	/* Do not need to be on an SPDK thread to initialize an spdk_spinlock */
+	g_spin_err_count = 0;
+	spdk_spin_init(&lock);
+	CU_ASSERT(g_spin_err_count == 0);
+
+	/* Trying to take a lock while not on an SPDK thread is an error */
+	g_spin_err_count = 0;
+	spdk_spin_lock(&lock);
+	CU_ASSERT(g_spin_err_count == 1);
+	CU_ASSERT(g_spin_err == SPIN_ERR_NOT_SPDK_THREAD);
+
+	/* Trying to check if a lock is held while not on an SPDK thread is an error */
+	g_spin_err_count = 0;
+	spdk_spin_held(&lock);
+	CU_ASSERT(g_spin_err_count == 1);
+	CU_ASSERT(g_spin_err == SPIN_ERR_NOT_SPDK_THREAD);
+
+	/* Do not need to be on an SPDK thread to destroy an spdk_spinlock */
+	g_spin_err_count = 0;
+	spdk_spin_destroy(&lock);
+	CU_ASSERT(g_spin_err_count == 0);
+
+	allocate_threads(2);
+	set_thread(0);
+
+	/* Can initialize an spdk_spinlock on an SPDK thread */
+	g_spin_err_count = 0;
+	spdk_spin_init(&lock);
+	CU_ASSERT(g_spin_err_count == 0);
+
+	/* Can take spinlock */
+	g_spin_err_count = 0;
+	spdk_spin_lock(&lock);
+	CU_ASSERT(g_spin_err_count == 0);
+
+	/* Can release spinlock */
+	g_spin_err_count = 0;
+	spdk_spin_unlock(&lock);
+	CU_ASSERT(g_spin_err_count == 0);
+
+	/* Deadlock detected */
+	g_spin_err_count = 0;
+	g_spin_err = SPIN_ERR_NONE;
+	spdk_spin_lock(&lock);
+	CU_ASSERT(g_spin_err_count == 0);
+	spdk_spin_lock(&lock);
+	CU_ASSERT(g_spin_err_count == 1);
+	CU_ASSERT(g_spin_err == SPIN_ERR_DEADLOCK);
+
+	/* Cannot unlock from wrong thread */
+	set_thread(1);
+	g_spin_err_count = 0;
+	spdk_spin_unlock(&lock);
+	CU_ASSERT(g_spin_err_count == 1);
+	CU_ASSERT(g_spin_err == SPIN_ERR_WRONG_THREAD);
+
+	/* Get back to a known good state */
+	set_thread(0);
+	g_spin_err_count = 0;
+	spdk_spin_unlock(&lock);
+	CU_ASSERT(g_spin_err_count == 0);
+
+	/* Cannot release the same lock twice */
+	g_spin_err_count = 0;
+	spdk_spin_lock(&lock);
+	CU_ASSERT(g_spin_err_count == 0);
+	spdk_spin_unlock(&lock);
+	CU_ASSERT(g_spin_err_count == 0);
+	spdk_spin_unlock(&lock);
+	CU_ASSERT(g_spin_err_count == 1);
+	CU_ASSERT(g_spin_err == SPIN_ERR_WRONG_THREAD);
+
+	/* A lock that is not held is properly recognized */
+	g_spin_err_count = 0;
+	CU_ASSERT(!spdk_spin_held(&lock));
+	CU_ASSERT(g_spin_err_count == 0);
+
+	/* A lock that is held is recognized as held by only the thread that holds it. */
+	set_thread(1);
+	g_spin_err_count = 0;
+	spdk_spin_lock(&lock);
+	CU_ASSERT(g_spin_err_count == 0);
+	CU_ASSERT(spdk_spin_held(&lock));
+	CU_ASSERT(g_spin_err_count == 0);
+	set_thread(0);
+	CU_ASSERT(!spdk_spin_held(&lock));
+	CU_ASSERT(g_spin_err_count == 0);
+
+	/* After releasing, no one thinks it is held */
+	set_thread(1);
+	spdk_spin_unlock(&lock);
+	CU_ASSERT(g_spin_err_count == 0);
+	CU_ASSERT(!spdk_spin_held(&lock));
+	CU_ASSERT(g_spin_err_count == 0);
+	set_thread(0);
+	CU_ASSERT(!spdk_spin_held(&lock));
+	CU_ASSERT(g_spin_err_count == 0);
+
+	/* Destroying a lock that is held is an error. */
+	set_thread(0);
+	g_spin_err_count = 0;
+	spdk_spin_lock(&lock);
+	CU_ASSERT(g_spin_err_count == 0);
+	spdk_spin_destroy(&lock);
+	CU_ASSERT(g_spin_err_count == 1);
+	CU_ASSERT(g_spin_err == SPIN_ERR_LOCK_HELD);
+	g_spin_err_count = 0;
+	spdk_spin_unlock(&lock);
+	CU_ASSERT(g_spin_err_count == 0);
+
+	/* Clean up */
+	g_spin_err_count = 0;
+	spdk_spin_destroy(&lock);
+	CU_ASSERT(g_spin_err_count == 0);
+	free_threads();
+	g_spin_abort_fn = __posix_abort;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1805,6 +1941,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, cache_closest_timed_poller);
 	CU_ADD_TEST(suite, multi_timed_pollers_have_same_expiration);
 	CU_ADD_TEST(suite, io_device_lookup);
+	CU_ADD_TEST(suite, spdk_spin);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

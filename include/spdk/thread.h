@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 /** \file
@@ -883,6 +884,71 @@ int spdk_interrupt_mode_enable(void);
  * \return True if interrupt mode is set, false otherwise.
  */
 bool spdk_interrupt_mode_is_enabled(void);
+
+/**
+ * A spinlock augmented with safety checks for use with SPDK.
+ *
+ * SPDK code that uses spdk_spinlock runs from an SPDK thread, which itself is associated with a
+ * pthread. There are typically many SPDK threads associated with each pthread. The SPDK application
+ * may migrate SPDK threads between pthreads from time to time to balance the load on those threads.
+ * Migration of SPDK threads only happens when the thread is off CPU, and as such it is only safe to
+ * hold a lock so long as an SPDK thread stays on CPU.
+ *
+ * It is not safe to lock a spinlock, return from the event or poller, then unlock it at some later
+ * time because:
+ *
+ *   - Even though the SPDK thread may be the same, the SPDK thread may be running on different
+ *     pthreads during lock and unlock. A pthread spinlock may consider this to be an unlock by a
+ *     non-owner, which results in undefined behavior.
+ *   - A lock that is acquired by a poller or event may be needed by another poller or event that
+ *     runs on the same pthread. This can lead to deadlock or detection of deadlock.
+ *   - A lock that is acquired by a poller or event that is needed by another poller or event that
+ *     runs on a second pthread will block the second pthread from doing any useful work until the
+ *     lock is released. Because the lock holder and the lock acquirer are on the same pthread, this
+ *     would lead to deadlock.
+ *
+ * If an SPDK spinlock is used erroneously, the program will abort.
+ */
+struct spdk_spinlock {
+	pthread_spinlock_t spinlock;
+	struct spdk_thread *thread;
+};
+
+/**
+ * Initialize an spdk_spinlock.
+ *
+ * \param sspin The SPDK spinlock to initialize.
+ */
+void spdk_spin_init(struct spdk_spinlock *sspin);
+
+/**
+ * Destroy an spdk_spinlock.
+ *
+ * \param sspin The SPDK spinlock to initialize.
+ */
+void spdk_spin_destroy(struct spdk_spinlock *sspin);
+
+/**
+ * Lock an SPDK spin lock.
+ *
+ * \param sspin An SPDK spinlock.
+ */
+void spdk_spin_lock(struct spdk_spinlock *sspin);
+
+/**
+ * Unlock an SPDK spinlock.
+ *
+ * \param sspin An SPDK spinlock.
+ */
+void spdk_spin_unlock(struct spdk_spinlock *sspin);
+
+/**
+ * Determine if the caller holds this SPDK spinlock.
+ *
+ * \param sspin An SPDK spinlock.
+ * \return true if spinlock is held by this thread, else false
+ */
+bool spdk_spin_held(struct spdk_spinlock *sspin);
 
 #ifdef __cplusplus
 }

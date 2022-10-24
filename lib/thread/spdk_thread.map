@@ -57,6 +57,11 @@
 	spdk_thread_get_interrupt_fd;
 	spdk_interrupt_mode_enable;
 	spdk_interrupt_mode_is_enabled;
+	spdk_spin_init;
+	spdk_spin_destroy;
+	spdk_spin_lock;
+	spdk_spin_unlock;
+	spdk_spin_held;
 
 	# internal functions in spdk_internal/thread.h
 	spdk_poller_get_name;

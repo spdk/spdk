@@ -81,6 +81,9 @@ Added `spdk_thread_get_app_thread` which returns the first thread that was creat
 Added `spdk_thread_is_running`.  This returns `true` for a running thread, or `false` if
 its exit process has started using `spdk_thread_exit`.
 
+Added API `spdk_spin_init`, `spdk_spin_destroy`, `spdk_spin_lock`, `spdk_spin_unlock`, and
+`spdk_spin_held` to support spinlocks that are aware of the SPDK concurrency model.
+
 ## v22.09
 
 ### accel

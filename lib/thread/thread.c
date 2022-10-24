@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -129,6 +130,8 @@ struct spdk_thread {
 	struct spdk_cpuset		cpumask;
 	uint64_t			exit_timeout_tsc;
 
+	int32_t				lock_count;
+
 	/* Indicates whether this spdk_thread currently runs in interrupt. */
 	bool				in_interrupt;
 	bool				poller_unregistered;
@@ -149,6 +152,64 @@ static size_t g_ctx_sz = 0;
  * SPDK application is required.
  */
 static uint64_t g_thread_id = 1;
+
+enum spin_error {
+	SPIN_ERR_NONE,
+	/* Trying to use an SPDK lock while not on an SPDK thread */
+	SPIN_ERR_NOT_SPDK_THREAD,
+	/* Trying to lock a lock already held by this SPDK thread */
+	SPIN_ERR_DEADLOCK,
+	/* Trying to unlock a lock not held by this SPDK thread */
+	SPIN_ERR_WRONG_THREAD,
+	/* pthread_spin_*() returned an error */
+	SPIN_ERR_PTHREAD,
+	/* Trying to destroy a lock that is held */
+	SPIN_ERR_LOCK_HELD,
+	/* lock_count is invalid */
+	SPIN_ERR_LOCK_COUNT,
+	/*
+	 * An spdk_thread may migrate to another pthread. A spinlock held across migration leads to
+	 * undefined behavior. A spinlock held when an SPDK thread goes off CPU would lead to
+	 * deadlock when another SPDK thread on the same pthread tries to take that lock.
+	 */
+	SPIN_ERR_HOLD_DURING_SWITCH,
+};
+
+static const char *spin_error_strings[] = {
+	[SPIN_ERR_NONE]			= "No error",
+	[SPIN_ERR_NOT_SPDK_THREAD]	= "Not an SPDK thread",
+	[SPIN_ERR_DEADLOCK]		= "Deadlock detected",
+	[SPIN_ERR_WRONG_THREAD]		= "Unlock on wrong SPDK thread",
+	[SPIN_ERR_PTHREAD]		= "Error from pthread_spinlock",
+	[SPIN_ERR_LOCK_HELD]		= "Destroying a held spinlock",
+	[SPIN_ERR_LOCK_COUNT]		= "Lock count is invalid",
+	[SPIN_ERR_HOLD_DURING_SWITCH]	= "Lock(s) held while SPDK thread going off CPU",
+};
+
+#define SPIN_ERROR_STRING(err) (err < 0 || err >= SPDK_COUNTOF(spin_error_strings)) \
+				? "Unknown error" : spin_error_strings[err]
+
+static void
+__posix_abort(enum spin_error err)
+{
+	abort();
+}
+
+typedef void (*spin_abort)(enum spin_error err);
+spin_abort g_spin_abort_fn = __posix_abort;
+
+#define SPIN_ASSERT_IMPL(cond, err, ret) \
+	do { \
+		if (spdk_unlikely(!(cond))) { \
+			SPDK_ERRLOG("unrecoverable spinlock error %d: %s (%s)\n", err, \
+				    SPIN_ERROR_STRING(err), #cond); \
+			g_spin_abort_fn(err); \
+			ret; \
+		} \
+	} while (0)
+#define SPIN_ASSERT_RETURN_VOID(cond, err)	SPIN_ASSERT_IMPL(cond, err, return)
+#define SPIN_ASSERT_RETURN(cond, err, ret)	SPIN_ASSERT_IMPL(cond, err, return ret)
+#define SPIN_ASSERT(cond, err)			SPIN_ASSERT_IMPL(cond, err,)
 
 struct io_device {
 	void				*io_device;
@@ -726,6 +787,8 @@ msg_queue_run_batch(struct spdk_thread *thread, uint32_t max_msgs)
 
 		msg->fn(msg->arg);
 
+		SPIN_ASSERT(thread->lock_count == 0, SPIN_ERR_HOLD_DURING_SWITCH);
+
 		if (thread->msg_cache_count < SPDK_MSG_MEMPOOL_CACHE_SIZE) {
 			/* Insert the messages at the head. We want to re-use the hot
 			 * ones. */
@@ -829,6 +892,8 @@ thread_execute_poller(struct spdk_thread *thread, struct spdk_poller *poller)
 	poller->state = SPDK_POLLER_STATE_RUNNING;
 	rc = poller->fn(poller->arg);
 
+	SPIN_ASSERT(thread->lock_count == 0, SPIN_ERR_HOLD_DURING_SWITCH);
+
 	poller->run_count++;
 	if (rc > 0) {
 		poller->busy_count++;
@@ -887,6 +952,8 @@ thread_execute_timed_poller(struct spdk_thread *thread, struct spdk_poller *poll
 
 	poller->state = SPDK_POLLER_STATE_RUNNING;
 	rc = poller->fn(poller->arg);
+
+	SPIN_ASSERT(thread->lock_count == 0, SPIN_ERR_HOLD_DURING_SWITCH);
 
 	poller->run_count++;
 	if (rc > 0) {
@@ -1011,6 +1078,7 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 	} else {
 		/* Non-block wait on thread's fd_group */
 		rc = spdk_fd_group_wait(thread->fgrp, 0);
+		SPIN_ASSERT(thread->lock_count == 0, SPIN_ERR_HOLD_DURING_SWITCH);
 		if (spdk_unlikely(!thread->in_interrupt)) {
 			/* The thread transitioned to poll mode in a msg during the above processing.
 			 * Clear msg_fd since thread messages will be polled directly in poll mode.
@@ -2743,6 +2811,70 @@ bool
 spdk_interrupt_mode_is_enabled(void)
 {
 	return g_interrupt_mode;
+}
+
+void
+spdk_spin_init(struct spdk_spinlock *sspin)
+{
+	int rc;
+
+	memset(sspin, 0, sizeof(*sspin));
+	rc = pthread_spin_init(&sspin->spinlock, PTHREAD_PROCESS_PRIVATE);
+	SPIN_ASSERT_RETURN_VOID(rc == 0, SPIN_ERR_PTHREAD);
+}
+
+void
+spdk_spin_destroy(struct spdk_spinlock *sspin)
+{
+	int rc;
+
+	SPIN_ASSERT_RETURN_VOID(sspin->thread == NULL, SPIN_ERR_LOCK_HELD);
+
+	rc = pthread_spin_destroy(&sspin->spinlock);
+	SPIN_ASSERT_RETURN_VOID(rc == 0, SPIN_ERR_PTHREAD);
+}
+
+void
+spdk_spin_lock(struct spdk_spinlock *sspin)
+{
+	struct spdk_thread *thread = spdk_get_thread();
+	int rc;
+
+	SPIN_ASSERT_RETURN_VOID(thread != NULL, SPIN_ERR_NOT_SPDK_THREAD);
+	SPIN_ASSERT_RETURN_VOID(thread != sspin->thread, SPIN_ERR_DEADLOCK);
+
+	rc = pthread_spin_lock(&sspin->spinlock);
+	SPIN_ASSERT_RETURN_VOID(rc == 0, SPIN_ERR_PTHREAD);
+
+	sspin->thread = thread;
+	sspin->thread->lock_count++;
+}
+
+void
+spdk_spin_unlock(struct spdk_spinlock *sspin)
+{
+	struct spdk_thread *thread = spdk_get_thread();
+	int rc;
+
+	SPIN_ASSERT_RETURN_VOID(thread != NULL, SPIN_ERR_NOT_SPDK_THREAD);
+	SPIN_ASSERT_RETURN_VOID(thread == sspin->thread, SPIN_ERR_WRONG_THREAD);
+
+	SPIN_ASSERT_RETURN_VOID(thread->lock_count > 0, SPIN_ERR_LOCK_COUNT);
+	thread->lock_count--;
+	sspin->thread = NULL;
+
+	rc = pthread_spin_unlock(&sspin->spinlock);
+	SPIN_ASSERT_RETURN_VOID(rc == 0, SPIN_ERR_PTHREAD);
+}
+
+bool
+spdk_spin_held(struct spdk_spinlock *sspin)
+{
+	struct spdk_thread *thread = spdk_get_thread();
+
+	SPIN_ASSERT_RETURN(thread != NULL, SPIN_ERR_NOT_SPDK_THREAD, false);
+
+	return sspin->thread == thread;
 }
 
 SPDK_LOG_REGISTER_COMPONENT(thread)
