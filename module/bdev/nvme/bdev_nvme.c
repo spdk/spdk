@@ -32,6 +32,8 @@
 #define SPDK_BDEV_NVME_DEFAULT_DELAY_CMD_SUBMIT true
 #define SPDK_BDEV_NVME_DEFAULT_KEEP_ALIVE_TIMEOUT_IN_MS	(10000)
 
+#define NSID_STR_LEN 10
+
 static int bdev_nvme_config_json(struct spdk_json_write_ctx *w);
 
 struct nvme_bdev_io {
@@ -120,6 +122,7 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.reconnect_delay_sec = 0,
 	.fast_io_fail_timeout_sec = 0,
 	.disable_auto_failback = false,
+	.generate_uuids = false,
 };
 
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
@@ -2907,6 +2910,120 @@ nvme_ns_set_ana_state(const struct spdk_nvme_ana_group_descriptor *desc, void *c
 	return 0;
 }
 
+static void
+merge_nsid_sn_strings(const char *sn, char *nsid, int8_t *out)
+{
+	int i = 0, j = 0;
+	int sn_len = strlen(sn), nsid_len = strlen(nsid);
+
+	for (i = 0; i < nsid_len; i++) {
+		out[i] = nsid[i];
+	}
+
+	/* Since last few characters are more likely to be unique,
+	 * even among the devices from the same manufacturer,
+	 * we use serial number in reverse. We also skip the
+	 * terminating character of serial number string. */
+	for (j = sn_len - 1; j >= 0; j--) {
+		if (i == SPDK_UUID_STRING_LEN - 1) {
+			break;
+		}
+
+		/* There may be a lot of spaces in serial number string
+		 * and they will generate equally large number of the
+		 * same character, so just skip them. */
+		if (sn[j] == ' ') {
+			continue;
+		}
+
+		out[i] = sn[j];
+		i++;
+	}
+}
+
+/* Dictionary of characters for UUID generation. */
+static char dict[17] = "0123456789abcdef";
+
+static struct spdk_uuid
+nvme_generate_uuid(const char *sn, uint32_t nsid)
+{
+	struct spdk_uuid new_uuid;
+	char buf[SPDK_UUID_STRING_LEN] = {'\0'}, merged_str[SPDK_UUID_STRING_LEN] = {'\0'};
+	char nsid_str[NSID_STR_LEN] = {'\0'}, tmp;
+	uint64_t i = 0, j = 0, rem, dict_size = strlen(dict);
+	int rc;
+
+	assert(strlen(sn) <= SPDK_NVME_CTRLR_SN_LEN);
+
+	snprintf(nsid_str, NSID_STR_LEN, "%" PRIu32, nsid);
+
+	merge_nsid_sn_strings(sn, nsid_str, merged_str);
+
+	while (i < SPDK_UUID_STRING_LEN) {
+		/* If 'j' is equal to indexes, where '-' should be placed,
+		 * insert this character and continue the loop without
+		 * increasing 'i'. */
+		if ((j == 8 || j == 13 || j == 18 || j == 23)) {
+			buf[j] = '-';
+			j++;
+
+			/* Break, if we ran out of characters in
+			 * serial number and namespace ID string. */
+			if (j == strlen(merged_str)) {
+				break;
+			}
+			continue;
+		}
+
+		/* Change character in shuffled string to lower case. */
+		tmp = tolower(merged_str[i]);
+
+		if (isxdigit(tmp)) {
+			/* If character can be represented by a hex
+			 * value as is, copy it to the result buffer. */
+			buf[j] = tmp;
+		} else {
+			/* Otherwise get its code and divide it
+			 * by the number of elements in dictionary.
+			 * The remainder will be the index of dictionary
+			 * character to replace tmp value with. */
+			rem = tmp % dict_size;
+			buf[j] = dict[rem];
+		}
+
+		i++;
+		j++;
+
+		/* Break, if we ran out of characters in
+		 * serial number and namespace ID string. */
+		if (j == strlen(merged_str)) {
+			break;
+		}
+	}
+
+	/* If there are not enough values to fill UUID,
+	 * the rest is taken from dictionary characters. */
+	i = 0;
+	while (j < SPDK_UUID_STRING_LEN - 1) {
+		if ((j == 8 || j == 13 || j == 18 || j == 23)) {
+			buf[j] = '-';
+			j++;
+			continue;
+		}
+		buf[j] = dict[i % dict_size];
+		i++;
+		j++;
+	}
+
+	rc = spdk_uuid_parse(&new_uuid, buf);
+	if (rc != 0) {
+		SPDK_ERRLOG("Unexpected spdk_uuid_parse failure on %s.\n", buf);
+		assert(false);
+	}
+
+	return new_uuid;
+}
+
 static int
 nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 		 struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns,
@@ -2919,6 +3036,7 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 	const struct spdk_nvme_ctrlr_opts *opts;
 	enum spdk_nvme_csi		csi;
 	uint32_t atomic_bs, phys_bs, bs;
+	char sn_tmp[SPDK_NVME_CTRLR_SN_LEN + 1] = {'\0'};
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 	csi = spdk_nvme_ns_get_csi(ns);
@@ -2974,6 +3092,9 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 		uuid = spdk_nvme_ns_get_uuid(ns);
 		if (uuid) {
 			disk->uuid = *uuid;
+		} else if (g_opts.generate_uuids) {
+			spdk_strcpy_pad(sn_tmp, cdata->sn, SPDK_NVME_CTRLR_SN_LEN + 1, '\0');
+			disk->uuid = nvme_generate_uuid(sn_tmp, spdk_nvme_ns_get_id(ns));
 		}
 	} else {
 		memcpy(&disk->uuid, nguid, sizeof(disk->uuid));
@@ -6579,6 +6700,7 @@ bdev_nvme_opts_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_int32(w, "ctrlr_loss_timeout_sec", g_opts.ctrlr_loss_timeout_sec);
 	spdk_json_write_named_uint32(w, "reconnect_delay_sec", g_opts.reconnect_delay_sec);
 	spdk_json_write_named_uint32(w, "fast_io_fail_timeout_sec", g_opts.fast_io_fail_timeout_sec);
+	spdk_json_write_named_bool(w, "generate_uuids", g_opts.generate_uuids);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);

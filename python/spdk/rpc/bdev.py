@@ -521,7 +521,7 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
                           nvme_adminq_poll_period_us=None, nvme_ioq_poll_period_us=None, io_queue_requests=None,
                           delay_cmd_submit=None, transport_retry_count=None, bdev_retry_count=None,
                           transport_ack_timeout=None, ctrlr_loss_timeout_sec=None, reconnect_delay_sec=None,
-                          fast_io_fail_timeout_sec=None, disable_auto_failback=None):
+                          fast_io_fail_timeout_sec=None, disable_auto_failback=None, generate_uuids=None):
     """Set options for the bdev nvme. This is startup command.
 
     Args:
@@ -559,6 +559,8 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
         This can be overridden by bdev_nvme_attach_controller. (optional)
         disable_auto_failback: Disable automatic failback. bdev_nvme_set_preferred_path can be used to do manual failback.
         By default, immediately failback to the preferred I/O path if it is restored. (optional)
+        generate_uuids: Enable generation of unique identifiers for NVMe bdevs only if they do not provide UUID themselves.
+        These strings are based on device serial number and namespace ID and will always be the same for that device.
 
     """
     params = {}
@@ -623,6 +625,9 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
 
     if disable_auto_failback is not None:
         params['disable_auto_failback'] = disable_auto_failback
+
+    if generate_uuids is not None:
+        params['generate_uuids'] = generate_uuids
 
     return client.call('bdev_nvme_set_options', params)
 

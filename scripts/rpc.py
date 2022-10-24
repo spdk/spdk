@@ -556,7 +556,8 @@ if __name__ == "__main__":
                                        ctrlr_loss_timeout_sec=args.ctrlr_loss_timeout_sec,
                                        reconnect_delay_sec=args.reconnect_delay_sec,
                                        fast_io_fail_timeout_sec=args.fast_io_fail_timeout_sec,
-                                       disable_auto_failback=args.disable_auto_failback)
+                                       disable_auto_failback=args.disable_auto_failback,
+                                       generate_uuids=args.generate_uuids)
 
     p = subparsers.add_parser('bdev_nvme_set_options',
                               help='Set options for the bdev nvme type. This is startup command.')
@@ -621,6 +622,10 @@ if __name__ == "__main__":
                    help="""Disable automatic failback. bdev_nvme_set_preferred_path can be used to do manual failback.
                    By default, immediately failback to the preferred I/O path if it restored.""",
                    action='store_true')
+    p.add_argument('--generate-uuids',
+                   help="""Enable generation of unique identifiers for NVMe bdevs only if they do
+                   not provide UUID themselves. These strings are based on device serial number and
+                   namespace ID and will always be the same for that device.""", action='store_true')
 
     p.set_defaults(func=bdev_nvme_set_options)
 

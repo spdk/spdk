@@ -27,6 +27,12 @@ New `spdk_bdev_copy_blocks` and `spdk_bdev_get_max_copy` APIs to support copy co
 
 A new API `spdk_bdev_io_get_submit_tsc` was added to get the submit_tsc of the bdev I/O.
 
+Bdevs will no longer have UUIDs generated based on timestamp and are responsible for
+setting this field themselves. Generation of UUIDs for NVMe bdevs may be enabled by
+running `bdev_nvme_set_options` RPC with `--generate-uuids` option. These identifiers
+are based on serial number and namespace ID and will always be the same for a given
+device.
+
 ### event
 
 Added core lock file mechanism to prevent the same CPU cores from being used by multiple

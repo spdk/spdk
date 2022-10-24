@@ -380,8 +380,7 @@ struct spdk_bdev {
 	/**
 	 * UUID for this bdev.
 	 *
-	 * Fill with zeroes if no uuid is available. The bdev layer
-	 * will automatically populate this if necessary.
+	 * Fill with zeroes if no uuid is available.
 	 */
 	struct spdk_uuid uuid;
 
