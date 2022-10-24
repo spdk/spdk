@@ -837,7 +837,7 @@ claim_test(void)
 
 	rc = spdk_bdev_module_claim_bdev(bdev, NULL, &bdev_ut_if);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(bdev->internal.claim_module == &bdev_ut_if);
+	CU_ASSERT(bdev->internal.claim.v1.module == &bdev_ut_if);
 
 	/* There should be only one open descriptor and it should still be ro */
 	count = 0;
@@ -852,7 +852,7 @@ claim_test(void)
 	spdk_bdev_module_release_bdev(bdev);
 	rc = spdk_bdev_module_claim_bdev(bdev, desc, &bdev_ut_if);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(bdev->internal.claim_module == &bdev_ut_if);
+	CU_ASSERT(bdev->internal.claim.v1.module == &bdev_ut_if);
 
 	/* There should be only one open descriptor and it should be rw */
 	count = 0;
@@ -6241,7 +6241,7 @@ examine_locks(void)
 	bdev = allocate_bdev_ctx("bdev0", &ctx);
 	CU_ASSERT(ctx.examine_config_count == 1);
 	CU_ASSERT(ctx.examine_disk_count == 1);
-	CU_ASSERT(bdev->internal.claim_module == NULL);
+	CU_ASSERT(bdev->internal.claim.v1.module == NULL);
 	free_bdev(bdev);
 
 	/* Exercise the other path that is taken when examine_config() takes a claim. */
@@ -6251,8 +6251,9 @@ examine_locks(void)
 	bdev = allocate_bdev_ctx("bdev0", &ctx);
 	CU_ASSERT(ctx.examine_config_count == 1);
 	CU_ASSERT(ctx.examine_disk_count == 1);
-	CU_ASSERT(bdev->internal.claim_module == &vbdev_ut_if);
+	CU_ASSERT(bdev->internal.claim.v1.module == &vbdev_ut_if);
 	spdk_bdev_module_release_bdev(bdev);
+	CU_ASSERT(bdev->internal.claim.v1.module == NULL);
 	free_bdev(bdev);
 }
 

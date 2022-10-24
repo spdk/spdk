@@ -658,13 +658,13 @@ bdev_examine(struct spdk_bdev *bdev)
 			spdk_spin_unlock(&module->internal.spinlock);
 			module->examine_config(bdev);
 			if (action != module->internal.action_in_progress) {
-				SPDK_ERRLOG("examine_config for module %s did not call spdk_bdev_module_examine_done()\n",
-					    module->name);
+				SPDK_ERRLOG("examine_config for module %s did not call "
+					    "spdk_bdev_module_examine_done()\n", module->name);
 			}
 		}
 	}
 
-	module = bdev->internal.claim_module;
+	module = bdev->internal.claim.v1.module;
 	if (module != NULL) {
 		if (module->examine_disk) {
 			spdk_spin_lock(&module->internal.spinlock);
@@ -767,7 +767,7 @@ static struct spdk_bdev *
 _bdev_next_leaf(struct spdk_bdev *bdev)
 {
 	while (bdev != NULL) {
-		if (bdev->internal.claim_module == NULL) {
+		if (bdev->internal.claim.v1.module == NULL) {
 			return bdev;
 		} else {
 			bdev = TAILQ_NEXT(bdev, internal.link);
@@ -1823,9 +1823,9 @@ bdev_finish_unregister_bdevs_iter(void *cb_arg, int bdeverrno)
 	for (bdev = TAILQ_LAST(&g_bdev_mgr.bdevs, spdk_bdev_list);
 	     bdev; bdev = TAILQ_PREV(bdev, spdk_bdev_list, internal.link)) {
 		spdk_spin_lock(&bdev->internal.spinlock);
-		if (bdev->internal.claim_module != NULL) {
+		if (bdev->internal.claim.v1.module != NULL) {
 			SPDK_DEBUGLOG(bdev, "Skipping claimed bdev '%s'(<-'%s').\n",
-				      bdev->name, bdev->internal.claim_module->name);
+				      bdev->name, bdev->internal.claim.v1.module->name);
 			spdk_spin_unlock(&bdev->internal.spinlock);
 			continue;
 		}
@@ -6724,7 +6724,7 @@ bdev_register(struct spdk_bdev *bdev)
 
 	bdev->internal.status = SPDK_BDEV_STATUS_READY;
 	bdev->internal.measured_queue_depth = UINT64_MAX;
-	bdev->internal.claim_module = NULL;
+	bdev->internal.claim.v1.module = NULL;
 	bdev->internal.qd_poller = NULL;
 	bdev->internal.qos = NULL;
 
@@ -7056,9 +7056,9 @@ bdev_open(struct spdk_bdev *bdev, bool write, struct spdk_bdev_desc *desc)
 		return -ENODEV;
 	}
 
-	if (write && bdev->internal.claim_module) {
+	if (write && bdev->internal.claim.v1.module) {
 		SPDK_ERRLOG("Could not open %s - %s module already claimed it\n",
-			    bdev->name, bdev->internal.claim_module->name);
+			    bdev->name, bdev->internal.claim.v1.module->name);
 		spdk_spin_unlock(&bdev->internal.spinlock);
 		return -EPERM;
 	}
@@ -7285,9 +7285,9 @@ spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 {
 	spdk_spin_lock(&bdev->internal.spinlock);
 
-	if (bdev->internal.claim_module != NULL) {
+	if (bdev->internal.claim.v1.module != NULL) {
 		SPDK_ERRLOG("bdev %s already claimed by module %s\n", bdev->name,
-			    bdev->internal.claim_module->name);
+			    bdev->internal.claim.v1.module->name);
 		spdk_spin_unlock(&bdev->internal.spinlock);
 		return -EPERM;
 	}
@@ -7296,7 +7296,7 @@ spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		desc->write = true;
 	}
 
-	bdev->internal.claim_module = module;
+	bdev->internal.claim.v1.module = module;
 
 	spdk_spin_unlock(&bdev->internal.spinlock);
 	return 0;
@@ -7307,8 +7307,8 @@ spdk_bdev_module_release_bdev(struct spdk_bdev *bdev)
 {
 	spdk_spin_lock(&bdev->internal.spinlock);
 
-	assert(bdev->internal.claim_module != NULL);
-	bdev->internal.claim_module = NULL;
+	assert(bdev->internal.claim.v1.module != NULL);
+	bdev->internal.claim.v1.module = NULL;
 
 	spdk_spin_unlock(&bdev->internal.spinlock);
 }

@@ -522,12 +522,17 @@ struct spdk_bdev {
 		/** The bdev status */
 		enum spdk_bdev_status status;
 
-		/**
-		 * Pointer to the module that has claimed this bdev for purposes of creating virtual
-		 * bdevs on top of it. Set to NULL if the bdev has not been claimed. Must hold
-		 * spinlock on all updates.
-		 */
-		struct spdk_bdev_module *claim_module;
+		/** Which module has claimed this bdev. Must hold spinlock on all updates. */
+		union __bdev_internal_claim {
+			struct __bdev_internal_claim_v1 {
+				/**
+				 * Pointer to the module that has claimed this bdev for purposes of
+				 * creating virtual bdevs on top of it. Set to NULL if the bdev has
+				 * not been claimed.
+				 */
+				struct spdk_bdev_module		*module;
+			} v1;
+		} claim;
 
 		/** Callback function that will be called after bdev destruct is completed. */
 		spdk_bdev_unregister_cb	unregister_cb;
