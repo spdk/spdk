@@ -1593,7 +1593,7 @@ nvme_tcp_pdu_psh_handle(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 }
 
 static int
-nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
+nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped, uint32_t max_completions)
 {
 	int rc = 0;
 	struct nvme_tcp_pdu *pdu;
@@ -1687,7 +1687,7 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 			assert(0);
 			break;
 		}
-	} while (prev_state != tqpair->recv_state);
+	} while (prev_state != tqpair->recv_state && *reaped + tqpair->async_complete < max_completions);
 
 out:
 	*reaped += tqpair->async_complete;
@@ -1763,7 +1763,7 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 
 	reaped = 0;
 	do {
-		rc = nvme_tcp_read_pdu(tqpair, &reaped);
+		rc = nvme_tcp_read_pdu(tqpair, &reaped, max_completions);
 		if (rc < 0) {
 			SPDK_DEBUGLOG(nvme, "Error polling CQ! (%d): %s\n",
 				      errno, spdk_strerror(errno));
