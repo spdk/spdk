@@ -162,6 +162,7 @@ vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bde
 	struct error_channel *ch = spdk_io_channel_get_ctx(_ch);
 	struct error_disk *error_disk = bdev_io->bdev->ctxt;
 	uint32_t error_type;
+	int rc;
 
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
 		vbdev_error_reset(error_disk, bdev_io);
@@ -169,20 +170,26 @@ vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bde
 	}
 
 	error_type = vbdev_error_get_error_type(error_disk, bdev_io->type);
-	if (error_type == 0) {
-		int rc = spdk_bdev_part_submit_request(&ch->part_ch, bdev_io);
+	switch (error_type) {
+	case VBDEV_IO_FAILURE:
+		error_disk->error_vector[bdev_io->type].error_num--;
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		break;
+	case VBDEV_IO_PENDING:
+		TAILQ_INSERT_TAIL(&error_disk->pending_ios, bdev_io, module_link);
+		error_disk->error_vector[bdev_io->type].error_num--;
+		break;
+	case 0:
+		rc = spdk_bdev_part_submit_request(&ch->part_ch, bdev_io);
 
 		if (rc) {
 			SPDK_ERRLOG("bdev_error: submit request failed, rc=%d\n", rc);
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		}
-		return;
-	} else if (error_type == VBDEV_IO_FAILURE) {
-		error_disk->error_vector[bdev_io->type].error_num--;
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-	} else if (error_type == VBDEV_IO_PENDING) {
-		TAILQ_INSERT_TAIL(&error_disk->pending_ios, bdev_io, module_link);
-		error_disk->error_vector[bdev_io->type].error_num--;
+		break;
+	default:
+		assert(false);
+		break;
 	}
 }
 
