@@ -2846,14 +2846,6 @@ _bdev_io_submit(void *ctx)
 	struct spdk_bdev_io *bdev_io = ctx;
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
-	uint64_t tsc;
-
-	tsc = spdk_get_ticks();
-	bdev_io->internal.submit_tsc = tsc;
-	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_START, 0, 0, (uintptr_t)bdev_io,
-			      (uint64_t)bdev_io->type, bdev_io->internal.caller_ctx,
-			      bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
-			      spdk_bdev_get_name(bdev));
 
 	if (spdk_likely(bdev_ch->flags == 0)) {
 		bdev_io_do_submit(bdev_ch, bdev_io);
@@ -2956,12 +2948,13 @@ bdev_io_submit(struct spdk_bdev_io *bdev_io)
 
 	TAILQ_INSERT_TAIL(&ch->io_submitted, bdev_io, internal.ch_link);
 
+	bdev_io->internal.submit_tsc = spdk_get_ticks();
+	spdk_trace_record_tsc(bdev_io->internal.submit_tsc, TRACE_BDEV_IO_START, 0, 0,
+			      (uintptr_t)bdev_io, (uint64_t)bdev_io->type, bdev_io->internal.caller_ctx,
+			      bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
+			      spdk_bdev_get_name(bdev));
+
 	if (bdev_io_should_split(bdev_io)) {
-		bdev_io->internal.submit_tsc = spdk_get_ticks();
-		spdk_trace_record_tsc(bdev_io->internal.submit_tsc, TRACE_BDEV_IO_START, 0, 0,
-				      (uintptr_t)bdev_io, (uint64_t)bdev_io->type, bdev_io->internal.caller_ctx,
-				      bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
-				      spdk_bdev_get_name(bdev));
 		bdev_io_split(NULL, bdev_io);
 		return;
 	}
