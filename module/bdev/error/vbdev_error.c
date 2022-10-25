@@ -140,6 +140,16 @@ vbdev_error_reset(struct error_disk *error_disk, struct spdk_bdev_io *bdev_io)
 static uint32_t
 vbdev_error_get_error_type(struct error_disk *error_disk, uint32_t io_type)
 {
+	switch (io_type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+		break;
+	default:
+		return 0;
+	}
+
 	if (error_disk->error_vector[io_type].error_num) {
 		return error_disk->error_vector[io_type].error_type;
 	}
@@ -153,18 +163,8 @@ vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bde
 	struct error_disk *error_disk = bdev_io->bdev->ctxt;
 	uint32_t error_type;
 
-	switch (bdev_io->type) {
-	case SPDK_BDEV_IO_TYPE_READ:
-	case SPDK_BDEV_IO_TYPE_WRITE:
-	case SPDK_BDEV_IO_TYPE_UNMAP:
-	case SPDK_BDEV_IO_TYPE_FLUSH:
-		break;
-	case SPDK_BDEV_IO_TYPE_RESET:
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
 		vbdev_error_reset(error_disk, bdev_io);
-		return;
-	default:
-		SPDK_ERRLOG("Error Injection: unknown I/O type %d\n", bdev_io->type);
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
 
