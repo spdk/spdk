@@ -648,8 +648,10 @@ bdev_examine(struct spdk_bdev *bdev)
 
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
 		if (module->examine_config && bdev_ok_to_examine(bdev)) {
+			spdk_spin_lock(&module->internal.spinlock);
 			action = module->internal.action_in_progress;
 			module->internal.action_in_progress++;
+			spdk_spin_unlock(&module->internal.spinlock);
 			module->examine_config(bdev);
 			if (action != module->internal.action_in_progress) {
 				SPDK_ERRLOG("examine_config for module %s did not call spdk_bdev_module_examine_done()\n",
@@ -658,17 +660,22 @@ bdev_examine(struct spdk_bdev *bdev)
 		}
 	}
 
-	if (bdev->internal.claim_module && bdev_ok_to_examine(bdev)) {
-		if (bdev->internal.claim_module->examine_disk) {
-			bdev->internal.claim_module->internal.action_in_progress++;
-			bdev->internal.claim_module->examine_disk(bdev);
+	module = bdev->internal.claim_module;
+	if (module != NULL && bdev_ok_to_examine(bdev)) {
+		if (module->examine_disk) {
+			spdk_spin_lock(&module->internal.spinlock);
+			module->internal.action_in_progress++;
+			spdk_spin_unlock(&module->internal.spinlock);
+			module->examine_disk(bdev);
 		}
 		return;
 	}
 
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
 		if (module->examine_disk && bdev_ok_to_examine(bdev)) {
+			spdk_spin_lock(&module->internal.spinlock);
 			module->internal.action_in_progress++;
+			spdk_spin_unlock(&module->internal.spinlock);
 			module->examine_disk(bdev);
 		}
 	}
@@ -1562,8 +1569,10 @@ bdev_module_action_complete(void)
 static void
 bdev_module_action_done(struct spdk_bdev_module *module)
 {
+	spdk_spin_lock(&module->internal.spinlock);
 	assert(module->internal.action_in_progress > 0);
 	module->internal.action_in_progress--;
+	spdk_spin_unlock(&module->internal.spinlock);
 	bdev_module_action_complete();
 }
 
@@ -1587,7 +1596,10 @@ bdev_init_failed(void *cb_arg)
 {
 	struct spdk_bdev_module *module = cb_arg;
 
+	spdk_spin_lock(&module->internal.spinlock);
+	assert(module->internal.action_in_progress > 0);
 	module->internal.action_in_progress--;
+	spdk_spin_unlock(&module->internal.spinlock);
 	bdev_init_complete(-1);
 }
 
@@ -1600,13 +1612,17 @@ bdev_modules_init(void)
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
 		g_resume_bdev_module = module;
 		if (module->async_init) {
+			spdk_spin_lock(&module->internal.spinlock);
 			module->internal.action_in_progress = 1;
+			spdk_spin_unlock(&module->internal.spinlock);
 		}
 		rc = module->module_init();
 		if (rc != 0) {
 			/* Bump action_in_progress to prevent other modules from completion of modules_init
 			 * Send message to defer application shutdown until resources are cleaned up */
+			spdk_spin_lock(&module->internal.spinlock);
 			module->internal.action_in_progress = 1;
+			spdk_spin_unlock(&module->internal.spinlock);
 			spdk_thread_send_msg(spdk_get_thread(), bdev_init_failed, module);
 			return rc;
 		}
@@ -7445,6 +7461,8 @@ spdk_bdev_module_list_add(struct spdk_bdev_module *bdev_module)
 		SPDK_ERRLOG("ERROR: module '%s' already registered.\n", bdev_module->name);
 		assert(false);
 	}
+
+	spdk_spin_init(&bdev_module->internal.spinlock);
 
 	/*
 	 * Modules with examine callbacks must be initialized first, so they are
