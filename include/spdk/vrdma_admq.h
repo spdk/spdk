@@ -260,7 +260,7 @@ struct vrdma_create_mr_req {
 	struct vrdma_sge {
 		uint64_t pa;
 		uint32_t length;
-	} sge_list[8];
+	} sge_list[MAX_VRDMA_MR_SGE_NUM];
 } __attribute__((packed));
 
 struct vrdma_create_mr_resp {
