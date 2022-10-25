@@ -279,7 +279,7 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
     sctrl_attr.npgs = attr->nthreads;
     sctrl_attr.force_in_order = attr->force_in_order;
     sctrl_attr.suspended = attr->suspended;
-    sctrl_attr.adminq_size = VRDMA_DMA_ELEM_SIZE;
+    sctrl_attr.adminq_dma_entry_size = VRDMA_DMA_ELEM_SIZE;
     sctrl_attr.adminq_buf = ctrl->sw_qp.admq;
     sctrl_attr.adminq_dma_comp = (struct snap_dma_completion *)&ctrl->sw_qp.init_ci;
     ctrl->sctrl = snap_vrdma_ctrl_open(ctrl->sctx, &sctrl_attr);
