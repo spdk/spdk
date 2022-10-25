@@ -156,7 +156,7 @@ print_event(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint64_t t
 			print_object_id(d, entry);
 			print_float("time", us);
 		} else {
-			printf("id:    N/A");
+			printf("id:    %-17s", "N/A");
 		}
 	} else if (e->object_id != 0) {
 		print_ptr("object", e->object_id);
