@@ -1376,6 +1376,7 @@ test_nvme_tcp_ctrlr_connect_qpair(void)
 	tqpair->send_pdu = &pdu;
 	tqpair->qpair.ctrlr = &ctrlr;
 	tqpair->qpair.state = NVME_QPAIR_CONNECTING;
+	tqpair->num_entries = 128;
 	ic_req = &pdu.hdr.ic_req;
 
 	tqpair->recv_pdu->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_RESP;

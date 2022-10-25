@@ -1600,8 +1600,15 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped, uint32_t max_
 	uint32_t data_len;
 	enum nvme_tcp_pdu_recv_state prev_state;
 
+	*reaped = tqpair->async_complete;
+	tqpair->async_complete = 0;
+
 	/* The loop here is to allow for several back-to-back state changes. */
 	do {
+		if (*reaped >= max_completions) {
+			break;
+		}
+
 		prev_state = tqpair->recv_state;
 		pdu = tqpair->recv_pdu;
 		switch (tqpair->recv_state) {
@@ -1622,8 +1629,7 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped, uint32_t max_
 			}
 			pdu->ch_valid_bytes += rc;
 			if (pdu->ch_valid_bytes < sizeof(struct spdk_nvme_tcp_common_pdu_hdr)) {
-				rc =  NVME_TCP_PDU_IN_PROGRESS;
-				goto out;
+				return NVME_TCP_PDU_IN_PROGRESS;
 			}
 
 			/* The command header of this PDU has now been read from the socket. */
@@ -1642,8 +1648,7 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped, uint32_t max_
 
 			pdu->psh_valid_bytes += rc;
 			if (pdu->psh_valid_bytes < pdu->psh_len) {
-				rc =  NVME_TCP_PDU_IN_PROGRESS;
-				goto out;
+				return NVME_TCP_PDU_IN_PROGRESS;
 			}
 
 			/* All header(ch, psh, head digist) of this PDU has now been read from the socket. */
@@ -1671,8 +1676,7 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped, uint32_t max_
 
 			pdu->rw_offset += rc;
 			if (pdu->rw_offset < data_len) {
-				rc =  NVME_TCP_PDU_IN_PROGRESS;
-				goto out;
+				return NVME_TCP_PDU_IN_PROGRESS;
 			}
 
 			assert(pdu->rw_offset == data_len);
@@ -1681,19 +1685,14 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped, uint32_t max_
 			break;
 		case NVME_TCP_PDU_RECV_STATE_ERROR:
 			memset(pdu, 0, sizeof(struct nvme_tcp_pdu));
-			rc = NVME_TCP_PDU_FATAL;
-			break;
+			return NVME_TCP_PDU_FATAL;
 		default:
 			assert(0);
 			break;
 		}
-	} while (prev_state != tqpair->recv_state && *reaped + tqpair->async_complete < max_completions);
+	} while (prev_state != tqpair->recv_state);
 
-out:
-	*reaped += tqpair->async_complete;
-	tqpair->async_complete = 0;
-
-	return rc;
+	return rc > 0 ? 0 : rc;
 }
 
 static void
@@ -1758,24 +1757,18 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 	}
 
 	if (max_completions == 0) {
-		max_completions = tqpair->num_entries;
+		max_completions = spdk_max(tqpair->num_entries, 1);
 	} else {
 		max_completions = spdk_min(max_completions, tqpair->num_entries);
 	}
 
 	reaped = 0;
-	do {
-		rc = nvme_tcp_read_pdu(tqpair, &reaped, max_completions);
-		if (rc < 0) {
-			SPDK_DEBUGLOG(nvme, "Error polling CQ! (%d): %s\n",
-				      errno, spdk_strerror(errno));
-			goto fail;
-		} else if (rc == 0) {
-			/* Partial PDU is read */
-			break;
-		}
-
-	} while (reaped < max_completions);
+	rc = nvme_tcp_read_pdu(tqpair, &reaped, max_completions);
+	if (rc < 0) {
+		SPDK_DEBUGLOG(nvme, "Error polling CQ! (%d): %s\n",
+			      errno, spdk_strerror(errno));
+		goto fail;
+	}
 
 	if (spdk_unlikely(tqpair->qpair.ctrlr->timeout_enabled)) {
 		nvme_tcp_qpair_check_timeout(qpair);
