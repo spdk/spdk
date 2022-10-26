@@ -139,6 +139,7 @@ static void vrdma_ctrl_dev_init(struct vrdma_ctrl *ctrl)
 static void vrdma_aq_open_dev(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
+	SPDK_ERRLOG("\nlizh vrdma_aq_open_dev...start\n");
 	if (ctrl->srv_ops->vrdma_device_notify(&ctrl->dev)) {
 		aqe->resp.open_device_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
@@ -154,6 +155,7 @@ static void vrdma_aq_query_dev(struct vrdma_ctrl *ctrl,
 	struct snap_device *sdev = ctrl->sctrl->sdev;
 	const char fw_ver[] = "Unkown";
 
+	SPDK_ERRLOG("\nlizh vrdma_aq_query_dev...start\n");
 	memcpy(aqe->resp.query_device_resp.fw_ver, fw_ver, strlen(fw_ver));
 	aqe->resp.query_device_resp.dev_cap_flags = VRDMA_DEVICE_RC_RNR_NAK_GEN;
 	aqe->resp.query_device_resp.vendor_id = sdev->pci->pci_attr.vendor_id;
@@ -172,6 +174,7 @@ static void vrdma_aq_query_dev(struct vrdma_ctrl *ctrl,
 static void vrdma_aq_query_port(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
+	SPDK_ERRLOG("\nlizh vrdma_aq_query_port...start\n");
 	aqe->resp.query_port_resp.state = IBV_PORT_ACTIVE; /* hardcode just for POC*/
 	aqe->resp.query_port_resp.max_mtu = ctrl->sctrl->bar_curr->mtu;
 	aqe->resp.query_port_resp.active_mtu = ctrl->sctrl->bar_curr->mtu;
@@ -189,8 +192,7 @@ static void vrdma_aq_query_port(struct vrdma_ctrl *ctrl,
 static void vrdma_aq_query_gid(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
-	//struct snap_device *sdev = ctrl->sctrl->sdev;
-
+	SPDK_ERRLOG("\nlizh vrdma_aq_query_gid...start\n");
 	if (ctrl->srv_ops->vrdma_device_query_gid(&ctrl->dev, aqe)) {
 		aqe->resp.query_gid_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
@@ -198,6 +200,9 @@ static void vrdma_aq_query_gid(struct vrdma_ctrl *ctrl,
 	}
 	memcpy(aqe->resp.query_gid_resp.gid, ctrl->dev.gid, VRDMA_DEV_GID_LEN);
 	aqe->resp.query_gid_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
+	SPDK_ERRLOG("\nlizh vrdma_aq_query_gid...gid=0x%x%x%x%x\n",
+	aqe->resp.query_gid_resp.gid[0], aqe->resp.query_gid_resp.gid[1],
+	aqe->resp.query_gid_resp.gid[2], aqe->resp.query_gid_resp.gid[3]);
 }
 
 static void vrdma_aq_modify_gid(struct vrdma_ctrl *ctrl,
@@ -205,7 +210,7 @@ static void vrdma_aq_modify_gid(struct vrdma_ctrl *ctrl,
 {
 	struct vrdma_cmd_param param;
 	
-	
+	SPDK_ERRLOG("\nlizh vrdma_aq_modify_gid...start\n");
 	memcpy(param.param.modify_gid_param.gid, aqe->req.modify_gid_req.gid,
 			VRDMA_DEV_GID_LEN);
 	if (ctrl->srv_ops->vrdma_device_modify_gid(&ctrl->dev, aqe, &param)) {
@@ -215,6 +220,9 @@ static void vrdma_aq_modify_gid(struct vrdma_ctrl *ctrl,
 	}
 	memcpy(ctrl->dev.gid, aqe->req.modify_gid_req.gid, VRDMA_DEV_GID_LEN);
 	aqe->resp.modify_gid_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
+	SPDK_ERRLOG("\nlizh vrdma_aq_modify_gid...gid=0x%x%x%x%x\n",
+	ctrl->dev.gid[0], ctrl->dev.gid[1],
+	ctrl->dev.gid[2], ctrl->dev.gid[3]);
 }
 
 static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
@@ -224,6 +232,7 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 	struct spdk_vrdma_pd *vpd;
 	uint32_t pd_idx;
 
+	SPDK_ERRLOG("\nlizh vrdma_aq_create_pd...start\n");
 	if (g_vpd_cnt > VRDMA_MAX_PD_NUM ||
 		!ctrl->vdev ||
 		ctrl->vdev->vpd_cnt > VRDMA_DEV_MAX_PD) {
@@ -262,6 +271,7 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 	LIST_INSERT_HEAD(&ctrl->vdev->vpd_list, vpd, entry);
 	aqe->resp.create_pd_resp.pd_handle = pd_idx;
 	aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
+	SPDK_ERRLOG("\nlizh vrdma_aq_create_pd...pd_idx %d done\n", pd_idx);
 	return;
 
 free_ibpd:
@@ -275,6 +285,8 @@ static void vrdma_aq_destroy_pd(struct vrdma_ctrl *ctrl,
 {
 	struct spdk_vrdma_pd *vpd = NULL;
 
+	SPDK_ERRLOG("\nlizh vrdma_aq_destroy_pd...pd_handle %d start\n",
+	aqe->req.destroy_pd_req.pd_handle);
 	if (!g_vpd_cnt || !ctrl->vdev ||
 		!ctrl->vdev->vpd_cnt ||
 		!aqe->req.destroy_pd_req.pd_handle) {
@@ -310,6 +322,7 @@ static void vrdma_aq_destroy_pd(struct vrdma_ctrl *ctrl,
 	g_vpd_cnt--;
 	ctrl->vdev->vpd_cnt--;
 	aqe->resp.destroy_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
+	SPDK_ERRLOG("\nlizh vrdma_aq_destroy_pd...done\n");
 }
 
 static inline unsigned int log2above(unsigned int v)
@@ -376,8 +389,8 @@ static void vrdma_indirect_mkey_attr_init(struct snap_device *dev,
 	attr->klm_num = log->num_sge;
 	*total_len = size;
 
-	SPDK_NOTICELOG("dev(%s): start_addr:0x%lx, total_size:0x%lx, "
-		  "crossing key:0x%x, log_entity_size:0x%x klm_num:0x%x",
+	SPDK_NOTICELOG("\ndev(%s): start_addr:0x%lx, total_size:0x%lx, "
+		  "crossing key:0x%x, log_entity_size:0x%x klm_num:0x%x\n",
 		  dev->pci->pci_number, attr->addr, attr->size,
 		  crossing_mkey->mkey, attr->log_entity_size, attr->klm_num);
 }
@@ -390,7 +403,7 @@ static int vrdma_destroy_indirect_mkey(struct snap_device *dev,
 	if (lattr->indirect_mkey) {
 		ret = snap_destroy_indirect_mkey(lattr->indirect_mkey);
 		if (ret)
-			SPDK_ERRLOG("dev(%s): Failed to destroy indirect mkey, err(%d)",
+			SPDK_ERRLOG("\ndev(%s): Failed to destroy indirect mkey, err(%d)",
 				  dev->pci->pci_number, ret);
 		lattr->indirect_mkey = NULL;
 		free(lattr->klm_array);
@@ -420,7 +433,7 @@ vrdma_create_indirect_mkey(struct snap_device *dev,
 
 	indirect_mkey = snap_create_indirect_mkey(vmr->vpd->ibpd, &attr);
 	if (indirect_mkey == NULL) {
-		SPDK_ERRLOG("dev(%s): Failed to create indirect mkey",
+		SPDK_ERRLOG("\ndev(%s): Failed to create indirect mkey",
 			  dev->pci->pci_number);
 		goto free_klm_array;
 	}
@@ -458,7 +471,7 @@ static int vrdma_create_remote_mkey(struct vrdma_ctrl *ctrl,
 		lattr->log_base = 0;
 	}
 
-	SPDK_NOTICELOG("dev(%s): Created remote mkey=0x%x, "
+	SPDK_NOTICELOG("\ndev(%s): Created remote mkey=0x%x, "
 	"start_vaddr=0x%lx, base=0x%lx, size=0x%x",
 		  ctrl->name, lattr->mkey, lattr->start_vaddr, lattr->log_base, lattr->log_size);
 
@@ -475,7 +488,7 @@ void vrdma_destroy_remote_mkey(struct vrdma_ctrl *ctrl,
 	struct spdk_vrdma_mr_log *lattr = &vmr->mr_log;
 
 	if (!lattr->mkey) {
-		SPDK_ERRLOG("dev(%s): remote mkey is not created", ctrl->name);
+		SPDK_ERRLOG("\ndev(%s): remote mkey is not created", ctrl->name);
 		return;
 	}
 	vrdma_destroy_indirect_mkey(ctrl->sctrl->sdev, lattr);
@@ -508,6 +521,7 @@ static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
 			(1 << ctrl->sctx->vrdma_caps.log_max_mkey));
 	uint32_t i, mr_idx, total_len = 0;
 
+	SPDK_ERRLOG("\nlizh vrdma_aq_reg_mr...start\n");
 	if (g_vmr_cnt > VRDMA_MAX_MR_NUM ||
 		!ctrl->vdev ||
 		ctrl->vdev->vmr_cnt > dev_max_mr) {
@@ -572,6 +586,7 @@ static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
 	aqe->resp.create_mr_resp.rkey = vmr->mr_log.mkey;
 	aqe->resp.create_mr_resp.lkey = aqe->resp.create_mr_resp.rkey;
 	aqe->resp.create_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
+	SPDK_ERRLOG("\nlizh vrdma_aq_reg_mr...mr_idx %d done\n", mr_idx);
 	return;
 
 free_mkey:
@@ -587,6 +602,8 @@ static void vrdma_aq_dereg_mr(struct vrdma_ctrl *ctrl,
 	struct spdk_vrdma_mr *vmr = NULL;
 	struct vrdma_cmd_param param;
 
+	SPDK_ERRLOG("\nlizh vrdma_aq_dereg_mr..lkey=0x%x.start\n",
+	aqe->req.destroy_mr_req.lkey);
 	if (!g_vmr_cnt || !ctrl->vdev ||
 		!ctrl->vdev->vmr_cnt ||
 		!aqe->req.destroy_mr_req.lkey) {
@@ -622,6 +639,7 @@ static void vrdma_aq_dereg_mr(struct vrdma_ctrl *ctrl,
 	vmr->vpd->ref_cnt--;
 	free(vmr);
 	aqe->resp.destroy_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
+	SPDK_ERRLOG("\nlizh vrdma_aq_dereg_mr...done\n");
 }
 
 static void vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,
@@ -713,9 +731,12 @@ int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
 			struct vrdma_admin_cmd_entry *aqe)
 {
 	if (!ctrl || aqe_sanity_check(aqe)) {
+		SPDK_ERRLOG("\nlizh vrdma_parse_admq_entry check input fail\n");
 		return -1;
 	}
 
+	SPDK_ERRLOG("\nlizh vrdma_parse_admq_entry aqe->hdr.opcode %d\n",
+			aqe->hdr.opcode);
 	switch (aqe->hdr.opcode) {
 			case VRDMA_ADMIN_OPEN_DEVICE:
 				vrdma_aq_open_dev(ctrl, aqe);
@@ -781,6 +802,22 @@ int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
 				return -1;		
 	}
 
+	/* lizh:Just for test*/
+	int i;
+	SPDK_ERRLOG("\nhdr:seq=0x%x magic=0x%x version=%d is_inline_in=%d is_inline_out=%d opcode=%d\n",
+		aqe->hdr.seq, aqe->hdr.magic, aqe->hdr.version,
+		aqe->hdr.is_inline_in, aqe->hdr.is_inline_out, aqe->hdr.opcode);
+	for (i = 0; i < 64;) {
+		SPDK_ERRLOG("\nreq idx=%d:0x%x%x%x%x ",
+		i, aqe->req.buf[i], aqe->req.buf[i+1], aqe->req.buf[i+2], aqe->req.buf[i+3]);
+		i += 4;
+	}
+	for (i = 0; i < 64;) {
+		SPDK_ERRLOG("\n\nresp idx=%d:0x%x%x%x%x ",
+		i, aqe->resp.buf[i], aqe->resp.buf[i+1], aqe->resp.buf[i+2], aqe->resp.buf[i+3]);
+		i += 4;
+	}
+	/* End:Just for test*/
 	return 0;
 }
 
@@ -825,7 +862,7 @@ static bool vrdma_aq_sm_read_pi(struct vrdma_admin_sw_qp *aq,
 		aq->state = VRDMA_CMD_STATE_FATAL_ERR;
 	}
 
-	return true;
+	return false;
 }
 
 static bool vrdma_aq_sm_handle_pi(struct vrdma_admin_sw_qp *aq,
@@ -835,7 +872,7 @@ static bool vrdma_aq_sm_handle_pi(struct vrdma_admin_sw_qp *aq,
 	if (status != VRDMA_CMD_SM_OP_OK) {
 		SPDK_ERRLOG("failed to get admq PI, status %d\n", status);
 		aq->state = VRDMA_CMD_STATE_FATAL_ERR;
-		return true;
+		return false;
 	}
 
 	if (aq->admq->pi > aq->admq->ci) {
@@ -844,7 +881,7 @@ static bool vrdma_aq_sm_handle_pi(struct vrdma_admin_sw_qp *aq,
 		aq->state = VRDMA_CMD_STATE_POLL_PI;
 	}
 
-	return false;
+	return true;
 }
 
 static bool vrdma_aq_sm_read_cmd(struct vrdma_admin_sw_qp *aq,
@@ -925,6 +962,7 @@ static bool vrdma_aq_sm_parse_cmd(struct vrdma_admin_sw_qp *aq,
 	int ret = 0;
 	struct vrdma_ctrl *ctrl = container_of(aq, struct vrdma_ctrl, sw_qp);
 
+	SPDK_ERRLOG("lizh vrdma_aq_sm_parse_cmd aq->num_to_parse %d\n", aq->num_to_parse);
 	if (status != VRDMA_CMD_SM_OP_OK) {
 		SPDK_ERRLOG("failed to get admq cmd entry, status %d\n", status);
 		aq->state = VRDMA_CMD_STATE_FATAL_ERR;
@@ -1070,7 +1108,7 @@ static struct vrdma_aq_sm_state vrdma_aq_sm_arr[] = {
 struct vrdma_state_machine vrdma_sm  = { vrdma_aq_sm_arr, sizeof(vrdma_aq_sm_arr) / sizeof(struct vrdma_aq_sm_state) };
 
 /**
- * vrdma_aq_cmd_progress() - admq command state machine progress handle
+ * vrdma_aq_cmd_progress() - admq commanda_adminq_init state machine progress handle
  * @aq:	admq to be processed
  * @status:	status of calling function (can be a callback)
  *
@@ -1115,6 +1153,10 @@ int vrdma_ctrl_adminq_progress(void *ctrl)
 	enum vrdma_aq_cmd_sm_op_status status = VRDMA_CMD_SM_OP_OK;
 	int n = 0;
 
+	if (!vdev_ctrl->sctrl->adminq_dma_q)
+		return 0;
+	n += snap_dma_q_progress(vdev_ctrl->sctrl->adminq_dma_q);
+
 	if (aq->pre_ci == VRDMA_INVALID_CI_PI ||
 		aq->state < VRDMA_CMD_STATE_INIT_CI) {
 		return 0;
@@ -1123,8 +1165,6 @@ int vrdma_ctrl_adminq_progress(void *ctrl)
 	if (aq->state == VRDMA_CMD_STATE_INIT_CI) {
 		vrdma_aq_sm_read_pi(aq, status);
 	}
-
-	n += snap_dma_q_progress(vdev_ctrl->sctrl->adminq_dma_q);
 
 	return n;
 }

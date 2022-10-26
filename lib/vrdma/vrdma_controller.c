@@ -205,11 +205,16 @@ static void vrdma_adminq_dma_cb(struct snap_dma_completion *self, int status)
     struct vrdma_admin_sw_qp *sw_qp = container_of(self,
             struct vrdma_admin_sw_qp, init_ci);
 
+	if (status != IBV_WC_SUCCESS) {
+		SPDK_ERRLOG("error in dma for init ci status %d\n", status);
+	}
     admq = sw_qp->admq;
     sw_qp->pre_ci = admq->ci;
     /* pre_pi should be init as last ci*/
     sw_qp->pre_pi = sw_qp->pre_ci;
 	sw_qp->state = VRDMA_CMD_STATE_INIT_CI;
+    SPDK_ERRLOG("\nlizh vrdma_adminq_dma_cb...sw_qp->state %d sw_qp->pre_ci %d sw_qp->pre_pi %d admq->pi %d\n",
+    sw_qp->state, sw_qp->pre_ci, sw_qp->pre_pi, admq->pi);
 }
 
 static int vrdma_adminq_init(struct vrdma_ctrl *ctrl)
@@ -217,7 +222,7 @@ static int vrdma_adminq_init(struct vrdma_ctrl *ctrl)
     struct vrdma_admin_queue *admq;
     uint32_t aq_size = sizeof(*admq);
     
-    SPDK_ERRLOG("lizh vrdma_adminq_init...start");
+    SPDK_ERRLOG("\nlizh vrdma_adminq_init...start\n");
     admq = spdk_malloc(aq_size, 0x10, NULL, SPDK_ENV_LCORE_ID_ANY,
                              SPDK_MALLOC_DMA);
     if (!admq) {
@@ -233,12 +238,14 @@ static int vrdma_adminq_init(struct vrdma_ctrl *ctrl)
     }
     ctrl->sw_qp.pre_ci = VRDMA_INVALID_CI_PI;
     ctrl->sw_qp.pre_pi = VRDMA_INVALID_CI_PI;
+    ctrl->sw_qp.poll_comp.func = vrdma_aq_sm_dma_cb;
+    ctrl->sw_qp.poll_comp.count = 1;
     ctrl->sw_qp.init_ci.func = vrdma_adminq_dma_cb;
     ctrl->sw_qp.init_ci.count = 1;
     ctrl->sw_qp.admq = admq;
 	ctrl->sw_qp.state = VRDMA_CMD_STATE_IDLE;
 	ctrl->sw_qp.custom_sm = &vrdma_sm;
-    SPDK_ERRLOG("lizh vrdma_adminq_init...done");
+    SPDK_ERRLOG("lizh vrdma_adminq_init...done\n");
     return 0;
 }
 
@@ -251,7 +258,7 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
         .post_flr = vrdma_ctrl_post_flr,
     };
 
-    SPDK_ERRLOG("lizh vrdma_ctrl_init...pf_id %d start", attr->pf_id);
+    SPDK_ERRLOG("\nlizh vrdma_ctrl_init...pf_id %d start\n", attr->pf_id);
     ctrl = calloc(1, sizeof(*ctrl));
     if (!ctrl)
         goto err;
