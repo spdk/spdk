@@ -113,8 +113,12 @@ if [[ -S /run/udev/control ]]; then
 	# This trap targets a subshell which forks udevadm monitor. Since
 	# process substitution works in an async fashion, $$ won't wait
 	# for it, leaving it's child unattended after the main loop breaks
-	# (udevadm won't exit on its own either).
-	trap '[[ -e /proc/$!/status ]] && pkill -P $!' EXIT
+	# (udevadm won't exit on its own either). UPDATE: This is not true
+	# anymore for Bash >= 5.2 where executing process replaces the
+	# actual subshell so $! becomes the PID of the udevadm instance.
+	# To accommodate that, attempt to signal $! directly in case pkill
+	# fails.
+	trap '[[ ! -e /proc/$!/status ]] || pkill -P $! || kill $!' EXIT
 	# Also, this will block while reading through a pipe with a timeout
 	# after not receiving any input. stdbuf is used since udevadm always
 	# line buffers the monitor output.
