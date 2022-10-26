@@ -353,14 +353,14 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 fi
 
+trap - SIGINT SIGTERM EXIT
+
 timing_enter cleanup
 autotest_cleanup
 timing_exit cleanup
 
 timing_exit autotest
 chmod a+r $output_dir/timing.txt
-
-trap - SIGINT SIGTERM EXIT
 
 [[ -f "$output_dir/udev.log" ]] && rm -f "$output_dir/udev.log"
 
