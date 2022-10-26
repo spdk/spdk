@@ -772,20 +772,24 @@ function process_shm() {
 	return 0
 }
 
+# Parameters:
+# $1 - process pid
+# $2 - rpc address (optional)
+# $3 - max retries (optional)
 function waitforlisten() {
-	# $1 = process pid
 	if [ -z "$1" ]; then
 		exit 1
 	fi
 
 	local rpc_addr="${2:-$DEFAULT_RPC_ADDR}"
+	local max_retries=${3:-100}
 
 	echo "Waiting for process to start up and listen on UNIX domain socket $rpc_addr..."
 	# turn off trace for this loop
 	xtrace_disable
 	local ret=0
 	local i
-	for ((i = 100; i != 0; i--)); do
+	for ((i = max_retries; i != 0; i--)); do
 		# if the process is no longer running, then exit the script
 		#  since it means the application crashed
 		if ! kill -s 0 $1; then
