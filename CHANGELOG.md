@@ -6,6 +6,8 @@
 
 Both of interleaved and separated metadata are now supported by the malloc bdev module.
 
+Protection information is now supported by the malloc bdev module.
+
 ### scheduler
 
 Changing scheduler from dynamic back to static is no longer possible,

@@ -21,6 +21,8 @@ struct malloc_bdev_opts {
 	uint32_t optimal_io_boundary;
 	uint32_t md_size;
 	bool md_interleave;
+	enum spdk_dif_type dif_type;
+	bool dif_is_head_of_md;
 };
 
 int create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts);

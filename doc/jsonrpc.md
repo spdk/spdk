@@ -2785,6 +2785,15 @@ Example response:
 
 Construct @ref bdev_config_malloc
 
+The `dif_type` parameter can have 0, 1, 2, or 3, and controls the check of the guard tag and the reference tag.
+If the `dif_type` is 1, 2, or 3, the malloc bdev compares the guard tag to the CRC-16 computed over the block data.
+If the `dif_type` is 1 or 2, the malloc bdev compares the reference tag to the computed reference tag.
+The computed reference tag for the first block of the I/O is the `init_ref_tag` of the DIF context, and
+the computed reference tag is incremented for each subsequent block.
+If the `dif_type` is 3, the malloc bdev does not check the reference tag.
+The application tag is not checked by the malloc bdev because the current block device API does not expose
+it to the upper layer yet.
+
 #### Parameters
 
 Name                    | Optional | Type        | Description
@@ -2796,6 +2805,8 @@ uuid                    | Optional | string      | UUID of new bdev
 optimal_io_boundary     | Optional | number      | Split on optimal IO boundary, in number of blocks, default 0
 md_size                 | Optional | number      | Metadata size for this bdev (0, 8, 16, 32, 64, or 128). Default is 0.
 md_interleave           | Optional | boolean     | Metadata location, interleaved if true, and separated if false. Default is false.
+dif_type                | Optional | number      | Protection information type. Parameter --md-size needs to be set along --dif-type. Default=0 - no protection.
+dif_is_head_of_md       | Optional | boolean     | Protection information is in the first 8 bytes of metadata. Default=false.
 
 #### Result
 

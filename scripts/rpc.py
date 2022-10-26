@@ -355,7 +355,9 @@ if __name__ == "__main__":
                                                uuid=args.uuid,
                                                optimal_io_boundary=args.optimal_io_boundary,
                                                md_size=args.md_size,
-                                               md_interleave=args.md_interleave))
+                                               md_interleave=args.md_interleave,
+                                               dif_type=args.dif_type,
+                                               dif_is_head_of_md=args.dif_is_head_of_md))
     p = subparsers.add_parser('bdev_malloc_create', help='Create a bdev with malloc backend')
     p.add_argument('-b', '--name', help="Name of the bdev")
     p.add_argument('-u', '--uuid', help="UUID of the bdev")
@@ -368,6 +370,11 @@ if __name__ == "__main__":
                    help='Metadata size for this bdev (0, 8, 16, 32, 64, or 128). Default is 0.')
     p.add_argument('-i', '--md-interleave', action='store_true',
                    help='Metadata location, interleaved if set, and separated if omitted.')
+    p.add_argument('-t', '--dif-type', type=int, choices=[0, 1, 2, 3],
+                   help='Protection information type. Parameter --md-size needs'
+                        'to be set along --dif-type. Default=0 - no protection.')
+    p.add_argument('-d', '--dif-is-head-of-md', action='store_true',
+                   help='Protection information is in the first 8 bytes of metadata. Default=false.')
     p.set_defaults(func=bdev_malloc_create)
 
     def bdev_malloc_delete(args):

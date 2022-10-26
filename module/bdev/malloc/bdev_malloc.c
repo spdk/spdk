@@ -33,10 +33,68 @@ struct malloc_channel {
 	TAILQ_HEAD(, malloc_task)	completed_tasks;
 };
 
+static int
+malloc_verify_pi(struct spdk_bdev_io *bdev_io)
+{
+	struct spdk_bdev *bdev = bdev_io->bdev;
+	struct spdk_dif_ctx dif_ctx;
+	struct spdk_dif_error err_blk;
+	int rc;
+
+	rc = spdk_dif_ctx_init(&dif_ctx,
+			       bdev->blocklen,
+			       bdev->md_len,
+			       bdev->md_interleave,
+			       bdev->dif_is_head_of_md,
+			       bdev->dif_type,
+			       bdev->dif_check_flags,
+			       bdev_io->u.bdev.offset_blocks & 0xFFFFFFFF,
+			       0xFFFF, 0, 0, 0);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to initialize DIF/DIX context\n");
+		return rc;
+	}
+
+	if (spdk_bdev_is_md_interleaved(bdev)) {
+		rc = spdk_dif_verify(bdev_io->u.bdev.iovs,
+				     bdev_io->u.bdev.iovcnt,
+				     bdev_io->u.bdev.num_blocks,
+				     &dif_ctx,
+				     &err_blk);
+	} else {
+		struct iovec md_iov = {
+			.iov_base	= bdev_io->u.bdev.md_buf,
+			.iov_len	= bdev_io->u.bdev.num_blocks * bdev->md_len,
+		};
+
+		rc = spdk_dix_verify(bdev_io->u.bdev.iovs,
+				     bdev_io->u.bdev.iovcnt,
+				     &md_iov,
+				     bdev_io->u.bdev.num_blocks,
+				     &dif_ctx,
+				     &err_blk);
+	}
+
+	if (rc != 0) {
+		SPDK_ERRLOG("DIF/DIX verify failed: lba %" PRIu64 ", num_blocks %" PRIu64 ", "
+			    "err_type %u, expected %u, actual %u, err_offset %u\n",
+			    bdev_io->u.bdev.offset_blocks,
+			    bdev_io->u.bdev.num_blocks,
+			    err_blk.err_type,
+			    err_blk.expected,
+			    err_blk.actual,
+			    err_blk.err_offset);
+	}
+
+	return rc;
+}
+
 static void
 malloc_done(void *ref, int status)
 {
 	struct malloc_task *task = (struct malloc_task *)ref;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(task);
+	int rc;
 
 	if (status != 0) {
 		if (status == -ENOMEM) {
@@ -46,9 +104,20 @@ malloc_done(void *ref, int status)
 		}
 	}
 
-	if (--task->num_outstanding == 0) {
-		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(task), task->status);
+	if (--task->num_outstanding != 0) {
+		return;
 	}
+
+	if (bdev_io->bdev->dif_type != SPDK_DIF_DISABLE &&
+	    bdev_io->type == SPDK_BDEV_IO_TYPE_READ &&
+	    task->status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+		rc = malloc_verify_pi(bdev_io);
+		if (rc != 0) {
+			task->status = SPDK_BDEV_IO_STATUS_FAILED;
+		}
+	}
+
+	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(task), task->status);
 }
 
 static void
@@ -252,6 +321,7 @@ _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bde
 {
 	uint32_t block_size = bdev_io->bdev->blocklen;
 	uint32_t md_size = bdev_io->bdev->md_len;
+	int rc;
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -279,6 +349,15 @@ _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bde
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
+		if (bdev_io->bdev->dif_type != SPDK_DIF_DISABLE) {
+			rc = malloc_verify_pi(bdev_io);
+			if (rc != 0) {
+				malloc_complete_task((struct malloc_task *)bdev_io->driver_ctx, mch,
+						     SPDK_BDEV_IO_STATUS_FAILED);
+				return 0;
+			}
+		}
+
 		bdev_malloc_writev((struct malloc_disk *)bdev_io->bdev->ctxt,
 				   mch->accel_channel,
 				   (struct malloc_task *)bdev_io->driver_ctx,
@@ -406,6 +485,47 @@ static const struct spdk_bdev_fn_table malloc_fn_table = {
 	.write_config_json	= bdev_malloc_write_json_config,
 };
 
+static int
+malloc_disk_setup_pi(struct malloc_disk *mdisk)
+{
+	struct spdk_bdev *bdev = &mdisk->disk;
+	struct spdk_dif_ctx dif_ctx;
+	struct iovec iov, md_iov;
+	int rc;
+
+	rc = spdk_dif_ctx_init(&dif_ctx,
+			       bdev->blocklen,
+			       bdev->md_len,
+			       bdev->md_interleave,
+			       bdev->dif_is_head_of_md,
+			       bdev->dif_type,
+			       bdev->dif_check_flags,
+			       0,	/* configure the whole buffers */
+			       0, 0, 0, 0);
+	if (rc != 0) {
+		SPDK_ERRLOG("Initialization of DIF/DIX context failed\n");
+		return rc;
+	}
+
+	iov.iov_base = mdisk->malloc_buf;
+	iov.iov_len = bdev->blockcnt * bdev->blocklen;
+
+	if (mdisk->disk.md_interleave) {
+		rc = spdk_dif_generate(&iov, 1, bdev->blockcnt, &dif_ctx);
+	} else {
+		md_iov.iov_base = mdisk->malloc_md_buf;
+		md_iov.iov_len = bdev->blockcnt * bdev->md_len;
+
+		rc = spdk_dix_generate(&iov, 1, &md_iov, bdev->blockcnt, &dif_ctx);
+	}
+
+	if (rc != 0) {
+		SPDK_ERRLOG("Formatting by DIF/DIX failed\n");
+	}
+
+	return rc;
+}
+
 int
 create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 {
@@ -442,6 +562,16 @@ create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 		block_size = opts->block_size + opts->md_size;
 	} else {
 		block_size = opts->block_size;
+	}
+
+	if (opts->dif_type < SPDK_DIF_DISABLE || opts->dif_type > SPDK_DIF_TYPE3) {
+		SPDK_ERRLOG("DIF type is invalid\n");
+		return -EINVAL;
+	}
+
+	if (opts->dif_type != SPDK_DIF_DISABLE && opts->md_size == 0) {
+		SPDK_ERRLOG("Metadata size should not be zero if DIF is enabled\n");
+		return -EINVAL;
 	}
 
 	mdisk = calloc(1, sizeof(*mdisk));
@@ -492,6 +622,34 @@ create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 	mdisk->disk.blockcnt = opts->num_blocks;
 	mdisk->disk.md_len = opts->md_size;
 	mdisk->disk.md_interleave = opts->md_interleave;
+	mdisk->disk.dif_type = opts->dif_type;
+	mdisk->disk.dif_is_head_of_md = opts->dif_is_head_of_md;
+	/* Current block device layer API does not propagate
+	 * any DIF related information from user. So, we can
+	 * not generate or verify Application Tag.
+	 */
+	switch (opts->dif_type) {
+	case SPDK_DIF_TYPE1:
+	case SPDK_DIF_TYPE2:
+		mdisk->disk.dif_check_flags = SPDK_DIF_FLAGS_GUARD_CHECK |
+					      SPDK_DIF_FLAGS_REFTAG_CHECK;
+		break;
+	case SPDK_DIF_TYPE3:
+		mdisk->disk.dif_check_flags = SPDK_DIF_FLAGS_GUARD_CHECK;
+		break;
+	case SPDK_DIF_DISABLE:
+		break;
+	}
+
+	if (opts->dif_type != SPDK_DIF_DISABLE) {
+		rc = malloc_disk_setup_pi(mdisk);
+		if (rc) {
+			SPDK_ERRLOG("Failed to set up protection information.\n");
+			malloc_disk_free(mdisk);
+			return rc;
+		}
+	}
+
 	if (opts->optimal_io_boundary) {
 		mdisk->disk.optimal_io_boundary = opts->optimal_io_boundary;
 		mdisk->disk.split_on_optimal_io_boundary = true;
