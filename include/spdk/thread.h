@@ -17,6 +17,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/cpuset.h"
+#include "spdk/env.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -949,6 +950,210 @@ void spdk_spin_unlock(struct spdk_spinlock *sspin);
  * \return true if spinlock is held by this thread, else false
  */
 bool spdk_spin_held(struct spdk_spinlock *sspin);
+
+struct spdk_iobuf_opts {
+	/** Maximum number of small buffers */
+	uint64_t small_pool_count;
+	/** Maximum number of large buffers */
+	uint64_t large_pool_count;
+	/** Size of a single small buffer */
+	uint32_t small_bufsize;
+	/** Size of a single large buffer */
+	uint32_t large_bufsize;
+};
+
+struct spdk_iobuf_entry;
+
+typedef void (*spdk_iobuf_get_cb)(struct spdk_iobuf_entry *entry, void *buf);
+
+/** iobuf queue entry */
+struct spdk_iobuf_entry {
+	spdk_iobuf_get_cb		cb_fn;
+	const void			*module;
+	STAILQ_ENTRY(spdk_iobuf_entry)	stailq;
+};
+
+typedef STAILQ_HEAD(, spdk_iobuf_entry) spdk_iobuf_entry_stailq_t;
+
+struct spdk_iobuf_pool {
+	/** Buffer pool */
+	struct spdk_mempool		*pool;
+	/** Buffer wait queue */
+	spdk_iobuf_entry_stailq_t	*queue;
+	/** Buffer size */
+	uint32_t			bufsize;
+};
+
+/** iobuf channel */
+struct spdk_iobuf_channel {
+	/** Small buffer memory pool */
+	struct spdk_iobuf_pool		small;
+	/** Large buffer memory pool */
+	struct spdk_iobuf_pool		large;
+	/** Module pointer */
+	const void			*module;
+	/** Parent IO channel */
+	struct spdk_io_channel		*parent;
+};
+
+/**
+ * Initialize and allocate iobuf pools.
+ *
+ * \return 0 on success, negative errno otherwise.
+ */
+int spdk_iobuf_initialize(void);
+
+typedef void (*spdk_iobuf_finish_cb)(void *cb_arg);
+
+/**
+ * Clean up and free iobuf pools.
+ *
+ * \param cb_fn Callback to be executed once the clean up is completed.
+ * \param cb_arg Callback argument.
+ */
+void spdk_iobuf_finish(spdk_iobuf_finish_cb cb_fn, void *cb_arg);
+
+/**
+ * Set iobuf options.  These options will be used during `spdk_iobuf_initialize()`.
+ *
+ * \param opts Options describing the size of the pools to reserve.
+ *
+ * \return 0 on success, negative errno otherwise.
+ */
+int spdk_iobuf_set_opts(const struct spdk_iobuf_opts *opts);
+
+/**
+ * Get iobuf options.
+ *
+ * \param opts Options to fill in.
+ */
+void spdk_iobuf_get_opts(struct spdk_iobuf_opts *opts);
+
+/**
+ * Register a module as an iobuf pool user.  Only registered users can request buffers from the
+ * iobuf pool.
+ *
+ * \name Name of the module.
+ *
+ * \return 0 on success, negative errno otherwise.
+ */
+int spdk_iobuf_register_module(const char *name);
+
+/**
+ * Initialize an iobuf channel.
+ *
+ * \param ch iobuf channel to initialize.
+ * \param name Name of the module registered via `spdk_iobuf_register_module()`.
+ * \param small_cache_size Number of small buffers to be cached by this channel.
+ * \param large_cache_size Number of large buffers to be cached by this channel.
+ *
+ * \return 0 on success, negative errno otherwise.
+ */
+int spdk_iobuf_channel_init(struct spdk_iobuf_channel *ch, const char *name,
+			    uint32_t small_cache_size, uint32_t large_cache_size);
+
+/**
+ * Release resources tied to an iobuf channel.
+ *
+ * \param ch iobuf channel.
+ */
+void spdk_iobuf_channel_fini(struct spdk_iobuf_channel *ch);
+
+typedef int (*spdk_iobuf_for_each_entry_fn)(struct spdk_iobuf_channel *ch,
+		struct spdk_iobuf_entry *entry, void *ctx);
+
+/**
+ * Iterate over all entries on a given queue and execute a callback on those that were requested
+ * using `ch`.  The iteration is stopped if the callback returns non-zero status.
+ *
+ * \param ch iobuf channel to iterate over.
+ * \param pool Pool to iterate over (`small` or `large`).
+ * \param cb_fn Callback to execute on each entry on the queue that was requested using `ch`.
+ * \param cb_ctx Argument passed to `cb_fn`.
+ *
+ * \return status of the last callback.
+ */
+int spdk_iobuf_for_each_entry(struct spdk_iobuf_channel *ch, struct spdk_iobuf_pool *pool,
+			      spdk_iobuf_for_each_entry_fn cb_fn, void *cb_ctx);
+
+/**
+ * Abort an outstanding request waiting for a buffer.
+ *
+ * \param ch iobuf channel on which the entry is waiting.
+ * \param entry Entry to remove from the wait queue.
+ * \param len Length of the requested buffer (must be the exact same value as specified in
+ *            `spdk_iobuf_get()`.
+ */
+void spdk_iobuf_entry_abort(struct spdk_iobuf_channel *ch, struct spdk_iobuf_entry *entry,
+			    uint64_t len);
+
+/**
+ * Get a buffer from the iobuf pool.  If no buffers are available, the request is queued until a
+ * buffer is released.
+ *
+ * \param ch iobuf channel.
+ * \param len Length of the buffer to retrieve.  The user is responsible for making sure the length
+ *            doesn't exceed large_bufsize.
+ * \param entry Wait queue entry.
+ * \param cb_fn Callback to be executed once a buffer becomes available.  If a buffer is available
+ *              immediately, it is NOT be executed.
+ *
+ * \return pointer to a buffer or NULL if no buffers are currently available.
+ */
+static inline void *
+spdk_iobuf_get(struct spdk_iobuf_channel *ch, uint64_t len,
+	       struct spdk_iobuf_entry *entry, spdk_iobuf_get_cb cb_fn)
+{
+	struct spdk_iobuf_pool *pool;
+	void *buf;
+
+	assert(spdk_io_channel_get_thread(ch->parent) == spdk_get_thread());
+	if (len <= ch->small.bufsize) {
+		pool = &ch->small;
+	} else {
+		assert(len <= ch->large.bufsize);
+		pool = &ch->large;
+	}
+
+	buf = spdk_mempool_get(pool->pool);
+	if (!buf) {
+		STAILQ_INSERT_TAIL(pool->queue, entry, stailq);
+		entry->module = ch->module;
+		entry->cb_fn = cb_fn;
+	}
+
+	return buf;
+}
+
+/**
+ * Release a buffer back to the iobuf pool.  If there are outstanding requests waiting for a buffer,
+ * this buffer will be passed to one of them.
+ *
+ * \param ch iobuf channel.
+ * \param buf Buffer to release
+ * \param len Length of the buffer (must be the exact same value as specified in `spdk_iobuf_get()`).
+ */
+static inline void
+spdk_iobuf_put(struct spdk_iobuf_channel *ch, void *buf, uint64_t len)
+{
+	struct spdk_iobuf_entry *entry;
+	struct spdk_iobuf_pool *pool;
+
+	assert(spdk_io_channel_get_thread(ch->parent) == spdk_get_thread());
+	if (len <= ch->small.bufsize) {
+		pool = &ch->small;
+	} else {
+		pool = &ch->large;
+	}
+
+	if (STAILQ_EMPTY(pool->queue)) {
+		spdk_mempool_put(pool->pool, buf);
+	} else {
+		entry = STAILQ_FIRST(pool->queue);
+		STAILQ_REMOVE_HEAD(pool->queue, stailq);
+		entry->cb_fn(entry, buf);
+	}
+}
 
 #ifdef __cplusplus
 }

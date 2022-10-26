@@ -1913,6 +1913,459 @@ spdk_spin(void)
 	g_spin_abort_fn = __posix_abort;
 }
 
+struct ut_iobuf_entry {
+	struct spdk_iobuf_channel	*ioch;
+	struct spdk_iobuf_entry		iobuf;
+	void				*buf;
+	uint32_t			thread_id;
+	const char			*module;
+};
+
+static void
+ut_iobuf_finish_cb(void *ctx)
+{
+	*(int *)ctx = 1;
+}
+
+static void
+ut_iobuf_get_buf_cb(struct spdk_iobuf_entry *entry, void *buf)
+{
+	struct ut_iobuf_entry *ut_entry = SPDK_CONTAINEROF(entry, struct ut_iobuf_entry, iobuf);
+
+	ut_entry->buf = buf;
+}
+
+static int
+ut_iobuf_foreach_cb(struct spdk_iobuf_channel *ch, struct spdk_iobuf_entry *entry, void *cb_arg)
+{
+	struct ut_iobuf_entry *ut_entry = SPDK_CONTAINEROF(entry, struct ut_iobuf_entry, iobuf);
+
+	ut_entry->buf = cb_arg;
+
+	return 0;
+}
+
+static void
+iobuf(void)
+{
+	struct spdk_iobuf_opts opts = {
+		.small_pool_count = 2,
+		.large_pool_count = 2,
+		.small_bufsize = 2,
+		.large_bufsize = 4,
+	};
+	struct ut_iobuf_entry *entry;
+	struct spdk_iobuf_channel mod0_ch[2], mod1_ch[2];
+	struct ut_iobuf_entry mod0_entries[] = {
+		{ .thread_id = 0, .module = "ut_module0", },
+		{ .thread_id = 0, .module = "ut_module0", },
+		{ .thread_id = 0, .module = "ut_module0", },
+		{ .thread_id = 0, .module = "ut_module0", },
+		{ .thread_id = 1, .module = "ut_module0", },
+		{ .thread_id = 1, .module = "ut_module0", },
+		{ .thread_id = 1, .module = "ut_module0", },
+		{ .thread_id = 1, .module = "ut_module0", },
+	};
+	struct ut_iobuf_entry mod1_entries[] = {
+		{ .thread_id = 0, .module = "ut_module1", },
+		{ .thread_id = 0, .module = "ut_module1", },
+		{ .thread_id = 0, .module = "ut_module1", },
+		{ .thread_id = 0, .module = "ut_module1", },
+		{ .thread_id = 1, .module = "ut_module1", },
+		{ .thread_id = 1, .module = "ut_module1", },
+		{ .thread_id = 1, .module = "ut_module1", },
+		{ .thread_id = 1, .module = "ut_module1", },
+	};
+	int rc, finish = 0;
+	uint32_t i;
+
+	allocate_cores(2);
+	allocate_threads(2);
+
+	set_thread(0);
+
+	/* We cannot use spdk_iobuf_set_opts(), as it won't allow us to use such small pools */
+	g_iobuf.opts = opts;
+	rc = spdk_iobuf_initialize();
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_iobuf_register_module("ut_module0");
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_iobuf_register_module("ut_module1");
+	CU_ASSERT_EQUAL(rc, 0);
+
+	set_thread(0);
+	rc = spdk_iobuf_channel_init(&mod0_ch[0], "ut_module0", 0, 0);
+	CU_ASSERT_EQUAL(rc, 0);
+	set_thread(1);
+	rc = spdk_iobuf_channel_init(&mod0_ch[1], "ut_module0", 0, 0);
+	CU_ASSERT_EQUAL(rc, 0);
+	for (i = 0; i < SPDK_COUNTOF(mod0_entries); ++i) {
+		mod0_entries[i].ioch = &mod0_ch[mod0_entries[i].thread_id];
+	}
+	set_thread(0);
+	rc = spdk_iobuf_channel_init(&mod1_ch[0], "ut_module1", 0, 0);
+	CU_ASSERT_EQUAL(rc, 0);
+	set_thread(1);
+	rc = spdk_iobuf_channel_init(&mod1_ch[1], "ut_module1", 0, 0);
+	CU_ASSERT_EQUAL(rc, 0);
+	for (i = 0; i < SPDK_COUNTOF(mod1_entries); ++i) {
+		mod1_entries[i].ioch = &mod1_ch[mod1_entries[i].thread_id];
+	}
+
+	/* First check that it's possible to retrieve the whole pools from a single module */
+	set_thread(0);
+	entry = &mod0_entries[0];
+	entry->buf = spdk_iobuf_get(entry->ioch, 4, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+	entry = &mod0_entries[1];
+	entry->buf = spdk_iobuf_get(entry->ioch, 4, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+	/* The next two should be put onto the large buf wait queue */
+	entry = &mod0_entries[2];
+	entry->buf = spdk_iobuf_get(entry->ioch, 4, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NULL(entry->buf);
+	entry = &mod0_entries[3];
+	entry->buf = spdk_iobuf_get(entry->ioch, 4, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NULL(entry->buf);
+	/* Pick the two next buffers from the small pool */
+	set_thread(1);
+	entry = &mod0_entries[4];
+	entry->buf = spdk_iobuf_get(entry->ioch, 2, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+	entry = &mod0_entries[5];
+	entry->buf = spdk_iobuf_get(entry->ioch, 2, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+	/* The next two should be put onto the small buf wait queue */
+	entry = &mod0_entries[6];
+	entry->buf = spdk_iobuf_get(entry->ioch, 2, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NULL(entry->buf);
+	entry = &mod0_entries[7];
+	entry->buf = spdk_iobuf_get(entry->ioch, 2, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NULL(entry->buf);
+
+	/* Now return one of the large buffers to the pool and verify that the first request's
+	 * (entry 2) callback was executed and it was removed from the wait queue.
+	 */
+	set_thread(0);
+	entry = &mod0_entries[0];
+	spdk_iobuf_put(entry->ioch, entry->buf, 4);
+	entry = &mod0_entries[2];
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+	entry = &mod0_entries[3];
+	CU_ASSERT_PTR_NULL(entry->buf);
+
+	/* Return the second buffer and check that the other request is satisfied */
+	entry = &mod0_entries[1];
+	spdk_iobuf_put(entry->ioch, entry->buf, 4);
+	entry = &mod0_entries[3];
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+
+	/* Return the remaining two buffers */
+	entry = &mod0_entries[2];
+	spdk_iobuf_put(entry->ioch, entry->buf, 4);
+	entry = &mod0_entries[3];
+	spdk_iobuf_put(entry->ioch, entry->buf, 4);
+
+	/* Check that it didn't change the requests waiting for the small buffers */
+	entry = &mod0_entries[6];
+	CU_ASSERT_PTR_NULL(entry->buf);
+	entry = &mod0_entries[7];
+	CU_ASSERT_PTR_NULL(entry->buf);
+
+	/* Do the same test as above, this time using the small pool */
+	set_thread(1);
+	entry = &mod0_entries[4];
+	spdk_iobuf_put(entry->ioch, entry->buf, 2);
+	entry = &mod0_entries[6];
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+	entry = &mod0_entries[7];
+	CU_ASSERT_PTR_NULL(entry->buf);
+
+	/* Return the second buffer and check that the other request is satisfied */
+	entry = &mod0_entries[5];
+	spdk_iobuf_put(entry->ioch, entry->buf, 2);
+	entry = &mod0_entries[7];
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+
+	/* Return the remaining two buffers */
+	entry = &mod0_entries[6];
+	spdk_iobuf_put(entry->ioch, entry->buf, 2);
+	entry = &mod0_entries[7];
+	spdk_iobuf_put(entry->ioch, entry->buf, 2);
+
+	/* Now check requesting buffers from different modules - first request all of them from one
+	 * module, starting from the large pool
+	 */
+	set_thread(0);
+	entry = &mod0_entries[0];
+	entry->buf = spdk_iobuf_get(entry->ioch, 4, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+	entry = &mod0_entries[1];
+	entry->buf = spdk_iobuf_get(entry->ioch, 4, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+	/* Request all of them from the small one */
+	set_thread(1);
+	entry = &mod0_entries[4];
+	entry->buf = spdk_iobuf_get(entry->ioch, 2, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+	entry = &mod0_entries[5];
+	entry->buf = spdk_iobuf_get(entry->ioch, 2, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+
+	/* Request one buffer per module from each pool  */
+	set_thread(0);
+	entry = &mod1_entries[0];
+	entry->buf = spdk_iobuf_get(entry->ioch, 4, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NULL(entry->buf);
+	entry = &mod0_entries[3];
+	entry->buf = spdk_iobuf_get(entry->ioch, 4, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NULL(entry->buf);
+	/* Change the order from the small pool and request a buffer from mod0 first */
+	set_thread(1);
+	entry = &mod0_entries[6];
+	entry->buf = spdk_iobuf_get(entry->ioch, 2, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NULL(entry->buf);
+	entry = &mod1_entries[4];
+	entry->buf = spdk_iobuf_get(entry->ioch, 2, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NULL(entry->buf);
+
+	/* Now return one buffer to the large pool */
+	set_thread(0);
+	entry = &mod0_entries[0];
+	spdk_iobuf_put(entry->ioch, entry->buf, 4);
+
+	/* Make sure the request from mod1 got the buffer, as it was the first to request it */
+	entry = &mod1_entries[0];
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+	entry = &mod0_entries[3];
+	CU_ASSERT_PTR_NULL(entry->buf);
+
+	/* Return second buffer to the large pool and check the outstanding mod0 request */
+	entry = &mod0_entries[1];
+	spdk_iobuf_put(entry->ioch, entry->buf, 4);
+	entry = &mod0_entries[3];
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+
+	/* Return the remaining two buffers */
+	entry = &mod1_entries[0];
+	spdk_iobuf_put(entry->ioch, entry->buf, 4);
+	entry = &mod0_entries[3];
+	spdk_iobuf_put(entry->ioch, entry->buf, 4);
+
+	/* Check the same for the small pool, but this time the order of the request is reversed
+	 * (mod0 before mod1)
+	 */
+	set_thread(1);
+	entry = &mod0_entries[4];
+	spdk_iobuf_put(entry->ioch, entry->buf, 2);
+	entry = &mod0_entries[6];
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+	/* mod1 request was second in this case, so it still needs to wait */
+	entry = &mod1_entries[4];
+	CU_ASSERT_PTR_NULL(entry->buf);
+
+	/* Return the second requested buffer */
+	entry = &mod0_entries[5];
+	spdk_iobuf_put(entry->ioch, entry->buf, 2);
+	entry = &mod1_entries[4];
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+
+	/* Return the remaining two buffers */
+	entry = &mod0_entries[6];
+	spdk_iobuf_put(entry->ioch, entry->buf, 2);
+	entry = &mod1_entries[4];
+	spdk_iobuf_put(entry->ioch, entry->buf, 2);
+
+	/* Request buffers to make the pools empty */
+	set_thread(0);
+	entry = &mod0_entries[0];
+	entry->buf = spdk_iobuf_get(entry->ioch, 4, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+	entry = &mod1_entries[0];
+	entry->buf = spdk_iobuf_get(entry->ioch, 4, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+	entry = &mod0_entries[1];
+	entry->buf = spdk_iobuf_get(entry->ioch, 2, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+	entry = &mod1_entries[1];
+	entry->buf = spdk_iobuf_get(entry->ioch, 2, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+
+	/* Queue more requests from both modules */
+	entry = &mod0_entries[2];
+	entry->buf = spdk_iobuf_get(entry->ioch, 4, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NULL(entry->buf);
+	entry = &mod1_entries[2];
+	entry->buf = spdk_iobuf_get(entry->ioch, 4, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NULL(entry->buf);
+	entry = &mod1_entries[3];
+	entry->buf = spdk_iobuf_get(entry->ioch, 2, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NULL(entry->buf);
+	entry = &mod0_entries[3];
+	entry->buf = spdk_iobuf_get(entry->ioch, 2, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NULL(entry->buf);
+
+	/* Check that abort correctly remove an entry from the queue */
+	entry = &mod0_entries[2];
+	spdk_iobuf_entry_abort(entry->ioch, &entry->iobuf, 4);
+	entry = &mod1_entries[3];
+	spdk_iobuf_entry_abort(entry->ioch, &entry->iobuf, 2);
+
+	entry = &mod0_entries[0];
+	spdk_iobuf_put(entry->ioch, entry->buf, 4);
+	CU_ASSERT_PTR_NOT_NULL(mod1_entries[2].buf);
+	entry = &mod0_entries[1];
+	spdk_iobuf_put(entry->ioch, entry->buf, 2);
+	CU_ASSERT_PTR_NOT_NULL(mod0_entries[3].buf);
+
+	/* Clean up */
+	entry = &mod1_entries[0];
+	spdk_iobuf_put(entry->ioch, entry->buf, 4);
+	entry = &mod1_entries[2];
+	spdk_iobuf_put(entry->ioch, entry->buf, 4);
+	entry = &mod1_entries[1];
+	spdk_iobuf_put(entry->ioch, entry->buf, 2);
+	entry = &mod0_entries[3];
+	spdk_iobuf_put(entry->ioch, entry->buf, 2);
+
+	/* Request buffers to make the pools empty */
+	set_thread(0);
+	entry = &mod0_entries[0];
+	entry->buf = spdk_iobuf_get(entry->ioch, 4, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+	entry = &mod1_entries[0];
+	entry->buf = spdk_iobuf_get(entry->ioch, 4, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+	entry = &mod0_entries[1];
+	entry->buf = spdk_iobuf_get(entry->ioch, 2, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+	entry = &mod1_entries[1];
+	entry->buf = spdk_iobuf_get(entry->ioch, 2, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NOT_NULL(entry->buf);
+
+	/* Request a buffer from each queue and each module on thread 0 */
+	set_thread(0);
+	entry = &mod0_entries[2];
+	entry->buf = spdk_iobuf_get(entry->ioch, 4, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NULL(entry->buf);
+	entry = &mod1_entries[2];
+	entry->buf = spdk_iobuf_get(entry->ioch, 4, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NULL(entry->buf);
+	entry = &mod0_entries[3];
+	entry->buf = spdk_iobuf_get(entry->ioch, 2, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NULL(entry->buf);
+	entry = &mod1_entries[3];
+	entry->buf = spdk_iobuf_get(entry->ioch, 2, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NULL(entry->buf);
+
+	/* Do the same on thread 1 */
+	set_thread(1);
+	entry = &mod0_entries[6];
+	entry->buf = spdk_iobuf_get(entry->ioch, 4, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NULL(entry->buf);
+	entry = &mod1_entries[6];
+	entry->buf = spdk_iobuf_get(entry->ioch, 4, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NULL(entry->buf);
+	entry = &mod0_entries[7];
+	entry->buf = spdk_iobuf_get(entry->ioch, 2, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NULL(entry->buf);
+	entry = &mod1_entries[7];
+	entry->buf = spdk_iobuf_get(entry->ioch, 2, &entry->iobuf, ut_iobuf_get_buf_cb);
+	CU_ASSERT_PTR_NULL(entry->buf);
+
+	/* Now do the foreach and check that correct entries are iterated over by assigning their
+	 * ->buf pointers to different values.
+	 */
+	set_thread(0);
+	rc = spdk_iobuf_for_each_entry(&mod0_ch[0], &mod0_ch[0].large,
+				       ut_iobuf_foreach_cb, (void *)0xdeadbeef);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_iobuf_for_each_entry(&mod0_ch[0], &mod0_ch[0].small,
+				       ut_iobuf_foreach_cb, (void *)0xbeefdead);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_iobuf_for_each_entry(&mod1_ch[0], &mod1_ch[0].large,
+				       ut_iobuf_foreach_cb, (void *)0xfeedbeef);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_iobuf_for_each_entry(&mod1_ch[0], &mod1_ch[0].small,
+				       ut_iobuf_foreach_cb, (void *)0xbeeffeed);
+	CU_ASSERT_EQUAL(rc, 0);
+	set_thread(1);
+	rc = spdk_iobuf_for_each_entry(&mod0_ch[1], &mod0_ch[1].large,
+				       ut_iobuf_foreach_cb, (void *)0xcafebabe);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_iobuf_for_each_entry(&mod0_ch[1], &mod0_ch[1].small,
+				       ut_iobuf_foreach_cb, (void *)0xbabecafe);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_iobuf_for_each_entry(&mod1_ch[1], &mod1_ch[1].large,
+				       ut_iobuf_foreach_cb, (void *)0xbeefcafe);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_iobuf_for_each_entry(&mod1_ch[1], &mod1_ch[1].small,
+				       ut_iobuf_foreach_cb, (void *)0xcafebeef);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	/* thread 0 */
+	CU_ASSERT_PTR_EQUAL(mod0_entries[2].buf, (void *)0xdeadbeef);
+	CU_ASSERT_PTR_EQUAL(mod0_entries[3].buf, (void *)0xbeefdead);
+	CU_ASSERT_PTR_EQUAL(mod1_entries[2].buf, (void *)0xfeedbeef);
+	CU_ASSERT_PTR_EQUAL(mod1_entries[3].buf, (void *)0xbeeffeed);
+	/* thread 1 */
+	CU_ASSERT_PTR_EQUAL(mod0_entries[6].buf, (void *)0xcafebabe);
+	CU_ASSERT_PTR_EQUAL(mod0_entries[7].buf, (void *)0xbabecafe);
+	CU_ASSERT_PTR_EQUAL(mod1_entries[6].buf, (void *)0xbeefcafe);
+	CU_ASSERT_PTR_EQUAL(mod1_entries[7].buf, (void *)0xcafebeef);
+
+	/* Clean everything up */
+	set_thread(0);
+	entry = &mod0_entries[2];
+	spdk_iobuf_entry_abort(entry->ioch, &entry->iobuf, 4);
+	entry = &mod0_entries[3];
+	spdk_iobuf_entry_abort(entry->ioch, &entry->iobuf, 2);
+	entry = &mod1_entries[2];
+	spdk_iobuf_entry_abort(entry->ioch, &entry->iobuf, 4);
+	entry = &mod1_entries[3];
+	spdk_iobuf_entry_abort(entry->ioch, &entry->iobuf, 2);
+
+	entry = &mod0_entries[0];
+	spdk_iobuf_put(entry->ioch, entry->buf, 4);
+	entry = &mod1_entries[0];
+	spdk_iobuf_put(entry->ioch, entry->buf, 4);
+	entry = &mod0_entries[1];
+	spdk_iobuf_put(entry->ioch, entry->buf, 2);
+	entry = &mod1_entries[1];
+	spdk_iobuf_put(entry->ioch, entry->buf, 2);
+
+	set_thread(1);
+	entry = &mod0_entries[6];
+	spdk_iobuf_entry_abort(entry->ioch, &entry->iobuf, 4);
+	entry = &mod0_entries[7];
+	spdk_iobuf_entry_abort(entry->ioch, &entry->iobuf, 2);
+	entry = &mod1_entries[6];
+	spdk_iobuf_entry_abort(entry->ioch, &entry->iobuf, 4);
+	entry = &mod1_entries[7];
+	spdk_iobuf_entry_abort(entry->ioch, &entry->iobuf, 2);
+
+	set_thread(0);
+	spdk_iobuf_channel_fini(&mod0_ch[0]);
+	poll_threads();
+	spdk_iobuf_channel_fini(&mod1_ch[0]);
+	poll_threads();
+	set_thread(1);
+	spdk_iobuf_channel_fini(&mod0_ch[1]);
+	poll_threads();
+	spdk_iobuf_channel_fini(&mod1_ch[1]);
+	poll_threads();
+
+	spdk_iobuf_finish(ut_iobuf_finish_cb, &finish);
+	poll_threads();
+
+	CU_ASSERT_EQUAL(finish, 1);
+
+	free_threads();
+	free_cores();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1942,6 +2395,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, multi_timed_pollers_have_same_expiration);
 	CU_ADD_TEST(suite, io_device_lookup);
 	CU_ADD_TEST(suite, spdk_spin);
+	CU_ADD_TEST(suite, iobuf);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

@@ -62,6 +62,15 @@
 	spdk_spin_lock;
 	spdk_spin_unlock;
 	spdk_spin_held;
+	spdk_iobuf_initialize;
+	spdk_iobuf_finish;
+	spdk_iobuf_set_opts;
+	spdk_iobuf_get_opts;
+	spdk_iobuf_channel_init;
+	spdk_iobuf_channel_fini;
+	spdk_iobuf_register_module;
+	spdk_iobuf_for_each_entry;
+	spdk_iobuf_entry_abort;
 
 	# internal functions in spdk_internal/thread.h
 	spdk_poller_get_name;

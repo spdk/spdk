@@ -7,6 +7,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/env.h"
+#include "spdk/bdev.h"
 #include "spdk/likely.h"
 #include "spdk/queue.h"
 #include "spdk/string.h"
@@ -32,6 +33,13 @@
 #define SPDK_THREAD_EXIT_TIMEOUT_SEC	5
 #define SPDK_MAX_POLLER_NAME_LEN	256
 #define SPDK_MAX_THREAD_NAME_LEN	256
+#define IOBUF_MIN_SMALL_POOL_SIZE	8191
+#define IOBUF_MIN_LARGE_POOL_SIZE	1023
+#define IOBUF_ALIGNMENT			512
+#define IOBUF_MIN_SMALL_BUFSIZE		(SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_SMALL_BUF_MAX_SIZE) + \
+					 IOBUF_ALIGNMENT)
+#define IOBUF_MIN_LARGE_BUFSIZE		(SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_LARGE_BUF_MAX_SIZE) + \
+					 IOBUF_ALIGNMENT)
 
 static struct spdk_thread *g_app_thread;
 
@@ -228,6 +236,35 @@ struct io_device {
 
 	bool				pending_unregister;
 	bool				unregistered;
+};
+
+struct iobuf_channel {
+	spdk_iobuf_entry_stailq_t small_queue;
+	spdk_iobuf_entry_stailq_t large_queue;
+};
+
+struct iobuf_module {
+	char				*name;
+	TAILQ_ENTRY(iobuf_module)	tailq;
+};
+
+struct iobuf {
+	struct spdk_mempool		*small_pool;
+	struct spdk_mempool		*large_pool;
+	struct spdk_iobuf_opts		opts;
+	TAILQ_HEAD(, iobuf_module)	modules;
+	spdk_iobuf_finish_cb		finish_cb;
+	void				*finish_arg;
+};
+
+static struct iobuf g_iobuf = {
+	.modules = TAILQ_HEAD_INITIALIZER(g_iobuf.modules),
+	.opts = {
+		.small_pool_count = IOBUF_MIN_SMALL_POOL_SIZE,
+		.large_pool_count = IOBUF_MIN_LARGE_POOL_SIZE,
+		.small_bufsize = IOBUF_MIN_SMALL_BUFSIZE,
+		.large_bufsize = IOBUF_MIN_LARGE_BUFSIZE,
+	},
 };
 
 static RB_HEAD(io_device_tree, io_device) g_io_devices = RB_INITIALIZER(g_io_devices);
@@ -2877,6 +2914,265 @@ spdk_spin_held(struct spdk_spinlock *sspin)
 	SPIN_ASSERT_RETURN(thread != NULL, SPIN_ERR_NOT_SPDK_THREAD, false);
 
 	return sspin->thread == thread;
+}
+
+static int
+iobuf_channel_create_cb(void *io_device, void *ctx)
+{
+	struct iobuf_channel *ch = ctx;
+
+	STAILQ_INIT(&ch->small_queue);
+	STAILQ_INIT(&ch->large_queue);
+
+	return 0;
+}
+
+static void
+iobuf_channel_destroy_cb(void *io_device, void *ctx)
+{
+	struct iobuf_channel *ch __attribute__((unused)) = ctx;
+
+	assert(STAILQ_EMPTY(&ch->small_queue));
+	assert(STAILQ_EMPTY(&ch->large_queue));
+}
+
+int
+spdk_iobuf_initialize(void)
+{
+	struct spdk_iobuf_opts *opts = &g_iobuf.opts;
+	int cache_size, rc = 0;
+
+	/**
+	 * Ensure no more than half of the total buffers end up local caches, by using
+	 * spdk_env_get_core_count() to determine how many local caches we need to account for.
+	 */
+	cache_size = opts->small_pool_count / (2 * spdk_env_get_core_count());
+	g_iobuf.small_pool = spdk_mempool_create("iobuf_small_pool", opts->small_pool_count,
+			     opts->small_bufsize, cache_size,
+			     SPDK_ENV_SOCKET_ID_ANY);
+	if (!g_iobuf.small_pool) {
+		SPDK_ERRLOG("Failed to create small iobuf pool\n");
+		rc = -ENOMEM;
+		goto error;
+	}
+
+	cache_size = opts->large_pool_count / (2 * spdk_env_get_core_count());
+	g_iobuf.large_pool = spdk_mempool_create("iobuf_large_pool", opts->large_pool_count,
+			     opts->large_bufsize, cache_size,
+			     SPDK_ENV_SOCKET_ID_ANY);
+	if (!g_iobuf.large_pool) {
+		SPDK_ERRLOG("Failed to create large iobuf pool\n");
+		rc = -ENOMEM;
+		goto error;
+	}
+
+	spdk_io_device_register(&g_iobuf, iobuf_channel_create_cb, iobuf_channel_destroy_cb,
+				sizeof(struct iobuf_channel), "iobuf");
+
+	return 0;
+error:
+	spdk_mempool_free(g_iobuf.small_pool);
+	return rc;
+}
+
+static void
+iobuf_unregister_cb(void *io_device)
+{
+	struct iobuf_module *module;
+
+	while (!TAILQ_EMPTY(&g_iobuf.modules)) {
+		module = TAILQ_FIRST(&g_iobuf.modules);
+		TAILQ_REMOVE(&g_iobuf.modules, module, tailq);
+		free(module->name);
+		free(module);
+	}
+
+	if (spdk_mempool_count(g_iobuf.small_pool) != g_iobuf.opts.small_pool_count) {
+		SPDK_ERRLOG("small iobuf pool count is %zu, expected %"PRIu64"\n",
+			    spdk_mempool_count(g_iobuf.small_pool), g_iobuf.opts.small_pool_count);
+	}
+
+	if (spdk_mempool_count(g_iobuf.large_pool) != g_iobuf.opts.large_pool_count) {
+		SPDK_ERRLOG("large iobuf pool count is %zu, expected %"PRIu64"\n",
+			    spdk_mempool_count(g_iobuf.large_pool), g_iobuf.opts.large_pool_count);
+	}
+
+	spdk_mempool_free(g_iobuf.small_pool);
+	spdk_mempool_free(g_iobuf.large_pool);
+
+	if (g_iobuf.finish_cb != NULL) {
+		g_iobuf.finish_cb(g_iobuf.finish_arg);
+	}
+}
+
+void
+spdk_iobuf_finish(spdk_iobuf_finish_cb cb_fn, void *cb_arg)
+{
+	g_iobuf.finish_cb = cb_fn;
+	g_iobuf.finish_arg = cb_arg;
+
+	spdk_io_device_unregister(&g_iobuf, iobuf_unregister_cb);
+}
+
+int
+spdk_iobuf_set_opts(const struct spdk_iobuf_opts *opts)
+{
+	if (opts->small_pool_count < IOBUF_MIN_SMALL_POOL_SIZE) {
+		SPDK_ERRLOG("small_pool_count must be at least %" PRIu32 "\n",
+			    IOBUF_MIN_SMALL_POOL_SIZE);
+		return -EINVAL;
+	}
+	if (opts->large_pool_count < IOBUF_MIN_LARGE_POOL_SIZE) {
+		SPDK_ERRLOG("large_pool_count must be at least %" PRIu32 "\n",
+			    IOBUF_MIN_LARGE_POOL_SIZE);
+		return -EINVAL;
+	}
+	if (opts->small_bufsize < IOBUF_MIN_SMALL_BUFSIZE) {
+		SPDK_ERRLOG("small_bufsize must be at least %" PRIu32 "\n",
+			    IOBUF_MIN_SMALL_BUFSIZE);
+		return -EINVAL;
+	}
+	if (opts->large_bufsize < IOBUF_MIN_LARGE_BUFSIZE) {
+		SPDK_ERRLOG("large_bufsize must be at least %" PRIu32 "\n",
+			    IOBUF_MIN_LARGE_BUFSIZE);
+		return -EINVAL;
+	}
+
+	g_iobuf.opts = *opts;
+
+	return 0;
+}
+
+void
+spdk_iobuf_get_opts(struct spdk_iobuf_opts *opts)
+{
+	*opts = g_iobuf.opts;
+}
+
+int
+spdk_iobuf_channel_init(struct spdk_iobuf_channel *ch, const char *name,
+			uint32_t small_cache_size, uint32_t large_cache_size)
+{
+	struct spdk_io_channel *ioch;
+	struct iobuf_channel *iobuf_ch;
+	struct iobuf_module *module;
+
+	if (small_cache_size != 0 || large_cache_size != 0) {
+		SPDK_ERRLOG("iobuf cache is currently unsupported\n");
+		return -EINVAL;
+	}
+
+	TAILQ_FOREACH(module, &g_iobuf.modules, tailq) {
+		if (strcmp(name, module->name) == 0) {
+			break;
+		}
+	}
+
+	if (module == NULL) {
+		SPDK_ERRLOG("Couldn't find iobuf module: '%s'\n", name);
+		return -ENODEV;
+	}
+
+	ioch = spdk_get_io_channel(&g_iobuf);
+	if (ioch == NULL) {
+		SPDK_ERRLOG("Couldn't get iobuf IO channel\n");
+		return -ENOMEM;
+	}
+
+	iobuf_ch = spdk_io_channel_get_ctx(ioch);
+
+	ch->small.queue = &iobuf_ch->small_queue;
+	ch->large.queue = &iobuf_ch->large_queue;
+	ch->small.pool = g_iobuf.small_pool;
+	ch->large.pool = g_iobuf.large_pool;
+	ch->small.bufsize = g_iobuf.opts.small_bufsize;
+	ch->large.bufsize = g_iobuf.opts.large_bufsize;
+	ch->parent = ioch;
+	ch->module = module;
+
+	return 0;
+}
+
+void
+spdk_iobuf_channel_fini(struct spdk_iobuf_channel *ch)
+{
+	struct spdk_iobuf_entry *entry __attribute__((unused));
+
+	/* Make sure none of the wait queue entries are coming from this module */
+	STAILQ_FOREACH(entry, ch->small.queue, stailq) {
+		assert(entry->module != ch->module);
+	}
+	STAILQ_FOREACH(entry, ch->large.queue, stailq) {
+		assert(entry->module != ch->module);
+	}
+
+	spdk_put_io_channel(ch->parent);
+	ch->parent = NULL;
+}
+
+int
+spdk_iobuf_register_module(const char *name)
+{
+	struct iobuf_module *module;
+
+	TAILQ_FOREACH(module, &g_iobuf.modules, tailq) {
+		if (strcmp(name, module->name) == 0) {
+			return -EEXIST;
+		}
+	}
+
+	module = calloc(1, sizeof(*module));
+	if (module == NULL) {
+		return -ENOMEM;
+	}
+
+	module->name = strdup(name);
+	if (module->name == NULL) {
+		free(module);
+		return -ENOMEM;
+	}
+
+	TAILQ_INSERT_TAIL(&g_iobuf.modules, module, tailq);
+
+	return 0;
+}
+
+int
+spdk_iobuf_for_each_entry(struct spdk_iobuf_channel *ch, struct spdk_iobuf_pool *pool,
+			  spdk_iobuf_for_each_entry_fn cb_fn, void *cb_ctx)
+{
+	struct spdk_iobuf_entry *entry, *tmp;
+	int rc;
+
+	STAILQ_FOREACH_SAFE(entry, pool->queue, stailq, tmp) {
+		/* We only want to iterate over the entries requested by the module which owns ch */
+		if (entry->module != ch->module) {
+			continue;
+		}
+
+		rc = cb_fn(ch, entry, cb_ctx);
+		if (rc != 0) {
+			return rc;
+		}
+	}
+
+	return 0;
+}
+
+void
+spdk_iobuf_entry_abort(struct spdk_iobuf_channel *ch, struct spdk_iobuf_entry *entry,
+		       uint64_t len)
+{
+	struct spdk_iobuf_pool *pool;
+
+	if (len <= ch->small.bufsize) {
+		pool = &ch->small;
+	} else {
+		assert(len <= ch->large.bufsize);
+		pool = &ch->large;
+	}
+
+	STAILQ_REMOVE(pool->queue, entry, spdk_iobuf_entry, stailq);
 }
 
 SPDK_LOG_REGISTER_COMPONENT(thread)
