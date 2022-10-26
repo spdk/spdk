@@ -425,10 +425,6 @@ function cleanup_linux() {
 
 	files_to_clean+=(/dev/shm/@(@($match_spdk)_trace|spdk_iscsi_conns))
 	files_to_clean+=("${file_locks[@]}")
-	if ((${#files_to_clean[@]} == 0)); then
-		echo "Clean"
-		return 0
-	fi
 
 	# This may fail in case path that readlink attempts to resolve suddenly
 	# disappears (as it may happen with terminating processes).
