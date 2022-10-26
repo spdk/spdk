@@ -430,7 +430,9 @@ function cleanup_linux() {
 		return 0
 	fi
 
-	opened_files+=($(readlink -f /proc/+([0-9])/fd/+([0-9])))
+	# This may fail in case path that readlink attempts to resolve suddenly
+	# disappears (as it may happen with terminating processes).
+	opened_files+=($(readlink -f /proc/+([0-9])/fd/+([0-9]))) || true
 
 	if ((${#opened_files[@]} == 0)); then
 		echo "Can't get list of opened files!"
