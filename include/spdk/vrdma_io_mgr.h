@@ -32,10 +32,50 @@
 #define _VRDMA_IO_MGR_H
 #include <stdio.h>
 #include <stdint.h>
+#include "spdk/vrdma_srv.h"
+#include "spdk/vrdma_controller.h"
+#include "snap_dma.h"
+
+/**
+ * enum vrdma_vq_wqe_sm_op_status - status of last operation
+ * @VRDMA_WQE_SM_OP_OK:		Last operation finished without a problem
+ * @VRDMA_WQE_SM_OP_ERR:	Last operation failed
+ *
+ * State machine operates asynchronously, usually by calling a function
+ * and providing a callback. Once callback is called it calls the state machine
+ * progress again and provides it with the status of the function called.
+ * This enum describes the status of the function called.
+ */
+enum vrdma_vq_sm_op_status {
+	VRDMA_VQ_SM_OP_OK,
+	VRDMA_VQ_SM_OP_ERR,
+};
+
+struct vrdma_sq_sm_state {
+	bool (*sm_handler)(struct vrdma_sq *sq,
+			enum vrdma_vq_sm_op_status status);
+};
+
+struct vrdma_sq_state_machine {
+	struct vrdma_sq_sm_state *sm_array;
+	uint16_t sme;
+};
+
+struct vrdma_rq_sm_state {
+	bool (*sm_handler)(struct vrdma_rq *rq,
+			enum vrdma_vq_sm_op_status status);
+};
+
+struct vrdma_rq_state_machine {
+	struct vrdma_rq_sm_state *sm_array;
+	uint16_t sme;
+};
 
 size_t spdk_io_mgr_get_num_threads(void);
 struct spdk_thread *spdk_io_mgr_get_thread(int id);
 
 int spdk_io_mgr_init(void);
 void spdk_io_mgr_clear(void);
+
+void vrdma_sq_sm_dma_cb(struct snap_dma_completion *self, int status);
 #endif
