@@ -82,7 +82,7 @@ vrdma_ctrl_find_snap_context(const char *emu_manager, int pf_id)
     int ibv_list_sz, pf_list_sz;
     int i, j;
 
-    SPDK_ERRLOG("lizh vrdma_ctrl_find_snap_context...emu_manager %s pf_id %d",
+    SPDK_NOTICELOG("lizh vrdma_ctrl_find_snap_context...emu_manager %s pf_id %d",
      emu_manager, pf_id);
     ibv_list = ibv_get_device_list(&ibv_list_sz);
     if (!ibv_list)
@@ -106,7 +106,7 @@ vrdma_ctrl_find_snap_context(const char *emu_manager, int pf_id)
 
         pf_list_sz = snap_get_pf_list(ctx, SNAP_VIRTIO_NET, pf_list);
         for (j = 0; j < pf_list_sz; j++) {
-            SPDK_ERRLOG("\n lizh vrdma_ctrl_find_snap_context...pf_list[%d]->plugged %d id %d",
+            SPDK_NOTICELOG("\n lizh vrdma_ctrl_find_snap_context...pf_list[%d]->plugged %d id %d",
             j, pf_list[j]->plugged, pf_list[j]->id);
             if (pf_list[j]->plugged && pf_list[j]->id == pf_id) {
                 found = ctx;
@@ -213,7 +213,7 @@ static void vrdma_adminq_dma_cb(struct snap_dma_completion *self, int status)
     /* pre_pi should be init as last ci*/
     sw_qp->pre_pi = sw_qp->pre_ci;
 	sw_qp->state = VRDMA_CMD_STATE_INIT_CI;
-    SPDK_ERRLOG("\nlizh vrdma_adminq_dma_cb...sw_qp->state %d sw_qp->pre_ci %d sw_qp->pre_pi %d admq->pi %d\n",
+    SPDK_NOTICELOG("\nlizh vrdma_adminq_dma_cb...sw_qp->state %d sw_qp->pre_ci %d sw_qp->pre_pi %d admq->pi %d\n",
     sw_qp->state, sw_qp->pre_ci, sw_qp->pre_pi, admq->pi);
 }
 
@@ -222,7 +222,7 @@ static int vrdma_adminq_init(struct vrdma_ctrl *ctrl)
     struct vrdma_admin_queue *admq;
     uint32_t aq_size = sizeof(*admq);
     
-    SPDK_ERRLOG("\nlizh vrdma_adminq_init...start\n");
+    SPDK_NOTICELOG("\nlizh vrdma_adminq_init...start\n");
     admq = spdk_malloc(aq_size, 0x10, NULL, SPDK_ENV_LCORE_ID_ANY,
                              SPDK_MALLOC_DMA);
     if (!admq) {
@@ -245,7 +245,7 @@ static int vrdma_adminq_init(struct vrdma_ctrl *ctrl)
     ctrl->sw_qp.admq = admq;
 	ctrl->sw_qp.state = VRDMA_CMD_STATE_IDLE;
 	ctrl->sw_qp.custom_sm = &vrdma_sm;
-    SPDK_ERRLOG("lizh vrdma_adminq_init...done\n");
+    SPDK_NOTICELOG("lizh vrdma_adminq_init...done\n");
     return 0;
 }
 
@@ -258,7 +258,7 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
         .post_flr = vrdma_ctrl_post_flr,
     };
 
-    SPDK_ERRLOG("\nlizh vrdma_ctrl_init...pf_id %d start\n", attr->pf_id);
+    SPDK_NOTICELOG("\nlizh vrdma_ctrl_init...pf_id %d start\n", attr->pf_id);
     ctrl = calloc(1, sizeof(*ctrl));
     if (!ctrl)
         goto err;
@@ -375,11 +375,11 @@ void vrdma_ctrl_destroy(void *arg, void (*done_cb)(void *arg),
 {
     struct vrdma_ctrl *ctrl = arg;
 
-    SPDK_ERRLOG("lizh vrdma_ctrl_destroy...start");
+    SPDK_NOTICELOG("lizh vrdma_ctrl_destroy...start");
     snap_vrdma_ctrl_close(ctrl->sctrl);
     ctrl->sctrl = NULL;
     ctrl->destroy_done_cb = done_cb;
     ctrl->destroy_done_cb_arg = done_cb_arg;
     vrdma_ctrl_free(ctrl);
-    SPDK_ERRLOG("lizh vrdma_ctrl_destroy...done");
+    SPDK_NOTICELOG("lizh vrdma_ctrl_destroy...done");
 }

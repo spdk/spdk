@@ -83,7 +83,7 @@ spdk_emu_ctx_find_by_pci_id(const char *emu_manager, int pf_id)
 
     LIST_FOREACH(ctx, &spdk_emu_list, entry) {
         /*lizh Just for test*/
-        SPDK_ERRLOG("lizh spdk_emu_ctx_find_by_pci_id...%s type %d id %d",
+        SPDK_NOTICELOG("lizh spdk_emu_ctx_find_by_pci_id...%s type %d id %d",
         ctx->emu_manager, ctx->spci->type, ctx->spci->id);
         if (strncmp(ctx->emu_manager, emu_manager,
                     SPDK_EMU_MANAGER_NAME_MAXLEN) ||
@@ -182,7 +182,7 @@ static int spdk_emu_ctrl_vrdma_create(struct spdk_emu_ctx *ctx,
     struct vrdma_ctrl_init_attr vrdma_init_attr = {};
     struct spdk_emu_controller_vrdma_create_attr *vrdma_attr;
 
-    SPDK_ERRLOG("\n lizh spdk_emu_ctrl_vrdma_create..pf_id %d.start\n", attr->spci->id);
+    SPDK_NOTICELOG("\n lizh spdk_emu_ctrl_vrdma_create..pf_id %d.start\n", attr->spci->id);
     vrdma_attr = attr->priv;
     vrdma_init_attr.emu_manager_name = attr->emu_manager;
     //vrdma_init_attr.pf_id = attr->spci->id;
@@ -320,7 +320,7 @@ spdk_emu_ctx_create(const struct spdk_emu_ctx_create_attr *attr)
     struct spdk_emu_ctx *ctx;
     int err;
 
-    SPDK_ERRLOG("\n lizh spdk_emu_ctx_create...start\n");
+    SPDK_NOTICELOG("\n lizh spdk_emu_ctx_create...start\n");
     ctx = calloc(1, sizeof(*ctx));
     if (!ctx)
         goto err;
@@ -333,14 +333,14 @@ spdk_emu_ctx_create(const struct spdk_emu_ctx_create_attr *attr)
         SPDK_ERRLOG("failed to start controller admin queue poller\n");
         goto ctrl_destroy;
     }
-    SPDK_ERRLOG("\n lizh spdk_emu_ctx_create..adminq_poller...done\n");
+    SPDK_NOTICELOG("\n lizh spdk_emu_ctx_create..adminq_poller...done\n");
     ctx->bar_event_poller = spdk_poller_register(spdk_emu_progress_mmio,
                                             ctx, 100000);
     if (!ctx->bar_event_poller) {
         SPDK_ERRLOG("failed to start controller bar event poller\n");
         goto unregister_adminq_poller;
     }
-    SPDK_ERRLOG("\n lizh spdk_emu_ctx_create..bar_event_poller...done\n");
+    SPDK_NOTICELOG("\n lizh spdk_emu_ctx_create..bar_event_poller...done\n");
     if (spdk_emu_ctrl_has_mt(ctx)) {
         err = spdk_emu_ctx_io_threads_create(ctx);
         if (err) {
@@ -368,7 +368,7 @@ spdk_emu_ctx_create(const struct spdk_emu_ctx_create_attr *attr)
         snprintf(ctx->emu_name, SPDK_EMU_NAME_MAXLEN,
                 "%s%dpf%d", ctx->ctrl_ops->prefix,
                 vrdma_dev_name_to_id(attr->emu_manager), attr->spci->id);
-    SPDK_ERRLOG("\n lizh spdk_emu_ctx_create...done\n");
+    SPDK_NOTICELOG("\n lizh spdk_emu_ctx_create...done\n");
     return ctx;
 
 unregister_adminq_bar_poller:
@@ -412,7 +412,7 @@ static void spdk_emu_ctrl_destroy(struct spdk_emu_ctx *ctx,
                                   void *done_cb_arg)
 {
     ctx->ctrl_ops = NULL;
-    SPDK_ERRLOG("lizh spdk_emu_ctrl_destroy...start");
+    SPDK_NOTICELOG("lizh spdk_emu_ctrl_destroy...start");
     vrdma_ctrl_destroy(ctx->ctrl, done_cb, done_cb_arg);
 }
 
@@ -424,7 +424,7 @@ spdk_emu_controller_vrdma_create(struct spdk_vrdma_dev *vdev)
     struct spdk_emu_ctx *ctx;
     struct snap_pci *spci;
 
-    SPDK_ERRLOG("\n lizh spdk_emu_controller_vrdma_create start\n");
+    SPDK_NOTICELOG("\n lizh spdk_emu_controller_vrdma_create start\n");
     attr = calloc(1, sizeof(*attr));
     if (!attr)
         goto err;
@@ -434,7 +434,7 @@ spdk_emu_controller_vrdma_create(struct spdk_vrdma_dev *vdev)
     spci = spdk_vrdma_snap_get_snap_pci(attr->emu_manager, attr->pf_id);
     if (!spci)
         goto free_attr;
-    SPDK_ERRLOG("\n lizh spdk_emu_controller_vrdma_create emu_manager %s spci %p pf_id %d\n", attr->emu_manager, spci, attr->pf_id);
+    SPDK_NOTICELOG("\n lizh spdk_emu_controller_vrdma_create emu_manager %s spci %p pf_id %d\n", attr->emu_manager, spci, attr->pf_id);
     pthread_mutex_lock(&spdk_emu_list_lock);
     ctx = spdk_emu_ctx_find_by_pci_id(attr->emu_manager,
                            attr->pf_id);
@@ -456,7 +456,7 @@ spdk_emu_controller_vrdma_create(struct spdk_vrdma_dev *vdev)
     LIST_INSERT_HEAD(&spdk_emu_list, ctx, entry);
     pthread_mutex_unlock(&spdk_emu_list_lock);
     free(attr);
-    SPDK_ERRLOG("\n lizh spdk_emu_controller_vrdma_create done\n");
+    SPDK_NOTICELOG("\n lizh spdk_emu_controller_vrdma_create done\n");
     return 0;
 
 free_attr:
@@ -521,7 +521,7 @@ spdk_emu_ctx_find_by_pci_id_testrpc(const char *emu_manager, int pf_id)
 
     LIST_FOREACH(ctx, &spdk_emu_list, entry) {
         
-        SPDK_ERRLOG("lizh spdk_emu_ctx_find_by_pci_id...%s type %d id %d",
+        SPDK_NOTICELOG("lizh spdk_emu_ctx_find_by_pci_id...%s type %d id %d",
         ctx->emu_manager, ctx->spci->type, ctx->spci->id);
         if (strncmp(ctx->emu_manager, emu_manager,
                     SPDK_EMU_MANAGER_NAME_MAXLEN))
@@ -542,7 +542,7 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
     struct snap_vrdma_ctrl *sctrl;
     struct vrdma_ctrl *ctrl;
 
-    SPDK_ERRLOG("lizh spdk_vrdma_rpc_controller_configue...start\n");
+    SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...start\n");
     attr = calloc(1, sizeof(*attr));
     if (!attr)
         goto invalid;
@@ -575,7 +575,7 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
         }
     }
     if (attr->mac) {
-        SPDK_ERRLOG("lizh spdk_vrdma_rpc_controller_configue...mac=0x%lx\n", attr->mac);
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...mac=0x%lx\n", attr->mac);
         ctrl = ctx->ctrl;
         if (!ctrl) {
             SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
@@ -598,11 +598,11 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
         }
     }
     if (attr->dev_state) {
-        SPDK_ERRLOG("lizh spdk_vrdma_rpc_controller_configue...dev_state=0x%x\n", attr->dev_state);
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...dev_state=0x%x\n", attr->dev_state);
         g_bar_test.status = attr->dev_state;
     }
     if (attr->adminq_paddr && attr->adminq_length) {
-        SPDK_ERRLOG("lizh spdk_vrdma_rpc_controller_configue...adminq_paddr=0x%lx adminq_length %d\n",
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...adminq_paddr=0x%lx adminq_length %d\n",
         attr->adminq_paddr, attr->adminq_length);
         g_bar_test.enabled = 1;
         g_bar_test.status = 4; /* driver_ok */

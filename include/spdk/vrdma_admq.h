@@ -452,11 +452,11 @@ Currently only query_device_resp and query_port_resp exceed the resp length (64-
 but the corresponding two requests do not pass to service!
 */
 union vrdma_admin_cmd_req {
-	char buf[64];  /* 64 Byte */
+	char buf[256];  /* 256 Byte */
 	struct { 
-    	uint16_t    len; 
-		uint16_t	reserved[3]; 
-    	uint64_t 	pdata; 
+    	uint16_t    len;
+		uint16_t	reserved[3];
+    	uint64_t 	pdata;
 	}; 
 	struct vrdma_open_device_req open_device_req;
 	struct vrdma_query_device_req query_device_req;
@@ -481,11 +481,11 @@ union vrdma_admin_cmd_req {
 } __attribute((packed));
 
 union vrdma_admin_cmd_resp {
-	char buf[64];  /* 64 Byte */
-	struct { 
+	char buf[256];  /* 256 Byte */
+	struct {
     	uint16_t    len;
 		uint16_t	reserved[3];
-    	uint64_t 	pdata; 
+    	uint64_t 	pdata;/*host physic address*/
 	}; 
 	struct vrdma_open_device_resp open_device_resp;
 	struct vrdma_query_device_resp query_device_resp;
