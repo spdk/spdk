@@ -1818,11 +1818,14 @@ bdev_finish_unregister_bdevs_iter(void *cb_arg, int bdeverrno)
 	 */
 	for (bdev = TAILQ_LAST(&g_bdev_mgr.bdevs, spdk_bdev_list);
 	     bdev; bdev = TAILQ_PREV(bdev, spdk_bdev_list, internal.link)) {
+		spdk_spin_lock(&bdev->internal.spinlock);
 		if (bdev->internal.claim_module != NULL) {
 			SPDK_DEBUGLOG(bdev, "Skipping claimed bdev '%s'(<-'%s').\n",
 				      bdev->name, bdev->internal.claim_module->name);
+			spdk_spin_unlock(&bdev->internal.spinlock);
 			continue;
 		}
+		spdk_spin_unlock(&bdev->internal.spinlock);
 
 		SPDK_DEBUGLOG(bdev, "Unregistering bdev '%s'\n", bdev->name);
 		spdk_bdev_unregister(bdev, bdev_finish_unregister_bdevs_iter, bdev);
@@ -7276,9 +7279,12 @@ int
 spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			    struct spdk_bdev_module *module)
 {
+	spdk_spin_lock(&bdev->internal.spinlock);
+
 	if (bdev->internal.claim_module != NULL) {
 		SPDK_ERRLOG("bdev %s already claimed by module %s\n", bdev->name,
 			    bdev->internal.claim_module->name);
+		spdk_spin_unlock(&bdev->internal.spinlock);
 		return -EPERM;
 	}
 
@@ -7287,14 +7293,20 @@ spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	}
 
 	bdev->internal.claim_module = module;
+
+	spdk_spin_unlock(&bdev->internal.spinlock);
 	return 0;
 }
 
 void
 spdk_bdev_module_release_bdev(struct spdk_bdev *bdev)
 {
+	spdk_spin_lock(&bdev->internal.spinlock);
+
 	assert(bdev->internal.claim_module != NULL);
 	bdev->internal.claim_module = NULL;
+
+	spdk_spin_unlock(&bdev->internal.spinlock);
 }
 
 struct spdk_bdev *

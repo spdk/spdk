@@ -524,7 +524,8 @@ struct spdk_bdev {
 
 		/**
 		 * Pointer to the module that has claimed this bdev for purposes of creating virtual
-		 *  bdevs on top of it.  Set to NULL if the bdev has not been claimed.
+		 * bdevs on top of it. Set to NULL if the bdev has not been claimed. Must hold
+		 * spinlock on all updates.
 		 */
 		struct spdk_bdev_module *claim_module;
 
