@@ -16,6 +16,7 @@ struct raid_params {
 	uint64_t base_bdev_blockcnt;
 	uint32_t base_bdev_blocklen;
 	uint32_t strip_size;
+	uint32_t md_len;
 };
 
 struct raid_params *g_params;
@@ -111,6 +112,7 @@ raid_test_create_raid_bdev(struct raid_params *params, struct raid_bdev_module *
 	raid_bdev->strip_size_shift = spdk_u32log2(raid_bdev->strip_size);
 	raid_bdev->blocklen_shift = spdk_u32log2(params->base_bdev_blocklen);
 	raid_bdev->bdev.blocklen = params->base_bdev_blocklen;
+	raid_bdev->bdev.md_len = params->md_len;
 
 	return raid_bdev;
 }

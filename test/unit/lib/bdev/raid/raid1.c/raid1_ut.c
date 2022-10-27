@@ -66,6 +66,7 @@ test_setup(void)
 				params.base_bdev_blockcnt = *base_bdev_blockcnt;
 				params.base_bdev_blocklen = *base_bdev_blocklen;
 				params.strip_size = 0;
+				params.md_len = 0;
 				raid_test_params_add(&params);
 			}
 		}

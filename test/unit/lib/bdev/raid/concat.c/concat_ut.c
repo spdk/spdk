@@ -201,6 +201,7 @@ test_setup(void)
 					params.base_bdev_blockcnt = *base_bdev_blockcnt;
 					params.base_bdev_blocklen = *base_bdev_blocklen;
 					params.strip_size = *strip_size_kb * 1024 / *base_bdev_blocklen;
+					params.md_len = 0;
 					if (params.strip_size == 0 ||
 					    params.strip_size > *base_bdev_blockcnt) {
 						continue;
