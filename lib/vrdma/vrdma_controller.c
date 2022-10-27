@@ -328,6 +328,7 @@ static void vrdma_ctrl_free(struct vrdma_ctrl *ctrl)
 {
     struct spdk_vrdma_pd *vpd;
     struct spdk_vrdma_mr *vmr;
+    struct spdk_vrdma_ah *vah;
     struct spdk_vrdma_qp *vqp;
     struct spdk_vrdma_cq *vcq;
     struct spdk_vrdma_eq *veq;
@@ -352,6 +353,11 @@ static void vrdma_ctrl_free(struct vrdma_ctrl *ctrl)
         LIST_FOREACH(veq, &ctrl->vdev->veq_list, entry) {
             LIST_REMOVE(veq, entry);
             free(veq);
+        }
+        LIST_FOREACH(vah, &ctrl->vdev->vah_list, entry) {
+            LIST_REMOVE(vah, entry);
+	        spdk_bit_array_clear(free_vah_ids, vah->ah_idx);
+            free(vah);
         }
         LIST_FOREACH(vmr, &ctrl->vdev->vmr_list, entry) {
             LIST_REMOVE(vmr, entry);

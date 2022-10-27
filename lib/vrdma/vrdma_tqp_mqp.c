@@ -32,7 +32,6 @@
 #include <stdint.h>
 #include <unistd.h>
 
-#include "snap_vrdma_admq.h"
 #include "snap_dma.h"
 
 #define MAX_VRDMA_THREAD 4

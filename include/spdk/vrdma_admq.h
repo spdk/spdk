@@ -39,6 +39,7 @@
 
 extern struct spdk_bit_array *free_vpd_ids;
 extern struct spdk_bit_array *free_vmr_ids;
+extern struct spdk_bit_array *free_vah_ids;
 extern struct spdk_bit_array *free_vqp_ids;
 extern struct spdk_bit_array *free_vcq_ids;
 
@@ -115,6 +116,8 @@ enum vrdma_device_cap_flags {
 #define VRDMA_MAX_PD_NUM     0x40000
 #define VRDMA_DEV_MAX_PD     0x2000
 #define VRDMA_MAX_MR_NUM     0x40000
+#define VRDMA_MAX_AH_NUM     0x40000
+#define VRDMA_DEV_MAX_AH     0x2000
 #define VRDMA_DEV_MAX_MR     0x2000
 #define VRDMA_MAX_QP_NUM     0x40000
 #define VRDMA_DEV_MAX_QP     0x2000
@@ -454,9 +457,9 @@ but the corresponding two requests do not pass to service!
 union vrdma_admin_cmd_req {
 	char buf[256];  /* 256 Byte */
 	struct { 
-    	uint16_t    len;
+		uint16_t    len;
 		uint16_t	reserved[3];
-    	uint64_t 	pdata;
+		uint64_t 	pdata;
 	}; 
 	struct vrdma_open_device_req open_device_req;
 	struct vrdma_query_device_req query_device_req;
@@ -483,9 +486,9 @@ union vrdma_admin_cmd_req {
 union vrdma_admin_cmd_resp {
 	char buf[256];  /* 256 Byte */
 	struct {
-    	uint16_t    len;
+		uint16_t    len;
 		uint16_t	reserved[3];
-    	uint64_t 	pdata;/*host physic address*/
+		uint64_t 	pdata;/*host physic address*/
 	}; 
 	struct vrdma_open_device_resp open_device_resp;
 	struct vrdma_query_device_resp query_device_resp;

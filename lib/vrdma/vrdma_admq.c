@@ -48,11 +48,13 @@
 
 static uint32_t g_vpd_cnt;
 static uint32_t g_vmr_cnt;
+static uint32_t g_vah_cnt;
 static uint32_t g_vqp_cnt;
 static uint32_t g_vcq_cnt;
 
 struct spdk_bit_array *free_vpd_ids;
 struct spdk_bit_array *free_vmr_ids;
+struct spdk_bit_array *free_vah_ids;
 struct spdk_bit_array *free_vqp_ids;
 struct spdk_bit_array *free_vcq_ids;
 
@@ -78,6 +80,9 @@ static int spdk_vrdma_init_all_id_pool(void)
 	free_vmr_ids = spdk_vrdma_create_id_pool(VRDMA_MAX_MR_NUM);
 	if (!free_vmr_ids)
 		return -1;
+	free_vah_ids = spdk_vrdma_create_id_pool(VRDMA_MAX_AH_NUM);
+	if (!free_vah_ids)
+		return -1;
 	free_vqp_ids = spdk_vrdma_create_id_pool(VRDMA_MAX_QP_NUM);
 	if (!free_vqp_ids)
 		return -1;
@@ -93,6 +98,7 @@ int spdk_vrdma_adminq_resource_init(void)
 	g_vqp_cnt = 0;
 	g_vcq_cnt = 0;
 	g_vmr_cnt = 0;
+	g_vah_cnt = 0;
 	if (spdk_vrdma_init_all_id_pool())
 		return -1;
 	return 0;
@@ -102,6 +108,7 @@ void spdk_vrdma_adminq_resource_destory(void)
 {
 	spdk_bit_array_free(&free_vpd_ids);
 	spdk_bit_array_free(&free_vmr_ids);
+	spdk_bit_array_free(&free_vah_ids);
 	spdk_bit_array_free(&free_vqp_ids);
 	spdk_bit_array_free(&free_vcq_ids);
 }
@@ -173,6 +180,7 @@ static void vrdma_aq_query_dev(struct vrdma_ctrl *ctrl,
 	aqe->resp.query_device_resp.max_rq_depth = VRDMA_DEV_MAX_RQ_DP;
 	aqe->resp.query_device_resp.max_cq_depth = VRDMA_DEV_MAX_CQ_DP;
 	aqe->resp.query_device_resp.max_mr = 1 << ctrl->sctx->vrdma_caps.log_max_mkey;
+	aqe->resp.query_device_resp.max_ah = VRDMA_DEV_MAX_AH;
 	aqe->resp.query_device_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 }
 
@@ -688,7 +696,7 @@ static void vrdma_aq_dereg_mr(struct vrdma_ctrl *ctrl,
 	vrdma_destroy_remote_mkey(ctrl, vmr);
 	spdk_bit_array_clear(free_vmr_ids, vmr->mr_idx);
 
-	g_vpd_cnt--;
+	g_vmr_cnt--;
 	ctrl->vdev->vmr_cnt--;
 	vmr->vpd->ref_cnt--;
 	free(vmr);
@@ -770,15 +778,124 @@ static void vrdma_aq_destroy_ceq(struct vrdma_ctrl *ctrl,
 static void vrdma_aq_create_ah(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
-	//TODO
+	struct spdk_vrdma_ah *vah;
+	struct vrdma_cmd_param param;
+	struct spdk_vrdma_pd *vpd = NULL;
+	uint32_t ah_idx;
+
+	SPDK_NOTICELOG("\nlizh vrdma_aq_create_ah...start\n");
+	if (g_vah_cnt > VRDMA_MAX_AH_NUM ||
+		!ctrl->vdev ||
+		ctrl->vdev->vah_cnt > VRDMA_DEV_MAX_AH) {
+		aqe->resp.create_ah_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_EXCEED_MAX;
+		SPDK_ERRLOG("Failed to create ah, err(%d)",
+				  aqe->resp.create_ah_resp.err_code);
+		return;
+	}
+	LIST_FOREACH(vpd, &ctrl->vdev->vpd_list, entry)
+        if (vpd->pd_idx == aqe->req.create_ah_req.pd_handle)
+            break;
+	if (!vpd) {
+		aqe->resp.create_mr_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
+		SPDK_ERRLOG("Failed to find PD %d when creation AH, err(%d)",
+					aqe->req.create_ah_req.pd_handle,
+					aqe->resp.create_ah_resp.err_code);
+		return;
+	}
+	ah_idx = spdk_bit_array_find_first_clear(free_vmr_ids, 0);
+	if (ah_idx == UINT32_MAX) {
+		aqe->resp.create_ah_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
+		SPDK_ERRLOG("Failed to allocate ah_idx, err(%d)",
+				  aqe->resp.create_ah_resp.err_code);
+		return;
+	}
+    vah = calloc(1, sizeof(*vah));
+    if (!vah) {
+		aqe->resp.create_ah_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
+		SPDK_ERRLOG("Failed to allocate AH memory, err(%d)",
+				  aqe->resp.create_ah_resp.err_code);
+		return;
+	}
+	param.param.ah_param.ah_handle = ah_idx;
+	if (ctrl->srv_ops->vrdma_device_create_ah(&ctrl->dev, aqe, &param)) {
+		aqe->resp.create_ah_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
+		SPDK_ERRLOG("Failed to create AH in service, err(%d)",
+				  aqe->resp.create_ah_resp.err_code);
+		goto free_vah;
+	}
+	g_vah_cnt++;
+	ctrl->vdev->vah_cnt++;
+	vah->vpd = vpd;
+	vah->ah_idx = ah_idx;
+	vah->dip = aqe->req.create_ah_req.dip;
+	vpd->ref_cnt++;
+	spdk_bit_array_set(free_vah_ids, ah_idx);
+	LIST_INSERT_HEAD(&ctrl->vdev->vah_list, vah, entry);
+	aqe->resp.create_ah_resp.ah_handle = ah_idx;
+	aqe->resp.create_ah_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
+	SPDK_NOTICELOG("\nlizh vrdma_aq_create_ah...ah_idx %d dip 0x%x done\n", ah_idx, vah->dip);
+	return;
+
+free_vah:
+	free(vah);
 	return;
 }
 
 static void vrdma_aq_destroy_ah(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
-	//TODO
-	return;
+	struct spdk_vrdma_ah *vah = NULL;
+	struct vrdma_cmd_param param;
+
+	SPDK_NOTICELOG("\nlizh vrdma_aq_destroy_ah..ah_handle=0x%x.start\n",
+	aqe->req.destroy_ah_req.ah_handle);
+	if (!g_vah_cnt || !ctrl->vdev ||
+		!ctrl->vdev->vah_cnt) {
+		aqe->resp.destroy_ah_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
+		SPDK_ERRLOG("Failed to destroy AH, err(%d)",
+				  aqe->resp.destroy_ah_resp.err_code);
+		return;
+	}
+	LIST_FOREACH(vah, &ctrl->vdev->vah_list, entry)
+        if (vah->ah_idx == aqe->req.destroy_ah_req.ah_handle)
+            break;
+	if (!vah) {
+		aqe->resp.destroy_ah_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
+		SPDK_ERRLOG("Failed to find destroy AH %d , err(%d)",
+					aqe->req.destroy_ah_req.ah_handle,
+					aqe->resp.destroy_ah_resp.err_code);
+		return;
+	}
+	if (vah->ref_cnt) {
+		aqe->resp.destroy_ah_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_REF_CNT_INVALID;
+		SPDK_ERRLOG("AH %d is used now, err(%d)",
+					aqe->req.destroy_ah_req.ah_handle,
+					aqe->resp.destroy_ah_resp.err_code);
+		return;
+	}
+	param.param.ah_param.ah_handle = vah->ah_idx;
+	if (ctrl->srv_ops->vrdma_device_destroy_ah(&ctrl->dev, aqe, &param)) {
+		aqe->resp.destroy_ah_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
+		SPDK_ERRLOG("Failed to notify destroy AH %d in service, err(%d)",
+					aqe->req.destroy_ah_req.ah_handle,
+					aqe->resp.destroy_ah_resp.err_code);
+		return;
+	}
+	LIST_REMOVE(vah, entry);
+	spdk_bit_array_clear(free_vah_ids, vah->ah_idx);
+
+	g_vah_cnt--;
+	ctrl->vdev->vah_cnt--;
+	vah->vpd->ref_cnt--;
+	free(vah);
+	aqe->resp.destroy_ah_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
+	SPDK_NOTICELOG("\nlizh vrdma_aq_destroy_ah...done\n");
 }
 
 int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
@@ -858,7 +975,9 @@ int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
 
 #if 0
 	/* lizh:Just for test*/
-	if (aqe->hdr.opcode > VRDMA_ADMIN_DEREG_MR)
+	if (aqe->hdr.opcode > VRDMA_ADMIN_DEREG_MR && 
+		aqe->hdr.opcode != VRDMA_ADMIN_CREATE_AH &&
+		aqe->hdr.opcode != VRDMA_ADMIN_DESTROY_AH)
 		return 0;
 	int i;
 	SPDK_NOTICELOG("\nhdr:seq=0x%x magic=0x%x version=%d is_inline_in=%d is_inline_out=%d opcode=%d\n",
