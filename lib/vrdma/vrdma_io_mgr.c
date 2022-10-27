@@ -192,7 +192,7 @@ static bool vrdma_sq_sm_handle_pi(struct vrdma_sq *sq,
 	return true;
 }
 
-static bool vrdma_sq_sm_read_wqe(struct vrdma_sq *sq,
+static bool vrdma_sq_wqe_sm_read(struct vrdma_sq *sq,
                                     enum vrdma_vq_sm_op_status status)
 {
 	uint16_t pi = sq->comm.pi;
@@ -262,7 +262,7 @@ static bool vrdma_sq_sm_read_wqe(struct vrdma_sq *sq,
 	return false;
 }
 
-static bool vrdma_sq_sm_parse_wqe(struct vrdma_sq *sq,
+static bool vrdma_sq_wqe_sm_parse(struct vrdma_sq *sq,
                                    enum vrdma_vq_sm_op_status status)
 {
 	if (status != VRDMA_VQ_SM_OP_OK) {
@@ -280,12 +280,12 @@ static bool vrdma_sq_sm_parse_wqe(struct vrdma_sq *sq,
 
 static inline uint32_t vrdma_vq_get_mqpn(struct vrdma_sq *sq)
 {
-	// TODO: currently, only one-to-one map
+	//TODO: currently, only one-to-one map
 	return sq->comm.mqpn[0];
 }
 
-static bool vrdma_sq_sm_map_wqe(struct vrdma_sq *sq,
-                                    enum vrdma_vq_sm_op_status status)
+static bool vrdma_sq_wqe_sm_map_backend(struct vrdma_sq *sq,
+                                    		enum vrdma_vq_sm_op_status status)
 {
 	sq->comm.mqpn[0] = vrdma_vq_get_mqpn(sq);
 	SPDK_NOTICELOG("vrdam map sq wqe: vq pi %d, mqpn %d\n", sq->comm.qpn, sq->comm.mqpn[0]);
@@ -294,7 +294,8 @@ static bool vrdma_sq_sm_map_wqe(struct vrdma_sq *sq,
 	return true;
 }
 
-static bool vrdma_sq_sm_submit_wqe(struct vrdma_sq *sq,
+//translate and submit vqp wqe to mqp
+static bool vrdma_sq_wqe_sm_submit(struct vrdma_sq *sq,
                                     enum vrdma_vq_sm_op_status status)
 {
 	SPDK_NOTICELOG("vrdam submit sq wqe: vq pi %d, pre_pi %d\n", sq->comm.pi, sq->comm.pre_pi);
@@ -328,10 +329,10 @@ static struct vrdma_sq_sm_state vrdma_sq_sm_arr[] = {
 /*VRDMA_SQ_STATE_IDLE                         */ {vrdma_sq_sm_idle},
 /*VRDMA_SQ_STATE_POLL_PI                      */ {vrdma_sq_sm_poll_pi},
 /*VRDMA_SQ_STATE_HANDLE_PI                    */ {vrdma_sq_sm_handle_pi},
-/*VRDMA_SQ_STATE_WQE_READ                     */ {vrdma_sq_sm_read_wqe},
-/*VRDMA_SQ_STATE_WQE_PARSE                    */ {vrdma_sq_sm_parse_wqe},
-/*VRDMA_SQ_STATE_WQE_MAP_BACKEND              */ {vrdma_sq_sm_map_wqe},
-/*VRDMA_SQ_STATE_WQE_SUBMIT                  */ {vrdma_sq_sm_submit_wqe},
+/*VRDMA_SQ_STATE_WQE_READ                     */ {vrdma_sq_wqe_sm_read},
+/*VRDMA_SQ_STATE_WQE_PARSE                    */ {vrdma_sq_wqe_sm_parse},
+/*VRDMA_SQ_STATE_WQE_MAP_BACKEND              */ {vrdma_sq_wqe_sm_map_backend},
+/*VRDMA_SQ_STATE_WQE_SUBMIT                  */ {vrdma_sq_wqe_sm_submit},
 ///*VRDMA_SQ_STATE_GEN_COMP                  */ {vrdma_sq_sm_gen_completion},
 /*VRDMA_SQ_STATE_FATAL_ERR                   */ {vrdma_sq_sm_fatal_error},
 };
