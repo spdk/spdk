@@ -52,6 +52,10 @@ struct vrdma_destroy_mr_req_param {
 	uint32_t mr_handle; /* mr handle need to be created in vrdev and passed to vservice */
 };
 
+struct vrdma_ah_req_param {
+	uint32_t ah_handle;  /* ah handle need to be created in vrdev and passed to vservice */
+};
+
 struct vrdma_cmd_param {
 	union {
 		char buf[12];
@@ -59,6 +63,7 @@ struct vrdma_cmd_param {
 		struct vrdma_create_pd_req_param create_pd_param;
 		struct vrdma_create_mr_req_param create_mr_param;
 		struct vrdma_destroy_mr_req_param destroy_mr_param;
+		struct vrdma_ah_req_param ah_param;
 	} param;
 };
 
@@ -212,7 +217,8 @@ typedef int (*vrdma_admin_destroy_eq_op)(struct vrdma_dev *rdev,
 typedef int (*vrdma_admin_create_pd_op)(struct vrdma_dev *rdev, 
 										struct vrdma_admin_cmd_entry *cmd, 
 										struct vrdma_cmd_param *param);
-typedef int (*vrdma_admin_destroy_pd_op)(struct vrdma_dev *rdev,		struct vrdma_admin_cmd_entry *cmd);
+typedef int (*vrdma_admin_destroy_pd_op)(struct vrdma_dev *rdev,
+										struct vrdma_admin_cmd_entry *cmd);
 typedef int (*vrdma_admin_create_mr_op)(struct vrdma_dev *rdev, 
 										struct vrdma_admin_cmd_entry *cmd, 
 										struct vrdma_cmd_param *param);
@@ -233,9 +239,11 @@ typedef int (*vrdma_admin_query_qp_op)(struct vrdma_dev *rdev,
 typedef int (*vrdma_admin_modify_qp_op)(struct vrdma_dev *rdev, 
 										struct vrdma_admin_cmd_entry *cmd);
 typedef int (*vrdma_admin_create_ah_op)(struct vrdma_dev *rdev, 
-										struct vrdma_admin_cmd_entry *cmd);
+										struct vrdma_admin_cmd_entry *cmd,
+										struct vrdma_cmd_param *param);
 typedef int (*vrdma_admin_destroy_ah_op)(struct vrdma_dev *rdev, 
-										struct vrdma_admin_cmd_entry *cmd);
+										struct vrdma_admin_cmd_entry *cmd,
+										struct vrdma_cmd_param *param);
 
 /* vrdma ops call back exposed to vrdma device */
 typedef struct vRdmaServiceOps {
