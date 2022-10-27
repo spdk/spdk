@@ -777,32 +777,35 @@ run_cmds(uint32_t queue_depth)
 static int
 TestOneInput(const uint8_t *data, size_t size)
 {
+	int ret = 0;
 	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
 
 	g_ctrlr = spdk_nvme_connect(&g_trid, NULL, 0);
 	if (g_ctrlr == NULL) {
 		fprintf(stderr, "spdk_nvme_connect() failed for transport address '%s'\n",
 			g_trid.traddr);
-		spdk_app_stop(-1);
+		return -1;
 	}
 
 	g_io_qpair = spdk_nvme_ctrlr_alloc_io_qpair(g_ctrlr, NULL, 0);
 	if (g_io_qpair == NULL) {
 		fprintf(stderr, "spdk_nvme_ctrlr_alloc_io_qpair failed\n");
-		spdk_app_stop(-1);
+		ret = -1;
+		goto detach_ctrlr;
 	}
 
 	g_data = data;
 
 	run_cmds(size / g_fuzzer->bytes_per_cmd);
 	spdk_nvme_ctrlr_free_io_qpair(g_io_qpair);
+detach_ctrlr:
 	spdk_nvme_detach_async(g_ctrlr, &detach_ctx);
 
 	if (detach_ctx) {
 		spdk_nvme_detach_poll(detach_ctx);
 	}
 
-	return 0;
+	return ret;
 }
 
 int LLVMFuzzerRunDriver(int *argc, char ***argv, int (*UserCb)(const uint8_t *Data, size_t Size));
@@ -832,6 +835,7 @@ start_fuzzer(void *ctx)
 	char **argv = _argv;
 	int argc = SPDK_COUNTOF(_argv);
 	uint32_t len;
+	int rc;
 
 	spdk_unaffinitize_thread();
 	len = MAX_COMMANDS * g_fuzzer->bytes_per_cmd;
@@ -845,10 +849,10 @@ start_fuzzer(void *ctx)
 	atexit(exit_handler);
 	if (g_repro_data) {
 		printf("Running single test based on reproduction data file.\n");
-		TestOneInput(g_repro_data, g_repro_size);
+		rc = TestOneInput(g_repro_data, g_repro_size);
 		printf("Done.\n");
 	} else {
-		LLVMFuzzerRunDriver(&argc, &argv, TestOneInput);
+		rc = LLVMFuzzerRunDriver(&argc, &argv, TestOneInput);
 		/* TODO: in the normal case, LLVMFuzzerRunDriver never returns - it calls exit()
 		 * directly and we never get here.  But this behavior isn't really documented
 		 * anywhere by LLVM, so call spdk_app_stop(0) if it does return, which will
@@ -857,7 +861,7 @@ start_fuzzer(void *ctx)
 		 */
 	}
 	g_in_fuzzer = false;
-	spdk_app_stop(0);
+	spdk_app_stop(rc);
 
 	return NULL;
 }
