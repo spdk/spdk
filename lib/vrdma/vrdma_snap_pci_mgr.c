@@ -107,7 +107,7 @@ struct snap_pci **spdk_vrdma_snap_get_snap_pci_list(const char *vrdma_dev,
     /* Lizh Just for test*/
     pfs = &sctx->virtio_net_pfs;
     if (!pfs)
-    SPDK_ERRLOG("\n lizh spdk_vrdma_snap_get_snap_pci_list virtio_net_pfs max_pfs %d", pfs->max_pfs);
+    SPDK_NOTICELOG("\n lizh spdk_vrdma_snap_get_snap_pci_list virtio_net_pfs max_pfs %d", pfs->max_pfs);
     if (!pfs->max_pfs) {
         SPDK_WARNLOG("No PFs of type VRDMA");
         goto err;
@@ -187,7 +187,7 @@ int spdk_vrdma_snap_pci_mgr_init(void)
     int i, dev_count;
     bool found_emu_managers = false;
 
-    SPDK_ERRLOG("lizh spdk_vrdma_snap_pci_mgr_init start");
+    SPDK_NOTICELOG("lizh spdk_vrdma_snap_pci_mgr_init start");
     list = ibv_get_device_list(&dev_count);
     if (!list) {
         SPDK_ERRLOG("failed to open IB device list");
@@ -195,14 +195,14 @@ int spdk_vrdma_snap_pci_mgr_init(void)
     }
 
     /* Verify RDMA device exist in ibv list */
-    SPDK_ERRLOG("lizh spdk_vrdma_snap_pci_mgr_init verify RDMA device");
+    SPDK_NOTICELOG("lizh spdk_vrdma_snap_pci_mgr_init verify RDMA device");
     for (i = 0; i < dev_count; i++) {
         emu_manager = calloc(1, sizeof(*emu_manager));
         if (!emu_manager)
             goto clear_emu_manager_list;
 
         sctx = snap_open(list[i]);
-        SPDK_ERRLOG("\n lizh spdk_vrdma_snap_pci_mgr_init dev_count %d dev %d sctx %p",
+        SPDK_NOTICELOG("\n lizh spdk_vrdma_snap_pci_mgr_init dev_count %d dev %d sctx %p",
         dev_count, i, sctx);
         if (sctx) {
             found_emu_managers = true;
@@ -221,7 +221,7 @@ int spdk_vrdma_snap_pci_mgr_init(void)
         emu_manager->sctx = sctx;
         emu_manager->ibctx = ibctx;
         emu_manager->ibdev = list[i];
-        SPDK_ERRLOG("\n lizh spdk_vrdma_snap_pci_mgr_init emu_manager %s ",
+        SPDK_NOTICELOG("\n lizh spdk_vrdma_snap_pci_mgr_init emu_manager %s ",
         ibv_get_device_name(emu_manager->ibdev));
 
         LIST_INSERT_HEAD(&vrdma_snap_emu_manager_list, emu_manager, entry);

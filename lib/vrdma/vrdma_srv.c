@@ -40,7 +40,7 @@
 static int vrdma_srv_device_notify(struct vrdma_dev *rdev)
 {
 	//TODO
-	SPDK_ERRLOG("lizh dummy function vrdma_srv_device_notify");
+	SPDK_NOTICELOG("lizh dummy function vrdma_srv_device_notify");
 	return 0;
 }
 
@@ -48,7 +48,7 @@ static int vrdma_srv_device_query_gid(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
-	SPDK_ERRLOG("lizh dummy function vrdma_srv_vrdma_device_query_gid");
+	SPDK_NOTICELOG("lizh dummy function vrdma_srv_vrdma_device_query_gid");
 	return 0;
 }
 
@@ -57,7 +57,7 @@ static int vrdma_srv_device_modify_gid(struct vrdma_dev *rdev,
 					struct vrdma_cmd_param *param)
 {
 	//TODO
-	SPDK_ERRLOG("lizh dummy function vrdma_srv_device_modify_gid");
+	SPDK_NOTICELOG("lizh dummy function vrdma_srv_device_modify_gid");
 	return 0;
 }
 
@@ -65,7 +65,7 @@ static int vrdma_srv_device_create_eq(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
-	SPDK_ERRLOG("lizh dummy function vrdma_srv_device_create_eq");
+	SPDK_NOTICELOG("lizh dummy function vrdma_srv_device_create_eq");
 	return 0;
 }
 
@@ -73,7 +73,7 @@ static int vrdma_srv_device_modify_eq(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
-	SPDK_ERRLOG("lizh dummy function vrdma_srv_device_modify_eq");
+	SPDK_NOTICELOG("lizh dummy function vrdma_srv_device_modify_eq");
 	return 0;
 }
 
@@ -81,7 +81,7 @@ static int vrdma_srv_device_destroy_eq(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
-	SPDK_ERRLOG("lizh dummy function vrdma_srv_device_destroy_eq");
+	SPDK_NOTICELOG("lizh dummy function vrdma_srv_device_destroy_eq");
 	return 0;
 }
 
@@ -90,7 +90,7 @@ static int vrdma_srv_device_create_pd(struct vrdma_dev *rdev,
 					struct vrdma_cmd_param *param)
 {
 	//TODO
-	SPDK_ERRLOG("lizh dummy function vrdma_srv_device_create_pd");
+	SPDK_NOTICELOG("lizh dummy function vrdma_srv_device_create_pd");
 	return 0;
 }
 
@@ -98,7 +98,7 @@ static int vrdma_srv_device_destroy_pd(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
-	SPDK_ERRLOG("lizh dummy function vrdma_srv_device_destroy_pd");
+	SPDK_NOTICELOG("lizh dummy function vrdma_srv_device_destroy_pd");
 	return 0;
 }
 
@@ -107,7 +107,7 @@ static int vrdma_srv_device_create_mr(struct vrdma_dev *rdev,
 					struct vrdma_cmd_param *param)
 {
 	//TODO
-	SPDK_ERRLOG("lizh dummy function vrdma_srv_device_create_mr");
+	SPDK_NOTICELOG("lizh dummy function vrdma_srv_device_create_mr");
 	return 0;
 }
 
@@ -116,7 +116,7 @@ static int vrdma_srv_device_destroy_mr(struct vrdma_dev *rdev,
 					struct vrdma_cmd_param *param)
 {
 	//TODO
-	SPDK_ERRLOG("lizh dummy function vrdma_srv_device_destroy_mr");
+	SPDK_NOTICELOG("lizh dummy function vrdma_srv_device_destroy_mr");
 	return 0;
 }
 
@@ -124,7 +124,7 @@ static int vrdma_srv_device_create_cq(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
-	SPDK_ERRLOG("lizh dummy function vrdma_srv_device_create_cq");
+	SPDK_NOTICELOG("lizh dummy function vrdma_srv_device_create_cq");
 	return 0;
 }
 
@@ -132,7 +132,7 @@ static int vrdma_srv_device_destroy_cq(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
-	SPDK_ERRLOG("lizh dummy function vrdma_srv_device_destroy_cq");
+	SPDK_NOTICELOG("lizh dummy function vrdma_srv_device_destroy_cq");
 	return 0;
 }
 
@@ -140,7 +140,7 @@ static int vrdma_srv_device_create_qp(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
-	SPDK_ERRLOG("lizh dummy function vrdma_srv_device_create_qp");
+	SPDK_NOTICELOG("lizh dummy function vrdma_srv_device_create_qp");
 	return 0;
 }
 
@@ -148,7 +148,7 @@ static int vrdma_srv_device_destroy_qp(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
-	SPDK_ERRLOG("lizh dummy function vrdma_srv_device_destroy_qp");
+	SPDK_NOTICELOG("lizh dummy function vrdma_srv_device_destroy_qp");
 	return 0;
 }
 
@@ -157,7 +157,7 @@ static int vrdma_srv_device_query_qp(struct vrdma_dev *rdev,
 					struct vrdma_cmd_param *param)
 {
 	//TODO
-	SPDK_ERRLOG("lizh dummy function vrdma_srv_device_query_qp");
+	SPDK_NOTICELOG("lizh dummy function vrdma_srv_device_query_qp");
 	return 0;
 }
 
@@ -165,7 +165,7 @@ static int vrdma_srv_device_modify_qp(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
-	SPDK_ERRLOG("lizh dummy function vrdma_srv_device_modify_qp");
+	SPDK_NOTICELOG("lizh dummy function vrdma_srv_device_modify_qp");
 	return 0;
 }
 
@@ -173,7 +173,7 @@ static int vrdma_srv_device_create_ah(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
-	SPDK_ERRLOG("lizh dummy function vrdma_srv_device_create_ah");
+	SPDK_NOTICELOG("lizh dummy function vrdma_srv_device_create_ah");
 	return 0;
 }
 
@@ -181,7 +181,7 @@ static int vrdma_srv_device_destroy_ah(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
-	SPDK_ERRLOG("lizh dummy function vrdma_srv_device_create_ah");
+	SPDK_NOTICELOG("lizh dummy function vrdma_srv_device_create_ah");
 	return 0;
 }
 

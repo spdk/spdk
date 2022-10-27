@@ -65,7 +65,7 @@ static void spdk_vrdma_app_start(void *arg)
 {
     struct sigaction act;
 
-    SPDK_ERRLOG("lizh spdk_vrdma_app_start...start\n");
+    SPDK_NOTICELOG("lizh spdk_vrdma_app_start...start\n");
     /*
      * Set signal handler to allow stop on Ctrl+C.
      */
