@@ -646,8 +646,12 @@ bdev_examine(struct spdk_bdev *bdev)
 	struct spdk_bdev_module *module;
 	uint32_t action;
 
+	if (!bdev_ok_to_examine(bdev)) {
+		return;
+	}
+
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
-		if (module->examine_config && bdev_ok_to_examine(bdev)) {
+		if (module->examine_config) {
 			spdk_spin_lock(&module->internal.spinlock);
 			action = module->internal.action_in_progress;
 			module->internal.action_in_progress++;
@@ -661,7 +665,7 @@ bdev_examine(struct spdk_bdev *bdev)
 	}
 
 	module = bdev->internal.claim_module;
-	if (module != NULL && bdev_ok_to_examine(bdev)) {
+	if (module != NULL) {
 		if (module->examine_disk) {
 			spdk_spin_lock(&module->internal.spinlock);
 			module->internal.action_in_progress++;
@@ -672,7 +676,7 @@ bdev_examine(struct spdk_bdev *bdev)
 	}
 
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
-		if (module->examine_disk && bdev_ok_to_examine(bdev)) {
+		if (module->examine_disk) {
 			spdk_spin_lock(&module->internal.spinlock);
 			module->internal.action_in_progress++;
 			spdk_spin_unlock(&module->internal.spinlock);
