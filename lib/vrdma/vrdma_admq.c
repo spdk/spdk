@@ -116,14 +116,17 @@ void spdk_vrdma_adminq_resource_destory(void)
 static inline int aqe_sanity_check(struct vrdma_admin_cmd_entry *aqe)
 {
 	if (!aqe) {
+		SPDK_ERRLOG("check input aqe NULL\n");
 		return -1;
 	}
 	
 	if (aqe->hdr.magic != VRDMA_AQ_HDR_MEGIC_NUM) { 
+		SPDK_ERRLOG("check input aqe wrong megic num\n");
 		return -1;
 	}
 	if (aqe->hdr.is_inline_out || !aqe->hdr.is_inline_in) {
 		/* It only supports inline message */
+		SPDK_ERRLOG("check input aqe wrong inline flag\n");
 		return -1;
 	}
 	//TODO: add other sanity check later
@@ -1000,7 +1003,7 @@ int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
 	return 0;
 }
 
-//need invoker to guarantee pi is bigger than pre_pi
+//need invoker to guarantee pi is bigger than ci 
 static inline int vrdma_aq_rollback(struct vrdma_admin_sw_qp *aq, uint16_t pi,
                                            uint16_t q_size)
 {
@@ -1078,17 +1081,19 @@ static bool vrdma_aq_sm_read_cmd(struct vrdma_admin_sw_qp *aq,
 
 	host_ring_addr = ctrl->sctrl->bar_curr->adminq_base_addr +
 		             offsetof(struct vrdma_admin_queue, ring);
-	SPDK_NOTICELOG("vrdam poll admin cmd: admq pa 0x%lx\n", ctrl->sctrl->bar_curr->adminq_base_addr);
 
 	aq->state = VRDMA_CMD_STATE_PARSE_CMD_ENTRY;
-	aq->num_to_parse = pi - aq->pre_ci;
+	aq->num_to_parse = pi - aq->admq->ci;
+
+	SPDK_NOTICELOG("vrdam poll admin cmd: admq pa 0x%lx, pi %d, ci %d\n",
+			ctrl->sctrl->bar_curr->adminq_base_addr, pi, aq->admq->ci);
 
 	//fetch the delta PI number entry in one time
 	if (!vrdma_aq_rollback(aq, pi, q_size)) {
 		aq->poll_comp.count = 1;
-		num = pi - aq->pre_ci;
+		num = pi - aq->admq->ci;
 		aq_poll_size = num * sizeof(struct vrdma_admin_cmd_entry);
-		offset = (aq->pre_pi % q_size) * sizeof(struct vrdma_admin_cmd_entry);
+		offset = (aq->admq->ci % q_size) * sizeof(struct vrdma_admin_cmd_entry);
 	    	host_ring_addr = host_ring_addr + offset;
 		ret = snap_dma_q_read(ctrl->sctrl->adminq_dma_q, aq->admq->ring, aq_poll_size,
 				              ctrl->sctrl->adminq_mr->lkey, host_ring_addr,
@@ -1101,9 +1106,9 @@ static bool vrdma_aq_sm_read_cmd(struct vrdma_admin_sw_qp *aq,
 	} else {
 		/* aq roll back case, first part */
 		aq->poll_comp.count = 1;
-		num = q_size - (aq->pre_ci % q_size);
+		num = q_size - (aq->admq->ci % q_size);
 		aq_poll_size = num * sizeof(struct vrdma_admin_cmd_entry);
-		offset = (aq->pre_ci % q_size) * sizeof(struct vrdma_admin_cmd_entry);
+		offset = (aq->admq->ci % q_size) * sizeof(struct vrdma_admin_cmd_entry);
 		host_ring_addr = host_ring_addr + offset;
 		ret = snap_dma_q_read(ctrl->sctrl->adminq_dma_q, aq->admq->ring, aq_poll_size,
 				              ctrl->sctrl->adminq_mr->lkey, host_ring_addr,
@@ -1176,8 +1181,13 @@ static bool vrdma_aq_sm_write_cmd(struct vrdma_admin_sw_qp *aq,
 
 	host_ring_addr = ctrl->sctrl->bar_curr->adminq_base_addr +
 		             offsetof(struct vrdma_admin_queue, ring);
-	SPDK_NOTICELOG("vrdam write admin cmd: admq pa 0x%lx\n", ctrl->sctrl->bar_curr->adminq_base_addr);
+	SPDK_NOTICELOG("vrdam write admin cmd: admq pa 0x%lx, num_to_write %d, old ci %d, pi %d\n", 
+			ctrl->sctrl->bar_curr->adminq_base_addr, num_to_write, ci, aq->admq->pi);
 
+	if (!num_to_write) {
+		aq->state = VRDMA_CMD_STATE_FATAL_ERR;
+		return true;
+	}
 	aq->state = VRDMA_CMD_STATE_UPDATE_CI;
 
 	//write back entries in one time
@@ -1245,8 +1255,8 @@ static bool vrdma_aq_sm_update_ci(struct vrdma_admin_sw_qp *aq,
 		return true;
 	}
 
-	SPDK_NOTICELOG("vrdam update admq CI: admq pa 0x%lx\n",
-					ctrl->sctrl->bar_curr->adminq_base_addr);
+	SPDK_NOTICELOG("vrdam update admq CI: admq pa 0x%lx, new ci %d\n",
+					ctrl->sctrl->bar_curr->adminq_base_addr, aq->admq->ci);
 
 	aq->state = VRDMA_CMD_STATE_POLL_PI;
 	aq->poll_comp.count = 1;
@@ -1332,9 +1342,11 @@ int vrdma_ctrl_adminq_progress(void *ctrl)
 	enum vrdma_aq_cmd_sm_op_status status = VRDMA_CMD_SM_OP_OK;
 	int n = 0;
 
-	if (!vdev_ctrl->sctrl->adminq_dma_q)
+	if (!vdev_ctrl->sctrl->adminq_dma_q) {
 		return 0;
-	n += snap_dma_q_progress(vdev_ctrl->sctrl->adminq_dma_q);
+	}
+
+	n = snap_dma_q_progress(vdev_ctrl->sctrl->adminq_dma_q);
 
 	if (aq->pre_ci == VRDMA_INVALID_CI_PI ||
 		aq->state < VRDMA_CMD_STATE_INIT_CI) {
