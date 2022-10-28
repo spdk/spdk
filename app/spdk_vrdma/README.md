@@ -93,3 +93,9 @@ How to run testpmd command
 create vrdma adminq 0         #Will create and get admin-queue physic address in log
 dump vrdma adminq 0           #Will dump admin-queue message
 del vrdma adminq 0
+
+How to run RPC command on ARM
+==============================
+<spdk_vrdma_view> snap-rdma/rpc/snap_rpc.py controller_vrdma_configue -d <device_id> -e mlx5_0 -p < admin-queue physic address > -l 532484
+One example:
+snap-rdma/rpc/snap_rpc.py controller_vrdma_configue -d 8192 -e mlx5_0 -p 0xfb5c96d40  -l 532484
