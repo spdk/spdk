@@ -335,6 +335,8 @@ struct spdk_bdev_channel_iter {
 
 #define __bdev_to_io_dev(bdev)		(((char *)bdev) + 1)
 #define __bdev_from_io_dev(io_dev)	((struct spdk_bdev *)(((char *)io_dev) - 1))
+#define __io_ch_to_bdev_ch(io_ch)	((struct spdk_bdev_channel *)spdk_io_channel_get_ctx(io_ch))
+#define __io_ch_to_bdev_mgmt_ch(io_ch)	((struct spdk_bdev_mgmt_channel *)spdk_io_channel_get_ctx(io_ch))
 
 static inline void bdev_io_complete(void *ctx);
 
@@ -3285,7 +3287,7 @@ bdev_channel_poll_timeout_io(struct spdk_bdev_channel_iter *i, struct spdk_bdev 
 			     struct spdk_io_channel *io_ch, void *_ctx)
 {
 	struct poll_timeout_ctx *ctx  = _ctx;
-	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(io_ch);
+	struct spdk_bdev_channel *bdev_ch = __io_ch_to_bdev_ch(io_ch);
 	struct spdk_bdev_desc *desc = ctx->desc;
 	struct spdk_bdev_io *bdev_io;
 	uint64_t now;
@@ -3412,7 +3414,7 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	mgmt_ch = spdk_io_channel_get_ctx(mgmt_io_ch);
+	mgmt_ch = __io_ch_to_bdev_mgmt_ch(mgmt_io_ch);
 	TAILQ_FOREACH(shared_resource, &mgmt_ch->shared_resources, link) {
 		if (shared_resource->shared_ch == ch->channel) {
 			spdk_put_io_channel(mgmt_io_ch);
@@ -4079,7 +4081,7 @@ static void
 _calculate_measured_qd(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
 		       struct spdk_io_channel *io_ch, void *_ctx)
 {
-	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(io_ch);
+	struct spdk_bdev_channel *ch = __io_ch_to_bdev_ch(io_ch);
 
 	bdev->internal.temporary_queue_depth += ch->io_outstanding;
 	spdk_bdev_for_each_channel_continue(i, 0);
@@ -4180,7 +4182,7 @@ bdev_get_current_qd(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
 		    struct spdk_io_channel *io_ch, void *_ctx)
 {
 	struct bdev_get_current_qd_ctx *ctx = _ctx;
-	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(io_ch);
+	struct spdk_bdev_channel *bdev_ch = __io_ch_to_bdev_ch(io_ch);
 
 	ctx->current_qd += bdev_ch->io_outstanding;
 
@@ -4325,7 +4327,7 @@ bdev_seek(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	assert(io_type == SPDK_BDEV_IO_TYPE_SEEK_DATA || io_type == SPDK_BDEV_IO_TYPE_SEEK_HOLE);
 
@@ -4391,7 +4393,7 @@ bdev_read_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	if (!bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
 		return -EINVAL;
@@ -4487,7 +4489,7 @@ bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	if (!bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
 		return -EINVAL;
@@ -4593,7 +4595,7 @@ bdev_write_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	if (!desc->write) {
 		return -EBADF;
@@ -4679,7 +4681,7 @@ bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	if (!desc->write) {
 		return -EBADF;
@@ -4852,7 +4854,7 @@ bdev_comparev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	if (!bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
 		return -EINVAL;
@@ -4919,7 +4921,7 @@ bdev_compare_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel 
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	if (!bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
 		return -EINVAL;
@@ -5097,7 +5099,7 @@ spdk_bdev_comparev_and_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	if (!desc->write) {
 		return -EBADF;
@@ -5147,7 +5149,7 @@ spdk_bdev_zcopy_start(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	if (!desc->write) {
 		return -EBADF;
@@ -5226,7 +5228,7 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	if (!desc->write) {
 		return -EBADF;
@@ -5291,7 +5293,7 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	if (!desc->write) {
 		return -EBADF;
@@ -5351,7 +5353,7 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	if (!desc->write) {
 		return -EBADF;
@@ -5413,7 +5415,7 @@ static void
 bdev_reset_check_outstanding_io(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
 				struct spdk_io_channel *io_ch, void *_ctx)
 {
-	struct spdk_bdev_channel *cur_ch = spdk_io_channel_get_ctx(io_ch);
+	struct spdk_bdev_channel *cur_ch = __io_ch_to_bdev_ch(io_ch);
 	int status = 0;
 
 	if (cur_ch->io_outstanding > 0) {
@@ -5476,7 +5478,7 @@ bdev_reset_freeze_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bd
 
 	TAILQ_INIT(&tmp_queued);
 
-	channel = spdk_io_channel_get_ctx(ch);
+	channel = __io_ch_to_bdev_ch(ch);
 	shared_resource = channel->shared_resource;
 	mgmt_channel = shared_resource->mgmt_ch;
 
@@ -5540,7 +5542,7 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	bdev_io = bdev_channel_get_io(channel);
 	if (!bdev_io) {
@@ -5570,7 +5572,7 @@ void
 spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		      struct spdk_bdev_io_stat *stat)
 {
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	*stat = channel->stat;
 }
@@ -5590,7 +5592,7 @@ bdev_get_each_channel_stat(struct spdk_bdev_channel_iter *i, struct spdk_bdev *b
 			   struct spdk_io_channel *ch, void *_ctx)
 {
 	struct spdk_bdev_iostat_ctx *bdev_iostat_ctx = _ctx;
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	bdev_io_stat_add(bdev_iostat_ctx->stat, &channel->stat);
 	spdk_bdev_for_each_channel_continue(i, 0);
@@ -5634,7 +5636,7 @@ spdk_bdev_nvme_admin_passthru(struct spdk_bdev_desc *desc, struct spdk_io_channe
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	if (!desc->write) {
 		return -EBADF;
@@ -5671,7 +5673,7 @@ spdk_bdev_nvme_io_passthru(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	if (!desc->write) {
 		/*
@@ -5713,7 +5715,7 @@ spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *desc, struct spdk_io_channe
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
 	if (!desc->write) {
 		/*
@@ -5934,7 +5936,7 @@ spdk_bdev_abort(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 	struct spdk_bdev_io *bdev_io;
 
 	if (bio_cb_arg == NULL) {
@@ -5972,7 +5974,7 @@ int
 spdk_bdev_queue_io_wait(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 			struct spdk_bdev_io_wait_entry *entry)
 {
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 	struct spdk_bdev_mgmt_channel *mgmt_ch = channel->shared_resource->mgmt_ch;
 
 	if (bdev != entry->bdev) {
@@ -6121,7 +6123,7 @@ bdev_unfreeze_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
 		      struct spdk_io_channel *_ch, void *_ctx)
 {
 	struct spdk_bdev_io *bdev_io = _ctx;
-	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct spdk_bdev_channel *ch = __io_ch_to_bdev_ch(_ch);
 	struct spdk_bdev_io *queued_reset;
 
 	ch->flags &= ~BDEV_CH_RESET_IN_PROGRESS;
@@ -6587,7 +6589,7 @@ static void
 bdev_unregister_abort_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
 			      struct spdk_io_channel *io_ch, void *_ctx)
 {
-	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(io_ch);
+	struct spdk_bdev_channel *bdev_ch = __io_ch_to_bdev_ch(io_ch);
 
 	bdev_channel_abort_queued_ios(bdev_ch);
 	spdk_bdev_for_each_channel_continue(i, 0);
@@ -7281,7 +7283,7 @@ static void
 bdev_disable_qos_msg(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
 		     struct spdk_io_channel *ch, void *_ctx)
 {
-	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *bdev_ch = __io_ch_to_bdev_ch(ch);
 
 	bdev_ch->flags &= ~BDEV_CH_QOS_ENABLED;
 
@@ -7305,7 +7307,7 @@ static void
 bdev_enable_qos_msg(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
 		    struct spdk_io_channel *ch, void *_ctx)
 {
-	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_channel *bdev_ch = __io_ch_to_bdev_ch(ch);
 
 	pthread_mutex_lock(&bdev->internal.mutex);
 	bdev_enable_qos(bdev, bdev_ch);
@@ -7471,7 +7473,7 @@ static void
 bdev_histogram_disable_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
 			       struct spdk_io_channel *_ch, void *_ctx)
 {
-	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct spdk_bdev_channel *ch = __io_ch_to_bdev_ch(_ch);
 
 	if (ch->histogram != NULL) {
 		spdk_histogram_data_free(ch->histogram);
@@ -7503,7 +7505,7 @@ static void
 bdev_histogram_enable_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
 			      struct spdk_io_channel *_ch, void *_ctx)
 {
-	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct spdk_bdev_channel *ch = __io_ch_to_bdev_ch(_ch);
 	int status = 0;
 
 	if (ch->histogram == NULL) {
@@ -7577,7 +7579,7 @@ static void
 bdev_histogram_get_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
 			   struct spdk_io_channel *_ch, void *_ctx)
 {
-	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct spdk_bdev_channel *ch = __io_ch_to_bdev_ch(_ch);
 	struct spdk_bdev_histogram_data_ctx *ctx = _ctx;
 	int status = 0;
 
@@ -7747,7 +7749,7 @@ bdev_lock_lba_range_check_io(void *_i)
 {
 	struct spdk_bdev_channel_iter *i = _i;
 	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i->i);
-	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct spdk_bdev_channel *ch = __io_ch_to_bdev_ch(_ch);
 	struct locked_lba_range_ctx *ctx = i->ctx;
 	struct lba_range *range = ctx->current_range;
 	struct spdk_bdev_io *bdev_io;
@@ -7773,7 +7775,7 @@ static void
 bdev_lock_lba_range_get_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
 				struct spdk_io_channel *_ch, void *_ctx)
 {
-	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct spdk_bdev_channel *ch = __io_ch_to_bdev_ch(_ch);
 	struct locked_lba_range_ctx *ctx = _ctx;
 	struct lba_range *range;
 
@@ -7843,7 +7845,7 @@ bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 		    lock_range_cb cb_fn, void *cb_arg)
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
-	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct spdk_bdev_channel *ch = __io_ch_to_bdev_ch(_ch);
 	struct locked_lba_range_ctx *ctx;
 
 	if (cb_arg == NULL) {
@@ -7920,7 +7922,7 @@ static void
 bdev_unlock_lba_range_get_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
 				  struct spdk_io_channel *_ch, void *_ctx)
 {
-	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct spdk_bdev_channel *ch = __io_ch_to_bdev_ch(_ch);
 	struct locked_lba_range_ctx *ctx = _ctx;
 	TAILQ_HEAD(, spdk_bdev_io) io_locked;
 	struct spdk_bdev_io *bdev_io;
@@ -7967,7 +7969,7 @@ bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 		      lock_range_cb cb_fn, void *cb_arg)
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
-	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct spdk_bdev_channel *ch = __io_ch_to_bdev_ch(_ch);
 	struct locked_lba_range_ctx *ctx;
 	struct lba_range *range;
 	bool range_found = false;
@@ -8043,7 +8045,7 @@ bdev_channel_for_each_io(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bde
 			 struct spdk_io_channel *io_ch, void *_ctx)
 {
 	struct spdk_bdev_for_each_io_ctx *ctx = _ctx;
-	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(io_ch);
+	struct spdk_bdev_channel *bdev_ch = __io_ch_to_bdev_ch(io_ch);
 	struct spdk_bdev_io *bdev_io;
 	int rc = 0;
 
