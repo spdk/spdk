@@ -157,6 +157,14 @@ vbdev_error_get_error_type(struct error_disk *error_disk, uint32_t io_type)
 }
 
 static void
+vbdev_error_complete_request(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+
+	spdk_bdev_io_complete(bdev_io, status);
+}
+
+static void
 vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
 	struct error_channel *ch = spdk_io_channel_get_ctx(_ch);
@@ -180,7 +188,8 @@ vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bde
 		error_disk->error_vector[bdev_io->type].error_num--;
 		break;
 	case 0:
-		rc = spdk_bdev_part_submit_request(&ch->part_ch, bdev_io);
+		rc = spdk_bdev_part_submit_request_ext(&ch->part_ch, bdev_io,
+						       vbdev_error_complete_request);
 
 		if (rc) {
 			SPDK_ERRLOG("bdev_error: submit request failed, rc=%d\n", rc);
