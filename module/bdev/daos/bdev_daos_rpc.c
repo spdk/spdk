@@ -29,6 +29,7 @@ free_rpc_construct_daos(struct rpc_construct_daos *r)
 	free(r->uuid);
 	free(r->pool);
 	free(r->cont);
+	free(r->oclass);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_daos_decoders[] = {

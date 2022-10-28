@@ -583,7 +583,7 @@ bdev_daos_io_channel_create_cb(void *io_device, void *ctx_buf)
 	ch->disk = io_device;
 
 	if (spdk_call_unaffinitized(_bdev_daos_io_channel_create_cb, ch) == NULL) {
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	SPDK_DEBUGLOG(bdev_daos, "%s: starting daos event queue poller\n",
@@ -634,6 +634,7 @@ create_bdev_daos(struct spdk_bdev **bdev,
 	int rc;
 	size_t len;
 	struct bdev_daos *daos;
+	struct bdev_daos_io_channel ch = {};
 
 	SPDK_NOTICELOG("%s: creating bdev_daos disk on '%s:%s'\n", name, pool, cont);
 
@@ -716,6 +717,19 @@ create_bdev_daos(struct spdk_bdev **bdev,
 		bdev_daos_free(daos);
 		return rc;
 	}
+
+	/* We try to connect to the DAOS container during channel creation, so simulate
+	 * creating a channel here, so that we can return a failure when the DAOS bdev
+	 * is created, instead of finding it out later when the first channel is created
+	 * and leaving unusable bdev registered.
+	 */
+	rc = bdev_daos_io_channel_create_cb(daos, &ch);
+	if (rc) {
+		SPDK_ERRLOG("'%s' could not initialize io-channel: %s", name, strerror(-rc));
+		bdev_daos_free(daos);
+		return rc;
+	}
+	bdev_daos_io_channel_destroy_cb(daos, &ch);
 
 	spdk_io_device_register(daos, bdev_daos_io_channel_create_cb,
 				bdev_daos_io_channel_destroy_cb,
