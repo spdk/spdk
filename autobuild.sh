@@ -165,7 +165,7 @@ function build_native_dpdk() {
 		export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$external_dpdk_base_dir/intel-ipsec-mb/$intel_ipsec_lib"
 	fi
 
-	if [[ "$SPDK_TEST_REDUCE" -eq 1 ]]; then
+	if [[ "$SPDK_TEST_VBDEV_COMPRESS" -eq 1 ]]; then
 		isal_dir="$external_dpdk_base_dir/isa-l"
 		git clone --branch v2.29.0 --depth 1 https://github.com/intel/isa-l.git "$isal_dir"
 

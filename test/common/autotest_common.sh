@@ -130,8 +130,8 @@ export SPDK_TEST_VHOST_INIT
 export SPDK_TEST_PMDK
 : ${SPDK_TEST_LVOL=0}
 export SPDK_TEST_LVOL
-: ${SPDK_TEST_REDUCE=0}
-export SPDK_TEST_REDUCE
+: ${SPDK_TEST_VBDEV_COMPRESS=0}
+export SPDK_TEST_VBDEV_COMPRESS
 : ${SPDK_RUN_ASAN=0}
 export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=0}
@@ -259,7 +259,7 @@ fi
 if [ "$(uname -s)" = "Linux" ]; then
 	HUGEMEM=${HUGEMEM:-4096}
 	export CLEAR_HUGE=yes
-	if [[ $SPDK_TEST_CRYPTO -eq 1 || $SPDK_TEST_REDUCE -eq 1 ]]; then
+	if [[ $SPDK_TEST_CRYPTO -eq 1 || $SPDK_TEST_VBDEV_COMPRESS -eq 1 ]]; then
 		# Make sure that memory is distributed across all NUMA nodes - by default, all goes to
 		# node0, but if QAT devices are attached to a different node, all of their VFs will end
 		# up under that node too and memory needs to be available there for the tests.
@@ -445,9 +445,9 @@ function get_config_params() {
 		config_params+=' --with-pmdk'
 	fi
 
-	if [ -f /usr/include/libpmem.h ] && [ $SPDK_TEST_REDUCE -eq 1 ]; then
+	if [ -f /usr/include/libpmem.h ] && [ $SPDK_TEST_VBDEV_COMPRESS -eq 1 ]; then
 		if ge "$(nasm --version | awk '{print $3}')" 2.14 && [[ $SPDK_TEST_ISAL -eq 1 ]]; then
-			config_params+=' --with-reduce'
+			config_params+=' --with-vbdev-compress'
 		fi
 	fi
 

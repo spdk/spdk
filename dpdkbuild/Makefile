@@ -39,13 +39,13 @@ DPDK_LIBS += kvargs telemetry
 # Governor required libs
 DPDK_LIBS += power timer ethdev net
 
-# common crypto/reduce drivers
-ifeq ($(findstring y,$(CONFIG_CRYPTO)$(CONFIG_REDUCE)),y)
+# common crypto/compress drivers
+ifeq ($(findstring y,$(CONFIG_CRYPTO)$(CONFIG_VBDEV_COMPRESS)),y)
 DPDK_DRIVERS += crypto/qat compress/qat common/qat
 endif
 
 # common mlx5 libs
-ifeq ($(findstring y,$(CONFIG_CRYPTO_MLX5)$(CONFIG_REDUCE_MLX5)),y)
+ifeq ($(findstring y,$(CONFIG_CRYPTO_MLX5)$(CONFIG_VBDEV_COMPRESS_MLX5)),y)
 DPDK_DRIVERS += common/mlx5 bus/auxiliary
 endif
 
@@ -63,9 +63,9 @@ DPDK_LDFLAGS += -L$(IPSEC_MB_DIR)
 endif
 endif
 
-ifeq ($(CONFIG_REDUCE),y)
+ifeq ($(CONFIG_VBDEV_COMPRESS),y)
 DPDK_DRIVERS += compress compress/isal
-ifeq ($(CONFIG_REDUCE_MLX5),y)
+ifeq ($(CONFIG_VBDEV_COMPRESS_MLX5),y)
 DPDK_DRIVERS += compress/mlx5
 endif
 DPDK_CFLAGS += -I$(ISAL_DIR)

@@ -18,7 +18,7 @@ DIRS-$(CONFIG_OCF) += env_ocf
 DIRS-$(CONFIG_IDXD) += idxd
 DIRS-$(CONFIG_VHOST) += vhost
 DIRS-$(CONFIG_VIRTIO) += virtio
-DIRS-$(CONFIG_REDUCE) += reduce
+DIRS-$(CONFIG_VBDEV_COMPRESS) += reduce
 DIRS-$(CONFIG_RDMA) += rdma
 DIRS-$(CONFIG_VFIO_USER) += vfu_tgt
 

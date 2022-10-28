@@ -73,8 +73,8 @@ function usage() {
 	echo " --with-pmdk[=DIR]         Build persistent memory bdev.
 					 example: /usr/share/pmdk"
 	echo " --without-pmdk		 No path required."
-	echo " --with-reduce             Build vbdev compression module."
-	echo " --without-reduce          No path required."
+	echo " --with-vbdev-compress     Build vbdev compression module and dependencies."
+	echo " --without-vbdev-compress  No path required."
 	echo " --with-rbd                Build Ceph RBD bdev module."
 	echo " --without-rbd             No path required."
 	echo " --with-rdma[=DIR]         Build RDMA transport for NVMf target and initiator."
@@ -531,11 +531,11 @@ for i in "$@"; do
 		--without-pmdk)
 			CONFIG[PMDK]=n
 			;;
-		--with-reduce)
-			CONFIG[REDUCE]=y
+		--with-vbdev-compress)
+			CONFIG[VBDEV_COMPRESS]=y
 			;;
-		--without-reduce)
-			CONFIG[REDUCE]=n
+		--without-vbdev-compress)
+			CONFIG[VBDEV_COMPRESS]=n
 			;;
 		--with-xnvme)
 			CONFIG[XNVME]=y
@@ -899,41 +899,41 @@ function mlx5_build() {
 	return 0
 }
 
-if [[ "${CONFIG[REDUCE]}" = "y" ]]; then
+if [[ "${CONFIG[VBDEV_COMPRESS]}" = "y" ]]; then
 	if ! echo -e '#include <libpmem.h>\nint main(void) { return 0; }\n' \
 		| "${BUILD_CMD[@]}" -lpmem - 2> /dev/null; then
-		echo "--with-reduce requires libpmem."
+		echo "--with-vbdev-compress requires libpmem."
 		echo "Please install then re-run this script."
 		exit 1
 	fi
 	# Try to enable mlx5 compress
-	CONFIG[REDUCE_MLX5]="y"
+	CONFIG[VBDEV_COMPRESS_MLX5]="y"
 
 	# Check if libmlx5 exists to enable mlx5_pci compress PMD
 	if ! mlx5_build; then
 		echo "libmlx5 is not found, so disabling DPDK mlx5_pci compress PMD"
-		CONFIG[REDUCE_MLX5]="n"
+		CONFIG[VBDEV_COMPRESS_MLX5]="n"
 	else
 		if [[ "${CONFIG[DPDK_PKG_CONFIG]}" = "y" ]]; then
 			# Check if librte_compress_mlx5 exists in DPDK package
 			if [ ! -f "${CONFIG[DPDK_LIB_DIR]}"/librte_compress_mlx5.so ]; then
 				echo "librte_compress_mlx5 is not found, so disabling DPDK mlx5_pci compress PMD"
-				CONFIG[REDUCE_MLX5]="n"
+				CONFIG[VBDEV_COMPRESS_MLX5]="n"
 			fi
 		else
 			# Check DPDK version to determine if mlx5_pci driver is supported
 			dpdk_ver=$(dpdk_version)
 			if [[ $dpdk_ver = "none" ]]; then
 				echo "Cannot get DPDK version, so disabling DPDK mlx5_pci compress PMD"
-				CONFIG[REDUCE_MLX5]="n"
+				CONFIG[VBDEV_COMPRESS_MLX5]="n"
 			elif [[ -n $dpdk_ver ]] && lt "$dpdk_ver" 21.02.0; then
 				# mlx5_pci for compress is supported by DPDK >- 21.02.0
 				echo "DPDK version ${dpdk_ver} doesn't support mlx5_pci compress PMD"
-				CONFIG[REDUCE_MLX5]="n"
+				CONFIG[VBDEV_COMPRESS_MLX5]="n"
 			elif [[ -n ${CONFIG[DPDK_LIB_DIR]} ]] && [ ! -f "${CONFIG[DPDK_LIB_DIR]}"/librte_compress_mlx5.so ]; then
 				# This is only checked when --with-dpdk or --with-dpdk=* is used
 				echo "librte_compress_mlx5 is not found, so disabling DPDK mlx5_pci compress PMD"
-				CONFIG[REDUCE_MLX5]="n"
+				CONFIG[VBDEV_COMPRESS_MLX5]="n"
 			fi
 		fi
 	fi
@@ -1161,7 +1161,7 @@ else
 	echo "Without ISA-L, there is no software support for crypto or compression,"
 	echo "so these features will be disabled."
 	CONFIG[CRYPTO]=n
-	CONFIG[REDUCE]=n
+	CONFIG[VBDEV_COMPRESS]=n
 fi
 
 if [[ "${CONFIG[SMA]}" = "y" ]]; then

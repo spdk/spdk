@@ -147,7 +147,7 @@ if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
 fi
 
 if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
-	if [[ $SPDK_TEST_CRYPTO -eq 1 || $SPDK_TEST_REDUCE -eq 1 ]]; then
+	if [[ $SPDK_TEST_CRYPTO -eq 1 || $SPDK_TEST_VBDEV_COMPRESS -eq 1 ]]; then
 		if [[ $SPDK_TEST_USE_IGB_UIO -eq 1 ]]; then
 			./scripts/qat_setup.sh igb_uio
 		else
@@ -324,7 +324,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		run_test "vmd" ./test/vmd/vmd.sh
 	fi
 
-	if [ $SPDK_TEST_REDUCE -eq 1 ]; then
+	if [ $SPDK_TEST_VBDEV_COMPRESS -eq 1 ]; then
 		run_test "compress_qat" ./test/compress/compress.sh "qat"
 		run_test "compress_isal" ./test/compress/compress.sh "isal"
 	fi
