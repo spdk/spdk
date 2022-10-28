@@ -104,6 +104,9 @@ endif
 ifeq ($(CONFIG_CRYPTO),y)
 ACCEL_MODULES_LIST += accel_dpdk_cryptodev
 endif
+ifeq ($(CONFIG_DPDK_COMPRESSDEV),y)
+ACCEL_MODULES_LIST += accel_dpdk_compressdev
+endif
 
 SCHEDULER_MODULES_LIST = scheduler_dynamic
 ifeq (y,$(DPDK_POWER))

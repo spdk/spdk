@@ -76,6 +76,8 @@ function usage() {
 	echo " --without-pmdk		 No path required."
 	echo " --with-vbdev-compress     Build vbdev compression module and dependencies."
 	echo " --without-vbdev-compress  No path required."
+	echo " --with-dpdk-compressdev   Build accel DPDK compression module and dependencies."
+	echo " --without-dpdk-compressdev No path required."
 	echo " --with-rbd                Build Ceph RBD bdev module."
 	echo " --without-rbd             No path required."
 	echo " --with-rdma[=DIR]         Build RDMA transport for NVMf target and initiator."
@@ -534,6 +536,12 @@ for i in "$@"; do
 			;;
 		--without-vbdev-compress)
 			CONFIG[VBDEV_COMPRESS]=n
+			;;
+		--with-dpdk-compressdev)
+			CONFIG[DPDK_COMPRESSDEV]=y
+			;;
+		--without-dpdk-compressdev)
+			CONFIG[DPDK_COMPRESSDEV]=n
 			;;
 		--with-xnvme)
 			CONFIG[XNVME]=y
@@ -1192,6 +1200,7 @@ else
 	echo "so these features will be disabled."
 	CONFIG[CRYPTO]=n
 	CONFIG[VBDEV_COMPRESS]=n
+	CONFIG[DPDK_COMPRESSDEV]=n
 fi
 
 # ISA-L-crypto complements ISA-L functionality, it is only enabled together with ISA-L

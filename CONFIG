@@ -130,6 +130,9 @@ CONFIG_PMDK_DIR=
 # Build with xNVMe
 CONFIG_XNVME=n
 
+# Enable the dependencies for building the DPDK accel compress module
+CONFIG_DPDK_COMPRESSDEV=n
+
 # Enable the dependencies for building the compress vbdev, includes the reduce library
 CONFIG_VBDEV_COMPRESS=n
 

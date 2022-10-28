@@ -98,6 +98,7 @@ DEPDIRS-accel_ioat := log ioat thread jsonrpc rpc accel
 DEPDIRS-accel_dsa := log idxd thread $(JSON_LIBS) accel trace
 DEPDIRS-accel_iaa := log idxd thread $(JSON_LIBS) accel trace
 DEPDIRS-accel_dpdk_cryptodev := log thread $(JSON_LIBS) accel
+DEPDIRS-accel_dpdk_compressdev := log thread $(JSON_LIBS) accel util
 
 # module/env_dpdk
 DEPDIRS-env_dpdk_rpc := log $(JSON_LIBS)

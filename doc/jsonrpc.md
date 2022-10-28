@@ -1867,6 +1867,43 @@ Example response:
 }
 ~~~
 
+### compressdev_scan_accel_module {#rpc_compressdev_scan_accel_module}
+
+Set config and enable compressdev accel module offload.
+Select the DPDK polled mode driver (pmd) for the accel compress module,
+0 = auto-select, 1= QAT only, 2 = mlx5_pci only.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+pmd                     | Required | int         | pmd selection
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "pmd": 1
+  },
+  "jsonrpc": "2.0",
+  "method": "compressdev_scan_accel_module",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### dsa_scan_accel_module {#rpc_dsa_scan_accel_module}
 
 Set config and enable dsa accel module offload.

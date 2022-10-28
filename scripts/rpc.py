@@ -2840,6 +2840,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('ioat_scan_accel_module', help='Enable IOAT accel module offload.')
     p.set_defaults(func=ioat_scan_accel_module)
 
+    # dpdk compressdev
+    def compressdev_scan_accel_module(args):
+        rpc.compressdev.compressdev_scan_accel_module(args.client, pmd=args.pmd)
+
+    p = subparsers.add_parser('compressdev_scan_accel_module', help='Scan and enable compressdev module and set pmd option.')
+    p.add_argument('-p', '--pmd', type=int, help='0 = auto-select, 1= QAT only, 2 = mlx5_pci only')
+    p.set_defaults(func=compressdev_scan_accel_module)
+
     # dsa
     def dsa_scan_accel_module(args):
         rpc.dsa.dsa_scan_accel_module(args.client, config_kernel_mode=args.config_kernel_mode)

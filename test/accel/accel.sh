@@ -28,6 +28,15 @@ if [[ $CONFIG_ISAL == y ]]; then
 	run_test "accel_decomp_mthread" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w decompress -l $testdir/bib -y -T 2
 	run_test "accel_deomp_full_mthread" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w decompress -l $testdir/bib -y -o 0 -T 2
 fi
+if [[ $CONFIG_DPDK_COMPRESSDEV == y ]]; then
+	run_test "accel_cdev_comp" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w compress -l $testdir/bib -c $testdir/dpdk.json
+	run_test "accel_cdev_decomp" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w decompress -l $testdir/bib -y -c $testdir/dpdk.json
+	run_test "accel_cdev_decmop_full" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w decompress -l $testdir/bib -y -o 0 -c $testdir/dpdk.json
+	run_test "accel_cdev_decomp_mcore" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w decompress -l $testdir/bib -y -m 0xf -c $testdir/dpdk.json
+	run_test "accel_cdev_decomp_full_mcore" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w decompress -l $testdir/bib -y -o 0 -m 0xf -c $testdir/dpdk.json
+	run_test "accel_cdev_decomp_mthread" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w decompress -l $testdir/bib -y -T 2 -c $testdir/dpdk.json
+	run_test "accel_cdev_deomp_full_mthread" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w decompress -l $testdir/bib -y -o 0 -T 2 -c $testdir/dpdk.json
+fi
 
 trap 'killprocess $spdk_tgt_pid; exit 1' ERR
 

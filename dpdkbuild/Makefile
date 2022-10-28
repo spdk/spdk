@@ -40,7 +40,7 @@ DPDK_LIBS += kvargs telemetry
 DPDK_LIBS += power timer ethdev net
 
 # common crypto/compress drivers
-ifeq ($(findstring y,$(CONFIG_CRYPTO)$(CONFIG_VBDEV_COMPRESS)),y)
+ifeq ($(findstring y,$(CONFIG_DPDK_COMPRESSDEV)$(CONFIG_CRYPTO)$(CONFIG_VBDEV_COMPRESS)),y)
 DPDK_DRIVERS += crypto/qat compress/qat common/qat
 endif
 
@@ -63,7 +63,7 @@ DPDK_LDFLAGS += -L$(IPSEC_MB_DIR)
 endif
 endif
 
-ifeq ($(CONFIG_VBDEV_COMPRESS),y)
+ifeq ($(findstring y,$(CONFIG_DPDK_COMPRESSDEV)$(CONFIG_VBDEV_COMPRESS)),y)
 DPDK_DRIVERS += compress compress/isal
 ifeq ($(CONFIG_VBDEV_COMPRESS_MLX5),y)
 DPDK_DRIVERS += compress/mlx5

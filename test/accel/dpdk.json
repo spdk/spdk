@@ -1,0 +1,15 @@
+{
+  "subsystems": [
+    {
+      "subsystem": "accel",
+      "config": [
+        {
+          "method": "compressdev_scan_accel_module",
+          "params": {
+            "pmd": 0
+          }
+        }
+      ]
+    }
+  ]
+}

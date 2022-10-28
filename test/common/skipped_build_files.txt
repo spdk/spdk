@@ -56,7 +56,3 @@ module/bdev/daos/bdev_daos_rpc
 # Not configured to test xNVMe bdev
 module/bdev/xnvme/bdev_xnvme
 module/bdev/xnvme/bdev_xnvme_rpc
-
-# Temporarily include this in the skipped files.  Next patches will remove
-# this and start building it.
-module/accel/dpdk_compressdev/accel_dpdk_compressdev

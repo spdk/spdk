@@ -353,6 +353,8 @@ vbdev_init_compress_drivers(void)
 		return -EINVAL;
 	}
 
+	/* TODO: make these global pools per thread but do in a follow-up patch to make
+	 * it easier to review against the old compressdev code */
 	g_mbuf_mp = rte_pktmbuf_pool_create("comp_mbuf_mp", NUM_MBUFS, POOL_CACHE_SIZE,
 					    sizeof(struct rte_mbuf), 0, rte_socket_id());
 	if (g_mbuf_mp == NULL) {
@@ -1400,6 +1402,10 @@ comp_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 {
 	struct vbdev_compress *comp_bdev = io_device;
 	struct comp_device_qp *device_qp;
+
+	/* TODO look into associating the device_qp with the channel vs the thread,
+	 * doing in next patch to make this one easier to review against code taken
+	 * from the vbdev module */
 
 	/* Now set the reduce channel if it's not already set. */
 	pthread_mutex_lock(&comp_bdev->reduce_lock);

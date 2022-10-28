@@ -80,7 +80,7 @@ endif
 endif
 endif
 
-ifeq ($(CONFIG_VBDEV_COMPRESS),y)
+ifeq ($(findstring y,$(CONFIG_DPDK_COMPRESSDEV)$(CONFIG_VBDEV_COMPRESS)),y)
 DPDK_FRAMEWORK=y
 ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_compress_isal.*))
 DPDK_LIB_LIST += rte_compress_isal
