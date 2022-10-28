@@ -6231,11 +6231,31 @@ examine_no_lock_held(struct spdk_bdev *bdev)
 	CU_ASSERT(!spdk_spin_held(&bdev->internal.spinlock));
 }
 
+struct examine_claim_v2_ctx {
+	struct ut_examine_ctx examine_ctx;
+	enum spdk_bdev_claim_type claim_type;
+	struct spdk_bdev_desc *desc;
+};
+
+static void
+examine_claim_v2(struct spdk_bdev *bdev)
+{
+	struct examine_claim_v2_ctx *ctx = bdev->ctxt;
+	int rc;
+
+	rc = spdk_bdev_open_ext(bdev->name, false, bdev_ut_event_cb, NULL, &ctx->desc);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_bdev_module_claim_bdev_desc(ctx->desc, ctx->claim_type, NULL, &vbdev_ut_if);
+	CU_ASSERT(rc == 0);
+}
+
 static void
 examine_locks(void)
 {
 	struct spdk_bdev *bdev;
 	struct ut_examine_ctx ctx = { 0 };
+	struct examine_claim_v2_ctx v2_ctx;
 
 	/* Without any claims, one code path is taken */
 	ctx.examine_config = examine_no_lock_held;
@@ -6247,7 +6267,7 @@ examine_locks(void)
 	CU_ASSERT(bdev->internal.claim.v1.module == NULL);
 	free_bdev(bdev);
 
-	/* Exercise the other path that is taken when examine_config() takes a claim. */
+	/* Exercise another path that is taken when examine_config() takes a v1 claim. */
 	memset(&ctx, 0, sizeof(ctx));
 	ctx.examine_config = examine_claim_v1;
 	ctx.examine_disk = examine_no_lock_held;
@@ -6259,6 +6279,19 @@ examine_locks(void)
 	spdk_bdev_module_release_bdev(bdev);
 	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_NONE);
 	CU_ASSERT(bdev->internal.claim.v1.module == NULL);
+	free_bdev(bdev);
+
+	/* Exercise the final path that comes with v2 claims. */
+	memset(&v2_ctx, 0, sizeof(v2_ctx));
+	v2_ctx.examine_ctx.examine_config = examine_claim_v2;
+	v2_ctx.examine_ctx.examine_disk = examine_no_lock_held;
+	v2_ctx.claim_type = SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE;
+	bdev = allocate_bdev_ctx("bdev0", &v2_ctx);
+	CU_ASSERT(v2_ctx.examine_ctx.examine_config_count == 1);
+	CU_ASSERT(v2_ctx.examine_ctx.examine_disk_count == 1);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE);
+	spdk_bdev_close(v2_ctx.desc);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_NONE);
 	free_bdev(bdev);
 }
 
@@ -6809,6 +6842,198 @@ claim_v1_existing_v2(void)
 	free_bdev(bdev);
 }
 
+static void ut_examine_claimed_config0(struct spdk_bdev *bdev);
+static void ut_examine_claimed_disk0(struct spdk_bdev *bdev);
+static void ut_examine_claimed_config1(struct spdk_bdev *bdev);
+static void ut_examine_claimed_disk1(struct spdk_bdev *bdev);
+
+#define UT_MAX_EXAMINE_MODS 2
+struct spdk_bdev_module examine_claimed_mods[UT_MAX_EXAMINE_MODS] = {
+	{
+		.name = "vbdev_ut_examine0",
+		.module_init = vbdev_ut_module_init,
+		.module_fini = vbdev_ut_module_fini,
+		.examine_config = ut_examine_claimed_config0,
+		.examine_disk = ut_examine_claimed_disk0,
+	},
+	{
+		.name = "vbdev_ut_examine1",
+		.module_init = vbdev_ut_module_init,
+		.module_fini = vbdev_ut_module_fini,
+		.examine_config = ut_examine_claimed_config1,
+		.examine_disk = ut_examine_claimed_disk1,
+	}
+};
+
+SPDK_BDEV_MODULE_REGISTER(bdev_ut_claimed0, &examine_claimed_mods[0])
+SPDK_BDEV_MODULE_REGISTER(bdev_ut_claimed1, &examine_claimed_mods[1])
+
+struct ut_examine_claimed_ctx {
+	uint32_t examine_config_count;
+	uint32_t examine_disk_count;
+
+	/* Claim type to take, with these options */
+	enum spdk_bdev_claim_type claim_type;
+	struct spdk_bdev_claim_opts claim_opts;
+
+	/* Expected return value from spdk_bdev_module_claim_bdev_desc() */
+	int expect_claim_err;
+
+	/* Descriptor used for a claim */
+	struct spdk_bdev_desc *desc;
+} examine_claimed_ctx[UT_MAX_EXAMINE_MODS];
+
+bool ut_testing_examine_claimed;
+
+static void
+reset_examine_claimed_ctx(void)
+{
+	struct ut_examine_claimed_ctx *ctx;
+	uint32_t i;
+
+	for (i = 0; i < SPDK_COUNTOF(examine_claimed_ctx); i++) {
+		ctx = &examine_claimed_ctx[i];
+		if (ctx->desc != NULL) {
+			spdk_bdev_close(ctx->desc);
+		}
+		memset(ctx, 0, sizeof(*ctx));
+		spdk_bdev_claim_opts_init(&ctx->claim_opts, sizeof(ctx->claim_opts));
+	}
+}
+
+static void
+examine_claimed_config(struct spdk_bdev *bdev, uint32_t modnum)
+{
+	SPDK_CU_ASSERT_FATAL(modnum < UT_MAX_EXAMINE_MODS);
+	struct spdk_bdev_module *module = &examine_claimed_mods[modnum];
+	struct ut_examine_claimed_ctx *ctx = &examine_claimed_ctx[modnum];
+	int rc;
+
+	if (!ut_testing_examine_claimed) {
+		spdk_bdev_module_examine_done(module);
+		return;
+	}
+
+	ctx->examine_config_count++;
+
+	if (ctx->claim_type != SPDK_BDEV_CLAIM_NONE) {
+		rc = spdk_bdev_open_ext(bdev->name, false, bdev_ut_event_cb, &ctx->claim_opts,
+					&ctx->desc);
+		CU_ASSERT(rc == 0);
+
+		rc = spdk_bdev_module_claim_bdev_desc(ctx->desc, ctx->claim_type, NULL, module);
+		CU_ASSERT(rc == ctx->expect_claim_err);
+	}
+	spdk_bdev_module_examine_done(module);
+}
+
+static void
+ut_examine_claimed_config0(struct spdk_bdev *bdev)
+{
+	examine_claimed_config(bdev, 0);
+}
+
+static void
+ut_examine_claimed_config1(struct spdk_bdev *bdev)
+{
+	examine_claimed_config(bdev, 1);
+}
+
+static void
+examine_claimed_disk(struct spdk_bdev *bdev, uint32_t modnum)
+{
+	SPDK_CU_ASSERT_FATAL(modnum < UT_MAX_EXAMINE_MODS);
+	struct spdk_bdev_module *module = &examine_claimed_mods[modnum];
+	struct ut_examine_claimed_ctx *ctx = &examine_claimed_ctx[modnum];
+
+	if (!ut_testing_examine_claimed) {
+		spdk_bdev_module_examine_done(module);
+		return;
+	}
+
+	ctx->examine_disk_count++;
+
+	spdk_bdev_module_examine_done(module);
+}
+
+static void
+ut_examine_claimed_disk0(struct spdk_bdev *bdev)
+{
+	examine_claimed_disk(bdev, 0);
+}
+
+static void
+ut_examine_claimed_disk1(struct spdk_bdev *bdev)
+{
+	examine_claimed_disk(bdev, 1);
+}
+
+static void
+examine_claimed(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_module *mod = examine_claimed_mods;
+	struct ut_examine_claimed_ctx *ctx = examine_claimed_ctx;
+
+	ut_testing_examine_claimed = true;
+	reset_examine_claimed_ctx();
+
+	/*
+	 * With one module claiming, both modules' examine_config should be called, but only the
+	 * claiming module's examine_disk should be called.
+	 */
+	ctx[0].claim_type = SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE;
+	bdev = allocate_bdev("bdev0");
+	CU_ASSERT(ctx[0].examine_config_count == 1);
+	CU_ASSERT(ctx[0].examine_disk_count == 1);
+	SPDK_CU_ASSERT_FATAL(ctx[0].desc != NULL);
+	CU_ASSERT(ctx[0].desc->claim->module == &mod[0]);
+	CU_ASSERT(ctx[1].examine_config_count == 1);
+	CU_ASSERT(ctx[1].examine_disk_count == 0);
+	CU_ASSERT(ctx[1].desc == NULL);
+	reset_examine_claimed_ctx();
+	free_bdev(bdev);
+
+	/*
+	 * With two modules claiming, both modules' examine_config and examine_disk should be
+	 * called.
+	 */
+	ctx[0].claim_type = SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE;
+	ctx[1].claim_type = SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE;
+	bdev = allocate_bdev("bdev0");
+	CU_ASSERT(ctx[0].examine_config_count == 1);
+	CU_ASSERT(ctx[0].examine_disk_count == 1);
+	SPDK_CU_ASSERT_FATAL(ctx[0].desc != NULL);
+	CU_ASSERT(ctx[0].desc->claim->module == &mod[0]);
+	CU_ASSERT(ctx[1].examine_config_count == 1);
+	CU_ASSERT(ctx[1].examine_disk_count == 1);
+	SPDK_CU_ASSERT_FATAL(ctx[1].desc != NULL);
+	CU_ASSERT(ctx[1].desc->claim->module == &mod[1]);
+	reset_examine_claimed_ctx();
+	free_bdev(bdev);
+
+	/*
+	 * If two vbdev modules try to claim with conflicting claim types, the module that was added
+	 * last wins. The winner gets the claim and is the only one that has its examine_disk
+	 * callback invoked.
+	 */
+	ctx[0].claim_type = SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE;
+	ctx[0].expect_claim_err = -EPERM;
+	ctx[1].claim_type = SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE;
+	bdev = allocate_bdev("bdev0");
+	CU_ASSERT(ctx[0].examine_config_count == 1);
+	CU_ASSERT(ctx[0].examine_disk_count == 0);
+	CU_ASSERT(ctx[1].examine_config_count == 1);
+	CU_ASSERT(ctx[1].examine_disk_count == 1);
+	SPDK_CU_ASSERT_FATAL(ctx[1].desc != NULL);
+	CU_ASSERT(ctx[1].desc->claim->module == &mod[1]);
+	CU_ASSERT(bdev->internal.claim_type == SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE);
+	reset_examine_claimed_ctx();
+	free_bdev(bdev);
+
+	ut_testing_examine_claimed = false;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -6878,6 +7103,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, claim_v2_existing_writer);
 	CU_ADD_TEST(suite, claim_v2_existing_v1);
 	CU_ADD_TEST(suite, claim_v1_existing_v2);
+	CU_ADD_TEST(suite, examine_claimed);
 
 	allocate_cores(1);
 	allocate_threads(1);

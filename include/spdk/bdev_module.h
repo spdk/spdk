@@ -626,6 +626,13 @@ struct spdk_bdev {
 		enum spdk_bdev_status status;
 
 		/**
+		 * How many bdev_examine() calls are iterating claim.v2.claims. When non-zero claims
+		 * that are released will be cleared but remain on the claims list until
+		 * bdev_examine() finishes. Must hold spinlock on all updates.
+		 */
+		uint32_t examine_in_progress;
+
+		/**
 		 * The claim type: used in conjunction with claim. Must hold spinlock on all
 		 * updates.
 		 */
