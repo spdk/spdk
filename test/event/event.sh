@@ -31,7 +31,7 @@ function app_repeat_test() {
 		# This SIGTERM is sent to the app_repeat test app - it doesn't actually
 		# terminate the app, it just causes it go through another
 		# spdk_app_stop/spdk_app_start cycle
-		./scripts/rpc.py -s $rpc_server spdk_kill_instance SIGTERM
+		$rootdir/scripts/rpc.py -s $rpc_server spdk_kill_instance SIGTERM
 	done
 
 	waitforlisten $repeat_pid $rpc_server

@@ -36,7 +36,7 @@ fi
 timing_exit porcelain_check
 
 if [[ $SPDK_TEST_RELEASE_BUILD -eq 1 ]]; then
-	run_test "packaging" test/packaging/packaging.sh
+	run_test "packaging" $rootdir/test/packaging/packaging.sh
 	$MAKE clean
 fi
 
@@ -54,10 +54,10 @@ if [ $(uname -s) = Linux ]; then
 		LD=$(type -P ld.gold)
 		export LD
 	fi
-	./configure $config_params --enable-lto
+	$rootdir/configure $config_params --enable-lto
 else
 	# LTO needs a special compiler to work on BSD.
-	./configure $config_params
+	$rootdir/configure $config_params
 fi
 $MAKE ${MAKEFLAGS}
 $MAKE ${MAKEFLAGS} clean

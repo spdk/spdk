@@ -50,10 +50,10 @@ function check_header_filenames() {
 
 	xtrace_disable
 
-	include_headers=$(git ls-files -- include/spdk include/spdk_internal | xargs -n 1 basename)
+	include_headers=$(git ls-files -- $rootdir/include/spdk $rootdir/include/spdk_internal | xargs -n 1 basename)
 	dups=
 	for file in $include_headers; do
-		if [[ $(git ls-files "lib/**/$file" "module/**/$file" --error-unmatch 2> /dev/null) ]]; then
+		if [[ $(git ls-files "$rootdir/lib/**/$file" "$rootdir/module/**/$file" --error-unmatch 2> /dev/null) ]]; then
 			dups+=" $file"
 			dups_found=1
 		fi
@@ -309,7 +309,7 @@ if [[ -f $rootdir/mk/config.mk ]]; then
 	$MAKE $MAKEFLAGS clean
 fi
 
-./configure $config_params --with-shared
+$rootdir/configure $config_params --with-shared
 # By setting SPDK_NO_LIB_DEPS=1, we ensure that we won't create any link dependencies.
 # Then we can be sure we get a valid accounting of the symbol dependencies we have.
 SPDK_NO_LIB_DEPS=1 $MAKE $MAKEFLAGS

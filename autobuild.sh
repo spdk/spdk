@@ -31,7 +31,7 @@ fi
 
 case "$SPDK_TEST_AUTOBUILD" in
 	full)
-		./configure $config_params
+		$rootdir/configure $config_params
 		echo "** START ** Info for Hostname: $HOSTNAME"
 		uname -a
 		$MAKE cc_version
@@ -62,10 +62,10 @@ elif [[ $SPDK_TEST_SCANBUILD -eq 1 ]]; then
 else
 	if [[ $SPDK_TEST_FUZZER -eq 1 ]]; then
 		# if we are testing nvmf fuzz with llvm lib, --with-shared will cause lib link fail
-		./configure $config_params
+		$rootdir/configure $config_params
 	else
 		# if we aren't testing the unittests, build with shared objects.
-		./configure $config_params --with-shared
+		$rootdir/configure $config_params --with-shared
 	fi
 	run_test "make" $MAKE $MAKEFLAGS
 fi
