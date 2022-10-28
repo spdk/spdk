@@ -293,9 +293,9 @@ rpc_vhost_delete_controller(struct spdk_jsonrpc_request *request,
 		rc = -ENODEV;
 		goto invalid;
 	}
+	spdk_vhost_unlock();
 
 	rc = spdk_vhost_dev_remove(vdev);
-	spdk_vhost_unlock();
 	if (rc < 0) {
 		goto invalid;
 	}

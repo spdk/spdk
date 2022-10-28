@@ -1141,10 +1141,8 @@ vhost_session_bdev_resize_cb(struct spdk_vhost_dev *vdev,
 static void
 vhost_user_blk_resize_cb(struct spdk_vhost_dev *vdev, bdev_event_cb_complete cb, void *cb_arg)
 {
-	spdk_vhost_lock();
 	vhost_user_dev_foreach_session(vdev, vhost_session_bdev_resize_cb,
 				       cb, cb_arg);
-	spdk_vhost_unlock();
 }
 
 static int
@@ -1182,10 +1180,8 @@ vhost_user_bdev_remove_cb(struct spdk_vhost_dev *vdev, bdev_event_cb_complete cb
 	SPDK_WARNLOG("%s: hot-removing bdev - all further requests will fail.\n",
 		     vdev->name);
 
-	spdk_vhost_lock();
 	vhost_user_dev_foreach_session(vdev, vhost_user_session_bdev_remove_cb,
 				       cb, cb_arg);
-	spdk_vhost_unlock();
 }
 
 static void
@@ -1363,9 +1359,10 @@ destroy_session_poller_cb(void *arg)
 {
 	struct spdk_vhost_blk_session *bvsession = arg;
 	struct spdk_vhost_session *vsession = &bvsession->vsession;
+	struct spdk_vhost_user_dev *user_dev = to_user_dev(vsession->vdev);
 	int i;
 
-	if (vsession->task_cnt > 0 || spdk_vhost_trylock() != 0) {
+	if (vsession->task_cnt > 0 || (pthread_mutex_trylock(&user_dev->lock) != 0)) {
 		assert(vsession->stop_retry_count > 0);
 		vsession->stop_retry_count--;
 		if (vsession->stop_retry_count == 0) {
@@ -1395,7 +1392,7 @@ destroy_session_poller_cb(void *arg)
 	spdk_poller_unregister(&bvsession->stop_poller);
 	vhost_user_session_stop_done(vsession, 0);
 
-	spdk_vhost_unlock();
+	pthread_mutex_unlock(&user_dev->lock);
 	return SPDK_POLLER_BUSY;
 }
 
@@ -1599,8 +1596,6 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	const char *transport_name = VIRTIO_BLK_DEFAULT_TRANSPORT;
 	int ret = 0;
 
-	spdk_vhost_lock();
-
 	bvdev = calloc(1, sizeof(*bvdev));
 	if (bvdev == NULL) {
 		ret = -ENOMEM;
@@ -1669,7 +1664,6 @@ out:
 	if (ret != 0 && bvdev) {
 		free(bvdev);
 	}
-	spdk_vhost_unlock();
 	return ret;
 }
 

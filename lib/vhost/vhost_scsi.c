@@ -170,6 +170,15 @@ vhost_scsi_task_free_cb(struct spdk_scsi_task *scsi_task)
 }
 
 static void
+vhost_scsi_dev_unregister(void *arg1)
+{
+	struct spdk_vhost_scsi_dev *svdev = arg1;
+
+	vhost_dev_unregister(&svdev->vdev);
+	free(svdev);
+}
+
+static void
 remove_scsi_tgt(struct spdk_vhost_scsi_dev *svdev,
 		unsigned scsi_tgt_num)
 {
@@ -189,8 +198,10 @@ remove_scsi_tgt(struct spdk_vhost_scsi_dev *svdev,
 	SPDK_INFOLOG(vhost, "removed target 'Target %u'\n", scsi_tgt_num);
 
 	if (--svdev->ref == 0 && svdev->registered == false) {
-		vhost_dev_unregister(&svdev->vdev);
-		free(svdev);
+		/* `remove_scsi_tgt` is running under vhost-user lock, so we
+		 * unregister the device in next poll.
+		 */
+		spdk_thread_send_msg(spdk_get_thread(), vhost_scsi_dev_unregister, svdev);
 	}
 }
 
@@ -248,12 +259,10 @@ process_removed_devs(struct spdk_vhost_scsi_session *svsession)
 			state->dev = NULL;
 			state->status = VHOST_SCSI_DEV_REMOVED;
 			/* try to detach it globally */
-			spdk_vhost_lock();
 			vhost_user_dev_foreach_session(&svsession->svdev->vdev,
 						       vhost_scsi_session_process_removed,
 						       vhost_scsi_dev_process_removed_cpl_cb,
 						       (void *)(uintptr_t)i);
-			spdk_vhost_unlock();
 		}
 	}
 }
@@ -860,19 +869,16 @@ spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask)
 	svdev->vdev.disabled_features = SPDK_VHOST_SCSI_DISABLED_FEATURES;
 	svdev->vdev.protocol_features = SPDK_VHOST_SCSI_PROTOCOL_FEATURES;
 
-	spdk_vhost_lock();
 	rc = vhost_dev_register(&svdev->vdev, name, cpumask, NULL,
 				&spdk_vhost_scsi_device_backend,
 				&spdk_vhost_scsi_user_device_backend);
 	if (rc) {
 		free(svdev);
-		spdk_vhost_unlock();
 		return rc;
 	}
 
 	svdev->registered = true;
 
-	spdk_vhost_unlock();
 	return rc;
 }
 
@@ -1409,10 +1415,11 @@ destroy_session_poller_cb(void *arg)
 {
 	struct spdk_vhost_scsi_session *svsession = arg;
 	struct spdk_vhost_session *vsession = &svsession->vsession;
+	struct spdk_vhost_user_dev *user_dev = to_user_dev(vsession->vdev);
 	struct spdk_scsi_dev_session_state *state;
 	uint32_t i;
 
-	if (vsession->task_cnt > 0 || spdk_vhost_trylock() != 0) {
+	if (vsession->task_cnt > 0 || (pthread_mutex_trylock(&user_dev->lock) != 0)) {
 		assert(vsession->stop_retry_count > 0);
 		vsession->stop_retry_count--;
 		if (vsession->stop_retry_count == 0) {
@@ -1461,7 +1468,7 @@ destroy_session_poller_cb(void *arg)
 	spdk_poller_unregister(&svsession->stop_poller);
 	vhost_user_session_stop_done(vsession, 0);
 
-	spdk_vhost_unlock();
+	pthread_mutex_unlock(&user_dev->lock);
 	return SPDK_POLLER_BUSY;
 }
 

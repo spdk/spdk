@@ -156,6 +156,9 @@ struct spdk_vhost_user_dev {
 
 	bool registered;
 
+	/* Use this lock to protect multiple sessions. */
+	pthread_mutex_t lock;
+
 	/* Current connections to the device */
 	TAILQ_HEAD(, spdk_vhost_session) vsessions;
 
@@ -187,6 +190,13 @@ struct spdk_vhost_dev {
 
 	TAILQ_ENTRY(spdk_vhost_dev) tailq;
 };
+
+static inline struct spdk_vhost_user_dev *
+to_user_dev(struct spdk_vhost_dev *vdev)
+{
+	assert(vdev != NULL);
+	return vdev->ctxt;
+}
 
 /**
  * \param vdev vhost device.

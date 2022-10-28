@@ -127,13 +127,16 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 		return -EINVAL;
 	}
 
+	spdk_vhost_lock();
 	if (spdk_vhost_dev_find(name)) {
 		SPDK_ERRLOG("vhost controller %s already exists.\n", name);
+		spdk_vhost_unlock();
 		return -EEXIST;
 	}
 
 	vdev->name = strdup(name);
 	if (vdev->name == NULL) {
+		spdk_vhost_unlock();
 		return -EIO;
 	}
 
@@ -145,10 +148,12 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 	}
 	if (rc != 0) {
 		free(vdev->name);
+		spdk_vhost_unlock();
 		return rc;
 	}
 
 	TAILQ_INSERT_TAIL(&g_vhost_devices, vdev, tailq);
+	spdk_vhost_unlock();
 
 	SPDK_INFOLOG(vhost, "Controller %s: new controller added\n", vdev->name);
 	return 0;
@@ -171,11 +176,13 @@ vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 	SPDK_INFOLOG(vhost, "Controller %s: removed\n", vdev->name);
 
 	free(vdev->name);
-	TAILQ_REMOVE(&g_vhost_devices, vdev, tailq);
 
+	spdk_vhost_lock();
+	TAILQ_REMOVE(&g_vhost_devices, vdev, tailq);
 	if (TAILQ_EMPTY(&g_vhost_devices) && g_fini_cb != NULL) {
 		g_fini_cb();
 	}
+	spdk_vhost_unlock();
 
 	return 0;
 }
@@ -265,9 +272,7 @@ vhost_fini(void)
 {
 	struct spdk_vhost_dev *vdev, *tmp;
 
-	spdk_vhost_lock();
 	if (spdk_vhost_dev_next(NULL) == NULL) {
-		spdk_vhost_unlock();
 		g_fini_cb();
 		return;
 	}
@@ -279,7 +284,6 @@ vhost_fini(void)
 		/* don't care if it fails, there's nothing we can do for now */
 		vdev = tmp;
 	}
-	spdk_vhost_unlock();
 
 	/* g_fini_cb will get called when last device is unregistered. */
 }
