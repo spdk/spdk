@@ -1165,14 +1165,20 @@ if __name__ == "__main__":
                                          name=args.name,
                                          io_type=args.io_type,
                                          error_type=args.error_type,
-                                         num=args.num)
+                                         num=args.num,
+                                         corrupt_offset=args.corrupt_offset,
+                                         corrupt_value=args.corrupt_value)
 
     p = subparsers.add_parser('bdev_error_inject_error', help='bdev inject error')
     p.add_argument('name', help="""the name of the error injection bdev""")
     p.add_argument('io_type', help="""io_type: 'clear' 'read' 'write' 'unmap' 'flush' 'all'""")
-    p.add_argument('error_type', help="""error_type: 'failure' 'pending'""")
+    p.add_argument('error_type', help="""error_type: 'failure' 'pending' 'corrupt_data'""")
     p.add_argument(
         '-n', '--num', help='the number of commands you want to fail', type=int)
+    p.add_argument(
+        '-o', '--corrupt-offset', help='the offset in bytes to xor with corrupt_value', type=int)
+    p.add_argument(
+        '-v', '--corrupt-value', help='the value for xor (1-255, 0 is invalid)', type=int)
     p.set_defaults(func=bdev_error_inject_error)
 
     def bdev_nvme_apply_firmware(args):

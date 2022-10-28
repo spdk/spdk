@@ -1505,14 +1505,17 @@ def bdev_get_histogram(client, name):
     return client.call('bdev_get_histogram', params)
 
 
-def bdev_error_inject_error(client, name, io_type, error_type, num):
+def bdev_error_inject_error(client, name, io_type, error_type, num,
+                            corrupt_offset, corrupt_value):
     """Inject an error via an error bdev.
 
     Args:
         name: name of error bdev
         io_type: one of "clear", "read", "write", "unmap", "flush", or "all"
-        error_type: one of "failure" or "pending"
+        error_type: one of "failure", "pending", or "corrupt_data"
         num: number of commands to fail
+        corrupt_offset: offset in bytes to xor with corrupt_value
+        corrupt_value: value for xor (1-255, 0 is invalid)
     """
     params = {
         'name': name,
@@ -1522,6 +1525,10 @@ def bdev_error_inject_error(client, name, io_type, error_type, num):
 
     if num:
         params['num'] = num
+    if corrupt_offset:
+        params['corrupt_offset'] = corrupt_offset
+    if corrupt_value:
+        params['corrupt_value'] = corrupt_value
 
     return client.call('bdev_error_inject_error', params)
 

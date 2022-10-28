@@ -4596,8 +4596,10 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Name of the error injection bdev
 io_type                 | Required | string      | io type 'clear' 'read' 'write' 'unmap' 'flush' 'all'
-error_type              | Required | string      | error type 'failure' 'pending'
+error_type              | Required | string      | error type 'failure' 'pending' 'corrupt_data'
 num                     | Optional | int         | the number of commands you want to fail.(default:1)
+corrupt_offset          | Optional | int         | the offset in bytes to xor with corrupt_value
+corrupt_value           | Optional | int         | the value for xor (1-255, 0 is invalid)
 
 #### Example
 

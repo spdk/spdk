@@ -45,6 +45,8 @@ rpc_error_bdev_decode_error_type(const struct spdk_json_val *val, void *out)
 		*error_type = VBDEV_IO_FAILURE;
 	} else if (spdk_json_strequal(val, "pending") == true) {
 		*error_type = VBDEV_IO_PENDING;
+	} else if (spdk_json_strequal(val, "corrupt_data") == true) {
+		*error_type = VBDEV_IO_CORRUPT_DATA;
 	} else {
 		SPDK_NOTICELOG("Invalid parameter value: error_type\n");
 		return -EINVAL;
@@ -153,6 +155,8 @@ static const struct spdk_json_object_decoder rpc_error_information_decoders[] = 
 	{"io_type", offsetof(struct rpc_error_information, opts.io_type), rpc_error_bdev_decode_io_type},
 	{"error_type", offsetof(struct rpc_error_information, opts.error_type), rpc_error_bdev_decode_error_type},
 	{"num", offsetof(struct rpc_error_information, opts.error_num), spdk_json_decode_uint32, true},
+	{"corrupt_offset", offsetof(struct rpc_error_information, opts.corrupt_offset), spdk_json_decode_uint64, true},
+	{"corrupt_value", offsetof(struct rpc_error_information, opts.corrupt_value), spdk_json_decode_uint8, true},
 };
 
 static void
