@@ -1004,6 +1004,86 @@ test_nvme_pcie_ctrlr_config_pmr(void)
 	CU_ASSERT(rc == -EINVAL);
 }
 
+static void
+map_io_pmr_init(struct nvme_pcie_ctrlr *pctrlr, union spdk_nvme_pmrcap_register *pmrcap)
+{
+	pmrcap->raw = 0;
+	pmrcap->bits.rds = 1;
+	pmrcap->bits.wds = 1;
+	nvme_pcie_ctrlr_set_reg_4(&pctrlr->ctrlr, offsetof(struct spdk_nvme_registers, pmrcap.raw),
+				  pmrcap->raw);
+	pctrlr->regs->cap.bits.pmrs = 1;
+	pctrlr->pmr.mem_register_size = 0;
+	pctrlr->pmr.mem_register_addr = NULL;
+	pctrlr->pmr.bar_va = (void *)0x7F7C00E30000;
+	pctrlr->pmr.size = (1 << 22) * 128;
+}
+
+static void
+test_nvme_pcie_ctrlr_map_io_pmr(void)
+{
+	struct nvme_pcie_ctrlr pctrlr = {};
+	struct spdk_nvme_ctrlr *ctrlr;
+	volatile struct spdk_nvme_registers regs = {};
+	union spdk_nvme_pmrcap_register pmrcap;
+	void *mem_reg_addr = NULL;
+	size_t rt_size = 0;
+
+	ctrlr = &pctrlr.ctrlr;
+	pctrlr.regs = &regs;
+
+	/* PMR is not supported by the controller */
+	map_io_pmr_init(&pctrlr, &pmrcap);
+	regs.cap.bits.pmrs = 0;
+
+	mem_reg_addr = nvme_pcie_ctrlr_map_io_pmr(ctrlr, &rt_size);
+	CU_ASSERT(mem_reg_addr == NULL);
+
+	/* mem_register_addr not NULL. */
+	map_io_pmr_init(&pctrlr, &pmrcap);
+	pctrlr.pmr.mem_register_addr = (void *)0xDEADBEEF;
+	pctrlr.pmr.mem_register_size = 1024;
+
+	mem_reg_addr = nvme_pcie_ctrlr_map_io_pmr(ctrlr, &rt_size);
+	CU_ASSERT(rt_size == 1024);
+	CU_ASSERT(mem_reg_addr == (void *)0xDEADBEEF);
+
+	/* PMR not available */
+	map_io_pmr_init(&pctrlr, &pmrcap);
+	pctrlr.pmr.bar_va = NULL;
+	pctrlr.pmr.mem_register_addr = NULL;
+
+	mem_reg_addr = nvme_pcie_ctrlr_map_io_pmr(ctrlr, &rt_size);
+	CU_ASSERT(mem_reg_addr == NULL);
+	CU_ASSERT(rt_size == 0);
+
+	/* WDS / RDS is not supported */
+	map_io_pmr_init(&pctrlr, &pmrcap);
+	pmrcap.bits.rds = 0;
+	pmrcap.bits.wds = 0;
+	nvme_pcie_ctrlr_set_reg_4(&pctrlr.ctrlr, offsetof(struct spdk_nvme_registers, pmrcap.raw),
+				  pmrcap.raw);
+
+	mem_reg_addr = nvme_pcie_ctrlr_map_io_pmr(ctrlr, &rt_size);
+	CU_ASSERT(mem_reg_addr == NULL);
+	CU_ASSERT(rt_size == 0);
+
+	/* PMR is less than 4MiB in size then abort PMR mapping  */
+	map_io_pmr_init(&pctrlr, &pmrcap);
+	pctrlr.pmr.size = (1ULL << 20);
+
+	mem_reg_addr = nvme_pcie_ctrlr_map_io_pmr(ctrlr, &rt_size);
+	CU_ASSERT(mem_reg_addr == NULL);
+	CU_ASSERT(rt_size == 0);
+
+	/* All parameters success */
+	map_io_pmr_init(&pctrlr, &pmrcap);
+
+	mem_reg_addr = nvme_pcie_ctrlr_map_io_pmr(ctrlr, &rt_size);
+	CU_ASSERT(mem_reg_addr == (void *)0x7F7C01000000);
+	CU_ASSERT(rt_size == 0x1FE00000);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1027,6 +1107,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_map_io_cmb);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_map_unmap_pmr);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_config_pmr);
+	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_map_io_pmr);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
