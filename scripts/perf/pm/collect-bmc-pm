@@ -210,7 +210,11 @@ sdr_power_support() {
 }
 
 power_support() {
-	local -g support
+	local -g support cpu_support=0
+
+	if ((include_cpu == 1)) && rapl_supported; then
+		cpu_support=1
+	fi
 
 	if [[ $interface == dcmi || $interface == sdr ]]; then
 		# override
@@ -221,7 +225,11 @@ power_support() {
 	elif sdr_power_support; then
 		support=sdr
 	else
-		printf 'BMC does not provide Power Management support, cannot gather power measurements\n' >&2
+		printf 'BMC does not provide Power Management support, cannot gather system-wide power measurements\n' >&2
+		if ((cpu_support)); then
+			printf 'Only CPU measurements will be provided\n' >&2
+			return 0
+		fi
 		return 1
 	fi
 }
@@ -304,6 +312,49 @@ get_sdr_now_reading() {
 	done
 }
 
+rapl_supported() {
+	[[ -e /sys/class/powercap/intel-rapl ]]
+}
+
+get_cpu_socket_reading() {
+	local rapl=/sys/class/powercap
+	local socket socket_idx _socket_idx socket_name
+	local ts reading
+
+	# power_uw is usually not available so we need to relay on energy_uj. It's also rarely
+	# rw so we can't zero it out, hence we need to keep track of the initial counter. For
+	# details see kernel documentation (powercap.rst).
+	ts=$(utc)
+	for socket in /sys/class/powercap/intel-rapl:*; do
+		[[ -e $socket ]] || continue
+
+		socket_idx=${socket#*:} socket_name=$(< "$socket/name")
+		# Adjust for different domains, see linux/intel_rapl.h
+		case "$socket_name" in
+			dram | core | uncore) _socket_idx=${socket_idx//:/_} socket_idx=${socket_idx%:*} ;;
+			package-*) _socket_idx=$socket_idx socket_name=socket ;;
+			psys*) _socket_idx=$socket_idx socket_name=platform ;;
+		esac
+
+		local -n socket_uj=socket_${_socket_idx}_uj
+		socket_uj+=("$(< "$socket/energy_uj")")
+		# We need at least two readings for comparison
+		((${#socket_uj[@]} > 1)) || continue
+
+		# Convert to Watts - use bc since $interval can be an actual float
+		reading=$(bc <<< "scale=2; (${socket_uj[-1]} - ${socket_uj[-2]}) / 1000000 / $interval")
+		eval "_socket${_socket_idx}_readings+=($reading)"
+		power_readings["$socket_name-$socket_idx"]="_socket${_socket_idx}_readings[@]"
+
+		printf '(%s) CPU %s %s reading: %s Watts (interval: %ss)\n' \
+			"$ts" \
+			"$socket_name" \
+			"$socket_idx" \
+			"$reading" \
+			"$interval" >&2
+	done
+}
+
 get_now_reading() {
 	case "$support" in
 		dcmi) get_dcmi_now_reading ;;
@@ -349,8 +400,13 @@ cleanup() {
 
 collect_readings() {
 	local _count=$count
+	if ((_count == 1 && cpu_support)); then
+		# We need at least two readings to get a meaningful data
+		((_count += 1))
+	fi
 	while ((count <= 0 ? 1 : _count--)); do
 		get_now_reading
+		((cpu_support)) && get_cpu_socket_reading
 		sleep "${interval}s"
 	done
 }
@@ -358,7 +414,7 @@ collect_readings() {
 help() {
 	cat <<- HELP
 
-		Usage: $0 [-h] [-d dir] [-i sdr|dcmi] [-s SENSOR_NAME] [-t interval] [-l log_file] [-p prefix] [-c count]
+		Usage: $0 [-h] [-d dir] [-i sdr|dcmi] [-s SENSOR_NAME] [-t interval] [-l log_file] [-p prefix] [-c count] [-r]
 
 		  -h - Print this message.
 		  -d - Directory where the results should be saved. Default is /tmp.
@@ -375,6 +431,7 @@ help() {
 		  -p - Add prefix to saved files.
 		  -c - Read power usage count times. 0 is the default and it means to run
 		       indefinitely.
+		  -r - Include readings from CPU sockets (RAPL-dependent)
 
 		When started, ${0##*/} will enter loop to continuously read power usage from either
 		DCMI interface or dedicated Watts sensors every interval. Each reading will be
@@ -392,11 +449,12 @@ remove_sdr_cache=yes
 log_to_file=no
 prefix=""
 count=0
+include_cpu=0
 
 declare -A power_readings=()
 declare -a extra_power_sensors=()
 
-while getopts :hi:s:d:t:xlp:c: arg; do
+while getopts :hi:s:d:t:xlp:c:r arg; do
 	case "$arg" in
 		h)
 			help
@@ -410,6 +468,7 @@ while getopts :hi:s:d:t:xlp:c: arg; do
 		l) log_to_file=yes ;;
 		p) prefix=$OPTARG ;;
 		c) count=$OPTARG ;;
+		r) include_cpu=1 ;;
 		*) ;;
 	esac
 done
