@@ -511,7 +511,7 @@ class Target(Server):
         self.log_print("Starting power measurements")
         self.exec_cmd(["%s/../pm/collect-bmc-pm" % script_full_dir,
                       "-d", "%s" % results_dir, "-l", "-p", "%s" % prefix,
-                       "-x", "-c", "%s" % self.pm_count, "-t", "%s" % self.pm_interval])
+                       "-x", "-c", "%s" % self.pm_count, "-t", "%s" % self.pm_interval, "-r"])
 
     def ethtool_after_fio_ramp(self, fio_ramp_time):
         time.sleep(fio_ramp_time//2)
