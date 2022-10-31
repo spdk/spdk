@@ -1332,12 +1332,19 @@ function autotest_cleanup() {
 	local autotest_es=$?
 	xtrace_disable
 
+	# Slurp at_app_exit() so we can kill all lingering vhost and qemu processes
+	# in one swing. We do this in a subshell as vhost/common.sh is too eager to
+	# do some extra work which we don't care about in this context.
+	# shellcheck source=/dev/null
+	vhost_reap() (source "$rootdir/test/vhost/common.sh" || return 0 && at_app_exit)
+
 	# catch any stray core files and kill all remaining SPDK processes. Update
 	# autotest_es in case autotest reported success but cores and/or processes
 	# were left behind regardless.
 
 	process_core || autotest_es=1
 	reap_spdk_processes || autotest_es=1
+	vhost_reap || autotest_es=1
 
 	$rootdir/scripts/setup.sh reset
 	$rootdir/scripts/setup.sh cleanup

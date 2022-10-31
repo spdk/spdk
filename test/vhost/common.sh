@@ -21,7 +21,7 @@ WORKDIR=$(readlink -f "$(dirname "$0")")
 
 if ! hash $QEMU_IMG_BIN $QEMU_BIN; then
 	echo 'ERROR: QEMU is not installed on this system. Unable to run vhost tests.' >&2
-	exit 1
+	return 1
 fi
 
 mkdir -p $VHOST_DIR
