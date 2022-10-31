@@ -35,7 +35,7 @@ mkdir -p "$(get_vhost_dir 3)"
 vhostpid=$!
 waitforlisten $vhostpid $NVMF_SOCK
 
-trap 'process_shm --id $NVMF_APP_SHM_ID; killprocess $vhostpid nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+trap 'process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; at_app_exit; exit 1' SIGINT SIGTERM EXIT
 
 # Configure NVMF tgt on host machine
 malloc_bdev="$($NVMF_RPC bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
