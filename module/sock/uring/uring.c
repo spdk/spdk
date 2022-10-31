@@ -1271,57 +1271,7 @@ end:
 	return count;
 }
 
-static int
-_sock_flush_client(struct spdk_sock *_sock)
-{
-	struct spdk_uring_sock *sock = __uring_sock(_sock);
-	struct msghdr msg = {};
-	struct iovec iovs[IOV_BATCH_SIZE];
-	int iovcnt;
-	ssize_t rc;
-	int flags = sock->zcopy_send_flags;
-	int retval;
-	bool is_zcopy = false;
-
-	/* Can't flush from within a callback or we end up with recursive calls */
-	if (_sock->cb_cnt > 0) {
-		return 0;
-	}
-
-	/* Gather an iov */
-	iovcnt = spdk_sock_prep_reqs(_sock, iovs, 0, NULL, &flags);
-	if (iovcnt == 0) {
-		return 0;
-	}
-
-	/* Perform the vectored write */
-	msg.msg_iov = iovs;
-	msg.msg_iovlen = iovcnt;
-	rc = sendmsg(sock->fd, &msg, flags | MSG_DONTWAIT);
-	if (rc <= 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
-			return 0;
-		}
-		return rc;
-	}
-
-#ifdef SPDK_ZEROCOPY
-	is_zcopy = flags & MSG_ZEROCOPY;
-#endif
-	retval = sock_complete_write_reqs(_sock, rc, is_zcopy);
-	if (retval < 0) {
-		/* if the socket is closed, return to avoid heap-use-after-free error */
-		return retval;
-	}
-
-#ifdef SPDK_ZEROCOPY
-	if (sock->zcopy && !TAILQ_EMPTY(&_sock->pending_reqs)) {
-		_sock_check_zcopy(_sock, 0);
-	}
-#endif
-
-	return 0;
-}
+static int uring_sock_flush(struct spdk_sock *_sock);
 
 static void
 uring_sock_writev_async(struct spdk_sock *_sock, struct spdk_sock_request *req)
@@ -1338,8 +1288,8 @@ uring_sock_writev_async(struct spdk_sock *_sock, struct spdk_sock_request *req)
 
 	if (!sock->group) {
 		if (_sock->queued_iovcnt >= IOV_BATCH_SIZE) {
-			rc = _sock_flush_client(_sock);
-			if (rc) {
+			rc = uring_sock_flush(_sock);
+			if (rc < 0 && errno != EAGAIN) {
 				spdk_sock_abort_requests(_sock);
 			}
 		}
@@ -1645,12 +1595,61 @@ static int
 uring_sock_flush(struct spdk_sock *_sock)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
+	struct msghdr msg = {};
+	struct iovec iovs[IOV_BATCH_SIZE];
+	int iovcnt;
+	ssize_t rc;
+	int flags = sock->zcopy_send_flags;
+	int retval;
+	bool is_zcopy = false;
 
-	if (!sock->group) {
-		return _sock_flush_client(_sock);
+	/* Can't flush from within a callback or we end up with recursive calls */
+	if (_sock->cb_cnt > 0) {
+		errno = EAGAIN;
+		return -1;
 	}
 
-	return 0;
+	/* Can't flush while a write is already outstanding */
+	if (sock->write_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) {
+		errno = EAGAIN;
+		return -1;
+	}
+
+	/* Gather an iov */
+	iovcnt = spdk_sock_prep_reqs(_sock, iovs, 0, NULL, &flags);
+	if (iovcnt == 0) {
+		/* Nothing to send */
+		return 0;
+	}
+
+	/* Perform the vectored write */
+	msg.msg_iov = iovs;
+	msg.msg_iovlen = iovcnt;
+	rc = sendmsg(sock->fd, &msg, flags | MSG_DONTWAIT);
+	if (rc <= 0) {
+		if (rc == 0 || errno == EAGAIN || errno == EWOULDBLOCK || (errno == ENOBUFS && sock->zcopy)) {
+			errno = EAGAIN;
+		}
+		return -1;
+	}
+
+#ifdef SPDK_ZEROCOPY
+	is_zcopy = flags & MSG_ZEROCOPY;
+#endif
+	retval = sock_complete_write_reqs(_sock, rc, is_zcopy);
+	if (retval < 0) {
+		/* if the socket is closed, return to avoid heap-use-after-free error */
+		errno = ENOTCONN;
+		return -1;
+	}
+
+#ifdef SPDK_ZEROCOPY
+	if (sock->zcopy && !TAILQ_EMPTY(&_sock->pending_reqs)) {
+		_sock_check_zcopy(_sock, 0);
+	}
+#endif
+
+	return rc;
 }
 
 static struct spdk_net_impl g_uring_net_impl = {

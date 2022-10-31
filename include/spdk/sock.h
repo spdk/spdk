@@ -319,7 +319,7 @@ int spdk_sock_close(struct spdk_sock **sock);
  *
  * \param sock Socket to flush.
  *
- * \return 0 on success, -1 on failure.
+ * \return number of bytes sent on success, -1 (with errno set) on failure
  */
 int spdk_sock_flush(struct spdk_sock *sock);
 

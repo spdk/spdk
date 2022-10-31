@@ -1213,14 +1213,15 @@ _sock_flush(struct spdk_sock *sock)
 	int retval;
 	struct spdk_sock_request *req;
 	int i;
-	ssize_t rc;
+	ssize_t rc, sent;
 	unsigned int offset;
 	size_t len;
 	bool is_zcopy = false;
 
 	/* Can't flush from within a callback or we end up with recursive calls */
 	if (sock->cb_cnt > 0) {
-		return 0;
+		errno = EAGAIN;
+		return -1;
 	}
 
 #ifdef SPDK_ZEROCOPY
@@ -1251,11 +1252,13 @@ _sock_flush(struct spdk_sock *sock)
 		rc = sendmsg(psock->fd, &msg, flags);
 	}
 	if (rc <= 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK || (errno == ENOBUFS && psock->zcopy)) {
-			return 0;
+		if (rc == 0 || errno == EAGAIN || errno == EWOULDBLOCK || (errno == ENOBUFS && psock->zcopy)) {
+			errno = EAGAIN;
 		}
-		return rc;
+		return -1;
 	}
+
+	sent = rc;
 
 	if (is_zcopy) {
 		/* Handling overflow case, because we use psock->sendmsg_idx - 1 for the
@@ -1288,7 +1291,7 @@ _sock_flush(struct spdk_sock *sock)
 			if (len > (size_t)rc) {
 				/* This element was partially sent. */
 				req->internal.offset += rc;
-				return 0;
+				return sent;
 			}
 
 			offset = 0;
@@ -1320,7 +1323,7 @@ _sock_flush(struct spdk_sock *sock)
 		req = TAILQ_FIRST(&sock->queued_reqs);
 	}
 
-	return 0;
+	return sent;
 }
 
 static int
@@ -1532,7 +1535,7 @@ posix_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req)
 	/* If there are a sufficient number queued, just flush them out immediately. */
 	if (sock->queued_iovcnt >= IOV_BATCH_SIZE) {
 		rc = _sock_flush(sock);
-		if (rc) {
+		if (rc < 0 && errno != EAGAIN) {
 			spdk_sock_abort_requests(sock);
 		}
 	}
@@ -1876,7 +1879,7 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 	 * group. */
 	TAILQ_FOREACH_SAFE(sock, &_group->socks, link, tmp) {
 		rc = _sock_flush(sock);
-		if (rc) {
+		if (rc < 0 && errno != EAGAIN) {
 			spdk_sock_abort_requests(sock);
 		}
 	}
