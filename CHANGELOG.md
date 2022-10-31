@@ -94,6 +94,10 @@ Changed `bdev_raid_get_bdevs` RPC output format to include raid_bdev details.
 Added `selector` parameter to bdev_nvme_set_multipath_policy RPC to set path selector for multipath.
 Option `round_robin` and `queue_depth` are available.
 
+Added `rr_min_io` option to RPC bdev_nvme_set_multipath_policy. It switches I/O to
+another path after rr_min_io I/Os are routed to current io path for the round-robin
+path selector.
+
 ### bdevperf
 
 Promoted the application to example to match similar programs: fio_plugin and perf.

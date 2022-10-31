@@ -2210,6 +2210,7 @@ struct rpc_set_multipath_policy {
 	char *name;
 	enum bdev_nvme_multipath_policy policy;
 	enum bdev_nvme_multipath_selector selector;
+	uint32_t rr_min_io;
 };
 
 static void
@@ -2256,6 +2257,7 @@ static const struct spdk_json_object_decoder rpc_set_multipath_policy_decoders[]
 	{"name", offsetof(struct rpc_set_multipath_policy, name), spdk_json_decode_string},
 	{"policy", offsetof(struct rpc_set_multipath_policy, policy), rpc_decode_mp_policy},
 	{"selector", offsetof(struct rpc_set_multipath_policy, selector), rpc_decode_mp_selector, true},
+	{"rr_min_io", offsetof(struct rpc_set_multipath_policy, rr_min_io), spdk_json_decode_uint32, true},
 };
 
 struct rpc_set_multipath_policy_ctx {
@@ -2290,6 +2292,8 @@ rpc_bdev_nvme_set_multipath_policy(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
+	ctx->req.rr_min_io = UINT32_MAX;
+
 	if (spdk_json_decode_object(params, rpc_set_multipath_policy_decoders,
 				    SPDK_COUNTOF(rpc_set_multipath_policy_decoders),
 				    &ctx->req)) {
@@ -2309,6 +2313,7 @@ rpc_bdev_nvme_set_multipath_policy(struct spdk_jsonrpc_request *request,
 	}
 
 	bdev_nvme_set_multipath_policy(ctx->req.name, ctx->req.policy, ctx->req.selector,
+				       ctx->req.rr_min_io,
 				       rpc_bdev_nvme_set_multipath_policy_done, ctx);
 	return;
 

@@ -164,6 +164,7 @@ struct nvme_bdev {
 	int				ref;
 	enum bdev_nvme_multipath_policy	mp_policy;
 	enum bdev_nvme_multipath_selector mp_selector;
+	uint32_t			rr_min_io;
 	TAILQ_HEAD(, nvme_ns)		nvme_ns_list;
 	bool				opal;
 	TAILQ_ENTRY(nvme_bdev)		tailq;
@@ -203,6 +204,8 @@ struct nvme_bdev_channel {
 	struct nvme_io_path			*current_io_path;
 	enum bdev_nvme_multipath_policy		mp_policy;
 	enum bdev_nvme_multipath_selector	mp_selector;
+	uint32_t				rr_min_io;
+	uint32_t				rr_counter;
 	STAILQ_HEAD(, nvme_io_path)		io_path_list;
 	TAILQ_HEAD(retry_io_head, spdk_bdev_io)	retry_io_list;
 	struct spdk_poller			*retry_io_poller;
@@ -353,11 +356,13 @@ typedef void (*bdev_nvme_set_multipath_policy_cb)(void *cb_arg, int rc);
  * \param name NVMe bdev name
  * \param policy Multipath policy (active-passive or active-active)
  * \param selector Multipath selector (round_robin, queue_depth)
+ * \param rr_min_io Number of IO to route to a path before switching to another for round-robin
  * \param cb_fn Function to be called back after completion.
  */
 void bdev_nvme_set_multipath_policy(const char *name,
 				    enum bdev_nvme_multipath_policy policy,
 				    enum bdev_nvme_multipath_selector selector,
+				    uint32_t rr_min_io,
 				    bdev_nvme_set_multipath_policy_cb cb_fn,
 				    void *cb_arg);
 

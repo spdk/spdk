@@ -5898,6 +5898,22 @@ test_find_next_io_path(void)
 	nvme_ns2.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
 	nvme_ns3.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
 	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path2);
+
+	/* Test if next io_path is selected according to rr_min_io */
+
+	nbdev_ch.current_io_path = NULL;
+	nbdev_ch.rr_min_io = 2;
+	nbdev_ch.rr_counter = 0;
+	nvme_ns1.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	nvme_ns2.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path1);
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path1);
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path2);
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path2);
+
+	nvme_ns3.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path1);
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path1);
 }
 
 static void
@@ -6177,13 +6193,14 @@ test_set_multipath_policy(void)
 	 */
 	done = -1;
 	bdev_nvme_set_multipath_policy(bdev->disk.name, BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE,
-				       BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH,
+				       BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH, UINT32_MAX,
 				       ut_set_multipath_policy_done, &done);
 	poll_threads();
 	CU_ASSERT(done == 0);
 
 	CU_ASSERT(bdev->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE);
 	CU_ASSERT(bdev->mp_selector == BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH);
+	CU_ASSERT(bdev->rr_min_io == UINT32_MAX);
 
 	ch = spdk_get_io_channel(bdev);
 	SPDK_CU_ASSERT_FATAL(ch != NULL);
@@ -6191,13 +6208,14 @@ test_set_multipath_policy(void)
 
 	CU_ASSERT(nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE);
 	CU_ASSERT(nbdev_ch->mp_selector == BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH);
+	CU_ASSERT(nbdev_ch->rr_min_io == UINT32_MAX);
 
 	/* If multipath policy is updated while a I/O channel is active,
 	 * the update should be applied to the I/O channel immediately.
 	 */
 	done = -1;
 	bdev_nvme_set_multipath_policy(bdev->disk.name, BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE,
-				       BDEV_NVME_MP_SELECTOR_ROUND_ROBIN,
+				       BDEV_NVME_MP_SELECTOR_ROUND_ROBIN, UINT32_MAX,
 				       ut_set_multipath_policy_done, &done);
 	poll_threads();
 	CU_ASSERT(done == 0);
@@ -6206,6 +6224,8 @@ test_set_multipath_policy(void)
 	CU_ASSERT(nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE);
 	CU_ASSERT(bdev->mp_selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN);
 	CU_ASSERT(nbdev_ch->mp_selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN);
+	CU_ASSERT(bdev->rr_min_io == UINT32_MAX);
+	CU_ASSERT(nbdev_ch->rr_min_io == UINT32_MAX);
 
 	spdk_put_io_channel(ch);
 
@@ -6325,12 +6345,13 @@ test_retry_io_to_same_path(void)
 
 	done = -1;
 	bdev_nvme_set_multipath_policy(bdev->disk.name, BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE,
-				       BDEV_NVME_MP_SELECTOR_ROUND_ROBIN, ut_set_multipath_policy_done, &done);
+				       BDEV_NVME_MP_SELECTOR_ROUND_ROBIN, 1, ut_set_multipath_policy_done, &done);
 	poll_threads();
 	CU_ASSERT(done == 0);
 
 	CU_ASSERT(bdev->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE);
 	CU_ASSERT(bdev->mp_selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN);
+	CU_ASSERT(bdev->rr_min_io == 1);
 
 	ch = spdk_get_io_channel(bdev);
 	SPDK_CU_ASSERT_FATAL(ch != NULL);
@@ -6338,6 +6359,7 @@ test_retry_io_to_same_path(void)
 
 	CU_ASSERT(nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE);
 	CU_ASSERT(bdev->mp_selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN);
+	CU_ASSERT(nbdev_ch->rr_min_io == 1);
 
 	bdev_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_WRITE, bdev, ch);
 	ut_bdev_io_set_buf(bdev_io);

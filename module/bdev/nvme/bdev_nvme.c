@@ -557,6 +557,7 @@ static void
 bdev_nvme_clear_current_io_path(struct nvme_bdev_channel *nbdev_ch)
 {
 	nbdev_ch->current_io_path = NULL;
+	nbdev_ch->rr_counter = 0;
 }
 
 static struct nvme_io_path *
@@ -662,6 +663,7 @@ bdev_nvme_create_bdev_channel_cb(void *io_device, void *ctx_buf)
 
 	nbdev_ch->mp_policy = nbdev->mp_policy;
 	nbdev_ch->mp_selector = nbdev->mp_selector;
+	nbdev_ch->rr_min_io = nbdev->rr_min_io;
 
 	TAILQ_FOREACH(nvme_ns, &nbdev->nvme_ns_list, tailq) {
 		rc = _bdev_nvme_add_io_path(nbdev_ch, nvme_ns);
@@ -928,9 +930,15 @@ _bdev_nvme_find_io_path_min_qd(struct nvme_bdev_channel *nbdev_ch)
 static inline struct nvme_io_path *
 bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 {
-	if (spdk_likely(nbdev_ch->current_io_path != NULL &&
-			nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE)) {
-		return nbdev_ch->current_io_path;
+	if (spdk_likely(nbdev_ch->current_io_path != NULL)) {
+		if (nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE) {
+			return nbdev_ch->current_io_path;
+		} else if (nbdev_ch->mp_selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN) {
+			if (++nbdev_ch->rr_counter < nbdev_ch->rr_min_io) {
+				return nbdev_ch->current_io_path;
+			}
+			nbdev_ch->rr_counter = 0;
+		}
 	}
 
 	if (nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE ||
@@ -3359,6 +3367,7 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 	bdev->ref = 1;
 	bdev->mp_policy = BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE;
 	bdev->mp_selector = BDEV_NVME_MP_SELECTOR_ROUND_ROBIN;
+	bdev->rr_min_io = UINT32_MAX;
 	TAILQ_INIT(&bdev->nvme_ns_list);
 	TAILQ_INSERT_TAIL(&bdev->nvme_ns_list, nvme_ns, tailq);
 	bdev->opal = nvme_ctrlr->opal_dev != NULL;
@@ -4169,6 +4178,7 @@ _bdev_nvme_set_multipath_policy(struct spdk_io_channel_iter *i)
 
 	nbdev_ch->mp_policy = nbdev->mp_policy;
 	nbdev_ch->mp_selector = nbdev->mp_selector;
+	nbdev_ch->rr_min_io = nbdev->rr_min_io;
 	bdev_nvme_clear_current_io_path(nbdev_ch);
 
 	spdk_for_each_channel_continue(i, 0);
@@ -4176,7 +4186,8 @@ _bdev_nvme_set_multipath_policy(struct spdk_io_channel_iter *i)
 
 void
 bdev_nvme_set_multipath_policy(const char *name, enum bdev_nvme_multipath_policy policy,
-			       enum bdev_nvme_multipath_selector selector, bdev_nvme_set_multipath_policy_cb cb_fn, void *cb_arg)
+			       enum bdev_nvme_multipath_selector selector, uint32_t rr_min_io,
+			       bdev_nvme_set_multipath_policy_cb cb_fn, void *cb_arg)
 {
 	struct bdev_nvme_set_multipath_policy_ctx *ctx;
 	struct spdk_bdev *bdev;
@@ -4185,11 +4196,23 @@ bdev_nvme_set_multipath_policy(const char *name, enum bdev_nvme_multipath_policy
 
 	assert(cb_fn != NULL);
 
+	if (policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE && selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN) {
+		if (rr_min_io == UINT32_MAX) {
+			rr_min_io = 1;
+		} else if (rr_min_io == 0) {
+			rc = -EINVAL;
+			goto exit;
+		}
+	} else if (rr_min_io != UINT32_MAX) {
+		rc = -EINVAL;
+		goto exit;
+	}
+
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
 		SPDK_ERRLOG("Failed to alloc context.\n");
 		rc = -ENOMEM;
-		goto err_alloc;
+		goto exit;
 	}
 
 	ctx->cb_fn = cb_fn;
@@ -4213,6 +4236,7 @@ bdev_nvme_set_multipath_policy(const char *name, enum bdev_nvme_multipath_policy
 	pthread_mutex_lock(&nbdev->mutex);
 	nbdev->mp_policy = policy;
 	nbdev->mp_selector = selector;
+	nbdev->rr_min_io = rr_min_io;
 	pthread_mutex_unlock(&nbdev->mutex);
 
 	spdk_for_each_channel(nbdev,
@@ -4225,7 +4249,7 @@ err_module:
 	spdk_bdev_close(ctx->desc);
 err_open:
 	free(ctx);
-err_alloc:
+exit:
 	cb_fn(cb_arg, rc);
 }
 

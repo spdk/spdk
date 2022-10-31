@@ -4145,6 +4145,7 @@ Name                    | Optional | Type        | Description
 name                    | Required | string      | Name of the NVMe bdev
 policy                  | Required | string      | Multipath policy: active_active or active_passive
 selector                | Optional | string      | Multipath selector: round_robin or queue_depth, used in active-active mode. Default is round_robin
+rr_min_io               | Optional | number      | Number of I/Os routed to current io path before switching to another for round-robin selector. The min value is 1.
 
 #### Example
 
