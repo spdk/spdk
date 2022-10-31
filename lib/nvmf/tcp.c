@@ -951,26 +951,26 @@ _pdu_write_done(struct nvme_tcp_pdu *pdu, int err)
 static void
 _tcp_write_pdu(struct nvme_tcp_pdu *pdu)
 {
-	uint32_t mapped_length = 0;
-	ssize_t rc;
+	int rc;
+	uint32_t mapped_length;
 	struct spdk_nvmf_tcp_qpair *tqpair = pdu->qpair;
 
 	pdu->sock_req.iovcnt = nvme_tcp_build_iovs(pdu->iov, SPDK_COUNTOF(pdu->iov), pdu,
-			       tqpair->host_hdgst_enable, tqpair->host_ddgst_enable,
-			       &mapped_length);
+			       tqpair->host_hdgst_enable, tqpair->host_ddgst_enable, &mapped_length);
+	spdk_sock_writev_async(tqpair->sock, &pdu->sock_req);
+
 	if (pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_RESP ||
 	    pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ) {
-		rc = spdk_sock_writev(tqpair->sock, pdu->iov, pdu->sock_req.iovcnt);
-		if (rc == mapped_length) {
+		/* Try to force the send immediately. */
+		rc = spdk_sock_flush(tqpair->sock);
+		if (rc > 0 && (uint32_t)rc == mapped_length) {
 			_pdu_write_done(pdu, 0);
 		} else {
-			SPDK_ERRLOG("Could not write %s to socket: rc=%zd, errno=%d\n",
+			SPDK_ERRLOG("Could not write %s to socket: rc=%d, errno=%d\n",
 				    pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_RESP ?
 				    "IC_RESP" : "TERM_REQ", rc, errno);
-			_pdu_write_done(pdu, -1);
+			_pdu_write_done(pdu, rc >= 0 ? -EAGAIN : -errno);
 		}
-	} else {
-		spdk_sock_writev_async(tqpair->sock, &pdu->sock_req);
 	}
 }
 
