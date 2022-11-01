@@ -265,7 +265,7 @@ if __name__ == "__main__":
     p.add_argument('crypto_pmd', help="Name of the crypto device driver")
     p.add_argument('key', help="Key")
     p.add_argument('-c', '--cipher', help="cipher to use, AES_CBC or AES_XTS (QAT only)")
-    p.add_argument('-k2', '--key2', help="2nd key for cipher AET_XTS", default=None)
+    p.add_argument('-k2', '--key2', help="2nd key for cipher AES_XTS", default=None)
     p.set_defaults(func=bdev_crypto_create)
 
     def bdev_crypto_delete(args):

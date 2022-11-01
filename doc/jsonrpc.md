@@ -2289,7 +2289,7 @@ name                    | Required | string      | Name of the crypto vbdev to c
 crypto_pmd              | Required | string      | Name of the crypto device driver
 key                     | Required | string      | Key in hex form
 cipher                  | Required | string      | Cipher to use, AES_CBC or AES_XTS (QAT and MLX5)
-key2                    | Required | string      | 2nd key in hex form only required for cipher AET_XTS
+key2                    | Required | string      | 2nd key in hex form only required for cipher AES_XTS
 
 Both key and key2 must be passed in the hexlified form. For example, 256bit AES key may look like this:
 afd9477abf50254219ccb75965fbe39f23ebead5676e292582a0a67f66b88215
