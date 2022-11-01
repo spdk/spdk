@@ -1,4 +1,5 @@
 /*   SPDX-License-Identifier: BSD-2-Clause
+ *   Copyright (C) 2020 Intel Corporation.
  *   Copyright (c) 2005-2007, Nick Galbreath
  *   Copyright (c) 2013-2017, Alfred Klomp
  *   Copyright (c) 2015-2017, Wojciech Mula

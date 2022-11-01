@@ -1,7 +1,8 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
- *   Copyright (c) Intel Corporation.
+ *   Copyright (C) 2022 Intel Corporation.
  *   All rights reserved.
  */
+
 #include "spdk/ftl.h"
 
 #include "ftl_conf.h"

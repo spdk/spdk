@@ -1,4 +1,5 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2022 Intel Corporation.
  *   Copyright(c) ARM Limited. 2021 All rights reserved.
  */
 

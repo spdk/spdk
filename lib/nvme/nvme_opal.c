@@ -1,7 +1,8 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
- *   Copyright (c) Intel Corporation.
+ *   Copyright (C) 2019 Intel Corporation.
  *   All rights reserved.
  */
+
 #include "spdk/opal.h"
 #include "spdk/log.h"
 #include "spdk/util.h"

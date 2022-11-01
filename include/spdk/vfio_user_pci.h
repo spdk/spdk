@@ -1,5 +1,5 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
- *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (C) 2020 Intel Corporation. All rights reserved.
  */
 
 #ifndef _SPDK_VFIO_USER_PCI_H

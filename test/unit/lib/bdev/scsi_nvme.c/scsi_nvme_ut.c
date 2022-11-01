@@ -1,4 +1,5 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   Copyright (c) 2016 FUJITSU LIMITED, All rights reserved.
  */
 

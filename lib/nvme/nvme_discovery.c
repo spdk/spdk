@@ -1,5 +1,5 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
- *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (C) 2021 Intel Corporation. All rights reserved.
  */
 
 #include "nvme_internal.h"

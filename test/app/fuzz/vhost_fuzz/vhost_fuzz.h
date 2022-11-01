@@ -1,8 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
- *   Copyright (c) Intel Corporation.
+ *   Copyright (C) 2019 Intel Corporation.
  *   All rights reserved.
  */
-
 
 #ifndef VHOST_FUZZ_H
 #define VHOST_FUZZ_H

@@ -1,3 +1,8 @@
+/*  SPDX-License-Identifier: BSD-3-Clause
+ *  Copyright (C) 2016 Intel Corporation.
+ *  All rights reserved.
+ */
+
 #include "iscsi/task.h"
 #include "iscsi/iscsi.h"
 #include "iscsi/conn.h"

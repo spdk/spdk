@@ -1,3 +1,8 @@
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2022 Intel Corporation.
+ *   All rights reserved.
+ */
+
 #include "spdk/stdinc.h"
 #include "spdk_cunit.h"
 #include "spdk/env.h"

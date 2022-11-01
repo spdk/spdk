@@ -1,7 +1,8 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
- *   Copyright (c) Intel Corporation.
+ *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
  */
+
 #include <ocf/ocf.h>
 #include <execinfo.h>
 

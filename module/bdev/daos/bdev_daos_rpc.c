@@ -1,6 +1,4 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
  *   Copyright (c) croit GmbH.
  *   All rights reserved.
  */

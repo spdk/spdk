@@ -1,5 +1,5 @@
 #  SPDX-License-Identifier: BSD-3-Clause
-#  Copyright (c) Intel Corporation.
+#  Copyright (C) 2016 Intel Corporation.
 #  Copyright (c) 2015-2016, Micron Technology, Inc.
 #  All rights reserved.
 #

@@ -1,4 +1,5 @@
 #  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2019 Intel Corporation.
 #  Copyright (c) Eideticom Inc
 #  All rights reserved.
 #

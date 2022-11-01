@@ -1,7 +1,8 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
- *   Copyright (c) Intel Corporation.
+ *   Copyright (C) 2019 Intel Corporation.
  *   All rights reserved.
  */
+
 #ifndef SPDK_VBDEV_OPAL_H
 #define SPDK_VBDEV_OPAL_H
 
