@@ -936,7 +936,7 @@ new_connection(int vid)
 	}
 
 	/* We expect sessions inside user_dev->vsessions to be sorted in ascending
-	 * order in regard of vsession->id. For now we always set id = vsessions_cnt++
+	 * order in regard of vsession->id. For now we always set id = vsessions_num++
 	 * and append each session to the very end of the vsessions list.
 	 * This is required for vhost_user_dev_foreach_session() to work.
 	 */
@@ -989,9 +989,6 @@ vhost_user_session_start(void *arg1)
 	rc = backend->start_session(vdev, vsession, NULL);
 	if (rc == 0) {
 		vsession->started = true;
-
-		assert(user_dev->active_session_num < UINT32_MAX);
-		user_dev->active_session_num++;
 	}
 	pthread_mutex_unlock(&user_dev->lock);
 }
@@ -1286,13 +1283,8 @@ vhost_session_cb_done(int rc)
 void
 vhost_user_session_stop_done(struct spdk_vhost_session *vsession, int response)
 {
-	struct spdk_vhost_user_dev *user_dev = to_user_dev(vsession->vdev);
-
 	if (response == 0) {
 		vsession->started = false;
-
-		assert(user_dev->active_session_num > 0);
-		user_dev->active_session_num--;
 	}
 
 	vhost_session_cb_done(response);

@@ -165,9 +165,6 @@ struct spdk_vhost_user_dev {
 	/* Increment-only session counter */
 	uint64_t vsessions_num;
 
-	/* Number of started and actively polled sessions */
-	uint32_t active_session_num;
-
 	/* Number of pending asynchronous operations */
 	uint32_t pending_async_op_num;
 };
