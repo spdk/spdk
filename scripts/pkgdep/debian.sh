@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation
+#  All rights reserved.
+#
 
 VERSION_ID_NUM=$(sed 's/\.//g' <<< $VERSION_ID)
 # Includes Ubuntu, Debian

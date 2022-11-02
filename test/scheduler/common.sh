@@ -1,3 +1,8 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation
+#  All rights reserved.
+#
+
 shopt -s nullglob extglob
 
 declare -r sysfs_system=/sys/devices/system

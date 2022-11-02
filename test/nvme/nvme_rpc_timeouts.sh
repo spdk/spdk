@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  All rights reserved.
+#
 
 ## Test goal: Confirm that rpc setting of bdev_nvme_set_options timeout values is working
 ## Test steps:

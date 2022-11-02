@@ -1,3 +1,8 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation
+#  All rights reserved.
+#
+
 # Common shell utility functions
 
 # Check if PCI device is in PCI_ALLOWED and not in PCI_BLOCKED

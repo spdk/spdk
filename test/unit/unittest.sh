@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation
+#  All rights reserved.
 #
 # Environment variables:
 #  $valgrind    Specify the valgrind command line, if not

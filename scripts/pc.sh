@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation
+#  All rights reserved.
+#
 cat << EOF
 Description: SPDK $3 library
 Name: spdk_$3

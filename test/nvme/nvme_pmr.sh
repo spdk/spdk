@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  All rights reserved.
+#
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)

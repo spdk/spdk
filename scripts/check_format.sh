@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2015 Intel Corporation
+#  All rights reserved.
+#
 if [[ $(uname -s) == Darwin ]]; then
 	# SPDK is not supported on MacOS, but as a developer
 	# convenience we support running the check_format.sh

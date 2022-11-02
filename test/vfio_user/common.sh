@@ -1,3 +1,8 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2021 Intel Corporation
+#  All rights reserved.
+#
+
 : ${MALLOC_BDEV_SIZE=256}
 : ${MALLOC_BLOCK_SIZE=512}
 

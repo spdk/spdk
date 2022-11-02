@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation
+#  All rights reserved.
+#
 # Minimal install
 pkg install -y gmake cunit openssl git bash misc/e2fsprogs-libuuid python \
 	ncurses ninja meson

@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation
+#  All rights reserved.
+#
 # We don't want to tell kernel to include %e or %E since these
 # can include whitespaces or other funny characters, and working
 # with those on the cmdline would be a nightmare. Use procfs for
