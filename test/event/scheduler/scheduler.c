@@ -20,6 +20,7 @@
 static bool g_is_running = true;
 pthread_mutex_t g_sched_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 #define TIMESLICE_US 100 * 1000
+static bool g_for_each_reactor = false;
 
 struct sched_thread {
 	struct spdk_thread *thread;
@@ -370,9 +371,9 @@ for_each_nop(void *arg1, void *arg2)
 }
 
 static void
-for_each_done(void *arg1, void *arg2)
+for_each_reactor_start(void *arg1, void *arg2)
 {
-	spdk_for_each_reactor(for_each_nop, NULL, NULL, for_each_done);
+	spdk_for_each_reactor(for_each_nop, NULL, NULL, for_each_reactor_start);
 }
 
 static void
@@ -385,7 +386,28 @@ test_start(void *arg1)
 	 * that any pending spdk_for_each_reactor operations are
 	 * completed before reactors are shut down.
 	 */
-	for_each_done(NULL, NULL);
+	if (g_for_each_reactor) {
+		for_each_reactor_start(NULL, NULL);
+	}
+}
+
+static void
+scheduler_usage(void)
+{
+	printf(" -f                        Enable spdk_for_each_reactor regression test\n");
+}
+
+static int
+scheduler_parse_arg(int ch, char *arg)
+{
+	switch (ch) {
+	case 'f':
+		g_for_each_reactor = true;
+		break;
+	default:
+		return -EINVAL;
+	}
+	return 0;
 }
 
 int
@@ -399,7 +421,7 @@ main(int argc, char **argv)
 	opts.shutdown_cb = test_shutdown;
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts,
-				      NULL, NULL, NULL, NULL)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
+				      "f", NULL, scheduler_parse_arg, scheduler_usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
 	}
 
