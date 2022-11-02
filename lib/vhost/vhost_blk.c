@@ -1627,7 +1627,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	 * be started/stopped many times, related to the queues num, as the
 	 * exact number of queues used for this device is not known at the time.
 	 * The target has to stop and start the device once got a valid IO queue.
-	 * When stoping and starting the vhost device, the backend bdev io device
+	 * When stopping and starting the vhost device, the backend bdev io device
 	 * will be deleted and created repeatedly.
 	 * Hold a bdev reference so that in the struct spdk_vhost_blk_dev, so that
 	 * the io device will not be deleted.

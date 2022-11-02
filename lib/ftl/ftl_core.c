@@ -468,7 +468,7 @@ spdk_ftl_unmap(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_chann
 	       uint64_t lba, uint64_t lba_cnt, spdk_ftl_fn cb_fn, void *cb_arg)
 {
 	int rc;
-	uint64_t aligment = dev->layout.l2p.lbas_in_page;
+	uint64_t alignment = dev->layout.l2p.lbas_in_page;
 
 	if (lba_cnt == 0) {
 		return -EINVAL;
@@ -486,7 +486,7 @@ spdk_ftl_unmap(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_chann
 		return -EBUSY;
 	}
 
-	if (lba % aligment || lba_cnt % aligment) {
+	if (lba % alignment || lba_cnt % alignment) {
 		if (!io) {
 			/* This is management/RPC path, its parameters must be aligned to 1MiB. */
 			return -EINVAL;
@@ -665,7 +665,7 @@ ftl_process_io_queue(struct spdk_ftl_dev *dev)
 
 		/*
 		 * Unmap operation requires generating a sequence id for itself, which it gets based on the open chunk
-		 * in nv cache. If there are no open chunks (because we're in the middle of state transistion or compaction
+		 * in nv cache. If there are no open chunks (because we're in the middle of state transition or compaction
 		 * lagged behind), then we need to wait for the nv cache to resolve the situation - it's fine to just put the
 		 * unmap and try again later.
 		 */

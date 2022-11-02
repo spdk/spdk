@@ -131,7 +131,7 @@ delete_device "$devid1"
 NOT rpc_cmd vhost_get_controllers -n sma-1
 [[ $(rpc_cmd vhost_get_controllers | jq -r '. | length') -eq 0 ]]
 
-# Finally check that removing a non-existing device is also sucessful
+# Finally check that removing a non-existing device is also successful
 delete_device "$devid0"
 delete_device "$devid1"
 

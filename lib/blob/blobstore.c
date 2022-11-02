@@ -3864,7 +3864,7 @@ bs_load_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 					     struct spdk_blob_md_page) * 8));
 	/*
 	 * The length of the mask must be equal to or larger than the total number of clusters. It may be
-	 * larger than the total nubmer of clusters due to a failure spdk_bs_grow.
+	 * larger than the total number of clusters due to a failure spdk_bs_grow.
 	 */
 	assert(ctx->mask->length >= ctx->bs->total_clusters);
 	if (ctx->mask->length > ctx->bs->total_clusters) {

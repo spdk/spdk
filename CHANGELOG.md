@@ -2075,7 +2075,7 @@ A new `spdk_bdev_open_ext` function has been added and `spdk_bdev_open` function
 The new open function introduces requirement to provide callback function that will be called by
 asynchronous event such as bdev removal. `spdk_bdev_open_ext` function takes bdev name as
 an argument instead of bdev structure to avoid a race condition that can happen when the bdev
-is being removed between a call to get its structure based on a name and actually openning it.
+is being removed between a call to get its structure based on a name and actually opening it.
 
 New 'resize' event has been added to notify about change of block count property of block device.
 Event is delivered only if block device was opened with `spdk_bdev_open_ext` function.
@@ -3001,7 +3001,7 @@ Net framework initialization and finish is now done asynchronously.
 
 Added `spdk_rpc_is_method_allowed` function for checking whether method is permitted in a given state.
 Added `spdk_rpc_get_state` to check current state of RPC server.
-RPC `wait_subsystem_init` has been added to allow clients to block untill all subsystems are initialized.
+RPC `wait_subsystem_init` has been added to allow clients to block until all subsystems are initialized.
 
 ### json rpc
 
@@ -3299,7 +3299,7 @@ to link only the minimal set of components required.
 ### git pre-commit and pre-push hooks
 
 The pre-commit hook will run `scripts/check_format.sh` and verify there are no
-formating errors before allowing `git commit` to run. The pre-push hook runs
+formatting errors before allowing `git commit` to run. The pre-push hook runs
 `make CONFIG_WERROR=y` with and without `CONFIG_DEBUG=y` using both the gcc and
 clang compiler before allowing `git push` to run. Following each DEBUG build
 `test/unit/unittest.sh` is run and verified. Results are recorded in the

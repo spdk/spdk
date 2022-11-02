@@ -250,7 +250,7 @@ int virtio_dev_reset(struct virtio_dev *vdev, uint64_t req_features);
  * \param max_queues number of queues to allocate. The max number of
  * usable I/O queues is also limited by the host device. `vdev` will be
  * started successfully even if the host supports less queues than requested.
- * \param fixed_queue_num number of queues preceeding the first
+ * \param fixed_queue_num number of queues preceding the first
  * request queue. For Virtio-SCSI this is equal to 2, as there are
  * additional event and control queues.
  */

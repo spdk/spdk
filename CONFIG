@@ -146,7 +146,7 @@ CONFIG_CRYPTO=n
 # Build spdk shared libraries in addition to the static ones.
 CONFIG_SHARED=n
 
-# Build with VTune suport.
+# Build with VTune support.
 CONFIG_VTUNE=n
 CONFIG_VTUNE_DIR=
 

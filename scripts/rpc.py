@@ -2260,7 +2260,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-b', '--buf-cache-size', help='The number of shared buffers to reserve for each poll group', type=int)
     p.add_argument('-z', '--zcopy', action='store_true', help='''Use zero-copy operations if the
     underlying bdev supports them''')
-    p.add_argument('-d', '--num-cqe', help="""The number of CQ entires. Only used when no_srq=true.
+    p.add_argument('-d', '--num-cqe', help="""The number of CQ entries. Only used when no_srq=true.
     Relevant only for RDMA transport""", type=int)
     p.add_argument('-s', '--max-srq-depth', help='Max number of outstanding I/O per SRQ. Relevant only for RDMA transport', type=int)
     p.add_argument('-r', '--no-srq', action='store_true', help='Disable per-thread shared receive queue. Relevant only for RDMA transport')

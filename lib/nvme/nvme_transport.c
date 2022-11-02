@@ -41,7 +41,7 @@ nvme_get_next_transport(const struct spdk_nvme_transport *transport)
  * Unfortunately, due to NVMe PCIe multiprocess support, we cannot store the
  * transport object in either the controller struct or the admin qpair. THis means
  * that a lot of admin related transport calls will have to call nvme_get_transport
- * in order to knwo which functions to call.
+ * in order to know which functions to call.
  * In the I/O path, we have the ability to store the transport struct in the I/O
  * qpairs to avoid taking a performance hit.
  */

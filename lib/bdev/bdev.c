@@ -6039,7 +6039,7 @@ _bdev_abort(struct spdk_bdev_io *parent_io)
 
 	/* matched_ios is returned and will be kept by the caller.
 	 *
-	 * This funcion will be used for two cases, 1) the same cb_arg is used for
+	 * This function will be used for two cases, 1) the same cb_arg is used for
 	 * multiple I/Os, 2) a single large I/O is split into smaller ones.
 	 * Incrementing split_outstanding directly here may confuse readers especially
 	 * for the 1st case.

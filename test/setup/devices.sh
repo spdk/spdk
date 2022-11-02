@@ -153,7 +153,7 @@ dm_mount() {
 	dm_mount=$SPDK_TEST_STORAGE/dm_mount
 	dm_dummy_test_file=$dm_mount/test_dm
 
-	# Each partition is 1G in size, join their halfs
+	# Each partition is 1G in size, join their halves
 	dmsetup create "$dm_name" <<- DM_TABLE
 		0 1048576 linear /dev/$pv0 0
 		1048576 1048576 linear /dev/$pv1 0

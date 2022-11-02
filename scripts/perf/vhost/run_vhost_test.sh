@@ -33,7 +33,7 @@ fio_conf() {
 	fi
 
 	if [[ -e $fio_extra_conf ]]; then
-		# Overriden through cmdline|env
+		# Overridden through cmdline|env
 		cat "$fio_extra_conf"
 	elif [[ ! -t $fio_extra_conf ]]; then
 		# Attached to stdin

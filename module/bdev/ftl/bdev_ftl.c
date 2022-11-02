@@ -616,7 +616,7 @@ bdev_ftl_finish(void)
 }
 
 static void
-bdev_ftl_create_defered_cb(const struct ftl_bdev_info *info, void *ctx, int status)
+bdev_ftl_create_deferred_cb(const struct ftl_bdev_info *info, void *ctx, int status)
 {
 	struct ftl_deferred_init *opts = ctx;
 
@@ -636,8 +636,8 @@ bdev_ftl_examine(struct spdk_bdev *bdev)
 	int rc;
 
 	LIST_FOREACH(opts, &g_deferred_init, entry) {
-		/* spdk_bdev_module_examine_done will be called by bdev_ftl_create_defered_cb */
-		rc = bdev_ftl_create_bdev(&opts->conf, bdev_ftl_create_defered_cb, opts);
+		/* spdk_bdev_module_examine_done will be called by bdev_ftl_create_deferred_cb */
+		rc = bdev_ftl_create_bdev(&opts->conf, bdev_ftl_create_deferred_cb, opts);
 		if (rc == -ENODEV) {
 			continue;
 		}
@@ -645,7 +645,7 @@ bdev_ftl_examine(struct spdk_bdev *bdev)
 		LIST_REMOVE(opts, entry);
 
 		if (rc) {
-			bdev_ftl_create_defered_cb(NULL, opts, rc);
+			bdev_ftl_create_deferred_cb(NULL, opts, rc);
 		}
 		return;
 	}

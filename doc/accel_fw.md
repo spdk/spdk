@@ -91,7 +91,7 @@ Design software to deal with the inability to get a channel.
 There are several dependencies to leverage the Linux idxd driver for driving DSA devices.
 
 1 Linux kernel support: You need to have a Linux kernel with the `idxd` driver
-loaded. Futher, add the following command line options to the kernel boot
+loaded. Further, add the following command line options to the kernel boot
 commands:
 
 ```bash
@@ -170,5 +170,5 @@ The following RPCs would accomplish the copy override:
 }
 ```
 
-To detemine the name of available modules and their supported operations use the
+To determine the name of available modules and their supported operations use the
 RPC `accel_get_module_info`.

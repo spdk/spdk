@@ -742,7 +742,7 @@ ftl_mngt_complete_unmap(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 
 		assert(seq_id <= dev->sb->seq_id);
 
-		FTL_NOTICELOG(dev, "Uncomplete unmap detected lba: %"PRIu64" num_blocks: %"PRIu64"\n",
+		FTL_NOTICELOG(dev, "Incomplete unmap detected lba: %"PRIu64" num_blocks: %"PRIu64"\n",
 			      start_lba, num_blocks);
 
 		ftl_set_unmap_map(dev, start_lba, num_blocks, seq_id);

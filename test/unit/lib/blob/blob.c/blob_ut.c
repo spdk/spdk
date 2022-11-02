@@ -1585,7 +1585,7 @@ _blob_io_read_no_split(struct spdk_blob *blob, struct spdk_io_channel *channel,
 	uint8_t *buf;
 	uint64_t page_size = spdk_bs_get_page_size(blob->bs);
 
-	/* To be sure that operation is NOT splitted, read one page at the time */
+	/* To be sure that operation is NOT split, read one page at the time */
 	buf = payload;
 	for (i = 0; i < length; i++) {
 		spdk_blob_io_read(blob, channel, buf, i + offset, 1, blob_op_complete, NULL);
@@ -1609,7 +1609,7 @@ _blob_io_write_no_split(struct spdk_blob *blob, struct spdk_io_channel *channel,
 	uint8_t *buf;
 	uint64_t page_size = spdk_bs_get_page_size(blob->bs);
 
-	/* To be sure that operation is NOT splitted, write one page at the time */
+	/* To be sure that operation is NOT split, write one page at the time */
 	buf = payload;
 	for (i = 0; i < length; i++) {
 		spdk_blob_io_write(blob, channel, buf, i + offset, 1, blob_op_complete, NULL);
@@ -2561,7 +2561,7 @@ bs_load_after_failed_grow(void)
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 	/*
 	 * The bdev_size is 64M, cluster_sz is 1M, so there are 64 clusters. The
-	 * blobstore will create 64 md pages by defualt. We set num_md_pages to 128,
+	 * blobstore will create 64 md pages by default. We set num_md_pages to 128,
 	 * thus the blobstore could grow to the double size.
 	 */
 	opts.num_md_pages = 128;

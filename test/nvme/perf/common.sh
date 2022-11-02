@@ -255,7 +255,7 @@ function create_fio_config() {
 
 		total_disks_per_core=$disks_per_core
 		# Check how many "stray" disks are unassigned to CPU cores
-		# Assign one disk to current CPU core and substract it from the total of
+		# Assign one disk to current CPU core and subtract it from the total of
 		# unassigned disks
 		if [[ "$disks_per_core_mod" -gt "0" ]]; then
 			total_disks_per_core=$((disks_per_core + 1))

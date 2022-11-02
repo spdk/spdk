@@ -38,7 +38,7 @@
  * zero if the number of free chunks is at the threshold, negative if below and positive if above.
  */
 
-/* Interval in miliseconds between write throttle updates. */
+/* Interval in milliseconds between write throttle updates. */
 #define FTL_NV_CACHE_THROTTLE_INTERVAL_MS	20
 /* Throttle modifier proportional gain */
 #define FTL_NV_CACHE_THROTTLE_MODIFIER_KP	20

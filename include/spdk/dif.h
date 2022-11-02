@@ -294,7 +294,7 @@ int spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
  * This function removes the necessity of data copy in the SPDK application
  * during DIF insertion and strip.
  *
- * When the extended LBA payload is splitted into multiple data segments,
+ * When the extended LBA payload is split into multiple data segments,
  * start of each data segment is passed through the DIF context. data_offset
  * and data_len is within a data segment.
  *
@@ -321,7 +321,7 @@ int spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 /**
  * Generate and insert DIF into metadata space for newly read data block.
  *
- * When the extended LBA payload is splitted into multiple data segments,
+ * When the extended LBA payload is split into multiple data segments,
  * start of each data segment is passed through the DIF context. data_offset
  * and data_len is within a data segment.
  *

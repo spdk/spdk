@@ -145,7 +145,7 @@ well as on the base devices. The following types of metadata are persisted:
 
 After power failure, FTL needs to rebuild the whole L2P using the address maps (`P2L`) stored within each band/chunk.
 This needs to done, because while individual L2P pages may have been paged out and persisted to the cache device,
-there's no way to tell which, if any, pages were dirty before the power failure occured. The P2L consists of not only
+there's no way to tell which, if any, pages were dirty before the power failure occurred. The P2L consists of not only
 the mapping itself, but also a sequence id (`seq_id`), which describes the relative age of a given logical block
 (multiple writes to the same logical block would produce the same amount of P2L entries, only the last one having the current data).
 

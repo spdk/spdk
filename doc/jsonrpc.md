@@ -4343,7 +4343,7 @@ This method is available only if SPDK was build with Ceph RBD support.
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
-name                    | Required | string      | Registerd Rados cluster object name
+name                    | Required | string      | Registered Rados cluster object name
 user_id                 | Optional | string      | Ceph ID (i.e. admin, not client.admin)
 config_param            | Optional | string map  | Explicit librados configuration
 config_file             | Optional | string      | File path of libraodos configuration file
@@ -7374,7 +7374,7 @@ io_unit_size                | Optional | number  | I/O unit size (bytes)
 max_aq_depth                | Optional | number  | Max number of admin cmds per AQ
 num_shared_buffers          | Optional | number  | The number of pooled data buffers available to the transport
 buf_cache_size              | Optional | number  | The number of shared buffers to reserve for each poll group
-num_cqe                     | Optional | number  | The number of CQ entires. Only used when no_srq=true (RDMA only)
+num_cqe                     | Optional | number  | The number of CQ entries. Only used when no_srq=true (RDMA only)
 max_srq_depth               | Optional | number  | The number of elements in a per-thread shared receive queue (RDMA only)
 no_srq                      | Optional | boolean | Disable shared receive queue even for devices that support it. (RDMA only)
 c2h_success                 | Optional | boolean | Disable C2H success optimization (TCP only)
@@ -8782,7 +8782,7 @@ ctrlr                   | string      | Controller name
 cpumask                 | string      | @ref cpu_mask of this controller
 delay_base_us           | number      | Base (minimum) coalescing time in microseconds (0 if disabled)
 iops_threshold          | number      | Coalescing activation level
-backend_specific        | object      | Backend specific informations
+backend_specific        | object      | Backend specific information
 
 ### Vhost block {#rpc_vhost_get_controllers_blk}
 
@@ -10171,7 +10171,7 @@ Example response:
 
 ### notify_get_notifications {#notify_get_notifications}
 
-Request notifications. Returns array of notifications that happend since the specified id (or first that is available).
+Request notifications. Returns array of notifications that happened since the specified id (or first that is available).
 
 Notice: Notifications are kept in circular buffer with limited size. Older notifications might be inaccessible
 due to being overwritten by new ones.
@@ -10679,7 +10679,7 @@ Example response:
 
 Send NVMe command directly to NVMe controller or namespace. Parameters and responses encoded by base64 urlsafe need further processing.
 
-Notice: bdev_nvme_send_cmd requires user to guarentee the correctness of NVMe command itself, and also optional parameters.
+Notice: bdev_nvme_send_cmd requires user to guarantee the correctness of NVMe command itself, and also optional parameters.
 Illegal command contents or mismatching buffer size may result in unpredictable behavior.
 
 #### Parameters
@@ -11042,7 +11042,7 @@ uuid                    | Optional | string      | UUID of new bdev
 oclass                  | Optional | string      | DAOS object class (default SX)
 
 To find more about various object classes please visit [DAOS documentation](https://github.com/daos-stack/daos/blob/master/src/object/README.md).
-Please note, that DAOS bdev module uses the same CLI flag notation as `dmg` and `daos` commmands,
+Please note, that DAOS bdev module uses the same CLI flag notation as `dmg` and `daos` commands,
 for instance, `SX` or `EC_4P2G2` rather than in DAOS header file `OC_SX` or `OC_EC_4P2G2`.
 
 #### Result

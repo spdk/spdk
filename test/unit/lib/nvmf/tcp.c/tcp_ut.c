@@ -1240,7 +1240,7 @@ test_nvmf_tcp_pdu_ch_handle(void)
 		  (unsigned)sizeof(struct spdk_nvme_tcp_term_req_hdr));
 	CU_ASSERT(tqpair.mgmt_pdu->hdr.term_req.fei[0] == 3);
 
-	/* Test case: All parameters is conformed to the functon. Expect: PASS */
+	/* Test case: All parameters is conformed to the function. Expect: PASS */
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH;
 	tqpair.pdu_in_progress->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_REQ;
 	tqpair.state = NVME_TCP_QPAIR_STATE_INVALID;

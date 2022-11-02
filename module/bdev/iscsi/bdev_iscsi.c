@@ -177,7 +177,7 @@ bdev_iscsi_finish(void)
 
 	/* clear out pending connection requests here. We cannot
 	 * simply set the state to a non SCSI_STATUS_GOOD state as
-	 * the connection poller wont run anymore
+	 * the connection poller won't run anymore
 	 */
 	TAILQ_FOREACH_SAFE(req, &g_iscsi_conn_req, link, tmp) {
 		_bdev_iscsi_conn_req_free(req);

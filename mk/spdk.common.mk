@@ -74,7 +74,7 @@ ifeq ($(TARGET_MACHINE),x86_64)
 ifneq (,$(shell $(CC) --target-help | grep -qe -mavx512f && echo 1))
 # Don't use AVX-512 instructions in SPDK code - it breaks Valgrind for
 # some cases where compiler decides to hyper-optimize a relatively
-# simple operation (like int-to-float converstion) using AVX-512
+# simple operation (like int-to-float conversion) using AVX-512
 COMMON_CFLAGS += -mno-avx512f
 endif
 endif

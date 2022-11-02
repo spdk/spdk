@@ -15,7 +15,7 @@
 static int
 init_static(void)
 {
-	/* There is no scheduling perfomed by static scheduler,
+	/* There is no scheduling performed by static scheduler,
 	 * do not set the scheduling period. */
 	spdk_scheduler_set_period(0);
 	return 0;

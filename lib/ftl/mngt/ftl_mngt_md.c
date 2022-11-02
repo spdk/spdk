@@ -334,7 +334,7 @@ ftl_mngt_persist_md(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 }
 
 /*
- * Fast clean shutdown path - skips the persistance of most metadata regions and
+ * Fast clean shutdown path - skips the persistence of most metadata regions and
  * relies on their shared memory state instead.
  */
 static const struct ftl_mngt_process_desc desc_fast_persist = {

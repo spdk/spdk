@@ -19,7 +19,7 @@ def sort_json_object(o):
             sorted_o[key] = sort_json_object(o[key])
         return sorted_o
     if isinstance(o, list):
-        """ Keep list in the same orded but sort each item """
+        """ Keep list in the same order but sort each item """
         return [sort_json_object(item) for item in o]
     else:
         return o

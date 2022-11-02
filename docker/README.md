@@ -75,7 +75,7 @@ docker-compose run traffic-generator-nvme
 docker-compose run traffic-generator-virtio
 ~~~
 
-Enviroment variables to containers can be passed as shown in
+Environment variables to containers can be passed as shown in
 [docs](https://docs.docker.com/compose/environment-variables/).
 For example extra arguments to fio can be passed as so:
 

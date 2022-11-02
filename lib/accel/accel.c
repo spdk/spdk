@@ -593,7 +593,7 @@ spdk_accel_initialize(void)
 	/* Create our priority global map of opcodes to modules, we populate starting
 	 * with the software module (guaranteed to be first on the list) and then
 	 * updating opcodes with HW modules that have been initilaized.
-	 * NOTE: all opcodes must be suported by software in the event that no HW
+	 * NOTE: all opcodes must be supported by software in the event that no HW
 	 * modules are initilaized to support the operation.
 	 */
 	TAILQ_FOREACH(accel_module, &spdk_accel_module_list, tailq) {

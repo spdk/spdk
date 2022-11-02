@@ -2582,7 +2582,7 @@ bdev_io_mix_split_test(void)
 
 	/* IO crossing the IO boundary requires split.
 	 * The 1st child IO segment size exceeds the max_segment_size,
-	 * So 1st child IO will be splitted to multiple segment entry.
+	 * So 1st child IO will be split to multiple segment entry.
 	 * Then it split to 2 child IOs because of the max_num_segments.
 	 * Total 3 child IOs.
 	 */
@@ -2658,7 +2658,7 @@ bdev_io_mix_split_test(void)
 	/* IO crossing the IO boundary requires split.
 	 * The 1st child IO segment size exceeds the max_segment_size and after
 	 * splitting segment_size, the num_segments exceeds max_num_segments.
-	 * So 1st child IO will be splitted to 2 child IOs.
+	 * So 1st child IO will be split to 2 child IOs.
 	 * Total 3 child IOs.
 	 */
 
@@ -2708,7 +2708,7 @@ bdev_io_mix_split_test(void)
 
 	/* IO crossing the IO boundary requires split.
 	 * 80 block length can split 5 child IOs base on offset and IO boundary.
-	 * Each iov entry needs to be splitted to 2 entries because of max_segment_size
+	 * Each iov entry needs to be split to 2 entries because of max_segment_size
 	 * Total 5 child IOs.
 	 */
 
@@ -2750,7 +2750,7 @@ bdev_io_mix_split_test(void)
 	}
 	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
-	/* 5th child IO and because of the child iov entry it should be splitted
+	/* 5th child IO and because of the child iov entry it should be split
 	 * in next round.
 	 */
 	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 64, 16, 8);

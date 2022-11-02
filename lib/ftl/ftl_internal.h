@@ -69,7 +69,7 @@ struct ftl_p2l_map_entry {
  * Mapping of physical (actual location on disk) to logical (user's POV) addresses. Used in two main scenarios:
  * - during relocation FTL needs to pin L2P pages (this allows to check which pages to pin) and move still valid blocks
  * (valid map allows for preliminary elimination of invalid physical blocks, but user data could invalidate a location
- * during read/write operation, so actual comparision against L2P needs to be done)
+ * during read/write operation, so actual comparison against L2P needs to be done)
  * - After dirty shutdown the state of the L2P is unknown and needs to be rebuilt - it is done by applying all P2L, taking
  * into account ordering of user writes
  */

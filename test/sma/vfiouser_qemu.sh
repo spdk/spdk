@@ -204,7 +204,7 @@ NOT rpc_cmd nvmf_get_subsystems nqn.2016-06.io.spdk:vfiouser-1
 [[ $(rpc_cmd nvmf_get_subsystems | jq -r '. | length') -eq 1 ]]
 [[ $(vm_count_nvme ${vm_no}) -eq 0 ]]
 
-# Finally check that removing a non-existing device is also sucessful
+# Finally check that removing a non-existing device is also successful
 delete_device "$device0"
 delete_device "$device1"
 

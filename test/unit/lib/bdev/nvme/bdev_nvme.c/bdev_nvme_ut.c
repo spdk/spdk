@@ -5788,7 +5788,7 @@ test_set_preferred_path(void)
 	CU_ASSERT(io_path->nvme_ns->ctrlr->ctrlr == ctrlr2);
 
 	/* If io_path to ctrlr3 is set to the preferred path and then a new I/O channel is
-	 * aquired, find_io_path() should return io_path to ctrlr3.
+	 * acquired, find_io_path() should return io_path to ctrlr3.
 	 */
 
 	spdk_put_io_channel(ch);

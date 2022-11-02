@@ -113,7 +113,7 @@ vhost_log_req_desc(struct spdk_vhost_session *vsession, struct spdk_vhost_virtqu
 
 	do {
 		if (vhost_vring_desc_is_wr(desc)) {
-			/* To be honest, only pages realy touched should be logged, but
+			/* To be honest, only pages really touched should be logged, but
 			 * doing so would require tracking those changes in each backed.
 			 * Also backend most likely will touch all/most of those pages so
 			 * for lets assume we touched all pages passed to as writeable buffers. */
@@ -1456,7 +1456,7 @@ extern_vhost_pre_msg_handler(int vid, void *_msg)
 
 	vsession = vhost_session_find_by_vid(vid);
 	if (vsession == NULL) {
-		SPDK_ERRLOG("Received a message to unitialized session (vid %d).\n", vid);
+		SPDK_ERRLOG("Received a message to uninitialized session (vid %d).\n", vid);
 		assert(false);
 		return RTE_VHOST_MSG_RESULT_ERR;
 	}
@@ -1512,7 +1512,7 @@ extern_vhost_post_msg_handler(int vid, void *_msg)
 
 	vsession = vhost_session_find_by_vid(vid);
 	if (vsession == NULL) {
-		SPDK_ERRLOG("Received a message to unitialized session (vid %d).\n", vid);
+		SPDK_ERRLOG("Received a message to uninitialized session (vid %d).\n", vid);
 		assert(false);
 		return RTE_VHOST_MSG_RESULT_ERR;
 	}

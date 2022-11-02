@@ -117,7 +117,7 @@ uint8_t g_number_of_claimed_volumes = 0;
 
 #define AESNI_MB_NUM_QP		64
 
-/* Common for suported devices. */
+/* Common for supported devices. */
 #define DEFAULT_NUM_XFORMS           2
 #define IV_OFFSET (sizeof(struct rte_crypto_op) + \
                 sizeof(struct rte_crypto_sym_op) + \
@@ -241,7 +241,7 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 	}
 
 	/* Before going any further, make sure we have enough resources for this
-	 * device type to function.  We need a unique queue pair per core accross each
+	 * device type to function.  We need a unique queue pair per core across each
 	 * device type to remain lockless....
 	 */
 	if ((rte_cryptodev_device_count_by_driver(cdrv_id) *

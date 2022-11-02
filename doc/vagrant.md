@@ -116,7 +116,7 @@ Bringing machine 'default' up with 'virtualbox' provider...
   Use vagrant "destroy" followed by "rm -rf ubuntu18" to destroy all trace of vm.
 ~~~
 
-Check the enviroment.
+Check the environment.
 
 ~~~{.sh}
 user@dev-system:~/spdk/scripts/vagrant$ cd ubuntu18

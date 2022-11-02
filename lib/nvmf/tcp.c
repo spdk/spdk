@@ -78,7 +78,7 @@ enum spdk_nvmf_tcp_req_state {
 	/* The request is currently executing at the block device */
 	TCP_REQUEST_STATE_EXECUTING = 8,
 
-	/* The request is waiting for zcopy buffers to be commited */
+	/* The request is waiting for zcopy buffers to be committed */
 	TCP_REQUEST_STATE_AWAITING_ZCOPY_COMMIT = 9,
 
 	/* The request finished executing at the block device */
@@ -999,7 +999,7 @@ pdu_data_crc32_compute(struct nvme_tcp_pdu *pdu)
 
 	/* Data Digest */
 	if (pdu->data_len > 0 && g_nvme_tcp_ddgst[pdu->hdr.common.pdu_type] && tqpair->host_ddgst_enable) {
-		/* Only suport this limitated case for the first step */
+		/* Only support this limitated case for the first step */
 		if (spdk_likely(!pdu->dif_ctx && (pdu->data_len % SPDK_NVME_TCP_DIGEST_ALIGNMENT == 0)
 				&& tqpair->group)) {
 			rc = spdk_accel_submit_crc32cv(tqpair->group->accel_channel, &pdu->data_digest_crc32, pdu->data_iov,

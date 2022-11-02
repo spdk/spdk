@@ -198,7 +198,7 @@ class QMPClient():
         :return command exec response or optionally execute result event
         :raise QMPRequestError: on response from QMP server being of error type
         :raise QMPSocketError: on timeout or socket errors
-        :raise QMPError: on id missmatch and JSONdecoder errors
+        :raise QMPError: on id mismatch and JSONdecoder errors
         '''
         cmd_id = self._get_next_exec_id()
         msg = {'execute': cmd, 'id': cmd_id}

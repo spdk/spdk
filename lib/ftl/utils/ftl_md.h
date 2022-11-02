@@ -331,7 +331,7 @@ void ftl_md_read_entry(struct ftl_md *md, uint64_t start_entry, void *buffer, vo
 void ftl_md_clear(struct ftl_md *md, int pattern, union ftl_md_vss *vss_pattern);
 
 /**
- * @brief Gets the number of blocks that are transfered in a single IO operation
+ * @brief Gets the number of blocks that are transferred in a single IO operation
  *
  * @param dev The FTL device
  *

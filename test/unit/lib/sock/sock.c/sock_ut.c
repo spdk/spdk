@@ -1150,7 +1150,7 @@ override_impl_opts(void)
 	opts.impl_opts = &impl_opts;
 	opts.impl_opts_size = sizeof(impl_opts);
 
-	/* Use send_buf_size to verify that impl_opts get overriden */
+	/* Use send_buf_size to verify that impl_opts get overridden */
 	send_buf_size = impl_opts.send_buf_size;
 	impl_opts.send_buf_size = send_buf_size + 1;
 

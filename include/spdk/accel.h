@@ -261,7 +261,7 @@ int spdk_accel_submit_decompress(struct spdk_io_channel *ch, struct iovec *dst_i
 				 spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
- * Return the name of the module assigned to a specfic opcode.
+ * Return the name of the module assigned to a specific opcode.
  *
  * \param opcode Accel Framework Opcode enum value. Valid codes can be retrieved using
  * `accel_get_opc_assignments` or `spdk_accel_get_opc_name`.

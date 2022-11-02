@@ -30,7 +30,7 @@ typedef void (*ftl_mngt_fn)(struct spdk_ftl_dev *dev, struct ftl_mngt_process *m
 typedef void (*ftl_mngt_completion)(struct spdk_ftl_dev *dev, void *ctx, int status);
 
 /**
- * The FTL management step descriptior
+ * The FTL management step descriptor
  */
 struct ftl_mngt_step_desc {
 	/**

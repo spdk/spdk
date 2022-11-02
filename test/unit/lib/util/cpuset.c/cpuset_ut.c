@@ -121,7 +121,7 @@ test_cpuset_parse(void)
 	rc = spdk_cpuset_parse(NULL, "[1]");
 	CU_ASSERT(rc < 0);
 
-	/* Wrong formated core lists */
+	/* Wrong formatted core lists */
 	rc = spdk_cpuset_parse(core_mask, "");
 	CU_ASSERT(rc < 0);
 

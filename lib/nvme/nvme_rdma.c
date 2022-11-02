@@ -2003,7 +2003,7 @@ nvme_rdma_stale_conn_retry(struct nvme_rdma_qpair *rqpair)
 
 	rqpair->stale_conn_retry_count++;
 
-	SPDK_NOTICELOG("%d times, retry stale connnection to qpair (cntlid:%u, qid:%u).\n",
+	SPDK_NOTICELOG("%d times, retry stale connection to qpair (cntlid:%u, qid:%u).\n",
 		       rqpair->stale_conn_retry_count, qpair->ctrlr->cntlid, qpair->id);
 
 	_nvme_rdma_ctrlr_disconnect_qpair(qpair->ctrlr, qpair, nvme_rdma_stale_conn_disconnected);

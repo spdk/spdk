@@ -1006,7 +1006,7 @@ function daos_cleanup() {
 function _start_stub() {
 	# Disable ASLR for multi-process testing.  SPDK does support using DPDK multi-process,
 	# but ASLR can still be unreliable in some cases.
-	# We will reenable it again after multi-process testing is complete in kill_stub().
+	# We will re-enable it again after multi-process testing is complete in kill_stub().
 	# Save current setting so it can be restored upon calling kill_stub().
 	_randomize_va_space=$(< /proc/sys/kernel/randomize_va_space)
 	echo 0 > /proc/sys/kernel/randomize_va_space

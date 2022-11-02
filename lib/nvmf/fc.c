@@ -3051,7 +3051,7 @@ nvmf_fc_adm_evnt_hw_port_offline(void *arg)
 
 		free(arg);
 
-		/* Wait untill all the hwqps are removed from poll groups. */
+		/* Wait until all the hwqps are removed from poll groups. */
 		return;
 	} else {
 		SPDK_ERRLOG("Unable to find the SPDK FC port %d\n", args->port_handle);

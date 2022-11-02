@@ -449,7 +449,7 @@ pdu_data_crc32_compute(struct nvme_tcp_pdu *pdu)
 	/* Data Digest */
 	if (pdu->data_len > 0 && g_nvme_tcp_ddgst[pdu->hdr.common.pdu_type] &&
 	    tqpair->flags.host_ddgst_enable) {
-		/* Only suport this limited case for the first step */
+		/* Only support this limited case for the first step */
 		if ((nvme_qpair_get_state(&tqpair->qpair) >= NVME_QPAIR_CONNECTED) &&
 		    (tgroup != NULL && tgroup->group.group->accel_fn_table.submit_accel_crc32c) &&
 		    spdk_likely(!pdu->dif_ctx && (pdu->data_len % SPDK_NVME_TCP_DIGEST_ALIGNMENT == 0))) {
@@ -1121,7 +1121,7 @@ nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair,
 		/* But if the data digest is enabled, tcp_req cannot be NULL */
 		assert(tcp_req != NULL);
 		tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
-		/* Only suport this limitated case that the request has only one c2h pdu */
+		/* Only support this limitated case that the request has only one c2h pdu */
 		if ((nvme_qpair_get_state(&tqpair->qpair) >= NVME_QPAIR_CONNECTED) &&
 		    (tgroup != NULL && tgroup->group.group->accel_fn_table.submit_accel_crc32c) &&
 		    spdk_likely(!pdu->dif_ctx && (pdu->data_len % SPDK_NVME_TCP_DIGEST_ALIGNMENT == 0)

@@ -3031,7 +3031,7 @@ iscsi_transfer_in(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 		sequence_end = spdk_min(((i + 1) * conn->sess->MaxBurstLength),
 					transfer_len);
 
-		/* send data splitted by segment_len */
+		/* send data split by segment_len */
 		for (; offset < sequence_end; offset += segment_len) {
 			len = spdk_min(segment_len, (sequence_end - offset));
 

@@ -40,7 +40,7 @@ bdev_scsi_set_naa_ieee_extended(const char *name, uint8_t *buf)
 
 	/*
 	 * see spc3r23 7.6.3.6.2,
-	 *  NAA IEEE Extended identifer format
+	 *  NAA IEEE Extended identifier format
 	 */
 	id_a = local_value & 0x0000000fff000000ull;
 	id_a = id_a << 24;

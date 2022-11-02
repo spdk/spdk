@@ -71,7 +71,7 @@ function clean_up() {
 	# This assumes every NVMe controller contains single namespace,
 	# encompassing Total NVM Capacity and formatted as 512 block size.
 	# 512 block size is needed for test/vhost/vhost_boot.sh to
-	# succesfully run.
+	# successfully run.
 
 	tnvmcap=$($NVME_CMD id-ctrl ${nvme_dev} | grep tnvmcap | cut -d: -f2)
 	blksize=512

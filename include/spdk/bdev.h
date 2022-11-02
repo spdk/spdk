@@ -392,7 +392,7 @@ typedef int (*spdk_for_each_bdev_fn)(void *ctx, struct spdk_bdev *bdev);
  * \param ctx Context passed to the callback function.
  * \param fn Callback function for each block device.
  *
- * \return 0 if operation is sucessful, or suitable errno value one of the
+ * \return 0 if operation is successful, or suitable errno value one of the
  * callback returned otherwise.
  */
 int spdk_for_each_bdev(void *ctx, spdk_for_each_bdev_fn fn);
@@ -405,7 +405,7 @@ int spdk_for_each_bdev(void *ctx, spdk_for_each_bdev_fn fn);
  * callback function for each unclaimed bdev internally.
  *
  * \param ctx Context passed to the callback function.
- * \param fn Callback funciton for each block device without virtual block devices on top.
+ * \param fn Callback function for each block device without virtual block devices on top.
  *
  * \return 0 if operation is successful, or suitable errno value one of the
  * callback returned otherwise.

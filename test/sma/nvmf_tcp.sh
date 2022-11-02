@@ -121,7 +121,7 @@ delete_device "$devid1"
 NOT rpc_cmd nvmf_get_subsystems nqn.2016-06.io.spdk:cnode1
 [[ $(rpc_cmd nvmf_get_subsystems | jq -r '. | length') -eq 1 ]]
 
-# Finally check that removing a non-existing device is also sucessful
+# Finally check that removing a non-existing device is also successful
 delete_device "$devid0"
 delete_device "$devid1"
 
@@ -147,7 +147,7 @@ detach_volume "$devid0" "$uuid"
 [[ $(rpc_cmd nvmf_get_subsystems nqn.2016-06.io.spdk:cnode0 | jq -r '.[0].namespaces | length') -eq 0 ]]
 [[ $(rpc_cmd nvmf_get_subsystems nqn.2016-06.io.spdk:cnode1 | jq -r '.[0].namespaces | length') -eq 0 ]]
 
-# Detach it again and verify it suceeds
+# Detach it again and verify it succeeds
 detach_volume "$devid0" "$uuid"
 
 cleanup

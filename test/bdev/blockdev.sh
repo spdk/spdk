@@ -550,7 +550,7 @@ function stat_test_suite() {
 	trap - SIGINT SIGTERM EXIT
 }
 
-# Inital bdev creation and configuration
+# Initial bdev creation and configuration
 #-----------------------------------------------------
 QOS_DEV_1="Malloc_0"
 QOS_DEV_2="Null_1"

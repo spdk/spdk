@@ -74,7 +74,7 @@ hello_sock_usage(void)
 	printf(" -T tls_ver    TLS version, e.g., -T 12 or -T 13. If omitted, auto-negotiation will take place\n");
 	printf(" -k            disable KTLS for the given sock implementation (default)\n");
 	printf(" -K            enable KTLS for the given sock implementation\n");
-	printf(" -V            print out additional informations\n");
+	printf(" -V            print out additional information\n");
 	printf(" -z            disable zero copy send for the given sock implementation\n");
 	printf(" -Z            enable zero copy send for the given sock implementation\n");
 }

@@ -792,7 +792,7 @@ opal_discovery0_end(struct spdk_opal_dev *dev, void *payload, uint32_t payload_s
 			supported = true;
 			break;
 		default:
-			SPDK_INFOLOG(opal, "Unknow feature code: %d\n", feat_code);
+			SPDK_INFOLOG(opal, "Unknown feature code: %d\n", feat_code);
 		}
 		cpos += feat_hdr->length + sizeof(*feat_hdr);
 	}

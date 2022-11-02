@@ -121,7 +121,7 @@ struct ftl_l2p_cache {
 	struct ftl_mempool *page_sets_pool;
 	TAILQ_HEAD(, ftl_l2p_page_set) deferred_page_set_list; /* for deferred page sets */
 
-	/* Process unmap in backgorund */
+	/* Process unmap in background */
 	struct {
 #define FTL_L2P_MAX_LAZY_UNMAP_QD 1
 		/* Unmap queue depth */

@@ -515,7 +515,7 @@ void spdk_blob_opts_init(struct spdk_blob_opts *opts, size_t opts_size);
  * \param bs blobstore.
  * \param opts The structure which contains the option values for the new blob.
  * \param cb_fn Called when the operation is complete.
- * \param cb_arg Argument passed to funcion cb_fn.
+ * \param cb_arg Argument passed to function cb_fn.
  */
 void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_opts *opts,
 			     spdk_blob_op_with_id_complete cb_fn, void *cb_arg);

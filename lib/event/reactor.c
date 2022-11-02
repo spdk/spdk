@@ -566,7 +566,7 @@ event_queue_run_batch(void *arg)
 	}
 
 	/* Execute the events. There are still some remaining events
-	 * that must occur on an SPDK thread. To accomodate those, try to
+	 * that must occur on an SPDK thread. To accommodate those, try to
 	 * run them on the first thread in the list, if it exists. */
 	lw_thread = TAILQ_FIRST(&reactor->threads);
 	if (lw_thread) {
