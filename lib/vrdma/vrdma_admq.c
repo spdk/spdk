@@ -1155,21 +1155,57 @@ static bool vrdma_aq_sm_parse_cmd(struct vrdma_admin_sw_qp *aq,
 
 	vrdma_ctrl_dev_init(ctrl);
     aq->state = VRDMA_CMD_STATE_WRITE_CMD_BACK;
+	aq->num_parsed = aq->num_to_parse;
 	for (i = 0; i < aq->num_to_parse; i++) {
 		ret = vrdma_parse_admq_entry(ctrl, &(aq->admq->ring[i]));
 		if (ret) {
-			aq->num_to_parse = i;
+			if (ret == VRDMA_CMD_STATE_WAITING) {
+				aq->state = VRDMA_CMD_STATE_WAITING;
+			}
+			aq->num_parsed = i;
 			break;
 		}
 	}
 	return true;
 }
 
+static bool vrdma_aq_sm_waiting(struct vrdma_admin_sw_qp *aq,
+                                           enum vrdma_aq_cmd_sm_op_status status)
+{
+	uint16_t wait_idx;
+	struct vrdma_admin_cmd_entry *aqe;
+
+	SPDK_ERRLOG("lizh vrdma_aq_sm_waiting num_to_parse %d, num_parsed %d\n", 
+				aq->num_to_parse, aq->num_parsed);
+	if (status != VRDMA_CMD_SM_OP_OK) {
+		SPDK_ERRLOG("failed to get admq cmd entry, status %d\n", status);
+		aq->state = VRDMA_CMD_STATE_FATAL_ERR;
+		return true;
+	}
+
+	wait_idx = aq->num_parsed;
+	aqe = &aq->admq->ring[wait_idx];
+	if (aqe->hdr.opcode == VRDMA_ADMIN_DESTROY_QP) {
+		uint8_t qp_state = vrdma_get_qp_status(aqe->req.destroy_qp_req.qp_handle);
+		if (qp_state == SW_VIRTQ_SUSPENDED) {
+			goto next_sm;
+		} else {
+			aq->state = VRDMA_CMD_STATE_WAITING;
+			return false;
+		}
+	}
+
+next_sm:
+    aq->state = VRDMA_CMD_STATE_WRITE_CMD_BACK;
+	return true;
+}
+
+
 static bool vrdma_aq_sm_write_cmd(struct vrdma_admin_sw_qp *aq,
                                            enum vrdma_aq_cmd_sm_op_status status)
 {
 	struct vrdma_ctrl *ctrl = container_of(aq, struct vrdma_ctrl, sw_qp);
-	uint16_t num_to_write = aq->num_to_parse;
+	uint16_t num_to_write = aq->num_parsed;
 	uint16_t ci = aq->admq->ci;
 	uint32_t aq_poll_size = 0;
 	uint64_t host_ring_addr;
@@ -1289,6 +1325,7 @@ static struct vrdma_aq_sm_state vrdma_aq_sm_arr[] = {
 /*VRDMA_CMD_STATE_HANDLE_PI			    */	{vrdma_aq_sm_handle_pi},
 /*VRDMA_CMD_STATE_READ_CMD_ENTRY	    */	{vrdma_aq_sm_read_cmd},
 /*VRDMA_CMD_STATE_PARSE_CMD_ENTRY	    */	{vrdma_aq_sm_parse_cmd},
+/*VRDMA_CMD_STATE_WAITING       	    */	{vrdma_aq_sm_waiting},
 /*VRDMA_CMD_STATE_WRITE_CMD_BACK	    */	{vrdma_aq_sm_write_cmd},
 /*VRDMA_CMD_STATE_UPDATE_CI	            */	{vrdma_aq_sm_update_ci},
 /*VIRTQ_CMD_STATE_FATAL_ERR				*/	{vrdma_aq_sm_fatal_error},
@@ -1343,6 +1380,13 @@ int vrdma_ctrl_adminq_progress(void *ctrl)
 	int n = 0;
 
 	if (!vdev_ctrl->sctrl->adminq_dma_q) {
+		return 0;
+	}
+
+	if (aq->state == VRDMA_CMD_STATE_WAITING) {
+		SPDK_NOTICELOG("vrdma adminq is in waiting state, cmd idx %d\n",
+						aq->num_parsed);
+		vrdma_aq_cmd_progress(aq, status);
 		return 0;
 	}
 

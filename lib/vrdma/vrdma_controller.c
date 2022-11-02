@@ -389,3 +389,9 @@ void vrdma_ctrl_destroy(void *arg, void (*done_cb)(void *arg),
     vrdma_ctrl_free(ctrl);
     SPDK_NOTICELOG("lizh vrdma_ctrl_destroy...done");
 }
+
+uint8_t vrdma_get_qp_status(uint32_t qp_handle)
+{
+	//TODO: get qp based on handle
+	return SW_VIRTQ_SUSPENDED;
+}

@@ -532,6 +532,7 @@ struct vrdma_admin_queue {
  * @VRDMA_CMD_STATE_HANDLE_PI:       process PI
  * @VRDMA_CMD_STATE_READ_CMD_ENTRY:  Read admq cmd entry from host memory
  * @VRDMA_CMD_STATE_PARSE_CMD_ENTRY: handle each cmd
+ * @VRDMA_CMD_STATE_WAITING: wait for current cmd complete, used for qp destroy
  * @VRDMA_CMD_STATE_WRITE_CMD_BACK:  when all cmds are handled, write back to host memory
  * @VRDMA_CMD_STATE_UPDATE_CI:       update admq CI
  * @VRDMA_CMD_STATE_FATAL_ERR:       Fatal error, SM stuck here (until reset)
@@ -544,6 +545,7 @@ enum vrdma_aq_cmd_sm_state {
         VRDMA_CMD_STATE_HANDLE_PI,
         VRDMA_CMD_STATE_READ_CMD_ENTRY,
         VRDMA_CMD_STATE_PARSE_CMD_ENTRY,
+        VRDMA_CMD_STATE_WAITING,
         VRDMA_CMD_STATE_WRITE_CMD_BACK,
         VRDMA_CMD_STATE_UPDATE_CI,
         VRDMA_CMD_STATE_FATAL_ERR,
@@ -557,6 +559,7 @@ struct vrdma_admin_sw_qp {
 	uint16_t pre_pi;
 	enum vrdma_aq_cmd_sm_state state;
 	uint16_t num_to_parse;
+	uint16_t num_parsed;
 	struct vrdma_admin_queue *admq;
 	struct snap_dma_completion init_ci;
 	struct snap_dma_completion poll_comp;
