@@ -145,4 +145,7 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr);
 void vrdma_ctrl_destroy(void *arg, void (*done_cb)(void *arg),
                              void *done_cb_arg);
 int vrdma_dev_name_to_id(const char *rdma_dev_name);
+
+uint8_t vrdma_get_qp_status(uint32_t qp_handle);
+
 #endif
