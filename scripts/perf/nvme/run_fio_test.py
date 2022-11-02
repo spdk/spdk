@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation
+#  All rights reserved.
+#
 
 # This script runs fio benchmark test on the local nvme device using the SPDK NVMe driver.
 # Prework: Run script/setup.sh to bind SSDs to SPDK driver.

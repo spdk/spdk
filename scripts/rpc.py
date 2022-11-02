@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2016 Intel Corporation
+#  All rights reserved.
+#
 
 import logging
 import argparse
