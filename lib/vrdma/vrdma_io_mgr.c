@@ -376,4 +376,3 @@ void vrdma_sq_sm_dma_cb(struct snap_dma_completion *self, int status)
 	}
 	vrdma_sq_wqe_progress(sq, op_status);
 }
-

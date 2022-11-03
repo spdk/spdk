@@ -124,6 +124,8 @@ enum vrdma_device_cap_flags {
 #define VRDMA_DEV_MAX_QP_SZ  0x2000000
 #define VRDMA_MAX_CQ_NUM     0x40000
 #define VRDMA_DEV_MAX_CQ     0x2000
+#define VRDMA_MAX_EQ_NUM     0x40000
+#define VRDMA_DEV_MAX_EQ     0x2000
 #define VRDMA_DEV_MAX_CQ_DP  0x400
 #define VRDMA_DEV_MAX_SQ_DP  0x400
 #define VRDMA_DEV_MAX_RQ_DP  0x400
@@ -308,6 +310,8 @@ struct vrdma_destroy_cq_resp {
 	uint32_t err_hint:24;
 };
 
+#define VRDMA_QP_WQEBB_BASE_SIZE 64
+
 struct vrdma_create_qp_req {
 	uint32_t pd_handle;
 
@@ -327,7 +331,6 @@ struct vrdma_create_qp_req {
 	uint32_t sq_cqn;
 	uint32_t rq_cqn;
 
-	//uint64_t qpc_l0_paddr; /* qpc buffer vm phy addr */
 	uint64_t sq_l0_paddr;  /* sqe buffer vm phy addr */
 	uint64_t rq_l0_paddr;  /* rqe buffer vm phy addr */
 	uint64_t sq_pi_paddr;
@@ -365,6 +368,11 @@ struct vrdma_query_qp_resp {
 	uint32_t qkey;
 } __attribute__((packed));
 
+#define vrdma_supported_qp_attr_mask (IBV_QP_STATE | IBV_QP_RQ_PSN | \
+					IBV_QP_SQ_PSN | IBV_QP_DEST_QPN | \
+					IBV_QP_QKEY | IBV_QP_TIMEOUT | \
+					IBV_QP_MIN_RNR_TIMER | IBV_QP_RETRY_CNT | \
+					IBV_QP_RNR_RETRY)
 struct vrdma_modify_qp_req {
 	uint32_t qp_attr_mask;
 	uint32_t qp_handle;
@@ -600,4 +608,18 @@ void spdk_vrdma_adminq_resource_destory(void);
 void vrdma_aq_sm_dma_cb(struct snap_dma_completion *self, int status);
 void vrdma_destroy_remote_mkey(struct vrdma_ctrl *ctrl,
 					struct spdk_vrdma_mr *vmr);
+struct spdk_vrdma_pd *
+find_spdk_vrdma_pd_by_idx(struct vrdma_ctrl *ctrl, uint32_t pd_idx);
+struct spdk_vrdma_mr *
+find_spdk_vrdma_mr_by_idx(struct vrdma_ctrl *ctrl, uint32_t mr_idx);
+struct spdk_vrdma_mr *
+find_spdk_vrdma_mr_by_key(struct vrdma_ctrl *ctrl, uint32_t key);
+struct spdk_vrdma_ah *
+find_spdk_vrdma_ah_by_idx(struct vrdma_ctrl *ctrl, uint32_t ah_idx);
+struct spdk_vrdma_qp *
+find_spdk_vrdma_qp_by_idx(struct vrdma_ctrl *ctrl, uint32_t qp_idx);
+struct spdk_vrdma_cq *
+find_spdk_vrdma_cq_by_idx(struct vrdma_ctrl *ctrl, uint32_t cq_idx);
+struct spdk_vrdma_eq *
+find_spdk_vrdma_eq_by_idx(struct vrdma_ctrl *ctrl, uint32_t eq_idx);
 #endif

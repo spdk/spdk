@@ -300,6 +300,7 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
     ctrl->pf_id = attr->pf_id;
     ctrl->vdev = attr->vdev;
     ctrl->dev.rdev_idx = attr->vdev->devid;
+    LIST_INIT(&ctrl->bk_qp_list);
     vrdma_srv_device_init(ctrl);
     SPDK_NOTICELOG("new VRDMA controller %d [in order %d]"
                   " was opened successfully over RDMA device %s ",
