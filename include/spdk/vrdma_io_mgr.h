@@ -46,14 +46,25 @@
  * progress again and provides it with the status of the function called.
  * This enum describes the status of the function called.
  */
-enum vrdma_vq_sm_op_status {
-	VRDMA_VQ_SM_OP_OK,
-	VRDMA_VQ_SM_OP_ERR,
+enum vrdma_qp_sm_op_status {
+	VRDMA_QP_SM_OP_OK,
+	VRDMA_QP_SM_OP_ERR,
 };
+
+struct vrdma_qp_sm_state {
+	bool (*sm_handler)(struct spdk_vrdma_qp *vqp,
+			enum vrdma_qp_sm_op_status status);
+};
+
+struct vrdma_qp_state_machine {
+	struct vrdma_qp_sm_state *sm_array;
+	uint16_t sme;
+};
+
 
 struct vrdma_sq_sm_state {
 	bool (*sm_handler)(struct vrdma_sq *sq,
-			enum vrdma_vq_sm_op_status status);
+			enum vrdma_qp_sm_op_status status);
 };
 
 struct vrdma_sq_state_machine {
@@ -63,7 +74,7 @@ struct vrdma_sq_state_machine {
 
 struct vrdma_rq_sm_state {
 	bool (*sm_handler)(struct vrdma_rq *rq,
-			enum vrdma_vq_sm_op_status status);
+			enum vrdma_qp_sm_op_status status);
 };
 
 struct vrdma_rq_state_machine {
@@ -77,6 +88,6 @@ struct spdk_thread *spdk_io_mgr_get_thread(int id);
 int spdk_io_mgr_init(void);
 void spdk_io_mgr_clear(void);
 
-void vrdma_sq_sm_dma_cb(struct snap_dma_completion *self, int status);
-void vrdma_rq_sm_dma_cb(struct snap_dma_completion *self, int status);
+void vrdma_qp_sm_dma_cb(struct snap_dma_completion *self, int status);
+
 #endif

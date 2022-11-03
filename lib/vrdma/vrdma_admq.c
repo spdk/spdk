@@ -983,8 +983,9 @@ static int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 		SPDK_ERRLOG("Failed to create rq dma queue");
 		return -1;
 	}
-	vqp->q_comp.func = vrdma_sq_sm_dma_cb;
+	vqp->q_comp.func = vrdma_qp_sm_dma_cb;
 	vqp->q_comp.count = 1;
+	vqp->sm_state = VRDMA_QP_STATE_IDLE;
 
 	vqp->rq.comm.wqebb_size = aqe->req.create_qp_req.rq_wqebb_size;
 	vqp->rq.comm.wqebb_cnt = 1 << aqe->req.create_qp_req.log_rq_wqebb_cnt;
@@ -1028,12 +1029,10 @@ static int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 	vqp->rq.comm.doorbell_pa = aqe->req.create_qp_req.rq_pi_paddr;
 	vqp->rq.comm.log_pagesize = aqe->req.create_qp_req.log_rq_pagesize;
 	vqp->rq.comm.hop = aqe->req.create_qp_req.rq_hop;
-	vqp->rq.sm_state = VRDMA_RQ_STATE_IDLE;
 	vqp->sq.comm.wqe_buff_pa = aqe->req.create_qp_req.sq_l0_paddr;
 	vqp->sq.comm.doorbell_pa = aqe->req.create_qp_req.sq_pi_paddr;
 	vqp->sq.comm.log_pagesize = aqe->req.create_qp_req.log_sq_pagesize;
 	vqp->sq.comm.hop = aqe->req.create_qp_req.sq_hop;
-	vqp->sq.sm_state = VRDMA_SQ_STATE_IDLE;
 	SPDK_NOTICELOG("\nlizh vrdma_create_vq...done\n");
 	return 0;
 

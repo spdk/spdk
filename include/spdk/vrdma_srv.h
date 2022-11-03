@@ -85,7 +85,8 @@ struct vrdma_cmd_param {
 struct vrdma_tx_meta_desc {
     uint32_t reserved1: 4;
     uint32_t opcode: 4;
-    uint32_t reserved2: 24;
+	uint32_t sge_num:8;
+    uint32_t reserved2: 16;
     uint32_t send_flags: 16;
     uint32_t req_id: 16;
     uint32_t length;
@@ -112,7 +113,7 @@ struct vrdma_rdma_atomic {
 struct vrdma_rdma_ud{
 	uint32_t remote_qpn;
 	uint32_t remote_qkey;
-	uint32_t reserved1;
+	uint32_t ah_handle;
 	uint32_t reserved2;
 }__attribute__((packed));
 
@@ -190,7 +191,8 @@ struct vrdma_recv_wqe {
 */ 
 // 32 bytres
 struct vrdma_cqe {
-	uint32_t reserved1:16;
+	uint32_t owner: 1;
+	uint32_t reserved1:15;
     uint32_t opcode: 8;
     uint32_t status: 8;
     uint32_t length;
