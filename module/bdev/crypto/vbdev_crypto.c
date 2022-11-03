@@ -742,7 +742,8 @@ crypto_dev_poller(void *args)
 			}
 			TAILQ_REMOVE(&crypto_ch->queued_cry_ops, op_to_resubmit, link);
 		} else {
-			if (op_to_resubmit->crypto_op->status == RTE_CRYPTO_OP_STATUS_NOT_PROCESSED) {
+			if (op_to_resubmit->crypto_op->status == RTE_CRYPTO_OP_STATUS_NOT_PROCESSED
+					|| op_to_resubmit->crypto_op->status == RTE_CRYPTO_OP_STATUS_SUCCESS) {
 				/* If we couldn't get one, just break and try again later. */
 				break;
 			} else {
