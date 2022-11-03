@@ -72,9 +72,6 @@ int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
 
     ibv_free_device_list(list);
     
-    if (vrdma_ctx->dpa_enabled) {
-        /*Prove init DPA*/
-    }
 
     /*Create static PF device*/
     vdev = calloc(1, sizeof(*vdev));
@@ -90,6 +87,10 @@ int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
     g_vdev_cnt++;
     if (spdk_emu_controller_vrdma_create(vdev))
         goto free_vdev;
+
+    if (vrdma_ctx->dpa_enabled) {
+        /*Prove init DPA*/
+    }
     return 0;
 free_vdev:
     free(vdev);

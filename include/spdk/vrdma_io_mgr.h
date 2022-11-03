@@ -78,4 +78,5 @@ int spdk_io_mgr_init(void);
 void spdk_io_mgr_clear(void);
 
 void vrdma_sq_sm_dma_cb(struct snap_dma_completion *self, int status);
+void vrdma_rq_sm_dma_cb(struct snap_dma_completion *self, int status);
 #endif

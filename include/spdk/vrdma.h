@@ -35,6 +35,8 @@
 #include <infiniband/verbs.h>
 #include <sys/queue.h>
 #include "snap_mr.h"
+#include "snap_dma.h"
+#include "snap_vrdma_virtq.h"
 
 #define MAX_VRDMA_DEV_NUM 64
 #define MAX_VRDMA_DEV_LEN 32
@@ -94,22 +96,115 @@ struct spdk_vrdma_ah {
 	uint32_t ref_cnt;
 };
 
-struct spdk_vrdma_qp {
-    LIST_ENTRY(spdk_vrdma_qp) entry;
-	uint32_t qp_idx;
+struct spdk_vrdma_eq {
+    LIST_ENTRY(spdk_vrdma_eq) entry;
+	uint32_t eq_idx;
 	uint32_t ref_cnt;
+	uint32_t log_depth; /* 2^n */
+	uint64_t queue_addr;
+	uint16_t vector_idx;
 };
 
 struct spdk_vrdma_cq {
     LIST_ENTRY(spdk_vrdma_cq) entry;
 	uint32_t cq_idx;
 	uint32_t ref_cnt;
+	struct spdk_vrdma_eq *veq;
+	uint32_t log_cqe_entry_num:4; /* 2^n */
+	uint32_t log_cqe_size:2; /* 2^n */
+	uint32_t log_pagesize:3; /* 2^n */
+	uint32_t interrupt_mode:1;
+	uint64_t host_pa;
 };
 
-struct spdk_vrdma_eq {
-    LIST_ENTRY(spdk_vrdma_eq) entry;
-	uint32_t eq_idx;
+#define VRDMA_MAX_BK_QP_PER_VQP 4
+#define VRDMA_MAX_DMA_SQ_SIZE_PER_VQP 512
+#define VRDMA_MAX_DMA_RQ_SIZE_PER_VQP 64
+
+enum vrdma_sq_sm_state_type {
+        VRDMA_SQ_STATE_IDLE,
+        VRDMA_SQ_STATE_INIT_CI,
+        VRDMA_SQ_STATE_POLL_PI,
+        VRDMA_SQ_STATE_HANDLE_PI,
+        VRDMA_SQ_STATE_WQE_READ,
+        VRDMA_SQ_STATE_WQE_PARSE,
+        VRDMA_SQ_STATE_WQE_MAP_BACKEND,
+        VRDMA_SQ_STATE_WQE_SUBMIT,
+        VRDMA_SQ_STATE_FATAL_ERR,
+        VRDMA_SQ_NUM_OF_STATES,
+};
+
+enum vrdma_rq_sm_state_type {
+    VRDMA_RQ_STATE_IDLE,
+    VRDMA_RQ_STATE_INIT_CI,
+    VRDMA_RQ_STATE_FATAL_ERR,
+    VRDMA_RQ_NUM_OF_STATES,
+};
+
+struct vrdma_q_comm {
+	uint64_t wqe_buff_pa;
+	uint64_t doorbell_pa;
+	uint16_t wqebb_size:2; /* based on 64 * (sq_wqebb_size + 1) */
+	uint16_t log_pagesize:5; /* 2 ^ (n) */
+	uint16_t hop:2;
+    uint16_t qp_type:3;
+    uint16_t sq_sig_all:1;
+	uint16_t reserved:3;
+	uint16_t wqebb_cnt; /* sqe entry cnt */
+	uint32_t qpn; //Lei:To be deleted
+	uint32_t mqpn[4]; //Lei:To be deleted
+	uint16_t pi;
+	uint16_t pre_pi;
+	uint32_t num_to_parse;
+    struct ibv_mr *mr;
+};
+
+struct vrdma_sq {
+	struct vrdma_q_comm comm;
+    struct snap_dma_completion q_comp; //Lei:To be deleted
+	struct snap_vrdma_queue *snap_queue; //Lei:To be deleted
+	struct vrdma_sq_state_machine *custom_sm; //Lei:To be deleted
+	enum vrdma_sq_sm_state_type sm_state;
+	struct ibv_mr *mr; //Lei:To be deleted
+	struct vrdma_send_wqe *sq_buff; /* wqe buff */
+    void *cqe_buff;
+};
+
+struct vrdma_rq {
+	struct vrdma_q_comm comm;
+	struct snap_dma_completion q_comp; //Lei:To be deleted
+	struct snap_vrdma_queue *snap_queue; //Lei:To be deleted
+	enum vrdma_rq_sm_state_type sm_state;
+	struct ibv_mr *mr; //Lei:To be deleted
+	struct vrdma_recv_wqe *rq_buff; /* wqe buff */
+    void *cqe_buff;
+};
+
+struct spdk_vrdma_qp {
+    LIST_ENTRY(spdk_vrdma_qp) entry;
+	uint32_t qp_idx;
 	uint32_t ref_cnt;
+	uint32_t qp_state;
+	uint32_t rq_psn;
+	uint32_t sq_psn;
+	uint32_t dest_qp_num;
+	uint32_t sip;
+	uint32_t dip;
+	uint32_t qkey;
+	uint32_t timeout;
+	uint32_t min_rnr_timer;
+	uint32_t timeout_retry_cnt;
+	uint32_t rnr_retry_cnt;
+	uint32_t sq_draining;
+	struct spdk_vrdma_pd *vpd;
+	struct spdk_vrdma_cq *rq_vcq;
+	struct spdk_vrdma_cq *sq_vcq;
+	struct snap_dma_completion q_comp;
+    struct snap_vrdma_queue *snap_queue;
+	struct vrdma_sq_state_machine *custom_sm;
+	struct vrdma_backend_qp *bk_qp[VRDMA_MAX_BK_QP_PER_VQP];
+	struct vrdma_rq rq;
+	struct vrdma_sq sq;
 };
 
 struct spdk_vrdma_dev {

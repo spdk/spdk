@@ -43,11 +43,23 @@
 #define VRDMA_EMU_NAME_PREFIX "VrdmaEmu"
 #define VRDMA_EMU_NAME_MAXLEN 32
 #define VRDMA_DMA_ELEM_SIZE 64
+#define VRDMA_INVALID_QPN 0xFFFFFFFF
 
 extern struct vrdma_state_machine vrdma_sm;
 
 struct snap_vrdma_ctrl;
 struct snap_context;
+struct snap_vrdma_backend_qp;
+
+struct vrdma_backend_qp {
+    LIST_ENTRY(vrdma_backend_qp) entry;
+    struct ibv_pd *pd;
+    union ibv_gid rgid_rip;
+    uint32_t poller_core;
+    struct snap_vrdma_backend_qp bk_qp;
+    uint32_t remote_qpn;
+    uint8_t dest_mac[6];
+};
 
 struct vrdma_ctrl {
     char name[VRDMA_EMU_NAME_MAXLEN];
@@ -66,6 +78,7 @@ struct vrdma_ctrl {
 	const struct vRdmaServiceOps *srv_ops;
     void (*destroy_done_cb)(void *arg);
     void *destroy_done_cb_arg;
+    LIST_HEAD(bk_qp_list, vrdma_backend_qp) bk_qp_list;
 };
 
 struct vrdma_ctrl_init_attr {
@@ -75,62 +88,6 @@ struct vrdma_ctrl_init_attr {
     uint32_t nthreads;
     bool force_in_order;
     bool suspended;
-};
-
-enum vrdma_sq_sm_state_type {
-        VRDMA_SQ_STATE_IDLE,
-        VRDMA_SQ_STATE_INIT_CI,
-        VRDMA_SQ_STATE_POLL_PI,
-        VRDMA_SQ_STATE_HANDLE_PI,
-        VRDMA_SQ_STATE_WQE_READ,
-        VRDMA_SQ_STATE_WQE_PARSE,
-        VRDMA_SQ_STATE_WQE_MAP_BACKEND,
-        VRDMA_SQ_STATE_WQE_SUBMIT,
-        VRDMA_SQ_STATE_FATAL_ERR,
-        VRDMA_SQ_NUM_OF_STATES,
-};
-
-enum vrdma_rq_sm_state_type {
-    VRDMA_RQ_STATE_IDLE,
-    VRDMA_RQ_STATE_INIT_CI,
-    VRDMA_RQ_STATE_FATAL_ERR,
-    VRDMA_RQ_NUM_OF_STATES,
-};
-
-struct vrdma_q_comm {
-	uint64_t wqe_buff_pa;
-	uint64_t doorbell_pa;
-	uint16_t wqebb_size:2; /* based on 64 * (sq_wqebb_size + 1) */
-	uint16_t pagesize:5; /* 12, 21, 30 | 2 ^ (n) */
-	uint16_t hop:2;
-	uint16_t reserved:7;
-	uint16_t wqebb_cnt; /* sqe entry cnt */
-	uint32_t qpn;
-	uint32_t cqn;
-	uint32_t mqpn[4];
-	uint16_t pi;
-	uint16_t pre_pi;
-	uint32_t num_to_parse;
-};
-
-struct vrdma_sq {
-	struct vrdma_q_comm comm;
-	struct snap_dma_completion q_comp;
-	struct snap_vrdma_queue *snap_queue;
-	struct vrdma_sq_state_machine *custom_sm;
-	enum vrdma_sq_sm_state_type sm_state;
-	struct ibv_mr *mr;
-	struct vrdma_send_wqe *sq_buff; /* wqe buff */
-};
-
-struct vrdma_rq {
-	struct vrdma_q_comm comm;
-	struct snap_dma_completion q_comp;
-	struct snap_vrdma_queue *snap_queue;
-	struct vrdma_rq_state_machine *custom_sm;
-	enum vrdma_rq_sm_state_type sm_state;
-	struct ibv_mr *mr;
-	struct vrdma_recv_wqe *rq_buff; /* wqe buff */
 };
 
 int vrdma_ctrl_adminq_progress(void *ctrl);
