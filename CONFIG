@@ -4,6 +4,8 @@
 #  Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
+# configure options: __CONFIGURE_OPTIONS__
+
 # Installation prefix
 CONFIG_PREFIX="/usr/local"
 

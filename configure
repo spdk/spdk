@@ -1196,6 +1196,8 @@ fi
 
 echo -n "Creating mk/config.mk..."
 cp -f $rootdir/CONFIG $rootdir/mk/config.mk
+ARGS=$(echo "$@" | sed 's/ /\\ /g')
+sed -i.bak -r "s#__CONFIGURE_OPTIONS__#${ARGS}#g" $rootdir/mk/config.mk
 for key in "${!CONFIG[@]}"; do
 	sed -i.bak -r "s#[[:space:]]*CONFIG_${key}=.*#CONFIG_${key}\?=${CONFIG[$key]}#g" $rootdir/mk/config.mk
 done
