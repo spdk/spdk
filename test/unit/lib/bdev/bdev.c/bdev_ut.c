@@ -463,7 +463,8 @@ struct spdk_bdev_module bdev_ut_if = {
 	.async_init = true,
 };
 
-static void vbdev_ut_examine(struct spdk_bdev *bdev);
+static void vbdev_ut_examine_config(struct spdk_bdev *bdev);
+static void vbdev_ut_examine_disk(struct spdk_bdev *bdev);
 
 static int
 vbdev_ut_module_init(void)
@@ -480,20 +481,52 @@ struct spdk_bdev_module vbdev_ut_if = {
 	.name = "vbdev_ut",
 	.module_init = vbdev_ut_module_init,
 	.module_fini = vbdev_ut_module_fini,
-	.examine_config = vbdev_ut_examine,
+	.examine_config = vbdev_ut_examine_config,
+	.examine_disk = vbdev_ut_examine_disk,
 };
 
 SPDK_BDEV_MODULE_REGISTER(bdev_ut, &bdev_ut_if)
 SPDK_BDEV_MODULE_REGISTER(vbdev_ut, &vbdev_ut_if)
 
+struct ut_examine_ctx {
+	void (*examine_config)(struct spdk_bdev *bdev);
+	void (*examine_disk)(struct spdk_bdev *bdev);
+	uint32_t examine_config_count;
+	uint32_t examine_disk_count;
+};
+
 static void
-vbdev_ut_examine(struct spdk_bdev *bdev)
+vbdev_ut_examine_config(struct spdk_bdev *bdev)
 {
+	struct ut_examine_ctx *ctx = bdev->ctxt;
+
+	if (ctx != NULL) {
+		ctx->examine_config_count++;
+		if (ctx->examine_config != NULL) {
+			ctx->examine_config(bdev);
+		}
+	}
+
+	spdk_bdev_module_examine_done(&vbdev_ut_if);
+}
+
+static void
+vbdev_ut_examine_disk(struct spdk_bdev *bdev)
+{
+	struct ut_examine_ctx *ctx = bdev->ctxt;
+
+	if (ctx != NULL) {
+		ctx->examine_disk_count++;
+		if (ctx->examine_disk != NULL) {
+			ctx->examine_disk(bdev);
+		}
+	}
+
 	spdk_bdev_module_examine_done(&vbdev_ut_if);
 }
 
 static struct spdk_bdev *
-allocate_bdev(char *name)
+allocate_bdev_ctx(char *name, void *ctx)
 {
 	struct spdk_bdev *bdev;
 	int rc;
@@ -501,6 +534,7 @@ allocate_bdev(char *name)
 	bdev = calloc(1, sizeof(*bdev));
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 
+	bdev->ctxt = ctx;
 	bdev->name = name;
 	bdev->fn_table = &fn_table;
 	bdev->module = &bdev_ut_if;
@@ -514,6 +548,12 @@ allocate_bdev(char *name)
 	CU_ASSERT(rc == 0);
 
 	return bdev;
+}
+
+static struct spdk_bdev *
+allocate_bdev(char *name)
+{
+	return allocate_bdev_ctx(name, NULL);
 }
 
 static struct spdk_bdev *
@@ -6173,6 +6213,49 @@ bdev_copy_split_test(void)
 	ut_fini_bdev();
 }
 
+static void
+examine_claim(struct spdk_bdev *bdev)
+{
+	int rc;
+
+	rc = spdk_bdev_module_claim_bdev(bdev, NULL, &vbdev_ut_if);
+	CU_ASSERT(rc == 0);
+}
+
+static void
+examine_no_lock_held(struct spdk_bdev *bdev)
+{
+	CU_ASSERT(!spdk_spin_held(&g_bdev_mgr.spinlock));
+	CU_ASSERT(!spdk_spin_held(&bdev->internal.spinlock));
+}
+
+static void
+examine_locks(void)
+{
+	struct spdk_bdev *bdev;
+	struct ut_examine_ctx ctx = { 0 };
+
+	/* Without any claims, one code path is taken */
+	ctx.examine_config = examine_no_lock_held;
+	ctx.examine_disk = examine_no_lock_held;
+	bdev = allocate_bdev_ctx("bdev0", &ctx);
+	CU_ASSERT(ctx.examine_config_count == 1);
+	CU_ASSERT(ctx.examine_disk_count == 1);
+	CU_ASSERT(bdev->internal.claim_module == NULL);
+	free_bdev(bdev);
+
+	/* Exercise the other path that is taken when examine_config() takes a claim. */
+	memset(&ctx, 0, sizeof(ctx));
+	ctx.examine_config = examine_claim;
+	ctx.examine_disk = examine_no_lock_held;
+	bdev = allocate_bdev_ctx("bdev0", &ctx);
+	CU_ASSERT(ctx.examine_config_count == 1);
+	CU_ASSERT(ctx.examine_disk_count == 1);
+	CU_ASSERT(bdev->internal.claim_module == &vbdev_ut_if);
+	spdk_bdev_module_release_bdev(bdev);
+	free_bdev(bdev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -6235,6 +6318,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_seek_test);
 	CU_ADD_TEST(suite, bdev_copy);
 	CU_ADD_TEST(suite, bdev_copy_split_test);
+	CU_ADD_TEST(suite, examine_locks);
 
 	allocate_cores(1);
 	allocate_threads(1);
