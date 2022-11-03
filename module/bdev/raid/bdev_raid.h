@@ -35,8 +35,8 @@ enum raid_bdev_state {
 	 */
 	RAID_BDEV_STATE_OFFLINE,
 
-	/* raid bdev max, new states should be added before this */
-	RAID_BDEV_MAX
+	/* raid bdev state max, new states should be added before this */
+	RAID_BDEV_STATE_MAX
 };
 
 /*
@@ -167,8 +167,10 @@ int raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bde
 void raid_bdev_delete(struct raid_bdev *raid_bdev, raid_bdev_destruct_cb cb_fn, void *cb_ctx);
 int raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name, uint8_t slot);
 struct raid_bdev *raid_bdev_find_by_name(const char *name);
-enum raid_level raid_bdev_parse_raid_level(const char *str);
+enum raid_level raid_bdev_str_to_level(const char *str);
 const char *raid_bdev_level_to_str(enum raid_level level);
+enum raid_bdev_state raid_bdev_str_to_state(const char *str);
+const char *raid_bdev_state_to_str(enum raid_bdev_state state);
 
 /*
  * RAID module descriptor

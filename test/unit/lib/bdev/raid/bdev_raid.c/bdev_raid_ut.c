@@ -1906,10 +1906,10 @@ test_raid_level_conversions(void)
 {
 	const char *raid_str;
 
-	CU_ASSERT(raid_bdev_parse_raid_level("abcd123") == INVALID_RAID_LEVEL);
-	CU_ASSERT(raid_bdev_parse_raid_level("0") == RAID0);
-	CU_ASSERT(raid_bdev_parse_raid_level("raid0") == RAID0);
-	CU_ASSERT(raid_bdev_parse_raid_level("RAID0") == RAID0);
+	CU_ASSERT(raid_bdev_str_to_level("abcd123") == INVALID_RAID_LEVEL);
+	CU_ASSERT(raid_bdev_str_to_level("0") == RAID0);
+	CU_ASSERT(raid_bdev_str_to_level("raid0") == RAID0);
+	CU_ASSERT(raid_bdev_str_to_level("RAID0") == RAID0);
 
 	raid_str = raid_bdev_level_to_str(INVALID_RAID_LEVEL);
 	CU_ASSERT(raid_str != NULL && strlen(raid_str) == 0);

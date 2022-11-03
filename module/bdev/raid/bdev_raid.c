@@ -167,8 +167,8 @@ raid_bdev_cleanup(struct raid_bdev *raid_bdev)
 {
 	struct raid_base_bdev_info *base_info;
 
-	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_cleanup, %p name %s, state %u\n",
-		      raid_bdev, raid_bdev->bdev.name, raid_bdev->state);
+	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_cleanup, %p name %s, state %s\n",
+		      raid_bdev, raid_bdev->bdev.name, raid_bdev_state_to_str(raid_bdev->state));
 	assert(raid_bdev->state != RAID_BDEV_STATE_ONLINE);
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
@@ -626,7 +626,7 @@ raid_bdev_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	/* Dump the raid bdev configuration related information */
 	spdk_json_write_named_object_begin(w, "raid");
 	spdk_json_write_named_uint32(w, "strip_size_kb", raid_bdev->strip_size_kb);
-	spdk_json_write_named_uint32(w, "state", raid_bdev->state);
+	spdk_json_write_named_string(w, "state", raid_bdev_state_to_str(raid_bdev->state));
 	spdk_json_write_named_string(w, "raid_level", raid_bdev_level_to_str(raid_bdev->level));
 	spdk_json_write_named_uint32(w, "num_base_bdevs", raid_bdev->num_base_bdevs);
 	spdk_json_write_named_uint32(w, "num_base_bdevs_discovered", raid_bdev->num_base_bdevs_discovered);
@@ -753,11 +753,22 @@ static struct {
 	{ }
 };
 
+static struct {
+	const char *name;
+	enum raid_bdev_state value;
+} g_raid_state_names[] = {
+	{ "online", RAID_BDEV_STATE_ONLINE },
+	{ "configuring", RAID_BDEV_STATE_CONFIGURING },
+	{ "offline", RAID_BDEV_STATE_OFFLINE },
+	{ }
+};
+
 /* We have to use the typedef in the function declaration to appease astyle. */
 typedef enum raid_level raid_level_t;
+typedef enum raid_bdev_state raid_bdev_state_t;
 
 raid_level_t
-raid_bdev_parse_raid_level(const char *str)
+raid_bdev_str_to_level(const char *str)
 {
 	unsigned int i;
 
@@ -783,6 +794,37 @@ raid_bdev_level_to_str(enum raid_level level)
 		}
 	}
 
+	return "";
+}
+
+raid_bdev_state_t
+raid_bdev_str_to_state(const char *str)
+{
+	unsigned int i;
+
+	assert(str != NULL);
+
+	for (i = 0; g_raid_state_names[i].name != NULL; i++) {
+		if (strcasecmp(g_raid_state_names[i].name, str) == 0) {
+			return g_raid_state_names[i].value;
+		}
+	}
+
+	return RAID_BDEV_STATE_MAX;
+}
+
+const char *
+raid_bdev_state_to_str(enum raid_bdev_state state)
+{
+	unsigned int i;
+
+	for (i = 0; g_raid_state_names[i].name != NULL; i++) {
+		if (g_raid_state_names[i].value == state) {
+			return g_raid_state_names[i].name;
+		}
+	}
+
+	assert(false);
 	return "";
 }
 
