@@ -380,6 +380,26 @@ spdk_vhost_scsi_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_array_end(w);
 }
 
+static void
+vhost_blk_dump_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_virtio_blk_transport *transport;
+
+	/* Write vhost transports */
+	TAILQ_FOREACH(transport, &g_virtio_blk_transports, tailq) {
+		/* Since vhost_user_blk is always added on SPDK startup,
+		 * do not emit virtio_blk_create_transport RPC. */
+		if (strcasecmp(transport->ops->name, "vhost_user_blk") != 0) {
+			spdk_json_write_object_begin(w);
+			spdk_json_write_named_string(w, "method", "virtio_blk_create_transport");
+			spdk_json_write_named_object_begin(w, "params");
+			transport->ops->dump_opts(transport, w);
+			spdk_json_write_object_end(w);
+			spdk_json_write_object_end(w);
+		}
+	}
+}
+
 void
 spdk_vhost_blk_config_json(struct spdk_json_write_ctx *w)
 {
@@ -395,6 +415,8 @@ spdk_vhost_blk_config_json(struct spdk_json_write_ctx *w)
 		}
 	}
 	spdk_vhost_unlock();
+
+	vhost_blk_dump_config_json(w);
 
 	spdk_json_write_array_end(w);
 }

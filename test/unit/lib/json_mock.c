@@ -60,3 +60,5 @@ DEFINE_STUB(spdk_json_write_named_array_begin, int, (struct spdk_json_write_ctx 
 		const char *name), 0);
 DEFINE_STUB(spdk_json_write_named_object_begin, int, (struct spdk_json_write_ctx *w,
 		const char *name), 0);
+
+DEFINE_STUB(spdk_json_number_to_uint64, int, (const struct spdk_json_val *val, uint64_t *num), 0);

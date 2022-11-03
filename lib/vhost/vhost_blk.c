@@ -13,6 +13,7 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/vhost.h"
+#include "spdk/json.h"
 
 #include "vhost_internal.h"
 #include <rte_version.h>
@@ -1785,10 +1786,18 @@ vhost_user_blk_destroy_ctrlr(struct spdk_vhost_dev *vdev)
 	return vhost_user_dev_unregister(vdev);
 }
 
+static void
+vhost_user_blk_dump_opts(struct spdk_virtio_blk_transport *transport, struct spdk_json_write_ctx *w)
+{
+	assert(w != NULL);
+
+	spdk_json_write_named_string(w, "name", transport->ops->name);
+}
+
 static const struct spdk_virtio_blk_transport_ops vhost_user_blk = {
 	.name = "vhost_user_blk",
 
-	.dump_opts = NULL,
+	.dump_opts = vhost_user_blk_dump_opts,
 
 	.create = vhost_user_blk_create,
 	.destroy = vhost_user_blk_destroy,
