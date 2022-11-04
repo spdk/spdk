@@ -6,12 +6,14 @@
 #include "spdk/stdinc.h"
 #include "spdk_internal/cunit.h"
 #include "spdk/env.h"
-#include "spdk_internal/mock.h"
+
+#include "common/lib/ut_multithread.c"
 
 #include "bdev/raid/raid1.c"
 #include "../common.c"
 
 DEFINE_STUB_V(raid_bdev_module_list_add, (struct raid_bdev_module *raid_module));
+DEFINE_STUB_V(raid_bdev_module_stop_done, (struct raid_bdev *raid_bdev));
 DEFINE_STUB_V(raid_bdev_io_complete, (struct raid_bdev_io *raid_io,
 				      enum spdk_bdev_io_status status));
 DEFINE_STUB(raid_bdev_io_complete_part, bool, (struct raid_bdev_io *raid_io, uint64_t completed,
@@ -132,6 +134,9 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("raid1", test_setup, test_cleanup);
 	CU_ADD_TEST(suite, test_raid1_start);
+
+	allocate_threads(1);
+	set_thread(0);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
