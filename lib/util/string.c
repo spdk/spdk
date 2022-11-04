@@ -446,3 +446,99 @@ spdk_strtoll(const char *nptr, int base)
 
 	return val;
 }
+
+void
+spdk_strarray_free(char **strarray)
+{
+	size_t i;
+
+	if (strarray == NULL) {
+		return;
+	}
+
+	for (i = 0; strarray[i] != NULL; i++) {
+		free(strarray[i]);
+	}
+	free(strarray);
+}
+
+char **
+spdk_strarray_from_string(const char *str, const char *delim)
+{
+	const char *c = str;
+	size_t count = 0;
+	char **result;
+	size_t i;
+
+	assert(str != NULL);
+	assert(delim != NULL);
+
+	/* Count number of entries. */
+	for (;;) {
+		const char *next = strpbrk(c, delim);
+
+		count++;
+
+		if (next == NULL) {
+			break;
+		}
+
+		c = next + 1;
+	}
+
+	/* Account for the terminating NULL entry. */
+	result = calloc(count + 1, sizeof(char *));
+	if (result == NULL) {
+		return NULL;
+	}
+
+	c = str;
+
+	for (i = 0; i < count; i++) {
+		const char *next = strpbrk(c, delim);
+
+		if (next == NULL) {
+			result[i] = strdup(c);
+		} else {
+			result[i] = strndup(c, next - c);
+		}
+
+		if (result[i] == NULL) {
+			spdk_strarray_free(result);
+			return NULL;
+		}
+
+		if (next != NULL) {
+			c = next + 1;
+		}
+	}
+
+	return result;
+}
+
+char **
+spdk_strarray_dup(const char **strarray)
+{
+	size_t count, i;
+	char **result;
+
+	assert(strarray != NULL);
+
+	for (count = 0; strarray[count] != NULL; count++)
+		;
+
+	result = calloc(count + 1, sizeof(char *));
+	if (result == NULL) {
+		return NULL;
+	}
+
+	for (i = 0; i < count; i++) {
+		result[i] = strdup(strarray[i]);
+		if (result[i] == NULL) {
+			spdk_strarray_free(result);
+			return NULL;
+		}
+	}
+
+	return result;
+}

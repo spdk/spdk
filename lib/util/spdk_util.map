@@ -123,6 +123,9 @@
 	spdk_mem_all_zero;
 	spdk_strtol;
 	spdk_strtoll;
+	spdk_strarray_from_string;
+	spdk_strarray_dup;
+	spdk_strarray_free;
 
 	# public functions in util.h
 	spdk_u32log2;

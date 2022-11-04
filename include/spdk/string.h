@@ -236,6 +236,35 @@ long int spdk_strtol(const char *nptr, int base);
  */
 long long int spdk_strtoll(const char *nptr, int base);
 
+/**
+ * Build a NULL-terminated array of strings from the given string separated by
+ * the given chars in delim, as if split by strpbrk(). Empty items are pointers
+ * to an empty string.
+ *
+ * \param str Input string
+ * \param delim Separating delimiter set.
+ *
+ * \return the string array, or NULL on failure.
+ */
+char **spdk_strarray_from_string(const char *str, const char *delim);
+
+/**
+ * Duplicate a NULL-terminated array of strings. Returns NULL on failure.
+ * The array, and the strings, are allocated with the standard allocator (e.g.
+ * calloc()).
+ *
+ * \param strarray input array of strings.
+ */
+char **spdk_strarray_dup(const char **strarray);
+
+/**
+ * Free a NULL-terminated array of strings. The array and its strings must have
+ * been allocated with the standard allocator (calloc() etc.).
+ *
+ * \param strarray array of strings.
+ */
+void spdk_strarray_free(char **strarray);
+
 #ifdef __cplusplus
 }
 #endif

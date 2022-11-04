@@ -375,6 +375,67 @@ test_strtoll(void)
 	CU_ASSERT(val == 0);
 }
 
+static void
+test_strarray(void)
+{
+	char **r;
+	char **r2;
+
+	r = spdk_strarray_from_string("", ":");
+	CU_ASSERT(strcmp(r[0], "") == 0);
+	CU_ASSERT(r[1] == NULL);
+	spdk_strarray_free(r);
+
+	r = spdk_strarray_from_string(":", ":");
+	CU_ASSERT(strcmp(r[0], "") == 0);
+	CU_ASSERT(strcmp(r[1], "") == 0);
+	CU_ASSERT(r[2] == NULL);
+	spdk_strarray_free(r);
+
+	r = spdk_strarray_from_string("a", ":");
+	CU_ASSERT(strcmp(r[0], "a") == 0);
+	CU_ASSERT(r[1] == NULL);
+	spdk_strarray_free(r);
+
+	r = spdk_strarray_from_string("ab:", ":");
+	CU_ASSERT(strcmp(r[0], "ab") == 0);
+	CU_ASSERT(strcmp(r[1], "") == 0);
+	CU_ASSERT(r[2] == NULL);
+	spdk_strarray_free(r);
+
+	r = spdk_strarray_from_string(":ab", ":");
+	CU_ASSERT(strcmp(r[0], "") == 0);
+	CU_ASSERT(strcmp(r[1], "ab") == 0);
+	CU_ASSERT(r[2] == NULL);
+	spdk_strarray_free(r);
+
+	r = spdk_strarray_from_string("ab:c", ":");
+	CU_ASSERT(strcmp(r[0], "ab") == 0);
+	CU_ASSERT(strcmp(r[1], "c") == 0);
+	CU_ASSERT(r[2] == NULL);
+	spdk_strarray_free(r);
+
+	r = spdk_strarray_from_string(":ab.:c:", ":.");
+	CU_ASSERT(strcmp(r[0], "") == 0);
+	CU_ASSERT(strcmp(r[1], "ab") == 0);
+	CU_ASSERT(strcmp(r[2], "") == 0);
+	CU_ASSERT(strcmp(r[3], "c") == 0);
+	CU_ASSERT(strcmp(r[4], "") == 0);
+	CU_ASSERT(r[5] == NULL);
+	spdk_strarray_free(r);
+
+	r = spdk_strarray_from_string(":ab.:c:", ":.");
+	r2 = spdk_strarray_dup((const char **)r);
+	CU_ASSERT(strcmp(r2[0], "") == 0);
+	CU_ASSERT(strcmp(r2[1], "ab") == 0);
+	CU_ASSERT(strcmp(r2[2], "") == 0);
+	CU_ASSERT(strcmp(r2[3], "c") == 0);
+	CU_ASSERT(strcmp(r2[4], "") == 0);
+	CU_ASSERT(r2[5] == NULL);
+	spdk_strarray_free(r);
+	spdk_strarray_free(r2);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -392,6 +453,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_sprintf_append_realloc);
 	CU_ADD_TEST(suite, test_strtol);
 	CU_ADD_TEST(suite, test_strtoll);
+	CU_ADD_TEST(suite, test_strarray);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
