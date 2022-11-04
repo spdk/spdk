@@ -402,7 +402,7 @@ def bdev_raid_get_bdevs(client, category):
     return client.call('bdev_raid_get_bdevs', params)
 
 
-def bdev_raid_create(client, name, raid_level, base_bdevs, strip_size=None, strip_size_kb=None, uuid=None):
+def bdev_raid_create(client, name, raid_level, base_bdevs, strip_size=None, strip_size_kb=None, uuid=None, superblock=False):
     """Create raid bdev. Either strip size arg will work but one is required.
 
     Args:
@@ -412,11 +412,13 @@ def bdev_raid_create(client, name, raid_level, base_bdevs, strip_size=None, stri
         raid_level: raid level of raid bdev, supported values 0
         base_bdevs: Space separated names of Nvme bdevs in double quotes, like "Nvme0n1 Nvme1n1 Nvme2n1"
         uuid: UUID for this raid bdev (optional)
+        superblock: information about raid bdev will be stored in superblock on each base bdev,
+                    disabled by default due to backward compatibility
 
     Returns:
         None
     """
-    params = {'name': name, 'raid_level': raid_level, 'base_bdevs': base_bdevs}
+    params = {'name': name, 'raid_level': raid_level, 'base_bdevs': base_bdevs, 'superblock': superblock}
 
     if strip_size:
         params['strip_size'] = strip_size

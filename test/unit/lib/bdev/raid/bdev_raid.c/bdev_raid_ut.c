@@ -98,6 +98,7 @@ DEFINE_STUB(spdk_json_decode_uuid, int, (const struct spdk_json_val *val, void *
 DEFINE_STUB(spdk_json_decode_array, int, (const struct spdk_json_val *values,
 		spdk_json_decode_fn decode_func,
 		void *out, size_t max_size, size_t *out_size, size_t stride), 0);
+DEFINE_STUB(spdk_json_decode_bool, int, (const struct spdk_json_val *val, void *out), 0);
 DEFINE_STUB(spdk_json_write_name, int, (struct spdk_json_write_ctx *w, const char *name), 0);
 DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_named_object_begin, int, (struct spdk_json_write_ctx *w,

@@ -10393,6 +10393,7 @@ strip_size_kb           | Required | number      | Strip size in KB
 raid_level              | Required | string      | RAID level
 base_bdevs              | Required | string      | Base bdevs name, whitespace separated list in quotes
 uuid                    | Optional | string      | UUID for this RAID bdev
+superblock              | Optional | boolean     | If set, information about raid bdev will be stored in superblock on each base bdev (default: `false`)
 
 #### Example
 
