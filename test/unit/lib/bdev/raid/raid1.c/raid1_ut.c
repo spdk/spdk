@@ -124,6 +124,136 @@ test_raid1_start(void)
 	}
 }
 
+static struct raid_bdev_io *
+get_raid_io(struct raid1_info *r1_info, struct raid_bdev_io_channel *raid_ch,
+	    enum spdk_bdev_io_type io_type, uint64_t num_blocks)
+{
+	struct spdk_bdev_io *bdev_io;
+	struct raid_bdev_io *raid_io;
+
+	bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
+	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
+
+	bdev_io->bdev = &r1_info->raid_bdev->bdev;
+	bdev_io->type = io_type;
+	bdev_io->u.bdev.offset_blocks = 0;
+	bdev_io->u.bdev.num_blocks = num_blocks;
+	bdev_io->internal.cb = NULL;
+	bdev_io->internal.caller_ctx = NULL;
+
+	raid_io = (void *)bdev_io->driver_ctx;
+	raid_io->raid_bdev = r1_info->raid_bdev;
+	raid_io->raid_ch = raid_ch;
+
+	return raid_io;
+}
+
+static void
+put_raid_io(struct raid_bdev_io *raid_io)
+{
+	free(spdk_bdev_io_from_ctx(raid_io));
+}
+
+static void
+run_for_each_raid1_config(void (*test_fn)(struct raid_bdev *raid_bdev,
+			  struct raid_bdev_io_channel *raid_ch))
+{
+	struct raid_params *params;
+
+	RAID_PARAMS_FOR_EACH(params) {
+		struct raid1_info *r1_info;
+		struct raid_bdev_io_channel raid_ch = { 0 };
+		int i;
+
+		r1_info = create_raid1(params);
+
+		raid_ch.num_channels = params->num_base_bdevs;
+		raid_ch.base_channel = calloc(params->num_base_bdevs, sizeof(struct spdk_io_channel *));
+		SPDK_CU_ASSERT_FATAL(raid_ch.base_channel != NULL);
+		for (i = 0; i < raid_ch.num_channels; i++) {
+			raid_ch.base_channel[i] = calloc(1, sizeof(*raid_ch.base_channel));
+			SPDK_CU_ASSERT_FATAL(raid_ch.base_channel[i] != NULL);
+		}
+
+		raid_ch.module_channel = raid1_get_io_channel(r1_info->raid_bdev);
+		SPDK_CU_ASSERT_FATAL(raid_ch.module_channel);
+
+		test_fn(r1_info->raid_bdev, &raid_ch);
+
+		spdk_put_io_channel(raid_ch.module_channel);
+		poll_threads();
+
+		for (i = 0; i < raid_ch.num_channels; i++) {
+			free(raid_ch.base_channel[i]);
+		}
+		free(raid_ch.base_channel);
+
+		delete_raid1(r1_info);
+	}
+}
+
+static void
+_test_raid1_read_balancing(struct raid_bdev *raid_bdev, struct raid_bdev_io_channel *raid_ch)
+{
+	struct raid1_info *r1_info = raid_bdev->module_private;
+	struct raid1_io_channel *raid1_ch = spdk_io_channel_get_ctx(raid_ch->module_channel);
+	uint8_t big_io_base_bdev_idx;
+	const uint64_t big_io_blocks = 256;
+	const uint64_t small_io_blocks = 4;
+	uint64_t blocks_remaining;
+	struct raid_bdev_io *raid_io;
+	uint8_t i;
+	int n;
+
+	/* same sized IOs should be be spread evenly across all base bdevs */
+	for (n = 0; n < 3; n++) {
+		for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
+			raid_io = get_raid_io(r1_info, raid_ch, SPDK_BDEV_IO_TYPE_READ, small_io_blocks);
+			raid1_submit_read_request(raid_io);
+			CU_ASSERT(raid_io->base_bdev_io_submitted == i);
+			put_raid_io(raid_io);
+		}
+	}
+
+	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
+		CU_ASSERT(raid1_ch->read_blocks_outstanding[i] == n * small_io_blocks);
+		raid1_ch->read_blocks_outstanding[i] = 0;
+	}
+
+	/*
+	 * Submit one big and many small IOs. The small IOs should not land on the same base bdev
+	 * as the big until the submitted block count is matched.
+	 */
+	raid_io = get_raid_io(r1_info, raid_ch, SPDK_BDEV_IO_TYPE_READ, big_io_blocks);
+	raid1_submit_read_request(raid_io);
+	big_io_base_bdev_idx = raid_io->base_bdev_io_submitted;
+	put_raid_io(raid_io);
+
+	blocks_remaining = big_io_blocks * (raid_bdev->num_base_bdevs - 1);
+	while (blocks_remaining > 0) {
+		raid_io = get_raid_io(r1_info, raid_ch, SPDK_BDEV_IO_TYPE_READ, small_io_blocks);
+		raid1_submit_read_request(raid_io);
+		CU_ASSERT(raid_io->base_bdev_io_submitted != big_io_base_bdev_idx);
+		put_raid_io(raid_io);
+		blocks_remaining -= small_io_blocks;
+	}
+
+	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
+		CU_ASSERT(raid1_ch->read_blocks_outstanding[i] == big_io_blocks);
+	}
+
+	raid_io = get_raid_io(r1_info, raid_ch, SPDK_BDEV_IO_TYPE_READ, small_io_blocks);
+	raid1_submit_read_request(raid_io);
+	CU_ASSERT(raid_io->base_bdev_io_submitted == big_io_base_bdev_idx);
+	put_raid_io(raid_io);
+}
+
+static void
+test_raid1_read_balancing(void)
+{
+	run_for_each_raid1_config(_test_raid1_read_balancing);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -134,6 +264,7 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("raid1", test_setup, test_cleanup);
 	CU_ADD_TEST(suite, test_raid1_start);
+	CU_ADD_TEST(suite, test_raid1_read_balancing);
 
 	allocate_threads(1);
 	set_thread(0);
