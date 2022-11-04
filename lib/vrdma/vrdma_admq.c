@@ -964,7 +964,7 @@ static int vrdma_modify_backend_qp_to_ready(struct vrdma_ctrl *ctrl,
 		return -1;
 	}
 
-	attr_mask = IBV_QP_PATH_MTU | IBV_QP_DEST_QPN | 
+	attr_mask = IBV_QP_PATH_MTU | IBV_QP_DEST_QPN |
 				IBV_QP_RQ_PSN | IBV_QP_MIN_RNR_TIMER;
 	qp_attr.path_mtu = ctrl->sctrl->bar_curr->mtu > 1024 ?
 				IBV_MTU_2048 : IBV_MTU_1024;
@@ -983,7 +983,7 @@ static int vrdma_modify_backend_qp_to_ready(struct vrdma_ctrl *ctrl,
 		return -1;
 	}
 
-	attr_mask = IBV_QP_SQ_PSN | IBV_QP_RETRY_CNT | 
+	attr_mask = IBV_QP_SQ_PSN | IBV_QP_RETRY_CNT |
 				IBV_QP_RNR_RETRY | IBV_QP_TIMEOUT;
 	qp_attr.sq_psn = 0;
 	qp_attr.retry_cnt = 8;
