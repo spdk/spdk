@@ -840,9 +840,10 @@ static void vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,
 	ctrl->vdev->vcq_cnt++;
 	vcq->veq = veq;
 	vcq->cq_idx = cq_idx;
-	vcq->log_cqe_entry_num = aqe->req.create_cq_req.log_cqe_entry_num;
-	vcq->log_cqe_size = aqe->req.create_cq_req.log_cqe_size;
-	vcq->log_pagesize = aqe->req.create_cq_req.log_pagesize;
+	vcq->cqe_entry_num =  1 << aqe->req.create_cq_req.log_cqe_entry_num;
+	vcq->cqebb_size =
+		VRDMA_CQEBB_BASE_SIZE * (aqe->req.create_cq_req.cqebb_size + 1);
+	vcq->pagesize = 1 << aqe->req.create_cq_req.log_pagesize;
 	vcq->interrupt_mode = aqe->req.create_cq_req.interrupt_mode;
 	vcq->host_pa = aqe->req.create_cq_req.l0_pa;
 	veq->ref_cnt++;
@@ -928,7 +929,7 @@ static int vrdma_create_backend_qp(struct vrdma_ctrl *ctrl,
 	qp->remote_qpn = VRDMA_INVALID_QPN;
 	qp->bk_qp.qp_attr.qp_type = SNAP_OBJ_DEVX;
 	//qp->bk_qp.qp_attr.sq_size = vqp->sq.comm.wqebb_cnt;
-	qp->bk_qp.qp_attr.sq_size = ctrl->sctrl->bar_curr->mtu;
+	qp->bk_qp.qp_attr.sq_size = ctrl->sctrl->bar_curr->mtu ? ctrl->sctrl->bar_curr->mtu : IBV_MTU_2048;
 	qp->bk_qp.qp_attr.sq_max_sge = 1;
 	qp->bk_qp.qp_attr.sq_max_inline_size = (64 * (vqp->sq.comm.wqebb_size + 1));
 	qp->bk_qp.qp_attr.rq_size = vqp->rq.comm.wqebb_cnt;
@@ -941,6 +942,58 @@ static int vrdma_create_backend_qp(struct vrdma_ctrl *ctrl,
 	vqp->bk_qp[0] = qp;
 	LIST_INSERT_HEAD(&ctrl->bk_qp_list, qp, entry);
 	SPDK_NOTICELOG("\nlizh vrdma_create_backend_qp...done\n");
+	return 0;
+}
+
+static int vrdma_modify_backend_qp_to_ready(struct vrdma_ctrl *ctrl,
+				struct spdk_vrdma_qp *vqp)
+{
+	struct snap_vrdma_bk_qp_rdy_attr rdy_attr = {0};
+	struct ibv_qp_attr qp_attr = {0};
+	struct snap_qp *sqp;
+	int attr_mask;
+
+	SPDK_NOTICELOG("\nlizh vrdma_modify_backend_qp_to_ready...start\n");
+	/* Modify bankend QP to ready (rst2init + init2rtr + rtr2rts)*/
+	sqp = vqp->bk_qp[0]->bk_qp.sqp;
+	qp_attr.qp_access_flags = IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_REMOTE_READ |
+				IBV_ACCESS_REMOTE_ATOMIC | IBV_ACCESS_LOCAL_WRITE;
+	attr_mask = IBV_QP_ACCESS_FLAGS;
+	if (snap_vrdma_modify_bankend_qp_rst2init(sqp, &qp_attr, attr_mask)) {
+		SPDK_ERRLOG("Failed to modify bankend QP reset to init");
+		return -1;
+	}
+
+	attr_mask = IBV_QP_PATH_MTU | IBV_QP_DEST_QPN | 
+				IBV_QP_RQ_PSN | IBV_QP_MIN_RNR_TIMER;
+	qp_attr.path_mtu = ctrl->sctrl->bar_curr->mtu > 1024 ?
+				IBV_MTU_2048 : IBV_MTU_1024;
+	qp_attr.dest_qp_num = vqp->bk_qp[0]->remote_qpn;
+	if (qp_attr.dest_qp_num == VRDMA_INVALID_QPN) {
+		SPDK_ERRLOG("Failed to modify bankend QP for invalid remote qpn");
+		return -1;
+	}
+	qp_attr.rq_psn = 0;
+	qp_attr.min_rnr_timer = 12;
+	rdy_attr.dest_mac = vqp->bk_qp[0]->dest_mac;
+	rdy_attr.rgid_rip = vqp->bk_qp[0]->rgid_rip;
+	rdy_attr.src_addr_index = 0;
+	if (snap_vrdma_modify_bankend_qp_init2rtr(sqp, &qp_attr, attr_mask, &rdy_attr)) {
+		SPDK_ERRLOG("Failed to modify bankend QP init to RTR");
+		return -1;
+	}
+
+	attr_mask = IBV_QP_SQ_PSN | IBV_QP_RETRY_CNT | 
+				IBV_QP_RNR_RETRY | IBV_QP_TIMEOUT;
+	qp_attr.sq_psn = 0;
+	qp_attr.retry_cnt = 8;
+	qp_attr.rnr_retry = 8;
+	qp_attr.timeout = 32;
+	if (snap_vrdma_modify_bankend_qp_rtr2rts(sqp, &qp_attr, attr_mask)) {
+		SPDK_ERRLOG("Failed to modify bankend QP RTR to RTS");
+		return -1;
+	}
+	SPDK_NOTICELOG("\nlizh vrdma_modify_backend_qp_to_ready...done\n");
 	return 0;
 }
 
@@ -980,17 +1033,17 @@ static int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 	q_attr.vqpn = vqp->qp_idx;
 	vqp->snap_queue = ctrl->sctrl->q_ops->create(ctrl->sctrl, &q_attr);
 	if (!vqp->snap_queue) {
-		SPDK_ERRLOG("Failed to create rq dma queue");
+		SPDK_ERRLOG("Failed to create qp dma queue");
 		return -1;
 	}
 	vqp->q_comp.func = vrdma_qp_sm_dma_cb;
 	vqp->q_comp.count = 1;
 	vqp->sm_state = VRDMA_QP_STATE_IDLE;
-
-	vqp->rq.comm.wqebb_size = aqe->req.create_qp_req.rq_wqebb_size;
+	vqp->rq.comm.wqebb_size =
+		VRDMA_QP_WQEBB_BASE_SIZE * (aqe->req.create_qp_req.rq_wqebb_size + 1);
 	vqp->rq.comm.wqebb_cnt = 1 << aqe->req.create_qp_req.log_rq_wqebb_cnt;
-	wqe_buff_size = (VRDMA_QP_WQEBB_BASE_SIZE * (vqp->rq.comm.wqebb_size + 1)) * vqp->rq.comm.wqebb_cnt;
-    q_buff_size  = wqe_buff_size + ((1 << rq_vcq->log_cqe_size) * (1 << rq_vcq->log_cqe_entry_num));
+	wqe_buff_size = vqp->rq.comm.wqebb_size * vqp->rq.comm.wqebb_cnt;
+    q_buff_size  = wqe_buff_size + (rq_vcq->cqebb_size * rq_vcq->cqe_entry_num);
 	vqp->rq.rq_buff = spdk_malloc(q_buff_size, 0x10, NULL, SPDK_ENV_LCORE_ID_ANY,
                              SPDK_MALLOC_DMA);
     if (!vqp->rq.rq_buff) {
@@ -1006,10 +1059,11 @@ static int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 		SPDK_ERRLOG("Failed to register rq mr");
         goto free_rq_buff;
     }
-	vqp->sq.comm.wqebb_size = aqe->req.create_qp_req.sq_wqebb_size;
+	vqp->sq.comm.wqebb_size =
+		VRDMA_QP_WQEBB_BASE_SIZE * (aqe->req.create_qp_req.sq_wqebb_size + 1);
 	vqp->sq.comm.wqebb_cnt = 1 << aqe->req.create_qp_req.log_sq_wqebb_cnt;
-	wqe_buff_size = (VRDMA_QP_WQEBB_BASE_SIZE * (vqp->sq.comm.wqebb_size + 1)) * vqp->sq.comm.wqebb_cnt;
-    q_buff_size  = wqe_buff_size + ((1 << sq_vcq->log_cqe_size) * (1 << sq_vcq->log_cqe_entry_num));
+	wqe_buff_size = vqp->sq.comm.wqebb_size * vqp->sq.comm.wqebb_cnt;
+    q_buff_size  = wqe_buff_size + (sq_vcq->cqebb_size * sq_vcq->cqe_entry_num);
 	vqp->sq.sq_buff = spdk_malloc(q_buff_size, 0x10, NULL, SPDK_ENV_LCORE_ID_ANY,
                              SPDK_MALLOC_DMA);
     if (!vqp->sq.sq_buff) {
@@ -1110,7 +1164,8 @@ static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
 					aqe->resp.create_qp_resp.err_code);
 		return;
 	}
-	qp_idx = spdk_bit_array_find_first_clear(free_vqp_ids, 0);
+	qp_idx = spdk_bit_array_find_first_clear(free_vqp_ids,
+			VRDMA_NORMAL_VQP_START_IDX);
 	if (qp_idx == UINT32_MAX) {
 		aqe->resp.create_qp_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
 		SPDK_ERRLOG("Failed to allocate qp_idx, err(%d)",
@@ -1271,11 +1326,7 @@ static void vrdma_aq_query_qp(struct vrdma_ctrl *ctrl,
 static void vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
-	struct snap_vrdma_bk_qp_rdy_attr rdy_attr = {0};
 	struct spdk_vrdma_qp *vqp = NULL;
-	struct ibv_qp_attr qp_attr;
-	struct snap_qp *sqp;
-	int attr_mask;
 
 	SPDK_NOTICELOG("\nlizh vrdma_aq_modify_qp..qp_handle=0x%x.start\n",
 				aqe->req.modify_qp_req.qp_handle);
@@ -1314,7 +1365,6 @@ static void vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
 	if (aqe->req.modify_qp_req.qp_attr_mask & IBV_QP_DEST_QPN){
 		vqp->dest_qp_num = aqe->req.modify_qp_req.dest_qp_num;
 	}
-	/* lizh : Waiting for tencent add define qp_attr_mask*/
 	if (aqe->req.modify_qp_req.qp_attr_mask & IBV_QP_AV){
 		vqp->sip = aqe->req.modify_qp_req.sip;
 		vqp->dip = aqe->req.modify_qp_req.dip;
@@ -1337,65 +1387,23 @@ static void vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
 	if (aqe->req.modify_qp_req.qp_attr_mask & IBV_QP_STATE){
 		if (vqp->qp_state == IBV_QPS_RESET &&
 			aqe->req.modify_qp_req.qp_state >= IBV_QPS_INIT) {
-			/* Modify bankend QP to ready (rst2init + init2rtr + rtr2rts)*/
-			sqp = vqp->bk_qp[0]->bk_qp.sqp;
-			qp_attr.qp_access_flags = IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_REMOTE_READ |
-						 IBV_ACCESS_REMOTE_ATOMIC | IBV_ACCESS_LOCAL_WRITE;
-			attr_mask = IBV_QP_ACCESS_FLAGS;
-			if (snap_vrdma_modify_bankend_qp_rst2init(sqp, &qp_attr, attr_mask)) {
+			if (vrdma_modify_backend_qp_to_ready(ctrl, vqp)) {
 				aqe->resp.modify_qp_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_UNKNOWN;
-				SPDK_ERRLOG("Failed to modify bankend QP %d to init, err(%d)",
+				SPDK_ERRLOG("Failed to modify bankend QP %d to ready, err(%d)",
 					aqe->req.modify_qp_req.qp_handle,
 					aqe->resp.modify_qp_resp.err_code);
-				return;
-			}
-
-			attr_mask = IBV_QP_PATH_MTU | IBV_QP_DEST_QPN | 
-						IBV_QP_RQ_PSN | IBV_QP_MIN_RNR_TIMER;
-			qp_attr.path_mtu = ctrl->sctrl->bar_curr->mtu > 1024 ?
-						IBV_MTU_2048 : IBV_MTU_1024;
-			qp_attr.dest_qp_num = vqp->bk_qp[0]->remote_qpn;
-			if (qp_attr.dest_qp_num == VRDMA_INVALID_QPN) {
-				aqe->resp.modify_qp_resp.err_code =
-				VRDMA_AQ_MSG_ERR_CODE_UNKNOWN;
-				SPDK_ERRLOG("Failed to modify bankend QP %d for invalid remote qpn, err(%d)",
-					aqe->req.modify_qp_req.qp_handle,
-					aqe->resp.modify_qp_resp.err_code);
-				return;
-			}
-			qp_attr.rq_psn = 0;
-			qp_attr.min_rnr_timer = 12;
-			rdy_attr.dest_mac = vqp->bk_qp[0]->dest_mac;
-			rdy_attr.rgid_rip = vqp->bk_qp[0]->rgid_rip;
-			rdy_attr.src_addr_index = 0;
-			if (snap_vrdma_modify_bankend_qp_init2rtr(sqp, &qp_attr, attr_mask, &rdy_attr)) {
-				aqe->resp.modify_qp_resp.err_code =
-				VRDMA_AQ_MSG_ERR_CODE_UNKNOWN;
-				SPDK_ERRLOG("Failed to modify bankend QP %d to RTR, err(%d)",
-					aqe->req.modify_qp_req.qp_handle,
-					aqe->resp.modify_qp_resp.err_code);
-				return;
-			}
-
-			attr_mask = IBV_QP_SQ_PSN | IBV_QP_RETRY_CNT | 
-						IBV_QP_RNR_RETRY | IBV_QP_TIMEOUT;
-			qp_attr.sq_psn = 0;
-			qp_attr.retry_cnt = 8;
-			qp_attr.rnr_retry = 8;
-			qp_attr.timeout = 32;
-			if (snap_vrdma_modify_bankend_qp_rtr2rts(sqp, &qp_attr, attr_mask)) {
-				aqe->resp.modify_qp_resp.err_code =
-				VRDMA_AQ_MSG_ERR_CODE_UNKNOWN;
-				SPDK_ERRLOG("Failed to modify bankend QP %d to RTS, err(%d)",
-					aqe->req.modify_qp_req.qp_handle,
-					aqe->resp.modify_qp_resp.err_code);
-				return;
 			}
 		}
-		//init2rtr qp join poller: lei API
 		if (vqp->qp_state == IBV_QPS_INIT &&
 			aqe->req.modify_qp_req.qp_state == IBV_QPS_RTR) {
+			/* init2rtr vqp join poller-group */
+			snap_vrdma_sched_vq(ctrl->sctrl, vqp->snap_queue);
+		}
+		if (vqp->qp_state != IBV_QPS_ERR &&
+			aqe->req.modify_qp_req.qp_state == IBV_QPS_ERR) {
+			/* Take vqp out of poller-group when it changed to ERR state */
+			snap_vrdma_desched_vq(vqp->snap_queue);
 		}
 		vqp->qp_state = aqe->req.modify_qp_req.qp_state;
 	}
@@ -1726,7 +1734,7 @@ int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
 				return -1;		
 	}
 
-#if 0
+#if 1
 	/* lizh:Just for test*/
 	if (aqe->hdr.opcode > VRDMA_ADMIN_DEREG_MR && 
 		aqe->hdr.opcode != VRDMA_ADMIN_CREATE_AH &&

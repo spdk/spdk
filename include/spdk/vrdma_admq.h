@@ -45,8 +45,7 @@ extern struct spdk_bit_array *free_vcq_ids;
 
 #define VRDMA_NUM_MSIX_VEC                  (64) 
 #define VRDMA_ADMINQ_SIZE                   (1024)
-#define VRDMA_ADMINQ_MSG_INLINE_LEN         (64) 
-#define VRDMA_CEQ_SIZE                      (1024) /* need to be discussed */
+#define VRDMA_ADMINQ_MSG_INLINE_LEN         (64)
 #define VRDMA_ADMINQ_MSIX_VEC_IDX           (0)
 #define VRDMA_CEQ_START_MSIX_VEC_IDX        (1)
 #define VRDMA_AQ_HDR_MEGIC_NUM 				(0xAA88)
@@ -122,6 +121,7 @@ enum vrdma_device_cap_flags {
 #define VRDMA_MAX_QP_NUM     0x40000
 #define VRDMA_DEV_MAX_QP     0x2000
 #define VRDMA_DEV_MAX_QP_SZ  0x2000000
+#define VRDMA_NORMAL_VQP_START_IDX  0x2
 #define VRDMA_MAX_CQ_NUM     0x40000
 #define VRDMA_DEV_MAX_CQ     0x2000
 #define VRDMA_MAX_EQ_NUM     0x40000
@@ -284,9 +284,10 @@ struct vrdma_destroy_mr_resp {
 	uint32_t err_hint:24;
 } __attribute__((packed));
 
+#define VRDMA_CQEBB_BASE_SIZE 32
 struct vrdma_create_cq_req {
 	uint32_t log_cqe_entry_num:4; /* 2^n */
-	uint32_t log_cqe_size:2; /* 2^n */
+	uint32_t cqebb_size:2; /* based on 32 * (cqebb_size + 1) */
 	uint32_t log_pagesize:3; /* 2^n */
 	uint32_t hop:2;
 	uint32_t interrupt_mode:1;
@@ -311,7 +312,6 @@ struct vrdma_destroy_cq_resp {
 };
 
 #define VRDMA_QP_WQEBB_BASE_SIZE 64
-
 struct vrdma_create_qp_req {
 	uint32_t pd_handle;
 
@@ -370,7 +370,7 @@ struct vrdma_query_qp_resp {
 
 #define vrdma_supported_qp_attr_mask (IBV_QP_STATE | IBV_QP_RQ_PSN | \
 					IBV_QP_SQ_PSN | IBV_QP_DEST_QPN | \
-					IBV_QP_QKEY | IBV_QP_TIMEOUT | \
+					IBV_QP_AV | IBV_QP_QKEY | IBV_QP_TIMEOUT | \
 					IBV_QP_MIN_RNR_TIMER | IBV_QP_RETRY_CNT | \
 					IBV_QP_RNR_RETRY)
 struct vrdma_modify_qp_req {

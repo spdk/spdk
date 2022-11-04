@@ -220,6 +220,12 @@ for following cb functions, device layer need care following return values
 2, for modify and destroy operation, return 0: success, -1: failed
 */
 typedef int (*vrdma_device_notify_op)(struct vrdma_dev *rdev);
+typedef int (*vrdma_admin_open_device_op)(struct vrdma_dev *rdev, 
+										struct vrdma_admin_cmd_entry *cmd);
+typedef int (*vrdma_admin_query_device_op)(struct vrdma_dev *rdev, 
+										struct vrdma_admin_cmd_entry *cmd);
+typedef int (*vrdma_admin_query_port_op)(struct vrdma_dev *rdev, 
+										struct vrdma_admin_cmd_entry *cmd);
 typedef int (*vrdma_admin_query_gid_op)(struct vrdma_dev *rdev, 
 										struct vrdma_admin_cmd_entry *cmd);
 typedef int (*vrdma_admin_modify_gid_op)(struct vrdma_dev *rdev, 
@@ -268,6 +274,9 @@ typedef struct vRdmaServiceOps {
     /* device notify state (probing) to vrdma service */
 	vrdma_device_notify_op vrdma_device_notify;
     /* admin callback */
+	vrdma_admin_open_device_op vrdma_device_open_device;
+	vrdma_admin_query_device_op vrdma_device_query_device;
+	vrdma_admin_query_port_op vrdma_device_query_port;
 	vrdma_admin_query_gid_op vrdma_device_query_gid;
 	vrdma_admin_modify_gid_op vrdma_device_modify_gid;
 	vrdma_admin_create_eq_op vrdma_device_create_eq;
