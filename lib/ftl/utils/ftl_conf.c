@@ -162,5 +162,9 @@ ftl_conf_is_valid(const struct spdk_ftl_conf *conf)
 		return false;
 	}
 
+	if (conf->l2p_dram_limit == 0) {
+		return false;
+	}
+
 	return true;
 }
