@@ -114,7 +114,11 @@ struct spdk_vrdma_cq {
 	uint32_t cqe_entry_num;
 	uint32_t pagesize;
 	uint32_t cqebb_size; /* cqebb_size is base on 64 * (log_cqebb_size + 1) */
+	uint32_t pre_pi;
+	uint32_t pi;
+	uint32_t ci;
 	uint64_t host_pa;
+	uint64_t ci_pa;
 };
 
 #define VRDMA_MAX_BK_QP_PER_VQP 4
@@ -130,6 +134,8 @@ enum vrdma_qp_sm_state_type {
         VRDMA_QP_STATE_WQE_PARSE,
         VRDMA_QP_STATE_WQE_MAP_BACKEND,
         VRDMA_QP_STATE_WQE_SUBMIT,
+        VRDMA_QP_STATE_POLL_CQ_CI,
+        VRDMA_QP_STATE_GEN_COMP,
         VRDMA_QP_STATE_FATAL_ERR,
         VRDMA_QP_NUM_OF_STATES,
 };
