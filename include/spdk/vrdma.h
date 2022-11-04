@@ -110,10 +110,10 @@ struct spdk_vrdma_cq {
 	uint32_t cq_idx;
 	uint32_t ref_cnt;
 	struct spdk_vrdma_eq *veq;
-	uint32_t log_cqe_entry_num:4; /* 2^n */
-	uint32_t log_cqe_size:2; /* 2^n */
-	uint32_t log_pagesize:3; /* 2^n */
 	uint32_t interrupt_mode:1;
+	uint32_t cqe_entry_num;
+	uint32_t pagesize;
+	uint32_t cqebb_size; /* cqebb_size is base on 64 * (log_cqebb_size + 1) */
 	uint64_t host_pa;
 };
 
@@ -137,33 +137,33 @@ enum vrdma_qp_sm_state_type {
 struct vrdma_q_comm {
 	uint64_t wqe_buff_pa;
 	uint64_t doorbell_pa;
-	uint16_t wqebb_size:2; /* based on 64 * (sq_wqebb_size + 1) */
 	uint16_t log_pagesize:5; /* 2 ^ (n) */
 	uint16_t hop:2;
-    uint16_t qp_type:3;
-    uint16_t sq_sig_all:1;
-	uint16_t reserved:3;
+	uint16_t qp_type:3;
+	uint16_t sq_sig_all:1;
+	uint16_t reserved:5;
 	uint16_t wqebb_cnt; /* sqe entry cnt */
+	uint32_t wqebb_size; /* wqebb_size is based on 64 * (log_wqebb_size + 1) */
 	uint16_t pi;
 	uint16_t pre_pi;
 	uint32_t num_to_parse;
-    struct ibv_mr *mr;
+	struct ibv_mr *mr;
 };
 
 struct vrdma_sq {
 	struct vrdma_q_comm comm;
 	struct vrdma_send_wqe *sq_buff; /* wqe buff */
-    void *cqe_buff;
+	void *cqe_buff;
 };
 
 struct vrdma_rq {
 	struct vrdma_q_comm comm;
 	struct vrdma_recv_wqe *rq_buff; /* wqe buff */
-    void *cqe_buff;
+	void *cqe_buff;
 };
 
 struct spdk_vrdma_qp {
-    LIST_ENTRY(spdk_vrdma_qp) entry;
+	LIST_ENTRY(spdk_vrdma_qp) entry;
 	uint32_t qp_idx;
 	uint32_t ref_cnt;
 	uint32_t qp_state;
@@ -182,7 +182,7 @@ struct spdk_vrdma_qp {
 	struct spdk_vrdma_cq *rq_vcq;
 	struct spdk_vrdma_cq *sq_vcq;
 	struct snap_dma_completion q_comp;
-    struct snap_vrdma_queue *snap_queue;
+	struct snap_vrdma_queue *snap_queue;
 	struct vrdma_qp_state_machine *custom_sm;
 	enum vrdma_qp_sm_state_type sm_state;
 	struct vrdma_backend_qp *bk_qp[VRDMA_MAX_BK_QP_PER_VQP];
@@ -191,9 +191,9 @@ struct spdk_vrdma_qp {
 };
 
 struct spdk_vrdma_dev {
-    uint32_t devid; /*PF_id*/
+	uint32_t devid; /*PF_id*/
 	char emu_name[MAX_VRDMA_DEV_LEN];
-    struct ibv_device *emu_mgr;
+	struct ibv_device *emu_mgr;
 	uint32_t vpd_cnt;
 	uint32_t vmr_cnt;
 	uint32_t vah_cnt;
@@ -209,7 +209,7 @@ struct spdk_vrdma_dev {
 };
 
 struct spdk_vrdma_ctx {
-    uint32_t dpa_enabled:1;
+	uint32_t dpa_enabled:1;
 	char emu_manager[MAX_VRDMA_DEV_LEN];
 };
 
