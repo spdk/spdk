@@ -770,7 +770,7 @@ ftl_mngt_recover_unmap_map_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int s
 		return;
 	}
 
-	num_md_blocks = ftl_md_get_buffer_size(md) / lbas_in_page;
+	num_md_blocks = ftl_md_get_buffer_size(md) / FTL_BLOCK_SIZE;
 
 	for (i = 0; i < num_md_blocks; ++i, page_vss++) {
 		lba = page_vss->unmap.start_lba;
