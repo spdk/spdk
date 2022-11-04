@@ -1065,6 +1065,8 @@ ut_init_bdev(struct spdk_bdev_opts *opts)
 		rc = spdk_bdev_set_opts(opts);
 		CU_ASSERT(rc == 0);
 	}
+	rc = spdk_iobuf_initialize();
+	CU_ASSERT(rc == 0);
 	spdk_bdev_initialize(bdev_init_cb, NULL);
 	poll_threads();
 }
@@ -1073,6 +1075,7 @@ static void
 ut_fini_bdev(void)
 {
 	spdk_bdev_finish(bdev_fini_cb, NULL);
+	spdk_iobuf_finish(bdev_fini_cb, NULL);
 	poll_threads();
 }
 

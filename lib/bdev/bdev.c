@@ -38,6 +38,8 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define SPDK_BDEV_AUTO_EXAMINE			true
 #define BUF_SMALL_POOL_SIZE			8191
 #define BUF_LARGE_POOL_SIZE			1023
+#define BUF_SMALL_CACHE_SIZE			128
+#define BUF_LARGE_CACHE_SIZE			16
 #define NOMEM_THRESHOLD_COUNT			8
 
 #define SPDK_BDEV_QOS_TIMESLICE_IN_USEC		1000
@@ -47,8 +49,6 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define SPDK_BDEV_QOS_MIN_BYTES_PER_SEC		(1024 * 1024)
 #define SPDK_BDEV_QOS_LIMIT_NOT_DEFINED		UINT64_MAX
 #define SPDK_BDEV_IO_POLL_INTERVAL_IN_MSEC	1000
-
-#define SPDK_BDEV_POOL_ALIGNMENT 512
 
 /* The maximum number of children requests for a UNMAP or WRITE ZEROES command
  * when splitting into children requests at a time.
@@ -79,9 +79,6 @@ RB_GENERATE_STATIC(bdev_name_tree, spdk_bdev_name, node, bdev_name_cmp);
 
 struct spdk_bdev_mgr {
 	struct spdk_mempool *bdev_io_pool;
-
-	struct spdk_mempool *buf_small_pool;
-	struct spdk_mempool *buf_large_pool;
 
 	void *zero_buffer;
 
@@ -190,9 +187,6 @@ struct spdk_bdev_qos {
 };
 
 struct spdk_bdev_mgmt_channel {
-	bdev_io_stailq_t need_buf_small;
-	bdev_io_stailq_t need_buf_large;
-
 	/*
 	 * Each thread keeps a cache of bdev_io - this allows
 	 *  bdev threads which are *not* DPDK threads to still
@@ -203,6 +197,8 @@ struct spdk_bdev_mgmt_channel {
 	bdev_io_stailq_t per_thread_cache;
 	uint32_t	per_thread_cache_count;
 	uint32_t	bdev_io_cache_size;
+
+	struct spdk_iobuf_channel iobuf;
 
 	TAILQ_HEAD(, spdk_bdev_shared_resource)	shared_resources;
 	TAILQ_HEAD(, spdk_bdev_io_wait_entry)	io_wait_queue;
@@ -374,7 +370,7 @@ static int bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_cha
 static inline void bdev_io_complete(void *ctx);
 
 static bool bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_io *bio_to_abort);
-static bool bdev_abort_buf_io(bdev_io_stailq_t *queue, struct spdk_bdev_io *bio_to_abort);
+static bool bdev_abort_buf_io(struct spdk_bdev_mgmt_channel *ch, struct spdk_bdev_io *bio_to_abort);
 
 void
 spdk_bdev_get_opts(struct spdk_bdev_opts *opts, size_t opts_size)
@@ -409,10 +405,16 @@ spdk_bdev_get_opts(struct spdk_bdev_opts *opts, size_t opts_size)
 #undef SET_FIELD
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(bdev_opts_small_buf_pool_size, "spdk_bdev_opts.small_buf_pool_size",
+			      "v23.05", 0);
+SPDK_LOG_DEPRECATION_REGISTER(bdev_opts_large_buf_pool_size, "spdk_bdev_opts.large_buf_pool_size",
+			      "v23.05", 0);
 int
 spdk_bdev_set_opts(struct spdk_bdev_opts *opts)
 {
+	struct spdk_iobuf_opts iobuf_opts;
 	uint32_t min_pool_size;
+	int rc;
 
 	if (!opts) {
 		SPDK_ERRLOG("opts cannot be NULL\n");
@@ -438,14 +440,11 @@ spdk_bdev_set_opts(struct spdk_bdev_opts *opts)
 		return -1;
 	}
 
-	if (opts->small_buf_pool_size < BUF_SMALL_POOL_SIZE) {
-		SPDK_ERRLOG("small_buf_pool_size must be at least %" PRIu32 "\n", BUF_SMALL_POOL_SIZE);
-		return -1;
+	if (opts->small_buf_pool_size != BUF_SMALL_POOL_SIZE) {
+		SPDK_LOG_DEPRECATED(bdev_opts_small_buf_pool_size);
 	}
-
-	if (opts->large_buf_pool_size < BUF_LARGE_POOL_SIZE) {
-		SPDK_ERRLOG("large_buf_pool_size must be at least %" PRIu32 "\n", BUF_LARGE_POOL_SIZE);
-		return -1;
+	if (opts->large_buf_pool_size != BUF_LARGE_POOL_SIZE) {
+		SPDK_LOG_DEPRECATED(bdev_opts_large_buf_pool_size);
 	}
 
 #define SET_FIELD(field) \
@@ -458,6 +457,16 @@ spdk_bdev_set_opts(struct spdk_bdev_opts *opts)
 	SET_FIELD(bdev_auto_examine);
 	SET_FIELD(small_buf_pool_size);
 	SET_FIELD(large_buf_pool_size);
+
+	spdk_iobuf_get_opts(&iobuf_opts);
+	iobuf_opts.small_pool_count = opts->small_buf_pool_size;
+	iobuf_opts.large_pool_count = opts->large_buf_pool_size;
+
+	rc = spdk_iobuf_set_opts(&iobuf_opts);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to set iobuf opts\n");
+		return -1;
+	}
 
 	g_bdev_opts.opts_size = opts->opts_size;
 
@@ -994,31 +1003,10 @@ bdev_io_get_max_buf_len(struct spdk_bdev_io *bdev_io, uint64_t len)
 static void
 _bdev_io_put_buf(struct spdk_bdev_io *bdev_io, void *buf, uint64_t buf_len)
 {
-	struct spdk_mempool *pool;
-	struct spdk_bdev_io *tmp;
-	bdev_io_stailq_t *stailq;
 	struct spdk_bdev_mgmt_channel *ch;
-	uint64_t max_len;
 
-	max_len = bdev_io_get_max_buf_len(bdev_io, buf_len);
 	ch = bdev_io->internal.ch->shared_resource->mgmt_ch;
-
-	if (max_len <= SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_SMALL_BUF_MAX_SIZE) +
-	    SPDK_BDEV_POOL_ALIGNMENT) {
-		pool = g_bdev_mgr.buf_small_pool;
-		stailq = &ch->need_buf_small;
-	} else {
-		pool = g_bdev_mgr.buf_large_pool;
-		stailq = &ch->need_buf_large;
-	}
-
-	if (STAILQ_EMPTY(stailq)) {
-		spdk_mempool_put(pool, buf);
-	} else {
-		tmp = STAILQ_FIRST(stailq);
-		STAILQ_REMOVE_HEAD(stailq, internal.buf_link);
-		_bdev_io_set_buf(tmp, buf, tmp->internal.buf_len);
-	}
+	spdk_iobuf_put(&ch->iobuf, buf, bdev_io_get_max_buf_len(bdev_io, buf_len));
 }
 
 static void
@@ -1228,40 +1216,35 @@ _bdev_io_push_bounce_data_buffer(struct spdk_bdev_io *bdev_io, bdev_copy_bounce_
 }
 
 static void
+bdev_io_get_iobuf_cb(struct spdk_iobuf_entry *iobuf, void *buf)
+{
+	struct spdk_bdev_io *bdev_io;
+
+	bdev_io = SPDK_CONTAINEROF(iobuf, struct spdk_bdev_io, internal.iobuf);
+	_bdev_io_set_buf(bdev_io, buf, bdev_io->internal.buf_len);
+}
+
+static void
 bdev_io_get_buf(struct spdk_bdev_io *bdev_io, uint64_t len)
 {
-	struct spdk_mempool *pool;
-	bdev_io_stailq_t *stailq;
 	struct spdk_bdev_mgmt_channel *mgmt_ch;
 	uint64_t max_len;
 	void *buf;
 
 	assert(spdk_bdev_io_get_thread(bdev_io) == spdk_get_thread());
+	mgmt_ch = bdev_io->internal.ch->shared_resource->mgmt_ch;
 	max_len = bdev_io_get_max_buf_len(bdev_io, len);
-	if (max_len > SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_LARGE_BUF_MAX_SIZE) +
-	    SPDK_BDEV_POOL_ALIGNMENT) {
+
+	if (spdk_unlikely(max_len > mgmt_ch->iobuf.large.bufsize)) {
 		SPDK_ERRLOG("Length %" PRIu64 " is larger than allowed\n", max_len);
 		bdev_io_get_buf_complete(bdev_io, false);
 		return;
 	}
 
-	mgmt_ch = bdev_io->internal.ch->shared_resource->mgmt_ch;
-
 	bdev_io->internal.buf_len = len;
-
-	if (max_len <= SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_SMALL_BUF_MAX_SIZE) +
-	    SPDK_BDEV_POOL_ALIGNMENT) {
-		pool = g_bdev_mgr.buf_small_pool;
-		stailq = &mgmt_ch->need_buf_small;
-	} else {
-		pool = g_bdev_mgr.buf_large_pool;
-		stailq = &mgmt_ch->need_buf_large;
-	}
-
-	buf = spdk_mempool_get(pool);
-	if (!buf) {
-		STAILQ_INSERT_TAIL(stailq, bdev_io, internal.buf_link);
-	} else {
+	buf = spdk_iobuf_get(&mgmt_ch->iobuf, max_len, &bdev_io->internal.iobuf,
+			     bdev_io_get_iobuf_cb);
+	if (buf != NULL) {
 		_bdev_io_set_buf(bdev_io, buf, len);
 	}
 }
@@ -1416,13 +1399,7 @@ bdev_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 	struct spdk_bdev_mgmt_channel *ch = ctx_buf;
 	struct spdk_bdev_io *bdev_io;
 
-	if (!STAILQ_EMPTY(&ch->need_buf_small) || !STAILQ_EMPTY(&ch->need_buf_large)) {
-		SPDK_ERRLOG("Pending I/O list wasn't empty on mgmt channel free\n");
-	}
-
-	if (!TAILQ_EMPTY(&ch->shared_resources)) {
-		SPDK_ERRLOG("Module channel list wasn't empty on mgmt channel free\n");
-	}
+	spdk_iobuf_channel_fini(&ch->iobuf);
 
 	while (!STAILQ_EMPTY(&ch->per_thread_cache)) {
 		bdev_io = STAILQ_FIRST(&ch->per_thread_cache);
@@ -1440,9 +1417,13 @@ bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
 	struct spdk_bdev_mgmt_channel *ch = ctx_buf;
 	struct spdk_bdev_io *bdev_io;
 	uint32_t i;
+	int rc;
 
-	STAILQ_INIT(&ch->need_buf_small);
-	STAILQ_INIT(&ch->need_buf_large);
+	rc = spdk_iobuf_channel_init(&ch->iobuf, "bdev", BUF_SMALL_CACHE_SIZE, BUF_LARGE_CACHE_SIZE);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to create iobuf channel: %s\n", spdk_strerror(-rc));
+		return -1;
+	}
 
 	STAILQ_INIT(&ch->per_thread_cache);
 	ch->bdev_io_cache_size = g_bdev_opts.bdev_io_cache_size;
@@ -1595,7 +1576,6 @@ bdev_modules_init(void)
 void
 spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 {
-	int cache_size;
 	int rc = 0;
 	char mempool_name[32];
 
@@ -1609,6 +1589,13 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 
 	snprintf(mempool_name, sizeof(mempool_name), "bdev_io_%d", getpid());
 
+	rc = spdk_iobuf_register_module("bdev");
+	if (rc != 0) {
+		SPDK_ERRLOG("could not register bdev iobuf module: %s\n", spdk_strerror(-rc));
+		bdev_init_complete(-1);
+		return;
+	}
+
 	g_bdev_mgr.bdev_io_pool = spdk_mempool_create(mempool_name,
 				  g_bdev_opts.bdev_io_pool_size,
 				  sizeof(struct spdk_bdev_io) +
@@ -1618,41 +1605,6 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 
 	if (g_bdev_mgr.bdev_io_pool == NULL) {
 		SPDK_ERRLOG("could not allocate spdk_bdev_io pool\n");
-		bdev_init_complete(-1);
-		return;
-	}
-
-	/**
-	 * Ensure no more than half of the total buffers end up local caches, by
-	 *   using spdk_env_get_core_count() to determine how many local caches we need
-	 *   to account for.
-	 */
-	cache_size = BUF_SMALL_POOL_SIZE / (2 * spdk_env_get_core_count());
-	snprintf(mempool_name, sizeof(mempool_name), "buf_small_pool_%d", getpid());
-
-	g_bdev_mgr.buf_small_pool = spdk_mempool_create(mempool_name,
-				    g_bdev_opts.small_buf_pool_size,
-				    SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_SMALL_BUF_MAX_SIZE) +
-				    SPDK_BDEV_POOL_ALIGNMENT,
-				    cache_size,
-				    SPDK_ENV_SOCKET_ID_ANY);
-	if (!g_bdev_mgr.buf_small_pool) {
-		SPDK_ERRLOG("create rbuf small pool failed\n");
-		bdev_init_complete(-1);
-		return;
-	}
-
-	cache_size = BUF_LARGE_POOL_SIZE / (2 * spdk_env_get_core_count());
-	snprintf(mempool_name, sizeof(mempool_name), "buf_large_pool_%d", getpid());
-
-	g_bdev_mgr.buf_large_pool = spdk_mempool_create(mempool_name,
-				    g_bdev_opts.large_buf_pool_size,
-				    SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_LARGE_BUF_MAX_SIZE) +
-				    SPDK_BDEV_POOL_ALIGNMENT,
-				    cache_size,
-				    SPDK_ENV_SOCKET_ID_ANY);
-	if (!g_bdev_mgr.buf_large_pool) {
-		SPDK_ERRLOG("create rbuf large pool failed\n");
 		bdev_init_complete(-1);
 		return;
 	}
@@ -1697,28 +1649,6 @@ bdev_mgr_unregister_cb(void *io_device)
 		}
 
 		spdk_mempool_free(g_bdev_mgr.bdev_io_pool);
-	}
-
-	if (g_bdev_mgr.buf_small_pool) {
-		if (spdk_mempool_count(g_bdev_mgr.buf_small_pool) != g_bdev_opts.small_buf_pool_size) {
-			SPDK_ERRLOG("Small buffer pool count is %zu but should be %u\n",
-				    spdk_mempool_count(g_bdev_mgr.buf_small_pool),
-				    g_bdev_opts.small_buf_pool_size);
-			assert(false);
-		}
-
-		spdk_mempool_free(g_bdev_mgr.buf_small_pool);
-	}
-
-	if (g_bdev_mgr.buf_large_pool) {
-		if (spdk_mempool_count(g_bdev_mgr.buf_large_pool) != g_bdev_opts.large_buf_pool_size) {
-			SPDK_ERRLOG("Large buffer pool count is %zu but should be %u\n",
-				    spdk_mempool_count(g_bdev_mgr.buf_large_pool),
-				    g_bdev_opts.large_buf_pool_size);
-			assert(false);
-		}
-
-		spdk_mempool_free(g_bdev_mgr.buf_large_pool);
 	}
 
 	spdk_free(g_bdev_mgr.zero_buffer);
@@ -2191,8 +2121,7 @@ bdev_io_do_submit(struct spdk_bdev_channel *bdev_ch, struct spdk_bdev_io *bdev_i
 		struct spdk_bdev_io *bio_to_abort = bdev_io->u.abort.bio_to_abort;
 
 		if (bdev_abort_queued_io(&shared_resource->nomem_io, bio_to_abort) ||
-		    bdev_abort_buf_io(&mgmt_channel->need_buf_small, bio_to_abort) ||
-		    bdev_abort_buf_io(&mgmt_channel->need_buf_large, bio_to_abort)) {
+		    bdev_abort_buf_io(mgmt_channel, bio_to_abort)) {
 			_bdev_io_complete_in_submit(bdev_ch, bdev_io,
 						    SPDK_BDEV_IO_STATUS_SUCCESS);
 			return;
@@ -3521,29 +3450,34 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-/*
- * Abort I/O that are waiting on a data buffer.  These types of I/O are
- *  linked using the spdk_bdev_io internal.buf_link TAILQ_ENTRY.
- */
-static void
-bdev_abort_all_buf_io(bdev_io_stailq_t *queue, struct spdk_bdev_channel *ch)
+static int
+bdev_abort_all_buf_io_cb(struct spdk_iobuf_channel *ch, struct spdk_iobuf_entry *entry,
+			 void *cb_ctx)
 {
-	bdev_io_stailq_t tmp;
+	struct spdk_bdev_channel *bdev_ch = cb_ctx;
 	struct spdk_bdev_io *bdev_io;
+	uint64_t buf_len;
 
-	STAILQ_INIT(&tmp);
-
-	while (!STAILQ_EMPTY(queue)) {
-		bdev_io = STAILQ_FIRST(queue);
-		STAILQ_REMOVE_HEAD(queue, internal.buf_link);
-		if (bdev_io->internal.ch == ch) {
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_ABORTED);
-		} else {
-			STAILQ_INSERT_TAIL(&tmp, bdev_io, internal.buf_link);
-		}
+	bdev_io = SPDK_CONTAINEROF(entry, struct spdk_bdev_io, internal.iobuf);
+	if (bdev_io->internal.ch == bdev_ch) {
+		buf_len = bdev_io_get_max_buf_len(bdev_io, bdev_io->internal.buf_len);
+		spdk_iobuf_entry_abort(ch, entry, buf_len);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_ABORTED);
 	}
 
-	STAILQ_SWAP(&tmp, queue, spdk_bdev_io);
+	return 0;
+}
+
+/*
+ * Abort I/O that are waiting on a data buffer.
+ */
+static void
+bdev_abort_all_buf_io(struct spdk_bdev_mgmt_channel *mgmt_ch, struct spdk_bdev_channel *ch)
+{
+	spdk_iobuf_for_each_entry(&mgmt_ch->iobuf, &mgmt_ch->iobuf.small,
+				  bdev_abort_all_buf_io_cb, ch);
+	spdk_iobuf_for_each_entry(&mgmt_ch->iobuf, &mgmt_ch->iobuf.large,
+				  bdev_abort_all_buf_io_cb, ch);
 }
 
 /*
@@ -3589,20 +3523,37 @@ bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_io *bio_to_abort)
 	return false;
 }
 
-static bool
-bdev_abort_buf_io(bdev_io_stailq_t *queue, struct spdk_bdev_io *bio_to_abort)
+static int
+bdev_abort_buf_io_cb(struct spdk_iobuf_channel *ch, struct spdk_iobuf_entry *entry, void *cb_ctx)
 {
-	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_io *bdev_io, *bio_to_abort = cb_ctx;
+	uint64_t buf_len;
 
-	STAILQ_FOREACH(bdev_io, queue, internal.buf_link) {
-		if (bdev_io == bio_to_abort) {
-			STAILQ_REMOVE(queue, bio_to_abort, spdk_bdev_io, internal.buf_link);
-			spdk_bdev_io_complete(bio_to_abort, SPDK_BDEV_IO_STATUS_ABORTED);
-			return true;
-		}
+	bdev_io = SPDK_CONTAINEROF(entry, struct spdk_bdev_io, internal.iobuf);
+	if (bdev_io == bio_to_abort) {
+		buf_len = bdev_io_get_max_buf_len(bdev_io, bdev_io->internal.buf_len);
+		spdk_iobuf_entry_abort(ch, entry, buf_len);
+		spdk_bdev_io_complete(bio_to_abort, SPDK_BDEV_IO_STATUS_ABORTED);
+		return 1;
 	}
 
-	return false;
+	return 0;
+}
+
+static bool
+bdev_abort_buf_io(struct spdk_bdev_mgmt_channel *mgmt_ch, struct spdk_bdev_io *bio_to_abort)
+{
+	int rc;
+
+	rc = spdk_iobuf_for_each_entry(&mgmt_ch->iobuf, &mgmt_ch->iobuf.small,
+				       bdev_abort_buf_io_cb, bio_to_abort);
+	if (rc == 1) {
+		return true;
+	}
+
+	rc = spdk_iobuf_for_each_entry(&mgmt_ch->iobuf, &mgmt_ch->iobuf.large,
+				       bdev_abort_buf_io_cb, bio_to_abort);
+	return rc == 1;
 }
 
 static void
@@ -3809,8 +3760,8 @@ bdev_channel_abort_queued_ios(struct spdk_bdev_channel *ch)
 	struct spdk_bdev_mgmt_channel *mgmt_ch = shared_resource->mgmt_ch;
 
 	bdev_abort_all_queued_io(&shared_resource->nomem_io, ch);
-	bdev_abort_all_buf_io(&mgmt_ch->need_buf_small, ch);
-	bdev_abort_all_buf_io(&mgmt_ch->need_buf_large, ch);
+	bdev_abort_all_buf_io(mgmt_ch, ch);
+	bdev_abort_all_buf_io(mgmt_ch, ch);
 }
 
 static void
@@ -5636,8 +5587,8 @@ bdev_reset_freeze_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bd
 	}
 
 	bdev_abort_all_queued_io(&shared_resource->nomem_io, channel);
-	bdev_abort_all_buf_io(&mgmt_channel->need_buf_small, channel);
-	bdev_abort_all_buf_io(&mgmt_channel->need_buf_large, channel);
+	bdev_abort_all_buf_io(mgmt_channel, channel);
+	bdev_abort_all_buf_io(mgmt_channel, channel);
 	bdev_abort_all_queued_io(&tmp_queued, channel);
 
 	spdk_bdev_for_each_channel_continue(i, 0);

@@ -111,7 +111,7 @@ ifeq ($(CONFIG_VFIO_USER),y)
 VFU_DEVICE_MODULES_LIST = vfu_device
 endif
 
-EVENT_BDEV_SUBSYSTEM = event_bdev event_accel event_vmd event_sock
+EVENT_BDEV_SUBSYSTEM = event_bdev event_accel event_vmd event_sock event_iobuf
 
 ALL_MODULES_LIST = $(BLOCKDEV_MODULES_LIST) $(ACCEL_MODULES_LIST) $(SCHEDULER_MODULES_LIST) $(SOCK_MODULES_LIST)
 ALL_MODULES_LIST += $(VFU_DEVICE_MODULES_LIST)

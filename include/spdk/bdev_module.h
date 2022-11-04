@@ -807,6 +807,9 @@ struct spdk_bdev_io {
 		/** Entry to the list io_submitted of struct spdk_bdev_channel */
 		TAILQ_ENTRY(spdk_bdev_io) ch_link;
 
+		/** iobuf queue entry */
+		struct spdk_iobuf_entry iobuf;
+
 		/** Enables queuing parent I/O when no bdev_ios available for split children. */
 		struct spdk_bdev_io_wait_entry waitq_entry;
 

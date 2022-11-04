@@ -190,7 +190,9 @@ struct spdk_bdev_opts {
 	 */
 	size_t opts_size;
 
+	/** Deprecated, use spdk_iobuf_set_opts() instead */
 	uint32_t small_buf_pool_size;
+	/** Deprecated, use spdk_iobuf_set_opts() instead */
 	uint32_t large_buf_pool_size;
 } __attribute__((packed));
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_opts) == 32, "Incorrect size");

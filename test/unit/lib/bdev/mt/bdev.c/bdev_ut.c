@@ -283,10 +283,14 @@ static void
 setup_test(void)
 {
 	bool done = false;
+	int rc;
 
 	allocate_cores(BDEV_UT_NUM_THREADS);
 	allocate_threads(BDEV_UT_NUM_THREADS);
 	set_thread(0);
+
+	rc = spdk_iobuf_initialize();
+	CU_ASSERT(rc == 0);
 	spdk_bdev_initialize(bdev_init_cb, &done);
 	spdk_io_device_register(&g_io_device, stub_create_ch, stub_destroy_ch,
 				sizeof(struct ut_bdev_channel), NULL);
@@ -310,6 +314,7 @@ teardown_test(void)
 	unregister_bdev(&g_bdev);
 	spdk_io_device_unregister(&g_io_device, NULL);
 	spdk_bdev_finish(finish_cb, NULL);
+	spdk_iobuf_finish(finish_cb, NULL);
 	poll_threads();
 	memset(&g_bdev, 0, sizeof(g_bdev));
 	CU_ASSERT(g_teardown_done == true);
@@ -2042,6 +2047,7 @@ bdev_set_io_timeout_mt(void)
 	unregister_bdev(&g_bdev);
 	spdk_io_device_unregister(&g_io_device, NULL);
 	spdk_bdev_finish(finish_cb, NULL);
+	spdk_iobuf_finish(finish_cb, NULL);
 	poll_threads();
 	memset(&g_bdev, 0, sizeof(g_bdev));
 	CU_ASSERT(g_teardown_done == true);

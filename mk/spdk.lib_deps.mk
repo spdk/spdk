@@ -149,7 +149,7 @@ DEPDIRS-bdev_xnvme := $(BDEV_DEPS_THREAD)
 DEPDIRS-event_accel := init accel
 DEPDIRS-event_vmd := init vmd $(JSON_LIBS) log thread util
 
-DEPDIRS-event_bdev := init bdev event_accel event_vmd event_sock
+DEPDIRS-event_bdev := init bdev event_accel event_vmd event_sock event_iobuf
 
 DEPDIRS-event_scheduler := event init json log
 

@@ -19,7 +19,7 @@ DIRS-$(CONFIG_VFIO_USER) += vfu_tgt
 # the subsystem dependency tree defined within the event subsystem C files
 # themselves. Should that tree change, these dependencies should change
 # accordingly.
-DEPDIRS-bdev := accel vmd sock
+DEPDIRS-bdev := accel vmd sock iobuf
 DEPDIRS-iscsi := scsi
 DEPDIRS-nbd := bdev
 DEPDIRS-nvmf := bdev
