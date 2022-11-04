@@ -131,6 +131,13 @@ void spdk_rpc_set_state(uint32_t state_mask);
  */
 uint32_t spdk_rpc_get_state(void);
 
+/*
+ * Mark only the given RPC methods as allowed.
+ *
+ * \param rpc_allowlist string array of method names, terminated with a NULL.
+ */
+void spdk_rpc_set_allowlist(const char **rpc_allowlist);
+
 #ifdef __cplusplus
 }
 #endif

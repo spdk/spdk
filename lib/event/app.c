@@ -38,6 +38,7 @@ struct spdk_app {
 	bool				json_config_ignore_errors;
 	bool				stopped;
 	const char			*rpc_addr;
+	const char			**rpc_allowlist;
 	int				shm_id;
 	spdk_app_shutdown_cb		shutdown_cb;
 	int				rc;
@@ -123,6 +124,8 @@ static const struct option g_cmdline_options[] = {
 	{"env-context",			required_argument,	NULL, ENV_CONTEXT_OPT_IDX},
 #define DISABLE_CPUMASK_LOCKS_OPT_IDX	267
 	{"disable-cpumask-locks",	no_argument,		NULL, DISABLE_CPUMASK_LOCKS_OPT_IDX},
+#define RPCS_ALLOWED_OPT_IDX	268
+	{"rpcs-allowed",		required_argument,	NULL, RPCS_ALLOWED_OPT_IDX}
 };
 
 static void
@@ -205,6 +208,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts, size_t opts_size)
 	SET_FIELD(delay_subsystem_init, false);
 	SET_FIELD(disable_signal_handlers, false);
 	SET_FIELD(msg_mempool_size, SPDK_DEFAULT_MSG_MEMPOOL_SIZE);
+	SET_FIELD(rpc_allowlist, NULL);
 #undef SET_FIELD
 }
 
@@ -263,6 +267,8 @@ app_start_rpc(int rc, void *arg1)
 		spdk_app_stop(rc);
 		return;
 	}
+
+	spdk_rpc_set_allowlist(g_spdk_app.rpc_allowlist);
 
 	rc = spdk_rpc_initialize(g_spdk_app.rpc_addr);
 	if (rc) {
@@ -459,6 +465,8 @@ bootstrap_fn(void *arg1)
 		if (!g_delay_subsystem_init) {
 			spdk_subsystem_init(app_start_rpc, NULL);
 		} else {
+			spdk_rpc_set_allowlist(g_spdk_app.rpc_allowlist);
+
 			rc = spdk_rpc_initialize(g_spdk_app.rpc_addr);
 			if (rc) {
 				spdk_app_stop(rc);
@@ -507,10 +515,11 @@ app_copy_opts(struct spdk_app_opts *opts, struct spdk_app_opts *opts_user, size_
 	SET_FIELD(base_virtaddr);
 	SET_FIELD(disable_signal_handlers);
 	SET_FIELD(msg_mempool_size);
+	SET_FIELD(rpc_allowlist);
 
 	/* You should not remove this statement, but need to update the assert statement
 	 * if you add a new field, and also add a corresponding SET_FIELD statement */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 200, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 208, "Incorrect size");
 
 #undef SET_FIELD
 }
@@ -662,6 +671,7 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	g_spdk_app.json_config_file = opts->json_config_file;
 	g_spdk_app.json_config_ignore_errors = opts->json_config_ignore_errors;
 	g_spdk_app.rpc_addr = opts->rpc_addr;
+	g_spdk_app.rpc_allowlist = opts->rpc_allowlist;
 	g_spdk_app.shm_id = opts->shm_id;
 	g_spdk_app.shutdown_cb = opts->shutdown_cb;
 	g_spdk_app.rc = 0;
@@ -844,6 +854,7 @@ usage(void (*app_usage)(void))
 	printf("     --base-virtaddr <addr>      the base virtual address for DPDK (default: 0x200000000000)\n");
 	printf("     --num-trace-entries <num>   number of trace entries for each core, must be power of 2, setting 0 to disable trace (default %d)\n",
 	       SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES);
+	printf("     --rpcs-allowed	   comma-separated list of permitted RPCS\n");
 	printf("     --env-context         Opaque context for use of the env implementation\n");
 	spdk_log_usage(stdout, "-L");
 	spdk_trace_mask_usage(stdout, "-e");
@@ -1094,6 +1105,14 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		case ENV_CONTEXT_OPT_IDX:
 			opts->env_context = optarg;
 			break;
+		case RPCS_ALLOWED_OPT_IDX:
+			opts->rpc_allowlist = (const char **)spdk_strarray_from_string(optarg, ",");
+			if (opts->rpc_allowlist == NULL) {
+				SPDK_ERRLOG("Invalid --rpcs-allowed argument\n");
+				usage(app_usage);
+				goto out;
+			}
+			break;
 		case VERSION_OPT_IDX:
 			printf(SPDK_VERSION_STRING"\n");
 			retval = SPDK_APP_PARSE_ARGS_HELP;
@@ -1127,6 +1146,8 @@ out:
 		opts->pci_blocked = NULL;
 		free(opts->pci_allowed);
 		opts->pci_allowed = NULL;
+		spdk_strarray_free((char **)opts->rpc_allowlist);
+		opts->rpc_allowlist = NULL;
 	}
 	free(cmdline_short_opts);
 	free(cmdline_options);

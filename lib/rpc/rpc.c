@@ -23,6 +23,7 @@ static int g_rpc_lock_fd = -1;
 static struct spdk_jsonrpc_server *g_jsonrpc_server = NULL;
 static uint32_t g_rpc_state;
 static bool g_rpcs_correct = true;
+static char **g_rpcs_allowlist = NULL;
 
 struct spdk_rpc_method {
 	const char *name;
@@ -48,6 +49,25 @@ spdk_rpc_get_state(void)
 	return g_rpc_state;
 }
 
+static bool
+rpc_is_allowed(const char *name)
+{
+	size_t i;
+
+	if (g_rpcs_allowlist == NULL) {
+		return true;
+	}
+
+	for (i = 0; g_rpcs_allowlist[i] != NULL; i++) {
+		if (strcmp(name, g_rpcs_allowlist[i]) == 0) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
 static struct spdk_rpc_method *
 _get_rpc_method(const struct spdk_json_val *method)
 {
@@ -55,6 +75,9 @@ _get_rpc_method(const struct spdk_json_val *method)
 
 	SLIST_FOREACH(m, &g_rpc_methods, slist) {
 		if (spdk_json_strequal(method, m->name)) {
+			if (!rpc_is_allowed(m->name)) {
+				return NULL;
+			}
 			return m;
 		}
 	}
@@ -259,6 +282,10 @@ spdk_rpc_is_method_allowed(const char *method, uint32_t state_mask)
 {
 	struct spdk_rpc_method *m;
 
+	if (!rpc_is_allowed(method)) {
+		return -ENOENT;
+	}
+
 	SLIST_FOREACH(m, &g_rpc_methods, slist) {
 		if (strcmp(m->name, method) != 0) {
 			continue;
@@ -287,6 +314,20 @@ spdk_rpc_get_method_state_mask(const char *method, uint32_t *state_mask)
 	}
 
 	return -ENOENT;
+}
+
+void
+spdk_rpc_set_allowlist(const char **rpc_allowlist)
+{
+	spdk_strarray_free(g_rpcs_allowlist);
+
+	if (rpc_allowlist == NULL) {
+		g_rpcs_allowlist = NULL;
+		return;
+	}
+
+	g_rpcs_allowlist = spdk_strarray_dup(rpc_allowlist);
+	assert(g_rpcs_allowlist != NULL);
 }
 
 void
@@ -344,6 +385,9 @@ rpc_get_methods(struct spdk_jsonrpc_request *request, const struct spdk_json_val
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_array_begin(w);
 	SLIST_FOREACH(m, &g_rpc_methods, slist) {
+		if (!rpc_is_allowed(m->name)) {
+			continue;
+		}
 		if (m->is_alias_of != NULL && !req.include_aliases) {
 			continue;
 		}

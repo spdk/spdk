@@ -12,6 +12,7 @@
 	spdk_rpc_get_method_state_mask;
 	spdk_rpc_set_state;
 	spdk_rpc_get_state;
+	spdk_rpc_set_allowlist;
 
 	local: *;
 };

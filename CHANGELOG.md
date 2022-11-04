@@ -37,6 +37,13 @@ Added a command line switch to disable CPU locks on SPDK startup.
 Added RPCs framework_enable_cpumask_locks and framework_disable_cpumask_locks to enable
 and disable CPU core locks in runtime.
 
+Added --rpcs-allowed command line option. Users can specify a comma-separated list of RPC
+names with this option to restrict allowed RPCs to only that list.
+
+### rpc
+
+Added spdk_rpc_set_allowlist to restrict allowed RPCs to the specified list.
+
 ## v22.09
 
 ### accel

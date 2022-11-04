@@ -152,8 +152,13 @@ struct spdk_app_opts {
 	 * Default is `SPDK_DEFAULT_MSG_MEMPOOL_SIZE`.
 	 */
 	size_t msg_mempool_size;
+
+	/*
+	 *  If non-NULL, a string array of allowed RPC methods.
+	 */
+	const char **rpc_allowlist;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 200, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 208, "Incorrect size");
 
 /**
  * Initialize the default value of opts
