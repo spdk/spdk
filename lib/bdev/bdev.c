@@ -979,21 +979,31 @@ _bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, uint64_t len)
 	_bdev_io_set_md_buf(bdev_io);
 }
 
-static void
-_bdev_io_put_buf(struct spdk_bdev_io *bdev_io, void *buf, uint64_t buf_len)
+static inline uint64_t
+bdev_io_get_max_buf_len(struct spdk_bdev_io *bdev_io, uint64_t len)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
-	struct spdk_mempool *pool;
-	struct spdk_bdev_io *tmp;
-	bdev_io_stailq_t *stailq;
-	struct spdk_bdev_mgmt_channel *ch;
 	uint64_t md_len, alignment;
 
 	md_len = spdk_bdev_is_md_separate(bdev) ? bdev_io->u.bdev.num_blocks * bdev->md_len : 0;
 	alignment = spdk_bdev_get_buf_align(bdev);
+
+	return len + alignment + md_len;
+}
+
+static void
+_bdev_io_put_buf(struct spdk_bdev_io *bdev_io, void *buf, uint64_t buf_len)
+{
+	struct spdk_mempool *pool;
+	struct spdk_bdev_io *tmp;
+	bdev_io_stailq_t *stailq;
+	struct spdk_bdev_mgmt_channel *ch;
+	uint64_t max_len;
+
+	max_len = bdev_io_get_max_buf_len(bdev_io, buf_len);
 	ch = bdev_io->internal.ch->shared_resource->mgmt_ch;
 
-	if (buf_len + alignment + md_len <= SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_SMALL_BUF_MAX_SIZE) +
+	if (max_len <= SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_SMALL_BUF_MAX_SIZE) +
 	    SPDK_BDEV_POOL_ALIGNMENT) {
 		pool = g_bdev_mgr.buf_small_pool;
 		stailq = &ch->need_buf_small;
@@ -1220,21 +1230,17 @@ _bdev_io_push_bounce_data_buffer(struct spdk_bdev_io *bdev_io, bdev_copy_bounce_
 static void
 bdev_io_get_buf(struct spdk_bdev_io *bdev_io, uint64_t len)
 {
-	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_mempool *pool;
 	bdev_io_stailq_t *stailq;
 	struct spdk_bdev_mgmt_channel *mgmt_ch;
-	uint64_t alignment, md_len;
+	uint64_t max_len;
 	void *buf;
 
 	assert(spdk_bdev_io_get_thread(bdev_io) == spdk_get_thread());
-	alignment = spdk_bdev_get_buf_align(bdev);
-	md_len = spdk_bdev_is_md_separate(bdev) ? bdev_io->u.bdev.num_blocks * bdev->md_len : 0;
-
-	if (len + alignment + md_len > SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_LARGE_BUF_MAX_SIZE) +
+	max_len = bdev_io_get_max_buf_len(bdev_io, len);
+	if (max_len > SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_LARGE_BUF_MAX_SIZE) +
 	    SPDK_BDEV_POOL_ALIGNMENT) {
-		SPDK_ERRLOG("Length + alignment %" PRIu64 " is larger than allowed\n",
-			    len + alignment);
+		SPDK_ERRLOG("Length %" PRIu64 " is larger than allowed\n", max_len);
 		bdev_io_get_buf_complete(bdev_io, false);
 		return;
 	}
@@ -1243,7 +1249,7 @@ bdev_io_get_buf(struct spdk_bdev_io *bdev_io, uint64_t len)
 
 	bdev_io->internal.buf_len = len;
 
-	if (len + alignment + md_len <= SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_SMALL_BUF_MAX_SIZE) +
+	if (max_len <= SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_SMALL_BUF_MAX_SIZE) +
 	    SPDK_BDEV_POOL_ALIGNMENT) {
 		pool = g_bdev_mgr.buf_small_pool;
 		stailq = &mgmt_ch->need_buf_small;
