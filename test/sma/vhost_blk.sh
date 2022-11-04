@@ -203,6 +203,12 @@ device=$(create_device 0 $uuid | jq -r '.handle')
 diff <(get_qos_caps $device_vhost | jq --sort-keys) <(
 	jq --sort-keys <<- CAPS
 		{
+		  "max_device_caps": {
+		    "rw_iops": true,
+		    "rd_bandwidth": true,
+		    "wr_bandwidth": true,
+		    "rw_bandwidth": true
+		  },
 		  "max_volume_caps": {
 		    "rw_iops": true,
 		    "rd_bandwidth": true,

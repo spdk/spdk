@@ -219,4 +219,6 @@ class VhostBlkDeviceManager(DeviceManager):
                                   'Failed to set QoS')
 
     def get_qos_capabilities(self, request):
-        return qos.get_bdev_qos_capabilities()
+        bdev_caps = qos.get_bdev_qos_capabilities().max_volume_caps
+        return sma_pb2.GetQosCapabilitiesResponse(max_volume_caps=bdev_caps,
+                                                  max_device_caps=bdev_caps)
