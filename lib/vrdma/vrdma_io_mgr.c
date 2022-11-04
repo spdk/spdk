@@ -28,6 +28,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/time.h>
+
 #include "spdk/env.h"
 #include "spdk/cpuset.h"
 #include "spdk/thread.h"
@@ -172,6 +174,7 @@ static bool vrdma_qp_sm_poll_pi(struct spdk_vrdma_qp *vqp,
 	if (spdk_unlikely(ret)) {
 		SPDK_ERRLOG("failed to read sq PI, ret %d\n", ret);
 		vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
+		return true;
 	}
 
 	return false;
@@ -333,10 +336,81 @@ static inline void vrdma_set_atomic_seg(struct mlx5_wqe_atomic_seg *aseg,
 	}
 }
 
-static inline void *vrdma_get_wqe_bb(struct snap_hw_qp *hw_qp)
+static inline void *vrdma_get_wqe_bb(struct snap_vrdma_backend_qp *bk_qp)
 {
-	return (void *)hw_qp->sq.addr + (hw_qp->sq.pi & (hw_qp->sq.wqe_cnt - 1)) *
+	return (void *)bk_qp->hw_qp.sq.addr + (bk_qp->hw_qp.sq.pi & (bk_qp->hw_qp.sq.wqe_cnt - 1)) *
 	       MLX5_SEND_WQE_BB;
+}
+
+static inline void vrdma_update_tx_db(struct snap_vrdma_backend_qp *bk_qp)
+{
+	/*
+	 * Use cpu barrier to prevent code reordering
+	 */
+	snap_memory_cpu_store_fence();
+
+	((uint32_t *)bk_qp->hw_qp.dbr_addr)[MLX5_SND_DBR] = htobe32(bk_qp->hw_qp.sq.pi);
+}
+
+static inline void vrdma_flush_tx_db(struct snap_vrdma_backend_qp *bk_qp,
+											struct mlx5_wqe_ctrl_seg *ctrl)
+{
+	*(uint64_t *)(bk_qp->hw_qp.sq.bf_addr) = *(uint64_t *)ctrl;
+	++bk_qp->stat.tx.total_dbs;
+}
+
+
+static inline void vrdma_ring_tx_db(struct snap_vrdma_backend_qp *bk_qp,
+											struct mlx5_wqe_ctrl_seg *ctrl)
+{
+#if !__DPA
+	/* 8.9.3.1  Posting a Work Request to Work Queue
+	 * 1. Write WQE to the WQE buffer sequentially to previously-posted
+	 *    WQE (on WQEBB granularity)
+	 *
+	 * 2. Update Doorbell Record associated with that queue by writing
+	 *    the sq_wqebb_counter or wqe_counter for send and RQ respectively
+	 **/
+	vrdma_update_tx_db(bk_qp);
+
+	/* Make sure that doorbell record is written before ringing the doorbell
+	 **/
+	snap_memory_bus_store_fence();
+
+	/* 3. For send request ring DoorBell by writing to the Doorbell
+	 *    Register field in the UAR associated with that queue
+	 */
+	vrdma_flush_tx_db(bk_qp, ctrl);
+
+	/* If UAR is mapped as WC (write combined) we need another fence to
+	 * force write. Otherwise it may take a long time.
+	 * On BF2/1 uar is mapped as NC (non combined) and fence is not needed
+	 * here.
+	 */
+#if !defined(__aarch64__)
+	//if (!vrdma_flush_tx_db->hw_qp.sq.tx_db_nc)
+	//	snap_memory_bus_store_fence();
+#endif
+
+#else
+	/* Based on review with Eliav:
+	 * - only need a store fence to ensure that the wqe is committed to the
+	 *   memory
+	 * - there is no need to update dbr on DPA
+	 * - The flow works only if there is no doorbell recovery. Unfortunately
+	 *   doorbell recovery can happen on any QP in the same gvmi. Then it
+	 *   will trigger recovery on the dpa qp with wrong pi.
+	 * - Disable optimization for now.
+	 * - At the moment optimization has no measurable effect on single
+	 *   queue virtio performance
+	 */
+#define HAVE_DOORBELL_RECOVERY 1
+#if SIMX_BUILD || HAVE_DOORBELL_RECOVERY
+	vrdma_update_tx_db(bk_qp);
+#endif
+	snap_memory_bus_store_fence();
+	dpa_dma_q_ring_tx_db(bk_qp->hw_qp.qp_num, bk_qp->hw_qp.sq.pi);
+#endif
 }
 
 static inline void
@@ -350,15 +424,28 @@ vrdma_set_ctrl_seg(struct mlx5_wqe_ctrl_seg *ctrl, uint16_t pi,
 			fm_ce_se, ds, signature, imm);
 }
 
-static inline void vrdma_wqe_submit(struct snap_hw_qp *hw_qp,
+static inline void vrdma_wqe_submit(struct snap_vrdma_backend_qp *bk_qp,
 											struct mlx5_wqe_ctrl_seg *ctrl)
 {
-	hw_qp->sq.pi++;
-	// TODO:
+	bk_qp->hw_qp.sq.pi++;
+	if (bk_qp->db_flag == SNAP_DB_RING_BATCH) {
+		bk_qp->tx_need_ring_db = true;
+		bk_qp->ctrl = ctrl;
+		return;
+	}
+	vrdma_ring_tx_db(bk_qp, ctrl);
+}
+
+static inline void vrdma_tx_complete(struct snap_vrdma_backend_qp *bk_qp)
+{
+	if (bk_qp->tx_need_ring_db) {
+		bk_qp->tx_need_ring_db = false;
+		vrdma_ring_tx_db(bk_qp, bk_qp->ctrl);
+	}
 }
 
 static int vrdma_rw_wqe_submit(struct vrdma_send_wqe *wqe,
-										struct snap_hw_qp *backend_qp, 
+										struct snap_vrdma_backend_qp *bk_qp, 
 										uint8_t opcode)
 {
 	struct mlx5_wqe_ctrl_seg *ctrl;
@@ -376,7 +463,7 @@ static int vrdma_rw_wqe_submit(struct vrdma_send_wqe *wqe,
 
 	fm_ce_se = vrdma_get_send_flags(wqe);
 
-	ctrl = seg = (struct mlx5_wqe_ctrl_seg *)vrdma_get_wqe_bb(backend_qp);
+	ctrl = seg = (struct mlx5_wqe_ctrl_seg *)vrdma_get_wqe_bb(bk_qp);
 
 	seg += sizeof(*ctrl); 
 	ds += sizeof(*ctrl) / 16;
@@ -391,22 +478,22 @@ static int vrdma_rw_wqe_submit(struct vrdma_send_wqe *wqe,
 	for (i = 0; i < sge_num; i++) {
 		sge = wqe->sgl[i];
 		if (spdk_likely(sge.buf_length)) {
-			sge_addr = sge.buf_addr_hi << 32 + sge.buf_addr_lo;
+			sge_addr = ((uint64_t)sge.buf_addr_hi << 32) + sge.buf_addr_lo;
 			mlx5dv_set_data_seg(dseg, sge.buf_length, sge.lkey, (intptr_t)sge_addr);
 			++dseg;
 			ds += sizeof(*dseg) / 16;		
 		}
 	}
 
-	vrdma_set_ctrl_seg(ctrl, backend_qp->sq.pi, opcode, 0, backend_qp->qp_num,
+	vrdma_set_ctrl_seg(ctrl, bk_qp->hw_qp.sq.pi, opcode, 0, bk_qp->hw_qp.qp_num,
 			    	fm_ce_se, ds, sig, imm);	
-	vrdma_wqe_submit(backend_qp, ctrl);
+	vrdma_wqe_submit(bk_qp, ctrl);
 	return 0;
 	
 }
 
 static int vrdma_atomic_wqe_submit(struct vrdma_send_wqe *wqe,
-											struct snap_hw_qp *backend_qp, 
+											struct snap_vrdma_backend_qp *bk_qp, 
 											uint8_t opcode)
 {
 	struct mlx5_wqe_ctrl_seg *ctrl;
@@ -425,7 +512,7 @@ static int vrdma_atomic_wqe_submit(struct vrdma_send_wqe *wqe,
 
 	fm_ce_se = vrdma_get_send_flags(wqe);
 
-	ctrl = seg = (struct mlx5_wqe_ctrl_seg *)vrdma_get_wqe_bb(backend_qp);
+	ctrl = seg = (struct mlx5_wqe_ctrl_seg *)vrdma_get_wqe_bb(bk_qp);
 
 	seg += sizeof(*ctrl); 
 	ds += sizeof(*ctrl) / 16;
@@ -439,28 +526,29 @@ static int vrdma_atomic_wqe_submit(struct vrdma_send_wqe *wqe,
 	vrdma_set_atomic_seg(aseg, opcode, wqe->rdma_atomic.swap,
 						wqe->rdma_atomic.compare_add);
 	seg += sizeof(*aseg); 
-	ds += (sizeof(*rseg) + sizeof(*aseg))/ 16;
+	ds += (sizeof(*rseg) + sizeof(*aseg)) / 16;
 	
 	dseg = seg;
 	for (i = 0; i < sge_num; i++) {
 		sge = wqe->sgl[i];
 		if (spdk_likely(sge.buf_length)) {
-			sge_addr = sge.buf_addr_hi << 32 + sge.buf_addr_lo;
+			sge_addr = ((uint64_t)sge.buf_addr_hi << 32) + sge.buf_addr_lo;
 			mlx5dv_set_data_seg(dseg, MLX5_ATOMIC_SIZE, sge.lkey, (intptr_t)sge_addr);
 			++dseg;
 			ds += sizeof(*dseg) / 16;		
 		}
 	}
 
-	vrdma_set_ctrl_seg(ctrl, backend_qp->sq.pi, opcode, 0, backend_qp->qp_num,
+	vrdma_set_ctrl_seg(ctrl, bk_qp->hw_qp.sq.pi, opcode, 0, bk_qp->hw_qp.qp_num,
 			    	fm_ce_se, ds, sig, imm);	
-	vrdma_wqe_submit(backend_qp, ctrl);
+	vrdma_wqe_submit(bk_qp, ctrl);
 	return 0;
 
 }
 
-static int vrdma_ud_wqe_submit(struct vrdma_send_wqe *wqe, struct snap_hw_qp *backend_qp, 
-											uint8_t opcode)
+static int vrdma_ud_wqe_submit(struct vrdma_send_wqe *wqe,
+										struct snap_vrdma_backend_qp *bk_qp, 
+										uint8_t opcode)
 {
 	//TODO:
 	return 0;
@@ -472,17 +560,18 @@ static bool vrdma_qp_wqe_sm_submit(struct spdk_vrdma_qp *vqp,
                                     enum vrdma_qp_sm_op_status status)
 {
 	uint16_t num_to_parse = vqp->sq.comm.num_to_parse;
-	struct snap_hw_qp *backend_qp = &vqp->bk_qp[0]->bk_qp.hw_qp;
+	struct snap_vrdma_backend_qp *backend_qp = &vqp->bk_qp[0]->bk_qp;
 	uint16_t i;
 	struct vrdma_send_wqe *wqe;
 	uint8_t opcode = 0;
+	uint16_t q_size = vqp->sq.comm.wqebb_cnt;
 
 	SPDK_NOTICELOG("vrdam submit sq wqe: vq pi %d, pre_pi %d\n",
 					vqp->sq.comm.pi, vqp->sq.comm.pre_pi);
-	vqp->sm_state = VRDMA_QP_STATE_POLL_PI;
+	vqp->sm_state = VRDMA_QP_STATE_POLL_CQ_CI;
 
-	for (i = 0; i< num_to_parse; i++) {
-		wqe = vqp->sq.sq_buff + i;
+	for (i = 0; i < num_to_parse; i++) {
+		wqe = vqp->sq.sq_buff + ((vqp->sq.comm.pre_pi + i) % q_size);
 		opcode = wqe->meta.opcode;
 		switch (opcode) {
 			case IBV_WR_RDMA_READ:
@@ -495,12 +584,14 @@ static bool vrdma_qp_wqe_sm_submit(struct spdk_vrdma_qp *vqp,
 				vrdma_atomic_wqe_submit(wqe, backend_qp, opcode);
 				break;
 			default:
+				// place holder, will be replaced in future
+				vrdma_ud_wqe_submit(wqe, backend_qp, opcode);
 				vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
 				return false;
 		}
-
 	}
-	
+
+	vrdma_tx_complete(backend_qp);
 	return true;
 }
 
@@ -550,6 +641,37 @@ static uint32_t vrdma_get_wqe_id(struct spdk_vrdma_qp *vqp, uint32_t mwqe_idx)
 	return mwqe_idx;
 }
 
+static bool vrdma_qp_sm_poll_cq_ci(struct spdk_vrdma_qp *vqp,
+                                   			enum vrdma_qp_sm_op_status status)
+{
+	int ret;
+	uint64_t ci_addr = vqp->sq_vcq->ci_pa;
+
+	if (status != VRDMA_QP_SM_OP_OK) {
+		SPDK_ERRLOG("failed to update admq CI, status %d\n", status);
+		vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
+		return true;
+	}
+
+	SPDK_NOTICELOG("vrdam poll sq vcq ci: doorbell pa 0x%lx\n", ci_addr);
+
+	vqp->sm_state = VRDMA_QP_STATE_GEN_COMP;
+	vqp->q_comp.func = vrdma_qp_sm_dma_cb;
+	vqp->q_comp.count = 1;
+
+	// TODO, here lkey need to be changed to vcq
+	ret = snap_dma_q_read(vqp->snap_queue->dma_q, &vqp->sq_vcq->ci, sizeof(uint32_t),
+			          vqp->sq.comm.mr->lkey, ci_addr,
+			          vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
+	if (spdk_unlikely(ret)) {
+		SPDK_ERRLOG("failed to read sq vcq CI, ret %d\n", ret);
+		vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
+		return true;
+	}
+
+	return false;
+}
+
 static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
                                            enum vrdma_qp_sm_op_status status)
 {
@@ -558,28 +680,54 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 	struct mlx5_cqe64 *cqe;
 	struct vrdma_cqe *vcqe;
 	uint32_t wqe_idx;
-	uint32_t mwqe_idx;
-	uint64_t vcqe_addr;
-	uint8_t owner;
+	uint32_t cqe_idx;
+	uint64_t vcq_host_addr = vcq->host_pa + vcq->pre_pi * vcq->cqebb_size;
+	uint8_t *vcq_local_addr = (uint8_t *)vqp->sq.cqe_buff + vcq->pre_pi * vcq->cqebb_size;
+	uint32_t size;
+	int ret;
+	struct timeval tv; 
 
 	SPDK_NOTICELOG("vrdam gen sq cqe: vcq pi %d, pre_pi %d\n",
 					vqp->sq.comm.pi, vqp->sq.comm.pre_pi);
-	vqp->sm_state = VRDMA_QP_STATE_WQE_MAP_BACKEND;
-	cqe = vrdma_poll_mqp_cq(mcq, 64);
-	
-	if (cqe == NULL) {
-		return false;
+	vqp->sm_state = VRDMA_QP_STATE_POLL_PI;
+	gettimeofday(&tv, NULL);
+
+	while(1) {
+		cqe = vrdma_poll_mqp_cq(mcq, 64);
+		if (cqe == NULL || vcq->pi - vcq->ci == vcq->cqe_entry_num) {
+			/* if no available cqe or vcq is full
+			   need to write prepared vcqes*/
+			goto write_vcq;
+		}
+		wqe_idx = vrdma_get_wqe_id(vqp, cqe->wqe_counter);
+		cqe_idx = vcq->pi & (vcq->cqe_entry_num - 1);
+		
+		vcqe = vqp->sq.cqe_buff + cqe_idx;
+		vcqe->imm_data = cqe->imm_inval_pkey;
+		vcqe->length = cqe->byte_cnt;
+		vcqe->opcode = cqe->sop_drop_qpn >> 24;
+		vcqe->req_id = wqe_idx;
+		vcqe->local_qpn = vqp->qp_idx;
+		vcqe->owner = ((vcq->pi++) & (vcq->cqe_entry_num - 1)) & 1;
+		//vcqe->ts = (uint32_t)cqe->timestamp;
+		vcqe->ts = (uint32_t)tv.tv_usec;
 	}
-	mwqe_idx = cqe->wqe_counter & (vqp->sq.comm.wqebb_cnt - 1);
-	wqe_idx = vrdma_get_wqe_id(vqp, mwqe_idx);
 
-	vcqe->imm_data = cqe->imm_inval_pkey;
-	vcqe->length = cqe->byte_cnt;
-	vcqe->opcode = cqe->sop_drop_qpn >> 24;
-	vcqe->req_id = cqe->wqe_counter;	
+write_vcq:
+	vqp->q_comp.count = 1;
+	size = (vcq->pi - vcq->pre_pi) * vcq->cqebb_size;
+	ret = snap_dma_q_write(vqp->snap_queue->dma_q, vcq_local_addr, size,
+				              vqp->sq.comm.mr->lkey, vcq_host_addr,
+				              vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
 
-	//TODO: poll mqp cq handling
-	return true;
+	if (spdk_unlikely(ret)) {
+		SPDK_ERRLOG("failed to write cq CQE entry, ret %d\n", ret);
+		vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
+		return true;
+	}
+	
+	vcq->pre_pi = vcq->pi;
+	return false;
 }
 
 static bool vrdma_qp_sm_fatal_error(struct spdk_vrdma_qp *vqp,
@@ -600,11 +748,13 @@ static struct vrdma_qp_sm_state vrdma_qp_sm_arr[] = {
 /*VRDMA_QP_STATE_WQE_PARSE                    */ {vrdma_qp_wqe_sm_parse},
 /*VRDMA_QP_STATE_WQE_MAP_BACKEND              */ {vrdma_qp_wqe_sm_map_backend},
 /*VRDMA_QP_STATE_WQE_SUBMIT                   */ {vrdma_qp_wqe_sm_submit},
+/*VRDMA_QP_STATE_POLL_CQ_CI                   */ {vrdma_qp_sm_poll_cq_ci},
 /*VRDMA_QP_STATE_GEN_COMP                  	  */ {vrdma_qp_sm_gen_completion},
 /*VRDMA_QP_STATE_FATAL_ERR                    */ {vrdma_qp_sm_fatal_error},
 };
 
-struct vrdma_qp_state_machine vrdma_sq_sm  = { vrdma_qp_sm_arr, sizeof(vrdma_qp_sm_arr) / sizeof(struct vrdma_qp_sm_state) };
+struct vrdma_qp_state_machine vrdma_sq_sm  = { vrdma_qp_sm_arr,
+											sizeof(vrdma_qp_sm_arr) / sizeof(struct vrdma_qp_sm_state) };
 
 /**
  * vrdma_qp_cmd_progress() - admq command state machine progress handle
