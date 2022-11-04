@@ -121,24 +121,17 @@ struct spdk_vrdma_cq {
 #define VRDMA_MAX_DMA_SQ_SIZE_PER_VQP 512
 #define VRDMA_MAX_DMA_RQ_SIZE_PER_VQP 64
 
-enum vrdma_sq_sm_state_type {
-        VRDMA_SQ_STATE_IDLE,
-        VRDMA_SQ_STATE_INIT_CI,
-        VRDMA_SQ_STATE_POLL_PI,
-        VRDMA_SQ_STATE_HANDLE_PI,
-        VRDMA_SQ_STATE_WQE_READ,
-        VRDMA_SQ_STATE_WQE_PARSE,
-        VRDMA_SQ_STATE_WQE_MAP_BACKEND,
-        VRDMA_SQ_STATE_WQE_SUBMIT,
-        VRDMA_SQ_STATE_FATAL_ERR,
-        VRDMA_SQ_NUM_OF_STATES,
-};
-
-enum vrdma_rq_sm_state_type {
-    VRDMA_RQ_STATE_IDLE,
-    VRDMA_RQ_STATE_INIT_CI,
-    VRDMA_RQ_STATE_FATAL_ERR,
-    VRDMA_RQ_NUM_OF_STATES,
+enum vrdma_qp_sm_state_type {
+        VRDMA_QP_STATE_IDLE,
+        VRDMA_QP_STATE_INIT_CI,
+        VRDMA_QP_STATE_POLL_PI,
+        VRDMA_QP_STATE_HANDLE_PI,
+        VRDMA_QP_STATE_WQE_READ,
+        VRDMA_QP_STATE_WQE_PARSE,
+        VRDMA_QP_STATE_WQE_MAP_BACKEND,
+        VRDMA_QP_STATE_WQE_SUBMIT,
+        VRDMA_QP_STATE_FATAL_ERR,
+        VRDMA_QP_NUM_OF_STATES,
 };
 
 struct vrdma_q_comm {
@@ -151,8 +144,6 @@ struct vrdma_q_comm {
     uint16_t sq_sig_all:1;
 	uint16_t reserved:3;
 	uint16_t wqebb_cnt; /* sqe entry cnt */
-	uint32_t qpn; //Lei:To be deleted
-	uint32_t mqpn[4]; //Lei:To be deleted
 	uint16_t pi;
 	uint16_t pre_pi;
 	uint32_t num_to_parse;
@@ -161,21 +152,12 @@ struct vrdma_q_comm {
 
 struct vrdma_sq {
 	struct vrdma_q_comm comm;
-    struct snap_dma_completion q_comp; //Lei:To be deleted
-	struct snap_vrdma_queue *snap_queue; //Lei:To be deleted
-	struct vrdma_sq_state_machine *custom_sm; //Lei:To be deleted
-	enum vrdma_sq_sm_state_type sm_state;
-	struct ibv_mr *mr; //Lei:To be deleted
 	struct vrdma_send_wqe *sq_buff; /* wqe buff */
     void *cqe_buff;
 };
 
 struct vrdma_rq {
 	struct vrdma_q_comm comm;
-	struct snap_dma_completion q_comp; //Lei:To be deleted
-	struct snap_vrdma_queue *snap_queue; //Lei:To be deleted
-	enum vrdma_rq_sm_state_type sm_state;
-	struct ibv_mr *mr; //Lei:To be deleted
 	struct vrdma_recv_wqe *rq_buff; /* wqe buff */
     void *cqe_buff;
 };
@@ -201,7 +183,8 @@ struct spdk_vrdma_qp {
 	struct spdk_vrdma_cq *sq_vcq;
 	struct snap_dma_completion q_comp;
     struct snap_vrdma_queue *snap_queue;
-	struct vrdma_sq_state_machine *custom_sm;
+	struct vrdma_qp_state_machine *custom_sm;
+	enum vrdma_qp_sm_state_type sm_state;
 	struct vrdma_backend_qp *bk_qp[VRDMA_MAX_BK_QP_PER_VQP];
 	struct vrdma_rq rq;
 	struct vrdma_sq sq;
