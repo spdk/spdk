@@ -606,6 +606,7 @@ shm_retry:
 		if ((md_create_flags & FTL_MD_CREATE_SHM_NEW) == 0) {
 			md_create_flags |= FTL_MD_CREATE_SHM_NEW;
 			ftl_md_destroy(dev->sb_shm_md, 0);
+			dev->sb_shm_md = NULL;
 			goto shm_retry;
 		}
 		ftl_mngt_fail_step(mngt);

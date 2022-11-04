@@ -528,7 +528,7 @@ ftl_layout_setup_superblock(struct spdk_ftl_dev *dev)
 
 	region = &layout->region[FTL_LAYOUT_REGION_TYPE_SB_BASE];
 	region->type = FTL_LAYOUT_REGION_TYPE_SB_BASE;
-	region->mirror_type = FTL_LAYOUT_REGION_TYPE_MAX;
+	region->mirror_type = FTL_LAYOUT_REGION_TYPE_INVALID;
 	region->name = "sb_mirror";
 	region->current.version = FTL_SB_VERSION_CURRENT;
 	region->prev.version = FTL_SB_VERSION_CURRENT;
