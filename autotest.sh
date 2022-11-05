@@ -162,6 +162,8 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	run_test "event" test/event/event.sh
 	run_test "thread" test/thread/thread.sh
 	run_test "accel" test/accel/accel.sh
+	# Uncomment this line when ready
+	# run_test "app_cmdline" test/app/cmdline.sh
 
 	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 		run_test "blockdev_general" test/bdev/blockdev.sh
