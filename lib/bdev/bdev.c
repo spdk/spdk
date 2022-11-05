@@ -682,25 +682,39 @@ bdev_examine(struct spdk_bdev *bdev)
 		}
 	}
 
-	if (bdev->internal.claim_type != SPDK_BDEV_CLAIM_NONE) {
+	spdk_spin_lock(&bdev->internal.spinlock);
+
+	switch (bdev->internal.claim_type) {
+	case SPDK_BDEV_CLAIM_NONE:
+		/* Examine by all bdev modules */
+		TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
+			if (module->examine_disk) {
+				spdk_spin_lock(&module->internal.spinlock);
+				module->internal.action_in_progress++;
+				spdk_spin_unlock(&module->internal.spinlock);
+				spdk_spin_unlock(&bdev->internal.spinlock);
+				module->examine_disk(bdev);
+				spdk_spin_lock(&bdev->internal.spinlock);
+			}
+		}
+		break;
+	case SPDK_BDEV_CLAIM_EXCL_WRITE:
+		/* Examine by the one bdev module with a v1 claim */
 		module = bdev->internal.claim.v1.module;
 		if (module->examine_disk) {
 			spdk_spin_lock(&module->internal.spinlock);
 			module->internal.action_in_progress++;
 			spdk_spin_unlock(&module->internal.spinlock);
+			spdk_spin_unlock(&bdev->internal.spinlock);
 			module->examine_disk(bdev);
+			return;
 		}
-		return;
+		break;
+	default:
+		break;
 	}
 
-	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
-		if (module->examine_disk) {
-			spdk_spin_lock(&module->internal.spinlock);
-			module->internal.action_in_progress++;
-			spdk_spin_unlock(&module->internal.spinlock);
-			module->examine_disk(bdev);
-		}
-	}
+	spdk_spin_unlock(&bdev->internal.spinlock);
 }
 
 int
