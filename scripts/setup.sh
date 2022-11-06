@@ -423,7 +423,7 @@ function cleanup_linux() {
 	done
 	file_locks+=(/var/tmp/spdk_pci_lock*)
 
-	files_to_clean+=(/dev/shm/@(@($match_spdk)_trace|spdk_iscsi_conns))
+	files_to_clean+=(/dev/shm/@(@($match_spdk)_trace|spdk_iscsi_conns)*)
 	files_to_clean+=("${file_locks[@]}")
 
 	# This may fail in case path that readlink attempts to resolve suddenly
