@@ -96,6 +96,12 @@ if echo "$ID $VERSION_ID" | grep -E -q 'centos 8|rhel 8|rocky 8'; then
 	if [[ ! -e /usr/bin/python && -e /etc/alternatives/python3 ]]; then
 		ln -s /etc/alternatives/python3 /usr/bin/python
 	fi
+	# pip3, which is shipped with centos8 and rocky8, is currently providing faulty ninja binary
+	# which segfaults at each run. To workaround it, upgrade pip itself and then use it for each
+	# package - new pip will provide ninja at the same version but with the actually working
+	# binary.
+	pip3 install --upgrade pip
+	pip3() { /usr/local/bin/pip "$@"; }
 else
 	yum install -y python python3-devel
 fi
