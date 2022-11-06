@@ -67,6 +67,10 @@ if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
 	fi
 fi
 
+yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
+	libuuid-devel libiscsi-devel ncurses-devel json-c-devel libcmocka-devel \
+	clang clang-devel python3-pip
+
 # Minimal install
 # workaround for arm: ninja fails with dep on skbuild python module
 if [ "$(uname -m)" = "aarch64" ]; then
@@ -82,10 +86,6 @@ if [ "$(uname -m)" = "aarch64" ]; then
 	fi
 fi
 
-yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
-	libuuid-devel libiscsi-devel ncurses-devel json-c-devel libcmocka-devel \
-	clang clang-devel
-
 # for rhel and centos7 OpenSSL 1.1 should be installed via EPEL
 if echo "$ID $VERSION_ID" | grep -E -q 'centos 7|rhel 7'; then
 	yum install -y openssl11-devel
@@ -99,7 +99,6 @@ if echo "$ID $VERSION_ID" | grep -E -q 'centos 8|rhel 8|rocky 8'; then
 else
 	yum install -y python python3-devel
 fi
-yum install -y python3-pip
 pip3 install ninja
 pip3 install meson
 pip3 install pyelftools
