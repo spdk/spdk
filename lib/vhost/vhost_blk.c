@@ -1397,8 +1397,8 @@ destroy_session_poller_cb(void *arg)
 }
 
 static int
-vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
-		  struct spdk_vhost_session *vsession, void *unused)
+vhost_blk_stop(struct spdk_vhost_dev *vdev,
+	       struct spdk_vhost_session *vsession, void *unused)
 {
 	struct spdk_vhost_blk_session *bvsession = to_blk_session(vsession);
 
@@ -1418,13 +1418,6 @@ vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
 	bvsession->stop_poller = SPDK_POLLER_REGISTER(destroy_session_poller_cb,
 				 bvsession, 1000);
 	return 0;
-}
-
-static int
-vhost_blk_stop(struct spdk_vhost_session *vsession)
-{
-	return vhost_user_session_send_event(vsession, vhost_blk_stop_cb,
-					     3, "stop session");
 }
 
 static void

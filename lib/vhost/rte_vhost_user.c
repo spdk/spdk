@@ -53,6 +53,9 @@ struct vhost_session_fn_ctx {
 	void *user_ctx;
 };
 
+static int vhost_user_wait_for_session_stop(struct spdk_vhost_session *vsession,
+		unsigned timeout_sec, const char *errmsg);
+
 static void
 __attribute__((constructor))
 _vhost_user_sem_init(void)
@@ -857,13 +860,11 @@ vhost_register_memtable_if_required(struct spdk_vhost_session *vsession, int vid
 static int
 _stop_session(struct spdk_vhost_session *vsession)
 {
-	struct spdk_vhost_dev *vdev = vsession->vdev;
-	struct spdk_vhost_user_dev *user_vdev = to_user_dev(vdev);
 	struct spdk_vhost_virtqueue *q;
 	int rc;
 	uint16_t i;
 
-	rc = user_vdev->user_backend->stop_session(vsession);
+	rc = vhost_user_wait_for_session_stop(vsession, 3, "stop session");
 	if (rc != 0) {
 		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vsession->vid);
 		return rc;
@@ -1273,13 +1274,6 @@ wait_for_semaphore(int timeout_sec, const char *errmsg)
 	}
 }
 
-static void
-vhost_session_cb_done(int rc)
-{
-	g_dpdk_response = rc;
-	sem_post(&g_dpdk_sem);
-}
-
 void
 vhost_user_session_stop_done(struct spdk_vhost_session *vsession, int response)
 {
@@ -1287,11 +1281,12 @@ vhost_user_session_stop_done(struct spdk_vhost_session *vsession, int response)
 		vsession->started = false;
 	}
 
-	vhost_session_cb_done(response);
+	g_dpdk_response = response;
+	sem_post(&g_dpdk_sem);
 }
 
 static void
-vhost_event_cb(void *arg1)
+vhost_user_session_stop_event(void *arg1)
 {
 	struct vhost_session_fn_ctx *ctx = arg1;
 	struct spdk_vhost_dev *vdev = ctx->vdev;
@@ -1299,19 +1294,18 @@ vhost_event_cb(void *arg1)
 	struct spdk_vhost_session *vsession;
 
 	if (pthread_mutex_trylock(&user_dev->lock) != 0) {
-		spdk_thread_send_msg(spdk_get_thread(), vhost_event_cb, arg1);
+		spdk_thread_send_msg(spdk_get_thread(), vhost_user_session_stop_event, arg1);
 		return;
 	}
 
 	vsession = vhost_session_find_by_id(vdev, ctx->vsession_id);
-	ctx->cb_fn(vdev, vsession, NULL);
+	user_dev->user_backend->stop_session(vdev, vsession, NULL);
 	pthread_mutex_unlock(&user_dev->lock);
 }
 
-int
-vhost_user_session_send_event(struct spdk_vhost_session *vsession,
-			      spdk_vhost_session_fn cb_fn, unsigned timeout_sec,
-			      const char *errmsg)
+static int
+vhost_user_wait_for_session_stop(struct spdk_vhost_session *vsession,
+				 unsigned timeout_sec, const char *errmsg)
 {
 	struct vhost_session_fn_ctx ev_ctx = {0};
 	struct spdk_vhost_dev *vdev = vsession->vdev;
@@ -1319,9 +1313,8 @@ vhost_user_session_send_event(struct spdk_vhost_session *vsession,
 
 	ev_ctx.vdev = vdev;
 	ev_ctx.vsession_id = vsession->id;
-	ev_ctx.cb_fn = cb_fn;
 
-	spdk_thread_send_msg(vdev->thread, vhost_event_cb, &ev_ctx);
+	spdk_thread_send_msg(vdev->thread, vhost_user_session_stop_event, &ev_ctx);
 
 	pthread_mutex_unlock(&user_dev->lock);
 	wait_for_semaphore(timeout_sec, errmsg);

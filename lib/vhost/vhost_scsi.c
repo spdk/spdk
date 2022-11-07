@@ -114,7 +114,8 @@ struct spdk_vhost_scsi_task {
 
 static int vhost_scsi_start(struct spdk_vhost_dev *vdev,
 			    struct spdk_vhost_session *vsession, void *unused);
-static int vhost_scsi_stop(struct spdk_vhost_session *vsession);
+static int vhost_scsi_stop(struct spdk_vhost_dev *vdev,
+			   struct spdk_vhost_session *vsession, void *unused);
 static void vhost_scsi_dump_info_json(struct spdk_vhost_dev *vdev,
 				      struct spdk_json_write_ctx *w);
 static void vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev,
@@ -1473,8 +1474,8 @@ destroy_session_poller_cb(void *arg)
 }
 
 static int
-vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
-		   struct spdk_vhost_session *vsession, void *unused)
+vhost_scsi_stop(struct spdk_vhost_dev *vdev,
+		struct spdk_vhost_session *vsession, void *unused)
 {
 	struct spdk_vhost_scsi_session *svsession = to_scsi_session(vsession);
 
@@ -1502,13 +1503,6 @@ vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
 				 svsession, 1000);
 
 	return 0;
-}
-
-static int
-vhost_scsi_stop(struct spdk_vhost_session *vsession)
-{
-	return vhost_user_session_send_event(vsession, vhost_scsi_stop_cb,
-					     3, "stop session");
 }
 
 static void

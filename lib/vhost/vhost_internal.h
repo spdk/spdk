@@ -222,7 +222,7 @@ struct spdk_vhost_user_dev_backend {
 	size_t session_ctx_size;
 
 	spdk_vhost_session_fn start_session;
-	int (*stop_session)(struct spdk_vhost_session *vsession);
+	spdk_vhost_session_fn stop_session;
 	int (*alloc_vq_tasks)(struct spdk_vhost_session *vsession, uint16_t qid);
 };
 
@@ -435,49 +435,13 @@ void vhost_user_dev_foreach_session(struct spdk_vhost_dev *dev,
 				    void *arg);
 
 /**
- * Call a function on the provided lcore and block until either
- * vhost_user_session_start_done() or vhost_user_session_stop_done()
- * is called.
- *
- * This must be called under the global vhost mutex, which this function
- * will unlock for the time it's waiting. It's meant to be called only
- * from start/stop session callbacks.
- *
- * \param vsession vhost session
- * \param cb_fn the function to call. The void *arg parameter in cb_fn
- * is always NULL.
- * \param timeout_sec timeout in seconds. This function will still
- * block after the timeout expires, but will print the provided errmsg.
- * \param errmsg error message to print once the timeout expires
- * \return return the code passed to spdk_vhost_session_event_done().
- */
-int vhost_user_session_send_event(struct spdk_vhost_session *vsession,
-				  spdk_vhost_session_fn cb_fn, unsigned timeout_sec,
-				  const char *errmsg);
-
-/**
- * Finish a blocking spdk_vhost_user_session_send_event() call and finally
- * start the session. This must be called on the target lcore, which
- * will now receive all session-related messages (e.g. from
- * vhost_user_dev_foreach_session()).
- *
- * Must be called under the global vhost lock.
- *
- * \param vsession vhost session
- * \param response return code
- */
-void vhost_user_session_start_done(struct spdk_vhost_session *vsession, int response);
-
-/**
- * Finish a blocking spdk_vhost_user_session_send_event() call and finally
+ * Finish a blocking vhost_user_wait_for_session_stop() call and finally
  * stop the session. This must be called on the session's lcore which
  * used to receive all session-related messages (e.g. from
  * vhost_user_dev_foreach_session()). After this call, the session-
  * related messages will be once again processed by any arbitrary thread.
  *
- * Must be called under the global vhost lock.
- *
- * Must be called under the global vhost mutex.
+ * Must be called under the vhost user device's session access lock.
  *
  * \param vsession vhost session
  * \param response return code
