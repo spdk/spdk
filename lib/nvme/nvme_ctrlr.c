@@ -4011,8 +4011,8 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	if (rc) {
-		NVME_CTRLR_ERRLOG(ctrlr, "Ctrlr operation failed with error: %d, ctrlr state: %d",
-				  rc, ctrlr->state);
+		NVME_CTRLR_ERRLOG(ctrlr, "Ctrlr operation failed with error: %d, ctrlr state: %d (%s)\n",
+				  rc, ctrlr->state, nvme_ctrlr_state_string(ctrlr->state));
 	}
 
 	/* Note: we use the ticks captured when we entered this function.
