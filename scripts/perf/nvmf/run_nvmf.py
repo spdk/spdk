@@ -370,6 +370,20 @@ class Target(Server):
         super().__init__(name, general_config, target_config)
 
         # Defaults
+        self.enable_zcopy = False
+        self.scheduler_name = "static"
+        self.null_block = 0
+        self._nics_json_obj = json.loads(self.exec_cmd(["ip", "-j", "address", "show"]))
+        self.subsystem_info_list = []
+        self.initiator_info = []
+        self.nvme_allowlist = []
+        self.nvme_blocklist = []
+
+        # Target-side measurement options
+        self.enable_pm = False
+        self.pm_delay = 0
+        self.pm_interval = 0
+        self.pm_count = 1
         self.enable_sar = False
         self.sar_delay = 0
         self.sar_interval = 0
@@ -383,21 +397,25 @@ class Target(Server):
         self.bandwidth_count = 0
         self.enable_dpdk_memory = False
         self.dpdk_wait_time = 0
-        self.enable_zcopy = False
-        self.scheduler_name = "static"
-        self.null_block = 0
-        self._nics_json_obj = json.loads(self.exec_cmd(["ip", "-j", "address", "show"]))
-        self.subsystem_info_list = []
-        self.initiator_info = []
-        self.enable_pm = False
-        self.pm_delay = 0
-        self.pm_interval = 0
-        self.pm_count = 1
-        self.nvme_allowlist = []
-        self.nvme_blocklist = []
 
         if "null_block_devices" in target_config:
             self.null_block = target_config["null_block_devices"]
+        if "scheduler_settings" in target_config:
+            self.scheduler_name = target_config["scheduler_settings"]
+        if "zcopy_settings" in target_config:
+            self.enable_zcopy = target_config["zcopy_settings"]
+        if "results_dir" in target_config:
+            self.results_dir = target_config["results_dir"]
+        if "blocklist" in target_config:
+            self.nvme_blocklist = target_config["blocklist"]
+        if "allowlist" in target_config:
+            self.nvme_allowlist = target_config["allowlist"]
+            # Blocklist takes precedence, remove common elements from allowlist
+            self.nvme_allowlist = list(set(self.nvme_allowlist) - set(self.nvme_blocklist))
+        if "pm_settings" in target_config:
+            self.enable_pm, self.pm_delay, self.pm_interval, self.pm_count = target_config["pm_settings"]
+            # Normalize pm_count - <= 0 means to loop indefinitely so let's avoid that to not block forever
+            self.pm_count = self.pm_count if self.pm_count > 0 else 1
         if "sar_settings" in target_config:
             self.enable_sar, self.sar_delay, self.sar_interval, self.sar_count = target_config["sar_settings"]
         if "pcm_settings" in target_config:
@@ -407,22 +425,6 @@ class Target(Server):
             self.enable_bandwidth, self.bandwidth_count = target_config["enable_bandwidth"]
         if "enable_dpdk_memory" in target_config:
             self.enable_dpdk_memory, self.dpdk_wait_time = target_config["enable_dpdk_memory"]
-        if "scheduler_settings" in target_config:
-            self.scheduler_name = target_config["scheduler_settings"]
-        if "zcopy_settings" in target_config:
-            self.enable_zcopy = target_config["zcopy_settings"]
-        if "results_dir" in target_config:
-            self.results_dir = target_config["results_dir"]
-        if "pm_settings" in target_config:
-            self.enable_pm, self.pm_delay, self.pm_interval, self.pm_count = target_config["pm_settings"]
-            # Normalize pm_count - <= 0 means to loop indefinitely so let's avoid that to not block forever
-            self.pm_count = self.pm_count if self.pm_count > 0 else 1
-        if "blocklist" in target_config:
-            self.nvme_blocklist = target_config["blocklist"]
-        if "allowlist" in target_config:
-            self.nvme_allowlist = target_config["allowlist"]
-            # Blocklist takes precedence, remove common elements from allowlist
-            self.nvme_allowlist = list(set(self.nvme_allowlist) - set(self.nvme_blocklist))
 
         self.log.info("Items now on allowlist: %s" % self.nvme_allowlist)
         self.log.info("Items now on blocklist: %s" % self.nvme_blocklist)
