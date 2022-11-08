@@ -473,6 +473,11 @@ struct spdk_vrdma_rpc_controller_configue_attr {
     int dev_state;
     uint64_t adminq_paddr;
     uint32_t adminq_length;
+    uint64_t dest_mac;
+    int64_t subnet_prefix;
+    int64_t intf_id;
+    int vrdma_qpn;
+    int backend_rqpn;
 };
 
 static const struct spdk_json_object_decoder
@@ -511,6 +516,36 @@ spdk_vrdma_rpc_controller_configue_decoder[] = {
         spdk_json_decode_uint32,
         true
     },
+    {
+        "dest_mac",
+        offsetof(struct spdk_vrdma_rpc_controller_configue_attr, dest_mac),
+        spdk_json_decode_uint64,
+        true
+    },
+    {
+        "subnet_prefix",
+        offsetof(struct spdk_vrdma_rpc_controller_configue_attr, subnet_prefix),
+        spdk_json_decode_uint64,
+        true
+    },
+    {
+        "intf_id",
+        offsetof(struct spdk_vrdma_rpc_controller_configue_attr, intf_id),
+        spdk_json_decode_uint64,
+        true
+    },
+    {
+        "vrdma_qpn",
+        offsetof(struct spdk_vrdma_rpc_controller_configue_attr, vrdma_qpn),
+        spdk_json_decode_uint32,
+        true
+    },
+    {
+        "backend_rqpn",
+        offsetof(struct spdk_vrdma_rpc_controller_configue_attr, backend_rqpn),
+        spdk_json_decode_uint32,
+        true
+    },
 };
 
 /*lizh Just for test*/
@@ -537,10 +572,13 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
                                     const struct spdk_json_val *params)
 {
     struct spdk_vrdma_rpc_controller_configue_attr *attr = NULL;
-     struct spdk_json_write_ctx *w;
+    struct spdk_json_write_ctx *w;
     struct spdk_emu_ctx *ctx;
     struct snap_vrdma_ctrl *sctrl;
     struct vrdma_ctrl *ctrl;
+    struct spdk_vrdma_qp *vqp;
+    struct vrdma_backend_qp *bk_qp;
+    uint32_t i;
 
     SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...start\n");
     attr = calloc(1, sizeof(*attr));
@@ -550,6 +588,10 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
     // Set invalid index, to identify when value was not decoded
     attr->dev_id = -1;
     attr->dev_state = -1;
+    attr->vrdma_qpn = -1;
+    attr->backend_rqpn = -1;
+    attr->subnet_prefix = -1;
+    attr->intf_id = -1;
 
     if (spdk_json_decode_object(params,
             spdk_vrdma_rpc_controller_configue_decoder,
@@ -560,7 +602,7 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
     }
     if (attr->dev_id == -1 || !attr->emu_manager) {
         SPDK_ERRLOG("invalid device id -1\n");
-        goto free_attr;        
+        goto free_attr;
     }
     /* Find device data */
     ctx = spdk_emu_ctx_find_by_pci_id(attr->emu_manager,
@@ -597,7 +639,7 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
             goto free_attr;
         }
     }
-    if (attr->dev_state) {
+    if (attr->dev_state != -1) {
         SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...dev_state=0x%x\n", attr->dev_state);
         g_bar_test.status = attr->dev_state;
     }
@@ -608,6 +650,107 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
         g_bar_test.status = 4; /* driver_ok */
         g_bar_test.adminq_base_addr = attr->adminq_paddr;
         g_bar_test.adminq_size = attr->adminq_length;
+    }
+    if (attr->dest_mac) {
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...dest_mac=0x%lx\n", attr->dest_mac);
+        ctrl = ctx->ctrl;
+        if (!ctrl) {
+            SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
+            goto free_attr;
+        }
+        if (attr->vrdma_qpn == -1) {
+            SPDK_ERRLOG("Invalid vrdma_qpn for emu_manager %s\n", attr->emu_manager);
+            goto free_attr;
+        }
+        vqp = find_spdk_vrdma_qp_by_idx(ctrl, attr->vrdma_qpn);
+        if (!vqp) {
+            SPDK_ERRLOG("Fail to find vrdma_qpn %d for emu_manager %s\n",
+                    attr->vrdma_qpn, attr->emu_manager);
+            goto free_attr;
+        }
+        bk_qp = vqp->bk_qp[0];
+        if (!bk_qp) {
+            SPDK_ERRLOG("Fail to find vrdma_qpn %d's backend qp for emu_manager %s\n",
+                    attr->vrdma_qpn, attr->emu_manager);
+            goto free_attr;
+        }
+        for (i = 0; i < 6; i++)
+            bk_qp->dest_mac[5-i] = attr->dest_mac >> i & 0xFF;
+    }
+    if (attr->backend_rqpn != -1) {
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...backend_rqpn=0x%x\n", attr->backend_rqpn);
+        ctrl = ctx->ctrl;
+        if (!ctrl) {
+            SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
+            goto free_attr;
+        }
+        if (attr->vrdma_qpn == -1) {
+            SPDK_ERRLOG("Invalid vrdma_qpn for emu_manager %s\n", attr->emu_manager);
+            goto free_attr;
+        }
+        vqp = find_spdk_vrdma_qp_by_idx(ctrl, attr->vrdma_qpn);
+        if (!vqp) {
+            SPDK_ERRLOG("Fail to find vrdma_qpn %d for emu_manager %s\n",
+                    attr->vrdma_qpn, attr->emu_manager);
+            goto free_attr;
+        }
+        bk_qp = vqp->bk_qp[0];
+        if (!bk_qp) {
+            SPDK_ERRLOG("Fail to find vrdma_qpn %d's backend qp for emu_manager %s\n",
+                    attr->vrdma_qpn, attr->emu_manager);
+            goto free_attr;
+        }
+        bk_qp->remote_qpn = attr->backend_rqpn;
+    }
+    if (attr->subnet_prefix != -1) {
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...subnet_prefix=0x%lx\n", attr->subnet_prefix);
+        ctrl = ctx->ctrl;
+        if (!ctrl) {
+            SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
+            goto free_attr;
+        }
+        if (attr->vrdma_qpn == -1) {
+            SPDK_ERRLOG("Invalid vrdma_qpn for emu_manager %s\n", attr->emu_manager);
+            goto free_attr;
+        }
+        vqp = find_spdk_vrdma_qp_by_idx(ctrl, attr->vrdma_qpn);
+        if (!vqp) {
+            SPDK_ERRLOG("Fail to find vrdma_qpn %d for emu_manager %s\n",
+                    attr->vrdma_qpn, attr->emu_manager);
+            goto free_attr;
+        }
+        bk_qp = vqp->bk_qp[0];
+        if (!bk_qp) {
+            SPDK_ERRLOG("Fail to find vrdma_qpn %d's backend qp for emu_manager %s\n",
+                    attr->vrdma_qpn, attr->emu_manager);
+            goto free_attr;
+        }
+        bk_qp->rgid_rip.global.subnet_prefix = attr->subnet_prefix;
+    }
+    if (attr->intf_id != -1) {
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...intf_id=0x%lx\n", attr->intf_id);
+        ctrl = ctx->ctrl;
+        if (!ctrl) {
+            SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
+            goto free_attr;
+        }
+        if (attr->vrdma_qpn == -1) {
+            SPDK_ERRLOG("Invalid vrdma_qpn for emu_manager %s\n", attr->emu_manager);
+            goto free_attr;
+        }
+        vqp = find_spdk_vrdma_qp_by_idx(ctrl, attr->vrdma_qpn);
+        if (!vqp) {
+            SPDK_ERRLOG("Fail to find vrdma_qpn %d for emu_manager %s\n",
+                    attr->vrdma_qpn, attr->emu_manager);
+            goto free_attr;
+        }
+        bk_qp = vqp->bk_qp[0];
+        if (!bk_qp) {
+            SPDK_ERRLOG("Fail to find vrdma_qpn %d's backend qp for emu_manager %s\n",
+                    attr->vrdma_qpn, attr->emu_manager);
+            goto free_attr;
+        }
+        bk_qp->rgid_rip.global.interface_id = attr->intf_id;
     }
     w = spdk_jsonrpc_begin_result(request);
     spdk_json_write_string(w, attr->emu_manager);

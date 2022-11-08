@@ -89,5 +89,5 @@ int spdk_io_mgr_init(void);
 void spdk_io_mgr_clear(void);
 
 void vrdma_qp_sm_dma_cb(struct snap_dma_completion *self, int status);
-
+void vrdma_qp_sm_init(struct spdk_vrdma_qp *vqp);
 #endif
