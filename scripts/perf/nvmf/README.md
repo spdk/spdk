@@ -59,7 +59,8 @@ The following sub-chapters describe each configuration section in more detail.
     "username": "user",
     "password": "password",
     "transport": "transport_type",
-    "skip_spdk_install": bool
+    "skip_spdk_install": bool,
+    "irdma_roce_enable": bool
 }
 ```
 
@@ -76,6 +77,9 @@ Optional:
   is already in place on Initiator systems and there's no need to re-build it,
   then set this option to true.
   Default: false.
+- irdma_roce_enable - loads irdma driver with RoCEv2 network protocol enabled on Target and
+  Initiator machines. This option applies only to system with Intel E810 NICs.
+  Default: false
 
 ### Target System Configuration
 
