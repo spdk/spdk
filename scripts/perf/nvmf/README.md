@@ -29,6 +29,7 @@ To run the scripts in your environment please follow steps below.
   option in Target and Initiator configuration sections.
 - `sysstat` package must be installed for SAR CPU utilization measurements.
 - `bwm-ng` package must be installed for NIC bandwidth utilization measurements.
+- `pcm` package must be installed for pcm, pcm-power and pcm-memory measurements.
 
 ### Optional
 
@@ -86,7 +87,7 @@ Optional:
   "null_block_devices": 8,
   "nvmet_bin": "/path/to/nvmetcli",
   "sar_settings": true,
-  "pcm_settings": [/tmp/pcm, 30, 1, 60],
+  "pcm_settings": false,
   "enable_bandwidth": [true, 60],
   "enable_dpdk_memory": [true, 30]
   "num_shared_buffers": 4096,
@@ -117,15 +118,9 @@ Optional, common:
   Enable SAR CPU utilization measurement on Target side. SAR thread will
   wait until fio finishes it's "ramp_time" and then start measurement for
   fio "run_time" duration. Default: enabled.
-- pcm_settings - [path, int(x), int(y), int(z)];
+- pcm_settings - bool
   Enable [PCM](https://github.com/opcm/pcm.git) measurements on Target side.
-  Measurements include CPU, memory and power consumption. "path" points to a
-  directory where pcm executables are present.
-  "x" - time to wait before starting measurements (suggested it equals to fio
-  ramp_time).
-  "y" - time interval between measurements.
-  "z" - number of measurement samples.
-  Default: disabled.
+  Measurements include CPU, memory and power consumption. Default: enabled.
 - enable_bandwidth - bool. Measure bandwidth utilization on network
   interfaces. Default: enabled.
 - tuned_profile - tunedadm profile to apply on the system before starting

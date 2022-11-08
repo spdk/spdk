@@ -385,11 +385,7 @@ class Target(Server):
         self.pm_interval = 0
         self.pm_count = 1
         self.enable_sar = True
-        self.enable_pcm = False
-        self.pcm_dir = ""
-        self.pcm_delay = 0
-        self.pcm_interval = 0
-        self.pcm_count = 0
+        self.enable_pcm = True
         self.enable_bw = True
         self.enable_dpdk_memory = False
         self.dpdk_wait_time = 0
@@ -414,9 +410,8 @@ class Target(Server):
             self.pm_count = self.pm_count if self.pm_count > 0 else 1
         if "enable_sar" in target_config:
             self.enable_sar = target_config["sar_settings"]
-        if "pcm_settings" in target_config:
-            self.enable_pcm = True
-            self.pcm_dir, self.pcm_delay, self.pcm_interval, self.pcm_count = target_config["pcm_settings"]
+        if "enable_pcm" in target_config:
+            self.enable_pcm = target_config["enable_pcm"]
         if "enable_bandwidth" in target_config:
             self.enable_bw = target_config["enable_bandwidth"]
         if "enable_dpdk_memory" in target_config:
@@ -531,16 +526,16 @@ class Target(Server):
             self.exec_cmd(["sudo", "ethtool", "--set-priv-flags", nic,
                            "channel-pkt-inspect-optimize", "off"])  # Disable channel packet inspection optimization
 
-    def measure_pcm_memory(self, results_dir, pcm_file_name):
-        time.sleep(self.pcm_delay)
-        cmd = ["%s/build/bin/pcm-memory" % self.pcm_dir, "%s" % self.pcm_interval, "-csv=%s/%s" % (results_dir, pcm_file_name)]
+    def measure_pcm_memory(self, results_dir, pcm_file_name, ramp_time, run_time):
+        time.sleep(ramp_time)
+        cmd = ["pcm-memory", "1", "-csv=%s/%s" % (results_dir, pcm_file_name)]
         pcm_memory = subprocess.Popen(cmd)
-        time.sleep(self.pcm_count)
+        time.sleep(run_time)
         pcm_memory.terminate()
 
-    def measure_pcm(self, results_dir, pcm_file_name):
-        time.sleep(self.pcm_delay)
-        cmd = ["%s/build/bin/pcm" % self.pcm_dir, "%s" % self.pcm_interval, "-i=%s" % self.pcm_count,
+    def measure_pcm(self, results_dir, pcm_file_name, ramp_time, run_time):
+        time.sleep(ramp_time)
+        cmd = ["pcm", "1", "-i=%s" % run_time,
                "-csv=%s/%s" % (results_dir, pcm_file_name)]
         subprocess.run(cmd)
         df = pd.read_csv(os.path.join(results_dir, pcm_file_name), header=[0, 1])
@@ -549,11 +544,13 @@ class Target(Server):
         skt_pcm_file_name = "_".join(["skt", pcm_file_name])
         skt.to_csv(os.path.join(results_dir, skt_pcm_file_name), index=False)
 
-    def measure_pcm_power(self, results_dir, pcm_power_file_name):
-        time.sleep(self.pcm_delay)
-        out = self.exec_cmd(["%s/build/bin/pcm-power" % self.pcm_dir, "%s" % self.pcm_interval, "-i=%s" % self.pcm_count])
+    def measure_pcm_power(self, results_dir, pcm_power_file_name, ramp_time, run_time):
+        time.sleep(ramp_time)
+        out = self.exec_cmd(["pcm-power", "1", "-i=%s" % run_time])
         with open(os.path.join(results_dir, pcm_power_file_name), "w") as fh:
             fh.write(out)
+        # TODO: Above command results in a .csv file containing measurements for all gathered samples.
+        #       Improve this so that additional file containing measurements average is generated too.
 
     def measure_network_bandwidth(self, results_dir, bandwidth_file_name, ramp_time, run_time):
         self.log.info("Waiting %d seconds for ramp-up to finish before measuring bandwidth stats" % ramp_time)
@@ -1569,9 +1566,12 @@ if __name__ == "__main__":
             if target_obj.enable_pcm:
                 pcm_fnames = ["%s_%s_%s_%s.csv" % (block_size, rw, io_depth, x) for x in ["pcm_cpu", "pcm_memory", "pcm_power"]]
 
-                pcm_cpu_t = threading.Thread(target=target_obj.measure_pcm, args=(args.results, pcm_fnames[0],))
-                pcm_mem_t = threading.Thread(target=target_obj.measure_pcm_memory, args=(args.results, pcm_fnames[1],))
-                pcm_pow_t = threading.Thread(target=target_obj.measure_pcm_power, args=(args.results, pcm_fnames[2],))
+                pcm_cpu_t = threading.Thread(target=target_obj.measure_pcm,
+                                             args=(args.results, pcm_fnames[0], fio_ramp_time, fio_run_time))
+                pcm_mem_t = threading.Thread(target=target_obj.measure_pcm_memory,
+                                             args=(args.results, pcm_fnames[1], fio_ramp_time, fio_run_time))
+                pcm_pow_t = threading.Thread(target=target_obj.measure_pcm_power,
+                                             args=(args.results, pcm_fnames[2], fio_ramp_time, fio_run_time))
 
                 threads.append(pcm_cpu_t)
                 threads.append(pcm_mem_t)
