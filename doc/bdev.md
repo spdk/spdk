@@ -200,8 +200,7 @@ rpc.py must be twice as long than the key length in binary form.
 
 Example command
 
-rpc.py bdev_crypto_create -c AES_XTS -k2 7859243a027411e581e0c40a35c8228f NVMe1n1 CryNvmeA \
-mlx5_pci d16a2f3a9e9f5b32daefacd7f5984f4578add84425be4a0baa489b9de8884b09
+`rpc.py bdev_crypto_create -c AES_XTS -k2 7859243a027411e581e0c40a35c8228f NVMe1n1 CryNvmeA mlx5_pci d16a2f3a9e9f5b32daefacd7f5984f4578add84425be4a0baa489b9de8884b09`
 
 This command will create a crypto vbdev called 'CryNvmeA' on top of the NVMe bdev
 'NVMe1n1' and will use the DPDK software driver 'mlx5_pci', the AES key
@@ -431,7 +430,7 @@ option to enable this RPC.
 
 Example commands
 
-`rpc.py bdev_nvme_cuse_register -n Nvme3
+`rpc.py bdev_nvme_cuse_register -n Nvme3`
 
 This command will register a character device under /dev/spdk associated with Nvme3
 controller. If there are namespaces created on Nvme3 controller, a namespace
