@@ -384,10 +384,7 @@ class Target(Server):
         self.pm_delay = 0
         self.pm_interval = 0
         self.pm_count = 1
-        self.enable_sar = False
-        self.sar_delay = 0
-        self.sar_interval = 0
-        self.sar_count = 0
+        self.enable_sar = True
         self.enable_pcm = False
         self.pcm_dir = ""
         self.pcm_delay = 0
@@ -416,8 +413,8 @@ class Target(Server):
             self.enable_pm, self.pm_delay, self.pm_interval, self.pm_count = target_config["pm_settings"]
             # Normalize pm_count - <= 0 means to loop indefinitely so let's avoid that to not block forever
             self.pm_count = self.pm_count if self.pm_count > 0 else 1
-        if "sar_settings" in target_config:
-            self.enable_sar, self.sar_delay, self.sar_interval, self.sar_count = target_config["sar_settings"]
+        if "enable_sar" in target_config:
+            self.enable_sar = target_config["sar_settings"]
         if "pcm_settings" in target_config:
             self.enable_pcm = True
             self.pcm_dir, self.pcm_delay, self.pcm_interval, self.pcm_count = target_config["pcm_settings"]
@@ -493,17 +490,17 @@ class Target(Server):
                     ip_bdev_map.append((ip, c))
         return ip_bdev_map
 
-    def measure_sar(self, results_dir, sar_file_prefix):
+    def measure_sar(self, results_dir, sar_file_prefix, ramp_time, run_time):
         cpu_number = os.cpu_count()
         sar_idle_sum = 0
         sar_output_file = os.path.join(results_dir, sar_file_prefix + ".txt")
         sar_cpu_util_file = os.path.join(results_dir, ".".join([sar_file_prefix + "cpu_util", "txt"]))
 
-        self.log.info("Waiting %d seconds for ramp-up to finish before measuring SAR stats" % self.sar_delay)
-        time.sleep(self.sar_delay)
+        self.log.info("Waiting %d seconds for ramp-up to finish before measuring SAR stats" % ramp_time)
+        time.sleep(ramp_time)
         self.log.info("Starting SAR measurements")
 
-        out = self.exec_cmd(["sar", "-P", "ALL", "%s" % self.sar_interval, "%s" % self.sar_count])
+        out = self.exec_cmd(["sar", "-P", "ALL", "%s" % 1, "%s" % run_time])
         with open(os.path.join(results_dir, sar_output_file), "w") as fh:
             for line in out.split("\n"):
                 if "Average" in line:
@@ -1562,7 +1559,7 @@ if __name__ == "__main__":
                 threads.append(t)
             if target_obj.enable_sar:
                 sar_file_prefix = "%s_%s_%s_sar" % (block_size, rw, io_depth)
-                t = threading.Thread(target=target_obj.measure_sar, args=(args.results, sar_file_prefix))
+                t = threading.Thread(target=target_obj.measure_sar, args=(args.results, sar_file_prefix, fio_ramp_time, fio_run_time))
                 threads.append(t)
 
             if target_obj.enable_pcm:
@@ -1579,7 +1576,7 @@ if __name__ == "__main__":
             if target_obj.enable_bandwidth:
                 bandwidth_file_name = "_".join(["bandwidth", str(block_size), str(rw), str(io_depth)])
                 bandwidth_file_name = ".".join([bandwidth_file_name, "csv"])
-                t = threading.Thread(target=target_obj.measure_network_bandwidth, args=(args.results, bandwidth_file_name,))
+                t = threading.Thread(target=target_obj.measure_network_bandwidth, args=(args.results, bandwidth_file_name))
                 threads.append(t)
 
             if target_obj.enable_dpdk_memory:

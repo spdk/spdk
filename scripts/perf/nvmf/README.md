@@ -27,6 +27,7 @@ To run the scripts in your environment please follow steps below.
   to /usr/src/local directory in order to configure NIC ports IRQ affinity.
   If custom directory is to be used, then it must be set using irq_scripts_dir
   option in Target and Initiator configuration sections.
+- `sysstat` package must be installed for SAR CPU utilization measurements.
 
 ### Optional
 
@@ -83,7 +84,7 @@ Optional:
   "core_mask": "[1-10]",
   "null_block_devices": 8,
   "nvmet_bin": "/path/to/nvmetcli",
-  "sar_settings": [true, 30, 1, 60],
+  "sar_settings": true,
   "pcm_settings": [/tmp/pcm, 30, 1, 60],
   "enable_bandwidth": [true, 60],
   "enable_dpdk_memory": [true, 30]
@@ -111,10 +112,10 @@ Optional, common:
 
 - null_block_devices - int, number of null block devices to create.
   Detected NVMe devices are not used if option is present. Default: 0.
-- sar_settings - [bool, int(x), int(y), int(z)];
-  Enable SAR CPU utilization measurement on Target side.
-  Wait for "x" seconds before starting measurements, then do "z" samples
-  with "y" seconds intervals between them. Default: disabled.
+- sar_settings - bool
+  Enable SAR CPU utilization measurement on Target side. SAR thread will
+  wait until fio finishes it's "ramp_time" and then start measurement for
+  fio "run_time" duration. Default: enabled.
 - pcm_settings - [path, int(x), int(y), int(z)];
   Enable [PCM](https://github.com/opcm/pcm.git) measurements on Target side.
   Measurements include CPU, memory and power consumption. "path" points to a
