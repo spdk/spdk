@@ -793,8 +793,8 @@ static void vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,
 {
 	struct spdk_vrdma_cq *vcq;
 	struct vrdma_cmd_param param;
-	struct spdk_vrdma_eq *veq = NULL;
-	uint32_t cq_idx;
+	struct spdk_vrdma_eq *veq;
+	uint32_t cq_idx, q_buff_size;
 
 	SPDK_NOTICELOG("\nlizh vrdma_aq_create_cq...start\n");
 	if (g_vcq_cnt > VRDMA_MAX_CQ_NUM ||
@@ -828,16 +828,6 @@ static void vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,
 				  aqe->resp.create_cq_resp.err_code);
 		return;
 	}
-	param.param.create_cq_param.cq_handle = cq_idx;
-	if (ctrl->srv_ops->vrdma_device_create_cq(&ctrl->dev, aqe, &param)) {
-		aqe->resp.create_cq_resp.err_code =
-				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
-		SPDK_ERRLOG("Failed to create CQ in service, err(%d)",
-				  aqe->resp.create_cq_resp.err_code);
-		goto free_vcq;
-	}
-	g_vcq_cnt++;
-	ctrl->vdev->vcq_cnt++;
 	vcq->veq = veq;
 	vcq->cq_idx = cq_idx;
 	vcq->cqe_entry_num =  1 << aqe->req.create_cq_req.log_cqe_entry_num;
@@ -846,6 +836,34 @@ static void vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,
 	vcq->pagesize = 1 << aqe->req.create_cq_req.log_pagesize;
 	vcq->interrupt_mode = aqe->req.create_cq_req.interrupt_mode;
 	vcq->host_pa = aqe->req.create_cq_req.l0_pa;
+	q_buff_size  = sizeof(*vcq->pici) + vcq->cqebb_size * vcq->cqe_entry_num;
+	vcq->pici = spdk_malloc(q_buff_size, 0x10, NULL, SPDK_ENV_LCORE_ID_ANY,
+                             SPDK_MALLOC_DMA);
+    if (!vcq->pici) {
+		aqe->resp.create_cq_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
+		SPDK_ERRLOG("Failed to allocate cqe buff");
+        goto free_vcq;
+    }
+    vcq->cqe_ci_mr = ibv_reg_mr(ctrl->pd, vcq->pici, q_buff_size,
+                    IBV_ACCESS_REMOTE_READ |
+                    IBV_ACCESS_REMOTE_WRITE |
+                    IBV_ACCESS_LOCAL_WRITE);
+    if (!vcq->cqe_ci_mr) {
+		aqe->resp.create_cq_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
+		SPDK_ERRLOG("Failed to register cqe mr");
+        goto free_cqe_buff;
+    }
+	vcq->cqe_buff = (uint8_t *)vcq->pici + sizeof(*vcq->pici);
+	param.param.create_cq_param.cq_handle = cq_idx;
+	if (ctrl->srv_ops->vrdma_device_create_cq(&ctrl->dev, aqe, &param)) {
+		aqe->resp.create_cq_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
+		SPDK_ERRLOG("Failed to create CQ in service, err(%d)",
+				  aqe->resp.create_cq_resp.err_code);
+		goto free_cqe_mr;
+	}
+	g_vcq_cnt++;
+	ctrl->vdev->vcq_cnt++;
 	veq->ref_cnt++;
 	spdk_bit_array_set(free_vcq_ids, cq_idx);
 	LIST_INSERT_HEAD(&ctrl->vdev->vcq_list, vcq, entry);
@@ -854,6 +872,10 @@ static void vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,
 	SPDK_NOTICELOG("\nlizh vrdma_aq_create_cq...cq_idx %d done\n", cq_idx);
 	return;
 
+free_cqe_mr:
+	ibv_dereg_mr(vcq->cqe_ci_mr);
+free_cqe_buff:
+	spdk_free(vcq->pici);
 free_vcq:
 	free(vcq);
 	return;
@@ -903,10 +925,11 @@ static void vrdma_aq_destroy_cq(struct vrdma_ctrl *ctrl,
 	}
 	LIST_REMOVE(vcq, entry);
 	spdk_bit_array_clear(free_vcq_ids, vcq->cq_idx);
-
 	g_vcq_cnt--;
 	ctrl->vdev->vcq_cnt--;
 	vcq->veq->ref_cnt--;
+	ibv_dereg_mr(vcq->cqe_ci_mr);
+	spdk_free(vcq->pici);
 	free(vcq);
 	aqe->resp.destroy_cq_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 	SPDK_NOTICELOG("\nlizh vrdma_aq_destroy_cq...done\n");
@@ -931,7 +954,7 @@ static int vrdma_create_backend_qp(struct vrdma_ctrl *ctrl,
 	//qp->bk_qp.qp_attr.sq_size = vqp->sq.comm.wqebb_cnt;
 	qp->bk_qp.qp_attr.sq_size = ctrl->sctrl->bar_curr->mtu ? ctrl->sctrl->bar_curr->mtu : IBV_MTU_2048;
 	qp->bk_qp.qp_attr.sq_max_sge = 1;
-	qp->bk_qp.qp_attr.sq_max_inline_size = (64 * (vqp->sq.comm.wqebb_size + 1));
+	qp->bk_qp.qp_attr.sq_max_inline_size = 256;
 	qp->bk_qp.qp_attr.rq_size = vqp->rq.comm.wqebb_cnt;
 	qp->bk_qp.qp_attr.rq_max_sge = 1;
 	if (snap_vrdma_create_qp_helper(qp->pd, &qp->bk_qp)) {
@@ -1021,11 +1044,11 @@ static int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 				struct spdk_vrdma_cq *sq_vcq)
 {
 	struct snap_vrdma_vq_create_attr q_attr;
-	uint32_t wqe_buff_size, q_buff_size;
+	uint32_t rq_buff_size, sq_buff_size, q_buff_size;
 
 	SPDK_NOTICELOG("\nlizh vrdma_create_vq...start\n");
 	q_attr.bdev = NULL;
-	q_attr.pd = vqp->vpd->ibpd;
+	q_attr.pd = ctrl->pd;
 	q_attr.sq_size = VRDMA_MAX_DMA_SQ_SIZE_PER_VQP;
 	q_attr.rq_size = VRDMA_MAX_DMA_RQ_SIZE_PER_VQP;
 	q_attr.tx_elem_size = VRDMA_DMA_ELEM_SIZE;
@@ -1036,48 +1059,33 @@ static int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 		SPDK_ERRLOG("Failed to create qp dma queue");
 		return -1;
 	}
-	vqp->q_comp.func = vrdma_qp_sm_dma_cb;
-	vqp->q_comp.count = 1;
-	vqp->sm_state = VRDMA_QP_STATE_IDLE;
+	vrdma_qp_sm_init(vqp);
 	vqp->rq.comm.wqebb_size =
 		VRDMA_QP_WQEBB_BASE_SIZE * (aqe->req.create_qp_req.rq_wqebb_size + 1);
 	vqp->rq.comm.wqebb_cnt = 1 << aqe->req.create_qp_req.log_rq_wqebb_cnt;
-	wqe_buff_size = vqp->rq.comm.wqebb_size * vqp->rq.comm.wqebb_cnt;
-    q_buff_size  = wqe_buff_size + (rq_vcq->cqebb_size * rq_vcq->cqe_entry_num);
-	vqp->rq.rq_buff = spdk_malloc(q_buff_size, 0x10, NULL, SPDK_ENV_LCORE_ID_ANY,
-                             SPDK_MALLOC_DMA);
-    if (!vqp->rq.rq_buff) {
-		SPDK_ERRLOG("Failed to allocate rq buff");
-        goto destroy_dma;
-    }
-	vqp->rq.cqe_buff = (uint8_t *)vqp->rq.rq_buff + wqe_buff_size;
-    vqp->rq.comm.mr = ibv_reg_mr(vqp->vpd->ibpd, vqp->rq.rq_buff, q_buff_size,
-                    IBV_ACCESS_REMOTE_READ |
-                    IBV_ACCESS_REMOTE_WRITE |
-                    IBV_ACCESS_LOCAL_WRITE);
-    if (!vqp->rq.comm.mr) {
-		SPDK_ERRLOG("Failed to register rq mr");
-        goto free_rq_buff;
-    }
+	rq_buff_size = vqp->rq.comm.wqebb_size * vqp->rq.comm.wqebb_cnt;
+	q_buff_size = sizeof(*vqp->qp_pi) + rq_buff_size;
 	vqp->sq.comm.wqebb_size =
 		VRDMA_QP_WQEBB_BASE_SIZE * (aqe->req.create_qp_req.sq_wqebb_size + 1);
 	vqp->sq.comm.wqebb_cnt = 1 << aqe->req.create_qp_req.log_sq_wqebb_cnt;
-	wqe_buff_size = vqp->sq.comm.wqebb_size * vqp->sq.comm.wqebb_cnt;
-    q_buff_size  = wqe_buff_size + (sq_vcq->cqebb_size * sq_vcq->cqe_entry_num);
-	vqp->sq.sq_buff = spdk_malloc(q_buff_size, 0x10, NULL, SPDK_ENV_LCORE_ID_ANY,
+	sq_buff_size = vqp->sq.comm.wqebb_size * vqp->sq.comm.wqebb_cnt;
+	q_buff_size += sq_buff_size;
+
+	vqp->qp_pi = spdk_malloc(q_buff_size, 0x10, NULL, SPDK_ENV_LCORE_ID_ANY,
                              SPDK_MALLOC_DMA);
-    if (!vqp->sq.sq_buff) {
-		SPDK_ERRLOG("Failed to allocate sq buff");
-        goto free_rq_mr;
+    if (!vqp->qp_pi) {
+		SPDK_ERRLOG("Failed to allocate wqe buff");
+        goto destroy_dma;
     }
-	vqp->sq.cqe_buff = (uint8_t *)vqp->sq.sq_buff + wqe_buff_size;
-    vqp->sq.comm.mr = ibv_reg_mr(vqp->vpd->ibpd, vqp->sq.sq_buff, q_buff_size,
+	vqp->rq.rq_buff = (struct vrdma_recv_wqe *)((uint8_t *)vqp->qp_pi + sizeof(*vqp->qp_pi));
+	vqp->sq.sq_buff = (struct vrdma_send_wqe *)((uint8_t *)vqp->rq.rq_buff + rq_buff_size);
+    vqp->qp_mr = ibv_reg_mr(ctrl->pd, vqp->qp_pi, q_buff_size,
                     IBV_ACCESS_REMOTE_READ |
                     IBV_ACCESS_REMOTE_WRITE |
                     IBV_ACCESS_LOCAL_WRITE);
-    if (!vqp->sq.comm.mr) {
-		SPDK_ERRLOG("Failed to register sq mr");
-        goto free_sq_buff;
+    if (!vqp->qp_mr) {
+		SPDK_ERRLOG("Failed to register qp_mr");
+        goto free_wqe_buff;
     }
 	vqp->rq.comm.wqe_buff_pa = aqe->req.create_qp_req.rq_l0_paddr;
 	vqp->rq.comm.doorbell_pa = aqe->req.create_qp_req.rq_pi_paddr;
@@ -1090,12 +1098,8 @@ static int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 	SPDK_NOTICELOG("\nlizh vrdma_create_vq...done\n");
 	return 0;
 
-free_sq_buff:
-	spdk_free(vqp->sq.sq_buff);
-free_rq_mr:
-	ibv_dereg_mr(vqp->rq.comm.mr);
-free_rq_buff:
-	spdk_free(vqp->rq.rq_buff);
+free_wqe_buff:
+	spdk_free(vqp->qp_pi);
 destroy_dma:
 	ctrl->sctrl->q_ops->destroy(ctrl->sctrl, vqp->snap_queue);
 	return -1;
@@ -1109,6 +1113,16 @@ static void vrdma_destroy_vq(struct vrdma_ctrl *ctrl,
 	/* set queue flushing and waiting it suspended*/
 	if (ctrl->sctrl->q_ops->is_suspended(vqp->snap_queue)) {
 		ctrl->sctrl->q_ops->destroy(ctrl->sctrl, vqp->snap_queue);
+		if (vqp->qp_mr) {
+			ibv_dereg_mr(vqp->qp_mr);
+			vqp->qp_mr = NULL;
+		}
+		if (vqp->qp_pi) {
+			spdk_free(vqp->qp_pi);
+			vqp->qp_pi = NULL;
+			vqp->rq.rq_buff = NULL;
+			vqp->sq.sq_buff = NULL;
+		}
 	} else {
 		ctrl->sctrl->q_ops->suspend(vqp->snap_queue);
 		is_flushing = true;
@@ -1209,7 +1223,7 @@ static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
 	LIST_INSERT_HEAD(&ctrl->vdev->vqp_list, vqp, entry);
 	aqe->resp.create_qp_resp.qp_handle = qp_idx;
 	aqe->resp.create_qp_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
-	SPDK_NOTICELOG("\nlizh vrdma_aq_create_cq...qp_idx %d done\n", qp_idx);
+	SPDK_NOTICELOG("\nlizh vrdma_aq_create_qp...qp_idx %d done\n", qp_idx);
 	return;
 
 destroy_bk_qp:
@@ -1323,13 +1337,40 @@ static void vrdma_aq_query_qp(struct vrdma_ctrl *ctrl,
 	return;
 }
 
+/* Lei : Just for test */
+static void vrdma_qp_sm_poll_pi(struct spdk_vrdma_qp *vqp,
+                                   enum vrdma_qp_sm_op_status status)
+{
+    int ret;
+    uint64_t pi_addr = vqp->sq.comm.doorbell_pa;
+
+   	if (status != VRDMA_QP_SM_OP_OK) {
+        SPDK_ERRLOG("failed to update admq CI, status %d\n", status);
+        vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
+        return;
+    }
+	//SPDK_NOTICELOG("vrdam poll sq pi: doorbell pa 0x%lx\n", pi_addr);
+	vqp->sm_state = VRDMA_QP_STATE_HANDLE_PI;
+    vqp->q_comp.func = vrdma_qp_sm_dma_cb;
+    vqp->q_comp.count = 1;
+	ret = snap_dma_q_read(vqp->snap_queue->dma_q, &vqp->qp_pi->pi.sq_pi, sizeof(uint16_t),
+                      vqp->qp_mr->lkey, pi_addr,
+                      vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
+    if (spdk_unlikely(ret)) {
+        SPDK_ERRLOG("failed to read sq PI, ret %d\n", ret);
+        vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
+        return;
+    }
+	return;
+}
+
 static void vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
 	struct spdk_vrdma_qp *vqp = NULL;
 
-	SPDK_NOTICELOG("\nlizh vrdma_aq_modify_qp..qp_handle=0x%x.start\n",
-				aqe->req.modify_qp_req.qp_handle);
+	SPDK_NOTICELOG("\nlizh vrdma_aq_modify_qp..qp_handle=0x%x qp_attr_mask = 0x%x...start\n",
+				aqe->req.modify_qp_req.qp_handle, aqe->req.modify_qp_req.qp_attr_mask);
 	if (!g_vqp_cnt || !ctrl->vdev ||
 		!ctrl->vdev->vqp_cnt) {
 		aqe->resp.modify_qp_resp.err_code =
@@ -1395,13 +1436,18 @@ static void vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
 					aqe->resp.modify_qp_resp.err_code);
 			}
 		}
+		SPDK_NOTICELOG("\nlizh vrdma_aq_modify_qp..vqp->qp_state=0x%x new qp_state = 0x%x\n",
+				vqp->qp_state, aqe->req.modify_qp_req.qp_state);
 		if (vqp->qp_state == IBV_QPS_INIT &&
 			aqe->req.modify_qp_req.qp_state == IBV_QPS_RTR) {
+			SPDK_NOTICELOG("lizh call snap_vrdma_sched_vq for qp %d\n", aqe->req.modify_qp_req.qp_handle);
 			/* init2rtr vqp join poller-group */
+			vrdma_qp_sm_poll_pi(vqp, VRDMA_QP_SM_OP_OK);
 			snap_vrdma_sched_vq(ctrl->sctrl, vqp->snap_queue);
 		}
 		if (vqp->qp_state != IBV_QPS_ERR &&
 			aqe->req.modify_qp_req.qp_state == IBV_QPS_ERR) {
+			SPDK_NOTICELOG("lizh call snap_vrdma_desched_vq for qp %d\n", aqe->req.modify_qp_req.qp_handle);
 			/* Take vqp out of poller-group when it changed to ERR state */
 			snap_vrdma_desched_vq(vqp->snap_queue);
 		}
@@ -1734,7 +1780,7 @@ int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
 				return -1;		
 	}
 
-#if 1
+#if 0
 	/* lizh:Just for test*/
 	if (aqe->hdr.opcode > VRDMA_ADMIN_DEREG_MR && 
 		aqe->hdr.opcode != VRDMA_ADMIN_CREATE_AH &&
@@ -1904,7 +1950,7 @@ static bool vrdma_aq_sm_parse_cmd(struct vrdma_admin_sw_qp *aq,
 	int ret = 0;
 	struct vrdma_ctrl *ctrl = container_of(aq, struct vrdma_ctrl, sw_qp);
 
-	SPDK_ERRLOG("lizh vrdma_aq_sm_parse_cmd aq->num_to_parse %d\n", aq->num_to_parse);
+	SPDK_NOTICELOG("lizh vrdma_aq_sm_parse_cmd aq->num_to_parse %d\n", aq->num_to_parse);
 	if (status != VRDMA_CMD_SM_OP_OK) {
 		SPDK_ERRLOG("failed to get admq cmd entry, status %d\n", status);
 		aq->state = VRDMA_CMD_STATE_FATAL_ERR;

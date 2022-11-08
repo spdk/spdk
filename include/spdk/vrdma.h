@@ -105,6 +105,15 @@ struct spdk_vrdma_eq {
 	uint16_t vector_idx;
 };
 
+union vrdma_align_pici {
+	uint8_t dummy[64]; /* alignment with RTE_CACHE_LINE_SIZE */
+	struct {
+		uint16_t sq_pi;
+		uint16_t rq_pi;
+	} pi;
+	uint32_t ci;
+};
+
 struct spdk_vrdma_cq {
     LIST_ENTRY(spdk_vrdma_cq) entry;
 	uint32_t cq_idx;
@@ -116,9 +125,11 @@ struct spdk_vrdma_cq {
 	uint32_t cqebb_size; /* cqebb_size is base on 64 * (log_cqebb_size + 1) */
 	uint32_t pre_pi;
 	uint32_t pi;
-	uint32_t ci;
+	union vrdma_align_pici *pici;
 	uint64_t host_pa;
 	uint64_t ci_pa;
+	void *cqe_buff;
+	struct ibv_mr *cqe_ci_mr;
 };
 
 #define VRDMA_MAX_BK_QP_PER_VQP 4
@@ -127,7 +138,6 @@ struct spdk_vrdma_cq {
 
 enum vrdma_qp_sm_state_type {
         VRDMA_QP_STATE_IDLE,
-        VRDMA_QP_STATE_INIT_CI,
         VRDMA_QP_STATE_POLL_PI,
         VRDMA_QP_STATE_HANDLE_PI,
         VRDMA_QP_STATE_WQE_READ,
@@ -150,22 +160,18 @@ struct vrdma_q_comm {
 	uint16_t reserved:5;
 	uint16_t wqebb_cnt; /* sqe entry cnt */
 	uint32_t wqebb_size; /* wqebb_size is based on 64 * (log_wqebb_size + 1) */
-	uint16_t pi;
 	uint16_t pre_pi;
 	uint32_t num_to_parse;
-	struct ibv_mr *mr;
 };
 
 struct vrdma_sq {
 	struct vrdma_q_comm comm;
 	struct vrdma_send_wqe *sq_buff; /* wqe buff */
-	void *cqe_buff;
 };
 
 struct vrdma_rq {
 	struct vrdma_q_comm comm;
 	struct vrdma_recv_wqe *rq_buff; /* wqe buff */
-	void *cqe_buff;
 };
 
 struct spdk_vrdma_qp {
@@ -194,6 +200,8 @@ struct spdk_vrdma_qp {
 	struct vrdma_backend_qp *bk_qp[VRDMA_MAX_BK_QP_PER_VQP];
 	struct vrdma_rq rq;
 	struct vrdma_sq sq;
+	struct ibv_mr *qp_mr;
+	union vrdma_align_pici *qp_pi;
 };
 
 struct spdk_vrdma_dev {
