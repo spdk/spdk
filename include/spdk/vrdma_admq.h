@@ -294,6 +294,7 @@ struct vrdma_create_cq_req {
 	uint32_t reserved:4;
 	uint32_t ceq_handle;
 	uint64_t l0_pa; 
+	uint64_t ci_pa;
 } __attribute__((packed));
 
 struct vrdma_create_cq_resp {
