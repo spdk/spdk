@@ -60,19 +60,21 @@ function ocf_precompile() {
 	./configure $config_params
 }
 
+# Find matching llvm fuzzer library and clang compiler version
 function llvm_precompile() {
-	# llvm need clang compiler
-	local clangV
-	local clang_complier
+	[[ $(clang --version) =~ "version "(([0-9]+).([0-9]+).([0-9]+)) ]]
+	clang_version=${BASH_REMATCH[1]}
+	clang_num=${BASH_REMATCH[2]}
 
-	clangV=$(clang --version | grep version | cut -d" " -f3)
-	clang_complier=$(echo "$clangV" | cut -d"." -f1)
+	export CC=clang-$clang_num
+	export CXX=clang++-$clang_num
 
-	export CC=clang-$clang_complier
-	export CXX=clang++-$clang_complier
-	# Set config to use precompiled library
-	config_params="$config_params --with-fuzzer=/usr/lib64/clang/$clangV/lib/linux/libclang_rt.fuzzer_no_main-x86_64.a"
-	# need to reconfigure to avoid clearing llvm related files on future make clean.
+	fuzzer_libs=(/usr/lib*/clang/"$clang_version"/lib/linux/libclang_rt.fuzzer_no_main-x86_64.a)
+	fuzzer_lib=${fuzzer_libs[0]}
+	[[ -e $fuzzer_lib ]]
+
+	config_params="$config_params --with-fuzzer=$fuzzer_lib"
+	# Need to reconfigure to avoid clearing llvm related files on future make clean.
 	./configure $config_params
 }
 
