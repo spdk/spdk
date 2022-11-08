@@ -390,8 +390,7 @@ class Target(Server):
         self.pcm_delay = 0
         self.pcm_interval = 0
         self.pcm_count = 0
-        self.enable_bandwidth = 0
-        self.bandwidth_count = 0
+        self.enable_bw = True
         self.enable_dpdk_memory = False
         self.dpdk_wait_time = 0
 
@@ -419,7 +418,7 @@ class Target(Server):
             self.enable_pcm = True
             self.pcm_dir, self.pcm_delay, self.pcm_interval, self.pcm_count = target_config["pcm_settings"]
         if "enable_bandwidth" in target_config:
-            self.enable_bandwidth, self.bandwidth_count = target_config["enable_bandwidth"]
+            self.enable_bw = target_config["enable_bandwidth"]
         if "enable_dpdk_memory" in target_config:
             self.enable_dpdk_memory, self.dpdk_wait_time = target_config["enable_dpdk_memory"]
 
@@ -556,10 +555,15 @@ class Target(Server):
         with open(os.path.join(results_dir, pcm_power_file_name), "w") as fh:
             fh.write(out)
 
-    def measure_network_bandwidth(self, results_dir, bandwidth_file_name):
+    def measure_network_bandwidth(self, results_dir, bandwidth_file_name, ramp_time, run_time):
+        self.log.info("Waiting %d seconds for ramp-up to finish before measuring bandwidth stats" % ramp_time)
+        time.sleep(ramp_time)
         self.log.info("INFO: starting network bandwidth measure")
         self.exec_cmd(["bwm-ng", "-o", "csv", "-F", "%s/%s" % (results_dir, bandwidth_file_name),
-                       "-a", "1", "-t", "1000", "-c", str(self.bandwidth_count)])
+                       "-a", "1", "-t", "1000", "-c", "%s" % run_time])
+        # TODO: Above command results in a .csv file containing measurements for all gathered samples.
+        #       Improve this so that additional file containing measurements average is generated too.
+        # TODO: Monitor only these interfaces which are currently used to run the workload.
 
     def measure_dpdk_memory(self, results_dir):
         self.log.info("INFO: waiting to generate DPDK memory usage")
@@ -1573,10 +1577,11 @@ if __name__ == "__main__":
                 threads.append(pcm_mem_t)
                 threads.append(pcm_pow_t)
 
-            if target_obj.enable_bandwidth:
-                bandwidth_file_name = "_".join(["bandwidth", str(block_size), str(rw), str(io_depth)])
+            if target_obj.enable_bw:
+                bandwidth_file_name = "_".join([str(block_size), str(rw), str(io_depth), "bandwidth"])
                 bandwidth_file_name = ".".join([bandwidth_file_name, "csv"])
-                t = threading.Thread(target=target_obj.measure_network_bandwidth, args=(args.results, bandwidth_file_name))
+                t = threading.Thread(target=target_obj.measure_network_bandwidth,
+                                     args=(args.results, bandwidth_file_name, fio_ramp_time, fio_run_time))
                 threads.append(t)
 
             if target_obj.enable_dpdk_memory:

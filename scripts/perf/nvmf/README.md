@@ -28,6 +28,7 @@ To run the scripts in your environment please follow steps below.
   If custom directory is to be used, then it must be set using irq_scripts_dir
   option in Target and Initiator configuration sections.
 - `sysstat` package must be installed for SAR CPU utilization measurements.
+- `bwm-ng` package must be installed for NIC bandwidth utilization measurements.
 
 ### Optional
 
@@ -125,9 +126,8 @@ Optional, common:
   "y" - time interval between measurements.
   "z" - number of measurement samples.
   Default: disabled.
-- enable_bandwidth - [bool, int]. Wait a given number of seconds and run
-  bwm-ng until the end of test to measure bandwidth utilization on network
-  interfaces. Default: disabled.
+- enable_bandwidth - bool. Measure bandwidth utilization on network
+  interfaces. Default: enabled.
 - tuned_profile - tunedadm profile to apply on the system before starting
   the test.
 - irq_scripts_dir - path to scripts directory of Mellanox mlnx-tools package;
