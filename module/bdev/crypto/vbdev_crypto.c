@@ -20,6 +20,7 @@
 #include <rte_crypto.h>
 #include <rte_cryptodev.h>
 #include <rte_mbuf_dyn.h>
+#include <rte_version.h>
 
 /* Used to store IO context in mbuf */
 static const struct rte_mbuf_dynfield rte_mbuf_dynfield_io_context = {
@@ -1378,9 +1379,17 @@ _vdev_dev_get(struct vbdev_crypto *vbdev)
 }
 
 static void
-_cryptodev_sym_session_free(void *session)
+_cryptodev_sym_session_free(struct vbdev_crypto *vbdev, void *session)
 {
+#if RTE_VERSION >= RTE_VERSION_NUM(22, 11, 0, 0)
+	struct vbdev_dev *device = _vdev_dev_get(vbdev);
+
+	assert(device != NULL);
+
+	rte_cryptodev_sym_session_free(device->cdev_id, session);
+#else
 	rte_cryptodev_sym_session_free(session);
+#endif
 }
 
 static void *
@@ -1388,7 +1397,6 @@ _cryptodev_sym_session_create(struct vbdev_crypto *vbdev, struct rte_crypto_sym_
 {
 	void *session;
 	struct vbdev_dev *device;
-	int rc = 0;
 
 	device = _vdev_dev_get(vbdev);
 	if (!device) {
@@ -1396,16 +1404,20 @@ _cryptodev_sym_session_create(struct vbdev_crypto *vbdev, struct rte_crypto_sym_
 		return NULL;
 	}
 
+#if RTE_VERSION >= RTE_VERSION_NUM(22, 11, 0, 0)
+	session = rte_cryptodev_sym_session_create(device->cdev_id, xforms, g_session_mp);
+#else
 	session = rte_cryptodev_sym_session_create(g_session_mp);
 	if (!session) {
 		return NULL;
 	}
 
-	rc = rte_cryptodev_sym_session_init(device->cdev_id, session, xforms, g_session_mp_priv);
-	if (rc < 0) {
-		_cryptodev_sym_session_free(session);
+	if (rte_cryptodev_sym_session_init(device->cdev_id, session, xforms, g_session_mp_priv) < 0) {
+		_cryptodev_sym_session_free(vbdev, session);
 		return NULL;
 	}
+#endif
+
 	return session;
 }
 
@@ -1416,8 +1428,8 @@ _device_unregister_cb(void *io_device)
 	struct vbdev_crypto *crypto_bdev = io_device;
 
 	/* Done with this crypto_bdev. */
-	_cryptodev_sym_session_free(crypto_bdev->session_decrypt);
-	_cryptodev_sym_session_free(crypto_bdev->session_encrypt);
+	_cryptodev_sym_session_free(crypto_bdev, crypto_bdev->session_decrypt);
+	_cryptodev_sym_session_free(crypto_bdev, crypto_bdev->session_encrypt);
 	crypto_bdev->opts = NULL;
 	free(crypto_bdev->crypto_bdev.name);
 	free(crypto_bdev);
@@ -2048,9 +2060,9 @@ vbdev_crypto_claim(const char *bdev_name)
 
 	/* Error cleanup paths. */
 error_bdev_register:
-	_cryptodev_sym_session_free(vbdev->session_decrypt);
+	_cryptodev_sym_session_free(vbdev, vbdev->session_decrypt);
 error_session_de_create:
-	_cryptodev_sym_session_free(vbdev->session_encrypt);
+	_cryptodev_sym_session_free(vbdev, vbdev->session_encrypt);
 error_session_en_create:
 	spdk_bdev_module_release_bdev(vbdev->base_bdev);
 error_claim:
