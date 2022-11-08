@@ -25,6 +25,37 @@ class SpdkNormalTailqList(SpdkTailqList):
                                                   ['tailq'])
 
 
+class SpdkRbTree(object):
+
+    def __init__(self, tree_pointer, tree_member, tree_name_list):
+        self.tree_pointer = tree_pointer
+        self.tree_name_list = tree_name_list
+        self.tree_member = tree_member
+        self.tree = gdb.parse_and_eval(self.tree_pointer)
+
+    def get_left_node(self, node):
+        return node['node']['rbe_left']
+
+    def get_right_node(self, node):
+        return node['node']['rbe_right']
+
+    def traverse_rb_tree(self, node):
+        if node:
+            self.rb_list.append(node)
+            self.traverse_rb_tree(self.get_left_node(node))
+            self.traverse_rb_tree(self.get_right_node(node))
+
+    def __iter__(self):
+        self.rb_list = []
+        tree_top = self.tree['rbh_root']
+        if tree_top:
+            self.traverse_rb_tree(tree_top)
+            for rb_node in self.rb_list:
+                yield self.tree_member(rb_node)
+        else:
+            yield
+
+
 class SpdkArr(object):
 
     def __init__(self, arr_pointer, num_elements, element_type):
@@ -82,10 +113,10 @@ class IoDevice(SpdkObject):
     type_name = 'struct io_device'
 
 
-class IoDevices(SpdkTailqList):
+class IoDevices(SpdkRbTree):
 
     def __init__(self):
-        super(IoDevices, self).__init__('g_io_devices', IoDevice, ['tailq'])
+        super(IoDevices, self).__init__('g_io_devices', IoDevice, ['rbh_root'])
 
 
 class spdk_print_io_devices(SpdkPrintCommand):
@@ -214,13 +245,12 @@ class IoChannel(SpdkObject):
         return s
 
 
-# TODO - create TailqList type that gets a gdb object instead of a pointer
-class IoChannels(SpdkTailqList):
+class IoChannels(SpdkRbTree):
 
-    def __init__(self, list_obj):
-        self.tailq_name_list = ['tailq']
-        self.list_member = IoChannel
-        self.list = list_obj
+    def __init__(self, tree_obj):
+        self.tree_name_list = ['rbh_root']
+        self.tree_member = IoChannel
+        self.tree = tree_obj
 
 
 class SpdkThread(SpdkObject):
