@@ -6997,6 +6997,12 @@ spdk_for_each_bdev(void *ctx, spdk_for_each_bdev_fn fn)
 		rc = bdev_open(bdev, false, desc);
 		if (rc != 0) {
 			bdev_desc_free(desc);
+			if (rc == -ENODEV) {
+				/* Ignore the error and move to the next bdev. */
+				rc = 0;
+				bdev = spdk_bdev_next(bdev);
+				continue;
+			}
 			break;
 		}
 		pthread_mutex_unlock(&g_bdev_mgr.mutex);
@@ -7035,6 +7041,12 @@ spdk_for_each_bdev_leaf(void *ctx, spdk_for_each_bdev_fn fn)
 		rc = bdev_open(bdev, false, desc);
 		if (rc != 0) {
 			bdev_desc_free(desc);
+			if (rc == -ENODEV) {
+				/* Ignore the error and move to the next bdev. */
+				rc = 0;
+				bdev = spdk_bdev_next_leaf(bdev);
+				continue;
+			}
 			break;
 		}
 		pthread_mutex_unlock(&g_bdev_mgr.mutex);

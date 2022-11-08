@@ -5939,6 +5939,7 @@ for_each_bdev_test(void)
 	int rc, count;
 
 	bdev[0] = allocate_bdev("bdev0");
+	bdev[0]->internal.status = SPDK_BDEV_STATUS_REMOVING;
 
 	bdev[1] = allocate_bdev("bdev1");
 	rc = spdk_bdev_module_claim_bdev(bdev[1], NULL, &bdev_ut_if);
@@ -5963,13 +5964,14 @@ for_each_bdev_test(void)
 	count = 0;
 	rc = spdk_for_each_bdev(&count, count_bdevs);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(count == 8);
+	CU_ASSERT(count == 7);
 
 	count = 0;
 	rc = spdk_for_each_bdev_leaf(&count, count_bdevs);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(count == 5);
+	CU_ASSERT(count == 4);
 
+	bdev[0]->internal.status = SPDK_BDEV_STATUS_READY;
 	free_bdev(bdev[0]);
 	free_bdev(bdev[1]);
 	free_bdev(bdev[2]);
