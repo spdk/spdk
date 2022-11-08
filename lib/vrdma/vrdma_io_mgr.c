@@ -157,13 +157,15 @@ static bool vrdma_qp_sm_poll_pi(struct spdk_vrdma_qp *vqp,
 	uint64_t pi_addr = vqp->sq.comm.doorbell_pa;
 
 	if (status != VRDMA_QP_SM_OP_OK) {
-		SPDK_ERRLOG("failed to update admq CI, status %d\n", status);
+		SPDK_ERRLOG("failed in previous step, status %d\n", status);
 		vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
 		return true;
 	}
 
-	//SPDK_NOTICELOG("vrdam poll sq pi: doorbell pa 0x%lx\n", pi_addr);
-
+#if 0
+	SPDK_NOTICELOG("vrdam poll sq pi: loop %d, pi pa 0x%lx, pi %d, pre pi %d\n",
+					pi_addr, vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
+#endif
 	vqp->sm_state = VRDMA_QP_STATE_HANDLE_PI;
 	vqp->q_comp.func = vrdma_qp_sm_dma_cb;
 	vqp->q_comp.count = 1;
@@ -183,7 +185,6 @@ static bool vrdma_qp_sm_poll_pi(struct spdk_vrdma_qp *vqp,
 static bool vrdma_qp_sm_handle_pi(struct spdk_vrdma_qp *vqp,
                                     enum vrdma_qp_sm_op_status status)
 {
-
 	if (status != VRDMA_QP_SM_OP_OK) {
 		SPDK_ERRLOG("failed to get vq PI, status %d\n", status);
 		vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
@@ -594,7 +595,106 @@ static bool vrdma_qp_wqe_sm_submit(struct spdk_vrdma_qp *vqp,
 	}
 
 	vrdma_tx_complete(backend_qp);
+	vqp->sq.comm.pre_pi = vqp->qp_pi->pi.sq_pi; 
 	return true;
+}
+
+static const char *vrdma_mcqe_err_opcode(struct mlx5_err_cqe *ecqe)
+{
+	uint8_t wqe_err_opcode = be32toh(ecqe->s_wqe_opcode_qpn) >> 24;
+
+	switch (ecqe->op_own >> 4) {
+	case MLX5_CQE_REQ_ERR:
+		switch (wqe_err_opcode) {
+		case MLX5_OPCODE_RDMA_WRITE_IMM:
+		case MLX5_OPCODE_RDMA_WRITE:
+			return "RDMA_WRITE";
+		case MLX5_OPCODE_SEND_IMM:
+		case MLX5_OPCODE_SEND:
+		case MLX5_OPCODE_SEND_INVAL:
+			return "SEND";
+		case MLX5_OPCODE_RDMA_READ:
+			return "RDMA_READ";
+		case MLX5_OPCODE_ATOMIC_CS:
+			return "COMPARE_SWAP";
+		case MLX5_OPCODE_ATOMIC_FA:
+			return "FETCH_ADD";
+		case MLX5_OPCODE_ATOMIC_MASKED_CS:
+			return "MASKED_COMPARE_SWAP";
+		case MLX5_OPCODE_ATOMIC_MASKED_FA:
+			return "MASKED_FETCH_ADD";
+		default:
+			return "";
+			}
+	case MLX5_CQE_RESP_ERR:
+		return "RECV";
+	default:
+		return "";
+	}
+}
+
+static void vrdma_mcqe_err(struct mlx5_cqe64 *cqe)
+{
+	struct mlx5_err_cqe *ecqe = (struct mlx5_err_cqe *)cqe;
+	uint16_t wqe_counter;
+	uint32_t qp_num = 0;
+	char info[200] = {0};
+
+	wqe_counter = be16toh(ecqe->wqe_counter);
+	qp_num = be32toh(ecqe->s_wqe_opcode_qpn) & ((1<<24)-1);
+
+	if (ecqe->syndrome == MLX5_CQE_SYNDROME_WR_FLUSH_ERR) {
+		snap_debug("QP 0x%x wqe[%d] is flushed\n", qp_num, wqe_counter);
+		return;
+	}
+
+	switch (ecqe->syndrome) {
+	case MLX5_CQE_SYNDROME_LOCAL_LENGTH_ERR:
+		snprintf(info, sizeof(info), "Local length");
+		break;
+	case MLX5_CQE_SYNDROME_LOCAL_QP_OP_ERR:
+		snprintf(info, sizeof(info), "Local QP operation");
+		break;
+	case MLX5_CQE_SYNDROME_LOCAL_PROT_ERR:
+		snprintf(info, sizeof(info), "Local protection");
+		break;
+	case MLX5_CQE_SYNDROME_WR_FLUSH_ERR:
+		snprintf(info, sizeof(info), "WR flushed because QP in error state");
+		break;
+	case MLX5_CQE_SYNDROME_MW_BIND_ERR:
+		snprintf(info, sizeof(info), "Memory window bind");
+		break;
+	case MLX5_CQE_SYNDROME_BAD_RESP_ERR:
+		snprintf(info, sizeof(info), "Bad response");
+		break;
+	case MLX5_CQE_SYNDROME_LOCAL_ACCESS_ERR:
+		snprintf(info, sizeof(info), "Local access");
+		break;
+	case MLX5_CQE_SYNDROME_REMOTE_INVAL_REQ_ERR:
+		snprintf(info, sizeof(info), "Invalid request");
+		break;
+	case MLX5_CQE_SYNDROME_REMOTE_ACCESS_ERR:
+		snprintf(info, sizeof(info), "Remote access");
+		break;
+	case MLX5_CQE_SYNDROME_REMOTE_OP_ERR:
+		snprintf(info, sizeof(info), "Remote QP");
+		break;
+	case MLX5_CQE_SYNDROME_TRANSPORT_RETRY_EXC_ERR:
+		snprintf(info, sizeof(info), "Transport retry count exceeded");
+		break;
+	case MLX5_CQE_SYNDROME_RNR_RETRY_EXC_ERR:
+		snprintf(info, sizeof(info), "Receive-no-ready retry count exceeded");
+		break;
+	case MLX5_CQE_SYNDROME_REMOTE_ABORTED_ERR:
+		snprintf(info, sizeof(info), "Remote side aborted");
+		break;
+	default:
+		snprintf(info, sizeof(info), "Generic");
+		break;
+	}
+	snap_error("Error on QP 0x%x wqe[%03d]: %s (synd 0x%x vend 0x%x) opcode %s\n",
+		   qp_num, wqe_counter, info, ecqe->syndrome, ecqe->vendor_err_synd,
+		   vrdma_mcqe_err_opcode(ecqe));
 }
 
 static inline struct mlx5_cqe64 *vrdma_get_mqp_cqe(struct snap_hw_cq *dv_cq,
@@ -611,7 +711,7 @@ static inline struct mlx5_cqe64 *vrdma_get_mqp_cqe(struct snap_hw_cq *dv_cq,
 	return cqe_size == 64 ? cqe : cqe + 1;
 }
 
-static inline struct mlx5_cqe64 *vrdma_poll_mqp_cq(struct snap_hw_cq *dv_cq,
+static inline struct mlx5_cqe64 *vrdma_poll_mqp_scq(struct snap_hw_cq *dv_cq,
 															int cqe_size)
 {
 	struct mlx5_cqe64 *cqe;
@@ -619,16 +719,18 @@ static inline struct mlx5_cqe64 *vrdma_poll_mqp_cq(struct snap_hw_cq *dv_cq,
 	cqe = vrdma_get_mqp_cqe(dv_cq, cqe_size);
 
 	/* cqe is hw owned */
-	if (mlx5dv_get_cqe_owner(cqe) == !(dv_cq->ci & dv_cq->cqe_cnt))
+	if (mlx5dv_get_cqe_owner(cqe) == !(dv_cq->ci & dv_cq->cqe_cnt)) {
 		return NULL;
+	}
 
 	/* and must have valid opcode */
-	if (mlx5dv_get_cqe_opcode(cqe) == MLX5_CQE_INVALID)
+	if (mlx5dv_get_cqe_opcode(cqe) == MLX5_CQE_INVALID) {
 		return NULL;
-
+	}
+		
 	dv_cq->ci++;
 
-	snap_debug("cq: 0x%x ci: %d CQ opcode %d size %d wqe_counter %d scatter32 %d scatter64 %d\n",
+	SPDK_NOTICELOG("cq: 0x%x ci: %d CQ opcode %d size %d wqe_counter %d scatter32 %d scatter64 %d\n",
 		   dv_cq->cq_num, dv_cq->ci,
 		   mlx5dv_get_cqe_opcode(cqe),
 		   be32toh(cqe->byte_cnt),
@@ -663,7 +765,7 @@ static bool vrdma_qp_sm_poll_cq_ci(struct spdk_vrdma_qp *vqp,
 
 	// TODO, here lkey need to be changed to vcq
 	ret = snap_dma_q_read(vqp->snap_queue->dma_q, &vqp->sq_vcq->pici->ci, sizeof(uint32_t),
-			          vqp->qp_mr->lkey, ci_addr,
+			          vqp->sq_vcq->cqe_ci_mr->lkey, ci_addr,
 			          vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
 	if (spdk_unlikely(ret)) {
 		SPDK_ERRLOG("failed to read sq vcq CI, ret %d\n", ret);
@@ -691,16 +793,19 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 	int ret;
 	struct timeval tv; 
 
-	SPDK_NOTICELOG("vrdam gen sq cqe: vcq pi %d, pre_pi %d\n",
-					vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
+	SPDK_NOTICELOG("vrdam gen sq cqe start: vcq pi %d, pre_pi %d\n",
+					vcq->pi, vcq->pre_pi);
 	vqp->sm_state = VRDMA_QP_STATE_POLL_PI;
 	gettimeofday(&tv, NULL);
 
 	while(1) {
-		cqe = vrdma_poll_mqp_cq(mcq, 64);
+		cqe = vrdma_poll_mqp_scq(mcq, 64);
+		
 		if (cqe == NULL || vcq->pi - vcq->pici->ci == vcq->cqe_entry_num) {
 			/* if no available cqe or vcq is full
 			   need to write prepared vcqes*/
+			SPDK_NOTICELOG("get null MCQE or vcq is full: vcq new pi %d, pre_pi %d\n",
+					vcq->pi, vcq->pre_pi);
 			goto write_vcq;
 		}
 		wqe_idx = vrdma_get_wqe_id(vqp, cqe->wqe_counter);
@@ -709,19 +814,29 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 		vcqe = (struct vrdma_cqe *)vqp->sq_vcq->cqe_buff + cqe_idx;
 		vcqe->imm_data = cqe->imm_inval_pkey;
 		vcqe->length = cqe->byte_cnt;
-		vcqe->opcode = cqe->sop_drop_qpn >> 24;
 		vcqe->req_id = wqe_idx;
 		vcqe->local_qpn = vqp->qp_idx;
 		vcqe->owner = ((vcq->pi++) & (vcq->cqe_entry_num - 1)) & 1;
 		//vcqe->ts = (uint32_t)cqe->timestamp;
 		vcqe->ts = (uint32_t)tv.tv_usec;
+
+		if (spdk_unlikely(mlx5dv_get_cqe_opcode(cqe) != MLX5_CQE_REQ)) {
+			vrdma_mcqe_err(cqe);
+			vcqe->opcode = cqe->op_own >> 4;
+		} else {
+			vcqe->opcode = cqe->sop_drop_qpn >> 24;
+		}
 	}
 
 write_vcq:
+	if (vcq->pi == vcq->pre_pi) {
+		//no cqe to gen, jump to poll sq PI for next loop
+		return true;
+	}
 	vqp->q_comp.count = 1;
 	size = (vcq->pi - vcq->pre_pi) * vcq->cqebb_size;
 	ret = snap_dma_q_write(vqp->snap_queue->dma_q, vcq_local_addr, size,
-				              vqp->qp_mr->lkey, vcq_host_addr,
+				              vqp->sq_vcq->cqe_ci_mr->lkey, vcq_host_addr,
 				              vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
 
 	if (spdk_unlikely(ret)) {
@@ -731,6 +846,9 @@ write_vcq:
 	}
 	
 	vcq->pre_pi = vcq->pi;
+	
+	SPDK_NOTICELOG("vrdam gen sq cqe done: vcq new pi %d, pre_pi %d\n",
+					vcq->pi, vcq->pre_pi);
 	return false;
 }
 

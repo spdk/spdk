@@ -836,6 +836,7 @@ static void vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,
 	vcq->pagesize = 1 << aqe->req.create_cq_req.log_pagesize;
 	vcq->interrupt_mode = aqe->req.create_cq_req.interrupt_mode;
 	vcq->host_pa = aqe->req.create_cq_req.l0_pa;
+	vcq->ci_pa = aqe->req.create_cq_req.ci_pa;
 	q_buff_size  = sizeof(*vcq->pici) + vcq->cqebb_size * vcq->cqe_entry_num;
 	vcq->pici = spdk_malloc(q_buff_size, 0x10, NULL, SPDK_ENV_LCORE_ID_ANY,
                              SPDK_MALLOC_DMA);
