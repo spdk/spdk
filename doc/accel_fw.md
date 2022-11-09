@@ -155,7 +155,7 @@ The following RPCs would accomplish the copy override:
 
 ```bash
 ./scripts/rpc.py dsa_scan_accel_module
-./scripts/rpc.py accel_assign_opc -o copy -e software
+./scripts/rpc.py accel_assign_opc -o copy -m software
 ./scripts/rpc.py framework_start_init
 ./scripts/rpc.py accel_get_opc_assignments
 {
