@@ -386,6 +386,7 @@ dump_readings() {
 		avg=$((total / ${#readings[@]}))
 
 		readings+=("Total: ${#readings[@]}")
+		sensor="${sensor//[[:space:]]/_}"
 		printf '%u\n' "$avg" > "$output_dir/${prefix:+${prefix}_}avg_${sensor}.bmc.pm.txt"
 		printf '%s\n' "${readings[@]}" > "$output_dir/${prefix:+${prefix}_}all_${sensor}.bmc.pm.txt"
 		printf 'Dumped avg to %s\n' "$output_dir/${prefix:+${prefix}_}avg_${sensor}.bmc.pm.txt" >&2
