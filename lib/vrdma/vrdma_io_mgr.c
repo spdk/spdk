@@ -47,6 +47,7 @@
 #define SPDK_IO_MGR_THREAD_NAME_LEN 32
 
 #define MLX5_ATOMIC_SIZE 8
+#define WQE_DBG
 
 static size_t g_num_spdk_threads;
 static struct spdk_thread **g_spdk_threads;
@@ -212,7 +213,8 @@ static bool vrdma_qp_wqe_sm_read(struct spdk_vrdma_qp *vqp,
 	uint16_t q_size = vqp->sq.comm.wqebb_cnt;
 	int ret;
 
-	local_ring_addr = (uint8_t *)vqp->sq.sq_buff;
+	local_ring_addr = (uint8_t *)vqp->sq.sq_buff + 
+					vqp->sq.comm.pre_pi * sizeof(struct vrdma_send_wqe);
 	SPDK_NOTICELOG("vrdam poll sq wqe: sq pa 0x%lx\n", vqp->sq.comm.wqe_buff_pa);
 
 	vqp->sm_state = VRDMA_QP_STATE_WQE_PARSE;
@@ -226,7 +228,7 @@ static bool vrdma_qp_wqe_sm_read(struct spdk_vrdma_qp *vqp,
 		sq_poll_size = num * sizeof(struct vrdma_send_wqe);
 		offset = (vqp->sq.comm.pre_pi % q_size) * sizeof(struct vrdma_send_wqe);
 		host_ring_addr = vqp->sq.comm.wqe_buff_pa + offset;
-		ret = snap_dma_q_read(vqp->snap_queue->dma_q, vqp->sq.sq_buff, sq_poll_size,
+		ret = snap_dma_q_read(vqp->snap_queue->dma_q, local_ring_addr, sq_poll_size,
 							vqp->qp_mr->lkey, host_ring_addr,
 							vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
 		if (spdk_unlikely(ret)) {
@@ -242,7 +244,7 @@ static bool vrdma_qp_wqe_sm_read(struct spdk_vrdma_qp *vqp,
 		sq_poll_size = num * sizeof(struct vrdma_send_wqe);
 		offset = (vqp->sq.comm.pre_pi % q_size) * sizeof(struct vrdma_send_wqe);
 		host_ring_addr = vqp->sq.comm.wqe_buff_pa + offset;
-		ret = snap_dma_q_read(vqp->snap_queue->dma_q, vqp->sq.sq_buff, sq_poll_size,
+		ret = snap_dma_q_read(vqp->snap_queue->dma_q, local_ring_addr, sq_poll_size,
 							vqp->qp_mr->lkey, host_ring_addr,
 							vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
 		if (spdk_unlikely(ret)) {
@@ -427,6 +429,76 @@ static inline void vrdma_tx_complete(struct snap_vrdma_backend_qp *bk_qp)
 	}
 }
 
+static void *vrdma_get_send_wqe(struct snap_vrdma_backend_qp *qp, int n)
+{
+	return qp->hw_qp.sq.addr + (n << MLX5_SEND_WQE_SHIFT);
+}
+
+static void vrdma_dump_wqe(int idx, int size_16,
+								struct snap_vrdma_backend_qp *qp)
+{
+	uint32_t *p;
+	int i, j;
+	int tidx = idx;
+
+	printf("dump wqe at %p, len %d, wqe_id %d\n",
+			vrdma_get_send_wqe(qp, tidx), size_16, idx);
+	for (i = 0, j = 0; i < size_16 * 4; i += 4, j += 4) {
+		if ((i & 0xf) == 0) {
+			void *buf = vrdma_get_send_wqe(qp, tidx);
+			tidx = (tidx + 1) & (qp->hw_qp.sq.wqe_cnt - 1);
+			p = buf;
+			j = 0;
+		}
+		printf("%08x %08x %08x %08x\n", be32toh(p[j]), be32toh(p[j + 1]),
+			be32toh(p[j + 2]), be32toh(p[j + 3]));
+	}
+}
+
+static void vrdma_dump_tencent_wqe(struct vrdma_send_wqe *wqe)
+{
+	uint16_t i;
+	
+	printf("\ndump tencent wqe start\n");
+
+	printf("meta.opcode %x \n", wqe->meta.opcode);
+	printf("meta.imm_data %x \n", wqe->meta.imm_data);
+	printf("meta.invalid_key %x \n", wqe->meta.invalid_key);
+	printf("meta.length %x \n", wqe->meta.length);
+	printf("meta.req_id %x \n", wqe->meta.req_id);
+	printf("meta.send_flags %x \n", wqe->meta.send_flags);
+	printf("meta.sge_num %x \n", wqe->meta.sge_num);
+
+	switch (wqe->meta.opcode) {
+		case IBV_WR_RDMA_READ:
+		case IBV_WR_RDMA_WRITE:
+		case IBV_WR_RDMA_WRITE_WITH_IMM:
+			printf("rdma_rw.req_id 0x%lx \n", wqe->rdma_rw.remote_addr);
+			printf("rdma_rw.rkey 0x%lx \n", wqe->rdma_rw.rkey);
+			if (wqe->meta.sge_num) {
+				for (i = 0; i < wqe->meta.sge_num; i++) {
+					printf("sge[%d].buf_addr_hi 0x%x \n", i, wqe->sgl[i].buf_addr_hi);
+					printf("sge[%d].buf_addr_lo 0x%x \n", i, wqe->sgl[i].buf_addr_lo);
+					printf("sge[%d].buf_length 0x%x \n", i, wqe->sgl[i].buf_length);
+					printf("sge[%d].lkey 0x%x \n", i, wqe->sgl[i].lkey);
+				}
+			}
+			break;
+		case IBV_WR_ATOMIC_CMP_AND_SWP:
+		case IBV_WR_ATOMIC_FETCH_AND_ADD:
+			printf("rdma_atomic.compare_add 0x%lx \n", wqe->rdma_atomic.compare_add);
+			printf("rdma_atomic.remote_addr 0x%lx \n", wqe->rdma_atomic.remote_addr);
+			printf("rdma_atomic.swap 0x%lx \n", wqe->rdma_atomic.swap);
+			printf("rdma_atomic.rkey 0x%lx \n", wqe->rdma_atomic.rkey);
+			break;
+		default:
+			printf(" tencent wqe unsupported type %x\n", wqe->meta.opcode);
+			break;
+	}
+	
+	printf(" tencent wqe dump done\n");
+}
+
 static int vrdma_rw_wqe_submit(struct vrdma_send_wqe *wqe,
 								struct snap_vrdma_backend_qp *bk_qp,
 								uint8_t opcode)
@@ -443,9 +515,14 @@ static int vrdma_rw_wqe_submit(struct vrdma_send_wqe *wqe,
 	uint8_t i = 0;
 	uint8_t sge_num = wqe->meta.sge_num;
 	uint64_t sge_addr;
+#ifdef WQE_DBG
+	uint32_t idx;
+#endif
+
+	SPDK_NOTICELOG("vrdam sq submit wqe start, mqp num %d\n", bk_qp->hw_qp.qp_num);
 
 	fm_ce_se = vrdma_get_send_flags(wqe);
-
+	
 	ctrl = seg = (struct mlx5_wqe_ctrl_seg *)vrdma_get_wqe_bb(bk_qp);
 
 	seg += sizeof(*ctrl);
@@ -468,9 +545,15 @@ static int vrdma_rw_wqe_submit(struct vrdma_send_wqe *wqe,
 		}
 	}
 
-	vrdma_set_ctrl_seg(ctrl, bk_qp->hw_qp.sq.pi, opcode, 0, bk_qp->hw_qp.qp_num,
+	vrdma_set_ctrl_seg(ctrl, bk_qp->hw_qp.sq.pi, 0x8, 0, bk_qp->hw_qp.qp_num,
 					fm_ce_se, ds, sig, imm);
+#ifdef WQE_DBG
+	idx = bk_qp->hw_qp.sq.pi & (bk_qp->hw_qp.sq.wqe_cnt - 1);
+	vrdma_dump_wqe(idx, ds, bk_qp);
+#endif
 	vrdma_wqe_submit(bk_qp, ctrl);
+	SPDK_NOTICELOG("vrdam sq submit wqe done \n");
+
 	return 0;
 	
 }
@@ -555,6 +638,7 @@ static bool vrdma_qp_wqe_sm_submit(struct spdk_vrdma_qp *vqp,
 
 	for (i = 0; i < num_to_parse; i++) {
 		wqe = vqp->sq.sq_buff + ((vqp->sq.comm.pre_pi + i) % q_size);
+		vrdma_dump_tencent_wqe(wqe);
 		opcode = wqe->meta.opcode;
 		switch (opcode) {
 			case IBV_WR_RDMA_READ:
