@@ -839,28 +839,20 @@ registerfiles=1
         else:
             self.log.warning("WARNING: you have disabled intel_pstate and using default cpu governance.")
 
-    def run_fio(self, fio_config_file, run_num=None):
+    def run_fio(self, fio_config_file, run_num=1):
         job_name, _ = os.path.splitext(fio_config_file)
         self.log.info("Starting FIO run for job: %s" % job_name)
         self.log.info("Using FIO: %s" % self.fio_bin)
 
-        if run_num:
-            for i in range(1, run_num + 1):
-                output_filename = job_name + "_run_" + str(i) + "_" + self.name + ".json"
-                try:
-                    output = self.exec_cmd(["sudo", self.fio_bin, fio_config_file, "--output-format=json",
-                                            "--output=%s" % output_filename, "--eta=never"], True)
-                    self.log.info(output)
-                except CalledProcessError as e:
-                    self.log.error("ERROR: Fio process failed!")
-                    self.log.info(e.stdout)
-        else:
-            output_filename = job_name + "_" + self.name + ".json"
-            output = self.exec_cmd(["sudo", self.fio_bin,
-                                    fio_config_file, "--output-format=json",
-                                    "--output" % output_filename], True)
+        output_filename = job_name + "_run_" + str(run_num) + "_" + self.name + ".json"
+        try:
+            output = self.exec_cmd(["sudo", self.fio_bin, fio_config_file, "--output-format=json",
+                                    "--output=%s" % output_filename, "--eta=never"], True)
             self.log.info(output)
-        self.log.info("FIO run finished. Results in: %s" % output_filename)
+            self.log.info("FIO run finished. Results in: %s" % output_filename)
+        except subprocess.CalledProcessError as e:
+            self.log.error("ERROR: Fio process failed!")
+            self.log.error(e.stdout)
 
     def sys_config(self):
         self.log.info("====Kernel release:====")
@@ -1551,9 +1543,7 @@ if __name__ == "__main__":
         # Poor mans threading
         # Run FIO tests
         for block_size, io_depth, rw in fio_workloads:
-            threads = []
             configs = []
-            power_daemon = None
             for i in initiators:
                 i.init_connect()
                 cfg = i.gen_fio_config(rw, fio_rw_mix_read, block_size, io_depth, target_obj.subsys_no,
@@ -1561,59 +1551,66 @@ if __name__ == "__main__":
                                        fio_offset, fio_offset_inc)
                 configs.append(cfg)
 
-            for i, cfg in zip(initiators, configs):
-                t = threading.Thread(target=i.run_fio, args=(cfg, fio_run_num))
-                threads.append(t)
-            if target_obj.enable_sar:
-                sar_file_prefix = "%s_%s_%s_sar" % (block_size, rw, io_depth)
-                t = threading.Thread(target=target_obj.measure_sar, args=(args.results, sar_file_prefix, fio_ramp_time, fio_run_time))
-                threads.append(t)
+            for run_no in range(1, fio_run_num+1):
+                threads = []
+                power_daemon = None
 
-            if target_obj.enable_pcm:
-                pcm_fnames = ["%s_%s_%s_%s.csv" % (block_size, rw, io_depth, x) for x in ["pcm_cpu", "pcm_memory", "pcm_power"]]
+                for i, cfg in zip(initiators, configs):
+                    t = threading.Thread(target=i.run_fio, args=(cfg, run_no))
+                    threads.append(t)
+                if target_obj.enable_sar:
+                    sar_file_prefix = "%s_%s_%s_run_%s_sar" % (block_size, rw, io_depth, run_no)
+                    t = threading.Thread(target=target_obj.measure_sar, args=(args.results, sar_file_prefix, fio_ramp_time, fio_run_time))
+                    threads.append(t)
 
-                pcm_cpu_t = threading.Thread(target=target_obj.measure_pcm,
-                                             args=(args.results, pcm_fnames[0], fio_ramp_time, fio_run_time))
-                pcm_mem_t = threading.Thread(target=target_obj.measure_pcm_memory,
-                                             args=(args.results, pcm_fnames[1], fio_ramp_time, fio_run_time))
-                pcm_pow_t = threading.Thread(target=target_obj.measure_pcm_power,
-                                             args=(args.results, pcm_fnames[2], fio_ramp_time, fio_run_time))
+                if target_obj.enable_pcm:
+                    pcm_fnames = ["%s_%s_%s_run_%s_%s.csv" % (block_size, rw, io_depth, run_no, x)
+                                  for x in ["pcm_cpu", "pcm_memory", "pcm_power", run_no]]
 
-                threads.append(pcm_cpu_t)
-                threads.append(pcm_mem_t)
-                threads.append(pcm_pow_t)
+                    pcm_cpu_t = threading.Thread(target=target_obj.measure_pcm,
+                                                 args=(args.results, pcm_fnames[0], fio_ramp_time, fio_run_time))
+                    pcm_mem_t = threading.Thread(target=target_obj.measure_pcm_memory,
+                                                 args=(args.results, pcm_fnames[1], fio_ramp_time, fio_run_time))
+                    pcm_pow_t = threading.Thread(target=target_obj.measure_pcm_power,
+                                                 args=(args.results, pcm_fnames[2], fio_ramp_time, fio_run_time))
 
-            if target_obj.enable_bw:
-                bandwidth_file_name = "_".join([str(block_size), str(rw), str(io_depth), "bandwidth"])
-                bandwidth_file_name = ".".join([bandwidth_file_name, "csv"])
-                t = threading.Thread(target=target_obj.measure_network_bandwidth,
-                                     args=(args.results, bandwidth_file_name, fio_ramp_time, fio_run_time))
-                threads.append(t)
+                    threads.append(pcm_cpu_t)
+                    threads.append(pcm_mem_t)
+                    threads.append(pcm_pow_t)
 
-            if target_obj.enable_dpdk_memory:
-                t = threading.Thread(target=target_obj.measure_dpdk_memory, args=(args.results))
-                threads.append(t)
+                if target_obj.enable_bw:
+                    bandwidth_file_name = "_".join([block_size, rw, str(io_depth), "run_%s" % run_no, "bandwidth"])
+                    bandwidth_file_name = ".".join([bandwidth_file_name, "csv"])
+                    t = threading.Thread(target=target_obj.measure_network_bandwidth,
+                                         args=(args.results, bandwidth_file_name, fio_ramp_time, fio_run_time))
+                    threads.append(t)
 
-            if target_obj.enable_adq:
-                ethtool_thread = threading.Thread(target=target_obj.ethtool_after_fio_ramp, args=(fio_ramp_time,))
-                threads.append(ethtool_thread)
+                if target_obj.enable_dpdk_memory:
+                    t = threading.Thread(target=target_obj.measure_dpdk_memory, args=(args.results))
+                    threads.append(t)
 
-            if target_obj.enable_pm:
-                power_daemon = threading.Thread(target=target_obj.measure_power,
-                                                args=(args.results, "%s_%s_%s" % (block_size, rw, io_depth), script_full_dir,
-                                                      fio_ramp_time, fio_run_time))
-                threads.append(power_daemon)
+                if target_obj.enable_pm:
+                    power_daemon = threading.Thread(target=target_obj.measure_power,
+                                                    args=(args.results, "%s_%s_%s_run_%s" % (block_size, rw, io_depth, run_no),
+                                                          script_full_dir, fio_ramp_time, fio_run_time))
+                    threads.append(power_daemon)
 
-            for t in threads:
-                t.start()
-            for t in threads:
-                t.join()
+                if target_obj.enable_adq:
+                    ethtool_thread = threading.Thread(target=target_obj.ethtool_after_fio_ramp, args=(fio_ramp_time,))
+                    threads.append(ethtool_thread)
+
+                for t in threads:
+                    t.start()
+                for t in threads:
+                    t.join()
 
             for i in initiators:
                 i.init_disconnect()
                 i.copy_result_files(args.results)
-
-        parse_results(args.results, args.csv_filename)
+        try:
+            parse_results(args.results, args.csv_filename)
+        except Exception:
+            logging.error("There was an error with parsing the results")
     finally:
         for i in initiators:
             try:
