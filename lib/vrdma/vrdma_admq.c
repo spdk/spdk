@@ -1338,33 +1338,6 @@ static void vrdma_aq_query_qp(struct vrdma_ctrl *ctrl,
 	return;
 }
 
-/* Lei : Just for test */
-static void vrdma_qp_sm_poll_pi(struct spdk_vrdma_qp *vqp,
-                                   enum vrdma_qp_sm_op_status status)
-{
-    int ret;
-    uint64_t pi_addr = vqp->sq.comm.doorbell_pa;
-
-   	if (status != VRDMA_QP_SM_OP_OK) {
-        SPDK_ERRLOG("failed to update admq CI, status %d\n", status);
-        vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
-        return;
-    }
-	//SPDK_NOTICELOG("vrdam poll sq pi: doorbell pa 0x%lx\n", pi_addr);
-	vqp->sm_state = VRDMA_QP_STATE_HANDLE_PI;
-    vqp->q_comp.func = vrdma_qp_sm_dma_cb;
-    vqp->q_comp.count = 1;
-	ret = snap_dma_q_read(vqp->snap_queue->dma_q, &vqp->qp_pi->pi.sq_pi, sizeof(uint16_t),
-                      vqp->qp_mr->lkey, pi_addr,
-                      vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
-    if (spdk_unlikely(ret)) {
-        SPDK_ERRLOG("failed to read sq PI, ret %d\n", ret);
-        vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
-        return;
-    }
-	return;
-}
-
 static void vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
@@ -1443,8 +1416,8 @@ static void vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
 			aqe->req.modify_qp_req.qp_state == IBV_QPS_RTR) {
 			SPDK_NOTICELOG("lizh call snap_vrdma_sched_vq for qp %d\n", aqe->req.modify_qp_req.qp_handle);
 			/* init2rtr vqp join poller-group */
-			vrdma_qp_sm_poll_pi(vqp, VRDMA_QP_SM_OP_OK);
 			snap_vrdma_sched_vq(ctrl->sctrl, vqp->snap_queue);
+			vrdma_qp_sm_start(vqp);
 		}
 		if (vqp->qp_state != IBV_QPS_ERR &&
 			aqe->req.modify_qp_req.qp_state == IBV_QPS_ERR) {

@@ -1,31 +1,31 @@
 /*
- *   Copyright © 2022 NVIDIA CORPORATION & AFFILIATES. ALL RIGHTS RESERVED.
+ *	 Copyright © 2022 NVIDIA CORPORATION & AFFILIATES. ALL RIGHTS RESERVED.
  *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
+ *	 Redistribution and use in source and binary forms, with or without
+ *	 modification, are permitted provided that the following conditions
+ *	 are met:
  *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
+ *	   * Redistributions of source code must retain the above copyright
+ *		 notice, this list of conditions and the following disclaimer.
+ *	   * Redistributions in binary form must reproduce the above copyright
+ *		 notice, this list of conditions and the following disclaimer in
+ *		 the documentation and/or other materials provided with the
+ *		 distribution.
+ *	   * Neither the name of Intel Corporation nor the names of its
+ *		 contributors may be used to endorse or promote products derived
+ *		 from this software without specific prior written permission.
  *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *	 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *	 "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *	 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ *	 A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ *	 OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *	 SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *	 LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *	 DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *	 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *	 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *	 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <sys/time.h>
@@ -54,96 +54,96 @@ static struct spdk_thread *app_thread;
 
 size_t spdk_io_mgr_get_num_threads(void)
 {
-    return g_num_spdk_threads;
+	return g_num_spdk_threads;
 }
 
 struct spdk_thread *spdk_io_mgr_get_thread(int id)
 {
-    if (id == -1)
-        return app_thread;
-    return g_spdk_threads[id];
+	if (id == -1)
+		return app_thread;
+	return g_spdk_threads[id];
 }
 
 static void spdk_thread_exit_wrapper(void *uarg)
 {
-    (void)spdk_thread_exit((struct spdk_thread *)uarg);
+	(void)spdk_thread_exit((struct spdk_thread *)uarg);
 }
 
 int spdk_io_mgr_init(void)
 {
-    struct spdk_cpuset *cpumask;
-    uint32_t i;
-    int  j;
-    char thread_name[SPDK_IO_MGR_THREAD_NAME_LEN];
+	struct spdk_cpuset *cpumask;
+	uint32_t i;
+	int  j;
+	char thread_name[SPDK_IO_MGR_THREAD_NAME_LEN];
 
-    app_thread = spdk_get_thread();
+	app_thread = spdk_get_thread();
 
-    g_num_spdk_threads = spdk_env_get_core_count();
-    g_spdk_threads = calloc(g_num_spdk_threads, sizeof(*g_spdk_threads));
-    if (!g_spdk_threads) {
-        SPDK_ERRLOG("Failed to allocate IO threads");
-        goto err;
-    }
+	g_num_spdk_threads = spdk_env_get_core_count();
+	g_spdk_threads = calloc(g_num_spdk_threads, sizeof(*g_spdk_threads));
+	if (!g_spdk_threads) {
+		SPDK_ERRLOG("Failed to allocate IO threads");
+		goto err;
+	}
 
-    cpumask = spdk_cpuset_alloc();
-    if (!cpumask) {
-        SPDK_ERRLOG("Failed to allocate SPDK CPU mask");
-        goto free_threads;
-    }
+	cpumask = spdk_cpuset_alloc();
+	if (!cpumask) {
+		SPDK_ERRLOG("Failed to allocate SPDK CPU mask");
+		goto free_threads;
+	}
 
-    j = 0;
-    SPDK_ENV_FOREACH_CORE(i) {
-        spdk_cpuset_zero(cpumask);
-        spdk_cpuset_set_cpu(cpumask, i, true);
-        snprintf(thread_name, SPDK_IO_MGR_THREAD_NAME_LEN, "%s%d",
-                 SPDK_IO_MGR_THREAD_NAME_PREFIX, j);
-        g_spdk_threads[j] = spdk_thread_create(thread_name, cpumask);
-        if (!g_spdk_threads[j]) {
-            SPDK_ERRLOG("Failed to create thread %s", thread_name);
-            spdk_cpuset_free(cpumask);
-            goto exit_threads;
-        }
+	j = 0;
+	SPDK_ENV_FOREACH_CORE(i) {
+		spdk_cpuset_zero(cpumask);
+		spdk_cpuset_set_cpu(cpumask, i, true);
+		snprintf(thread_name, SPDK_IO_MGR_THREAD_NAME_LEN, "%s%d",
+				 SPDK_IO_MGR_THREAD_NAME_PREFIX, j);
+		g_spdk_threads[j] = spdk_thread_create(thread_name, cpumask);
+		if (!g_spdk_threads[j]) {
+			SPDK_ERRLOG("Failed to create thread %s", thread_name);
+			spdk_cpuset_free(cpumask);
+			goto exit_threads;
+		}
 
-        j++;
-    }
-    spdk_cpuset_free(cpumask);
+		j++;
+	}
+	spdk_cpuset_free(cpumask);
 
-    return 0;
+	return 0;
 
 exit_threads:
-    for (j--; j >= 0; j--)
-        spdk_thread_send_msg(g_spdk_threads[j], spdk_thread_exit_wrapper,
-                             g_spdk_threads[j]);
+	for (j--; j >= 0; j--)
+		spdk_thread_send_msg(g_spdk_threads[j], spdk_thread_exit_wrapper,
+							 g_spdk_threads[j]);
 free_threads:
-    free(g_spdk_threads);
-    g_spdk_threads = NULL;
-    g_num_spdk_threads = 0;
+	free(g_spdk_threads);
+	g_spdk_threads = NULL;
+	g_num_spdk_threads = 0;
 err:
-    return -1;
+	return -1;
 }
 
 void spdk_io_mgr_clear(void)
 {
-    uint32_t i;
+	uint32_t i;
 
-    for (i = 0; i < g_num_spdk_threads; i++)
-        spdk_thread_send_msg(g_spdk_threads[i], spdk_thread_exit_wrapper,
-                             g_spdk_threads[i]);
-    free(g_spdk_threads);
-    g_spdk_threads = NULL;
-    g_num_spdk_threads = 0;
+	for (i = 0; i < g_num_spdk_threads; i++)
+		spdk_thread_send_msg(g_spdk_threads[i], spdk_thread_exit_wrapper,
+							 g_spdk_threads[i]);
+	free(g_spdk_threads);
+	g_spdk_threads = NULL;
+	g_num_spdk_threads = 0;
 }
 
 //need invoker to guarantee pi is bigger than pre_pi
 static inline int vrdma_vq_rollback(uint16_t pre_pi, uint16_t pi,
-                                           uint16_t q_size)
+								   uint16_t q_size)
 {
 	return (pi % q_size < pre_pi % q_size);
 }
 
 
 static bool vrdma_qp_sm_idle(struct spdk_vrdma_qp *vqp,
-                                    enum vrdma_qp_sm_op_status status)
+							enum vrdma_qp_sm_op_status status)
 {
 	SPDK_ERRLOG("vrdma sq in invalid state %d\n",
 					   VRDMA_QP_STATE_IDLE);
@@ -151,7 +151,7 @@ static bool vrdma_qp_sm_idle(struct spdk_vrdma_qp *vqp,
 }
 
 static bool vrdma_qp_sm_poll_pi(struct spdk_vrdma_qp *vqp,
-                                   enum vrdma_qp_sm_op_status status)
+								   enum vrdma_qp_sm_op_status status)
 {
 	int ret;
 	uint64_t pi_addr = vqp->sq.comm.doorbell_pa;
@@ -171,8 +171,8 @@ static bool vrdma_qp_sm_poll_pi(struct spdk_vrdma_qp *vqp,
 	vqp->q_comp.count = 1;
 
 	ret = snap_dma_q_read(vqp->snap_queue->dma_q, &vqp->qp_pi->pi.sq_pi, sizeof(uint16_t),
-				vqp->qp_mr->lkey, pi_addr,
-				vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
+						vqp->qp_mr->lkey, pi_addr,
+						vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
 	if (spdk_unlikely(ret)) {
 		SPDK_ERRLOG("failed to read sq PI, ret %d\n", ret);
 		vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
@@ -183,7 +183,7 @@ static bool vrdma_qp_sm_poll_pi(struct spdk_vrdma_qp *vqp,
 }
 
 static bool vrdma_qp_sm_handle_pi(struct spdk_vrdma_qp *vqp,
-                                    enum vrdma_qp_sm_op_status status)
+									enum vrdma_qp_sm_op_status status)
 {
 	if (status != VRDMA_QP_SM_OP_OK) {
 		SPDK_ERRLOG("failed to get vq PI, status %d\n", status);
@@ -201,7 +201,7 @@ static bool vrdma_qp_sm_handle_pi(struct spdk_vrdma_qp *vqp,
 }
 
 static bool vrdma_qp_wqe_sm_read(struct spdk_vrdma_qp *vqp,
-                                    enum vrdma_qp_sm_op_status status)
+									enum vrdma_qp_sm_op_status status)
 {
 	uint16_t pi = vqp->qp_pi->pi.sq_pi;
 	uint32_t sq_poll_size = 0;
@@ -225,14 +225,14 @@ static bool vrdma_qp_wqe_sm_read(struct spdk_vrdma_qp *vqp,
 		num = vqp->sq.comm.num_to_parse;
 		sq_poll_size = num * sizeof(struct vrdma_send_wqe);
 		offset = (vqp->sq.comm.pre_pi % q_size) * sizeof(struct vrdma_send_wqe);
-	    host_ring_addr = vqp->sq.comm.wqe_buff_pa + offset;
+		host_ring_addr = vqp->sq.comm.wqe_buff_pa + offset;
 		ret = snap_dma_q_read(vqp->snap_queue->dma_q, vqp->sq.sq_buff, sq_poll_size,
-				              vqp->qp_mr->lkey, host_ring_addr,
-				              vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
+							vqp->qp_mr->lkey, host_ring_addr,
+							vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
 		if (spdk_unlikely(ret)) {
 			SPDK_ERRLOG("no roll back failed to read sq WQE entry, ret %d\n", ret);
-		    vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
-		    return true;
+			vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
+			 return true;
 		}
 	} else {
 		/* vq roll back case, first part */
@@ -241,16 +241,16 @@ static bool vrdma_qp_wqe_sm_read(struct spdk_vrdma_qp *vqp,
 		num = q_size - (vqp->sq.comm.pre_pi % q_size);
 		sq_poll_size = num * sizeof(struct vrdma_send_wqe);
 		offset = (vqp->sq.comm.pre_pi % q_size) * sizeof(struct vrdma_send_wqe);
-	    host_ring_addr = vqp->sq.comm.wqe_buff_pa + offset;
+		host_ring_addr = vqp->sq.comm.wqe_buff_pa + offset;
 		ret = snap_dma_q_read(vqp->snap_queue->dma_q, vqp->sq.sq_buff, sq_poll_size,
-				              vqp->qp_mr->lkey, host_ring_addr,
-				              vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
+							vqp->qp_mr->lkey, host_ring_addr,
+							vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
 		if (spdk_unlikely(ret)) {
 			SPDK_ERRLOG("no roll back failed to read sq WQE entry, ret %d\n", ret);
-		    vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
-		    return true;
+			vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
+			return true;
 		}
-		
+
 		/* calculate second poll size */
 		local_ring_addr = (uint8_t *)vqp->sq.sq_buff + num * sizeof(struct vrdma_send_wqe);
 		vqp->q_comp.count++;
@@ -258,11 +258,11 @@ static bool vrdma_qp_wqe_sm_read(struct spdk_vrdma_qp *vqp,
 		num = pi % q_size;
 		sq_poll_size = num * sizeof(struct vrdma_send_wqe);
 		ret = snap_dma_q_read(vqp->snap_queue->dma_q, local_ring_addr, sq_poll_size,
-				              vqp->qp_mr->lkey, vqp->sq.comm.wqe_buff_pa,
-				              vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
+							  vqp->qp_mr->lkey, vqp->sq.comm.wqe_buff_pa,
+							  vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
 		if (spdk_unlikely(ret)) {
 			SPDK_ERRLOG("roll back failed to second read sq WQE entry, ret %d\n", ret);
-		    	vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
+				vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
 			return true;
 		}
 	}
@@ -271,7 +271,7 @@ static bool vrdma_qp_wqe_sm_read(struct spdk_vrdma_qp *vqp,
 }
 
 static bool vrdma_qp_wqe_sm_parse(struct spdk_vrdma_qp *vqp,
-                                   enum vrdma_qp_sm_op_status status)
+								   enum vrdma_qp_sm_op_status status)
 {
 	if (status != VRDMA_QP_SM_OP_OK) {
 		SPDK_ERRLOG("failed to read vq wqe, status %d\n", status);
@@ -294,7 +294,7 @@ static inline struct vrdma_backend_qp *vrdma_vq_get_mqp(struct spdk_vrdma_qp *vq
 }
 
 static bool vrdma_qp_wqe_sm_map_backend(struct spdk_vrdma_qp *vqp,
-                                    		enum vrdma_qp_sm_op_status status)
+											enum vrdma_qp_sm_op_status status)
 {
 	vqp->bk_qp[0] = vrdma_vq_get_mqp(vqp);
 	SPDK_NOTICELOG("vrdam map sq wqe: vq pi %d, mqp %p\n",
@@ -320,16 +320,16 @@ static inline uint8_t vrdma_get_send_flags(struct vrdma_send_wqe *wqe)
 }
 
 static inline void vrdma_set_raddr_seg(struct mlx5_wqe_raddr_seg *rseg,
-				 							uint64_t remote_addr, uint32_t rkey)
+										uint64_t remote_addr, uint32_t rkey)
 {
 	rseg->raddr    = htobe64(remote_addr);
-	rseg->rkey     = htobe32(rkey);
+	rseg->rkey	   = htobe32(rkey);
 	rseg->reserved = 0;
 }
 
 static inline void vrdma_set_atomic_seg(struct mlx5_wqe_atomic_seg *aseg,
-			   								uint8_t opcode, uint64_t swap,
-			   								uint64_t compare_add)
+										uint8_t opcode, uint64_t swap,
+										uint64_t compare_add)
 {
 	if (opcode == IBV_WR_ATOMIC_CMP_AND_SWP) {
 		aseg->swap_add = htobe64(swap);
@@ -342,7 +342,7 @@ static inline void vrdma_set_atomic_seg(struct mlx5_wqe_atomic_seg *aseg,
 static inline void *vrdma_get_wqe_bb(struct snap_vrdma_backend_qp *bk_qp)
 {
 	return (void *)bk_qp->hw_qp.sq.addr + (bk_qp->hw_qp.sq.pi & (bk_qp->hw_qp.sq.wqe_cnt - 1)) *
-	       MLX5_SEND_WQE_BB;
+		   MLX5_SEND_WQE_BB;
 }
 
 static inline void vrdma_update_tx_db(struct snap_vrdma_backend_qp *bk_qp)
@@ -356,7 +356,7 @@ static inline void vrdma_update_tx_db(struct snap_vrdma_backend_qp *bk_qp)
 }
 
 static inline void vrdma_flush_tx_db(struct snap_vrdma_backend_qp *bk_qp,
-											struct mlx5_wqe_ctrl_seg *ctrl)
+									struct mlx5_wqe_ctrl_seg *ctrl)
 {
 	*(uint64_t *)(bk_qp->hw_qp.sq.bf_addr) = *(uint64_t *)ctrl;
 	++bk_qp->stat.tx.total_dbs;
@@ -364,15 +364,14 @@ static inline void vrdma_flush_tx_db(struct snap_vrdma_backend_qp *bk_qp,
 
 
 static inline void vrdma_ring_tx_db(struct snap_vrdma_backend_qp *bk_qp,
-											struct mlx5_wqe_ctrl_seg *ctrl)
+									struct mlx5_wqe_ctrl_seg *ctrl)
 {
-#if !__DPA
-	/* 8.9.3.1  Posting a Work Request to Work Queue
+	/* 8.9.3.1	Posting a Work Request to Work Queue
 	 * 1. Write WQE to the WQE buffer sequentially to previously-posted
-	 *    WQE (on WQEBB granularity)
+	 *	  WQE (on WQEBB granularity)
 	 *
 	 * 2. Update Doorbell Record associated with that queue by writing
-	 *    the sq_wqebb_counter or wqe_counter for send and RQ respectively
+	 *	  the sq_wqebb_counter or wqe_counter for send and RQ respectively
 	 **/
 	vrdma_update_tx_db(bk_qp);
 
@@ -381,7 +380,7 @@ static inline void vrdma_ring_tx_db(struct snap_vrdma_backend_qp *bk_qp,
 	snap_memory_bus_store_fence();
 
 	/* 3. For send request ring DoorBell by writing to the Doorbell
-	 *    Register field in the UAR associated with that queue
+	 *	  Register field in the UAR associated with that queue
 	 */
 	vrdma_flush_tx_db(bk_qp, ctrl);
 
@@ -395,32 +394,13 @@ static inline void vrdma_ring_tx_db(struct snap_vrdma_backend_qp *bk_qp,
 	//	snap_memory_bus_store_fence();
 #endif
 
-#else
-	/* Based on review with Eliav:
-	 * - only need a store fence to ensure that the wqe is committed to the
-	 *   memory
-	 * - there is no need to update dbr on DPA
-	 * - The flow works only if there is no doorbell recovery. Unfortunately
-	 *   doorbell recovery can happen on any QP in the same gvmi. Then it
-	 *   will trigger recovery on the dpa qp with wrong pi.
-	 * - Disable optimization for now.
-	 * - At the moment optimization has no measurable effect on single
-	 *   queue virtio performance
-	 */
-#define HAVE_DOORBELL_RECOVERY 1
-#if SIMX_BUILD || HAVE_DOORBELL_RECOVERY
-	vrdma_update_tx_db(bk_qp);
-#endif
-	snap_memory_bus_store_fence();
-	dpa_dma_q_ring_tx_db(bk_qp->hw_qp.qp_num, bk_qp->hw_qp.sq.pi);
-#endif
 }
 
 static inline void
 vrdma_set_ctrl_seg(struct mlx5_wqe_ctrl_seg *ctrl, uint16_t pi,
-			 uint8_t opcode, uint8_t opmod, uint32_t qp_num,
-			 uint8_t fm_ce_se, uint8_t ds,
-			 uint8_t signature, uint32_t imm)
+				 uint8_t opcode, uint8_t opmod, uint32_t qp_num,
+				 uint8_t fm_ce_se, uint8_t ds,
+				 uint8_t signature, uint32_t imm)
 {
 	*(uint32_t *)((void *)ctrl + 8) = 0;
 	mlx5dv_set_ctrl_seg(ctrl, pi, opcode, opmod, qp_num,
@@ -428,7 +408,7 @@ vrdma_set_ctrl_seg(struct mlx5_wqe_ctrl_seg *ctrl, uint16_t pi,
 }
 
 static inline void vrdma_wqe_submit(struct snap_vrdma_backend_qp *bk_qp,
-											struct mlx5_wqe_ctrl_seg *ctrl)
+									struct mlx5_wqe_ctrl_seg *ctrl)
 {
 	bk_qp->hw_qp.sq.pi++;
 	if (bk_qp->db_flag == SNAP_DB_RING_BATCH) {
@@ -448,8 +428,8 @@ static inline void vrdma_tx_complete(struct snap_vrdma_backend_qp *bk_qp)
 }
 
 static int vrdma_rw_wqe_submit(struct vrdma_send_wqe *wqe,
-										struct snap_vrdma_backend_qp *bk_qp, 
-										uint8_t opcode)
+								struct snap_vrdma_backend_qp *bk_qp,
+								uint8_t opcode)
 {
 	struct mlx5_wqe_ctrl_seg *ctrl;
 	struct mlx5_wqe_raddr_seg *rseg;
@@ -468,7 +448,7 @@ static int vrdma_rw_wqe_submit(struct vrdma_send_wqe *wqe,
 
 	ctrl = seg = (struct mlx5_wqe_ctrl_seg *)vrdma_get_wqe_bb(bk_qp);
 
-	seg += sizeof(*ctrl); 
+	seg += sizeof(*ctrl);
 	ds += sizeof(*ctrl) / 16;
 
 	rseg = (struct mlx5_wqe_raddr_seg *)(ctrl + 1);
@@ -484,20 +464,20 @@ static int vrdma_rw_wqe_submit(struct vrdma_send_wqe *wqe,
 			sge_addr = ((uint64_t)sge.buf_addr_hi << 32) + sge.buf_addr_lo;
 			mlx5dv_set_data_seg(dseg, sge.buf_length, sge.lkey, (intptr_t)sge_addr);
 			++dseg;
-			ds += sizeof(*dseg) / 16;		
+			ds += sizeof(*dseg) / 16;
 		}
 	}
 
 	vrdma_set_ctrl_seg(ctrl, bk_qp->hw_qp.sq.pi, opcode, 0, bk_qp->hw_qp.qp_num,
-			    	fm_ce_se, ds, sig, imm);	
+					fm_ce_se, ds, sig, imm);
 	vrdma_wqe_submit(bk_qp, ctrl);
 	return 0;
 	
 }
 
 static int vrdma_atomic_wqe_submit(struct vrdma_send_wqe *wqe,
-											struct snap_vrdma_backend_qp *bk_qp, 
-											uint8_t opcode)
+									struct snap_vrdma_backend_qp *bk_qp,
+									uint8_t opcode)
 {
 	struct mlx5_wqe_ctrl_seg *ctrl;
 	struct mlx5_wqe_raddr_seg *rseg;
@@ -538,20 +518,20 @@ static int vrdma_atomic_wqe_submit(struct vrdma_send_wqe *wqe,
 			sge_addr = ((uint64_t)sge.buf_addr_hi << 32) + sge.buf_addr_lo;
 			mlx5dv_set_data_seg(dseg, MLX5_ATOMIC_SIZE, sge.lkey, (intptr_t)sge_addr);
 			++dseg;
-			ds += sizeof(*dseg) / 16;		
+			ds += sizeof(*dseg) / 16;
 		}
 	}
 
 	vrdma_set_ctrl_seg(ctrl, bk_qp->hw_qp.sq.pi, opcode, 0, bk_qp->hw_qp.qp_num,
-			    	fm_ce_se, ds, sig, imm);	
+					fm_ce_se, ds, sig, imm);
 	vrdma_wqe_submit(bk_qp, ctrl);
 	return 0;
 
 }
 
 static int vrdma_ud_wqe_submit(struct vrdma_send_wqe *wqe,
-										struct snap_vrdma_backend_qp *bk_qp, 
-										uint8_t opcode)
+								struct snap_vrdma_backend_qp *bk_qp, 
+								uint8_t opcode)
 {
 	//TODO:
 	return 0;
@@ -560,7 +540,7 @@ static int vrdma_ud_wqe_submit(struct vrdma_send_wqe *wqe,
 
 //translate and submit vqp wqe to mqp
 static bool vrdma_qp_wqe_sm_submit(struct spdk_vrdma_qp *vqp,
-                                    enum vrdma_qp_sm_op_status status)
+									enum vrdma_qp_sm_op_status status)
 {
 	uint16_t num_to_parse = vqp->sq.comm.num_to_parse;
 	struct snap_vrdma_backend_qp *backend_qp = &vqp->bk_qp[0]->bk_qp;
@@ -595,7 +575,7 @@ static bool vrdma_qp_wqe_sm_submit(struct spdk_vrdma_qp *vqp,
 	}
 
 	vrdma_tx_complete(backend_qp);
-	vqp->sq.comm.pre_pi = vqp->qp_pi->pi.sq_pi; 
+	vqp->sq.comm.pre_pi = vqp->qp_pi->pi.sq_pi;
 	return true;
 }
 
@@ -698,7 +678,7 @@ static void vrdma_mcqe_err(struct mlx5_cqe64 *cqe)
 }
 
 static inline struct mlx5_cqe64 *vrdma_get_mqp_cqe(struct snap_hw_cq *dv_cq,
-															int cqe_size)
+													int cqe_size)
 {
 	struct mlx5_cqe64 *cqe;
 
@@ -707,12 +687,12 @@ static inline struct mlx5_cqe64 *vrdma_get_mqp_cqe(struct snap_hw_cq *dv_cq,
 	 * compile time during inlining
 	 **/
 	cqe = (struct mlx5_cqe64 *)(dv_cq->cq_addr + (dv_cq->ci & (dv_cq->cqe_cnt - 1)) *
-				    cqe_size);
+					cqe_size);
 	return cqe_size == 64 ? cqe : cqe + 1;
 }
 
 static inline struct mlx5_cqe64 *vrdma_poll_mqp_scq(struct snap_hw_cq *dv_cq,
-															int cqe_size)
+													int cqe_size)
 {
 	struct mlx5_cqe64 *cqe;
 
@@ -746,7 +726,7 @@ static uint32_t vrdma_get_wqe_id(struct spdk_vrdma_qp *vqp, uint32_t mwqe_idx)
 }
 
 static bool vrdma_qp_sm_poll_cq_ci(struct spdk_vrdma_qp *vqp,
-                                   			enum vrdma_qp_sm_op_status status)
+									enum vrdma_qp_sm_op_status status)
 {
 	int ret;
 	uint64_t ci_addr = vqp->sq_vcq->ci_pa;
@@ -765,8 +745,8 @@ static bool vrdma_qp_sm_poll_cq_ci(struct spdk_vrdma_qp *vqp,
 
 	// TODO, here lkey need to be changed to vcq
 	ret = snap_dma_q_read(vqp->snap_queue->dma_q, &vqp->sq_vcq->pici->ci, sizeof(uint32_t),
-			          vqp->sq_vcq->cqe_ci_mr->lkey, ci_addr,
-			          vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
+					  vqp->sq_vcq->cqe_ci_mr->lkey, ci_addr,
+					  vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
 	if (spdk_unlikely(ret)) {
 		SPDK_ERRLOG("failed to read sq vcq CI, ret %d\n", ret);
 		vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
@@ -777,7 +757,7 @@ static bool vrdma_qp_sm_poll_cq_ci(struct spdk_vrdma_qp *vqp,
 }
 
 static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
-                                           enum vrdma_qp_sm_op_status status)
+									   enum vrdma_qp_sm_op_status status)
 {
 	struct snap_hw_cq *mcq = &vqp->bk_qp[0]->bk_qp.sq_hw_cq;
 	struct spdk_vrdma_cq *vcq = vqp->sq_vcq;
@@ -836,8 +816,8 @@ write_vcq:
 	vqp->q_comp.count = 1;
 	size = (vcq->pi - vcq->pre_pi) * vcq->cqebb_size;
 	ret = snap_dma_q_write(vqp->snap_queue->dma_q, vcq_local_addr, size,
-				              vqp->sq_vcq->cqe_ci_mr->lkey, vcq_host_addr,
-				              vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
+							  vqp->sq_vcq->cqe_ci_mr->lkey, vcq_host_addr,
+							  vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
 
 	if (spdk_unlikely(ret)) {
 		SPDK_ERRLOG("failed to write cq CQE entry, ret %d\n", ret);
@@ -853,7 +833,7 @@ write_vcq:
 }
 
 static bool vrdma_qp_sm_fatal_error(struct spdk_vrdma_qp *vqp,
-                                       enum vrdma_qp_sm_op_status status)
+									   enum vrdma_qp_sm_op_status status)
 {
 	/*
 	 * TODO: maybe need to add more handling
@@ -863,16 +843,16 @@ static bool vrdma_qp_sm_fatal_error(struct spdk_vrdma_qp *vqp,
 }
 
 static struct vrdma_qp_sm_state vrdma_qp_sm_arr[] = {
-/*VRDMA_QP_STATE_IDLE                         */ {vrdma_qp_sm_idle},
-/*VRDMA_QP_STATE_POLL_PI                      */ {vrdma_qp_sm_poll_pi},
-/*VRDMA_QP_STATE_HANDLE_PI                    */ {vrdma_qp_sm_handle_pi},
-/*VRDMA_QP_STATE_WQE_READ                     */ {vrdma_qp_wqe_sm_read},
-/*VRDMA_QP_STATE_WQE_PARSE                    */ {vrdma_qp_wqe_sm_parse},
-/*VRDMA_QP_STATE_WQE_MAP_BACKEND              */ {vrdma_qp_wqe_sm_map_backend},
-/*VRDMA_QP_STATE_WQE_SUBMIT                   */ {vrdma_qp_wqe_sm_submit},
-/*VRDMA_QP_STATE_POLL_CQ_CI                   */ {vrdma_qp_sm_poll_cq_ci},
-/*VRDMA_QP_STATE_GEN_COMP                  	  */ {vrdma_qp_sm_gen_completion},
-/*VRDMA_QP_STATE_FATAL_ERR                    */ {vrdma_qp_sm_fatal_error},
+/*VRDMA_QP_STATE_IDLE						  */ {vrdma_qp_sm_idle},
+/*VRDMA_QP_STATE_POLL_PI					  */ {vrdma_qp_sm_poll_pi},
+/*VRDMA_QP_STATE_HANDLE_PI					  */ {vrdma_qp_sm_handle_pi},
+/*VRDMA_QP_STATE_WQE_READ					  */ {vrdma_qp_wqe_sm_read},
+/*VRDMA_QP_STATE_WQE_PARSE					  */ {vrdma_qp_wqe_sm_parse},
+/*VRDMA_QP_STATE_WQE_MAP_BACKEND			  */ {vrdma_qp_wqe_sm_map_backend},
+/*VRDMA_QP_STATE_WQE_SUBMIT					  */ {vrdma_qp_wqe_sm_submit},
+/*VRDMA_QP_STATE_POLL_CQ_CI					  */ {vrdma_qp_sm_poll_cq_ci},
+/*VRDMA_QP_STATE_GEN_COMP					  */ {vrdma_qp_sm_gen_completion},
+/*VRDMA_QP_STATE_FATAL_ERR					  */ {vrdma_qp_sm_fatal_error},
 };
 
 struct vrdma_qp_state_machine vrdma_sq_sm  = { vrdma_qp_sm_arr,
@@ -880,13 +860,13 @@ struct vrdma_qp_state_machine vrdma_sq_sm  = { vrdma_qp_sm_arr,
 
 /**
  * vrdma_qp_cmd_progress() - admq command state machine progress handle
- * @sq:	admq to be processed
- * @status:	status of calling function (can be a callback)
+ * @sq: admq to be processed
+ * @status: status of calling function (can be a callback)
  *
  * Return: 0 (Currently no option to fail)
  */
 static int vrdma_qp_wqe_progress(struct spdk_vrdma_qp *vqp,
-		          	enum vrdma_qp_sm_op_status status)
+								enum vrdma_qp_sm_op_status status)
 {
 	struct vrdma_qp_state_machine *sm;
 	bool repeat = true;
@@ -918,8 +898,13 @@ void vrdma_qp_sm_dma_cb(struct snap_dma_completion *self, int status)
 
 void vrdma_qp_sm_init(struct spdk_vrdma_qp *vqp)
 {
-       vqp->q_comp.func = vrdma_qp_sm_dma_cb;
-       vqp->q_comp.count = 1;
-       vqp->sm_state = VRDMA_QP_STATE_IDLE;
-       vqp->custom_sm = &vrdma_sq_sm;
+	vqp->q_comp.func = vrdma_qp_sm_dma_cb;
+	vqp->q_comp.count = 1;
+	vqp->sm_state = VRDMA_QP_STATE_IDLE;
+	vqp->custom_sm = &vrdma_sq_sm;
+}
+
+void vrdma_qp_sm_start(struct spdk_vrdma_qp *vqp)
+{
+	vrdma_qp_sm_poll_pi(vqp, VRDMA_QP_SM_OP_OK);
 }
