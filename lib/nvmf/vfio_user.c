@@ -1731,6 +1731,16 @@ free_sq_reqs(struct nvmf_vfio_user_sq *sq)
 	}
 }
 
+static void
+delete_cq_done(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq)
+{
+	assert(cq->cq_ref == 0);
+	unmap_q(ctrlr, &cq->mapping);
+	cq->size = 0;
+	cq->cq_state = VFIO_USER_CQ_DELETED;
+	cq->group = NULL;
+}
+
 /* Deletes a SQ, if this SQ is the last user of the associated CQ
  * and the controller is being shut down/reset or vfio-user client disconnects,
  * then the CQ is also deleted.
@@ -1766,10 +1776,7 @@ delete_sq_done(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvmf_vfio_user_sq *
 
 		assert(cq->cq_ref > 0);
 		if (--cq->cq_ref == 0) {
-			unmap_q(vu_ctrlr, &cq->mapping);
-			cq->size = 0;
-			cq->cq_state = VFIO_USER_CQ_DELETED;
-			cq->group = NULL;
+			delete_cq_done(vu_ctrlr, cq);
 		}
 	}
 }
@@ -2212,12 +2219,13 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 			sc = SPDK_NVME_SC_INVALID_QUEUE_DELETION;
 			goto out;
 		}
-
-		unmap_q(ctrlr, &cq->mapping);
-		cq->size = 0;
-		cq->cq_state = VFIO_USER_CQ_DELETED;
-		cq->group = NULL;
+		delete_cq_done(ctrlr, cq);
 	} else {
+		/*
+		 * Deletion of the CQ is only deferred to delete_sq_done() on
+		 * VM reboot or CC.EN change, so we have to delete it in all
+		 * other cases.
+		 */
 		ctx = calloc(1, sizeof(*ctx));
 		if (!ctx) {
 			sct = SPDK_NVME_SCT_GENERIC;
