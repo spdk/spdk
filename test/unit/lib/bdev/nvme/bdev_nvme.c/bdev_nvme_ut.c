@@ -6135,6 +6135,38 @@ test_set_multipath_policy(void)
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 }
 
+static void
+test_uuid_generation(void)
+{
+	uint32_t nsid1 = 1, nsid2 = 2;
+	char sn1[21] = "SPDK CTRLR SERIAL 01", sn2[21] = "SPDK CTRLR SERIAL 02";
+	char sn3[21] = "                    ";
+	char uuid_str[SPDK_UUID_STRING_LEN] = {'\0'};
+	struct spdk_uuid uuid1, uuid2;
+
+	/* Test case 1:
+	 * Serial numbers are the same, nsids are different.
+	 * Compare two generated UUID - they should be different. */
+	uuid1 = nvme_generate_uuid(sn1, nsid1);
+	uuid2 = nvme_generate_uuid(sn1, nsid2);
+
+	CU_ASSERT((spdk_uuid_compare(&uuid1, &uuid2)) != 0);
+
+	/* Test case 2:
+	 * Serial numbers differ only by one character, nsids are the same.
+	 * Compare two generated UUID - they should be different. */
+	uuid1 = nvme_generate_uuid(sn1, nsid1);
+	uuid2 = nvme_generate_uuid(sn2, nsid1);
+
+	CU_ASSERT((spdk_uuid_compare(&uuid1, &uuid2)) != 0);
+
+	/* Test case 3:
+	 * Serial number comprises only of space characters.
+	 * Validate the generated UUID. */
+	uuid1 = nvme_generate_uuid(sn3, nsid1);
+	CU_ASSERT((spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &uuid1)) == 0);
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -6185,6 +6217,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_find_next_io_path);
 	CU_ADD_TEST(suite, test_disable_auto_failback);
 	CU_ADD_TEST(suite, test_set_multipath_policy);
+	CU_ADD_TEST(suite, test_uuid_generation);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
