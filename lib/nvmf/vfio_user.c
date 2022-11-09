@@ -390,6 +390,7 @@ struct nvmf_vfio_user_ctrlr {
 	bool					queued_quiesce;
 
 	bool					reset_shn;
+	bool					disconnect;
 
 	uint16_t				cntlid;
 	struct spdk_nvmf_ctrlr			*ctrlr;
@@ -1731,8 +1732,8 @@ free_sq_reqs(struct nvmf_vfio_user_sq *sq)
 }
 
 /* Deletes a SQ, if this SQ is the last user of the associated CQ
- * and the controller is being shut down or reset, then the CQ is
- * also deleted.
+ * and the controller is being shut down/reset or vfio-user client disconnects,
+ * then the CQ is also deleted.
  */
 static void
 delete_sq_done(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvmf_vfio_user_sq *sq)
@@ -1756,7 +1757,7 @@ delete_sq_done(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvmf_vfio_user_sq *
 	 * VM may not send DELETE IO SQ/CQ commands, NVMf library
 	 * will disconnect IO queue pairs.
 	 */
-	if (vu_ctrlr->reset_shn) {
+	if (vu_ctrlr->reset_shn || vu_ctrlr->disconnect) {
 		cqid = sq->cqid;
 		cq = vu_ctrlr->cqs[cqid];
 
@@ -4731,6 +4732,7 @@ vfio_user_destroy_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 
 	pthread_mutex_lock(&endpoint->lock);
 	endpoint->need_relisten = true;
+	ctrlr->disconnect = true;
 	if (TAILQ_EMPTY(&ctrlr->connected_sqs)) {
 		endpoint->ctrlr = NULL;
 		free_ctrlr(ctrlr);
