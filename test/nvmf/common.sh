@@ -352,7 +352,7 @@ function gather_supported_nvmf_pci_devs() {
 	fi
 
 	# E810 cards also need irdma driver to be around.
-	if ((${#e810[@]} > 0)) && [[ $TEST_TRANSPORT == rdma ]]; then
+	if [[ $SPDK_TEST_NVMF_NICS == e810 && $TEST_TRANSPORT == rdma ]]; then
 		if [[ -e /sys/module/irdma/parameters/roce_ena ]]; then
 			# Our tests don't play well with iWARP protocol. Make sure we use RoCEv2 instead.
 			(($(< /sys/module/irdma/parameters/roce_ena) != 1)) && modprobe -r irdma
