@@ -329,7 +329,7 @@ struct nvmf_vfio_user_sq {
 struct nvmf_vfio_user_cq {
 	struct spdk_nvmf_transport_poll_group	*group;
 	struct spdk_thread			*thread;
-	uint32_t				cq_ref;
+	int					cq_ref;
 
 	uint32_t				qid;
 	/* Number of entries in queue. */
@@ -1763,10 +1763,8 @@ delete_sq_done(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvmf_vfio_user_sq *
 		SPDK_DEBUGLOG(nvmf_vfio, "%s: try to delete cqid:%u=%p\n", ctrlr_id(vu_ctrlr),
 			      cq->qid, cq);
 
-		if (cq->cq_ref) {
-			cq->cq_ref--;
-		}
-		if (cq->cq_ref == 0) {
+		assert(cq->cq_ref > 0);
+		if (--cq->cq_ref == 0) {
 			unmap_q(vu_ctrlr, &cq->mapping);
 			cq->size = 0;
 			cq->cq_state = VFIO_USER_CQ_DELETED;
@@ -4978,6 +4976,11 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 	pthread_mutex_lock(&endpoint->lock);
 	if (nvmf_qpair_is_admin_queue(&sq->qpair)) {
 		admin_cq->thread = spdk_get_thread();
+		/*
+		 * The admin queue is special as SQ0 and CQ0 are created
+		 * together.
+		 */
+		admin_cq->cq_ref = 1;
 		start_ctrlr(vu_ctrlr, sq->qpair.ctrlr);
 	} else {
 		/* For I/O queues this command was generated in response to an
