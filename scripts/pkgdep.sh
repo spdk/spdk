@@ -25,6 +25,7 @@ function usage() {
 	echo "  -u --uring                  Additional dependencies for io_uring"
 	echo "  -D --daos                   Additional dependencies for DAOS"
 	echo "  -A --avahi                  Additional dependencies for Avahi mDNS Discovery"
+	echo "  -G --golang                 Additional dependencies for go API generation (excluded from --all)"
 	echo ""
 	exit 0
 }
@@ -51,8 +52,9 @@ INSTALL_DOCS=false
 INSTALL_LIBURING=false
 INSTALL_DAOS=false
 INSTALL_AVAHI=false
+INSTALL_GOLANG=false
 
-while getopts 'abdfhipruADR-:' optchar; do
+while getopts 'abdfhipruADGR-:' optchar; do
 	case "$optchar" in
 		-)
 			case "$OPTARG" in
@@ -67,6 +69,7 @@ while getopts 'abdfhipruADR-:' optchar; do
 				uring) INSTALL_LIBURING=true ;;
 				daos) INSTALL_DAOS=true ;;
 				avahi) INSTALL_AVAHI=true ;;
+				golang) INSTALL_GOLANG=true ;;
 				*)
 					echo "Invalid argument '$OPTARG'"
 					usage
@@ -84,6 +87,7 @@ while getopts 'abdfhipruADR-:' optchar; do
 		u) INSTALL_LIBURING=true ;;
 		D) INSTALL_DAOS=true ;;
 		A) INSTALL_AVAHI=true ;;
+		G) INSTALL_GOLANG=true ;;
 		*)
 			echo "Invalid argument '$OPTARG'"
 			usage

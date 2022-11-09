@@ -109,6 +109,138 @@ install_markdownlint() {
 	fi
 }
 
+version-at-least() {
+	local atleastver="$1"
+	local askver="$2"
+	local smallest
+	smallest=$(echo -e "${atleastver}\n${askver}" | sort -V | head -n 1)
+	[[ "${smallest}" == "${atleastver}" ]]
+}
+
+install_protoc() {
+	local PROTOCVERSION=${PROTOCVERSION:-21.7}
+	local PROTOCGENGOVERSION=${PROTOCGENGOVERSION:-1.28}
+	local PROTOCGENGOGRPCVERSION=${PROTOCGENGOGRPCVERSION:-1.2}
+	local protocdir protocpkg protocurl protocver arch
+	local skip_protoc=0
+	# It is easy to find an incompatible combination of protoc,
+	# protoc-gen-go and protoc-gen-go-grpc. Therefore install a
+	# preferred version combination even if more recent versions
+	# of some of these tools would be available in the system.
+	protocver=$(protoc --version 2> /dev/null | {
+		read -r _ v
+		echo $v
+	})
+	if [[ "3.${PROTOCVERSION}" == "${protocver}" ]]; then
+		echo "found protoc version ${protocver} exactly required 3.${PROTOCVERSION}, skip installing"
+		skip_protoc=1
+	fi
+	protocdir=/opt/protoc/${PROTOCVERSION}
+	if [[ -x "${protocdir}/bin/protoc" ]]; then
+		echo "protoc already installed to ${protocdir}, skip installing"
+		skip_protoc=1
+	fi
+	if [[ "${skip_protoc}" != "1" ]]; then
+		echo "installing protoc v${PROTOCVERSION} to ${protocdir}"
+		mkdir -p "${protocdir}"
+		arch=x86_64
+		if [[ "$(arch)" == "aarch64" ]]; then
+			arch=aarch_64
+		fi
+		protocpkg=protoc-${PROTOCVERSION}-linux-${arch}.zip
+		protocurl=https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOCVERSION}/${protocpkg}
+		curl -f -LO "${protocurl}" || {
+			echo "downloading protoc ${PROTOCVERSION} from ${protocurl} failed"
+			return 1
+		}
+		unzip -d "${protocdir}" "${protocpkg}" || {
+			echo "extracting protoc ${PROTOCVERSION} from ${protocpkg} failed"
+			rm -f "${protocpkg}"
+			return 1
+		}
+		rm -f "${protocpkg}"
+	fi
+	if [[ -x "${protocdir}/bin/protoc-gen-go" ]]; then
+		echo "${protocdir}/bin/protoc-gen-go already installed"
+	else
+		echo "installing protoc-gen-go v${PROTOCGENGOVERSION} to ${protocdir}/bin"
+		mkdir -p "${protocdir}/bin"
+		GOBIN="${protocdir}/bin" go install "google.golang.org/protobuf/cmd/protoc-gen-go@v${PROTOCGENGOVERSION}" || {
+			echo "protoc protoc-gen-go plugin install failed"
+			return 1
+		}
+	fi
+	if [[ -x "${protocdir}/bin/protoc-gen-go-grpc" ]]; then
+		echo "${protocdir}/bin/protoc-gen-go-grpc already installed"
+	else
+		echo "installing protoc-gen-go-grpc v${PROTOCGENGOGRPCVERSION} to ${protocdir}/bin"
+		mkdir -p "${protocdir}/bin"
+		GOBIN="${protocdir}/bin" go install "google.golang.org/grpc/cmd/protoc-gen-go-grpc@v${PROTOCGENGOGRPCVERSION}" || {
+			echo "protoc protoc-gen-go-grpc plugin install failed"
+			return 1
+		}
+	fi
+	pkgdep_toolpath protoc "${protocdir}/bin"
+}
+
+install_golang() {
+	local GOVERSION=${GOVERSION:-1.19}
+	local godir gopkg gover arch
+	gover=$(go version 2> /dev/null | {
+		read -r _ _ v _
+		echo ${v#go}
+	})
+	if [[ -n "${gover}" ]] && version-at-least "${GOVERSION}" "${gover}"; then
+		echo "found go version ${gover} >= required ${GOVERSION}, skip installing"
+		return 0
+	fi
+	godir=/opt/go/${GOVERSION}
+	if [[ -x "${godir}/bin/go" ]]; then
+		echo "go already installed in ${godir}, skip installing"
+		return 0
+	fi
+	mkdir -p "${godir}"
+	arch=amd64
+	if [[ "$(arch)" == "aarch64" ]]; then
+		arch=arm64
+	fi
+	gopkg=go${GOVERSION}.linux-${arch}.tar.gz
+	echo "installing go v${GOVERSION} to ${godir}/bin"
+	curl -s https://dl.google.com/go/${gopkg} | tar -C "${godir}" -xzf - --strip 1
+	${godir}/bin/go version || {
+		echo "go install failed"
+		return 1
+	}
+	export PATH=${godir}/bin:$PATH
+	export GOBIN=${godir}/bin
+	pkgdep_toolpath go "${godir}/bin"
+}
+
+pkgdep_toolpath() {
+	# Usage: pkgdep_toolpath TOOL DIR
+	#
+	# Regenerates /etc/opt/spdk-pkgdep/paths to ensure that
+	# TOOL in DIR will be in PATH before other versions
+	# of the TOOL installed in the system.
+	local toolname="$1"
+	local toolpath="$2"
+	local toolpath_dir="/etc/opt/spdk-pkgdep/paths"
+	local toolpath_file="${toolpath_dir}/${toolname}.path"
+	local export_file="${toolpath_dir}/export.sh"
+	mkdir -p "$(dirname "${toolpath_file}")"
+	echo "${toolpath}" > "${toolpath_file}" || {
+		echo "cannot write toolpath ${toolpath} to ${toolpath_file}"
+		return 1
+	}
+	echo "# generated, source this file in shell" > "${export_file}"
+	for pathfile in "${toolpath_dir}"/*.path; do
+		echo "PATH=$(< ${pathfile}):\$PATH" >> "${export_file}"
+	done
+	echo "export PATH" >> "${export_file}"
+	echo "echo \$PATH" >> "${export_file}"
+	chmod a+x "${export_file}"
+}
+
 if [[ $INSTALL_DEV_TOOLS == true ]]; then
 	install_shfmt
 	install_spdk_bash_completion
@@ -121,4 +253,9 @@ fi
 
 if [[ $INSTALL_LIBURING == true ]]; then
 	install_liburing
+fi
+
+if [[ $INSTALL_GOLANG == true ]]; then
+	install_golang
+	install_protoc
 fi
