@@ -57,7 +57,7 @@ function run_fuzz() {
 	else
 		fuzzer_type=$((interval % fuzz_num))
 	fi
-	start_llvm_fuzz $fuzzer_type
+	start_llvm_fuzz $fuzzer_type &> $output_dir/llvm/llvm_vfio_$fuzzer_type.txt
 }
 
 testdir=$(readlink -f $(dirname $0))

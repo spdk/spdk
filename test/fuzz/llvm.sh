@@ -10,7 +10,9 @@ source "$rootdir/test/common/autotest_common.sh"
 
 fuzzers=($(get_fuzzer_targets))
 
-mkdir -p $rootdir/../corpus/
+llvm_out=$output_dir/llvm
+
+mkdir -p $rootdir/../corpus/ $llvm_out
 
 for fuzzer in "${fuzzers[@]}"; do
 	case "$fuzzer" in
