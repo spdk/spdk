@@ -40,7 +40,7 @@ function run_fuzz() {
 	else
 		fuzzer_type=$((interval % fuzz_num))
 	fi
-	start_llvm_fuzz $fuzzer_type
+	start_llvm_fuzz $fuzzer_type &> $output_dir/fuzzer_${fuzzer_type}.log
 }
 
 testdir=$(readlink -f $(dirname $0))
