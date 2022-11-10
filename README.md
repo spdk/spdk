@@ -2,6 +2,11 @@
 
 [![Build Status](https://travis-ci.org/spdk/spdk.svg?branch=master)](https://travis-ci.org/spdk/spdk)
 
+NOTE: The SPDK mailing list has moved to a new location. Please visit
+[this URL](https://lists.linuxfoundation.org/mailman/listinfo/spdk) to subscribe
+at the new location. Subscribers from the old location will not be automatically
+migrated to the new location.
+
 The Storage Performance Development Kit ([SPDK](http://www.spdk.io)) provides a set of tools
 and libraries for writing high performance, scalable, user-mode storage
 applications. It achieves high performance by moving all of the necessary
