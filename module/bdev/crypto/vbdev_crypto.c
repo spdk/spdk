@@ -1377,6 +1377,39 @@ _vdev_dev_get(struct vbdev_crypto *vbdev)
 	return NULL;
 }
 
+static void
+_cryptodev_sym_session_free(struct rte_cryptodev_sym_session *session)
+{
+	rte_cryptodev_sym_session_free(session);
+}
+
+static struct rte_cryptodev_sym_session *
+_cryptodev_sym_session_create(struct vbdev_crypto *vbdev, struct rte_crypto_sym_xform *xforms)
+{
+	struct rte_cryptodev_sym_session *session;
+	struct vbdev_dev *device;
+	int rc = 0;
+
+	device = _vdev_dev_get(vbdev);
+	if (!device) {
+		SPDK_ERRLOG("Failed to match crypto device driver to crypto vbdev.\n");
+		return NULL;
+	}
+
+	session = rte_cryptodev_sym_session_create(g_session_mp);
+	if (!session) {
+		return NULL;
+	}
+
+	rc = rte_cryptodev_sym_session_init(device->cdev_id, session, xforms,
+					    g_session_mp_priv ? g_session_mp_priv : g_session_mp);
+	if (rc < 0) {
+		_cryptodev_sym_session_free(session);
+		return NULL;
+	}
+	return session;
+}
+
 /* Callback for unregistering the IO device. */
 static void
 _device_unregister_cb(void *io_device)
@@ -1384,8 +1417,8 @@ _device_unregister_cb(void *io_device)
 	struct vbdev_crypto *crypto_bdev = io_device;
 
 	/* Done with this crypto_bdev. */
-	rte_cryptodev_sym_session_free(crypto_bdev->session_decrypt);
-	rte_cryptodev_sym_session_free(crypto_bdev->session_encrypt);
+	_cryptodev_sym_session_free(crypto_bdev->session_decrypt);
+	_cryptodev_sym_session_free(crypto_bdev->session_encrypt);
 	crypto_bdev->opts = NULL;
 	free(crypto_bdev->crypto_bdev.name);
 	free(crypto_bdev);
@@ -1860,7 +1893,6 @@ vbdev_crypto_claim(const char *bdev_name)
 {
 	struct bdev_names *name;
 	struct vbdev_crypto *vbdev;
-	struct vbdev_dev *device;
 	struct spdk_bdev *bdev;
 	uint8_t key_size;
 	int rc = 0;
@@ -1967,29 +1999,6 @@ vbdev_crypto_claim(const char *bdev_name)
 			goto error_claim;
 		}
 
-		/* To init the session we have to get the cryptoDev device ID for this vbdev */
-		device = _vdev_dev_get(vbdev);
-		if (!device) {
-			SPDK_ERRLOG("Failed to match crypto device driver to crypto vbdev.\n");
-			rc = -EINVAL;
-			goto error_cant_find_devid;
-		}
-
-		/* Get sessions. */
-		vbdev->session_encrypt = rte_cryptodev_sym_session_create(g_session_mp);
-		if (NULL == vbdev->session_encrypt) {
-			SPDK_ERRLOG("Failed to create encrypt crypto session.\n");
-			rc = -EINVAL;
-			goto error_session_en_create;
-		}
-
-		vbdev->session_decrypt = rte_cryptodev_sym_session_create(g_session_mp);
-		if (NULL == vbdev->session_decrypt) {
-			SPDK_ERRLOG("Failed to create decrypt crypto session.\n");
-			rc = -EINVAL;
-			goto error_session_de_create;
-		}
-
 		/* Init our per vbdev xform with the desired cipher options. */
 		vbdev->cipher_xform.type = RTE_CRYPTO_SYM_XFORM_CIPHER;
 		vbdev->cipher_xform.cipher.iv.offset = IV_OFFSET;
@@ -2010,23 +2019,19 @@ vbdev_crypto_claim(const char *bdev_name)
 		vbdev->cipher_xform.cipher.iv.length = IV_LENGTH;
 
 		vbdev->cipher_xform.cipher.op = RTE_CRYPTO_CIPHER_OP_ENCRYPT;
-		rc = rte_cryptodev_sym_session_init(device->cdev_id, vbdev->session_encrypt,
-						    &vbdev->cipher_xform,
-						    g_session_mp_priv ? g_session_mp_priv : g_session_mp);
-		if (rc < 0) {
-			SPDK_ERRLOG("Failed to init encrypt session: error %d\n", rc);
+		vbdev->session_encrypt = _cryptodev_sym_session_create(vbdev, &vbdev->cipher_xform);
+		if (NULL == vbdev->session_encrypt) {
+			SPDK_ERRLOG("Failed to create encrypt crypto session.\n");
 			rc = -EINVAL;
-			goto error_session_init;
+			goto error_session_en_create;
 		}
 
 		vbdev->cipher_xform.cipher.op = RTE_CRYPTO_CIPHER_OP_DECRYPT;
-		rc = rte_cryptodev_sym_session_init(device->cdev_id, vbdev->session_decrypt,
-						    &vbdev->cipher_xform,
-						    g_session_mp_priv ? g_session_mp_priv : g_session_mp);
-		if (rc < 0) {
-			SPDK_ERRLOG("Failed to init decrypt session: error %d\n", rc);
+		vbdev->session_decrypt = _cryptodev_sym_session_create(vbdev, &vbdev->cipher_xform);
+		if (NULL == vbdev->session_decrypt) {
+			SPDK_ERRLOG("Failed to create decrypt crypto session.\n");
 			rc = -EINVAL;
-			goto error_session_init;
+			goto error_session_de_create;
 		}
 
 		rc = spdk_bdev_register(&vbdev->crypto_bdev);
@@ -2044,12 +2049,10 @@ vbdev_crypto_claim(const char *bdev_name)
 
 	/* Error cleanup paths. */
 error_bdev_register:
-error_session_init:
-	rte_cryptodev_sym_session_free(vbdev->session_decrypt);
+	_cryptodev_sym_session_free(vbdev->session_decrypt);
 error_session_de_create:
-	rte_cryptodev_sym_session_free(vbdev->session_encrypt);
+	_cryptodev_sym_session_free(vbdev->session_encrypt);
 error_session_en_create:
-error_cant_find_devid:
 	spdk_bdev_module_release_bdev(vbdev->base_bdev);
 error_claim:
 	TAILQ_REMOVE(&g_vbdev_crypto, vbdev, link);
