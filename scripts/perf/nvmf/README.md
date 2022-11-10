@@ -89,7 +89,7 @@ Optional:
   "sar_settings": true,
   "pcm_settings": false,
   "enable_bandwidth": [true, 60],
-  "enable_dpdk_memory": [true, 30]
+  "enable_dpdk_memory": true
   "num_shared_buffers": 4096,
   "scheduler_settings": "static",
   "zcopy_settings": false,
@@ -150,9 +150,9 @@ Optional, SPDK Target only:
   creating transport layer. Default: false.
 - null_block_dif_type - int, 0-3. Level of DIF type to use when creating
   null block bdev. Default: 0.
-- enable_dpdk_memory - [bool, int]. Wait for a given number of seconds and
-  call env_dpdk_get_mem_stats RPC call to dump DPDK memory stats. Typically
-  wait time should be at least ramp_time of fio described in another section.
+- enable_dpdk_memory - bool. Wait for a fio ramp_time to finish and
+  call env_dpdk_get_mem_stats RPC call to dump DPDK memory stats.
+  Default: enabled.
 - adq_enable - bool; only for TCP transport.
   Configure system modules, NIC settings and create priority traffic classes
   for ADQ testing. You need and ADQ-capable NIC like the Intel E810.

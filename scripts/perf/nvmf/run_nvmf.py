@@ -392,8 +392,7 @@ class Target(Server):
         self.enable_sar = True
         self.enable_pcm = True
         self.enable_bw = True
-        self.enable_dpdk_memory = False
-        self.dpdk_wait_time = 0
+        self.enable_dpdk_memory = True
 
         if "null_block_devices" in target_config:
             self.null_block = target_config["null_block_devices"]
@@ -418,7 +417,7 @@ class Target(Server):
         if "enable_bandwidth" in target_config:
             self.enable_bw = target_config["enable_bandwidth"]
         if "enable_dpdk_memory" in target_config:
-            self.enable_dpdk_memory, self.dpdk_wait_time = target_config["enable_dpdk_memory"]
+            self.enable_dpdk_memory = target_config["enable_dpdk_memory"]
 
         self.log.info("Items now on allowlist: %s" % self.nvme_allowlist)
         self.log.info("Items now on blocklist: %s" % self.nvme_blocklist)
@@ -565,12 +564,12 @@ class Target(Server):
         #       Improve this so that additional file containing measurements average is generated too.
         # TODO: Monitor only these interfaces which are currently used to run the workload.
 
-    def measure_dpdk_memory(self, results_dir):
+    def measure_dpdk_memory(self, results_dir, dump_file_name, ramp_time):
         self.log.info("INFO: waiting to generate DPDK memory usage")
-        time.sleep(self.dpdk_wait_time)
+        time.sleep(ramp_time)
         self.log.info("INFO: generating DPDK memory usage")
-        rpc.env.env_dpdk_get_mem_stats
-        os.rename("/tmp/spdk_mem_dump.txt", "%s/spdk_mem_dump.txt" % (results_dir))
+        tmp_dump_file = rpc.env_dpdk.env_dpdk_get_mem_stats(self.client)["filename"]
+        os.rename(tmp_dump_file, "%s/%s" % (results_dir, dump_file_name))
 
     def sys_config(self):
         self.log.info("====Kernel release:====")
@@ -1586,7 +1585,8 @@ if __name__ == "__main__":
                     threads.append(t)
 
                 if target_obj.enable_dpdk_memory:
-                    t = threading.Thread(target=target_obj.measure_dpdk_memory, args=(args.results))
+                    dpdk_mem_file_name = "%s_%s_%s_run_%s_dpdk_mem.txt" % (block_size, rw, io_depth, run_no)
+                    t = threading.Thread(target=target_obj.measure_dpdk_memory, args=(args.results, dpdk_mem_file_name, fio_ramp_time))
                     threads.append(t)
 
                 if target_obj.enable_pm:
