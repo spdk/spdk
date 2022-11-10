@@ -290,7 +290,9 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 	struct rte_cryptodev_qp_conf qp_conf = {
 		.nb_descriptors = qp_desc_nr,
 		.mp_session = g_session_mp,
+#if RTE_VERSION < RTE_VERSION_NUM(22, 11, 0, 0)
 		.mp_session_private = g_session_mp_priv,
+#endif
 	};
 
 	/* Pre-setup all potential qpairs now and assign them in the channel
@@ -458,6 +460,7 @@ vbdev_crypto_init_crypto_drivers(void)
 		}
 	}
 
+#if RTE_VERSION < RTE_VERSION_NUM(22, 11, 0, 0)
 	g_session_mp_priv = rte_mempool_create("session_mp_priv", NUM_SESSIONS, max_sess_size,
 					       SESS_MEMPOOL_CACHE_SIZE, 0, NULL, NULL, NULL,
 					       NULL, SOCKET_ID_ANY, 0);
@@ -465,10 +468,14 @@ vbdev_crypto_init_crypto_drivers(void)
 		SPDK_ERRLOG("Cannot create private session pool max size 0x%x\n", max_sess_size);
 		return -ENOMEM;
 	}
+	/* When session private data mempool allocated, the element size for the session mempool
+	 * should be 0. */
+	max_sess_size = 0;
+#endif
 
 	g_session_mp = rte_cryptodev_sym_session_pool_create(
 			       "session_mp",
-			       NUM_SESSIONS, 0, SESS_MEMPOOL_CACHE_SIZE, 0,
+			       NUM_SESSIONS, max_sess_size, SESS_MEMPOOL_CACHE_SIZE, 0,
 			       SOCKET_ID_ANY);
 	if (g_session_mp == NULL) {
 		SPDK_ERRLOG("Cannot create session pool max size 0x%x\n", max_sess_size);

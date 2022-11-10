@@ -971,7 +971,9 @@ test_initdrivers(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_mbuf_mp != NULL);
 	CU_ASSERT(g_session_mp != NULL);
+#if RTE_VERSION < RTE_VERSION_NUM(22, 11, 0, 0)
 	CU_ASSERT(g_session_mp_priv != NULL);
+#endif
 	init_cleanup();
 	MOCK_SET(rte_vdev_init, 0);
 	MOCK_CLEAR(rte_cryptodev_device_count_by_driver);
