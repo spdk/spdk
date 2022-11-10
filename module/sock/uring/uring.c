@@ -1122,6 +1122,7 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 	struct spdk_uring_sock *sock, *tmp;
 	struct spdk_uring_task *task;
 	int status;
+	bool is_zcopy;
 
 	for (i = 0; i < max; i++) {
 		ret = io_uring_peek_cqe(&group->uring, &cqe);
@@ -1170,12 +1171,13 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 		case SPDK_SOCK_TASK_WRITE:
 			task->last_req = NULL;
 			task->iov_cnt = 0;
+			is_zcopy = task->is_zcopy;
 			task->is_zcopy = false;
 			if (spdk_unlikely(status) < 0) {
 				sock->connection_status = status;
 				spdk_sock_abort_requests(&sock->base);
 			} else {
-				sock_complete_write_reqs(&sock->base, status, task->is_zcopy);
+				sock_complete_write_reqs(&sock->base, status, is_zcopy);
 			}
 
 			break;
