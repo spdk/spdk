@@ -277,22 +277,6 @@ done:
 	free(_stat);
 }
 
-struct rpc_bdev_get_iostat {
-	char *name;
-	bool per_channel;
-};
-
-static void
-free_rpc_bdev_get_iostat(struct rpc_bdev_get_iostat *r)
-{
-	free(r->name);
-}
-
-static const struct spdk_json_object_decoder rpc_bdev_get_iostat_decoders[] = {
-	{"name", offsetof(struct rpc_bdev_get_iostat, name), spdk_json_decode_string, true},
-	{"per_channel", offsetof(struct rpc_bdev_get_iostat, per_channel), spdk_json_decode_bool, true},
-};
-
 static int
 _bdev_get_device_stat(void *_ctx, struct spdk_bdev *bdev)
 {
@@ -349,6 +333,22 @@ rpc_bdev_get_per_channel_stat(struct spdk_bdev_channel_iter *i, struct spdk_bdev
 
 	spdk_bdev_for_each_channel_continue(i, 0);
 }
+
+struct rpc_bdev_get_iostat {
+	char *name;
+	bool per_channel;
+};
+
+static void
+free_rpc_bdev_get_iostat(struct rpc_bdev_get_iostat *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_get_iostat_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_get_iostat, name), spdk_json_decode_string, true},
+	{"per_channel", offsetof(struct rpc_bdev_get_iostat, per_channel), spdk_json_decode_bool, true},
+};
 
 static void
 rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
