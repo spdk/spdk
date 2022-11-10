@@ -1707,7 +1707,7 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 		if (!rc) {
 			rc = nvmf_ns_reservation_restore(ns, &info);
 			if (rc) {
-				SPDK_ERRLOG("Subsystem restore reservation failed\n");
+				SPDK_ERRLOG("Subsystem restore reservation failed (%d)\n", rc);
 				goto err_ns_reservation_restore;
 			}
 		}
@@ -2161,7 +2161,6 @@ nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservatio
 	uint32_t i;
 	struct spdk_nvmf_registrant *reg, *holder = NULL;
 	struct spdk_uuid bdev_uuid, holder_uuid;
-	bool rkey_flag = false;
 
 	SPDK_DEBUGLOG(nvmf, "NSID %u, PTPL %u, Number of registrants %u\n",
 		      ns->nsid, info->ptpl_activated, info->num_regs);
@@ -2169,16 +2168,6 @@ nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservatio
 	/* it's not an error */
 	if (!info->ptpl_activated || !info->num_regs) {
 		return 0;
-	}
-
-	/* Check info->crkey exist or not in info->registrants[i].rkey */
-	for (i = 0; i < info->num_regs; i++) {
-		if (info->crkey == info->registrants[i].rkey) {
-			rkey_flag = true;
-		}
-	}
-	if (!rkey_flag) {
-		return -EINVAL;
 	}
 
 	spdk_uuid_parse(&bdev_uuid, info->bdev_uuid);
@@ -2206,14 +2195,18 @@ nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservatio
 		spdk_uuid_parse(&reg->hostid, info->registrants[i].host_uuid);
 		reg->rkey = info->registrants[i].rkey;
 		TAILQ_INSERT_TAIL(&ns->registrants, reg, link);
-		if (!spdk_uuid_compare(&holder_uuid, &reg->hostid)) {
+		if (info->crkey && !spdk_uuid_compare(&holder_uuid, &reg->hostid)) {
 			holder = reg;
 		}
 		SPDK_DEBUGLOG(nvmf, "Registrant RKEY 0x%"PRIx64", Host UUID %s\n",
 			      info->registrants[i].rkey, info->registrants[i].host_uuid);
 	}
 
-	if (nvmf_ns_reservation_all_registrants_type(ns)) {
+	/* if current key was zero then there's no holder */
+	if (!info->crkey) {
+		ns->holder = NULL;
+		ns->rtype = 0;
+	} else if (nvmf_ns_reservation_all_registrants_type(ns)) {
 		ns->holder = TAILQ_FIRST(&ns->registrants);
 	} else {
 		ns->holder = holder;
