@@ -952,8 +952,8 @@ static int vrdma_create_backend_qp(struct vrdma_ctrl *ctrl,
 	qp->poller_core = spdk_env_get_current_core();
 	qp->remote_qpn = VRDMA_INVALID_QPN;
 	qp->bk_qp.qp_attr.qp_type = SNAP_OBJ_DEVX;
-	//qp->bk_qp.qp_attr.sq_size = vqp->sq.comm.wqebb_cnt;
-	qp->bk_qp.qp_attr.sq_size = ctrl->sctrl->bar_curr->mtu ? ctrl->sctrl->bar_curr->mtu : IBV_MTU_2048;
+	qp->bk_qp.qp_attr.sq_size = vqp->sq.comm.wqebb_cnt;
+	//qp->bk_qp.qp_attr.sq_size = ctrl->sctrl->bar_curr->mtu ? ctrl->sctrl->bar_curr->mtu : IBV_MTU_2048;
 	qp->bk_qp.qp_attr.sq_max_sge = 1;
 	qp->bk_qp.qp_attr.sq_max_inline_size = 256;
 	qp->bk_qp.qp_attr.rq_size = vqp->rq.comm.wqebb_cnt;
