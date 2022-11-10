@@ -2720,11 +2720,52 @@ enable_ctrlr(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 }
 
 static int
+nvmf_vfio_user_prop_req_rsp_set(struct nvmf_vfio_user_req *req,
+				struct nvmf_vfio_user_sq *sq)
+{
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr;
+	union spdk_nvme_cc_register cc, diff;
+
+	assert(req->req.cmd->prop_set_cmd.fctype == SPDK_NVMF_FABRIC_COMMAND_PROPERTY_SET);
+	assert(sq->ctrlr != NULL);
+	vu_ctrlr = sq->ctrlr;
+
+	if (req->req.cmd->prop_set_cmd.ofst != offsetof(struct spdk_nvme_registers, cc)) {
+		return 0;
+	}
+
+	cc.raw = req->req.cmd->prop_set_cmd.value.u64;
+	diff.raw = cc.raw ^ req->cc.raw;
+
+	if (diff.bits.en) {
+		if (cc.bits.en) {
+			int ret = enable_ctrlr(vu_ctrlr);
+			if (ret) {
+				SPDK_ERRLOG("%s: failed to enable ctrlr\n", ctrlr_id(vu_ctrlr));
+				return ret;
+			}
+			vu_ctrlr->reset_shn = false;
+		} else {
+			vu_ctrlr->reset_shn = true;
+		}
+	}
+
+	if (diff.bits.shn) {
+		if (cc.bits.shn == SPDK_NVME_SHN_NORMAL || cc.bits.shn == SPDK_NVME_SHN_ABRUPT) {
+			vu_ctrlr->reset_shn = true;
+		}
+	}
+
+	if (vu_ctrlr->reset_shn) {
+		disable_ctrlr(vu_ctrlr);
+	}
+	return 0;
+}
+
+static int
 nvmf_vfio_user_prop_req_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 {
 	struct nvmf_vfio_user_sq *sq = cb_arg;
-	struct nvmf_vfio_user_ctrlr *vu_ctrlr;
-	int ret;
 
 	assert(sq != NULL);
 	assert(req != NULL);
@@ -2736,43 +2777,10 @@ nvmf_vfio_user_prop_req_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 		memcpy(req->req.data,
 		       &req->req.rsp->prop_get_rsp.value.u64,
 		       req->req.length);
-	} else {
-		assert(req->req.cmd->prop_set_cmd.fctype == SPDK_NVMF_FABRIC_COMMAND_PROPERTY_SET);
-		assert(sq->ctrlr != NULL);
-		vu_ctrlr = sq->ctrlr;
-
-		if (req->req.cmd->prop_set_cmd.ofst == offsetof(struct spdk_nvme_registers, cc)) {
-			union spdk_nvme_cc_register cc, diff;
-
-			cc.raw = req->req.cmd->prop_set_cmd.value.u64;
-			diff.raw = cc.raw ^ req->cc.raw;
-
-			if (diff.bits.en) {
-				if (cc.bits.en) {
-					ret = enable_ctrlr(vu_ctrlr);
-					if (ret) {
-						SPDK_ERRLOG("%s: failed to enable ctrlr\n", ctrlr_id(vu_ctrlr));
-						return ret;
-					}
-					vu_ctrlr->reset_shn = false;
-				} else {
-					vu_ctrlr->reset_shn = true;
-				}
-			}
-
-			if (diff.bits.shn) {
-				if (cc.bits.shn == SPDK_NVME_SHN_NORMAL || cc.bits.shn == SPDK_NVME_SHN_ABRUPT) {
-					vu_ctrlr->reset_shn = true;
-				}
-			}
-
-			if (vu_ctrlr->reset_shn) {
-				disable_ctrlr(vu_ctrlr);
-			}
-		}
+		return 0;
 	}
 
-	return 0;
+	return nvmf_vfio_user_prop_req_rsp_set(req, sq);
 }
 
 /*
