@@ -2,7 +2,12 @@
  *   Copyright (C) 2019 Intel Corporation.
  *   All rights reserved.
  */
+#include "spdk/stdinc.h"
+#include "spdk/config.h"
+#include "spdk/log.h"
+#include "spdk/nvme.h"
 
+#ifdef SPDK_CONFIG_NVME_CUSE
 #define FUSE_USE_VERSION 31
 
 #include <fuse3/cuse_lowlevel.h>
@@ -1345,3 +1350,41 @@ spdk_nvme_cuse_get_ns_name(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, char *n
 }
 
 SPDK_LOG_REGISTER_COMPONENT(nvme_cuse)
+
+#else /* SPDK_CONFIG_NVME_CUSE */
+
+int
+spdk_nvme_cuse_get_ctrlr_name(struct spdk_nvme_ctrlr *ctrlr, char *name, size_t *size)
+{
+	SPDK_ERRLOG("spdk_nvme_cuse_get_ctrlr_name() is unsupported\n");
+	return -ENOTSUP;
+}
+
+int
+spdk_nvme_cuse_get_ns_name(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, char *name, size_t *size)
+{
+	SPDK_ERRLOG("spdk_nvme_cuse_get_ns_name() is unsupported\n");
+	return -ENOTSUP;
+}
+
+int
+spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr)
+{
+	SPDK_ERRLOG("spdk_nvme_cuse_register() is unsupported\n");
+	return -ENOTSUP;
+}
+
+int
+spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr)
+{
+	SPDK_ERRLOG("spdk_nvme_cuse_unregister() is unsupported\n");
+	return -ENOTSUP;
+}
+
+void
+spdk_nvme_cuse_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
+{
+	SPDK_ERRLOG("spdk_nvme_cuse_update_namespaces() is unsupported\n");
+}
+
+#endif

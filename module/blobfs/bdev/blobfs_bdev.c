@@ -297,4 +297,14 @@ invalid:
 	cb_fn(cb_arg, rc);
 }
 
+#else /* SPDK_CONFIG_FUSE */
+
+void
+spdk_blobfs_bdev_mount(const char *bdev_name, const char *mountpoint,
+		       spdk_blobfs_bdev_op_complete cb_fn, void *cb_arg)
+{
+	SPDK_ERRLOG("spdk_blobfs_bdev_mount() is unsupported\n");
+	cb_fn(cb_arg, -ENOTSUP);
+}
+
 #endif

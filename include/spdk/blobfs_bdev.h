@@ -47,7 +47,6 @@ void spdk_blobfs_bdev_detect(const char *bdev_name,
 void spdk_blobfs_bdev_create(const char *bdev_name, uint32_t cluster_sz,
 			     spdk_blobfs_bdev_op_complete cb_fn, void *cb_arg);
 
-#ifdef SPDK_CONFIG_FUSE
 /**
  * Mount a blobfs on given device to a host path by FUSE
  *
@@ -61,7 +60,6 @@ void spdk_blobfs_bdev_create(const char *bdev_name, uint32_t cluster_sz,
  */
 void spdk_blobfs_bdev_mount(const char *bdev_name, const char *mountpoint,
 			    spdk_blobfs_bdev_op_complete cb_fn, void *cb_arg);
-#endif
 
 #ifdef __cplusplus
 }
