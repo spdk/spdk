@@ -147,8 +147,8 @@ struct vbdev_crypto {
 	struct spdk_bdev		crypto_bdev;		/* the crypto virtual bdev */
 	struct vbdev_crypto_opts	*opts;			/* crypto options such as key, cipher */
 	uint32_t			qp_desc_nr;             /* number of qp descriptors */
-	struct rte_cryptodev_sym_session *session_encrypt;	/* encryption session for this bdev */
-	struct rte_cryptodev_sym_session *session_decrypt;	/* decryption session for this bdev */
+	void				*session_encrypt;	/* encryption session for this bdev */
+	void				*session_decrypt;	/* decryption session for this bdev */
 	struct rte_crypto_sym_xform	cipher_xform;		/* crypto control struct for this bdev */
 	TAILQ_ENTRY(vbdev_crypto)	link;
 	struct spdk_thread		*thread;		/* thread where base device is opened */
@@ -1378,15 +1378,15 @@ _vdev_dev_get(struct vbdev_crypto *vbdev)
 }
 
 static void
-_cryptodev_sym_session_free(struct rte_cryptodev_sym_session *session)
+_cryptodev_sym_session_free(void *session)
 {
 	rte_cryptodev_sym_session_free(session);
 }
 
-static struct rte_cryptodev_sym_session *
+static void *
 _cryptodev_sym_session_create(struct vbdev_crypto *vbdev, struct rte_crypto_sym_xform *xforms)
 {
-	struct rte_cryptodev_sym_session *session;
+	void *session;
 	struct vbdev_dev *device;
 	int rc = 0;
 
