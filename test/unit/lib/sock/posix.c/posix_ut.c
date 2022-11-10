@@ -23,6 +23,10 @@ DEFINE_STUB_V(spdk_sock_map_cleanup, (struct spdk_sock_map *map));
 
 DEFINE_STUB_V(spdk_net_impl_register, (struct spdk_net_impl *impl, int priority));
 DEFINE_STUB(spdk_sock_close, int, (struct spdk_sock **s), 0);
+DEFINE_STUB(spdk_sock_group_provide_buf, int, (struct spdk_sock_group *group, void *buf,
+		size_t len, void *ctx), 0);
+DEFINE_STUB(spdk_sock_group_get_buf, size_t, (struct spdk_sock_group *group, void **buf,
+		void **ctx), 0);
 
 static void
 _req_cb(void *cb_arg, int len)

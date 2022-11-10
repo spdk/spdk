@@ -1539,10 +1539,32 @@ posix_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 }
 
 static int
-posix_sock_recv_next(struct spdk_sock *sock, void **buf, void **ctx)
+posix_sock_recv_next(struct spdk_sock *_sock, void **buf, void **ctx)
 {
-	errno = ENOTSUP;
-	return -1;
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	struct iovec iov;
+	ssize_t rc;
+
+	if (sock->recv_pipe != NULL) {
+		errno = ENOTSUP;
+		return -1;
+	}
+
+	iov.iov_len = spdk_sock_group_get_buf(_sock->group_impl->group, &iov.iov_base, ctx);
+	if (iov.iov_len == 0) {
+		errno = ENOBUFS;
+		return -1;
+	}
+
+	rc = posix_sock_readv(_sock, &iov, 1);
+	if (rc <= 0) {
+		spdk_sock_group_provide_buf(_sock->group_impl->group, iov.iov_base, iov.iov_len, *ctx);
+		return rc;
+	}
+
+	*buf = iov.iov_base;
+
+	return rc;
 }
 
 static void
