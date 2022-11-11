@@ -835,8 +835,8 @@ int spdk_bdev_read(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
  */
 int spdk_bdev_read_with_flags(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-                              void *buf, uint64_t offset, uint64_t nbytes,
-                              spdk_bdev_io_completion_cb cb, void *cb_arg,
+			      void *buf, uint64_t offset, uint64_t nbytes,
+			      spdk_bdev_io_completion_cb cb, void *cb_arg,
 			      uint32_t ext_io_flags);
 
 /**
@@ -997,11 +997,11 @@ int spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
  *   * -EINVAL - offset_blocks and/or num_blocks are out of range
  *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
  */
- int spdk_bdev_readv_blocks_with_flags(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-				       struct iovec *iov, int iovcnt,
-				       uint64_t offset_blocks, uint64_t num_blocks,
-				       spdk_bdev_io_completion_cb cb, void *cb_arg,
-				       uint32_t ext_io_flags);
+int spdk_bdev_readv_blocks_with_flags(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				      struct iovec *iov, int iovcnt,
+				      uint64_t offset_blocks, uint64_t num_blocks,
+				      spdk_bdev_io_completion_cb cb, void *cb_arg,
+				      uint32_t ext_io_flags);
 
 /**
  * Submit a read request to the bdev on the given channel. This differs from
