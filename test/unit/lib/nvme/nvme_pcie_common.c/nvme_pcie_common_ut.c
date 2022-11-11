@@ -545,6 +545,40 @@ test_nvme_pcie_ctrlr_construct_admin_qpair(void)
 	CU_ASSERT(rc == 0);
 }
 
+static void
+test_nvme_pcie_poll_group_get_stats(void)
+{
+	int rc = 0;
+	struct nvme_pcie_poll_group *pgroup = NULL;
+	struct spdk_nvme_transport_poll_group *tgroup = NULL;
+	struct spdk_nvme_transport_poll_group_stat *tgroup_stat = NULL;
+
+	tgroup = nvme_pcie_poll_group_create();
+	CU_ASSERT(tgroup != NULL);
+	pgroup = SPDK_CONTAINEROF(tgroup, struct nvme_pcie_poll_group, group);
+	CU_ASSERT(pgroup != NULL);
+
+	/* Invalid group pointer, expect fail and return -EINVAL */
+	rc = nvme_pcie_poll_group_get_stats(NULL, &tgroup_stat);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(tgroup_stat == NULL);
+
+	/* Invalid stats, expect fail and return -EINVAL */
+	rc = nvme_pcie_poll_group_get_stats(tgroup, NULL);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* Get state success */
+	rc = nvme_pcie_poll_group_get_stats(tgroup, &tgroup_stat);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tgroup_stat != NULL);
+	CU_ASSERT(tgroup_stat->trtype == SPDK_NVME_TRANSPORT_PCIE);
+	CU_ASSERT(memcmp(&tgroup_stat->pcie, &pgroup->stats, sizeof(struct spdk_nvme_pcie_stat)) == 0);
+
+	nvme_pcie_poll_group_free_stats(tgroup, tgroup_stat);
+	rc = nvme_pcie_poll_group_destroy(tgroup);
+	CU_ASSERT(rc == 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -560,6 +594,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_cmd_create_delete_io_queue);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_connect_qpair);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_construct_admin_qpair);
+	CU_ADD_TEST(suite, test_nvme_pcie_poll_group_get_stats);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
