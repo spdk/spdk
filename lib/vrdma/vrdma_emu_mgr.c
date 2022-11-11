@@ -675,7 +675,7 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
             goto free_attr;
         }
         for (i = 0; i < 6; i++)
-            bk_qp->dest_mac[5-i] = attr->dest_mac >> i & 0xFF;
+            bk_qp->dest_mac[5-i] = (attr->dest_mac >> (i * 8)) & 0xFF;
     }
     if (attr->backend_rqpn != -1) {
         SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...backend_rqpn=0x%x\n", attr->backend_rqpn);

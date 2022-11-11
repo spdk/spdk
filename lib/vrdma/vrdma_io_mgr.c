@@ -508,7 +508,7 @@ static void vrdma_dump_tencent_wqe(struct vrdma_send_wqe *wqe)
 			printf("rdma_atomic.compare_add 0x%lx \n", wqe->rdma_atomic.compare_add);
 			printf("rdma_atomic.remote_addr 0x%lx \n", wqe->rdma_atomic.remote_addr);
 			printf("rdma_atomic.swap 0x%lx \n", wqe->rdma_atomic.swap);
-			printf("rdma_atomic.rkey 0x%lx \n", wqe->rdma_atomic.rkey);
+			printf("rdma_atomic.rkey 0x%x \n", wqe->rdma_atomic.rkey);
 			break;
 		default:
 			printf(" tencent wqe unsupported type %x\n", wqe->meta.opcode);
@@ -546,7 +546,7 @@ static int vrdma_rw_wqe_submit(struct vrdma_send_wqe *wqe,
 	uint32_t idx;
 #endif
 
-	SPDK_NOTICELOG("vrdam sq submit wqe start, mqp num %d, opcode %d\n",
+	SPDK_NOTICELOG("vrdam sq submit wqe start, mqp num %d, opcode 0x%x\n",
 					bk_qp->hw_qp.qp_num, opcode);
 
 	fm_ce_se = vrdma_get_send_flags(wqe);
@@ -563,10 +563,10 @@ static int vrdma_rw_wqe_submit(struct vrdma_send_wqe *wqe,
 	ds += sizeof(*rseg) / 16;
 	
 	dseg = seg;
-	memcpy((void *)dseg + sizeof(struct mlx5_wqe_inline_seg), test_data, 64);
-	dseg->byte_count = htobe32(64 | MLX5_INLINE_SEG);
+	memcpy((void *)dseg + sizeof(struct mlx5_wqe_inline_seg), test_data, 16);
+	dseg->byte_count = htobe32(16 | MLX5_INLINE_SEG);
 	//ds += sizeof(*dseg) / 16;
-	ds += align(64 + sizeof dseg->byte_count, 16) / 16;
+	ds += align(16 + sizeof dseg->byte_count, 16) / 16;
 	
 #if 0
 	for (i = 0; i < sge_num; i++) {
