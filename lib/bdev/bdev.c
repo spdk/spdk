@@ -7634,6 +7634,21 @@ spdk_bdev_histogram_get(struct spdk_bdev *bdev, struct spdk_histogram_data *hist
 				   bdev_histogram_get_channel_cb);
 }
 
+void
+spdk_bdev_channel_get_histogram(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+				spdk_bdev_histogram_data_cb cb_fn, void *cb_arg)
+{
+	struct spdk_bdev_channel *bdev_ch = __io_ch_to_bdev_ch(ch);
+	int status = 0;
+
+	assert(cb_fn != NULL);
+
+	if (bdev_ch->histogram == NULL) {
+		status = -EFAULT;
+	}
+	cb_fn(cb_arg, status, bdev_ch->histogram);
+}
+
 size_t
 spdk_bdev_get_media_events(struct spdk_bdev_desc *desc, struct spdk_bdev_media_event *events,
 			   size_t max_events)

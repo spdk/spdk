@@ -3424,6 +3424,18 @@ histogram_io_count(void *ctx, uint64_t start, uint64_t end, uint64_t count,
 }
 
 static void
+histogram_channel_data_cb(void *cb_arg, int status, struct spdk_histogram_data *histogram)
+{
+	spdk_histogram_data_fn cb_fn = cb_arg;
+
+	g_status = status;
+
+	if (status == 0) {
+		spdk_histogram_data_iterate(histogram, cb_fn, NULL);
+	}
+}
+
+static void
 bdev_histograms(void)
 {
 	struct spdk_bdev *bdev;
@@ -3493,6 +3505,11 @@ bdev_histograms(void)
 	spdk_histogram_data_iterate(g_histogram, histogram_io_count, NULL);
 	CU_ASSERT(g_count == 2);
 
+	g_count = 0;
+	spdk_bdev_channel_get_histogram(bdev, ch, histogram_channel_data_cb, histogram_io_count);
+	CU_ASSERT(g_status == 0);
+	CU_ASSERT(g_count == 2);
+
 	/* Disable histogram */
 	spdk_bdev_histogram_enable(bdev, histogram_status_cb, NULL, false);
 	poll_threads();
@@ -3502,6 +3519,9 @@ bdev_histograms(void)
 	/* Try to run histogram commands on disabled bdev */
 	spdk_bdev_histogram_get(bdev, histogram, histogram_data_cb, NULL);
 	poll_threads();
+	CU_ASSERT(g_status == -EFAULT);
+
+	spdk_bdev_channel_get_histogram(bdev, ch, histogram_channel_data_cb, NULL);
 	CU_ASSERT(g_status == -EFAULT);
 
 	spdk_histogram_data_free(histogram);

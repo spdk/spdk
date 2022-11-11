@@ -99,6 +99,7 @@
 	spdk_bdev_io_get_seek_offset;
 	spdk_bdev_histogram_enable;
 	spdk_bdev_histogram_get;
+	spdk_bdev_channel_get_histogram;
 	spdk_bdev_get_media_events;
 	spdk_bdev_get_memory_domains;
 	spdk_bdev_readv_blocks_ext;
