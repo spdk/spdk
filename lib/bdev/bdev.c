@@ -93,7 +93,7 @@ struct spdk_bdev_mgr {
 	bool init_complete;
 	bool module_init_complete;
 
-	pthread_mutex_t mutex;
+	pthread_spinlock_t spinlock;
 
 #ifdef SPDK_CONFIG_VTUNE
 	__itt_domain	*domain;
@@ -106,8 +106,14 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 	.bdev_names = RB_INITIALIZER(g_bdev_mgr.bdev_names),
 	.init_complete = false,
 	.module_init_complete = false,
-	.mutex = PTHREAD_MUTEX_INITIALIZER,
 };
+
+static void
+__attribute__((constructor))
+_bdev_init(void)
+{
+	pthread_spin_init(&g_bdev_mgr.spinlock, PTHREAD_PROCESS_PRIVATE);
+}
 
 typedef void (*lock_range_cb)(void *ctx, int status);
 
@@ -301,7 +307,7 @@ struct spdk_bdev_desc {
 	bool				closed;
 	bool				write;
 	bool				memory_domains_supported;
-	pthread_mutex_t			mutex;
+	pthread_spinlock_t		spinlock;
 	uint32_t			refs;
 	TAILQ_HEAD(, media_event_entry)	pending_media_events;
 	TAILQ_HEAD(, media_event_entry)	free_media_events;
@@ -480,9 +486,9 @@ spdk_bdev_get_by_name(const char *bdev_name)
 {
 	struct spdk_bdev *bdev;
 
-	pthread_mutex_lock(&g_bdev_mgr.mutex);
+	pthread_spin_lock(&g_bdev_mgr.spinlock);
 	bdev = bdev_get_by_name(bdev_name);
-	pthread_mutex_unlock(&g_bdev_mgr.mutex);
+	pthread_spin_unlock(&g_bdev_mgr.spinlock);
 
 	return bdev;
 }
@@ -1377,7 +1383,7 @@ spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w)
 		}
 	}
 
-	pthread_mutex_lock(&g_bdev_mgr.mutex);
+	pthread_spin_lock(&g_bdev_mgr.spinlock);
 
 	TAILQ_FOREACH(bdev, &g_bdev_mgr.bdevs, internal.link) {
 		if (bdev->fn_table->write_config_json) {
@@ -1387,7 +1393,7 @@ spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w)
 		bdev_qos_config_json(bdev, w);
 	}
 
-	pthread_mutex_unlock(&g_bdev_mgr.mutex);
+	pthread_spin_unlock(&g_bdev_mgr.spinlock);
 
 	/* This has to be last RPC in array to make sure all bdevs finished examine */
 	spdk_json_write_object_begin(w);
@@ -3197,7 +3203,7 @@ bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 	}
 }
 
-/* Caller must hold bdev->internal.mutex. */
+/* Caller must hold bdev->internal.spinlock. */
 static void
 bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 {
@@ -3259,7 +3265,7 @@ struct poll_timeout_ctx {
 static void
 bdev_desc_free(struct spdk_bdev_desc *desc)
 {
-	pthread_mutex_destroy(&desc->mutex);
+	pthread_spin_destroy(&desc->spinlock);
 	free(desc->media_events_buffer);
 	free(desc);
 }
@@ -3272,14 +3278,14 @@ bdev_channel_poll_timeout_io_done(struct spdk_bdev *bdev, void *_ctx, int status
 
 	free(ctx);
 
-	pthread_mutex_lock(&desc->mutex);
+	pthread_spin_lock(&desc->spinlock);
 	desc->refs--;
 	if (desc->closed == true && desc->refs == 0) {
-		pthread_mutex_unlock(&desc->mutex);
+		pthread_spin_unlock(&desc->spinlock);
 		bdev_desc_free(desc);
 		return;
 	}
-	pthread_mutex_unlock(&desc->mutex);
+	pthread_spin_unlock(&desc->spinlock);
 }
 
 static void
@@ -3292,13 +3298,13 @@ bdev_channel_poll_timeout_io(struct spdk_bdev_channel_iter *i, struct spdk_bdev 
 	struct spdk_bdev_io *bdev_io;
 	uint64_t now;
 
-	pthread_mutex_lock(&desc->mutex);
+	pthread_spin_lock(&desc->spinlock);
 	if (desc->closed == true) {
-		pthread_mutex_unlock(&desc->mutex);
+		pthread_spin_unlock(&desc->spinlock);
 		spdk_bdev_for_each_channel_continue(i, -1);
 		return;
 	}
-	pthread_mutex_unlock(&desc->mutex);
+	pthread_spin_unlock(&desc->spinlock);
 
 	now = spdk_get_ticks();
 	TAILQ_FOREACH(bdev_io, &bdev_ch->io_submitted, internal.ch_link) {
@@ -3344,9 +3350,9 @@ bdev_poll_timeout_io(void *arg)
 	/* Take a ref on the descriptor in case it gets closed while we are checking
 	 * all of the channels.
 	 */
-	pthread_mutex_lock(&desc->mutex);
+	pthread_spin_lock(&desc->spinlock);
 	desc->refs++;
-	pthread_mutex_unlock(&desc->mutex);
+	pthread_spin_unlock(&desc->spinlock);
 
 	spdk_bdev_for_each_channel(bdev, bdev_channel_poll_timeout_io, ctx,
 				   bdev_channel_poll_timeout_io_done);
@@ -3468,7 +3474,7 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 	}
 #endif
 
-	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_spin_lock(&bdev->internal.spinlock);
 	bdev_enable_qos(bdev, ch);
 
 	TAILQ_FOREACH(range, &bdev->internal.locked_ranges, tailq) {
@@ -3476,7 +3482,7 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 
 		new_range = calloc(1, sizeof(*new_range));
 		if (new_range == NULL) {
-			pthread_mutex_unlock(&bdev->internal.mutex);
+			pthread_spin_unlock(&bdev->internal.spinlock);
 			bdev_channel_destroy_resource(ch);
 			return -1;
 		}
@@ -3486,7 +3492,7 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 		TAILQ_INSERT_TAIL(&ch->locked_ranges, new_range, tailq);
 	}
 
-	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_spin_unlock(&bdev->internal.spinlock);
 
 	return 0;
 }
@@ -3686,9 +3692,9 @@ bdev_channel_destroy(void *io_device, void *ctx_buf)
 			  spdk_thread_get_id(spdk_io_channel_get_thread(ch->channel)));
 
 	/* This channel is going away, so add its statistics into the bdev so that they don't get lost. */
-	pthread_mutex_lock(&ch->bdev->internal.mutex);
+	pthread_spin_lock(&ch->bdev->internal.spinlock);
 	bdev_io_stat_add(&ch->bdev->internal.stat, &ch->stat);
-	pthread_mutex_unlock(&ch->bdev->internal.mutex);
+	pthread_spin_unlock(&ch->bdev->internal.spinlock);
 
 	bdev_abort_all_queued_io(&ch->queued_resets, ch);
 
@@ -3718,9 +3724,9 @@ bdev_name_add(struct spdk_bdev_name *bdev_name, struct spdk_bdev *bdev, const ch
 
 	bdev_name->bdev = bdev;
 
-	pthread_mutex_lock(&g_bdev_mgr.mutex);
+	pthread_spin_lock(&g_bdev_mgr.spinlock);
 	tmp = RB_INSERT(bdev_name_tree, &g_bdev_mgr.bdev_names, bdev_name);
-	pthread_mutex_unlock(&g_bdev_mgr.mutex);
+	pthread_spin_unlock(&g_bdev_mgr.spinlock);
 
 	if (tmp != NULL) {
 		SPDK_ERRLOG("Bdev name %s already exists\n", name);
@@ -3741,9 +3747,9 @@ bdev_name_del_unsafe(struct spdk_bdev_name *bdev_name)
 static void
 bdev_name_del(struct spdk_bdev_name *bdev_name)
 {
-	pthread_mutex_lock(&g_bdev_mgr.mutex);
+	pthread_spin_lock(&g_bdev_mgr.spinlock);
 	bdev_name_del_unsafe(bdev_name);
-	pthread_mutex_unlock(&g_bdev_mgr.mutex);
+	pthread_spin_unlock(&g_bdev_mgr.spinlock);
 }
 
 int
@@ -3891,7 +3897,7 @@ spdk_bdev_get_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits)
 
 	memset(limits, 0, sizeof(*limits) * SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES);
 
-	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_spin_lock(&bdev->internal.spinlock);
 	if (bdev->internal.qos) {
 		for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
 			if (bdev->internal.qos->rate_limits[i].limit !=
@@ -3904,7 +3910,7 @@ spdk_bdev_get_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits)
 			}
 		}
 	}
-	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_spin_unlock(&bdev->internal.spinlock);
 }
 
 size_t
@@ -4214,10 +4220,10 @@ _resize_notify(void *arg)
 {
 	struct spdk_bdev_desc *desc = arg;
 
-	pthread_mutex_lock(&desc->mutex);
+	pthread_spin_lock(&desc->spinlock);
 	desc->refs--;
 	if (!desc->closed) {
-		pthread_mutex_unlock(&desc->mutex);
+		pthread_spin_unlock(&desc->spinlock);
 		desc->callback.event_fn(SPDK_BDEV_EVENT_RESIZE,
 					desc->bdev,
 					desc->callback.ctx);
@@ -4227,11 +4233,11 @@ _resize_notify(void *arg)
 		 * spdk_bdev_close() could not free the descriptor since this message was
 		 * in flight, so we free it now using bdev_desc_free().
 		 */
-		pthread_mutex_unlock(&desc->mutex);
+		pthread_spin_unlock(&desc->spinlock);
 		bdev_desc_free(desc);
 		return;
 	}
-	pthread_mutex_unlock(&desc->mutex);
+	pthread_spin_unlock(&desc->spinlock);
 }
 
 int
@@ -4244,7 +4250,7 @@ spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 		return 0;
 	}
 
-	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_spin_lock(&bdev->internal.spinlock);
 
 	/* bdev has open descriptors */
 	if (!TAILQ_EMPTY(&bdev->internal.open_descs) &&
@@ -4253,17 +4259,17 @@ spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 	} else {
 		bdev->blockcnt = size;
 		TAILQ_FOREACH(desc, &bdev->internal.open_descs, link) {
-			pthread_mutex_lock(&desc->mutex);
+			pthread_spin_lock(&desc->spinlock);
 			if (!desc->closed) {
 				desc->refs++;
 				spdk_thread_send_msg(desc->thread, _resize_notify, desc);
 			}
-			pthread_mutex_unlock(&desc->mutex);
+			pthread_spin_unlock(&desc->spinlock);
 		}
 		ret = 0;
 	}
 
-	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_spin_unlock(&bdev->internal.spinlock);
 
 	return ret;
 }
@@ -5489,11 +5495,11 @@ bdev_reset_freeze_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bd
 		 * the channel flag is set, so the lock here should not
 		 * be necessary. We're not in the fast path though, so
 		 * just take it anyway. */
-		pthread_mutex_lock(&channel->bdev->internal.mutex);
+		pthread_spin_lock(&channel->bdev->internal.spinlock);
 		if (channel->bdev->internal.qos->ch == channel) {
 			TAILQ_SWAP(&channel->bdev->internal.qos->queued, &tmp_queued, spdk_bdev_io, internal.link);
 		}
-		pthread_mutex_unlock(&channel->bdev->internal.mutex);
+		pthread_spin_unlock(&channel->bdev->internal.spinlock);
 	}
 
 	bdev_abort_all_queued_io(&shared_resource->nomem_io, channel);
@@ -5520,7 +5526,7 @@ bdev_channel_start_reset(struct spdk_bdev_channel *ch)
 
 	assert(!TAILQ_EMPTY(&ch->queued_resets));
 
-	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_spin_lock(&bdev->internal.spinlock);
 	if (bdev->internal.reset_in_progress == NULL) {
 		bdev->internal.reset_in_progress = TAILQ_FIRST(&ch->queued_resets);
 		/*
@@ -5533,7 +5539,7 @@ bdev_channel_start_reset(struct spdk_bdev_channel *ch)
 		bdev->internal.reset_in_progress->u.reset.ch_ref = spdk_get_io_channel(__bdev_to_io_dev(bdev));
 		bdev_start_reset(ch);
 	}
-	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_spin_unlock(&bdev->internal.spinlock);
 }
 
 int
@@ -5556,9 +5562,9 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.reset.ch_ref = NULL;
 	bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_spin_lock(&bdev->internal.spinlock);
 	TAILQ_INSERT_TAIL(&channel->queued_resets, bdev_io, internal.link);
-	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_spin_unlock(&bdev->internal.spinlock);
 
 	TAILQ_INSERT_TAIL(&bdev_io->internal.ch->io_submitted, bdev_io,
 			  internal.ch_link);
@@ -5620,9 +5626,9 @@ spdk_bdev_get_device_stat(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat
 	bdev_iostat_ctx->cb_arg = cb_arg;
 
 	/* Start with the statistics from previously deleted channels. */
-	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_spin_lock(&bdev->internal.spinlock);
 	bdev_io_stat_add(bdev_iostat_ctx->stat, &bdev->internal.stat);
-	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_spin_unlock(&bdev->internal.spinlock);
 
 	/* Then iterate and add the statistics from each existing channel. */
 	spdk_bdev_for_each_channel(bdev, bdev_get_each_channel_stat, bdev_iostat_ctx,
@@ -6151,12 +6157,12 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		if (status == SPDK_BDEV_IO_STATUS_NOMEM) {
 			SPDK_ERRLOG("NOMEM returned for reset\n");
 		}
-		pthread_mutex_lock(&bdev->internal.mutex);
+		pthread_spin_lock(&bdev->internal.spinlock);
 		if (bdev_io == bdev->internal.reset_in_progress) {
 			bdev->internal.reset_in_progress = NULL;
 			unlock_channels = true;
 		}
-		pthread_mutex_unlock(&bdev->internal.mutex);
+		pthread_spin_unlock(&bdev->internal.spinlock);
 
 		if (unlock_channels) {
 			spdk_bdev_for_each_channel(bdev, bdev_unfreeze_channel, bdev_io,
@@ -6473,7 +6479,7 @@ bdev_register(struct spdk_bdev *bdev)
 
 	free(bdev_name);
 
-	pthread_mutex_init(&bdev->internal.mutex, NULL);
+	pthread_spin_init(&bdev->internal.spinlock, PTHREAD_PROCESS_PRIVATE);
 
 	SPDK_DEBUGLOG(bdev, "Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, internal.link);
@@ -6493,7 +6499,7 @@ bdev_destroy_cb(void *io_device)
 	cb_fn = bdev->internal.unregister_cb;
 	cb_arg = bdev->internal.unregister_ctx;
 
-	pthread_mutex_destroy(&bdev->internal.mutex);
+	pthread_spin_destroy(&bdev->internal.spinlock);
 	free(bdev->internal.qos);
 
 	rc = bdev->fn_table->destruct(bdev->ctxt);
@@ -6518,11 +6524,11 @@ _remove_notify(void *arg)
 {
 	struct spdk_bdev_desc *desc = arg;
 
-	pthread_mutex_lock(&desc->mutex);
+	pthread_spin_lock(&desc->spinlock);
 	desc->refs--;
 
 	if (!desc->closed) {
-		pthread_mutex_unlock(&desc->mutex);
+		pthread_spin_unlock(&desc->spinlock);
 		desc->callback.event_fn(SPDK_BDEV_EVENT_REMOVE, desc->bdev, desc->callback.ctx);
 		return;
 	} else if (0 == desc->refs) {
@@ -6530,14 +6536,14 @@ _remove_notify(void *arg)
 		 * spdk_bdev_close() could not free the descriptor since this message was
 		 * in flight, so we free it now using bdev_desc_free().
 		 */
-		pthread_mutex_unlock(&desc->mutex);
+		pthread_spin_unlock(&desc->spinlock);
 		bdev_desc_free(desc);
 		return;
 	}
-	pthread_mutex_unlock(&desc->mutex);
+	pthread_spin_unlock(&desc->spinlock);
 }
 
-/* Must be called while holding g_bdev_mgr.mutex and bdev->internal.mutex.
+/* Must be called while holding g_bdev_mgr.spinlock and bdev->internal.spinlock.
  * returns: 0 - bdev removed and ready to be destructed.
  *          -EBUSY - bdev can't be destructed yet.  */
 static int
@@ -6550,7 +6556,7 @@ bdev_unregister_unsafe(struct spdk_bdev *bdev)
 	/* Notify each descriptor about hotremoval */
 	TAILQ_FOREACH_SAFE(desc, &bdev->internal.open_descs, link, tmp) {
 		rc = -EBUSY;
-		pthread_mutex_lock(&desc->mutex);
+		pthread_spin_lock(&desc->spinlock);
 		/*
 		 * Defer invocation of the event_cb to a separate message that will
 		 *  run later on its thread.  This ensures this context unwinds and
@@ -6559,7 +6565,7 @@ bdev_unregister_unsafe(struct spdk_bdev *bdev)
 		 */
 		desc->refs++;
 		spdk_thread_send_msg(desc->thread, _remove_notify, desc);
-		pthread_mutex_unlock(&desc->mutex);
+		pthread_spin_unlock(&desc->spinlock);
 	}
 
 	/* If there are no descriptors, proceed removing the bdev */
@@ -6600,8 +6606,8 @@ bdev_unregister(struct spdk_bdev *bdev, void *_ctx, int status)
 {
 	int rc;
 
-	pthread_mutex_lock(&g_bdev_mgr.mutex);
-	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_spin_lock(&g_bdev_mgr.spinlock);
+	pthread_spin_lock(&bdev->internal.spinlock);
 	/*
 	 * Set the status to REMOVING after completing to abort channels. Otherwise,
 	 * the last spdk_bdev_close() may call spdk_io_device_unregister() while
@@ -6610,8 +6616,8 @@ bdev_unregister(struct spdk_bdev *bdev, void *_ctx, int status)
 	 */
 	bdev->internal.status = SPDK_BDEV_STATUS_REMOVING;
 	rc = bdev_unregister_unsafe(bdev);
-	pthread_mutex_unlock(&bdev->internal.mutex);
-	pthread_mutex_unlock(&g_bdev_mgr.mutex);
+	pthread_spin_unlock(&bdev->internal.spinlock);
+	pthread_spin_unlock(&g_bdev_mgr.spinlock);
 
 	if (rc == 0) {
 		spdk_io_device_unregister(__bdev_to_io_dev(bdev), bdev_destroy_cb);
@@ -6634,22 +6640,22 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 		return;
 	}
 
-	pthread_mutex_lock(&g_bdev_mgr.mutex);
+	pthread_spin_lock(&g_bdev_mgr.spinlock);
 	if (bdev->internal.status == SPDK_BDEV_STATUS_UNREGISTERING ||
 	    bdev->internal.status == SPDK_BDEV_STATUS_REMOVING) {
-		pthread_mutex_unlock(&g_bdev_mgr.mutex);
+		pthread_spin_unlock(&g_bdev_mgr.spinlock);
 		if (cb_fn) {
 			cb_fn(cb_arg, -EBUSY);
 		}
 		return;
 	}
 
-	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_spin_lock(&bdev->internal.spinlock);
 	bdev->internal.status = SPDK_BDEV_STATUS_UNREGISTERING;
 	bdev->internal.unregister_cb = cb_fn;
 	bdev->internal.unregister_ctx = cb_arg;
-	pthread_mutex_unlock(&bdev->internal.mutex);
-	pthread_mutex_unlock(&g_bdev_mgr.mutex);
+	pthread_spin_unlock(&bdev->internal.spinlock);
+	pthread_spin_unlock(&g_bdev_mgr.spinlock);
 
 	spdk_bdev_set_qd_sampling_period(bdev, 0);
 
@@ -6725,30 +6731,30 @@ bdev_open(struct spdk_bdev *bdev, bool write, struct spdk_bdev_desc *desc)
 	desc->thread = thread;
 	desc->write = write;
 
-	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_spin_lock(&bdev->internal.spinlock);
 	if (bdev->internal.status == SPDK_BDEV_STATUS_UNREGISTERING ||
 	    bdev->internal.status == SPDK_BDEV_STATUS_REMOVING) {
-		pthread_mutex_unlock(&bdev->internal.mutex);
+		pthread_spin_unlock(&bdev->internal.spinlock);
 		return -ENODEV;
 	}
 
 	if (write && bdev->internal.claim_module) {
 		SPDK_ERRLOG("Could not open %s - %s module already claimed it\n",
 			    bdev->name, bdev->internal.claim_module->name);
-		pthread_mutex_unlock(&bdev->internal.mutex);
+		pthread_spin_unlock(&bdev->internal.spinlock);
 		return -EPERM;
 	}
 
 	rc = bdev_start_qos(bdev);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to start QoS on bdev %s\n", bdev->name);
-		pthread_mutex_unlock(&bdev->internal.mutex);
+		pthread_spin_unlock(&bdev->internal.spinlock);
 		return rc;
 	}
 
 	TAILQ_INSERT_TAIL(&bdev->internal.open_descs, desc, link);
 
-	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_spin_unlock(&bdev->internal.spinlock);
 
 	return 0;
 }
@@ -6772,7 +6778,7 @@ bdev_desc_alloc(struct spdk_bdev *bdev, spdk_bdev_event_cb_t event_cb, void *eve
 	desc->memory_domains_supported = spdk_bdev_get_memory_domains(bdev, NULL, 0) > 0;
 	desc->callback.event_fn = event_cb;
 	desc->callback.ctx = event_ctx;
-	pthread_mutex_init(&desc->mutex, NULL);
+	pthread_spin_init(&desc->spinlock, PTHREAD_PROCESS_PRIVATE);
 
 	if (bdev->media_events) {
 		desc->media_events_buffer = calloc(MEDIA_EVENT_POOL_SIZE,
@@ -6807,19 +6813,19 @@ spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event
 		return -EINVAL;
 	}
 
-	pthread_mutex_lock(&g_bdev_mgr.mutex);
+	pthread_spin_lock(&g_bdev_mgr.spinlock);
 
 	bdev = bdev_get_by_name(bdev_name);
 
 	if (bdev == NULL) {
 		SPDK_NOTICELOG("Currently unable to find bdev with name: %s\n", bdev_name);
-		pthread_mutex_unlock(&g_bdev_mgr.mutex);
+		pthread_spin_unlock(&g_bdev_mgr.spinlock);
 		return -ENODEV;
 	}
 
 	rc = bdev_desc_alloc(bdev, event_cb, event_ctx, &desc);
 	if (rc != 0) {
-		pthread_mutex_unlock(&g_bdev_mgr.mutex);
+		pthread_spin_unlock(&g_bdev_mgr.spinlock);
 		return rc;
 	}
 
@@ -6831,7 +6837,7 @@ spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event
 
 	*_desc = desc;
 
-	pthread_mutex_unlock(&g_bdev_mgr.mutex);
+	pthread_spin_unlock(&g_bdev_mgr.spinlock);
 
 	return rc;
 }
@@ -6841,18 +6847,18 @@ bdev_close(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc)
 {
 	int rc;
 
-	pthread_mutex_lock(&bdev->internal.mutex);
-	pthread_mutex_lock(&desc->mutex);
+	pthread_spin_lock(&bdev->internal.spinlock);
+	pthread_spin_lock(&desc->spinlock);
 
 	TAILQ_REMOVE(&bdev->internal.open_descs, desc, link);
 
 	desc->closed = true;
 
 	if (0 == desc->refs) {
-		pthread_mutex_unlock(&desc->mutex);
+		pthread_spin_unlock(&desc->spinlock);
 		bdev_desc_free(desc);
 	} else {
-		pthread_mutex_unlock(&desc->mutex);
+		pthread_spin_unlock(&desc->spinlock);
 	}
 
 	/* If no more descriptors, kill QoS channel */
@@ -6870,13 +6876,13 @@ bdev_close(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc)
 
 	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING && TAILQ_EMPTY(&bdev->internal.open_descs)) {
 		rc = bdev_unregister_unsafe(bdev);
-		pthread_mutex_unlock(&bdev->internal.mutex);
+		pthread_spin_unlock(&bdev->internal.spinlock);
 
 		if (rc == 0) {
 			spdk_io_device_unregister(__bdev_to_io_dev(bdev), bdev_destroy_cb);
 		}
 	} else {
-		pthread_mutex_unlock(&bdev->internal.mutex);
+		pthread_spin_unlock(&bdev->internal.spinlock);
 	}
 }
 
@@ -6892,11 +6898,11 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 
 	spdk_poller_unregister(&desc->io_timeout_poller);
 
-	pthread_mutex_lock(&g_bdev_mgr.mutex);
+	pthread_spin_lock(&g_bdev_mgr.spinlock);
 
 	bdev_close(bdev, desc);
 
-	pthread_mutex_unlock(&g_bdev_mgr.mutex);
+	pthread_spin_unlock(&g_bdev_mgr.spinlock);
 }
 
 static void
@@ -6988,7 +6994,7 @@ spdk_for_each_bdev(void *ctx, spdk_for_each_bdev_fn fn)
 
 	assert(fn != NULL);
 
-	pthread_mutex_lock(&g_bdev_mgr.mutex);
+	pthread_spin_lock(&g_bdev_mgr.spinlock);
 	bdev = spdk_bdev_first();
 	while (bdev != NULL) {
 		rc = bdev_desc_alloc(bdev, _tmp_bdev_event_cb, NULL, &desc);
@@ -7006,11 +7012,11 @@ spdk_for_each_bdev(void *ctx, spdk_for_each_bdev_fn fn)
 			}
 			break;
 		}
-		pthread_mutex_unlock(&g_bdev_mgr.mutex);
+		pthread_spin_unlock(&g_bdev_mgr.spinlock);
 
 		rc = fn(ctx, bdev);
 
-		pthread_mutex_lock(&g_bdev_mgr.mutex);
+		pthread_spin_lock(&g_bdev_mgr.spinlock);
 		tmp = spdk_bdev_next(bdev);
 		bdev_close(bdev, desc);
 		if (rc != 0) {
@@ -7018,7 +7024,7 @@ spdk_for_each_bdev(void *ctx, spdk_for_each_bdev_fn fn)
 		}
 		bdev = tmp;
 	}
-	pthread_mutex_unlock(&g_bdev_mgr.mutex);
+	pthread_spin_unlock(&g_bdev_mgr.spinlock);
 
 	return rc;
 }
@@ -7032,7 +7038,7 @@ spdk_for_each_bdev_leaf(void *ctx, spdk_for_each_bdev_fn fn)
 
 	assert(fn != NULL);
 
-	pthread_mutex_lock(&g_bdev_mgr.mutex);
+	pthread_spin_lock(&g_bdev_mgr.spinlock);
 	bdev = spdk_bdev_first_leaf();
 	while (bdev != NULL) {
 		rc = bdev_desc_alloc(bdev, _tmp_bdev_event_cb, NULL, &desc);
@@ -7050,11 +7056,11 @@ spdk_for_each_bdev_leaf(void *ctx, spdk_for_each_bdev_fn fn)
 			}
 			break;
 		}
-		pthread_mutex_unlock(&g_bdev_mgr.mutex);
+		pthread_spin_unlock(&g_bdev_mgr.spinlock);
 
 		rc = fn(ctx, bdev);
 
-		pthread_mutex_lock(&g_bdev_mgr.mutex);
+		pthread_spin_lock(&g_bdev_mgr.spinlock);
 		tmp = spdk_bdev_next_leaf(bdev);
 		bdev_close(bdev, desc);
 		if (rc != 0) {
@@ -7062,7 +7068,7 @@ spdk_for_each_bdev_leaf(void *ctx, spdk_for_each_bdev_fn fn)
 		}
 		bdev = tmp;
 	}
-	pthread_mutex_unlock(&g_bdev_mgr.mutex);
+	pthread_spin_unlock(&g_bdev_mgr.spinlock);
 
 	return rc;
 }
@@ -7223,9 +7229,9 @@ bdev_write_zero_buffer_done(struct spdk_bdev_io *bdev_io, bool success, void *cb
 static void
 bdev_set_qos_limit_done(struct set_qos_limit_ctx *ctx, int status)
 {
-	pthread_mutex_lock(&ctx->bdev->internal.mutex);
+	pthread_spin_lock(&ctx->bdev->internal.spinlock);
 	ctx->bdev->internal.qos_mod_in_progress = false;
-	pthread_mutex_unlock(&ctx->bdev->internal.mutex);
+	pthread_spin_unlock(&ctx->bdev->internal.spinlock);
 
 	if (ctx->cb_fn) {
 		ctx->cb_fn(ctx->cb_arg, status);
@@ -7241,10 +7247,10 @@ bdev_disable_qos_done(void *cb_arg)
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_qos *qos;
 
-	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_spin_lock(&bdev->internal.spinlock);
 	qos = bdev->internal.qos;
 	bdev->internal.qos = NULL;
-	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_spin_unlock(&bdev->internal.spinlock);
 
 	while (!TAILQ_EMPTY(&qos->queued)) {
 		/* Send queued I/O back to their original thread for resubmission. */
@@ -7280,9 +7286,9 @@ bdev_disable_qos_msg_done(struct spdk_bdev *bdev, void *_ctx, int status)
 	struct set_qos_limit_ctx *ctx = _ctx;
 	struct spdk_thread *thread;
 
-	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_spin_lock(&bdev->internal.spinlock);
 	thread = bdev->internal.qos->thread;
-	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_spin_unlock(&bdev->internal.spinlock);
 
 	if (thread != NULL) {
 		spdk_thread_send_msg(thread, bdev_disable_qos_done, ctx);
@@ -7308,9 +7314,9 @@ bdev_update_qos_rate_limit_msg(void *cb_arg)
 	struct set_qos_limit_ctx *ctx = cb_arg;
 	struct spdk_bdev *bdev = ctx->bdev;
 
-	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_spin_lock(&bdev->internal.spinlock);
 	bdev_qos_update_max_quota_per_timeslice(bdev->internal.qos);
-	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_spin_unlock(&bdev->internal.spinlock);
 
 	bdev_set_qos_limit_done(ctx, 0);
 }
@@ -7321,9 +7327,9 @@ bdev_enable_qos_msg(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
 {
 	struct spdk_bdev_channel *bdev_ch = __io_ch_to_bdev_ch(ch);
 
-	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_spin_lock(&bdev->internal.spinlock);
 	bdev_enable_qos(bdev, bdev_ch);
-	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_spin_unlock(&bdev->internal.spinlock);
 	spdk_bdev_for_each_channel_continue(i, 0);
 }
 
@@ -7400,9 +7406,9 @@ spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits,
 	ctx->cb_arg = cb_arg;
 	ctx->bdev = bdev;
 
-	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_spin_lock(&bdev->internal.spinlock);
 	if (bdev->internal.qos_mod_in_progress) {
-		pthread_mutex_unlock(&bdev->internal.mutex);
+		pthread_spin_unlock(&bdev->internal.spinlock);
 		free(ctx);
 		cb_fn(cb_arg, -EAGAIN);
 		return;
@@ -7425,7 +7431,7 @@ spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits,
 		if (bdev->internal.qos == NULL) {
 			bdev->internal.qos = calloc(1, sizeof(*bdev->internal.qos));
 			if (!bdev->internal.qos) {
-				pthread_mutex_unlock(&bdev->internal.mutex);
+				pthread_spin_unlock(&bdev->internal.spinlock);
 				SPDK_ERRLOG("Unable to allocate memory for QoS tracking\n");
 				bdev_set_qos_limit_done(ctx, -ENOMEM);
 				return;
@@ -7453,13 +7459,13 @@ spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits,
 			spdk_bdev_for_each_channel(bdev, bdev_disable_qos_msg, ctx,
 						   bdev_disable_qos_msg_done);
 		} else {
-			pthread_mutex_unlock(&bdev->internal.mutex);
+			pthread_spin_unlock(&bdev->internal.spinlock);
 			bdev_set_qos_limit_done(ctx, 0);
 			return;
 		}
 	}
 
-	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_spin_unlock(&bdev->internal.spinlock);
 }
 
 struct spdk_bdev_histogram_ctx {
@@ -7474,9 +7480,9 @@ bdev_histogram_disable_channel_cb(struct spdk_bdev *bdev, void *_ctx, int status
 {
 	struct spdk_bdev_histogram_ctx *ctx = _ctx;
 
-	pthread_mutex_lock(&ctx->bdev->internal.mutex);
+	pthread_spin_lock(&ctx->bdev->internal.spinlock);
 	ctx->bdev->internal.histogram_in_progress = false;
-	pthread_mutex_unlock(&ctx->bdev->internal.mutex);
+	pthread_spin_unlock(&ctx->bdev->internal.spinlock);
 	ctx->cb_fn(ctx->cb_arg, ctx->status);
 	free(ctx);
 }
@@ -7505,9 +7511,9 @@ bdev_histogram_enable_channel_cb(struct spdk_bdev *bdev, void *_ctx, int status)
 		spdk_bdev_for_each_channel(ctx->bdev, bdev_histogram_disable_channel, ctx,
 					   bdev_histogram_disable_channel_cb);
 	} else {
-		pthread_mutex_lock(&ctx->bdev->internal.mutex);
+		pthread_spin_lock(&ctx->bdev->internal.spinlock);
 		ctx->bdev->internal.histogram_in_progress = false;
-		pthread_mutex_unlock(&ctx->bdev->internal.mutex);
+		pthread_spin_unlock(&ctx->bdev->internal.spinlock);
 		ctx->cb_fn(ctx->cb_arg, ctx->status);
 		free(ctx);
 	}
@@ -7547,16 +7553,16 @@ spdk_bdev_histogram_enable(struct spdk_bdev *bdev, spdk_bdev_histogram_status_cb
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 
-	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_spin_lock(&bdev->internal.spinlock);
 	if (bdev->internal.histogram_in_progress) {
-		pthread_mutex_unlock(&bdev->internal.mutex);
+		pthread_spin_unlock(&bdev->internal.spinlock);
 		free(ctx);
 		cb_fn(cb_arg, -EAGAIN);
 		return;
 	}
 
 	bdev->internal.histogram_in_progress = true;
-	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_spin_unlock(&bdev->internal.spinlock);
 
 	bdev->internal.histogram_enabled = enable;
 
@@ -7659,7 +7665,7 @@ spdk_bdev_push_media_events(struct spdk_bdev *bdev, const struct spdk_bdev_media
 
 	assert(bdev->media_events);
 
-	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_spin_lock(&bdev->internal.spinlock);
 	TAILQ_FOREACH(desc, &bdev->internal.open_descs, link) {
 		if (desc->write) {
 			break;
@@ -7684,7 +7690,7 @@ spdk_bdev_push_media_events(struct spdk_bdev *bdev, const struct spdk_bdev_media
 
 	rc = event_id;
 out:
-	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_spin_unlock(&bdev->internal.spinlock);
 	return rc;
 }
 
@@ -7693,14 +7699,14 @@ spdk_bdev_notify_media_management(struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_desc *desc;
 
-	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_spin_lock(&bdev->internal.spinlock);
 	TAILQ_FOREACH(desc, &bdev->internal.open_descs, link) {
 		if (!TAILQ_EMPTY(&desc->pending_media_events)) {
 			desc->callback.event_fn(SPDK_BDEV_EVENT_MEDIA_MANAGEMENT, bdev,
 						desc->callback.ctx);
 		}
 	}
-	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_spin_unlock(&bdev->internal.spinlock);
 }
 
 struct locked_lba_range_ctx {
@@ -7878,7 +7884,7 @@ bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 
-	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_spin_lock(&bdev->internal.spinlock);
 	if (bdev_lba_range_overlaps_tailq(&ctx->range, &bdev->internal.locked_ranges)) {
 		/* There is an active lock overlapping with this range.
 		 * Put it on the pending list until this range no
@@ -7889,7 +7895,7 @@ bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 		TAILQ_INSERT_TAIL(&bdev->internal.locked_ranges, &ctx->range, tailq);
 		bdev_lock_lba_range_ctx(bdev, ctx);
 	}
-	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_spin_unlock(&bdev->internal.spinlock);
 	return 0;
 }
 
@@ -7908,7 +7914,7 @@ bdev_unlock_lba_range_cb(struct spdk_bdev *bdev, void *_ctx, int status)
 	struct locked_lba_range_ctx *pending_ctx;
 	struct lba_range *range, *tmp;
 
-	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_spin_lock(&bdev->internal.spinlock);
 	/* Check if there are any pending locked ranges that overlap with this range
 	 * that was just unlocked.  If there are, check that it doesn't overlap with any
 	 * other locked ranges before calling bdev_lock_lba_range_ctx which will start
@@ -7924,7 +7930,7 @@ bdev_unlock_lba_range_cb(struct spdk_bdev *bdev, void *_ctx, int status)
 					     bdev_lock_lba_range_ctx_msg, pending_ctx);
 		}
 	}
-	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_spin_unlock(&bdev->internal.spinlock);
 
 	ctx->cb_fn(ctx->cb_arg, status);
 	free(ctx);
@@ -8001,7 +8007,7 @@ bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 		return -EINVAL;
 	}
 
-	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_spin_lock(&bdev->internal.spinlock);
 	/* We confirmed that this channel has locked the specified range.  To
 	 * start the unlock the process, we find the range in the bdev's locked_ranges
 	 * and remove it.  This ensures new channels don't inherit the locked range.
@@ -8016,12 +8022,12 @@ bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 	}
 	if (range == NULL) {
 		assert(false);
-		pthread_mutex_unlock(&bdev->internal.mutex);
+		pthread_spin_unlock(&bdev->internal.spinlock);
 		return -EINVAL;
 	}
 	TAILQ_REMOVE(&bdev->internal.locked_ranges, range, tailq);
 	ctx = SPDK_CONTAINEROF(range, struct locked_lba_range_ctx, range);
-	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_spin_unlock(&bdev->internal.spinlock);
 
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;

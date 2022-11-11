@@ -489,8 +489,8 @@ struct spdk_bdev {
 		/** True if the state of the QoS is being modified */
 		bool qos_mod_in_progress;
 
-		/** Mutex protecting claimed */
-		pthread_mutex_t mutex;
+		/** Spin lock protecting claimed */
+		pthread_spinlock_t spinlock;
 
 		/** The bdev status */
 		enum spdk_bdev_status status;
