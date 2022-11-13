@@ -1,3 +1,7 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation.
+#  All rights reserved.
+
 def framework_get_subsystems(client):
     return client.call('framework_get_subsystems')
 

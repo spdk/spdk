@@ -1,3 +1,7 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation.
+#  All rights reserved.
+
 def bdev_nvme_send_cmd(client, name, cmd_type, data_direction, cmdbuf,
                        data=None, metadata=None,
                        data_len=None, metadata_len=None,

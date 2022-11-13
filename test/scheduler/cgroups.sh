@@ -1,3 +1,7 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2021 Intel Corporation.
+#  All rights reserved.
+
 check_cgroup() {
 	# Try to work with both, cgroup-v1 and cgroup-v2. Verify which version is
 	# in use by looking up interfaces common for either of the versions.

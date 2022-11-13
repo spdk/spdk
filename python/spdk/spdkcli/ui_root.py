@@ -1,3 +1,7 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation.
+#  All rights reserved.
+
 from .ui_node import UINode, UIBdevs, UILvolStores, UIVhosts
 from .ui_node_nvmf import UINVMf
 from .ui_node_iscsi import UIISCSI

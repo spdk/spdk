@@ -1,3 +1,7 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2021 Intel Corporation.
+#  All rights reserved.
+
 def sock_impl_get_options(client, impl_name=None):
     """Get parameters for the socket layer implementation.
 

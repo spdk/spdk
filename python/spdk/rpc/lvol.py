@@ -1,3 +1,7 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation.
+#  All rights reserved.
+
 def bdev_lvol_create_lvstore(client, bdev_name, lvs_name, cluster_sz=None,
                              clear_method=None, num_md_pages_per_cluster_ratio=None):
     """Construct a logical volume store.
