@@ -661,6 +661,65 @@ function check_rpc_args() {
 	return $rc
 }
 
+function get_files_for_lic() {
+	local f_shebang="" f_suffix=() f_type=() f_all=() exceptions=""
+
+	f_shebang+="bash|"
+	f_shebang+="make|"
+	f_shebang+="perl|"
+	f_shebang+="python|"
+	f_shebang+="sh"
+
+	f_suffix+=("*.c")
+	f_suffix+=("*.cpp")
+	f_suffix+=("*.h")
+	f_suffix+=("*.go")
+	f_suffix+=("*.mk")
+	f_suffix+=("*.pl")
+	f_suffix+=("*.py")
+	f_suffix+=("*.sh")
+	f_suffix+=("*.yaml")
+
+	f_type+=("*Dockerfile")
+	f_type+=("*Makefile")
+
+	# Exclude files that may match the above types but should not
+	# fall under SPDX check.
+	exceptions+="include/linux|"
+	exceptions+="include/spdk/queue_extras.h"
+
+	mapfile -t f_all < <(
+		git ls-files "${f_suffix[@]}" "${f_type[@]}"
+		git grep -lE "^#!.*($f_shebang)"
+	)
+
+	printf '%s\n' "${f_all[@]}" | sort -u | grep -vE "$exceptions"
+}
+
+function check_spdx_lic() {
+	local files_missing_license_header=() hint=()
+	local rc=0
+
+	hint+=("SPDX-License-Identifier: BSD-3-Clause")
+	hint+=("All rights reserved.")
+
+	printf 'Checking SPDX-license...'
+
+	mapfile -t files_missing_license_header < <(
+		grep -LE "SPDX-License-Identifier:.+" $(get_files_for_lic)
+	)
+
+	if ((${#files_missing_license_header[@]} > 0)); then
+		printf '\nFollowing files are missing SPDX-license header:\n'
+		printf '  @%s\n' "${files_missing_license_header[@]}"
+		printf '\nExample:\n'
+		printf '  #  %s\n' "${hint[@]}"
+		return 1
+	fi
+
+	printf 'OK\n'
+}
+
 rc=0
 
 check_permissions || rc=1
@@ -690,5 +749,6 @@ check_bash_static_analysis || rc=1
 check_changelog || rc=1
 check_json_rpc || rc=1
 check_rpc_args || rc=1
+check_spdx_lic || rc=1
 
 exit $rc
