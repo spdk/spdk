@@ -1364,6 +1364,19 @@ vbdev_crypto_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	}
 }
 
+static struct vbdev_dev *
+_vdev_dev_get(struct vbdev_crypto *vbdev)
+{
+	struct vbdev_dev *device;
+
+	TAILQ_FOREACH(device, &g_vbdev_devs, link) {
+		if (strcmp(device->cdev_info.driver_name, vbdev->opts->drv_name) == 0) {
+			return device;
+		}
+	}
+	return NULL;
+}
+
 /* Callback for unregistering the IO device. */
 static void
 _device_unregister_cb(void *io_device)
@@ -1849,7 +1862,6 @@ vbdev_crypto_claim(const char *bdev_name)
 	struct vbdev_crypto *vbdev;
 	struct vbdev_dev *device;
 	struct spdk_bdev *bdev;
-	bool found = false;
 	uint8_t key_size;
 	int rc = 0;
 
@@ -1956,13 +1968,8 @@ vbdev_crypto_claim(const char *bdev_name)
 		}
 
 		/* To init the session we have to get the cryptoDev device ID for this vbdev */
-		TAILQ_FOREACH(device, &g_vbdev_devs, link) {
-			if (strcmp(device->cdev_info.driver_name, vbdev->opts->drv_name) == 0) {
-				found = true;
-				break;
-			}
-		}
-		if (found == false) {
+		device = _vdev_dev_get(vbdev);
+		if (!device) {
 			SPDK_ERRLOG("Failed to match crypto device driver to crypto vbdev.\n");
 			rc = -EINVAL;
 			goto error_cant_find_devid;
