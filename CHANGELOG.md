@@ -58,6 +58,11 @@ Added spdk_rpc_set_allowlist to restrict allowed RPCs to the specified list.
 Promoted the application to example to match similar programs: fio_plugin and perf.
 It can now be found inside `examples/bdev/bdevperf`.
 
+### trace
+
+New `trace_get_info` RPC was added to get name of shared memory file, list of the
+available trace point groups and mask of the available trace points for each group.
+
 ### util
 
 New API `spdk_fd_group_get_epoll_event` that returns the epoll(7) event that

@@ -1803,6 +1803,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('trace_get_tpoint_group_mask', help='get trace point group mask')
     p.set_defaults(func=trace_get_tpoint_group_mask)
 
+    def trace_get_info(args):
+        print_dict(rpc.trace.trace_get_info(args.client))
+
+    p = subparsers.add_parser('trace_get_info',
+                              help='get name of shared memory file and list of the available trace point groups')
+    p.set_defaults(func=trace_get_info)
+
     # log
     def log_set_flag(args):
         rpc.log.log_set_flag(args.client, flag=args.flag)

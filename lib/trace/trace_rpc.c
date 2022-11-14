@@ -7,6 +7,7 @@
 #include "spdk/util.h"
 #include "spdk/trace.h"
 #include "spdk/log.h"
+#include "trace_internal.h"
 
 struct rpc_tpoint_group {
 	char *name;
@@ -210,4 +211,53 @@ rpc_trace_get_tpoint_group_mask(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("trace_get_tpoint_group_mask", rpc_trace_get_tpoint_group_mask,
+		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+
+static void
+rpc_trace_get_info(struct spdk_jsonrpc_request *request,
+		   const struct spdk_json_val *params)
+{
+	char shm_path[128];
+	uint64_t tpoint_group_mask;
+	uint64_t tpoint_mask;
+	char tpoint_mask_str[20];
+	char mask_str[20];
+	struct spdk_json_write_ctx *w;
+	struct spdk_trace_register_fn *register_fn;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "trace_get_info requires no parameters");
+		return;
+	}
+
+	snprintf(shm_path, sizeof(shm_path), "/dev/shm%s", trace_get_shm_name());
+	tpoint_group_mask = spdk_trace_get_tpoint_group_mask();
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "tpoint_shm_path", shm_path);
+
+	snprintf(mask_str, sizeof(mask_str), "0x%" PRIx64, tpoint_group_mask);
+	spdk_json_write_named_string(w, "tpoint_group_mask", mask_str);
+
+	register_fn = spdk_trace_get_first_register_fn();
+	while (register_fn) {
+
+		tpoint_mask = spdk_trace_get_tpoint_mask(register_fn->tgroup_id);
+
+		spdk_json_write_named_object_begin(w, register_fn->name);
+		snprintf(mask_str, sizeof(mask_str), "0x%lx", (1UL << register_fn->tgroup_id));
+		spdk_json_write_named_string(w, "mask", mask_str);
+		snprintf(tpoint_mask_str, sizeof(tpoint_mask_str), "0x%lx", tpoint_mask);
+		spdk_json_write_named_string(w, "tpoint_mask", tpoint_mask_str);
+		spdk_json_write_object_end(w);
+
+		register_fn = spdk_trace_get_next_register_fn(register_fn);
+	}
+
+	spdk_json_write_object_end(w);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("trace_get_info", rpc_trace_get_info,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)

@@ -1173,6 +1173,76 @@ Example response:
 }
 ~~~
 
+### trace_get_info {#rpc_trace_get_info}
+
+Get name of shared memory file, list of the available trace point groups
+and mask of the available trace points for each group
+
+#### Parameters
+
+No parameters required
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "trace_get_info",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "tpoint_shm_path": "/dev/shm/spdk_tgt_trace.pid3071944",
+    "tpoint_group_mask": "0x8",
+    "iscsi_conn": {
+      "mask": "0x2",
+      "tpoint_mask": "0x0"
+    },
+    "scsi": {
+      "mask": "0x4",
+      "tpoint_mask": "0x0"
+    },
+    "bdev": {
+      "mask": "0x8",
+      "tpoint_mask": "0xffffffffffffffff"
+    },
+    "nvmf_tcp": {
+      "mask": "0x20",
+      "tpoint_mask": "0x0"
+    },
+    "blobfs": {
+      "mask": "0x80",
+      "tpoint_mask": "0x0"
+    },
+    "thread": {
+      "mask": "0x400",
+      "tpoint_mask": "0x0"
+    },
+    "nvme_pcie": {
+      "mask": "0x800",
+      "tpoint_mask": "0x0"
+    },
+    "nvme_tcp": {
+      "mask": "0x2000",
+      "tpoint_mask": "0x0"
+    },
+    "bdev_nvme": {
+      "mask": "0x4000",
+      "tpoint_mask": "0x0"
+    }
+  }
+}
+~~~
+
 ### log_set_print_level {#rpc_log_set_print_level}
 
 Set the current level at which output will additionally be

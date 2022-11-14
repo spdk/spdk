@@ -13,6 +13,7 @@
 #include "spdk/log.h"
 #include "spdk/cpuset.h"
 #include "spdk/likely.h"
+#include "trace_internal.h"
 
 static int g_trace_fd = -1;
 static char g_shm_name[64];
@@ -270,4 +271,10 @@ spdk_trace_cleanup(void)
 	if (unlink) {
 		shm_unlink(g_shm_name);
 	}
+}
+
+const char *
+trace_get_shm_name(void)
+{
+	return g_shm_name;
 }

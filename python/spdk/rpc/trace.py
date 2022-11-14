@@ -53,3 +53,12 @@ def trace_get_tpoint_group_mask(client):
         List of trace point group mask
     """
     return client.call('trace_get_tpoint_group_mask')
+
+
+def trace_get_info(client):
+    """Get name of shared memory file and list of the available trace point groups
+
+    Returns:
+        Name of shared memory file and list of the available trace point groups
+    """
+    return client.call('trace_get_info')

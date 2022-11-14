@@ -40,7 +40,18 @@ function rpc_plugins() {
 	}
 }
 
-$SPDK_BIN_DIR/spdk_tgt &
+function rpc_trace_cmd_test() {
+	local info
+
+	info=$($rpc trace_get_info)
+	[ "$(jq length <<< "$info")" -gt 2 ]
+	[ "$(jq 'has("tpoint_group_mask")' <<< "$info")" = "true" ]
+	[ "$(jq 'has("tpoint_shm_path")' <<< "$info")" = "true" ]
+	[ "$(jq 'has("bdev")' <<< "$info")" = "true" ]
+	[ "$(jq -r .bdev.tpoint_mask <<< "$info")" != "0x0" ]
+}
+
+$SPDK_BIN_DIR/spdk_tgt -e bdev &
 spdk_pid=$!
 trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid
@@ -51,6 +62,7 @@ export PYTHONPATH=$PYTHONPATH:$testdir
 rpc=rpc_cmd
 run_test "rpc_integrity" rpc_integrity
 run_test "rpc_plugins" rpc_plugins
+run_test "rpc_trace_cmd_test" rpc_trace_cmd_test
 # same integrity test, but with rpc_cmd() instead
 rpc="rpc_cmd"
 run_test "rpc_daemon_integrity" rpc_integrity
