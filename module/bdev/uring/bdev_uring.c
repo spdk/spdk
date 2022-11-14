@@ -132,6 +132,11 @@ bdev_uring_readv(struct bdev_uring *uring, struct spdk_io_channel *ch,
 	struct io_uring_sqe *sqe;
 
 	sqe = io_uring_get_sqe(&group_ch->uring);
+	if (!sqe) {
+		SPDK_DEBUGLOG(uring, "get sqe failed as out of resource\n");
+		return -ENOMEM;
+	}
+
 	io_uring_prep_readv(sqe, uring->fd, iov, iovcnt, offset);
 	io_uring_sqe_set_data(sqe, uring_task);
 	uring_task->len = nbytes;
@@ -154,6 +159,11 @@ bdev_uring_writev(struct bdev_uring *uring, struct spdk_io_channel *ch,
 	struct io_uring_sqe *sqe;
 
 	sqe = io_uring_get_sqe(&group_ch->uring);
+	if (!sqe) {
+		SPDK_DEBUGLOG(uring, "get sqe failed as out of resource\n");
+		return -ENOMEM;
+	}
+
 	io_uring_prep_writev(sqe, uring->fd, iov, iovcnt, offset);
 	io_uring_sqe_set_data(sqe, uring_task);
 	uring_task->len = nbytes;
@@ -255,6 +265,8 @@ static void
 bdev_uring_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		      bool success)
 {
+	int64_t ret = 0;
+
 	if (!success) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
@@ -262,26 +274,30 @@ bdev_uring_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		bdev_uring_readv((struct bdev_uring *)bdev_io->bdev->ctxt,
-				 ch,
-				 (struct bdev_uring_task *)bdev_io->driver_ctx,
-				 bdev_io->u.bdev.iovs,
-				 bdev_io->u.bdev.iovcnt,
-				 bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
-				 bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
+		ret = bdev_uring_readv((struct bdev_uring *)bdev_io->bdev->ctxt,
+				       ch,
+				       (struct bdev_uring_task *)bdev_io->driver_ctx,
+				       bdev_io->u.bdev.iovs,
+				       bdev_io->u.bdev.iovcnt,
+				       bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
+				       bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		bdev_uring_writev((struct bdev_uring *)bdev_io->bdev->ctxt,
-				  ch,
-				  (struct bdev_uring_task *)bdev_io->driver_ctx,
-				  bdev_io->u.bdev.iovs,
-				  bdev_io->u.bdev.iovcnt,
-				  bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
-				  bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
+		ret = bdev_uring_writev((struct bdev_uring *)bdev_io->bdev->ctxt,
+					ch,
+					(struct bdev_uring_task *)bdev_io->driver_ctx,
+					bdev_io->u.bdev.iovs,
+					bdev_io->u.bdev.iovcnt,
+					bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
+					bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
 		break;
 	default:
 		SPDK_ERRLOG("Wrong io type\n");
 		break;
+	}
+
+	if (ret == -ENOMEM) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
 	}
 }
 
