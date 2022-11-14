@@ -104,35 +104,19 @@ struct snap_pci **spdk_vrdma_snap_get_snap_pci_list(const char *vrdma_dev,
         goto err;
     }
 
-    /* Lizh Just for test*/
-    pfs = &sctx->virtio_net_pfs;
-    if (!pfs)
-    SPDK_NOTICELOG("\n lizh spdk_vrdma_snap_get_snap_pci_list virtio_net_pfs max_pfs %d", pfs->max_pfs);
-    if (!pfs->max_pfs) {
-        SPDK_WARNLOG("No PFs of type VRDMA");
-        goto err;
-    }
-
-    pf_list = calloc(pfs->max_pfs, sizeof(*pf_list));
-    if (!pf_list) {
-        SPDK_ERRLOG("Cannot allocate PF list");
-        goto err;
-    }
-    *spci_list_sz = snap_get_pf_list(sctx, SNAP_VIRTIO_NET, pf_list);
-#if 0
     pfs = &sctx->vrdma_pfs;
+    if (pfs)
+        SPDK_NOTICELOG("\n lizh spdk_vrdma_snap_get_snap_pci_list vrdma_pfs max_pfs %d", pfs->max_pfs);
     if (!pfs->max_pfs) {
         SPDK_WARNLOG("No PFs of type VRDMA");
         goto err;
     }
-
     pf_list = calloc(pfs->max_pfs, sizeof(*pf_list));
     if (!pf_list) {
         SPDK_ERRLOG("Cannot allocate PF list");
         goto err;
     }
     *spci_list_sz = snap_get_pf_list(sctx, SNAP_VRDMA, pf_list);
-#endif
 
     return pf_list;
 
@@ -154,7 +138,7 @@ struct snap_pci *spdk_vrdma_snap_get_snap_pci(const char *vrdma_dev, int pf_inde
     if (pf_index >= pf_list_sz) {
         SPDK_ERRLOG("PF %d exceeds limit (%d)", pf_index, pf_list_sz);
     } else {
-        pci_func = (struct snap_pci *)&pf_list[pf_index];
+        pci_func = pf_list[pf_index];
     }
     free(pf_list);
 
@@ -207,9 +191,7 @@ int spdk_vrdma_snap_pci_mgr_init(void)
         if (sctx) {
             found_emu_managers = true;
             ibctx = sctx->context;
-            /* lizh just for test */
-            //snap_vrdma_pci_functions_cleanup(sctx);
-            snap_virtio_net_pci_functions_cleanup(sctx);
+            snap_vrdma_pci_functions_cleanup(sctx);
         } else {
             ibctx = ibv_open_device(list[i]);
             if (!ibctx) {

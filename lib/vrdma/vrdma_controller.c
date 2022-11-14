@@ -96,24 +96,6 @@ vrdma_ctrl_find_snap_context(const char *emu_manager, int pf_id)
         if (!ctx)
             continue;
 
-        /* lizh just for test*/
-        if (!(ctx->emulation_caps & SNAP_VIRTIO_NET))
-            continue;
-
-        pf_list = calloc(ctx->virtio_net_pfs.max_pfs, sizeof(*pf_list));
-        if (!pf_list)
-            continue;
-
-        pf_list_sz = snap_get_pf_list(ctx, SNAP_VIRTIO_NET, pf_list);
-        for (j = 0; j < pf_list_sz; j++) {
-            SPDK_NOTICELOG("\n lizh vrdma_ctrl_find_snap_context...pf_list[%d]->plugged %d id %d",
-            j, pf_list[j]->plugged, pf_list[j]->id);
-            if (pf_list[j]->plugged && pf_list[j]->id == pf_id) {
-                found = ctx;
-                break;
-            }
-        }
-#if 0
         if (!(ctx->emulation_caps & SNAP_VRDMA))
             continue;
 
@@ -123,12 +105,14 @@ vrdma_ctrl_find_snap_context(const char *emu_manager, int pf_id)
 
         pf_list_sz = snap_get_pf_list(ctx, SNAP_VRDMA, pf_list);
         for (j = 0; j < pf_list_sz; j++) {
+            SPDK_NOTICELOG("\n lizh vrdma_ctrl_find_snap_context...pf_list[%d]->plugged %d id %d",
+            j, pf_list[j]->plugged, pf_list[j]->id);
             if (pf_list[j]->plugged && pf_list[j]->id == pf_id) {
                 found = ctx;
                 break;
             }
         }
-#endif
+
         free(pf_list);
 
         if (found)
@@ -278,9 +262,7 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
     sctrl_attr.bar_cbs = &bar_cbs;
     sctrl_attr.cb_ctx = ctrl;
     sctrl_attr.pf_id = attr->pf_id;
-    /*lizh Just for test*/
-    sctrl_attr.pci_type = SNAP_VIRTIO_NET_PF;
-    //sctrl_attr.pci_type = SNAP_VRDMA_PF;
+    sctrl_attr.pci_type = SNAP_VRDMA_PF;
     sctrl_attr.pd = ctrl->pd;
     sctrl_attr.mr = ctrl->mr;
     sctrl_attr.npgs = attr->nthreads;

@@ -82,15 +82,11 @@ spdk_emu_ctx_find_by_pci_id(const char *emu_manager, int pf_id)
     struct spdk_emu_ctx *ctx;
 
     LIST_FOREACH(ctx, &spdk_emu_list, entry) {
-        /*lizh Just for test*/
         SPDK_NOTICELOG("lizh spdk_emu_ctx_find_by_pci_id...%s type %d id %d",
         ctx->emu_manager, ctx->spci->type, ctx->spci->id);
         if (strncmp(ctx->emu_manager, emu_manager,
                     SPDK_EMU_MANAGER_NAME_MAXLEN) ||
-            ctx->spci->type != SNAP_VIRTIO_NET_PF)
-        /*if (strncmp(ctx->emu_manager, emu_manager,
-                    SPDK_EMU_MANAGER_NAME_MAXLEN) ||
-            ctx->spci->type != SNAP_VRDMA_PF)*/
+            ctx->spci->type != SNAP_VRDMA_PF)
             continue;
 
         if (ctx->spci->id == pf_id)
@@ -359,13 +355,7 @@ spdk_emu_ctx_create(const struct spdk_emu_ctx_create_attr *attr)
     ctx->spci = attr->spci;
     strncpy(ctx->emu_manager, attr->emu_manager,
             SPDK_EMU_MANAGER_NAME_MAXLEN - 1);
-    if (attr->spci->parent)
-        snprintf(ctx->emu_name, SPDK_EMU_NAME_MAXLEN,
-                "%s%dpf%dvf%d", ctx->ctrl_ops->prefix,
-                vrdma_dev_name_to_id(attr->emu_manager), attr->spci->parent->id,
-                attr->spci->id);
-    else
-        snprintf(ctx->emu_name, SPDK_EMU_NAME_MAXLEN,
+    snprintf(ctx->emu_name, SPDK_EMU_NAME_MAXLEN,
                 "%s%dpf%d", ctx->ctrl_ops->prefix,
                 vrdma_dev_name_to_id(attr->emu_manager), attr->spci->id);
     SPDK_NOTICELOG("\n lizh spdk_emu_ctx_create...done\n");
@@ -548,7 +538,6 @@ spdk_vrdma_rpc_controller_configue_decoder[] = {
     },
 };
 
-/*lizh Just for test*/
 static struct spdk_emu_ctx *
 spdk_emu_ctx_find_by_pci_id_testrpc(const char *emu_manager, int pf_id)
 {
@@ -608,7 +597,6 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
     ctx = spdk_emu_ctx_find_by_pci_id(attr->emu_manager,
                            attr->dev_id);
     if (!ctx) {
-        /*lizh Just for test*/
         ctx = spdk_emu_ctx_find_by_pci_id_testrpc(attr->emu_manager,
                            attr->dev_id);
         if (!ctx) {
