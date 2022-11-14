@@ -470,7 +470,7 @@ test_nvmf_bdev_ctrlr_identify_ns(void)
 	bdev.dif_type = SPDK_DIF_TYPE1;
 	bdev.blocklen = 4096;
 	bdev.md_interleave = 0;
-	bdev.optimal_io_boundary = BDEV_IO_NUM_CHILD_IOV;
+	bdev.optimal_io_boundary = SPDK_BDEV_IO_NUM_CHILD_IOV;
 	bdev.dif_is_head_of_md = true;
 
 	nvmf_bdev_ctrlr_identify_ns(&ns, &nsdata, false);
@@ -483,7 +483,7 @@ test_nvmf_bdev_ctrlr_identify_ns(void)
 	CU_ASSERT(nsdata.lbaf[0].lbads == spdk_u32log2(4096));
 	CU_ASSERT(nsdata.lbaf[0].ms == 512);
 	CU_ASSERT(nsdata.dps.pit == SPDK_NVME_FMT_NVM_PROTECTION_DISABLE);
-	CU_ASSERT(nsdata.noiob == BDEV_IO_NUM_CHILD_IOV);
+	CU_ASSERT(nsdata.noiob == SPDK_BDEV_IO_NUM_CHILD_IOV);
 	CU_ASSERT(nsdata.nmic.can_share == 1);
 	CU_ASSERT(nsdata.nsrescap.rescap.persist == 1);
 	CU_ASSERT(nsdata.nsrescap.rescap.write_exclusive == 1);
@@ -509,7 +509,7 @@ test_nvmf_bdev_ctrlr_identify_ns(void)
 	CU_ASSERT(nsdata.flbas.format == 0);
 	CU_ASSERT(nsdata.nacwu == 0);
 	CU_ASSERT(nsdata.lbaf[0].lbads == spdk_u32log2(4096));
-	CU_ASSERT(nsdata.noiob == BDEV_IO_NUM_CHILD_IOV);
+	CU_ASSERT(nsdata.noiob == SPDK_BDEV_IO_NUM_CHILD_IOV);
 	CU_ASSERT(nsdata.nmic.can_share == 1);
 	CU_ASSERT(nsdata.lbaf[0].ms == 0);
 	CU_ASSERT(nsdata.nsrescap.rescap.persist == 1);

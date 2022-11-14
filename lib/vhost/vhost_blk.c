@@ -1512,7 +1512,7 @@ vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
 		blkcnt = spdk_bdev_get_num_blocks(bdev);
 		if (spdk_bdev_get_buf_align(bdev) > 1) {
 			blkcfg.size_max = SPDK_BDEV_LARGE_BUF_MAX_SIZE;
-			blkcfg.seg_max = spdk_min(SPDK_VHOST_IOVS_MAX - 2 - 1, BDEV_IO_NUM_CHILD_IOV - 2 - 1);
+			blkcfg.seg_max = spdk_min(SPDK_VHOST_IOVS_MAX - 2 - 1, SPDK_BDEV_IO_NUM_CHILD_IOV - 2 - 1);
 		} else {
 			blkcfg.size_max = 131072;
 			/*  -2 for REQ and RESP and -1 for region boundary splitting */

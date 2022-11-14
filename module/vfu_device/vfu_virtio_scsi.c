@@ -517,7 +517,7 @@ virtio_scsi_update_config(struct virtio_scsi_endpoint *scsi_endpoint)
 
 	scsi_cfg->num_queues = scsi_endpoint->virtio.num_queues;
 	/*  -2 for REQ and RESP and -1 for region boundary splitting */
-	scsi_cfg->seg_max = spdk_min(VIRTIO_DEV_MAX_IOVS - 2 - 1, BDEV_IO_NUM_CHILD_IOV - 2 - 1);
+	scsi_cfg->seg_max = spdk_min(VIRTIO_DEV_MAX_IOVS - 2 - 1, SPDK_BDEV_IO_NUM_CHILD_IOV - 2 - 1);
 	/* we can set `max_sectors` and `cmd_per_lun` based on bdevs */
 	scsi_cfg->max_sectors = 131072;
 	scsi_cfg->cmd_per_lun = scsi_endpoint->virtio.qsize;

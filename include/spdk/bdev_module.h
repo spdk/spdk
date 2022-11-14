@@ -31,7 +31,7 @@ extern "C" {
 /* This parameter is best defined for bdevs that share an underlying bdev,
  * such as multiple lvol bdevs sharing an nvme device, to avoid unnecessarily
  * resetting the underlying bdev and affecting other bdevs that are sharing it. */
-#define BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE 5
+#define SPDK_BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE 5
 
 /** Block device module */
 struct spdk_bdev_module {
@@ -464,7 +464,7 @@ struct spdk_bdev {
 	 * `reset_io_drain_timeout` seconds for outstanding IO that are present
 	 * on any bdev channel, before sending a reset down to the underlying device.
 	 * That way we can avoid sending "empty" resets and interrupting work of
-	 * other lvols that use the same bdev. BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE
+	 * other lvols that use the same bdev. SPDK_BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE
 	 * is a good choice for the value of this parameter.
 	 *
 	 * If this parameter remains equal to zero, the bdev reset will be forcefully
@@ -585,7 +585,8 @@ typedef void (*spdk_bdev_io_get_buf_cb)(struct spdk_io_channel *ch, struct spdk_
 typedef void (*spdk_bdev_io_get_aux_buf_cb)(struct spdk_io_channel *ch,
 		struct spdk_bdev_io *bdev_io, void *aux_buf);
 
-#define BDEV_IO_NUM_CHILD_IOV 32
+/* Maximum number of IOVs used for I/O splitting */
+#define SPDK_BDEV_IO_NUM_CHILD_IOV 32
 
 struct spdk_bdev_io {
 	/** The block device that this I/O belongs to. */
@@ -601,7 +602,7 @@ struct spdk_bdev_io {
 	struct iovec iov;
 
 	/** Array of iovecs used for I/O splitting. */
-	struct iovec child_iov[BDEV_IO_NUM_CHILD_IOV];
+	struct iovec child_iov[SPDK_BDEV_IO_NUM_CHILD_IOV];
 
 	union {
 		struct {

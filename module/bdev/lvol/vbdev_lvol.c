@@ -1046,7 +1046,7 @@ _create_lvol_disk(struct spdk_lvol *lvol, bool destroy)
 	 * bdev module.
 	 * Setting this parameter is mainly to avoid "empty" resets to a shared
 	 * bdev that may be used by multiple lvols. */
-	bdev->reset_io_drain_timeout = BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE;
+	bdev->reset_io_drain_timeout = SPDK_BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE;
 
 	rc = spdk_bdev_register(bdev);
 	if (rc) {

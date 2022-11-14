@@ -567,7 +567,7 @@ aborted_reset_no_outstanding_io(void)
 	io_ch[0] = spdk_bdev_get_io_channel(g_desc);
 	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
 	bdev[0] = bdev_ch[0]->bdev;
-	bdev[0]->reset_io_drain_timeout = BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE;
+	bdev[0]->reset_io_drain_timeout = SPDK_BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE;
 	CU_ASSERT(io_ch[0] != NULL);
 	spdk_bdev_reset(g_desc, io_ch[0], aborted_reset_done, &status1);
 	poll_threads();
@@ -581,7 +581,7 @@ aborted_reset_no_outstanding_io(void)
 	io_ch[1] = spdk_bdev_get_io_channel(g_desc);
 	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
 	bdev[1] = bdev_ch[1]->bdev;
-	bdev[1]->reset_io_drain_timeout = BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE;
+	bdev[1]->reset_io_drain_timeout = SPDK_BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE;
 	CU_ASSERT(io_ch[1] != NULL);
 	spdk_bdev_reset(g_desc, io_ch[1], aborted_reset_done, &status2);
 	poll_threads();
@@ -777,7 +777,7 @@ reset_completions(void)
 
 	/* Test case 2) no outstanding IO are present. Reset should perform one iteration over
 	* channels and then be skipped. */
-	bdev->reset_io_drain_timeout = BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE;
+	bdev->reset_io_drain_timeout = SPDK_BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE;
 	status_reset = SPDK_BDEV_IO_STATUS_PENDING;
 
 	rc = spdk_bdev_reset(g_desc, io_ch, io_during_io_done, &status_reset);

@@ -344,7 +344,7 @@ virtio_blk_update_config(struct virtio_blk_config *blk_cfg, struct spdk_bdev *bd
 
 	if (spdk_bdev_get_buf_align(bdev) > 1) {
 		blk_cfg->size_max = SPDK_BDEV_LARGE_BUF_MAX_SIZE;
-		blk_cfg->seg_max = spdk_min(VIRTIO_DEV_MAX_IOVS - 2 - 1, BDEV_IO_NUM_CHILD_IOV - 2 - 1);
+		blk_cfg->seg_max = spdk_min(VIRTIO_DEV_MAX_IOVS - 2 - 1, SPDK_BDEV_IO_NUM_CHILD_IOV - 2 - 1);
 	} else {
 		blk_cfg->size_max = 131072;
 		/*  -2 for REQ and RESP and -1 for region boundary splitting */

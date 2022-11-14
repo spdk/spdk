@@ -2521,8 +2521,8 @@ _bdev_rw_split(void *_bdev_io)
 	int rc;
 
 	max_segment_size = max_segment_size ? max_segment_size : UINT32_MAX;
-	max_child_iovcnt = max_child_iovcnt ? spdk_min(max_child_iovcnt, BDEV_IO_NUM_CHILD_IOV) :
-			   BDEV_IO_NUM_CHILD_IOV;
+	max_child_iovcnt = max_child_iovcnt ? spdk_min(max_child_iovcnt, SPDK_BDEV_IO_NUM_CHILD_IOV) :
+			   SPDK_BDEV_IO_NUM_CHILD_IOV;
 
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE && bdev->split_on_write_unit) {
 		io_boundary = bdev->write_unit_size;
@@ -2547,7 +2547,8 @@ _bdev_rw_split(void *_bdev_io)
 	}
 
 	child_iovcnt = 0;
-	while (remaining > 0 && parent_iovpos < parent_iovcnt && child_iovcnt < BDEV_IO_NUM_CHILD_IOV) {
+	while (remaining > 0 && parent_iovpos < parent_iovcnt &&
+	       child_iovcnt < SPDK_BDEV_IO_NUM_CHILD_IOV) {
 		to_next_boundary = _to_next_boundary(current_offset, io_boundary);
 		to_next_boundary = spdk_min(remaining, to_next_boundary);
 		to_next_boundary_bytes = to_next_boundary * blocklen;
@@ -2560,7 +2561,7 @@ _bdev_rw_split(void *_bdev_io)
 				 (current_offset - parent_offset) * spdk_bdev_get_md_size(bdev);
 		}
 
-		child_iovsize = spdk_min(BDEV_IO_NUM_CHILD_IOV - child_iovcnt, max_child_iovcnt);
+		child_iovsize = spdk_min(SPDK_BDEV_IO_NUM_CHILD_IOV - child_iovcnt, max_child_iovcnt);
 		while (to_next_boundary_bytes > 0 && parent_iovpos < parent_iovcnt &&
 		       iovcnt < child_iovsize) {
 			parent_iov = &bdev_io->u.bdev.iovs[parent_iovpos];
@@ -2590,12 +2591,12 @@ _bdev_rw_split(void *_bdev_io)
 			 * then adjust to_next_boundary before starting the
 			 * child I/O.
 			 */
-			assert(child_iovcnt == BDEV_IO_NUM_CHILD_IOV ||
+			assert(child_iovcnt == SPDK_BDEV_IO_NUM_CHILD_IOV ||
 			       iovcnt == child_iovsize);
 			to_last_block_bytes = to_next_boundary_bytes % blocklen;
 			if (to_last_block_bytes != 0) {
 				uint32_t child_iovpos = child_iovcnt - 1;
-				/* don't decrease child_iovcnt when it equals to BDEV_IO_NUM_CHILD_IOV
+				/* don't decrease child_iovcnt when it equals to SPDK_BDEV_IO_NUM_CHILD_IOV
 				 * so the loop will naturally end
 				 */
 
