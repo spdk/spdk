@@ -3205,12 +3205,13 @@ bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 	}
 }
 
-/* Caller must hold bdev->internal.spinlock. */
 static void
 bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 {
 	struct spdk_bdev_qos	*qos = bdev->internal.qos;
 	int			i;
+
+	assert(spdk_spin_held(&bdev->internal.spinlock));
 
 	/* Rate limiting on this bdev enabled */
 	if (qos) {
@@ -6545,8 +6546,7 @@ _remove_notify(void *arg)
 	spdk_spin_unlock(&desc->spinlock);
 }
 
-/* Must be called while holding g_bdev_mgr.spinlock and bdev->internal.spinlock.
- * returns: 0 - bdev removed and ready to be destructed.
+/* returns: 0 - bdev removed and ready to be destructed.
  *          -EBUSY - bdev can't be destructed yet.  */
 static int
 bdev_unregister_unsafe(struct spdk_bdev *bdev)
@@ -6554,6 +6554,9 @@ bdev_unregister_unsafe(struct spdk_bdev *bdev)
 	struct spdk_bdev_desc	*desc, *tmp;
 	int			rc = 0;
 	char			uuid[SPDK_UUID_STRING_LEN];
+
+	assert(spdk_spin_held(&g_bdev_mgr.spinlock));
+	assert(spdk_spin_held(&bdev->internal.spinlock));
 
 	/* Notify each descriptor about hotremoval */
 	TAILQ_FOREACH_SAFE(desc, &bdev->internal.open_descs, link, tmp) {
@@ -6915,7 +6918,11 @@ bdev_register_finished(void *arg)
 
 	spdk_notify_send("bdev_register", spdk_bdev_get_name(bdev));
 
+	spdk_spin_lock(&g_bdev_mgr.spinlock);
+
 	bdev_close(bdev, desc);
+
+	spdk_spin_unlock(&g_bdev_mgr.spinlock);
 }
 
 int
