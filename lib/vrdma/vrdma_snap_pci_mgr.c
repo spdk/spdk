@@ -138,7 +138,7 @@ struct snap_pci *spdk_vrdma_snap_get_snap_pci(const char *vrdma_dev, int pf_inde
     if (pf_index >= pf_list_sz) {
         SPDK_ERRLOG("PF %d exceeds limit (%d)", pf_index, pf_list_sz);
     } else {
-        pci_func = (struct snap_pci *)&pf_list[pf_index];
+        pci_func = pf_list[pf_index];
     }
     free(pf_list);
 

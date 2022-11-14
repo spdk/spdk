@@ -99,7 +99,7 @@ vrdma_ctrl_find_snap_context(const char *emu_manager, int pf_id)
         if (!(ctx->emulation_caps & SNAP_VRDMA))
             continue;
 
-        pf_list = calloc(ctx->virtio_net_pfs.max_pfs, sizeof(*pf_list));
+        pf_list = calloc(ctx->vrdma_pfs.max_pfs, sizeof(*pf_list));
         if (!pf_list)
             continue;
 
@@ -112,22 +112,7 @@ vrdma_ctrl_find_snap_context(const char *emu_manager, int pf_id)
                 break;
             }
         }
-#if 0
-        if (!(ctx->emulation_caps & SNAP_VRDMA))
-            continue;
 
-        pf_list = calloc(ctx->vrdma_pfs.max_pfs, sizeof(*pf_list));
-        if (!pf_list)
-            continue;
-
-        pf_list_sz = snap_get_pf_list(ctx, SNAP_VRDMA, pf_list);
-        for (j = 0; j < pf_list_sz; j++) {
-            if (pf_list[j]->plugged && pf_list[j]->id == pf_id) {
-                found = ctx;
-                break;
-            }
-        }
-#endif
         free(pf_list);
 
         if (found)
