@@ -296,9 +296,9 @@ function check_naming_conventions() {
 
 	# Build an array of all the modified C libraries.
 	mapfile -t changed_c_libs < <(git diff --name-only HEAD $commit_to_compare -- lib/**/*.c module/**/*.c | xargs -r dirname | sort | uniq)
-	# Matching groups are 1. qualifiers / return type. 2. function name 3. argument list / comments and stuff after that.
-	# Capture just the names of newly added (or modified) function definitions.
-	mapfile -t declared_symbols < <(git diff -U0 $commit_to_compare HEAD -- include/spdk*/*.h | sed -En 's/(^[+].*)(spdk[a-z,A-Z,0-9,_]*)(\(.*)/\2/p')
+	# Capture the names of all function declarations
+	mapfile -t declared_symbols < <(grep -Eh 'spdk_[a-zA-Z0-9_]*\(' include/spdk*/*.h \
+		| sed -En 's/.*(spdk[a-z,A-Z,0-9,_]*)\(.*/\1/p')
 
 	for c_lib in "${changed_c_libs[@]}"; do
 		lib_map_file="mk/spdk_blank.map"
