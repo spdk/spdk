@@ -1401,8 +1401,7 @@ _cryptodev_sym_session_create(struct vbdev_crypto *vbdev, struct rte_crypto_sym_
 		return NULL;
 	}
 
-	rc = rte_cryptodev_sym_session_init(device->cdev_id, session, xforms,
-					    g_session_mp_priv ? g_session_mp_priv : g_session_mp);
+	rc = rte_cryptodev_sym_session_init(device->cdev_id, session, xforms, g_session_mp_priv);
 	if (rc < 0) {
 		_cryptodev_sym_session_free(session);
 		return NULL;
