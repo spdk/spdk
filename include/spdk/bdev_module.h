@@ -490,7 +490,7 @@ struct spdk_bdev {
 		bool qos_mod_in_progress;
 
 		/** Spin lock protecting claimed */
-		pthread_spinlock_t spinlock;
+		struct spdk_spinlock spinlock;
 
 		/** The bdev status */
 		enum spdk_bdev_status status;

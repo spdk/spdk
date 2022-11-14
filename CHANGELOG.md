@@ -36,6 +36,10 @@ device.
 A new API `spdk_bdev_channel_get_histogram` was added to get the histogram of a specified
 channel for a bdev.
 
+Converted internal use of `pthread_mutex_t` to `struct spdk_spinlock`. Consumers of bdev
+API functions must be on an SPDK thread or the program will abort. It is now enforced
+that no internal bdev locks can be held when a poller or message goes off CPU.
+
 ### event
 
 Added core lock file mechanism to prevent the same CPU cores from being used by multiple
