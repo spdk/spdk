@@ -2433,7 +2433,7 @@ consume_cmd(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_sq *sq,
 	    struct spdk_nvme_cmd *cmd)
 {
 	assert(sq != NULL);
-	if (nvmf_qpair_is_admin_queue(&sq->qpair)) {
+	if (spdk_unlikely(nvmf_qpair_is_admin_queue(&sq->qpair))) {
 		return consume_admin_cmd(ctrlr, cmd);
 	}
 
@@ -2473,7 +2473,7 @@ handle_sq_tdbl_write(struct nvmf_vfio_user_ctrlr *ctrlr, const uint32_t new_tail
 		sq_head_advance(sq);
 
 		err = consume_cmd(ctrlr, sq, cmd);
-		if (err != 0) {
+		if (spdk_unlikely(err != 0)) {
 			return err;
 		}
 	}
@@ -2797,14 +2797,14 @@ handle_dbl_access(struct nvmf_vfio_user_ctrlr *ctrlr, uint32_t *buf,
 	assert(ctrlr != NULL);
 	assert(buf != NULL);
 
-	if (!is_write) {
+	if (spdk_unlikely(!is_write)) {
 		SPDK_WARNLOG("%s: host tried to read BAR0 doorbell %#lx\n",
 			     ctrlr_id(ctrlr), pos);
 		errno = EPERM;
 		return -1;
 	}
 
-	if (count != sizeof(uint32_t)) {
+	if (spdk_unlikely(count != sizeof(uint32_t))) {
 		SPDK_ERRLOG("%s: bad doorbell buffer size %ld\n",
 			    ctrlr_id(ctrlr), count);
 		errno = EINVAL;
@@ -2814,7 +2814,7 @@ handle_dbl_access(struct nvmf_vfio_user_ctrlr *ctrlr, uint32_t *buf,
 	pos -= NVME_DOORBELLS_OFFSET;
 
 	/* pos must be dword aligned */
-	if ((pos & 0x3) != 0) {
+	if (spdk_unlikely((pos & 0x3) != 0)) {
 		SPDK_ERRLOG("%s: bad doorbell offset %#lx\n", ctrlr_id(ctrlr), pos);
 		errno = EINVAL;
 		return -1;
@@ -2823,7 +2823,7 @@ handle_dbl_access(struct nvmf_vfio_user_ctrlr *ctrlr, uint32_t *buf,
 	/* convert byte offset to array index */
 	pos >>= 2;
 
-	if (pos >= NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR * 2) {
+	if (spdk_unlikely(pos >= NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR * 2)) {
 		SPDK_ERRLOG("%s: bad doorbell index %#lx\n", ctrlr_id(ctrlr), pos);
 		errno = EINVAL;
 		return -1;
@@ -2900,7 +2900,7 @@ access_bar0_fn(vfu_ctx_t *vfu_ctx, char *buf, size_t count, loff_t pos,
 	int ret;
 
 	ctrlr = endpoint->ctrlr;
-	if (endpoint->need_async_destroy || !ctrlr) {
+	if (spdk_unlikely(endpoint->need_async_destroy || !ctrlr)) {
 		errno = EIO;
 		return -1;
 	}
@@ -3670,7 +3670,7 @@ vfio_user_migr_ctrlr_restore(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 		cmd.opc = SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
 		cmd.cid = migr_state.nvmf_data.aer_cids[i];
 		rc = handle_cmd_req(vu_ctrlr, &cmd, vu_ctrlr->sqs[0]);
-		if (rc) {
+		if (spdk_unlikely(rc)) {
 			break;
 		}
 	}
@@ -5553,7 +5553,7 @@ nvmf_vfio_user_sq_poll(struct nvmf_vfio_user_sq *sq)
 	spdk_rmb();
 
 	count = handle_sq_tdbl_write(ctrlr, new_tail, sq);
-	if (count < 0) {
+	if (spdk_unlikely(count < 0)) {
 		fail_ctrlr(ctrlr);
 	}
 
@@ -5589,7 +5589,7 @@ nvmf_vfio_user_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 
 		ret = nvmf_vfio_user_sq_poll(sq);
 
-		if (ret < 0) {
+		if (spdk_unlikely(ret < 0)) {
 			return ret;
 		}
 
