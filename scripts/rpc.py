@@ -2529,12 +2529,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         rpc.nvmf.nvmf_subsystem_add_host(args.client,
                                          nqn=args.nqn,
                                          host=args.host,
-                                         tgt_name=args.tgt_name)
+                                         tgt_name=args.tgt_name,
+                                         psk=args.psk)
 
     p = subparsers.add_parser('nvmf_subsystem_add_host', help='Add a host to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('host', help='Host NQN to allow')
     p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('--psk', help='PSK for TLS authentication (optional). Only applicable for TCP transport.', type=str)
     p.set_defaults(func=nvmf_subsystem_add_host)
 
     def nvmf_subsystem_remove_host(args):

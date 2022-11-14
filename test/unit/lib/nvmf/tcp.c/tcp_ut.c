@@ -1263,6 +1263,76 @@ test_nvmf_tcp_pdu_ch_handle(void)
 			  struct spdk_nvme_tcp_common_pdu_hdr));
 }
 
+static void
+test_nvmf_tcp_tls_add_remove_credentials(void)
+{
+	struct spdk_thread *thread;
+	struct spdk_nvmf_transport *transport;
+	struct spdk_nvmf_tcp_transport *ttransport;
+	struct spdk_nvmf_transport_opts opts;
+	struct spdk_nvmf_subsystem subsystem;
+	struct tcp_psk_entry *entry;
+	const char subnqn[] = {"nqn.2016-06.io.spdk:cnode1"};
+	const char hostnqn[] = {"nqn.2016-06.io.spdk:host1"};
+	struct spdk_json_val psk_json[] = {
+		{"", 2, SPDK_JSON_VAL_OBJECT_BEGIN},
+		{"psk", 3, SPDK_JSON_VAL_NAME},
+		{"1234567890ABCDEF", 16, SPDK_JSON_VAL_STRING},
+		{"", 0, SPDK_JSON_VAL_OBJECT_END},
+	};
+	bool found = false;
+
+	thread = spdk_thread_create(NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(thread != NULL);
+	spdk_set_thread(thread);
+
+	memset(&opts, 0, sizeof(opts));
+	opts.max_queue_depth = UT_MAX_QUEUE_DEPTH;
+	opts.max_qpairs_per_ctrlr = UT_MAX_QPAIRS_PER_CTRLR;
+	opts.in_capsule_data_size = UT_IN_CAPSULE_DATA_SIZE;
+	opts.max_io_size = UT_MAX_IO_SIZE;
+	opts.io_unit_size = UT_IO_UNIT_SIZE;
+	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
+	opts.num_shared_buffers = UT_NUM_SHARED_BUFFERS;
+	transport = nvmf_tcp_create(&opts);
+
+	memset(&subsystem, 0, sizeof(subsystem));
+	snprintf(subsystem.subnqn, sizeof(subsystem.subnqn), "%s", subnqn);
+
+	nvmf_tcp_subsystem_add_host(transport, &subsystem, hostnqn, psk_json);
+
+	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
+	TAILQ_FOREACH(entry, &ttransport->psks, link) {
+		if ((strcmp(subnqn, entry->subnqn) == 0) &&
+		    (strcmp(hostnqn, entry->hostnqn) == 0)) {
+			found = true;
+		}
+	}
+
+	CU_ASSERT(found == true);
+	found = false;
+
+	nvmf_tcp_subsystem_remove_host(transport, &subsystem, hostnqn);
+
+	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
+	TAILQ_FOREACH(entry, &ttransport->psks, link) {
+		if ((strcmp(subnqn, entry->subnqn) == 0) &&
+		    (strcmp(hostnqn, entry->hostnqn) == 0)) {
+			found = true;
+		}
+	}
+
+	CU_ASSERT(found == false);
+
+	CU_ASSERT(nvmf_tcp_destroy(transport, NULL, NULL) == 0);
+
+	spdk_thread_exit(thread);
+	while (!spdk_thread_is_exited(thread)) {
+		spdk_thread_poll(thread, 0, 0);
+	}
+	spdk_thread_destroy(thread);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1287,6 +1357,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_tcp_check_xfer_type);
 	CU_ADD_TEST(suite, test_nvmf_tcp_invalid_sgl);
 	CU_ADD_TEST(suite, test_nvmf_tcp_pdu_ch_handle);
+	CU_ADD_TEST(suite, test_nvmf_tcp_tls_add_remove_credentials);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

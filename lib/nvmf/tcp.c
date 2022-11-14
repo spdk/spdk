@@ -342,6 +342,14 @@ struct tcp_transport_opts {
 	uint32_t	sock_priority;
 };
 
+struct tcp_psk_entry {
+	char				hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+	char				subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+	char				psk_identity[NVMF_PSK_IDENTITY_LEN];
+	uint8_t				psk[SPDK_TLS_PSK_MAX_LEN];
+	TAILQ_ENTRY(tcp_psk_entry)	link;
+};
+
 struct spdk_nvmf_tcp_transport {
 	struct spdk_nvmf_transport		transport;
 	struct tcp_transport_opts               tcp_opts;
@@ -352,6 +360,8 @@ struct spdk_nvmf_tcp_transport {
 
 	TAILQ_HEAD(, spdk_nvmf_tcp_port)	ports;
 	TAILQ_HEAD(, spdk_nvmf_tcp_poll_group)	poll_groups;
+
+	TAILQ_HEAD(, tcp_psk_entry)		psks;
 };
 
 static const struct spdk_json_object_decoder tcp_transport_opts_decoder[] = {
@@ -584,9 +594,15 @@ nvmf_tcp_destroy(struct spdk_nvmf_transport *transport,
 		 spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_tcp_transport	*ttransport;
+	struct tcp_psk_entry *entry, *tmp;
 
 	assert(transport != NULL);
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
+
+	TAILQ_FOREACH_SAFE(entry, &ttransport->psks, link, tmp) {
+		TAILQ_REMOVE(&ttransport->psks, entry, link);
+		free(entry);
+	}
 
 	spdk_poller_unregister(&ttransport->accept_poller);
 	free(ttransport);
@@ -613,6 +629,7 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 
 	TAILQ_INIT(&ttransport->ports);
 	TAILQ_INIT(&ttransport->poll_groups);
+	TAILQ_INIT(&ttransport->psks);
 
 	ttransport->transport.ops = &spdk_nvmf_transport_tcp;
 
@@ -3423,6 +3440,133 @@ nvmf_tcp_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 	_nvmf_tcp_qpair_abort_request(req);
 }
 
+struct tcp_subsystem_add_host_opts {
+	char *psk;
+};
+
+static const struct spdk_json_object_decoder tcp_subsystem_add_host_opts_decoder[] = {
+	{"psk", offsetof(struct tcp_subsystem_add_host_opts, psk), spdk_json_decode_string, true},
+};
+
+static int
+nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
+			    const struct spdk_nvmf_subsystem *subsystem,
+			    const char *hostnqn,
+			    const struct spdk_json_val *transport_specific)
+{
+	struct tcp_subsystem_add_host_opts opts;
+	struct spdk_nvmf_tcp_transport *ttransport;
+	struct tcp_psk_entry *entry;
+	/* This hardcoded PSK identity prefix will remain until
+	 * support for different hash functions to generate PSK
+	 * is introduced. */
+	const char *psk_id_prefix = "NVMe0R01";
+	char psk_identity[NVMF_PSK_IDENTITY_LEN];
+	uint64_t key_len;
+	int rc = 0;
+
+	if (transport_specific == NULL) {
+		return 0;
+	}
+
+	assert(transport != NULL);
+	assert(subsystem != NULL);
+
+	memset(&opts, 0, sizeof(opts));
+
+	/* Decode PSK */
+	if (spdk_json_decode_object_relaxed(transport_specific, tcp_subsystem_add_host_opts_decoder,
+					    SPDK_COUNTOF(tcp_subsystem_add_host_opts_decoder), &opts)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		return -EINVAL;
+	}
+
+	if (opts.psk == NULL) {
+		return 0;
+	}
+
+	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
+	/* Generate PSK identity. */
+	if (snprintf(psk_identity, NVMF_PSK_IDENTITY_LEN, "%s %s %s", psk_id_prefix, hostnqn,
+		     subsystem->subnqn) < 0) {
+		SPDK_ERRLOG("Could not construct PSK identity string!\n");
+		rc = -EINVAL;
+		goto end;
+	}
+	/* Check if PSK identity entry already exists. */
+	TAILQ_FOREACH(entry, &ttransport->psks, link) {
+		if (strncmp(entry->psk_identity, psk_identity, NVMF_PSK_IDENTITY_LEN) == 0) {
+			SPDK_ERRLOG("Given PSK identity: %s entry already exists!\n", psk_identity);
+			rc = -EEXIST;
+			goto end;
+		}
+	}
+	entry = calloc(1, sizeof(struct tcp_psk_entry));
+	if (entry == NULL) {
+		SPDK_ERRLOG("Unable to allocate memory for PSK entry!\n");
+		rc = -ENOMEM;
+		goto end;
+	}
+	if (snprintf(entry->hostnqn, sizeof(entry->hostnqn), "%s", hostnqn) < 0) {
+		SPDK_ERRLOG("Could not write hostnqn string!\n");
+		rc = -EINVAL;
+		free(entry);
+		goto end;
+	}
+	if (snprintf(entry->subnqn, sizeof(entry->subnqn), "%s", subsystem->subnqn) < 0) {
+		SPDK_ERRLOG("Could not write subnqn string!\n");
+		rc = -EINVAL;
+		free(entry);
+		goto end;
+	}
+	if (snprintf(entry->psk_identity, sizeof(entry->psk_identity), "%s", psk_identity) < 0) {
+		SPDK_ERRLOG("Could not write PSK identity string!\n");
+		rc = -EINVAL;
+		free(entry);
+		goto end;
+	}
+	if (strlen(opts.psk) >= sizeof(entry->psk)) {
+		SPDK_ERRLOG("PSK of length: %ld cannot fit in max buffer size: %ld\n", strlen(opts.psk),
+			    sizeof(entry->psk));
+		rc = -EINVAL;
+		free(entry);
+		goto end;
+	}
+	memcpy(entry->psk, opts.psk, strlen(opts.psk));
+
+	TAILQ_INSERT_TAIL(&ttransport->psks, entry, link);
+
+end:
+	key_len = strnlen(opts.psk, SPDK_TLS_PSK_MAX_LEN);
+	spdk_memset_s(opts.psk, key_len, 0, key_len);
+	free(opts.psk);
+
+	return rc;
+}
+
+static void
+nvmf_tcp_subsystem_remove_host(struct spdk_nvmf_transport *transport,
+			       const struct spdk_nvmf_subsystem *subsystem,
+			       const char *hostnqn)
+{
+	struct spdk_nvmf_tcp_transport *ttransport;
+	struct tcp_psk_entry *entry, *tmp;
+
+	assert(transport != NULL);
+	assert(subsystem != NULL);
+
+	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
+	TAILQ_FOREACH_SAFE(entry, &ttransport->psks, link, tmp) {
+		if ((strncmp(entry->hostnqn, hostnqn, SPDK_NVMF_NQN_MAX_LEN)) == 0 &&
+		    (strncmp(entry->subnqn, subsystem->subnqn, SPDK_NVMF_NQN_MAX_LEN)) == 0) {
+			TAILQ_REMOVE(&ttransport->psks, entry, link);
+			spdk_memset_s(entry->psk, sizeof(entry->psk), 0, sizeof(entry->psk));
+			free(entry);
+			break;
+		}
+	}
+}
+
 static void
 nvmf_tcp_opts_init(struct spdk_nvmf_transport_opts *opts)
 {
@@ -3467,6 +3611,8 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
 	.qpair_get_peer_trid = nvmf_tcp_qpair_get_peer_trid,
 	.qpair_get_listen_trid = nvmf_tcp_qpair_get_listen_trid,
 	.qpair_abort_request = nvmf_tcp_qpair_abort_request,
+	.subsystem_add_host = nvmf_tcp_subsystem_add_host,
+	.subsystem_remove_host = nvmf_tcp_subsystem_remove_host,
 };
 
 SPDK_NVMF_TRANSPORT_REGISTER(tcp, &spdk_nvmf_transport_tcp);

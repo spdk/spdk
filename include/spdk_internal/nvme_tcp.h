@@ -49,6 +49,18 @@
          ((*((uint8_t *)(B)+2)) = (uint8_t)((uint32_t)(D) >> 16)),              \
          ((*((uint8_t *)(B)+3)) = (uint8_t)((uint32_t)(D) >> 24)))
 
+/* The PSK identity comprises of following components:
+ * 4-character format specifier "NVMe" +
+ * 1-character TLS protocol version indicator +
+ * 1-character PSK type indicator, specifying the used PSK +
+ * 2-characters hash specifier +
+ * NQN of the host (SPDK_NVMF_NQN_MAX_LEN -> 223) +
+ * NQN of the subsystem (SPDK_NVMF_NQN_MAX_LEN -> 223) +
+ * 2 space character separators +
+ * 1 null terminator =
+ * 457 characters. */
+#define NVMF_PSK_IDENTITY_LEN (SPDK_NVMF_NQN_MAX_LEN + SPDK_NVMF_NQN_MAX_LEN + 11)
+
 typedef void (*nvme_tcp_qpair_xfer_complete_cb)(void *cb_arg);
 
 struct nvme_tcp_pdu {
