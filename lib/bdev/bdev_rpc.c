@@ -214,6 +214,18 @@ rpc_get_iostat_done(struct rpc_get_iostat_ctx *rpc_ctx)
 	free(rpc_ctx);
 }
 
+static struct bdev_get_iostat_ctx *
+bdev_iostat_ctx_alloc(void)
+{
+	return calloc(1, sizeof(struct bdev_get_iostat_ctx));
+}
+
+static void
+bdev_iostat_ctx_free(struct bdev_get_iostat_ctx *ctx)
+{
+	free(ctx);
+}
+
 static void
 bdev_get_iostat_dump(struct spdk_json_write_ctx *w, struct spdk_bdev_io_stat *stat)
 {
@@ -272,7 +284,7 @@ done:
 	rpc_get_iostat_done(rpc_ctx);
 
 	spdk_bdev_close(bdev_ctx->desc);
-	free(bdev_ctx);
+	bdev_iostat_ctx_free(bdev_ctx);
 }
 
 static int
@@ -282,7 +294,7 @@ bdev_get_iostat(void *ctx, struct spdk_bdev *bdev)
 	struct bdev_get_iostat_ctx *bdev_ctx;
 	int rc;
 
-	bdev_ctx = calloc(1, sizeof(struct bdev_get_iostat_ctx));
+	bdev_ctx = bdev_iostat_ctx_alloc();
 	if (bdev_ctx == NULL) {
 		SPDK_ERRLOG("Failed to allocate bdev_iostat_ctx struct\n");
 		return -ENOMEM;
@@ -291,7 +303,7 @@ bdev_get_iostat(void *ctx, struct spdk_bdev *bdev)
 	rc = spdk_bdev_open_ext(spdk_bdev_get_name(bdev), false, dummy_bdev_event_cb, NULL,
 				&bdev_ctx->desc);
 	if (rc != 0) {
-		free(bdev_ctx);
+		bdev_iostat_ctx_free(bdev_ctx);
 		SPDK_ERRLOG("Failed to open bdev\n");
 		return rc;
 	}
@@ -312,7 +324,7 @@ bdev_get_per_channel_stat_done(struct spdk_bdev *bdev, void *ctx, int status)
 
 	spdk_bdev_close(bdev_ctx->desc);
 
-	free(bdev_ctx);
+	bdev_iostat_ctx_free(bdev_ctx);
 }
 
 static void
@@ -406,7 +418,7 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 	rpc_ctx->per_channel = req.per_channel;
 
 	if (desc != NULL) {
-		bdev_ctx = calloc(1, sizeof(struct bdev_get_iostat_ctx));
+		bdev_ctx = bdev_iostat_ctx_alloc();
 		if (bdev_ctx == NULL) {
 			SPDK_ERRLOG("Failed to allocate bdev_iostat_ctx struct\n");
 			rpc_ctx->rc = -ENOMEM;
