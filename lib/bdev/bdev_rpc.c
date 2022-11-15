@@ -166,7 +166,7 @@ struct rpc_get_iostat_ctx {
 };
 
 struct bdev_get_iostat_ctx {
-	struct spdk_bdev_io_stat stat;
+	struct spdk_bdev_io_stat *stat;
 	struct rpc_get_iostat_ctx *rpc_ctx;
 	struct spdk_bdev_desc *desc;
 };
@@ -217,12 +217,26 @@ rpc_get_iostat_done(struct rpc_get_iostat_ctx *rpc_ctx)
 static struct bdev_get_iostat_ctx *
 bdev_iostat_ctx_alloc(void)
 {
-	return calloc(1, sizeof(struct bdev_get_iostat_ctx));
+	struct bdev_get_iostat_ctx *ctx;
+
+	ctx = calloc(1, sizeof(struct bdev_get_iostat_ctx));
+	if (ctx == NULL) {
+		return NULL;
+	}
+
+	ctx->stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
+	if (ctx->stat == NULL) {
+		free(ctx);
+		return NULL;
+	}
+
+	return ctx;
 }
 
 static void
 bdev_iostat_ctx_free(struct bdev_get_iostat_ctx *ctx)
 {
+	free(ctx->stat);
 	free(ctx);
 }
 
@@ -258,7 +272,7 @@ bdev_get_iostat_done(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat,
 		goto done;
 	}
 
-	assert(stat == &bdev_ctx->stat);
+	assert(stat == bdev_ctx->stat);
 
 	spdk_json_write_object_begin(w);
 
@@ -310,7 +324,7 @@ bdev_get_iostat(void *ctx, struct spdk_bdev *bdev)
 
 	rpc_ctx->bdev_count++;
 	bdev_ctx->rpc_ctx = rpc_ctx;
-	spdk_bdev_get_device_stat(bdev, &bdev_ctx->stat, bdev_get_iostat_done, bdev_ctx);
+	spdk_bdev_get_device_stat(bdev, bdev_ctx->stat, bdev_get_iostat_done, bdev_ctx);
 
 	return 0;
 }
@@ -333,13 +347,12 @@ bdev_get_per_channel_stat(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bd
 {
 	struct bdev_get_iostat_ctx *bdev_ctx = ctx;
 	struct spdk_json_write_ctx *w = bdev_ctx->rpc_ctx->w;
-	struct spdk_bdev_io_stat stat;
 
-	spdk_bdev_get_io_stat(bdev, ch, &stat);
+	spdk_bdev_get_io_stat(bdev, ch, bdev_ctx->stat);
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_uint64(w, "thread_id", spdk_thread_get_id(spdk_get_thread()));
-	bdev_get_iostat_dump(w, &stat);
+	bdev_get_iostat_dump(w, bdev_ctx->stat);
 	spdk_json_write_object_end(w);
 
 	spdk_bdev_for_each_channel_continue(i, 0);
@@ -430,7 +443,7 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 			rpc_ctx->bdev_count++;
 			bdev_ctx->rpc_ctx = rpc_ctx;
 			if (req.per_channel == false) {
-				spdk_bdev_get_device_stat(spdk_bdev_desc_get_bdev(desc), &bdev_ctx->stat,
+				spdk_bdev_get_device_stat(spdk_bdev_desc_get_bdev(desc), bdev_ctx->stat,
 							  bdev_get_iostat_done, bdev_ctx);
 			} else {
 				spdk_bdev_for_each_channel(spdk_bdev_desc_get_bdev(desc),
