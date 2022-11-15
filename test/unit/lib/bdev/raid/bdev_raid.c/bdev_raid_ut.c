@@ -831,7 +831,6 @@ verify_raid_bdev(struct rpc_bdev_raid_create *r, bool presence, uint32_t raid_st
 			CU_ASSERT(pbdev->num_base_bdevs == r->base_bdevs.num_base_bdevs);
 			CU_ASSERT(pbdev->num_base_bdevs_discovered == r->base_bdevs.num_base_bdevs);
 			CU_ASSERT(pbdev->level == r->level);
-			CU_ASSERT(pbdev->destruct_called == false);
 			CU_ASSERT(pbdev->base_bdev_info != NULL);
 			RAID_FOR_EACH_BASE_BDEV(pbdev, base_info) {
 				CU_ASSERT(base_info->bdev != NULL);

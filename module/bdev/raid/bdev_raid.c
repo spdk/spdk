@@ -286,7 +286,6 @@ raid_bdev_destruct(void *ctxt)
 
 	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_destruct\n");
 
-	raid_bdev->destruct_called = true;
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
 		/*
 		 * Close all base bdev descriptors for which call has come from below
@@ -629,7 +628,6 @@ raid_bdev_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_named_uint32(w, "strip_size_kb", raid_bdev->strip_size_kb);
 	spdk_json_write_named_uint32(w, "state", raid_bdev->state);
 	spdk_json_write_named_string(w, "raid_level", raid_bdev_level_to_str(raid_bdev->level));
-	spdk_json_write_named_uint32(w, "destruct_called", raid_bdev->destruct_called);
 	spdk_json_write_named_uint32(w, "num_base_bdevs", raid_bdev->num_base_bdevs);
 	spdk_json_write_named_uint32(w, "num_base_bdevs_discovered", raid_bdev->num_base_bdevs_discovered);
 	spdk_json_write_name(w, "base_bdevs_list");
@@ -1126,8 +1124,7 @@ raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev)
 	assert(base_info->desc);
 	base_info->remove_scheduled = true;
 
-	if (raid_bdev->destruct_called == true ||
-	    raid_bdev->state != RAID_BDEV_STATE_ONLINE) {
+	if (raid_bdev->state != RAID_BDEV_STATE_ONLINE) {
 		/*
 		 * As raid bdev is not registered yet or already unregistered,
 		 * so cleanup should be done here itself.
@@ -1197,8 +1194,7 @@ raid_bdev_delete(struct raid_bdev *raid_bdev, raid_bdev_destruct_cb cb_fn, void 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
 		base_info->remove_scheduled = true;
 
-		if (raid_bdev->destruct_called == true ||
-		    raid_bdev->state != RAID_BDEV_STATE_ONLINE) {
+		if (raid_bdev->state != RAID_BDEV_STATE_ONLINE) {
 			/*
 			 * As raid bdev is not registered yet or already unregistered,
 			 * so cleanup should be done here itself.
