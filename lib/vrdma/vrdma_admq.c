@@ -937,6 +937,28 @@ static void vrdma_aq_destroy_cq(struct vrdma_ctrl *ctrl,
 	return;
 }
 
+static struct ibv_pd *vrdma_create_sf_pd(const char *dev_name)
+{
+	struct ibv_context *dev_ctx;
+	struct ibv_pd *sf_pd;
+	
+	dev_ctx = snap_vrdma_open_device(dev_name);
+	if (!dev_ctx) {
+		printf("test null dev sctx, dev name %s\n", dev_name);
+		return NULL;
+	}
+	sf_pd = ibv_alloc_pd(dev_ctx);
+	if (!sf_pd) {
+		printf("test null PD, dev name %s\n", dev_name);
+		return NULL;
+	}
+
+	printf("test vrdma_create_sf_pd succeed dev %s, pd 0x%p\n", dev_name, sf_pd);
+
+	return sf_pd;
+
+}
+
 static int vrdma_create_backend_qp(struct vrdma_ctrl *ctrl,
 				struct spdk_vrdma_qp *vqp)
 {
@@ -948,7 +970,8 @@ static int vrdma_create_backend_qp(struct vrdma_ctrl *ctrl,
 		SPDK_ERRLOG("Failed to allocate backend QP memory");
 		return -1;
 	}
-	qp->pd = vqp->vpd->ibpd;
+	//qp->pd = vqp->vpd->ibpd;
+	qp->pd = vrdma_create_sf_pd("mlx5_2");
 	qp->poller_core = spdk_env_get_current_core();
 	qp->remote_qpn = VRDMA_INVALID_QPN;
 	qp->bk_qp.qp_attr.qp_type = SNAP_OBJ_DEVX;
