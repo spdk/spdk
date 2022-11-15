@@ -32,6 +32,8 @@ fio_iterations=1
 fio_gtod=""
 precond_fio_bin=$CONFIG_FIO_SOURCE_DIR/fio
 disk_map=""
+enable_irq=0
+irqs_pids=()
 
 disk_cfg_bdfs=()
 disk_cfg_spdk_names=()
@@ -88,6 +90,7 @@ function usage() {
 	echo "    --iobuf-small-pool-count=INT   number of small buffers in the global pool"
 	echo "    --iobuf-large-pool-count=INT   number of large buffers in the global pool"
 	echo "-x                          set -x for script debug"
+	echo "-i                          Collect IRQ stats from each VM"
 	exit 0
 }
 
@@ -174,7 +177,7 @@ function create_spdk_controller() {
 	fi
 }
 
-while getopts 'xh-:' optchar; do
+while getopts 'xhi-:' optchar; do
 	case "$optchar" in
 		-)
 			case "$OPTARG" in
@@ -210,6 +213,7 @@ while getopts 'xh-:' optchar; do
 			set -x
 			x="-x"
 			;;
+		i) enable_irq=1 ;;
 		*) usage $0 "Invalid argument '$OPTARG'" ;;
 	esac
 done
@@ -446,6 +450,7 @@ fi
 
 # Run FIO
 fio_disks=""
+
 for vm_num in $used_vms; do
 	host_name="VM-$vm_num"
 	vm_exec $vm_num "hostname $host_name"
@@ -484,10 +489,12 @@ for vm_num in $used_vms; do
 	fi
 
 	fio_disks+=" --vm=${vm_num}$(printf ':/dev/%s' $SCSI_DISK)"
+	((enable_irq == 1)) && lookup_dev_irqs "$vm_num"
 done
 
 # Run FIO traffic
 for fio_job in ${fio_jobs//,/ }; do
+	((enable_irq == 1)) && irqs $used_vms
 	fio_job_fname=$(basename $fio_job)
 	fio_log_fname="${fio_job_fname%%.*}.log"
 	for i in $(seq 1 $fio_iterations); do
@@ -528,7 +535,10 @@ for fio_job in ${fio_jobs//,/ }; do
 		sleep 1
 	done
 
+	((enable_irq == 1)) && kill "${irqs_pids[@]}"
+
 	parse_fio_results "$VHOST_DIR/fio_results" "$fio_log_fname"
+	((enable_irq == 1)) && parse_irqs $((++iter))
 done
 
 notice "Shutting down virtual machines..."

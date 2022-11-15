@@ -1289,3 +1289,57 @@ function error_exit() {
 	at_app_exit
 	exit 1
 }
+
+function lookup_dev_irqs() {
+	local vm=$1 irqs=() cpus=()
+	local script_get_irqs script_get_cpus
+
+	mkdir -p "$VHOST_DIR/irqs"
+
+	# All vhost tests depend either on virtio_blk or virtio_scsi drivers on the VM side.
+	# Considering that, simply iterate over virtio bus and pick pci device corresponding
+	# to each virtio device.
+	# For vfio-user setup, look for bare nvme devices.
+
+	script_get_irqs=$(
+		cat <<- 'SCRIPT'
+			shopt -s nullglob
+			for virtio in /sys/bus/virtio/devices/virtio*; do
+			  irqs+=("$(readlink -f "$virtio")/../msi_irqs/"*)
+			done
+			irqs+=(/sys/class/nvme/nvme*/device/msi_irqs/*)
+			printf '%u\n' "${irqs[@]##*/}"
+		SCRIPT
+	)
+
+	script_get_cpus=$(
+		cat <<- 'SCRIPT'
+			cpus=(/sys/devices/system/cpu/cpu[0-9]*)
+			printf '%u\n' "${cpus[@]##*cpu}"
+		SCRIPT
+	)
+
+	irqs=($(vm_exec "$vm" "$script_get_irqs"))
+	cpus=($(vm_exec "$vm" "$script_get_cpus"))
+	((${#irqs[@]} > 0 && ${#cpus[@]} > 0))
+
+	printf '%u\n' "${irqs[@]}" > "$VHOST_DIR/irqs/$vm.irqs"
+	printf '%u\n' "${cpus[@]}" > "$VHOST_DIR/irqs/$vm.cpus"
+}
+
+function irqs() {
+	local vm
+	for vm; do
+		vm_exec "$vm" "while :; do cat /proc/interrupts; sleep 1s; done" > "$VHOST_DIR/irqs/$vm.interrupts" &
+		irqs_pids+=($!)
+	done
+}
+
+function parse_irqs() {
+	local iter=${1:-1}
+	"$rootdir/test/vhost/parse_irqs.sh" "$VHOST_DIR/irqs/"*.interrupts
+	rm "$VHOST_DIR/irqs/"*.interrupts
+
+	mkdir -p "$VHOST_DIR/irqs/$iter"
+	mv "$VHOST_DIR/irqs/"*.parsed "$VHOST_DIR/irqs/$iter/"
+}
