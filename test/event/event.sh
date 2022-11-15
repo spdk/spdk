@@ -50,4 +50,7 @@ if [ $(uname -s) = Linux ]; then
 	if modprobe -n nbd; then
 		run_test "app_repeat" app_repeat_test
 	fi
+	if ((SPDK_TEST_CRYPTO == 0)); then
+		run_test "cpu_locks" "$testdir/cpu_locks.sh"
+	fi
 fi
