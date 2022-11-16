@@ -11,6 +11,7 @@
 #define SPDK_ACCEL_H
 
 #include "spdk/stdinc.h"
+#include "spdk/dma.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -259,6 +260,92 @@ int spdk_accel_submit_decompress(struct spdk_io_channel *ch, struct iovec *dst_i
 				 size_t dst_iovcnt, struct iovec *src_iovs,
 				 size_t src_iovcnt, int flags,
 				 spdk_accel_completion_cb cb_fn, void *cb_arg);
+
+/** Object grouping multiple accel operations to be executed at the same point in time */
+struct spdk_accel_sequence;
+
+/**
+ * Completion callback of a single operation within a sequence.  After it's executed, the sequence
+ * object might be freed, so users should not touch it.
+ */
+typedef void (*spdk_accel_step_cb)(void *cb_arg);
+
+/**
+ * Append a copy operation to a sequence.  Copy operation in a sequence is special, as it is not
+ * guaranteed that the data will be actually copied.  If it's possible, it will only change
+ * source / destination buffers of some of the operations in a sequence.
+ *
+ * \param seq Sequence object.  If NULL, a new sequence object will be created.
+ * \param ch I/O channel.
+ * \param dst_iovs Destination I/O vector array.
+ * \param dst_iovcnt Size of the `dst_iovs` array.
+ * \param dst_domain Memory domain to which the destination buffers belong.
+ * \param dst_domain_ctx Destination buffer domain context.
+ * \param src_iovs Source I/O vector array.
+ * \param src_iovcnt Size of the `src_iovs` array.
+ * \param src_domain Memory domain to which the source buffers belong.
+ * \param src_domain_ctx Source buffer domain context.
+ * \param flags Accel operation flags.
+ * \param cb_fn Callback to be executed once this operation is completed.
+ * \param cb_arg Argument to be passed to `cb_fn`.
+ *
+ * \return 0 if operation was successfully added to the sequence, negative errno otherwise.
+ */
+int spdk_accel_append_copy(struct spdk_accel_sequence **seq, struct spdk_io_channel *ch,
+			   struct iovec *dst_iovs, uint32_t dst_iovcnt,
+			   struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+			   struct iovec *src_iovs, uint32_t src_iovcnt,
+			   struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+			   int flags, spdk_accel_step_cb cb_fn, void *cb_arg);
+
+/**
+ * Append a fill operation to a sequence.
+ *
+ * \param seq Sequence object.  If NULL, a new sequence object will be created.
+ * \param ch I/O channel.
+ * \param buf Data buffer.
+ * \param len Length of the data buffer.
+ * \param domain Memory domain to which the data buffer belongs.
+ * \param domain_ctx Buffer domain context.
+ * \param pattern Pattern to fill the buffer with.
+ * \param flags Accel operation flags.
+ * \param cb_fn Callback to be executed once this operation is completed.
+ * \param cb_arg Argument to be passed to `cb_fn`.
+ *
+ * \return 0 if operation was successfully added to the sequence, negative errno otherwise.
+ */
+int spdk_accel_append_fill(struct spdk_accel_sequence **seq, struct spdk_io_channel *ch,
+			   void *buf, uint64_t len,
+			   struct spdk_memory_domain *domain, void *domain_ctx, uint8_t pattern,
+			   int flags, spdk_accel_step_cb cb_fn, void *cb_arg);
+
+/**
+ * Finish a sequence and execute all its operations. After the completion callback is executed, the
+ * sequence object is automatically freed.
+ *
+ * \param seq Sequence to finish.
+ * \param cb_fn Completion callback to be executed once all operations are executed.
+ * \param cb_arg Argument to be passed to `cb_fn`.
+ *
+ * \return 0 on success, negative errno otherwise.
+ */
+int spdk_accel_sequence_finish(struct spdk_accel_sequence *seq,
+			       spdk_accel_completion_cb cb_fn, void *cb_arg);
+
+/**
+ * Reverse a sequence, so that the last operation becomes the first and vice versa.
+ *
+ * \param seq Sequence to reverse.
+ */
+void spdk_accel_sequence_reverse(struct spdk_accel_sequence *seq);
+
+/**
+ * Abort a sequence.  This will execute the completion callbacks of all operations that were added
+ * to the sequence and will then free the sequence object.
+ *
+ * \param seq Sequence to abort.
+ */
+void spdk_accel_sequence_abort(struct spdk_accel_sequence *seq);
 
 /**
  * Return the name of the module assigned to a specific opcode.

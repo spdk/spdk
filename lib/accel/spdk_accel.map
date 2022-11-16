@@ -18,6 +18,11 @@
 	spdk_accel_get_opc_module_name;
 	spdk_accel_assign_opc;
 	spdk_accel_write_config_json;
+	spdk_accel_append_copy;
+	spdk_accel_append_fill;
+	spdk_accel_sequence_finish;
+	spdk_accel_sequence_abort;
+	spdk_accel_sequence_reverse;
 
 	# functions needed by modules
 	spdk_accel_module_list_add;

@@ -20,6 +20,12 @@ struct spdk_accel_task {
 	struct accel_io_channel		*accel_ch;
 	spdk_accel_completion_cb	cb_fn;
 	void				*cb_arg;
+	spdk_accel_step_cb		step_cb_fn;
+	void				*step_cb_arg;
+	struct spdk_memory_domain	*src_domain;
+	void				*src_domain_ctx;
+	struct spdk_memory_domain	*dst_domain;
+	void				*dst_domain_ctx;
 	union {
 		struct {
 			struct iovec		*iovs; /* iovs passed by the caller */
@@ -50,6 +56,7 @@ struct spdk_accel_task {
 	int				flags;
 	int				status;
 	TAILQ_ENTRY(spdk_accel_task)	link;
+	TAILQ_ENTRY(spdk_accel_task)	seq_link;
 };
 
 struct spdk_accel_module_if {
