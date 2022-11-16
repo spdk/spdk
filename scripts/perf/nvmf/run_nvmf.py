@@ -1553,18 +1553,18 @@ if __name__ == "__main__":
             for run_no in range(1, fio_run_num+1):
                 threads = []
                 power_daemon = None
+                measurements_prefix = "%s_%s_%s_m_%s_run_%s" % (block_size, io_depth, rw, fio_rw_mix_read, run_no)
 
                 for i, cfg in zip(initiators, configs):
                     t = threading.Thread(target=i.run_fio, args=(cfg, run_no))
                     threads.append(t)
                 if target_obj.enable_sar:
-                    sar_file_prefix = "%s_%s_%s_run_%s_sar" % (block_size, rw, io_depth, run_no)
+                    sar_file_prefix = measurements_prefix + "_sar"
                     t = threading.Thread(target=target_obj.measure_sar, args=(args.results, sar_file_prefix, fio_ramp_time, fio_run_time))
                     threads.append(t)
 
                 if target_obj.enable_pcm:
-                    pcm_fnames = ["%s_%s_%s_run_%s_%s.csv" % (block_size, rw, io_depth, run_no, x)
-                                  for x in ["pcm_cpu", "pcm_memory", "pcm_power", run_no]]
+                    pcm_fnames = ["%s_%s.csv" % (measurements_prefix, x) for x in ["pcm_cpu", "pcm_memory", "pcm_power"]]
 
                     pcm_cpu_t = threading.Thread(target=target_obj.measure_pcm,
                                                  args=(args.results, pcm_fnames[0], fio_ramp_time, fio_run_time))
@@ -1578,21 +1578,20 @@ if __name__ == "__main__":
                     threads.append(pcm_pow_t)
 
                 if target_obj.enable_bw:
-                    bandwidth_file_name = "_".join([block_size, rw, str(io_depth), "run_%s" % run_no, "bandwidth"])
-                    bandwidth_file_name = ".".join([bandwidth_file_name, "csv"])
+                    bandwidth_file_name = measurements_prefix + "_bandwidth.csv"
                     t = threading.Thread(target=target_obj.measure_network_bandwidth,
                                          args=(args.results, bandwidth_file_name, fio_ramp_time, fio_run_time))
                     threads.append(t)
 
                 if target_obj.enable_dpdk_memory:
-                    dpdk_mem_file_name = "%s_%s_%s_run_%s_dpdk_mem.txt" % (block_size, rw, io_depth, run_no)
+                    dpdk_mem_file_name = measurements_prefix + "_dpdk_mem.txt"
                     t = threading.Thread(target=target_obj.measure_dpdk_memory, args=(args.results, dpdk_mem_file_name, fio_ramp_time))
                     threads.append(t)
 
                 if target_obj.enable_pm:
                     power_daemon = threading.Thread(target=target_obj.measure_power,
-                                                    args=(args.results, "%s_%s_%s_run_%s" % (block_size, rw, io_depth, run_no),
-                                                          script_full_dir, fio_ramp_time, fio_run_time))
+                                                    args=(args.results, measurements_prefix, script_full_dir,
+                                                          fio_ramp_time, fio_run_time))
                     threads.append(power_daemon)
 
                 if target_obj.enable_adq:
