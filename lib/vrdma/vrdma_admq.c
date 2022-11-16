@@ -971,7 +971,11 @@ static int vrdma_create_backend_qp(struct vrdma_ctrl *ctrl,
 		return -1;
 	}
 	//qp->pd = vqp->vpd->ibpd;
-	qp->pd = vrdma_create_sf_pd("mlx5_2");
+	if (!strcmp(vrdma_sf_name, "dummy")) {
+		SPDK_ERRLOG("no sf dev name is configured \n");
+		return -1;
+	}
+	qp->pd = vrdma_create_sf_pd(vrdma_sf_name);
 	qp->poller_core = spdk_env_get_current_core();
 	qp->remote_qpn = VRDMA_INVALID_QPN;
 	qp->bk_qp.qp_attr.qp_type = SNAP_OBJ_DEVX;

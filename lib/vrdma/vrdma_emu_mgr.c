@@ -468,6 +468,7 @@ struct spdk_vrdma_rpc_controller_configue_attr {
     int64_t intf_id;
     int vrdma_qpn;
     int backend_rqpn;
+	char *backend_dev;
 };
 
 static const struct spdk_json_object_decoder
@@ -534,6 +535,12 @@ spdk_vrdma_rpc_controller_configue_decoder[] = {
         "backend_rqpn",
         offsetof(struct spdk_vrdma_rpc_controller_configue_attr, backend_rqpn),
         spdk_json_decode_uint32,
+        true
+    },
+    {
+        "backend_dev",
+        offsetof(struct spdk_vrdma_rpc_controller_configue_attr, backend_dev),
+        spdk_json_decode_string,
         true
     },
 };
@@ -739,6 +746,23 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
             goto free_attr;
         }
         bk_qp->rgid_rip.global.interface_id = attr->intf_id;
+    }
+	if (attr->backend_dev) {
+		uint8_t name_size;
+		
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...backend_dev=%s\n", attr->backend_dev);
+        ctrl = ctx->ctrl;
+        if (!ctrl) {
+            SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
+            goto free_attr;
+        }
+		name_size = sizeof(attr->backend_dev);
+		if (name_size > (sizeof(vrdma_sf_name) - 1)) {
+			SPDK_ERRLOG("invalid sf name %s\n", attr->backend_dev);
+			name_size = sizeof(vrdma_sf_name) - 1;
+		}
+		strncpy(vrdma_sf_name, attr->backend_dev, name_size);
+		vrdma_sf_name[name_size] = '\0';
     }
     w = spdk_jsonrpc_begin_result(request);
     spdk_json_write_string(w, attr->emu_manager);

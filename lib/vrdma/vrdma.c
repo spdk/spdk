@@ -39,6 +39,7 @@
 
 
 static uint32_t g_vdev_cnt;
+char *vrdma_sf_name;
 
 void spdk_vrdma_ctx_stop(void (*fini_cb)(void))
 {
@@ -53,6 +54,13 @@ int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
 
     SPDK_NOTICELOG("lizh spdk_vrdma_ctx_start...start\n");
     g_vdev_cnt = 0;
+	/* init sf name */
+	vrdma_sf_name = calloc(sizeof(char), 16);
+	if (!vrdma_sf_name) {
+		goto err;
+	}
+	strcpy(vrdma_sf_name, "dummy");
+	
     if (vrdma_ctx->dpa_enabled) {
         /*Load provider just for DPA*/
     }
