@@ -76,6 +76,30 @@ int spdk_fd_group_wait(struct spdk_fd_group *fgrp, int timeout);
 int spdk_fd_group_get_fd(struct spdk_fd_group *fgrp);
 
 /**
+ * Nest the child fd_group in the parent fd_group. After this operation
+ * completes, calling spdk_fd_group_wait() on the parent will include events
+ * from the child.
+ *
+ * \param parent The parent fd_group.
+ * \param child The child fd_group.
+ *
+ * \return 0 on success. Negated errno on failure. However, on all errno values other
+ * than -ENOTRECOVERABLE, the operation has not changed the state of the fd_group.
+ */
+int spdk_fd_group_nest(struct spdk_fd_group *parent, struct spdk_fd_group *child);
+
+/**
+ * Remove the nested child from the parent.
+ *
+ * \param parent The parent fd_group.
+ * \param child The child fd_group.
+ *
+ * \return 0 on success. Negated errno on failure. However, on all errno values other
+ * than -ENOTRECOVERABLE, the operation has not changed the state of the fd_group.
+ */
+int spdk_fd_group_unnest(struct spdk_fd_group *parent, struct spdk_fd_group *child);
+
+/**
  * Register one event source to specified fgrp.
  *
  * \param fgrp The fgrp registered to.

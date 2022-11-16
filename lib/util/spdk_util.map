@@ -165,6 +165,8 @@
 	spdk_fd_group_remove;
 	spdk_fd_group_event_modify;
 	spdk_fd_group_get_fd;
+	spdk_fd_group_nest;
+	spdk_fd_group_unnest;
 
 	# public functions in xor.h
 	spdk_xor_gen;
