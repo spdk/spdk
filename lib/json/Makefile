@@ -7,7 +7,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 SO_VER := 4
-SO_MINOR := 0
+SO_MINOR := 1
 
 C_SRCS = json_parse.c json_util.c json_write.c
 LIBNAME = json

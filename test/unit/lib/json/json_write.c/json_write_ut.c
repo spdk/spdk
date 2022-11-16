@@ -49,6 +49,10 @@ write_cb(void *cb_ctx, const void *data, size_t size)
 #define END_NOCMP() \
 	CU_ASSERT(spdk_json_write_end(w) == 0)
 
+#define END_SIZE_NOCMP(size) \
+	CU_ASSERT(spdk_json_write_end(w) == 0); \
+	CU_ASSERT(g_write_pos - g_buf == size)
+
 #define END_FAIL() \
 	CU_ASSERT(spdk_json_write_end(w) < 0)
 
@@ -93,6 +97,8 @@ write_cb(void *cb_ctx, const void *data, size_t size)
 	CU_ASSERT(spdk_json_write_uint128(w, low, high) == 0);
 #define VAL_NAME_UINT128(name, low, high) \
 	CU_ASSERT(spdk_json_write_named_uint128(w, name, low, high) == 0);
+
+#define VAL_DOUBLE(d) CU_ASSERT(spdk_json_write_double(w, d) == 0);
 
 #define VAL_ARRAY_BEGIN() CU_ASSERT(spdk_json_write_array_begin(w) == 0)
 #define VAL_ARRAY_END() CU_ASSERT(spdk_json_write_array_end(w) == 0)
@@ -522,6 +528,29 @@ test_write_number_uint64(void)
 }
 
 static void
+test_write_number_double(void)
+{
+	struct spdk_json_write_ctx *w;
+
+	BEGIN();
+	VAL_DOUBLE(0);
+	END_SIZE("0.00000000000000000000e+00", 26);
+
+	BEGIN();
+	VAL_DOUBLE(1.2);
+	END_SIZE("1.19999999999999995559e+00", 26);
+
+
+	BEGIN();
+	VAL_DOUBLE(1234.5678);
+	END_SIZE("1.23456780000000003383e+03", 26);
+
+	BEGIN();
+	VAL_DOUBLE(-1234.5678);
+	END_SIZE("-1.23456780000000003383e+03", 27);
+}
+
+static void
 test_write_array(void)
 {
 	struct spdk_json_write_ctx *w;
@@ -837,6 +866,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_write_string_number_uint128);
 	CU_ADD_TEST(suite, test_write_number_int64);
 	CU_ADD_TEST(suite, test_write_number_uint64);
+	CU_ADD_TEST(suite, test_write_number_double);
 	CU_ADD_TEST(suite, test_write_array);
 	CU_ADD_TEST(suite, test_write_object);
 	CU_ADD_TEST(suite, test_write_nesting);

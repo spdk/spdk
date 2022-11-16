@@ -309,6 +309,18 @@ spdk_json_write_named_uint128(struct spdk_json_write_ctx *w, const char *name,
 	return rc ? rc : spdk_json_write_uint128(w, low_val, high_val);
 }
 
+int
+spdk_json_write_double(struct spdk_json_write_ctx *w, double val)
+{
+	char buf[32];
+	int count;
+
+	if (begin_value(w)) { return fail(w); }
+	count = snprintf(buf, sizeof(buf), "%.20e", val);
+	if (count <= 0 || (size_t)count >= sizeof(buf)) { return fail(w); }
+	return emit(w, buf, count);
+}
+
 static void
 write_hex_2(void *dest, uint8_t val)
 {
@@ -722,6 +734,14 @@ spdk_json_write_named_uint64(struct spdk_json_write_ctx *w, const char *name, ui
 	int rc = spdk_json_write_name(w, name);
 
 	return rc ? rc : spdk_json_write_uint64(w, val);
+}
+
+int
+spdk_json_write_named_double(struct spdk_json_write_ctx *w, const char *name, double val)
+{
+	int rc = spdk_json_write_name(w, name);
+
+	return rc ? rc : spdk_json_write_double(w, val);
 }
 
 int

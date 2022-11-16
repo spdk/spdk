@@ -60,6 +60,11 @@ It can now be found inside `examples/bdev/bdevperf`.
 New API `spdk_fd_group_get_epoll_event` that returns the epoll(7) event that
 caused a function callback in file descriptor group to execute.
 
+### json
+
+Added API `spdk_json_write_double` and `spdk_json_write_named_double` to allow
+for writing and decoding of the the double data type.
+
 ## v22.09
 
 ### accel
