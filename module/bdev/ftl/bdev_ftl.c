@@ -94,6 +94,7 @@ bdev_ftl_cb(void *arg, int rc)
 	case 0:
 		status = SPDK_BDEV_IO_STATUS_SUCCESS;
 		break;
+	case -EAGAIN:
 	case -ENOMEM:
 		status = SPDK_BDEV_IO_STATUS_NOMEM;
 		break;
@@ -126,7 +127,7 @@ bdev_ftl_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 			    bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, bdev_ftl_cb, bdev_io);
 
 	if (spdk_unlikely(rc != 0)) {
-		spdk_bdev_io_complete(bdev_io, rc);
+		bdev_ftl_cb(bdev_io, rc);
 	}
 }
 
@@ -165,7 +166,7 @@ bdev_ftl_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 	int rc = _bdev_ftl_submit_request(ch, bdev_io);
 
 	if (spdk_unlikely(rc != 0)) {
-		spdk_bdev_io_complete(bdev_io, rc);
+		bdev_ftl_cb(bdev_io, rc);
 	}
 }
 
