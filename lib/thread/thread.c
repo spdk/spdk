@@ -46,6 +46,8 @@ static struct spdk_thread *g_app_thread;
 struct spdk_interrupt {
 	int			efd;
 	struct spdk_thread	*thread;
+	spdk_interrupt_fn	fn;
+	void			*arg;
 	char			name[SPDK_MAX_POLLER_NAME_LEN + 1];
 };
 
@@ -1101,7 +1103,6 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 {
 	struct spdk_thread *orig_thread;
 	int rc;
-	uint64_t notify = 1;
 
 	orig_thread = _get_thread();
 	tls_thread = thread;
@@ -1122,16 +1123,6 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 	} else {
 		/* Non-block wait on thread's fd_group */
 		rc = spdk_fd_group_wait(thread->fgrp, 0);
-		SPIN_ASSERT(thread->lock_count == 0, SPIN_ERR_HOLD_DURING_SWITCH);
-		if (spdk_unlikely(!thread->in_interrupt)) {
-			/* The thread transitioned to poll mode in a msg during the above processing.
-			 * Clear msg_fd since thread messages will be polled directly in poll mode.
-			 */
-			rc = read(thread->msg_fd, &notify, sizeof(notify));
-			if (rc < 0 && errno != EAGAIN) {
-				SPDK_ERRLOG("failed to acknowledge msg queue: %s.\n", spdk_strerror(errno));
-			}
-		}
 
 		/* Reap unregistered pollers out of poller execution in intr mode */
 		if (spdk_unlikely(thread->poller_unregistered)) {
@@ -2661,12 +2652,16 @@ static int
 thread_interrupt_msg_process(void *arg)
 {
 	struct spdk_thread *thread = arg;
+	struct spdk_thread *orig_thread;
 	uint32_t msg_count;
 	spdk_msg_fn critical_msg;
 	int rc = 0;
 	uint64_t notify = 1;
 
 	assert(spdk_interrupt_mode_is_enabled());
+
+	orig_thread = spdk_get_thread();
+	spdk_set_thread(thread);
 
 	/* There may be race between msg_acknowledge and another producer's msg_notify,
 	 * so msg_acknowledge should be applied ahead. And then check for self's msg_notify.
@@ -2689,6 +2684,18 @@ thread_interrupt_msg_process(void *arg)
 		rc = 1;
 	}
 
+	SPIN_ASSERT(thread->lock_count == 0, SPIN_ERR_HOLD_DURING_SWITCH);
+	if (spdk_unlikely(!thread->in_interrupt)) {
+		/* The thread transitioned to poll mode in a msg during the above processing.
+		 * Clear msg_fd since thread messages will be polled directly in poll mode.
+		 */
+		rc = read(thread->msg_fd, &notify, sizeof(notify));
+		if (rc < 0 && errno != EAGAIN) {
+			SPDK_ERRLOG("failed to acknowledge msg queue: %s.\n", spdk_strerror(errno));
+		}
+	}
+
+	spdk_set_thread(orig_thread);
 	return rc;
 }
 
@@ -2724,6 +2731,30 @@ thread_interrupt_create(struct spdk_thread *thread)
 }
 #endif
 
+static int
+_interrupt_wrapper(void *ctx)
+{
+	struct spdk_interrupt *intr = ctx;
+	struct spdk_thread *orig_thread, *thread;
+	int rc;
+
+	orig_thread = spdk_get_thread();
+	thread = intr->thread;
+
+	spdk_set_thread(thread);
+
+	SPDK_DTRACE_PROBE4(interrupt_fd_process, intr->name, intr->efd,
+			   intr->fn, intr->arg);
+
+	rc = intr->fn(intr->arg);
+
+	SPIN_ASSERT(thread->lock_count == 0, SPIN_ERR_HOLD_DURING_SWITCH);
+
+	spdk_set_thread(orig_thread);
+
+	return rc;
+}
+
 struct spdk_interrupt *
 spdk_interrupt_register(int efd, spdk_interrupt_fn fn,
 			void *arg, const char *name)
@@ -2757,8 +2788,10 @@ spdk_interrupt_register(int efd, spdk_interrupt_fn fn,
 
 	intr->efd = efd;
 	intr->thread = thread;
+	intr->fn = fn;
+	intr->arg = arg;
 
-	ret = spdk_fd_group_add(thread->fgrp, efd, fn, arg, name);
+	ret = spdk_fd_group_add(thread->fgrp, efd, _interrupt_wrapper, intr, name);
 
 	if (ret != 0) {
 		SPDK_ERRLOG("thread %s: failed to add fd %d: %s\n",

@@ -286,9 +286,6 @@ spdk_fd_group_wait(struct spdk_fd_group *fgrp, int timeout)
 			continue;
 		}
 
-		SPDK_DTRACE_PROBE4(interrupt_fd_process, ehdlr->name, ehdlr->fd,
-				   ehdlr->fn, ehdlr->fn_arg);
-
 		g_event = &events[n];
 		/* call the interrupt response function */
 		ehdlr->fn(ehdlr->fn_arg);
