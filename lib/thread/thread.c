@@ -2634,14 +2634,6 @@ spdk_interrupt_register(int efd, spdk_interrupt_fn fn,
 		return NULL;
 	}
 
-	ret = spdk_fd_group_add(thread->fgrp, efd, fn, arg, name);
-
-	if (ret != 0) {
-		SPDK_ERRLOG("thread %s: failed to add fd %d: %s\n",
-			    thread->name, efd, spdk_strerror(-ret));
-		return NULL;
-	}
-
 	intr = calloc(1, sizeof(*intr));
 	if (intr == NULL) {
 		SPDK_ERRLOG("Interrupt handler allocation failed\n");
@@ -2656,6 +2648,15 @@ spdk_interrupt_register(int efd, spdk_interrupt_fn fn,
 
 	intr->efd = efd;
 	intr->thread = thread;
+
+	ret = spdk_fd_group_add(thread->fgrp, efd, fn, arg, name);
+
+	if (ret != 0) {
+		SPDK_ERRLOG("thread %s: failed to add fd %d: %s\n",
+			    thread->name, efd, spdk_strerror(-ret));
+		free(intr);
+		return NULL;
+	}
 
 	return intr;
 }
