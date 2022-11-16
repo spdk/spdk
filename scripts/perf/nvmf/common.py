@@ -80,30 +80,41 @@ def read_json_stats(file):
             write_p99_lat, write_p99_9_lat, write_p99_99_lat, write_p99_999_lat]
 
 
+def read_target_stats(measurement_name, results_file_list, results_dir):
+    # Read additional metrics measurements done on target side and
+    # calculate the average from across all workload iterations.
+    # Currently only works for SAR CPU utilization and power draw measurements.
+    # Other (bwm-ng, pcm, dpdk memory) need to be refactored and provide more
+    # structured result files instead of a output dump.
+    total_util = 0
+    for result_file in results_file_list:
+        with open(os.path.join(results_dir, result_file), "r") as result_file_fh:
+            total_util += float(result_file_fh.read())
+    avg_util = total_util / len(results_file_list)
+
+    return {measurement_name: "{0:.3f}".format(avg_util)}
+
+
 def parse_results(results_dir, csv_file):
     files = os.listdir(results_dir)
     fio_files = filter(lambda x: ".fio" in x, files)
     json_files = [x for x in files if ".json" in x]
+    sar_files = [x for x in files if "sar" in x and "util" in x]
+    pm_files = [x for x in files if "pm" in x and "avg" in x]
 
     headers = ["read_iops", "read_bw", "read_avg_lat_us", "read_min_lat_us", "read_max_lat_us",
                "read_p99_lat_us", "read_p99.9_lat_us", "read_p99.99_lat_us", "read_p99.999_lat_us",
                "write_iops", "write_bw", "write_avg_lat_us", "write_min_lat_us", "write_max_lat_us",
                "write_p99_lat_us", "write_p99.9_lat_us", "write_p99.99_lat_us", "write_p99.999_lat_us"]
 
-    aggr_headers = ["iops", "bw", "avg_lat_us", "min_lat_us", "max_lat_us",
-                    "p99_lat_us", "p99.9_lat_us", "p99.99_lat_us", "p99.999_lat_us"]
-
     header_line = ",".join(["Name", *headers])
-    aggr_header_line = ",".join(["Name", *aggr_headers])
-
-    # Create empty results file
-    with open(os.path.join(results_dir, csv_file), "w") as fh:
-        fh.write(aggr_header_line + "\n")
     rows = set()
 
     for fio_config in fio_files:
         logging.info("Getting FIO stats for %s" % fio_config)
         job_name, _ = os.path.splitext(fio_config)
+        aggr_headers = ["iops", "bw", "avg_lat_us", "min_lat_us", "max_lat_us",
+                        "p99_lat_us", "p99.9_lat_us", "p99.99_lat_us", "p99.999_lat_us"]
 
         # Look in the filename for rwmixread value. Function arguments do
         # not have that information.
@@ -120,7 +131,10 @@ def parse_results(results_dir, csv_file):
         # Initiators for the same job could have different num_cores parameter
         job_name = re.sub(r"_\d+CPU", "", job_name)
         job_result_files = [x for x in json_files if x.startswith(job_name)]
-        logging.info("Matching result files for current fio config:")
+        sar_result_files = [x for x in sar_files if x.startswith(job_name)]
+        pm_result_files = [x for x in pm_files if x.startswith(job_name)]
+
+        logging.info("Matching result files for current fio config %s:" % job_name)
         for j in job_result_files:
             logging.info("\t %s" % j)
 
@@ -172,7 +186,20 @@ def parse_results(results_dir, csv_file):
                 _ = read_stat + write_stat
             aggregate_results[h] = "{0:.3f}".format(_)
 
+        if sar_result_files:
+            aggr_headers.append("target_avg_cpu_util")
+            aggregate_results.update(read_target_stats("target_avg_cpu_util", sar_result_files, results_dir))
+
+        if pm_result_files:
+            aggr_headers.append("target_avg_power")
+            aggregate_results.update(read_target_stats("target_avg_power", pm_result_files, results_dir))
+
         rows.add(",".join([job_name, *aggregate_results.values()]))
+
+    # Create empty results file with just the header line
+    aggr_header_line = ",".join(["Name", *aggr_headers])
+    with open(os.path.join(results_dir, csv_file), "w") as fh:
+        fh.write(aggr_header_line + "\n")
 
     # Save results to file
     for row in rows:
