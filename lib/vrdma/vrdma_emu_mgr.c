@@ -720,7 +720,7 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
                     attr->vrdma_qpn, attr->emu_manager);
             goto free_attr;
         }
-        bk_qp->rgid_rip.global.subnet_prefix = attr->subnet_prefix;
+        bk_qp->rgid_rip.global.subnet_prefix = htobe64(attr->subnet_prefix);
     }
     if (attr->intf_id != -1) {
         SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...intf_id=0x%lx\n", attr->intf_id);
@@ -745,7 +745,7 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
                     attr->vrdma_qpn, attr->emu_manager);
             goto free_attr;
         }
-        bk_qp->rgid_rip.global.interface_id = attr->intf_id;
+        bk_qp->rgid_rip.global.interface_id = htobe64(attr->intf_id);
     }
 	if (attr->backend_dev) {
 		uint8_t name_size;

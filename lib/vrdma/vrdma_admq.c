@@ -971,11 +971,15 @@ static int vrdma_create_backend_qp(struct vrdma_ctrl *ctrl,
 		return -1;
 	}
 	//qp->pd = vqp->vpd->ibpd;
+#if 0
 	if (!strcmp(vrdma_sf_name, "dummy")) {
 		SPDK_ERRLOG("no sf dev name is configured \n");
 		return -1;
 	}
+
 	qp->pd = vrdma_create_sf_pd(vrdma_sf_name);
+#endif
+	qp->pd = vrdma_create_sf_pd("mlx5_2");
 	qp->poller_core = spdk_env_get_current_core();
 	qp->remote_qpn = VRDMA_INVALID_QPN;
 	qp->bk_qp.qp_attr.qp_type = SNAP_OBJ_DEVX;
@@ -1028,7 +1032,7 @@ static int vrdma_modify_backend_qp_to_ready(struct vrdma_ctrl *ctrl,
 	qp_attr.min_rnr_timer = 12;
 	rdy_attr.dest_mac = vqp->bk_qp[0]->dest_mac;
 	rdy_attr.rgid_rip = vqp->bk_qp[0]->rgid_rip;
-	rdy_attr.src_addr_index = 0;
+	rdy_attr.src_addr_index = 1;
 	if (snap_vrdma_modify_bankend_qp_init2rtr(sqp, &qp_attr, attr_mask, &rdy_attr)) {
 		SPDK_ERRLOG("Failed to modify bankend QP init to RTR");
 		return -1;
