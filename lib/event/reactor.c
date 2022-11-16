@@ -354,6 +354,7 @@ _reactor_set_interrupt_mode(void *arg1, void *arg2)
 {
 	struct spdk_reactor *target = arg1;
 	struct spdk_thread *thread;
+	struct spdk_fd_group *grp;
 	struct spdk_lw_thread *lw_thread, *tmp;
 
 	assert(target == spdk_reactor_get(spdk_env_get_current_core()));
@@ -368,6 +369,14 @@ _reactor_set_interrupt_mode(void *arg1, void *arg2)
 		/* Align spdk_thread with reactor to interrupt mode or poll mode */
 		TAILQ_FOREACH_SAFE(lw_thread, &target->threads, link, tmp) {
 			thread = spdk_thread_get_from_ctx(lw_thread);
+			if (target->in_interrupt) {
+				grp = spdk_thread_get_interrupt_fd_group(thread);
+				spdk_fd_group_nest(target->fgrp, grp);
+			} else {
+				grp = spdk_thread_get_interrupt_fd_group(thread);
+				spdk_fd_group_unnest(target->fgrp, grp);
+			}
+
 			spdk_thread_send_msg(thread, _reactor_set_thread_interrupt_mode, target);
 		}
 	}
@@ -835,7 +844,7 @@ static void
 _reactor_remove_lw_thread(struct spdk_reactor *reactor, struct spdk_lw_thread *lw_thread)
 {
 	struct spdk_thread	*thread = spdk_thread_get_from_ctx(lw_thread);
-	int efd;
+	struct spdk_fd_group	*grp;
 
 	TAILQ_REMOVE(&reactor->threads, lw_thread, link);
 	assert(reactor->thread_count > 0);
@@ -843,8 +852,10 @@ _reactor_remove_lw_thread(struct spdk_reactor *reactor, struct spdk_lw_thread *l
 
 	/* Operate thread intr if running with full interrupt ability */
 	if (spdk_interrupt_mode_is_enabled()) {
-		efd = spdk_thread_get_interrupt_fd(thread);
-		spdk_fd_group_remove(reactor->fgrp, efd);
+		if (reactor->in_interrupt) {
+			grp = spdk_thread_get_interrupt_fd_group(thread);
+			spdk_fd_group_unnest(reactor->fgrp, grp);
+		}
 	}
 }
 
@@ -986,7 +997,11 @@ reactor_run(void *arg)
 				_reactor_remove_lw_thread(reactor, lw_thread);
 				spdk_thread_destroy(thread);
 			} else {
-				spdk_thread_poll(thread, 0, 0);
+				if (spdk_unlikely(reactor->in_interrupt)) {
+					reactor_interrupt_run(reactor);
+				} else {
+					spdk_thread_poll(thread, 0, 0);
+				}
 			}
 		}
 	}
@@ -1100,35 +1115,6 @@ spdk_reactors_stop(void *arg1)
 static pthread_mutex_t g_scheduler_mtx = PTHREAD_MUTEX_INITIALIZER;
 static uint32_t g_next_core = UINT32_MAX;
 
-static int
-thread_process_interrupts(void *arg)
-{
-	struct spdk_thread *thread = arg;
-	struct spdk_reactor *reactor = spdk_reactor_get(spdk_env_get_current_core());
-	uint64_t now;
-	int rc;
-
-	assert(reactor != NULL);
-
-	/* Update idle_tsc between the end of last intr_fn and the start of this intr_fn. */
-	now = spdk_get_ticks();
-	reactor->idle_tsc += now - reactor->tsc_last;
-	reactor->tsc_last = now;
-
-	rc = spdk_thread_poll(thread, 0, now);
-
-	/* Update tsc between the start and the end of this intr_fn. */
-	now = spdk_thread_get_last_tsc(thread);
-	if (rc == 0) {
-		reactor->idle_tsc += now - reactor->tsc_last;
-	} else if (rc > 0) {
-		reactor->busy_tsc += now - reactor->tsc_last;
-	}
-	reactor->tsc_last = now;
-
-	return rc;
-}
-
 static void
 _schedule_thread(void *arg1, void *arg2)
 {
@@ -1136,7 +1122,7 @@ _schedule_thread(void *arg1, void *arg2)
 	struct spdk_thread *thread;
 	struct spdk_reactor *reactor;
 	uint32_t current_core;
-	int efd;
+	struct spdk_fd_group *grp;
 
 	current_core = spdk_env_get_current_core();
 	reactor = spdk_reactor_get(current_core);
@@ -1158,11 +1144,12 @@ _schedule_thread(void *arg1, void *arg2)
 	if (spdk_interrupt_mode_is_enabled()) {
 		int rc;
 
-		efd = spdk_thread_get_interrupt_fd(thread);
-		rc = SPDK_FD_GROUP_ADD(reactor->fgrp, efd,
-				       thread_process_interrupts, thread);
-		if (rc < 0) {
-			SPDK_ERRLOG("Failed to schedule spdk_thread: %s.\n", spdk_strerror(-rc));
+		if (reactor->in_interrupt) {
+			grp = spdk_thread_get_interrupt_fd_group(thread);
+			rc = spdk_fd_group_nest(reactor->fgrp, grp);
+			if (rc < 0) {
+				SPDK_ERRLOG("Failed to schedule spdk_thread: %s.\n", spdk_strerror(-rc));
+			}
 		}
 
 		/* Align spdk_thread with reactor to interrupt mode or poll mode */
