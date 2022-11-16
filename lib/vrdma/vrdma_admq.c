@@ -329,6 +329,28 @@ static void vrdma_aq_modify_gid(struct vrdma_ctrl *ctrl,
 			aqe->resp.query_gid_resp.gid[i+2], aqe->resp.query_gid_resp.gid[i+3]);
 }
 
+static struct ibv_pd *vrdma_create_sf_pd(const char *dev_name)
+{
+	struct ibv_context *dev_ctx;
+	struct ibv_pd *sf_pd;
+	
+	dev_ctx = snap_vrdma_open_device(dev_name);
+	if (!dev_ctx) {
+		printf("test null dev sctx, dev name %s\n", dev_name);
+		return NULL;
+	}
+	sf_pd = ibv_alloc_pd(dev_ctx);
+	if (!sf_pd) {
+		printf("test null PD, dev name %s\n", dev_name);
+		return NULL;
+	}
+
+	printf("test vrdma_create_sf_pd succeed dev %s, pd 0x%p\n", dev_name, sf_pd);
+
+	return sf_pd;
+
+}
+
 static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
@@ -360,7 +382,8 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 		return;
 	}
 	
-	vpd->ibpd = ibv_alloc_pd(ctrl->sctx->context);
+	//vpd->ibpd = ibv_alloc_pd(ctrl->sctx->context);
+	vpd->ibpd = vrdma_create_sf_pd("mlx5_2");
 	if (!vpd->ibpd) {
 		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
 		SPDK_ERRLOG("Failed to allocate PD, err(%d)",
@@ -935,28 +958,6 @@ static void vrdma_aq_destroy_cq(struct vrdma_ctrl *ctrl,
 	aqe->resp.destroy_cq_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 	SPDK_NOTICELOG("\nlizh vrdma_aq_destroy_cq...done\n");
 	return;
-}
-
-static struct ibv_pd *vrdma_create_sf_pd(const char *dev_name)
-{
-	struct ibv_context *dev_ctx;
-	struct ibv_pd *sf_pd;
-	
-	dev_ctx = snap_vrdma_open_device(dev_name);
-	if (!dev_ctx) {
-		printf("test null dev sctx, dev name %s\n", dev_name);
-		return NULL;
-	}
-	sf_pd = ibv_alloc_pd(dev_ctx);
-	if (!sf_pd) {
-		printf("test null PD, dev name %s\n", dev_name);
-		return NULL;
-	}
-
-	printf("test vrdma_create_sf_pd succeed dev %s, pd 0x%p\n", dev_name, sf_pd);
-
-	return sf_pd;
-
 }
 
 static int vrdma_create_backend_qp(struct vrdma_ctrl *ctrl,
