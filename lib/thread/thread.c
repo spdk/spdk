@@ -2877,6 +2877,12 @@ spdk_thread_get_interrupt_fd(struct spdk_thread *thread)
 	return spdk_fd_group_get_fd(thread->fgrp);
 }
 
+struct spdk_fd_group *
+spdk_thread_get_interrupt_fd_group(struct spdk_thread *thread)
+{
+	return thread->fgrp;
+}
+
 static bool g_interrupt_mode = false;
 
 int

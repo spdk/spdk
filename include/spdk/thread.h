@@ -15,6 +15,7 @@
 #include <sys/epoll.h>
 #endif
 
+#include "spdk/fd_group.h"
 #include "spdk/stdinc.h"
 #include "spdk/assert.h"
 #include "spdk/cpuset.h"
@@ -873,6 +874,17 @@ int spdk_interrupt_set_event_types(struct spdk_interrupt *intr,
  * \return The spdk_interrupt fd of thread itself.
  */
 int spdk_thread_get_interrupt_fd(struct spdk_thread *thread);
+
+/**
+ * Return an fd_group that becomes ready whenever any of the registered
+ * interrupt file descriptors are ready
+ *
+ *
+ * \param thread The thread to get.
+ *
+ * \return The spdk_fd_group of the thread itself.
+ */
+struct spdk_fd_group *spdk_thread_get_interrupt_fd_group(struct spdk_thread *thread);
 
 /**
  * Set SPDK run as event driven mode

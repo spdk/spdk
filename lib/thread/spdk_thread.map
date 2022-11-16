@@ -55,6 +55,7 @@
 	spdk_interrupt_unregister;
 	spdk_interrupt_set_event_types;
 	spdk_thread_get_interrupt_fd;
+	spdk_thread_get_interrupt_fd_group;
 	spdk_interrupt_mode_enable;
 	spdk_interrupt_mode_is_enabled;
 	spdk_spin_init;
