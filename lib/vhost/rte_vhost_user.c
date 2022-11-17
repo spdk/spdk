@@ -1777,9 +1777,9 @@ vhost_user_dev_register(struct spdk_vhost_dev *vdev, const char *name, struct sp
 		return -EIO;
 	}
 
-	vdev->registered = true;
 	user_dev->user_backend = user_backend;
 	user_dev->vdev = vdev;
+	user_dev->registered = true;
 	TAILQ_INIT(&user_dev->vsessions);
 
 	vhost_user_dev_set_coalescing(user_dev, SPDK_VHOST_COALESCING_DELAY_BASE_US,
@@ -1810,12 +1810,10 @@ vhost_user_dev_unregister(struct spdk_vhost_dev *vdev)
 		return -EBUSY;
 	}
 
-	if (vdev->registered && vhost_driver_unregister(vdev->path) != 0) {
-		SPDK_ERRLOG("Could not unregister controller %s with vhost library\n"
-			    "Check if domain socket %s still exists\n",
-			    vdev->name, vdev->path);
-		return -EIO;
-	}
+	/* There are no valid connections now, and it's not an error if the domain
+	 * socket was already removed by shutdown thread.
+	 */
+	vhost_driver_unregister(vdev->path);
 
 	spdk_thread_send_msg(vdev->thread, vhost_dev_thread_exit, NULL);
 	free(user_dev);
@@ -1880,7 +1878,6 @@ vhost_user_session_shutdown(void *vhost_cb)
 		}
 		spdk_vhost_unlock();
 		vhost_driver_unregister(vdev->path);
-		vdev->registered = false;
 	}
 
 	SPDK_INFOLOG(vhost, "Exiting\n");

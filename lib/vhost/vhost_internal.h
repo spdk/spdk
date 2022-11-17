@@ -154,6 +154,8 @@ struct spdk_vhost_user_dev {
 	uint32_t coalescing_delay_us;
 	uint32_t coalescing_iops_threshold;
 
+	bool registered;
+
 	/* Current connections to the device */
 	TAILQ_HEAD(, spdk_vhost_session) vsessions;
 
@@ -172,7 +174,6 @@ struct spdk_vhost_dev {
 	char *path;
 
 	struct spdk_thread *thread;
-	bool registered;
 
 	uint64_t virtio_features;
 	uint64_t disabled_features;
