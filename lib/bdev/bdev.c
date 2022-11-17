@@ -6051,43 +6051,9 @@ spdk_bdev_queue_io_wait(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 }
 
 static inline void
-bdev_io_complete(void *ctx)
+bdev_io_update_io_stat(struct spdk_bdev_io *bdev_io, uint64_t tsc_diff)
 {
-	struct spdk_bdev_io *bdev_io = ctx;
-	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
-	uint64_t tsc, tsc_diff;
-
-	if (spdk_unlikely(bdev_io->internal.in_submit_request || bdev_io->internal.io_submit_ch)) {
-		/*
-		 * Send the completion to the thread that originally submitted the I/O,
-		 * which may not be the current thread in the case of QoS.
-		 */
-		if (bdev_io->internal.io_submit_ch) {
-			bdev_io->internal.ch = bdev_io->internal.io_submit_ch;
-			bdev_io->internal.io_submit_ch = NULL;
-		}
-
-		/*
-		 * Defer completion to avoid potential infinite recursion if the
-		 * user's completion callback issues a new I/O.
-		 */
-		spdk_thread_send_msg(spdk_bdev_io_get_thread(bdev_io),
-				     bdev_io_complete, bdev_io);
-		return;
-	}
-
-	tsc = spdk_get_ticks();
-	tsc_diff = tsc - bdev_io->internal.submit_tsc;
-	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)bdev_io,
-			      bdev_io->internal.caller_ctx);
-
-	TAILQ_REMOVE(&bdev_ch->io_submitted, bdev_io, internal.ch_link);
-
-	if (bdev_io->internal.ch->histogram) {
-		spdk_histogram_data_tally(bdev_io->internal.ch->histogram, tsc_diff);
-	}
-
-	if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+	if (spdk_likely(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS)) {
 		switch (bdev_io->type) {
 		case SPDK_BDEV_IO_TYPE_READ:
 			bdev_io->internal.ch->stat->bytes_read += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
@@ -6152,6 +6118,46 @@ bdev_io_complete(void *ctx)
 		bdev_io->internal.ch->start_tsc = now_tsc;
 	}
 #endif
+}
+
+static inline void
+bdev_io_complete(void *ctx)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
+	uint64_t tsc, tsc_diff;
+
+	if (spdk_unlikely(bdev_io->internal.in_submit_request || bdev_io->internal.io_submit_ch)) {
+		/*
+		 * Send the completion to the thread that originally submitted the I/O,
+		 * which may not be the current thread in the case of QoS.
+		 */
+		if (bdev_io->internal.io_submit_ch) {
+			bdev_io->internal.ch = bdev_io->internal.io_submit_ch;
+			bdev_io->internal.io_submit_ch = NULL;
+		}
+
+		/*
+		 * Defer completion to avoid potential infinite recursion if the
+		 * user's completion callback issues a new I/O.
+		 */
+		spdk_thread_send_msg(spdk_bdev_io_get_thread(bdev_io),
+				     bdev_io_complete, bdev_io);
+		return;
+	}
+
+	tsc = spdk_get_ticks();
+	tsc_diff = tsc - bdev_io->internal.submit_tsc;
+	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)bdev_io,
+			      bdev_io->internal.caller_ctx);
+
+	TAILQ_REMOVE(&bdev_ch->io_submitted, bdev_io, internal.ch_link);
+
+	if (bdev_io->internal.ch->histogram) {
+		spdk_histogram_data_tally(bdev_io->internal.ch->histogram, tsc_diff);
+	}
+
+	bdev_io_update_io_stat(bdev_io, tsc_diff);
 
 	assert(bdev_io->internal.cb != NULL);
 	assert(spdk_get_thread() == spdk_bdev_io_get_thread(bdev_io));
