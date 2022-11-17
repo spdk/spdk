@@ -964,8 +964,18 @@ reactor_run(void *arg)
 
 	TAILQ_FOREACH(lw_thread, &reactor->threads, link) {
 		thread = spdk_thread_get_from_ctx(lw_thread);
-		spdk_set_thread(thread);
-		spdk_thread_exit(thread);
+		/* All threads should have already had spdk_thread_exit() called on them, except
+		 * for the app thread.
+		 */
+		if (spdk_thread_is_running(thread)) {
+			if (thread != spdk_thread_get_app_thread()) {
+				SPDK_ERRLOG("spdk_thread_exit() was not called on thread '%s'\n",
+					    spdk_thread_get_name(thread));
+				SPDK_ERRLOG("This will result in a non-zero exit code in a future release.\n");
+			}
+			spdk_set_thread(thread);
+			spdk_thread_exit(thread);
+		}
 	}
 
 	while (!TAILQ_EMPTY(&reactor->threads)) {
