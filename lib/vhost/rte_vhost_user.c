@@ -929,6 +929,11 @@ new_connection(int vid)
 
 	user_dev = to_user_dev(vdev);
 	pthread_mutex_lock(&user_dev->lock);
+	if (user_dev->registered == false) {
+		SPDK_ERRLOG("Device %s is unregistered\n", ctrlr_name);
+		pthread_mutex_unlock(&user_dev->lock);
+		return -1;
+	}
 
 	/* We expect sessions inside user_dev->vsessions to be sorted in ascending
 	 * order in regard of vsession->id. For now we always set id = vsessions_cnt++
@@ -1841,6 +1846,7 @@ vhost_user_dev_unregister(struct spdk_vhost_dev *vdev)
 		pthread_mutex_unlock(&user_dev->lock);
 		return -EBUSY;
 	}
+	user_dev->registered = false;
 	pthread_mutex_unlock(&user_dev->lock);
 
 	/* There are no valid connections now, and it's not an error if the domain
