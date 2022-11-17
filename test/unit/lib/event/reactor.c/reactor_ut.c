@@ -708,6 +708,10 @@ test_scheduler(void)
 
 	/* Destroy threads */
 	for (i = 0; i < 3; i++) {
+		spdk_set_thread(thread[i]);
+		spdk_thread_exit(thread[i]);
+	}
+	for (i = 0; i < 3; i++) {
 		reactor = spdk_reactor_get(i);
 		CU_ASSERT(reactor != NULL);
 		reactor_run(reactor);
@@ -920,6 +924,10 @@ test_governor(void)
 	g_reactor_state = SPDK_REACTOR_STATE_INITIALIZED;
 
 	/* Destroy threads */
+	for (i = 0; i < 2; i++) {
+		spdk_set_thread(thread[i]);
+		spdk_thread_exit(thread[i]);
+	}
 	for (i = 0; i < 2; i++) {
 		reactor = spdk_reactor_get(i);
 		CU_ASSERT(reactor != NULL);
