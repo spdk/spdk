@@ -29,5 +29,5 @@ fi
 
 if [[ $INSTALL_RBD == "true" ]]; then
 	# Additional dependencies for RBD bdev in NVMe over Fabrics
-	pkg install -y ceph
+	pkg install -y ceph || pkg install -y ceph14
 fi
