@@ -208,11 +208,16 @@ main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
+	struct spdk_thread *thread;
 
 	CU_set_error_action(CUEA_ABORT);
 	CU_initialize_registry();
 
 	suite = CU_add_suite("subsystem_suite", NULL, NULL);
+
+	spdk_thread_lib_init(NULL, 0);
+	thread = spdk_thread_create(NULL, NULL);
+	spdk_set_thread(thread);
 
 	CU_ADD_TEST(suite, subsystem_sort_test_depends_on_single);
 	CU_ADD_TEST(suite, subsystem_sort_test_depends_on_multiple);

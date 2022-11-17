@@ -132,6 +132,8 @@ subsystem_sort(void)
 void
 spdk_subsystem_init_next(int rc)
 {
+	assert(spdk_get_thread() == spdk_thread_get_app_thread());
+
 	/* The initialization is interrupted by the spdk_subsystem_fini, so just return */
 	if (g_subsystems_init_interrupted) {
 		return;
@@ -166,6 +168,8 @@ void
 spdk_subsystem_init(spdk_subsystem_init_fn cb_fn, void *cb_arg)
 {
 	struct spdk_subsystem_depend *dep;
+
+	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
 	g_subsystem_start_fn = cb_fn;
 	g_subsystem_start_arg = cb_arg;
