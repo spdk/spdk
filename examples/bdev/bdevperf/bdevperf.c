@@ -405,9 +405,7 @@ bdevperf_test_done(void *ctx)
 			free(task);
 		}
 
-		if (job->verify) {
-			spdk_bit_array_free(&job->outstanding);
-		}
+		spdk_bit_array_free(&job->outstanding);
 		spdk_zipf_free(&job->zipf);
 		free(job->name);
 		free(job);
