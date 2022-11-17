@@ -362,6 +362,15 @@ free_job_config(void)
 }
 
 static void
+bdevperf_job_free(struct bdevperf_job *job)
+{
+	spdk_bit_array_free(&job->outstanding);
+	spdk_zipf_free(&job->zipf);
+	free(job->name);
+	free(job);
+}
+
+static void
 bdevperf_test_done(void *ctx)
 {
 	struct bdevperf_job *job, *jtmp;
@@ -405,10 +414,7 @@ bdevperf_test_done(void *ctx)
 			free(task);
 		}
 
-		spdk_bit_array_free(&job->outstanding);
-		spdk_zipf_free(&job->zipf);
-		free(job->name);
-		free(job);
+		bdevperf_job_free(job);
 	}
 
 	printf("\r ==================================================================================\n");
@@ -1322,7 +1328,7 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 	job->name = strdup(spdk_bdev_get_name(bdev));
 	if (!job->name) {
 		fprintf(stderr, "Unable to allocate memory for job name.\n");
-		free(job);
+		bdevperf_job_free(job);
 		return -ENOMEM;
 	}
 
@@ -1340,15 +1346,13 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 	if ((job->io_size % data_block_size) != 0) {
 		SPDK_ERRLOG("IO size (%d) is not multiples of data block size of bdev %s (%"PRIu32")\n",
 			    job->io_size, spdk_bdev_get_name(bdev), data_block_size);
-		free(job->name);
-		free(job);
+		bdevperf_job_free(job);
 		return -ENOTSUP;
 	}
 
 	if (job->unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 		printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
-		free(job->name);
-		free(job);
+		bdevperf_job_free(job);
 		return -ENOTSUP;
 	}
 
@@ -1380,8 +1384,7 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 		if (job->outstanding == NULL) {
 			SPDK_ERRLOG("Could not create outstanding array bitmap for bdev %s\n",
 				    spdk_bdev_get_name(bdev));
-			free(job->name);
-			free(job);
+			bdevperf_job_free(job);
 			return -ENOMEM;
 		}
 	}
