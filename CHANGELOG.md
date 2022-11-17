@@ -70,6 +70,9 @@ for writing and decoding of the the double data type.
 Added `spdk_thread_get_app_thread` which returns the first thread that was created using
 `spdk_thread_create`.
 
+Added `spdk_thread_is_running`.  This returns `true` for a running thread, or `false` if
+its exit process has started using `spdk_thread_exit`.
+
 ## v22.09
 
 ### accel

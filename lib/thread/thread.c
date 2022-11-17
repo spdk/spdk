@@ -595,6 +595,12 @@ spdk_thread_exit(struct spdk_thread *thread)
 }
 
 bool
+spdk_thread_is_running(struct spdk_thread *thread)
+{
+	return thread->state == SPDK_THREAD_STATE_RUNNING;
+}
+
+bool
 spdk_thread_is_exited(struct spdk_thread *thread)
 {
 	return thread->state == SPDK_THREAD_STATE_EXITED;

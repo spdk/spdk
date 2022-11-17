@@ -285,11 +285,27 @@ int spdk_thread_exit(struct spdk_thread *thread);
 /**
  * Returns whether the thread is marked as exited.
  *
+ * A thread is exited only after it has spdk_thread_exit() called on it, and
+ * it has been polled until any outstanding operations targeting this
+ * thread have completed.  This may include poller unregistrations, io channel
+ * unregistrations, or outstanding spdk_thread_send_msg calls.
+ *
  * \param thread The thread to query.
  *
  * \return true if marked as exited, false otherwise.
  */
 bool spdk_thread_is_exited(struct spdk_thread *thread);
+
+/**
+ * Returns whether the thread is still running.
+ *
+ * A thread is considered running until it has * spdk_thread_exit() called on it.
+ *
+ * \param thread The thread to query.
+ *
+ * \return true if still running, false otherwise.
+ */
+bool spdk_thread_is_running(struct spdk_thread *thread);
 
 /**
  * Destroy a thread, releasing all of its resources. May only be called

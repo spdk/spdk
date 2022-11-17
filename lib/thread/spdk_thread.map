@@ -9,6 +9,7 @@
 	spdk_thread_get_app_thread;
 	spdk_set_thread;
 	spdk_thread_exit;
+	spdk_thread_is_running;
 	spdk_thread_is_exited;
 	spdk_thread_destroy;
 	spdk_thread_get_ctx;
