@@ -371,6 +371,12 @@ bdevperf_job_free(struct bdevperf_job *job)
 }
 
 static void
+job_thread_exit(void *ctx)
+{
+	spdk_thread_exit(spdk_get_thread());
+}
+
+static void
 bdevperf_test_done(void *ctx)
 {
 	struct bdevperf_job *job, *jtmp;
@@ -406,6 +412,8 @@ bdevperf_test_done(void *ctx)
 		TAILQ_REMOVE(&g_bdevperf.jobs, job, link);
 
 		performance_dump_job(&g_stats, job);
+
+		spdk_thread_send_msg(job->thread, job_thread_exit, NULL);
 
 		TAILQ_FOREACH_SAFE(task, &job->task_list, link, ttmp) {
 			TAILQ_REMOVE(&job->task_list, task, link);
