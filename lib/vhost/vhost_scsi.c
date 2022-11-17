@@ -878,21 +878,11 @@ static int
 vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 {
 	struct spdk_vhost_scsi_dev *svdev = to_scsi_dev(vdev);
-	struct spdk_vhost_user_dev *user_dev = vdev->ctxt;
-	int rc = 0, i;
-
-	if (user_dev->pending_async_op_num) {
-		return -EBUSY;
-	}
+	int rc, i;
 
 	assert(svdev != NULL);
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++i) {
 		if (svdev->scsi_dev_state[i].dev) {
-			if (vdev->registered) {
-				SPDK_ERRLOG("%s: SCSI target %d is still present.\n", vdev->name, i);
-				return -EBUSY;
-			}
-
 			rc = spdk_vhost_scsi_dev_remove_tgt(vdev, i, NULL, NULL);
 			if (rc != 0) {
 				SPDK_ERRLOG("%s: failed to force-remove target %d\n", vdev->name, i);
