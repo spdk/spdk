@@ -185,6 +185,7 @@ dma_test_check_and_signal_task_done(struct dma_test_task *task)
 		spdk_put_io_channel(task->channel);
 		spdk_bdev_close(task->desc);
 		spdk_thread_send_msg(g_main_thread, dma_test_task_complete, task);
+		spdk_thread_exit(spdk_get_thread());
 	}
 }
 
