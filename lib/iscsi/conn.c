@@ -612,6 +612,7 @@ _iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 	iscsi_clear_all_transfer_task(conn, NULL, NULL);
 	spdk_poller_unregister(&conn->logout_request_timer);
 	spdk_poller_unregister(&conn->logout_timer);
+	spdk_poller_unregister(&conn->login_timer);
 
 	rc = iscsi_conn_free_tasks(conn);
 	if (rc < 0) {
