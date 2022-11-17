@@ -1665,6 +1665,7 @@ Example response:
       "compress": "software",
       "decompress": "software"
     }
+  ]
 }
 ~~~
 
