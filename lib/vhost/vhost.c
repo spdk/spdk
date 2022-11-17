@@ -23,6 +23,8 @@ static pthread_mutex_t g_vhost_mutex = PTHREAD_MUTEX_INITIALIZER;
 static TAILQ_HEAD(, spdk_virtio_blk_transport) g_virtio_blk_transports = TAILQ_HEAD_INITIALIZER(
 			g_virtio_blk_transports);
 
+static spdk_vhost_fini_cb g_fini_cb;
+
 struct spdk_vhost_dev *
 spdk_vhost_dev_next(struct spdk_vhost_dev *vdev)
 {
@@ -170,6 +172,11 @@ vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 
 	free(vdev->name);
 	TAILQ_REMOVE(&g_vhost_devices, vdev, tailq);
+
+	if (TAILQ_EMPTY(&g_vhost_devices) && g_fini_cb != NULL) {
+		g_fini_cb();
+	}
+
 	return 0;
 }
 
@@ -237,14 +244,18 @@ spdk_vhost_scsi_init(spdk_vhost_init_cb init_cb)
 	init_cb(ret);
 }
 
-static spdk_vhost_fini_cb g_fini_cb;
-
 static void
 vhost_fini(void)
 {
 	struct spdk_vhost_dev *vdev, *tmp;
 
 	spdk_vhost_lock();
+	if (spdk_vhost_dev_next(NULL) == NULL) {
+		spdk_vhost_unlock();
+		g_fini_cb();
+		return;
+	}
+
 	vdev = spdk_vhost_dev_next(NULL);
 	while (vdev != NULL) {
 		tmp = spdk_vhost_dev_next(vdev);
@@ -254,7 +265,7 @@ vhost_fini(void)
 	}
 	spdk_vhost_unlock();
 
-	g_fini_cb();
+	/* g_fini_cb will get called when last device is unregistered. */
 }
 
 void

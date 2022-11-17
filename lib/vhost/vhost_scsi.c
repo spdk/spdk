@@ -187,6 +187,7 @@ remove_scsi_tgt(struct spdk_vhost_scsi_dev *svdev,
 	SPDK_INFOLOG(vhost, "removed target 'Target %u'\n", scsi_tgt_num);
 
 	if (--svdev->ref == 0 && svdev->registered == false) {
+		vhost_dev_unregister(&svdev->vdev);
 		free(svdev);
 	}
 }
@@ -878,7 +879,7 @@ vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 {
 	struct spdk_vhost_scsi_dev *svdev = to_scsi_dev(vdev);
 	struct spdk_vhost_user_dev *user_dev = vdev->ctxt;
-	int rc, i;
+	int rc = 0, i;
 
 	if (user_dev->pending_async_op_num) {
 		return -EBUSY;
@@ -900,17 +901,14 @@ vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 		}
 	}
 
-	rc = vhost_dev_unregister(vdev);
-	if (rc != 0) {
-		return rc;
-	}
 	svdev->registered = false;
 
 	if (svdev->ref == 0) {
+		rc = vhost_dev_unregister(vdev);
 		free(svdev);
 	}
 
-	return 0;
+	return rc;
 }
 
 struct spdk_scsi_dev *
