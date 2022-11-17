@@ -1571,6 +1571,73 @@ test_nvme_tcp_poll_group_get_stats(void)
 	MOCK_CLEAR(spdk_sock_group_create);
 }
 
+static void
+test_nvme_tcp_ctrlr_construct(void)
+{
+	struct nvme_tcp_qpair *tqpair = NULL;
+	struct nvme_tcp_ctrlr *tctrlr = NULL;
+	struct spdk_nvme_ctrlr *ctrlr = NULL;
+	struct spdk_nvme_transport_id trid = {
+		.trtype = SPDK_NVME_TRANSPORT_TCP,
+		.priority = 1,
+		.adrfam = SPDK_NVMF_ADRFAM_IPV4,
+		.traddr = "192.168.1.78",
+		.trsvcid = "23",
+	};
+	struct spdk_nvme_ctrlr_opts opts = {
+		.admin_queue_size = 2,
+		.src_addr = "192.168.1.77",
+		.src_svcid = "23",
+	};
+
+	/* Transmit ACK timeout value exceeds max, expected to pass and using max */
+	opts.transport_ack_timeout = NVME_TCP_CTRLR_MAX_TRANSPORT_ACK_TIMEOUT + 1;
+	MOCK_SET(spdk_sock_connect_ext, (struct spdk_sock *)0xDEADBEEF);
+	ctrlr = nvme_tcp_ctrlr_construct(&trid, &opts, NULL);
+	tctrlr = nvme_tcp_ctrlr(ctrlr);
+	tqpair = nvme_tcp_qpair(tctrlr->ctrlr.adminq);
+
+	CU_ASSERT(ctrlr != NULL);
+	CU_ASSERT(tctrlr != NULL);
+	CU_ASSERT(tqpair != NULL);
+	CU_ASSERT(ctrlr->opts.transport_ack_timeout == NVME_TCP_CTRLR_MAX_TRANSPORT_ACK_TIMEOUT);
+	CU_ASSERT(memcmp(&ctrlr->trid, &trid, sizeof(struct spdk_nvme_transport_id)) == 0);
+	CU_ASSERT(tqpair->num_entries == 1);
+	CU_ASSERT(TAILQ_EMPTY(&tqpair->send_queue));
+	CU_ASSERT(TAILQ_EMPTY(&tqpair->outstanding_reqs));
+	CU_ASSERT(!TAILQ_EMPTY(&tqpair->free_reqs));
+	CU_ASSERT(TAILQ_FIRST(&tqpair->free_reqs) == &tqpair->tcp_reqs[0]);
+	CU_ASSERT(TAILQ_FIRST(&tqpair->free_reqs)->cid == 0);
+	CU_ASSERT(TAILQ_FIRST(&tqpair->free_reqs)->tqpair == tqpair);
+	CU_ASSERT(TAILQ_FIRST(&tqpair->free_reqs)->pdu == &tqpair->send_pdus[0]);
+	CU_ASSERT(tqpair->send_pdu == &tqpair->send_pdus[1]);
+	CU_ASSERT(tqpair->recv_pdu == &tqpair->send_pdus[2]);
+
+	free(tqpair->tcp_reqs);
+	spdk_free(tqpair->send_pdus);
+	free(tqpair);
+	free(tctrlr);
+
+	/* The Admin queue size is less than the minimum required size, expected to create Admin qpair failed */
+	opts.admin_queue_size = 1;
+	ctrlr = nvme_tcp_ctrlr_construct(&trid, &opts, NULL);
+	CU_ASSERT(ctrlr == NULL);
+
+	/* Unhandled ADRFAM, expected to create Admin qpair failed */
+	opts.admin_queue_size = 2;
+	trid.adrfam = SPDK_NVMF_ADRFAM_INTRA_HOST;
+	ctrlr = nvme_tcp_ctrlr_construct(&trid, &opts, NULL);
+	CU_ASSERT(ctrlr == NULL);
+
+	/* Error connecting socket, expected to create Admin qpair failed */
+	trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
+	MOCK_SET(spdk_sock_connect_ext, NULL);
+	ctrlr = nvme_tcp_ctrlr_construct(&trid, &opts, NULL);
+	CU_ASSERT(ctrlr == NULL);
+
+	MOCK_CLEAR(spdk_sock_connect_ext);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1607,6 +1674,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_tcp_ctrlr_create_io_qpair);
 	CU_ADD_TEST(suite, test_nvme_tcp_ctrlr_delete_io_qpair);
 	CU_ADD_TEST(suite, test_nvme_tcp_poll_group_get_stats);
+	CU_ADD_TEST(suite, test_nvme_tcp_ctrlr_construct);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
