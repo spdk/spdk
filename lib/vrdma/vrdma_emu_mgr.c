@@ -82,7 +82,7 @@ spdk_emu_ctx_find_by_pci_id(const char *emu_manager, int pf_id)
     struct spdk_emu_ctx *ctx;
 
     LIST_FOREACH(ctx, &spdk_emu_list, entry) {
-        SPDK_NOTICELOG("lizh spdk_emu_ctx_find_by_pci_id...%s type %d id %d",
+        SPDK_NOTICELOG("lizh spdk_emu_ctx_find_by_pci_id...%s type %d id %d\n",
         ctx->emu_manager, ctx->spci->type, ctx->spci->id);
         if (strncmp(ctx->emu_manager, emu_manager,
                     SPDK_EMU_MANAGER_NAME_MAXLEN) ||
@@ -552,7 +552,7 @@ spdk_emu_ctx_find_by_pci_id_testrpc(const char *emu_manager, int pf_id)
 
     LIST_FOREACH(ctx, &spdk_emu_list, entry) {
         
-        SPDK_NOTICELOG("lizh spdk_emu_ctx_find_by_pci_id...%s type %d id %d",
+        SPDK_NOTICELOG("lizh spdk_emu_ctx_find_by_pci_id...%s type %d id %d\n",
         ctx->emu_manager, ctx->spci->type, ctx->spci->id);
         if (strncmp(ctx->emu_manager, emu_manager,
                     SPDK_EMU_MANAGER_NAME_MAXLEN))
@@ -750,19 +750,21 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
 	if (attr->backend_dev) {
 		uint8_t name_size;
 		
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...backend_dev=%s\n", attr->backend_dev);
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...backend_dev %s\n", attr->backend_dev);
         ctrl = ctx->ctrl;
         if (!ctrl) {
             SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
             goto free_attr;
         }
-		name_size = sizeof(attr->backend_dev);
-		if (name_size > (sizeof(vrdma_sf_name) - 1)) {
-			SPDK_ERRLOG("invalid sf name %s\n", attr->backend_dev);
-			name_size = sizeof(vrdma_sf_name) - 1;
+		name_size = strlen(attr->backend_dev);
+		if (name_size > (VRDMA_DEV_NAME_LEN - 1)) {
+			SPDK_ERRLOG("invalid sf name %s, len %d\n", attr->backend_dev, name_size);
+			name_size = VRDMA_DEV_NAME_LEN - 1;
 		}
-		strncpy(vrdma_sf_name, attr->backend_dev, name_size);
+		memcpy(vrdma_sf_name, attr->backend_dev, name_size);
 		vrdma_sf_name[name_size] = '\0';
+		SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...backend_dev done, sf name %s\n",
+						vrdma_sf_name);
     }
     w = spdk_jsonrpc_begin_result(request);
     spdk_json_write_string(w, attr->emu_manager);

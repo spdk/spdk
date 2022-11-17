@@ -43,6 +43,7 @@
 #define LOG_4K_PAGE_SIZE 12
 #define MAX_VRDMA_MR_SGE_NUM 8
 
+#define VRDMA_DEV_NAME_LEN 32
 extern char *vrdma_sf_name;
 
 enum vrdma_size {
