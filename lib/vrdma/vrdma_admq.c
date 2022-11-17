@@ -329,6 +329,33 @@ static void vrdma_aq_modify_gid(struct vrdma_ctrl *ctrl,
 			aqe->resp.query_gid_resp.gid[i+2], aqe->resp.query_gid_resp.gid[i+3]);
 }
 
+static struct ibv_pd *vrdma_create_sf_pd(const char *dev_name)
+{
+	struct ibv_context *dev_ctx;
+	struct ibv_pd *sf_pd;
+	int gvmi;
+	
+	dev_ctx = snap_vrdma_open_device(dev_name);
+	if (!dev_ctx) {
+		SPDK_ERRLOG("NULL dev sctx, dev name %s\n", dev_name);
+		return NULL;
+	}
+	sf_pd = ibv_alloc_pd(dev_ctx);
+	if (!sf_pd) {
+		SPDK_ERRLOG("get NULL PD, dev name %s\n", dev_name);
+		return NULL;
+	}
+	gvmi = snap_get_dev_vhca_id(dev_ctx);
+	if (gvmi == -1) {
+		SPDK_ERRLOG("get NULL gvmi, dev name %s\n", dev_name);
+	}
+
+	SPDK_NOTICELOG("vrdma sf dev %s(gvmi 0x%x) created pd 0x%p done\n", dev_name, gvmi, sf_pd);
+
+	return sf_pd;
+
+}
+
 static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
@@ -341,29 +368,35 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 		!ctrl->vdev ||
 		ctrl->vdev->vpd_cnt > VRDMA_DEV_MAX_PD) {
 		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_EXCEED_MAX;
-		SPDK_ERRLOG("Failed to create PD, err(%d)",
+		SPDK_ERRLOG("Failed to create PD, err(%d)\n",
 				  aqe->resp.create_pd_resp.err_code);
+		return;
+	}
+	if (!strcmp(vrdma_sf_name, "dummy")) {
+		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
+		SPDK_ERRLOG("no vrdma sf dev name is configured \n");
 		return;
 	}
 	pd_idx = spdk_bit_array_find_first_clear(free_vpd_ids, 0);
 	if (pd_idx == UINT32_MAX) {
 		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
-		SPDK_ERRLOG("Failed to allocate PD index, err(%d)",
+		SPDK_ERRLOG("Failed to allocate PD index, err(%d)\n",
 				  aqe->resp.create_pd_resp.err_code);
 		return;
 	}
     vpd = calloc(1, sizeof(*vpd));
     if (!vpd) {
 		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
-		SPDK_ERRLOG("Failed to allocate PD memory, err(%d)",
+		SPDK_ERRLOG("Failed to allocate PD memory, err(%d)\n",
 				  aqe->resp.create_pd_resp.err_code);
 		return;
 	}
 	
-	vpd->ibpd = ibv_alloc_pd(ctrl->sctx->context);
+	//vpd->ibpd = ibv_alloc_pd(ctrl->sctx->context);	
+	vpd->ibpd = vrdma_create_sf_pd(vrdma_sf_name);
 	if (!vpd->ibpd) {
 		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
-		SPDK_ERRLOG("Failed to allocate PD, err(%d)",
+		SPDK_ERRLOG("Failed to allocate PD, err(%d)\n",
 				  aqe->resp.create_pd_resp.err_code);
 		goto free_vpd;
 	}
@@ -374,7 +407,7 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 	if (ctrl->srv_ops->vrdma_device_create_pd(&ctrl->dev, aqe, &param)) {
 		aqe->resp.create_pd_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
-		SPDK_ERRLOG("Failed to notify PD in service, err(%d)",
+		SPDK_ERRLOG("Failed to notify PD in service, err(%d)\n",
 				  aqe->resp.create_pd_resp.err_code);
 		goto free_ibpd;
 	}
@@ -385,7 +418,8 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 	LIST_INSERT_HEAD(&ctrl->vdev->vpd_list, vpd, entry);
 	aqe->resp.create_pd_resp.pd_handle = pd_idx;
 	aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
-	SPDK_NOTICELOG("\nlizh vrdma_aq_create_pd...pd_idx %d done\n", pd_idx);
+	SPDK_NOTICELOG("\nlizh vrdma_aq_create_pd...pd_idx %d pd 0x%p done\n",
+					pd_idx, vpd->ibpd);
 	return;
 
 free_ibpd:
@@ -405,7 +439,7 @@ static void vrdma_aq_destroy_pd(struct vrdma_ctrl *ctrl,
 		!ctrl->vdev->vpd_cnt) {
 		aqe->resp.destroy_pd_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to destroy PD, err(%d)",
+		SPDK_ERRLOG("Failed to destroy PD, err(%d)\n",
 				  aqe->resp.destroy_pd_resp.err_code);
 		return;
 	}
@@ -413,7 +447,7 @@ static void vrdma_aq_destroy_pd(struct vrdma_ctrl *ctrl,
 	if (!vpd) {
 		aqe->resp.destroy_pd_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to find PD handle %d, err(%d)",
+		SPDK_ERRLOG("Failed to find PD handle %d, err(%d)\n",
 				  aqe->req.destroy_pd_req.pd_handle,
 				  aqe->resp.destroy_pd_resp.err_code);
 		return;
@@ -421,7 +455,7 @@ static void vrdma_aq_destroy_pd(struct vrdma_ctrl *ctrl,
 	if (vpd->ref_cnt) {
 		aqe->resp.destroy_pd_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_REF_CNT_INVALID;
-		SPDK_ERRLOG("PD handle %d is used now, err(%d)",
+		SPDK_ERRLOG("PD handle %d is used now, err(%d)\n",
 				  aqe->req.destroy_pd_req.pd_handle,
 				  aqe->resp.destroy_pd_resp.err_code);
 		return;
@@ -429,7 +463,7 @@ static void vrdma_aq_destroy_pd(struct vrdma_ctrl *ctrl,
 	if (ctrl->srv_ops->vrdma_device_destroy_pd(&ctrl->dev, aqe)) {
 		aqe->resp.destroy_pd_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
-		SPDK_ERRLOG("Failed to notify destroy PD handle %d in service, err(%d)",
+		SPDK_ERRLOG("Failed to notify destroy PD handle %d in service, err(%d)\n",
 				  aqe->req.destroy_pd_req.pd_handle,
 				  aqe->resp.destroy_pd_resp.err_code);
 		return;
@@ -465,7 +499,7 @@ static void vrdma_destroy_crossing_mkey(struct snap_device *dev,
 	if (lattr->crossing_mkey) {
 		ret = snap_destroy_cross_mkey(lattr->crossing_mkey);
 		if (ret)
-			SPDK_ERRLOG("dev(%s): Failed to destroy cross mkey, err(%d)",
+			SPDK_ERRLOG("dev(%s): Failed to destroy cross mkey, err(%d)\n",
 				  dev->pci->pci_number, ret);
 		lattr->crossing_mkey = NULL;
 	}
@@ -519,7 +553,7 @@ static int vrdma_destroy_indirect_mkey(struct snap_device *dev,
 	if (lattr->indirect_mkey) {
 		ret = snap_destroy_indirect_mkey(lattr->indirect_mkey);
 		if (ret)
-			SPDK_ERRLOG("\ndev(%s): Failed to destroy indirect mkey, err(%d)",
+			SPDK_ERRLOG("\ndev(%s): Failed to destroy indirect mkey, err(%d)\n",
 				  dev->pci->pci_number, ret);
 		lattr->indirect_mkey = NULL;
 		free(lattr->klm_array);
@@ -548,7 +582,7 @@ vrdma_create_indirect_mkey(struct snap_device *dev,
 
 	indirect_mkey = snap_create_indirect_mkey(vmr->vpd->ibpd, &attr);
 	if (indirect_mkey == NULL) {
-		SPDK_ERRLOG("\ndev(%s): Failed to create indirect mkey",
+		SPDK_ERRLOG("\ndev(%s): Failed to create indirect mkey\n",
 			  dev->pci->pci_number);
 		goto free_klm_array;
 	}
@@ -569,7 +603,7 @@ static int vrdma_create_remote_mkey(struct vrdma_ctrl *ctrl,
 	lattr->crossing_mkey = snap_create_cross_mkey(vmr->vpd->ibpd,
 								ctrl->sctrl->sdev);
 	if (!lattr->crossing_mkey) {
-		SPDK_ERRLOG("\ndev(%s): Failed to create cross mkey", ctrl->name);
+		SPDK_ERRLOG("\ndev(%s): Failed to create cross mkey\n", ctrl->name);
 		return -1;
 	}
 
@@ -581,7 +615,7 @@ static int vrdma_create_remote_mkey(struct vrdma_ctrl *ctrl,
 		lattr->indirect_mkey = vrdma_create_indirect_mkey(ctrl->sctrl->sdev,
 									vmr, lattr, &total_len);
 		if (!lattr->indirect_mkey) {
-			SPDK_ERRLOG("\ndev(%s): Failed to create indirect mkey",
+			SPDK_ERRLOG("\ndev(%s): Failed to create indirect mkey\n",
 					ctrl->name);
 			goto destroy_crossing;
 		}
@@ -606,7 +640,7 @@ void vrdma_destroy_remote_mkey(struct vrdma_ctrl *ctrl,
 	struct spdk_vrdma_mr_log *lattr = &vmr->mr_log;
 
 	if (!lattr->mkey) {
-		SPDK_ERRLOG("\ndev(%s): remote mkey is not created", ctrl->name);
+		SPDK_ERRLOG("\ndev(%s): remote mkey is not created\n", ctrl->name);
 		return;
 	}
 	vrdma_destroy_indirect_mkey(ctrl->sctrl->sdev, lattr);
@@ -644,14 +678,14 @@ static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
 		!ctrl->vdev ||
 		ctrl->vdev->vmr_cnt > dev_max_mr) {
 		aqe->resp.create_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_EXCEED_MAX;
-		SPDK_ERRLOG("Failed to register MR, err(%d)",
+		SPDK_ERRLOG("Failed to register MR, err(%d)\n",
 				  aqe->resp.create_mr_resp.err_code);
 		return;
 	}
 	if (!aqe->req.create_mr_req.sge_count || !aqe->req.create_mr_req.length) {
 		aqe->resp.create_mr_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to register MR, err(%d)",
+		SPDK_ERRLOG("Failed to register MR, err(%d)\n",
 				  aqe->resp.create_mr_resp.err_code);
 		return;
 	}
@@ -659,14 +693,14 @@ static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
 	if (!vpd) {
 		aqe->resp.create_mr_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to find PD %d when creation MR, err(%d)",
+		SPDK_ERRLOG("Failed to find PD %d when creation MR, err(%d)\n",
 					aqe->req.create_mr_req.pd_handle,
 					aqe->resp.create_mr_resp.err_code);
 		return;
 	}
 	if (aqe->req.create_mr_req.sge_count > MAX_VRDMA_MR_SGE_NUM) {
 		aqe->resp.create_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_EXCEED_MAX;
-		SPDK_ERRLOG("Failed to register MR for sge_count more than 8, err(%d)",
+		SPDK_ERRLOG("Failed to register MR for sge_count more than 8, err(%d)\n",
 				  aqe->resp.create_mr_resp.err_code);
 		return;
 	}
@@ -676,7 +710,7 @@ static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
 	if (total_len < aqe->req.create_mr_req.length) {
 		aqe->resp.create_mr_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to register MR for sge length %d more than %ld, err(%d)",
+		SPDK_ERRLOG("Failed to register MR for sge length %d more than %ld, err(%d)\n",
 				total_len, aqe->req.create_mr_req.length,
 				aqe->resp.create_mr_resp.err_code);
 		return;
@@ -684,22 +718,25 @@ static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
 	mr_idx = spdk_bit_array_find_first_clear(free_vmr_ids, 0);
 	if (mr_idx == UINT32_MAX) {
 		aqe->resp.create_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
-		SPDK_ERRLOG("Failed to allocate mr_idx, err(%d)",
+		SPDK_ERRLOG("Failed to allocate mr_idx, err(%d)\n",
 				  aqe->resp.create_mr_resp.err_code);
 		return;
 	}
     vmr = calloc(1, sizeof(*vmr));
     if (!vmr) {
 		aqe->resp.create_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
-		SPDK_ERRLOG("Failed to allocate MR memory, err(%d)",
+		SPDK_ERRLOG("Failed to allocate MR memory, err(%d)\n",
 				  aqe->resp.create_mr_resp.err_code);
 		return;
 	}
 	vrdma_reg_mr_create_attr(&aqe->req.create_mr_req, vmr);
 	vmr->vpd = vpd;
+	SPDK_NOTICELOG("register MR remote mkey, pd id %d, pd 0x%p\n",
+				  aqe->req.create_mr_req.pd_handle, vpd->ibpd);
+	
 	if (vrdma_create_remote_mkey(ctrl, vmr)) {
 		aqe->resp.create_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_UNKNOWN;
-		SPDK_ERRLOG("Failed to register MR remote mkey, err(%d)",
+		SPDK_ERRLOG("Failed to register MR remote mkey, err(%d)\n",
 				  aqe->resp.create_mr_resp.err_code);
 		goto free_vmr;
 	}
@@ -709,7 +746,7 @@ static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
 	if (ctrl->srv_ops->vrdma_device_create_mr(&ctrl->dev, aqe, &param)) {
 		aqe->resp.create_mr_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
-		SPDK_ERRLOG("Failed to register MR in service, err(%d)",
+		SPDK_ERRLOG("Failed to register MR in service, err(%d)\n",
 				  aqe->resp.create_mr_resp.err_code);
 		goto free_mkey;
 	}
@@ -745,7 +782,7 @@ static void vrdma_aq_dereg_mr(struct vrdma_ctrl *ctrl,
 		!aqe->req.destroy_mr_req.lkey) {
 		aqe->resp.destroy_mr_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to dereg MR, err(%d)",
+		SPDK_ERRLOG("Failed to dereg MR, err(%d)\n",
 				  aqe->resp.destroy_mr_resp.err_code);
 		return;
 	}
@@ -753,7 +790,7 @@ static void vrdma_aq_dereg_mr(struct vrdma_ctrl *ctrl,
 	if (!vmr) {
 		aqe->resp.destroy_mr_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to find MR %d dereg MR, err(%d)",
+		SPDK_ERRLOG("Failed to find MR %d dereg MR, err(%d)\n",
 					aqe->req.destroy_mr_req.lkey,
 					aqe->resp.destroy_mr_resp.err_code);
 		return;
@@ -761,7 +798,7 @@ static void vrdma_aq_dereg_mr(struct vrdma_ctrl *ctrl,
 	if (vmr->ref_cnt) {
 		aqe->resp.destroy_mr_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_REF_CNT_INVALID;
-		SPDK_ERRLOG("MR %d is used now, err(%d)",
+		SPDK_ERRLOG("MR %d is used now, err(%d)\n",
 					aqe->req.destroy_mr_req.lkey,
 					aqe->resp.destroy_mr_resp.err_code);
 		return;
@@ -770,7 +807,7 @@ static void vrdma_aq_dereg_mr(struct vrdma_ctrl *ctrl,
 	if (ctrl->srv_ops->vrdma_device_destroy_mr(&ctrl->dev, aqe, &param)) {
 		aqe->resp.destroy_mr_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
-		SPDK_ERRLOG("Failed to notify MR %d dereg MR in service, err(%d)",
+		SPDK_ERRLOG("Failed to notify MR %d dereg MR in service, err(%d)\n",
 					aqe->req.destroy_mr_req.lkey,
 					aqe->resp.destroy_mr_resp.err_code);
 		return;
@@ -801,7 +838,7 @@ static void vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,
 		!ctrl->vdev ||
 		ctrl->vdev->vcq_cnt > VRDMA_DEV_MAX_CQ) {
 		aqe->resp.create_cq_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_EXCEED_MAX;
-		SPDK_ERRLOG("Failed to create CQ, err(%d)",
+		SPDK_ERRLOG("Failed to create CQ, err(%d)\n",
 				  aqe->resp.create_cq_resp.err_code);
 		return;
 	}
@@ -809,7 +846,7 @@ static void vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,
 	if (!veq) {
 		aqe->resp.create_cq_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to find CEQ %d when creation CQ, err(%d)",
+		SPDK_ERRLOG("Failed to find CEQ %d when creation CQ, err(%d)\n",
 					aqe->req.create_cq_req.ceq_handle,
 					aqe->resp.create_cq_resp.err_code);
 		return;
@@ -817,14 +854,14 @@ static void vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,
 	cq_idx = spdk_bit_array_find_first_clear(free_vcq_ids, 0);
 	if (cq_idx == UINT32_MAX) {
 		aqe->resp.create_cq_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
-		SPDK_ERRLOG("Failed to allocate cq_idx, err(%d)",
+		SPDK_ERRLOG("Failed to allocate cq_idx, err(%d)\n",
 				  aqe->resp.create_cq_resp.err_code);
 		return;
 	}
     vcq = calloc(1, sizeof(*vcq));
     if (!vcq) {
 		aqe->resp.create_cq_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
-		SPDK_ERRLOG("Failed to allocate CQ memory, err(%d)",
+		SPDK_ERRLOG("Failed to allocate CQ memory, err(%d)\n",
 				  aqe->resp.create_cq_resp.err_code);
 		return;
 	}
@@ -842,7 +879,7 @@ static void vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,
                              SPDK_MALLOC_DMA);
     if (!vcq->pici) {
 		aqe->resp.create_cq_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
-		SPDK_ERRLOG("Failed to allocate cqe buff");
+		SPDK_ERRLOG("Failed to allocate cqe buff\n");
         goto free_vcq;
     }
     vcq->cqe_ci_mr = ibv_reg_mr(ctrl->pd, vcq->pici, q_buff_size,
@@ -851,7 +888,7 @@ static void vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,
                     IBV_ACCESS_LOCAL_WRITE);
     if (!vcq->cqe_ci_mr) {
 		aqe->resp.create_cq_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
-		SPDK_ERRLOG("Failed to register cqe mr");
+		SPDK_ERRLOG("Failed to register cqe mr\n");
         goto free_cqe_buff;
     }
 	vcq->cqe_buff = (uint8_t *)vcq->pici + sizeof(*vcq->pici);
@@ -859,7 +896,7 @@ static void vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,
 	if (ctrl->srv_ops->vrdma_device_create_cq(&ctrl->dev, aqe, &param)) {
 		aqe->resp.create_cq_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
-		SPDK_ERRLOG("Failed to create CQ in service, err(%d)",
+		SPDK_ERRLOG("Failed to create CQ in service, err(%d)\n",
 				  aqe->resp.create_cq_resp.err_code);
 		goto free_cqe_mr;
 	}
@@ -893,7 +930,7 @@ static void vrdma_aq_destroy_cq(struct vrdma_ctrl *ctrl,
 		!ctrl->vdev->vcq_cnt) {
 		aqe->resp.destroy_cq_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to destroy CQ, err(%d)",
+		SPDK_ERRLOG("Failed to destroy CQ, err(%d)\n",
 				  aqe->resp.destroy_cq_resp.err_code);
 		return;
 	}
@@ -903,7 +940,7 @@ static void vrdma_aq_destroy_cq(struct vrdma_ctrl *ctrl,
 	if (!vcq) {
 		aqe->resp.destroy_cq_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to find destroy CQ %d , err(%d)",
+		SPDK_ERRLOG("Failed to find destroy CQ %d , err(%d)\n",
 					aqe->req.destroy_cq_req.cq_handle,
 					aqe->resp.destroy_cq_resp.err_code);
 		return;
@@ -911,7 +948,7 @@ static void vrdma_aq_destroy_cq(struct vrdma_ctrl *ctrl,
 	if (vcq->ref_cnt) {
 		aqe->resp.destroy_cq_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_REF_CNT_INVALID;
-		SPDK_ERRLOG("CQ %d is used now, err(%d)",
+		SPDK_ERRLOG("CQ %d is used now, err(%d)\n",
 					aqe->req.destroy_cq_req.cq_handle,
 					aqe->resp.destroy_cq_resp.err_code);
 		return;
@@ -919,7 +956,7 @@ static void vrdma_aq_destroy_cq(struct vrdma_ctrl *ctrl,
 	if (ctrl->srv_ops->vrdma_device_destroy_cq(&ctrl->dev, aqe)) {
 		aqe->resp.destroy_cq_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
-		SPDK_ERRLOG("Failed to notify destroy CQ %d in service, err(%d)",
+		SPDK_ERRLOG("Failed to notify destroy CQ %d in service, err(%d)\n",
 					aqe->req.destroy_cq_req.cq_handle,
 					aqe->resp.destroy_cq_resp.err_code);
 		return;
@@ -945,7 +982,7 @@ static int vrdma_create_backend_qp(struct vrdma_ctrl *ctrl,
 	SPDK_NOTICELOG("\nlizh vrdma_create_backend_qp...start\n");
 	qp = calloc(1, sizeof(*qp));
     if (!qp) {
-		SPDK_ERRLOG("Failed to allocate backend QP memory");
+		SPDK_ERRLOG("Failed to allocate backend QP memory\n");
 		return -1;
 	}
 	qp->pd = vqp->vpd->ibpd;
@@ -959,7 +996,7 @@ static int vrdma_create_backend_qp(struct vrdma_ctrl *ctrl,
 	qp->bk_qp.qp_attr.rq_size = vqp->rq.comm.wqebb_cnt;
 	qp->bk_qp.qp_attr.rq_max_sge = 1;
 	if (snap_vrdma_create_qp_helper(qp->pd, &qp->bk_qp)) {
-		SPDK_ERRLOG("Failed to create backend QP ");
+		SPDK_ERRLOG("Failed to create backend QP \n");
 		free(qp);
 		return -1;
 	}
@@ -984,7 +1021,7 @@ static int vrdma_modify_backend_qp_to_ready(struct vrdma_ctrl *ctrl,
 				IBV_ACCESS_REMOTE_ATOMIC | IBV_ACCESS_LOCAL_WRITE;
 	attr_mask = IBV_QP_ACCESS_FLAGS;
 	if (snap_vrdma_modify_bankend_qp_rst2init(sqp, &qp_attr, attr_mask)) {
-		SPDK_ERRLOG("Failed to modify bankend QP reset to init");
+		SPDK_ERRLOG("Failed to modify bankend QP reset to init\n");
 		return -1;
 	}
 
@@ -994,16 +1031,16 @@ static int vrdma_modify_backend_qp_to_ready(struct vrdma_ctrl *ctrl,
 				IBV_MTU_2048 : IBV_MTU_1024;
 	qp_attr.dest_qp_num = vqp->bk_qp[0]->remote_qpn;
 	if (qp_attr.dest_qp_num == VRDMA_INVALID_QPN) {
-		SPDK_ERRLOG("Failed to modify bankend QP for invalid remote qpn");
+		SPDK_ERRLOG("Failed to modify bankend QP for invalid remote qpn\n");
 		return -1;
 	}
 	qp_attr.rq_psn = 0;
 	qp_attr.min_rnr_timer = 12;
 	rdy_attr.dest_mac = vqp->bk_qp[0]->dest_mac;
 	rdy_attr.rgid_rip = vqp->bk_qp[0]->rgid_rip;
-	rdy_attr.src_addr_index = 0;
+	rdy_attr.src_addr_index = 1;
 	if (snap_vrdma_modify_bankend_qp_init2rtr(sqp, &qp_attr, attr_mask, &rdy_attr)) {
-		SPDK_ERRLOG("Failed to modify bankend QP init to RTR");
+		SPDK_ERRLOG("Failed to modify bankend QP init to RTR\n");
 		return -1;
 	}
 
@@ -1014,7 +1051,7 @@ static int vrdma_modify_backend_qp_to_ready(struct vrdma_ctrl *ctrl,
 	qp_attr.rnr_retry = 8;
 	qp_attr.timeout = 32;
 	if (snap_vrdma_modify_bankend_qp_rtr2rts(sqp, &qp_attr, attr_mask)) {
-		SPDK_ERRLOG("Failed to modify bankend QP RTR to RTS");
+		SPDK_ERRLOG("Failed to modify bankend QP RTR to RTS\n");
 		return -1;
 	}
 	SPDK_NOTICELOG("\nlizh vrdma_modify_backend_qp_to_ready...done\n");
@@ -1057,7 +1094,7 @@ static int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 	q_attr.vqpn = vqp->qp_idx;
 	vqp->snap_queue = ctrl->sctrl->q_ops->create(ctrl->sctrl, &q_attr);
 	if (!vqp->snap_queue) {
-		SPDK_ERRLOG("Failed to create qp dma queue");
+		SPDK_ERRLOG("Failed to create qp dma queue\n");
 		return -1;
 	}
 	vrdma_qp_sm_init(vqp);
@@ -1075,7 +1112,7 @@ static int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 	vqp->qp_pi = spdk_malloc(q_buff_size, 0x10, NULL, SPDK_ENV_LCORE_ID_ANY,
                              SPDK_MALLOC_DMA);
     if (!vqp->qp_pi) {
-		SPDK_ERRLOG("Failed to allocate wqe buff");
+		SPDK_ERRLOG("Failed to allocate wqe buff\n");
         goto destroy_dma;
     }
 	vqp->rq.rq_buff = (struct vrdma_recv_wqe *)((uint8_t *)vqp->qp_pi + sizeof(*vqp->qp_pi));
@@ -1085,7 +1122,7 @@ static int vrdma_create_vq(struct vrdma_ctrl *ctrl,
                     IBV_ACCESS_REMOTE_WRITE |
                     IBV_ACCESS_LOCAL_WRITE);
     if (!vqp->qp_mr) {
-		SPDK_ERRLOG("Failed to register qp_mr");
+		SPDK_ERRLOG("Failed to register qp_mr\n");
         goto free_wqe_buff;
     }
 	vqp->rq.comm.wqe_buff_pa = aqe->req.create_qp_req.rq_l0_paddr;
@@ -1148,7 +1185,7 @@ static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
 		!ctrl->vdev ||
 		ctrl->vdev->vqp_cnt > VRDMA_DEV_MAX_QP) {
 		aqe->resp.create_qp_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_EXCEED_MAX;
-		SPDK_ERRLOG("Failed to create QP, err(%d)",
+		SPDK_ERRLOG("Failed to create QP, err(%d)\n",
 				  aqe->resp.create_qp_resp.err_code);
 		return;
 	}
@@ -1156,7 +1193,7 @@ static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
 	if (!vpd) {
 		aqe->resp.create_qp_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to find PD %d when creation QP, err(%d)",
+		SPDK_ERRLOG("Failed to find PD %d when creation QP, err(%d)\n",
 					aqe->req.create_qp_req.pd_handle,
 					aqe->resp.create_qp_resp.err_code);
 		return;
@@ -1165,7 +1202,7 @@ static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
 	if (!sq_vcq) {
 		aqe->resp.create_qp_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to find SQ CQ %d when creation QP, err(%d)",
+		SPDK_ERRLOG("Failed to find SQ CQ %d when creation QP, err(%d)\n",
 					aqe->req.create_qp_req.sq_cqn,
 					aqe->resp.create_qp_resp.err_code);
 		return;
@@ -1174,7 +1211,7 @@ static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
 	if (!rq_vcq) {
 		aqe->resp.create_qp_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to find RQ CQ %d when creation QP, err(%d)",
+		SPDK_ERRLOG("Failed to find RQ CQ %d when creation QP, err(%d)\n",
 					aqe->req.create_qp_req.rq_cqn,
 					aqe->resp.create_qp_resp.err_code);
 		return;
@@ -1183,14 +1220,14 @@ static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
 			VRDMA_NORMAL_VQP_START_IDX);
 	if (qp_idx == UINT32_MAX) {
 		aqe->resp.create_qp_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
-		SPDK_ERRLOG("Failed to allocate qp_idx, err(%d)",
+		SPDK_ERRLOG("Failed to allocate qp_idx, err(%d)\n",
 				  aqe->resp.create_qp_resp.err_code);
 		return;
 	}
     vqp = calloc(1, sizeof(*vqp));
     if (!vqp) {
 		aqe->resp.create_qp_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
-		SPDK_ERRLOG("Failed to allocate QP memory, err(%d)",
+		SPDK_ERRLOG("Failed to allocate QP memory, err(%d)\n",
 				  aqe->resp.create_qp_resp.err_code);
 		return;
 	}
@@ -1211,7 +1248,7 @@ static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
 	if (ctrl->srv_ops->vrdma_device_create_qp(&ctrl->dev, aqe, &param)) {
 		aqe->resp.create_qp_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
-		SPDK_ERRLOG("Failed to create QP in service, err(%d)",
+		SPDK_ERRLOG("Failed to create QP in service, err(%d)\n",
 				  aqe->resp.create_qp_resp.err_code);
 		goto destroy_bk_qp;
 	}
@@ -1247,7 +1284,7 @@ static void vrdma_aq_destroy_qp(struct vrdma_ctrl *ctrl,
 		!ctrl->vdev->vqp_cnt) {
 		aqe->resp.destroy_qp_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to destroy QP, err(%d)",
+		SPDK_ERRLOG("Failed to destroy QP, err(%d)\n",
 				  aqe->resp.destroy_qp_resp.err_code);
 		return;
 	}
@@ -1256,7 +1293,7 @@ static void vrdma_aq_destroy_qp(struct vrdma_ctrl *ctrl,
 	if (!vqp) {
 		aqe->resp.destroy_qp_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to find destroy QP %d , err(%d)",
+		SPDK_ERRLOG("Failed to find destroy QP %d , err(%d)\n",
 					aqe->req.destroy_qp_req.qp_handle,
 					aqe->resp.destroy_qp_resp.err_code);
 		return;
@@ -1264,7 +1301,7 @@ static void vrdma_aq_destroy_qp(struct vrdma_ctrl *ctrl,
 	if (vqp->ref_cnt) {
 		aqe->resp.destroy_qp_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_REF_CNT_INVALID;
-		SPDK_ERRLOG("QP %d is used now, err(%d)",
+		SPDK_ERRLOG("QP %d is used now, err(%d)\n",
 					aqe->req.destroy_qp_req.qp_handle,
 					aqe->resp.destroy_qp_resp.err_code);
 		return;
@@ -1274,7 +1311,7 @@ static void vrdma_aq_destroy_qp(struct vrdma_ctrl *ctrl,
 	if (ctrl->srv_ops->vrdma_device_destroy_qp(&ctrl->dev, aqe)) {
 		aqe->resp.destroy_qp_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
-		SPDK_ERRLOG("Failed to notify destroy QP %d in service, err(%d)",
+		SPDK_ERRLOG("Failed to notify destroy QP %d in service, err(%d)\n",
 					aqe->req.destroy_qp_req.qp_handle,
 					aqe->resp.destroy_qp_resp.err_code);
 		return;
@@ -1304,7 +1341,7 @@ static void vrdma_aq_query_qp(struct vrdma_ctrl *ctrl,
 		!ctrl->vdev->vqp_cnt) {
 		aqe->resp.query_qp_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to query QP, err(%d)",
+		SPDK_ERRLOG("Failed to query QP, err(%d)\n",
 				  aqe->resp.query_qp_resp.err_code);
 		return;
 	}
@@ -1313,7 +1350,7 @@ static void vrdma_aq_query_qp(struct vrdma_ctrl *ctrl,
 	if (!vqp) {
 		aqe->resp.query_qp_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to find query QP %d , err(%d)",
+		SPDK_ERRLOG("Failed to find query QP %d , err(%d)\n",
 					aqe->req.query_qp_req.qp_handle,
 					aqe->resp.query_qp_resp.err_code);
 		return;
@@ -1329,7 +1366,7 @@ static void vrdma_aq_query_qp(struct vrdma_ctrl *ctrl,
 	if (ctrl->srv_ops->vrdma_device_query_qp(&ctrl->dev, aqe)) {
 		aqe->resp.query_qp_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
-		SPDK_ERRLOG("Failed to notify query QP %d in service, err(%d)",
+		SPDK_ERRLOG("Failed to notify query QP %d in service, err(%d)\n",
 					aqe->req.query_qp_req.qp_handle,
 					aqe->resp.query_qp_resp.err_code);
 		return;
@@ -1349,7 +1386,7 @@ static void vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
 		!ctrl->vdev->vqp_cnt) {
 		aqe->resp.modify_qp_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to modify QP, err(%d)",
+		SPDK_ERRLOG("Failed to modify QP, err(%d)\n",
 				  aqe->resp.modify_qp_resp.err_code);
 		return;
 	}
@@ -1357,7 +1394,7 @@ static void vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
 		aqe->resp.modify_qp_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
 		SPDK_ERRLOG("Failed to modify QP for qp_attr_mask "
-				"some bits unsupportted, err(%d)",
+				"some bits unsupportted, err(%d)\n",
 				aqe->resp.modify_qp_resp.err_code);
 		return;
 	}
@@ -1366,7 +1403,7 @@ static void vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
 	if (!vqp) {
 		aqe->resp.modify_qp_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to find QP %d in modify progress , err(%d)",
+		SPDK_ERRLOG("Failed to find QP %d in modify progress , err(%d)\n",
 					aqe->req.modify_qp_req.qp_handle,
 					aqe->resp.modify_qp_resp.err_code);
 		return;
@@ -1405,7 +1442,7 @@ static void vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
 			if (vrdma_modify_backend_qp_to_ready(ctrl, vqp)) {
 				aqe->resp.modify_qp_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_UNKNOWN;
-				SPDK_ERRLOG("Failed to modify bankend QP %d to ready, err(%d)",
+				SPDK_ERRLOG("Failed to modify bankend QP %d to ready, err(%d)\n",
 					aqe->req.modify_qp_req.qp_handle,
 					aqe->resp.modify_qp_resp.err_code);
 			}
@@ -1430,7 +1467,7 @@ static void vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
 	if (ctrl->srv_ops->vrdma_device_modify_qp(&ctrl->dev, aqe)) {
 		aqe->resp.modify_qp_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
-		SPDK_ERRLOG("Failed to notify modify QP %d in service, err(%d)",
+		SPDK_ERRLOG("Failed to notify modify QP %d in service, err(%d)\n",
 					aqe->req.modify_qp_req.qp_handle,
 					aqe->resp.modify_qp_resp.err_code);
 		return;
@@ -1453,21 +1490,21 @@ static void vrdma_aq_create_ceq(struct vrdma_ctrl *ctrl,
 		aqe->req.create_ceq_req.vector_idx >=
 			ctrl->sctrl->bar_curr->num_msix) {
 		aqe->resp.create_ceq_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_EXCEED_MAX;
-		SPDK_ERRLOG("Failed to create ceq, err(%d)",
+		SPDK_ERRLOG("Failed to create ceq, err(%d)\n",
 				  aqe->resp.create_ceq_resp.err_code);
 		return;
 	}
 	eq_idx = spdk_bit_array_find_first_clear(free_veq_ids, 0);
 	if (eq_idx == UINT32_MAX) {
 		aqe->resp.create_ceq_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
-		SPDK_ERRLOG("Failed to allocate eq_idx, err(%d)",
+		SPDK_ERRLOG("Failed to allocate eq_idx, err(%d)\n",
 				  aqe->resp.create_ceq_resp.err_code);
 		return;
 	}
     veq = calloc(1, sizeof(*veq));
     if (!veq) {
 		aqe->resp.create_ceq_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
-		SPDK_ERRLOG("Failed to allocate CEQ memory, err(%d)",
+		SPDK_ERRLOG("Failed to allocate CEQ memory, err(%d)\n",
 				  aqe->resp.create_ceq_resp.err_code);
 		return;
 	}
@@ -1476,7 +1513,7 @@ static void vrdma_aq_create_ceq(struct vrdma_ctrl *ctrl,
 	if (ctrl->srv_ops->vrdma_device_create_eq(&ctrl->dev, aqe, &param)) {
 		aqe->resp.create_ceq_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
-		SPDK_ERRLOG("Failed to create CEQ in service, err(%d)",
+		SPDK_ERRLOG("Failed to create CEQ in service, err(%d)\n",
 				  aqe->resp.create_ceq_resp.err_code);
 		goto free_veq;
 	}
@@ -1521,7 +1558,7 @@ static void vrdma_aq_destroy_ceq(struct vrdma_ctrl *ctrl,
 		!ctrl->vdev->veq_cnt) {
 		aqe->resp.destroy_ceq_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to destroy CEQ, err(%d)",
+		SPDK_ERRLOG("Failed to destroy CEQ, err(%d)\n",
 				  aqe->resp.destroy_ceq_resp.err_code);
 		return;
 	}
@@ -1530,7 +1567,7 @@ static void vrdma_aq_destroy_ceq(struct vrdma_ctrl *ctrl,
 	if (!veq) {
 		aqe->resp.destroy_ceq_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to find destroy CEQ %d , err(%d)",
+		SPDK_ERRLOG("Failed to find destroy CEQ %d , err(%d)\n",
 					aqe->req.destroy_ceq_req.ceq_handle,
 					aqe->resp.destroy_ceq_resp.err_code);
 		return;
@@ -1538,7 +1575,7 @@ static void vrdma_aq_destroy_ceq(struct vrdma_ctrl *ctrl,
 	if (veq->ref_cnt) {
 		aqe->resp.destroy_ceq_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_REF_CNT_INVALID;
-		SPDK_ERRLOG("CEQ %d is used now, err(%d)",
+		SPDK_ERRLOG("CEQ %d is used now, err(%d)\n",
 					aqe->req.destroy_ceq_req.ceq_handle,
 					aqe->resp.destroy_ceq_resp.err_code);
 		return;
@@ -1546,7 +1583,7 @@ static void vrdma_aq_destroy_ceq(struct vrdma_ctrl *ctrl,
 	if (ctrl->srv_ops->vrdma_device_destroy_eq(&ctrl->dev, aqe)) {
 		aqe->resp.destroy_ceq_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
-		SPDK_ERRLOG("Failed to notify destroy CEQ %d in service, err(%d)",
+		SPDK_ERRLOG("Failed to notify destroy CEQ %d in service, err(%d)\n",
 					aqe->req.destroy_ceq_req.ceq_handle,
 					aqe->resp.destroy_ceq_resp.err_code);
 		return;
@@ -1575,7 +1612,7 @@ static void vrdma_aq_create_ah(struct vrdma_ctrl *ctrl,
 		!ctrl->vdev ||
 		ctrl->vdev->vah_cnt > VRDMA_DEV_MAX_AH) {
 		aqe->resp.create_ah_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_EXCEED_MAX;
-		SPDK_ERRLOG("Failed to create ah, err(%d)",
+		SPDK_ERRLOG("Failed to create ah, err(%d)\n",
 				  aqe->resp.create_ah_resp.err_code);
 		return;
 	}
@@ -1583,7 +1620,7 @@ static void vrdma_aq_create_ah(struct vrdma_ctrl *ctrl,
 	if (!vpd) {
 		aqe->resp.create_ah_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to find PD %d when creation AH, err(%d)",
+		SPDK_ERRLOG("Failed to find PD %d when creation AH, err(%d)\n",
 					aqe->req.create_ah_req.pd_handle,
 					aqe->resp.create_ah_resp.err_code);
 		return;
@@ -1591,14 +1628,14 @@ static void vrdma_aq_create_ah(struct vrdma_ctrl *ctrl,
 	ah_idx = spdk_bit_array_find_first_clear(free_vah_ids, 0);
 	if (ah_idx == UINT32_MAX) {
 		aqe->resp.create_ah_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
-		SPDK_ERRLOG("Failed to allocate ah_idx, err(%d)",
+		SPDK_ERRLOG("Failed to allocate ah_idx, err(%d)\n",
 				  aqe->resp.create_ah_resp.err_code);
 		return;
 	}
     vah = calloc(1, sizeof(*vah));
     if (!vah) {
 		aqe->resp.create_ah_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
-		SPDK_ERRLOG("Failed to allocate AH memory, err(%d)",
+		SPDK_ERRLOG("Failed to allocate AH memory, err(%d)\n",
 				  aqe->resp.create_ah_resp.err_code);
 		return;
 	}
@@ -1606,7 +1643,7 @@ static void vrdma_aq_create_ah(struct vrdma_ctrl *ctrl,
 	if (ctrl->srv_ops->vrdma_device_create_ah(&ctrl->dev, aqe, &param)) {
 		aqe->resp.create_ah_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
-		SPDK_ERRLOG("Failed to create AH in service, err(%d)",
+		SPDK_ERRLOG("Failed to create AH in service, err(%d)\n",
 				  aqe->resp.create_ah_resp.err_code);
 		goto free_vah;
 	}
@@ -1639,7 +1676,7 @@ static void vrdma_aq_destroy_ah(struct vrdma_ctrl *ctrl,
 		!ctrl->vdev->vah_cnt) {
 		aqe->resp.destroy_ah_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to destroy AH, err(%d)",
+		SPDK_ERRLOG("Failed to destroy AH, err(%d)\n",
 				  aqe->resp.destroy_ah_resp.err_code);
 		return;
 	}
@@ -1647,7 +1684,7 @@ static void vrdma_aq_destroy_ah(struct vrdma_ctrl *ctrl,
 	if (!vah) {
 		aqe->resp.destroy_ah_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to find destroy AH %d , err(%d)",
+		SPDK_ERRLOG("Failed to find destroy AH %d , err(%d)\n",
 					aqe->req.destroy_ah_req.ah_handle,
 					aqe->resp.destroy_ah_resp.err_code);
 		return;
@@ -1655,7 +1692,7 @@ static void vrdma_aq_destroy_ah(struct vrdma_ctrl *ctrl,
 	if (vah->ref_cnt) {
 		aqe->resp.destroy_ah_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_REF_CNT_INVALID;
-		SPDK_ERRLOG("AH %d is used now, err(%d)",
+		SPDK_ERRLOG("AH %d is used now, err(%d)\n",
 					aqe->req.destroy_ah_req.ah_handle,
 					aqe->resp.destroy_ah_resp.err_code);
 		return;
@@ -1663,7 +1700,7 @@ static void vrdma_aq_destroy_ah(struct vrdma_ctrl *ctrl,
 	if (ctrl->srv_ops->vrdma_device_destroy_ah(&ctrl->dev, aqe)) {
 		aqe->resp.destroy_ah_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
-		SPDK_ERRLOG("Failed to notify destroy AH %d in service, err(%d)",
+		SPDK_ERRLOG("Failed to notify destroy AH %d in service, err(%d)\n",
 					aqe->req.destroy_ah_req.ah_handle,
 					aqe->resp.destroy_ah_resp.err_code);
 		return;
