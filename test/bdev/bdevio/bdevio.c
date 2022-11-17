@@ -75,6 +75,14 @@ wake_ut_thread(void)
 }
 
 static void
+__exit_io_thread(void *arg)
+{
+	assert(spdk_get_thread() == g_thread_io);
+	spdk_thread_exit(g_thread_io);
+	wake_ut_thread();
+}
+
+static void
 __get_io_channel(void *arg)
 {
 	struct io_target *target = arg;
@@ -1220,6 +1228,9 @@ __stop_init_thread(void *arg)
 		rpc_perform_tests_cb(num_failures, request);
 		return;
 	}
+	assert(spdk_get_thread() == g_thread_init);
+	assert(spdk_get_thread() == spdk_thread_get_app_thread());
+	execute_spdk_function(__exit_io_thread, NULL);
 	spdk_app_stop(num_failures);
 }
 
@@ -1325,12 +1336,12 @@ __run_ut_thread(void *arg)
 	struct spdk_jsonrpc_request *request = arg;
 	int rc = 0;
 	struct io_target *target;
-	unsigned num_failures;
 
 	if (CU_initialize_registry() != CUE_SUCCESS) {
 		/* CUnit error, probably won't recover */
 		rc = CU_get_error();
-		stop_init_thread(-rc, request);
+		rc = -rc;
+		goto ret;
 	}
 
 	target = g_io_targets;
@@ -1338,16 +1349,20 @@ __run_ut_thread(void *arg)
 		rc = __setup_ut_on_single_target(target);
 		if (rc < 0) {
 			/* CUnit error, probably won't recover */
-			stop_init_thread(-rc, request);
+			rc = -rc;
+			goto ret;
 		}
 		target = target->next;
 	}
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
-	num_failures = CU_get_number_of_failures();
+	rc = CU_get_number_of_failures();
 	CU_cleanup_registry();
 
-	stop_init_thread(num_failures, request);
+ret:
+	stop_init_thread(rc, request);
+	assert(spdk_get_thread() == g_thread_ut);
+	spdk_thread_exit(g_thread_ut);
 }
 
 static void
