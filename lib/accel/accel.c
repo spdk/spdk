@@ -815,11 +815,89 @@ accel_sequence_task_cb(void *cb_arg, int status)
 	accel_process_sequence(seq);
 }
 
+static bool
+accel_compare_iovs(struct iovec *iova, uint32_t iovacnt, struct iovec *iovb, uint32_t iovbcnt)
+{
+	/* For now, just do a dumb check that the iovecs arrays are exactly the same */
+	if (iovacnt != iovbcnt) {
+		return false;
+	}
+
+	return memcmp(iova, iovb, sizeof(*iova) * iovacnt) == 0;
+}
+
+static void
+accel_sequence_merge_tasks(struct spdk_accel_sequence *seq, struct spdk_accel_task *task,
+			   struct spdk_accel_task **next_task)
+{
+	struct spdk_accel_task *next = *next_task;
+
+	switch (task->op_code) {
+	case ACCEL_OPC_COPY:
+		/* We only allow changing src of operations that actually have a src, e.g. we never
+		 * do it for fill.  Theoretically, it is possible, but we'd have to be careful to
+		 * change the src of the operation after fill (which in turn could also be a fill).
+		 * So, for the sake of simplicity, skip this type of operations for now.
+		 */
+		if (next->op_code != ACCEL_OPC_DECOMPRESS &&
+		    next->op_code != ACCEL_OPC_COPY) {
+			break;
+		}
+		if (task->dst_domain != next->src_domain) {
+			break;
+		}
+		if (!accel_compare_iovs(task->d.iovs, task->d.iovcnt,
+					next->s.iovs, next->s.iovcnt)) {
+			break;
+		}
+		next->s.iovs = task->s.iovs;
+		next->s.iovcnt = task->s.iovcnt;
+		next->src_domain = task->src_domain;
+		TAILQ_REMOVE(&seq->tasks, task, seq_link);
+		TAILQ_INSERT_TAIL(&seq->completed, task, seq_link);
+		break;
+	case ACCEL_OPC_DECOMPRESS:
+		/* We can only merge tasks when one of them is a copy */
+		if (next->op_code != ACCEL_OPC_COPY) {
+			break;
+		}
+		if (task->dst_domain != next->src_domain) {
+			break;
+		}
+		if (!accel_compare_iovs(task->d.iovs, task->d.iovcnt,
+					next->s.iovs, next->s.iovcnt)) {
+			break;
+		}
+		task->d.iovs = next->d.iovs;
+		task->d.iovcnt = next->d.iovcnt;
+		task->dst_domain = next->dst_domain;
+		/* We're removing next_task from the tasks queue, so we need to update its pointer,
+		 * so that the TAILQ_FOREACH_SAFE() loop below works correctly */
+		*next_task = TAILQ_NEXT(next, seq_link);
+		TAILQ_REMOVE(&seq->tasks, next, seq_link);
+		TAILQ_INSERT_TAIL(&seq->completed, next, seq_link);
+		break;
+	case ACCEL_OPC_FILL:
+		break;
+	default:
+		assert(0 && "bad opcode");
+		break;
+	}
+}
+
 int
 spdk_accel_sequence_finish(struct spdk_accel_sequence *seq,
 			   spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
-	struct spdk_accel_task *task;
+	struct spdk_accel_task *task, *next;
+
+	/* Try to remove any copy operations if possible */
+	TAILQ_FOREACH_SAFE(task, &seq->tasks, seq_link, next) {
+		if (next == NULL) {
+			break;
+		}
+		accel_sequence_merge_tasks(seq, task, &next);
+	}
 
 	/* Since we store copy operations' buffers as iovecs, we need to convert them to scalar
 	 * buffers, as that's what accel modules expect
