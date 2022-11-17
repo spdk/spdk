@@ -256,6 +256,7 @@ io_poller(void *ctx)
 		spdk_poller_unregister(&(io->run_poller));
 		spdk_free(io->write_buf);
 		spdk_free(io->read_buf);
+		spdk_thread_exit(spdk_get_thread());
 
 		spdk_app_stop(0);
 
