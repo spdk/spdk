@@ -42,7 +42,7 @@ SNAP_VRDMA_INC_DIR :=$(SPDK_ROOT_DIR)/snap-rdma/vrdma
 
 CFLAGS += $(ENV_CFLAGS)
 CFLAGS += -I$(SNAP_INC_DIR) -I$(SNAP_CTL_INC_DIR) -I$(SNAP_RPC_INC_DIR) -I$(SNAP_VRDMA_INC_DIR)
-C_SRCS = vrdma.c vrdma_admq.c vrdma_controller.c vrdma_emu_mgr.c vrdma_io_mgr.c vrdma_snap.c vrdma_snap_pci_mgr.c vrdma_srv.c
+C_SRCS = vrdma.c vrdma_admq.c vrdma_controller.c vrdma_emu_mgr.c vrdma_io_mgr.c vrdma_snap.c vrdma_snap_pci_mgr.c vrdma_srv.c vrdma_qp.c
 
 LIBNAME = vrdma
 LOCAL_SYS_LIBS = -libverbs -L$(SNAP_LIB_DIR) -lsnap-dma -lsnap -lsnap-mr -lsnap-env -lsnap-vrdma -lsnap-virtio-blk-ctrl

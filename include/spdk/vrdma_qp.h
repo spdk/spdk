@@ -28,25 +28,42 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef __VRDMA_QP_H__
+#define __VRDMA_QP_H__
 #include <stdio.h>
-#include <stdint.h>
-#include <unistd.h>
+#include "spdk/stdinc.h"
+#include "vrdma.h"
+#include "vrdma_admq.h"
+#include "vrdma_controller.h"
+#include "snap_vrdma_virtq.h"
 
-#include "snap_dma.h"
+#define VRDMA_INVALID_QPN 0xFFFFFFFF
 
-#define MAX_VRDMA_THREAD 4
-struct snap_dma_q *thread_dma_q[MAX_VRDMA_THREAD];
+struct snap_vrdma_backend_qp;
 
-// @wqe_head : array to place the batch wqe fetched by dev
-uint16_t vrdma_fetch_sq_wqes(struct vrdma_dev *dev, uint32_t qp_handle, uint32_t idx,
-                             uint16_t num, void* wqe_head, uint32_t lkey)
-{
-	uint32_t tid = gettid();
-	struct snap_dma_q *dma_q = thread_dma_q[tid % MAX_VRDMA_THREAD];
-	struct snap_dma_completion *comp[10];
-	uint32_t max = 100;
+struct vrdma_backend_qp {
+    LIST_ENTRY(vrdma_backend_qp) entry;
+    struct ibv_pd *pd;
+    union ibv_gid rgid_rip;
+    uint32_t poller_core;
+    struct snap_vrdma_backend_qp bk_qp;
+    uint32_t remote_qpn;
+    uint8_t dest_mac[6];
+};
 
-	snap_dma_q_poll_tx(dma_q,comp,max);
-	return 0;
-
-}
+int vrdma_create_backend_qp(struct vrdma_ctrl *ctrl,
+				struct spdk_vrdma_qp *vqp);
+int vrdma_modify_backend_qp_to_ready(struct vrdma_ctrl *ctrl,
+				struct spdk_vrdma_qp *vqp);
+void vrdma_destroy_backend_qp(struct spdk_vrdma_qp *vqp);
+int vrdma_create_vq(struct vrdma_ctrl *ctrl,
+				struct vrdma_admin_cmd_entry *aqe,
+				struct spdk_vrdma_qp *vqp,
+				struct spdk_vrdma_cq *rq_vcq,
+				struct spdk_vrdma_cq *sq_vcq);
+bool vrdma_set_vq_flush(struct vrdma_ctrl *ctrl,
+				struct spdk_vrdma_qp *vqp);
+void vrdma_destroy_vq(struct vrdma_ctrl *ctrl,
+				struct spdk_vrdma_qp *vqp);
+bool vrdma_qp_is_suspended(struct vrdma_ctrl *ctrl, uint32_t qp_handle);
+#endif
