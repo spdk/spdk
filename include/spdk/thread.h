@@ -231,6 +231,10 @@ void spdk_thread_lib_fini(void);
 /**
  * Creates a new SPDK thread object.
  *
+ * Note that the first thread created via spdk_thread_create() will be designated as
+ * the app thread.  Other SPDK libraries may place restrictions on certain APIs to
+ * only be called in the context of this app thread.
+ *
  * \param name Human-readable name for the thread; can be retrieved with spdk_thread_get_name().
  * The string is copied, so the pointed-to data only needs to be valid during the
  * spdk_thread_create() call. May be NULL to specify no name.
@@ -241,6 +245,15 @@ void spdk_thread_lib_fini(void);
  * \return a pointer to the allocated thread on success or NULL on failure..
  */
 struct spdk_thread *spdk_thread_create(const char *name, const struct spdk_cpuset *cpumask);
+
+/**
+ * Return the app thread.
+ *
+ * The app thread is the first thread created using spdk_thread_create().
+ *
+ * \return a pointer to the app thread, or NULL if no thread has been created yet.
+ */
+struct spdk_thread *spdk_thread_get_app_thread(void);
 
 /**
  * Force the current system thread to act as if executing the given SPDK thread.
@@ -260,7 +273,10 @@ void spdk_set_thread(struct spdk_thread *thread);
  * this function. This function will complete these processing. The completion can
  * be queried by spdk_thread_is_exited().
  *
- * \param thread The thread to destroy.
+ * Note that this function must not be called on the app thread until after it
+ * has been called for all other threads.
+ *
+ * \param thread The thread to exit.
  *
  * \return always 0. (return value was deprecated but keep it for ABI compatibility.)
  */

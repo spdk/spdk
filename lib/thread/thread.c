@@ -32,6 +32,8 @@
 #define SPDK_MAX_POLLER_NAME_LEN	256
 #define SPDK_MAX_THREAD_NAME_LEN	256
 
+static struct spdk_thread *g_app_thread;
+
 enum spdk_poller_state {
 	/* The poller is registered with a thread but not currently executing its fn. */
 	SPDK_POLLER_STATE_WAITING,
@@ -377,21 +379,25 @@ spdk_thread_lib_fini(void)
 		SPDK_ERRLOG("io_device %s not unregistered\n", dev->name);
 	}
 
-	if (g_spdk_msg_mempool) {
-		spdk_mempool_free(g_spdk_msg_mempool);
-		g_spdk_msg_mempool = NULL;
-	}
-
 	g_new_thread_fn = NULL;
 	g_thread_op_fn = NULL;
 	g_thread_op_supported_fn = NULL;
 	g_ctx_sz = 0;
+	if (g_app_thread != NULL) {
+		_free_thread(g_app_thread);
+		g_app_thread = NULL;
+	}
+
+	if (g_spdk_msg_mempool) {
+		spdk_mempool_free(g_spdk_msg_mempool);
+		g_spdk_msg_mempool = NULL;
+	}
 }
 
 struct spdk_thread *
 spdk_thread_create(const char *name, const struct spdk_cpuset *cpumask)
 {
-	struct spdk_thread *thread;
+	struct spdk_thread *thread, *null_thread;
 	struct spdk_msg *msgs[SPDK_MSG_MEMPOOL_CACHE_SIZE];
 	int rc = 0, i;
 
@@ -482,7 +488,21 @@ spdk_thread_create(const char *name, const struct spdk_cpuset *cpumask)
 
 	thread->state = SPDK_THREAD_STATE_RUNNING;
 
+	/* If this is the first thread, save it as the app thread.  Use an atomic
+	 * compare + exchange to guard against crazy users who might try to
+	 * call spdk_thread_create() simultaneously on multiple threads.
+	 */
+	null_thread = NULL;
+	__atomic_compare_exchange_n(&g_app_thread, &null_thread, thread, false,
+				    __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+
 	return thread;
+}
+
+struct spdk_thread *
+spdk_thread_get_app_thread(void)
+{
+	return g_app_thread;
 }
 
 void
@@ -578,6 +598,7 @@ spdk_thread_is_exited(struct spdk_thread *thread)
 void
 spdk_thread_destroy(struct spdk_thread *thread)
 {
+	assert(thread != NULL);
 	SPDK_DEBUGLOG(thread, "Destroy thread %s\n", thread->name);
 
 	assert(thread->state == SPDK_THREAD_STATE_EXITED);
@@ -586,7 +607,10 @@ spdk_thread_destroy(struct spdk_thread *thread)
 		tls_thread = NULL;
 	}
 
-	_free_thread(thread);
+	/* To be safe, do not free the app thread until spdk_thread_lib_fini(). */
+	if (thread != g_app_thread) {
+		_free_thread(thread);
+	}
 }
 
 void *

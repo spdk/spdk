@@ -65,6 +65,11 @@ caused a function callback in file descriptor group to execute.
 Added API `spdk_json_write_double` and `spdk_json_write_named_double` to allow
 for writing and decoding of the the double data type.
 
+### thread
+
+Added `spdk_thread_get_app_thread` which returns the first thread that was created using
+`spdk_thread_create`.
+
 ## v22.09
 
 ### accel
