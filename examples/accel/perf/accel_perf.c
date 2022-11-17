@@ -228,6 +228,7 @@ unregister_worker(void *arg1)
 
 	free(worker->task_base);
 	spdk_put_io_channel(worker->ch);
+	spdk_thread_exit(spdk_get_thread());
 	pthread_mutex_lock(&g_workers_lock);
 	assert(g_num_workers >= 1);
 	if (--g_num_workers == 0) {
