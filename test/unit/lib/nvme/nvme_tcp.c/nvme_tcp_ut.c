@@ -1533,6 +1533,44 @@ test_nvme_tcp_ctrlr_delete_io_qpair(void)
 	CU_ASSERT(rc == 0);
 }
 
+static void
+test_nvme_tcp_poll_group_get_stats(void)
+{
+	int rc = 0;
+	struct spdk_sock_group sgroup = {};
+	struct nvme_tcp_poll_group *pgroup = NULL;
+	struct spdk_nvme_transport_poll_group *tgroup = NULL;
+	struct spdk_nvme_transport_poll_group_stat *tgroup_stat = NULL;
+
+	MOCK_SET(spdk_sock_group_create, &sgroup);
+	tgroup = nvme_tcp_poll_group_create();
+	CU_ASSERT(tgroup != NULL);
+	pgroup = nvme_tcp_poll_group(tgroup);
+	CU_ASSERT(pgroup != NULL);
+
+	/* Invalid group pointer, expect fail and return -EINVAL */
+	rc = nvme_tcp_poll_group_get_stats(NULL, &tgroup_stat);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(tgroup_stat == NULL);
+
+	/* Invalid stats, expect fail and return -EINVAL */
+	rc = nvme_tcp_poll_group_get_stats(tgroup, NULL);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* Get stats success */
+	rc = nvme_tcp_poll_group_get_stats(tgroup, &tgroup_stat);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tgroup_stat != NULL);
+	CU_ASSERT(tgroup_stat->trtype == SPDK_NVME_TRANSPORT_TCP);
+	CU_ASSERT(memcmp(&tgroup_stat->tcp, &pgroup->stats, sizeof(struct spdk_nvme_tcp_stat)) == 0);
+
+	nvme_tcp_poll_group_free_stats(tgroup, tgroup_stat);
+	rc = nvme_tcp_poll_group_destroy(tgroup);
+	CU_ASSERT(rc == 0);
+
+	MOCK_CLEAR(spdk_sock_group_create);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1568,6 +1606,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_tcp_ctrlr_disconnect_qpair);
 	CU_ADD_TEST(suite, test_nvme_tcp_ctrlr_create_io_qpair);
 	CU_ADD_TEST(suite, test_nvme_tcp_ctrlr_delete_io_qpair);
+	CU_ADD_TEST(suite, test_nvme_tcp_poll_group_get_stats);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
