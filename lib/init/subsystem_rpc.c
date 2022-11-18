@@ -126,7 +126,7 @@ dump_pci_device(void *ctx, struct spdk_pci_device *dev)
 {
 	struct spdk_json_write_ctx *w = ctx;
 	struct spdk_pci_addr addr;
-	char config[4096], bdf[14];
+	char config[4096], bdf[32];
 	int rc;
 
 	addr = spdk_pci_device_get_addr(dev);
