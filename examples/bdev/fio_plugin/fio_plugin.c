@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -476,6 +477,7 @@ spdk_fio_setup(struct thread_data *td)
 {
 	unsigned int i;
 	struct fio_file *f;
+	int rc;
 
 	/*
 	 * If we're running in a daemonized FIO instance, it's possible
@@ -507,6 +509,11 @@ spdk_fio_setup(struct thread_data *td)
 		g_spdk_env_initialized = true;
 	}
 
+	rc = spdk_fio_init(td);
+	if (rc) {
+		return rc;
+	}
+
 	if (td->o.nr_files == 1 && strcmp(td->files[0]->file_name, "*") == 0) {
 		struct spdk_bdev *bdev;
 
@@ -518,7 +525,6 @@ spdk_fio_setup(struct thread_data *td)
 
 	for_each_file(td, f, i) {
 		struct spdk_bdev *bdev;
-		int rc;
 
 		if (strcmp(f->file_name, "*") == 0) {
 			continue;
@@ -527,6 +533,7 @@ spdk_fio_setup(struct thread_data *td)
 		bdev = spdk_bdev_get_by_name(f->file_name);
 		if (!bdev) {
 			SPDK_ERRLOG("Unable to find bdev with name %s\n", f->file_name);
+			spdk_fio_cleanup(td);
 			return -1;
 		}
 
@@ -537,10 +544,12 @@ spdk_fio_setup(struct thread_data *td)
 
 		rc = spdk_fio_handle_options(td, f, bdev);
 		if (rc) {
+			spdk_fio_cleanup(td);
 			return rc;
 		}
 	}
 
+	spdk_fio_cleanup(td);
 	return 0;
 }
 
@@ -616,11 +625,14 @@ spdk_fio_bdev_open(void *arg)
 /* Called for each thread, on that thread, shortly after the thread
  * starts.
  *
- * Also called by spdk_fio_report_zones(), since we need an I/O channel
+ * Called by spdk_fio_report_zones(), since we need an I/O channel
  * in order to get the zone report. (fio calls the .report_zones callback
  * before it calls the .init callback.)
  * Therefore, if fio was run with --zonemode=zbd, the thread will already
  * be initialized by the time that fio calls the .init callback.
+ *
+ * Called by other ioengine ops that call library functions that use SPDK
+ * spinlocks.
  */
 static int
 spdk_fio_init(struct thread_data *td)
@@ -879,15 +891,22 @@ static int
 spdk_fio_get_zoned_model(struct thread_data *td, struct fio_file *f, enum zbd_zoned_model *model)
 {
 	struct spdk_bdev *bdev;
+	int rc;
 
 	if (f->filetype != FIO_TYPE_BLOCK) {
 		SPDK_ERRLOG("Unsupported filetype: %d\n", f->filetype);
 		return -EINVAL;
 	}
 
+	rc = spdk_fio_init(td);
+	if (rc) {
+		return rc;
+	}
+
 	bdev = spdk_bdev_get_by_name(f->file_name);
 	if (!bdev) {
 		SPDK_ERRLOG("Cannot get zoned model, no bdev with name: %s\n", f->file_name);
+		spdk_fio_cleanup(td);
 		return -ENODEV;
 	}
 
@@ -896,6 +915,8 @@ spdk_fio_get_zoned_model(struct thread_data *td, struct fio_file *f, enum zbd_zo
 	} else {
 		*model = ZBD_NONE;
 	}
+
+	spdk_fio_cleanup(td);
 
 	return 0;
 }
@@ -1140,15 +1161,23 @@ spdk_fio_get_max_open_zones(struct thread_data *td, struct fio_file *f,
 			    unsigned int *max_open_zones)
 {
 	struct spdk_bdev *bdev;
+	int rc;
+
+	rc = spdk_fio_init(td);
+	if (rc) {
+		return rc;
+	}
 
 	bdev = spdk_bdev_get_by_name(f->file_name);
 	if (!bdev) {
 		SPDK_ERRLOG("Cannot get max open zones, no bdev with name: %s\n", f->file_name);
+		spdk_fio_cleanup(td);
 		return -ENODEV;
 	}
 
 	*max_open_zones = spdk_bdev_get_max_open_zones(bdev);
 
+	spdk_fio_cleanup(td);
 	return 0;
 }
 #endif
@@ -1160,15 +1189,12 @@ spdk_fio_handle_options(struct thread_data *td, struct fio_file *f, struct spdk_
 
 	if (fio_options->initial_zone_reset && spdk_bdev_is_zoned(bdev)) {
 #if FIO_HAS_ZBD
-		int rc = spdk_fio_init(td);
-		if (rc) {
-			return rc;
-		}
+		int rc;
+
 		/* offset used to indicate conventional zones that need to be skipped (reset not allowed) */
 		rc = spdk_fio_reset_zones(td->io_ops_data, f->engine_data, td->o.start_offset,
 					  f->real_file_size - td->o.start_offset);
 		if (rc) {
-			spdk_fio_cleanup(td);
 			return rc;
 		}
 #else
