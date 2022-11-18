@@ -71,7 +71,8 @@ waitfornbd nbd0
 # Write and calculate checksum of the data written
 $spdk_dd -m 0x2 -r /var/tmp/spdk_dd.sock --if=/dev/urandom --of=$testdir/testfile --bs=$block_size --count=$data_size
 md5sum $testdir/testfile > $testdir/testfile.md5
-$spdk_dd -m 0x2 -r /var/tmp/spdk_dd.sock --if=$testdir/testfile --of=/dev/nbd0 --bs=$block_size --count=$data_size --oflag=dsync
+$spdk_dd -m 0x2 -r /var/tmp/spdk_dd.sock --if=$testdir/testfile --of=/dev/nbd0 --bs=$block_size --count=$data_size --oflag=direct
+sync /dev/nbd0
 $rpc_py nbd_stop_disk /dev/nbd0
 
 # Force kill bdev service (dirty shutdown) and start it again
