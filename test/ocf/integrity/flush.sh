@@ -4,7 +4,7 @@ curdir=$(dirname $(readlink -f "${BASH_SOURCE[0]}"))
 rootdir=$(readlink -f $curdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 
-bdevperf=$rootdir/test/bdev/bdevperf/bdevperf
+bdevperf=$rootdir/build/examples/bdevperf
 rpc_py="$rootdir/scripts/rpc.py -s /var/tmp/spdk.sock"
 
 check_flush_in_progress() {
