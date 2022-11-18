@@ -604,13 +604,12 @@ static int vrdma_create_remote_mkey(struct vrdma_ctrl *ctrl,
 								ctrl->sctrl->sdev);
 	if (!lattr->crossing_mkey) {
 		SPDK_ERRLOG("\ndev(%s): Failed to create cross mkey\n", ctrl->name);
-		return -1;
+			return -1;
 	}
-
-	if (lattr->num_sge == 1) {
-			lattr->mkey = lattr->crossing_mkey->mkey;
-			lattr->log_base = lattr->sge[0].paddr;
-			lattr->log_size = lattr->sge[0].size;
+	if (lattr->num_sge == 1 && !lattr->start_vaddr) {
+		lattr->mkey = lattr->crossing_mkey->mkey;
+		lattr->log_base = lattr->sge[0].paddr;
+		lattr->log_size = lattr->sge[0].size;
 	} else {
 		lattr->indirect_mkey = vrdma_create_indirect_mkey(ctrl->sctrl->sdev,
 									vmr, lattr, &total_len);
@@ -986,6 +985,7 @@ static int vrdma_create_backend_qp(struct vrdma_ctrl *ctrl,
 		return -1;
 	}
 	qp->pd = vqp->vpd->ibpd;
+	SPDK_NOTICELOG("create backend qp pd 0x%p\n", qp->pd);
 	qp->poller_core = spdk_env_get_current_core();
 	qp->remote_qpn = VRDMA_INVALID_QPN;
 	qp->bk_qp.qp_attr.qp_type = SNAP_OBJ_DEVX;
@@ -1231,6 +1231,7 @@ static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
 				  aqe->resp.create_qp_resp.err_code);
 		return;
 	}
+	SPDK_NOTICELOG("create vqp pd 0x%p \n", vpd->ibpd);
 	vqp->vpd = vpd;
 	vqp->sq_vcq = sq_vcq;
 	vqp->rq_vcq = rq_vcq;
