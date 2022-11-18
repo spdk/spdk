@@ -509,7 +509,7 @@ class Target(Server):
 
     def measure_power(self, results_dir, prefix, script_full_dir):
         time.sleep(self.pm_delay)
-        self.log_print("Starting power measurements")
+        self.log.info("Starting power measurements")
         self.exec_cmd(["%s/../pm/collect-bmc-pm" % script_full_dir,
                       "-d", "%s" % results_dir, "-l", "-p", "%s" % prefix,
                        "-x", "-c", "%s" % self.pm_count, "-t", "%s" % self.pm_interval, "-r"])
