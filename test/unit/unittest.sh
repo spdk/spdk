@@ -180,8 +180,10 @@ else
 fi
 if [ "$cov_avail" = "yes" ]; then
 	# set unit test output dir if not specified in env var
-	if [ -z ${UT_COVERAGE+x} ]; then
+	if [[ -z $output_dir ]]; then
 		UT_COVERAGE="ut_coverage"
+	else
+		UT_COVERAGE=$output_dir/ut_coverage
 	fi
 	mkdir -p $UT_COVERAGE
 	export LCOV_OPTS="

@@ -66,8 +66,6 @@ freebsd_update_contigmem_mod
 # More information: https://github.com/spdk/spdk/issues/1693
 CC_TYPE=$(grep CC_TYPE mk/cc.mk)
 if hash lcov && ! [[ "$CC_TYPE" == *"clang"* ]]; then
-	# setup output dir for unittest.sh
-	export UT_COVERAGE=$out/ut_coverage
 	export LCOV_OPTS="
 		--rc lcov_branch_coverage=1
 		--rc lcov_function_coverage=1
