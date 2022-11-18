@@ -173,6 +173,8 @@ enum spin_error {
 	 * deadlock when another SPDK thread on the same pthread tries to take that lock.
 	 */
 	SPIN_ERR_HOLD_DURING_SWITCH,
+	/* Must be last, not an actual error code */
+	SPIN_ERR_LAST
 };
 
 static const char *spin_error_strings[] = {
