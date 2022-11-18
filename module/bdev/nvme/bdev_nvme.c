@@ -1385,14 +1385,6 @@ bdev_nvme_destruct(void *ctx)
 }
 
 static int
-bdev_nvme_flush(struct nvme_bdev_io *bio, uint64_t offset, uint64_t nbytes)
-{
-	bdev_nvme_io_complete(bio, 0);
-
-	return 0;
-}
-
-static int
 bdev_nvme_create_qpair(struct nvme_qpair *nvme_qpair)
 {
 	struct nvme_ctrlr *nvme_ctrlr;
@@ -2160,9 +2152,7 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 		bdev_nvme_reset_io(nbdev_ch, nbdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		rc = bdev_nvme_flush(nbdev_io,
-				     bdev_io->u.bdev.offset_blocks,
-				     bdev_io->u.bdev.num_blocks);
+		bdev_nvme_io_complete(nbdev_io, 0);
 		break;
 	case SPDK_BDEV_IO_TYPE_ZONE_APPEND:
 		rc = bdev_nvme_zone_appendv(nbdev_io,
