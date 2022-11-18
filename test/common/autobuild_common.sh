@@ -10,13 +10,13 @@ ocf_precompile() {
 	# We compile OCF sources ourselves
 	# They don't need to be checked with scanbuild and code coverage is not applicable
 	# So we precompile OCF now for further use as standalone static library
-	./configure $(echo $config_params | sed 's/--enable-coverage//g')
+	"$rootdir/configure" $(echo $config_params | sed 's/--enable-coverage//g')
 	$MAKE $MAKEFLAGS include/spdk/config.h
-	CC=gcc CCAR=ar $MAKE $MAKEFLAGS -C lib/env_ocf exportlib O=$rootdir/ocf.a
+	CC=gcc CCAR=ar $MAKE $MAKEFLAGS -C "$rootdir/lib/env_ocf" exportlib O="$rootdir/ocf.a"
 	# Set config to use precompiled library
 	config_params="$config_params --with-ocf=/$rootdir/ocf.a"
 	# need to reconfigure to avoid clearing ocf related files on future make clean.
-	./configure $config_params
+	"$rootdir/configure" $config_params
 }
 
 # Find matching llvm fuzzer library and clang compiler version
@@ -33,8 +33,8 @@ llvm_precompile() {
 	[[ -e $fuzzer_lib ]]
 
 	config_params="$config_params --with-fuzzer=$fuzzer_lib"
-	# Need to reconfigure to avoid clearing llvm related files on future make clean.
-	./configure $config_params
+	# need to reconfigure to avoid clearing llvm related files on future make clean.
+	"$rootdir/configure" $config_params
 }
 
 build_native_dpdk() {
@@ -258,7 +258,7 @@ porcelain_check() {
 header_dependency_check() {
 	STAT1=$(stat $SPDK_BIN_DIR/spdk_tgt)
 	sleep 1
-	touch lib/nvme/nvme_internal.h
+	touch "$rootdir/lib/nvme/nvme_internal.h"
 	$MAKE $MAKEFLAGS
 	STAT2=$(stat $SPDK_BIN_DIR/spdk_tgt)
 
@@ -323,12 +323,12 @@ build_doc() {
 }
 
 autobuild_test_suite() {
-	run_test "autobuild_check_format" ./scripts/check_format.sh
+	run_test "autobuild_check_format" "$rootdir/scripts/check_format.sh"
 	run_test "autobuild_check_so_deps" $rootdir/test/make/check_so_deps.sh $1
 	run_test "autobuild_check_dpdk_pci_api" check_dpdk_pci_api
 	if [[ $SPDK_TEST_AUTOBUILD == 'full' ]]; then
 		run_test "autobuild_external_code" $rootdir/test/external_code/test_make.sh $rootdir
-		./configure $config_params --without-shared
+		"$rootdir/configure" $config_params --without-shared
 		$MAKE $MAKEFLAGS
 		run_test "autobuild_generated_files_check" porcelain_check
 		run_test "autobuild_header_dependency_check" header_dependency_check
