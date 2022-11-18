@@ -22,7 +22,7 @@ timeout=240
 
 block_size=4096
 chunk_size=262144
-data_size=$((chunk_size * 2))
+data_size=$chunk_size
 
 restore_kill() {
 	rm -f $testdir/config/ftl.json
