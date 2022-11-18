@@ -128,9 +128,9 @@ Optional, common:
 - irq_scripts_dir - path to scripts directory of Mellanox mlnx-tools package;
   Used to run set_irq_affinity.sh script.
   Default: /usr/src/local/mlnx-tools/ofed_scripts
-- enable_pm - [bool, int(x), int(y), int(z)];
+- enable_pm - bool;
   if bool is set to true, power measurement is enabled via collect-bmc-pm on
-  the target side. For the meaning of remaining options see sar_settings.
+  the target side. Default: true.
 
 Optional, Kernel Target only:
 

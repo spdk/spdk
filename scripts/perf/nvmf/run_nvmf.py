@@ -388,10 +388,7 @@ class Target(Server):
         self.nvme_blocklist = []
 
         # Target-side measurement options
-        self.enable_pm = False
-        self.pm_delay = 0
-        self.pm_interval = 0
-        self.pm_count = 1
+        self.enable_pm = True
         self.enable_sar = True
         self.enable_pcm = True
         self.enable_bw = True
@@ -412,10 +409,8 @@ class Target(Server):
             self.nvme_allowlist = target_config["allowlist"]
             # Blocklist takes precedence, remove common elements from allowlist
             self.nvme_allowlist = list(set(self.nvme_allowlist) - set(self.nvme_blocklist))
-        if "pm_settings" in target_config:
-            self.enable_pm, self.pm_delay, self.pm_interval, self.pm_count = target_config["pm_settings"]
-            # Normalize pm_count - <= 0 means to loop indefinitely so let's avoid that to not block forever
-            self.pm_count = self.pm_count if self.pm_count > 0 else 1
+        if "enable_pm" in target_config:
+            self.enable_pm = target_config["enable_pm"]
         if "enable_sar" in target_config:
             self.enable_sar = target_config["sar_settings"]
         if "enable_pcm" in target_config:
@@ -519,12 +514,12 @@ class Target(Server):
         with open(os.path.join(results_dir, sar_cpu_util_file), "w") as f:
             f.write("%0.2f" % sar_cpu_usage)
 
-    def measure_power(self, results_dir, prefix, script_full_dir):
-        time.sleep(self.pm_delay)
+    def measure_power(self, results_dir, prefix, script_full_dir, ramp_time, run_time):
+        time.sleep(ramp_time)
         self.log.info("Starting power measurements")
         self.exec_cmd(["%s/../pm/collect-bmc-pm" % script_full_dir,
                       "-d", "%s" % results_dir, "-l", "-p", "%s" % prefix,
-                       "-x", "-c", "%s" % self.pm_count, "-t", "%s" % self.pm_interval, "-r"])
+                       "-x", "-c", "%s" % run_time, "-t", "%s" % 1, "-r"])
 
     def ethtool_after_fio_ramp(self, fio_ramp_time):
         time.sleep(fio_ramp_time//2)
@@ -1605,7 +1600,8 @@ if __name__ == "__main__":
 
             if target_obj.enable_pm:
                 power_daemon = threading.Thread(target=target_obj.measure_power,
-                                                args=(args.results, "%s_%s_%s" % (block_size, rw, io_depth), script_full_dir))
+                                                args=(args.results, "%s_%s_%s" % (block_size, rw, io_depth), script_full_dir,
+                                                      fio_ramp_time, fio_run_time))
                 threads.append(power_daemon)
 
             for t in threads:
