@@ -523,6 +523,11 @@ thread_exit(struct spdk_thread *thread, uint64_t now)
 		goto exited;
 	}
 
+	if (spdk_ring_count(thread->messages) > 0) {
+		SPDK_INFOLOG(thread, "thread %s still has messages\n", thread->name);
+		return;
+	}
+
 	TAILQ_FOREACH(poller, &thread->active_pollers, tailq) {
 		if (poller->state != SPDK_POLLER_STATE_UNREGISTERED) {
 			SPDK_INFOLOG(thread,
