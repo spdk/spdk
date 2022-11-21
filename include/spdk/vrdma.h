@@ -63,6 +63,7 @@ struct spdk_vrdma_pd {
     LIST_ENTRY(spdk_vrdma_pd) entry;
 	uint32_t pd_idx;
 	struct ibv_pd *ibpd;
+	struct snap_cross_mkey *crossing_mkey;
 	uint32_t ref_cnt;
 };
 

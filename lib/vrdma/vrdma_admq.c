@@ -391,8 +391,6 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 				  aqe->resp.create_pd_resp.err_code);
 		return;
 	}
-	
-	//vpd->ibpd = ibv_alloc_pd(ctrl->sctx->context);	
 	vpd->ibpd = vrdma_create_sf_pd(vrdma_sf_name);
 	if (!vpd->ibpd) {
 		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
@@ -400,9 +398,6 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 				  aqe->resp.create_pd_resp.err_code);
 		goto free_vpd;
 	}
-
-	/* Create mlnx-qp pool with mlnx-cq/eq and hardcode remote-qpn */
-
 	param.param.create_pd_param.pd_handle = pd_idx;
 	if (ctrl->srv_ops->vrdma_device_create_pd(&ctrl->dev, aqe, &param)) {
 		aqe->resp.create_pd_resp.err_code =
@@ -426,6 +421,17 @@ free_ibpd:
 	ibv_dealloc_pd(vpd->ibpd);
 free_vpd:
 	free(vpd);
+}
+
+static void vrdma_destroy_crossing_mkey(struct snap_device *dev,
+					 struct snap_cross_mkey *crossing_mkey)
+{
+	int ret = 0;
+
+	ret = snap_destroy_cross_mkey(crossing_mkey);
+	if (ret)
+		SPDK_ERRLOG("dev(%s): Failed to destroy cross mkey, err(%d)\n",
+				  dev->pci->pci_number, ret);
 }
 
 static void vrdma_aq_destroy_pd(struct vrdma_ctrl *ctrl,
@@ -470,10 +476,9 @@ static void vrdma_aq_destroy_pd(struct vrdma_ctrl *ctrl,
 	}
 	LIST_REMOVE(vpd, entry);
     ibv_dealloc_pd(vpd->ibpd);
+	if (vpd->crossing_mkey)
+		vrdma_destroy_crossing_mkey(ctrl->sctrl->sdev, vpd->crossing_mkey);
 	spdk_bit_array_clear(free_vpd_ids, vpd->pd_idx);
-
-	/* Free mlnx-qp pool */
-
     free(vpd);
 	g_vpd_cnt--;
 	ctrl->vdev->vpd_cnt--;
@@ -489,20 +494,6 @@ static inline unsigned int log2above(unsigned int v)
 	for (l = 0, r = 0; (v >> 1); ++l, v >>= 1)
 		r |= (v & 1);
 	return l + r;
-}
-
-static void vrdma_destroy_crossing_mkey(struct snap_device *dev,
-					 struct spdk_vrdma_mr_log *lattr)
-{
-	int ret = 0;
-
-	if (lattr->crossing_mkey) {
-		ret = snap_destroy_cross_mkey(lattr->crossing_mkey);
-		if (ret)
-			SPDK_ERRLOG("dev(%s): Failed to destroy cross mkey, err(%d)\n",
-				  dev->pci->pci_number, ret);
-		lattr->crossing_mkey = NULL;
-	}
 }
 
 static void vrdma_indirect_mkey_attr_init(struct snap_device *dev,
@@ -598,10 +589,15 @@ static int vrdma_create_remote_mkey(struct vrdma_ctrl *ctrl,
 {
 	struct spdk_vrdma_mr_log *lattr;
 	uint32_t total_len = 0;
+	struct spdk_vrdma_pd *vpd = vmr->vpd;
 
 	lattr = &vmr->mr_log;
-	lattr->crossing_mkey = snap_create_cross_mkey(vmr->vpd->ibpd,
+	if (vpd->crossing_mkey) {
+		lattr->crossing_mkey = vpd->crossing_mkey;
+	} else {
+		lattr->crossing_mkey = snap_create_cross_mkey(vmr->vpd->ibpd,
 								ctrl->sctrl->sdev);
+	}
 	if (!lattr->crossing_mkey) {
 		SPDK_ERRLOG("\ndev(%s): Failed to create cross mkey\n", ctrl->name);
 			return -1;
@@ -622,14 +618,16 @@ static int vrdma_create_remote_mkey(struct vrdma_ctrl *ctrl,
 		lattr->log_size = total_len;
 		lattr->log_base = 0;
 	}
-
+	if (!vpd->crossing_mkey)
+		vpd->crossing_mkey = lattr->crossing_mkey;
 	SPDK_NOTICELOG("\ndev(%s): Created remote mkey=0x%x, "
 	"start_vaddr=0x%lx, base=0x%lx, size=0x%x\n",
 		  ctrl->name, lattr->mkey, lattr->start_vaddr, lattr->log_base, lattr->log_size);
 	return 0;
 
 destroy_crossing:
-	vrdma_destroy_crossing_mkey(ctrl->sctrl->sdev, lattr);
+	if (!vpd->crossing_mkey)
+		vrdma_destroy_crossing_mkey(ctrl->sctrl->sdev, lattr->crossing_mkey);
 	return -1;
 }
 
@@ -643,7 +641,6 @@ void vrdma_destroy_remote_mkey(struct vrdma_ctrl *ctrl,
 		return;
 	}
 	vrdma_destroy_indirect_mkey(ctrl->sctrl->sdev, lattr);
-	vrdma_destroy_crossing_mkey(ctrl->sctrl->sdev, lattr);
 	return;
 }
 
