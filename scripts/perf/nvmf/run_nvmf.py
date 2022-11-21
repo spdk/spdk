@@ -4,6 +4,9 @@
 #  All rights reserved.
 #
 
+# Note: we use setattr
+# pylint: disable=no-member
+
 import os
 import re
 import sys
@@ -23,6 +26,8 @@ import pandas as pd
 from common import *
 from subprocess import CalledProcessError
 from abc import abstractmethod, ABC
+from dataclasses import dataclass
+from typing import Any
 
 sys.path.append(os.path.dirname(__file__) + '/../../../python')
 
@@ -30,22 +35,37 @@ import spdk.rpc as rpc  # noqa
 import spdk.rpc.client as rpc_client  # noqa
 
 
+@dataclass
+class ConfigField:
+    name: str = None
+    default: Any = None
+    required: bool = False
+
+
 class Server(ABC):
     def __init__(self, name, general_config, server_config):
         self.name = name
-        self.username = general_config["username"]
-        self.password = general_config["password"]
-        self.transport = general_config["transport"].lower()
-        self.skip_spdk_install = general_config.get('skip_spdk_install', False)
-        self.nic_ips = server_config["nic_ips"]
-        self.mode = server_config["mode"]
-        self.irdma_roce_enable = False
 
         self.log = logging.getLogger(self.name)
 
-        self.irq_scripts_dir = "/usr/src/local/mlnx-tools/ofed_scripts"
-        if "irq_scripts_dir" in server_config and server_config["irq_scripts_dir"]:
-            self.irq_scripts_dir = server_config["irq_scripts_dir"]
+        config_fields = [
+            ConfigField(name='username', required=True),
+            ConfigField(name='password', required=True),
+            ConfigField(name='transport', required=True),
+            ConfigField(name='skip_spdk_install', default=False)
+            ConfigField(name='irdma_roce_enable' default=False)
+        ]
+        self.read_config(config_fields, general_config)
+        self.transport = self.transport.lower()
+
+        config_fields = [
+            ConfigField(name='nic_ips', required=True),
+            ConfigField(name='mode', required=True),
+            ConfigField(name='irq_scripts_dir', default='/usr/src/local/mlnx-tools/ofed_scripts')
+            ConfigField(name='enable_arfs', default=False)
+            ConfigField(name='tuned_profile', default='')
+        ]
+        self.read_config(config_fields, server_config)
 
         self.local_nic_info = []
         self._nics_json_obj = {}
@@ -53,26 +73,22 @@ class Server(ABC):
         self.sysctl_restore_dict = {}
         self.tuned_restore_dict = {}
         self.governor_restore = ""
-        self.tuned_profile = ""
 
-        self.enable_adq = False
-        self.adq_priority = None
-        self.enable_arfs = server_config.get("enable_arfs", False)
-        self.irq_settings = {"mode": "default"}
-
-        if "adq_enable" in server_config and server_config["adq_enable"]:
-            self.enable_adq = server_config["adq_enable"]
-            self.adq_priority = 1
-        if "irq_settings" in server_config:
-            self.irq_settings.update(server_config["irq_settings"])
-        if "tuned_profile" in server_config:
-            self.tuned_profile = server_config["tuned_profile"]
-        if "irdma_roce_enable" in general_config:
-            self.irdma_roce_enable = general_config["irdma_roce_enable"]
+        self.enable_adq = server_config.get('adq_enable', False)
+        self.adq_priority = 1 if self.enable_adq else None
+        self.irq_settings = {'mode': 'default', **server_config.get('irq_settings', {})}
 
         if not re.match(r'^[A-Za-z0-9\-]+$', name):
             self.log.info("Please use a name which contains only letters, numbers or dashes")
             sys.exit(1)
+
+    def read_config(self, config_fields, config):
+        for config_field in config_fields:
+            value = config.get(config_field.name, config_field.default)
+            if config_field.required is True and value is None:
+                raise ValueError('%s config key is required' % config_field.name)
+
+            setattr(self, config_field.name, value)
 
     @staticmethod
     def get_uncommented_lines(lines):
@@ -714,36 +730,25 @@ class Initiator(Server):
     def __init__(self, name, general_config, initiator_config):
         super().__init__(name, general_config, initiator_config)
 
-        # Required fields
-        self.ip = initiator_config["ip"]
-        self.target_nic_ips = initiator_config["target_nic_ips"]
+        # Required fields, Defaults
+        config_fields = [
+            ConfigField(name='ip', required=True),
+            ConfigField(name='target_nic_ips', required=True),
+            ConfigField(name='cpus_allowed', default=None),
+            ConfigField(name='cpus_allowed_policy', default='shared'),
+            ConfigField(name='spdk_dir', default='/tmp/spdk'),
+            ConfigField(name='fio_bin', default='/usr/src/fio/fio'),
+            ConfigField(name='nvmecli_bin', default='nvme'),
+            ConfigField(name='cpu_frequency', default=None),
+            ConfigField(name='allow_cpu_sharing', default=True)
+        ]
 
-        # Defaults
-        self.cpus_allowed = None
-        self.cpus_allowed_policy = "shared"
-        self.spdk_dir = "/tmp/spdk"
-        self.fio_bin = "/usr/src/fio/fio"
-        self.nvmecli_bin = "nvme"
-        self.cpu_frequency = None
-        self.subsystem_info_list = []
-        self.allow_cpu_sharing = True
+        self.read_config(config_fields, initiator_config)
 
-        if "spdk_dir" in initiator_config:
-            self.spdk_dir = initiator_config["spdk_dir"]
-        if "fio_bin" in initiator_config:
-            self.fio_bin = initiator_config["fio_bin"]
-        if "nvmecli_bin" in initiator_config:
-            self.nvmecli_bin = initiator_config["nvmecli_bin"]
-        if "cpus_allowed" in initiator_config:
-            self.cpus_allowed = initiator_config["cpus_allowed"]
-        if "cpus_allowed_policy" in initiator_config:
-            self.cpus_allowed_policy = initiator_config["cpus_allowed_policy"]
-        if "cpu_frequency" in initiator_config:
-            self.cpu_frequency = initiator_config["cpu_frequency"]
-        if "allow_cpu_sharing" in initiator_config:
-            self.allow_cpu_sharing = initiator_config["allow_cpu_sharing"]
         if os.getenv('SPDK_WORKSPACE'):
             self.spdk_dir = os.getenv('SPDK_WORKSPACE')
+
+        self.subsystem_info_list = []
 
         self.ssh_connection = paramiko.SSHClient()
         self.ssh_connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -1011,10 +1016,7 @@ class KernelTarget(Target):
     def __init__(self, name, general_config, target_config):
         super().__init__(name, general_config, target_config)
         # Defaults
-        self.nvmet_bin = "nvmetcli"
-
-        if "nvmet_bin" in target_config:
-            self.nvmet_bin = target_config["nvmet_bin"]
+        self.nvmet_bin = target_config.get('nvmet_bin', 'nvmetcli')
 
     def load_drivers(self):
         self.log.info("Loading drivers")
@@ -1134,45 +1136,32 @@ class KernelTarget(Target):
 
 class SPDKTarget(Target):
     def __init__(self, name, general_config, target_config):
-        # Required fields
+        # IRQ affinity on SPDK Target side takes Target's core mask into consideration.
+        # Method setting IRQ affinity is run as part of parent classes init,
+        # so we need to have self.core_mask set before changing IRQ affinity.
         self.core_mask = target_config["core_mask"]
         self.num_cores = len(self.get_core_list_from_mask(self.core_mask))
 
         super().__init__(name, general_config, target_config)
 
-        # Defaults
-        self.dif_insert_strip = False
-        self.null_block_dif_type = 0
-        self.num_shared_buffers = 4096
-        self.max_queue_depth = 128
-        self.bpf_proc = None
-        self.bpf_scripts = []
-        self.enable_dsa = False
-        self.scheduler_core_limit = None
-        self.iobuf_small_pool_count = 32767
-        self.iobuf_large_pool_count = 16383
-        self.num_cqe = 4096
+        # Format: property, default value
+        config_fields = [
+            ConfigField(name='dif_insert_strip', default=False),
+            ConfigField(name='null_block_dif_type', default=0),
+            ConfigField(name='num_shared_buffers', default=4096),
+            ConfigField(name='max_queue_depth', default=128),
+            ConfigField(name='bpf_scripts', default=[]),
+            ConfigField(name='scheduler_core_limit', default=None),
+            ConfigField(name='dsa_settings', default=False),
+            ConfigField(name='iobuf_small_pool_count', default=32767),
+            ConfigField(name='iobuf_large_pool_count', default=16383),
+            ConfigField(name='num_cqe', default=4096)
+        ]
 
-        if "num_shared_buffers" in target_config:
-            self.num_shared_buffers = target_config["num_shared_buffers"]
-        if "max_queue_depth" in target_config:
-            self.max_queue_depth = target_config["max_queue_depth"]
-        if "null_block_dif_type" in target_config:
-            self.null_block_dif_type = target_config["null_block_dif_type"]
-        if "dif_insert_strip" in target_config:
-            self.dif_insert_strip = target_config["dif_insert_strip"]
-        if "bpf_scripts" in target_config:
-            self.bpf_scripts = target_config["bpf_scripts"]
-        if "dsa_settings" in target_config:
-            self.enable_dsa = target_config["dsa_settings"]
-        if "scheduler_core_limit" in target_config:
-            self.scheduler_core_limit = target_config["scheduler_core_limit"]
-        if "iobuf_small_pool_count" in target_config:
-            self.iobuf_small_pool_count = target_config["iobuf_small_pool_count"]
-        if "iobuf_large_pool_count" in target_config:
-            self.iobuf_large_pool_count = target_config["iobuf_large_pool_count"]
-        if "num_cqe" in target_config:
-            self.num_cqe = target_config["num_cqe"]
+        self.read_config(config_fields, target_config)
+
+        self.bpf_proc = None
+        self.enable_dsa = False
 
         self.log.info("====DSA settings:====")
         self.log.info("DSA enabled: %s" % (self.enable_dsa))
@@ -1404,15 +1393,13 @@ class KernelInitiator(Initiator):
         super().__init__(name, general_config, initiator_config)
 
         # Defaults
-        self.extra_params = ""
+        self.extra_params = initiator_config.get('extra_params', '')
+
         self.ioengine = "libaio"
         self.spdk_conf = ""
 
         if "num_cores" in initiator_config:
             self.num_cores = initiator_config["num_cores"]
-
-        if "extra_params" in initiator_config:
-            self.extra_params = initiator_config["extra_params"]
 
         if "kernel_engine" in initiator_config:
             self.ioengine = initiator_config["kernel_engine"]
@@ -1529,9 +1516,8 @@ class SPDKInitiator(Initiator):
             self.install_spdk()
 
         # Optional fields
-        self.enable_data_digest = False
-        if "enable_data_digest" in initiator_config:
-            self.enable_data_digest = initiator_config["enable_data_digest"]
+        self.enable_data_digest = initiator_config.get('enable_data_digest', False)
+
         if "num_cores" in initiator_config:
             self.num_cores = initiator_config["num_cores"]
 
