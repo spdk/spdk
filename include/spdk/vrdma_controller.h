@@ -37,29 +37,16 @@
 #include "spdk/vrdma_admq.h"
 #include "spdk/vrdma_emu_mgr.h"
 #include "spdk/vrdma_srv.h"
-
-#include "snap_vrdma_virtq.h"
+#include "spdk/vrdma_qp.h"
 
 #define VRDMA_EMU_NAME_PREFIX "VrdmaEmu"
 #define VRDMA_EMU_NAME_MAXLEN 32
 #define VRDMA_DMA_ELEM_SIZE 64
-#define VRDMA_INVALID_QPN 0xFFFFFFFF
 
 extern struct vrdma_state_machine vrdma_sm;
 
 struct snap_vrdma_ctrl;
 struct snap_context;
-struct snap_vrdma_backend_qp;
-
-struct vrdma_backend_qp {
-    LIST_ENTRY(vrdma_backend_qp) entry;
-    struct ibv_pd *pd;
-    union ibv_gid rgid_rip;
-    uint32_t poller_core;
-    struct snap_vrdma_backend_qp bk_qp;
-    uint32_t remote_qpn;
-    uint8_t dest_mac[6];
-};
 
 struct vrdma_ctrl {
     char name[VRDMA_EMU_NAME_MAXLEN];

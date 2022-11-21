@@ -47,6 +47,7 @@
 #include "spdk/vrdma_controller.h"
 #include "spdk/vrdma_emu_mgr.h"
 #include "spdk/vrdma_io_mgr.h"
+#include "spdk/vrdma_qp.h"
 
 static uint32_t g_vpd_cnt;
 static uint32_t g_vmr_cnt;
@@ -970,203 +971,6 @@ static void vrdma_aq_destroy_cq(struct vrdma_ctrl *ctrl,
 	return;
 }
 
-static int vrdma_create_backend_qp(struct vrdma_ctrl *ctrl,
-				struct spdk_vrdma_qp *vqp)
-{
-	struct vrdma_backend_qp *qp;
-
-	SPDK_NOTICELOG("\nlizh vrdma_create_backend_qp...start\n");
-	qp = calloc(1, sizeof(*qp));
-    if (!qp) {
-		SPDK_ERRLOG("Failed to allocate backend QP memory\n");
-		return -1;
-	}
-	qp->pd = vqp->vpd->ibpd;
-	SPDK_NOTICELOG("create backend qp pd 0x%p\n", qp->pd);
-	qp->poller_core = spdk_env_get_current_core();
-	qp->remote_qpn = VRDMA_INVALID_QPN;
-	qp->bk_qp.qp_attr.qp_type = SNAP_OBJ_DEVX;
-	qp->bk_qp.qp_attr.sq_size = vqp->sq.comm.wqebb_cnt;
-	//qp->bk_qp.qp_attr.sq_size = ctrl->sctrl->bar_curr->mtu ? ctrl->sctrl->bar_curr->mtu : IBV_MTU_2048;
-	qp->bk_qp.qp_attr.sq_max_sge = 1;
-	qp->bk_qp.qp_attr.sq_max_inline_size = 256;
-	qp->bk_qp.qp_attr.rq_size = vqp->rq.comm.wqebb_cnt;
-	qp->bk_qp.qp_attr.rq_max_sge = 1;
-	if (snap_vrdma_create_qp_helper(qp->pd, &qp->bk_qp)) {
-		SPDK_ERRLOG("Failed to create backend QP \n");
-		free(qp);
-		return -1;
-	}
-	vqp->bk_qp[0] = qp;
-	LIST_INSERT_HEAD(&ctrl->bk_qp_list, qp, entry);
-	SPDK_NOTICELOG("\nlizh vrdma_create_backend_qp...done\n");
-	return 0;
-}
-
-static int vrdma_modify_backend_qp_to_ready(struct vrdma_ctrl *ctrl,
-				struct spdk_vrdma_qp *vqp)
-{
-	struct snap_vrdma_bk_qp_rdy_attr rdy_attr = {0};
-	struct ibv_qp_attr qp_attr = {0};
-	struct snap_qp *sqp;
-	int attr_mask;
-
-	SPDK_NOTICELOG("\nlizh vrdma_modify_backend_qp_to_ready...start\n");
-	/* Modify bankend QP to ready (rst2init + init2rtr + rtr2rts)*/
-	sqp = vqp->bk_qp[0]->bk_qp.sqp;
-	qp_attr.qp_access_flags = IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_REMOTE_READ |
-				IBV_ACCESS_REMOTE_ATOMIC | IBV_ACCESS_LOCAL_WRITE;
-	attr_mask = IBV_QP_ACCESS_FLAGS;
-	if (snap_vrdma_modify_bankend_qp_rst2init(sqp, &qp_attr, attr_mask)) {
-		SPDK_ERRLOG("Failed to modify bankend QP reset to init\n");
-		return -1;
-	}
-
-	attr_mask = IBV_QP_PATH_MTU | IBV_QP_DEST_QPN |
-				IBV_QP_RQ_PSN | IBV_QP_MIN_RNR_TIMER;
-	qp_attr.path_mtu = ctrl->sctrl->bar_curr->mtu > 1024 ?
-				IBV_MTU_2048 : IBV_MTU_1024;
-	qp_attr.dest_qp_num = vqp->bk_qp[0]->remote_qpn;
-	if (qp_attr.dest_qp_num == VRDMA_INVALID_QPN) {
-		SPDK_ERRLOG("Failed to modify bankend QP for invalid remote qpn\n");
-		return -1;
-	}
-	qp_attr.rq_psn = 0;
-	qp_attr.min_rnr_timer = 12;
-	rdy_attr.dest_mac = vqp->bk_qp[0]->dest_mac;
-	rdy_attr.rgid_rip = vqp->bk_qp[0]->rgid_rip;
-	rdy_attr.src_addr_index = 1;
-	if (snap_vrdma_modify_bankend_qp_init2rtr(sqp, &qp_attr, attr_mask, &rdy_attr)) {
-		SPDK_ERRLOG("Failed to modify bankend QP init to RTR\n");
-		return -1;
-	}
-
-	attr_mask = IBV_QP_SQ_PSN | IBV_QP_RETRY_CNT |
-				IBV_QP_RNR_RETRY | IBV_QP_TIMEOUT;
-	qp_attr.sq_psn = 0;
-	qp_attr.retry_cnt = 8;
-	qp_attr.rnr_retry = 8;
-	qp_attr.timeout = 32;
-	if (snap_vrdma_modify_bankend_qp_rtr2rts(sqp, &qp_attr, attr_mask)) {
-		SPDK_ERRLOG("Failed to modify bankend QP RTR to RTS\n");
-		return -1;
-	}
-	SPDK_NOTICELOG("\nlizh vrdma_modify_backend_qp_to_ready...done\n");
-	return 0;
-}
-
-static void vrdma_destroy_backend_qp(struct spdk_vrdma_qp *vqp)
-{
-	struct vrdma_backend_qp *qp;
-	uint32_t i;
-
-	for (i = 0; i < VRDMA_MAX_BK_QP_PER_VQP; i++) {
-		if (vqp->bk_qp[i]) {
-			qp = vqp->bk_qp[i];
-			snap_vrdma_destroy_qp_helper(&qp->bk_qp);
-			vqp->bk_qp[i] = NULL;
-			vqp->bk_qp[i] = NULL;
-			LIST_REMOVE(qp, entry);
-			free(qp);
-		}
-	}
-}
-
-static int vrdma_create_vq(struct vrdma_ctrl *ctrl,
-				struct vrdma_admin_cmd_entry *aqe,
-				struct spdk_vrdma_qp *vqp,
-				struct spdk_vrdma_cq *rq_vcq,
-				struct spdk_vrdma_cq *sq_vcq)
-{
-	struct snap_vrdma_vq_create_attr q_attr;
-	uint32_t rq_buff_size, sq_buff_size, q_buff_size;
-
-	SPDK_NOTICELOG("\nlizh vrdma_create_vq...start\n");
-	q_attr.bdev = NULL;
-	q_attr.pd = ctrl->pd;
-	q_attr.sq_size = VRDMA_MAX_DMA_SQ_SIZE_PER_VQP;
-	q_attr.rq_size = VRDMA_MAX_DMA_RQ_SIZE_PER_VQP;
-	q_attr.tx_elem_size = VRDMA_DMA_ELEM_SIZE;
-	q_attr.rx_elem_size = VRDMA_DMA_ELEM_SIZE;
-	q_attr.vqpn = vqp->qp_idx;
-	vqp->snap_queue = ctrl->sctrl->q_ops->create(ctrl->sctrl, &q_attr);
-	if (!vqp->snap_queue) {
-		SPDK_ERRLOG("Failed to create qp dma queue\n");
-		return -1;
-	}
-	vrdma_qp_sm_init(vqp);
-	vqp->rq.comm.wqebb_size =
-		VRDMA_QP_WQEBB_BASE_SIZE * (aqe->req.create_qp_req.rq_wqebb_size + 1);
-	vqp->rq.comm.wqebb_cnt = 1 << aqe->req.create_qp_req.log_rq_wqebb_cnt;
-	rq_buff_size = vqp->rq.comm.wqebb_size * vqp->rq.comm.wqebb_cnt;
-	q_buff_size = sizeof(*vqp->qp_pi) + rq_buff_size;
-	vqp->sq.comm.wqebb_size =
-		VRDMA_QP_WQEBB_BASE_SIZE * (aqe->req.create_qp_req.sq_wqebb_size + 1);
-	vqp->sq.comm.wqebb_cnt = 1 << aqe->req.create_qp_req.log_sq_wqebb_cnt;
-	sq_buff_size = vqp->sq.comm.wqebb_size * vqp->sq.comm.wqebb_cnt;
-	q_buff_size += sq_buff_size;
-
-	vqp->qp_pi = spdk_malloc(q_buff_size, 0x10, NULL, SPDK_ENV_LCORE_ID_ANY,
-                             SPDK_MALLOC_DMA);
-    if (!vqp->qp_pi) {
-		SPDK_ERRLOG("Failed to allocate wqe buff\n");
-        goto destroy_dma;
-    }
-	vqp->rq.rq_buff = (struct vrdma_recv_wqe *)((uint8_t *)vqp->qp_pi + sizeof(*vqp->qp_pi));
-	vqp->sq.sq_buff = (struct vrdma_send_wqe *)((uint8_t *)vqp->rq.rq_buff + rq_buff_size);
-    vqp->qp_mr = ibv_reg_mr(ctrl->pd, vqp->qp_pi, q_buff_size,
-                    IBV_ACCESS_REMOTE_READ |
-                    IBV_ACCESS_REMOTE_WRITE |
-                    IBV_ACCESS_LOCAL_WRITE);
-    if (!vqp->qp_mr) {
-		SPDK_ERRLOG("Failed to register qp_mr\n");
-        goto free_wqe_buff;
-    }
-	vqp->rq.comm.wqe_buff_pa = aqe->req.create_qp_req.rq_l0_paddr;
-	vqp->rq.comm.doorbell_pa = aqe->req.create_qp_req.rq_pi_paddr;
-	vqp->rq.comm.log_pagesize = aqe->req.create_qp_req.log_rq_pagesize;
-	vqp->rq.comm.hop = aqe->req.create_qp_req.rq_hop;
-	vqp->sq.comm.wqe_buff_pa = aqe->req.create_qp_req.sq_l0_paddr;
-	vqp->sq.comm.doorbell_pa = aqe->req.create_qp_req.sq_pi_paddr;
-	vqp->sq.comm.log_pagesize = aqe->req.create_qp_req.log_sq_pagesize;
-	vqp->sq.comm.hop = aqe->req.create_qp_req.sq_hop;
-	SPDK_NOTICELOG("\nlizh vrdma_create_vq...done\n");
-	return 0;
-
-free_wqe_buff:
-	spdk_free(vqp->qp_pi);
-destroy_dma:
-	ctrl->sctrl->q_ops->destroy(ctrl->sctrl, vqp->snap_queue);
-	return -1;
-}
-
-static void vrdma_destroy_vq(struct vrdma_ctrl *ctrl,
-				struct spdk_vrdma_qp *vqp)
-{
-	bool is_flushing = false;
-
-	/* set queue flushing and waiting it suspended*/
-	if (ctrl->sctrl->q_ops->is_suspended(vqp->snap_queue)) {
-		ctrl->sctrl->q_ops->destroy(ctrl->sctrl, vqp->snap_queue);
-		if (vqp->qp_mr) {
-			ibv_dereg_mr(vqp->qp_mr);
-			vqp->qp_mr = NULL;
-		}
-		if (vqp->qp_pi) {
-			spdk_free(vqp->qp_pi);
-			vqp->qp_pi = NULL;
-			vqp->rq.rq_buff = NULL;
-			vqp->sq.sq_buff = NULL;
-		}
-	} else {
-		ctrl->sctrl->q_ops->suspend(vqp->snap_queue);
-		is_flushing = true;
-	}
-	if (is_flushing) {
-		SPDK_NOTICELOG("\nlizh vrdma_destroy_vq...vq\n");
-	}
-}
-
 static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
@@ -1271,22 +1075,15 @@ free_vqp:
 	return;
 }
 
-static void vrdma_aq_destroy_qp(struct vrdma_ctrl *ctrl,
-				struct vrdma_admin_cmd_entry *aqe)
+static void vrdma_aq_destroy_suspended_qp(struct vrdma_ctrl *ctrl,
+				struct vrdma_admin_cmd_entry *aqe, struct spdk_vrdma_qp *in_vqp)
 {
-	struct spdk_vrdma_qp *vqp = NULL;
+	struct spdk_vrdma_qp *vqp = in_vqp;
 
-	SPDK_NOTICELOG("\nlizh vrdma_aq_destroy_qp..qp_handle=0x%x.start\n",
+	SPDK_NOTICELOG("\nlizh vrdma_aq_destroy_suspended_qp..qp_handle=0x%x.start\n",
 	aqe->req.destroy_qp_req.qp_handle);
-	if (!g_vqp_cnt || !ctrl->vdev ||
-		!ctrl->vdev->vqp_cnt) {
-		aqe->resp.destroy_qp_resp.err_code =
-				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to destroy QP, err(%d)\n",
-				  aqe->resp.destroy_qp_resp.err_code);
-		return;
-	}
-	vqp = find_spdk_vrdma_qp_by_idx(ctrl,
+	if (!vqp)
+		vqp = find_spdk_vrdma_qp_by_idx(ctrl,
 				aqe->req.destroy_qp_req.qp_handle);
 	if (!vqp) {
 		aqe->resp.destroy_qp_resp.err_code =
@@ -1304,7 +1101,6 @@ static void vrdma_aq_destroy_qp(struct vrdma_ctrl *ctrl,
 					aqe->resp.destroy_qp_resp.err_code);
 		return;
 	}
-	vrdma_destroy_backend_qp(vqp);
 	vrdma_destroy_vq(ctrl, vqp);
 	if (ctrl->srv_ops->vrdma_device_destroy_qp(&ctrl->dev, aqe)) {
 		aqe->resp.destroy_qp_resp.err_code =
@@ -1324,8 +1120,47 @@ static void vrdma_aq_destroy_qp(struct vrdma_ctrl *ctrl,
 	vqp->vpd->ref_cnt--;
 	free(vqp);
 	aqe->resp.destroy_qp_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
-	SPDK_NOTICELOG("\nlizh vrdma_aq_destroy_qp...done\n");
-	return;
+	SPDK_NOTICELOG("\nlizh vrdma_aq_destroy_suspended_qp...done\n");
+}
+
+static int vrdma_aq_destroy_qp(struct vrdma_ctrl *ctrl,
+				struct vrdma_admin_cmd_entry *aqe)
+{
+	struct spdk_vrdma_qp *vqp = NULL;
+
+	SPDK_NOTICELOG("\nlizh vrdma_aq_destroy_qp..qp_handle=0x%x.start\n",
+	aqe->req.destroy_qp_req.qp_handle);
+	if (!g_vqp_cnt || !ctrl->vdev ||
+		!ctrl->vdev->vqp_cnt) {
+		aqe->resp.destroy_qp_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
+		SPDK_ERRLOG("Failed to destroy QP, err(%d)",
+				  aqe->resp.destroy_qp_resp.err_code);
+		return 0;
+	}
+	vqp = find_spdk_vrdma_qp_by_idx(ctrl,
+				aqe->req.destroy_qp_req.qp_handle);
+	if (!vqp) {
+		aqe->resp.destroy_qp_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
+		SPDK_ERRLOG("Failed to find destroy QP %d , err(%d)",
+					aqe->req.destroy_qp_req.qp_handle,
+					aqe->resp.destroy_qp_resp.err_code);
+		return 0;
+	}
+	if (vqp->ref_cnt) {
+		aqe->resp.destroy_qp_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_REF_CNT_INVALID;
+		SPDK_ERRLOG("QP %d is used now, err(%d)",
+					aqe->req.destroy_qp_req.qp_handle,
+					aqe->resp.destroy_qp_resp.err_code);
+		return 0;
+	}
+	vrdma_destroy_backend_qp(vqp);
+	if (vrdma_set_vq_flush(ctrl, vqp))
+		return VRDMA_CMD_STATE_WAITING;
+	vrdma_aq_destroy_suspended_qp(ctrl, aqe, vqp);
+	return 0;
 }
 
 static void vrdma_aq_query_qp(struct vrdma_ctrl *ctrl,
@@ -1717,6 +1552,8 @@ static void vrdma_aq_destroy_ah(struct vrdma_ctrl *ctrl,
 int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
 			struct vrdma_admin_cmd_entry *aqe)
 {
+	int ret = 0;
+
 	if (!ctrl || aqe_sanity_check(aqe)) {
 		SPDK_ERRLOG("\nlizh vrdma_parse_admq_entry check input fail\n");
 		return -1;
@@ -1762,7 +1599,7 @@ int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
 				vrdma_aq_create_qp(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_DESTROY_QP:
-				vrdma_aq_destroy_qp(ctrl, aqe);
+				ret = vrdma_aq_destroy_qp(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_QUERY_QP:
 				vrdma_aq_query_qp(ctrl, aqe);
@@ -1813,7 +1650,7 @@ int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
 	}
 	/* End:Just for test*/
 #endif
-	return 0;
+	return ret;
 }
 
 //need invoker to guarantee pi is bigger than ci 
@@ -1987,8 +1824,9 @@ static bool vrdma_aq_sm_waiting(struct vrdma_admin_sw_qp *aq,
 {
 	uint16_t wait_idx;
 	struct vrdma_admin_cmd_entry *aqe;
+	struct vrdma_ctrl *ctrl = container_of(aq, struct vrdma_ctrl, sw_qp);
 
-	SPDK_ERRLOG("lizh vrdma_aq_sm_waiting num_to_parse %d, num_parsed %d\n", 
+	SPDK_NOTICELOG("lizh vrdma_aq_sm_waiting num_to_parse %d, num_parsed %d\n", 
 				aq->num_to_parse, aq->num_parsed);
 	if (status != VRDMA_CMD_SM_OP_OK) {
 		SPDK_ERRLOG("failed to get admq cmd entry, status %d\n", status);
@@ -1999,8 +1837,8 @@ static bool vrdma_aq_sm_waiting(struct vrdma_admin_sw_qp *aq,
 	wait_idx = aq->num_parsed;
 	aqe = &aq->admq->ring[wait_idx];
 	if (aqe->hdr.opcode == VRDMA_ADMIN_DESTROY_QP) {
-		uint8_t qp_state = vrdma_get_qp_status(aqe->req.destroy_qp_req.qp_handle);
-		if (qp_state == SW_VIRTQ_SUSPENDED) {
+		if (vrdma_qp_is_suspended(ctrl, aqe->req.destroy_qp_req.qp_handle)) {
+			vrdma_aq_destroy_suspended_qp(ctrl, aqe, NULL);
 			goto next_sm;
 		} else {
 			aq->state = VRDMA_CMD_STATE_WAITING;
@@ -2009,6 +1847,7 @@ static bool vrdma_aq_sm_waiting(struct vrdma_admin_sw_qp *aq,
 	}
 
 next_sm:
+	SPDK_NOTICELOG("lizh vrdma_aq_sm_waiting set VRDMA_CMD_STATE_WRITE_CMD_BACK\n");
     aq->state = VRDMA_CMD_STATE_WRITE_CMD_BACK;
 	return true;
 }
