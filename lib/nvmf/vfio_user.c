@@ -328,7 +328,6 @@ struct nvmf_vfio_user_sq {
 
 struct nvmf_vfio_user_cq {
 	struct spdk_nvmf_transport_poll_group	*group;
-	struct spdk_thread			*thread;
 	int					cq_ref;
 
 	uint32_t				qid;
@@ -1736,7 +1735,7 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq
 	}
 
 	if (cq->qid == 0) {
-		assert(spdk_get_thread() == cq->thread);
+		assert(spdk_get_thread() == cq->group->group->thread);
 	}
 
 	if (cq_is_full(cq)) {
@@ -2239,9 +2238,11 @@ vfio_user_qpair_delete_cb(void *cb_arg)
 	struct nvmf_vfio_user_ctrlr *vu_ctrlr = ctx->vu_ctrlr;
 	struct nvmf_vfio_user_cq *admin_cq = vu_ctrlr->cqs[0];
 
-	if (admin_cq->thread != spdk_get_thread()) {
-		assert(admin_cq->thread != NULL);
-		spdk_thread_send_msg(admin_cq->thread,
+	assert(admin_cq != NULL);
+	assert(admin_cq->group != NULL);
+	assert(admin_cq->group->group->thread != NULL);
+	if (admin_cq->group->group->thread != spdk_get_thread()) {
+		spdk_thread_send_msg(admin_cq->group->group->thread,
 				     vfio_user_qpair_delete_cb,
 				     cb_arg);
 	} else {
@@ -5071,10 +5072,12 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 
 	admin_cq = vu_ctrlr->cqs[0];
 	assert(admin_cq != NULL);
+	assert(admin_cq->group != NULL);
+	assert(admin_cq->group->group->thread != NULL);
 
 	pthread_mutex_lock(&endpoint->lock);
 	if (nvmf_qpair_is_admin_queue(&sq->qpair)) {
-		admin_cq->thread = spdk_get_thread();
+		assert(admin_cq->group->group->thread == spdk_get_thread());
 		/*
 		 * The admin queue is special as SQ0 and CQ0 are created
 		 * together.
@@ -5087,8 +5090,7 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 		 * been completed. Complete it now.
 		 */
 		if (sq->post_create_io_sq_completion) {
-			assert(admin_cq->thread != NULL);
-			if (admin_cq->thread != spdk_get_thread()) {
+			if (admin_cq->group->group->thread != spdk_get_thread()) {
 				struct vfio_user_post_cpl_ctx *cpl_ctx;
 
 				cpl_ctx = calloc(1, sizeof(*cpl_ctx));
@@ -5103,7 +5105,8 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 				cpl_ctx->cpl.status.sc = SPDK_NVME_SC_SUCCESS;
 				cpl_ctx->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 
-				spdk_thread_send_msg(admin_cq->thread, _post_completion_msg,
+				spdk_thread_send_msg(admin_cq->group->group->thread,
+						     _post_completion_msg,
 						     cpl_ctx);
 			} else {
 				post_completion(vu_ctrlr, admin_cq, 0, 0,
