@@ -80,7 +80,9 @@ static struct spdk_sock_impl_opts g_spdk_posix_sock_impl_opts = {
 	.tls_version = 0,
 	.enable_ktls = false,
 	.psk_key = NULL,
-	.psk_identity = NULL
+	.psk_identity = NULL,
+	.get_key = NULL,
+	.get_key_ctx = NULL
 };
 
 static struct spdk_sock_map g_map = {
@@ -122,6 +124,8 @@ posix_sock_copy_impl_opts(struct spdk_sock_impl_opts *dest, const struct spdk_so
 	SET_FIELD(enable_ktls);
 	SET_FIELD(psk_key);
 	SET_FIELD(psk_identity);
+	SET_FIELD(get_key);
+	SET_FIELD(get_key_ctx);
 
 #undef SET_FIELD
 #undef FIELD_OK
@@ -520,40 +524,52 @@ posix_sock_tls_psk_server_cb(SSL *ssl,
 			     unsigned int max_psk_len)
 {
 	long key_len;
-	unsigned char *default_psk;
+	unsigned char *psk_k = NULL;
+	const char *cipher = NULL;
 	struct spdk_sock_impl_opts *impl_opts;
+	uint8_t sock_psk[PSK_MAX_PSK_LEN] = {};
+	int rc;
 
 	impl_opts = SSL_get_app_data(ssl);
-
-	if (impl_opts->psk_key == NULL) {
-		SPDK_ERRLOG("PSK is not set\n");
-		goto err;
-	}
-	SPDK_DEBUGLOG(sock_posix, "Length of Client's PSK ID %lu\n", strlen(impl_opts->psk_identity));
+	SPDK_DEBUGLOG(sock_posix, "Received PSK ID '%s'\n", id);
 	if (id == NULL) {
 		SPDK_ERRLOG("Received empty PSK ID\n");
 		goto err;
 	}
-	SPDK_DEBUGLOG(sock_posix,  "Received PSK ID '%s'\n", id);
-	if (strcmp(impl_opts->psk_identity, id) != 0) {
-		SPDK_ERRLOG("Unknown Client's PSK ID\n");
-		goto err;
-	}
 
 	SPDK_DEBUGLOG(sock_posix, "Length of Client's PSK KEY %u\n", max_psk_len);
-	default_psk = OPENSSL_hexstr2buf(impl_opts->psk_key, &key_len);
-	if (default_psk == NULL) {
+
+	if (impl_opts->get_key) {
+		rc = impl_opts->get_key(sock_psk, PSK_MAX_PSK_LEN, &cipher, id, impl_opts->get_key_ctx);
+		assert(cipher == NULL);
+		if (rc < 0) {
+			goto err;
+		}
+		psk_k = OPENSSL_hexstr2buf(sock_psk, &key_len);
+	} else {
+		if (impl_opts->psk_key == NULL) {
+			SPDK_ERRLOG("PSK is not set\n");
+			goto err;
+		}
+
+		SPDK_DEBUGLOG(sock_posix, "Length of Client's PSK ID %lu\n", strlen(impl_opts->psk_identity));
+		if (strcmp(impl_opts->psk_identity, id) != 0) {
+			SPDK_ERRLOG("Unknown Client's PSK ID\n");
+			goto err;
+		}
+		psk_k = OPENSSL_hexstr2buf(impl_opts->psk_key, &key_len);
+	}
+	if (psk_k == NULL) {
 		SPDK_ERRLOG("Could not unhexlify PSK\n");
 		goto err;
 	}
 	if (key_len > max_psk_len) {
 		SPDK_ERRLOG("Insufficient buffer size to copy PSK\n");
-		OPENSSL_free(default_psk);
+		OPENSSL_free(psk_k);
 		goto err;
 	}
-
-	memcpy(psk, default_psk, key_len);
-	OPENSSL_free(default_psk);
+	memcpy(psk, psk_k, key_len);
+	OPENSSL_free(psk_k);
 
 	return key_len;
 

@@ -149,6 +149,25 @@ struct spdk_sock_impl_opts {
 	 * Set default PSK identity. Used by ssl socket module.
 	 */
 	char *psk_identity;
+
+	/**
+	 * Optional callback to retrieve PSK based on client's identity.
+	 *
+	 * \param out Buffer for PSK in hexadecimal format to be filled with found key.
+	 * \param out_len Length of "out" buffer.
+	 * \param cipher Cipher suite to be set by this callback.
+	 * \param psk_identity PSK identity for which the key needs to be found.
+	 * \param get_key_ctx Context for this callback.
+	 *
+	 * \return key length on success, -1 on failure.
+	 */
+	int (*get_key)(uint8_t *out, int out_len, const char **cipher, const char *psk_identity,
+		       void *get_key_ctx);
+
+	/**
+	 * Context to be passed to get_key() callback.
+	 */
+	void *get_key_ctx;
 };
 
 /**
