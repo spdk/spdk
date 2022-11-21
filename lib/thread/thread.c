@@ -681,6 +681,8 @@ exited:
 	}
 }
 
+static void _thread_exit(void *ctx);
+
 int
 spdk_thread_exit(struct spdk_thread *thread)
 {
@@ -698,6 +700,11 @@ spdk_thread_exit(struct spdk_thread *thread)
 	thread->exit_timeout_tsc = spdk_get_ticks() + (spdk_get_ticks_hz() *
 				   SPDK_THREAD_EXIT_TIMEOUT_SEC);
 	thread->state = SPDK_THREAD_STATE_EXITING;
+
+	if (spdk_interrupt_mode_is_enabled()) {
+		spdk_thread_send_msg(thread, _thread_exit, thread);
+	}
+
 	return 0;
 }
 
@@ -1122,6 +1129,16 @@ _thread_remove_pollers(void *ctx)
 	thread->poller_unregistered = false;
 }
 
+static void
+_thread_exit(void *ctx)
+{
+	struct spdk_thread *thread = ctx;
+
+	assert(thread->state == SPDK_THREAD_STATE_EXITING);
+
+	thread_exit(thread, spdk_get_ticks());
+}
+
 int
 spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 {
@@ -1144,14 +1161,13 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 			 */
 			rc = thread_poll(thread, max_msgs, now);
 		}
+
+		if (spdk_unlikely(thread->state == SPDK_THREAD_STATE_EXITING)) {
+			thread_exit(thread, now);
+		}
 	} else {
 		/* Non-block wait on thread's fd_group */
 		rc = spdk_fd_group_wait(thread->fgrp, 0);
-	}
-
-
-	if (spdk_unlikely(thread->state == SPDK_THREAD_STATE_EXITING)) {
-		thread_exit(thread, now);
 	}
 
 	thread_update_stats(thread, spdk_get_ticks(), now, rc);
