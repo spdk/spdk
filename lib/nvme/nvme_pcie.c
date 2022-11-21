@@ -104,12 +104,10 @@ _nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
 	struct spdk_nvme_ctrlr *ctrlr, *tmp;
 	struct spdk_pci_event event;
 
-	if (g_spdk_nvme_driver->hotplug_fd < 0) {
-		return 0;
-	}
-
-	while (spdk_pci_get_event(g_spdk_nvme_driver->hotplug_fd, &event) > 0) {
-		_nvme_pcie_event_process(&event, probe_ctx->cb_ctx);
+	if (g_spdk_nvme_driver->hotplug_fd >= 0) {
+		while (spdk_pci_get_event(g_spdk_nvme_driver->hotplug_fd, &event) > 0) {
+			_nvme_pcie_event_process(&event, probe_ctx->cb_ctx);
+		}
 	}
 
 	/* Initiate removal of physically hotremoved PCI controllers. Even after
