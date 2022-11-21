@@ -128,6 +128,8 @@ static const struct option g_cmdline_options[] = {
 	{"rpcs-allowed",		required_argument,	NULL, RPCS_ALLOWED_OPT_IDX},
 #define ENV_VF_TOKEN_OPT_IDX 269
 	{"vfio-vf-token",		required_argument,	NULL, ENV_VF_TOKEN_OPT_IDX},
+#define MSG_MEMPOOL_SIZE_OPT_IDX 270
+	{"msg-mempool-size",		required_argument,	NULL, MSG_MEMPOOL_SIZE_OPT_IDX},
 };
 
 static void
@@ -860,6 +862,8 @@ usage(void (*app_usage)(void))
 	}
 	printf("     --disable-cpumask-locks    Disable CPU core lock files.\n");
 	printf("     --silence-noticelog   disable notice level logging to stderr\n");
+	printf("     --msg-mempool-size <size>  global message memory pool size in count (default: %d)\n",
+	       SPDK_DEFAULT_MSG_MEMPOOL_SIZE);
 	printf(" -u, --no-pci              disable PCI access\n");
 	printf("     --wait-for-rpc        wait for RPCs to initialize subsystems\n");
 	printf("     --max-delay <num>     maximum reactor delay (in microseconds)\n");
@@ -1036,6 +1040,16 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			opts->mem_size = (int) mem_size_mb;
 			break;
 		}
+		case MSG_MEMPOOL_SIZE_OPT_IDX:
+			tmp = spdk_strtol(optarg, 10);
+			if (tmp <= 0) {
+				SPDK_ERRLOG("Invalid message memory pool size %s\n", optarg);
+				goto out;
+			}
+
+			opts->msg_mempool_size = (size_t)tmp;
+			break;
+
 		case NO_PCI_OPT_IDX:
 			opts->no_pci = true;
 			break;
