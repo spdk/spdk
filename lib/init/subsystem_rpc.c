@@ -110,6 +110,7 @@ dump_pci_device(void *ctx, struct spdk_pci_device *dev)
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "address", bdf);
+	spdk_json_write_named_string(w, "type", spdk_pci_device_get_type(dev));
 
 	/* Don't write the extended config space if it's all zeroes */
 	if (spdk_mem_all_zero(&config[256], sizeof(config) - 256)) {
