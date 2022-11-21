@@ -1098,6 +1098,30 @@ thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 	return rc;
 }
 
+static void
+_thread_remove_pollers(void *ctx)
+{
+	struct spdk_thread *thread = ctx;
+	struct spdk_poller *poller, *tmp;
+
+	TAILQ_FOREACH_REVERSE_SAFE(poller, &thread->active_pollers,
+				   active_pollers_head, tailq, tmp) {
+		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+			TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
+			free(poller);
+		}
+	}
+
+	RB_FOREACH_SAFE(poller, timed_pollers_tree, &thread->timed_pollers, tmp) {
+		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+			poller_remove_timer(thread, poller);
+			free(poller);
+		}
+	}
+
+	thread->poller_unregistered = false;
+}
+
 int
 spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 {
@@ -1123,28 +1147,6 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 	} else {
 		/* Non-block wait on thread's fd_group */
 		rc = spdk_fd_group_wait(thread->fgrp, 0);
-
-		/* Reap unregistered pollers out of poller execution in intr mode */
-		if (spdk_unlikely(thread->poller_unregistered)) {
-			struct spdk_poller *poller, *tmp;
-
-			TAILQ_FOREACH_REVERSE_SAFE(poller, &thread->active_pollers,
-						   active_pollers_head, tailq, tmp) {
-				if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
-					TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
-					free(poller);
-				}
-			}
-
-			RB_FOREACH_SAFE(poller, timed_pollers_tree, &thread->timed_pollers, tmp) {
-				if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
-					poller_remove_timer(thread, poller);
-					free(poller);
-				}
-			}
-
-			thread->poller_unregistered = false;
-		}
 	}
 
 
@@ -1751,10 +1753,12 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 			poller_interrupt_fini(poller);
 		}
 
-		/* Mark there is poller unregistered. Then unregistered pollers will
-		 * get reaped by spdk_thread_poll also in intr mode.
-		 */
-		thread->poller_unregistered = true;
+		/* If there is not already a pending poller removal, generate
+		 * a message to go process removals. */
+		if (!thread->poller_unregistered) {
+			thread->poller_unregistered = true;
+			spdk_thread_send_msg(thread, _thread_remove_pollers, thread);
+		}
 	}
 
 	/* If the poller was paused, put it on the active_pollers list so that
