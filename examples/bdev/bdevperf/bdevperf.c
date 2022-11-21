@@ -1577,6 +1577,7 @@ make_cli_job_config(const char *filename, int64_t offset, uint64_t range)
 	config->length = range;
 	config->rw = parse_rw(g_workload_type, BDEVPERF_CONFIG_ERROR);
 	if ((int)config->rw == BDEVPERF_CONFIG_ERROR) {
+		free(config);
 		return -EINVAL;
 	}
 
