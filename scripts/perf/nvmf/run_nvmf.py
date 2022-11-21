@@ -21,6 +21,7 @@ import uuid
 import paramiko
 import pandas as pd
 from common import *
+from subprocess import CalledProcessError
 
 sys.path.append(os.path.dirname(__file__) + '/../../../python')
 
@@ -835,7 +836,7 @@ registerfiles=1
                     output = self.exec_cmd(["sudo", self.fio_bin, fio_config_file, "--output-format=json",
                                             "--output=%s" % output_filename, "--eta=never"], True)
                     self.log.info(output)
-                except subprocess.CalledProcessError as e:
+                except CalledProcessError as e:
                     self.log.error("ERROR: Fio process failed!")
                     self.log.info(e.stdout)
         else:
@@ -1228,7 +1229,7 @@ class KernelInitiator(Initiator):
                     sysfs_opt_path = os.path.join(sysfs, k)
                     try:
                         self.exec_cmd(["sudo", "bash", "-c", "echo %s > %s" % (v, sysfs_opt_path)], stderr_redirect=True)
-                    except subprocess.CalledProcessError as e:
+                    except CalledProcessError as e:
                         self.log.warning("Warning: command %s failed due to error %s. %s was not set!" % (e.cmd, e.output, v))
                     finally:
                         _ = self.exec_cmd(["sudo", "cat", "%s" % (sysfs_opt_path)])
