@@ -4156,6 +4156,16 @@ iscsi_pdu_hdr_op_snack(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	return rc;
 }
 
+static inline uint32_t
+iscsi_get_mobj_max_data_len(struct spdk_mobj *mobj)
+{
+	if (mobj->mp == g_iscsi.pdu_immediate_data_pool) {
+		return iscsi_get_max_immediate_data_size();
+	} else {
+		return SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	}
+}
+
 static int
 iscsi_pdu_hdr_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
@@ -4169,6 +4179,7 @@ iscsi_pdu_hdr_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	uint32_t DataSN;
 	uint32_t buffer_offset;
 	uint32_t len;
+	uint32_t current_desired_data_transfer_length;
 	int F_bit;
 	int rc;
 
@@ -4195,6 +4206,7 @@ iscsi_pdu_hdr_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	}
 
 	lun_dev = spdk_scsi_dev_get_lun(conn->dev, task->lun_id);
+	current_desired_data_transfer_length = task->desired_data_transfer_length;
 
 	if (pdu->data_segment_len > task->desired_data_transfer_length) {
 		SPDK_ERRLOG("the dataout pdu data length is larger than the value sent by R2T PDU\n");
@@ -4272,7 +4284,7 @@ iscsi_pdu_hdr_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 			 * SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH to merge them into a
 			 * single subtask.
 			 */
-			pdu->data_buf_len = spdk_min(task->desired_data_transfer_length,
+			pdu->data_buf_len = spdk_min(current_desired_data_transfer_length,
 						     SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 		}
 	} else {
@@ -4280,7 +4292,7 @@ iscsi_pdu_hdr_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		pdu->mobj[0] = mobj;
 		pdu->data = (void *)((uint64_t)mobj->buf + mobj->data_len);
 		pdu->data_from_mempool = true;
-		pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+		pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(iscsi_get_mobj_max_data_len(mobj));
 
 		iscsi_task_set_mobj(task, NULL);
 	}
@@ -4626,7 +4638,7 @@ iscsi_pdu_payload_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		pdu->mobj[0] = mobj;
 		pdu->data = mobj->buf;
 		pdu->data_from_mempool = true;
-	} else if (mobj->data_len == SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH && read_len > 0) {
+	} else if (mobj->data_len == iscsi_get_mobj_max_data_len(mobj) && read_len > 0) {
 		mobj = pdu->mobj[1];
 		if (mobj == NULL) {
 			/* The first data buffer just ran out. Allocate the second data buffer and
@@ -4650,7 +4662,7 @@ iscsi_pdu_payload_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	}
 
 	/* copy the actual data into local buffer */
-	read_len = spdk_min(read_len, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH - mobj->data_len);
+	read_len = spdk_min(read_len, iscsi_get_mobj_max_data_len(mobj) - mobj->data_len);
 
 	if (read_len > 0) {
 		rc = iscsi_conn_read_data_segment(conn,

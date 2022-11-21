@@ -123,6 +123,21 @@ DEFINE_STUB(spdk_scsi_lun_get_dif_ctx, bool,
 	     struct spdk_dif_ctx *dif_ctx), false);
 
 static void
+alloc_mock_mobj(struct spdk_mobj *mobj, int len)
+{
+	mobj->buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(len));
+	SPDK_CU_ASSERT_FATAL(mobj->buf != NULL);
+
+	g_iscsi.pdu_immediate_data_pool = (struct spdk_mempool *)100;
+	g_iscsi.pdu_data_out_pool = (struct spdk_mempool *)200;
+	if (len == SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
+		mobj->mp = g_iscsi.pdu_data_out_pool;
+	} else {
+		mobj->mp = g_iscsi.pdu_immediate_data_pool;
+	}
+}
+
+static void
 op_login_check_target_test(void)
 {
 	struct spdk_iscsi_conn conn = {};
@@ -2037,11 +2052,8 @@ pdu_payload_read_test(void)
 
 	g_iscsi.FirstBurstLength = SPDK_ISCSI_FIRST_BURST_LENGTH;
 
-	mobj1.buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH));
-	SPDK_CU_ASSERT_FATAL(mobj1.buf != NULL);
-
-	mobj2.buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH));
-	SPDK_CU_ASSERT_FATAL(mobj2.buf != NULL);
+	alloc_mock_mobj(&mobj1, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+	alloc_mock_mobj(&mobj2, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 
 	MOCK_SET(spdk_mempool_get, &mobj1);
 
@@ -2212,14 +2224,9 @@ data_out_pdu_sequence_test(void)
 
 	TAILQ_INSERT_TAIL(&dev.luns, &lun, tailq);
 
-	mobj1.buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH));
-	SPDK_CU_ASSERT_FATAL(mobj1.buf != NULL);
-
-	mobj2.buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH));
-	SPDK_CU_ASSERT_FATAL(mobj2.buf != NULL);
-
-	mobj3.buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH));
-	SPDK_CU_ASSERT_FATAL(mobj3.buf != NULL);
+	alloc_mock_mobj(&mobj1, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+	alloc_mock_mobj(&mobj2, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+	alloc_mock_mobj(&mobj3, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 
 	/* Test scenario is as follows.
 	 *
@@ -2382,8 +2389,7 @@ immediate_data_and_data_out_pdu_sequence_test(void)
 
 	TAILQ_INSERT_TAIL(&dev.luns, &lun, tailq);
 
-	mobj.buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH));
-	SPDK_CU_ASSERT_FATAL(mobj.buf != NULL);
+	alloc_mock_mobj(&mobj, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 
 	/* Test scenario is as follows.
 	 *
