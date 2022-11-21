@@ -75,45 +75,16 @@ if [[ "$ktls" != "false" ]]; then
 	exit 1
 fi
 
-# Check default PSK key
-key=$($rpc_py sock_impl_get_options -i ssl | jq -r .psk_key)
-if [[ "$key" != "null" ]]; then
-	echo "TLS default key should be empty and not $key"
-	exit 1
-fi
-
-# Check default PSK key set
-$rpc_py sock_impl_set_options -i ssl --psk-key 1234567890ABCDEF
-key=$($rpc_py sock_impl_get_options -i ssl | jq -r .psk_key)
-if [[ "$key" != "1234567890ABCDEF" ]]; then
-	echo "TLS key was not set correctly $key != 1234567890ABCDEF"
-	exit 1
-fi
-
-# Check default PSK identity
-identity=$($rpc_py sock_impl_get_options -i ssl | jq -r .psk_identity)
-if [[ "$identity" != "null" ]]; then
-	echo "TLS default identity should be empty and not $identity"
-	exit 1
-fi
-
-# Check default PSK identity set
-$rpc_py sock_impl_set_options -i ssl --psk-identity \
-	"NVMe0R01 nqn.2016-06.io.spdk:host1 nqn.2016-06.io.spdk:cnode1"
-identity=$($rpc_py sock_impl_get_options -i ssl | jq -r .psk_identity)
-if [[ "$identity" != "NVMe0R01 nqn.2016-06.io.spdk:host1 nqn.2016-06.io.spdk:cnode1" ]]; then
-	echo "PSK ID was not set correctly $identity != NVMe0R01 nqn.2016-06.io.spdk:host1 nqn.2016-06.io.spdk:cnode1"
-	exit 1
-fi
-
 $rpc_py sock_impl_set_options -i ssl --tls-version 13
 $rpc_py framework_start_init
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
-$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001 -m 10
+$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -s SPDK00000000000001 -m 10
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT \
-	-a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+	-a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -k
 $rpc_py bdev_malloc_create 32 4096 -b malloc0
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 malloc0 -n 1
+
+$rpc_py nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 --psk 1234567890ABCDEF
 
 # Send IO
 "${NVMF_TARGET_NS_CMD[@]}" $SPDK_EXAMPLE_DIR/perf -S ssl -q 64 -o 4096 -w randrw -M 30 -t 10 \

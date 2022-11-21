@@ -810,6 +810,36 @@ nvmf_tcp_find_port(struct spdk_nvmf_tcp_transport *ttransport,
 }
 
 static int
+tcp_sock_get_key(uint8_t *out, int out_len, const char **cipher, const char *psk_identity,
+		 void *get_key_ctx)
+{
+	struct tcp_psk_entry *entry;
+	struct spdk_nvmf_tcp_transport *ttransport = get_key_ctx;
+	size_t psk_len;
+
+	*cipher = NULL;
+
+	TAILQ_FOREACH(entry, &ttransport->psks, link) {
+		if (strcmp(psk_identity, entry->psk_identity) != 0) {
+			continue;
+		}
+
+		psk_len = strlen(entry->psk);
+		if ((size_t)out_len <= psk_len) {
+			SPDK_ERRLOG("Out buffer of size: %" PRIu32 " cannot fit PSK of len: %lu\n",
+				    out_len, psk_len);
+			return -ENOBUFS;
+		}
+		memcpy(out, entry->psk, psk_len + 1);
+		return psk_len;
+	}
+
+	SPDK_ERRLOG("Could not find PSK for identity: %s\n", psk_identity);
+
+	return -EINVAL;
+}
+
+static int
 nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_transport_id *trid,
 		struct spdk_nvmf_listen_opts *listen_opts)
 {
@@ -852,6 +882,8 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 		sock_impl_name = "ssl";
 		spdk_sock_impl_get_opts(sock_impl_name, &impl_opts, &impl_opts_size);
 		impl_opts.tls_version = SPDK_TLS_VERSION_1_3;
+		impl_opts.get_key = tcp_sock_get_key;
+		impl_opts.get_key_ctx = ttransport;
 		opts.impl_opts = &impl_opts;
 		opts.impl_opts_size = sizeof(impl_opts);
 	}
