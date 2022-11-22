@@ -318,6 +318,6 @@ get_cc_toolchain
 
 cross_compile_packages=(numa uuid crypto_ssl libaio ncurses cunit isal dpdk spdk)
 
-for index in ${cross_compile_packages[*]}; do
+for index in "${cross_compile_packages[@]}"; do
 	cross_compile_$index
 done
