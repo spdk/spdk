@@ -1216,6 +1216,25 @@ override_impl_opts(void)
 	spdk_sock_close(&csock);
 }
 
+static void
+ut_sock_group_get_ctx(void)
+{
+	void *test_ctx = (void *)0xff0000000;
+	void *test_ctx1 = (void *)0xfff000000;
+	void *test_ctx2 = (void *)0xffff00000;
+	struct spdk_sock_group group;
+
+	/* The return should be NULL */
+	test_ctx = spdk_sock_group_get_ctx(NULL);
+	CU_ASSERT(test_ctx == NULL);
+
+	/* The group.ctx should be changed */
+	group.ctx = test_ctx1;
+	test_ctx2 = spdk_sock_group_get_ctx(&group);
+
+	CU_ASSERT(test_ctx1 == test_ctx2);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1238,6 +1257,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, posix_sock_impl_get_set_opts);
 	CU_ADD_TEST(suite, ut_sock_map);
 	CU_ADD_TEST(suite, override_impl_opts);
+	CU_ADD_TEST(suite, ut_sock_group_get_ctx);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
