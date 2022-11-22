@@ -98,7 +98,7 @@ DEFINE_RETURN_MOCK(spdk_vtophys, uint64_t);
 uint64_t
 spdk_vtophys(const void *buf, uint64_t *size)
 {
-	if (size) {
+	if (size && g_vtophys_size > 0) {
 		*size = g_vtophys_size;
 	}
 
@@ -491,7 +491,8 @@ test_build_contig_hw_sgl_request(void)
 static void
 test_nvme_pcie_qpair_build_metadata(void)
 {
-	struct spdk_nvme_qpair qpair = {};
+	struct nvme_pcie_qpair pqpair = {};
+	struct spdk_nvme_qpair *qpair = &pqpair.qpair;
 	struct nvme_tracker tr = {};
 	struct nvme_request req = {};
 	struct spdk_nvme_ctrlr	ctrlr = {};
@@ -499,7 +500,7 @@ test_nvme_pcie_qpair_build_metadata(void)
 
 	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	tr.req = &req;
-	qpair.ctrlr = &ctrlr;
+	qpair->ctrlr = &ctrlr;
 
 	req.payload.md = (void *)0xDEADBEE0;
 	req.md_offset = 0;
@@ -508,7 +509,7 @@ test_nvme_pcie_qpair_build_metadata(void)
 	tr.prp_sgl_bus_addr = 0xDBADBEEF;
 	MOCK_SET(spdk_vtophys, 0xDCADBEE0);
 
-	rc = nvme_pcie_qpair_build_metadata(&qpair, &tr, true, true);
+	rc = nvme_pcie_qpair_build_metadata(qpair, &tr, true, true);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(req.cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_SGL);
 	CU_ASSERT(tr.meta_sgl.address == 0xDCADBEE0);
@@ -516,14 +517,29 @@ test_nvme_pcie_qpair_build_metadata(void)
 	CU_ASSERT(tr.meta_sgl.unkeyed.length == 4096);
 	CU_ASSERT(tr.meta_sgl.unkeyed.subtype == 0);
 	CU_ASSERT(req.cmd.mptr == (0xDBADBEEF - sizeof(struct spdk_nvme_sgl_descriptor)));
+
+	/* Non-IOVA contiguous metadata buffers should fail. */
+	g_vtophys_size = 1024;
+	req.cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
+	rc = nvme_pcie_qpair_build_metadata(qpair, &tr, true, true);
+	CU_ASSERT(rc == -EINVAL);
+	g_vtophys_size = 0;
+
 	MOCK_CLEAR(spdk_vtophys);
 
 	/* Build non sgl metadata */
 	MOCK_SET(spdk_vtophys, 0xDDADBEE0);
 
-	rc = nvme_pcie_qpair_build_metadata(&qpair, &tr, false, true);
+	rc = nvme_pcie_qpair_build_metadata(qpair, &tr, false, true);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(req.cmd.mptr == 0xDDADBEE0);
+
+	/* Non-IOVA contiguous metadata buffers should fail. */
+	g_vtophys_size = 1024;
+	rc = nvme_pcie_qpair_build_metadata(qpair, &tr, false, true);
+	CU_ASSERT(rc == -EINVAL);
+	g_vtophys_size = 0;
+
 	MOCK_CLEAR(spdk_vtophys);
 }
 

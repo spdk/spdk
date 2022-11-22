@@ -1585,6 +1585,7 @@ nvme_pcie_qpair_build_metadata(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 {
 	void *md_payload;
 	struct nvme_request *req = tr->req;
+	uint64_t mapping_length;
 
 	if (req->payload.md) {
 		md_payload = req->payload.md + req->md_offset;
@@ -1593,11 +1594,13 @@ nvme_pcie_qpair_build_metadata(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 			goto exit;
 		}
 
+		mapping_length = req->md_size;
 		if (sgl_supported && dword_aligned) {
 			assert(req->cmd.psdt == SPDK_NVME_PSDT_SGL_MPTR_CONTIG);
 			req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_SGL;
-			tr->meta_sgl.address = nvme_pcie_vtophys(qpair->ctrlr, md_payload, NULL);
-			if (tr->meta_sgl.address == SPDK_VTOPHYS_ERROR) {
+
+			tr->meta_sgl.address = nvme_pcie_vtophys(qpair->ctrlr, md_payload, &mapping_length);
+			if (tr->meta_sgl.address == SPDK_VTOPHYS_ERROR || mapping_length != req->md_size) {
 				goto exit;
 			}
 			tr->meta_sgl.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
@@ -1605,8 +1608,8 @@ nvme_pcie_qpair_build_metadata(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 			tr->meta_sgl.unkeyed.subtype = 0;
 			req->cmd.mptr = tr->prp_sgl_bus_addr - sizeof(struct spdk_nvme_sgl_descriptor);
 		} else {
-			req->cmd.mptr = nvme_pcie_vtophys(qpair->ctrlr, md_payload, NULL);
-			if (req->cmd.mptr == SPDK_VTOPHYS_ERROR) {
+			req->cmd.mptr = nvme_pcie_vtophys(qpair->ctrlr, md_payload, &mapping_length);
+			if (req->cmd.mptr == SPDK_VTOPHYS_ERROR || mapping_length != req->md_size) {
 				goto exit;
 			}
 		}
