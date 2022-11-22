@@ -321,7 +321,9 @@ function build_doc() {
 		$MAKE -C "$rootdir"/doc/output/latex --no-print-directory $MAKEFLAGS &>> "$out"/doxygen.log
 	fi
 	mkdir -p "$out"/doc
-	mv "$rootdir"/doc/output/html "$out"/doc
+	# Copy and remove files to avoid mv: failed to preserve ownership error
+	cp -r --preserve=mode "$rootdir"/doc/output/html "$out"/doc
+	rm -rf "$rootdir"/doc/output/html
 	if [ -f "$rootdir"/doc/output/latex/refman.pdf ]; then
 		mv "$rootdir"/doc/output/latex/refman.pdf "$out"/doc/spdk.pdf
 	fi
