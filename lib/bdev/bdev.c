@@ -3705,6 +3705,23 @@ bdev_io_stat_free(struct spdk_bdev_io_stat *stat)
 	free(stat);
 }
 
+void
+bdev_get_iostat_dump(struct spdk_json_write_ctx *w, struct spdk_bdev_io_stat *stat)
+{
+	spdk_json_write_named_uint64(w, "bytes_read", stat->bytes_read);
+	spdk_json_write_named_uint64(w, "num_read_ops", stat->num_read_ops);
+	spdk_json_write_named_uint64(w, "bytes_written", stat->bytes_written);
+	spdk_json_write_named_uint64(w, "num_write_ops", stat->num_write_ops);
+	spdk_json_write_named_uint64(w, "bytes_unmapped", stat->bytes_unmapped);
+	spdk_json_write_named_uint64(w, "num_unmap_ops", stat->num_unmap_ops);
+	spdk_json_write_named_uint64(w, "bytes_copied", stat->bytes_copied);
+	spdk_json_write_named_uint64(w, "num_copy_ops", stat->num_copy_ops);
+	spdk_json_write_named_uint64(w, "read_latency_ticks", stat->read_latency_ticks);
+	spdk_json_write_named_uint64(w, "write_latency_ticks", stat->write_latency_ticks);
+	spdk_json_write_named_uint64(w, "unmap_latency_ticks", stat->unmap_latency_ticks);
+	spdk_json_write_named_uint64(w, "copy_latency_ticks", stat->copy_latency_ticks);
+}
+
 static void
 bdev_channel_abort_queued_ios(struct spdk_bdev_channel *ch)
 {
