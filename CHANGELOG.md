@@ -1,16 +1,59 @@
 # Changelog
 
-## v22.01.2: (Upcoming Release)
+## v22.01.2
+
+### dpdk
+
+DPDK submodule is now updated to 21.11.2, it contains fixes up to DPDK 22.07
+as well as fixes for CVE-2022-28199 and CVE-2022-2132.
+
+Note that SPDK 22.01 will not work with DPDK 22.11 and later due to changes in PCI DPDK API.
+
+(#2460) Temporarily disabled stringop-overread for DPDK compilation.
+
+(#2456) Removed assert from `pci_device_fini()`.
+
+### bdev_nvme
+
+(#2632) Fail reset sequence immediately if controller is already removed.
+
+### bdev_ocf
+
+OCF submodule is now updated to 21.6.3.1.
 
 ### nvme
 
-Added  `spdk_nvme_ctrlr_disable_read_changed_ns_list_log_page` to allow an
+(#2647) Added  `spdk_nvme_ctrlr_disable_read_changed_ns_list_log_page` to allow an
 application to tell the driver to not read the CHANGED_NS_LIST log page in
 response to a NS_ATTR_CHANGED AEN.  Applications that are consuming data from
 the CHANGED_NS_LIST log page *must* call this new API when upgrading to SPDK
 v22.01.  Otherwise the driver will perform the read to clear the AEN before
 notifying the application, and when the application reads it the log page will
 be empty.
+
+(#2201) Check CSTS.CFS when initializing controller.
+
+### nvmf_rdma
+
+(#2541) Fix data_wr_pool corruption.
+
+### nvmf_tcp
+
+(#2527) Unregister timeout poller in qpair_destroy.
+
+(#2445) Delay completion for zcopy requests with in-progress writes.
+
+### vfio-user
+
+libvfio-user submodule is now updated to support building with meson.
+
+(#2530) Take endpoint as input parameter in quiesce_done.
+
+### vhost
+
+(#2452) Copy virtio_blk_outhdr to local struct.
+
+(#2518) Do not kick VM when there are outstanding vhost-user messages.
 
 ## v22.01.1
 
