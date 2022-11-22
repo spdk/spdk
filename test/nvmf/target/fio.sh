@@ -40,7 +40,7 @@ $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 raid0
 # Append the concat0 bdev into subsystem
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 concat0
 
-nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+$NVME_CONNECT -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 waitforserial $NVMF_SERIAL 4
 

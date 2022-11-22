@@ -6,6 +6,7 @@ NVMF_IP_LEAST_ADDR=8
 NVMF_TCP_IP_ADDRESS="127.0.0.1"
 NVMF_TRANSPORT_OPTS=""
 NVMF_SERIAL=SPDK00000000000001
+NVME_CONNECT="nvme connect"
 NET_TYPE=${NET_TYPE:-phy-fallback}
 
 function build_nvmf_app_args() {
@@ -291,6 +292,7 @@ function gather_supported_nvmf_pci_devs() {
 	x722+=(${pci_bus_cache["$intel:0x37d2"]})
 	# ConnectX-5
 	mlx+=(${pci_bus_cache["$mellanox:0x1017"]})
+	mlx+=(${pci_bus_cache["$mellanox:0x1019"]})
 	# ConnectX-4
 	mlx+=(${pci_bus_cache["$mellanox:0x1015"]})
 	mlx+=(${pci_bus_cache["$mellanox:0x1013"]})
@@ -324,6 +326,20 @@ function gather_supported_nvmf_pci_devs() {
 		if [[ ${pci_bus_driver["$pci"]} == unbound ]]; then
 			echo "$pci not bound, needs ${pci_mod_resolved["$pci"]}"
 			pci_drivers["${pci_mod_resolved["$pci"]}"]=1
+		fi
+		if [[ ${pci_ids_device["$pci"]} == "0x1017" ]] \
+			|| [[ ${pci_ids_device["$pci"]} == "0x1019" ]] \
+			|| [[ $TEST_TRANSPORT == rdma ]]; then
+			# Reduce maximum number of queues when connecting with
+			# ConnectX-5 NICs. When using host systems with nproc > 64
+			# connecting with default options (where default equals to
+			# number of host online CPUs) creating all IO queues
+			# takes too much time and results in keep-alive timeout.
+			# See:
+			# https://github.com/spdk/spdk/issues/2772
+			# 0x1017 - MT27800 Family ConnectX-5
+			# 0x1019 - MT28800 Family ConnectX-5 Ex
+			NVME_CONNECT="nvme connect -i 15"
 		fi
 	done
 

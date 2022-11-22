@@ -54,7 +54,7 @@ function nvmf_filesystem_part() {
 
 	malloc_size=$(($(get_bdev_size $malloc_name) * 1024 * 1024))
 
-	nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+	$NVME_CONNECT -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 	waitforserial "$NVMF_SERIAL"
 	nvme_name=$(lsblk -l -o NAME,SERIAL | grep -oP "([\w]*)(?=\s+${NVMF_SERIAL})")
