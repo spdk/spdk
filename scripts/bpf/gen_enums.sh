@@ -9,7 +9,7 @@ _print_enums() {
 	output=$(< "$rootdir/$(git -C "$rootdir" grep -G -l "$enum_string" -- lib module)")
 
 	# Isolate the enum block
-	output=${output#*$enum_string$'\n'} output=${output%%$'\n'\};*}
+	output=${output#*"$enum_string"$'\n'} output=${output%%$'\n'\};*}
 	# Fold it onto an array
 	IFS="," read -ra output <<< "${output//[[:space:]]/}"
 	# Drop the assignments
