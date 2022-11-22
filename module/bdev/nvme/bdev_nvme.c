@@ -3096,7 +3096,7 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 		if (uuid) {
 			disk->uuid = *uuid;
 		} else if (g_opts.generate_uuids) {
-			spdk_strcpy_pad(sn_tmp, cdata->sn, SPDK_NVME_CTRLR_SN_LEN + 1, '\0');
+			spdk_strcpy_pad(sn_tmp, cdata->sn, SPDK_NVME_CTRLR_SN_LEN, '\0');
 			disk->uuid = nvme_generate_uuid(sn_tmp, spdk_nvme_ns_get_id(ns));
 		}
 	} else {
