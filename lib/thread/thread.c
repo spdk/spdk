@@ -263,65 +263,6 @@ _thread_lib_init(size_t ctx_sz, size_t msg_mempool_sz)
 	return 0;
 }
 
-int
-spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn, size_t ctx_sz)
-{
-	assert(g_new_thread_fn == NULL);
-	assert(g_thread_op_fn == NULL);
-
-	if (new_thread_fn == NULL) {
-		SPDK_INFOLOG(thread, "new_thread_fn was not specified at spdk_thread_lib_init\n");
-	} else {
-		g_new_thread_fn = new_thread_fn;
-	}
-
-	return _thread_lib_init(ctx_sz, SPDK_DEFAULT_MSG_MEMPOOL_SIZE);
-}
-
-int
-spdk_thread_lib_init_ext(spdk_thread_op_fn thread_op_fn,
-			 spdk_thread_op_supported_fn thread_op_supported_fn,
-			 size_t ctx_sz, size_t msg_mempool_sz)
-{
-	assert(g_new_thread_fn == NULL);
-	assert(g_thread_op_fn == NULL);
-	assert(g_thread_op_supported_fn == NULL);
-
-	if ((thread_op_fn != NULL) != (thread_op_supported_fn != NULL)) {
-		SPDK_ERRLOG("Both must be defined or undefined together.\n");
-		return -EINVAL;
-	}
-
-	if (thread_op_fn == NULL && thread_op_supported_fn == NULL) {
-		SPDK_INFOLOG(thread, "thread_op_fn and thread_op_supported_fn were not specified\n");
-	} else {
-		g_thread_op_fn = thread_op_fn;
-		g_thread_op_supported_fn = thread_op_supported_fn;
-	}
-
-	return _thread_lib_init(ctx_sz, msg_mempool_sz);
-}
-
-void
-spdk_thread_lib_fini(void)
-{
-	struct io_device *dev;
-
-	RB_FOREACH(dev, io_device_tree, &g_io_devices) {
-		SPDK_ERRLOG("io_device %s not unregistered\n", dev->name);
-	}
-
-	if (g_spdk_msg_mempool) {
-		spdk_mempool_free(g_spdk_msg_mempool);
-		g_spdk_msg_mempool = NULL;
-	}
-
-	g_new_thread_fn = NULL;
-	g_thread_op_fn = NULL;
-	g_thread_op_supported_fn = NULL;
-	g_ctx_sz = 0;
-}
-
 static void thread_interrupt_destroy(struct spdk_thread *thread);
 static int thread_interrupt_create(struct spdk_thread *thread);
 
@@ -386,6 +327,65 @@ _free_thread(struct spdk_thread *thread)
 
 	spdk_ring_free(thread->messages);
 	free(thread);
+}
+
+int
+spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn, size_t ctx_sz)
+{
+	assert(g_new_thread_fn == NULL);
+	assert(g_thread_op_fn == NULL);
+
+	if (new_thread_fn == NULL) {
+		SPDK_INFOLOG(thread, "new_thread_fn was not specified at spdk_thread_lib_init\n");
+	} else {
+		g_new_thread_fn = new_thread_fn;
+	}
+
+	return _thread_lib_init(ctx_sz, SPDK_DEFAULT_MSG_MEMPOOL_SIZE);
+}
+
+int
+spdk_thread_lib_init_ext(spdk_thread_op_fn thread_op_fn,
+			 spdk_thread_op_supported_fn thread_op_supported_fn,
+			 size_t ctx_sz, size_t msg_mempool_sz)
+{
+	assert(g_new_thread_fn == NULL);
+	assert(g_thread_op_fn == NULL);
+	assert(g_thread_op_supported_fn == NULL);
+
+	if ((thread_op_fn != NULL) != (thread_op_supported_fn != NULL)) {
+		SPDK_ERRLOG("Both must be defined or undefined together.\n");
+		return -EINVAL;
+	}
+
+	if (thread_op_fn == NULL && thread_op_supported_fn == NULL) {
+		SPDK_INFOLOG(thread, "thread_op_fn and thread_op_supported_fn were not specified\n");
+	} else {
+		g_thread_op_fn = thread_op_fn;
+		g_thread_op_supported_fn = thread_op_supported_fn;
+	}
+
+	return _thread_lib_init(ctx_sz, msg_mempool_sz);
+}
+
+void
+spdk_thread_lib_fini(void)
+{
+	struct io_device *dev;
+
+	RB_FOREACH(dev, io_device_tree, &g_io_devices) {
+		SPDK_ERRLOG("io_device %s not unregistered\n", dev->name);
+	}
+
+	if (g_spdk_msg_mempool) {
+		spdk_mempool_free(g_spdk_msg_mempool);
+		g_spdk_msg_mempool = NULL;
+	}
+
+	g_new_thread_fn = NULL;
+	g_thread_op_fn = NULL;
+	g_thread_op_supported_fn = NULL;
+	g_ctx_sz = 0;
 }
 
 struct spdk_thread *
