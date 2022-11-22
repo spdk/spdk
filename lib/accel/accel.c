@@ -662,6 +662,57 @@ spdk_accel_append_fill(struct spdk_accel_sequence **pseq, struct spdk_io_channel
 	return 0;
 }
 
+int
+spdk_accel_append_decompress(struct spdk_accel_sequence **pseq, struct spdk_io_channel *ch,
+			     struct iovec *dst_iovs, size_t dst_iovcnt,
+			     struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+			     struct iovec *src_iovs, size_t src_iovcnt,
+			     struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+			     int flags, spdk_accel_step_cb cb_fn, void *cb_arg)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_accel_task *task;
+	struct spdk_accel_sequence *seq = *pseq;
+
+	if (dst_domain != NULL || src_domain != NULL) {
+		SPDK_ERRLOG("Memory domains are currently unsupported\n");
+		return -EINVAL;
+	}
+
+	if (seq == NULL) {
+		seq = accel_sequence_get(accel_ch);
+		if (spdk_unlikely(seq == NULL)) {
+			return -ENOMEM;
+		}
+	}
+
+	assert(seq->ch == accel_ch);
+	task = accel_sequence_get_task(accel_ch, seq, cb_fn, cb_arg);
+	if (spdk_unlikely(task == NULL)) {
+		if (*pseq == NULL) {
+			accel_sequence_put(seq);
+		}
+
+		return -ENOMEM;
+	}
+
+	task->dst_domain = dst_domain;
+	task->dst_domain_ctx = dst_domain_ctx;
+	task->d.iovs = dst_iovs;
+	task->d.iovcnt = dst_iovcnt;
+	task->src_domain = src_domain;
+	task->src_domain_ctx = src_domain_ctx;
+	task->s.iovs = src_iovs;
+	task->s.iovcnt = src_iovcnt;
+	task->flags = flags;
+	task->op_code = ACCEL_OPC_DECOMPRESS;
+
+	TAILQ_INSERT_TAIL(&seq->tasks, task, seq_link);
+	*pseq = seq;
+
+	return 0;
+}
+
 static void
 accel_sequence_complete_tasks(struct spdk_accel_sequence *seq)
 {

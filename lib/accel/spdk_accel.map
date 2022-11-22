@@ -20,6 +20,7 @@
 	spdk_accel_write_config_json;
 	spdk_accel_append_copy;
 	spdk_accel_append_fill;
+	spdk_accel_append_decompress;
 	spdk_accel_sequence_finish;
 	spdk_accel_sequence_abort;
 	spdk_accel_sequence_reverse;
