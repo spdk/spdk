@@ -10582,6 +10582,43 @@ Example response:
 }
 ~~~
 
+### bdev_raid_add_base_bdev {#rpc_bdev_raid_add_base_bdev}
+
+Add base bdev to existing raid bdev. The raid bdev must have an empty base bdev slot.
+The bdev must be large enough and have the same block size and metadata format as the other base bdevs.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+raid_bdev               | Required | string      | Raid bdev name
+base_bdev               | Required | string      | Base bdev name
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_raid_add_base_bdev",
+  "id": 1,
+  "params": {
+    "raid_bdev": "RaidBdev0",
+    "base_bdev": "Nvme0n1"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
 ### bdev_raid_remove_base_bdev {#rpc_bdev_raid_remove_base_bdev}
 
 Remove base bdev from existing raid bdev.

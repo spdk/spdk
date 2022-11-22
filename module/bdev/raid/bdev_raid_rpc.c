@@ -379,6 +379,117 @@ cleanup:
 SPDK_RPC_REGISTER("bdev_raid_delete", rpc_bdev_raid_delete, SPDK_RPC_RUNTIME)
 
 /*
+ * Base bdevs in RPC bdev_raid_add_base_bdev
+ */
+struct rpc_bdev_raid_add_base_bdev {
+	/* Base bdev name */
+	char			*base_bdev;
+
+	/* Raid bdev name */
+	char			*raid_bdev;
+};
+
+/*
+ * brief:
+ * free_rpc_bdev_raid_add_base_bdev function is to free RPC
+ * bdev_raid_add_base_bdev related parameters.
+ * params:
+ * req - pointer to RPC request
+ * returns:
+ * none
+ */
+static void
+free_rpc_bdev_raid_add_base_bdev(struct rpc_bdev_raid_add_base_bdev *req)
+{
+	free(req->base_bdev);
+	free(req->raid_bdev);
+}
+
+/*
+ * Decoder object for RPC bdev_raid_add_base_bdev
+ */
+static const struct spdk_json_object_decoder rpc_bdev_raid_add_base_bdev_decoders[] = {
+	{"base_bdev", offsetof(struct rpc_bdev_raid_add_base_bdev, base_bdev), spdk_json_decode_string},
+	{"raid_bdev", offsetof(struct rpc_bdev_raid_add_base_bdev, raid_bdev), spdk_json_decode_string},
+};
+
+static void
+rpc_bdev_raid_add_base_bdev_done(void *ctx, int status)
+{
+	struct spdk_jsonrpc_request *request = ctx;
+
+	if (status != 0) {
+		spdk_jsonrpc_send_error_response_fmt(request, status, "Failed to add base bdev to RAID bdev: %s",
+						     spdk_strerror(-status));
+		return;
+	}
+
+	spdk_jsonrpc_send_bool_response(request, true);
+}
+
+static void
+rpc_bdev_raid_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
+{
+}
+
+/*
+ * brief:
+ * bdev_raid_add_base_bdev function is the RPC for adding base bdev to a raid bdev.
+ * It takes base bdev and raid bdev names as input.
+ * params:
+ * request - pointer to json rpc request
+ * params - pointer to request parameters
+ * returns:
+ * none
+ */
+static void
+rpc_bdev_raid_add_base_bdev(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct rpc_bdev_raid_add_base_bdev req = {};
+	struct raid_bdev *raid_bdev;
+	struct spdk_bdev_desc *desc;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_bdev_raid_add_base_bdev_decoders,
+				    SPDK_COUNTOF(rpc_bdev_raid_add_base_bdev_decoders),
+				    &req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	raid_bdev = raid_bdev_find_by_name(req.raid_bdev);
+	if (raid_bdev == NULL) {
+		spdk_jsonrpc_send_error_response_fmt(request, -ENODEV, "raid bdev %s is not found in config",
+						     req.raid_bdev);
+		goto cleanup;
+	}
+
+	rc = spdk_bdev_open_ext(req.base_bdev, false, rpc_bdev_raid_event_cb, NULL, &desc);
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response_fmt(request, rc, "Failed to open bdev %s: %s",
+						     req.base_bdev, spdk_strerror(-rc));
+		goto cleanup;
+	}
+
+	rc = raid_bdev_attach_base_bdev(raid_bdev, spdk_bdev_desc_get_bdev(desc),
+					rpc_bdev_raid_add_base_bdev_done, request);
+	spdk_bdev_close(desc);
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response_fmt(request, rc,
+						     "Failed to attach base bdev %s to RAID bdev %s: %s",
+						     req.base_bdev, req.raid_bdev,
+						     spdk_strerror(-rc));
+		goto cleanup;
+	}
+
+cleanup:
+	free_rpc_bdev_raid_add_base_bdev(&req);
+}
+SPDK_RPC_REGISTER("bdev_raid_add_base_bdev", rpc_bdev_raid_add_base_bdev, SPDK_RPC_RUNTIME)
+
+/*
  * Decoder object for RPC bdev_raid_remove_base_bdev
  */
 static const struct spdk_json_object_decoder rpc_bdev_raid_remove_base_bdev_decoders[] = {
@@ -396,11 +507,6 @@ rpc_bdev_raid_remove_base_bdev_done(void *ctx, int status)
 	}
 
 	spdk_jsonrpc_send_bool_response(request, true);
-}
-
-static void
-rpc_bdev_raid_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
-{
 }
 
 /*
