@@ -2795,8 +2795,7 @@ memory_region_remove_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 static void
 disable_ctrlr(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 {
-	SPDK_DEBUGLOG(nvmf_vfio, "%s: disabling controller\n",
-		      ctrlr_id(vu_ctrlr));
+	SPDK_NOTICELOG("%s: disabling controller\n", ctrlr_id(vu_ctrlr));
 
 	/* Unmap Admin queue. */
 
@@ -2834,8 +2833,7 @@ enable_ctrlr(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 
 	assert(vu_ctrlr != NULL);
 
-	SPDK_DEBUGLOG(nvmf_vfio, "%s: enabling controller\n",
-		      ctrlr_id(vu_ctrlr));
+	SPDK_NOTICELOG("%s: enabling controller\n", ctrlr_id(vu_ctrlr));
 
 	err = acq_setup(vu_ctrlr);
 	if (err != 0) {
