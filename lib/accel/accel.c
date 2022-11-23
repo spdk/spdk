@@ -929,7 +929,17 @@ spdk_accel_sequence_finish(struct spdk_accel_sequence *seq,
 void
 spdk_accel_sequence_reverse(struct spdk_accel_sequence *seq)
 {
-	assert(0 && "unsupported");
+	struct accel_sequence_tasks tasks = TAILQ_HEAD_INITIALIZER(tasks);
+	struct spdk_accel_task *task;
+
+	assert(TAILQ_EMPTY(&seq->completed));
+	TAILQ_SWAP(&tasks, &seq->tasks, spdk_accel_task, seq_link);
+
+	while (!TAILQ_EMPTY(&tasks)) {
+		task = TAILQ_FIRST(&tasks);
+		TAILQ_REMOVE(&tasks, task, seq_link);
+		TAILQ_INSERT_HEAD(&seq->tasks, task, seq_link);
+	}
 }
 
 void

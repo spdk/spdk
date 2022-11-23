@@ -1207,6 +1207,188 @@ test_sequence_decompress(void)
 	spdk_put_io_channel(ioch);
 	poll_threads();
 }
+
+static void
+test_sequence_reverse(void)
+{
+	struct spdk_accel_sequence *seq = NULL;
+	struct spdk_io_channel *ioch;
+	struct ut_sequence ut_seq;
+	char buf[4096], tmp[2][4096], expected[4096];
+	struct iovec src_iovs[2], dst_iovs[2];
+	uint32_t compressed_size;
+	int rc, completed = 0;
+
+	ioch = spdk_accel_get_io_channel();
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
+
+	memset(expected, 0xa5, sizeof(expected));
+	src_iovs[0].iov_base = expected;
+	src_iovs[0].iov_len = sizeof(expected);
+	rc = spdk_accel_submit_compress(ioch, tmp[0], sizeof(tmp[0]), &src_iovs[0], 1,
+					&compressed_size, 0, ut_compress_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	while (!completed) {
+		poll_threads();
+	}
+
+	/* First check that reversing a sequnce with a single operation is a no-op */
+	memset(buf, 0, sizeof(buf));
+	seq = NULL;
+	completed = 0;
+
+	dst_iovs[0].iov_base = buf;
+	dst_iovs[0].iov_len = sizeof(buf);
+	src_iovs[0].iov_base = tmp[0];
+	src_iovs[0].iov_len = compressed_size;
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, NULL, NULL,
+					  &src_iovs[0], 1, NULL, NULL, 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	spdk_accel_sequence_reverse(seq);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 1);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(buf, expected, sizeof(buf)), 0);
+
+	/* Add a copy operation at the end with src set to the compressed data.  After reverse(),
+	 * that copy operation should be first, so decompress() should receive compressed data in
+	 * its src buffer.
+	 */
+	memset(buf, 0, sizeof(buf));
+	memset(tmp[1], 0, sizeof(tmp[1]));
+	seq = NULL;
+	completed = 0;
+
+	dst_iovs[0].iov_base = buf;
+	dst_iovs[0].iov_len = sizeof(buf);
+	src_iovs[0].iov_base = tmp[1];
+	src_iovs[0].iov_len = compressed_size;
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, NULL, NULL,
+					  &src_iovs[0], 1, NULL, NULL, 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	dst_iovs[1].iov_base = tmp[1];
+	dst_iovs[1].iov_len = compressed_size;
+	src_iovs[1].iov_base = tmp[0];
+	src_iovs[1].iov_len = compressed_size;
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[1], 1, NULL, NULL,
+				    &src_iovs[1], 1, NULL, NULL, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	spdk_accel_sequence_reverse(seq);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 2);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(buf, expected, sizeof(buf)), 0);
+
+	/* Check the same, but add an extra fill operation at the beginning that should execute last
+	 * after reverse().
+	 */
+	memset(buf, 0, sizeof(buf));
+	memset(tmp[1], 0, sizeof(tmp[1]));
+	memset(expected, 0xfe, 2048);
+	seq = NULL;
+	completed = 0;
+
+	rc = spdk_accel_append_fill(&seq, ioch, buf, 2048, NULL, NULL, 0xfe, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	dst_iovs[0].iov_base = buf;
+	dst_iovs[0].iov_len = sizeof(buf);
+	src_iovs[0].iov_base = tmp[1];
+	src_iovs[0].iov_len = compressed_size;
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, NULL, NULL,
+					  &src_iovs[0], 1, NULL, NULL, 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	dst_iovs[1].iov_base = tmp[1];
+	dst_iovs[1].iov_len = compressed_size;
+	src_iovs[1].iov_base = tmp[0];
+	src_iovs[1].iov_len = compressed_size;
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[1], 1, NULL, NULL,
+				    &src_iovs[1], 1, NULL, NULL, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	spdk_accel_sequence_reverse(seq);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 3);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(buf, expected, sizeof(buf)), 0);
+
+	/* Build the sequence in order and then reverse it twice */
+	memset(buf, 0, sizeof(buf));
+	memset(tmp[1], 0, sizeof(tmp[1]));
+	seq = NULL;
+	completed = 0;
+
+	dst_iovs[0].iov_base = tmp[1];
+	dst_iovs[0].iov_len = compressed_size;
+	src_iovs[0].iov_base = tmp[0];
+	src_iovs[0].iov_len = compressed_size;
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[0], 1, NULL, NULL,
+				    &src_iovs[0], 1, NULL, NULL, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	dst_iovs[1].iov_base = buf;
+	dst_iovs[1].iov_len = sizeof(buf);
+	src_iovs[1].iov_base = tmp[1];
+	src_iovs[1].iov_len = compressed_size;
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[1], 1, NULL, NULL,
+					  &src_iovs[1], 1, NULL, NULL, 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_accel_append_fill(&seq, ioch, buf, 2048, NULL, NULL, 0xfe, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	spdk_accel_sequence_reverse(seq);
+	spdk_accel_sequence_reverse(seq);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 3);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(buf, expected, sizeof(buf)), 0);
+
+	spdk_put_io_channel(ioch);
+	poll_threads();
+}
 #endif
 
 static void
@@ -1535,6 +1717,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(seq_suite, test_sequence_completion_error);
 #ifdef SPDK_CONFIG_ISAL /* accel_sw requires isa-l for compression */
 	CU_ADD_TEST(seq_suite, test_sequence_decompress);
+	CU_ADD_TEST(seq_suite, test_sequence_reverse);
 #endif
 	CU_ADD_TEST(seq_suite, test_sequence_copy_elision);
 
