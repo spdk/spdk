@@ -469,6 +469,7 @@ struct spdk_vrdma_rpc_controller_configue_attr {
     int vrdma_qpn;
     int backend_rqpn;
 	char *backend_dev;
+	uint32_t src_addr_idx;
 };
 
 static const struct spdk_json_object_decoder
@@ -543,6 +544,12 @@ spdk_vrdma_rpc_controller_configue_decoder[] = {
         spdk_json_decode_string,
         true
     },
+    {
+        "src_addr_idx",
+        offsetof(struct spdk_vrdma_rpc_controller_configue_attr, src_addr_idx),
+        spdk_json_decode_uint32,
+        true
+    },
 };
 
 static struct spdk_emu_ctx *
@@ -588,6 +595,7 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
     attr->backend_rqpn = -1;
     attr->subnet_prefix = -1;
     attr->intf_id = -1;
+	attr->src_addr_idx = -1;
 
     if (spdk_json_decode_object(params,
             spdk_vrdma_rpc_controller_configue_decoder,
@@ -765,6 +773,32 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
 		vrdma_sf_name[name_size] = '\0';
 		SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...backend_dev done, sf name %s\n",
 						vrdma_sf_name);
+    }
+	if (attr->src_addr_idx != -1) {
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...src_addr_idx=0x%x\n", attr->src_addr_idx);
+        ctrl = ctx->ctrl;
+        if (!ctrl) {
+            SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
+            goto free_attr;
+        }
+        if (attr->vrdma_qpn == -1) {
+            SPDK_ERRLOG("Invalid vrdma_qpn for emu_manager %s\n", attr->emu_manager);
+            goto free_attr;
+        }
+        vqp = find_spdk_vrdma_qp_by_idx(ctrl, attr->vrdma_qpn);
+        if (!vqp) {
+            SPDK_ERRLOG("Fail to find vrdma_qpn %d for emu_manager %s\n",
+                    attr->vrdma_qpn, attr->emu_manager);
+            goto free_attr;
+        }
+        bk_qp = vqp->bk_qp[0];
+        if (!bk_qp) {
+            SPDK_ERRLOG("Fail to find vrdma_qpn %d's backend qp for emu_manager %s\n",
+                    attr->vrdma_qpn, attr->emu_manager);
+            goto free_attr;
+        }
+        bk_qp->src_addr_idx = attr->src_addr_idx;
+		SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue... done, backend src_addr_idx=0x%x\n", bk_qp->src_addr_idx);
     }
     w = spdk_jsonrpc_begin_result(request);
     spdk_json_write_string(w, attr->emu_manager);
