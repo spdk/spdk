@@ -48,6 +48,7 @@ struct vrdma_backend_qp {
     uint32_t poller_core;
     struct snap_vrdma_backend_qp bk_qp;
     uint32_t remote_qpn;
+	uint32_t src_addr_idx;
     uint8_t dest_mac[6];
 };
 

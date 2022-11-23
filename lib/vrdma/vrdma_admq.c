@@ -608,6 +608,7 @@ static int vrdma_create_remote_mkey(struct vrdma_ctrl *ctrl,
 		lattr->log_base = lattr->sge[0].paddr;
 		lattr->log_size = lattr->sge[0].size;
 	} else {
+		/* 3 layers TPT traslation: indirect_mkey -> crossing_mkey -> crossed_mkey */
 		lattr->indirect_mkey = vrdma_create_indirect_mkey(ctrl->sctrl->sdev,
 									vmr, lattr, &total_len);
 		if (!lattr->indirect_mkey) {
