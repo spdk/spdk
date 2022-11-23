@@ -153,11 +153,12 @@ class Server:
         num_queues_tc0 = 2  # 2 is minimum number of queues for TC0
         num_queues_tc1 = self.num_cores
         port_param = "dst_port" if isinstance(self, Target) else "src_port"
-        port = "4420"
         xps_script_path = os.path.join(self.spdk_dir, "scripts", "perf", "nvmf", "set_xps_rxqs")
 
         for nic_ip in self.nic_ips:
             nic_name = self.get_nic_name_by_ip(nic_ip)
+            nic_ports = [x[0] for x in self.subsystem_info_list]
+
             tc_qdisc_map_cmd = ["sudo", "tc", "qdisc", "add", "dev", nic_name,
                                 "root", "mqprio", "num_tc", "2", "map", "0", "1",
                                 "queues", "%s@0" % num_queues_tc0,
@@ -175,12 +176,13 @@ class Server:
             self.exec_cmd(["sudo", "devlink", "dev", "param", "set", "pci/%s" % nic_bdf,
                            "name", "tc1_inline_fd", "value", "true", "cmode", "runtime"])
 
-            tc_filter_cmd = ["sudo", "tc", "filter", "add", "dev", nic_name,
-                             "protocol", "ip", "ingress", "prio", "1", "flower",
-                             "dst_ip", "%s/32" % nic_ip, "ip_proto", "tcp", port_param, port,
-                             "skip_sw", "hw_tc", "1"]
-            self.log.info(" ".join(tc_filter_cmd))
-            self.exec_cmd(tc_filter_cmd)
+            for port in nic_ports:
+                tc_filter_cmd = ["sudo", "tc", "filter", "add", "dev", nic_name,
+                                 "protocol", "ip", "ingress", "prio", "1", "flower",
+                                 "dst_ip", "%s/32" % nic_ip, "ip_proto", "tcp", port_param, port,
+                                 "skip_sw", "hw_tc", "1"]
+                self.log.info(" ".join(tc_filter_cmd))
+                self.exec_cmd(tc_filter_cmd)
 
             # show tc configuration
             self.log.info("Show tc configuration for %s NIC..." % nic_name)
