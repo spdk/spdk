@@ -161,7 +161,6 @@ bdev_daos_writev(struct bdev_daos *daos, struct bdev_daos_io_channel *ch,
 		 struct iovec *iov, int iovcnt, uint64_t nbytes, uint64_t offset)
 {
 	int rc;
-	struct iovec *io = iov;
 
 	SPDK_DEBUGLOG(bdev_daos, "write %d iovs size %lu to off: %#lx\n",
 		      iovcnt, nbytes, offset);
@@ -184,7 +183,7 @@ bdev_daos_writev(struct bdev_daos *daos, struct bdev_daos_io_channel *ch,
 	}
 
 	for (int i = 0; i < iovcnt; i++, iov++) {
-		d_iov_set(&(task->diovs[i]), io->iov_base, io->iov_len);
+		d_iov_set(&(task->diovs[i]), iov->iov_base, iov->iov_len);
 	}
 
 	task->sgl.sg_nr = iovcnt;
@@ -208,7 +207,6 @@ bdev_daos_readv(struct bdev_daos *daos, struct bdev_daos_io_channel *ch,
 		struct iovec *iov, int iovcnt, uint64_t nbytes, uint64_t offset)
 {
 	int rc;
-	struct iovec *io = iov;
 
 	SPDK_DEBUGLOG(bdev_daos, "read %d iovs size %lu to off: %#lx\n",
 		      iovcnt, nbytes, offset);
@@ -230,8 +228,8 @@ bdev_daos_readv(struct bdev_daos *daos, struct bdev_daos_io_channel *ch,
 		return -EINVAL;
 	}
 
-	for (int i = 0; i < iovcnt; i++, io++) {
-		d_iov_set(&(task->diovs[i]), io->iov_base, io->iov_len);
+	for (int i = 0; i < iovcnt; i++, iov++) {
+		d_iov_set(&(task->diovs[i]), iov->iov_base, iov->iov_len);
 	}
 
 	task->sgl.sg_nr = iovcnt;
