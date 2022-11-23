@@ -34,6 +34,8 @@ precond_fio_bin=$CONFIG_FIO_SOURCE_DIR/fio
 disk_map=""
 enable_irq=0
 irqs_pids=()
+enable_perf=0
+perf_cpus=""
 
 disk_cfg_bdfs=()
 disk_cfg_spdk_names=()
@@ -91,6 +93,7 @@ function usage() {
 	echo "    --iobuf-large-pool-count=INT   number of large buffers in the global pool"
 	echo "-x                          set -x for script debug"
 	echo "-i                          Collect IRQ stats from each VM"
+	echo "-p                          Enable perf report collection hooked to vhost CPUs"
 	exit 0
 }
 
@@ -177,7 +180,7 @@ function create_spdk_controller() {
 	fi
 }
 
-while getopts 'xhi-:' optchar; do
+while getopts 'xhip-:' optchar; do
 	case "$optchar" in
 		-)
 			case "$OPTARG" in
@@ -214,6 +217,7 @@ while getopts 'xhi-:' optchar; do
 			x="-x"
 			;;
 		i) enable_irq=1 ;;
+		p) enable_perf=1 ;;
 		*) usage $0 "Invalid argument '$OPTARG'" ;;
 	esac
 done
@@ -492,15 +496,24 @@ for vm_num in $used_vms; do
 	((enable_irq == 1)) && lookup_dev_irqs "$vm_num"
 done
 
+# Gather perf stats only from the vhost cpus
+perf_cpus=${vhost_reactor_mask//[\[\]]/}
+
 # Run FIO traffic
 for fio_job in ${fio_jobs//,/ }; do
 	((enable_irq == 1)) && irqs $used_vms
+	runtime=$(get_from_fio "runtime" "$fio_job")
+	ramptime=$(get_from_fio "ramp_time" "$fio_job")
 	fio_job_fname=$(basename $fio_job)
 	fio_log_fname="${fio_job_fname%%.*}.log"
 	for i in $(seq 1 $fio_iterations); do
 		echo "Running FIO iteration $i for $fio_job_fname"
 		run_fio $fio_bin --hide-results --job-file="$fio_job" --out="$VHOST_DIR/fio_results" --json $fio_disks $fio_gtod &
 		fio_pid=$!
+		if ((enable_perf == 1)); then
+			collect_perf "$perf_cpus" "$VHOST_DIR/perf/report.perf" "$runtime" "$ramptime" &
+			perf_pid=$!
+		fi
 
 		if $host_sar_enable || $vm_sar_enable; then
 			pids=""
@@ -530,7 +543,7 @@ for fio_job in ${fio_jobs//,/ }; do
 			done
 		fi
 
-		wait $fio_pid
+		wait $fio_pid $perf_pid
 		mv $VHOST_DIR/fio_results/$fio_log_fname $VHOST_DIR/fio_results/$fio_log_fname.$i
 		sleep 1
 	done
@@ -539,6 +552,7 @@ for fio_job in ${fio_jobs//,/ }; do
 
 	parse_fio_results "$VHOST_DIR/fio_results" "$fio_log_fname"
 	((enable_irq == 1)) && parse_irqs $((++iter))
+	((enable_perf == 1)) && parse_perf $iter
 done
 
 notice "Shutting down virtual machines..."

@@ -1343,3 +1343,43 @@ function parse_irqs() {
 	mkdir -p "$VHOST_DIR/irqs/$iter"
 	mv "$VHOST_DIR/irqs/"*.parsed "$VHOST_DIR/irqs/$iter/"
 }
+
+function collect_perf() {
+	local cpus=$1 outf=$2 runtime=$3 delay=$4
+
+	mkdir -p "$VHOST_DIR/perf"
+
+	perf record -g \
+		${cpus:+-C "$cpus"} \
+		${outf:+-o "$outf"} \
+		${delay:+-D $((delay * 1000))} \
+		-z \
+		${runtime:+ -- sleep $((runtime + delay))}
+}
+
+function parse_perf() {
+	local iter=${1:-1}
+	local report out
+
+	mkdir -p "$VHOST_DIR/perf/$iter"
+	shift
+
+	for report in "$@" "$VHOST_DIR/perf/"*.perf; do
+		[[ -f $report ]] || continue
+		perf report \
+			-n \
+			-i "$report" \
+			--header \
+			--stdio > "$VHOST_DIR/perf/$iter/${report##*/}.parsed"
+		cp "$report" "$VHOST_DIR/perf/$iter/"
+	done
+	rm "$VHOST_DIR/perf/"*.perf
+}
+
+function get_from_fio() {
+	local opt=$1 conf=$2
+
+	[[ -n $opt && -f $conf ]] || return 1
+
+	awk -F= "/^$opt/{print \$2}" "$conf"
+}
