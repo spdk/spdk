@@ -15,6 +15,10 @@ spdk_top utility gets the fine grained metrics from the pollers, analyzes and re
 This information enables users to identify CPU cores that are busy doing real work so that they can determine if the application
 needs more or less CPU resources.
 
+spdk_top uses RPCs to communicate with the app it is viewing, so it will work only with those that run RPC server and support
+`thread_get_stats`, `thread_get_pollers`, `framework_get_reactors` methods. Apps currently meeting this criteria:
+spdk_tgt, nvmf_tgt, vhost, iscsi_tgt.
+
 ## Run spdk_top
 
 Before running spdk_top you need to run the SPDK application whose performance you want to analyze using spdk_top.
