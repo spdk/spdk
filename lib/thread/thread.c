@@ -2940,15 +2940,10 @@ int
 spdk_iobuf_initialize(void)
 {
 	struct spdk_iobuf_opts *opts = &g_iobuf.opts;
-	int cache_size, rc = 0;
+	int rc = 0;
 
-	/**
-	 * Ensure no more than half of the total buffers end up local caches, by using
-	 * spdk_env_get_core_count() to determine how many local caches we need to account for.
-	 */
-	cache_size = opts->small_pool_count / (2 * spdk_env_get_core_count());
 	g_iobuf.small_pool = spdk_mempool_create("iobuf_small_pool", opts->small_pool_count,
-			     opts->small_bufsize, cache_size,
+			     opts->small_bufsize + SPDK_IOBUF_DATA_OFFSET, 0,
 			     SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_iobuf.small_pool) {
 		SPDK_ERRLOG("Failed to create small iobuf pool\n");
@@ -2956,9 +2951,8 @@ spdk_iobuf_initialize(void)
 		goto error;
 	}
 
-	cache_size = opts->large_pool_count / (2 * spdk_env_get_core_count());
 	g_iobuf.large_pool = spdk_mempool_create("iobuf_large_pool", opts->large_pool_count,
-			     opts->large_bufsize, cache_size,
+			     opts->large_bufsize + SPDK_IOBUF_DATA_OFFSET, 0,
 			     SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_iobuf.large_pool) {
 		SPDK_ERRLOG("Failed to create large iobuf pool\n");
@@ -3056,11 +3050,8 @@ spdk_iobuf_channel_init(struct spdk_iobuf_channel *ch, const char *name,
 	struct spdk_io_channel *ioch;
 	struct iobuf_channel *iobuf_ch;
 	struct iobuf_module *module;
-
-	if (small_cache_size != 0 || large_cache_size != 0) {
-		SPDK_ERRLOG("iobuf cache is currently unsupported\n");
-		return -EINVAL;
-	}
+	struct spdk_iobuf_buffer *buf;
+	uint32_t i;
 
 	TAILQ_FOREACH(module, &g_iobuf.modules, tailq) {
 		if (strcmp(name, module->name) == 0) {
@@ -3089,14 +3080,47 @@ spdk_iobuf_channel_init(struct spdk_iobuf_channel *ch, const char *name,
 	ch->large.bufsize = g_iobuf.opts.large_bufsize;
 	ch->parent = ioch;
 	ch->module = module;
+	ch->small.cache_size = small_cache_size;
+	ch->large.cache_size = large_cache_size;
+	ch->small.cache_count = 0;
+	ch->large.cache_count = 0;
+
+	STAILQ_INIT(&ch->small.cache);
+	STAILQ_INIT(&ch->large.cache);
+
+	for (i = 0; i < small_cache_size; ++i) {
+		buf = spdk_mempool_get(g_iobuf.small_pool);
+		if (buf == NULL) {
+			SPDK_ERRLOG("Failed to populate iobuf small buffer cache. "
+				    "You may need to increase spdk_iobuf_opts.small_pool_count\n");
+			goto error;
+		}
+		STAILQ_INSERT_TAIL(&ch->small.cache, buf, stailq);
+		ch->small.cache_count++;
+	}
+	for (i = 0; i < large_cache_size; ++i) {
+		buf = spdk_mempool_get(g_iobuf.large_pool);
+		if (buf == NULL) {
+			SPDK_ERRLOG("Failed to populate iobuf large buffer cache. "
+				    "You may need to increase spdk_iobuf_opts.large_pool_count\n");
+			goto error;
+		}
+		STAILQ_INSERT_TAIL(&ch->large.cache, buf, stailq);
+		ch->large.cache_count++;
+	}
 
 	return 0;
+error:
+	spdk_iobuf_channel_fini(ch);
+
+	return -ENOMEM;
 }
 
 void
 spdk_iobuf_channel_fini(struct spdk_iobuf_channel *ch)
 {
 	struct spdk_iobuf_entry *entry __attribute__((unused));
+	struct spdk_iobuf_buffer *buf;
 
 	/* Make sure none of the wait queue entries are coming from this module */
 	STAILQ_FOREACH(entry, ch->small.queue, stailq) {
@@ -3105,6 +3129,23 @@ spdk_iobuf_channel_fini(struct spdk_iobuf_channel *ch)
 	STAILQ_FOREACH(entry, ch->large.queue, stailq) {
 		assert(entry->module != ch->module);
 	}
+
+	/* Release cached buffers back to the pool */
+	while (!STAILQ_EMPTY(&ch->small.cache)) {
+		buf = STAILQ_FIRST(&ch->small.cache);
+		STAILQ_REMOVE_HEAD(&ch->small.cache, stailq);
+		spdk_mempool_put(ch->small.pool, buf);
+		ch->small.cache_count--;
+	}
+	while (!STAILQ_EMPTY(&ch->large.cache)) {
+		buf = STAILQ_FIRST(&ch->large.cache);
+		STAILQ_REMOVE_HEAD(&ch->large.cache, stailq);
+		spdk_mempool_put(ch->large.pool, buf);
+		ch->large.cache_count--;
+	}
+
+	assert(ch->small.cache_count == 0);
+	assert(ch->large.cache_count == 0);
 
 	spdk_put_io_channel(ch->parent);
 	ch->parent = NULL;

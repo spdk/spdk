@@ -2366,6 +2366,164 @@ iobuf(void)
 	free_cores();
 }
 
+static void
+iobuf_cache(void)
+{
+	struct spdk_iobuf_opts opts = {
+		.small_pool_count = 4,
+		.large_pool_count = 4,
+		.small_bufsize = 2,
+		.large_bufsize = 4,
+	};
+	struct spdk_iobuf_channel iobuf_ch[2];
+	struct ut_iobuf_entry *entry;
+	struct ut_iobuf_entry mod0_entries[] = {
+		{ .thread_id = 0, .module = "ut_module0", },
+		{ .thread_id = 0, .module = "ut_module0", },
+		{ .thread_id = 0, .module = "ut_module0", },
+		{ .thread_id = 0, .module = "ut_module0", },
+	};
+	struct ut_iobuf_entry mod1_entries[] = {
+		{ .thread_id = 0, .module = "ut_module1", },
+		{ .thread_id = 0, .module = "ut_module1", },
+	};
+	int rc, finish = 0;
+	uint32_t i, j, bufsize;
+
+	allocate_cores(1);
+	allocate_threads(1);
+
+	set_thread(0);
+
+	/* We cannot use spdk_iobuf_set_opts(), as it won't allow us to use such small pools */
+	g_iobuf.opts = opts;
+	rc = spdk_iobuf_initialize();
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_iobuf_register_module("ut_module0");
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_iobuf_register_module("ut_module1");
+	CU_ASSERT_EQUAL(rc, 0);
+
+	/* First check that channel initialization fails when it's not possible to fill in the cache
+	 * from the pool.
+	 */
+	rc = spdk_iobuf_channel_init(&iobuf_ch[0], "ut_module0", 5, 1);
+	CU_ASSERT_EQUAL(rc, -ENOMEM);
+	rc = spdk_iobuf_channel_init(&iobuf_ch[0], "ut_module0", 1, 5);
+	CU_ASSERT_EQUAL(rc, -ENOMEM);
+
+	rc = spdk_iobuf_channel_init(&iobuf_ch[0], "ut_module0", 4, 4);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_iobuf_channel_init(&iobuf_ch[1], "ut_module1", 4, 4);
+	CU_ASSERT_EQUAL(rc, -ENOMEM);
+
+	spdk_iobuf_channel_fini(&iobuf_ch[0]);
+	poll_threads();
+
+	/* Initialize one channel with cache, acquire buffers, and check that a second one can be
+	 * created once the buffers acquired from the first one are returned to the pool
+	 */
+	rc = spdk_iobuf_channel_init(&iobuf_ch[0], "ut_module0", 2, 2);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	for (i = 0; i < 3; ++i) {
+		mod0_entries[i].buf = spdk_iobuf_get(&iobuf_ch[0], 4, &mod0_entries[i].iobuf,
+						     ut_iobuf_get_buf_cb);
+		CU_ASSERT_PTR_NOT_NULL(mod0_entries[i].buf);
+	}
+
+	/* It should be able to create a channel with a single entry in the cache */
+	rc = spdk_iobuf_channel_init(&iobuf_ch[1], "ut_module1", 2, 1);
+	CU_ASSERT_EQUAL(rc, 0);
+	spdk_iobuf_channel_fini(&iobuf_ch[1]);
+	poll_threads();
+
+	/* But not with two entries */
+	rc = spdk_iobuf_channel_init(&iobuf_ch[1], "ut_module1", 2, 2);
+	CU_ASSERT_EQUAL(rc, -ENOMEM);
+
+	for (i = 0; i < 2; ++i) {
+		spdk_iobuf_put(&iobuf_ch[0], mod0_entries[i].buf, 4);
+		rc = spdk_iobuf_channel_init(&iobuf_ch[1], "ut_module1", 2, 2);
+		CU_ASSERT_EQUAL(rc, -ENOMEM);
+	}
+
+	spdk_iobuf_put(&iobuf_ch[0], mod0_entries[2].buf, 4);
+
+	/* The last buffer should be released back to the pool, so we should be able to create a new
+	 * channel
+	 */
+	rc = spdk_iobuf_channel_init(&iobuf_ch[1], "ut_module1", 2, 2);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	spdk_iobuf_channel_fini(&iobuf_ch[0]);
+	spdk_iobuf_channel_fini(&iobuf_ch[1]);
+	poll_threads();
+
+	/* Check that the pool is only used when the cache is empty and that the cache guarantees a
+	 * certain set of buffers
+	 */
+	rc = spdk_iobuf_channel_init(&iobuf_ch[0], "ut_module0", 2, 2);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_iobuf_channel_init(&iobuf_ch[1], "ut_module1", 1, 1);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	uint32_t buffer_sizes[] = { 2, 4 };
+	for (i = 0; i < SPDK_COUNTOF(buffer_sizes); ++i) {
+		bufsize = buffer_sizes[i];
+
+		for (j = 0; j < 3; ++j) {
+			entry = &mod0_entries[j];
+			entry->buf = spdk_iobuf_get(&iobuf_ch[0], bufsize, &entry->iobuf,
+						    ut_iobuf_get_buf_cb);
+			CU_ASSERT_PTR_NOT_NULL(entry->buf);
+		}
+
+		mod1_entries[0].buf = spdk_iobuf_get(&iobuf_ch[1], bufsize, &mod1_entries[0].iobuf,
+						     ut_iobuf_get_buf_cb);
+		CU_ASSERT_PTR_NOT_NULL(mod1_entries[0].buf);
+
+		/* The whole pool is exhausted now */
+		mod1_entries[1].buf = spdk_iobuf_get(&iobuf_ch[1], bufsize, &mod1_entries[1].iobuf,
+						     ut_iobuf_get_buf_cb);
+		CU_ASSERT_PTR_NULL(mod1_entries[1].buf);
+		mod0_entries[3].buf = spdk_iobuf_get(&iobuf_ch[0], bufsize, &mod0_entries[3].iobuf,
+						     ut_iobuf_get_buf_cb);
+		CU_ASSERT_PTR_NULL(mod0_entries[3].buf);
+
+		/* If there are outstanding requests waiting for a buffer, they should have priority
+		 * over filling in the cache, even if they're from different modules.
+		 */
+		spdk_iobuf_put(&iobuf_ch[0], mod0_entries[2].buf, bufsize);
+		/* Also make sure the queue is FIFO and doesn't care about which module requested
+		 * and which module released the buffer.
+		 */
+		CU_ASSERT_PTR_NOT_NULL(mod1_entries[1].buf);
+		CU_ASSERT_PTR_NULL(mod0_entries[3].buf);
+
+		/* Return the buffers back */
+		spdk_iobuf_entry_abort(&iobuf_ch[0], &mod0_entries[3].iobuf, bufsize);
+		for (j = 0; j < 2; ++j) {
+			spdk_iobuf_put(&iobuf_ch[0], mod0_entries[j].buf, bufsize);
+			spdk_iobuf_put(&iobuf_ch[1], mod1_entries[j].buf, bufsize);
+		}
+	}
+
+	spdk_iobuf_channel_fini(&iobuf_ch[0]);
+	spdk_iobuf_channel_fini(&iobuf_ch[1]);
+	poll_threads();
+
+	spdk_iobuf_finish(ut_iobuf_finish_cb, &finish);
+	poll_threads();
+
+	CU_ASSERT_EQUAL(finish, 1);
+
+	free_threads();
+	free_cores();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2396,6 +2554,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, io_device_lookup);
 	CU_ADD_TEST(suite, spdk_spin);
 	CU_ADD_TEST(suite, iobuf);
+	CU_ADD_TEST(suite, iobuf_cache);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
