@@ -1148,9 +1148,6 @@ class SPDKTarget(Target):
     def spdk_tgt_configure(self):
         self.log.info("Configuring SPDK NVMeOF target via RPC")
 
-        if self.enable_adq:
-            self.adq_configure_tc()
-
         # Create transport layer
         nvmf_transport_params = {
             "client": self.client,
@@ -1174,6 +1171,9 @@ class SPDKTarget(Target):
         else:
             self.spdk_tgt_add_nvme_conf()
             self.spdk_tgt_add_subsystem_conf(self.nic_ips)
+
+        if self.enable_adq:
+            self.adq_configure_tc()
 
         self.log.info("Done configuring SPDK NVMeOF Target")
 
