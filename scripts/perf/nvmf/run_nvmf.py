@@ -171,6 +171,10 @@ class Server:
             self.log.info(" ".join(tc_qdisc_ingress_cmd))
             self.exec_cmd(tc_qdisc_ingress_cmd)
 
+            nic_bdf = os.path.basename(self.exec_cmd(["readlink", "-f", "/sys/class/net/%s/device" % nic_name]).strip())
+            self.exec_cmd(["sudo", "devlink", "dev", "param", "set", "pci/%s" % nic_bdf,
+                           "name", "tc1_inline_fd", "value", "true", "cmode", "runtime"])
+
             tc_filter_cmd = ["sudo", "tc", "filter", "add", "dev", nic_name,
                              "protocol", "ip", "ingress", "prio", "1", "flower",
                              "dst_ip", "%s/32" % nic_ip, "ip_proto", "tcp", port_param, port,
@@ -214,14 +218,14 @@ class Server:
             try:
                 self.exec_cmd(["sudo", "ethtool", "-K", nic,
                                "hw-tc-offload", "on"])  # Enable hardware TC offload
-                self.exec_cmd(["sudo", "ethtool", "--set-priv-flags", nic,
-                               "channel-inline-flow-director", "on"])  # Enable Intel Flow Director
+                nic_bdf = self.exec_cmd(["bash", "-c", "source /sys/class/net/%s/device/uevent; echo $PCI_SLOT_NAME" % nic])
                 self.exec_cmd(["sudo", "ethtool", "--set-priv-flags", nic, "fw-lldp-agent", "off"])  # Disable LLDP
-                # As temporary workaround for ADQ, channel packet inspection optimization is turned on during connection establishment.
-                # Then turned off before fio ramp_up expires in ethtool_after_fio_ramp().
-                self.exec_cmd(["sudo", "ethtool", "--set-priv-flags", nic,
-                               "channel-pkt-inspect-optimize", "on"])
-            except CalledProcessError as e:
+                self.exec_cmd(["sudo", "ethtool", "--set-priv-flags", nic, "channel-pkt-inspect-optimize", "off"])
+                # Following are suggested in ADQ Configuration Guide to be enabled for large block sizes,
+                # but can be used with 4k block sizes as well
+                self.exec_cmd(["sudo", "ethtool", "--set-priv-flags", nic, "channel-pkt-clean-bp-stop", "on"])
+                self.exec_cmd(["sudo", "ethtool", "--set-priv-flags", nic, "channel-pkt-clean-bp-stop-cfg", "on"])
+            except subprocess.CalledProcessError as e:
                 self.log.error("ERROR: failed to configure NIC port using ethtool!")
                 self.log.error("%s resulted in error: %s" % (e.cmd, e.output))
                 self.log.info("Please update your NIC driver and firmware versions and try again.")
@@ -259,9 +263,15 @@ class Server:
     def configure_sysctl(self):
         self.log.info("Tuning sysctl settings...")
 
+        busy_read = 0
+        busy_poll = 0
+        if self.enable_adq and self.mode == "spdk":
+            busy_read = 1
+            busy_poll = 1
+
         sysctl_opts = {
-            "net.core.busy_poll": 0,
-            "net.core.busy_read": 0,
+            "net.core.busy_poll": busy_poll,
+            "net.core.busy_read": busy_read,
             "net.core.somaxconn": 4096,
             "net.core.netdev_max_backlog": 8192,
             "net.ipv4.tcp_max_syn_backlog": 16384,
@@ -490,6 +500,7 @@ class Target(Server):
         self.configure_system()
         if self.enable_adq:
             self.configure_adq()
+            self.configure_irq_affinity()
         self.sys_config()
 
     def set_local_nic_info_helper(self):
@@ -577,14 +588,6 @@ class Target(Server):
         self.exec_cmd(["%s/../pm/collect-bmc-pm" % script_full_dir,
                       "-d", "%s" % results_dir, "-l", "-p", "%s" % prefix,
                        "-x", "-c", "%s" % run_time, "-t", "%s" % 1, "-r"])
-
-    def ethtool_after_fio_ramp(self, fio_ramp_time):
-        time.sleep(fio_ramp_time//2)
-        nic_names = [self.get_nic_name_by_ip(n) for n in self.nic_ips]
-        for nic in nic_names:
-            self.log.info(nic)
-            self.exec_cmd(["sudo", "ethtool", "--set-priv-flags", nic,
-                           "channel-pkt-inspect-optimize", "off"])  # Disable channel packet inspection optimization
 
     def measure_pcm_memory(self, results_dir, pcm_file_name, ramp_time, run_time):
         time.sleep(ramp_time)
@@ -1149,11 +1152,19 @@ class SPDKTarget(Target):
             self.adq_configure_tc()
 
         # Create transport layer
-        rpc.nvmf.nvmf_create_transport(self.client, trtype=self.transport,
-                                       num_shared_buffers=self.num_shared_buffers,
-                                       max_queue_depth=self.max_queue_depth,
-                                       dif_insert_or_strip=self.dif_insert_strip,
-                                       sock_priority=self.adq_priority)
+        nvmf_transport_params = {
+            "client": self.client,
+            "trtype": self.transport,
+            "num_shared_buffers": self.num_shared_buffers,
+            "max_queue_depth": self.max_queue_depth,
+            "dif_insert_or_strip": self.dif_insert_strip,
+            "sock_priority": self.adq_priority
+        }
+
+        if self.enable_adq:
+            nvmf_transport_params["acceptor_poll_rate"] = 10000
+
+        rpc.nvmf.nvmf_create_transport(**nvmf_transport_params)
         self.log.info("SPDK NVMeOF transport layer:")
         rpc_client.print_dict(rpc.nvmf.nvmf_get_transports(self.client))
 
@@ -1723,10 +1734,6 @@ if __name__ == "__main__":
                                                     args=(args.results, measurements_prefix, script_full_dir,
                                                           fio_ramp_time, fio_run_time))
                     threads.append(power_daemon)
-
-                if target_obj.enable_adq:
-                    ethtool_thread = threading.Thread(target=target_obj.ethtool_after_fio_ramp, args=(fio_ramp_time,))
-                    threads.append(ethtool_thread)
 
                 for t in threads:
                     t.start()
