@@ -11,6 +11,6 @@ APP = lsvmd
 
 C_SRCS := lsvmd.c
 
-SPDK_LIB_LIST = vmd log util
+SPDK_LIB_LIST = vmd log util nvme
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
