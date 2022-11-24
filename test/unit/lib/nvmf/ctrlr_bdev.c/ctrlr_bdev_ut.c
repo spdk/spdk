@@ -42,6 +42,7 @@ DEFINE_STUB(spdk_bdev_abort, int,
 
 DEFINE_STUB_V(spdk_bdev_io_get_iovec,
 	      (struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *iovcntp));
+DEFINE_STUB(spdk_bdev_get_write_unit_size, uint32_t, (const struct spdk_bdev *bdev), 1);
 
 uint32_t
 spdk_bdev_get_optimal_io_boundary(const struct spdk_bdev *bdev)
