@@ -4614,18 +4614,20 @@ iscsi_pdu_payload_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	uint32_t read_len;
 	uint32_t crc32c;
 	int rc;
+	uint32_t data_buf_len;
 
 	data_len = pdu->data_segment_len;
 	read_len = data_len - pdu->data_valid_bytes;
+	data_buf_len = pdu->data_buf_len;
 
 	mobj = pdu->mobj[0];
 	if (mobj == NULL) {
-		if (pdu->data_buf_len <= iscsi_get_max_immediate_data_size()) {
+		if (data_buf_len <= iscsi_get_max_immediate_data_size()) {
 			pool = g_iscsi.pdu_immediate_data_pool;
-			pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(iscsi_get_max_immediate_data_size());
-		} else if (pdu->data_buf_len <= SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
+			data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(iscsi_get_max_immediate_data_size());
+		} else if (data_buf_len <= SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
 			pool = g_iscsi.pdu_data_out_pool;
-			pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+			data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 		} else {
 			SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n",
 				    data_len, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
@@ -4635,6 +4637,9 @@ iscsi_pdu_payload_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		if (mobj == NULL) {
 			return 1;
 		}
+
+		pdu->data_buf_len = data_buf_len;
+
 		pdu->mobj[0] = mobj;
 		pdu->data = mobj->buf;
 		pdu->data_from_mempool = true;
