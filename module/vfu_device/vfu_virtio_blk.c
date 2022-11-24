@@ -185,7 +185,7 @@ virtio_blk_process_req(struct vfu_virtio_endpoint *virtio_endpoint, struct vfu_v
 
 	iov = &req->iovs[0];
 	if (spdk_unlikely(iov->iov_len != sizeof(*hdr))) {
-		SPDK_ERRLOG("Invalid virtio_blk header length");
+		SPDK_ERRLOG("Invalid virtio_blk header length %lu\n", iov->iov_len);
 		virtio_blk_req_finish(blk_req, VIRTIO_BLK_S_UNSUPP);
 		return -EINVAL;
 	}
@@ -193,7 +193,7 @@ virtio_blk_process_req(struct vfu_virtio_endpoint *virtio_endpoint, struct vfu_v
 
 	iov = &req->iovs[req->iovcnt - 1];
 	if (spdk_unlikely(iov->iov_len != 1)) {
-		SPDK_ERRLOG("Invalid virtio_blk response length");
+		SPDK_ERRLOG("Invalid virtio_blk response length %lu\n", iov->iov_len);
 		virtio_blk_req_finish(blk_req, VIRTIO_BLK_S_UNSUPP);
 		return -EINVAL;
 	}
