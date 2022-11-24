@@ -67,6 +67,8 @@ if [[ $NET_TYPE == phy ]]; then
 		if ((${#TCP_INTERFACE_LIST[@]} > 0)); then
 			run_test "nvmf_perf_adq" $rootdir/test/nvmf/target/perf_adq.sh "${TEST_ARGS[@]}"
 		fi
+	else
+		run_test "nvmf_device_removal" test/nvmf/target/device_removal.sh "${TEST_ARGS[@]}"
 	fi
 	run_test "nvmf_shutdown" $rootdir/test/nvmf/target/shutdown.sh "${TEST_ARGS[@]}"
 	# TODO: disabled due to intermittent failures. Need to triage.

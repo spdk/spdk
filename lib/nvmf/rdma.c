@@ -283,6 +283,8 @@ struct spdk_nvmf_rdma_resources {
 
 typedef void (*spdk_nvmf_rdma_qpair_ibv_event)(struct spdk_nvmf_rdma_qpair *rqpair);
 
+typedef void (*spdk_poller_destroy_cb)(void *ctx);
+
 struct spdk_nvmf_rdma_ibv_event_ctx {
 	struct spdk_nvmf_rdma_qpair			*rqpair;
 	spdk_nvmf_rdma_qpair_ibv_event			cb_fn;
@@ -395,12 +397,16 @@ struct spdk_nvmf_rdma_poller {
 
 	/* The maximum number of I/O outstanding on the shared receive queue at one time */
 	uint16_t				max_srq_depth;
+	bool					need_destroy;
 
 	/* Shared receive queue */
 	struct spdk_rdma_srq			*srq;
 
 	struct spdk_nvmf_rdma_resources		*resources;
 	struct spdk_nvmf_rdma_poller_stat	stat;
+
+	spdk_poller_destroy_cb			destroy_cb;
+	void					*destroy_cb_ctx;
 
 	RB_HEAD(qpairs_tree, spdk_nvmf_rdma_qpair) qpairs;
 
@@ -436,6 +442,8 @@ struct spdk_nvmf_rdma_device {
 	struct ibv_pd				*pd;
 
 	int					num_srq;
+	bool					need_destroy;
+	bool					ready_to_destroy;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_device)	link;
 };
@@ -474,6 +482,16 @@ struct spdk_nvmf_rdma_transport {
 	TAILQ_HEAD(, spdk_nvmf_rdma_device)	devices;
 	TAILQ_HEAD(, spdk_nvmf_rdma_port)	ports;
 	TAILQ_HEAD(, spdk_nvmf_rdma_poll_group)	poll_groups;
+};
+
+struct poller_manage_ctx {
+	struct spdk_nvmf_rdma_transport		*rtransport;
+	struct spdk_nvmf_rdma_poll_group	*rgroup;
+	struct spdk_nvmf_rdma_poller		*rpoller;
+	struct spdk_nvmf_rdma_device		*device;
+
+	struct spdk_thread			*thread;
+	volatile int				*inflight_op_counter;
 };
 
 static const struct spdk_json_object_decoder rdma_transport_opts_decoder[] = {
@@ -515,6 +533,8 @@ static void _poller_submit_sends(struct spdk_nvmf_rdma_transport *rtransport,
 
 static void _poller_submit_recvs(struct spdk_nvmf_rdma_transport *rtransport,
 				 struct spdk_nvmf_rdma_poller *rpoller);
+
+static void _nvmf_rdma_remove_destroyed_device(void *c);
 
 static inline int
 nvmf_rdma_check_ibv_state(enum ibv_qp_state state)
@@ -831,6 +851,8 @@ nvmf_rdma_qpair_clean_ibv_events(struct spdk_nvmf_rdma_qpair *rqpair)
 	}
 }
 
+static void nvmf_rdma_poller_destroy(struct spdk_nvmf_rdma_poller *poller);
+
 static void
 nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 {
@@ -909,6 +931,9 @@ nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 		rqpair->destruct_channel = NULL;
 	}
 
+	if (rqpair->poller && rqpair->poller->need_destroy && RB_EMPTY(&rqpair->poller->qpairs)) {
+		nvmf_rdma_poller_destroy(rqpair->poller);
+	}
 	free(rqpair);
 }
 
@@ -2682,6 +2707,8 @@ destroy_ib_device(struct spdk_nvmf_rdma_transport *rtransport,
 			ibv_dealloc_pd(device->pd);
 		}
 	}
+	SPDK_NOTICELOG("IB device %s[%p] is destroyed.\n", ibv_get_device_name(device->context->device),
+		       device);
 	free(device);
 }
 
@@ -2878,6 +2905,96 @@ nvmf_rdma_stop_listen(struct spdk_nvmf_transport *transport,
 	}
 }
 
+static void _nvmf_rdma_remove_poller_in_group(void *c);
+
+static bool
+nvmf_rdma_all_pollers_are_destroyed(void *c)
+{
+	struct poller_manage_ctx	*ctx = c;
+	int				counter;
+
+	counter = __atomic_sub_fetch(ctx->inflight_op_counter, 1, __ATOMIC_SEQ_CST);
+	SPDK_DEBUGLOG(rdma, "nvmf_rdma_all_pollers_are_destroyed called. counter: %d, poller: %p\n",
+		      counter, ctx->rpoller);
+
+	if (counter == 0) {
+		free((void *)ctx->inflight_op_counter);
+	}
+	free(ctx);
+
+	return counter == 0;
+}
+
+static int
+nvmf_rdma_remove_pollers_on_dev(struct spdk_nvmf_rdma_transport *rtransport,
+				struct spdk_nvmf_rdma_device *device,
+				bool *has_inflight)
+{
+	struct spdk_nvmf_rdma_poll_group	*rgroup;
+	struct spdk_nvmf_rdma_poller		*rpoller;
+	struct spdk_nvmf_poll_group		*poll_group;
+	struct poller_manage_ctx		*ctx;
+	bool					found;
+	int					*inflight_counter;
+	spdk_msg_fn				do_fn;
+
+	*has_inflight = false;
+	do_fn = _nvmf_rdma_remove_poller_in_group;
+	inflight_counter = calloc(1, sizeof(int));
+	if (!inflight_counter) {
+		SPDK_ERRLOG("Failed to allocate inflight counter when removing pollers\n");
+		return -ENOMEM;
+	}
+
+	TAILQ_FOREACH(rgroup, &rtransport->poll_groups, link) {
+		(*inflight_counter)++;
+	}
+
+	TAILQ_FOREACH(rgroup, &rtransport->poll_groups, link) {
+		found = false;
+		TAILQ_FOREACH(rpoller, &rgroup->pollers, link) {
+			if (rpoller->device == device) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			__atomic_fetch_sub(inflight_counter, 1, __ATOMIC_SEQ_CST);
+			continue;
+		}
+
+		ctx = calloc(1, sizeof(struct poller_manage_ctx));
+		if (!ctx) {
+			SPDK_ERRLOG("Failed to allocate poller_manage_ctx when removing pollers\n");
+			if (!*has_inflight) {
+				free(inflight_counter);
+			}
+			return -ENOMEM;
+		}
+
+		ctx->rtransport = rtransport;
+		ctx->rgroup = rgroup;
+		ctx->rpoller = rpoller;
+		ctx->device = device;
+		ctx->thread = spdk_get_thread();
+		ctx->inflight_op_counter = inflight_counter;
+		*has_inflight = true;
+
+		poll_group = rgroup->group.group;
+		if (poll_group->thread != spdk_get_thread()) {
+			spdk_thread_send_msg(poll_group->thread, do_fn, ctx);
+		} else {
+			do_fn(ctx);
+		}
+	}
+
+	if (!*has_inflight) {
+		free(inflight_counter);
+	}
+
+	return 0;
+}
+
 static void
 nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport,
 				struct spdk_nvmf_rdma_qpair *rqpair, bool drain)
@@ -2951,6 +3068,12 @@ nvmf_rdma_destroy_drained_qpair(struct spdk_nvmf_rdma_qpair *rqpair)
 
 	/* nvmf_rdma_close_qpair is not called */
 	if (!rqpair->to_close) {
+		return;
+	}
+
+	/* device is already destroyed and we should force destroy this qpair. */
+	if (rqpair->poller && rqpair->poller->need_destroy) {
+		nvmf_rdma_qpair_destroy(rqpair);
 		return;
 	}
 
@@ -3070,6 +3193,42 @@ nvmf_rdma_handle_cm_event_addr_change(struct spdk_nvmf_transport *transport,
 }
 
 static void
+nvmf_rdma_handle_device_removal(struct spdk_nvmf_rdma_transport *rtransport,
+				struct spdk_nvmf_rdma_device *device)
+{
+	struct spdk_nvmf_rdma_port	*port, *port_tmp;
+	int				rc;
+	bool				has_inflight;
+
+	rc = nvmf_rdma_remove_pollers_on_dev(rtransport, device, &has_inflight);
+	if (rc) {
+		SPDK_ERRLOG("Failed to handle device removal, rc %d\n", rc);
+		return;
+	}
+
+	if (!has_inflight) {
+		/* no pollers, destroy the device */
+		device->ready_to_destroy = true;
+		spdk_thread_send_msg(spdk_get_thread(), _nvmf_rdma_remove_destroyed_device, rtransport);
+	}
+
+	TAILQ_FOREACH_SAFE(port, &rtransport->ports, link, port_tmp) {
+		if (port->device == device) {
+			SPDK_NOTICELOG("Port %s:%s on device %s is being removed.\n",
+				       port->trid->traddr,
+				       port->trid->trsvcid,
+				       ibv_get_device_name(port->device->context->device));
+
+			/* keep NVMF listener and only destroy structures of the
+			 * RDMA transport. when the device comes back we can retry listening
+			 * and the application's workflow will not be interrupted.
+			 */
+			nvmf_rdma_stop_listen(&rtransport->transport, port->trid);
+		}
+	}
+}
+
+static void
 nvmf_rdma_handle_cm_event_port_removal(struct spdk_nvmf_transport *transport,
 				       struct rdma_cm_event *event)
 {
@@ -3079,14 +3238,11 @@ nvmf_rdma_handle_cm_event_port_removal(struct spdk_nvmf_transport *transport,
 	port = event->id->context;
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
-	SPDK_NOTICELOG("Port %s:%s is being removed\n", port->trid->traddr, port->trid->trsvcid);
-
-	nvmf_rdma_disconnect_qpairs_on_port(rtransport, port);
-
 	rdma_ack_cm_event(event);
 
-	while (spdk_nvmf_transport_stop_listen(transport, port->trid) == 0) {
-		;
+	if (!port->device->need_destroy) {
+		port->device->need_destroy = true;
+		nvmf_rdma_handle_device_removal(rtransport, port->device);
 	}
 }
 
@@ -3159,15 +3315,11 @@ nvmf_process_cm_event(struct spdk_nvmf_transport *transport)
 			 * don't make attempts to call any ibv_query/modify/create functions. We can only call
 			 * ibv_destroy* functions to release user space memory allocated by IB. All kernel
 			 * resources are already cleaned. */
-			if (event->id->qp) {
+			if (!event->id->qp) {
 				/* If rdma_cm event has a valid `qp` pointer then the event refers to the
-				 * corresponding qpair. Otherwise the event refers to a listening device */
-				rc = nvmf_rdma_disconnect(event);
-				if (rc < 0) {
-					SPDK_ERRLOG("Unable to process disconnect event. rc: %d\n", rc);
-					break;
-				}
-			} else {
+				 * corresponding qpair. Otherwise the event refers to a listening device.
+				 * Only handle this event on device because we will disconnect all qpairs
+				 * when removing device */
 				nvmf_rdma_handle_cm_event_port_removal(transport, event);
 				event_acked = true;
 			}
@@ -3323,8 +3475,12 @@ nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 			break;
 		}
 		break;
-	case IBV_EVENT_CQ_ERR:
 	case IBV_EVENT_DEVICE_FATAL:
+		SPDK_ERRLOG("Device Fatal event[%s] received on %s. device: %p\n",
+			    ibv_event_type_str(event.event_type), ibv_get_device_name(device->context->device), device);
+		device->need_destroy = true;
+		break;
+	case IBV_EVENT_CQ_ERR:
 	case IBV_EVENT_PORT_ACTIVE:
 	case IBV_EVENT_PORT_ERR:
 	case IBV_EVENT_LID_CHANGE:
@@ -3369,6 +3525,7 @@ nvmf_rdma_accept(void *ctx)
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_device *device, *tmp;
 	uint32_t count;
+	short revents;
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 	count = nfds = poll(rtransport->poll_fds, rtransport->npoll_fds, 0);
@@ -3389,8 +3546,17 @@ nvmf_rdma_accept(void *ctx)
 
 	/* Second and subsequent poll descriptors are IB async events */
 	TAILQ_FOREACH_SAFE(device, &rtransport->devices, link, tmp) {
-		if (rtransport->poll_fds[i++].revents & POLLIN) {
-			nvmf_process_ib_events(device, 32);
+		revents = rtransport->poll_fds[i++].revents;
+		if (revents & POLLIN) {
+			if (spdk_likely(!device->need_destroy)) {
+				nvmf_process_ib_events(device, 32);
+				if (spdk_unlikely(device->need_destroy)) {
+					nvmf_rdma_handle_device_removal(rtransport, device);
+				}
+			}
+			nfds--;
+		} else if (revents & POLLNVAL || revents & POLLHUP) {
+			SPDK_ERRLOG("Receive unknown revent %x on device %p\n", (int)revents, device);
 			nfds--;
 		}
 	}
@@ -3632,6 +3798,9 @@ static void
 nvmf_rdma_poller_destroy(struct spdk_nvmf_rdma_poller *poller)
 {
 	struct spdk_nvmf_rdma_qpair	*qpair, *tmp_qpair;
+	int				rc;
+
+	TAILQ_REMOVE(&poller->group->pollers, poller, link);
 	RB_FOREACH_SAFE(qpair, qpairs_tree, &poller->qpairs, tmp_qpair) {
 		nvmf_rdma_qpair_destroy(qpair);
 	}
@@ -3645,7 +3814,15 @@ nvmf_rdma_poller_destroy(struct spdk_nvmf_rdma_poller *poller)
 	}
 
 	if (poller->cq) {
-		ibv_destroy_cq(poller->cq);
+		rc = ibv_destroy_cq(poller->cq);
+		if (rc != 0) {
+			SPDK_ERRLOG("Destroy cq return %d, error: %s\n", rc, strerror(errno));
+		}
+	}
+
+	if (poller->destroy_cb) {
+		poller->destroy_cb(poller->destroy_cb_ctx);
+		poller->destroy_cb = NULL;
 	}
 
 	free(poller);
@@ -3664,7 +3841,6 @@ nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	}
 
 	TAILQ_FOREACH_SAFE(poller, &rgroup->pollers, link, tmp) {
-		TAILQ_REMOVE(&rgroup->pollers, poller, link);
 		nvmf_rdma_poller_destroy(poller);
 	}
 
@@ -4055,11 +4231,22 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	struct spdk_nvmf_rdma_wr	*rdma_wr;
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct spdk_nvmf_rdma_recv	*rdma_recv;
-	struct spdk_nvmf_rdma_qpair	*rqpair;
+	struct spdk_nvmf_rdma_qpair	*rqpair, *tmp_rqpair;
 	int reaped, i;
 	int count = 0;
 	bool error = false;
 	uint64_t poll_tsc = spdk_get_ticks();
+
+	if (spdk_unlikely(rpoller->need_destroy)) {
+		/* If qpair is closed before poller destroy, nvmf_rdma_destroy_drained_qpair may not
+		 * be called because we cannot poll anything from cq. So we call that here to force
+		 * destroy the qpair after to_close turning true.
+		 */
+		RB_FOREACH_SAFE(rqpair, qpairs_tree, &rpoller->qpairs, tmp_rqpair) {
+			nvmf_rdma_destroy_drained_qpair(rqpair);
+		}
+		return 0;
+	}
 
 	/* Poll for completing operations. */
 	reaped = ibv_poll_cq(rpoller->cq, 32, wc);
@@ -4203,19 +4390,74 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	return count;
 }
 
+static void
+_nvmf_rdma_remove_destroyed_device(void *c)
+{
+	struct spdk_nvmf_rdma_transport	*rtransport = c;
+	struct spdk_nvmf_rdma_device	*device, *device_tmp;
+	int				rc;
+
+	TAILQ_FOREACH_SAFE(device, &rtransport->devices, link, device_tmp) {
+		if (device->ready_to_destroy) {
+			destroy_ib_device(rtransport, device);
+		}
+	}
+
+	free_poll_fds(rtransport);
+	rc = generate_poll_fds(rtransport);
+	/* cannot handle fd allocation error here */
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to generate poll fds after remove ib device.\n");
+	}
+}
+
+static void
+_nvmf_rdma_remove_poller_in_group_cb(void *c)
+{
+	struct poller_manage_ctx	*ctx = c;
+	struct spdk_nvmf_rdma_transport	*rtransport = ctx->rtransport;
+	struct spdk_nvmf_rdma_device	*device = ctx->device;
+	struct spdk_thread		*thread = ctx->thread;
+
+	if (nvmf_rdma_all_pollers_are_destroyed(c)) {
+		/* destroy device when last poller is destroyed */
+		device->ready_to_destroy = true;
+		spdk_thread_send_msg(thread, _nvmf_rdma_remove_destroyed_device, rtransport);
+	}
+}
+
+static void
+_nvmf_rdma_remove_poller_in_group(void *c)
+{
+	struct spdk_nvmf_rdma_qpair		*rqpair, *tmp_qpair;
+	struct poller_manage_ctx		*ctx = c;
+
+	ctx->rpoller->need_destroy = true;
+	ctx->rpoller->destroy_cb_ctx = ctx;
+	ctx->rpoller->destroy_cb = _nvmf_rdma_remove_poller_in_group_cb;
+
+	if (RB_EMPTY(&ctx->rpoller->qpairs)) {
+		nvmf_rdma_poller_destroy(ctx->rpoller);
+	} else {
+		RB_FOREACH_SAFE(rqpair, qpairs_tree, &ctx->rpoller->qpairs, tmp_qpair) {
+			spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
+		}
+	}
+}
+
 static int
 nvmf_rdma_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_poll_group *rgroup;
-	struct spdk_nvmf_rdma_poller	*rpoller;
+	struct spdk_nvmf_rdma_poller	*rpoller, *tmp;
 	int				count, rc;
 
 	rtransport = SPDK_CONTAINEROF(group->transport, struct spdk_nvmf_rdma_transport, transport);
 	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
 
 	count = 0;
-	TAILQ_FOREACH(rpoller, &rgroup->pollers, link) {
+	TAILQ_FOREACH_SAFE(rpoller, &rgroup->pollers, link, tmp) {
 		rc = nvmf_rdma_poller_poll(rtransport, rpoller);
 		if (rc < 0) {
 			return rc;
