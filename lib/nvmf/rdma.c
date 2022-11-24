@@ -2362,13 +2362,136 @@ nvmf_rdma_is_rxe_device(struct spdk_nvmf_rdma_device *device)
 }
 
 static int nvmf_rdma_accept(void *ctx);
+static int
+create_ib_device(struct spdk_nvmf_rdma_transport *rtransport, struct ibv_context *context,
+		 struct spdk_nvmf_rdma_device **new_device)
+{
+	struct spdk_nvmf_rdma_device	*device;
+	int				flag = 0;
+	int				rc = 0;
+
+	device = calloc(1, sizeof(*device));
+	if (!device) {
+		SPDK_ERRLOG("Unable to allocate memory for RDMA devices.\n");
+		return -ENOMEM;
+	}
+	device->context = context;
+	rc = ibv_query_device(device->context, &device->attr);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to query RDMA device attributes.\n");
+		free(device);
+		return rc;
+	}
+
+#ifdef SPDK_CONFIG_RDMA_SEND_WITH_INVAL
+	if ((device->attr.device_cap_flags & IBV_DEVICE_MEM_MGT_EXTENSIONS) == 0) {
+		SPDK_WARNLOG("The libibverbs on this system supports SEND_WITH_INVALIDATE,");
+		SPDK_WARNLOG("but the device with vendor ID %u does not.\n", device->attr.vendor_id);
+	}
+
+	/**
+	 * The vendor ID is assigned by the IEEE and an ID of 0 implies Soft-RoCE.
+	 * The Soft-RoCE RXE driver does not currently support send with invalidate,
+	 * but incorrectly reports that it does. There are changes making their way
+	 * through the kernel now that will enable this feature. When they are merged,
+	 * we can conditionally enable this feature.
+	 *
+	 * TODO: enable this for versions of the kernel rxe driver that support it.
+	 */
+	if (nvmf_rdma_is_rxe_device(device)) {
+		device->attr.device_cap_flags &= ~(IBV_DEVICE_MEM_MGT_EXTENSIONS);
+	}
+#endif
+
+	/* set up device context async ev fd as NON_BLOCKING */
+	flag = fcntl(device->context->async_fd, F_GETFL);
+	rc = fcntl(device->context->async_fd, F_SETFL, flag | O_NONBLOCK);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to set context async fd to NONBLOCK.\n");
+		free(device);
+		return rc;
+	}
+
+	TAILQ_INSERT_TAIL(&rtransport->devices, device, link);
+	SPDK_DEBUGLOG(rdma, "New device %p is added to RDMA trasport\n", device);
+
+	if (g_nvmf_hooks.get_ibv_pd) {
+		device->pd = g_nvmf_hooks.get_ibv_pd(NULL, device->context);
+	} else {
+		device->pd = ibv_alloc_pd(device->context);
+	}
+
+	if (!device->pd) {
+		SPDK_ERRLOG("Unable to allocate protection domain.\n");
+		return -ENOMEM;
+	}
+
+	assert(device->map == NULL);
+
+	device->map = spdk_rdma_create_mem_map(device->pd, &g_nvmf_hooks, SPDK_RDMA_MEMORY_MAP_ROLE_TARGET);
+	if (!device->map) {
+		SPDK_ERRLOG("Unable to allocate memory map for listen address\n");
+		return -ENOMEM;
+	}
+
+	assert(device->map != NULL);
+	assert(device->pd != NULL);
+
+	if (new_device) {
+		*new_device = device;
+	}
+	return 0;
+}
+
+static void
+free_poll_fds(struct spdk_nvmf_rdma_transport *rtransport)
+{
+	if (rtransport->poll_fds) {
+		free(rtransport->poll_fds);
+		rtransport->poll_fds = NULL;
+	}
+	rtransport->npoll_fds = 0;
+}
+
+static int
+generate_poll_fds(struct spdk_nvmf_rdma_transport *rtransport)
+{
+	/* Set up poll descriptor array to monitor events from RDMA and IB
+	 * in a single poll syscall
+	 */
+	int device_count = 0;
+	int i = 0;
+	struct spdk_nvmf_rdma_device *device, *tmp;
+
+	TAILQ_FOREACH_SAFE(device, &rtransport->devices, link, tmp) {
+		device_count++;
+	}
+
+	rtransport->npoll_fds = device_count + 1;
+
+	rtransport->poll_fds = calloc(rtransport->npoll_fds, sizeof(struct pollfd));
+	if (rtransport->poll_fds == NULL) {
+		SPDK_ERRLOG("poll_fds allocation failed\n");
+		return -ENOMEM;
+	}
+
+	rtransport->poll_fds[i].fd = rtransport->event_channel->fd;
+	rtransport->poll_fds[i++].events = POLLIN;
+
+	TAILQ_FOREACH_SAFE(device, &rtransport->devices, link, tmp) {
+		rtransport->poll_fds[i].fd = device->context->async_fd;
+		rtransport->poll_fds[i++].events = POLLIN;
+	}
+
+	return 0;
+}
 
 static struct spdk_nvmf_transport *
 nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 {
 	int rc;
 	struct spdk_nvmf_rdma_transport *rtransport;
-	struct spdk_nvmf_rdma_device	*device, *tmp;
+	struct spdk_nvmf_rdma_device	*device;
 	struct ibv_context		**contexts;
 	uint32_t			i;
 	int				flag;
@@ -2506,78 +2629,12 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	i = 0;
 	rc = 0;
 	while (contexts[i] != NULL) {
-		device = calloc(1, sizeof(*device));
-		if (!device) {
-			SPDK_ERRLOG("Unable to allocate memory for RDMA devices.\n");
-			rc = -ENOMEM;
-			break;
-		}
-		device->context = contexts[i];
-		rc = ibv_query_device(device->context, &device->attr);
+		rc = create_ib_device(rtransport, contexts[i], &device);
 		if (rc < 0) {
-			SPDK_ERRLOG("Failed to query RDMA device attributes.\n");
-			free(device);
-			break;
-
-		}
-
-		max_device_sge = spdk_min(max_device_sge, device->attr.max_sge);
-
-#ifdef SPDK_CONFIG_RDMA_SEND_WITH_INVAL
-		if ((device->attr.device_cap_flags & IBV_DEVICE_MEM_MGT_EXTENSIONS) == 0) {
-			SPDK_WARNLOG("The libibverbs on this system supports SEND_WITH_INVALIDATE,");
-			SPDK_WARNLOG("but the device with vendor ID %u does not.\n", device->attr.vendor_id);
-		}
-
-		/**
-		 * The vendor ID is assigned by the IEEE and an ID of 0 implies Soft-RoCE.
-		 * The Soft-RoCE RXE driver does not currently support send with invalidate,
-		 * but incorrectly reports that it does. There are changes making their way
-		 * through the kernel now that will enable this feature. When they are merged,
-		 * we can conditionally enable this feature.
-		 *
-		 * TODO: enable this for versions of the kernel rxe driver that support it.
-		 */
-		if (nvmf_rdma_is_rxe_device(device)) {
-			device->attr.device_cap_flags &= ~(IBV_DEVICE_MEM_MGT_EXTENSIONS);
-		}
-#endif
-
-		/* set up device context async ev fd as NON_BLOCKING */
-		flag = fcntl(device->context->async_fd, F_GETFL);
-		rc = fcntl(device->context->async_fd, F_SETFL, flag | O_NONBLOCK);
-		if (rc < 0) {
-			SPDK_ERRLOG("Failed to set context async fd to NONBLOCK.\n");
-			free(device);
 			break;
 		}
-
-		TAILQ_INSERT_TAIL(&rtransport->devices, device, link);
 		i++;
-
-		if (g_nvmf_hooks.get_ibv_pd) {
-			device->pd = g_nvmf_hooks.get_ibv_pd(NULL, device->context);
-		} else {
-			device->pd = ibv_alloc_pd(device->context);
-		}
-
-		if (!device->pd) {
-			SPDK_ERRLOG("Unable to allocate protection domain.\n");
-			rc = -ENOMEM;
-			break;
-		}
-
-		assert(device->map == NULL);
-
-		device->map = spdk_rdma_create_mem_map(device->pd, &g_nvmf_hooks, SPDK_RDMA_MEMORY_MAP_ROLE_TARGET);
-		if (!device->map) {
-			SPDK_ERRLOG("Unable to allocate memory map for listen address\n");
-			rc = -ENOMEM;
-			break;
-		}
-
-		assert(device->map != NULL);
-		assert(device->pd != NULL);
+		max_device_sge = spdk_min(max_device_sge, device->attr.max_sge);
 	}
 	rdma_free_devices(contexts);
 
@@ -2598,24 +2655,10 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
-	/* Set up poll descriptor array to monitor events from RDMA and IB
-	 * in a single poll syscall
-	 */
-	rtransport->npoll_fds = i + 1;
-	i = 0;
-	rtransport->poll_fds = calloc(rtransport->npoll_fds, sizeof(struct pollfd));
-	if (rtransport->poll_fds == NULL) {
-		SPDK_ERRLOG("poll_fds allocation failed\n");
+	rc = generate_poll_fds(rtransport);
+	if (rc < 0) {
 		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
 		return NULL;
-	}
-
-	rtransport->poll_fds[i].fd = rtransport->event_channel->fd;
-	rtransport->poll_fds[i++].events = POLLIN;
-
-	TAILQ_FOREACH_SAFE(device, &rtransport->devices, link, tmp) {
-		rtransport->poll_fds[i].fd = device->context->async_fd;
-		rtransport->poll_fds[i++].events = POLLIN;
 	}
 
 	rtransport->accept_poller = SPDK_POLLER_REGISTER(nvmf_rdma_accept, &rtransport->transport,
@@ -2626,6 +2669,20 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	}
 
 	return &rtransport->transport;
+}
+
+static void
+destroy_ib_device(struct spdk_nvmf_rdma_transport *rtransport,
+		  struct spdk_nvmf_rdma_device *device)
+{
+	TAILQ_REMOVE(&rtransport->devices, device, link);
+	spdk_rdma_free_mem_map(&device->map);
+	if (device->pd) {
+		if (!g_nvmf_hooks.get_ibv_pd) {
+			ibv_dealloc_pd(device->pd);
+		}
+	}
+	free(device);
 }
 
 static void
@@ -2660,23 +2717,14 @@ nvmf_rdma_destroy(struct spdk_nvmf_transport *transport,
 		free(port);
 	}
 
-	if (rtransport->poll_fds != NULL) {
-		free(rtransport->poll_fds);
-	}
+	free_poll_fds(rtransport);
 
 	if (rtransport->event_channel != NULL) {
 		rdma_destroy_event_channel(rtransport->event_channel);
 	}
 
 	TAILQ_FOREACH_SAFE(device, &rtransport->devices, link, device_tmp) {
-		TAILQ_REMOVE(&rtransport->devices, device, link);
-		spdk_rdma_free_mem_map(&device->map);
-		if (device->pd) {
-			if (!g_nvmf_hooks.get_ibv_pd) {
-				ibv_dealloc_pd(device->pd);
-			}
-		}
-		free(device);
+		destroy_ib_device(rtransport, device);
 	}
 
 	if (rtransport->data_wr_pool != NULL) {
@@ -3390,6 +3438,86 @@ nvmf_rdma_discover(struct spdk_nvmf_transport *transport,
 	entry->tsas.rdma.rdma_cms = SPDK_NVMF_RDMA_CMS_RDMA_CM;
 }
 
+static int
+nvmf_rdma_poller_create(struct spdk_nvmf_rdma_transport *rtransport,
+			struct spdk_nvmf_rdma_poll_group *rgroup, struct spdk_nvmf_rdma_device *device,
+			struct spdk_nvmf_rdma_poller **out_poller)
+{
+	struct spdk_nvmf_rdma_poller		*poller;
+	struct spdk_rdma_srq_init_attr		srq_init_attr;
+	struct spdk_nvmf_rdma_resource_opts	opts;
+	int					num_cqe;
+
+	poller = calloc(1, sizeof(*poller));
+	if (!poller) {
+		SPDK_ERRLOG("Unable to allocate memory for new RDMA poller\n");
+		return -1;
+	}
+
+	poller->device = device;
+	poller->group = rgroup;
+	*out_poller = poller;
+
+	RB_INIT(&poller->qpairs);
+	STAILQ_INIT(&poller->qpairs_pending_send);
+	STAILQ_INIT(&poller->qpairs_pending_recv);
+
+	TAILQ_INSERT_TAIL(&rgroup->pollers, poller, link);
+	SPDK_DEBUGLOG(rdma, "Create poller %p on device %p in poll group %p.\n", poller, device, rgroup);
+	if (rtransport->rdma_opts.no_srq == false && device->num_srq < device->attr.max_srq) {
+		if ((int)rtransport->rdma_opts.max_srq_depth > device->attr.max_srq_wr) {
+			SPDK_WARNLOG("Requested SRQ depth %u, max supported by dev %s is %d\n",
+				     rtransport->rdma_opts.max_srq_depth, device->context->device->name, device->attr.max_srq_wr);
+		}
+		poller->max_srq_depth = spdk_min((int)rtransport->rdma_opts.max_srq_depth, device->attr.max_srq_wr);
+
+		device->num_srq++;
+		memset(&srq_init_attr, 0, sizeof(srq_init_attr));
+		srq_init_attr.pd = device->pd;
+		srq_init_attr.stats = &poller->stat.qp_stats.recv;
+		srq_init_attr.srq_init_attr.attr.max_wr = poller->max_srq_depth;
+		srq_init_attr.srq_init_attr.attr.max_sge = spdk_min(device->attr.max_sge, NVMF_DEFAULT_RX_SGE);
+		poller->srq = spdk_rdma_srq_create(&srq_init_attr);
+		if (!poller->srq) {
+			SPDK_ERRLOG("Unable to create shared receive queue, errno %d\n", errno);
+			return -1;
+		}
+
+		opts.qp = poller->srq;
+		opts.map = device->map;
+		opts.qpair = NULL;
+		opts.shared = true;
+		opts.max_queue_depth = poller->max_srq_depth;
+		opts.in_capsule_data_size = rtransport->transport.opts.in_capsule_data_size;
+
+		poller->resources = nvmf_rdma_resources_create(&opts);
+		if (!poller->resources) {
+			SPDK_ERRLOG("Unable to allocate resources for shared receive queue.\n");
+			return -1;
+		}
+	}
+
+	/*
+	 * When using an srq, we can limit the completion queue at startup.
+	 * The following formula represents the calculation:
+	 * num_cqe = num_recv + num_data_wr + num_send_wr.
+	 * where num_recv=num_data_wr=and num_send_wr=poller->max_srq_depth
+	 */
+	if (poller->srq) {
+		num_cqe = poller->max_srq_depth * 3;
+	} else {
+		num_cqe = rtransport->rdma_opts.num_cqe;
+	}
+
+	poller->cq = ibv_create_cq(device->context, num_cqe, poller, NULL, 0);
+	if (!poller->cq) {
+		SPDK_ERRLOG("Unable to create completion queue\n");
+		return -1;
+	}
+	poller->num_cqe = num_cqe;
+	return 0;
+}
+
 static void nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group);
 
 static struct spdk_nvmf_transport_poll_group *
@@ -3400,9 +3528,7 @@ nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport,
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
 	struct spdk_nvmf_rdma_poller		*poller;
 	struct spdk_nvmf_rdma_device		*device;
-	struct spdk_rdma_srq_init_attr		srq_init_attr;
-	struct spdk_nvmf_rdma_resource_opts	opts;
-	int					num_cqe;
+	int					rc;
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
@@ -3414,75 +3540,11 @@ nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport,
 	TAILQ_INIT(&rgroup->pollers);
 
 	TAILQ_FOREACH(device, &rtransport->devices, link) {
-		poller = calloc(1, sizeof(*poller));
-		if (!poller) {
-			SPDK_ERRLOG("Unable to allocate memory for new RDMA poller\n");
+		rc = nvmf_rdma_poller_create(rtransport, rgroup, device, &poller);
+		if (rc < 0) {
 			nvmf_rdma_poll_group_destroy(&rgroup->group);
 			return NULL;
 		}
-
-		poller->device = device;
-		poller->group = rgroup;
-
-		RB_INIT(&poller->qpairs);
-		STAILQ_INIT(&poller->qpairs_pending_send);
-		STAILQ_INIT(&poller->qpairs_pending_recv);
-
-		TAILQ_INSERT_TAIL(&rgroup->pollers, poller, link);
-		if (rtransport->rdma_opts.no_srq == false && device->num_srq < device->attr.max_srq) {
-			if ((int)rtransport->rdma_opts.max_srq_depth > device->attr.max_srq_wr) {
-				SPDK_WARNLOG("Requested SRQ depth %u, max supported by dev %s is %d\n",
-					     rtransport->rdma_opts.max_srq_depth, device->context->device->name, device->attr.max_srq_wr);
-			}
-			poller->max_srq_depth = spdk_min((int)rtransport->rdma_opts.max_srq_depth, device->attr.max_srq_wr);
-
-			device->num_srq++;
-			memset(&srq_init_attr, 0, sizeof(srq_init_attr));
-			srq_init_attr.pd = device->pd;
-			srq_init_attr.stats = &poller->stat.qp_stats.recv;
-			srq_init_attr.srq_init_attr.attr.max_wr = poller->max_srq_depth;
-			srq_init_attr.srq_init_attr.attr.max_sge = spdk_min(device->attr.max_sge, NVMF_DEFAULT_RX_SGE);
-			poller->srq = spdk_rdma_srq_create(&srq_init_attr);
-			if (!poller->srq) {
-				SPDK_ERRLOG("Unable to create shared receive queue, errno %d\n", errno);
-				nvmf_rdma_poll_group_destroy(&rgroup->group);
-				return NULL;
-			}
-
-			opts.qp = poller->srq;
-			opts.map = device->map;
-			opts.qpair = NULL;
-			opts.shared = true;
-			opts.max_queue_depth = poller->max_srq_depth;
-			opts.in_capsule_data_size = transport->opts.in_capsule_data_size;
-
-			poller->resources = nvmf_rdma_resources_create(&opts);
-			if (!poller->resources) {
-				SPDK_ERRLOG("Unable to allocate resources for shared receive queue.\n");
-				nvmf_rdma_poll_group_destroy(&rgroup->group);
-				return NULL;
-			}
-		}
-
-		/*
-		 * When using an srq, we can limit the completion queue at startup.
-		 * The following formula represents the calculation:
-		 * num_cqe = num_recv + num_data_wr + num_send_wr.
-		 * where num_recv=num_data_wr=and num_send_wr=poller->max_srq_depth
-		 */
-		if (poller->srq) {
-			num_cqe = poller->max_srq_depth * 3;
-		} else {
-			num_cqe = rtransport->rdma_opts.num_cqe;
-		}
-
-		poller->cq = ibv_create_cq(device->context, num_cqe, poller, NULL, 0);
-		if (!poller->cq) {
-			SPDK_ERRLOG("Unable to create completion queue\n");
-			nvmf_rdma_poll_group_destroy(&rgroup->group);
-			return NULL;
-		}
-		poller->num_cqe = num_cqe;
 	}
 
 	TAILQ_INSERT_TAIL(&rtransport->poll_groups, rgroup, link);
@@ -3567,11 +3629,33 @@ nvmf_rdma_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 }
 
 static void
+nvmf_rdma_poller_destroy(struct spdk_nvmf_rdma_poller *poller)
+{
+	struct spdk_nvmf_rdma_qpair	*qpair, *tmp_qpair;
+	RB_FOREACH_SAFE(qpair, qpairs_tree, &poller->qpairs, tmp_qpair) {
+		nvmf_rdma_qpair_destroy(qpair);
+	}
+
+	if (poller->srq) {
+		if (poller->resources) {
+			nvmf_rdma_resources_destroy(poller->resources);
+		}
+		spdk_rdma_srq_destroy(poller->srq);
+		SPDK_DEBUGLOG(rdma, "Destroyed RDMA shared queue %p\n", poller->srq);
+	}
+
+	if (poller->cq) {
+		ibv_destroy_cq(poller->cq);
+	}
+
+	free(poller);
+}
+
+static void
 nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_rdma_poll_group	*rgroup, *next_rgroup;
 	struct spdk_nvmf_rdma_poller		*poller, *tmp;
-	struct spdk_nvmf_rdma_qpair		*qpair, *tmp_qpair;
 	struct spdk_nvmf_rdma_transport		*rtransport;
 
 	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
@@ -3581,24 +3665,7 @@ nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 
 	TAILQ_FOREACH_SAFE(poller, &rgroup->pollers, link, tmp) {
 		TAILQ_REMOVE(&rgroup->pollers, poller, link);
-
-		RB_FOREACH_SAFE(qpair, qpairs_tree, &poller->qpairs, tmp_qpair) {
-			nvmf_rdma_qpair_destroy(qpair);
-		}
-
-		if (poller->srq) {
-			if (poller->resources) {
-				nvmf_rdma_resources_destroy(poller->resources);
-			}
-			spdk_rdma_srq_destroy(poller->srq);
-			SPDK_DEBUGLOG(rdma, "Destroyed RDMA shared queue %p\n", poller->srq);
-		}
-
-		if (poller->cq) {
-			ibv_destroy_cq(poller->cq);
-		}
-
-		free(poller);
+		nvmf_rdma_poller_destroy(poller);
 	}
 
 	if (rgroup->group.transport == NULL) {
