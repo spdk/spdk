@@ -729,6 +729,10 @@ _nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	qpair->qid = cmd->qid;
 	qpair->connect_received = true;
 
+	pthread_mutex_lock(&qpair->group->mutex);
+	qpair->group->current_unassociated_qpairs--;
+	pthread_mutex_unlock(&qpair->group->mutex);
+
 	if (0 == qpair->qid) {
 		qpair->group->stat.admin_qpairs++;
 		qpair->group->stat.current_admin_qpairs++;

@@ -175,6 +175,7 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	TAILQ_INIT(&group->tgroups);
 	TAILQ_INIT(&group->qpairs);
 	group->thread = thread;
+	pthread_mutex_init(&group->mutex, NULL);
 
 	group->poller = SPDK_POLLER_REGISTER(nvmf_poll_group_poll, group, 0);
 
@@ -887,6 +888,10 @@ spdk_nvmf_tgt_new_qpair(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *qpair
 	ctx->qpair = qpair;
 	ctx->group = group;
 
+	pthread_mutex_lock(&group->mutex);
+	group->current_unassociated_qpairs++;
+	pthread_mutex_unlock(&group->mutex);
+
 	spdk_thread_send_msg(group->thread, _nvmf_poll_group_add, ctx);
 }
 
@@ -1054,6 +1059,10 @@ _nvmf_qpair_destroy(void *ctx, int status)
 			assert(qpair->group->stat.current_io_qpairs > 0);
 			qpair->group->stat.current_io_qpairs--;
 		}
+	} else {
+		pthread_mutex_lock(&qpair->group->mutex);
+		qpair->group->current_unassociated_qpairs--;
+		pthread_mutex_unlock(&qpair->group->mutex);
 	}
 
 	if (ctrlr) {

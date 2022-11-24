@@ -157,6 +157,12 @@ struct spdk_nvmf_poll_group {
 	struct spdk_nvmf_subsystem_poll_group		*sgroups;
 	uint32_t					num_sgroups;
 
+	/* Protected by mutex. Counts qpairs that have connected at a
+	 * transport level, but are not associated with a subsystem
+	 * or controller yet (because the CONNECT capsule hasn't
+	 * been received). */
+	uint32_t					current_unassociated_qpairs;
+
 	/* All of the queue pairs that belong to this poll group */
 	TAILQ_HEAD(, spdk_nvmf_qpair)			qpairs;
 
@@ -167,6 +173,8 @@ struct spdk_nvmf_poll_group {
 	void						*destroy_cb_arg;
 
 	TAILQ_ENTRY(spdk_nvmf_poll_group)		link;
+
+	pthread_mutex_t					mutex;
 };
 
 struct spdk_nvmf_listener {
