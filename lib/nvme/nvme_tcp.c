@@ -1748,6 +1748,8 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 	if (qpair->poll_group == NULL) {
 		rc = spdk_sock_flush(tqpair->sock);
 		if (rc < 0) {
+			SPDK_ERRLOG("Failed to flush tqpair=%p (%d): %s\n", tqpair,
+				    errno, spdk_strerror(errno));
 			if (spdk_unlikely(tqpair->qpair.ctrlr->timeout_enabled)) {
 				nvme_tcp_qpair_check_timeout(qpair);
 			}
