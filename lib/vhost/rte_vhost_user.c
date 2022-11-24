@@ -1776,6 +1776,8 @@ vhost_dev_thread_exit(void *arg1)
 	spdk_thread_exit(spdk_get_thread());
 }
 
+static bool g_vhost_user_started = false;
+
 int
 vhost_user_dev_register(struct spdk_vhost_dev *vdev, const char *name, struct spdk_cpuset *cpumask,
 			const struct spdk_vhost_user_dev_backend *user_backend)
@@ -1834,6 +1836,7 @@ int
 vhost_user_dev_unregister(struct spdk_vhost_dev *vdev)
 {
 	struct spdk_vhost_user_dev *user_dev = to_user_dev(vdev);
+	struct spdk_vhost_session *vsession;
 
 	pthread_mutex_lock(&user_dev->lock);
 	if (user_dev->pending_async_op_num) {
@@ -1841,11 +1844,29 @@ vhost_user_dev_unregister(struct spdk_vhost_dev *vdev)
 		return -EBUSY;
 	}
 
-	if (!TAILQ_EMPTY(&user_dev->vsessions)) {
+	/* This is the case that uses RPC call `vhost_delete_controller` while VM is connected */
+	if (!TAILQ_EMPTY(&user_dev->vsessions) && g_vhost_user_started) {
 		SPDK_ERRLOG("Controller %s has still valid connection.\n", vdev->name);
 		pthread_mutex_unlock(&user_dev->lock);
 		return -EBUSY;
 	}
+
+	/* This is the case that quits the subsystem while VM is connected, the VM
+	 * should be stopped by the shutdown thread.
+	 */
+	if (!g_vhost_user_started) {
+		TAILQ_FOREACH(vsession, &user_dev->vsessions, tailq) {
+			assert(vsession->started == false);
+			TAILQ_REMOVE(&user_dev->vsessions, vsession, tailq);
+			if (vsession->mem) {
+				vhost_session_mem_unregister(vsession->mem);
+				free(vsession->mem);
+			}
+			free(vsession->name);
+			free(vsession);
+		}
+	}
+
 	user_dev->registered = false;
 	pthread_mutex_unlock(&user_dev->lock);
 
@@ -1862,8 +1883,6 @@ vhost_user_dev_unregister(struct spdk_vhost_dev *vdev)
 
 	return 0;
 }
-
-static bool g_vhost_user_started = false;
 
 int
 vhost_user_init(void)
