@@ -131,6 +131,7 @@ void vrdma_destroy_backend_qp(struct spdk_vrdma_qp *vqp)
 	struct vrdma_backend_qp *qp;
 	uint32_t i;
 
+	SPDK_NOTICELOG("\nlizh vrdma_destroy_backend_qp...start\n");
 	for (i = 0; i < VRDMA_MAX_BK_QP_PER_VQP; i++) {
 		if (vqp->bk_qp[i]) {
 			qp = vqp->bk_qp[i];
@@ -214,8 +215,10 @@ destroy_dma:
 bool vrdma_set_vq_flush(struct vrdma_ctrl *ctrl,
 				struct spdk_vrdma_qp *vqp)
 {
+	SPDK_NOTICELOG("\nlizh vrdma_set_vq_flush...start\n");
 	if (ctrl->sctrl->q_ops->is_suspended(vqp->snap_queue))
 		return false;
+	SPDK_NOTICELOG("\nlizh vrdma_set_vq_flush...done\n");
 	ctrl->sctrl->q_ops->suspend(vqp->snap_queue);
 	return true;
 }
@@ -247,4 +250,11 @@ bool vrdma_qp_is_suspended(struct vrdma_ctrl *ctrl, uint32_t qp_handle)
 		return false;
 	}
 	return ctrl->sctrl->q_ops->is_suspended(vqp->snap_queue);
+}
+
+bool vrdma_qp_is_connected_ready(struct spdk_vrdma_qp *vqp)
+{
+	if (vqp->qp_state > IBV_QPS_INIT && vqp->qp_state < IBV_QPS_ERR)
+		return true;
+	return false;
 }
