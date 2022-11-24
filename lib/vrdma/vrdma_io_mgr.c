@@ -182,6 +182,11 @@ static bool vrdma_qp_sm_poll_pi(struct spdk_vrdma_qp *vqp,
 		return true;
 	}
 
+	if (vqp->snap_queue->swq_state == SW_VIRTQ_FLUSHING) {
+		SPDK_NOTICELOG("vqp is in flushing status, stop poll pi\n");
+		return false;
+	}
+
 #ifdef POLL_PI_DBG
 	SPDK_NOTICELOG("vrdam poll sq pi: loop %d, pi pa 0x%lx, pi %d, pre pi %d\n",
 					pi_addr, vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
