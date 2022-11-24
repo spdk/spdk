@@ -2919,7 +2919,7 @@ nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 	}
 
 invalid_cns:
-	SPDK_INFOLOG(nvmf, "Identify command with unsupported CNS 0x%02x\n", cns);
+	SPDK_DEBUGLOG(nvmf, "Identify command with unsupported CNS 0x%02x\n", cns);
 	rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 	rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
