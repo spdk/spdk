@@ -67,4 +67,5 @@ bool vrdma_set_vq_flush(struct vrdma_ctrl *ctrl,
 void vrdma_destroy_vq(struct vrdma_ctrl *ctrl,
 				struct spdk_vrdma_qp *vqp);
 bool vrdma_qp_is_suspended(struct vrdma_ctrl *ctrl, uint32_t qp_handle);
+bool vrdma_qp_is_connected_ready(struct spdk_vrdma_qp *vqp);
 #endif

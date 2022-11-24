@@ -326,8 +326,8 @@ static void vrdma_aq_modify_gid(struct vrdma_ctrl *ctrl,
 	aqe->resp.modify_gid_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 	for (int i = 0; i < VRDMA_DEV_GID_LEN; i += 4)
 		SPDK_NOTICELOG("\nlizh vrdma_aq_modify_gid...gid=0x%x%x%x%x\n",
-			aqe->resp.query_gid_resp.gid[i], aqe->resp.query_gid_resp.gid[i+1],
-			aqe->resp.query_gid_resp.gid[i+2], aqe->resp.query_gid_resp.gid[i+3]);
+			aqe->req.modify_gid_req.gid[i], aqe->req.modify_gid_req.gid[i+1],
+			aqe->req.modify_gid_req.gid[i+2], aqe->req.modify_gid_req.gid[i+3]);
 }
 
 static struct ibv_pd *vrdma_create_sf_pd(const char *dev_name)
@@ -1102,6 +1102,9 @@ static void vrdma_aq_destroy_suspended_qp(struct vrdma_ctrl *ctrl,
 					aqe->resp.destroy_qp_resp.err_code);
 		return;
 	}
+	if (vrdma_qp_is_connected_ready(vqp)) {
+		snap_vrdma_desched_vq(vqp->snap_queue);
+	}
 	vrdma_destroy_vq(ctrl, vqp);
 	if (ctrl->srv_ops->vrdma_device_destroy_qp(&ctrl->dev, aqe)) {
 		aqe->resp.destroy_qp_resp.err_code =
@@ -1158,8 +1161,11 @@ static int vrdma_aq_destroy_qp(struct vrdma_ctrl *ctrl,
 		return 0;
 	}
 	vrdma_destroy_backend_qp(vqp);
-	if (vrdma_set_vq_flush(ctrl, vqp))
-		return VRDMA_CMD_STATE_WAITING;
+	if (vrdma_qp_is_connected_ready(vqp)) {
+		if (vrdma_set_vq_flush(ctrl, vqp)) {
+			return VRDMA_CMD_STATE_WAITING;
+		}
+	}
 	vrdma_aq_destroy_suspended_qp(ctrl, aqe, vqp);
 	return 0;
 }
