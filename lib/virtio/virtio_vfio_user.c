@@ -428,7 +428,6 @@ virtio_vfio_user_dev_init(struct virtio_dev *vdev, const char *name, const char 
 	if (!dev->ctx) {
 		SPDK_ERRLOG("Error to setup %s as vfio device\n", path);
 		virtio_dev_destruct(vdev);
-		free(dev);
 		return -EINVAL;
 	}
 
@@ -438,8 +437,6 @@ virtio_vfio_user_dev_init(struct virtio_dev *vdev, const char *name, const char 
 	if (rc != 0) {
 		SPDK_ERRLOG("Read PCI CMD REG failed\n");
 		virtio_dev_destruct(vdev);
-		spdk_vfio_user_release(dev->ctx);
-		free(dev);
 		return rc;
 	}
 	cmd_reg |= 0x404;
@@ -448,8 +445,6 @@ virtio_vfio_user_dev_init(struct virtio_dev *vdev, const char *name, const char 
 	if (rc != 0) {
 		SPDK_ERRLOG("Write PCI CMD REG failed\n");
 		virtio_dev_destruct(vdev);
-		spdk_vfio_user_release(dev->ctx);
-		free(dev);
 		return rc;
 	}
 
