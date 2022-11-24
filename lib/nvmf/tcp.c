@@ -964,7 +964,9 @@ _tcp_write_pdu(struct nvme_tcp_pdu *pdu)
 		if (rc == mapped_length) {
 			_pdu_write_done(pdu, 0);
 		} else {
-			SPDK_ERRLOG("IC_RESP or TERM_REQ could not write to socket.\n");
+			SPDK_ERRLOG("Could not write %s to socket: rc=%zd, errno=%d\n",
+				    pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_RESP ?
+				    "IC_RESP" : "TERM_REQ", rc, errno);
 			_pdu_write_done(pdu, -1);
 		}
 	} else {
