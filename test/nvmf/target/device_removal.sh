@@ -76,6 +76,17 @@ function get_rdma_device_name() {
 	ls $(get_pci_dir $dev_name)/infiniband
 }
 
+function check_rdma_dev_exists_in_nvmf_tgt() {
+	local rdma_dev_name=$1
+	$rpc_py nvmf_get_stats | jq -r '.poll_groups[0].transports[].devices[].name' | grep "$rdma_dev_name"
+	return $?
+}
+
+function get_rdma_dev_count_in_nvmf_tgt() {
+	local rdma_dev_name=$1
+	$rpc_py nvmf_get_stats | jq -r '.poll_groups[0].transports[].devices | length'
+}
+
 function test_remove_and_rescan() {
 	nvmfappstart -m 0xF
 
@@ -91,7 +102,7 @@ function test_remove_and_rescan() {
 		origin_ip=$(get_ip_address "$net_dev")
 		pci_dir=$(get_pci_dir $net_dev)
 
-		if ! $rpc_py nvmf_get_stats | grep "\"name\": \"$rdma_dev_name\""; then
+		if ! check_rdma_dev_exists_in_nvmf_tgt "$rdma_dev_name"; then
 			echo "Device $rdma_dev_name is not registered in tgt".
 			exit 1
 		fi
@@ -99,7 +110,7 @@ function test_remove_and_rescan() {
 		remove_one_nic $net_dev
 
 		for i in $(seq 1 10); do
-			if ! $rpc_py nvmf_get_stats | grep "\"name\": \"$rdma_dev_name\""; then
+			if ! check_rdma_dev_exists_in_nvmf_tgt "$rdma_dev_name"; then
 				break
 			fi
 			if [[ $i == 10 ]]; then
@@ -108,6 +119,8 @@ function test_remove_and_rescan() {
 			fi
 			sleep 1
 		done
+
+		ib_count_after_remove=$(get_rdma_dev_count_in_nvmf_tgt)
 
 		rescan_pci
 
@@ -132,9 +145,25 @@ function test_remove_and_rescan() {
 		if [[ -z $(get_ip_address "$net_dev") ]]; then
 			ip addr add $origin_ip/24 dev $net_dev
 		fi
+
+		# if rdma device name is renamed, nvmf_get_stats may return an obsoleted name.
+		# so we check ib device count here instead of the device name.
+		for i in $(seq 1 10); do
+			ib_count=$(get_rdma_dev_count_in_nvmf_tgt)
+			if ((ib_count > ib_count_after_remove)); then
+				break
+			fi
+
+			if [[ $i == 10 ]]; then
+				# failed to rescan this device
+				exit 1
+			fi
+			sleep 2
+		done
 	done
 
-	killprocess $nvmfpid
+	# NOTE: rdma-core <= v43.0 has memleak bug (fixed in commit 7720071f).
+	killprocess $nvmfpid || true
 	nvmfpid=
 
 	return 0
@@ -205,7 +234,7 @@ function test_bonding_slaves_on_nics() {
 
 	create_subsystem_and_connect_on_netdev $BOND_NAME
 
-	ib_count=$($rpc_py nvmf_get_stats | grep devices -A 2 | grep -c name)
+	ib_count=$(get_rdma_dev_count_in_nvmf_tgt)
 	echo "IB Count: " $ib_count
 
 	$rootdir/scripts/fio-wrapper -p nvmf -i 4096 -d 1 -t randrw -r 10 &
@@ -213,21 +242,23 @@ function test_bonding_slaves_on_nics() {
 
 	sleep 2
 	echo -$nic1 | sudo tee /sys/class/net/${BOND_NAME}/bonding/slaves
+	sleep 10
+	echo +$nic1 | sudo tee /sys/class/net/${BOND_NAME}/bonding/slaves
 
 	ib_count2=$ib_count
 	for i in $(seq 1 10); do
-		ib_count2=$($rpc_py nvmf_get_stats | grep devices -A 2 | grep -c name)
-		if ((ib_count2 < ib_count)); then
+		ib_count2=$(get_rdma_dev_count_in_nvmf_tgt)
+		if ((ib_count2 == ib_count)); then
 			break
 		fi
 		sleep 2
 	done
-	if ((ib_count2 == ib_count)); then
+	if ((ib_count2 != ib_count)); then
 		exit 1
 	fi
 
-	# fio will exit when nvmf fin. do not wait here because it may be in D state.
-	killprocess $nvmfpid
+	# NOTE: rdma-core <= v43.0 has memleak bug (fixed in commit 7720071f).
+	killprocess $nvmfpid || true
 	nvmfpid=
 	return 0
 }
