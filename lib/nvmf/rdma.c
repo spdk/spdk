@@ -3494,6 +3494,22 @@ nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport,
 	return &rgroup->group;
 }
 
+static uint32_t
+nvmf_poll_group_get_io_qpair_count(struct spdk_nvmf_poll_group *pg)
+{
+	uint32_t count;
+
+	/* Just assume that unassociated qpairs will eventually be io
+	 * qpairs.  This is close enough for the use cases for this
+	 * function.
+	 */
+	pthread_mutex_lock(&pg->mutex);
+	count = pg->stat.current_io_qpairs + pg->current_unassociated_qpairs;
+	pthread_mutex_unlock(&pg->mutex);
+
+	return count;
+}
+
 static struct spdk_nvmf_transport_poll_group *
 nvmf_rdma_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 {
@@ -3518,9 +3534,9 @@ nvmf_rdma_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 		pg_min = *pg;
 		pg_start = *pg;
 		pg_current = *pg;
-		min_value = pg_current->group.group->stat.current_io_qpairs;
+		min_value = nvmf_poll_group_get_io_qpair_count(pg_current->group.group);
 
-		while ((count = pg_current->group.group->stat.current_io_qpairs) > 0) {
+		while ((count = nvmf_poll_group_get_io_qpair_count(pg_current->group.group)) > 0) {
 			pg_current = TAILQ_NEXT(pg_current, link);
 			if (pg_current == NULL) {
 				pg_current = TAILQ_FIRST(&rtransport->poll_groups);
