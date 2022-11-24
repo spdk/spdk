@@ -1751,7 +1751,7 @@ static bool vrdma_aq_sm_read_cmd(struct vrdma_admin_sw_qp *aq,
 		num = pi - aq->admq->ci;
 		aq_poll_size = num * sizeof(struct vrdma_admin_cmd_entry);
 		offset = (aq->admq->ci % q_size) * sizeof(struct vrdma_admin_cmd_entry);
-	    	host_ring_addr = host_ring_addr + offset;
+	    host_ring_addr = host_ring_addr + offset;
 		ret = snap_dma_q_read(ctrl->sctrl->adminq_dma_q, aq->admq->ring, aq_poll_size,
 				              ctrl->sctrl->adminq_mr->lkey, host_ring_addr,
 				              ctrl->sctrl->xmkey->mkey, &aq->poll_comp);
@@ -1819,7 +1819,8 @@ static bool vrdma_aq_sm_parse_cmd(struct vrdma_admin_sw_qp *aq,
 			if (ret == VRDMA_CMD_STATE_WAITING) {
 				aq->state = VRDMA_CMD_STATE_WAITING;
 			}
-			aq->num_parsed = i;
+			/* i is counted from 0, so need to add 1 */
+			aq->num_parsed = i + 1;
 			break;
 		}
 	}
@@ -1841,7 +1842,7 @@ static bool vrdma_aq_sm_waiting(struct vrdma_admin_sw_qp *aq,
 		return true;
 	}
 
-	wait_idx = aq->num_parsed;
+	wait_idx = aq->num_parsed - 1;
 	aqe = &aq->admq->ring[wait_idx];
 	if (aqe->hdr.opcode == VRDMA_ADMIN_DESTROY_QP) {
 		if (vrdma_qp_is_suspended(ctrl, aqe->req.destroy_qp_req.qp_handle)) {
@@ -1881,6 +1882,7 @@ static bool vrdma_aq_sm_write_cmd(struct vrdma_admin_sw_qp *aq,
 
 	if (!num_to_write) {
 		aq->state = VRDMA_CMD_STATE_FATAL_ERR;
+		SPDK_ERRLOG("no new aqe need to be written back, admq will be stuck!!!\n");
 		return true;
 	}
 	aq->state = VRDMA_CMD_STATE_UPDATE_CI;
