@@ -2195,7 +2195,8 @@ bdev_io_do_submit(struct spdk_bdev_channel *bdev_ch, struct spdk_bdev_io *bdev_i
 	if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE &&
 			  bdev_io->bdev->split_on_write_unit &&
 			  bdev_io->u.bdev.num_blocks < bdev_io->bdev->write_unit_size)) {
-		SPDK_ERRLOG("IO does not match the write_unit_size\n");
+		SPDK_ERRLOG("IO num_blocks %lu does not match the write_unit_size %u\n",
+			    bdev_io->u.bdev.num_blocks, bdev_io->bdev->write_unit_size);
 		_bdev_io_complete_in_submit(bdev_ch, bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
