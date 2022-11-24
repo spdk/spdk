@@ -3500,6 +3500,7 @@ nvmf_rdma_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_poll_group **pg;
 	struct spdk_nvmf_transport_poll_group *result;
+	uint32_t count;
 
 	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
 
@@ -3517,16 +3518,16 @@ nvmf_rdma_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 		pg_min = *pg;
 		pg_start = *pg;
 		pg_current = *pg;
-		min_value = (*pg)->group.group->stat.current_io_qpairs;
+		min_value = pg_current->group.group->stat.current_io_qpairs;
 
-		while (pg_current->group.group->stat.current_io_qpairs) {
+		while ((count = pg_current->group.group->stat.current_io_qpairs) > 0) {
 			pg_current = TAILQ_NEXT(pg_current, link);
 			if (pg_current == NULL) {
 				pg_current = TAILQ_FIRST(&rtransport->poll_groups);
 			}
 
-			if (pg_current->group.group->stat.current_io_qpairs < min_value) {
-				min_value = pg_current->group.group->stat.current_io_qpairs;
+			if (count < min_value) {
+				min_value = count;
 				pg_min = pg_current;
 			}
 
