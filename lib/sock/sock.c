@@ -516,7 +516,8 @@ int
 spdk_sock_flush(struct spdk_sock *sock)
 {
 	if (sock == NULL || sock->flags.closed) {
-		return -EBADF;
+		errno = EBADF;
+		return -1;
 	}
 
 	/* Sock is in a polling group, so group polling mechanism will work */

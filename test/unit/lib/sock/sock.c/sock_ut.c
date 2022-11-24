@@ -805,7 +805,8 @@ _sock_close(const char *ip, int port, char *impl_name)
 
 	/* Test spdk_sock_flush when sock is NULL */
 	rc = spdk_sock_flush(NULL);
-	CU_ASSERT(rc == -EBADF);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EBADF);
 
 	/* Test spdk_sock_flush when sock is not NULL */
 	rc = spdk_sock_flush(client_sock);
