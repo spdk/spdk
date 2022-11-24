@@ -138,23 +138,23 @@ delete_device "$devid1"
 # At the end check if vhost devices are gone
 [[ $(vm_exec $vm_no "lsblk | grep -E \"^vd.\" | wc -l") -eq 0 ]]
 
-# Create 62 bdevs, two already exist
-for ((i = 2; i < 64; i++)); do
+# Create 31 bdevs, two already exist
+for ((i = 2; i < 33; i++)); do
 	rpc_cmd bdev_null_create null$i 100 4096
 done
 
 devids=()
 
-# Not try to add 64 devices, max for two buses
-for ((i = 0; i < 64; i++)); do
+# Now try to add 33 devices, max for one bus + one device on the next bus
+for ((i = 0; i < 33; i++)); do
 	uuid=$(rpc_cmd bdev_get_bdevs -b null$i | jq -r '.[].uuid')
 	devids[$i]=$(create_device $i $uuid | jq -r '.handle')
 done
 
-[[ $(vm_exec $vm_no "lsblk | grep -E \"^vd.\" | wc -l") -eq 64 ]]
+[[ $(vm_exec $vm_no "lsblk | grep -E \"^vd.\" | wc -l") -eq 33 ]]
 
 # Cleanup at the end
-for ((i = 0; i < 64; i++)); do
+for ((i = 0; i < 33; i++)); do
 	delete_device ${devids[$i]}
 done
 
@@ -241,7 +241,7 @@ diff <(get_qos_caps $device_vhost | jq --sort-keys) <(
 EOF
 
 # Make sure that limits were changed
-diff <(rpc_cmd bdev_get_bdevs -b null63 | jq --sort-keys '.[].assigned_rate_limits') <(
+diff <(rpc_cmd bdev_get_bdevs -b null32 | jq --sort-keys '.[].assigned_rate_limits') <(
 	jq --sort-keys <<- EOF
 		{
 		  "rw_ios_per_sec": 3000,
@@ -272,7 +272,7 @@ diff <(rpc_cmd bdev_get_bdevs -b null63 | jq --sort-keys '.[].assigned_rate_limi
 EOF
 
 # Make sure that limits were changed even if volume id is not set
-diff <(rpc_cmd bdev_get_bdevs -b null63 | jq --sort-keys '.[].assigned_rate_limits') <(
+diff <(rpc_cmd bdev_get_bdevs -b null32 | jq --sort-keys '.[].assigned_rate_limits') <(
 	jq --sort-keys <<- EOF
 		{
 		  "rw_ios_per_sec": 4000,
@@ -322,7 +322,7 @@ NOT "$rootdir/scripts/sma-client.py" <<- EOF
 EOF
 
 # Values remain unchanged
-diff <(rpc_cmd bdev_get_bdevs -b null63 | jq --sort-keys '.[].assigned_rate_limits') <(
+diff <(rpc_cmd bdev_get_bdevs -b null32 | jq --sort-keys '.[].assigned_rate_limits') <(
 	jq --sort-keys <<- EOF
 		{
 		  "rw_ios_per_sec": 4000,
