@@ -1046,7 +1046,7 @@ _nvmf_qpair_destroy(void *ctx, int status)
 	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
 	qpair_ctx->qid = qpair->qid;
 
-	if (ctrlr) {
+	if (qpair->connect_received) {
 		if (0 == qpair->qid) {
 			assert(qpair->group->stat.current_admin_qpairs > 0);
 			qpair->group->stat.current_admin_qpairs--;
@@ -1054,7 +1054,9 @@ _nvmf_qpair_destroy(void *ctx, int status)
 			assert(qpair->group->stat.current_io_qpairs > 0);
 			qpair->group->stat.current_io_qpairs--;
 		}
+	}
 
+	if (ctrlr) {
 		sgroup = &qpair->group->sgroups[ctrlr->subsys->id];
 		TAILQ_FOREACH_SAFE(req, &sgroup->queued, link, tmp) {
 			if (req->qpair == qpair) {

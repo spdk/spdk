@@ -727,6 +727,7 @@ _nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 
 	qpair->sq_head_max = cmd->sqsize;
 	qpair->qid = cmd->qid;
+	qpair->connect_received = true;
 
 	if (0 == qpair->qid) {
 		qpair->group->stat.admin_qpairs++;
