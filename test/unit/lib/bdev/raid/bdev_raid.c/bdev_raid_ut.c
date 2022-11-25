@@ -207,7 +207,7 @@ check_and_remove_raid_bdev(struct raid_bdev *raid_bdev)
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
 		if (base_info->bdev) {
-			raid_bdev_free_base_bdev_resource(raid_bdev, base_info);
+			raid_bdev_free_base_bdev_resource(base_info);
 		}
 	}
 	assert(raid_bdev->num_base_bdevs_discovered == 0);

@@ -47,6 +47,9 @@ enum raid_bdev_state {
  * required per base device for raid bdev will be kept here
  */
 struct raid_base_bdev_info {
+	/* The raid bdev that this base bdev belongs to */
+	struct raid_bdev	*raid_bdev;
+
 	/* name of the bdev */
 	char			*name;
 
