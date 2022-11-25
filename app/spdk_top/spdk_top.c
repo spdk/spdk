@@ -3098,11 +3098,25 @@ show_stats(pthread_t *data_thread)
 		case KEY_UP: /* Arrow up */
 			if (g_selected_row > 0) {
 				g_selected_row--;
+			} else if (g_selected_row == 0) {
+				if (current_page > 0) {
+					current_page--;
+					g_selected_row = g_max_data_rows - 1;
+					wclear(g_tabs[active_tab]);
+					draw_tabs(active_tab, g_current_sort_col[active_tab], g_current_sort_col2[active_tab]);
+				}
 			}
 			break;
 		case KEY_DOWN: /* Arrow down */
 			if (g_selected_row < g_max_selected_row) {
 				g_selected_row++;
+			} else if (g_selected_row == g_max_selected_row) {
+				if (current_page + 1 < max_pages) {
+					current_page++;
+					g_selected_row = 0;
+					wclear(g_tabs[active_tab]);
+					draw_tabs(active_tab, g_current_sort_col[active_tab], g_current_sort_col2[active_tab]);
+				}
 			}
 			break;
 		case 10: /* Enter */
