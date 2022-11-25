@@ -37,7 +37,16 @@ static pthread_t				g_fuzz_td;
 static pthread_t				g_reactor_td;
 static struct fuzz_type				*g_fuzzer;
 
+enum IO_POLLER_STATE {
+	IO_POLLER_STATE_IDLE,
+	IO_POLLER_STATE_PROCESSING,
+	IO_POLLER_STATE_TERMINATE_INIT,
+	IO_POLLER_STATE_TERMINATE_WAIT,
+	IO_POLLER_STATE_TERMINATE_DONE,
+};
+
 struct io_thread {
+	enum IO_POLLER_STATE			state;
 	int					lba_num;
 	char					*write_buf;
 	char					*read_buf;
@@ -46,11 +55,10 @@ struct io_thread {
 	struct spdk_thread			*thread;
 	struct spdk_nvme_ctrlr			*io_ctrlr;
 	pthread_t				io_td;
+	pthread_t				term_td;
 	struct spdk_nvme_ns			*io_ns;
 	struct spdk_nvme_qpair			*io_qpair;
 	char					*io_ctrlr_path;
-	bool					io_processing;
-	bool					terminate;
 } g_io_thread;
 
 static int
@@ -128,7 +136,7 @@ int LLVMFuzzerRunDriver(int *argc, char ***argv, int (*UserCb)(const uint8_t *Da
 static void
 io_terminate(void *ctx)
 {
-	((struct io_thread *)ctx)->terminate = true;
+	((struct io_thread *)ctx)->state = IO_POLLER_STATE_TERMINATE_INIT;
 }
 
 static void
@@ -196,20 +204,23 @@ read_complete(void *arg, const struct spdk_nvme_cpl *completion)
 		spdk_nvme_qpair_print_completion(io->io_qpair, (struct spdk_nvme_cpl *)completion);
 		fprintf(stderr, "I/O read error status: %s\n",
 			spdk_nvme_cpl_get_status_string(&completion->status));
-		io->io_processing = false;
+		io->state = IO_POLLER_STATE_TERMINATE_WAIT;
 		pthread_kill(g_fuzz_td, SIGSEGV);
 		return;
 	}
 
 	if (memcmp(io->read_buf, io->write_buf, io->buf_size)) {
 		fprintf(stderr, "I/O corrupt, value not the same\n");
+		io->state = IO_POLLER_STATE_TERMINATE_WAIT;
 		pthread_kill(g_fuzz_td, SIGSEGV);
+		return;
 	}
 
 	sectors_num =  spdk_nvme_ns_get_num_sectors(io->io_ns);
 	io->lba_num = (io->lba_num + 1) % sectors_num;
-
-	io->io_processing = false;
+	if (io->state != IO_POLLER_STATE_TERMINATE_INIT) {
+		io->state = IO_POLLER_STATE_IDLE;
+	}
 }
 
 static void
@@ -223,7 +234,7 @@ write_complete(void *arg, const struct spdk_nvme_cpl *completion)
 						 (struct spdk_nvme_cpl *)completion);
 		fprintf(stderr, "I/O write error status: %s\n",
 			spdk_nvme_cpl_get_status_string(&completion->status));
-		io->io_processing = false;
+		io->state = IO_POLLER_STATE_TERMINATE_WAIT;
 		pthread_kill(g_fuzz_td, SIGSEGV);
 		return;
 	}
@@ -232,9 +243,24 @@ write_complete(void *arg, const struct spdk_nvme_cpl *completion)
 				   read_complete, io, 0);
 	if (rc != 0) {
 		fprintf(stderr, "starting read I/O failed\n");
-		io->io_processing = false;
+		io->state = IO_POLLER_STATE_TERMINATE_WAIT;
 		pthread_kill(g_fuzz_td, SIGSEGV);
 	}
+}
+
+static void *
+terminate_io_thread(void *ctx)
+{
+	struct io_thread *io = (struct io_thread *)ctx;
+
+	spdk_nvme_ctrlr_free_io_qpair(io->io_qpair);
+	spdk_nvme_detach(io->io_ctrlr);
+	spdk_free(io->write_buf);
+	spdk_free(io->read_buf);
+
+	io->state = IO_POLLER_STATE_TERMINATE_DONE;
+
+	return NULL;
 }
 
 static int
@@ -246,29 +272,41 @@ io_poller(void *ctx)
 	unsigned int seed = 0;
 	int *write_buf = (int *)io->write_buf;
 
-	if (io->io_processing) {
+	switch (io->state) {
+	case IO_POLLER_STATE_IDLE:
+		break;
+	case IO_POLLER_STATE_PROCESSING:
 		spdk_nvme_qpair_process_completions(io->io_qpair, 0);
 		return SPDK_POLLER_BUSY;
-	}
+	case IO_POLLER_STATE_TERMINATE_INIT:
+		if (spdk_nvme_qpair_get_num_outstanding_reqs(io->io_qpair) > 0) {
+			spdk_nvme_qpair_process_completions(io->io_qpair, 0);
+			return SPDK_POLLER_BUSY;
+		}
 
-	if (io->terminate) {
-		/* detaching controller here cause deadlock */
-		spdk_poller_unregister(&(io->run_poller));
-		spdk_free(io->write_buf);
-		spdk_free(io->read_buf);
+		io->state = IO_POLLER_STATE_TERMINATE_WAIT;
+		ret = pthread_create(&io->term_td, NULL, terminate_io_thread, ctx);
+		if (ret != 0) {
+			abort();
+		}
+		return SPDK_POLLER_BUSY;
+	case IO_POLLER_STATE_TERMINATE_WAIT:
+		return SPDK_POLLER_BUSY;
+	case IO_POLLER_STATE_TERMINATE_DONE:
+		spdk_poller_unregister(&io->run_poller);
 		spdk_thread_exit(spdk_get_thread());
-
 		spdk_app_stop(0);
-
 		return SPDK_POLLER_IDLE;
+	default:
+		break;
 	}
+
+	io->state = IO_POLLER_STATE_PROCESSING;
 
 	/* Compiler should optimize the "/ sizeof(int)" into a right shift. */
 	for (i = 0; i < io->buf_size / sizeof(int); i++) {
 		write_buf[i] = rand_r(&seed);
 	}
-
-	io->io_processing = true;
 
 	ret = spdk_nvme_ns_cmd_write(io->io_ns, io->io_qpair,
 				     io->write_buf, io->lba_num, 1,
