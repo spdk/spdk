@@ -115,7 +115,7 @@ raid5f_chunk_stripe_req(struct chunk *chunk)
 static inline uint8_t
 raid5f_stripe_data_chunks_num(const struct raid_bdev *raid_bdev)
 {
-	return raid_bdev->num_base_bdevs - raid_bdev->module->base_bdevs_max_degraded;
+	return raid_bdev->min_base_bdevs_operational;
 }
 
 static inline uint8_t
@@ -697,7 +697,7 @@ raid5f_get_io_channel(struct raid_bdev *raid_bdev)
 static struct raid_bdev_module g_raid5f_module = {
 	.level = RAID5F,
 	.base_bdevs_min = 3,
-	.base_bdevs_max_degraded = 1,
+	.base_bdevs_constraint = {CONSTRAINT_MAX_BASE_BDEVS_REMOVED, 1},
 	.start = raid5f_start,
 	.stop = raid5f_stop,
 	.submit_rw_request = raid5f_submit_rw_request,

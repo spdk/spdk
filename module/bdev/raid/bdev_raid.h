@@ -121,6 +121,9 @@ struct raid_bdev {
 	/* number of base bdevs discovered */
 	uint8_t				num_base_bdevs_discovered;
 
+	/* minimum number of viable base bdevs that are required by array to operate */
+	uint8_t				min_base_bdevs_operational;
+
 	/* Raid Level of this raid bdev */
 	enum raid_level			level;
 
@@ -181,10 +184,17 @@ struct raid_bdev_module {
 	uint8_t base_bdevs_min;
 
 	/*
-	 * Maximum number of base bdevs that can be removed without failing
-	 * the array.
+	 * RAID constraint. Determines number of base bdevs that can be removed
+	 * without failing the array.
 	 */
-	uint8_t base_bdevs_max_degraded;
+	struct {
+		enum {
+			CONSTRAINT_UNSET = 0,
+			CONSTRAINT_MAX_BASE_BDEVS_REMOVED,
+			CONSTRAINT_MIN_BASE_BDEVS_OPERATIONAL,
+		} type;
+		uint8_t value;
+	} base_bdevs_constraint;
 
 	/*
 	 * Called when the raid is starting, right before changing the state to

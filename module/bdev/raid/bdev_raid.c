@@ -918,13 +918,14 @@ raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 	struct raid_bdev *raid_bdev;
 	struct spdk_bdev *raid_bdev_gen;
 	struct raid_bdev_module *module;
+	uint8_t min_operational;
 
 	if (raid_bdev_find_by_name(name) != NULL) {
 		SPDK_ERRLOG("Duplicate raid bdev name found: %s\n", name);
 		return -EEXIST;
 	}
 
-	if (spdk_u32_is_pow2(strip_size) == false) {
+	if (strip_size && spdk_u32_is_pow2(strip_size) == false) {
 		SPDK_ERRLOG("Invalid strip size %" PRIu32 "\n", strip_size);
 		return -EINVAL;
 	}
@@ -940,6 +941,34 @@ raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 		SPDK_ERRLOG("At least %u base devices required for %s\n",
 			    module->base_bdevs_min,
 			    raid_bdev_level_to_str(level));
+		return -EINVAL;
+	}
+
+	switch (module->base_bdevs_constraint.type) {
+	case CONSTRAINT_MAX_BASE_BDEVS_REMOVED:
+		min_operational = num_base_bdevs - module->base_bdevs_constraint.value;
+		break;
+	case CONSTRAINT_MIN_BASE_BDEVS_OPERATIONAL:
+		min_operational = module->base_bdevs_constraint.value;
+		break;
+	case CONSTRAINT_UNSET:
+		if (module->base_bdevs_constraint.value != 0) {
+			SPDK_ERRLOG("Unexpected constraint value '%u' provided for raid bdev '%s'.\n",
+				    (uint8_t)module->base_bdevs_constraint.value, name);
+			return -EINVAL;
+		}
+		min_operational = num_base_bdevs;
+		break;
+	default:
+		SPDK_ERRLOG("Unrecognised constraint type '%u' in module for raid level '%s'.\n",
+			    (uint8_t)module->base_bdevs_constraint.type,
+			    raid_bdev_level_to_str(module->level));
+		return -EINVAL;
+	};
+
+	if (min_operational == 0 || min_operational > num_base_bdevs) {
+		SPDK_ERRLOG("Wrong constraint value for raid level '%s'.\n",
+			    raid_bdev_level_to_str(module->level));
 		return -EINVAL;
 	}
 
@@ -966,6 +995,7 @@ raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 	raid_bdev->strip_size_kb = strip_size;
 	raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
 	raid_bdev->level = level;
+	raid_bdev->min_base_bdevs_operational = min_operational;
 
 	raid_bdev_gen = &raid_bdev->bdev;
 
