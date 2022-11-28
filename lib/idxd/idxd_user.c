@@ -505,6 +505,7 @@ idxd_attach(struct spdk_pci_device *device)
 	struct spdk_idxd_device *idxd;
 	uint16_t did = device->id.device_id;
 	uint32_t cmd_reg;
+	uint64_t updated = sizeof(struct iaa_aecs);
 	int rc;
 
 	user_idxd = calloc(1, sizeof(struct spdk_user_idxd_device));
@@ -525,6 +526,14 @@ idxd_attach(struct spdk_pci_device *device)
 			SPDK_ERRLOG("Failed to allocate iaa aecs\n");
 			goto err;
 		}
+
+		idxd->aecs_addr = spdk_vtophys((void *)idxd->aecs, &updated);
+		if (idxd->aecs_addr == SPDK_VTOPHYS_ERROR || updated < sizeof(struct iaa_aecs)) {
+			SPDK_ERRLOG("Failed to translate iaa aecs\n");
+			spdk_free(idxd->aecs);
+			goto err;
+		}
+
 		/* Configure aecs table using fixed Huffman table */
 		idxd->aecs->output_accum[0] = DYNAMIC_HDR | 1;
 		idxd->aecs->num_output_accum_bits = DYNAMIC_HDR_SIZE;

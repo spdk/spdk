@@ -1187,7 +1187,7 @@ _idxd_submit_compress_single(struct spdk_idxd_io_channel *chan, void *dst, const
 	desc->src1_size = nbytes_src;
 	desc->iaa.max_dst_size = nbytes_dst;
 	desc->iaa.src2_size = sizeof(struct iaa_aecs);
-	desc->iaa.src2_addr = (uint64_t)chan->idxd->aecs;
+	desc->iaa.src2_addr = chan->idxd->aecs_addr;
 	desc->flags |= IAA_FLAG_RD_SRC2_AECS;
 	desc->compr_flags = IAA_COMP_FLAGS;
 	op->output_size = output_size;

@@ -143,6 +143,7 @@ struct spdk_idxd_device {
 	bool				pasid_enabled;
 	enum idxd_dev			type;
 	struct iaa_aecs			*aecs;
+	uint64_t			aecs_addr;
 	uint32_t			version;
 };
 
