@@ -738,6 +738,8 @@ static struct {
 } g_raid_level_names[] = {
 	{ "raid0", RAID0 },
 	{ "0", RAID0 },
+	{ "raid1", RAID1 },
+	{ "1", RAID1 },
 	{ "raid5f", RAID5F },
 	{ "5f", RAID5F },
 	{ "concat", CONCAT },
@@ -925,7 +927,12 @@ raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 		return -EEXIST;
 	}
 
-	if (strip_size && spdk_u32_is_pow2(strip_size) == false) {
+	if (level == RAID1) {
+		if (strip_size != 0) {
+			SPDK_ERRLOG("Strip size is not supported by raid1\n");
+			return -EINVAL;
+		}
+	} else if (spdk_u32_is_pow2(strip_size) == false) {
 		SPDK_ERRLOG("Invalid strip size %" PRIu32 "\n", strip_size);
 		return -EINVAL;
 	}

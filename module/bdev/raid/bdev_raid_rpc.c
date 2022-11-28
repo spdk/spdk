@@ -220,11 +220,6 @@ rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	if (req.strip_size_kb == 0) {
-		spdk_jsonrpc_send_error_response(request, -EINVAL, "strip size not specified");
-		goto cleanup;
-	}
-
 	rc = raid_bdev_create(req.name, req.strip_size_kb, req.base_bdevs.num_base_bdevs,
 			      req.level, &raid_bdev);
 	if (rc != 0) {
