@@ -242,6 +242,7 @@ delete_device $device
 device=$(create_device $uuid AES_CBC $key0 | jq -r '.handle')
 verify_crypto_volume $localnqn $uuid
 
+detach_volume $device $uuid
 delete_device $device
 
 # Try to create a device with incorrect volume crypto params, check that it fails and everything

@@ -20,7 +20,7 @@ from .device import DeviceException, DeviceManager
 
 class VhostBlkDeviceManager(DeviceManager):
     def __init__(self, client):
-        super().__init__('vhost_blk', 'virtio_blk', client)
+        super().__init__('vhost_blk', 'virtio_blk', client, allow_delete_volumes=True)
 
     def init(self, config):
         self._buses = config.get('buses', [])

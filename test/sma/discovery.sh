@@ -260,7 +260,15 @@ detach_volume $device_id $t1uuid
 $rpc_py bdev_nvme_get_discovery_info | jq -r '.[].trid.trsvcid' | grep $t1dscport
 $rpc_py bdev_nvme_get_discovery_info | jq -r '.[].trid.trsvcid' | grep $t2dscport1
 
-# Delete the device and verify that this also causes the volumes to be disconnected
+# Try to delete the device and verify that it fails if it has volumes attached to it
+NOT delete_device $device_id
+
+[[ $($rpc_py bdev_nvme_get_discovery_info | jq -r '. | length') -eq 2 ]]
+$rpc_py bdev_nvme_get_discovery_info | jq -r '.[].trid.trsvcid' | grep $t1dscport
+$rpc_py bdev_nvme_get_discovery_info | jq -r '.[].trid.trsvcid' | grep $t2dscport1
+
+# After detaching the second volume, it should be possible to delete the device
+detach_volume $device_id $t2uuid
 delete_device $device_id
 
 [[ $($rpc_py bdev_nvme_get_discovery_info | jq -r '. | length') -eq 0 ]]
@@ -299,6 +307,9 @@ $rpc_py nvmf_get_subsystems $localnqn | jq -r '.[].namespaces[].uuid' | grep $t2
 $rpc_py nvmf_get_subsystems $localnqn | jq -r '.[].namespaces[].uuid' | grep $t2uuid2
 
 # Reset the device
+detach_volume $device_id $t1uuid
+detach_volume $device_id $t2uuid
+detach_volume $device_id $t2uuid2
 delete_device $device_id
 [[ $($rpc_py bdev_nvme_get_discovery_info | jq -r '. | length') -eq 0 ]]
 

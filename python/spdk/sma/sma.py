@@ -97,8 +97,12 @@ class StorageManagementAgent(pb2_grpc.StorageManagementAgentServicer):
             if device is None:
                 raise DeviceException(grpc.StatusCode.NOT_FOUND,
                                       'Invalid device handle')
+            if not device.allow_delete_volumes and self._volume_mgr.has_volumes(request.handle):
+                raise DeviceException(grpc.StatusCode.FAILED_PRECONDITION,
+                                      'Device has attached volumes')
             device.delete_device(request)
-            # Remove all volumes attached to that device
+            # Either there are no volumes attached to this device or we're allowed to delete it
+            # with volumes still attached
             self._volume_mgr.disconnect_device_volumes(request.handle)
         except DeviceException as ex:
             context.set_details(ex.message)

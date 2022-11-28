@@ -320,3 +320,9 @@ class VolumeManager:
         volumes = [i for i, v in self._volumes.items() if v.device_handle == device_handle]
         for volume_id in volumes:
             self._disconnect_volume(volume_id)
+
+    @_locked
+    def has_volumes(self, device_handle):
+        """Checks whether a given device has volumes attached to it"""
+        return next(filter(lambda v: v.device_handle == device_handle,
+                           self._volumes.values()), None) is not None

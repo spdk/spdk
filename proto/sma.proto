@@ -172,7 +172,10 @@ service StorageManagementAgent {
   // volumes (e.g. an NVMeoF subsystem).
   rpc CreateDevice (CreateDeviceRequest)
     returns (CreateDeviceResponse) {}
-  // Deletes a device
+  // Deletes a device.  It is only allowed to delete a device with volumes still
+  // attached if that device doesn't support attaching volumes through
+  // AttachVolume (e.g. virtio-blk).   In other cases, it is forbidden and
+  // FAILED_PRECONDITION status will be returned.
   rpc DeleteDevice (DeleteDeviceRequest)
     returns (DeleteDeviceResponse) {}
   // Attaches a volume to a specified device making it available through that

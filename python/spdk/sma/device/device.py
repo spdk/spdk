@@ -12,10 +12,12 @@ class DeviceException(Exception):
 
 
 class DeviceManager:
-    def __init__(self, name, protocol, client):
+    def __init__(self, name, protocol, client, allow_delete_volumes=False):
         self._client = client
         self.protocol = protocol
         self.name = name
+        # Configures whether the device allows deleting a device with attached volumes
+        self.allow_delete_volumes = allow_delete_volumes
 
     def init(self, config):
         pass
