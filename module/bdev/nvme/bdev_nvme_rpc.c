@@ -936,7 +936,7 @@ rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 	struct spdk_bdev			*bdev2;
 	struct open_descriptors			*opt;
 	struct spdk_bdev_desc			*desc;
-	struct spdk_nvme_cmd			*cmd;
+	struct spdk_nvme_cmd			cmd = {};
 	struct firmware_update_info		*firm_ctx;
 
 	firm_ctx = calloc(1, sizeof(struct firmware_update_info));
@@ -1060,25 +1060,17 @@ rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 	firm_ctx->size_remaining = firm_ctx->size;
 	firm_ctx->transfer = spdk_min(firm_ctx->size_remaining, 4096);
 
-	cmd = malloc(sizeof(struct spdk_nvme_cmd));
-	if (!cmd) {
-		snprintf(msg, sizeof(msg), "Memory allocation error.");
-		goto err;
-	}
-	memset(cmd, 0, sizeof(struct spdk_nvme_cmd));
-	cmd->opc = SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD;
+	cmd.opc = SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD;
+	cmd.cdw10 = spdk_nvme_bytes_to_numd(firm_ctx->transfer);
+	cmd.cdw11 = firm_ctx->offset >> 2;
 
-	cmd->cdw10 = spdk_nvme_bytes_to_numd(firm_ctx->transfer);
-	cmd->cdw11 = firm_ctx->offset >> 2;
-
-	rc = spdk_bdev_nvme_admin_passthru(firm_ctx->desc, firm_ctx->ch, cmd, firm_ctx->p,
+	rc = spdk_bdev_nvme_admin_passthru(firm_ctx->desc, firm_ctx->ch, &cmd, firm_ctx->p,
 					   firm_ctx->transfer, apply_firmware_complete, firm_ctx);
 	if (rc == 0) {
 		/* normal return here. */
 		return;
 	}
 
-	free(cmd);
 	snprintf(msg, sizeof(msg), "Read firmware image failed!");
 err:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, msg);
