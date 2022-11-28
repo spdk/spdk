@@ -1227,6 +1227,7 @@ bdev_io_get_buf(struct spdk_bdev_io *bdev_io, uint64_t len)
 	uint64_t alignment, md_len;
 	void *buf;
 
+	assert(spdk_bdev_io_get_thread(bdev_io) == spdk_get_thread());
 	alignment = spdk_bdev_get_buf_align(bdev);
 	md_len = spdk_bdev_is_md_separate(bdev) ? bdev_io->u.bdev.num_blocks * bdev->md_len : 0;
 

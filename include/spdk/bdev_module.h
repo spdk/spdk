@@ -968,7 +968,8 @@ const struct spdk_bdev_aliases_list *spdk_bdev_get_aliases(const struct spdk_bde
  * callback on read path.  The buffer will be freed automatically
  * on \c spdk_bdev_free_io() call. This call will never fail.
  * In case of lack of memory given callback \c cb will be deferred
- * until enough memory is freed.
+ * until enough memory is freed.  This function *must* be called
+ * from the thread issuing \c bdev_io.
  *
  * \param bdev_io I/O to allocate buffer for.
  * \param cb callback to be called when the buffer is allocated
