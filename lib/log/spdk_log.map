@@ -17,6 +17,13 @@
 	spdk_log_clear_flag;
 	spdk_log_usage;
 	spdk_log_enable_timestamps;
+	spdk_log_deprecation_register;
+	spdk_log_deprecated;
+	spdk_log_for_each_deprecation;
+	spdk_deprecation_get_tag;
+	spdk_deprecation_get_description;
+	spdk_deprecation_get_remove_release;
+	spdk_deprecation_get_hits;
 
 	# functions used by other SPDK libraries
 	spdk_log_register_flag;

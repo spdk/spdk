@@ -12,6 +12,11 @@ Each entry must describe what will be removed and can suggest the future use or 
 Specific future SPDK release for the removal must be provided.
 ABI cannot be removed without providing deprecation notice for at least single SPDK release.
 
+Deprecated code paths must be registered with `SPDK_DEPRECATION_REGISTER()` and logged with
+`SPDK_LOG_DEPRECATED()`. The tag used with these macros will appear in the SPDK
+log at the warn level when `SPDK_LOG_DEPRECATED()` is called, subject to rate limits.
+The tags can be matched with the level 4 headers below.
+
 ## Deprecation Notices {#deprecation-notices}
 
 ### nvme

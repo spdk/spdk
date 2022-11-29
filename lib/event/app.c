@@ -772,6 +772,21 @@ _start_subsystem_fini(void *arg1)
 	spdk_subsystem_fini(spdk_reactors_stop, NULL);
 }
 
+static int
+log_deprecation_hits(void *ctx, struct spdk_deprecation *dep)
+{
+	uint64_t hits = spdk_deprecation_get_hits(dep);
+
+	if (hits == 0) {
+		return 0;
+	}
+
+	SPDK_WARNLOG("%s: deprecation '%s' scheduled for removal in %s hit %" PRIu64 " times\n",
+		     spdk_deprecation_get_tag(dep), spdk_deprecation_get_remove_release(dep),
+		     spdk_deprecation_get_description(dep), hits);
+	return 0;
+}
+
 static void
 app_stop(void *arg1)
 {
@@ -786,6 +801,7 @@ app_stop(void *arg1)
 
 	spdk_rpc_finish();
 	g_spdk_app.stopped = true;
+	spdk_log_for_each_deprecation(NULL, log_deprecation_hits);
 	_start_subsystem_fini(NULL);
 }
 

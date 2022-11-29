@@ -90,6 +90,15 @@ its exit process has started using `spdk_thread_exit`.
 Added API `spdk_spin_init`, `spdk_spin_destroy`, `spdk_spin_lock`, `spdk_spin_unlock`, and
 `spdk_spin_held` to support spinlocks that are aware of the SPDK concurrency model.
 
+### log
+
+Added consistent tracking of use of deprecated behavior. Deprecations continue to be
+listed in deprecation.md and now are in subsections with headers matching a tag
+used in `SPDK_LOG_DEPRECATED()` calls. When deprecated behavior is used, these
+tags will appear in SPDK's log at the warn level. As the SPDK application exits, it
+will log a summary of how many times `SPDK_LOG_DEPRECATED()` was called for each
+tag that was logged at least once.
+
 ## v22.09
 
 ### accel
