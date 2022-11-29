@@ -553,6 +553,12 @@ nvme_ctrlr_release(struct nvme_ctrlr *nvme_ctrlr)
 	spdk_thread_exec_msg(nvme_ctrlr->thread, nvme_ctrlr_unregister, nvme_ctrlr);
 }
 
+static void
+bdev_nvme_clear_current_io_path(struct nvme_bdev_channel *nbdev_ch)
+{
+	nbdev_ch->current_io_path = NULL;
+}
+
 static struct nvme_io_path *
 _bdev_nvme_get_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_ns *nvme_ns)
 {
@@ -601,7 +607,7 @@ _bdev_nvme_add_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_ns *nvme_
 	io_path->nbdev_ch = nbdev_ch;
 	STAILQ_INSERT_TAIL(&nbdev_ch->io_path_list, io_path, stailq);
 
-	nbdev_ch->current_io_path = NULL;
+	bdev_nvme_clear_current_io_path(nbdev_ch);
 
 	return 0;
 }
@@ -613,7 +619,7 @@ _bdev_nvme_delete_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_io_pat
 	struct nvme_qpair *nvme_qpair;
 	struct nvme_ctrlr_channel *ctrlr_ch;
 
-	nbdev_ch->current_io_path = NULL;
+	bdev_nvme_clear_current_io_path(nbdev_ch);
 
 	STAILQ_REMOVE(&nbdev_ch->io_path_list, io_path, nvme_io_path, stailq);
 
@@ -1146,7 +1152,7 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 	    spdk_nvme_cpl_is_aborted_sq_deletion(cpl) ||
 	    !nvme_io_path_is_available(io_path) ||
 	    !nvme_ctrlr_is_available(nvme_ctrlr)) {
-		nbdev_ch->current_io_path = NULL;
+		bdev_nvme_clear_current_io_path(nbdev_ch);
 		bio->io_path = NULL;
 		if (spdk_nvme_cpl_is_ana_error(cpl)) {
 			if (nvme_ctrlr_read_ana_log_page(nvme_ctrlr) == 0) {
@@ -1194,7 +1200,7 @@ bdev_nvme_io_complete(struct nvme_bdev_io *bio, int rc)
 	case -ENXIO:
 		nbdev_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
 
-		nbdev_ch->current_io_path = NULL;
+		bdev_nvme_clear_current_io_path(nbdev_ch);
 		bio->io_path = NULL;
 
 		if (any_io_path_may_become_available(nbdev_ch)) {
@@ -1261,7 +1267,7 @@ _bdev_nvme_clear_io_path_cache(struct nvme_qpair *nvme_qpair)
 	struct nvme_io_path *io_path;
 
 	TAILQ_FOREACH(io_path, &nvme_qpair->io_path_list, tailq) {
-		io_path->nbdev_ch->current_io_path = NULL;
+		bdev_nvme_clear_current_io_path(io_path->nbdev_ch);
 	}
 }
 
@@ -4031,7 +4037,7 @@ _bdev_nvme_set_preferred_path(struct spdk_io_channel_iter *i)
 		 * Automatic failback may be disabled. Hence even if the io_path is
 		 * already at the head, clear nbdev_ch->current_io_path.
 		 */
-		nbdev_ch->current_io_path = NULL;
+		bdev_nvme_clear_current_io_path(nbdev_ch);
 	}
 
 	spdk_for_each_channel_continue(i, 0);
@@ -4163,7 +4169,7 @@ _bdev_nvme_set_multipath_policy(struct spdk_io_channel_iter *i)
 
 	nbdev_ch->mp_policy = nbdev->mp_policy;
 	nbdev_ch->mp_selector = nbdev->mp_selector;
-	nbdev_ch->current_io_path = NULL;
+	bdev_nvme_clear_current_io_path(nbdev_ch);
 
 	spdk_for_each_channel_continue(i, 0);
 }
