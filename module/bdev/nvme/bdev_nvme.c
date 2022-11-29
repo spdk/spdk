@@ -4355,9 +4355,11 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return;
 	}
 
-	SPDK_DEBUGLOG(bdev_nvme, "Attached to %s (%s)\n", trid->traddr, name);
-
-	nvme_ctrlr_create(ctrlr, name, trid, NULL);
+	if (nvme_ctrlr_create(ctrlr, name, trid, NULL) == 0) {
+		SPDK_DEBUGLOG(bdev_nvme, "Attached to %s (%s)\n", trid->traddr, name);
+	} else {
+		SPDK_ERRLOG("Failed to attach to %s (%s)\n", trid->traddr, name);
+	}
 
 	free(name);
 }
