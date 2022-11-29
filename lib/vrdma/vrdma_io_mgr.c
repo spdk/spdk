@@ -885,6 +885,28 @@ static bool vrdma_qp_sm_poll_cq_ci(struct spdk_vrdma_qp *vqp,
 	return false;
 }
 
+static void vrdma_ring_mcq_db(struct snap_hw_cq *mcq)
+{
+	uint32_t *dbrec = (uint32_t *)mcq->dbr_addr;
+	uint64_t sn_ci_cmd, doorbell;
+	uint32_t sn, ci;
+
+	sn = mcq->cq_sn & 3;
+	ci = mcq->ci & 0xffffff;
+	sn_ci_cmd = (sn << 28) | ci;
+
+	dbrec[SNAP_MLX5_CQ_SET_CI] = htobe32(mcq->ci & 0xffffff);
+	snap_memory_cpu_fence();
+
+	doorbell = (sn_ci_cmd << 32) | mcq->cq_num;
+	*(uint64_t *)((uint8_t *)mcq->uar_addr + MLX5_CQ_DOORBELL) = htobe64(doorbell);
+	snap_memory_bus_store_fence();
+	mcq->cq_sn++;
+
+	SPDK_NOTICELOG("test update mcq ci %d\n", mcq->ci);
+}
+
+#define POLL_CQ_NUM 16
 static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 									   enum vrdma_qp_sm_op_status status)
 {
@@ -899,6 +921,7 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 	uint32_t size;
 	int ret;
 	struct timeval tv; 
+	uint32_t i;
 
 	SPDK_NOTICELOG("vrdam gen sq cqe start: vcq pi %d, pre_pi %d, ci %d\n",
 					vcq->pi, vcq->pre_pi, vcq->pici->ci);
@@ -909,7 +932,7 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 											vcq->pre_pi % (vcq->cqe_entry_num - 1));
 	gettimeofday(&tv, NULL);
 
-	while(1) {
+	for (i = 0; i < POLL_CQ_NUM; i++) {
 		cqe = vrdma_poll_mqp_scq(mcq, SNAP_VRDMA_BACKEND_CQE_SIZE);
 		
 		if (cqe == NULL) {
@@ -949,9 +972,11 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 
 write_vcq:
 	if (vcq->pi == vcq->pre_pi) {
-		//no cqe to gen, jump to poll sq PI for next loop
+		SPDK_NOTICELOG("no cqe to generate, jump to poll sq PI\n");
 		return true;
 	}
+	vrdma_ring_mcq_db(mcq);
+	
 	vqp->q_comp.count = 1;
 	size = (vcq->pi - vcq->pre_pi) * vcq->cqebb_size;
 	ret = snap_dma_q_write(vqp->snap_queue->dma_q, vcq_local_addr, size,
