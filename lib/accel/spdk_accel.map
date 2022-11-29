@@ -24,6 +24,8 @@
 	spdk_accel_sequence_finish;
 	spdk_accel_sequence_abort;
 	spdk_accel_sequence_reverse;
+	spdk_accel_get_buf;
+	spdk_accel_put_buf;
 
 	# functions needed by modules
 	spdk_accel_module_list_add;

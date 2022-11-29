@@ -30,6 +30,8 @@
 #define MAX_TASKS_PER_CHANNEL		0x800
 #define ACCEL_SMALL_CACHE_SIZE		128
 #define ACCEL_LARGE_CACHE_SIZE		16
+/* Set MSB, so we don't return NULL pointers as buffers */
+#define ACCEL_BUFFER_BASE		((void *)(1ull << 63))
 
 /* Largest context size for all accel modules */
 static size_t g_max_accel_module_size = sizeof(struct spdk_accel_task);
@@ -53,12 +55,19 @@ static const char *g_opcode_strings[ACCEL_OPC_LAST] = {
 	"compress", "decompress"
 };
 
+struct accel_buffer {
+	uint64_t			len;
+	TAILQ_ENTRY(accel_buffer)	link;
+};
+
 struct accel_io_channel {
 	struct spdk_io_channel			*module_ch[ACCEL_OPC_LAST];
 	void					*task_pool_base;
 	struct spdk_accel_sequence		*seq_pool_base;
+	struct accel_buffer			*buf_pool_base;
 	TAILQ_HEAD(, spdk_accel_task)		task_pool;
 	TAILQ_HEAD(, spdk_accel_sequence)	seq_pool;
+	TAILQ_HEAD(, accel_buffer)		buf_pool;
 	struct spdk_iobuf_channel		iobuf;
 };
 
@@ -517,6 +526,28 @@ spdk_accel_submit_decompress(struct spdk_io_channel *ch, struct iovec *dst_iovs,
 	return 0;
 }
 
+static inline struct accel_buffer *
+accel_get_buf(struct accel_io_channel *ch, uint64_t len)
+{
+	struct accel_buffer *buf;
+
+	buf = TAILQ_FIRST(&ch->buf_pool);
+	if (spdk_unlikely(buf == NULL)) {
+		return NULL;
+	}
+
+	TAILQ_REMOVE(&ch->buf_pool, buf, link);
+	buf->len = len;
+
+	return buf;
+}
+
+static inline void
+accel_put_buf(struct accel_io_channel *ch, struct accel_buffer *buf)
+{
+	TAILQ_INSERT_HEAD(&ch->buf_pool, buf, link);
+}
+
 static inline struct spdk_accel_sequence *
 accel_sequence_get(struct accel_io_channel *ch)
 {
@@ -716,6 +747,39 @@ spdk_accel_append_decompress(struct spdk_accel_sequence **pseq, struct spdk_io_c
 	*pseq = seq;
 
 	return 0;
+}
+
+int
+spdk_accel_get_buf(struct spdk_io_channel *ch, uint64_t len, void **buf,
+		   struct spdk_memory_domain **domain, void **domain_ctx)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+	struct accel_buffer *accel_buf;
+
+	accel_buf = accel_get_buf(accel_ch, len);
+	if (spdk_unlikely(accel_buf == NULL)) {
+		return -ENOMEM;
+	}
+
+	/* We always return the same pointer and identify the buffers through domain_ctx */
+	*buf = ACCEL_BUFFER_BASE;
+	*domain_ctx = accel_buf;
+	*domain = g_accel_domain;
+
+	return 0;
+}
+
+void
+spdk_accel_put_buf(struct spdk_io_channel *ch, void *buf,
+		   struct spdk_memory_domain *domain, void *domain_ctx)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+	struct accel_buffer *accel_buf = domain_ctx;
+
+	assert(domain == g_accel_domain);
+	assert(buf == ACCEL_BUFFER_BASE);
+
+	accel_put_buf(accel_ch, accel_buf);
 }
 
 static void
@@ -1004,6 +1068,7 @@ accel_create_channel(void *io_device, void *ctx_buf)
 	struct accel_io_channel	*accel_ch = ctx_buf;
 	struct spdk_accel_task *accel_task;
 	struct spdk_accel_sequence *seq;
+	struct accel_buffer *buf;
 	uint8_t *task_mem;
 	int i = 0, j, rc;
 
@@ -1017,14 +1082,22 @@ accel_create_channel(void *io_device, void *ctx_buf)
 		goto err;
 	}
 
+	accel_ch->buf_pool_base = calloc(MAX_TASKS_PER_CHANNEL, sizeof(struct accel_buffer));
+	if (accel_ch->buf_pool_base == NULL) {
+		goto err;
+	}
+
 	TAILQ_INIT(&accel_ch->task_pool);
 	TAILQ_INIT(&accel_ch->seq_pool);
+	TAILQ_INIT(&accel_ch->buf_pool);
 	task_mem = accel_ch->task_pool_base;
 	for (i = 0 ; i < MAX_TASKS_PER_CHANNEL; i++) {
 		accel_task = (struct spdk_accel_task *)task_mem;
 		seq = &accel_ch->seq_pool_base[i];
+		buf = &accel_ch->buf_pool_base[i];
 		TAILQ_INSERT_TAIL(&accel_ch->task_pool, accel_task, link);
 		TAILQ_INSERT_TAIL(&accel_ch->seq_pool, seq, link);
+		TAILQ_INSERT_TAIL(&accel_ch->buf_pool, buf, link);
 		task_mem += g_max_accel_module_size;
 	}
 
@@ -1051,6 +1124,7 @@ err:
 	}
 	free(accel_ch->task_pool_base);
 	free(accel_ch->seq_pool_base);
+	free(accel_ch->buf_pool_base);
 	return -ENOMEM;
 }
 
@@ -1071,6 +1145,7 @@ accel_destroy_channel(void *io_device, void *ctx_buf)
 
 	free(accel_ch->task_pool_base);
 	free(accel_ch->seq_pool_base);
+	free(accel_ch->buf_pool_base);
 }
 
 struct spdk_io_channel *

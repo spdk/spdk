@@ -374,6 +374,37 @@ void spdk_accel_sequence_reverse(struct spdk_accel_sequence *seq);
 void spdk_accel_sequence_abort(struct spdk_accel_sequence *seq);
 
 /**
+ * Allocate a buffer from accel domain.  These buffers can be only used with operations appended to
+ * a sequence.  The actual data buffer won't be allocated immediately, but only when it's necessary
+ * to execute a given operation.  In some cases, this might even mean that a data buffer won't be
+ * allocated at all, if a sequence can be executed without it.
+ *
+ * A buffer can only be a part of one sequence, but it can be used by multiple operations within
+ * that sequence.
+ *
+ * \param ch I/O channel.
+ * \param len Length of the buffer to allocate.
+ * \param buf Pointer to the allocated buffer.
+ * \param domain Memory domain in which the buffer is allocated.
+ * \param domain_ctx Memory domain context related to the allocated buffer.
+ *
+ * \return 0 if a buffer was successfully allocated, negative errno otherwise.
+ */
+int spdk_accel_get_buf(struct spdk_io_channel *ch, uint64_t len, void **buf,
+		       struct spdk_memory_domain **domain, void **domain_ctx);
+
+/**
+ * Release a buffer allocated via `spdk_accel_get_buf()`.
+ *
+ * \param ch I/O channel.
+ * \param buf Buffer allocated via `spdk_accel_get_buf()`.
+ * \param domain Memory domain in which the buffer is allocated.
+ * \param domain_ctx Memory domain context related to the allocated buffer.
+ */
+void spdk_accel_put_buf(struct spdk_io_channel *ch, void *buf,
+			struct spdk_memory_domain *domain, void *domain_ctx);
+
+/**
  * Return the name of the module assigned to a specific opcode.
  *
  * \param opcode Accel Framework Opcode enum value. Valid codes can be retrieved using
