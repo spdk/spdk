@@ -163,7 +163,6 @@ endif
 
 ifeq ($(CONFIG_AVAHI),y)
 SYS_LIBS += -lavahi-common -lavahi-client
-CFLAGS += -I
 endif
 
 IPSEC_MB_DIR=$(CONFIG_IPSEC_MB_DIR)

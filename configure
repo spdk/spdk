@@ -117,6 +117,7 @@ function usage() {
 	echo " --with-sma                Generate Storage Management Agent's protobuf interface"
 	echo " --without-sma             No path required."
 	echo " --with-avahi              Build with Avahi mDNS discovery client service enabled."
+	echo " --without-avahi           No path required."
 	echo ""
 	echo "Environment variables:"
 	echo ""
@@ -645,6 +646,9 @@ for i in "$@"; do
 			;;
 		--with-avahi)
 			CONFIG[AVAHI]=y
+			;;
+		--without-avahi)
+			CONFIG[AVAHI]=n
 			;;
 		--)
 			break

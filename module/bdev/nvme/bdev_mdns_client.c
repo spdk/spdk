@@ -306,7 +306,8 @@ static void resolve_callback(
             snprintf(trid->subnqn, sizeof(trid->subnqn), "%s", subnqn);
             TAILQ_FOREACH(entry_ctx, &ctx->mdns_discovery_entry_ctxs, tailq) {
 	        if (!spdk_nvme_transport_id_compare(trid, &entry_ctx->trid)) {
-                    SPDK_ERRLOG("mDNS discovery entry exists already. trid->traddr: %s trid->trsvcid: %s\n", trid->traddr, trid->trsvcid);
+                    SPDK_ERRLOG("mDNS discovery entry exists already. trid->traddr: %s trid->trsvcid: %s\n",
+				 trid->traddr, trid->trsvcid);
                     free(trid);
                     avahi_free(subnqn);
                     avahi_free(proto);
@@ -340,13 +341,6 @@ static void browse_callback(
     switch (event) {
         case AVAHI_BROWSER_FAILURE:
             SPDK_ERRLOG("(Browser) Failure: %s\n", avahi_strerror(avahi_client_errno(avahi_service_browser_get_client(b))));
-            /*entry = get_svc_slot(b->type);
-	    if(entry && entry->svc_name && entry->svc_poll) {
-	        avahi_simple_poll_quit(entry->svc_poll);
-		free_svc_slot(entry);
-            } else {
-		SPDK_ERRLOG("Unable to find entry %s in svc slot/n", b->type);
-	    }*/
             return;
         case AVAHI_BROWSER_NEW:
             SPDK_ERRLOG("(Browser) NEW: service '%s' of type '%s' in domain '%s'\n", name, type, domain);
@@ -359,7 +353,10 @@ static void browse_callback(
             break;
         case AVAHI_BROWSER_REMOVE:
             SPDK_ERRLOG("(Browser) REMOVE: service '%s' of type '%s' in domain '%s'\n", name, type, domain);
-            break;
+            /* TODO On remove , need to decide whether we want to cleanup all the connections made, or
+	     * just stop the poller and mark the discovery state as down and leave it to the user to
+	     * invoke bdev_nvme_stop_mdns_discovery */
+	    break;
         case AVAHI_BROWSER_ALL_FOR_NOW:
         case AVAHI_BROWSER_CACHE_EXHAUSTED:
             SPDK_ERRLOG("(Browser) %s\n", event == AVAHI_BROWSER_CACHE_EXHAUSTED ? "CACHE_EXHAUSTED" : "ALL_FOR_NOW");
@@ -371,7 +368,6 @@ static void client_callback(AvahiClient *c, AvahiClientState state, AVAHI_GCC_UN
     /* Called whenever the client or server state changes */
     if (state == AVAHI_CLIENT_FAILURE) {
         SPDK_ERRLOG("Server connection failure: %s\n", avahi_strerror(avahi_client_errno(c)));
-        //avahi_simple_poll_quit(simple_poll);
     }
 }
 
@@ -379,14 +375,16 @@ static int
 bdev_nvme_avahi_iterate(void *arg)
 {
 	struct mdns_discovery_ctx *ctx = arg;
+	int rc;
 
 	if (g_avahi_simple_poll == NULL) {
 		spdk_poller_unregister(&ctx->poller);
 		return SPDK_POLLER_IDLE;
 	}
 
-	if (avahi_simple_poll_iterate(g_avahi_simple_poll, 0) != -EAGAIN) {
-	    SPDK_NOTICELOG("avahi poll returned error/n");
+	rc = avahi_simple_poll_iterate(g_avahi_simple_poll, 0);
+	if (rc && rc != -EAGAIN) {
+	    SPDK_ERRLOG("avahi poll returned error/n");
         }
 
 	return SPDK_POLLER_BUSY;
