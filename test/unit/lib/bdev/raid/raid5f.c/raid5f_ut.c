@@ -10,14 +10,11 @@
 #include "common/lib/ut_multithread.c"
 
 #include "bdev/raid/raid5f.c"
+#include "../common.c"
 
 DEFINE_STUB_V(raid_bdev_module_list_add, (struct raid_bdev_module *raid_module));
 DEFINE_STUB(spdk_bdev_get_buf_align, size_t, (const struct spdk_bdev *bdev), 0);
 DEFINE_STUB_V(raid_bdev_module_stop_done, (struct raid_bdev *raid_bdev));
-
-struct spdk_bdev_desc {
-	struct spdk_bdev *bdev;
-};
 
 void
 raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status)
@@ -48,22 +45,6 @@ raid_bdev_io_complete_part(struct raid_bdev_io *raid_io, uint64_t completed,
 	}
 }
 
-struct raid5f_params {
-	uint8_t num_base_bdevs;
-	uint64_t base_bdev_blockcnt;
-	uint32_t base_bdev_blocklen;
-	uint32_t strip_size;
-};
-
-static struct raid5f_params *g_params;
-static size_t g_params_count;
-
-#define ARRAY_FOR_EACH(a, e) \
-	for (e = a; e < a + SPDK_COUNTOF(a); e++)
-
-#define RAID5F_PARAMS_FOR_EACH(p) \
-	for (p = g_params; p < g_params + g_params_count; p++)
-
 static int
 test_setup(void)
 {
@@ -75,33 +56,32 @@ test_setup(void)
 	uint64_t *base_bdev_blockcnt;
 	uint32_t *base_bdev_blocklen;
 	uint32_t *strip_size_kb;
-	struct raid5f_params *params;
+	struct raid_params params;
+	uint64_t params_count;
+	int rc;
 
-	g_params_count = SPDK_COUNTOF(num_base_bdevs_values) *
-			 SPDK_COUNTOF(base_bdev_blockcnt_values) *
-			 SPDK_COUNTOF(base_bdev_blocklen_values) *
-			 SPDK_COUNTOF(strip_size_kb_values);
-	g_params = calloc(g_params_count, sizeof(*g_params));
-	if (!g_params) {
-		return -ENOMEM;
+	params_count = SPDK_COUNTOF(num_base_bdevs_values) *
+		       SPDK_COUNTOF(base_bdev_blockcnt_values) *
+		       SPDK_COUNTOF(base_bdev_blocklen_values) *
+		       SPDK_COUNTOF(strip_size_kb_values);
+	rc = raid_test_params_alloc(params_count);
+	if (rc) {
+		return rc;
 	}
-
-	params = g_params;
 
 	ARRAY_FOR_EACH(num_base_bdevs_values, num_base_bdevs) {
 		ARRAY_FOR_EACH(base_bdev_blockcnt_values, base_bdev_blockcnt) {
 			ARRAY_FOR_EACH(base_bdev_blocklen_values, base_bdev_blocklen) {
 				ARRAY_FOR_EACH(strip_size_kb_values, strip_size_kb) {
-					params->num_base_bdevs = *num_base_bdevs;
-					params->base_bdev_blockcnt = *base_bdev_blockcnt;
-					params->base_bdev_blocklen = *base_bdev_blocklen;
-					params->strip_size = *strip_size_kb * 1024 / *base_bdev_blocklen;
-					if (params->strip_size == 0 ||
-					    params->strip_size > *base_bdev_blockcnt) {
-						g_params_count--;
+					params.num_base_bdevs = *num_base_bdevs;
+					params.base_bdev_blockcnt = *base_bdev_blockcnt;
+					params.base_bdev_blocklen = *base_bdev_blocklen;
+					params.strip_size = *strip_size_kb * 1024 / *base_bdev_blocklen;
+					if (params.strip_size == 0 ||
+					    params.strip_size > *base_bdev_blockcnt) {
 						continue;
 					}
-					params++;
+					raid_test_params_add(&params);
 				}
 			}
 		}
@@ -113,84 +93,14 @@ test_setup(void)
 static int
 test_cleanup(void)
 {
-	free(g_params);
+	raid_test_params_free();
 	return 0;
 }
 
-static struct raid_bdev *
-create_raid_bdev(struct raid5f_params *params)
-{
-	struct raid_bdev *raid_bdev;
-	struct raid_base_bdev_info *base_info;
-
-	raid_bdev = calloc(1, sizeof(*raid_bdev));
-	SPDK_CU_ASSERT_FATAL(raid_bdev != NULL);
-
-	raid_bdev->module = &g_raid5f_module;
-	raid_bdev->num_base_bdevs = params->num_base_bdevs;
-
-	switch (raid_bdev->module->base_bdevs_constraint.type) {
-	case CONSTRAINT_MAX_BASE_BDEVS_REMOVED:
-		raid_bdev->min_base_bdevs_operational = raid_bdev->num_base_bdevs -
-							raid_bdev->module->base_bdevs_constraint.value;
-		break;
-	case CONSTRAINT_MIN_BASE_BDEVS_OPERATIONAL:
-		raid_bdev->min_base_bdevs_operational = raid_bdev->module->base_bdevs_constraint.value;
-		break;
-	case CONSTRAINT_UNSET:
-		raid_bdev->min_base_bdevs_operational = raid_bdev->num_base_bdevs;
-		break;
-	default:
-		CU_FAIL_FATAL("unsupported raid constraint type");
-	};
-
-	raid_bdev->base_bdev_info = calloc(raid_bdev->num_base_bdevs,
-					   sizeof(struct raid_base_bdev_info));
-	SPDK_CU_ASSERT_FATAL(raid_bdev->base_bdev_info != NULL);
-
-	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		struct spdk_bdev *bdev;
-		struct spdk_bdev_desc *desc;
-
-		bdev = calloc(1, sizeof(*bdev));
-		SPDK_CU_ASSERT_FATAL(bdev != NULL);
-		bdev->blockcnt = params->base_bdev_blockcnt;
-		bdev->blocklen = params->base_bdev_blocklen;
-
-		desc = calloc(1, sizeof(*desc));
-		SPDK_CU_ASSERT_FATAL(desc != NULL);
-		desc->bdev = bdev;
-
-		base_info->bdev = bdev;
-		base_info->desc = desc;
-	}
-
-	raid_bdev->strip_size = params->strip_size;
-	raid_bdev->strip_size_kb = params->strip_size * params->base_bdev_blocklen / 1024;
-	raid_bdev->strip_size_shift = spdk_u32log2(raid_bdev->strip_size);
-	raid_bdev->blocklen_shift = spdk_u32log2(params->base_bdev_blocklen);
-	raid_bdev->bdev.blocklen = params->base_bdev_blocklen;
-
-	return raid_bdev;
-}
-
-static void
-delete_raid_bdev(struct raid_bdev *raid_bdev)
-{
-	struct raid_base_bdev_info *base_info;
-
-	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		free(base_info->bdev);
-		free(base_info->desc);
-	}
-	free(raid_bdev->base_bdev_info);
-	free(raid_bdev);
-}
-
 static struct raid5f_info *
-create_raid5f(struct raid5f_params *params)
+create_raid5f(struct raid_params *params)
 {
-	struct raid_bdev *raid_bdev = create_raid_bdev(params);
+	struct raid_bdev *raid_bdev = raid_test_create_raid_bdev(params, &g_raid5f_module);
 
 	SPDK_CU_ASSERT_FATAL(raid5f_start(raid_bdev) == 0);
 
@@ -204,18 +114,20 @@ delete_raid5f(struct raid5f_info *r5f_info)
 
 	raid5f_stop(raid_bdev);
 
-	delete_raid_bdev(raid_bdev);
+	raid_test_delete_raid_bdev(raid_bdev);
 }
 
 static void
 test_raid5f_start(void)
 {
-	struct raid5f_params *params;
+	struct raid_params *params;
 
-	RAID5F_PARAMS_FOR_EACH(params) {
+	RAID_PARAMS_FOR_EACH(params) {
 		struct raid5f_info *r5f_info;
 
 		r5f_info = create_raid5f(params);
+
+		SPDK_CU_ASSERT_FATAL(r5f_info != NULL);
 
 		CU_ASSERT_EQUAL(r5f_info->stripe_blocks, params->strip_size * (params->num_base_bdevs - 1));
 		CU_ASSERT_EQUAL(r5f_info->total_stripes, params->base_bdev_blockcnt / params->strip_size);
@@ -644,9 +556,9 @@ static void
 run_for_each_raid5f_config(void (*test_fn)(struct raid_bdev *raid_bdev,
 			   struct raid_bdev_io_channel *raid_ch))
 {
-	struct raid5f_params *params;
+	struct raid_params *params;
 
-	RAID5F_PARAMS_FOR_EACH(params) {
+	RAID_PARAMS_FOR_EACH(params) {
 		struct raid5f_info *r5f_info;
 		struct raid_bdev_io_channel raid_ch = { 0 };
 

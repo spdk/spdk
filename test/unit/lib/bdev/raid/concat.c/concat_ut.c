@@ -11,6 +11,7 @@
 
 #include "bdev/raid/bdev_raid.h"
 #include "bdev/raid/concat.c"
+#include "../common.c"
 
 #define BLOCK_LEN (4096)
 
@@ -20,10 +21,6 @@ enum CONCAT_IO_TYPE {
 	CONCAT_READV,
 	CONCAT_FLUSH,
 	CONCAT_UNMAP,
-};
-
-struct spdk_bdev_desc {
-	struct spdk_bdev *bdev;
 };
 
 #define MAX_RECORDS (10)
@@ -161,22 +158,6 @@ init_globals(void)
 	g_succeed = false;
 }
 
-struct concat_params {
-	uint8_t num_base_bdevs;
-	uint64_t base_bdev_blockcnt;
-	uint32_t base_bdev_blocklen;
-	uint32_t strip_size;
-};
-
-static struct concat_params *g_params;
-static size_t g_params_count;
-
-#define ARRAY_FOR_EACH(a, e) \
-	for (e = a; e < a + SPDK_COUNTOF(a); e++)
-
-#define CONCAT_PARAMS_FOR_EACH(p) \
-	for (p = g_params; p < g_params + g_params_count; p++)
-
 static int
 test_setup(void)
 {
@@ -188,33 +169,32 @@ test_setup(void)
 	uint64_t *base_bdev_blockcnt;
 	uint32_t *base_bdev_blocklen;
 	uint32_t *strip_size_kb;
-	struct concat_params *params;
+	struct raid_params params;
+	uint64_t params_count;
+	int rc;
 
-	g_params_count = SPDK_COUNTOF(num_base_bdevs_values) *
-			 SPDK_COUNTOF(base_bdev_blockcnt_values) *
-			 SPDK_COUNTOF(base_bdev_blocklen_values) *
-			 SPDK_COUNTOF(strip_size_kb_values);
-	g_params = calloc(g_params_count, sizeof(*g_params));
-	if (!g_params) {
-		return -ENOMEM;
+	params_count = SPDK_COUNTOF(num_base_bdevs_values) *
+		       SPDK_COUNTOF(base_bdev_blockcnt_values) *
+		       SPDK_COUNTOF(base_bdev_blocklen_values) *
+		       SPDK_COUNTOF(strip_size_kb_values);
+	rc = raid_test_params_alloc(params_count);
+	if (rc) {
+		return rc;
 	}
-
-	params = g_params;
 
 	ARRAY_FOR_EACH(num_base_bdevs_values, num_base_bdevs) {
 		ARRAY_FOR_EACH(base_bdev_blockcnt_values, base_bdev_blockcnt) {
 			ARRAY_FOR_EACH(base_bdev_blocklen_values, base_bdev_blocklen) {
 				ARRAY_FOR_EACH(strip_size_kb_values, strip_size_kb) {
-					params->num_base_bdevs = *num_base_bdevs;
-					params->base_bdev_blockcnt = *base_bdev_blockcnt;
-					params->base_bdev_blocklen = *base_bdev_blocklen;
-					params->strip_size = *strip_size_kb * 1024 / *base_bdev_blocklen;
-					if (params->strip_size == 0 ||
-					    params->strip_size > *base_bdev_blockcnt) {
-						g_params_count--;
+					params.num_base_bdevs = *num_base_bdevs;
+					params.base_bdev_blockcnt = *base_bdev_blockcnt;
+					params.base_bdev_blocklen = *base_bdev_blocklen;
+					params.strip_size = *strip_size_kb * 1024 / *base_bdev_blocklen;
+					if (params.strip_size == 0 ||
+					    params.strip_size > *base_bdev_blockcnt) {
 						continue;
 					}
-					params++;
+					raid_test_params_add(&params);
 				}
 			}
 		}
@@ -226,59 +206,14 @@ test_setup(void)
 static int
 test_cleanup(void)
 {
-	free(g_params);
+	raid_test_params_free();
 	return 0;
 }
 
 static struct raid_bdev *
-create_raid_bdev(struct concat_params *params)
+create_concat(struct raid_params *params)
 {
-	struct raid_bdev *raid_bdev;
-	struct raid_base_bdev_info *base_info;
-
-	raid_bdev = calloc(1, sizeof(*raid_bdev));
-	SPDK_CU_ASSERT_FATAL(raid_bdev != NULL);
-
-	raid_bdev->module = &g_concat_module;
-	raid_bdev->num_base_bdevs = params->num_base_bdevs;
-	raid_bdev->base_bdev_info = calloc(raid_bdev->num_base_bdevs,
-					   sizeof(struct raid_base_bdev_info));
-	SPDK_CU_ASSERT_FATAL(raid_bdev->base_bdev_info != NULL);
-
-	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		base_info->bdev = calloc(1, sizeof(*base_info->bdev));
-		SPDK_CU_ASSERT_FATAL(base_info->bdev != NULL);
-		base_info->desc = calloc(1, sizeof(*base_info->desc));
-		SPDK_CU_ASSERT_FATAL(base_info->desc != NULL);
-
-		base_info->bdev->blockcnt = params->base_bdev_blockcnt;
-		base_info->bdev->blocklen = params->base_bdev_blocklen;
-	}
-
-	raid_bdev->strip_size = params->strip_size;
-	raid_bdev->strip_size_shift = spdk_u32log2(raid_bdev->strip_size);
-	raid_bdev->bdev.blocklen = params->base_bdev_blocklen;
-
-	return raid_bdev;
-}
-
-static void
-delete_raid_bdev(struct raid_bdev *raid_bdev)
-{
-	struct raid_base_bdev_info *base_info;
-
-	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		free(base_info->bdev);
-		free(base_info->desc);
-	}
-	free(raid_bdev->base_bdev_info);
-	free(raid_bdev);
-}
-
-static struct raid_bdev *
-create_concat(struct concat_params *params)
-{
-	struct raid_bdev *raid_bdev = create_raid_bdev(params);
+	struct raid_bdev *raid_bdev = raid_test_create_raid_bdev(params, &g_concat_module);
 
 	CU_ASSERT(concat_start(raid_bdev) == 0);
 	return raid_bdev;
@@ -288,19 +223,19 @@ static void
 delete_concat(struct raid_bdev *raid_bdev)
 {
 	concat_stop(raid_bdev);
-	delete_raid_bdev(raid_bdev);
+	raid_test_delete_raid_bdev(raid_bdev);
 }
 
 static void
 test_concat_start(void)
 {
 	struct raid_bdev *raid_bdev;
-	struct concat_params *params;
+	struct raid_params *params;
 	struct concat_block_range *block_range;
 	uint64_t total_blockcnt;
 	int i;
 
-	CONCAT_PARAMS_FOR_EACH(params) {
+	RAID_PARAMS_FOR_EACH(params) {
 		raid_bdev = create_concat(params);
 		block_range = raid_bdev->module_private;
 		total_blockcnt = 0;
@@ -360,7 +295,7 @@ bdev_io_initialize(struct spdk_bdev_io *bdev_io, struct spdk_io_channel *ch, str
 }
 
 static void
-submit_and_verify_rw(enum CONCAT_IO_TYPE io_type, struct concat_params *params)
+submit_and_verify_rw(enum CONCAT_IO_TYPE io_type, struct raid_params *params)
 {
 	struct raid_bdev *raid_bdev;
 	struct spdk_bdev_io *bdev_io;
@@ -430,12 +365,12 @@ submit_and_verify_rw(enum CONCAT_IO_TYPE io_type, struct concat_params *params)
 static void
 test_concat_rw(void)
 {
-	struct concat_params *params;
+	struct raid_params *params;
 	enum CONCAT_IO_TYPE io_type_list[] = {CONCAT_WRITEV, CONCAT_READV};
 	enum CONCAT_IO_TYPE io_type;
 	int i;
 
-	CONCAT_PARAMS_FOR_EACH(params) {
+	RAID_PARAMS_FOR_EACH(params) {
 		for (i = 0; i < 2; i ++) {
 			io_type = io_type_list[i];
 			submit_and_verify_rw(io_type, params);
@@ -444,7 +379,7 @@ test_concat_rw(void)
 }
 
 static void
-submit_and_verify_null_payload(enum CONCAT_IO_TYPE io_type, struct concat_params *params)
+submit_and_verify_null_payload(enum CONCAT_IO_TYPE io_type, struct raid_params *params)
 {
 	struct raid_bdev *raid_bdev;
 	struct spdk_bdev_io *bdev_io;
@@ -529,12 +464,12 @@ submit_and_verify_null_payload(enum CONCAT_IO_TYPE io_type, struct concat_params
 static void
 test_concat_null_payload(void)
 {
-	struct concat_params *params;
+	struct raid_params *params;
 	enum CONCAT_IO_TYPE io_type_list[] = {CONCAT_FLUSH, CONCAT_UNMAP};
 	enum CONCAT_IO_TYPE io_type;
 	int i;
 
-	CONCAT_PARAMS_FOR_EACH(params) {
+	RAID_PARAMS_FOR_EACH(params) {
 		for (i = 0; i < 2; i ++) {
 			io_type = io_type_list[i];
 			submit_and_verify_null_payload(io_type, params);
