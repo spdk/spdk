@@ -30,6 +30,7 @@ from . import vhost
 from . import vmd
 from . import sock
 from . import vfio_user
+from . import iobuf
 from . import client as rpc_client
 
 

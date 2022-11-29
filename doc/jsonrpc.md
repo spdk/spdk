@@ -11150,3 +11150,42 @@ Example response:
   "result": true
 }
 ~~~
+
+### iobuf_set_options {#rpc_iobuf_set_options}
+
+Set iobuf buffer pool options.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+small_pool_count        | Optional | number      | Number of small buffers in the global pool
+large_pool_count        | Optional | number      | Number of large buffers in the global pool
+small_bufsize           | Optional | number      | Size of a small buffer
+large_bufsize           | Optional | number      | Size of a small buffer
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "iobuf_set_options",
+  "params": {
+    "small_pool_count": 16383,
+    "large_pool_count": 2047
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~

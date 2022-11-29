@@ -3192,6 +3192,19 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('new_size', help='new bdev size for resize operation. The unit is MiB')
     p.set_defaults(func=bdev_daos_resize)
 
+    def iobuf_set_options(args):
+        rpc.iobuf.iobuf_set_options(args.client,
+                                    small_pool_count=args.small_pool_count,
+                                    large_pool_count=args.large_pool_count,
+                                    small_bufsize=args.small_bufsize,
+                                    large_bufsize=args.large_bufsize)
+    p = subparsers.add_parser('iobuf_set_options', help='Set iobuf pool options')
+    p.add_argument('--small-pool-count', help='number of small buffers in the global pool', type=int)
+    p.add_argument('--large-pool-count', help='number of large buffers in the global pool', type=int)
+    p.add_argument('--small-bufsize', help='size of a small buffer', type=int)
+    p.add_argument('--large-bufsize', help='size of a large buffer', type=int)
+    p.set_defaults(func=iobuf_set_options)
+
     def check_called_name(name):
         if name in deprecated_aliases:
             print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)

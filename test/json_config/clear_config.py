@@ -175,6 +175,10 @@ def clear_scheduler_subsystem(args, scheduler_config):
     pass
 
 
+def clear_iobuf_subsystem(args, config):
+    pass
+
+
 def call_test_cmd(func):
     def rpc_test_cmd(*args, **kwargs):
         try:
