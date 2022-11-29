@@ -28,6 +28,8 @@
 
 #define ALIGN_4K			0x1000
 #define MAX_TASKS_PER_CHANNEL		0x800
+#define ACCEL_SMALL_CACHE_SIZE		128
+#define ACCEL_LARGE_CACHE_SIZE		16
 
 /* Largest context size for all accel modules */
 static size_t g_max_accel_module_size = sizeof(struct spdk_accel_task);
@@ -57,6 +59,7 @@ struct accel_io_channel {
 	struct spdk_accel_sequence		*seq_pool_base;
 	TAILQ_HEAD(, spdk_accel_task)		task_pool;
 	TAILQ_HEAD(, spdk_accel_sequence)	seq_pool;
+	struct spdk_iobuf_channel		iobuf;
 };
 
 TAILQ_HEAD(accel_sequence_tasks, spdk_accel_task);
@@ -1002,7 +1005,7 @@ accel_create_channel(void *io_device, void *ctx_buf)
 	struct spdk_accel_task *accel_task;
 	struct spdk_accel_sequence *seq;
 	uint8_t *task_mem;
-	int i = 0, j;
+	int i = 0, j, rc;
 
 	accel_ch->task_pool_base = calloc(MAX_TASKS_PER_CHANNEL, g_max_accel_module_size);
 	if (accel_ch->task_pool_base == NULL) {
@@ -1034,6 +1037,13 @@ accel_create_channel(void *io_device, void *ctx_buf)
 		}
 	}
 
+	rc = spdk_iobuf_channel_init(&accel_ch->iobuf, "accel", ACCEL_SMALL_CACHE_SIZE,
+				     ACCEL_LARGE_CACHE_SIZE);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to initialize iobuf accel channel\n");
+		goto err;
+	}
+
 	return 0;
 err:
 	for (j = 0; j < i; j++) {
@@ -1050,6 +1060,8 @@ accel_destroy_channel(void *io_device, void *ctx_buf)
 {
 	struct accel_io_channel	*accel_ch = ctx_buf;
 	int i;
+
+	spdk_iobuf_channel_fini(&accel_ch->iobuf);
 
 	for (i = 0; i < ACCEL_OPC_LAST; i++) {
 		assert(accel_ch->module_ch[i] != NULL);
@@ -1132,6 +1144,12 @@ spdk_accel_initialize(void)
 		assert(g_modules_opc[op] != NULL);
 	}
 #endif
+	rc = spdk_iobuf_register_module("accel");
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to register accel iobuf module\n");
+		goto error;
+	}
+
 	/*
 	 * We need a unique identifier for the accel framework, so use the
 	 * spdk_accel_module_list address for this purpose.
