@@ -61,6 +61,9 @@ int __itt_init_ittlib(const char *, __itt_group_id);
  */
 #define SPDK_BDEV_MAX_CHILDREN_COPY_REQS (8)
 
+SPDK_LOG_DEPRECATION_REGISTER(bdev_register_examine_thread,
+			      "bdev register and examine on non-app thread", "SPDK 23.05", 0);
+
 static const char *qos_rpc_type[] = {"rw_ios_per_sec",
 				     "rw_mbytes_per_sec", "r_mbytes_per_sec", "w_mbytes_per_sec"
 				    };
@@ -676,6 +679,10 @@ spdk_bdev_examine(const char *name)
 {
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_examine_item *item;
+
+	if (spdk_unlikely(spdk_thread_get_app_thread() != spdk_get_thread())) {
+		SPDK_LOG_DEPRECATED(bdev_register_examine_thread);
+	}
 
 	if (g_bdev_opts.bdev_auto_examine) {
 		SPDK_ERRLOG("Manual examine is not allowed if auto examine is enabled");
@@ -7213,6 +7220,10 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_desc *desc;
 	int rc;
+
+	if (spdk_unlikely(spdk_thread_get_app_thread() != spdk_get_thread())) {
+		SPDK_LOG_DEPRECATED(bdev_register_examine_thread);
+	}
 
 	rc = bdev_register(bdev);
 	if (rc != 0) {

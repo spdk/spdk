@@ -849,6 +849,8 @@ struct spdk_bdev_io {
 /**
  * Register a new bdev.
  *
+ * This function must be called from the SPDK app thread.
+ *
  * \param bdev Block device to register.
  *
  * \return 0 on success.

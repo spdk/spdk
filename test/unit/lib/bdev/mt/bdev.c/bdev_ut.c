@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk_cunit.h"
@@ -2293,16 +2294,182 @@ unregister_during_reset(void)
 	teardown_test();
 }
 
+static void
+bdev_init_wt_cb(void *done, int rc)
+{
+}
+
+
+static uint64_t
+get_wrong_thread_hits(void)
+{
+	static uint64_t previous = 0;
+	uint64_t ret, current;
+
+	current = spdk_deprecation_get_hits(_deprecated_bdev_register_examine_thread);
+	ret = current - previous;
+	previous = current;
+
+	return ret;
+}
+
+static int
+wrong_thread_setup(void)
+{
+	allocate_cores(1);
+	allocate_threads(2);
+	set_thread(0);
+
+	spdk_bdev_initialize(bdev_init_wt_cb, NULL);
+	spdk_io_device_register(&g_io_device, stub_create_ch, stub_destroy_ch,
+				sizeof(struct ut_bdev_channel), NULL);
+
+	set_thread(1);
+
+	/* Ignore return, just setting the base for the next time it is called. */
+	get_wrong_thread_hits();
+
+	return 0;
+}
+
+static int
+wrong_thread_teardown(void)
+{
+	int rc;
+
+	rc = get_wrong_thread_hits();
+
+	set_thread(0);
+
+	g_teardown_done = false;
+	spdk_io_device_unregister(&g_io_device, NULL);
+	spdk_bdev_finish(finish_cb, NULL);
+	poll_threads();
+	memset(&g_bdev, 0, sizeof(g_bdev));
+	if (!g_teardown_done) {
+		fprintf(stderr, "%s:%d %s: teardown not done\n", __FILE__, __LINE__, __func__);
+		rc = -1;
+	}
+	g_teardown_done = false;
+
+	free_threads();
+	free_cores();
+
+	return rc;
+}
+
+static void
+spdk_bdev_register_wt(void)
+{
+	struct spdk_bdev bdev = { 0 };
+	int rc;
+	bool done;
+
+	bdev.name = "wt_bdev";
+	bdev.fn_table = &fn_table;
+	bdev.module = &bdev_ut_if;
+	bdev.blocklen = 4096;
+	bdev.blockcnt = 1024;
+
+	/* Can register only on app thread */
+	rc = spdk_bdev_register(&bdev);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(get_wrong_thread_hits() == 1);
+
+	/* Can unregister on any thread */
+	done = false;
+	spdk_bdev_unregister(&bdev, _bdev_unregistered, &done);
+	poll_threads();
+	CU_ASSERT(get_wrong_thread_hits() == 0);
+	CU_ASSERT(done);
+
+	/* Can unregister by name on any thread */
+	rc = spdk_bdev_register(&bdev);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(get_wrong_thread_hits() == 1);
+	done = false;
+	rc = spdk_bdev_unregister_by_name(bdev.name, bdev.module, _bdev_unregistered, &done);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	CU_ASSERT(get_wrong_thread_hits() == 0);
+	CU_ASSERT(done);
+}
+
+static void
+wait_for_examine_cb(void *arg)
+{
+	struct spdk_thread **thread = arg;
+
+	*thread = spdk_get_thread();
+}
+
+static void
+spdk_bdev_examine_wt(void)
+{
+	int rc;
+	bool save_auto_examine = g_bdev_opts.bdev_auto_examine;
+	struct spdk_thread *thread;
+
+	g_bdev_opts.bdev_auto_examine = false;
+
+	set_thread(0);
+	register_bdev(&g_bdev, "ut_bdev_wt", &g_io_device);
+	CU_ASSERT(spdk_bdev_get_by_name("ut_bdev_wt") != NULL);
+	set_thread(1);
+
+	/* Can examine only on the app thread */
+	rc = spdk_bdev_examine("ut_bdev_wt");
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	CU_ASSERT(get_wrong_thread_hits() == 1);
+	unregister_bdev(&g_bdev);
+	CU_ASSERT(spdk_bdev_get_by_name("ut_bdev_wt") == NULL);
+	CU_ASSERT(get_wrong_thread_hits() == 0);
+
+	/* Can wait for examine on app thread, callback called on app thread. */
+	set_thread(0);
+	register_bdev(&g_bdev, "ut_bdev_wt", &g_io_device);
+	CU_ASSERT(spdk_bdev_get_by_name("ut_bdev_wt") != NULL);
+	thread = NULL;
+	rc = spdk_bdev_wait_for_examine(wait_for_examine_cb, &thread);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	CU_ASSERT(get_wrong_thread_hits() == 0);
+	CU_ASSERT(thread == spdk_get_thread());
+	unregister_bdev(&g_bdev);
+	CU_ASSERT(spdk_bdev_get_by_name("ut_bdev_wt") == NULL);
+	CU_ASSERT(get_wrong_thread_hits() == 0);
+
+	/* Can wait for examine on non-app thread, callback called on same thread. */
+	set_thread(0);
+	register_bdev(&g_bdev, "ut_bdev_wt", &g_io_device);
+	CU_ASSERT(spdk_bdev_get_by_name("ut_bdev_wt") != NULL);
+	thread = NULL;
+	rc = spdk_bdev_wait_for_examine(wait_for_examine_cb, &thread);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	CU_ASSERT(get_wrong_thread_hits() == 0);
+	CU_ASSERT(thread == spdk_get_thread());
+	unregister_bdev(&g_bdev);
+	CU_ASSERT(spdk_bdev_get_by_name("ut_bdev_wt") == NULL);
+	CU_ASSERT(get_wrong_thread_hits() == 0);
+
+	unregister_bdev(&g_bdev);
+	g_bdev_opts.bdev_auto_examine = save_auto_examine;
+}
+
 int
 main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
+	CU_pSuite	suite_wt = NULL;
 	unsigned int	num_failures;
 
 	CU_set_error_action(CUEA_ABORT);
 	CU_initialize_registry();
 
 	suite = CU_add_suite("bdev", NULL, NULL);
+	suite_wt = CU_add_suite("bdev_wrong_thread", wrong_thread_setup, wrong_thread_teardown);
 
 	CU_ADD_TEST(suite, basic);
 	CU_ADD_TEST(suite, unregister_and_close);
@@ -2323,6 +2490,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_set_io_timeout_mt);
 	CU_ADD_TEST(suite, lock_lba_range_then_submit_io);
 	CU_ADD_TEST(suite, unregister_during_reset);
+	CU_ADD_TEST(suite_wt, spdk_bdev_register_wt);
+	CU_ADD_TEST(suite_wt, spdk_bdev_examine_wt);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

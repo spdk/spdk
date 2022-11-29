@@ -252,6 +252,8 @@ int spdk_bdev_wait_for_examine(spdk_bdev_wait_for_examine_cb cb_fn, void *cb_arg
 /**
  * Examine a block device explicitly
  *
+ * This function must be called from the SPDK app thread.
+ *
  * \param name the name or alias of the block device
  * \return 0 if block device was examined successfully, suitable errno value otherwise
  */
