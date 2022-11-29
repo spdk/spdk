@@ -1687,3 +1687,37 @@ def bdev_daos_resize(client, name, new_size):
             'new_size': new_size,
             }
     return client.call('bdev_daos_resize', params)
+
+def bdev_nvme_start_mdns_discovery(client, name, svcname, hostnqn=None):
+    """Start discovery with mDNS
+
+    Args:
+        name: bdev name prefix; "n" + unique seqno + namespace ID will be appended to create unique names
+        svcname: service to discover ("_nvme-disc._tcp")
+        traddr: transport address (PCI BDF or IP address)
+        adrfam: address family ("IPv4", "IPv6", "IB", or "FC")
+        trsvcid: transport service ID (port number for IP-based addresses)
+        hostnqn: NQN to connect from (optional)
+    """
+    params = {'name': name,
+              'svcname': svcname}
+
+    if hostnqn:
+        params['hostnqn'] = hostnqn
+    return client.call('bdev_nvme_start_mdns_discovery', params)
+
+def bdev_nvme_stop_mdns_discovery(client, name):
+    """Stop a previously started mdns discovery service
+
+    Args:
+        name: name of the discovery service to stop
+    """
+    params = {'name': name}
+
+    return client.call('bdev_nvme_stop_mdns_discovery', params)
+
+
+def bdev_nvme_get_mdns_discovery_info(client):
+    """Get information about the automatic mdns discovery
+    """
+    return client.call('bdev_nvme_get_mdns_discovery_info')

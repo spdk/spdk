@@ -11,6 +11,7 @@ SO_MINOR := 0
 
 C_SRCS = bdev_nvme.c bdev_nvme_rpc.c nvme_rpc.c
 C_SRCS-$(CONFIG_NVME_CUSE) += bdev_nvme_cuse_rpc.c
+C_SRCS-$(CONFIG_AVAHI) += bdev_mdns_client.c
 
 ifeq ($(OS),Linux)
 C_SRCS += vbdev_opal.c vbdev_opal_rpc.c

@@ -201,3 +201,6 @@ CONFIG_IPSEC_MB_DIR=
 
 # Generate Storage Management Agent's protobuf interface
 CONFIG_SMA=n
+
+# Build with AVAHI support
+CONFIG_AVAHI=n

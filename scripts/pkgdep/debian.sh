@@ -78,3 +78,8 @@ if [[ $INSTALL_DOCS == "true" ]]; then
 	# Additional dependencies for building docs
 	apt-get install -y doxygen mscgen graphviz
 fi
+# Additional dependencies for Avahi
+if [[ $INSTALL_AVAHI == "true" ]]; then
+	# Additional dependencies for AVAHI
+	apt-get install -y libavahi-client-dev
+fi

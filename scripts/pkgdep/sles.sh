@@ -40,3 +40,7 @@ if [[ $INSTALL_DAOS == "true" ]]; then
 	zypper --non-interactive refresh
 	zypper install -y daos-client daos-devel
 fi
+if [[ $INSTALL_AVAHI == "true" ]]; then
+	# Additional dependencies for AVAHI
+	zypper install -y avahi-devel
+fi

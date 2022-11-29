@@ -3176,6 +3176,31 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('new_size', help='new bdev size for resize operation. The unit is MiB')
     p.set_defaults(func=bdev_daos_resize)
 
+    def bdev_nvme_start_mdns_discovery(args):
+        rpc.bdev.bdev_nvme_start_mdns_discovery(args.client,
+                                           name=args.name,
+                                           svcname=args.svcname,
+                                           hostnqn=args.hostnqn)
+
+    p = subparsers.add_parser('bdev_nvme_start_mdns_discovery', help='Start mdns based automatic discovery')
+    p.add_argument('-b', '--name', help="Name of the NVMe controller prefix for each bdev name", required=True)
+    p.add_argument('-s', '--svcname', help='Service type to discover: e.g., _nvme-disc._tcp', required=True)
+    p.add_argument('-q', '--hostnqn', help='NVMe-oF host subnqn')
+    p.set_defaults(func=bdev_nvme_start_mdns_discovery)
+
+    def bdev_nvme_stop_mdns_discovery(args):
+        rpc.bdev.bdev_nvme_stop_mdns_discovery(args.client, name=args.name)
+
+    p = subparsers.add_parser('bdev_nvme_stop_mdns_discovery', help='Stop automatic mdns discovery')
+    p.add_argument('-b', '--name', help="Name of the service to stop", required=True)
+    p.set_defaults(func=bdev_nvme_stop_mdns_discovery)
+
+    def bdev_nvme_get_mdns_discovery_info(args):
+        print_dict(rpc.bdev.bdev_nvme_get_mdns_discovery_info(args.client))
+
+    p = subparsers.add_parser('bdev_nvme_get_mdns_discovery_info', help='Get information about the automatic mdns discovery')
+    p.set_defaults(func=bdev_nvme_get_mdns_discovery_info)
+
     def check_called_name(name):
         if name in deprecated_aliases:
             print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)

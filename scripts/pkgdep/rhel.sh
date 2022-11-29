@@ -178,3 +178,8 @@ if [[ $INSTALL_DAOS == "true" ]]; then
 		echo "Skipping installation of DAOS bdev dependencies. It is supported only for CentOS 7, CentOS 8 and Rocky 8"
 	fi
 fi
+# Additional dependencies for Avahi
+if [[ $INSTALL_AVAHI == "true" ]]; then
+	# Additional dependencies for AVAHI
+	yum install -y avahi-devel
+fi

@@ -19,6 +19,7 @@
 
 #include "spdk/log.h"
 #include "spdk/bdev_module.h"
+#include "bdev_mdns.h"
 
 struct open_descriptors {
 	void *desc;
@@ -2296,3 +2297,152 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_nvme_set_multipath_policy", rpc_bdev_nvme_set_multipath_policy,
 		  SPDK_RPC_RUNTIME)
+
+struct rpc_bdev_nvme_start_mdns_discovery {
+        char *name;
+        char *svcname;
+        char *hostnqn;
+        struct spdk_nvme_ctrlr_opts opts;
+        struct nvme_ctrlr_opts bdev_opts;
+};
+
+static void
+free_rpc_bdev_nvme_start_mdns_discovery(struct rpc_bdev_nvme_start_mdns_discovery *req)
+{
+        free(req->name);
+        free(req->svcname);
+        free(req->hostnqn);
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_nvme_start_mdns_discovery_decoders[] = {
+        {"name", offsetof(struct rpc_bdev_nvme_start_mdns_discovery, name), spdk_json_decode_string},
+        {"svcname", offsetof(struct rpc_bdev_nvme_start_mdns_discovery, svcname), spdk_json_decode_string},
+        {"hostnqn", offsetof(struct rpc_bdev_nvme_start_mdns_discovery, hostnqn), spdk_json_decode_string, true},
+};
+
+struct rpc_bdev_nvme_start_mdns_discovery_ctx {
+        struct rpc_bdev_nvme_start_mdns_discovery req;
+        struct spdk_jsonrpc_request *request;
+};
+
+
+int
+bdev_nvme_start_mdns_discovery(const char *base_name,
+                               const char *svcname,
+                               struct spdk_nvme_ctrlr_opts *drv_opts,
+                               struct nvme_ctrlr_opts *bdev_opts) __attribute__((weak));
+int
+bdev_nvme_start_mdns_discovery(const char *base_name,
+                               const char *svcname,
+                               struct spdk_nvme_ctrlr_opts *drv_opts,
+                               struct nvme_ctrlr_opts *bdev_opts) {
+    SPDK_ERRLOG("spdk not built with --with-avahi option\n");
+    return -EINVAL;
+}
+
+static void
+rpc_bdev_nvme_start_mdns_discovery(struct spdk_jsonrpc_request *request,
+                              const struct spdk_json_val *params)
+{
+        struct rpc_bdev_nvme_start_mdns_discovery_ctx *ctx;
+        int rc;
+
+        ctx = calloc(1, sizeof(*ctx));
+        if (!ctx) {
+                spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
+                return;
+        }
+
+        spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctx->req.opts, sizeof(ctx->req.opts));
+
+        if (spdk_json_decode_object(params, rpc_bdev_nvme_start_mdns_discovery_decoders,
+                                    SPDK_COUNTOF(rpc_bdev_nvme_start_mdns_discovery_decoders),
+                                    &ctx->req)) {
+                SPDK_ERRLOG("spdk_json_decode_object failed\n");
+                spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+                                                 "spdk_json_decode_object failed");
+                goto cleanup;
+        }
+
+        if (ctx->req.hostnqn) {
+                snprintf(ctx->req.opts.hostnqn, sizeof(ctx->req.opts.hostnqn), "%s",
+                         ctx->req.hostnqn);
+        }
+        ctx->request = request;
+        rc = bdev_nvme_start_mdns_discovery(ctx->req.name, ctx->req.svcname, &ctx->req.opts,
+                                       &ctx->req.bdev_opts);
+        if (rc) {
+                spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+        }else {
+                spdk_jsonrpc_send_bool_response(request, true);
+        }
+
+cleanup:
+        free_rpc_bdev_nvme_start_mdns_discovery(&ctx->req);
+        free(ctx);
+}
+SPDK_RPC_REGISTER("bdev_nvme_start_mdns_discovery", rpc_bdev_nvme_start_mdns_discovery,
+                  SPDK_RPC_RUNTIME)
+/*
+struct rpc_bdev_nvme_stop_mdns_discovery {
+        char *name;
+};
+
+static const struct spdk_json_object_decoder rpc_bdev_nvme_stop_mdns_discovery_decoders[] = {
+        {"name", offsetof(struct rpc_bdev_nvme_stop_mdns_discovery, name), spdk_json_decode_string},
+};
+
+struct rpc_bdev_nvme_stop_mdns_discovery_ctx {
+        struct rpc_bdev_nvme_stop_mdns_discovery req;
+        struct spdk_jsonrpc_request *request;
+};
+
+static void
+rpc_bdev_nvme_stop_discovery_mdns_done(void *cb_ctx)
+{
+        struct rpc_bdev_nvme_stop_discovery_mdns_ctx *ctx = cb_ctx;
+
+        spdk_jsonrpc_send_bool_response(ctx->request, true);
+        free(ctx->req.name);
+        free(ctx);
+}
+
+static void
+rpc_bdev_nvme_stop_mdns_discovery(struct spdk_jsonrpc_request *request,
+                             const struct spdk_json_val *params)
+{
+        struct rpc_bdev_nvme_stop_mdns_discovery_ctx *ctx;
+        int rc;
+
+        ctx = calloc(1, sizeof(*ctx));
+        if (!ctx) {
+                spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
+                return;
+        }
+
+        if (spdk_json_decode_object(params, rpc_bdev_nvme_stop_mdns_discovery_decoders,
+                                    SPDK_COUNTOF(rpc_bdev_nvme_stop_mdns_discovery_decoders),
+                                    &ctx->req)) {
+                SPDK_ERRLOG("spdk_json_decode_object failed\n");
+                spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+                                                 "spdk_json_decode_object failed");
+                goto cleanup;
+        }
+
+        ctx->request = request;
+        rc = bdev_nvme_stop_mdns_discovery(ctx->req.name, rpc_bdev_nvme_stop_mdns_discovery_done, ctx);
+        if (rc) {
+                spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+                goto cleanup;
+        }
+
+        return;
+
+cleanup:
+        free(ctx->req.name);
+        free(ctx);
+}
+SPDK_RPC_REGISTER("bdev_nvme_stop_mdns_discovery", rpc_bdev_nvme_stop_discovery,
+                  SPDK_RPC_RUNTIME)
+*/
+

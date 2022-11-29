@@ -5239,9 +5239,9 @@ create_discovery_entry_ctx(struct discovery_ctx *ctx, struct spdk_nvme_transport
 		DISCOVERY_ERRLOG(ctx, "could not allocate new entry_ctx\n");
 		return NULL;
 	}
-
 	new_ctx->ctx = ctx;
 	memcpy(&new_ctx->trid, trid, sizeof(*trid));
+	DISCOVERY_ERRLOG(ctx, "PARAMLOG: trid: %p ctx->name: %s new_ctx->trid.traddr: %s new_ctx->trid.trsvcid: %s new_ctx->trid.adrfam %d new_ctx->trid.trtype %d\n", trid, ctx->name, new_ctx->trid.traddr, new_ctx->trid.trsvcid, new_ctx->trid.adrfam, new_ctx->trid.trtype);
 	spdk_nvme_ctrlr_get_default_ctrlr_opts(&new_ctx->drv_opts, sizeof(new_ctx->drv_opts));
 	snprintf(new_ctx->drv_opts.hostnqn, sizeof(new_ctx->drv_opts.hostnqn), "%s", ctx->hostnqn);
 	return new_ctx;
@@ -5527,6 +5527,7 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 	struct discovery_ctx *ctx;
 	struct discovery_entry_ctx *discovery_entry_ctx;
 
+	SPDK_ERRLOG("PARAMLOG FIRST: trid: %p ctx->name: %s trid->traddr: %s trid->trsvcid: %s trid->adrfam %d trid->trtype %d\n", trid, base_name, trid->traddr, trid->trsvcid, trid->adrfam, trid->trtype);
 	snprintf(trid->subnqn, sizeof(trid->subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 	TAILQ_FOREACH(ctx, &g_discovery_ctxs, tailq) {
 		if (strcmp(ctx->name, base_name) == 0) {
@@ -5576,6 +5577,7 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 	TAILQ_INIT(&ctx->nvm_entry_ctxs);
 	TAILQ_INIT(&ctx->discovery_entry_ctxs);
 	memcpy(&ctx->trid, trid, sizeof(*trid));
+	DISCOVERY_ERRLOG(ctx, "PARAMLOG SECOND: trid: %p ctx->name: %s trid->traddr: %s trid->trsvcid: %s trid->adrfam %d trid->trtype %d\n", trid, ctx->name, trid->traddr, trid->trsvcid, trid->adrfam, trid->trtype);
 	/* Even if user did not specify hostnqn, we can still strdup("\0"); */
 	ctx->hostnqn = strdup(ctx->drv_opts.hostnqn);
 	if (ctx->hostnqn == NULL) {
