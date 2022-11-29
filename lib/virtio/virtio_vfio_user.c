@@ -183,8 +183,10 @@ virtio_vfio_user_destruct_dev(struct virtio_dev *vdev)
 {
 	struct virtio_vfio_user_dev *dev = vdev->ctx;
 
-	spdk_vfio_user_release(dev->ctx);
-	free(dev);
+	if (dev) {
+		spdk_vfio_user_release(dev->ctx);
+		free(dev);
+	}
 }
 
 static uint16_t

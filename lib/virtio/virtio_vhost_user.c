@@ -971,8 +971,10 @@ virtio_user_destroy(struct virtio_dev *vdev)
 {
 	struct virtio_user_dev *dev = vdev->ctx;
 
-	close(dev->vhostfd);
-	free(dev);
+	if (dev) {
+		close(dev->vhostfd);
+		free(dev);
+	}
 }
 
 static void
