@@ -513,6 +513,22 @@ spdk_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req)
 }
 
 int
+spdk_sock_recv_next(struct spdk_sock *sock, void **buf, void **ctx)
+{
+	if (sock == NULL || sock->flags.closed) {
+		errno = EBADF;
+		return -1;
+	}
+
+	if (sock->group_impl == NULL) {
+		errno = ENOTSUP;
+		return -1;
+	}
+
+	return sock->net_impl->recv_next(sock, buf, ctx);
+}
+
+int
 spdk_sock_flush(struct spdk_sock *sock)
 {
 	if (sock == NULL || sock->flags.closed) {
@@ -572,6 +588,7 @@ spdk_sock_group_create(void *ctx)
 	}
 
 	STAILQ_INIT(&group->group_impls);
+	STAILQ_INIT(&group->pool);
 
 	STAILQ_FOREACH_FROM(impl, &g_net_impls, link) {
 		group_impl = impl->group_impl_create();
@@ -660,6 +677,37 @@ spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *soc
 	}
 
 	return rc;
+}
+
+int
+spdk_sock_group_provide_buf(struct spdk_sock_group *group, void *buf, size_t len, void *ctx)
+{
+	struct spdk_sock_group_provided_buf *provided;
+
+	provided = (struct spdk_sock_group_provided_buf *)buf;
+
+	provided->len = len;
+	provided->ctx = ctx;
+	STAILQ_INSERT_HEAD(&group->pool, provided, link);
+
+	return 0;
+}
+
+size_t
+spdk_sock_group_get_buf(struct spdk_sock_group *group, void **buf, void **ctx)
+{
+	struct spdk_sock_group_provided_buf *provided;
+
+	provided = STAILQ_FIRST(&group->pool);
+	if (provided == NULL) {
+		*buf = NULL;
+		return 0;
+	}
+	STAILQ_REMOVE_HEAD(&group->pool, link);
+
+	*buf = provided;
+	*ctx = provided->ctx;
+	return provided->len;
 }
 
 int

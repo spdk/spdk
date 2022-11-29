@@ -40,3 +40,19 @@ DEFINE_STUB(spdk_sock_group_remove_sock, int, (struct spdk_sock_group *group,
 DEFINE_STUB(spdk_sock_group_poll, int, (struct spdk_sock_group *group), 0);
 DEFINE_STUB(spdk_sock_group_poll_count, int, (struct spdk_sock_group *group, int max_events), 0);
 DEFINE_STUB(spdk_sock_group_close, int, (struct spdk_sock_group **group), 0);
+DEFINE_STUB(spdk_sock_group_provide_buf, int, (struct spdk_sock_group *group, void *buf, size_t len,
+		void *ctx), 0);
+
+static uint8_t g_buf[0x1000] = {};
+
+DEFINE_RETURN_MOCK(spdk_sock_recv_next, int);
+int
+spdk_sock_recv_next(struct spdk_sock *sock, void **buf, void **ctx)
+{
+	HANDLE_RETURN_MOCK(spdk_sock_recv_next);
+
+	*buf = g_buf;
+	*ctx = NULL;
+
+	return 0x1000;
+}

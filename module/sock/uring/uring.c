@@ -797,6 +797,13 @@ uring_sock_read(struct spdk_uring_sock *sock)
 	return bytes;
 }
 
+static int
+uring_sock_recv_next(struct spdk_sock *sock, void **buf, void **ctx)
+{
+	errno = ENOTSUP;
+	return -1;
+}
+
 static ssize_t
 uring_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 {
@@ -1673,6 +1680,7 @@ static struct spdk_net_impl g_uring_net_impl = {
 	.readv		= uring_sock_readv,
 	.readv_async	= uring_sock_readv_async,
 	.writev		= uring_sock_writev,
+	.recv_next	= uring_sock_recv_next,
 	.writev_async	= uring_sock_writev_async,
 	.flush          = uring_sock_flush,
 	.set_recvlowat	= uring_sock_set_recvlowat,
@@ -1684,7 +1692,7 @@ static struct spdk_net_impl g_uring_net_impl = {
 	.group_impl_get_optimal	= uring_sock_group_impl_get_optimal,
 	.group_impl_create	= uring_sock_group_impl_create,
 	.group_impl_add_sock	= uring_sock_group_impl_add_sock,
-	.group_impl_remove_sock = uring_sock_group_impl_remove_sock,
+	.group_impl_remove_sock	= uring_sock_group_impl_remove_sock,
 	.group_impl_poll	= uring_sock_group_impl_poll,
 	.group_impl_close	= uring_sock_group_impl_close,
 	.get_opts		= uring_sock_impl_get_opts,

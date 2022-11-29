@@ -1538,6 +1538,13 @@ posix_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	}
 }
 
+static int
+posix_sock_recv_next(struct spdk_sock *sock, void **buf, void **ctx)
+{
+	errno = ENOTSUP;
+	return -1;
+}
+
 static void
 posix_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req)
 {
@@ -2036,6 +2043,7 @@ static struct spdk_net_impl g_posix_net_impl = {
 	.readv		= posix_sock_readv,
 	.readv_async	= posix_sock_readv_async,
 	.writev		= posix_sock_writev,
+	.recv_next	= posix_sock_recv_next,
 	.writev_async	= posix_sock_writev_async,
 	.flush		= posix_sock_flush,
 	.set_recvlowat	= posix_sock_set_recvlowat,
@@ -2084,6 +2092,7 @@ static struct spdk_net_impl g_ssl_net_impl = {
 	.recv		= posix_sock_recv,
 	.readv		= posix_sock_readv,
 	.writev		= posix_sock_writev,
+	.recv_next	= posix_sock_recv_next,
 	.writev_async	= posix_sock_writev_async,
 	.flush		= posix_sock_flush,
 	.set_recvlowat	= posix_sock_set_recvlowat,
