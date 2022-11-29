@@ -1313,6 +1313,15 @@ unregister_namespaces(void)
 	TAILQ_FOREACH_SAFE(entry, &g_namespaces, link, tmp) {
 		TAILQ_REMOVE(&g_namespaces, entry, link);
 		spdk_zipf_free(&entry->zipf);
+		if (g_use_uring) {
+#ifdef SPDK_CONFIG_URING
+			close(entry->u.uring.fd);
+#endif
+		} else {
+#if HAVE_LIBAIO
+			close(entry->u.aio.fd);
+#endif
+		}
 		free(entry);
 	}
 }

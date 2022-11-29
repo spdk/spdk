@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation
+#  All rights reserved.
+#
 # Install main dependencies
 swupd bundle-add -y c-basic make dev-utils openssl devpkg-libiscsi \
 	devpkg-ncurses python3-basic python-extras devpkg-open-iscsi devpkg-json-c \

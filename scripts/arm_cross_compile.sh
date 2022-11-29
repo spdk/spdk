@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  All rights reserved.
+#
 
 # exit on errors
 set -e

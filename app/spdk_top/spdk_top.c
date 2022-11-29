@@ -1172,7 +1172,7 @@ draw_tab_win(enum tabs tab)
 	uint16_t col;
 	uint8_t white_spaces = TABS_SPACING * NUMBER_OF_TABS;
 
-	wbkgd(g_tab_win[tab], COLOR_PAIR(2));
+	wbkgd(g_tab_win[tab], COLOR_PAIR(10));
 	box(g_tab_win[tab], 0, 0);
 
 	col = ((g_max_col - white_spaces) / NUMBER_OF_TABS / 2) - (strlen(g_tab_title[tab]) / 2) -
@@ -2973,6 +2973,31 @@ help_window_display(void)
 }
 
 static void
+refresh_after_popup(uint8_t active_tab, uint8_t *max_pages, uint8_t current_page)
+{
+	int i;
+
+	/* After closing pop-up there would be unrefreshed parts
+	 * of the tab, so this is to refresh them */
+	draw_tabs(active_tab, g_current_sort_col[active_tab], g_current_sort_col2[active_tab]);
+	pthread_mutex_lock(&g_thread_lock);
+	*max_pages = refresh_tab(active_tab, current_page);
+	pthread_mutex_unlock(&g_thread_lock);
+	top_panel(g_panels[active_tab]);
+
+	for (i = 0; i < NUMBER_OF_TABS; i++) {
+		wclear(g_tab_win[i]);
+		wresize(g_tab_win[i], TAB_WIN_HEIGHT,
+			(g_max_col - (TABS_SPACING * NUMBER_OF_TABS)) / NUMBER_OF_TABS);
+		mvwin(g_tab_win[i], TAB_WIN_LOCATION_ROW, 1 + (g_max_col / NUMBER_OF_TABS) * i);
+		draw_tab_win(i);
+	}
+
+	update_panels();
+	refresh();
+}
+
+static void
 show_stats(pthread_t *data_thread)
 {
 	const int CURRENT_PAGE_STR_LEN = 50;
@@ -3073,11 +3098,25 @@ show_stats(pthread_t *data_thread)
 		case KEY_UP: /* Arrow up */
 			if (g_selected_row > 0) {
 				g_selected_row--;
+			} else if (g_selected_row == 0) {
+				if (current_page > 0) {
+					current_page--;
+					g_selected_row = g_max_data_rows - 1;
+					wclear(g_tabs[active_tab]);
+					draw_tabs(active_tab, g_current_sort_col[active_tab], g_current_sort_col2[active_tab]);
+				}
 			}
 			break;
 		case KEY_DOWN: /* Arrow down */
 			if (g_selected_row < g_max_selected_row) {
 				g_selected_row++;
+			} else if (g_selected_row == g_max_selected_row) {
+				if (current_page + 1 < max_pages) {
+					current_page++;
+					g_selected_row = 0;
+					wclear(g_tabs[active_tab]);
+					draw_tabs(active_tab, g_current_sort_col[active_tab], g_current_sort_col2[active_tab]);
+				}
 			}
 			break;
 		case 10: /* Enter */
@@ -3088,20 +3127,13 @@ show_stats(pthread_t *data_thread)
 			} else if (active_tab == POLLERS_TAB) {
 				show_poller(current_page, active_tab);
 			}
-			/* After closing pop-up there would be unrefreshed parts
-			 * of the tab, so this is to refresh them */
-			draw_tabs(active_tab, g_current_sort_col[active_tab], g_current_sort_col2[active_tab]);
-			pthread_mutex_lock(&g_thread_lock);
-			max_pages = refresh_tab(active_tab, current_page);
-			pthread_mutex_unlock(&g_thread_lock);
 			snprintf(current_page_str, CURRENT_PAGE_STR_LEN - 1, "Page: %d/%d", current_page + 1, max_pages);
 			mvprintw(g_max_row - 1, 1, "%s", current_page_str);
-			top_panel(g_panels[active_tab]);
-			update_panels();
-			refresh();
+			refresh_after_popup(active_tab, &max_pages, current_page);
 			break;
 		case 'h':
 			help_window_display();
+			refresh_after_popup(active_tab, &max_pages, current_page);
 			break;
 		default:
 			force_refresh = false;

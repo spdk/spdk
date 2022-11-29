@@ -1,3 +1,8 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation
+#  All rights reserved.
+#
+
 # Network configuration
 # There is one initiator interface and it is accessed directly.
 # There are two target interfaces and they are accessed through an namespace.

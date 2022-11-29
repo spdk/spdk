@@ -1,3 +1,8 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation
+#  All rights reserved.
+#
+
 # Prints error message and return error code, closes vhost app and remove
 # pmem pool file
 # input: error message, error code

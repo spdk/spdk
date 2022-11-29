@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2021 Intel Corporation
+#  All rights reserved.
+#
 if [[ $SPDK_TEST_FUZZER_SHORT -eq 0 ]]; then
 	TIME=60000
 else

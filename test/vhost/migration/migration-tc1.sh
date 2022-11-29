@@ -1,3 +1,8 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation
+#  All rights reserved.
+#
+
 function migration_tc1_clean_vhost_config() {
 	# Restore trap
 	trap 'error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT

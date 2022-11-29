@@ -1,3 +1,7 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2022 Intel Corporation.
+#  All rights reserved.
+
 function vfu_tgt_run() {
 	local vhost_name=$1
 	local vfio_user_dir vfu_pid_file rpc_py

@@ -1,3 +1,8 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2016 Intel Corporation
+#  All rights reserved.
+#
+
 NVMF_PORT=4420
 NVMF_SECOND_PORT=4421
 NVMF_THIRD_PORT=4422

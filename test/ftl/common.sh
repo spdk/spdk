@@ -1,3 +1,8 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2019 Intel Corporation
+#  All rights reserved.
+#
+
 # Common utility functions to be sourced by the libftl test scripts
 
 function clear_lvols() {

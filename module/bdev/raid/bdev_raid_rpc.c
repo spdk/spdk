@@ -65,6 +65,7 @@ rpc_bdev_raid_get_bdevs(struct spdk_jsonrpc_request *request,
 	struct rpc_bdev_raid_get_bdevs   req = {};
 	struct spdk_json_write_ctx  *w;
 	struct raid_bdev            *raid_bdev;
+	enum raid_bdev_state        state;
 
 	if (spdk_json_decode_object(params, rpc_bdev_raid_get_bdevs_decoders,
 				    SPDK_COUNTOF(rpc_bdev_raid_get_bdevs_decoders),
@@ -74,10 +75,8 @@ rpc_bdev_raid_get_bdevs(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	if (!(strcmp(req.category, "all") == 0 ||
-	      strcmp(req.category, "online") == 0 ||
-	      strcmp(req.category, "configuring") == 0 ||
-	      strcmp(req.category, "offline") == 0)) {
+	state = raid_bdev_str_to_state(req.category);
+	if (state == RAID_BDEV_STATE_MAX && strcmp(req.category, "all") != 0) {
 		spdk_jsonrpc_send_error_response(request, -EINVAL, spdk_strerror(EINVAL));
 		goto cleanup;
 	}
@@ -87,10 +86,7 @@ rpc_bdev_raid_get_bdevs(struct spdk_jsonrpc_request *request,
 
 	/* Get raid bdev list based on the category requested */
 	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
-		if (strcmp(req.category, "all") == 0 ||
-		    (strcmp(req.category, "configuring") == 0 && raid_bdev->state == RAID_BDEV_STATE_CONFIGURING) ||
-		    (strcmp(req.category, "online") == 0 && raid_bdev->state == RAID_BDEV_STATE_ONLINE) ||
-		    (strcmp(req.category, "offline") == 0 && raid_bdev->state == RAID_BDEV_STATE_OFFLINE)) {
+		if (raid_bdev->state == state || state == RAID_BDEV_STATE_MAX) {
 			spdk_json_write_string(w, raid_bdev->bdev.name);
 		}
 	}
@@ -161,7 +157,7 @@ decode_raid_level(const struct spdk_json_val *val, void *out)
 
 	ret = spdk_json_decode_string(val, &str);
 	if (ret == 0 && str != NULL) {
-		level = raid_bdev_parse_raid_level(str);
+		level = raid_bdev_str_to_level(str);
 		if (level == INVALID_RAID_LEVEL) {
 			ret = -EINVAL;
 		} else {

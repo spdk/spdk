@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation
+#  All rights reserved.
+#
 # Virtual Machine environment requirements:
 # 8 GiB of RAM (for DPDK)
 # enable intel_kvm on your host machine

@@ -27,6 +27,9 @@ To run the scripts in your environment please follow steps below.
   to /usr/src/local directory in order to configure NIC ports IRQ affinity.
   If custom directory is to be used, then it must be set using irq_scripts_dir
   option in Target and Initiator configuration sections.
+- `sysstat` package must be installed for SAR CPU utilization measurements.
+- `bwm-ng` package must be installed for NIC bandwidth utilization measurements.
+- `pcm` package must be installed for pcm, pcm-power and pcm-memory measurements.
 
 ### Optional
 
@@ -83,8 +86,8 @@ Optional:
   "core_mask": "[1-10]",
   "null_block_devices": 8,
   "nvmet_bin": "/path/to/nvmetcli",
-  "sar_settings": [true, 30, 1, 60],
-  "pcm_settings": [/tmp/pcm, 30, 1, 60],
+  "sar_settings": true,
+  "pcm_settings": false,
   "enable_bandwidth": [true, 60],
   "enable_dpdk_memory": [true, 30]
   "num_shared_buffers": 4096,
@@ -111,22 +114,15 @@ Optional, common:
 
 - null_block_devices - int, number of null block devices to create.
   Detected NVMe devices are not used if option is present. Default: 0.
-- sar_settings - [bool, int(x), int(y), int(z)];
-  Enable SAR CPU utilization measurement on Target side.
-  Wait for "x" seconds before starting measurements, then do "z" samples
-  with "y" seconds intervals between them. Default: disabled.
-- pcm_settings - [path, int(x), int(y), int(z)];
+- sar_settings - bool
+  Enable SAR CPU utilization measurement on Target side. SAR thread will
+  wait until fio finishes it's "ramp_time" and then start measurement for
+  fio "run_time" duration. Default: enabled.
+- pcm_settings - bool
   Enable [PCM](https://github.com/opcm/pcm.git) measurements on Target side.
-  Measurements include CPU, memory and power consumption. "path" points to a
-  directory where pcm executables are present.
-  "x" - time to wait before starting measurements (suggested it equals to fio
-  ramp_time).
-  "y" - time interval between measurements.
-  "z" - number of measurement samples.
-  Default: disabled.
-- enable_bandwidth - [bool, int]. Wait a given number of seconds and run
-  bwm-ng until the end of test to measure bandwidth utilization on network
-  interfaces. Default: disabled.
+  Measurements include CPU, memory and power consumption. Default: enabled.
+- enable_bandwidth - bool. Measure bandwidth utilization on network
+  interfaces. Default: enabled.
 - tuned_profile - tunedadm profile to apply on the system before starting
   the test.
 - irq_scripts_dir - path to scripts directory of Mellanox mlnx-tools package;

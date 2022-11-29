@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2022 Intel Corporation
+#  All rights reserved.
+#
 
 # Test for if we can allocate a request for the FABRICS_CONNECT when all requests objects are consumed by the queued I/O
 

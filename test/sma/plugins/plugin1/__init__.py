@@ -1,3 +1,7 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2022 Intel Corporation.
+#  All rights reserved.
+
 from spdk.sma import DeviceManager
 from spdk.sma import CryptoEngine, get_crypto_engine
 from spdk.sma.proto import sma_pb2

@@ -2195,7 +2195,8 @@ bdev_io_do_submit(struct spdk_bdev_channel *bdev_ch, struct spdk_bdev_io *bdev_i
 	if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE &&
 			  bdev_io->bdev->split_on_write_unit &&
 			  bdev_io->u.bdev.num_blocks < bdev_io->bdev->write_unit_size)) {
-		SPDK_ERRLOG("IO does not match the write_unit_size\n");
+		SPDK_ERRLOG("IO num_blocks %lu does not match the write_unit_size %u\n",
+			    bdev_io->u.bdev.num_blocks, bdev_io->bdev->write_unit_size);
 		_bdev_io_complete_in_submit(bdev_ch, bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
@@ -7631,6 +7632,21 @@ spdk_bdev_histogram_get(struct spdk_bdev *bdev, struct spdk_histogram_data *hist
 
 	spdk_bdev_for_each_channel(bdev, bdev_histogram_get_channel, ctx,
 				   bdev_histogram_get_channel_cb);
+}
+
+void
+spdk_bdev_channel_get_histogram(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+				spdk_bdev_histogram_data_cb cb_fn, void *cb_arg)
+{
+	struct spdk_bdev_channel *bdev_ch = __io_ch_to_bdev_ch(ch);
+	int status = 0;
+
+	assert(cb_fn != NULL);
+
+	if (bdev_ch->histogram == NULL) {
+		status = -EFAULT;
+	}
+	cb_fn(cb_arg, status, bdev_ch->histogram);
 }
 
 size_t

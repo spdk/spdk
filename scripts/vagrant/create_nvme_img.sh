@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation
+#  All rights reserved.
+#
 SYSTEM=$(uname -s)
 size="1024M"
 nvme_disk="/var/lib/libvirt/images/nvme_disk.img"

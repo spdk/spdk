@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2022 Intel Corporation
+#  All rights reserved.
+
 # The xnvme build executes library_bundler.py which wraps itself around ar
 # to create libxnvme.a. It builds a set of MRI commands which then is
 # passed to ar via stdin. The set of members is declared via ADDLIB

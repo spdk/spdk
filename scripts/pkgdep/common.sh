@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation
+#  All rights reserved.
+#
 install_liburing() {
 	local GIT_REPO_LIBURING=https://github.com/axboe/liburing.git
 	local liburing_dir=/usr/local/src/liburing

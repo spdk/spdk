@@ -1,3 +1,7 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation.
+#  All rights reserved.
+
 def bdev_pmem_create_pool(client, pmem_file, num_blocks, block_size):
     """Create pmem pool at specified path.
     Args:

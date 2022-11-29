@@ -1,3 +1,7 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2022 Intel Corporation.
+#  All rights reserved.
+
 from concurrent import futures
 from contextlib import contextmanager
 from multiprocessing import Lock

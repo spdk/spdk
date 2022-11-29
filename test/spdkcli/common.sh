@@ -1,3 +1,8 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation
+#  All rights reserved.
+#
+
 spdkcli_job="$rootdir/test/spdkcli/spdkcli_job.py"
 spdk_clear_config_py="$rootdir/test/json_config/clear_config.py"
 

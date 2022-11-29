@@ -370,51 +370,55 @@ class Target(Server):
         super().__init__(name, general_config, target_config)
 
         # Defaults
-        self.enable_sar = False
-        self.sar_delay = 0
-        self.sar_interval = 0
-        self.sar_count = 0
-        self.enable_pcm = False
-        self.pcm_dir = ""
-        self.pcm_delay = 0
-        self.pcm_interval = 0
-        self.pcm_count = 0
-        self.enable_bandwidth = 0
-        self.bandwidth_count = 0
-        self.enable_dpdk_memory = False
-        self.dpdk_wait_time = 0
         self.enable_zcopy = False
         self.scheduler_name = "static"
         self.null_block = 0
         self._nics_json_obj = json.loads(self.exec_cmd(["ip", "-j", "address", "show"]))
         self.subsystem_info_list = []
         self.initiator_info = []
+        self.nvme_allowlist = []
+        self.nvme_blocklist = []
+
+        # Target-side measurement options
         self.enable_pm = False
         self.pm_delay = 0
         self.pm_interval = 0
         self.pm_count = 1
+        self.enable_sar = True
+        self.enable_pcm = True
+        self.enable_bw = True
+        self.enable_dpdk_memory = False
+        self.dpdk_wait_time = 0
 
         if "null_block_devices" in target_config:
             self.null_block = target_config["null_block_devices"]
-        if "sar_settings" in target_config:
-            self.enable_sar, self.sar_delay, self.sar_interval, self.sar_count = target_config["sar_settings"]
-        if "pcm_settings" in target_config:
-            self.enable_pcm = True
-            self.pcm_dir, self.pcm_delay, self.pcm_interval, self.pcm_count = target_config["pcm_settings"]
-        if "enable_bandwidth" in target_config:
-            self.enable_bandwidth, self.bandwidth_count = target_config["enable_bandwidth"]
-        if "enable_dpdk_memory" in target_config:
-            self.enable_dpdk_memory, self.dpdk_wait_time = target_config["enable_dpdk_memory"]
         if "scheduler_settings" in target_config:
             self.scheduler_name = target_config["scheduler_settings"]
         if "zcopy_settings" in target_config:
             self.enable_zcopy = target_config["zcopy_settings"]
         if "results_dir" in target_config:
             self.results_dir = target_config["results_dir"]
+        if "blocklist" in target_config:
+            self.nvme_blocklist = target_config["blocklist"]
+        if "allowlist" in target_config:
+            self.nvme_allowlist = target_config["allowlist"]
+            # Blocklist takes precedence, remove common elements from allowlist
+            self.nvme_allowlist = list(set(self.nvme_allowlist) - set(self.nvme_blocklist))
         if "pm_settings" in target_config:
             self.enable_pm, self.pm_delay, self.pm_interval, self.pm_count = target_config["pm_settings"]
             # Normalize pm_count - <= 0 means to loop indefinitely so let's avoid that to not block forever
             self.pm_count = self.pm_count if self.pm_count > 0 else 1
+        if "enable_sar" in target_config:
+            self.enable_sar = target_config["sar_settings"]
+        if "enable_pcm" in target_config:
+            self.enable_pcm = target_config["enable_pcm"]
+        if "enable_bandwidth" in target_config:
+            self.enable_bw = target_config["enable_bandwidth"]
+        if "enable_dpdk_memory" in target_config:
+            self.enable_dpdk_memory, self.dpdk_wait_time = target_config["enable_dpdk_memory"]
+
+        self.log.info("Items now on allowlist: %s" % self.nvme_allowlist)
+        self.log.info("Items now on blocklist: %s" % self.nvme_blocklist)
 
         self.script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
         self.spdk_dir = os.path.abspath(os.path.join(self.script_dir, "../../../"))
@@ -480,17 +484,17 @@ class Target(Server):
                     ip_bdev_map.append((ip, c))
         return ip_bdev_map
 
-    def measure_sar(self, results_dir, sar_file_prefix):
+    def measure_sar(self, results_dir, sar_file_prefix, ramp_time, run_time):
         cpu_number = os.cpu_count()
         sar_idle_sum = 0
         sar_output_file = os.path.join(results_dir, sar_file_prefix + ".txt")
         sar_cpu_util_file = os.path.join(results_dir, ".".join([sar_file_prefix + "cpu_util", "txt"]))
 
-        self.log.info("Waiting %d seconds for ramp-up to finish before measuring SAR stats" % self.sar_delay)
-        time.sleep(self.sar_delay)
+        self.log.info("Waiting %d seconds for ramp-up to finish before measuring SAR stats" % ramp_time)
+        time.sleep(ramp_time)
         self.log.info("Starting SAR measurements")
 
-        out = self.exec_cmd(["sar", "-P", "ALL", "%s" % self.sar_interval, "%s" % self.sar_count])
+        out = self.exec_cmd(["sar", "-P", "ALL", "%s" % 1, "%s" % run_time])
         with open(os.path.join(results_dir, sar_output_file), "w") as fh:
             for line in out.split("\n"):
                 if "Average" in line:
@@ -509,7 +513,7 @@ class Target(Server):
 
     def measure_power(self, results_dir, prefix, script_full_dir):
         time.sleep(self.pm_delay)
-        self.log_print("Starting power measurements")
+        self.log.info("Starting power measurements")
         self.exec_cmd(["%s/../pm/collect-bmc-pm" % script_full_dir,
                       "-d", "%s" % results_dir, "-l", "-p", "%s" % prefix,
                        "-x", "-c", "%s" % self.pm_count, "-t", "%s" % self.pm_interval, "-r"])
@@ -522,16 +526,16 @@ class Target(Server):
             self.exec_cmd(["sudo", "ethtool", "--set-priv-flags", nic,
                            "channel-pkt-inspect-optimize", "off"])  # Disable channel packet inspection optimization
 
-    def measure_pcm_memory(self, results_dir, pcm_file_name):
-        time.sleep(self.pcm_delay)
-        cmd = ["%s/build/bin/pcm-memory" % self.pcm_dir, "%s" % self.pcm_interval, "-csv=%s/%s" % (results_dir, pcm_file_name)]
+    def measure_pcm_memory(self, results_dir, pcm_file_name, ramp_time, run_time):
+        time.sleep(ramp_time)
+        cmd = ["pcm-memory", "1", "-csv=%s/%s" % (results_dir, pcm_file_name)]
         pcm_memory = subprocess.Popen(cmd)
-        time.sleep(self.pcm_count)
+        time.sleep(run_time)
         pcm_memory.terminate()
 
-    def measure_pcm(self, results_dir, pcm_file_name):
-        time.sleep(self.pcm_delay)
-        cmd = ["%s/build/bin/pcm" % self.pcm_dir, "%s" % self.pcm_interval, "-i=%s" % self.pcm_count,
+    def measure_pcm(self, results_dir, pcm_file_name, ramp_time, run_time):
+        time.sleep(ramp_time)
+        cmd = ["pcm", "1", "-i=%s" % run_time,
                "-csv=%s/%s" % (results_dir, pcm_file_name)]
         subprocess.run(cmd)
         df = pd.read_csv(os.path.join(results_dir, pcm_file_name), header=[0, 1])
@@ -540,16 +544,23 @@ class Target(Server):
         skt_pcm_file_name = "_".join(["skt", pcm_file_name])
         skt.to_csv(os.path.join(results_dir, skt_pcm_file_name), index=False)
 
-    def measure_pcm_power(self, results_dir, pcm_power_file_name):
-        time.sleep(self.pcm_delay)
-        out = self.exec_cmd(["%s/build/bin/pcm-power" % self.pcm_dir, "%s" % self.pcm_interval, "-i=%s" % self.pcm_count])
+    def measure_pcm_power(self, results_dir, pcm_power_file_name, ramp_time, run_time):
+        time.sleep(ramp_time)
+        out = self.exec_cmd(["pcm-power", "1", "-i=%s" % run_time])
         with open(os.path.join(results_dir, pcm_power_file_name), "w") as fh:
             fh.write(out)
+        # TODO: Above command results in a .csv file containing measurements for all gathered samples.
+        #       Improve this so that additional file containing measurements average is generated too.
 
-    def measure_network_bandwidth(self, results_dir, bandwidth_file_name):
+    def measure_network_bandwidth(self, results_dir, bandwidth_file_name, ramp_time, run_time):
+        self.log.info("Waiting %d seconds for ramp-up to finish before measuring bandwidth stats" % ramp_time)
+        time.sleep(ramp_time)
         self.log.info("INFO: starting network bandwidth measure")
         self.exec_cmd(["bwm-ng", "-o", "csv", "-F", "%s/%s" % (results_dir, bandwidth_file_name),
-                       "-a", "1", "-t", "1000", "-c", str(self.bandwidth_count)])
+                       "-a", "1", "-t", "1000", "-c", "%s" % run_time])
+        # TODO: Above command results in a .csv file containing measurements for all gathered samples.
+        #       Improve this so that additional file containing measurements average is generated too.
+        # TODO: Monitor only these interfaces which are currently used to run the workload.
 
     def measure_dpdk_memory(self, results_dir):
         self.log.info("INFO: waiting to generate DPDK memory usage")
@@ -872,10 +883,24 @@ class KernelTarget(Target):
     def stop(self):
         self.nvmet_command(self.nvmet_bin, "clear")
 
+    def get_nvme_device_bdf(self, nvme_dev_path):
+        nvme_name = os.path.basename(nvme_dev_path)
+        return self.exec_cmd(["cat", "/sys/block/%s/device/address" % nvme_name]).strip()
+
     def get_nvme_devices(self):
-        output = self.exec_cmd(["lsblk", "-o", "NAME", "-nlpd"])
-        output = [x for x in output.split("\n") if "nvme" in x]
-        return output
+        dev_list = self.exec_cmd(["lsblk", "-o", "NAME", "-nlpd"]).split("\n")
+        nvme_list = []
+        for dev in dev_list:
+            if "nvme" not in dev:
+                continue
+            if self.get_nvme_device_bdf(dev) in self.nvme_blocklist:
+                continue
+            if len(self.nvme_allowlist) == 0:
+                nvme_list.append(dev)
+                continue
+            if self.get_nvme_device_bdf(dev) in self.nvme_allowlist:
+                nvme_list.append(dev)
+        return dev_list
 
     def nvmet_command(self, nvmet_bin, command):
         return self.exec_cmd([nvmet_bin, *(command.split(" "))])
@@ -995,7 +1020,15 @@ class SPDKTarget(Target):
 
     def get_nvme_devices(self):
         bdev_subsys_json_obj = json.loads(self.exec_cmd([os.path.join(self.spdk_dir, "scripts/gen_nvme.sh")]))
-        bdev_bdfs = [bdev["params"]["traddr"] for bdev in bdev_subsys_json_obj["config"]]
+        bdev_bdfs = []
+        for bdev in bdev_subsys_json_obj["config"]:
+            bdev_traddr = bdev["params"]["traddr"]
+            if bdev_traddr in self.nvme_blocklist:
+                continue
+            if len(self.nvme_allowlist) == 0:
+                bdev_bdfs.append(bdev_traddr)
+            if bdev_traddr in self.nvme_allowlist:
+                bdev_bdfs.append(bdev_traddr)
         return bdev_bdfs
 
     @staticmethod
@@ -1421,6 +1454,10 @@ if __name__ == "__main__":
                         help='Results directory.')
     parser.add_argument('-s', '--csv-filename', type=str, default='nvmf_results.csv',
                         help='CSV results filename.')
+    parser.add_argument('-f', '--force', default=False, action='store_true',
+                        dest='force', help="""Force script to continue and try to use all
+                        available NVMe devices during test.
+                        WARNING: Might result in data loss on used NVMe drives""")
 
     args = parser.parse_args()
 
@@ -1437,6 +1474,16 @@ if __name__ == "__main__":
     general_config = data["general"]
     target_config = data["target"]
     initiator_configs = [data[x] for x in data.keys() if "initiator" in x]
+
+    if "null_block_devices" not in data["target"] and \
+        (args.force is False and
+            "allowlist" not in data["target"] and
+            "blocklist" not in data["target"]):
+        # TODO: Also check if allowlist or blocklist are not empty.
+        logging.warning("""WARNING: This script requires allowlist and blocklist to be defined.
+        You can choose to use all available NVMe drives on your system, which may potentially
+        lead to data loss. If you wish to proceed with all attached NVMes, use "-f" option.""")
+        exit(1)
 
     for k, v in data.items():
         if "target" in k:
@@ -1513,24 +1560,28 @@ if __name__ == "__main__":
                 threads.append(t)
             if target_obj.enable_sar:
                 sar_file_prefix = "%s_%s_%s_sar" % (block_size, rw, io_depth)
-                t = threading.Thread(target=target_obj.measure_sar, args=(args.results, sar_file_prefix))
+                t = threading.Thread(target=target_obj.measure_sar, args=(args.results, sar_file_prefix, fio_ramp_time, fio_run_time))
                 threads.append(t)
 
             if target_obj.enable_pcm:
                 pcm_fnames = ["%s_%s_%s_%s.csv" % (block_size, rw, io_depth, x) for x in ["pcm_cpu", "pcm_memory", "pcm_power"]]
 
-                pcm_cpu_t = threading.Thread(target=target_obj.measure_pcm, args=(args.results, pcm_fnames[0],))
-                pcm_mem_t = threading.Thread(target=target_obj.measure_pcm_memory, args=(args.results, pcm_fnames[1],))
-                pcm_pow_t = threading.Thread(target=target_obj.measure_pcm_power, args=(args.results, pcm_fnames[2],))
+                pcm_cpu_t = threading.Thread(target=target_obj.measure_pcm,
+                                             args=(args.results, pcm_fnames[0], fio_ramp_time, fio_run_time))
+                pcm_mem_t = threading.Thread(target=target_obj.measure_pcm_memory,
+                                             args=(args.results, pcm_fnames[1], fio_ramp_time, fio_run_time))
+                pcm_pow_t = threading.Thread(target=target_obj.measure_pcm_power,
+                                             args=(args.results, pcm_fnames[2], fio_ramp_time, fio_run_time))
 
                 threads.append(pcm_cpu_t)
                 threads.append(pcm_mem_t)
                 threads.append(pcm_pow_t)
 
-            if target_obj.enable_bandwidth:
-                bandwidth_file_name = "_".join(["bandwidth", str(block_size), str(rw), str(io_depth)])
+            if target_obj.enable_bw:
+                bandwidth_file_name = "_".join([str(block_size), str(rw), str(io_depth), "bandwidth"])
                 bandwidth_file_name = ".".join([bandwidth_file_name, "csv"])
-                t = threading.Thread(target=target_obj.measure_network_bandwidth, args=(args.results, bandwidth_file_name,))
+                t = threading.Thread(target=target_obj.measure_network_bandwidth,
+                                     args=(args.results, bandwidth_file_name, fio_ramp_time, fio_run_time))
                 threads.append(t)
 
             if target_obj.enable_dpdk_memory:

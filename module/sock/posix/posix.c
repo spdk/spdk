@@ -546,10 +546,12 @@ posix_sock_tls_psk_server_cb(SSL *ssl,
 	}
 	if (key_len > max_psk_len) {
 		SPDK_ERRLOG("Insufficient buffer size to copy PSK\n");
+		OPENSSL_free(default_psk);
 		goto err;
 	}
 
 	memcpy(psk, default_psk, key_len);
+	OPENSSL_free(default_psk);
 
 	return key_len;
 
@@ -585,6 +587,7 @@ posix_sock_tls_psk_client_cb(SSL *ssl, const char *hint,
 	}
 	if ((strlen(impl_opts->psk_identity) + 1 > max_identity_len)
 	    || (key_len > max_psk_len)) {
+		OPENSSL_free(default_psk);
 		SPDK_ERRLOG("PSK ID or Key buffer is not sufficient\n");
 		goto err;
 	}
@@ -593,6 +596,7 @@ posix_sock_tls_psk_client_cb(SSL *ssl, const char *hint,
 
 	memcpy(psk, default_psk, key_len);
 	SPDK_DEBUGLOG(sock_posix, "Provided out-of-band (OOB) PSK for TLS1.3 client\n");
+	OPENSSL_free(default_psk);
 
 	return key_len;
 

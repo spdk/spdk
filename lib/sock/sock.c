@@ -752,8 +752,7 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 	STAILQ_FOREACH_SAFE(group_impl, &(*group)->group_impls, link, tmp) {
 		rc = group_impl->net_impl->group_impl_close(group_impl);
 		if (rc != 0) {
-			SPDK_ERRLOG("group_impl_close for net(%s) failed\n",
-				    group_impl->net_impl->name);
+			SPDK_ERRLOG("group_impl_close for net failed\n");
 		}
 	}
 

@@ -1,3 +1,8 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation
+#  All rights reserved.
+#
+
 # Default set of apps used in functional testing
 
 _root=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")

@@ -37,6 +37,9 @@ running `bdev_nvme_set_options` RPC with `--generate-uuids` option. These identi
 are based on serial number and namespace ID and will always be the same for a given
 device.
 
+A new API `spdk_bdev_channel_get_histogram` was added to get the histogram of a specified
+channel for a bdev.
+
 ### event
 
 Added core lock file mechanism to prevent the same CPU cores from being used by multiple

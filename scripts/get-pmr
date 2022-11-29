@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2021 Intel Corporation
+#  All rights reserved.
+
 # We simply check if BAR2 is present as that's where PMR or CMB is
 # meant to be located under qemu. If found, print some stats then exit.
 shopt -s nullglob

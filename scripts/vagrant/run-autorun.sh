@@ -1,5 +1,6 @@
 #!/bin/bash
 #  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation.
 #  Copyright (c) 2018 by NetApp, Inc.
 #  All Rights Reserved.
 

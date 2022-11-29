@@ -1,3 +1,8 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2019 Intel Corporation
+#  All rights reserved.
+#
+
 MALLOC_SIZE_MB=128
 MALLOC_BS=512
 AIO_SIZE_MB=400

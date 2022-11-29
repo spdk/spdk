@@ -1,4 +1,7 @@
 #!/bin/sh
+#  SPDX-License-Identifier: BSD-3-Clause
+#  All rights reserved.
+
 # Verify what is about to be pushed.  Called by "git
 # push" after it has checked the remote status, but before anything has been
 # pushed.  If this script exits with a non-zero status nothing will be pushed.
