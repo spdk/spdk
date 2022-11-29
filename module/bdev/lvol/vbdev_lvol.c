@@ -1690,6 +1690,12 @@ vbdev_lvs_grow(struct spdk_lvol_store *lvs,
 	req->cb_arg = cb_arg;
 	req->lvol_store = lvs;
 	req->lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvs);
+	if (req->lvs_bdev == NULL) {
+		SPDK_ERRLOG("Cannot get valid lvs_bdev\n");
+		cb_fn(cb_arg, -EINVAL);
+		free(req);
+		return;
+	}
 
 	if (_vbdev_lvs_are_lvols_closed(lvs)) {
 		spdk_lvs_unload(lvs, _vbdev_lvs_grow_unload_cb, req);
