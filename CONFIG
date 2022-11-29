@@ -113,6 +113,9 @@ CONFIG_RBD=n
 CONFIG_DAOS=n
 CONFIG_DAOS_DIR=
 
+# Build UBLK support
+CONFIG_UBLK=n
+
 # Build vhost library.
 CONFIG_VHOST=y
 

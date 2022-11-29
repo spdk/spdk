@@ -21,6 +21,9 @@ endif
 
 ifeq ($(OS),Linux)
 SPDK_LIB_LIST += event_nbd
+ifeq ($(CONFIG_UBLK),y)
+SPDK_LIB_LIST += event_ublk
+endif
 ifeq ($(CONFIG_VHOST),y)
 SPDK_LIB_LIST += event_vhost_blk event_vhost_scsi
 endif

@@ -80,6 +80,8 @@ function usage() {
 	echo " --without-dpdk-compressdev No path required."
 	echo " --with-rbd                Build Ceph RBD bdev module."
 	echo " --without-rbd             No path required."
+	echo " --with-ublk               Build ublk library."
+	echo " --without-ublk            No path required."
 	echo " --with-rdma[=DIR]         Build RDMA transport for NVMf target and initiator."
 	echo " --without-rdma            Accepts optional RDMA provider name. Can be \"verbs\" or \"mlx5_dv\"."
 	echo "                           If no provider specified, \"verbs\" provider is used by default."
@@ -435,6 +437,12 @@ for i in "$@"; do
 			;;
 		--with-env=*)
 			CONFIG[ENV]="${i#*=}"
+			;;
+		--with-ublk)
+			CONFIG[UBLK]=y
+			;;
+		--without-ublk)
+			CONFIG[UBLK]=n
 			;;
 		--with-rbd)
 			CONFIG[RBD]=y
@@ -1020,6 +1028,16 @@ if [[ "${CONFIG[RBD]}" = "y" ]]; then
 		'int main(void) { return 0; }\n' \
 		| "${BUILD_CMD[@]}" -lrados -lrbd - 2> /dev/null; then
 		echo "--with-rbd requires librados and librbd."
+		echo "Please install then re-run this script."
+		exit 1
+	fi
+fi
+
+if [[ "${CONFIG[UBLK]}" = "y" ]]; then
+	if ! echo -e '#include <linux/ublk_cmd.h>\n#include <liburing.h>\n' \
+		'int main(void) { return 0; }\n' \
+		| "${BUILD_CMD[@]}" -luring - 2> /dev/null; then
+		echo "--with-ublk requires liburing and ublk_drv."
 		echo "Please install then re-run this script."
 		exit 1
 	fi

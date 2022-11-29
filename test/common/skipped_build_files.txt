@@ -61,3 +61,7 @@ module/bdev/xnvme/bdev_xnvme_rpc
 module/accel/mlx5/accel_mlx5
 module/accel/mlx5/accel_mlx5_rpc
 lib/mlx5/mlx5_crypto
+
+# Not configured to test ublk
+lib/ublk/ublk
+module/event/subsystems/ublk/ublk

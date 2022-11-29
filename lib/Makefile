@@ -12,6 +12,9 @@ DIRS-y += bdev blob blobfs conf dma accel event json jsonrpc \
           ioat ut_mock iscsi notify init trace_parser
 ifeq ($(OS),Linux)
 DIRS-y += nbd ftl vfio_user
+ifeq ($(CONFIG_UBLK),y)
+DIRS-y += ublk
+endif
 endif
 
 DIRS-$(CONFIG_OCF) += env_ocf

@@ -10,6 +10,9 @@ DIRS-y += bdev accel scheduler iscsi nvmf scsi vmd sock iobuf
 
 ifeq ($(OS),Linux)
 DIRS-y += nbd
+ifeq ($(CONFIG_UBLK),y)
+DIRS-y += ublk
+endif
 endif
 
 DIRS-$(CONFIG_VHOST) += vhost_blk vhost_scsi
@@ -23,6 +26,7 @@ DEPDIRS-accel := iobuf
 DEPDIRS-bdev := accel vmd sock iobuf
 DEPDIRS-iscsi := scsi
 DEPDIRS-nbd := bdev
+DEPDIRS-ublk := bdev
 DEPDIRS-nvmf := bdev
 DEPDIRS-scsi := bdev
 DEPDIRS-vhost_scsi := scsi
