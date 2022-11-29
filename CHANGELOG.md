@@ -4,6 +4,10 @@
 
 ### bdev
 
+Added RPCs bdev_nvme_start_mdns_discovery, bdev_nvme_get_discovery_info and
+bdev_nvme_stop_mdns_discovery to perform avahi based mDNS discovery service,
+as per Nvme TP 8009 - Automated Discovery of Ethernet Discovery Controllers.
+
 Both of interleaved and separated metadata are now supported by the malloc bdev module.
 
 Protection information is now supported by the malloc bdev module.

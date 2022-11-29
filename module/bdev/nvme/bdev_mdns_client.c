@@ -215,7 +215,6 @@ static struct mdns_discovery_ctx * get_mdns_discovery_ctx_by_svcname(const char 
 
     TAILQ_FOREACH_SAFE(ctx, &g_mdns_discovery_ctxs, tailq, tmp_ctx) {
         if(strcmp(ctx->svcname, svcname) == 0) {
-            SPDK_ERRLOG("CTX returned for svcname:%s ctx-name:%s ctx-svcname:%s", svcname, ctx->name, ctx->svcname);
 	    return ctx;
         }
     }
@@ -254,11 +253,11 @@ static void mdns_resolve_callback(
 
             memset(ipaddr, 0, sizeof(ipaddr));
             memset(port_str, 0, sizeof(port_str));
-            SPDK_ERRLOG("Service '%s' of type '%s' in domain '%s':\n", name, type, domain);
+            SPDK_DEBUGLOG(bdev_nvme, "Service '%s' of type '%s' in domain '%s':\n", name, type, domain);
             avahi_address_snprint(ipaddr, sizeof(ipaddr), address);
             snprintf(port_str, sizeof(port_str), "%d", port);
             t = avahi_string_list_to_string(txt);
-            SPDK_ERRLOG(
+            SPDK_DEBUGLOG(bdev_nvme,
                     "\t%s:%u (%s)\n"
                     "\tTXT=%s\n"
                     "\tcookie is %u\n"
@@ -290,7 +289,7 @@ static void mdns_resolve_callback(
             trid->adrfam = get_spdk_nvme_adrfam_from_avahi_addr(address);
 	    if(trid->adrfam != SPDK_NVMF_ADRFAM_IPV4) {
 	        /* TODO: For now process only ipv4 addresses */
-		 SPDK_ERRLOG( "trid family is not IPV4 %d\n", trid->adrfam);
+		 SPDK_INFOLOG(bdev_nvme, "trid family is not IPV4 %d\n", trid->adrfam);
 		 free(trid);
 		 break; 
 	    }
@@ -330,13 +329,11 @@ static void mdns_resolve_callback(
                 }
 	    }
 	    entry_ctx = create_mdns_discovery_entry_ctx(ctx, trid);
-            SPDK_ERRLOG("PARAMLOG FIRST MDNS thread: name: %s &entry_ctx->trid:%p entry_ctx->trid.traddr %s entry_ctx->trid.trsvcid %s\n", entry_ctx->name, &entry_ctx->trid, entry_ctx->trid.traddr, entry_ctx->trid.trsvcid);
 	    TAILQ_INSERT_TAIL(&ctx->mdns_discovery_entry_ctxs, entry_ctx, tailq);
             spdk_thread_send_msg(ctx->calling_thread, mdns_bdev_nvme_start_discovery, entry_ctx);
             free(trid);
             avahi_free(subnqn);
             avahi_free(proto);
-	    SPDK_ERRLOG("PARAMLOG Second MDNS thread: &entry_ctx->trid:%p entry_ctx->trid.traddr %s entry_ctx->trid.trsvcid %s\n", &entry_ctx->trid, entry_ctx->trid.traddr, entry_ctx->trid.trsvcid);
         }
     }
     avahi_service_resolver_free(r);
@@ -359,7 +356,7 @@ static void mdns_browse_callback(
             SPDK_ERRLOG("(Browser) Failure: %s\n", avahi_strerror(avahi_client_errno(avahi_service_browser_get_client(b))));
             return;
         case AVAHI_BROWSER_NEW:
-            SPDK_ERRLOG("(Browser) NEW: service '%s' of type '%s' in domain '%s'\n", name, type, domain);
+            SPDK_DEBUGLOG(bdev_nvme, "(Browser) NEW: service '%s' of type '%s' in domain '%s'\n", name, type, domain);
             /* We ignore the returned resolver object. In the callback
                function we free it. If the server is terminated before
                the callback function is called the server will free
@@ -375,7 +372,7 @@ static void mdns_browse_callback(
 	    break;
         case AVAHI_BROWSER_ALL_FOR_NOW:
         case AVAHI_BROWSER_CACHE_EXHAUSTED:
-            SPDK_ERRLOG("(Browser) %s\n", event == AVAHI_BROWSER_CACHE_EXHAUSTED ? "CACHE_EXHAUSTED" : "ALL_FOR_NOW");
+            SPDK_INFOLOG(bdev_nvme, "(Browser) %s\n", event == AVAHI_BROWSER_CACHE_EXHAUSTED ? "CACHE_EXHAUSTED" : "ALL_FOR_NOW");
             break;
     }
 }
@@ -394,7 +391,7 @@ bdev_nvme_avahi_iterate(void *arg)
 	int rc;
 
         if(ctx->stop) {
-            SPDK_ERRLOG("Stopping avahi poller for service %s\n", ctx->svcname);
+            SPDK_INFOLOG(bdev_nvme, "Stopping avahi poller for service %s\n", ctx->svcname);
             spdk_poller_unregister(&ctx->poller);
             TAILQ_REMOVE(&g_mdns_discovery_ctxs, ctx, tailq);
             free_mdns_discovery_ctx(ctx);
@@ -420,7 +417,6 @@ start_mdns_discovery_poller(void *arg)
 {
         struct mdns_discovery_ctx *ctx = arg;
 
-        SPDK_ERRLOG("Adding mdns_discovery_ctx base_name: %s, svcname:%s", ctx->name, ctx->svcname);
 	TAILQ_INSERT_TAIL(&g_mdns_discovery_ctxs, ctx, tailq);
         ctx->poller = SPDK_POLLER_REGISTER(bdev_nvme_avahi_iterate, ctx, 1000 * 1000);
 }
@@ -519,36 +515,9 @@ bdev_nvme_start_mdns_discovery(const char *base_name,
         free_mdns_discovery_ctx(ctx);
         return -ENOMEM;
     }
-/*
-    mdns_discovery_entry_ctx = create_mdns_discovery_entry_ctx(ctx, svc_name);
-    if (discovery_entry_ctx == NULL) {
-        SPDK_ERRLOG(ctx, "could not allocate new mDNS discovery entry_ctx\n");
-        free_discovery_mdns_ctx(ctx);
-        avahi_service_browser_free(sb);
-        return -ENOMEM;
-    }
-
-    TAILQ_INSERT_TAIL(&ctx->mdns_discovery_entry_ctxs, mdns_discovery_entry_ctx, tailq);
-*/
     /* Start the poller for the Avahi client browser in g_avahi_poll_thread */
     spdk_thread_send_msg(g_avahi_poll_thread, start_mdns_discovery_poller, ctx); 
     return 0;
-/*fail:
-    //Cleanup things
-    avahi_simple_poll_free(svc_poll);
-    svc_slot->svc_poll = NULL;
-    free(svc_slot->svc_name);
-    svc_slot->svc_name = NULL;
-
-    if (sb)
-        avahi_service_browser_free(sb);
-    if (client)
-        avahi_client_free(client);
-    if (svc_poll) {
-        avahi_simple_poll_free(svc_poll);
-	svc_slot->svc_poll = NULL;
-    }
-    return ret;*/
 }
 
 static void mdns_stop_discovery_entry(struct mdns_discovery_ctx *ctx) {
