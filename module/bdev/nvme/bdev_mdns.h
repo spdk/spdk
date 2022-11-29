@@ -18,4 +18,8 @@ bdev_nvme_start_mdns_discovery(const char *base_name,
                                const char *svcname,
                                struct spdk_nvme_ctrlr_opts *drv_opts,
                                struct nvme_ctrlr_opts *bdev_opts);
+int
+bdev_nvme_stop_mdns_discovery(const char *name);
+void
+bdev_nvme_get_mdns_discovery_info(struct spdk_json_write_ctx *w);
 #endif /* SPDK_BDEV_MDNS_H */

@@ -43,6 +43,7 @@ struct mdns_discovery_ctx {
     struct spdk_poller                      *poller;
     struct spdk_nvme_ctrlr_opts             drv_opts;
     struct nvme_ctrlr_opts                  bdev_opts;
+    uint32_t                                seqno;
     bool                                    stop;
     struct spdk_thread                      *calling_thread;
     TAILQ_ENTRY(mdns_discovery_ctx)         tailq;
@@ -65,9 +66,10 @@ create_mdns_discovery_entry_ctx(struct mdns_discovery_ctx *ctx, struct spdk_nvme
 
     new_ctx->ctx = ctx;
     memcpy(&new_ctx->trid, trid, sizeof(struct spdk_nvme_transport_id));
-    snprintf(new_ctx->name, sizeof(new_ctx->name), "%s", ctx->name);
+    snprintf(new_ctx->name, sizeof(new_ctx->name), "%s%u", ctx->name,ctx->seqno);
     memcpy(&new_ctx->drv_opts, &ctx->drv_opts, sizeof(ctx->drv_opts));
     snprintf(new_ctx->drv_opts.hostnqn, sizeof(ctx->drv_opts.hostnqn), "%s", ctx->hostnqn);
+    ctx->seqno = ctx->seqno + 1;
     return new_ctx;
 }
 
@@ -78,7 +80,7 @@ static void mdns_bdev_nvme_start_discovery(void *_entry_ctx) {
         SPDK_ERRLOG("mdns bdev discovery start called with NULL\n");
         return;
     }
-    status = bdev_nvme_start_discovery(&entry_ctx->trid, entry_ctx->ctx->name,
+    status = bdev_nvme_start_discovery(&entry_ctx->trid, entry_ctx->name,
                                        &entry_ctx->ctx->drv_opts,
                                        &entry_ctx->ctx->bdev_opts,
                                        0, NULL, NULL);
@@ -90,6 +92,17 @@ static void mdns_bdev_nvme_start_discovery(void *_entry_ctx) {
     return;
 }
 
+static void free_mdns_discovery_entry_ctx(struct mdns_discovery_ctx *ctx) {
+    struct mdns_discovery_entry_ctx *entry_ctx = NULL;
+
+    if(!ctx)
+        return;
+
+    TAILQ_FOREACH(entry_ctx, &ctx->mdns_discovery_entry_ctxs, tailq) {
+        free(entry_ctx);
+    }
+
+}
 static void free_mdns_discovery_ctx(struct mdns_discovery_ctx *ctx) {
     if(!ctx)
         return;
@@ -101,7 +114,7 @@ static void free_mdns_discovery_ctx(struct mdns_discovery_ctx *ctx) {
     if(ctx->hostnqn)
         free(ctx->hostnqn);
     avahi_service_browser_free(ctx->sb);
-    //free_mdns_discovery_entry_ctx(ctx->discovery_entry_ctxs);
+    free_mdns_discovery_entry_ctx(ctx);
     free(ctx);
 
 }
@@ -208,7 +221,7 @@ static struct mdns_discovery_ctx * get_mdns_discovery_ctx_by_svcname(const char 
     }
     return NULL;
 }
-static void resolve_callback(
+static void mdns_resolve_callback(
     AvahiServiceResolver *r,
     AVAHI_GCC_UNUSED AvahiIfIndex interface,
     AVAHI_GCC_UNUSED AvahiProtocol protocol,
@@ -227,7 +240,9 @@ static void resolve_callback(
     /* Called whenever a service has been resolved successfully or timed out */
     switch (event) {
         case AVAHI_RESOLVER_FAILURE:
-            SPDK_ERRLOG("(Resolver) Failed to resolve service '%s' of type '%s' in domain '%s': %s\n", name, type, domain, avahi_strerror(avahi_client_errno(avahi_service_resolver_get_client(r))));
+            SPDK_ERRLOG("(Resolver) Failed to resolve service '%s' of type '%s' in domain '%s': %s\n",
+                        name, type, domain,
+                        avahi_strerror(avahi_client_errno(avahi_service_resolver_get_client(r))));
             break;
         case AVAHI_RESOLVER_FOUND: {
             char ipaddr[SPDK_NVMF_TRADDR_MAX_LEN + 1], port_str[SPDK_NVMF_TRSVCID_MAX_LEN + 1], *t;
@@ -315,8 +330,9 @@ static void resolve_callback(
                 }
 	    }
 	    entry_ctx = create_mdns_discovery_entry_ctx(ctx, trid);
-            SPDK_ERRLOG("PARAMLOG FIRST MDNS thread: &entry_ctx->trid:%p entry_ctx->trid.traddr %s entry_ctx->trid.trsvcid %s\n", &entry_ctx->trid, entry_ctx->trid.traddr, entry_ctx->trid.trsvcid);
-	    spdk_thread_send_msg(ctx->calling_thread, mdns_bdev_nvme_start_discovery, entry_ctx);
+            SPDK_ERRLOG("PARAMLOG FIRST MDNS thread: name: %s &entry_ctx->trid:%p entry_ctx->trid.traddr %s entry_ctx->trid.trsvcid %s\n", entry_ctx->name, &entry_ctx->trid, entry_ctx->trid.traddr, entry_ctx->trid.trsvcid);
+	    TAILQ_INSERT_TAIL(&ctx->mdns_discovery_entry_ctxs, entry_ctx, tailq);
+            spdk_thread_send_msg(ctx->calling_thread, mdns_bdev_nvme_start_discovery, entry_ctx);
             free(trid);
             avahi_free(subnqn);
             avahi_free(proto);
@@ -325,7 +341,7 @@ static void resolve_callback(
     }
     avahi_service_resolver_free(r);
 }
-static void browse_callback(
+static void mdns_browse_callback(
     AvahiServiceBrowser *b,
     AvahiIfIndex interface,
     AvahiProtocol protocol,
@@ -348,7 +364,7 @@ static void browse_callback(
                function we free it. If the server is terminated before
                the callback function is called the server will free
                the resolver for us. */
-            if (!(avahi_service_resolver_new(c, interface, protocol, name, type, domain, AVAHI_PROTO_UNSPEC, 0, resolve_callback, c)))
+            if (!(avahi_service_resolver_new(c, interface, protocol, name, type, domain, AVAHI_PROTO_UNSPEC, 0, mdns_resolve_callback, c)))
                 SPDK_ERRLOG("Failed to resolve service '%s': %s\n", name, avahi_strerror(avahi_client_errno(c)));
             break;
         case AVAHI_BROWSER_REMOVE:
@@ -377,6 +393,14 @@ bdev_nvme_avahi_iterate(void *arg)
 	struct mdns_discovery_ctx *ctx = arg;
 	int rc;
 
+        if(ctx->stop) {
+            SPDK_ERRLOG("Stopping avahi poller for service %s\n", ctx->svcname);
+            spdk_poller_unregister(&ctx->poller);
+            TAILQ_REMOVE(&g_mdns_discovery_ctxs, ctx, tailq);
+            free_mdns_discovery_ctx(ctx);
+            return SPDK_POLLER_IDLE;
+        }
+
 	if (g_avahi_simple_poll == NULL) {
 		spdk_poller_unregister(&ctx->poller);
 		return SPDK_POLLER_IDLE;
@@ -384,7 +408,8 @@ bdev_nvme_avahi_iterate(void *arg)
 
 	rc = avahi_simple_poll_iterate(g_avahi_simple_poll, 0);
 	if (rc && rc != -EAGAIN) {
-	    SPDK_ERRLOG("avahi poll returned error/n");
+	    SPDK_ERRLOG("avahi poll returned error for service: %s/n", ctx->svcname);
+            return SPDK_POLLER_IDLE;
         }
 
 	return SPDK_POLLER_BUSY;
@@ -455,7 +480,7 @@ bdev_nvme_start_mdns_discovery(const char *base_name,
         }
     }
     /* Create the service browser */
-    if (!(sb = avahi_service_browser_new(g_avahi_client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, svcname, NULL, 0, browse_callback, g_avahi_client))) {
+    if (!(sb = avahi_service_browser_new(g_avahi_client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, svcname, NULL, 0, mdns_browse_callback, g_avahi_client))) {
         SPDK_ERRLOG("Failed to create service browser for service: %s Error: %s\n", svcname, avahi_strerror(avahi_client_errno(g_avahi_client)));
         return -ENOMEM;
     }
@@ -526,3 +551,61 @@ bdev_nvme_start_mdns_discovery(const char *base_name,
     return ret;*/
 }
 
+static void mdns_stop_discovery_entry(struct mdns_discovery_ctx *ctx) {
+    struct mdns_discovery_entry_ctx *entry_ctx = NULL;
+
+    if(!ctx)
+        return;
+
+    TAILQ_FOREACH(entry_ctx, &ctx->mdns_discovery_entry_ctxs, tailq) {
+        bdev_nvme_stop_discovery(entry_ctx->name, NULL, NULL);
+    }
+
+}
+int
+bdev_nvme_stop_mdns_discovery(const char *name)
+{
+    struct mdns_discovery_ctx *ctx;
+
+    TAILQ_FOREACH(ctx, &g_mdns_discovery_ctxs, tailq) {
+        if (strcmp(name, ctx->name) == 0) {
+            if (ctx->stop) {
+                return -EALREADY;
+            }
+            /* set stop to true to stop the mdns poller instance */
+            ctx->stop = true;
+            mdns_stop_discovery_entry(ctx);
+            return 0;
+        }
+    }
+
+        return -ENOENT;
+}
+
+void
+bdev_nvme_get_mdns_discovery_info(struct spdk_json_write_ctx *w)
+{
+    struct mdns_discovery_ctx *ctx;
+    struct mdns_discovery_entry_ctx *entry_ctx;
+
+    spdk_json_write_array_begin(w);
+    TAILQ_FOREACH(ctx, &g_mdns_discovery_ctxs, tailq) {
+        spdk_json_write_object_begin(w);
+        spdk_json_write_named_string(w, "name", ctx->name);
+        spdk_json_write_named_string(w, "svcname", ctx->svcname);
+
+        spdk_json_write_named_array_begin(w, "referrals");
+        TAILQ_FOREACH(entry_ctx, &ctx->mdns_discovery_entry_ctxs, tailq) {
+            spdk_json_write_object_begin(w);
+            spdk_json_write_named_string(w, "name", entry_ctx->name);
+	    spdk_json_write_named_object_begin(w, "trid");
+            nvme_bdev_dump_trid_json(&entry_ctx->trid, w);
+            spdk_json_write_object_end(w);
+            spdk_json_write_object_end(w);
+        }
+        spdk_json_write_array_end(w);
+
+        spdk_json_write_object_end(w);
+    }
+    spdk_json_write_array_end(w);
+}

@@ -2383,7 +2383,16 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_nvme_start_mdns_discovery", rpc_bdev_nvme_start_mdns_discovery,
                   SPDK_RPC_RUNTIME)
-/*
+
+int
+bdev_nvme_stop_mdns_discovery(const char *name) __attribute__((weak));
+
+int
+bdev_nvme_stop_mdns_discovery(const char *name) {
+    SPDK_ERRLOG("spdk not built with --with-avahi option\n");
+    return -EINVAL;
+}
+
 struct rpc_bdev_nvme_stop_mdns_discovery {
         char *name;
 };
@@ -2396,16 +2405,6 @@ struct rpc_bdev_nvme_stop_mdns_discovery_ctx {
         struct rpc_bdev_nvme_stop_mdns_discovery req;
         struct spdk_jsonrpc_request *request;
 };
-
-static void
-rpc_bdev_nvme_stop_discovery_mdns_done(void *cb_ctx)
-{
-        struct rpc_bdev_nvme_stop_discovery_mdns_ctx *ctx = cb_ctx;
-
-        spdk_jsonrpc_send_bool_response(ctx->request, true);
-        free(ctx->req.name);
-        free(ctx);
-}
 
 static void
 rpc_bdev_nvme_stop_mdns_discovery(struct spdk_jsonrpc_request *request,
@@ -2430,19 +2429,39 @@ rpc_bdev_nvme_stop_mdns_discovery(struct spdk_jsonrpc_request *request,
         }
 
         ctx->request = request;
-        rc = bdev_nvme_stop_mdns_discovery(ctx->req.name, rpc_bdev_nvme_stop_mdns_discovery_done, ctx);
+        rc = bdev_nvme_stop_mdns_discovery(ctx->req.name);
         if (rc) {
                 spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
                 goto cleanup;
         }
-
-        return;
+	spdk_jsonrpc_send_bool_response(ctx->request, true);
 
 cleanup:
         free(ctx->req.name);
         free(ctx);
 }
-SPDK_RPC_REGISTER("bdev_nvme_stop_mdns_discovery", rpc_bdev_nvme_stop_discovery,
+SPDK_RPC_REGISTER("bdev_nvme_stop_mdns_discovery", rpc_bdev_nvme_stop_mdns_discovery,
                   SPDK_RPC_RUNTIME)
-*/
 
+void
+bdev_nvme_get_mdns_discovery_info(struct spdk_json_write_ctx *w) __attribute__((weak));
+
+void
+bdev_nvme_get_mdns_discovery_info(struct spdk_json_write_ctx *w) {
+    SPDK_ERRLOG("spdk not built with --with-avahi option\n");
+    return;
+}
+
+static void
+rpc_bdev_nvme_get_mdns_discovery_info(struct spdk_jsonrpc_request *request,
+                                 const struct spdk_json_val *params)
+{
+        struct spdk_json_write_ctx *w;
+
+        w = spdk_jsonrpc_begin_result(request);
+        bdev_nvme_get_mdns_discovery_info(w);
+        spdk_jsonrpc_end_result(request, w);
+}
+
+SPDK_RPC_REGISTER("bdev_nvme_get_mdns_discovery_info", rpc_bdev_nvme_get_mdns_discovery_info,
+                  SPDK_RPC_RUNTIME)
