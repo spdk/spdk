@@ -5239,7 +5239,7 @@ create_discovery_entry_ctx(struct discovery_ctx *ctx, struct spdk_nvme_transport
 		DISCOVERY_ERRLOG(ctx, "could not allocate new entry_ctx\n");
 		return NULL;
 	}
-	
+
 	new_ctx->ctx = ctx;
 	memcpy(&new_ctx->trid, trid, sizeof(*trid));
 	spdk_nvme_ctrlr_get_default_ctrlr_opts(&new_ctx->drv_opts, sizeof(new_ctx->drv_opts));
