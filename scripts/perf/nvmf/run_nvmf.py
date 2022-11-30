@@ -1360,7 +1360,8 @@ class SPDKInitiator(Initiator):
         self.log.info("Using fio binary %s" % self.fio_bin)
         self.exec_cmd(["git", "-C", self.spdk_dir, "submodule", "update", "--init"])
         self.exec_cmd(["git", "-C", self.spdk_dir, "clean", "-ffdx"])
-        self.exec_cmd(["cd", self.spdk_dir, "&&", "./configure", "--with-rdma", "--with-fio=%s" % os.path.dirname(self.fio_bin)])
+        self.exec_cmd(["cd", self.spdk_dir, "&&", "./configure", "--with-rdma",
+                       "--with-fio=%s" % os.path.dirname(self.fio_bin), "--enable-lto"])
         self.exec_cmd(["make", "-C", self.spdk_dir, "clean"])
         self.exec_cmd(["make", "-C", self.spdk_dir, "-j$(($(nproc)*2))"])
 
