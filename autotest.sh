@@ -145,7 +145,6 @@ opal_revert_cleanup
 
 if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
 	run_test "unittest" ./test/unit/unittest.sh
-	run_test "env" test/env/env.sh
 fi
 
 if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
@@ -158,6 +157,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 	timing_enter lib
 
+	run_test "env" test/env/env.sh
 	run_test "rpc" test/rpc/rpc.sh
 	run_test "rpc_client" test/rpc_client/rpc_client.sh
 	run_test "json_config" ./test/json_config/json_config.sh
