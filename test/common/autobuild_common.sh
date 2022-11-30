@@ -6,7 +6,7 @@
 source "$rootdir/test/common/autotest_common.sh"
 source "$rootdir/scripts/common.sh"
 
-ocf_precompile() {
+_ocf_precompile() {
 	# We compile OCF sources ourselves
 	# They don't need to be checked with scanbuild and code coverage is not applicable
 	# So we precompile OCF now for further use as standalone static library
@@ -20,7 +20,7 @@ ocf_precompile() {
 }
 
 # Find matching llvm fuzzer library and clang compiler version
-llvm_precompile() {
+_llvm_precompile() {
 	[[ $(clang --version) =~ "version "(([0-9]+).([0-9]+).([0-9]+)) ]]
 	clang_version=${BASH_REMATCH[1]}
 	clang_num=${BASH_REMATCH[2]}
@@ -37,7 +37,7 @@ llvm_precompile() {
 	"$rootdir/configure" $config_params
 }
 
-build_native_dpdk() {
+_build_native_dpdk() {
 	local external_dpdk_dir
 	local external_dpdk_base_dir
 	local compiler_version
@@ -203,7 +203,7 @@ make_fail_cleanup() {
 	false
 }
 
-scanbuild_make() {
+_scanbuild_make() {
 	pass=true
 	"$rootdir/configure" $config_params --without-shared
 	$scanbuild $MAKE $MAKEFLAGS > $out/build_output.txt && rm -rf $out/scan-build-tmp || make_fail_cleanup
@@ -373,7 +373,7 @@ autobuild_test_suite_full() {
 	build_doc
 }
 
-autobuild_test_suite() {
+_autobuild_test_suite() {
 	case "$SPDK_TEST_AUTOBUILD" in
 		tiny) autobuild_test_suite_tiny ;;
 		ext) autobuild_test_suite_ext ;;
@@ -381,9 +381,33 @@ autobuild_test_suite() {
 	esac
 }
 
-unittest_build() {
+_unittest_build() {
 	"$rootdir/configure" $config_params --without-shared
 	$MAKE $MAKEFLAGS
+}
+
+autobuild_test_suite() {
+	run_test "autobuild" _autobuild_test_suite
+}
+
+unittest_build() {
+	run_test "unittest_build" _unittest_build
+}
+
+scanbuild_make() {
+	run_test "scanbuild_make" _scanbuild_make
+}
+
+ocf_precompile() {
+	run_test "autobuild_ocf_precompile" _ocf_precompile
+}
+
+llvm_precompile() {
+	run_test "autobuild_llvm_precompile" _llvm_precompile
+}
+
+build_native_dpdk() {
+	run_test "build_native_dpdk" _build_native_dpdk
 }
 
 out=$output_dir
