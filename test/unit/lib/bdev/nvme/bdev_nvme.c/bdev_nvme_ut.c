@@ -16,6 +16,8 @@
 
 #include "unit/lib/json_mock.c"
 
+#include "bdev/nvme/bdev_mdns_client.c"
+
 static void *g_accel_p = (void *)0xdeadbeaf;
 
 DEFINE_STUB(spdk_nvme_probe_async, struct spdk_nvme_probe_ctx *,
@@ -46,6 +48,10 @@ DEFINE_STUB(spdk_nvme_ctrlr_get_discovery_log_page, int,
 	    (struct spdk_nvme_ctrlr *ctrlr, spdk_nvme_discovery_cb cb_fn, void *cb_arg), 0);
 
 DEFINE_RETURN_MOCK(spdk_nvme_ctrlr_get_memory_domains, int);
+
+DEFINE_STUB_V(spdk_jsonrpc_send_error_response, (struct spdk_jsonrpc_request *request,
+		int error_code, const char *msg));
+
 int
 spdk_nvme_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
 				   struct spdk_memory_domain **domains, int array_size)

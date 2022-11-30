@@ -2,6 +2,7 @@
  *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2022 Dell Inc, or its subsidiaries. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -133,7 +134,7 @@ static struct spdk_bdev_nvme_opts g_opts = {
 static int g_hot_insert_nvme_controller_index = 0;
 static uint64_t g_nvme_hotplug_poll_period_us = NVME_HOTPLUG_POLL_PERIOD_DEFAULT;
 static bool g_nvme_hotplug_enabled = false;
-static struct spdk_thread *g_bdev_nvme_init_thread;
+struct spdk_thread *g_bdev_nvme_init_thread;
 static struct spdk_poller *g_hotplug_poller;
 static struct spdk_poller *g_hotplug_probe_poller;
 static struct spdk_nvme_probe_ctx *g_hotplug_probe_ctx;
@@ -5188,6 +5189,10 @@ struct discovery_ctx {
 	uint32_t				index;
 	uint32_t				attach_in_progress;
 	char					*hostnqn;
+
+	/* Denotes if the discovery service was started by the mdns discovery.
+	 */
+	bool					from_mdns_discovery_service;
 };
 
 TAILQ_HEAD(discovery_ctxs, discovery_ctx);
@@ -5641,6 +5646,7 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 			  struct spdk_nvme_ctrlr_opts *drv_opts,
 			  struct nvme_ctrlr_opts *bdev_opts,
 			  uint64_t attach_timeout,
+			  bool from_mdns,
 			  spdk_bdev_nvme_start_discovery_fn cb_fn, void *cb_ctx)
 {
 	struct discovery_ctx *ctx;
@@ -5677,6 +5683,7 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 	}
 	memcpy(&ctx->drv_opts, drv_opts, sizeof(*drv_opts));
 	memcpy(&ctx->bdev_opts, bdev_opts, sizeof(*bdev_opts));
+	ctx->from_mdns_discovery_service = from_mdns;
 	ctx->bdev_opts.from_discovery_service = true;
 	ctx->calling_thread = spdk_get_thread();
 	ctx->start_cb_fn = cb_fn;
@@ -6864,7 +6871,8 @@ nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 
 	if (nvme_ctrlr->opts.from_discovery_service) {
 		/* Do not emit an RPC for this - it will be implicitly
-		 * covered by a separate bdev_nvme_start_discovery RPC.
+		 * covered by a separate bdev_nvme_start_discovery or
+		 * bdev_nvme_start_mdns_discovery RPC.
 		 */
 		return;
 	}
@@ -6924,8 +6932,12 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	}
 
 	TAILQ_FOREACH(ctx, &g_discovery_ctxs, tailq) {
-		bdev_nvme_discovery_config_json(w, ctx);
+		if (!ctx->from_mdns_discovery_service) {
+			bdev_nvme_discovery_config_json(w, ctx);
+		}
 	}
+
+	bdev_nvme_mdns_discovery_config_json(w);
 
 	/* Dump as last parameter to give all NVMe bdevs chance to be constructed
 	 * before enabling hotplug poller.

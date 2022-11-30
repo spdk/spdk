@@ -2,6 +2,7 @@
  *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2022 Dell Inc, or its subsidiaries. All rights reserved.
  */
 
 #ifndef SPDK_BDEV_NVME_H
@@ -12,11 +13,13 @@
 #include "spdk/queue.h"
 #include "spdk/nvme.h"
 #include "spdk/bdev_module.h"
+#include "spdk/jsonrpc.h"
 
 TAILQ_HEAD(nvme_bdev_ctrlrs, nvme_bdev_ctrlr);
 extern struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs;
 extern pthread_mutex_t g_bdev_nvme_mutex;
 extern bool g_bdev_nvme_module_finish;
+extern struct spdk_thread *g_bdev_nvme_init_thread;
 
 #define NVME_MAX_CONTROLLERS 1024
 
@@ -281,10 +284,19 @@ int bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 
 int bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid, const char *base_name,
 			      struct spdk_nvme_ctrlr_opts *drv_opts, struct nvme_ctrlr_opts *bdev_opts,
-			      uint64_t timeout, spdk_bdev_nvme_start_discovery_fn cb_fn, void *cb_ctx);
+			      uint64_t timeout, bool from_mdns,
+			      spdk_bdev_nvme_start_discovery_fn cb_fn, void *cb_ctx);
 int bdev_nvme_stop_discovery(const char *name, spdk_bdev_nvme_stop_discovery_fn cb_fn,
 			     void *cb_ctx);
 void bdev_nvme_get_discovery_info(struct spdk_json_write_ctx *w);
+
+int bdev_nvme_start_mdns_discovery(const char *base_name,
+				   const char *svcname,
+				   struct spdk_nvme_ctrlr_opts *drv_opts,
+				   struct nvme_ctrlr_opts *bdev_opts);
+int bdev_nvme_stop_mdns_discovery(const char *name);
+void bdev_nvme_get_mdns_discovery_info(struct spdk_jsonrpc_request *request);
+void bdev_nvme_mdns_discovery_config_json(struct spdk_json_write_ctx *w);
 
 struct spdk_nvme_ctrlr *bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
 

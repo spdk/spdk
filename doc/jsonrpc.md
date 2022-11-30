@@ -11379,3 +11379,143 @@ Example response:
   "result": true
 }
 ~~~
+
+### bdev_nvme_start_mdns_discovery {#rpc_bdev_nvme_start_mdns_discovery}
+
+Starts an mDNS based discovery service for the specified service type for the
+auto-discovery of discovery controllers (NVMe TP-8009).
+
+The discovery service will listen for the mDNS discovery events from the
+Avahi-daemon and will connect to the newly learnt discovery controllers.
+Then the discovery service will automatically attach to any subsystem found in the
+discovery log page from the discovery controllers learnt using mDNS.
+When determining a controller name to use when attaching, it will use
+the 'name' parameter as a prefix, followed by a unique integer assigned for each of the
+discovery controllers learnt through mDNS, followed by a unique integer for that discovery
+service. If the discovery service identifies a subsystem that has been previously
+attached but is listed with a different path, it will use the same controller name
+as the previous entry, and connect as a multipath.
+
+When the discovery service sees that a subsystem entry has been removed
+from the log page, it will automatically detach from that controller as well.
+
+The 'name' is also used to later stop the discovery service.
+
+#### Parameters
+
+Name                       | Optional | Type        | Description
+-------------------------- | -------- | ----------- | -----------
+name                       | Required | string      | Prefix for NVMe discovery services found
+svcname                    | Required | string      | Service to discover: e.g. _nvme-disc._tcp
+hostnqn                    | Optional | string      | NVMe-oF hostnqn
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_start_mdns_discovery",
+  "id": 1,
+  "params": {
+    "name": "cdc_auto",
+    "svcname": "_nvme-disc._tcp",
+    "hostnqn": "nqn.2021-12.io.spdk:host1",
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_nvme_stop_mdns_discovery {#rpc_bdev_nvme_stop_mdns_discovery}
+
+Stops a mDNS discovery service. This includes detaching any controllers that were
+discovered via the service that is being stopped.
+
+#### Parameters
+
+Name                       | Optional | Type        | Description
+-------------------------- | -------- | ----------- | -----------
+name                       | Required | string      | Name of mDNS discovery instance to stop
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_stop_mdns_discovery",
+  "id": 1,
+  "params": {
+    "name": "cdc_auto"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_nvme_get_mdns_discovery_info {#rpc_bdev_nvme_get_mdns_discovery_info}
+
+Get the information about the mDNS discovery service instances.
+
+#### Example
+
+Example request:
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_get_mdns_discovery_info",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+[
+  {
+    "name": "cdc_auto",
+    "svcname": "_nvme-disc._tcp",
+    "referrals": [
+      {
+        "name": "cdc_auto0",
+        "trid": {
+          "trtype": "TCP",
+          "adrfam": "IPv4",
+          "traddr": "66.1.2.21",
+          "trsvcid": "8009",
+          "subnqn": "nqn.2014-08.org.nvmexpress.discovery"
+        }
+      },
+      {
+        "name": "cdc_auto1",
+        "trid": {
+          "trtype": "TCP",
+          "adrfam": "IPv4",
+          "traddr": "66.1.1.21",
+          "trsvcid": "8009",
+          "subnqn": "nqn.2014-08.org.nvmexpress.discovery"
+        }
+      }
+    ]
+  }
+]
+~~~

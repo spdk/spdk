@@ -13,6 +13,10 @@ decrypt operations. New RPC `dpdk_cryptodev_scan_accel_module` has been added to
 
 ### bdev
 
+Added RPCs bdev_nvme_start_mdns_discovery, bdev_nvme_get_mdns_discovery_info and
+bdev_nvme_stop_mdns_discovery to perform Avahi based mDNS discovery service,
+as per NVMe TP 8009 - Automated Discovery of Ethernet Discovery Controllers.
+
 Both of interleaved and separated metadata are now supported by the malloc bdev module.
 
 Protection information is now supported by the malloc bdev module.

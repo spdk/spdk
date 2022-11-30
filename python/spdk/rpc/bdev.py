@@ -1,6 +1,7 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2017 Intel Corporation.
 #  All rights reserved.
+#  Copyright (c) 2022 Dell Inc, or its subsidiaries.
 
 
 def bdev_set_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None, bdev_auto_examine=None,
@@ -1724,3 +1725,36 @@ def bdev_daos_resize(client, name, new_size):
             'new_size': new_size,
             }
     return client.call('bdev_daos_resize', params)
+
+
+def bdev_nvme_start_mdns_discovery(client, name, svcname, hostnqn=None):
+    """Start discovery with mDNS
+
+    Args:
+        name: bdev name prefix; "n" + unique seqno + namespace ID will be appended to create unique names
+        svcname: service to discover ("_nvme-disc._tcp")
+        hostnqn: NQN to connect from (optional)
+    """
+    params = {'name': name,
+              'svcname': svcname}
+
+    if hostnqn:
+        params['hostnqn'] = hostnqn
+    return client.call('bdev_nvme_start_mdns_discovery', params)
+
+
+def bdev_nvme_stop_mdns_discovery(client, name):
+    """Stop a previously started mdns discovery service
+
+    Args:
+        name: name of the discovery service to stop
+    """
+    params = {'name': name}
+
+    return client.call('bdev_nvme_stop_mdns_discovery', params)
+
+
+def bdev_nvme_get_mdns_discovery_info(client):
+    """Get information about the automatic mdns discovery
+    """
+    return client.call('bdev_nvme_get_mdns_discovery_info')

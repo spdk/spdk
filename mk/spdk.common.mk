@@ -4,6 +4,7 @@
 #  Copyright (c) 2019, 2021 Mellanox Corporation.
 #  Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES
 #  All rights reserved.
+#  Copyright (c) 2022 Dell Inc, or its subsidiaries.
 #
 
 ifeq ($(wildcard $(SPDK_ROOT_DIR)/mk/config.mk),)
@@ -173,6 +174,10 @@ ifneq ($(strip $(CONFIG_URING_PATH)),)
 CFLAGS += -I$(CONFIG_URING_PATH)
 LDFLAGS += -L$(CONFIG_URING_PATH)
 endif
+endif
+
+ifeq ($(CONFIG_AVAHI),y)
+SYS_LIBS += -lavahi-common -lavahi-client
 endif
 
 IPSEC_MB_DIR=$(CONFIG_IPSEC_MB_DIR)

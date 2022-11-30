@@ -2,6 +2,7 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2017 Intel Corporation
 #  All rights reserved.
+#  Copyright (c) 2022 Dell Inc, or its subsidiaries.
 #
 
 set -e
@@ -120,6 +121,8 @@ function usage() {
 	echo "                           (Typically /usr/lib/llvm-VER/lib/clang/VER/lib/linux/libclang_rt.fuzzer_no_main-ARCH.a)"
 	echo " --with-sma                Generate Storage Management Agent's protobuf interface"
 	echo " --without-sma             No path required."
+	echo " --with-avahi              Build with Avahi mDNS discovery client service enabled in bdev-nvme module."
+	echo " --without-avahi           No path required."
 	echo ""
 	echo "Environment variables:"
 	echo ""
@@ -640,6 +643,12 @@ for i in "$@"; do
 			;;
 		--without-sma)
 			CONFIG[SMA]=n
+			;;
+		--with-avahi)
+			CONFIG[AVAHI]=y
+			;;
+		--without-avahi)
+			CONFIG[AVAHI]=n
 			;;
 		--)
 			break
@@ -1212,6 +1221,16 @@ fi
 if [[ "${CONFIG[SMA]}" = "y" ]]; then
 	if ! python3 -c 'import grpc; import grpc_tools' 2> /dev/null; then
 		echo "--with-sma requires grpcio and grpcio-tools python packages."
+		echo "Please install then re-run this script."
+		exit 1
+	fi
+fi
+
+if [[ "${CONFIG[AVAHI]}" = "y" ]]; then
+	if ! echo -e '#include <avahi-client/client.h>\n#include <avahi-common/malloc.h>\n' \
+		'int main(void) { return 0; }\n' \
+		| "${BUILD_CMD[@]}" -lavahi-client -lavahi-common - 2> /dev/null; then
+		echo "--with-avahi requires libavahi-client and libavahi-common."
 		echo "Please install then re-run this script."
 		exit 1
 	fi
