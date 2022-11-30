@@ -283,7 +283,7 @@ test_make_uninstall() {
 	fi
 }
 
-build_doc() {
+_build_doc() {
 	local doxygenv
 	doxygenv=$(doxygen --version)
 
@@ -326,19 +326,44 @@ build_doc() {
 	rm -rf "$rootdir"/doc/output
 }
 
-autobuild_test_suite() {
+check_format() {
 	run_test "autobuild_check_format" "$rootdir/scripts/check_format.sh"
-	run_test "autobuild_check_so_deps" $rootdir/test/make/check_so_deps.sh $1
+}
+
+check_so_deps() {
+	run_test "autobuild_check_so_deps" "$rootdir/test/make/check_so_deps.sh" "$1"
+}
+
+external_code() {
+	run_test "autobuild_external_code" "$rootdir/test/external_code/test_make.sh" "$rootdir"
+}
+
+dpdk_pci_api() {
 	run_test "autobuild_check_dpdk_pci_api" check_dpdk_pci_api
+}
+
+build_files() {
+	"$rootdir/configure" $config_params --without-shared
+	$MAKE $MAKEFLAGS
+	run_test "autobuild_generated_files_check" porcelain_check
+	run_test "autobuild_header_dependency_check" header_dependency_check
+	run_test "autobuild_make_install" test_make_install
+	run_test "autobuild_make_uninstall" test_make_uninstall
+}
+
+build_doc() {
+	"$rootdir/configure" $config_params --without-shared
+	run_test "autobuild_build_doc" _build_doc
+}
+
+autobuild_test_suite() {
+	check_format
+	check_so_deps "$1"
+	dpdk_pci_api
 	if [[ $SPDK_TEST_AUTOBUILD == 'full' ]]; then
-		run_test "autobuild_external_code" $rootdir/test/external_code/test_make.sh $rootdir
-		"$rootdir/configure" $config_params --without-shared
-		$MAKE $MAKEFLAGS
-		run_test "autobuild_generated_files_check" porcelain_check
-		run_test "autobuild_header_dependency_check" header_dependency_check
-		run_test "autobuild_make_install" test_make_install
-		run_test "autobuild_make_uninstall" test_make_uninstall
-		run_test "autobuild_build_doc" build_doc
+		external_code
+		build_files
+		build_doc
 	fi
 }
 
