@@ -17,6 +17,7 @@ rootdir=$(readlink -f $(dirname $0))
 source "$1"
 source "$rootdir/test/common/autobuild_common.sh"
 
+SPDK_TEST_AUTOBUILD=${SPDK_TEST_AUTOBUILD:-}
 umask 022
 cd $rootdir
 
@@ -36,17 +37,21 @@ if [ -n "$SPDK_TEST_NATIVE_DPDK" ]; then
 	run_test "build_native_dpdk" build_native_dpdk
 fi
 
-if [[ -z $SPDK_TEST_AUTOBUILD ]] || [[ $SPDK_TEST_AUTOBUILD == 'full' ]]; then
-	./configure $config_params
-	echo "** START ** Info for Hostname: $HOSTNAME"
-	uname -a
-	$MAKE cc_version
-	$MAKE cxx_version
-	echo "** END ** Info for Hostname: $HOSTNAME"
-elif [[ $SPDK_TEST_AUTOBUILD != 'tiny' ]]; then
-	echo "ERROR: supported values for SPDK_TEST_AUTOBUILD are 'full' and 'tiny'"
-	exit 1
-fi
+case "$SPDK_TEST_AUTOBUILD" in
+	full)
+		./configure $config_params
+		echo "** START ** Info for Hostname: $HOSTNAME"
+		uname -a
+		$MAKE cc_version
+		$MAKE cxx_version
+		echo "** END ** Info for Hostname: $HOSTNAME"
+		;;
+	ext | tiny | "") ;;
+	*)
+		echo "ERROR: supported values for SPDK_TEST_AUTOBUILD are 'full', 'tiny' and 'ext'"
+		exit 1
+		;;
+esac
 
 if [[ $SPDK_TEST_OCF -eq 1 ]]; then
 	run_test "autobuild_ocf_precompile" ocf_precompile

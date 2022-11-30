@@ -356,15 +356,29 @@ build_doc() {
 	run_test "autobuild_build_doc" _build_doc
 }
 
-autobuild_test_suite() {
+autobuild_test_suite_tiny() {
 	check_format
 	check_so_deps "$1"
 	dpdk_pci_api
-	if [[ $SPDK_TEST_AUTOBUILD == 'full' ]]; then
-		external_code
-		build_files
-		build_doc
-	fi
+}
+
+autobuild_test_suite_ext() {
+	external_code
+}
+
+autobuild_test_suite_full() {
+	autobuild_test_suite_tiny "$1"
+	autobuild_test_suite_ext
+	build_files
+	build_doc
+}
+
+autobuild_test_suite() {
+	case "$SPDK_TEST_AUTOBUILD" in
+		tiny) autobuild_test_suite_tiny "$1" ;;
+		ext) autobuild_test_suite_ext ;;
+		full) autobuild_test_suite_full "$1" ;;
+	esac
 }
 
 unittest_build() {
