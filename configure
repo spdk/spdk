@@ -858,10 +858,7 @@ fi
 
 if [[ "${CONFIG[FC]}" = "y" ]]; then
 	if [[ -n "${CONFIG[FC_PATH]}" ]]; then
-		if [ ! -d "${CONFIG[FC_PATH]}" ]; then
-			echo "${CONFIG[FC_PATH]}: directory not found"
-			exit 1
-		fi
+		check_dir "${CONFIG[FC_PATH]}"
 	fi
 fi
 
@@ -1077,10 +1074,7 @@ fi
 
 if [[ "${CONFIG[URING]}" = "y" ]]; then
 	if [[ -n "${CONFIG[URING_PATH]}" ]]; then
-		if [ ! -d "${CONFIG[URING_PATH]}" ]; then
-			echo "${CONFIG[URING_PATH]}: directory not found"
-			exit 1
-		fi
+		check_dir "${CONFIG[URING_PATH]}"
 	elif ! echo -e '#include <liburing.h>\nint main(void) { return 0; }\n' \
 		| "${BUILD_CMD[@]}" -luring - 2> /dev/null; then
 		echo "--with-uring requires liburing."
