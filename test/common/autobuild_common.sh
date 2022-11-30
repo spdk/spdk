@@ -268,6 +268,10 @@ header_dependency_check() {
 	fi
 }
 
+test_make_install() {
+	$MAKE $MAKEFLAGS install DESTDIR="$SPDK_WORKSPACE" prefix=/usr
+}
+
 test_make_uninstall() {
 	# Create empty file to check if it is not deleted by target uninstall
 	touch "$SPDK_WORKSPACE/usr/lib/sample_xyz.a"
@@ -332,7 +336,7 @@ autobuild_test_suite() {
 		$MAKE $MAKEFLAGS
 		run_test "autobuild_generated_files_check" porcelain_check
 		run_test "autobuild_header_dependency_check" header_dependency_check
-		run_test "autobuild_make_install" $MAKE $MAKEFLAGS install DESTDIR="$SPDK_WORKSPACE" prefix=/usr
+		run_test "autobuild_make_install" test_make_install
 		run_test "autobuild_make_uninstall" test_make_uninstall
 		run_test "autobuild_build_doc" build_doc
 	fi
