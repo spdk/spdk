@@ -6,12 +6,6 @@
 
 set -e
 
-# If the configuration of tests is not provided, no tests will be carried out.
-if [[ ! -f $1 ]]; then
-	echo "ERROR: SPDK test configuration not specified"
-	exit 1
-fi
-
 rootdir=$(readlink -f $(dirname $0))
 
 source "$1"
@@ -62,7 +56,7 @@ if [[ $SPDK_TEST_FUZZER -eq 1 ]]; then
 fi
 
 if [[ -n $SPDK_TEST_AUTOBUILD ]]; then
-	run_test "autobuild" autobuild_test_suite $1
+	run_test "autobuild" autobuild_test_suite
 elif [[ $SPDK_TEST_UNITTEST -eq 1 ]]; then
 	run_test "unittest_build" unittest_build
 elif [[ $SPDK_TEST_SCANBUILD -eq 1 ]]; then

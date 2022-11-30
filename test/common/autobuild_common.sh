@@ -331,7 +331,7 @@ check_format() {
 }
 
 check_so_deps() {
-	run_test "autobuild_check_so_deps" "$rootdir/test/make/check_so_deps.sh" "$1"
+	run_test "autobuild_check_so_deps" "$rootdir/test/make/check_so_deps.sh" "$spdk_conf"
 }
 
 external_code() {
@@ -358,7 +358,7 @@ build_doc() {
 
 autobuild_test_suite_tiny() {
 	check_format
-	check_so_deps "$1"
+	check_so_deps
 	dpdk_pci_api
 }
 
@@ -367,7 +367,7 @@ autobuild_test_suite_ext() {
 }
 
 autobuild_test_suite_full() {
-	autobuild_test_suite_tiny "$1"
+	autobuild_test_suite_tiny
 	autobuild_test_suite_ext
 	build_files
 	build_doc
@@ -375,9 +375,9 @@ autobuild_test_suite_full() {
 
 autobuild_test_suite() {
 	case "$SPDK_TEST_AUTOBUILD" in
-		tiny) autobuild_test_suite_tiny "$1" ;;
+		tiny) autobuild_test_suite_tiny ;;
 		ext) autobuild_test_suite_ext ;;
-		full) autobuild_test_suite_full "$1" ;;
+		full) autobuild_test_suite_full ;;
 	esac
 }
 
@@ -404,3 +404,10 @@ scanbuild_exclude+=" --exclude $rootdir/xnvme --exclude /tmp"
 
 scanbuild="scan-build -o $output_dir/scan-build-tmp $scanbuild_exclude --status-bugs"
 config_params=$(get_config_params)
+
+spdk_conf=${spdk_conf:-"$1"}
+
+if [[ ! -f $spdk_conf ]]; then
+	echo "ERROR: SPDK test configuration not specified"
+	return 1
+fi
