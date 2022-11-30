@@ -224,11 +224,13 @@ test_buf_to_iovs(void)
 	struct iovec iov[4];
 	uint8_t sdata[64];
 	uint8_t ddata[64];
+	uint8_t iov_buffer[64];
 
 	memset(&sdata, 7, sizeof(sdata));
 	memset(&ddata, 4, sizeof(ddata));
+	memset(&iov_buffer, 1, sizeof(iov_buffer));
 
-	iov[0].iov_base = sdata;
+	iov[0].iov_base = iov_buffer;
 	iov[0].iov_len = 5;
 	iov[1].iov_base = iov[0].iov_base + iov[0].iov_len;
 	iov[1].iov_len = 15;
