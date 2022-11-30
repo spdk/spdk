@@ -19,11 +19,7 @@ DEFINE_STUB(pmem_memcpy_persist, void *, (void *pmemdest, const void *src, size_
 DEFINE_STUB(pmem_is_pmem, int, (const void *addr, size_t len), 0);
 DEFINE_STUB(pmem_memset_persist, void *, (void *pmemdest, int c, size_t len), NULL);
 #endif
-DEFINE_STUB(spdk_memory_domain_create, int,
-	    (struct spdk_memory_domain **domain, enum spdk_dma_device_type type,
-	     struct spdk_memory_domain_ctx *ctx, const char *id), 0);
 DEFINE_STUB_V(spdk_memory_domain_destroy, (struct spdk_memory_domain *domain));
-
 #ifdef SPDK_CONFIG_ISAL
 DEFINE_STUB_V(XTS_AES_128_enc, (uint8_t *k2, uint8_t *k1, uint8_t *tweak, uint64_t lba_size,
 				const uint8_t *src, uint8_t *dst));
@@ -34,6 +30,15 @@ DEFINE_STUB_V(XTS_AES_256_enc, (uint8_t *k2, uint8_t *k1, uint8_t *tweak, uint64
 DEFINE_STUB_V(XTS_AES_256_dec, (uint8_t *k2, uint8_t *k1, uint8_t *tweak, uint64_t lba_size,
 				const uint8_t *src, uint8_t *dst));
 #endif
+
+int
+spdk_memory_domain_create(struct spdk_memory_domain **domain, enum spdk_dma_device_type type,
+			  struct spdk_memory_domain_ctx *ctx, const char *id)
+{
+	*domain = (void *)0xdeadbeef;
+
+	return 0;
+}
 
 /* global vars and setup/cleanup functions used for all test functions */
 struct spdk_accel_module_if g_module = {};
@@ -913,6 +918,7 @@ struct ut_sequence_operation {
 	uint32_t src_iovcnt;
 	struct iovec *dst_iovs;
 	uint32_t dst_iovcnt;
+	int (*submit)(struct spdk_io_channel *ch, struct spdk_accel_task *t);
 };
 
 static struct ut_sequence_operation g_seq_operations[ACCEL_OPC_LAST];
@@ -922,6 +928,9 @@ ut_sequnce_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *task
 {
 	struct ut_sequence_operation *op = &g_seq_operations[task->op_code];
 
+	if (op->submit != NULL) {
+		return op->submit(ch, task);
+	}
 	if (op->src_iovs != NULL) {
 		CU_ASSERT_EQUAL(task->s.iovcnt, op->src_iovcnt);
 		CU_ASSERT_EQUAL(memcmp(task->s.iovs, op->src_iovs,
@@ -1670,6 +1679,479 @@ test_sequence_copy_elision(void)
 }
 
 static int
+ut_submit_decompress(struct spdk_io_channel *ch, struct spdk_accel_task *task)
+{
+	spdk_iovmove(task->s.iovs, task->s.iovcnt, task->d.iovs, task->d.iovcnt);
+
+	spdk_accel_task_complete(task, 0);
+
+	return 0;
+}
+
+static void
+test_sequence_accel_buffers(void)
+{
+	struct spdk_accel_sequence *seq = NULL;
+	struct spdk_io_channel *ioch;
+	struct accel_io_channel *accel_ch;
+	struct ut_sequence ut_seq;
+	struct iovec src_iovs[3], dst_iovs[3];
+	char srcbuf[4096], dstbuf[4096], expected[4096];
+	struct spdk_accel_module_if *modules[ACCEL_OPC_LAST];
+	void *buf[2], *domain_ctx[2], *iobuf_buf;
+	struct spdk_memory_domain *domain[2];
+	struct spdk_iobuf_buffer *cache_entry;
+	spdk_iobuf_buffer_stailq_t small_cache;
+	uint32_t small_cache_count;
+	int i, rc, completed;
+
+	ioch = spdk_accel_get_io_channel();
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
+
+	/* Override the submit_tasks function */
+	g_module.submit_tasks = ut_sequnce_submit_tasks;
+	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+		modules[i] = g_modules_opc[i];
+		g_modules_opc[i] = &g_module;
+	}
+	/* Intercept decompress to make it simply copy the data, so that we can chain multiple
+	 * decompress operations together in one sequence.
+	 */
+	g_seq_operations[ACCEL_OPC_DECOMPRESS].submit = ut_submit_decompress;
+	g_seq_operations[ACCEL_OPC_COPY].submit = sw_accel_submit_tasks;
+	g_seq_operations[ACCEL_OPC_FILL].submit = sw_accel_submit_tasks;
+
+	/* Check the simplest case: one operation using accel buffer as destination + copy operation
+	 * specifying the actual destination buffer
+	 */
+	memset(srcbuf, 0xa5, 4096);
+	memset(dstbuf, 0x0, 4096);
+	memset(expected, 0xa5, 4096);
+	completed = 0;
+	seq = NULL;
+
+	rc = spdk_accel_get_buf(ioch, 4096, &buf[0], &domain[0], &domain_ctx[0]);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_PTR_NOT_NULL(buf[0]);
+
+	src_iovs[0].iov_base = srcbuf;
+	src_iovs[0].iov_len = 4096;
+	dst_iovs[0].iov_base = buf[0];
+	dst_iovs[0].iov_len = 4096;
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, domain[0], domain_ctx[0],
+					  &src_iovs[0], 1, NULL, NULL, 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	src_iovs[1].iov_base = buf[0];
+	src_iovs[1].iov_len = 4096;
+	dst_iovs[1].iov_base = dstbuf;
+	dst_iovs[1].iov_len = 4096;
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[1], 1, NULL, NULL,
+				    &src_iovs[1], 1, domain[0], domain_ctx[0], 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 2);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(dstbuf, expected, 4096), 0);
+	spdk_accel_put_buf(ioch, buf[0], domain[0], domain_ctx[0]);
+
+	/* Start with a fill operation using accel buffer, followed by a decompress using another
+	 * accel buffer as dst, followed by a copy operation specifying dst buffer of the whole
+	 * sequence
+	 */
+	memset(srcbuf, 0x0, 4096);
+	memset(dstbuf, 0x0, 4096);
+	memset(expected, 0x5a, 4096);
+	completed = 0;
+	seq = NULL;
+
+	rc = spdk_accel_get_buf(ioch, 4096, &buf[0], &domain[0], &domain_ctx[0]);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_PTR_NOT_NULL(buf[0]);
+
+	rc = spdk_accel_append_fill(&seq, ioch, buf[0], 4096, domain[0], domain_ctx[0], 0x5a, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_accel_get_buf(ioch, 4096, &buf[1], &domain[1], &domain_ctx[1]);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_PTR_NOT_NULL(buf[1]);
+
+	src_iovs[0].iov_base = buf[0];
+	src_iovs[0].iov_len = 4096;
+	dst_iovs[0].iov_base = buf[1];
+	dst_iovs[0].iov_len = 4096;
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, domain[1], domain_ctx[1],
+					  &src_iovs[0], 1, domain[0], domain_ctx[0], 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	src_iovs[1].iov_base = buf[1];
+	src_iovs[1].iov_len = 4096;
+	dst_iovs[1].iov_base = dstbuf;
+	dst_iovs[1].iov_len = 4096;
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[1], 1, NULL, NULL,
+				    &src_iovs[1], 1, domain[1], domain_ctx[1], 0,
+				    ut_sequence_step_cb, &completed);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 3);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(dstbuf, expected, 4096), 0);
+	spdk_accel_put_buf(ioch, buf[0], domain[0], domain_ctx[0]);
+	spdk_accel_put_buf(ioch, buf[1], domain[1], domain_ctx[1]);
+
+	/* Check the same, but with two decompress operations with the first one being in-place */
+	memset(srcbuf, 0x0, 4096);
+	memset(dstbuf, 0x0, 4096);
+	memset(expected, 0x5a, 4096);
+	completed = 0;
+	seq = NULL;
+
+	rc = spdk_accel_get_buf(ioch, 4096, &buf[0], &domain[0], &domain_ctx[0]);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_PTR_NOT_NULL(buf[0]);
+
+	rc = spdk_accel_append_fill(&seq, ioch, buf[0], 4096, domain[0], domain_ctx[0], 0x5a, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	src_iovs[0].iov_base = buf[0];
+	src_iovs[0].iov_len = 4096;
+	dst_iovs[0].iov_base = buf[0];
+	dst_iovs[0].iov_len = 4096;
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, domain[0], domain_ctx[0],
+					  &src_iovs[0], 1, domain[0], domain_ctx[0], 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_accel_get_buf(ioch, 4096, &buf[1], &domain[1], &domain_ctx[1]);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_PTR_NOT_NULL(buf[1]);
+
+	src_iovs[1].iov_base = buf[0];
+	src_iovs[1].iov_len = 4096;
+	dst_iovs[1].iov_base = buf[1];
+	dst_iovs[1].iov_len = 4096;
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[1], 1, domain[1], domain_ctx[1],
+					  &src_iovs[1], 1, domain[0], domain_ctx[0], 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	src_iovs[2].iov_base = buf[1];
+	src_iovs[2].iov_len = 4096;
+	dst_iovs[2].iov_base = dstbuf;
+	dst_iovs[2].iov_len = 4096;
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[2], 1, NULL, NULL,
+				    &src_iovs[2], 1, domain[1], domain_ctx[1], 0,
+				    ut_sequence_step_cb, &completed);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 4);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(dstbuf, expected, 4096), 0);
+	spdk_accel_put_buf(ioch, buf[0], domain[0], domain_ctx[0]);
+	spdk_accel_put_buf(ioch, buf[1], domain[1], domain_ctx[1]);
+
+	/* Check that specifying offsets within accel buffers works correctly */
+	memset(srcbuf, 0x0, 4096);
+	memset(dstbuf, 0x0, 4096);
+	completed = 0;
+	seq = NULL;
+
+	rc = spdk_accel_get_buf(ioch, 4096, &buf[0], &domain[0], &domain_ctx[0]);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_PTR_NOT_NULL(buf[0]);
+
+	/* Fill in each 1K of the buffer with different pattern */
+	rc = spdk_accel_append_fill(&seq, ioch, buf[0], 1024, domain[0], domain_ctx[0], 0xa5, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_accel_append_fill(&seq, ioch, (char *)buf[0] + 1024, 1024, domain[0], domain_ctx[0],
+				    0x5a, 0, ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_accel_append_fill(&seq, ioch, (char *)buf[0] + 2048, 1024, domain[0], domain_ctx[0],
+				    0xfe, 0, ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_accel_append_fill(&seq, ioch, (char *)buf[0] + 3072, 1024, domain[0], domain_ctx[0],
+				    0xed, 0, ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	src_iovs[0].iov_base = buf[0];
+	src_iovs[0].iov_len = 4096;
+	dst_iovs[0].iov_base = dstbuf;
+	dst_iovs[0].iov_len = 4096;
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[0], 1, NULL, NULL,
+				    &src_iovs[0], 1, domain[0], domain_ctx[0], 0,
+				    ut_sequence_step_cb, &completed);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	memset(&expected[0], 0xa5, 1024);
+	memset(&expected[1024], 0x5a, 1024);
+	memset(&expected[2048], 0xfe, 1024);
+	memset(&expected[3072], 0xed, 1024);
+	CU_ASSERT_EQUAL(completed, 5);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(dstbuf, expected, 4096), 0);
+	spdk_accel_put_buf(ioch, buf[0], domain[0], domain_ctx[0]);
+
+	/* Check the same but this time with a decompress operation on part of the buffer (512B
+	 * offset) */
+	memset(srcbuf, 0x0, 4096);
+	memset(dstbuf, 0x0, 4096);
+	completed = 0;
+	seq = NULL;
+
+	rc = spdk_accel_get_buf(ioch, 4096, &buf[0], &domain[0], &domain_ctx[0]);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_PTR_NOT_NULL(buf[0]);
+
+	/* Fill in each 1K of the buffer with different pattern */
+	rc = spdk_accel_append_fill(&seq, ioch, buf[0], 1024, domain[0], domain_ctx[0], 0xa5, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_accel_append_fill(&seq, ioch, (char *)buf[0] + 1024, 1024, domain[0], domain_ctx[0],
+				    0x5a, 0, ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_accel_append_fill(&seq, ioch, (char *)buf[0] + 2048, 1024, domain[0], domain_ctx[0],
+				    0xfe, 0, ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_accel_append_fill(&seq, ioch, (char *)buf[0] + 3072, 1024, domain[0], domain_ctx[0],
+				    0xed, 0, ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_accel_get_buf(ioch, 3072, &buf[1], &domain[1], &domain_ctx[1]);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_PTR_NOT_NULL(buf[1]);
+
+	src_iovs[0].iov_base = (char *)buf[0] + 512;
+	src_iovs[0].iov_len = 3072;
+	dst_iovs[0].iov_base = (char *)buf[1] + 256;
+	dst_iovs[0].iov_len = 3072;
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, domain[1], domain_ctx[1],
+					  &src_iovs[0], 1, domain[0], domain_ctx[0], 0,
+					  ut_sequence_step_cb, &completed);
+
+	src_iovs[1].iov_base = (char *)buf[1] + 256;
+	src_iovs[1].iov_len = 3072;
+	dst_iovs[1].iov_base = dstbuf;
+	dst_iovs[1].iov_len = 3072;
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[1], 1, NULL, NULL,
+				    &src_iovs[1], 1, domain[1], domain_ctx[1], 0,
+				    ut_sequence_step_cb, &completed);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	memset(&expected[0], 0xa5, 512);
+	memset(&expected[512], 0x5a, 1024);
+	memset(&expected[1536], 0xfe, 1024);
+	memset(&expected[2560], 0xed, 512);
+	CU_ASSERT_EQUAL(completed, 6);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(dstbuf, expected, 3072), 0);
+	spdk_accel_put_buf(ioch, buf[0], domain[0], domain_ctx[0]);
+	spdk_accel_put_buf(ioch, buf[1], domain[1], domain_ctx[1]);
+
+	/* Check that if iobuf pool is empty, the sequence processing will wait until a buffer is
+	 * available
+	 */
+	accel_ch = spdk_io_channel_get_ctx(ioch);
+	small_cache_count = accel_ch->iobuf.small.cache_count;
+	STAILQ_INIT(&small_cache);
+	STAILQ_SWAP(&accel_ch->iobuf.small.cache, &small_cache, spdk_iobuf_buffer);
+	accel_ch->iobuf.small.cache_count = 0;
+	MOCK_SET(spdk_mempool_get, NULL);
+
+	/* First allocate a single buffer used by two operations */
+	memset(srcbuf, 0x0, 4096);
+	memset(dstbuf, 0x0, 4096);
+	memset(expected, 0xa5, 4096);
+	completed = 0;
+	seq = NULL;
+
+	rc = spdk_accel_get_buf(ioch, 4096, &buf[0], &domain[0], &domain_ctx[0]);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_PTR_NOT_NULL(buf[0]);
+
+	rc = spdk_accel_append_fill(&seq, ioch, buf[0], 4096, domain[0], domain_ctx[0], 0xa5, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	src_iovs[0].iov_base = buf[0];
+	src_iovs[0].iov_len = 4096;
+	dst_iovs[0].iov_base = dstbuf;
+	dst_iovs[0].iov_len = 4096;
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, NULL, NULL,
+					  &src_iovs[0], 1, domain[0], domain_ctx[0], 0,
+					  ut_sequence_step_cb, &completed);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 0);
+	CU_ASSERT(!ut_seq.complete);
+
+	/* Get a buffer and return it to the pool to trigger the sequence to finish */
+	MOCK_CLEAR(spdk_mempool_get);
+	iobuf_buf = spdk_iobuf_get(&accel_ch->iobuf, 4096, NULL, NULL);
+	CU_ASSERT_PTR_NOT_NULL(iobuf_buf);
+	MOCK_SET(spdk_mempool_get, NULL);
+	spdk_iobuf_put(&accel_ch->iobuf, iobuf_buf, 4096);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 2);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(dstbuf, expected, 4096), 0);
+	spdk_accel_put_buf(ioch, buf[0], domain[0], domain_ctx[0]);
+
+	/* Return the buffers back to the cache */
+	while (!STAILQ_EMPTY(&accel_ch->iobuf.small.cache)) {
+		cache_entry = STAILQ_FIRST(&accel_ch->iobuf.small.cache);
+		STAILQ_REMOVE_HEAD(&accel_ch->iobuf.small.cache, stailq);
+		STAILQ_INSERT_HEAD(&small_cache, cache_entry, stailq);
+		small_cache_count++;
+	}
+	accel_ch->iobuf.small.cache_count = 0;
+
+	/* Check a bit more complex scenario, with two buffers in the sequence */
+	memset(srcbuf, 0x0, 4096);
+	memset(dstbuf, 0x0, 4096);
+	memset(expected, 0x5a, 4096);
+	completed = 0;
+	seq = NULL;
+
+	rc = spdk_accel_get_buf(ioch, 4096, &buf[0], &domain[0], &domain_ctx[0]);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_PTR_NOT_NULL(buf[0]);
+
+	rc = spdk_accel_append_fill(&seq, ioch, buf[0], 4096, domain[0], domain_ctx[0], 0x5a, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_accel_get_buf(ioch, 4096, &buf[1], &domain[1], &domain_ctx[1]);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_PTR_NOT_NULL(buf[1]);
+
+	src_iovs[0].iov_base = buf[0];
+	src_iovs[0].iov_len = 4096;
+	dst_iovs[0].iov_base = buf[1];
+	dst_iovs[0].iov_len = 4096;
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, domain[1], domain_ctx[1],
+					  &src_iovs[0], 1, domain[0], domain_ctx[0], 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	src_iovs[1].iov_base = buf[1];
+	src_iovs[1].iov_len = 4096;
+	dst_iovs[1].iov_base = dstbuf;
+	dst_iovs[1].iov_len = 4096;
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[1], 1, NULL, NULL,
+					  &src_iovs[1], 1, domain[1], domain_ctx[1], 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 0);
+	CU_ASSERT(!ut_seq.complete);
+
+	MOCK_CLEAR(spdk_mempool_get);
+	iobuf_buf = spdk_iobuf_get(&accel_ch->iobuf, 4096, NULL, NULL);
+	CU_ASSERT_PTR_NOT_NULL(iobuf_buf);
+	MOCK_SET(spdk_mempool_get, NULL);
+	spdk_iobuf_put(&accel_ch->iobuf, iobuf_buf, 4096);
+
+	/* One buffer is not enough to finish the whole sequence */
+	poll_threads();
+	CU_ASSERT(!ut_seq.complete);
+
+	MOCK_CLEAR(spdk_mempool_get);
+	iobuf_buf = spdk_iobuf_get(&accel_ch->iobuf, 4096, NULL, NULL);
+	CU_ASSERT_PTR_NOT_NULL(iobuf_buf);
+	MOCK_SET(spdk_mempool_get, NULL);
+	spdk_iobuf_put(&accel_ch->iobuf, iobuf_buf, 4096);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 3);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(dstbuf, expected, 4096), 0);
+	spdk_accel_put_buf(ioch, buf[0], domain[0], domain_ctx[0]);
+	spdk_accel_put_buf(ioch, buf[1], domain[1], domain_ctx[1]);
+
+	/* Return the buffers back to the cache */
+	while (!STAILQ_EMPTY(&accel_ch->iobuf.small.cache)) {
+		cache_entry = STAILQ_FIRST(&accel_ch->iobuf.small.cache);
+		STAILQ_REMOVE_HEAD(&accel_ch->iobuf.small.cache, stailq);
+		STAILQ_INSERT_HEAD(&small_cache, cache_entry, stailq);
+		small_cache_count++;
+	}
+	accel_ch->iobuf.small.cache_count = 0;
+
+	MOCK_CLEAR(spdk_mempool_get);
+	STAILQ_SWAP(&accel_ch->iobuf.small.cache, &small_cache, spdk_iobuf_buffer);
+	accel_ch->iobuf.small.cache_count = small_cache_count;
+
+	g_seq_operations[ACCEL_OPC_DECOMPRESS].submit = NULL;
+	g_seq_operations[ACCEL_OPC_COPY].submit = NULL;
+	g_seq_operations[ACCEL_OPC_FILL].submit = NULL;
+	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+		g_modules_opc[i] = modules[i];
+	}
+
+	spdk_put_io_channel(ioch);
+	poll_threads();
+}
+
+static int
 test_sequence_setup(void)
 {
 	int rc;
@@ -1747,6 +2229,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(seq_suite, test_sequence_reverse);
 #endif
 	CU_ADD_TEST(seq_suite, test_sequence_copy_elision);
+	CU_ADD_TEST(seq_suite, test_sequence_accel_buffers);
 
 	suite = CU_add_suite("accel", test_setup, test_cleanup);
 	CU_ADD_TEST(suite, test_spdk_accel_task_complete);
