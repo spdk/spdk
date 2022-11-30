@@ -188,23 +188,28 @@ function check_dir() {
 
 # On x86_64 'clang -dumpmachine' produces x86_64-pc-linux-gnu
 # whereas the dpdk might be built with gcc and its libs lie in
-# x86_64-linux-gnu. Let's find the right libdir for dpdkd libs.
+# x86_64-linux-gnu. Let's find the right libdir for dpdk libs.
 function find_dpdk_arch_libdir() {
-	local dpdk_dir=$1
+	local dpdk_libdir="$1/lib"
+
+	# Use libdir with 'lib' or 'lib64'
+	if [[ ! -d "$dpdk_libdir" ]]; then
+		dpdk_libdir+="64"
+	fi
 
 	# Checking first what we have with $arch, then clang
 	# variant of arch.
 	arches=("$arch" "$(echo $arch | sed 's/-pc//g')")
 	for a in "${arches[@]}"; do
-		local libdir="$dpdk_dir/lib/$a"
-		if [[ -d $libdir ]]; then
-			echo $libdir
+		local libdir_arch="$dpdk_libdir/$a"
+		if [[ -d "$libdir_arch" ]]; then
+			echo "$libdir_arch"
 			return
 		fi
 	done
 
 	# Fallback to the libdir without arch component
-	echo "$dpdk_dir/lib"
+	echo "$dpdk_libdir"
 }
 
 function check_IPSec_mb() {
