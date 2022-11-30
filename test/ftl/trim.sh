@@ -58,6 +58,7 @@ waitforbdev ftl0
 
 bdev_info=$($rpc_py bdev_get_bdevs -b ftl0)
 nb=$(jq ".[] .num_blocks" <<< "$bdev_info")
+$rpc_py bdev_ftl_unload -b ftl0
 
 killprocess $svcpid
 

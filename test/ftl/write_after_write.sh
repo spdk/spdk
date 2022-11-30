@@ -53,6 +53,7 @@ waitforbdev ftl0
 	$rpc_py save_subsystem_config -n bdev
 	echo ']}'
 ) > $FTL_JSON_CONF
+$rpc_py bdev_ftl_unload -b ftl0
 
 killprocess $svcpid
 

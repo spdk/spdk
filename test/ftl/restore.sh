@@ -62,6 +62,7 @@ $rpc_py -t $timeout $ftl_construct_args
 	$rpc_py save_subsystem_config -n bdev
 	echo ']}'
 ) > $testdir/config/ftl.json
+$rpc_py bdev_ftl_unload -b ftl0
 killprocess $svcpid
 
 # Generate random data and calculate checksum
