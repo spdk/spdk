@@ -4,8 +4,6 @@
 #  All rights reserved.
 #
 
-set -e
-
 rootdir=$(readlink -f $(dirname $0))
 
 source "$1"
