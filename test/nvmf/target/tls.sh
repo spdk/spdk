@@ -98,10 +98,11 @@ if [[ "$identity" != "null" ]]; then
 fi
 
 # Check default PSK identity set
-$rpc_py sock_impl_set_options -i ssl --psk-identity psk.spdk.io
+$rpc_py sock_impl_set_options -i ssl --psk-identity \
+	"NVMe0R01 nqn.2016-06.io.spdk:host1 nqn.2016-06.io.spdk:cnode1"
 identity=$($rpc_py sock_impl_get_options -i ssl | jq -r .psk_identity)
-if [[ "$identity" != "psk.spdk.io" ]]; then
-	echo "PSK ID was not set correctly $identity != psk.spdk.io"
+if [[ "$identity" != "NVMe0R01 nqn.2016-06.io.spdk:host1 nqn.2016-06.io.spdk:cnode1" ]]; then
+	echo "PSK ID was not set correctly $identity != NVMe0R01 nqn.2016-06.io.spdk:host1 nqn.2016-06.io.spdk:cnode1"
 	exit 1
 fi
 
@@ -117,7 +118,7 @@ $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 malloc0 -n 1
 # Send IO
 "${NVMF_TARGET_NS_CMD[@]}" $SPDK_EXAMPLE_DIR/perf -S ssl -q 64 -o 4096 -w randrw -M 30 -t 10 \
 	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \
-subnqn:nqn.2016-06.io.spdk:cnode1" --psk-key 1234567890ABCDEF --psk-identity psk.spdk.io
+subnqn:nqn.2016-06.io.spdk:cnode1 hostnqn:nqn.2016-06.io.spdk:host1" --psk-key 1234567890ABCDEF
 
 # use bdevperf to test "bdev_nvme_attach_controller"
 bdevperf_rpc_sock=/var/tmp/bdevperf.sock
@@ -128,7 +129,7 @@ trap 'process_shm --id $NVMF_APP_SHM_ID; killprocess $bdevperf_pid; nvmftestfini
 waitforlisten $bdevperf_pid $bdevperf_rpc_sock
 # send RPC
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b TLSTEST -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
-	-s $NVMF_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 --psk 1234567890ABCDEF
+	-s $NVMF_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -q nqn.2016-06.io.spdk:host1 --psk 1234567890ABCDEF
 # run I/O and wait
 $rootdir/examples/bdev/bdevperf/bdevperf.py -t 20 -s $bdevperf_rpc_sock perform_tests
 # finish

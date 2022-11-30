@@ -3457,10 +3457,6 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 	struct tcp_subsystem_add_host_opts opts;
 	struct spdk_nvmf_tcp_transport *ttransport;
 	struct tcp_psk_entry *entry;
-	/* This hardcoded PSK identity prefix will remain until
-	 * support for different hash functions to generate PSK
-	 * is introduced. */
-	const char *psk_id_prefix = "NVMe0R01";
 	char psk_identity[NVMF_PSK_IDENTITY_LEN];
 	uint64_t key_len;
 	int rc = 0;
@@ -3487,9 +3483,9 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 	/* Generate PSK identity. */
-	if (snprintf(psk_identity, NVMF_PSK_IDENTITY_LEN, "%s %s %s", psk_id_prefix, hostnqn,
-		     subsystem->subnqn) < 0) {
-		SPDK_ERRLOG("Could not construct PSK identity string!\n");
+	rc = nvme_tcp_generate_psk_identity(psk_identity, NVMF_PSK_IDENTITY_LEN, hostnqn,
+					    subsystem->subnqn);
+	if (rc) {
 		rc = -EINVAL;
 		goto end;
 	}
@@ -3507,6 +3503,7 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 		rc = -ENOMEM;
 		goto end;
 	}
+
 	if (snprintf(entry->hostnqn, sizeof(entry->hostnqn), "%s", hostnqn) < 0) {
 		SPDK_ERRLOG("Could not write hostnqn string!\n");
 		rc = -EINVAL;

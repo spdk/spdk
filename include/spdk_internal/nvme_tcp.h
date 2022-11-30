@@ -561,4 +561,30 @@ nvme_tcp_pdu_calc_psh_len(struct nvme_tcp_pdu *pdu, bool hdgst_enable)
 	pdu->psh_len = psh_len;
 }
 
+static inline int
+nvme_tcp_generate_psk_identity(char *out_id, size_t out_id_len,
+			       const char *hostnqn, const char *subnqn)
+{
+	/* This hardcoded PSK identity prefix will remain until
+	 * support for different hash functions to generate PSK
+	 * key is introduced. */
+	const char *psk_id_prefix = "NVMe0R01";
+	int rc;
+
+	assert(out_id != NULL);
+
+	if (out_id_len < strlen(psk_id_prefix) + strlen(hostnqn) + strlen(subnqn) + 3) {
+		SPDK_ERRLOG("Out buffer too small!\n");
+		return -1;
+	}
+
+	rc = snprintf(out_id, out_id_len, "%s %s %s", psk_id_prefix, hostnqn, subnqn);
+	if (rc < 0) {
+		SPDK_ERRLOG("Could not generate PSK identity\n");
+		return -1;
+	}
+
+	return 0;
+}
+
 #endif /* SPDK_INTERNAL_NVME_TCP_H */

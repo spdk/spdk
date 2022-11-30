@@ -345,16 +345,6 @@ perf_set_sock_opts(const char *impl_name, const char *field, uint32_t val, const
 			fprintf(stderr, "Failed to allocate memory for psk\n");
 			return;
 		}
-	} else if (strcmp(field, "psk_identity") == 0) {
-		if (!valstr) {
-			fprintf(stderr, "No socket opts value specified\n");
-			return;
-		}
-		sock_opts.psk_identity = strdup(valstr);
-		if (sock_opts.psk_identity == NULL) {
-			fprintf(stderr, "Failed to allocate psk_identity in sock_impl\n");
-			return;
-		}
 	} else if (strcmp(field, "zerocopy_threshold") == 0) {
 		sock_opts.zerocopy_threshold = val;
 	} else {

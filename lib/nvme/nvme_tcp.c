@@ -1885,9 +1885,10 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 	int family;
 	long int port;
 	char *sock_impl_name;
-	struct spdk_sock_impl_opts impl_opts;
+	struct spdk_sock_impl_opts impl_opts = {};
 	size_t impl_opts_size = sizeof(impl_opts);
 	struct spdk_sock_opts opts;
+	struct nvme_tcp_ctrlr *tcp_ctrlr;
 
 	tqpair = nvme_tcp_qpair(qpair);
 
@@ -1934,14 +1935,15 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 	sock_impl_name = ctrlr->opts.psk[0] ? "ssl" : NULL;
 	SPDK_DEBUGLOG(nvme, "sock_impl_name is %s\n", sock_impl_name);
 
-	spdk_sock_impl_get_opts(sock_impl_name, &impl_opts, &impl_opts_size);
-	impl_opts.enable_ktls = false;
-	impl_opts.tls_version = SPDK_TLS_VERSION_1_3;
-	/* TODO: Change current PSK HEX string format to TLS PSK Interchange Format */
-	impl_opts.psk_key = ctrlr->opts.psk;
-	/* TODO: generate identity from hostnqn instead */
-	impl_opts.psk_identity = "psk.spdk.io";
+	if (sock_impl_name) {
+		spdk_sock_impl_get_opts(sock_impl_name, &impl_opts, &impl_opts_size);
+		impl_opts.enable_ktls = false;
+		impl_opts.tls_version = SPDK_TLS_VERSION_1_3;
+		impl_opts.psk_key = ctrlr->opts.psk;
 
+		tcp_ctrlr = SPDK_CONTAINEROF(ctrlr, struct nvme_tcp_ctrlr, ctrlr);
+		impl_opts.psk_identity = tcp_ctrlr->psk_identity;
+	}
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
 	opts.priority = ctrlr->trid.priority;
@@ -2155,6 +2157,16 @@ nvme_tcp_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 
 	tctrlr->ctrlr.opts = *opts;
 	tctrlr->ctrlr.trid = *trid;
+
+	if (opts->psk[0] != '\0') {
+		rc = nvme_tcp_generate_psk_identity(tctrlr->psk_identity, sizeof(tctrlr->psk_identity),
+						    tctrlr->ctrlr.opts.hostnqn, tctrlr->ctrlr.trid.subnqn);
+		if (rc) {
+			SPDK_ERRLOG("could not generate PSK identity\n");
+			free(tctrlr);
+			return NULL;
+		}
+	}
 
 	if (opts->transport_ack_timeout > NVME_TCP_CTRLR_MAX_TRANSPORT_ACK_TIMEOUT) {
 		SPDK_NOTICELOG("transport_ack_timeout exceeds max value %d, use max value\n",

@@ -64,6 +64,8 @@ authentication. Only valid for the TCP transport.
 Added two optional transport module callbacks: `subsystem_add_host()` and `subsystem_remove_host()`.
 These functions will notify a transport about adding/removing hosts' access.
 
+TLS PSK identity is now generated from subsystem NQN and host NQN.
+
 ### sock
 
 Added a callback `get_key()` to `spdk_sock_impl_opts` structure.

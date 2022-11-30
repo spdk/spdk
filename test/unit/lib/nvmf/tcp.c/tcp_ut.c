@@ -1333,6 +1333,25 @@ test_nvmf_tcp_tls_add_remove_credentials(void)
 	spdk_thread_destroy(thread);
 }
 
+static void
+test_nvmf_tcp_tls_generate_psk_id(void)
+{
+	const char psk_id_reference[] = {"NVMe0R01 nqn.2016-06.io.spdk:host1 nqn.2016-06.io.spdk:cnode1"};
+	const char subnqn[] = {"nqn.2016-06.io.spdk:cnode1"};
+	const char hostnqn[] = {"nqn.2016-06.io.spdk:host1"};
+	char psk_id[NVMF_PSK_IDENTITY_LEN] = {};
+	char too_small_psk_id[5] = {};
+
+	/* Check if we can generate expected PSK id. */
+	CU_ASSERT(nvme_tcp_generate_psk_identity(psk_id, NVMF_PSK_IDENTITY_LEN, hostnqn,
+			subnqn) == 0);
+	CU_ASSERT(strcmp(psk_id, psk_id_reference) == 0);
+
+	/* Test with a buffer that is too small to fit PSK id. */
+	CU_ASSERT(nvme_tcp_generate_psk_identity(too_small_psk_id, sizeof(too_small_psk_id), hostnqn,
+			subnqn) != 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1358,6 +1377,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_tcp_invalid_sgl);
 	CU_ADD_TEST(suite, test_nvmf_tcp_pdu_ch_handle);
 	CU_ADD_TEST(suite, test_nvmf_tcp_tls_add_remove_credentials);
+	CU_ADD_TEST(suite, test_nvmf_tcp_tls_generate_psk_id);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
