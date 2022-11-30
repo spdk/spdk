@@ -27,6 +27,8 @@ for ((i = 0; i < ${#tests[@]}; i++)); do
 
 	l2p_dram_size_mb=$(($(get_bdev_size $split_bdev) * 20 / 100 / 1024))
 	$rpc_py -t $timeout bdev_ftl_create -b ftl0 -d $split_bdev $use_append -c $nv_cache --l2p_dram_limit $l2p_dram_size_mb
+	# Check ftl0 was created properly
+	$rpc_py bdev_ftl_get_stats -b ftl0 | jq -r '.name' | grep -qw ftl0
 
 	$rootdir/examples/bdev/bdevperf/bdevperf.py perform_tests
 	$rpc_py bdev_ftl_delete -b ftl0
