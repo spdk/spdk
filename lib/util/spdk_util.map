@@ -131,6 +131,7 @@
 	spdk_u32log2;
 	spdk_u64log2;
 	spdk_iovcpy;
+	spdk_iovmove;
 	spdk_ioviter_first;
 	spdk_ioviter_next;
 	spdk_copy_iovs_to_buf;

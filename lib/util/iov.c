@@ -104,6 +104,24 @@ spdk_iovcpy(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_t diovc
 	return total_sz;
 }
 
+size_t
+spdk_iovmove(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_t diovcnt)
+{
+	struct spdk_ioviter iter;
+	size_t len, total_sz;
+	void *src, *dst;
+
+	total_sz = 0;
+	for (len = spdk_ioviter_first(&iter, siov, siovcnt, diov, diovcnt, &src, &dst);
+	     len != 0;
+	     len = spdk_ioviter_next(&iter, &src, &dst)) {
+		memmove(dst, src, len);
+		total_sz += len;
+	}
+
+	return total_sz;
+}
+
 void
 spdk_copy_iovs_to_buf(void *buf, size_t buf_len, struct iovec *iovs, int iovcnt)
 {

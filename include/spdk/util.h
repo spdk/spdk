@@ -109,6 +109,13 @@ spdk_divide_round_up(uint64_t num, uint64_t divisor)
 size_t spdk_iovcpy(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_t diovcnt);
 
 /**
+ * Same as spdk_iovcpy(), but the src/dst buffers might overlap.
+ *
+ * \return The number of bytes copied.
+ */
+size_t spdk_iovmove(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_t diovcnt);
+
+/**
  * An iovec iterator. Can be allocated on the stack.
  */
 struct spdk_ioviter {
