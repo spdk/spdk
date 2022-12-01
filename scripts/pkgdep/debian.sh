@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2020 Intel Corporation
+#  Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES.
 #  All rights reserved.
 #
 
@@ -14,7 +15,7 @@ if [[ $NAME == "Ubuntu" ]] && [[ $VERSION_ID_NUM -ge 2204 ]]; then
 else
 	apt-get install -y python
 fi
-apt-get install -y libncurses5-dev libncursesw5-dev python3-pip
+apt-get install -y libncurses5-dev libncursesw5-dev python3-pip python3-dev
 pip3 install ninja
 if ! pip3 install meson; then
 	# After recent updates pip3 on ubuntu1604 provides meson version which requires python >= 3.6.
