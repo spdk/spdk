@@ -26,7 +26,7 @@ INITIATOR_TAG=2
 INITIATOR_NAME=ANY
 PORTAL_TAG=1
 ISCSI_APP=("${TARGET_NS_CMD[@]}" "${ISCSI_APP[@]}")
-ISCSI_TEST_CORE_MASK=0xFF
+ISCSI_TEST_CORE_MASK=0xF
 
 function create_veth_interfaces() {
 	ip link set $INITIATOR_BRIDGE nomaster || true
