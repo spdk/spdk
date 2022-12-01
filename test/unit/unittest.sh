@@ -209,6 +209,7 @@ fi
 
 if grep -q '#define SPDK_CONFIG_VBDEV_COMPRESS 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_bdev_compress" $valgrind $testdir/lib/bdev/compress.c/compress_ut
+	run_test "unittest_lib_reduce" $valgrind $testdir/lib/reduce/reduce.c/reduce_ut
 fi
 
 if grep -q '#define SPDK_CONFIG_PMDK 1' $rootdir/include/spdk/config.h; then

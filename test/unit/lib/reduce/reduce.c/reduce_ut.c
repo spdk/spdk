@@ -1531,7 +1531,7 @@ test_prepare_compress_chunk(void)
 	memcmp_offset += req.iov[1].iov_len;
 	CU_ASSERT(memcmp(req.decomp_iov[0].iov_base + memcmp_offset, g_zero_buf + memcmp_offset,
 			 remainder_bytes) == 0);
-
+	backing_dev_destroy(&backing_dev);
 	free(buf);
 }
 
