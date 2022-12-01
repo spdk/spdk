@@ -54,10 +54,13 @@ class Server:
 
         self.enable_adq = False
         self.adq_priority = None
+        self.irq_settings = {"mode": "default"}
+
         if "adq_enable" in server_config and server_config["adq_enable"]:
             self.enable_adq = server_config["adq_enable"]
             self.adq_priority = 1
-
+        if "irq_settings" in server_config:
+            self.irq_settings.update(server_config["irq_settings"])
         if "tuned_profile" in server_config:
             self.tuned_profile = server_config["tuned_profile"]
 
@@ -121,7 +124,7 @@ class Server:
         self.configure_sysctl()
         self.configure_tuned()
         self.configure_cpu_governor()
-        self.configure_irq_affinity()
+        self.configure_irq_affinity(**self.irq_settings)
 
     def load_drivers(self):
         self.log.info("Loading drivers")
@@ -313,13 +316,79 @@ class Server:
         self.governor_restore = self.exec_cmd(["cat", "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"]).strip()
         self.exec_cmd(["sudo", "cpupower", "frequency-set", "-g", "performance"])
 
-    def configure_irq_affinity(self):
-        self.log.info("Setting NIC irq affinity for NICs...")
+    def get_core_list_from_mask(self, core_mask):
+        # Generate list of individual cores from hex core mask
+        # (e.g. '0xffff') or list containing:
+        # - individual cores (e.g. '1, 2, 3')
+        # - core ranges (e.g. '0-3')
+        # - mix of both (e.g. '0, 1-4, 9, 11-13')
 
-        irq_script_path = os.path.join(self.irq_scripts_dir, "set_irq_affinity.sh")
+        core_list = []
+        if "0x" in core_mask:
+            core_mask_int = int(core_mask, 16)
+            for i in range(core_mask_int.bit_length()):
+                if (1 << i) & core_mask_int:
+                    core_list.append(i)
+            return core_list
+        else:
+            # Core list can be provided in .json config with square brackets
+            # remove them first
+            core_mask = core_mask.replace("[", "")
+            core_mask = core_mask.replace("]", "")
+
+            for i in core_mask.split(","):
+                if "-" in i:
+                    start, end = i.split("-")
+                    core_range = range(int(start), int(end) + 1)
+                    core_list.extend(core_range)
+                else:
+                    core_list.append(int(i))
+            return core_list
+
+    def configure_irq_affinity(self, mode="default", cpulist=None, exclude_cpulist=False):
+        self.log.info("Setting NIC irq affinity for NICs. Using %s mode" % mode)
+
+        if mode not in ["default", "bynode", "cpulist"]:
+            raise ValueError("%s irq affinity setting not supported" % mode)
+
+        if mode == "cpulist" and not cpulist:
+            raise ValueError("%s irq affinity setting set, but no cpulist provided" % mode)
+
+        affinity_script = "set_irq_affinity.sh"
+        if "default" not in mode:
+            affinity_script = "set_irq_affinity_cpulist.sh"
+            system_cpu_map = self.get_numa_cpu_map()
+        irq_script_path = os.path.join(self.irq_scripts_dir, affinity_script)
+
+        def cpu_list_to_string(cpulist):
+            return ",".join(map(lambda x: str(x), cpulist))
+
         nic_names = [self.get_nic_name_by_ip(n) for n in self.nic_ips]
-        for nic in nic_names:
-            irq_cmd = ["sudo", irq_script_path, nic]
+        for nic_name in nic_names:
+            irq_cmd = ["sudo", irq_script_path]
+
+            # Use only CPU cores matching NIC NUMA node.
+            # Remove any CPU cores if they're on exclusion list.
+            if mode == "bynode":
+                irq_cpus = system_cpu_map[self.get_nic_numa_node(nic_name)]
+                if cpulist and exclude_cpulist:
+                    disallowed_cpus = self.get_core_list_from_mask(cpulist)
+                    irq_cpus = list(set(irq_cpus) - set(disallowed_cpus))
+                    if not irq_cpus:
+                        raise Exception("No CPUs left to process IRQs after excluding CPUs!")
+                irq_cmd.append(cpu_list_to_string(irq_cpus))
+
+            if mode == "cpulist":
+                irq_cpus = self.get_core_list_from_mask(cpulist)
+                if exclude_cpulist:
+                    # Flatten system CPU list, we don't need NUMA awareness here
+                    system_cpu_list = sorted({x for v in system_cpu_map.values() for x in v})
+                    irq_cpus = list(set(system_cpu_list) - set(irq_cpus))
+                    if not irq_cpus:
+                        raise Exception("No CPUs left to process IRQs after excluding CPUs!")
+                irq_cmd.append(cpu_list_to_string(irq_cpus))
+
+            irq_cmd.append(nic_name)
             self.log.info(irq_cmd)
             self.exec_cmd(irq_cmd, change_dir=self.irq_scripts_dir)
 
@@ -977,11 +1046,11 @@ class KernelTarget(Target):
 
 class SPDKTarget(Target):
     def __init__(self, name, general_config, target_config):
-        super().__init__(name, general_config, target_config)
-
         # Required fields
         self.core_mask = target_config["core_mask"]
-        self.num_cores = self.get_num_cores(self.core_mask)
+        self.num_cores = len(self.get_core_list_from_mask(self.core_mask))
+
+        super().__init__(name, general_config, target_config)
 
         # Defaults
         self.dif_insert_strip = False
@@ -1011,6 +1080,27 @@ class SPDKTarget(Target):
         self.log.info("====DSA settings:====")
         self.log.info("DSA enabled: %s" % (self.enable_dsa))
 
+    def configure_irq_affinity(self, mode="default", cpulist=None, exclude_cpulist=False):
+        if mode not in ["default", "bynode", "cpulist",
+                        "shared", "split", "split-bynode"]:
+            self.log.error("%s irq affinity setting not supported" % mode)
+            raise Exception
+
+        # Create core list from SPDK's mask and change it to string.
+        # This is the type configure_irq_affinity expects for cpulist parameter.
+        spdk_tgt_core_list = self.get_core_list_from_mask(self.core_mask)
+        spdk_tgt_core_list = ",".join(map(lambda x: str(x), spdk_tgt_core_list))
+        spdk_tgt_core_list = "[" + spdk_tgt_core_list + "]"
+
+        if mode == "shared":
+            super().configure_irq_affinity(mode="cpulist", cpulist=spdk_tgt_core_list)
+        elif mode == "split":
+            super().configure_irq_affinity(mode="cpulist", cpulist=spdk_tgt_core_list, exclude_cpulist=True)
+        elif mode == "split-bynode":
+            super().configure_irq_affinity(mode="bynode", cpulist=spdk_tgt_core_list, exclude_cpulist=True)
+        else:
+            super().configure_irq_affinity(mode=mode, cpulist=cpulist, exclude_cpulist=exclude_cpulist)
+
     def adq_set_busy_read(self, busy_read_val):
         return {"net.core.busy_read": busy_read_val}
 
@@ -1029,22 +1119,6 @@ class SPDKTarget(Target):
             if bdev_traddr in self.nvme_allowlist:
                 bdev_bdfs.append(bdev_traddr)
         return bdev_bdfs
-
-    @staticmethod
-    def get_num_cores(core_mask):
-        if "0x" in core_mask:
-            return bin(int(core_mask, 16)).count("1")
-        else:
-            num_cores = 0
-            core_mask = core_mask.replace("[", "")
-            core_mask = core_mask.replace("]", "")
-            for i in core_mask.split(","):
-                if "-" in i:
-                    x, y = i.split("-")
-                    num_cores += len(range(int(x), int(y))) + 1
-                else:
-                    num_cores += 1
-            return num_cores
 
     def spdk_tgt_configure(self):
         self.log.info("Configuring SPDK NVMeOF target via RPC")

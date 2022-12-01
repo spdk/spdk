@@ -95,7 +95,12 @@ Optional:
   "zcopy_settings": false,
   "dif_insert_strip": true,
   "null_block_dif_type": 3,
-  "pm_settings": [true, 30, 1, 60]
+  "pm_settings": [true, 30, 1, 60],
+  "irq_settings": {
+    "mode": "cpulist",
+    "cpulist": "[0-10]",
+    "exclude_cpulist": false
+  }
 }
 ```
 
@@ -131,6 +136,18 @@ Optional, common:
 - enable_pm - bool;
   if bool is set to true, power measurement is enabled via collect-bmc-pm on
   the target side. Default: true.
+- irq_settings - dict;
+  Choose how to adjust network interface IRQ settings.
+  mode: default - run IRQ alignment script with no additional options.
+  mode: bynode - align IRQs to be processed only on CPU cores matching NIC
+    NUMA node.
+  mode: cpulist - align IRQs to be processed only on CPU cores provided
+    in the cpulist parameter.
+  cpulist: list of CPU cores to use for cpulist mode. Can be provided as
+    list of individual cores ("[0,1,10]"), core ranges ("[0-10]"), or mix
+    of both ("[0-1,10,20-22]")
+  exclude_cpulist: reverse the effect of cpulist mode. Allow IRQ processing
+    only on CPU cores which are not provided in cpulist parameter.
 
 Optional, Kernel Target only:
 
@@ -163,6 +180,15 @@ Optional, SPDK Target only:
   Accelerator (DSA) engine.
 - scheduler_core_limit - int, 0-100. Dynamic scheduler option to load limit on
   the core to be considered full.
+- irq_settings - dict;
+  Choose how to adjust network interface IRQ settings.
+  Same as in common options section, but SPDK Target allows more modes:
+  mode: shared - align IRQs to be processed only on the same CPU cores which
+    are already used by SPDK Target process.
+  mode: split - align IRQs to be processed only on CPU cores which are not
+    used by SPDK Target process.
+  mode: split-bynode - same as "split", but reduce the number of CPU cores
+    to use for IRQ processing to only these matching NIC NUMA node.
 
 ### Initiator system settings section
 
@@ -181,7 +207,8 @@ There can be one or more `initiatorX` setting sections, depending on the test se
   "num_cores": 4,
   "cpu_frequency": 2100000,
   "adq_enable": false,
-  "kernel_engine": "io_uring"
+  "kernel_engine": "io_uring",
+  "irq_settings": { "mode": "bynode" }
 }
 ```
 
@@ -231,6 +258,8 @@ Optional, common:
   Available options:
   - libaio (default)
   - io_uring
+- irq_settings - dict;
+  Same as "irq_settings" in Target common options section.
 
 Optional, SPDK Initiator only:
 
