@@ -85,6 +85,16 @@ extern "C" {
 #define _spdk_smp_mb()	__asm__ __volatile__("fence rw, rw" ::: "memory")
 #define _spdk_ivdt_dcache(pdata)
 
+#elif defined(__loongarch__)
+
+#define _spdk_rmb()	__asm volatile("dbar 0" ::: "memory")
+#define _spdk_wmb()	__asm volatile("dbar 0" ::: "memory")
+#define _spdk_mb()	__asm volatile("dbar 0" ::: "memory")
+#define _spdk_smp_rmb()	__asm volatile("dbar 0" ::: "memory")
+#define _spdk_smp_wmb()	__asm volatile("dbar 0" ::: "memory")
+#define _spdk_smp_mb()	__asm volatile("dbar 0" ::: "memory")
+#define _spdk_ivdt_dcache(pdata)
+
 #else
 
 #define _spdk_rmb()
