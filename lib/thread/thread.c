@@ -43,6 +43,12 @@
 
 static struct spdk_thread *g_app_thread;
 
+struct spdk_interrupt {
+	int			efd;
+	struct spdk_thread	*thread;
+	char			name[SPDK_MAX_POLLER_NAME_LEN + 1];
+};
+
 enum spdk_poller_state {
 	/* The poller is registered with a thread but not currently executing its fn. */
 	SPDK_POLLER_STATE_WAITING,
@@ -79,8 +85,7 @@ struct spdk_poller {
 	spdk_poller_fn			fn;
 	void				*arg;
 	struct spdk_thread		*thread;
-	/* Native interruptfd for period or busy poller */
-	int				interruptfd;
+	struct spdk_interrupt		*intr;
 	spdk_poller_set_interrupt_mode_cb set_intr_cb_fn;
 	void				*set_intr_cb_arg;
 
@@ -1389,7 +1394,7 @@ interrupt_timerfd_process(void *arg)
 	int rc;
 
 	/* clear the level of interval timer */
-	rc = read(poller->interruptfd, &exp, sizeof(exp));
+	rc = read(poller->intr->efd, &exp, sizeof(exp));
 	if (rc < 0) {
 		if (rc == -EAGAIN) {
 			return 0;
@@ -1406,9 +1411,7 @@ interrupt_timerfd_process(void *arg)
 static int
 period_poller_interrupt_init(struct spdk_poller *poller)
 {
-	struct spdk_fd_group *fgrp = poller->thread->fgrp;
 	int timerfd;
-	int rc;
 
 	SPDK_DEBUGLOG(thread, "timerfd init for periodic poller %s\n", poller->name);
 	timerfd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
@@ -1416,27 +1419,30 @@ period_poller_interrupt_init(struct spdk_poller *poller)
 		return -errno;
 	}
 
-	rc = SPDK_FD_GROUP_ADD(fgrp, timerfd, interrupt_timerfd_process, poller);
-	if (rc < 0) {
+	poller->intr = spdk_interrupt_register(timerfd, interrupt_timerfd_process, poller, poller->name);
+	if (poller->intr == NULL) {
 		close(timerfd);
-		return rc;
+		return -1;
 	}
 
-	poller->interruptfd = timerfd;
 	return 0;
 }
 
 static void
 period_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool interrupt_mode)
 {
-	int timerfd = poller->interruptfd;
+	int timerfd;
 	uint64_t now_tick = spdk_get_ticks();
 	uint64_t ticks = spdk_get_ticks_hz();
 	int ret;
 	struct itimerspec new_tv = {};
 	struct itimerspec old_tv = {};
 
+	assert(poller->intr != NULL);
 	assert(poller->period_ticks != 0);
+
+	timerfd = poller->intr->efd;
+
 	assert(timerfd >= 0);
 
 	SPDK_DEBUGLOG(thread, "timerfd set poller %s into %s mode\n", poller->name,
@@ -1484,18 +1490,19 @@ period_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool 
 static void
 poller_interrupt_fini(struct spdk_poller *poller)
 {
+	int fd;
+
 	SPDK_DEBUGLOG(thread, "interrupt fini for poller %s\n", poller->name);
-	assert(poller->interruptfd >= 0);
-	spdk_fd_group_remove(poller->thread->fgrp, poller->interruptfd);
-	close(poller->interruptfd);
-	poller->interruptfd = -1;
+	assert(poller->intr != NULL);
+	fd = poller->intr->efd;
+	spdk_interrupt_unregister(&poller->intr);
+	close(fd);
 }
 
 static int
 busy_poller_interrupt_init(struct spdk_poller *poller)
 {
 	int busy_efd;
-	int rc;
 
 	SPDK_DEBUGLOG(thread, "busy_efd init for busy poller %s\n", poller->name);
 	busy_efd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
@@ -1504,21 +1511,19 @@ busy_poller_interrupt_init(struct spdk_poller *poller)
 		return -errno;
 	}
 
-	rc = spdk_fd_group_add(poller->thread->fgrp, busy_efd,
-			       poller->fn, poller->arg, poller->name);
-	if (rc < 0) {
+	poller->intr = spdk_interrupt_register(busy_efd, poller->fn, poller->arg, poller->name);
+	if (poller->intr == NULL) {
 		close(busy_efd);
-		return rc;
+		return -1;
 	}
 
-	poller->interruptfd = busy_efd;
 	return 0;
 }
 
 static void
 busy_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool interrupt_mode)
 {
-	int busy_efd = poller->interruptfd;
+	int busy_efd = poller->intr->efd;
 	uint64_t notify = 1;
 	int rc __attribute__((unused));
 
@@ -1579,13 +1584,8 @@ spdk_poller_register_interrupt(struct spdk_poller *poller,
 		return;
 	}
 
-	/* when a poller is created we don't know if the user is ever going to
-	 * enable interrupts on it by calling this function, so the poller
-	 * registration function has to immediately create a interruptfd.
-	 * When this function does get called by user, we have to then destroy
-	 * that interruptfd.
-	 */
-	if (poller->set_intr_cb_fn && poller->interruptfd >= 0) {
+	/* If this poller already had an interrupt, clean the old one up. */
+	if (poller->intr != NULL) {
 		poller_interrupt_fini(poller);
 	}
 
@@ -1650,7 +1650,7 @@ poller_register(spdk_poller_fn fn,
 	poller->fn = fn;
 	poller->arg = arg;
 	poller->thread = thread;
-	poller->interruptfd = -1;
+	poller->intr = NULL;
 	if (thread->next_poller_id == 0) {
 		SPDK_WARNLOG("Poller ID rolled over. Poller ID is duplicated.\n");
 		thread->next_poller_id = 1;
@@ -1670,7 +1670,9 @@ poller_register(spdk_poller_fn fn,
 				return NULL;
 			}
 
-			spdk_poller_register_interrupt(poller, period_poller_set_interrupt_mode, NULL);
+			poller->set_intr_cb_fn = period_poller_set_interrupt_mode;
+			poller->set_intr_cb_arg = NULL;
+
 		} else {
 			/* If the poller doesn't have a period, create interruptfd that's always
 			 * busy automatically when running in interrupt mode.
@@ -1682,7 +1684,13 @@ poller_register(spdk_poller_fn fn,
 				return NULL;
 			}
 
-			spdk_poller_register_interrupt(poller, busy_poller_set_interrupt_mode, NULL);
+			poller->set_intr_cb_fn = busy_poller_set_interrupt_mode;
+			poller->set_intr_cb_arg = NULL;
+		}
+
+		/* Set poller into interrupt mode if thread is in interrupt. */
+		if (poller->thread->in_interrupt) {
+			poller->set_intr_cb_fn(poller, poller->set_intr_cb_arg, true);
 		}
 	}
 
@@ -1748,7 +1756,7 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 
 	if (spdk_interrupt_mode_is_enabled()) {
 		/* Release the interrupt resource for period or busy poller */
-		if (poller->interruptfd >= 0) {
+		if (poller->intr != NULL) {
 			poller_interrupt_fini(poller);
 		}
 
@@ -2628,12 +2636,6 @@ end:
 	}
 	pthread_mutex_unlock(&g_devlist_mutex);
 }
-
-struct spdk_interrupt {
-	int			efd;
-	struct spdk_thread	*thread;
-	char			name[SPDK_MAX_POLLER_NAME_LEN + 1];
-};
 
 static void
 thread_interrupt_destroy(struct spdk_thread *thread)
