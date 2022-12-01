@@ -24,7 +24,9 @@ MAKEFLAGS=${MAKEFLAGS:--j16}
 cd $rootdir
 
 timing_enter porcelain_check
-$MAKE clean
+if [[ -e $rootdir/mk/config.mk ]]; then
+	$MAKE clean
+fi
 
 if [ $(git status --porcelain --ignore-submodules | wc -l) -ne 0 ]; then
 	echo make clean left the following files:

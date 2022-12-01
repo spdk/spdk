@@ -20,7 +20,9 @@ sudo HUGEMEM="$EXTERNAL_MAKE_HUGEMEM" $SPDK_DIR/scripts/setup.sh
 if [ -n "$SPDK_RUN_EXTERNAL_DPDK" ]; then
 	WITH_DPDK="--with-dpdk=$SPDK_RUN_EXTERNAL_DPDK"
 fi
-make -C $SPDK_DIR clean
+if [[ -e $SPDK_DIR/mk/config.mk ]]; then
+	make -C $SPDK_DIR clean
+fi
 $SPDK_DIR/configure --with-shared --without-ocf --disable-asan $WITH_DPDK
 make -C $SPDK_DIR -j$(nproc)
 

@@ -305,7 +305,7 @@ if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 	config_params="$config_params --with-ocf=$rootdir/ocf.a"
 fi
 
-if [[ -f $rootdir/mk/spdk.common.mk ]]; then
+if [[ -f $rootdir/mk/config.mk ]]; then
 	$MAKE $MAKEFLAGS clean
 fi
 
