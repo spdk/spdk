@@ -6053,42 +6053,44 @@ spdk_bdev_queue_io_wait(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 static inline void
 bdev_io_update_io_stat(struct spdk_bdev_io *bdev_io, uint64_t tsc_diff)
 {
+	struct spdk_bdev_io_stat *io_stat = bdev_io->internal.ch->stat;
+	uint64_t num_blocks = bdev_io->u.bdev.num_blocks;
+	uint32_t blocklen = bdev_io->bdev->blocklen;
+
 	if (spdk_likely(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS)) {
 		switch (bdev_io->type) {
 		case SPDK_BDEV_IO_TYPE_READ:
-			bdev_io->internal.ch->stat->bytes_read += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
-			bdev_io->internal.ch->stat->num_read_ops++;
-			bdev_io->internal.ch->stat->read_latency_ticks += tsc_diff;
+			io_stat->bytes_read += num_blocks * blocklen;
+			io_stat->num_read_ops++;
+			io_stat->read_latency_ticks += tsc_diff;
 			break;
 		case SPDK_BDEV_IO_TYPE_WRITE:
-			bdev_io->internal.ch->stat->bytes_written += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
-			bdev_io->internal.ch->stat->num_write_ops++;
-			bdev_io->internal.ch->stat->write_latency_ticks += tsc_diff;
+			io_stat->bytes_written += num_blocks * blocklen;
+			io_stat->num_write_ops++;
+			io_stat->write_latency_ticks += tsc_diff;
 			break;
 		case SPDK_BDEV_IO_TYPE_UNMAP:
-			bdev_io->internal.ch->stat->bytes_unmapped += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
-			bdev_io->internal.ch->stat->num_unmap_ops++;
-			bdev_io->internal.ch->stat->unmap_latency_ticks += tsc_diff;
+			io_stat->bytes_unmapped += num_blocks * blocklen;
+			io_stat->num_unmap_ops++;
+			io_stat->unmap_latency_ticks += tsc_diff;
 			break;
 		case SPDK_BDEV_IO_TYPE_ZCOPY:
 			/* Track the data in the start phase only */
 			if (bdev_io->u.bdev.zcopy.start) {
 				if (bdev_io->u.bdev.zcopy.populate) {
-					bdev_io->internal.ch->stat->bytes_read +=
-						bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
-					bdev_io->internal.ch->stat->num_read_ops++;
-					bdev_io->internal.ch->stat->read_latency_ticks += tsc_diff;
+					io_stat->bytes_read += num_blocks * blocklen;
+					io_stat->num_read_ops++;
+					io_stat->read_latency_ticks += tsc_diff;
 				} else {
-					bdev_io->internal.ch->stat->bytes_written +=
-						bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
-					bdev_io->internal.ch->stat->num_write_ops++;
-					bdev_io->internal.ch->stat->write_latency_ticks += tsc_diff;
+					io_stat->bytes_written += num_blocks * blocklen;
+					io_stat->num_write_ops++;
+					io_stat->write_latency_ticks += tsc_diff;
 				}
 			}
 			break;
 		case SPDK_BDEV_IO_TYPE_COPY:
-			bdev_io->internal.ch->stat->bytes_copied += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
-			bdev_io->internal.ch->stat->num_copy_ops++;
+			io_stat->bytes_copied += num_blocks * blocklen;
+			io_stat->num_copy_ops++;
 			bdev_io->internal.ch->stat->copy_latency_ticks += tsc_diff;
 			break;
 		default:
@@ -6100,21 +6102,19 @@ bdev_io_update_io_stat(struct spdk_bdev_io *bdev_io, uint64_t tsc_diff)
 	uint64_t now_tsc = spdk_get_ticks();
 	if (now_tsc > (bdev_io->internal.ch->start_tsc + bdev_io->internal.ch->interval_tsc)) {
 		uint64_t data[5];
+		struct spdk_bdev_io_stat *prev_stat = bdev_io->internal.ch->prev_stat;
 
-		data[0] = bdev_io->internal.ch->stat->num_read_ops - bdev_io->internal.ch->prev_stat->num_read_ops;
-		data[1] = bdev_io->internal.ch->stat->bytes_read - bdev_io->internal.ch->prev_stat->bytes_read;
-		data[2] = bdev_io->internal.ch->stat->num_write_ops -
-			  bdev_io->internal.ch->prev_stat->num_write_ops;
-		data[3] = bdev_io->internal.ch->stat->bytes_written -
-			  bdev_io->internal.ch->prev_stat->bytes_written;
+		data[0] = io_stat->num_read_ops - prev_stat->num_read_ops;
+		data[1] = io_stat->bytes_read - prev_stat->bytes_read;
+		data[2] = io_stat->num_write_ops - prev_stat->num_write_ops;
+		data[3] = io_stat->bytes_written - prev_stat->bytes_written;
 		data[4] = bdev_io->bdev->fn_table->get_spin_time ?
 			  bdev_io->bdev->fn_table->get_spin_time(spdk_bdev_io_get_io_channel(bdev_io)) : 0;
 
 		__itt_metadata_add(g_bdev_mgr.domain, __itt_null, bdev_io->internal.ch->handle,
 				   __itt_metadata_u64, 5, data);
 
-		memcpy(bdev_io->internal.ch->prev_stat, bdev_io->internal.ch->stat,
-		       sizeof(struct spdk_bdev_io_stat));
+		memcpy(prev_stat, io_stat, sizeof(struct spdk_bdev_io_stat));
 		bdev_io->internal.ch->start_tsc = now_tsc;
 	}
 #endif
