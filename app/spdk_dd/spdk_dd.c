@@ -1184,7 +1184,7 @@ dd_run(void *arg1)
 				io_uring_flags = IORING_SETUP_IOPOLL;
 			}
 
-			g_job.u.uring.poller = spdk_poller_register(dd_uring_poll, NULL, 0);
+			g_job.u.uring.poller = SPDK_POLLER_REGISTER(dd_uring_poll, NULL, 0);
 			rc = io_uring_queue_init(g_opts.queue_depth * 2, &g_job.u.uring.ring, io_uring_flags);
 			if (rc) {
 				SPDK_ERRLOG("Failed to create io_uring: %d (%s)\n", rc, spdk_strerror(-rc));
@@ -1212,14 +1212,14 @@ dd_run(void *arg1)
 		} else
 #endif
 		{
-			g_job.u.aio.poller = spdk_poller_register(dd_aio_poll, NULL, 0);
+			g_job.u.aio.poller = SPDK_POLLER_REGISTER(dd_aio_poll, NULL, 0);
 			io_setup(g_opts.queue_depth, &g_job.u.aio.io_ctx);
 		}
 	}
 
 	clock_gettime(CLOCK_REALTIME, &g_job.start_time);
 
-	g_job.status_poller = spdk_poller_register(dd_status_poller, NULL,
+	g_job.status_poller = SPDK_POLLER_REGISTER(dd_status_poller, NULL,
 			      STATUS_POLLER_PERIOD_SEC * SPDK_SEC_TO_USEC);
 
 	STAILQ_INIT(&g_job.seek_queue);
