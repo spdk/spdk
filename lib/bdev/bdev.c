@@ -3706,7 +3706,7 @@ bdev_io_stat_free(struct spdk_bdev_io_stat *stat)
 }
 
 void
-bdev_get_iostat_dump(struct spdk_json_write_ctx *w, struct spdk_bdev_io_stat *stat)
+bdev_io_stat_dump_json(struct spdk_bdev_io_stat *stat, struct spdk_json_write_ctx *w)
 {
 	spdk_json_write_named_uint64(w, "bytes_read", stat->bytes_read);
 	spdk_json_write_named_uint64(w, "num_read_ops", stat->num_read_ops);

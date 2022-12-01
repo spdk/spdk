@@ -263,7 +263,7 @@ bdev_get_iostat_done(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat,
 
 	spdk_json_write_named_string(w, "name", spdk_bdev_get_name(bdev));
 
-	bdev_get_iostat_dump(w, stat);
+	bdev_io_stat_dump_json(stat, w);
 
 	if (spdk_bdev_get_qd_sampling_period(bdev)) {
 		spdk_json_write_named_uint64(w, "queue_depth_polling_period",
@@ -337,7 +337,7 @@ bdev_get_per_channel_stat(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bd
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_uint64(w, "thread_id", spdk_thread_get_id(spdk_get_thread()));
-	bdev_get_iostat_dump(w, bdev_ctx->stat);
+	bdev_io_stat_dump_json(bdev_ctx->stat, w);
 	spdk_json_write_object_end(w);
 
 	spdk_bdev_for_each_channel_continue(i, 0);
