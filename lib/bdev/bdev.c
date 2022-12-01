@@ -3685,6 +3685,30 @@ bdev_io_stat_add(struct spdk_bdev_io_stat *total, struct spdk_bdev_io_stat *add)
 	total->write_latency_ticks += add->write_latency_ticks;
 	total->unmap_latency_ticks += add->unmap_latency_ticks;
 	total->copy_latency_ticks += add->copy_latency_ticks;
+	if (total->max_read_latency_ticks < add->max_read_latency_ticks) {
+		total->max_read_latency_ticks = add->max_read_latency_ticks;
+	}
+	if (total->min_read_latency_ticks > add->min_read_latency_ticks) {
+		total->min_read_latency_ticks = add->min_read_latency_ticks;
+	}
+	if (total->max_write_latency_ticks < add->max_write_latency_ticks) {
+		total->max_write_latency_ticks = add->max_write_latency_ticks;
+	}
+	if (total->min_write_latency_ticks > add->min_write_latency_ticks) {
+		total->min_write_latency_ticks = add->min_write_latency_ticks;
+	}
+	if (total->max_unmap_latency_ticks < add->max_unmap_latency_ticks) {
+		total->max_unmap_latency_ticks = add->max_unmap_latency_ticks;
+	}
+	if (total->min_unmap_latency_ticks > add->min_unmap_latency_ticks) {
+		total->min_unmap_latency_ticks = add->min_unmap_latency_ticks;
+	}
+	if (total->max_copy_latency_ticks < add->max_copy_latency_ticks) {
+		total->max_copy_latency_ticks = add->max_copy_latency_ticks;
+	}
+	if (total->min_copy_latency_ticks > add->min_copy_latency_ticks) {
+		total->min_copy_latency_ticks = add->min_copy_latency_ticks;
+	}
 }
 
 static void
@@ -3696,6 +3720,14 @@ bdev_io_stat_get(struct spdk_bdev_io_stat *to_stat, struct spdk_bdev_io_stat *fr
 static void
 bdev_io_stat_reset(struct spdk_bdev_io_stat *stat)
 {
+	stat->max_read_latency_ticks = 0;
+	stat->min_read_latency_ticks = UINT64_MAX;
+	stat->max_write_latency_ticks = 0;
+	stat->min_write_latency_ticks = UINT64_MAX;
+	stat->max_unmap_latency_ticks = 0;
+	stat->min_unmap_latency_ticks = UINT64_MAX;
+	stat->max_copy_latency_ticks = 0;
+	stat->min_copy_latency_ticks = UINT64_MAX;
 	stat->bytes_read = 0;
 	stat->num_read_ops = 0;
 	stat->bytes_written = 0;
@@ -3710,7 +3742,14 @@ bdev_io_stat_reset(struct spdk_bdev_io_stat *stat)
 struct spdk_bdev_io_stat *
 bdev_io_stat_alloc(void)
 {
-	return calloc(1, sizeof(struct spdk_bdev_io_stat));
+	struct spdk_bdev_io_stat *stat;
+
+	stat = malloc(sizeof(struct spdk_bdev_io_stat));
+	if (stat != NULL) {
+		bdev_io_stat_reset(stat);
+	}
+
+	return stat;
 }
 
 void
@@ -3731,9 +3770,25 @@ bdev_io_stat_dump_json(struct spdk_bdev_io_stat *stat, struct spdk_json_write_ct
 	spdk_json_write_named_uint64(w, "bytes_copied", stat->bytes_copied);
 	spdk_json_write_named_uint64(w, "num_copy_ops", stat->num_copy_ops);
 	spdk_json_write_named_uint64(w, "read_latency_ticks", stat->read_latency_ticks);
+	spdk_json_write_named_uint64(w, "max_read_latency_ticks", stat->max_read_latency_ticks);
+	spdk_json_write_named_uint64(w, "min_read_latency_ticks",
+				     stat->min_read_latency_ticks != UINT64_MAX ?
+				     stat->min_read_latency_ticks : 0);
 	spdk_json_write_named_uint64(w, "write_latency_ticks", stat->write_latency_ticks);
+	spdk_json_write_named_uint64(w, "max_write_latency_ticks", stat->max_write_latency_ticks);
+	spdk_json_write_named_uint64(w, "min_write_latency_ticks",
+				     stat->min_write_latency_ticks != UINT64_MAX ?
+				     stat->min_write_latency_ticks : 0);
 	spdk_json_write_named_uint64(w, "unmap_latency_ticks", stat->unmap_latency_ticks);
+	spdk_json_write_named_uint64(w, "max_unmap_latency_ticks", stat->max_unmap_latency_ticks);
+	spdk_json_write_named_uint64(w, "min_unmap_latency_ticks",
+				     stat->min_unmap_latency_ticks != UINT64_MAX ?
+				     stat->min_unmap_latency_ticks : 0);
 	spdk_json_write_named_uint64(w, "copy_latency_ticks", stat->copy_latency_ticks);
+	spdk_json_write_named_uint64(w, "max_copy_latency_ticks", stat->max_copy_latency_ticks);
+	spdk_json_write_named_uint64(w, "min_copy_latency_ticks",
+				     stat->min_copy_latency_ticks != UINT64_MAX ?
+				     stat->min_copy_latency_ticks : 0);
 }
 
 static void
@@ -6131,16 +6186,34 @@ bdev_io_update_io_stat(struct spdk_bdev_io *bdev_io, uint64_t tsc_diff)
 			io_stat->bytes_read += num_blocks * blocklen;
 			io_stat->num_read_ops++;
 			io_stat->read_latency_ticks += tsc_diff;
+			if (io_stat->max_read_latency_ticks < tsc_diff) {
+				io_stat->max_read_latency_ticks = tsc_diff;
+			}
+			if (io_stat->min_read_latency_ticks > tsc_diff) {
+				io_stat->min_read_latency_ticks = tsc_diff;
+			}
 			break;
 		case SPDK_BDEV_IO_TYPE_WRITE:
 			io_stat->bytes_written += num_blocks * blocklen;
 			io_stat->num_write_ops++;
 			io_stat->write_latency_ticks += tsc_diff;
+			if (io_stat->max_write_latency_ticks < tsc_diff) {
+				io_stat->max_write_latency_ticks = tsc_diff;
+			}
+			if (io_stat->min_write_latency_ticks > tsc_diff) {
+				io_stat->min_write_latency_ticks = tsc_diff;
+			}
 			break;
 		case SPDK_BDEV_IO_TYPE_UNMAP:
 			io_stat->bytes_unmapped += num_blocks * blocklen;
 			io_stat->num_unmap_ops++;
 			io_stat->unmap_latency_ticks += tsc_diff;
+			if (io_stat->max_unmap_latency_ticks < tsc_diff) {
+				io_stat->max_unmap_latency_ticks = tsc_diff;
+			}
+			if (io_stat->min_unmap_latency_ticks > tsc_diff) {
+				io_stat->min_unmap_latency_ticks = tsc_diff;
+			}
 			break;
 		case SPDK_BDEV_IO_TYPE_ZCOPY:
 			/* Track the data in the start phase only */
@@ -6149,10 +6222,22 @@ bdev_io_update_io_stat(struct spdk_bdev_io *bdev_io, uint64_t tsc_diff)
 					io_stat->bytes_read += num_blocks * blocklen;
 					io_stat->num_read_ops++;
 					io_stat->read_latency_ticks += tsc_diff;
+					if (io_stat->max_read_latency_ticks < tsc_diff) {
+						io_stat->max_read_latency_ticks = tsc_diff;
+					}
+					if (io_stat->min_read_latency_ticks > tsc_diff) {
+						io_stat->min_read_latency_ticks = tsc_diff;
+					}
 				} else {
 					io_stat->bytes_written += num_blocks * blocklen;
 					io_stat->num_write_ops++;
 					io_stat->write_latency_ticks += tsc_diff;
+					if (io_stat->max_write_latency_ticks < tsc_diff) {
+						io_stat->max_write_latency_ticks = tsc_diff;
+					}
+					if (io_stat->min_write_latency_ticks > tsc_diff) {
+						io_stat->min_write_latency_ticks = tsc_diff;
+					}
 				}
 			}
 			break;
@@ -6160,6 +6245,12 @@ bdev_io_update_io_stat(struct spdk_bdev_io *bdev_io, uint64_t tsc_diff)
 			io_stat->bytes_copied += num_blocks * blocklen;
 			io_stat->num_copy_ops++;
 			bdev_io->internal.ch->stat->copy_latency_ticks += tsc_diff;
+			if (io_stat->max_copy_latency_ticks < tsc_diff) {
+				io_stat->max_copy_latency_ticks = tsc_diff;
+			}
+			if (io_stat->min_copy_latency_ticks > tsc_diff) {
+				io_stat->min_copy_latency_ticks = tsc_diff;
+			}
 			break;
 		default:
 			break;
