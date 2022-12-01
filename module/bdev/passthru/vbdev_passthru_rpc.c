@@ -14,6 +14,7 @@
 struct rpc_bdev_passthru_create {
 	char *base_bdev_name;
 	char *name;
+	char *uuid;
 };
 
 /* Free the allocated memory resource after the RPC handling. */
@@ -22,12 +23,14 @@ free_rpc_bdev_passthru_create(struct rpc_bdev_passthru_create *r)
 {
 	free(r->base_bdev_name);
 	free(r->name);
+	free(r->uuid);
 }
 
 /* Structure to decode the input parameters for this RPC method. */
 static const struct spdk_json_object_decoder rpc_bdev_passthru_create_decoders[] = {
 	{"base_bdev_name", offsetof(struct rpc_bdev_passthru_create, base_bdev_name), spdk_json_decode_string},
 	{"name", offsetof(struct rpc_bdev_passthru_create, name), spdk_json_decode_string},
+	{"uuid", offsetof(struct rpc_bdev_passthru_create, uuid), spdk_json_decode_string, true},
 };
 
 /* Decode the parameters for this RPC method and properly construct the passthru
@@ -39,6 +42,8 @@ rpc_bdev_passthru_create(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_bdev_passthru_create req = {NULL};
 	struct spdk_json_write_ctx *w;
+	struct spdk_uuid *uuid = NULL;
+	struct spdk_uuid decoded_uuid;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_bdev_passthru_create_decoders,
@@ -50,7 +55,16 @@ rpc_bdev_passthru_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = bdev_passthru_create_disk(req.base_bdev_name, req.name);
+	if (req.uuid) {
+		if (spdk_uuid_parse(&decoded_uuid, req.uuid)) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Failed to parse bdev UUID");
+			goto cleanup;
+		}
+		uuid = &decoded_uuid;
+	}
+
+	rc = bdev_passthru_create_disk(req.base_bdev_name, req.name, uuid);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;

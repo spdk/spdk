@@ -48,6 +48,7 @@ SPDK_BDEV_MODULE_REGISTER(passthru, &passthru_if)
 struct bdev_names {
 	char			*vbdev_name;
 	char			*bdev_name;
+	struct spdk_uuid	uuid;
 	TAILQ_ENTRY(bdev_names)	link;
 };
 static TAILQ_HEAD(, bdev_names) g_bdev_names = TAILQ_HEAD_INITIALIZER(g_bdev_names);
@@ -406,11 +407,19 @@ vbdev_passthru_config_json(struct spdk_json_write_ctx *w)
 	struct vbdev_passthru *pt_node;
 
 	TAILQ_FOREACH(pt_node, &g_pt_nodes, link) {
+		const struct spdk_uuid *uuid = spdk_bdev_get_uuid(&pt_node->pt_bdev);
+
 		spdk_json_write_object_begin(w);
 		spdk_json_write_named_string(w, "method", "bdev_passthru_create");
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "base_bdev_name", spdk_bdev_get_name(pt_node->base_bdev));
 		spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&pt_node->pt_bdev));
+		if (!spdk_uuid_is_null(uuid)) {
+			char uuid_str[SPDK_UUID_STRING_LEN];
+
+			spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), uuid);
+			spdk_json_write_named_string(w, "uuid", uuid_str);
+		}
 		spdk_json_write_object_end(w);
 		spdk_json_write_object_end(w);
 	}
@@ -449,7 +458,8 @@ pt_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
 /* Create the passthru association from the bdev and vbdev name and insert
  * on the global list. */
 static int
-vbdev_passthru_insert_name(const char *bdev_name, const char *vbdev_name)
+vbdev_passthru_insert_name(const char *bdev_name, const char *vbdev_name,
+			   const struct spdk_uuid *uuid)
 {
 	struct bdev_names *name;
 
@@ -479,6 +489,10 @@ vbdev_passthru_insert_name(const char *bdev_name, const char *vbdev_name)
 		free(name->bdev_name);
 		free(name);
 		return -ENOMEM;
+	}
+
+	if (uuid) {
+		spdk_uuid_copy(&name->uuid, uuid);
 	}
 
 	TAILQ_INSERT_TAIL(&g_bdev_names, name, link);
@@ -612,6 +626,7 @@ vbdev_passthru_register(const char *bdev_name)
 			break;
 		}
 		pt_node->pt_bdev.product_name = "passthru";
+		spdk_uuid_copy(&pt_node->pt_bdev.uuid, &name->uuid);
 
 		/* The base bdev that we're attaching to. */
 		rc = spdk_bdev_open_ext(bdev_name, true, vbdev_passthru_base_bdev_event_cb,
@@ -701,14 +716,15 @@ vbdev_passthru_register(const char *bdev_name)
 
 /* Create the passthru disk from the given bdev and vbdev name. */
 int
-bdev_passthru_create_disk(const char *bdev_name, const char *vbdev_name)
+bdev_passthru_create_disk(const char *bdev_name, const char *vbdev_name,
+			  const struct spdk_uuid *uuid)
 {
 	int rc;
 
 	/* Insert the bdev name into our global name list even if it doesn't exist yet,
 	 * it may show up soon...
 	 */
-	rc = vbdev_passthru_insert_name(bdev_name, vbdev_name);
+	rc = vbdev_passthru_insert_name(bdev_name, vbdev_name, uuid);
 	if (rc) {
 		return rc;
 	}
