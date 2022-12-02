@@ -56,6 +56,12 @@ spdk_target() {
 
 	rpc_cmd nvmf_delete_subsystem "$subnqn"
 	rpc_cmd bdev_nvme_detach_controller "$name"
+
+	# Make sure we fully detached from the ctrl as vfio-pci won't be able to release the
+	# device otherwise - we can either wait a bit or simply kill the app. Since we don't
+	# really need it at this point, reap it but leave the net setup around. See:
+	# https://github.com/spdk/spdk/issues/2811
+	killprocess "$nvmfpid"
 }
 
 kernel_target() {

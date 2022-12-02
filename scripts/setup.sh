@@ -150,20 +150,26 @@ function linux_bind_driver() {
 		return 0
 	fi
 
+	local probe_attempts=0
 	echo "$driver_name" > "/sys/bus/pci/devices/$bdf/driver_override"
-	echo "$bdf" > "/sys/bus/pci/drivers_probe"
+	while ! echo "$bdf" > "/sys/bus/pci/drivers_probe" && ((probe_attempts++ < 10)); do
+		pci_dev_echo "$bdf" "failed to bind to $driver_name, retrying ($probe_attempts)"
+		sleep 0.5
+	done 2> /dev/null
+
 	echo "" > "/sys/bus/pci/devices/$bdf/driver_override"
 
-	if [[ $driver_name == uio_pci_generic ]] && ! check_for_driver igb_uio; then
-		# Check if the uio_pci_generic driver is broken as it might be in
-		# some 4.18.x kernels (see centos8 for instance) - if our device
-		# didn't get a proper uio entry, fallback to igb_uio
-		if [[ ! -e /sys/bus/pci/devices/$bdf/uio ]]; then
+	if [[ ! -e /sys/bus/pci/drivers/$driver_name/$bdf ]]; then
+		if [[ $driver_name == uio_pci_generic ]] && ! check_for_driver igb_uio; then
+			# uio_pci_generic driver might be broken in some 4.18.x kernels (see
+			# centos8 for instance) so try to fallback to igb_uio.
 			pci_dev_echo "$bdf" "uio_pci_generic potentially broken, moving to igb_uio"
 			drivers_d["$bdf"]="no driver"
-			# This call will override $driver_name for remaining devices as well
 			linux_bind_driver "$bdf" igb_uio
+			return
 		fi
+		pci_dev_echo "$bdf" "failed to bind to $driver_name, aborting"
+		return 1
 	fi
 
 	iommu_group=$(basename $(readlink -f /sys/bus/pci/devices/$bdf/iommu_group))
