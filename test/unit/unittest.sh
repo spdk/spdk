@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2018 Intel Corporation
+#  Copyright (c) 2023, NVIDIA CORPORATION & AFFILIATES.
 #  All rights reserved.
 #
 # Environment variables:
@@ -206,6 +207,7 @@ run_test "unittest_include" $valgrind $testdir/include/spdk/histogram_data.h/his
 run_test "unittest_bdev" unittest_bdev
 if grep -q '#define SPDK_CONFIG_CRYPTO 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_bdev_crypto" $valgrind $testdir/lib/bdev/crypto.c/crypto_ut
+	run_test "unittest_bdev_crypto" $valgrind $testdir/lib/accel/dpdk_cryptodev.c/accel_dpdk_cryptodev_ut
 fi
 
 if grep -q '#define SPDK_CONFIG_VBDEV_COMPRESS 1' $rootdir/include/spdk/config.h; then
