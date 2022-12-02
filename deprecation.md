@@ -21,5 +21,7 @@ The tags can be matched with the level 4 headers below.
 
 ### nvme
 
+#### `nvme_ctrlr_prepare_for_reset``
+
 Deprecated `spdk_nvme_ctrlr_prepare_for_reset` API, which will be removed in SPDK 22.01.
 For PCIe transport, `spdk_nvme_ctrlr_disconnect` should be used before freeing I/O qpairs.
