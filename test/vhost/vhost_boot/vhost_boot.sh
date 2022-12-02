@@ -108,7 +108,7 @@ timing_exit setup_vm
 start_part_sector=0 drive_size=0
 while IFS=":" read -r id start end _; do
 	start=${start%s} end=${end%s}
-	[[ -b $id ]] && drive_size=$start
+	[[ $id == /dev/sda ]] && drive_size=$start
 	[[ $id =~ ^[0-9]+$ ]] && start_part_sector=$((end + 1))
 done < <(vm_exec "$vm_no" "parted /dev/sda -ms unit s print")
 
