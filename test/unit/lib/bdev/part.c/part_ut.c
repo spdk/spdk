@@ -180,6 +180,20 @@ bdev_fini_cb(void *arg)
 }
 
 static void
+ut_init_bdev(void)
+{
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+	poll_threads();
+}
+
+static void
+ut_fini_bdev(void)
+{
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
+static void
 bdev_ut_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
 {
 }
@@ -274,8 +288,7 @@ part_get_io_channel_test(void)
 	SPDK_BDEV_PART_TAILQ		tailq = TAILQ_HEAD_INITIALIZER(tailq);
 	int rc;
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
-
+	ut_init_bdev();
 	bdev_base.name = "base";
 	bdev_base.blocklen = 512;
 	bdev_base.blockcnt = 1024;
@@ -318,8 +331,7 @@ part_get_io_channel_test(void)
 	CU_ASSERT(TAILQ_EMPTY(&tailq));
 
 	spdk_bdev_unregister(&bdev_base, NULL, NULL);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 int

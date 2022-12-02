@@ -1056,6 +1056,26 @@ bdev_fini_cb(void *arg)
 {
 }
 
+static void
+ut_init_bdev(struct spdk_bdev_opts *opts)
+{
+	int rc;
+
+	if (opts != NULL) {
+		rc = spdk_bdev_set_opts(opts);
+		CU_ASSERT(rc == 0);
+	}
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+	poll_threads();
+}
+
+static void
+ut_fini_bdev(void)
+{
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
 struct bdev_ut_io_wait_entry {
 	struct spdk_bdev_io_wait_entry	entry;
 	struct spdk_io_channel		*io_ch;
@@ -1086,11 +1106,7 @@ bdev_io_types_test(void)
 	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
 	bdev_opts.bdev_io_pool_size = 4;
 	bdev_opts.bdev_io_cache_size = 2;
-
-	rc = spdk_bdev_set_opts(&bdev_opts);
-	CU_ASSERT(rc == 0);
-	spdk_bdev_initialize(bdev_init_cb, NULL);
-	poll_threads();
+	ut_init_bdev(&bdev_opts);
 
 	bdev = allocate_bdev("bdev0");
 
@@ -1133,8 +1149,7 @@ bdev_io_types_test(void)
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -1151,11 +1166,7 @@ bdev_io_wait_test(void)
 	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
 	bdev_opts.bdev_io_pool_size = 4;
 	bdev_opts.bdev_io_cache_size = 2;
-
-	rc = spdk_bdev_set_opts(&bdev_opts);
-	CU_ASSERT(rc == 0);
-	spdk_bdev_initialize(bdev_init_cb, NULL);
-	poll_threads();
+	ut_init_bdev(&bdev_opts);
 
 	bdev = allocate_bdev("bdev0");
 
@@ -1213,8 +1224,7 @@ bdev_io_wait_test(void)
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -1315,10 +1325,7 @@ bdev_io_boundary_split_test(void)
 	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
 	bdev_opts.bdev_io_pool_size = 512;
 	bdev_opts.bdev_io_cache_size = 64;
-
-	rc = spdk_bdev_set_opts(&bdev_opts);
-	CU_ASSERT(rc == 0);
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(&bdev_opts);
 
 	bdev = allocate_bdev("bdev0");
 
@@ -1949,8 +1956,7 @@ bdev_io_boundary_split_test(void)
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -1968,11 +1974,8 @@ bdev_io_max_size_and_segment_split_test(void)
 	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
 	bdev_opts.bdev_io_pool_size = 512;
 	bdev_opts.bdev_io_cache_size = 64;
-
 	bdev_opts.opts_size = sizeof(bdev_opts);
-	rc = spdk_bdev_set_opts(&bdev_opts);
-	CU_ASSERT(rc == 0);
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(&bdev_opts);
 
 	bdev = allocate_bdev("bdev0");
 
@@ -2510,8 +2513,7 @@ bdev_io_max_size_and_segment_split_test(void)
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -2529,10 +2531,7 @@ bdev_io_mix_split_test(void)
 	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
 	bdev_opts.bdev_io_pool_size = 512;
 	bdev_opts.bdev_io_cache_size = 64;
-
-	rc = spdk_bdev_set_opts(&bdev_opts);
-	CU_ASSERT(rc == 0);
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(&bdev_opts);
 
 	bdev = allocate_bdev("bdev0");
 
@@ -2779,8 +2778,7 @@ bdev_io_mix_split_test(void)
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -2799,10 +2797,7 @@ bdev_io_split_with_io_wait(void)
 	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
 	bdev_opts.bdev_io_pool_size = 2;
 	bdev_opts.bdev_io_cache_size = 1;
-
-	rc = spdk_bdev_set_opts(&bdev_opts);
-	CU_ASSERT(rc == 0);
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(&bdev_opts);
 
 	bdev = allocate_bdev("bdev0");
 
@@ -2916,8 +2911,7 @@ bdev_io_split_with_io_wait(void)
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -2935,10 +2929,7 @@ bdev_io_write_unit_split_test(void)
 	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
 	bdev_opts.bdev_io_pool_size = 512;
 	bdev_opts.bdev_io_cache_size = 64;
-
-	rc = spdk_bdev_set_opts(&bdev_opts);
-	CU_ASSERT(rc == 0);
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(&bdev_opts);
 
 	bdev = allocate_bdev("bdev0");
 
@@ -3037,8 +3028,7 @@ bdev_io_write_unit_split_test(void)
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -3057,10 +3047,7 @@ bdev_io_alignment(void)
 	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
 	bdev_opts.bdev_io_pool_size = 20;
 	bdev_opts.bdev_io_cache_size = 2;
-
-	rc = spdk_bdev_set_opts(&bdev_opts);
-	CU_ASSERT(rc == 0);
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(&bdev_opts);
 
 	fn_table.submit_request = stub_submit_request_get_buf;
 	bdev = allocate_bdev("bdev0");
@@ -3256,8 +3243,7 @@ bdev_io_alignment(void)
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
 	fn_table.submit_request = stub_submit_request;
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 
 	free(buf);
 }
@@ -3278,11 +3264,8 @@ bdev_io_alignment_with_boundary(void)
 	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
 	bdev_opts.bdev_io_pool_size = 20;
 	bdev_opts.bdev_io_cache_size = 2;
-
 	bdev_opts.opts_size = sizeof(bdev_opts);
-	rc = spdk_bdev_set_opts(&bdev_opts);
-	CU_ASSERT(rc == 0);
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(&bdev_opts);
 
 	fn_table.submit_request = stub_submit_request_get_buf;
 	bdev = allocate_bdev("bdev0");
@@ -3397,8 +3380,7 @@ bdev_io_alignment_with_boundary(void)
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
 	fn_table.submit_request = stub_submit_request;
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 
 	free(buf);
 }
@@ -3445,7 +3427,7 @@ bdev_histograms(void)
 	uint8_t buf[4096];
 	int rc;
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(NULL);
 
 	bdev = allocate_bdev("bdev");
 
@@ -3528,8 +3510,7 @@ bdev_histograms(void)
 	spdk_put_io_channel(ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -3558,7 +3539,7 @@ _bdev_compare(bool emulated)
 
 	g_io_types_supported[SPDK_BDEV_IO_TYPE_COMPARE] = !emulated;
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(NULL);
 	fn_table.submit_request = stub_submit_request_get_buf;
 	bdev = allocate_bdev("bdev");
 
@@ -3609,8 +3590,7 @@ _bdev_compare(bool emulated)
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
 	fn_table.submit_request = stub_submit_request;
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 
 	g_io_types_supported[SPDK_BDEV_IO_TYPE_COMPARE] = true;
 
@@ -3651,7 +3631,7 @@ _bdev_compare_with_md(bool emulated)
 
 	g_io_types_supported[SPDK_BDEV_IO_TYPE_COMPARE] = !emulated;
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(NULL);
 	fn_table.submit_request = stub_submit_request_get_buf;
 	bdev = allocate_bdev("bdev");
 
@@ -3765,8 +3745,7 @@ _bdev_compare_with_md(bool emulated)
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
 	fn_table.submit_request = stub_submit_request;
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 
 	g_io_types_supported[SPDK_BDEV_IO_TYPE_COMPARE] = true;
 
@@ -3810,7 +3789,7 @@ bdev_compare_and_write(void)
 
 	g_io_types_supported[SPDK_BDEV_IO_TYPE_COMPARE] = false;
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(NULL);
 	fn_table.submit_request = stub_submit_request_get_buf;
 	bdev = allocate_bdev("bdev");
 
@@ -3886,8 +3865,7 @@ bdev_compare_and_write(void)
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
 	fn_table.submit_request = stub_submit_request;
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 
 	g_io_types_supported[SPDK_BDEV_IO_TYPE_COMPARE] = true;
 
@@ -3906,7 +3884,7 @@ bdev_write_zeroes(void)
 	uint32_t num_completed, num_requests;
 	int rc;
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(NULL);
 	bdev = allocate_bdev("bdev");
 
 	rc = spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc);
@@ -3996,8 +3974,7 @@ bdev_write_zeroes(void)
 	spdk_put_io_channel(ioch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -4017,7 +3994,7 @@ bdev_zcopy_write(void)
 
 	memset(aa_buf, 0xaa, sizeof(aa_buf));
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(NULL);
 	bdev = allocate_bdev("bdev");
 
 	rc = spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc);
@@ -4079,8 +4056,7 @@ bdev_zcopy_write(void)
 	spdk_put_io_channel(ioch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -4100,7 +4076,7 @@ bdev_zcopy_read(void)
 
 	memset(aa_buf, 0xaa, sizeof(aa_buf));
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(NULL);
 	bdev = allocate_bdev("bdev");
 
 	rc = spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc);
@@ -4164,8 +4140,7 @@ bdev_zcopy_read(void)
 	spdk_put_io_channel(ioch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -4387,8 +4362,7 @@ bdev_set_io_timeout(void)
 	struct spdk_bdev_channel *bdev_ch = NULL;
 	struct timeout_io_cb_arg cb_arg;
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
-
+	ut_init_bdev(NULL);
 	bdev = allocate_bdev("bdev");
 
 	CU_ASSERT(spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc) == 0);
@@ -4518,8 +4492,7 @@ bdev_set_io_timeout(void)
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -4531,8 +4504,7 @@ bdev_set_qd_sampling(void)
 	struct spdk_bdev_channel *bdev_ch = NULL;
 	struct timeout_io_cb_arg cb_arg;
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
-
+	ut_init_bdev(NULL);
 	bdev = allocate_bdev("bdev");
 
 	CU_ASSERT(spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc) == 0);
@@ -4623,8 +4595,7 @@ bdev_set_qd_sampling(void)
 	poll_threads();
 
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -4698,8 +4669,7 @@ lock_lba_range_check_ranges(void)
 	int ctx1;
 	int rc;
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
-
+	ut_init_bdev(NULL);
 	bdev = allocate_bdev("bdev0");
 
 	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
@@ -4739,8 +4709,7 @@ lock_lba_range_check_ranges(void)
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -4755,8 +4724,7 @@ lock_lba_range_with_io_outstanding(void)
 	int ctx1;
 	int rc;
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
-
+	ut_init_bdev(NULL);
 	bdev = allocate_bdev("bdev0");
 
 	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
@@ -4835,8 +4803,7 @@ lock_lba_range_with_io_outstanding(void)
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -4850,8 +4817,7 @@ lock_lba_range_overlapped(void)
 	int ctx1;
 	int rc;
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
-
+	ut_init_bdev(NULL);
 	bdev = allocate_bdev("bdev0");
 
 	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
@@ -4974,8 +4940,7 @@ lock_lba_range_overlapped(void)
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -5002,10 +4967,7 @@ bdev_io_abort(void)
 	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
 	bdev_opts.bdev_io_pool_size = 7;
 	bdev_opts.bdev_io_cache_size = 2;
-
-	rc = spdk_bdev_set_opts(&bdev_opts);
-	CU_ASSERT(rc == 0);
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(&bdev_opts);
 
 	bdev = allocate_bdev("bdev0");
 
@@ -5172,8 +5134,7 @@ bdev_io_abort(void)
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -5192,10 +5153,8 @@ bdev_unmap(void)
 	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
 	bdev_opts.bdev_io_pool_size = 512;
 	bdev_opts.bdev_io_cache_size = 64;
-	rc = spdk_bdev_set_opts(&bdev_opts);
-	CU_ASSERT(rc == 0);
+	ut_init_bdev(&bdev_opts);
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
 	bdev = allocate_bdev("bdev");
 
 	rc = spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc);
@@ -5272,8 +5231,7 @@ bdev_unmap(void)
 	spdk_put_io_channel(ioch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -5292,10 +5250,8 @@ bdev_write_zeroes_split_test(void)
 	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
 	bdev_opts.bdev_io_pool_size = 512;
 	bdev_opts.bdev_io_cache_size = 64;
-	rc = spdk_bdev_set_opts(&bdev_opts);
-	CU_ASSERT(rc == 0);
+	ut_init_bdev(&bdev_opts);
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
 	bdev = allocate_bdev("bdev");
 
 	rc = spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc);
@@ -5373,8 +5329,7 @@ bdev_write_zeroes_split_test(void)
 	spdk_put_io_channel(ioch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -5537,7 +5492,7 @@ _bdev_io_ext(struct spdk_bdev_ext_io_opts *ext_io_opts)
 	struct ut_expected_io *expected_io;
 	int rc;
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(NULL);
 
 	bdev = allocate_bdev("bdev0");
 	bdev->md_interleave = false;
@@ -5589,8 +5544,7 @@ _bdev_io_ext(struct spdk_bdev_ext_io_opts *ext_io_opts)
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 
 }
 
@@ -5625,7 +5579,7 @@ bdev_io_ext_invalid_opts(void)
 	};
 	int rc;
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(NULL);
 
 	bdev = allocate_bdev("bdev0");
 	bdev->md_interleave = false;
@@ -5661,8 +5615,7 @@ bdev_io_ext_invalid_opts(void)
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -5680,7 +5633,7 @@ bdev_io_ext_split(void)
 	};
 	int rc;
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(NULL);
 
 	bdev = allocate_bdev("bdev0");
 	bdev->md_interleave = false;
@@ -5762,8 +5715,7 @@ bdev_io_ext_split(void)
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -5781,7 +5733,7 @@ bdev_io_ext_bounce_buffer(void)
 	};
 	int rc;
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(NULL);
 
 	bdev = allocate_bdev("bdev0");
 	bdev->md_interleave = false;
@@ -5835,8 +5787,7 @@ bdev_io_ext_bounce_buffer(void)
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -5846,7 +5797,7 @@ bdev_register_uuid_alias(void)
 	char uuid[SPDK_UUID_STRING_LEN];
 	int rc;
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(NULL);
 	bdev = allocate_bdev("bdev0");
 
 	/* Make sure an UUID was generated  */
@@ -5902,8 +5853,7 @@ bdev_register_uuid_alias(void)
 
 	free_bdev(second);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -6010,7 +5960,7 @@ bdev_seek_test(void)
 	struct spdk_io_channel *io_ch;
 	int rc;
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(NULL);
 	poll_threads();
 
 	bdev = allocate_bdev("bdev0");
@@ -6062,8 +6012,7 @@ bdev_seek_test(void)
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -6077,7 +6026,7 @@ bdev_copy(void)
 	uint32_t num_completed;
 	int rc;
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(NULL);
 	bdev = allocate_bdev("bdev");
 
 	rc = spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc);
@@ -6113,8 +6062,7 @@ bdev_copy(void)
 	spdk_put_io_channel(ioch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 static void
@@ -6136,7 +6084,7 @@ bdev_copy_split_test(void)
 	rc = spdk_bdev_set_opts(&bdev_opts);
 	CU_ASSERT(rc == 0);
 
-	spdk_bdev_initialize(bdev_init_cb, NULL);
+	ut_init_bdev(NULL);
 	bdev = allocate_bdev("bdev");
 
 	rc = spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc);
@@ -6219,8 +6167,7 @@ bdev_copy_split_test(void)
 	spdk_put_io_channel(ioch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	poll_threads();
+	ut_fini_bdev();
 }
 
 int
