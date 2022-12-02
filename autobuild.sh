@@ -269,8 +269,13 @@ function scanbuild_make() {
 	comm -2 -3 $out/all_c_files.txt $out/built_c_files.txt > $out/unbuilt_c_files.txt || true
 
 	if [ $(wc -l < $out/unbuilt_c_files.txt) -ge 1 ]; then
-		echo "missing files"
-		cat $out/unbuilt_c_files.txt
+		cat <<- ERROR
+			The following C files were not built.  Either scanbuild CI job needs to
+			be updated with proper flags to build these files, or exceptions need
+			to be added to test/common/skipped_build_files.txt
+
+			$(<"$out/unbuilt_c_files.txt")
+		ERROR
 		pass=false
 	fi
 
