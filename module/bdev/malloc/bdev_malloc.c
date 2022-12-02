@@ -737,7 +737,7 @@ create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 		mdisk->disk.optimal_io_boundary = opts->optimal_io_boundary;
 		mdisk->disk.split_on_optimal_io_boundary = true;
 	}
-	if (!spdk_mem_all_zero(&opts->uuid, sizeof(opts->uuid))) {
+	if (!spdk_uuid_is_null(&opts->uuid)) {
 		spdk_uuid_copy(&mdisk->disk.uuid, &opts->uuid);
 	}
 

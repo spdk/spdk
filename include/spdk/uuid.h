@@ -86,6 +86,22 @@ int spdk_uuid_generate_sha1(struct spdk_uuid *uuid, struct spdk_uuid *ns_uuid, c
  */
 void spdk_uuid_copy(struct spdk_uuid *dst, const struct spdk_uuid *src);
 
+/**
+ * Compare the UUID to the NULL value (all bits equal to zero).
+ *
+ * \param uuid The UUID to test.
+ *
+ * \return true if uuid is equal to the NULL value, false if not.
+ */
+bool spdk_uuid_is_null(const struct spdk_uuid *uuid);
+
+/**
+ * Set the value of UUID to the NULL value.
+ *
+ * \param uuid The UUID to set.
+ */
+void spdk_uuid_set_null(struct spdk_uuid *uuid);
+
 #ifdef __cplusplus
 }
 #endif

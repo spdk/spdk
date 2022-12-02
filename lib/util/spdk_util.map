@@ -155,6 +155,8 @@
 	spdk_uuid_generate;
 	spdk_uuid_generate_sha1;
 	spdk_uuid_copy;
+	spdk_uuid_is_null;
+	spdk_uuid_set_null;
 
 	# public functions in fd_group.h
 	spdk_fd_group_create;

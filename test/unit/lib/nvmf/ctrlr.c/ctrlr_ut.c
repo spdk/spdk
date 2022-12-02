@@ -1361,7 +1361,7 @@ test_reservation_write_exclusive(void)
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 
 	/* Unregister Host C */
-	memset(&g_ns_info.reg_hostid[2], 0, sizeof(struct spdk_uuid));
+	spdk_uuid_set_null(&g_ns_info.reg_hostid[2]);
 
 	/* Test Case: Read and Write commands from non-registrant Host C */
 	cmd.nvme_cmd.opc = SPDK_NVME_OPC_WRITE;
@@ -1430,7 +1430,7 @@ _test_reservation_write_exclusive_regs_only_and_all_regs(enum spdk_nvme_reservat
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 
 	/* Unregister Host C */
-	memset(&g_ns_info.reg_hostid[2], 0, sizeof(struct spdk_uuid));
+	spdk_uuid_set_null(&g_ns_info.reg_hostid[2]);
 
 	/* Test Case: Read and Write commands from non-registrant Host C */
 	cmd.nvme_cmd.opc = SPDK_NVME_OPC_READ;
@@ -1472,7 +1472,7 @@ _test_reservation_exclusive_access_regs_only_and_all_regs(enum spdk_nvme_reserva
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 
 	/* Unregister Host B */
-	memset(&g_ns_info.reg_hostid[1], 0, sizeof(struct spdk_uuid));
+	spdk_uuid_set_null(&g_ns_info.reg_hostid[1]);
 
 	/* Test Case: Issue a Read command from Host B */
 	cmd.nvme_cmd.opc = SPDK_NVME_OPC_READ;

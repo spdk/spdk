@@ -255,11 +255,11 @@ load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	if (rc != 0 || value_len != SPDK_UUID_STRING_LEN || attr[SPDK_UUID_STRING_LEN - 1] != '\0' ||
 	    spdk_uuid_parse(&lvol->uuid, attr) != 0) {
 		SPDK_INFOLOG(lvol, "Missing or corrupt lvol uuid\n");
-		memset(&lvol->uuid, 0, sizeof(lvol->uuid));
+		spdk_uuid_set_null(&lvol->uuid);
 	}
 	spdk_uuid_fmt_lower(lvol->uuid_str, sizeof(lvol->uuid_str), &lvol->uuid);
 
-	if (!spdk_mem_all_zero(&lvol->uuid, sizeof(lvol->uuid))) {
+	if (!spdk_uuid_is_null(&lvol->uuid)) {
 		snprintf(lvol->unique_id, sizeof(lvol->unique_id), "%s", lvol->uuid_str);
 	} else {
 		spdk_uuid_fmt_lower(lvol->unique_id, sizeof(lvol->unique_id), &lvol->lvol_store->uuid);

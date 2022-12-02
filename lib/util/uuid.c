@@ -52,6 +52,18 @@ spdk_uuid_copy(struct spdk_uuid *dst, const struct spdk_uuid *src)
 	uuid_copy((void *)dst, (void *)src);
 }
 
+bool
+spdk_uuid_is_null(const struct spdk_uuid *uuid)
+{
+	return uuid_is_null((void *)uuid);
+}
+
+void
+spdk_uuid_set_null(struct spdk_uuid *uuid)
+{
+	uuid_clear((void *)uuid);
+}
+
 #else
 
 #include <uuid.h>
@@ -106,6 +118,18 @@ void
 spdk_uuid_copy(struct spdk_uuid *dst, const struct spdk_uuid *src)
 {
 	memcpy(dst, src, sizeof(*dst));
+}
+
+bool
+spdk_uuid_is_null(const struct spdk_uuid *uuid)
+{
+	return uuid_is_nil((const uuid_t *)uuid, NULL);
+}
+
+void
+spdk_uuid_set_null(struct spdk_uuid *uuid)
+{
+	uuid_create_nil((uuid_t *)uuid, NULL);
 }
 
 #endif

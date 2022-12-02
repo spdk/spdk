@@ -93,7 +93,7 @@ rpc_bdev_ftl_create(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
-	if (spdk_mem_all_zero(&conf.uuid, sizeof(conf.uuid))) {
+	if (spdk_uuid_is_null(&conf.uuid)) {
 		conf.mode |= SPDK_FTL_MODE_CREATE;
 	}
 

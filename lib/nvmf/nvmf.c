@@ -541,7 +541,7 @@ nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 			spdk_json_write_named_string_fmt(w, "eui64", "%016"PRIX64, from_be64(&ns_opts.eui64));
 		}
 
-		if (!spdk_mem_all_zero(&ns_opts.uuid, sizeof(ns_opts.uuid))) {
+		if (!spdk_uuid_is_null(&ns_opts.uuid)) {
 			spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &ns_opts.uuid);
 			spdk_json_write_named_string(w, "uuid",  uuid_str);
 		}

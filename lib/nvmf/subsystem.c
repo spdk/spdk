@@ -1505,7 +1505,7 @@ spdk_nvmf_ns_opts_get_defaults(struct spdk_nvmf_ns_opts *opts, size_t opts_size)
 		memset(opts->eui64, 0, sizeof(opts->eui64));
 	}
 	if (FIELD_OK(uuid)) {
-		memset(&opts->uuid, 0, sizeof(opts->uuid));
+		spdk_uuid_set_null(&opts->uuid);
 	}
 	SET_FIELD(anagrpid, 0);
 
@@ -1534,7 +1534,7 @@ nvmf_ns_opts_copy(struct spdk_nvmf_ns_opts *opts,
 		memcpy(opts->eui64, user_opts->eui64, sizeof(opts->eui64));
 	}
 	if (FIELD_OK(uuid)) {
-		memcpy(&opts->uuid, &user_opts->uuid, sizeof(opts->uuid));
+		spdk_uuid_copy(&opts->uuid, &user_opts->uuid);
 	}
 	SET_FIELD(anagrpid);
 
@@ -1662,7 +1662,7 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 	/* Cache the zcopy capability of the bdev device */
 	ns->zcopy = spdk_bdev_io_type_supported(ns->bdev, SPDK_BDEV_IO_TYPE_ZCOPY);
 
-	if (spdk_mem_all_zero(&opts.uuid, sizeof(opts.uuid))) {
+	if (spdk_uuid_is_null(&opts.uuid)) {
 		opts.uuid = *spdk_bdev_get_uuid(ns->bdev);
 	}
 

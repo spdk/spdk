@@ -259,7 +259,7 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 				json_write_hex_str(w, ns_opts.eui64, sizeof(ns_opts.eui64));
 			}
 
-			if (!spdk_mem_all_zero(&ns_opts.uuid, sizeof(ns_opts.uuid))) {
+			if (!spdk_uuid_is_null(&ns_opts.uuid)) {
 				char uuid_str[SPDK_UUID_STRING_LEN];
 
 				spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &ns_opts.uuid);
@@ -1221,7 +1221,7 @@ nvmf_rpc_ns_paused(struct spdk_nvmf_subsystem *subsystem,
 	SPDK_STATIC_ASSERT(sizeof(ns_opts.eui64) == sizeof(ctx->ns_params.eui64), "size mismatch");
 	memcpy(ns_opts.eui64, ctx->ns_params.eui64, sizeof(ns_opts.eui64));
 
-	if (!spdk_mem_all_zero(&ctx->ns_params.uuid, sizeof(ctx->ns_params.uuid))) {
+	if (!spdk_uuid_is_null(&ctx->ns_params.uuid)) {
 		ns_opts.uuid = ctx->ns_params.uuid;
 	}
 

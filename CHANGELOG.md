@@ -83,6 +83,11 @@ New API `spdk_bdev_part_construct_ext` is added and allows the bdev's UUID to be
 the existing worker and namespace association logic to access every namespace from each worker.
 This replicates behavior of bdevperf application when `-C` option is provided.
 
+### util
+
+New APIs `spdk_uuid_is_null` and `spdk_uuid_set_null` were added to compare and
+set UUID to NULL value.
+
 ## v23.01
 
 ### accel

@@ -7399,7 +7399,7 @@ bdev_register(struct spdk_bdev *bdev)
 
 	/* UUID may be specified by the user or defined by bdev itself.
 	 * Otherwise it will be generated here, so this field will never be empty. */
-	if (spdk_mem_all_zero(&bdev->uuid, sizeof(bdev->uuid))) {
+	if (spdk_uuid_is_null(&bdev->uuid)) {
 		spdk_uuid_generate(&bdev->uuid);
 	}
 

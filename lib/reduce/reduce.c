@@ -621,7 +621,7 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		return;
 	}
 
-	if (spdk_mem_all_zero(&params->uuid, sizeof(params->uuid))) {
+	if (spdk_uuid_is_null(&params->uuid)) {
 		spdk_uuid_generate(&params->uuid);
 	}
 
