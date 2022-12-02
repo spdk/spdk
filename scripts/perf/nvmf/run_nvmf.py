@@ -411,7 +411,7 @@ class Target(Server):
         if "enable_pm" in target_config:
             self.enable_pm = target_config["enable_pm"]
         if "enable_sar" in target_config:
-            self.enable_sar = target_config["sar_settings"]
+            self.enable_sar = target_config["enable_sar"]
         if "enable_pcm" in target_config:
             self.enable_pcm = target_config["enable_pcm"]
         if "enable_bandwidth" in target_config:
