@@ -631,10 +631,6 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
             SPDK_ERRLOG("Fail to find device snap controller for emu_manager %s\n", attr->emu_manager);
             goto free_attr;
         }
-        if (sctrl->bar_curr->status >= SNAP_VRDMA_DEVICE_S_DRIVER_OK) {
-            SPDK_ERRLOG("Can not change MAC after driver_ok for emu_manager %s\n", attr->emu_manager);
-            goto free_attr;
-        }
         sctrl->mac = attr->mac;
         g_bar_test.mac = attr->mac;
         if (snap_vrdma_device_mac_init(sctrl)) {
