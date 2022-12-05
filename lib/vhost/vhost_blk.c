@@ -1544,6 +1544,24 @@ vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
 	return 0;
 }
 
+static int
+vhost_blk_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
+			 uint32_t iops_threshold)
+{
+	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+
+	return bvdev->ops->set_coalescing(vdev, delay_base_us, iops_threshold);
+}
+
+static void
+vhost_blk_get_coalescing(struct spdk_vhost_dev *vdev, uint32_t *delay_base_us,
+			 uint32_t *iops_threshold)
+{
+	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+
+	bvdev->ops->get_coalescing(vdev, delay_base_us, iops_threshold);
+}
+
 static const struct spdk_vhost_user_dev_backend vhost_blk_user_device_backend = {
 	.session_ctx_size = sizeof(struct spdk_vhost_blk_session) - sizeof(struct spdk_vhost_session),
 	.start_session =  vhost_blk_start,
@@ -1557,8 +1575,8 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.dump_info_json = vhost_blk_dump_info_json,
 	.write_config_json = vhost_blk_write_config_json,
 	.remove_device = vhost_blk_destroy,
-	.set_coalescing = vhost_user_set_coalescing,
-	.get_coalescing = vhost_user_get_coalescing,
+	.set_coalescing = vhost_blk_set_coalescing,
+	.get_coalescing = vhost_blk_get_coalescing,
 };
 
 int
@@ -1792,6 +1810,8 @@ static const struct spdk_virtio_blk_transport_ops vhost_user_blk = {
 	.destroy_ctrlr = vhost_user_blk_destroy_ctrlr,
 
 	.bdev_event = vhost_user_bdev_event_cb,
+	.set_coalescing = vhost_user_set_coalescing,
+	.get_coalescing = vhost_user_get_coalescing,
 };
 
 SPDK_VIRTIO_BLK_TRANSPORT_REGISTER(vhost_user_blk, &vhost_user_blk);

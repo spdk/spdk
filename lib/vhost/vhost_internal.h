@@ -587,6 +587,18 @@ struct spdk_virtio_blk_transport_ops {
 	 */
 	void (*bdev_event)(enum spdk_bdev_event_type type, struct spdk_vhost_dev *vdev,
 			   bdev_event_cb_complete cb, void *cb_arg);
+
+	/**
+	 * Set coalescing parameters.
+	 */
+	int (*set_coalescing)(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
+			      uint32_t iops_threshold);
+
+	/**
+	 * Get coalescing parameters.
+	 */
+	void (*get_coalescing)(struct spdk_vhost_dev *vdev, uint32_t *delay_base_us,
+			       uint32_t *iops_threshold);
 };
 
 struct spdk_virtio_blk_transport {
