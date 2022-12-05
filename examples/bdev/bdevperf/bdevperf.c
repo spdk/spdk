@@ -627,24 +627,29 @@ bdevperf_channel_get_histogram_cb(void *cb_arg, int status, struct spdk_histogra
 }
 
 static void
+bdevperf_job_empty(struct bdevperf_job *job)
+{
+	uint64_t end_tsc = 0;
+
+	end_tsc = spdk_get_ticks() - g_start_tsc;
+	job->run_time_in_usec = end_tsc * SPDK_SEC_TO_USEC / spdk_get_ticks_hz();
+	/* keep histogram info before channel is destroyed */
+	spdk_bdev_channel_get_histogram(job->ch, bdevperf_channel_get_histogram_cb,
+					job->histogram);
+	spdk_put_io_channel(job->ch);
+	spdk_bdev_close(job->bdev_desc);
+	spdk_thread_send_msg(g_main_thread, bdevperf_job_end, NULL);
+}
+
+static void
 bdevperf_end_task(struct bdevperf_task *task)
 {
 	struct bdevperf_job     *job = task->job;
-	uint64_t		end_tsc = 0;
 
 	TAILQ_INSERT_TAIL(&job->task_list, task, link);
 	if (job->is_draining) {
 		if (job->current_queue_depth == 0) {
-			end_tsc = spdk_get_ticks() - g_start_tsc;
-			job->run_time_in_usec = end_tsc * SPDK_SEC_TO_USEC / spdk_get_ticks_hz();
-
-			/* keep histogram info before channel is destroyed */
-			spdk_bdev_channel_get_histogram(job->ch, bdevperf_channel_get_histogram_cb,
-							job->histogram);
-
-			spdk_put_io_channel(job->ch);
-			spdk_bdev_close(job->bdev_desc);
-			spdk_thread_send_msg(g_main_thread, bdevperf_job_end, NULL);
+			bdevperf_job_empty(job);
 		}
 	}
 }
@@ -673,6 +678,19 @@ bdevperf_job_drain(void *ctx)
 	job->is_draining = true;
 
 	return -1;
+}
+
+static int
+bdevperf_job_drain_timer(void *ctx)
+{
+	struct bdevperf_job *job = ctx;
+
+	bdevperf_job_drain(ctx);
+	if (job->current_queue_depth == 0) {
+		bdevperf_job_empty(job);
+	}
+
+	return SPDK_POLLER_BUSY;
 }
 
 static void
@@ -1221,7 +1239,7 @@ bdevperf_job_run(void *ctx)
 	 * completes, another will be submitted. */
 
 	/* Start a timer to stop this I/O chain when the run is over */
-	job->run_timer = SPDK_POLLER_REGISTER(bdevperf_job_drain, job, g_time_in_usec);
+	job->run_timer = SPDK_POLLER_REGISTER(bdevperf_job_drain_timer, job, g_time_in_usec);
 	if (job->reset) {
 		job->reset_timer = SPDK_POLLER_REGISTER(reset_job, job,
 							10 * SPDK_SEC_TO_USEC);
