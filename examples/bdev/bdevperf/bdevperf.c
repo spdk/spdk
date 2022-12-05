@@ -1651,6 +1651,13 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 			bdevperf_job_free(job);
 			return -ENOMEM;
 		}
+		if (job->queue_depth > (int)job->size_in_ios) {
+			SPDK_WARNLOG("Due to constraints of verify job, queue depth (-q, %d) can't exceed the number of IO "
+				     "requests which can be submitted to the bdev %s simultaneously (%"PRIu64"). "
+				     "Queue depth is limited to %"PRIu64"\n",
+				     job->queue_depth, job->name, job->size_in_ios, job->size_in_ios);
+			job->queue_depth = (int)job->size_in_ios;
+		}
 	}
 
 	job->histogram = spdk_histogram_data_alloc();
