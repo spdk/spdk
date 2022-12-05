@@ -251,6 +251,9 @@ export AR_TOOL=$rootdir/scripts/ar-xnvme-fixer
 # pass our valgrind desire on to unittest.sh
 if [ $SPDK_RUN_VALGRIND -eq 0 ]; then
 	export valgrind=''
+else
+	# unset all DEBUGINFOD_* vars that may affect our valgrind instance
+	unset -v "${!DEBUGINFOD_@}"
 fi
 
 if [ "$(uname -s)" = "Linux" ]; then

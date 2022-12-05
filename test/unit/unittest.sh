@@ -152,7 +152,7 @@ fi
 # the env variable to override the default shown below.
 if [ -z ${valgrind+x} ]; then
 	if grep -q '#undef SPDK_CONFIG_ASAN' $rootdir/include/spdk/config.h && hash valgrind; then
-		valgrind='valgrind --leak-check=full --error-exitcode=2'
+		valgrind='valgrind --leak-check=full --error-exitcode=2 --verbose'
 	else
 		valgrind=''
 	fi
