@@ -1685,7 +1685,7 @@ vhost_user_session_set_coalescing(struct spdk_vhost_dev *vdev,
 }
 
 int
-spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
+vhost_user_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
 			  uint32_t iops_threshold)
 {
 	int rc;
@@ -1696,11 +1696,12 @@ spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
 	}
 
 	vhost_user_dev_foreach_session(vdev, vhost_user_session_set_coalescing, NULL, NULL);
+
 	return 0;
 }
 
 void
-spdk_vhost_get_coalescing(struct spdk_vhost_dev *vdev, uint32_t *delay_base_us,
+vhost_user_get_coalescing(struct spdk_vhost_dev *vdev, uint32_t *delay_base_us,
 			  uint32_t *iops_threshold)
 {
 	struct spdk_vhost_user_dev *user_dev = to_user_dev(vdev);

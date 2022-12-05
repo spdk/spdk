@@ -234,6 +234,10 @@ struct spdk_vhost_dev_backend {
 	void (*dump_info_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 	void (*write_config_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 	int (*remove_device)(struct spdk_vhost_dev *vdev);
+	int (*set_coalescing)(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
+			      uint32_t iops_threshold);
+	void (*get_coalescing)(struct spdk_vhost_dev *vdev, uint32_t *delay_base_us,
+			       uint32_t *iops_threshold);
 };
 
 void *vhost_gpa_to_vva(struct spdk_vhost_session *vsession, uint64_t addr, uint64_t len);
@@ -501,6 +505,10 @@ int vhost_user_dev_register(struct spdk_vhost_dev *vdev, const char *name,
 int vhost_user_dev_unregister(struct spdk_vhost_dev *vdev);
 int vhost_user_init(void);
 void vhost_user_fini(spdk_vhost_fini_cb vhost_cb);
+int vhost_user_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
+			      uint32_t iops_threshold);
+void vhost_user_get_coalescing(struct spdk_vhost_dev *vdev, uint32_t *delay_base_us,
+			       uint32_t *iops_threshold);
 
 int virtio_blk_construct_ctrlr(struct spdk_vhost_dev *vdev, const char *address,
 			       struct spdk_cpuset *cpumask, const struct spdk_json_val *params,

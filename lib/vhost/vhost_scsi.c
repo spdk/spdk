@@ -136,6 +136,8 @@ static const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	.dump_info_json = vhost_scsi_dump_info_json,
 	.write_config_json = vhost_scsi_write_config_json,
 	.remove_device = vhost_scsi_dev_remove,
+	.set_coalescing = vhost_user_set_coalescing,
+	.get_coalescing = vhost_user_get_coalescing,
 };
 
 static inline void

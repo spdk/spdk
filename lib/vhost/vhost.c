@@ -207,6 +207,22 @@ spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
 	return vdev->backend->remove_device(vdev);
 }
 
+int
+spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
+			  uint32_t iops_threshold)
+{
+	assert(vdev->backend->set_coalescing != NULL);
+	return vdev->backend->set_coalescing(vdev, delay_base_us, iops_threshold);
+}
+
+void
+spdk_vhost_get_coalescing(struct spdk_vhost_dev *vdev, uint32_t *delay_base_us,
+			  uint32_t *iops_threshold)
+{
+	assert(vdev->backend->get_coalescing != NULL);
+	vdev->backend->get_coalescing(vdev, delay_base_us, iops_threshold);
+}
+
 void
 spdk_vhost_lock(void)
 {
