@@ -1361,9 +1361,11 @@ draw_thread_tab_row(uint64_t current_row, uint8_t item_index)
 		col += col_desc[COL_THREADS_PAUSED_POLLERS].max_data_string + 2;
 	}
 
+	uint64_t idle_period = g_threads_info[current_row].idle - g_threads_info[current_row].last_idle;
+	uint64_t busy_period = g_threads_info[current_row].busy - g_threads_info[current_row].last_busy;
 	if (!col_desc[COL_THREADS_IDLE_TIME].disabled) {
 		if (g_interval_data == true) {
-			get_time_str(g_threads_info[current_row].idle - g_threads_info[current_row].last_idle, idle_time);
+			get_time_str(idle_period, idle_time);
 		} else {
 			get_time_str(g_threads_info[current_row].idle, idle_time);
 		}
@@ -1374,7 +1376,7 @@ draw_thread_tab_row(uint64_t current_row, uint8_t item_index)
 
 	if (!col_desc[COL_THREADS_BUSY_TIME].disabled) {
 		if (g_interval_data == true) {
-			get_time_str(g_threads_info[current_row].busy - g_threads_info[current_row].last_busy, busy_time);
+			get_time_str(busy_period, busy_time);
 		} else {
 			get_time_str(g_threads_info[current_row].busy, busy_time);
 		}
@@ -1385,11 +1387,10 @@ draw_thread_tab_row(uint64_t current_row, uint8_t item_index)
 
 	if (!col_desc[COL_THREADS_CPU_USAGE].disabled) {
 		core_num = g_threads_info[current_row].core_num;
+		uint64_t core_busy_period = g_cores_info[core_num].busy - g_cores_info[core_num].last_busy;
+		uint64_t core_idle_period = g_cores_info[core_num].idle - g_cores_info[core_num].last_idle;
 		if (core_num >= 0 && core_num < RPC_MAX_CORES) {
-			get_cpu_usage_str(g_threads_info[current_row].busy - g_threads_info[current_row].last_busy,
-					  (g_cores_info[core_num].busy - g_cores_info[core_num].last_busy) +
-					  (g_cores_info[core_num].idle - g_cores_info[core_num].last_idle),
-					  cpu_usage);
+			get_cpu_usage_str(busy_period, core_busy_period + core_idle_period, cpu_usage);
 		} else {
 			snprintf(cpu_usage, sizeof(cpu_usage), "n/a");
 		}
@@ -1400,7 +1401,7 @@ draw_thread_tab_row(uint64_t current_row, uint8_t item_index)
 	}
 
 	if (!col_desc[COL_THREADS_STATUS].disabled) {
-		if (g_threads_info[current_row].busy > g_threads_info[current_row].idle) {
+		if (busy_period > idle_period) {
 			if (item_index != g_selected_row) {
 				color_attr = COLOR_PAIR(6);
 			} else {
@@ -1636,9 +1637,11 @@ draw_core_tab_row(uint64_t current_row, uint8_t item_index)
 		col += col_desc[COL_CORES_POLLERS].max_data_string;
 	}
 
+	uint64_t idle_period = g_threads_info[current_row].idle - g_threads_info[current_row].last_idle;
+	uint64_t busy_period = g_threads_info[current_row].busy - g_threads_info[current_row].last_busy;
 	if (!col_desc[COL_CORES_IDLE_TIME].disabled) {
 		if (g_interval_data == true) {
-			get_time_str(g_cores_info[current_row].idle - g_cores_info[current_row].last_idle, idle_time);
+			get_time_str(idle_period, idle_time);
 		} else {
 			get_time_str(g_cores_info[current_row].idle, idle_time);
 		}
@@ -1649,7 +1652,7 @@ draw_core_tab_row(uint64_t current_row, uint8_t item_index)
 
 	if (!col_desc[COL_CORES_BUSY_TIME].disabled) {
 		if (g_interval_data == true) {
-			get_time_str(g_cores_info[current_row].busy - g_cores_info[current_row].last_busy, busy_time);
+			get_time_str(busy_period, busy_time);
 		} else {
 			get_time_str(g_cores_info[current_row].busy, busy_time);
 		}
@@ -1679,17 +1682,14 @@ draw_core_tab_row(uint64_t current_row, uint8_t item_index)
 	}
 
 	if (!col_desc[COL_CORES_CPU_USAGE].disabled) {
-		get_cpu_usage_str(g_cores_info[current_row].busy - g_cores_info[current_row].last_busy,
-				  (g_cores_info[current_row].busy - g_cores_info[current_row].last_busy) +
-				  (g_cores_info[current_row].idle - g_cores_info[current_row].last_idle),
-				  cpu_usage);
+		get_cpu_usage_str(busy_period, busy_period + idle_period, cpu_usage);
 		print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index, col,
 			      col_desc[COL_CORES_CPU_USAGE].max_data_string, ALIGN_RIGHT, cpu_usage);
 		col += col_desc[COL_CORES_CPU_USAGE].max_data_string + 1;
 	}
 
 	if (!col_desc[COL_CORES_STATUS].disabled) {
-		if (g_cores_info[current_row].busy > g_cores_info[current_row].idle) {
+		if (busy_period > idle_period) {
 			if (item_index != g_selected_row) {
 				color_attr = COLOR_PAIR(6);
 			} else {
