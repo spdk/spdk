@@ -50,7 +50,7 @@ static bool g_error_to_exit = false;
 static int g_queue_depth = 0;
 static uint64_t g_time_in_usec;
 static int g_show_performance_real_time = 0;
-static uint64_t g_show_performance_period_in_usec = 1000000;
+static uint64_t g_show_performance_period_in_usec = SPDK_SEC_TO_USEC;
 static uint64_t g_show_performance_period_num = 0;
 static uint64_t g_show_performance_ema_period = 0;
 static int g_run_rc = 0;
@@ -219,7 +219,7 @@ static struct bdevperf_aggregate_stats g_stats = {.min_latency = (double)UINT64_
 static double
 get_cma_io_per_second(struct bdevperf_job *job, uint64_t io_time_in_usec)
 {
-	return (double)job->io_completed * 1000000 / io_time_in_usec;
+	return (double)job->io_completed * SPDK_SEC_TO_USEC / io_time_in_usec;
 }
 
 static double
@@ -228,7 +228,7 @@ get_ema_io_per_second(struct bdevperf_job *job, uint64_t ema_period)
 	double io_completed, io_per_second;
 
 	io_completed = job->io_completed;
-	io_per_second = (double)(io_completed - job->prev_io_completed) * 1000000
+	io_per_second = (double)(io_completed - job->prev_io_completed) * SPDK_SEC_TO_USEC
 			/ g_show_performance_period_in_usec;
 	job->prev_io_completed = io_completed;
 
@@ -273,7 +273,7 @@ performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job
 
 	if (job->io_failed > 0 && !job->reset && !job->continue_on_failure) {
 		printf("\r Job: %s ended in about %.2f seconds with error\n",
-		       spdk_thread_get_name(job->thread), (double)job->run_time_in_usec / 1000000);
+		       spdk_thread_get_name(job->thread), (double)job->run_time_in_usec / SPDK_SEC_TO_USEC);
 	}
 	if (job->verify) {
 		printf("\t Verification LBA range: start 0x%" PRIx64 " length 0x%" PRIx64 "\n",
@@ -304,16 +304,16 @@ performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job
 
 	total_io = job->io_completed + job->io_failed;
 	if (total_io != 0) {
-		average_latency = (double)latency_info.total / total_io * 1000 * 1000 / tsc_rate;
+		average_latency = (double)latency_info.total / total_io * SPDK_SEC_TO_USEC / tsc_rate;
 	}
-	min_latency = (double)latency_info.min * 1000 * 1000 / tsc_rate;
-	max_latency = (double)latency_info.max * 1000 * 1000 / tsc_rate;
+	min_latency = (double)latency_info.min * SPDK_SEC_TO_USEC / tsc_rate;
+	max_latency = (double)latency_info.max * SPDK_SEC_TO_USEC / tsc_rate;
 
-	failed_per_second = (double)job->io_failed * 1000000 / time_in_usec;
-	timeout_per_second = (double)job->io_timeout * 1000000 / time_in_usec;
+	failed_per_second = (double)job->io_failed * SPDK_SEC_TO_USEC / time_in_usec;
+	timeout_per_second = (double)job->io_timeout * SPDK_SEC_TO_USEC / time_in_usec;
 
 	printf("\t %-20s: %10.2f %10.2f %10.2f",
-	       job->name, (float)time_in_usec / 1000000, io_per_second, mb_per_second);
+	       job->name, (float)time_in_usec / SPDK_SEC_TO_USEC, io_per_second, mb_per_second);
 	printf(" %10.2f %8.2f",
 	       failed_per_second, timeout_per_second);
 	printf(" %10.2f %10.2f %10.2f\n",
@@ -474,7 +474,7 @@ check_cutoff(void *ctx, uint64_t start, uint64_t end, uint64_t count,
 	tsc_rate = spdk_get_ticks_hz();
 	so_far_pct = (double)so_far / total;
 	while (so_far_pct >= **cutoff && **cutoff > 0) {
-		printf("%9.5f%% : %9.3fus\n", **cutoff * 100, (double)end * 1000 * 1000 / tsc_rate);
+		printf("%9.5f%% : %9.3fus\n", **cutoff * 100, (double)end * SPDK_SEC_TO_USEC / tsc_rate);
 		(*cutoff)++;
 	}
 }
@@ -493,8 +493,8 @@ print_bucket(void *ctx, uint64_t start, uint64_t end, uint64_t count,
 	tsc_rate = spdk_get_ticks_hz();
 	so_far_pct = (double)so_far * 100 / total;
 	printf("%9.3f - %9.3f: %9.4f%%  (%9ju)\n",
-	       (double)start * 1000 * 1000 / tsc_rate,
-	       (double)end * 1000 * 1000 / tsc_rate,
+	       (double)start * SPDK_SEC_TO_USEC / tsc_rate,
+	       (double)end * SPDK_SEC_TO_USEC / tsc_rate,
 	       so_far_pct, count);
 }
 
@@ -522,10 +522,10 @@ bdevperf_test_done(void *ctx)
 
 	if (g_shutdown) {
 		g_shutdown_tsc = spdk_get_ticks() - g_start_tsc;
-		time_in_usec = g_shutdown_tsc * 1000000 / spdk_get_ticks_hz();
+		time_in_usec = g_shutdown_tsc * SPDK_SEC_TO_USEC / spdk_get_ticks_hz();
 		g_time_in_usec = (g_time_in_usec > time_in_usec) ? time_in_usec : g_time_in_usec;
 		printf("Received shutdown signal, test time was about %.6f seconds\n",
-		       (double)g_time_in_usec / 1000000);
+		       (double)g_time_in_usec / SPDK_SEC_TO_USEC);
 	}
 
 	printf("\n%*s\n", 107, "Latency(us)");
@@ -544,7 +544,7 @@ bdevperf_test_done(void *ctx)
 	       g_stats.total_failed_per_second, g_stats.total_timeout_per_second);
 
 	if (g_stats.total_io_completed != 0) {
-		average_latency = ((double)g_stats.total_tsc / g_stats.total_io_completed) * 1000 * 1000 /
+		average_latency = ((double)g_stats.total_tsc / g_stats.total_io_completed) * SPDK_SEC_TO_USEC /
 				  spdk_get_ticks_hz();
 	}
 	printf(" %10.2f %10.2f %10.2f\n", average_latency, g_stats.min_latency, g_stats.max_latency);
@@ -636,7 +636,7 @@ bdevperf_end_task(struct bdevperf_task *task)
 	if (job->is_draining) {
 		if (job->current_queue_depth == 0) {
 			end_tsc = spdk_get_ticks() - g_start_tsc;
-			job->run_time_in_usec = end_tsc * 1000000 / spdk_get_ticks_hz();
+			job->run_time_in_usec = end_tsc * SPDK_SEC_TO_USEC / spdk_get_ticks_hz();
 
 			/* keep histogram info before channel is destroyed */
 			spdk_bdev_channel_get_histogram(job->bdev, job->ch, bdevperf_channel_get_histogram_cb,
@@ -1161,7 +1161,7 @@ reset_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	spdk_bdev_free_io(bdev_io);
 
 	job->reset_timer = SPDK_POLLER_REGISTER(reset_job, job,
-						10 * 1000000);
+						10 * SPDK_SEC_TO_USEC);
 }
 
 static int
@@ -1224,7 +1224,7 @@ bdevperf_job_run(void *ctx)
 	job->run_timer = SPDK_POLLER_REGISTER(bdevperf_job_drain, job, g_time_in_usec);
 	if (job->reset) {
 		job->reset_timer = SPDK_POLLER_REGISTER(reset_job, job,
-							10 * 1000000);
+							10 * SPDK_SEC_TO_USEC);
 	}
 
 	spdk_bdev_set_timeout(job->bdev_desc, g_timeout_in_sec, bdevperf_timeout_cb, job);
@@ -1248,7 +1248,7 @@ _performance_dump_done(void *ctx)
 	printf(" %10.2f %8.2f",
 	       stats->total_failed_per_second, stats->total_timeout_per_second);
 
-	average_latency = ((double)stats->total_tsc / stats->total_io_completed) * 1000 * 1000 /
+	average_latency = ((double)stats->total_tsc / stats->total_io_completed) * SPDK_SEC_TO_USEC /
 			  spdk_get_ticks_hz();
 	printf(" %10.2f %10.2f %10.2f\n", average_latency, stats->min_latency, stats->max_latency);
 	printf("\n");
@@ -1319,7 +1319,7 @@ bdevperf_test(void)
 {
 	struct bdevperf_job *job;
 
-	printf("Running I/O for %" PRIu64 " seconds...\n", g_time_in_usec / 1000000);
+	printf("Running I/O for %" PRIu64 " seconds...\n", g_time_in_usec / (uint64_t)SPDK_SEC_TO_USEC);
 	fflush(stdout);
 
 	/* Start a timer to dump performance numbers */
@@ -2320,7 +2320,7 @@ bdevperf_parse_arg(int ch, char *arg)
 			break;
 		case 'S':
 			g_show_performance_real_time = 1;
-			g_show_performance_period_in_usec = tmp * 1000000;
+			g_show_performance_period_in_usec = tmp * SPDK_SEC_TO_USEC;
 			break;
 		default:
 			return -EINVAL;
@@ -2376,7 +2376,7 @@ verify_test_params(struct spdk_app_opts *opts)
 	if (g_time_in_sec <= 0) {
 		goto out;
 	}
-	g_time_in_usec = g_time_in_sec * 1000000LL;
+	g_time_in_usec = g_time_in_sec * SPDK_SEC_TO_USEC;
 
 	if (g_timeout_in_sec < 0) {
 		goto out;
