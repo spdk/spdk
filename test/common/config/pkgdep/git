@@ -595,8 +595,13 @@ function install_sources() {
 	if [[ $INSTALL_REFSPDK == true ]]; then
 		# Serialize builds as refspdk depends on spdk
 		[[ $INSTALL_SPDK != true ]] && install_spdk
-		install_refspdk latest
-		install_refspdk LTS
+		if [[ $ID == fedora ]] && (( VERSION_ID >= 36 )); then
+			echo "Serialized SPDK release builds are not used anymore for newer Fedora images. Skip."
+			return 0
+		else
+			install_refspdk latest
+			install_refspdk LTS
+		fi
 	fi
 }
 
