@@ -19,6 +19,9 @@
 #define USERSPACE_DRIVER_NAME "user"
 #define KERNEL_DRIVER_NAME "kernel"
 
+/* The max number of completions processed per poll */
+#define IDXD_MAX_COMPLETIONS      128
+
 static STAILQ_HEAD(, spdk_idxd_impl) g_idxd_impls = STAILQ_HEAD_INITIALIZER(g_idxd_impls);
 static struct spdk_idxd_impl *g_idxd_impl;
 
@@ -1442,7 +1445,7 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 		/* reset the status */
 		status = 0;
 		/* break the processing loop to prevent from starving the rest of the system */
-		if (rc > DESC_PER_BATCH) {
+		if (rc > IDXD_MAX_COMPLETIONS) {
 			break;
 		}
 	}
