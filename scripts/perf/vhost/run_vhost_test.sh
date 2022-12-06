@@ -57,7 +57,7 @@ fio_conf() {
 	FIO
 }
 
-(($#)) && eval "$@"
+(($#)) && eval "$*"
 
 perf_args+=("--vm-image=${vm_image:-$VM_IMAGE}")
 perf_args+=("--ctrl-type=${ctrl_type:-spdk_vhost_scsi}")
