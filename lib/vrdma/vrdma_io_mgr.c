@@ -161,6 +161,10 @@ static inline int vrdma_vq_rollback(uint16_t pre_pi, uint16_t pi,
 	return (pi % q_size < pre_pi % q_size);
 }
 
+static inline unsigned long DIV_ROUND_UP(unsigned long n, unsigned long d)
+{
+	return ((n) + (d) - 1) / (d);
+}
 
 static bool vrdma_qp_sm_idle(struct spdk_vrdma_qp *vqp,
 							enum vrdma_qp_sm_op_status status)
@@ -435,7 +439,9 @@ vrdma_set_ctrl_seg(struct mlx5_wqe_ctrl_seg *ctrl, uint16_t pi,
 static inline void vrdma_wqe_submit(struct snap_vrdma_backend_qp *bk_qp,
 									struct mlx5_wqe_ctrl_seg *ctrl)
 {
-	bk_qp->hw_qp.sq.pi++;
+	uint8_t ds = ctrl->qpn_ds & 0xFF;
+	
+	bk_qp->hw_qp.sq.pi += DIV_ROUND_UP(ds * 16, MLX5_SEND_WQE_BB);
 	if (bk_qp->db_flag == SNAP_DB_RING_BATCH) {
 		bk_qp->tx_need_ring_db = true;
 		bk_qp->ctrl = ctrl;
@@ -460,7 +466,7 @@ static void *vrdma_get_send_wqe(struct snap_vrdma_backend_qp *qp, int n)
 static void vrdma_dump_wqe(int idx, int size_16,
 								struct snap_vrdma_backend_qp *qp)
 {
-	uint32_t *p;
+	uint32_t *p = NULL;
 	int i, j;
 	int tidx = idx;
 
@@ -470,7 +476,7 @@ static void vrdma_dump_wqe(int idx, int size_16,
 		if ((i & 0xf) == 0) {
 			void *buf = vrdma_get_send_wqe(qp, tidx);
 			tidx = (tidx + 1) & (qp->hw_qp.sq.wqe_cnt - 1);
-			p = buf;
+			p = (uint32_t *)buf;
 			j = 0;
 		}
 		printf("%08x %08x %08x %08x\n", be32toh(p[j]), be32toh(p[j + 1]),
