@@ -7,7 +7,7 @@ physical address mapping and manages the garbage collection process.
 
 ## Terminology {#ftl_terminology}
 
-### Logical to physical address map
+### Logical to physical address map {#ftl_l2p}
 
 - Shorthand: `L2P`
 
