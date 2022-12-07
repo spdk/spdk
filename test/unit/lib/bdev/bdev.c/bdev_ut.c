@@ -3608,7 +3608,7 @@ _bdev_compare(bool emulated)
 	compare_iov.iov_base = aa_buf;
 	compare_iov.iov_len = sizeof(aa_buf);
 
-	/* 1. successful compare */
+	/* 1. successful comparev */
 	expected_io = ut_alloc_expected_io(expected_io_type, offset, num_blocks, 0);
 	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
@@ -3622,7 +3622,7 @@ _bdev_compare(bool emulated)
 	CU_ASSERT(g_io_done == true);
 	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
 
-	/* 2. miscompare */
+	/* 2. miscompare comparev */
 	expected_io = ut_alloc_expected_io(expected_io_type, offset, num_blocks, 0);
 	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
@@ -3630,6 +3630,35 @@ _bdev_compare(bool emulated)
 	g_compare_read_buf = bb_buf;
 	g_compare_read_buf_len = sizeof(bb_buf);
 	rc = spdk_bdev_comparev_blocks(desc, ioch, &compare_iov, 1, offset, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	num_completed = stub_complete_io(1);
+	CU_ASSERT_EQUAL(num_completed, 1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_MISCOMPARE);
+
+	/* 3. successful compare */
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	expected_io = ut_alloc_expected_io(expected_io_type, offset, num_blocks, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	g_io_done = false;
+	g_compare_read_buf = aa_buf;
+	g_compare_read_buf_len = sizeof(aa_buf);
+	rc = spdk_bdev_compare_blocks(desc, ioch, aa_buf, offset, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	num_completed = stub_complete_io(1);
+	CU_ASSERT_EQUAL(num_completed, 1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* 4. miscompare compare */
+	expected_io = ut_alloc_expected_io(expected_io_type, offset, num_blocks, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	g_io_done = false;
+	g_compare_read_buf = bb_buf;
+	g_compare_read_buf_len = sizeof(bb_buf);
+	rc = spdk_bdev_compare_blocks(desc, ioch, aa_buf, offset, num_blocks, io_done, NULL);
 	CU_ASSERT_EQUAL(rc, 0);
 	num_completed = stub_complete_io(1);
 	CU_ASSERT_EQUAL(num_completed, 1);
