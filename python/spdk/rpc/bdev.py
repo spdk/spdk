@@ -1523,6 +1523,18 @@ def bdev_get_iostat(client, name=None, per_channel=None):
     return client.call('bdev_get_iostat', params)
 
 
+def bdev_reset_iostat(client, name=None):
+    """Reset I/O statistics for block devices.
+
+    Args:
+        name: bdev name to reset (optional; if omitted, reset all bdevs)
+    """
+    params = {}
+    if name:
+        params['name'] = name
+    return client.call('bdev_reset_iostat', params)
+
+
 def bdev_enable_histogram(client, name, enable):
     """Control whether histogram is enabled for specified bdev.
 

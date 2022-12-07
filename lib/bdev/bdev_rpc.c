@@ -457,6 +457,168 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("bdev_get_iostat", rpc_bdev_get_iostat, SPDK_RPC_RUNTIME)
 
+struct rpc_reset_iostat_ctx {
+	int bdev_count;
+	int rc;
+	struct spdk_jsonrpc_request *request;
+	struct spdk_json_write_ctx *w;
+};
+
+struct bdev_reset_iostat_ctx {
+	struct rpc_reset_iostat_ctx *rpc_ctx;
+	struct spdk_bdev_desc *desc;
+};
+
+static void
+rpc_reset_iostat_done(struct rpc_reset_iostat_ctx *rpc_ctx)
+{
+	if (--rpc_ctx->bdev_count != 0) {
+		return;
+	}
+
+	if (rpc_ctx->rc == 0) {
+		spdk_jsonrpc_send_bool_response(rpc_ctx->request, true);
+	} else {
+		spdk_jsonrpc_send_error_response(rpc_ctx->request, rpc_ctx->rc,
+						 spdk_strerror(-rpc_ctx->rc));
+	}
+
+	free(rpc_ctx);
+}
+
+static void
+bdev_reset_iostat_done(struct spdk_bdev *bdev, void *cb_arg, int rc)
+{
+	struct bdev_reset_iostat_ctx *bdev_ctx = cb_arg;
+	struct rpc_reset_iostat_ctx *rpc_ctx = bdev_ctx->rpc_ctx;
+
+	if (rc != 0 || rpc_ctx->rc != 0) {
+		if (rpc_ctx->rc == 0) {
+			rpc_ctx->rc = rc;
+		}
+	}
+
+	rpc_reset_iostat_done(rpc_ctx);
+
+	spdk_bdev_close(bdev_ctx->desc);
+	free(bdev_ctx);
+}
+
+static int
+bdev_reset_iostat(void *ctx, struct spdk_bdev *bdev)
+{
+	struct rpc_reset_iostat_ctx *rpc_ctx = ctx;
+	struct bdev_reset_iostat_ctx *bdev_ctx;
+	int rc;
+
+	bdev_ctx = calloc(1, sizeof(struct bdev_reset_iostat_ctx));
+	if (bdev_ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate bdev_iostat_ctx struct\n");
+		return -ENOMEM;
+	}
+
+	rc = spdk_bdev_open_ext(spdk_bdev_get_name(bdev), false, dummy_bdev_event_cb, NULL,
+				&bdev_ctx->desc);
+	if (rc != 0) {
+		free(bdev_ctx);
+		SPDK_ERRLOG("Failed to open bdev\n");
+		return rc;
+	}
+
+	rpc_ctx->bdev_count++;
+	bdev_ctx->rpc_ctx = rpc_ctx;
+	bdev_reset_device_stat(bdev, bdev_reset_iostat_done, bdev_ctx);
+
+	return 0;
+}
+
+struct rpc_bdev_reset_iostat {
+	char *name;
+};
+
+static void
+free_rpc_bdev_reset_iostat(struct rpc_bdev_reset_iostat *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_reset_iostat_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_reset_iostat, name), spdk_json_decode_string, true},
+};
+
+static void
+rpc_bdev_reset_iostat(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	struct rpc_bdev_reset_iostat req = {};
+	struct spdk_bdev_desc *desc = NULL;
+	struct rpc_reset_iostat_ctx *rpc_ctx;
+	struct bdev_reset_iostat_ctx *bdev_ctx;
+	int rc;
+
+	if (params != NULL) {
+		if (spdk_json_decode_object(params, rpc_bdev_reset_iostat_decoders,
+					    SPDK_COUNTOF(rpc_bdev_reset_iostat_decoders),
+					    &req)) {
+			SPDK_ERRLOG("spdk_json_decode_object failed\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "spdk_json_decode_object failed");
+			free_rpc_bdev_reset_iostat(&req);
+			return;
+		}
+
+		if (req.name) {
+			rc = spdk_bdev_open_ext(req.name, false, dummy_bdev_event_cb, NULL, &desc);
+			if (rc != 0) {
+				SPDK_ERRLOG("Failed to open bdev '%s': %d\n", req.name, rc);
+				spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+				free_rpc_bdev_reset_iostat(&req);
+				return;
+			}
+		}
+	}
+
+	free_rpc_bdev_reset_iostat(&req);
+
+	rpc_ctx = calloc(1, sizeof(struct rpc_reset_iostat_ctx));
+	if (rpc_ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate rpc_iostat_ctx struct\n");
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
+		return;
+	}
+
+	/*
+	 * Increment initial bdev_count so that it will never reach 0 in the middle
+	 * of iterating.
+	 */
+	rpc_ctx->bdev_count++;
+	rpc_ctx->request = request;
+
+	if (desc != NULL) {
+		bdev_ctx = calloc(1, sizeof(struct bdev_reset_iostat_ctx));
+		if (bdev_ctx == NULL) {
+			SPDK_ERRLOG("Failed to allocate bdev_iostat_ctx struct\n");
+			rpc_ctx->rc = -ENOMEM;
+
+			spdk_bdev_close(desc);
+		} else {
+			bdev_ctx->desc = desc;
+
+			rpc_ctx->bdev_count++;
+			bdev_ctx->rpc_ctx = rpc_ctx;
+			bdev_reset_device_stat(spdk_bdev_desc_get_bdev(desc),
+					       bdev_reset_iostat_done, bdev_ctx);
+		}
+	} else {
+		rc = spdk_for_each_bdev(rpc_ctx, bdev_reset_iostat);
+		if (rc != 0 && rpc_ctx->rc == 0) {
+			rpc_ctx->rc = rc;
+		}
+	}
+
+	rpc_reset_iostat_done(rpc_ctx);
+}
+SPDK_RPC_REGISTER("bdev_reset_iostat", rpc_bdev_reset_iostat, SPDK_RPC_RUNTIME)
+
 static int
 rpc_dump_bdev_info(void *ctx, struct spdk_bdev *bdev)
 {

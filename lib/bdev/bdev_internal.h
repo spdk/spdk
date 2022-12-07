@@ -25,4 +25,9 @@ struct spdk_bdev_io_stat *bdev_io_stat_alloc(void);
 void bdev_io_stat_free(struct spdk_bdev_io_stat *stat);
 void bdev_io_stat_dump_json(struct spdk_bdev_io_stat *stat, struct spdk_json_write_ctx *w);
 
+typedef void (*bdev_reset_device_stat_cb)(struct spdk_bdev *bdev, void *cb_arg, int rc);
+
+void bdev_reset_device_stat(struct spdk_bdev *bdev, bdev_reset_device_stat_cb cb,
+			    void *cb_arg);
+
 #endif /* SPDK_BDEV_INTERNAL_H */

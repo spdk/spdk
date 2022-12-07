@@ -40,6 +40,9 @@ Converted internal use of `pthread_mutex_t` to `struct spdk_spinlock`. Consumers
 API functions must be on an SPDK thread or the program will abort. It is now enforced
 that no internal bdev locks can be held when a poller or message goes off CPU.
 
+A new RPC `bdev_reset_iostat` was added to reset I/O statistics of bdevs. Note that if one
+consumer reset I/O statistics, it affects all other consumers.
+
 ### event
 
 Added core lock file mechanism to prevent the same CPU cores from being used by multiple

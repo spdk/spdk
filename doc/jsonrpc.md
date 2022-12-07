@@ -2119,6 +2119,45 @@ Example response:
 }
 ~~~
 
+### bdev_reset_iostat {#rpc_bdev_reset_iostat}
+
+Reset I/O statistics of block devices (bdevs). Note that if one consumer resets I/O statistics,
+it affects all other consumers.
+
+#### Parameters
+
+The user may specify no parameters in order to reset I/O statistics for all block devices, or
+a block device may be specified by name.
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Optional | string      | Block device name
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "bdev_reset_iostat",
+  "params": {
+    "name": "Nvme0n1"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### bdev_enable_histogram {#rpc_bdev_enable_histogram}
 
 Control whether collecting data for histogram is enabled for specified bdev.

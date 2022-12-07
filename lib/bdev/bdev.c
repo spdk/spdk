@@ -3693,6 +3693,20 @@ bdev_io_stat_get(struct spdk_bdev_io_stat *to_stat, struct spdk_bdev_io_stat *fr
 	memcpy(to_stat, from_stat, sizeof(struct spdk_bdev_io_stat));
 }
 
+static void
+bdev_io_stat_reset(struct spdk_bdev_io_stat *stat)
+{
+	stat->bytes_read = 0;
+	stat->num_read_ops = 0;
+	stat->bytes_written = 0;
+	stat->num_write_ops = 0;
+	stat->bytes_unmapped = 0;
+	stat->num_unmap_ops = 0;
+	stat->read_latency_ticks = 0;
+	stat->write_latency_ticks = 0;
+	stat->unmap_latency_ticks = 0;
+}
+
 struct spdk_bdev_io_stat *
 bdev_io_stat_alloc(void)
 {
@@ -5686,6 +5700,60 @@ spdk_bdev_get_device_stat(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat
 	/* Then iterate and add the statistics from each existing channel. */
 	spdk_bdev_for_each_channel(bdev, bdev_get_each_channel_stat, bdev_iostat_ctx,
 				   bdev_get_device_stat_done);
+}
+
+struct bdev_iostat_reset_ctx {
+	bdev_reset_device_stat_cb cb;
+	void *cb_arg;
+};
+
+static void
+bdev_reset_device_stat_done(struct spdk_bdev *bdev, void *_ctx, int status)
+{
+	struct bdev_iostat_reset_ctx *ctx = _ctx;
+
+	ctx->cb(bdev, ctx->cb_arg, 0);
+
+	free(ctx);
+}
+
+static void
+bdev_reset_each_channel_stat(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
+			     struct spdk_io_channel *ch, void *ctx)
+{
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
+
+	bdev_io_stat_reset(channel->stat);
+
+	spdk_bdev_for_each_channel_continue(i, 0);
+}
+
+void
+bdev_reset_device_stat(struct spdk_bdev *bdev, bdev_reset_device_stat_cb cb, void *cb_arg)
+{
+	struct bdev_iostat_reset_ctx *ctx;
+
+	assert(bdev != NULL);
+	assert(cb != NULL);
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Unable to allocate bdev_iostat_reset_ctx.\n");
+		cb(bdev, cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->cb = cb;
+	ctx->cb_arg = cb_arg;
+
+	spdk_spin_lock(&bdev->internal.spinlock);
+	bdev_io_stat_reset(bdev->internal.stat);
+	spdk_spin_unlock(&bdev->internal.spinlock);
+
+	spdk_bdev_for_each_channel(bdev,
+				   bdev_reset_each_channel_stat,
+				   ctx,
+				   bdev_reset_device_stat_done);
 }
 
 int
