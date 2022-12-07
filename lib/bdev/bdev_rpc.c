@@ -462,6 +462,7 @@ struct rpc_reset_iostat_ctx {
 	int rc;
 	struct spdk_jsonrpc_request *request;
 	struct spdk_json_write_ctx *w;
+	enum bdev_reset_stat_mode mode;
 };
 
 struct bdev_reset_iostat_ctx {
@@ -527,13 +528,14 @@ bdev_reset_iostat(void *ctx, struct spdk_bdev *bdev)
 
 	rpc_ctx->bdev_count++;
 	bdev_ctx->rpc_ctx = rpc_ctx;
-	bdev_reset_device_stat(bdev, bdev_reset_iostat_done, bdev_ctx);
+	bdev_reset_device_stat(bdev, rpc_ctx->mode, bdev_reset_iostat_done, bdev_ctx);
 
 	return 0;
 }
 
 struct rpc_bdev_reset_iostat {
 	char *name;
+	enum bdev_reset_stat_mode mode;
 };
 
 static void
@@ -542,14 +544,32 @@ free_rpc_bdev_reset_iostat(struct rpc_bdev_reset_iostat *r)
 	free(r->name);
 }
 
+static int
+rpc_decode_reset_iostat_mode(const struct spdk_json_val *val, void *out)
+{
+	enum bdev_reset_stat_mode *mode = out;
+
+	if (spdk_json_strequal(val, "all") == true) {
+		*mode = BDEV_RESET_STAT_ALL;
+	} else if (spdk_json_strequal(val, "maxmin") == true) {
+		*mode = BDEV_RESET_STAT_MAXMIN;
+	} else {
+		SPDK_NOTICELOG("Invalid parameter value: mode\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 static const struct spdk_json_object_decoder rpc_bdev_reset_iostat_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_reset_iostat, name), spdk_json_decode_string, true},
+	{"mode", offsetof(struct rpc_bdev_reset_iostat, mode), rpc_decode_reset_iostat_mode, true},
 };
 
 static void
 rpc_bdev_reset_iostat(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
-	struct rpc_bdev_reset_iostat req = {};
+	struct rpc_bdev_reset_iostat req = { .mode = BDEV_RESET_STAT_ALL, };
 	struct spdk_bdev_desc *desc = NULL;
 	struct rpc_reset_iostat_ctx *rpc_ctx;
 	struct bdev_reset_iostat_ctx *bdev_ctx;
@@ -577,12 +597,12 @@ rpc_bdev_reset_iostat(struct spdk_jsonrpc_request *request, const struct spdk_js
 		}
 	}
 
-	free_rpc_bdev_reset_iostat(&req);
 
 	rpc_ctx = calloc(1, sizeof(struct rpc_reset_iostat_ctx));
 	if (rpc_ctx == NULL) {
 		SPDK_ERRLOG("Failed to allocate rpc_iostat_ctx struct\n");
 		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
+		free_rpc_bdev_reset_iostat(&req);
 		return;
 	}
 
@@ -592,6 +612,9 @@ rpc_bdev_reset_iostat(struct spdk_jsonrpc_request *request, const struct spdk_js
 	 */
 	rpc_ctx->bdev_count++;
 	rpc_ctx->request = request;
+	rpc_ctx->mode = req.mode;
+
+	free_rpc_bdev_reset_iostat(&req);
 
 	if (desc != NULL) {
 		bdev_ctx = calloc(1, sizeof(struct bdev_reset_iostat_ctx));
@@ -605,7 +628,7 @@ rpc_bdev_reset_iostat(struct spdk_jsonrpc_request *request, const struct spdk_js
 
 			rpc_ctx->bdev_count++;
 			bdev_ctx->rpc_ctx = rpc_ctx;
-			bdev_reset_device_stat(spdk_bdev_desc_get_bdev(desc),
+			bdev_reset_device_stat(spdk_bdev_desc_get_bdev(desc), rpc_ctx->mode,
 					       bdev_reset_iostat_done, bdev_ctx);
 		}
 	} else {

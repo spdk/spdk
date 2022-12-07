@@ -1523,15 +1523,19 @@ def bdev_get_iostat(client, name=None, per_channel=None):
     return client.call('bdev_get_iostat', params)
 
 
-def bdev_reset_iostat(client, name=None):
+def bdev_reset_iostat(client, name=None, mode=None):
     """Reset I/O statistics for block devices.
 
     Args:
         name: bdev name to reset (optional; if omitted, reset all bdevs)
+        mode: mode to reset: all, maxmin (optional: if omitted, reset all fields)
     """
     params = {}
     if name:
         params['name'] = name
+    if mode:
+        params['mode'] = mode
+
     return client.call('bdev_reset_iostat', params)
 
 

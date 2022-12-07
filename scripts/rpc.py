@@ -1142,11 +1142,12 @@ if __name__ == "__main__":
     p.set_defaults(func=bdev_get_iostat)
 
     def bdev_reset_iostat(args):
-        rpc.bdev.bdev_reset_iostat(args.client, name=args.name)
+        rpc.bdev.bdev_reset_iostat(args.client, name=args.name, mode=args.mode)
 
     p = subparsers.add_parser('bdev_reset_iostat',
                               help='Reset I/O statistics of all the blockdevs or specified blockdev.')
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
+    p.add_argument('-m', '--mode', help="Mode to reset I/O statistics", choices=['all', 'maxmin'], required=False)
     p.set_defaults(func=bdev_reset_iostat)
 
     def bdev_enable_histogram(args):

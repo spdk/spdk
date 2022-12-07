@@ -2132,6 +2132,7 @@ a block device may be specified by name.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Optional | string      | Block device name
+mode                    | Optional | string      | Mode to reset I/O statistics: all, maxmin (default: all)
 
 #### Example
 

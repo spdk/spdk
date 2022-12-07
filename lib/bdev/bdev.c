@@ -3718,7 +3718,7 @@ bdev_io_stat_get(struct spdk_bdev_io_stat *to_stat, struct spdk_bdev_io_stat *fr
 }
 
 static void
-bdev_io_stat_reset(struct spdk_bdev_io_stat *stat)
+bdev_io_stat_reset(struct spdk_bdev_io_stat *stat, enum bdev_reset_stat_mode mode)
 {
 	stat->max_read_latency_ticks = 0;
 	stat->min_read_latency_ticks = UINT64_MAX;
@@ -3728,6 +3728,11 @@ bdev_io_stat_reset(struct spdk_bdev_io_stat *stat)
 	stat->min_unmap_latency_ticks = UINT64_MAX;
 	stat->max_copy_latency_ticks = 0;
 	stat->min_copy_latency_ticks = UINT64_MAX;
+
+	if (mode != BDEV_RESET_STAT_ALL) {
+		return;
+	}
+
 	stat->bytes_read = 0;
 	stat->num_read_ops = 0;
 	stat->bytes_written = 0;
@@ -3746,7 +3751,7 @@ bdev_io_stat_alloc(void)
 
 	stat = malloc(sizeof(struct spdk_bdev_io_stat));
 	if (stat != NULL) {
-		bdev_io_stat_reset(stat);
+		bdev_io_stat_reset(stat, BDEV_RESET_STAT_ALL);
 	}
 
 	return stat;
@@ -5758,6 +5763,7 @@ spdk_bdev_get_device_stat(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat
 }
 
 struct bdev_iostat_reset_ctx {
+	enum bdev_reset_stat_mode mode;
 	bdev_reset_device_stat_cb cb;
 	void *cb_arg;
 };
@@ -5774,17 +5780,19 @@ bdev_reset_device_stat_done(struct spdk_bdev *bdev, void *_ctx, int status)
 
 static void
 bdev_reset_each_channel_stat(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
-			     struct spdk_io_channel *ch, void *ctx)
+			     struct spdk_io_channel *ch, void *_ctx)
 {
+	struct bdev_iostat_reset_ctx *ctx = _ctx;
 	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
-	bdev_io_stat_reset(channel->stat);
+	bdev_io_stat_reset(channel->stat, ctx->mode);
 
 	spdk_bdev_for_each_channel_continue(i, 0);
 }
 
 void
-bdev_reset_device_stat(struct spdk_bdev *bdev, bdev_reset_device_stat_cb cb, void *cb_arg)
+bdev_reset_device_stat(struct spdk_bdev *bdev, enum bdev_reset_stat_mode mode,
+		       bdev_reset_device_stat_cb cb, void *cb_arg)
 {
 	struct bdev_iostat_reset_ctx *ctx;
 
@@ -5798,11 +5806,12 @@ bdev_reset_device_stat(struct spdk_bdev *bdev, bdev_reset_device_stat_cb cb, voi
 		return;
 	}
 
+	ctx->mode = mode;
 	ctx->cb = cb;
 	ctx->cb_arg = cb_arg;
 
 	spdk_spin_lock(&bdev->internal.spinlock);
-	bdev_io_stat_reset(bdev->internal.stat);
+	bdev_io_stat_reset(bdev->internal.stat, mode);
 	spdk_spin_unlock(&bdev->internal.spinlock);
 
 	spdk_bdev_for_each_channel(bdev,
