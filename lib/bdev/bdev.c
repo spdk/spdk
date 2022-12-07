@@ -255,7 +255,7 @@ struct spdk_bdev_channel {
 	/* Per io_device per thread data */
 	struct spdk_bdev_shared_resource *shared_resource;
 
-	struct spdk_bdev_io_stat stat;
+	struct spdk_bdev_io_stat *stat;
 
 	/*
 	 * Count of I/O submitted to the underlying dev module through this channel
@@ -282,7 +282,7 @@ struct spdk_bdev_channel {
 	uint64_t		start_tsc;
 	uint64_t		interval_tsc;
 	__itt_string_handle	*handle;
-	struct spdk_bdev_io_stat prev_stat;
+	struct spdk_bdev_io_stat *prev_stat;
 #endif
 
 	bdev_io_tailq_t		queued_resets;
@@ -3182,6 +3182,11 @@ bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 	struct spdk_bdev_shared_resource *shared_resource;
 	struct lba_range *range;
 
+	free(ch->stat);
+#ifdef SPDK_CONFIG_VTUNE
+	free(ch->prev_stat);
+#endif
+
 	while (!TAILQ_EMPTY(&ch->locked_ranges)) {
 		range = TAILQ_FIRST(&ch->locked_ranges);
 		TAILQ_REMOVE(&ch->locked_ranges, range, tailq);
@@ -3449,8 +3454,6 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 		TAILQ_INSERT_TAIL(&mgmt_ch->shared_resources, shared_resource, link);
 	}
 
-	memset(&ch->stat, 0, sizeof(ch->stat));
-	ch->stat.ticks_rate = spdk_get_ticks_hz();
 	ch->io_outstanding = 0;
 	TAILQ_INIT(&ch->queued_resets);
 	TAILQ_INIT(&ch->locked_ranges);
@@ -3459,6 +3462,14 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 
 	TAILQ_INIT(&ch->io_submitted);
 	TAILQ_INIT(&ch->io_locked);
+
+	ch->stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
+	if (ch->stat == NULL) {
+		bdev_channel_destroy_resource(ch);
+		return -1;
+	}
+
+	ch->stat->ticks_rate = spdk_get_ticks_hz();
 
 #ifdef SPDK_CONFIG_VTUNE
 	{
@@ -3473,7 +3484,11 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 		free(name);
 		ch->start_tsc = spdk_get_ticks();
 		ch->interval_tsc = spdk_get_ticks_hz() / 100;
-		memset(&ch->prev_stat, 0, sizeof(ch->prev_stat));
+		ch->prev_stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
+		if (ch->prev_stat == NULL) {
+			bdev_channel_destroy_resource(ch);
+			return -1;
+		}
 	}
 #endif
 
@@ -3696,7 +3711,7 @@ bdev_channel_destroy(void *io_device, void *ctx_buf)
 
 	/* This channel is going away, so add its statistics into the bdev so that they don't get lost. */
 	spdk_spin_lock(&ch->bdev->internal.spinlock);
-	bdev_io_stat_add(&ch->bdev->internal.stat, &ch->stat);
+	bdev_io_stat_add(&ch->bdev->internal.stat, ch->stat);
 	spdk_spin_unlock(&ch->bdev->internal.spinlock);
 
 	bdev_abort_all_queued_io(&ch->queued_resets, ch);
@@ -5583,7 +5598,7 @@ spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 {
 	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
-	*stat = channel->stat;
+	memcpy(stat, channel->stat, sizeof(struct spdk_bdev_io_stat));
 }
 
 static void
@@ -5603,7 +5618,7 @@ bdev_get_each_channel_stat(struct spdk_bdev_channel_iter *i, struct spdk_bdev *b
 	struct spdk_bdev_iostat_ctx *bdev_iostat_ctx = _ctx;
 	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
-	bdev_io_stat_add(bdev_iostat_ctx->stat, &channel->stat);
+	bdev_io_stat_add(bdev_iostat_ctx->stat, channel->stat);
 	spdk_bdev_for_each_channel_continue(i, 0);
 }
 
@@ -6040,40 +6055,40 @@ bdev_io_complete(void *ctx)
 	if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS) {
 		switch (bdev_io->type) {
 		case SPDK_BDEV_IO_TYPE_READ:
-			bdev_io->internal.ch->stat.bytes_read += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
-			bdev_io->internal.ch->stat.num_read_ops++;
-			bdev_io->internal.ch->stat.read_latency_ticks += tsc_diff;
+			bdev_io->internal.ch->stat->bytes_read += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+			bdev_io->internal.ch->stat->num_read_ops++;
+			bdev_io->internal.ch->stat->read_latency_ticks += tsc_diff;
 			break;
 		case SPDK_BDEV_IO_TYPE_WRITE:
-			bdev_io->internal.ch->stat.bytes_written += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
-			bdev_io->internal.ch->stat.num_write_ops++;
-			bdev_io->internal.ch->stat.write_latency_ticks += tsc_diff;
+			bdev_io->internal.ch->stat->bytes_written += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+			bdev_io->internal.ch->stat->num_write_ops++;
+			bdev_io->internal.ch->stat->write_latency_ticks += tsc_diff;
 			break;
 		case SPDK_BDEV_IO_TYPE_UNMAP:
-			bdev_io->internal.ch->stat.bytes_unmapped += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
-			bdev_io->internal.ch->stat.num_unmap_ops++;
-			bdev_io->internal.ch->stat.unmap_latency_ticks += tsc_diff;
+			bdev_io->internal.ch->stat->bytes_unmapped += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+			bdev_io->internal.ch->stat->num_unmap_ops++;
+			bdev_io->internal.ch->stat->unmap_latency_ticks += tsc_diff;
 			break;
 		case SPDK_BDEV_IO_TYPE_ZCOPY:
 			/* Track the data in the start phase only */
 			if (bdev_io->u.bdev.zcopy.start) {
 				if (bdev_io->u.bdev.zcopy.populate) {
-					bdev_io->internal.ch->stat.bytes_read +=
+					bdev_io->internal.ch->stat->bytes_read +=
 						bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
-					bdev_io->internal.ch->stat.num_read_ops++;
-					bdev_io->internal.ch->stat.read_latency_ticks += tsc_diff;
+					bdev_io->internal.ch->stat->num_read_ops++;
+					bdev_io->internal.ch->stat->read_latency_ticks += tsc_diff;
 				} else {
-					bdev_io->internal.ch->stat.bytes_written +=
+					bdev_io->internal.ch->stat->bytes_written +=
 						bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
-					bdev_io->internal.ch->stat.num_write_ops++;
-					bdev_io->internal.ch->stat.write_latency_ticks += tsc_diff;
+					bdev_io->internal.ch->stat->num_write_ops++;
+					bdev_io->internal.ch->stat->write_latency_ticks += tsc_diff;
 				}
 			}
 			break;
 		case SPDK_BDEV_IO_TYPE_COPY:
-			bdev_io->internal.ch->stat.bytes_copied += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
-			bdev_io->internal.ch->stat.num_copy_ops++;
-			bdev_io->internal.ch->stat.copy_latency_ticks += tsc_diff;
+			bdev_io->internal.ch->stat->bytes_copied += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+			bdev_io->internal.ch->stat->num_copy_ops++;
+			bdev_io->internal.ch->stat->copy_latency_ticks += tsc_diff;
 			break;
 		default:
 			break;
@@ -6085,17 +6100,20 @@ bdev_io_complete(void *ctx)
 	if (now_tsc > (bdev_io->internal.ch->start_tsc + bdev_io->internal.ch->interval_tsc)) {
 		uint64_t data[5];
 
-		data[0] = bdev_io->internal.ch->stat.num_read_ops - bdev_io->internal.ch->prev_stat.num_read_ops;
-		data[1] = bdev_io->internal.ch->stat.bytes_read - bdev_io->internal.ch->prev_stat.bytes_read;
-		data[2] = bdev_io->internal.ch->stat.num_write_ops - bdev_io->internal.ch->prev_stat.num_write_ops;
-		data[3] = bdev_io->internal.ch->stat.bytes_written - bdev_io->internal.ch->prev_stat.bytes_written;
+		data[0] = bdev_io->internal.ch->stat->num_read_ops - bdev_io->internal.ch->prev_stat->num_read_ops;
+		data[1] = bdev_io->internal.ch->stat->bytes_read - bdev_io->internal.ch->prev_stat->bytes_read;
+		data[2] = bdev_io->internal.ch->stat->num_write_ops -
+			  bdev_io->internal.ch->prev_stat->num_write_ops;
+		data[3] = bdev_io->internal.ch->stat->bytes_written -
+			  bdev_io->internal.ch->prev_stat->bytes_written;
 		data[4] = bdev_io->bdev->fn_table->get_spin_time ?
 			  bdev_io->bdev->fn_table->get_spin_time(spdk_bdev_io_get_io_channel(bdev_io)) : 0;
 
 		__itt_metadata_add(g_bdev_mgr.domain, __itt_null, bdev_io->internal.ch->handle,
 				   __itt_metadata_u64, 5, data);
 
-		bdev_io->internal.ch->prev_stat = bdev_io->internal.ch->stat;
+		memcpy(bdev_io->internal.ch->prev_stat, bdev_io->internal.ch->stat,
+		       sizeof(struct spdk_bdev_io_stat));
 		bdev_io->internal.ch->start_tsc = now_tsc;
 	}
 #endif
