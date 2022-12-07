@@ -3182,9 +3182,9 @@ bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 	struct spdk_bdev_shared_resource *shared_resource;
 	struct lba_range *range;
 
-	free(ch->stat);
+	bdev_io_stat_free(ch->stat);
 #ifdef SPDK_CONFIG_VTUNE
-	free(ch->prev_stat);
+	bdev_io_stat_free(ch->prev_stat);
 #endif
 
 	while (!TAILQ_EMPTY(&ch->locked_ranges)) {
@@ -3463,7 +3463,7 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 	TAILQ_INIT(&ch->io_submitted);
 	TAILQ_INIT(&ch->io_locked);
 
-	ch->stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
+	ch->stat = bdev_io_stat_alloc();
 	if (ch->stat == NULL) {
 		bdev_channel_destroy_resource(ch);
 		return -1;
@@ -3484,7 +3484,7 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 		free(name);
 		ch->start_tsc = spdk_get_ticks();
 		ch->interval_tsc = spdk_get_ticks_hz() / 100;
-		ch->prev_stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
+		ch->prev_stat = bdev_io_stat_alloc();
 		if (ch->prev_stat == NULL) {
 			bdev_channel_destroy_resource(ch);
 			return -1;
@@ -3685,6 +3685,24 @@ bdev_io_stat_add(struct spdk_bdev_io_stat *total, struct spdk_bdev_io_stat *add)
 	total->write_latency_ticks += add->write_latency_ticks;
 	total->unmap_latency_ticks += add->unmap_latency_ticks;
 	total->copy_latency_ticks += add->copy_latency_ticks;
+}
+
+static void
+bdev_io_stat_get(struct spdk_bdev_io_stat *to_stat, struct spdk_bdev_io_stat *from_stat)
+{
+	memcpy(to_stat, from_stat, sizeof(struct spdk_bdev_io_stat));
+}
+
+struct spdk_bdev_io_stat *
+bdev_io_stat_alloc(void)
+{
+	return calloc(1, sizeof(struct spdk_bdev_io_stat));
+}
+
+void
+bdev_io_stat_free(struct spdk_bdev_io_stat *stat)
+{
+	free(stat);
 }
 
 static void
@@ -5598,7 +5616,7 @@ spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 {
 	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
-	memcpy(stat, channel->stat, sizeof(struct spdk_bdev_io_stat));
+	bdev_io_stat_get(stat, channel->stat);
 }
 
 static void
@@ -5645,7 +5663,7 @@ spdk_bdev_get_device_stat(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat
 
 	/* Start with the statistics from previously deleted channels. */
 	spdk_spin_lock(&bdev->internal.spinlock);
-	bdev_io_stat_add(bdev_iostat_ctx->stat, bdev->internal.stat);
+	bdev_io_stat_get(bdev_iostat_ctx->stat, bdev->internal.stat);
 	spdk_spin_unlock(&bdev->internal.spinlock);
 
 	/* Then iterate and add the statistics from each existing channel. */
@@ -6430,7 +6448,7 @@ bdev_register(struct spdk_bdev *bdev)
 		return -ENOMEM;
 	}
 
-	bdev->internal.stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
+	bdev->internal.stat = bdev_io_stat_alloc();
 	if (!bdev->internal.stat) {
 		SPDK_ERRLOG("Unable to allocate I/O statistics structure.\n");
 		free(bdev_name);
@@ -6450,7 +6468,7 @@ bdev_register(struct spdk_bdev *bdev)
 
 	ret = bdev_name_add(&bdev->internal.bdev_name, bdev, bdev->name);
 	if (ret != 0) {
-		free(bdev->internal.stat);
+		bdev_io_stat_free(bdev->internal.stat);
 		free(bdev_name);
 		return ret;
 	}
@@ -6466,7 +6484,7 @@ bdev_register(struct spdk_bdev *bdev)
 			if (ret != 0) {
 				SPDK_ERRLOG("Unable to add uuid:%s alias for bdev %s\n", uuid, bdev->name);
 				bdev_name_del(&bdev->internal.bdev_name);
-				free(bdev->internal.stat);
+				bdev_io_stat_free(bdev->internal.stat);
 				free(bdev_name);
 				return ret;
 			}
@@ -6531,7 +6549,7 @@ bdev_destroy_cb(void *io_device)
 
 	spdk_spin_destroy(&bdev->internal.spinlock);
 	free(bdev->internal.qos);
-	free(bdev->internal.stat);
+	bdev_io_stat_free(bdev->internal.stat);
 
 	rc = bdev->fn_table->destruct(bdev->ctxt);
 	if (rc < 0) {

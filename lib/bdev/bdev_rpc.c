@@ -15,6 +15,8 @@
 
 #include "spdk/log.h"
 
+#include "bdev_internal.h"
+
 static void
 dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *ctx)
 {
@@ -224,7 +226,7 @@ bdev_iostat_ctx_alloc(void)
 		return NULL;
 	}
 
-	ctx->stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
+	ctx->stat = bdev_io_stat_alloc();
 	if (ctx->stat == NULL) {
 		free(ctx);
 		return NULL;
@@ -236,7 +238,7 @@ bdev_iostat_ctx_alloc(void)
 static void
 bdev_iostat_ctx_free(struct bdev_get_iostat_ctx *ctx)
 {
-	free(ctx->stat);
+	bdev_io_stat_free(ctx->stat);
 	free(ctx);
 }
 
