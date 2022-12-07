@@ -82,6 +82,7 @@ histogram_merge(void)
 	struct spdk_histogram_data *h1, *h2;
 	uint64_t *values = g_values;
 	uint32_t i;
+	int rc;
 
 	h1 = spdk_histogram_data_alloc();
 	h2 = spdk_histogram_data_alloc();
@@ -91,11 +92,21 @@ histogram_merge(void)
 		spdk_histogram_data_tally(h2, g_values[i]);
 	}
 
-	spdk_histogram_data_merge(h1, h2);
+	rc = spdk_histogram_data_merge(h1, h2);
+	CU_ASSERT(rc == 0);
 
 	g_total = 0;
 	g_number_of_merged_histograms = 2;
 	spdk_histogram_data_iterate(h1, check_values, &values);
+
+	spdk_histogram_data_free(h1);
+	spdk_histogram_data_free(h2);
+
+	h1 = spdk_histogram_data_alloc_sized(SPDK_HISTOGRAM_BUCKET_SHIFT_DEFAULT);
+	h2 = spdk_histogram_data_alloc_sized(SPDK_HISTOGRAM_BUCKET_SHIFT_DEFAULT - 1);
+
+	rc = spdk_histogram_data_merge(h1, h2);
+	CU_ASSERT(rc == -EINVAL);
 
 	spdk_histogram_data_free(h1);
 	spdk_histogram_data_free(h2);

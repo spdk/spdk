@@ -179,15 +179,25 @@ spdk_histogram_data_iterate(const struct spdk_histogram_data *histogram,
 	}
 }
 
-static inline void
+static inline int
 spdk_histogram_data_merge(const struct spdk_histogram_data *dst,
 			  const struct spdk_histogram_data *src)
 {
 	uint64_t i;
 
+	/* Histograms with different bucket_shift values cannot be simply
+	 * merged, because the buckets represent different ranges of
+	 * values.
+	 */
+	if (dst->bucket_shift != src->bucket_shift) {
+		return -EINVAL;
+	}
+
 	for (i = 0; i < SPDK_HISTOGRAM_NUM_BUCKETS(dst); i++) {
 		dst->bucket[i] += src->bucket[i];
 	}
+
+	return 0;
 }
 
 static inline struct spdk_histogram_data *
