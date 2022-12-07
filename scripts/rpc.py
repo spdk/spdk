@@ -3249,11 +3249,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         if args is not None:
             rpc_module = plugin_parser.parse_known_args(args)[0].rpc_plugin
 
+        if rpc_module in plugins:
+            return
+
         if rpc_module is not None:
             try:
                 rpc_plugin = importlib.import_module(rpc_module)
                 try:
                     rpc_plugin.spdk_rpc_plugin_initialize(subparsers)
+                    plugins.append(rpc_module)
                 except AttributeError:
                     print("Module %s does not contain 'spdk_rpc_plugin_initialize' function" % rpc_module)
             except ModuleNotFoundError:
@@ -3269,6 +3273,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             if arg.startswith('--') and "_" in arg:
                 args[i] = arg.replace('_', '-')
 
+    plugins = []
     load_plugin(None)
 
     replace_arg_underscores(sys.argv)
