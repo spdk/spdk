@@ -4098,6 +4098,44 @@ static void __attribute__((constructor)) _spdk_nvme_transport_register_##name(vo
 	spdk_nvme_transport_register(transport_ops); \
 }
 
+/**
+ * NVMe transport options.
+ */
+struct spdk_nvme_transport_opts {
+	/**
+	 * It is used for RDMA transport.
+	 *
+	 * The queue depth of a shared rdma receive queue.
+	 */
+	uint32_t rdma_srq_size;
+
+	/**
+	 * The size of spdk_nvme_transport_opts according to the caller of this library is used for ABI
+	 * compatibility.  The library uses this field to know how many fields in this
+	 * structure are valid. And the library will populate any remaining fields with default values.
+	 */
+	size_t opts_size;
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_transport_opts) == 12, "Incorrect size");
+
+/**
+ * Get the current NVMe transport options.
+ *
+ * \param[out] opts Will be filled with the current options for spdk_nvme_transport_set_opts().
+ * \param opts_size Must be set to sizeof(struct spdk_nvme_transport_opts).
+ */
+void spdk_nvme_transport_get_opts(struct spdk_nvme_transport_opts *opts, size_t opts_size);
+
+/**
+ * Set the NVMe transport options.
+ *
+ * \param opts Pointer to the allocated spdk_nvme_transport_opts structure with new values.
+ * \param opts_size Must be set to sizeof(struct spdk_nvme_transport_opts).
+ *
+ * \return 0 on success, or negated errno on failure.
+ */
+int spdk_nvme_transport_set_opts(const struct spdk_nvme_transport_opts *opts, size_t opts_size);
+
 #ifdef __cplusplus
 }
 #endif

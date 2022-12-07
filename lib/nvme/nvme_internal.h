@@ -34,6 +34,8 @@
 
 extern pid_t g_spdk_nvme_pid;
 
+extern struct spdk_nvme_transport_opts g_spdk_nvme_transport_opts;
+
 /*
  * Some Intel devices support vendor-unique read latency log page even
  * though the log page directory says otherwise.

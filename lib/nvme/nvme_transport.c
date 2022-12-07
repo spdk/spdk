@@ -25,6 +25,10 @@ TAILQ_HEAD(nvme_transport_list, spdk_nvme_transport) g_spdk_nvme_transports =
 struct spdk_nvme_transport g_spdk_transports[SPDK_MAX_NUM_OF_TRANSPORTS] = {};
 int g_current_transport_index = 0;
 
+struct spdk_nvme_transport_opts g_spdk_nvme_transport_opts = {
+	.rdma_srq_size = 0,
+};
+
 const struct spdk_nvme_transport *
 nvme_get_first_transport(void)
 {
@@ -791,4 +795,60 @@ spdk_nvme_transport_type_t
 nvme_transport_get_trtype(const struct spdk_nvme_transport *transport)
 {
 	return transport->ops.type;
+}
+
+void
+spdk_nvme_transport_get_opts(struct spdk_nvme_transport_opts *opts, size_t opts_size)
+{
+	if (opts == NULL) {
+		SPDK_ERRLOG("opts should not be NULL.\n");
+		return;
+	}
+
+	if (opts_size == 0) {
+		SPDK_ERRLOG("opts_size should not be zero.\n");
+		return;
+	}
+
+	opts->opts_size = opts_size;
+
+#define SET_FIELD(field) \
+	if (offsetof(struct spdk_nvme_transport_opts, field) + sizeof(opts->field) <= opts_size) { \
+		opts->field = g_spdk_nvme_transport_opts.field; \
+	} \
+
+	SET_FIELD(rdma_srq_size);
+
+	/* Do not remove this statement, you should always update this statement when you adding a new field,
+	 * and do not forget to add the SET_FIELD statement for your added field. */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_transport_opts) == 12, "Incorrect size");
+
+#undef SET_FIELD
+}
+
+int
+spdk_nvme_transport_set_opts(const struct spdk_nvme_transport_opts *opts, size_t opts_size)
+{
+	if (opts == NULL) {
+		SPDK_ERRLOG("opts should not be NULL.\n");
+		return -EINVAL;
+	}
+
+	if (opts_size == 0) {
+		SPDK_ERRLOG("opts_size should not be zero.\n");
+		return -EINVAL;
+	}
+
+#define SET_FIELD(field) \
+	if (offsetof(struct spdk_nvme_transport_opts, field) + sizeof(opts->field) <= opts->opts_size) { \
+		g_spdk_nvme_transport_opts.field = opts->field; \
+	} \
+
+	SET_FIELD(rdma_srq_size);
+
+	g_spdk_nvme_transport_opts.opts_size = opts->opts_size;
+
+#undef SET_FIELD
+
+	return 0;
 }

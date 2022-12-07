@@ -76,6 +76,15 @@ and disable CPU core locks in runtime.
 Added --rpcs-allowed command line option. Users can specify a comma-separated list of RPC
 names with this option to restrict allowed RPCs to only that list.
 
+### nvme
+
+NVMe transport options were newly introduced. The NVMe transport options are defined via
+the `spdk_nvme_transport_opts` structure and configured via `spdk_nvme_transport_get_opts`
+and `spdk_nvme_transport_get_opts` functions.
+
+Shared receive queue was supported by the RDMA transport. It can be configured by
+a new NVMe transport option `rdma_srq_size`.
+
 ### rpc
 
 Added spdk_rpc_set_allowlist to restrict allowed RPCs to the specified list.

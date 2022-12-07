@@ -5,6 +5,8 @@
 	spdk_nvme_transport_register;
 	spdk_nvme_transport_available;
 	spdk_nvme_transport_available_by_name;
+	spdk_nvme_transport_get_opts;
+	spdk_nvme_transport_set_opts;
 	spdk_nvme_transport_id_parse;
 	spdk_nvme_transport_id_populate_trstring;
 	spdk_nvme_transport_id_parse_trtype;
