@@ -3711,7 +3711,7 @@ bdev_channel_destroy(void *io_device, void *ctx_buf)
 
 	/* This channel is going away, so add its statistics into the bdev so that they don't get lost. */
 	spdk_spin_lock(&ch->bdev->internal.spinlock);
-	bdev_io_stat_add(&ch->bdev->internal.stat, ch->stat);
+	bdev_io_stat_add(ch->bdev->internal.stat, ch->stat);
 	spdk_spin_unlock(&ch->bdev->internal.spinlock);
 
 	bdev_abort_all_queued_io(&ch->queued_resets, ch);
@@ -5645,7 +5645,7 @@ spdk_bdev_get_device_stat(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat
 
 	/* Start with the statistics from previously deleted channels. */
 	spdk_spin_lock(&bdev->internal.spinlock);
-	bdev_io_stat_add(bdev_iostat_ctx->stat, &bdev->internal.stat);
+	bdev_io_stat_add(bdev_iostat_ctx->stat, bdev->internal.stat);
 	spdk_spin_unlock(&bdev->internal.spinlock);
 
 	/* Then iterate and add the statistics from each existing channel. */
@@ -6430,6 +6430,13 @@ bdev_register(struct spdk_bdev *bdev)
 		return -ENOMEM;
 	}
 
+	bdev->internal.stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
+	if (!bdev->internal.stat) {
+		SPDK_ERRLOG("Unable to allocate I/O statistics structure.\n");
+		free(bdev_name);
+		return -ENOMEM;
+	}
+
 	bdev->internal.status = SPDK_BDEV_STATUS_READY;
 	bdev->internal.measured_queue_depth = UINT64_MAX;
 	bdev->internal.claim_module = NULL;
@@ -6443,6 +6450,7 @@ bdev_register(struct spdk_bdev *bdev)
 
 	ret = bdev_name_add(&bdev->internal.bdev_name, bdev, bdev->name);
 	if (ret != 0) {
+		free(bdev->internal.stat);
 		free(bdev_name);
 		return ret;
 	}
@@ -6458,6 +6466,7 @@ bdev_register(struct spdk_bdev *bdev)
 			if (ret != 0) {
 				SPDK_ERRLOG("Unable to add uuid:%s alias for bdev %s\n", uuid, bdev->name);
 				bdev_name_del(&bdev->internal.bdev_name);
+				free(bdev->internal.stat);
 				free(bdev_name);
 				return ret;
 			}
@@ -6522,6 +6531,7 @@ bdev_destroy_cb(void *io_device)
 
 	spdk_spin_destroy(&bdev->internal.spinlock);
 	free(bdev->internal.qos);
+	free(bdev->internal.stat);
 
 	rc = bdev->fn_table->destruct(bdev->ctxt);
 	if (rc < 0) {

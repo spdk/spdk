@@ -540,7 +540,7 @@ struct spdk_bdev {
 		uint64_t weighted_io_time;
 
 		/** accumulated I/O statistics for previously deleted channels of this bdev */
-		struct spdk_bdev_io_stat stat;
+		struct spdk_bdev_io_stat *stat;
 
 		/** true if tracking the queue_depth of a device is in progress */
 		bool	qd_poll_in_progress;
