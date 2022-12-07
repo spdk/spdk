@@ -32,10 +32,6 @@
 
 #define MAX_TMPBUF 1024
 
-#ifdef __FreeBSD__
-#define HAVE_SRANDOMDEV 1
-#endif
-
 struct spdk_iscsi_globals g_iscsi = {
 	.mutex = PTHREAD_MUTEX_INITIALIZER,
 	.portal_head = TAILQ_HEAD_INITIALIZER(g_iscsi.portal_head),
@@ -53,7 +49,7 @@ struct spdk_iscsi_globals g_iscsi = {
 	    | (((uint32_t) *((uint8_t *)(BUF)+3)) << 24))	\
 	    == (CRC32C))
 
-#ifndef HAVE_SRANDOMDEV
+#ifndef SPDK_CONFIG_HAVE_ARC4RANDOM
 static void
 srandomdev(void)
 {
@@ -66,9 +62,7 @@ srandomdev(void)
 	seed = pid ^ now;
 	srandom(seed);
 }
-#endif /* HAVE_SRANDOMDEV */
 
-#ifndef SPDK_CONFIG_HAVE_ARC4RANDOM
 static int g_arc4random_initialized = 0;
 
 static uint32_t
