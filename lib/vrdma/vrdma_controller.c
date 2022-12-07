@@ -282,6 +282,7 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
     ctrl->pf_id = attr->pf_id;
     ctrl->vdev = attr->vdev;
     ctrl->dev.rdev_idx = attr->vdev->devid;
+    ctrl->rpc.srv.rpc_lock_fd = -1;
     LIST_INIT(&ctrl->bk_qp_list);
     vrdma_srv_device_init(ctrl);
     SPDK_NOTICELOG("new VRDMA controller %d [in order %d]"
@@ -305,6 +306,12 @@ free_ctrl:
     free(ctrl);
 err:
     return NULL;
+}
+
+struct vrdma_ctrl *
+vrdma_find_ctrl_by_srv_dev(struct vrdma_dev *rdev)
+{
+    return SPDK_CONTAINEROF(rdev, struct vrdma_ctrl, dev);
 }
 
 static void vrdma_ctrl_free(struct vrdma_ctrl *ctrl)

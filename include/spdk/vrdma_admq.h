@@ -94,7 +94,6 @@ struct vrdma_dev {
 
 	uint32_t input_pkt_num;
 	uint32_t output_pkt_num;
-
 } __attribute__((packed));
 
 /*Per app backend resource creation*/

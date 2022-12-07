@@ -38,6 +38,7 @@
 #include "spdk/vrdma_emu_mgr.h"
 #include "spdk/vrdma_srv.h"
 #include "spdk/vrdma_qp.h"
+#include "spdk/vrdma_rpc.h"
 
 #define VRDMA_EMU_NAME_PREFIX "VrdmaEmu"
 #define VRDMA_EMU_NAME_MAXLEN 32
@@ -61,6 +62,7 @@ struct vrdma_ctrl {
     struct ibv_mr *mr;
     struct vrdma_admin_sw_qp sw_qp;
     struct snap_vrdma_ctrl *sctrl;
+    struct spdk_vrdma_rpc rpc;
     /** Service-specific callbacks. */
 	const struct vRdmaServiceOps *srv_ops;
     void (*destroy_done_cb)(void *arg);
@@ -86,6 +88,8 @@ bool vrdma_ctrl_is_suspended(void *ctrl);
 
 struct vrdma_ctrl *
 vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr);
+struct vrdma_ctrl *
+vrdma_find_ctrl_by_srv_dev(struct vrdma_dev *rdev);
 void vrdma_ctrl_destroy(void *arg, void (*done_cb)(void *arg),
                              void *done_cb_arg);
 int vrdma_dev_name_to_id(const char *rdma_dev_name);

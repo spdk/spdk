@@ -320,7 +320,7 @@ static bool vrdma_qp_wqe_sm_parse(struct spdk_vrdma_qp *vqp,
 static inline struct vrdma_backend_qp *vrdma_vq_get_mqp(struct spdk_vrdma_qp *vqp)
 {
 	//TODO: currently, only one-to-one map
-	return vqp->bk_qp[0];
+	return vqp->bk_qp;
 }
 
 static bool vrdma_qp_wqe_sm_map_backend(struct spdk_vrdma_qp *vqp,
@@ -673,7 +673,7 @@ static bool vrdma_qp_wqe_sm_submit(struct spdk_vrdma_qp *vqp,
 											enum vrdma_qp_sm_op_status status)
 {
 	uint16_t num_to_parse = vqp->sq.comm.num_to_parse;
-	struct snap_vrdma_backend_qp *backend_qp = &vqp->bk_qp[0]->bk_qp;
+	struct snap_vrdma_backend_qp *backend_qp = &vqp->bk_qp->bk_qp;
 	uint16_t i;
 	struct vrdma_send_wqe *wqe;
 	uint8_t opcode = 0;
@@ -916,7 +916,7 @@ static void vrdma_ring_mcq_db(struct snap_hw_cq *mcq)
 static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 									   enum vrdma_qp_sm_op_status status)
 {
-	struct snap_hw_cq *mcq = &vqp->bk_qp[0]->bk_qp.sq_hw_cq;
+	struct snap_hw_cq *mcq = &vqp->bk_qp->bk_qp.sq_hw_cq;
 	struct spdk_vrdma_cq *vcq = vqp->sq_vcq;
 	struct mlx5_cqe64 *cqe;
 	struct vrdma_cqe *vcqe;

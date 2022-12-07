@@ -36,14 +36,14 @@
 #include "spdk/vrdma_snap.h"
 #include "spdk/vrdma_emu_mgr.h"
 #include "spdk/vrdma_snap_pci_mgr.h"
-
+#include "spdk/vrdma_qp.h"
 
 static uint32_t g_vdev_cnt;
-char *vrdma_sf_name;
 
 void spdk_vrdma_ctx_stop(void (*fini_cb)(void))
 {
 	spdk_vrdma_snap_stop(fini_cb);
+	vrdma_del_bk_qp_list();
 }
 
 int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
@@ -93,13 +93,7 @@ int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
 	}
 
 	/* init sf name */
-	vrdma_sf_name = calloc(sizeof(char), VRDMA_DEV_NAME_LEN);
-	if (!vrdma_sf_name) {
-		SPDK_ERRLOG("Failed to alloc sf_name memory\n");
-		goto free_vdev;
-	}
-	strcpy(vrdma_sf_name, "dummy");
-	
+	strcpy(vdev->vrdma_sf.sf_name, "dummy");
 	return 0;
 free_vdev:
 	free(vdev);

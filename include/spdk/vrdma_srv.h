@@ -34,6 +34,29 @@
 #include <stdint.h>
 #include "vrdma_admq.h"
 
+#define VRDMA_MAX_BK_QP_PER_VQP 4
+
+struct vrdma_srv_qp {
+	LIST_ENTRY(vrdma_srv_qp) entry;
+	uint32_t qp_idx;
+	struct ibv_pd *pd;
+	uint32_t qp_state;
+	uint32_t sq_size;
+	uint32_t rq_size;
+	struct vrdma_backend_qp *bk_qp[VRDMA_MAX_BK_QP_PER_VQP];
+};
+
+struct vrdma_srv_pd {
+    LIST_ENTRY(vrdma_srv_pd) entry;
+	uint32_t pd_idx;
+	struct ibv_pd *ibpd;
+};
+
+LIST_HEAD(vrdma_srv_qp_list_head, vrdma_srv_qp);
+
+extern struct vrdma_srv_qp_list_head srv_qp_list;
+
+/* Admin-queue message API*/
 struct vrdma_modify_gid_req_param {
 	uint8_t gid[16];
 };
@@ -66,6 +89,7 @@ struct vrdma_create_cq_req_param {
 
 struct vrdma_create_qp_req_param {
 	uint32_t qp_handle;  /* qp handle need to be created in vrdev and passed to vservice */
+	struct ibv_pd *ibpd;
 };
 
 struct vrdma_cmd_param {
@@ -268,6 +292,8 @@ typedef int (*vrdma_admin_create_ah_op)(struct vrdma_dev *rdev,
 										struct vrdma_cmd_param *param);
 typedef int (*vrdma_admin_destroy_ah_op)(struct vrdma_dev *rdev,
 										struct vrdma_admin_cmd_entry *cmd);
+typedef int (*vrdma_device_map_backend_qp_op)(uint32_t vqpn,
+						struct vrdma_backend_qp *bk_qp);
 
 /* vrdma ops call back exposed to vrdma device */
 typedef struct vRdmaServiceOps {
@@ -294,6 +320,8 @@ typedef struct vRdmaServiceOps {
 	vrdma_admin_modify_qp_op vrdma_device_modify_qp;
 	vrdma_admin_create_ah_op vrdma_device_create_ah;
 	vrdma_admin_destroy_ah_op vrdma_device_destroy_ah;
+	/* map backend_qp */
+	vrdma_device_map_backend_qp_op vrdma_device_map_backend_qp;
 } vRdmaServiceOps;
 
 // Assume vrdma service checks the pi,ci boundaries.
@@ -349,4 +377,26 @@ bool vrdma_mem_move_d2h(struct vrdma_dev *dev, void *src, uint32_t skey, void *d
 struct ibv_mr *vrdma_reg_mr(struct ibv_pd *pd, void *addr, size_t length);
 
 void vrdma_srv_device_init(struct vrdma_ctrl *ctrl);
+
+/* data path interfaces */
+//@v_rgid   rgid passed from user
+//@pd
+//@core_num
+//@qp_state  passed as parameter in modify_qp
+//@vqpn      
+//return 0 success, else failed
+int vrdma_srv_bind_channel(struct vrdma_dev *rdev, union ibv_gid *v_rgid, struct ibv_pd *pd,
+							enum ibv_qp_state qp_state, uint32_t vqpn, uint32_t remote_vqpn);
+//@vqpn
+//return 0 success, else failed
+int vrdma_srv_unbind_channel(struct vrdma_dev *rdev, uint32_t vqpn);
+//@vqpn
+//bk_qp    the backend_qp returned by vrdma service
+//return 0 success, else failed
+int vrdma_srv_map_backend_mqp(uint32_t vqpn, struct vrdma_backend_qp *bk_qp);
+//@sychrome    the synchrome passed to vrdma service
+//@vqpn
+//@bk_qp    if service has switched mqp for network error, returned bk_qp, else nothing change
+//@return 0 success, else failed
+int vrdma_srv_update_backend_channel(uint8_t synchrome, uint32_t vqpn, struct vrdma_backend_qp *bk_qp);
 #endif
