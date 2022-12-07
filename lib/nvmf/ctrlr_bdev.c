@@ -681,7 +681,13 @@ nvmf_bdev_ctrlr_copy_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		      cmd->cdw12_bits.copy.prinfow,
 		      cmd->cdw12_bits.copy.fua,
 		      cmd->cdw12_bits.copy.lr);
-	assert(req->length == (cmd->cdw12_bits.copy.nr + 1) * sizeof(struct spdk_nvme_scc_source_range));
+
+	if (spdk_unlikely(req->length != (cmd->cdw12_bits.copy.nr + 1) *
+			  sizeof(struct spdk_nvme_scc_source_range))) {
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
 
 	if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_COPY)) {
 		SPDK_NOTICELOG("Copy command not supported by bdev\n");
