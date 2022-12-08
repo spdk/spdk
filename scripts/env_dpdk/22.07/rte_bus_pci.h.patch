@@ -1,0 +1,12 @@
+@@ -69,7 +69,11 @@
+ 	struct rte_pci_id id;               /**< PCI ID. */
+ 	struct rte_mem_resource mem_resource[PCI_MAX_RESOURCE];
+ 					    /**< PCI Memory Resource */
++#if RTE_VERSION < RTE_VERSION_NUM(21, 11, 0, 0)
++	struct rte_intr_handle intr_handle; /**< Interrupt handle */
++#else
+ 	struct rte_intr_handle *intr_handle; /**< Interrupt handle */
++#endif
+ 	struct rte_pci_driver *driver;      /**< PCI driver used in probing */
+ 	uint16_t max_vfs;                   /**< sriov enable if not zero */
+ 	enum rte_pci_kernel_driver kdrv;    /**< Kernel driver passthrough */

@@ -342,6 +342,7 @@ function build_doc() {
 function autobuild_test_suite() {
 	run_test "autobuild_check_format" ./scripts/check_format.sh
 	run_test "autobuild_check_so_deps" $rootdir/test/make/check_so_deps.sh $1
+	run_test "autobuild_check_dpdk_pci_api" $rootdir/scripts/env_dpdk/check_dpdk_pci_api.sh
 	if [[ $SPDK_TEST_AUTOBUILD == 'full' ]]; then
 		run_test "autobuild_external_code" $rootdir/test/external_code/test_make.sh $rootdir
 		./configure $config_params --without-shared
