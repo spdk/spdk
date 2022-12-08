@@ -474,11 +474,11 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 				  aqe->resp.create_pd_resp.err_code);
 		return;
 	}
-	if (!strcmp(ctrl->vdev->vrdma_sf.sf_name, "dummy")) {
-		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("no vrdma sf dev name is configured \n");
-		return;
-	}
+	//if (!strcmp(ctrl->vdev->vrdma_sf.sf_name, "dummy")) {
+	//	aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
+	//	SPDK_ERRLOG("no vrdma sf dev name is configured \n");
+	//	return;
+	//}
 	pd_idx = spdk_bit_array_find_first_clear(ctrl->vdev->free_vpd_ids, 0);
 	if (pd_idx == UINT32_MAX) {
 		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
@@ -493,7 +493,8 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 				  aqe->resp.create_pd_resp.err_code);
 		return;
 	}
-	vpd->ibpd = vrdma_create_sf_pd(ctrl);
+	//vpd->ibpd = vrdma_create_sf_pd(ctrl->vdev->vrdma_sf.sf_name);
+	vpd->ibpd = ibv_alloc_pd(ctrl->sctx->context);
 	if (!vpd->ibpd) {
 		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
 		SPDK_ERRLOG("Failed to allocate PD, err(%d)\n",

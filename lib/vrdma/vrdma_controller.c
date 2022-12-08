@@ -48,6 +48,8 @@
 #include "spdk/vrdma_snap_pci_mgr.h"
 #include "spdk/vrdma_admq.h"
 #include "spdk/vrdma_srv.h"
+#include "vrdma_providers.h"
+
 
 struct vrdma_dev_mac_list_head vrdma_dev_mac_list =
 				LIST_HEAD_INITIALIZER(vrdma_dev_mac_list);
@@ -256,6 +258,41 @@ static int vrdma_adminq_init(struct vrdma_ctrl *ctrl)
     return 0;
 }
 
+static int vrdma_device_start(void *arg)
+{
+	struct vrdma_prov_emu_dev_init_attr dev_init_attr = {};
+	struct vrdma_prov_init_attr attr = {};
+    struct vrdma_ctrl *ctrl = arg;
+
+    SPDK_NOTICELOG("ctrl %p name '%s' pf_id %d : vrdma_device_start\n",
+            ctrl, ctrl->name, ctrl->pf_id);
+	// ctx = spdk_emu_ctx_find_by_pci_id(vrdma_ctx->emu_manager, vdev->devid);
+	// ctrl = ctx->ctrl;
+	// ctrl->emu_ctx  = spdk_vrdma_snap_get_ibv_context(vrdma_ctx->emu_manager);
+	/*now, we don't have sf, so sf_vhca_id equal emu manager vhca_id*/
+	ctrl->sf_vhca_id = snap_get_dev_vhca_id(ctrl->emu_ctx);
+	attr.emu_ctx = ctrl->emu_ctx;
+	attr.emu_pd  = ctrl->pd;
+	SPDK_NOTICELOG("-----------naliu start test dev\n");
+	vrdma_prov_init(&attr, &ctrl->dpa_ctx);
+
+	dev_init_attr.dpa_handler = ctrl->dpa_ctx;
+	dev_init_attr.sf_dev_pd   = attr.emu_pd;
+	dev_init_attr.sf_ibv_ctx  = attr.emu_ctx;
+	dev_init_attr.sf_vhca_id  = snap_get_dev_vhca_id(attr.emu_ctx);
+	dev_init_attr.emu_ibv_ctx = attr.emu_ctx;
+	dev_init_attr.emu_vhca_id = ctrl->sctrl->sdev->pci->mpci.vhca_id;
+	dev_init_attr.num_msix    = ctrl->sctrl->bar_curr->num_msix;
+	dev_init_attr.msix_config_vector = ctrl->sctrl->bar_curr->msix_config;
+	vrdma_prov_emu_dev_init(&dev_init_attr, &ctrl->dpa_emu_dev_ctx);
+    return 0;
+}
+
+static int vrdma_device_stop(void *ctx)
+{
+    return 0;
+};
+
 struct vrdma_ctrl *
 vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
 {
@@ -263,6 +300,8 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
     struct vrdma_dev_mac *dev_mac;
     struct snap_vrdma_ctrl_attr sctrl_attr = {};
     struct snap_vrdma_ctrl_bar_cbs bar_cbs = {
+        .start = vrdma_device_start,
+        .stop = vrdma_device_stop,
         .post_flr = vrdma_ctrl_post_flr,
     };
 

@@ -41,6 +41,7 @@
 #include "spdk/vrdma_io_mgr.h"
 #include "spdk/vrdma_controller.h"
 #include "spdk/vrdma_qp.h"
+#include "vrdma_providers.h"
 
 /* TODO: use a hash table or sorted list */
 struct vrdma_lbk_qp_list_head vrdma_lbk_qp_list =
@@ -420,6 +421,7 @@ int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 				struct spdk_vrdma_cq *sq_vcq)
 {
 	struct snap_vrdma_vq_create_attr q_attr;
+	struct snap_vrdma_vq_create_dpa_attr q_dpa_attr = {};
 	uint32_t rq_buff_size, sq_buff_size, q_buff_size;
 	uint16_t sq_meta_size;
 
@@ -430,10 +432,13 @@ int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 	q_attr.tx_elem_size = VRDMA_DMA_ELEM_SIZE;
 	q_attr.rx_elem_size = VRDMA_DMA_ELEM_SIZE;
 	q_attr.vqpn = vqp->qp_idx;
-	vqp->snap_queue = ctrl->sctrl->q_ops->create(ctrl->sctrl, &q_attr);
-	if (!vqp->snap_queue) {
-		SPDK_ERRLOG("Failed to create qp dma queue");
-		return -1;
+
+	if (!ctrl->dpa_enabled) {
+		vqp->snap_queue = ctrl->sctrl->q_ops->create(ctrl->sctrl, &q_attr);
+		if (!vqp->snap_queue) {
+			SPDK_ERRLOG("Failed to create qp dma queue");
+			return -1;
+		}
 	}
 	vrdma_qp_sm_init(vqp);
 	vqp->rq.comm.wqebb_size =
@@ -474,6 +479,26 @@ int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 	vqp->sq.comm.doorbell_pa = aqe->req.create_qp_req.sq_pi_paddr;
 	vqp->sq.comm.log_pagesize = aqe->req.create_qp_req.log_sq_pagesize;
 	vqp->sq.comm.hop = aqe->req.create_qp_req.sq_hop;
+
+	if (ctrl->dpa_enabled) {
+		q_dpa_attr.bdev = NULL;
+		q_dpa_attr.pd = vqp->vpd->ibpd;
+		q_dpa_attr.sq_size = VRDMA_MAX_DMA_SQ_SIZE_PER_VQP;
+		q_dpa_attr.rq_size = VRDMA_MAX_DMA_RQ_SIZE_PER_VQP;
+		q_dpa_attr.tx_elem_size = VRDMA_DMA_ELEM_SIZE;
+		q_dpa_attr.rx_elem_size = VRDMA_DMA_ELEM_SIZE;
+		q_dpa_attr.vqpn = vqp->qp_idx;
+		q_dpa_attr.sq_msix_vector = vqp->sq_vcq->veq->vector_idx;
+		q_dpa_attr.rq_msix_vector = vqp->rq_vcq->veq->vector_idx;
+		q_dpa_attr.rq = vqp->rq;
+		q_dpa_attr.sq = vqp->sq;
+		q_dpa_attr.lkey = vqp->qp_mr->lkey;
+		q_dpa_attr.sq_pi = vqp->qp_pi->pi.sq_pi;
+		q_dpa_attr.rq_pi = vqp->qp_pi->pi.rq_pi;
+		vqp->snap_queue = vrdma_prov_vq_create(ctrl, &q_dpa_attr);
+		SPDK_NOTICELOG("\nnaliu vrdma_create_vq...end\n");
+	}
+	SPDK_NOTICELOG("\nlizh vrdma_create_vq...done\n");
 	return 0;
 
 free_wqe_buff:

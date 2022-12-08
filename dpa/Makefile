@@ -1,7 +1,8 @@
 #
 #  BSD LICENSE
 #
-#  Copyright © 2022 NVIDIA CORPORATION & AFFILIATES. ALL RIGHTS RESERVED.
+#  Copyright (c) Intel Corporation.
+#  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
@@ -30,25 +31,18 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-SNAP_INC_DIR :=/usr/local/snap/include
-SNAP_LIB_DIR :=/usr/local/snap/lib
+DIRS-y += host device
+#DIRS-y += host
 
-APP = spdk_vrdma
+# ifeq ($(OS),Linux)
+# DIRS-$(CONFIG_VHOST) += vhost
+# endif
 
-C_SRCS := spdk_vrdma.c
+.PHONY: all clean $(DIRS-y)
 
-CFLAGS += $(ENV_CFLAGS)
-CFLAGS += -I$(SNAP_INC_DIR)
-CLFAGS += -I/usr/include//include -I/usr/include//include/libflexio
-SYS_LIBS += -lm -L/usr/include//lib -lflexio -lmlx5 -libverbs -L$(SNAP_LIB_DIR) -lsnap-dma -lsnap -lsnap-mr -lsnap-env -lsnap-vrdma -lsnap-virtio-blk-ctrl
-
-SPDK_LIB_LIST = $(ALL_MODULES_LIST)
-SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev scsi copy trace conf
-SPDK_LIB_LIST += thread util event log log_rpc app_rpc
-SPDK_LIB_LIST += net sock notify vrdma dpa
-
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+all: $(DIRS-y)
+clean: $(DIRS-y)
+include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
