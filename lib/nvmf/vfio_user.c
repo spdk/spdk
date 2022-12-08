@@ -1858,7 +1858,7 @@ free_qp(struct nvmf_vfio_user_ctrlr *ctrlr, uint16_t qid)
 
 	sq = ctrlr->sqs[qid];
 	if (sq) {
-		SPDK_DEBUGLOG(nvmf_vfio, "%s: Free SQ %u\n", ctrlr_id(ctrlr), qid);
+		SPDK_DEBUGLOG(nvmf_vfio, "%s: Free sqid:%u\n", ctrlr_id(ctrlr), qid);
 		unmap_q(ctrlr, &sq->mapping);
 
 		free_sq_reqs(sq);
