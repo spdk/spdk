@@ -37,6 +37,7 @@ SPDK_ROOT_DIR := $(CURDIR)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-$(CONFIG_SNAP) += snaprdmabuild
+DIRS-y += dpa
 DIRS-y += lib
 DIRS-y += module
 DIRS-$(CONFIG_SHARED) += shared_lib
