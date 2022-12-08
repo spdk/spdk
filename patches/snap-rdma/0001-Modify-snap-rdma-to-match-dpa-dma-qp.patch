@@ -1,0 +1,151 @@
+From 1735b89d5f3f8aa85b8825bd04806f0834972bb0 Mon Sep 17 00:00:00 2001
+From: naliu <naliu@nvidia.com>
+Date: Thu, 8 Dec 2022 06:51:02 +0200
+Subject: [PATCH] Modify snap-rdma to match dpa-dma-qp
+
+Signed-off-by: naliu <naliu@nvidia.com>
+---
+ src/snap_vrdma.c         | 36 ++++++++++++++++++++++
+ src/snap_vrdma.h         | 64 ++++++++++++++++++++++++++++++++++++++++
+ vrdma/snap_vrdma_virtq.h |  1 +
+ 3 files changed, 101 insertions(+)
+
+diff --git a/src/snap_vrdma.c b/src/snap_vrdma.c
+index e44dea0..a086ef0 100644
+--- a/src/snap_vrdma.c
++++ b/src/snap_vrdma.c
+@@ -413,3 +413,39 @@ err:
+ 	free(pfs);
+ 	free(sdev);
+ }
++
++
++struct mlx5dv_devx_obj *
++snap_vrdma_mlx_devx_create_eq(struct ibv_context *ctx, uint32_t dev_emu_id,
++		   uint16_t msix_vector, uint64_t *eqn)
++{
++	uint8_t in[DEVX_ST_SZ_BYTES(general_obj_in_cmd_hdr) +
++		   DEVX_ST_SZ_BYTES(create_emulated_dev_eq_in)] = {};
++	uint8_t out[DEVX_ST_SZ_DW(general_obj_out_cmd_hdr) +
++		    DEVX_ST_SZ_BYTES(create_eq_out)] = {};
++	struct mlx5dv_devx_obj *eq = NULL;
++	uint8_t *emu_dev_eq_in;
++
++	DEVX_SET(general_obj_in_cmd_hdr, in, opcode,
++		 MLX5_CMD_OP_CREATE_GENERAL_OBJECT);
++	DEVX_SET(general_obj_in_cmd_hdr, in, obj_type,
++		 MLX5_OBJ_TYPE_EMULATED_DEV_EQ);
++
++	emu_dev_eq_in = in + DEVX_ST_SZ_BYTES(general_obj_in_cmd_hdr);
++	DEVX_SET(create_emulated_dev_eq_in, emu_dev_eq_in, device_emulation_id,
++		 dev_emu_id);
++	DEVX_SET(create_emulated_dev_eq_in, emu_dev_eq_in, intr, msix_vector);
++
++	eq = mlx5dv_devx_obj_create(ctx, in, sizeof(in), out, sizeof(out));
++	if (eq)
++		*eqn = DEVX_GET(general_obj_out_cmd_hdr, out, obj_id);
++	return eq;
++}
++
++void snap_vrdma_mlx_devx_destroy_eq(struct mlx5dv_devx_obj *obj)
++{
++	mlx5dv_devx_obj_destroy(obj);
++}
++
++
++
+diff --git a/src/snap_vrdma.h b/src/snap_vrdma.h
+index dd3e4b2..3f7cce7 100644
+--- a/src/snap_vrdma.h
++++ b/src/snap_vrdma.h
+@@ -66,6 +66,66 @@ struct snap_vrdma_device {
+ 	uint32_t vdev_idx;
+ };
+ 
++#define u8 uint8_t
++#define u16 uint16_t
++#define u32 uint32_t
++
++// enum {
++// 	MLX5_CMD_OP_CREATE_GENERAL_OBJECT = 0xa00,
++// 	MLX5_OBJ_TYPE_EMULATED_DEV_EQ = 0x49,
++// };
++
++// struct mlx5_ifc_general_obj_out_cmd_hdr_bits {
++// 	u8	 status[0x8];
++// 	u8	 reserved_at_8[0x18];
++
++// 	u8	 syndrome[0x20];
++
++// 	u8	 obj_id[0x20];
++
++// 	u8	 reserved_at_60[0x20];
++// };
++
++struct mlx5_ifc_create_emulated_dev_eq_in_bits {
++    u8     modify_field_select[0x40];
++
++    u8     reserved_at_40[0x20];
++
++    u8     device_emulation_id[0x20];
++
++    u8     reserved_at_e0[0x120];
++
++    u8     reserved0[0x14];
++    u8     intr[0xc];
++
++    u8     reserved1[0x40];
++};
++
++struct mlx5_ifc_create_eq_out_bits {
++    u8     status[0x8];
++    u8     reserved_at_8[0x18];
++
++    u8     syndrome[0x20];
++
++    u8     reserved_at_40[0x18];
++    u8     eqn[0x8];
++
++    u8     reserved_at_60[0x20];
++};
++
++// struct mlx5_ifc_general_obj_in_cmd_hdr_bits {
++// 	u8	 opcode[0x10];
++// 	u8	 uid[0x10];
++
++// 	u8	 reserved_at_20[0x10];
++// 	u8	 obj_type[0x10];
++
++// 	u8	 obj_id[0x20];
++
++// 	u8	 alias_object[0x1];
++// 	u8	 reserved_at_61[0x1f];
++// };
++
+ int snap_vrdma_device_mac_init(struct snap_vrdma_ctrl *ctrl);
+ int snap_vrdma_init_device(struct snap_device *sdev, uint32_t vdev_idx);
+ int snap_vrdma_teardown_device(struct snap_device *sdev);
+@@ -74,4 +134,8 @@ int snap_vrdma_query_device(struct snap_device *sdev,
+ int snap_vrdma_modify_device(struct snap_device *sdev, uint64_t mask,
+ 		struct snap_vrdma_device_attr *attr);
+ void snap_vrdma_pci_functions_cleanup(struct snap_context *sctx);
++struct mlx5dv_devx_obj *
++snap_vrdma_mlx_devx_create_eq(struct ibv_context *ctx, uint32_t dev_emu_id,
++		   uint16_t msix_vector, uint64_t *eqn);
++void snap_vrdma_mlx_devx_destroy_eq(struct mlx5dv_devx_obj *obj);
+ #endif
+diff --git a/vrdma/snap_vrdma_virtq.h b/vrdma/snap_vrdma_virtq.h
+index 7656086..13238ce 100644
+--- a/vrdma/snap_vrdma_virtq.h
++++ b/vrdma/snap_vrdma_virtq.h
+@@ -101,6 +101,7 @@ struct snap_vrdma_queue {
+ 	struct ibv_pd *pd;
+ 	uint32_t dma_mkey;
+ 	struct snap_dma_q *dma_q;
++	struct vrdma_dpa_vq *dpa_vq;
+ 	struct snap_vrdma_ctrl_queue_out_counter cmd_cntrs;
+ };
+ 
+-- 
+2.34.1
+
