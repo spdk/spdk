@@ -34,22 +34,11 @@ vfio() {
 	return 1
 }
 
-igb_uio() {
-	is_driver igb_uio
-}
-
 pick_driver() {
 	if vfio; then
 		echo "vfio-pci"
 	elif uio; then
-		# Consider special case for broken uio_pci_generic driver
-		if igb_uio; then
-			echo "@(uio_pci_generic|igb_uio)"
-		else
-			echo "uio_pci_generic"
-		fi
-	elif igb_uio; then
-		echo "igb_uio"
+		echo "uio_pci_generic"
 	else
 		echo "No valid driver found"
 	fi

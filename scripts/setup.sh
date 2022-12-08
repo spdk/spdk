@@ -160,14 +160,6 @@ function linux_bind_driver() {
 	echo "" > "/sys/bus/pci/devices/$bdf/driver_override"
 
 	if [[ ! -e /sys/bus/pci/drivers/$driver_name/$bdf ]]; then
-		if [[ $driver_name == uio_pci_generic ]] && ! check_for_driver igb_uio; then
-			# uio_pci_generic driver might be broken in some 4.18.x kernels (see
-			# centos8 for instance) so try to fallback to igb_uio.
-			pci_dev_echo "$bdf" "uio_pci_generic potentially broken, moving to igb_uio"
-			drivers_d["$bdf"]="no driver"
-			linux_bind_driver "$bdf" igb_uio
-			return
-		fi
 		pci_dev_echo "$bdf" "failed to bind to $driver_name, aborting"
 		return 1
 	fi

@@ -268,11 +268,6 @@ if [ "$(uname -s)" = "Linux" ]; then
 
 	MAKE="make"
 	MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
-	if [[ $SPDK_TEST_USE_IGB_UIO -eq 1 ]]; then
-		export DRIVER_OVERRIDE=igb_uio
-		# Building kernel modules requires root privileges
-		MAKE="sudo $MAKE"
-	fi
 elif [ "$(uname -s)" = "FreeBSD" ]; then
 	MAKE="gmake"
 	MAKEFLAGS=${MAKEFLAGS:--j$(sysctl -a | grep -E -i 'hw.ncpu' | awk '{print $2}')}
@@ -1345,11 +1340,7 @@ function autotest_cleanup() {
 	$rootdir/scripts/setup.sh reset
 	$rootdir/scripts/setup.sh cleanup
 	if [ $(uname -s) = "Linux" ]; then
-		if [[ $SPDK_TEST_USE_IGB_UIO -eq 1 ]]; then
-			[[ -e /sys/module/igb_uio ]] && rmmod igb_uio
-		else
-			modprobe -r uio_pci_generic
-		fi
+		modprobe -r uio_pci_generic
 	fi
 	rm -rf "$asan_suppression_file"
 	if [[ -n $old_core_pattern ]]; then
