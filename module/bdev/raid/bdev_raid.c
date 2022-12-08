@@ -184,13 +184,13 @@ raid_bdev_cleanup(struct raid_bdev *raid_bdev)
 	}
 
 	TAILQ_REMOVE(&g_raid_bdev_list, raid_bdev, global_link);
-	free(raid_bdev->base_bdev_info);
 }
 
 static void
 raid_bdev_free(struct raid_bdev *raid_bdev)
 {
 	spdk_spin_destroy(&raid_bdev->base_bdev_lock);
+	free(raid_bdev->base_bdev_info);
 	free(raid_bdev->bdev.name);
 	free(raid_bdev);
 }
@@ -1009,13 +1009,14 @@ raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 		return -ENOMEM;
 	}
 
+	spdk_spin_init(&raid_bdev->base_bdev_lock);
 	raid_bdev->module = module;
 	raid_bdev->num_base_bdevs = num_base_bdevs;
 	raid_bdev->base_bdev_info = calloc(raid_bdev->num_base_bdevs,
 					   sizeof(struct raid_base_bdev_info));
 	if (!raid_bdev->base_bdev_info) {
 		SPDK_ERRLOG("Unable able to allocate base bdev info\n");
-		free(raid_bdev);
+		raid_bdev_free(raid_bdev);
 		return -ENOMEM;
 	}
 
@@ -1037,12 +1038,9 @@ raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 	raid_bdev_gen->name = strdup(name);
 	if (!raid_bdev_gen->name) {
 		SPDK_ERRLOG("Unable to allocate name for raid\n");
-		free(raid_bdev->base_bdev_info);
-		free(raid_bdev);
+		raid_bdev_free(raid_bdev);
 		return -ENOMEM;
 	}
-
-	spdk_spin_init(&raid_bdev->base_bdev_lock);
 
 	raid_bdev_gen->product_name = "Raid Volume";
 	raid_bdev_gen->ctxt = raid_bdev;
