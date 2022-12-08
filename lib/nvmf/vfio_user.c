@@ -4253,17 +4253,13 @@ _free_ctrlr(void *ctx)
 	struct nvmf_vfio_user_ctrlr *ctrlr = ctx;
 	struct nvmf_vfio_user_endpoint *endpoint = ctrlr->endpoint;
 
-	free_sdbl(ctrlr->endpoint->vfu_ctx, ctrlr->sdbl);
+	free_sdbl(endpoint->vfu_ctx, ctrlr->sdbl);
 
 	spdk_interrupt_unregister(&ctrlr->intr);
 	ctrlr->intr_fd = -1;
 	spdk_poller_unregister(&ctrlr->vfu_ctx_poller);
 
 	free(ctrlr);
-
-	if (endpoint == NULL) {
-		return;
-	}
 
 	if (endpoint->need_async_destroy) {
 		nvmf_vfio_user_destroy_endpoint(endpoint);
