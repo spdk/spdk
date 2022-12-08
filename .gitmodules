@@ -13,3 +13,6 @@
 [submodule "snap-rdma"]
 	path = snap-rdma
 	url = https://github.com/LiZhang-2020/snap-rdma.git
+[submodule "flexio-sdk"]
+	path = flexio-sdk
+	url = http://l-gerrit.mtl.labs.mlnx:8080/flexio-sdk
