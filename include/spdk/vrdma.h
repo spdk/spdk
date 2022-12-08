@@ -165,7 +165,7 @@ struct vrdma_q_comm {
 	uint16_t wqebb_cnt; /* sqe entry cnt */
 	uint32_t wqebb_size; /* wqebb_size is based on 64 * (log_wqebb_size + 1) */
 	uint16_t pre_pi;
-	uint32_t num_to_parse;
+	uint16_t num_to_parse;
 };
 
 struct vrdma_sq {
