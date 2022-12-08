@@ -62,7 +62,7 @@ static TAILQ_HEAD(, compress_dev) g_compress_devs = TAILQ_HEAD_INITIALIZER(g_com
 struct comp_device_qp {
 	struct compress_dev		*device;	/* ptr to compression device */
 	uint8_t				qp;		/* queue pair for this node */
-	struct spdk_thread		*thread;	/* thread that this qp is assigned to */
+	struct compress_io_channel	*chan;
 	TAILQ_ENTRY(comp_device_qp)	link;
 };
 static TAILQ_HEAD(, comp_device_qp) g_comp_device_qp = TAILQ_HEAD_INITIALIZER(g_comp_device_qp);
@@ -218,7 +218,7 @@ create_compress_dev(uint8_t index)
 		}
 		dev_qp->device = device;
 		dev_qp->qp = i;
-		dev_qp->thread = NULL;
+		dev_qp->chan = NULL;
 		TAILQ_INSERT_TAIL(&g_comp_device_qp, dev_qp, link);
 	}
 
@@ -759,13 +759,12 @@ compress_create_cb(void *io_device, void *ctx_buf)
 	chan->poller = SPDK_POLLER_REGISTER(comp_dev_poller, chan, 0);
 	TAILQ_INIT(&chan->queued_tasks);
 
-	/* TODO: consider associating device_qp with chan as opposed to thread */
 	pthread_mutex_lock(&g_comp_device_qp_lock);
 	TAILQ_FOREACH(device_qp, &g_comp_device_qp, link) {
 		if (strcmp(device_qp->device->cdev_info.driver_name, chan->drv_name) == 0) {
-			if (device_qp->thread == NULL) {
+			if (device_qp->chan == NULL) {
 				chan->device_qp = device_qp;
-				device_qp->thread = spdk_get_thread();
+				device_qp->chan = chan;
 				break;
 			}
 		}
@@ -808,8 +807,7 @@ static void
 compress_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct compress_io_channel *chan = ctx_buf;
-	struct comp_device_qp *device_qp;
-	struct spdk_thread *thread = spdk_get_thread();
+	struct comp_device_qp *device_qp = chan->device_qp;
 
 	spdk_free(chan->src_mbufs);
 	spdk_free(chan->dst_mbufs);
@@ -817,15 +815,8 @@ compress_destroy_cb(void *io_device, void *ctx_buf)
 	spdk_poller_unregister(&chan->poller);
 
 	pthread_mutex_lock(&g_comp_device_qp_lock);
-	TAILQ_FOREACH(device_qp, &g_comp_device_qp, link) {
-		if (strcmp(device_qp->device->cdev_info.driver_name, chan->drv_name) == 0) {
-			if (device_qp->thread == thread) {
-				chan->device_qp = NULL;
-				device_qp->thread = NULL;
-				break;
-			}
-		}
-	}
+	chan->device_qp = NULL;
+	device_qp->chan = NULL;
 	pthread_mutex_unlock(&g_comp_device_qp_lock);
 }
 
@@ -875,16 +866,12 @@ accel_dpdk_compressdev_enable(void)
 	spdk_accel_module_list_add(&g_compress_module);
 }
 
+/* Callback for unregistering the IO device. */
 static void
-accel_compress_exit(void *ctx)
+_device_unregister_cb(void *io_device)
 {
 	struct comp_device_qp *dev_qp;
 	struct compress_dev *device;
-
-	if (g_compressdev_initialized) {
-		spdk_io_device_unregister(&g_compress_module, NULL);
-		g_compressdev_initialized = false;
-	}
 
 	while ((device = TAILQ_FIRST(&g_compress_devs))) {
 		TAILQ_REMOVE(&g_compress_devs, device, link);
@@ -902,4 +889,15 @@ accel_compress_exit(void *ctx)
 	rte_mempool_free(g_mbuf_mp);
 
 	spdk_accel_module_finish();
+}
+
+static void
+accel_compress_exit(void *ctx)
+{
+	if (g_compressdev_initialized) {
+		spdk_io_device_unregister(&g_compress_module, _device_unregister_cb);
+		g_compressdev_initialized = false;
+	} else {
+		spdk_accel_module_finish();
+	}
 }
