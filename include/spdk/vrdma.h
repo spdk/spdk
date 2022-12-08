@@ -194,6 +194,7 @@ struct spdk_vrdma_qp {
 	uint32_t timeout_retry_cnt;
 	uint32_t rnr_retry_cnt;
 	uint32_t sq_draining;
+	uint32_t qdb_idx;
 	struct spdk_vrdma_pd *vpd;
 	struct spdk_vrdma_cq *rq_vcq;
 	struct spdk_vrdma_cq *sq_vcq;

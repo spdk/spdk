@@ -1038,6 +1038,7 @@ static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
 	vqp->sq_vcq = sq_vcq;
 	vqp->rq_vcq = rq_vcq;
 	vqp->qp_idx = qp_idx;
+	vqp->qdb_idx = aqe->req.create_qp_req.qdb_idx;
 	if (vrdma_create_vq(ctrl, aqe, vqp, rq_vcq, sq_vcq)) {
 		aqe->resp.create_qp_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_UNKNOWN;
 		goto free_vqp;
@@ -1064,7 +1065,8 @@ static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
 	LIST_INSERT_HEAD(&ctrl->vdev->vqp_list, vqp, entry);
 	aqe->resp.create_qp_resp.qp_handle = qp_idx;
 	aqe->resp.create_qp_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
-	SPDK_NOTICELOG("\nlizh vrdma_aq_create_qp...qp_idx %d done\n", qp_idx);
+	SPDK_NOTICELOG("\nlizh vrdma_aq_create_qp...qp_idx %d qdb_idx %d done\n",
+		qp_idx, vqp->qdb_idx);
 	return;
 
 destroy_bk_qp:
