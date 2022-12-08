@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: BSD-3-Clause
- * Copyright (C) 2010-2015 Intel Corporation.
+ * Copyright(c) 2010-2015 Intel Corporation.
  * Copyright 2013-2014 6WIND S.A.
  */
 
