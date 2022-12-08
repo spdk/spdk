@@ -1103,6 +1103,10 @@ posix_sock_close(struct spdk_sock *_sock)
 
 	assert(TAILQ_EMPTY(&_sock->pending_reqs));
 
+	if (sock->ssl != NULL) {
+		SSL_shutdown(sock->ssl);
+	}
+
 	/* If the socket fails to close, the best choice is to
 	 * leak the fd but continue to free the rest of the sock
 	 * memory. */
