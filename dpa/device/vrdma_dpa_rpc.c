@@ -44,9 +44,11 @@ uint64_t vrdma_qp_rpc_handler(uint64_t arg1, uint64_t __unused arg2,
 	struct  vrdma_dpa_event_handler_ctx *ectx;
 	struct flexio_dev_thread_ctx *dtctx;
 
-	ectx = (struct vrdma_dpa_event_handler_ctx *)arg1;
 	flexio_dev_get_thread_ctx(&dtctx);
-	printf("\n------naliu vrdma_qp_rpc_handler cqn: %d, emu_db_to_cq_id %d,"
+	ectx = (struct vrdma_dpa_event_handler_ctx *)arg1;
+
+	flexio_dev_outbox_config(dtctx, ectx->emu_outbox);
+	printf("\n------naliu vrdma_qp_rpc_handler cqn: %#x, emu_db_to_cq_id %d,"
 		"guest_db_cq_ctx.ci %d\n", ectx->guest_db_cq_ctx.cqn,
 		ectx->emu_db_to_cq_id, ectx->guest_db_cq_ctx.ci);
 

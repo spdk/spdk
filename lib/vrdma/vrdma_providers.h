@@ -43,6 +43,7 @@ struct snap_vrdma_vq_create_dpa_attr {
 	uint32_t vqpn;
 	uint16_t sq_msix_vector;
 	uint16_t rq_msix_vector;
+	uint32_t qdb_idx;
 	// uint16_t num_msix;
 	/*host wr address*/
 	// struct vrdma_q_comm host_rq_param;

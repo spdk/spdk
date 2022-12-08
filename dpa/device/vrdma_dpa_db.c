@@ -21,7 +21,35 @@
 flexio_dev_event_handler_t vrdma_db_handler;
 void vrdma_db_handler(flexio_uintptr_t thread_arg)
 {
-	printf("%s: =====naliu vrdma_db_handler %lu.\n", __func__, thread_arg);
+	printf("%s: ---------naliu vrdma_db_handler start.\n", __func__);
+	struct  vrdma_dpa_event_handler_ctx *ectx;
+	struct flexio_dev_thread_ctx *dtctx;
+
+	flexio_dev_get_thread_ctx(&dtctx);
+	ectx = (struct vrdma_dpa_event_handler_ctx *)thread_arg;
+
+	/*later need modify*/
+	if (ectx->dma_qp.state != VRDMA_DPA_VQ_STATE_RDY) {
+		printf("%s: vqp status is not READY.\n", __func__);
+		goto out;
+	}
+
+	flexio_dev_outbox_config(dtctx, ectx->emu_outbox);
+
+out:
+	ectx->guest_db_cq_ctx.ci++;
+	flexio_dev_dbr_cq_set_ci(ectx->guest_db_cq_ctx.dbr,
+				 ectx->guest_db_cq_ctx.ci);
+
+	flexio_dev_db_ctx_arm(dtctx, ectx->guest_db_cq_ctx.cqn,
+			      ectx->emu_db_to_cq_id);
+	flexio_dev_cq_arm(dtctx, ectx->guest_db_cq_ctx.ci,
+			  ectx->guest_db_cq_ctx.cqn);
+
+	printf("\n------naliu vrdma_db_handler cqn: %#x, emu_db_to_cq_id %d,"
+		"guest_db_cq_ctx.ci %d\n", ectx->guest_db_cq_ctx.cqn,
+		ectx->emu_db_to_cq_id, ectx->guest_db_cq_ctx.ci);
+
 	flexio_dev_return();
 }	
 #if 0

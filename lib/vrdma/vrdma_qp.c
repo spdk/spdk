@@ -495,6 +495,8 @@ int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 		q_dpa_attr.lkey = vqp->qp_mr->lkey;
 		q_dpa_attr.sq_pi = vqp->qp_pi->pi.sq_pi;
 		q_dpa_attr.rq_pi = vqp->qp_pi->pi.rq_pi;
+		q_dpa_attr.qdb_idx = vqp->qdb_idx;
+		SPDK_NOTICELOG("\nvqp %d qdb_idx %d\n", vqp->qp_idx, vqp->qdb_idx);
 		vqp->snap_queue = vrdma_prov_vq_create(ctrl, &q_dpa_attr);
 		SPDK_NOTICELOG("\nnaliu vrdma_create_vq...end\n");
 	}

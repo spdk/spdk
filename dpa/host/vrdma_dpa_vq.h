@@ -51,7 +51,7 @@ struct vrdma_prov_vq_init_attr {
 	uint16_t sq_msix_vector;
 	uint16_t rq_msix_vector;
 	uint16_t num_msix;
-
+	uint32_t qdb_idx;
 	// uint16_t hw_available_index;
 	// uint16_t hw_used_index;
 	// uint16_t max_tunnel_desc;

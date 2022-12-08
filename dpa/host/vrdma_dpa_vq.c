@@ -40,7 +40,6 @@ static int vrdma_dpa_get_hart_to_use(struct vrdma_dpa_ctx *dpa_ctx)
 	return hart_num;
 }
 
-
 static void vrdma_dpa_vq_dump(struct vrdma_dpa_vq *dpa_vq,
 				struct vrdma_prov_vq_init_attr *attr)
 {
@@ -698,17 +697,23 @@ static int __vrdma_dpa_vq_create(struct vrdma_dpa_vq *dpa_vq,
 		log_error("Failed to create db_cq, err(%d)", err);
 		goto err_db_cq_create;
 	}
-	log_notice("\n===naliu emu_vhca_id %d, attr->vq_idx %d, dpa_vq->db_cq.cq %d\n",
-			emu_vhca_id, attr->vq_idx, dpa_vq->db_cq.cq);
 	err = flexio_emu_db_to_cq_map(emu_ibv_ctx, emu_vhca_id,
-				      attr->vq_idx, dpa_vq->db_cq.cq,
+				      attr->qdb_idx, dpa_vq->db_cq.cq,
 				      &dpa_vq->guest_db_to_cq_ctx);
 	if (err) {
 		log_error("Failed to map cq_to_db, err(%d)", err);
 		goto err_db_cq_map;
 	}
-	log_notice("\n===naliu __vrdma_dpa_vq_create flexio_emu_db_to_cq_map\n");
-	err = vrdma_dpa_vq_state_modify(dpa_vq, VRDMA_DPA_VQ_STATE_RDY);
+	log_notice("\n===naliu __vrdma_dpa_vq_create flexio_emu_db_to_cq_map done\n");
+
+	log_notice("\n===naliu emu_vhca_id %d, vqp_idx %d, qdb_idx %d, dpa_vq->db_cq.cq_num %#x, "
+			"emu_db_to_cq_id %d\n",
+			emu_vhca_id, attr->vq_idx, attr->qdb_idx, dpa_vq->db_cq.cq_num,
+			flexio_emu_db_to_cq_ctx_get_id(dpa_vq->guest_db_to_cq_ctx));
+
+
+
+	err = vrdma_dpa_vq_state_modify(dpa_vq, VRDMA_DPA_VQ_STATE_INIT);
 	if (err) {
 		log_error("Failed to set vq state to INIT, err(%d)", err);
 		goto err_vq_state_init;
@@ -771,6 +776,12 @@ static int __vrdma_dpa_vq_create(struct vrdma_dpa_vq *dpa_vq,
 		log_error("Failed to run event handler, err(%d)", err);
 		goto err_handler_run;
 	}
+	err = vrdma_dpa_vq_state_modify(dpa_vq, VRDMA_DPA_VQ_STATE_RDY);
+	if (err) {
+		log_error("Failed to set vq state to READY, err(%d)", err);
+		goto err_vq_state_init;
+	}
+
 	log_notice("\n===naliu __vrdma_dpa_vq_create done\n");
 	return 0;
 err_handler_run:
@@ -954,7 +965,7 @@ vrdma_dpa_vq_create(struct vrdma_ctrl *ctrl, struct snap_vrdma_vq_create_dpa_att
 	attr.rx_qsize = q_attr->rq_size;
 	attr.tx_elem_size = q_attr->tx_elem_size;
 	attr.rx_elem_size = q_attr->rx_elem_size;
-
+	attr.qdb_idx = q_attr->qdb_idx;
 	/*prepare mkey && pd */
 	attr.emu_ib_ctx  = ctrl->emu_ctx;
 	attr.emu_pd      = ctrl->pd;
