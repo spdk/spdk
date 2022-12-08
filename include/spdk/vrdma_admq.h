@@ -331,6 +331,7 @@ struct vrdma_create_qp_req {
 
 	uint32_t sq_cqn;
 	uint32_t rq_cqn;
+	uint32_t qdb_idx; /* qp doorbell index */
 
 	uint64_t sq_l0_paddr;  /* sqe buffer vm phy addr */
 	uint64_t rq_l0_paddr;  /* rqe buffer vm phy addr */
