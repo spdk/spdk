@@ -29,6 +29,7 @@ struct fuzz_type {
 static uint8_t					payload[VFIO_USER_MAX_PAYLOAD_SIZE];
 
 static char					*g_ctrlr_path;
+static char					*g_artifact_prefix;
 static int32_t					g_time_in_sec = 10;
 static char					*g_corpus_dir;
 static uint8_t					*g_repro_data;
@@ -161,15 +162,19 @@ start_fuzzer(void *ctx)
 		"-detect_leaks=1",
 		NULL,
 		NULL,
+		NULL,
 		NULL
 	};
 	char time_str[128];
+	char prefix[PATH_MAX];
 	char len_str[128];
 	char **argv = _argv;
 	int argc = SPDK_COUNTOF(_argv);
 	uint32_t len = 0;
 
 	spdk_unaffinitize_thread();
+	snprintf(prefix, sizeof(prefix), "-artifact_prefix=%s", g_artifact_prefix);
+	argv[argc - 4] = prefix;
 	len = 10 * g_fuzzer->bytes_per_cmd;
 	snprintf(len_str, sizeof(len_str), "-max_len=%d", len);
 	argv[argc - 3] = len_str;
@@ -178,6 +183,8 @@ start_fuzzer(void *ctx)
 	argv[argc - 1] = g_corpus_dir;
 
 	atexit(exit_handler);
+
+	free(g_artifact_prefix);
 
 	if (g_repro_data) {
 		printf("Running single test based on reproduction data file.\n");
@@ -435,6 +442,7 @@ vfio_fuzz_usage(void)
 	fprintf(stderr, " -D                        Path of corpus directory.\n");
 	fprintf(stderr, " -F                        Path for ctrlr that should be fuzzed.\n");
 	fprintf(stderr, " -N                        Name of reproduction data file.\n");
+	fprintf(stderr, " -P                        Provide a prefix to use when saving artifacts.\n");
 	fprintf(stderr, " -t                        Time to run fuzz tests (in seconds). Default: 10\n");
 	fprintf(stderr, " -Y                        Path of addition controller to perform io.\n");
 	fprintf(stderr, " -Z                        Fuzzer to run (0 to %lu)\n", NUM_FUZZERS - 1);
@@ -471,6 +479,13 @@ vfio_fuzz_parse(int ch, char *arg)
 		if (g_repro_data == NULL) {
 			fprintf(stderr, "could not load data for file %s\n", optarg);
 			return -1;
+		}
+		break;
+	case 'P':
+		g_artifact_prefix = strdup(optarg);
+		if (!g_artifact_prefix) {
+			fprintf(stderr, "cannot strdup: %s\n", optarg);
+			return -ENOMEM;
 		}
 		break;
 	case 'Y':
@@ -533,7 +548,7 @@ main(int argc, char **argv)
 	opts.name = "vfio_fuzz";
 	opts.shutdown_cb = fuzz_shutdown;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "D:F:N:t:Y:Z:", NULL, vfio_fuzz_parse,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "D:F:N:P:t:Y:Z:", NULL, vfio_fuzz_parse,
 				      vfio_fuzz_usage) != SPDK_APP_PARSE_ARGS_SUCCESS)) {
 		return rc;
 	}

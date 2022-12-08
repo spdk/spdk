@@ -35,6 +35,7 @@ function start_llvm_fuzz() {
 	$rootdir/test/app/fuzz/llvm_nvme_fuzz/llvm_nvme_fuzz \
 		-m $core \
 		-s $mem_size \
+		-P $output_dir/llvm/ \
 		-F "$trid" \
 		-c $nvmf_cfg \
 		-t $timen \

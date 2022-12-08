@@ -15,6 +15,7 @@
 
 static const uint8_t *g_data;
 static bool g_trid_specified = false;
+static char *g_artifact_prefix;
 static int32_t g_time_in_sec = 10;
 static char *g_corpus_dir;
 static uint8_t *g_repro_data;
@@ -828,9 +829,11 @@ start_fuzzer(void *ctx)
 		"-detect_leaks=1",
 		NULL,
 		NULL,
+		NULL,
 		NULL
 	};
 	char time_str[128];
+	char prefix[PATH_MAX];
 	char len_str[128];
 	char **argv = _argv;
 	int argc = SPDK_COUNTOF(_argv);
@@ -838,6 +841,8 @@ start_fuzzer(void *ctx)
 	int rc;
 
 	spdk_unaffinitize_thread();
+	snprintf(prefix, sizeof(prefix), "-artifact_prefix=%s", g_artifact_prefix);
+	argv[argc - 4] = prefix;
 	len = MAX_COMMANDS * g_fuzzer->bytes_per_cmd;
 	snprintf(len_str, sizeof(len_str), "-max_len=%d", len);
 	argv[argc - 3] = len_str;
@@ -847,6 +852,9 @@ start_fuzzer(void *ctx)
 
 	g_in_fuzzer = true;
 	atexit(exit_handler);
+
+	free(g_artifact_prefix);
+
 	if (g_repro_data) {
 		printf("Running single test based on reproduction data file.\n");
 		rc = TestOneInput(g_repro_data, g_repro_size);
@@ -888,6 +896,7 @@ nvme_fuzz_usage(void)
 	fprintf(stderr, " -D                        Path of corpus directory.\n");
 	fprintf(stderr, " -F                        Transport ID for subsystem that should be fuzzed.\n");
 	fprintf(stderr, " -N                        Name of reproduction data file.\n");
+	fprintf(stderr, " -P                        Provide a prefix to use when saving artifacts.\n");
 	fprintf(stderr, " -t                        Time to run fuzz tests (in seconds). Default: 10\n");
 	fprintf(stderr, " -Z                        Fuzzer to run (0 to %lu)\n", NUM_FUZZERS - 1);
 }
@@ -925,6 +934,13 @@ nvme_fuzz_parse(int ch, char *arg)
 		if (g_repro_data == NULL) {
 			fprintf(stderr, "could not load data for file %s\n", optarg);
 			return -1;
+		}
+		break;
+	case 'P':
+		g_artifact_prefix = strdup(optarg);
+		if (!g_artifact_prefix) {
+			fprintf(stderr, "cannot strdup: %s\n", optarg);
+			return -ENOMEM;
 		}
 		break;
 	case 't':
@@ -980,7 +996,7 @@ main(int argc, char **argv)
 	opts.name = "nvme_fuzz";
 	opts.shutdown_cb = fuzz_shutdown;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "D:F:N:t:Z:", NULL, nvme_fuzz_parse,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "D:F:N:P:t:Z:", NULL, nvme_fuzz_parse,
 				      nvme_fuzz_usage) != SPDK_APP_PARSE_ARGS_SUCCESS)) {
 		return rc;
 	}

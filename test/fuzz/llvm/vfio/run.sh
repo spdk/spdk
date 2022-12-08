@@ -37,6 +37,7 @@ function start_llvm_fuzz() {
 	$rootdir/test/app/fuzz/llvm_vfio_fuzz/llvm_vfio_fuzz \
 		-m $core \
 		-s $mem_size \
+		-P $output_dir/llvm/ \
 		-F $vfiouser_dir \
 		-c $vfiouser_cfg \
 		-t $timen \
