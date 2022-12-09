@@ -15,7 +15,7 @@ install_liburing() {
 	fi
 	# Use commit we know we can compile against. See #1673 as a reference.
 	git -C "$liburing_dir" checkout liburing-2.2
-	(cd "$liburing_dir" && ./configure --libdir=/usr/lib64 && make install)
+	(cd "$liburing_dir" && ./configure --libdir=/usr/lib64 --libdevdir=/usr/lib64 && make install)
 	echo /usr/lib64 > /etc/ld.so.conf.d/spdk-liburing.conf
 	ldconfig
 }
