@@ -135,15 +135,12 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 
 	switch (task->op_code) {
 	case ACCEL_OPC_COPY:
-		siov.iov_base = task->src;
-		siov.iov_len = task->nbytes;
-		diov.iov_base = task->dst;
-		diov.iov_len = task->nbytes;
 		if (task->flags & ACCEL_FLAG_PERSISTENT) {
 			flags |= SPDK_IDXD_FLAG_PERSISTENT;
 			flags |= SPDK_IDXD_FLAG_NONTEMPORAL;
 		}
-		rc = spdk_idxd_submit_copy(chan->chan, &diov, 1, &siov, 1, flags, dsa_done, idxd_task);
+		rc = spdk_idxd_submit_copy(chan->chan, task->d.iovs, task->d.iovcnt,
+					   task->s.iovs, task->s.iovcnt, flags, dsa_done, idxd_task);
 		break;
 	case ACCEL_OPC_DUALCAST:
 		if (task->flags & ACCEL_FLAG_PERSISTENT) {

@@ -187,10 +187,7 @@ test_spdk_accel_submit_copy(void)
 	/* submission OK. */
 	rc = spdk_accel_submit_copy(g_ch, dst, src, nbytes, flags, NULL, cb_arg);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(task.dst == dst);
-	CU_ASSERT(task.src == src);
 	CU_ASSERT(task.op_code == ACCEL_OPC_COPY);
-	CU_ASSERT(task.nbytes == nbytes);
 	CU_ASSERT(task.flags == 0);
 	CU_ASSERT(memcmp(dst, src, TEST_SUBMIT_SIZE) == 0);
 	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
@@ -1636,6 +1633,14 @@ test_sequence_copy_elision(void)
 	seq = NULL;
 	completed = 0;
 	g_seq_operations[ACCEL_OPC_COPY].count = 0;
+	g_seq_operations[ACCEL_OPC_COPY].dst_iovcnt = 1;
+	g_seq_operations[ACCEL_OPC_COPY].src_iovcnt = 1;
+	g_seq_operations[ACCEL_OPC_COPY].src_iovs = &exp_iovs[0];
+	g_seq_operations[ACCEL_OPC_COPY].dst_iovs = &exp_iovs[1];
+	exp_iovs[0].iov_base = tmp[0];
+	exp_iovs[0].iov_len = sizeof(tmp[0]);
+	exp_iovs[1].iov_base = buf;
+	exp_iovs[1].iov_len = sizeof(buf);
 
 	dst_iovs[0].iov_base = tmp[1];
 	dst_iovs[0].iov_len = sizeof(tmp[1]);

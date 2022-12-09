@@ -9,6 +9,7 @@
 
 #include "spdk_internal/accel_module.h"
 #include "spdk/log.h"
+#include "spdk/likely.h"
 
 #include "spdk/env.h"
 #include "spdk/event.h"
@@ -129,6 +130,22 @@ ioat_supports_opcode(enum accel_opcode opc)
 }
 
 static int
+ioat_submit_copy(struct ioat_io_channel *ioat_ch, struct spdk_accel_task *task)
+{
+	if (spdk_unlikely(task->d.iovcnt != 1 || task->s.iovcnt != 1)) {
+		return -EINVAL;
+	}
+
+	if (spdk_unlikely(task->d.iovs[0].iov_len != task->s.iovs[0].iov_len)) {
+		return -EINVAL;
+	}
+
+	return spdk_ioat_build_copy(ioat_ch->ioat_ch, task, ioat_done,
+				    task->d.iovs[0].iov_base, task->s.iovs[0].iov_base,
+				    task->d.iovs[0].iov_len);
+}
+
+static int
 ioat_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task)
 {
 	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
@@ -147,8 +164,7 @@ ioat_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task
 						  accel_task->dst, accel_task->fill_pattern, accel_task->nbytes);
 			break;
 		case ACCEL_OPC_COPY:
-			rc = spdk_ioat_build_copy(ioat_ch->ioat_ch, accel_task, ioat_done,
-						  accel_task->dst, accel_task->src, accel_task->nbytes);
+			rc = ioat_submit_copy(ioat_ch, accel_task);
 			break;
 		default:
 			assert(false);

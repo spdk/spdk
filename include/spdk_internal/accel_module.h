@@ -32,6 +32,14 @@ struct spdk_accel_crypto_key {
 	TAILQ_ENTRY(spdk_accel_crypto_key) link;
 };
 
+enum spdk_accel_aux_iov_type {
+	SPDK_ACCEL_AUX_IOV_SRC,
+	SPDK_ACCEL_AUX_IOV_DST,
+	SPDK_ACCEL_AUX_IOV_SRC2,
+	SPDK_ACCEL_AUX_IOV_DST2,
+	SPDK_ACCEL_AUX_IOV_MAX,
+};
+
 struct spdk_accel_task {
 	struct accel_io_channel		*accel_ch;
 	spdk_accel_completion_cb	cb_fn;
@@ -76,6 +84,7 @@ struct spdk_accel_task {
 	};
 	int				flags;
 	int				status;
+	struct iovec			aux_iovs[SPDK_ACCEL_AUX_IOV_MAX];
 	TAILQ_ENTRY(spdk_accel_task)	link;
 	TAILQ_ENTRY(spdk_accel_task)	seq_link;
 };

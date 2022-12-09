@@ -215,10 +215,15 @@ spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src,
 		return -ENOMEM;
 	}
 
-	accel_task->dst = dst;
-	accel_task->src = src;
+	accel_task->s.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_SRC];
+	accel_task->d.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_DST];
+	accel_task->d.iovs[0].iov_base = dst;
+	accel_task->d.iovs[0].iov_len = nbytes;
+	accel_task->d.iovcnt = 1;
+	accel_task->s.iovs[0].iov_base = src;
+	accel_task->s.iovs[0].iov_len = nbytes;
+	accel_task->s.iovcnt = 1;
 	accel_task->op_code = ACCEL_OPC_COPY;
-	accel_task->nbytes = nbytes;
 	accel_task->flags = flags;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
@@ -978,23 +983,13 @@ accel_sequence_set_virtbuf(struct spdk_accel_sequence *seq, struct accel_buffer 
 	TAILQ_FOREACH(task, &seq->tasks, seq_link) {
 		switch (task->op_code) {
 		case ACCEL_OPC_DECOMPRESS:
+		case ACCEL_OPC_COPY:
 			if (task->src_domain == g_accel_domain && task->src_domain_ctx == buf) {
 				accel_update_iovs(task->s.iovs, task->s.iovcnt, buf);
 				task->src_domain = NULL;
 			}
 			if (task->dst_domain == g_accel_domain && task->dst_domain_ctx == buf) {
 				accel_update_iovs(task->d.iovs, task->d.iovcnt, buf);
-				task->dst_domain = NULL;
-			}
-			break;
-		case ACCEL_OPC_COPY:
-			/* By the time we're here, we've already changed iovecs -> buf */
-			if (task->src_domain == g_accel_domain && task->src_domain_ctx == buf) {
-				accel_update_buf(&task->src, buf);
-				task->src_domain = NULL;
-			}
-			if (task->dst_domain == g_accel_domain && task->dst_domain_ctx == buf) {
-				accel_update_buf(&task->dst, buf);
 				task->dst_domain = NULL;
 			}
 			break;
@@ -1221,25 +1216,6 @@ spdk_accel_sequence_finish(struct spdk_accel_sequence *seq,
 			break;
 		}
 		accel_sequence_merge_tasks(seq, task, &next);
-	}
-
-	/* Since we store copy operations' buffers as iovecs, we need to convert them to scalar
-	 * buffers, as that's what accel modules expect
-	 */
-	TAILQ_FOREACH(task, &seq->tasks, seq_link) {
-		if (task->op_code != ACCEL_OPC_COPY) {
-			continue;
-		}
-
-		if (spdk_unlikely(task->s.iovcnt != 1 || task->d.iovcnt != 1)) {
-			SPDK_ERRLOG("Unable to set buffer of a copy operation due "
-				    "to iovcnt!=1\n");
-			return -EINVAL;
-		}
-		task->nbytes = spdk_min(task->s.iovs[0].iov_len,
-					task->d.iovs[0].iov_len);
-		task->src = task->s.iovs[0].iov_base;
-		task->dst = task->d.iovs[0].iov_base;
 	}
 
 	seq->cb_fn = cb_fn;
