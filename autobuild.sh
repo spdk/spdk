@@ -318,17 +318,27 @@ function build_doc() {
 
 	$MAKE -C "$rootdir"/doc --no-print-directory $MAKEFLAGS &> "$out"/doxygen.log
 	if [ -s "$out"/doxygen.log ]; then
-		if [[ "$doxygenv" != "1.8.20" ]]; then
+		if [[ "$doxygenv" == "1.8.20" ]]; then
+			# Doxygen 1.8.20 produces false positives, see:
+			# https://github.com/doxygen/doxygen/issues/7948
+			if grep -vE '\\ilinebr' "$out"/doxygen.log; then
+				echo "Doxygen errors found!"
+				exit 1
+			fi
+		elif [[ "$doxygenv" == "1.9.5" ]]; then
+			# Doxygen 1.9.5 produces false positives, see:
+			# https://github.com/doxygen/doxygen/issues/9552 and
+			# https://github.com/doxygen/doxygen/issues/9678
+			if grep -vE '\\ifile|@param' "$out"/doxygen.log; then
+				echo "Doxygen errors found!"
+				exit 1
+			fi
+		else
 			cat "$out"/doxygen.log
 			echo "Doxygen errors found!"
 			exit 1
 		fi
-		# Doxygen 1.8.20 produces false positives, see:
-		# https://github.com/doxygen/doxygen/issues/7948
-		if grep -v "\ilinebr" "$out"/doxygen.log; then
-			echo "Doxygen errors found!"
-			exit 1
-		fi
+
 		echo "Doxygen $doxygenv detected. No warnings except false positives, continuing the test"
 	fi
 	if hash pdflatex 2> /dev/null; then
