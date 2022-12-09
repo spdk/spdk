@@ -160,6 +160,16 @@ enum vrdma_qp_sm_state_type {
         VRDMA_QP_NUM_OF_STATES,
 };
 
+struct vrdma_qp_stats {
+	uint64_t sq_wqe_fetched;
+	uint64_t sq_wqe_submitted;
+	uint64_t sq_wqe_wr;
+	uint64_t sq_wqe_atomic;
+	uint64_t sq_wqe_ud;
+	uint16_t msq_dbred_pi;
+	uint16_t mcq_dbred_ci;	
+};
+
 struct vrdma_q_comm {
 	uint64_t wqe_buff_pa;
 	uint64_t doorbell_pa;
@@ -213,6 +223,7 @@ struct spdk_vrdma_qp {
 	struct vrdma_sq sq;
 	struct ibv_mr *qp_mr;
 	union vrdma_align_pici *qp_pi;
+	struct vrdma_qp_stats stats;
 };
 
 struct spdk_vrdma_dev {
