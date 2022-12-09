@@ -195,9 +195,18 @@ _sw_accel_copyv(void *dst, struct iovec *iov, uint32_t iovcnt, int flags)
 }
 
 static int
-_sw_accel_compare(void *src1, void *src2, size_t nbytes)
+_sw_accel_compare(struct iovec *src_iovs, uint32_t src_iovcnt,
+		  struct iovec *src2_iovs, uint32_t src2_iovcnt)
 {
-	return memcmp(src1, src2, nbytes);
+	if (spdk_unlikely(src_iovcnt != 1 || src2_iovcnt != 1)) {
+		return -EINVAL;
+	}
+
+	if (spdk_unlikely(src_iovs[0].iov_len != src2_iovs[0].iov_len)) {
+		return -EINVAL;
+	}
+
+	return memcmp(src_iovs[0].iov_base, src2_iovs[0].iov_base, src_iovs[0].iov_len);
 }
 
 static void
@@ -520,7 +529,8 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 			}
 			break;
 		case ACCEL_OPC_COMPARE:
-			rc = _sw_accel_compare(accel_task->src, accel_task->src2, accel_task->nbytes);
+			rc = _sw_accel_compare(accel_task->s.iovs, accel_task->s.iovcnt,
+					       accel_task->s2.iovs, accel_task->s2.iovcnt);
 			break;
 		case ACCEL_OPC_CRC32C:
 			if (accel_task->s.iovcnt == 0) {

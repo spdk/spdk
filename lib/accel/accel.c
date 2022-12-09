@@ -290,9 +290,14 @@ spdk_accel_submit_compare(struct spdk_io_channel *ch, void *src1,
 		return -ENOMEM;
 	}
 
-	accel_task->src = src1;
-	accel_task->src2 = src2;
-	accel_task->nbytes = nbytes;
+	accel_task->s.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_SRC];
+	accel_task->s2.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_SRC2];
+	accel_task->s.iovs[0].iov_base = src1;
+	accel_task->s.iovs[0].iov_len = nbytes;
+	accel_task->s.iovcnt = 1;
+	accel_task->s2.iovs[0].iov_base = src2;
+	accel_task->s2.iovs[0].iov_len = nbytes;
+	accel_task->s2.iovcnt = 1;
 	accel_task->op_code = ACCEL_OPC_COMPARE;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;

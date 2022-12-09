@@ -170,11 +170,9 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 		rc = idxd_submit_dualcast(chan, idxd_task, flags);
 		break;
 	case ACCEL_OPC_COMPARE:
-		siov.iov_base = task->src;
-		siov.iov_len = task->nbytes;
-		diov.iov_base = task->dst;
-		diov.iov_len = task->nbytes;
-		rc = spdk_idxd_submit_compare(chan->chan, &siov, 1, &diov, 1, flags, dsa_done, idxd_task);
+		rc = spdk_idxd_submit_compare(chan->chan, task->s.iovs, task->s.iovcnt,
+					      task->s2.iovs, task->s2.iovcnt, flags,
+					      dsa_done, idxd_task);
 		break;
 	case ACCEL_OPC_FILL:
 		diov.iov_base = task->dst;

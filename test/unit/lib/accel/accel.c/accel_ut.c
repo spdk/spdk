@@ -288,10 +288,7 @@ test_spdk_accel_submit_compare(void)
 	/* accel submission OK. */
 	rc = spdk_accel_submit_compare(g_ch, src1, src2, nbytes, NULL, cb_arg);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(task.src == src1);
-	CU_ASSERT(task.src2 == src2);
 	CU_ASSERT(task.op_code == ACCEL_OPC_COMPARE);
-	CU_ASSERT(task.nbytes == nbytes);
 	CU_ASSERT(memcmp(src1, src2, TEST_SUBMIT_SIZE) == 0);
 	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
 	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
