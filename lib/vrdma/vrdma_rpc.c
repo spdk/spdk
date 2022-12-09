@@ -61,6 +61,7 @@
 #include "spdk/vrdma_controller.h"
 #include "spdk/vrdma_qp.h"
 #include "spdk/vrdma_rpc.h"
+#include "spdk/vrdma_io_mgr.h"
 
 static char *g_vrdma_qp_method_str = "VRDMA_RPC_SRV_QP";
 static SLIST_HEAD(, spdk_vrdma_rpc_method) g_vrdma_rpc_methods = SLIST_HEAD_INITIALIZER(g_vrdma_rpc_methods);
@@ -707,6 +708,7 @@ struct spdk_vrdma_rpc_controller_configue_attr {
 	int src_addr_idx;
     int32_t node_ip;
     int32_t node_rip;
+	int32_t show_vqpn;
 };
 
 static const struct spdk_json_object_decoder
@@ -805,6 +807,12 @@ spdk_vrdma_rpc_controller_configue_decoder[] = {
         spdk_json_decode_uint32,
         true
     },
+    {
+        "show_vqpn",
+        offsetof(struct spdk_vrdma_rpc_controller_configue_attr, show_vqpn),
+        spdk_json_decode_uint32,
+        true
+    },
 };
 
 static struct spdk_emu_ctx *
@@ -852,6 +860,7 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
 	attr->src_addr_idx = -1;
 	attr->node_ip = -1;
 	attr->node_rip = -1;
+	attr->show_vqpn = -1;
 
     if (spdk_json_decode_object(params,
             spdk_vrdma_rpc_controller_configue_decoder,
@@ -1109,6 +1118,22 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
             (node_rip >> 8) & 0xff, node_rip & 0xff,
             VRDMA_RPC_DEFAULT_PORT);
         SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...node_rip %s\n", ctrl->rpc.node_rip);
+    }
+	if (attr->show_vqpn != -1) {
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...show_vqpn=0x%x\n", attr->show_vqpn);
+        ctrl = ctx->ctrl;
+        if (!ctrl) {
+            SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n",
+                attr->emu_manager);
+            goto free_attr;
+        }
+		vqp = find_spdk_vrdma_qp_by_idx(ctrl, attr->show_vqpn);
+        if (!vqp) {
+            SPDK_ERRLOG("show vqpn stats: Fail to find vrdma_qpn %d for emu_manager %s\n",
+                    attr->show_vqpn, attr->emu_manager);
+            goto free_attr;
+        }
+		vrdma_dump_vqp_stats(vqp);
     }
     w = spdk_jsonrpc_begin_result(request);
     spdk_json_write_string(w, "Success");

@@ -229,7 +229,6 @@ static bool vrdma_qp_sm_handle_pi(struct spdk_vrdma_qp *vqp,
 	} else {
 		vqp->sm_state = VRDMA_QP_STATE_POLL_CQ_CI;
 	}
-
 	return true;
 }
 #define MAX_POLL_WQE_NUM 32
@@ -287,7 +286,6 @@ static bool vrdma_qp_wqe_sm_read(struct spdk_vrdma_qp *vqp,
 			return true;
 		}
 
-second:
 		/* calculate second poll size */
 		vqp->q_comp.count++;
 		vqp->q_comp.func = vrdma_qp_sm_dma_cb;
@@ -317,6 +315,7 @@ static bool vrdma_qp_wqe_sm_parse(struct spdk_vrdma_qp *vqp,
 		return true;
 	}
 
+	vqp->stats.sq_wqe_fetched += vqp->sq.comm.num_to_parse;
 	SPDK_NOTICELOG("vrdam parse sq wqe: vq pi %d, pre_pi %d\n",
 		vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
 	vqp->sm_state = VRDMA_QP_STATE_WQE_MAP_BACKEND;
@@ -337,7 +336,7 @@ static bool vrdma_qp_wqe_sm_map_backend(struct spdk_vrdma_qp *vqp,
 	vqp->bk_qp = vrdma_vq_get_mqp(vqp);
 #ifdef WQE_DBG
 	SPDK_NOTICELOG("vrdam map sq wqe: vq pi %d, mqp %p\n",
-			vqp->qp_pi->pi.sq_pi, vqp->bk_qp[0]);
+			vqp->qp_pi->pi.sq_pi, vqp->bk_qp);
 #endif
 	vqp->sm_state = VRDMA_QP_STATE_WQE_SUBMIT;
 	
@@ -706,20 +705,24 @@ static bool vrdma_qp_wqe_sm_submit(struct spdk_vrdma_qp *vqp,
 			case MLX5_OPCODE_RDMA_WRITE:
 			case MLX5_OPCODE_RDMA_WRITE_IMM:
 				vrdma_rw_wqe_submit(wqe, backend_qp, opcode);
+				vqp->stats.sq_wqe_wr++;
 				break;
 			case MLX5_OPCODE_ATOMIC_CS:
 			case MLX5_OPCODE_ATOMIC_FA:
 				vrdma_atomic_wqe_submit(wqe, backend_qp, opcode);
+				vqp->stats.sq_wqe_atomic++;
 				break;
 			default:
 				// place holder, will be replaced in future
 				vrdma_ud_wqe_submit(wqe, backend_qp, opcode);
+				vqp->stats.sq_wqe_ud++;
 				vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
 				return false;
 		}
 	}
-
 	vrdma_tx_complete(backend_qp);
+	vqp->stats.msq_dbred_pi = backend_qp->hw_qp.sq.pi;
+	vqp->stats.sq_wqe_submitted += num_to_parse;
 	vqp->sq.comm.pre_pi += num_to_parse;
 	SPDK_NOTICELOG("vrdam sq submit wqe done \n");
 	return true;
@@ -885,7 +888,9 @@ static bool vrdma_qp_sm_poll_cq_ci(struct spdk_vrdma_qp *vqp,
 		return true;
 	}
 
-	//SPDK_NOTICELOG("vrdam poll sq vcq ci: doorbell pa 0x%lx\n", ci_addr);
+#ifdef WQE_DBG
+	SPDK_NOTICELOG("vrdam poll sq vcq ci: doorbell pa 0x%lx\n", ci_addr);
+#endif
 
 	vqp->sm_state = VRDMA_QP_STATE_GEN_COMP;
 	vqp->q_comp.func = vrdma_qp_sm_dma_cb;
@@ -984,7 +989,6 @@ static int vrdma_write_back_sq_cqe(struct spdk_vrdma_qp *vqp)
 			return -1;
 		}
 
-second:
 		/* calculate second write size */
 		vqp->q_comp.count++;
 		vqp->q_comp.func = vrdma_qp_sm_dma_cb;
@@ -1024,8 +1028,10 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 	struct timeval tv; 
 	uint32_t i;
 
-	//SPDK_NOTICELOG("vrdam gen sq cqe start: vcq pi %d, pre_pi %d, ci %d\n",
-	//				vcq->pi, vcq->pre_pi, vcq->pici->ci);
+#ifdef WQE_DBG
+	SPDK_NOTICELOG("vrdam gen sq cqe start: vcq pi %d, pre_pi %d, ci %d\n",
+					vcq->pi, vcq->pre_pi, vcq->pici->ci);
+#endif
 	vqp->sm_state = VRDMA_QP_STATE_POLL_PI;
 	gettimeofday(&tv, NULL);
 
@@ -1034,8 +1040,10 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 		
 		if (cqe == NULL) {
 			/* if no available cqe, need to write prepared vcqes*/
-			//SPDK_NOTICELOG("get null MCQE: vcq new pi %d, pre_pi %d, ci %d\n",
-			//				vcq->pi, vcq->pre_pi, vcq->pici->ci);
+#ifdef WQE_DBG
+			SPDK_NOTICELOG("get null MCQE: vcq new pi %d, pre_pi %d, ci %d\n",
+							vcq->pi, vcq->pre_pi, vcq->pici->ci);
+#endif
 			goto write_vcq;
 		}
 
@@ -1069,10 +1077,13 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 
 write_vcq:
 	if (vcq->pi == vcq->pre_pi) {
-		//SPDK_NOTICELOG("no cqe to generate, jump to poll sq PI\n");
+#ifdef WQE_DBG
+		SPDK_NOTICELOG("no cqe to generate, jump to poll sq PI\n");
+#endif
 		return true;
 	}
 	vrdma_ring_mcq_db(mcq);
+	vqp->stats.mcq_dbred_ci = mcq->ci;
 
 	ret = vrdma_write_back_sq_cqe(vqp);
 
@@ -1165,3 +1176,26 @@ void vrdma_qp_sm_start(struct spdk_vrdma_qp *vqp)
 {
 	vrdma_qp_sm_poll_pi(vqp, VRDMA_QP_SM_OP_OK);
 }
+
+void vrdma_dump_vqp_stats(struct spdk_vrdma_qp *vqp)
+{
+	printf("\n========= vrdma qp debug counter =========\n");
+	printf("sq pi %6d       sq pre pi %6d\n", vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
+	printf("scq pi %6d      scq pre pi %6d     scq ci %10d\n", 
+			vqp->sq_vcq->pi, vqp->sq_vcq->pre_pi, vqp->sq_vcq->pici->ci);
+	if (vqp->bk_qp) {
+		printf("msq pi %6d      msq dbred pi %6d\n",
+				vqp->bk_qp->bk_qp.hw_qp.sq.pi, vqp->stats.msq_dbred_pi);
+		printf("mscq ci %6d     mscq dbred ci %6d\n",
+				vqp->bk_qp->bk_qp.sq_hw_cq.ci, vqp->stats.mcq_dbred_ci);
+	} else {
+		printf("!!!no backend qp info \n");
+	}
+	printf("sq wqe fetched %15lu\n",vqp->stats.sq_wqe_fetched);
+	printf("sq wqe submitted %15lu\n", vqp->stats.sq_wqe_submitted);
+	printf("sq wqe wr submitted %15lu\n", vqp->stats.sq_wqe_wr);
+	printf("sq wqe atomic submitted %15lu\n", vqp->stats.sq_wqe_atomic);
+	printf("sq wqe ud submitted %15lu\n", vqp->stats.sq_wqe_ud);
+
+}
+
