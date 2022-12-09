@@ -160,14 +160,14 @@ function verify_raid_bdev_state() (
 		return 1
 	fi
 
-	num_base_bdevs=$(echo $raid_bdev_info | jq -r '.base_bdevs_list | length')
+	num_base_bdevs=$(echo $raid_bdev_info | jq -r '[.base_bdevs_list[]] | length')
 	tmp=$(echo $raid_bdev_info | jq -r '.num_base_bdevs')
 	if [ "$num_base_bdevs" != "$tmp" ]; then
 		echo "incorrect num_base_bdevs: $tmp, expected: $num_base_bdevs"
 		return 1
 	fi
 
-	num_base_bdevs_discovered=$(echo $raid_bdev_info | jq -r '[.base_bdevs_list[] | strings] | length')
+	num_base_bdevs_discovered=$(echo $raid_bdev_info | jq -r '[.base_bdevs_list[] | select(.is_configured)] | length')
 	tmp=$(echo $raid_bdev_info | jq -r '.num_base_bdevs_discovered')
 	if [ "$num_base_bdevs_discovered" != "$tmp" ]; then
 		echo "incorrect num_base_bdevs_discovered: $tmp, expected: $num_base_bdevs_discovered"

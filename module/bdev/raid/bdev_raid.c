@@ -620,11 +620,19 @@ raid_bdev_write_info_json(struct raid_bdev *raid_bdev, struct spdk_json_write_ct
 	spdk_json_write_name(w, "base_bdevs_list");
 	spdk_json_write_array_begin(w);
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		if (base_info->desc) {
-			spdk_json_write_string(w, spdk_bdev_desc_get_bdev(base_info->desc)->name);
+		spdk_json_write_object_begin(w);
+		spdk_json_write_name(w, "name");
+		if (base_info->name) {
+			spdk_json_write_string(w, base_info->name);
 		} else {
 			spdk_json_write_null(w);
 		}
+		spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &base_info->uuid);
+		spdk_json_write_named_string(w, "uuid", uuid_str);
+		spdk_json_write_named_bool(w, "is_configured", base_info->is_configured);
+		spdk_json_write_named_uint64(w, "data_offset", base_info->data_offset);
+		spdk_json_write_named_uint64(w, "data_size", base_info->data_size);
+		spdk_json_write_object_end(w);
 	}
 	spdk_json_write_array_end(w);
 }

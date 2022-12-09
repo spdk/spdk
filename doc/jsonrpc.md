@@ -10454,8 +10454,20 @@ Example response:
       "num_base_bdevs": 2,
       "num_base_bdevs_discovered": 2,
       "base_bdevs_list": [
-        "malloc0",
-        "malloc1"
+        {
+          "name": "malloc0",
+          "uuid": "d2788884-5b3e-4fd7-87ff-6c78177e14ab",
+          "is_configured": true,
+          "data_offset": 256,
+          "data_size": 261888
+        },
+        {
+          "name": "malloc1",
+          "uuid": "a81bb1f8-5865-488a-8758-10152017e7d1",
+          "is_configured": true,
+          "data_offset": 256,
+          "data_size": 261888
+        }
       ]
     },
     {
@@ -10467,8 +10479,20 @@ Example response:
       "num_base_bdevs": 2,
       "num_base_bdevs_discovered": 1,
       "base_bdevs_list": [
-        "malloc2",
-        null
+        {
+          "name": "malloc2",
+          "uuid": "f60c20e1-3439-4f89-ae55-965a70333f86",
+          "is_configured": true,
+          "data_offset": 256,
+          "data_size": 261888
+        }
+        {
+          "name": "malloc3",
+          "uuid": "00000000-0000-0000-0000-000000000000",
+          "is_configured": false,
+          "data_offset": 0,
+          "data_size": 0
+        }
       ]
     }
   ]
