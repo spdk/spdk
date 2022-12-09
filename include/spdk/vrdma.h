@@ -42,9 +42,16 @@
 #define MAX_VRDMA_DEV_LEN 32
 #define LOG_4K_PAGE_SIZE 12
 #define MAX_VRDMA_MR_SGE_NUM 8
-
 #define VRDMA_DEV_NAME_LEN 32
-extern char *vrdma_sf_name;
+
+struct spdk_vrdma_sf {
+	char sf_name[VRDMA_DEV_NAME_LEN];
+	uint32_t gid_idx;
+	uint32_t remote_ip;
+	uint32_t ip;
+	uint8_t mac[6];
+	uint8_t dest_mac[6];
+};
 
 enum vrdma_size {
 	VRDMA_VIRTQ_TYPE_SZ	= 2,
@@ -136,7 +143,6 @@ struct spdk_vrdma_cq {
 	struct ibv_mr *cqe_ci_mr;
 };
 
-#define VRDMA_MAX_BK_QP_PER_VQP 4
 #define VRDMA_MAX_DMA_SQ_SIZE_PER_VQP 512
 #define VRDMA_MAX_DMA_RQ_SIZE_PER_VQP 64
 
@@ -202,7 +208,7 @@ struct spdk_vrdma_qp {
 	struct snap_vrdma_queue *snap_queue;
 	struct vrdma_qp_state_machine *custom_sm;
 	enum vrdma_qp_sm_state_type sm_state;
-	struct vrdma_backend_qp *bk_qp[VRDMA_MAX_BK_QP_PER_VQP];
+	struct vrdma_backend_qp *bk_qp;
 	struct vrdma_rq rq;
 	struct vrdma_sq sq;
 	struct ibv_mr *qp_mr;
@@ -212,6 +218,7 @@ struct spdk_vrdma_qp {
 struct spdk_vrdma_dev {
 	uint32_t devid; /*PF_id*/
 	char emu_name[MAX_VRDMA_DEV_LEN];
+	struct spdk_vrdma_sf vrdma_sf;
 	struct ibv_device *emu_mgr;
 	uint32_t vpd_cnt;
 	uint32_t vmr_cnt;

@@ -241,7 +241,7 @@ static void vrdma_aq_open_dev(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
 	SPDK_NOTICELOG("\nlizh vrdma_aq_open_dev...start\n");
-	if (ctrl->srv_ops->vrdma_device_notify(&ctrl->dev)) {
+	if (ctrl->srv_ops->vrdma_device_open_device(&ctrl->dev, aqe)) {
 		aqe->resp.open_device_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
 		return;
@@ -271,6 +271,11 @@ static void vrdma_aq_query_dev(struct vrdma_ctrl *ctrl,
 	aqe->resp.query_device_resp.max_cq_depth = VRDMA_DEV_MAX_CQ_DP;
 	aqe->resp.query_device_resp.max_mr = 1 << ctrl->sctx->vrdma_caps.log_max_mkey;
 	aqe->resp.query_device_resp.max_ah = VRDMA_DEV_MAX_AH;
+	if (ctrl->srv_ops->vrdma_device_query_device(&ctrl->dev, aqe)) {
+		aqe->resp.query_device_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
+		return;
+	}
 	aqe->resp.query_device_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 }
 
@@ -289,6 +294,11 @@ static void vrdma_aq_query_port(struct vrdma_ctrl *ctrl,
 	aqe->resp.query_port_resp.active_speed = 16; /* FDR hardcode just for POC*/
 	aqe->resp.query_port_resp.phys_state = VRDMA_PORT_PHYS_STATE_LINK_UP;
 	aqe->resp.query_port_resp.link_layer = IBV_LINK_LAYER_INFINIBAND;
+	if (ctrl->srv_ops->vrdma_device_query_port(&ctrl->dev, aqe)) {
+		aqe->resp.query_port_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
+		return;
+	}
 	aqe->resp.query_port_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 }
 
@@ -296,12 +306,13 @@ static void vrdma_aq_query_gid(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
 	SPDK_NOTICELOG("\nlizh vrdma_aq_query_gid...start\n");
+
+	memcpy(aqe->resp.query_gid_resp.gid, ctrl->dev.gid, VRDMA_DEV_GID_LEN);
 	if (ctrl->srv_ops->vrdma_device_query_gid(&ctrl->dev, aqe)) {
 		aqe->resp.query_gid_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
 		return;
 	}
-	memcpy(aqe->resp.query_gid_resp.gid, ctrl->dev.gid, VRDMA_DEV_GID_LEN);
 	aqe->resp.query_gid_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 	for (int i = 0; i < VRDMA_DEV_GID_LEN; i += 4)
 		SPDK_NOTICELOG("\nlizh vrdma_aq_query_gid...gid=0x%x%x%x%x\n",
@@ -373,7 +384,7 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 				  aqe->resp.create_pd_resp.err_code);
 		return;
 	}
-	if (!strcmp(vrdma_sf_name, "dummy")) {
+	if (!strcmp(ctrl->vdev->vrdma_sf.sf_name, "dummy")) {
 		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
 		SPDK_ERRLOG("no vrdma sf dev name is configured \n");
 		return;
@@ -392,7 +403,7 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 				  aqe->resp.create_pd_resp.err_code);
 		return;
 	}
-	vpd->ibpd = vrdma_create_sf_pd(vrdma_sf_name);
+	vpd->ibpd = vrdma_create_sf_pd(ctrl->vdev->vrdma_sf.sf_name);
 	if (!vpd->ibpd) {
 		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
 		SPDK_ERRLOG("Failed to allocate PD, err(%d)\n",
@@ -1043,18 +1054,14 @@ static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
 		aqe->resp.create_qp_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_UNKNOWN;
 		goto free_vqp;
 	}
-	if (vrdma_create_backend_qp(ctrl, vqp)) {
-		aqe->resp.create_qp_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_UNKNOWN;
-		goto destroy_vq;
-	}
-
 	param.param.create_qp_param.qp_handle = qp_idx;
+	param.param.create_qp_param.ibpd = vpd->ibpd;
 	if (ctrl->srv_ops->vrdma_device_create_qp(&ctrl->dev, aqe, &param)) {
 		aqe->resp.create_qp_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
 		SPDK_ERRLOG("Failed to create QP in service, err(%d)\n",
 				  aqe->resp.create_qp_resp.err_code);
-		goto destroy_bk_qp;
+		goto destroy_vq;
 	}
 	g_vqp_cnt++;
 	ctrl->vdev->vqp_cnt++;
@@ -1069,8 +1076,6 @@ static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
 		qp_idx, vqp->qdb_idx);
 	return;
 
-destroy_bk_qp:
-	vrdma_destroy_backend_qp(vqp);
 destroy_vq:
 	vrdma_destroy_vq(ctrl, vqp);
 free_vqp:
@@ -1162,7 +1167,6 @@ static int vrdma_aq_destroy_qp(struct vrdma_ctrl *ctrl,
 					aqe->resp.destroy_qp_resp.err_code);
 		return 0;
 	}
-	vrdma_destroy_backend_qp(vqp);
 	if (vrdma_qp_is_connected_ready(vqp)) {
 		if (vrdma_set_vq_flush(ctrl, vqp)) {
 			return VRDMA_CMD_STATE_WAITING;
@@ -1279,16 +1283,6 @@ static void vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
 		vqp->rnr_retry_cnt = aqe->req.modify_qp_req.rnr_retry_cnt;
 	}
 	if (aqe->req.modify_qp_req.qp_attr_mask & IBV_QP_STATE){
-		if (vqp->qp_state == IBV_QPS_RESET &&
-			aqe->req.modify_qp_req.qp_state >= IBV_QPS_INIT) {
-			if (vrdma_modify_backend_qp_to_ready(ctrl, vqp)) {
-				aqe->resp.modify_qp_resp.err_code =
-				VRDMA_AQ_MSG_ERR_CODE_UNKNOWN;
-				SPDK_ERRLOG("Failed to modify bankend QP %d to ready, err(%d)\n",
-					aqe->req.modify_qp_req.qp_handle,
-					aqe->resp.modify_qp_resp.err_code);
-			}
-		}
 		SPDK_NOTICELOG("\nlizh vrdma_aq_modify_qp..vqp->qp_state=0x%x new qp_state = 0x%x\n",
 				vqp->qp_state, aqe->req.modify_qp_req.qp_state);
 		if (vqp->qp_state == IBV_QPS_INIT &&
