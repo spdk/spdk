@@ -222,6 +222,16 @@ function build_native_dpdk() {
 	cd "$orgdir"
 }
 
+function check_dpdk_pci_api() {
+	local dpdk_dir
+
+	if [[ -n "$SPDK_TEST_NATIVE_DPDK" ]]; then
+		dpdk_dir=$(dirname "$SPDK_RUN_EXTERNAL_DPDK")
+	fi
+
+	"$rootdir/scripts/env_dpdk/check_dpdk_pci_api.sh" check "$dpdk_dir"
+}
+
 function make_fail_cleanup() {
 	if [ -d $out/scan-build-tmp ]; then
 		scanoutput=$(ls -1 $out/scan-build-tmp/)
@@ -342,7 +352,7 @@ function build_doc() {
 function autobuild_test_suite() {
 	run_test "autobuild_check_format" ./scripts/check_format.sh
 	run_test "autobuild_check_so_deps" $rootdir/test/make/check_so_deps.sh $1
-	run_test "autobuild_check_dpdk_pci_api" $rootdir/scripts/env_dpdk/check_dpdk_pci_api.sh
+	run_test "autobuild_check_dpdk_pci_api" check_dpdk_pci_api
 	if [[ $SPDK_TEST_AUTOBUILD == 'full' ]]; then
 		run_test "autobuild_external_code" $rootdir/test/external_code/test_make.sh $rootdir
 		./configure $config_params --without-shared
