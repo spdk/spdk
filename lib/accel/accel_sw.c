@@ -130,6 +130,26 @@ _sw_accel_dualcast(void *dst1, void *dst2, void *src, size_t nbytes, int flags)
 	}
 }
 
+static int
+_sw_accel_dualcast_iovs(struct iovec *dst_iovs, uint32_t dst_iovcnt,
+			struct iovec *dst2_iovs, uint32_t dst2_iovcnt,
+			struct iovec *src_iovs, uint32_t src_iovcnt, int flags)
+{
+	if (spdk_unlikely(dst_iovcnt != 1 || dst2_iovcnt != 1 || src_iovcnt != 1)) {
+		return -EINVAL;
+	}
+
+	if (spdk_unlikely(dst_iovs[0].iov_len != src_iovs[0].iov_len ||
+			  dst_iovs[0].iov_len != dst2_iovs[0].iov_len)) {
+		return -EINVAL;
+	}
+
+	_sw_accel_dualcast(dst_iovs[0].iov_base, dst2_iovs[0].iov_base, src_iovs[0].iov_base,
+			   dst_iovs[0].iov_len, flags);
+
+	return 0;
+}
+
 static void
 _sw_accel_copy(void *dst, void *src, size_t nbytes, int flags)
 {
@@ -493,8 +513,10 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 		case ACCEL_OPC_DUALCAST:
 			rc = _check_flags(accel_task->flags);
 			if (rc == 0) {
-				_sw_accel_dualcast(accel_task->dst, accel_task->dst2, accel_task->src, accel_task->nbytes,
-						   accel_task->flags);
+				rc = _sw_accel_dualcast_iovs(accel_task->d.iovs, accel_task->d.iovcnt,
+							     accel_task->d2.iovs, accel_task->d2.iovcnt,
+							     accel_task->s.iovs, accel_task->s.iovcnt,
+							     accel_task->flags);
 			}
 			break;
 		case ACCEL_OPC_COMPARE:

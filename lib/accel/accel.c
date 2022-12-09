@@ -253,10 +253,18 @@ spdk_accel_submit_dualcast(struct spdk_io_channel *ch, void *dst1,
 		return -ENOMEM;
 	}
 
-	accel_task->src = src;
-	accel_task->dst = dst1;
-	accel_task->dst2 = dst2;
-	accel_task->nbytes = nbytes;
+	accel_task->s.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_SRC];
+	accel_task->d.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_DST];
+	accel_task->d2.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_DST2];
+	accel_task->d.iovs[0].iov_base = dst1;
+	accel_task->d.iovs[0].iov_len = nbytes;
+	accel_task->d.iovcnt = 1;
+	accel_task->d2.iovs[0].iov_base = dst2;
+	accel_task->d2.iovs[0].iov_len = nbytes;
+	accel_task->d2.iovcnt = 1;
+	accel_task->s.iovs[0].iov_base = src;
+	accel_task->s.iovs[0].iov_len = nbytes;
+	accel_task->s.iovcnt = 1;
 	accel_task->flags = flags;
 	accel_task->op_code = ACCEL_OPC_DUALCAST;
 	accel_task->src_domain = NULL;

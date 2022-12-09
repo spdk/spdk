@@ -66,7 +66,10 @@ struct spdk_accel_task {
 		void			*src2;
 	};
 	union {
-		void				*dst2;
+		struct {
+			struct iovec		*iovs;
+			uint32_t		iovcnt;
+		} d2;
 		uint32_t			seed;
 		uint64_t			fill_pattern;
 		struct spdk_accel_crypto_key	*crypto_key;

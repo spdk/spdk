@@ -248,11 +248,7 @@ test_spdk_accel_submit_dualcast(void)
 	/* SW module does the dualcast. */
 	rc = spdk_accel_submit_dualcast(g_ch, dst1, dst2, src, nbytes, flags, NULL, cb_arg);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(task.dst == dst1);
-	CU_ASSERT(task.dst2 == dst2);
-	CU_ASSERT(task.src == src);
 	CU_ASSERT(task.op_code == ACCEL_OPC_DUALCAST);
-	CU_ASSERT(task.nbytes == nbytes);
 	CU_ASSERT(task.flags == 0);
 	CU_ASSERT(memcmp(dst1, src, TEST_SUBMIT_SIZE) == 0);
 	CU_ASSERT(memcmp(dst2, src, TEST_SUBMIT_SIZE) == 0);
