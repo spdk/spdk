@@ -3506,7 +3506,7 @@ bdev_histograms(void)
 	CU_ASSERT(g_count == 2);
 
 	g_count = 0;
-	spdk_bdev_channel_get_histogram(bdev, ch, histogram_channel_data_cb, histogram_io_count);
+	spdk_bdev_channel_get_histogram(ch, histogram_channel_data_cb, histogram_io_count);
 	CU_ASSERT(g_status == 0);
 	CU_ASSERT(g_count == 2);
 
@@ -3521,7 +3521,7 @@ bdev_histograms(void)
 	poll_threads();
 	CU_ASSERT(g_status == -EFAULT);
 
-	spdk_bdev_channel_get_histogram(bdev, ch, histogram_channel_data_cb, NULL);
+	spdk_bdev_channel_get_histogram(ch, histogram_channel_data_cb, NULL);
 	CU_ASSERT(g_status == -EFAULT);
 
 	spdk_histogram_data_free(histogram);

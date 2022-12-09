@@ -1951,13 +1951,12 @@ void spdk_bdev_histogram_get(struct spdk_bdev *bdev, struct spdk_histogram_data 
  * is only valid during the execution of cb_fn. Referencing the histogram after cb_fn
  * returns is not supported and yields undetermined behavior.
  *
- * \param bdev Block device.
  * \param ch IO channel of bdev.
  * \param cb_fn Callback function to process the histogram of the channel.
  * \param cb_arg Argument to pass to cb_fn.
  */
-void spdk_bdev_channel_get_histogram(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
-				     spdk_bdev_histogram_data_cb cb_fn, void *cb_arg);
+void spdk_bdev_channel_get_histogram(struct spdk_io_channel *ch, spdk_bdev_histogram_data_cb cb_fn,
+				     void *cb_arg);
 
 /**
  * Retrieves media events.  Can only be called from the context of

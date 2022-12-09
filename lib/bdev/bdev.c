@@ -7880,8 +7880,8 @@ spdk_bdev_histogram_get(struct spdk_bdev *bdev, struct spdk_histogram_data *hist
 }
 
 void
-spdk_bdev_channel_get_histogram(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
-				spdk_bdev_histogram_data_cb cb_fn, void *cb_arg)
+spdk_bdev_channel_get_histogram(struct spdk_io_channel *ch, spdk_bdev_histogram_data_cb cb_fn,
+				void *cb_arg)
 {
 	struct spdk_bdev_channel *bdev_ch = __io_ch_to_bdev_ch(ch);
 	int status = 0;
