@@ -279,6 +279,15 @@ spdk_nvme_qpair_print_command(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cm
 	spdk_nvme_print_command(qpair->id, cmd);
 }
 
+static const struct nvme_string status_type[] = {
+	{ SPDK_NVME_SCT_GENERIC, "GENERIC" },
+	{ SPDK_NVME_SCT_COMMAND_SPECIFIC, "COMMAND SPECIFIC" },
+	{ SPDK_NVME_SCT_MEDIA_ERROR, "MEDIA ERROR" },
+	{ SPDK_NVME_SCT_PATH, "PATH" },
+	{ SPDK_NVME_SCT_VENDOR_SPECIFIC, "VENDOR SPECIFIC" },
+	{ 0xFFFF, "RESERVED" },
+};
+
 static const struct nvme_string generic_status[] = {
 	{ SPDK_NVME_SC_SUCCESS, "SUCCESS" },
 	{ SPDK_NVME_SC_INVALID_OPCODE, "INVALID OPCODE" },
@@ -443,6 +452,12 @@ spdk_nvme_cpl_get_status_string(const struct spdk_nvme_status *status)
 	}
 
 	return nvme_get_string(entry, status->sc);
+}
+
+const char *
+spdk_nvme_cpl_get_status_type_string(const struct spdk_nvme_status *status)
+{
+	return nvme_get_string(status_type, status->sct);
 }
 
 void

@@ -183,6 +183,7 @@
 	spdk_nvme_print_completion;
 
 	spdk_nvme_cpl_get_status_string;
+	spdk_nvme_cpl_get_status_type_string;
 
 	spdk_nvme_rdma_init_hooks;
 

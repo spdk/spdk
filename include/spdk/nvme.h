@@ -3751,6 +3751,14 @@ void spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 const char *spdk_nvme_cpl_get_status_string(const struct spdk_nvme_status *status);
 
 /**
+ * \brief Given NVMe status, return ASCII string for the type of that error.
+ *
+ * \param status Status from NVMe completion queue element.
+ * \return Returns status type as an ASCII string.
+ */
+const char *spdk_nvme_cpl_get_status_type_string(const struct spdk_nvme_status *status);
+
+/**
  * \brief Prints (SPDK_NOTICELOG) the contents of an NVMe submission queue entry (command).
  *
  * \param qpair Pointer to the NVMe queue pair - used to determine admin versus I/O queue.
