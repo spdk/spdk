@@ -330,10 +330,8 @@ test_spdk_accel_submit_fill(void)
 	/* accel submission OK. */
 	rc = spdk_accel_submit_fill(g_ch, dst, fill, nbytes, flags, NULL, cb_arg);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(task.dst == dst);
 	CU_ASSERT(task.fill_pattern == fill64);
 	CU_ASSERT(task.op_code == ACCEL_OPC_FILL);
-	CU_ASSERT(task.nbytes == nbytes);
 	CU_ASSERT(task.flags == 0);
 
 	CU_ASSERT(memcmp(dst, src, TEST_SUBMIT_SIZE) == 0);
@@ -1667,6 +1665,43 @@ test_sequence_copy_elision(void)
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
 	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 1);
+
+	/* Check fill + copy */
+	seq = NULL;
+	completed = 0;
+	g_seq_operations[ACCEL_OPC_COPY].count = 0;
+	g_seq_operations[ACCEL_OPC_FILL].count = 0;
+	g_seq_operations[ACCEL_OPC_COPY].src_iovs = NULL;
+	g_seq_operations[ACCEL_OPC_COPY].dst_iovs = NULL;
+	g_seq_operations[ACCEL_OPC_FILL].dst_iovcnt = 1;
+	g_seq_operations[ACCEL_OPC_FILL].dst_iovs = &exp_iovs[0];
+	exp_iovs[0].iov_base = buf;
+	exp_iovs[0].iov_len = sizeof(buf);
+
+	rc = spdk_accel_append_fill(&seq, ioch, tmp[0], sizeof(tmp[0]), NULL, NULL, 0xa5, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	dst_iovs[0].iov_base = buf;
+	dst_iovs[0].iov_len = sizeof(buf);
+	src_iovs[0].iov_base = tmp[0];
+	src_iovs[0].iov_len = sizeof(tmp[0]);
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[0], 1, NULL, NULL,
+				    &src_iovs[0], 1, NULL, NULL, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 2);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_FILL].count, 1);
 
 	/* Cleanup module pointers to make subsequent tests work correctly */
 	for (i = 0; i < ACCEL_OPC_LAST; ++i) {

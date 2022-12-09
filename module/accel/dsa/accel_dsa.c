@@ -175,14 +175,12 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 					      dsa_done, idxd_task);
 		break;
 	case ACCEL_OPC_FILL:
-		diov.iov_base = task->dst;
-		diov.iov_len = task->nbytes;
 		if (task->flags & ACCEL_FLAG_PERSISTENT) {
 			flags |= SPDK_IDXD_FLAG_PERSISTENT;
 			flags |= SPDK_IDXD_FLAG_NONTEMPORAL;
 		}
-		rc = spdk_idxd_submit_fill(chan->chan, &diov, 1, task->fill_pattern, flags, dsa_done,
-					   idxd_task);
+		rc = spdk_idxd_submit_fill(chan->chan, task->d.iovs, task->d.iovcnt,
+					   task->fill_pattern, flags, dsa_done, idxd_task);
 		break;
 	case ACCEL_OPC_CRC32C:
 		if (task->s.iovcnt == 0) {

@@ -209,9 +209,19 @@ _sw_accel_compare(struct iovec *src_iovs, uint32_t src_iovcnt,
 	return memcmp(src_iovs[0].iov_base, src2_iovs[0].iov_base, src_iovs[0].iov_len);
 }
 
-static void
-_sw_accel_fill(void *dst, uint8_t fill, size_t nbytes, int flags)
+static int
+_sw_accel_fill(struct iovec *iovs, uint32_t iovcnt, uint8_t fill, int flags)
 {
+	void *dst;
+	size_t nbytes;
+
+	if (spdk_unlikely(iovcnt != 1)) {
+		return -EINVAL;
+	}
+
+	dst = iovs[0].iov_base;
+	nbytes = iovs[0].iov_len;
+
 	if (flags & ACCEL_FLAG_PERSISTENT) {
 #ifdef SPDK_CONFIG_PMDK
 		int is_pmem = pmem_is_pmem(dst, nbytes);
@@ -229,6 +239,8 @@ _sw_accel_fill(void *dst, uint8_t fill, size_t nbytes, int flags)
 	} else {
 		memset(dst, fill, nbytes);
 	}
+
+	return 0;
 }
 
 static void
@@ -516,7 +528,8 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 		case ACCEL_OPC_FILL:
 			rc = _check_flags(accel_task->flags);
 			if (rc == 0) {
-				_sw_accel_fill(accel_task->dst, accel_task->fill_pattern, accel_task->nbytes, accel_task->flags);
+				rc = _sw_accel_fill(accel_task->d.iovs, accel_task->d.iovcnt,
+						    accel_task->fill_pattern, accel_task->flags);
 			}
 			break;
 		case ACCEL_OPC_DUALCAST:

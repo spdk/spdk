@@ -322,9 +322,11 @@ spdk_accel_submit_fill(struct spdk_io_channel *ch, void *dst,
 		return -ENOMEM;
 	}
 
-	accel_task->dst = dst;
+	accel_task->d.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_DST];
+	accel_task->d.iovs[0].iov_base = dst;
+	accel_task->d.iovs[0].iov_len = nbytes;
+	accel_task->d.iovcnt = 1;
 	memset(&accel_task->fill_pattern, fill, sizeof(uint64_t));
-	accel_task->nbytes = nbytes;
 	accel_task->flags = flags;
 	accel_task->op_code = ACCEL_OPC_FILL;
 	accel_task->src_domain = NULL;
@@ -821,11 +823,13 @@ spdk_accel_append_fill(struct spdk_accel_sequence **pseq, struct spdk_io_channel
 
 	memset(&task->fill_pattern, pattern, sizeof(uint64_t));
 
+	task->d.iovs = &task->aux_iovs[SPDK_ACCEL_AUX_IOV_DST];
+	task->d.iovs[0].iov_base = buf;
+	task->d.iovs[0].iov_len = len;
+	task->d.iovcnt = 1;
 	task->src_domain = NULL;
 	task->dst_domain = domain;
 	task->dst_domain_ctx = domain_ctx;
-	task->dst = buf;
-	task->nbytes = len;
 	task->flags = flags;
 	task->op_code = ACCEL_OPC_FILL;
 
@@ -994,29 +998,13 @@ accel_sequence_set_virtbuf(struct spdk_accel_sequence *seq, struct accel_buffer 
 	 * in a sequence that were using it.
 	 */
 	TAILQ_FOREACH(task, &seq->tasks, seq_link) {
-		switch (task->op_code) {
-		case ACCEL_OPC_DECOMPRESS:
-		case ACCEL_OPC_COPY:
-			if (task->src_domain == g_accel_domain && task->src_domain_ctx == buf) {
-				accel_update_iovs(task->s.iovs, task->s.iovcnt, buf);
-				task->src_domain = NULL;
-			}
-			if (task->dst_domain == g_accel_domain && task->dst_domain_ctx == buf) {
-				accel_update_iovs(task->d.iovs, task->d.iovcnt, buf);
-				task->dst_domain = NULL;
-			}
-			break;
-		case ACCEL_OPC_FILL:
-			/* Fill should have src_domain cleared */
-			assert(task->src_domain == NULL);
-			if (task->dst_domain == g_accel_domain && task->dst_domain_ctx == buf) {
-				accel_update_buf(&task->dst, buf);
-				task->dst_domain = NULL;
-			}
-			break;
-		default:
-			assert(0 && "bad opcode");
-			break;
+		if (task->src_domain == g_accel_domain && task->src_domain_ctx == buf) {
+			accel_update_iovs(task->s.iovs, task->s.iovcnt, buf);
+			task->src_domain = NULL;
+		}
+		if (task->dst_domain == g_accel_domain && task->dst_domain_ctx == buf) {
+			accel_update_iovs(task->d.iovs, task->d.iovcnt, buf);
+			task->dst_domain = NULL;
 		}
 	}
 }
@@ -1189,6 +1177,7 @@ accel_sequence_merge_tasks(struct spdk_accel_sequence *seq, struct spdk_accel_ta
 		TAILQ_INSERT_TAIL(&seq->completed, task, seq_link);
 		break;
 	case ACCEL_OPC_DECOMPRESS:
+	case ACCEL_OPC_FILL:
 		/* We can only merge tasks when one of them is a copy */
 		if (next->op_code != ACCEL_OPC_COPY) {
 			break;
@@ -1208,8 +1197,6 @@ accel_sequence_merge_tasks(struct spdk_accel_sequence *seq, struct spdk_accel_ta
 		*next_task = TAILQ_NEXT(next, seq_link);
 		TAILQ_REMOVE(&seq->tasks, next, seq_link);
 		TAILQ_INSERT_TAIL(&seq->completed, next, seq_link);
-		break;
-	case ACCEL_OPC_FILL:
 		break;
 	default:
 		assert(0 && "bad opcode");

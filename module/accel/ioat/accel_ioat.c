@@ -130,6 +130,18 @@ ioat_supports_opcode(enum accel_opcode opc)
 }
 
 static int
+ioat_submit_fill(struct ioat_io_channel *ioat_ch, struct spdk_accel_task *task)
+{
+	if (spdk_unlikely(task->d.iovcnt != 1)) {
+		return -EINVAL;
+	}
+
+	return spdk_ioat_build_fill(ioat_ch->ioat_ch, task, ioat_done,
+				    task->d.iovs[0].iov_base, task->fill_pattern,
+				    task->d.iovs[0].iov_len);
+}
+
+static int
 ioat_submit_copy(struct ioat_io_channel *ioat_ch, struct spdk_accel_task *task)
 {
 	if (spdk_unlikely(task->d.iovcnt != 1 || task->s.iovcnt != 1)) {
@@ -160,8 +172,7 @@ ioat_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task
 	do {
 		switch (accel_task->op_code) {
 		case ACCEL_OPC_FILL:
-			rc = spdk_ioat_build_fill(ioat_ch->ioat_ch, accel_task, ioat_done,
-						  accel_task->dst, accel_task->fill_pattern, accel_task->nbytes);
+			rc = ioat_submit_fill(ioat_ch,  accel_task);
 			break;
 		case ACCEL_OPC_COPY:
 			rc = ioat_submit_copy(ioat_ch, accel_task);
