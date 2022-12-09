@@ -334,7 +334,7 @@ static inline struct vrdma_backend_qp *vrdma_vq_get_mqp(struct spdk_vrdma_qp *vq
 static bool vrdma_qp_wqe_sm_map_backend(struct spdk_vrdma_qp *vqp,
 											enum vrdma_qp_sm_op_status status)
 {
-	vqp->bk_qp[0] = vrdma_vq_get_mqp(vqp);
+	vqp->bk_qp = vrdma_vq_get_mqp(vqp);
 #ifdef WQE_DBG
 	SPDK_NOTICELOG("vrdam map sq wqe: vq pi %d, mqp %p\n",
 			vqp->qp_pi->pi.sq_pi, vqp->bk_qp[0]);
@@ -885,7 +885,7 @@ static bool vrdma_qp_sm_poll_cq_ci(struct spdk_vrdma_qp *vqp,
 		return true;
 	}
 
-	SPDK_NOTICELOG("vrdam poll sq vcq ci: doorbell pa 0x%lx\n", ci_addr);
+	//SPDK_NOTICELOG("vrdam poll sq vcq ci: doorbell pa 0x%lx\n", ci_addr);
 
 	vqp->sm_state = VRDMA_QP_STATE_GEN_COMP;
 	vqp->q_comp.func = vrdma_qp_sm_dma_cb;
@@ -1024,8 +1024,8 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 	struct timeval tv; 
 	uint32_t i;
 
-	SPDK_NOTICELOG("vrdam gen sq cqe start: vcq pi %d, pre_pi %d, ci %d\n",
-					vcq->pi, vcq->pre_pi, vcq->pici->ci);
+	//SPDK_NOTICELOG("vrdam gen sq cqe start: vcq pi %d, pre_pi %d, ci %d\n",
+	//				vcq->pi, vcq->pre_pi, vcq->pici->ci);
 	vqp->sm_state = VRDMA_QP_STATE_POLL_PI;
 	gettimeofday(&tv, NULL);
 
@@ -1034,8 +1034,8 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 		
 		if (cqe == NULL) {
 			/* if no available cqe, need to write prepared vcqes*/
-			SPDK_NOTICELOG("get null MCQE: vcq new pi %d, pre_pi %d, ci %d\n",
-							vcq->pi, vcq->pre_pi, vcq->pici->ci);
+			//SPDK_NOTICELOG("get null MCQE: vcq new pi %d, pre_pi %d, ci %d\n",
+			//				vcq->pi, vcq->pre_pi, vcq->pici->ci);
 			goto write_vcq;
 		}
 
@@ -1069,7 +1069,7 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 
 write_vcq:
 	if (vcq->pi == vcq->pre_pi) {
-		SPDK_NOTICELOG("no cqe to generate, jump to poll sq PI\n");
+		//SPDK_NOTICELOG("no cqe to generate, jump to poll sq PI\n");
 		return true;
 	}
 	vrdma_ring_mcq_db(mcq);
