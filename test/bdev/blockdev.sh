@@ -195,6 +195,28 @@ function setup_crypto_sw_conf() {
 	RPC
 }
 
+function setup_crypto_accel_mlx5_conf() {
+	"$rpc_py" <<- RPC
+		mlx5_scan_accel_module
+		accel_assign_opc -o encrypt -m mlx5
+		accel_assign_opc -o decrypt -m mlx5
+		framework_start_init
+		bdev_malloc_create -b Malloc0 32 512
+		bdev_malloc_create -b Malloc1 32 512
+		bdev_malloc_create -b Malloc2 32 4096
+		bdev_malloc_create -b Malloc3 32 4096
+		accel_crypto_key_create -c AES_XTS -k 00112233445566778899001122334455 -e 11223344556677889900112233445500 -n test_dek_accel_mlx5_1
+		accel_crypto_key_create -c AES_XTS -k 11223344556677889900112233445500 -e 22334455667788990011223344550011 -n test_dek_accel_mlx5_2
+		accel_crypto_key_create -c AES_XTS -k 22334455667788990011223344550011 -e 33445566778899001122334455002233 -n test_dek_accel_mlx5_3
+		accel_crypto_key_create -c AES_XTS -k 33445566778899001122334455001122 -e 44556677889900112233445500112233 -n test_dek_accel_mlx5_4
+		bdev_crypto_create Malloc0 crypto_ram_1 -n test_dek_accel_mlx5_1
+		bdev_crypto_create Malloc1 crypto_ram_2 -n test_dek_accel_mlx5_2
+		bdev_crypto_create Malloc2 crypto_ram_3 -n test_dek_accel_mlx5_3
+		bdev_crypto_create Malloc3 crypto_ram_4 -n test_dek_accel_mlx5_4
+		bdev_get_bdevs -b Malloc1
+	RPC
+}
+
 function setup_crypto_mlx5_conf() {
 	local key=$1
 	local block_key
@@ -651,6 +673,9 @@ case "$test_type" in
 		;;
 	crypto_mlx5)
 		setup_crypto_mlx5_conf $dek
+		;;
+	crypto_accel_mlx5)
+		setup_crypto_accel_mlx5_conf
 		;;
 	pmem)
 		setup_pmem_conf
