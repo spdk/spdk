@@ -546,11 +546,7 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 					       accel_task->s2.iovs, accel_task->s2.iovcnt);
 			break;
 		case ACCEL_OPC_CRC32C:
-			if (accel_task->s.iovcnt == 0) {
-				_sw_accel_crc32c(accel_task->crc_dst, accel_task->src, accel_task->seed, accel_task->nbytes);
-			} else {
-				_sw_accel_crc32cv(accel_task->crc_dst, accel_task->s.iovs, accel_task->s.iovcnt, accel_task->seed);
-			}
+			_sw_accel_crc32cv(accel_task->crc_dst, accel_task->s.iovs, accel_task->s.iovcnt, accel_task->seed);
 			break;
 		case ACCEL_OPC_COPY_CRC32C:
 			rc = _check_flags(accel_task->flags);

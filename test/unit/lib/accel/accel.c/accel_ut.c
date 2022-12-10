@@ -367,11 +367,8 @@ test_spdk_accel_submit_crc32c(void)
 	rc = spdk_accel_submit_crc32c(g_ch, &crc_dst, src, seed, nbytes, NULL, cb_arg);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(task.crc_dst == &crc_dst);
-	CU_ASSERT(task.src == src);
-	CU_ASSERT(task.s.iovcnt == 0);
 	CU_ASSERT(task.seed == seed);
 	CU_ASSERT(task.op_code == ACCEL_OPC_CRC32C);
-	CU_ASSERT(task.nbytes == nbytes);
 	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
 	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
 	CU_ASSERT(expected_accel_task == &task);

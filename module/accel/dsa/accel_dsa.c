@@ -183,17 +183,8 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 					   task->fill_pattern, flags, dsa_done, idxd_task);
 		break;
 	case ACCEL_OPC_CRC32C:
-		if (task->s.iovcnt == 0) {
-			siov.iov_base = task->src;
-			siov.iov_len = task->nbytes;
-			iov = &siov;
-			iovcnt = 1;
-		} else {
-			iov = task->s.iovs;
-			iovcnt = task->s.iovcnt;
-		}
-		rc = spdk_idxd_submit_crc32c(chan->chan, iov, iovcnt, task->seed, task->crc_dst,
-					     flags, dsa_done, idxd_task);
+		rc = spdk_idxd_submit_crc32c(chan->chan, task->s.iovs, task->s.iovcnt, task->seed,
+					     task->crc_dst, flags, dsa_done, idxd_task);
 		break;
 	case ACCEL_OPC_COPY_CRC32C:
 		if (task->s.iovcnt == 0) {
