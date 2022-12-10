@@ -137,8 +137,9 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 
 	switch (task->op_code) {
 	case ACCEL_OPC_COMPRESS:
-		rc = spdk_idxd_submit_compress(chan->chan, task->dst, task->nbytes_dst, task->s.iovs,
-					       task->s.iovcnt, task->output_size, flags, iaa_done, idxd_task);
+		rc = spdk_idxd_submit_compress(chan->chan, task->d.iovs[0].iov_base, task->d.iovs[0].iov_len,
+					       task->s.iovs, task->s.iovcnt, task->output_size, flags,
+					       iaa_done, idxd_task);
 		break;
 	case ACCEL_OPC_DECOMPRESS:
 		rc = spdk_idxd_submit_decompress(chan->chan, task->d.iovs, task->d.iovcnt, task->s.iovs,

@@ -239,13 +239,14 @@ _sw_accel_compress(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *ac
 	size_t last_seglen = accel_task->s.iovs[accel_task->s.iovcnt - 1].iov_len;
 	struct iovec *siov = accel_task->s.iovs;
 	struct iovec *diov = accel_task->d.iovs;
-	size_t remaining = accel_task->nbytes;
-	uint32_t s = 0, d = 0;
+	size_t remaining;
+	uint32_t i, s = 0, d = 0;
 	int rc = 0;
 
-	accel_task->d.iovcnt = 1;
-	diov[0].iov_base = accel_task->dst;
-	diov[0].iov_len = accel_task->nbytes_dst;
+	remaining = 0;
+	for (i = 0; i < accel_task->s.iovcnt; ++i) {
+		remaining += accel_task->s.iovs[i].iov_len;
+	}
 
 	isal_deflate_reset(&sw_ch->stream);
 	sw_ch->stream.end_of_stream = 0;

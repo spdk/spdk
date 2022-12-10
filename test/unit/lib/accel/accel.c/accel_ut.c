@@ -395,7 +395,6 @@ test_spdk_accel_submit_crc32cv(void)
 		iov[i].iov_len = TEST_SUBMIT_SIZE;
 	}
 
-	task.nbytes = TEST_SUBMIT_SIZE;
 	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
 
 	/* accel submission OK. */
@@ -407,7 +406,6 @@ test_spdk_accel_submit_crc32cv(void)
 	CU_ASSERT(task.seed == seed);
 	CU_ASSERT(task.op_code == ACCEL_OPC_CRC32C);
 	CU_ASSERT(task.cb_arg == cb_arg);
-	CU_ASSERT(task.nbytes == iov[0].iov_len);
 	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
 	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
 	CU_ASSERT(expected_accel_task == &task);

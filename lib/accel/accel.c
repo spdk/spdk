@@ -502,23 +502,19 @@ spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, uint64_t nbyte
 	struct spdk_accel_task *accel_task;
 	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_COMPRESS];
 	struct spdk_io_channel *module_ch = accel_ch->module_ch[ACCEL_OPC_COMPRESS];
-	size_t i, src_len = 0;
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
 	if (accel_task == NULL) {
 		return -ENOMEM;
 	}
 
-	for (i = 0; i < src_iovcnt; i++) {
-		src_len +=  src_iovs[i].iov_len;
-	}
-
-	accel_task->nbytes = src_len;
+	accel_task->d.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_DST];
+	accel_task->d.iovs[0].iov_base = dst;
+	accel_task->d.iovs[0].iov_len = nbytes;
+	accel_task->d.iovcnt = 1;
 	accel_task->output_size = output_size;
 	accel_task->s.iovs = src_iovs;
 	accel_task->s.iovcnt = src_iovcnt;
-	accel_task->dst = dst;
-	accel_task->nbytes_dst = nbytes;
 	accel_task->flags = flags;
 	accel_task->op_code = ACCEL_OPC_COMPRESS;
 	accel_task->src_domain = NULL;

@@ -63,7 +63,6 @@ struct spdk_accel_task {
 			struct iovec		*iovs;
 			uint32_t		iovcnt;
 		} s2;
-		void			*dst;
 	};
 	union {
 		struct {
@@ -81,10 +80,7 @@ struct spdk_accel_task {
 	};
 	enum accel_opcode		op_code;
 	uint64_t			nbytes;
-	union {
-		uint64_t		nbytes_dst; /* for compress op */
-		uint64_t		iv; /* Initialization vector (tweak) for crypto op */
-	};
+	uint64_t			iv; /* Initialization vector (tweak) for crypto op */
 	int				flags;
 	int				status;
 	struct iovec			aux_iovs[SPDK_ACCEL_AUX_IOV_MAX];
