@@ -50,13 +50,10 @@ struct spdk_accel_task {
 	void				*src_domain_ctx;
 	struct spdk_memory_domain	*dst_domain;
 	void				*dst_domain_ctx;
-	union {
-		struct {
-			struct iovec		*iovs; /* iovs passed by the caller */
-			uint32_t		iovcnt; /* iovcnt passed by the caller */
-		} s;
-		void				*src;
-	};
+	struct {
+		struct iovec		*iovs; /* iovs passed by the caller */
+		uint32_t		iovcnt; /* iovcnt passed by the caller */
+	} s;
 	union {
 		struct {
 			struct iovec		*iovs; /* iovs passed by the caller */

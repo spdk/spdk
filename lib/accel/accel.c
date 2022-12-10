@@ -422,12 +422,16 @@ spdk_accel_submit_copy_crc32c(struct spdk_io_channel *ch, void *dst,
 		return -ENOMEM;
 	}
 
-	accel_task->dst = dst;
-	accel_task->src = src;
+	accel_task->s.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_SRC];
+	accel_task->d.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_DST];
+	accel_task->d.iovs[0].iov_base = dst;
+	accel_task->d.iovs[0].iov_len = nbytes;
+	accel_task->d.iovcnt = 1;
+	accel_task->s.iovs[0].iov_base = src;
+	accel_task->s.iovs[0].iov_len = nbytes;
+	accel_task->s.iovcnt = 1;
 	accel_task->crc_dst = crc_dst;
-	accel_task->s.iovcnt = 0;
 	accel_task->seed = seed;
-	accel_task->nbytes = nbytes;
 	accel_task->flags = flags;
 	accel_task->op_code = ACCEL_OPC_COPY_CRC32C;
 	accel_task->src_domain = NULL;
@@ -472,12 +476,14 @@ spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst,
 		nbytes += src_iovs[i].iov_len;
 	}
 
+	accel_task->d.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_DST];
+	accel_task->d.iovs[0].iov_base = dst;
+	accel_task->d.iovs[0].iov_len = nbytes;
+	accel_task->d.iovcnt = 1;
 	accel_task->s.iovs = src_iovs;
 	accel_task->s.iovcnt = iov_cnt;
-	accel_task->dst = (void *)dst;
 	accel_task->crc_dst = crc_dst;
 	accel_task->seed = seed;
-	accel_task->nbytes = nbytes;
 	accel_task->flags = flags;
 	accel_task->op_code = ACCEL_OPC_COPY_CRC32C;
 	accel_task->src_domain = NULL;

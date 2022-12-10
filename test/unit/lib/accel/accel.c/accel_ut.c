@@ -444,12 +444,8 @@ test_spdk_accel_submit_copy_crc32c(void)
 	rc = spdk_accel_submit_copy_crc32c(g_ch, dst, src, &crc_dst, seed, nbytes, flags,
 					   NULL, cb_arg);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(task.dst == dst);
-	CU_ASSERT(task.src == src);
 	CU_ASSERT(task.crc_dst == &crc_dst);
-	CU_ASSERT(task.s.iovcnt == 0);
 	CU_ASSERT(task.seed == seed);
-	CU_ASSERT(task.nbytes == nbytes);
 	CU_ASSERT(task.flags == 0);
 	CU_ASSERT(task.op_code == ACCEL_OPC_COPY_CRC32C);
 	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
