@@ -67,6 +67,8 @@ enum accel_sequence_state {
 	ACCEL_SEQUENCE_STATE_AWAIT_VIRTBUF,
 	ACCEL_SEQUENCE_STATE_CHECK_BOUNCEBUF,
 	ACCEL_SEQUENCE_STATE_AWAIT_BOUNCEBUF,
+	ACCEL_SEQUENCE_STATE_PULL_DATA,
+	ACCEL_SEQUENCE_STATE_AWAIT_PULL_DATA,
 	ACCEL_SEQUENCE_STATE_EXEC_TASK,
 	ACCEL_SEQUENCE_STATE_AWAIT_TASK,
 	ACCEL_SEQUENCE_STATE_COMPLETE_TASK,
@@ -81,6 +83,8 @@ __attribute__((unused)) = {
 	[ACCEL_SEQUENCE_STATE_AWAIT_VIRTBUF] = "await-virtbuf",
 	[ACCEL_SEQUENCE_STATE_CHECK_BOUNCEBUF] = "check-bouncebuf",
 	[ACCEL_SEQUENCE_STATE_AWAIT_BOUNCEBUF] = "await-bouncebuf",
+	[ACCEL_SEQUENCE_STATE_PULL_DATA] = "pull-data",
+	[ACCEL_SEQUENCE_STATE_AWAIT_PULL_DATA] = "await-pull-data",
 	[ACCEL_SEQUENCE_STATE_EXEC_TASK] = "exec-task",
 	[ACCEL_SEQUENCE_STATE_AWAIT_TASK] = "await-task",
 	[ACCEL_SEQUENCE_STATE_COMPLETE_TASK] = "complete-task",
@@ -247,6 +251,8 @@ _get_task(struct accel_io_channel *accel_ch, spdk_accel_completion_cb cb_fn, voi
 	accel_task->cb_fn = cb_fn;
 	accel_task->cb_arg = cb_arg;
 	accel_task->accel_ch = accel_ch;
+	accel_task->bounce.s.orig_iovs = NULL;
+	accel_task->bounce.d.orig_iovs = NULL;
 
 	return accel_task;
 }
@@ -1223,6 +1229,42 @@ accel_sequence_check_bouncebuf(struct spdk_accel_sequence *seq, struct spdk_acce
 }
 
 static void
+accel_task_pull_data_cb(void *ctx, int status)
+{
+	struct spdk_accel_sequence *seq = ctx;
+
+	assert(seq->state == ACCEL_SEQUENCE_STATE_AWAIT_PULL_DATA);
+	if (spdk_likely(status == 0)) {
+		accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_EXEC_TASK);
+	} else {
+		accel_sequence_set_fail(seq, status);
+	}
+
+	accel_process_sequence(seq);
+}
+
+static void
+accel_task_pull_data(struct spdk_accel_sequence *seq, struct spdk_accel_task *task)
+{
+	int rc;
+
+	assert(task->bounce.s.orig_iovs != NULL);
+	assert(task->bounce.s.orig_domain != NULL);
+	assert(task->bounce.s.orig_domain != g_accel_domain);
+
+	rc = spdk_memory_domain_pull_data(task->bounce.s.orig_domain,
+					  task->bounce.s.orig_domain_ctx,
+					  task->bounce.s.orig_iovs, task->bounce.s.orig_iovcnt,
+					  task->s.iovs, task->s.iovcnt,
+					  accel_task_pull_data_cb, seq);
+	if (spdk_unlikely(rc != 0)) {
+		SPDK_ERRLOG("Failed to pull data from memory domain: %s, rc: %d\n",
+			    spdk_memory_domain_get_dma_device_id(task->bounce.s.orig_domain), rc);
+		accel_sequence_set_fail(seq, rc);
+	}
+}
+
+static void
 accel_process_sequence(struct spdk_accel_sequence *seq)
 {
 	struct accel_io_channel *accel_ch = seq->ch;
@@ -1265,6 +1307,10 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 				accel_sequence_set_fail(seq, rc);
 				break;
 			}
+			if (task->bounce.s.orig_iovs != NULL) {
+				accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_PULL_DATA);
+				break;
+			}
 			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_EXEC_TASK);
 		/* Fall through */
 		case ACCEL_SEQUENCE_STATE_EXEC_TASK:
@@ -1284,6 +1330,10 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 					    g_opcode_strings[task->op_code], seq);
 				accel_sequence_set_fail(seq, rc);
 			}
+			break;
+		case ACCEL_SEQUENCE_STATE_PULL_DATA:
+			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_AWAIT_PULL_DATA);
+			accel_task_pull_data(seq, task);
 			break;
 		case ACCEL_SEQUENCE_STATE_COMPLETE_TASK:
 			TAILQ_REMOVE(&seq->tasks, task, seq_link);
@@ -1306,6 +1356,7 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 			return;
 		case ACCEL_SEQUENCE_STATE_AWAIT_VIRTBUF:
 		case ACCEL_SEQUENCE_STATE_AWAIT_BOUNCEBUF:
+		case ACCEL_SEQUENCE_STATE_AWAIT_PULL_DATA:
 		case ACCEL_SEQUENCE_STATE_AWAIT_TASK:
 			break;
 		default:
