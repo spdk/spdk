@@ -72,6 +72,9 @@ enum accel_sequence_state {
 	ACCEL_SEQUENCE_STATE_EXEC_TASK,
 	ACCEL_SEQUENCE_STATE_AWAIT_TASK,
 	ACCEL_SEQUENCE_STATE_COMPLETE_TASK,
+	ACCEL_SEQUENCE_STATE_NEXT_TASK,
+	ACCEL_SEQUENCE_STATE_PUSH_DATA,
+	ACCEL_SEQUENCE_STATE_AWAIT_PUSH_DATA,
 	ACCEL_SEQUENCE_STATE_ERROR,
 	ACCEL_SEQUENCE_STATE_MAX,
 };
@@ -88,6 +91,9 @@ __attribute__((unused)) = {
 	[ACCEL_SEQUENCE_STATE_EXEC_TASK] = "exec-task",
 	[ACCEL_SEQUENCE_STATE_AWAIT_TASK] = "await-task",
 	[ACCEL_SEQUENCE_STATE_COMPLETE_TASK] = "complete-task",
+	[ACCEL_SEQUENCE_STATE_NEXT_TASK] = "next-task",
+	[ACCEL_SEQUENCE_STATE_PUSH_DATA] = "push-data",
+	[ACCEL_SEQUENCE_STATE_AWAIT_PUSH_DATA] = "await-push-data",
 	[ACCEL_SEQUENCE_STATE_ERROR] = "error",
 	[ACCEL_SEQUENCE_STATE_MAX] = "",
 };
@@ -771,12 +777,6 @@ accel_sequence_get_task(struct accel_io_channel *ch, struct spdk_accel_sequence 
 	return task;
 }
 
-static inline bool
-accel_check_domain(struct spdk_memory_domain *domain)
-{
-	return domain == NULL || domain == g_accel_domain;
-}
-
 int
 spdk_accel_append_copy(struct spdk_accel_sequence **pseq, struct spdk_io_channel *ch,
 		       struct iovec *dst_iovs, uint32_t dst_iovcnt,
@@ -788,11 +788,6 @@ spdk_accel_append_copy(struct spdk_accel_sequence **pseq, struct spdk_io_channel
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *task;
 	struct spdk_accel_sequence *seq = *pseq;
-
-	if (!accel_check_domain(dst_domain) || !accel_check_domain(src_domain)) {
-		SPDK_ERRLOG("Memory domains are currently unsupported\n");
-		return -EINVAL;
-	}
 
 	if (seq == NULL) {
 		seq = accel_sequence_get(accel_ch);
@@ -837,11 +832,6 @@ spdk_accel_append_fill(struct spdk_accel_sequence **pseq, struct spdk_io_channel
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *task;
 	struct spdk_accel_sequence *seq = *pseq;
-
-	if (!accel_check_domain(domain)) {
-		SPDK_ERRLOG("Memory domains are currently unsupported\n");
-		return -EINVAL;
-	}
 
 	if (seq == NULL) {
 		seq = accel_sequence_get(accel_ch);
@@ -889,11 +879,6 @@ spdk_accel_append_decompress(struct spdk_accel_sequence **pseq, struct spdk_io_c
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *task;
 	struct spdk_accel_sequence *seq = *pseq;
-
-	if (!accel_check_domain(dst_domain) || !accel_check_domain(src_domain)) {
-		SPDK_ERRLOG("Memory domains are currently unsupported\n");
-		return -EINVAL;
-	}
 
 	if (seq == NULL) {
 		seq = accel_sequence_get(accel_ch);
@@ -1265,6 +1250,42 @@ accel_task_pull_data(struct spdk_accel_sequence *seq, struct spdk_accel_task *ta
 }
 
 static void
+accel_task_push_data_cb(void *ctx, int status)
+{
+	struct spdk_accel_sequence *seq = ctx;
+
+	assert(seq->state == ACCEL_SEQUENCE_STATE_AWAIT_PUSH_DATA);
+	if (spdk_likely(status == 0)) {
+		accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_NEXT_TASK);
+	} else {
+		accel_sequence_set_fail(seq, status);
+	}
+
+	accel_process_sequence(seq);
+}
+
+static void
+accel_task_push_data(struct spdk_accel_sequence *seq, struct spdk_accel_task *task)
+{
+	int rc;
+
+	assert(task->bounce.d.orig_iovs != NULL);
+	assert(task->bounce.d.orig_domain != NULL);
+	assert(task->bounce.d.orig_domain != g_accel_domain);
+
+	rc = spdk_memory_domain_push_data(task->bounce.d.orig_domain,
+					  task->bounce.d.orig_domain_ctx,
+					  task->bounce.d.orig_iovs, task->bounce.d.orig_iovcnt,
+					  task->d.iovs, task->d.iovcnt,
+					  accel_task_push_data_cb, seq);
+	if (spdk_unlikely(rc != 0)) {
+		SPDK_ERRLOG("Failed to push data to memory domain: %s, rc: %d\n",
+			    spdk_memory_domain_get_dma_device_id(task->bounce.s.orig_domain), rc);
+		accel_sequence_set_fail(seq, rc);
+	}
+}
+
+static void
 accel_process_sequence(struct spdk_accel_sequence *seq)
 {
 	struct accel_io_channel *accel_ch = seq->ch;
@@ -1336,6 +1357,17 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 			accel_task_pull_data(seq, task);
 			break;
 		case ACCEL_SEQUENCE_STATE_COMPLETE_TASK:
+			if (task->bounce.d.orig_iovs != NULL) {
+				accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_PUSH_DATA);
+				break;
+			}
+			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_NEXT_TASK);
+			break;
+		case ACCEL_SEQUENCE_STATE_PUSH_DATA:
+			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_AWAIT_PUSH_DATA);
+			accel_task_push_data(seq, task);
+			break;
+		case ACCEL_SEQUENCE_STATE_NEXT_TASK:
 			TAILQ_REMOVE(&seq->tasks, task, seq_link);
 			TAILQ_INSERT_TAIL(&seq->completed, task, seq_link);
 			/* Check if there are any remaining tasks */
@@ -1358,6 +1390,7 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 		case ACCEL_SEQUENCE_STATE_AWAIT_BOUNCEBUF:
 		case ACCEL_SEQUENCE_STATE_AWAIT_PULL_DATA:
 		case ACCEL_SEQUENCE_STATE_AWAIT_TASK:
+		case ACCEL_SEQUENCE_STATE_AWAIT_PUSH_DATA:
 			break;
 		default:
 			assert(0 && "bad state");

@@ -20,10 +20,6 @@ DEFINE_STUB(pmem_is_pmem, int, (const void *addr, size_t len), 0);
 DEFINE_STUB(pmem_memset_persist, void *, (void *pmemdest, int c, size_t len), NULL);
 #endif
 DEFINE_STUB_V(spdk_memory_domain_destroy, (struct spdk_memory_domain *domain));
-DEFINE_STUB(spdk_memory_domain_pull_data, int,
-	    (struct spdk_memory_domain *sd, void *sctx, struct iovec *siov, uint32_t siovcnt,
-	     struct iovec *diov, uint32_t diovcnt, spdk_memory_domain_data_cpl_cb cpl_cb,
-	     void *cpl_arg), 0);
 DEFINE_STUB(spdk_memory_domain_get_dma_device_id, const char *,
 	    (struct spdk_memory_domain *domain), "UT_DMA");
 #ifdef SPDK_CONFIG_ISAL
@@ -42,6 +38,69 @@ spdk_memory_domain_create(struct spdk_memory_domain **domain, enum spdk_dma_devi
 			  struct spdk_memory_domain_ctx *ctx, const char *id)
 {
 	*domain = (void *)0xdeadbeef;
+
+	return 0;
+}
+
+struct ut_domain_ctx {
+	struct iovec	iov;
+	struct iovec	expected;
+	int		pull_submit_status;
+	int		push_submit_status;
+	int		pull_complete_status;
+	int		push_complete_status;
+};
+
+static struct spdk_memory_domain *g_ut_domain = (void *)0xa55e1;
+
+int
+spdk_memory_domain_pull_data(struct spdk_memory_domain *sd, void *sctx, struct iovec *siov,
+			     uint32_t siovcnt, struct iovec *diov, uint32_t diovcnt,
+			     spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_arg)
+{
+	struct ut_domain_ctx *ctx = sctx;
+
+	CU_ASSERT_EQUAL(sd, g_ut_domain);
+	CU_ASSERT_EQUAL(siovcnt, 1);
+	CU_ASSERT_EQUAL(memcmp(siov, &ctx->expected, sizeof(*siov)), 0);
+
+	if (ctx->pull_submit_status != 0) {
+		return ctx->pull_submit_status;
+	}
+
+	if (ctx->pull_complete_status != 0) {
+		cpl_cb(cpl_arg, ctx->pull_complete_status);
+		return 0;
+	}
+
+	spdk_iovcpy(&ctx->iov, 1, diov, diovcnt);
+	cpl_cb(cpl_arg, 0);
+
+	return 0;
+}
+
+int
+spdk_memory_domain_push_data(struct spdk_memory_domain *dd, void *dctx, struct iovec *diov,
+			     uint32_t diovcnt, struct iovec *siov, uint32_t siovcnt,
+			     spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_arg)
+{
+	struct ut_domain_ctx *ctx = dctx;
+
+	CU_ASSERT_EQUAL(dd, g_ut_domain);
+	CU_ASSERT_EQUAL(diovcnt, 1);
+	CU_ASSERT_EQUAL(memcmp(diov, &ctx->expected, sizeof(*diov)), 0);
+
+	if (ctx->push_submit_status != 0) {
+		return ctx->push_submit_status;
+	}
+
+	if (ctx->push_complete_status != 0) {
+		cpl_cb(cpl_arg, ctx->push_complete_status);
+		return 0;
+	}
+
+	spdk_iovcpy(siov, siovcnt, &ctx->iov, 1);
+	cpl_cb(cpl_arg, 0);
 
 	return 0;
 }
@@ -2185,6 +2244,375 @@ test_sequence_accel_buffers(void)
 	poll_threads();
 }
 
+static void
+ut_domain_ctx_init(struct ut_domain_ctx *ctx, void *base, size_t len, struct iovec *expected)
+{
+	ctx->iov.iov_base = base;
+	ctx->iov.iov_len = len;
+	ctx->expected = *expected;
+	ctx->pull_submit_status = 0;
+	ctx->push_submit_status = 0;
+	ctx->pull_complete_status = 0;
+	ctx->push_complete_status = 0;
+}
+
+static void
+test_sequence_memory_domain(void)
+{
+	struct spdk_accel_sequence *seq = NULL;
+	struct spdk_io_channel *ioch;
+	struct accel_io_channel *accel_ch;
+	struct ut_sequence ut_seq;
+	struct ut_domain_ctx domctx[4];
+	struct spdk_iobuf_buffer *cache_entry;
+	struct spdk_accel_module_if *modules[ACCEL_OPC_LAST];
+	struct spdk_memory_domain *accel_domain;
+	spdk_iobuf_buffer_stailq_t small_cache;
+	char srcbuf[4096], dstbuf[4096], expected[4096], tmp[4096];
+	struct iovec src_iovs[2], dst_iovs[2];
+	uint32_t small_cache_count;
+	void *accel_buf, *accel_domain_ctx, *iobuf_buf;
+	int i, rc, completed;
+
+	ioch = spdk_accel_get_io_channel();
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
+
+	/* Override the submit_tasks function */
+	g_module.submit_tasks = ut_sequnce_submit_tasks;
+	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+		modules[i] = g_modules_opc[i];
+		g_modules_opc[i] = &g_module;
+	}
+	/* Intercept decompress to make it simply copy the data, so that we can chain multiple
+	 * decompress operations together in one sequence.
+	 */
+	g_seq_operations[ACCEL_OPC_DECOMPRESS].submit = ut_submit_decompress;
+	g_seq_operations[ACCEL_OPC_COPY].submit = sw_accel_submit_tasks;
+	g_seq_operations[ACCEL_OPC_FILL].submit = sw_accel_submit_tasks;
+
+	/* First check the simplest case - single fill operation with dstbuf in domain */
+	memset(expected, 0xa5, sizeof(expected));
+	memset(dstbuf, 0x0, sizeof(dstbuf));
+	completed = 0;
+	seq = NULL;
+
+	/* Use some garbage pointer as dst and use domain ctx to get the actual dstbuf */
+	dst_iovs[0].iov_base = (void *)0xcafebabe;
+	dst_iovs[0].iov_len = sizeof(dstbuf);
+	ut_domain_ctx_init(&domctx[0], dstbuf, sizeof(dstbuf), &dst_iovs[0]);
+
+	rc = spdk_accel_append_fill(&seq, ioch, dst_iovs[0].iov_base, dst_iovs[0].iov_len,
+				    g_ut_domain, &domctx[0], 0xa5, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+	CU_ASSERT_EQUAL(completed, 1);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(expected, dstbuf, sizeof(dstbuf)), 0);
+
+	/* Check operation with both srcbuf and dstbuf in remote memory domain */
+	memset(expected, 0x5a, sizeof(expected));
+	memset(dstbuf, 0x0, sizeof(dstbuf));
+	memset(srcbuf, 0x5a, sizeof(dstbuf));
+	completed = 0;
+	seq = NULL;
+
+	src_iovs[0].iov_base = (void *)0xcafebabe;
+	src_iovs[0].iov_len = sizeof(srcbuf);
+	dst_iovs[0].iov_base = (void *)0xbeefdead;
+	dst_iovs[0].iov_len = sizeof(dstbuf);
+	ut_domain_ctx_init(&domctx[0], dstbuf, sizeof(dstbuf), &dst_iovs[0]);
+	ut_domain_ctx_init(&domctx[1], srcbuf, sizeof(srcbuf), &src_iovs[0]);
+
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, g_ut_domain, &domctx[0],
+					  &src_iovs[0], 1, g_ut_domain, &domctx[1], 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+	CU_ASSERT_EQUAL(completed, 1);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(expected, dstbuf, sizeof(dstbuf)), 0);
+
+	/* Two operations using a buffer in remote domain */
+	memset(expected, 0xa5, sizeof(expected));
+	memset(srcbuf, 0xa5,  sizeof(srcbuf));
+	memset(tmp, 0x0, sizeof(tmp));
+	memset(dstbuf, 0x0, sizeof(dstbuf));
+	completed = 0;
+	seq = NULL;
+
+	src_iovs[0].iov_base = (void *)0xcafebabe;
+	src_iovs[0].iov_len = sizeof(srcbuf);
+	dst_iovs[0].iov_base = (void *)0xbeefdead;
+	dst_iovs[0].iov_len = sizeof(tmp);
+	ut_domain_ctx_init(&domctx[0], tmp, sizeof(tmp), &dst_iovs[0]);
+	ut_domain_ctx_init(&domctx[1], srcbuf, sizeof(srcbuf), &src_iovs[0]);
+
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, g_ut_domain, &domctx[0],
+					  &src_iovs[0], 1, g_ut_domain, &domctx[1], 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	src_iovs[1].iov_base = (void *)0xbeefdead;
+	src_iovs[1].iov_len = sizeof(tmp);
+	dst_iovs[1].iov_base = (void *)0xa5a5a5a5;
+	dst_iovs[1].iov_len = sizeof(dstbuf);
+	ut_domain_ctx_init(&domctx[2], dstbuf, sizeof(dstbuf), &dst_iovs[1]);
+	ut_domain_ctx_init(&domctx[3], tmp, sizeof(tmp), &src_iovs[1]);
+
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[1], 1, g_ut_domain, &domctx[2],
+					  &src_iovs[1], 1, g_ut_domain, &domctx[3], 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+	CU_ASSERT_EQUAL(completed, 2);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(expected, dstbuf, sizeof(dstbuf)), 0);
+
+	/* Use buffer in remote memory domain and accel buffer at the same time */
+	memset(expected, 0x5a, sizeof(expected));
+	memset(srcbuf, 0x5a,  sizeof(expected));
+	memset(dstbuf, 0x0, sizeof(dstbuf));
+	completed = 0;
+	seq = NULL;
+
+	rc = spdk_accel_get_buf(ioch, sizeof(dstbuf), &accel_buf, &accel_domain, &accel_domain_ctx);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	src_iovs[0].iov_base = (void *)0xfeedbeef;
+	src_iovs[0].iov_len = sizeof(srcbuf);
+	dst_iovs[0].iov_base = accel_buf;
+	dst_iovs[0].iov_len = sizeof(dstbuf);
+	ut_domain_ctx_init(&domctx[0], srcbuf, sizeof(srcbuf), &src_iovs[0]);
+
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, accel_domain, accel_domain_ctx,
+					  &src_iovs[0], 1, g_ut_domain, &domctx[0], 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	src_iovs[1].iov_base = accel_buf;
+	src_iovs[1].iov_len = sizeof(dstbuf);
+	dst_iovs[1].iov_base = (void *)0xbeeffeed;
+	dst_iovs[1].iov_len = sizeof(dstbuf);
+	ut_domain_ctx_init(&domctx[1], dstbuf, sizeof(dstbuf), &dst_iovs[1]);
+
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[1], 1, g_ut_domain, &domctx[1],
+					  &src_iovs[1], 1, accel_domain, accel_domain_ctx, 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+	CU_ASSERT_EQUAL(completed, 2);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(expected, dstbuf, sizeof(dstbuf)), 0);
+	spdk_accel_put_buf(ioch, accel_buf, accel_domain, accel_domain_ctx);
+
+	/* Check that a sequence with memory domains is correctly executed if buffers are not
+	 * immediately available */
+	memset(expected, 0xa5, sizeof(expected));
+	memset(srcbuf, 0xa5,  sizeof(srcbuf));
+	memset(dstbuf, 0x0, sizeof(dstbuf));
+	completed = 0;
+	seq = NULL;
+	/* Make sure the buffer pool is empty */
+	accel_ch = spdk_io_channel_get_ctx(ioch);
+	small_cache_count = accel_ch->iobuf.small.cache_count;
+	STAILQ_INIT(&small_cache);
+	STAILQ_SWAP(&accel_ch->iobuf.small.cache, &small_cache, spdk_iobuf_buffer);
+	accel_ch->iobuf.small.cache_count = 0;
+	MOCK_SET(spdk_mempool_get, NULL);
+
+	src_iovs[0].iov_base = (void *)0xdeadbeef;
+	src_iovs[0].iov_len = sizeof(srcbuf);
+	dst_iovs[0].iov_base = (void *)0xfeedbeef;
+	dst_iovs[0].iov_len = sizeof(dstbuf);
+	ut_domain_ctx_init(&domctx[0], dstbuf, sizeof(dstbuf), &dst_iovs[0]);
+	ut_domain_ctx_init(&domctx[1], srcbuf, sizeof(srcbuf), &src_iovs[0]);
+
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, g_ut_domain, &domctx[0],
+					  &src_iovs[0], 1, g_ut_domain, &domctx[1], 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+	CU_ASSERT_EQUAL(completed, 0);
+	CU_ASSERT(!ut_seq.complete);
+
+	/* Get a buffer and return it to the pool to trigger the sequence to resume.  It shouldn't
+	 * be able to complete, as it needs two buffers */
+	MOCK_CLEAR(spdk_mempool_get);
+	iobuf_buf = spdk_iobuf_get(&accel_ch->iobuf, sizeof(dstbuf), NULL, NULL);
+	CU_ASSERT_PTR_NOT_NULL(iobuf_buf);
+	MOCK_SET(spdk_mempool_get, NULL);
+	spdk_iobuf_put(&accel_ch->iobuf, iobuf_buf, sizeof(dstbuf));
+
+	CU_ASSERT_EQUAL(completed, 0);
+	CU_ASSERT(!ut_seq.complete);
+
+	/* Return another buffer, this time the sequence should finish */
+	MOCK_CLEAR(spdk_mempool_get);
+	iobuf_buf = spdk_iobuf_get(&accel_ch->iobuf, sizeof(dstbuf), NULL, NULL);
+	CU_ASSERT_PTR_NOT_NULL(iobuf_buf);
+	MOCK_SET(spdk_mempool_get, NULL);
+	spdk_iobuf_put(&accel_ch->iobuf, iobuf_buf, sizeof(dstbuf));
+
+	poll_threads();
+	CU_ASSERT_EQUAL(completed, 1);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(expected, dstbuf, sizeof(dstbuf)), 0);
+
+	/* Return the buffers back to the cache */
+	while (!STAILQ_EMPTY(&accel_ch->iobuf.small.cache)) {
+		cache_entry = STAILQ_FIRST(&accel_ch->iobuf.small.cache);
+		STAILQ_REMOVE_HEAD(&accel_ch->iobuf.small.cache, stailq);
+		STAILQ_INSERT_HEAD(&small_cache, cache_entry, stailq);
+		small_cache_count++;
+	}
+	accel_ch->iobuf.small.cache_count = 0;
+
+	MOCK_CLEAR(spdk_mempool_get);
+	STAILQ_SWAP(&accel_ch->iobuf.small.cache, &small_cache, spdk_iobuf_buffer);
+	accel_ch->iobuf.small.cache_count = small_cache_count;
+
+	/* Check error cases, starting with an error from spdk_memory_domain_pull_data() */
+	completed = 0;
+	seq = NULL;
+
+	src_iovs[0].iov_base = (void *)0xdeadbeef;
+	src_iovs[0].iov_len = sizeof(srcbuf);
+	dst_iovs[0].iov_base = (void *)0xfeedbeef;
+	dst_iovs[0].iov_len = sizeof(dstbuf);
+	ut_domain_ctx_init(&domctx[0], dstbuf, sizeof(dstbuf), &dst_iovs[0]);
+	ut_domain_ctx_init(&domctx[1], srcbuf, sizeof(srcbuf), &src_iovs[0]);
+	domctx[1].pull_submit_status = -E2BIG;
+
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, g_ut_domain, &domctx[0],
+					  &src_iovs[0], 1, g_ut_domain, &domctx[1], 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	CU_ASSERT_EQUAL(completed, 1);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, -E2BIG);
+
+	/* Check completion error from spdk_memory_domain_pull_data() */
+	completed = 0;
+	seq = NULL;
+
+	src_iovs[0].iov_base = (void *)0xdeadbeef;
+	src_iovs[0].iov_len = sizeof(srcbuf);
+	dst_iovs[0].iov_base = (void *)0xfeedbeef;
+	dst_iovs[0].iov_len = sizeof(dstbuf);
+	ut_domain_ctx_init(&domctx[0], dstbuf, sizeof(dstbuf), &dst_iovs[0]);
+	ut_domain_ctx_init(&domctx[1], srcbuf, sizeof(srcbuf), &src_iovs[0]);
+	domctx[1].pull_complete_status = -EACCES;
+
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, g_ut_domain, &domctx[0],
+					  &src_iovs[0], 1, g_ut_domain, &domctx[1], 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	CU_ASSERT_EQUAL(completed, 1);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, -EACCES);
+
+	/* Check submission error from spdk_memory_domain_push_data() */
+	completed = 0;
+	seq = NULL;
+
+	src_iovs[0].iov_base = (void *)0xdeadbeef;
+	src_iovs[0].iov_len = sizeof(srcbuf);
+	dst_iovs[0].iov_base = (void *)0xfeedbeef;
+	dst_iovs[0].iov_len = sizeof(dstbuf);
+	ut_domain_ctx_init(&domctx[0], dstbuf, sizeof(dstbuf), &dst_iovs[0]);
+	ut_domain_ctx_init(&domctx[1], srcbuf, sizeof(srcbuf), &src_iovs[0]);
+	domctx[0].push_submit_status = -EADDRINUSE;
+
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, g_ut_domain, &domctx[0],
+					  &src_iovs[0], 1, g_ut_domain, &domctx[1], 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	CU_ASSERT_EQUAL(completed, 1);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, -EADDRINUSE);
+
+	/* Check completion error from spdk_memory_domain_push_data() */
+	completed = 0;
+	seq = NULL;
+
+	src_iovs[0].iov_base = (void *)0xdeadbeef;
+	src_iovs[0].iov_len = sizeof(srcbuf);
+	dst_iovs[0].iov_base = (void *)0xfeedbeef;
+	dst_iovs[0].iov_len = sizeof(dstbuf);
+	ut_domain_ctx_init(&domctx[0], dstbuf, sizeof(dstbuf), &dst_iovs[0]);
+	ut_domain_ctx_init(&domctx[1], srcbuf, sizeof(srcbuf), &src_iovs[0]);
+	domctx[0].push_complete_status = -EADDRNOTAVAIL;
+
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, g_ut_domain, &domctx[0],
+					  &src_iovs[0], 1, g_ut_domain, &domctx[1], 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	CU_ASSERT_EQUAL(completed, 1);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, -EADDRNOTAVAIL);
+
+	g_seq_operations[ACCEL_OPC_DECOMPRESS].submit = NULL;
+	g_seq_operations[ACCEL_OPC_COPY].submit = NULL;
+	g_seq_operations[ACCEL_OPC_FILL].submit = NULL;
+	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+		g_modules_opc[i] = modules[i];
+	}
+
+	spdk_put_io_channel(ioch);
+	poll_threads();
+}
+
 static int
 test_sequence_setup(void)
 {
@@ -2264,6 +2692,7 @@ main(int argc, char **argv)
 #endif
 	CU_ADD_TEST(seq_suite, test_sequence_copy_elision);
 	CU_ADD_TEST(seq_suite, test_sequence_accel_buffers);
+	CU_ADD_TEST(seq_suite, test_sequence_memory_domain);
 
 	suite = CU_add_suite("accel", test_setup, test_cleanup);
 	CU_ADD_TEST(suite, test_spdk_accel_task_complete);
