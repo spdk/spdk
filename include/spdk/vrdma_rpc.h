@@ -114,6 +114,8 @@ struct vrdma_bk_qp_connect {
 struct spdk_vrdma_rpc_qp_msg {
 	char *emu_manager;
 	struct vrdma_bk_qp_connect qp_attr;
+	uint32_t remote_node_id; /* remote classic ip:bridge IP */
+	uint32_t remote_dev_id; /* remote vhca_id */
 	uint32_t remote_vqpn;
 	uint32_t bk_qpn;
 	uint32_t qp_state;
@@ -126,6 +128,8 @@ struct spdk_vrdma_rpc_qp_attr {
     uint32_t vqpn;
     uint32_t gid_ip;
     uint64_t sf_mac;
+	uint32_t remote_node_id;
+	uint32_t remote_dev_id;
     uint32_t remote_vqpn;
     uint32_t bk_qpn;
     uint32_t qp_state;
