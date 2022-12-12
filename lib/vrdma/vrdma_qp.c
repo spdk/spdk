@@ -130,7 +130,7 @@ static int vrdma_add_lbk_qp_list(struct vrdma_ctrl *ctrl, uint32_t vqp_idx,
 	lqp->bk_qpn = bk_qp->bk_qp.qpnum;
 	rqp = vrdma_find_rbk_qp_by_vqp(bk_qp->remote_vqpn);
 	if (rqp) {
-		lqp->remote_qpn = rqp->attr.comm.vqpn;
+		lqp->remote_qpn = rqp->bk_qpn;
 		lqp->remote_node_id = rqp->attr.comm.node_id;
 		lqp->remote_dev_id = rqp->attr.comm.dev_id;
 	} else {
@@ -141,6 +141,9 @@ static int vrdma_add_lbk_qp_list(struct vrdma_ctrl *ctrl, uint32_t vqp_idx,
 	lqp->bk_qp = bk_qp;
 	bk_qp->remote_qpn = lqp->remote_qpn;
 	LIST_INSERT_HEAD(&vrdma_lbk_qp_list, lqp, entry);
+	SPDK_NOTICELOG("\n lizh vrdma_add_lbk_qp_list vqp %d remote_vqp %d "
+	"remote_node_id 0x%x remote_dev_id 0x%x done\n",
+	vqp_idx, bk_qp->remote_vqpn, lqp->remote_node_id, lqp->remote_dev_id);
 	return 0;
 }
 void vrdma_del_rbk_qp_from_list(struct vrdma_remote_bk_qp *rqp)
@@ -156,8 +159,8 @@ int vrdma_add_rbk_qp_list(struct vrdma_ctrl *ctrl, uint32_t vqp_idx,
 	struct vrdma_remote_bk_qp *rqp;
 	struct vrdma_local_bk_qp *lqp;
 
-    SPDK_NOTICELOG("\n lizh vrdma_add_rbk_qp_list vqp %d remote_vqp %d start\n",
-			vqp_idx, qp_attr->comm.vqpn);
+    SPDK_NOTICELOG("\n lizh vrdma_add_rbk_qp_list vqp %d remote_vqp %d remote_qpn 0x%x start\n",
+			vqp_idx, qp_attr->comm.vqpn, remote_qpn);
 	rqp = vrdma_find_rbk_qp_by_vqp(qp_attr->comm.vqpn);
 	if (rqp) {
 		SPDK_ERRLOG("This remote vqp %d is already existed",
@@ -173,20 +176,22 @@ int vrdma_add_rbk_qp_list(struct vrdma_ctrl *ctrl, uint32_t vqp_idx,
 	memcpy(&rqp->attr, qp_attr, sizeof(*qp_attr));
 	rqp->bk_qpn = remote_qpn;
 	LIST_INSERT_HEAD(&vrdma_rbk_qp_list, rqp, entry);
-	lqp = vrdma_find_lbk_qp_by_vqp(vqp_idx);
-	if (lqp && lqp->remote_qpn == VRDMA_INVALID_QPN) {
-		lqp->remote_node_id = qp_attr->comm.node_id;
-		lqp->remote_dev_id = qp_attr->comm.dev_id;
-		lqp->remote_qpn = remote_qpn;
-		lqp->bk_qp->remote_qpn = lqp->remote_qpn;
-	    SPDK_NOTICELOG("\n lizh vrdma_add_rbk_qp_list vrdma_modify_backend_qp_to_ready vqp %d "
-		"remote_vqp %d remote_qpn %d node_id 0x%x dev_id 0x%x\n",
-			vqp_idx, qp_attr->comm.vqpn, remote_qpn,
-			lqp->remote_node_id, lqp->remote_dev_id);
-		if (vrdma_modify_backend_qp_to_ready(ctrl, lqp->bk_qp)) {
-			SPDK_ERRLOG("Failed to modify bankend qp %d to ready\n",
-				lqp->bk_qpn);
-			return -1;
+	if (ctrl) {
+		lqp = vrdma_find_lbk_qp_by_vqp(vqp_idx);
+		if (lqp && lqp->remote_qpn == VRDMA_INVALID_QPN) {
+			lqp->remote_node_id = qp_attr->comm.node_id;
+			lqp->remote_dev_id = qp_attr->comm.dev_id;
+			lqp->remote_qpn = remote_qpn;
+			lqp->bk_qp->remote_qpn = lqp->remote_qpn;
+	    	SPDK_NOTICELOG("\n lizh vrdma_add_rbk_qp_list vrdma_modify_backend_qp_to_ready vqp %d "
+			"remote_vqp %d remote_qpn 0x%x node_id 0x%x dev_id 0x%x\n",
+				vqp_idx, qp_attr->comm.vqpn, remote_qpn,
+				lqp->remote_node_id, lqp->remote_dev_id);
+			if (vrdma_modify_backend_qp_to_ready(ctrl, lqp->bk_qp)) {
+				SPDK_ERRLOG("Failed to modify bankend qp %d to ready\n",
+					lqp->bk_qpn);
+				return -1;
+			}
 		}
 	}
 	return 0;
@@ -199,7 +204,9 @@ vrdma_create_backend_qp(struct vrdma_ctrl *ctrl,
 	struct vrdma_backend_qp *qp;
 	struct spdk_vrdma_qp *vqp;
 
-	SPDK_NOTICELOG("\nlizh vrdma_create_backend_qp...start\n");
+	SPDK_NOTICELOG("\nlizh vrdma_create_backend_qp.."
+	"remote_ip 0x%lx sf ip 0x%lx...start\n",
+	ctrl->vdev->vrdma_sf.remote_ip, ctrl->vdev->vrdma_sf.ip);
 	vqp = find_spdk_vrdma_qp_by_idx(ctrl, vqp_idx);
 	if (!vqp) {
 		SPDK_ERRLOG("Failed to find VQP %d in allocate backend QP",
@@ -462,7 +469,7 @@ int vrdma_qp_notify_remote_by_rpc(struct vrdma_ctrl *ctrl, uint32_t vqpn,
 	struct spdk_vrdma_rpc_qp_msg msg = {0};
     struct vrdma_local_bk_qp *lqp;
 
-	SPDK_NOTICELOG("lizh vrdma_qp_notify_remote_by_rpc...vqpn %d remote_qpn %d...start\n",
+	SPDK_NOTICELOG("lizh vrdma_qp_notify_remote_by_rpc...vqpn %d remote_qpn 0x%x...start\n",
         vqpn, bk_qp->remote_qpn);
 	if (bk_qp->remote_qpn != VRDMA_INVALID_QPN) {
 		if (vrdma_modify_backend_qp_to_ready(ctrl, bk_qp)) {
@@ -486,6 +493,9 @@ int vrdma_qp_notify_remote_by_rpc(struct vrdma_ctrl *ctrl, uint32_t vqpn,
 	msg.remote_dev_id = lqp->remote_dev_id;
     msg.remote_vqpn = remote_vqpn;
     msg.bk_qpn = lqp->bk_qpn;
+	SPDK_NOTICELOG("lizh vrdma_qp_notify_remote_by_rpc...vqpn %d bk_qpn 0x%x "
+	"remote_qpn 0x%x remote_node_id 0x%x remote_vqpn 0x%x ...start\n",
+    vqpn, msg.bk_qpn, bk_qp->remote_qpn, msg.remote_node_id, msg.remote_vqpn);
     if (spdk_vrdma_rpc_send_qp_msg(ctrl, ctrl->rpc.node_rip, &msg)) {
         SPDK_ERRLOG("Fail to send local qp %d to remote qp %d\n",
             vqpn, remote_vqpn);
