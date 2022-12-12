@@ -27,6 +27,17 @@ dpdk_pci_init(void)
 		return -EINVAL;
 	}
 
+	/* Add support for DPDK main branch.
+	 * Version release 99 is reserved for DPDK releases, other are used for development versions.
+	 */
+	if (rte_version_release() != 99) {
+		if (year == 23 && month == 3 && minor == 0) {
+			g_dpdk_fn_table = &fn_table_2211;
+			SPDK_NOTICELOG("DPDK version 23.03.0 not supported yet. Enabled only for validation.\n");
+			return 0;
+		}
+	}
+
 	/* Anything 23.x or higher is not supported. */
 	if (year > 22) {
 		SPDK_ERRLOG("DPDK version %d.%02d.%d not supported.\n", year, month, minor);
