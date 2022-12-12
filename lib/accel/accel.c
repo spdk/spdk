@@ -61,6 +61,37 @@ static const char *g_opcode_strings[ACCEL_OPC_LAST] = {
 	"compress", "decompress", "encrypt", "decrypt"
 };
 
+enum accel_sequence_state {
+	ACCEL_SEQUENCE_STATE_INIT,
+	ACCEL_SEQUENCE_STATE_CHECK_VIRTBUF,
+	ACCEL_SEQUENCE_STATE_AWAIT_VIRTBUF,
+	ACCEL_SEQUENCE_STATE_CHECK_BOUNCEBUF,
+	ACCEL_SEQUENCE_STATE_AWAIT_BOUNCEBUF,
+	ACCEL_SEQUENCE_STATE_EXEC_TASK,
+	ACCEL_SEQUENCE_STATE_AWAIT_TASK,
+	ACCEL_SEQUENCE_STATE_COMPLETE_TASK,
+	ACCEL_SEQUENCE_STATE_ERROR,
+	ACCEL_SEQUENCE_STATE_MAX,
+};
+
+static const char *g_seq_states[]
+__attribute__((unused)) = {
+	[ACCEL_SEQUENCE_STATE_INIT] = "init",
+	[ACCEL_SEQUENCE_STATE_CHECK_VIRTBUF] = "check-virtbuf",
+	[ACCEL_SEQUENCE_STATE_AWAIT_VIRTBUF] = "await-virtbuf",
+	[ACCEL_SEQUENCE_STATE_CHECK_BOUNCEBUF] = "check-bouncebuf",
+	[ACCEL_SEQUENCE_STATE_AWAIT_BOUNCEBUF] = "await-bouncebuf",
+	[ACCEL_SEQUENCE_STATE_EXEC_TASK] = "exec-task",
+	[ACCEL_SEQUENCE_STATE_AWAIT_TASK] = "await-task",
+	[ACCEL_SEQUENCE_STATE_COMPLETE_TASK] = "complete-task",
+	[ACCEL_SEQUENCE_STATE_ERROR] = "error",
+	[ACCEL_SEQUENCE_STATE_MAX] = "",
+};
+
+#define ACCEL_SEQUENCE_STATE_STRING(s) \
+	(((s) >= ACCEL_SEQUENCE_STATE_INIT && (s) < ACCEL_SEQUENCE_STATE_MAX) \
+	 ? g_seq_states[s] : "unknown")
+
 struct accel_buffer {
 	struct spdk_accel_sequence	*seq;
 	void				*buf;
@@ -87,10 +118,29 @@ struct spdk_accel_sequence {
 	struct accel_sequence_tasks		tasks;
 	struct accel_sequence_tasks		completed;
 	TAILQ_HEAD(, accel_buffer)		bounce_bufs;
+	enum accel_sequence_state		state;
+	int					status;
+	bool					in_process_sequence;
 	spdk_accel_completion_cb		cb_fn;
 	void					*cb_arg;
 	TAILQ_ENTRY(spdk_accel_sequence)	link;
 };
+
+static inline void
+accel_sequence_set_state(struct spdk_accel_sequence *seq, enum accel_sequence_state state)
+{
+	SPDK_DEBUGLOG(accel, "seq=%p, setting state: %s -> %s\n", seq,
+		      ACCEL_SEQUENCE_STATE_STRING(seq->state), ACCEL_SEQUENCE_STATE_STRING(state));
+	seq->state = state;
+}
+
+static void
+accel_sequence_set_fail(struct spdk_accel_sequence *seq, int status)
+{
+	accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_ERROR);
+	assert(status != 0);
+	seq->status = status;
+}
 
 int
 spdk_accel_get_opc_module_name(enum accel_opcode opcode, const char **module_name)
@@ -670,6 +720,9 @@ accel_sequence_get(struct accel_io_channel *ch)
 	TAILQ_INIT(&seq->bounce_bufs);
 
 	seq->ch = ch;
+	seq->status = 0;
+	seq->state = ACCEL_SEQUENCE_STATE_INIT;
+	seq->in_process_sequence = false;
 
 	return seq;
 }
@@ -935,15 +988,15 @@ accel_sequence_complete_tasks(struct spdk_accel_sequence *seq)
 }
 
 static void
-accel_sequence_complete(struct spdk_accel_sequence *seq, int status)
+accel_sequence_complete(struct spdk_accel_sequence *seq)
 {
-	SPDK_DEBUGLOG(accel, "Completed sequence: %p with status: %d\n", seq, status);
+	SPDK_DEBUGLOG(accel, "Completed sequence: %p with status: %d\n", seq, seq->status);
 
 	/* First notify all users that appended operations to this sequence */
 	accel_sequence_complete_tasks(seq);
 
 	/* Then notify the user that finished the sequence */
-	seq->cb_fn(seq->cb_arg, status);
+	seq->cb_fn(seq->cb_arg, seq->status);
 
 	accel_sequence_put(seq);
 }
@@ -1002,6 +1055,8 @@ accel_iobuf_get_virtbuf_cb(struct spdk_iobuf_entry *entry, void *buf)
 	assert(accel_buf->buf == NULL);
 	accel_buf->buf = buf;
 
+	assert(accel_buf->seq->state == ACCEL_SEQUENCE_STATE_AWAIT_VIRTBUF);
+	accel_sequence_set_state(accel_buf->seq, ACCEL_SEQUENCE_STATE_CHECK_VIRTBUF);
 	accel_sequence_set_virtbuf(accel_buf->seq, accel_buf);
 	accel_process_sequence(accel_buf->seq);
 }
@@ -1093,6 +1148,8 @@ accel_iobuf_get_src_bounce_cb(struct spdk_iobuf_entry *entry, void *buf)
 	task = TAILQ_FIRST(&accel_buf->seq->tasks);
 	assert(task != NULL);
 
+	assert(accel_buf->seq->state == ACCEL_SEQUENCE_STATE_AWAIT_BOUNCEBUF);
+	accel_sequence_set_state(accel_buf->seq, ACCEL_SEQUENCE_STATE_CHECK_BOUNCEBUF);
 	accel_set_bounce_buffer(&task->bounce.s, &task->s.iovs, &task->s.iovcnt, &task->src_domain,
 				&task->src_domain_ctx, accel_buf);
 	accel_process_sequence(accel_buf->seq);
@@ -1111,6 +1168,8 @@ accel_iobuf_get_dst_bounce_cb(struct spdk_iobuf_entry *entry, void *buf)
 	task = TAILQ_FIRST(&accel_buf->seq->tasks);
 	assert(task != NULL);
 
+	assert(accel_buf->seq->state == ACCEL_SEQUENCE_STATE_AWAIT_BOUNCEBUF);
+	accel_sequence_set_state(accel_buf->seq, ACCEL_SEQUENCE_STATE_CHECK_BOUNCEBUF);
 	accel_set_bounce_buffer(&task->bounce.d, &task->d.iovs, &task->d.iovcnt, &task->dst_domain,
 				&task->dst_domain_ctx, accel_buf);
 	accel_process_sequence(accel_buf->seq);
@@ -1170,47 +1229,95 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 	struct spdk_accel_module_if *module;
 	struct spdk_io_channel *module_ch;
 	struct spdk_accel_task *task;
+	enum accel_sequence_state state;
 	int rc;
+
+	/* Prevent recursive calls to this function */
+	if (spdk_unlikely(seq->in_process_sequence)) {
+		return;
+	}
+	seq->in_process_sequence = true;
 
 	task = TAILQ_FIRST(&seq->tasks);
 	if (task == NULL) {
 		/* We've processed all tasks */
-		accel_sequence_complete(seq, 0);
+		accel_sequence_complete(seq);
 		return;
 	}
 
-	if (!accel_sequence_check_virtbuf(seq, task)) {
-		/* We couldn't allocate a buffer, wait until one is available */
-		return;
-	}
+	do {
+		state = seq->state;
+		switch (state) {
+		case ACCEL_SEQUENCE_STATE_INIT:
+		case ACCEL_SEQUENCE_STATE_CHECK_VIRTBUF:
+			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_AWAIT_VIRTBUF);
+			if (!accel_sequence_check_virtbuf(seq, task)) {
+				/* We couldn't allocate a buffer, wait until one is available */
+				break;
+			}
+			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_CHECK_BOUNCEBUF);
+		/* Fall through */
+		case ACCEL_SEQUENCE_STATE_CHECK_BOUNCEBUF:
+			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_AWAIT_BOUNCEBUF);
+			/* For now, assume that none of the modules support memory domains */
+			rc = accel_sequence_check_bouncebuf(seq, task);
+			if (rc != 0) {
+				/* We couldn't allocate a buffer, wait until one is available */
+				if (rc == -EAGAIN) {
+					break;
+				}
+				accel_sequence_set_fail(seq, rc);
+				break;
+			}
+			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_EXEC_TASK);
+		/* Fall through */
+		case ACCEL_SEQUENCE_STATE_EXEC_TASK:
+			SPDK_DEBUGLOG(accel, "Executing %s operation, sequence: %p\n",
+				      g_opcode_strings[task->op_code], seq);
 
-	/* For now, assume that none of the modules support memory domains */
-	rc = accel_sequence_check_bouncebuf(seq, task);
-	if (rc != 0) {
-		if (rc == -EAGAIN) {
-			/* We couldn't allocate a buffer, wait until one is available */
+			assert(task->src_domain == NULL);
+			assert(task->dst_domain == NULL);
+
+			module = g_modules_opc[task->op_code];
+			module_ch = accel_ch->module_ch[task->op_code];
+
+			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_AWAIT_TASK);
+			rc = module->submit_tasks(module_ch, task);
+			if (spdk_unlikely(rc != 0)) {
+				SPDK_ERRLOG("Failed to submit %s operation, sequence: %p\n",
+					    g_opcode_strings[task->op_code], seq);
+				accel_sequence_set_fail(seq, rc);
+			}
+			break;
+		case ACCEL_SEQUENCE_STATE_COMPLETE_TASK:
+			/* Update the task pointer here, in case a task was completed by a module
+			 * from submit_tasks() */
+			task = TAILQ_FIRST(&seq->tasks);
+			if (task == NULL) {
+				/* Immediately return here to make sure we don't touch the sequence
+				 * after it's completed */
+				accel_sequence_complete(seq);
+				return;
+			}
+			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_INIT);
+			break;
+		case ACCEL_SEQUENCE_STATE_ERROR:
+			/* Immediately return here to make sure we don't touch the sequence
+			 * after it's completed */
+			assert(seq->status != 0);
+			accel_sequence_complete(seq);
 			return;
+		case ACCEL_SEQUENCE_STATE_AWAIT_VIRTBUF:
+		case ACCEL_SEQUENCE_STATE_AWAIT_BOUNCEBUF:
+		case ACCEL_SEQUENCE_STATE_AWAIT_TASK:
+			break;
+		default:
+			assert(0 && "bad state");
+			break;
 		}
+	} while (seq->state != state);
 
-		accel_sequence_complete(seq, rc);
-		return;
-	}
-
-	SPDK_DEBUGLOG(accel, "Executing %s operation, sequence: %p\n",
-		      g_opcode_strings[task->op_code], seq);
-
-	assert(task->src_domain == NULL);
-	assert(task->dst_domain == NULL);
-
-	module = g_modules_opc[task->op_code];
-	module_ch = accel_ch->module_ch[task->op_code];
-
-	rc = module->submit_tasks(module_ch, task);
-	if (spdk_unlikely(rc != 0)) {
-		SPDK_ERRLOG("Failed to submit %s operation, sequence: %p\n",
-			    g_opcode_strings[task->op_code], seq);
-		accel_sequence_complete(seq, rc);
-	}
+	seq->in_process_sequence = false;
 }
 
 static void
@@ -1227,14 +1334,16 @@ accel_sequence_task_cb(void *cb_arg, int status)
 	assert(task != NULL);
 	TAILQ_REMOVE(&accel_ch->task_pool, task, link);
 
+	assert(seq->state == ACCEL_SEQUENCE_STATE_AWAIT_TASK);
+	accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_COMPLETE_TASK);
+
 	TAILQ_REMOVE(&seq->tasks, task, seq_link);
 	TAILQ_INSERT_TAIL(&seq->completed, task, seq_link);
 
 	if (spdk_unlikely(status != 0)) {
 		SPDK_ERRLOG("Failed to execute %s operation, sequence: %p\n",
 			    g_opcode_strings[task->op_code], seq);
-		accel_sequence_complete(seq, status);
-		return;
+		accel_sequence_set_fail(seq, status);
 	}
 
 	accel_process_sequence(seq);
