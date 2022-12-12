@@ -786,8 +786,8 @@ log_deprecation_hits(void *ctx, struct spdk_deprecation *dep)
 	}
 
 	SPDK_WARNLOG("%s: deprecation '%s' scheduled for removal in %s hit %" PRIu64 " times\n",
-		     spdk_deprecation_get_tag(dep), spdk_deprecation_get_remove_release(dep),
-		     spdk_deprecation_get_description(dep), hits);
+		     spdk_deprecation_get_tag(dep), spdk_deprecation_get_description(dep),
+		     spdk_deprecation_get_remove_release(dep), hits);
 	return 0;
 }
 
