@@ -688,11 +688,13 @@ test_nvme_allocate_request(void)
 	memset(&payload, 0x5a, payload_struct_size);
 	STAILQ_INIT(&qpair.free_req);
 	STAILQ_INIT(&qpair.queued_req);
+	qpair.num_outstanding_reqs = 0;
 
 	/* Test trying to allocate a request when no requests are available */
 	req = nvme_allocate_request(&qpair, &payload, payload_struct_size, 0,
 				    cb_fn, cb_arg);
 	CU_ASSERT(req == NULL);
+	CU_ASSERT(qpair.num_outstanding_reqs == 0);
 
 	/* put a dummy on the queue, and then allocate one */
 	STAILQ_INSERT_HEAD(&qpair.free_req, &dummy_req, stailq);
@@ -701,6 +703,7 @@ test_nvme_allocate_request(void)
 
 	/* all the req elements should now match the passed in parameters */
 	SPDK_CU_ASSERT_FATAL(req != NULL);
+	CU_ASSERT(qpair.num_outstanding_reqs == 1);
 	CU_ASSERT(req->cb_fn == cb_fn);
 	CU_ASSERT(req->cb_arg == cb_arg);
 	CU_ASSERT(memcmp(&req->payload, &payload, payload_struct_size) == 0);
@@ -718,6 +721,7 @@ test_nvme_free_request(void)
 	/* put a req on the Q, take it off and compare */
 	memset(&match_req.cmd, 0x5a, sizeof(struct spdk_nvme_cmd));
 	match_req.qpair = &qpair;
+	qpair.num_outstanding_reqs = 1;
 	/* the code under tests asserts this condition */
 	match_req.num_children = 0;
 	STAILQ_INIT(&qpair.free_req);
@@ -726,6 +730,7 @@ test_nvme_free_request(void)
 	nvme_free_request(&match_req);
 	req = STAILQ_FIRST(&match_req.qpair->free_req);
 	CU_ASSERT(req == &match_req);
+	CU_ASSERT(qpair.num_outstanding_reqs == 0);
 }
 
 static void

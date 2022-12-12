@@ -176,6 +176,7 @@ test_nvme_qpair_process_completions(void)
 	STAILQ_INIT(&qpair.queued_req);
 	STAILQ_INSERT_TAIL(&qpair.queued_req, &dummy_1, stailq);
 	STAILQ_INSERT_TAIL(&qpair.queued_req, &dummy_2, stailq);
+	qpair.num_outstanding_reqs = 2;
 
 	/* If the controller is failed, return -ENXIO */
 	ctrlr.is_failed = true;
@@ -185,6 +186,7 @@ test_nvme_qpair_process_completions(void)
 	CU_ASSERT(!STAILQ_EMPTY(&qpair.queued_req));
 	CU_ASSERT(g_num_cb_passed == 0);
 	CU_ASSERT(g_num_cb_failed == 0);
+	CU_ASSERT(qpair.num_outstanding_reqs == 2);
 
 	/* Same if the qpair is failed at the transport layer. */
 	ctrlr.is_failed = false;
@@ -195,6 +197,7 @@ test_nvme_qpair_process_completions(void)
 	CU_ASSERT(!STAILQ_EMPTY(&qpair.queued_req));
 	CU_ASSERT(g_num_cb_passed == 0);
 	CU_ASSERT(g_num_cb_failed == 0);
+	CU_ASSERT(qpair.num_outstanding_reqs == 2);
 
 	/* If the controller is removed, make sure we abort the requests. */
 	ctrlr.is_failed = true;
@@ -205,6 +208,7 @@ test_nvme_qpair_process_completions(void)
 	CU_ASSERT(STAILQ_EMPTY(&qpair.queued_req));
 	CU_ASSERT(g_num_cb_passed == 0);
 	CU_ASSERT(g_num_cb_failed == 2);
+	CU_ASSERT(qpair.num_outstanding_reqs == 0);
 
 	/* If we are resetting, make sure that we don't call into the transport. */
 	STAILQ_INSERT_TAIL(&qpair.queued_req, &dummy_1, stailq);
@@ -626,10 +630,12 @@ test_nvme_qpair_manual_complete_request(void)
 	qpair.ctrlr->opts.disable_error_logging = false;
 	STAILQ_INIT(&qpair.free_req);
 	SPDK_CU_ASSERT_FATAL(STAILQ_EMPTY(&qpair.free_req));
+	qpair.num_outstanding_reqs = 1;
 
 	nvme_qpair_manual_complete_request(&qpair, &req, SPDK_NVME_SCT_GENERIC,
 					   SPDK_NVME_SC_SUCCESS, 1, true);
 	CU_ASSERT(!STAILQ_EMPTY(&qpair.free_req));
+	CU_ASSERT(qpair.num_outstanding_reqs == 0);
 }
 
 static void
@@ -688,12 +694,14 @@ test_nvme_qpair_init_deinit(void)
 	STAILQ_REMOVE(&qpair.free_req, reqs[2], nvme_request, stailq);
 	STAILQ_INSERT_TAIL(&qpair.err_req_head, reqs[2], stailq);
 	CU_ASSERT(STAILQ_EMPTY(&qpair.free_req));
+	qpair.num_outstanding_reqs = 3;
 
 	nvme_qpair_deinit(&qpair);
 	CU_ASSERT(STAILQ_EMPTY(&qpair.queued_req));
 	CU_ASSERT(STAILQ_EMPTY(&qpair.aborting_queued_req));
 	CU_ASSERT(STAILQ_EMPTY(&qpair.err_req_head));
 	CU_ASSERT(TAILQ_EMPTY(&qpair.err_cmd_head));
+	CU_ASSERT(qpair.num_outstanding_reqs == 0);
 }
 
 static void

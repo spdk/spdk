@@ -439,6 +439,8 @@ struct spdk_nvme_qpair {
 
 	enum spdk_nvme_transport_type		trtype;
 
+	uint32_t				num_outstanding_reqs;
+
 	/* request object used only for this qpair's FABRICS/CONNECT command (if needed) */
 	struct nvme_request			*reserved_req;
 
@@ -1268,6 +1270,7 @@ nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 	}
 
 	STAILQ_REMOVE_HEAD(&qpair->free_req, stailq);
+	qpair->num_outstanding_reqs++;
 
 	/*
 	 * Only memset/zero fields that need it.  All other fields
@@ -1357,6 +1360,9 @@ nvme_free_request(struct nvme_request *req)
 	 */
 	if (spdk_likely(req->qpair->reserved_req != req)) {
 		STAILQ_INSERT_HEAD(&req->qpair->free_req, req, stailq);
+
+		assert(req->qpair->num_outstanding_reqs > 0);
+		req->qpair->num_outstanding_reqs--;
 	}
 }
 
@@ -1381,6 +1387,9 @@ nvme_qpair_free_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 	assert(req->num_children == 0);
 
 	STAILQ_INSERT_HEAD(&qpair->free_req, req, stailq);
+
+	assert(req->qpair->num_outstanding_reqs > 0);
+	req->qpair->num_outstanding_reqs--;
 }
 
 static inline void

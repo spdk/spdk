@@ -851,6 +851,7 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 	qpair->is_new_qpair = true;
 	qpair->async = async;
 	qpair->poll_status = NULL;
+	qpair->num_outstanding_reqs = 0;
 
 	STAILQ_INIT(&qpair->free_req);
 	STAILQ_INIT(&qpair->queued_req);
