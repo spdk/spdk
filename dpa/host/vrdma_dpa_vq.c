@@ -53,7 +53,7 @@ static void vrdma_dpa_vq_dump(struct vrdma_dpa_vq *dpa_vq,
 	qprq_cqnum = flexio_cq_get_cq_num(dpa_vq->dma_q_rqcq.cq);
 	qpsq_cqnum = flexio_cq_get_cq_num(dpa_vq->dma_q_sqcq.cq);
 	log_notice("sf_vhca_id(%x), ctrl_vq_idx(%#x): qp_rqcq(%#x), "
-			"qp_sqcq(%x) qp_num(%#x) hw_dbcq(%#x)", 
+			"qp_sqcq(%#x) qp_num(%#x) hw_dbcq(%#x)", 
 			attr->sf_vhca_id, attr->vq_idx, qprq_cqnum,
 			 qpsq_cqnum, hw_qpnum, db_cqnum);
 }
@@ -299,7 +299,7 @@ static void vrdma_dpa_db_cq_destroy(struct vrdma_dpa_vq *dpa_vq)
 			       &dpa_vq->db_cq);
 }
 
-
+#define VRDMA_QP_SND_RCV_PSN		0x4242
 static int vrdma_dpa_dma_q_create(struct vrdma_dpa_vq *dpa_vq,
 				    struct vrdma_dpa_ctx *dpa_ctx,
 				    struct vrdma_prov_vq_init_attr *attr,
@@ -409,8 +409,8 @@ static int vrdma_dpa_dma_q_create(struct vrdma_dpa_vq *dpa_vq,
 	qp_attr.retry_count = 0x7;
 	qp_attr.vhca_port_num = 0x1;
 	/*todo: why we need this?*/
-	// qp_attr.next_send_psn = VRDMA_QP_SND_RCV_PSN;
-	// qp_attr.next_rcv_psn = VIRTNET_QP_SND_RCV_PSN;
+	qp_attr.next_send_psn = VRDMA_QP_SND_RCV_PSN;
+	qp_attr.next_rcv_psn = VRDMA_QP_SND_RCV_PSN;
 	qp_attr.next_state = FLEXIO_QP_STATE_INIT;
 	err = flexio_qp_modify(dpa_vq->dma_qp.qp, &qp_attr, &qp_mask);
 	if (err) {
@@ -639,6 +639,9 @@ vrdma_dpa_vq_event_handler_init(const struct vrdma_dpa_vq *dpa_vq,
 	eh_data->dma_qp.qp_num = flexio_qp_get_qp_num(dpa_vq->dma_qp.qp);
 	eh_data->dma_qp.dbr_daddr = dpa_vq->dma_qp.dbr_daddr;
 
+	eh_data->dma_qp.tx_wqe_buff = dpa_vq->dma_qp.tx_wqe_buff;
+	eh_data->dma_qp.sqd_mkey = dpa_vq->dma_qp.tx_wqe_buff;
+
 	/*prepare host and arm wr&pi address which used for rdma write*/
 	eh_data->dma_qp.host_vq_ctx = attr->host_vq_ctx;
 	eh_data->dma_qp.arm_vq_ctx  = attr->arm_vq_ctx;
@@ -689,7 +692,7 @@ static int __vrdma_dpa_vq_create(struct vrdma_dpa_vq *dpa_vq,
 		log_error("Failed to init vq, err(%d)", err);
 		goto err_vq_init;
 	}
-	log_notice("\n===naliu __vrdma_dpa_vq_create vrdma_dpa_vq_init\n");
+	log_notice("===naliu __vrdma_dpa_vq_create vrdma_dpa_vq_init\n");
 	err = vrdma_dpa_db_cq_create(dpa_ctx->flexio_process, emu_ibv_ctx,
 				       dpa_vq->db_handler, &dpa_vq->db_cq,
 				       dpa_ctx->emu_uar->page_id);
@@ -704,9 +707,9 @@ static int __vrdma_dpa_vq_create(struct vrdma_dpa_vq *dpa_vq,
 		log_error("Failed to map cq_to_db, err(%d)", err);
 		goto err_db_cq_map;
 	}
-	log_notice("\n===naliu __vrdma_dpa_vq_create flexio_emu_db_to_cq_map done\n");
+	log_notice("===naliu __vrdma_dpa_vq_create flexio_emu_db_to_cq_map done\n");
 
-	log_notice("\n===naliu emu_vhca_id %d, vqp_idx %d, qdb_idx %d, dpa_vq->db_cq.cq_num %#x, "
+	log_notice("===naliu emu_vhca_id %d, vqp_idx %d, qdb_idx %d, dpa_vq->db_cq.cq_num %#x, "
 			"emu_db_to_cq_id %d\n",
 			emu_vhca_id, attr->vq_idx, attr->qdb_idx, dpa_vq->db_cq.cq_num,
 			flexio_emu_db_to_cq_ctx_get_id(dpa_vq->guest_db_to_cq_ctx));
@@ -718,7 +721,7 @@ static int __vrdma_dpa_vq_create(struct vrdma_dpa_vq *dpa_vq,
 		log_error("Failed to set vq state to INIT, err(%d)", err);
 		goto err_vq_state_init;
 	}
-	log_notice("\n===naliu __vrdma_dpa_vq_create vrdma_dpa_vq_state_modify\n");
+	log_notice("===naliu __vrdma_dpa_vq_create vrdma_dpa_vq_state_modify\n");
 	msix_attr.emu_ib_ctx  = attr->emu_ib_ctx;
 	msix_attr.emu_vhca_id = attr->emu_vhca_id;
 	msix_attr.sf_ib_ctx   = attr->sf_ib_ctx;
@@ -741,7 +744,7 @@ static int __vrdma_dpa_vq_create(struct vrdma_dpa_vq *dpa_vq,
 		}
 	}
 
-	log_notice("\n===naliu __vrdma_dpa_vq_create done vrdma_dpa_msix_create\n");
+	log_notice("===naliu __vrdma_dpa_vq_create done vrdma_dpa_msix_create\n");
 	err = vrdma_dpa_dma_q_cq_create(dpa_vq, dpa_ctx, emu_dev_ctx, attr,
 					  "vrdma_msix_handler");
 	if (err) {
@@ -782,7 +785,7 @@ static int __vrdma_dpa_vq_create(struct vrdma_dpa_vq *dpa_vq,
 		goto err_vq_state_init;
 	}
 
-	log_notice("\n===naliu __vrdma_dpa_vq_create done\n");
+	log_notice("===naliu __vrdma_dpa_vq_create done\n");
 	return 0;
 err_handler_run:
 err_handler_init:
@@ -865,7 +868,7 @@ _vrdma_dpa_vq_create(struct vrdma_ctrl *ctrl,
 		log_error("Failed to create vq %d, err(%d)", attr->vq_idx, err);
 		goto err_dpa_vq_create;
 	}
-	log_notice("\n===naliu _vrdma_dpa_vq_create done\n");
+	log_notice("===naliu _vrdma_dpa_vq_create done\n");
 	// prov_vq->dpa_qpn = dpa_vq->dma_qp.qp_num;
 	// prov_vq->idx = attr->idx;
 	vrdma_dpa_vq_dump(dpa_vq, attr);
@@ -927,19 +930,22 @@ vrdma_dpa_vq_create(struct vrdma_ctrl *ctrl, struct snap_vrdma_vq_create_dpa_att
 	rdma_qp_create_attr.uctx = virtq;
 	rdma_qp_create_attr.mode = SNAP_DMA_Q_MODE_DV;
 
+
 	/*Tod: need confirm*/
 	// dev->ctrl.sw.rdma_buf_len = 4096;
 	// dev->ctrl.sw.state_buf_len = 4096;
 	virtq->idx = q_attr->vqpn;
-	virtq->pd = q_attr->pd;
+	// virtq->pd = q_attr->pd;
+	virtq->pd = ctrl->pd;
 
 	// dev->ctrl.dma = snap_dma_ep_create(dev->sf_ctx->pd, &q_attr);
-	virtq->dma_q = snap_dma_ep_create(q_attr->pd, &rdma_qp_create_attr);
+	// virtq->dma_q = snap_dma_ep_create(q_attr->pd, &rdma_qp_create_attr);
+	virtq->dma_q = snap_dma_ep_create(ctrl->pd, &rdma_qp_create_attr);
 	if (!virtq->dma_q) {
 		log_error("Failed creating SW QP\n");
 		return NULL;
 	}
-	log_notice("\n===naliu vrdma_dpa_vq_create snap_dma_ep_create done\n");
+	log_notice("===naliu vrdma_dpa_vq_create snap_dma_ep_create done\n");
 	/*Todo: found ctrl.sw haven't been used*/
 	// dev->ctrl.sw.dma = &dev->ctrl.dma->sw_qp;
 	// dev->ctrl.sw.cb_data.ctx = dev;
@@ -958,6 +964,7 @@ vrdma_dpa_vq_create(struct vrdma_ctrl *ctrl, struct snap_vrdma_vq_create_dpa_att
 
 	/*prepare dpa qp created parameters*/
 	attr.tisn_or_qpn = virtq->dma_q->sw_qp.qp->verbs_qp->qp_num;
+	log_notice("==========================naliu sw qpn %#x", attr.tisn_or_qpn);
 	attr.vq_idx = virtq->idx;
 	attr.sq_msix_vector = q_attr->sq_msix_vector;
 	attr.rq_msix_vector = q_attr->rq_msix_vector;
@@ -980,32 +987,56 @@ vrdma_dpa_vq_create(struct vrdma_ctrl *ctrl, struct snap_vrdma_vq_create_dpa_att
 	/*prepare host wr parameters*/
 	attr.host_vq_ctx.rq_wqe_buff_pa = q_attr->rq.comm.wqe_buff_pa;
 	attr.host_vq_ctx.rq_pi_paddr = q_attr->rq.comm.doorbell_pa;
-	attr.host_vq_ctx.rq_wqebb_cnt = q_attr->rq.comm.log_pagesize;
+	attr.host_vq_ctx.rq_wqebb_cnt = q_attr->rq.comm.wqebb_cnt;
 	attr.host_vq_ctx.rq_wqebb_size = q_attr->rq.comm.wqebb_size;
 	attr.host_vq_ctx.sq_wqe_buff_pa = q_attr->sq.comm.wqe_buff_pa;
 	attr.host_vq_ctx.sq_pi_paddr = q_attr->sq.comm.doorbell_pa;
-	attr.host_vq_ctx.sq_wqebb_cnt = q_attr->sq.comm.log_pagesize;
+	attr.host_vq_ctx.sq_wqebb_cnt = q_attr->sq.comm.wqebb_cnt;
 	attr.host_vq_ctx.sq_wqebb_size = q_attr->sq.comm.wqebb_size;
+	attr.host_vq_ctx.emu_crossing_mkey = ctrl->sctrl->xmkey->mkey;
+	attr.host_vq_ctx.sf_crossing_mkey = ctrl->sctrl->xmkey->mkey;
+
+	log_notice("====================naliu================================");
+	log_notice("===naliu rq_wqe_buff_pa %#lx, rq_pi_paddr %#lx, rq_wqebb_cnt %#x,"
+			"rq_wqebb_size %#x, sq_wqe_buff_pa %#lx, sq_pi_paddr %#lx,"
+			"sq_wqebb_cnt %#x, sq_wqebb_size %#x, emu_crossing_mkey %#x,"
+			"sf_crossing_mkey %#x",
+			attr.host_vq_ctx.rq_wqe_buff_pa, attr.host_vq_ctx.rq_pi_paddr,
+			attr.host_vq_ctx.rq_wqebb_cnt, attr.host_vq_ctx.rq_wqebb_size,
+			attr.host_vq_ctx.sq_wqe_buff_pa, attr.host_vq_ctx.sq_pi_paddr,
+			attr.host_vq_ctx.sq_wqebb_cnt, attr.host_vq_ctx.sq_wqebb_size,
+			attr.host_vq_ctx.emu_crossing_mkey, attr.host_vq_ctx.sf_crossing_mkey);
 
 	/*prepare arm wr parameters*/
 	attr.arm_vq_ctx.rq_buff_addr = (uint64_t)q_attr->rq.rq_buff;
 	attr.arm_vq_ctx.sq_buff_addr = (uint64_t)q_attr->sq.sq_buff;
-	attr.arm_vq_ctx.rq_pi_addr   = q_attr->rq_pi;
-	attr.arm_vq_ctx.sq_pi_addr   = q_attr->sq_pi;
+
+	// attr.arm_vq_ctx.rq_pi_addr   = q_attr->rq_pi;
+	// attr.arm_vq_ctx.sq_pi_addr   = q_attr->sq_pi;
 	attr.arm_vq_ctx.rq_lkey      = q_attr->lkey;
 	attr.arm_vq_ctx.sq_lkey      = q_attr->lkey;
+	log_notice("===naliu rq_buff_addr %lx, sq_buff_addr %lx,"
+			"rq_lkey %#x, sq_lkey %#x",
+			attr.arm_vq_ctx.rq_buff_addr, attr.arm_vq_ctx.sq_buff_addr,
+			attr.arm_vq_ctx.rq_lkey, attr.arm_vq_ctx.sq_lkey);
+	// log_notice("===naliu rq_buff_addr %lx, sq_buff_addr %lx,"
+	// 		"rq_pi_addr %lx, sq_pi_addr %lx, rq_lkey %#x, sq_lkey %#x",
+	// 		attr.arm_vq_ctx.rq_buff_addr, attr.arm_vq_ctx.sq_buff_addr,
+	// 		attr.arm_vq_ctx.rq_pi_addr, attr.arm_vq_ctx.sq_pi_addr,
+	// 		attr.arm_vq_ctx.rq_lkey, attr.arm_vq_ctx.sq_lkey);
 
 	/*prepare msix parameters*/
 	attr.num_msix = ctrl->sctrl->bar_curr->num_msix;
 
 	dpa_vq = _vrdma_dpa_vq_create(ctrl, &attr);
-	log_notice("\n===naliu vrdma_dpa_vq_create _vrdma_dpa_vq_create done\n");
+
 	if (!dpa_vq) {
 		log_error("Failed to create control snap dpa_vq, errno(%s)",
 			  strerror(errno));
 		goto err_vq_create;
 	}
 	virtq->dpa_vq = dpa_vq;
+	log_notice("===naliu vrdma_dpa_vq_create _vrdma_dpa_vq_create done\n");
 
 	/* Connect SW_QP to remote DPA qpn */
 	rc = snap_dma_ep_connect_remote_qpn(virtq->dma_q, dpa_vq->dma_qp.qp_num);
@@ -1014,10 +1045,21 @@ vrdma_dpa_vq_create(struct vrdma_ctrl *ctrl, struct snap_vrdma_vq_create_dpa_att
 		goto err_ep_connect;
 	}
 
+	log_notice("====================naliu================================");
+	log_notice("===naliu  sw_qp: %#x sqcq %#x rqcq %#x,"
+		 "dpa qp: %#x sqcq %#x rqcq %#x done\n",
+		 virtq->dma_q->sw_qp.dv_qp.hw_qp.qp_num,
+		 virtq->dma_q->sw_qp.dv_tx_cq.cq_num,
+		 virtq->dma_q->sw_qp.dv_rx_cq.cq_num,
+		 dpa_vq->dma_qp.qp_num,
+		 dpa_vq->dma_q_sqcq.cq_num,
+		 dpa_vq->dma_q_rqcq.cq_num);
+
 	/* Post recv buffers on SW_QP */
 	rc = snap_dma_q_post_recv(virtq->dma_q);
 	if (rc)
 		goto err_post_recv;
+	log_notice("===naliu vrdma_dpa_vq_create snap_dma_q_post_recv done\n");
 
 	virtq->ctrl = ctrl->sctrl;
 

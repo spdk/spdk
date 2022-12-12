@@ -218,7 +218,7 @@ int vrdma_dpa_emu_dev_init(const struct vrdma_prov_emu_dev_init_attr *attr,
 		log_error("Failed to allocate emu_dev_ctx memory");
 		return -ENOMEM;
 	}
-	log_debug("-------naliu vrdma_dpa_emu_dev_init num_msix %d\n", attr->num_msix);
+	log_debug("===naliu vrdma_dpa_emu_dev_init num_msix %d\n", attr->num_msix);
 	emu_dev_ctx->msix = calloc(attr->num_msix,
 				   sizeof(struct vrdma_dpa_msix));
 	if (!emu_dev_ctx->msix) {

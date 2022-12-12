@@ -28,6 +28,13 @@
 // #define VIRTNET_DPA_SYNC_TIMEOUT 1000
 
 enum{
+	MLX5_CTRL_SEG_OPCODE_RDMA_WRITE                      = 0x8,
+	MLX5_CTRL_SEG_OPCODE_RDMA_WRITE_WITH_IMMEDIATE       = 0x9,
+	MLX5_CTRL_SEG_OPCODE_SEND                            = 0xa,
+	MLX5_CTRL_SEG_OPCODE_RDMA_READ                       = 0x10,
+};
+
+enum{
 	VRDMA_DB_CQ_LOG_DEPTH = 2,
 	VRDMA_DB_CQ_ELEM_DEPTH = 7,
 };
@@ -206,7 +213,10 @@ struct vrdma_dpa_event_handler_ctx {
 	// struct {
 	// 	uint32_t cqn;
 	// } msix;
-
+	uint16_t rq_last_fetch_start;
+	uint16_t sq_last_fetch_start;
+	uint16_t rq_last_fetch_end;
+	uint16_t sq_last_fetch_end;
 	struct {
 		struct vrdma_dpa_cq qp_rqcq;
 		uint32_t hw_qp_sq_pi;
@@ -221,6 +231,8 @@ struct vrdma_dpa_event_handler_ctx {
 		struct vrdma_host_vq_ctx host_vq_ctx; /*host rdma parameters*/
 		struct vrdma_arm_vq_ctx arm_vq_ctx; /*arm rdma parameters*/
 		enum vrdma_dpa_vq_state state;
+		flexio_uintptr_t tx_wqe_buff; /*for test*/
+		struct flexio_mkey *sqd_mkey;/*for test*/
 	} dma_qp;
 };
 

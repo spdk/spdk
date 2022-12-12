@@ -273,7 +273,7 @@ static int vrdma_device_start(void *arg)
 	ctrl->sf_vhca_id = snap_get_dev_vhca_id(ctrl->emu_ctx);
 	attr.emu_ctx = ctrl->emu_ctx;
 	attr.emu_pd  = ctrl->pd;
-	SPDK_NOTICELOG("-----------naliu start test dev\n");
+	SPDK_NOTICELOG("===naliu start test dev\n");
 	vrdma_prov_init(&attr, &ctrl->dpa_ctx);
 
 	dev_init_attr.dpa_handler = ctrl->dpa_ctx;

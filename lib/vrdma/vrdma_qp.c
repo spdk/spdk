@@ -492,13 +492,15 @@ int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 		q_dpa_attr.rq_msix_vector = vqp->rq_vcq->veq->vector_idx;
 		q_dpa_attr.rq = vqp->rq;
 		q_dpa_attr.sq = vqp->sq;
-		q_dpa_attr.lkey = vqp->qp_mr->lkey;
-		q_dpa_attr.sq_pi = vqp->qp_pi->pi.sq_pi;
-		q_dpa_attr.rq_pi = vqp->qp_pi->pi.rq_pi;
+		q_dpa_attr.lkey = vqp->qp_mr->rkey;
+		// q_dpa_attr.sq_pi_addr = &vqp->qp_pi->pi.sq_pi;
+		// q_dpa_attr.rq_pi_addr = &vqp->qp_pi->pi.rq_pi;
 		q_dpa_attr.qdb_idx = vqp->qdb_idx;
-		SPDK_NOTICELOG("\nvqp %d qdb_idx %d\n", vqp->qp_idx, vqp->qdb_idx);
+		SPDK_NOTICELOG("===================naliu vrdma_qp.c=================");
+		SPDK_NOTICELOG("vqp %d qdb_idx %d lkey %#x rkey %#x\n",
+				vqp->qp_idx, vqp->qdb_idx, vqp->qp_mr->lkey, vqp->qp_mr->rkey);
 		vqp->snap_queue = vrdma_prov_vq_create(ctrl, &q_dpa_attr);
-		SPDK_NOTICELOG("\nnaliu vrdma_create_vq...end\n");
+		SPDK_NOTICELOG("===naliu vrdma_create_vq...end\n");
 	}
 	SPDK_NOTICELOG("\nlizh vrdma_create_vq...done\n");
 	return 0;
