@@ -39,6 +39,8 @@
 #include "snap_vrdma_virtq.h"
 
 #define VRDMA_INVALID_QPN 0xFFFFFFFF
+#define VRDMA_INVALID_NODEID 0xFFFFFFFF
+#define VRDMA_INVALID_DEVID 0xFFFFFFFF
 
 struct snap_vrdma_backend_qp;
 
@@ -69,6 +71,8 @@ struct vrdma_local_bk_qp {
 		uint8_t data[VRDMA_LOCAL_BK_QP_ATTR_SIZE];
 	};
 	uint32_t bk_qpn;
+	uint32_t remote_node_id;
+	uint32_t remote_dev_id;
 	uint32_t remote_qpn;
 	struct vrdma_backend_qp *bk_qp;
 };
@@ -92,6 +96,8 @@ LIST_HEAD(vrdma_rbk_qp_list_head, vrdma_remote_bk_qp);
 extern struct vrdma_lbk_qp_list_head vrdma_lbk_qp_list;
 extern struct vrdma_rbk_qp_list_head vrdma_rbk_qp_list;
 
+struct spdk_vrdma_qp *
+find_spdk_vrdma_qp_by_idx(struct vrdma_ctrl *ctrl, uint32_t qp_idx);
 void vrdma_del_bk_qp_list(void);
 int vrdma_add_rbk_qp_list(struct vrdma_ctrl *ctrl, uint32_t vqp_idx,
 		uint32_t remote_qpn, struct vrdma_remote_bk_qp_attr *qp_attr);

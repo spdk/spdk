@@ -48,15 +48,15 @@ struct vrdma_lbk_qp_list_head vrdma_lbk_qp_list =
 struct vrdma_rbk_qp_list_head vrdma_rbk_qp_list =
 				LIST_HEAD_INITIALIZER(vrdma_rbk_qp_list);
 
-static uint32_t vrdma_find_rbk_qpn_by_vqp(uint32_t remote_vqpn)
+struct spdk_vrdma_qp *
+find_spdk_vrdma_qp_by_idx(struct vrdma_ctrl *ctrl, uint32_t qp_idx)
 {
-	struct vrdma_remote_bk_qp *rqp;
+	struct spdk_vrdma_qp *vqp = NULL;
 
-	LIST_FOREACH(rqp, &vrdma_rbk_qp_list, entry) {
-    	if (rqp->attr.comm.vqpn == remote_vqpn)
-            return rqp->bk_qpn;
-    }
-	return VRDMA_INVALID_QPN;
+	LIST_FOREACH(vqp, &ctrl->vdev->vqp_list, entry)
+        if (vqp->qp_idx == qp_idx)
+            break;
+	return vqp;
 }
 
 struct vrdma_remote_bk_qp *
@@ -111,6 +111,7 @@ static int vrdma_add_lbk_qp_list(struct vrdma_ctrl *ctrl, uint32_t vqp_idx,
 				struct vrdma_backend_qp *bk_qp)
 {
 	struct vrdma_local_bk_qp *lqp;
+	struct vrdma_remote_bk_qp *rqp;
 
     SPDK_NOTICELOG("\n lizh vrdma_add_lbk_qp_list vqp %d remote_vqp %d start\n",
 			vqp_idx, bk_qp->remote_vqpn);
@@ -127,7 +128,16 @@ static int vrdma_add_lbk_qp_list(struct vrdma_ctrl *ctrl, uint32_t vqp_idx,
 	memcpy(lqp->attr.comm.mac, ctrl->vdev->vrdma_sf.mac, 6);
 	lqp->attr.core_id = bk_qp->poller_core;
 	lqp->bk_qpn = bk_qp->bk_qp.qpnum;
-	lqp->remote_qpn = vrdma_find_rbk_qpn_by_vqp(bk_qp->remote_vqpn);
+	rqp = vrdma_find_rbk_qp_by_vqp(bk_qp->remote_vqpn);
+	if (rqp) {
+		lqp->remote_qpn = rqp->attr.comm.vqpn;
+		lqp->remote_node_id = rqp->attr.comm.node_id;
+		lqp->remote_dev_id = rqp->attr.comm.dev_id;
+	} else {
+		lqp->remote_qpn = VRDMA_INVALID_QPN;
+		lqp->remote_node_id = VRDMA_INVALID_NODEID;
+		lqp->remote_dev_id = VRDMA_INVALID_DEVID;
+	}
 	lqp->bk_qp = bk_qp;
 	bk_qp->remote_qpn = lqp->remote_qpn;
 	LIST_INSERT_HEAD(&vrdma_lbk_qp_list, lqp, entry);
@@ -165,10 +175,14 @@ int vrdma_add_rbk_qp_list(struct vrdma_ctrl *ctrl, uint32_t vqp_idx,
 	LIST_INSERT_HEAD(&vrdma_rbk_qp_list, rqp, entry);
 	lqp = vrdma_find_lbk_qp_by_vqp(vqp_idx);
 	if (lqp && lqp->remote_qpn == VRDMA_INVALID_QPN) {
+		lqp->remote_node_id = qp_attr->comm.node_id;
+		lqp->remote_dev_id = qp_attr->comm.dev_id;
 		lqp->remote_qpn = remote_qpn;
 		lqp->bk_qp->remote_qpn = lqp->remote_qpn;
-	    SPDK_NOTICELOG("\n lizh vrdma_add_rbk_qp_list vrdma_modify_backend_qp_to_ready vqp %d remote_vqp %d remote_qpn %d\n",
-			vqp_idx, qp_attr->comm.vqpn, remote_qpn);
+	    SPDK_NOTICELOG("\n lizh vrdma_add_rbk_qp_list vrdma_modify_backend_qp_to_ready vqp %d "
+		"remote_vqp %d remote_qpn %d node_id 0x%x dev_id 0x%x\n",
+			vqp_idx, qp_attr->comm.vqpn, remote_qpn,
+			lqp->remote_node_id, lqp->remote_dev_id);
 		if (vrdma_modify_backend_qp_to_ready(ctrl, lqp->bk_qp)) {
 			SPDK_ERRLOG("Failed to modify bankend qp %d to ready\n",
 				lqp->bk_qpn);
@@ -311,6 +325,8 @@ void vrdma_destroy_backend_qp(struct vrdma_ctrl *ctrl, uint32_t vqp_idx)
             	sizeof(struct vrdma_bk_qp_connect));
 			msg.emu_manager = ctrl->emu_manager;
     		msg.bk_qpn = lqp->bk_qpn;
+			msg.remote_node_id = lqp->remote_node_id;
+			msg.remote_dev_id = lqp->remote_dev_id;
 			msg.remote_vqpn = qp->remote_vqpn;
 			msg.qp_state = SPDK_VRDMA_RPC_QP_DESTROYED;
     		if (spdk_vrdma_rpc_send_qp_msg(ctrl, ctrl->rpc.node_rip, &msg)) {
@@ -466,6 +482,8 @@ int vrdma_qp_notify_remote_by_rpc(struct vrdma_ctrl *ctrl, uint32_t vqpn,
 	memcpy(&msg.qp_attr, &lqp->attr.comm,
             sizeof(struct vrdma_bk_qp_connect));
 	msg.emu_manager = ctrl->emu_manager;
+	msg.remote_node_id = lqp->remote_node_id;
+	msg.remote_dev_id = lqp->remote_dev_id;
     msg.remote_vqpn = remote_vqpn;
     msg.bk_qpn = lqp->bk_qpn;
     if (spdk_vrdma_rpc_send_qp_msg(ctrl, ctrl->rpc.node_rip, &msg)) {

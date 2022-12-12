@@ -54,6 +54,7 @@
 #include "spdk/vrdma_emu_mgr.h"
 #include "spdk/vrdma_io_mgr.h"
 #include "spdk/vrdma_controller.h"
+#include "spdk/vrdma_qp.h"
 
 static int spdk_emu_ctx_io_threads_create(struct spdk_emu_ctx *ctrl_ctx);
 static void spdk_emu_ctrl_destroy(struct spdk_emu_ctx *ctx,
@@ -107,6 +108,26 @@ spdk_emu_ctx_find_by_vhca_id(const char *emu_manager, int vhca_id)
         SPDK_NOTICELOG("lizh spdk_emu_ctx_find_by_vhca_id...mpci.vhca_id %d vhca_id %d\n",
         ctrl->sctrl->sdev->pci->mpci.vhca_id, vhca_id);
         if (ctrl->sctrl->sdev->pci->mpci.vhca_id == vhca_id)
+            return ctx;
+    }
+    return NULL;
+}
+
+struct spdk_emu_ctx *
+spdk_emu_ctx_find_by_vqpn(const char *emu_manager, uint32_t vqpn)
+{
+    struct spdk_emu_ctx *ctx;
+    struct vrdma_ctrl *ctrl;
+
+    LIST_FOREACH(ctx, &spdk_emu_list, entry) {
+        SPDK_NOTICELOG("lizh spdk_emu_ctx_find_by_vhca_id...%s type %d vqpn %d\n",
+        ctx->emu_manager, ctx->spci->type, vqpn);
+        if (strncmp(ctx->emu_manager, emu_manager,
+                    SPDK_EMU_MANAGER_NAME_MAXLEN) ||
+            ctx->spci->type != SNAP_VRDMA_PF)
+            continue;
+        ctrl = ctx->ctrl;
+        if (find_spdk_vrdma_qp_by_idx(ctrl, vqpn) != NULL)
             return ctx;
     }
     return NULL;

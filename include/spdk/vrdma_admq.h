@@ -617,8 +617,6 @@ struct spdk_vrdma_mr *
 find_spdk_vrdma_mr_by_key(struct vrdma_ctrl *ctrl, uint32_t key);
 struct spdk_vrdma_ah *
 find_spdk_vrdma_ah_by_idx(struct vrdma_ctrl *ctrl, uint32_t ah_idx);
-struct spdk_vrdma_qp *
-find_spdk_vrdma_qp_by_idx(struct vrdma_ctrl *ctrl, uint32_t qp_idx);
 struct spdk_vrdma_cq *
 find_spdk_vrdma_cq_by_idx(struct vrdma_ctrl *ctrl, uint32_t cq_idx);
 struct spdk_vrdma_eq *

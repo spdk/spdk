@@ -167,17 +167,6 @@ find_spdk_vrdma_ah_by_idx(struct vrdma_ctrl *ctrl, uint32_t ah_idx)
 	return vah;
 }
 
-struct spdk_vrdma_qp *
-find_spdk_vrdma_qp_by_idx(struct vrdma_ctrl *ctrl, uint32_t qp_idx)
-{
-	struct spdk_vrdma_qp *vqp = NULL;
-
-	LIST_FOREACH(vqp, &ctrl->vdev->vqp_list, entry)
-        if (vqp->qp_idx == qp_idx)
-            break;
-	return vqp;
-}
-
 struct spdk_vrdma_cq *
 find_spdk_vrdma_cq_by_idx(struct vrdma_ctrl *ctrl, uint32_t cq_idx)
 {

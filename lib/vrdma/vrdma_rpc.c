@@ -91,7 +91,6 @@ spdk_vrdma_close_rpc_client(struct spdk_vrdma_rpc_client *client)
 	spdk_poller_unregister(&client->client_conn_poller);
 	if (client->client_conn)
 		spdk_jsonrpc_client_close(client->client_conn);
-	spdk_rpc_finish();
 }
 
 static int
@@ -191,6 +190,18 @@ spdk_vrdma_rpc_qp_resp_decoder[] = {
         true
     },
     {
+        "remote_node",
+        offsetof(struct spdk_vrdma_rpc_qp_attr, remote_node_id),
+        spdk_json_decode_uint32,
+        true
+    },
+    {
+        "remote_device",
+        offsetof(struct spdk_vrdma_rpc_qp_attr, remote_dev_id),
+        spdk_json_decode_uint32,
+        true
+    },
+    {
         "remote_vqpn",
         offsetof(struct spdk_vrdma_rpc_qp_attr, remote_vqpn),
         spdk_json_decode_uint32,
@@ -243,15 +254,21 @@ spdk_vrdma_client_qp_resp_handler(struct spdk_vrdma_rpc_client *client,
 
     SPDK_NOTICELOG("lizh spdk_vrdma_client_qp_resp_handler decode:\n"
     "emu_manager %s node_id=0x%x  dev_id=0x%x vqpn=0x%x gid_ip=0x%x "
-    "mac=0x%lx remote_vqpn=0x%x bk_qpn=0x%x\n", 
+    "mac=0x%lx remote_node_id=0x%x remote_dev_id =0x%x "
+    "remote_vqpn=0x%x bk_qpn=0x%x\n",
     attr->emu_manager, attr->node_id, attr->dev_id, attr->vqpn,
-    attr->gid_ip, attr->sf_mac, attr->remote_vqpn, attr->bk_qpn);
+    attr->gid_ip, attr->sf_mac, attr->remote_node_id, attr->remote_dev_id,
+    attr->remote_vqpn, attr->bk_qpn);
     /* Find device data by dev_id (mpci.vhca_id)*/
-    ctx = spdk_emu_ctx_find_by_vhca_id(attr->emu_manager, attr->dev_id);
+    ctx = spdk_emu_ctx_find_by_vhca_id(attr->emu_manager, attr->remote_dev_id);
     if (!ctx) {
-        SPDK_ERRLOG("Fail to find device for emu_manager %s\n",
+         /*TODO: Hardcode one device and vqpn is global. */
+        ctx = spdk_emu_ctx_find_by_vqpn(attr->emu_manager, attr->remote_vqpn);
+        if (!ctx) {
+            SPDK_ERRLOG("Fail to find device for emu_manager %s\n",
                 attr->emu_manager);
-        goto free_attr;
+            goto free_attr;
+        }
     }
     ctrl = ctx->ctrl;
     if (!ctrl) {
@@ -531,16 +548,21 @@ spdk_vrdma_rpc_srv_qp_req_handle(struct spdk_jsonrpc_request *request,
     }
     SPDK_NOTICELOG("lizh spdk_vrdma_rpc_srv_qp_req_handle decode:\n"
     "emu_manager %s node_id=0x%x  dev_id=0x%x vqpn=0x%x gid_ip=0x%x "
-    "mac=0x%lx remote_vqpn=0x%x bk_qpn=0x%x qp_state=%d\n",
+    "mac=0x%lx remote_vqpn=0x%x remote_node_id=0x%x remote_dev_id =0x%x "
+    "bk_qpn=0x%x qp_state=%d\n",
     attr->emu_manager, attr->node_id, attr->dev_id, attr->vqpn,
-    attr->gid_ip, attr->sf_mac, attr->remote_vqpn, attr->bk_qpn,
-    attr->qp_state);
+    attr->gid_ip, attr->sf_mac, attr->remote_node_id, attr->remote_dev_id,
+    attr->remote_vqpn, attr->bk_qpn, attr->qp_state);
     /* Find device data by dev_id (mpci.vhca_id)*/
-    ctx = spdk_emu_ctx_find_by_vhca_id(attr->emu_manager, attr->dev_id);
+    ctx = spdk_emu_ctx_find_by_vhca_id(attr->emu_manager, attr->remote_dev_id);
     if (!ctx) {
-        SPDK_ERRLOG("Fail to find device for emu_manager %s\n",
+         /*TODO: Hardcode one device and vqpn is global. */
+        ctx = spdk_emu_ctx_find_by_vqpn(attr->emu_manager, attr->remote_vqpn);
+        if (!ctx) {
+            SPDK_ERRLOG("Fail to find device for emu_manager %s\n",
                 attr->emu_manager);
-        goto invalid;
+            goto invalid;
+        }
     }
     ctrl = ctx->ctrl;
     if (!ctrl) {
@@ -568,6 +590,8 @@ spdk_vrdma_rpc_srv_qp_req_handle(struct spdk_jsonrpc_request *request,
         if (lqp) {
             memcpy(&msg.qp_attr, &lqp->attr.comm,
             sizeof(struct vrdma_bk_qp_connect));
+	        msg.remote_node_id = lqp->remote_node_id;
+	        msg.remote_dev_id = lqp->remote_dev_id;
             msg.remote_vqpn = attr->vqpn;
             msg.bk_qpn = lqp->bk_qpn;
             msg.qp_state = SPDK_VRDMA_RPC_QP_READY;

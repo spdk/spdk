@@ -83,6 +83,8 @@ struct spdk_emu_ctx *
 spdk_emu_ctx_find_by_pci_id(const char *emu_manager, int pf_id);
 struct spdk_emu_ctx *
 spdk_emu_ctx_find_by_vhca_id(const char *emu_manager, int vhca_id);
+struct spdk_emu_ctx *
+spdk_emu_ctx_find_by_vqpn(const char *emu_manager, uint32_t vqpn);
 struct spdk_emu_ctx *spdk_emu_ctx_find_by_emu_name(const char *emu_name);
 
 struct spdk_emu_ctx *
