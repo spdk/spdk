@@ -86,6 +86,7 @@ struct spdk_accel_sequence {
 	struct accel_io_channel			*ch;
 	struct accel_sequence_tasks		tasks;
 	struct accel_sequence_tasks		completed;
+	TAILQ_HEAD(, accel_buffer)		bounce_bufs;
 	spdk_accel_completion_cb		cb_fn;
 	void					*cb_arg;
 	TAILQ_ENTRY(spdk_accel_sequence)	link;
@@ -666,6 +667,7 @@ accel_sequence_get(struct accel_io_channel *ch)
 
 	TAILQ_INIT(&seq->tasks);
 	TAILQ_INIT(&seq->completed);
+	TAILQ_INIT(&seq->bounce_bufs);
 
 	seq->ch = ch;
 
@@ -676,6 +678,13 @@ static inline void
 accel_sequence_put(struct spdk_accel_sequence *seq)
 {
 	struct accel_io_channel *ch = seq->ch;
+	struct accel_buffer *buf;
+
+	while (!TAILQ_EMPTY(&seq->bounce_bufs)) {
+		buf = TAILQ_FIRST(&seq->bounce_bufs);
+		TAILQ_REMOVE(&seq->bounce_bufs, buf, link);
+		accel_put_buf(seq->ch, buf);
+	}
 
 	assert(TAILQ_EMPTY(&seq->tasks));
 	assert(TAILQ_EMPTY(&seq->completed));
@@ -1041,6 +1050,119 @@ accel_sequence_check_virtbuf(struct spdk_accel_sequence *seq, struct spdk_accel_
 	return true;
 }
 
+static inline uint64_t
+accel_get_iovlen(struct iovec *iovs, uint32_t iovcnt)
+{
+	uint64_t result = 0;
+	uint32_t i;
+
+	for (i = 0; i < iovcnt; ++i) {
+		result += iovs[i].iov_len;
+	}
+
+	return result;
+}
+
+static inline void
+accel_set_bounce_buffer(struct spdk_accel_bounce_buffer *bounce, struct iovec **iovs,
+			uint32_t *iovcnt, struct spdk_memory_domain **domain, void **domain_ctx,
+			struct accel_buffer *buf)
+{
+	bounce->orig_iovs = *iovs;
+	bounce->orig_iovcnt = *iovcnt;
+	bounce->orig_domain = *domain;
+	bounce->orig_domain_ctx = *domain_ctx;
+	bounce->iov.iov_base = buf->buf;
+	bounce->iov.iov_len = buf->len;
+
+	*iovs = &bounce->iov;
+	*iovcnt = 1;
+	*domain = NULL;
+}
+
+static void
+accel_iobuf_get_src_bounce_cb(struct spdk_iobuf_entry *entry, void *buf)
+{
+	struct spdk_accel_task *task;
+	struct accel_buffer *accel_buf;
+
+	accel_buf = SPDK_CONTAINEROF(entry, struct accel_buffer, iobuf);
+	assert(accel_buf->buf == NULL);
+	accel_buf->buf = buf;
+
+	task = TAILQ_FIRST(&accel_buf->seq->tasks);
+	assert(task != NULL);
+
+	accel_set_bounce_buffer(&task->bounce.s, &task->s.iovs, &task->s.iovcnt, &task->src_domain,
+				&task->src_domain_ctx, accel_buf);
+	accel_process_sequence(accel_buf->seq);
+}
+
+static void
+accel_iobuf_get_dst_bounce_cb(struct spdk_iobuf_entry *entry, void *buf)
+{
+	struct spdk_accel_task *task;
+	struct accel_buffer *accel_buf;
+
+	accel_buf = SPDK_CONTAINEROF(entry, struct accel_buffer, iobuf);
+	assert(accel_buf->buf == NULL);
+	accel_buf->buf = buf;
+
+	task = TAILQ_FIRST(&accel_buf->seq->tasks);
+	assert(task != NULL);
+
+	accel_set_bounce_buffer(&task->bounce.d, &task->d.iovs, &task->d.iovcnt, &task->dst_domain,
+				&task->dst_domain_ctx, accel_buf);
+	accel_process_sequence(accel_buf->seq);
+}
+
+static int
+accel_sequence_check_bouncebuf(struct spdk_accel_sequence *seq, struct spdk_accel_task *task)
+{
+	struct accel_buffer *buf;
+
+	if (task->src_domain != NULL) {
+		/* By the time we're here, accel buffers should have been allocated */
+		assert(task->src_domain != g_accel_domain);
+
+		buf = accel_get_buf(seq->ch, accel_get_iovlen(task->s.iovs, task->s.iovcnt));
+		if (buf == NULL) {
+			SPDK_ERRLOG("Couldn't allocate buffer descriptor\n");
+			return -ENOMEM;
+		}
+
+		TAILQ_INSERT_TAIL(&seq->bounce_bufs, buf, link);
+		if (!accel_sequence_alloc_buf(seq, buf, accel_iobuf_get_src_bounce_cb)) {
+			return -EAGAIN;
+		}
+
+		accel_set_bounce_buffer(&task->bounce.s, &task->s.iovs, &task->s.iovcnt,
+					&task->src_domain, &task->src_domain_ctx, buf);
+	}
+
+	if (task->dst_domain != NULL) {
+		/* By the time we're here, accel buffers should have been allocated */
+		assert(task->dst_domain != g_accel_domain);
+
+		buf = accel_get_buf(seq->ch, accel_get_iovlen(task->d.iovs, task->d.iovcnt));
+		if (buf == NULL) {
+			/* The src buffer will be released when a sequence is completed */
+			SPDK_ERRLOG("Couldn't allocate buffer descriptor\n");
+			return -ENOMEM;
+		}
+
+		TAILQ_INSERT_TAIL(&seq->bounce_bufs, buf, link);
+		if (!accel_sequence_alloc_buf(seq, buf, accel_iobuf_get_dst_bounce_cb)) {
+			return -EAGAIN;
+		}
+
+		accel_set_bounce_buffer(&task->bounce.d, &task->d.iovs, &task->d.iovcnt,
+					&task->dst_domain, &task->dst_domain_ctx, buf);
+	}
+
+	return 0;
+}
+
 static void
 accel_process_sequence(struct spdk_accel_sequence *seq)
 {
@@ -1059,6 +1181,18 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 
 	if (!accel_sequence_check_virtbuf(seq, task)) {
 		/* We couldn't allocate a buffer, wait until one is available */
+		return;
+	}
+
+	/* For now, assume that none of the modules support memory domains */
+	rc = accel_sequence_check_bouncebuf(seq, task);
+	if (rc != 0) {
+		if (rc == -EAGAIN) {
+			/* We couldn't allocate a buffer, wait until one is available */
+			return;
+		}
+
+		accel_sequence_complete(seq, rc);
 		return;
 	}
 

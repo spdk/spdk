@@ -32,6 +32,19 @@ struct spdk_accel_crypto_key {
 	TAILQ_ENTRY(spdk_accel_crypto_key) link;
 };
 
+/**
+ * Describes user's buffers in remote memory domains in case a module doesn't support memory domains
+ * and accel needs to pull/push the data before submitting a task.  Should only be used by accel
+ * itself and should not be touched by accel modules.
+ */
+struct spdk_accel_bounce_buffer {
+	struct iovec			*orig_iovs;
+	uint32_t			orig_iovcnt;
+	struct spdk_memory_domain	*orig_domain;
+	void				*orig_domain_ctx;
+	struct iovec			iov;
+};
+
 enum spdk_accel_aux_iov_type {
 	SPDK_ACCEL_AUX_IOV_SRC,
 	SPDK_ACCEL_AUX_IOV_DST,
@@ -78,6 +91,10 @@ struct spdk_accel_task {
 		uint32_t		*output_size;
 		uint32_t		block_size; /* for crypto op */
 	};
+	struct {
+		struct spdk_accel_bounce_buffer s;
+		struct spdk_accel_bounce_buffer d;
+	} bounce;
 	enum accel_opcode		op_code;
 	uint64_t			iv; /* Initialization vector (tweak) for crypto op */
 	int				flags;
