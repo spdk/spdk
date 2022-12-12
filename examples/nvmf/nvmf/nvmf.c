@@ -405,7 +405,7 @@ static void
 nvmf_create_nvmf_tgt(void)
 {
 	struct spdk_nvmf_subsystem *subsystem;
-	struct spdk_nvmf_target_opts tgt_opts;
+	struct spdk_nvmf_target_opts tgt_opts = {};
 
 	tgt_opts.max_subsystems = g_nvmf_tgt.max_subsystems;
 	snprintf(tgt_opts.name, sizeof(tgt_opts.name), "%s", "nvmf_example");
