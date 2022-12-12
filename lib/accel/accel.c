@@ -1239,11 +1239,7 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 	seq->in_process_sequence = true;
 
 	task = TAILQ_FIRST(&seq->tasks);
-	if (task == NULL) {
-		/* We've processed all tasks */
-		accel_sequence_complete(seq);
-		return;
-	}
+	assert(task != NULL);
 
 	do {
 		state = seq->state;
@@ -1290,8 +1286,9 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 			}
 			break;
 		case ACCEL_SEQUENCE_STATE_COMPLETE_TASK:
-			/* Update the task pointer here, in case a task was completed by a module
-			 * from submit_tasks() */
+			TAILQ_REMOVE(&seq->tasks, task, seq_link);
+			TAILQ_INSERT_TAIL(&seq->completed, task, seq_link);
+			/* Check if there are any remaining tasks */
 			task = TAILQ_FIRST(&seq->tasks);
 			if (task == NULL) {
 				/* Immediately return here to make sure we don't touch the sequence
@@ -1336,9 +1333,6 @@ accel_sequence_task_cb(void *cb_arg, int status)
 
 	assert(seq->state == ACCEL_SEQUENCE_STATE_AWAIT_TASK);
 	accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_COMPLETE_TASK);
-
-	TAILQ_REMOVE(&seq->tasks, task, seq_link);
-	TAILQ_INSERT_TAIL(&seq->completed, task, seq_link);
 
 	if (spdk_unlikely(status != 0)) {
 		SPDK_ERRLOG("Failed to execute %s operation, sequence: %p\n",
