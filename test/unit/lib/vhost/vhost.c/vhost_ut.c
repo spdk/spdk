@@ -661,6 +661,23 @@ vq_packed_ring_test(void)
 	CU_ASSERT(guest_avail_phase == guest_used_phase);
 }
 
+static void
+vhost_blk_construct_test(void)
+{
+	int ret;
+	struct spdk_vhost_dev *vdev = NULL;
+
+	ret = spdk_vhost_blk_construct("Malloc0", "0x1", "vhost.blk.0", NULL, NULL);
+	CU_ASSERT(ret == 0);
+
+	vdev = spdk_vhost_dev_find("Malloc0");
+	CU_ASSERT(vdev != NULL);
+	CU_ASSERT(strcmp("Malloc0", spdk_vhost_dev_get_name(vdev)) == 0);
+
+	ret = spdk_vhost_dev_remove(vdev);
+	CU_ASSERT(ret == 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -678,6 +695,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, remove_controller_test);
 	CU_ADD_TEST(suite, vq_avail_ring_get_test);
 	CU_ADD_TEST(suite, vq_packed_ring_test);
+	CU_ADD_TEST(suite, vhost_blk_construct_test);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
