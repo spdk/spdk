@@ -3136,9 +3136,9 @@ bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 	struct spdk_bdev_shared_resource *shared_resource;
 	struct lba_range *range;
 
-	bdev_io_stat_free(ch->stat);
+	bdev_free_io_stat(ch->stat);
 #ifdef SPDK_CONFIG_VTUNE
-	bdev_io_stat_free(ch->prev_stat);
+	bdev_free_io_stat(ch->prev_stat);
 #endif
 
 	while (!TAILQ_EMPTY(&ch->locked_ranges)) {
@@ -3417,7 +3417,7 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 	TAILQ_INIT(&ch->io_submitted);
 	TAILQ_INIT(&ch->io_locked);
 
-	ch->stat = bdev_io_stat_alloc();
+	ch->stat = bdev_alloc_io_stat();
 	if (ch->stat == NULL) {
 		bdev_channel_destroy_resource(ch);
 		return -1;
@@ -3438,7 +3438,7 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 		free(name);
 		ch->start_tsc = spdk_get_ticks();
 		ch->interval_tsc = spdk_get_ticks_hz() / 100;
-		ch->prev_stat = bdev_io_stat_alloc();
+		ch->prev_stat = bdev_alloc_io_stat();
 		if (ch->prev_stat == NULL) {
 			bdev_channel_destroy_resource(ch);
 			return -1;
@@ -3647,7 +3647,7 @@ bdev_qos_destroy(struct spdk_bdev *bdev)
 }
 
 static void
-bdev_io_stat_add(struct spdk_bdev_io_stat *total, struct spdk_bdev_io_stat *add)
+bdev_add_io_stat(struct spdk_bdev_io_stat *total, struct spdk_bdev_io_stat *add)
 {
 	total->bytes_read += add->bytes_read;
 	total->num_read_ops += add->num_read_ops;
@@ -3688,13 +3688,13 @@ bdev_io_stat_add(struct spdk_bdev_io_stat *total, struct spdk_bdev_io_stat *add)
 }
 
 static void
-bdev_io_stat_get(struct spdk_bdev_io_stat *to_stat, struct spdk_bdev_io_stat *from_stat)
+bdev_get_io_stat(struct spdk_bdev_io_stat *to_stat, struct spdk_bdev_io_stat *from_stat)
 {
 	memcpy(to_stat, from_stat, sizeof(struct spdk_bdev_io_stat));
 }
 
 static void
-bdev_io_stat_reset(struct spdk_bdev_io_stat *stat, enum bdev_reset_stat_mode mode)
+bdev_reset_io_stat(struct spdk_bdev_io_stat *stat, enum bdev_reset_stat_mode mode)
 {
 	stat->max_read_latency_ticks = 0;
 	stat->min_read_latency_ticks = UINT64_MAX;
@@ -3721,26 +3721,26 @@ bdev_io_stat_reset(struct spdk_bdev_io_stat *stat, enum bdev_reset_stat_mode mod
 }
 
 struct spdk_bdev_io_stat *
-bdev_io_stat_alloc(void)
+bdev_alloc_io_stat(void)
 {
 	struct spdk_bdev_io_stat *stat;
 
 	stat = malloc(sizeof(struct spdk_bdev_io_stat));
 	if (stat != NULL) {
-		bdev_io_stat_reset(stat, BDEV_RESET_STAT_ALL);
+		bdev_reset_io_stat(stat, BDEV_RESET_STAT_ALL);
 	}
 
 	return stat;
 }
 
 void
-bdev_io_stat_free(struct spdk_bdev_io_stat *stat)
+bdev_free_io_stat(struct spdk_bdev_io_stat *stat)
 {
 	free(stat);
 }
 
 void
-bdev_io_stat_dump_json(struct spdk_bdev_io_stat *stat, struct spdk_json_write_ctx *w)
+bdev_dump_io_stat_json(struct spdk_bdev_io_stat *stat, struct spdk_json_write_ctx *w)
 {
 	spdk_json_write_named_uint64(w, "bytes_read", stat->bytes_read);
 	spdk_json_write_named_uint64(w, "num_read_ops", stat->num_read_ops);
@@ -3796,7 +3796,7 @@ bdev_channel_destroy(void *io_device, void *ctx_buf)
 
 	/* This channel is going away, so add its statistics into the bdev so that they don't get lost. */
 	spdk_spin_lock(&ch->bdev->internal.spinlock);
-	bdev_io_stat_add(ch->bdev->internal.stat, ch->stat);
+	bdev_add_io_stat(ch->bdev->internal.stat, ch->stat);
 	spdk_spin_unlock(&ch->bdev->internal.spinlock);
 
 	bdev_abort_all_queued_io(&ch->queued_resets, ch);
@@ -5683,7 +5683,7 @@ spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 {
 	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
-	bdev_io_stat_get(stat, channel->stat);
+	bdev_get_io_stat(stat, channel->stat);
 }
 
 static void
@@ -5703,7 +5703,7 @@ bdev_get_each_channel_stat(struct spdk_bdev_channel_iter *i, struct spdk_bdev *b
 	struct spdk_bdev_iostat_ctx *bdev_iostat_ctx = _ctx;
 	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
-	bdev_io_stat_add(bdev_iostat_ctx->stat, channel->stat);
+	bdev_add_io_stat(bdev_iostat_ctx->stat, channel->stat);
 	spdk_bdev_for_each_channel_continue(i, 0);
 }
 
@@ -5730,7 +5730,7 @@ spdk_bdev_get_device_stat(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat
 
 	/* Start with the statistics from previously deleted channels. */
 	spdk_spin_lock(&bdev->internal.spinlock);
-	bdev_io_stat_get(bdev_iostat_ctx->stat, bdev->internal.stat);
+	bdev_get_io_stat(bdev_iostat_ctx->stat, bdev->internal.stat);
 	spdk_spin_unlock(&bdev->internal.spinlock);
 
 	/* Then iterate and add the statistics from each existing channel. */
@@ -5761,7 +5761,7 @@ bdev_reset_each_channel_stat(struct spdk_bdev_channel_iter *i, struct spdk_bdev 
 	struct bdev_iostat_reset_ctx *ctx = _ctx;
 	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
-	bdev_io_stat_reset(channel->stat, ctx->mode);
+	bdev_reset_io_stat(channel->stat, ctx->mode);
 
 	spdk_bdev_for_each_channel_continue(i, 0);
 }
@@ -5787,7 +5787,7 @@ bdev_reset_device_stat(struct spdk_bdev *bdev, enum bdev_reset_stat_mode mode,
 	ctx->cb_arg = cb_arg;
 
 	spdk_spin_lock(&bdev->internal.spinlock);
-	bdev_io_stat_reset(bdev->internal.stat, mode);
+	bdev_reset_io_stat(bdev->internal.stat, mode);
 	spdk_spin_unlock(&bdev->internal.spinlock);
 
 	spdk_bdev_for_each_channel(bdev,
@@ -6606,7 +6606,7 @@ bdev_register(struct spdk_bdev *bdev)
 		return -ENOMEM;
 	}
 
-	bdev->internal.stat = bdev_io_stat_alloc();
+	bdev->internal.stat = bdev_alloc_io_stat();
 	if (!bdev->internal.stat) {
 		SPDK_ERRLOG("Unable to allocate I/O statistics structure.\n");
 		free(bdev_name);
@@ -6626,7 +6626,7 @@ bdev_register(struct spdk_bdev *bdev)
 
 	ret = bdev_name_add(&bdev->internal.bdev_name, bdev, bdev->name);
 	if (ret != 0) {
-		bdev_io_stat_free(bdev->internal.stat);
+		bdev_free_io_stat(bdev->internal.stat);
 		free(bdev_name);
 		return ret;
 	}
@@ -6642,7 +6642,7 @@ bdev_register(struct spdk_bdev *bdev)
 			if (ret != 0) {
 				SPDK_ERRLOG("Unable to add uuid:%s alias for bdev %s\n", uuid, bdev->name);
 				bdev_name_del(&bdev->internal.bdev_name);
-				bdev_io_stat_free(bdev->internal.stat);
+				bdev_free_io_stat(bdev->internal.stat);
 				free(bdev_name);
 				return ret;
 			}
@@ -6707,7 +6707,7 @@ bdev_destroy_cb(void *io_device)
 
 	spdk_spin_destroy(&bdev->internal.spinlock);
 	free(bdev->internal.qos);
-	bdev_io_stat_free(bdev->internal.stat);
+	bdev_free_io_stat(bdev->internal.stat);
 
 	rc = bdev->fn_table->destruct(bdev->ctxt);
 	if (rc < 0) {
