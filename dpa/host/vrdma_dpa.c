@@ -51,7 +51,6 @@ int vrdma_dpa_init(const struct vrdma_prov_init_attr *attr, void **out)
 	size_t elf_size;
 	int padding;
 	int err;
-	uint64_t func_ret;
 
 	dpa_ctx = calloc(1, sizeof(*dpa_ctx));
 	if (!dpa_ctx) {
@@ -89,7 +88,7 @@ int vrdma_dpa_init(const struct vrdma_prov_init_attr *attr, void **out)
 	}
 
 	/*Init Print environment*/
-	err = flexio_print_init(dpa_ctx->flexio_process, dpa_ctx->flexio_uar, PRINTF_BUFF_BSIZE, stdout,
+	err = vrdma_dpa_dev_print_init(dpa_ctx->flexio_process, dpa_ctx->flexio_uar, PRINTF_BUFF_BSIZE, stdout,
 				0, NULL);
 
 	/* outbox to press CQ and QP doorbells */
@@ -202,10 +201,8 @@ int vrdma_dpa_emu_dev_init(const struct vrdma_prov_emu_dev_init_attr *attr,
 			     void **out)
 {
 	struct vrdma_dpa_emu_dev_ctx *emu_dev_ctx;
-	// struct flexio_mkey_attr mkeyattr = {};
 	struct vrdma_dpa_ctx *dpa_ctx;
 	int err;
-	uint64_t func_ret;
 
 	emu_dev_ctx = calloc(1, sizeof(*emu_dev_ctx));
 	if (!emu_dev_ctx) {
@@ -286,9 +283,8 @@ void vrdma_dpa_emu_dev_uninit(void *emu_dev_handler)
 	free(emu_dev_ctx);
 }
 
-#if 0
-/*looks like don't need, because we are not care device link change*/
-int vrdma_dpa_device_msix_send(void *handler)
+/*used when device state changed*/
+static int vrdma_dpa_device_msix_send(void *handler)
 {
 	struct vrdma_dpa_emu_dev_ctx *emu_dev_ctx = handler;
 	uint32_t outbox_id;
@@ -297,7 +293,7 @@ int vrdma_dpa_device_msix_send(void *handler)
 
 	outbox_id = flexio_outbox_get_id(emu_dev_ctx->db_sf_outbox);
 	err = flexio_process_call(emu_dev_ctx->flexio_process,
-		virtnet_dpa_device_rpc_handler[VIRTNET_DPA_DEVICE_MSIX_SEND],
+		"vrdma_dpa_msix_send_rpc_handler",
 		emu_dev_ctx->msix[emu_dev_ctx->msix_config_vector].cqn,
 		outbox_id, 0, &rpc_ret);
 
@@ -306,7 +302,6 @@ int vrdma_dpa_device_msix_send(void *handler)
 			  err, rpc_ret);
 	return err;
 }
-#endif
 
 static struct vrdma_prov_ops vrdma_dpa_prov_ops = {
 	.q_ops = &vrdma_dpa_vq_ops,
@@ -314,7 +309,7 @@ static struct vrdma_prov_ops vrdma_dpa_prov_ops = {
 	.uninit = vrdma_dpa_uninit,
 	.emu_dev_init = vrdma_dpa_emu_dev_init,
 	.emu_dev_uninit = vrdma_dpa_emu_dev_uninit,
-	//.msix_send = vrdma_dpa_device_msix_send,
+	.msix_send = vrdma_dpa_device_msix_send,
 };
 
 VRDMA_PROV_DECLARE(vrdma_dpa_prov_ops);

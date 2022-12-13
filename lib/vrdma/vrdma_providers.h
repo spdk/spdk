@@ -15,7 +15,7 @@
 #define VRDMA_PROVIDERS_H
 
 #include "spdk/vrdma_controller.h"
-// #include "snap_vrdma_virtq.h"
+#include "snap_vrdma_virtq.h"
 
 struct vrdma_prov_init_attr {
 	struct ibv_context *emu_ctx;
@@ -33,40 +33,16 @@ struct vrdma_prov_emu_dev_init_attr {
 	uint16_t msix_config_vector;
 };
 
-struct snap_vrdma_vq_create_dpa_attr {
-	void *bdev;
-	struct ibv_pd *pd;
-	uint32_t sq_size;
-	uint32_t rq_size;
-	uint16_t tx_elem_size;
-	uint16_t rx_elem_size;
-	uint32_t vqpn;
-	uint16_t sq_msix_vector;
-	uint16_t rq_msix_vector;
-	uint32_t qdb_idx;
-	// uint16_t num_msix;
-	/*host wr address*/
-	// struct vrdma_q_comm host_rq_param;
-	// struct vrdma_q_comm host_sq_param;
-
-	/*both host and arm wr address*/
-	struct vrdma_rq rq;
-	struct vrdma_sq sq;
-	/*arm mr & pi*/
-	uint32_t lkey;
-	uint16_t sq_pi;
-	uint16_t rq_pi;
-};
-
-struct vrdma_prov_vq {
-	// uint16_t idx;
-	struct vrdma_dpa_vq *dpa_vq;//void    *dpa_q;
-	uint16_t dpa_qpn; /*it is dpa_vq's qpn*/
-	// struct snap_dma_q *dma_q;
-};
+// struct vrdma_prov_vq {
+// 	// uint16_t idx;
+// 	struct vrdma_dpa_vq *dpa_vq; /*dpa_q;*/
+// 	uint16_t dpa_qpn; /*it is dpa_dma_q's qpn*/
+// };
 
 struct vrdma_vq_ops {
-	struct snap_vrdma_queue *(*create)(struct vrdma_ctrl *ctrl, struct snap_vrdma_vq_create_dpa_attr* q_attr);
+	struct snap_vrdma_queue *(*create)(struct vrdma_ctrl *ctrl,
+					   struct spdk_vrdma_qp *vqp,
+					   struct snap_vrdma_vq_create_attr* q_attr);
 	void (*destroy)(struct snap_vrdma_queue *virtq);
 	// int (*modify)(struct vrdma_prov_vq *vq, uint64_t mask,
 				//  struct vrdma_prov_vq_attr *attr);
@@ -79,7 +55,7 @@ struct vrdma_prov_ops {
 	int (*emu_dev_init)(const struct vrdma_prov_emu_dev_init_attr *attr,
 			    void **out);
 	void (*emu_dev_uninit)(void *in);
-	// int (*msix_send)(void *handler); ---------later
+	int (*msix_send)(void *handler);
 };
 
 int vrdma_prov_init(const struct vrdma_prov_init_attr *prov_init_attr,
@@ -88,8 +64,11 @@ void vrdma_prov_uninit(void *prov_ctx_in);
 int vrdma_prov_emu_dev_init(const struct vrdma_prov_emu_dev_init_attr *emu_attr,
 			  void **emu_ctx_out);
 void vrdma_prov_emu_dev_uninit(void *emu_ctx_in);
-struct snap_vrdma_queue* vrdma_prov_vq_create(struct vrdma_ctrl *ctrl,
-		       struct snap_vrdma_vq_create_dpa_attr *attr);
+int vrdma_prov_emu_msix_send(void *handler);
+
+struct snap_vrdma_queue* 
+vrdma_prov_vq_create(struct vrdma_ctrl *ctrl, struct spdk_vrdma_qp *vqp,
+		     struct snap_vrdma_vq_create_attr *attr);
 void vrdma_prov_vq_destroy(struct snap_vrdma_queue *vq);
 void vrdma_prov_ops_register(const struct vrdma_prov_ops *ops);
 void vrdma_prov_ops_unregister(void);

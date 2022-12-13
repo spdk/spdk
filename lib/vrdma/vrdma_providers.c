@@ -74,17 +74,17 @@ void vrdma_prov_emu_dev_uninit(void *emu_ctx_in)
 // 	return 0;
 // }
 
-// int virtnet_prov_emu_msix_send(void *handler)
-// {
-// 	if (prov_ops && prov_ops->msix_send)
-// 		return prov_ops->msix_send(handler);
+int vrdma_prov_emu_msix_send(void *handler)
+{
+	if (prov_ops && prov_ops->msix_send)
+		return prov_ops->msix_send(handler);
 
-// 	return 0;
-// }
+	return 0;
+}
 
 struct snap_vrdma_queue*
-vrdma_prov_vq_create(struct vrdma_ctrl *ctrl,
-		       struct snap_vrdma_vq_create_dpa_attr *attr)
+vrdma_prov_vq_create(struct vrdma_ctrl *ctrl, struct spdk_vrdma_qp *vqp,
+		       struct snap_vrdma_vq_create_attr *attr)
 {
 	struct snap_vrdma_queue *vq = NULL;
 
@@ -106,7 +106,7 @@ vrdma_prov_vq_create(struct vrdma_ctrl *ctrl,
 	// virtnet_vq_get_common_config(dev, attr->idx, &attr->common);
 
 	if (prov_ops && prov_ops->q_ops && prov_ops->q_ops->create)
-		vq = prov_ops->q_ops->create(ctrl, attr);
+		vq = prov_ops->q_ops->create(ctrl, vqp, attr);
 
 	// if (!vq)
 	// 	return NULL;

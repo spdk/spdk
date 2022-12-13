@@ -50,8 +50,7 @@ flexio_uintptr_t vrdma_dpa_mm_cq_ring_alloc(struct flexio_process *process,
 		log_error("Failed to allocate memory, err(%d)", errno);
 		return 0;
 	}
-	log_notice("===naliu ring_bsize %lu, cq_size %d, elem_size %d",
-			 ring_bsize, cq_size, elem_size);
+
 	cqe = cq_ring_src;
 	/* Init CQEs and set ownership bit */
 	for (i = 0; i < cq_size; i++)
@@ -169,8 +168,6 @@ int vrdma_dpa_init_qp_rx_ring(struct vrdma_dpa_vq *dpa_vq,
 		log_error("Failed to allocate wqe memory, err(%d)", errno);
 		return -ENOMEM;
 	}
-	log_notice("===naliu num_of_wqes %d, sizeof(struct mlx5_wqe_data_seg %d",
-			num_of_wqes, sizeof(struct mlx5_wqe_data_seg));
 
 	/* Initialize WQEs' data segment */
 	dseg = rx_wqes;

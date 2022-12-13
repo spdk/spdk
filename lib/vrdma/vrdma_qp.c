@@ -439,7 +439,6 @@ int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 				struct spdk_vrdma_cq *sq_vcq)
 {
 	struct snap_vrdma_vq_create_attr q_attr;
-	struct snap_vrdma_vq_create_dpa_attr q_dpa_attr = {};
 	uint32_t rq_buff_size, sq_buff_size, q_buff_size;
 	uint16_t sq_meta_size;
 
@@ -500,23 +499,10 @@ int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 	vqp->sq.comm.hop = aqe->req.create_qp_req.sq_hop;
 
 	if (ctrl->dpa_enabled) {
-		q_dpa_attr.bdev = NULL;
-		q_dpa_attr.pd = vqp->vpd->ibpd;
-		q_dpa_attr.sq_size = VRDMA_MAX_DMA_SQ_SIZE_PER_VQP;
-		q_dpa_attr.rq_size = VRDMA_MAX_DMA_RQ_SIZE_PER_VQP;
-		q_dpa_attr.tx_elem_size = VRDMA_DMA_ELEM_SIZE;
-		q_dpa_attr.rx_elem_size = VRDMA_DMA_ELEM_SIZE;
-		q_dpa_attr.vqpn = vqp->qp_idx;
-		q_dpa_attr.sq_msix_vector = vqp->sq_vcq->veq->vector_idx;
-		q_dpa_attr.rq_msix_vector = vqp->rq_vcq->veq->vector_idx;
-		q_dpa_attr.rq = vqp->rq;
-		q_dpa_attr.sq = vqp->sq;
-		q_dpa_attr.lkey = vqp->qp_mr->rkey;
-		q_dpa_attr.qdb_idx = vqp->qdb_idx;
 		SPDK_NOTICELOG("===================naliu vrdma_qp.c=================");
 		SPDK_NOTICELOG("vqp %d qdb_idx %d lkey %#x rkey %#x\n",
 				vqp->qp_idx, vqp->qdb_idx, vqp->qp_mr->lkey, vqp->qp_mr->rkey);
-		vqp->snap_queue = vrdma_prov_vq_create(ctrl, &q_dpa_attr);
+		vqp->snap_queue = vrdma_prov_vq_create(ctrl, vqp, &q_attr);
 		SPDK_NOTICELOG("===naliu vrdma_create_vq...end\n");
 	}
 	SPDK_NOTICELOG("\nlizh vrdma_create_vq...done\n");

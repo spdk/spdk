@@ -41,6 +41,7 @@ SNAP_RPC_INC_DIR :=$(SPDK_ROOT_DIR)/snap-rdma/rpc
 SNAP_VRDMA_INC_DIR :=$(SPDK_ROOT_DIR)/snap-rdma/vrdma
 USR_INCLUDE := /usr/include
 
+CFLAGS += -DDEBUG
 CFLAGS += $(ENV_CFLAGS)
 CFLAGS += -I$(SNAP_INC_DIR) -I$(SNAP_CTL_INC_DIR) -I$(SNAP_RPC_INC_DIR) -I$(SNAP_VRDMA_INC_DIR) -I$(USR_INCLUDE)
 C_SRCS = vrdma_dpa.c vrdma_dpa_mm.c vrdma_dpa_vq.c
