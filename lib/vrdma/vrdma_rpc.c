@@ -168,7 +168,7 @@ spdk_vrdma_rpc_qp_resp_decoder[] = {
     {
         "node",
         offsetof(struct spdk_vrdma_rpc_qp_attr, node_id),
-        spdk_json_decode_uint32,
+        spdk_json_decode_uint64,
         true
     },
     {
@@ -186,7 +186,7 @@ spdk_vrdma_rpc_qp_resp_decoder[] = {
     {
         "gid",
         offsetof(struct spdk_vrdma_rpc_qp_attr, gid_ip),
-        spdk_json_decode_uint32,
+        spdk_json_decode_uint64,
         true
     },
     {
@@ -249,11 +249,12 @@ spdk_vrdma_client_qp_resp_handler(struct spdk_vrdma_rpc_client *client,
         SPDK_ERRLOG("Failed to decode result for qp_msg\n");
         goto free_attr;
     }
-    if (!attr->sf_mac)
+    if (!attr->gid_ip) {
+        SPDK_NOTICELOG("Skip decode result for zero gid_ip\n");
         goto free_attr;
-
+    }
     SPDK_NOTICELOG("lizh spdk_vrdma_client_qp_resp_handler decode:\n"
-    "emu_manager %s node_id=0x%x  dev_id=0x%x vqpn=0x%x gid_ip=0x%x "
+    "emu_manager %s node_id=0x%lx  dev_id=0x%x vqpn=0x%x gid_ip=0x%lx "
     "mac=0x%lx remote_node_id=0x%x remote_dev_id =0x%x "
     "remote_vqpn=0x%x bk_qpn=0x%x\n",
     attr->emu_manager, attr->node_id, attr->dev_id, attr->vqpn,
@@ -342,7 +343,7 @@ spdk_vrdma_rpc_qp_req_decoder[] = {
     {
         "node",
         offsetof(struct spdk_vrdma_rpc_qp_attr, node_id),
-        spdk_json_decode_uint32
+        spdk_json_decode_uint64
     },
     {
         "device",
@@ -357,7 +358,7 @@ spdk_vrdma_rpc_qp_req_decoder[] = {
     {
         "gid",
         offsetof(struct spdk_vrdma_rpc_qp_attr, gid_ip),
-        spdk_json_decode_uint32
+        spdk_json_decode_uint64
     },
     {
         "remote_node",
@@ -401,10 +402,10 @@ spdk_vrdma_rpc_qp_info_json(struct spdk_vrdma_rpc_qp_msg *info,
 	spdk_json_write_object_begin(w);
     spdk_json_write_named_string(w, "emu_manager", info->emu_manager);
     if (send_qp_info) {
-	    spdk_json_write_named_uint32(w, "node", info->qp_attr.node_id);
+	    spdk_json_write_named_uint64(w, "node", info->qp_attr.node_id);
         spdk_json_write_named_uint32(w, "device", info->qp_attr.dev_id);
         spdk_json_write_named_uint32(w, "vqpn", info->qp_attr.vqpn);
-        spdk_json_write_named_uint32(w, "gid", info->qp_attr.gid_ip);
+        spdk_json_write_named_uint64(w, "gid", info->qp_attr.gid_ip);
 	    spdk_json_write_named_uint32(w, "remote_node", info->remote_node_id);
         spdk_json_write_named_uint32(w, "remote_device", info->remote_dev_id);
         spdk_json_write_named_uint32(w, "remote_vqpn", info->remote_vqpn);
@@ -414,7 +415,8 @@ spdk_vrdma_rpc_qp_info_json(struct spdk_vrdma_rpc_qp_msg *info,
             temp = info->qp_attr.mac[5-i] & 0xFF;
             sf_mac |= temp << (i * 8);
         }
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_qp_info_json...mac=0x%lx\n", sf_mac);
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_qp_info_json...mac=0x%lx gid_ip=0x%lx\n",
+        sf_mac, info->qp_attr.gid_ip);
         spdk_json_write_named_uint64(w, "mac", sf_mac);
     }
     spdk_json_write_object_end(w);
@@ -559,8 +561,8 @@ spdk_vrdma_rpc_srv_qp_req_handle(struct spdk_jsonrpc_request *request,
         goto invalid;
     }
     SPDK_NOTICELOG("lizh spdk_vrdma_rpc_srv_qp_req_handle decode:\n"
-    "emu_manager %s node_id=0x%x  dev_id=0x%x vqpn=0x%x gid_ip=0x%x "
-    "mac=0x%lx remote_node_id=0x%x remote_dev_id =0x%x remote_vqpn=0x%x"
+    "emu_manager %s node_id=0x%lx  dev_id=0x%x vqpn=0x%x gid_ip=0x%lx "
+    "mac=0x%lx remote_node_id=0x%x remote_dev_id =0x%x remote_vqpn=0x%x "
     "bk_qpn=0x%x qp_state=%d\n",
     attr->emu_manager, attr->node_id, attr->dev_id, attr->vqpn,
     attr->gid_ip, attr->sf_mac, attr->remote_node_id, attr->remote_dev_id,

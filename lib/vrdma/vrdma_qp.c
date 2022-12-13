@@ -494,8 +494,9 @@ int vrdma_qp_notify_remote_by_rpc(struct vrdma_ctrl *ctrl, uint32_t vqpn,
     msg.remote_vqpn = remote_vqpn;
     msg.bk_qpn = lqp->bk_qpn;
 	SPDK_NOTICELOG("lizh vrdma_qp_notify_remote_by_rpc...vqpn %d bk_qpn 0x%x "
-	"remote_qpn 0x%x remote_node_id 0x%x remote_vqpn 0x%x ...start\n",
-    vqpn, msg.bk_qpn, bk_qp->remote_qpn, msg.remote_node_id, msg.remote_vqpn);
+	"remote_qpn 0x%x remote_node_id 0x%x remote_vqpn 0x%x gid_ip 0x%lx...start\n",
+    vqpn, msg.bk_qpn, bk_qp->remote_qpn, msg.remote_node_id, msg.remote_vqpn,
+	msg.qp_attr.gid_ip);
     if (spdk_vrdma_rpc_send_qp_msg(ctrl, ctrl->rpc.node_rip, &msg)) {
         SPDK_ERRLOG("Fail to send local qp %d to remote qp %d\n",
             vqpn, remote_vqpn);

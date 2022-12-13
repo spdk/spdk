@@ -104,10 +104,10 @@ enum spdk_vrdma_rpc_qp_state {
 };
 
 struct vrdma_bk_qp_connect {
-	uint32_t node_id; /* classic ip:bridge IP */
+	uint64_t node_id; /* classic ip:bridge IP */
 	uint32_t dev_id; /* vhca_id */
 	uint32_t vqpn;
-	uint32_t gid_ip; /* SF IP */
+	uint64_t gid_ip; /* SF IP */
 	uint8_t mac[6]; /* SF MAC */
 };
 
@@ -123,10 +123,10 @@ struct spdk_vrdma_rpc_qp_msg {
 
 struct spdk_vrdma_rpc_qp_attr {
     char *emu_manager;
-    uint32_t node_id;
+    uint64_t node_id;
     uint32_t dev_id;
     uint32_t vqpn;
-    uint32_t gid_ip;
+    uint64_t gid_ip;
     uint64_t sf_mac;
 	uint32_t remote_node_id;
 	uint32_t remote_dev_id;
