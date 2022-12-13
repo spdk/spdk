@@ -32,7 +32,7 @@ get_cipher() {
 }
 
 format_key() {
-	base64 <(echo -n "$1")
+	base64 -w 0 <(echo -n "$1")
 }
 
 uuid2nguid() {
