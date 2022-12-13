@@ -254,6 +254,8 @@ static uint32_t g_io_queue_size = UINT16_MAX;
 static uint32_t g_sock_zcopy_threshold;
 static char *g_sock_threshold_impl;
 
+static uint8_t g_transport_tos = 0;
+
 /* When user specifies -Q, some error messages are rate limited.  When rate
  * limited, we only print the error message every g_quiet_count times the
  * error occurs.
@@ -1855,6 +1857,7 @@ usage(char *program_name)
 	printf("\t[--psk-identity <val> Default PSK ID, e.g. psk.spdk.io (only applies when sock_impl == ssl)]\n");
 	printf("\t[--zerocopy-threshold <val> data is sent with MSG_ZEROCOPY if size is greater than this val. Default: 0 to disable it]\n");
 	printf("\t[--zerocopy-threshold-sock-impl <impl> specify the sock implementation to set zerocopy_threshold]\n");
+	printf("\t[--transport-tos <val> specify the type of service for RDMA transport. Default: 0 (disabled)]\n");
 }
 
 static void
@@ -2363,6 +2366,8 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"zerocopy-threshold", required_argument, NULL, PERF_ZEROCOPY_THRESHOLD},
 #define PERF_SOCK_IMPL		266
 	{"zerocopy-threshold-sock-impl", required_argument, NULL, PERF_SOCK_IMPL},
+#define PERF_TRANSPORT_TOS		267
+	{"transport-tos", required_argument, NULL, PERF_TRANSPORT_TOS},
 	/* Should be the last element */
 	{0, 0, 0, 0}
 };
@@ -2606,6 +2611,14 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		case PERF_SOCK_IMPL:
 			g_sock_threshold_impl = optarg;
 			break;
+		case PERF_TRANSPORT_TOS:
+			val = spdk_strtol(optarg, 10);
+			if (val < 0) {
+				fprintf(stderr, "Invalid TOS value\n");
+				return 1;
+			}
+			g_transport_tos = val;
+			break;
 		default:
 			usage(argv[0]);
 			return 1;
@@ -2789,6 +2802,8 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	opts->data_digest = g_data_digest;
 	opts->keep_alive_timeout_ms = g_keep_alive_timeout_in_ms;
 	memcpy(opts->hostnqn, trid_entry->hostnqn, sizeof(opts->hostnqn));
+
+	opts->transport_tos = g_transport_tos;
 
 	return true;
 }
