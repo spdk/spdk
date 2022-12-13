@@ -82,6 +82,7 @@ class UIBdevs(UINode):
         UIVirtioBlkBdev(self)
         UIVirtioScsiBdev(self)
         UIRaidBdev(self)
+        UIUringBdev(self)
 
 
 class UILvolStores(UINode):
@@ -863,5 +864,38 @@ class UIRaidBdev(UIBdev):
 
         Arguments:
         name - raid bdev name
+        """
+        self.delete(name)
+
+
+class UIUringBdev(UIBdev):
+    def __init__(self, parent):
+        UIBdev.__init__(self, "uring", parent)
+
+    def delete(self, name):
+        self.get_root().bdev_uring_delete(name=name)
+
+    def ui_command_create(self, filename, name, block_size):
+        """
+        Construct a uring bdev.
+
+        Arguments:
+        filename - Path to device or file.
+        name - Name to use for bdev.
+        block_size - Integer, block size to use when constructing bdev.
+        """
+
+        block_size = self.ui_eval_param(block_size, "number", None)
+        ret_name = self.get_root().bdev_uring_create(filename=filename,
+                                                     name=name,
+                                                     block_size=int(block_size))
+        self.shell.log.info(ret_name)
+
+    def ui_command_delete(self, name):
+        """
+        Deletes a uring bdev.
+
+        Arguments:
+        name - uring bdev name
         """
         self.delete(name)

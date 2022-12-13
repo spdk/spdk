@@ -261,6 +261,15 @@ class UIRoot(UINode):
         rpc.bdev.bdev_raid_delete(self.client, **kwargs)
 
     @verbose
+    def bdev_uring_create(self, **kwargs):
+        response = rpc.bdev.bdev_uring_create(self.client, **kwargs)
+        return response
+
+    @verbose
+    def bdev_uring_delete(self, **kwargs):
+        rpc.bdev.bdev_uring_delete(self.client, **kwargs)
+
+    @verbose
     @is_method_available
     def bdev_virtio_scsi_get_devices(self):
         if self.is_init:
