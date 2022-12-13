@@ -639,7 +639,7 @@ bdevperf_end_task(struct bdevperf_task *task)
 			job->run_time_in_usec = end_tsc * SPDK_SEC_TO_USEC / spdk_get_ticks_hz();
 
 			/* keep histogram info before channel is destroyed */
-			spdk_bdev_channel_get_histogram(job->bdev, job->ch, bdevperf_channel_get_histogram_cb,
+			spdk_bdev_channel_get_histogram(job->ch, bdevperf_channel_get_histogram_cb,
 							job->histogram);
 
 			spdk_put_io_channel(job->ch);
