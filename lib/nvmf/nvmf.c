@@ -1676,6 +1676,7 @@ spdk_nvmf_poll_group_dump_stat(struct spdk_nvmf_poll_group *group, struct spdk_j
 	spdk_json_write_named_uint32(w, "current_admin_qpairs", group->stat.current_admin_qpairs);
 	spdk_json_write_named_uint32(w, "current_io_qpairs", group->stat.current_io_qpairs);
 	spdk_json_write_named_uint64(w, "pending_bdev_io", group->stat.pending_bdev_io);
+	spdk_json_write_named_uint64(w, "completed_nvme_io", group->stat.completed_nvme_io);
 
 	spdk_json_write_named_array_begin(w, "transports");
 

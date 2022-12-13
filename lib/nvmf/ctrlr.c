@@ -4137,6 +4137,9 @@ _nvmf_request_complete(void *ctx)
 		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
 		assert(sgroup != NULL);
 		is_aer = req->cmd->nvme_cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
+		if (spdk_likely(qpair->qid != 0)) {
+			qpair->group->stat.completed_nvme_io++;
+		}
 
 		/*
 		 * Set the crd value.

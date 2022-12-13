@@ -128,6 +128,8 @@ struct spdk_nvmf_poll_group_stat {
 	/* current io qpair count */
 	uint32_t current_io_qpairs;
 	uint64_t pending_bdev_io;
+	/* NVMe IO commands completed (excludes admin commands) */
+	uint64_t completed_nvme_io;
 };
 
 /**
