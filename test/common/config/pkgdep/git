@@ -369,9 +369,12 @@ function install_extra_pkgs() {
 	if [[ $INSTALL_QEMU == true ]]; then
 		install qemu-system-x86 qemu-img \
 			|| install qemu-system-x86 qemu-utils \
-			|| install qemu \
-			|| :
-	fi
+			|| install qemu
+
+		# Install extra dependency which was removed from Qemu 7.2 source tree
+		install libslirp-devel \
+			|| install libslirp-dev
+	fi || :
 }
 
 function install_vagrant() {
