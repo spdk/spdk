@@ -47,8 +47,6 @@ struct vrdma_dpa_emu_dev_ctx {
 	struct mlx5dv_devx_uar *sf_uar; 
 	struct flexio_uar *flexio_uar;
 	struct flexio_outbox *db_sf_outbox;
-	// flexio_uintptr_t dev_ctx_daddr; /*point to used_idx*/
-	// struct flexio_mkey *dmem_key;   /*used for used_idx*/
 	struct flexio_msix *flexio_msix;
 	uint16_t msix_config_vector;
 	struct vrdma_dpa_msix *msix;

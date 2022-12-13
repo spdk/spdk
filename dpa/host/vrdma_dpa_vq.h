@@ -52,14 +52,9 @@ struct vrdma_prov_vq_init_attr {
 	uint16_t rq_msix_vector;
 	uint16_t num_msix;
 	uint32_t qdb_idx;
-	// uint16_t hw_available_index;
-	// uint16_t hw_used_index;
-	// uint16_t max_tunnel_desc;
 
 	struct vrdma_host_vq_ctx host_vq_ctx; /*host rdma parameters*/
 	struct vrdma_arm_vq_ctx arm_vq_ctx; /*arm rdma parameters*/
-
-	// struct virtnet_vq_common_config common;
 };
 
 
@@ -79,10 +74,7 @@ struct vrdma_dpa_vq {
  	struct vrdma_dpa_ctx *dpa_ctx; /*used for db handler*/
 	struct vrdma_dpa_emu_dev_ctx *emu_dev_ctx; /*used for msix handler*/
 	int idx;
-	// enum virtnet_dpa_vq_type vq_type;
 	struct flexio_msix *msix;
-        /*Todo: check counters debug*/
-	// struct vrdma_dpa_vq_counters *host_vq_counters; /*used for debug*/
         /*now don't have sf, so sf_mkey means emu manager mkey*/
 	uint32_t sf_mkey;
 	uint32_t emu_mkey;

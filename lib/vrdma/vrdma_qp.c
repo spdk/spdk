@@ -493,8 +493,6 @@ int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 		q_dpa_attr.rq = vqp->rq;
 		q_dpa_attr.sq = vqp->sq;
 		q_dpa_attr.lkey = vqp->qp_mr->rkey;
-		// q_dpa_attr.sq_pi_addr = &vqp->qp_pi->pi.sq_pi;
-		// q_dpa_attr.rq_pi_addr = &vqp->qp_pi->pi.rq_pi;
 		q_dpa_attr.qdb_idx = vqp->qdb_idx;
 		SPDK_NOTICELOG("===================naliu vrdma_qp.c=================");
 		SPDK_NOTICELOG("vqp %d qdb_idx %d lkey %#x rkey %#x\n",

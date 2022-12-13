@@ -639,9 +639,6 @@ vrdma_dpa_vq_event_handler_init(const struct vrdma_dpa_vq *dpa_vq,
 	eh_data->dma_qp.qp_num = flexio_qp_get_qp_num(dpa_vq->dma_qp.qp);
 	eh_data->dma_qp.dbr_daddr = dpa_vq->dma_qp.dbr_daddr;
 
-	eh_data->dma_qp.tx_wqe_buff = dpa_vq->dma_qp.tx_wqe_buff;
-	eh_data->dma_qp.sqd_mkey = dpa_vq->dma_qp.tx_wqe_buff;
-
 	/*prepare host and arm wr&pi address which used for rdma write*/
 	eh_data->dma_qp.host_vq_ctx = attr->host_vq_ctx;
 	eh_data->dma_qp.arm_vq_ctx  = attr->arm_vq_ctx;

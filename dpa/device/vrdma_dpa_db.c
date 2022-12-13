@@ -20,43 +20,6 @@
 #include "vrdma_dpa_dev_com.h"
 #include "vrdma_dpa_cq.h"
 
-#if 0
-flexio_dev_event_handler_t vrdma_db_handler;
-void vrdma_db_handler(flexio_uintptr_t thread_arg)
-{
-	printf("%s: ---------naliu vrdma_db_handler start.\n", __func__);
-	struct  vrdma_dpa_event_handler_ctx *ehctx;
-	struct flexio_dev_thread_ctx *dtctx;
-
-	flexio_dev_get_thread_ctx(&dtctx);
-	ehctx = (struct vrdma_dpa_event_handler_ctx *)thread_arg;
-
-	/*later need modify*/
-	if (ehctx->dma_qp.state != VRDMA_DPA_VQ_STATE_RDY) {
-		printf("%s: vqp status is not READY.\n", __func__);
-		goto out;
-	}
-
-	flexio_dev_outbox_config(dtctx, ehctx->emu_outbox);
-
-out:
-	ehctx->guest_db_cq_ctx.ci++;
-	flexio_dev_dbr_cq_set_ci(ehctx->guest_db_cq_ctx.dbr,
-				 ehctx->guest_db_cq_ctx.ci);
-
-	flexio_dev_db_ctx_arm(dtctx, ehctx->guest_db_cq_ctx.cqn,
-			      ehctx->emu_db_to_cq_id);
-	flexio_dev_cq_arm(dtctx, ehctx->guest_db_cq_ctx.ci,
-			  ehctx->guest_db_cq_ctx.cqn);
-
-	printf("\n------naliu vrdma_db_handler cqn: %#x, emu_db_to_cq_id %d,"
-		"guest_db_cq_ctx.ci %d\n", ehctx->guest_db_cq_ctx.cqn,
-		ehctx->emu_db_to_cq_id, ehctx->guest_db_cq_ctx.ci);
-
-	flexio_dev_return();
-}	
-#endif
-
 static int get_next_qp_swqe_index(uint32_t pi, uint32_t depth)
 {
 	return (pi % depth);
@@ -81,7 +44,7 @@ static flexio_dev_status_t swqe_seg_ctrl_set_rdmaw_immd(union flexio_dev_sqe_seg
 
 	return FLEXIO_DEV_STATUS_SUCCESS;
 }
-// #if 0
+
 static void vrdma_dpa_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 					uint32_t remote_key,
 					uint64_t remote_addr,

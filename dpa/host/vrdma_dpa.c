@@ -18,16 +18,11 @@
 #include "dpa/vrdma_dpa_common.h"
 #include "include/spdk/vrdma.h"
 
-// #include "lib/vrdma/vrdma_providers.h"
 
 // #define DEV_ELF_PATH "/opt/mellanox/mlnx_vrdma/providers/dpa/dpa_dev.elf"
 #define DEV_ELF_PATH "/images/work/vrdma-debug/na-vrdma1124/dpa/device/dpa_dev.elf"
 #define PRINF_BUF_SZ	(4 * 2048)
 extern struct vrdma_vq_ops vrdma_dpa_vq_ops;
-
-// static char *vrdma_dpa_device_rpc_handler[] = {
-// 	[VRDMA_DPA_DEVICE_MSIX_SEND] = "vrdma_dpa_msix_send_rpc_handler",
-// };
 
 static
 int extract_dev_elf(const char *dev_elf_fname, void **elf_buf, size_t *elf_size)
@@ -230,8 +225,6 @@ int vrdma_dpa_emu_dev_init(const struct vrdma_prov_emu_dev_init_attr *attr,
 	dpa_ctx = attr->dpa_handler;
 	emu_dev_ctx->flexio_process = dpa_ctx->flexio_process;
 
-	// emu_dev_ctx->sf_uar = mlx5dv_devx_alloc_uar(attr->sf_ibv_ctx,
-	// 					    MLX5DV_UAR_ALLOC_TYPE_NC);
 	emu_dev_ctx->sf_uar = dpa_ctx->emu_uar;
 
 
@@ -257,36 +250,6 @@ int vrdma_dpa_emu_dev_init(const struct vrdma_prov_emu_dev_init_attr *attr,
 		goto err_outbox_create;
 	}
 
-	/* device heap memory for used_idx cache*/
-	#if 0
-	err = flexio_buf_dev_alloc(dpa_ctx->flexio_process,
-				   sizeof(struct vrdma_dpa_device_ctx),
-				   &emu_dev_ctx->dev_ctx_daddr);
-	if (err) {
-		log_error("Failed to allocate dev ctx, err(%d)", err);
-		goto err_dev_ctx;
-	}
-
-	err = flexio_buf_dev_memset(dpa_ctx->flexio_process, 0,
-				    sizeof(struct vrdma_dpa_device_ctx),
-				    emu_dev_ctx->dev_ctx_daddr);
-	if (err) {
-		log_error("Failed to clear dev ctx, err(%d)", err);
-		goto err_dev_ctx_clear;
-	}
-
-	mkeyattr.pd = attr->sf_dev_pd;
-	mkeyattr.daddr = emu_dev_ctx->dev_ctx_daddr;
-	mkeyattr.len = sizeof(struct vrdma_dpa_device_ctx);
-	mkeyattr.access = IBV_ACCESS_LOCAL_WRITE;
-	err = flexio_device_mkey_create(dpa_ctx->flexio_process, &mkeyattr,
-					&emu_dev_ctx->dmem_key);
-	if (err) {
-		log_error("Failed to create dumem mkey, err(%d)", errno);
-		goto err_mkey_create;
-	}
-	#endif /*for used_idx cache*/
-
 	err = vrdma_dpa_device_msix_create(dpa_ctx->flexio_process, attr,
 					     emu_dev_ctx, attr->num_msix);
 	if (err) {
@@ -298,11 +261,6 @@ int vrdma_dpa_emu_dev_init(const struct vrdma_prov_emu_dev_init_attr *attr,
 	return 0;
 
 err_msix_create:
-	// flexio_device_mkey_destroy(emu_dev_ctx->dmem_key);
-// err_mkey_create:
-// err_dev_ctx_clear:
-	// flexio_buf_dev_free(dpa_ctx->flexio_process, emu_dev_ctx->dev_ctx_daddr);
-// err_dev_ctx:
 	flexio_outbox_destroy(emu_dev_ctx->db_sf_outbox);
 err_outbox_create:
 	flexio_uar_destroy(emu_dev_ctx->flexio_uar);
@@ -322,9 +280,6 @@ void vrdma_dpa_emu_dev_uninit(void *emu_dev_handler)
 	vrdma_dpa_device_msix_destroy(emu_dev_ctx->flexio_msix,
 					emu_dev_ctx->msix_config_vector,
 					emu_dev_ctx);
-	// flexio_device_mkey_destroy(emu_dev_ctx->dmem_key);
-	// flexio_buf_dev_free(emu_dev_ctx->flexio_process,
-			//     emu_dev_ctx->dev_ctx_daddr);
 	flexio_outbox_destroy(emu_dev_ctx->db_sf_outbox);
 	flexio_uar_destroy(emu_dev_ctx->flexio_uar);
 	mlx5dv_devx_free_uar(emu_dev_ctx->sf_uar);
@@ -355,13 +310,11 @@ int vrdma_dpa_device_msix_send(void *handler)
 #endif
 
 static struct vrdma_prov_ops vrdma_dpa_prov_ops = {
-	// .info.name = "vrdma-dpa",
 	.q_ops = &vrdma_dpa_vq_ops,
 	.init = vrdma_dpa_init,
 	.uninit = vrdma_dpa_uninit,
 	.emu_dev_init = vrdma_dpa_emu_dev_init,
 	.emu_dev_uninit = vrdma_dpa_emu_dev_uninit,
-	//.caps_query = vrdma_dpa_caps_query,
 	//.msix_send = vrdma_dpa_device_msix_send,
 };
 

@@ -52,13 +52,6 @@ struct vrdma_dpa_cq {
 	struct flexio_cq *cq;
 };
 
-struct vrdma_dpa_vq_counters {
-        /*Todo: can used it to do debug*/
-	// uint64_t received_desc;
-	// uint64_t completed_desc;
-	// uint8_t batch_num;
-};
-
 struct vrdma_dpa_vq_desc {
 	uint64_t addr;
 	uint32_t len;
@@ -90,12 +83,12 @@ struct vrdma_dpa_ring_ctx {
 	uint32_t ci;
 };
 
-/* virtnet_dpa_vq_state values:
+/* vrdma_dpa_vq_state values:
  *
- * @VIRTNET_DPA_VQ_STATE_INIT - VQ is created, but cannot handle doorbells.
- * @VIRTNET_DPA_VQ_STATE_SUSPEND - VQ is suspended, no outgoing DMA, can be restarted.
- * @VIRTNET_DPA_VQ_STATE_RDY - Can handle doorbells.
- * @VIRTNET_DPA_VQ_STATE_ERR - VQ is in error state.
+ * @VRDMA_DPA_VQ_STATE_INIT - VQ is created, but cannot handle doorbells.
+ * @VRDMA_DPA_VQ_STATE_SUSPEND - VQ is suspended, no outgoing DMA, can be restarted.
+ * @VRDMA_DPA_VQ_STATE_RDY - Can handle doorbells.
+ * @VRDMA_DPA_VQ_STATE_ERR - VQ is in error state.
  */
 enum vrdma_dpa_vq_state {
 	VRDMA_DPA_VQ_STATE_INIT = 1 << 0,
@@ -103,36 +96,6 @@ enum vrdma_dpa_vq_state {
 	VRDMA_DPA_VQ_STATE_SUSPEND = 1 << 2,
 	VRDMA_DPA_VQ_STATE_ERR = 1 << 3,
 };
-
-/* ctrl queue is in tunneling mode */
-// enum virtq_types {
-// 	VIRTNET_DPA_SX = 0,
-// 	VIRTNET_DPA_RX = 1,
-// 	VIRTNET_DPA_TUNNELING = 2,
-// };
-
-// struct virtnet_dpa_avail_ring {
-// 	uint64_t base_addr;
-// 	uint16_t next_index;
-// 	uint16_t done;
-// 	uint32_t reserved;
-// };
-
-// struct virtnet_dpa_used_ring {
-// 	uint64_t base_addr;
-// 	uint16_t next_index;
-// 	uint16_t reserved[6];
-// };
-
-// struct virtnet_dpa_desc_table {
-// 	uint64_t base_addr;
-// };
-
-// struct virtnet_dpa_splitq {
-// 	struct virtnet_dpa_avail_ring avail_ring;
-// 	struct virtnet_dpa_desc_table desc_table;
-// 	struct virtnet_dpa_used_ring used_ring;
-// };
 
 struct vrdma_window_dev_config {
 	uint32_t window_id;
@@ -156,14 +119,6 @@ struct vrdma_host_vq_ctx {
         /*now no sf, sf_ means emu manager*/
 	uint32_t sf_crossing_mkey;
 	uint32_t emu_crossing_mkey;
-	// uint32_t dumem_mkey; /*not used now*/
-	// uint16_t depth;
-	/* padding to align with 64bit for following members which
-	 * contains pointers.
-	 */
-	// uint16_t reserved;
-	// struct virtnet_dpa_splitq splitq;
-	// enum vrdma_dpa_vq_state state;
 } __attribute__((__packed__, aligned(8)));
 
 struct vrdma_arm_vq_ctx {
@@ -179,40 +134,21 @@ struct vrdma_arm_vq_ctx {
 
 
 struct vrdma_dpa_event_handler_ctx {
-	uint32_t dbg_signature; /*used to confirm event handler is right*/
-	// struct vrdma_dpa_device_ctx *dev_ctx; /* point to used_idx_cache*/
-	// uint16_t net_hdr_len;
-	// uint8_t run_once;
-	// uint8_t type;
-	// uint8_t batch;
-	// uint8_t is_chain;
-	// uint8_t virtio_version_1_0;
+	uint32_t dbg_signature; /*Todo: used to confirm event handler is right*/
 
 	struct vrdma_dpa_cq_ctx guest_db_cq_ctx;
 	struct vrdma_dpa_cq_ctx msix_cq_ctx;
-	// struct vrdma_dpa_ring_ctx ring_ctx;
-	// struct virtnet_dpa_vq_counters eh_vq_counters;
-	// struct virtnet_dpa_vq_counters *host_vq_counters;
 
 	struct flexio_cq *db_handler_cq;
-	// struct virtnet_dpa_sqrq sqrq;
+
 	uint32_t emu_outbox;
         /*now no sf, so sf_outbox mean emu_manager_outbox*/
 	uint32_t sf_outbox;
-	// struct virtnet_dpa_vq_features features;
+
 	uint32_t emu_db_to_cq_id;
 	uint32_t window_id;
 	flexio_uintptr_t window_base_addr;
-	// uint16_t hw_available_index;
-	// uint16_t hw_used_index;
 	uint16_t vq_index;
-	// uint16_t vq_depth; /**/
-	// struct virtnet_dpa_cpu_counters cpu_cnts;
-
-	/*virtnet used to send msix,but vrdma don't need, vrdma get cqn from rq.wqe*/
-	// struct {
-	// 	uint32_t cqn;
-	// } msix;
 	uint16_t rq_last_fetch_start;
 	uint16_t sq_last_fetch_start;
 	uint16_t rq_last_fetch_end;
@@ -222,7 +158,6 @@ struct vrdma_dpa_event_handler_ctx {
 		uint32_t hw_qp_sq_pi;
 		uint32_t hw_qp_cq_ci;
 		uint32_t hw_qp_depth;
-		// uint16_t max_tunnel_desc;
 		uint16_t qp_num;
 		uint16_t reserved1;
 		flexio_uintptr_t qp_sq_buff;
@@ -231,13 +166,10 @@ struct vrdma_dpa_event_handler_ctx {
 		struct vrdma_host_vq_ctx host_vq_ctx; /*host rdma parameters*/
 		struct vrdma_arm_vq_ctx arm_vq_ctx; /*arm rdma parameters*/
 		enum vrdma_dpa_vq_state state;
-		flexio_uintptr_t tx_wqe_buff; /*for test*/
-		struct flexio_mkey *sqd_mkey;/*for test*/
 	} dma_qp;
 };
 
 struct vrdma_dpa_vq_data {
-	struct vrdma_dpa_vq_counters vq_counters;
 	struct vrdma_dpa_event_handler_ctx ehctx;
 	enum dpa_sync_state_t state;
 	uint8_t err;
