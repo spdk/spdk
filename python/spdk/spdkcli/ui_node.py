@@ -9,6 +9,8 @@ import json
 
 
 def convert_bytes_to_human(size):
+    if size == 0:
+        return "%3.1f%s" % (size, "bytes")
     if not size:
         return ""
     for x in ["bytes", "K", "M", "G", "T"]:
