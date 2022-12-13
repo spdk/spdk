@@ -75,6 +75,8 @@
 	spdk_nvmf_get_transport_type;
 	spdk_nvmf_get_transport_name;
 	spdk_nvmf_tgt_add_transport;
+        spdk_nvmf_tgt_pause_polling;
+        spdk_nvmf_tgt_resume_polling;
 	spdk_nvmf_transport_listen;
 	spdk_nvmf_transport_stop_listen;
 	spdk_nvmf_transport_stop_listen_async;

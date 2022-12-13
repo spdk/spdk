@@ -1072,6 +1072,46 @@ void spdk_nvmf_tgt_add_transport(struct spdk_nvmf_tgt *tgt,
 				 void *cb_arg);
 
 /**
+ * Function to be called once target pause is complete.
+ *
+ * \param cb_arg Callback argument passed to this function.
+ * \param status 0 if it completed successfully, or negative errno if it failed.
+ */
+typedef void (*spdk_nvmf_tgt_pause_polling_cb_fn)(void *cb_arg, int status);
+
+/**
+ * Pause polling on the given target.
+ *
+ * \param tgt The target to pause
+ * \param cb_fn A callback that will be called once the target is paused
+ * \param cb_arg A context argument passed to cb_fn.
+ *
+ * \return 0 if it completed successfully, or negative errno if it failed.
+ */
+int spdk_nvmf_tgt_pause_polling(struct spdk_nvmf_tgt *tgt, spdk_nvmf_tgt_pause_polling_cb_fn cb_fn,
+				void *cb_arg);
+
+/**
+ * Function to be called once target resume is complete.
+ *
+ * \param cb_arg Callback argument passed to this function.
+ * \param status 0 if it completed successfully, or negative errno if it failed.
+ */
+typedef void (*spdk_nvmf_tgt_resume_polling_cb_fn)(void *cb_arg, int status);
+
+/**
+ * Resume polling on the given target.
+ *
+ * \param tgt The target to resume
+ * \param cb_fn A callback that will be called once the target is resumed
+ * \param cb_arg A context argument passed to cb_fn.
+ *
+ * \return 0 if it completed successfully, or negative errno if it failed.
+ */
+int spdk_nvmf_tgt_resume_polling(struct spdk_nvmf_tgt *tgt,
+				 spdk_nvmf_tgt_resume_polling_cb_fn cb_fn, void *cb_arg);
+
+/**
  * Add listener to transport and begin accepting new connections.
  *
  * \param transport The transport to add listener to.

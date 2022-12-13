@@ -133,6 +133,7 @@ nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 	TAILQ_REMOVE(&tgt->poll_groups, group, link);
 	pthread_mutex_unlock(&tgt->mutex);
 
+	assert(!(tgt->state == NVMF_TGT_PAUSING || tgt->state == NVMF_TGT_RESUMING));
 	nvmf_tgt_cleanup_poll_group(group);
 }
 
@@ -321,6 +322,8 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *opts)
 				sizeof(struct spdk_nvmf_poll_group),
 				tgt->name);
 
+	tgt->state = NVMF_TGT_RUNNING;
+
 	TAILQ_INSERT_HEAD(&g_nvmf_tgts, tgt, link);
 
 	return tgt;
@@ -384,6 +387,8 @@ spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt,
 		      spdk_nvmf_tgt_destroy_done_fn cb_fn,
 		      void *cb_arg)
 {
+	assert(!(tgt->state == NVMF_TGT_PAUSING || tgt->state == NVMF_TGT_RESUMING));
+
 	tgt->destroy_cb_fn = cb_fn;
 	tgt->destroy_cb_arg = cb_arg;
 
@@ -793,6 +798,130 @@ spdk_nvmf_tgt_add_transport(struct spdk_nvmf_tgt *tgt,
 			      _nvmf_tgt_add_transport,
 			      ctx,
 			      _nvmf_tgt_add_transport_done);
+}
+
+struct nvmf_tgt_pause_ctx {
+	struct spdk_nvmf_tgt *tgt;
+	spdk_nvmf_tgt_pause_polling_cb_fn cb_fn;
+	void *cb_arg;
+};
+
+static void
+_nvmf_tgt_pause_polling_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct nvmf_tgt_pause_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	ctx->tgt->state = NVMF_TGT_PAUSED;
+
+	ctx->cb_fn(ctx->cb_arg, status);
+	free(ctx);
+}
+
+static void
+_nvmf_tgt_pause_polling(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(ch);
+
+	spdk_poller_unregister(&group->poller);
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+int
+spdk_nvmf_tgt_pause_polling(struct spdk_nvmf_tgt *tgt, spdk_nvmf_tgt_pause_polling_cb_fn cb_fn,
+			    void *cb_arg)
+{
+	struct nvmf_tgt_pause_ctx *ctx;
+
+	SPDK_DTRACE_PROBE2(nvmf_tgt_pause_polling, tgt, tgt->name);
+
+	switch (tgt->state) {
+	case NVMF_TGT_PAUSING:
+	case NVMF_TGT_RESUMING:
+		return -EBUSY;
+	case NVMF_TGT_RUNNING:
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		return -ENOMEM;
+	}
+
+
+	tgt->state = NVMF_TGT_PAUSING;
+
+	ctx->tgt = tgt;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	spdk_for_each_channel(tgt,
+			      _nvmf_tgt_pause_polling,
+			      ctx,
+			      _nvmf_tgt_pause_polling_done);
+	return 0;
+}
+
+static void
+_nvmf_tgt_resume_polling_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct nvmf_tgt_pause_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	ctx->tgt->state = NVMF_TGT_RUNNING;
+
+	ctx->cb_fn(ctx->cb_arg, status);
+	free(ctx);
+}
+
+static void
+_nvmf_tgt_resume_polling(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(ch);
+
+	assert(group->poller == NULL);
+	group->poller = SPDK_POLLER_REGISTER(nvmf_poll_group_poll, group, 0);
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+int
+spdk_nvmf_tgt_resume_polling(struct spdk_nvmf_tgt *tgt, spdk_nvmf_tgt_resume_polling_cb_fn cb_fn,
+			     void *cb_arg)
+{
+	struct nvmf_tgt_pause_ctx *ctx;
+
+	SPDK_DTRACE_PROBE2(nvmf_tgt_resume_polling, tgt, tgt->name);
+
+	switch (tgt->state) {
+	case NVMF_TGT_PAUSING:
+	case NVMF_TGT_RESUMING:
+		return -EBUSY;
+	case NVMF_TGT_PAUSED:
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		return -ENOMEM;
+	}
+
+	tgt->state = NVMF_TGT_RESUMING;
+
+	ctx->tgt = tgt;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	spdk_for_each_channel(tgt,
+			      _nvmf_tgt_resume_polling,
+			      ctx,
+			      _nvmf_tgt_resume_polling_done);
+	return 0;
 }
 
 struct spdk_nvmf_subsystem *

@@ -24,6 +24,14 @@
 #define NVMF_MIN_CNTLID 1
 #define NVMF_MAX_CNTLID 0xFFEF
 
+enum spdk_nvmf_tgt_state {
+	NVMF_TGT_IDLE = 0,
+	NVMF_TGT_RUNNING,
+	NVMF_TGT_PAUSING,
+	NVMF_TGT_PAUSED,
+	NVMF_TGT_RESUMING,
+};
+
 enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_INACTIVE = 0,
 	SPDK_NVMF_SUBSYSTEM_ACTIVATING,
@@ -45,6 +53,8 @@ struct spdk_nvmf_tgt {
 	uint32_t				max_subsystems;
 
 	enum spdk_nvmf_tgt_discovery_filter	discovery_filter;
+
+	enum spdk_nvmf_tgt_state                state;
 
 	/* Array of subsystem pointers of size max_subsystems indexed by sid */
 	struct spdk_nvmf_subsystem		**subsystems;
