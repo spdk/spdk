@@ -29,6 +29,10 @@ DEFINE_STUB(__io_uring_get_cqe, int, (struct io_uring *ring, struct io_uring_cqe
 DEFINE_STUB(io_uring_submit, int, (struct io_uring *ring), 0);
 DEFINE_STUB(io_uring_queue_init, int, (unsigned entries, struct io_uring *ring, unsigned flags), 0);
 DEFINE_STUB_V(io_uring_queue_exit, (struct io_uring *ring));
+DEFINE_STUB(spdk_sock_group_provide_buf, int, (struct spdk_sock_group *group, void *buf,
+		size_t len, void *ctx), 0);
+DEFINE_STUB(spdk_sock_group_get_buf, size_t, (struct spdk_sock_group *group, void **buf,
+		void **ctx), 0);
 
 static void
 _req_cb(void *cb_arg, int len)
