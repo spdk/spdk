@@ -34,7 +34,7 @@ dpdk_pci_init(void)
 	}
 
 	if (year == 22 && month == 11) {
-		if (minor != 0) {
+		if (minor > 1) {
 			/* It is possible that LTS minor release changed private ABI, so we
 			 * cannot assume fn_table_2211 works for minor releases.  As 22.11
 			 * minor releases occur, this will need to be updated to either affirm
