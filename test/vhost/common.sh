@@ -1121,7 +1121,8 @@ function run_fio() {
 		local vm_num=${vm%%:*}
 		local vmdisks=${vm#*:}
 
-		sed "s@filename=@filename=$vmdisks@" $job_file | vm_exec $vm_num "cat > /root/$job_fname"
+		sed "s@filename=@filename=$vmdisks@;s@description=\(.*\)@description=\1 (VM=$vm_num)@" "$job_file" \
+			| vm_exec $vm_num "cat > /root/$job_fname"
 
 		if $fio_gtod_reduce; then
 			vm_exec $vm_num "echo 'gtod_reduce=1' >> /root/$job_fname"
