@@ -90,6 +90,12 @@ function nvmf_host_management() {
 	# and so it will never shut down. Just kill it.
 	kill -9 $perfpid || true
 
+	# Since we abruptly terminate $perfpid above, we need to do some cleanup on our own.
+	# In particular, we need to get rid of the cpu lock files that may potentially prevent
+	# the next instance of bdevperf from running.
+	# FIXME: Can't we just SIGTERM $perfpid above?
+	rm -f /var/tmp/spdk_cpu_lock*
+
 	# Run bdevperf
 	$rootdir/build/examples/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "0") -q 64 -o 65536 -w verify -t 1
 
