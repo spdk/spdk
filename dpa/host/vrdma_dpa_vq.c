@@ -965,7 +965,7 @@ vrdma_dpa_vq_create(struct vrdma_ctrl *ctrl, struct snap_vrdma_vq_create_dpa_att
 	/*prepare dpa qp created parameters*/
 	attr.tisn_or_qpn = virtq->dma_q->sw_qp.qp->verbs_qp->qp_num;
 	log_notice("==========================naliu sw qpn %#x", attr.tisn_or_qpn);
-	attr.vq_idx = virtq->idx;
+	attr.vq_idx = q_attr->vqpn;
 	attr.sq_msix_vector = q_attr->sq_msix_vector;
 	attr.rq_msix_vector = q_attr->rq_msix_vector;
 	attr.tx_qsize = q_attr->sq_size;

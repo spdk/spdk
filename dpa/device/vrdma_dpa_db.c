@@ -63,7 +63,7 @@ static int get_next_qp_swqe_index(uint32_t pi, uint32_t depth)
 }
 
 static flexio_dev_status_t swqe_seg_ctrl_set_rdmaw_immd(union flexio_dev_sqe_seg *swqe, uint32_t sq_pi,
-						 uint32_t sq_number, uint32_t ce, uint16_t imm)
+						 uint32_t sq_number, uint32_t ce, uint32_t imm)
 {
 	uint32_t ds_count;
 	uint32_t opcode;
@@ -71,17 +71,13 @@ static flexio_dev_status_t swqe_seg_ctrl_set_rdmaw_immd(union flexio_dev_sqe_seg
 
 	/* default for common case */
 	mod = 0;
-
 	opcode = MLX5_CTRL_SEG_OPCODE_RDMA_WRITE_WITH_IMMEDIATE;
-	// opcode = MLX5_CTRL_SEG_OPCODE_RDMA_WRITE;
-	// opcode = MLX5_CTRL_SEG_OPCODE_RDMA_READ;
 	ds_count = 3;
 	/* Fill out 1-st segment (Control) */
 	swqe->ctrl.idx_opcode = cpu_to_be32((mod << 24) | ((sq_pi & 0xffff) << 8) | opcode);
 	swqe->ctrl.qpn_ds = cpu_to_be32((sq_number << 8) | ds_count);
 	swqe->ctrl.signature_fm_ce_se = cpu_to_be32(ce << 2);
-	swqe->ctrl.general_id = imm;
-	// swqe->ctrl.general_id = 0;
+	swqe->ctrl.general_id = cpu_to_be32(imm);
 
 	return FLEXIO_DEV_STATUS_SUCCESS;
 }
@@ -145,9 +141,9 @@ static int vrdma_dpa_rq_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 	size = (rq_pi - rq_last_pi) * wqebb_size;
 	vrdma_dpa_wr_pi_fetch(ehctx, remote_key, remote_addr, local_key,
 				local_addr, size, rq_pi);
-	printf("---naliu rq: index %#x, wqebb_size %#x, size %#x, remote_key %#x, remote_addr %#lx,"
-			"local_key %#x, local_addr %#lx\n",
-			index, wqebb_size, size, remote_key, remote_addr, local_key, local_addr);
+	// printf("---naliu rq: index %#x, wqebb_size %#x, size %#x, remote_key %#x, remote_addr %#lx,"
+	// 		"local_key %#x, local_addr %#lx\n",
+	// 		index, wqebb_size, size, remote_key, remote_addr, local_key, local_addr);
 	return rq_pi;
 }
 
@@ -171,20 +167,13 @@ static int vrdma_dpa_sq_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 	remote_addr  = ehctx->dma_qp.arm_vq_ctx.sq_buff_addr +
 		      wqebb_size * index;
 
-	// /*----------------------test begin-----------------*/
-	// remote_key = ehctx->dma_qp.host_vq_ctx.emu_crossing_mkey;
-	// remote_addr = ehctx->dma_qp.host_vq_ctx.rq_wqe_buff_pa + wqebb_size * index;
-	// /*----------------------test end-----------------*/
-
-
-
 	size = (sq_pi - sq_last_pi) * wqebb_size;
 	vrdma_dpa_wr_pi_fetch(ehctx, remote_key, remote_addr, local_key,
 				local_addr, size, sq_pi);
 
-	printf("---naliu sq: index %#x, wqebb_size %#x, size %#x, remote_key %#x, remote_addr %#lx,"
-			"local_key %#x, local_addr %#lx\n",
-			index, wqebb_size, size, remote_key, remote_addr, local_key, local_addr);
+	// printf("---naliu sq: index %#x, wqebb_size %#x, size %#x, remote_key %#x, remote_addr %#lx,"
+	// 		"local_key %#x, local_addr %#lx\n",
+	// 		index, wqebb_size, size, remote_key, remote_addr, local_key, local_addr);
 	return sq_pi;
 }
 
@@ -213,9 +202,9 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 	flexio_dev_window_ptr_acquire(dtctx, 0,
 		(flexio_uintptr_t **)&ehctx->window_base_addr);
 
-	printf("---naliu emu_outbox %d, emu_crossing_mkey %d\n",
-		ehctx->emu_outbox, ehctx->dma_qp.host_vq_ctx.emu_crossing_mkey);
-	printf("---naliu window_base_addr %#x\n", ehctx->window_base_addr);
+	// printf("---naliu vq_idx %d, emu_outbox %d, emu_crossing_mkey %d\n",
+		// ehctx->vq_index, ehctx->emu_outbox, ehctx->dma_qp.host_vq_ctx.emu_crossing_mkey);
+	// printf("---naliu window_base_addr %#x\n", ehctx->window_base_addr);
 
 	printf("---naliu rq_wqe_buff_pa %#lx, rq_pi_paddr %#lx, rq_wqebb_cnt %#x,"
 			"rq_wqebb_size %#x, sq_wqe_buff_pa %#lx, sq_pi_paddr %#lx,"
