@@ -5106,8 +5106,8 @@ build_trid_from_log_page_entry(struct spdk_nvme_transport_id *trid,
 
 	trid->trtype = entry->trtype;
 	trid->adrfam = entry->adrfam;
-	memcpy(trid->traddr, entry->traddr, sizeof(trid->traddr));
-	memcpy(trid->trsvcid, entry->trsvcid, sizeof(trid->trsvcid));
+	memcpy(trid->traddr, entry->traddr, sizeof(entry->traddr));
+	memcpy(trid->trsvcid, entry->trsvcid, sizeof(entry->trsvcid));
 	memcpy(trid->subnqn, entry->subnqn, sizeof(trid->subnqn));
 
 	/* We want the traddr, trsvcid and subnqn fields to be NULL-terminated.
