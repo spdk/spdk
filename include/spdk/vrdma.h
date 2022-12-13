@@ -47,8 +47,8 @@
 struct spdk_vrdma_sf {
 	char sf_name[VRDMA_DEV_NAME_LEN];
 	uint32_t gid_idx;
-	uint32_t remote_ip;
-	uint32_t ip;
+	uint64_t remote_ip;
+	uint64_t ip;
 	uint8_t mac[6];
 	uint8_t dest_mac[6];
 };
