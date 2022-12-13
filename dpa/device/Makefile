@@ -24,7 +24,7 @@ DPA_LINKER_SCRIPT = vrdma_dpa_linker.ld
 .PHONY: all clean 
 
 all: $(dpa_dev_SOURCES)
-	$(CROSS_CC) $(dpa_dev_CFLAGS) -o dpa_dev.elf $(dpa_dev_SOURCES) \
+	$(CROSS_CC) $(dpa_dev_CFLAGS) -o ../dpa_dev.elf $(dpa_dev_SOURCES) \
 	 -T$(DPA_LINKER_SCRIPT) $(INCDIR) $(ADD_HEADER) $(DEFINES) \
 	 $(dpa_dev_LDADD) $(dpa_dev_LDFLAGS)
 

@@ -17,10 +17,9 @@
 #include "vrdma_dpa_vq.h"
 #include "dpa/vrdma_dpa_common.h"
 #include "include/spdk/vrdma.h"
+#include "stdio.h"
 
-
-// #define DEV_ELF_PATH "/opt/mellanox/mlnx_vrdma/providers/dpa/dpa_dev.elf"
-#define DEV_ELF_PATH "/images/work/vrdma-debug/na-vrdma1124/dpa/device/dpa_dev.elf"
+#define DEV_ELF_PATH "dpa/dpa_dev.elf"
 #define PRINF_BUF_SZ	(4 * 2048)
 extern struct vrdma_vq_ops vrdma_dpa_vq_ops;
 
