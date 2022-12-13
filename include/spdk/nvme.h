@@ -275,8 +275,15 @@ struct spdk_nvme_ctrlr_opts {
 	 * 12B (header) + 2B (hash) + 176B (base64 for 1024b + crc32) + 3B (colons) + 1B (NULL) + 6B (extra space for future)
 	 */
 	char psk[200];
+
+	/**
+	 * It is used for RDMA transport.
+	 *
+	 * Set the IP protocol type of service value for RDMA transport. Default is 0, which means that the TOS will not be set.
+	 */
+	uint8_t transport_tos;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_opts) == 817, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_opts) == 818, "Incorrect size");
 
 /**
  * NVMe acceleration operation callback.

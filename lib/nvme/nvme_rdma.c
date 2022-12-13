@@ -1023,6 +1023,18 @@ nvme_rdma_addr_resolved(struct nvme_rdma_qpair *rqpair, int ret)
 #endif
 	}
 
+	if (rqpair->qpair.ctrlr->opts.transport_tos != SPDK_NVME_TRANSPORT_TOS_DISABLED) {
+#ifdef SPDK_CONFIG_RDMA_SET_TOS
+		uint8_t tos = rqpair->qpair.ctrlr->opts.transport_tos;
+		ret = rdma_set_option(rqpair->cm_id, RDMA_OPTION_ID, RDMA_OPTION_ID_TOS, &tos, sizeof(tos));
+		if (ret) {
+			SPDK_NOTICELOG("Can't apply RDMA_OPTION_ID_TOS %u, ret %d\n", tos, ret);
+		}
+#else
+		SPDK_DEBUGLOG(nvme, "transport_tos is not supported\n");
+#endif
+	}
+
 	ret = rdma_resolve_route(rqpair->cm_id, NVME_RDMA_TIME_OUT_IN_MS);
 	if (ret) {
 		SPDK_ERRLOG("rdma_resolve_route\n");

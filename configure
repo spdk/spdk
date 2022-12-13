@@ -846,6 +846,15 @@ than or equal to 4.14 will see significantly reduced performance.
 		echo "RDMA_OPTION_ID_ACK_TIMEOUT is not supported"
 	fi
 
+	if echo -e '#include <rdma/rdma_cma.h>\n' \
+		'int main(void) { return !!RDMA_OPTION_ID_TOS; }\n' \
+		| "${BUILD_CMD[@]}" -c - 2> /dev/null; then
+		CONFIG[RDMA_SET_TOS]="y"
+	else
+		CONFIG[RDMA_SET_TOS]="n"
+		echo "RDMA_OPTION_ID_TOS is not supported"
+	fi
+
 	if [ "${CONFIG[RDMA_PROV]}" == "mlx5_dv" ]; then
 		if ! echo -e '#include <spdk/stdinc.h>\n' \
 			'#include <infiniband/mlx5dv.h>\n' \

@@ -110,6 +110,11 @@ tags will appear in SPDK's log at the warn level. As the SPDK application exits,
 will log a summary of how many times `SPDK_LOG_DEPRECATED()` was called for each
 tag that was logged at least once.
 
+### nvme
+
+Added `transport_tos` to `spdk_nvme_ctrlr_opts` to support setting of the "type of service"
+value in the IPv4 header. Only RDMA is supported at this time.
+
 ## v22.09
 
 ### accel

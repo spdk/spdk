@@ -171,6 +171,8 @@ extern pid_t g_spdk_nvme_pid;
 #define SPDK_NVME_TRANSPORT_ACK_TIMEOUT_DISABLED	(0)
 #define SPDK_NVME_DEFAULT_TRANSPORT_ACK_TIMEOUT	SPDK_NVME_TRANSPORT_ACK_TIMEOUT_DISABLED
 
+#define SPDK_NVME_TRANSPORT_TOS_DISABLED	(0)
+
 #define MIN_KEEP_ALIVE_TIMEOUT_IN_MS	(10000)
 
 /* We want to fit submission and completion rings each in a single 2MB
