@@ -414,6 +414,24 @@ void vrdma_destroy_backend_qp(struct vrdma_ctrl *ctrl, uint32_t vqp_idx)
 	}
 }
 
+static void vrdma_vqp_rx_cb(struct snap_dma_q *q, const void *data,
+									uint32_t data_len, uint32_t imm_data)
+{
+	uint16_t pi = imm_data & 0xFFFF;
+	struct spdk_vrdma_qp *vqp;
+	struct snap_vrdma_queue *snap_vqp;
+
+	snap_vqp = (struct snap_vrdma_queue *)q->uctx;
+	vqp = container_of(snap_vqp, struct spdk_vrdma_qp, snap_queue);
+	vqp->sm_state = VRDMA_QP_STATE_WQE_PARSE;
+	vqp->qp_pi->pi.sq_pi = pi;
+	vqp->sq.comm.num_to_parse = pi - vqp->sq.comm.pre_pi;
+
+	vrdma_dpa_rx_cb(vqp, VRDMA_QP_SM_OP_OK);
+
+	SPDK_NOTICELOG("VRDMA: rx cb done, imm_data 0x%x\n", imm_data);
+}
+
 int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe,
 				struct spdk_vrdma_qp *vqp,
@@ -432,6 +450,7 @@ int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 	q_attr.tx_elem_size = VRDMA_DMA_ELEM_SIZE;
 	q_attr.rx_elem_size = VRDMA_DMA_ELEM_SIZE;
 	q_attr.vqpn = vqp->qp_idx;
+	q_attr.rx_cb = vrdma_vqp_rx_cb;
 
 	if (!ctrl->dpa_enabled) {
 		vqp->snap_queue = ctrl->sctrl->q_ops->create(ctrl->sctrl, &q_attr);

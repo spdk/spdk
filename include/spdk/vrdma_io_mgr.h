@@ -92,5 +92,6 @@ void vrdma_qp_sm_dma_cb(struct snap_dma_completion *self, int status);
 void vrdma_qp_sm_init(struct spdk_vrdma_qp *vqp);
 void vrdma_qp_sm_start(struct spdk_vrdma_qp *vqp);
 void vrdma_dump_vqp_stats(struct vrdma_ctrl *ctrl, struct spdk_vrdma_qp *vqp);
-
+void vrdma_dpa_rx_cb(struct spdk_vrdma_qp *vqp,
+			enum vrdma_qp_sm_op_status status);
 #endif
