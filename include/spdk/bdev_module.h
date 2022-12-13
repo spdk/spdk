@@ -267,6 +267,11 @@ enum spdk_bdev_io_status {
 	SPDK_BDEV_IO_STATUS_FAILED = -1,
 	SPDK_BDEV_IO_STATUS_PENDING = 0,
 	SPDK_BDEV_IO_STATUS_SUCCESS = 1,
+
+	/* This may be used as the size of an error status array by negation.
+	 * Hence, this should be updated when adding new error statuses.
+	 */
+	SPDK_MIN_BDEV_IO_STATUS = SPDK_BDEV_IO_STATUS_AIO_ERROR,
 };
 
 struct spdk_bdev_name {
