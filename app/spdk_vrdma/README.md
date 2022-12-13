@@ -95,7 +95,18 @@ echo 4096 > /sys/devices/system/node/node0/hugepages/hugepages-2048kB/nr_hugepag
 
 #Note:Must run spdk on ARM before dpdk on host to make sure device reset successfully.
 
-How to use DPDK test on host 
+#Configure SF IP on ARM
+
+ifconfig enp3s0f0s0 100.10.20.2/24
+
+#Run RPC on ARM to configure SF for traffic
+
+<spdk_vrdma_view>snap-rdma/rpc/snap_rpc.py controller_vrdma_configue -d <dev_id> -e mlx5_0 -r <remote-arm-ip> -o <local-arm-ip> -n <local sf-dev>
+-c <remote_sf_dev_mac> -u <ipv4 addr of peer sf> -i <ipv4 addr of local sf> -g <source gid id>
+
+snap-rdma/rpc/snap_rpc.py controller_vrdma_configue -d 0 -e mlx5_0 -r 0x0aed7927  -o 0x0aed793b -n mlx5_2  -c 0x622122312311  -u 0x640a1401 -i 0x640a1402 -g 1
+
+How to use DPDK test on host
 =================================
 
 How to get code
@@ -132,52 +143,12 @@ sudo ./build/app/dpdk-testpmd --log-level=.,8 -a 5e:00.3 --iova-mode=pa  -- -i -
 
 How to run testpmd command
 ==============================
-create vrdma adminq 5e:00.3 0    #Will get admin-queue by vrdma device 5e:00.3
+create vrdma qp <dev_name> <dev_id> <qp_cnt> <start_qp_idx> <start_qdb_idx> <qp_state>
 
-#Run RPC on ARM to configure SF
+#One example: create vrdma qp af:00.2 0 1 2 4 3
 
-snap-rdma/rpc/snap_rpc.py controller_vrdma_configue -d 0 -e mlx5_0 -n mlx5_2  
-
-create vrdma adminq msg 0 106    #Will create PD index 0 for vrdma device on ARM.
-
-create vrdma qp 0 4              #Will 4 qps for test traffic
-
-#Configure qp connect information by RPC command on ARM
-
-snap-rdma/rpc/snap_rpc.py controller_vrdma_configue -d 0 -e mlx5_0  -v 2 -b 2 -c   0x66778899aa -u  0x1234 -i 0x5678
-
-modify vrdma qp 0 2 1 2 0x1234 0x5678  #Set qp to init
-
-modify vrdma qp 0 2 2 2 0x1234 0x5678  #Set qp to RTR
-
-modify vrdma qp 0 2 3 2 0x1234 0x5678  #Set qp to RTS
+#Note:start_qp_idx should be more than 1.
 
 #dump vrdma adminq 0             #Will dump admin-queue message
 
-#del vrdma adminq 0
-
-How to run RPC command on ARM
-==============================
-#configure SF
-
-#<spdk_vrdma_view> snap-rdma/rpc/snap_rpc.py controller_vrdma_configue -d <device_id> -e mlx5_0 -n <sf_name >
-
-#Configure qp connect information by RPC command.
-
-#<spdk_vrdma_view> snap-rdma/rpc/snap_rpc.py controller_vrdma_configue -d <device_id> -e mlx5_0 -v <vrdma_qpn > -b <backend_rqpn> -c <dest_mac> -u <subnet_prefix> -i <intf_id>
-
-One example:
-
-snap-rdma/rpc/snap_rpc.py controller_vrdma_configue -d 0 -e mlx5_0  -v 2 -b 2 -c 0x66778899aa -u  0x1234 -i 0x5678
-
-How to run testpmd command for qp ready
-==============================
-#modify vrdma qp <dev_id> <qp_idx> <qp_state> <dest_qpn> <sip> <dip>
-
-One example:
-
-modify vrdma qp 0 2 1 2 0x1234 0x5678  #Set qp to init
-
-modify vrdma qp 0 2 2 2 0x1234 0x5678  #Set qp to RTR
-
-modify vrdma qp 0 2 3 2 0x1234 0x5678  #Set qp to RTS
+#del vrdma qp <dev_id> <qp_idx>
