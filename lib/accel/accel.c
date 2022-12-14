@@ -35,6 +35,10 @@
 #define ACCEL_BUFFER_BASE		((void *)(1ull << 63))
 #define ACCEL_BUFFER_OFFSET_MASK	((uintptr_t)ACCEL_BUFFER_BASE - 1)
 
+struct accel_module {
+	struct spdk_accel_module_if *module;
+};
+
 /* Largest context size for all accel modules */
 static size_t g_max_accel_module_size = sizeof(struct spdk_accel_task);
 
@@ -53,7 +57,7 @@ static TAILQ_HEAD(, spdk_accel_crypto_key) g_keyring = TAILQ_HEAD_INITIALIZER(g_
 static struct spdk_spinlock g_keyring_spin;
 
 /* Global array mapping capabilities to modules */
-static struct spdk_accel_module_if *g_modules_opc[ACCEL_OPC_LAST] = {};
+static struct accel_module g_modules_opc[ACCEL_OPC_LAST] = {};
 static char *g_modules_opc_override[ACCEL_OPC_LAST] = {};
 
 static const char *g_opcode_strings[ACCEL_OPC_LAST] = {
@@ -160,8 +164,8 @@ spdk_accel_get_opc_module_name(enum accel_opcode opcode, const char **module_nam
 		return -EINVAL;
 	}
 
-	if (g_modules_opc[opcode]) {
-		*module_name = g_modules_opc[opcode]->name;
+	if (g_modules_opc[opcode].module) {
+		*module_name = g_modules_opc[opcode].module->name;
 	} else {
 		return -ENOENT;
 	}
@@ -270,7 +274,7 @@ spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src,
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
-	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_COPY];
+	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_COPY].module;
 	struct spdk_io_channel *module_ch = accel_ch->module_ch[ACCEL_OPC_COPY];
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
@@ -303,7 +307,7 @@ spdk_accel_submit_dualcast(struct spdk_io_channel *ch, void *dst1,
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
-	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_DUALCAST];
+	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_DUALCAST].module;
 	struct spdk_io_channel *module_ch = accel_ch->module_ch[ACCEL_OPC_DUALCAST];
 
 	if ((uintptr_t)dst1 & (ALIGN_4K - 1) || (uintptr_t)dst2 & (ALIGN_4K - 1)) {
@@ -345,7 +349,7 @@ spdk_accel_submit_compare(struct spdk_io_channel *ch, void *src1,
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
-	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_COMPARE];
+	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_COMPARE].module;
 	struct spdk_io_channel *module_ch = accel_ch->module_ch[ACCEL_OPC_COMPARE];
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
@@ -377,7 +381,7 @@ spdk_accel_submit_fill(struct spdk_io_channel *ch, void *dst,
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
-	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_FILL];
+	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_FILL].module;
 	struct spdk_io_channel *module_ch = accel_ch->module_ch[ACCEL_OPC_FILL];
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
@@ -407,7 +411,7 @@ spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *crc_dst,
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
-	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_CRC32C];
+	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_CRC32C].module;
 	struct spdk_io_channel *module_ch = accel_ch->module_ch[ACCEL_OPC_CRC32C];
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
@@ -437,7 +441,7 @@ spdk_accel_submit_crc32cv(struct spdk_io_channel *ch, uint32_t *crc_dst,
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
-	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_CRC32C];
+	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_CRC32C].module;
 	struct spdk_io_channel *module_ch = accel_ch->module_ch[ACCEL_OPC_CRC32C];
 
 	if (iov == NULL) {
@@ -477,7 +481,7 @@ spdk_accel_submit_copy_crc32c(struct spdk_io_channel *ch, void *dst,
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
-	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_COPY_CRC32C];
+	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_COPY_CRC32C].module;
 	struct spdk_io_channel *module_ch = accel_ch->module_ch[ACCEL_OPC_COPY_CRC32C];
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
@@ -512,7 +516,7 @@ spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst,
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
-	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_COPY_CRC32C];
+	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_COPY_CRC32C].module;
 	struct spdk_io_channel *module_ch = accel_ch->module_ch[ACCEL_OPC_COPY_CRC32C];
 	uint64_t nbytes;
 	uint32_t i;
@@ -563,7 +567,7 @@ spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, uint64_t nbyte
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
-	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_COMPRESS];
+	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_COMPRESS].module;
 	struct spdk_io_channel *module_ch = accel_ch->module_ch[ACCEL_OPC_COMPRESS];
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
@@ -596,7 +600,7 @@ spdk_accel_submit_decompress(struct spdk_io_channel *ch, struct iovec *dst_iovs,
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
-	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_DECOMPRESS];
+	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_DECOMPRESS].module;
 	struct spdk_io_channel *module_ch = accel_ch->module_ch[ACCEL_OPC_DECOMPRESS];
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
@@ -628,7 +632,7 @@ spdk_accel_submit_encrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_k
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
-	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_ENCRYPT];
+	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_ENCRYPT].module;
 	struct spdk_io_channel *module_ch = accel_ch->module_ch[ACCEL_OPC_ENCRYPT];
 
 	if (spdk_unlikely(!dst_iovs || !dst_iovcnt || !src_iovs || !src_iovcnt || !key || !block_size)) {
@@ -662,7 +666,7 @@ spdk_accel_submit_decrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_k
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
-	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_DECRYPT];
+	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_DECRYPT].module;
 	struct spdk_io_channel *module_ch = accel_ch->module_ch[ACCEL_OPC_DECRYPT];
 
 	if (spdk_unlikely(!dst_iovs || !dst_iovcnt || !src_iovs || !src_iovcnt || !key || !block_size)) {
@@ -1341,7 +1345,7 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 			assert(task->src_domain == NULL);
 			assert(task->dst_domain == NULL);
 
-			module = g_modules_opc[task->op_code];
+			module = g_modules_opc[task->op_code].module;
 			module_ch = accel_ch->module_ch[task->op_code];
 
 			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_AWAIT_TASK);
@@ -1640,11 +1644,11 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 		return -EINVAL;
 	}
 
-	if (g_modules_opc[ACCEL_OPC_ENCRYPT] != g_modules_opc[ACCEL_OPC_DECRYPT]) {
+	if (g_modules_opc[ACCEL_OPC_ENCRYPT].module != g_modules_opc[ACCEL_OPC_DECRYPT].module) {
 		/* hardly ever possible, but let's check and warn the user */
 		SPDK_ERRLOG("Different accel modules are used for encryption and decryption\n");
 	}
-	module = g_modules_opc[ACCEL_OPC_ENCRYPT];
+	module = g_modules_opc[ACCEL_OPC_ENCRYPT].module;
 
 	if (!module) {
 		SPDK_ERRLOG("No accel module found assigned for crypto operation\n");
@@ -1843,7 +1847,7 @@ accel_create_channel(void *io_device, void *ctx_buf)
 
 	/* Assign modules and get IO channels for each */
 	for (i = 0; i < ACCEL_OPC_LAST; i++) {
-		accel_ch->module_ch[i] = g_modules_opc[i]->get_io_channel();
+		accel_ch->module_ch[i] = g_modules_opc[i].module->get_io_channel();
 		/* This can happen if idxd runs out of channels. */
 		if (accel_ch->module_ch[i] == NULL) {
 			goto err;
@@ -1932,7 +1936,7 @@ spdk_accel_initialize(void)
 	TAILQ_FOREACH(accel_module, &spdk_accel_module_list, tailq) {
 		for (op = 0; op < ACCEL_OPC_LAST; op++) {
 			if (accel_module->supports_opcode(op)) {
-				g_modules_opc[op] = accel_module;
+				g_modules_opc[op].module = accel_module;
 				SPDK_DEBUGLOG(accel, "OPC 0x%x now assigned to %s\n", op, accel_module->name);
 			}
 		}
@@ -1952,18 +1956,18 @@ spdk_accel_initialize(void)
 				rc = -EINVAL;
 				goto error;
 			}
-			g_modules_opc[op] = accel_module;
+			g_modules_opc[op].module = accel_module;
 		}
 	}
 
-	if (g_modules_opc[ACCEL_OPC_ENCRYPT] != g_modules_opc[ACCEL_OPC_DECRYPT]) {
+	if (g_modules_opc[ACCEL_OPC_ENCRYPT].module != g_modules_opc[ACCEL_OPC_DECRYPT].module) {
 		SPDK_ERRLOG("Different accel modules are assigned to encrypt and decrypt operations");
 		return -EINVAL;
 	}
 
 #ifdef DEBUG
 	for (op = 0; op < ACCEL_OPC_LAST; op++) {
-		assert(g_modules_opc[op] != NULL);
+		assert(g_modules_opc[op].module != NULL);
 	}
 #endif
 	rc = spdk_iobuf_register_module("accel");
@@ -2135,7 +2139,7 @@ spdk_accel_finish(spdk_accel_fini_cb cb_fn, void *cb_arg)
 			free(g_modules_opc_override[op]);
 			g_modules_opc_override[op] = NULL;
 		}
-		g_modules_opc[op] = NULL;
+		g_modules_opc[op].module = NULL;
 	}
 
 	spdk_io_device_unregister(&spdk_accel_module_list, NULL);

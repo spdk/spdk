@@ -106,7 +106,8 @@ spdk_memory_domain_push_data(struct spdk_memory_domain *dd, void *dctx, struct i
 }
 
 /* global vars and setup/cleanup functions used for all test functions */
-struct spdk_accel_module_if g_module = {};
+struct spdk_accel_module_if g_module_if = {};
+struct accel_module g_module = { .module = &g_module_if };
 struct spdk_io_channel *g_ch = NULL;
 struct accel_io_channel *g_accel_ch = NULL;
 struct sw_accel_io_channel *g_sw_ch = NULL;
@@ -147,16 +148,16 @@ test_setup(void)
 		return -1;
 	}
 
-	g_module.submit_tasks = sw_accel_submit_tasks;
-	g_module.name = "software";
+	g_module_if.submit_tasks = sw_accel_submit_tasks;
+	g_module_if.name = "software";
 	for (i = 0; i < ACCEL_OPC_LAST; i++) {
 		g_accel_ch->module_ch[i] = g_module_ch;
-		g_modules_opc[i] = &g_module;
+		g_modules_opc[i] = g_module;
 	}
 	g_sw_ch = (struct sw_accel_io_channel *)((char *)g_module_ch + sizeof(
 				struct spdk_io_channel));
 	TAILQ_INIT(&g_sw_ch->tasks_to_complete);
-	g_module.supports_opcode = _supports_opcode;
+	g_module_if.supports_opcode = _supports_opcode;
 	return 0;
 }
 
@@ -1004,17 +1005,17 @@ test_sequence_completion_error(void)
 	struct ut_sequence ut_seq;
 	struct iovec src_iovs, dst_iovs;
 	char buf[4096], tmp[4096];
-	struct spdk_accel_module_if *modules[ACCEL_OPC_LAST];
+	struct accel_module modules[ACCEL_OPC_LAST];
 	int i, rc, completed;
 
 	ioch = spdk_accel_get_io_channel();
 	SPDK_CU_ASSERT_FATAL(ioch != NULL);
 
 	/* Override the submit_tasks function */
-	g_module.submit_tasks = ut_sequnce_submit_tasks;
+	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
 	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
 		modules[i] = g_modules_opc[i];
-		g_modules_opc[i] = &g_module;
+		g_modules_opc[i] = g_module;
 	}
 
 	memset(buf, 0, sizeof(buf));
@@ -1471,21 +1472,21 @@ test_sequence_copy_elision(void)
 	struct ut_sequence ut_seq;
 	struct iovec src_iovs[4], dst_iovs[4], exp_iovs[2];
 	char buf[4096], tmp[4][4096];
-	struct spdk_accel_module_if *modules[ACCEL_OPC_LAST];
+	struct accel_module modules[ACCEL_OPC_LAST];
 	int i, rc, completed;
 
 	ioch = spdk_accel_get_io_channel();
 	SPDK_CU_ASSERT_FATAL(ioch != NULL);
 
 	/* Override the submit_tasks function */
-	g_module.submit_tasks = ut_sequnce_submit_tasks;
+	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
 	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
 		g_seq_operations[i].complete_status = 0;
 		g_seq_operations[i].submit_status = 0;
 		g_seq_operations[i].count = 0;
 
 		modules[i] = g_modules_opc[i];
-		g_modules_opc[i] = &g_module;
+		g_modules_opc[i] = g_module;
 	}
 
 	/* Check that a copy operation at the beginning is removed */
@@ -1790,7 +1791,7 @@ test_sequence_accel_buffers(void)
 	struct ut_sequence ut_seq;
 	struct iovec src_iovs[3], dst_iovs[3];
 	char srcbuf[4096], dstbuf[4096], expected[4096];
-	struct spdk_accel_module_if *modules[ACCEL_OPC_LAST];
+	struct accel_module modules[ACCEL_OPC_LAST];
 	void *buf[2], *domain_ctx[2], *iobuf_buf;
 	struct spdk_memory_domain *domain[2];
 	struct spdk_iobuf_buffer *cache_entry;
@@ -1802,10 +1803,10 @@ test_sequence_accel_buffers(void)
 	SPDK_CU_ASSERT_FATAL(ioch != NULL);
 
 	/* Override the submit_tasks function */
-	g_module.submit_tasks = ut_sequnce_submit_tasks;
+	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
 	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
 		modules[i] = g_modules_opc[i];
-		g_modules_opc[i] = &g_module;
+		g_modules_opc[i] = g_module;
 	}
 	/* Intercept decompress to make it simply copy the data, so that we can chain multiple
 	 * decompress operations together in one sequence.
@@ -2265,7 +2266,7 @@ test_sequence_memory_domain(void)
 	struct ut_sequence ut_seq;
 	struct ut_domain_ctx domctx[4];
 	struct spdk_iobuf_buffer *cache_entry;
-	struct spdk_accel_module_if *modules[ACCEL_OPC_LAST];
+	struct accel_module modules[ACCEL_OPC_LAST];
 	struct spdk_memory_domain *accel_domain;
 	spdk_iobuf_buffer_stailq_t small_cache;
 	char srcbuf[4096], dstbuf[4096], expected[4096], tmp[4096];
@@ -2278,10 +2279,10 @@ test_sequence_memory_domain(void)
 	SPDK_CU_ASSERT_FATAL(ioch != NULL);
 
 	/* Override the submit_tasks function */
-	g_module.submit_tasks = ut_sequnce_submit_tasks;
+	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
 	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
 		modules[i] = g_modules_opc[i];
-		g_modules_opc[i] = &g_module;
+		g_modules_opc[i] = g_module;
 	}
 	/* Intercept decompress to make it simply copy the data, so that we can chain multiple
 	 * decompress operations together in one sequence.
