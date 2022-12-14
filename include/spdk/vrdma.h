@@ -194,6 +194,10 @@ struct vrdma_rq {
 	struct vrdma_recv_wqe *rq_buff; /* wqe buff */
 };
 
+enum {
+       VRDMA_SEND_ERR_CQE = 1,
+};
+
 struct spdk_vrdma_qp {
 	LIST_ENTRY(spdk_vrdma_qp) entry;
 	uint32_t qp_idx;
@@ -210,7 +214,8 @@ struct spdk_vrdma_qp {
 	uint32_t timeout_retry_cnt;
 	uint32_t rnr_retry_cnt;
 	uint32_t sq_draining;
-	uint32_t qdb_idx;
+	uint32_t qdb_idx;	
+	uint32_t flags;
 	struct spdk_vrdma_pd *vpd;
 	struct spdk_vrdma_cq *rq_vcq;
 	struct spdk_vrdma_cq *sq_vcq;
