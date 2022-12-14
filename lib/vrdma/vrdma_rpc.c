@@ -46,6 +46,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/env.h"
+#include "spdk/net.h"
 #include "spdk/util.h"
 #include "spdk/log.h"
 #include "spdk/event.h"
@@ -738,14 +739,14 @@ struct spdk_vrdma_rpc_controller_configue_attr {
     uint32_t adminq_length;
     uint64_t dest_mac;
     uint64_t sf_mac;
-    int64_t subnet_prefix;
-    int64_t intf_id;
+    char *subnet_prefix;
+    char *intf_id;
     int vrdma_qpn;
     int backend_rqpn;
 	char *backend_dev;
 	int src_addr_idx;
-    int32_t node_ip;
-    int32_t node_rip;
+    char *node_ip;
+    char *node_rip;
 	int32_t show_vqpn;
 };
 
@@ -794,13 +795,13 @@ spdk_vrdma_rpc_controller_configue_decoder[] = {
     {
         "subnet_prefix",
         offsetof(struct spdk_vrdma_rpc_controller_configue_attr, subnet_prefix),
-        spdk_json_decode_uint64,
+        spdk_json_decode_string,
         true
     },
     {
         "intf_id",
         offsetof(struct spdk_vrdma_rpc_controller_configue_attr, intf_id),
-        spdk_json_decode_uint64,
+        spdk_json_decode_string,
         true
     },
     {
@@ -836,13 +837,13 @@ spdk_vrdma_rpc_controller_configue_decoder[] = {
     {
         "node_ip",
         offsetof(struct spdk_vrdma_rpc_controller_configue_attr, node_ip),
-        spdk_json_decode_uint32,
+        spdk_json_decode_string,
         true
     },
     {
         "node_rip",
         offsetof(struct spdk_vrdma_rpc_controller_configue_attr, node_rip),
-        spdk_json_decode_uint32,
+        spdk_json_decode_string,
         true
     },
     {
@@ -893,11 +894,7 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
     attr->dev_state = -1;
     attr->vrdma_qpn = -1;
     attr->backend_rqpn = -1;
-    attr->subnet_prefix = -1;
-    attr->intf_id = -1;
-	attr->src_addr_idx = -1;
-	attr->node_ip = -1;
-	attr->node_rip = -1;
+	attr->src_addr_idx = -1;;
 	attr->show_vqpn = -1;
 
     if (spdk_json_decode_object(params,
@@ -1023,17 +1020,22 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
         }
         bk_qp->remote_qpn = attr->backend_rqpn;
     }
-    if (attr->subnet_prefix != -1) {
+    if (attr->subnet_prefix) {
         struct vrdma_backend_qp *bk_qp;
+        struct in_addr inaddr;
+        uint64_t subnet_prefix;
 
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...subnet_prefix=0x%lx\n", attr->subnet_prefix);
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...subnet_prefix %s\n", attr->subnet_prefix);
         ctrl = ctx->ctrl;
         if (!ctrl) {
             SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
             goto free_attr;
         }
+        inet_aton(attr->subnet_prefix, &inaddr);
+        subnet_prefix = inaddr.s_addr;
+        subnet_prefix = subnet_prefix << 32;
         if (attr->vrdma_qpn == -1) {
-            ctrl->vdev->vrdma_sf.remote_ip = htobe64(attr->subnet_prefix);
+            ctrl->vdev->vrdma_sf.remote_ip = subnet_prefix;
             SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...remote_ip=0x%lx..done\n",
             ctrl->vdev->vrdma_sf.remote_ip);
         } else {
@@ -1049,20 +1051,28 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
                     attr->vrdma_qpn, attr->emu_manager);
                 goto free_attr;
             }
-            bk_qp->rgid_rip.global.subnet_prefix = htobe64(attr->subnet_prefix);
+            bk_qp->rgid_rip.global.subnet_prefix = subnet_prefix;
         }
     }
-    if (attr->intf_id != -1) {
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...intf_id=0x%lx\n", attr->intf_id);
+    if (attr->intf_id) {
+        struct in_addr inaddr;
+        uint64_t intf_id;
+
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...intf_id %s\n", attr->intf_id);
         ctrl = ctx->ctrl;
         if (!ctrl) {
             SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
             goto free_attr;
         }
+        inet_aton(attr->intf_id, &inaddr);
+        intf_id = inaddr.s_addr;
+        intf_id = intf_id << 32;
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...intf_id %s inaddr 0x%x\n", 
+        attr->intf_id, inaddr.s_addr);
         if (attr->vrdma_qpn == -1) {
-            ctrl->vdev->vrdma_sf.ip = htobe64(attr->intf_id);
-            SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...sf ip=0x%lx..done\n",
-            ctrl->vdev->vrdma_sf.ip);
+            ctrl->vdev->vrdma_sf.ip = intf_id;
+            SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...sf ip=0x%lx.intf_id=0x%lx.done\n",
+            ctrl->vdev->vrdma_sf.ip, intf_id);
         } else {
             struct vrdma_backend_qp *bk_qp;
 
@@ -1078,7 +1088,7 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
                     attr->vrdma_qpn, attr->emu_manager);
                 goto free_attr;
             }
-            bk_qp->rgid_rip.global.interface_id = htobe64(attr->intf_id);
+            bk_qp->rgid_rip.global.interface_id = intf_id;
         }
     }
 	if (attr->backend_dev) {
@@ -1130,43 +1140,51 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
             bk_qp->src_addr_idx = attr->src_addr_idx;
         }
     }
-    if (attr->node_ip != -1) {
-        uint32_t node_ip;
+    if (attr->node_ip) {
+        uint32_t ip_len;
 
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...node_ip=0x%x\n", attr->node_ip);
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...node_ip %s\n", attr->node_ip);
         ctrl = ctx->ctrl;
         if (!ctrl) {
             SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n",
                 attr->emu_manager);
             goto free_attr;
         }
-        node_ip = attr->node_ip;
-        snprintf(ctrl->rpc.node_ip, 24, "%d.%d.%d.%d:%s",
-            (node_ip >> 24) & 0xff, (node_ip >> 16) & 0xff,
-            (node_ip >> 8) & 0xff, node_ip & 0xff,
-            VRDMA_RPC_DEFAULT_PORT);
+		ip_len = strlen(attr->node_ip);
+		if (ip_len > (VRDMA_RPC_IP_LEN - 5)) {
+			SPDK_ERRLOG("invalid node ip %s, len %d\n",
+            attr->node_ip, ip_len);
+		}
+		snprintf(ctrl->rpc.node_ip, VRDMA_RPC_IP_LEN, "%s:%s",
+            attr->node_ip, VRDMA_RPC_DEFAULT_PORT);
         spdk_vrdma_rpc_server_configuration(ctrl, ctrl->rpc.node_ip);
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...node_ip %s\n", ctrl->rpc.node_ip);
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...node_ip %s\n",
+        ctrl->rpc.node_ip);
     }
-    if (attr->node_rip != -1) {
-        uint32_t node_rip;
+    if (attr->node_rip) {
+        uint32_t ip_len;
 
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...node_rip=0x%x\n", attr->node_rip);
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...node_rip %s\n",
+        attr->node_rip);
         ctrl = ctx->ctrl;
         if (!ctrl) {
             SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n",
                 attr->emu_manager);
             goto free_attr;
         }
-        node_rip = attr->node_rip;
-        snprintf(ctrl->rpc.node_rip, 24, "%d.%d.%d.%d:%s",
-            (node_rip >> 24) & 0xff, (node_rip >> 16) & 0xff,
-            (node_rip >> 8) & 0xff, node_rip & 0xff,
-            VRDMA_RPC_DEFAULT_PORT);
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...node_rip %s\n", ctrl->rpc.node_rip);
+		ip_len = strlen(attr->node_rip);
+		if (ip_len > (VRDMA_RPC_IP_LEN - 5)) {
+			SPDK_ERRLOG("invalid remote node ip %s, len %d\n",
+            attr->node_rip, ip_len);
+		}
+		snprintf(ctrl->rpc.node_rip, VRDMA_RPC_IP_LEN, "%s:%s",
+            attr->node_rip, VRDMA_RPC_DEFAULT_PORT);
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...node_rip %s\n",
+        ctrl->rpc.node_rip);
     }
 	if (attr->show_vqpn != -1) {
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...show_vqpn=0x%x\n", attr->show_vqpn);
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...show_vqpn=0x%x\n",
+        attr->show_vqpn);
         ctrl = ctx->ctrl;
         if (!ctrl) {
             SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n",
@@ -1176,7 +1194,7 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
 		vqp = find_spdk_vrdma_qp_by_idx(ctrl, attr->show_vqpn);
         if (!vqp) {
             SPDK_ERRLOG("show vqpn stats: Fail to find vrdma_qpn %d for emu_manager %s\n",
-                    attr->show_vqpn, attr->emu_manager);
+                attr->show_vqpn, attr->emu_manager);
             goto free_attr;
         }
 		vrdma_dump_vqp_stats(vqp);

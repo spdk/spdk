@@ -219,6 +219,7 @@ struct spdk_vrdma_qp {
 	struct vrdma_qp_state_machine *custom_sm;
 	enum vrdma_qp_sm_state_type sm_state;
 	struct vrdma_backend_qp *bk_qp;
+	struct vrdma_backend_qp *pre_bk_qp;
 	struct vrdma_rq rq;
 	struct vrdma_sq sq;
 	struct ibv_mr *qp_mr;

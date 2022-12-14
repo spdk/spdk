@@ -244,7 +244,7 @@ vrdma_create_backend_qp(struct vrdma_ctrl *ctrl,
 		SPDK_ERRLOG("Failed to add backend QP in local list");
 		goto detory_bk_qp;
 	}
-	vqp->bk_qp = qp;
+	vqp->pre_bk_qp = qp;
 	LIST_INSERT_HEAD(&ctrl->bk_qp_list, qp, entry);
 	SPDK_NOTICELOG("\nlizh vrdma_create_backend_qp..mqpn 0x%x.done\n", qp->bk_qp.qpnum);
 	return qp;
@@ -254,6 +254,20 @@ detory_bk_qp:
 free_bk_qp:
 	free(qp);
 	return NULL;
+}
+
+static void
+set_spdk_vrdma_bk_qp_active(struct vrdma_ctrl *ctrl,
+		struct vrdma_backend_qp *pre_bk_qp)
+{
+	struct spdk_vrdma_qp *vqp = NULL;
+
+	LIST_FOREACH(vqp, &ctrl->vdev->vqp_list, entry) {
+        if (vqp->pre_bk_qp == pre_bk_qp) {
+			vqp->bk_qp = pre_bk_qp;
+			SPDK_NOTICELOG("\nlizh set_spdk_vrdma_bk_qp_active...done\n");
+		}
+	}
 }
 
 int vrdma_modify_backend_qp_to_ready(struct vrdma_ctrl *ctrl,
@@ -304,6 +318,7 @@ int vrdma_modify_backend_qp_to_ready(struct vrdma_ctrl *ctrl,
 		SPDK_ERRLOG("Failed to modify bankend QP RTR to RTS");
 		return -1;
 	}
+	set_spdk_vrdma_bk_qp_active(ctrl, bk_qp);
 	SPDK_NOTICELOG("\nlizh vrdma_modify_backend_qp_to_ready...done\n");
 	return 0;
 }
@@ -322,8 +337,8 @@ void vrdma_destroy_backend_qp(struct vrdma_ctrl *ctrl, uint32_t vqp_idx)
 			vqp_idx);
 		return;
 	}
-	if (vqp->bk_qp) {
-		qp = vqp->bk_qp;
+	if (vqp->pre_bk_qp) {
+		qp = vqp->pre_bk_qp;
 		snap_vrdma_destroy_qp_helper(&qp->bk_qp);
 		/* Send RPC to nodify remote gid/backend_qp with local gid/backend_qp */
     	lqp = vrdma_find_lbk_qp_by_vqp(vqp_idx);
@@ -342,6 +357,7 @@ void vrdma_destroy_backend_qp(struct vrdma_ctrl *ctrl, uint32_t vqp_idx)
     		}
 			vrdma_del_lbk_qp_from_list(lqp);
 		}
+		vqp->pre_bk_qp = NULL;
 		vqp->bk_qp = NULL;
 		LIST_REMOVE(qp, entry);
 		free(qp);
