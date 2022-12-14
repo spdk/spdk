@@ -37,7 +37,13 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 	}
 
 	val = 1;
-	setsockopt(server->sockfd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
+	rc = setsockopt(server->sockfd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
+	if (rc != 0) {
+		SPDK_ERRLOG("could not set SO_REUSEADDR sock option: %s\n", spdk_strerror(errno));
+		close(server->sockfd);
+		free(server);
+		return NULL;
+	}
 
 	rc = bind(server->sockfd, listen_addr, addrlen);
 	if (rc != 0) {
