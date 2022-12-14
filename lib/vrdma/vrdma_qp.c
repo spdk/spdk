@@ -417,12 +417,12 @@ void vrdma_destroy_backend_qp(struct vrdma_ctrl *ctrl, uint32_t vqp_idx)
 static void vrdma_vqp_rx_cb(struct snap_dma_q *q, const void *data,
 									uint32_t data_len, uint32_t imm_data)
 {
-	uint16_t pi = imm_data & 0xFFFF;
+	uint16_t pi = be32toh(imm_data) & 0xFFFF;
 	struct spdk_vrdma_qp *vqp;
 	struct snap_vrdma_queue *snap_vqp;
 
 	snap_vqp = (struct snap_vrdma_queue *)q->uctx;
-	vqp = container_of(snap_vqp, struct spdk_vrdma_qp, snap_queue);
+	vqp = (struct spdk_vrdma_qp *)snap_vqp->ctx;
 	vqp->sm_state = VRDMA_QP_STATE_WQE_PARSE;
 	vqp->qp_pi->pi.sq_pi = pi;
 	vqp->sq.comm.num_to_parse = pi - vqp->sq.comm.pre_pi;
@@ -457,6 +457,7 @@ int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 			SPDK_ERRLOG("Failed to create qp dma queue");
 			return -1;
 		}
+		vqp->snap_queue->ctx = vqp;
 	}
 	vrdma_qp_sm_init(vqp);
 	vqp->rq.comm.wqebb_size =
@@ -504,6 +505,9 @@ int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 				vqp->qp_idx, vqp->qdb_idx, vqp->qp_mr->lkey, vqp->qp_mr->rkey);
 		vqp->snap_queue = vrdma_prov_vq_create(ctrl, vqp, &q_attr);
 		SPDK_NOTICELOG("===naliu vrdma_create_vq...end\n");
+		if (vqp->snap_queue) {
+			vqp->snap_queue->ctx = vqp;
+		}
 	}
 	SPDK_NOTICELOG("\nlizh vrdma_create_vq...done\n");
 	return 0;
