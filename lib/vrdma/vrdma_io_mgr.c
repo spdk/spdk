@@ -48,7 +48,9 @@
 #define SPDK_IO_MGR_THREAD_NAME_LEN 32
 
 #define MLX5_ATOMIC_SIZE 8
-//#define WQE_DBG
+#define WQE_DBG
+//#define VCQ_ERR
+//#define POLL_PI_DBG
 
 struct mlx5_wqe_inline_seg {
 	__be32		byte_count;
@@ -320,13 +322,13 @@ static bool vrdma_qp_wqe_sm_parse(struct spdk_vrdma_qp *vqp,
 		vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
 	vqp->sm_state = VRDMA_QP_STATE_WQE_MAP_BACKEND;
 
-	//TODO: parse wqe handling
+	/* TODO: parse wqe handling */
 	return true;
 }
 
 static inline struct vrdma_backend_qp *vrdma_vq_get_mqp(struct spdk_vrdma_qp *vqp)
 {
-	//TODO: currently, only one-to-one map
+	/* TODO: currently, only one-to-one map */
 	return vqp->bk_qp;
 }
 
@@ -334,12 +336,22 @@ static bool vrdma_qp_wqe_sm_map_backend(struct spdk_vrdma_qp *vqp,
 											enum vrdma_qp_sm_op_status status)
 {
 	vqp->bk_qp = vrdma_vq_get_mqp(vqp);
-#ifdef WQE_DBG
+
+/* todo for error vcqe handling */
+
+	if (!vqp->bk_qp) {
+#ifdef VCQ_ERR
+		vqp->sm_state = VRDMA_QP_STATE_POLL_CQ_CI;
+		vqp->flags |= VRDMA_SEND_ERR_CQE;
+#else
+		vqp->sm_state = VRDMA_QP_STATE_POLL_PI;
+#endif
+		return true;
+	}
+
 	SPDK_NOTICELOG("vrdam map sq wqe: vq pi %d, mqp %p\n",
 			vqp->qp_pi->pi.sq_pi, vqp->bk_qp);
-#endif
 	vqp->sm_state = VRDMA_QP_STATE_WQE_SUBMIT;
-	
 	return true;
 }
 
@@ -674,7 +686,6 @@ static int vrdma_ud_wqe_submit(struct vrdma_send_wqe *wqe,
 {
 	//TODO:
 	return 0;
-
 }
 
 //translate and submit vqp wqe to mqp
@@ -858,7 +869,7 @@ static inline struct mlx5_cqe64 *vrdma_poll_mqp_scq(struct snap_hw_cq *dv_cq,
 	}
 		
 	dv_cq->ci++;
-#ifdef WQE_DBG
+#ifdef POLL_PI_DBG
 	SPDK_NOTICELOG("cq: 0x%x ci: %d CQ opcode %d size %d wqe_counter %d,"
 					"scatter32 %d scatter64 %d\n",
 		   			dv_cq->cq_num, dv_cq->ci,
@@ -888,7 +899,7 @@ static bool vrdma_qp_sm_poll_cq_ci(struct spdk_vrdma_qp *vqp,
 		return true;
 	}
 
-#ifdef WQE_DBG
+#ifdef POLL_PI_DBG
 	SPDK_NOTICELOG("vrdam poll sq vcq ci: doorbell pa 0x%lx\n", ci_addr);
 #endif
 
@@ -1014,12 +1025,53 @@ static int vrdma_write_back_sq_cqe(struct spdk_vrdma_qp *vqp)
 	return 0;
 }
 
+static bool vrdma_vqp_send_err_cqe(struct spdk_vrdma_qp *vqp)
+{
+	struct spdk_vrdma_cq *vcq = vqp->sq_vcq;
+	struct vrdma_cqe *vcqe;
+	uint32_t wqe_idx;
+	uint32_t cqe_idx;
+	int ret;
+	uint32_t i;
+
+	for (i = 0; i < vqp->sq.comm.num_to_parse; i++) {
+		if (vcq->pi - vcq->pici->ci == vcq->cqe_entry_num) {
+			SPDK_ERRLOG("send err cqe, cq full: vcq new pi %d, pre_pi %d, ci %d\n",
+					vcq->pi, vcq->pre_pi, vcq->pici->ci);
+			goto write_err_cqe;
+		}
+		wqe_idx  = vqp->sq.comm.pre_pi + i;
+		cqe_idx = vcq->pi & (vcq->cqe_entry_num - 1);
+		vcqe = (struct vrdma_cqe *)vqp->sq_vcq->cqe_buff + cqe_idx;
+		vcqe->imm_data = 0;
+		vcqe->length = 0;
+		vcqe->req_id = wqe_idx;
+		vcqe->local_qpn = vqp->qp_idx;
+		//vcqe->ts = (uint32_t)cqe->timestamp;
+		vcqe->ts = 0;
+		vcqe->opcode = IBV_WC_RETRY_EXC_ERR;
+		vcqe->owner = !!((vcq->pi++) & (vcq->cqe_entry_num));
+	}
+write_err_cqe:
+	ret = vrdma_write_back_sq_cqe(vqp);
+	if (spdk_unlikely(ret)) {
+		SPDK_ERRLOG("failed to write cq CQE entry, ret %d\n", ret);
+		vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
+		return true;
+	}
+
+	SPDK_NOTICELOG("vrdam send err scqe done: vcq new pi %d, pre_pi %d\n",
+					vcq->pi, vcq->pre_pi);
+	vcq->pre_pi = vcq->pi;
+	return false;
+}
+
 #define POLL_CQ_NUM 1024
 static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 									   enum vrdma_qp_sm_op_status status)
 {
-	struct snap_hw_cq *mcq = &vqp->bk_qp->bk_qp.sq_hw_cq;
-	struct spdk_vrdma_cq *vcq = vqp->sq_vcq;
+	struct snap_hw_cq *mcq;
+	struct spdk_vrdma_cq *vcq;
 	struct mlx5_cqe64 *cqe;
 	struct vrdma_cqe *vcqe;
 	uint32_t wqe_idx;
@@ -1028,19 +1080,25 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 	struct timeval tv; 
 	uint32_t i;
 
-#ifdef WQE_DBG
+	vqp->sm_state = VRDMA_QP_STATE_POLL_PI;
+	if (spdk_unlikely(vqp->flags & VRDMA_SEND_ERR_CQE)) {
+		return vrdma_vqp_send_err_cqe(vqp);
+	}
+	if (spdk_unlikely(!vqp->bk_qp)) {
+		return true;
+	}
+#ifdef POLL_PI_DBG
 	SPDK_NOTICELOG("vrdam gen sq cqe start: vcq pi %d, pre_pi %d, ci %d\n",
 					vcq->pi, vcq->pre_pi, vcq->pici->ci);
 #endif
-	vqp->sm_state = VRDMA_QP_STATE_POLL_PI;
 	gettimeofday(&tv, NULL);
-
+	mcq = &vqp->bk_qp->bk_qp.sq_hw_cq;
+	vcq = vqp->sq_vcq;
 	for (i = 0; i < POLL_CQ_NUM; i++) {
-		cqe = vrdma_poll_mqp_scq(mcq, SNAP_VRDMA_BACKEND_CQE_SIZE);
-		
+		cqe = vrdma_poll_mqp_scq(mcq, SNAP_VRDMA_BACKEND_CQE_SIZE);	
 		if (cqe == NULL) {
 			/* if no available cqe, need to write prepared vcqes*/
-#ifdef WQE_DBG
+#ifdef POLL_PI_DBG
 			SPDK_NOTICELOG("get null MCQE: vcq new pi %d, pre_pi %d, ci %d\n",
 							vcq->pi, vcq->pre_pi, vcq->pici->ci);
 #endif
@@ -1077,22 +1135,19 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 
 write_vcq:
 	if (vcq->pi == vcq->pre_pi) {
-#ifdef WQE_DBG
+#ifdef POLL_PI_DBG
 		SPDK_NOTICELOG("no cqe to generate, jump to poll sq PI\n");
 #endif
 		return true;
 	}
 	vrdma_ring_mcq_db(mcq);
 	vqp->stats.mcq_dbred_ci = mcq->ci;
-
 	ret = vrdma_write_back_sq_cqe(vqp);
-
 	if (spdk_unlikely(ret)) {
 		SPDK_ERRLOG("failed to write cq CQE entry, ret %d\n", ret);
 		vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
 		return true;
 	}
-
 	SPDK_NOTICELOG("vrdam gen sq cqe done: vcq new pi %d, pre_pi %d\n",
 					vcq->pi, vcq->pre_pi);
 	vcq->pre_pi = vcq->pi;
@@ -1151,7 +1206,7 @@ static int vrdma_qp_wqe_progress(struct spdk_vrdma_qp *vqp,
 
 	return 0;
 }
-
+							
 void vrdma_qp_sm_dma_cb(struct snap_dma_completion *self, int status)
 {
 	enum vrdma_qp_sm_op_status op_status = VRDMA_QP_SM_OP_OK;
@@ -1180,11 +1235,11 @@ void vrdma_qp_sm_start(struct spdk_vrdma_qp *vqp)
 void vrdma_dump_vqp_stats(struct spdk_vrdma_qp *vqp)
 {
 	printf("\n========= vrdma qp debug counter =========\n");
-	printf("sq pi %6d       sq pre pi %6d\n", vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
-	printf("scq pi %6d      scq pre pi %6d     scq ci %10d\n", 
+	printf("sq pi  %6d       sq pre pi  %6d\n", vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
+	printf("scq pi %6d       scq pre pi %6d     scq ci %10d\n", 
 			vqp->sq_vcq->pi, vqp->sq_vcq->pre_pi, vqp->sq_vcq->pici->ci);
 	if (vqp->bk_qp) {
-		printf("msq pi %6d      msq dbred pi %6d\n",
+		printf("msq pi  %6d     msq dbred pi  %6d\n",
 				vqp->bk_qp->bk_qp.hw_qp.sq.pi, vqp->stats.msq_dbred_pi);
 		printf("mscq ci %6d     mscq dbred ci %6d\n",
 				vqp->bk_qp->bk_qp.sq_hw_cq.ci, vqp->stats.mcq_dbred_ci);
