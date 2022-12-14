@@ -36,7 +36,7 @@ enum{
 
 enum{
 	VRDMA_DB_CQ_LOG_DEPTH = 2,
-	VRDMA_DB_CQ_ELEM_DEPTH = 7,
+	VRDMA_DB_CQ_ELEM_DEPTH = 6,
 };
 
 enum dpa_sync_state_t{

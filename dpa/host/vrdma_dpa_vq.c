@@ -179,8 +179,7 @@ static int vrdma_dpa_db_cq_create(struct flexio_process *process,
 	int err;
 
 	err = vrdma_dpa_mm_cq_alloc(process, BIT_ULL(VRDMA_DB_CQ_LOG_DEPTH),
-					BIT_ULL(VRDMA_DB_CQ_ELEM_DEPTH),
-				      	dpa_cq);
+				    dpa_cq);
 	if (err) {
 		log_error("Failed to alloc cq memory, err(%d)", err);
 		return err;
@@ -389,7 +388,7 @@ _vrdma_dpa_dma_q_cq_create(struct flexio_process *process,
 	int err;
 
 	/* QP RQ_CQ */
-	err = vrdma_dpa_mm_cq_alloc(process, attr->rx_qsize, attr->rx_elem_size, rq_dpacq);
+	err = vrdma_dpa_mm_cq_alloc(process, attr->rx_qsize,rq_dpacq);
 	if (err) {
 		log_error("Failed to alloc cq memory, err(%d)", err);
 		return err;
@@ -410,7 +409,7 @@ _vrdma_dpa_dma_q_cq_create(struct flexio_process *process,
 	}
 
 	/* QP SQ_CQ */
-	err = vrdma_dpa_mm_cq_alloc(process, attr->tx_qsize, attr->tx_elem_size,
+	err = vrdma_dpa_mm_cq_alloc(process, attr->tx_qsize,
 				    sq_dpacq);
 	if (err) {
 		log_error("Failed to alloc cq memory, err(%d)", err);

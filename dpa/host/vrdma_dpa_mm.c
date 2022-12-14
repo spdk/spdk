@@ -35,7 +35,7 @@ flexio_uintptr_t vrdma_dpa_mm_dbr_alloc(struct flexio_process *process)
 /*BIT_ULL(log_depth) means 1<<log_depth*/
 static
 flexio_uintptr_t vrdma_dpa_mm_cq_ring_alloc(struct flexio_process *process,
-					      int cq_size, int elem_size)
+					      int cq_size)
 {
 	struct mlx5_cqe64 *cq_ring_src;
 	flexio_uintptr_t ring_daddr;
@@ -44,8 +44,8 @@ flexio_uintptr_t vrdma_dpa_mm_cq_ring_alloc(struct flexio_process *process,
 	flexio_status err;
 	int i;
 
-	ring_bsize = cq_size * elem_size;
-	cq_ring_src = calloc(cq_size, elem_size);
+	ring_bsize = cq_size * BIT_ULL(VRDMA_DPA_CQE_BSIZE);
+	cq_ring_src = calloc(cq_size, BIT_ULL(VRDMA_DPA_CQE_BSIZE));
 	if (!cq_ring_src) {
 		log_error("Failed to allocate memory, err(%d)", errno);
 		return 0;
@@ -82,7 +82,7 @@ err_dev_alloc:
 }
 
 int vrdma_dpa_mm_cq_alloc(struct flexio_process *process, int cq_size,
-			  int elem_size, struct vrdma_dpa_cq *cq)
+			  struct vrdma_dpa_cq *cq)
 {
 	int err;
 
@@ -92,7 +92,7 @@ int vrdma_dpa_mm_cq_alloc(struct flexio_process *process, int cq_size,
 		return errno;
 	}
 
-	cq->cq_ring_daddr = vrdma_dpa_mm_cq_ring_alloc(process, cq_size, elem_size);
+	cq->cq_ring_daddr = vrdma_dpa_mm_cq_ring_alloc(process, cq_size);
 	if (!cq->cq_ring_daddr) {
 		log_error("Failed to alloc cq ring, err(%d)", errno);
 		err = errno;

@@ -28,7 +28,7 @@ enum vrdma_dpa_buff_size {
 
 flexio_uintptr_t vrdma_dpa_mm_dbr_alloc(struct flexio_process *process);
 int vrdma_dpa_mm_cq_alloc(struct flexio_process *process, int cq_size,
-			  int elem_size, struct vrdma_dpa_cq *cq);
+			  struct vrdma_dpa_cq *cq);
 void vrdma_dpa_mm_cq_free(struct flexio_process *process,
 			    struct vrdma_dpa_cq *cq);
 flexio_uintptr_t vrdma_dpa_mm_qp_buff_alloc(struct flexio_process *process,
