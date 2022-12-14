@@ -145,6 +145,10 @@ ifeq ($(CONFIG_HAVE_LIBBSD),y)
 DPDK_PRIVATE_LINKER_ARGS += -lbsd
 endif
 
+ifeq ($(CONFIG_HAVE_LIBARCHIVE),y)
+DPDK_PRIVATE_LINKER_ARGS += -larchive
+endif
+
 ifeq ($(CONFIG_CRYPTO),y)
 ifeq ($(CONFIG_CRYPTO_MLX5),y)
 DPDK_PRIVATE_LINKER_ARGS += -lmlx5 -libverbs

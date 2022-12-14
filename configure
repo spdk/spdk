@@ -786,6 +786,10 @@ if [[ $sys_name == "Linux" ]]; then
 	fi
 fi
 
+if pkg-config libarchive; then
+	CONFIG[HAVE_LIBARCHIVE]=y
+fi
+
 if [[ $sys_name != "Linux" ]]; then
 	if [[ "${CONFIG[VHOST]}" == "y" ]]; then
 		echo "Vhost is only supported on Linux."

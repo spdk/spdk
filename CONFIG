@@ -200,6 +200,9 @@ CONFIG_HAVE_ARC4RANDOM=n
 # Is DPDK using libbsd?
 CONFIG_HAVE_LIBBSD=n
 
+# Is DPDK using libarchive?
+CONFIG_HAVE_LIBARCHIVE=n
+
 # Path to IPSEC_MB used by DPDK
 CONFIG_IPSEC_MB_DIR=
 
