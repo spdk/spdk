@@ -115,6 +115,9 @@ tag that was logged at least once.
 Added `transport_tos` to `spdk_nvme_ctrlr_opts` to support setting of the "type of service"
 value in the IPv4 header. Only RDMA is supported at this time.
 
+Added API spdk_nvme_qpair_get_num_outstanding_reqs to get the number of outstanding reqs of
+a specified qpair.
+
 ### bdev_nvme
 
 Updated `bdev_nvme_set_options` RPC (and rpc.py) to support the new `transport_tos` parameter.

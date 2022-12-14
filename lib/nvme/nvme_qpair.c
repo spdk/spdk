@@ -1197,3 +1197,9 @@ spdk_nvme_qpair_get_id(struct spdk_nvme_qpair *qpair)
 {
 	return qpair->id;
 }
+
+uint32_t
+spdk_nvme_qpair_get_num_outstanding_reqs(struct spdk_nvme_qpair *qpair)
+{
+	return qpair->num_outstanding_reqs;
+}

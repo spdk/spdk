@@ -3792,6 +3792,20 @@ void spdk_nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair,
 uint16_t spdk_nvme_qpair_get_id(struct spdk_nvme_qpair *qpair);
 
 /**
+ * Gets the number of outstanding requests for the specified qpair.
+ *
+ * This number is not decremented until after a request's callback function is completed.
+ *
+ * This number is not matched necessarily to the number of NVMe commands submitted by the
+ * user. For example, nvme driver may split a request due to MDTS limitations, that will
+ * also allocate a request for the parent, etc.
+ *
+ * \param qpair Pointer to the NVMe queue pair.
+ * \returns number of outstanding requests for the specified qpair.
+ */
+uint32_t spdk_nvme_qpair_get_num_outstanding_reqs(struct spdk_nvme_qpair *qpair);
+
+/**
  * \brief Prints (SPDK_NOTICELOG) the contents of an NVMe submission queue entry (command).
  *
  * \param qid Queue identifier.
