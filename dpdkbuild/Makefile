@@ -149,6 +149,12 @@ DPDK_ALL_LIB_DIRS = $(shell find $(SPDK_ROOT_DIR)/dpdk/lib -mindepth 1 -maxdepth
 DPDK_ALL_LIBS = $(DPDK_ALL_LIB_DIRS:$(SPDK_ROOT_DIR)/dpdk/lib/%=%)
 DPDK_DISABLED_LIBS = $(shell echo $(filter-out $(DPDK_LIBS),$(DPDK_ALL_LIBS)) | sed -E "s/ +/,/g")
 
+ifeq ($(shell grep -q disable_apps $(SPDK_ROOT_DIR)/dpdk/meson_options.txt && echo 1), 1)
+DPDK_ALL_APP_DIRS = $(shell find $(SPDK_ROOT_DIR)/dpdk/app -mindepth 1 -maxdepth 1 -type d)
+DPDK_ALL_APPS = $(DPDK_ALL_APP_DIRS:$(SPDK_ROOT_DIR)/dpdk/app/%=%)
+DPDK_DISABLED_APPS = -Ddisable_apps="$(shell echo $(DPDK_ALL_APPS) | sed -E "s/ +/,/g")"
+endif
+
 ifneq ($(OS),FreeBSD)
 SED_INPLACE_FLAG = "-i"
 MESON_PREFIX = $(SPDK_ROOT_DIR)/dpdk/build
@@ -189,7 +195,7 @@ all: $(SPDK_ROOT_DIR)/dpdk/build-tmp
 
 $(SPDK_ROOT_DIR)/dpdk/build-tmp: $(SPDK_ROOT_DIR)/mk/cc.mk $(SPDK_ROOT_DIR)/include/spdk/config.h
 	$(Q)rm -rf $(SPDK_ROOT_DIR)/dpdk/build $(SPDK_ROOT_DIR)/dpdk/build-tmp
-	$(Q)cd "$(SPDK_ROOT_DIR)/dpdk"; CC="$(SUB_CC)" meson setup --prefix="$(MESON_PREFIX)" --libdir lib -Dc_args="$(DPDK_CFLAGS)" -Dc_link_args="$(DPDK_LDFLAGS)" $(DPDK_OPTS) -Denable_drivers="$(DPDK_ENABLED_DRIVERS)" -Ddisable_libs="$(DPDK_DISABLED_LIBS)" $(DPDKBUILD_FLAGS) build-tmp
+	$(Q)cd "$(SPDK_ROOT_DIR)/dpdk"; CC="$(SUB_CC)" meson setup --prefix="$(MESON_PREFIX)" --libdir lib -Dc_args="$(DPDK_CFLAGS)" -Dc_link_args="$(DPDK_LDFLAGS)" $(DPDK_OPTS) -Denable_drivers="$(DPDK_ENABLED_DRIVERS)" -Ddisable_libs="$(DPDK_DISABLED_LIBS)" $(DPDK_DISABLED_APPS) $(DPDKBUILD_FLAGS) build-tmp
 	$(Q)sed $(SED_INPLACE_FLAG) 's/#define RTE_EAL_PMD_PATH .*/#define RTE_EAL_PMD_PATH ""/g' $(SPDK_ROOT_DIR)/dpdk/build-tmp/rte_build_config.h
 
 clean:
