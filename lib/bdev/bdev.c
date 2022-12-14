@@ -2176,6 +2176,15 @@ bdev_qos_queue_io(struct spdk_bdev_qos *qos, struct spdk_bdev_io *bdev_io)
 	return false;
 }
 
+static inline void
+_bdev_io_do_submit(void *ctx)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
+
+	bdev_io_do_submit(ch, bdev_io);
+}
+
 static int
 bdev_qos_io_submit(struct spdk_bdev_channel *ch, struct spdk_bdev_qos *qos)
 {
@@ -2185,7 +2194,17 @@ bdev_qos_io_submit(struct spdk_bdev_channel *ch, struct spdk_bdev_qos *qos)
 	TAILQ_FOREACH_SAFE(bdev_io, &qos->queued, internal.link, tmp) {
 		if (!bdev_qos_queue_io(qos, bdev_io)) {
 			TAILQ_REMOVE(&qos->queued, bdev_io, internal.link);
-			bdev_io_do_submit(ch, bdev_io);
+
+			if (bdev_io->internal.io_submit_ch) {
+				/* Send back the IO to the original thread for the actual processing. */
+				bdev_io->internal.ch = bdev_io->internal.io_submit_ch;
+				bdev_io->internal.io_submit_ch = NULL;
+				spdk_thread_send_msg(spdk_bdev_io_get_thread(bdev_io),
+						     _bdev_io_do_submit, bdev_io);
+			} else {
+				bdev_io_do_submit(ch, bdev_io);
+			}
+
 			submitted_ios++;
 		}
 	}
@@ -6252,16 +6271,7 @@ bdev_io_complete(void *ctx)
 	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
 	uint64_t tsc, tsc_diff;
 
-	if (spdk_unlikely(bdev_io->internal.in_submit_request || bdev_io->internal.io_submit_ch)) {
-		/*
-		 * Send the completion to the thread that originally submitted the I/O,
-		 * which may not be the current thread in the case of QoS.
-		 */
-		if (bdev_io->internal.io_submit_ch) {
-			bdev_io->internal.ch = bdev_io->internal.io_submit_ch;
-			bdev_io->internal.io_submit_ch = NULL;
-		}
-
+	if (spdk_unlikely(bdev_io->internal.in_submit_request)) {
 		/*
 		 * Defer completion to avoid potential infinite recursion if the
 		 * user's completion callback issues a new I/O.

@@ -930,12 +930,13 @@ basic_qos(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(status == SPDK_BDEV_IO_STATUS_PENDING);
 	poll_threads();
-	/* Complete I/O on thread 1. This should not complete the I/O we submitted */
+	/* Complete I/O on thread 0. This should not complete the I/O we submitted. */
+	set_thread(0);
 	stub_complete_io(g_bdev.io_target, 0);
 	poll_threads();
 	CU_ASSERT(status == SPDK_BDEV_IO_STATUS_PENDING);
-	/* Now complete I/O on thread 0 */
-	set_thread(0);
+	/* Now complete I/O on original thread 1. */
+	set_thread(1);
 	poll_threads();
 	stub_complete_io(g_bdev.io_target, 0);
 	poll_threads();
