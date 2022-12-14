@@ -123,6 +123,7 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.fast_io_fail_timeout_sec = 0,
 	.disable_auto_failback = false,
 	.generate_uuids = false,
+	.transport_tos = 0,
 };
 
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
@@ -4892,6 +4893,7 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	ctx->drv_opts.transport_ack_timeout = g_opts.transport_ack_timeout;
 	ctx->drv_opts.keep_alive_timeout_ms = g_opts.keep_alive_timeout_ms;
 	ctx->drv_opts.disable_read_ana_log_page = true;
+	ctx->drv_opts.transport_tos = g_opts.transport_tos;
 
 	if (nvme_bdev_ctrlr_get_by_name(base_name) == NULL || multipath) {
 		attach_cb = connect_attach_cb;
@@ -6706,6 +6708,7 @@ bdev_nvme_opts_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_uint32(w, "reconnect_delay_sec", g_opts.reconnect_delay_sec);
 	spdk_json_write_named_uint32(w, "fast_io_fail_timeout_sec", g_opts.fast_io_fail_timeout_sec);
 	spdk_json_write_named_bool(w, "generate_uuids", g_opts.generate_uuids);
+	spdk_json_write_named_uint8(w, "transport_tos", g_opts.transport_tos);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);

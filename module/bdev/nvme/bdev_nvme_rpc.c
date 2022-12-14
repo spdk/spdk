@@ -69,6 +69,7 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_options_decoders[] = 
 	{"fast_io_fail_timeout_sec", offsetof(struct spdk_bdev_nvme_opts, fast_io_fail_timeout_sec), spdk_json_decode_uint32, true},
 	{"disable_auto_failback", offsetof(struct spdk_bdev_nvme_opts, disable_auto_failback), spdk_json_decode_bool, true},
 	{"generate_uuids", offsetof(struct spdk_bdev_nvme_opts, generate_uuids), spdk_json_decode_bool, true},
+	{"transport_tos", offsetof(struct spdk_bdev_nvme_opts, transport_tos), spdk_json_decode_uint8, true},
 };
 
 static void

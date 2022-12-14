@@ -252,6 +252,8 @@ struct spdk_bdev_nvme_opts {
 	uint32_t fast_io_fail_timeout_sec;
 	bool disable_auto_failback;
 	bool generate_uuids;
+	/* Type of Service - RDMA only */
+	uint8_t transport_tos;
 };
 
 struct spdk_nvme_qpair *bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);

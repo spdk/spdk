@@ -558,7 +558,8 @@ if __name__ == "__main__":
                                        reconnect_delay_sec=args.reconnect_delay_sec,
                                        fast_io_fail_timeout_sec=args.fast_io_fail_timeout_sec,
                                        disable_auto_failback=args.disable_auto_failback,
-                                       generate_uuids=args.generate_uuids)
+                                       generate_uuids=args.generate_uuids,
+                                       transport_tos=args.transport_tos)
 
     p = subparsers.add_parser('bdev_nvme_set_options',
                               help='Set options for the bdev nvme type. This is startup command.')
@@ -627,6 +628,9 @@ if __name__ == "__main__":
                    help="""Enable generation of unique identifiers for NVMe bdevs only if they do
                    not provide UUID themselves. These strings are based on device serial number and
                    namespace ID and will always be the same for that device.""", action='store_true')
+    p.add_argument('--transport-tos',
+                   help="""IPv4 Type of Service value. Only applicable for RDMA transports.
+                   The default is 0 which means no TOS is applied.""", type=int)
 
     p.set_defaults(func=bdev_nvme_set_options)
 
