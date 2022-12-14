@@ -286,8 +286,9 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
     LIST_INIT(&ctrl->bk_qp_list);
     vrdma_srv_device_init(ctrl);
     SPDK_NOTICELOG("new VRDMA controller %d [in order %d]"
-                  " was opened successfully over RDMA device %s ",
-                  attr->pf_id, attr->force_in_order, attr->emu_manager_name);
+                  " was opened successfully over RDMA device %s vhca_id %d\n",
+                  attr->pf_id, attr->force_in_order, attr->emu_manager_name,
+                  ctrl->sctrl->sdev->pci->mpci.vhca_id);
     snprintf(ctrl->name, VRDMA_EMU_NAME_MAXLEN,
                 "%s%dpf%d", VRDMA_EMU_NAME_PREFIX,
                 vrdma_dev_name_to_id(attr->emu_manager_name), attr->pf_id);

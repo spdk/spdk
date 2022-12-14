@@ -44,6 +44,7 @@
 #define VRDMA_RPC_CLIENT_REQUEST_TIMEOUT_US (10U * 1000U * 1000U)
 #define VRDMA_RPC_UNIX_PATH_MAX	108
 #define VRDMA_RPC_LISTEN_LOCK_PATH_SIZE (VRDMA_RPC_UNIX_PATH_MAX + sizeof(".lock"))
+#define VRDMA_RPC_IP_LEN 32
 
 struct spdk_vrdma_rpc_method {
 	const char *name;
@@ -91,8 +92,8 @@ enum spdk_vrdma_rpc_type {
 };
 
 struct spdk_vrdma_rpc {
-	char node_ip[24];
-	char node_rip[24];/* Remote node ip */
+	char node_ip[VRDMA_RPC_IP_LEN];
+	char node_rip[VRDMA_RPC_IP_LEN];/* Remote node ip */
     struct spdk_vrdma_rpc_server srv;
 	struct spdk_vrdma_rpc_client client;
 };

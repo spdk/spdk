@@ -104,7 +104,7 @@ ifconfig enp3s0f0s0 100.10.20.2/24
 <spdk_vrdma_view>snap-rdma/rpc/snap_rpc.py controller_vrdma_configue -d <dev_id> -e mlx5_0 -r <remote-arm-ip> -o <local-arm-ip> -n <local sf-dev>
 -c <remote_sf_dev_mac> -u <ipv4 addr of peer sf> -i <ipv4 addr of local sf> -g <source gid id>
 
-snap-rdma/rpc/snap_rpc.py controller_vrdma_configue -d 0 -e mlx5_0 -r 0x0aed7927  -o 0x0aed793b -n mlx5_2  -c 0x622122312311  -u 0x640a1401 -i 0x640a1402 -g 1
+snap-rdma/rpc/snap_rpc.py controller_vrdma_configue -d 0 -e mlx5_0 -r 10.237.121.39  -o 10.237.121.59 -n mlx5_2  -c 0x622122312311  -u 100.10.20.1 -i 100.10.20.2 -g 1
 
 How to use DPDK test on host
 =================================
