@@ -61,6 +61,13 @@
 #define SPDK_ZEROCOPY
 #endif
 
+struct posix_connect_ctx {
+	bool 	inprogress;
+	bool 	fd_closed;
+	struct 	addrinfo *next_res, *res0;
+	struct 	spdk_sock_opts opts;
+};
+
 struct spdk_posix_sock {
 	struct spdk_sock	base;
 	int			fd;
@@ -69,6 +76,7 @@ struct spdk_posix_sock {
 
 	struct spdk_pipe	*recv_pipe;
 	void			*recv_buf;
+	struct posix_connect_ctx conn_ctx;
 	int			recv_buf_sz;
 	bool			pipe_has_data;
 	bool			socket_has_data;
@@ -77,14 +85,17 @@ struct spdk_posix_sock {
 	int			placement_id;
 
 	TAILQ_ENTRY(spdk_posix_sock)	link;
+	TAILQ_ENTRY(spdk_posix_sock)	connect_link;
 };
 
 TAILQ_HEAD(spdk_has_data_list, spdk_posix_sock);
+TAILQ_HEAD(spdk_sock_list, spdk_posix_sock);
 
 struct spdk_posix_sock_group_impl {
 	struct spdk_sock_group_impl	base;
 	int				fd;
 	struct spdk_has_data_list	socks_with_data;
+	struct spdk_has_data_list	socks_in_progress;
 	int				placement_id;
 };
 
@@ -112,6 +123,16 @@ posix_sock_map_cleanup(void)
 
 #define __posix_sock(sock) (struct spdk_posix_sock *)sock
 #define __posix_group_impl(group) (struct spdk_posix_sock_group_impl *)group
+
+static void
+posix_connect_ctx_init(struct posix_connect_ctx *ctx, struct addrinfo *res0,
+		       struct addrinfo *res, struct spdk_sock_opts *opts)
+{
+	ctx->opts = *opts;
+	ctx->res0 = res0;
+	ctx->next_res = res;
+	ctx->inprogress = true;
+}
 
 static int
 posix_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *sport,
@@ -320,6 +341,8 @@ posix_sock_init(struct spdk_posix_sock *sock, bool enable_zero_copy)
 		rc = setsockopt(sock->fd, SOL_SOCKET, SO_ZEROCOPY, &flag, sizeof(flag));
 		if (rc == 0) {
 			sock->zcopy = true;
+		} else {
+			sock->zcopy = false;
 		}
 	}
 #endif
@@ -345,7 +368,7 @@ posix_sock_init(struct spdk_posix_sock *sock, bool enable_zero_copy)
 }
 
 static struct spdk_posix_sock *
-posix_sock_alloc(int fd, bool enable_zero_copy)
+posix_sock_alloc(int fd, bool enable_zero_copy, bool connected)
 {
 	struct spdk_posix_sock *sock;
 
@@ -356,9 +379,33 @@ posix_sock_alloc(int fd, bool enable_zero_copy)
 	}
 
 	sock->fd = fd;
-	posix_sock_init(sock, enable_zero_copy);
+	if (connected) {
+		posix_sock_init(sock, enable_zero_copy);
+	} else {
+		sock->zcopy = enable_zero_copy;
+	}
 
 	return sock;
+}
+
+static bool
+posix_sock_is_connecting(struct spdk_posix_sock *sock)
+{
+	return sock->conn_ctx.inprogress;
+}
+
+static int
+posix_sock_make_nonblock(int fd)
+{
+	int flag;
+
+	flag = fcntl(fd, F_GETFL);
+	if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) < 0) {
+		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%d)\n", fd, errno);
+		return -1;
+	}
+
+	return 0;
 }
 
 static int
@@ -439,6 +486,41 @@ posix_fd_create(struct addrinfo *res, struct spdk_sock_opts *opts)
 	return fd;
 }
 
+static int
+posix_sock_connect_async(struct addrinfo **ai, struct spdk_sock_opts *opts, bool *inprogress)
+{
+	int rc;
+	int fd;
+
+	*inprogress = false;
+	for (; *ai != NULL; *ai = (*ai)->ai_next) {
+		fd = posix_fd_create(*ai, opts);
+		if (fd < 0) {
+			continue;
+		}
+
+		if (posix_sock_make_nonblock(fd)) {
+			close(fd);
+			return -1;
+		}
+
+		rc = connect(fd, (*ai)->ai_addr, (*ai)->ai_addrlen);
+		if (rc != 0 && errno != EINPROGRESS) {
+			SPDK_ERRLOG("connect() failed, errno = %d\n", errno);
+			/* try next family */
+			close(fd);
+			continue;
+		} else if (rc != 0 && errno == EINPROGRESS) {
+			*inprogress = true;
+		}
+
+		*ai = (*ai)->ai_next;
+		return fd;
+	}
+
+	return -1;
+}
+
 static struct spdk_sock *
 posix_sock_create(const char *ip, int port,
 		  enum posix_sock_create_type type,
@@ -453,6 +535,7 @@ posix_sock_create(const char *ip, int port,
 	int rc;
 	bool enable_zcopy_user_opts = true;
 	bool enable_zcopy_impl_opts = true;
+	bool conn_inprogress = false;
 
 	assert(opts != NULL);
 
@@ -483,13 +566,13 @@ posix_sock_create(const char *ip, int port,
 
 	/* try listen */
 	fd = -1;
-	for (res = res0; res != NULL; res = res->ai_next) {
-retry:
-		fd = posix_fd_create(res, opts);
-		if (fd < 0) {
-			continue;
-		}
-		if (type == SPDK_SOCK_CREATE_LISTEN) {
+	if (type == SPDK_SOCK_CREATE_LISTEN) {
+		for (res = res0; res != NULL; res = res->ai_next) {
+	retry:
+			fd = posix_fd_create(res, opts);
+			if (fd < 0) {
+				continue;
+			}
 			rc = bind(fd, res->ai_addr, res->ai_addrlen);
 			if (rc != 0) {
 				SPDK_ERRLOG("bind() failed at port %d, errno = %d\n", port, errno);
@@ -520,28 +603,24 @@ retry:
 				break;
 			}
 			enable_zcopy_impl_opts = g_spdk_posix_sock_impl_opts.enable_zerocopy_send_server;
-		} else if (type == SPDK_SOCK_CREATE_CONNECT) {
-			rc = connect(fd, res->ai_addr, res->ai_addrlen);
-			if (rc != 0) {
-				SPDK_ERRLOG("connect() failed, errno = %d\n", errno);
-				/* try next family */
+
+			if (posix_sock_make_nonblock(fd)) {
 				close(fd);
 				fd = -1;
-				continue;
+				break;
 			}
-			enable_zcopy_impl_opts = g_spdk_posix_sock_impl_opts.enable_zerocopy_send_client;
-		}
-
-		flag = fcntl(fd, F_GETFL);
-		if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) < 0) {
-			SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%d)\n", fd, errno);
-			close(fd);
-			fd = -1;
+			// Socket successfully initialized.
 			break;
 		}
-		break;
+	} else {
+		enable_zcopy_impl_opts = g_spdk_posix_sock_impl_opts.enable_zerocopy_send_client;
+		res = res0;
+		fd = posix_sock_connect_async(&res, opts, &conn_inprogress);
 	}
-	freeaddrinfo(res0);
+
+	if (!conn_inprogress) {
+		freeaddrinfo(res0);
+	}
 
 	if (fd < 0) {
 		return NULL;
@@ -550,11 +629,15 @@ retry:
 	/* Only enable zero copy for non-loopback sockets. */
 	enable_zcopy_user_opts = opts->zcopy && !sock_is_loopback(fd);
 
-	sock = posix_sock_alloc(fd, enable_zcopy_user_opts && enable_zcopy_impl_opts);
+	sock = posix_sock_alloc(fd, enable_zcopy_user_opts && enable_zcopy_impl_opts, !conn_inprogress);
 	if (sock == NULL) {
 		SPDK_ERRLOG("sock allocation failed\n");
 		close(fd);
 		return NULL;
+	}
+
+	if (conn_inprogress) {
+		posix_connect_ctx_init(&sock->conn_ctx, res0, res, opts);
 	}
 
 	return &sock->base;
@@ -614,7 +697,7 @@ posix_sock_accept(struct spdk_sock *_sock)
 #endif
 
 	/* Inherit the zero copy feature from the listen socket */
-	new_sock = posix_sock_alloc(fd, sock->zcopy);
+	new_sock = posix_sock_alloc(fd, sock->zcopy, true);
 	if (new_sock == NULL) {
 		close(fd);
 		return NULL;
@@ -630,10 +713,16 @@ posix_sock_close(struct spdk_sock *_sock)
 
 	assert(TAILQ_EMPTY(&_sock->pending_reqs));
 
+	if (posix_sock_is_connecting(sock)) {
+		freeaddrinfo(sock->conn_ctx.res0);
+	}
+
 	/* If the socket fails to close, the best choice is to
 	 * leak the fd but continue to free the rest of the sock
 	 * memory. */
-	close(sock->fd);
+	if (!sock->conn_ctx.fd_closed) {
+		close(sock->fd);
+	}
 
 	spdk_pipe_destroy(sock->recv_pipe);
 	free(sock->recv_buf);
@@ -723,6 +812,9 @@ _sock_check_zcopy(struct spdk_sock *sock)
 #endif
 
 static int
+posix_sock_connect_poll(struct spdk_posix_sock *sock);
+
+static int
 _sock_flush(struct spdk_sock *sock)
 {
 	struct spdk_posix_sock *psock = __posix_sock(sock);
@@ -737,6 +829,10 @@ _sock_flush(struct spdk_sock *sock)
 	unsigned int offset;
 	size_t len;
 	bool is_zcopy = false;
+
+	if (posix_sock_is_connecting(psock)) {
+		return posix_sock_connect_poll(psock);
+	}
 
 	/* Can't flush from within a callback or we end up with recursive calls */
 	if (sock->cb_cnt > 0) {
@@ -949,6 +1045,15 @@ posix_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	int rc, i;
 	size_t len;
 
+	if (posix_sock_is_connecting(sock)) {
+		rc = posix_sock_connect_poll(sock);
+		if (rc != 0) {
+			return -1;
+		}
+		errno = EAGAIN;
+		return -1;
+	}
+
 	if (sock->recv_pipe == NULL) {
 		assert(sock->pipe_has_data == false);
 		if (group && sock->socket_has_data) {
@@ -1098,6 +1203,10 @@ posix_sock_is_connected(struct spdk_sock *_sock)
 	uint8_t byte;
 	int rc;
 
+	if (posix_sock_is_connecting(sock)) {
+		return false;
+	}
+
 	rc = recv(sock->fd, &byte, 1, MSG_PEEK);
 	if (rc == 0) {
 		return false;
@@ -1152,6 +1261,7 @@ posix_sock_group_impl_create(void)
 
 	group_impl->fd = fd;
 	TAILQ_INIT(&group_impl->socks_with_data);
+	TAILQ_INIT(&group_impl->socks_in_progress);
 	group_impl->placement_id = -1;
 
 	if (g_spdk_posix_sock_impl_opts.enable_placement_id == PLACEMENT_CPU) {
@@ -1215,12 +1325,30 @@ posix_sock_update_mark(struct spdk_sock_group_impl *_group, struct spdk_sock *_s
 	}
 }
 
+static bool
+posix_sock_is_ready(int fd)
+{
+	struct pollfd fds;
+	int ready;
+
+	fds.fd = fd;
+	fds.events = POLLOUT;
+	fds.revents = 0;
+	ready = poll(&fds, 1, 0);
+	return ready != 0;
+}
+
 static int
 posix_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct spdk_sock *_sock)
 {
 	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
 	int rc;
+
+	if (posix_sock_is_connecting(sock)) {
+		TAILQ_INSERT_TAIL(&group->socks_in_progress, sock, connect_link);
+		return 0;
+	}
 
 #if defined(SPDK_EPOLL)
 	struct epoll_event event;
@@ -1265,6 +1393,69 @@ posix_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct spdk_
 	return rc;
 }
 
+static bool
+posix_sock_in_inprogress_group(struct spdk_posix_sock *sock,
+			       struct spdk_posix_sock_group_impl *group)
+{
+	struct spdk_posix_sock *psock;
+
+	TAILQ_FOREACH(psock, &group->socks_in_progress, connect_link) {
+		if (psock == sock) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static int
+posix_sock_connect_poll(struct spdk_posix_sock *sock)
+{
+	int connect_error = 0;
+	int rc;
+	struct spdk_posix_sock_group_impl *group;
+	socklen_t connect_error_len;
+
+	connect_error_len = sizeof(connect_error);
+	if (!posix_sock_is_ready(sock->fd)) {
+		return 0;
+	}
+
+	rc = getsockopt(sock->fd, SOL_SOCKET, SO_ERROR, &connect_error, &connect_error_len);
+	if (rc != 0) {
+		SPDK_ERRLOG("getsockopt() failed, errno = %d\n", errno);
+		return -1;
+	}
+
+	if (connect_error) {
+		close(sock->fd);
+		SPDK_ERRLOG("connect() failed, errno = %d\n", connect_error);
+		sock->fd = posix_sock_connect_async(&sock->conn_ctx.next_res, &sock->conn_ctx.opts,
+						    &sock->conn_ctx.inprogress);
+		if (sock->fd < 0) {
+			freeaddrinfo(sock->conn_ctx.res0);
+			sock->conn_ctx.fd_closed = true;
+			return -connect_error;
+		} else if (posix_sock_is_connecting(sock)) {
+			return 0;
+		}
+	} else {
+		sock->conn_ctx.inprogress = false;
+	}
+
+	posix_sock_init(sock, sock->zcopy);
+	freeaddrinfo(sock->conn_ctx.res0);
+	group = __posix_group_impl(sock->base.group_impl);
+	if (group) {
+		rc = posix_sock_group_impl_add_sock(&group->base, &sock->base);
+		if (rc == 0) {
+			TAILQ_REMOVE(&group->socks_in_progress, sock, connect_link);
+		}
+	}
+
+	return rc;
+}
+
 static int
 posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, struct spdk_sock *_sock)
 {
@@ -1280,6 +1471,12 @@ posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, struct sp
 
 	if (sock->placement_id != -1) {
 		spdk_sock_map_release(&g_map, sock->placement_id);
+	}
+
+	if (posix_sock_in_inprogress_group(sock, group)) {
+		TAILQ_REMOVE(&group->socks_in_progress, sock, connect_link);
+		spdk_sock_abort_requests(_sock);
+		return 0;
 	}
 
 #if defined(SPDK_EPOLL)
@@ -1312,6 +1509,7 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
 	struct spdk_sock *sock, *tmp;
 	int num_events, i, rc;
+	int conn_events;
 	struct spdk_posix_sock *psock, *ptmp;
 #if defined(SPDK_EPOLL)
 	struct epoll_event events[MAX_EVENTS_PER_POLL];
@@ -1377,6 +1575,20 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 
 	assert(max_events > 0);
 
+	conn_events = 0;
+
+	TAILQ_FOREACH(psock, &group->socks_in_progress, connect_link) {
+		if (conn_events == max_events) {
+			break;
+		}
+
+		rc = posix_sock_connect_poll(psock);
+		if (rc) {
+			socks[conn_events++] = &psock->base;
+			spdk_sock_abort_requests(sock);
+		}
+	}
+
 #if defined(SPDK_EPOLL)
 	num_events = epoll_wait(group->fd, events, max_events, 0);
 #elif defined(SPDK_KEVENT)
@@ -1432,7 +1644,7 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 		psock->socket_has_data = true;
 	}
 
-	num_events = 0;
+	num_events = conn_events;
 
 	TAILQ_FOREACH_SAFE(psock, &group->socks_with_data, link, ptmp) {
 		if (num_events == max_events) {
@@ -1466,9 +1678,9 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 
 		/* Capture pointers to the elements we need */
 		pd = psock;
-		pc = TAILQ_PREV(pd, spdk_has_data_list, link);
+		pc = TAILQ_PREV(pd, spdk_sock_list, link);
 		pa = TAILQ_FIRST(&group->socks_with_data);
-		pf = TAILQ_LAST(&group->socks_with_data, spdk_has_data_list);
+		pf = TAILQ_LAST(&group->socks_with_data, spdk_sock_list);
 
 		/* Break the link between C and D */
 		pc->link.tqe_next = NULL;
