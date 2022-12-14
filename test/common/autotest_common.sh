@@ -481,7 +481,7 @@ function get_config_params() {
 		config_params+=' --with-raid5f'
 	fi
 
-	if [ $SPDK_TEST_VFIOUSER -eq 1 ] || [ $SPDK_TEST_VFIOUSER_QEMU -eq 1 ]; then
+	if [ $SPDK_TEST_VFIOUSER -eq 1 ] || [ $SPDK_TEST_VFIOUSER_QEMU -eq 1 ] || [ $SPDK_TEST_SMA -eq 1 ]; then
 		config_params+=' --with-vfio-user'
 	fi
 
