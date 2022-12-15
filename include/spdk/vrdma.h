@@ -167,7 +167,7 @@ struct vrdma_qp_stats {
 	uint64_t sq_wqe_atomic;
 	uint64_t sq_wqe_ud;
 	uint16_t msq_dbred_pi;
-	uint16_t mcq_dbred_ci;	
+	uint32_t mcq_dbred_ci;	
 };
 
 struct vrdma_q_comm {
