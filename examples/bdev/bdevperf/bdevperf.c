@@ -2210,6 +2210,19 @@ bdevperf_run(void *arg1)
 }
 
 static void
+rpc_perform_tests_reset(void)
+{
+	/* Reset g_run_rc to 0 for the next test run. */
+	g_run_rc = 0;
+
+	/* Reset g_stats to 0 for the next test run. */
+	memset(&g_stats, 0, sizeof(g_stats));
+
+	/* Reset g_show_performance_period_num to 0 for the next test run. */
+	g_show_performance_period_num = 0;
+}
+
+static void
 rpc_perform_tests_cb(void)
 {
 	struct spdk_json_write_ctx *w;
@@ -2226,11 +2239,7 @@ rpc_perform_tests_cb(void)
 						     "bdevperf failed with error %s", spdk_strerror(-g_run_rc));
 	}
 
-	/* Reset g_run_rc to 0 for the next test run. */
-	g_run_rc = 0;
-
-	/* Reset g_stats to 0 for the next test run. */
-	memset(&g_stats, 0, sizeof(g_stats));
+	rpc_perform_tests_reset();
 }
 
 static void
