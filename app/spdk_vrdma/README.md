@@ -96,17 +96,27 @@ echo 4096 > /sys/devices/system/node/node0/hugepages/hugepages-2048kB/nr_hugepag
 #Note:Must run spdk on ARM before dpdk on host to make sure device reset successfully.
 
 #Create SF interface in ARM, following cmd is suitable for mlnx-sf 1.0 version
+
 #Check mlnx-sf version
+
 mlnx-sf --version
+
 #Check is SF based on P0 is there
+
 mlnx-sf -a show
+
 #Create SF interface if no sf
+
 mlnx-sf -a create -d 0000:03:00.0 -m 62:21:22:31:23:11  --sfnum 2
 
 #Configure OVS in ARM side, make sure ovs is installed and run following cmd to setup OVS
+
 ovs-vsctl del-br ovsbr1
+
 ovs-vsctl add-br ovsbr1
+
 ovs-vsctl add-port ovsbr1 p0
+
 ovs-vsctl add-port ovsbr1 <sf_name>
 
 #Configure SF IP on ARM
@@ -166,3 +176,7 @@ create vrdma qp <dev_name> <dev_id> <qp_cnt> <start_qp_idx> <start_qdb_idx> <qp_
 #dump vrdma adminq 0             #Will dump admin-queue message
 
 #del vrdma qp <dev_id> <qp_idx>
+
+#how to add one wqe
+
+add vrdma wqe <dev_id> <qp_idx> <wqe_type> <remote_va>, <remote_key> <wqe_count> <max_wqe_threash>
