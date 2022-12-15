@@ -172,7 +172,11 @@ get_iommu_width(void)
 		FILE *file = fopen(filename, "r");
 		uint64_t cap_reg = 0;
 
-		if (file != NULL && fscanf(file, "%" PRIx64, &cap_reg) == 1) {
+		if (file == NULL) {
+			continue;
+		}
+
+		if (fscanf(file, "%" PRIx64, &cap_reg) == 1) {
 			if (strstr(filename, "intel-iommu") != NULL) {
 				/* We have an Intel IOMMU */
 				int mgaw = ((cap_reg & VTD_CAP_MGAW_MASK) >> VTD_CAP_MGAW_SHIFT) + 1;
