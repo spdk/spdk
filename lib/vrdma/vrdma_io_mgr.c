@@ -48,7 +48,7 @@
 #define SPDK_IO_MGR_THREAD_NAME_LEN 32
 
 #define MLX5_ATOMIC_SIZE 8
-#define WQE_DBG
+//#define WQE_DBG
 //#define VCQ_ERR
 //#define POLL_PI_DBG
 
@@ -205,9 +205,9 @@ static bool vrdma_qp_sm_poll_pi(struct spdk_vrdma_qp *vqp,
 	vqp->q_comp.func = vrdma_qp_sm_dma_cb;
 	vqp->q_comp.count = 1;
 
-	ret = snap_dma_q_read(vqp->snap_queue->dma_q, &vqp->qp_pi->pi.sq_pi, sizeof(uint16_t),
-						vqp->qp_mr->lkey, pi_addr,
-						vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
+	ret = snap_dma_q_write(vqp->snap_queue->dma_q, (void *)pi_addr, sizeof(uint16_t), 
+							vqp->snap_queue->ctrl->xmkey->mkey, (uint64_t)&vqp->qp_pi->pi.sq_pi,
+							vqp->qp_mr->lkey, &vqp->q_comp);
 	if (spdk_unlikely(ret)) {
 		SPDK_ERRLOG("failed to read sq PI, ret %d\n", ret);
 		vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
@@ -262,9 +262,9 @@ static bool vrdma_qp_wqe_sm_read(struct spdk_vrdma_qp *vqp,
 		offset = (pre_pi % q_size) * sizeof(struct vrdma_send_wqe);
 		local_ring_addr = (uint8_t *)vqp->sq.sq_buff + offset;
 		host_ring_addr = vqp->sq.comm.wqe_buff_pa + offset;
-		ret = snap_dma_q_read(vqp->snap_queue->dma_q, local_ring_addr, sq_poll_size,
-							vqp->qp_mr->lkey, host_ring_addr,
-							vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
+		ret = snap_dma_q_write(vqp->snap_queue->dma_q, (void *)host_ring_addr, sq_poll_size,
+							vqp->snap_queue->ctrl->xmkey->mkey, (uint64_t)local_ring_addr,
+							vqp->qp_mr->lkey, &vqp->q_comp);
 		if (spdk_unlikely(ret)) {
 			SPDK_ERRLOG("no roll back failed to read sq WQE entry, ret %d\n", ret);
 			vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
@@ -279,9 +279,9 @@ static bool vrdma_qp_wqe_sm_read(struct spdk_vrdma_qp *vqp,
 		offset = (pre_pi % q_size) * sizeof(struct vrdma_send_wqe);
 		local_ring_addr = (uint8_t *)vqp->sq.sq_buff + offset;
 		host_ring_addr = vqp->sq.comm.wqe_buff_pa + offset;
-		ret = snap_dma_q_read(vqp->snap_queue->dma_q, local_ring_addr, sq_poll_size,
-							vqp->qp_mr->lkey, host_ring_addr,
-							vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
+		ret = snap_dma_q_write(vqp->snap_queue->dma_q, (void *)host_ring_addr, sq_poll_size,
+							vqp->snap_queue->ctrl->xmkey->mkey, (uint64_t)local_ring_addr,
+							vqp->qp_mr->lkey, &vqp->q_comp);
 		if (spdk_unlikely(ret)) {
 			SPDK_ERRLOG("no roll back failed to read sq WQE entry, ret %d\n", ret);
 			vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
@@ -295,9 +295,9 @@ static bool vrdma_qp_wqe_sm_read(struct spdk_vrdma_qp *vqp,
 		sq_poll_size = num * sizeof(struct vrdma_send_wqe);
 		local_ring_addr = (uint8_t *)vqp->sq.sq_buff;
 		host_ring_addr = vqp->sq.comm.wqe_buff_pa;
-		ret = snap_dma_q_read(vqp->snap_queue->dma_q, local_ring_addr, sq_poll_size,
-							  vqp->qp_mr->lkey, vqp->sq.comm.wqe_buff_pa,
-							  vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
+		ret = snap_dma_q_write(vqp->snap_queue->dma_q, (void *)vqp->sq.comm.wqe_buff_pa, sq_poll_size,
+							  vqp->snap_queue->ctrl->xmkey->mkey, (uint64_t)local_ring_addr,
+							  vqp->qp_mr->lkey, &vqp->q_comp);
 		if (spdk_unlikely(ret)) {
 			SPDK_ERRLOG("roll back failed to second read sq WQE entry, ret %d\n", ret);
 				vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
@@ -311,6 +311,9 @@ static bool vrdma_qp_wqe_sm_read(struct spdk_vrdma_qp *vqp,
 static bool vrdma_qp_wqe_sm_parse(struct spdk_vrdma_qp *vqp,
 								   enum vrdma_qp_sm_op_status status)
 {
+	struct timespec start_tv, end_tv;
+
+	clock_gettime(CLOCK_REALTIME, &start_tv);
 	if (status != VRDMA_QP_SM_OP_OK) {
 		SPDK_ERRLOG("failed to read vq wqe, status %d\n", status);
 		vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
@@ -318,9 +321,14 @@ static bool vrdma_qp_wqe_sm_parse(struct spdk_vrdma_qp *vqp,
 	}
 
 	vqp->stats.sq_wqe_fetched += vqp->sq.comm.num_to_parse;
+#if WQE_DBG
 	SPDK_NOTICELOG("vrdam parse sq wqe: vq pi %d, pre_pi %d\n",
 		vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
+#endif
 	vqp->sm_state = VRDMA_QP_STATE_WQE_MAP_BACKEND;
+	clock_gettime(CLOCK_REALTIME, &end_tv);
+	vqp->stats.latency_parse = 
+			(end_tv.tv_nsec - start_tv.tv_nsec) / vqp->sq.comm.num_to_parse;
 
 	/* TODO: parse wqe handling */
 	return true;
@@ -335,10 +343,11 @@ static inline struct vrdma_backend_qp *vrdma_vq_get_mqp(struct spdk_vrdma_qp *vq
 static bool vrdma_qp_wqe_sm_map_backend(struct spdk_vrdma_qp *vqp,
 											enum vrdma_qp_sm_op_status status)
 {
+	struct timespec start_tv, end_tv;
+
+	clock_gettime(CLOCK_REALTIME, &start_tv);
 	vqp->bk_qp = vrdma_vq_get_mqp(vqp);
-
-/* todo for error vcqe handling */
-
+	/* todo for error vcqe handling */
 	if (!vqp->bk_qp) {
 #ifdef VCQ_ERR
 		vqp->sm_state = VRDMA_QP_STATE_POLL_CQ_CI;
@@ -349,9 +358,14 @@ static bool vrdma_qp_wqe_sm_map_backend(struct spdk_vrdma_qp *vqp,
 		return true;
 	}
 
+#if WQE_DBG
 	SPDK_NOTICELOG("vrdam map sq wqe: vq pi %d, mqp %p\n",
 			vqp->qp_pi->pi.sq_pi, vqp->bk_qp);
+#endif
 	vqp->sm_state = VRDMA_QP_STATE_WQE_SUBMIT;
+	clock_gettime(CLOCK_REALTIME, &end_tv);
+	vqp->stats.latency_map = 
+			(end_tv.tv_nsec - start_tv.tv_nsec) / vqp->sq.comm.num_to_parse;
 	return true;
 }
 
@@ -698,9 +712,14 @@ static bool vrdma_qp_wqe_sm_submit(struct spdk_vrdma_qp *vqp,
 	struct vrdma_send_wqe *wqe;
 	uint8_t opcode = 0;
 	uint16_t q_size = vqp->sq.comm.wqebb_cnt;
+	struct timespec start_tv, end_tv;
 
+	clock_gettime(CLOCK_REALTIME, &start_tv);
+
+#if WQE_DBG
 	SPDK_NOTICELOG("vrdam submit sq wqe: pi %d, pre_pi %d, num_to_submit %d\n",
 					vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi, num_to_parse);
+#endif
 	vqp->sm_state = VRDMA_QP_STATE_POLL_CQ_CI;
 
 	for (i = 0; i < num_to_parse; i++) {
@@ -735,7 +754,12 @@ static bool vrdma_qp_wqe_sm_submit(struct spdk_vrdma_qp *vqp,
 	vqp->stats.msq_dbred_pi = backend_qp->hw_qp.sq.pi;
 	vqp->stats.sq_wqe_submitted += num_to_parse;
 	vqp->sq.comm.pre_pi += num_to_parse;
+#if WQE_DBG
 	SPDK_NOTICELOG("vrdam sq submit wqe done \n");
+#endif 
+	clock_gettime(CLOCK_REALTIME, &end_tv);
+	vqp->stats.latency_submit = 
+				(end_tv.tv_nsec - start_tv.tv_nsec) / num_to_parse;
 	return true;
 }
 
@@ -907,9 +931,9 @@ static bool vrdma_qp_sm_poll_cq_ci(struct spdk_vrdma_qp *vqp,
 	vqp->q_comp.func = vrdma_qp_sm_dma_cb;
 	vqp->q_comp.count = 1;
 
-	ret = snap_dma_q_read(vqp->snap_queue->dma_q, &vqp->sq_vcq->pici->ci, sizeof(uint32_t),
-					  vqp->sq_vcq->cqe_ci_mr->lkey, ci_addr,
-					  vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
+	ret = snap_dma_q_write(vqp->snap_queue->dma_q, (void *)ci_addr, sizeof(uint32_t),
+					  vqp->snap_queue->ctrl->xmkey->mkey, (uint64_t)&vqp->sq_vcq->pici->ci,
+					  vqp->sq_vcq->cqe_ci_mr->lkey, &vqp->q_comp);
 	if (spdk_unlikely(ret)) {
 		SPDK_ERRLOG("failed to read sq vcq CI, ret %d\n", ret);
 		vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
@@ -1193,15 +1217,30 @@ static int vrdma_qp_wqe_progress(struct spdk_vrdma_qp *vqp,
 {
 	struct vrdma_qp_state_machine *sm;
 	bool repeat = true;
+	struct timespec start_tv, end_tv;
+	bool start_count = 0;
 
 	while (repeat) {
 		repeat = false;
-		//SPDK_NOTICELOG("vrdma vq sm state: %d\n", vqp->sm_state);
+	#ifdef POLL_PI_WQE
+		SPDK_NOTICELOG("vrdma vq sm state: %d\n", vqp->sm_state);
+	#endif
 		sm = vqp->custom_sm;
+		if (vqp->sm_state == VRDMA_QP_STATE_WQE_PARSE) {
+			clock_gettime(CLOCK_REALTIME, &start_tv);
+			start_count = 1;
+		}
 		if (spdk_likely(vqp->sm_state < VRDMA_QP_NUM_OF_STATES))
 			repeat = sm->sm_array[vqp->sm_state].sm_handler(vqp, status);
 		else
 			SPDK_ERRLOG("reached invalid state %d\n", vqp->sm_state);
+
+		if (start_count && vqp->sm_state == VRDMA_QP_STATE_POLL_CQ_CI) {
+			clock_gettime(CLOCK_REALTIME, &end_tv);
+			vqp->stats.latency_one_total = 
+				(end_tv.tv_nsec - start_tv.tv_nsec) / vqp->sq.comm.num_to_parse;
+			start_count = 0;
+		}
 	}
 
 	return 0;
@@ -1251,6 +1290,11 @@ void vrdma_dump_vqp_stats(struct spdk_vrdma_qp *vqp)
 	printf("sq wqe wr submitted %-15lu\n", vqp->stats.sq_wqe_wr);
 	printf("sq wqe atomic submitted %-15lu\n", vqp->stats.sq_wqe_atomic);
 	printf("sq wqe ud submitted %-15lu\n", vqp->stats.sq_wqe_ud);
-
+	printf("\n========= vrdma qp one wqe latency (ns) =========\n");
+	printf("sq wqe parse latency %-15lu\n", vqp->stats.latency_parse);
+	printf("sq wqe map latency %-15lu\n", vqp->stats.latency_map);
+	printf("sq wqe submit latency %-15lu\n", vqp->stats.latency_submit);
+	printf("sq wqe total latency %-15lu\n", vqp->stats.latency_one_total);
+	
 }
 
