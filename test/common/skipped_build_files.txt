@@ -64,4 +64,5 @@ lib/mlx5/mlx5_crypto
 
 # Not configured to test ublk
 lib/ublk/ublk
+lib/ublk/ublk_rpc
 module/event/subsystems/ublk/ublk

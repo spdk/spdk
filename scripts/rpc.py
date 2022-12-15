@@ -2221,6 +2221,21 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('vmd_rescan', help='Force a rescan of the devices behind VMD')
     p.set_defaults(func=vmd_rescan)
 
+    # ublk
+    def ublk_create_target(args):
+        rpc.ublk.ublk_create_target(args.client,
+                                    cpumask=args.cpumask)
+    p = subparsers.add_parser('ublk_create_target',
+                              help='Create spdk ublk target for ublk dev')
+    p.add_argument('-m', '--cpumask', help='cpu mask for ublk dev')
+    p.set_defaults(func=ublk_create_target)
+
+    def ublk_destroy_target(args):
+        rpc.ublk.ublk_destroy_target(args.client)
+    p = subparsers.add_parser('ublk_destroy_target',
+                              help='Destroy spdk ublk target for ublk dev')
+    p.set_defaults(func=ublk_destroy_target)
+
     # nbd
     def nbd_start_disk(args):
         print(rpc.nbd.nbd_start_disk(args.client,

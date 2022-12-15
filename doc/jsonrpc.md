@@ -10672,6 +10672,83 @@ Example response:
 }
 ~~~
 
+## Linux Userspace Block Device (UBLK) {#jsonrpc_components_ublk}
+
+SPDK supports exporting bdevs though Linux ublk. The motivation behind it is to back a Linux kernel block device
+with an SPDK user space bdev.
+
+To export a device over ublk, first make sure the Linux kernel ublk driver is loaded by running 'modprobe ublk_drv'.
+
+### ublk_create_target {#rpc_ublk_create_target}
+
+Start to create ublk threads and initialize ublk target. It will return an error if user calls this RPC twice without
+ublk_destroy_target in between. It will use current cpumask in SPDK when user does not specify cpumask option.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+cpumask                 | Optional | string      | Cpumask for ublk target
+
+#### Response
+
+True if ublk target initialization is successful; False if failed.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "cpumask": "0x2"
+  },
+  "jsonrpc": "2.0",
+  "method": "ublk_create_target",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### ublk_destroy_target {#rpc_ublk_destroy_target}
+
+Release all UBLK devices and destroy ublk target.
+
+#### Response
+
+True if ublk target destruction is successful; False if failed.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "ublk_destroy_target",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## Linux Network Block Device (NBD) {#jsonrpc_components_nbd}
 
 SPDK supports exporting bdevs through Linux nbd. These devices then appear as standard Linux kernel block devices
