@@ -331,7 +331,7 @@ hello_sock_accept_poll(void *arg)
 			rc = spdk_sock_getaddr(sock, saddr, sizeof(saddr), &sport, caddr, sizeof(caddr), &cport);
 			if (rc < 0) {
 				SPDK_ERRLOG("Cannot get connection addresses\n");
-				spdk_sock_close(&ctx->sock);
+				spdk_sock_close(&sock);
 				return SPDK_POLLER_IDLE;
 			}
 
