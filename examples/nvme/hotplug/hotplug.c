@@ -370,17 +370,18 @@ io_loop(void)
 			}
 		}
 
+		if (g_insert_times == g_expected_insert_times && g_removal_times == g_expected_removal_times) {
+			break;
+		}
+
 		now = spdk_get_ticks();
 		if (now > tsc_end) {
+			SPDK_ERRLOG("Timing out hotplug application!\n");
 			break;
 		}
 		if (now > next_stats_tsc) {
 			print_stats();
 			next_stats_tsc += g_tsc_rate;
-		}
-
-		if (g_insert_times == g_expected_insert_times && g_removal_times == g_expected_removal_times) {
-			break;
 		}
 	}
 
