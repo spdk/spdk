@@ -1235,22 +1235,22 @@ void vrdma_qp_sm_start(struct spdk_vrdma_qp *vqp)
 void vrdma_dump_vqp_stats(struct spdk_vrdma_qp *vqp)
 {
 	printf("\n========= vrdma qp debug counter =========\n");
-	printf("sq pi  %6d       sq pre pi  %6d\n", vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
-	printf("scq pi %6d       scq pre pi %6d     scq ci %10d\n", 
+	printf("sq pi  %-10d       sq pre pi  %-10d\n", vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
+	printf("scq pi %-10d       scq pre pi %-10d     scq ci %-10d\n", 
 			vqp->sq_vcq->pi, vqp->sq_vcq->pre_pi, vqp->sq_vcq->pici->ci);
 	if (vqp->bk_qp) {
-		printf("msq pi  %6d     msq dbred pi  %6d\n",
+		printf("msq pi  %-10d     msq dbred pi  %-10d\n",
 				vqp->bk_qp->bk_qp.hw_qp.sq.pi, vqp->stats.msq_dbred_pi);
-		printf("mscq ci %6d     mscq dbred ci %6d\n",
+		printf("mscq ci %-10d     mscq dbred ci %-10d\n",
 				vqp->bk_qp->bk_qp.sq_hw_cq.ci, vqp->stats.mcq_dbred_ci);
 	} else {
 		printf("!!!no backend qp info \n");
 	}
-	printf("sq wqe fetched %15lu\n",vqp->stats.sq_wqe_fetched);
-	printf("sq wqe submitted %15lu\n", vqp->stats.sq_wqe_submitted);
-	printf("sq wqe wr submitted %15lu\n", vqp->stats.sq_wqe_wr);
-	printf("sq wqe atomic submitted %15lu\n", vqp->stats.sq_wqe_atomic);
-	printf("sq wqe ud submitted %15lu\n", vqp->stats.sq_wqe_ud);
+	printf("sq wqe fetched %-15lu\n",vqp->stats.sq_wqe_fetched);
+	printf("sq wqe submitted %-15lu\n", vqp->stats.sq_wqe_submitted);
+	printf("sq wqe wr submitted %-15lu\n", vqp->stats.sq_wqe_wr);
+	printf("sq wqe atomic submitted %-15lu\n", vqp->stats.sq_wqe_atomic);
+	printf("sq wqe ud submitted %-15lu\n", vqp->stats.sq_wqe_ud);
 
 }
 
