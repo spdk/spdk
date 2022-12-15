@@ -1,6 +1,6 @@
 [global]
-blocksize_range=4k-512k
-iodepth=128
+blocksize_range=4k-128k
+iodepth=16
 ioengine=libaio
 filename=
 group_reporting

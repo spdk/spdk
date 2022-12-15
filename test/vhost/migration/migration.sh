@@ -100,7 +100,6 @@ function vm_migrate() {
 	timing_enter vm_migrate
 	notice "Migrating VM $1 to VM "$(basename $target_vm_dir)
 	echo -e \
-		"migrate_set_speed 1g\n" \
 		"migrate tcp:$target_ip:$target_vm_migration_port\n" \
 		"info migrate\n" \
 		"quit" | vm_monitor_send $1 "$from_vm_dir/migration_result"

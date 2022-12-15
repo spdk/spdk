@@ -55,6 +55,8 @@ function migration_tc1() {
 	# Use 2 VMs:
 	# incoming VM - the one we want to migrate
 	# targe VM - the one which will accept migration
+	# VM uses 1 GiB memory, here we use light IO workload to keep number of dirty pages
+	# is in low rate of VM's memory, see https://github.com/spdk/spdk/issues/2805.
 	local job_file="$testdir/migration-tc1.job"
 	local log_file
 	log_file="/root/$(basename ${job_file%%.*}).log"
