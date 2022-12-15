@@ -72,11 +72,19 @@ COMMON_CFLAGS += -march=$(TARGET_ARCHITECTURE)
 endif
 
 ifeq ($(TARGET_MACHINE),x86_64)
-ifneq (,$(shell $(CC) --target-help | grep -e -mavx512f >/dev/null && echo 1))
+ifeq ($(CC_TYPE),gcc)
+ifneq (,$(shell $(CC) --target-help 2>/dev/null | grep -e -mavx512f >/dev/null && echo 1))
 # Don't use AVX-512 instructions in SPDK code - it breaks Valgrind for
 # some cases where compiler decides to hyper-optimize a relatively
 # simple operation (like int-to-float conversion) using AVX-512
 COMMON_CFLAGS += -mno-avx512f
+endif
+endif
+ifeq ($(CC_TYPE),clang)
+LLC=llc$(shell echo $(CC) | grep -o -E  "\-[0-9]{2}")
+ifneq (,$(shell $(LLC) -march=x86-64 -mattr=help 2>&1 | grep -e avx512f >/dev/null && echo 1))
+COMMON_CFLAGS += -mno-avx512f
+endif
 endif
 endif
 
