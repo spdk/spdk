@@ -335,6 +335,10 @@ struct spdk_bdev_channel_iter {
 	void *ctx;
 };
 
+struct spdk_bdev_io_error_stat {
+	uint32_t error_status[-SPDK_MIN_BDEV_IO_STATUS];
+};
+
 #define __bdev_to_io_dev(bdev)		(((char *)bdev) + 1)
 #define __bdev_from_io_dev(io_dev)	((struct spdk_bdev *)(((char *)io_dev) - 1))
 #define __io_ch_to_bdev_ch(io_ch)	((struct spdk_bdev_channel *)spdk_io_channel_get_ctx(io_ch))
@@ -500,6 +504,38 @@ spdk_bdev_get_by_name(const char *bdev_name)
 	spdk_spin_unlock(&g_bdev_mgr.spinlock);
 
 	return bdev;
+}
+
+struct bdev_io_status_string {
+	enum spdk_bdev_io_status status;
+	const char *str;
+};
+
+static const struct bdev_io_status_string bdev_io_status_strings[] = {
+	{ SPDK_BDEV_IO_STATUS_AIO_ERROR, "aio_error" },
+	{ SPDK_BDEV_IO_STATUS_ABORTED, "aborted" },
+	{ SPDK_BDEV_IO_STATUS_FIRST_FUSED_FAILED, "first_fused_failed" },
+	{ SPDK_BDEV_IO_STATUS_MISCOMPARE, "miscompare" },
+	{ SPDK_BDEV_IO_STATUS_NOMEM, "nomem" },
+	{ SPDK_BDEV_IO_STATUS_SCSI_ERROR, "scsi_error" },
+	{ SPDK_BDEV_IO_STATUS_NVME_ERROR, "nvme_error" },
+	{ SPDK_BDEV_IO_STATUS_FAILED, "failed" },
+	{ SPDK_BDEV_IO_STATUS_PENDING, "pending" },
+	{ SPDK_BDEV_IO_STATUS_SUCCESS, "success" },
+};
+
+static const char *
+bdev_io_status_get_string(enum spdk_bdev_io_status status)
+{
+	uint32_t i;
+
+	for (i = 0; i < SPDK_COUNTOF(bdev_io_status_strings); i++) {
+		if (bdev_io_status_strings[i].status == status) {
+			return bdev_io_status_strings[i].str;
+		}
+	}
+
+	return "reserved";
 }
 
 struct spdk_bdev_wait_for_examine_ctx {
@@ -3417,7 +3453,7 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 	TAILQ_INIT(&ch->io_submitted);
 	TAILQ_INIT(&ch->io_locked);
 
-	ch->stat = bdev_alloc_io_stat();
+	ch->stat = bdev_alloc_io_stat(false);
 	if (ch->stat == NULL) {
 		bdev_channel_destroy_resource(ch);
 		return -1;
@@ -3438,7 +3474,7 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 		free(name);
 		ch->start_tsc = spdk_get_ticks();
 		ch->interval_tsc = spdk_get_ticks_hz() / 100;
-		ch->prev_stat = bdev_alloc_io_stat();
+		ch->prev_stat = bdev_alloc_io_stat(false);
 		if (ch->prev_stat == NULL) {
 			bdev_channel_destroy_resource(ch);
 			return -1;
@@ -3690,7 +3726,12 @@ bdev_add_io_stat(struct spdk_bdev_io_stat *total, struct spdk_bdev_io_stat *add)
 static void
 bdev_get_io_stat(struct spdk_bdev_io_stat *to_stat, struct spdk_bdev_io_stat *from_stat)
 {
-	memcpy(to_stat, from_stat, sizeof(struct spdk_bdev_io_stat));
+	memcpy(to_stat, from_stat, offsetof(struct spdk_bdev_io_stat, io_error));
+
+	if (to_stat->io_error != NULL && from_stat->io_error != NULL) {
+		memcpy(to_stat->io_error, from_stat->io_error,
+		       sizeof(struct spdk_bdev_io_error_stat));
+	}
 }
 
 static void
@@ -3718,17 +3759,33 @@ bdev_reset_io_stat(struct spdk_bdev_io_stat *stat, enum bdev_reset_stat_mode mod
 	stat->read_latency_ticks = 0;
 	stat->write_latency_ticks = 0;
 	stat->unmap_latency_ticks = 0;
+
+	if (stat->io_error != NULL) {
+		memset(stat->io_error, 0, sizeof(struct spdk_bdev_io_error_stat));
+	}
 }
 
 struct spdk_bdev_io_stat *
-bdev_alloc_io_stat(void)
+bdev_alloc_io_stat(bool io_error_stat)
 {
 	struct spdk_bdev_io_stat *stat;
 
 	stat = malloc(sizeof(struct spdk_bdev_io_stat));
-	if (stat != NULL) {
-		bdev_reset_io_stat(stat, BDEV_RESET_STAT_ALL);
+	if (stat == NULL) {
+		return NULL;
 	}
+
+	if (io_error_stat) {
+		stat->io_error = malloc(sizeof(struct spdk_bdev_io_error_stat));
+		if (stat->io_error == NULL) {
+			free(stat);
+			return NULL;
+		}
+	} else {
+		stat->io_error = NULL;
+	}
+
+	bdev_reset_io_stat(stat, BDEV_RESET_STAT_ALL);
 
 	return stat;
 }
@@ -3736,12 +3793,15 @@ bdev_alloc_io_stat(void)
 void
 bdev_free_io_stat(struct spdk_bdev_io_stat *stat)
 {
+	free(stat->io_error);
 	free(stat);
 }
 
 void
 bdev_dump_io_stat_json(struct spdk_bdev_io_stat *stat, struct spdk_json_write_ctx *w)
 {
+	int i;
+
 	spdk_json_write_named_uint64(w, "bytes_read", stat->bytes_read);
 	spdk_json_write_named_uint64(w, "num_read_ops", stat->num_read_ops);
 	spdk_json_write_named_uint64(w, "bytes_written", stat->bytes_written);
@@ -3770,6 +3830,17 @@ bdev_dump_io_stat_json(struct spdk_bdev_io_stat *stat, struct spdk_json_write_ct
 	spdk_json_write_named_uint64(w, "min_copy_latency_ticks",
 				     stat->min_copy_latency_ticks != UINT64_MAX ?
 				     stat->min_copy_latency_ticks : 0);
+
+	if (stat->io_error != NULL) {
+		spdk_json_write_named_object_begin(w, "io_error");
+		for (i = 0; i < -SPDK_MIN_BDEV_IO_STATUS; i++) {
+			if (stat->io_error->error_status[i] != 0) {
+				spdk_json_write_named_uint32(w, bdev_io_status_get_string(-(i + 1)),
+							     stat->io_error->error_status[i]);
+			}
+		}
+		spdk_json_write_object_end(w);
+	}
 }
 
 static void
@@ -6161,11 +6232,12 @@ spdk_bdev_queue_io_wait(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 static inline void
 bdev_io_update_io_stat(struct spdk_bdev_io *bdev_io, uint64_t tsc_diff)
 {
+	enum spdk_bdev_io_status io_status = bdev_io->internal.status;
 	struct spdk_bdev_io_stat *io_stat = bdev_io->internal.ch->stat;
 	uint64_t num_blocks = bdev_io->u.bdev.num_blocks;
 	uint32_t blocklen = bdev_io->bdev->blocklen;
 
-	if (spdk_likely(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS)) {
+	if (spdk_likely(io_status == SPDK_BDEV_IO_STATUS_SUCCESS)) {
 		switch (bdev_io->type) {
 		case SPDK_BDEV_IO_TYPE_READ:
 			io_stat->bytes_read += num_blocks * blocklen;
@@ -6240,6 +6312,13 @@ bdev_io_update_io_stat(struct spdk_bdev_io *bdev_io, uint64_t tsc_diff)
 		default:
 			break;
 		}
+	} else if (io_status <= SPDK_BDEV_IO_STATUS_FAILED && io_status >= SPDK_MIN_BDEV_IO_STATUS) {
+		io_stat = bdev_io->bdev->internal.stat;
+		assert(io_stat->io_error != NULL);
+
+		spdk_spin_lock(&bdev_io->bdev->internal.spinlock);
+		io_stat->io_error->error_status[-io_status - 1]++;
+		spdk_spin_unlock(&bdev_io->bdev->internal.spinlock);
 	}
 
 #ifdef SPDK_CONFIG_VTUNE
@@ -6606,7 +6685,7 @@ bdev_register(struct spdk_bdev *bdev)
 		return -ENOMEM;
 	}
 
-	bdev->internal.stat = bdev_alloc_io_stat();
+	bdev->internal.stat = bdev_alloc_io_stat(true);
 	if (!bdev->internal.stat) {
 		SPDK_ERRLOG("Unable to allocate I/O statistics structure.\n");
 		free(bdev_name);

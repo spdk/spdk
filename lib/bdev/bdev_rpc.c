@@ -217,7 +217,7 @@ rpc_get_iostat_done(struct rpc_get_iostat_ctx *rpc_ctx)
 }
 
 static struct bdev_get_iostat_ctx *
-bdev_iostat_ctx_alloc(void)
+bdev_iostat_ctx_alloc(bool iostat_ext)
 {
 	struct bdev_get_iostat_ctx *ctx;
 
@@ -226,7 +226,7 @@ bdev_iostat_ctx_alloc(void)
 		return NULL;
 	}
 
-	ctx->stat = bdev_alloc_io_stat();
+	ctx->stat = bdev_alloc_io_stat(iostat_ext);
 	if (ctx->stat == NULL) {
 		free(ctx);
 		return NULL;
@@ -293,7 +293,7 @@ bdev_get_iostat(void *ctx, struct spdk_bdev *bdev)
 	struct bdev_get_iostat_ctx *bdev_ctx;
 	int rc;
 
-	bdev_ctx = bdev_iostat_ctx_alloc();
+	bdev_ctx = bdev_iostat_ctx_alloc(true);
 	if (bdev_ctx == NULL) {
 		SPDK_ERRLOG("Failed to allocate bdev_iostat_ctx struct\n");
 		return -ENOMEM;
@@ -416,7 +416,7 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 	rpc_ctx->per_channel = req.per_channel;
 
 	if (desc != NULL) {
-		bdev_ctx = bdev_iostat_ctx_alloc();
+		bdev_ctx = bdev_iostat_ctx_alloc(req.per_channel == false);
 		if (bdev_ctx == NULL) {
 			SPDK_ERRLOG("Failed to allocate bdev_iostat_ctx struct\n");
 			rpc_ctx->rc = -ENOMEM;

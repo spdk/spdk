@@ -150,6 +150,8 @@ typedef void (*spdk_bdev_io_completion_cb)(struct spdk_bdev_io *bdev_io,
 		bool success,
 		void *cb_arg);
 
+struct spdk_bdev_io_error_stat;
+
 struct spdk_bdev_io_stat {
 	uint64_t bytes_read;
 	uint64_t num_read_ops;
@@ -172,6 +174,13 @@ struct spdk_bdev_io_stat {
 	uint64_t max_copy_latency_ticks;
 	uint64_t min_copy_latency_ticks;
 	uint64_t ticks_rate;
+
+	/* This data structure is privately defined in the bdev library.
+	 * This data structure is only used by the bdev_get_iostat RPC now.
+	 */
+	struct spdk_bdev_io_error_stat *io_error;
+
+	/* For efficient deep copy, no members should be added after io_error. */
 };
 
 struct spdk_bdev_opts {

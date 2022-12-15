@@ -25,7 +25,7 @@ New APIs `spdk_bdev_for_each_channel` and `spdk_bdev_for_each_channel_continue` 
 associated function pointers were added to iterate each channel of the required bdev.
 
 The RPC `bdev_get_iostat` now allows a user to query the per channel IO statistics for
-required bdev.
+required bdev, and displays maximum and minimum latencies and I/O error counts.
 
 New `spdk_bdev_copy_blocks` and `spdk_bdev_get_max_copy` APIs to support copy commands.
 

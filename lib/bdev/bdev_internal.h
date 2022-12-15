@@ -21,7 +21,7 @@ void bdev_io_init(struct spdk_bdev_io *bdev_io, struct spdk_bdev *bdev, void *cb
 
 void bdev_io_submit(struct spdk_bdev_io *bdev_io);
 
-struct spdk_bdev_io_stat *bdev_alloc_io_stat(void);
+struct spdk_bdev_io_stat *bdev_alloc_io_stat(bool io_error_stat);
 void bdev_free_io_stat(struct spdk_bdev_io_stat *stat);
 void bdev_dump_io_stat_json(struct spdk_bdev_io_stat *stat, struct spdk_json_write_ctx *w);
 
