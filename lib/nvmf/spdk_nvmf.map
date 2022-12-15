@@ -84,6 +84,7 @@
 
 	# public functions in nvmf_cmd.h
 	spdk_nvmf_ctrlr_identify_ctrlr;
+	spdk_nvmf_ctrlr_identify_iocs_specific;
 	spdk_nvmf_ctrlr_identify_ns;
 	spdk_nvmf_set_custom_admin_cmd_hdlr;
 	spdk_nvmf_set_passthru_admin_cmd;
@@ -96,6 +97,7 @@
 	spdk_nvmf_request_get_response;
 	spdk_nvmf_request_get_req_to_abort;
 	spdk_nvmf_bdev_ctrlr_abort_cmd;
+	spdk_nvmf_ns_identify_iocs_specific;
 
 	# public functions in nvmf_transport.h
 	spdk_nvmf_transport_register;

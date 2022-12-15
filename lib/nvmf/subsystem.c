@@ -18,6 +18,7 @@
 #include "spdk/json.h"
 #include "spdk/file.h"
 #include "spdk/bit_array.h"
+#include "spdk/bdev.h"
 
 #define __SPDK_BDEV_MODULE_ONLY
 #include "spdk/bdev_module.h"
@@ -403,6 +404,19 @@ _nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	}
 
 	return 0;
+}
+
+static struct spdk_nvmf_ns *
+_nvmf_subsystem_get_first_zoned_ns(struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_ns *ns = spdk_nvmf_subsystem_get_first_ns(subsystem);
+	while (ns != NULL) {
+		if (ns->csi == SPDK_NVME_CSI_ZNS) {
+			return ns;
+		}
+		ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns);
+	}
+	return NULL;
 }
 
 int
@@ -1578,6 +1592,8 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 	struct spdk_nvmf_ns *ns;
 	struct spdk_nvmf_reservation_info info = {0};
 	int rc;
+	bool zone_append_supported;
+	uint64_t max_zone_append_size_kib;
 
 	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
 	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
@@ -1678,6 +1694,26 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 	if (spdk_mem_all_zero(opts.nguid, sizeof(opts.nguid))) {
 		SPDK_STATIC_ASSERT(sizeof(opts.nguid) == sizeof(opts.uuid), "size mismatch");
 		memcpy(opts.nguid, spdk_bdev_get_uuid(ns->bdev), sizeof(opts.nguid));
+	}
+
+	if (spdk_bdev_is_zoned(ns->bdev)) {
+		SPDK_DEBUGLOG(nvmf, "The added namespace is backed by a zoned block device.\n");
+		ns->csi = SPDK_NVME_CSI_ZNS;
+
+		zone_append_supported = spdk_bdev_io_type_supported(ns->bdev,
+					SPDK_BDEV_IO_TYPE_ZONE_APPEND);
+		max_zone_append_size_kib = spdk_bdev_get_max_zone_append_size(
+						   ns->bdev) * spdk_bdev_get_block_size(ns->bdev);
+
+		if (_nvmf_subsystem_get_first_zoned_ns(subsystem) != NULL &&
+		    (subsystem->zone_append_supported != zone_append_supported ||
+		     subsystem->max_zone_append_size_kib != max_zone_append_size_kib)) {
+			SPDK_ERRLOG("Namespaces with different zone append support or different zone append size are not allowed.\n");
+			goto err_ns_reservation_restore;
+		}
+
+		subsystem->zone_append_supported = zone_append_supported;
+		subsystem->max_zone_append_size_kib = max_zone_append_size_kib;
 	}
 
 	ns->opts = opts;

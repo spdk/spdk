@@ -4,6 +4,8 @@
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
+#include "spdk/bdev_zone.h"
+#include "spdk/nvme_spec.h"
 #include "spdk/stdinc.h"
 
 #include "spdk_cunit.h"
@@ -19,7 +21,15 @@ struct spdk_bdev {
 	int ut_mock;
 	uint64_t blockcnt;
 	uint32_t blocklen;
+	bool zoned;
+	uint32_t zone_size;
+	uint32_t max_open_zones;
+	uint32_t max_active_zones;
 };
+
+const uint32_t MAX_OPEN_ZONES = 12;
+const uint32_t MAX_ACTIVE_ZONES = 34;
+const uint32_t ZONE_SIZE = 56;
 
 const char subsystem_default_sn[SPDK_NVME_CTRLR_SN_LEN + 1] = "subsys_default_sn";
 const char subsystem_default_mn[SPDK_NVME_CTRLR_MN_LEN + 1] = "subsys_default_mn";
@@ -193,6 +203,12 @@ DEFINE_STUB(spdk_nvmf_bdev_ctrlr_nvme_passthru_admin,
 DEFINE_STUB(spdk_bdev_reset, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 				   spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
+
+DEFINE_STUB(spdk_bdev_get_max_active_zones, uint32_t, (const struct spdk_bdev *bdev),
+	    MAX_ACTIVE_ZONES);
+DEFINE_STUB(spdk_bdev_get_max_open_zones, uint32_t, (const struct spdk_bdev *bdev), MAX_OPEN_ZONES);
+DEFINE_STUB(spdk_bdev_get_zone_size, uint64_t, (const struct spdk_bdev *bdev), ZONE_SIZE);
+DEFINE_STUB(spdk_bdev_is_zoned, bool, (const struct spdk_bdev *bdev), false);
 
 int
 spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_cb cb_fn, void *ctx)
@@ -1040,6 +1056,76 @@ test_identify_ns(void)
 }
 
 static void
+test_identify_ns_iocs_specific(void)
+{
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_transport transport = {};
+	struct spdk_nvmf_qpair admin_qpair = { .transport = &transport };
+	struct spdk_nvmf_ctrlr ctrlr = { .subsys = &subsystem, .admin_qpair = &admin_qpair };
+	struct spdk_nvme_cmd cmd = {};
+	struct spdk_nvme_cpl rsp = {};
+	struct spdk_nvme_zns_ns_data nsdata = {};
+	struct spdk_bdev bdev[2] = {{.blockcnt = 1234, .zoned = true, .zone_size = ZONE_SIZE, .max_open_zones = MAX_OPEN_ZONES, .max_active_zones = MAX_ACTIVE_ZONES}, {.blockcnt = 5678}};
+	struct spdk_nvmf_ns ns[2] = {{.bdev = &bdev[0]}, {.bdev = &bdev[1]}};
+	struct spdk_nvmf_ns *ns_arr[2] = {&ns[0], &ns[1]};
+
+	subsystem.ns = ns_arr;
+	subsystem.max_nsid = SPDK_COUNTOF(ns_arr);
+
+	cmd.cdw11_bits.identify.csi = SPDK_NVME_CSI_ZNS;
+
+	/* Invalid ZNS NSID 0 */
+	cmd.nsid = 0;
+	memset(&nsdata, 0xFF, sizeof(nsdata));
+	memset(&rsp, 0, sizeof(rsp));
+	CU_ASSERT(spdk_nvmf_ns_identify_iocs_specific(&ctrlr, &cmd, &rsp,
+			&nsdata, sizeof(nsdata)) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT);
+	CU_ASSERT(spdk_mem_all_zero(&nsdata, sizeof(nsdata)));
+
+	/* Valid ZNS NSID 1 */
+	cmd.nsid = 1;
+	memset(&nsdata, 0xFF, sizeof(nsdata));
+	memset(&rsp, 0, sizeof(rsp));
+	CU_ASSERT(spdk_nvmf_ns_identify_iocs_specific(&ctrlr, &cmd, &rsp,
+			&nsdata, sizeof(nsdata)) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT(nsdata.ozcs.read_across_zone_boundaries == 1);
+	CU_ASSERT(nsdata.mar == MAX_ACTIVE_ZONES - 1);
+	CU_ASSERT(nsdata.mor == MAX_OPEN_ZONES - 1);
+	CU_ASSERT(nsdata.lbafe[0].zsze == ZONE_SIZE);
+	nsdata.ozcs.read_across_zone_boundaries = 0;
+	nsdata.mar = 0;
+	nsdata.mor = 0;
+	nsdata.lbafe[0].zsze = 0;
+	CU_ASSERT(spdk_mem_all_zero(&nsdata, sizeof(nsdata)));
+
+	cmd.cdw11_bits.identify.csi = SPDK_NVME_CSI_NVM;
+
+	/* Valid NVM NSID 2 */
+	cmd.nsid = 2;
+	memset(&nsdata, 0xFF, sizeof(nsdata));
+	memset(&rsp, 0, sizeof(rsp));
+	CU_ASSERT(spdk_nvmf_ns_identify_iocs_specific(&ctrlr, &cmd, &rsp,
+			&nsdata, sizeof(nsdata)) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT(spdk_mem_all_zero(&nsdata, sizeof(nsdata)));
+
+	/* Invalid NVM NSID 3 */
+	cmd.nsid = 0;
+	memset(&nsdata, 0xFF, sizeof(nsdata));
+	memset(&rsp, 0, sizeof(rsp));
+	CU_ASSERT(spdk_nvmf_ns_identify_iocs_specific(&ctrlr, &cmd, &rsp,
+			&nsdata, sizeof(nsdata)) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT);
+	CU_ASSERT(spdk_mem_all_zero(&nsdata, sizeof(nsdata)));
+}
+
+static void
 test_set_get_features(void)
 {
 	struct spdk_nvmf_subsystem subsystem = {};
@@ -1585,6 +1671,77 @@ test_identify_ctrlr(void)
 	expected_ioccsz = sizeof(struct spdk_nvme_cmd) / 16 + transport.opts.in_capsule_data_size / 16;
 	CU_ASSERT(spdk_nvmf_ctrlr_identify_ctrlr(&ctrlr, &cdata) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(cdata.nvmf_specific.ioccsz == expected_ioccsz);
+}
+
+static void
+test_identify_ctrlr_iocs_specific(void)
+{
+	struct spdk_nvmf_subsystem subsystem = { .max_zone_append_size_kib = 0 };
+	struct spdk_nvmf_registers vcprop = { .cap.bits.mpsmin = 0 };
+	struct spdk_nvmf_ctrlr ctrlr = { .subsys = &subsystem, .vcprop = vcprop };
+	struct spdk_nvme_cmd cmd = {};
+	struct spdk_nvme_cpl rsp = {};
+	struct spdk_nvme_zns_ctrlr_data ctrlr_data = {};
+
+	cmd.cdw11_bits.identify.csi = SPDK_NVME_CSI_ZNS;
+
+	/* ZNS max_zone_append_size_kib no limit */
+	memset(&ctrlr_data, 0xFF, sizeof(ctrlr_data));
+	memset(&rsp, 0, sizeof(rsp));
+	CU_ASSERT(spdk_nvmf_ctrlr_identify_iocs_specific(&ctrlr, &cmd, &rsp,
+			&ctrlr_data, sizeof(ctrlr_data)) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT(ctrlr_data.zasl == 0);
+	CU_ASSERT(spdk_mem_all_zero(&ctrlr_data, sizeof(ctrlr_data)));
+
+	/* ZNS max_zone_append_size_kib = 4096 */
+	memset(&ctrlr_data, 0xFF, sizeof(ctrlr_data));
+	memset(&rsp, 0, sizeof(rsp));
+	subsystem.max_zone_append_size_kib = 4096;
+	CU_ASSERT(spdk_nvmf_ctrlr_identify_iocs_specific(&ctrlr, &cmd, &rsp,
+			&ctrlr_data, sizeof(ctrlr_data)) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT(ctrlr_data.zasl == 0);
+	CU_ASSERT(spdk_mem_all_zero(&ctrlr_data, sizeof(ctrlr_data)));
+
+	/* ZNS max_zone_append_size_kib = 60000 */
+	memset(&ctrlr_data, 0xFF, sizeof(ctrlr_data));
+	memset(&rsp, 0, sizeof(rsp));
+	subsystem.max_zone_append_size_kib = 60000;
+	CU_ASSERT(spdk_nvmf_ctrlr_identify_iocs_specific(&ctrlr, &cmd, &rsp,
+			&ctrlr_data, sizeof(ctrlr_data)) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT(ctrlr_data.zasl == 3);
+	ctrlr_data.zasl = 0;
+	CU_ASSERT(spdk_mem_all_zero(&ctrlr_data, sizeof(ctrlr_data)));
+
+	/* ZNS max_zone_append_size_kib = 60000; mpsmin = 2 */
+	memset(&ctrlr_data, 0xFF, sizeof(ctrlr_data));
+	memset(&rsp, 0, sizeof(rsp));
+	ctrlr.vcprop.cap.bits.mpsmin = 2;
+	subsystem.max_zone_append_size_kib = 60000;
+	CU_ASSERT(spdk_nvmf_ctrlr_identify_iocs_specific(&ctrlr, &cmd, &rsp,
+			&ctrlr_data, sizeof(ctrlr_data)) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT(ctrlr_data.zasl == 1);
+	ctrlr_data.zasl = 0;
+	CU_ASSERT(spdk_mem_all_zero(&ctrlr_data, sizeof(ctrlr_data)));
+	ctrlr.vcprop.cap.bits.mpsmin = 0;
+
+	cmd.cdw11_bits.identify.csi = SPDK_NVME_CSI_NVM;
+
+	/* NVM */
+	memset(&ctrlr_data, 0xFF, sizeof(ctrlr_data));
+	memset(&rsp, 0, sizeof(rsp));
+	CU_ASSERT(spdk_nvmf_ctrlr_identify_iocs_specific(&ctrlr, &cmd, &rsp,
+			&ctrlr_data, sizeof(ctrlr_data)) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT(spdk_mem_all_zero(&ctrlr_data, sizeof(ctrlr_data)));
 }
 
 static int
@@ -2899,6 +3056,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_connect);
 	CU_ADD_TEST(suite, test_get_ns_id_desc_list);
 	CU_ADD_TEST(suite, test_identify_ns);
+	CU_ADD_TEST(suite, test_identify_ns_iocs_specific);
 	CU_ADD_TEST(suite, test_reservation_write_exclusive);
 	CU_ADD_TEST(suite, test_reservation_exclusive_access);
 	CU_ADD_TEST(suite, test_reservation_write_exclusive_regs_only_and_all_regs);
@@ -2907,6 +3065,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_get_dif_ctx);
 	CU_ADD_TEST(suite, test_set_get_features);
 	CU_ADD_TEST(suite, test_identify_ctrlr);
+	CU_ADD_TEST(suite, test_identify_ctrlr_iocs_specific);
 	CU_ADD_TEST(suite, test_custom_admin_cmd);
 	CU_ADD_TEST(suite, test_fused_compare_and_write);
 	CU_ADD_TEST(suite, test_multi_async_event_reqs);

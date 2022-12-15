@@ -7,6 +7,7 @@
 #include "spdk/stdinc.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk_cunit.h"
+#include "spdk/bdev_zone.h"
 
 #include "spdk_internal/mock.h"
 
@@ -226,6 +227,13 @@ DEFINE_STUB_V(accel_channel_destroy, (void *io_device, void *ctx_buf));
 DEFINE_STUB(spdk_bdev_reset, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 				   spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
+
+DEFINE_STUB(spdk_bdev_get_max_active_zones, uint32_t,
+	    (const struct spdk_bdev *bdev), 0);
+DEFINE_STUB(spdk_bdev_get_max_open_zones, uint32_t,
+	    (const struct spdk_bdev *bdev), 0);
+DEFINE_STUB(spdk_bdev_is_zoned, bool, (const struct spdk_bdev *bdev), false);
+DEFINE_STUB(spdk_bdev_get_zone_size, uint64_t, (const struct spdk_bdev *bdev), 0);
 
 struct spdk_io_channel *
 spdk_accel_get_io_channel(void)

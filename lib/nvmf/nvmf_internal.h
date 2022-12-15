@@ -165,6 +165,8 @@ struct spdk_nvmf_ns {
 	bool ptpl_activated;
 	/* ZCOPY supported on bdev device */
 	bool zcopy;
+	/* Command Set Identifier */
+	enum spdk_nvme_csi csi;
 };
 
 /*
@@ -262,6 +264,10 @@ struct spdk_nvmf_subsystem {
 
 	bool						destroying;
 	bool						async_destroy;
+
+	/* Zoned storage related fields */
+	bool						zone_append_supported;
+	uint64_t					max_zone_append_size_kib;
 
 	struct spdk_nvmf_tgt				*tgt;
 
