@@ -2591,6 +2591,34 @@ invalid_log_page:
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
+static struct spdk_nvmf_ns *
+_nvmf_subsystem_get_ns_safe(struct spdk_nvmf_subsystem *subsystem,
+			    uint32_t nsid,
+			    struct spdk_nvme_cpl *rsp)
+{
+	struct spdk_nvmf_ns *ns;
+	if (nsid == 0 || nsid > subsystem->max_nsid) {
+		SPDK_ERRLOG("Identify Namespace for invalid NSID %u\n", nsid);
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+		return NULL;
+	}
+
+	ns = _nvmf_subsystem_get_ns(subsystem, nsid);
+	if (ns == NULL || ns->bdev == NULL) {
+		/*
+		 * Inactive namespaces should return a zero filled data structure.
+		 * The data buffer is already zeroed by nvmf_ctrlr_process_admin_cmd(),
+		 * so we can just return early here.
+		 */
+		SPDK_DEBUGLOG(nvmf, "Identify Namespace for inactive NSID %u\n", nsid);
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_SUCCESS;
+		return NULL;
+	}
+	return ns;
+}
+
 int
 spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 			    struct spdk_nvme_cmd *cmd,
@@ -2602,23 +2630,8 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 	uint32_t max_num_blocks;
 	enum spdk_nvme_ana_state ana_state;
 
-	if (cmd->nsid == 0 || cmd->nsid > subsystem->max_nsid) {
-		SPDK_ERRLOG("Identify Namespace for invalid NSID %u\n", cmd->nsid);
-		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
-		rsp->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	ns = _nvmf_subsystem_get_ns(subsystem, cmd->nsid);
-	if (ns == NULL || ns->bdev == NULL) {
-		/*
-		 * Inactive namespaces should return a zero filled data structure.
-		 * The data buffer is already zeroed by nvmf_ctrlr_process_admin_cmd(),
-		 * so we can just return early here.
-		 */
-		SPDK_DEBUGLOG(nvmf, "Identify Namespace for inactive NSID %u\n", cmd->nsid);
-		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
-		rsp->status.sc = SPDK_NVME_SC_SUCCESS;
+	ns = _nvmf_subsystem_get_ns_safe(subsystem, cmd->nsid, rsp);
+	if (ns == NULL) {
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
