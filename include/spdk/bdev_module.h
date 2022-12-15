@@ -247,6 +247,16 @@ struct spdk_bdev_fn_table {
 	 * Vbdev module must inspect types of memory domains returned by base bdev and report only those
 	 * memory domains that it can work with. */
 	int (*get_memory_domains)(void *ctx, struct spdk_memory_domain **domains, int array_size);
+
+	/**
+	 * Reset I/O statistics specific for this bdev context.
+	 */
+	void (*reset_device_stat)(void *ctx);
+
+	/**
+	 * Dump I/O statistics specific for this bdev context.
+	 */
+	void (*dump_device_stat_json)(void *ctx, struct spdk_json_write_ctx *w);
 };
 
 /** bdev I/O completion status */

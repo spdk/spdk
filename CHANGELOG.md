@@ -47,6 +47,10 @@ that no internal bdev locks can be held when a poller or message goes off CPU.
 A new RPC `bdev_reset_iostat` was added to reset I/O statistics of bdevs. Note that if one
 consumer reset I/O statistics, it affects all other consumers.
 
+Add function pointers, `dump_device_stat_json` and `reset_device_stat` to the bdev module
+function table to display and reset I/O statistics specific for the module specific bdev
+context.
+
 ### event
 
 Added core lock file mechanism to prevent the same CPU cores from being used by multiple

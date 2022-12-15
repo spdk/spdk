@@ -277,6 +277,12 @@ bdev_get_iostat_done(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat,
 					     spdk_bdev_get_weighted_io_time(bdev));
 	}
 
+	if (bdev->fn_table->dump_device_stat_json) {
+		spdk_json_write_named_object_begin(w, "driver_specific");
+		bdev->fn_table->dump_device_stat_json(bdev->ctxt, w);
+		spdk_json_write_object_end(w);
+	}
+
 	spdk_json_write_object_end(w);
 
 done:
@@ -524,6 +530,10 @@ bdev_reset_iostat(void *ctx, struct spdk_bdev *bdev)
 		free(bdev_ctx);
 		SPDK_ERRLOG("Failed to open bdev\n");
 		return rc;
+	}
+
+	if (bdev->fn_table->reset_device_stat) {
+		bdev->fn_table->reset_device_stat(bdev->ctxt);
 	}
 
 	rpc_ctx->bdev_count++;
