@@ -24,8 +24,8 @@ extern "C" {
 
 #include <rte_debug.h>
 #include <rte_interrupts.h>
-#include <rte_dev.h>
-#include <rte_bus.h>
+#include "rte_dev.h"
+#include "rte_bus.h"
 #include <rte_pci.h>
 
 /** Pathname of PCI devices directory. */
