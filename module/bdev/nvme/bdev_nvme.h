@@ -177,7 +177,6 @@ struct nvme_ctrlr_channel {
 struct nvme_io_path {
 	struct nvme_ns			*nvme_ns;
 	struct nvme_qpair		*qpair;
-	uint64_t			io_outstanding;
 	STAILQ_ENTRY(nvme_io_path)	stailq;
 
 	/* The following are used to update io_path cache of the nvme_bdev_channel. */
