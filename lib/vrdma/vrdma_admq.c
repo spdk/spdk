@@ -56,13 +56,6 @@ static uint32_t g_vqp_cnt;
 static uint32_t g_vcq_cnt;
 static uint32_t g_veq_cnt;
 
-struct spdk_bit_array *free_vpd_ids;
-struct spdk_bit_array *free_vmr_ids;
-struct spdk_bit_array *free_vah_ids;
-struct spdk_bit_array *free_vqp_ids;
-struct spdk_bit_array *free_vcq_ids;
-struct spdk_bit_array *free_veq_ids;
-
 static struct spdk_bit_array *
 spdk_vrdma_create_id_pool(uint32_t max_num)
 {
@@ -77,27 +70,38 @@ spdk_vrdma_create_id_pool(uint32_t max_num)
 	return free_ids;
 }
 
-static int spdk_vrdma_init_all_id_pool(void)
+int spdk_vrdma_init_all_id_pool(struct spdk_vrdma_dev *vdev)
 {
-	free_vpd_ids = spdk_vrdma_create_id_pool(VRDMA_MAX_PD_NUM);
-	if (!free_vpd_ids)
+	vdev->free_vpd_ids = spdk_vrdma_create_id_pool(VRDMA_DEV_MAX_PD);
+	if (!vdev->free_vpd_ids)
 		return -1;
-	free_vmr_ids = spdk_vrdma_create_id_pool(VRDMA_MAX_MR_NUM);
-	if (!free_vmr_ids)
-		return -1;
-	free_vah_ids = spdk_vrdma_create_id_pool(VRDMA_MAX_AH_NUM);
-	if (!free_vah_ids)
-		return -1;
-	free_vqp_ids = spdk_vrdma_create_id_pool(VRDMA_MAX_QP_NUM);
-	if (!free_vqp_ids)
-		return -1;
-	free_vcq_ids = spdk_vrdma_create_id_pool(VRDMA_MAX_CQ_NUM);
-	if (!free_vcq_ids)
-		return -1;
-	free_veq_ids = spdk_vrdma_create_id_pool(VRDMA_MAX_EQ_NUM);
-	if (!free_veq_ids)
-		return -1;
+	vdev->free_vmr_ids = spdk_vrdma_create_id_pool(VRDMA_DEV_MAX_MR);
+	if (!vdev->free_vmr_ids)
+		goto del_vpd;
+	vdev->free_vah_ids = spdk_vrdma_create_id_pool(VRDMA_DEV_MAX_AH);
+	if (!vdev->free_vah_ids)
+		goto del_vmr;
+	vdev->free_vqp_ids = spdk_vrdma_create_id_pool(VRDMA_DEV_MAX_QP);
+	if (!vdev->free_vqp_ids)
+		goto del_vah;
+	vdev->free_vcq_ids = spdk_vrdma_create_id_pool(VRDMA_DEV_MAX_CQ);
+	if (!vdev->free_vcq_ids)
+		goto del_vqp;
+	vdev->free_veq_ids = spdk_vrdma_create_id_pool(VRDMA_DEV_MAX_EQ);
+	if (!vdev->free_veq_ids)
+		goto del_vcq;
 	return 0;
+del_vcq:
+	spdk_bit_array_free(&vdev->free_vcq_ids);
+del_vqp:
+	spdk_bit_array_free(&vdev->free_vqp_ids);
+del_vah:
+	spdk_bit_array_free(&vdev->free_vah_ids);
+del_vmr:
+	spdk_bit_array_free(&vdev->free_vmr_ids);
+del_vpd:
+	spdk_bit_array_free(&vdev->free_vpd_ids);
+	return -1;
 }
 
 int spdk_vrdma_adminq_resource_init(void)
@@ -108,19 +112,17 @@ int spdk_vrdma_adminq_resource_init(void)
 	g_veq_cnt = 0;
 	g_vmr_cnt = 0;
 	g_vah_cnt = 0;
-	if (spdk_vrdma_init_all_id_pool())
-		return -1;
 	return 0;
 }
 
-void spdk_vrdma_adminq_resource_destory(void)
+void spdk_vrdma_adminq_resource_destory(struct spdk_vrdma_dev *vdev)
 {
-	spdk_bit_array_free(&free_vpd_ids);
-	spdk_bit_array_free(&free_vmr_ids);
-	spdk_bit_array_free(&free_vah_ids);
-	spdk_bit_array_free(&free_vqp_ids);
-	spdk_bit_array_free(&free_vcq_ids);
-	spdk_bit_array_free(&free_veq_ids);
+	spdk_bit_array_free(&vdev->free_vpd_ids);
+	spdk_bit_array_free(&vdev->free_vmr_ids);
+	spdk_bit_array_free(&vdev->free_vah_ids);
+	spdk_bit_array_free(&vdev->free_vqp_ids);
+	spdk_bit_array_free(&vdev->free_vcq_ids);
+	spdk_bit_array_free(&vdev->free_veq_ids);
 }
 
 struct spdk_vrdma_pd *
@@ -378,7 +380,7 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 		SPDK_ERRLOG("no vrdma sf dev name is configured \n");
 		return;
 	}
-	pd_idx = spdk_bit_array_find_first_clear(free_vpd_ids, 0);
+	pd_idx = spdk_bit_array_find_first_clear(ctrl->vdev->free_vpd_ids, 0);
 	if (pd_idx == UINT32_MAX) {
 		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
 		SPDK_ERRLOG("Failed to allocate PD index, err(%d)\n",
@@ -410,7 +412,7 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 	g_vpd_cnt++;
 	ctrl->vdev->vpd_cnt++;
 	vpd->pd_idx = pd_idx;
-	spdk_bit_array_set(free_vpd_ids, pd_idx);
+	spdk_bit_array_set(ctrl->vdev->free_vpd_ids, pd_idx);
 	LIST_INSERT_HEAD(&ctrl->vdev->vpd_list, vpd, entry);
 	aqe->resp.create_pd_resp.pd_handle = pd_idx;
 	aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
@@ -479,7 +481,7 @@ static void vrdma_aq_destroy_pd(struct vrdma_ctrl *ctrl,
     ibv_dealloc_pd(vpd->ibpd);
 	if (vpd->crossing_mkey)
 		vrdma_destroy_crossing_mkey(ctrl->sctrl->sdev, vpd->crossing_mkey);
-	spdk_bit_array_clear(free_vpd_ids, vpd->pd_idx);
+	spdk_bit_array_clear(ctrl->vdev->free_vpd_ids, vpd->pd_idx);
     free(vpd);
 	g_vpd_cnt--;
 	ctrl->vdev->vpd_cnt--;
@@ -657,6 +659,8 @@ static void vrdma_reg_mr_create_attr(struct vrdma_create_mr_req *mr_req,
 	for (i = 0; i < lattr->num_sge; i++) {
 		lattr->sge[i].paddr = mr_req->sge_list[i].pa;
 		lattr->sge[i].size = mr_req->sge_list[i].length;
+		SPDK_NOTICELOG("\nlizh vrdma_reg_mr_create_attr...paddr 0x%lx length 0x%x\n",
+		lattr->sge[i].paddr, lattr->sge[i].size);
 	}
 	/*TODO use mr_type and access_flag in future. Not support in POC.*/
 }
@@ -713,7 +717,7 @@ static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
 				aqe->resp.create_mr_resp.err_code);
 		return;
 	}
-	mr_idx = spdk_bit_array_find_first_clear(free_vmr_ids, 0);
+	mr_idx = spdk_bit_array_find_first_clear(ctrl->vdev->free_vmr_ids, 0);
 	if (mr_idx == UINT32_MAX) {
 		aqe->resp.create_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
 		SPDK_ERRLOG("Failed to allocate mr_idx, err(%d)\n",
@@ -752,7 +756,7 @@ static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
 	ctrl->vdev->vmr_cnt++;
 	vmr->mr_idx = mr_idx;
 	vpd->ref_cnt++;
-	spdk_bit_array_set(free_vmr_ids, mr_idx);
+	spdk_bit_array_set(ctrl->vdev->free_vmr_ids, mr_idx);
 	LIST_INSERT_HEAD(&ctrl->vdev->vmr_list, vmr, entry);
 	aqe->resp.create_mr_resp.rkey = vmr->mr_log.mkey;
 	aqe->resp.create_mr_resp.lkey = aqe->resp.create_mr_resp.rkey;
@@ -812,7 +816,7 @@ static void vrdma_aq_dereg_mr(struct vrdma_ctrl *ctrl,
 	}
 	LIST_REMOVE(vmr, entry);
 	vrdma_destroy_remote_mkey(ctrl, vmr);
-	spdk_bit_array_clear(free_vmr_ids, vmr->mr_idx);
+	spdk_bit_array_clear(ctrl->vdev->free_vmr_ids, vmr->mr_idx);
 
 	g_vmr_cnt--;
 	ctrl->vdev->vmr_cnt--;
@@ -849,7 +853,7 @@ static void vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,
 					aqe->resp.create_cq_resp.err_code);
 		return;
 	}
-	cq_idx = spdk_bit_array_find_first_clear(free_vcq_ids, 0);
+	cq_idx = spdk_bit_array_find_first_clear(ctrl->vdev->free_vcq_ids, 0);
 	if (cq_idx == UINT32_MAX) {
 		aqe->resp.create_cq_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
 		SPDK_ERRLOG("Failed to allocate cq_idx, err(%d)\n",
@@ -901,7 +905,7 @@ static void vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,
 	g_vcq_cnt++;
 	ctrl->vdev->vcq_cnt++;
 	veq->ref_cnt++;
-	spdk_bit_array_set(free_vcq_ids, cq_idx);
+	spdk_bit_array_set(ctrl->vdev->free_vcq_ids, cq_idx);
 	LIST_INSERT_HEAD(&ctrl->vdev->vcq_list, vcq, entry);
 	aqe->resp.create_cq_resp.cq_handle = cq_idx;
 	aqe->resp.create_cq_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
@@ -960,7 +964,7 @@ static void vrdma_aq_destroy_cq(struct vrdma_ctrl *ctrl,
 		return;
 	}
 	LIST_REMOVE(vcq, entry);
-	spdk_bit_array_clear(free_vcq_ids, vcq->cq_idx);
+	spdk_bit_array_clear(ctrl->vdev->free_vcq_ids, vcq->cq_idx);
 	g_vcq_cnt--;
 	ctrl->vdev->vcq_cnt--;
 	vcq->veq->ref_cnt--;
@@ -1018,7 +1022,7 @@ static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
 					aqe->resp.create_qp_resp.err_code);
 		return;
 	}
-	qp_idx = spdk_bit_array_find_first_clear(free_vqp_ids,
+	qp_idx = spdk_bit_array_find_first_clear(ctrl->vdev->free_vqp_ids,
 			VRDMA_NORMAL_VQP_START_IDX);
 	if (qp_idx == UINT32_MAX) {
 		aqe->resp.create_qp_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
@@ -1057,7 +1061,7 @@ static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
 	sq_vcq->ref_cnt++;
 	rq_vcq->ref_cnt++;
 	vpd->ref_cnt++;
-	spdk_bit_array_set(free_vqp_ids, qp_idx);
+	spdk_bit_array_set(ctrl->vdev->free_vqp_ids, qp_idx);
 	LIST_INSERT_HEAD(&ctrl->vdev->vqp_list, vqp, entry);
 	aqe->resp.create_qp_resp.qp_handle = qp_idx;
 	aqe->resp.create_qp_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
@@ -1111,7 +1115,7 @@ static void vrdma_aq_destroy_suspended_qp(struct vrdma_ctrl *ctrl,
 		return;
 	}
 	LIST_REMOVE(vqp, entry);
-	spdk_bit_array_clear(free_vqp_ids, vqp->qp_idx);
+	spdk_bit_array_clear(ctrl->vdev->free_vqp_ids, vqp->qp_idx);
 
 	g_vqp_cnt--;
 	ctrl->vdev->vqp_cnt--;
@@ -1319,7 +1323,7 @@ static void vrdma_aq_create_ceq(struct vrdma_ctrl *ctrl,
 				  aqe->resp.create_ceq_resp.err_code);
 		return;
 	}
-	eq_idx = spdk_bit_array_find_first_clear(free_veq_ids, 0);
+	eq_idx = spdk_bit_array_find_first_clear(ctrl->vdev->free_veq_ids, 0);
 	if (eq_idx == UINT32_MAX) {
 		aqe->resp.create_ceq_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
 		SPDK_ERRLOG("Failed to allocate eq_idx, err(%d)\n",
@@ -1349,7 +1353,7 @@ static void vrdma_aq_create_ceq(struct vrdma_ctrl *ctrl,
 	veq->log_depth = aqe->req.create_ceq_req.log_depth;
 	veq->queue_addr = aqe->req.create_ceq_req.queue_addr;
 	veq->vector_idx = aqe->req.create_ceq_req.vector_idx;
-	spdk_bit_array_set(free_veq_ids, eq_idx);
+	spdk_bit_array_set(ctrl->vdev->free_veq_ids, eq_idx);
 	LIST_INSERT_HEAD(&ctrl->vdev->veq_list, veq, entry);
 	aqe->resp.create_ceq_resp.ceq_handle = eq_idx;
 	aqe->resp.create_ceq_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
@@ -1414,7 +1418,7 @@ static void vrdma_aq_destroy_ceq(struct vrdma_ctrl *ctrl,
 		return;
 	}
 	LIST_REMOVE(veq, entry);
-	spdk_bit_array_clear(free_veq_ids, veq->eq_idx);
+	spdk_bit_array_clear(ctrl->vdev->free_veq_ids, veq->eq_idx);
 
 	g_veq_cnt--;
 	ctrl->vdev->veq_cnt--;
@@ -1450,7 +1454,7 @@ static void vrdma_aq_create_ah(struct vrdma_ctrl *ctrl,
 					aqe->resp.create_ah_resp.err_code);
 		return;
 	}
-	ah_idx = spdk_bit_array_find_first_clear(free_vah_ids, 0);
+	ah_idx = spdk_bit_array_find_first_clear(ctrl->vdev->free_vah_ids, 0);
 	if (ah_idx == UINT32_MAX) {
 		aqe->resp.create_ah_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
 		SPDK_ERRLOG("Failed to allocate ah_idx, err(%d)\n",
@@ -1478,7 +1482,7 @@ static void vrdma_aq_create_ah(struct vrdma_ctrl *ctrl,
 	vah->ah_idx = ah_idx;
 	vah->dip = aqe->req.create_ah_req.dip;
 	vpd->ref_cnt++;
-	spdk_bit_array_set(free_vah_ids, ah_idx);
+	spdk_bit_array_set(ctrl->vdev->free_vah_ids, ah_idx);
 	LIST_INSERT_HEAD(&ctrl->vdev->vah_list, vah, entry);
 	aqe->resp.create_ah_resp.ah_handle = ah_idx;
 	aqe->resp.create_ah_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
@@ -1531,7 +1535,7 @@ static void vrdma_aq_destroy_ah(struct vrdma_ctrl *ctrl,
 		return;
 	}
 	LIST_REMOVE(vah, entry);
-	spdk_bit_array_clear(free_vah_ids, vah->ah_idx);
+	spdk_bit_array_clear(ctrl->vdev->free_vah_ids, vah->ah_idx);
 
 	g_vah_cnt--;
 	ctrl->vdev->vah_cnt--;

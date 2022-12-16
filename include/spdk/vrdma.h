@@ -38,6 +38,7 @@
 #include "snap_dma.h"
 #include "snap_vrdma_virtq.h"
 
+#define MAX_VRDMA_STATIC_PF 2
 #define MAX_VRDMA_DEV_NUM 64
 #define MAX_VRDMA_DEV_LEN 32
 #define LOG_4K_PAGE_SIZE 12
@@ -241,6 +242,12 @@ struct spdk_vrdma_dev {
 	char emu_name[MAX_VRDMA_DEV_LEN];
 	struct spdk_vrdma_sf vrdma_sf;
 	struct ibv_device *emu_mgr;
+	struct spdk_bit_array *free_vpd_ids;
+	struct spdk_bit_array *free_vmr_ids;
+	struct spdk_bit_array *free_vah_ids;
+	struct spdk_bit_array *free_vqp_ids;
+	struct spdk_bit_array *free_vcq_ids;
+	struct spdk_bit_array *free_veq_ids;
 	uint32_t vpd_cnt;
 	uint32_t vmr_cnt;
 	uint32_t vah_cnt;

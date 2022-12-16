@@ -37,6 +37,7 @@
 #include "spdk/vrdma_emu_mgr.h"
 #include "spdk/vrdma_snap_pci_mgr.h"
 #include "spdk/vrdma_qp.h"
+#include "spdk/vrdma_rpc.h"
 
 static uint32_t g_vdev_cnt;
 
@@ -53,7 +54,9 @@ int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
 	int dev_count;
 
 	SPDK_NOTICELOG("lizh spdk_vrdma_ctx_start...start\n");
-	g_vdev_cnt = 0;	
+	g_vdev_cnt = 0;
+	memset(&g_vrdma_rpc, 0, sizeof(struct spdk_vrdma_rpc));
+	g_vrdma_rpc.srv.rpc_lock_fd = -1;
 	if (vrdma_ctx->dpa_enabled) {
 		/*Load provider just for DPA*/
 	}
@@ -72,28 +75,29 @@ int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
 			 MAX_VRDMA_DEV_LEN - 1);
 
 	ibv_free_device_list(list);
-	
 	/*Create static PF device*/
-	vdev = calloc(1, sizeof(*vdev));
-	if (!vdev)
-		goto err;
-	vdev->emu_mgr = spdk_vrdma_snap_get_ibv_device(vrdma_ctx->emu_manager);
-	vdev->devid = 0; /*lizh: Hard code for POC*/
-	LIST_INIT(&vdev->vpd_list);
-	LIST_INIT(&vdev->vmr_list);
-	LIST_INIT(&vdev->vqp_list);
-	LIST_INIT(&vdev->vcq_list);
-	LIST_INIT(&vdev->veq_list);
-	g_vdev_cnt++;
-	if (spdk_emu_controller_vrdma_create(vdev))
-		goto free_vdev;
-
+	for (dev_count = 0; dev_count < MAX_VRDMA_STATIC_PF; dev_count++) {
+		vdev = calloc(1, sizeof(*vdev));
+		if (!vdev)
+			goto err;
+		vdev->emu_mgr = spdk_vrdma_snap_get_ibv_device(vrdma_ctx->emu_manager);
+		vdev->devid = dev_count;
+		LIST_INIT(&vdev->vpd_list);
+		LIST_INIT(&vdev->vmr_list);
+		LIST_INIT(&vdev->vqp_list);
+		LIST_INIT(&vdev->vcq_list);
+		LIST_INIT(&vdev->veq_list);
+		g_vdev_cnt++;
+		if (spdk_vrdma_init_all_id_pool(vdev))
+			goto free_vdev;
+		if (spdk_emu_controller_vrdma_create(vdev))
+			goto free_vdev;
+		/* init sf name */
+		strcpy(vdev->vrdma_sf.sf_name, "dummy");
+	}
 	if (vrdma_ctx->dpa_enabled) {
 		/*Prove init DPA*/
 	}
-
-	/* init sf name */
-	strcpy(vdev->vrdma_sf.sf_name, "dummy");
 	return 0;
 free_vdev:
 	free(vdev);

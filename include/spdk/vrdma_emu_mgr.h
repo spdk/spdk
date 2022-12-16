@@ -82,9 +82,7 @@ extern pthread_mutex_t spdk_emu_list_lock;
 struct spdk_emu_ctx *
 spdk_emu_ctx_find_by_pci_id(const char *emu_manager, int pf_id);
 struct spdk_emu_ctx *
-spdk_emu_ctx_find_by_vhca_id(const char *emu_manager, int vhca_id);
-struct spdk_emu_ctx *
-spdk_emu_ctx_find_by_vqpn(const char *emu_manager, uint32_t vqpn);
+spdk_emu_ctx_find_by_gid_ip(const char *emu_manager, uint64_t gid_ip);
 struct spdk_emu_ctx *spdk_emu_ctx_find_by_emu_name(const char *emu_name);
 
 struct spdk_emu_ctx *

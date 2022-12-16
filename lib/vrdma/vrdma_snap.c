@@ -78,7 +78,6 @@ void spdk_vrdma_snap_stop(void (*fini_cb)(void))
     if (count == 0) {
         spdk_io_mgr_clear();
         spdk_vrdma_snap_pci_mgr_clear();
-        spdk_vrdma_adminq_resource_destory();
         fini_cb();
     }
 }

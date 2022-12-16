@@ -62,7 +62,6 @@ struct vrdma_ctrl {
     struct ibv_mr *mr;
     struct vrdma_admin_sw_qp sw_qp;
     struct snap_vrdma_ctrl *sctrl;
-    struct spdk_vrdma_rpc rpc;
     /** Service-specific callbacks. */
 	const struct vRdmaServiceOps *srv_ops;
     void (*destroy_done_cb)(void *arg);

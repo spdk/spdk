@@ -282,7 +282,6 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
     ctrl->pf_id = attr->pf_id;
     ctrl->vdev = attr->vdev;
     ctrl->dev.rdev_idx = attr->vdev->devid;
-    ctrl->rpc.srv.rpc_lock_fd = -1;
     LIST_INIT(&ctrl->bk_qp_list);
     vrdma_srv_device_init(ctrl);
     SPDK_NOTICELOG("new VRDMA controller %d [in order %d]"
@@ -347,21 +346,22 @@ static void vrdma_ctrl_free(struct vrdma_ctrl *ctrl)
         }
         LIST_FOREACH(vah, &ctrl->vdev->vah_list, entry) {
             LIST_REMOVE(vah, entry);
-	        spdk_bit_array_clear(free_vah_ids, vah->ah_idx);
+	        spdk_bit_array_clear(ctrl->vdev->free_vah_ids, vah->ah_idx);
             free(vah);
         }
         LIST_FOREACH(vmr, &ctrl->vdev->vmr_list, entry) {
             LIST_REMOVE(vmr, entry);
             vrdma_destroy_remote_mkey(ctrl, vmr);
-	        spdk_bit_array_clear(free_vmr_ids, vmr->mr_idx);
+	        spdk_bit_array_clear(ctrl->vdev->free_vmr_ids, vmr->mr_idx);
             free(vmr);
         }
         LIST_FOREACH(vpd, &ctrl->vdev->vpd_list, entry) {
             LIST_REMOVE(vpd, entry);
             ibv_dealloc_pd(vpd->ibpd);
-	        spdk_bit_array_clear(free_vpd_ids, vpd->pd_idx);
+	        spdk_bit_array_clear(ctrl->vdev->free_vpd_ids, vpd->pd_idx);
             free(vpd);
         }
+        spdk_vrdma_adminq_resource_destory(ctrl->vdev);
         free(ctrl->vdev);
     }
     free(ctrl);
