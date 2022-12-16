@@ -63,6 +63,8 @@ packages=(
 
 if [[ $OSID != centos && $OSID != rocky ]] || [[ $OSVERSION != 8* ]]; then
 	packages+=(btrfs-progs)
+	packages+=(avahi)
+	packages+=(avahi-tools)
 fi
 
 if [[ $OSID == centos && $OSVERSION == 8* ]]; then

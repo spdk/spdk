@@ -59,6 +59,8 @@ packages=(
 	rpmdevtools
 	ruby-devel
 	llvm
+	avahi
+	avahi-tools
 )
 
 pre_install() { :; }

@@ -54,6 +54,7 @@ packages=(
 	parted
 	wget
 	xfsprogs
+	avahi
 )
 
 # TODO:

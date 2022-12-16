@@ -25,4 +25,5 @@ packages=(
 	sshpass
 	wget
 	llvm-devel
+	avahi
 )

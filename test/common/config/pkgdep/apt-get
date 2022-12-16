@@ -73,6 +73,8 @@ packages=(
 	rdmacm-utils
 	ruby-dev
 	llvm
+	avahi-daemon
+	avahi-utils
 )
 
 install_vagrant_dependencies() {
