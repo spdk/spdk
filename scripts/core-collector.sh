@@ -18,7 +18,8 @@ core_meta() {
 		    "PID": $core_pid,
 		    "signal": "$core_sig ($core_sig_name)",
 		    "path": "$exe_path",
-		    "statm": "$statm"
+		    "statm": "$statm",
+		    "filter": "$(coredump_filter)"
 		  }
 		}
 	CORE
@@ -29,6 +30,30 @@ bt() { hash gdb && gdb -batch -ex "thread apply all bt full" "$1" "$2" 2>&1; }
 stderr() {
 	exec 2> "$core.stderr.txt"
 	set -x
+}
+
+coredump_filter() {
+	local bitmap bit
+	local _filter filter
+
+	bitmap[0]=anon-priv-mappings
+	bitmap[1]=anon-shared-mappings
+	bitmap[2]=file-priv-mappings
+	bitmap[3]=file-shared-mappings
+	bitmap[4]=elf-headers
+	bitmap[5]=priv-hp
+	bitmap[6]=shared-hp
+	bitmap[7]=priv-DAX
+	bitmap[8]=shared-DAX
+
+	_filter=0x$(< "/proc/$core_pid/coredump_filter")
+
+	for bit in "${!bitmap[@]}"; do
+		((_filter & 1 << bit)) || continue
+		filter=${filter:+$filter,}${bitmap[bit]}
+	done
+
+	echo "$filter"
 }
 
 args+=(core_pid)
