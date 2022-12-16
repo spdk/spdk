@@ -483,6 +483,7 @@ spdk_fd_group_remove(struct spdk_fd_group *fgrp, int efd)
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to remove fd: %d from fd group(%p): %s\n",
 			    ehdlr->fd, fgrp, strerror(errno));
+		assert(0);
 		return;
 	}
 
