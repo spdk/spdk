@@ -4028,8 +4028,10 @@ blob_insert_cluster_msg_test(void)
 	/* Specify cluster_num to allocate and new_cluster will be returned to insert on md_thread.
 	 * This is to simulate behaviour when cluster is allocated after blob creation.
 	 * Such as _spdk_bs_allocate_and_copy_cluster(). */
+	spdk_spin_lock(&bs->used_lock);
 	bs_allocate_cluster(blob, cluster_num, &new_cluster, &extent_page, false);
 	CU_ASSERT(blob->active.clusters[cluster_num] == 0);
+	spdk_spin_unlock(&bs->used_lock);
 
 	blob_insert_cluster_on_md_thread(blob, cluster_num, new_cluster, extent_page, &page,
 					 blob_op_complete, NULL);
