@@ -1136,11 +1136,8 @@ function waitforserial() {
 		nvme_device_counter=$2
 	fi
 
-	# Wait initially for min 4s to make sure all devices are ready for use. It seems
-	# that we may be racing with a kernel where in some cases immediate disconnect may
-	# leave dangling subsystem with no-op block devices which can't be used nor removed
-	# (unless kernel is rebooted) and which start to negatively affect all the tests.
-	sleep 4
+	# Wait initially for min 2s to make sure all devices are ready for use.
+	sleep 2
 	while ((i++ <= 15)); do
 		nvme_devices=$(lsblk -l -o NAME,SERIAL | grep -c "$1")
 		((nvme_devices == nvme_device_counter)) && return 0
