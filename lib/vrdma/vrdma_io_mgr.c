@@ -247,8 +247,9 @@ static bool vrdma_qp_wqe_sm_read(struct spdk_vrdma_qp *vqp,
 	uint16_t q_size = vqp->sq.comm.wqebb_cnt;
 	int ret;
 
+#if WQE_DBG
 	SPDK_NOTICELOG("vrdam poll sq wqe: sq pa 0x%lx\n", vqp->sq.comm.wqe_buff_pa);
-
+#endif
 	vqp->sm_state = VRDMA_QP_STATE_WQE_PARSE;
 	//vqp->sq.comm.num_to_parse = spdk_min((pi - pre_pi), MAX_POLL_WQE_NUM);
 	vqp->sq.comm.num_to_parse = pi - pre_pi;
