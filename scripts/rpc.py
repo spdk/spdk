@@ -2260,6 +2260,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('ublk_id', help='ublk device id to be deleted. Example: 1.', type=int)
     p.set_defaults(func=ublk_stop_disk)
 
+    def ublk_get_disks(args):
+        print_dict(rpc.ublk.ublk_get_disks(args.client,
+                                           ublk_id=args.ublk_id))
+
+    p = subparsers.add_parser('ublk_get_disks',
+                              help='Display full or specified ublk device list')
+    p.add_argument('-n', '--ublk-id', help="ublk device id. Example: 1", type=int, required=False)
+    p.set_defaults(func=ublk_get_disks)
+
     # nbd
     def nbd_start_disk(args):
         print(rpc.nbd.nbd_start_disk(args.client,

@@ -25,7 +25,12 @@ int ublk_start_disk(const char *bdev_name, uint32_t ublk_id,
 		    uint32_t num_queues, uint32_t queue_depth);
 int ublk_stop_disk(uint32_t ublk_id, ublk_del_cb del_cb, void *cb_arg);
 struct spdk_ublk_dev *ublk_dev_find_by_id(uint32_t ublk_id);
+uint32_t ublk_dev_get_id(struct spdk_ublk_dev *ublk);
 const char *ublk_dev_get_bdev_name(struct spdk_ublk_dev *ublk);
+struct spdk_ublk_dev *ublk_dev_first(void);
+struct spdk_ublk_dev *ublk_dev_next(struct spdk_ublk_dev *prev);
+uint32_t ublk_dev_get_queue_depth(struct spdk_ublk_dev *ublk);
+uint32_t ublk_dev_get_num_queues(struct spdk_ublk_dev *ublk);
 
 #ifdef __cplusplus
 }

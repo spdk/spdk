@@ -10831,6 +10831,50 @@ Example response:
 }
 ~~~
 
+### ublk_get_disks {#rpc_ublk_get_disks}
+
+Display full or specified ublk device list
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+ublk_id                 | Optional | int         | ublk device id to display
+
+#### Response
+
+Display ublk device list
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "ublk_get_disks",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result":  [
+    {
+      "ublk_device": "/dev/ublkb1",
+      "id": 1,
+      "queue_depth": 512,
+      "num_queues": 1,
+      "bdev_name": "Malloc1"
+    }
+  ]
+}
+~~~
+
 ## Linux Network Block Device (NBD) {#jsonrpc_components_nbd}
 
 SPDK supports exporting bdevs through Linux nbd. These devices then appear as standard Linux kernel block devices

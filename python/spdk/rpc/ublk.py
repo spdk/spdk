@@ -28,3 +28,10 @@ def ublk_start_disk(client, bdev_name, ublk_id=1, num_queues=1, queue_depth=128)
 def ublk_stop_disk(client, ublk_id=1):
     params = {'ublk_id': ublk_id}
     return client.call('ublk_stop_disk', params)
+
+
+def ublk_get_disks(client, ublk_id=1):
+    params = {}
+    if ublk_id:
+        params['ublk_id'] = ublk_id
+    return client.call('ublk_get_disks', params)

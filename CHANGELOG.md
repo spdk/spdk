@@ -176,6 +176,15 @@ For the active-active policy of the multipath mode, in addition to the default r
 selector, the minimum queue depth path selector was added. The minimum queue depth path selector
 selects an I/O path according to the number of outstanding requests of each nvme qpair.
 
+### ublk device
+
+The ublk application supports the ublk kernel driver. It's implemented as a ublk backend
+in spdk_tgt and could be started with specifying configuration. See the
+[ublk](https://www.kernel.org/doc/html/latest/block/ublk.html) documentation for more details.
+
+ublk bdev could export a block device via Linux ublk. It will move this backend device into userspace
+as `/dev/ublkb*`. Before to adding ublk device, need to create ublk target by rpc methond.
+
 ## v22.09
 
 ### accel

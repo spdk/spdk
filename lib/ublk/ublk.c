@@ -561,6 +561,34 @@ ublk_dev_find_by_id(uint32_t ublk_id)
 	return NULL;
 }
 
+uint32_t
+ublk_dev_get_id(struct spdk_ublk_dev *ublk)
+{
+	return ublk->ublk_id;
+}
+
+struct spdk_ublk_dev *ublk_dev_first(void)
+{
+	return TAILQ_FIRST(&g_ublk_bdevs);
+}
+
+struct spdk_ublk_dev *ublk_dev_next(struct spdk_ublk_dev *prev)
+{
+	return TAILQ_NEXT(prev, tailq);
+}
+
+uint32_t
+ublk_dev_get_queue_depth(struct spdk_ublk_dev *ublk)
+{
+	return ublk->queue_depth;
+}
+
+uint32_t
+ublk_dev_get_num_queues(struct spdk_ublk_dev *ublk)
+{
+	return ublk->num_queues;
+}
+
 const char *
 ublk_dev_get_bdev_name(struct spdk_ublk_dev *ublk)
 {
