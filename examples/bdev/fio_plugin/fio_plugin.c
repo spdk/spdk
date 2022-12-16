@@ -16,6 +16,7 @@
 #include "spdk/string.h"
 #include "spdk/queue.h"
 #include "spdk/util.h"
+#include "spdk/rpc.h"
 
 #include "spdk_internal/event.h"
 
@@ -45,6 +46,7 @@ struct spdk_fio_options {
 	int mem_single_seg;
 	int initial_zone_reset;
 	int zone_append;
+	char *rpc_listen_addr;
 };
 
 struct spdk_fio_request {
@@ -86,6 +88,7 @@ struct spdk_fio_zone_cb_arg {
 
 static bool g_spdk_env_initialized = false;
 static const char *g_json_config_file = NULL;
+static const char *g_rpc_listen_addr = SPDK_DEFAULT_RPC_ADDR;
 
 static int spdk_fio_init(struct thread_data *td);
 static void spdk_fio_cleanup(struct thread_data *td);
@@ -207,6 +210,10 @@ static void
 spdk_fio_bdev_init_done(int rc, void *cb_arg)
 {
 	*(bool *)cb_arg = true;
+
+	if (spdk_rpc_initialize(g_rpc_listen_addr) == 0) {
+		spdk_rpc_set_state(SPDK_RPC_RUNTIME);
+	}
 }
 
 static void
@@ -222,6 +229,8 @@ static void
 spdk_fio_bdev_fini_done(void *cb_arg)
 {
 	*(bool *)cb_arg = true;
+
+	spdk_rpc_finish();
 }
 
 static void
@@ -263,6 +272,11 @@ spdk_init_thread_poll(void *arg)
 		SPDK_ERRLOG("No configuration file provided\n");
 		rc = EINVAL;
 		goto err_exit;
+	}
+
+	/* Initialize the RPC listen address */
+	if (eo->rpc_listen_addr) {
+		g_rpc_listen_addr = eo->rpc_listen_addr;
 	}
 
 	/* Initialize the environment library */
@@ -1300,6 +1314,15 @@ static struct fio_option options[] = {
 		.help           = "Opaque context for use of the env implementation",
 		.category       = FIO_OPT_C_ENGINE,
 		.group          = FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "spdk_rpc_listen_addr",
+		.lname		= "SPDK RPC listen address",
+		.type		= FIO_OPT_STR_STORE,
+		.off1		= offsetof(struct spdk_fio_options, rpc_listen_addr),
+		.help		= "The address to listen the RPC operations",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
 	},
 	{
 		.name		= NULL,
