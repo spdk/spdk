@@ -1909,7 +1909,8 @@ nvmf_tcp_pdu_payload_handle(struct spdk_nvmf_tcp_qpair *tqpair, struct nvme_tcp_
 	SPDK_DEBUGLOG(nvmf_tcp, "enter\n");
 	/* check data digest if need */
 	if (pdu->ddgst_enable) {
-		if (!pdu->dif_ctx && tqpair->group && (pdu->data_len % SPDK_NVME_TCP_DIGEST_ALIGNMENT == 0)) {
+		if (tqpair->qpair.qid != 0 && !pdu->dif_ctx && tqpair->group &&
+		    (pdu->data_len % SPDK_NVME_TCP_DIGEST_ALIGNMENT == 0)) {
 			rc = spdk_accel_submit_crc32cv(tqpair->group->accel_channel, &pdu->data_digest_crc32, pdu->data_iov,
 						       pdu->data_iovcnt, 0, data_crc32_calc_done, pdu);
 			if (spdk_likely(rc == 0)) {
