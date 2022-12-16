@@ -160,17 +160,17 @@ struct spdk_blob_store {
 
 	struct spdk_bs_dev		*dev;
 
-	struct spdk_bit_array		*used_md_pages;
-	struct spdk_bit_pool		*used_clusters;
+	struct spdk_bit_array		*used_md_pages;		/* Protected by used_lock */
+	struct spdk_bit_pool		*used_clusters;		/* Protected by used_lock */
 	struct spdk_bit_array		*used_blobids;
 	struct spdk_bit_array		*open_blobids;
 
-	pthread_mutex_t			used_clusters_mutex;
+	pthread_mutex_t			used_lock;
 
 	uint32_t			cluster_sz;
 	uint64_t			total_clusters;
 	uint64_t			total_data_clusters;
-	uint64_t			num_free_clusters;
+	uint64_t			num_free_clusters;	/* Protected by used_lock */
 	uint64_t			pages_per_cluster;
 	uint8_t				pages_per_cluster_shift;
 	uint32_t			io_unit_size;
