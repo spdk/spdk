@@ -12,6 +12,7 @@
 #include "spdk/queue.h"
 #include "spdk/util.h"
 #include "spdk/tree.h"
+#include "spdk/thread.h"
 
 #include "request.h"
 
@@ -165,7 +166,7 @@ struct spdk_blob_store {
 	struct spdk_bit_array		*used_blobids;
 	struct spdk_bit_array		*open_blobids;
 
-	pthread_mutex_t			used_lock;
+	struct spdk_spinlock		used_lock;
 
 	uint32_t			cluster_sz;
 	uint64_t			total_clusters;
