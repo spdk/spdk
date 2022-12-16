@@ -1971,6 +1971,7 @@ blob_resize(struct spdk_blob *blob, uint64_t sz)
 	uint32_t	*ep_tmp;
 	uint64_t	new_num_ep = 0, current_num_ep = 0;
 	struct spdk_blob_store *bs;
+	int		rc;
 
 	bs = blob->bs;
 
@@ -2001,14 +2002,16 @@ blob_resize(struct spdk_blob *blob, uint64_t sz)
 	/* Check first that we have enough clusters and md pages before we start claiming them. */
 	if (sz > num_clusters && spdk_blob_is_thin_provisioned(blob) == false) {
 		if ((sz - num_clusters) > bs->num_free_clusters) {
-			return -ENOSPC;
+			rc = -ENOSPC;
+			goto out;
 		}
 		lfmd = 0;
 		for (i = current_num_ep; i < new_num_ep ; i++) {
 			lfmd = spdk_bit_array_find_first_clear(blob->bs->used_md_pages, lfmd);
 			if (lfmd == UINT32_MAX) {
 				/* No more free md pages. Cannot satisfy the request */
-				return -ENOSPC;
+				rc = -ENOSPC;
+				goto out;
 			}
 		}
 	}
@@ -2019,7 +2022,8 @@ blob_resize(struct spdk_blob *blob, uint64_t sz)
 		 */
 		tmp = realloc(blob->active.clusters, sizeof(*blob->active.clusters) * sz);
 		if (sz > 0 && tmp == NULL) {
-			return -ENOMEM;
+			rc = -ENOMEM;
+			goto out;
 		}
 		memset(tmp + blob->active.cluster_array_size, 0,
 		       sizeof(*blob->active.clusters) * (sz - blob->active.cluster_array_size));
@@ -2030,7 +2034,8 @@ blob_resize(struct spdk_blob *blob, uint64_t sz)
 		if (new_num_ep > current_num_ep && blob->use_extent_table) {
 			ep_tmp = realloc(blob->active.extent_pages, sizeof(*blob->active.extent_pages) * new_num_ep);
 			if (new_num_ep > 0 && ep_tmp == NULL) {
-				return -ENOMEM;
+				rc = -ENOMEM;
+				goto out;
 			}
 			memset(ep_tmp + blob->active.extent_pages_array_size, 0,
 			       sizeof(*blob->active.extent_pages) * (new_num_ep - blob->active.extent_pages_array_size));
@@ -2055,7 +2060,9 @@ blob_resize(struct spdk_blob *blob, uint64_t sz)
 	blob->active.num_clusters = sz;
 	blob->active.num_extent_pages = new_num_ep;
 
-	return 0;
+	rc = 0;
+out:
+	return rc;
 }
 
 static void
