@@ -97,6 +97,9 @@ struct spdk_vrdma_rpc {
     struct spdk_vrdma_rpc_server srv;
 	struct spdk_vrdma_rpc_client client;
 };
+extern struct spdk_vrdma_rpc g_vrdma_rpc;
+extern uint64_t g_node_ip;
+extern uint64_t g_node_rip;
 
 enum spdk_vrdma_rpc_qp_state {
 	SPDK_VRDMA_RPC_QP_WAIT_RQPN,
@@ -115,9 +118,10 @@ struct vrdma_bk_qp_connect {
 struct spdk_vrdma_rpc_qp_msg {
 	char *emu_manager;
 	struct vrdma_bk_qp_connect qp_attr;
-	uint32_t remote_node_id; /* remote classic ip:bridge IP */
+	uint64_t remote_node_id; /* remote classic ip:bridge IP */
 	uint32_t remote_dev_id; /* remote vhca_id */
 	uint32_t remote_vqpn;
+	uint64_t remote_gid_ip; /* remote SF IP */
 	uint32_t bk_qpn;
 	uint32_t qp_state;
 };
@@ -129,9 +133,10 @@ struct spdk_vrdma_rpc_qp_attr {
     uint32_t vqpn;
     uint64_t gid_ip;
     uint64_t sf_mac;
-	uint32_t remote_node_id;
+	uint64_t remote_node_id;
 	uint32_t remote_dev_id;
     uint32_t remote_vqpn;
+	uint64_t remote_gid_ip;
     uint32_t bk_qpn;
     uint32_t qp_state;
 };

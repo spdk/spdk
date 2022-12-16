@@ -37,12 +37,6 @@
 #include "snap_dma.h"
 #include "vrdma.h"
 
-extern struct spdk_bit_array *free_vpd_ids;
-extern struct spdk_bit_array *free_vmr_ids;
-extern struct spdk_bit_array *free_vah_ids;
-extern struct spdk_bit_array *free_vqp_ids;
-extern struct spdk_bit_array *free_vcq_ids;
-
 #define VRDMA_NUM_MSIX_VEC                  (64) 
 #define VRDMA_ADMINQ_SIZE                   (1024)
 #define VRDMA_ADMINQ_MSG_INLINE_LEN         (64)
@@ -602,10 +596,11 @@ struct vrdma_state_machine {
 
 struct vrdma_ctrl;
 
+int spdk_vrdma_init_all_id_pool(struct spdk_vrdma_dev *vdev);
 int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe);
 int spdk_vrdma_adminq_resource_init(void);
-void spdk_vrdma_adminq_resource_destory(void);
+void spdk_vrdma_adminq_resource_destory(struct spdk_vrdma_dev *vdev);
 void vrdma_aq_sm_dma_cb(struct snap_dma_completion *self, int status);
 void vrdma_destroy_remote_mkey(struct vrdma_ctrl *ctrl,
 					struct spdk_vrdma_mr *vmr);

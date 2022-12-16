@@ -92,42 +92,22 @@ spdk_emu_ctx_find_by_pci_id(const char *emu_manager, int pf_id)
 }
 
 struct spdk_emu_ctx *
-spdk_emu_ctx_find_by_vhca_id(const char *emu_manager, int vhca_id)
+spdk_emu_ctx_find_by_gid_ip(const char *emu_manager, uint64_t gid_ip)
 {
     struct spdk_emu_ctx *ctx;
     struct vrdma_ctrl *ctrl;
 
     LIST_FOREACH(ctx, &spdk_emu_list, entry) {
-        SPDK_NOTICELOG("lizh spdk_emu_ctx_find_by_vhca_id...%s type %d vhca_id %d\n",
-        ctx->emu_manager, ctx->spci->type, vhca_id);
+        SPDK_NOTICELOG("lizh spdk_emu_ctx_find_by_node_id...%s type %d gid_ip 0x%lx\n",
+        ctx->emu_manager, ctx->spci->type, gid_ip);
         if (strncmp(ctx->emu_manager, emu_manager,
                     SPDK_EMU_MANAGER_NAME_MAXLEN) ||
             ctx->spci->type != SNAP_VRDMA_PF)
             continue;
         ctrl = ctx->ctrl;
-        SPDK_NOTICELOG("lizh spdk_emu_ctx_find_by_vhca_id...mpci.vhca_id %d vhca_id %d\n",
-        ctrl->sctrl->sdev->pci->mpci.vhca_id, vhca_id);
-        if (ctrl->sctrl->sdev->pci->mpci.vhca_id == vhca_id)
-            return ctx;
-    }
-    return NULL;
-}
-
-struct spdk_emu_ctx *
-spdk_emu_ctx_find_by_vqpn(const char *emu_manager, uint32_t vqpn)
-{
-    struct spdk_emu_ctx *ctx;
-    struct vrdma_ctrl *ctrl;
-
-    LIST_FOREACH(ctx, &spdk_emu_list, entry) {
-        SPDK_NOTICELOG("lizh spdk_emu_ctx_find_by_vhca_id...%s type %d vqpn %d\n",
-        ctx->emu_manager, ctx->spci->type, vqpn);
-        if (strncmp(ctx->emu_manager, emu_manager,
-                    SPDK_EMU_MANAGER_NAME_MAXLEN) ||
-            ctx->spci->type != SNAP_VRDMA_PF)
-            continue;
-        ctrl = ctx->ctrl;
-        if (find_spdk_vrdma_qp_by_idx(ctrl, vqpn) != NULL)
+        SPDK_NOTICELOG("lizh spdk_emu_ctx_find_by_node_id...%s type %d gid_ip 0x%lx ip 0x%lx\n",
+        ctx->emu_manager, ctx->spci->type, gid_ip, ctrl->vdev->vrdma_sf.ip);
+        if (ctrl->vdev->vrdma_sf.ip == gid_ip)
             return ctx;
     }
     return NULL;
@@ -216,7 +196,8 @@ static int spdk_emu_ctrl_vrdma_create(struct spdk_emu_ctx *ctx,
     struct vrdma_ctrl_init_attr vrdma_init_attr = {};
     struct spdk_emu_controller_vrdma_create_attr *vrdma_attr;
 
-    SPDK_NOTICELOG("\n lizh spdk_emu_ctrl_vrdma_create..pf_id %d.start\n", attr->spci->id);
+    SPDK_NOTICELOG("\n lizh spdk_emu_ctrl_vrdma_create..spci->id %d devid %d.start\n",
+    attr->spci->id, attr->vdev->devid);
     vrdma_attr = attr->priv;
     vrdma_init_attr.emu_manager_name = attr->emu_manager;
     //vrdma_init_attr.pf_id = attr->spci->id;
@@ -462,7 +443,8 @@ spdk_emu_controller_vrdma_create(struct spdk_vrdma_dev *vdev)
     spci = spdk_vrdma_snap_get_snap_pci(attr->emu_manager, attr->pf_id);
     if (!spci)
         goto free_attr;
-    SPDK_NOTICELOG("\n lizh spdk_emu_controller_vrdma_create emu_manager %s spci %p pf_id %d\n", attr->emu_manager, spci, attr->pf_id);
+    SPDK_NOTICELOG("\n lizh spdk_emu_controller_vrdma_create emu_manager %s spci %p pf_id %d\n",
+    attr->emu_manager, spci, attr->pf_id);
     pthread_mutex_lock(&spdk_emu_list_lock);
     ctx = spdk_emu_ctx_find_by_pci_id(attr->emu_manager,
                            attr->pf_id);
