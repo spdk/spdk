@@ -36,7 +36,7 @@ if [ $(uname -s) = Linux ]; then
 	# Dump the $output_dir path to a file so collector can pick it up while executing.
 	# We don't set in in the core_pattern command line because of the string length limitation
 	# of 128 bytes. See 'man core 5' for details.
-	echo "|$rootdir/scripts/core-collector.sh %P %s %t %c" > /proc/sys/kernel/core_pattern
+	echo "|$rootdir/scripts/core-collector.sh %P %s %t" > /proc/sys/kernel/core_pattern
 	echo "$output_dir/coredumps" > "$rootdir/.coredump_path"
 
 	# make sure nbd (network block device) driver is loaded if it is available

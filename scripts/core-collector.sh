@@ -7,7 +7,7 @@
 # can include whitespaces or other funny characters, and working
 # with those on the cmdline would be a nightmare. Use procfs for
 # the remaining pieces we want to gather:
-# |$rootdir/scripts/core-collector.sh %P %s %t %c $output_dir
+# |$rootdir/scripts/core-collector.sh %P %s %t $output_dir
 
 core_meta() {
 	jq . <<- CORE
@@ -34,7 +34,6 @@ stderr() {
 args+=(core_pid)
 args+=(core_sig)
 args+=(core_ts)
-args+=(rlimit)
 
 read -r "${args[@]}" <<< "$*"
 
@@ -50,13 +49,8 @@ stderr
 # RLIMIT_CORE is not enforced when core is piped to us. To make
 # sure we won't attempt to overload underlying storage, copy
 # only the reasonable amount of bytes (systemd defaults to 2G
-# so let's follow that). But first, check limits of terminating
-# process to see if we need to make any adjustments.
-max_core=$((1024 * 1024 * 1024 * 2))
-
-if ((rlimit == 0xffffffffffffffff || rlimit > max_core)); then
-	rlimit=$max_core
-fi
+# so let's follow that).
+rlimit=$((1024 * 1024 * 1024 * 2))
 
 # Clear path for lz
 rm -f "$core"{,.{bin,bt,gz,json}}
