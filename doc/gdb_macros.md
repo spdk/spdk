@@ -125,6 +125,54 @@ nqn "nqn.2016-06.io.spdk.umgmt:cnode1", '\000' <repeats 191 times>
 ID 1
 ~~~
 
+Printing SPDK spinlocks:
+
+In this example, the spinlock has been initialized and locked but has never been unlocked.
+After it is unlocked the first time the last unlocked stack will be present and the
+`Locked by spdk_thread` line will say `not locked`.
+
+~~~{.sh}
+Breakpoint 2, spdk_spin_unlock (sspin=0x655110 <g_bdev_mgr+80>) at thread.c:2915
+2915            struct spdk_thread *thread = spdk_get_thread();
+(gdb) print *sspin
+$2 = struct spdk_spinlock:
+  Locked by spdk_thread: 0x658080
+  Initialized at:
+     0x43e677 <spdk_spin_init+213> thread.c:2878
+     0x404feb <_bdev_init+16> /build/spdk/spdk-review-public/lib/bdev/bdev.c:116
+     0x44483d <__libc_csu_init+77>
+     0x7ffff62c9d18 <__libc_start_main+120>
+     0x40268e <_start+46>
+  Last locked at:
+     0x43e936 <spdk_spin_lock+436> thread.c:2909
+     0x40ca9c <bdev_name_add+129> /build/spdk/spdk-review-public/lib/bdev/bdev.c:3855
+     0x411a3c <bdev_register+641> /build/spdk/spdk-review-public/lib/bdev/bdev.c:6660
+     0x412e1e <spdk_bdev_register+24> /build/spdk/spdk-review-public/lib/bdev/bdev.c:7171
+     0x417895 <num_blocks_test+119> bdev_ut.c:878
+     0x7ffff7bc38cb <run_single_test.constprop+379>
+     0x7ffff7bc3b61 <run_single_suite.constprop+433>
+     0x7ffff7bc3f76 <CU_run_all_tests+118>
+     0x43351f <main+1439> bdev_ut.c:6295
+     0x7ffff62c9d85 <__libc_start_main+229>
+     0x40268e <_start+46>
+  Last unlocked at:
+~~~
+
+Print a single spinlock stack:
+
+~~~{.sh}
+(gdb) print sspin->internal.lock_stack
+$1 = struct sspin_stack:
+ 0x40c6a1 <spdk_spin_lock+436> /build/spdk/spdk-review-public/lib/thread/thread.c:2909
+ 0x413f48 <spdk_spin+552> thread_ut.c:1831
+ 0x7ffff7bc38cb <run_single_test.constprop+379>
+ 0x7ffff7bc3b61 <run_single_suite.constprop+433>
+ 0x7ffff7bc3f76 <CU_run_all_tests+118>
+ 0x4148fa <main+547> thread_ut.c:1948
+ 0x7ffff62c9d85 <__libc_start_main+229>
+ 0x40248e <_start+46>
+~~~
+
 ## Loading The gdb Macros
 
 Copy the gdb macros to the host where you are about to debug.

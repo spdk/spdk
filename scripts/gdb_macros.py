@@ -4,6 +4,7 @@
 #
 
 import gdb
+import gdb.printing
 
 
 class SpdkTailqList(object):
@@ -307,6 +308,64 @@ class spdk_print_threads(SpdkPrintCommand):
         super(spdk_print_threads, self).__init__(name, threads)
 
 
+class SpdkSpinlockStackPrinter(object):
+
+    def __init__(self, val):
+        self.val = val
+
+    def to_array(self):
+        ret = []
+        count = self.val['depth']
+        for i in range(count):
+            line = ''
+            addr = self.val['addrs'][i]
+            line += ' ' + str(addr)
+            # Source and line (sal) only exists for objects with debug info
+            sal = gdb.find_pc_line(int(addr))
+            try:
+                line += ' ' + str(sal.symtab.filename)
+                line += ':' + str(sal.line)
+            except AttributeError as e:
+                pass
+            ret.append(line)
+        return ret
+
+    def to_string(self):
+        return 'struct sspin_stack:\n' + '\n'.join(self.to_array())
+
+    def display_hint(self):
+        return 'struct sspin_stack'
+
+
+class SpdkSpinlockPrinter(object):
+
+    def __init__(self, val):
+        self.val = val
+
+    def to_string(self):
+        thread = self.val['thread']
+        internal = self.val['internal']
+        s = 'struct spdk_spinlock:'
+        s += '\n  Locked by spdk_thread: '
+        if thread == 0:
+            s += 'not locked'
+        else:
+            s += str(thread)
+        if internal != 0:
+            stacks = [
+                ['Initialized', 'init_stack'],
+                ['Last locked', 'lock_stack'],
+                ['Last unlocked', 'unlock_stack']]
+            for stack in stacks:
+                s += '\n  ' + stack[0] + ' at:\n    '
+                frames = SpdkSpinlockStackPrinter(internal[stack[1]])
+                s += '\n    '.join(frames.to_array())
+        return s
+
+    def display_hint(self):
+        return 'struct spdk_spinlock'
+
+
 class spdk_load_macros(gdb.Command):
 
     def __init__(self):
@@ -316,12 +375,21 @@ class spdk_load_macros(gdb.Command):
                              True)
         self.loaded = False
 
+    def load_pretty_printers(self):
+        pp = gdb.printing.RegexpCollectionPrettyPrinter("spdk_library")
+        pp.add_printer('sspin_stack', '^sspin_stack$',
+                       SpdkSpinlockStackPrinter)
+        pp.add_printer('spdk_spinlock', '^spdk_spinlock$', SpdkSpinlockPrinter)
+        gdb.printing.register_pretty_printer(gdb.current_objfile(), pp)
+
     def invoke(self, arg, from_tty):
         if arg == '--reload':
             print('Reloading spdk information')
             reload = True
         else:
             reload = False
+            # These can only load once
+            self.load_pretty_printers()
 
         if self.loaded and not reload:
             return
