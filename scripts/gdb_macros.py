@@ -1,5 +1,6 @@
 #   SPDX-License-Identifier: BSD-3-Clause
 #   Copyright (C) 2019 Intel Corporation.
+#   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
 import gdb
@@ -126,7 +127,11 @@ class IoDevices(SpdkRbTree):
 class spdk_print_io_devices(SpdkPrintCommand):
 
     def __init__(self):
-        io_devices = IoDevices()
+        try:
+            io_devices = IoDevices()
+        except RuntimeError as e:
+            print("Cannot load IO devices: " + str(e))
+            return
         name = 'spdk_print_io_devices'
         super(spdk_print_io_devices, self).__init__(name, io_devices)
 
@@ -147,7 +152,11 @@ class spdk_print_bdevs(SpdkPrintCommand):
     name = 'spdk_print_bdevs'
 
     def __init__(self):
-        bdevs = BdevMgrBdevs()
+        try:
+            bdevs = BdevMgrBdevs()
+        except RuntimeError as e:
+            print("Cannot load bdevs: " + str(e))
+            return
         super(spdk_print_bdevs, self).__init__(self.name, bdevs)
 
 
@@ -210,7 +219,11 @@ class SpdkNvmfTgtSubsystems(SpdkArr):
             return int(self.spdk_nvmf_tgt['opts']['max_subsystems'])
 
     def __init__(self):
-        self.spdk_nvmf_tgt = gdb.parse_and_eval("g_spdk_nvmf_tgt")
+        try:
+            self.spdk_nvmf_tgt = gdb.parse_and_eval("g_spdk_nvmf_tgt")
+        except RuntimeError as e:
+            print("Cannot load nvmf target subsystems: " + str(e))
+            return
         subsystems = gdb.parse_and_eval("g_spdk_nvmf_tgt->subsystems")
         super(SpdkNvmfTgtSubsystems, self).__init__(subsystems,
                                                     self.get_num_subsystems(),
