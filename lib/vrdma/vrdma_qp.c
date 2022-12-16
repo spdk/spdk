@@ -65,7 +65,7 @@ vrdma_find_rbk_qp_by_vqp(uint64_t remote_gid_ip, uint32_t remote_vqpn)
 	struct vrdma_remote_bk_qp *rqp;
 
 	LIST_FOREACH(rqp, &vrdma_rbk_qp_list, entry) {
-	if (r3qp->attr.comm.vqpn == remote_vqpn &&
+	if (rqp->attr.comm.vqpn == remote_vqpn &&
 		rqp->attr.comm.gid_ip == remote_gid_ip)
             return rqp;
     }
