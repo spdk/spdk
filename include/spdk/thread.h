@@ -904,6 +904,7 @@ bool spdk_interrupt_mode_is_enabled(void);
 struct spdk_spinlock {
 	pthread_spinlock_t spinlock;
 	struct spdk_thread *thread;
+	struct spdk_spinlock_internal *internal;
 };
 
 /**

@@ -154,7 +154,7 @@ endif
 SYS_LIBS =
 
 ifeq ($(OS),FreeBSD)
-SYS_LIBS += -L/usr/local/lib
+SYS_LIBS += -lexecinfo -L/usr/local/lib
 COMMON_CFLAGS += -I/usr/local/include
 endif
 

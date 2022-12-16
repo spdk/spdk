@@ -25,6 +25,11 @@
 #ifdef __linux__
 #include <sys/timerfd.h>
 #include <sys/eventfd.h>
+#include <execinfo.h>
+#endif
+
+#ifdef __FreeBSD__
+#include <execinfo.h>
 #endif
 
 #define SPDK_MSG_BATCH_SIZE		8
@@ -2876,6 +2881,48 @@ spdk_interrupt_mode_is_enabled(void)
 	return g_interrupt_mode;
 }
 
+#define SSPIN_DEBUG_STACK_FRAMES 16
+
+struct sspin_stack {
+	void *addrs[SSPIN_DEBUG_STACK_FRAMES];
+	uint32_t depth;
+};
+
+struct spdk_spinlock_internal {
+	struct sspin_stack init_stack;
+	struct sspin_stack lock_stack;
+	struct sspin_stack unlock_stack;
+};
+
+static void
+sspin_init_internal(struct spdk_spinlock *sspin)
+{
+#ifdef DEBUG
+	sspin->internal = calloc(1, sizeof(*sspin->internal));
+#endif
+}
+
+static void
+sspin_fini_internal(struct spdk_spinlock *sspin)
+{
+#ifdef DEBUG
+	free(sspin->internal);
+	sspin->internal = NULL;
+#endif
+}
+
+#ifdef DEBUG
+#define SSPIN_GET_STACK(sspin, which) \
+	do { \
+		if (sspin->internal != NULL) { \
+			struct sspin_stack *stack = &sspin->internal->which ## _stack; \
+			stack->depth = backtrace(stack->addrs, SPDK_COUNTOF(stack->addrs)); \
+		} \
+	} while (0)
+#else
+#define SSPIN_GET_STACK(sspin, which) do { } while (0)
+#endif
+
 void
 spdk_spin_init(struct spdk_spinlock *sspin)
 {
@@ -2884,6 +2931,8 @@ spdk_spin_init(struct spdk_spinlock *sspin)
 	memset(sspin, 0, sizeof(*sspin));
 	rc = pthread_spin_init(&sspin->spinlock, PTHREAD_PROCESS_PRIVATE);
 	SPIN_ASSERT_RETURN_VOID(rc == 0, SPIN_ERR_PTHREAD);
+	sspin_init_internal(sspin);
+	SSPIN_GET_STACK(sspin, init);
 }
 
 void
@@ -2895,6 +2944,8 @@ spdk_spin_destroy(struct spdk_spinlock *sspin)
 
 	rc = pthread_spin_destroy(&sspin->spinlock);
 	SPIN_ASSERT_RETURN_VOID(rc == 0, SPIN_ERR_PTHREAD);
+
+	sspin_fini_internal(sspin);
 }
 
 void
@@ -2911,6 +2962,8 @@ spdk_spin_lock(struct spdk_spinlock *sspin)
 
 	sspin->thread = thread;
 	sspin->thread->lock_count++;
+
+	SSPIN_GET_STACK(sspin, lock);
 }
 
 void
@@ -2925,6 +2978,8 @@ spdk_spin_unlock(struct spdk_spinlock *sspin)
 	SPIN_ASSERT_RETURN_VOID(thread->lock_count > 0, SPIN_ERR_LOCK_COUNT);
 	thread->lock_count--;
 	sspin->thread = NULL;
+
+	SSPIN_GET_STACK(sspin, unlock);
 
 	rc = pthread_spin_unlock(&sspin->spinlock);
 	SPIN_ASSERT_RETURN_VOID(rc == 0, SPIN_ERR_PTHREAD);
