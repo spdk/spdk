@@ -10,12 +10,22 @@
 
 #include "spdk/ublk.h"
 
+#define UBLK_DEV_QUEUE_DEPTH	128
+#define UBLK_DEV_NUM_QUEUE	1
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+typedef void (*ublk_del_cb)(void *cb_arg);
+
 int ublk_create_target(const char *cpumask_str);
 int ublk_destroy_target(spdk_ublk_fini_cb cb_fn, void *cb_arg);
+int ublk_start_disk(const char *bdev_name, uint32_t ublk_id,
+		    uint32_t num_queues, uint32_t queue_depth);
+int ublk_stop_disk(uint32_t ublk_id, ublk_del_cb del_cb, void *cb_arg);
+struct spdk_ublk_dev *ublk_dev_find_by_id(uint32_t ublk_id);
+const char *ublk_dev_get_bdev_name(struct spdk_ublk_dev *ublk);
 
 #ifdef __cplusplus
 }

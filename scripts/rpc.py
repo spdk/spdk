@@ -2236,6 +2236,30 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                               help='Destroy spdk ublk target for ublk dev')
     p.set_defaults(func=ublk_destroy_target)
 
+    def ublk_start_disk(args):
+        print(rpc.ublk.ublk_start_disk(args.client,
+                                       bdev_name=args.bdev_name,
+                                       ublk_id=args.ublk_id,
+                                       num_queues=args.num_queues,
+                                       queue_depth=args.queue_depth))
+
+    p = subparsers.add_parser('ublk_start_disk',
+                              help='Export a bdev as a ublk device')
+    p.add_argument('bdev_name', help='Blockdev name to be exported. Example: Malloc0.')
+    p.add_argument('ublk_id', help='ublk device id to be assigned. Example: 1.', type=int)
+    p.add_argument('-q', '--num-queues', help="the total number of queues. Example: 1", type=int, required=False)
+    p.add_argument('-d', '--queue-depth', help="queue depth. Example: 128", type=int, required=False)
+    p.set_defaults(func=ublk_start_disk)
+
+    def ublk_stop_disk(args):
+        rpc.ublk.ublk_stop_disk(args.client,
+                                ublk_id=args.ublk_id)
+
+    p = subparsers.add_parser('ublk_stop_disk',
+                              help='Stop a ublk device')
+    p.add_argument('ublk_id', help='ublk device id to be deleted. Example: 1.', type=int)
+    p.set_defaults(func=ublk_stop_disk)
+
     # nbd
     def nbd_start_disk(args):
         print(rpc.nbd.nbd_start_disk(args.client,

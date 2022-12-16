@@ -10749,6 +10749,88 @@ Example response:
 }
 ~~~
 
+### ublk_start_disk {#rpc_ublk_start_disk}
+
+Start to export one SPDK bdev as a UBLK device
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+bdev_name               | Required | string      | Bdev name to export
+ublk_id                 | Required | int         | Device id
+queue_depth             | Optional | int         | Device queue depth
+num_queues              | Optional | int         | Total number of device queues
+
+#### Response
+
+UBLK device ID
+
+#### Example
+
+Example request:
+
+~~~json
+{
+ "params": {
+    "ublk_id": "1",
+    "bdev_name": "Malloc1"
+  },
+  "jsonrpc": "2.0",
+  "method": "ublk_start_disk",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": 1
+}
+~~~
+
+### ublk_stop_disk {#rpc_ublk_stop_disk}
+
+Delete a UBLK device
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+ublk_id                 | Required | int         | Device id to delete
+
+#### Response
+
+True if UBLK device is deleted successfully; False if failed.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+ "params": {
+    "ublk_id": "1",
+  },
+  "jsonrpc": "2.0",
+  "method": "ublk_stop_disk",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## Linux Network Block Device (NBD) {#jsonrpc_components_nbd}
 
 SPDK supports exporting bdevs through Linux nbd. These devices then appear as standard Linux kernel block devices
