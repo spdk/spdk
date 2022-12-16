@@ -141,6 +141,18 @@ struct spdk_accel_module_if {
 	int (*crypto_key_init)(struct spdk_accel_crypto_key *key);
 	void (*crypto_key_deinit)(struct spdk_accel_crypto_key *key);
 
+	/**
+	 * Returns memory domains supported by the module.  If NULL, the module does not support
+	 * memory domains.  The `domains` array can be NULL, in which case this function only
+	 * returns the number of supported memory domains.
+	 *
+	 * \param domains Memory domain array.
+	 * \param num_domains Size of the `domains` array.
+	 *
+	 * \return Number of supported memory domains.
+	 */
+	int (*get_memory_domains)(struct spdk_memory_domain **domains, int num_domains);
+
 	TAILQ_ENTRY(spdk_accel_module_if)	tailq;
 };
 

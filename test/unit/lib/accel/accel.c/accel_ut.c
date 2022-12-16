@@ -2280,6 +2280,7 @@ test_sequence_memory_domain(void)
 
 	/* Override the submit_tasks function */
 	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
+	g_module.supports_memory_domains = false;
 	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
 		modules[i] = g_modules_opc[i];
 		g_modules_opc[i] = g_module;
@@ -2615,6 +2616,185 @@ test_sequence_memory_domain(void)
 }
 
 static int
+ut_submit_decompress_memory_domain(struct spdk_io_channel *ch, struct spdk_accel_task *task)
+{
+	struct ut_domain_ctx *ctx;
+	struct iovec *src_iovs, *dst_iovs;
+	uint32_t src_iovcnt, dst_iovcnt;
+
+	src_iovs = task->s.iovs;
+	dst_iovs = task->d.iovs;
+	src_iovcnt = task->s.iovcnt;
+	dst_iovcnt = task->d.iovcnt;
+
+	if (task->src_domain != NULL) {
+		ctx = task->src_domain_ctx;
+		CU_ASSERT_EQUAL(memcmp(task->s.iovs, &ctx->expected, sizeof(struct iovec)), 0);
+		src_iovs = &ctx->iov;
+		src_iovcnt = 1;
+	}
+
+	if (task->dst_domain != NULL) {
+		ctx = task->dst_domain_ctx;
+		CU_ASSERT_EQUAL(memcmp(task->d.iovs, &ctx->expected, sizeof(struct iovec)), 0);
+		dst_iovs = &ctx->iov;
+		dst_iovcnt = 1;
+	}
+
+	spdk_iovcpy(src_iovs, src_iovcnt, dst_iovs, dst_iovcnt);
+	spdk_accel_task_complete(task, 0);
+
+	return 0;
+}
+
+static void
+test_sequence_module_memory_domain(void)
+{
+	struct spdk_accel_sequence *seq = NULL;
+	struct spdk_io_channel *ioch;
+	struct accel_module modules[ACCEL_OPC_LAST];
+	struct spdk_memory_domain *accel_domain;
+	struct ut_sequence ut_seq;
+	struct ut_domain_ctx domctx[2];
+	struct iovec src_iovs[2], dst_iovs[2];
+	void *buf, *accel_domain_ctx;
+	char srcbuf[4096], dstbuf[4096], tmp[4096], expected[4096];
+	int i, rc, completed;
+
+	ioch = spdk_accel_get_io_channel();
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
+
+	/* Override the submit_tasks function */
+	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
+	g_module.supports_memory_domains = true;
+	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+		modules[i] = g_modules_opc[i];
+		g_modules_opc[i] = g_module;
+	}
+	g_seq_operations[ACCEL_OPC_DECOMPRESS].submit = ut_submit_decompress_memory_domain;
+	g_seq_operations[ACCEL_OPC_FILL].submit = sw_accel_submit_tasks;
+
+	/* Check a sequence with both buffers in memory domains */
+	memset(srcbuf, 0xa5, sizeof(srcbuf));
+	memset(expected, 0xa5, sizeof(expected));
+	memset(dstbuf, 0, sizeof(dstbuf));
+	seq = NULL;
+	completed = 0;
+
+	src_iovs[0].iov_base = (void *)0xcafebabe;
+	src_iovs[0].iov_len = sizeof(srcbuf);
+	dst_iovs[0].iov_base = (void *)0xfeedbeef;
+	dst_iovs[0].iov_len = sizeof(dstbuf);
+	ut_domain_ctx_init(&domctx[0], dstbuf, sizeof(dstbuf), &dst_iovs[0]);
+	ut_domain_ctx_init(&domctx[1], srcbuf, sizeof(srcbuf), &src_iovs[0]);
+
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, g_ut_domain, &domctx[0],
+					  &src_iovs[0], 1, g_ut_domain, &domctx[1], 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 1);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(dstbuf, expected, 4096), 0);
+
+	/* Check two operations each with a single buffer in memory domain */
+	memset(srcbuf, 0x5a, sizeof(srcbuf));
+	memset(expected, 0x5a, sizeof(expected));
+	memset(dstbuf, 0, sizeof(dstbuf));
+	memset(tmp, 0, sizeof(tmp));
+	seq = NULL;
+	completed = 0;
+
+	src_iovs[0].iov_base = srcbuf;
+	src_iovs[0].iov_len = sizeof(srcbuf);
+	dst_iovs[0].iov_base = (void *)0xfeedbeef;
+	dst_iovs[0].iov_len = sizeof(tmp);
+	ut_domain_ctx_init(&domctx[0], tmp, sizeof(tmp), &dst_iovs[0]);
+
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, g_ut_domain, &domctx[0],
+					  &src_iovs[0], 1, NULL, NULL, 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	src_iovs[1].iov_base = (void *)0xfeedbeef;
+	src_iovs[1].iov_len = sizeof(tmp);
+	dst_iovs[1].iov_base = dstbuf;
+	dst_iovs[1].iov_len = sizeof(dstbuf);
+	ut_domain_ctx_init(&domctx[1], tmp, sizeof(tmp), &src_iovs[1]);
+
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[1], 1, NULL, NULL,
+					  &src_iovs[1], 1, g_ut_domain, &domctx[1], 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 2);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(dstbuf, expected, 4096), 0);
+
+	/* Check a sequence with an accel buffer and a buffer in a regular memory domain */
+	memset(expected, 0xa5, sizeof(expected));
+	memset(dstbuf, 0, sizeof(dstbuf));
+	memset(tmp, 0, sizeof(tmp));
+	seq = NULL;
+	completed = 0;
+
+	rc = spdk_accel_get_buf(ioch, 4096, &buf, &accel_domain, &accel_domain_ctx);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_accel_append_fill(&seq, ioch, buf, 4096, accel_domain, accel_domain_ctx,
+				    0xa5, 0, ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	src_iovs[0].iov_base = buf;
+	src_iovs[0].iov_len = 4096;
+	dst_iovs[0].iov_base = (void *)0xfeedbeef;
+	dst_iovs[0].iov_len = sizeof(dstbuf);
+	ut_domain_ctx_init(&domctx[0], dstbuf, sizeof(dstbuf), &dst_iovs[0]);
+
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, g_ut_domain, &domctx[0],
+					  &src_iovs[0], 1, accel_domain, accel_domain_ctx, 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 2);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(dstbuf, expected, 4096), 0);
+
+	spdk_accel_put_buf(ioch, buf, accel_domain, accel_domain_ctx);
+
+	g_module.supports_memory_domains = false;
+	g_seq_operations[ACCEL_OPC_DECOMPRESS].submit = NULL;
+	g_seq_operations[ACCEL_OPC_FILL].submit = NULL;
+	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+		g_modules_opc[i] = modules[i];
+	}
+
+	spdk_put_io_channel(ioch);
+	poll_threads();
+}
+
+static int
 test_sequence_setup(void)
 {
 	int rc;
@@ -2694,6 +2874,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(seq_suite, test_sequence_copy_elision);
 	CU_ADD_TEST(seq_suite, test_sequence_accel_buffers);
 	CU_ADD_TEST(seq_suite, test_sequence_memory_domain);
+	CU_ADD_TEST(seq_suite, test_sequence_module_memory_domain);
 
 	suite = CU_add_suite("accel", test_setup, test_cleanup);
 	CU_ADD_TEST(suite, test_spdk_accel_task_complete);

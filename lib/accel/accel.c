@@ -36,7 +36,8 @@
 #define ACCEL_BUFFER_OFFSET_MASK	((uintptr_t)ACCEL_BUFFER_BASE - 1)
 
 struct accel_module {
-	struct spdk_accel_module_if *module;
+	struct spdk_accel_module_if	*module;
+	bool				supports_memory_domains;
 };
 
 /* Largest context size for all accel modules */
@@ -1240,6 +1241,7 @@ accel_task_pull_data(struct spdk_accel_sequence *seq, struct spdk_accel_task *ta
 	assert(task->bounce.s.orig_iovs != NULL);
 	assert(task->bounce.s.orig_domain != NULL);
 	assert(task->bounce.s.orig_domain != g_accel_domain);
+	assert(!g_modules_opc[task->op_code].supports_memory_domains);
 
 	rc = spdk_memory_domain_pull_data(task->bounce.s.orig_domain,
 					  task->bounce.s.orig_domain_ctx,
@@ -1276,6 +1278,7 @@ accel_task_push_data(struct spdk_accel_sequence *seq, struct spdk_accel_task *ta
 	assert(task->bounce.d.orig_iovs != NULL);
 	assert(task->bounce.d.orig_domain != NULL);
 	assert(task->bounce.d.orig_domain != g_accel_domain);
+	assert(!g_modules_opc[task->op_code].supports_memory_domains);
 
 	rc = spdk_memory_domain_push_data(task->bounce.d.orig_domain,
 					  task->bounce.d.orig_domain_ctx,
@@ -1321,8 +1324,13 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_CHECK_BOUNCEBUF);
 		/* Fall through */
 		case ACCEL_SEQUENCE_STATE_CHECK_BOUNCEBUF:
+			/* If a module supports memory domains, we don't need to allocate bounce
+			 * buffers */
+			if (g_modules_opc[task->op_code].supports_memory_domains) {
+				accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_EXEC_TASK);
+				break;
+			}
 			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_AWAIT_BOUNCEBUF);
-			/* For now, assume that none of the modules support memory domains */
 			rc = accel_sequence_check_bouncebuf(seq, task);
 			if (rc != 0) {
 				/* We couldn't allocate a buffer, wait until one is available */
@@ -1341,9 +1349,6 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 		case ACCEL_SEQUENCE_STATE_EXEC_TASK:
 			SPDK_DEBUGLOG(accel, "Executing %s operation, sequence: %p\n",
 				      g_opcode_strings[task->op_code], seq);
-
-			assert(task->src_domain == NULL);
-			assert(task->dst_domain == NULL);
 
 			module = g_modules_opc[task->op_code].module;
 			module_ch = accel_ch->module_ch[task->op_code];
@@ -1908,6 +1913,17 @@ accel_module_initialize(void)
 	}
 }
 
+static void
+accel_module_init_opcode(enum accel_opcode opcode)
+{
+	struct accel_module *module = &g_modules_opc[opcode];
+	struct spdk_accel_module_if *module_if = module->module;
+
+	if (module_if->get_memory_domains != NULL) {
+		module->supports_memory_domains = module_if->get_memory_domains(NULL, 0) > 0;
+	}
+}
+
 int
 spdk_accel_initialize(void)
 {
@@ -1962,14 +1978,15 @@ spdk_accel_initialize(void)
 
 	if (g_modules_opc[ACCEL_OPC_ENCRYPT].module != g_modules_opc[ACCEL_OPC_DECRYPT].module) {
 		SPDK_ERRLOG("Different accel modules are assigned to encrypt and decrypt operations");
-		return -EINVAL;
+		rc = -EINVAL;
+		goto error;
 	}
 
-#ifdef DEBUG
 	for (op = 0; op < ACCEL_OPC_LAST; op++) {
 		assert(g_modules_opc[op].module != NULL);
+		accel_module_init_opcode(op);
 	}
-#endif
+
 	rc = spdk_iobuf_register_module("accel");
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to register accel iobuf module\n");
