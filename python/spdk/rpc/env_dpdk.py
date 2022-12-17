@@ -2,6 +2,7 @@
 #  Copyright (C) 2019 Intel Corporation.
 #  All rights reserved.
 
+
 def env_dpdk_get_mem_stats(client):
     """Dump the applications memory stats to a file.
 

@@ -2,6 +2,7 @@
 #  Copyright (C) 2017 Intel Corporation.
 #  All rights reserved.
 
+
 def spdk_kill_instance(client, sig_name):
     """Send a signal to the SPDK process.
 

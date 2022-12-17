@@ -2,6 +2,7 @@
 #  Copyright (C) 2017 Intel Corporation.
 #  All rights reserved.
 
+
 def nbd_start_disk(client, bdev_name, nbd_device):
     params = {
         'bdev_name': bdev_name

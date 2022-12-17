@@ -2,6 +2,7 @@
 #  Copyright (C) 2019 Intel Corporation.
 #  All rights reserved.
 
+
 def blobfs_detect(client, bdev_name):
     """Detect whether a blobfs exists on bdev.
 

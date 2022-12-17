@@ -2,6 +2,7 @@
 #  Copyright (C) 2017 Intel Corporation.
 #  All rights reserved.
 
+
 def log_set_flag(client, flag):
     """Set log flag.
 

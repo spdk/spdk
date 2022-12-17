@@ -2,6 +2,7 @@
 #  Copyright (C) 2018 Intel Corporation.
 #  All rights reserved.
 
+
 def notify_get_types(client):
     return client.call("notify_get_types")
 

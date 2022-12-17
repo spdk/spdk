@@ -2,6 +2,7 @@
 #  Copyright (C) 2018 Intel Corporation.
 #  All rights reserved.
 
+
 def trace_enable_tpoint_group(client, name):
     """Enable trace on a specific tpoint group.
 

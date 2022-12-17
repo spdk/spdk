@@ -2,6 +2,7 @@
 #  Copyright (C) 2017 Intel Corporation.
 #  All rights reserved.
 
+
 def bdev_set_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None, bdev_auto_examine=None,
                      small_buf_pool_size=None, large_buf_pool_size=None):
     """Set parameters for the bdev subsystem.
