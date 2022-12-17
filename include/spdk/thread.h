@@ -905,6 +905,8 @@ struct spdk_spinlock {
 	pthread_spinlock_t spinlock;
 	struct spdk_thread *thread;
 	struct spdk_spinlock_internal *internal;
+	bool initialized;
+	bool destroyed;
 };
 
 /**

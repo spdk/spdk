@@ -185,6 +185,11 @@ enum spin_error {
 	 * deadlock when another SPDK thread on the same pthread tries to take that lock.
 	 */
 	SPIN_ERR_HOLD_DURING_SWITCH,
+	/* Trying to use a lock that was destroyed (but not re-initialized) */
+	SPIN_ERR_DESTROYED,
+	/* Trying to use a lock that is not initialized */
+	SPIN_ERR_NOT_INITIALIZED,
+
 	/* Must be last, not an actual error code */
 	SPIN_ERR_LAST
 };
@@ -198,6 +203,8 @@ static const char *spin_error_strings[] = {
 	[SPIN_ERR_LOCK_HELD]		= "Destroying a held spinlock",
 	[SPIN_ERR_LOCK_COUNT]		= "Lock count is invalid",
 	[SPIN_ERR_HOLD_DURING_SWITCH]	= "Lock(s) held while SPDK thread going off CPU",
+	[SPIN_ERR_DESTROYED]		= "Lock has been destroyed",
+	[SPIN_ERR_NOT_INITIALIZED]	= "Lock has not been initialized",
 };
 
 #define SPIN_ERROR_STRING(err) (err < 0 || err >= SPDK_COUNTOF(spin_error_strings)) \
@@ -2971,6 +2978,7 @@ spdk_spin_init(struct spdk_spinlock *sspin)
 	SPIN_ASSERT_LOG_STACKS(rc == 0, SPIN_ERR_PTHREAD, sspin);
 	sspin_init_internal(sspin);
 	SSPIN_GET_STACK(sspin, init);
+	sspin->initialized = true;
 }
 
 void
@@ -2978,12 +2986,16 @@ spdk_spin_destroy(struct spdk_spinlock *sspin)
 {
 	int rc;
 
+	SPIN_ASSERT_LOG_STACKS(!sspin->destroyed, SPIN_ERR_DESTROYED, sspin);
+	SPIN_ASSERT_LOG_STACKS(sspin->initialized, SPIN_ERR_NOT_INITIALIZED, sspin);
 	SPIN_ASSERT_LOG_STACKS(sspin->thread == NULL, SPIN_ERR_LOCK_HELD, sspin);
 
 	rc = pthread_spin_destroy(&sspin->spinlock);
 	SPIN_ASSERT_LOG_STACKS(rc == 0, SPIN_ERR_PTHREAD, sspin);
 
 	sspin_fini_internal(sspin);
+	sspin->initialized = false;
+	sspin->destroyed = true;
 }
 
 void
@@ -2992,6 +3004,8 @@ spdk_spin_lock(struct spdk_spinlock *sspin)
 	struct spdk_thread *thread = spdk_get_thread();
 	int rc;
 
+	SPIN_ASSERT_LOG_STACKS(!sspin->destroyed, SPIN_ERR_DESTROYED, sspin);
+	SPIN_ASSERT_LOG_STACKS(sspin->initialized, SPIN_ERR_NOT_INITIALIZED, sspin);
 	SPIN_ASSERT_LOG_STACKS(thread != NULL, SPIN_ERR_NOT_SPDK_THREAD, sspin);
 	SPIN_ASSERT_LOG_STACKS(thread != sspin->thread, SPIN_ERR_DEADLOCK, sspin);
 
@@ -3010,6 +3024,8 @@ spdk_spin_unlock(struct spdk_spinlock *sspin)
 	struct spdk_thread *thread = spdk_get_thread();
 	int rc;
 
+	SPIN_ASSERT_LOG_STACKS(!sspin->destroyed, SPIN_ERR_DESTROYED, sspin);
+	SPIN_ASSERT_LOG_STACKS(sspin->initialized, SPIN_ERR_NOT_INITIALIZED, sspin);
 	SPIN_ASSERT_LOG_STACKS(thread != NULL, SPIN_ERR_NOT_SPDK_THREAD, sspin);
 	SPIN_ASSERT_LOG_STACKS(thread == sspin->thread, SPIN_ERR_WRONG_THREAD, sspin);
 
