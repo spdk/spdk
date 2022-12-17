@@ -212,18 +212,20 @@ __posix_abort(enum spin_error err)
 typedef void (*spin_abort)(enum spin_error err);
 spin_abort g_spin_abort_fn = __posix_abort;
 
-#define SPIN_ASSERT_IMPL(cond, err, ret) \
+#define SPIN_ASSERT_IMPL(cond, err, extra_log, ret) \
 	do { \
 		if (spdk_unlikely(!(cond))) { \
 			SPDK_ERRLOG("unrecoverable spinlock error %d: %s (%s)\n", err, \
 				    SPIN_ERROR_STRING(err), #cond); \
+			extra_log; \
 			g_spin_abort_fn(err); \
 			ret; \
 		} \
 	} while (0)
-#define SPIN_ASSERT_RETURN_VOID(cond, err)	SPIN_ASSERT_IMPL(cond, err, return)
-#define SPIN_ASSERT_RETURN(cond, err, ret)	SPIN_ASSERT_IMPL(cond, err, return ret)
-#define SPIN_ASSERT(cond, err)			SPIN_ASSERT_IMPL(cond, err,)
+#define SPIN_ASSERT_LOG_STACKS(cond, err, lock) \
+	SPIN_ASSERT_IMPL(cond, err, sspin_stacks_print(sspin), return)
+#define SPIN_ASSERT_RETURN(cond, err, ret)	SPIN_ASSERT_IMPL(cond, err, , return ret)
+#define SPIN_ASSERT(cond, err)			SPIN_ASSERT_IMPL(cond, err, ,)
 
 struct io_device {
 	void				*io_device;
@@ -2923,6 +2925,42 @@ sspin_fini_internal(struct spdk_spinlock *sspin)
 #define SSPIN_GET_STACK(sspin, which) do { } while (0)
 #endif
 
+static void
+sspin_stack_print(const char *title, const struct sspin_stack *sspin_stack)
+{
+	char **stack;
+	size_t i;
+
+	stack = backtrace_symbols(sspin_stack->addrs, sspin_stack->depth);
+	if (stack == NULL) {
+		SPDK_ERRLOG("Out of memory while allocate stack for %s\n", title);
+		return;
+	}
+	SPDK_ERRLOG("  %s:\n", title);
+	for (i = 0; i < sspin_stack->depth; i++) {
+		/*
+		 * This does not print line numbers. In gdb, use something like "list *0x444b6b" or
+		 * "list *sspin_stack->addrs[0]".  Or more conveniently, load the spdk gdb macros
+		 * and use use "print *sspin" or "print sspin->internal.lock_stack".  See
+		 * gdb_macros.md in the docs directory for details.
+		 */
+		SPDK_ERRLOG("    #%" PRIu64 ": %s\n", i, stack[i]);
+	}
+	free(stack);
+}
+
+static void
+sspin_stacks_print(const struct spdk_spinlock *sspin)
+{
+	if (sspin->internal == NULL) {
+		return;
+	}
+	SPDK_ERRLOG("spinlock %p\n", sspin);
+	sspin_stack_print("Lock initalized at", &sspin->internal->init_stack);
+	sspin_stack_print("Last locked at", &sspin->internal->lock_stack);
+	sspin_stack_print("Last unlocked at", &sspin->internal->unlock_stack);
+}
+
 void
 spdk_spin_init(struct spdk_spinlock *sspin)
 {
@@ -2930,7 +2968,7 @@ spdk_spin_init(struct spdk_spinlock *sspin)
 
 	memset(sspin, 0, sizeof(*sspin));
 	rc = pthread_spin_init(&sspin->spinlock, PTHREAD_PROCESS_PRIVATE);
-	SPIN_ASSERT_RETURN_VOID(rc == 0, SPIN_ERR_PTHREAD);
+	SPIN_ASSERT_LOG_STACKS(rc == 0, SPIN_ERR_PTHREAD, sspin);
 	sspin_init_internal(sspin);
 	SSPIN_GET_STACK(sspin, init);
 }
@@ -2940,10 +2978,10 @@ spdk_spin_destroy(struct spdk_spinlock *sspin)
 {
 	int rc;
 
-	SPIN_ASSERT_RETURN_VOID(sspin->thread == NULL, SPIN_ERR_LOCK_HELD);
+	SPIN_ASSERT_LOG_STACKS(sspin->thread == NULL, SPIN_ERR_LOCK_HELD, sspin);
 
 	rc = pthread_spin_destroy(&sspin->spinlock);
-	SPIN_ASSERT_RETURN_VOID(rc == 0, SPIN_ERR_PTHREAD);
+	SPIN_ASSERT_LOG_STACKS(rc == 0, SPIN_ERR_PTHREAD, sspin);
 
 	sspin_fini_internal(sspin);
 }
@@ -2954,11 +2992,11 @@ spdk_spin_lock(struct spdk_spinlock *sspin)
 	struct spdk_thread *thread = spdk_get_thread();
 	int rc;
 
-	SPIN_ASSERT_RETURN_VOID(thread != NULL, SPIN_ERR_NOT_SPDK_THREAD);
-	SPIN_ASSERT_RETURN_VOID(thread != sspin->thread, SPIN_ERR_DEADLOCK);
+	SPIN_ASSERT_LOG_STACKS(thread != NULL, SPIN_ERR_NOT_SPDK_THREAD, sspin);
+	SPIN_ASSERT_LOG_STACKS(thread != sspin->thread, SPIN_ERR_DEADLOCK, sspin);
 
 	rc = pthread_spin_lock(&sspin->spinlock);
-	SPIN_ASSERT_RETURN_VOID(rc == 0, SPIN_ERR_PTHREAD);
+	SPIN_ASSERT_LOG_STACKS(rc == 0, SPIN_ERR_PTHREAD, sspin);
 
 	sspin->thread = thread;
 	sspin->thread->lock_count++;
@@ -2972,17 +3010,17 @@ spdk_spin_unlock(struct spdk_spinlock *sspin)
 	struct spdk_thread *thread = spdk_get_thread();
 	int rc;
 
-	SPIN_ASSERT_RETURN_VOID(thread != NULL, SPIN_ERR_NOT_SPDK_THREAD);
-	SPIN_ASSERT_RETURN_VOID(thread == sspin->thread, SPIN_ERR_WRONG_THREAD);
+	SPIN_ASSERT_LOG_STACKS(thread != NULL, SPIN_ERR_NOT_SPDK_THREAD, sspin);
+	SPIN_ASSERT_LOG_STACKS(thread == sspin->thread, SPIN_ERR_WRONG_THREAD, sspin);
 
-	SPIN_ASSERT_RETURN_VOID(thread->lock_count > 0, SPIN_ERR_LOCK_COUNT);
+	SPIN_ASSERT_LOG_STACKS(thread->lock_count > 0, SPIN_ERR_LOCK_COUNT, sspin);
 	thread->lock_count--;
 	sspin->thread = NULL;
 
 	SSPIN_GET_STACK(sspin, unlock);
 
 	rc = pthread_spin_unlock(&sspin->spinlock);
-	SPIN_ASSERT_RETURN_VOID(rc == 0, SPIN_ERR_PTHREAD);
+	SPIN_ASSERT_LOG_STACKS(rc == 0, SPIN_ERR_PTHREAD, sspin);
 }
 
 bool
