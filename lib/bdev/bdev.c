@@ -73,9 +73,6 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 static void log_already_claimed(enum spdk_log_level level, const int line, const char *func,
 				const char *detail, struct spdk_bdev *bdev);
 
-SPDK_LOG_DEPRECATION_REGISTER(bdev_register_examine_thread,
-			      "bdev register and examine on non-app thread", "SPDK 23.05", 0);
-
 SPDK_LOG_DEPRECATION_REGISTER(vtune_support, "Intel(R) VTune integration", "SPDK 23.05", 0);
 
 static const char *qos_rpc_type[] = {"rw_ios_per_sec",
@@ -770,9 +767,12 @@ spdk_bdev_examine(const char *name)
 {
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_examine_item *item;
+	struct spdk_thread *thread = spdk_get_thread();
 
-	if (spdk_unlikely(spdk_thread_get_app_thread() != spdk_get_thread())) {
-		SPDK_LOG_DEPRECATED(bdev_register_examine_thread);
+	if (spdk_unlikely(spdk_thread_get_app_thread() != thread)) {
+		SPDK_ERRLOG("Cannot examine bdev %s on thread %p (%s)\n", name, thread,
+			    thread ? spdk_thread_get_name(thread) : "null");
+		return -EINVAL;
 	}
 
 	if (g_bdev_opts.bdev_auto_examine) {
@@ -7370,10 +7370,13 @@ int
 spdk_bdev_register(struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_desc *desc;
+	struct spdk_thread *thread = spdk_get_thread();
 	int rc;
 
 	if (spdk_unlikely(spdk_thread_get_app_thread() != spdk_get_thread())) {
-		SPDK_LOG_DEPRECATED(bdev_register_examine_thread);
+		SPDK_ERRLOG("Cannot examine bdev %s on thread %p (%s)\n", bdev->name, thread,
+			    thread ? spdk_thread_get_name(thread) : "null");
+		return -EINVAL;
 	}
 
 	rc = bdev_register(bdev);

@@ -58,20 +58,6 @@ and will be removed in SPDK 23.05.
 Deprecated `spdk_nvme_ctrlr_prepare_for_reset` API, which will be removed in SPDK 22.01.
 For PCIe transport, `spdk_nvme_ctrlr_disconnect` should be used before freeing I/O qpairs.
 
-### bdev
-
-#### `bdev_register_examine_thread`
-
-Deprecated calling `spdk_bdev_register()` and `spdk_bdev_examine()` from a thread other than the
-app thread. See `spdk_thread_get_app_thread()`. Starting in SPDK 23.05, calling
-`spdk_bdev_register()` or `spdk_bdev_examine()` from a thread other than the app thread will return
-an error.
-
-With the removal of this deprecation, calls to vbdev modules' `examine_disk()` and
-`examine_config()` callbacks will happen only on the app thread. This means that vbdev module
-maintainers will not need to make any changes to examine callbacks that call `spdk_bdev_register()`
-on the same thread as the examine callback uses.
-
 ### gpt
 
 #### `old_gpt_guid`

@@ -2354,19 +2354,6 @@ bdev_init_wt_cb(void *done, int rc)
 }
 
 
-static uint64_t
-get_wrong_thread_hits(void)
-{
-	static uint64_t previous = 0;
-	uint64_t ret, current;
-
-	current = spdk_deprecation_get_hits(_deprecated_bdev_register_examine_thread);
-	ret = current - previous;
-	previous = current;
-
-	return ret;
-}
-
 static int
 wrong_thread_setup(void)
 {
@@ -2380,18 +2367,13 @@ wrong_thread_setup(void)
 
 	set_thread(1);
 
-	/* Ignore return, just setting the base for the next time it is called. */
-	get_wrong_thread_hits();
-
 	return 0;
 }
 
 static int
 wrong_thread_teardown(void)
 {
-	int rc;
-
-	rc = get_wrong_thread_hits();
+	int rc = 0;
 
 	set_thread(0);
 
@@ -2413,11 +2395,19 @@ wrong_thread_teardown(void)
 }
 
 static void
+_bdev_unregistered_wt(void *ctx, int rc)
+{
+	struct spdk_thread **threadp = ctx;
+
+	*threadp = spdk_get_thread();
+}
+
+static void
 spdk_bdev_register_wt(void)
 {
 	struct spdk_bdev bdev = { 0 };
 	int rc;
-	bool done;
+	struct spdk_thread *unreg_thread;
 
 	bdev.name = "wt_bdev";
 	bdev.fn_table = &fn_table;
@@ -2427,26 +2417,29 @@ spdk_bdev_register_wt(void)
 
 	/* Can register only on app thread */
 	rc = spdk_bdev_register(&bdev);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(get_wrong_thread_hits() == 1);
+	CU_ASSERT(rc == -EINVAL);
 
 	/* Can unregister on any thread */
-	done = false;
-	spdk_bdev_unregister(&bdev, _bdev_unregistered, &done);
-	poll_threads();
-	CU_ASSERT(get_wrong_thread_hits() == 0);
-	CU_ASSERT(done);
-
-	/* Can unregister by name on any thread */
+	set_thread(0);
 	rc = spdk_bdev_register(&bdev);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(get_wrong_thread_hits() == 1);
-	done = false;
-	rc = spdk_bdev_unregister_by_name(bdev.name, bdev.module, _bdev_unregistered, &done);
+	set_thread(1);
+	unreg_thread = NULL;
+	spdk_bdev_unregister(&bdev, _bdev_unregistered_wt, &unreg_thread);
+	poll_threads();
+	CU_ASSERT(unreg_thread == spdk_get_thread());
+
+	/* Can unregister by name on any thread */
+	set_thread(0);
+	rc = spdk_bdev_register(&bdev);
+	CU_ASSERT(rc == 0);
+	set_thread(1);
+	unreg_thread = NULL;
+	rc = spdk_bdev_unregister_by_name(bdev.name, bdev.module, _bdev_unregistered_wt,
+					  &unreg_thread);
 	CU_ASSERT(rc == 0);
 	poll_threads();
-	CU_ASSERT(get_wrong_thread_hits() == 0);
-	CU_ASSERT(done);
+	CU_ASSERT(unreg_thread == spdk_get_thread());
 }
 
 static void
@@ -2473,12 +2466,9 @@ spdk_bdev_examine_wt(void)
 
 	/* Can examine only on the app thread */
 	rc = spdk_bdev_examine("ut_bdev_wt");
-	CU_ASSERT(rc == 0);
-	poll_threads();
-	CU_ASSERT(get_wrong_thread_hits() == 1);
+	CU_ASSERT(rc == -EINVAL);
 	unregister_bdev(&g_bdev);
 	CU_ASSERT(spdk_bdev_get_by_name("ut_bdev_wt") == NULL);
-	CU_ASSERT(get_wrong_thread_hits() == 0);
 
 	/* Can wait for examine on app thread, callback called on app thread. */
 	set_thread(0);
@@ -2488,11 +2478,9 @@ spdk_bdev_examine_wt(void)
 	rc = spdk_bdev_wait_for_examine(wait_for_examine_cb, &thread);
 	CU_ASSERT(rc == 0);
 	poll_threads();
-	CU_ASSERT(get_wrong_thread_hits() == 0);
 	CU_ASSERT(thread == spdk_get_thread());
 	unregister_bdev(&g_bdev);
 	CU_ASSERT(spdk_bdev_get_by_name("ut_bdev_wt") == NULL);
-	CU_ASSERT(get_wrong_thread_hits() == 0);
 
 	/* Can wait for examine on non-app thread, callback called on same thread. */
 	set_thread(0);
@@ -2502,11 +2490,9 @@ spdk_bdev_examine_wt(void)
 	rc = spdk_bdev_wait_for_examine(wait_for_examine_cb, &thread);
 	CU_ASSERT(rc == 0);
 	poll_threads();
-	CU_ASSERT(get_wrong_thread_hits() == 0);
 	CU_ASSERT(thread == spdk_get_thread());
 	unregister_bdev(&g_bdev);
 	CU_ASSERT(spdk_bdev_get_by_name("ut_bdev_wt") == NULL);
-	CU_ASSERT(get_wrong_thread_hits() == 0);
 
 	unregister_bdev(&g_bdev);
 	g_bdev_opts.bdev_auto_examine = save_auto_examine;
