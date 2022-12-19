@@ -33,6 +33,7 @@
 #include "spdk/config.h"
 #include "spdk/log.h"
 #include "spdk/vrdma.h"
+#include "spdk/vrdma_controller.h"
 #include "spdk/vrdma_snap.h"
 #include "spdk/vrdma_emu_mgr.h"
 #include "spdk/vrdma_snap_pci_mgr.h"
@@ -45,6 +46,7 @@ void spdk_vrdma_ctx_stop(void (*fini_cb)(void))
 {
 	spdk_vrdma_snap_stop(fini_cb);
 	vrdma_del_bk_qp_list();
+	vrdma_dev_mac_list_del();
 }
 
 int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)

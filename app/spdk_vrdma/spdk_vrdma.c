@@ -39,10 +39,11 @@
 #include "spdk/conf.h"
 #include "spdk/event.h"
 #include "spdk/vrdma.h"
+#include "spdk/vrdma_controller.h"
 
 static struct spdk_thread *g_vrdma_app_thread;
-static int g_start_mqpn;
 static struct spdk_vrdma_ctx g_vrdma_ctx;
+static struct vrdma_dev_mac g_dev_mac;
 
 #define MAX_START_MQP_NUM 0x40000
 
@@ -96,20 +97,77 @@ err:
 static void
 vrdma_usage(void)
 {
-	fprintf(stderr, " -q <integer>              remote_mqp start mlnx qp number.\n");
+	fprintf(stderr, " -v --pci_mac   [pci_number]:[mac], such as [af:00.2]:[11:22:33:44:55:66]\n");
+}
+
+static int
+vrdma_parse_dev_mac(char *arg)
+{
+    char vrdma_dev[MAX_VRDMA_DEV_LEN];
+    char *str, *next, *pci_str, *mac_str;
+    char mac[6];
+    uint64_t temp_mac;
+    int i;
+
+    SPDK_NOTICELOG("lizh vrdma_parse_dev_mac arg %s mac 0x%lx \n", arg, g_dev_mac.mac);
+    snprintf(vrdma_dev, MAX_VRDMA_DEV_LEN, "%s", arg);
+    next = vrdma_dev;
+
+	if (next[0] == '[') {
+		str = strchr(next, ']');
+        SPDK_NOTICELOG("lizh vrdma_parse_dev_mac str %s \n", str);
+        pci_str = &next[1];
+        *str = '\0';
+        SPDK_NOTICELOG("lizh vrdma_parse_dev_mac pci_str %s \n", pci_str);
+        memcpy(g_dev_mac.pci_number, pci_str, VRDMA_PCI_NAME_MAXLEN);
+        SPDK_NOTICELOG("lizh vrdma_parse_dev_mac pci_number %s \n", g_dev_mac.pci_number);
+        next = str + 2;
+    } else {
+        SPDK_NOTICELOG("lizh vrdma_parse_dev_mac next[0] 0x%x \n", next[0]);
+        return -EINVAL;
+    }
+    SPDK_NOTICELOG("lizh vrdma_parse_dev_mac next %s \n", next);
+    if (next[0] == '[') {
+        mac_str = &next[1];
+        SPDK_NOTICELOG("lizh vrdma_parse_dev_mac mac_str %s \n", mac_str);
+        for (i = 0; i < 6; i++) {
+            SPDK_NOTICELOG("lizh vrdma_parse_dev_mac mac_str[0] 0x%x \n", mac_str[0]);
+            if ((i < 5 && mac_str[2] != ':') ||
+                (i == 5 && mac_str[2] != ']') ) {
+                SPDK_NOTICELOG("lizh vrdma_parse_dev_mac mac_str[2] 0x%x\n", mac_str[2]);
+                return -EINVAL;
+            }
+            if (i < 5)
+                str = strchr(mac_str, ':');
+            else
+                str = strchr(mac_str, ']');
+            *str = '\0';
+            SPDK_NOTICELOG("lizh vrdma_parse_dev_mac mac_str %s \n", mac_str);
+            mac[i] = spdk_strtol(mac_str, 16);
+            SPDK_NOTICELOG("lizh vrdma_parse_dev_mac mac[%d] 0x%x \n", i, mac[i]);
+            temp_mac = mac[i] & 0xFF;
+            SPDK_NOTICELOG("lizh vrdma_parse_dev_mac temp_mac 0x%lx \n", temp_mac);
+            g_dev_mac.mac |= temp_mac << ((5-i) * 8);
+            SPDK_NOTICELOG("lizh vrdma_parse_dev_mac g_dev_mac.mac 0x%lx \n", g_dev_mac.mac);
+            mac_str += 3;
+        }
+    } else {
+        SPDK_NOTICELOG("lizh vrdma_parse_dev_mac next[0] 0x%x next[1] 0x%x\n", next[0], next[1]);
+        return -EINVAL;
+    }
+    return 0;
 }
 
 static int
 vrdma_parse_arg(int ch, char *arg)
 {
 	switch (ch) {
-	case 'q':
-		g_start_mqpn = spdk_strtol(arg, 10);
-		if (g_start_mqpn < 0 || g_start_mqpn > MAX_START_MQP_NUM) {
-			fprintf(stderr,
-			"You must supply a positive mqp number less than 4096.\n");
-			return -EINVAL;
-		}
+	case 'v':
+        SPDK_NOTICELOG("lizh vrdma_parse_arg pci_number %s mac 0x%lx \n", arg, g_dev_mac.mac);
+        if (vrdma_parse_dev_mac(arg))
+            return -EINVAL;
+		vrdma_dev_mac_add(g_dev_mac.pci_number, g_dev_mac.mac);
+        memset(&g_dev_mac, 0, sizeof(struct vrdma_dev_mac));
 		break;
 	default:
 		return -EINVAL;
@@ -125,8 +183,8 @@ int main(int argc, char **argv)
     /* Set default values in opts structure. */
     spdk_app_opts_init(&opts);
     opts.name = "spdk_vrdma";
-
-    if ((rc = spdk_app_parse_args(argc, argv, &opts, "q", NULL,
+    memset(&g_dev_mac, 0, sizeof(struct vrdma_dev_mac));
+    if ((rc = spdk_app_parse_args(argc, argv, &opts, "v:", NULL,
     	vrdma_parse_arg, vrdma_usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 	    fprintf(stderr, "Unable to parse the application arguments.\n");
         exit(rc);

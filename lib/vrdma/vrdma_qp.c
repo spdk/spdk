@@ -198,7 +198,7 @@ int vrdma_add_rbk_qp_list(struct vrdma_ctrl *ctrl, uint64_t gid_ip,
 				gid_ip, vqp_idx, qp_attr->comm.vqpn, remote_qpn,
 				lqp->remote_node_id, lqp->remote_dev_id, lqp->remote_gid_ip);
 			if (vrdma_modify_backend_qp_to_ready(ctrl, lqp->bk_qp)) {
-				SPDK_ERRLOG("Failed to modify bankend qp %d to ready\n",
+				SPDK_ERRLOG("Failed to modify bankend qp 0x%x to ready\n",
 					lqp->bk_qpn);
 				return -1;
 			}
@@ -500,7 +500,7 @@ int vrdma_qp_notify_remote_by_rpc(struct vrdma_ctrl *ctrl, uint32_t vqpn,
         vqpn, bk_qp->remote_qpn);
 	if (bk_qp->remote_qpn != VRDMA_INVALID_QPN) {
 		if (vrdma_modify_backend_qp_to_ready(ctrl, bk_qp)) {
-			SPDK_ERRLOG("Failed to modify bankend qp %d to ready\n",vqpn);
+			SPDK_ERRLOG("Failed to modify bankend qp 0x%x to ready\n",vqpn);
 			return -1;
 		}
 		msg.qp_state = SPDK_VRDMA_RPC_QP_READY;

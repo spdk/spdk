@@ -743,12 +743,12 @@ spdk_vrdma_rpc_server_configuration(void)
 struct spdk_vrdma_rpc_controller_configue_attr {
     char *emu_manager;
     int dev_id;
-    uint64_t mac;
+    char *mac;
     int dev_state;
     uint64_t adminq_paddr;
     uint32_t adminq_length;
-    uint64_t dest_mac;
-    uint64_t sf_mac;
+    char *dest_mac;
+    char *sf_mac;
     char *subnet_prefix;
     char *intf_id;
     int vrdma_qpn;
@@ -775,7 +775,7 @@ spdk_vrdma_rpc_controller_configue_decoder[] = {
     {
         "mac",
         offsetof(struct spdk_vrdma_rpc_controller_configue_attr, mac),
-        spdk_json_decode_uint64,
+        spdk_json_decode_string,
         true
     },
     {
@@ -799,7 +799,7 @@ spdk_vrdma_rpc_controller_configue_decoder[] = {
     {
         "dest_mac",
         offsetof(struct spdk_vrdma_rpc_controller_configue_attr, dest_mac),
-        spdk_json_decode_uint64,
+        spdk_json_decode_string,
         true
     },
     {
@@ -841,7 +841,7 @@ spdk_vrdma_rpc_controller_configue_decoder[] = {
     {
         "sf_mac",
         offsetof(struct spdk_vrdma_rpc_controller_configue_attr, sf_mac),
-        spdk_json_decode_uint64,
+        spdk_json_decode_string,
         true
     },
     {
@@ -882,6 +882,48 @@ spdk_emu_ctx_find_by_pci_id_testrpc(const char *emu_manager, int pf_id)
     return NULL;
 }
 
+static int
+vrdma_rpc_parse_mac_into_int(char *arg, uint64_t *int_mac, char *mac)
+{
+    char vrdma_dev[MAX_VRDMA_DEV_LEN];
+    char *str, *mac_str;
+    char mac_arg[6] = {0};
+    uint64_t temp_mac = 0;
+    uint64_t ret_mac = 0;
+    int i;
+
+    if (!mac)
+        mac = mac_arg;
+    if (!int_mac)
+        int_mac = &ret_mac;
+
+    SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int arg %s \n", arg);
+    snprintf(vrdma_dev, MAX_VRDMA_DEV_LEN, "%s", arg);
+    mac_str = vrdma_dev;
+    SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int mac_str %s \n", mac_str);
+    for (i = 0; i < 6; i++) {
+        SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int mac_str[0] 0x%x \n", mac_str[0]);
+        if ((i < 5 && mac_str[2] != ':')) {
+            SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int mac_str[2] 0x%x\n", mac_str[2]);
+            return -EINVAL;
+        }
+        if (i < 5)
+            str = strchr(mac_str, ':');
+        else
+            str = mac_str + 3;
+        *str = '\0';
+        SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int mac_str %s \n", mac_str);
+        mac[i] = spdk_strtol(mac_str, 16);
+        SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int mac[%d] 0x%x \n", i, mac[i]);
+        temp_mac = mac[i] & 0xFF;
+        SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int temp_mac 0x%lx \n", temp_mac);
+        *int_mac |= temp_mac << ((5-i) * 8);
+        SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int int_mac 0x%lx \n", *int_mac);
+        mac_str += 3;
+    }
+    return 0;
+}
+
 static void
 spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
                                     const struct spdk_json_val *params)
@@ -892,7 +934,6 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
     struct snap_vrdma_ctrl *sctrl;
     struct vrdma_ctrl *ctrl;
     struct spdk_vrdma_qp *vqp;
-    uint32_t i;
 
     SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...start\n");
     attr = calloc(1, sizeof(*attr));
@@ -930,7 +971,7 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
         }
     }
     if (attr->mac) {
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...mac=0x%lx\n", attr->mac);
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...mac %s\n", attr->mac);
         ctrl = ctx->ctrl;
         if (!ctrl) {
             SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
@@ -941,8 +982,13 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
             SPDK_ERRLOG("Fail to find device snap controller for emu_manager %s\n", attr->emu_manager);
             goto free_attr;
         }
-        sctrl->mac = attr->mac;
-        g_bar_test.mac = attr->mac;
+        sctrl->mac = 0;
+        if (vrdma_rpc_parse_mac_into_int(attr->mac, &sctrl->mac, NULL)) {
+            SPDK_ERRLOG("Fail to parse mac string %s for emu_manager %s\n",
+            attr->mac, attr->emu_manager);
+            goto free_attr;
+        }
+        g_bar_test.mac = sctrl->mac;
         if (snap_vrdma_device_mac_init(sctrl)) {
             SPDK_ERRLOG("Fail to change MAC after driver_ok for emu_manager %s\n", attr->emu_manager);
             goto free_attr;
@@ -963,15 +1009,19 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
     if (attr->dest_mac) {
         struct vrdma_backend_qp *bk_qp;
 
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...dest_mac=0x%lx\n", attr->dest_mac);
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...dest_mac %s\n", attr->dest_mac);
         ctrl = ctx->ctrl;
         if (!ctrl) {
             SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
             goto free_attr;
         }
         if (attr->vrdma_qpn == -1) {
-            for (i = 0; i < 6; i++)
-                ctrl->vdev->vrdma_sf.dest_mac[5-i] = (attr->dest_mac >> (i * 8)) & 0xFF;
+            if (vrdma_rpc_parse_mac_into_int(attr->dest_mac, NULL,
+                ctrl->vdev->vrdma_sf.dest_mac)) {
+                SPDK_ERRLOG("Fail to parse dest_mac string %s for emu_manager %s\n",
+                    attr->dest_mac, attr->emu_manager);
+                goto free_attr;
+            }
         } else {
             vqp = find_spdk_vrdma_qp_by_idx(ctrl, attr->vrdma_qpn);
             if (!vqp) {
@@ -985,12 +1035,16 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
                     attr->vrdma_qpn, attr->emu_manager);
                 goto free_attr;
             }
-            for (i = 0; i < 6; i++)
-            bk_qp->dest_mac[5-i] = (attr->dest_mac >> (i * 8)) & 0xFF;
+            if (vrdma_rpc_parse_mac_into_int(attr->dest_mac, NULL,
+                bk_qp->dest_mac)) {
+                SPDK_ERRLOG("Fail to parse dest_mac string %s for emu_manager %s\n",
+                    attr->dest_mac, attr->emu_manager);
+                goto free_attr;
+            }
         }
     }
     if (attr->sf_mac) {
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...sf_mac=0x%lx\n", attr->sf_mac);
+        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...sf_mac %s\n", attr->sf_mac);
         ctrl = ctx->ctrl;
         if (!ctrl) {
             SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
@@ -1000,8 +1054,12 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
             SPDK_ERRLOG("Invalid SF device for emu_manager %s\n", attr->emu_manager);
             goto free_attr;
         }
-        for (i = 0; i < 6; i++)
-            ctrl->vdev->vrdma_sf.mac[5-i] = (attr->sf_mac >> (i * 8)) & 0xFF;
+        if (vrdma_rpc_parse_mac_into_int(attr->sf_mac, NULL,
+            ctrl->vdev->vrdma_sf.mac)) {
+            SPDK_ERRLOG("Fail to parse sf_mac string %s for emu_manager %s\n",
+                    attr->sf_mac, attr->emu_manager);
+            goto free_attr;
+        }
     }
     if (attr->backend_rqpn != -1) {
         struct vrdma_backend_qp *bk_qp;

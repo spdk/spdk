@@ -49,6 +49,48 @@
 #include "spdk/vrdma_admq.h"
 #include "spdk/vrdma_srv.h"
 
+struct vrdma_dev_mac_list_head vrdma_dev_mac_list =
+				LIST_HEAD_INITIALIZER(vrdma_dev_mac_list);
+
+void vrdma_dev_mac_add(char *pci_number, uint64_t mac)
+{
+    struct vrdma_dev_mac *dev_mac;
+
+    SPDK_NOTICELOG("lizh vrdma_dev_mac_add...pci_number %s mac 0x%lx",
+    pci_number, mac);
+    dev_mac = calloc(1, sizeof(*dev_mac));
+    if (!dev_mac)
+        return;
+    memcpy(dev_mac->pci_number, pci_number, VRDMA_PCI_NAME_MAXLEN);
+    dev_mac->mac = mac;
+    LIST_INSERT_HEAD(&vrdma_dev_mac_list, dev_mac, entry);
+}
+
+struct vrdma_dev_mac *
+vrdma_find_dev_mac_by_pci(char *pci_number)
+{
+	struct vrdma_dev_mac *dev_mac;
+
+	LIST_FOREACH(dev_mac, &vrdma_dev_mac_list, entry) {
+        SPDK_NOTICELOG("lizh vrdma_dev_mac_add...pci_number %s dev_mac.pci_number %s mac 0x%lx",
+            pci_number, dev_mac->pci_number, dev_mac->mac);
+        if (!strcmp(dev_mac->pci_number, pci_number))
+            return dev_mac;
+    }
+	return NULL;
+}
+
+void vrdma_dev_mac_list_del(void)
+{
+    struct vrdma_dev_mac *dev_mac;
+
+    SPDK_NOTICELOG("lizh vrdma_dev_mac_list_del...start");
+	LIST_FOREACH(dev_mac, &vrdma_dev_mac_list, entry) {
+		LIST_REMOVE(dev_mac, entry);
+		free(dev_mac);
+	}
+}
+
 int vrdma_dev_name_to_id(const char *rdma_dev_name)
 {
     char vrdma_dev[MAX_VRDMA_DEV_LEN];
@@ -237,6 +279,7 @@ struct vrdma_ctrl *
 vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
 {
     struct vrdma_ctrl *ctrl;
+    struct vrdma_dev_mac *dev_mac;
     struct snap_vrdma_ctrl_attr sctrl_attr = {};
     struct snap_vrdma_ctrl_bar_cbs bar_cbs = {
         .post_flr = vrdma_ctrl_post_flr,
@@ -279,15 +322,21 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
         goto dereg_mr;
     }
 
+    dev_mac = vrdma_find_dev_mac_by_pci(ctrl->sctrl->sdev->pci->pci_number);
+    if (dev_mac) {
+        ctrl->sctrl->mac = dev_mac->mac;
+    }
     ctrl->pf_id = attr->pf_id;
     ctrl->vdev = attr->vdev;
     ctrl->dev.rdev_idx = attr->vdev->devid;
     LIST_INIT(&ctrl->bk_qp_list);
     vrdma_srv_device_init(ctrl);
     SPDK_NOTICELOG("new VRDMA controller %d [in order %d]"
-                  " was opened successfully over RDMA device %s vhca_id %d\n",
+                  " was opened successfully over RDMA device %s "
+                  "vhca_id %d pci %s mac 0x%lx\n",
                   attr->pf_id, attr->force_in_order, attr->emu_manager_name,
-                  ctrl->sctrl->sdev->pci->mpci.vhca_id);
+                  ctrl->sctrl->sdev->pci->mpci.vhca_id,
+                  ctrl->sctrl->sdev->pci->pci_number, ctrl->sctrl->mac);
     snprintf(ctrl->name, VRDMA_EMU_NAME_MAXLEN,
                 "%s%dpf%d", VRDMA_EMU_NAME_PREFIX,
                 vrdma_dev_name_to_id(attr->emu_manager_name), attr->pf_id);
