@@ -40,34 +40,32 @@ static int
 _spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client)
 {
 	ssize_t rc;
-	struct spdk_jsonrpc_client_request *request = client->request;
+	struct spdk_jsonrpc_client_request *request, *temp;
 
-	if (!request) {
-		return 0;
-	}
+	STAILQ_FOREACH_SAFE(request, &client->request, stailq, temp) {
+		if (request->send_len > 0) {
+			rc = send(client->sockfd, request->send_buf + request->send_offset,
+			  	request->send_len, 0);
+			if (rc < 0) {
+				/* For EINTR we pretend that nothing was send. */
+				if (errno == EINTR) {
+					rc = 0;
+				} else {
+					rc = -errno;
+					SPDK_ERRLOG("poll() failed (%d): %s\n", errno, spdk_strerror(errno));
+				}
 
-	if (request->send_len > 0) {
-		rc = send(client->sockfd, request->send_buf + request->send_offset,
-			  request->send_len, 0);
-		if (rc < 0) {
-			/* For EINTR we pretend that nothing was send. */
-			if (errno == EINTR) {
-				rc = 0;
-			} else {
-				rc = -errno;
-				SPDK_ERRLOG("poll() failed (%d): %s\n", errno, spdk_strerror(errno));
+				return rc;
 			}
 
-			return rc;
+			request->send_offset += rc;
+			request->send_len -= rc;
 		}
-
-		request->send_offset += rc;
-		request->send_len -= rc;
-	}
-
-	if (request->send_len == 0) {
-		client->request = NULL;
-		spdk_jsonrpc_client_free_request(request);
+		if (request->send_len == 0) {
+			STAILQ_REMOVE(&client->request, request,
+				spdk_jsonrpc_client_request, stailq);
+			spdk_jsonrpc_client_free_request(request);
+		}
 	}
 
 	return 0;
@@ -325,6 +323,7 @@ spdk_jsonrpc_client_connect(const char *addr, int addr_family)
 						  res->ai_addrlen);
 		freeaddrinfo(res);
 	}
+	STAILQ_INIT(&client->request);
 
 err:
 	if (rc != 0 && rc != -EINPROGRESS) {
@@ -340,6 +339,8 @@ err:
 void
 spdk_jsonrpc_client_close(struct spdk_jsonrpc_client *client)
 {
+	struct spdk_jsonrpc_client_request *req, *temp;
+
 	if (client->sockfd >= 0) {
 		close(client->sockfd);
 	}
@@ -348,7 +349,10 @@ spdk_jsonrpc_client_close(struct spdk_jsonrpc_client *client)
 	if (client->resp) {
 		spdk_jsonrpc_client_free_response(&client->resp->jsonrpc);
 	}
-
+	STAILQ_FOREACH_SAFE(req, &client->request, stailq, temp) {
+		STAILQ_REMOVE(&client->request, req, spdk_jsonrpc_client_request, stailq);
+		spdk_jsonrpc_client_free_request(req);
+	}
 	free(client);
 }
 
@@ -394,11 +398,7 @@ spdk_jsonrpc_client_poll(struct spdk_jsonrpc_client *client, int timeout)
 int spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
 				     struct spdk_jsonrpc_client_request *req)
 {
-	if (client->request != NULL) {
-		return -ENOSPC;
-	}
-
-	client->request = req;
+	STAILQ_INSERT_TAIL(&client->request, req, stailq);
 	return 0;
 }
 

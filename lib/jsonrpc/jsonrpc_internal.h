@@ -35,9 +35,8 @@
 #define SPDK_JSONRPC_INTERNAL_H_
 
 #include "spdk/stdinc.h"
-
+#include "spdk/util.h"
 #include "spdk/jsonrpc.h"
-
 #include "spdk_internal/log.h"
 
 #define SPDK_JSONRPC_RECV_BUF_SIZE	(32 * 1024)
@@ -112,6 +111,8 @@ struct spdk_jsonrpc_client_request {
 	size_t send_offset;
 
 	uint8_t *send_buf;
+
+	STAILQ_ENTRY(spdk_jsonrpc_client_request) stailq;
 };
 
 struct spdk_jsonrpc_client_response_internal {
@@ -132,7 +133,7 @@ struct spdk_jsonrpc_client {
 
 	/* Parsed response */
 	struct spdk_jsonrpc_client_response_internal *resp;
-	struct spdk_jsonrpc_client_request *request;
+	STAILQ_HEAD(, spdk_jsonrpc_client_request) request;
 };
 
 /* jsonrpc_server_tcp */
