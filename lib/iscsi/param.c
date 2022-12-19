@@ -495,7 +495,7 @@ static const char *discovery_ignored_param[] = {
 	"InitialR2T",
 	"ImmediateData",
 	"MaxBurstLength",
-	"FirstBurstLength"
+	"FirstBurstLength",
 	"MaxOutstandingR2T",
 	"DataPDUInOrder",
 	"DataSequenceInOrder",
