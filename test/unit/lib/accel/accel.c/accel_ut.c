@@ -981,8 +981,9 @@ test_sequence_completion_error(void)
 	src_iovs.iov_base = tmp;
 	src_iovs.iov_len = sizeof(tmp);
 
-	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs, 1, NULL, NULL,
-				    &src_iovs, 1, NULL, NULL, 0, ut_sequence_step_cb, &completed);
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs, 1, NULL, NULL,
+					  &src_iovs, 1, NULL, NULL, 0,
+					  ut_sequence_step_cb, &completed);
 	CU_ASSERT_EQUAL(rc, 0);
 
 	ut_seq.complete = false;
@@ -994,7 +995,7 @@ test_sequence_completion_error(void)
 	CU_ASSERT_EQUAL(ut_seq.status, -E2BIG);
 
 	/* Check the same with a second operation in the sequence */
-	g_seq_operations[ACCEL_OPC_COPY].complete_status = -EACCES;
+	g_seq_operations[ACCEL_OPC_DECOMPRESS].complete_status = -EACCES;
 	g_seq_operations[ACCEL_OPC_FILL].complete_status = 0;
 	completed = 0;
 	seq = NULL;
@@ -1007,8 +1008,9 @@ test_sequence_completion_error(void)
 	src_iovs.iov_base = tmp;
 	src_iovs.iov_len = sizeof(tmp);
 
-	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs, 1, NULL, NULL,
-				    &src_iovs, 1, NULL, NULL, 0, ut_sequence_step_cb, &completed);
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs, 1, NULL, NULL,
+					  &src_iovs, 1, NULL, NULL, 0,
+					  ut_sequence_step_cb, &completed);
 	CU_ASSERT_EQUAL(rc, 0);
 
 	ut_seq.complete = false;
@@ -1019,7 +1021,7 @@ test_sequence_completion_error(void)
 	CU_ASSERT_EQUAL(completed, 2);
 	CU_ASSERT_EQUAL(ut_seq.status, -EACCES);
 
-	g_seq_operations[ACCEL_OPC_COPY].complete_status = 0;
+	g_seq_operations[ACCEL_OPC_DECOMPRESS].complete_status = 0;
 	g_seq_operations[ACCEL_OPC_FILL].complete_status = 0;
 
 	/* Check submission failure of the first operation */
@@ -1035,8 +1037,9 @@ test_sequence_completion_error(void)
 	src_iovs.iov_base = tmp;
 	src_iovs.iov_len = sizeof(tmp);
 
-	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs, 1, NULL, NULL,
-				    &src_iovs, 1, NULL, NULL, 0, ut_sequence_step_cb, &completed);
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs, 1, NULL, NULL,
+					  &src_iovs, 1, NULL, NULL, 0,
+					  ut_sequence_step_cb, &completed);
 	CU_ASSERT_EQUAL(rc, 0);
 
 	ut_seq.complete = false;
@@ -1048,7 +1051,7 @@ test_sequence_completion_error(void)
 	CU_ASSERT_EQUAL(ut_seq.status, -EADDRINUSE);
 
 	/* Check the same with a second operation */
-	g_seq_operations[ACCEL_OPC_COPY].submit_status = -EADDRNOTAVAIL;
+	g_seq_operations[ACCEL_OPC_DECOMPRESS].submit_status = -EADDRNOTAVAIL;
 	g_seq_operations[ACCEL_OPC_FILL].submit_status = 0;
 	completed = 0;
 	seq = NULL;
@@ -1061,8 +1064,9 @@ test_sequence_completion_error(void)
 	src_iovs.iov_base = tmp;
 	src_iovs.iov_len = sizeof(tmp);
 
-	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs, 1, NULL, NULL,
-				    &src_iovs, 1, NULL, NULL, 0, ut_sequence_step_cb, &completed);
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs, 1, NULL, NULL,
+					  &src_iovs, 1, NULL, NULL, 0,
+					  ut_sequence_step_cb, &completed);
 	CU_ASSERT_EQUAL(rc, 0);
 
 	ut_seq.complete = false;
