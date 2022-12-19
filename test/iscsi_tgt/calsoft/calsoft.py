@@ -72,6 +72,9 @@ def main():
 
     all_cases = [x for x in os.listdir(CALSOFT_BIN_PATH) if x.startswith('tc')]
     all_cases.sort()
+    nopin_cases = ['tc_err_2_4', 'tc_err_8_2', 'tc_ffp_7_6_1', 'tc_ffp_7_7_3', 'tc_ffp_7_7_2',
+                   'tc_ffp_7_7_5', 'tc_ffp_7_6_4', 'tc_ffp_7_6_3', 'tc_ffp_7_7_4', 'tc_ffp_7_6_2',
+                   'tc_ffp_7_7_1', 'tc_ffp_7_7']
 
     case_result_list = []
 
@@ -84,22 +87,29 @@ def main():
         case_result_list.append({"Name": case, "Result": "SKIP"})
 
     thread_objs = []
-    left_cases = list(set(all_cases) - set(known_failed_cases))
-    index = 0
-    max_thread_count = 32
 
-    while index < len(left_cases):
-        cur_thread_count = 0
-        for thread_obj in thread_objs:
-            if thread_obj.is_alive():
-                cur_thread_count += 1
-        while cur_thread_count < max_thread_count and index < len(left_cases):
-            thread_obj = threading.Thread(target=run_case, args=(left_cases[index], case_result_list, log_dir, ))
-            thread_obj.start()
-            time.sleep(0.02)
-            thread_objs.append(thread_obj)
-            index += 1
-            cur_thread_count += 1
+    # The Calsoft tests all pull their InitiatorName from the its.conf file.  We set the
+    # AllowDuplicatedIsid flag in the SPDK JSON config, to allow these tests to run in
+    # parallel where needed, but we only run tests in parallel that make sense - in this case
+    # only the nopin-related tests which take longer to run because of various timeouts.
+    serial_cases = list(set(all_cases) - set(known_failed_cases) - set(nopin_cases))
+    parallel_cases = nopin_cases
+
+    for test_case in serial_cases:
+        thread_obj = threading.Thread(target=run_case, args=(test_case, case_result_list, log_dir, ))
+        thread_obj.start()
+        thread_obj.join(30)
+        if thread_obj.is_alive():
+            # Thread is still alive, meaning the join() timeout expired.
+            print("Thread timeout")
+            exit(1)
+
+    for test_case in parallel_cases:
+        thread_obj = threading.Thread(target=run_case, args=(test_case, case_result_list, log_dir, ))
+        thread_obj.start()
+        time.sleep(0.02)
+        thread_objs.append(thread_obj)
+
     end_time = time.time() + 30
     while time.time() < end_time:
         for thread_obj in thread_objs:
