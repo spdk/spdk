@@ -43,11 +43,20 @@
 #define VRDMA_EMU_NAME_PREFIX "VrdmaEmu"
 #define VRDMA_EMU_NAME_MAXLEN 32
 #define VRDMA_DMA_ELEM_SIZE 64
+#define VRDMA_PCI_NAME_MAXLEN 16
 
 extern struct vrdma_state_machine vrdma_sm;
 
 struct snap_vrdma_ctrl;
 struct snap_context;
+
+struct vrdma_dev_mac {
+    LIST_ENTRY(vrdma_dev_mac) entry;
+    char pci_number[VRDMA_PCI_NAME_MAXLEN];
+    uint64_t mac;
+};
+LIST_HEAD(vrdma_dev_mac_list_head, vrdma_dev_mac);
+extern struct vrdma_dev_mac_list_head vrdma_dev_mac_list;
 
 struct vrdma_ctrl {
     char name[VRDMA_EMU_NAME_MAXLEN];
@@ -77,6 +86,11 @@ struct vrdma_ctrl_init_attr {
     bool force_in_order;
     bool suspended;
 };
+
+void vrdma_dev_mac_add(char *pci_number, uint64_t mac);
+struct vrdma_dev_mac *
+vrdma_find_dev_mac_by_pci(char *pci_number);
+void vrdma_dev_mac_list_del(void);
 
 int vrdma_ctrl_adminq_progress(void *ctrl);
 void vrdma_ctrl_progress(void *ctrl);
