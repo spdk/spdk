@@ -5,6 +5,7 @@
 
 #include "bdev_raid.h"
 
+#include "spdk/likely.h"
 #include "spdk/log.h"
 
 struct raid1_info {
@@ -13,9 +14,128 @@ struct raid1_info {
 };
 
 static void
+raid1_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct raid_bdev_io *raid_io = cb_arg;
+
+	spdk_bdev_free_io(bdev_io);
+
+	raid_bdev_io_complete_part(raid_io, 1, success ?
+				   SPDK_BDEV_IO_STATUS_SUCCESS :
+				   SPDK_BDEV_IO_STATUS_FAILED);
+}
+
+static void raid1_submit_rw_request(struct raid_bdev_io *raid_io);
+
+static void
+_raid1_submit_rw_request(void *_raid_io)
+{
+	struct raid_bdev_io *raid_io = _raid_io;
+
+	raid1_submit_rw_request(raid_io);
+}
+
+static int
+raid1_submit_read_request(struct raid_bdev_io *raid_io)
+{
+	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
+	uint8_t ch_idx = 0;
+	struct raid_base_bdev_info *base_info = &raid_bdev->base_bdev_info[ch_idx];
+	struct spdk_io_channel *base_ch = raid_io->raid_ch->base_channel[ch_idx];
+	uint64_t pd_lba, pd_blocks;
+	int ret;
+
+	pd_lba = bdev_io->u.bdev.offset_blocks;
+	pd_blocks = bdev_io->u.bdev.num_blocks;
+
+	raid_io->base_bdev_io_remaining = 1;
+
+	ret = spdk_bdev_readv_blocks(base_info->desc, base_ch,
+				     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+				     pd_lba, pd_blocks,
+				     raid1_bdev_io_completion, raid_io);
+
+	if (spdk_likely(ret == 0)) {
+		raid_io->base_bdev_io_submitted++;
+	} else if (spdk_unlikely(ret == -ENOMEM)) {
+		raid_bdev_queue_io_wait(raid_io, base_info->bdev, base_ch,
+					_raid1_submit_rw_request);
+		return 0;
+	}
+
+	return ret;
+}
+
+static int
+raid1_submit_write_request(struct raid_bdev_io *raid_io)
+{
+	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
+	struct raid_base_bdev_info *base_info;
+	struct spdk_io_channel *base_ch;
+	uint64_t pd_lba, pd_blocks;
+	uint16_t idx = raid_io->base_bdev_io_submitted;
+	uint64_t base_bdev_io_not_submitted;
+	int ret = 0;
+
+	pd_lba = bdev_io->u.bdev.offset_blocks;
+	pd_blocks = bdev_io->u.bdev.num_blocks;
+
+	if (raid_io->base_bdev_io_submitted == 0) {
+		raid_io->base_bdev_io_remaining = raid_bdev->num_base_bdevs;
+	}
+
+	for (; idx < raid_bdev->num_base_bdevs; idx++) {
+		base_info = &raid_bdev->base_bdev_info[idx];
+		base_ch = raid_io->raid_ch->base_channel[idx];
+
+		ret = spdk_bdev_writev_blocks(base_info->desc, base_ch,
+					      bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+					      pd_lba, pd_blocks,
+					      raid1_bdev_io_completion, raid_io);
+
+		if (spdk_unlikely(ret != 0)) {
+			if (spdk_unlikely(ret == -ENOMEM)) {
+				raid_bdev_queue_io_wait(raid_io, base_info->bdev, base_ch,
+							_raid1_submit_rw_request);
+				return 0;
+			}
+
+			base_bdev_io_not_submitted = raid_bdev->num_base_bdevs -
+						     raid_io->base_bdev_io_submitted;
+			raid_bdev_io_complete_part(raid_io, base_bdev_io_not_submitted,
+						   SPDK_BDEV_IO_STATUS_FAILED);
+			return 0;
+		}
+
+		raid_io->base_bdev_io_submitted++;
+	}
+
+	return ret;
+}
+
+static void
 raid1_submit_rw_request(struct raid_bdev_io *raid_io)
 {
-	raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
+	int ret;
+
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		ret = raid1_submit_read_request(raid_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		ret = raid1_submit_write_request(raid_io);
+		break;
+	default:
+		ret = -EINVAL;
+		break;
+	}
+
+	if (spdk_unlikely(ret != 0)) {
+		raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
 }
 
 static int
