@@ -265,8 +265,9 @@ unregister_worker(void *arg1)
 		pthread_mutex_unlock(&g_workers_lock);
 		g_rc = dump_result();
 		spdk_app_stop(0);
+	} else {
+		pthread_mutex_unlock(&g_workers_lock);
 	}
-	pthread_mutex_unlock(&g_workers_lock);
 }
 
 static void
