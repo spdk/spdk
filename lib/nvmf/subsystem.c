@@ -1350,7 +1350,10 @@ _nvmf_ns_hot_remove(struct spdk_nvmf_subsystem *subsystem,
 		SPDK_ERRLOG("Failed to make changes to NVME-oF subsystem with id: %u\n", subsystem->id);
 	}
 
-	spdk_nvmf_subsystem_resume(subsystem, NULL, NULL);
+	rc = spdk_nvmf_subsystem_resume(subsystem, NULL, NULL);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to resume NVME-oF subsystem with id: %u\n", subsystem->id);
+	}
 
 	free(ctx);
 }
@@ -1413,7 +1416,9 @@ _nvmf_ns_resize(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
 	struct subsystem_ns_change_ctx *ctx = cb_arg;
 
 	nvmf_subsystem_ns_changed(subsystem, ctx->nsid);
-	spdk_nvmf_subsystem_resume(subsystem, NULL, NULL);
+	if (spdk_nvmf_subsystem_resume(subsystem, NULL, NULL) != 0) {
+		SPDK_ERRLOG("Failed to resume NVME-oF subsystem with id: %u\n", subsystem->id);
+	}
 
 	free(ctx);
 }
