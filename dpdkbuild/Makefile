@@ -182,7 +182,7 @@ all: $(SPDK_ROOT_DIR)/dpdk/build-tmp
 
 $(SPDK_ROOT_DIR)/dpdk/build-tmp: $(SPDK_ROOT_DIR)/mk/cc.mk $(SPDK_ROOT_DIR)/include/spdk/config.h
 	$(Q)rm -rf $(SPDK_ROOT_DIR)/dpdk/build $(SPDK_ROOT_DIR)/dpdk/build-tmp
-	$(Q)cd "$(SPDK_ROOT_DIR)/dpdk"; CC="$(SUB_CC)" meson --prefix="$(MESON_PREFIX)" --libdir lib -Dc_args="$(DPDK_CFLAGS)" -Dc_link_args="$(DPDK_LDFLAGS)" $(DPDK_OPTS) -Denable_drivers="$(shell echo $(DPDK_DRIVERS) | sed -E "s/ +/,/g")" -Ddisable_libs="$(shell echo $(DPDK_DISABLED_LIBS) | sed -E "s/ +/,/g")" $(DPDKBUILD_FLAGS) build-tmp
+	$(Q)cd "$(SPDK_ROOT_DIR)/dpdk"; CC="$(SUB_CC)" meson setup --prefix="$(MESON_PREFIX)" --libdir lib -Dc_args="$(DPDK_CFLAGS)" -Dc_link_args="$(DPDK_LDFLAGS)" $(DPDK_OPTS) -Denable_drivers="$(shell echo $(DPDK_DRIVERS) | sed -E "s/ +/,/g")" -Ddisable_libs="$(shell echo $(DPDK_DISABLED_LIBS) | sed -E "s/ +/,/g")" $(DPDKBUILD_FLAGS) build-tmp
 	$(Q)sed $(SED_INPLACE_FLAG) 's/#define RTE_EAL_PMD_PATH .*/#define RTE_EAL_PMD_PATH ""/g' $(SPDK_ROOT_DIR)/dpdk/build-tmp/rte_build_config.h
 	$(Q) \
 	# TODO Meson build adds libbsd and/or libarchive dependency when it's available. This means any app will be \
