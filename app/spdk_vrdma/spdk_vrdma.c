@@ -115,10 +115,8 @@ vrdma_parse_dev_mac(char *arg)
 
 	if (next[0] == '[') {
 		str = strchr(next, ']');
-        SPDK_NOTICELOG("lizh vrdma_parse_dev_mac str %s \n", str);
         pci_str = &next[1];
         *str = '\0';
-        SPDK_NOTICELOG("lizh vrdma_parse_dev_mac pci_str %s \n", pci_str);
         memcpy(g_dev_mac.pci_number, pci_str, VRDMA_PCI_NAME_MAXLEN);
         SPDK_NOTICELOG("lizh vrdma_parse_dev_mac pci_number %s \n", g_dev_mac.pci_number);
         next = str + 2;
@@ -126,12 +124,9 @@ vrdma_parse_dev_mac(char *arg)
         SPDK_NOTICELOG("lizh vrdma_parse_dev_mac next[0] 0x%x \n", next[0]);
         return -EINVAL;
     }
-    SPDK_NOTICELOG("lizh vrdma_parse_dev_mac next %s \n", next);
     if (next[0] == '[') {
         mac_str = &next[1];
-        SPDK_NOTICELOG("lizh vrdma_parse_dev_mac mac_str %s \n", mac_str);
         for (i = 0; i < 6; i++) {
-            SPDK_NOTICELOG("lizh vrdma_parse_dev_mac mac_str[0] 0x%x \n", mac_str[0]);
             if ((i < 5 && mac_str[2] != ':') ||
                 (i == 5 && mac_str[2] != ']') ) {
                 SPDK_NOTICELOG("lizh vrdma_parse_dev_mac mac_str[2] 0x%x\n", mac_str[2]);
@@ -142,15 +137,13 @@ vrdma_parse_dev_mac(char *arg)
             else
                 str = strchr(mac_str, ']');
             *str = '\0';
-            SPDK_NOTICELOG("lizh vrdma_parse_dev_mac mac_str %s \n", mac_str);
             mac[i] = spdk_strtol(mac_str, 16);
             SPDK_NOTICELOG("lizh vrdma_parse_dev_mac mac[%d] 0x%x \n", i, mac[i]);
             temp_mac = mac[i] & 0xFF;
-            SPDK_NOTICELOG("lizh vrdma_parse_dev_mac temp_mac 0x%lx \n", temp_mac);
             g_dev_mac.mac |= temp_mac << ((5-i) * 8);
-            SPDK_NOTICELOG("lizh vrdma_parse_dev_mac g_dev_mac.mac 0x%lx \n", g_dev_mac.mac);
             mac_str += 3;
         }
+        SPDK_NOTICELOG("lizh vrdma_parse_dev_mac g_dev_mac.mac 0x%lx \n", g_dev_mac.mac);
     } else {
         SPDK_NOTICELOG("lizh vrdma_parse_dev_mac next[0] 0x%x next[1] 0x%x\n", next[0], next[1]);
         return -EINVAL;

@@ -900,9 +900,7 @@ vrdma_rpc_parse_mac_into_int(char *arg, uint64_t *int_mac, char *mac)
     SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int arg %s \n", arg);
     snprintf(vrdma_dev, MAX_VRDMA_DEV_LEN, "%s", arg);
     mac_str = vrdma_dev;
-    SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int mac_str %s \n", mac_str);
     for (i = 0; i < 6; i++) {
-        SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int mac_str[0] 0x%x \n", mac_str[0]);
         if ((i < 5 && mac_str[2] != ':')) {
             SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int mac_str[2] 0x%x\n", mac_str[2]);
             return -EINVAL;
@@ -912,15 +910,13 @@ vrdma_rpc_parse_mac_into_int(char *arg, uint64_t *int_mac, char *mac)
         else
             str = mac_str + 3;
         *str = '\0';
-        SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int mac_str %s \n", mac_str);
         mac[i] = spdk_strtol(mac_str, 16);
         SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int mac[%d] 0x%x \n", i, mac[i]);
         temp_mac = mac[i] & 0xFF;
-        SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int temp_mac 0x%lx \n", temp_mac);
         *int_mac |= temp_mac << ((5-i) * 8);
-        SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int int_mac 0x%lx \n", *int_mac);
         mac_str += 3;
     }
+    SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int int_mac 0x%lx \n", *int_mac);
     return 0;
 }
 
