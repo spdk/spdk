@@ -56,20 +56,39 @@ struct mlx5_wqe_inline_seg {
 	__be32		byte_count;
 };
 
-static const uint32_t vrdma_ib_opcode[] = {
-	[IBV_WR_SEND]			= MLX5_OPCODE_SEND,
-	[IBV_WR_SEND_WITH_INV]		= MLX5_OPCODE_SEND_INVAL,
-	[IBV_WR_SEND_WITH_IMM]		= MLX5_OPCODE_SEND_IMM,
-	[IBV_WR_RDMA_WRITE]		= MLX5_OPCODE_RDMA_WRITE,
-	[IBV_WR_RDMA_WRITE_WITH_IMM]	= MLX5_OPCODE_RDMA_WRITE_IMM,
-	[IBV_WR_RDMA_READ]		= MLX5_OPCODE_RDMA_READ,
-	[IBV_WR_ATOMIC_CMP_AND_SWP]	= MLX5_OPCODE_ATOMIC_CS,
-	[IBV_WR_ATOMIC_FETCH_AND_ADD]	= MLX5_OPCODE_ATOMIC_FA,
-	[IBV_WR_BIND_MW]		= MLX5_OPCODE_UMR,
-	[IBV_WR_LOCAL_INV]		= MLX5_OPCODE_UMR,
-	[IBV_WR_TSO]			= MLX5_OPCODE_TSO,
-	[IBV_WR_DRIVER1]		= MLX5_OPCODE_UMR,
+static const uint32_t vrdma_ib2mlx_opcode[] = {
+	[IBV_WR_SEND]			      = MLX5_OPCODE_SEND,
+	[IBV_WR_SEND_WITH_INV]		  = MLX5_OPCODE_SEND_INVAL,
+	[IBV_WR_SEND_WITH_IMM]		  = MLX5_OPCODE_SEND_IMM,
+	[IBV_WR_RDMA_WRITE]		      = MLX5_OPCODE_RDMA_WRITE,
+	[IBV_WR_RDMA_WRITE_WITH_IMM]  = MLX5_OPCODE_RDMA_WRITE_IMM,
+	[IBV_WR_RDMA_READ]		      = MLX5_OPCODE_RDMA_READ,
+	[IBV_WR_ATOMIC_CMP_AND_SWP]	  = MLX5_OPCODE_ATOMIC_CS,
+	[IBV_WR_ATOMIC_FETCH_AND_ADD] = MLX5_OPCODE_ATOMIC_FA,
+	[IBV_WR_BIND_MW]		      = MLX5_OPCODE_UMR,
+	[IBV_WR_LOCAL_INV]		      = MLX5_OPCODE_UMR,
+	[IBV_WR_TSO]			      = MLX5_OPCODE_TSO,
+	[IBV_WR_DRIVER1]		      = MLX5_OPCODE_UMR,
 };
+
+static const uint32_t vrdma_mlx2ib_req_opcode[] = {
+	[MLX5_OPCODE_SEND]			  = IBV_WC_SEND,
+	[MLX5_OPCODE_SEND_INVAL]	  = IBV_WC_SEND,
+	[MLX5_OPCODE_SEND_IMM]		  = IBV_WC_SEND,
+	[MLX5_OPCODE_RDMA_WRITE]	  = IBV_WC_RDMA_WRITE,
+	[MLX5_OPCODE_RDMA_WRITE_IMM]  = IBV_WC_RDMA_WRITE,
+	[MLX5_OPCODE_RDMA_READ]		  = IBV_WC_RDMA_READ,
+	[MLX5_OPCODE_ATOMIC_CS]	      = IBV_WC_COMP_SWAP,
+	[MLX5_OPCODE_ATOMIC_FA]       = IBV_WC_FETCH_ADD,
+};
+
+static const uint32_t vrdma_mlx2ib_resp_opcode[] = {
+	[MLX5_CQE_RESP_SEND]          = IBV_WC_RECV,
+	[MLX5_CQE_RESP_SEND_IMM]      = IBV_WC_RECV,
+	[MLX5_CQE_RESP_SEND_INV]      = IBV_WC_RECV,
+	[MLX5_CQE_RESP_WR_IMM]        = IBV_WC_RECV_RDMA_WITH_IMM,
+};
+
 
 static size_t g_num_spdk_threads;
 static struct spdk_thread **g_spdk_threads;
@@ -725,7 +744,7 @@ static bool vrdma_qp_wqe_sm_submit(struct spdk_vrdma_qp *vqp,
 
 	for (i = 0; i < num_to_parse; i++) {
 		wqe = vqp->sq.sq_buff + ((vqp->sq.comm.pre_pi + i) % q_size);
-		opcode = vrdma_ib_opcode[wqe->meta.opcode];
+		opcode = vrdma_ib2mlx_opcode[wqe->meta.opcode];
 		//SPDK_NOTICELOG("vrdam sq submit wqe start, m_qpn %d, opcode 0x%x\n",
 			//			backend_qp->hw_qp.qp_num, opcode);
 #ifdef WQE_DBG
@@ -1139,7 +1158,9 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 		wqe_idx = vrdma_get_wqe_id(vqp, cqe->wqe_counter);
 		cqe_idx = vcq->pi & (vcq->cqe_entry_num - 1);
 
+#ifdef WQE_DBG
 		SPDK_NOTICELOG("vrdam sq get new mcqe: put vcqe index %d\n", cqe_idx);
+#endif
 		
 		vcqe = (struct vrdma_cqe *)vqp->sq_vcq->cqe_buff + cqe_idx;
 		vcqe->imm_data = cqe->imm_inval_pkey;
@@ -1151,9 +1172,9 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 
 		if (spdk_unlikely(mlx5dv_get_cqe_opcode(cqe) != MLX5_CQE_REQ)) {
 			vrdma_mcqe_err(cqe);
-			vcqe->opcode = cqe->sop_drop_qpn >> 24;
+			vcqe->opcode = vrdma_mlx2ib_resp_opcode[cqe->op_own >> 4];
 		} else {
-			vcqe->opcode = cqe->op_own >> 4;
+			vcqe->opcode = vrdma_mlx2ib_req_opcode[cqe->sop_drop_qpn >> 24];
 		}
 		vcqe->owner = !!((vcq->pi++) & (vcq->cqe_entry_num));
 	}
@@ -1173,8 +1194,11 @@ write_vcq:
 		vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
 		return true;
 	}
+
+#ifdef WQE_DBG
 	SPDK_NOTICELOG("vrdam gen sq cqe done: vcq new pi %d, pre_pi %d\n",
 					vcq->pi, vcq->pre_pi);
+#endif
 	vcq->pre_pi = vcq->pi;
 	
 	return false;
