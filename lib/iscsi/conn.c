@@ -1492,11 +1492,13 @@ iscsi_conn_full_feature_migrate(void *arg)
 {
 	struct spdk_iscsi_conn *conn = arg;
 
-	if (conn->state >= ISCSI_CONN_STATE_EXITING) {
-		/* Connection is being exited before this callback is executed. */
-		SPDK_DEBUGLOG(iscsi, "Connection is already exited.\n");
-		return;
-	}
+	assert(conn->state != ISCSI_CONN_STATE_EXITED);
+
+	/* Note: it is possible that connection could have moved to EXITING
+	 * state after this message was sent. We will still add it to the
+	 * poll group in this case.  When the poll group is polled
+	 * again, it will call iscsi_conn_destruct() on it.
+	 */
 
 	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
 		iscsi_conn_open_luns(conn);
