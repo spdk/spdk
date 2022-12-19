@@ -2148,6 +2148,7 @@ static int
 nvme_tcp_generate_tls_credentials(struct nvme_tcp_ctrlr *tctrlr)
 {
 	int rc;
+	uint8_t psk_retained[SPDK_TLS_PSK_MAX_LEN] = {};
 
 	assert(tctrlr != NULL);
 
@@ -2158,12 +2159,20 @@ nvme_tcp_generate_tls_credentials(struct nvme_tcp_ctrlr *tctrlr)
 		return -EINVAL;
 	}
 
-	rc = nvme_tcp_derive_retained_psk(tctrlr->ctrlr.opts.psk, tctrlr->ctrlr.opts.hostnqn, tctrlr->psk,
-					  sizeof(tctrlr->psk));
+	rc = nvme_tcp_derive_retained_psk(tctrlr->ctrlr.opts.psk, tctrlr->ctrlr.opts.hostnqn, psk_retained,
+					  sizeof(psk_retained));
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to derive retained PSK!\n");
 		return -EINVAL;
 	}
+
+	rc = nvme_tcp_derive_tls_psk(psk_retained, rc, tctrlr->psk_identity, tctrlr->psk,
+				     sizeof(tctrlr->psk));
+	if (rc < 0) {
+		SPDK_ERRLOG("Could not generate TLS PSK!\n");
+		return rc;
+	}
+
 	tctrlr->psk_size = rc;
 
 	return 0;

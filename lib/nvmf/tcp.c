@@ -817,6 +817,7 @@ tcp_sock_get_key(uint8_t *out, int out_len, const char **cipher, const char *psk
 	struct tcp_psk_entry *entry;
 	struct spdk_nvmf_tcp_transport *ttransport = get_key_ctx;
 	size_t psk_len;
+	int rc;
 
 	*cipher = NULL;
 
@@ -831,8 +832,14 @@ tcp_sock_get_key(uint8_t *out, int out_len, const char **cipher, const char *psk
 				    out_len, psk_len);
 			return -ENOBUFS;
 		}
-		memcpy(out, entry->psk, psk_len);
-		return psk_len;
+
+		/* Convert PSK to the TLS PSK format. */
+		rc = nvme_tcp_derive_tls_psk(entry->psk, psk_len, psk_identity, out, out_len);
+		if (rc < 0) {
+			SPDK_ERRLOG("Could not generate TLS PSK\n");
+		}
+
+		return rc;
 	}
 
 	SPDK_ERRLOG("Could not find PSK for identity: %s\n", psk_identity);

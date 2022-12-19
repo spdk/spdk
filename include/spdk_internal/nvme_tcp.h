@@ -683,4 +683,84 @@ end:
 	return rc;
 }
 
+static inline int
+nvme_tcp_derive_tls_psk(const uint8_t *psk_in, uint64_t psk_in_len, const char *psk_identity,
+			uint8_t *psk_out, uint64_t psk_out_size)
+{
+	EVP_PKEY_CTX *ctx;
+	uint64_t sha256_digest_len = SHA256_DIGEST_LENGTH;
+	char hkdf_info[NVME_TCP_HKDF_INFO_MAX_LEN] = {};
+	const char *label = "tls13 nvme-tls-psk";
+	size_t pos, labellen, idlen;
+	int rc, hkdf_info_size;
+
+	labellen = strlen(label);
+	idlen = strlen(psk_identity);
+	if (idlen > UINT8_MAX) {
+		SPDK_ERRLOG("Invalid PSK ID: too long\n");
+		return -1;
+	}
+
+	*(uint16_t *)&hkdf_info[0] = htons(psk_in_len);
+	pos = sizeof(uint16_t);
+	hkdf_info[pos] = (uint8_t)labellen;
+	pos += sizeof(uint8_t);
+	memcpy(&hkdf_info[pos], label, labellen);
+	pos += labellen;
+	hkdf_info[pos] = (uint8_t)idlen;
+	pos += sizeof(uint8_t);
+	memcpy(&hkdf_info[pos], psk_identity, idlen);
+	pos += idlen;
+	hkdf_info_size = pos;
+
+	if (sha256_digest_len > psk_out_size) {
+		SPDK_ERRLOG("Insufficient buffer size for out key!\n");
+		return -1;
+	}
+
+	ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, NULL);
+	if (!ctx) {
+		SPDK_ERRLOG("Unable to initialize EVP_PKEY_CTX!\n");
+		return -1;
+	}
+
+	if (EVP_PKEY_derive_init(ctx) != 1) {
+		SPDK_ERRLOG("Unable to initialize key derivation ctx for HKDF!\n");
+		rc = -ENOMEM;
+		goto end;
+	}
+	if (EVP_PKEY_CTX_set_hkdf_md(ctx, EVP_sha256()) != 1) {
+		SPDK_ERRLOG("Unable to set SHA256 method for HKDF!\n");
+		rc = -EOPNOTSUPP;
+		goto end;
+	}
+	/* PSK should already be in retained form, so we do not need to unhexlify it here. */
+	if (EVP_PKEY_CTX_set1_hkdf_key(ctx, psk_in, psk_in_len) != 1) {
+		SPDK_ERRLOG("Unable to set PSK key for HKDF!\n");
+		rc = -ENOBUFS;
+		goto end;
+	}
+	if (EVP_PKEY_CTX_add1_hkdf_info(ctx, hkdf_info, hkdf_info_size) != 1) {
+		SPDK_ERRLOG("Unable to set info label for HKDF!\n");
+		rc = -ENOBUFS;
+		goto end;
+	}
+	if (EVP_PKEY_CTX_set1_hkdf_salt(ctx, NULL, 0) != 1) {
+		SPDK_ERRLOG("Unable to set salt for HKDF!\n");
+		rc = -EINVAL;
+		goto end;
+	}
+	if (EVP_PKEY_derive(ctx, psk_out, &sha256_digest_len) != 1) {
+		SPDK_ERRLOG("Unable to derive the PSK key!\n");
+		rc = -EINVAL;
+		goto end;
+	}
+
+	rc = sha256_digest_len;
+
+end:
+	EVP_PKEY_CTX_free(ctx);
+	return rc;
+}
+
 #endif /* SPDK_INTERNAL_NVME_TCP_H */
