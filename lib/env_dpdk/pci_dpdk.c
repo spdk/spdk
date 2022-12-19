@@ -19,18 +19,19 @@ dpdk_pci_init(void)
 	uint32_t year;
 	uint32_t month;
 	uint32_t minor;
+	char release[32] = {0}; /* Max size of DPDK version string */
 	int count;
 
-	count = sscanf(rte_version(), "DPDK %u.%u.%u", &year, &month, &minor);
-	if (count != 3) {
+	count = sscanf(rte_version(), "DPDK %u.%u.%u%s", &year, &month, &minor, release);
+	if (count != 3 && count != 4) {
 		SPDK_ERRLOG("Unrecognized DPDK version format '%s'\n", rte_version());
 		return -EINVAL;
 	}
 
 	/* Add support for DPDK main branch.
-	 * Version release 99 is reserved for DPDK releases, other are used for development versions.
+	 * Only DPDK in development has additional suffix past minor version.
 	 */
-	if (rte_version_release() != 99) {
+	if (strlen(release) != 0) {
 		if (year == 23 && month == 3 && minor == 0) {
 			g_dpdk_fn_table = &fn_table_2211;
 			SPDK_NOTICELOG("DPDK version 23.03.0 not supported yet. Enabled only for validation.\n");
