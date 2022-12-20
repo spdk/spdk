@@ -14,8 +14,6 @@ setup() {
 }
 
 get_meminfo() {
-	xtrace_disable
-
 	local get=$1
 	local node=$2
 	local var val
@@ -35,8 +33,6 @@ get_meminfo() {
 		echo "$val" && return 0
 	done < <(printf '%s\n' "${mem[@]}")
 	return 1
-
-	xtrace_restore
 }
 
 partition_drive() {

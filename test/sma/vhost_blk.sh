@@ -148,7 +148,7 @@ devids=()
 # Now try to add 33 devices, max for one bus + one device on the next bus
 for ((i = 0; i < 33; i++)); do
 	uuid=$(rpc_cmd bdev_get_bdevs -b null$i | jq -r '.[].uuid')
-	devids[$i]=$(create_device $i $uuid | jq -r '.handle')
+	devids[i]=$(create_device $i $uuid | jq -r '.handle')
 done
 
 [[ $(vm_exec $vm_no "lsblk | grep -E \"^vd.\" | wc -l") -eq 33 ]]

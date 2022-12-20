@@ -396,7 +396,7 @@ else
 			vms_to_run=(${disk_cfg_vms[i]})
 			for ((j = 0; j < ${disk_cfg_splits[$i]}; j++)); do
 				free_mb=$(get_lvs_free_mb "$ls_guid")
-				size=$((free_mb / ((${disk_cfg_splits[$i]} - j))))
+				size=$((free_mb / (disk_cfg_splits[i] - j)))
 				lb_name=$($rpc_py bdev_lvol_create -u $ls_guid lbd_$j $size --clear-method none)
 				lvol_bdevs+=("$lb_name")
 				notice "Created LVOL Bdev $lb_name on Lvol Store $ls_guid on Bdev $nvme_bdev"

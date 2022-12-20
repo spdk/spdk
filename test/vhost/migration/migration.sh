@@ -115,8 +115,8 @@ function vm_migrate() {
 	# If you need this check then perform it on your own.
 	if [[ "$target_ip" == "127.0.0.1" ]]; then
 		if ! vm_os_booted $target_vm; then
-			fail "VM$target_vm is not running"
 			cat $target_vm $target_vm_dir/cont_result
+			fail "VM$target_vm is not running"
 		fi
 	fi
 

@@ -296,7 +296,7 @@ function create_fio_config() {
 				m=$((m + 1))
 
 				#Mark numa of n'th disk as "x" to mark it as claimed for next loop iterations
-				disks_numa[$n]="x"
+				disks_numa[n]="x"
 			fi
 			n=$((n + 1))
 
