@@ -13,6 +13,7 @@
 
 #include <rte_crypto.h>
 #include <rte_cryptodev.h>
+#include <rte_version.h>
 
 #define MAX_TEST_BLOCKS 8192
 struct rte_crypto_op *g_test_crypto_ops[MAX_TEST_BLOCKS];
@@ -197,11 +198,15 @@ mock_rte_mempool_put_bulk(struct rte_mempool *mp, void *const *obj_table,
 {
 	return;
 }
-
 #define rte_crypto_op_attach_sym_session mock_rte_crypto_op_attach_sym_session
+#if RTE_VERSION >= RTE_VERSION_NUM(22, 11, 0, 0)
+static inline int
+mock_rte_crypto_op_attach_sym_session(struct rte_crypto_op *op, void *sess)
+#else
 static inline int
 mock_rte_crypto_op_attach_sym_session(struct rte_crypto_op *op,
 				      struct rte_cryptodev_sym_session *sess)
+#endif
 {
 	return ut_rte_crypto_op_attach_sym_session;
 }
@@ -233,14 +238,21 @@ DEFINE_STUB(rte_cryptodev_queue_pair_setup, int, (uint8_t dev_id, uint16_t queue
 DEFINE_STUB(rte_cryptodev_start, int, (uint8_t dev_id), 0);
 DEFINE_STUB_V(rte_cryptodev_stop, (uint8_t dev_id));
 DEFINE_STUB(rte_cryptodev_close, int, (uint8_t dev_id), 0);
+DEFINE_STUB(rte_vdev_init, int, (const char *name, const char *args), 0);
+DEFINE_STUB(rte_vdev_uninit, int, (const char *name), 0);
+
+#if RTE_VERSION >= RTE_VERSION_NUM(22, 11, 0, 0)
+DEFINE_STUB(rte_cryptodev_sym_session_create, void *,
+	    (uint8_t dev_id, struct rte_crypto_sym_xform *xforms, struct rte_mempool *mempool), (void *)1);
+DEFINE_STUB(rte_cryptodev_sym_session_free, int, (uint8_t dev_id, void *sess), 0);
+#else
 DEFINE_STUB(rte_cryptodev_sym_session_create, struct rte_cryptodev_sym_session *,
-	    (struct rte_mempool *mempool), (struct rte_cryptodev_sym_session *)1);
+	    (struct rte_mempool *mempool), (void *)1);
 DEFINE_STUB(rte_cryptodev_sym_session_init, int, (uint8_t dev_id,
 		struct rte_cryptodev_sym_session *sess,
 		struct rte_crypto_sym_xform *xforms, struct rte_mempool *mempool), 0);
-DEFINE_STUB(rte_vdev_init, int, (const char *name, const char *args), 0);
 DEFINE_STUB(rte_cryptodev_sym_session_free, int, (struct rte_cryptodev_sym_session *sess), 0);
-DEFINE_STUB(rte_vdev_uninit, int, (const char *name), 0);
+#endif
 
 struct rte_cryptodev *rte_cryptodevs;
 
@@ -1199,7 +1211,9 @@ test_initdrivers(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_mbuf_mp != NULL);
 	CU_ASSERT(g_session_mp != NULL);
+#if RTE_VERSION < RTE_VERSION_NUM(22, 11, 0, 0)
 	CU_ASSERT(g_session_mp_priv != NULL);
+#endif
 	init_cleanup();
 	MOCK_SET(rte_vdev_init, 0);
 	MOCK_CLEAR(rte_cryptodev_device_count_by_driver);

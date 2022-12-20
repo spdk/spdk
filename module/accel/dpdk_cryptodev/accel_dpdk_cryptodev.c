@@ -20,6 +20,7 @@
 #include <rte_crypto.h>
 #include <rte_cryptodev.h>
 #include <rte_mbuf_dyn.h>
+#include <rte_version.h>
 
 /* The VF spread is the number of queue pairs between virtual functions, we use this to
  * load balance the QAT device.
@@ -132,8 +133,8 @@ struct accel_dpdk_cryptodev_device {
 struct accel_dpdk_cryptodev_key_handle {
 	struct accel_dpdk_cryptodev_device *device;
 	TAILQ_ENTRY(accel_dpdk_cryptodev_key_handle) link;
-	struct rte_cryptodev_sym_session *session_encrypt;	/* encryption session for this key */
-	struct rte_cryptodev_sym_session *session_decrypt;	/* decryption session for this key */
+	void *session_encrypt;	/* encryption session for this key */
+	void *session_decrypt;	/* decryption session for this key */
 	struct rte_crypto_sym_xform cipher_xform;		/* crypto control struct for this key */
 };
 
@@ -641,7 +642,7 @@ accel_dpdk_cryptodev_process_task(struct accel_dpdk_cryptodev_io_channel *crypto
 	struct rte_crypto_op *crypto_ops[ACCEL_DPDK_CRYPTODEV_MAX_ENQUEUE_ARRAY_SIZE];
 	struct rte_mbuf *src_mbufs[ACCEL_DPDK_CRYPTODEV_MAX_ENQUEUE_ARRAY_SIZE];
 	struct rte_mbuf *dst_mbufs[ACCEL_DPDK_CRYPTODEV_MAX_ENQUEUE_ARRAY_SIZE];
-	struct rte_cryptodev_sym_session *session;
+	void *session;
 	struct accel_dpdk_cryptodev_key_priv *priv;
 	struct accel_dpdk_cryptodev_key_handle *key_handle;
 	struct accel_dpdk_cryptodev_qp *qp;
@@ -1008,7 +1009,12 @@ shinfo_free_cb(void *arg1, void *arg2)
 static int
 accel_dpdk_cryptodev_create(uint8_t index, uint16_t num_lcores)
 {
-	struct rte_cryptodev_qp_conf qp_conf = { .mp_session = g_session_mp, .mp_session_private = g_session_mp_priv };
+	struct rte_cryptodev_qp_conf qp_conf = {
+		.mp_session = g_session_mp,
+#if RTE_VERSION < RTE_VERSION_NUM(22, 11, 0, 0)
+		.mp_session_private = g_session_mp_priv
+#endif
+	};
 	/* Setup queue pairs. */
 	struct rte_cryptodev_config conf = { .socket_id = SPDK_ENV_SOCKET_ID_ANY };
 	struct accel_dpdk_cryptodev_device *device;
@@ -1201,6 +1207,7 @@ accel_dpdk_cryptodev_init(void)
 		}
 	}
 
+#if RTE_VERSION < RTE_VERSION_NUM(22, 11, 0, 0)
 	g_session_mp_priv = rte_mempool_create("dpdk_crypto_ses_mp_priv",
 					       ACCEL_DPDK_CRYPTODEV_NUM_SESSIONS, max_sess_size, ACCEL_DPDK_CRYPTODEV_SESS_MEMPOOL_CACHE_SIZE, 0,
 					       NULL, NULL, NULL, NULL, SOCKET_ID_ANY, 0);
@@ -1209,8 +1216,13 @@ accel_dpdk_cryptodev_init(void)
 		return -ENOMEM;
 	}
 
+	/* When session private data mempool allocated, the element size for the session mempool
+	 * should be 0. */
+	max_sess_size = 0;
+#endif
+
 	g_session_mp = rte_cryptodev_sym_session_pool_create("dpdk_crypto_ses_mp",
-			ACCEL_DPDK_CRYPTODEV_NUM_SESSIONS, 0, ACCEL_DPDK_CRYPTODEV_SESS_MEMPOOL_CACHE_SIZE, 0,
+			ACCEL_DPDK_CRYPTODEV_NUM_SESSIONS, max_sess_size, ACCEL_DPDK_CRYPTODEV_SESS_MEMPOOL_CACHE_SIZE, 0,
 			SOCKET_ID_ANY);
 	if (g_session_mp == NULL) {
 		SPDK_ERRLOG("Cannot create session pool max size 0x%x\n", max_sess_size);
@@ -1305,24 +1317,48 @@ accel_dpdk_cryptodev_fini(void *ctx)
 	spdk_io_device_unregister(&g_accel_dpdk_cryptodev_module, accel_dpdk_cryptodev_fini_cb);
 }
 
+static void
+accel_dpdk_cryptodev_key_handle_session_free(struct accel_dpdk_cryptodev_device *device,
+		void *session)
+{
+#if RTE_VERSION >= RTE_VERSION_NUM(22, 11, 0, 0)
+	assert(device != NULL);
+
+	rte_cryptodev_sym_session_free(device->cdev_id, session);
+#else
+	rte_cryptodev_sym_session_free(session);
+#endif
+}
+
+static void *
+accel_dpdk_cryptodev_key_handle_session_create(struct accel_dpdk_cryptodev_device *device,
+		struct rte_crypto_sym_xform *cipher_xform)
+{
+	void *session;
+
+#if RTE_VERSION >= RTE_VERSION_NUM(22, 11, 0, 0)
+	session = rte_cryptodev_sym_session_create(device->cdev_id, cipher_xform, g_session_mp);
+#else
+	session = rte_cryptodev_sym_session_create(g_session_mp);
+	if (!session) {
+		return NULL;
+	}
+
+	if (rte_cryptodev_sym_session_init(device->cdev_id, session, cipher_xform, g_session_mp_priv) < 0) {
+		accel_dpdk_cryptodev_key_handle_session_free(device, session);
+		return NULL;
+	}
+#endif
+
+	return session;
+}
+
 static int
 accel_dpdk_cryptodev_key_handle_configure(struct spdk_accel_crypto_key *key,
 		struct accel_dpdk_cryptodev_key_handle *key_handle)
 {
 	struct accel_dpdk_cryptodev_key_priv *priv = key->priv;
-	int rc;
 
-	key_handle->session_encrypt = rte_cryptodev_sym_session_create(g_session_mp);
-	if (!key_handle->session_encrypt) {
-		SPDK_ERRLOG("Failed to create encrypt crypto session.\n");
-		return -EINVAL;
-	}
-	key_handle->session_decrypt = rte_cryptodev_sym_session_create(g_session_mp);
-	if (!key_handle->session_decrypt) {
-		SPDK_ERRLOG("Failed to create decrypt crypto session.\n");
-		rc = -EINVAL;
-		goto err_ses_encrypt;
-	}
 	key_handle->cipher_xform.type = RTE_CRYPTO_SYM_XFORM_CIPHER;
 	key_handle->cipher_xform.cipher.iv.offset = ACCEL_DPDK_CRYPTODEV_IV_OFFSET;
 	key_handle->cipher_xform.cipher.iv.length = ACCEL_DPDK_CRYPTODEV_IV_LENGTH;
@@ -1340,38 +1376,27 @@ accel_dpdk_cryptodev_key_handle_configure(struct spdk_accel_crypto_key *key,
 		break;
 	default:
 		SPDK_ERRLOG("Invalid cipher name %s.\n", key->param.cipher);
-		rc = -EINVAL;
-		goto err_ses_decrypt;
+		return -EINVAL;
 	}
 
 	key_handle->cipher_xform.cipher.op = RTE_CRYPTO_CIPHER_OP_ENCRYPT;
-	rc = rte_cryptodev_sym_session_init(key_handle->device->cdev_id, key_handle->session_encrypt,
-					    &key_handle->cipher_xform,
-					    g_session_mp_priv ? g_session_mp_priv : g_session_mp);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to init encrypt session: error %d\n", rc);
-		rc = -EINVAL;
-		goto err_ses_decrypt;
+	key_handle->session_encrypt = accel_dpdk_cryptodev_key_handle_session_create(key_handle->device,
+				      &key_handle->cipher_xform);
+	if (!key_handle->session_encrypt) {
+		SPDK_ERRLOG("Failed to init encrypt session\n");
+		return -EINVAL;
 	}
 
 	key_handle->cipher_xform.cipher.op = RTE_CRYPTO_CIPHER_OP_DECRYPT;
-	rc = rte_cryptodev_sym_session_init(key_handle->device->cdev_id, key_handle->session_decrypt,
-					    &key_handle->cipher_xform,
-					    g_session_mp_priv ? g_session_mp_priv : g_session_mp);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to init decrypt session: error %d\n", rc);
-		rc = -EINVAL;
-		goto err_ses_decrypt;
+	key_handle->session_decrypt = accel_dpdk_cryptodev_key_handle_session_create(key_handle->device,
+				      &key_handle->cipher_xform);
+	if (!key_handle->session_decrypt) {
+		SPDK_ERRLOG("Failed to init decrypt session:");
+		accel_dpdk_cryptodev_key_handle_session_free(key_handle->device, key_handle->session_encrypt);
+		return -EINVAL;
 	}
 
 	return 0;
-
-err_ses_decrypt:
-	rte_cryptodev_sym_session_free(key_handle->session_decrypt);
-err_ses_encrypt:
-	rte_cryptodev_sym_session_free(key_handle->session_encrypt);
-
-	return rc;
 }
 
 static int
@@ -1459,8 +1484,8 @@ accel_dpdk_cryptodev_key_deinit(struct spdk_accel_crypto_key *key)
 	struct accel_dpdk_cryptodev_key_priv *priv = key->priv;
 
 	TAILQ_FOREACH_SAFE(key_handle, &priv->dev_keys, link, key_handle_tmp) {
-		rte_cryptodev_sym_session_free(key_handle->session_encrypt);
-		rte_cryptodev_sym_session_free(key_handle->session_decrypt);
+		accel_dpdk_cryptodev_key_handle_session_free(key_handle->device, key_handle->session_encrypt);
+		accel_dpdk_cryptodev_key_handle_session_free(key_handle->device, key_handle->session_decrypt);
 		TAILQ_REMOVE(&priv->dev_keys, key_handle, link);
 		spdk_memset_s(key_handle, sizeof(*key_handle), 0, sizeof(*key_handle));
 		free(key_handle);
@@ -1481,6 +1506,7 @@ accel_dpdk_cryptodev_key_init(struct spdk_accel_crypto_key *key)
 	struct accel_dpdk_cryptodev_key_handle *key_handle;
 	enum accel_dpdk_cryptodev_driver_type driver;
 	enum accel_dpdk_crypto_dev_cipher_type cipher;
+	int rc;
 
 	if (!key->param.cipher) {
 		SPDK_ERRLOG("Cipher is missing\n");
@@ -1537,10 +1563,11 @@ accel_dpdk_cryptodev_key_init(struct spdk_accel_crypto_key *key)
 		}
 		key_handle->device = device;
 		TAILQ_INSERT_TAIL(&priv->dev_keys, key_handle, link);
-		if (accel_dpdk_cryptodev_key_handle_configure(key, key_handle)) {
+		rc = accel_dpdk_cryptodev_key_handle_configure(key, key_handle);
+		if (rc) {
 			pthread_mutex_unlock(&g_device_lock);
 			accel_dpdk_cryptodev_key_deinit(key);
-			return -ENOMEM;
+			return rc;
 		}
 		if (driver != ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI) {
 			/* For MLX5_PCI we need to register a key on each device since
