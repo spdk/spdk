@@ -91,9 +91,15 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/snap/lib #will be deleted thi
 
 echo 4096 > /sys/devices/system/node/node0/hugepages/hugepages-2048kB/nr_hugepages
 
-<spdk_vrdma_view>./app/spdk_vrdma/spdk_vrdma
+<spdk_vrdma_view>./app/spdk_vrdma/spdk_vrdma -v [dev_pci_number]:[vrdma_dev_mac]
 
 #Note:Must run spdk on ARM before dpdk on host to make sure device reset successfully.
+
+#It supports configure vrdma device mac option when app start.
+
+<spdk_vrdma_view>./app/spdk_vrdma/spdk_vrdma -v [dev_pci_number]:[vrdma_dev_mac]
+
+<spdk_vrdma_view>./app/spdk_vrdma/spdk_vrdma  -v [5e:00.3]:[11:22:33:44:55:66] -v [5e:00.4]:[66:77:88:99:aa:cc]
 
 #Create SF interface in ARM, following cmd is suitable for mlnx-sf 1.0 version
 
@@ -128,7 +134,7 @@ ifconfig enp3s0f0s0 100.10.20.2/24
 <spdk_vrdma_view>snap-rdma/rpc/snap_rpc.py controller_vrdma_configue -d <dev_id> -e mlx5_0 -r <remote-arm-ip> -o <local-arm-ip> -n <local sf-dev>
 -c <remote_sf_dev_mac> -u <ipv4 addr of peer sf> -i <ipv4 addr of local sf> -g <source gid id>
 
-snap-rdma/rpc/snap_rpc.py controller_vrdma_configue -d 0 -e mlx5_0 -r 10.237.121.39  -o 10.237.121.59 -n mlx5_2  -c 0x622122312311  -u 100.10.20.1 -i 100.10.20.2 -g 1
+snap-rdma/rpc/snap_rpc.py controller_vrdma_configue -d 0 -e mlx5_0 -r 10.237.121.39  -o 10.237.121.59 -n mlx5_2  -c 62:21:22:31:23:11  -u 100.10.20.1 -i 100.10.20.2 -g 1
 
 How to use DPDK test on host
 =================================
@@ -151,19 +157,23 @@ How to run testpmd
 
 echo 4096 > /sys/devices/system/node/node0/hugepages/hugepages-2048kB/nr_hugepages
 
-#2. Find vrdma device pci, such as 5e:00.3
+#2. Find vrdma device pci, such as 5e:00.3. There are 2 devices per one card.
 
 lspci |grep 4ace
 
 5e:00.3 Ethernet controller: Tencent Technology (Shenzhen) Company Limited Device 4ace
 
-#3. Bond vrmda device to dpdk manage it, such as 0000:5e:00.3
+5e:00.4 Ethernet controller: Tencent Technology (Shenzhen) Company Limited Device 4ace
+
+#3. Bond vrmda device to dpdk manage it, such as 0000:5e:00.3 0000:5e:00.4
 
 <dpdk_vrdma_view>usertools/dpdk-devbind.py --bind=vfio-pci 0000:5e:00.3
 
+<dpdk_vrdma_view>usertools/dpdk-devbind.py --bind=vfio-pci 0000:5e:00.4
+
 #4. Start testpmd with vrdma device, such as 5e:00.3
 
-sudo ./build/app/dpdk-testpmd --log-level=.,8 -a 5e:00.3 --iova-mode=pa  -- -i --rxq=1 --txq=1 -a --enable-rx-cksum --no-flush-rx
+sudo ./build/app/dpdk-testpmd --log-level=.,8 -a 5e:00.3 -a 5e:00.4 --iova-mode=pa  -- -i --rxq=1 --txq=1 -a --enable-rx-cksum --no-flush-rx
 
 How to run testpmd command
 ==============================
