@@ -53,6 +53,7 @@ int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
 {
 	struct spdk_vrdma_dev *vdev;
 	struct ibv_device **list;
+	struct snap_context *sctx;
 	int dev_count;
 
 	SPDK_NOTICELOG("lizh spdk_vrdma_ctx_start...start\n");
@@ -75,10 +76,19 @@ int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
 	}
 	strncpy(vrdma_ctx->emu_manager, ibv_get_device_name(list[0]),
 			 MAX_VRDMA_DEV_LEN - 1);
-
+    sctx = spdk_vrdma_snap_get_snap_context(ibv_get_device_name(list[0]));
+    if (!sctx) {
+		SPDK_ERRLOG("failed to find snap context for %s\n",
+			vrdma_ctx->emu_manager);
+		ibv_free_device_list(list);
+		goto err;
+	}
 	ibv_free_device_list(list);
 	/*Create static PF device*/
-	for (dev_count = 0; dev_count < MAX_VRDMA_STATIC_PF; dev_count++) {
+	SPDK_NOTICELOG("lizh spdk_vrdma_ctx_start...max static PFs %d\n",
+	sctx->vrdma_pfs.num_emulated_pfs);
+	for (dev_count = 0; dev_count < sctx->vrdma_pfs.num_emulated_pfs;
+		dev_count++) {
 		vdev = calloc(1, sizeof(*vdev));
 		if (!vdev)
 			goto err;
