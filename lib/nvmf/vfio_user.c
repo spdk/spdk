@@ -5350,7 +5350,7 @@ static int
 map_admin_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
-	uint32_t len = 0;
+	uint32_t len = 0, numdw = 0;
 	uint8_t fid;
 	int iovcnt;
 
@@ -5367,7 +5367,11 @@ map_admin_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *
 		len = 4096;
 		break;
 	case SPDK_NVME_OPC_GET_LOG_PAGE:
-		len = (((cmd->cdw11_bits.get_log_page.numdu << 16) | cmd->cdw10_bits.get_log_page.numdl) + 1) * 4;
+		numdw = (((cmd->cdw11_bits.get_log_page.numdu << 16) | cmd->cdw10_bits.get_log_page.numdl) + 1);
+		if (numdw > UINT32_MAX / 4) {
+			return -EINVAL;
+		}
+		len = numdw * 4;
 		break;
 	case SPDK_NVME_OPC_GET_FEATURES:
 	case SPDK_NVME_OPC_SET_FEATURES:
