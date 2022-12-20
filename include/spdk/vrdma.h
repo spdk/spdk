@@ -38,7 +38,6 @@
 #include "snap_dma.h"
 #include "snap_vrdma_virtq.h"
 
-#define MAX_VRDMA_STATIC_PF 2
 #define MAX_VRDMA_DEV_NUM 64
 #define MAX_VRDMA_DEV_LEN 32
 #define LOG_4K_PAGE_SIZE 12
