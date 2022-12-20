@@ -292,19 +292,13 @@ _build_doc() {
 		if [[ "$doxygenv" == "1.8.20" ]]; then
 			# Doxygen 1.8.20 produces false positives, see:
 			# https://github.com/doxygen/doxygen/issues/7948
-			if grep -vE '\\ilinebr' "$out"/doxygen.log; then
-				echo "Doxygen errors found!"
-				exit 1
-			fi
+			grep -vE '\\ilinebr'
 		elif [[ "$doxygenv" == "1.9.5" ]]; then
 			# Doxygen 1.9.5 produces false positives, see:
 			# https://github.com/doxygen/doxygen/issues/9552 and
 			# https://github.com/doxygen/doxygen/issues/9678
-			if grep -vE '\\ifile|@param' "$out"/doxygen.log; then
-				echo "Doxygen errors found!"
-				exit 1
-			fi
-		fi
+			grep -vE '\\ifile|@param'
+		fi < "$out/doxygen.log" && echo "Doxygen errors found!" && return 1
 
 		echo "Doxygen $doxygenv detected. No warnings except false positives, continuing the test"
 	fi
