@@ -597,7 +597,8 @@ spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, uint64_t nbyte
 int
 spdk_accel_submit_decompress(struct spdk_io_channel *ch, struct iovec *dst_iovs,
 			     size_t dst_iovcnt, struct iovec *src_iovs, size_t src_iovcnt,
-			     int flags, spdk_accel_completion_cb cb_fn, void *cb_arg)
+			     uint32_t *output_size, int flags, spdk_accel_completion_cb cb_fn,
+			     void *cb_arg)
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
@@ -609,6 +610,7 @@ spdk_accel_submit_decompress(struct spdk_io_channel *ch, struct iovec *dst_iovs,
 		return -ENOMEM;
 	}
 
+	accel_task->output_size = output_size;
 	accel_task->s.iovs = src_iovs;
 	accel_task->s.iovcnt = src_iovcnt;
 	accel_task->d.iovs = dst_iovs;
@@ -902,6 +904,8 @@ spdk_accel_append_decompress(struct spdk_accel_sequence **pseq, struct spdk_io_c
 		return -ENOMEM;
 	}
 
+	/* TODO: support output_size for chaining */
+	task->output_size = NULL;
 	task->dst_domain = dst_domain;
 	task->dst_domain_ctx = dst_domain_ctx;
 	task->d.iovs = dst_iovs;

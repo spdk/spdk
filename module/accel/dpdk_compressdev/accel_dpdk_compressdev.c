@@ -584,7 +584,7 @@ comp_dev_poller(void *args)
 		status = deq_ops[i]->status;
 
 		if (spdk_likely(status == RTE_COMP_OP_STATUS_SUCCESS)) {
-			if (task->op_code == ACCEL_OPC_COMPRESS) {
+			if (task->output_size != NULL) {
 				*task->output_size = deq_ops[i]->produced;
 			}
 		} else {

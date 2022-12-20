@@ -457,7 +457,7 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 		task->src_iovs = task->cur_seg->compressed_iovs;
 		task->src_iovcnt = task->cur_seg->compressed_iovcnt;
 		rc = spdk_accel_submit_decompress(worker->ch, task->dst_iovs, task->dst_iovcnt, task->src_iovs,
-						  task->src_iovcnt, flags, accel_done, task);
+						  task->src_iovcnt, NULL, flags, accel_done, task);
 		break;
 	default:
 		assert(false);

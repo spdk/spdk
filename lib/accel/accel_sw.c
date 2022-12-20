@@ -358,6 +358,12 @@ _sw_accel_decompress(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *
 	} while (sw_ch->state.block_state < ISAL_BLOCK_FINISH);
 	assert(sw_ch->state.avail_in == 0);
 
+	/* Get our total output size */
+	if (accel_task->output_size != NULL) {
+		assert(sw_ch->state.total_out > 0);
+		*accel_task->output_size = sw_ch->state.total_out;
+	}
+
 	return rc;
 #else
 	SPDK_ERRLOG("ISAL option is required to use software decompression.\n");
