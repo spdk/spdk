@@ -218,7 +218,6 @@ function vhost_kill() {
 		if kill -0 $vhost_pid; then
 			error "ERROR: vhost was NOT killed - sending SIGABRT"
 			kill -ABRT $vhost_pid
-			rm $vhost_pid_file
 			rc=1
 		else
 			while kill -0 $vhost_pid; do
@@ -233,9 +232,6 @@ function vhost_kill() {
 	fi
 
 	timing_exit vhost_kill
-	if [[ $rc == 0 ]]; then
-		rm $vhost_pid_file
-	fi
 
 	rm -rf "$vhost_dir"
 
@@ -366,7 +362,7 @@ function vm_is_running() {
 		fi
 
 		# not running - remove pid file
-		rm $vm_dir/qemu.pid
+		rm -f $vm_dir/qemu.pid
 		return 1
 	fi
 }
@@ -434,7 +430,6 @@ function vm_kill() {
 	# First kill should fail, second one must fail
 	if /bin/kill $vm_pid; then
 		notice "process $vm_pid killed"
-		rm $vm_dir/qemu.pid
 		rm -rf $vm_dir
 	elif vm_is_running $1; then
 		error "Process $vm_pid NOT killed"
