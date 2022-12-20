@@ -10,6 +10,9 @@
 #ifndef SPDK_UTIL_H
 #define SPDK_UTIL_H
 
+/* memset_s is only available if __STDC_WANT_LIB_EXT1__ is set to 1 before including \<string.h\> */
+#define __STDC_WANT_LIB_EXT1__ 1
+
 #include "spdk/stdinc.h"
 
 #ifdef __cplusplus
@@ -228,6 +231,38 @@ spdk_sn32_gt(uint32_t s1, uint32_t s2)
 	return (s1 != s2) &&
 	       ((s1 < s2 && s2 - s1 > SPDK_SN32_CMPMAX) ||
 		(s1 > s2 && s1 - s2 < SPDK_SN32_CMPMAX));
+}
+
+/**
+ * Copies the value (unsigned char)ch into each of the first \b count characters of the object pointed to by \b data
+ * \b data_size is used to check that filling \b count bytes won't lead to buffer overflow
+ *
+ * \param data Buffer to fill
+ * \param data_size Size of the buffer
+ * \param ch Fill byte
+ * \param count Number of bytes to fill
+ */
+static inline void
+spdk_memset_s(void *data, size_t data_size, int ch, size_t count)
+{
+#ifdef __STDC_LIB_EXT1__
+	/* memset_s was introduced as an optional feature in C11 */
+	memset_s(data, data_size, ch, count);
+#else
+	size_t i;
+	volatile unsigned char *buf = (volatile unsigned char *)data;
+
+	if (!buf) {
+		return;
+	}
+	if (count > data_size) {
+		count = data_size;
+	}
+
+	for (i = 0; i < count; i++) {
+		buf[i] = (unsigned char)ch;
+	}
+#endif
 }
 
 #ifdef __cplusplus

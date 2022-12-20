@@ -136,6 +136,7 @@
 	spdk_ioviter_next;
 	spdk_copy_iovs_to_buf;
 	spdk_copy_buf_to_iovs;
+	spdk_memset_s;
 
 	# resolvers for functions in util.h
 	spdk_u32log2.resolver;
