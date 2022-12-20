@@ -532,20 +532,18 @@ function install_lcov() {
 
 function install_bpftrace() {
 	install llvm-devel clang-devel cereal-devel gtest-devel gmock-devel cmake
-	rm -rf $GIT_REPOS/bcc
 	rm -rf $GIT_REPOS/bpftrace
-	git clone --recursive $GIT_REPO_BCC $GIT_REPOS/bcc
-	git -C $GIT_REPOS/bcc checkout $BCC_BRANCH
-	git clone --recursive $GIT_REPO_BPFTRACE --branch $BPFTRACE_VERSION $GIT_REPOS/bpftrace
-	mkdir -p $GIT_REPOS/bcc/build $GIT_REPOS/bpftrace/build
 
-	cmake -DCMAKE_BUILD_TYPE=Release -B $GIT_REPOS/bcc/build -S $GIT_REPOS/bcc
-	make -C $GIT_REPOS/bcc/build -j$(nproc)
-	make -C $GIT_REPOS/bcc/build install
+	git clone $GIT_REPO_BPFTRACE $GIT_REPOS/bpftrace --recurse-submodules
+	git -C $GIT_REPOS/bpftrace checkout $BPFTRACE_VERSION
+	mkdir -p $GIT_REPOS/bpftrace/build
+
+	# Use build-libs.sh to build necessary libraries in the bpftrace tree
+	(cd $GIT_REPOS/bpftrace/build && ../build-libs.sh)
 
 	cmake -DCMAKE_BUILD_TYPE=Release -B $GIT_REPOS/bpftrace/build -S $GIT_REPOS/bpftrace
 	make -C $GIT_REPOS/bpftrace/build -j$(nproc)
-	make -C $GIT_REPOS/bpftrace/build install
+	sudo make -C $GIT_REPOS/bpftrace/build install
 }
 
 function install_sources() {
@@ -608,11 +606,10 @@ function install_sources() {
 GIT_VERSION=2.25.1
 IRDMA_VERSION=1.7.72
 ICE_VERSION=1.8.8
-BPFTRACE_VERSION=v0.15.0
 
+BPFTRACE_VERSION=${BPFTRACE_VERSION:-36414d9}
 VFIO_QEMU_BRANCH=${VFIO_QEMU_BRANCH:-vfio-user-irqmask2}
 VANILLA_QEMU_BRANCH=${VANILLA_QEMU_BRANCH:-v7.0.0}
-BCC_BRANCH=${BCC_BRANCH:-6dac27d9}
 
 : ${GIT_REPO_SPDK=https://github.com/spdk/spdk.git}
 export GIT_REPO_SPDK
