@@ -519,6 +519,7 @@ int
 spdk_env_init(const struct spdk_env_opts *opts)
 {
 	char **dpdk_args = NULL;
+	char *args_print = NULL, *args_tmp = NULL;
 	int i, rc;
 	int orig_optind;
 	bool legacy_mem;
@@ -550,11 +551,22 @@ spdk_env_init(const struct spdk_env_opts *opts)
 	}
 
 	SPDK_PRINTF("Starting %s / %s initialization...\n", SPDK_VERSION_STRING, rte_version());
-	SPDK_PRINTF("[ DPDK EAL parameters: ");
-	for (i = 0; i < g_eal_cmdline_argcount; i++) {
-		SPDK_PRINTF("%s ", g_eal_cmdline[i]);
+
+	args_print = _sprintf_alloc("[ DPDK EAL parameters: ");
+	if (args_print == NULL) {
+		return -ENOMEM;
 	}
-	SPDK_PRINTF("]\n");
+	for (i = 0; i < g_eal_cmdline_argcount; i++) {
+		args_tmp = args_print;
+		args_print = _sprintf_alloc("%s%s ", args_tmp, g_eal_cmdline[i]);
+		if (args_print == NULL) {
+			free(args_tmp);
+			return -ENOMEM;
+		}
+		free(args_tmp);
+	}
+	SPDK_PRINTF("%s]\n", args_print);
+	free(args_print);
 
 	/* DPDK rearranges the array we pass to it, so make a copy
 	 * before passing so we can still free the individual strings
