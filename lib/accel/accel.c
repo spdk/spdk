@@ -590,8 +590,6 @@ spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, uint64_t nbyte
 	accel_task->step_cb_fn = NULL;
 
 	return module->submit_tasks(module_ch, accel_task);
-
-	return 0;
 }
 
 int
@@ -622,8 +620,6 @@ spdk_accel_submit_decompress(struct spdk_io_channel *ch, struct iovec *dst_iovs,
 	accel_task->step_cb_fn = NULL;
 
 	return module->submit_tasks(module_ch, accel_task);
-
-	return 0;
 }
 
 int
