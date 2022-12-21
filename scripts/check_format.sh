@@ -67,9 +67,14 @@ function array_contains_string() {
 rc=0
 
 function check_permissions() {
-	echo -n "Checking file permissions..."
+	local rc=0 files=()
 
-	local rc=0
+	mapfile -t files < <(git ls-files)
+	mapfile -t files < <(get_diffed_dups "${files[@]}")
+
+	((${#files[@]} > 0)) || return 0
+
+	echo -n "Checking file permissions..."
 
 	while read -r perm _res0 _res1 path; do
 		if [ ! -f "$path" ]; then
@@ -110,7 +115,7 @@ function check_permissions() {
 				;;
 		esac
 
-	done <<< "$(git grep -I --name-only --untracked -e . | git ls-files -s)"
+	done < <(git ls-files -s "${files[@]}")
 
 	if [ $rc -eq 0 ]; then
 		echo " OK"
@@ -414,7 +419,7 @@ function get_bash_files() {
 	mapfile -t sh < <(git ls-files '*.sh')
 	mapfile -t shebang < <(git grep -l '^#!.*bash')
 
-	printf '%s\n' "${sh[@]}" "${shebang[@]}" | sort -u
+	get_diffed_dups "${sh[@]}" "${shebang[@]}"
 }
 
 function check_bash_style() {
@@ -486,7 +491,10 @@ function check_bash_style() {
 }
 
 function check_bash_static_analysis() {
-	local rc=0
+	local rc=0 files=()
+
+	mapfile -t files < <(get_bash_files)
+	((${#files[@]} > 0)) || return 0
 
 	if hash shellcheck 2> /dev/null; then
 		echo -n "Checking Bash static analysis with shellcheck..."
@@ -540,7 +548,7 @@ SC2119,SC2120,SC2128,SC2148,SC2153,SC2154,SC2164,SC2174,SC2178,SC2001,SC2206,SC2
 			echo "shellcheck $shellcheck_v detected, recommended >= 0.4.0."
 		fi
 
-		get_bash_files | xargs -P$(nproc) -n1 shellcheck $SHCH_ARGS &> shellcheck.log
+		printf '%s\n' "${files[@]}" | xargs -P$(nproc) -n1 shellcheck $SHCH_ARGS &> shellcheck.log
 		if [[ -s shellcheck.log ]]; then
 			echo " Bash shellcheck errors detected!"
 
@@ -718,6 +726,42 @@ function check_spdx_lic() {
 	fi
 
 	printf 'OK\n'
+}
+
+function get_diffed_files() {
+	# Get files where changes are meant to be committed
+	git diff --name-only HEAD HEAD~1
+	# Get files from staging
+	git diff --name-only --cached HEAD
+	git diff --name-only HEAD
+}
+
+function get_diffed_dups() {
+	local files=("$@") diff=() _diff=()
+
+	# Sort and get rid of duplicates from the main list
+	mapfile -t files < <(printf '%s\n' "${files[@]}" | sort -u)
+	# Get staged|committed files
+	mapfile -t diff < <(get_diffed_files | sort -u)
+
+	if [[ ! -v CHECK_FORMAT_ONLY_DIFF ]]; then
+		# Just return the main list
+		printf '%s\n' "${files[@]}"
+		return 0
+	fi
+
+	if ((${#diff[@]} > 0)); then
+		# Check diff'ed files against the main list to see if they are a subset
+		# of it. If yes, then we return the duplicates which are the files that
+		# should be committed, modified.
+		mapfile -t _diff < <(
+			printf '%s\n' "${diff[@]}" "${files[@]}" | sort | uniq -d
+		)
+		if ((${#_diff[@]} > 0)); then
+			printf '%s\n' "${_diff[@]}"
+			return 0
+		fi
+	fi
 }
 
 rc=0
