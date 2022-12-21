@@ -97,12 +97,14 @@ build_shared_native_dpdk_rpm() {
 }
 
 run_test "build_shared_rpm" build_shared_rpm
+run_test "build_rpm_from_gen_spec" build_rpm_from_gen_spec
+
 if ((RUN_NIGHTLY == 1)); then
 	run_test "build_shared_rpm_with_rpmed_dpdk" build_rpm_with_rpmed_dpdk
-	run_test "build_rpm_from_gen_spec" build_rpm_from_gen_spec
-	if [[ -n $SPDK_TEST_NATIVE_DPDK ]]; then
-		run_test "build_shared_native_dpdk_rpm" build_shared_native_dpdk_rpm
-	fi
+fi
+
+if [[ -n $SPDK_TEST_NATIVE_DPDK ]]; then
+	run_test "build_shared_native_dpdk_rpm" build_shared_native_dpdk_rpm
 fi
 
 rm -rf "$builddir"
