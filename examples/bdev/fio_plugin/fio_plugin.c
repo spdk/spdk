@@ -531,6 +531,26 @@ fio_redirected_to_dev_null(void)
 	return true;
 }
 
+static int
+spdk_fio_init_spdk_env(struct thread_data *td)
+{
+	static pthread_mutex_t setup_lock = PTHREAD_MUTEX_INITIALIZER;
+
+	pthread_mutex_lock(&setup_lock);
+	if (!g_spdk_env_initialized) {
+		if (spdk_fio_init_env(td)) {
+			pthread_mutex_unlock(&setup_lock);
+			SPDK_ERRLOG("failed to initialize\n");
+			return -1;
+		}
+
+		g_spdk_env_initialized = true;
+	}
+	pthread_mutex_unlock(&setup_lock);
+
+	return 0;
+}
+
 /* Called for each thread to fill in the 'real_file_size' member for
  * each file associated with this thread. This is called prior to
  * the init operation (spdk_fio_init()) below. This call will occur
@@ -564,13 +584,8 @@ spdk_fio_setup(struct thread_data *td)
 		return -1;
 	}
 
-	if (!g_spdk_env_initialized) {
-		if (spdk_fio_init_env(td)) {
-			SPDK_ERRLOG("failed to initialize\n");
-			return -1;
-		}
-
-		g_spdk_env_initialized = true;
+	if (spdk_fio_init_spdk_env(td) != 0) {
+		return -1;
 	}
 
 	ctx.u.sa.td = td;
@@ -708,6 +723,10 @@ spdk_fio_init(struct thread_data *td)
 {
 	struct spdk_fio_thread *fio_thread;
 	int rc;
+
+	if (spdk_fio_init_spdk_env(td) != 0) {
+		return -1;
+	}
 
 	/* If thread has already been initialized, do nothing. */
 	if (td->io_ops_data) {
