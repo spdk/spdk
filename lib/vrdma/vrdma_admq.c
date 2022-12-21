@@ -1230,12 +1230,9 @@ static void vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
 		return;
 	}
 	if (aqe->req.modify_qp_req.qp_attr_mask & ~vrdma_supported_qp_attr_mask) {
-		aqe->resp.modify_qp_resp.err_code =
-				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-		SPDK_ERRLOG("Failed to modify QP for qp_attr_mask "
-				"some bits unsupportted, err(%d)\n",
-				aqe->resp.modify_qp_resp.err_code);
-		return;
+		SPDK_WARNLOG("Current qp_attr_mask 0x%x is some bits unsupportted"
+				" in supported_qp_attr_mask 0x%x for modification qp. \n",
+				vrdma_supported_qp_attr_mask, aqe->req.modify_qp_req.qp_attr_mask);
 	}
 	vqp = find_spdk_vrdma_qp_by_idx(ctrl,
 				aqe->req.query_qp_req.qp_handle);
@@ -1274,6 +1271,24 @@ static void vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
 	}
 	if (aqe->req.modify_qp_req.qp_attr_mask & IBV_QP_RNR_RETRY){
 		vqp->rnr_retry_cnt = aqe->req.modify_qp_req.rnr_retry_cnt;
+	}
+	if (aqe->req.modify_qp_req.qp_attr_mask & IBV_QP_ACCESS_FLAGS){
+		vqp->qp_access_flags = aqe->req.modify_qp_req.qp_access_flags;
+	}
+	if (aqe->req.modify_qp_req.qp_attr_mask & IBV_QP_PATH_MTU){
+		vqp->path_mtu = aqe->req.modify_qp_req.path_mtu;
+	}
+	if (aqe->req.modify_qp_req.qp_attr_mask & IBV_QP_PKEY_INDEX){
+		vqp->pkey_index = aqe->req.modify_qp_req.pkey_index;
+	}
+	if (aqe->req.modify_qp_req.qp_attr_mask & IBV_QP_PORT){
+		vqp->port_num = aqe->req.modify_qp_req.port_num;
+	}
+	if (aqe->req.modify_qp_req.qp_attr_mask & IBV_QP_MAX_QP_RD_ATOMIC){
+		vqp->max_rd_atomic = aqe->req.modify_qp_req.max_rd_atomic;
+	}
+	if (aqe->req.modify_qp_req.qp_attr_mask & IBV_QP_MAX_DEST_RD_ATOMIC){
+		vqp->max_dest_rd_atomic = aqe->req.modify_qp_req.max_dest_rd_atomic;
 	}
 	if (aqe->req.modify_qp_req.qp_attr_mask & IBV_QP_STATE){
 		SPDK_NOTICELOG("\nlizh vrdma_aq_modify_qp..vqp->qp_state=0x%x new qp_state = 0x%x\n",

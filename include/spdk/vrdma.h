@@ -199,7 +199,7 @@ struct vrdma_rq {
 };
 
 enum {
-       VRDMA_SEND_ERR_CQE = 1,
+	VRDMA_SEND_ERR_CQE = 1,
 };
 
 struct spdk_vrdma_qp {
@@ -218,6 +218,12 @@ struct spdk_vrdma_qp {
 	uint32_t timeout_retry_cnt;
 	uint32_t rnr_retry_cnt;
 	uint32_t sq_draining;
+	uint32_t qp_access_flags;
+	uint32_t path_mtu;
+	uint16_t pkey_index;
+	uint8_t	port_num;
+	uint8_t	max_rd_atomic;
+	uint8_t	max_dest_rd_atomic;
 	uint32_t qdb_idx;	
 	uint32_t flags;
 	struct spdk_vrdma_pd *vpd;

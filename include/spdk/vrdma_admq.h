@@ -363,11 +363,12 @@ struct vrdma_query_qp_resp {
 	uint32_t qkey;
 } __attribute__((packed));
 
-#define vrdma_supported_qp_attr_mask (IBV_QP_STATE | IBV_QP_RQ_PSN | \
-					IBV_QP_SQ_PSN | IBV_QP_DEST_QPN | \
-					IBV_QP_AV | IBV_QP_QKEY | IBV_QP_TIMEOUT | \
-					IBV_QP_MIN_RNR_TIMER | IBV_QP_RETRY_CNT | \
-					IBV_QP_RNR_RETRY)
+#define vrdma_supported_qp_attr_mask (IBV_QP_STATE | IBV_QP_ACCESS_FLAGS | \
+					IBV_QP_PKEY_INDEX | IBV_QP_PORT | IBV_QP_QKEY | \
+					IBV_QP_AV | IBV_QP_PATH_MTU | IBV_QP_TIMEOUT | \
+					IBV_QP_RETRY_CNT | IBV_QP_RNR_RETRY | IBV_QP_RQ_PSN | \
+					IBV_QP_MAX_QP_RD_ATOMIC | IBV_QP_MIN_RNR_TIMER | \
+					IBV_QP_SQ_PSN | IBV_QP_MAX_DEST_RD_ATOMIC | IBV_QP_DEST_QPN)
 struct vrdma_modify_qp_req {
 	uint32_t qp_attr_mask;
 	uint32_t qp_handle;
@@ -382,6 +383,12 @@ struct vrdma_modify_qp_req {
 	uint32_t min_rnr_timer;
 	uint32_t timeout_retry_cnt;
 	uint32_t rnr_retry_cnt;
+	uint32_t qp_access_flags;
+	uint32_t path_mtu;
+	uint16_t pkey_index;
+	uint8_t	port_num;
+	uint8_t	max_rd_atomic;
+	uint8_t	max_dest_rd_atomic;
 } __attribute__((packed));
 
 struct vrdma_modify_qp_resp { 
