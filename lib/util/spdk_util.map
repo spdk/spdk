@@ -126,6 +126,7 @@
 	spdk_strarray_from_string;
 	spdk_strarray_dup;
 	spdk_strarray_free;
+	spdk_strcpy_replace;
 
 	# public functions in util.h
 	spdk_u32log2;

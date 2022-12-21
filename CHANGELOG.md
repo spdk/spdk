@@ -85,6 +85,9 @@ available trace point groups and mask of the available trace points for each gro
 New API `spdk_fd_group_get_epoll_event` that returns the epoll(7) event that
 caused a function callback in file descriptor group to execute.
 
+A new API `spdk_strcpy_replace` was added to replace all occurrences of the search string
+with the replacement string.
+
 ### json
 
 Added API `spdk_json_write_double` and `spdk_json_write_named_double` to allow

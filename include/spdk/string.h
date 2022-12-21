@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2015 Intel Corporation.
+ *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
  */
 
@@ -264,6 +265,22 @@ char **spdk_strarray_dup(const char **strarray);
  * \param strarray array of strings.
  */
 void spdk_strarray_free(char **strarray);
+
+/**
+ * Copy a string into a fixed-size buffer with all occurrences of the search string
+ * replaced with the given replace substring. The fixed-size buffer must not be less
+ * than the string with the replaced values including the terminating null byte.
+ *
+ * \param dst Pointer to destination fixed-size buffer to fill.
+ * \param size Size of the destination fixed-size buffer in bytes.
+ * \param src Pointer to source null-terminated string to copy into dst.
+ * \param search The string being searched for.
+ * \param replace the replacement substring the replaces the found search substring.
+ *
+ * \return 0 on success, or negated errno on failure.
+ */
+int spdk_strcpy_replace(char *dst, size_t size, const char *src, const char *search,
+			const char *replace);
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2015 Intel Corporation.
+ *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
  */
 
@@ -541,4 +542,50 @@ spdk_strarray_dup(const char **strarray)
 	}
 
 	return result;
+}
+
+int
+spdk_strcpy_replace(char *dst, size_t size, const char *src, const char *search,
+		    const char *replace)
+{
+	const char *p, *q;
+	char *r;
+	size_t c, search_size, replace_size, dst_size;
+
+	if (dst == NULL || src == NULL || search == NULL || replace == NULL) {
+		return -EINVAL;
+	}
+
+	search_size = strlen(search);
+	replace_size = strlen(replace);
+
+	c = 0;
+	for (p = strstr(src, search); p != NULL; p = strstr(p + search_size, search)) {
+		c++;
+	}
+
+	dst_size = strlen(src) + (replace_size - search_size) * c;
+	if (dst_size >= size) {
+		return -EINVAL;
+	}
+
+	q = src;
+	r = dst;
+
+	for (p = strstr(src, search); p != NULL; p = strstr(p + search_size, search)) {
+		memcpy(r, q, p - q);
+		r += p - q;
+
+		memcpy(r, replace, replace_size);
+		r += replace_size;
+
+		q = p + search_size;
+	}
+
+	memcpy(r, q, strlen(q));
+	r += strlen(q);
+
+	*r = '\0';
+
+	return 0;
 }
