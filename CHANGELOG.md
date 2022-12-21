@@ -63,6 +63,9 @@ context.
 A new option `nvme_error_stat` was added to the `bdev_nvme_set_options` RPC to enable
 collecting NVMe error counts.
 
+New APIs `spdk_bdev_reset_io_stat`, `spdk_bdev_add_io_stat` and `spdk_bdev_dump_io_stat_json`
+were added to process I/O statistics outside the generic bdev layer, especially in bdev modules.
+
 ### event
 
 Added core lock file mechanism to prevent the same CPU cores from being used by multiple

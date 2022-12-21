@@ -3716,8 +3716,8 @@ bdev_qos_destroy(struct spdk_bdev *bdev)
 	return 0;
 }
 
-static void
-bdev_add_io_stat(struct spdk_bdev_io_stat *total, struct spdk_bdev_io_stat *add)
+void
+spdk_bdev_add_io_stat(struct spdk_bdev_io_stat *total, struct spdk_bdev_io_stat *add)
 {
 	total->bytes_read += add->bytes_read;
 	total->num_read_ops += add->num_read_ops;
@@ -3768,8 +3768,8 @@ bdev_get_io_stat(struct spdk_bdev_io_stat *to_stat, struct spdk_bdev_io_stat *fr
 	}
 }
 
-static void
-bdev_reset_io_stat(struct spdk_bdev_io_stat *stat, enum bdev_reset_stat_mode mode)
+void
+spdk_bdev_reset_io_stat(struct spdk_bdev_io_stat *stat, enum spdk_bdev_reset_stat_mode mode)
 {
 	stat->max_read_latency_ticks = 0;
 	stat->min_read_latency_ticks = UINT64_MAX;
@@ -3822,7 +3822,7 @@ bdev_alloc_io_stat(bool io_error_stat)
 		stat->io_error = NULL;
 	}
 
-	bdev_reset_io_stat(stat, BDEV_RESET_STAT_ALL);
+	spdk_bdev_reset_io_stat(stat, BDEV_RESET_STAT_ALL);
 
 	return stat;
 }
@@ -3837,7 +3837,7 @@ bdev_free_io_stat(struct spdk_bdev_io_stat *stat)
 }
 
 void
-bdev_dump_io_stat_json(struct spdk_bdev_io_stat *stat, struct spdk_json_write_ctx *w)
+spdk_bdev_dump_io_stat_json(struct spdk_bdev_io_stat *stat, struct spdk_json_write_ctx *w)
 {
 	int i;
 
@@ -3906,7 +3906,7 @@ bdev_channel_destroy(void *io_device, void *ctx_buf)
 
 	/* This channel is going away, so add its statistics into the bdev so that they don't get lost. */
 	spdk_spin_lock(&ch->bdev->internal.spinlock);
-	bdev_add_io_stat(ch->bdev->internal.stat, ch->stat);
+	spdk_bdev_add_io_stat(ch->bdev->internal.stat, ch->stat);
 	spdk_spin_unlock(&ch->bdev->internal.spinlock);
 
 	bdev_abort_all_queued_io(&ch->queued_resets, ch);
@@ -5813,7 +5813,7 @@ bdev_get_each_channel_stat(struct spdk_bdev_channel_iter *i, struct spdk_bdev *b
 	struct spdk_bdev_iostat_ctx *bdev_iostat_ctx = _ctx;
 	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
-	bdev_add_io_stat(bdev_iostat_ctx->stat, channel->stat);
+	spdk_bdev_add_io_stat(bdev_iostat_ctx->stat, channel->stat);
 	spdk_bdev_for_each_channel_continue(i, 0);
 }
 
@@ -5849,7 +5849,7 @@ spdk_bdev_get_device_stat(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat
 }
 
 struct bdev_iostat_reset_ctx {
-	enum bdev_reset_stat_mode mode;
+	enum spdk_bdev_reset_stat_mode mode;
 	bdev_reset_device_stat_cb cb;
 	void *cb_arg;
 };
@@ -5871,13 +5871,13 @@ bdev_reset_each_channel_stat(struct spdk_bdev_channel_iter *i, struct spdk_bdev 
 	struct bdev_iostat_reset_ctx *ctx = _ctx;
 	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
-	bdev_reset_io_stat(channel->stat, ctx->mode);
+	spdk_bdev_reset_io_stat(channel->stat, ctx->mode);
 
 	spdk_bdev_for_each_channel_continue(i, 0);
 }
 
 void
-bdev_reset_device_stat(struct spdk_bdev *bdev, enum bdev_reset_stat_mode mode,
+bdev_reset_device_stat(struct spdk_bdev *bdev, enum spdk_bdev_reset_stat_mode mode,
 		       bdev_reset_device_stat_cb cb, void *cb_arg)
 {
 	struct bdev_iostat_reset_ctx *ctx;
@@ -5897,7 +5897,7 @@ bdev_reset_device_stat(struct spdk_bdev *bdev, enum bdev_reset_stat_mode mode,
 	ctx->cb_arg = cb_arg;
 
 	spdk_spin_lock(&bdev->internal.spinlock);
-	bdev_reset_io_stat(bdev->internal.stat, mode);
+	spdk_bdev_reset_io_stat(bdev->internal.stat, mode);
 	spdk_spin_unlock(&bdev->internal.spinlock);
 
 	spdk_bdev_for_each_channel(bdev,

@@ -1475,6 +1475,35 @@ typedef void (*spdk_bdev_get_current_qd_cb)(struct spdk_bdev *bdev, uint64_t cur
 void spdk_bdev_get_current_qd(struct spdk_bdev *bdev,
 			      spdk_bdev_get_current_qd_cb cb_fn, void *cb_arg);
 
+/**
+ * Add I/O statictics.
+ *
+ * \param total The aggregated I/O statictics.
+ * \param add The I/O statictics to be added.
+ */
+void spdk_bdev_add_io_stat(struct spdk_bdev_io_stat *total, struct spdk_bdev_io_stat *add);
+
+/**
+ * Output bdev I/O statictics information to a JSON stream.
+ *
+ * \param stat The bdev I/O statictics to output.
+ * \param w JSON write context.
+ */
+void spdk_bdev_dump_io_stat_json(struct spdk_bdev_io_stat *stat, struct spdk_json_write_ctx *w);
+
+enum spdk_bdev_reset_stat_mode {
+	BDEV_RESET_STAT_ALL,
+	BDEV_RESET_STAT_MAXMIN,
+};
+
+/**
+ * Reset I/O statictics structure.
+ *
+ * \param stat The I/O statictics to reset.
+ * \param mode The mode to reset I/O statictics.
+ */
+void spdk_bdev_reset_io_stat(struct spdk_bdev_io_stat *stat, enum spdk_bdev_reset_stat_mode mode);
+
 /*
  *  Macro used to register module for later initialization.
  */

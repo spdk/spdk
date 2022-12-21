@@ -23,16 +23,12 @@ void bdev_io_submit(struct spdk_bdev_io *bdev_io);
 
 struct spdk_bdev_io_stat *bdev_alloc_io_stat(bool io_error_stat);
 void bdev_free_io_stat(struct spdk_bdev_io_stat *stat);
-void bdev_dump_io_stat_json(struct spdk_bdev_io_stat *stat, struct spdk_json_write_ctx *w);
 
-enum bdev_reset_stat_mode {
-	BDEV_RESET_STAT_ALL,
-	BDEV_RESET_STAT_MAXMIN,
-};
+enum spdk_bdev_reset_stat_mode;
 
 typedef void (*bdev_reset_device_stat_cb)(struct spdk_bdev *bdev, void *cb_arg, int rc);
 
-void bdev_reset_device_stat(struct spdk_bdev *bdev, enum bdev_reset_stat_mode mode,
+void bdev_reset_device_stat(struct spdk_bdev *bdev, enum spdk_bdev_reset_stat_mode mode,
 			    bdev_reset_device_stat_cb cb, void *cb_arg);
 
 #endif /* SPDK_BDEV_INTERNAL_H */

@@ -159,6 +159,9 @@
 	spdk_bdev_push_media_events;
 	spdk_bdev_notify_media_management;
 	spdk_bdev_for_each_bdev_io;
+	spdk_bdev_reset_io_stat;
+	spdk_bdev_add_io_stat;
+	spdk_bdev_dump_io_stat_json;
 
 	# Public functions in bdev_zone.h
 	spdk_bdev_get_zone_size;

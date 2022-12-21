@@ -264,7 +264,7 @@ bdev_get_iostat_done(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat,
 
 	spdk_json_write_named_string(w, "name", spdk_bdev_get_name(bdev));
 
-	bdev_dump_io_stat_json(stat, w);
+	spdk_bdev_dump_io_stat_json(stat, w);
 
 	if (spdk_bdev_get_qd_sampling_period(bdev)) {
 		spdk_json_write_named_uint64(w, "queue_depth_polling_period",
@@ -344,7 +344,7 @@ bdev_get_per_channel_stat(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bd
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_uint64(w, "thread_id", spdk_thread_get_id(spdk_get_thread()));
-	bdev_dump_io_stat_json(bdev_ctx->stat, w);
+	spdk_bdev_dump_io_stat_json(bdev_ctx->stat, w);
 	spdk_json_write_object_end(w);
 
 	spdk_bdev_for_each_channel_continue(i, 0);
@@ -469,7 +469,7 @@ struct rpc_reset_iostat_ctx {
 	int rc;
 	struct spdk_jsonrpc_request *request;
 	struct spdk_json_write_ctx *w;
-	enum bdev_reset_stat_mode mode;
+	enum spdk_bdev_reset_stat_mode mode;
 };
 
 struct bdev_reset_iostat_ctx {
@@ -546,7 +546,7 @@ bdev_reset_iostat(void *ctx, struct spdk_bdev *bdev)
 
 struct rpc_bdev_reset_iostat {
 	char *name;
-	enum bdev_reset_stat_mode mode;
+	enum spdk_bdev_reset_stat_mode mode;
 };
 
 static void
@@ -558,7 +558,7 @@ free_rpc_bdev_reset_iostat(struct rpc_bdev_reset_iostat *r)
 static int
 rpc_decode_reset_iostat_mode(const struct spdk_json_val *val, void *out)
 {
-	enum bdev_reset_stat_mode *mode = out;
+	enum spdk_bdev_reset_stat_mode *mode = out;
 
 	if (spdk_json_strequal(val, "all") == true) {
 		*mode = BDEV_RESET_STAT_ALL;
