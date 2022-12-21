@@ -301,15 +301,23 @@ int vrdma_modify_backend_qp_to_ready(struct vrdma_ctrl *ctrl,
 
 	attr_mask = IBV_QP_PATH_MTU | IBV_QP_DEST_QPN |
 				IBV_QP_RQ_PSN | IBV_QP_MIN_RNR_TIMER;
-	qp_attr.path_mtu = ctrl->sctrl->bar_curr->mtu > 1024 ?
-				IBV_MTU_2048 : IBV_MTU_1024;
+	if (ctrl->sctrl->bar_curr->mtu >= 4096)
+		qp_attr.path_mtu = IBV_MTU_4096;
+	else if (ctrl->sctrl->bar_curr->mtu >= 2048)
+		qp_attr.path_mtu = IBV_MTU_2048;
+	else if (ctrl->sctrl->bar_curr->mtu >= 1024)
+		qp_attr.path_mtu = IBV_MTU_1024;
+	else if (ctrl->sctrl->bar_curr->mtu >= 512)
+		qp_attr.path_mtu = IBV_MTU_512;
+	else
+		qp_attr.path_mtu = IBV_MTU_256;
 	qp_attr.dest_qp_num = bk_qp->remote_qpn;
 	if (qp_attr.dest_qp_num == VRDMA_INVALID_QPN) {
 		SPDK_ERRLOG("Failed to modify bankend QP for invalid remote qpn");
 		return -1;
 	}
 	qp_attr.rq_psn = 0;
-	qp_attr.min_rnr_timer = 12;
+	qp_attr.min_rnr_timer = VRDMA_MIN_RNR_TIMER;
 	rdy_attr.dest_mac = bk_qp->dest_mac;
 	rdy_attr.rgid_rip = bk_qp->rgid_rip;
 	rdy_attr.src_addr_index = bk_qp->src_addr_idx;
@@ -321,15 +329,20 @@ int vrdma_modify_backend_qp_to_ready(struct vrdma_ctrl *ctrl,
 	attr_mask = IBV_QP_SQ_PSN | IBV_QP_RETRY_CNT |
 				IBV_QP_RNR_RETRY | IBV_QP_TIMEOUT;
 	qp_attr.sq_psn = 0;
-	qp_attr.retry_cnt = 8;
-	qp_attr.rnr_retry = 8;
-	qp_attr.timeout = 32;
+	qp_attr.retry_cnt = VRDMA_BACKEND_QP_RNR_RETRY;
+	qp_attr.rnr_retry = VRDMA_BACKEND_QP_RETRY_COUNT;
+	qp_attr.timeout = VRDMA_BACKEND_QP_TIMEOUT;
 	if (snap_vrdma_modify_bankend_qp_rtr2rts(sqp, &qp_attr, attr_mask)) {
 		SPDK_ERRLOG("Failed to modify bankend QP RTR to RTS");
 		return -1;
 	}
 	set_spdk_vrdma_bk_qp_active(ctrl, bk_qp);
-	SPDK_NOTICELOG("\nlizh vrdma_modify_backend_qp_to_ready...done\n");
+	SPDK_NOTICELOG("\nlizh vrdma_modify_backend_qp_to_ready.."
+	"path_mtu %d dest_qp_num 0x%x min_rnr_timer %d "
+	"src_addr_index %d retry_cnt %d rnr_retry %d timeout %d...done\n",
+	qp_attr.path_mtu, qp_attr.dest_qp_num, qp_attr.min_rnr_timer,
+	rdy_attr.src_addr_index, qp_attr.retry_cnt, qp_attr.rnr_retry,
+	qp_attr.timeout);
 	return 0;
 }
 

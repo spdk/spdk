@@ -41,6 +41,14 @@
 #define VRDMA_INVALID_QPN 0xFFFFFFFF
 #define VRDMA_INVALID_DEVID 0xFFFFFFFF
 
+/* RTR state params */
+#define VRDMA_MIN_RNR_TIMER 12
+
+/* RTS state params */
+#define VRDMA_BACKEND_QP_TIMEOUT 14
+#define VRDMA_BACKEND_QP_RETRY_COUNT 7
+#define VRDMA_BACKEND_QP_RNR_RETRY 7
+
 struct snap_vrdma_backend_qp;
 
 struct vrdma_backend_qp {

@@ -326,6 +326,7 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
     if (dev_mac) {
         ctrl->sctrl->mac = dev_mac->mac;
     }
+    snap_vrdma_device_mac_init(ctrl->sctrl);
     ctrl->pf_id = attr->pf_id;
     ctrl->vdev = attr->vdev;
     ctrl->dev.rdev_idx = attr->vdev->devid;
