@@ -935,11 +935,9 @@ _nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *r
 			nvme_request_free_children(child_req);
 			nvme_free_request(child_req);
 		}
-		if (req->parent != NULL) {
-			nvme_request_remove_child(req->parent, req);
-		}
-		nvme_free_request(req);
-		return -ENXIO;
+
+		rc = -ENXIO;
+		goto error;
 	}
 
 	if (req->num_children) {
