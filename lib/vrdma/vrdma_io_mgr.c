@@ -1176,7 +1176,8 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 		} else {
 			vcqe->opcode = vrdma_mlx2ib_req_opcode[cqe->sop_drop_qpn >> 24];
 		}
-		vcqe->owner = !!((vcq->pi++) & (vcq->cqe_entry_num));
+		/* this owner bit should be aligned with vrdma provider layer */
+		vcqe->owner = !((vcq->pi++) & (vcq->cqe_entry_num));
 	}
 
 write_vcq:
