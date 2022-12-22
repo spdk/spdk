@@ -23,7 +23,7 @@ class CryptoEngine:
         """Initialize crypto engine"""
         self._client = client
 
-    def setup(self, volume_id, key, cipher, key2=None):
+    def setup(self, volume_id, key, cipher, key2=None, tweak_mode=None):
         """Set up crypto on a given volume"""
         raise NotImplementedError()
 
@@ -34,7 +34,7 @@ class CryptoEngine:
         """
         raise NotImplementedError()
 
-    def verify(self, volume_id, key, cipher, key2=None):
+    def verify(self, volume_id, key, cipher, key2=None, tweak_mode=None):
         """
         Verify that specified crypto parameters match those that are currently deployed on a given
         volume.  If key is None, this mehtod ensures that the volume doesn't use crypto.  If
@@ -56,13 +56,13 @@ class CryptoEngineNop(CryptoEngine):
     def __init__(self):
         super().__init__('nop')
 
-    def setup(self, volume_id, key, cipher, key2=None):
+    def setup(self, volume_id, key, cipher, key2=None, tweak_mode=None):
         raise CryptoException(grpc.StatusCode.INVALID_ARGUMENT, 'Crypto is disabled')
 
     def cleanup(self, volume_id):
         pass
 
-    def verify(self, volume_id, key, cipher, key2=None):
+    def verify(self, volume_id, key, cipher, key2=None, tweak_mode=None):
         pass
 
     def get_crypto_bdev(self, volume_id):
