@@ -4623,6 +4623,11 @@ spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	}
 
 	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+	if (ns == NULL) {
+		NVME_CTRLR_ERRLOG(ctrlr, "spdk_nvme_ctrlr_get_ns failed!\n");
+		return -ENXIO;
+	}
+
 	return nvme_ns_construct(ns, nsid, ctrlr);
 }
 
