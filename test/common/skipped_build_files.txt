@@ -66,6 +66,3 @@ lib/mlx5/mlx5_crypto
 lib/ublk/ublk
 lib/ublk/ublk_rpc
 module/event/subsystems/ublk/ublk
-
-# Temp skip checking for this file until next patch
-test/unit/lib/accel/dpdk_compressdev.c/accel_dpdk_compressdev_ut
