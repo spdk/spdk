@@ -71,8 +71,14 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	struct spdk_nvme_cmd cmd;
 
 	/* add to dev list */
-	dev = &devs[num_devs++];
-	spdk_pci_addr_parse(&dev->pci_addr, trid->traddr);
+	dev = &devs[num_devs];
+	if (spdk_pci_addr_parse(&dev->pci_addr, trid->traddr) != 0) {
+		fprintf(stderr, "spdk_pci_addr_parse failure\n");
+		assert(false);
+		return;
+	}
+	num_devs++;
+
 	dev->ctrlr = ctrlr;
 
 	/* Retrieve controller data */
