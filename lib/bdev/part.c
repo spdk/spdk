@@ -510,6 +510,9 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 			 char *name, uint64_t offset_blocks, uint64_t num_blocks,
 			 char *product_name)
 {
+	int rc;
+	bool first_claimed = false;
+
 	part->internal.bdev.blocklen = base->bdev->blocklen;
 	part->internal.bdev.blockcnt = num_blocks;
 	part->internal.offset_blocks = offset_blocks;
@@ -551,9 +554,11 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 			SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(base->bdev));
 			free(part->internal.bdev.name);
 			free(part->internal.bdev.product_name);
+			base->ref--;
 			return -1;
 		}
 		base->claimed = true;
+		first_claimed = true;
 	}
 
 	spdk_io_device_register(part, bdev_part_channel_create_cb,
@@ -561,8 +566,20 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 				base->channel_size,
 				name);
 
-	spdk_bdev_register(&part->internal.bdev);
-	TAILQ_INSERT_TAIL(base->tailq, part, tailq);
+	rc = spdk_bdev_register(&part->internal.bdev);
+	if (rc == 0) {
+		TAILQ_INSERT_TAIL(base->tailq, part, tailq);
+	} else {
+		spdk_io_device_unregister(part, NULL);
+		if (--base->ref == 0) {
+			spdk_bdev_module_release_bdev(base->bdev);
+		}
+		free(part->internal.bdev.name);
+		free(part->internal.bdev.product_name);
+		if (first_claimed == true) {
+			base->claimed = false;
+		}
+	}
 
-	return 0;
+	return rc;
 }

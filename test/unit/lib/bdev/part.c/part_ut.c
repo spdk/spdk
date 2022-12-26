@@ -210,6 +210,7 @@ part_test(void)
 	struct spdk_bdev_part_base	*base;
 	struct spdk_bdev_part		part1 = {};
 	struct spdk_bdev_part		part2 = {};
+	struct spdk_bdev_part		part3 = {};
 	struct spdk_bdev		bdev_base = {};
 	SPDK_BDEV_PART_TAILQ		tailq = TAILQ_HEAD_INITIALIZER(tailq);
 	int rc;
@@ -228,8 +229,16 @@ part_test(void)
 
 	rc = spdk_bdev_part_construct(&part1, base, "test1", 0, 100, "test");
 	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(base->ref == 1);
+	SPDK_CU_ASSERT_FATAL(base->claimed == true);
 	rc = spdk_bdev_part_construct(&part2, base, "test2", 100, 100, "test");
 	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(base->ref == 2);
+	SPDK_CU_ASSERT_FATAL(base->claimed == true);
+	rc = spdk_bdev_part_construct(&part3, base, "test1", 0, 100, "test");
+	SPDK_CU_ASSERT_FATAL(rc != 0);
+	SPDK_CU_ASSERT_FATAL(base->ref == 2);
+	SPDK_CU_ASSERT_FATAL(base->claimed == true);
 
 	spdk_bdev_part_base_hotremove(base, &tailq);
 
