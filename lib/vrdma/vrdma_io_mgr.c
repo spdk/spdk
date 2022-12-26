@@ -184,10 +184,8 @@ static bool vrdma_qp_sm_idle(struct spdk_vrdma_qp *vqp,
 	return false;
 }
 
-<<<<<<< HEAD
 struct timespec g_start_tv, g_end_tv, g_cqe_tv;
 
-=======
 #ifdef VRDMA_DPA
 static bool vrdma_qp_sm_poll_pi(struct spdk_vrdma_qp *vqp,
 								   enum vrdma_qp_sm_op_status status)
@@ -201,7 +199,6 @@ static bool vrdma_qp_sm_poll_pi(struct spdk_vrdma_qp *vqp,
 }
 
 #else
->>>>>>> f5a0437e5 (Add dpa rx path wqe handling in dma qp)
 static bool vrdma_qp_sm_poll_pi(struct spdk_vrdma_qp *vqp,
 								   enum vrdma_qp_sm_op_status status)
 {
