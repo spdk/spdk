@@ -71,25 +71,6 @@ static const uint32_t vrdma_ib2mlx_opcode[] = {
 	[IBV_WR_DRIVER1]		      = MLX5_OPCODE_UMR,
 };
 
-static const uint32_t vrdma_mlx2ib_req_opcode[] = {
-	[MLX5_OPCODE_SEND]			  = IBV_WC_SEND,
-	[MLX5_OPCODE_SEND_INVAL]	  = IBV_WC_SEND,
-	[MLX5_OPCODE_SEND_IMM]		  = IBV_WC_SEND,
-	[MLX5_OPCODE_RDMA_WRITE]	  = IBV_WC_RDMA_WRITE,
-	[MLX5_OPCODE_RDMA_WRITE_IMM]  = IBV_WC_RDMA_WRITE,
-	[MLX5_OPCODE_RDMA_READ]		  = IBV_WC_RDMA_READ,
-	[MLX5_OPCODE_ATOMIC_CS]	      = IBV_WC_COMP_SWAP,
-	[MLX5_OPCODE_ATOMIC_FA]       = IBV_WC_FETCH_ADD,
-};
-
-static const uint32_t vrdma_mlx2ib_resp_opcode[] = {
-	[MLX5_CQE_RESP_SEND]          = IBV_WC_RECV,
-	[MLX5_CQE_RESP_SEND_IMM]      = IBV_WC_RECV,
-	[MLX5_CQE_RESP_SEND_INV]      = IBV_WC_RECV,
-	[MLX5_CQE_RESP_WR_IMM]        = IBV_WC_RECV_RDMA_WITH_IMM,
-};
-
-
 static size_t g_num_spdk_threads;
 static struct spdk_thread **g_spdk_threads;
 static struct spdk_thread *app_thread;
@@ -266,7 +247,7 @@ static bool vrdma_qp_wqe_sm_read(struct spdk_vrdma_qp *vqp,
 	uint16_t q_size = vqp->sq.comm.wqebb_cnt;
 	int ret;
 
-#if WQE_DBG
+#ifdef WQE_DBG
 	SPDK_NOTICELOG("vrdam poll sq wqe: sq pa 0x%lx\n", vqp->sq.comm.wqe_buff_pa);
 #endif
 	vqp->sm_state = VRDMA_QP_STATE_WQE_PARSE;
@@ -341,7 +322,7 @@ static bool vrdma_qp_wqe_sm_parse(struct spdk_vrdma_qp *vqp,
 	}
 
 	vqp->stats.sq_wqe_fetched += vqp->sq.comm.num_to_parse;
-#if WQE_DBG
+#ifdef WQE_DBG
 	SPDK_NOTICELOG("vrdam parse sq wqe: vq pi %d, pre_pi %d\n",
 		vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
 #endif
@@ -378,7 +359,7 @@ static bool vrdma_qp_wqe_sm_map_backend(struct spdk_vrdma_qp *vqp,
 		return true;
 	}
 
-#if WQE_DBG
+#ifdef WQE_DBG
 	SPDK_NOTICELOG("vrdam map sq wqe: vq pi %d, mqp %p\n",
 			vqp->qp_pi->pi.sq_pi, vqp->bk_qp);
 #endif
@@ -736,7 +717,7 @@ static bool vrdma_qp_wqe_sm_submit(struct spdk_vrdma_qp *vqp,
 
 	clock_gettime(CLOCK_REALTIME, &start_tv);
 
-#if WQE_DBG
+#ifdef WQE_DBG
 	SPDK_NOTICELOG("vrdam submit sq wqe: pi %d, pre_pi %d, num_to_submit %d\n",
 					vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi, num_to_parse);
 #endif
@@ -774,7 +755,7 @@ static bool vrdma_qp_wqe_sm_submit(struct spdk_vrdma_qp *vqp,
 	vqp->stats.msq_dbred_pi = backend_qp->hw_qp.sq.pi;
 	vqp->stats.sq_wqe_submitted += num_to_parse;
 	vqp->sq.comm.pre_pi += num_to_parse;
-#if WQE_DBG
+#ifdef WQE_DBG
 	SPDK_NOTICELOG("vrdam sq submit wqe done \n");
 #endif 
 	clock_gettime(CLOCK_REALTIME, &end_tv);
@@ -1069,6 +1050,42 @@ static int vrdma_write_back_sq_cqe(struct spdk_vrdma_qp *vqp)
 	return 0;
 }
 
+static inline vrdma_convet_mlx5_ibv_opcode(struct mlx5_cqe64 *cqe)
+{
+	switch (mlx5dv_get_cqe_opcode(cqe)) {
+	case MLX5_CQE_RESP_WR_IMM:
+		return IBV_WC_RECV_RDMA_WITH_IMM;
+	case MLX5_CQE_RESP_SEND:
+	case MLX5_CQE_RESP_SEND_IMM:
+	case MLX5_CQE_RESP_SEND_INV:
+		return IBV_WC_RECV;
+	case MLX5_CQE_REQ:
+		switch (be32toh(cqe->sop_drop_qpn) >> 24) {
+		case MLX5_OPCODE_RDMA_WRITE_IMM:
+		case MLX5_OPCODE_RDMA_WRITE:
+			return IBV_WC_RDMA_WRITE;
+		case MLX5_OPCODE_SEND_IMM:
+		case MLX5_OPCODE_SEND:
+		case MLX5_OPCODE_SEND_INVAL:
+			return IBV_WC_SEND;
+		case MLX5_OPCODE_RDMA_READ:
+			return IBV_WC_RDMA_READ;
+		case MLX5_OPCODE_ATOMIC_CS:
+			return IBV_WC_COMP_SWAP;
+		case MLX5_OPCODE_ATOMIC_FA:
+			return IBV_WC_FETCH_ADD;
+		case MLX5_OPCODE_TSO:
+			return IBV_WC_TSO;
+		default:
+			break;
+		}
+	default:
+		vrdma_mcqe_err(cqe);
+		break;
+	}
+	return 0;
+}
+
 static bool vrdma_vqp_send_err_cqe(struct spdk_vrdma_qp *vqp)
 {
 	struct spdk_vrdma_cq *vcq = vqp->sq_vcq;
@@ -1169,13 +1186,7 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 		vcqe->local_qpn = vqp->qp_idx;
 		//vcqe->ts = (uint32_t)cqe->timestamp;
 		vcqe->ts = (uint32_t)tv.tv_usec;
-
-		if (spdk_unlikely(mlx5dv_get_cqe_opcode(cqe) != MLX5_CQE_REQ)) {
-			vrdma_mcqe_err(cqe);
-			vcqe->opcode = vrdma_mlx2ib_resp_opcode[cqe->op_own >> 4];
-		} else {
-			vcqe->opcode = vrdma_mlx2ib_req_opcode[cqe->sop_drop_qpn >> 24];
-		}
+		vcqe->opcode = vrdma_convet_mlx5_ibv_opcode(cqe);
 		/* this owner bit should be aligned with vrdma provider layer */
 		vcqe->owner = !((vcq->pi++) & (vcq->cqe_entry_num));
 	}
