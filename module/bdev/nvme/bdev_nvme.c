@@ -145,6 +145,8 @@ static void nvme_ctrlr_populate_namespaces_done(struct nvme_ctrlr *nvme_ctrlr,
 		struct nvme_async_probe_ctx *ctx);
 static int bdev_nvme_library_init(void);
 static void bdev_nvme_library_fini(void);
+static void _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch,
+				      struct spdk_bdev_io *bdev_io);
 static void bdev_nvme_submit_request(struct spdk_io_channel *ch,
 				     struct spdk_bdev_io *bdev_io);
 static int bdev_nvme_readv(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
@@ -943,11 +945,24 @@ any_io_path_may_become_available(struct nvme_bdev_channel *nbdev_ch)
 	return false;
 }
 
+static void
+bdev_nvme_retry_io(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_io *bdev_io)
+{
+	struct nvme_bdev_io *nbdev_io = (struct nvme_bdev_io *)bdev_io->driver_ctx;
+	struct spdk_io_channel *ch;
+
+	if (nbdev_io->io_path != NULL && nvme_io_path_is_available(nbdev_io->io_path)) {
+		_bdev_nvme_submit_request(nbdev_ch, bdev_io);
+	} else {
+		ch = spdk_io_channel_from_ctx(nbdev_ch);
+		bdev_nvme_submit_request(ch, bdev_io);
+	}
+}
+
 static int
 bdev_nvme_retry_ios(void *arg)
 {
 	struct nvme_bdev_channel *nbdev_ch = arg;
-	struct spdk_io_channel *ch = spdk_io_channel_from_ctx(nbdev_ch);
 	struct spdk_bdev_io *bdev_io, *tmp_bdev_io;
 	struct nvme_bdev_io *bio;
 	uint64_t now, delay_us;
@@ -962,7 +977,7 @@ bdev_nvme_retry_ios(void *arg)
 
 		TAILQ_REMOVE(&nbdev_ch->retry_io_list, bdev_io, module_link);
 
-		bdev_nvme_submit_request(ch, bdev_io);
+		bdev_nvme_retry_io(nbdev_ch, bdev_io);
 	}
 
 	spdk_poller_unregister(&nbdev_ch->retry_io_poller);
@@ -1112,10 +1127,14 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 	    !nvme_io_path_is_available(io_path) ||
 	    !nvme_ctrlr_is_available(nvme_ctrlr)) {
 		nbdev_ch->current_io_path = NULL;
+		bio->io_path = NULL;
 		if (spdk_nvme_cpl_is_ana_error(cpl)) {
 			if (nvme_ctrlr_read_ana_log_page(nvme_ctrlr) == 0) {
 				io_path->nvme_ns->ana_state_updating = true;
 			}
+		}
+		if (!any_io_path_may_become_available(nbdev_ch)) {
+			goto complete;
 		}
 		delay_ms = 0;
 	} else {
@@ -1130,10 +1149,8 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 		}
 	}
 
-	if (any_io_path_may_become_available(nbdev_ch)) {
-		bdev_nvme_queue_retry_io(nbdev_ch, bio, delay_ms);
-		return;
-	}
+	bdev_nvme_queue_retry_io(nbdev_ch, bio, delay_ms);
+	return;
 
 complete:
 	bio->retry_count = 0;
@@ -1158,6 +1175,7 @@ bdev_nvme_io_complete(struct nvme_bdev_io *bio, int rc)
 		nbdev_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
 
 		nbdev_ch->current_io_path = NULL;
+		bio->io_path = NULL;
 
 		if (any_io_path_may_become_available(nbdev_ch)) {
 			bdev_nvme_queue_retry_io(nbdev_ch, bio, 1000ULL);
