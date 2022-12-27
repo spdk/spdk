@@ -130,6 +130,11 @@ test_raid_bdev_write_superblock(void)
 		.base_bdev_info = base_info,
 	};
 	int status;
+	uint8_t i;
+
+	for (i = 1; i < SPDK_COUNTOF(base_info); i++) {
+		base_info[i].desc = (void *)0x1;
+	}
 
 	prepare_sb(raid_bdev.sb);
 

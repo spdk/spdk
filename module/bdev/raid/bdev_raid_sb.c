@@ -279,6 +279,14 @@ _raid_bdev_write_superblock(void *_ctx)
 
 	for (i = ctx->submitted; i < raid_bdev->num_base_bdevs; i++) {
 		base_info = &raid_bdev->base_bdev_info[i];
+
+		if (base_info->desc == NULL) {
+			assert(ctx->remaining > 1);
+			raid_bdev_write_sb_base_bdev_done(0, ctx);
+			ctx->submitted++;
+			continue;
+		}
+
 		rc = spdk_bdev_write(base_info->desc, base_info->app_thread_ch,
 				     (void *)raid_bdev->sb, 0, ctx->nbytes,
 				     raid_bdev_write_superblock_cb, ctx);

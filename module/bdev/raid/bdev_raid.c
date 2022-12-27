@@ -1365,6 +1365,21 @@ raid_bdev_find_base_info_by_bdev(struct spdk_bdev *base_bdev)
 }
 
 static void
+raid_bdev_remove_base_bdev_write_sb_cb(int status, struct raid_bdev *raid_bdev, void *ctx)
+{
+	struct raid_base_bdev_info *base_info = ctx;
+
+	if (status != 0) {
+		SPDK_ERRLOG("Failed to write raid bdev '%s' superblock: %s\n",
+			    raid_bdev->bdev.name, spdk_strerror(-status));
+	}
+
+	if (base_info->remove_cb != NULL) {
+		base_info->remove_cb(base_info->remove_cb_ctx, status);
+	}
+}
+
+static void
 raid_bdev_remove_base_bdev_on_unquiesced(void *ctx, int status)
 {
 	struct raid_base_bdev_info *base_info = ctx;
@@ -1381,6 +1396,30 @@ raid_bdev_remove_base_bdev_on_unquiesced(void *ctx, int status)
 	spdk_spin_lock(&raid_bdev->base_bdev_lock);
 	raid_bdev_free_base_bdev_resource(base_info);
 	spdk_spin_unlock(&raid_bdev->base_bdev_lock);
+
+	if (raid_bdev->sb) {
+		struct raid_bdev_superblock *sb = raid_bdev->sb;
+		struct raid_bdev_sb_base_bdev *sb_base_bdev = NULL;
+		uint8_t slot = base_info - raid_bdev->base_bdev_info;
+		uint8_t i;
+
+		for (i = 0; i < sb->base_bdevs_size; i++) {
+			sb_base_bdev = &sb->base_bdevs[i];
+
+			if (sb_base_bdev->state == RAID_SB_BASE_BDEV_CONFIGURED &&
+			    sb_base_bdev->slot == slot) {
+				break;
+			}
+		}
+
+		assert(i < sb->base_bdevs_size);
+
+		/* TODO: distinguish between failure and intentional removal */
+		sb_base_bdev->state = RAID_SB_BASE_BDEV_FAILED;
+
+		raid_bdev_write_superblock(raid_bdev, raid_bdev_remove_base_bdev_write_sb_cb, base_info);
+		return;
+	}
 out:
 	if (base_info->remove_cb != NULL) {
 		base_info->remove_cb(base_info->remove_cb_ctx, status);
