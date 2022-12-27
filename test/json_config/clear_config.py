@@ -131,6 +131,18 @@ def clear_nbd_subsystem(args, nbd_config):
             args.client.call(destroy_method, {'nbd_device': nbd['params']['nbd_device']})
 
 
+def get_ublk_destroy_method(ublk):
+    delete_method_map = {'ublk_start_disk': "ublk_stop_disk"}
+    return delete_method_map[ublk['method']]
+
+
+def clear_ublk_subsystem(args, ublk_config):
+    for ublk in ublk_config:
+        destroy_method = get_ublk_destroy_method(ublk)
+        if destroy_method:
+            args.client.call(destroy_method, {'ublk_device': ublk['params']['ublk_device']})
+
+
 def clear_net_framework_subsystem(args, net_framework_config):
     pass
 

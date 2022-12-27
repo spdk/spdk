@@ -479,6 +479,10 @@ function get_config_params() {
 		fi
 	fi
 
+	if [[ -f /usr/include/liburing/io_uring.h && -f /usr/include/linux/ublk_cmd.h ]]; then
+		config_params+=' --with-ublk'
+	fi
+
 	if [ $SPDK_TEST_RAID5 -eq 1 ]; then
 		config_params+=' --with-raid5f'
 	fi
