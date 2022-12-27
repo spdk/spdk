@@ -229,6 +229,8 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		if [[ $SPDK_TEST_XNVME -eq 1 ]]; then
 			run_test "nvme_xnvme" test/nvme/xnvme/xnvme.sh
 			run_test "blockdev_xnvme" test/bdev/blockdev.sh "xnvme"
+			# Run ublk with xnvme since they have similar kernel dependencies
+			run_test "ublk" test/ublk/ublk.sh
 		fi
 	fi
 
