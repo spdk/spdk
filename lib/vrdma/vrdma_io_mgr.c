@@ -907,9 +907,9 @@ static inline struct mlx5_cqe64 *vrdma_poll_mqp_scq(struct snap_hw_cq *dv_cq,
 	return cqe;
 }
 
-static inline uint32_t vrdma_get_wqe_id(struct spdk_vrdma_qp *vqp, uint32_t mwqe_idx)
+static inline uint32_t vrdma_get_wqe_id(struct spdk_vrdma_qp *vqp, uint16_t mwqe_idx)
 {
-	return mwqe_idx;
+	return be16toh(mwqe_idx);
 }
 
 static bool vrdma_qp_sm_poll_cq_ci(struct spdk_vrdma_qp *vqp,
@@ -1172,23 +1172,23 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 			goto write_vcq;
 		}
 		
-		wqe_idx = vrdma_get_wqe_id(vqp, cqe->wqe_counter);
-		cqe_idx = vcq->pi & (vcq->cqe_entry_num - 1);
-
-#ifdef WQE_DBG
-		SPDK_NOTICELOG("vrdam sq get new mcqe: put vcqe index %d\n", cqe_idx);
-#endif
-		
+		wqe_idx = vrdma_get_wqe_id(vqp, cqe->wqe_counter) % vqp->sq.comm.wqebb_cnt;
+		cqe_idx = vcq->pi & (vcq->cqe_entry_num - 1);	
 		vcqe = (struct vrdma_cqe *)vqp->sq_vcq->cqe_buff + cqe_idx;
 		vcqe->imm_data = cqe->imm_inval_pkey;
 		vcqe->length = cqe->byte_cnt;
-		vcqe->req_id = wqe_idx;
+		vcqe->req_id = vqp->sq.sq_buff[wqe_idx].meta.req_id;
 		vcqe->local_qpn = vqp->qp_idx;
 		//vcqe->ts = (uint32_t)cqe->timestamp;
 		vcqe->ts = (uint32_t)tv.tv_usec;
 		vcqe->opcode = vrdma_convet_mlx5_ibv_opcode(cqe);
 		/* this owner bit should be aligned with vrdma provider layer */
 		vcqe->owner = !((vcq->pi++) & (vcq->cqe_entry_num));
+#ifdef WQE_DBG
+		SPDK_NOTICELOG("vrdam vsq put cqe: cqe_idx %d, wqe_idx %d, req_id %d, opcode %d\n",
+						cqe_idx, wqe_idx, vcqe->req_id, vcqe->opcode);
+#endif
+
 	}
 
 write_vcq:
