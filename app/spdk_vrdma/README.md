@@ -131,10 +131,10 @@ ifconfig enp3s0f0s0 100.10.20.2/24
 
 #Run RPC on ARM to configure SF for traffic
 
-<spdk_vrdma_view>snap-rdma/rpc/snap_rpc.py controller_vrdma_configue -d <dev_id> -e mlx5_0 -r <remote-arm-ip> -o <local-arm-ip> -n <local sf-dev>
+<spdk_vrdma_view>snap-rdma/rpc/snap_rpc.py controller_vrdma_configue -d <dev_id> -e mlx5_0 -r <remote-arm-ip> -o <local-arm-ip> -n <local sf-dev> -t <local sf-dev mtu>
 -c <remote_sf_dev_mac> -u <ipv4 addr of peer sf> -i <ipv4 addr of local sf> -g <source gid id>
 
-snap-rdma/rpc/snap_rpc.py controller_vrdma_configue -d 0 -e mlx5_0 -r 10.237.121.39  -o 10.237.121.59 -n mlx5_2  -c 62:21:22:31:23:11  -u 100.10.20.1 -i 100.10.20.2 -g 1
+snap-rdma/rpc/snap_rpc.py controller_vrdma_configue -d 0 -e mlx5_0 -r 10.237.121.39  -o 10.237.121.59 -n mlx5_2 -t 1500 -c 62:21:22:31:23:11  -u 100.10.20.1 -i 100.10.20.2 -g 1
 
 How to use DPDK test on host
 =================================
