@@ -287,6 +287,7 @@ int vrdma_modify_backend_qp_to_ready(struct vrdma_ctrl *ctrl,
 	struct ibv_qp_attr qp_attr = {0};
 	struct snap_qp *sqp;
 	int attr_mask;
+	uint32_t path_mtu;
 
 	SPDK_NOTICELOG("\nlizh vrdma_modify_backend_qp_to_ready...start\n");
 	/* Modify bankend QP to ready (rst2init + init2rtr + rtr2rts)*/
@@ -301,13 +302,15 @@ int vrdma_modify_backend_qp_to_ready(struct vrdma_ctrl *ctrl,
 
 	attr_mask = IBV_QP_PATH_MTU | IBV_QP_DEST_QPN |
 				IBV_QP_RQ_PSN | IBV_QP_MIN_RNR_TIMER;
-	if (ctrl->sctrl->bar_curr->mtu >= 4096)
+	path_mtu = ctrl->vdev->vrdma_sf.mtu < ctrl->sctrl->bar_curr->mtu ?
+				ctrl->vdev->vrdma_sf.mtu : ctrl->sctrl->bar_curr->mtu;
+	if (path_mtu >= 4096)
 		qp_attr.path_mtu = IBV_MTU_4096;
-	else if (ctrl->sctrl->bar_curr->mtu >= 2048)
+	else if (path_mtu >= 2048)
 		qp_attr.path_mtu = IBV_MTU_2048;
-	else if (ctrl->sctrl->bar_curr->mtu >= 1024)
+	else if (path_mtu >= 1024)
 		qp_attr.path_mtu = IBV_MTU_1024;
-	else if (ctrl->sctrl->bar_curr->mtu >= 512)
+	else if (path_mtu >= 512)
 		qp_attr.path_mtu = IBV_MTU_512;
 	else
 		qp_attr.path_mtu = IBV_MTU_256;
