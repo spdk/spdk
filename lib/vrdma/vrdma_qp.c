@@ -43,6 +43,7 @@
 #include "spdk/vrdma_qp.h"
 #include "vrdma_providers.h"
 
+// #define NO_PERF_DEBUG
 /* TODO: use a hash table or sorted list */
 struct vrdma_lbk_qp_list_head vrdma_lbk_qp_list =
 				LIST_HEAD_INITIALIZER(vrdma_lbk_qp_list);
@@ -426,10 +427,13 @@ static void vrdma_vqp_rx_cb(struct snap_dma_q *q, const void *data,
 	vqp->sm_state = VRDMA_QP_STATE_WQE_PARSE;
 	vqp->qp_pi->pi.sq_pi = pi;
 	vqp->sq.comm.num_to_parse = pi - vqp->sq.comm.pre_pi;
-
+#ifdef NO_PERF_DEBUG
+	SPDK_NOTICELOG("VRDMA: rx cb started, pi %d, num_to_parse %d\n", pi, vqp->sq.comm.num_to_parse);
+#endif
 	vrdma_dpa_rx_cb(vqp, VRDMA_QP_SM_OP_OK);
-
+#ifdef NO_PERF_DEBUG
 	SPDK_NOTICELOG("VRDMA: rx cb done, imm_data 0x%x\n", imm_data);
+#endif
 }
 
 int vrdma_create_vq(struct vrdma_ctrl *ctrl,

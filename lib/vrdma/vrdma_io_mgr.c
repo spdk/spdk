@@ -50,7 +50,7 @@
 
 #define MAX_POLL_WQE_NUM 64 
 #define MLX5_ATOMIC_SIZE 8
-#define WQE_DBG
+//#define WQE_DBG
 //#define VCQ_ERR
 //#define POLL_PI_DBG
 //#define PREFETCH_WQE
@@ -1134,7 +1134,6 @@ static int vrdma_write_back_sq_cqe(struct spdk_vrdma_qp *vqp)
 	int ret;
 
 	clock_gettime(CLOCK_REALTIME, &g_cqe_tv);
-	
 #ifdef WQE_DBG
 	SPDK_NOTICELOG("vrdam write back cqe start: vcq pi %d, pre_pi %d, ci %d\n",
 					vcq->pi, vcq->pre_pi, vcq->pici->ci);
@@ -1393,6 +1392,13 @@ write_vcq:
 					vcq->pi, vcq->pre_pi);
 #endif
 	vcq->pre_pi = vcq->pi;
+
+#ifdef VRDMA_DPA
+	if ((vqp->bk_qp->bk_qp.hw_qp.sq.pi % 1024) - (mcq->ci % 1024) > 128) {
+		vqp->sm_state = VRDMA_QP_STATE_POLL_CQ_CI;
+		return true;
+	}
+#endif
 	
 	return false;
 }
@@ -1413,7 +1419,7 @@ static struct vrdma_qp_sm_state vrdma_qp_sm_arr[] = {
 /*VRDMA_QP_STATE_HANDLE_PI					  */ {vrdma_qp_sm_handle_pi},
 /*VRDMA_QP_STATE_WQE_READ					  */ {vrdma_qp_wqe_sm_read},
 /*VRDMA_QP_STATE_WQE_PARSE					  */ {vrdma_qp_wqe_sm_parse},
-/*VRDMA_QP_STATE_WQE_MAP_BACKEND			  */ {vrdma_qp_wqe_sm_map_backend},
+/*VRDMA_QP_STATE_WQE_MAP_BACKEND			  	  */ {vrdma_qp_wqe_sm_map_backend},
 /*VRDMA_QP_STATE_WQE_SUBMIT					  */ {vrdma_qp_wqe_sm_submit},
 /*VRDMA_QP_STATE_POLL_CQ_CI					  */ {vrdma_qp_sm_poll_cq_ci},
 /*VRDMA_QP_STATE_GEN_COMP					  */ {vrdma_qp_sm_gen_completion},
