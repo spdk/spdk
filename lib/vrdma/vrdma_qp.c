@@ -171,9 +171,9 @@ int vrdma_add_rbk_qp_list(struct vrdma_ctrl *ctrl, uint64_t gid_ip,
 	rqp = vrdma_find_rbk_qp_by_vqp(qp_attr->comm.gid_ip,
 			qp_attr->comm.vqpn);
 	if (rqp) {
-		SPDK_ERRLOG("This remote vqp %d is already existed",
+		SPDK_NOTICELOG("This remote vqp %d is already existed",
 			qp_attr->comm.vqpn);
-		return -1;
+		return 0;
 	}
     rqp = calloc(1, sizeof(*rqp));
     if (!rqp) {
@@ -367,7 +367,7 @@ void vrdma_destroy_backend_qp(struct vrdma_ctrl *ctrl, uint32_t vqp_idx)
 		qp = vqp->pre_bk_qp;
 		snap_vrdma_destroy_qp_helper(&qp->bk_qp);
 		/* Send RPC to nodify remote gid/backend_qp with local gid/backend_qp */
-	lqp = vrdma_find_lbk_qp_by_vqp(ctrl->vdev->vrdma_sf.ip, vqp_idx);
+		lqp = vrdma_find_lbk_qp_by_vqp(ctrl->vdev->vrdma_sf.ip, vqp_idx);
     	if (lqp) {
 			memcpy(&msg.qp_attr, &lqp->attr.comm,
             	sizeof(struct vrdma_bk_qp_connect));
@@ -378,7 +378,7 @@ void vrdma_destroy_backend_qp(struct vrdma_ctrl *ctrl, uint32_t vqp_idx)
 			msg.remote_vqpn = qp->remote_vqpn;
 			msg.remote_gid_ip = lqp->remote_gid_ip;
 			msg.qp_state = SPDK_VRDMA_RPC_QP_DESTROYED;
-		if (spdk_vrdma_rpc_send_qp_msg(ctrl, g_vrdma_rpc.node_rip, &msg)) {
+			if (spdk_vrdma_rpc_send_qp_msg(ctrl, g_vrdma_rpc.node_rip, &msg)) {
         		SPDK_ERRLOG("Fail to send local qp %d to remote qp %d to destroy\n",
             	vqp_idx, msg.remote_vqpn);
     		}
