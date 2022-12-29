@@ -20,6 +20,9 @@
 #include "vrdma_dpa_dev_com.h"
 #include "vrdma_dpa_cq.h"
 
+#define DPA_DEBUG
+// #define DPA_DEBUG_DETAIL
+
 static int get_next_qp_swqe_index(uint32_t pi, uint32_t depth)
 {
 	return (pi % depth);
@@ -82,7 +85,7 @@ static void vrdma_dpa_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 // #endif
 
 static int vrdma_dpa_rq_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
-					uint16_t rq_last_pi,
+					uint16_t rq_start_pi, uint16_t rq_end_pi,
 					uint16_t rq_pi)
 {
 	uint32_t remote_key, local_key, size;
@@ -90,7 +93,7 @@ static int vrdma_dpa_rq_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 	uint16_t index, wqebb_size;
 
 	/*notice: now both host and arm wqebb(wr) has same size and count*/
-	index = rq_last_pi % ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt;
+	index = rq_start_pi;
 	wqebb_size = ehctx->dma_qp.host_vq_ctx.rq_wqebb_size;
 
 	local_key  = ehctx->dma_qp.host_vq_ctx.emu_crossing_mkey;
@@ -101,17 +104,19 @@ static int vrdma_dpa_rq_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 	remote_addr  = ehctx->dma_qp.arm_vq_ctx.rq_buff_addr +
 		      wqebb_size * index;
 
-	size = (rq_pi - rq_last_pi) * wqebb_size;
+	size = (rq_end_pi - rq_start_pi) * wqebb_size;
 	vrdma_dpa_wr_pi_fetch(ehctx, remote_key, remote_addr, local_key,
 				local_addr, size, rq_pi);
-	// printf("---naliu rq: index %#x, wqebb_size %#x, size %#x, remote_key %#x, remote_addr %#lx,"
-	// 		"local_key %#x, local_addr %#lx\n",
-	// 		index, wqebb_size, size, remote_key, remote_addr, local_key, local_addr);
+#ifdef DPA_DEBUG_DETAIL
+	printf("---naliu rq: index %#x, wqebb_size %#x, size %#x, remote_key %#x, remote_addr %#lx,"
+			"local_key %#x, local_addr %#lx\n",
+			index, wqebb_size, size, remote_key, remote_addr, local_key, local_addr);
+#endif
 	return rq_pi;
 }
 
 static int vrdma_dpa_sq_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
-					uint16_t sq_last_pi,
+					uint16_t sq_start_pi, uint16_t sq_end_pi,
 					uint16_t sq_pi)
 {
 	uint32_t remote_key, local_key, size;
@@ -119,7 +124,7 @@ static int vrdma_dpa_sq_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 	uint16_t index, wqebb_size;
 
 	/*notice: now both host and arm wqebb(wr) has same size and count*/
-	index = sq_last_pi % ehctx->dma_qp.host_vq_ctx.sq_wqebb_cnt;
+	index = sq_start_pi;
 	wqebb_size = ehctx->dma_qp.host_vq_ctx.sq_wqebb_size;
 
 	local_key  = ehctx->dma_qp.host_vq_ctx.emu_crossing_mkey;
@@ -130,13 +135,17 @@ static int vrdma_dpa_sq_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 	remote_addr  = ehctx->dma_qp.arm_vq_ctx.sq_buff_addr +
 		      wqebb_size * index;
 
-	size = (sq_pi - sq_last_pi) * wqebb_size;
+	size = (sq_end_pi - sq_start_pi) * wqebb_size;
+	if (size > 0x400) {
+		ehctx->count[4] ++;
+	}
 	vrdma_dpa_wr_pi_fetch(ehctx, remote_key, remote_addr, local_key,
 				local_addr, size, sq_pi);
-
-	// printf("---naliu sq: index %#x, wqebb_size %#x, size %#x, remote_key %#x, remote_addr %#lx,"
-	// 		"local_key %#x, local_addr %#lx\n",
-	// 		index, wqebb_size, size, remote_key, remote_addr, local_key, local_addr);
+#ifdef DPA_DEBUG_DETAIL
+	printf("---naliu sq: sq_start_pi %#x, sq_end_pi %#x, sq_pi %#x, wqebb_size %#x, size %#x, remote_key %#x, remote_addr %#lx,"
+			"local_key %#x, local_addr %#lx\n",
+			sq_start_pi, sq_end_pi, sq_pi, wqebb_size, size, remote_key, remote_addr, local_key, local_addr);
+#endif	
 	return sq_pi;
 }
 
@@ -150,11 +159,11 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 	uint16_t sq_last_fetch_start;
 	uint16_t rq_last_fetch_end = 0;
 	uint16_t sq_last_fetch_end = 0;
-	// uint16_t rq_wr_num, sq_wr_num;
+	uint16_t rq_pi = 0 , sq_pi = 0;
 
 	flexio_dev_get_thread_ctx(&dtctx);
 	ehctx = (struct vrdma_dpa_event_handler_ctx *)thread_arg;
-	printf("%s: --------virtq status %d.\n", __func__, ehctx->dma_qp.state);
+//	printf("%s: --------virtq status %d.\n", __func__, ehctx->dma_qp.state);
 	if (ehctx->dma_qp.state != VRDMA_DPA_VQ_STATE_RDY) {
 		printf("%s: ------virtq status %d is not READY.\n", __func__, ehctx->dma_qp.state);
 		goto out;
@@ -168,7 +177,7 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 	// printf("---naliu vq_idx %d, emu_outbox %d, emu_crossing_mkey %d\n",
 		// ehctx->vq_index, ehctx->emu_outbox, ehctx->dma_qp.host_vq_ctx.emu_crossing_mkey);
 	// printf("---naliu window_base_addr %#x\n", ehctx->window_base_addr);
-
+#ifdef DPA_DEBUG
 	printf("---naliu rq_wqe_buff_pa %#lx, rq_pi_paddr %#lx, rq_wqebb_cnt %#x,"
 			"rq_wqebb_size %#x, sq_wqe_buff_pa %#lx, sq_pi_paddr %#lx,"
 			"sq_wqebb_cnt %#x, sq_wqebb_size %#lx, emu_crossing_mkey %#x,"
@@ -178,34 +187,45 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 			ehctx->dma_qp.host_vq_ctx.sq_wqe_buff_pa, ehctx->dma_qp.host_vq_ctx.sq_pi_paddr,
 			ehctx->dma_qp.host_vq_ctx.sq_wqebb_cnt, ehctx->dma_qp.host_vq_ctx.sq_wqebb_size,
 			ehctx->dma_qp.host_vq_ctx.emu_crossing_mkey, ehctx->dma_qp.host_vq_ctx.sf_crossing_mkey);
-
+#endif
 	rq_last_fetch_start = ehctx->rq_last_fetch_start;
 	sq_last_fetch_start = ehctx->sq_last_fetch_start;
 	/*fetch rq_pi*/
-	rq_last_fetch_end = *(uint16_t*)(ehctx->window_base_addr + 
+	rq_pi = *(uint16_t*)(ehctx->window_base_addr + 
 				ehctx->dma_qp.host_vq_ctx.rq_pi_paddr);
-	sq_last_fetch_end = *(uint16_t*)(ehctx->window_base_addr + 
+	sq_pi = *(uint16_t*)(ehctx->window_base_addr + 
 				ehctx->dma_qp.host_vq_ctx.sq_pi_paddr);
 
-	while ((rq_last_fetch_start != rq_last_fetch_end) || 
-		(sq_last_fetch_start != sq_last_fetch_end))
+	rq_last_fetch_end = rq_pi % ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt;
+	sq_last_fetch_end = sq_pi % ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt;
+
+	// while ((rq_last_fetch_start != rq_last_fetch_end) || 
+	// 	(sq_last_fetch_start != sq_last_fetch_end))
+	while (1)
 	{
 		if (rq_last_fetch_start < rq_last_fetch_end) {
-			rq_last_fetch_start = vrdma_dpa_rq_wr_pi_fetch(ehctx, rq_last_fetch_start, rq_last_fetch_end);
+			rq_last_fetch_start = vrdma_dpa_rq_wr_pi_fetch(ehctx, rq_last_fetch_start, rq_last_fetch_end, rq_pi);
 		} else if (rq_last_fetch_start > rq_last_fetch_end) {
 			rq_last_fetch_start = vrdma_dpa_rq_wr_pi_fetch(ehctx, 
 						rq_last_fetch_start,
-						ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt);
-			rq_last_fetch_start = vrdma_dpa_rq_wr_pi_fetch(ehctx, 0, rq_last_fetch_end);
+						ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt, rq_pi - rq_last_fetch_end);
+			rq_last_fetch_start = vrdma_dpa_rq_wr_pi_fetch(ehctx, 0, rq_last_fetch_end, rq_pi);
 		}
 
 		if (sq_last_fetch_start < sq_last_fetch_end) {
-			sq_last_fetch_start = vrdma_dpa_sq_wr_pi_fetch(ehctx, sq_last_fetch_start, sq_last_fetch_end);
+			sq_last_fetch_start = vrdma_dpa_sq_wr_pi_fetch(ehctx, sq_last_fetch_start, sq_last_fetch_end, sq_pi);
+			ehctx->count[0] ++;
 		} else if (sq_last_fetch_start > sq_last_fetch_end) {
 			sq_last_fetch_start = vrdma_dpa_sq_wr_pi_fetch(ehctx,
 						sq_last_fetch_start,
-						ehctx->dma_qp.host_vq_ctx.sq_wqebb_cnt);
-			sq_last_fetch_start = vrdma_dpa_sq_wr_pi_fetch(ehctx, 0, sq_last_fetch_end);
+						ehctx->dma_qp.host_vq_ctx.sq_wqebb_cnt, sq_pi - sq_last_fetch_end);
+			ehctx->count[1] ++;
+			if (sq_last_fetch_end != 0) {
+				ehctx->count[2] ++;
+				sq_last_fetch_start = vrdma_dpa_sq_wr_pi_fetch(ehctx, 0, sq_last_fetch_end, sq_pi);
+			} else {
+				ehctx->count[3] ++;
+			}
 		}
 		rq_last_fetch_start = rq_last_fetch_end;
 		sq_last_fetch_start = sq_last_fetch_end; 
@@ -221,10 +241,12 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 			goto out;
 		}
 		/*fetch rq_pi*/
-		rq_last_fetch_end = *(uint16_t*)(ehctx->window_base_addr + 
+		rq_pi = *(uint16_t*)(ehctx->window_base_addr + 
 					ehctx->dma_qp.host_vq_ctx.rq_pi_paddr);
-		sq_last_fetch_end = *(uint16_t*)(ehctx->window_base_addr + 
-					ehctx->dma_qp.host_vq_ctx.sq_pi_paddr);		
+		sq_pi = *(uint16_t*)(ehctx->window_base_addr + 
+					ehctx->dma_qp.host_vq_ctx.sq_pi_paddr);
+		rq_last_fetch_end = rq_pi % ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt;
+		sq_last_fetch_end = sq_pi % ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt;
 	}
 	ehctx->rq_last_fetch_start = rq_last_fetch_start;
 	ehctx->sq_last_fetch_start = sq_last_fetch_start;
@@ -237,10 +259,15 @@ out:
 			      ehctx->emu_db_to_cq_id);
 	flexio_dev_cq_arm(dtctx, ehctx->guest_db_cq_ctx.ci,
 			  ehctx->guest_db_cq_ctx.cqn);
+#ifdef DPA_DEBUG
+	printf("\n------naliu count[0] %d, count[1] %d, count[2] %d, count[3] %d, count[4] %d",
+		ehctx->count[0], ehctx->count[1], ehctx->count[2], ehctx->count[3], ehctx->count[4]);
+	printf("\n------naliu rq_pi %d, sq_pi %d\n", rq_pi, sq_pi);
 	printf("\n------naliu rq_last_fetch_end %d, sq_last_fetch_end %d\n", rq_last_fetch_end, sq_last_fetch_end);
 	printf("\n------naliu dma_qp.hw_qp_sq_pi %d\n", ehctx->dma_qp.hw_qp_sq_pi);
 	printf("\n------naliu vrdma_db_handler done. cqn: %#x, emu_db_to_cq_id %d, guest_db_cq_ctx.ci %d\n",
 		ehctx->guest_db_cq_ctx.cqn, ehctx->emu_db_to_cq_id, ehctx->guest_db_cq_ctx.ci);
+#endif
 	flexio_dev_return();
 }
 __FLEXIO_ENTRY_POINT_END

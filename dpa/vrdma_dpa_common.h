@@ -167,6 +167,7 @@ struct vrdma_dpa_event_handler_ctx {
 		struct vrdma_arm_vq_ctx arm_vq_ctx; /*arm rdma parameters*/
 		enum vrdma_dpa_vq_state state;
 	} dma_qp;
+	uint32_t count[8];
 };
 
 struct vrdma_dpa_vq_data {

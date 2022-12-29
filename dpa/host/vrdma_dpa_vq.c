@@ -402,6 +402,7 @@ _vrdma_dpa_dma_q_cq_create(struct flexio_process *process,
 	cq_attr.uar_id = emu_dev_ctx->sf_uar->page_id;
 	cq_attr.cq_dbr_daddr = rq_dpacq->cq_dbr_daddr;
 	cq_attr.cq_ring_qmem.daddr = rq_dpacq->cq_ring_daddr;
+	cq_attr.overrun_ignore = 1;
 	err = flexio_cq_create(process, ibv_ctx, &cq_attr, &rq_dpacq->cq);
 	if (err) {
 		log_error("Failed to create dma_q rqcq, err(%d)", err);
