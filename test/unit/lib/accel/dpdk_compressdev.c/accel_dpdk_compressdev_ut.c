@@ -40,6 +40,7 @@ struct compress_io_channel *g_comp_ch;
  * our custom functions.
  */
 
+static int ut_total_rte_pktmbuf_attach_extbuf = 0;
 static void mock_rte_pktmbuf_attach_extbuf(struct rte_mbuf *m, void *buf_addr, rte_iova_t buf_iova,
 		uint16_t buf_len, struct rte_mbuf_ext_shared_info *shinfo);
 #define rte_pktmbuf_attach_extbuf mock_rte_pktmbuf_attach_extbuf
@@ -52,6 +53,7 @@ mock_rte_pktmbuf_attach_extbuf(struct rte_mbuf *m, void *buf_addr, rte_iova_t bu
 	m->buf_iova = buf_iova;
 	m->buf_len = buf_len;
 	m->data_len = m->pkt_len = 0;
+	ut_total_rte_pktmbuf_attach_extbuf++;
 }
 
 static char *mock_rte_pktmbuf_append(struct rte_mbuf *m, uint16_t len);
@@ -787,6 +789,73 @@ test_compress_operation_cross_boundary(void)
 }
 
 static void
+test_setup_compress_mbuf(void)
+{
+	struct iovec src_iovs = {};
+	int src_iovcnt = 1;
+	struct spdk_accel_task task = {};
+	int src_mbuf_added = 0;
+	uint64_t total_length;
+	struct rte_mbuf *exp_src_mbuf[UT_MBUFS_PER_OP_BOUND_TEST];
+	int rc, i;
+
+	/* setup the src expected values */
+	_get_mbuf_array(exp_src_mbuf, &g_expected_src_mbufs[0], SPDK_COUNTOF(exp_src_mbuf), false);
+
+	/* no splitting */
+	total_length = 0;
+	ut_total_rte_pktmbuf_attach_extbuf = 0;
+	src_iovs.iov_len = 0x1000;
+	src_iovs.iov_base = (void *)0x10000000 + 0x1000;
+	rc = _setup_compress_mbuf(exp_src_mbuf, &src_mbuf_added, &total_length,
+				  &src_iovs, src_iovcnt, &task);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(total_length = src_iovs.iov_len);
+	CU_ASSERT(src_mbuf_added == 0);
+	CU_ASSERT(ut_total_rte_pktmbuf_attach_extbuf == 1);
+
+	/* one split, for splitting tests we need the global mbuf array unlinked,
+	 * otherwise the functional code will attempt to link them but if they are
+	 * already linked, it will just create a chain that links to itself */
+	for (i = 0; i < UT_MBUFS_PER_OP_BOUND_TEST - 1; i++) {
+		g_expected_src_mbufs[i].next = NULL;
+	}
+	total_length = 0;
+	ut_total_rte_pktmbuf_attach_extbuf = 0;
+	src_iovs.iov_len = 0x1000 + MBUF_SPLIT;
+	exp_src_mbuf[0]->buf_len = src_iovs.iov_len;
+	exp_src_mbuf[0]->pkt_len = src_iovs.iov_len;
+	rc = _setup_compress_mbuf(exp_src_mbuf, &src_mbuf_added, &total_length,
+				  &src_iovs, src_iovcnt, &task);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(total_length = src_iovs.iov_len);
+	CU_ASSERT(src_mbuf_added == 0);
+	CU_ASSERT(ut_total_rte_pktmbuf_attach_extbuf == 2);
+
+	/* two splits */
+	for (i = 0; i < UT_MBUFS_PER_OP_BOUND_TEST - 1; i++) {
+		g_expected_src_mbufs[i].next = NULL;
+	}
+	total_length = 0;
+	ut_total_rte_pktmbuf_attach_extbuf = 0;
+	src_iovs.iov_len = 0x1000 + 2 * MBUF_SPLIT;
+	exp_src_mbuf[0]->buf_len = src_iovs.iov_len;
+	exp_src_mbuf[0]->pkt_len = src_iovs.iov_len;
+
+	rc = _setup_compress_mbuf(exp_src_mbuf, &src_mbuf_added, &total_length,
+				  &src_iovs, src_iovcnt, &task);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(total_length = src_iovs.iov_len);
+	CU_ASSERT(src_mbuf_added == 0);
+	CU_ASSERT(ut_total_rte_pktmbuf_attach_extbuf == 3);
+
+	/* relink the global mbuf array */
+	for (i = 0; i < UT_MBUFS_PER_OP_BOUND_TEST - 1; i++) {
+		g_expected_src_mbufs[i].next = &g_expected_src_mbufs[i + 1];
+	}
+}
+
+static void
 test_poller(void)
 {
 	int rc;
@@ -976,6 +1045,7 @@ main(int argc, char **argv)
 	suite = CU_add_suite("compress", test_setup, test_cleanup);
 	CU_ADD_TEST(suite, test_compress_operation);
 	CU_ADD_TEST(suite, test_compress_operation_cross_boundary);
+	CU_ADD_TEST(suite, test_setup_compress_mbuf);
 	CU_ADD_TEST(suite, test_initdrivers);
 	CU_ADD_TEST(suite, test_poller);
 
