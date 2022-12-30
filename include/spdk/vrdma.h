@@ -169,6 +169,9 @@ struct vrdma_qp_stats {
 	uint64_t sq_wqe_wr;
 	uint64_t sq_wqe_atomic;
 	uint64_t sq_wqe_ud;
+	uint64_t sq_cq_write_cnt;
+	uint64_t sq_cq_write_wqe;
+	uint16_t sq_cq_write_cqe_max;
 	uint16_t msq_dbred_pi;
 	uint32_t mcq_dbred_ci;
 	uint64_t latency_one_total;
