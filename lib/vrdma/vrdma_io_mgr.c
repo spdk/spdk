@@ -1074,6 +1074,13 @@ static int vrdma_write_back_sq_cqe(struct spdk_vrdma_qp *vqp)
 		vqp->stats.sq_dma_tx_cnt++;
 	}
 
+	vqp->stats.sq_cq_write_cnt++;
+	num = pi - pre_pi;
+	vqp->stats.sq_cq_write_wqe += (uint64_t)num;
+	if (vqp->stats.sq_cq_write_cqe_max < (pi - pre_pi)) {
+		vqp->stats.sq_cq_write_cqe_max = pi - pre_pi;
+	}
+	
 	return 0;
 }
 
@@ -1339,13 +1346,17 @@ void vrdma_dump_vqp_stats(struct spdk_vrdma_qp *vqp)
 {
 	printf("\n========= vrdma qp debug counter =========\n");
 	printf("vqpn 0x%x, mqpn 0x%x\n", vqp->qp_idx, vqp->bk_qp->bk_qp.qpnum);
-	printf("sq pi  %-10d       sq pre pi  %-10d\n", vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
+	printf("sq pi  %-10d       sq pre pi  %-10d\n",
+			vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
 	printf("scq pi %-10d       scq pre pi %-10d     scq ci %-10d\n", 
 			vqp->sq_vcq->pi, vqp->sq_vcq->pre_pi, vqp->sq_vcq->pici->ci);
+	printf("scq write cnt %-20lu       scq total wqe %-20lu     scq write max wqe %-10d\n", 
+			vqp->stats.sq_cq_write_cnt, vqp->stats.sq_cq_write_wqe,
+			vqp->stats.sq_cq_write_cqe_max);
 	if (vqp->bk_qp) {
 		printf("msq pi  %-10d     msq dbred pi  %-10d\n",
 				vqp->bk_qp->bk_qp.hw_qp.sq.pi, vqp->stats.msq_dbred_pi);
-		printf("msq send dbr cnt  %-10d\n", vqp->bk_qp->bk_qp.stat.tx.total_dbs);
+		printf("msq send dbr cnt  %-20lu\n", vqp->bk_qp->bk_qp.stat.tx.total_dbs);
 		printf("mscq ci %-10d     mscq dbred ci %-10d\n",
 				vqp->bk_qp->bk_qp.sq_hw_cq.ci, vqp->stats.mcq_dbred_ci);
 	} else {
