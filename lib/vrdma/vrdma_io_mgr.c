@@ -1527,6 +1527,8 @@ void vrdma_dump_vqp_stats(struct vrdma_ctrl *ctrl,
 	printf("sq dma_q  0x%x\n", vqp->snap_queue->dma_q->sw_qp.dv_qp.hw_qp.qp_num);
 	printf("sq pi  %-10d       sq pre pi  %-10d\n",
 			vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
+	printf("scq pi %-10d       scq pre pi %-10d     scq ci %-10d\n", 
+			vqp->sq_vcq->pi, vqp->sq_vcq->pre_pi, vqp->sq_vcq->pici->ci);
 	printf("scq write cnt %-20lu       scq total wqe %-20lu     scq write max wqe %-10d\n", 
 			vqp->stats.sq_cq_write_cnt, vqp->stats.sq_cq_write_wqe,
 			vqp->stats.sq_cq_write_cqe_max);
