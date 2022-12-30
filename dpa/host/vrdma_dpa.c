@@ -58,6 +58,7 @@ int vrdma_dpa_init(const struct vrdma_prov_init_attr *attr, void **out)
 		return -ENOMEM;
 	}
 	log_debug("===naliu vrdma_dpa_init begin\n");
+	dpa_ctx->core_count = 1;
 	err = extract_dev_elf(DEV_ELF_PATH, &dpa_ctx->elf_buf, &elf_size);
 	if (err) {
 		log_error("Failed to extract dev elf, err(%d)", err);
@@ -87,10 +88,6 @@ int vrdma_dpa_init(const struct vrdma_prov_init_attr *attr, void **out)
 		goto err_uar_create;
 	}
 
-	/*Init Print environment*/
-	err = vrdma_dpa_dev_print_init(dpa_ctx->flexio_process, dpa_ctx->flexio_uar, PRINTF_BUFF_BSIZE, stdout,
-				0, NULL);
-
 	/* outbox to press CQ and QP doorbells */
 	err = flexio_outbox_create(dpa_ctx->flexio_process, attr->emu_ctx,
 				   dpa_ctx->flexio_uar,
@@ -108,6 +105,7 @@ int vrdma_dpa_init(const struct vrdma_prov_init_attr *attr, void **out)
 		goto err_window_create;
 	}
 
+	/*Init Print environment*/
 	err = vrdma_dpa_dev_print_init(dpa_ctx->flexio_process,
 					 dpa_ctx->flexio_uar, PRINF_BUF_SZ,
 					 stdout, 0, NULL);

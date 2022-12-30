@@ -84,7 +84,7 @@ static void vrdma_dpa_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 }
 // #endif
 
-static int vrdma_dpa_rq_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
+static bool vrdma_dpa_rq_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 					uint16_t rq_start_pi, uint16_t rq_end_pi,
 					uint16_t rq_pi)
 {
@@ -112,10 +112,10 @@ static int vrdma_dpa_rq_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 			"local_key %#x, local_addr %#lx\n",
 			index, wqebb_size, size, remote_key, remote_addr, local_key, local_addr);
 #endif
-	return rq_pi;
+	return true;
 }
 
-static int vrdma_dpa_sq_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
+static bool vrdma_dpa_sq_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 					uint16_t sq_start_pi, uint16_t sq_end_pi,
 					uint16_t sq_pi)
 {
@@ -146,7 +146,7 @@ static int vrdma_dpa_sq_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 			"local_key %#x, local_addr %#lx\n",
 			sq_start_pi, sq_end_pi, sq_pi, wqebb_size, size, remote_key, remote_addr, local_key, local_addr);
 #endif	
-	return sq_pi;
+	return true;
 }
 
 __FLEXIO_ENTRY_POINT_START
@@ -160,6 +160,7 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 	uint16_t rq_last_fetch_end = 0;
 	uint16_t sq_last_fetch_end = 0;
 	uint16_t rq_pi = 0 , sq_pi = 0;
+	bool has_wqe = false;
 
 	flexio_dev_get_thread_ctx(&dtctx);
 	ehctx = (struct vrdma_dpa_event_handler_ctx *)thread_arg;
@@ -204,19 +205,19 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 	while (1)
 	{
 		if (rq_last_fetch_start < rq_last_fetch_end) {
-			rq_last_fetch_start = vrdma_dpa_rq_wr_pi_fetch(ehctx, rq_last_fetch_start, rq_last_fetch_end, rq_pi);
+			has_wqe = vrdma_dpa_rq_wr_pi_fetch(ehctx, rq_last_fetch_start, rq_last_fetch_end, rq_pi);
 		} else if (rq_last_fetch_start > rq_last_fetch_end) {
-			rq_last_fetch_start = vrdma_dpa_rq_wr_pi_fetch(ehctx, 
+			has_wqe = vrdma_dpa_rq_wr_pi_fetch(ehctx,
 						rq_last_fetch_start,
 						ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt, rq_pi - rq_last_fetch_end);
-			rq_last_fetch_start = vrdma_dpa_rq_wr_pi_fetch(ehctx, 0, rq_last_fetch_end, rq_pi);
+			has_wqe = vrdma_dpa_rq_wr_pi_fetch(ehctx, 0, rq_last_fetch_end, rq_pi);
 		}
 
 		if (sq_last_fetch_start < sq_last_fetch_end) {
-			sq_last_fetch_start = vrdma_dpa_sq_wr_pi_fetch(ehctx, sq_last_fetch_start, sq_last_fetch_end, sq_pi);
+			has_wqe = vrdma_dpa_sq_wr_pi_fetch(ehctx, sq_last_fetch_start, sq_last_fetch_end, sq_pi);
 			ehctx->count[0] ++;
 		} else if (sq_last_fetch_start > sq_last_fetch_end) {
-			sq_last_fetch_start = vrdma_dpa_sq_wr_pi_fetch(ehctx,
+			has_wqe = vrdma_dpa_sq_wr_pi_fetch(ehctx,
 						sq_last_fetch_start,
 						ehctx->dma_qp.host_vq_ctx.sq_wqebb_cnt, sq_pi - sq_last_fetch_end);
 			ehctx->count[1] ++;
@@ -227,14 +228,17 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 				ehctx->count[3] ++;
 			}
 		}
-		rq_last_fetch_start = rq_last_fetch_end;
-		sq_last_fetch_start = sq_last_fetch_end; 
 
-		flexio_dev_dbr_sq_set_pi((uint32_t *)
-				ehctx->dma_qp.dbr_daddr + 1,
-				ehctx->dma_qp.hw_qp_sq_pi);
-		flexio_dev_qp_sq_ring_db(dtctx, ehctx->dma_qp.hw_qp_sq_pi,
-					ehctx->dma_qp.qp_num);
+		if (has_wqe) {
+			rq_last_fetch_start = rq_last_fetch_end;
+			sq_last_fetch_start = sq_last_fetch_end;
+
+			flexio_dev_dbr_sq_set_pi((uint32_t *)
+					ehctx->dma_qp.dbr_daddr + 1,
+					ehctx->dma_qp.hw_qp_sq_pi);
+			flexio_dev_qp_sq_ring_db(dtctx, ehctx->dma_qp.hw_qp_sq_pi,
+						ehctx->dma_qp.qp_num);
+		}
 
 		if (ehctx->dma_qp.state != VRDMA_DPA_VQ_STATE_RDY) {
 			printf("%s: Now virtq status is not READY.\n", __func__);

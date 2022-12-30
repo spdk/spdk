@@ -33,7 +33,7 @@ static int vrdma_dpa_get_hart_to_use(struct vrdma_dpa_ctx *dpa_ctx)
 	if (dpa_ctx->core_count < VRDMA_MAX_CORES_AVAILABLE - 1) {
 		dpa_ctx->core_count++;
 	} else {
-		dpa_ctx->core_count = 0;
+		dpa_ctx->core_count = 1;
 		dpa_ctx->hart_count = (dpa_ctx->hart_count + 1) &
 				      (VRDMA_MAX_HARTS_PER_CORE - 1);
 	}
