@@ -180,7 +180,15 @@ function raid_state_function_test() {
 	local base_bdev1="Non_Existed_Base_1"
 	local base_bdev2="Non_Existed_Base_2"
 	local raid_bdev_name="Existed_Raid"
-	local strip_size=64
+	local strip_size
+	local strip_size_create_arg
+
+	if [ $raid_level != "raid1" ]; then
+		strip_size=64
+		strip_size_create_arg="-z $strip_size"
+	else
+		strip_size=0
+	fi
 
 	$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -L bdev_raid &
 	raid_pid=$!
@@ -189,7 +197,7 @@ function raid_state_function_test() {
 
 	# Step1: create a RAID bdev with no base bdevs
 	# Expect state: CONFIGURING
-	$rpc_py bdev_raid_create -z $strip_size -r $raid_level -b "$base_bdev1 $base_bdev2" -n $raid_bdev_name
+	$rpc_py bdev_raid_create $strip_size_create_arg -r $raid_level -b "$base_bdev1 $base_bdev2" -n $raid_bdev_name
 	if ! verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size; then
 		return 1
 	fi
@@ -197,7 +205,7 @@ function raid_state_function_test() {
 
 	# Step2: create one base bdev and add to the RAID bdev
 	# Expect state: CONFIGURING
-	$rpc_py bdev_raid_create -z $strip_size -r $raid_level -b "$base_bdev1 $base_bdev2" -n $raid_bdev_name
+	$rpc_py bdev_raid_create $strip_size_create_arg -r $raid_level -b "$base_bdev1 $base_bdev2" -n $raid_bdev_name
 	$rpc_py bdev_malloc_create 32 512 -b $base_bdev1
 	waitforbdev $base_bdev1
 	if ! verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size; then
@@ -207,7 +215,7 @@ function raid_state_function_test() {
 
 	# Step3: create another base bdev and add to the RAID bdev
 	# Expect state: ONLINE
-	$rpc_py bdev_raid_create -z $strip_size -r $raid_level -b "$base_bdev1 $base_bdev2" -n $raid_bdev_name
+	$rpc_py bdev_raid_create $strip_size_create_arg -r $raid_level -b "$base_bdev1 $base_bdev2" -n $raid_bdev_name
 	$rpc_py bdev_malloc_create 32 512 -b $base_bdev2
 	waitforbdev $base_bdev2
 	if ! verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size; then
@@ -215,9 +223,14 @@ function raid_state_function_test() {
 	fi
 
 	# Step4: delete one base bdev from the RAID bdev
-	# Expect state: OFFLINE
 	$rpc_py bdev_malloc_delete $base_bdev2
-	if ! verify_raid_bdev_state $raid_bdev_name "offline" $raid_level $strip_size; then
+	local expected_state
+	if [ $raid_level != "raid1" ]; then
+		expected_state="offline"
+	else
+		expected_state="online"
+	fi
+	if ! verify_raid_bdev_state $raid_bdev_name $expected_state $raid_level $strip_size; then
 		return 1
 	fi
 
@@ -286,6 +299,7 @@ raid_function_test raid0
 raid_function_test concat
 raid_state_function_test raid0
 raid_state_function_test concat
+raid_state_function_test raid1
 raid0_resize_test
 
 rm -f $tmp_file

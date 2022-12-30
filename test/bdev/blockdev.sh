@@ -55,6 +55,8 @@ function start_spdk_tgt() {
 
 function setup_bdev_conf() {
 	"$rpc_py" <<- RPC
+		iobuf_set_options --small-pool-count 10000 --large-pool-count 1100
+		framework_start_init
 		bdev_split_create Malloc1 2
 		bdev_split_create -s 4 Malloc2 8
 		bdev_malloc_create -b Malloc0 32 512
@@ -65,9 +67,12 @@ function setup_bdev_conf() {
 		bdev_malloc_create -b Malloc5 32 512
 		bdev_malloc_create -b Malloc6 32 512
 		bdev_malloc_create -b Malloc7 32 512
+		bdev_malloc_create -b Malloc8 32 512
+		bdev_malloc_create -b Malloc9 32 512
 		bdev_passthru_create -p TestPT -b Malloc3
 		bdev_raid_create -n raid0 -z 64 -r 0 -b "Malloc4 Malloc5"
 		bdev_raid_create -n concat0 -z 64 -r concat -b "Malloc6 Malloc7"
+		bdev_raid_create -n raid1 -r 1 -b "Malloc8 Malloc9"
 		bdev_set_qos_limit --rw_mbytes_per_sec 100 Malloc3
 		bdev_set_qos_limit --rw_ios_per_sec 20000 Malloc0
 	RPC
@@ -686,7 +691,7 @@ wait_for_rpc=""
 if [ -n "$crypto_device" ]; then
 	env_ctx="--env-context=--allow=$crypto_device,class=crypto"
 fi
-if [[ $test_type == crypto_* ]]; then
+if [[ $test_type == bdev || $test_type == crypto_* ]]; then
 	wait_for_rpc="--wait-for-rpc"
 fi
 start_spdk_tgt
@@ -739,7 +744,8 @@ esac
 cat <<- CONF > "$conf_file"
 	        {"subsystems":[
 	        $("$rpc_py" save_subsystem_config -n accel),
-	        $("$rpc_py" save_subsystem_config -n bdev)
+	        $("$rpc_py" save_subsystem_config -n bdev),
+	        $("$rpc_py" save_subsystem_config -n iobuf)
 	        ]}
 CONF
 
