@@ -192,10 +192,8 @@ function raid_state_function_test() {
 	$rpc_py bdev_raid_create -z $strip_size -r $raid_level -b "$base_bdev1 $base_bdev2" -n $raid_bdev_name
 	if ! verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size; then
 		return 1
-	else
-		# Test: Delete the RAID bdev successfully
-		$rpc_py bdev_raid_delete $raid_bdev_name
 	fi
+	$rpc_py bdev_raid_delete $raid_bdev_name
 
 	# Step2: create one base bdev and add to the RAID bdev
 	# Expect state: CONFIGURING
@@ -203,13 +201,9 @@ function raid_state_function_test() {
 	$rpc_py bdev_malloc_create 32 512 -b $base_bdev1
 	waitforbdev $base_bdev1
 	if ! verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size; then
-		$rpc_py bdev_malloc_delete $base_bdev1
-		$rpc_py bdev_raid_delete $raid_bdev_name
 		return 1
-	else
-		# Test: Delete the RAID bdev successfully
-		$rpc_py bdev_raid_delete $raid_bdev_name
 	fi
+	$rpc_py bdev_raid_delete $raid_bdev_name
 
 	# Step3: create another base bdev and add to the RAID bdev
 	# Expect state: ONLINE
@@ -217,9 +211,6 @@ function raid_state_function_test() {
 	$rpc_py bdev_malloc_create 32 512 -b $base_bdev2
 	waitforbdev $base_bdev2
 	if ! verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size; then
-		$rpc_py bdev_malloc_delete $base_bdev1
-		$rpc_py bdev_malloc_delete $base_bdev2
-		$rpc_py bdev_raid_delete $raid_bdev_name
 		return 1
 	fi
 
@@ -227,8 +218,6 @@ function raid_state_function_test() {
 	# Expect state: OFFLINE
 	$rpc_py bdev_malloc_delete $base_bdev2
 	if ! verify_raid_bdev_state $raid_bdev_name "offline" $raid_level $strip_size; then
-		$rpc_py bdev_malloc_delete $base_bdev1
-		$rpc_py bdev_raid_delete $raid_bdev_name
 		return 1
 	fi
 
@@ -238,7 +227,6 @@ function raid_state_function_test() {
 	raid_bdev=$($rpc_py bdev_raid_get_bdevs all | jq -r '.[0]["name"] | select(.)')
 	if [ -n "$raid_bdev" ]; then
 		echo "$raid_bdev_name is not removed"
-		$rpc_py bdev_raid_delete $raid_bdev_name
 		return 1
 	fi
 
