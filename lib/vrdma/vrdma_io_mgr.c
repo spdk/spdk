@@ -213,6 +213,7 @@ static bool vrdma_qp_sm_poll_pi(struct spdk_vrdma_qp *vqp,
 		vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
 		return true;
 	}
+	vqp->stats.sq_dma_tx_cnt++;
 
 	return false;
 }
@@ -271,6 +272,7 @@ static bool vrdma_qp_wqe_sm_read(struct spdk_vrdma_qp *vqp,
 			vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
 			 return true;
 		}
+		vqp->stats.sq_dma_tx_cnt++;
 	} else {
 		/* vq roll back case, first part */
 		vqp->q_comp.count = 1;
@@ -288,6 +290,7 @@ static bool vrdma_qp_wqe_sm_read(struct spdk_vrdma_qp *vqp,
 			vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
 			return true;
 		}
+		vqp->stats.sq_dma_tx_cnt++;
 
 		/* calculate second poll size */
 		vqp->q_comp.count++;
@@ -304,6 +307,7 @@ static bool vrdma_qp_wqe_sm_read(struct spdk_vrdma_qp *vqp,
 				vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
 			return true;
 		}
+		vqp->stats.sq_dma_tx_cnt++;
 	}
 
 	return false;
@@ -478,20 +482,29 @@ static inline void vrdma_wqe_submit(struct snap_vrdma_backend_qp *bk_qp,
 	uint8_t ds = be32toh(ctrl->qpn_ds) & 0xFF;
 	
 	bk_qp->hw_qp.sq.pi += DIV_ROUND_UP(ds * 16, MLX5_SEND_WQE_BB);
+#if 0
 	if (bk_qp->db_flag == SNAP_DB_RING_BATCH) {
 		bk_qp->tx_need_ring_db = true;
 		bk_qp->ctrl = ctrl;
 		return;
 	}
-	vrdma_ring_tx_db(bk_qp, ctrl);
+#endif
+	/* ring dbr every 16 wqes */
+	if (!(bk_qp->hw_qp.sq.pi & 0xFF)) {
+		vrdma_ring_tx_db(bk_qp, ctrl);
+	}
+	bk_qp->ctrl = ctrl;
 }
 
 static inline void vrdma_tx_complete(struct snap_vrdma_backend_qp *bk_qp)
 {
+#if 0
 	if (bk_qp->tx_need_ring_db) {
 		bk_qp->tx_need_ring_db = false;
 		vrdma_ring_tx_db(bk_qp, bk_qp->ctrl);
 	}
+#endif
+	vrdma_ring_tx_db(bk_qp, bk_qp->ctrl);
 }
 
 static void *vrdma_get_send_wqe(struct snap_vrdma_backend_qp *qp, int n)
@@ -940,6 +953,7 @@ static bool vrdma_qp_sm_poll_cq_ci(struct spdk_vrdma_qp *vqp,
 		vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
 		return true;
 	}
+	vqp->stats.sq_dma_tx_cnt++;
 
 	return false;
 }
@@ -962,7 +976,10 @@ static void vrdma_ring_mcq_db(struct snap_hw_cq *mcq)
 	snap_memory_bus_store_fence();
 	mcq->cq_sn++;
 
+#ifdef WQE_DBG
 	SPDK_NOTICELOG("test update mcq ci %d\n", mcq->ci);
+#endif
+
 }
 
 static int vrdma_write_back_sq_cqe(struct spdk_vrdma_qp *vqp)
@@ -978,8 +995,10 @@ static int vrdma_write_back_sq_cqe(struct spdk_vrdma_qp *vqp)
 	uint16_t q_size = vcq->cqe_entry_num;
 	int ret;
 
+#ifdef WQE_DBG
 	SPDK_NOTICELOG("vrdam write back cqe start: vcq pi %d, pre_pi %d, ci %d\n",
 					vcq->pi, vcq->pre_pi, vcq->pici->ci);
+#endif
 	//fetch the delta PI number entry in one time
 	if (!vrdma_vq_rollback(pre_pi, pi, q_size)) {
 		vqp->q_comp.count = 1;
@@ -990,10 +1009,12 @@ static int vrdma_write_back_sq_cqe(struct spdk_vrdma_qp *vqp)
 		offset = (pre_pi % q_size) * vcq->cqebb_size;
 		host_ring_addr = vcq->host_pa + offset;
 		local_ring_addr = (uint8_t *)((uint8_t *)vcq->cqe_buff + offset);
+#ifdef WQE_DBG
 		SPDK_NOTICELOG("write cqe: offset %d host base addr 0x%lx host ring addr 0x%lx"
 						"local base 0x%p local ring 0x%p\n",
 						offset, vcq->host_pa, host_ring_addr,
 						vcq->cqe_buff, local_ring_addr);
+#endif
 		ret = snap_dma_q_write(vqp->snap_queue->dma_q, local_ring_addr, write_size,
 							vcq->cqe_ci_mr->lkey, host_ring_addr,
 							vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
@@ -1002,6 +1023,7 @@ static int vrdma_write_back_sq_cqe(struct spdk_vrdma_qp *vqp)
 			vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
 			 return -1;
 		}
+		vqp->stats.sq_dma_tx_cnt++;
 	} else {
 		/* vq roll back case, first part */
 		vqp->q_comp.count = 1;
@@ -1012,10 +1034,12 @@ static int vrdma_write_back_sq_cqe(struct spdk_vrdma_qp *vqp)
 		offset = (pre_pi % q_size) * vcq->cqebb_size;
 		host_ring_addr = vcq->host_pa + offset;
 		local_ring_addr = (uint8_t *)((uint8_t *)vcq->cqe_buff + offset);
+#ifdef WQE_DBG
 		SPDK_NOTICELOG("write cqe first: offset %d host base addr 0x%lx host ring addr 0x%lx"
 						"local base 0x%p local ring 0x%p\n",
 						offset, vcq->host_pa, host_ring_addr,
 						vcq->cqe_buff, local_ring_addr);
+#endif
 		ret = snap_dma_q_write(vqp->snap_queue->dma_q, local_ring_addr, write_size,
 							vcq->cqe_ci_mr->lkey, host_ring_addr,
 							vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
@@ -1024,6 +1048,7 @@ static int vrdma_write_back_sq_cqe(struct spdk_vrdma_qp *vqp)
 			vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
 			return -1;
 		}
+		vqp->stats.sq_dma_tx_cnt++;
 
 		/* calculate second write size */
 		vqp->q_comp.count++;
@@ -1032,11 +1057,12 @@ static int vrdma_write_back_sq_cqe(struct spdk_vrdma_qp *vqp)
 		write_size = num * vcq->cqebb_size;
 		local_ring_addr = (uint8_t *)vcq->cqe_buff;
 		host_ring_addr = vcq->host_pa;
-
+#ifdef WQE_DBG
 		SPDK_NOTICELOG("write cqe second: num %d host base addr 0x%lx host ring addr 0x%lx"
 						"local base 0x%p local ring 0x%p\n",
 						num, vcq->host_pa, host_ring_addr,
 						vcq->cqe_buff, local_ring_addr);
+#endif
 		ret = snap_dma_q_write(vqp->snap_queue->dma_q, local_ring_addr, write_size,
 							  vcq->cqe_ci_mr->lkey, host_ring_addr,
 							  vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
@@ -1045,6 +1071,7 @@ static int vrdma_write_back_sq_cqe(struct spdk_vrdma_qp *vqp)
 				vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
 			return -1;
 		}
+		vqp->stats.sq_dma_tx_cnt++;
 	}
 
 	return 0;
@@ -1311,22 +1338,26 @@ void vrdma_qp_sm_start(struct spdk_vrdma_qp *vqp)
 void vrdma_dump_vqp_stats(struct spdk_vrdma_qp *vqp)
 {
 	printf("\n========= vrdma qp debug counter =========\n");
+	printf("vqpn 0x%x, mqpn 0x%x\n", vqp->qp_idx, vqp->bk_qp->bk_qp.qpnum);
 	printf("sq pi  %-10d       sq pre pi  %-10d\n", vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
 	printf("scq pi %-10d       scq pre pi %-10d     scq ci %-10d\n", 
 			vqp->sq_vcq->pi, vqp->sq_vcq->pre_pi, vqp->sq_vcq->pici->ci);
 	if (vqp->bk_qp) {
 		printf("msq pi  %-10d     msq dbred pi  %-10d\n",
 				vqp->bk_qp->bk_qp.hw_qp.sq.pi, vqp->stats.msq_dbred_pi);
+		printf("msq send dbr cnt  %-10d\n", vqp->bk_qp->bk_qp.stat.tx.total_dbs);
 		printf("mscq ci %-10d     mscq dbred ci %-10d\n",
 				vqp->bk_qp->bk_qp.sq_hw_cq.ci, vqp->stats.mcq_dbred_ci);
 	} else {
 		printf("!!!no backend qp info \n");
 	}
-	printf("sq wqe fetched %-15lu\n",vqp->stats.sq_wqe_fetched);
-	printf("sq wqe submitted %-15lu\n", vqp->stats.sq_wqe_submitted);
-	printf("sq wqe wr submitted %-15lu\n", vqp->stats.sq_wqe_wr);
-	printf("sq wqe atomic submitted %-15lu\n", vqp->stats.sq_wqe_atomic);
-	printf("sq wqe ud submitted %-15lu\n", vqp->stats.sq_wqe_ud);
+	printf("sq tx dma cnt %-20lu\n",vqp->stats.sq_dma_tx_cnt);
+	printf("sq rx dma cnt %-20lu\n",vqp->stats.sq_dma_rx_cnt);
+	printf("sq wqe fetched %-20lu\n",vqp->stats.sq_wqe_fetched);
+	printf("sq wqe submitted %-20lu\n", vqp->stats.sq_wqe_submitted);
+	printf("sq wqe wr submitted %-20lu\n", vqp->stats.sq_wqe_wr);
+	printf("sq wqe atomic submitted %-20lu\n", vqp->stats.sq_wqe_atomic);
+	printf("sq wqe ud submitted %-20lu\n", vqp->stats.sq_wqe_ud);
 	printf("\n========= vrdma qp one wqe latency (ns) =========\n");
 	printf("sq wqe parse latency %-15lu\n", vqp->stats.latency_parse);
 	printf("sq wqe map latency %-15lu\n", vqp->stats.latency_map);

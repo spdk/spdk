@@ -162,6 +162,8 @@ enum vrdma_qp_sm_state_type {
 };
 
 struct vrdma_qp_stats {
+	uint64_t sq_dma_tx_cnt;
+	uint64_t sq_dma_rx_cnt;
 	uint64_t sq_wqe_fetched;
 	uint64_t sq_wqe_submitted;
 	uint64_t sq_wqe_wr;
