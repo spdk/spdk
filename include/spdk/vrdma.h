@@ -262,12 +262,12 @@ struct spdk_vrdma_dev {
 	uint32_t vqp_cnt;
 	uint32_t vcq_cnt;
 	uint32_t veq_cnt;
-	LIST_HEAD(vpd_list, spdk_vrdma_pd) vpd_list;
-	LIST_HEAD(vmr_list, spdk_vrdma_mr) vmr_list;
-	LIST_HEAD(vah_list, spdk_vrdma_ah) vah_list;
-	LIST_HEAD(vqp_list, spdk_vrdma_qp) vqp_list;
-	LIST_HEAD(vcq_list, spdk_vrdma_cq) vcq_list;
-	LIST_HEAD(veq_list, spdk_vrdma_eq) veq_list;
+	LIST_HEAD(, spdk_vrdma_pd) vpd_list;
+	LIST_HEAD(, spdk_vrdma_mr) vmr_list;
+	LIST_HEAD(, spdk_vrdma_ah) vah_list;
+	LIST_HEAD(, spdk_vrdma_qp) vqp_list;
+	LIST_HEAD(, spdk_vrdma_cq) vcq_list;
+	LIST_HEAD(, spdk_vrdma_eq) veq_list;
 };
 
 struct spdk_vrdma_ctx {

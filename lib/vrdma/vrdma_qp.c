@@ -87,15 +87,15 @@ vrdma_find_lbk_qp_by_vqp(uint64_t gid_ip, uint32_t vqp_idx)
 
 void vrdma_del_bk_qp_list(void)
 {
-	struct vrdma_remote_bk_qp *rqp;
-	struct vrdma_local_bk_qp *lqp;
+	struct vrdma_remote_bk_qp *rqp, *rqp_tmp;
+	struct vrdma_local_bk_qp *lqp, *lqp_tmp;
 
     SPDK_NOTICELOG("\n lizh vrdma_del_bk_qp_list start\n");
-	LIST_FOREACH(rqp, &vrdma_rbk_qp_list, entry) {
+	LIST_FOREACH_SAFE(rqp, &vrdma_rbk_qp_list, entry, rqp_tmp) {
 		LIST_REMOVE(rqp, entry);
 		free(rqp);
 	}
-	LIST_FOREACH(lqp, &vrdma_lbk_qp_list, entry) {
+	LIST_FOREACH_SAFE(lqp, &vrdma_lbk_qp_list, entry, lqp_tmp) {
 		LIST_REMOVE(lqp, entry);
 		free(lqp);
 	}
@@ -473,7 +473,8 @@ bool vrdma_set_vq_flush(struct vrdma_ctrl *ctrl,
 void vrdma_destroy_vq(struct vrdma_ctrl *ctrl,
 				struct spdk_vrdma_qp *vqp)
 {
-	ctrl->sctrl->q_ops->destroy(ctrl->sctrl, vqp->snap_queue);
+	if (ctrl->sctrl)
+		ctrl->sctrl->q_ops->destroy(ctrl->sctrl, vqp->snap_queue);
 	if (vqp->qp_mr) {
 		ibv_dereg_mr(vqp->qp_mr);
 		vqp->qp_mr = NULL;

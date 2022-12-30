@@ -82,10 +82,10 @@ vrdma_find_dev_mac_by_pci(char *pci_number)
 
 void vrdma_dev_mac_list_del(void)
 {
-    struct vrdma_dev_mac *dev_mac;
+    struct vrdma_dev_mac *dev_mac, *tmp;
 
     SPDK_NOTICELOG("lizh vrdma_dev_mac_list_del...start");
-	LIST_FOREACH(dev_mac, &vrdma_dev_mac_list, entry) {
+	LIST_FOREACH_SAFE(dev_mac, &vrdma_dev_mac_list, entry, tmp) {
 		LIST_REMOVE(dev_mac, entry);
 		free(dev_mac);
 	}
@@ -366,13 +366,6 @@ vrdma_find_ctrl_by_srv_dev(struct vrdma_dev *rdev)
 
 static void vrdma_ctrl_free(struct vrdma_ctrl *ctrl)
 {
-    struct spdk_vrdma_pd *vpd;
-    struct spdk_vrdma_mr *vmr;
-    struct spdk_vrdma_ah *vah;
-    struct spdk_vrdma_qp *vqp;
-    struct spdk_vrdma_cq *vcq;
-    struct spdk_vrdma_eq *veq;
-
     if (ctrl->mr)
         ibv_dereg_mr(ctrl->mr);
     if (ctrl->sw_qp.admq)
@@ -382,36 +375,7 @@ static void vrdma_ctrl_free(struct vrdma_ctrl *ctrl)
     if (ctrl->destroy_done_cb)
         ctrl->destroy_done_cb(ctrl->destroy_done_cb_arg);
     if (ctrl->vdev) {
-        LIST_FOREACH(vqp, &ctrl->vdev->vqp_list, entry) {
-            LIST_REMOVE(vqp, entry);
-            free(vqp);
-        }
-        LIST_FOREACH(vcq, &ctrl->vdev->vcq_list, entry) {
-            LIST_REMOVE(vcq, entry);
-            free(vcq);
-        }
-        LIST_FOREACH(veq, &ctrl->vdev->veq_list, entry) {
-            LIST_REMOVE(veq, entry);
-            free(veq);
-        }
-        LIST_FOREACH(vah, &ctrl->vdev->vah_list, entry) {
-            LIST_REMOVE(vah, entry);
-	        spdk_bit_array_clear(ctrl->vdev->free_vah_ids, vah->ah_idx);
-            free(vah);
-        }
-        LIST_FOREACH(vmr, &ctrl->vdev->vmr_list, entry) {
-            LIST_REMOVE(vmr, entry);
-            vrdma_destroy_remote_mkey(ctrl, vmr);
-	        spdk_bit_array_clear(ctrl->vdev->free_vmr_ids, vmr->mr_idx);
-            free(vmr);
-        }
-        LIST_FOREACH(vpd, &ctrl->vdev->vpd_list, entry) {
-            LIST_REMOVE(vpd, entry);
-            ibv_dealloc_pd(vpd->ibpd);
-	        spdk_bit_array_clear(ctrl->vdev->free_vpd_ids, vpd->pd_idx);
-            free(vpd);
-        }
-        spdk_vrdma_adminq_resource_destory(ctrl->vdev);
+        spdk_vrdma_adminq_resource_destory(ctrl);
         free(ctrl->vdev);
     }
     free(ctrl);
