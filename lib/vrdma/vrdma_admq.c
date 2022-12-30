@@ -115,16 +115,6 @@ int spdk_vrdma_adminq_resource_init(void)
 	return 0;
 }
 
-void spdk_vrdma_adminq_resource_destory(struct spdk_vrdma_dev *vdev)
-{
-	spdk_bit_array_free(&vdev->free_vpd_ids);
-	spdk_bit_array_free(&vdev->free_vmr_ids);
-	spdk_bit_array_free(&vdev->free_vah_ids);
-	spdk_bit_array_free(&vdev->free_vqp_ids);
-	spdk_bit_array_free(&vdev->free_vcq_ids);
-	spdk_bit_array_free(&vdev->free_veq_ids);
-}
-
 struct spdk_vrdma_pd *
 find_spdk_vrdma_pd_by_idx(struct vrdma_ctrl *ctrl, uint32_t pd_idx)
 {
@@ -1102,7 +1092,7 @@ static void vrdma_aq_destroy_suspended_qp(struct vrdma_ctrl *ctrl,
 					aqe->resp.destroy_qp_resp.err_code);
 		return;
 	}
-	if (vrdma_qp_is_connected_ready(vqp)) {
+	if (vrdma_qp_is_connected_ready(vqp) && ctrl->sctrl) {
 		snap_vrdma_desched_vq(vqp->snap_queue);
 	}
 	vrdma_destroy_vq(ctrl, vqp);
@@ -2067,4 +2057,67 @@ int vrdma_ctrl_adminq_progress(void *ctrl)
 	}
 
 	return n;
+}
+
+
+void spdk_vrdma_adminq_resource_destory(struct vrdma_ctrl *ctrl)
+{
+	struct spdk_vrdma_dev *vdev = ctrl->vdev;
+	struct spdk_vrdma_pd *vpd, *vpd_tmp;
+    struct spdk_vrdma_mr *vmr, *vmr_tmp;
+    struct spdk_vrdma_ah *vah, *vah_tmp;
+    struct spdk_vrdma_qp *vqp, *vqp_tmp;
+    struct spdk_vrdma_cq *vcq, *vcq_tmp;
+    struct spdk_vrdma_eq *veq, *veq_tmp;
+	struct vrdma_admin_cmd_entry aqe;
+
+	aqe.hdr.magic = VRDMA_AQ_HDR_MEGIC_NUM;
+	LIST_FOREACH_SAFE(vqp, &vdev->vqp_list, entry, vqp_tmp) {
+		aqe.hdr.opcode = VRDMA_ADMIN_DESTROY_QP;
+		aqe.req.destroy_qp_req.qp_handle = vqp->qp_idx;
+		SPDK_NOTICELOG("\nlizh spdk_vrdma_adminq_resource_destory..vqp->qp_idx=0x%x.\n",
+	vqp->qp_idx);
+		vrdma_aq_destroy_suspended_qp(ctrl, &aqe, vqp);
+    }
+    LIST_FOREACH_SAFE(vcq, &vdev->vcq_list, entry, vcq_tmp) {
+		aqe.hdr.opcode = VRDMA_ADMIN_DESTROY_CQ;
+		aqe.req.destroy_cq_req.cq_handle = vcq->cq_idx;
+		SPDK_NOTICELOG("\nlizh spdk_vrdma_adminq_resource_destory..vcq->cq_idx=0x%x.\n",
+	vcq->cq_idx);
+		vrdma_aq_destroy_cq(ctrl, &aqe);
+    }
+    LIST_FOREACH_SAFE(veq, &vdev->veq_list, entry, veq_tmp) {
+		aqe.hdr.opcode = VRDMA_ADMIN_DESTROY_CEQ;
+        aqe.req.destroy_ceq_req.ceq_handle = veq->eq_idx;
+		SPDK_NOTICELOG("\nlizh spdk_vrdma_adminq_resource_destory..veq->eq_idx=0x%x.\n",
+	veq->eq_idx);
+        vrdma_aq_destroy_ceq(ctrl, &aqe);
+    }
+    LIST_FOREACH_SAFE(vah, &vdev->vah_list, entry, vah_tmp) {
+		aqe.hdr.opcode = VRDMA_ADMIN_DESTROY_AH;
+		aqe.req.destroy_ah_req.ah_handle = vah->ah_idx;
+		SPDK_NOTICELOG("\nlizh spdk_vrdma_adminq_resource_destory..vah->ah_idx=0x%x.\n",
+	vah->ah_idx);
+		vrdma_aq_destroy_ah(ctrl, &aqe);
+    }
+    LIST_FOREACH_SAFE(vmr, &vdev->vmr_list, entry, vmr_tmp) {
+		aqe.hdr.opcode = VRDMA_ADMIN_DEREG_MR;
+		aqe.req.destroy_mr_req.lkey = vmr->mr_log.mkey;
+		SPDK_NOTICELOG("\nlizh spdk_vrdma_adminq_resource_destory..vmr->mr_log.mkey=0x%x.\n",
+	vmr->mr_log.mkey);
+		vrdma_aq_dereg_mr(ctrl, &aqe);
+    }
+    LIST_FOREACH_SAFE(vpd, &vdev->vpd_list, entry, vpd_tmp) {
+		aqe.hdr.opcode = VRDMA_ADMIN_DESTROY_PD;
+		aqe.req.destroy_pd_req.pd_handle = vpd->pd_idx;
+		SPDK_NOTICELOG("\nlizh spdk_vrdma_adminq_resource_destory..vpd->pd_idx=0x%x.\n",
+	vpd->pd_idx);
+		vrdma_aq_destroy_pd(ctrl, &aqe);
+    }
+	spdk_bit_array_free(&vdev->free_vpd_ids);
+	spdk_bit_array_free(&vdev->free_vmr_ids);
+	spdk_bit_array_free(&vdev->free_vah_ids);
+	spdk_bit_array_free(&vdev->free_vqp_ids);
+	spdk_bit_array_free(&vdev->free_vcq_ids);
+	spdk_bit_array_free(&vdev->free_veq_ids);
 }

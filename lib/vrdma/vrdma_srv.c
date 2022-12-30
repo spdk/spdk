@@ -169,13 +169,15 @@ static int vrdma_srv_device_destroy_cq(struct vrdma_dev *rdev,
 
 static struct vrdma_srv_qp *vrdma_srv_device_find_qp(uint32_t qp_idx)
 {
-	struct vrdma_srv_qp *vqp = NULL;
+	struct vrdma_srv_qp *vqp, *vqp_tmp;
 
-	LIST_FOREACH(vqp, &srv_qp_list, entry)
+	LIST_FOREACH_SAFE(vqp, &srv_qp_list, entry, vqp_tmp) {
     	if (vqp->qp_idx == qp_idx)
-            break;
-	return vqp;
+            return vqp;
+	}
+	return NULL;
 }
+
 static int vrdma_srv_device_create_qp(struct vrdma_dev *rdev, 
 					struct vrdma_admin_cmd_entry *cmd, 
 					struct vrdma_cmd_param *param)
@@ -213,6 +215,7 @@ static int vrdma_srv_device_destroy_qp(struct vrdma_dev *rdev,
 		SPDK_ERRLOG("Failed to unbind channel vqpn %d for destroy in service\n", vqpn);
 		return -1;
 	}
+	LIST_REMOVE(vqp, entry);
 	free(vqp);
 	return 0;
 }
