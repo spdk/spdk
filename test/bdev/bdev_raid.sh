@@ -118,7 +118,8 @@ function raid_function_test() {
 	return 0
 }
 
-function verify_raid_bdev_state() {
+function verify_raid_bdev_state() (
+	set +x
 	local raid_bdev_name=$1
 	local expected_state=$2
 	local raid_level=$3
@@ -172,13 +173,13 @@ function verify_raid_bdev_state() {
 		echo "incorrect num_base_bdevs_discovered: $tmp, expected: $num_base_bdevs_discovered"
 		return 1
 	fi
-}
+)
 
 function raid_state_function_test() {
 	local raid_level=$1
+	local num_base_bdevs=$2
 	local raid_bdev
-	local base_bdev1="Non_Existed_Base_1"
-	local base_bdev2="Non_Existed_Base_2"
+	local base_bdevs=($(for ((i = 1; i <= num_base_bdevs; i++)); do echo BaseBdev$i; done))
 	local raid_bdev_name="Existed_Raid"
 	local strip_size
 	local strip_size_create_arg
@@ -197,7 +198,7 @@ function raid_state_function_test() {
 
 	# Step1: create a RAID bdev with no base bdevs
 	# Expect state: CONFIGURING
-	$rpc_py bdev_raid_create $strip_size_create_arg -r $raid_level -b "$base_bdev1 $base_bdev2" -n $raid_bdev_name
+	$rpc_py bdev_raid_create $strip_size_create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
 	if ! verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size; then
 		return 1
 	fi
@@ -205,25 +206,30 @@ function raid_state_function_test() {
 
 	# Step2: create one base bdev and add to the RAID bdev
 	# Expect state: CONFIGURING
-	$rpc_py bdev_raid_create $strip_size_create_arg -r $raid_level -b "$base_bdev1 $base_bdev2" -n $raid_bdev_name
-	$rpc_py bdev_malloc_create 32 512 -b $base_bdev1
-	waitforbdev $base_bdev1
+	$rpc_py bdev_raid_create $strip_size_create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
+	$rpc_py bdev_malloc_create 32 512 -b ${base_bdevs[0]}
+	waitforbdev ${base_bdevs[0]}
 	if ! verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size; then
 		return 1
 	fi
 	$rpc_py bdev_raid_delete $raid_bdev_name
 
-	# Step3: create another base bdev and add to the RAID bdev
+	# Step3: create remaining base bdevs and add to the RAID bdev
 	# Expect state: ONLINE
-	$rpc_py bdev_raid_create $strip_size_create_arg -r $raid_level -b "$base_bdev1 $base_bdev2" -n $raid_bdev_name
-	$rpc_py bdev_malloc_create 32 512 -b $base_bdev2
-	waitforbdev $base_bdev2
+	$rpc_py bdev_raid_create $strip_size_create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
+	for ((i = 1; i < num_base_bdevs; i++)); do
+		if ! verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size; then
+			return 1
+		fi
+		$rpc_py bdev_malloc_create 32 512 -b ${base_bdevs[$i]}
+		waitforbdev ${base_bdevs[$i]}
+	done
 	if ! verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size; then
 		return 1
 	fi
 
 	# Step4: delete one base bdev from the RAID bdev
-	$rpc_py bdev_malloc_delete $base_bdev2
+	$rpc_py bdev_malloc_delete ${base_bdevs[0]}
 	local expected_state
 	if [ $raid_level != "raid1" ]; then
 		expected_state="offline"
@@ -234,9 +240,16 @@ function raid_state_function_test() {
 		return 1
 	fi
 
-	# Step5: delete last base bdev from the RAID bdev
+	# Step5: delete remaining base bdevs from the RAID bdev
 	# Expect state: removed from system
-	$rpc_py bdev_malloc_delete $base_bdev1
+	for ((i = 1; i < num_base_bdevs; i++)); do
+		raid_bdev=$($rpc_py bdev_raid_get_bdevs all | jq -r '.[0]["name"]')
+		if [ "$raid_bdev" != $raid_bdev_name ]; then
+			echo "$raid_bdev_name removed before all base bdevs were deleted"
+			return 1
+		fi
+		$rpc_py bdev_malloc_delete ${base_bdevs[$i]}
+	done
 	raid_bdev=$($rpc_py bdev_raid_get_bdevs all | jq -r '.[0]["name"] | select(.)')
 	if [ -n "$raid_bdev" ]; then
 		echo "$raid_bdev_name is not removed"
@@ -297,9 +310,12 @@ trap 'on_error_exit;' ERR
 
 raid_function_test raid0
 raid_function_test concat
-raid_state_function_test raid0
-raid_state_function_test concat
-raid_state_function_test raid1
 raid0_resize_test
+
+for level in raid0 concat raid1; do
+	for n in {2..4}; do
+		raid_state_function_test $level $n
+	done
+done
 
 rm -f $tmp_file
