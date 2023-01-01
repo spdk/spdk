@@ -15,6 +15,7 @@
 
 #define DATA_PATTERN 0x5a
 #define ALIGN_4K 0x1000
+#define COMP_BUF_PAD_PERCENTAGE 1.1L
 
 static uint64_t	g_tsc_rate;
 static uint64_t g_tsc_end;
@@ -48,6 +49,7 @@ struct ap_compress_seg {
 
 	void		*compressed_data;
 	uint32_t	compressed_len;
+	uint32_t	compressed_len_padded;
 	struct iovec	*compressed_iovs;
 	uint32_t	compressed_iovcnt;
 
@@ -310,8 +312,30 @@ _get_task_data_bufs(struct ap_task *task)
 	if (g_workload_selection == ACCEL_OPC_COMPRESS ||
 	    g_workload_selection == ACCEL_OPC_DECOMPRESS) {
 		task->cur_seg = STAILQ_FIRST(&g_compress_segs);
-	} else if (g_workload_selection == ACCEL_OPC_CRC32C ||
-		   g_workload_selection == ACCEL_OPC_COPY_CRC32C) {
+
+		if (g_workload_selection == ACCEL_OPC_COMPRESS) {
+			dst_buff_len = task->cur_seg->compressed_len_padded;
+		}
+
+		task->dst = spdk_dma_zmalloc(dst_buff_len, align, NULL);
+		if (task->dst == NULL) {
+			fprintf(stderr, "Unable to alloc dst buffer\n");
+			return -ENOMEM;
+		}
+
+		task->dst_iovs = calloc(g_chained_count, sizeof(struct iovec));
+		if (!task->dst_iovs) {
+			fprintf(stderr, "cannot allocate task->dst_iovs for task=%p\n", task);
+			return -ENOMEM;
+		}
+		task->dst_iovcnt = g_chained_count;
+		accel_perf_construct_iovs(task->dst, dst_buff_len, task->dst_iovs, task->dst_iovcnt);
+
+		return 0;
+	}
+
+	if (g_workload_selection == ACCEL_OPC_CRC32C ||
+	    g_workload_selection == ACCEL_OPC_COPY_CRC32C) {
 		assert(g_chained_count > 0);
 		task->src_iovcnt = g_chained_count;
 		task->src_iovs = calloc(task->src_iovcnt, sizeof(struct iovec));
@@ -360,16 +384,6 @@ _get_task_data_bufs(struct ap_task *task)
 			memset(task->dst, DATA_PATTERN, dst_buff_len);
 		} else {
 			memset(task->dst, ~DATA_PATTERN, dst_buff_len);
-		}
-
-		if (g_workload_selection == ACCEL_OPC_DECOMPRESS) {
-			task->dst_iovs = calloc(g_chained_count, sizeof(struct iovec));
-			if (!task->dst_iovs) {
-				fprintf(stderr, "cannot allocate task->dst_iovs for task=%p\n", task);
-				return -ENOMEM;
-			}
-			task->dst_iovcnt = g_chained_count;
-			accel_perf_construct_iovs(task->dst, dst_buff_len, task->dst_iovs, task->dst_iovcnt);
 		}
 	}
 
@@ -450,7 +464,8 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 	case ACCEL_OPC_COMPRESS:
 		task->src_iovs = task->cur_seg->uncompressed_iovs;
 		task->src_iovcnt = task->cur_seg->uncompressed_iovcnt;
-		rc = spdk_accel_submit_compress(worker->ch, task->dst, g_xfer_size_bytes, task->src_iovs,
+		rc = spdk_accel_submit_compress(worker->ch, task->dst, task->cur_seg->compressed_len_padded,
+						task->src_iovs,
 						task->src_iovcnt, &task->compressed_sz, flags, accel_done, task);
 		break;
 	case ACCEL_OPC_DECOMPRESS:
@@ -476,7 +491,7 @@ _free_task_buffers(struct ap_task *task)
 {
 	uint32_t i;
 
-	if (g_workload_selection == ACCEL_OPC_DECOMPRESS) {
+	if (g_workload_selection == ACCEL_OPC_DECOMPRESS || g_workload_selection == ACCEL_OPC_COMPRESS) {
 		free(task->dst_iovs);
 	} else if (g_workload_selection == ACCEL_OPC_CRC32C ||
 		   g_workload_selection == ACCEL_OPC_COPY_CRC32C) {
@@ -887,7 +902,7 @@ static void
 accel_perf_prep_process_seg(struct accel_perf_prep_ctx *ctx)
 {
 	struct ap_compress_seg *seg;
-	int sz, sz_read;
+	int sz, sz_read, sz_padded;
 	void *ubuf, *cbuf;
 	struct iovec iov[1];
 	int rc;
@@ -901,6 +916,14 @@ accel_perf_prep_process_seg(struct accel_perf_prep_ctx *ctx)
 	}
 
 	sz = spdk_min(ctx->remaining, g_xfer_size_bytes);
+	/* Add 10% pad to the compress buffer for incompressible data. Note that a real app
+	 * would likely either deal with the failure of not having a large enough buffer
+	 * by submitting another operation with a larger one.  Or, like the vbdev module
+	 * does, just accept the error and use the data uncompressed marking it as such in
+	 * its own metadata so that in the future it doesn't try to decompress uncompressed
+	 * data, etc.
+	 */
+	sz_padded = sz * COMP_BUF_PAD_PERCENTAGE;
 
 	ubuf = spdk_dma_zmalloc(sz, ALIGN_4K, NULL);
 	if (!ubuf) {
@@ -909,7 +932,7 @@ accel_perf_prep_process_seg(struct accel_perf_prep_ctx *ctx)
 		goto error;
 	}
 
-	cbuf = spdk_dma_malloc(sz, ALIGN_4K, NULL);
+	cbuf = spdk_dma_malloc(sz_padded, ALIGN_4K, NULL);
 	if (!cbuf) {
 		fprintf(stderr, "unable to allocate compress buffer\n");
 		rc = -ENOMEM;
@@ -954,19 +977,17 @@ accel_perf_prep_process_seg(struct accel_perf_prep_ctx *ctx)
 	seg->uncompressed_len = sz;
 	seg->compressed_data = cbuf;
 	seg->compressed_len = sz;
+	seg->compressed_len_padded = sz_padded;
 
 	ctx->cur_seg = seg;
 	iov[0].iov_base = seg->uncompressed_data;
 	iov[0].iov_len = seg->uncompressed_len;
 	/* Note that anytime a call is made to spdk_accel_submit_compress() there's a chance
 	 * it will fail with -ENOMEM in the event that the destination buffer is not large enough
-	 * to hold the compressed data.  This example app simply uses the same size as the input
-	 * buffer which will work for example purposes but when using the API in your application
-	 * be sure to allocate enough room in the destination buffer for cases where the data is
-	 * no compressible, the addition of header information will cause it to be larger than the
-	 * original input.
+	 * to hold the compressed data.  This example app simply adds 10% buffer for compressed data
+	 * but real applications may want to consider a more sophisticated method.
 	 */
-	rc = spdk_accel_submit_compress(ctx->ch, seg->compressed_data, seg->compressed_len, iov, 1,
+	rc = spdk_accel_submit_compress(ctx->ch, seg->compressed_data, seg->compressed_len_padded, iov, 1,
 					&seg->compressed_len, 0, accel_perf_prep_process_seg_cpl, ctx);
 	if (rc < 0) {
 		fprintf(stderr, "error (%d) on initial compress submission\n", rc);
