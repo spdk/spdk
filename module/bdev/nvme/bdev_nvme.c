@@ -7130,6 +7130,7 @@ nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 		       struct nvme_ctrlr *nvme_ctrlr)
 {
 	struct spdk_nvme_transport_id	*trid;
+	const struct spdk_nvme_ctrlr_opts *opts;
 
 	if (nvme_ctrlr->opts.from_discovery_service) {
 		/* Do not emit an RPC for this - it will be implicitly
@@ -7156,6 +7157,10 @@ nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 	spdk_json_write_named_uint32(w, "reconnect_delay_sec", nvme_ctrlr->opts.reconnect_delay_sec);
 	spdk_json_write_named_uint32(w, "fast_io_fail_timeout_sec",
 				     nvme_ctrlr->opts.fast_io_fail_timeout_sec);
+
+	opts = spdk_nvme_ctrlr_get_opts(nvme_ctrlr->ctrlr);
+	spdk_json_write_named_bool(w, "hdgst", opts->header_digest);
+	spdk_json_write_named_bool(w, "ddgst", opts->data_digest);
 
 	spdk_json_write_object_end(w);
 
