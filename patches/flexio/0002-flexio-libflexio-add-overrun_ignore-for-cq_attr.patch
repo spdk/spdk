@@ -1,0 +1,40 @@
+From 9d45ac995341dec8d49e9d21c8f86f32ba0b95e1 Mon Sep 17 00:00:00 2001
+From: Spike Du <spiked@nvidia.com>
+Date: Tue, 1 Nov 2022 03:36:33 +0200
+Subject: [PATCH 2/8] flexio/libflexio: add overrun_ignore for cq_attr
+
+Signed-off-by: Spike Du <spiked@nvidia.com>
+---
+ libflexio/flexio.h        | 1 +
+ libflexio/src/flexio_cq.c | 3 +++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/libflexio/flexio.h b/libflexio/flexio.h
+index fc09229..540e0e4 100644
+--- a/libflexio/flexio.h
++++ b/libflexio/flexio.h
+@@ -143,6 +143,7 @@ struct flexio_cq_attr {
+ 	/* memory allocated for queue */
+ 	struct flexio_qmem cq_ring_qmem;
+ 	flexio_uintptr_t cq_dbr_daddr;
++	uint32_t overrun_ignore:1;
+ };
+ 
+ struct flexio_wq_sq_attr {
+diff --git a/libflexio/src/flexio_cq.c b/libflexio/src/flexio_cq.c
+index 3eec32c..7c6a8df 100644
+--- a/libflexio/src/flexio_cq.c
++++ b/libflexio/src/flexio_cq.c
+@@ -220,6 +220,9 @@ flexio_status flexio_cq_create(struct flexio_process *process, struct ibv_contex
+ 		return -FLEXIO_STATUS_FAILED;
+ 	}
+ 
++	if (fattr->overrun_ignore)
++               prm_attr.oi = 1;
++
+ 	*cq_ptr = NULL;
+ 	cq = NULL;
+ 
+-- 
+2.24.1
+
