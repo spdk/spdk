@@ -928,6 +928,63 @@ vrdma_rpc_parse_mac_into_int(char *arg, uint64_t *int_mac, char *mac)
 }
 
 static void
+spdk_vrdma_rpc_vqp_info_json(struct vrdma_ctrl *ctrl,
+			struct spdk_vrdma_qp *vqp,
+			struct spdk_json_write_ctx *w)
+{
+	struct vrdma_local_bk_qp *lqp;
+
+	spdk_json_write_object_begin(w);
+	lqp = vrdma_find_lbk_qp_by_vqp(ctrl->vdev->vrdma_sf.ip,
+            vqp->qp_idx);
+	if (lqp && vqp->pre_bk_qp) {
+		spdk_json_write_named_uint64(w, "node_id", lqp->attr.comm.node_id);
+		spdk_json_write_named_uint32(w, "device(vhca_id)", lqp->attr.comm.dev_id);
+		spdk_json_write_named_uint64(w, "gid_ip", lqp->attr.comm.gid_ip);
+		spdk_json_write_named_uint32(w, "vqpn", vqp->qp_idx);
+		spdk_json_write_named_uint32(w, "bk_qpn", vqp->pre_bk_qp->bk_qp.qpnum);
+		spdk_json_write_named_uint64(w, "remote_node_id", lqp->remote_node_id);
+		spdk_json_write_named_uint32(w, "remote_device(vhca_id)", lqp->remote_dev_id);
+		spdk_json_write_named_uint64(w, "remote_gid_ip", lqp->remote_gid_ip);
+	}
+	if (vqp->bk_qp) {
+		spdk_json_write_named_uint32(w, "remote_vqpn", vqp->bk_qp->remote_vqpn);
+		spdk_json_write_named_uint32(w, "remote_bk_qpn", vqp->bk_qp->remote_qpn);
+	}
+	spdk_json_write_named_uint32(w, "sq pi", vqp->qp_pi->pi.sq_pi);
+	spdk_json_write_named_uint32(w, "sq pre pi", vqp->sq.comm.pre_pi);
+	spdk_json_write_named_uint32(w, "scq pi", vqp->sq_vcq->pi);
+	spdk_json_write_named_uint32(w, "scq ci", vqp->sq_vcq->pici->ci);
+	spdk_json_write_named_uint64(w, "scq write cnt", vqp->stats.sq_cq_write_cnt);
+	spdk_json_write_named_uint64(w, "scq total wqe", vqp->stats.sq_cq_write_wqe);
+	spdk_json_write_named_uint32(w, "scq write cnt", vqp->stats.sq_cq_write_cqe_max);
+	if (vqp->bk_qp) {
+		spdk_json_write_named_uint32(w, "msq pi", vqp->bk_qp->bk_qp.hw_qp.sq.pi);
+		spdk_json_write_named_uint32(w, "msq dbred pi", vqp->stats.msq_dbred_pi);
+		spdk_json_write_named_uint64(w, "msq send dbr cnt", vqp->bk_qp->bk_qp.stat.tx.total_dbs);
+		spdk_json_write_named_uint32(w, "mscq ci", vqp->bk_qp->bk_qp.sq_hw_cq.ci);
+		spdk_json_write_named_uint32(w, "mscq dbred ci", vqp->stats.mcq_dbred_ci);
+	}
+	spdk_json_write_named_uint64(w, "sq tx dma cnt", vqp->stats.sq_dma_tx_cnt);
+	spdk_json_write_named_uint64(w, "sq rx dma cnt", vqp->stats.sq_dma_rx_cnt);
+	spdk_json_write_named_uint64(w, "sq wqe fetched", vqp->stats.sq_wqe_fetched);
+	spdk_json_write_named_uint64(w, "sq wqe submitted", vqp->stats.sq_wqe_submitted);
+	spdk_json_write_named_uint64(w, "sq wqe wr submitted", vqp->stats.sq_wqe_wr);
+	spdk_json_write_named_uint64(w, "sq wqe atomic submitted", vqp->stats.sq_wqe_atomic);
+	spdk_json_write_named_uint64(w, "sq wqe ud submitted", vqp->stats.sq_wqe_ud);
+	spdk_json_write_named_uint64(w, "sq wqe parse latency", vqp->stats.latency_parse);
+	spdk_json_write_named_uint64(w, "sq wqe map latency", vqp->stats.latency_map);
+	spdk_json_write_named_uint64(w, "sq wqe submit latency", vqp->stats.latency_submit);
+	spdk_json_write_named_uint64(w, "sq wqe total latency", vqp->stats.latency_one_total);
+	spdk_json_write_named_uint32(w, "msq pi", vqp->bk_qp->bk_qp.hw_qp.sq.pi);
+	spdk_json_write_named_uint32(w, "msq dbred pi", vqp->stats.msq_dbred_pi);
+	spdk_json_write_named_uint64(w, "msq send dbr cnt", vqp->bk_qp->bk_qp.stat.tx.total_dbs);
+	spdk_json_write_named_uint32(w, "mscq ci", vqp->bk_qp->bk_qp.sq_hw_cq.ci);
+	spdk_json_write_named_uint32(w, "mscq dbred ci", vqp->stats.mcq_dbred_ci);
+    spdk_json_write_object_end(w);
+}
+
+static void
 spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
                                     const struct spdk_json_val *params)
 {
@@ -937,6 +994,7 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
     struct snap_vrdma_ctrl *sctrl;
     struct vrdma_ctrl *ctrl;
     struct spdk_vrdma_qp *vqp;
+    bool send_vqp_result = false;
 
     SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...start\n");
     attr = calloc(1, sizeof(*attr));
@@ -1268,10 +1326,14 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
                 attr->show_vqpn, attr->emu_manager);
             goto free_attr;
         }
-		vrdma_dump_vqp_stats(vqp);
+		vrdma_dump_vqp_stats(ctrl, vqp);
+        send_vqp_result = true;
     }
     w = spdk_jsonrpc_begin_result(request);
-    spdk_json_write_string(w, "Success");
+    if (send_vqp_result)
+        spdk_vrdma_rpc_vqp_info_json(ctrl, vqp, w);
+    else
+        spdk_json_write_string(w, "Success");
     spdk_jsonrpc_end_result(request, w);
 
     free(attr);
