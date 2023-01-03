@@ -961,10 +961,15 @@ void vrdma_dpa_msix_destroy(struct flexio_msix *msix, uint16_t msix_vector,
 	       sizeof(struct vrdma_dpa_msix));
 }
 
+uint32_t vrdma_dpa_emu_db_to_cq_ctx_get_id(struct spdk_vrdma_qp *vqp)
+{
+	return flexio_emu_db_to_cq_ctx_get_id(vqp->snap_queue->dpa_vq->guest_db_to_cq_ctx);
+}
 
 struct vrdma_vq_ops vrdma_dpa_vq_ops = {
 	.create = vrdma_dpa_vq_create,
 	// .modify = vrdma_dpa_vq_modify,
 	.destroy = vrdma_dpa_vq_destroy,
+	.get_emu_db_to_cq_id = vrdma_dpa_emu_db_to_cq_ctx_get_id,
 };
 

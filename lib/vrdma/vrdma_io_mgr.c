@@ -45,6 +45,9 @@
 #include "snap_dma.h"
 #include "snap_vrdma_ctrl.h"
 
+#include "vrdma_providers.h"
+#include "dpa/host/vrdma_dpa_vq.h"
+
 #define SPDK_IO_MGR_THREAD_NAME_PREFIX "VrdmaSnapThread"
 #define SPDK_IO_MGR_THREAD_NAME_LEN 32
 
@@ -1376,6 +1379,12 @@ write_vcq:
 #ifdef POLL_PI_DBG
 		SPDK_NOTICELOG("no cqe to generate, jump to poll sq PI\n");
 #endif
+
+#ifdef VRDMA_DPA
+		if ((vqp->bk_qp->bk_qp.hw_qp.sq.pi % 1024) != (mcq->ci % 1024)) {
+     			vqp->sm_state = VRDMA_QP_STATE_POLL_CQ_CI;
+		}
+#endif
 		return true;
 	}
 	vrdma_ring_mcq_db(mcq);
@@ -1518,6 +1527,9 @@ void vrdma_dump_vqp_stats(struct vrdma_ctrl *ctrl,
 	printf("sq dma_q  0x%x\n", vqp->snap_queue->dma_q->sw_qp.dv_qp.hw_qp.qp_num);
 	printf("sq pi  %-10d       sq pre pi  %-10d\n",
 			vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
+	printf("\n========= vrdma qp (vqpn %x, mqpn %x) debug counter =========\n",
+		vqp->qp_idx, vqp->bk_qp->bk_qp.qpnum);
+	printf("sq pi  %-10d       sq pre pi  %-10d\n", vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
 	printf("scq pi %-10d       scq pre pi %-10d     scq ci %-10d\n", 
 			vqp->sq_vcq->pi, vqp->sq_vcq->pre_pi, vqp->sq_vcq->pici->ci);
 	printf("scq write cnt %-20lu       scq total wqe %-20lu     scq write max wqe %-10d\n", 
@@ -1545,6 +1557,18 @@ void vrdma_dump_vqp_stats(struct vrdma_ctrl *ctrl,
 	printf("sq wqe map latency %-15lu\n", vqp->stats.latency_map);
 	printf("sq wqe submit latency %-15lu\n", vqp->stats.latency_submit);
 	printf("sq wqe total latency %-15lu\n", vqp->stats.latency_one_total);
-	
+
+	printf("\n========= dma qp(snap_queue) debug info =========\n");
+	// printf("emu_db_to_cq_id %#x, hw_dbcq %#x\n"
+	printf("hw_dbcq %#x\n"
+			"sw_qp : %#x sqcq %#x rqcq %#x,\ndpa qp: %#x sqcq %#x rqcq %#x\n",
+			// vrdma_prov_get_emu_db_to_cq_id(vqp->snap_queue),
+			vqp->snap_queue->dpa_vq->db_cq.cq_num,
+		 	vqp->snap_queue->dma_q->sw_qp.dv_qp.hw_qp.qp_num,
+		 	vqp->snap_queue->dma_q->sw_qp.dv_tx_cq.cq_num,
+		 	vqp->snap_queue->dma_q->sw_qp.dv_rx_cq.cq_num,
+			vqp->snap_queue->dpa_vq->dma_qp.qp_num,
+		 	vqp->snap_queue->dpa_vq->dma_q_sqcq.cq_num,
+		 	vqp->snap_queue->dpa_vq->dma_q_rqcq.cq_num);
 }
 

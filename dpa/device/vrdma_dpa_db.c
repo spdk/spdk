@@ -21,7 +21,7 @@
 #include "vrdma_dpa_cq.h"
 
 #define DPA_DEBUG
-// #define DPA_DEBUG_DETAIL
+#define DPA_DEBUG_DETAIL
 
 static int get_next_qp_swqe_index(uint32_t pi, uint32_t depth)
 {
@@ -200,9 +200,9 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 	rq_last_fetch_end = rq_pi % ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt;
 	sq_last_fetch_end = sq_pi % ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt;
 
-	// while ((rq_last_fetch_start != rq_last_fetch_end) || 
-	// 	(sq_last_fetch_start != sq_last_fetch_end))
-	while (1)
+	while ((rq_last_fetch_start != rq_last_fetch_end) || 
+		(sq_last_fetch_start != sq_last_fetch_end))
+	// while (1)
 	{
 		if (rq_last_fetch_start < rq_last_fetch_end) {
 			has_wqe = vrdma_dpa_rq_wr_pi_fetch(ehctx, rq_last_fetch_start, rq_last_fetch_end, rq_pi);

@@ -44,6 +44,7 @@ struct vrdma_vq_ops {
 					   struct spdk_vrdma_qp *vqp,
 					   struct snap_vrdma_vq_create_attr* q_attr);
 	void (*destroy)(struct snap_vrdma_queue *virtq);
+	uint32_t (*get_emu_db_to_cq_id)(struct snap_vrdma_queue *virtq);
 	// int (*modify)(struct vrdma_prov_vq *vq, uint64_t mask,
 				//  struct vrdma_prov_vq_attr *attr);
 };
@@ -70,6 +71,7 @@ struct snap_vrdma_queue*
 vrdma_prov_vq_create(struct vrdma_ctrl *ctrl, struct spdk_vrdma_qp *vqp,
 		     struct snap_vrdma_vq_create_attr *attr);
 void vrdma_prov_vq_destroy(struct snap_vrdma_queue *vq);
+uint32_t vrdma_prov_get_emu_db_to_cq_id(struct snap_vrdma_queue *vq);
 void vrdma_prov_ops_register(const struct vrdma_prov_ops *ops);
 void vrdma_prov_ops_unregister(void);
 int vrdma_providers_load(void);

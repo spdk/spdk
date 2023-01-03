@@ -120,6 +120,13 @@ void vrdma_prov_vq_destroy(struct snap_vrdma_queue *vq)
 		prov_ops->q_ops->destroy(vq);
 }
 
+uint32_t vrdma_prov_get_emu_db_to_cq_id(struct snap_vrdma_queue *vq)
+{
+	if (prov_ops && prov_ops->q_ops && prov_ops->q_ops->get_emu_db_to_cq_id)
+		return prov_ops->q_ops->get_emu_db_to_cq_id(vq);
+	return 0xFFFFFFFF;
+}
+
 // int virtnet_prov_vq_modify(struct virtnet_prov_vq *vq, uint64_t mask,
 // 			   struct virtnet_prov_vq_attr *attr)
 // {
