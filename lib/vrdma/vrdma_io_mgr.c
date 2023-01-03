@@ -1348,12 +1348,14 @@ void vrdma_dump_vqp_stats(struct vrdma_ctrl *ctrl, struct spdk_vrdma_qp *vqp)
 
 
 	printf("\n========= vrdma qp debug counter =========\n");
+	printf("sf_name %s, gvmi 0x%x\n", ctrl->vdev->vrdma_sf.sf_name,
+			ctrl->vdev->vrdma_sf.gvmi);
 	lqp = vrdma_find_lbk_qp_by_vqp(ctrl->vdev->vrdma_sf.ip,
             vqp->qp_idx);
 	if (lqp)
 		printf("node_id 0x%lx, device(vhca_id) 0x%x gid_ip 0x%lx\n",
 			lqp->attr.comm.node_id, lqp->attr.comm.dev_id, lqp->attr.comm.gid_ip);
-	printf("vqpn 0x%x, mqpn 0x%x\n", vqp->qp_idx, vqp->bk_qp->bk_qp.qpnum);
+	printf("vqpn 0x%x, mqpn 0x%x\n", vqp->qp_idx, vqp->pre_bk_qp->bk_qp.qpnum);
 	printf("sq pi  %-10d       sq pre pi  %-10d\n",
 			vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
 	printf("scq pi %-10d       scq pre pi %-10d     scq ci %-10d\n", 
