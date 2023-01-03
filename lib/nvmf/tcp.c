@@ -1350,14 +1350,27 @@ nvmf_tcp_discover(struct spdk_nvmf_transport *transport,
 		  struct spdk_nvme_transport_id *trid,
 		  struct spdk_nvmf_discovery_log_page_entry *entry)
 {
+	struct spdk_nvmf_tcp_port *port;
+	struct spdk_nvmf_tcp_transport *ttransport;
+
 	entry->trtype = SPDK_NVMF_TRTYPE_TCP;
 	entry->adrfam = trid->adrfam;
-	entry->treq.secure_channel = SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_REQUIRED;
 
 	spdk_strcpy_pad(entry->trsvcid, trid->trsvcid, sizeof(entry->trsvcid), ' ');
 	spdk_strcpy_pad(entry->traddr, trid->traddr, sizeof(entry->traddr), ' ');
 
-	entry->tsas.tcp.sectype = SPDK_NVME_TCP_SECURITY_NONE;
+	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
+	port = nvmf_tcp_find_port(ttransport, trid);
+
+	assert(port != NULL);
+
+	if (strcmp(spdk_sock_get_impl_name(port->listen_sock), "ssl") == 0) {
+		entry->treq.secure_channel = SPDK_NVMF_TREQ_SECURE_CHANNEL_REQUIRED;
+		entry->tsas.tcp.sectype = SPDK_NVME_TCP_SECURITY_TLS_1_3;
+	} else {
+		entry->treq.secure_channel = SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_REQUIRED;
+		entry->tsas.tcp.sectype = SPDK_NVME_TCP_SECURITY_NONE;
+	}
 }
 
 static struct spdk_nvmf_tcp_control_msg_list *

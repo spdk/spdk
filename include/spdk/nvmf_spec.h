@@ -333,8 +333,11 @@ enum spdk_nvme_tcp_secure_socket_type {
 	/** No security */
 	SPDK_NVME_TCP_SECURITY_NONE			= 0,
 
-	/** TLS (Secure Sockets) */
-	SPDK_NVME_TCP_SECURITY_TLS			= 1,
+	/** TLS (Secure Sockets) version 1.2 */
+	SPDK_NVME_TCP_SECURITY_TLS_1_2			= 1,
+
+	/** TLS (Secure Sockets) version 1.3 */
+	SPDK_NVME_TCP_SECURITY_TLS_1_3			= 2,
 };
 
 /** TCP transport-specific address subtype */

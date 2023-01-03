@@ -239,6 +239,7 @@ DEFINE_STUB(spdk_nvme_ns_get_format_index, uint32_t,
 	    (const struct spdk_nvme_ns_data *nsdata), 0);
 
 DEFINE_STUB(spdk_sock_get_default_impl_name, const char *, (void), "");
+DEFINE_STUB(spdk_sock_get_impl_name, const char *, (struct spdk_sock *sock), "");
 
 struct spdk_io_channel *
 spdk_accel_get_io_channel(void)
