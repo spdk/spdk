@@ -1200,7 +1200,7 @@ _nvmf_qpair_destroy(void *ctx, int status)
 			if (req->qpair == qpair) {
 				TAILQ_REMOVE(&sgroup->queued, req, link);
 				if (nvmf_transport_req_free(req)) {
-					SPDK_ERRLOG("Transport request free error!/n");
+					SPDK_ERRLOG("Transport request free error!\n");
 				}
 			}
 		}
