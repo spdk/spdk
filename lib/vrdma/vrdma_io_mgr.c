@@ -1342,9 +1342,17 @@ void vrdma_qp_sm_start(struct spdk_vrdma_qp *vqp)
 	vrdma_qp_sm_poll_pi(vqp, VRDMA_QP_SM_OP_OK);
 }
 
-void vrdma_dump_vqp_stats(struct spdk_vrdma_qp *vqp)
+void vrdma_dump_vqp_stats(struct vrdma_ctrl *ctrl, struct spdk_vrdma_qp *vqp)
 {
+	struct vrdma_local_bk_qp *lqp;
+
+
 	printf("\n========= vrdma qp debug counter =========\n");
+	lqp = vrdma_find_lbk_qp_by_vqp(ctrl->vdev->vrdma_sf.ip,
+            vqp->qp_idx);
+	if (lqp)
+		printf("node_id 0x%lx, device(vhca_id) 0x%x gid_ip 0x%lx\n",
+			lqp->attr.comm.node_id, lqp->attr.comm.dev_id, lqp->attr.comm.gid_ip);
 	printf("vqpn 0x%x, mqpn 0x%x\n", vqp->qp_idx, vqp->bk_qp->bk_qp.qpnum);
 	printf("sq pi  %-10d       sq pre pi  %-10d\n",
 			vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
@@ -1376,4 +1384,3 @@ void vrdma_dump_vqp_stats(struct spdk_vrdma_qp *vqp)
 	printf("sq wqe total latency %-15lu\n", vqp->stats.latency_one_total);
 	
 }
-
