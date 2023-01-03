@@ -50,6 +50,7 @@ struct spdk_vrdma_sf {
 	uint32_t gid_idx;
 	uint64_t remote_ip;
 	uint64_t ip;
+	uint32_t gvmi;
 	uint8_t mac[6];
 	uint8_t dest_mac[6];
 };

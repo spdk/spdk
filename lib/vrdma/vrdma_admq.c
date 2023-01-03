@@ -322,10 +322,11 @@ static void vrdma_aq_modify_gid(struct vrdma_ctrl *ctrl,
 			aqe->req.modify_gid_req.gid[i+2], aqe->req.modify_gid_req.gid[i+3]);
 }
 
-static struct ibv_pd *vrdma_create_sf_pd(const char *dev_name)
+static struct ibv_pd *vrdma_create_sf_pd(struct vrdma_ctrl *ctrl)
 {
 	struct ibv_context *dev_ctx;
 	struct ibv_pd *sf_pd;
+	char *dev_name = ctrl->vdev->vrdma_sf.sf_name;
 	int gvmi;
 	
 	dev_ctx = snap_vrdma_open_device(dev_name);
@@ -341,6 +342,8 @@ static struct ibv_pd *vrdma_create_sf_pd(const char *dev_name)
 	gvmi = snap_get_dev_vhca_id(dev_ctx);
 	if (gvmi == -1) {
 		SPDK_ERRLOG("get NULL gvmi, dev name %s\n", dev_name);
+	} else {
+		ctrl->vdev->vrdma_sf.gvmi = gvmi;
 	}
 
 	SPDK_NOTICELOG("vrdma sf dev %s(gvmi 0x%x) created pd 0x%p done\n", dev_name, gvmi, sf_pd);
@@ -384,7 +387,7 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 				  aqe->resp.create_pd_resp.err_code);
 		return;
 	}
-	vpd->ibpd = vrdma_create_sf_pd(ctrl->vdev->vrdma_sf.sf_name);
+	vpd->ibpd = vrdma_create_sf_pd(ctrl);
 	if (!vpd->ibpd) {
 		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
 		SPDK_ERRLOG("Failed to allocate PD, err(%d)\n",

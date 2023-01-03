@@ -935,6 +935,8 @@ spdk_vrdma_rpc_vqp_info_json(struct vrdma_ctrl *ctrl,
 	struct vrdma_local_bk_qp *lqp;
 
 	spdk_json_write_object_begin(w);
+    spdk_json_write_named_string(w, "sf_name", ctrl->vdev->vrdma_sf.sf_name);
+    spdk_json_write_named_uint32(w, "sf_gvmi", ctrl->vdev->vrdma_sf.gvmi);
 	lqp = vrdma_find_lbk_qp_by_vqp(ctrl->vdev->vrdma_sf.ip,
             vqp->qp_idx);
 	if (lqp && vqp->pre_bk_qp) {
@@ -976,11 +978,13 @@ spdk_vrdma_rpc_vqp_info_json(struct vrdma_ctrl *ctrl,
 	spdk_json_write_named_uint64(w, "sq wqe map latency", vqp->stats.latency_map);
 	spdk_json_write_named_uint64(w, "sq wqe submit latency", vqp->stats.latency_submit);
 	spdk_json_write_named_uint64(w, "sq wqe total latency", vqp->stats.latency_one_total);
-	spdk_json_write_named_uint32(w, "msq pi", vqp->bk_qp->bk_qp.hw_qp.sq.pi);
-	spdk_json_write_named_uint32(w, "msq dbred pi", vqp->stats.msq_dbred_pi);
-	spdk_json_write_named_uint64(w, "msq send dbr cnt", vqp->bk_qp->bk_qp.stat.tx.total_dbs);
-	spdk_json_write_named_uint32(w, "mscq ci", vqp->bk_qp->bk_qp.sq_hw_cq.ci);
-	spdk_json_write_named_uint32(w, "mscq dbred ci", vqp->stats.mcq_dbred_ci);
+    if (vqp->bk_qp) {
+	    spdk_json_write_named_uint32(w, "msq pi", vqp->bk_qp->bk_qp.hw_qp.sq.pi);
+	    spdk_json_write_named_uint32(w, "msq dbred pi", vqp->stats.msq_dbred_pi);
+	    spdk_json_write_named_uint64(w, "msq send dbr cnt", vqp->bk_qp->bk_qp.stat.tx.total_dbs);
+	    spdk_json_write_named_uint32(w, "mscq ci", vqp->bk_qp->bk_qp.sq_hw_cq.ci);
+	    spdk_json_write_named_uint32(w, "mscq dbred ci", vqp->stats.mcq_dbred_ci);
+    }
     spdk_json_write_object_end(w);
 }
 
