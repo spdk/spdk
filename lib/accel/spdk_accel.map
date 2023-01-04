@@ -41,6 +41,7 @@
 	spdk_accel_task_complete;
 	spdk_accel_sequence_continue;
 	spdk_accel_driver_register;
+	spdk_accel_get_memory_domain;
 
 	local: *;
 };

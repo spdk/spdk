@@ -1678,6 +1678,12 @@ spdk_accel_sequence_abort(struct spdk_accel_sequence *seq)
 	accel_sequence_put(seq);
 }
 
+struct spdk_memory_domain *
+spdk_accel_get_memory_domain(void)
+{
+	return g_accel_domain;
+}
+
 static struct spdk_accel_module_if *
 _module_find_by_name(const char *name)
 {
