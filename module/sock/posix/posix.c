@@ -521,29 +521,27 @@ posix_fd_create(struct addrinfo *res, struct spdk_sock_opts *opts,
 	return fd;
 }
 
-static unsigned int
-posix_sock_tls_psk_server_cb(SSL *ssl,
-			     const char *id,
-			     unsigned char *psk,
-			     unsigned int max_psk_len)
+static int
+posix_sock_psk_find_session_server_cb(SSL *ssl, const unsigned char *identity,
+				      size_t identity_len, SSL_SESSION **sess)
 {
-	const char *cipher = NULL;
-	struct spdk_sock_impl_opts *impl_opts;
-	int rc;
-
-	impl_opts = SSL_get_app_data(ssl);
-	SPDK_DEBUGLOG(sock_posix, "Received PSK ID '%s'\n", id);
-	if (id == NULL) {
-		SPDK_ERRLOG("Received empty PSK ID\n");
-		return 0;
-	}
-
-	SPDK_DEBUGLOG(sock_posix, "Length of Client's PSK KEY %u\n", max_psk_len);
+	struct spdk_sock_impl_opts *impl_opts = SSL_get_app_data(ssl);
+	uint8_t key[SSL_MAX_MASTER_KEY_LENGTH] = {};
+	int keylen;
+	int rc, i;
+	STACK_OF(SSL_CIPHER) *ciphers;
+	const SSL_CIPHER *cipher;
+	const char *cipher_name;
+	const char *user_cipher = NULL;
+	bool found = false;
 
 	if (impl_opts->get_key) {
-		rc = impl_opts->get_key(psk, max_psk_len, &cipher, id, impl_opts->get_key_ctx);
-		assert(cipher == NULL);
-		return rc > 0 ? rc : 0;
+		rc = impl_opts->get_key(key, sizeof(key), &user_cipher, identity, impl_opts->get_key_ctx);
+		if (rc < 0) {
+			SPDK_ERRLOG("Unable to find PSK for identity: %s\n", identity);
+			return 0;
+		}
+		keylen = rc;
 	} else {
 		if (impl_opts->psk_key == NULL) {
 			SPDK_ERRLOG("PSK is not set\n");
@@ -551,18 +549,67 @@ posix_sock_tls_psk_server_cb(SSL *ssl,
 		}
 
 		SPDK_DEBUGLOG(sock_posix, "Length of Client's PSK ID %lu\n", strlen(impl_opts->psk_identity));
-		if (strcmp(impl_opts->psk_identity, id) != 0) {
+		if (strcmp(impl_opts->psk_identity, identity) != 0) {
 			SPDK_ERRLOG("Unknown Client's PSK ID\n");
 			return 0;
 		}
-		if (impl_opts->psk_key_size > max_psk_len) {
-			SPDK_ERRLOG("PSK too long\n");
-			return 0;
-		}
+		keylen = impl_opts->psk_key_size;
 
-		memcpy(psk, impl_opts->psk_key, impl_opts->psk_key_size);
-		return impl_opts->psk_key_size;
+		memcpy(key, impl_opts->psk_key, keylen);
+		user_cipher = impl_opts->tls_cipher_suites;
 	}
+
+	if (user_cipher == NULL) {
+		SPDK_ERRLOG("Cipher suite not set\n");
+		return 0;
+	}
+
+	*sess = SSL_SESSION_new();
+	if (*sess == NULL) {
+		SPDK_ERRLOG("Unable to allocate new SSL session\n");
+		return 0;
+	}
+
+	ciphers = SSL_get_ciphers(ssl);
+	for (i = 0; i < sk_SSL_CIPHER_num(ciphers); i++) {
+		cipher = sk_SSL_CIPHER_value(ciphers, i);
+		cipher_name = SSL_CIPHER_get_name(cipher);
+
+		if (strcmp(user_cipher, cipher_name) == 0) {
+			rc = SSL_SESSION_set_cipher(*sess, cipher);
+			if (rc != 1) {
+				SPDK_ERRLOG("Unable to set cipher: %s\n", cipher_name);
+				goto err;
+			}
+			found = true;
+			break;
+		}
+	}
+	if (found == false) {
+		SPDK_ERRLOG("No suitable cipher found\n");
+		goto err;
+	}
+
+	SPDK_DEBUGLOG(sock_posix, "Cipher selected: %s\n", cipher_name);
+
+	rc = SSL_SESSION_set_protocol_version(*sess, TLS1_3_VERSION);
+	if (rc != 1) {
+		SPDK_ERRLOG("Unable to set TLS version: %d\n", TLS1_3_VERSION);
+		goto err;
+	}
+
+	rc = SSL_SESSION_set1_master_key(*sess, key, keylen);
+	if (rc != 1) {
+		SPDK_ERRLOG("Unable to set PSK for session\n");
+		goto err;
+	}
+
+	return 1;
+
+err:
+	SSL_SESSION_free(*sess);
+	*sess = NULL;
+	return 0;
 }
 
 static int
@@ -770,7 +817,7 @@ ssl_sock_accept_loop(SSL_CTX *ctx, int fd, struct spdk_sock_impl_opts *impl_opts
 	}
 	SSL_set_fd(ssl, fd);
 	SSL_set_app_data(ssl, impl_opts);
-	SSL_set_psk_server_callback(ssl, posix_sock_tls_psk_server_cb);
+	SSL_set_psk_find_session_callback(ssl, posix_sock_psk_find_session_server_cb);
 	SPDK_DEBUGLOG(sock_posix, "SSL object creation finished: %p\n", ssl);
 	SPDK_DEBUGLOG(sock_posix, "%s = SSL_state_string_long(%p)\n", SSL_state_string_long(ssl), ssl);
 	while ((rc = SSL_accept(ssl)) != 1) {

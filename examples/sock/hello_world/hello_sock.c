@@ -413,6 +413,7 @@ hello_sock_listen(struct hello_context_t *ctx)
 	impl_opts.enable_ktls = ctx->ktls;
 	impl_opts.tls_version = ctx->tls_version;
 	impl_opts.psk_identity = ctx->psk_identity;
+	impl_opts.tls_cipher_suites = "TLS_AES_128_GCM_SHA256";
 
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);

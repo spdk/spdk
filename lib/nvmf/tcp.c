@@ -348,6 +348,7 @@ struct tcp_psk_entry {
 	char				psk_identity[NVMF_PSK_IDENTITY_LEN];
 	uint8_t				psk[SPDK_TLS_PSK_MAX_LEN];
 	uint32_t			psk_size;
+	enum nvme_tcp_cipher_suite	tls_cipher_suite;
 	TAILQ_ENTRY(tcp_psk_entry)	link;
 };
 
@@ -819,8 +820,6 @@ tcp_sock_get_key(uint8_t *out, int out_len, const char **cipher, const char *psk
 	size_t psk_len;
 	int rc;
 
-	*cipher = NULL;
-
 	TAILQ_FOREACH(entry, &ttransport->psks, link) {
 		if (strcmp(psk_identity, entry->psk_identity) != 0) {
 			continue;
@@ -834,9 +833,22 @@ tcp_sock_get_key(uint8_t *out, int out_len, const char **cipher, const char *psk
 		}
 
 		/* Convert PSK to the TLS PSK format. */
-		rc = nvme_tcp_derive_tls_psk(entry->psk, psk_len, psk_identity, out, out_len);
+		rc = nvme_tcp_derive_tls_psk(entry->psk, psk_len, psk_identity, out, out_len,
+					     entry->tls_cipher_suite);
 		if (rc < 0) {
 			SPDK_ERRLOG("Could not generate TLS PSK\n");
+		}
+
+		switch (entry->tls_cipher_suite) {
+		case NVME_TCP_CIPHER_AES_128_GCM_SHA256:
+			*cipher = "TLS_AES_128_GCM_SHA256";
+			break;
+		case NVME_TCP_CIPHER_AES_256_GCM_SHA384:
+			*cipher = "TLS_AES_256_GCM_SHA384";
+			break;
+		default:
+			*cipher = NULL;
+			return -ENOTSUP;
 		}
 
 		return rc;
@@ -892,6 +904,7 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 		impl_opts.tls_version = SPDK_TLS_VERSION_1_3;
 		impl_opts.get_key = tcp_sock_get_key;
 		impl_opts.get_key_ctx = ttransport;
+		impl_opts.tls_cipher_suites = "TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256";
 		opts.impl_opts = &impl_opts;
 		opts.impl_opts_size = sizeof(impl_opts);
 	}
@@ -3537,7 +3550,7 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 	/* Generate PSK identity. */
 	rc = nvme_tcp_generate_psk_identity(psk_identity, NVMF_PSK_IDENTITY_LEN, hostnqn,
-					    subsystem->subnqn);
+					    subsystem->subnqn, NVME_TCP_CIPHER_AES_128_GCM_SHA256);
 	if (rc) {
 		rc = -EINVAL;
 		goto end;
@@ -3582,6 +3595,7 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 		free(entry);
 		goto end;
 	}
+	entry->tls_cipher_suite = NVME_TCP_CIPHER_AES_128_GCM_SHA256;
 
 	/* Derive retained PSK. */
 	rc = nvme_tcp_derive_retained_psk(opts.psk, hostnqn, entry->psk, SPDK_TLS_PSK_MAX_LEN);

@@ -49,6 +49,7 @@ struct nvme_tcp_ctrlr {
 	char					psk_identity[NVMF_PSK_IDENTITY_LEN];
 	uint8_t					psk[SPDK_TLS_PSK_MAX_LEN];
 	int					psk_size;
+	char					*tls_cipher_suite;
 };
 
 struct nvme_tcp_poll_group {
@@ -1946,7 +1947,7 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 		impl_opts.psk_identity = tcp_ctrlr->psk_identity;
 		impl_opts.psk_key = tcp_ctrlr->psk;
 		impl_opts.psk_key_size = tcp_ctrlr->psk_size;
-		impl_opts.tls_cipher_suites = "TLS_AES_128_GCM_SHA256";
+		impl_opts.tls_cipher_suites = tcp_ctrlr->tls_cipher_suite;
 	}
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
@@ -2153,8 +2154,11 @@ nvme_tcp_generate_tls_credentials(struct nvme_tcp_ctrlr *tctrlr)
 
 	assert(tctrlr != NULL);
 
+	tctrlr->tls_cipher_suite = "TLS_AES_128_GCM_SHA256";
+
 	rc = nvme_tcp_generate_psk_identity(tctrlr->psk_identity, sizeof(tctrlr->psk_identity),
-					    tctrlr->ctrlr.opts.hostnqn, tctrlr->ctrlr.trid.subnqn);
+					    tctrlr->ctrlr.opts.hostnqn, tctrlr->ctrlr.trid.subnqn,
+					    NVME_TCP_CIPHER_AES_128_GCM_SHA256);
 	if (rc) {
 		SPDK_ERRLOG("could not generate PSK identity\n");
 		return -EINVAL;
@@ -2168,7 +2172,7 @@ nvme_tcp_generate_tls_credentials(struct nvme_tcp_ctrlr *tctrlr)
 	}
 
 	rc = nvme_tcp_derive_tls_psk(psk_retained, rc, tctrlr->psk_identity, tctrlr->psk,
-				     sizeof(tctrlr->psk));
+				     sizeof(tctrlr->psk), NVME_TCP_CIPHER_AES_128_GCM_SHA256);
 	if (rc < 0) {
 		SPDK_ERRLOG("Could not generate TLS PSK!\n");
 		return rc;

@@ -1347,12 +1347,12 @@ test_nvmf_tcp_tls_generate_psk_id(void)
 
 	/* Check if we can generate expected PSK id. */
 	CU_ASSERT(nvme_tcp_generate_psk_identity(psk_id, NVMF_PSK_IDENTITY_LEN, hostnqn,
-			subnqn) == 0);
+			subnqn, NVME_TCP_CIPHER_AES_128_GCM_SHA256) == 0);
 	CU_ASSERT(strcmp(psk_id, psk_id_reference) == 0);
 
 	/* Test with a buffer that is too small to fit PSK id. */
 	CU_ASSERT(nvme_tcp_generate_psk_identity(too_small_psk_id, sizeof(too_small_psk_id), hostnqn,
-			subnqn) != 0);
+			subnqn, NVME_TCP_CIPHER_AES_128_GCM_SHA256) != 0);
 }
 
 static void
@@ -1395,7 +1395,8 @@ test_nvmf_tcp_tls_generate_tls_psk(void)
 
 	/* Make sure that passing buffer insufficient in size errors out the function. */
 	CU_ASSERT(nvme_tcp_derive_tls_psk(psk_retained, retained_size, psk_id_reference,
-					  too_small_psk_tls, sizeof(too_small_psk_tls)) < 0);
+					  too_small_psk_tls, sizeof(too_small_psk_tls),
+					  NVME_TCP_CIPHER_AES_128_GCM_SHA256) < 0);
 }
 
 int

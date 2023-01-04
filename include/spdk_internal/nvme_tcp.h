@@ -70,6 +70,13 @@
 /* The maximum size of hkdf_info is defined by RFC 8446, 514B (2 + 256 + 256). */
 #define NVME_TCP_HKDF_INFO_MAX_LEN 514
 
+#define PSK_ID_PREFIX "NVMe0R"
+
+enum nvme_tcp_cipher_suite {
+	NVME_TCP_CIPHER_AES_128_GCM_SHA256,
+	NVME_TCP_CIPHER_AES_256_GCM_SHA384,
+};
+
 typedef void (*nvme_tcp_qpair_xfer_complete_cb)(void *cb_arg);
 
 struct nvme_tcp_pdu {
@@ -571,23 +578,29 @@ nvme_tcp_pdu_calc_psh_len(struct nvme_tcp_pdu *pdu, bool hdgst_enable)
 }
 
 static inline int
-nvme_tcp_generate_psk_identity(char *out_id, size_t out_id_len,
-			       const char *hostnqn, const char *subnqn)
+nvme_tcp_generate_psk_identity(char *out_id, size_t out_id_len, const char *hostnqn,
+			       const char *subnqn, enum nvme_tcp_cipher_suite tls_cipher_suite)
 {
-	/* This hardcoded PSK identity prefix will remain until
-	 * support for different hash functions to generate PSK
-	 * key is introduced. */
-	const char *psk_id_prefix = "NVMe0R01";
 	int rc;
 
 	assert(out_id != NULL);
 
-	if (out_id_len < strlen(psk_id_prefix) + strlen(hostnqn) + strlen(subnqn) + 3) {
+	if (out_id_len < strlen(PSK_ID_PREFIX) + strlen(hostnqn) + strlen(subnqn) + 5) {
 		SPDK_ERRLOG("Out buffer too small!\n");
 		return -1;
 	}
 
-	rc = snprintf(out_id, out_id_len, "%s %s %s", psk_id_prefix, hostnqn, subnqn);
+	if (tls_cipher_suite == NVME_TCP_CIPHER_AES_128_GCM_SHA256) {
+		rc = snprintf(out_id, out_id_len, "%s%s %s %s", PSK_ID_PREFIX, "01",
+			      hostnqn, subnqn);
+	} else if (tls_cipher_suite == NVME_TCP_CIPHER_AES_256_GCM_SHA384) {
+		rc = snprintf(out_id, out_id_len, "%s%s %s %s", PSK_ID_PREFIX, "02",
+			      hostnqn, subnqn);
+	} else {
+		SPDK_ERRLOG("Unknown cipher suite requested!\n");
+		return -EOPNOTSUPP;
+	}
+
 	if (rc < 0) {
 		SPDK_ERRLOG("Could not generate PSK identity\n");
 		return -1;
@@ -685,14 +698,26 @@ end:
 
 static inline int
 nvme_tcp_derive_tls_psk(const uint8_t *psk_in, uint64_t psk_in_len, const char *psk_identity,
-			uint8_t *psk_out, uint64_t psk_out_size)
+			uint8_t *psk_out, uint64_t psk_out_size, enum nvme_tcp_cipher_suite tls_cipher_suite)
 {
 	EVP_PKEY_CTX *ctx;
-	uint64_t sha256_digest_len = SHA256_DIGEST_LENGTH;
+	uint64_t digest_len = 0;
 	char hkdf_info[NVME_TCP_HKDF_INFO_MAX_LEN] = {};
 	const char *label = "tls13 nvme-tls-psk";
 	size_t pos, labellen, idlen;
+	const EVP_MD *hash;
 	int rc, hkdf_info_size;
+
+	if (tls_cipher_suite == NVME_TCP_CIPHER_AES_128_GCM_SHA256) {
+		digest_len = SHA256_DIGEST_LENGTH;
+		hash = EVP_sha256();
+	} else if (tls_cipher_suite == NVME_TCP_CIPHER_AES_256_GCM_SHA384) {
+		digest_len = SHA384_DIGEST_LENGTH;
+		hash = EVP_sha384();
+	} else {
+		SPDK_ERRLOG("Unknown cipher suite requested!\n");
+		return -EOPNOTSUPP;
+	}
 
 	labellen = strlen(label);
 	idlen = strlen(psk_identity);
@@ -713,7 +738,7 @@ nvme_tcp_derive_tls_psk(const uint8_t *psk_in, uint64_t psk_in_len, const char *
 	pos += idlen;
 	hkdf_info_size = pos;
 
-	if (sha256_digest_len > psk_out_size) {
+	if (digest_len > psk_out_size) {
 		SPDK_ERRLOG("Insufficient buffer size for out key!\n");
 		return -1;
 	}
@@ -729,8 +754,8 @@ nvme_tcp_derive_tls_psk(const uint8_t *psk_in, uint64_t psk_in_len, const char *
 		rc = -ENOMEM;
 		goto end;
 	}
-	if (EVP_PKEY_CTX_set_hkdf_md(ctx, EVP_sha256()) != 1) {
-		SPDK_ERRLOG("Unable to set SHA256 method for HKDF!\n");
+	if (EVP_PKEY_CTX_set_hkdf_md(ctx, hash) != 1) {
+		SPDK_ERRLOG("Unable to set hash method for HKDF!\n");
 		rc = -EOPNOTSUPP;
 		goto end;
 	}
@@ -750,13 +775,13 @@ nvme_tcp_derive_tls_psk(const uint8_t *psk_in, uint64_t psk_in_len, const char *
 		rc = -EINVAL;
 		goto end;
 	}
-	if (EVP_PKEY_derive(ctx, psk_out, &sha256_digest_len) != 1) {
+	if (EVP_PKEY_derive(ctx, psk_out, &digest_len) != 1) {
 		SPDK_ERRLOG("Unable to derive the PSK key!\n");
 		rc = -EINVAL;
 		goto end;
 	}
 
-	rc = sha256_digest_len;
+	rc = digest_len;
 
 end:
 	EVP_PKEY_CTX_free(ctx);
