@@ -53,7 +53,7 @@
 
 #define MAX_POLL_WQE_NUM 64 
 #define MLX5_ATOMIC_SIZE 8
-//#define WQE_DBG
+#define WQE_DBG
 //#define VCQ_ERR
 //#define POLL_PI_DBG
 //#define PREFETCH_WQE
@@ -1559,8 +1559,9 @@ void vrdma_dump_vqp_stats(struct vrdma_ctrl *ctrl,
 	printf("sq wqe total latency %-15lu\n", vqp->stats.latency_one_total);
 
 	printf("\n========= dma qp(snap_queue) debug info =========\n");
+	if (vqp->snap_queue && vqp->snap_queue->dpa_vq && vqp->snap_queue->dma_q) {
 	// printf("emu_db_to_cq_id %#x, hw_dbcq %#x\n"
-	printf("hw_dbcq %#x\n"
+		printf("hw_dbcq %#x\n"
 			"sw_qp : %#x sqcq %#x rqcq %#x,\ndpa qp: %#x sqcq %#x rqcq %#x\n",
 			// vrdma_prov_get_emu_db_to_cq_id(vqp->snap_queue),
 			vqp->snap_queue->dpa_vq->db_cq.cq_num,
@@ -1570,5 +1571,11 @@ void vrdma_dump_vqp_stats(struct vrdma_ctrl *ctrl,
 			vqp->snap_queue->dpa_vq->dma_qp.qp_num,
 		 	vqp->snap_queue->dpa_vq->dma_q_sqcq.cq_num,
 		 	vqp->snap_queue->dpa_vq->dma_q_rqcq.cq_num);
+	} else {
+		printf("\nsnap_queue is %s, dpa_vq is %s, dma_q is %s\n",
+			vqp->snap_queue ? "not_null" : "null",
+			vqp->snap_queue->dpa_vq ? "not_null" : "null",
+			vqp->snap_queue->dma_q ? "not_null" : "null");
+	}
 }
 
