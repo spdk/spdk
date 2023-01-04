@@ -365,8 +365,11 @@ vmd_assign_base_addrs(struct vmd_pci_device *dev)
 
 	/* Enable device MEM and bus mastering */
 	dev->header->zero.command |= (PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER);
-	uint16_t cmd = dev->header->zero.command;
-	cmd++;
+	/*
+	 * Writes to the pci config space is posted write. To ensure transaction reaches its destination
+	 * before another write is posed, an immediate read of the written value should be performed.
+	 */
+	{ uint16_t cmd = dev->header->zero.command; (void)cmd; }
 
 	if (dev->msix_cap && ret_val) {
 		table_offset = ((volatile struct pci_msix_cap *)dev->msix_cap)->msix_table_offset;
