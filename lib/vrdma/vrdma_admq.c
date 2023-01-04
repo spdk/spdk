@@ -263,10 +263,22 @@ static void vrdma_aq_query_dev(struct vrdma_ctrl *ctrl,
 static void vrdma_aq_query_port(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
+	uint32_t path_mtu;
+
 	SPDK_NOTICELOG("\nlizh vrdma_aq_query_port...start\n");
 	aqe->resp.query_port_resp.state = IBV_PORT_ACTIVE; /* hardcode just for POC*/
-	aqe->resp.query_port_resp.max_mtu = ctrl->sctrl->bar_curr->mtu;
-	aqe->resp.query_port_resp.active_mtu = ctrl->sctrl->bar_curr->mtu;
+	path_mtu = ctrl->sctrl->bar_curr->mtu;
+	if (path_mtu >= 4096)
+		aqe->resp.query_port_resp.max_mtu = IBV_MTU_4096;
+	else if (path_mtu >= 2048)
+		aqe->resp.query_port_resp.max_mtu = IBV_MTU_2048;
+	else if (path_mtu >= 1024)
+		aqe->resp.query_port_resp.max_mtu = IBV_MTU_1024;
+	else if (path_mtu >= 512)
+		aqe->resp.query_port_resp.max_mtu = IBV_MTU_512;
+	else
+		aqe->resp.query_port_resp.max_mtu = IBV_MTU_256;
+	aqe->resp.query_port_resp.active_mtu = aqe->resp.query_port_resp.max_mtu;
 	aqe->resp.query_port_resp.gid_tbl_len = 1;/* hardcode just for POC*/
 	aqe->resp.query_port_resp.max_msg_sz = 1 << ctrl->sctx->vrdma_caps.log_max_msg;
 	aqe->resp.query_port_resp.sm_lid = 0xFFFF; /*IB_LID_PERMISSIVE*/
