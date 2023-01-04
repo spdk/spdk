@@ -2895,7 +2895,7 @@ nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
 
-	if (req->data == NULL || req->length < 4096) {
+	if (req->data == NULL || req->length < SPDK_NVME_IDENTIFY_BUFLEN) {
 		SPDK_DEBUGLOG(nvmf, "identify command with invalid buffer\n");
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;

@@ -968,7 +968,8 @@ test_nvme_ctrlr_cmd_identify(void)
 	int rc;
 	MOCK_SET(nvme_ctrlr_submit_admin_request, 0);
 
-	rc = nvme_ctrlr_cmd_identify(&ctrlr, SPDK_NVME_IDENTIFY_NS, 2, 1, 0, &payload, 4096, NULL, NULL);
+	rc = nvme_ctrlr_cmd_identify(&ctrlr, SPDK_NVME_IDENTIFY_NS, 2, 1, 0, &payload,
+				     SPDK_NVME_IDENTIFY_BUFLEN, NULL, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(req.cmd.opc == SPDK_NVME_OPC_IDENTIFY);
 	CU_ASSERT(req.cmd.cdw10_bits.identify.cns == SPDK_NVME_IDENTIFY_NS);

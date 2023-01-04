@@ -3809,6 +3809,9 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_streams_status) == 131072, "Incorr
 #define SPDK_NVME_IO_FLAGS_VALID_MASK 0xFFFF0003
 #define SPDK_NVME_IO_FLAGS_CDW12_MASK 0xFFFF0000
 
+/** Identify command buffer response size */
+#define SPDK_NVME_IDENTIFY_BUFLEN 4096
+
 #ifdef __cplusplus
 }
 #endif
