@@ -75,6 +75,10 @@ if [[ $OSID == fedora ]] && ((OSVERSION == 34)); then
 	packages+=(bpftrace)
 fi
 
+if [[ $OSID == fedora ]] && ((OSVERSION >= 37)); then
+	packages+=(iproute-tc)
+fi
+
 pre_install() { :; }
 
 if [[ $OSID != fedora ]]; then
