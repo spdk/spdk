@@ -53,7 +53,7 @@
 
 #define MAX_POLL_WQE_NUM 64 
 #define MLX5_ATOMIC_SIZE 8
-#define WQE_DBG
+// #define WQE_DBG
 //#define VCQ_ERR
 //#define POLL_PI_DBG
 //#define PREFETCH_WQE
