@@ -951,8 +951,8 @@ void spdk_bdev_module_examine_done(struct spdk_bdev_module *module);
 /**
  * Indicate to the bdev layer that the module is done initializing.
  *
- * To be called once during module_init or asynchronously after
- * an asynchronous operation required for module initialization is completed.
+ * To be called once after an asynchronous operation required for module initialization is
+ * completed. If module->async_init is false, the module must not call this function.
  *
  * \param module Pointer to the module completing the initialization.
  */

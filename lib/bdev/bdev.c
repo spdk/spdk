@@ -1583,6 +1583,7 @@ bdev_module_action_done(struct spdk_bdev_module *module)
 void
 spdk_bdev_module_init_done(struct spdk_bdev_module *module)
 {
+	assert(module->async_init);
 	bdev_module_action_done(module);
 }
 
