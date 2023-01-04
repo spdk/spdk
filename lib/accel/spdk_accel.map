@@ -42,6 +42,7 @@
 	spdk_accel_sequence_continue;
 	spdk_accel_driver_register;
 	spdk_accel_get_memory_domain;
+	spdk_accel_alloc_sequence_buf;
 
 	local: *;
 };

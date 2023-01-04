@@ -114,6 +114,8 @@ struct accel_buffer {
 	void				*buf;
 	uint64_t			len;
 	struct spdk_iobuf_entry		iobuf;
+	spdk_accel_sequence_get_buf_cb	cb_fn;
+	void				*cb_ctx;
 	TAILQ_ENTRY(accel_buffer)	link;
 };
 
@@ -706,6 +708,7 @@ accel_get_buf(struct accel_io_channel *ch, uint64_t len)
 	buf->len = len;
 	buf->buf = NULL;
 	buf->seq = NULL;
+	buf->cb_fn = NULL;
 
 	return buf;
 }
@@ -1211,6 +1214,41 @@ accel_sequence_check_virtbuf(struct spdk_accel_sequence *seq, struct spdk_accel_
 
 		accel_sequence_set_virtbuf(seq, task->dst_domain_ctx);
 	}
+
+	return true;
+}
+
+static void
+accel_sequence_get_buf_cb(struct spdk_iobuf_entry *entry, void *buf)
+{
+	struct accel_buffer *accel_buf;
+
+	accel_buf = SPDK_CONTAINEROF(entry, struct accel_buffer, iobuf);
+
+	assert(accel_buf->seq != NULL);
+	assert(accel_buf->buf == NULL);
+	accel_buf->buf = buf;
+
+	accel_sequence_set_virtbuf(accel_buf->seq, accel_buf);
+	accel_buf->cb_fn(accel_buf->seq, accel_buf->cb_ctx);
+}
+
+bool
+spdk_accel_alloc_sequence_buf(struct spdk_accel_sequence *seq, void *buf,
+			      struct spdk_memory_domain *domain, void *domain_ctx,
+			      spdk_accel_sequence_get_buf_cb cb_fn, void *cb_ctx)
+{
+	struct accel_buffer *accel_buf = domain_ctx;
+
+	assert(domain == g_accel_domain);
+	accel_buf->cb_fn = cb_fn;
+	accel_buf->cb_ctx = cb_ctx;
+
+	if (!accel_sequence_alloc_buf(seq, accel_buf, accel_sequence_get_buf_cb)) {
+		return false;
+	}
+
+	accel_sequence_set_virtbuf(seq, accel_buf);
 
 	return true;
 }

@@ -217,4 +217,23 @@ static void __attribute__((constructor)) _spdk_accel_driver_register_##name(void
  */
 struct spdk_memory_domain *spdk_accel_get_memory_domain(void);
 
+typedef void (*spdk_accel_sequence_get_buf_cb)(struct spdk_accel_sequence *seq, void *cb_arg);
+
+/**
+ * Allocates memory for an accel buffer in a given sequence.  The callback is only executed if the
+ * buffer couldn't be allocated immediately.
+ *
+ * \param seq Sequence object.
+ * \param buf Accel buffer to allocate.
+ * \param domain Accel memory domain.
+ * \param domain_ctx Memory domain context.
+ * \param cb_fn Callback to be executed once the buffer is allocated.
+ * \param cb_ctx Argument to be passed to `cb_fn`.
+ *
+ * \return true if the buffer was immediately allocated, false otherwise.
+ */
+bool spdk_accel_alloc_sequence_buf(struct spdk_accel_sequence *seq, void *buf,
+				   struct spdk_memory_domain *domain, void *domain_ctx,
+				   spdk_accel_sequence_get_buf_cb cb_fn, void *cb_ctx);
+
 #endif
