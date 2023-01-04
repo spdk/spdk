@@ -149,6 +149,11 @@ static bool vrdma_dpa_sq_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 	return true;
 }
 
+#define VRDMA_COUNT_BATCH(batch, total_batch, times, start_end, pi) \
+batch = start_end; \
+total_batch = pi; \
+times++;
+
 __FLEXIO_ENTRY_POINT_START
 flexio_dev_event_handler_t vrdma_db_handler;
 void vrdma_db_handler(flexio_uintptr_t thread_arg)
@@ -161,6 +166,7 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 	uint16_t sq_last_fetch_end = 0;
 	uint16_t rq_pi = 0 , sq_pi = 0;
 	bool has_wqe = false;
+	uint32_t print;
 
 	flexio_dev_get_thread_ctx(&dtctx);
 	ehctx = (struct vrdma_dpa_event_handler_ctx *)thread_arg;
@@ -196,25 +202,41 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 				ehctx->dma_qp.host_vq_ctx.rq_pi_paddr);
 	sq_pi = *(uint16_t*)(ehctx->window_base_addr + 
 				ehctx->dma_qp.host_vq_ctx.sq_pi_paddr);
+	ehctx->pi_count++;
 
 	rq_last_fetch_end = rq_pi % ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt;
 	sq_last_fetch_end = sq_pi % ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt;
 
-	while ((rq_last_fetch_start != rq_last_fetch_end) || 
-		(sq_last_fetch_start != sq_last_fetch_end))
-	// while (1)
+	// while ((rq_last_fetch_start != rq_last_fetch_end) || 
+	// 	(sq_last_fetch_start != sq_last_fetch_end))
+	while (1)
 	{
 		if (rq_last_fetch_start < rq_last_fetch_end) {
 			has_wqe = vrdma_dpa_rq_wr_pi_fetch(ehctx, rq_last_fetch_start, rq_last_fetch_end, rq_pi);
+			VRDMA_COUNT_BATCH(ehctx->batch_stats.rq_batch,
+					  ehctx->batch_stats.rq_total_batchess,
+					  ehctx->batch_stats.rq_times,
+					  rq_last_fetch_end - rq_last_fetch_start,
+					  rq_pi);
 		} else if (rq_last_fetch_start > rq_last_fetch_end) {
 			has_wqe = vrdma_dpa_rq_wr_pi_fetch(ehctx,
 						rq_last_fetch_start,
 						ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt, rq_pi - rq_last_fetch_end);
 			has_wqe = vrdma_dpa_rq_wr_pi_fetch(ehctx, 0, rq_last_fetch_end, rq_pi);
+			VRDMA_COUNT_BATCH(ehctx->batch_stats.rq_batch,
+					  ehctx->batch_stats.rq_total_batchess,
+					  ehctx->batch_stats.rq_times,
+					  ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt + rq_last_fetch_end - rq_last_fetch_start,
+					  rq_pi);
 		}
 
 		if (sq_last_fetch_start < sq_last_fetch_end) {
 			has_wqe = vrdma_dpa_sq_wr_pi_fetch(ehctx, sq_last_fetch_start, sq_last_fetch_end, sq_pi);
+			VRDMA_COUNT_BATCH(ehctx->batch_stats.sq_batch,
+					  ehctx->batch_stats.sq_total_batchess,
+					  ehctx->batch_stats.sq_times,
+					  sq_last_fetch_end - sq_last_fetch_start,
+					  sq_pi);
 			ehctx->count[0] ++;
 		} else if (sq_last_fetch_start > sq_last_fetch_end) {
 			has_wqe = vrdma_dpa_sq_wr_pi_fetch(ehctx,
@@ -223,10 +245,15 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 			ehctx->count[1] ++;
 			if (sq_last_fetch_end != 0) {
 				ehctx->count[2] ++;
-				sq_last_fetch_start = vrdma_dpa_sq_wr_pi_fetch(ehctx, 0, sq_last_fetch_end, sq_pi);
+				has_wqe = vrdma_dpa_sq_wr_pi_fetch(ehctx, 0, sq_last_fetch_end, sq_pi);
 			} else {
 				ehctx->count[3] ++;
 			}
+			VRDMA_COUNT_BATCH(ehctx->batch_stats.sq_batch,
+					ehctx->batch_stats.sq_total_batchess,
+					ehctx->batch_stats.sq_times,
+					ehctx->dma_qp.host_vq_ctx.sq_wqebb_cnt + sq_last_fetch_end - sq_last_fetch_start,
+					sq_pi);
 		}
 
 		if (has_wqe) {
@@ -238,6 +265,8 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 					ehctx->dma_qp.hw_qp_sq_pi);
 			flexio_dev_qp_sq_ring_db(dtctx, ehctx->dma_qp.hw_qp_sq_pi,
 						ehctx->dma_qp.qp_num);
+			ehctx->wqe_send_count++;
+			has_wqe = false;
 		}
 
 		if (ehctx->dma_qp.state != VRDMA_DPA_VQ_STATE_RDY) {
@@ -245,12 +274,31 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 			goto out;
 		}
 		/*fetch rq_pi*/
+		asm volatile("fence iorw, iorw" ::: "memory");
 		rq_pi = *(uint16_t*)(ehctx->window_base_addr + 
 					ehctx->dma_qp.host_vq_ctx.rq_pi_paddr);
 		sq_pi = *(uint16_t*)(ehctx->window_base_addr + 
 					ehctx->dma_qp.host_vq_ctx.sq_pi_paddr);
 		rq_last_fetch_end = rq_pi % ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt;
 		sq_last_fetch_end = sq_pi % ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt;
+		ehctx->pi_count++;
+
+		if ((print != ehctx->wqe_send_count) && (ehctx->wqe_send_count % 50 == 1)) {
+			print = ehctx->wqe_send_count;
+			printf(//"\n------naliu latest_rq_batch %d, avg_rq_batch %d,  rq_total_batches %llu, rq_times %d\n"
+				// "\n-----naliu latest_sq_batch %d, avg_sq_batch %d, sq_total_batchess %llu, sq_times %d\n"
+				"\n-----naliu latest_sq_batch %d, sq_total_batchess %llu, sq_times %d\n"
+				"\n-----naliu pi_query %d, wqe_send_count %d\n",
+			// ehctx->batch_stats.rq_batch,
+			// ehctx->batch_stats.rq_times?ehctx->batch_stats.rq_total_batchess/ehctx->batch_stats.rq_times:0,
+			// ehctx->batch_stats.rq_total_batchess,
+			// ehctx->batch_stats.rq_times,
+			ehctx->batch_stats.sq_batch,
+			// ehctx->batch_stats.sq_times?ehctx->batch_stats.sq_total_batchess/ehctx->batch_stats.sq_times:0,
+			ehctx->batch_stats.sq_total_batchess,
+			ehctx->batch_stats.sq_times,
+			ehctx->pi_count, ehctx->wqe_send_count);
+		}
 	}
 	ehctx->rq_last_fetch_start = rq_last_fetch_start;
 	ehctx->sq_last_fetch_start = sq_last_fetch_start;

@@ -131,7 +131,14 @@ struct vrdma_arm_vq_ctx {
 	uint32_t sq_lkey;
 } __attribute__((__packed__, aligned(8)));
 
-
+struct vrdma_dpa_batch {
+	uint32_t rq_batch;
+	uint32_t rq_times;
+	uint64_t rq_total_batchess;
+	uint32_t sq_batch;
+	uint32_t sq_times;
+	uint64_t sq_total_batchess;
+};
 
 struct vrdma_dpa_event_handler_ctx {
 	uint32_t dbg_signature; /*Todo: used to confirm event handler is right*/
@@ -167,6 +174,9 @@ struct vrdma_dpa_event_handler_ctx {
 		struct vrdma_arm_vq_ctx arm_vq_ctx; /*arm rdma parameters*/
 		enum vrdma_dpa_vq_state state;
 	} dma_qp;
+	struct vrdma_dpa_batch batch_stats;
+	uint32_t pi_count;
+	uint32_t wqe_send_count;
 	uint32_t count[8];
 };
 
