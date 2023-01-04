@@ -2877,8 +2877,10 @@ nvmf_ctrlr_identify_ns_id_descriptor_list(
 	ADD_ID_DESC(SPDK_NVME_NIDT_UUID, &ns->opts.uuid, sizeof(ns->opts.uuid));
 
 	/*
-	 * The list is automatically 0-terminated because controller to host buffers in
-	 * admin commands always get zeroed in nvmf_ctrlr_process_admin_cmd().
+	 * The list is automatically 0-terminated, both in the temporary buffer
+	 * used by nvmf_ctrlr_identify(), and the eventual iov destination -
+	 * controller to host buffers in admin commands always get zeroed in
+	 * nvmf_ctrlr_process_admin_cmd().
 	 */
 
 #undef ADD_ID_DESC
@@ -2894,12 +2896,15 @@ nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
+	int ret = SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	char tmpbuf[SPDK_NVME_IDENTIFY_BUFLEN] = "";
+	struct copy_iovs_ctx copy_ctx;
 
 	if (req->data == NULL || req->length < SPDK_NVME_IDENTIFY_BUFLEN) {
 		SPDK_DEBUGLOG(nvmf, "identify command with invalid buffer\n");
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		return ret;
 	}
 
 	cns = cmd->cdw10_bits.identify.cns;
@@ -2910,24 +2915,41 @@ nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 		goto invalid_cns;
 	}
 
+	/*
+	 * We must use a temporary buffer: it's entirely possible the out buffer
+	 * is split across more than one IOV.
+	 */
+	_init_copy_iovs_ctx(&copy_ctx, req->iov, req->iovcnt);
+
 	switch (cns) {
 	case SPDK_NVME_IDENTIFY_NS:
-		return spdk_nvmf_ctrlr_identify_ns(ctrlr, cmd, rsp, req->data);
+		ret = spdk_nvmf_ctrlr_identify_ns(ctrlr, cmd, rsp, (void *)&tmpbuf);
+		break;
 	case SPDK_NVME_IDENTIFY_CTRLR:
-		return spdk_nvmf_ctrlr_identify_ctrlr(ctrlr, req->data);
+		ret = spdk_nvmf_ctrlr_identify_ctrlr(ctrlr, (void *)&tmpbuf);
+		break;
 	case SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST:
-		return nvmf_ctrlr_identify_active_ns_list(subsystem, cmd, rsp, req->data);
+		ret = nvmf_ctrlr_identify_active_ns_list(subsystem, cmd, rsp, (void *)&tmpbuf);
+		break;
 	case SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST:
-		return nvmf_ctrlr_identify_ns_id_descriptor_list(subsystem, cmd, rsp, req->data, req->length);
+		ret = nvmf_ctrlr_identify_ns_id_descriptor_list(subsystem, cmd, rsp,
+				tmpbuf, req->length);
+		break;
 	default:
 		goto invalid_cns;
 	}
+
+	if (ret == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
+		_copy_buf_to_iovs(&copy_ctx, tmpbuf, sizeof(tmpbuf));
+	}
+
+	return ret;
 
 invalid_cns:
 	SPDK_DEBUGLOG(nvmf, "Identify command with unsupported CNS 0x%02x\n", cns);
 	rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 	rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	return ret;
 }
 
 static bool
