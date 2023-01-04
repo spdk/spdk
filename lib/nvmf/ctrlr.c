@@ -51,6 +51,69 @@ static struct spdk_nvmf_custom_admin_cmd g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME
 
 static void _nvmf_request_complete(void *ctx);
 
+struct copy_iovs_ctx {
+	struct iovec *iovs;
+	int iovcnt;
+	int cur_iov_idx;
+	size_t cur_iov_offset;
+};
+
+static void
+_clear_iovs(struct iovec *iovs, int iovcnt)
+{
+	int iov_idx = 0;
+	struct iovec *iov;
+
+	while (iov_idx < iovcnt) {
+		iov = &iovs[iov_idx];
+		memset(iov->iov_base, 0, iov->iov_len);
+		iov_idx++;
+	}
+}
+
+static void
+_init_copy_iovs_ctx(struct copy_iovs_ctx *copy_ctx, struct iovec *iovs, int iovcnt)
+{
+	copy_ctx->iovs = iovs;
+	copy_ctx->iovcnt = iovcnt;
+	copy_ctx->cur_iov_idx = 0;
+	copy_ctx->cur_iov_offset = 0;
+}
+
+static size_t
+_copy_buf_to_iovs(struct copy_iovs_ctx *copy_ctx, const void *buf, size_t buf_len)
+{
+	size_t len, iov_remain_len, copied_len = 0;
+	struct iovec *iov;
+
+	if (buf_len == 0) {
+		return 0;
+	}
+
+	while (copy_ctx->cur_iov_idx < copy_ctx->iovcnt) {
+		iov = &copy_ctx->iovs[copy_ctx->cur_iov_idx];
+		iov_remain_len = iov->iov_len - copy_ctx->cur_iov_offset;
+		if (iov_remain_len == 0) {
+			copy_ctx->cur_iov_idx++;
+			copy_ctx->cur_iov_offset = 0;
+			continue;
+		}
+
+		len = spdk_min(iov_remain_len, buf_len - copied_len);
+		memcpy((char *)iov->iov_base + copy_ctx->cur_iov_offset,
+		       (const char *)buf + copied_len,
+		       len);
+		copied_len += len;
+		copy_ctx->cur_iov_offset += len;
+
+		if (buf_len == copied_len) {
+			return copied_len;
+		}
+	}
+
+	return copied_len;
+}
+
 static inline void
 nvmf_invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp,
 			      uint8_t iattr, uint16_t ipo)
@@ -2050,69 +2113,6 @@ nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 
 	ctrlr->aer_req[ctrlr->nr_aer_reqs++] = req;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
-}
-
-struct copy_iovs_ctx {
-	struct iovec *iovs;
-	int iovcnt;
-	int cur_iov_idx;
-	size_t cur_iov_offset;
-};
-
-static void
-_clear_iovs(struct iovec *iovs, int iovcnt)
-{
-	int iov_idx = 0;
-	struct iovec *iov;
-
-	while (iov_idx < iovcnt) {
-		iov = &iovs[iov_idx];
-		memset(iov->iov_base, 0, iov->iov_len);
-		iov_idx++;
-	}
-}
-
-static void
-_init_copy_iovs_ctx(struct copy_iovs_ctx *copy_ctx, struct iovec *iovs, int iovcnt)
-{
-	copy_ctx->iovs = iovs;
-	copy_ctx->iovcnt = iovcnt;
-	copy_ctx->cur_iov_idx = 0;
-	copy_ctx->cur_iov_offset = 0;
-}
-
-static size_t
-_copy_buf_to_iovs(struct copy_iovs_ctx *copy_ctx, const void *buf, size_t buf_len)
-{
-	size_t len, iov_remain_len, copied_len = 0;
-	struct iovec *iov;
-
-	if (buf_len == 0) {
-		return 0;
-	}
-
-	while (copy_ctx->cur_iov_idx < copy_ctx->iovcnt) {
-		iov = &copy_ctx->iovs[copy_ctx->cur_iov_idx];
-		iov_remain_len = iov->iov_len - copy_ctx->cur_iov_offset;
-		if (iov_remain_len == 0) {
-			copy_ctx->cur_iov_idx++;
-			copy_ctx->cur_iov_offset = 0;
-			continue;
-		}
-
-		len = spdk_min(iov_remain_len, buf_len - copied_len);
-		memcpy((char *)iov->iov_base + copy_ctx->cur_iov_offset,
-		       (const char *)buf + copied_len,
-		       len);
-		copied_len += len;
-		copy_ctx->cur_iov_offset += len;
-
-		if (buf_len == copied_len) {
-			return copied_len;
-		}
-	}
-
-	return copied_len;
 }
 
 static void
