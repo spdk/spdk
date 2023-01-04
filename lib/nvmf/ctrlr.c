@@ -1687,6 +1687,7 @@ nvmf_ctrlr_get_features_host_identifier(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	struct copy_iovs_ctx copy_ctx;
 
 	SPDK_DEBUGLOG(nvmf, "Get Features - Host Identifier\n");
 
@@ -1703,7 +1704,9 @@ nvmf_ctrlr_get_features_host_identifier(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	spdk_uuid_copy((struct spdk_uuid *)req->data, &ctrlr->hostid);
+	_init_copy_iovs_ctx(&copy_ctx, req->iov, req->iovcnt);
+	_copy_buf_to_iovs(&copy_ctx, &ctrlr->hostid, sizeof(ctrlr->hostid));
+
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
@@ -1830,6 +1833,7 @@ nvmf_ctrlr_get_features_host_behavior_support(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	struct spdk_nvme_host_behavior host_behavior = {};
+	struct copy_iovs_ctx copy_ctx;
 
 	SPDK_DEBUGLOG(nvmf, "Get Features - Host Behavior Support\n");
 
@@ -1841,7 +1845,9 @@ nvmf_ctrlr_get_features_host_behavior_support(struct spdk_nvmf_request *req)
 	}
 
 	host_behavior.acre = ctrlr->acre_enabled;
-	memcpy(req->data, &host_behavior, sizeof(host_behavior));
+
+	_init_copy_iovs_ctx(&copy_ctx, req->iov, req->iovcnt);
+	_copy_buf_to_iovs(&copy_ctx, &host_behavior, sizeof(host_behavior));
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }

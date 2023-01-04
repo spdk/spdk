@@ -2766,8 +2766,10 @@ test_nvmf_ctrlr_get_features_host_behavior_support(void)
 	req.rsp = &rsp;
 
 	/* Invalid data */
-	req.data = NULL;
 	req.length = sizeof(struct spdk_nvme_host_behavior);
+	req.data = NULL;
+
+	req.iovcnt = 0;
 
 	rc = nvmf_ctrlr_get_features_host_behavior_support(&req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
@@ -2778,6 +2780,9 @@ test_nvmf_ctrlr_get_features_host_behavior_support(void)
 	/* Wrong structure length */
 	req.data = &behavior;
 	req.length = sizeof(struct spdk_nvme_host_behavior) - 1;
+	req.iovcnt = 1;
+	req.iov[0].iov_base = req.data;
+	req.iov[0].iov_len = req.length;
 
 	rc = nvmf_ctrlr_get_features_host_behavior_support(&req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
@@ -2787,6 +2792,10 @@ test_nvmf_ctrlr_get_features_host_behavior_support(void)
 	/* Get Features Host Behavior Support Success */
 	req.data = &behavior;
 	req.length = sizeof(struct spdk_nvme_host_behavior);
+	req.iovcnt = 1;
+	req.iov[0].iov_base = req.data;
+	req.iov[0].iov_len = req.length;
+
 	ctrlr.acre_enabled = true;
 	host_behavior = (struct spdk_nvme_host_behavior *)req.data;
 	host_behavior->acre = false;
