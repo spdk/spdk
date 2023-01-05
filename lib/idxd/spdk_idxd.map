@@ -5,15 +5,8 @@
 	spdk_idxd_probe;
 	spdk_idxd_detach;
 	spdk_idxd_batch_prep_copy;
-	spdk_idxd_batch_prep_dualcast;
-	spdk_idxd_batch_prep_fill;
-	spdk_idxd_batch_prep_crc32c;
 	spdk_idxd_batch_prep_copy_crc32c;
-	spdk_idxd_batch_prep_compare;
-	spdk_idxd_batch_submit;
-	spdk_idxd_batch_create;
 	spdk_idxd_batch_cancel;
-	spdk_idxd_batch_get_max;
 	spdk_idxd_get_socket;
 	spdk_idxd_set_config;
 	spdk_idxd_submit_compare;
