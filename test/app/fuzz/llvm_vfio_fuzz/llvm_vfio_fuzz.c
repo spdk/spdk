@@ -93,6 +93,8 @@ fuzz_vfio_user_region_rw(const uint8_t *data, size_t size, struct vfio_device *d
 					     &buf, false);
 }
 
+#define VFIO_USER_GET_REGION_INFO_LEN 4096
+
 static int
 fuzz_vfio_user_get_region_info(const uint8_t *data, size_t size, struct vfio_device *dev)
 {
@@ -161,6 +163,40 @@ fuzz_vfio_user_dma_unmap(const uint8_t *data, size_t size, struct vfio_device *d
 					&dma_unmap, sizeof(dma_unmap), sizeof(dma_unmap), &fd, 1);
 	return 0;
 }
+static int
+fuzz_vfio_user_irq_set(const uint8_t *data, size_t size, struct vfio_device *dev)
+{
+	uint8_t buf[VFIO_USER_GET_REGION_INFO_LEN];
+	struct vfio_irq_set *irq_set = (struct vfio_irq_set *)buf;
+
+	irq_set->argsz = sizeof(struct vfio_irq_set) ;
+	memcpy(&irq_set->flags, &data[0], 4);
+	irq_set->index = data[4]; /* VFIO_PCI_NUM_IRQS */
+	memcpy(&irq_set->start, &data[5], 4);
+	memcpy(&irq_set->count, &data[9], 4);
+
+	spdk_vfio_user_dev_send_request(dev, VFIO_USER_DEVICE_SET_IRQS,
+					irq_set, irq_set->argsz,
+					VFIO_USER_GET_REGION_INFO_LEN, NULL, 0);
+	return 0;
+}
+
+static int
+fuzz_vfio_user_set_msix(const uint8_t *data, size_t size, struct vfio_device *dev)
+{
+	struct vfio_irq_set irq_set;
+
+	irq_set.argsz = sizeof(struct vfio_irq_set);
+	/* Max value is VFIO_IRQ_SET_ACTION_TRIGGER, try different combination too */
+	irq_set.flags = data[0] & ((1 << 6) - 1);
+	irq_set.index = VFIO_PCI_MSIX_IRQ_INDEX;
+	memcpy(&irq_set.start, &data[2], 4);
+	memcpy(&irq_set.count, &data[6], 4);
+
+	spdk_vfio_user_dev_send_request(dev, VFIO_USER_DEVICE_SET_IRQS,
+					&irq_set, sizeof(irq_set), sizeof(irq_set), NULL, 0);
+	return 0;
+}
 
 static struct fuzz_type g_fuzzers[] = {
 	{ .fn = fuzz_vfio_user_region_rw,		.bytes_per_cmd = 6},
@@ -168,6 +204,8 @@ static struct fuzz_type g_fuzzers[] = {
 	{ .fn = fuzz_vfio_user_get_region_info,		.bytes_per_cmd = 8},
 	{ .fn = fuzz_vfio_user_dma_map,			.bytes_per_cmd = 32},
 	{ .fn = fuzz_vfio_user_dma_unmap,		.bytes_per_cmd = 32},
+	{ .fn = fuzz_vfio_user_irq_set,			.bytes_per_cmd = 12},
+	{ .fn = fuzz_vfio_user_set_msix,		.bytes_per_cmd = 9},
 	{ .fn = NULL,					.bytes_per_cmd = 0}
 };
 
