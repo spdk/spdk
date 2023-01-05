@@ -2,6 +2,7 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2017 Intel Corporation
 #  All rights reserved.
+#  Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
@@ -170,9 +171,6 @@ notice "Trying to remove scsi target with invalid slot number"
 if $rpc_py vhost_scsi_controller_remove_target naa.0 8 > /dev/null; then
 	error "Removing device 8 from controller naa.0 succeeded, but it shouldn't"
 fi
-
-notice "Re-adding device 0 to naa.0"
-$rpc_py vhost_scsi_controller_add_target naa.0 0 Malloc0
 
 # BLK
 notice "Trying to create block controller with incorrect cpumask outside of application cpumask"
