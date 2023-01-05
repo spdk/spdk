@@ -428,7 +428,6 @@ xnvme_bdev_unregister_cb(void *arg, int bdeverrno)
 {
 	struct delete_xnvme_bdev_ctx *ctx = arg;
 
-	bdev_xnvme_destruct(ctx->xnvme);
 	ctx->cb_fn(ctx->cb_arg, bdeverrno);
 	free(ctx);
 }

@@ -120,6 +120,7 @@ rpc_bdev_xnvme_delete(struct spdk_jsonrpc_request *request,
 		bdev = spdk_bdev_desc_get_bdev(desc);
 		spdk_bdev_close(desc);
 	} else {
+		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
 		goto cleanup;
 	}
 
