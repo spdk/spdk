@@ -143,6 +143,11 @@ struct nvme_bdev_ctrlr {
 	TAILQ_ENTRY(nvme_bdev_ctrlr)	tailq;
 };
 
+struct nvme_error_stat {
+	uint32_t status_type[8];
+	uint32_t status[4][256];
+};
+
 struct nvme_bdev {
 	struct spdk_bdev		disk;
 	uint32_t			nsid;
@@ -153,6 +158,7 @@ struct nvme_bdev {
 	TAILQ_HEAD(, nvme_ns)		nvme_ns_list;
 	bool				opal;
 	TAILQ_ENTRY(nvme_bdev)		tailq;
+	struct nvme_error_stat		*err_stat;
 };
 
 struct nvme_qpair {
@@ -253,6 +259,7 @@ struct spdk_bdev_nvme_opts {
 	bool generate_uuids;
 	/* Type of Service - RDMA only */
 	uint8_t transport_tos;
+	bool nvme_error_stat;
 };
 
 struct spdk_nvme_qpair *bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);

@@ -51,6 +51,9 @@ Add function pointers, `dump_device_stat_json` and `reset_device_stat` to the bd
 function table to display and reset I/O statistics specific for the module specific bdev
 context.
 
+A new option `nvme_error_stat` was added to the `bdev_nvme_set_options` RPC to enable
+collecting NVMe error counts.
+
 ### event
 
 Added core lock file mechanism to prevent the same CPU cores from being used by multiple

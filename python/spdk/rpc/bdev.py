@@ -532,7 +532,7 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
                           delay_cmd_submit=None, transport_retry_count=None, bdev_retry_count=None,
                           transport_ack_timeout=None, ctrlr_loss_timeout_sec=None, reconnect_delay_sec=None,
                           fast_io_fail_timeout_sec=None, disable_auto_failback=None, generate_uuids=None,
-                          transport_tos=None):
+                          transport_tos=None, nvme_error_stat=None):
     """Set options for the bdev nvme. This is startup command.
 
     Args:
@@ -574,6 +574,7 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
         These strings are based on device serial number and namespace ID and will always be the same for that device.
         transport_tos: IPv4 Type of Service value. Only applicable for RDMA transports.
         The default is 0 which means no TOS is applied. (optional)
+        nvme_error_stat: Enable collecting NVMe error counts. (optional)
 
     """
     params = {}
@@ -644,6 +645,9 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
 
     if transport_tos is not None:
         params['transport_tos'] = transport_tos
+
+    if nvme_error_stat is not None:
+        params['nvme_error_stat'] = nvme_error_stat
 
     return client.call('bdev_nvme_set_options', params)
 

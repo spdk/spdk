@@ -124,6 +124,7 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.disable_auto_failback = false,
 	.generate_uuids = false,
 	.transport_tos = 0,
+	.nvme_error_stat = false,
 };
 
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
@@ -1018,6 +1019,40 @@ bdev_nvme_queue_retry_io(struct nvme_bdev_channel *nbdev_ch,
 				    delay_ms * 1000ULL);
 }
 
+static void
+bdev_nvme_update_nvme_error_stat(struct spdk_bdev_io *bdev_io, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_bdev *nbdev;
+	uint16_t sct, sc;
+
+	assert(spdk_nvme_cpl_is_error(cpl));
+
+	nbdev = bdev_io->bdev->ctxt;
+
+	if (nbdev->err_stat == NULL) {
+		return;
+	}
+
+	sct = cpl->status.sct;
+	sc = cpl->status.sc;
+
+	pthread_mutex_lock(&nbdev->mutex);
+
+	nbdev->err_stat->status_type[sct]++;
+	switch (sct) {
+	case SPDK_NVME_SCT_GENERIC:
+	case SPDK_NVME_SCT_COMMAND_SPECIFIC:
+	case SPDK_NVME_SCT_MEDIA_ERROR:
+	case SPDK_NVME_SCT_PATH:
+		nbdev->err_stat->status[sct][sc]++;
+		break;
+	default:
+		break;
+	}
+
+	pthread_mutex_unlock(&nbdev->mutex);
+}
+
 static inline void
 bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 				  const struct spdk_nvme_cpl *cpl)
@@ -1033,6 +1068,11 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 	if (spdk_likely(spdk_nvme_cpl_is_success(cpl))) {
 		goto complete;
 	}
+
+	/* Update error counts before deciding if retry is needed.
+	 * Hence, error counts may be more than the number of I/O errors.
+	 */
+	bdev_nvme_update_nvme_error_stat(bdev_io, cpl);
 
 	if (cpl->status.dnr != 0 || spdk_nvme_cpl_is_aborted_by_request(cpl) ||
 	    (g_opts.bdev_retry_count != -1 && bio->retry_count >= g_opts.bdev_retry_count)) {
@@ -1348,6 +1388,7 @@ _bdev_nvme_unregister_dev_cb(void *io_device)
 	struct nvme_bdev *nvme_disk = io_device;
 
 	free(nvme_disk->disk.name);
+	free(nvme_disk->err_stat);
 	free(nvme_disk);
 }
 
@@ -2789,6 +2830,79 @@ bdev_nvme_get_spin_time(struct spdk_io_channel *ch)
 	return (spin_time * 1000000ULL) / spdk_get_ticks_hz();
 }
 
+static void
+bdev_nvme_reset_device_stat(void *ctx)
+{
+	struct nvme_bdev *nbdev = ctx;
+
+	if (nbdev->err_stat != NULL) {
+		memset(nbdev->err_stat, 0, sizeof(struct nvme_error_stat));
+	}
+}
+
+/* JSON string should be lowercases and underscore delimited string. */
+static void
+bdev_nvme_format_nvme_status(char *dst, const char *src)
+{
+	char tmp[256];
+
+	spdk_strcpy_replace(dst, 256, src, " - ", "_");
+	spdk_strcpy_replace(tmp, 256, dst, "-", "_");
+	spdk_strcpy_replace(dst, 256, tmp, " ", "_");
+	spdk_strlwr(dst);
+}
+
+static void
+bdev_nvme_dump_device_stat_json(void *ctx, struct spdk_json_write_ctx *w)
+{
+	struct nvme_bdev *nbdev = ctx;
+	struct spdk_nvme_status status = {};
+	uint16_t sct, sc;
+	char status_json[256];
+	const char *status_str;
+
+	if (nbdev->err_stat == NULL) {
+		return;
+	}
+
+	spdk_json_write_named_object_begin(w, "nvme_error");
+
+	spdk_json_write_named_object_begin(w, "status_type");
+	for (sct = 0; sct < 8; sct++) {
+		if (nbdev->err_stat->status_type[sct] == 0) {
+			continue;
+		}
+		status.sct = sct;
+
+		status_str = spdk_nvme_cpl_get_status_type_string(&status);
+		assert(status_str != NULL);
+		bdev_nvme_format_nvme_status(status_json, status_str);
+
+		spdk_json_write_named_uint32(w, status_json, nbdev->err_stat->status_type[sct]);
+	}
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_named_object_begin(w, "status_code");
+	for (sct = 0; sct < 4; sct++) {
+		status.sct = sct;
+		for (sc = 0; sc < 256; sc++) {
+			if (nbdev->err_stat->status[sct][sc] == 0) {
+				continue;
+			}
+			status.sc = sc;
+
+			status_str = spdk_nvme_cpl_get_status_string(&status);
+			assert(status_str != NULL);
+			bdev_nvme_format_nvme_status(status_json, status_str);
+
+			spdk_json_write_named_uint32(w, status_json, nbdev->err_stat->status[sct][sc]);
+		}
+	}
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
 static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.destruct		= bdev_nvme_destruct,
 	.submit_request		= bdev_nvme_submit_request,
@@ -2799,6 +2913,8 @@ static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.get_spin_time		= bdev_nvme_get_spin_time,
 	.get_module_ctx		= bdev_nvme_get_module_ctx,
 	.get_memory_domains	= bdev_nvme_get_memory_domains,
+	.reset_device_stat	= bdev_nvme_reset_device_stat,
+	.dump_device_stat_json	= bdev_nvme_dump_device_stat_json,
 };
 
 typedef int (*bdev_nvme_parse_ana_log_page_cb)(
@@ -3150,8 +3266,18 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 		return -ENOMEM;
 	}
 
+	if (g_opts.nvme_error_stat) {
+		bdev->err_stat = calloc(1, sizeof(struct nvme_error_stat));
+		if (!bdev->err_stat) {
+			SPDK_ERRLOG("err_stat calloc() failed\n");
+			free(bdev);
+			return -ENOMEM;
+		}
+	}
+
 	rc = pthread_mutex_init(&bdev->mutex, NULL);
 	if (rc != 0) {
+		free(bdev->err_stat);
 		free(bdev);
 		return rc;
 	}
@@ -3167,6 +3293,7 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to create NVMe disk\n");
 		pthread_mutex_destroy(&bdev->mutex);
+		free(bdev->err_stat);
 		free(bdev);
 		return rc;
 	}
@@ -3183,6 +3310,7 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 		spdk_io_device_unregister(bdev, NULL);
 		pthread_mutex_destroy(&bdev->mutex);
 		free(bdev->disk.name);
+		free(bdev->err_stat);
 		free(bdev);
 		return rc;
 	}

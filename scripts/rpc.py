@@ -559,7 +559,8 @@ if __name__ == "__main__":
                                        fast_io_fail_timeout_sec=args.fast_io_fail_timeout_sec,
                                        disable_auto_failback=args.disable_auto_failback,
                                        generate_uuids=args.generate_uuids,
-                                       transport_tos=args.transport_tos)
+                                       transport_tos=args.transport_tos,
+                                       nvme_error_stat=args.nvme_error_stat)
 
     p = subparsers.add_parser('bdev_nvme_set_options',
                               help='Set options for the bdev nvme type. This is startup command.')
@@ -631,6 +632,7 @@ if __name__ == "__main__":
     p.add_argument('--transport-tos',
                    help="""IPv4 Type of Service value. Only applicable for RDMA transports.
                    The default is 0 which means no TOS is applied.""", type=int)
+    p.add_argument('-m', '--nvme-error-stat', help="Enable collecting NVMe error counts.", action='store_true')
 
     p.set_defaults(func=bdev_nvme_set_options)
 
