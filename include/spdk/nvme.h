@@ -1014,7 +1014,7 @@ struct spdk_nvme_detach_ctx;
  * This function should be called from a single thread while no other threads are
  * actively using the NVMe device.
  *
- * \param ctrlr Opaque handle to HVMe controller.
+ * \param ctrlr Opaque handle to NVMe controller.
  * \param detach_ctx Reference to the context in a sequence. An new context is allocated
  * if this call is the first successful start of detachment in a sequence, or use the
  * passed context.
