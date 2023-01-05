@@ -169,4 +169,45 @@ static void __attribute__((constructor)) _spdk_accel_module_register_##name(void
  */
 void spdk_accel_module_finish(void);
 
+/**
+ * Platform driver responsible for executing tasks in a sequence.  If no driver is selected, tasks
+ * are submitted to accel modules.  All drivers are required to be aware of memory domains.
+ */
+struct spdk_accel_driver {
+	/** Name of the driver */
+	const char *name;
+	/**
+	 * Executes a sequence of accel operations.  The driver should notify accel about each
+	 * completed task using `spdk_accel_task_complete()`.  Once all tasks are completed or the
+	 * driver cannot proceed with a given task (e.g. because it doesn't handle specific opcode),
+	 * accel should be notified via `spdk_accel_sequence_continue()`.  If there are tasks left
+	 * in a sequence, the first will be submitted to a module, while the rest will be sent back
+	 * to the driver.  `spdk_accel_sequence_continue()` should only be called if this function
+	 * succeeds (i.e. returns 0).
+	 *
+	 * \param Sequence of tasks to execute.
+	 *
+	 * \return 0 on success, negative errno on failure.
+	 */
+	int (*execute_sequence)(struct spdk_accel_sequence *seq);
+
+	TAILQ_ENTRY(spdk_accel_driver)	tailq;
+};
+
+/**
+ * Notifies accel that a driver has finished executing a sequence (or its part) and accel should
+ * continue processing it.
+ *
+ * \param seq Sequence object.
+ */
+void spdk_accel_sequence_continue(struct spdk_accel_sequence *seq);
+
+void spdk_accel_driver_register(struct spdk_accel_driver *driver);
+
+#define SPDK_ACCEL_DRIVER_REGISTER(name, driver) \
+static void __attribute__((constructor)) _spdk_accel_driver_register_##name(void) \
+{ \
+	spdk_accel_driver_register(driver); \
+}
+
 #endif

@@ -11,6 +11,7 @@
 #include "spdk/util.h"
 #include "spdk/event.h"
 #include "spdk/stdinc.h"
+#include "spdk/string.h"
 #include "spdk/env.h"
 #include "spdk/util.h"
 
@@ -313,3 +314,43 @@ rpc_accel_crypto_key_destroy(struct spdk_jsonrpc_request *request,
 	free(req.key_name);
 }
 SPDK_RPC_REGISTER("accel_crypto_key_destroy", rpc_accel_crypto_key_destroy, SPDK_RPC_RUNTIME)
+
+struct rpc_accel_set_driver {
+	char *name;
+};
+
+static const struct spdk_json_object_decoder rpc_accel_set_driver_decoders[] = {
+	{"name", offsetof(struct rpc_accel_set_driver, name), spdk_json_decode_string},
+};
+
+static void
+free_rpc_accel_set_driver(struct rpc_accel_set_driver *r)
+{
+	free(r->name);
+}
+
+static void
+rpc_accel_set_driver(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	struct rpc_accel_set_driver req = {};
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_accel_set_driver_decoders,
+				    SPDK_COUNTOF(rpc_accel_set_driver_decoders), &req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
+						 "spdk_json_decode_object failed");
+		return;
+	}
+
+	rc = spdk_accel_set_driver(req.name);
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
+	}
+
+	SPDK_NOTICELOG("Using accel driver: %s\n", req.name);
+	spdk_jsonrpc_send_bool_response(request, true);
+cleanup:
+	free_rpc_accel_set_driver(&req);
+}
+SPDK_RPC_REGISTER("accel_set_driver", rpc_accel_set_driver, SPDK_RPC_STARTUP)

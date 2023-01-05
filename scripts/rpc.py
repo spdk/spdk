@@ -2894,6 +2894,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-k', '--key-name', help='Get information about a specific key', type=str)
     p.set_defaults(func=accel_crypto_keys_get)
 
+    def accel_set_driver(args):
+        rpc.accel.accel_set_driver(args.client, name=args.name)
+
+    p = subparsers.add_parser('accel_set_driver', help='Select accel platform driver to execute ' +
+                              'operation chains')
+    p.add_argument('name', help='name of the platform driver')
+    p.set_defaults(func=accel_set_driver)
+
     # ioat
     def ioat_scan_accel_module(args):
         rpc.ioat.ioat_scan_accel_module(args.client)

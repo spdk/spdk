@@ -1904,6 +1904,42 @@ Example response:
 }
 ~~~
 
+### accel_set_driver {#rpc_accel_set_driver}
+
+Select platform driver to execute operation chains.  Until a driver is selected, all operations are
+executed through accel modules.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- |----------| ----------- | -----------------
+name                    | Required | string      | Name of the platform driver
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "accel_set_driver",
+  "id": 1
+  "params": {
+    "name": "xeon"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### compressdev_scan_accel_module {#rpc_compressdev_scan_accel_module}
 
 Set config and enable compressdev accel module offload.

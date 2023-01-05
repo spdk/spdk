@@ -60,6 +60,8 @@ static struct spdk_spinlock g_keyring_spin;
 /* Global array mapping capabilities to modules */
 static struct accel_module g_modules_opc[ACCEL_OPC_LAST] = {};
 static char *g_modules_opc_override[ACCEL_OPC_LAST] = {};
+TAILQ_HEAD(, spdk_accel_driver) g_accel_drivers = TAILQ_HEAD_INITIALIZER(g_accel_drivers);
+static struct spdk_accel_driver *g_accel_driver;
 
 static const char *g_opcode_strings[ACCEL_OPC_LAST] = {
 	"copy", "fill", "dualcast", "compare", "crc32c", "copy_crc32c",
@@ -1548,6 +1550,12 @@ accel_sequence_task_cb(void *cb_arg, int status)
 	accel_process_sequence(seq);
 }
 
+void
+spdk_accel_sequence_continue(struct spdk_accel_sequence *seq)
+{
+	assert(0 && "unsupported");
+}
+
 static bool
 accel_compare_iovs(struct iovec *iova, uint32_t iovacnt, struct iovec *iovb, uint32_t iovbcnt)
 {
@@ -2277,6 +2285,48 @@ spdk_accel_finish(spdk_accel_fini_cb cb_fn, void *cb_arg)
 
 	spdk_io_device_unregister(&spdk_accel_module_list, NULL);
 	spdk_accel_module_finish();
+}
+
+static struct spdk_accel_driver *
+accel_find_driver(const char *name)
+{
+	struct spdk_accel_driver *driver;
+
+	TAILQ_FOREACH(driver, &g_accel_drivers, tailq) {
+		if (strcmp(driver->name, name) == 0) {
+			return driver;
+		}
+	}
+
+	return NULL;
+}
+
+int
+spdk_accel_set_driver(const char *name)
+{
+	struct spdk_accel_driver *driver;
+
+	driver = accel_find_driver(name);
+	if (driver == NULL) {
+		SPDK_ERRLOG("Couldn't find driver named '%s'\n", name);
+		return -ENODEV;
+	}
+
+	g_accel_driver = driver;
+
+	return 0;
+}
+
+void
+spdk_accel_driver_register(struct spdk_accel_driver *driver)
+{
+	if (accel_find_driver(driver->name)) {
+		SPDK_ERRLOG("Driver named '%s' has already been registered\n", driver->name);
+		assert(0);
+		return;
+	}
+
+	TAILQ_INSERT_TAIL(&g_accel_drivers, driver, tailq);
 }
 
 SPDK_LOG_REGISTER_COMPONENT(accel)

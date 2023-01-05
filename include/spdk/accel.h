@@ -611,6 +611,15 @@ struct spdk_json_write_ctx;
  */
 void spdk_accel_write_config_json(struct spdk_json_write_ctx *w);
 
+/**
+ * Select platform driver to execute operation chains.
+ *
+ * \param name Name of the driver.
+ *
+ * \return 0 on success, negetive errno otherwise.
+ */
+int spdk_accel_set_driver(const char *name);
+
 #ifdef __cplusplus
 }
 #endif

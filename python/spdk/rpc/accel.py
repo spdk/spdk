@@ -79,3 +79,12 @@ def accel_crypto_keys_get(client, key_name):
         params['key_name'] = key_name
 
     return client.call('accel_crypto_keys_get', params)
+
+
+def accel_set_driver(client, name):
+    """Select accel platform driver to execute operation chains.
+
+    Args:
+        name: name of the driver
+    """
+    return client.call('accel_set_driver', {'name': name})
