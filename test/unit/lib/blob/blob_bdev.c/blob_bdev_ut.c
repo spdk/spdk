@@ -58,11 +58,13 @@ struct spdk_bdev {
 	uint32_t open_cnt;
 	enum spdk_bdev_claim_type claim_type;
 	struct spdk_bdev_module *claim_module;
+	struct spdk_bdev_desc *claim_desc;
 };
 
 struct spdk_bdev_desc {
 	struct spdk_bdev *bdev;
 	bool write;
+	enum spdk_bdev_claim_type claim_type;
 };
 
 struct spdk_bdev *g_bdev;
@@ -115,6 +117,11 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	struct spdk_bdev *bdev = desc->bdev;
 
 	bdev->open_cnt--;
+	if (bdev->claim_desc == desc) {
+		bdev->claim_desc = NULL;
+		bdev->claim_type = SPDK_BDEV_CLAIM_NONE;
+		bdev->claim_module = NULL;
+	}
 	free(desc);
 }
 
@@ -136,31 +143,25 @@ spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
 	return bdev->blocklen;
 }
 
+/* This is a simple approximation: it does not support shared claims */
 int
-spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-			    struct spdk_bdev_module *module)
+spdk_bdev_module_claim_bdev_desc(struct spdk_bdev_desc *desc, enum spdk_bdev_claim_type type,
+				 struct spdk_bdev_claim_opts *opts,
+				 struct spdk_bdev_module *module)
 {
+	struct spdk_bdev *bdev = desc->bdev;
+
 	if (bdev->claim_module != NULL) {
 		return -EPERM;
 	}
 
-	if (desc != NULL) {
-		desc->write = true;
-	}
-
-	bdev->claim_type = SPDK_BDEV_CLAIM_EXCL_WRITE;
+	bdev->claim_type = type;
 	bdev->claim_module = module;
+	bdev->claim_desc = desc;
+
+	desc->claim_type = type;
 
 	return 0;
-}
-
-void
-spdk_bdev_module_release_bdev(struct spdk_bdev *bdev)
-{
-	CU_ASSERT(bdev->claim_type == SPDK_BDEV_CLAIM_EXCL_WRITE);
-	CU_ASSERT(bdev->claim_module != NULL);
-	bdev->claim_module = NULL;
-	bdev->claim_type = SPDK_BDEV_CLAIM_NONE;
 }
 
 static void
@@ -190,7 +191,8 @@ create_bs_dev(void)
 	blob_bdev = (struct blob_bdev *)bs_dev;
 	CU_ASSERT(blob_bdev->desc != NULL);
 	CU_ASSERT(blob_bdev->desc->bdev == g_bdev);
-	CU_ASSERT(!blob_bdev->claimed);
+	CU_ASSERT(blob_bdev->desc->claim_type == SPDK_BDEV_CLAIM_NONE);
+	CU_ASSERT(bdev.claim_type == SPDK_BDEV_CLAIM_NONE);
 
 	bs_dev->destroy(bs_dev);
 	CU_ASSERT(bdev.open_cnt == 0);
@@ -213,34 +215,34 @@ claim_bs_dev(void)
 	SPDK_CU_ASSERT_FATAL(bs_dev != NULL);
 
 	blob_bdev = (struct blob_bdev *)bs_dev;
-	CU_ASSERT(!blob_bdev->claimed);
+	CU_ASSERT(blob_bdev->desc->claim_type == SPDK_BDEV_CLAIM_NONE);
+	CU_ASSERT(bdev.claim_type == SPDK_BDEV_CLAIM_NONE);
 	CU_ASSERT(blob_bdev->desc->write);
 
 	/* Can get an exclusive write claim */
 	rc = spdk_bs_bdev_claim(bs_dev, &g_bdev_mod);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(blob_bdev->claimed);
 	CU_ASSERT(blob_bdev->desc->write);
-	CU_ASSERT(bdev.claim_type == SPDK_BDEV_CLAIM_EXCL_WRITE);
-	CU_ASSERT(bdev.claim_module == &g_bdev_mod);
+	CU_ASSERT(bdev.claim_type == SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE);
+	CU_ASSERT(bdev.claim_desc == blob_bdev->desc);
 
 	/* Claim blocks a second writer without messing up the first one. */
 	rc = spdk_bdev_create_bs_dev_ext("bdev0", NULL, NULL, &bs_dev2);
 	CU_ASSERT(rc == -EPERM);
-	CU_ASSERT(bdev.claim_type == SPDK_BDEV_CLAIM_EXCL_WRITE);
-	CU_ASSERT(bdev.claim_module == &g_bdev_mod);
+	CU_ASSERT(bdev.claim_type == SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE);
+	CU_ASSERT(bdev.claim_desc == blob_bdev->desc);
 
 	/* Claim blocks a second claim without messing up the first one. */
 	rc = spdk_bs_bdev_claim(bs_dev, &g_bdev_mod);
 	CU_ASSERT(rc == -EPERM);
-	CU_ASSERT(bdev.claim_type == SPDK_BDEV_CLAIM_EXCL_WRITE);
-	CU_ASSERT(bdev.claim_module == &g_bdev_mod);
+	CU_ASSERT(bdev.claim_type == SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE);
+	CU_ASSERT(bdev.claim_desc == blob_bdev->desc);
 
 	bs_dev->destroy(bs_dev);
 	CU_ASSERT(bdev.open_cnt == 0);
 	CU_ASSERT(bdev.claim_type == SPDK_BDEV_CLAIM_NONE);
 	CU_ASSERT(bdev.claim_module == NULL);
-
+	CU_ASSERT(bdev.claim_desc == NULL);
 	g_bdev = NULL;
 }
 

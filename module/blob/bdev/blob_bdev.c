@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -18,7 +18,6 @@ struct blob_bdev {
 	struct spdk_bs_dev	bs_dev;
 	struct spdk_bdev	*bdev;
 	struct spdk_bdev_desc	*desc;
-	bool			claimed;
 };
 
 struct blob_resubmit {
@@ -331,16 +330,15 @@ bdev_blob_resubmit(void *arg)
 int
 spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module *module)
 {
-	struct blob_bdev *blob_bdev = (struct blob_bdev *)bs_dev;
+	struct spdk_bdev_desc *desc = __get_desc(bs_dev);
 	int rc;
 
-	rc = spdk_bdev_module_claim_bdev(blob_bdev->bdev, NULL, module);
+	rc = spdk_bdev_module_claim_bdev_desc(desc, SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE,
+					      NULL, module);
 	if (rc != 0) {
 		SPDK_ERRLOG("could not claim bs dev\n");
 		return rc;
 	}
-
-	blob_bdev->claimed = true;
 
 	return rc;
 }
@@ -363,11 +361,6 @@ static void
 bdev_blob_destroy(struct spdk_bs_dev *bs_dev)
 {
 	struct spdk_bdev_desc *desc = __get_desc(bs_dev);
-	struct blob_bdev *blob_bdev = (struct blob_bdev *)bs_dev;
-
-	if (blob_bdev->claimed) {
-		spdk_bdev_module_release_bdev(blob_bdev->bdev);
-	}
 
 	spdk_bdev_close(desc);
 	free(bs_dev);
