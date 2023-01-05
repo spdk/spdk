@@ -291,7 +291,9 @@ nvme_pcie_qpair_insert_pending_admin_request(struct spdk_nvme_qpair *qpair,
 	} else {
 		SPDK_ERRLOG("The owning process (pid %d) is not found. Dropping the request.\n",
 			    active_req->pid);
-
+		if (active_req->user_buffer && active_req->payload_size) {
+			spdk_free(active_req->payload.contig_or_cb_arg);
+		}
 		nvme_free_request(active_req);
 	}
 }

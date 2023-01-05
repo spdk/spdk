@@ -1049,6 +1049,10 @@ error:
 		return rc;
 	}
 
+	if (req->user_buffer && req->payload_size) {
+		spdk_free(req->payload.contig_or_cb_arg);
+	}
+
 	nvme_free_request(req);
 
 	return rc;
