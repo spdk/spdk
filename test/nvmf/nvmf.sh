@@ -92,6 +92,10 @@ run_test "nvmf_discovery" test/nvmf/host/discovery.sh "${TEST_ARGS[@]}"
 # TODO: disabled due to intermittent failures (RDMA_CM_EVENT_UNREACHABLE/ETIMEDOUT)
 #run_test test/nvmf/host/identify_kernel_nvmf.sh $TEST_ARGS
 
+if [[ $SPDK_TEST_NVMF_MDNS -eq 1 ]]; then
+	run_test "nvmf_mdns_discovery" test/nvmf/host/mdns_discovery.sh "${TEST_ARGS[@]}"
+fi
+
 if [[ $SPDK_TEST_USDT -eq 1 ]]; then
 	run_test "nvmf_multipath" test/nvmf/host/multipath.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_timeout" test/nvmf/host/timeout.sh "${TEST_ARGS[@]}"

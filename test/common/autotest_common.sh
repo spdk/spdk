@@ -177,6 +177,8 @@ export SPDK_TEST_XNVME
 # Comma-separated list of fuzzer targets matching test/fuzz/llvm/$target
 : ${SPDK_TEST_FUZZER_TARGET:=}
 export SPDK_TEST_FUZZER_TARGET
+: ${SPDK_TEST_NVMF_MDNS=0}
+export SPDK_TEST_NVMF_MDNS
 
 # always test with SPDK shared objects.
 export SPDK_LIB_DIR="$rootdir/build/lib"
@@ -510,6 +512,10 @@ function get_config_params() {
 
 	if [[ $SPDK_TEST_FUZZER -eq 1 ]]; then
 		config_params+=" $(get_fuzzer_target_config)"
+	fi
+
+	if [[ $SPDK_TEST_NVMF_MDNS -eq 1 ]]; then
+		config_params+=' --with-avahi'
 	fi
 
 	echo "$config_params"
