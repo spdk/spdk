@@ -1,0 +1,28 @@
+From 206de654950fcffc51f69e2eb6d18967db9175fc Mon Sep 17 00:00:00 2001
+From: naliu <naliu@nvidia.com>
+Date: Thu, 5 Jan 2023 12:53:24 +0200
+Subject: [PATCH] solve hart confliction issue
+
+Signed-off-by: naliu <naliu@nvidia.com>
+---
+ libflexio/src/flexio.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/libflexio/src/flexio.c b/libflexio/src/flexio.c
+index 2d8fad4..589332b 100644
+--- a/libflexio/src/flexio.c
++++ b/libflexio/src/flexio.c
+@@ -418,7 +418,9 @@ static void assign_hart(struct flexio_process *process, uint8_t mask[])
+ 	static int created_threads_num;
+ 	int hart;
+ 
+-	hart = created_threads_num % (process->hca_caps->max_dpa_process_harts);
++	// hart = created_threads_num % (process->hca_caps->max_dpa_process_harts);
++	hart = created_threads_num % 8;
++	flexio_print(FLEXIO_INFO, "===naliu:assign_hart: hart %d", hart);
+ 	flexio_hart_mask_bit_set(process, hart, mask);
+ 	created_threads_num++;
+ }
+-- 
+2.34.1
+
