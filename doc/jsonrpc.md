@@ -3429,6 +3429,7 @@ reconnect_delay_sec        | Optional | number      | Time to delay a reconnect 
 fast_io_fail_timeout_sec   | Optional | number      | Time to wait until ctrlr is reconnected before failing I/O to ctrlr. 0 means no such timeout.
 disable_auto_failback      | Optional | boolean     | Disable automatic failback. The RPC bdev_nvme_set_preferred_path can be used to do manual failback.
 generate_uuids             | Optional | boolean     | Enable generation of UUIDs for NVMe bdevs that do not provide this value themselves.
+transport_tos              | Optional | number      | IPv4 Type of Service value. Only applicable for RDMA transport. Default: 0 (no TOS is applied).
 nvme_error_stat            | Optional | boolean     | Enable collecting NVMe error counts.
 
 #### Example
