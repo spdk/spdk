@@ -1137,8 +1137,8 @@ static int vrdma_aq_destroy_qp(struct vrdma_ctrl *ctrl,
 {
 	struct spdk_vrdma_qp *vqp = NULL;
 
-	SPDK_NOTICELOG("\nlizh vrdma_aq_destroy_qp..qp_handle=0x%x.start\n",
-	aqe->req.destroy_qp_req.qp_handle);
+	SPDK_NOTICELOG("\nlizh vrdma_aq_destroy_qp..qp_handle=0x%x g_vqp_cnt %d vdev %p vqp_cnt %d start\n",
+	aqe->req.destroy_qp_req.qp_handle, g_vqp_cnt, ctrl->vdev, ctrl->vdev->vqp_cnt);
 	if (!g_vqp_cnt || !ctrl->vdev ||
 		!ctrl->vdev->vqp_cnt) {
 		aqe->resp.destroy_qp_resp.err_code =
