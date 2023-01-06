@@ -256,6 +256,8 @@ static char *g_sock_threshold_impl;
 
 static uint8_t g_transport_tos = 0;
 
+static uint32_t g_rdma_srq_size;
+
 /* When user specifies -Q, some error messages are rate limited.  When rate
  * limited, we only print the error message every g_quiet_count times the
  * error occurs.
@@ -1858,6 +1860,7 @@ usage(char *program_name)
 	printf("\t[--zerocopy-threshold <val> data is sent with MSG_ZEROCOPY if size is greater than this val. Default: 0 to disable it]\n");
 	printf("\t[--zerocopy-threshold-sock-impl <impl> specify the sock implementation to set zerocopy_threshold]\n");
 	printf("\t[--transport-tos <val> specify the type of service for RDMA transport. Default: 0 (disabled)]\n");
+	printf("\t[--rdma-srq-size <val> The size of a shared rdma receive queue. Default: 0 (disabled)]\n");
 }
 
 static void
@@ -2368,6 +2371,8 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"zerocopy-threshold-sock-impl", required_argument, NULL, PERF_SOCK_IMPL},
 #define PERF_TRANSPORT_TOS		267
 	{"transport-tos", required_argument, NULL, PERF_TRANSPORT_TOS},
+#define PERF_RDMA_SRQ_SIZE	268
+	{"rdma-srq-size", required_argument, NULL, PERF_RDMA_SRQ_SIZE},
 	/* Should be the last element */
 	{0, 0, 0, 0}
 };
@@ -2401,6 +2406,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		case PERF_SKIP_ERRORS:
 		case PERF_IO_QUEUE_SIZE:
 		case PERF_ZEROCOPY_THRESHOLD:
+		case PERF_RDMA_SRQ_SIZE:
 			val = spdk_strtol(optarg, 10);
 			if (val < 0) {
 				fprintf(stderr, "Converting a string to integer failed\n");
@@ -2462,6 +2468,10 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 				break;
 			case PERF_ZEROCOPY_THRESHOLD:
 				g_sock_zcopy_threshold = val;
+				break;
+			case PERF_RDMA_SRQ_SIZE:
+				g_rdma_srq_size = val;
+				break;
 			}
 			break;
 		case PERF_NUMBER_IOS:
@@ -2710,6 +2720,19 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 	if (g_number_ios && g_number_ios < g_queue_depth) {
 		fprintf(stderr, "-d (--number-ios) less than -q (--io-depth) is not supported\n");
 		return 1;
+	}
+
+	if (g_rdma_srq_size != 0) {
+		struct spdk_nvme_transport_opts opts;
+
+		spdk_nvme_transport_get_opts(&opts, sizeof(opts));
+		opts.rdma_srq_size = g_rdma_srq_size;
+
+		rc = spdk_nvme_transport_set_opts(&opts, sizeof(opts));
+		if (rc != 0) {
+			fprintf(stderr, "Failed to set NVMe transport options.\n");
+			return 1;
+		}
 	}
 
 	if (TAILQ_EMPTY(&g_trid_list)) {
