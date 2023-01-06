@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk_internal/lvolstore.h"
@@ -21,6 +21,7 @@ SPDK_LOG_REGISTER_COMPONENT(lvol)
 static TAILQ_HEAD(, spdk_lvol_store) g_lvol_stores = TAILQ_HEAD_INITIALIZER(g_lvol_stores);
 static pthread_mutex_t g_lvol_stores_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+static inline int lvs_opts_copy(const struct spdk_lvs_opts *src, struct spdk_lvs_opts *dst);
 static int
 add_lvs_to_list(struct spdk_lvol_store *lvs)
 {
@@ -561,10 +562,46 @@ lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 void
 spdk_lvs_opts_init(struct spdk_lvs_opts *o)
 {
+	memset(o, 0, sizeof(*o));
 	o->cluster_sz = SPDK_LVS_OPTS_CLUSTER_SZ;
 	o->clear_method = LVS_CLEAR_WITH_UNMAP;
 	o->num_md_pages_per_cluster_ratio = 100;
-	memset(o->name, 0, sizeof(o->name));
+	o->opts_size = sizeof(*o);
+}
+
+static inline int
+lvs_opts_copy(const struct spdk_lvs_opts *src, struct spdk_lvs_opts *dst)
+{
+	if (src->opts_size == 0) {
+		SPDK_ERRLOG("opts_size should not be zero value\n");
+		return -1;
+	}
+#define FIELD_OK(field) \
+        offsetof(struct spdk_lvs_opts, field) + sizeof(src->field) <= src->opts_size
+
+#define SET_FIELD(field) \
+        if (FIELD_OK(field)) { \
+                dst->field = src->field; \
+        } \
+
+	SET_FIELD(cluster_sz);
+	SET_FIELD(clear_method);
+	if (FIELD_OK(name)) {
+		memcpy(&dst->name, &src->name, sizeof(dst->name));
+	}
+	SET_FIELD(num_md_pages_per_cluster_ratio);
+	SET_FIELD(opts_size);
+
+	dst->opts_size = src->opts_size;
+
+	/* You should not remove this statement, but need to update the assert statement
+	 * if you add a new field, and also add a corresponding SET_FIELD statement */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_lvs_opts) == 80, "Incorrect size");
+
+#undef FIELD_OK
+#undef SET_FIELD
+
+	return 0;
 }
 
 static void
@@ -584,6 +621,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	struct spdk_lvol_store *lvs;
 	struct spdk_lvs_with_handle_req *lvs_req;
 	struct spdk_bs_opts opts = {};
+	struct spdk_lvs_opts lvs_opts;
 	uint32_t total_clusters;
 	int rc;
 
@@ -597,21 +635,27 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 		return -EINVAL;
 	}
 
-	if (o->cluster_sz < bs_dev->blocklen) {
-		SPDK_ERRLOG("Cluster size %" PRIu32 " is smaller than blocklen %" PRIu32 "\n",
-			    o->cluster_sz, bs_dev->blocklen);
+	spdk_lvs_opts_init(&lvs_opts);
+	if (lvs_opts_copy(o, &lvs_opts) != 0) {
+		SPDK_ERRLOG("spdk_lvs_opts invalid\n");
 		return -EINVAL;
 	}
-	total_clusters = bs_dev->blockcnt / (o->cluster_sz / bs_dev->blocklen);
+
+	if (lvs_opts.cluster_sz < bs_dev->blocklen) {
+		SPDK_ERRLOG("Cluster size %" PRIu32 " is smaller than blocklen %" PRIu32 "\n",
+			    lvs_opts.cluster_sz, bs_dev->blocklen);
+		return -EINVAL;
+	}
+	total_clusters = bs_dev->blockcnt / (lvs_opts.cluster_sz / bs_dev->blocklen);
 
 	setup_lvs_opts(&opts, o, total_clusters);
 
-	if (strnlen(o->name, SPDK_LVS_NAME_MAX) == SPDK_LVS_NAME_MAX) {
+	if (strnlen(lvs_opts.name, SPDK_LVS_NAME_MAX) == SPDK_LVS_NAME_MAX) {
 		SPDK_ERRLOG("Name has no null terminator.\n");
 		return -EINVAL;
 	}
 
-	if (strnlen(o->name, SPDK_LVS_NAME_MAX) == 0) {
+	if (strnlen(lvs_opts.name, SPDK_LVS_NAME_MAX) == 0) {
 		SPDK_ERRLOG("No name specified.\n");
 		return -EINVAL;
 	}
@@ -623,7 +667,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	}
 
 	spdk_uuid_generate(&lvs->uuid);
-	snprintf(lvs->name, sizeof(lvs->name), "%s", o->name);
+	snprintf(lvs->name, sizeof(lvs->name), "%s", lvs_opts.name);
 
 	rc = add_lvs_to_list(lvs);
 	if (rc) {

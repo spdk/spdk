@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 /** \file
@@ -42,12 +43,27 @@ enum lvs_clear_method {
  * Parameters for lvolstore initialization.
  */
 struct spdk_lvs_opts {
+	/** Size of cluster in bytes. Must be multiple of 4KiB page size. */
 	uint32_t		cluster_sz;
+
+	/** Clear method */
 	enum lvs_clear_method	clear_method;
+
+	/** Name of the lvolstore */
 	char			name[SPDK_LVS_NAME_MAX];
+
 	/** num_md_pages_per_cluster_ratio = 100 means 1 page per cluster */
 	uint32_t		num_md_pages_per_cluster_ratio;
-};
+
+	/**
+	 * The size of spdk_lvol_opts according to the caller of this library is used for ABI
+	 * compatibility. The library uses this field to know how many fields in this
+	 * structure are valid. And the library will populate any remaining fields with default
+	 * values. After that, new added fields should be put in the end of the struct.
+	 */
+	uint32_t		opts_size;
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct spdk_lvs_opts) == 80, "Incorrect size");
 
 /**
  * Initialize an spdk_lvs_opts structure to the defaults.
