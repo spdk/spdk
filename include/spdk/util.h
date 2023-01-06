@@ -105,20 +105,6 @@ spdk_divide_round_up(uint64_t num, uint64_t divisor)
 }
 
 /**
- * Copy the data described by the source iovec to the destination iovec.
- *
- * \return The number of bytes copied.
- */
-size_t spdk_iovcpy(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_t diovcnt);
-
-/**
- * Same as spdk_iovcpy(), but the src/dst buffers might overlap.
- *
- * \return The number of bytes copied.
- */
-size_t spdk_iovmove(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_t diovcnt);
-
-/**
  * An iovec iterator. Can be allocated on the stack.
  */
 struct spdk_ioviter {
@@ -156,6 +142,26 @@ size_t spdk_ioviter_first(struct spdk_ioviter *iter,
  * the iteration is complete on the fifth call.
  */
 size_t spdk_ioviter_next(struct spdk_ioviter *iter, void **src, void **dst);
+
+/**
+ * Operate like memset across an iovec.
+ */
+void
+spdk_iov_memset(struct iovec *iovs, int iovcnt, int c);
+
+/**
+ * Copy the data described by the source iovec to the destination iovec.
+ *
+ * \return The number of bytes copied.
+ */
+size_t spdk_iovcpy(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_t diovcnt);
+
+/**
+ * Same as spdk_iovcpy(), but the src/dst buffers might overlap.
+ *
+ * \return The number of bytes copied.
+ */
+size_t spdk_iovmove(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_t diovcnt);
 
 /**
  * Copy iovs contents to buf through memcpy.

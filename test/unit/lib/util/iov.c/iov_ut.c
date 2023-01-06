@@ -245,6 +245,28 @@ test_buf_to_iovs(void)
 	CU_ASSERT(_check_val(ddata, 64, 7) == 0);
 }
 
+static void
+test_memset(void)
+{
+	struct iovec iov[4];
+	uint8_t iov_buffer[64];
+
+	memset(&iov_buffer, 1, sizeof(iov_buffer));
+
+	iov[0].iov_base = iov_buffer;
+	iov[0].iov_len = 5;
+	iov[1].iov_base = iov[0].iov_base + iov[0].iov_len;
+	iov[1].iov_len = 15;
+	iov[2].iov_base = iov[1].iov_base + iov[1].iov_len;
+	iov[2].iov_len = 21;
+	iov[3].iov_base = iov[2].iov_base + iov[2].iov_len;
+	iov[3].iov_len = 23;
+
+	spdk_iov_memset(iov, 4, 0);
+
+	CU_ASSERT(_check_val(iov_buffer, 64, 0) == 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -261,6 +283,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_complex_iov);
 	CU_ADD_TEST(suite, test_iovs_to_buf);
 	CU_ADD_TEST(suite, test_buf_to_iovs);
+	CU_ADD_TEST(suite, test_memset);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

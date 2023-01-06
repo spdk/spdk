@@ -100,6 +100,8 @@ caused a function callback in file descriptor group to execute.
 A new API `spdk_strcpy_replace` was added to replace all occurrences of the search string
 with the replacement string.
 
+New API `spdk_iov_memset()` was added to memset an iovec.
+
 ### json
 
 Added API `spdk_json_write_double` and `spdk_json_write_named_double` to allow

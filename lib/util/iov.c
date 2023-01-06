@@ -5,6 +5,19 @@
 
 #include "spdk/util.h"
 
+void
+spdk_iov_memset(struct iovec *iovs, int iovcnt, int c)
+{
+	int iov_idx = 0;
+	struct iovec *iov;
+
+	while (iov_idx < iovcnt) {
+		iov = &iovs[iov_idx];
+		memset(iov->iov_base, c, iov->iov_len);
+		iov_idx++;
+	}
+}
+
 size_t
 spdk_ioviter_first(struct spdk_ioviter *iter,
 		   struct iovec *siov, size_t siovcnt,

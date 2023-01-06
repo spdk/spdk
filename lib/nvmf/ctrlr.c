@@ -61,19 +61,6 @@ struct copy_iovs_ctx {
 };
 
 static void
-_clear_iovs(struct iovec *iovs, int iovcnt)
-{
-	int iov_idx = 0;
-	struct iovec *iov;
-
-	while (iov_idx < iovcnt) {
-		iov = &iovs[iov_idx];
-		memset(iov->iov_base, 0, iov->iov_len);
-		iov_idx++;
-	}
-}
-
-static void
 _init_copy_iovs_ctx(struct copy_iovs_ctx *copy_ctx, struct iovec *iovs, int iovcnt)
 {
 	copy_ctx->iovs = iovs;
@@ -3570,7 +3557,7 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 	}
 
 	if (req->data && spdk_nvme_opc_get_data_transfer(cmd->opc) == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-		_clear_iovs(req->iov, req->iovcnt);
+		spdk_iov_memset(req->iov, req->iovcnt, 0);
 	}
 
 	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {

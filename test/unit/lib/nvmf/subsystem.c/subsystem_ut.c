@@ -1512,9 +1512,14 @@ test_nvmf_ns_reservation_report(void)
 	struct spdk_nvme_reservation_status_extended_data *status_data;
 	struct spdk_nvmf_registrant *reg;
 
-	req.data = calloc(1, sizeof(*status_data) + sizeof(*ctrlr_data) * 2);
+	req.length = sizeof(*status_data) + sizeof(*ctrlr_data) * 2;
+	req.data = calloc(1, req.length);
 	reg = calloc(2, sizeof(struct spdk_nvmf_registrant));
 	SPDK_CU_ASSERT_FATAL(req.data != NULL && reg != NULL);
+
+	req.iov[0].iov_base = req.data;
+	req.iov[0].iov_len = req.length;
+	req.iovcnt = 1;
 
 	req.cmd = &cmd;
 	req.rsp = &rsp;
@@ -1554,7 +1559,7 @@ test_nvmf_ns_reservation_report(void)
 	CU_ASSERT(!spdk_uuid_compare((struct spdk_uuid *)ctrlr_data->hostid, &reg[1].hostid));
 
 	/* extended controller data structure */
-	memset(req.data, 0, sizeof(*status_data) + sizeof(*ctrlr_data) * 2);
+	spdk_iov_memset(req.iov, req.iovcnt, 0);
 	memset(req.rsp, 0, sizeof(*req.rsp));
 	cmd.nvme_cmd.cdw11_bits.resv_report.eds = false;
 
@@ -1563,7 +1568,7 @@ test_nvmf_ns_reservation_report(void)
 	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 
 	/* Transfer length invalid */
-	memset(req.data, 0, sizeof(*status_data) + sizeof(*ctrlr_data) * 2);
+	spdk_iov_memset(req.iov, req.iovcnt, 0);
 	memset(req.rsp, 0, sizeof(*req.rsp));
 	cmd.nvme_cmd.cdw11_bits.resv_report.eds = true;
 	cmd.nvme_cmd.cdw10 = 0;
