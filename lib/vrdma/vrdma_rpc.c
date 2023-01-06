@@ -92,9 +92,14 @@ static void
 spdk_vrdma_close_rpc_client(struct spdk_vrdma_rpc_client *client)
 {
     SPDK_NOTICELOG("lizh spdk_vrdma_close_rpc_client...start\n");
-	spdk_poller_unregister(&client->client_conn_poller);
-	if (client->client_conn)
+    if (client->client_conn_poller) {
+	    spdk_poller_unregister(&client->client_conn_poller);
+        client->client_conn_poller = NULL;
+    }
+	if (client->client_conn) {
 		spdk_jsonrpc_client_close(client->client_conn);
+        client->client_conn = NULL;
+    }
 }
 
 static int
@@ -106,6 +111,8 @@ spdk_vrdma_rpc_client_poller(void *arg)
 	int rc;
 
     //SPDK_NOTICELOG("lizh spdk_vrdma_sf_rpc_client_poller...start\n");
+    if (client->client_conn == NULL)
+        return -1;
 	rc = spdk_jsonrpc_client_poll(client->client_conn, 0);
 	if (rc == 0) {
 		rc = spdk_vrdma_rpc_client_check_timeout(client);
@@ -147,10 +154,13 @@ spdk_vrdma_client_connect_poller(void *arg)
 	int rc;
 
     //SPDK_NOTICELOG("lizh spdk_vrdma_client_connect_poller...start\n");
+    if (client->client_conn == NULL)
+        return -1;
 	rc = spdk_jsonrpc_client_poll(client->client_conn, 0);
 	if (rc != -ENOTCONN) {
 		/* We are connected. Start regular poller and issue first request */
-		spdk_poller_unregister(&client->client_conn_poller);
+        if (client->client_conn_poller)
+		    spdk_poller_unregister(&client->client_conn_poller);
 		client->client_conn_poller = spdk_poller_register(
                     spdk_vrdma_rpc_client_poller, client, 100);
 	} else {
