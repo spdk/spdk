@@ -2841,7 +2841,7 @@ nvmf_vfio_user_prop_req_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 		assert(sq->ctrlr != NULL);
 		assert(req != NULL);
 
-		memcpy(req->req.data,
+		memcpy(req->req.iov[0].iov_base,
 		       &req->req.rsp->prop_get_rsp.value.u64,
 		       req->req.length);
 		return 0;
@@ -2960,6 +2960,7 @@ vfio_user_property_access(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
 		req->req.cmd->prop_get_cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET;
 	}
 	req->req.length = count;
+	spdk_iov_one(req->req.iov, &req->req.iovcnt, buf, req->req.length);
 	req->req.data = buf;
 
 	spdk_nvmf_request_exec_fabrics(&req->req);
@@ -5126,7 +5127,9 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 	TAILQ_INSERT_TAIL(&vu_ctrlr->connected_sqs, sq, tailq);
 	pthread_mutex_unlock(&endpoint->lock);
 
-	free(req->req.data);
+	free(req->req.iov[0].iov_base);
+	req->req.iov[0].iov_base = NULL;
+	req->req.iovcnt = 0;
 	req->req.data = NULL;
 
 	return 0;
