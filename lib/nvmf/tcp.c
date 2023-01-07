@@ -2360,7 +2360,7 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 		req->data = req->iov[0].iov_base;
 
 		SPDK_DEBUGLOG(nvmf_tcp, "Request %p took %d buffer/s from central pool, and data=%p\n",
-			      tcp_req, req->iovcnt, req->data);
+			      tcp_req, req->iovcnt, req->iov[0].iov_base);
 
 		return 0;
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
@@ -2407,8 +2407,8 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 				SPDK_DEBUGLOG(nvmf_tcp, "Getting a buffer from control msg list\n");
 				tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
 				assert(tgroup->control_msg_list);
-				req->data = nvmf_tcp_control_msg_get(tgroup->control_msg_list);
-				if (!req->data) {
+				req->iov[0].iov_base = nvmf_tcp_control_msg_get(tgroup->control_msg_list);
+				if (!req->iov[0].iov_base) {
 					/* No available buffers. Queue this request up. */
 					SPDK_DEBUGLOG(nvmf_tcp, "No available ICD buffers. Queueing request %p\n", tcp_req);
 					return 0;
@@ -2420,18 +2420,18 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 				goto fatal_err;
 			}
 		} else {
-			req->data = tcp_req->buf;
+			req->iov[0].iov_base = tcp_req->buf;
 		}
 
 		req->length = length;
 		req->data_from_pool = false;
+		req->data = req->iov[0].iov_base;
 
 		if (spdk_unlikely(req->dif_enabled)) {
 			length = spdk_dif_get_length_with_md(length, &req->dif.dif_ctx);
 			req->dif.elba_length = length;
 		}
 
-		req->iov[0].iov_base = req->data;
 		req->iov[0].iov_len = length;
 		req->iovcnt = 1;
 
@@ -2802,7 +2802,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 				break;
 			}
 
-			if (!tcp_req->req.data) {
+			if (tcp_req->req.iovcnt < 1) {
 				SPDK_DEBUGLOG(nvmf_tcp, "No buffer allocated for tcp_req(%p) on tqpair(%p\n)",
 					      tcp_req, tqpair);
 				/* No buffers available. */
@@ -3000,7 +3000,8 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 				tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
 				assert(tgroup->control_msg_list);
 				SPDK_DEBUGLOG(nvmf_tcp, "Put buf to control msg list\n");
-				nvmf_tcp_control_msg_put(tgroup->control_msg_list, tcp_req->req.data);
+				nvmf_tcp_control_msg_put(tgroup->control_msg_list,
+							 tcp_req->req.iov[0].iov_base);
 			} else if (tcp_req->req.zcopy_bdev_io != NULL) {
 				/* If the request has an unreleased zcopy bdev_io, it's either a
 				 * read, a failed write, or the qpair is being disconnected */
