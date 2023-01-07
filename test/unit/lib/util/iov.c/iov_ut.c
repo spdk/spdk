@@ -281,6 +281,52 @@ test_iov_one(void)
 	CU_ASSERT(iovcnt == 1);
 }
 
+static void
+test_iov_xfer(void)
+{
+	struct spdk_iov_xfer ix;
+	uint8_t data[64] = { 0 };
+	uint8_t iov_buffer[64];
+	struct iovec iov[4];
+	size_t i;
+
+	for (i = 0; i < sizeof(iov_buffer); i++) {
+		iov_buffer[i] = i;
+	}
+
+	iov[0].iov_base = iov_buffer;
+	iov[0].iov_len = 5;
+	iov[1].iov_base = iov[0].iov_base + iov[0].iov_len;
+	iov[1].iov_len = 15;
+	iov[2].iov_base = iov[1].iov_base + iov[1].iov_len;
+	iov[2].iov_len = 21;
+	iov[3].iov_base = iov[2].iov_base + iov[2].iov_len;
+	iov[3].iov_len = 23;
+
+	spdk_iov_xfer_init(&ix, iov, 4);
+
+	spdk_iov_xfer_to_buf(&ix, data, 8);
+	spdk_iov_xfer_to_buf(&ix, data + 8, 56);
+
+	for (i = 0; i < sizeof(data); i++) {
+		CU_ASSERT(data[i] == i);
+	}
+
+	for (i = 0; i < sizeof(data); i++) {
+		data[i] = sizeof(data) - i;
+	}
+
+	spdk_iov_xfer_init(&ix, iov, 4);
+
+	spdk_iov_xfer_from_buf(&ix, data, 5);
+	spdk_iov_xfer_from_buf(&ix, data + 5, 3);
+	spdk_iov_xfer_from_buf(&ix, data + 8, 56);
+
+	for (i = 0; i < sizeof(iov_buffer); i++) {
+		CU_ASSERT(iov_buffer[i] == sizeof(iov_buffer) - i);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -299,6 +345,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_buf_to_iovs);
 	CU_ADD_TEST(suite, test_memset);
 	CU_ADD_TEST(suite, test_iov_one);
+	CU_ADD_TEST(suite, test_iov_xfer);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

@@ -581,7 +581,7 @@ nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	uint16_t nr, i;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
-	struct spdk_nvme_dsm_range *dsm_range;
+	struct spdk_iov_xfer ix;
 	uint64_t lba;
 	uint32_t lba_count;
 	int rc;
@@ -611,10 +611,15 @@ nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		unmap_ctx->count--;	/* dequeued */
 	}
 
-	dsm_range = (struct spdk_nvme_dsm_range *)req->data;
+	spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+
 	for (i = unmap_ctx->range_index; i < nr; i++) {
-		lba = dsm_range[i].starting_lba;
-		lba_count = dsm_range[i].length;
+		struct spdk_nvme_dsm_range dsm_range = { 0 };
+
+		spdk_iov_xfer_to_buf(&ix, &dsm_range, sizeof(dsm_range));
+
+		lba = dsm_range.starting_lba;
+		lba_count = dsm_range.length;
 
 		unmap_ctx->count++;
 
@@ -667,7 +672,8 @@ nvmf_bdev_ctrlr_copy_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	uint64_t sdlba = ((uint64_t)cmd->cdw11 << 32) + cmd->cdw10;
-	struct spdk_nvme_scc_source_range *range;
+	struct spdk_nvme_scc_source_range range = { 0 };
+	struct spdk_iov_xfer ix;
 	int rc;
 
 	SPDK_DEBUGLOG(nvmf, "Copy command: SDLBA %lu, NR %u, desc format %u, PRINFOR %u, "
@@ -696,7 +702,10 @@ nvmf_bdev_ctrlr_copy_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	/* We support only one source range */
+	/*
+	 * We support only one source range, and rely on this with the xfer
+	 * below.
+	 */
 	if (cmd->cdw12_bits.copy.nr > 0) {
 		response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		response->status.sc = SPDK_NVME_SC_CMD_SIZE_LIMIT_SIZE_EXCEEDED;
@@ -709,8 +718,10 @@ nvmf_bdev_ctrlr_copy_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	range = req->data;
-	rc = spdk_bdev_copy_blocks(desc, ch, sdlba, range->slba, range->nlb + 1,
+	spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+	spdk_iov_xfer_to_buf(&ix, &range, sizeof(range));
+
+	rc = spdk_bdev_copy_blocks(desc, ch, sdlba, range.slba, range.nlb + 1,
 				   nvmf_bdev_ctrlr_complete_cmd, req);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {

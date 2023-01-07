@@ -131,6 +131,9 @@ names with this option to restrict allowed RPCs to only that list.
 Added `--vfio-vf-token` command line option to specify a VF token (UUID)
 shared between SR-IOV PF and VFs for vfio_pci driver.
 
+The `spdk_iov_xfer_*()` APIs were added for handling incremental copying between
+an iovec and a buffer.
+
 ### json
 
 Added API `spdk_json_write_double` and `spdk_json_write_named_double` to allow

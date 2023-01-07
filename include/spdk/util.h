@@ -170,6 +170,37 @@ size_t spdk_iovcpy(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_
 size_t spdk_iovmove(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_t diovcnt);
 
 /**
+ * Transfer state for iterative copying in or out of an iovec.
+ */
+struct spdk_iov_xfer {
+	struct iovec *iovs;
+	int iovcnt;
+	int cur_iov_idx;
+	size_t cur_iov_offset;
+};
+
+/**
+ * Initialize a transfer context to point to the given iovec.
+ */
+void
+spdk_iov_xfer_init(struct spdk_iov_xfer *ix, struct iovec *iovs, int iovcnt);
+
+/**
+ * Copy from the given buf up to buf_len bytes, into the given ix iovec
+ * iterator, advancing the iterator as needed.. Returns the number of bytes
+ * copied.
+ */
+size_t
+spdk_iov_xfer_from_buf(struct spdk_iov_xfer *ix, const void *buf, size_t buf_len);
+
+/**
+ * Copy from the given ix iovec iterator into the given buf up to buf_len
+ * bytes, advancing the iterator as needed. Returns the number of bytes copied.
+ */
+size_t
+spdk_iov_xfer_to_buf(struct spdk_iov_xfer *ix, const void *buf, size_t buf_len);
+
+/**
  * Copy iovs contents to buf through memcpy.
  */
 void spdk_copy_iovs_to_buf(void *buf, size_t buf_len, struct iovec *iovs,
