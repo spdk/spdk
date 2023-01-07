@@ -601,7 +601,7 @@ _nvmf_ctrlr_add_io_qpair(void *ctx)
 {
 	struct spdk_nvmf_request *req = ctx;
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
-	struct spdk_nvmf_fabric_connect_data *data = req->data;
+	struct spdk_nvmf_fabric_connect_data *data;
 	struct spdk_nvmf_ctrlr *ctrlr;
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	struct spdk_nvmf_qpair *admin_qpair;
@@ -609,6 +609,10 @@ _nvmf_ctrlr_add_io_qpair(void *ctx)
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvme_transport_id listen_trid = {};
 	const struct spdk_nvmf_subsystem_listener *listener;
+
+	assert(req->iovcnt == 1);
+
+	data = req->iov[0].iov_base;
 
 	SPDK_DEBUGLOG(nvmf, "Connect I/O Queue for controller id 0x%x\n", data->cntlid);
 
@@ -693,7 +697,7 @@ nvmf_qpair_access_allowed(struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_subsys
 static int
 _nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_fabric_connect_data *data = req->data;
+	struct spdk_nvmf_fabric_connect_data *data = req->iov[0].iov_base;
 	struct spdk_nvmf_fabric_connect_cmd *cmd = &req->cmd->connect_cmd;
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
 	struct spdk_nvmf_qpair *qpair = req->qpair;
@@ -811,8 +815,9 @@ nvmf_subsystem_pg_from_connect_cmd(struct spdk_nvmf_request *req)
 
 	assert(nvmf_request_is_fabric_connect(req));
 	assert(req->qpair->ctrlr == NULL);
+	assert(req->iovcnt == 1);
 
-	data = req->data;
+	data = req->iov[0].iov_base;
 	tgt = req->qpair->transport->tgt;
 
 	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, data->subnqn);
@@ -830,6 +835,13 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	enum spdk_nvmf_request_exec_status status;
+
+	if (req->iovcnt > 1) {
+		SPDK_ERRLOG("Connect command invalid iovcnt: %d\n", req->iovcnt);
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		status = SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		goto out;
+	}
 
 	sgroup = nvmf_subsystem_pg_from_connect_cmd(req);
 	if (!sgroup) {
@@ -874,7 +886,7 @@ retry_connect(void *arg)
 static int
 nvmf_ctrlr_cmd_connect(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_fabric_connect_data *data = req->data;
+	struct spdk_nvmf_fabric_connect_data *data = req->iov[0].iov_base;
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
 	struct spdk_nvmf_transport *transport = req->qpair->transport;
 	struct spdk_nvmf_subsystem *subsystem;
@@ -2474,7 +2486,7 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	uint32_t rae, numdl, numdu;
 	uint8_t lid;
 
-	if (req->data == NULL) {
+	if (req->iovcnt < 1) {
 		SPDK_DEBUGLOG(nvmf, "get log command with no buffer\n");
 		response->status.sct = SPDK_NVME_SCT_GENERIC;
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
@@ -3506,7 +3518,7 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	if (req->data && spdk_nvme_opc_get_data_transfer(cmd->opc) == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+	if (req->iovcnt && spdk_nvme_opc_get_data_transfer(cmd->opc) == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 		spdk_iov_memset(req->iov, req->iovcnt, 0);
 	}
 

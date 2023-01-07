@@ -5173,13 +5173,16 @@ nvmf_vfio_user_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	req->cmd->connect_cmd.qid = admin ? 0 : qpair->qid;
 
 	req->length = sizeof(struct spdk_nvmf_fabric_connect_data);
-	req->data = calloc(1, req->length);
-	if (req->data == NULL) {
+
+	data = calloc(1, req->length);
+	if (data == NULL) {
 		nvmf_vfio_user_req_free(req);
 		return -ENOMEM;
 	}
 
-	data = (struct spdk_nvmf_fabric_connect_data *)req->data;
+	spdk_iov_one(req->iov, &req->iovcnt, data, req->length);
+	req->data = data;
+
 	data->cntlid = ctrlr->cntlid;
 	snprintf(data->subnqn, sizeof(data->subnqn), "%s",
 		 spdk_nvmf_subsystem_get_nqn(ctrlr->endpoint->subsystem));
@@ -5221,6 +5224,9 @@ _nvmf_vfio_user_req_free(struct nvmf_vfio_user_sq *sq, struct nvmf_vfio_user_req
 	memset(&vu_req->cmd, 0, sizeof(vu_req->cmd));
 	memset(&vu_req->rsp, 0, sizeof(vu_req->rsp));
 	vu_req->iovcnt = 0;
+	vu_req->req.iovcnt = 0;
+	vu_req->req.data = NULL;
+	vu_req->req.length = 0;
 	vu_req->state = VFIO_USER_REQUEST_STATE_FREE;
 
 	TAILQ_INSERT_TAIL(&sq->free_reqs, vu_req, link);
@@ -5355,8 +5361,6 @@ map_admin_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *
 	int iovcnt;
 
 	req->xfer = spdk_nvme_opc_get_data_transfer(cmd->opc);
-	req->length = 0;
-	req->data = NULL;
 
 	if (req->xfer == SPDK_NVME_DATA_NONE) {
 		return 0;
@@ -5439,8 +5443,6 @@ map_io_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *req
 
 	cmd = &req->cmd->nvme_cmd;
 	req->xfer = spdk_nvme_opc_get_data_transfer(cmd->opc);
-	req->length = 0;
-	req->data = NULL;
 
 	if (spdk_unlikely(req->xfer == SPDK_NVME_DATA_NONE)) {
 		return 0;
