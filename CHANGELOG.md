@@ -102,6 +102,8 @@ with the replacement string.
 
 New API `spdk_iov_memset()` was added to memset an iovec.
 
+New API `spdk_iov_one()` was added to initialize an iovec for a single buffer.
+
 ### json
 
 Added API `spdk_json_write_double` and `spdk_json_write_named_double` to allow

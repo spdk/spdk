@@ -136,6 +136,7 @@
 	spdk_ioviter_first;
 	spdk_ioviter_next;
 	spdk_iov_memset;
+	spdk_iov_one;
 	spdk_copy_iovs_to_buf;
 	spdk_copy_buf_to_iovs;
 	spdk_memset_s;

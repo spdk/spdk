@@ -18,6 +18,14 @@ spdk_iov_memset(struct iovec *iovs, int iovcnt, int c)
 	}
 }
 
+void
+spdk_iov_one(struct iovec *iov, int *iovcnt, void *buf, size_t buflen)
+{
+	iov->iov_base = buf;
+	iov->iov_len = buflen;
+	*iovcnt = 1;
+}
+
 size_t
 spdk_ioviter_first(struct spdk_ioviter *iter,
 		   struct iovec *siov, size_t siovcnt,

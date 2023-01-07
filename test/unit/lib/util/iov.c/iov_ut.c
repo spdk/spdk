@@ -267,6 +267,20 @@ test_memset(void)
 	CU_ASSERT(_check_val(iov_buffer, 64, 0) == 0);
 }
 
+static void
+test_iov_one(void)
+{
+	struct iovec iov = { 0 };
+	int iovcnt;
+	char buf[4];
+
+	spdk_iov_one(&iov, &iovcnt, buf, sizeof(buf));
+
+	CU_ASSERT(iov.iov_base == buf);
+	CU_ASSERT(iov.iov_len == sizeof(buf));
+	CU_ASSERT(iovcnt == 1);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -284,6 +298,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_iovs_to_buf);
 	CU_ADD_TEST(suite, test_buf_to_iovs);
 	CU_ADD_TEST(suite, test_memset);
+	CU_ADD_TEST(suite, test_iov_one);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

@@ -591,8 +591,9 @@ ut_reservation_build_req(uint32_t length)
 	req = calloc(1, sizeof(*req));
 	assert(req != NULL);
 
-	req->data = calloc(1, length);
-	assert(req->data != NULL);
+	spdk_iov_one(req->iov, &req->iovcnt, calloc(1, length), length);
+	assert(req->iov[0].iov_base != NULL);
+	req->data = req->iov[0].iov_base;
 	req->length = length;
 
 	req->cmd = (union nvmf_h2c_msg *)calloc(1, sizeof(union nvmf_h2c_msg));
@@ -1517,9 +1518,7 @@ test_nvmf_ns_reservation_report(void)
 	reg = calloc(2, sizeof(struct spdk_nvmf_registrant));
 	SPDK_CU_ASSERT_FATAL(req.data != NULL && reg != NULL);
 
-	req.iov[0].iov_base = req.data;
-	req.iov[0].iov_len = req.length;
-	req.iovcnt = 1;
+	spdk_iov_one(req.iov, &req.iovcnt, req.data, req.length);
 
 	req.cmd = &cmd;
 	req.rsp = &rsp;

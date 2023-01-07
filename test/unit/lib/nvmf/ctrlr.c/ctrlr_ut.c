@@ -325,6 +325,7 @@ test_get_log_page(void)
 	req.rsp = &rsp;
 	req.data = &data;
 	req.length = sizeof(data);
+	spdk_iov_one(req.iov, &req.iovcnt, &data, req.length);
 
 	/* Get Log Page - all valid */
 	memset(&cmd, 0, sizeof(cmd));
@@ -360,6 +361,7 @@ test_get_log_page(void)
 	memset(&cmd, 0, sizeof(cmd));
 	memset(&rsp, 0, sizeof(rsp));
 	req.data = NULL;
+	req.iovcnt = 0;
 	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
 	cmd.nvme_cmd.cdw10_bits.get_log_page.lid = SPDK_NVME_LOG_ERROR;
 	cmd.nvme_cmd.cdw10_bits.get_log_page.numdl = spdk_nvme_bytes_to_numd(req.length);
@@ -480,9 +482,10 @@ test_connect(void)
 
 	memset(&req, 0, sizeof(req));
 	req.qpair = &qpair;
-	req.length = sizeof(connect_data);
 	req.xfer = SPDK_NVME_DATA_HOST_TO_CONTROLLER;
 	req.data = &connect_data;
+	req.length = sizeof(connect_data);
+	spdk_iov_one(req.iov, &req.iovcnt, &connect_data, req.length);
 	req.cmd = &cmd;
 	req.rsp = &rsp;
 
@@ -882,9 +885,7 @@ test_get_ns_id_desc_list(void)
 	req.xfer = SPDK_NVME_DATA_CONTROLLER_TO_HOST;
 	req.data = buf;
 	req.length = sizeof(buf);
-	req.iovcnt = 1;
-	req.iov[0].iov_base = req.data;
-	req.iov[0].iov_len = req.length;
+	spdk_iov_one(req.iov, &req.iovcnt, &buf, req.length);
 
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.nvme_cmd.opc = SPDK_NVME_OPC_IDENTIFY;
@@ -1792,6 +1793,7 @@ test_custom_admin_cmd(void)
 	req.xfer = SPDK_NVME_DATA_CONTROLLER_TO_HOST;
 	req.data = buf;
 	req.length = sizeof(buf);
+	spdk_iov_one(req.iov, &req.iovcnt, &buf, req.length);
 
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.nvme_cmd.opc = 0xc1;
@@ -2295,6 +2297,7 @@ test_rae(void)
 		req[i].rsp = &rsp[i];
 		req[i].data = &data;
 		req[i].length = sizeof(data);
+		spdk_iov_one(req[i].iov, &req[i].iovcnt, &data, req[i].length);
 
 		cmd[i].nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
 		cmd[i].nvme_cmd.cdw10_bits.get_log_page.lid =
@@ -2392,16 +2395,17 @@ test_nvmf_ctrlr_create_destruct(void)
 	cmd.connect_cmd.kato = 120000;
 
 	req.qpair = &qpair;
-	req.length = sizeof(connect_data);
 	req.xfer = SPDK_NVME_DATA_HOST_TO_CONTROLLER;
 	req.data = &connect_data;
+	req.length = sizeof(connect_data);
+	spdk_iov_one(req.iov, &req.iovcnt, &connect_data, req.length);
 	req.cmd = &cmd;
 	req.rsp = &rsp;
 
 	TAILQ_INSERT_TAIL(&qpair.outstanding, &req, link);
 	sgroups[subsystem.id].mgmt_io_outstanding++;
 
-	ctrlr = nvmf_ctrlr_create(&subsystem, &req, &req.cmd->connect_cmd, req.data);
+	ctrlr = nvmf_ctrlr_create(&subsystem, &req, &req.cmd->connect_cmd, req.iov[0].iov_base);
 	poll_threads();
 	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
 	CU_ASSERT(req.qpair->ctrlr == ctrlr);
@@ -2912,7 +2916,6 @@ test_nvmf_ctrlr_get_features_host_behavior_support(void)
 	struct spdk_nvmf_request req = {};
 	struct spdk_nvmf_qpair qpair = {};
 	struct spdk_nvmf_ctrlr ctrlr = {};
-	struct spdk_nvme_host_behavior *host_behavior;
 	struct spdk_nvme_host_behavior behavior = {};
 	union nvmf_h2c_msg cmd = {};
 	union nvmf_c2h_msg rsp = {};
@@ -2923,9 +2926,8 @@ test_nvmf_ctrlr_get_features_host_behavior_support(void)
 	req.rsp = &rsp;
 
 	/* Invalid data */
-	req.length = sizeof(struct spdk_nvme_host_behavior);
 	req.data = NULL;
-
+	req.length = sizeof(struct spdk_nvme_host_behavior);
 	req.iovcnt = 0;
 
 	rc = nvmf_ctrlr_get_features_host_behavior_support(&req);
@@ -2937,9 +2939,7 @@ test_nvmf_ctrlr_get_features_host_behavior_support(void)
 	/* Wrong structure length */
 	req.data = &behavior;
 	req.length = sizeof(struct spdk_nvme_host_behavior) - 1;
-	req.iovcnt = 1;
-	req.iov[0].iov_base = req.data;
-	req.iov[0].iov_len = req.length;
+	spdk_iov_one(req.iov, &req.iovcnt, &behavior, req.length);
 
 	rc = nvmf_ctrlr_get_features_host_behavior_support(&req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
@@ -2949,17 +2949,14 @@ test_nvmf_ctrlr_get_features_host_behavior_support(void)
 	/* Get Features Host Behavior Support Success */
 	req.data = &behavior;
 	req.length = sizeof(struct spdk_nvme_host_behavior);
-	req.iovcnt = 1;
-	req.iov[0].iov_base = req.data;
-	req.iov[0].iov_len = req.length;
+	spdk_iov_one(req.iov, &req.iovcnt, &behavior, req.length);
 
 	ctrlr.acre_enabled = true;
-	host_behavior = (struct spdk_nvme_host_behavior *)req.data;
-	host_behavior->acre = false;
+	behavior.acre = false;
 
 	rc = nvmf_ctrlr_get_features_host_behavior_support(&req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
-	CU_ASSERT(host_behavior->acre == true);
+	CU_ASSERT(behavior.acre == true);
 }
 
 static void

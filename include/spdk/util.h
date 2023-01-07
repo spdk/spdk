@@ -150,6 +150,12 @@ void
 spdk_iov_memset(struct iovec *iovs, int iovcnt, int c);
 
 /**
+ * Initialize an iovec with just the single given buffer.
+ */
+void
+spdk_iov_one(struct iovec *iov, int *iovcnt, void *buf, size_t buflen);
+
+/**
  * Copy the data described by the source iovec to the destination iovec.
  *
  * \return The number of bytes copied.
