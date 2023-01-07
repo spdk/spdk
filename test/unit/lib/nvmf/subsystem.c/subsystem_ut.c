@@ -610,7 +610,7 @@ ut_reservation_free_req(struct spdk_nvmf_request *req)
 {
 	free(req->cmd);
 	free(req->rsp);
-	free(req->data);
+	free(req->iov[0].iov_base);
 	free(req);
 }
 
@@ -629,7 +629,7 @@ ut_reservation_build_register_request(struct spdk_nvmf_request *req,
 	cmd->cdw10_bits.resv_register.rrega = rrega;
 	cmd->cdw10_bits.resv_register.iekey = iekey;
 	cmd->cdw10_bits.resv_register.cptpl = cptpl;
-	memcpy(req->data, &key, sizeof(key));
+	memcpy(req->iov[0].iov_base, &key, sizeof(key));
 }
 
 static void
@@ -647,7 +647,7 @@ ut_reservation_build_acquire_request(struct spdk_nvmf_request *req,
 	cmd->cdw10_bits.resv_acquire.racqa = racqa;
 	cmd->cdw10_bits.resv_acquire.iekey = iekey;
 	cmd->cdw10_bits.resv_acquire.rtype = rtype;
-	memcpy(req->data, &key, sizeof(key));
+	memcpy(req->iov[0].iov_base, &key, sizeof(key));
 }
 
 static void
@@ -661,7 +661,7 @@ ut_reservation_build_release_request(struct spdk_nvmf_request *req,
 	cmd->cdw10_bits.resv_release.rrela = rrela;
 	cmd->cdw10_bits.resv_release.iekey = iekey;
 	cmd->cdw10_bits.resv_release.rtype = rtype;
-	memcpy(req->data, &crkey, sizeof(crkey));
+	memcpy(req->iov[0].iov_base, &crkey, sizeof(crkey));
 }
 
 /*
@@ -1512,13 +1512,15 @@ test_nvmf_ns_reservation_report(void)
 	struct spdk_nvme_registered_ctrlr_extended_data *ctrlr_data;
 	struct spdk_nvme_reservation_status_extended_data *status_data;
 	struct spdk_nvmf_registrant *reg;
+	void *data;
+
+	data = calloc(1, sizeof(*status_data) + sizeof(*ctrlr_data) * 2);
+	reg = calloc(2, sizeof(struct spdk_nvmf_registrant));
+	SPDK_CU_ASSERT_FATAL(data != NULL && reg != NULL);
 
 	req.length = sizeof(*status_data) + sizeof(*ctrlr_data) * 2;
-	req.data = calloc(1, req.length);
-	reg = calloc(2, sizeof(struct spdk_nvmf_registrant));
-	SPDK_CU_ASSERT_FATAL(req.data != NULL && reg != NULL);
-
-	spdk_iov_one(req.iov, &req.iovcnt, req.data, req.length);
+	spdk_iov_one(req.iov, &req.iovcnt, data, req.length);
+	req.data = req.iov[0].iov_base;
 
 	req.cmd = &cmd;
 	req.rsp = &rsp;
@@ -1539,8 +1541,8 @@ test_nvmf_ns_reservation_report(void)
 	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
 	/* Get ctrlr data and status data pointers */
-	ctrlr_data = (void *)((uint64_t)req.data + sizeof(*status_data));
-	status_data = (void *)req.data;
+	ctrlr_data = (void *)((char *)req.iov[0].iov_base + sizeof(*status_data));
+	status_data = (void *)req.iov[0].iov_base;
 	SPDK_CU_ASSERT_FATAL(status_data != NULL && ctrlr_data != NULL);
 	CU_ASSERT(status_data->data.gen == 1);
 	CU_ASSERT(status_data->data.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE);
@@ -1576,7 +1578,7 @@ test_nvmf_ns_reservation_report(void)
 	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 
-	free(req.data);
+	free(req.iov[0].iov_base);
 	free(reg);
 }
 
