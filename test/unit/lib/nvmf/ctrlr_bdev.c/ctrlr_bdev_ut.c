@@ -840,6 +840,7 @@ test_nvmf_bdev_ctrlr_nvme_passthru(void)
 	req.qpair = &qpair;
 	req.cmd = (union nvmf_h2c_msg *)&cmd;
 	req.rsp = &rsp;
+	spdk_iov_one(req.iov, &req.iovcnt, NULL, 0);
 
 	cmd.nsid = 1;
 	cmd.opc = 0xFF;

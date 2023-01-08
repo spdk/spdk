@@ -743,7 +743,14 @@ nvmf_bdev_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *
 {
 	int rc;
 
-	rc = spdk_bdev_nvme_io_passthru(desc, ch, &req->cmd->nvme_cmd, req->data, req->length,
+	if (spdk_unlikely(req->iovcnt != 1)) {
+		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		req->rsp->nvme_cpl.status.dnr = 1;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	rc = spdk_bdev_nvme_io_passthru(desc, ch, &req->cmd->nvme_cmd, req->iov[0].iov_base, req->length,
 					nvmf_bdev_ctrlr_complete_cmd, req);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
@@ -766,9 +773,16 @@ spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(struct spdk_bdev *bdev, struct spdk_bde
 {
 	int rc;
 
+	if (spdk_unlikely(req->iovcnt != 1)) {
+		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		req->rsp->nvme_cpl.status.dnr = 1;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
 	req->cmd_cb_fn = cb_fn;
 
-	rc = spdk_bdev_nvme_admin_passthru(desc, ch, &req->cmd->nvme_cmd, req->data, req->length,
+	rc = spdk_bdev_nvme_admin_passthru(desc, ch, &req->cmd->nvme_cmd, req->iov[0].iov_base, req->length,
 					   nvmf_bdev_ctrlr_complete_admin_cmd, req);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
