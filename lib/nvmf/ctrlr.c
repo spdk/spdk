@@ -4664,11 +4664,35 @@ struct spdk_nvmf_subsystem *spdk_nvmf_request_get_subsystem(struct spdk_nvmf_req
 	return req->qpair->ctrlr->subsys;
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(nvmf_request_get_data, "spdk_nvmf_request_get_data",
+			      "SPDK 23.09", 60);
+
 void
 spdk_nvmf_request_get_data(struct spdk_nvmf_request *req, void **data, uint32_t *length)
 {
+	SPDK_LOG_DEPRECATED(nvmf_request_get_data);
 	*data = req->data;
 	*length = req->length;
+}
+
+size_t
+spdk_nvmf_request_copy_from_buf(struct spdk_nvmf_request *req,
+				void *buf, size_t buflen)
+{
+	struct spdk_iov_xfer ix;
+
+	spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+	return spdk_iov_xfer_from_buf(&ix, buf, buflen);
+}
+
+size_t
+spdk_nvmf_request_copy_to_buf(struct spdk_nvmf_request *req,
+			      void *buf, size_t buflen)
+{
+	struct spdk_iov_xfer ix;
+
+	spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+	return spdk_iov_xfer_to_buf(&ix, buf, buflen);
 }
 
 struct spdk_nvmf_subsystem *spdk_nvmf_ctrlr_get_subsystem(struct spdk_nvmf_ctrlr *ctrlr)

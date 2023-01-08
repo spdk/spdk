@@ -197,11 +197,36 @@ struct spdk_nvmf_subsystem *spdk_nvmf_request_get_subsystem(struct spdk_nvmf_req
 /**
  * Get the data and length associated with this request.
  *
+ *
  * \param req The NVMe-oF request
  * \param data The data buffer associated with this request
  * \param length The length of the data buffer
  */
 void spdk_nvmf_request_get_data(struct spdk_nvmf_request *req, void **data, uint32_t *length);
+
+/**
+ * Copy the data from the given @buf into the request iovec.
+ *
+ * \param req The NVMe-oF request
+ * \param buf The data buffer
+ * \param buflen The length of the data buffer
+ *
+ * \return the number of bytes copied
+ */
+size_t spdk_nvmf_request_copy_from_buf(struct spdk_nvmf_request *req,
+				       void *buf, size_t buflen);
+
+/**
+ * Copy the data from the request iovec into the given @buf.
+ *
+ * \param req The NVMe-oF request
+ * \param buf The data buffer
+ * \param buflen The length of the data buffer
+ *
+ * \return the number of bytes copied
+ */
+size_t spdk_nvmf_request_copy_to_buf(struct spdk_nvmf_request *req,
+				     void *buf, size_t buflen);
 
 /**
  * Get the NVMe-oF command associated with this request.

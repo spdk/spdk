@@ -325,15 +325,16 @@ nvmf_tgt_create_target(void)
 static void
 fixup_identify_ctrlr(struct spdk_nvmf_request *req)
 {
-	uint32_t length;
-	int rc;
-	struct spdk_nvme_ctrlr_data *nvme_cdata;
+	struct spdk_nvme_ctrlr_data nvme_cdata = {};
 	struct spdk_nvme_ctrlr_data nvmf_cdata = {};
 	struct spdk_nvmf_ctrlr *ctrlr = spdk_nvmf_request_get_ctrlr(req);
 	struct spdk_nvme_cpl *rsp = spdk_nvmf_request_get_response(req);
+	size_t datalen;
+	int rc;
 
 	/* This is the identify data from the NVMe drive */
-	spdk_nvmf_request_get_data(req, (void **)&nvme_cdata, &length);
+	datalen = spdk_nvmf_request_copy_to_buf(req, &nvme_cdata,
+						sizeof(nvme_cdata));
 
 	/* Get the NVMF identify data */
 	rc = spdk_nvmf_ctrlr_identify_ctrlr(ctrlr, &nvmf_cdata);
@@ -346,17 +347,17 @@ fixup_identify_ctrlr(struct spdk_nvmf_request *req)
 	/* Fixup NVMF identify data with NVMe identify data */
 
 	/* Serial Number (SN) */
-	memcpy(&nvmf_cdata.sn[0], &nvme_cdata->sn[0], sizeof(nvmf_cdata.sn));
+	memcpy(&nvmf_cdata.sn[0], &nvme_cdata.sn[0], sizeof(nvmf_cdata.sn));
 	/* Model Number (MN) */
-	memcpy(&nvmf_cdata.mn[0], &nvme_cdata->mn[0], sizeof(nvmf_cdata.mn));
+	memcpy(&nvmf_cdata.mn[0], &nvme_cdata.mn[0], sizeof(nvmf_cdata.mn));
 	/* Firmware Revision (FR) */
-	memcpy(&nvmf_cdata.fr[0], &nvme_cdata->fr[0], sizeof(nvmf_cdata.fr));
+	memcpy(&nvmf_cdata.fr[0], &nvme_cdata.fr[0], sizeof(nvmf_cdata.fr));
 	/* IEEE OUI Identifier (IEEE) */
-	memcpy(&nvmf_cdata.ieee[0], &nvme_cdata->ieee[0], sizeof(nvmf_cdata.ieee));
+	memcpy(&nvmf_cdata.ieee[0], &nvme_cdata.ieee[0], sizeof(nvmf_cdata.ieee));
 	/* FRU Globally Unique Identifier (FGUID) */
 
 	/* Copy the fixed up data back to the response */
-	memcpy(nvme_cdata, &nvmf_cdata, length);
+	spdk_nvmf_request_copy_from_buf(req, &nvmf_cdata, datalen);
 }
 
 static int

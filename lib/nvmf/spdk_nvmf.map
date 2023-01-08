@@ -91,6 +91,8 @@
 	spdk_nvmf_set_custom_admin_cmd_hdlr;
 	spdk_nvmf_set_passthru_admin_cmd;
 	spdk_nvmf_bdev_ctrlr_nvme_passthru_admin;
+	spdk_nvmf_request_copy_from_buf;
+	spdk_nvmf_request_copy_to_buf;
 	spdk_nvmf_request_get_bdev;
 	spdk_nvmf_request_get_ctrlr;
 	spdk_nvmf_request_get_subsystem;
