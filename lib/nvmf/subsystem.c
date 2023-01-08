@@ -2583,9 +2583,9 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 			     struct spdk_nvmf_ctrlr *ctrlr,
 			     struct spdk_nvmf_request *req)
 {
+	struct spdk_nvme_reservation_register_data key = { 0 };
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	uint8_t rrega, iekey, cptpl, rtype;
-	struct spdk_nvme_reservation_register_data key;
 	struct spdk_nvmf_registrant *reg;
 	uint8_t status = SPDK_NVME_SC_SUCCESS;
 	bool update_sgroup = false;
@@ -2597,8 +2597,10 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 	iekey = cmd->cdw10_bits.resv_register.iekey;
 	cptpl = cmd->cdw10_bits.resv_register.cptpl;
 
-	if (req->data && req->length >= sizeof(key)) {
-		memcpy(&key, req->data, sizeof(key));
+	if (req->iovcnt > 0 && req->length >= sizeof(key)) {
+		struct spdk_iov_xfer ix;
+		spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+		spdk_iov_xfer_to_buf(&ix, &key, sizeof(key));
 	} else {
 		SPDK_ERRLOG("No key provided. Failing request.\n");
 		status = SPDK_NVME_SC_INVALID_FIELD;
@@ -2733,9 +2735,9 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 			    struct spdk_nvmf_ctrlr *ctrlr,
 			    struct spdk_nvmf_request *req)
 {
+	struct spdk_nvme_reservation_acquire_data key = { 0 };
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	uint8_t racqa, iekey, rtype;
-	struct spdk_nvme_reservation_acquire_data key;
 	struct spdk_nvmf_registrant *reg;
 	bool all_regs = false;
 	uint32_t count = 0;
@@ -2751,8 +2753,10 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 	iekey = cmd->cdw10_bits.resv_acquire.iekey;
 	rtype = cmd->cdw10_bits.resv_acquire.rtype;
 
-	if (req->data && req->length >= sizeof(key)) {
-		memcpy(&key, req->data, sizeof(key));
+	if (req->iovcnt > 0 && req->length >= sizeof(key)) {
+		struct spdk_iov_xfer ix;
+		spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+		spdk_iov_xfer_to_buf(&ix, &key, sizeof(key));
 	} else {
 		SPDK_ERRLOG("No key provided. Failing request.\n");
 		status = SPDK_NVME_SC_INVALID_FIELD;
@@ -2903,7 +2907,7 @@ nvmf_ns_reservation_release(struct spdk_nvmf_ns *ns,
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	uint8_t rrela, iekey, rtype;
 	struct spdk_nvmf_registrant *reg;
-	uint64_t crkey;
+	uint64_t crkey = 0;
 	uint8_t status = SPDK_NVME_SC_SUCCESS;
 	bool update_sgroup = true;
 	struct spdk_uuid hostid_list[SPDK_NVMF_MAX_NUM_REGISTRANTS];
@@ -2913,8 +2917,10 @@ nvmf_ns_reservation_release(struct spdk_nvmf_ns *ns,
 	iekey = cmd->cdw10_bits.resv_release.iekey;
 	rtype = cmd->cdw10_bits.resv_release.rtype;
 
-	if (req->data && req->length >= sizeof(crkey)) {
-		memcpy(&crkey, req->data, sizeof(crkey));
+	if (req->iovcnt > 0 && req->length >= sizeof(crkey)) {
+		struct spdk_iov_xfer ix;
+		spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+		spdk_iov_xfer_to_buf(&ix, &crkey, sizeof(crkey));
 	} else {
 		SPDK_ERRLOG("No key provided. Failing request.\n");
 		status = SPDK_NVME_SC_INVALID_FIELD;
@@ -3007,14 +3013,13 @@ nvmf_ns_reservation_report(struct spdk_nvmf_ns *ns,
 {
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvmf_registrant *reg, *tmp;
-	struct spdk_nvme_reservation_status_extended_data *status_data;
-	struct spdk_nvme_registered_ctrlr_extended_data *ctrlr_data;
-	uint8_t *payload;
-	uint32_t transfer_len, payload_len = 0;
+	struct spdk_nvme_reservation_status_extended_data status_data = { 0 };
+	struct spdk_iov_xfer ix;
+	uint32_t transfer_len;
 	uint32_t regctl = 0;
 	uint8_t status = SPDK_NVME_SC_SUCCESS;
 
-	if (req->data == NULL) {
+	if (req->iovcnt == 0) {
 		SPDK_ERRLOG("No data transfer specified for request. "
 			    " Unable to transfer back response.\n");
 		status = SPDK_NVME_SC_INVALID_FIELD;
@@ -3030,35 +3035,44 @@ nvmf_ns_reservation_report(struct spdk_nvmf_ns *ns,
 
 	/* Number of Dwords of the Reservation Status data structure to transfer */
 	transfer_len = (cmd->cdw10 + 1) * sizeof(uint32_t);
-	payload = req->data;
 
 	if (transfer_len < sizeof(struct spdk_nvme_reservation_status_extended_data)) {
 		status = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		goto exit;
 	}
 
-	status_data = (struct spdk_nvme_reservation_status_extended_data *)payload;
-	status_data->data.gen = ns->gen;
-	status_data->data.rtype = ns->rtype;
-	status_data->data.ptpls = ns->ptpl_activated;
-	payload_len += sizeof(struct spdk_nvme_reservation_status_extended_data);
+	spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+
+	status_data.data.gen = ns->gen;
+	status_data.data.rtype = ns->rtype;
+	status_data.data.ptpls = ns->ptpl_activated;
 
 	TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, tmp) {
-		payload_len += sizeof(struct spdk_nvme_registered_ctrlr_extended_data);
-		if (payload_len > transfer_len) {
-			break;
-		}
-
-		ctrlr_data = (struct spdk_nvme_registered_ctrlr_extended_data *)
-			     (payload + sizeof(*status_data) + sizeof(*ctrlr_data) * regctl);
-		/* Set to 0xffffh for dynamic controller */
-		ctrlr_data->cntlid = 0xffff;
-		ctrlr_data->rcsts.status = (ns->holder == reg) ? true : false;
-		ctrlr_data->rkey = reg->rkey;
-		spdk_uuid_copy((struct spdk_uuid *)ctrlr_data->hostid, &reg->hostid);
 		regctl++;
 	}
-	status_data->data.regctl = regctl;
+
+	/*
+	 * We report the number of registrants as per the spec here, even if
+	 * the iov isn't big enough to contain them all. In that case, the
+	 * spdk_iov_xfer_from_buf() won't actually copy any of the remaining
+	 * data; as it keeps track of the iov cursor itself, it's simplest to
+	 * just walk the entire list anyway.
+	 */
+	status_data.data.regctl = regctl;
+
+	spdk_iov_xfer_from_buf(&ix, &status_data, sizeof(status_data));
+
+	TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, tmp) {
+		struct spdk_nvme_registered_ctrlr_extended_data ctrlr_data = { 0 };
+
+		/* Set to 0xffffh for dynamic controller */
+		ctrlr_data.cntlid = 0xffff;
+		ctrlr_data.rcsts.status = (ns->holder == reg) ? true : false;
+		ctrlr_data.rkey = reg->rkey;
+		spdk_uuid_copy((struct spdk_uuid *)ctrlr_data.hostid, &reg->hostid);
+
+		spdk_iov_xfer_from_buf(&ix, &ctrlr_data, sizeof(ctrlr_data));
+	}
 
 exit:
 	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
