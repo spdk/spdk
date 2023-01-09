@@ -623,7 +623,10 @@ static void
 bdevperf_channel_get_histogram_cb(void *cb_arg, int status, struct spdk_histogram_data *histogram)
 {
 	struct spdk_histogram_data *job_hist = cb_arg;
-	spdk_histogram_data_merge(job_hist, histogram);
+
+	if (status == 0) {
+		spdk_histogram_data_merge(job_hist, histogram);
+	}
 }
 
 static void
