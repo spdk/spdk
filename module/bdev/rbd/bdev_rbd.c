@@ -200,6 +200,7 @@ bdev_rados_cluster_init(const char *user_id, const char *const *config,
 			if (ret < 0) {
 				SPDK_ERRLOG("Failed to set %s = %s\n", entry[0], entry[1]);
 				rados_shutdown(*cluster);
+				*cluster = NULL;
 				return -1;
 			}
 			entry += 2;
@@ -209,6 +210,7 @@ bdev_rados_cluster_init(const char *user_id, const char *const *config,
 		if (ret < 0) {
 			SPDK_ERRLOG("Failed to read conf file\n");
 			rados_shutdown(*cluster);
+			*cluster = NULL;
 			return -1;
 		}
 	}
@@ -217,6 +219,7 @@ bdev_rados_cluster_init(const char *user_id, const char *const *config,
 	if (ret < 0) {
 		SPDK_ERRLOG("Failed to connect to rbd_pool\n");
 		rados_shutdown(*cluster);
+		*cluster = NULL;
 		return -1;
 	}
 
