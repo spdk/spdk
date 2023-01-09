@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2018 Intel Corporation
-#  Copyright (c) 2023, NVIDIA CORPORATION & AFFILIATES.
 #  All rights reserved.
+#  Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Environment variables:
 #  $valgrind    Specify the valgrind command line, if not
@@ -37,6 +37,7 @@ function unittest_blob() {
 	if [[ -e $testdir/lib/blob/blob.c/blob_ut ]]; then
 		$valgrind $testdir/lib/blob/blob.c/blob_ut
 	fi
+	$valgrind $testdir/lib/blob/blob_bdev.c/blob_bdev_ut
 	$valgrind $testdir/lib/blobfs/tree.c/tree_ut
 	$valgrind $testdir/lib/blobfs/blobfs_async_ut/blobfs_async_ut
 	# blobfs_sync_ut hangs when run under valgrind, so don't use $valgrind
