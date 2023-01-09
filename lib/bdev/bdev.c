@@ -3827,8 +3827,10 @@ bdev_alloc_io_stat(bool io_error_stat)
 void
 bdev_free_io_stat(struct spdk_bdev_io_stat *stat)
 {
-	free(stat->io_error);
-	free(stat);
+	if (stat != NULL) {
+		free(stat->io_error);
+		free(stat);
+	}
 }
 
 void
