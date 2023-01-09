@@ -3786,9 +3786,12 @@ bdev_reset_io_stat(struct spdk_bdev_io_stat *stat, enum bdev_reset_stat_mode mod
 	stat->num_write_ops = 0;
 	stat->bytes_unmapped = 0;
 	stat->num_unmap_ops = 0;
+	stat->bytes_copied = 0;
+	stat->num_copy_ops = 0;
 	stat->read_latency_ticks = 0;
 	stat->write_latency_ticks = 0;
 	stat->unmap_latency_ticks = 0;
+	stat->copy_latency_ticks = 0;
 
 	if (stat->io_error != NULL) {
 		memset(stat->io_error, 0, sizeof(struct spdk_bdev_io_error_stat));
