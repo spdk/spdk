@@ -127,64 +127,6 @@ uint32_t vrdma_prov_get_emu_db_to_cq_id(struct snap_vrdma_queue *vq)
 	return 0xFFFFFFFF;
 }
 
-// int virtnet_prov_vq_modify(struct virtnet_prov_vq *vq, uint64_t mask,
-// 			   struct virtnet_prov_vq_attr *attr)
-// {
-// 	if (attr->vattr.hw_available_index || attr->vattr.hw_used_index)
-// 		log_warn("Don't use available and used index from vattr");
-
-// 	if (prov_ops && prov_ops->q_ops && prov_ops->q_ops->modify)
-// 		return prov_ops->q_ops->modify(vq, mask, attr);
-
-// 	return -EOPNOTSUPP;
-// }
-
-// int virtnet_prov_vq_counter_query(struct virtnet_prov_vq *vq,
-// 				  struct virtnet_prov_vq_counter *cnt)
-// {
-// 	if (prov_ops && prov_ops->q_ops && prov_ops->q_ops->counter_query)
-// 		return prov_ops->q_ops->counter_query(vq, cnt);
-
-// 	return 0;
-// }
-
-// int virtnet_prov_vq_counter_reset(struct virtnet_prov_vq *vq)
-// {
-// 	if (prov_ops && prov_ops->q_ops && prov_ops->q_ops->counter_reset)
-// 		return prov_ops->q_ops->counter_reset(vq);
-
-// 	return 0;
-// }
-
-// cJSON *virtnet_prov_vq_dbg_stats_query(struct virtnet_prov_vq *vq)
-// {
-// 	if (prov_ops && prov_ops->q_ops && prov_ops->q_ops->dbg_stats_query)
-// 		return prov_ops->q_ops->dbg_stats_query(vq);
-
-// 	return NULL;
-// }
-
-// int virtnet_prov_vq_rq_query(struct virtnet_prov_vq *vq,
-// 			      struct virtnet_prov_rq *rq)
-// {
-// 	if (prov_ops && prov_ops->q_ops && prov_ops->q_ops->rq_query)
-// 		return prov_ops->q_ops->rq_query(vq, rq);
-
-// 	return -EOPNOTSUPP;
-// }
-
-// int virtnet_prov_tunnel_create(struct virtnet_device *dev, int idx)
-// {
-// 	if (prov_ops && prov_ops->q_ops && prov_ops->q_ops->tunnel_create)
-// 		return prov_ops->q_ops->tunnel_create(dev, idx);
-// 	return -EOPNOTSUPP;
-// }
-
-// void virtnet_prov_tunnel_destroy(struct virtnet_device *dev)
-// {
-// 	if (prov_ops && prov_ops->q_ops && prov_ops->q_ops->tunnel_destroy)
-// 		prov_ops->q_ops->tunnel_destroy(dev);
-// }
 
 void vrdma_prov_ops_register(const struct vrdma_prov_ops *ops)
 {
