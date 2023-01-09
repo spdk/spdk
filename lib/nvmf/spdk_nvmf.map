@@ -97,7 +97,6 @@
 	spdk_nvmf_request_get_bdev;
 	spdk_nvmf_request_get_ctrlr;
 	spdk_nvmf_request_get_subsystem;
-	spdk_nvmf_request_get_data;
 	spdk_nvmf_request_get_cmd;
 	spdk_nvmf_request_get_response;
 	spdk_nvmf_request_get_req_to_abort;

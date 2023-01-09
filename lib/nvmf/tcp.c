@@ -2493,9 +2493,6 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 			return 0;
 		}
 
-		/* backward compatible */
-		req->data = req->iov[0].iov_base;
-
 		SPDK_DEBUGLOG(nvmf_tcp, "Request %p took %d buffer/s from central pool, and data=%p\n",
 			      tcp_req, req->iovcnt, req->iov[0].iov_base);
 
@@ -2562,7 +2559,6 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 
 		req->length = length;
 		req->data_from_pool = false;
-		req->data = req->iov[0].iov_base;
 
 		if (spdk_unlikely(req->dif_enabled)) {
 			length = spdk_dif_get_length_with_md(length, &req->dif.dif_ctx);
@@ -3152,7 +3148,6 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			}
 			tcp_req->req.length = 0;
 			tcp_req->req.iovcnt = 0;
-			tcp_req->req.data = NULL;
 			tcp_req->fused_failed = false;
 			if (tcp_req->fused_pair) {
 				/* This req was part of a valid fused pair, but failed before it got to

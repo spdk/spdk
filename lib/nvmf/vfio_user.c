@@ -3015,7 +3015,6 @@ vfio_user_property_access(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
 	}
 	req->req.length = count;
 	spdk_iov_one(req->req.iov, &req->req.iovcnt, buf, req->req.length);
-	req->req.data = buf;
 
 	spdk_nvmf_request_exec_fabrics(&req->req);
 
@@ -5184,7 +5183,6 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 	free(req->req.iov[0].iov_base);
 	req->req.iov[0].iov_base = NULL;
 	req->req.iovcnt = 0;
-	req->req.data = NULL;
 
 	return 0;
 }
@@ -5238,7 +5236,6 @@ nvmf_vfio_user_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	}
 
 	spdk_iov_one(req->iov, &req->iovcnt, data, req->length);
-	req->data = data;
 
 	data->cntlid = ctrlr->cntlid;
 	snprintf(data->subnqn, sizeof(data->subnqn), "%s",
@@ -5282,7 +5279,6 @@ _nvmf_vfio_user_req_free(struct nvmf_vfio_user_sq *sq, struct nvmf_vfio_user_req
 	memset(&vu_req->rsp, 0, sizeof(vu_req->rsp));
 	vu_req->iovcnt = 0;
 	vu_req->req.iovcnt = 0;
-	vu_req->req.data = NULL;
 	vu_req->req.length = 0;
 	vu_req->state = VFIO_USER_REQUEST_STATE_FREE;
 
@@ -5490,7 +5486,6 @@ map_admin_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *
 		return -1;
 	}
 	req->length = len;
-	req->data = req->iov[0].iov_base;
 	req->iovcnt = iovcnt;
 
 	return 0;
@@ -5528,7 +5523,6 @@ map_io_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *req
 		SPDK_ERRLOG("%s: failed to map IO OPC %u\n", ctrlr_id(ctrlr), cmd->opc);
 		return -EFAULT;
 	}
-	req->data = req->iov[0].iov_base;
 	req->iovcnt = iovcnt;
 
 	return 0;

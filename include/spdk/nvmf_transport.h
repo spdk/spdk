@@ -78,7 +78,6 @@ struct spdk_nvmf_request {
 	uint8_t				xfer; /* type enum spdk_nvme_data_transfer */
 	bool				data_from_pool;
 	bool				dif_enabled;
-	void				*data;
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
 	STAILQ_ENTRY(spdk_nvmf_request)	buf_link;

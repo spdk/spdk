@@ -195,16 +195,6 @@ struct spdk_nvmf_ctrlr *spdk_nvmf_request_get_ctrlr(struct spdk_nvmf_request *re
 struct spdk_nvmf_subsystem *spdk_nvmf_request_get_subsystem(struct spdk_nvmf_request *req);
 
 /**
- * Get the data and length associated with this request.
- *
- *
- * \param req The NVMe-oF request
- * \param data The data buffer associated with this request
- * \param length The length of the data buffer
- */
-void spdk_nvmf_request_get_data(struct spdk_nvmf_request *req, void **data, uint32_t *length);
-
-/**
  * Copy the data from the given @buf into the request iovec.
  *
  * \param req The NVMe-oF request

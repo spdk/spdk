@@ -897,9 +897,6 @@ nvmf_bdev_ctrlr_zcopy_start_complete(struct spdk_bdev_io *bdev_io, bool success,
 
 	assert(req->iov == iov);
 
-	/* backward compatible */
-	req->data = req->iov[0].iov_base;
-
 	req->zcopy_bdev_io = bdev_io; /* Preserve the bdev_io for the end zcopy */
 
 	spdk_nvmf_request_complete(req);

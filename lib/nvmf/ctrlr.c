@@ -4546,10 +4546,6 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_transport *transport = qpair->transport;
 	enum spdk_nvmf_request_exec_status status;
 
-	if (req->data != NULL) {
-		assert(req->iovcnt > 0);
-	}
-
 	if (!nvmf_check_subsystem_active(req)) {
 		return;
 	}
@@ -4714,17 +4710,6 @@ struct spdk_nvme_cpl *spdk_nvmf_request_get_response(struct spdk_nvmf_request *r
 struct spdk_nvmf_subsystem *spdk_nvmf_request_get_subsystem(struct spdk_nvmf_request *req)
 {
 	return req->qpair->ctrlr->subsys;
-}
-
-SPDK_LOG_DEPRECATION_REGISTER(nvmf_request_get_data, "spdk_nvmf_request_get_data",
-			      "SPDK 23.09", 60);
-
-void
-spdk_nvmf_request_get_data(struct spdk_nvmf_request *req, void **data, uint32_t *length)
-{
-	SPDK_LOG_DEPRECATED(nvmf_request_get_data);
-	*data = req->data;
-	*length = req->length;
 }
 
 size_t

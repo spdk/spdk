@@ -558,7 +558,6 @@ ut_reservation_build_req(uint32_t length)
 
 	spdk_iov_one(req->iov, &req->iovcnt, calloc(1, length), length);
 	assert(req->iov[0].iov_base != NULL);
-	req->data = req->iov[0].iov_base;
 	req->length = length;
 
 	req->cmd = (union nvmf_h2c_msg *)calloc(1, sizeof(union nvmf_h2c_msg));
@@ -1534,7 +1533,6 @@ test_nvmf_ns_reservation_report(void)
 
 	req.length = sizeof(*status_data) + sizeof(*ctrlr_data) * 2;
 	spdk_iov_one(req.iov, &req.iovcnt, data, req.length);
-	req.data = req.iov[0].iov_base;
 
 	req.cmd = &cmd;
 	req.rsp = &rsp;

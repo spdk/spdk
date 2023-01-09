@@ -1877,9 +1877,6 @@ nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 			return 0;
 		}
 
-		/* backward compatible */
-		req->data = req->iov[0].iov_base;
-
 		SPDK_DEBUGLOG(rdma, "Request %p took %d buffer/s from central pool\n", rdma_req,
 			      req->iovcnt);
 
@@ -1914,7 +1911,6 @@ nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		req->iov[0].iov_base = rdma_req->recv->buf + offset;
 		req->iov[0].iov_len = req->length;
 		req->iovcnt = 1;
-		req->data = req->iov[0].iov_base;
 
 		return 0;
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT &&
@@ -1929,9 +1925,6 @@ nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
 			return -1;
 		}
-
-		/* backward compatible */
-		req->data = req->iov[0].iov_base;
 
 		SPDK_DEBUGLOG(rdma, "Request %p took %d buffer/s from central pool\n", rdma_req,
 			      req->iovcnt);
@@ -1966,7 +1959,6 @@ _nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 	nvmf_rdma_request_free_data(rdma_req, rtransport);
 	rdma_req->req.length = 0;
 	rdma_req->req.iovcnt = 0;
-	rdma_req->req.data = NULL;
 	rdma_req->offset = 0;
 	rdma_req->req.dif_enabled = false;
 	rdma_req->fused_failed = false;

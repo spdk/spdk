@@ -16,6 +16,12 @@ For retrieving physical addresses, spdk_vtophys() should be used instead.
 
 New APIs, `spdk_flog` and `spdk_vflog`, were added to write messages to the specified log file.
 
+### nvmf
+
+The `spdk_nvmf_request::data` field has been removed: instead, clients should set
+`->iov` and `->iovcnt` appropriately, as nvmf request APIs now expect any data
+buffers to be described there. spdk_nvmf_request_get_data() has been removed.
+
 ## v23.05
 
 ### accel

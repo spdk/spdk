@@ -733,7 +733,6 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	cmd.nvme_cmd.cdw12_bits.copy.nr = 0;
 	range.slba = 512;
 	range.nlb = 511;
-	req.data = &range;
 	req.length = 32;
 	spdk_iov_one(req.iov, &req.iovcnt, &range, req.length);
 	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, NULL, &ch, &req);
