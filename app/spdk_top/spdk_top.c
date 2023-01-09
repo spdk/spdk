@@ -488,11 +488,8 @@ rpc_decode_cores_lw_threads(const struct spdk_json_val *val, void *out)
 	 * 'val' value (-2 is to subtract VAL_OBJECT_BEGIN/END). */
 	uint16_t threads_count = (spdk_json_val_len(val) - 2) / RPC_THREAD_ENTRY_SIZE;
 
+	assert(threads != NULL);
 	threads->thread = calloc(threads_count, sizeof(struct rpc_core_thread_info));
-	if (!out) {
-		fprintf(stderr, "Unable to allocate memory for a thread array.\n");
-		return -1;
-	}
 
 	return spdk_json_decode_array(val, rpc_decode_core_threads_object, threads->thread, threads_count,
 				      &threads->threads_count, sizeof(struct rpc_core_thread_info));
