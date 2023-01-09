@@ -872,31 +872,29 @@ bdev_nvme_find_next_io_path(struct nvme_bdev_channel *nbdev_ch,
 static struct nvme_io_path *
 _bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 {
-	struct nvme_io_path *io_path, *non_optimized = NULL;
+	struct nvme_io_path *io_path, *start, *non_optimized = NULL;
 
-	STAILQ_FOREACH(io_path, &nbdev_ch->io_path_list, stailq) {
-		if (spdk_unlikely(!nvme_io_path_is_connected(io_path))) {
-			/* The device is currently resetting. */
-			continue;
-		}
+	start = STAILQ_FIRST(&nbdev_ch->io_path_list);
 
-		if (spdk_unlikely(io_path->nvme_ns->ana_state_updating)) {
-			continue;
-		}
-
-		switch (io_path->nvme_ns->ana_state) {
-		case SPDK_NVME_ANA_OPTIMIZED_STATE:
-			nbdev_ch->current_io_path = io_path;
-			return io_path;
-		case SPDK_NVME_ANA_NON_OPTIMIZED_STATE:
-			if (non_optimized == NULL) {
-				non_optimized = io_path;
+	io_path = start;
+	do {
+		if (spdk_likely(nvme_io_path_is_connected(io_path) &&
+				!io_path->nvme_ns->ana_state_updating)) {
+			switch (io_path->nvme_ns->ana_state) {
+			case SPDK_NVME_ANA_OPTIMIZED_STATE:
+				nbdev_ch->current_io_path = io_path;
+				return io_path;
+			case SPDK_NVME_ANA_NON_OPTIMIZED_STATE:
+				if (non_optimized == NULL) {
+					non_optimized = io_path;
+				}
+				break;
+			default:
+				break;
 			}
-			break;
-		default:
-			break;
 		}
-	}
+		io_path = nvme_io_path_get_next(nbdev_ch, io_path);
+	} while (io_path != start);
 
 	return non_optimized;
 }
