@@ -876,15 +876,12 @@ _bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 static inline struct nvme_io_path *
 bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 {
-	if (spdk_unlikely(nbdev_ch->current_io_path == NULL)) {
-		return _bdev_nvme_find_io_path(nbdev_ch);
+	if (spdk_likely(nbdev_ch->current_io_path != NULL &&
+			nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE)) {
+		return nbdev_ch->current_io_path;
 	}
 
-	if (spdk_likely(nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE)) {
-		return nbdev_ch->current_io_path;
-	} else {
-		return _bdev_nvme_find_io_path(nbdev_ch);
-	}
+	return _bdev_nvme_find_io_path(nbdev_ch);
 }
 
 /* Return true if there is any io_path whose qpair is active or ctrlr is not failed,
