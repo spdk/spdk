@@ -1354,6 +1354,29 @@ test_nvmf_tcp_tls_generate_psk_id(void)
 			subnqn) != 0);
 }
 
+static void
+test_nvmf_tcp_tls_generate_retained_psk(void)
+{
+	const char hostnqn[] = {"nqn.2016-06.io.spdk:host1"};
+	const char psk_reference1[] = {"1234567890ABCDEF"};
+	const char psk_reference2[] = {"FEDCBA0987654321"};
+	uint8_t psk_retained1[SPDK_TLS_PSK_MAX_LEN] = {};
+	uint8_t psk_retained2[SPDK_TLS_PSK_MAX_LEN] = {};
+	uint8_t too_small_psk_retained[5] = {};
+	int retained_size;
+
+	/* Make sure that retained PSKs are different with different input PSKs. */
+	CU_ASSERT((retained_size = nvme_tcp_derive_retained_psk(psk_reference1,
+				   hostnqn, psk_retained1, SPDK_TLS_PSK_MAX_LEN)) > 0);
+	CU_ASSERT(nvme_tcp_derive_retained_psk(psk_reference2, hostnqn, psk_retained2,
+					       SPDK_TLS_PSK_MAX_LEN) > 0);
+	CU_ASSERT(memcmp(psk_retained1, psk_retained2, retained_size) != 0);
+
+	/* Make sure that passing buffer insufficient in size errors out the function. */
+	CU_ASSERT(nvme_tcp_derive_retained_psk(psk_reference1, hostnqn, too_small_psk_retained,
+					       sizeof(too_small_psk_retained)) < 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1380,6 +1403,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_tcp_pdu_ch_handle);
 	CU_ADD_TEST(suite, test_nvmf_tcp_tls_add_remove_credentials);
 	CU_ADD_TEST(suite, test_nvmf_tcp_tls_generate_psk_id);
+	CU_ADD_TEST(suite, test_nvmf_tcp_tls_generate_retained_psk);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

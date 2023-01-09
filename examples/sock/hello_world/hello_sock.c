@@ -11,6 +11,8 @@
 #include "spdk/string.h"
 
 #include "spdk/sock.h"
+#include "spdk/hexlify.h"
+#include "spdk/nvmf.h"
 
 #define ACCEPT_TIMEOUT_US 1000
 #define CLOSE_TIMEOUT_US 1000000
@@ -233,11 +235,12 @@ hello_sock_connect(struct hello_context_t *ctx)
 	struct spdk_sock_impl_opts impl_opts;
 	size_t impl_opts_size = sizeof(impl_opts);
 	struct spdk_sock_opts opts;
+	char psk[SPDK_TLS_PSK_MAX_LEN] = {};
+	char *unhexlified;
 
 	spdk_sock_impl_get_opts(ctx->sock_impl_name, &impl_opts, &impl_opts_size);
 	impl_opts.enable_ktls = ctx->ktls;
 	impl_opts.tls_version = ctx->tls_version;
-	impl_opts.psk_key = ctx->psk_key;
 	impl_opts.psk_identity = ctx->psk_identity;
 
 	opts.opts_size = sizeof(opts);
@@ -245,6 +248,22 @@ hello_sock_connect(struct hello_context_t *ctx)
 	opts.zcopy = ctx->zcopy;
 	opts.impl_opts = &impl_opts;
 	opts.impl_opts_size = sizeof(impl_opts);
+
+	if (ctx->psk_key) {
+		impl_opts.psk_key_size = strlen(ctx->psk_key) / 2;
+		if (impl_opts.psk_key_size > SPDK_TLS_PSK_MAX_LEN) {
+			SPDK_ERRLOG("Insufficient buffer size for PSK");
+			return -EINVAL;
+		}
+		unhexlified = spdk_unhexlify(ctx->psk_key);
+		if (unhexlified == NULL) {
+			SPDK_ERRLOG("Could not unhexlify PSK");
+			return -EINVAL;
+		}
+		memcpy(psk, unhexlified, impl_opts.psk_key_size);
+		free(unhexlified);
+		impl_opts.psk_key = psk;
+	}
 
 	SPDK_NOTICELOG("Connecting to the server on %s:%d with sock_impl(%s)\n", ctx->host, ctx->port,
 		       ctx->sock_impl_name);
@@ -379,11 +398,12 @@ hello_sock_listen(struct hello_context_t *ctx)
 	struct spdk_sock_impl_opts impl_opts;
 	size_t impl_opts_size = sizeof(impl_opts);
 	struct spdk_sock_opts opts;
+	static char psk[SPDK_TLS_PSK_MAX_LEN] = {};
+	char *unhexlified;
 
 	spdk_sock_impl_get_opts(ctx->sock_impl_name, &impl_opts, &impl_opts_size);
 	impl_opts.enable_ktls = ctx->ktls;
 	impl_opts.tls_version = ctx->tls_version;
-	impl_opts.psk_key = ctx->psk_key;
 	impl_opts.psk_identity = ctx->psk_identity;
 
 	opts.opts_size = sizeof(opts);
@@ -391,6 +411,22 @@ hello_sock_listen(struct hello_context_t *ctx)
 	opts.zcopy = ctx->zcopy;
 	opts.impl_opts = &impl_opts;
 	opts.impl_opts_size = sizeof(impl_opts);
+
+	if (ctx->psk_key) {
+		impl_opts.psk_key_size = strlen(ctx->psk_key) / 2;
+		if (impl_opts.psk_key_size > SPDK_TLS_PSK_MAX_LEN) {
+			SPDK_ERRLOG("Insufficient buffer size for PSK");
+			return -EINVAL;
+		}
+		unhexlified = spdk_unhexlify(ctx->psk_key);
+		if (unhexlified == NULL) {
+			SPDK_ERRLOG("Could not unhexlify PSK");
+			return -EINVAL;
+		}
+		memcpy(psk, unhexlified, impl_opts.psk_key_size);
+		free(unhexlified);
+		impl_opts.psk_key = psk;
+	}
 
 	ctx->sock = spdk_sock_listen_ext(ctx->host, ctx->port, ctx->sock_impl_name, &opts);
 	if (ctx->sock == NULL) {

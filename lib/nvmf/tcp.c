@@ -347,6 +347,7 @@ struct tcp_psk_entry {
 	char				subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 	char				psk_identity[NVMF_PSK_IDENTITY_LEN];
 	uint8_t				psk[SPDK_TLS_PSK_MAX_LEN];
+	uint32_t			psk_size;
 	TAILQ_ENTRY(tcp_psk_entry)	link;
 };
 
@@ -824,13 +825,13 @@ tcp_sock_get_key(uint8_t *out, int out_len, const char **cipher, const char *psk
 			continue;
 		}
 
-		psk_len = strlen(entry->psk);
-		if ((size_t)out_len <= psk_len) {
+		psk_len = entry->psk_size;
+		if ((size_t)out_len < psk_len) {
 			SPDK_ERRLOG("Out buffer of size: %" PRIu32 " cannot fit PSK of len: %lu\n",
 				    out_len, psk_len);
 			return -ENOBUFS;
 		}
-		memcpy(out, entry->psk, psk_len + 1);
+		memcpy(out, entry->psk, psk_len);
 		return psk_len;
 	}
 
@@ -3561,9 +3562,17 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 		free(entry);
 		goto end;
 	}
-	memcpy(entry->psk, opts.psk, strlen(opts.psk));
+
+	/* Derive retained PSK. */
+	rc = nvme_tcp_derive_retained_psk(opts.psk, hostnqn, entry->psk, SPDK_TLS_PSK_MAX_LEN);
+	if (rc < 0) {
+		SPDK_ERRLOG("Unable to derive retained PSK!\n");
+		goto end;
+	}
+	entry->psk_size = rc;
 
 	TAILQ_INSERT_TAIL(&ttransport->psks, entry, link);
+	rc = 0;
 
 end:
 	key_len = strnlen(opts.psk, SPDK_TLS_PSK_MAX_LEN);

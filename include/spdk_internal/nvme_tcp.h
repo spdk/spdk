@@ -10,8 +10,14 @@
 #include "spdk/likely.h"
 #include "spdk/sock.h"
 #include "spdk/dif.h"
+#include "spdk/hexlify.h"
+#include "spdk/nvmf_spec.h"
 
 #include "sgl.h"
+
+#include "openssl/evp.h"
+#include "openssl/kdf.h"
+#include "openssl/sha.h"
 
 #define SPDK_CRC32C_XOR				0xffffffffUL
 #define SPDK_NVME_TCP_DIGEST_LEN		4
@@ -60,6 +66,9 @@
  * 1 null terminator =
  * 457 characters. */
 #define NVMF_PSK_IDENTITY_LEN (SPDK_NVMF_NQN_MAX_LEN + SPDK_NVMF_NQN_MAX_LEN + 11)
+
+/* The maximum size of hkdf_info is defined by RFC 8446, 514B (2 + 256 + 256). */
+#define NVME_TCP_HKDF_INFO_MAX_LEN 514
 
 typedef void (*nvme_tcp_qpair_xfer_complete_cb)(void *cb_arg);
 
@@ -585,6 +594,92 @@ nvme_tcp_generate_psk_identity(char *out_id, size_t out_id_len,
 	}
 
 	return 0;
+}
+
+static inline int
+nvme_tcp_derive_retained_psk(const char *psk_in, const char *hostnqn, uint8_t *psk_out,
+			     uint64_t psk_out_len)
+{
+	EVP_PKEY_CTX *ctx;
+	uint64_t sha256_digest_len = SHA256_DIGEST_LENGTH;
+	uint8_t hkdf_info[NVME_TCP_HKDF_INFO_MAX_LEN] = {};
+	const char *label = "tls13 HostNQN";
+	size_t pos, labellen, nqnlen;
+	char *unhexlified = NULL;
+	int rc, hkdf_info_size;
+
+	labellen = strlen(label);
+	nqnlen = strlen(hostnqn);
+	assert(nqnlen <= SPDK_NVMF_NQN_MAX_LEN);
+
+	*(uint16_t *)&hkdf_info[0] = htons(strlen(psk_in) / 2);
+	pos = sizeof(uint16_t);
+	hkdf_info[pos] = (uint8_t)labellen;
+	pos += sizeof(uint8_t);
+	memcpy(&hkdf_info[pos], label, labellen);
+	hkdf_info[pos] = (uint8_t)nqnlen;
+	pos += sizeof(uint8_t);
+	memcpy(&hkdf_info[pos], hostnqn, nqnlen);
+
+	hkdf_info_size = pos * sizeof(uint8_t) + nqnlen;
+
+	if (sha256_digest_len > psk_out_len) {
+		SPDK_ERRLOG("Insufficient buffer size for out key!\n");
+		return -EINVAL;
+	}
+
+	ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, NULL);
+	if (!ctx) {
+		SPDK_ERRLOG("Unable to initialize EVP_PKEY_CTX!\n");
+		return -ENOMEM;
+	}
+
+	/* EVP_PKEY_* functions returns 1 as a success code and 0 or negative on failure. */
+	if (EVP_PKEY_derive_init(ctx) != 1) {
+		SPDK_ERRLOG("Unable to initialize key derivation ctx for HKDF!\n");
+		rc = -ENOMEM;
+		goto end;
+	}
+	if (EVP_PKEY_CTX_set_hkdf_md(ctx, EVP_sha256()) != 1) {
+		SPDK_ERRLOG("Unable to set SHA256 method for HKDF!\n");
+		rc = -EOPNOTSUPP;
+		goto end;
+	}
+
+	unhexlified = spdk_unhexlify(psk_in);
+	if (unhexlified == NULL) {
+		SPDK_ERRLOG("Unable to unhexlify PSK!\n");
+		rc = -EINVAL;
+		goto end;
+	}
+	if (EVP_PKEY_CTX_set1_hkdf_key(ctx, unhexlified, strlen(psk_in) / 2) != 1) {
+		SPDK_ERRLOG("Unable to set PSK key for HKDF!\n");
+		rc = -ENOBUFS;
+		goto end;
+	}
+
+	if (EVP_PKEY_CTX_add1_hkdf_info(ctx, hkdf_info, hkdf_info_size) != 1) {
+		SPDK_ERRLOG("Unable to set info label for HKDF!\n");
+		rc = -ENOBUFS;
+		goto end;
+	}
+	if (EVP_PKEY_CTX_set1_hkdf_salt(ctx, NULL, 0) != 1) {
+		SPDK_ERRLOG("Unable to set salt for HKDF!\n");
+		rc = -EINVAL;
+		goto end;
+	}
+	if (EVP_PKEY_derive(ctx, psk_out, &sha256_digest_len) != 1) {
+		SPDK_ERRLOG("Unable to derive the PSK key!\n");
+		rc = -EINVAL;
+		goto end;
+	}
+
+	rc = sha256_digest_len;
+
+end:
+	free(unhexlified);
+	EVP_PKEY_CTX_free(ctx);
+	return rc;
 }
 
 #endif /* SPDK_INTERNAL_NVME_TCP_H */

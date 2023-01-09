@@ -1935,17 +1935,17 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 		}
 	}
 
-	sock_impl_name = ctrlr->opts.psk[0] ? "ssl" : NULL;
+	tcp_ctrlr = SPDK_CONTAINEROF(ctrlr, struct nvme_tcp_ctrlr, ctrlr);
+	sock_impl_name = tcp_ctrlr->psk[0] ? "ssl" : NULL;
 	SPDK_DEBUGLOG(nvme, "sock_impl_name is %s\n", sock_impl_name);
 
 	if (sock_impl_name) {
 		spdk_sock_impl_get_opts(sock_impl_name, &impl_opts, &impl_opts_size);
 		impl_opts.enable_ktls = false;
 		impl_opts.tls_version = SPDK_TLS_VERSION_1_3;
-		impl_opts.psk_key = ctrlr->opts.psk;
-
-		tcp_ctrlr = SPDK_CONTAINEROF(ctrlr, struct nvme_tcp_ctrlr, ctrlr);
 		impl_opts.psk_identity = tcp_ctrlr->psk_identity;
+		impl_opts.psk_key = tcp_ctrlr->psk;
+		impl_opts.psk_key_size = tcp_ctrlr->psk_size;
 	}
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
@@ -2144,6 +2144,31 @@ nvme_tcp_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 /* We have to use the typedef in the function declaration to appease astyle. */
 typedef struct spdk_nvme_ctrlr spdk_nvme_ctrlr_t;
 
+static int
+nvme_tcp_generate_tls_credentials(struct nvme_tcp_ctrlr *tctrlr)
+{
+	int rc;
+
+	assert(tctrlr != NULL);
+
+	rc = nvme_tcp_generate_psk_identity(tctrlr->psk_identity, sizeof(tctrlr->psk_identity),
+					    tctrlr->ctrlr.opts.hostnqn, tctrlr->ctrlr.trid.subnqn);
+	if (rc) {
+		SPDK_ERRLOG("could not generate PSK identity\n");
+		return -EINVAL;
+	}
+
+	rc = nvme_tcp_derive_retained_psk(tctrlr->ctrlr.opts.psk, tctrlr->ctrlr.opts.hostnqn, tctrlr->psk,
+					  sizeof(tctrlr->psk));
+	if (rc < 0) {
+		SPDK_ERRLOG("Unable to derive retained PSK!\n");
+		return -EINVAL;
+	}
+	tctrlr->psk_size = rc;
+
+	return 0;
+}
+
 static spdk_nvme_ctrlr_t *
 nvme_tcp_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 			 const struct spdk_nvme_ctrlr_opts *opts,
@@ -2162,10 +2187,11 @@ nvme_tcp_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 	tctrlr->ctrlr.trid = *trid;
 
 	if (opts->psk[0] != '\0') {
-		rc = nvme_tcp_generate_psk_identity(tctrlr->psk_identity, sizeof(tctrlr->psk_identity),
-						    tctrlr->ctrlr.opts.hostnqn, tctrlr->ctrlr.trid.subnqn);
-		if (rc) {
-			SPDK_ERRLOG("could not generate PSK identity\n");
+		rc = nvme_tcp_generate_tls_credentials(tctrlr);
+		spdk_memset_s(&tctrlr->ctrlr.opts.psk, sizeof(tctrlr->ctrlr.opts.psk), 0,
+			      sizeof(tctrlr->ctrlr.opts.psk));
+
+		if (rc != 0) {
 			free(tctrlr);
 			return NULL;
 		}

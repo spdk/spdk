@@ -158,7 +158,7 @@ struct spdk_sock_impl_opts {
 	/**
 	 * Optional callback to retrieve PSK based on client's identity.
 	 *
-	 * \param out Buffer for PSK in hexadecimal format to be filled with found key.
+	 * \param out Buffer for PSK in binary format to be filled with found key.
 	 * \param out_len Length of "out" buffer.
 	 * \param cipher Cipher suite to be set by this callback.
 	 * \param psk_identity PSK identity for which the key needs to be found.

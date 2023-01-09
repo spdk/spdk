@@ -525,58 +525,42 @@ posix_sock_tls_psk_server_cb(SSL *ssl,
 			     unsigned char *psk,
 			     unsigned int max_psk_len)
 {
-	long key_len;
-	unsigned char *psk_k = NULL;
 	const char *cipher = NULL;
 	struct spdk_sock_impl_opts *impl_opts;
-	uint8_t sock_psk[PSK_MAX_PSK_LEN] = {};
 	int rc;
 
 	impl_opts = SSL_get_app_data(ssl);
 	SPDK_DEBUGLOG(sock_posix, "Received PSK ID '%s'\n", id);
 	if (id == NULL) {
 		SPDK_ERRLOG("Received empty PSK ID\n");
-		goto err;
+		return 0;
 	}
 
 	SPDK_DEBUGLOG(sock_posix, "Length of Client's PSK KEY %u\n", max_psk_len);
 
 	if (impl_opts->get_key) {
-		rc = impl_opts->get_key(sock_psk, PSK_MAX_PSK_LEN, &cipher, id, impl_opts->get_key_ctx);
+		rc = impl_opts->get_key(psk, max_psk_len, &cipher, id, impl_opts->get_key_ctx);
 		assert(cipher == NULL);
-		if (rc < 0) {
-			goto err;
-		}
-		psk_k = OPENSSL_hexstr2buf(sock_psk, &key_len);
+		return rc > 0 ? rc : 0;
 	} else {
 		if (impl_opts->psk_key == NULL) {
 			SPDK_ERRLOG("PSK is not set\n");
-			goto err;
+			return 0;
 		}
 
 		SPDK_DEBUGLOG(sock_posix, "Length of Client's PSK ID %lu\n", strlen(impl_opts->psk_identity));
 		if (strcmp(impl_opts->psk_identity, id) != 0) {
 			SPDK_ERRLOG("Unknown Client's PSK ID\n");
-			goto err;
+			return 0;
 		}
-		psk_k = OPENSSL_hexstr2buf(impl_opts->psk_key, &key_len);
-	}
-	if (psk_k == NULL) {
-		SPDK_ERRLOG("Could not unhexlify PSK\n");
-		goto err;
-	}
-	if (key_len > max_psk_len) {
-		SPDK_ERRLOG("Insufficient buffer size to copy PSK\n");
-		OPENSSL_free(psk_k);
-		goto err;
-	}
-	memcpy(psk, psk_k, key_len);
-	OPENSSL_free(psk_k);
+		if (impl_opts->psk_key_size > max_psk_len) {
+			SPDK_ERRLOG("PSK too long\n");
+			return 0;
+		}
 
-	return key_len;
-
-err:
-	return 0;
+		memcpy(psk, impl_opts->psk_key, impl_opts->psk_key_size);
+		return impl_opts->psk_key_size;
+	}
 }
 
 static unsigned int
@@ -587,7 +571,6 @@ posix_sock_tls_psk_client_cb(SSL *ssl, const char *hint,
 			     unsigned int max_psk_len)
 {
 	long key_len;
-	unsigned char *default_psk;
 	struct spdk_sock_impl_opts *impl_opts;
 
 	impl_opts = SSL_get_app_data(ssl);
@@ -600,23 +583,17 @@ posix_sock_tls_psk_client_cb(SSL *ssl, const char *hint,
 		SPDK_ERRLOG("PSK is not set\n");
 		goto err;
 	}
-	default_psk = OPENSSL_hexstr2buf(impl_opts->psk_key, &key_len);
-	if (default_psk == NULL) {
-		SPDK_ERRLOG("Could not unhexlify PSK\n");
-		goto err;
-	}
+	key_len = impl_opts->psk_key_size;
 	if ((strlen(impl_opts->psk_identity) + 1 > max_identity_len)
 	    || (key_len > max_psk_len)) {
-		OPENSSL_free(default_psk);
 		SPDK_ERRLOG("PSK ID or Key buffer is not sufficient\n");
 		goto err;
 	}
 	spdk_strcpy_pad(identity, impl_opts->psk_identity, strlen(impl_opts->psk_identity), 0);
 	SPDK_DEBUGLOG(sock_posix, "Sending PSK identity '%s'\n", identity);
 
-	memcpy(psk, default_psk, key_len);
+	memcpy(psk, impl_opts->psk_key, key_len);
 	SPDK_DEBUGLOG(sock_posix, "Provided out-of-band (OOB) PSK for TLS1.3 client\n");
-	OPENSSL_free(default_psk);
 
 	return key_len;
 
