@@ -2144,7 +2144,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=bdev_ftl_load)
 
     def bdev_ftl_unload(args):
-        print_dict(rpc.bdev.bdev_ftl_unload(args.client, name=args.name))
+        print_dict(rpc.bdev.bdev_ftl_unload(args.client, name=args.name, fast_shutdown=args.fast_shutdown))
 
     p = subparsers.add_parser('bdev_ftl_unload', help='Unload FTL bdev')
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)

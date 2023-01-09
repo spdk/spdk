@@ -1460,7 +1460,8 @@ def bdev_ftl_unload(client, name, fast_shutdown):
     Args:
         name: name of the bdev
     """
-    params = {'name': name}
+    params = {'name': name,
+              'fast_shutdown': fast_shutdown}
 
     return client.call('bdev_ftl_unload', params)
 
