@@ -1821,7 +1821,7 @@ int
 vhost_user_dev_unregister(struct spdk_vhost_dev *vdev)
 {
 	struct spdk_vhost_user_dev *user_dev = to_user_dev(vdev);
-	struct spdk_vhost_session *vsession;
+	struct spdk_vhost_session *vsession, *tmp_vsession;
 
 	pthread_mutex_lock(&user_dev->lock);
 	if (user_dev->pending_async_op_num) {
@@ -1840,7 +1840,7 @@ vhost_user_dev_unregister(struct spdk_vhost_dev *vdev)
 	 * should be stopped by the shutdown thread.
 	 */
 	if (!g_vhost_user_started) {
-		TAILQ_FOREACH(vsession, &user_dev->vsessions, tailq) {
+		TAILQ_FOREACH_SAFE(vsession, &user_dev->vsessions, tailq, tmp_vsession) {
 			assert(vsession->started == false);
 			TAILQ_REMOVE(&user_dev->vsessions, vsession, tailq);
 			if (vsession->mem) {
