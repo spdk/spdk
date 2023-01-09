@@ -826,47 +826,14 @@ nvme_io_path_get_next(struct nvme_bdev_channel *nbdev_ch, struct nvme_io_path *p
 {
 	struct nvme_io_path *next_path;
 
-	next_path = STAILQ_NEXT(prev_path, stailq);
-	if (next_path != NULL) {
-		return next_path;
-	} else {
-		return STAILQ_FIRST(&nbdev_ch->io_path_list);
-	}
-}
-
-static struct nvme_io_path *
-bdev_nvme_find_next_io_path(struct nvme_bdev_channel *nbdev_ch,
-			    struct nvme_io_path *prev)
-{
-	struct nvme_io_path *io_path, *start, *non_optimized = NULL;
-
-	start = nvme_io_path_get_next(nbdev_ch, prev);
-
-	io_path = start;
-	do {
-		if (spdk_likely(nvme_io_path_is_connected(io_path) &&
-				!io_path->nvme_ns->ana_state_updating)) {
-			switch (io_path->nvme_ns->ana_state) {
-			case SPDK_NVME_ANA_OPTIMIZED_STATE:
-				nbdev_ch->current_io_path = io_path;
-				return io_path;
-			case SPDK_NVME_ANA_NON_OPTIMIZED_STATE:
-				if (non_optimized == NULL) {
-					non_optimized = io_path;
-				}
-				break;
-			default:
-				break;
-			}
+	if (prev_path != NULL) {
+		next_path = STAILQ_NEXT(prev_path, stailq);
+		if (next_path != NULL) {
+			return next_path;
 		}
-		io_path = nvme_io_path_get_next(nbdev_ch, io_path);
-	} while (io_path != start);
+	}
 
-	/* We come here only if there is no optimized path. Cache even non_optimized
-	 * path for load balance across multiple non_optimized paths.
-	 */
-	nbdev_ch->current_io_path = non_optimized;
-	return non_optimized;
+	return STAILQ_FIRST(&nbdev_ch->io_path_list);
 }
 
 static struct nvme_io_path *
@@ -874,7 +841,7 @@ _bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 {
 	struct nvme_io_path *io_path, *start, *non_optimized = NULL;
 
-	start = STAILQ_FIRST(&nbdev_ch->io_path_list);
+	start = nvme_io_path_get_next(nbdev_ch, nbdev_ch->current_io_path);
 
 	io_path = start;
 	do {
@@ -895,6 +862,13 @@ _bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 		}
 		io_path = nvme_io_path_get_next(nbdev_ch, io_path);
 	} while (io_path != start);
+
+	if (nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE) {
+		/* We come here only if there is no optimized path. Cache even non_optimized
+		 * path for load balance across multiple non_optimized paths.
+		 */
+		nbdev_ch->current_io_path = non_optimized;
+	}
 
 	return non_optimized;
 }
@@ -909,7 +883,7 @@ bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 	if (spdk_likely(nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE)) {
 		return nbdev_ch->current_io_path;
 	} else {
-		return bdev_nvme_find_next_io_path(nbdev_ch, nbdev_ch->current_io_path);
+		return _bdev_nvme_find_io_path(nbdev_ch);
 	}
 }
 
