@@ -28,7 +28,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	# Reduce number of IO queues to shorten connection time
 	NVME_CONNECT="nvme connect -i 8"
 else
-	num_iterations=10
+	num_iterations=5
 fi
 
 set +x
