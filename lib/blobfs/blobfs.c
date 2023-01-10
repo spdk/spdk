@@ -2451,10 +2451,10 @@ spdk_file_write(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 		extend_args.op.resize.num_clusters = __bytes_to_clusters((offset + length), cluster_sz);
 		extend_args.file = file;
 		BLOBFS_TRACE(file, "start resize to %u clusters\n", extend_args.op.resize.num_clusters);
-		pthread_spin_unlock(&file->lock);
 		file->fs->send_request(__file_extend_blob, &extend_args);
 		sem_wait(&channel->sem);
 		if (extend_args.rc) {
+		        pthread_spin_unlock(&file->lock);
 			return extend_args.rc;
 		}
 	}
