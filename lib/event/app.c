@@ -440,6 +440,7 @@ app_setup_trace(struct spdk_app_opts *opts)
 
 	if (error_found) {
 		SPDK_ERRLOG("invalid tpoint mask %s\n", opts->tpoint_group_mask);
+		free(tp_g_str);
 		return -1;
 	} else {
 		SPDK_NOTICELOG("Tracepoint Group Mask %s specified.\n", opts->tpoint_group_mask);
