@@ -1079,6 +1079,7 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 	struct nvme_bdev_channel *nbdev_ch;
+	struct nvme_io_path *io_path;
 	struct nvme_ctrlr *nvme_ctrlr;
 	const struct spdk_nvme_ctrlr_data *cdata;
 	uint64_t delay_ms;
@@ -1102,16 +1103,18 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 	nbdev_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
 
 	assert(bio->io_path != NULL);
-	nvme_ctrlr = bio->io_path->qpair->ctrlr;
+	io_path = bio->io_path;
+
+	nvme_ctrlr = io_path->qpair->ctrlr;
 
 	if (spdk_nvme_cpl_is_path_error(cpl) ||
 	    spdk_nvme_cpl_is_aborted_sq_deletion(cpl) ||
-	    !nvme_io_path_is_available(bio->io_path) ||
+	    !nvme_io_path_is_available(io_path) ||
 	    !nvme_ctrlr_is_available(nvme_ctrlr)) {
 		nbdev_ch->current_io_path = NULL;
 		if (spdk_nvme_cpl_is_ana_error(cpl)) {
 			if (nvme_ctrlr_read_ana_log_page(nvme_ctrlr) == 0) {
-				bio->io_path->nvme_ns->ana_state_updating = true;
+				io_path->nvme_ns->ana_state_updating = true;
 			}
 		}
 		delay_ms = 0;
