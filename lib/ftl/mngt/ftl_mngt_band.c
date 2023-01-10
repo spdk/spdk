@@ -43,7 +43,23 @@ static int
 ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 {
 	struct ftl_band *band;
-	uint64_t i;
+	uint64_t i, blocks, md_blocks, md_bands;
+
+	/* Calculate initial number of bands */
+	blocks = spdk_bdev_get_num_blocks(spdk_bdev_desc_get_bdev(dev->base_bdev_desc));
+	dev->num_bands = blocks / ftl_get_num_blocks_in_band(dev);
+
+	/* Calculate number of bands considering base device metadata size requirement */
+	md_blocks = ftl_layout_base_md_blocks(dev);
+	md_bands = spdk_divide_round_up(md_blocks, dev->num_blocks_in_band);
+
+	if (dev->num_bands > md_bands) {
+		/* Save a band worth of space for metadata */
+		dev->num_bands -= md_bands;
+	} else {
+		FTL_ERRLOG(dev, "Base device too small to store metadata\n");
+		return -1;
+	}
 
 	TAILQ_INIT(&dev->free_bands);
 	TAILQ_INIT(&dev->shut_bands);

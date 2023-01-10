@@ -107,11 +107,6 @@ ftl_mngt_open_base_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 		goto error;
 	}
 
-	dev->num_bands = num_blocks / ftl_get_num_blocks_in_band(dev);
-
-	/* Save a band worth of space for metadata */
-	dev->num_bands--;
-
 	ftl_mngt_next_step(mngt);
 	return;
 error:

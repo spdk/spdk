@@ -183,4 +183,9 @@ void ftl_layout_setup_vss_emu(struct spdk_ftl_dev *dev);
 void ftl_layout_dump(struct spdk_ftl_dev *dev);
 int ftl_validate_regions(struct spdk_ftl_dev *dev, struct ftl_layout *layout);
 
+/**
+ * @brief Get number of blocks required to store metadata on bottom device
+ */
+uint64_t ftl_layout_base_md_blocks(struct spdk_ftl_dev *dev);
+
 #endif /* FTL_LAYOUT_H */

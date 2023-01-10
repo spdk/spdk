@@ -28,16 +28,30 @@ blocks2mib(uint64_t blocks)
 
 	return result;
 }
-/* TODO: This should be aligned to the write unit size of the device a given piece of md is on.
- * The tricky part is to make sure interpreting old alignment values will still be valid...
- */
-#define FTL_LAYOUT_REGION_ALIGNMENT_BLOCKS 32ULL
-#define FTL_LAYOUT_REGION_ALIGNMENT_BYTES (FTL_LAYOUT_REGION_ALIGNMENT_BLOCKS * FTL_BLOCK_SIZE)
+
+static uint64_t
+superblock_region_size(struct spdk_ftl_dev *dev)
+{
+	const struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(dev->base_bdev_desc);
+	uint64_t wus = spdk_bdev_get_write_unit_size(bdev) * FTL_BLOCK_SIZE;
+
+	if (wus > FTL_SUPERBLOCK_SIZE) {
+		return wus;
+	} else {
+		return wus * spdk_divide_round_up(FTL_SUPERBLOCK_SIZE, wus);
+	}
+}
+
+static uint64_t
+superblock_region_blocks(struct spdk_ftl_dev *dev)
+{
+	return superblock_region_size(dev) / FTL_BLOCK_SIZE;
+}
 
 static inline uint64_t
-blocks_region(uint64_t bytes)
+blocks_region(struct spdk_ftl_dev *dev, uint64_t bytes)
 {
-	const uint64_t alignment = FTL_LAYOUT_REGION_ALIGNMENT_BYTES;
+	const uint64_t alignment = superblock_region_size(dev);
 	uint64_t result;
 
 	result = spdk_divide_round_up(bytes, alignment);
@@ -50,8 +64,8 @@ blocks_region(uint64_t bytes)
 static void
 dump_region(struct spdk_ftl_dev *dev, struct ftl_layout_region *region)
 {
-	assert(!(region->current.offset % FTL_LAYOUT_REGION_ALIGNMENT_BLOCKS));
-	assert(!(region->current.blocks % FTL_LAYOUT_REGION_ALIGNMENT_BLOCKS));
+	assert(!(region->current.offset % superblock_region_blocks(dev)));
+	assert(!(region->current.blocks % superblock_region_blocks(dev)));
 
 	FTL_NOTICELOG(dev, "Region %s\n", region->name);
 	FTL_NOTICELOG(dev, "	offset:                      %.2f MiB\n",
@@ -162,7 +176,7 @@ setup_layout_nvc(struct spdk_ftl_dev *dev)
 	region->current.version = 0;
 	region->prev.version = 0;
 	region->current.offset = offset;
-	region->current.blocks = blocks_region(layout->l2p.addr_size * dev->num_lbas);
+	region->current.blocks = blocks_region(dev, layout->l2p.addr_size * dev->num_lbas);
 	set_region_bdev_nvc(region, dev);
 	offset += region->current.blocks;
 
@@ -176,7 +190,7 @@ setup_layout_nvc(struct spdk_ftl_dev *dev)
 	region->name = "band_md";
 	region->current.version = region->prev.version = FTL_BAND_VERSION_CURRENT;
 	region->current.offset = offset;
-	region->current.blocks = blocks_region(ftl_get_num_bands(dev) * sizeof(struct ftl_band_md));
+	region->current.blocks = blocks_region(dev, ftl_get_num_bands(dev) * sizeof(struct ftl_band_md));
 	region->entry_size = sizeof(struct ftl_band_md) / FTL_BLOCK_SIZE;
 	region->num_entries = ftl_get_num_bands(dev);
 	set_region_bdev_nvc(region, dev);
@@ -215,7 +229,7 @@ setup_layout_nvc(struct spdk_ftl_dev *dev)
 		region->current.version = FTL_P2L_VERSION_CURRENT;
 		region->prev.version = FTL_P2L_VERSION_CURRENT;
 		region->current.offset = offset;
-		region->current.blocks = blocks_region(layout->p2l.ckpt_pages * FTL_BLOCK_SIZE);
+		region->current.blocks = blocks_region(dev, layout->p2l.ckpt_pages * FTL_BLOCK_SIZE);
 		region->entry_size = 1;
 		region->num_entries = region->current.blocks;
 		set_region_bdev_nvc(region, dev);
@@ -236,7 +250,7 @@ setup_layout_nvc(struct spdk_ftl_dev *dev)
 	region->current.version = 0;
 	region->prev.version = 0;
 	region->current.offset = offset;
-	region->current.blocks = blocks_region(l2p_blocks * sizeof(uint64_t));
+	region->current.blocks = blocks_region(dev, l2p_blocks * sizeof(uint64_t));
 	region->entry_size = 1;
 	region->num_entries = region->current.blocks;
 	set_region_bdev_nvc(region, dev);
@@ -278,7 +292,7 @@ setup_layout_nvc(struct spdk_ftl_dev *dev)
 	region->name = "nvc_md";
 	region->current.version = region->prev.version = FTL_NVC_VERSION_CURRENT;
 	region->current.offset = offset;
-	region->current.blocks = blocks_region(layout->nvc.chunk_count *
+	region->current.blocks = blocks_region(dev, layout->nvc.chunk_count *
 					       sizeof(struct ftl_nv_cache_chunk_md));
 	region->entry_size = sizeof(struct ftl_nv_cache_chunk_md) / FTL_BLOCK_SIZE;
 	region->num_entries = layout->nvc.chunk_count;
@@ -378,7 +392,7 @@ setup_layout_base(struct spdk_ftl_dev *dev)
 	region->name = "vmap";
 	region->current.version = region->prev.version = 0;
 	region->current.offset = offset;
-	region->current.blocks = blocks_region(spdk_divide_round_up(
+	region->current.blocks = blocks_region(dev, spdk_divide_round_up(
 			layout->base.total_blocks + layout->nvc.total_blocks, 8));
 	set_region_bdev_btm(region, dev);
 	offset += region->current.blocks;
@@ -482,7 +496,7 @@ ftl_layout_setup_vss_emu(struct spdk_ftl_dev *dev)
 
 	bdev = spdk_bdev_desc_get_bdev(dev->nv_cache.bdev_desc);
 	layout->nvc.total_blocks = spdk_bdev_get_num_blocks(bdev);
-	region->current.blocks = blocks_region(dev->nv_cache.md_size * layout->nvc.total_blocks);
+	region->current.blocks = blocks_region(dev, dev->nv_cache.md_size * layout->nvc.total_blocks);
 
 	region->vss_blksz = 0;
 	region->bdev_desc = dev->nv_cache.bdev_desc;
@@ -518,7 +532,7 @@ ftl_layout_setup_superblock(struct spdk_ftl_dev *dev)
 				 layout->region[FTL_LAYOUT_REGION_TYPE_VSS].current.blocks;
 #endif
 
-	region->current.blocks = blocks_region(FTL_SUPERBLOCK_SIZE);
+	region->current.blocks = superblock_region_blocks(dev);
 	region->vss_blksz = 0;
 	region->bdev_desc = dev->nv_cache.bdev_desc;
 	region->ioch = dev->nv_cache.cache_ioch;
@@ -533,7 +547,7 @@ ftl_layout_setup_superblock(struct spdk_ftl_dev *dev)
 	region->current.version = FTL_SB_VERSION_CURRENT;
 	region->prev.version = FTL_SB_VERSION_CURRENT;
 	region->current.offset = 0;
-	region->current.blocks = blocks_region(FTL_SUPERBLOCK_SIZE);
+	region->current.blocks = superblock_region_blocks(dev);
 	set_region_bdev_btm(region, dev);
 
 	/* Check if SB can be stored at the end of base device */
@@ -554,16 +568,37 @@ ftl_layout_dump(struct spdk_ftl_dev *dev)
 {
 	struct ftl_layout *layout = &dev->layout;
 	int i;
+
 	FTL_NOTICELOG(dev, "NV cache layout:\n");
 	for (i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; ++i) {
 		if (layout->region[i].bdev_desc == dev->nv_cache.bdev_desc) {
 			dump_region(dev, &layout->region[i]);
 		}
 	}
-	FTL_NOTICELOG(dev, "Bottom device layout:\n");
+	FTL_NOTICELOG(dev, "Base device layout:\n");
 	for (i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; ++i) {
 		if (layout->region[i].bdev_desc == dev->base_bdev_desc) {
 			dump_region(dev, &layout->region[i]);
 		}
 	}
+}
+
+uint64_t
+ftl_layout_base_md_blocks(struct spdk_ftl_dev *dev)
+{
+	const struct spdk_bdev *bdev;
+	uint64_t md_blocks = 0, total_blocks = 0;
+
+	bdev = spdk_bdev_desc_get_bdev(dev->base_bdev_desc);
+	total_blocks += spdk_bdev_get_num_blocks(bdev);
+
+	bdev = spdk_bdev_desc_get_bdev(dev->nv_cache.bdev_desc);
+	total_blocks += spdk_bdev_get_num_blocks(bdev);
+
+	/* Count space needed for validity map */
+	md_blocks += blocks_region(dev, spdk_divide_round_up(total_blocks, 8));
+
+	/* Count space needed for superblock */
+	md_blocks += superblock_region_blocks(dev);
+	return md_blocks;
 }
