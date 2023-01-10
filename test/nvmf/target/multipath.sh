@@ -118,7 +118,7 @@ check_ana_state "$subsys_id" "$ctrl2_id" "inaccessible"
 
 wait $fio_pid
 
-nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
+nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
 waitforserial_disconnect "$NVMF_SERIAL"
 
 $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1

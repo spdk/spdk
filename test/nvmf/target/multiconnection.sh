@@ -35,7 +35,7 @@ $rootdir/scripts/fio-wrapper -p nvmf -i 262144 -d 64 -t randwrite -r 10
 
 sync
 for i in $(seq 1 $NVMF_SUBSYS); do
-	nvme disconnect -n "nqn.2016-06.io.spdk:cnode${i}" || true
+	nvme disconnect -n "nqn.2016-06.io.spdk:cnode${i}"
 	waitforserial_disconnect SPDK$i
 	$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode${i}
 done

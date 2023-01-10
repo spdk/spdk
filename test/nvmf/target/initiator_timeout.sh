@@ -53,7 +53,7 @@ $rpc_py bdev_delay_update_latency Delay0 p99_write 30
 fio_status=0
 wait $fio_pid || fio_status=$?
 
-nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
+nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
 waitforserial_disconnect "$NVMF_SERIAL"
 
 if [ $fio_status -eq 0 ]; then
