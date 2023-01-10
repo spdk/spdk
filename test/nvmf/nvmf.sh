@@ -17,6 +17,8 @@ trap "exit 1" SIGINT SIGTERM EXIT
 
 TEST_ARGS=("$@")
 
+timing_enter target
+
 if [[ $SPDK_TEST_URING -eq 0 ]]; then
 	run_test "nvmf_example" test/nvmf/target/nvmf_example.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_filesystem" test/nvmf/target/filesystem.sh "${TEST_ARGS[@]}"
@@ -30,10 +32,6 @@ if [[ $SPDK_TEST_URING -eq 0 ]]; then
 	run_test "nvmf_connect_stress" test/nvmf/target/connect_stress.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_fused_ordering" test/nvmf/target/fused_ordering.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_delete_subsystem" test/nvmf/target/delete_subsystem.sh "${TEST_ARGS[@]}"
-	run_test "nvmf_multicontroller" test/nvmf/host/multicontroller.sh "${TEST_ARGS[@]}"
-	run_test "nvmf_aer" test/nvmf/host/aer.sh "${TEST_ARGS[@]}"
-	run_test "nvmf_async_init" test/nvmf/host/async_init.sh "${TEST_ARGS[@]}"
-	run_test "dma" test/nvmf/host/dma.sh "${TEST_ARGS[@]}"
 	if [[ $SPDK_TEST_NVME_CLI -eq 1 ]]; then
 		run_test "nvmf_nvme_cli" test/nvmf/target/nvme_cli.sh "${TEST_ARGS[@]}"
 	fi
@@ -43,10 +41,18 @@ if [[ $SPDK_TEST_URING -eq 0 ]]; then
 		run_test "nvmf_vfio_user_fuzz" test/nvmf/target/vfio_user_fuzz.sh "${TEST_ARGS[@]}"
 	fi
 fi
+
 run_test "nvmf_host_management" test/nvmf/target/host_management.sh "${TEST_ARGS[@]}"
 run_test "nvmf_lvol" test/nvmf/target/nvmf_lvol.sh "${TEST_ARGS[@]}"
 run_test "nvmf_vhost" test/nvmf/target/nvmf_vhost.sh "${TEST_ARGS[@]}"
 run_test "nvmf_bdev_io_wait" test/nvmf/target/bdev_io_wait.sh "${TEST_ARGS[@]}"
+run_test "nvmf_queue_depth" test/nvmf/target/queue_depth.sh "${TEST_ARGS[@]}"
+run_test "nvmf_multipath" test/nvmf/target/multipath.sh "${TEST_ARGS[@]}"
+run_test "nvmf_zcopy" test/nvmf/target/zcopy.sh "${TEST_ARGS[@]}"
+run_test "nvmf_tls" test/nvmf/target/tls.sh "${TEST_ARGS[@]}"
+run_test "nvmf_nmic" test/nvmf/target/nmic.sh "${TEST_ARGS[@]}"
+run_test "nvmf_fio_target" test/nvmf/target/fio.sh "${TEST_ARGS[@]}"
+run_test "nvmf_bdevio" test/nvmf/target/bdevio.sh "${TEST_ARGS[@]}"
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test "nvmf_fuzz" test/nvmf/target/fabrics_fuzz.sh "${TEST_ARGS[@]}"
@@ -54,9 +60,6 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test "nvmf_initiator_timeout" test/nvmf/target/initiator_timeout.sh "${TEST_ARGS[@]}"
 fi
 
-run_test "nvmf_nmic" test/nvmf/target/nmic.sh "${TEST_ARGS[@]}"
-run_test "nvmf_fio_target" test/nvmf/target/fio.sh "${TEST_ARGS[@]}"
-run_test "nvmf_bdevio" test/nvmf/target/bdevio.sh "${TEST_ARGS[@]}"
 if [[ $NET_TYPE == phy ]]; then
 	if [ "$SPDK_TEST_NVMF_TRANSPORT" = "tcp" ]; then
 		gather_supported_nvmf_pci_devs
@@ -70,28 +73,29 @@ if [[ $NET_TYPE == phy ]]; then
 	# run_test "nvmf_srq_overwhelm" test/nvmf/target/srq_overwhelm.sh $TEST_ARGS
 fi
 
-run_test "nvmf_queue_depth" test/nvmf/target/queue_depth.sh "${TEST_ARGS[@]}"
-run_test "nvmf_multipath" test/nvmf/target/multipath.sh "${TEST_ARGS[@]}"
-run_test "nvmf_zcopy" test/nvmf/target/zcopy.sh "${TEST_ARGS[@]}"
-run_test "nvmf_tls" test/nvmf/target/tls.sh "${TEST_ARGS[@]}"
+timing_exit target
 
 timing_enter host
 
+if [[ $SPDK_TEST_URING -eq 0 ]]; then
+	run_test "nvmf_multicontroller" test/nvmf/host/multicontroller.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_aer" test/nvmf/host/aer.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_async_init" test/nvmf/host/async_init.sh "${TEST_ARGS[@]}"
+	run_test "dma" test/nvmf/host/dma.sh "${TEST_ARGS[@]}"
+fi
+
 run_test "nvmf_identify" test/nvmf/host/identify.sh "${TEST_ARGS[@]}"
 run_test "nvmf_perf" test/nvmf/host/perf.sh "${TEST_ARGS[@]}"
-
+run_test "nvmf_fio_host" test/nvmf/host/fio.sh "${TEST_ARGS[@]}"
 run_test "nvmf_failover" test/nvmf/host/failover.sh "${TEST_ARGS[@]}"
-if [[ $SPDK_TEST_USDT -eq 1 ]]; then
-	run_test "nvmf_multipath" test/nvmf/host/multipath.sh "${TEST_ARGS[@]}"
-fi
 run_test "nvmf_discovery" test/nvmf/host/discovery.sh "${TEST_ARGS[@]}"
-if [[ $SPDK_TEST_USDT -eq 1 ]]; then
-	run_test "nvmf_timeout" test/nvmf/host/timeout.sh "${TEST_ARGS[@]}"
-fi
-
 # TODO: disabled due to intermittent failures (RDMA_CM_EVENT_UNREACHABLE/ETIMEDOUT)
 #run_test test/nvmf/host/identify_kernel_nvmf.sh $TEST_ARGS
-run_test "nvmf_fio_host" test/nvmf/host/fio.sh "${TEST_ARGS[@]}"
+
+if [[ $SPDK_TEST_USDT -eq 1 ]]; then
+	run_test "nvmf_multipath" test/nvmf/host/multipath.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_timeout" test/nvmf/host/timeout.sh "${TEST_ARGS[@]}"
+fi
 
 if [[ $NET_TYPE == phy ]]; then
 	# GitHub issue #1165
