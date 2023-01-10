@@ -1858,9 +1858,6 @@ test_pending_reset(void)
 	ctrlr_ch1 = io_path1->qpair->ctrlr_ch;
 	SPDK_CU_ASSERT_FATAL(ctrlr_ch1 != NULL);
 
-	first_bdev_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_RESET, bdev, ch1);
-	first_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-
 	set_thread(1);
 
 	ch2 = spdk_get_io_channel(bdev);
@@ -1872,7 +1869,10 @@ test_pending_reset(void)
 	ctrlr_ch2 = io_path2->qpair->ctrlr_ch;
 	SPDK_CU_ASSERT_FATAL(ctrlr_ch2 != NULL);
 
-	second_bdev_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_RESET, bdev, ch2);
+	first_bdev_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_RESET, bdev, ch2);
+	first_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+
+	second_bdev_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_RESET, bdev, ch1);
 	second_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
 
 	/* The first reset request is submitted on thread 1, and the second reset request

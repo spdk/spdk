@@ -2111,27 +2111,13 @@ exit:
 	}
 }
 
-static void
-bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+static inline void
+_bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_io *bdev_io)
 {
-	struct nvme_bdev_channel *nbdev_ch = spdk_io_channel_get_ctx(ch);
-	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct nvme_bdev_io *nbdev_io = (struct nvme_bdev_io *)bdev_io->driver_ctx;
+	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct nvme_bdev_io *nbdev_io_to_abort;
 	int rc = 0;
-
-	spdk_trace_record(TRACE_BDEV_NVME_IO_START, 0, 0, (uintptr_t)nbdev_io, (uintptr_t)bdev_io);
-	nbdev_io->io_path = bdev_nvme_find_io_path(nbdev_ch);
-	if (spdk_unlikely(!nbdev_io->io_path)) {
-		if (!bdev_nvme_io_type_is_admin(bdev_io->type)) {
-			rc = -ENXIO;
-			goto exit;
-		}
-
-		/* Admin commands do not use the optimal I/O path.
-		 * Simply fall through even if it is not found.
-		 */
-	}
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -2257,10 +2243,31 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 		break;
 	}
 
-exit:
 	if (spdk_unlikely(rc != 0)) {
 		bdev_nvme_io_complete(nbdev_io, rc);
 	}
+}
+
+static void
+bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	struct nvme_bdev_channel *nbdev_ch = spdk_io_channel_get_ctx(ch);
+	struct nvme_bdev_io *nbdev_io = (struct nvme_bdev_io *)bdev_io->driver_ctx;
+
+	spdk_trace_record(TRACE_BDEV_NVME_IO_START, 0, 0, (uintptr_t)nbdev_io, (uintptr_t)bdev_io);
+	nbdev_io->io_path = bdev_nvme_find_io_path(nbdev_ch);
+	if (spdk_unlikely(!nbdev_io->io_path)) {
+		if (!bdev_nvme_io_type_is_admin(bdev_io->type)) {
+			bdev_nvme_io_complete(nbdev_io, -ENXIO);
+			return;
+		}
+
+		/* Admin commands do not use the optimal I/O path.
+		 * Simply fall through even if it is not found.
+		 */
+	}
+
+	_bdev_nvme_submit_request(nbdev_ch, bdev_io);
 }
 
 static bool
