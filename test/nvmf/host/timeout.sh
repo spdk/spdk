@@ -28,7 +28,7 @@ $rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK0000000000000
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
-$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 20 -f &
+$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 -f &
 bdevperf_pid=$!
 
 waitforlisten $bdevperf_pid $bdevperf_rpc_sock
@@ -42,9 +42,10 @@ function get_controller() {
 }
 
 # Case 1 test ctrlr_loss_timeout_sec time to try reconnecting to a ctrlr before deleting it
-# ctrlr_loss_timeout_sec is 10 reconnect_delay_sec is 5
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_set_options -r -1
-$rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -l 10 -o 5
+$rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
+	-s $NVMF_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 \
+	--ctrlr-loss-timeout-sec 5 --reconnect-delay-sec 2
 
 $rootdir/examples/bdev/bdevperf/bdevperf.py -s $bdevperf_rpc_sock perform_tests &
 rpc_pid=$!
@@ -52,12 +53,12 @@ rpc_pid=$!
 sleep 1
 
 $rpc_py nvmf_subsystem_remove_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
-sleep 5
+sleep 2
 [[ "$(get_controller)" == "NVMe0" ]]
 [[ "$(get_bdev)" == "NVMe0n1" ]]
 
-# wait for the ctrlr_loss_timeout_sec time 10 sec and check bdevs and controller are deleted
-sleep 10
+# wait for the ctrlr_loss_timeout_sec time 2 sec and check bdevs and controller are deleted
+sleep 5
 [[ "$(get_controller)" == "" ]]
 [[ "$(get_bdev)" == "" ]]
 
@@ -69,15 +70,15 @@ killprocess $bdevperf_pid
 # Time to wait until ctrlr is reconnected before failing I/O to ctrlr
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
-$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 20 -f &
+$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 -f &
 bdevperf_pid=$!
 
 waitforlisten $bdevperf_pid $bdevperf_rpc_sock
 
-# ctrlr_loss_timeout_sec is 10 fast_io_fail_timeout_sec is 2 -o reconnect_delay_sec is 1
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_set_options -r -1
-$rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT \
-	-f ipv4 -n nqn.2016-06.io.spdk:cnode1 -l 10 -u 2 -o 1
+$rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
+	-s $NVMF_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 \
+	--ctrlr-loss-timeout-sec 5 --fast-io-fail-timeout-sec 2 --reconnect-delay-sec 1
 
 $rootdir/examples/bdev/bdevperf/bdevperf.py -s $bdevperf_rpc_sock perform_tests &
 rpc_pid=$!
@@ -97,7 +98,7 @@ rpc_pid=$!
 sleep 1
 $rpc_py nvmf_subsystem_remove_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 # bdevperf fails to process the I/O fast_io_fail_timeout_sec expires at 2 sec
-sleep 5
+sleep 3
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 wait $rpc_pid
 
@@ -105,7 +106,7 @@ killprocess $bdevperf_pid
 
 # Case 3 test reconnect_delay_sec
 # Time to delay a reconnect trial
-$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w randread -t 20 -f &
+$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w randread -t 10 -f &
 bdevperf_pid=$!
 
 waitforlisten $bdevperf_pid $bdevperf_rpc_sock
@@ -116,9 +117,9 @@ dtrace_pid=$!
 
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_set_options -r -1 -e 9
 
-# ctrlr_loss_timeout_sec is 10 reconnect_delay_sec is 2
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
-	-s $NVMF_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -l 10 -o 2
+	-s $NVMF_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 \
+	--ctrlr-loss-timeout-sec 5 --reconnect-delay-sec 2
 $rootdir/examples/bdev/bdevperf/bdevperf.py -s $bdevperf_rpc_sock perform_tests &
 rpc_pid=$!
 sleep 1
