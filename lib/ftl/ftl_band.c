@@ -610,9 +610,12 @@ ftl_band_search_next_to_reloc(struct spdk_ftl_dev *dev)
 			if (phys_id == FTL_BAND_PHYS_ID_INVALID ||
 			    band_cmp(invalidity, wr_cnt, max_invalidity, max_wr_cnt,
 				     band->phys_id, phys_id)) {
-				max_invalidity = invalidity;
 				max_wr_cnt = wr_cnt;
 				phys_id = band->phys_id;
+
+				if (invalidity > max_invalidity) {
+					max_invalidity = invalidity;
+				}
 			}
 		}
 	}
