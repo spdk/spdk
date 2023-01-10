@@ -250,7 +250,6 @@ _spdk_apps() {
 
 	apps=(
 		iscsi_tgt
-		iscsi_top
 		nvmf_tgt
 		spdk_dd
 		spdk_tgt
