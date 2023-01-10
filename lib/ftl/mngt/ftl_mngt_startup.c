@@ -161,7 +161,6 @@ static const struct ftl_mngt_process_desc desc_first_start = {
 		{
 			.name = "Clear L2P",
 			.action = ftl_mngt_clear_l2p,
-			.cleanup = ftl_mngt_clear_l2p
 		},
 		{
 			.name = "Scrub NV cache",

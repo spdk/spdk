@@ -19,5 +19,6 @@ void ftl_l2p_flat_persist(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
 void ftl_l2p_flat_process(struct spdk_ftl_dev *dev);
 bool ftl_l2p_flat_is_halted(struct spdk_ftl_dev *dev);
 void ftl_l2p_flat_halt(struct spdk_ftl_dev *dev);
+void ftl_l2p_flat_resume(struct spdk_ftl_dev *dev);
 
 #endif /* FTL_L2P_FLAT_H */

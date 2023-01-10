@@ -190,3 +190,8 @@ void
 ftl_l2p_flat_halt(struct spdk_ftl_dev *dev)
 {
 }
+
+void
+ftl_l2p_flat_resume(struct spdk_ftl_dev *dev)
+{
+}

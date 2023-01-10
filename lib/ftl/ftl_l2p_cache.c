@@ -504,7 +504,6 @@ ftl_l2p_cache_init(struct spdk_ftl_dev *dev)
 	cache->cache_layout_bdev_desc = reg->bdev_desc;
 	cache->cache_layout_ioch = reg->ioch;
 
-	cache->state = L2P_CACHE_RUNNING;
 	return 0;
 }
 
@@ -957,6 +956,15 @@ ftl_l2p_cache_halt(struct spdk_ftl_dev *dev)
 			cache->state = L2P_CACHE_SHUTDOWN_DONE;
 		}
 	}
+}
+
+void
+ftl_l2p_cache_resume(struct spdk_ftl_dev *dev)
+{
+	struct ftl_l2p_cache *cache = (struct ftl_l2p_cache *)dev->l2p;
+
+	assert(cache->state == L2P_CACHE_INIT);
+	cache->state = L2P_CACHE_RUNNING;
 }
 
 static inline struct ftl_l2p_page *

@@ -124,6 +124,12 @@ ftl_l2p_is_halted(struct spdk_ftl_dev *dev)
 }
 
 void
+ftl_l2p_resume(struct spdk_ftl_dev *dev)
+{
+	return FTL_L2P_OP(resume)(dev);
+}
+
+void
 ftl_l2p_halt(struct spdk_ftl_dev *dev)
 {
 	return FTL_L2P_OP(halt)(dev);

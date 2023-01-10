@@ -47,6 +47,7 @@ void ftl_l2p_persist(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx);
 void ftl_l2p_process(struct spdk_ftl_dev *dev);
 bool ftl_l2p_is_halted(struct spdk_ftl_dev *dev);
 void ftl_l2p_halt(struct spdk_ftl_dev *dev);
+void ftl_l2p_resume(struct spdk_ftl_dev *dev);
 
 void ftl_l2p_update_cache(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr new_addr,
 			  ftl_addr old_addr);

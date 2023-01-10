@@ -189,6 +189,7 @@ ftl_mngt_finalize_startup(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mng
 	dev->initialized = 1;
 	dev->sb_shm->shm_ready = true;
 
+	ftl_l2p_resume(dev);
 	ftl_reloc_resume(dev->reloc);
 	ftl_writer_resume(&dev->writer_user);
 	ftl_writer_resume(&dev->writer_gc);

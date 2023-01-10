@@ -23,5 +23,6 @@ void ftl_l2p_cache_persist(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx
 void ftl_l2p_cache_process(struct spdk_ftl_dev *dev);
 bool ftl_l2p_cache_is_halted(struct spdk_ftl_dev *dev);
 void ftl_l2p_cache_halt(struct spdk_ftl_dev *dev);
+void ftl_l2p_cache_resume(struct spdk_ftl_dev *dev);
 
 #endif /* FTL_L2P_CACHE_H */
