@@ -664,6 +664,7 @@ class Initiator(Server):
         self.nvmecli_bin = "nvme"
         self.cpu_frequency = None
         self.subsystem_info_list = []
+        self.allow_cpu_sharing = True
 
         if "spdk_dir" in initiator_config:
             self.spdk_dir = initiator_config["spdk_dir"]
@@ -677,6 +678,8 @@ class Initiator(Server):
             self.cpus_allowed_policy = initiator_config["cpus_allowed_policy"]
         if "cpu_frequency" in initiator_config:
             self.cpu_frequency = initiator_config["cpu_frequency"]
+        if "allow_cpu_sharing" in initiator_config:
+            self.allow_cpu_sharing = initiator_config["allow_cpu_sharing"]
         if os.getenv('SPDK_WORKSPACE'):
             self.spdk_dir = os.getenv('SPDK_WORKSPACE')
 
@@ -790,6 +793,19 @@ class Initiator(Server):
 
         # Use the most common NUMA node for this chunk to allocate memory and CPUs
         section_local_numa = sorted(numa_stats.items(), key=lambda item: item[1], reverse=True)[0][0]
+
+        # Check if we have enough free CPUs to pop from the list before assigning them
+        if len(self.available_cpus[section_local_numa]) < num_jobs:
+            if self.allow_cpu_sharing:
+                self.log.info("Regenerating available CPU list %s" % section_local_numa)
+                # Remove still available CPUs from the regenerated list. We don't want to
+                # regenerate it with duplicates.
+                cpus_regen = set(self.get_numa_cpu_map()[section_local_numa]) - set(self.available_cpus[section_local_numa])
+                self.available_cpus[section_local_numa].extend(cpus_regen)
+                self.log.info(self.log.info(self.available_cpus[section_local_numa]))
+            else:
+                self.log.error("No more free CPU cores to use from allowed_cpus list!")
+                raise IndexError
 
         for _ in range(num_jobs):
             try:
