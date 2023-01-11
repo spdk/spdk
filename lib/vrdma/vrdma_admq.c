@@ -1673,7 +1673,10 @@ int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
 static inline int vrdma_aq_rollback(struct vrdma_admin_sw_qp *aq, uint16_t pi,
                                            uint16_t q_size)
 {
-	return (pi % q_size < aq->admq->ci % q_size);
+	if (spdk_unlikely(pi % q_size == 0)) {
+		return 0;
+	}
+	return !(pi % q_size > aq->admq->ci % q_size);
 }
 
 static bool vrdma_aq_sm_idle(struct vrdma_admin_sw_qp *aq,
@@ -1723,7 +1726,7 @@ static bool vrdma_aq_sm_handle_pi(struct vrdma_admin_sw_qp *aq,
 		return false;
 	}
 
-	if (aq->admq->pi > aq->admq->ci) {
+	if (aq->admq->pi != aq->admq->ci) {
 		aq->state = VRDMA_CMD_STATE_READ_CMD_ENTRY;
 	} else {
 		aq->state = VRDMA_CMD_STATE_POLL_PI;
