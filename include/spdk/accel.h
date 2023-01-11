@@ -382,6 +382,81 @@ int spdk_accel_append_decompress(struct spdk_accel_sequence **seq, struct spdk_i
 				 int flags, spdk_accel_step_cb cb_fn, void *cb_arg);
 
 /**
+ * Append an encrypt operation to a sequence.
+ *
+ * `nbytes` must be multiple of `block_size`.  `iv` is used to encrypt the first logical block of
+ * size `block_size`.  If `src_iovs` describes more than one logical block then `iv` will be
+ * incremented for each next logical block.  Data Encryption Key identifier should be created before
+ * calling this function using methods specific to the accel module being used.
+ *
+ * \param seq Sequence object.  If NULL, a new sequence object will be created.
+ * \param ch I/O channel.
+ * \param key Data Encryption Key identifier
+ * \param dst_iovs Destination I/O vector array.
+ * \param dst_iovcnt Size of the `dst_iovs` array.
+ * \param dst_domain Memory domain to which the destination buffers belong.
+ * \param dst_domain_ctx Destination buffer domain context.
+ * \param src_iovs Source I/O vector array.
+ * \param src_iovcnt Size of the `src_iovs` array.
+ * \param src_domain Memory domain to which the source buffers belong.
+ * \param src_domain_ctx Source buffer domain context.
+ * \param iv Initialization vector (tweak) used for encryption
+ * \param block_size Logical block size, if src contains more than 1 logical block, subsequent
+ *        logical blocks will be encrypted with incremented `iv`.
+ * \param flags Accel operation flags.
+ * \param cb_fn Callback to be executed once this operation is completed.
+ * \param cb_arg Argument to be passed to `cb_fn`.
+ *
+ * \return 0 if operation was successfully added to the sequence, negative errno otherwise.
+ */
+int spdk_accel_append_encrypt(struct spdk_accel_sequence **seq, struct spdk_io_channel *ch,
+			      struct spdk_accel_crypto_key *key,
+			      struct iovec *dst_iovs, uint32_t dst_iovcnt,
+			      struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+			      struct iovec *src_iovs, uint32_t src_iovcnt,
+			      struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+			      uint64_t iv, uint32_t block_size, int flags,
+			      spdk_accel_step_cb cb_fn, void *cb_arg);
+
+/**
+ * Append a decrypt operation to a sequence.
+ *
+ * `nbytes` must be multiple of `block_size`. `iv` is used to decrypt the first logical block of
+ * size `block_size`. If `src_iovs` describes more than one logical block then `iv` will be
+ * incremented for each next logical block.  Data Encryption Key identifier should be created before
+ * calling this function using methods specific to the accel module being used.
+ *
+ * \param seq Sequence object.  If NULL, a new sequence object will be created.
+ * \param ch I/O channel.
+ * \param key Data Encryption Key identifier
+ * \param dst_iovs Destination I/O vector array.
+ * \param dst_iovcnt Size of the `dst_iovs` array.
+ * \param dst_domain Memory domain to which the destination buffers belong.
+ * \param dst_domain_ctx Destination buffer domain context.
+ * \param src_iovs Source I/O vector array.
+ * \param src_iovcnt Size of the `src_iovs` array.
+ * \param src_domain Memory domain to which the source buffers belong.
+ * \param src_domain_ctx Source buffer domain context.
+ * \param iv Initialization vector (tweak) used for decryption. Should be the same as `iv` used for
+ *        encryption of a data block.
+ * \param block_size Logical block size, if src contains more than 1 logical block, subsequent
+ *        logical blocks will be decrypted with incremented `iv`.
+ * \param flags Accel operation flags.
+ * \param cb_fn Callback to be executed once this operation is completed.
+ * \param cb_arg Argument to be passed to `cb_fn`.
+ *
+ * \return 0 if operation was successfully added to the sequence, negative errno otherwise.
+ */
+int spdk_accel_append_decrypt(struct spdk_accel_sequence **seq, struct spdk_io_channel *ch,
+			      struct spdk_accel_crypto_key *key,
+			      struct iovec *dst_iovs, uint32_t dst_iovcnt,
+			      struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+			      struct iovec *src_iovs, uint32_t src_iovcnt,
+			      struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+			      uint64_t iv, uint32_t block_size, int flags,
+			      spdk_accel_step_cb cb_fn, void *cb_arg);
+
+/**
  * Finish a sequence and execute all its operations. After the completion callback is executed, the
  * sequence object is automatically freed.
  *

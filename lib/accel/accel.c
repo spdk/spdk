@@ -920,6 +920,118 @@ spdk_accel_append_decompress(struct spdk_accel_sequence **pseq, struct spdk_io_c
 }
 
 int
+spdk_accel_append_encrypt(struct spdk_accel_sequence **pseq, struct spdk_io_channel *ch,
+			  struct spdk_accel_crypto_key *key,
+			  struct iovec *dst_iovs, uint32_t dst_iovcnt,
+			  struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+			  struct iovec *src_iovs, uint32_t src_iovcnt,
+			  struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+			  uint64_t iv, uint32_t block_size, int flags,
+			  spdk_accel_step_cb cb_fn, void *cb_arg)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_accel_task *task;
+	struct spdk_accel_sequence *seq = *pseq;
+
+	if (spdk_unlikely(!dst_iovs || !dst_iovcnt || !src_iovs || !src_iovcnt || !key ||
+			  !block_size)) {
+		return -EINVAL;
+	}
+
+	if (seq == NULL) {
+		seq = accel_sequence_get(accel_ch);
+		if (spdk_unlikely(seq == NULL)) {
+			return -ENOMEM;
+		}
+	}
+
+	assert(seq->ch == accel_ch);
+	task = accel_sequence_get_task(accel_ch, seq, cb_fn, cb_arg);
+	if (spdk_unlikely(task == NULL)) {
+		if (*pseq == NULL) {
+			accel_sequence_put(seq);
+		}
+
+		return -ENOMEM;
+	}
+
+	task->crypto_key = key;
+	task->src_domain = src_domain;
+	task->src_domain_ctx = src_domain_ctx;
+	task->s.iovs = src_iovs;
+	task->s.iovcnt = src_iovcnt;
+	task->dst_domain = dst_domain;
+	task->dst_domain_ctx = dst_domain_ctx;
+	task->d.iovs = dst_iovs;
+	task->d.iovcnt = dst_iovcnt;
+	task->iv = iv;
+	task->block_size = block_size;
+	task->flags = flags;
+	task->op_code = ACCEL_OPC_ENCRYPT;
+
+	TAILQ_INSERT_TAIL(&seq->tasks, task, seq_link);
+	*pseq = seq;
+
+	return 0;
+}
+
+int
+spdk_accel_append_decrypt(struct spdk_accel_sequence **pseq, struct spdk_io_channel *ch,
+			  struct spdk_accel_crypto_key *key,
+			  struct iovec *dst_iovs, uint32_t dst_iovcnt,
+			  struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+			  struct iovec *src_iovs, uint32_t src_iovcnt,
+			  struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+			  uint64_t iv, uint32_t block_size, int flags,
+			  spdk_accel_step_cb cb_fn, void *cb_arg)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_accel_task *task;
+	struct spdk_accel_sequence *seq = *pseq;
+
+	if (spdk_unlikely(!dst_iovs || !dst_iovcnt || !src_iovs || !src_iovcnt || !key ||
+			  !block_size)) {
+		return -EINVAL;
+	}
+
+	if (seq == NULL) {
+		seq = accel_sequence_get(accel_ch);
+		if (spdk_unlikely(seq == NULL)) {
+			return -ENOMEM;
+		}
+	}
+
+	assert(seq->ch == accel_ch);
+	task = accel_sequence_get_task(accel_ch, seq, cb_fn, cb_arg);
+	if (spdk_unlikely(task == NULL)) {
+		if (*pseq == NULL) {
+			accel_sequence_put(seq);
+		}
+
+		return -ENOMEM;
+	}
+
+	task->crypto_key = key;
+	task->src_domain = src_domain;
+	task->src_domain_ctx = src_domain_ctx;
+	task->s.iovs = src_iovs;
+	task->s.iovcnt = src_iovcnt;
+	task->dst_domain = dst_domain;
+	task->dst_domain_ctx = dst_domain_ctx;
+	task->d.iovs = dst_iovs;
+	task->d.iovcnt = dst_iovcnt;
+	task->iv = iv;
+	task->block_size = block_size;
+	task->flags = flags;
+	task->op_code = ACCEL_OPC_DECRYPT;
+
+	TAILQ_INSERT_TAIL(&seq->tasks, task, seq_link);
+	*pseq = seq;
+
+	return 0;
+}
+
+int
 spdk_accel_get_buf(struct spdk_io_channel *ch, uint64_t len, void **buf,
 		   struct spdk_memory_domain **domain, void **domain_ctx)
 {
@@ -1461,7 +1573,9 @@ accel_sequence_merge_tasks(struct spdk_accel_sequence *seq, struct spdk_accel_ta
 		 * So, for the sake of simplicity, skip this type of operations for now.
 		 */
 		if (next->op_code != ACCEL_OPC_DECOMPRESS &&
-		    next->op_code != ACCEL_OPC_COPY) {
+		    next->op_code != ACCEL_OPC_COPY &&
+		    next->op_code != ACCEL_OPC_ENCRYPT &&
+		    next->op_code != ACCEL_OPC_DECRYPT) {
 			break;
 		}
 		if (task->dst_domain != next->src_domain) {
@@ -1479,6 +1593,8 @@ accel_sequence_merge_tasks(struct spdk_accel_sequence *seq, struct spdk_accel_ta
 		break;
 	case ACCEL_OPC_DECOMPRESS:
 	case ACCEL_OPC_FILL:
+	case ACCEL_OPC_ENCRYPT:
+	case ACCEL_OPC_DECRYPT:
 		/* We can only merge tasks when one of them is a copy */
 		if (next->op_code != ACCEL_OPC_COPY) {
 			break;

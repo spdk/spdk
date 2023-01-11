@@ -1463,6 +1463,7 @@ test_sequence_copy_elision(void)
 	struct iovec src_iovs[4], dst_iovs[4], exp_iovs[2];
 	char buf[4096], tmp[4][4096];
 	struct accel_module modules[ACCEL_OPC_LAST];
+	struct spdk_accel_crypto_key key = {};
 	int i, rc, completed;
 
 	ioch = spdk_accel_get_io_channel();
@@ -1750,6 +1751,112 @@ test_sequence_copy_elision(void)
 	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 0);
 	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_FILL].count, 1);
 
+	/* Check copy + encrypt + copy */
+	seq = NULL;
+	completed = 0;
+	g_seq_operations[ACCEL_OPC_COPY].count = 0;
+	g_seq_operations[ACCEL_OPC_ENCRYPT].count = 0;
+	g_seq_operations[ACCEL_OPC_ENCRYPT].dst_iovcnt = 1;
+	g_seq_operations[ACCEL_OPC_ENCRYPT].src_iovcnt = 1;
+	g_seq_operations[ACCEL_OPC_ENCRYPT].src_iovs = &exp_iovs[0];
+	g_seq_operations[ACCEL_OPC_ENCRYPT].dst_iovs = &exp_iovs[1];
+	exp_iovs[0].iov_base = tmp[0];
+	exp_iovs[0].iov_len = sizeof(tmp[0]);
+	exp_iovs[1].iov_base = buf;
+	exp_iovs[1].iov_len = sizeof(buf);
+
+	dst_iovs[0].iov_base = tmp[1];
+	dst_iovs[0].iov_len = sizeof(tmp[1]);
+	src_iovs[0].iov_base = tmp[0];
+	src_iovs[0].iov_len = sizeof(tmp[0]);
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[0], 1, NULL, NULL,
+				    &src_iovs[0], 1, NULL, NULL, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	dst_iovs[1].iov_base = tmp[2];
+	dst_iovs[1].iov_len = sizeof(tmp[2]);
+	src_iovs[1].iov_base = tmp[1];
+	src_iovs[1].iov_len = sizeof(tmp[1]);
+	rc = spdk_accel_append_encrypt(&seq, ioch, &key, &dst_iovs[1], 1, NULL, NULL,
+				       &src_iovs[1], 1, NULL, NULL, 0, sizeof(tmp[2]), 0,
+				       ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	dst_iovs[2].iov_base = buf;
+	dst_iovs[2].iov_len = sizeof(buf);
+	src_iovs[2].iov_base = tmp[2];
+	src_iovs[2].iov_len = sizeof(tmp[2]);
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[2], 1, NULL, NULL,
+				    &src_iovs[2], 1, NULL, NULL, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 3);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_ENCRYPT].count, 1);
+
+	/* Check copy + decrypt + copy */
+	seq = NULL;
+	completed = 0;
+	g_seq_operations[ACCEL_OPC_COPY].count = 0;
+	g_seq_operations[ACCEL_OPC_DECRYPT].count = 0;
+	g_seq_operations[ACCEL_OPC_DECRYPT].dst_iovcnt = 1;
+	g_seq_operations[ACCEL_OPC_DECRYPT].src_iovcnt = 1;
+	g_seq_operations[ACCEL_OPC_DECRYPT].src_iovs = &exp_iovs[0];
+	g_seq_operations[ACCEL_OPC_DECRYPT].dst_iovs = &exp_iovs[1];
+	exp_iovs[0].iov_base = tmp[0];
+	exp_iovs[0].iov_len = sizeof(tmp[0]);
+	exp_iovs[1].iov_base = buf;
+	exp_iovs[1].iov_len = sizeof(buf);
+
+	dst_iovs[0].iov_base = tmp[1];
+	dst_iovs[0].iov_len = sizeof(tmp[1]);
+	src_iovs[0].iov_base = tmp[0];
+	src_iovs[0].iov_len = sizeof(tmp[0]);
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[0], 1, NULL, NULL,
+				    &src_iovs[0], 1, NULL, NULL, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	dst_iovs[1].iov_base = tmp[2];
+	dst_iovs[1].iov_len = sizeof(tmp[2]);
+	src_iovs[1].iov_base = tmp[1];
+	src_iovs[1].iov_len = sizeof(tmp[1]);
+	rc = spdk_accel_append_decrypt(&seq, ioch, &key, &dst_iovs[1], 1, NULL, NULL,
+				       &src_iovs[1], 1, NULL, NULL, 0, sizeof(tmp[2]), 0,
+				       ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	dst_iovs[2].iov_base = buf;
+	dst_iovs[2].iov_len = sizeof(buf);
+	src_iovs[2].iov_base = tmp[2];
+	src_iovs[2].iov_len = sizeof(tmp[2]);
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[2], 1, NULL, NULL,
+				    &src_iovs[2], 1, NULL, NULL, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 3);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECRYPT].count, 1);
+
 	/* Cleanup module pointers to make subsequent tests work correctly */
 	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
 		g_modules_opc[i] = modules[i];
@@ -1757,6 +1864,10 @@ test_sequence_copy_elision(void)
 
 	g_seq_operations[ACCEL_OPC_DECOMPRESS].src_iovs = NULL;
 	g_seq_operations[ACCEL_OPC_DECOMPRESS].dst_iovs = NULL;
+	g_seq_operations[ACCEL_OPC_ENCRYPT].src_iovs = NULL;
+	g_seq_operations[ACCEL_OPC_ENCRYPT].src_iovs = NULL;
+	g_seq_operations[ACCEL_OPC_DECRYPT].dst_iovs = NULL;
+	g_seq_operations[ACCEL_OPC_DECRYPT].dst_iovs = NULL;
 
 	spdk_put_io_channel(ioch);
 	poll_threads();
@@ -2784,6 +2895,204 @@ test_sequence_module_memory_domain(void)
 	poll_threads();
 }
 
+#ifdef SPDK_CONFIG_ISAL_CRYPTO
+static void
+ut_encrypt_cb(void *cb_arg, int status)
+{
+	int *completed = cb_arg;
+
+	CU_ASSERT_EQUAL(status, 0);
+
+	*completed = 1;
+}
+
+static void
+test_sequence_crypto(void)
+{
+	struct spdk_accel_sequence *seq = NULL;
+	struct spdk_io_channel *ioch;
+	struct spdk_accel_crypto_key *key;
+	struct spdk_accel_crypto_key_create_param key_params = {
+		.cipher = "AES_XTS",
+		.hex_key = "00112233445566778899aabbccddeeff",
+		.hex_key2 = "ffeeddccbbaa99887766554433221100",
+		.key_name = "ut_key",
+	};
+	struct ut_sequence ut_seq;
+	unsigned char buf[4096], encrypted[4096] = {}, data[4096], tmp[3][4096];
+	struct iovec src_iovs[4], dst_iovs[4];
+	int rc, completed = 0;
+	size_t i;
+
+	ioch = spdk_accel_get_io_channel();
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
+
+	rc = spdk_accel_crypto_key_create(&key_params);
+	CU_ASSERT_EQUAL(rc, 0);
+	key = spdk_accel_crypto_key_get(key_params.key_name);
+	SPDK_CU_ASSERT_FATAL(key != NULL);
+
+	for (i = 0; i < sizeof(data); ++i) {
+		data[i] = (uint8_t)i & 0xff;
+	}
+
+	dst_iovs[0].iov_base = encrypted;
+	dst_iovs[0].iov_len = sizeof(encrypted);
+	src_iovs[0].iov_base = data;
+	src_iovs[0].iov_len = sizeof(data);
+	rc = spdk_accel_submit_encrypt(ioch, key, &dst_iovs[0], 1, &src_iovs[0], 1, 0, 4096, 0,
+				       ut_encrypt_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	while (!completed) {
+		poll_threads();
+	}
+
+	/* Verify that encryption operation in a sequence produces the same result */
+	seq = NULL;
+	completed = 0;
+
+	dst_iovs[0].iov_base = tmp[0];
+	dst_iovs[0].iov_len = sizeof(tmp[0]);
+	src_iovs[0].iov_base = data;
+	src_iovs[0].iov_len = sizeof(data);
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[0], 1, NULL, NULL,
+				    &src_iovs[0], 1, NULL, NULL, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	dst_iovs[1].iov_base = tmp[1];
+	dst_iovs[1].iov_len = sizeof(tmp[1]);
+	src_iovs[1].iov_base = tmp[0];
+	src_iovs[1].iov_len = sizeof(tmp[0]);
+	rc = spdk_accel_append_encrypt(&seq, ioch, key, &dst_iovs[1], 1, NULL, NULL,
+				       &src_iovs[1], 1, NULL, NULL, 0, 4096, 0,
+				       ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	dst_iovs[2].iov_base = buf;
+	dst_iovs[2].iov_len = sizeof(buf);
+	src_iovs[2].iov_base = tmp[1];
+	src_iovs[2].iov_len = sizeof(tmp[1]);
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[2], 1, NULL, NULL,
+				    &src_iovs[2], 1, NULL, NULL, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 3);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(buf, encrypted, sizeof(buf)), 0);
+
+	/* Check that decryption produces the original buffer */
+	seq = NULL;
+	completed = 0;
+	memset(buf, 0, sizeof(buf));
+
+	dst_iovs[0].iov_base = tmp[0];
+	dst_iovs[0].iov_len = sizeof(tmp[0]);
+	src_iovs[0].iov_base = encrypted;
+	src_iovs[0].iov_len = sizeof(encrypted);
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[0], 1, NULL, NULL,
+				    &src_iovs[0], 1, NULL, NULL, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	dst_iovs[1].iov_base = tmp[1];
+	dst_iovs[1].iov_len = sizeof(tmp[1]);
+	src_iovs[1].iov_base = tmp[0];
+	src_iovs[1].iov_len = sizeof(tmp[0]);
+	rc = spdk_accel_append_decrypt(&seq, ioch, key, &dst_iovs[1], 1, NULL, NULL,
+				       &src_iovs[1], 1, NULL, NULL, 0, 4096, 0,
+				       ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	dst_iovs[2].iov_base = buf;
+	dst_iovs[2].iov_len = sizeof(buf);
+	src_iovs[2].iov_base = tmp[1];
+	src_iovs[2].iov_len = sizeof(tmp[1]);
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[2], 1, NULL, NULL,
+				    &src_iovs[2], 1, NULL, NULL, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 3);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(buf, data, sizeof(buf)), 0);
+
+	/* Check encrypt + decrypt in a single sequence */
+	seq = NULL;
+	completed = 0;
+	memset(buf, 0, sizeof(buf));
+
+	dst_iovs[0].iov_base = tmp[0];
+	dst_iovs[0].iov_len = sizeof(tmp[0]);
+	src_iovs[0].iov_base = data;
+	src_iovs[0].iov_len = sizeof(data);
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[0], 1, NULL, NULL,
+				    &src_iovs[0], 1, NULL, NULL, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	dst_iovs[1].iov_base = tmp[1];
+	dst_iovs[1].iov_len = sizeof(tmp[1]);
+	src_iovs[1].iov_base = tmp[0];
+	src_iovs[1].iov_len = sizeof(tmp[0]);
+	rc = spdk_accel_append_encrypt(&seq, ioch, key, &dst_iovs[1], 1, NULL, NULL,
+				       &src_iovs[1], 1, NULL, NULL, 0, 4096, 0,
+				       ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+
+	dst_iovs[2].iov_base = tmp[2];
+	dst_iovs[2].iov_len = sizeof(tmp[2]);
+	src_iovs[2].iov_base = tmp[1];
+	src_iovs[2].iov_len = sizeof(tmp[1]);
+	rc = spdk_accel_append_decrypt(&seq, ioch, key, &dst_iovs[2], 1, NULL, NULL,
+				       &src_iovs[2], 1, NULL, NULL, 0, 4096, 0,
+				       ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	dst_iovs[3].iov_base = buf;
+	dst_iovs[3].iov_len = sizeof(buf);
+	src_iovs[3].iov_base = tmp[2];
+	src_iovs[3].iov_len = sizeof(tmp[2]);
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[3], 1, NULL, NULL,
+				    &src_iovs[3], 1, NULL, NULL, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 4);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(memcmp(buf, data, sizeof(buf)), 0);
+
+	rc = spdk_accel_crypto_key_destroy(key);
+	CU_ASSERT_EQUAL(rc, 0);
+	spdk_put_io_channel(ioch);
+	poll_threads();
+}
+#endif /* SPDK_CONFIG_ISAL_CRYPTO */
+
 static int
 test_sequence_setup(void)
 {
@@ -2865,7 +3174,9 @@ main(int argc, char **argv)
 	CU_ADD_TEST(seq_suite, test_sequence_accel_buffers);
 	CU_ADD_TEST(seq_suite, test_sequence_memory_domain);
 	CU_ADD_TEST(seq_suite, test_sequence_module_memory_domain);
-
+#ifdef SPDK_CONFIG_ISAL_CRYPTO /* accel_sw requires isa-l-crypto for crypto operations */
+	CU_ADD_TEST(seq_suite, test_sequence_crypto);
+#endif
 	suite = CU_add_suite("accel", test_setup, test_cleanup);
 	CU_ADD_TEST(suite, test_spdk_accel_task_complete);
 	CU_ADD_TEST(suite, test_get_task);
