@@ -375,6 +375,7 @@ if hash lcov && ! [[ "$CC_TYPE" == *"clang"* ]]; then
 	$LCOV -q -a $out/cov_base.info -a $out/cov_test.info -o $out/cov_total.info
 	$LCOV -q -r $out/cov_total.info '*/dpdk/*' -o $out/cov_total.info
 	$LCOV -q -r $out/cov_total.info '/usr/*' -o $out/cov_total.info
+	$LCOV -q -r $out/cov_total.info '*/examples/vmd/*' -o $out/cov_total.info
 	owner=$(stat -c "%U" .)
 	sudo -u $owner git clean -f "*.gcda"
 	rm -f cov_base.info cov_test.info OLD_STDOUT OLD_STDERR
