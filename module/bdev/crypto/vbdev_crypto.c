@@ -2085,29 +2085,65 @@ error_vbdev_alloc:
 	return rc;
 }
 
+struct crypto_delete_disk_ctx {
+	spdk_delete_crypto_complete cb_fn;
+	void *cb_arg;
+	char *bdev_name;
+};
+
+static void
+delete_crypto_disk_bdev_name(void *ctx, int rc)
+{
+	struct bdev_names *name;
+	struct crypto_delete_disk_ctx *disk_ctx = ctx;
+
+	/* Remove the association (vbdev, bdev) from g_bdev_names. This is required so that the
+	 * vbdev does not get re-created if the same bdev is constructed at some other time,
+	 * unless the underlying bdev was hot-removed. */
+	TAILQ_FOREACH(name, &g_bdev_names, link) {
+		if (strcmp(name->opts->vbdev_name, disk_ctx->bdev_name) == 0) {
+			vbdev_crypto_delete_name(name);
+			break;
+		}
+	}
+
+	disk_ctx->cb_fn(disk_ctx->cb_arg, rc);
+
+	free(disk_ctx->bdev_name);
+	free(disk_ctx);
+}
+
 /* RPC entry for deleting a crypto vbdev. */
 void
 delete_crypto_disk(const char *bdev_name, spdk_delete_crypto_complete cb_fn,
 		   void *cb_arg)
 {
-	struct bdev_names *name;
 	int rc;
+	struct crypto_delete_disk_ctx *ctx;
 
+	ctx = calloc(1, sizeof(struct crypto_delete_disk_ctx));
+	if (!ctx) {
+		SPDK_ERRLOG("Failed to allocate delete crypto disk ctx\n");
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->bdev_name = strdup(bdev_name);
+	if (!ctx->bdev_name) {
+		SPDK_ERRLOG("Failed to copy bdev_name\n");
+		free(ctx);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+	ctx->cb_arg = cb_arg;
+	ctx->cb_fn = cb_fn;
 	/* Some cleanup happens in the destruct callback. */
-	rc = spdk_bdev_unregister_by_name(bdev_name, &crypto_if, cb_fn, cb_arg);
-	if (rc == 0) {
-		/* Remove the association (vbdev, bdev) from g_bdev_names. This is required so that the
-		 * vbdev does not get re-created if the same bdev is constructed at some other time,
-		 * unless the underlying bdev was hot-removed.
-		 */
-		TAILQ_FOREACH(name, &g_bdev_names, link) {
-			if (strcmp(name->opts->vbdev_name, bdev_name) == 0) {
-				vbdev_crypto_delete_name(name);
-				break;
-			}
-		}
-	} else {
+	rc = spdk_bdev_unregister_by_name(bdev_name, &crypto_if, delete_crypto_disk_bdev_name, ctx);
+	if (rc != 0) {
+		SPDK_ERRLOG("Encountered an error during bdev unregistration\n");
 		cb_fn(cb_arg, rc);
+		free(ctx->bdev_name);
+		free(ctx);
 	}
 }
 
