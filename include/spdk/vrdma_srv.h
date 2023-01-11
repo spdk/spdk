@@ -40,6 +40,7 @@ struct vrdma_srv_qp {
 	LIST_ENTRY(vrdma_srv_qp) entry;
 	uint32_t qp_idx;
 	struct ibv_pd *pd;
+	uint32_t remote_vqpn;
 	uint32_t qp_state;
 	uint32_t sq_size;
 	uint32_t rq_size;
