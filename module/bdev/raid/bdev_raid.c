@@ -1220,7 +1220,7 @@ raid_bdev_find_by_base_bdev(struct spdk_bdev *base_bdev, struct raid_bdev **_rai
  * is removed. This function checks if this base bdev is part of any raid bdev
  * or not. If yes, it takes necessary action on that particular raid bdev.
  * params:
- * base_bdev - pointer to base bdev pointer which got removed
+ * base_bdev - pointer to base bdev which got removed
  * returns:
  * none
  */
@@ -1261,6 +1261,40 @@ raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev)
 
 /*
  * brief:
+ * raid_bdev_resize_base_bdev function is called by below layers when base_bdev
+ * is resized. This function checks if the smallest size of the base_bdevs is changed.
+ * If yes, call module handler to resize the raid_bdev if implemented.
+ * params:
+ * base_bdev - pointer to base bdev which got resized.
+ * returns:
+ * none
+ */
+static void
+raid_bdev_resize_base_bdev(struct spdk_bdev *base_bdev)
+{
+	struct raid_bdev	*raid_bdev = NULL;
+	struct raid_base_bdev_info *base_info;
+
+	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_resize_base_bdev\n");
+
+	/* Find the raid_bdev which has claimed this base_bdev */
+	if (!raid_bdev_find_by_base_bdev(base_bdev, &raid_bdev, &base_info)) {
+		SPDK_ERRLOG("raid_bdev whose base_bdev '%s' not found\n", base_bdev->name);
+		return;
+	}
+
+	assert(spdk_get_thread() == spdk_thread_get_app_thread());
+
+	SPDK_NOTICELOG("base_bdev '%s' was resized: old size %" PRIu64 ", new size %" PRIu64 "\n",
+		       base_bdev->name, base_info->blockcnt, base_bdev->blockcnt);
+
+	if (raid_bdev->module->resize) {
+		raid_bdev->module->resize(raid_bdev);
+	}
+}
+
+/*
+ * brief:
  * raid_bdev_event_base_bdev function is called by below layers when base_bdev
  * triggers asynchronous event.
  * params:
@@ -1277,6 +1311,9 @@ raid_bdev_event_base_bdev(enum spdk_bdev_event_type type, struct spdk_bdev *bdev
 	switch (type) {
 	case SPDK_BDEV_EVENT_REMOVE:
 		raid_bdev_remove_base_bdev(bdev);
+		break;
+	case SPDK_BDEV_EVENT_RESIZE:
+		raid_bdev_resize_base_bdev(bdev);
 		break;
 	default:
 		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
@@ -1367,6 +1404,7 @@ raid_bdev_configure_base_bdev(struct raid_bdev *raid_bdev, struct raid_base_bdev
 
 	base_info->bdev = bdev;
 	base_info->desc = desc;
+	base_info->blockcnt = bdev->blockcnt;
 	raid_bdev->num_base_bdevs_discovered++;
 	assert(raid_bdev->num_base_bdevs_discovered <= raid_bdev->num_base_bdevs);
 

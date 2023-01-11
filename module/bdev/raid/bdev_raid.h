@@ -61,6 +61,9 @@ struct raid_base_bdev_info {
 	 * descriptor will be closed
 	 */
 	bool			remove_scheduled;
+
+	/* Hold the number of blocks to know how large the base bdev is resized. */
+	uint64_t		blockcnt;
 };
 
 /*
@@ -227,6 +230,12 @@ struct raid_bdev_module {
 	 * Optional.
 	 */
 	struct spdk_io_channel *(*get_io_channel)(struct raid_bdev *raid_bdev);
+
+	/*
+	 * Called when a base_bdev is resized to resize the raid if the condition
+	 * is satisfied.
+	 */
+	void (*resize)(struct raid_bdev *raid_bdev);
 
 	TAILQ_ENTRY(raid_bdev_module) link;
 };
