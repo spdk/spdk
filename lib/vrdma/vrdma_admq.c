@@ -1900,20 +1900,7 @@ static bool vrdma_aq_sm_write_cmd(struct vrdma_admin_sw_qp *aq,
 	aq->state = VRDMA_CMD_STATE_UPDATE_CI;
 
 	//write back entries in one time
-	if ((num_to_write + ci % q_size) < q_size ) {
-		aq->poll_comp.count = 1;
-		aq_poll_size = num_to_write * sizeof(struct vrdma_admin_cmd_entry);
-		offset = (ci % q_size) * sizeof(struct vrdma_admin_cmd_entry);
-	    host_ring_addr = host_ring_addr + offset;
-		ret = snap_dma_q_write(ctrl->sctrl->adminq_dma_q, aq->admq->ring, aq_poll_size,
-				              ctrl->sctrl->adminq_mr->lkey, host_ring_addr,
-				              ctrl->sctrl->xmkey->mkey, &aq->poll_comp);
-		if (spdk_unlikely(ret)) {
-			SPDK_ERRLOG("no roll back failed to write back admin CMD entry, ret %d\n", ret);
-		    aq->state = VRDMA_CMD_STATE_FATAL_ERR;
-		    return true;
-		}
-	} else {
+	if ((num_to_write + ci % q_size) > q_size) {
 		/* aq roll back case, first part */
 		aq->poll_comp.count = 1;
 		num = q_size - (ci % q_size);
@@ -1943,6 +1930,19 @@ static bool vrdma_aq_sm_write_cmd(struct vrdma_admin_sw_qp *aq,
 			SPDK_ERRLOG("roll back failed to second write admin CMD entry, ret %d\n", ret);
 		    aq->state = VRDMA_CMD_STATE_FATAL_ERR;
 			return true;
+		}
+	} else {
+		aq->poll_comp.count = 1;
+		aq_poll_size = num_to_write * sizeof(struct vrdma_admin_cmd_entry);
+		offset = (ci % q_size) * sizeof(struct vrdma_admin_cmd_entry);
+	    host_ring_addr = host_ring_addr + offset;
+		ret = snap_dma_q_write(ctrl->sctrl->adminq_dma_q, aq->admq->ring, aq_poll_size,
+				              ctrl->sctrl->adminq_mr->lkey, host_ring_addr,
+				              ctrl->sctrl->xmkey->mkey, &aq->poll_comp);
+		if (spdk_unlikely(ret)) {
+			SPDK_ERRLOG("no roll back failed to write back admin CMD entry, ret %d\n", ret);
+		    aq->state = VRDMA_CMD_STATE_FATAL_ERR;
+		    return true;
 		}
 	}
 
