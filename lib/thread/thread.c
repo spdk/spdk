@@ -2943,8 +2943,7 @@ spdk_iobuf_initialize(void)
 	int rc = 0;
 
 	g_iobuf.small_pool = spdk_mempool_create("iobuf_small_pool", opts->small_pool_count,
-			     opts->small_bufsize + SPDK_IOBUF_DATA_OFFSET, 0,
-			     SPDK_ENV_SOCKET_ID_ANY);
+			     opts->small_bufsize, 0, SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_iobuf.small_pool) {
 		SPDK_ERRLOG("Failed to create small iobuf pool\n");
 		rc = -ENOMEM;
@@ -2952,8 +2951,7 @@ spdk_iobuf_initialize(void)
 	}
 
 	g_iobuf.large_pool = spdk_mempool_create("iobuf_large_pool", opts->large_pool_count,
-			     opts->large_bufsize + SPDK_IOBUF_DATA_OFFSET, 0,
-			     SPDK_ENV_SOCKET_ID_ANY);
+			     opts->large_bufsize, 0, SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_iobuf.large_pool) {
 		SPDK_ERRLOG("Failed to create large iobuf pool\n");
 		rc = -ENOMEM;

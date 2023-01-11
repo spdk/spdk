@@ -975,14 +975,10 @@ struct spdk_iobuf_entry {
 	STAILQ_ENTRY(spdk_iobuf_entry)	stailq;
 };
 
-#define SPDK_IOBUF_DATA_OFFSET SPDK_CACHE_LINE_SIZE
 
 struct spdk_iobuf_buffer {
 	STAILQ_ENTRY(spdk_iobuf_buffer)	stailq;
 };
-
-SPDK_STATIC_ASSERT(sizeof(struct spdk_iobuf_buffer) <= SPDK_IOBUF_DATA_OFFSET,
-		   "Invalid data offset");
 
 typedef STAILQ_HEAD(, spdk_iobuf_entry) spdk_iobuf_entry_stailq_t;
 typedef STAILQ_HEAD(, spdk_iobuf_buffer) spdk_iobuf_buffer_stailq_t;
@@ -1123,7 +1119,7 @@ spdk_iobuf_get(struct spdk_iobuf_channel *ch, uint64_t len,
 	       struct spdk_iobuf_entry *entry, spdk_iobuf_get_cb cb_fn)
 {
 	struct spdk_iobuf_pool *pool;
-	struct spdk_iobuf_buffer *buf;
+	void *buf;
 
 	assert(spdk_io_channel_get_thread(ch->parent) == spdk_get_thread());
 	if (len <= ch->small.bufsize) {
@@ -1133,13 +1129,13 @@ spdk_iobuf_get(struct spdk_iobuf_channel *ch, uint64_t len,
 		pool = &ch->large;
 	}
 
-	buf = STAILQ_FIRST(&pool->cache);
+	buf = (void *)STAILQ_FIRST(&pool->cache);
 	if (buf) {
 		STAILQ_REMOVE_HEAD(&pool->cache, stailq);
 		assert(pool->cache_count > 0);
 		pool->cache_count--;
 	} else {
-		buf = (struct spdk_iobuf_buffer *)spdk_mempool_get(pool->pool);
+		buf = spdk_mempool_get(pool->pool);
 		if (!buf) {
 			STAILQ_INSERT_TAIL(pool->queue, entry, stailq);
 			entry->module = ch->module;
@@ -1149,7 +1145,7 @@ spdk_iobuf_get(struct spdk_iobuf_channel *ch, uint64_t len,
 		}
 	}
 
-	return (char *)buf + SPDK_IOBUF_DATA_OFFSET;
+	return (char *)buf;
 }
 
 /**
@@ -1164,7 +1160,6 @@ static inline void
 spdk_iobuf_put(struct spdk_iobuf_channel *ch, void *buf, uint64_t len)
 {
 	struct spdk_iobuf_entry *entry;
-	struct spdk_iobuf_buffer *iobuf_buf;
 	struct spdk_iobuf_pool *pool;
 
 	assert(spdk_io_channel_get_thread(ch->parent) == spdk_get_thread());
@@ -1175,13 +1170,11 @@ spdk_iobuf_put(struct spdk_iobuf_channel *ch, void *buf, uint64_t len)
 	}
 
 	if (STAILQ_EMPTY(pool->queue)) {
-		iobuf_buf = (struct spdk_iobuf_buffer *)((char *)buf - SPDK_IOBUF_DATA_OFFSET);
-
 		if (pool->cache_count < pool->cache_size) {
-			STAILQ_INSERT_HEAD(&pool->cache, iobuf_buf, stailq);
+			STAILQ_INSERT_HEAD(&pool->cache, (struct spdk_iobuf_buffer *)buf, stailq);
 			pool->cache_count++;
 		} else {
-			spdk_mempool_put(pool->pool, iobuf_buf);
+			spdk_mempool_put(pool->pool, buf);
 		}
 	} else {
 		entry = STAILQ_FIRST(pool->queue);
