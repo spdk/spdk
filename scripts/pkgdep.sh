@@ -2,6 +2,7 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2017 Intel Corporation
 #  All rights reserved.
+#  Copyright (c) 2022 Dell Inc, or its subsidiaries.
 #
 # Please run this script as root.
 
@@ -23,6 +24,7 @@ function usage() {
 	echo "  -b --docs                   Additional dependencies for building docs"
 	echo "  -u --uring                  Additional dependencies for io_uring"
 	echo "  -D --daos                   Additional dependencies for DAOS"
+	echo "  -A --avahi                  Additional dependencies for Avahi mDNS Discovery"
 	echo ""
 	exit 0
 }
@@ -36,6 +38,7 @@ function install_all_dependencies() {
 	INSTALL_DOCS=true
 	INSTALL_LIBURING=true
 	INSTALL_DAOS=true
+	INSTALL_AVAHI=true
 }
 
 INSTALL_CRYPTO=false
@@ -47,8 +50,9 @@ INSTALL_RDMA=false
 INSTALL_DOCS=false
 INSTALL_LIBURING=false
 INSTALL_DAOS=false
+INSTALL_AVAHI=false
 
-while getopts 'abdfhipruDR-:' optchar; do
+while getopts 'abdfhipruADR-:' optchar; do
 	case "$optchar" in
 		-)
 			case "$OPTARG" in
@@ -62,6 +66,7 @@ while getopts 'abdfhipruDR-:' optchar; do
 				docs) INSTALL_DOCS=true ;;
 				uring) INSTALL_LIBURING=true ;;
 				daos) INSTALL_DAOS=true ;;
+				avahi) INSTALL_AVAHI=true ;;
 				*)
 					echo "Invalid argument '$OPTARG'"
 					usage
@@ -78,6 +83,7 @@ while getopts 'abdfhipruDR-:' optchar; do
 		b) INSTALL_DOCS=true ;;
 		u) INSTALL_LIBURING=true ;;
 		D) INSTALL_DAOS=true ;;
+		A) INSTALL_AVAHI=true ;;
 		*)
 			echo "Invalid argument '$OPTARG'"
 			usage

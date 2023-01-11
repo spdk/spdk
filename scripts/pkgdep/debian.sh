@@ -3,6 +3,7 @@
 #  Copyright (C) 2020 Intel Corporation
 #  Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES.
 #  All rights reserved.
+#  Copyright (c) 2022 Dell Inc, or its subsidiaries.
 #
 
 VERSION_ID_NUM=$(sed 's/\.//g' <<< $VERSION_ID)
@@ -82,4 +83,9 @@ fi
 if [[ $INSTALL_DOCS == "true" ]]; then
 	# Additional dependencies for building docs
 	apt-get install -y doxygen mscgen graphviz
+fi
+# Additional dependencies for Avahi
+if [[ $INSTALL_AVAHI == "true" ]]; then
+	# Additional dependencies for Avahi
+	apt-get install -y libavahi-client-dev
 fi

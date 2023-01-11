@@ -2,6 +2,7 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2020 Intel Corporation
 #  All rights reserved.
+#  Copyright (c) 2022 Dell Inc, or its subsidiaries.
 #
 
 disclaimer() {
@@ -181,4 +182,9 @@ if [[ $INSTALL_DAOS == "true" ]]; then
 	else
 		echo "Skipping installation of DAOS bdev dependencies. It is supported only for CentOS 7, CentOS 8 and Rocky 8"
 	fi
+fi
+# Additional dependencies for Avahi
+if [[ $INSTALL_AVAHI == "true" ]]; then
+	# Additional dependencies for Avahi
+	yum install -y avahi-devel
 fi

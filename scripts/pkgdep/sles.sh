@@ -2,6 +2,7 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2020 Intel Corporation
 #  All rights reserved.
+#  Copyright (c) 2022 Dell Inc, or its subsidiaries.
 #
 # Minimal install
 zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
@@ -42,4 +43,8 @@ if [[ $INSTALL_DAOS == "true" ]]; then
 	rpm --import https://packages.daos.io/RPM-GPG-KEY
 	zypper --non-interactive refresh
 	zypper install -y daos-client daos-devel
+fi
+if [[ $INSTALL_AVAHI == "true" ]]; then
+	# Additional dependencies for Avahi
+	zypper install -y avahi-devel
 fi
