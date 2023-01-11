@@ -1836,13 +1836,13 @@ nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 
 		rdma_req->num_outstanding_data_wr = 0;
-		req->data = rdma_req->recv->buf + offset;
 		req->data_from_pool = false;
 		req->length = sgl->unkeyed.length;
 
-		req->iov[0].iov_base = req->data;
+		req->iov[0].iov_base = rdma_req->recv->buf + offset;
 		req->iov[0].iov_len = req->length;
 		req->iovcnt = 1;
+		req->data = req->iov[0].iov_base;
 
 		return 0;
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT &&
@@ -2077,7 +2077,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 				break;
 			}
 
-			if (!rdma_req->req.data) {
+			if (rdma_req->req.iovcnt == 0) {
 				/* No buffers available. */
 				rgroup->stat.pending_data_buffer++;
 				break;
