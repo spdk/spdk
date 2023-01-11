@@ -315,6 +315,53 @@ claim_bs_dev(void)
 	g_bdev = NULL;
 }
 
+static void
+claim_bs_dev_ro(void)
+{
+	struct spdk_bdev bdev;
+	struct spdk_bs_dev *bs_dev = NULL, *bs_dev2 = NULL;
+	struct blob_bdev *blob_bdev;
+	int rc;
+
+	init_bdev(&bdev, "bdev0", 16);
+	g_bdev = &bdev;
+
+	rc = spdk_bdev_create_bs_dev("bdev0", false, NULL, 0, NULL, NULL, &bs_dev);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(bs_dev != NULL);
+
+	blob_bdev = (struct blob_bdev *)bs_dev;
+	CU_ASSERT(blob_bdev->desc->claim_type == SPDK_BDEV_CLAIM_NONE);
+	CU_ASSERT(bdev.claim_type == SPDK_BDEV_CLAIM_NONE);
+	CU_ASSERT(!blob_bdev->desc->write);
+
+	/* Can get an shared reader claim */
+	rc = spdk_bs_bdev_claim(bs_dev, &g_bdev_mod);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(!blob_bdev->desc->write);
+	CU_ASSERT(bdev.claim_type == SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE);
+	CU_ASSERT(bdev.claim_desc == blob_bdev->desc);
+
+	/* Claim blocks a writer without messing up the claim. */
+	rc = spdk_bdev_create_bs_dev_ext("bdev0", NULL, NULL, &bs_dev2);
+	CU_ASSERT(rc == -EPERM);
+	CU_ASSERT(bdev.claim_type == SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE);
+	CU_ASSERT(bdev.claim_desc == blob_bdev->desc);
+
+	/* Another reader is just fine */
+	rc = spdk_bdev_create_bs_dev("bdev0", false, NULL, 0, NULL, NULL, &bs_dev2);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(bs_dev2 != NULL);
+	bs_dev2->destroy(bs_dev2);
+
+	bs_dev->destroy(bs_dev);
+	CU_ASSERT(bdev.open_cnt == 0);
+	CU_ASSERT(bdev.claim_type == SPDK_BDEV_CLAIM_NONE);
+	CU_ASSERT(bdev.claim_module == NULL);
+	CU_ASSERT(bdev.claim_desc == NULL);
+	g_bdev = NULL;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -330,6 +377,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, create_bs_dev_ro);
 	CU_ADD_TEST(suite, create_bs_dev_rw);
 	CU_ADD_TEST(suite, claim_bs_dev);
+	CU_ADD_TEST(suite, claim_bs_dev_ro);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

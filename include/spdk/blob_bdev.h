@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 /** \file
@@ -65,6 +65,10 @@ int spdk_bdev_create_bs_dev(const char *bdev_name, bool write,
 
 /**
  * Claim the bdev module for the given blobstore.
+ *
+ * If bs_dev was opened read-write using spdk_bdev_create_bs_dev_ext(), a read-write-once claim is
+ * taken. If bs_dev was opened read-only using spdk_bdev_create_bs_dev_ro(), a read-only-many claim
+ * is taken.
  *
  * \param bs_dev Blobstore block device.
  * \param module Bdev module to claim.

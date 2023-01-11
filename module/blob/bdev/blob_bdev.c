@@ -18,6 +18,7 @@ struct blob_bdev {
 	struct spdk_bs_dev	bs_dev;
 	struct spdk_bdev	*bdev;
 	struct spdk_bdev_desc	*desc;
+	bool			write;
 };
 
 struct blob_resubmit {
@@ -325,11 +326,14 @@ bdev_blob_resubmit(void *arg)
 int
 spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module *module)
 {
-	struct spdk_bdev_desc *desc = __get_desc(bs_dev);
+	struct blob_bdev *blob_bdev = (struct blob_bdev *)bs_dev;
+	struct spdk_bdev_desc *desc = blob_bdev->desc;
+	enum spdk_bdev_claim_type claim_type;
 	int rc;
 
-	rc = spdk_bdev_module_claim_bdev_desc(desc, SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE,
-					      NULL, module);
+	claim_type = blob_bdev->write ? SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE :
+		     SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE;
+	rc = spdk_bdev_module_claim_bdev_desc(desc, claim_type, NULL, module);
 	if (rc != 0) {
 		SPDK_ERRLOG("could not claim bs dev\n");
 		return rc;
@@ -442,6 +446,7 @@ spdk_bdev_create_bs_dev(const char *bdev_name, bool write,
 	blob_bdev_init(b, desc);
 
 	*bs_dev = &b->bs_dev;
+	b->write = write;
 
 	return 0;
 }
