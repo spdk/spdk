@@ -82,6 +82,9 @@ enum accel_sequence_state {
 	ACCEL_SEQUENCE_STATE_NEXT_TASK,
 	ACCEL_SEQUENCE_STATE_PUSH_DATA,
 	ACCEL_SEQUENCE_STATE_AWAIT_PUSH_DATA,
+	ACCEL_SEQUENCE_STATE_DRIVER_EXEC,
+	ACCEL_SEQUENCE_STATE_DRIVER_AWAIT_TASK,
+	ACCEL_SEQUENCE_STATE_DRIVER_COMPLETE,
 	ACCEL_SEQUENCE_STATE_ERROR,
 	ACCEL_SEQUENCE_STATE_MAX,
 };
@@ -101,6 +104,9 @@ __attribute__((unused)) = {
 	[ACCEL_SEQUENCE_STATE_NEXT_TASK] = "next-task",
 	[ACCEL_SEQUENCE_STATE_PUSH_DATA] = "push-data",
 	[ACCEL_SEQUENCE_STATE_AWAIT_PUSH_DATA] = "await-push-data",
+	[ACCEL_SEQUENCE_STATE_DRIVER_EXEC] = "driver-exec",
+	[ACCEL_SEQUENCE_STATE_DRIVER_AWAIT_TASK] = "driver-await-task",
+	[ACCEL_SEQUENCE_STATE_DRIVER_COMPLETE] = "driver-complete",
 	[ACCEL_SEQUENCE_STATE_ERROR] = "error",
 	[ACCEL_SEQUENCE_STATE_MAX] = "",
 };
@@ -1514,6 +1520,11 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 		state = seq->state;
 		switch (state) {
 		case ACCEL_SEQUENCE_STATE_INIT:
+			if (g_accel_driver != NULL) {
+				accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_DRIVER_EXEC);
+				break;
+			}
+		/* Fall through */
 		case ACCEL_SEQUENCE_STATE_CHECK_VIRTBUF:
 			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_AWAIT_VIRTBUF);
 			if (!accel_sequence_check_virtbuf(seq, task)) {
@@ -1588,6 +1599,29 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 			}
 			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_INIT);
 			break;
+		case ACCEL_SEQUENCE_STATE_DRIVER_EXEC:
+			assert(!TAILQ_EMPTY(&seq->tasks));
+
+			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_DRIVER_AWAIT_TASK);
+			rc = g_accel_driver->execute_sequence(seq);
+			if (spdk_unlikely(rc != 0)) {
+				SPDK_ERRLOG("Failed to execute sequence: %p using driver: %s\n",
+					    seq, g_accel_driver->name);
+				accel_sequence_set_fail(seq, rc);
+			}
+			break;
+		case ACCEL_SEQUENCE_STATE_DRIVER_COMPLETE:
+			task = TAILQ_FIRST(&seq->tasks);
+			if (task == NULL) {
+				/* Immediately return here to make sure we don't touch the sequence
+				 * after it's completed */
+				accel_sequence_complete(seq);
+				return;
+			}
+			/* We don't want to execute the next task through the driver, so we
+			 * explicitly omit the INIT state here */
+			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_CHECK_VIRTBUF);
+			break;
 		case ACCEL_SEQUENCE_STATE_ERROR:
 			/* Immediately return here to make sure we don't touch the sequence
 			 * after it's completed */
@@ -1599,6 +1633,7 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 		case ACCEL_SEQUENCE_STATE_AWAIT_PULL_DATA:
 		case ACCEL_SEQUENCE_STATE_AWAIT_TASK:
 		case ACCEL_SEQUENCE_STATE_AWAIT_PUSH_DATA:
+		case ACCEL_SEQUENCE_STATE_DRIVER_AWAIT_TASK:
 			break;
 		default:
 			assert(0 && "bad state");
@@ -1623,22 +1658,52 @@ accel_sequence_task_cb(void *cb_arg, int status)
 	assert(task != NULL);
 	TAILQ_REMOVE(&accel_ch->task_pool, task, link);
 
-	assert(seq->state == ACCEL_SEQUENCE_STATE_AWAIT_TASK);
-	accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_COMPLETE_TASK);
+	switch (seq->state) {
+	case ACCEL_SEQUENCE_STATE_AWAIT_TASK:
+		accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_COMPLETE_TASK);
+		if (spdk_unlikely(status != 0)) {
+			SPDK_ERRLOG("Failed to execute %s operation, sequence: %p\n",
+				    g_opcode_strings[task->op_code], seq);
+			accel_sequence_set_fail(seq, status);
+		}
 
-	if (spdk_unlikely(status != 0)) {
-		SPDK_ERRLOG("Failed to execute %s operation, sequence: %p\n",
-			    g_opcode_strings[task->op_code], seq);
-		accel_sequence_set_fail(seq, status);
+		accel_process_sequence(seq);
+		break;
+	case ACCEL_SEQUENCE_STATE_DRIVER_AWAIT_TASK:
+		assert(g_accel_driver != NULL);
+		/* Immediately remove the task from the outstanding list to make sure the next call
+		 * to spdk_accel_sequence_first_task() doesn't return it */
+		TAILQ_REMOVE(&seq->tasks, task, seq_link);
+		TAILQ_INSERT_TAIL(&seq->completed, task, seq_link);
+
+		if (spdk_unlikely(status != 0)) {
+			SPDK_ERRLOG("Failed to execute %s operation, sequence: %p through "
+				    "driver: %s\n", g_opcode_strings[task->op_code], seq,
+				    g_accel_driver->name);
+			/* Update status without using accel_sequence_set_fail() to avoid changing
+			 * seq's state to ERROR until driver calls spdk_accel_sequence_continue() */
+			seq->status = status;
+		}
+		break;
+	default:
+		assert(0 && "bad state");
+		break;
 	}
-
-	accel_process_sequence(seq);
 }
 
 void
 spdk_accel_sequence_continue(struct spdk_accel_sequence *seq)
 {
-	assert(0 && "unsupported");
+	assert(g_accel_driver != NULL);
+	assert(seq->state == ACCEL_SEQUENCE_STATE_DRIVER_AWAIT_TASK);
+
+	if (spdk_likely(seq->status == 0)) {
+		accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_DRIVER_COMPLETE);
+	} else {
+		accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_ERROR);
+	}
+
+	accel_process_sequence(seq);
 }
 
 static bool
