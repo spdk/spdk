@@ -171,9 +171,16 @@ int vrdma_add_rbk_qp_list(struct vrdma_ctrl *ctrl, uint64_t gid_ip,
 	rqp = vrdma_find_rbk_qp_by_vqp(qp_attr->comm.gid_ip,
 			qp_attr->comm.vqpn);
 	if (rqp) {
-		SPDK_NOTICELOG("This remote vqp %d is already existed",
+		if (rqp->bk_qpn == remote_qpn &&
+			!memcmp(&rqp->attr, qp_attr, sizeof(*qp_attr))) {
+			SPDK_NOTICELOG("This remote vqp %d is already existed",
 			qp_attr->comm.vqpn);
-		return 0;
+			return 0;
+		} else {
+			SPDK_NOTICELOG("Delete this existed remote vqp %d and create new one",
+			qp_attr->comm.vqpn);
+			vrdma_del_rbk_qp_from_list(rqp);
+		}
 	}
     rqp = calloc(1, sizeof(*rqp));
     if (!rqp) {

@@ -292,19 +292,22 @@ static int vrdma_srv_device_modify_qp(struct vrdma_dev *rdev,
 		SPDK_ERRLOG("Failed to find qp for modify in service\n");
 		return -1;
 	}
-	SPDK_NOTICELOG("\nlizh vrdma_srv_device_modify_qp...vqpn %d old qp_state %d new qp_state %d start\n",
+	SPDK_NOTICELOG("\nlizh vrdma_srv_device_modify_qp...vqpn %d old qp_state %d new qp_state %d \n",
 	cmd->req.modify_qp_req.qp_handle, vqp->qp_state, cmd->req.modify_qp_req.qp_state);
 	if (vqp->qp_state == IBV_QPS_INIT &&
 		cmd->req.modify_qp_req.qp_state == IBV_QPS_RTR) {
 		/* For POC, it hardcode v_rgid to NULL, as only one remote node.
 		 * Also hardcode remote vqpn == local vqpn.
 		 */
+		vqp->remote_vqpn = cmd->req.modify_qp_req.dest_qp_num;
 		if (vrdma_srv_bind_channel(rdev, NULL, vqp->pd,
-					cmd->req.modify_qp_req.qp_state, vqp->qp_idx, vqp->qp_idx)) {
+					cmd->req.modify_qp_req.qp_state, vqp->qp_idx, vqp->remote_vqpn)) {
 			SPDK_ERRLOG("Failed to bind channel for modify qp in service\n");
 			return -1;
 		}
 	}
+	SPDK_NOTICELOG("\nlizh vrdma_srv_device_modify_qp...vqpn %d remote_vqpn %d done\n",
+	cmd->req.modify_qp_req.qp_handle, vqp->remote_vqpn);
 	vqp->qp_state = cmd->req.modify_qp_req.qp_state;
 	return 0;
 }
