@@ -684,18 +684,7 @@ __bdev_nvme_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status s
 	}
 }
 
-static void
-bdev_nvme_abort_retry_ios(struct nvme_bdev_channel *nbdev_ch)
-{
-	struct spdk_bdev_io *bdev_io, *tmp_io;
-
-	TAILQ_FOREACH_SAFE(bdev_io, &nbdev_ch->retry_io_list, module_link, tmp_io) {
-		TAILQ_REMOVE(&nbdev_ch->retry_io_list, bdev_io, module_link);
-		__bdev_nvme_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_ABORTED, NULL);
-	}
-
-	spdk_poller_unregister(&nbdev_ch->retry_io_poller);
-}
+static void bdev_nvme_abort_retry_ios(struct nvme_bdev_channel *nbdev_ch);
 
 static void
 bdev_nvme_destroy_bdev_channel_cb(void *io_device, void *ctx_buf)
@@ -1018,6 +1007,19 @@ bdev_nvme_queue_retry_io(struct nvme_bdev_channel *nbdev_ch,
 
 	nbdev_ch->retry_io_poller = SPDK_POLLER_REGISTER(bdev_nvme_retry_ios, nbdev_ch,
 				    delay_ms * 1000ULL);
+}
+
+static void
+bdev_nvme_abort_retry_ios(struct nvme_bdev_channel *nbdev_ch)
+{
+	struct spdk_bdev_io *bdev_io, *tmp_io;
+
+	TAILQ_FOREACH_SAFE(bdev_io, &nbdev_ch->retry_io_list, module_link, tmp_io) {
+		TAILQ_REMOVE(&nbdev_ch->retry_io_list, bdev_io, module_link);
+		__bdev_nvme_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_ABORTED, NULL);
+	}
+
+	spdk_poller_unregister(&nbdev_ch->retry_io_poller);
 }
 
 static void
