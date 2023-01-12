@@ -2457,6 +2457,7 @@ spdk_file_write(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 		if (extend_args.rc) {
 			return extend_args.rc;
 		}
+		pthread_spin_lock(&file->lock);
 	}
 
 	flush_req = alloc_fs_request(channel);
