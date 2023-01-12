@@ -343,7 +343,7 @@ virtio_dev_split_get_avail_reqs(struct vfu_virtio_dev *dev, struct vfu_virtio_vq
 		reqs[i] = vq->avail.avail->ring[(last_idx + i) & (vq->qsize - 1)];
 	}
 
-	SPDK_DEBUGLOG(vfu_virtio,
+	SPDK_DEBUGLOG(vfu_virtio_io,
 		      "AVAIL: vq %u last_idx=%"PRIu16" avail_idx=%"PRIu16" count=%"PRIu16"\n",
 		      vq->id, last_idx, avail_idx, count);
 
@@ -545,7 +545,7 @@ virtio_vq_used_ring_split_enqueue(struct vfu_virtio_vq *vq, uint16_t req_idx, ui
 {
 	uint16_t last_idx = vq->last_used_idx & (vq->qsize - 1);
 
-	SPDK_DEBUGLOG(vfu_virtio,
+	SPDK_DEBUGLOG(vfu_virtio_io,
 		      "Queue %u - USED RING: last_idx=%"PRIu16" req_idx=%"PRIu16" used_len=%"PRIu32"\n",
 		      vq->id, last_idx, req_idx, used_len);
 
@@ -566,7 +566,7 @@ virtio_vq_used_ring_packed_enqueue(struct vfu_virtio_vq *vq, uint16_t buffer_id,
 {
 	struct vring_packed_desc *desc = &vq->desc.desc_packed[vq->last_used_idx];
 
-	SPDK_DEBUGLOG(vfu_virtio,
+	SPDK_DEBUGLOG(vfu_virtio_io,
 		      "Queue %u - USED RING: buffer_id=%"PRIu16" num_descs=%u used_len=%"PRIu32"\n",
 		      vq->id, buffer_id, num_descs, used_len);
 
@@ -627,18 +627,18 @@ vfu_virtio_vq_post_irq(struct vfu_virtio_dev *dev, struct vfu_virtio_vq *vq)
 	vq->used_req_cnt = 0;
 
 	if (spdk_vfu_endpoint_msix_enabled(virtio_endpoint->endpoint)) {
-		SPDK_DEBUGLOG(vfu_virtio, "%s: Queue %u post MSIX IV %u\n",
+		SPDK_DEBUGLOG(vfu_virtio_io, "%s: Queue %u post MSIX IV %u\n",
 			      spdk_vfu_get_endpoint_id(virtio_endpoint->endpoint),
 			      vq->id, vq->vector);
 		return vfu_irq_trigger(vfu_ctx, vq->vector);
 	} else {
 		if (!spdk_vfu_endpoint_intx_enabled(virtio_endpoint->endpoint)) {
-			SPDK_DEBUGLOG(vfu_virtio, "%s: IRQ disabled\n",
+			SPDK_DEBUGLOG(vfu_virtio_io, "%s: IRQ disabled\n",
 				      spdk_vfu_get_endpoint_id(virtio_endpoint->endpoint));
 			return 0;
 		}
 
-		SPDK_DEBUGLOG(vfu_virtio, "%s: Queue %u post ISR\n",
+		SPDK_DEBUGLOG(vfu_virtio_io, "%s: Queue %u post ISR\n",
 			      spdk_vfu_get_endpoint_id(virtio_endpoint->endpoint), vq->id);
 		dev->cfg.isr = 1;
 		return vfu_irq_trigger(vfu_ctx, 0);
@@ -691,7 +691,7 @@ vfu_virito_dev_process_split_ring(struct vfu_virtio_dev *dev, struct vfu_virtio_
 		return 0;
 	}
 
-	SPDK_DEBUGLOG(vfu_virtio, "%s: get %u descriptors\n", dev->name, reqs_cnt);
+	SPDK_DEBUGLOG(vfu_virtio_io, "%s: get %u descriptors\n", dev->name, reqs_cnt);
 
 	for (i = 0; i < reqs_cnt; i++) {
 		req = vfu_virtio_dev_get_req(virtio_endpoint, vq);
@@ -731,7 +731,7 @@ virito_dev_split_ring_get_next_avail_req(struct vfu_virtio_dev *dev, struct vfu_
 	}
 	assert(reqs_cnt == 1);
 
-	SPDK_DEBUGLOG(vfu_virtio, "%s: get 1 descriptors\n", dev->name);
+	SPDK_DEBUGLOG(vfu_virtio_io, "%s: get 1 descriptors\n", dev->name);
 
 	req = vfu_virtio_dev_get_req(virtio_endpoint, vq);
 	if (!req) {
@@ -769,7 +769,7 @@ virtio_dev_packed_iovs_setup(struct vfu_virtio_dev *dev, struct vfu_virtio_vq *v
 	uint16_t new_idx, num_descs, desc_table_size = 0;
 	uint32_t len = 0;
 
-	SPDK_DEBUGLOG(vfu_virtio, "%s: last avail idx %u, req %p\n", dev->name, last_avail_idx, req);
+	SPDK_DEBUGLOG(vfu_virtio_io, "%s: last avail idx %u, req %p\n", dev->name, last_avail_idx, req);
 
 	desc = NULL;
 	num_descs = 1;
@@ -783,7 +783,7 @@ virtio_dev_packed_iovs_setup(struct vfu_virtio_dev *dev, struct vfu_virtio_vq *v
 		}
 		desc_table_size = current_desc->len / sizeof(struct vring_packed_desc);
 		desc = desc_table;
-		SPDK_DEBUGLOG(vfu_virtio, "%s: indirect desc %p, desc size %u, req %p\n",
+		SPDK_DEBUGLOG(vfu_virtio_io, "%s: indirect desc %p, desc size %u, req %p\n",
 			      dev->name, desc_table, desc_table_size, req);
 	} else {
 		desc = current_desc;
@@ -844,7 +844,7 @@ virtio_dev_packed_iovs_setup(struct vfu_virtio_dev *dev, struct vfu_virtio_vq *v
 
 	req->payload_size = len;
 
-	SPDK_DEBUGLOG(vfu_virtio, "%s: req %p, iovcnt %u, num_descs %u\n",
+	SPDK_DEBUGLOG(vfu_virtio_io, "%s: req %p, iovcnt %u, num_descs %u\n",
 		      dev->name, req, req->iovcnt, num_descs);
 	return 0;
 }
@@ -900,7 +900,7 @@ virito_dev_packed_ring_get_next_avail_req(struct vfu_virtio_dev *dev, struct vfu
 		return NULL;
 	}
 
-	SPDK_DEBUGLOG(vfu_virtio, "%s: get 1 descriptors\n", dev->name);
+	SPDK_DEBUGLOG(vfu_virtio_io, "%s: get 1 descriptors\n", dev->name);
 
 	req = vfu_virtio_dev_get_req(virtio_endpoint, vq);
 	if (!req) {
@@ -1775,3 +1775,4 @@ vfu_virtio_get_vendor_capability(struct spdk_vfu_endpoint *endpoint, char *buf,
 }
 
 SPDK_LOG_REGISTER_COMPONENT(vfu_virtio)
+SPDK_LOG_REGISTER_COMPONENT(vfu_virtio_io)
