@@ -1022,6 +1022,23 @@ bdev_nvme_abort_retry_ios(struct nvme_bdev_channel *nbdev_ch)
 	spdk_poller_unregister(&nbdev_ch->retry_io_poller);
 }
 
+static int
+bdev_nvme_abort_retry_io(struct nvme_bdev_channel *nbdev_ch,
+			 struct nvme_bdev_io *bio_to_abort)
+{
+	struct spdk_bdev_io *bdev_io_to_abort;
+
+	TAILQ_FOREACH(bdev_io_to_abort, &nbdev_ch->retry_io_list, module_link) {
+		if ((struct nvme_bdev_io *)bdev_io_to_abort->driver_ctx == bio_to_abort) {
+			TAILQ_REMOVE(&nbdev_ch->retry_io_list, bdev_io_to_abort, module_link);
+			__bdev_nvme_io_complete(bdev_io_to_abort, SPDK_BDEV_IO_STATUS_ABORTED, NULL);
+			return 0;
+		}
+	}
+
+	return -ENOENT;
+}
+
 static void
 bdev_nvme_update_nvme_error_stat(struct spdk_bdev_io *bdev_io, const struct spdk_nvme_cpl *cpl)
 {
@@ -6735,23 +6752,19 @@ bdev_nvme_abort(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio,
 		struct nvme_bdev_io *bio_to_abort)
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
-	struct spdk_bdev_io *bdev_io_to_abort;
 	struct nvme_io_path *io_path;
 	struct nvme_ctrlr *nvme_ctrlr;
 	int rc = 0;
 
 	bio->orig_thread = spdk_get_thread();
 
-	/* Traverse the retry_io_list first. */
-	TAILQ_FOREACH(bdev_io_to_abort, &nbdev_ch->retry_io_list, module_link) {
-		if ((struct nvme_bdev_io *)bdev_io_to_abort->driver_ctx == bio_to_abort) {
-			TAILQ_REMOVE(&nbdev_ch->retry_io_list, bdev_io_to_abort, module_link);
-			__bdev_nvme_io_complete(bdev_io_to_abort, SPDK_BDEV_IO_STATUS_ABORTED, NULL);
-
-			__bdev_nvme_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS, NULL);
-			return;
-		}
+	rc = bdev_nvme_abort_retry_io(nbdev_ch, bio_to_abort);
+	if (rc == 0) {
+		__bdev_nvme_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS, NULL);
+		return;
 	}
+
+	rc = 0;
 
 	/* Even admin commands, they were submitted to only nvme_ctrlrs which were
 	 * on any io_path. So traverse the io_path list for not only I/O commands
