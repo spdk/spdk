@@ -686,6 +686,7 @@ spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
 		req->buffers[i] = NULL;
 		req->iov[i].iov_len = 0;
 	}
+	req->iovcnt = 0;
 	req->data_from_pool = false;
 }
 
