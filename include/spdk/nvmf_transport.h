@@ -11,6 +11,7 @@
 #define SPDK_NVMF_TRANSPORT_H_
 
 #include "spdk/bdev.h"
+#include "spdk/thread.h"
 #include "spdk/nvme_spec.h"
 #include "spdk/nvmf.h"
 #include "spdk/nvmf_cmd.h"
@@ -27,8 +28,8 @@
 
 #define SPDK_NVMF_MAX_ASYNC_EVENTS 4
 
-/* AIO backend requires block size aligned data buffers,
- * extra 4KiB aligned data buffer should work for most devices.
+/* Some backends require 4K aligned buffers. The iobuf library gives us that
+ * naturally, but there are buffers allocated other ways that need to use this.
  */
 #define NVMF_DATA_BUFFER_ALIGNMENT	VALUE_4KB
 #define NVMF_DATA_BUFFER_MASK		(NVMF_DATA_BUFFER_ALIGNMENT - 1LL)
@@ -60,7 +61,6 @@ struct spdk_nvmf_dif_info {
 struct spdk_nvmf_stripped_data {
 	uint32_t			iovcnt;
 	struct iovec			iov[NVMF_REQ_MAX_BUFFERS];
-	void				*buffers[NVMF_REQ_MAX_BUFFERS];
 };
 
 enum spdk_nvmf_zcopy_phase {
@@ -86,7 +86,6 @@ struct spdk_nvmf_request {
 
 	uint32_t			iovcnt;
 	struct iovec			iov[NVMF_REQ_MAX_BUFFERS];
-	void				*buffers[NVMF_REQ_MAX_BUFFERS];
 	struct spdk_nvmf_stripped_data  *stripped_data;
 
 	struct spdk_nvmf_dif_info	dif;
@@ -135,17 +134,11 @@ struct spdk_nvmf_qpair {
 	TAILQ_ENTRY(spdk_nvmf_qpair)		link;
 };
 
-struct spdk_nvmf_transport_pg_cache_buf {
-	STAILQ_ENTRY(spdk_nvmf_transport_pg_cache_buf) link;
-};
-
 struct spdk_nvmf_transport_poll_group {
 	struct spdk_nvmf_transport					*transport;
 	/* Requests that are waiting to obtain a data buffer */
 	STAILQ_HEAD(, spdk_nvmf_request)				pending_buf_queue;
-	STAILQ_HEAD(, spdk_nvmf_transport_pg_cache_buf)			buf_cache;
-	uint32_t							buf_cache_count;
-	uint32_t							buf_cache_size;
+	struct spdk_iobuf_channel					buf_cache;
 	struct spdk_nvmf_poll_group					*group;
 	TAILQ_ENTRY(spdk_nvmf_transport_poll_group)			link;
 };
@@ -208,13 +201,14 @@ struct spdk_nvmf_ctrlr_data {
 	struct spdk_nvme_cdata_nvmf_specific nvmf_specific;
 };
 
+#define MAX_MEMPOOL_NAME_LENGTH 40
+
 struct spdk_nvmf_transport {
 	struct spdk_nvmf_tgt			*tgt;
 	const struct spdk_nvmf_transport_ops	*ops;
 	struct spdk_nvmf_transport_opts		opts;
 
-	/* A mempool for transport related data transfers */
-	struct spdk_mempool			*data_buf_pool;
+	char					iobuf_name[MAX_MEMPOOL_NAME_LENGTH];
 
 	TAILQ_HEAD(, spdk_nvmf_listener)	listeners;
 	TAILQ_ENTRY(spdk_nvmf_transport)	link;

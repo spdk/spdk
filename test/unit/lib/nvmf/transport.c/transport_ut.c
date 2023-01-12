@@ -5,6 +5,7 @@
 #include "spdk/stdinc.h"
 #include "spdk_cunit.h"
 #include "common/lib/test_env.c"
+#include "common/lib/test_iobuf.c"
 #include "nvmf/transport.c"
 #include "nvmf/rdma.c"
 #include "common/lib/test_rdma.c"
@@ -130,12 +131,21 @@ test_spdk_nvmf_transport_create(void)
 	int rc;
 	struct spdk_nvmf_transport *transport = NULL;
 	struct nvmf_transport_ops_list_element *ops_element;
+	struct spdk_iobuf_opts opts_iobuf = {};
 	struct spdk_nvmf_transport_ops ops = {
 		.name = "new_ops",
 		.type = (enum spdk_nvme_transport_type)SPDK_NVMF_TRTYPE_RDMA,
 		.create_async = ut_transport_create,
 		.destroy = ut_transport_destroy
 	};
+
+	opts_iobuf.large_bufsize = 0x10000;
+	opts_iobuf.large_pool_count = 4096;
+	opts_iobuf.small_bufsize = 0x1000;
+	opts_iobuf.small_pool_count = 4096;
+
+	rc = spdk_iobuf_set_opts(&opts_iobuf);
+	CU_ASSERT(rc == 0);
 
 	/* No available ops element */
 	rc = spdk_nvmf_transport_create_async("new_ops", &g_rdma_ut_transport_opts,
@@ -152,7 +162,6 @@ test_spdk_nvmf_transport_create(void)
 	CU_ASSERT(transport == &ut_transport);
 	CU_ASSERT(!memcmp(&transport->opts, &g_rdma_ut_transport_opts, sizeof(g_rdma_ut_transport_opts)));
 	CU_ASSERT(!memcmp(transport->ops, &ops, sizeof(ops)));
-	CU_ASSERT(transport->data_buf_pool != NULL);
 
 	rc = spdk_nvmf_transport_destroy(transport, NULL, NULL);
 	CU_ASSERT(rc == 0);
@@ -201,28 +210,18 @@ test_nvmf_transport_poll_group_create(void)
 	ops.poll_group_destroy = ut_poll_group_destroy;
 	transport.ops = &ops;
 	transport.opts.buf_cache_size = SPDK_NVMF_DEFAULT_BUFFER_CACHE_SIZE;
-	transport.data_buf_pool = spdk_mempool_create("buf_pool", 32, 4096, 0, 0);
 
 	poll_group = nvmf_transport_poll_group_create(&transport, NULL);
 	SPDK_CU_ASSERT_FATAL(poll_group != NULL);
 	CU_ASSERT(poll_group->transport == &transport);
-	CU_ASSERT(poll_group->buf_cache_size == SPDK_NVMF_DEFAULT_BUFFER_CACHE_SIZE);
-	CU_ASSERT(poll_group->buf_cache_count == SPDK_NVMF_DEFAULT_BUFFER_CACHE_SIZE);
 
 	nvmf_transport_poll_group_destroy(poll_group);
-	spdk_mempool_free(transport.data_buf_pool);
-
-	/* Mempool members insufficient */
-	transport.data_buf_pool = spdk_mempool_create("buf_pool", 31, 4096, 0, 0);
 
 	poll_group = nvmf_transport_poll_group_create(&transport, NULL);
 	SPDK_CU_ASSERT_FATAL(poll_group != NULL);
 	CU_ASSERT(poll_group->transport == &transport);
-	CU_ASSERT(poll_group->buf_cache_size == 31);
-	CU_ASSERT(poll_group->buf_cache_count == 31);
 
 	nvmf_transport_poll_group_destroy(poll_group);
-	spdk_mempool_free(transport.data_buf_pool);
 }
 
 static void
