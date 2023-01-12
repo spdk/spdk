@@ -11,6 +11,54 @@ source $rootdir/test/nvmf/common.sh
 
 rpc_py="$rootdir/scripts/rpc.py"
 
+function run_bdevperf() {
+	local subnqn hostnqn psk
+	subnqn=$1 hostnqn=$2 psk=$3
+
+	bdevperf_rpc_sock=/var/tmp/bdevperf.sock
+
+	# use bdevperf to test "bdev_nvme_attach_controller"
+	$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 &
+	bdevperf_pid=$!
+
+	trap 'process_shm --id $NVMF_APP_SHM_ID; killprocess $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+	waitforlisten $bdevperf_pid $bdevperf_rpc_sock
+
+	# send RPC
+	$rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b TLSTEST -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
+		-s $NVMF_PORT -f ipv4 -n "$subnqn" -q "$hostnqn" --psk "$psk"
+
+	# run I/O and wait
+	$rootdir/examples/bdev/bdevperf/bdevperf.py -t 20 -s $bdevperf_rpc_sock perform_tests
+
+	# finish
+	trap 'nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+	killprocess $bdevperf_pid
+}
+
+format_interchange_psk() {
+	local key hash crc
+
+	key=$1 hash=${2:-01}
+	crc=$(echo -n $key | gzip -1 -c | tail -c8 | head -c 4)
+
+	echo "NVMeTLSkey-1:$hash:$(base64 <(echo -n ${key}${crc})):"
+}
+
+setup_nvmf_tgt() {
+	local key=$1
+
+	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
+	$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -s SPDK00000000000001 -m 10
+	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT \
+		-a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -k
+	$rpc_py bdev_malloc_create 32 4096 -b malloc0
+	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 malloc0 -n 1
+
+	$rpc_py nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 \
+		--psk $key
+}
+
 nvmftestinit
 nvmfappstart -m 0x2 --wait-for-rpc
 
@@ -67,42 +115,21 @@ if [[ "$ktls" != "false" ]]; then
 	exit 1
 fi
 
-key="00112233445566778899aabbccddeeff"
-interchange_key="NVMeTLSkey-1:01:$(base64 <(echo -n $key$(echo -n $key | gzip -1 -c | tail -c8 | head -c 4))):"
+key=$(format_interchange_psk 00112233445566778899aabbccddeeff)
 
 $rpc_py sock_impl_set_options -i ssl --tls-version 13
 $rpc_py framework_start_init
-$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
-$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -s SPDK00000000000001 -m 10
-$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT \
-	-a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -k
-$rpc_py bdev_malloc_create 32 4096 -b malloc0
-$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 malloc0 -n 1
 
-$rpc_py nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 \
-	--psk $interchange_key
+setup_nvmf_tgt "$key"
 
-# Send IO
+# Check connectivity with nvmeperf"
 "${NVMF_TARGET_NS_CMD[@]}" $SPDK_EXAMPLE_DIR/perf -S ssl -q 64 -o 4096 -w randrw -M 30 -t 10 \
 	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \
 subnqn:nqn.2016-06.io.spdk:cnode1 hostnqn:nqn.2016-06.io.spdk:host1" \
-	--psk-key $interchange_key
+	--psk-key $key
 
-# use bdevperf to test "bdev_nvme_attach_controller"
-bdevperf_rpc_sock=/var/tmp/bdevperf.sock
-$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 &
-bdevperf_pid=$!
-
-trap 'process_shm --id $NVMF_APP_SHM_ID; killprocess $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
-waitforlisten $bdevperf_pid $bdevperf_rpc_sock
-# send RPC
-$rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b TLSTEST -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
-	-s $NVMF_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -q nqn.2016-06.io.spdk:host1 \
-	--psk $interchange_key
-# run I/O and wait
-$rootdir/examples/bdev/bdevperf/bdevperf.py -t 20 -s $bdevperf_rpc_sock perform_tests
-# finish
-killprocess $bdevperf_pid
+# Check connectivity with bdevperf
+run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 "$key"
 
 trap - SIGINT SIGTERM EXIT
 nvmftestfini
