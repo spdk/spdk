@@ -85,6 +85,8 @@ function usage() {
 	echo "                            NVME PCI BDF,Spdk Bdev Name,Split Count,VM List"
 	echo "                            0000:1a:00.0,Nvme0,2,0 1"
 	echo "                            0000:1b:00.0,Nvme1,2,2 3"
+	echo "    --iobuf-small-pool-count=INT   number of small buffers in the global pool"
+	echo "    --iobuf-large-pool-count=INT   number of large buffers in the global pool"
 	echo "-x                          set -x for script debug"
 	exit 0
 }
@@ -198,6 +200,8 @@ while getopts 'xh-:' optchar; do
 				limit-kernel-vhost=*) kernel_cpus="${OPTARG#*=}" ;;
 				custom-cpu-cfg=*) custom_cpu_cfg="${OPTARG#*=}" ;;
 				disk-map=*) disk_map="${OPTARG#*=}" ;;
+				iobuf-small-pool-count=*) iobuf_small_count="${OPTARG#*=}" ;;
+				iobuf-large-pool-count=*) iobuf_large_count="${OPTARG#*=}" ;;
 				*) usage $0 "Invalid argument '$OPTARG'" ;;
 			esac
 			;;

@@ -166,12 +166,24 @@ function vhost_run() {
 
 	timing_enter vhost_start
 
-	$cmd &
+	iobuf_small_count=${iobuf_small_count:-16383}
+	iobuf_large_count=${iobuf_large_count:-2047}
+
+	$cmd --wait-for-rpc &
 	vhost_pid=$!
 	echo $vhost_pid > $vhost_pid_file
 
 	notice "waiting for app to run..."
 	waitforlisten "$vhost_pid" "$vhost_dir/rpc.sock"
+
+	"$rootdir/scripts/rpc.py" -s "$vhost_dir/rpc.sock" \
+		iobuf_set_options \
+		--small-pool-count="$iobuf_small_count" \
+		--large-pool-count="$iobuf_large_count"
+
+	"$rootdir/scripts/rpc.py" -s "$vhost_dir/rpc.sock" \
+		framework_start_init
+
 	#do not generate nvmes if pci access is disabled
 	if [[ "$cmd" != *"--no-pci"* ]] && [[ "$cmd" != *"-u"* ]] && $run_gen_nvme; then
 		$rootdir/scripts/gen_nvme.sh | $rootdir/scripts/rpc.py -s $vhost_dir/rpc.sock load_subsystem_config
