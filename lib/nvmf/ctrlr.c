@@ -4498,6 +4498,10 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_transport *transport = qpair->transport;
 	enum spdk_nvmf_request_exec_status status;
 
+	if (req->data != NULL) {
+		assert(req->iovcnt > 0);
+	}
+
 	if (!nvmf_check_subsystem_active(req)) {
 		return;
 	}
