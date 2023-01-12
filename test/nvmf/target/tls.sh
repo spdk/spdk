@@ -13,10 +13,9 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 function run_bdevperf() {
 	local subnqn hostnqn psk
-	subnqn=$1 hostnqn=$2 psk=$3
+	subnqn=$1 hostnqn=$2 psk=${3:+--psk $3}
 
 	bdevperf_rpc_sock=/var/tmp/bdevperf.sock
-
 	# use bdevperf to test "bdev_nvme_attach_controller"
 	$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 &
 	bdevperf_pid=$!
@@ -25,8 +24,11 @@ function run_bdevperf() {
 	waitforlisten $bdevperf_pid $bdevperf_rpc_sock
 
 	# send RPC
-	$rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b TLSTEST -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
-		-s $NVMF_PORT -f ipv4 -n "$subnqn" -q "$hostnqn" --psk "$psk"
+	if ! $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b TLSTEST -t $TEST_TRANSPORT \
+		-a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -f ipv4 -n "$subnqn" -q "$hostnqn" $psk; then
+		killprocess $bdevperf_pid
+		return 1
+	fi
 
 	# run I/O and wait
 	$rootdir/examples/bdev/bdevperf/bdevperf.py -t 20 -s $bdevperf_rpc_sock perform_tests
@@ -116,12 +118,14 @@ if [[ "$ktls" != "false" ]]; then
 fi
 
 key=$(format_interchange_psk 00112233445566778899aabbccddeeff)
+key_2=$(format_interchange_psk ffeeddccbbaa99887766554433221100)
 
 $rpc_py sock_impl_set_options -i ssl --tls-version 13
 $rpc_py framework_start_init
 
 setup_nvmf_tgt "$key"
 
+# Test #1 - test connectivity with perf and bdevperf application
 # Check connectivity with nvmeperf"
 "${NVMF_TARGET_NS_CMD[@]}" $SPDK_EXAMPLE_DIR/perf -S ssl -q 64 -o 4096 -w randrw -M 30 -t 10 \
 	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \
@@ -130,6 +134,27 @@ subnqn:nqn.2016-06.io.spdk:cnode1 hostnqn:nqn.2016-06.io.spdk:host1" \
 
 # Check connectivity with bdevperf
 run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 "$key"
+
+# Test #2 - test if it is possible to connect with different PSK
+NOT run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 "$key_2"
+
+# Test #3 - test if it is possible to connect with different hostnqn
+NOT run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host2 "$key"
+
+# Test #4 - test if it is possible to connect with different subnqn
+NOT run_bdevperf nqn.2016-06.io.spdk:cnode2 nqn.2016-06.io.spdk:host1 "$key"
+
+# Test #5 - test if it is possible to connect with POSIX socket to SSL socket (no credentials provided)
+NOT run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 ""
+
+# Test #6 - check connectivity with bdevperf, but with longer PSK
+killprocess $nvmfpid
+key_long=$(format_interchange_psk 00112233445566778899aabbccddeeff0011223344556677 02)
+nvmfappstart -m 0x2
+
+setup_nvmf_tgt "$key_long"
+
+run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 "$key_long"
 
 trap - SIGINT SIGTERM EXIT
 nvmftestfini
