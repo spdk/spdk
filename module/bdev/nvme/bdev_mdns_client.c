@@ -315,7 +315,6 @@ mdns_resolve_callback(
 			SPDK_ERRLOG("Unable to derive nvme transport type  for service %s\n", ctx->svcname);
 			break;
 		}
-		trid->adrfam = get_spdk_nvme_adrfam_from_avahi_addr(address);
 		snprintf(trid->traddr, sizeof(trid->traddr), "%s", ipaddr);
 		snprintf(trid->trsvcid, sizeof(trid->trsvcid), "%s", port_str);
 		snprintf(trid->subnqn, sizeof(trid->subnqn), "%s", subnqn);
