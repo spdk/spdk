@@ -490,7 +490,7 @@ static inline void vrdma_wqe_submit(struct snap_vrdma_backend_qp *bk_qp,
 	}
 #endif
 	/* ring dbr every 16 wqes */
-	if (!(bk_qp->hw_qp.sq.pi & 0xFF)) {
+	if (!(bk_qp->hw_qp.sq.pi & 0xF)) {
 		vrdma_ring_tx_db(bk_qp, ctrl);
 	}
 	bk_qp->ctrl = ctrl;
