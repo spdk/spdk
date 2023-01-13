@@ -4621,7 +4621,9 @@ bdev_nvme_validate_opts(const struct spdk_bdev_nvme_opts *opts)
 int
 bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 {
-	int ret = bdev_nvme_validate_opts(opts);
+	int ret;
+
+	ret = bdev_nvme_validate_opts(opts);
 	if (ret) {
 		SPDK_WARNLOG("Failed to set nvme opts.\n");
 		return ret;
@@ -4630,6 +4632,19 @@ bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 	if (g_bdev_nvme_init_thread != NULL) {
 		if (!TAILQ_EMPTY(&g_nvme_bdev_ctrlrs)) {
 			return -EPERM;
+		}
+	}
+
+	if (opts->rdma_srq_size != 0) {
+		struct spdk_nvme_transport_opts drv_opts;
+
+		spdk_nvme_transport_get_opts(&drv_opts, sizeof(drv_opts));
+		drv_opts.rdma_srq_size = opts->rdma_srq_size;
+
+		ret = spdk_nvme_transport_set_opts(&drv_opts, sizeof(drv_opts));
+		if (ret) {
+			SPDK_ERRLOG("Failed to set NVMe transport opts.\n");
+			return ret;
 		}
 	}
 

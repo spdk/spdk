@@ -561,7 +561,8 @@ if __name__ == "__main__":
                                        disable_auto_failback=args.disable_auto_failback,
                                        generate_uuids=args.generate_uuids,
                                        transport_tos=args.transport_tos,
-                                       nvme_error_stat=args.nvme_error_stat)
+                                       nvme_error_stat=args.nvme_error_stat,
+                                       rdma_srq_size=args.rdma_srq_size)
 
     p = subparsers.add_parser('bdev_nvme_set_options',
                               help='Set options for the bdev nvme type. This is startup command.')
@@ -634,6 +635,8 @@ if __name__ == "__main__":
                    help="""IPv4 Type of Service value. Only applicable for RDMA transports.
                    The default is 0 which means no TOS is applied.""", type=int)
     p.add_argument('-m', '--nvme-error-stat', help="Enable collecting NVMe error counts.", action='store_true')
+    p.add_argument('-q', '--rdma-srq-size',
+                   help='Set the size of a shared rdma receive queue. Default: 0 (disabled)', type=int)
 
     p.set_defaults(func=bdev_nvme_set_options)
 

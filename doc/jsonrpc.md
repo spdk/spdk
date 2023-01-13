@@ -3617,6 +3617,7 @@ disable_auto_failback      | Optional | boolean     | Disable automatic failback
 generate_uuids             | Optional | boolean     | Enable generation of UUIDs for NVMe bdevs that do not provide this value themselves.
 transport_tos              | Optional | number      | IPv4 Type of Service value. Only applicable for RDMA transport. Default: 0 (no TOS is applied).
 nvme_error_stat            | Optional | boolean     | Enable collecting NVMe error counts.
+rdma_srq_size              | Optional | number      | Set the size of a shared rdma receive queue. Default: 0 (disabled).
 
 #### Example
 

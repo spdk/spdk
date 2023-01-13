@@ -263,6 +263,7 @@ struct spdk_bdev_nvme_opts {
 	/* Type of Service - RDMA only */
 	uint8_t transport_tos;
 	bool nvme_error_stat;
+	uint32_t rdma_srq_size;
 };
 
 struct spdk_nvme_qpair *bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);

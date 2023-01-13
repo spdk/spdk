@@ -52,6 +52,12 @@ DEFINE_RETURN_MOCK(spdk_nvme_ctrlr_get_memory_domains, int);
 DEFINE_STUB_V(spdk_jsonrpc_send_error_response, (struct spdk_jsonrpc_request *request,
 		int error_code, const char *msg));
 
+DEFINE_STUB_V(spdk_nvme_transport_get_opts, (struct spdk_nvme_transport_opts *opts,
+		size_t opts_size));
+
+DEFINE_STUB(spdk_nvme_transport_set_opts, int, (const struct spdk_nvme_transport_opts *opts,
+		size_t opts_size), 0);
+
 int
 spdk_nvme_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
 				   struct spdk_memory_domain **domains, int array_size)
