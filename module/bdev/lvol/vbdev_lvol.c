@@ -954,11 +954,73 @@ static int
 vbdev_lvol_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int array_size)
 {
 	struct spdk_lvol *lvol = ctx;
-	struct spdk_bdev *base_bdev;
+	struct spdk_bdev *base_bdev, *esnap_bdev;
+	struct spdk_bs_dev *bs_dev;
+	struct spdk_lvol_store *lvs;
+	int base_cnt, esnap_cnt;
 
-	base_bdev = lvol->lvol_store->bs_dev->get_base_bdev(lvol->lvol_store->bs_dev);
+	lvs = lvol->lvol_store;
+	base_bdev = lvs->bs_dev->get_base_bdev(lvol->lvol_store->bs_dev);
 
-	return spdk_bdev_get_memory_domains(base_bdev, domains, array_size);
+	base_cnt = spdk_bdev_get_memory_domains(base_bdev, domains, array_size);
+	if (base_cnt < 0) {
+		return base_cnt;
+	}
+
+	if (lvol->blob == NULL) {
+		/*
+		 * This is probably called due to an open happening during blobstore load. Another
+		 * open will follow shortly that has lvol->blob set.
+		 */
+		return -EAGAIN;
+	}
+
+	if (!spdk_blob_is_esnap_clone(lvol->blob)) {
+		return base_cnt;
+	}
+
+	bs_dev = spdk_blob_get_esnap_bs_dev(lvol->blob);
+	if (bs_dev == NULL) {
+		assert(false);
+		SPDK_ERRLOG("lvol %s is an esnap clone but has no esnap device\n", lvol->unique_id);
+		return base_cnt;
+	}
+
+	if (bs_dev->get_base_bdev == NULL) {
+		/*
+		 * If this were a blob_bdev, we wouldn't be here. We are probably here because an
+		 * lvol bdev is being registered with spdk_bdev_register() before the external
+		 * snapshot bdev is loaded. Ideally, the load of a missing esnap would trigger an
+		 * event that causes the lvol bdev's memory domain information to be updated.
+		 */
+		return base_cnt;
+	}
+
+	esnap_bdev = bs_dev->get_base_bdev(bs_dev);
+	if (esnap_bdev == NULL) {
+		/*
+		 * The esnap bdev has not yet been loaded. Anyone that has opened at this point may
+		 * miss out on using memory domains if base_cnt is zero.
+		 */
+		SPDK_NOTICELOG("lvol %s reporting %d memory domains, not including missing esnap\n",
+			       lvol->unique_id, base_cnt);
+		return base_cnt;
+	}
+
+	if (base_cnt < array_size) {
+		array_size -= base_cnt;
+		domains += base_cnt;
+	} else {
+		array_size = 0;
+		domains = NULL;
+	}
+
+	esnap_cnt = spdk_bdev_get_memory_domains(esnap_bdev, domains, array_size);
+	if (esnap_cnt <= 0) {
+		return base_cnt;
+	}
+
+	return base_cnt + esnap_cnt;
 }
 
 static struct spdk_bdev_fn_table vbdev_lvol_fn_table = {
