@@ -1077,6 +1077,8 @@ class SPDKTarget(Target):
         self.bpf_scripts = []
         self.enable_dsa = False
         self.scheduler_core_limit = None
+        self.iobuf_small_pool_count = 16383
+        self.iobuf_large_pool_count = 2047
 
         if "num_shared_buffers" in target_config:
             self.num_shared_buffers = target_config["num_shared_buffers"]
@@ -1092,6 +1094,10 @@ class SPDKTarget(Target):
             self.enable_dsa = target_config["dsa_settings"]
         if "scheduler_core_limit" in target_config:
             self.scheduler_core_limit = target_config["scheduler_core_limit"]
+        if "iobuf_small_pool_count" in target_config:
+            self.iobuf_small_pool_count = target_config["iobuf_small_pool_count"]
+        if "iobuf_large_pool_count" in target_config:
+            self.iobuf_large_pool_count = target_config["iobuf_large_pool_count"]
 
         self.log.info("====DSA settings:====")
         self.log.info("DSA enabled: %s" % (self.enable_dsa))
@@ -1255,6 +1261,11 @@ class SPDKTarget(Target):
         self.client = rpc_client.JSONRPCClient("/var/tmp/spdk.sock")
 
         rpc.sock.sock_set_default_impl(self.client, impl_name="posix")
+        rpc.iobuf.iobuf_set_options(self.client,
+                                    small_pool_count=self.iobuf_small_pool_count,
+                                    large_pool_count=self.iobuf_large_pool_count,
+                                    small_bufsize=None,
+                                    large_bufsize=None)
 
         if self.enable_zcopy:
             rpc.sock.sock_impl_set_options(self.client, impl_name="posix",
