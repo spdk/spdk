@@ -8,6 +8,7 @@
  * each partition.
  */
 
+#define REGISTER_GUID_DEPRECATION
 #include "gpt.h"
 
 #include "spdk/endian.h"
@@ -313,12 +314,26 @@ vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 		p = &gpt->partitions[i];
 		uint64_t lba_start = from_le64(&p->starting_lba);
 		uint64_t lba_end = from_le64(&p->ending_lba);
+		uint64_t partition_size = lba_end - lba_start + 1;
 
-		if (!SPDK_GPT_GUID_EQUAL(&gpt->partitions[i].part_type_guid,
-					 &SPDK_GPT_PART_TYPE_GUID) ||
-		    lba_start == 0) {
+		if (lba_start == 0) {
 			continue;
 		}
+
+		if (SPDK_GPT_GUID_EQUAL(&gpt->partitions[i].part_type_guid,
+					&SPDK_GPT_PART_TYPE_GUID_OLD)) {
+			/* GitHub issue #2801 - we continue to report these partitions with
+			 * off-by-one sizing error to ensure we don't break layouts based
+			 * on that smaller size. */
+			partition_size -= 1;
+		} else if (!SPDK_GPT_GUID_EQUAL(&gpt->partitions[i].part_type_guid,
+						&SPDK_GPT_PART_TYPE_GUID)) {
+			/* Partition type isn't TYPE_GUID or TYPE_GUID_OLD, so this isn't
+			 * an SPDK parition.  Continue to the next partition.
+			 */
+			continue;
+		}
+
 		if (lba_start < head_lba_start || lba_end > head_lba_end) {
 			continue;
 		}
@@ -339,7 +354,7 @@ vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 		}
 
 		rc = spdk_bdev_part_construct(&d->part, gpt_base->part_base, name,
-					      lba_start, lba_end - lba_start, "GPT Disk");
+					      lba_start, partition_size, "GPT Disk");
 		free(name);
 		if (rc) {
 			SPDK_ERRLOG("could not construct bdev part\n");

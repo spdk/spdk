@@ -121,9 +121,10 @@ function setup_gpt_conf() {
 		# Create gpt partition table
 		parted -s "$gpt_nvme" mklabel gpt mkpart SPDK_TEST_first '0%' '50%' mkpart SPDK_TEST_second '50%' '100%'
 		# change the GUID to SPDK GUID value
+		SPDK_GPT_OLD_GUID=$(get_spdk_gpt_old)
 		SPDK_GPT_GUID=$(get_spdk_gpt)
 		sgdisk -t "1:$SPDK_GPT_GUID" "$gpt_nvme"
-		sgdisk -t "2:$SPDK_GPT_GUID" "$gpt_nvme"
+		sgdisk -t "2:$SPDK_GPT_OLD_GUID" "$gpt_nvme"
 		"$rootdir/scripts/setup.sh"
 		"$rpc_py" bdev_get_bdevs
 		setup_nvme_conf

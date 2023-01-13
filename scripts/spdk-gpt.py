@@ -40,6 +40,7 @@ def is_spdk_gpt(block, entry):
     disk_lbsize = lbsize(block)
     gpt_sig = 0x5452415020494645  # EFI PART
     spdk_guid = [0x7c5222bd, 0x8f5d, 0x4087, 0x9c00, 0xbf9843c7b58c]
+    spdk_guid2 = [0x6527994e, 0x2c5a, 0x4eec, 0x9613, 0x8f5944074e8b]
 
     if readb(block_path, disk_lbsize, 8) != gpt_sig:
         print("No valid GPT data, bailing")
@@ -56,7 +57,7 @@ def is_spdk_gpt(block, entry):
         readb(block_path, part_entry_lba + 10, 8, ">Q") >> 16
     ]
 
-    return guid == spdk_guid
+    return guid == spdk_guid or guid == spdk_guid2
 
 
 if __name__ == "__main__":
