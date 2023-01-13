@@ -344,8 +344,8 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 	}
 }
 
-static int
-raid0_start(struct raid_bdev *raid_bdev)
+static uint64_t
+raid0_calculate_blockcnt(struct raid_bdev *raid_bdev)
 {
 	uint64_t min_blockcnt = UINT64_MAX;
 	struct raid_base_bdev_info *base_info;
@@ -362,8 +362,15 @@ raid0_start(struct raid_bdev *raid_bdev)
 	 */
 	SPDK_DEBUGLOG(bdev_raid0, "min blockcount %" PRIu64 ",  numbasedev %u, strip size shift %u\n",
 		      min_blockcnt, raid_bdev->num_base_bdevs, raid_bdev->strip_size_shift);
-	raid_bdev->bdev.blockcnt = ((min_blockcnt >> raid_bdev->strip_size_shift) <<
-				    raid_bdev->strip_size_shift)  * raid_bdev->num_base_bdevs;
+
+	return ((min_blockcnt >> raid_bdev->strip_size_shift) <<
+		raid_bdev->strip_size_shift)  * raid_bdev->num_base_bdevs;
+}
+
+static int
+raid0_start(struct raid_bdev *raid_bdev)
+{
+	raid_bdev->bdev.blockcnt = raid0_calculate_blockcnt(raid_bdev);
 
 	if (raid_bdev->num_base_bdevs > 1) {
 		raid_bdev->bdev.optimal_io_boundary = raid_bdev->strip_size;
