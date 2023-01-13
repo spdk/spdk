@@ -22,16 +22,6 @@ DEFINE_STUB(pmem_memset_persist, void *, (void *pmemdest, int c, size_t len), NU
 DEFINE_STUB_V(spdk_memory_domain_destroy, (struct spdk_memory_domain *domain));
 DEFINE_STUB(spdk_memory_domain_get_dma_device_id, const char *,
 	    (struct spdk_memory_domain *domain), "UT_DMA");
-#ifdef SPDK_CONFIG_ISAL
-DEFINE_STUB_V(XTS_AES_128_enc, (uint8_t *k2, uint8_t *k1, uint8_t *tweak, uint64_t lba_size,
-				const uint8_t *src, uint8_t *dst));
-DEFINE_STUB_V(XTS_AES_128_dec, (uint8_t *k2, uint8_t *k1, uint8_t *tweak, uint64_t lba_size,
-				const uint8_t *src, uint8_t *dst));
-DEFINE_STUB_V(XTS_AES_256_enc, (uint8_t *k2, uint8_t *k1, uint8_t *tweak, uint64_t lba_size,
-				const uint8_t *src, uint8_t *dst));
-DEFINE_STUB_V(XTS_AES_256_dec, (uint8_t *k2, uint8_t *k1, uint8_t *tweak, uint64_t lba_size,
-				const uint8_t *src, uint8_t *dst));
-#endif
 
 int
 spdk_memory_domain_create(struct spdk_memory_domain **domain, enum spdk_dma_device_type type,
