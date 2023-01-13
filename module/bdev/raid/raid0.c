@@ -384,12 +384,36 @@ raid0_start(struct raid_bdev *raid_bdev)
 	return 0;
 }
 
+static void
+raid0_resize(struct raid_bdev *raid_bdev)
+{
+	uint64_t blockcnt;
+	int rc;
+
+	blockcnt = raid0_calculate_blockcnt(raid_bdev);
+
+	if (blockcnt == raid_bdev->bdev.blockcnt) {
+		return;
+	}
+
+	SPDK_NOTICELOG("raid0 '%s': min blockcount was changed from %" PRIu64 " to %" PRIu64 "\n",
+		       raid_bdev->bdev.name,
+		       raid_bdev->bdev.blockcnt,
+		       blockcnt);
+
+	rc = spdk_bdev_notify_blockcnt_change(&raid_bdev->bdev, blockcnt);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to notify blockcount change\n");
+	}
+}
+
 static struct raid_bdev_module g_raid0_module = {
 	.level = RAID0,
 	.base_bdevs_min = 1,
 	.start = raid0_start,
 	.submit_rw_request = raid0_submit_rw_request,
 	.submit_null_payload_request = raid0_submit_null_payload_request,
+	.resize = raid0_resize,
 };
 RAID_MODULE_REGISTER(&g_raid0_module)
 

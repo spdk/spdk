@@ -49,7 +49,7 @@ waitforlisten $bdevperf_pid $RESIZE_SOCK
 # Resize the Bdev from iSCSI target
 $rpc_py bdev_null_resize Null0 $BDEV_NEW_SIZE
 # Obtain the Bdev from bdevperf with iSCSI initiator
-num_block=$($rpc_py -s $RESIZE_SOCK bdev_get_bdevs | grep num_blocks | sed 's/[^[:digit:]]//g')
+num_block=$($rpc_py -s $RESIZE_SOCK bdev_get_bdevs | jq '.[].num_blocks')
 # Size is not changed as no IO sent yet and resize notification is deferred.
 total_size=$((num_block * BLOCK_SIZE / 1048576))
 if [ $total_size != $BDEV_SIZE ]; then
@@ -60,7 +60,7 @@ sleep 2
 # Start the bdevperf IO
 $rootdir/examples/bdev/bdevperf/bdevperf.py -s $RESIZE_SOCK perform_tests
 # Obtain the Bdev from bdevperf with iSCSI initiator
-num_block=$($rpc_py -s $RESIZE_SOCK bdev_get_bdevs | grep num_blocks | sed 's/[^[:digit:]]//g')
+num_block=$($rpc_py -s $RESIZE_SOCK bdev_get_bdevs | jq '.[].num_blocks')
 # Get the new bdev size in MiB.
 total_size=$((num_block * BLOCK_SIZE / 1048576))
 if [ $total_size != $BDEV_NEW_SIZE ]; then

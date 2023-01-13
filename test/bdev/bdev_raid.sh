@@ -247,11 +247,57 @@ function raid_state_function_test() {
 	return 0
 }
 
+function raid0_resize_test() {
+	local blksize=512
+	local bdev_size_mb=32
+	local new_bdev_size_mb=$((bdev_size_mb * 2))
+	local blkcnt
+	local raid_size_mb
+	local new_raid_size_mb
+
+	$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -L bdev_raid &
+	raid_pid=$!
+	echo "Process raid pid: $raid_pid"
+	waitforlisten $raid_pid $rpc_server
+
+	$rpc_py bdev_null_create Base_1 $bdev_size_mb $blksize
+	$rpc_py bdev_null_create Base_2 $bdev_size_mb $blksize
+
+	$rpc_py bdev_raid_create -z 64 -r 0 -b "Base_1 Base_2" -n Raid
+
+	# Resize Base_1 first.
+	$rpc_py bdev_null_resize Base_1 $new_bdev_size_mb
+
+	# The size of Raid should not be changed.
+	blkcnt=$($rpc_py bdev_get_bdevs -b Raid | jq '.[].num_blocks')
+	raid_size_mb=$((blkcnt * blksize / 1048576))
+	if [ $raid_size_mb != $((bdev_size_mb * 2)) ]; then
+		echo "resize failed"
+		return 1
+	fi
+
+	# Resize Base_2 next.
+	$rpc_py bdev_null_resize Base_2 $new_bdev_size_mb
+
+	# The size of Raid should be updated to the expected value.
+	blkcnt=$($rpc_py bdev_get_bdevs -b Raid | jq '.[].num_blocks')
+	raid_size_mb=$((blkcnt * blksize / 1048576))
+	if [ $raid_size_mb != $((new_bdev_size_mb * 2)) ]; then
+		echo "resize failed"
+		return 1
+	fi
+
+	killprocess $raid_pid
+
+	return 0
+}
+
 trap 'on_error_exit;' ERR
 
 raid_function_test raid0
 raid_function_test concat
 raid_state_function_test raid0
 raid_state_function_test concat
+raid0_resize_test
 
 rm -f $tmp_file
