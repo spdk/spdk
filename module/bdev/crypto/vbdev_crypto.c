@@ -1438,6 +1438,8 @@ _device_unregister_cb(void *io_device)
 	_cryptodev_sym_session_free(crypto_bdev, crypto_bdev->session_decrypt);
 	_cryptodev_sym_session_free(crypto_bdev, crypto_bdev->session_encrypt);
 	crypto_bdev->opts = NULL;
+
+	spdk_bdev_destruct_done(&crypto_bdev->crypto_bdev, 0);
 	free(crypto_bdev->crypto_bdev.name);
 	free(crypto_bdev);
 }
@@ -1477,7 +1479,7 @@ vbdev_crypto_destruct(void *ctx)
 
 	g_number_of_claimed_volumes--;
 
-	return 0;
+	return 1;
 }
 
 /* We supplied this as an entry point for upper layers who want to communicate to this
