@@ -91,7 +91,7 @@ function usage() {
 	echo " --without-shared          No path required."
 	echo " --with-iscsi-initiator    Build with iscsi bdev module."
 	echo " --without-iscsi-initiator No path required."
-	echo " --with-vtune=DIR          Required to profile I/O under Intel VTune Amplifier XE."
+	echo " --with-vtune=DIR          Required to profile I/O under Intel VTune Amplifier XE. (Deprecated)"
 	echo " --without-vtune           example: /opt/intel/vtune_amplifier_xe_version"
 	echo " --with-ocf[=DIR]          Build OCF library and bdev module."
 	echo " --without-ocf             If argument is directory, interpret it as root of OCF repo"
@@ -765,6 +765,7 @@ else
 fi
 
 if [ "${CONFIG[VTUNE]}" = "y" ]; then
+	echo "WARNING: VTune support is deprecated."
 	if [ -z "${CONFIG[VTUNE_DIR]}" ]; then
 		echo "When VTune is enabled, you must specify the VTune directory using --with-vtune=path"
 		exit 1
