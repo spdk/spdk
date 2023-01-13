@@ -361,12 +361,25 @@ block_in_use() {
 	return 0
 }
 
+get_spdk_gpt_old() {
+	local spdk_guid
+
+	[[ -e $rootdir/module/bdev/gpt/gpt.h ]] || return 1
+
+	GPT_H="$rootdir/module/bdev/gpt/gpt.h"
+	IFS="()" read -r _ spdk_guid _ < <(grep -w SPDK_GPT_PART_TYPE_GUID_OLD "$GPT_H")
+	spdk_guid=${spdk_guid//, /-} spdk_guid=${spdk_guid//0x/}
+
+	echo "$spdk_guid"
+}
+
 get_spdk_gpt() {
 	local spdk_guid
 
 	[[ -e $rootdir/module/bdev/gpt/gpt.h ]] || return 1
 
-	IFS="()" read -r _ spdk_guid _ < <(grep SPDK_GPT_PART_TYPE_GUID "$rootdir/module/bdev/gpt/gpt.h")
+	GPT_H="$rootdir/module/bdev/gpt/gpt.h"
+	IFS="()" read -r _ spdk_guid _ < <(grep -w SPDK_GPT_PART_TYPE_GUID "$GPT_H")
 	spdk_guid=${spdk_guid//, /-} spdk_guid=${spdk_guid//0x/}
 
 	echo "$spdk_guid"

@@ -43,3 +43,18 @@ With the removal of this deprecation, calls to vbdev modules' `examine_disk()` a
 `examine_config()` callbacks will happen only on the app thread. This means that vbdev module
 maintainers will not need to make any changes to examine callbacks that call `spdk_bdev_register()`
 on the same thread as the examine callback uses.
+
+### gpt
+
+### `old_gpt_guid`
+
+Deprecated the SPDK partition type GUID `7c5222bd-8f5d-4087-9c00-bf9843c7b58c`. Partitions of this
+type have bdevs created that are one block less than the actual size of the partition. Existing
+partitions using the deprecated GUID can continue to use that GUID; support for the deprecated GUID
+will remain in SPDK indefinitely, and will continue to exhibit the off-by-one bug so that on-disk
+metadata layouts based on the incorrect size are not affected.
+
+See GitHub issue [2801](https://github.com/spdk/spdk/issues/2801) for additional details on the bug.
+
+New SPDK partition types should use GUID `6527994e-2c5a-4eec-9613-8f5944074e8b` which will create
+a bdev of the correct size.

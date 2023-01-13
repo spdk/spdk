@@ -274,7 +274,7 @@ possibly multiple virtual bdevs.
 
 ### SPDK GPT partition table {#bdev_ug_gpt}
 
-The SPDK partition type GUID is `7c5222bd-8f5d-4087-9c00-bf9843c7b58c`. Existing SPDK bdevs
+The SPDK partition type GUID is `6527994e-2c5a-4eec-9613-8f5944074e8b`. Existing SPDK bdevs
 can be exposed as Linux block devices via NBD and then can be partitioned with
 standard partitioning tools. After partitioning, the bdevs will need to be deleted and
 attached again for the GPT bdev module to see any changes. NBD kernel module must be
@@ -312,7 +312,7 @@ parted -s /dev/nbd0 mkpart MyPartition '0%' '50%'
 
 # Change the partition type to the SPDK GUID.
 # sgdisk is part of the gdisk package.
-sgdisk -t 1:7c5222bd-8f5d-4087-9c00-bf9843c7b58c /dev/nbd0
+sgdisk -t 1:6527994e-2c5a-4eec-9613-8f5944074e8b /dev/nbd0
 
 # Stop the NBD device (stop exporting /dev/nbd0).
 rpc.py nbd_stop_disk /dev/nbd0
