@@ -190,6 +190,9 @@ static int bdev_nvme_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove);
 static void remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
 static int nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr);
 
+static struct nvme_ns *nvme_ns_alloc(void);
+static void nvme_ns_free(struct nvme_ns *ns);
+
 static int
 nvme_ns_cmp(struct nvme_ns *ns1, struct nvme_ns *ns2)
 {
@@ -425,7 +428,7 @@ _nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr)
 
 	RB_FOREACH_SAFE(ns, nvme_ns_tree, &nvme_ctrlr->namespaces, tmp_ns) {
 		RB_REMOVE(nvme_ns_tree, &nvme_ctrlr->namespaces, ns);
-		free(ns);
+		nvme_ns_free(ns);
 	}
 
 	TAILQ_FOREACH_SAFE(path_id, &nvme_ctrlr->trids, link, tmp_path) {
@@ -1598,7 +1601,7 @@ bdev_nvme_destruct(void *ctx)
 			pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 
 			nvme_ctrlr_release(nvme_ns->ctrlr);
-			free(nvme_ns);
+			nvme_ns_free(nvme_ns);
 		} else {
 			pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 		}
@@ -3645,6 +3648,18 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	}
 }
 
+static struct nvme_ns *
+nvme_ns_alloc(void)
+{
+	return calloc(1, sizeof(struct nvme_ns));
+}
+
+static void
+nvme_ns_free(struct nvme_ns *nvme_ns)
+{
+	free(nvme_ns);
+}
+
 static void
 nvme_ctrlr_populate_namespace_done(struct nvme_ns *nvme_ns, int rc)
 {
@@ -3658,7 +3673,7 @@ nvme_ctrlr_populate_namespace_done(struct nvme_ns *nvme_ns, int rc)
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 	} else {
 		RB_REMOVE(nvme_ns_tree, &nvme_ctrlr->namespaces, nvme_ns);
-		free(nvme_ns);
+		nvme_ns_free(nvme_ns);
 	}
 
 	if (ctx) {
@@ -3814,7 +3829,7 @@ nvme_ctrlr_depopulate_namespace_done(struct nvme_ns *nvme_ns)
 		return;
 	}
 
-	free(nvme_ns);
+	nvme_ns_free(nvme_ns);
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	nvme_ctrlr_release(nvme_ctrlr);
@@ -3927,7 +3942,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 
 		if (nvme_ns == NULL) {
 			/* Found a new one */
-			nvme_ns = calloc(1, sizeof(struct nvme_ns));
+			nvme_ns = nvme_ns_alloc();
 			if (nvme_ns == NULL) {
 				SPDK_ERRLOG("Failed to allocate namespace\n");
 				/* This just fails to attach the namespace. It may work on a future attempt. */
