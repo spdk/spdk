@@ -23,7 +23,7 @@ export MAKEFLAGS BUILDDIR DEPS
 install_uninstall_rpms() {
 	local rpms
 
-	rpms=("${1:-$builddir/rpm/}/x86_64/"*.rpm)
+	rpms=("${1:-$builddir/rpm/}/$(uname -m)/"*.rpm)
 
 	sudo rpm -i "${rpms[@]}"
 	# Check if we can find one of the apps in the PATH now and verify if it doesn't miss
