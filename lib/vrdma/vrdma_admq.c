@@ -55,6 +55,132 @@ static uint32_t g_vah_cnt;
 static uint32_t g_vqp_cnt;
 static uint32_t g_vcq_cnt;
 static uint32_t g_veq_cnt;
+static bool g_indirect_mkey_map;
+
+/* TODO: use a hash table or sorted list */
+struct vrdma_indirect_mkey_list_head vrdma_indirect_mkey_list =
+				LIST_HEAD_INITIALIZER(vrdma_indirect_mkey_list);
+
+void spdk_vrdma_disable_indirect_mkey_map(void)
+{
+	g_indirect_mkey_map = false;
+}
+void spdk_vrdma_enable_indirect_mkey_map(void)
+{
+	g_indirect_mkey_map = true;
+}
+
+static struct vrdma_indirect_mkey *
+vrdma_find_indirect_mkey_by_key(uint32_t mkey)
+{
+	struct vrdma_indirect_mkey *cmkey, *cmkey_tmp;
+
+	if (!g_indirect_mkey_map)
+		return NULL;
+
+    SPDK_NOTICELOG("\n lizh vrdma_find_indirect_mkey_by_key mkey 0x%x start\n", mkey);
+	LIST_FOREACH_SAFE(cmkey, &vrdma_indirect_mkey_list, entry, cmkey_tmp) {
+		if (cmkey->indirect_mkey == mkey)
+			return cmkey;
+	}
+	return NULL;
+}
+
+void
+vrdma_get_va_crossing_mkey_by_key(uint32_t *mkey, uint64_t *va2pa)
+{
+	struct vrdma_indirect_mkey *cmkey, *cmkey_tmp;
+	uint32_t i;
+	uint64_t va = *va2pa;
+
+	if (!g_indirect_mkey_map)
+		return;
+    //SPDK_NOTICELOG("\n lizh vrdma_get_va_crossing_mkey_by_key mkey 0x%x start\n", *mkey);
+	LIST_FOREACH_SAFE(cmkey, &vrdma_indirect_mkey_list, entry, cmkey_tmp) {
+		if (cmkey->indirect_mkey == *mkey) {
+			//SPDK_NOTICELOG("\n lizh vrdma_get_va_crossing_mkey_by_key mkey 0x%x num_sge 0x%x va 0x%lx\n",
+			//*mkey, cmkey->num_sge, *va2pa);
+			for (i = 0; i < cmkey->num_sge; i++) {
+				//SPDK_NOTICELOG("\n lizh vrdma_get_va_crossing_mkey_by_key va 0x%lx vapa[%d].vaddr 0x%lx size 0x%x\n",
+				//	va, i, cmkey->vapa[i].vaddr, cmkey->vapa[i].size);
+				if (va >= cmkey->vapa[i].vaddr &&
+					va < (cmkey->vapa[i].vaddr + cmkey->vapa[i].size)) {
+						*va2pa = cmkey->vapa[i].paddr + (va - cmkey->vapa[i].vaddr);
+						*mkey = cmkey->crossing_mkey;
+						//SPDK_NOTICELOG("\n lizh vrdma_get_va_crossing_mkey_by_key *pa 0x%lx crossing_mkey 0x%x\n",
+						//	*va2pa, *mkey);
+						return;
+				}
+			}
+			return;
+		}
+	}
+}
+
+static void vrdma_del_indirect_mkey_from_list(struct vrdma_indirect_mkey *cmkey)
+{
+    SPDK_NOTICELOG("\n lizh vrdma_del_indirect_mkey_from_list mkey 0x%x start\n",
+		cmkey->indirect_mkey);
+	LIST_REMOVE(cmkey, entry);
+	free(cmkey);
+}
+
+static void vrdma_destroy_crossing_mkey(struct snap_cross_mkey *crossing_mkey)
+{
+	int ret = 0;
+
+	SPDK_NOTICELOG("\nlizh vrdma_destroy_crossing_mkey mkey 0x%x start\n",
+	crossing_mkey->mkey);
+	ret = snap_destroy_cross_mkey(crossing_mkey);
+	if (ret)
+		SPDK_ERRLOG("Failed to destroy cross mkey, err(%d)\n",ret);
+}
+
+void vrdma_del_indirect_mkey_list(void)
+{
+	struct vrdma_indirect_mkey *cmkey, *cmkey_tmp;
+
+    SPDK_NOTICELOG("\n lizh vrdma_del_indirect_mkey_list start\n");
+	LIST_FOREACH_SAFE(cmkey, &vrdma_indirect_mkey_list, entry, cmkey_tmp) {
+		vrdma_del_indirect_mkey_from_list(cmkey);
+	}
+}
+
+static void vrdma_add_indirect_mkey_list(uint32_t crossing_mkey,
+				uint32_t indirect_mkey, struct spdk_vrdma_mr_log *log)
+{
+	struct vrdma_indirect_mkey *cmkey;
+	uint64_t total_size = 0;
+	uint32_t i;
+
+    SPDK_NOTICELOG("\n lizh vrdma_add_indirect_mkey_list crossing_mkey 0x%x mkey 0x%x start\n",
+			crossing_mkey, indirect_mkey);
+	if (!g_indirect_mkey_map)
+		return;
+	if (log->num_sge > MAX_VRDMA_MR_SGE_NUM) {
+		SPDK_ERRLOG("Invalid sge number 0x%x", log->num_sge);
+		return;
+	}
+    cmkey = calloc(1, sizeof(*cmkey));
+    if (!cmkey) {
+		SPDK_ERRLOG("Failed to allocate crossing_mkey memory for indirect_mkey 0x%x",
+			indirect_mkey);
+		return;
+	}
+	cmkey->crossing_mkey = crossing_mkey;
+	cmkey->indirect_mkey = indirect_mkey;
+	cmkey->num_sge = log->num_sge;
+	for (i = 0; i < log->num_sge; ++i) {
+		cmkey->vapa[i].vaddr = log->start_vaddr + total_size;
+		cmkey->vapa[i].paddr = log->sge[i].paddr;
+		cmkey->vapa[i].size = log->sge[i].size;
+		total_size += log->sge[i].size;
+		SPDK_NOTICELOG("\n lizh vrdma_add_indirect_mkey_list %d vaddr 0x%lx paddr 0x%lx size 0x%x total_size 0x%lx\n",
+			i, cmkey->vapa[i].vaddr, cmkey->vapa[i].paddr, cmkey->vapa[i].size, total_size);
+	}
+	LIST_INSERT_HEAD(&vrdma_indirect_mkey_list, cmkey, entry);
+	return;
+}
 
 static struct spdk_bit_array *
 spdk_vrdma_create_id_pool(uint32_t max_num)
@@ -431,16 +557,7 @@ free_vpd:
 	free(vpd);
 }
 
-static void vrdma_destroy_crossing_mkey(struct snap_device *dev,
-					 struct snap_cross_mkey *crossing_mkey)
-{
-	int ret = 0;
 
-	ret = snap_destroy_cross_mkey(crossing_mkey);
-	if (ret)
-		SPDK_ERRLOG("dev(%s): Failed to destroy cross mkey, err(%d)\n",
-				  dev->pci->pci_number, ret);
-}
 
 static void vrdma_aq_destroy_pd(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
@@ -485,7 +602,7 @@ static void vrdma_aq_destroy_pd(struct vrdma_ctrl *ctrl,
 	LIST_REMOVE(vpd, entry);
     ibv_dealloc_pd(vpd->ibpd);
 	if (vpd->crossing_mkey)
-		vrdma_destroy_crossing_mkey(ctrl->sctrl->sdev, vpd->crossing_mkey);
+		vrdma_destroy_crossing_mkey(vpd->crossing_mkey);
 	spdk_bit_array_clear(ctrl->vdev->free_vpd_ids, vpd->pd_idx);
     free(vpd);
 	g_vpd_cnt--;
@@ -548,8 +665,12 @@ static int vrdma_destroy_indirect_mkey(struct snap_device *dev,
 					struct spdk_vrdma_mr_log *lattr)
 {
 	int ret = 0;
+	struct vrdma_indirect_mkey *cmkey;
 
 	if (lattr->indirect_mkey) {
+		cmkey = vrdma_find_indirect_mkey_by_key(lattr->indirect_mkey->mkey);
+		if (cmkey)
+			vrdma_del_indirect_mkey_from_list(cmkey);
 		ret = snap_destroy_indirect_mkey(lattr->indirect_mkey);
 		if (ret)
 			SPDK_ERRLOG("\ndev(%s): Failed to destroy indirect mkey, err(%d)\n",
@@ -586,6 +707,8 @@ vrdma_create_indirect_mkey(struct snap_device *dev,
 		goto free_klm_array;
 	}
 	log->klm_array = attr.klm_array;
+	vrdma_add_indirect_mkey_list(crossing_mkey->mkey,
+				indirect_mkey->mkey, log);
 	return indirect_mkey;
 free_klm_array:
 	free(attr.klm_array);
@@ -614,6 +737,8 @@ static int vrdma_create_remote_mkey(struct vrdma_ctrl *ctrl,
 		lattr->mkey = lattr->crossing_mkey->mkey;
 		lattr->log_base = lattr->sge[0].paddr;
 		lattr->log_size = lattr->sge[0].size;
+		vrdma_add_indirect_mkey_list(lattr->crossing_mkey->mkey,
+				lattr->crossing_mkey->mkey, lattr);
 	} else {
 		/* 3 layers TPT traslation: indirect_mkey -> crossing_mkey -> crossed_mkey */
 		lattr->indirect_mkey = vrdma_create_indirect_mkey(ctrl->sctrl->sdev,
@@ -636,7 +761,7 @@ static int vrdma_create_remote_mkey(struct vrdma_ctrl *ctrl,
 
 destroy_crossing:
 	if (!vpd->crossing_mkey)
-		vrdma_destroy_crossing_mkey(ctrl->sctrl->sdev, lattr->crossing_mkey);
+		vrdma_destroy_crossing_mkey(lattr->crossing_mkey);
 	return -1;
 }
 

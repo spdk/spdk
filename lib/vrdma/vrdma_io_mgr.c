@@ -40,6 +40,7 @@
 #include "spdk/vrdma_io_mgr.h"
 #include "spdk/vrdma_controller.h"
 #include "spdk/vrdma_srv.h"
+#include "spdk/vrdma_admq.h"
 
 #include "snap_dma.h"
 #include "snap_vrdma_ctrl.h"
@@ -616,6 +617,11 @@ static inline uint16_t vrdma_set_data_seg(struct vrdma_send_wqe *wqe, void *seg,
 			sge = wqe->sgl[i];
 			if (spdk_likely(sge.buf_length)) {
 				sge_addr = ((uint64_t)sge.buf_addr_hi << 32) + sge.buf_addr_lo;
+				//SPDK_NOTICELOG("\n lizh vrdma_set_data_seg sge.lkey 0x%x sge_addr 0x%lx..before\n",
+				// sge.lkey, sge_addr);
+				vrdma_get_va_crossing_mkey_by_key(&sge.lkey, &sge_addr);
+				//SPDK_NOTICELOG("\n lizh vrdma_set_data_seg sge.lkey 0x%x sge_addr 0x%lx..after\n",
+				// sge.lkey, sge_addr);
 				mlx5dv_set_data_seg(dseg, sge.buf_length, sge.lkey, (intptr_t)sge_addr);
 				++dseg;
 				ds += sizeof(*dseg) / 16;

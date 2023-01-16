@@ -178,8 +178,8 @@ int vrdma_add_rbk_qp_list(struct vrdma_ctrl *ctrl, uint64_t gid_ip,
 			qp_attr->comm.vqpn);
 			return 0;
 		} else {
-			SPDK_NOTICELOG("Update this existed remote vqp %d",
-			qp_attr->comm.vqpn);
+			SPDK_NOTICELOG("Update this existed remote vqp %d old rbk_qpn 0x%x remote_qpn 0x%x",
+			qp_attr->comm.vqpn, rqp->bk_qpn, remote_qpn);
 			memcpy(&rqp->attr, qp_attr, sizeof(*qp_attr));
 			rqp->bk_qpn = remote_qpn;
 			goto update_lqp;
