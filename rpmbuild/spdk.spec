@@ -85,6 +85,7 @@ _PKGDEP_OPTS="$_PKGDEP_OPTS --rbd"
 %endif
 
 # Rely mainly on CONFIG
+git submodule update --init
 ./configure --disable-unit-tests --disable-tests %{configure}
 make %{make}
 make DESTDIR=%{buildroot} install %{make}
