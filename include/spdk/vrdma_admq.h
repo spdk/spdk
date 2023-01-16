@@ -122,6 +122,7 @@ enum vrdma_device_cap_flags {
 #define VRDMA_DEV_MAX_CQ_DP  0x20000
 #define VRDMA_DEV_MAX_SQ_DP  0x2000
 #define VRDMA_DEV_MAX_RQ_DP  0x2000
+#define VRDMA_MAX_LOG_SQ_WQEBB_CNT 13 /* 8K */
 
 struct vrdma_query_device_resp {
 	uint32_t err_code:8;

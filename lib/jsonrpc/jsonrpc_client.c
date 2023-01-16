@@ -185,6 +185,7 @@ jsonrpc_client_write_cb(void *cb_ctx, const void *data, size_t size)
 
 	memcpy(request->send_buf + request->send_len, data, size);
 	request->send_len += size;
+	request->send_total_len = request->send_len;
 
 	return 0;
 }

@@ -1355,7 +1355,8 @@ void vrdma_dump_vqp_stats(struct vrdma_ctrl *ctrl, struct spdk_vrdma_qp *vqp)
 	if (lqp)
 		printf("node_id 0x%lx, device(vhca_id) 0x%x gid_ip 0x%lx\n",
 			lqp->attr.comm.node_id, lqp->attr.comm.dev_id, lqp->attr.comm.gid_ip);
-	printf("vqpn 0x%x, mqpn 0x%x\n", vqp->qp_idx, vqp->pre_bk_qp->bk_qp.qpnum);
+	if (vqp->pre_bk_qp)
+		printf("vqpn 0x%x, pre_bk_qp 0x%x\n", vqp->qp_idx, vqp->pre_bk_qp->bk_qp.qpnum);
 	printf("sq pi  %-10d       sq pre pi  %-10d\n",
 			vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
 	printf("scq pi %-10d       scq pre pi %-10d     scq ci %-10d\n", 

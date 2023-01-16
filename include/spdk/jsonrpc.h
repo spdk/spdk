@@ -344,7 +344,12 @@ struct spdk_jsonrpc_client_response *spdk_jsonrpc_client_get_response(struct spd
  */
 void spdk_jsonrpc_client_free_response(struct spdk_jsonrpc_client_response *resp);
 
-
+void spdk_jsonrpc_client_resend_request(struct spdk_jsonrpc_client *client);
+void spdk_jsonrpc_set_request_id(struct spdk_jsonrpc_client_request *req,
+			uint32_t request_id);
+void spdk_jsonrpc_client_remove_request_from_list(struct spdk_jsonrpc_client *client,
+			uint32_t request_id);
+bool spdk_jsonrpc_client_request_list_empty(struct spdk_jsonrpc_client *client);
 #ifdef __cplusplus
 }
 #endif

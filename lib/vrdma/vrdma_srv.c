@@ -296,9 +296,7 @@ static int vrdma_srv_device_modify_qp(struct vrdma_dev *rdev,
 	cmd->req.modify_qp_req.qp_handle, vqp->qp_state, cmd->req.modify_qp_req.qp_state);
 	if (vqp->qp_state == IBV_QPS_INIT &&
 		cmd->req.modify_qp_req.qp_state == IBV_QPS_RTR) {
-		/* For POC, it hardcode v_rgid to NULL, as only one remote node.
-		 * Also hardcode remote vqpn == local vqpn.
-		 */
+		/* For POC, it hardcode v_rgid to NULL, as only one remote node.*/
 		vqp->remote_vqpn = cmd->req.modify_qp_req.dest_qp_num;
 		if (vrdma_srv_bind_channel(rdev, NULL, vqp->pd,
 					cmd->req.modify_qp_req.qp_state, vqp->qp_idx, vqp->remote_vqpn)) {

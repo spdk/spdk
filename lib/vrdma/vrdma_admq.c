@@ -994,7 +994,8 @@ static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
 	SPDK_NOTICELOG("\nlizh vrdma_aq_create_qp...start\n");
 	if (g_vqp_cnt > VRDMA_MAX_QP_NUM ||
 		!ctrl->vdev ||
-		ctrl->vdev->vqp_cnt > VRDMA_DEV_MAX_QP) {
+		ctrl->vdev->vqp_cnt > VRDMA_DEV_MAX_QP ||
+		aqe->req.create_qp_req.log_sq_wqebb_cnt > VRDMA_MAX_LOG_SQ_WQEBB_CNT) {
 		aqe->resp.create_qp_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_EXCEED_MAX;
 		SPDK_ERRLOG("Failed to create QP, err(%d)\n",
 				  aqe->resp.create_qp_resp.err_code);
