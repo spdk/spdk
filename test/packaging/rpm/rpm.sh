@@ -7,6 +7,7 @@
 testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir/../../../")
 source "$rootdir/test/common/autotest_common.sh"
+shopt -s extglob
 
 builddir=$SPDK_TEST_STORAGE/test-rpm
 
@@ -47,9 +48,16 @@ build_shared_rpm() {
 }
 
 build_rpm_with_rpmed_dpdk() {
-	local es=0
+	local es=0 dpdk_rpms=()
 
-	sudo dnf install -y dpdk-devel
+	dpdk_rpms=(/var/spdk/dependencies/autotest/dpdk/dpdk?(-devel).rpm)
+	if ((${#dpdk_rpms[@]} == 2)); then # dpdk, dpdk-devel
+		echo "INFO: Installing DPDK from local package: $(rpm -q --queryformat="%{VERSION}" "${dpdk_rpms[0]}")" >&2
+		sudo rpm -i "${dpdk_rpms[@]}"
+	else
+		echo "WARNING: No local packages found, trying to install DPDK from the remote" >&2
+		sudo dnf install -y dpdk-devel
+	fi
 	build_rpm --with-shared --with-dpdk || es=$?
 
 	if ((es == 11)); then
