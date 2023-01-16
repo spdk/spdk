@@ -19,6 +19,8 @@ struct blob_bdev {
 	struct spdk_bdev	*bdev;
 	struct spdk_bdev_desc	*desc;
 	bool			write;
+	int32_t			refs;
+	struct spdk_spinlock	lock;
 };
 
 struct blob_resubmit {
@@ -346,23 +348,88 @@ static struct spdk_io_channel *
 bdev_blob_create_channel(struct spdk_bs_dev *dev)
 {
 	struct blob_bdev *blob_bdev = (struct blob_bdev *)dev;
+	struct spdk_io_channel *ch;
 
-	return spdk_bdev_get_io_channel(blob_bdev->desc);
+	ch = spdk_bdev_get_io_channel(blob_bdev->desc);
+	if (ch != NULL) {
+		spdk_spin_lock(&blob_bdev->lock);
+		blob_bdev->refs++;
+		spdk_spin_unlock(&blob_bdev->lock);
+	}
+
+	return ch;
+}
+
+static void
+bdev_blob_free(struct blob_bdev *blob_bdev)
+{
+	assert(blob_bdev->refs == 0);
+
+	spdk_spin_destroy(&blob_bdev->lock);
+	free(blob_bdev);
 }
 
 static void
 bdev_blob_destroy_channel(struct spdk_bs_dev *dev, struct spdk_io_channel *channel)
 {
+	struct blob_bdev *blob_bdev = (struct blob_bdev *)dev;
+	int32_t refs;
+
+	spdk_spin_lock(&blob_bdev->lock);
+
+	assert(blob_bdev->refs > 0);
+	blob_bdev->refs--;
+	refs = blob_bdev->refs;
+
+	spdk_spin_unlock(&blob_bdev->lock);
+
 	spdk_put_io_channel(channel);
+
+	/*
+	 * If the value of blob_bdev->refs taken while holding blob_bdev->refs is zero, the blob and
+	 * this channel have been destroyed. This means that dev->destroy() has been called and it
+	 * would be an error (akin to use after free) if dev is dereferenced after destroying it.
+	 * Thus, there should be no race with bdev_blob_create_channel().
+	 *
+	 * Because the value of blob_bdev->refs was taken while holding the lock here and the same
+	 * is done in bdev_blob_destroy(), there is no race with bdev_blob_destroy().
+	 */
+	if (refs == 0) {
+		bdev_blob_free(blob_bdev);
+	}
 }
 
 static void
 bdev_blob_destroy(struct spdk_bs_dev *bs_dev)
 {
-	struct spdk_bdev_desc *desc = __get_desc(bs_dev);
+	struct blob_bdev *blob_bdev = (struct blob_bdev *)bs_dev;
+	struct spdk_bdev_desc *desc;
+	int32_t refs;
+
+	spdk_spin_lock(&blob_bdev->lock);
+
+	desc = blob_bdev->desc;
+	blob_bdev->desc = NULL;
+	blob_bdev->refs--;
+	refs = blob_bdev->refs;
+
+	spdk_spin_unlock(&blob_bdev->lock);
 
 	spdk_bdev_close(desc);
-	free(bs_dev);
+
+	/*
+	 * If the value of blob_bdev->refs taken while holding blob_bdev->refs is zero,
+	 * bs_dev->destroy() has been called and all the channels have been destroyed. It would be
+	 * an error (akin to use after free) if bs_dev is dereferenced after destroying it. Thus,
+	 * there should be no race with bdev_blob_create_channel().
+	 *
+	 * Because the value of blob_bdev->refs was taken while holding the lock here and the same
+	 * is done in bdev_blob_destroy_channel(), there is no race with
+	 * bdev_blob_destroy_channel().
+	 */
+	if (refs == 0) {
+		bdev_blob_free(blob_bdev);
+	}
 }
 
 static struct spdk_bdev *
@@ -425,6 +492,8 @@ spdk_bdev_create_bs_dev(const char *bdev_name, bool write,
 	struct spdk_bdev_desc *desc;
 	int rc;
 
+	assert(spdk_get_thread() != NULL);
+
 	if (opts != NULL && opts_size != sizeof(*opts)) {
 		SPDK_ERRLOG("bdev name '%s': unsupported options\n", bdev_name);
 		return -EINVAL;
@@ -447,6 +516,8 @@ spdk_bdev_create_bs_dev(const char *bdev_name, bool write,
 
 	*bs_dev = &b->bs_dev;
 	b->write = write;
+	b->refs = 1;
+	spdk_spin_init(&b->lock);
 
 	return 0;
 }

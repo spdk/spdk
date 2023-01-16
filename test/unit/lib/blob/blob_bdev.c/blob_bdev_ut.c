@@ -5,7 +5,11 @@
 #include "spdk/stdinc.h"
 
 #include "spdk_cunit.h"
-#include "common/lib/test_env.c"
+#include "common/lib/ut_multithread.c"
+
+static void ut_put_io_channel(struct spdk_io_channel *ch);
+
+#define spdk_put_io_channel(ch) ut_put_io_channel(ch);
 #include "blob/bdev/blob_bdev.c"
 
 DEFINE_STUB(spdk_bdev_io_type_supported, bool, (struct spdk_bdev *bdev,
@@ -48,8 +52,6 @@ DEFINE_STUB(spdk_bdev_copy_blocks, int,
 	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch, uint64_t dst_offset_blocks,
 	     uint64_t src_offset_blocks, uint64_t num_blocks, spdk_bdev_io_completion_cb cb,
 	     void *cb_arg), 0);
-DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *,
-	    (struct spdk_bdev_desc *desc), NULL);
 
 struct spdk_bdev {
 	char name[16];
@@ -65,6 +67,7 @@ struct spdk_bdev_desc {
 	struct spdk_bdev *bdev;
 	bool write;
 	enum spdk_bdev_claim_type claim_type;
+	struct spdk_thread *thread;
 };
 
 struct spdk_bdev *g_bdev;
@@ -72,6 +75,20 @@ struct spdk_bdev *g_bdev;
 static struct spdk_bdev_module g_bdev_mod = {
 	.name = "blob_bdev_ut"
 };
+
+struct spdk_io_channel *
+spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
+{
+	if (desc != NULL) {
+		return (struct spdk_io_channel *)0x1;
+	}
+	return NULL;
+}
+
+static void
+ut_put_io_channel(struct spdk_io_channel *ch)
+{
+}
 
 static struct spdk_bdev *
 get_bdev(const char *bdev_name)
@@ -105,6 +122,7 @@ spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event
 	desc = calloc(1, sizeof(*desc));
 	desc->bdev = g_bdev;
 	desc->write = write;
+	desc->thread = spdk_get_thread();
 	*_desc = desc;
 	bdev->open_cnt++;
 
@@ -115,6 +133,8 @@ void
 spdk_bdev_close(struct spdk_bdev_desc *desc)
 {
 	struct spdk_bdev *bdev = desc->bdev;
+
+	CU_ASSERT(desc->thread == spdk_get_thread());
 
 	bdev->open_cnt--;
 	if (bdev->claim_desc == desc) {
@@ -362,6 +382,159 @@ claim_bs_dev_ro(void)
 	g_bdev = NULL;
 }
 
+/*
+ * Verify that create_channel() and destroy_channel() increment and decrement the blob_bdev->refs.
+ */
+static void
+deferred_destroy_refs(void)
+{
+	struct spdk_bdev bdev;
+	struct spdk_io_channel *ch1, *ch2;
+	struct spdk_bs_dev *bs_dev = NULL;
+	struct blob_bdev *blob_bdev;
+	int rc;
+
+	set_thread(0);
+	init_bdev(&bdev, "bdev0", 16);
+	g_bdev = &bdev;
+
+	/* Open a blob_bdev, verify reference count is 1. */
+	rc = spdk_bdev_create_bs_dev("bdev0", false, NULL, 0, NULL, NULL, &bs_dev);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(bs_dev != NULL);
+	blob_bdev = (struct blob_bdev *)bs_dev;
+	CU_ASSERT(blob_bdev->refs == 1);
+	CU_ASSERT(blob_bdev->desc != NULL);
+
+	/* Verify reference count increases with channels on the same thread. */
+	ch1 = bs_dev->create_channel(bs_dev);
+	SPDK_CU_ASSERT_FATAL(ch1 != NULL);
+	CU_ASSERT(blob_bdev->refs == 2);
+	ch2 = bs_dev->create_channel(bs_dev);
+	SPDK_CU_ASSERT_FATAL(ch2 != NULL);
+	CU_ASSERT(blob_bdev->refs == 3);
+	bs_dev->destroy_channel(bs_dev, ch1);
+	CU_ASSERT(blob_bdev->refs == 2);
+	bs_dev->destroy_channel(bs_dev, ch2);
+	CU_ASSERT(blob_bdev->refs == 1);
+	CU_ASSERT(blob_bdev->desc != NULL);
+
+	/* Verify reference count increases with channels on different threads. */
+	ch1 = bs_dev->create_channel(bs_dev);
+	SPDK_CU_ASSERT_FATAL(ch1 != NULL);
+	CU_ASSERT(blob_bdev->refs == 2);
+	set_thread(1);
+	ch2 = bs_dev->create_channel(bs_dev);
+	SPDK_CU_ASSERT_FATAL(ch2 != NULL);
+	CU_ASSERT(blob_bdev->refs == 3);
+	bs_dev->destroy_channel(bs_dev, ch1);
+	CU_ASSERT(blob_bdev->refs == 2);
+	bs_dev->destroy_channel(bs_dev, ch2);
+	CU_ASSERT(blob_bdev->refs == 1);
+	CU_ASSERT(blob_bdev->desc != NULL);
+
+	set_thread(0);
+	bs_dev->destroy(bs_dev);
+	g_bdev = NULL;
+}
+
+/*
+ * When a channel is open bs_dev->destroy() should not free bs_dev until after the last channel is
+ * closed. Further, destroy() prevents the creation of new channels.
+ */
+static void
+deferred_destroy_channels(void)
+{
+	struct spdk_bdev bdev;
+	struct spdk_io_channel *ch1, *ch2;
+	struct spdk_bs_dev *bs_dev = NULL;
+	struct blob_bdev *blob_bdev;
+	int rc;
+
+	set_thread(0);
+	init_bdev(&bdev, "bdev0", 16);
+
+	/* Open bs_dev and sanity check */
+	g_bdev = &bdev;
+	rc = spdk_bdev_create_bs_dev("bdev0", false, NULL, 0, NULL, NULL, &bs_dev);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(bs_dev != NULL);
+	CU_ASSERT(bdev.open_cnt == 1);
+	blob_bdev = (struct blob_bdev *)bs_dev;
+	CU_ASSERT(blob_bdev->refs == 1);
+	CU_ASSERT(blob_bdev->desc != NULL);
+
+	/* Create a channel, destroy the bs_dev. It should not be freed yet. */
+	ch1 = bs_dev->create_channel(bs_dev);
+	SPDK_CU_ASSERT_FATAL(ch1 != NULL);
+	CU_ASSERT(blob_bdev->refs == 2);
+	bs_dev->destroy(bs_dev);
+
+	/* Destroy closes the bdev and prevents desc from being used for creating more channels. */
+	CU_ASSERT(blob_bdev->desc == NULL);
+	CU_ASSERT(bdev.open_cnt == 0);
+	CU_ASSERT(blob_bdev->refs == 1);
+	ch2 = bs_dev->create_channel(bs_dev);
+	CU_ASSERT(ch2 == NULL)
+	CU_ASSERT(blob_bdev->refs == 1);
+	bs_dev->destroy_channel(bs_dev, ch1);
+	g_bdev = NULL;
+
+	/* Now bs_dev should have been freed. Builds with asan will verify. */
+}
+
+/*
+ * Verify that deferred destroy copes well with the last channel destruction being on a thread other
+ * than the thread used to obtain the bdev descriptor.
+ */
+static void
+deferred_destroy_threads(void)
+{
+	struct spdk_bdev bdev;
+	struct spdk_io_channel *ch1, *ch2;
+	struct spdk_bs_dev *bs_dev = NULL;
+	struct blob_bdev *blob_bdev;
+	int rc;
+
+	set_thread(0);
+	init_bdev(&bdev, "bdev0", 16);
+	g_bdev = &bdev;
+
+	/* Open bs_dev and sanity check */
+	rc = spdk_bdev_create_bs_dev("bdev0", false, NULL, 0, NULL, NULL, &bs_dev);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(bs_dev != NULL);
+	CU_ASSERT(bdev.open_cnt == 1);
+	blob_bdev = (struct blob_bdev *)bs_dev;
+	CU_ASSERT(blob_bdev->refs == 1);
+	CU_ASSERT(blob_bdev->desc != NULL);
+
+	/* Create two channels, each on their own thread. */
+	ch1 = bs_dev->create_channel(bs_dev);
+	SPDK_CU_ASSERT_FATAL(ch1 != NULL);
+	CU_ASSERT(blob_bdev->refs == 2);
+	CU_ASSERT(spdk_get_thread() == blob_bdev->desc->thread);
+	set_thread(1);
+	ch2 = bs_dev->create_channel(bs_dev);
+	SPDK_CU_ASSERT_FATAL(ch2 != NULL);
+	CU_ASSERT(blob_bdev->refs == 3);
+
+	/* Destroy the bs_dev on thread 0, the channel on thread 0, then the channel on thread 1. */
+	set_thread(0);
+	bs_dev->destroy(bs_dev);
+	CU_ASSERT(blob_bdev->desc == NULL);
+	CU_ASSERT(bdev.open_cnt == 0);
+	CU_ASSERT(blob_bdev->refs == 2);
+	bs_dev->destroy_channel(bs_dev, ch1);
+	CU_ASSERT(blob_bdev->refs == 1);
+	set_thread(1);
+	bs_dev->destroy_channel(bs_dev, ch2);
+	set_thread(0);
+	g_bdev = NULL;
+
+	/* Now bs_dev should have been freed. Builds with asan will verify. */
+}
+
 int
 main(int argc, char **argv)
 {
@@ -378,11 +551,19 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, create_bs_dev_rw);
 	CU_ADD_TEST(suite, claim_bs_dev);
 	CU_ADD_TEST(suite, claim_bs_dev_ro);
+	CU_ADD_TEST(suite, deferred_destroy_refs);
+	CU_ADD_TEST(suite, deferred_destroy_channels);
+	CU_ADD_TEST(suite, deferred_destroy_threads);
+
+	allocate_threads(2);
+	set_thread(0);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
+
+	free_threads();
 
 	return num_failures;
 }
