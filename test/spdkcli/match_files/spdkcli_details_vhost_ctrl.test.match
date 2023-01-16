@@ -18,5 +18,6 @@
   "ctrlr": "vhost_scsi1",
   "delay_base_us": 20,
   "iops_threshold": 1000000,
+  "sessions": [],
   "socket": "$(S)/vhost_scsi1"
 }

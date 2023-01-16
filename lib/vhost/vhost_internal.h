@@ -595,6 +595,7 @@ struct spdk_virtio_blk_transport *virtio_blk_tgt_get_transport(const char *trans
 const struct spdk_virtio_blk_transport_ops *virtio_blk_get_transport_ops(
 	const char *transport_name);
 
+void vhost_session_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 
 /*
  * Macro used to register new transports.

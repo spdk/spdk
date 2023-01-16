@@ -332,6 +332,9 @@ _rpc_get_vhost_controller(struct spdk_json_write_ctx *w, struct spdk_vhost_dev *
 	spdk_json_write_named_uint32(w, "delay_base_us", delay_base_us);
 	spdk_json_write_named_uint32(w, "iops_threshold", iops_threshold);
 	spdk_json_write_named_string(w, "socket", vdev->path);
+	spdk_json_write_named_array_begin(w, "sessions");
+	vhost_session_info_json(vdev, w);
+	spdk_json_write_array_end(w);
 
 	spdk_json_write_named_object_begin(w, "backend_specific");
 	vhost_dump_info_json(vdev, w);

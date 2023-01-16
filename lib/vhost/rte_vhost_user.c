@@ -1956,3 +1956,24 @@ vhost_user_fini(spdk_vhost_fini_cb vhost_cb)
 	}
 	pthread_detach(tid);
 }
+
+void
+vhost_session_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+{
+	struct spdk_vhost_session *vsession;
+	struct spdk_vhost_user_dev *user_dev;
+
+	user_dev = to_user_dev(vdev);
+	pthread_mutex_lock(&user_dev->lock);
+	TAILQ_FOREACH(vsession, &user_dev->vsessions, tailq) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_uint32(w, "vid", vsession->vid);
+		spdk_json_write_named_uint32(w, "id", vsession->id);
+		spdk_json_write_named_string(w, "name", vsession->name);
+		spdk_json_write_named_bool(w, "started", vsession->started);
+		spdk_json_write_named_uint32(w, "max_queues", vsession->max_queues);
+		spdk_json_write_named_uint32(w, "inflight_task_cnt", vsession->task_cnt);
+		spdk_json_write_object_end(w);
+	}
+	pthread_mutex_unlock(&user_dev->lock);
+}
