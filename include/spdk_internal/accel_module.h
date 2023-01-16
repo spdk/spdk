@@ -79,7 +79,6 @@ struct spdk_accel_task {
 		uint32_t		block_size; /* for crypto op */
 	};
 	enum accel_opcode		op_code;
-	uint64_t			nbytes;
 	uint64_t			iv; /* Initialization vector (tweak) for crypto op */
 	int				flags;
 	int				status;

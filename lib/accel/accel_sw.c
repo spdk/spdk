@@ -371,10 +371,10 @@ _sw_accel_crypto_operation(struct spdk_accel_task *accel_task, struct spdk_accel
 {
 #ifdef SPDK_CONFIG_ISAL_CRYPTO
 	uint64_t iv[2];
-	size_t remaining_len;
+	size_t remaining_len, dst_len;
 	uint64_t src_offset = 0, dst_offset = 0;
 	uint32_t src_iovpos = 0, dst_iovpos = 0, src_iovcnt, dst_iovcnt;
-	uint32_t block_size, crypto_len, crypto_accum_len = 0;
+	uint32_t i, block_size, crypto_len, crypto_accum_len = 0;
 	struct iovec *src_iov, *dst_iov;
 	uint8_t *src, *dst;
 
@@ -399,7 +399,21 @@ _sw_accel_crypto_operation(struct spdk_accel_task *accel_task, struct spdk_accel
 		return -EINVAL;
 	}
 
-	remaining_len = accel_task->nbytes;
+	remaining_len = 0;
+	for (i = 0; i < src_iovcnt; i++) {
+		remaining_len += src_iov[i].iov_len;
+	}
+	dst_len = 0;
+	for (i = 0; i < dst_iovcnt; i++) {
+		dst_len += dst_iov[i].iov_len;
+	}
+
+	if (spdk_unlikely(remaining_len != dst_len || !remaining_len)) {
+		return -ERANGE;
+	}
+	if (spdk_unlikely(remaining_len % accel_task->block_size != 0)) {
+		return -EINVAL;
+	}
 
 	while (remaining_len) {
 		crypto_len = spdk_min(block_size - crypto_accum_len, src_iov->iov_len - src_offset);

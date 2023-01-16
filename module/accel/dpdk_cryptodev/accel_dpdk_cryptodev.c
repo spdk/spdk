@@ -591,10 +591,10 @@ accel_dpdk_cryptodev_process_task(struct accel_dpdk_cryptodev_io_channel *crypto
 	uint16_t num_enqueued_ops;
 	uint32_t cryop_cnt;
 	uint32_t crypto_len = task->base.block_size;
-	uint64_t total_length = task->base.nbytes;
+	uint64_t dst_length, total_length;
 	uint64_t iv_start = task->base.iv;
 	struct accel_dpdk_cryptodev_queued_op *op_to_queue;
-	uint32_t crypto_index;
+	uint32_t i, crypto_index;
 	struct rte_crypto_op *crypto_ops[ACCEL_DPDK_CRYPTODEV_MAX_ENQUEUE_ARRAY_SIZE];
 	struct rte_mbuf *src_mbufs[ACCEL_DPDK_CRYPTODEV_MAX_ENQUEUE_ARRAY_SIZE];
 	struct rte_mbuf *dst_mbufs[ACCEL_DPDK_CRYPTODEV_MAX_ENQUEUE_ARRAY_SIZE];
@@ -611,18 +611,31 @@ accel_dpdk_cryptodev_process_task(struct accel_dpdk_cryptodev_io_channel *crypto
 			  task->base.crypto_key->module_if != &g_accel_dpdk_cryptodev_module)) {
 		return -EINVAL;
 	}
-	priv = task->base.crypto_key->priv;
 
-	assert(task->base.nbytes);
-	assert(task->base.block_size);
-	assert(task->base.nbytes % task->base.block_size == 0);
+	total_length = 0;
+	for (i = 0; i < task->base.s.iovcnt; i++) {
+		total_length += task->base.s.iovs[i].iov_len;
+	}
+	dst_length = 0;
+	for (i = 0; i < task->base.d.iovcnt; i++) {
+		dst_length += task->base.d.iovs[i].iov_len;
+	}
+
+	if (spdk_unlikely(total_length != dst_length || !total_length)) {
+		return -ERANGE;
+	}
+	if (spdk_unlikely(total_length % task->base.block_size != 0)) {
+		return -EINVAL;
+	}
+
+	priv = task->base.crypto_key->priv;
 	assert(priv->driver < ACCEL_DPDK_CRYPTODEV_DRIVER_LAST);
 
 	if (total_length > ACCEL_DPDK_CRYPTODEV_CRYPTO_MAX_IO) {
 		return -E2BIG;
 	}
 
-	cryop_cnt =  task->base.nbytes / task->base.block_size;
+	cryop_cnt =  total_length / task->base.block_size;
 	qp = crypto_ch->device_qp[priv->driver];
 	assert(qp);
 	dev = qp->device;

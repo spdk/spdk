@@ -371,7 +371,6 @@ test_error_paths(void)
 	task.base.s.iovs = &src_iov;
 	task.base.d.iovcnt = 1;
 	task.base.d.iovs = &dst_iov;
-	task.base.nbytes = 512;
 	task.base.block_size = 512;
 	task.base.crypto_key = &g_key;
 	task.base.iv = 1;
@@ -394,11 +393,11 @@ test_error_paths(void)
 	CU_ASSERT(rc == -EINVAL);
 	key.module_if = &g_accel_dpdk_cryptodev_module;
 
-	/* case 3 - nbytes too big */
-	task.base.nbytes = ACCEL_DPDK_CRYPTODEV_CRYPTO_MAX_IO + 512;
+	/* case 3 - buffers are too big */
+	dst_iov.iov_len = src_iov.iov_len = ACCEL_DPDK_CRYPTODEV_CRYPTO_MAX_IO + 512;
 	rc = accel_dpdk_cryptodev_submit_tasks(g_io_ch, &task.base);
 	CU_ASSERT(rc == -E2BIG);
-	task.base.nbytes = 512;
+	dst_iov.iov_len = src_iov.iov_len = 512;
 
 	/* case 4 - no key handle in the channel */
 	rc = accel_dpdk_cryptodev_submit_tasks(g_io_ch, &task.base);
@@ -438,7 +437,6 @@ test_simple_encrypt(void)
 	task.base.s.iovs = src_iov;
 	task.base.d.iovcnt = 1;
 	task.base.d.iovs = &dst_iov;
-	task.base.nbytes = 512;
 	task.base.block_size = 512;
 	task.base.crypto_key = &g_key;
 	task.base.iv = 1;
@@ -525,7 +523,6 @@ test_simple_decrypt(void)
 	task.base.s.iovs = src_iov;
 	task.base.d.iovcnt = 1;
 	task.base.d.iovs = &dst_iov;
-	task.base.nbytes = 512;
 	task.base.block_size = 512;
 	task.base.crypto_key = &g_key;
 	task.base.iv = 1;
@@ -614,7 +611,6 @@ test_large_enc_dec(void)
 	task.base.s.iovs = &src_iov;
 	task.base.d.iovcnt = 1;
 	task.base.d.iovs = &dst_iov;
-	task.base.nbytes = ACCEL_DPDK_CRYPTODEV_CRYPTO_MAX_IO;
 	task.base.block_size = 512;
 	task.base.crypto_key = &g_key;
 	task.base.iv = 1;
@@ -722,7 +718,6 @@ test_dev_full(void)
 	task.base.s.iovs = &src_iov;
 	task.base.d.iovcnt = 1;
 	task.base.d.iovs = &dst_iov;
-	task.base.nbytes = 1024;
 	task.base.block_size = 512;
 	task.base.crypto_key = &g_key;
 	task.base.iv = 1;
@@ -790,7 +785,6 @@ test_crazy_rw(void)
 	task.base.d.iovcnt = 3;
 	task.base.d.iovs = dst_iov;
 	task.base.block_size = 512;
-	task.base.nbytes = num_blocks * task.base.block_size;
 	task.base.crypto_key = &g_key;
 	task.base.iv = 1;
 
@@ -817,7 +811,6 @@ test_crazy_rw(void)
 	num_blocks = 8;
 	task.base.op_code = ACCEL_OPC_ENCRYPT;
 	task.cryop_cnt_remaining = 0;
-	task.base.nbytes = task.base.block_size * num_blocks;
 	task.base.s.iovcnt = 4;
 	task.base.d.iovcnt = 4;
 	task.base.s.iovs[0].iov_len = 2048;
@@ -1054,7 +1047,6 @@ test_poller(void)
 	task.base.s.iovs = &src_iov;
 	task.base.d.iovcnt = 1;
 	task.base.d.iovs = &dst_iov;
-	task.base.nbytes = 1024;
 	task.base.block_size = 512;
 	task.base.crypto_key = &g_key;
 	task.base.iv = 1;

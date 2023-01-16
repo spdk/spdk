@@ -567,23 +567,8 @@ spdk_accel_submit_encrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_k
 	struct spdk_accel_task *accel_task;
 	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_ENCRYPT];
 	struct spdk_io_channel *module_ch = accel_ch->module_ch[ACCEL_OPC_ENCRYPT];
-	size_t src_nbytes = 0, dst_nbytes = 0;
-	uint32_t i;
 
 	if (spdk_unlikely(!dst_iovs || !dst_iovcnt || !src_iovs || !src_iovcnt || !key || !block_size)) {
-		return -EINVAL;
-	}
-
-	for (i = 0; i < src_iovcnt; i++) {
-		src_nbytes += src_iovs[i].iov_len;
-	}
-	for (i = 0; i < dst_iovcnt; i++) {
-		dst_nbytes += dst_iovs[i].iov_len;
-	}
-	if (spdk_unlikely(src_nbytes != dst_nbytes || !src_nbytes)) {
-		return -ERANGE;
-	}
-	if (spdk_unlikely(src_nbytes % block_size != 0)) {
 		return -EINVAL;
 	}
 
@@ -597,7 +582,6 @@ spdk_accel_submit_encrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_k
 	accel_task->s.iovcnt = src_iovcnt;
 	accel_task->d.iovs = dst_iovs;
 	accel_task->d.iovcnt = dst_iovcnt;
-	accel_task->nbytes = src_nbytes;
 	accel_task->iv = iv;
 	accel_task->block_size = block_size;
 	accel_task->flags = flags;
@@ -617,23 +601,8 @@ spdk_accel_submit_decrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_k
 	struct spdk_accel_task *accel_task;
 	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_DECRYPT];
 	struct spdk_io_channel *module_ch = accel_ch->module_ch[ACCEL_OPC_DECRYPT];
-	size_t src_nbytes = 0, dst_nbytes = 0;
-	uint32_t i;
 
 	if (spdk_unlikely(!dst_iovs || !dst_iovcnt || !src_iovs || !src_iovcnt || !key || !block_size)) {
-		return -EINVAL;
-	}
-
-	for (i = 0; i < src_iovcnt; i++) {
-		src_nbytes += src_iovs[i].iov_len;
-	}
-	for (i = 0; i < dst_iovcnt; i++) {
-		dst_nbytes += dst_iovs[i].iov_len;
-	}
-	if (spdk_unlikely(src_nbytes != dst_nbytes || !src_nbytes)) {
-		return -ERANGE;
-	}
-	if (spdk_unlikely(src_nbytes % block_size != 0)) {
 		return -EINVAL;
 	}
 
@@ -647,7 +616,6 @@ spdk_accel_submit_decrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_k
 	accel_task->s.iovcnt = src_iovcnt;
 	accel_task->d.iovs = dst_iovs;
 	accel_task->d.iovcnt = dst_iovcnt;
-	accel_task->nbytes = src_nbytes;
 	accel_task->iv = iv;
 	accel_task->block_size = block_size;
 	accel_task->flags = flags;
