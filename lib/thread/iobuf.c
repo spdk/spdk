@@ -365,6 +365,23 @@ spdk_iobuf_register_module(const char *name)
 }
 
 int
+spdk_iobuf_unregister_module(const char *name)
+{
+	struct iobuf_module *module;
+
+	TAILQ_FOREACH(module, &g_iobuf.modules, tailq) {
+		if (strcmp(name, module->name) == 0) {
+			TAILQ_REMOVE(&g_iobuf.modules, module, tailq);
+			free(module->name);
+			free(module);
+			return 0;
+		}
+	}
+
+	return -ENOENT;
+}
+
+int
 spdk_iobuf_for_each_entry(struct spdk_iobuf_channel *ch, struct spdk_iobuf_pool *pool,
 			  spdk_iobuf_for_each_entry_fn cb_fn, void *cb_ctx)
 {

@@ -1050,6 +1050,15 @@ void spdk_iobuf_get_opts(struct spdk_iobuf_opts *opts);
 int spdk_iobuf_register_module(const char *name);
 
 /**
+ * Unregister an iobuf pool user from a module.
+ *
+ * \name Name of the module.
+ *
+ * \return 0 on success, negative errno otherwise.
+ */
+int spdk_iobuf_unregister_module(const char *name);
+
+/**
  * Initialize an iobuf channel.
  *
  * \param ch iobuf channel to initialize.

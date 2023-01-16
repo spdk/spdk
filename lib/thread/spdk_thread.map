@@ -70,6 +70,7 @@
 	spdk_iobuf_channel_init;
 	spdk_iobuf_channel_fini;
 	spdk_iobuf_register_module;
+	spdk_iobuf_unregister_module;
 	spdk_iobuf_for_each_entry;
 	spdk_iobuf_entry_abort;
 	spdk_iobuf_get;
