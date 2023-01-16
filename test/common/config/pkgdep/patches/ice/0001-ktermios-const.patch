@@ -1,0 +1,21 @@
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a8c11c1520347
+
+---
+ src/ice_gnss.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/ice_gnss.c b/src/ice_gnss.c
+index f38cbe8..4031f9a 100644
+--- a/src/ice_gnss.c
++++ b/src/ice_gnss.c
+@@ -414,7 +414,7 @@ static int ice_gnss_tty_write_room(struct tty_struct *tty)
+  * @new_termios: pointer to the new termios parameters
+  */
+ static void
+-ice_gnss_tty_set_termios(struct tty_struct *tty, struct ktermios *new_termios)
++ice_gnss_tty_set_termios(struct tty_struct *tty, const struct ktermios *new_termios)
+ {
+ 	/**
+ 	 * Some 3rd party tools (ex. ubxtool) want to change the TTY parameters.
+-- 
+

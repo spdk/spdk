@@ -429,7 +429,7 @@ function install_igb_uio() {
 }
 
 function install_irdma() {
-	local RDMA_CORE_VERSION=35.0
+	local RDMA_CORE_VERSION=42.0
 	local RDMA_CORE=https://github.com/linux-rdma/rdma-core/releases/download/v$RDMA_CORE_VERSION/rdma-core-$RDMA_CORE_VERSION.tar.gz
 
 	if [[ $ID != fedora ]]; then
@@ -437,7 +437,7 @@ function install_irdma() {
 		return 0
 	fi
 
-	# Install extra dependencies needed by the rdma-core-35.0
+	# Install extra dependencies needed by the rdma-core
 	install ninja-build pandoc perl-generators valgrind-devel python-docutils libnl3 libnl3-devel python3-Cython
 
 	rm -rf "$GIT_REPOS/irdma-$IRDMA_VERSION"
@@ -506,19 +506,12 @@ function install_ice() {
 
 	curl -L -o- "$ICE_DRIVER" | tar -C "$GIT_REPOS" -xzf -
 
-	if [[ $OSID == ubuntu && $OSVERSION == 18.04 ]]; then
-		if ge "$kernel_ver" 4.15.0-159; then
-			patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1
-		fi < "$rootdir/test/common/config/pkgdep/patches/ice/0001-undef-skb-frag-off.patch"
+	if ge "$kernel_ver" 6.1.0; then
+		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1 \
+			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-ktermios-const.patch"
+		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1 \
+			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-netif-napi-weight.patch"
 	fi
-
-	if ge "$kernel_ver" 5.17.0; then
-		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1
-	fi < "$rootdir/test/common/config/pkgdep/patches/ice/0001-ringparam-incompatible-pointer-types.patch"
-
-	if ge "$kernel_ver" 5.19.0; then
-		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1
-	fi < "$rootdir/test/common/config/pkgdep/patches/ice/0001-ext-ack.patch"
 
 	(
 		cd "$GIT_REPOS/ice-$ICE_VERSION/src"
@@ -608,8 +601,8 @@ function install_sources() {
 }
 
 GIT_VERSION=2.25.1
-IRDMA_VERSION=1.7.72
-ICE_VERSION=1.8.8
+IRDMA_VERSION=1.11.16.6
+ICE_VERSION=1.10.1.2.2
 
 BPFTRACE_VERSION=${BPFTRACE_VERSION:-36414d9}
 VFIO_QEMU_BRANCH=${VFIO_QEMU_BRANCH:-vfio-user-patch1-noreq}
@@ -639,7 +632,7 @@ export DRIVER_LOCATION_QAT
 export GIT_REPO_GIT
 : ${GIT_REPO_DPDK_KMODS=http://dpdk.org/git/dpdk-kmods}
 export GIT_REPO_DPDK_KMODS
-: ${IRDMA_DRIVER=https://downloadmirror.intel.com/709709/irdma-$IRDMA_VERSION.tgz}
+: ${IRDMA_DRIVER=https://downloadmirror.intel.com/763932/irdma-$IRDMA_VERSION.tgz}
 export IRDMA_DRIVER
 : ${ICE_DRIVER="https://sourceforge.net/projects/e1000/files/ice%20stable/$ICE_VERSION/ice-$ICE_VERSION.tar.gz"}
 export ICE_DRIVER

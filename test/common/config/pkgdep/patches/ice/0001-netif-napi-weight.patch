@@ -1,0 +1,51 @@
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b48b89f9c189d24eb5e2b4a0ac067da5a24ee86d
+
+---
+ src/ice_base.c    | 3 +--
+ src/ice_eswitch.c | 3 +--
+ src/ice_main.c    | 2 +-
+ 3 files changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/src/ice_base.c b/src/ice_base.c
+index f3cd8dc..1d0115d 100644
+--- a/src/ice_base.c
++++ b/src/ice_base.c
+@@ -127,8 +127,7 @@ static int ice_vsi_alloc_q_vector(struct ice_vsi *vsi, u16 v_idx)
+ 	 * handler here (i.e. resume, reset/rebuild, etc.)
+ 	 */
+ 	if (vsi->netdev)
+-		netif_napi_add(vsi->netdev, &q_vector->napi, ice_napi_poll,
+-			       NAPI_POLL_WEIGHT);
++		netif_napi_add(vsi->netdev, &q_vector->napi, ice_napi_poll);
+ 
+ out:
+ 	/* tie q_vector and VSI together */
+diff --git a/src/ice_eswitch.c b/src/ice_eswitch.c
+index 06fce56..077804b 100644
+--- a/src/ice_eswitch.c
++++ b/src/ice_eswitch.c
+@@ -331,8 +331,7 @@ static int ice_eswitch_setup_reprs(struct ice_pf *pf)
+ 		if (max_vsi_num < vsi->vsi_num)
+ 			max_vsi_num = vsi->vsi_num;
+ 
+-		netif_napi_add(vf->repr->netdev, &vf->repr->q_vector->napi, ice_napi_poll,
+-			       NAPI_POLL_WEIGHT);
++		netif_napi_add(vf->repr->netdev, &vf->repr->q_vector->napi, ice_napi_poll);
+ 
+ 		netif_keep_dst(vf->repr->netdev);
+ 	}
+diff --git a/src/ice_main.c b/src/ice_main.c
+index bc6e6fa..b805ef3 100644
+--- a/src/ice_main.c
++++ b/src/ice_main.c
+@@ -4391,7 +4391,7 @@ static void ice_napi_add(struct ice_vsi *vsi)
+ 
+ 	ice_for_each_q_vector(vsi, v_idx)
+ 		netif_napi_add(vsi->netdev, &vsi->q_vectors[v_idx]->napi,
+-			       ice_napi_poll, NAPI_POLL_WEIGHT);
++			       ice_napi_poll);
+ }
+ 
+ /**
+-- 
+
