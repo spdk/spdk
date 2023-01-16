@@ -8911,6 +8911,43 @@ Example response:
 }
 ~~~
 
+### virtio_blk_get_transports {#rpc_virtio_blk_get_transports}
+
+#### Parameters
+
+The user may specify no parameters in order to list all transports,
+or a transport name may be specified.
+
+Name                        | Optional | Type        | Description
+--------------------------- | -------- | ------------| -----------
+name                        | Optional | string      | Transport name.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "virtio_blk_get_transports",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "name": "vhost_user_blk"
+    }
+  ]
+}
+~~~
+
 ### vhost_create_blk_controller {#rpc_vhost_create_blk_controller}
 
 Create vhost block controller

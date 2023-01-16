@@ -13,6 +13,8 @@
 #include "spdk/barrier.h"
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
+#include "spdk/queue.h"
+
 
 static struct spdk_cpuset g_vhost_core_mask;
 
@@ -448,6 +450,46 @@ virtio_blk_transport_create(const char *transport_name,
 	transport->ops = ops;
 	TAILQ_INSERT_TAIL(&g_virtio_blk_transports, transport, tailq);
 	return 0;
+}
+
+struct spdk_virtio_blk_transport *
+virtio_blk_transport_get_first(void)
+{
+	return TAILQ_FIRST(&g_virtio_blk_transports);
+}
+
+struct spdk_virtio_blk_transport *
+virtio_blk_transport_get_next(struct spdk_virtio_blk_transport *transport)
+{
+	return TAILQ_NEXT(transport, tailq);
+}
+
+void
+virtio_blk_transport_dump_opts(struct spdk_virtio_blk_transport *transport,
+			       struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "name", transport->ops->name);
+
+	if (transport->ops->dump_opts) {
+		transport->ops->dump_opts(transport, w);
+	}
+
+	spdk_json_write_object_end(w);
+}
+
+struct spdk_virtio_blk_transport *
+virtio_blk_tgt_get_transport(const char *transport_name)
+{
+	struct spdk_virtio_blk_transport *transport;
+
+	TAILQ_FOREACH(transport, &g_virtio_blk_transports, tailq) {
+		if (strcasecmp(transport->ops->name, transport_name) == 0) {
+			return transport;
+		}
+	}
+	return NULL;
 }
 
 int

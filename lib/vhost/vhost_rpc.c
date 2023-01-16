@@ -10,7 +10,7 @@
 #include "spdk/util.h"
 #include "spdk/string.h"
 #include "spdk/env.h"
-
+#include "spdk/log.h"
 #include "spdk/scsi.h"
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
@@ -471,6 +471,60 @@ invalid:
 }
 SPDK_RPC_REGISTER("vhost_controller_set_coalescing", rpc_vhost_controller_set_coalescing,
 		  SPDK_RPC_RUNTIME)
+
+struct rpc_get_transport {
+	char *name;
+};
+
+static const struct spdk_json_object_decoder rpc_get_transport_decoders[] = {
+	{"name", offsetof(struct rpc_get_transport, name), spdk_json_decode_string, true},
+};
+
+static void
+rpc_virtio_blk_get_transports(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
+{
+	struct rpc_get_transport req = { 0 };
+	struct spdk_json_write_ctx *w;
+	struct spdk_virtio_blk_transport *transport = NULL;
+
+	if (params) {
+		if (spdk_json_decode_object(params, rpc_get_transport_decoders,
+					    SPDK_COUNTOF(rpc_get_transport_decoders),
+					    &req)) {
+			SPDK_ERRLOG("spdk_json_decode_object failed\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+			return;
+		}
+	}
+
+	if (req.name) {
+		transport = virtio_blk_tgt_get_transport(req.name);
+		if (transport == NULL) {
+			SPDK_ERRLOG("transport '%s' does not exist\n", req.name);
+			spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+			free(req.name);
+			return;
+		}
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_array_begin(w);
+
+	if (transport) {
+		virtio_blk_transport_dump_opts(transport, w);
+	} else {
+		for (transport = virtio_blk_transport_get_first(); transport != NULL;
+		     transport = virtio_blk_transport_get_next(transport)) {
+			virtio_blk_transport_dump_opts(transport, w);
+		}
+	}
+
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+	free(req.name);
+}
+SPDK_RPC_REGISTER("virtio_blk_get_transports", rpc_virtio_blk_get_transports, SPDK_RPC_RUNTIME)
 
 struct rpc_virtio_blk_create_transport {
 	char *name;

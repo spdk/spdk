@@ -2601,6 +2601,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('name', help='transport name')
     p.set_defaults(func=virtio_blk_create_transport)
 
+    def virtio_blk_get_transports(args):
+        print_dict(rpc.vhost.virtio_blk_get_transports(args.client, name=args.name))
+
+    p = subparsers.add_parser('virtio_blk_get_transports', help='Display virtio-blk transports or requested transport')
+    p.add_argument('--name', help='Transport name (optional)', type=str)
+    p.set_defaults(func=virtio_blk_get_transports)
+
     def vhost_create_scsi_controller(args):
         rpc.vhost.vhost_create_scsi_controller(args.client,
                                                ctrlr=args.ctrlr,
