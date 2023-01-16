@@ -68,6 +68,7 @@ struct vrdma_backend_qp {
 struct vrdma_local_bk_qp_attr {
 	struct vrdma_bk_qp_connect comm;
 	uint32_t core_id;
+	uint32_t qp_state;
 };
 #define VRDMA_LOCAL_BK_QP_ATTR_SIZE sizeof(struct vrdma_local_bk_qp_attr)
 
@@ -87,6 +88,7 @@ struct vrdma_local_bk_qp {
 
 struct vrdma_remote_bk_qp_attr {
 	struct vrdma_bk_qp_connect comm;
+	uint32_t qp_state;
 };
 #define VRDMA_REMOTE_BK_QP_ATTR_SIZE sizeof(struct vrdma_remote_bk_qp_attr)
 
@@ -121,8 +123,10 @@ struct vrdma_backend_qp *
 vrdma_create_backend_qp(struct vrdma_ctrl *ctrl,
 				uint32_t vqp_idx, uint32_t remote_vqpn);
 int vrdma_modify_backend_qp_to_ready(struct vrdma_ctrl *ctrl,
-				struct vrdma_backend_qp *bk_qp);
+				struct vrdma_backend_qp *bk_qp, bool remote_ready);
 void vrdma_destroy_backend_qp(struct vrdma_ctrl *ctrl, uint32_t vqp_idx);
+void set_spdk_vrdma_bk_qp_active(struct vrdma_ctrl *ctrl,
+		struct vrdma_backend_qp *pre_bk_qp);
 int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe,
 				struct spdk_vrdma_qp *vqp,

@@ -44,6 +44,8 @@ _spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client)
 
 	STAILQ_FOREACH_SAFE(request, &client->request, stailq, temp) {
 		if (request->send_len > 0) {
+			SPDK_NOTICELOG("\nlizh _spdk_jsonrpc_client_send_request request send_len(%d) request_id 0x%x\n",
+		request->send_len, request->request_id);
 			rc = send(client->sockfd, request->send_buf + request->send_offset,
 			  	request->send_len, 0);
 			if (rc < 0) {
@@ -61,14 +63,25 @@ _spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client)
 			request->send_offset += rc;
 			request->send_len -= rc;
 		}
-		if (request->send_len == 0) {
+		/*if (request->send_len == 0) {
 			STAILQ_REMOVE(&client->request, request,
 				spdk_jsonrpc_client_request, stailq);
 			spdk_jsonrpc_client_free_request(request);
-		}
+		}*/
 	}
 
 	return 0;
+}
+
+void
+spdk_jsonrpc_client_resend_request(struct spdk_jsonrpc_client *client)
+{
+	struct spdk_jsonrpc_client_request *request, *temp;
+
+	STAILQ_FOREACH_SAFE(request, &client->request, stailq, temp) {
+		request->send_len = request->send_total_len;
+		request->send_offset = 0;
+	}
 }
 
 static int
@@ -385,6 +398,36 @@ spdk_jsonrpc_client_free_request(struct spdk_jsonrpc_client_request *req)
 	free(req);
 }
 
+void
+spdk_jsonrpc_client_remove_request_from_list(struct spdk_jsonrpc_client *client,
+			uint32_t request_id)
+{
+	struct spdk_jsonrpc_client_request *req, *temp;
+
+	STAILQ_FOREACH_SAFE(req, &client->request, stailq, temp) {
+		SPDK_NOTICELOG("\nlizh spdk_jsonrpc_client_remove_request_from_list req->request_id 0x%x request_id 0x%x\n",
+		req->request_id, request_id);
+		if (req->request_id == request_id) {
+			STAILQ_REMOVE(&client->request, req, spdk_jsonrpc_client_request, stailq);
+			spdk_jsonrpc_client_free_request(req);
+			break;
+		}
+	}
+}
+
+bool
+spdk_jsonrpc_client_request_list_empty(struct spdk_jsonrpc_client *client)
+{
+	/* lizh just for test*/
+	struct spdk_jsonrpc_client_request *req, *temp;
+
+	STAILQ_FOREACH_SAFE(req, &client->request, stailq, temp) {
+		SPDK_NOTICELOG("\nlizh spdk_jsonrpc_client_request_list_empty req->request_id 0x%x\n",
+		req->request_id);
+	}
+	return STAILQ_EMPTY(&client->request);
+}
+
 int
 spdk_jsonrpc_client_poll(struct spdk_jsonrpc_client *client, int timeout)
 {
@@ -400,6 +443,12 @@ int spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
 {
 	STAILQ_INSERT_TAIL(&client->request, req, stailq);
 	return 0;
+}
+
+void spdk_jsonrpc_set_request_id(struct spdk_jsonrpc_client_request *req,
+			uint32_t request_id)
+{
+	req->request_id = request_id;
 }
 
 struct spdk_jsonrpc_client_response *

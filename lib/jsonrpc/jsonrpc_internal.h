@@ -112,6 +112,8 @@ struct spdk_jsonrpc_client_request {
 
 	uint8_t *send_buf;
 
+	size_t send_total_len;
+	uint32_t request_id;
 	STAILQ_ENTRY(spdk_jsonrpc_client_request) stailq;
 };
 

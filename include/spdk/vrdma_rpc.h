@@ -39,9 +39,9 @@
 #define VRDMA_RPC_DEFAULT_PORT	"5262"
 #define VRDMA_RPC_SELECT_INTERVAL	4000 /* 4ms */
 /* 1s connections timeout */
-#define VRDMA_RPC_CLIENT_CONNECT_TIMEOUT_US (1U * 1000U * 1000U)
-/* 10s timeout */
-#define VRDMA_RPC_CLIENT_REQUEST_TIMEOUT_US (10U * 1000U * 1000U)
+#define VRDMA_RPC_CLIENT_CONNECT_TIMEOUT_US (10U * 1000U * 1000U)
+/* 30s timeout */
+#define VRDMA_RPC_CLIENT_REQUEST_TIMEOUT_US (30U * 1000U * 1000U)
 #define VRDMA_RPC_UNIX_PATH_MAX	108
 #define VRDMA_RPC_LISTEN_LOCK_PATH_SIZE (VRDMA_RPC_UNIX_PATH_MAX + sizeof(".lock"))
 #define VRDMA_RPC_IP_LEN 32
@@ -62,6 +62,10 @@ struct spdk_jsonrpc_client_request {
 	size_t send_offset;
 
 	uint8_t *send_buf;
+
+	size_t send_total_len;
+	uint32_t request_id;
+	STAILQ_ENTRY(spdk_jsonrpc_client_request) stailq;
 };
 
 struct spdk_vrdma_rpc_client;
@@ -128,6 +132,7 @@ struct spdk_vrdma_rpc_qp_msg {
 
 struct spdk_vrdma_rpc_qp_attr {
     char *emu_manager;
+	uint32_t request_id;
     uint64_t node_id;
     uint32_t dev_id;
     uint32_t vqpn;
