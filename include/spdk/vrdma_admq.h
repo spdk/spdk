@@ -602,8 +602,27 @@ struct vrdma_state_machine {
 	uint16_t sme;
 };
 
+struct vrdma_vapa_map {
+	uint64_t vaddr;
+	uint64_t paddr;
+	uint32_t size;
+};
+struct vrdma_indirect_mkey {
+	LIST_ENTRY(vrdma_indirect_mkey) entry;
+	uint32_t indirect_mkey;
+	uint32_t crossing_mkey;
+	uint32_t num_sge;
+	struct vrdma_vapa_map vapa[MAX_VRDMA_MR_SGE_NUM];
+};
+LIST_HEAD(vrdma_indirect_mkey_list_head, vrdma_indirect_mkey);
+extern struct vrdma_indirect_mkey_list_head vrdma_indirect_mkey_list;
+
 struct vrdma_ctrl;
 
+void spdk_vrdma_disable_indirect_mkey_map(void);
+void spdk_vrdma_enable_indirect_mkey_map(void);
+void vrdma_del_indirect_mkey_list(void);
+void vrdma_get_va_crossing_mkey_by_key(uint32_t *mkey, uint64_t *va2pa);
 int spdk_vrdma_init_all_id_pool(struct spdk_vrdma_dev *vdev);
 int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe);

@@ -40,6 +40,7 @@
 #include "spdk/event.h"
 #include "spdk/vrdma.h"
 #include "spdk/vrdma_controller.h"
+#include "spdk/vrdma_admq.h"
 
 static struct spdk_thread *g_vrdma_app_thread;
 static struct spdk_vrdma_ctx g_vrdma_ctx;
@@ -98,6 +99,7 @@ static void
 vrdma_usage(void)
 {
 	fprintf(stderr, " -v --pci_mac   [pci_number]:[mac], such as [af:00.2]:[11:22:33:44:55:66]\n");
+    fprintf(stderr, " -k --indirect_mkey map to crossing_mkey \n");
 }
 
 static int
@@ -162,6 +164,10 @@ vrdma_parse_arg(int ch, char *arg)
 		vrdma_dev_mac_add(g_dev_mac.pci_number, g_dev_mac.mac);
         memset(&g_dev_mac, 0, sizeof(struct vrdma_dev_mac));
 		break;
+	case 'k':
+        SPDK_NOTICELOG("lizh vrdma_parse_arg ...set_unshared_crossing_mkey\n");
+        spdk_vrdma_enable_indirect_mkey_map();
+        break;
 	default:
 		return -EINVAL;
 	}
@@ -176,8 +182,9 @@ int main(int argc, char **argv)
     /* Set default values in opts structure. */
     spdk_app_opts_init(&opts);
     opts.name = "spdk_vrdma";
+    spdk_vrdma_disable_indirect_mkey_map();
     memset(&g_dev_mac, 0, sizeof(struct vrdma_dev_mac));
-    if ((rc = spdk_app_parse_args(argc, argv, &opts, "v:", NULL,
+    if ((rc = spdk_app_parse_args(argc, argv, &opts, "v:k", NULL,
     	vrdma_parse_arg, vrdma_usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 	    fprintf(stderr, "Unable to parse the application arguments.\n");
         exit(rc);

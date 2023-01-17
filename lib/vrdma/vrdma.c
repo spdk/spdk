@@ -39,6 +39,7 @@
 #include "spdk/vrdma_snap_pci_mgr.h"
 #include "spdk/vrdma_qp.h"
 #include "spdk/vrdma_rpc.h"
+#include "spdk/vrdma_admq.h"
 
 static uint32_t g_vdev_cnt;
 
@@ -47,6 +48,7 @@ void spdk_vrdma_ctx_stop(void (*fini_cb)(void))
 	spdk_vrdma_snap_stop(fini_cb);
 	vrdma_del_bk_qp_list();
 	vrdma_dev_mac_list_del();
+	vrdma_del_indirect_mkey_list();
 }
 
 int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
