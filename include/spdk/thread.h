@@ -981,7 +981,7 @@ typedef STAILQ_HEAD(, spdk_iobuf_buffer) spdk_iobuf_buffer_stailq_t;
 
 struct spdk_iobuf_pool {
 	/** Buffer pool */
-	struct spdk_mempool		*pool;
+	struct spdk_ring		*pool;
 	/** Buffer cache */
 	spdk_iobuf_buffer_stailq_t	cache;
 	/** Number of elements in the cache */
