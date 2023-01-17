@@ -24,6 +24,7 @@ lib/idxd/idxd_kernel
 
 # These files all represent c files that are only compiled by direct inclusion in other files.
 test/common/lib/test_env
+test/common/lib/test_iobuf
 test/common/lib/test_sock
 test/common/lib/ut_multithread
 test/common/lib/test_rdma

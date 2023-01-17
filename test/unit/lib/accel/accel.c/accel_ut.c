@@ -9,6 +9,7 @@
 #include "spdk_internal/accel_module.h"
 #include "thread/thread_internal.h"
 #include "common/lib/ut_multithread.c"
+#include "common/lib/test_iobuf.c"
 #include "accel/accel.c"
 #include "accel/accel_sw.c"
 #include "unit/lib/json_mock.c"
@@ -1929,6 +1930,16 @@ test_sequence_accel_buffers(void)
 	spdk_iobuf_buffer_stailq_t small_cache;
 	uint32_t small_cache_count;
 	int i, rc, completed;
+	struct spdk_iobuf_opts opts_iobuf = {};
+
+	/* Set up the iobuf to always use the "small" pool */
+	opts_iobuf.large_bufsize = 0x20000;
+	opts_iobuf.large_pool_count = 0;
+	opts_iobuf.small_bufsize = 0x10000;
+	opts_iobuf.small_pool_count = 32;
+
+	rc = spdk_iobuf_set_opts(&opts_iobuf);
+	CU_ASSERT(rc == 0);
 
 	ioch = spdk_accel_get_io_channel();
 	SPDK_CU_ASSERT_FATAL(ioch != NULL);
@@ -2223,7 +2234,8 @@ test_sequence_accel_buffers(void)
 	STAILQ_INIT(&small_cache);
 	STAILQ_SWAP(&accel_ch->iobuf.small.cache, &small_cache, spdk_iobuf_buffer);
 	accel_ch->iobuf.small.cache_count = 0;
-	MOCK_SET(spdk_mempool_get, NULL);
+	accel_ch->iobuf.small.cache_size = 0;
+	g_iobuf.small_pool_count = 0;
 
 	/* First allocate a single buffer used by two operations */
 	memset(srcbuf, 0x0, 4096);
@@ -2258,10 +2270,10 @@ test_sequence_accel_buffers(void)
 	CU_ASSERT(!ut_seq.complete);
 
 	/* Get a buffer and return it to the pool to trigger the sequence to finish */
-	MOCK_CLEAR(spdk_mempool_get);
+	g_iobuf.small_pool_count = 1;
 	iobuf_buf = spdk_iobuf_get(&accel_ch->iobuf, 4096, NULL, NULL);
 	CU_ASSERT_PTR_NOT_NULL(iobuf_buf);
-	MOCK_SET(spdk_mempool_get, NULL);
+	CU_ASSERT(g_iobuf.small_pool_count == 0);
 	spdk_iobuf_put(&accel_ch->iobuf, iobuf_buf, 4096);
 
 	poll_threads();
@@ -2280,6 +2292,7 @@ test_sequence_accel_buffers(void)
 		small_cache_count++;
 	}
 	accel_ch->iobuf.small.cache_count = 0;
+	g_iobuf.small_pool_count = 0;
 
 	/* Check a bit more complex scenario, with two buffers in the sequence */
 	memset(srcbuf, 0x0, 4096);
@@ -2327,20 +2340,20 @@ test_sequence_accel_buffers(void)
 	CU_ASSERT_EQUAL(completed, 0);
 	CU_ASSERT(!ut_seq.complete);
 
-	MOCK_CLEAR(spdk_mempool_get);
+	g_iobuf.small_pool_count = 1;
 	iobuf_buf = spdk_iobuf_get(&accel_ch->iobuf, 4096, NULL, NULL);
 	CU_ASSERT_PTR_NOT_NULL(iobuf_buf);
-	MOCK_SET(spdk_mempool_get, NULL);
+	g_iobuf.small_pool_count = 0;
 	spdk_iobuf_put(&accel_ch->iobuf, iobuf_buf, 4096);
 
 	/* One buffer is not enough to finish the whole sequence */
 	poll_threads();
 	CU_ASSERT(!ut_seq.complete);
 
-	MOCK_CLEAR(spdk_mempool_get);
+	g_iobuf.small_pool_count = 1;
 	iobuf_buf = spdk_iobuf_get(&accel_ch->iobuf, 4096, NULL, NULL);
 	CU_ASSERT_PTR_NOT_NULL(iobuf_buf);
-	MOCK_SET(spdk_mempool_get, NULL);
+	g_iobuf.small_pool_count = 0;
 	spdk_iobuf_put(&accel_ch->iobuf, iobuf_buf, 4096);
 
 	poll_threads();
@@ -2361,7 +2374,7 @@ test_sequence_accel_buffers(void)
 	}
 	accel_ch->iobuf.small.cache_count = 0;
 
-	MOCK_CLEAR(spdk_mempool_get);
+	g_iobuf.small_pool_count = 32;
 	STAILQ_SWAP(&accel_ch->iobuf.small.cache, &small_cache, spdk_iobuf_buffer);
 	accel_ch->iobuf.small.cache_count = small_cache_count;
 
@@ -2574,7 +2587,7 @@ test_sequence_memory_domain(void)
 	STAILQ_INIT(&small_cache);
 	STAILQ_SWAP(&accel_ch->iobuf.small.cache, &small_cache, spdk_iobuf_buffer);
 	accel_ch->iobuf.small.cache_count = 0;
-	MOCK_SET(spdk_mempool_get, NULL);
+	g_iobuf.small_pool_count = 0;
 
 	src_iovs[0].iov_base = (void *)0xdeadbeef;
 	src_iovs[0].iov_len = sizeof(srcbuf);
@@ -2598,20 +2611,20 @@ test_sequence_memory_domain(void)
 
 	/* Get a buffer and return it to the pool to trigger the sequence to resume.  It shouldn't
 	 * be able to complete, as it needs two buffers */
-	MOCK_CLEAR(spdk_mempool_get);
+	g_iobuf.small_pool_count = 1;
 	iobuf_buf = spdk_iobuf_get(&accel_ch->iobuf, sizeof(dstbuf), NULL, NULL);
 	CU_ASSERT_PTR_NOT_NULL(iobuf_buf);
-	MOCK_SET(spdk_mempool_get, NULL);
+	g_iobuf.small_pool_count = 0;
 	spdk_iobuf_put(&accel_ch->iobuf, iobuf_buf, sizeof(dstbuf));
 
 	CU_ASSERT_EQUAL(completed, 0);
 	CU_ASSERT(!ut_seq.complete);
 
 	/* Return another buffer, this time the sequence should finish */
-	MOCK_CLEAR(spdk_mempool_get);
+	g_iobuf.small_pool_count = 1;
 	iobuf_buf = spdk_iobuf_get(&accel_ch->iobuf, sizeof(dstbuf), NULL, NULL);
 	CU_ASSERT_PTR_NOT_NULL(iobuf_buf);
-	MOCK_SET(spdk_mempool_get, NULL);
+	g_iobuf.small_pool_count = 0;
 	spdk_iobuf_put(&accel_ch->iobuf, iobuf_buf, sizeof(dstbuf));
 
 	poll_threads();
@@ -2629,7 +2642,7 @@ test_sequence_memory_domain(void)
 	}
 	accel_ch->iobuf.small.cache_count = 0;
 
-	MOCK_CLEAR(spdk_mempool_get);
+	g_iobuf.small_pool_count = 32;
 	STAILQ_SWAP(&accel_ch->iobuf.small.cache, &small_cache, spdk_iobuf_buffer);
 	accel_ch->iobuf.small.cache_count = small_cache_count;
 
