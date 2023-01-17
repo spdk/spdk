@@ -52,8 +52,6 @@ function load_ib_rdma_modules() {
 
 	modprobe ib_cm
 	modprobe ib_core
-	# Newer kernels do not have the ib_ucm module
-	modprobe ib_ucm || true
 	modprobe ib_umad
 	modprobe ib_uverbs
 	modprobe iw_cm
