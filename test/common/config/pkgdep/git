@@ -180,15 +180,7 @@ function install_qat() {
 
 	tar -C "$GIT_REPOS/QAT" -xzof - < <(wget -O- "$DRIVER_LOCATION_QAT")
 
-	if ge "$kernel_ver" 5.16.0; then
-		patch --dir="$GIT_REPOS/QAT" -p1
-	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-dma-mask.patch"
-
-	if ge "$kernel_ver" 5.18.0; then
-		patch --dir="$GIT_REPOS/QAT" -p1
-	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-default-groups.patch"
-
-	(cd "$GIT_REPOS/QAT" && sudo ./configure --enable-icp-sriov=host && sudo make -j$jobs install)
+	(cd "$GIT_REPOS/QAT" && sudo ./configure --enable-icp-sriov=host && sudo make install)
 
 	if ! sudo service qat_service start; then
 		echo "failed to start the qat service. Something may be wrong with your device or package."
@@ -626,7 +618,7 @@ export GIT_REPO_QEMU_VFIO
 export GIT_REPO_LIBISCSI
 : ${GIT_REPO_INTEL_IPSEC_MB=https://github.com/spdk/intel-ipsec-mb.git}
 export GIT_REPO_INTEL_IPSEC_MB
-: ${DRIVER_LOCATION_QAT=https://downloadmirror.intel.com/729932/QAT.L.4.18.0-00008.tar.gz}
+: ${DRIVER_LOCATION_QAT=https://downloadmirror.intel.com/761891/QAT.L.4.20.0-00001.tar.gz}
 export DRIVER_LOCATION_QAT
 : ${GIT_REPO_GIT=https://github.com/git/git/archive/v${GIT_VERSION}.tar.gz}
 export GIT_REPO_GIT
