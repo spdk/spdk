@@ -7522,18 +7522,52 @@ blob_insert_new_ep_cb(void *arg, int bserrno)
 	blob_sync_md(ctx->blob, blob_insert_cluster_msg_cb, ctx);
 }
 
+struct spdk_blob_write_extent_page_ctx {
+	struct spdk_blob_store		*bs;
+
+	uint32_t			extent;
+	struct spdk_blob_md_page	*page;
+};
+
 static void
 blob_persist_extent_page_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
+	struct spdk_blob_write_extent_page_ctx *ctx = cb_arg;
+
+	free(ctx);
 	bs_sequence_finish(seq, bserrno);
+}
+
+static void
+blob_write_extent_page_ready(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_blob_write_extent_page_ctx *ctx = cb_arg;
+
+	if (bserrno != 0) {
+		blob_persist_extent_page_cpl(seq, ctx, bserrno);
+		return;
+	}
+	bs_sequence_write_dev(seq, ctx->page, bs_md_page_to_lba(ctx->bs, ctx->extent),
+			      bs_byte_to_lba(ctx->bs, SPDK_BS_PAGE_SIZE),
+			      blob_persist_extent_page_cpl, ctx);
 }
 
 static void
 blob_write_extent_page(struct spdk_blob *blob, uint32_t extent, uint64_t cluster_num,
 		       struct spdk_blob_md_page *page, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
-	spdk_bs_sequence_t		*seq;
-	struct spdk_bs_cpl		cpl;
+	struct spdk_blob_write_extent_page_ctx	*ctx;
+	spdk_bs_sequence_t			*seq;
+	struct spdk_bs_cpl			cpl;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+	ctx->bs = blob->bs;
+	ctx->extent = extent;
+	ctx->page = page;
 
 	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
 	cpl.u.blob_basic.cb_fn = cb_fn;
@@ -7541,6 +7575,7 @@ blob_write_extent_page(struct spdk_blob *blob, uint32_t extent, uint64_t cluster
 
 	seq = bs_sequence_start(blob->bs->md_channel, &cpl);
 	if (!seq) {
+		free(ctx);
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
@@ -7556,9 +7591,7 @@ blob_write_extent_page(struct spdk_blob *blob, uint32_t extent, uint64_t cluster
 
 	assert(spdk_bit_array_get(blob->bs->used_md_pages, extent) == true);
 
-	bs_sequence_write_dev(seq, page, bs_md_page_to_lba(blob->bs, extent),
-			      bs_byte_to_lba(blob->bs, SPDK_BS_PAGE_SIZE),
-			      blob_persist_extent_page_cpl, page);
+	bs_mark_dirty(seq, blob->bs, blob_write_extent_page_ready, ctx);
 }
 
 static void
