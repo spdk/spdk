@@ -271,6 +271,7 @@ fi
 run_test "unittest_scsi" unittest_scsi
 run_test "unittest_sock" unittest_sock
 run_test "unittest_thread" $valgrind $testdir/lib/thread/thread.c/thread_ut
+run_test "unittest_iobuf" $valgrind $testdir/lib/thread/iobuf.c/iobuf_ut
 run_test "unittest_util" unittest_util
 if grep -q '#define SPDK_CONFIG_VHOST 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_vhost" $valgrind $testdir/lib/vhost/vhost.c/vhost_ut
