@@ -347,3 +347,64 @@ spdk_iobuf_entry_abort(struct spdk_iobuf_channel *ch, struct spdk_iobuf_entry *e
 
 	STAILQ_REMOVE(pool->queue, entry, spdk_iobuf_entry, stailq);
 }
+
+void *
+spdk_iobuf_get(struct spdk_iobuf_channel *ch, uint64_t len,
+	       struct spdk_iobuf_entry *entry, spdk_iobuf_get_cb cb_fn)
+{
+	struct spdk_iobuf_pool *pool;
+	void *buf;
+
+	assert(spdk_io_channel_get_thread(ch->parent) == spdk_get_thread());
+	if (len <= ch->small.bufsize) {
+		pool = &ch->small;
+	} else {
+		assert(len <= ch->large.bufsize);
+		pool = &ch->large;
+	}
+
+	buf = (void *)STAILQ_FIRST(&pool->cache);
+	if (buf) {
+		STAILQ_REMOVE_HEAD(&pool->cache, stailq);
+		assert(pool->cache_count > 0);
+		pool->cache_count--;
+	} else {
+		buf = spdk_mempool_get(pool->pool);
+		if (!buf) {
+			STAILQ_INSERT_TAIL(pool->queue, entry, stailq);
+			entry->module = ch->module;
+			entry->cb_fn = cb_fn;
+
+			return NULL;
+		}
+	}
+
+	return (char *)buf;
+}
+
+void
+spdk_iobuf_put(struct spdk_iobuf_channel *ch, void *buf, uint64_t len)
+{
+	struct spdk_iobuf_entry *entry;
+	struct spdk_iobuf_pool *pool;
+
+	assert(spdk_io_channel_get_thread(ch->parent) == spdk_get_thread());
+	if (len <= ch->small.bufsize) {
+		pool = &ch->small;
+	} else {
+		pool = &ch->large;
+	}
+
+	if (STAILQ_EMPTY(pool->queue)) {
+		if (pool->cache_count < pool->cache_size) {
+			STAILQ_INSERT_HEAD(&pool->cache, (struct spdk_iobuf_buffer *)buf, stailq);
+			pool->cache_count++;
+		} else {
+			spdk_mempool_put(pool->pool, buf);
+		}
+	} else {
+		entry = STAILQ_FIRST(pool->queue);
+		STAILQ_REMOVE_HEAD(pool->queue, stailq);
+		entry->cb_fn(entry, buf);
+	}
+}
