@@ -536,23 +536,12 @@ iobuf_cache(void)
 		CU_ASSERT_PTR_NOT_NULL(mod0_entries[i].buf);
 	}
 
-	/* It should be able to create a channel with a single entry in the cache */
-	rc = spdk_iobuf_channel_init(&iobuf_ch[1], "ut_module1", 2, 1);
-	CU_ASSERT_EQUAL(rc, 0);
-	spdk_iobuf_channel_fini(&iobuf_ch[1]);
-	poll_threads();
-
-	/* But not with two entries */
-	rc = spdk_iobuf_channel_init(&iobuf_ch[1], "ut_module1", 2, 2);
-	CU_ASSERT_EQUAL(rc, -ENOMEM);
-
-	for (i = 0; i < 2; ++i) {
+	/* The channels can be temporarily greedy, holding more buffers than their configured cache
+	 * size. We can only guarantee that we can create a channel if all outstanding buffers
+	 * have been returned. */
+	for (i = 0; i < 3; ++i) {
 		spdk_iobuf_put(&iobuf_ch[0], mod0_entries[i].buf, LARGE_BUFSIZE);
-		rc = spdk_iobuf_channel_init(&iobuf_ch[1], "ut_module1", 2, 2);
-		CU_ASSERT_EQUAL(rc, -ENOMEM);
 	}
-
-	spdk_iobuf_put(&iobuf_ch[0], mod0_entries[2].buf, LARGE_BUFSIZE);
 
 	/* The last buffer should be released back to the pool, so we should be able to create a new
 	 * channel
