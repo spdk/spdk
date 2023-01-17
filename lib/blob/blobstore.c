@@ -1588,8 +1588,6 @@ blob_load(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 struct spdk_blob_persist_ctx {
 	struct spdk_blob		*blob;
 
-	struct spdk_bs_super_block	*super;
-
 	struct spdk_blob_md_page	*pages;
 	uint32_t			next_extent_page;
 	struct spdk_blob_md_page	*extent_page;
@@ -1618,7 +1616,8 @@ bs_batch_clear_dev(struct spdk_blob_persist_ctx *ctx, spdk_bs_batch_t *batch, ui
 	}
 }
 
-static void blob_persist_check_dirty(struct spdk_blob_persist_ctx *ctx);
+static void bs_mark_dirty(spdk_bs_sequence_t *seq, struct spdk_blob_store *bs,
+			  spdk_bs_sequence_cpl cb_fn, void *cb_arg);
 
 static void
 blob_persist_complete_cb(void *arg)
@@ -1632,6 +1631,8 @@ blob_persist_complete_cb(void *arg)
 	spdk_free(ctx->pages);
 	free(ctx);
 }
+
+static void blob_persist_start(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno);
 
 static void
 blob_persist_complete(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ctx *ctx, int bserrno)
@@ -1660,7 +1661,7 @@ blob_persist_complete(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ctx *ctx
 	next_persist = TAILQ_FIRST(&blob->persists_to_complete);
 
 	blob->state = SPDK_BLOB_STATE_DIRTY;
-	blob_persist_check_dirty(next_persist);
+	bs_mark_dirty(seq, blob->bs, blob_persist_start, next_persist);
 }
 
 static void
@@ -2207,10 +2208,15 @@ blob_persist_write_extent_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 }
 
 static void
-blob_persist_start(struct spdk_blob_persist_ctx *ctx)
+blob_persist_start(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	spdk_bs_sequence_t *seq = ctx->seq;
+	struct spdk_blob_persist_ctx *ctx = cb_arg;
 	struct spdk_blob *blob = ctx->blob;
+
+	if (bserrno != 0) {
+		blob_persist_complete(seq, ctx, bserrno);
+		return;
+	}
 
 	if (blob->active.num_pages == 0) {
 		/* This is the signal that the blob should be deleted.
@@ -2239,21 +2245,26 @@ blob_persist_start(struct spdk_blob_persist_ctx *ctx)
 	blob_persist_write_extent_pages(seq, ctx, 0);
 }
 
+struct spdk_bs_mark_dirty {
+	struct spdk_blob_store		*bs;
+	struct spdk_bs_super_block	*super;
+	spdk_bs_sequence_cpl		cb_fn;
+	void				*cb_arg;
+};
+
 static void
-blob_persist_dirty_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+bs_mark_dirty_write_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_blob_persist_ctx *ctx = cb_arg;
+	struct spdk_bs_mark_dirty *ctx = cb_arg;
 
-	spdk_free(ctx->super);
-
-	if (bserrno != 0) {
-		blob_persist_complete(seq, ctx, bserrno);
-		return;
+	if (bserrno == 0) {
+		ctx->bs->clean = 0;
 	}
 
-	ctx->blob->bs->clean = 0;
+	ctx->cb_fn(seq, ctx->cb_arg, bserrno);
 
-	blob_persist_start(ctx);
+	spdk_free(ctx->super);
+	free(ctx);
 }
 
 static void bs_write_super(spdk_bs_sequence_t *seq, struct spdk_blob_store *bs,
@@ -2261,41 +2272,55 @@ static void bs_write_super(spdk_bs_sequence_t *seq, struct spdk_blob_store *bs,
 
 
 static void
-blob_persist_dirty(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+bs_mark_dirty_write(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_blob_persist_ctx *ctx = cb_arg;
+	struct spdk_bs_mark_dirty *ctx = cb_arg;
 
 	if (bserrno != 0) {
-		spdk_free(ctx->super);
-		blob_persist_complete(seq, ctx, bserrno);
+		bs_mark_dirty_write_cpl(seq, ctx, bserrno);
 		return;
 	}
 
 	ctx->super->clean = 0;
 	if (ctx->super->size == 0) {
-		ctx->super->size = ctx->blob->bs->dev->blockcnt * ctx->blob->bs->dev->blocklen;
+		ctx->super->size = ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen;
 	}
 
-	bs_write_super(seq, ctx->blob->bs, ctx->super, blob_persist_dirty_cpl, ctx);
+	bs_write_super(seq, ctx->bs, ctx->super, bs_mark_dirty_write_cpl, ctx);
 }
 
 static void
-blob_persist_check_dirty(struct spdk_blob_persist_ctx *ctx)
+bs_mark_dirty(spdk_bs_sequence_t *seq, struct spdk_blob_store *bs,
+	      spdk_bs_sequence_cpl cb_fn, void *cb_arg)
 {
-	if (ctx->blob->bs->clean) {
-		ctx->super = spdk_zmalloc(sizeof(*ctx->super), 0x1000, NULL,
-					  SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
-		if (!ctx->super) {
-			blob_persist_complete(ctx->seq, ctx, -ENOMEM);
-			return;
-		}
+	struct spdk_bs_mark_dirty *ctx;
 
-		bs_sequence_read_dev(ctx->seq, ctx->super, bs_page_to_lba(ctx->blob->bs, 0),
-				     bs_byte_to_lba(ctx->blob->bs, sizeof(*ctx->super)),
-				     blob_persist_dirty, ctx);
-	} else {
-		blob_persist_start(ctx);
+	/* Blobstore is already marked dirty */
+	if (bs->clean == 0) {
+		cb_fn(seq, cb_arg, 0);
+		return;
 	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		cb_fn(seq, cb_arg, -ENOMEM);
+		return;
+	}
+	ctx->bs = bs;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	ctx->super = spdk_zmalloc(sizeof(*ctx->super), 0x1000, NULL,
+				  SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+	if (!ctx->super) {
+		free(ctx);
+		cb_fn(seq, cb_arg, -ENOMEM);
+		return;
+	}
+
+	bs_sequence_read_dev(seq, ctx->super, bs_page_to_lba(bs, 0),
+			     bs_byte_to_lba(bs, sizeof(*ctx->super)),
+			     bs_mark_dirty_write, ctx);
 }
 
 /* Write a blob to disk */
@@ -2330,7 +2355,7 @@ blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	}
 	TAILQ_INSERT_HEAD(&blob->persists_to_complete, ctx, link);
 
-	blob_persist_check_dirty(ctx);
+	bs_mark_dirty(seq, blob->bs, blob_persist_start, ctx);
 }
 
 struct spdk_blob_copy_cluster_ctx {
