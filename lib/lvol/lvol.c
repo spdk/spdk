@@ -979,6 +979,7 @@ lvol_close_blob_cb(void *cb_arg, int lvolerrno)
 
 	lvol->ref_count--;
 	lvol->action_in_progress = false;
+	lvol->blob = NULL;
 	SPDK_INFOLOG(lvol, "Lvol %s closed\n", lvol->unique_id);
 
 end:
