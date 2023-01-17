@@ -1314,7 +1314,9 @@ accel_dpdk_cryptodev_fini_cb(void *io_device)
 static void
 accel_dpdk_cryptodev_fini(void *ctx)
 {
-	spdk_io_device_unregister(&g_accel_dpdk_cryptodev_module, accel_dpdk_cryptodev_fini_cb);
+	if (g_crypto_op_mp) {
+		spdk_io_device_unregister(&g_accel_dpdk_cryptodev_module, accel_dpdk_cryptodev_fini_cb);
+	}
 }
 
 static void
