@@ -259,6 +259,7 @@ static char *g_sock_threshold_impl;
 static uint8_t g_transport_tos = 0;
 
 static uint32_t g_rdma_srq_size;
+uint8_t *g_psk = NULL;
 
 /* When user specifies -Q, some error messages are rate limited.  When rate
  * limited, we only print the error message every g_quiet_count times the
@@ -339,9 +340,9 @@ perf_set_sock_opts(const char *impl_name, const char *field, uint32_t val, const
 			fprintf(stderr, "No socket opts value specified\n");
 			return;
 		}
-		sock_opts.psk_key = strdup(valstr);
-		if (sock_opts.psk_key == NULL) {
-			fprintf(stderr, "Failed to allocate psk_key in sock_impl\n");
+		g_psk = strdup(valstr);
+		if (g_psk == NULL) {
+			fprintf(stderr, "Failed to allocate memory for psk\n");
 			return;
 		}
 	} else if (strcmp(field, "psk_identity") == 0) {
@@ -2864,6 +2865,10 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		opts->num_io_queues = g_num_workers * g_nr_io_queues_per_ns;
 	}
 
+	if (g_psk != NULL) {
+		memcpy(opts->psk, g_psk, strlen(g_psk));
+	}
+
 	return true;
 }
 
@@ -3211,6 +3216,8 @@ cleanup:
 	unregister_workers();
 
 	spdk_env_fini();
+
+	free(g_psk);
 
 	pthread_mutex_destroy(&g_stats_mutex);
 
