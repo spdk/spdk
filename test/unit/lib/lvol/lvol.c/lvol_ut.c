@@ -28,11 +28,13 @@
 
 #define SPDK_BLOB_THIN_PROV (1ULL << 0)
 
+
 DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), NULL);
 DEFINE_STUB(spdk_bdev_get_by_name, struct spdk_bdev *, (const char *name), NULL);
 DEFINE_STUB(spdk_bdev_create_bs_dev_ro, int,
 	    (const char *bdev_name, spdk_bdev_event_cb_t event_cb, void *event_ctx,
 	     struct spdk_bs_dev **bs_dev), -ENOTSUP);
+DEFINE_STUB(spdk_blob_is_esnap_clone, bool, (const struct spdk_blob *blob), false);
 
 const char *uuid = "828d9766-ae50-11e7-bd8d-001e67edf350";
 
@@ -235,8 +237,6 @@ spdk_blob_is_thin_provisioned(struct spdk_blob *blob)
 	return blob->thin_provisioned;
 }
 
-DEFINE_STUB(spdk_blob_get_clones, int, (struct spdk_blob_store *bs, spdk_blob_id blobid,
-					spdk_blob_id *ids, size_t *count), 0);
 DEFINE_STUB(spdk_bs_get_page_size, uint64_t, (struct spdk_blob_store *bs), BS_PAGE_SIZE);
 
 int
@@ -509,6 +509,25 @@ spdk_blob_get_esnap_id(struct spdk_blob *blob, const void **id, size_t *len)
 	return g_spdk_blob_get_esnap_id_errno;
 }
 
+static spdk_blob_id g_spdk_blob_get_clones_snap_id = 0xbad;
+static size_t g_spdk_blob_get_clones_count;
+static spdk_blob_id *g_spdk_blob_get_clones_ids;
+int
+spdk_blob_get_clones(struct spdk_blob_store *bs, spdk_blob_id blob_id, spdk_blob_id *ids,
+		     size_t *count)
+{
+	if (blob_id != g_spdk_blob_get_clones_snap_id) {
+		*count = 0;
+		return 0;
+	}
+	if (ids == NULL || *count < g_spdk_blob_get_clones_count) {
+		*count = g_spdk_blob_get_clones_count;
+		return -ENOMEM;
+	}
+	memcpy(ids, g_spdk_blob_get_clones_ids, g_spdk_blob_get_clones_count * sizeof(*ids));
+	return 0;
+}
+
 static void
 lvol_store_op_with_handle_complete(void *cb_arg, struct spdk_lvol_store *lvol_store, int lvserrno)
 {
@@ -543,9 +562,19 @@ op_complete(void *cb_arg, int lvserrno)
 static struct ut_cb_res *
 ut_cb_res_clear(struct ut_cb_res *res)
 {
+	memset(res, 0, sizeof(*res));
 	res->data = (void *)(uintptr_t)(-1);
 	res->err = 0xbad;
 	return res;
+}
+
+static bool
+ut_cb_res_untouched(const struct ut_cb_res *res)
+{
+	struct ut_cb_res pristine;
+
+	ut_cb_res_clear(&pristine);
+	return !memcmp(&pristine, res, sizeof(pristine));
 }
 
 static void
@@ -2435,6 +2464,169 @@ lvol_esnap_load_esnaps(void)
 	g_esnap_bs_dev_errno = -ENOTSUP;
 }
 
+struct ut_degraded_dev {
+	struct spdk_bs_dev	bs_dev;
+	struct spdk_lvol	*lvol;
+};
+
+static void
+ut_destroy_degraded(struct spdk_bs_dev *ddev)
+{
+	free(ddev);
+}
+
+static int
+ut_create_degraded(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol,
+		   struct spdk_blob *blob, const char *name, struct spdk_bs_dev **bs_dev)
+{
+	struct ut_degraded_dev	*ddev;
+
+	ddev = calloc(1, sizeof(*ddev));
+	SPDK_CU_ASSERT_FATAL(ddev != NULL);
+
+	ddev->lvol = lvol;
+	ddev->bs_dev.destroy = ut_destroy_degraded;
+	ddev->bs_dev.blockcnt = UINT64_MAX / 512;
+	ddev->bs_dev.blocklen = 512;
+	*bs_dev = &ddev->bs_dev;
+	return 0;
+}
+
+static void
+lvol_esnap_missing(void)
+{
+	struct lvol_ut_bs_dev	dev;
+	struct spdk_lvs_opts	opts;
+	struct spdk_blob	blob = { .id = 42 };
+	struct ut_cb_res	cb_res;
+	struct spdk_lvol_store	*lvs;
+	struct spdk_lvol	*lvol1, *lvol2;
+	struct spdk_bs_dev	*bs_dev;
+	struct spdk_bdev	esnap_bdev;
+	struct spdk_lvs_degraded_lvol_set *degraded_set;
+	const char		*name1 = "lvol1";
+	const char		*name2 = "lvol2";
+	char			uuid_str[SPDK_UUID_STRING_LEN];
+	int			rc;
+
+	/* Create an lvstore */
+	init_dev(&dev);
+	spdk_lvs_opts_init(&opts);
+	snprintf(opts.name, sizeof(opts.name), "lvs");
+	g_lvserrno = -1;
+	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	lvs = g_lvol_store;
+	lvs->load_esnaps = true;
+
+	/* Pre-populate the lvstore with a degraded device */
+	lvol1 = lvol_alloc(lvs, name1, true, LVOL_CLEAR_WITH_DEFAULT);
+	SPDK_CU_ASSERT_FATAL(lvol1 != NULL);
+	lvol1->blob_id = blob.id;
+	TAILQ_REMOVE(&lvs->pending_lvols, lvol1, link);
+	TAILQ_INSERT_TAIL(&lvs->lvols, lvol1, link);
+	rc = ut_create_degraded(lvs, lvol1, &blob, name1, &bs_dev);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(bs_dev != NULL);
+
+	/* A clone with a missing external snapshot prevents a conflicting clone's creation */
+	init_bdev(&esnap_bdev, "bdev1", BS_CLUSTER_SIZE);
+	CU_ASSERT(spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &esnap_bdev.uuid) == 0);
+	MOCK_SET(spdk_bdev_get_by_name, &esnap_bdev);
+	rc = spdk_lvol_create_esnap_clone(uuid_str, sizeof(uuid_str), 1, g_lvol_store, name1,
+					  lvol_op_with_handle_complete, ut_cb_res_clear(&cb_res));
+	CU_ASSERT(rc == -EEXIST);
+	CU_ASSERT(ut_cb_res_untouched(&cb_res));
+	MOCK_CLEAR(spdk_bdev_get_by_name);
+
+	/* A clone with a missing external snapshot prevents a conflicting lvol's creation */
+	rc = spdk_lvol_create(lvs, name1, 10, false, LVOL_CLEAR_WITH_DEFAULT,
+			      lvol_op_with_handle_complete, ut_cb_res_clear(&cb_res));
+	CU_ASSERT(rc == -EEXIST);
+	CU_ASSERT(ut_cb_res_untouched(&cb_res));
+
+	/* Using a unique lvol name allows the clone to be created. */
+	MOCK_SET(spdk_bdev_get_by_name, &esnap_bdev);
+	MOCK_SET(spdk_blob_is_esnap_clone, true);
+	rc = spdk_lvol_create_esnap_clone(uuid_str, sizeof(uuid_str), 1, g_lvol_store, name2,
+					  lvol_op_with_handle_complete, ut_cb_res_clear(&cb_res));
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(cb_res.err == 0);
+	SPDK_CU_ASSERT_FATAL(cb_res.data != NULL);
+	lvol2 = cb_res.data;
+	CU_ASSERT(lvol2->degraded_set == NULL);
+	spdk_lvol_close(lvol2, op_complete, ut_cb_res_clear(&cb_res));
+	CU_ASSERT(cb_res.err == 0);
+	spdk_lvol_destroy(lvol2, op_complete, ut_cb_res_clear(&cb_res));
+	CU_ASSERT(cb_res.err == 0);
+	MOCK_CLEAR(spdk_blob_is_esnap_clone);
+	MOCK_CLEAR(spdk_bdev_get_by_name);
+
+	/* Destroying the esnap clone removes it from the degraded_set esnaps tree. */
+	spdk_lvol_destroy(lvol1, op_complete, ut_cb_res_clear(&cb_res));
+	CU_ASSERT(cb_res.err == 0);
+	CU_ASSERT(RB_EMPTY(&lvs->degraded_lvol_sets_tree));
+	bs_dev->destroy(bs_dev);
+
+	/* Create a missing device again */
+	lvol1 = lvol_alloc(lvs, name1, true, LVOL_CLEAR_WITH_DEFAULT);
+	SPDK_CU_ASSERT_FATAL(lvol1 != NULL);
+	lvol1->blob_id = blob.id;
+	TAILQ_REMOVE(&lvs->pending_lvols, lvol1, link);
+	TAILQ_INSERT_TAIL(&lvs->lvols, lvol1, link);
+	rc = ut_create_degraded(lvs, lvol1, &blob, name1, &bs_dev);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(bs_dev != NULL);
+	lvol1->blob = &blob;
+	rc = spdk_lvs_esnap_missing_add(lvs, lvol1, esnap_bdev.name, strlen(esnap_bdev.name) + 1);
+	CU_ASSERT(rc == 0);
+	lvol1->ref_count = 1;
+
+	/*
+	 * Creating a snapshot of lvol1 makes lvol1 a clone of the new snapshot. What was a clone of
+	 * the external snapshot is now a clone of the snapshot. The snapshot is a clone of the
+	 * external snapshot.  Now the snapshot is degraded_set its external snapshot.
+	 */
+	degraded_set = lvol1->degraded_set;
+	CU_ASSERT(degraded_set != NULL);
+	spdk_lvol_create_snapshot(lvol1, name2, lvol_op_with_handle_complete,
+				  ut_cb_res_clear(&cb_res));
+	CU_ASSERT(cb_res.err == 0);
+	SPDK_CU_ASSERT_FATAL(cb_res.data != NULL);
+	lvol2 = cb_res.data;
+	CU_ASSERT(lvol1->degraded_set == NULL);
+	CU_ASSERT(lvol2->degraded_set == degraded_set);
+
+	/*
+	 * Removing the snapshot (lvol2) makes the first lvol (lvol1) back into a clone of an
+	 * external snapshot.
+	 */
+	MOCK_SET(spdk_blob_is_esnap_clone, true);
+	g_spdk_blob_get_clones_snap_id = lvol2->blob_id;
+	g_spdk_blob_get_clones_ids = &lvol1->blob_id;
+	g_spdk_blob_get_clones_count = 1;
+	spdk_lvol_close(lvol2, op_complete, ut_cb_res_clear(&cb_res));
+	CU_ASSERT(cb_res.err == 0);
+	spdk_lvol_destroy(lvol2, op_complete, ut_cb_res_clear(&cb_res));
+	CU_ASSERT(cb_res.err == 0);
+	CU_ASSERT(lvol1->degraded_set == degraded_set);
+	g_spdk_blob_get_clones_snap_id = 0xbad;
+	g_spdk_blob_get_clones_ids = NULL;
+	g_spdk_blob_get_clones_count = 0;
+
+	/* Clean up */
+	spdk_lvol_close(lvol1, op_complete, ut_cb_res_clear(&cb_res));
+	CU_ASSERT(cb_res.err == 0);
+	spdk_lvol_destroy(lvol1, op_complete, ut_cb_res_clear(&cb_res));
+	CU_ASSERT(cb_res.err == 0);
+	bs_dev->destroy(bs_dev);
+	rc = spdk_lvs_destroy(g_lvol_store, op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	MOCK_CLEAR(spdk_blob_is_esnap_clone);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2477,6 +2669,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, lvol_esnap_create_bad_args);
 	CU_ADD_TEST(suite, lvol_esnap_create_delete);
 	CU_ADD_TEST(suite, lvol_esnap_load_esnaps);
+	CU_ADD_TEST(suite, lvol_esnap_missing);
 
 	allocate_threads(1);
 	set_thread(0);

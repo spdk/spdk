@@ -734,6 +734,18 @@ vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 
 	}
 
+	spdk_json_write_named_bool(w, "esnap_clone", spdk_blob_is_esnap_clone(blob));
+
+	if (spdk_blob_is_esnap_clone(blob)) {
+		const char *name;
+		size_t name_len;
+
+		rc = spdk_blob_get_esnap_id(blob, (const void **)&name, &name_len);
+		if (rc == 0 && name != NULL && strnlen(name, name_len) + 1 == name_len) {
+			spdk_json_write_named_string(w, "external_snapshot_name", name);
+		}
+	}
+
 end:
 	spdk_json_write_object_end(w);
 

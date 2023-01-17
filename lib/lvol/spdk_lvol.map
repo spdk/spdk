@@ -26,6 +26,8 @@
 	# internal functions
 	spdk_lvol_resize;
 	spdk_lvol_set_read_only;
+	spdk_lvs_esnap_missing_add;
+	spdk_lvs_esnap_missing_remove;
 
 	local: *;
 };

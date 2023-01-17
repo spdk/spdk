@@ -52,7 +52,7 @@ DEPDIRS-accel := log util thread json rpc jsonrpc dma
 DEPDIRS-jsonrpc := log util json
 DEPDIRS-virtio := log util json thread vfio_user
 
-DEPDIRS-lvol := log util blob
+DEPDIRS-lvol := log util blob thread
 DEPDIRS-rpc := log util json jsonrpc
 
 DEPDIRS-net := log util $(JSON_LIBS)

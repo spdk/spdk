@@ -9,6 +9,7 @@
 #include "spdk/string.h"
 #include "spdk/thread.h"
 #include "spdk/blob_bdev.h"
+#include "spdk/tree.h"
 #include "spdk/util.h"
 
 /* Default blob channel opts for lvol */
@@ -18,6 +19,14 @@
 
 SPDK_LOG_REGISTER_COMPONENT(lvol)
 
+struct spdk_lvs_degraded_lvol_set {
+	struct spdk_lvol_store			*lvol_store;
+	const void				*esnap_id;
+	uint32_t				id_len;
+	TAILQ_HEAD(degraded_lvols, spdk_lvol)	lvols;
+	RB_ENTRY(spdk_lvs_degraded_lvol_set)	node;
+};
+
 static TAILQ_HEAD(, spdk_lvol_store) g_lvol_stores = TAILQ_HEAD_INITIALIZER(g_lvol_stores);
 static pthread_mutex_t g_lvol_stores_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -25,6 +34,11 @@ static inline int lvs_opts_copy(const struct spdk_lvs_opts *src, struct spdk_lvs
 static int lvs_esnap_bs_dev_create(void *bs_ctx, void *blob_ctx, struct spdk_blob *blob,
 				   const void *esnap_id, uint32_t id_len,
 				   struct spdk_bs_dev **_bs_dev);
+static struct spdk_lvol *lvs_get_lvol_by_blob_id(struct spdk_lvol_store *lvs, spdk_blob_id blob_id);
+static void lvs_degraded_lvol_set_add(struct spdk_lvs_degraded_lvol_set *degraded_set,
+				      struct spdk_lvol *lvol);
+static void lvs_degraded_lvol_set_remove(struct spdk_lvs_degraded_lvol_set *degraded_set,
+		struct spdk_lvol *lvol);
 
 static int
 add_lvs_to_list(struct spdk_lvol_store *lvs)
@@ -63,6 +77,8 @@ lvs_alloc(void)
 	TAILQ_INIT(&lvs->retry_open_lvols);
 
 	lvs->load_esnaps = false;
+	RB_INIT(&lvs->degraded_lvol_sets_tree);
+	lvs->thread = spdk_get_thread();
 
 	return lvs;
 }
@@ -75,6 +91,8 @@ lvs_free(struct spdk_lvol_store *lvs)
 		TAILQ_REMOVE(&g_lvol_stores, lvs, link);
 	}
 	pthread_mutex_unlock(&g_lvol_stores_mutex);
+
+	assert(RB_EMPTY(&lvs->degraded_lvol_sets_tree));
 
 	free(lvs);
 }
@@ -321,7 +339,7 @@ lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	rc = spdk_blob_get_xattr_value(blob, "uuid", (const void **)&attr, &value_len);
 	if (rc != 0 || value_len != SPDK_UUID_STRING_LEN || attr[SPDK_UUID_STRING_LEN - 1] != '\0') {
-		SPDK_INFOLOG(lvol, "missing or incorrect UUID\n");
+		SPDK_INFOLOG(lvol, "degraded_set or incorrect UUID\n");
 		req->lvserrno = -EINVAL;
 		spdk_blob_close(blob, close_super_blob_with_error_cb, req);
 		return;
@@ -336,7 +354,7 @@ lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	rc = spdk_blob_get_xattr_value(blob, "name", (const void **)&attr, &value_len);
 	if (rc != 0 || value_len > SPDK_LVS_NAME_MAX) {
-		SPDK_INFOLOG(lvol, "missing or invalid name\n");
+		SPDK_INFOLOG(lvol, "degraded_set or invalid name\n");
 		req->lvserrno = -EINVAL;
 		spdk_blob_close(blob, close_super_blob_with_error_cb, req);
 		return;
@@ -878,6 +896,7 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	}
 
 	TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
+		spdk_lvs_esnap_missing_remove(lvol);
 		TAILQ_REMOVE(&lvs->lvols, lvol, link);
 		lvol_free(lvol);
 	}
@@ -1002,11 +1021,28 @@ lvol_delete_blob_cb(void *cb_arg, int lvolerrno)
 {
 	struct spdk_lvol_req *req = cb_arg;
 	struct spdk_lvol *lvol = req->lvol;
+	struct spdk_lvol *clone_lvol = req->clone_lvol;
 
 	if (lvolerrno < 0) {
 		SPDK_ERRLOG("Could not remove blob on lvol gracefully - forced removal\n");
 	} else {
 		SPDK_INFOLOG(lvol, "Lvol %s deleted\n", lvol->unique_id);
+	}
+
+	if (lvol->degraded_set != NULL) {
+		if (clone_lvol != NULL) {
+			/*
+			 * A degraded esnap clone that has a blob clone has been deleted. clone_lvol
+			 * becomes an esnap clone and needs to be associated with the
+			 * spdk_lvs_degraded_lvol_set.
+			 */
+			struct spdk_lvs_degraded_lvol_set *degraded_set = lvol->degraded_set;
+
+			lvs_degraded_lvol_set_remove(degraded_set, lvol);
+			lvs_degraded_lvol_set_add(degraded_set, clone_lvol);
+		} else {
+			spdk_lvs_esnap_missing_remove(lvol);
+		}
 	}
 
 	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
@@ -1071,6 +1107,18 @@ lvol_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 	 */
 	opts.esnap_ctx = req->lvol;
 	bs = req->lvol->lvol_store->blobstore;
+
+	if (req->origlvol != NULL && req->origlvol->degraded_set != NULL) {
+		/*
+		 * A snapshot was created from a degraded esnap clone. The new snapshot is now a
+		 * degraded esnap clone. The previous clone is now a regular clone of a blob. Update
+		 * the set of directly-related clones to the missing external snapshot.
+		 */
+		struct spdk_lvs_degraded_lvol_set *degraded_set = req->origlvol->degraded_set;
+
+		lvs_degraded_lvol_set_remove(degraded_set, req->origlvol);
+		lvs_degraded_lvol_set_add(degraded_set, req->lvol);
+	}
 
 	spdk_bs_open_blob_ext(bs, blobid, &opts, lvol_create_open_cb, req);
 }
@@ -1290,6 +1338,7 @@ spdk_lvol_create_snapshot(struct spdk_lvol *origlvol, const char *snapshot_name,
 	snapshot_xattrs.names = xattr_names;
 	snapshot_xattrs.get_value = lvol_get_xattr_value;
 	req->lvol = newlvol;
+	req->origlvol = origlvol;
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
@@ -1496,6 +1545,10 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 {
 	struct spdk_lvol_req *req;
 	struct spdk_blob_store *bs;
+	struct spdk_lvol_store	*lvs = lvol->lvol_store;
+	spdk_blob_id	clone_id;
+	size_t		count = 1;
+	int		rc;
 
 	assert(cb_fn != NULL);
 
@@ -1524,6 +1577,18 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 	req->cb_arg = cb_arg;
 	req->lvol = lvol;
 	bs = lvol->lvol_store->blobstore;
+
+	rc = spdk_blob_get_clones(lvs->blobstore, lvol->blob_id, &clone_id, &count);
+	if (rc == 0 && count == 1) {
+		req->clone_lvol = lvs_get_lvol_by_blob_id(lvs, clone_id);
+	} else if (rc == -ENOMEM) {
+		SPDK_INFOLOG(lvol, "lvol %s: cannot destroy: has %" PRIu64 " clones\n",
+			     lvol->unique_id, count);
+		free(req);
+		assert(count > 1);
+		cb_fn(cb_arg, -EBUSY);
+		return;
+	}
 
 	spdk_bs_delete_blob(bs, lvol->blob_id, lvol_delete_blob_cb, req);
 }
@@ -1757,4 +1822,116 @@ lvs_esnap_bs_dev_create(void *bs_ctx, void *blob_ctx, struct spdk_blob *blob,
 	}
 
 	return lvs->esnap_bs_dev_create(lvs, lvol, blob, esnap_id, id_len, bs_dev);
+}
+
+/*
+ * The theory of missing external snapshots
+ *
+ * The lvs->esnap_bs_dev_create() callback may be unable to create an external snapshot bs_dev when
+ * it is called. This can happen, for instance, as when the device containing the lvolstore is
+ * examined prior to spdk_bdev_register() being called on a bdev that acts as an external snapshot.
+ * In such a case, the esnap_bs_dev_create() callback will call spdk_lvs_esnap_missing_add().
+ *
+ * Missing external snapshots are tracked in a per-lvolstore tree, lvs->degraded_lvol_sets_tree.
+ * Each tree node (struct spdk_lvs_degraded_lvol_set) contains a tailq of lvols that are missing
+ * that particular external snapshot.
+ */
+static int
+lvs_esnap_name_cmp(struct spdk_lvs_degraded_lvol_set *m1, struct spdk_lvs_degraded_lvol_set *m2)
+{
+	if (m1->id_len == m2->id_len) {
+		return memcmp(m1->esnap_id, m2->esnap_id, m1->id_len);
+	}
+	return (m1->id_len > m2->id_len) ? 1 : -1;
+}
+
+RB_GENERATE_STATIC(degraded_lvol_sets_tree, spdk_lvs_degraded_lvol_set, node, lvs_esnap_name_cmp)
+
+static void
+lvs_degraded_lvol_set_add(struct spdk_lvs_degraded_lvol_set *degraded_set, struct spdk_lvol *lvol)
+{
+	assert(lvol->lvol_store->thread == spdk_get_thread());
+
+	lvol->degraded_set = degraded_set;
+	TAILQ_INSERT_TAIL(&degraded_set->lvols, lvol, degraded_link);
+}
+
+static void
+lvs_degraded_lvol_set_remove(struct spdk_lvs_degraded_lvol_set *degraded_set,
+			     struct spdk_lvol *lvol)
+{
+	assert(lvol->lvol_store->thread == spdk_get_thread());
+
+	lvol->degraded_set = NULL;
+	TAILQ_REMOVE(&degraded_set->lvols, lvol, degraded_link);
+	/* degraded_set->lvols may be empty. Caller should check if not immediately adding a new
+	 * lvol. */
+}
+
+/*
+ * Record in lvs->degraded_lvol_sets_tree that a bdev of the specified name is needed by the
+ * specified lvol.
+ */
+int
+spdk_lvs_esnap_missing_add(struct spdk_lvol_store *lvs, struct spdk_lvol *lvol,
+			   const void *esnap_id, uint32_t id_len)
+{
+	struct spdk_lvs_degraded_lvol_set find, *degraded_set;
+
+	assert(lvs->thread == spdk_get_thread());
+
+	find.esnap_id = esnap_id;
+	find.id_len = id_len;
+	degraded_set = RB_FIND(degraded_lvol_sets_tree, &lvs->degraded_lvol_sets_tree, &find);
+	if (degraded_set == NULL) {
+		degraded_set = calloc(1, sizeof(*degraded_set));
+		if (degraded_set == NULL) {
+			SPDK_ERRLOG("lvol %s: cannot create degraded_set node: out of memory\n",
+				    lvol->unique_id);
+			return -ENOMEM;
+		}
+		degraded_set->esnap_id = calloc(1, id_len);
+		if (degraded_set->esnap_id == NULL) {
+			free(degraded_set);
+			SPDK_ERRLOG("lvol %s: cannot create degraded_set node: out of memory\n",
+				    lvol->unique_id);
+			return -ENOMEM;
+		}
+		memcpy((void *)degraded_set->esnap_id, esnap_id, id_len);
+		degraded_set->id_len = id_len;
+		degraded_set->lvol_store = lvs;
+		TAILQ_INIT(&degraded_set->lvols);
+		RB_INSERT(degraded_lvol_sets_tree, &lvs->degraded_lvol_sets_tree, degraded_set);
+	}
+
+	lvs_degraded_lvol_set_add(degraded_set, lvol);
+
+	return 0;
+}
+
+/*
+ * Remove the record of the specified lvol needing a degraded_set bdev.
+ */
+void
+spdk_lvs_esnap_missing_remove(struct spdk_lvol *lvol)
+{
+	struct spdk_lvol_store		*lvs = lvol->lvol_store;
+	struct spdk_lvs_degraded_lvol_set	*degraded_set = lvol->degraded_set;
+
+	assert(lvs->thread == spdk_get_thread());
+
+	if (degraded_set == NULL) {
+		return;
+	}
+
+	lvs_degraded_lvol_set_remove(degraded_set, lvol);
+
+	if (!TAILQ_EMPTY(&degraded_set->lvols)) {
+		return;
+	}
+
+	RB_REMOVE(degraded_lvol_sets_tree, &lvs->degraded_lvol_sets_tree, degraded_set);
+
+	free((char *)degraded_set->esnap_id);
+	free(degraded_set);
 }
