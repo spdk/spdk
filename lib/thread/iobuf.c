@@ -432,9 +432,11 @@ spdk_iobuf_get(struct spdk_iobuf_channel *ch, uint64_t len,
 		sz = spdk_ring_dequeue(pool->pool, (void **)bufs, spdk_min(IOBUF_BATCH_SIZE,
 				       spdk_max(pool->cache_size, 1)));
 		if (sz == 0) {
-			STAILQ_INSERT_TAIL(pool->queue, entry, stailq);
-			entry->module = ch->module;
-			entry->cb_fn = cb_fn;
+			if (entry) {
+				STAILQ_INSERT_TAIL(pool->queue, entry, stailq);
+				entry->module = ch->module;
+				entry->cb_fn = cb_fn;
+			}
 
 			return NULL;
 		}
