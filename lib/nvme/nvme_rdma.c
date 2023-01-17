@@ -244,6 +244,7 @@ struct nvme_rdma_qpair {
 	bool					in_connect_poll;
 
 	uint8_t					stale_conn_retry_count;
+	bool					need_destroy;
 };
 
 enum NVME_RDMA_COMPLETION_FLAGS {
@@ -509,6 +510,7 @@ nvme_rdma_qpair_process_cm_event(struct nvme_rdma_qpair *rqpair)
 			break;
 		case RDMA_CM_EVENT_DEVICE_REMOVAL:
 			rqpair->qpair.transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
+			rqpair->need_destroy = true;
 			break;
 		case RDMA_CM_EVENT_MULTICAST_JOIN:
 		case RDMA_CM_EVENT_MULTICAST_ERROR:
@@ -1889,9 +1891,6 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 			spdk_rdma_qp_destroy(rqpair->rdma_qp);
 			rqpair->rdma_qp = NULL;
 		}
-
-		rdma_destroy_id(rqpair->cm_id);
-		rqpair->cm_id = NULL;
 	}
 
 	if (rqpair->poller) {
@@ -1916,6 +1915,12 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 	nvme_rdma_free_reqs(rqpair);
 	nvme_rdma_free_rsps(rqpair->rsps);
 	rqpair->rsps = NULL;
+
+	/* destroy cm_id last so cma device will not be freed before we destroy the cq. */
+	if (rqpair->cm_id) {
+		rdma_destroy_id(rqpair->cm_id);
+		rqpair->cm_id = NULL;
+	}
 }
 
 static void nvme_rdma_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
@@ -1941,8 +1946,9 @@ nvme_rdma_qpair_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
 		goto quiet;
 	}
 
-	if (rqpair->current_num_sends != 0 ||
-	    (!rqpair->srq && rqpair->rsps->current_num_recvs != 0)) {
+	if (rqpair->need_destroy ||
+	    (rqpair->current_num_sends != 0 ||
+	     (!rqpair->srq && rqpair->rsps->current_num_recvs != 0))) {
 		rqpair->state = NVME_RDMA_QPAIR_STATE_LINGERING;
 		rqpair->evt_timeout_ticks = (NVME_RDMA_DISCONNECTED_QPAIR_TIMEOUT_US * spdk_get_ticks_hz()) /
 					    SPDK_SEC_TO_USEC + spdk_get_ticks();
@@ -2570,13 +2576,13 @@ nvme_rdma_process_send_completion(struct nvme_rdma_poller *poller,
 	struct spdk_nvme_rdma_req	*rdma_req;
 
 	rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvme_rdma_req, rdma_wr);
+	rqpair = rdma_req->req ? nvme_rdma_qpair(rdma_req->req->qpair) : NULL;
+	if (!rqpair) {
+		rqpair = rdma_qpair != NULL ? rdma_qpair : get_rdma_qpair_from_wc(poller->group, wc);
+	}
 
 	/* If we are flushing I/O */
 	if (wc->status) {
-		rqpair = rdma_req->req ? nvme_rdma_qpair(rdma_req->req->qpair) : NULL;
-		if (!rqpair) {
-			rqpair = rdma_qpair != NULL ? rdma_qpair : get_rdma_qpair_from_wc(poller->group, wc);
-		}
 		if (!rqpair) {
 			/* When poll_group is used, several qpairs share the same CQ and it is possible to
 			 * receive a completion with error (e.g. IBV_WC_WR_FLUSH_ERR) for already disconnected qpair
@@ -2598,9 +2604,19 @@ nvme_rdma_process_send_completion(struct nvme_rdma_poller *poller,
 	/* We do not support Soft Roce anymore. Other than Soft Roce's bug, we should not
 	 * receive a completion without error status after qpair is disconnected/destroyed.
 	 */
-	assert(rdma_req->req != NULL);
+	if (spdk_unlikely(rdma_req->req == NULL)) {
+		/*
+		 * Some infiniband drivers do not guarantee the previous assumption after we
+		 * received a RDMA_CM_EVENT_DEVICE_REMOVAL event.
+		 */
+		SPDK_ERRLOG("Received malformed completion: request 0x%"PRIx64" type %d\n", wc->wr_id,
+			    rdma_wr->type);
+		if (!rqpair || !rqpair->need_destroy) {
+			assert(0);
+		}
+		return -ENXIO;
+	}
 
-	rqpair = nvme_rdma_qpair(rdma_req->req->qpair);
 	rdma_req->completion_flags |= NVME_RDMA_SEND_COMPLETED;
 	assert(rqpair->current_num_sends > 0);
 	rqpair->current_num_sends--;
