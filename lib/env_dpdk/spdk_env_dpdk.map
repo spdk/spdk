@@ -30,6 +30,7 @@
 	spdk_mempool_put_bulk;
 	spdk_mempool_count;
 	spdk_mempool_obj_iter;
+	spdk_mempool_mem_iter;
 	spdk_mempool_lookup;
 	spdk_env_get_core_count;
 	spdk_env_get_current_core;

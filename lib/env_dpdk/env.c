@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation.
+ *   Copyright (c) 2023, NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
  */
 
@@ -281,6 +282,33 @@ spdk_mempool_obj_iter(struct spdk_mempool *mp, spdk_mempool_obj_cb_t obj_cb,
 {
 	return rte_mempool_obj_iter((struct rte_mempool *)mp, (rte_mempool_obj_cb_t *)obj_cb,
 				    obj_cb_arg);
+}
+
+struct env_mempool_mem_iter_ctx {
+	spdk_mempool_mem_cb_t *user_cb;
+	void *user_arg;
+};
+
+static void
+mempool_mem_iter_remap(struct rte_mempool *mp, void *opaque, struct rte_mempool_memhdr *memhdr,
+		       unsigned mem_idx)
+{
+	struct env_mempool_mem_iter_ctx *ctx = opaque;
+
+	ctx->user_cb((struct spdk_mempool *)mp, ctx->user_arg, memhdr->addr, memhdr->iova, memhdr->len,
+		     mem_idx);
+}
+
+uint32_t
+spdk_mempool_mem_iter(struct spdk_mempool *mp, spdk_mempool_mem_cb_t mem_cb,
+		      void *mem_cb_arg)
+{
+	struct env_mempool_mem_iter_ctx ctx = {
+		.user_cb = mem_cb,
+		.user_arg = mem_cb_arg
+	};
+
+	return rte_mempool_mem_iter((struct rte_mempool *)mp, mempool_mem_iter_remap, &ctx);
 }
 
 struct spdk_mempool *
