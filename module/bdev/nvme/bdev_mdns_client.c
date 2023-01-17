@@ -440,7 +440,7 @@ start_mdns_discovery_poller(void *arg)
 
 	assert(arg);
 	TAILQ_INSERT_TAIL(&g_mdns_discovery_ctxs, ctx, tailq);
-	ctx->poller = SPDK_POLLER_REGISTER(bdev_nvme_avahi_iterate, ctx, 1000 * 1000);
+	ctx->poller = SPDK_POLLER_REGISTER(bdev_nvme_avahi_iterate, ctx, 100 * 1000);
 }
 
 int
