@@ -3454,7 +3454,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         for i in range(len(args)):
             arg = args[i]
             if arg.startswith('--') and "_" in arg:
-                args[i] = arg.replace('_', '-')
+                opt, *vals = arg.split('=')
+                args[i] = '='.join([opt.replace('_', '-'), *vals])
 
     plugins = []
     load_plugin(None)
