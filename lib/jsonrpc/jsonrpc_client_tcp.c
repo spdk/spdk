@@ -44,8 +44,8 @@ _spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client)
 
 	STAILQ_FOREACH_SAFE(request, &client->request, stailq, temp) {
 		if (request->send_len > 0) {
-			SPDK_NOTICELOG("\nlizh _spdk_jsonrpc_client_send_request request send_len(%d) request_id 0x%x\n",
-		request->send_len, request->request_id);
+			SPDK_NOTICELOG("\nSend RPC request send_len(%d) request_id 0x%x\n",
+				request->send_len, request->request_id);
 			rc = send(client->sockfd, request->send_buf + request->send_offset,
 			  	request->send_len, 0);
 			if (rc < 0) {
@@ -405,8 +405,6 @@ spdk_jsonrpc_client_remove_request_from_list(struct spdk_jsonrpc_client *client,
 	struct spdk_jsonrpc_client_request *req, *temp;
 
 	STAILQ_FOREACH_SAFE(req, &client->request, stailq, temp) {
-		SPDK_NOTICELOG("\nlizh spdk_jsonrpc_client_remove_request_from_list req->request_id 0x%x request_id 0x%x\n",
-		req->request_id, request_id);
 		if (req->request_id == request_id) {
 			STAILQ_REMOVE(&client->request, req, spdk_jsonrpc_client_request, stailq);
 			spdk_jsonrpc_client_free_request(req);
@@ -418,13 +416,6 @@ spdk_jsonrpc_client_remove_request_from_list(struct spdk_jsonrpc_client *client,
 bool
 spdk_jsonrpc_client_request_list_empty(struct spdk_jsonrpc_client *client)
 {
-	/* lizh just for test*/
-	struct spdk_jsonrpc_client_request *req, *temp;
-
-	STAILQ_FOREACH_SAFE(req, &client->request, stailq, temp) {
-		SPDK_NOTICELOG("\nlizh spdk_jsonrpc_client_request_list_empty req->request_id 0x%x\n",
-		req->request_id);
-	}
 	return STAILQ_EMPTY(&client->request);
 }
 

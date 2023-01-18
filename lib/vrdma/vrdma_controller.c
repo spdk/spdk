@@ -56,7 +56,7 @@ void vrdma_dev_mac_add(char *pci_number, uint64_t mac)
 {
     struct vrdma_dev_mac *dev_mac;
 
-    SPDK_NOTICELOG("lizh vrdma_dev_mac_add...pci_number %s mac 0x%lx",
+    SPDK_NOTICELOG("\nConfigure vrdma device pci_number %s mac 0x%lx\n",
     pci_number, mac);
     dev_mac = calloc(1, sizeof(*dev_mac));
     if (!dev_mac)
@@ -72,7 +72,7 @@ vrdma_find_dev_mac_by_pci(char *pci_number)
 	struct vrdma_dev_mac *dev_mac;
 
 	LIST_FOREACH(dev_mac, &vrdma_dev_mac_list, entry) {
-        SPDK_NOTICELOG("lizh vrdma_dev_mac_add...pci_number %s dev_mac.pci_number %s mac 0x%lx",
+        SPDK_NOTICELOG("\nFind vrdma device pci_number %s: device entry pci_number %s mac 0x%lx\n",
             pci_number, dev_mac->pci_number, dev_mac->mac);
         if (!strcmp(dev_mac->pci_number, pci_number))
             return dev_mac;
@@ -84,7 +84,6 @@ void vrdma_dev_mac_list_del(void)
 {
     struct vrdma_dev_mac *dev_mac, *tmp;
 
-    SPDK_NOTICELOG("lizh vrdma_dev_mac_list_del...start");
 	LIST_FOREACH_SAFE(dev_mac, &vrdma_dev_mac_list, entry, tmp) {
 		LIST_REMOVE(dev_mac, entry);
 		free(dev_mac);
@@ -99,7 +98,6 @@ int vrdma_dev_name_to_id(const char *rdma_dev_name)
 
     snprintf(vrdma_dev, MAX_VRDMA_DEV_LEN, "%s", rdma_dev_name);
     next = vrdma_dev;
-
     do {
         str = next;
         while (str[0] != '\0' && !isdigit(str[0]))
@@ -110,7 +108,6 @@ int vrdma_dev_name_to_id(const char *rdma_dev_name)
         else
             ret = strtol(str, &next, 0);
     } while (true);
-
     return ret;
 }
 
@@ -124,8 +121,6 @@ vrdma_ctrl_find_snap_context(const char *emu_manager, int pf_id)
     int ibv_list_sz, pf_list_sz;
     int i, j;
 
-    SPDK_NOTICELOG("lizh vrdma_ctrl_find_snap_context...emu_manager %s pf_id %d",
-     emu_manager, pf_id);
     ibv_list = ibv_get_device_list(&ibv_list_sz);
     if (!ibv_list)
         return NULL;
@@ -133,34 +128,25 @@ vrdma_ctrl_find_snap_context(const char *emu_manager, int pf_id)
     for (i = 0; i < ibv_list_sz; i++) {
         if (strncmp(ibv_get_device_name(ibv_list[i]), emu_manager, 16))
             continue;
-
         ctx = spdk_vrdma_snap_get_snap_context(ibv_get_device_name(ibv_list[i]));
         if (!ctx)
             continue;
-
         if (!(ctx->emulation_caps & SNAP_VRDMA))
             continue;
-
         pf_list = calloc(ctx->vrdma_pfs.max_pfs, sizeof(*pf_list));
         if (!pf_list)
             continue;
-
         pf_list_sz = snap_get_pf_list(ctx, SNAP_VRDMA, pf_list);
         for (j = 0; j < pf_list_sz; j++) {
-            SPDK_NOTICELOG("\n lizh vrdma_ctrl_find_snap_context...pf_list[%d]->plugged %d id %d",
-            j, pf_list[j]->plugged, pf_list[j]->id);
             if (pf_list[j]->plugged && pf_list[j]->id == pf_id) {
                 found = ctx;
                 break;
             }
         }
-
         free(pf_list);
-
         if (found)
             break;
     }
-
     ibv_free_device_list(ibv_list);
     return found;
 }
@@ -221,7 +207,6 @@ static int vrdma_ctrl_post_flr(void *arg)
      * IO threads context for an orderly cleanup.
      */
     //vrdma_ctrl_io_channels_clear(ctrl, NULL, NULL);
-
     return 0;
 }
 
@@ -239,8 +224,6 @@ static void vrdma_adminq_dma_cb(struct snap_dma_completion *self, int status)
     /* pre_pi should be init as last ci*/
     sw_qp->pre_pi = sw_qp->pre_ci;
 	sw_qp->state = VRDMA_CMD_STATE_INIT_CI;
-    SPDK_NOTICELOG("\nlizh vrdma_adminq_dma_cb...sw_qp->state %d sw_qp->pre_ci %d sw_qp->pre_pi %d admq->pi %d\n",
-    sw_qp->state, sw_qp->pre_ci, sw_qp->pre_pi, admq->pi);
 }
 
 static int vrdma_adminq_init(struct vrdma_ctrl *ctrl)
@@ -248,7 +231,6 @@ static int vrdma_adminq_init(struct vrdma_ctrl *ctrl)
     struct vrdma_admin_queue *admq;
     uint32_t aq_size = sizeof(*admq);
     
-    SPDK_NOTICELOG("\nlizh vrdma_adminq_init...start\n");
     admq = spdk_malloc(aq_size, 0x10, NULL, SPDK_ENV_LCORE_ID_ANY,
                              SPDK_MALLOC_DMA);
     if (!admq) {
@@ -271,7 +253,6 @@ static int vrdma_adminq_init(struct vrdma_ctrl *ctrl)
     ctrl->sw_qp.admq = admq;
 	ctrl->sw_qp.state = VRDMA_CMD_STATE_IDLE;
 	ctrl->sw_qp.custom_sm = &vrdma_sm;
-    SPDK_NOTICELOG("lizh vrdma_adminq_init...done\n");
     return 0;
 }
 
@@ -285,7 +266,6 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
         .post_flr = vrdma_ctrl_post_flr,
     };
 
-    SPDK_NOTICELOG("\nlizh vrdma_ctrl_init...pf_id %d start\n", attr->pf_id);
     ctrl = calloc(1, sizeof(*ctrl));
     if (!ctrl)
         goto err;
@@ -295,13 +275,11 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
                             attr->pf_id);
     if (!ctrl->sctx)
         goto free_ctrl;
-
     ctrl->pd = ibv_alloc_pd(ctrl->sctx->context);
     if (!ctrl->pd)
         goto free_ctrl;
     if (vrdma_adminq_init(ctrl))
         goto dealloc_pd;
-
     sctrl_attr.bar_cbs = &bar_cbs;
     sctrl_attr.cb_ctx = ctrl;
     sctrl_attr.pf_id = attr->pf_id;
@@ -316,12 +294,11 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
     sctrl_attr.adminq_dma_comp = (struct snap_dma_completion *)&ctrl->sw_qp.init_ci;
     ctrl->sctrl = snap_vrdma_ctrl_open(ctrl->sctx, &sctrl_attr);
     if (!ctrl->sctrl) {
-            SPDK_ERRLOG("Failed to open VRDMA controller %d [in order %d]"
+        SPDK_ERRLOG("Failed to open VRDMA controller %d [in order %d]"
                 " over RDMA device %s, PF %d",
                 attr->pf_id, attr->force_in_order, attr->emu_manager_name, attr->pf_id);
         goto dereg_mr;
     }
-
     dev_mac = vrdma_find_dev_mac_by_pci(ctrl->sctrl->sdev->pci->pci_number);
     if (dev_mac) {
         ctrl->sctrl->mac = dev_mac->mac;
@@ -345,8 +322,6 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
             SPDK_EMU_MANAGER_NAME_MAXLEN - 1);
     return ctrl;
 
-//ctrl_close:
-//    snap_vrdma_ctrl_close(ctrl->sctrl);
 dereg_mr:
     ibv_dereg_mr(ctrl->mr);
     spdk_free(ctrl->sw_qp.admq);
@@ -371,7 +346,6 @@ static void vrdma_ctrl_free(struct vrdma_ctrl *ctrl)
     if (ctrl->sw_qp.admq)
         spdk_free(ctrl->sw_qp.admq);
     ibv_dealloc_pd(ctrl->pd);
-
     if (ctrl->destroy_done_cb)
         ctrl->destroy_done_cb(ctrl->destroy_done_cb_arg);
     if (ctrl->vdev) {
@@ -386,11 +360,9 @@ void vrdma_ctrl_destroy(void *arg, void (*done_cb)(void *arg),
 {
     struct vrdma_ctrl *ctrl = arg;
 
-    SPDK_NOTICELOG("lizh vrdma_ctrl_destroy...start");
     snap_vrdma_ctrl_close(ctrl->sctrl);
     ctrl->sctrl = NULL;
     ctrl->destroy_done_cb = done_cb;
     ctrl->destroy_done_cb_arg = done_cb_arg;
     vrdma_ctrl_free(ctrl);
-    SPDK_NOTICELOG("lizh vrdma_ctrl_destroy...done");
 }

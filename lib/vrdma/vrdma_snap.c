@@ -38,7 +38,6 @@
 
 int spdk_vrdma_snap_start(void)
 {
-    SPDK_NOTICELOG("lizh spdk_vrdma_snap_start...start");
     if (spdk_vrdma_adminq_resource_init()) {
         SPDK_ERRLOG("Failed to init admin-queue resource");
         goto err;
@@ -51,7 +50,6 @@ int spdk_vrdma_snap_start(void)
         SPDK_ERRLOG("Failed to init SPDK IO manager");
         goto clear_pci;
     }
-
     return 0;
 clear_pci:
     spdk_vrdma_snap_pci_mgr_clear();

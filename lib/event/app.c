@@ -834,7 +834,6 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 	g_executable_name = argv[0];
 
 	while ((ch = getopt_long(argc, argv, cmdline_short_opts, cmdline_options, &opt_idx)) != -1) {
-		SPDK_WARNLOG("lizh spdk_app_parse_args opt index %d g_executable_name %s\n", ch, g_executable_name);
 		switch (ch) {
 		case CONFIG_FILE_OPT_IDX:
 			opts->config_file = optarg;
@@ -999,8 +998,6 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			usage(app_usage);
 			goto out;
 		default:
-			SPDK_WARNLOG("lizh spdk_app_parse_args opt index %d default: optarg %s\n",
-			ch, optarg);
 			rc = app_parse(ch, optarg);
 			if (rc) {
 				fprintf(stderr, "Parsing application specific arguments failed: %d\n", rc);
