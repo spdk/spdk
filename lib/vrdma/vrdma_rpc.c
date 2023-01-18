@@ -92,7 +92,6 @@ spdk_vrdma_rpc_client_check_timeout(struct spdk_vrdma_rpc_client *client)
 static void
 spdk_vrdma_close_rpc_client(struct spdk_vrdma_rpc_client *client)
 {
-    SPDK_NOTICELOG("lizh spdk_vrdma_close_rpc_client...start\n");
     if (client->client_conn_poller) {
 	    spdk_poller_unregister(&client->client_conn_poller);
         client->client_conn_poller = NULL;
@@ -110,7 +109,6 @@ spdk_vrdma_rpc_client_poller(void *arg)
 	struct spdk_jsonrpc_client_response *resp;
 	int rc;
 
-    //SPDK_NOTICELOG("lizh spdk_vrdma_sf_rpc_client_poller...start\n");
     if (client->client_conn == NULL)
         return -1;
 	rc = spdk_jsonrpc_client_poll(client->client_conn, 0);
@@ -150,7 +148,6 @@ spdk_vrdma_client_connect_poller(void *arg)
 	struct spdk_vrdma_rpc_client *client = arg;
 	int rc;
 
-    //SPDK_NOTICELOG("lizh spdk_vrdma_client_connect_poller...start\n");
     if (client->client_conn == NULL)
         return -1;
 	rc = spdk_jsonrpc_client_poll(client->client_conn, 0);
@@ -263,7 +260,6 @@ spdk_vrdma_client_qp_resp_handler(struct spdk_vrdma_rpc_client *client,
     if (!attr)
         goto close_rpc;
 
-    SPDK_NOTICELOG("lizh spdk_vrdma_client_qp_resp_handler...start\n");
     if (spdk_json_decode_object(resp->result,
             spdk_vrdma_rpc_qp_resp_decoder,
             SPDK_COUNTOF(spdk_vrdma_rpc_qp_resp_decoder),
@@ -271,7 +267,7 @@ spdk_vrdma_client_qp_resp_handler(struct spdk_vrdma_rpc_client *client,
         SPDK_ERRLOG("Failed to decode result for qp_msg\n");
         goto free_attr;
     }
-    SPDK_NOTICELOG("lizh spdk_vrdma_client_qp_resp_handler decode:\n"
+    SPDK_NOTICELOG("spdk_vrdma_client_qp_resp_handler decode:\n"
     "emu_manager %s node_id=0x%lx  dev_id=0x%x vqpn=0x%x gid_ip=0x%lx "
     "mac=0x%lx remote_node_id=0x%lx remote_dev_id =0x%x "
     "remote_vqpn=0x%x remote_gid_ip=0x%lx bk_qpn=0x%x qp_state %d request_id=0x%x\n",
@@ -315,7 +311,6 @@ free_attr:
 close_rpc:
 	spdk_jsonrpc_client_free_response(resp);
     if (request_id && client->client_conn) {
-        SPDK_NOTICELOG("lizh remove_request_from_list request_id=0x%x\n", request_id);
         spdk_jsonrpc_client_remove_request_from_list(client->client_conn,
             request_id);
         if (spdk_jsonrpc_client_request_list_empty(client->client_conn))
@@ -333,7 +328,6 @@ spdk_vrdma_client_send_request(struct spdk_vrdma_rpc_client *client,
 {
 	int rc;
 
-    SPDK_NOTICELOG("lizh spdk_vrdma_sf_client_send_request...start\n");
 	client->client_resp_cb = client_resp_cb;
 	spdk_vrdma_rpc_client_set_timeout(client,
             VRDMA_RPC_CLIENT_REQUEST_TIMEOUT_US);
@@ -348,7 +342,6 @@ spdk_vrdma_rpc_client_configuration(struct vrdma_ctrl *ctrl, const char *addr)
 {
     struct spdk_vrdma_rpc_client *client = &g_vrdma_rpc.client;
 
-    SPDK_NOTICELOG("lizh spdk_vrdma_sf_rpc_client_configuration...ipaddr %s\n", addr);
     if (client->client_conn) {
 		SPDK_NOTICELOG("RPC client connect to '%s' is already existed.\n", addr);
 		return 0;
@@ -460,8 +453,6 @@ spdk_vrdma_rpc_qp_info_json(struct spdk_vrdma_rpc_qp_msg *info,
             temp = info->qp_attr.mac[5-i] & 0xFF;
             sf_mac |= temp << (i * 8);
         }
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_qp_info_json...mac=0x%lx gid_ip=0x%lx qp_state %d request_id=0x%x\n",
-        sf_mac, info->qp_attr.gid_ip, info->qp_state, request_id);
         spdk_json_write_named_uint64(w, "mac", sf_mac);
     }
     spdk_json_write_object_end(w);
@@ -477,8 +468,6 @@ spdk_vrdma_rpc_client_send_qp_msg(struct vrdma_ctrl *ctrl,
     uint32_t request_id;
 	int rc;
 
-    SPDK_NOTICELOG("lizh spdk_vrdma_rpc_client_send_qp_msg...vqpn %d\n",
-        msg->qp_attr.vqpn);
 	rpc_request = spdk_jsonrpc_client_create_request();
 	if (!rpc_request) {
         SPDK_ERRLOG("Failed to create request for vqp %d\n",
@@ -505,8 +494,6 @@ spdk_vrdma_rpc_client_send_qp_msg(struct vrdma_ctrl *ctrl,
             msg->qp_attr.vqpn);
 		goto out;
 	}
-    SPDK_NOTICELOG("lizh spdk_vrdma_rpc_client_send_qp_msg...vqpn %d request_id 0x%x...done\n",
-        msg->qp_attr.vqpn, request_id);
     return 0;
 out:
 	spdk_vrdma_close_rpc_client(client);
@@ -516,8 +503,6 @@ out:
 int spdk_vrdma_rpc_send_qp_msg(struct vrdma_ctrl *ctrl, const char *addr,
                 struct spdk_vrdma_rpc_qp_msg *msg)
 {
-    SPDK_NOTICELOG("lizh spdk_vrdma_rpc_send_qp_msg...vqpn %d...start\n",
-        msg->qp_attr.vqpn);
     if (spdk_vrdma_rpc_client_configuration(ctrl, addr)) {
         SPDK_ERRLOG("Failed to client configuration for vqp %d\n",
             msg->qp_attr.vqpn);
@@ -562,7 +547,6 @@ spdk_vrdma_rpc_register_method(const char *method, spdk_rpc_method_handler func)
 {
 	struct spdk_vrdma_rpc_method *m;
 
-    SPDK_NOTICELOG("lizh spdk_vrdma_rpc_register_method..%s.start\n", method);
 	m = _get_rpc_method_raw(method);
 	if (m != NULL) {
 		SPDK_ERRLOG("duplicate RPC %s registered - ignoring...\n", method);
@@ -593,7 +577,6 @@ spdk_vrdma_rpc_srv_qp_req_handle(struct spdk_jsonrpc_request *request,
     bool send_lqp_info = false;
     uint32_t i;
 
-    SPDK_NOTICELOG("lizh spdk_vrdma_rpc_srv_qp_req_handle...start\n");
     /* If local client running and retry send requests. */
     if (client->client_conn)
         spdk_jsonrpc_client_resend_request(client->client_conn);
@@ -613,7 +596,7 @@ spdk_vrdma_rpc_srv_qp_req_handle(struct spdk_jsonrpc_request *request,
         SPDK_ERRLOG("invalid emu_manager\n");
         goto invalid;
     }
-    SPDK_NOTICELOG("lizh spdk_vrdma_rpc_srv_qp_req_handle decode:\n"
+    SPDK_NOTICELOG("spdk_vrdma_rpc_srv_qp_req_handle decode:\n"
     "emu_manager %s node_id=0x%lx  dev_id=0x%x vqpn=0x%x gid_ip=0x%lx "
     "mac=0x%lx remote_node_id=0x%lx remote_dev_id =0x%x remote_vqpn=0x%x "
     "remote_gid_ip=0x%lx bk_qpn=0x%x qp_state=%d request_id =0x%x\n",
@@ -696,9 +679,7 @@ spdk_vrdma_srv_rpc_handler(struct spdk_jsonrpc_request *request,
 {
 	struct spdk_vrdma_rpc_method *m;
 
-    SPDK_NOTICELOG("lizh spdk_vrdma_srv_rpc_handler...start\n");
 	assert(method != NULL);
-
 	m = _get_rpc_method(method);
 	if (!m) {
 		spdk_jsonrpc_send_error_response(request,
@@ -717,7 +698,6 @@ spdk_vrdma_rpc_listen(struct spdk_vrdma_rpc_server *srv,
 	char *host, *port;
 	char *tmp;
 
-    SPDK_NOTICELOG("lizh spdk_vrdma_rpc_listen...listen_addr %s\n", listen_addr);
 	memset(&srv->rpc_listen_addr_unix, 0, sizeof(srv->rpc_listen_addr_unix));
 	tmp = strdup(listen_addr);
 	if (!tmp) {
@@ -772,7 +752,6 @@ spdk_vrdma_rpc_server_configuration(void)
     struct spdk_vrdma_rpc_server *srv = &g_vrdma_rpc.srv;
     char *addr = g_vrdma_rpc.node_ip;
 
-    SPDK_NOTICELOG("lizh spdk_vrdma_sf_rpc_service_configuration...ipaddr %s\n", addr);
     /* Listen on the requested address */
     if (spdk_vrdma_rpc_listen(srv, addr)) {
         SPDK_ERRLOG("Failed to set listen '%s'\n", addr);
@@ -924,9 +903,6 @@ spdk_emu_ctx_find_by_pci_id_testrpc(const char *emu_manager, int pf_id)
     struct spdk_emu_ctx *ctx;
 
     LIST_FOREACH(ctx, &spdk_emu_list, entry) {
-        
-        SPDK_NOTICELOG("lizh spdk_emu_ctx_find_by_pci_id...%s type %d id %d\n",
-        ctx->emu_manager, ctx->spci->type, ctx->spci->id);
         if (strncmp(ctx->emu_manager, emu_manager,
                     SPDK_EMU_MANAGER_NAME_MAXLEN))
             continue;
@@ -950,13 +926,10 @@ vrdma_rpc_parse_mac_into_int(char *arg, uint64_t *int_mac, char *mac)
         mac = mac_arg;
     if (!int_mac)
         int_mac = &ret_mac;
-
-    SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int arg %s \n", arg);
     snprintf(vrdma_dev, MAX_VRDMA_DEV_LEN, "%s", arg);
     mac_str = vrdma_dev;
     for (i = 0; i < 6; i++) {
         if ((i < 5 && mac_str[2] != ':')) {
-            SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int mac_str[2] 0x%x\n", mac_str[2]);
             return -EINVAL;
         }
         if (i < 5)
@@ -965,12 +938,10 @@ vrdma_rpc_parse_mac_into_int(char *arg, uint64_t *int_mac, char *mac)
             str = mac_str + 3;
         *str = '\0';
         mac[i] = spdk_strtol(mac_str, 16);
-        SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int mac[%d] 0x%x \n", i, mac[i]);
         temp_mac = mac[i] & 0xFF;
         *int_mac |= temp_mac << ((5-i) * 8);
         mac_str += 3;
     }
-    SPDK_NOTICELOG("lizh vrdma_rpc_parse_mac_into_int int_mac 0x%lx \n", *int_mac);
     return 0;
 }
 
@@ -1047,7 +1018,6 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
     struct spdk_vrdma_qp *vqp;
     bool send_vqp_result = false;
 
-    SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...start\n");
     attr = calloc(1, sizeof(*attr));
     if (!attr)
         goto invalid;
@@ -1084,7 +1054,6 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
         }
     }
     if (attr->mac) {
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...mac %s\n", attr->mac);
         ctrl = ctx->ctrl;
         if (!ctrl) {
             SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
@@ -1108,12 +1077,9 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
         }
     }
     if (attr->dev_state != -1) {
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...dev_state=0x%x\n", attr->dev_state);
         g_bar_test.status = attr->dev_state;
     }
     if (attr->adminq_paddr && attr->adminq_length) {
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...adminq_paddr=0x%lx adminq_length %d\n",
-        attr->adminq_paddr, attr->adminq_length);
         g_bar_test.enabled = 1;
         g_bar_test.status = 4; /* driver_ok */
         g_bar_test.adminq_base_addr = attr->adminq_paddr;
@@ -1122,7 +1088,6 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
     if (attr->dest_mac) {
         struct vrdma_backend_qp *bk_qp;
 
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...dest_mac %s\n", attr->dest_mac);
         ctrl = ctx->ctrl;
         if (!ctrl) {
             SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
@@ -1157,7 +1122,6 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
         }
     }
     if (attr->sf_mac) {
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...sf_mac %s\n", attr->sf_mac);
         ctrl = ctx->ctrl;
         if (!ctrl) {
             SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
@@ -1177,7 +1141,6 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
     if (attr->backend_rqpn != -1) {
         struct vrdma_backend_qp *bk_qp;
 
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...backend_rqpn=0x%x\n", attr->backend_rqpn);
         ctrl = ctx->ctrl;
         if (!ctrl) {
             SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
@@ -1206,7 +1169,6 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
         struct in_addr inaddr;
         uint64_t subnet_prefix;
 
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...subnet_prefix %s\n", attr->subnet_prefix);
         ctrl = ctx->ctrl;
         if (!ctrl) {
             SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
@@ -1217,8 +1179,6 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
         subnet_prefix = subnet_prefix << 32;
         if (attr->vrdma_qpn == -1) {
             ctrl->vdev->vrdma_sf.remote_ip = subnet_prefix;
-            SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...remote_ip=0x%lx..done\n",
-            ctrl->vdev->vrdma_sf.remote_ip);
         } else {
             vqp = find_spdk_vrdma_qp_by_idx(ctrl, attr->vrdma_qpn);
             if (!vqp) {
@@ -1239,7 +1199,6 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
         struct in_addr inaddr;
         uint64_t intf_id;
 
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...intf_id %s\n", attr->intf_id);
         ctrl = ctx->ctrl;
         if (!ctrl) {
             SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
@@ -1248,12 +1207,8 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
         inet_aton(attr->intf_id, &inaddr);
         intf_id = inaddr.s_addr;
         intf_id = intf_id << 32;
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...intf_id %s inaddr 0x%x\n", 
-        attr->intf_id, inaddr.s_addr);
         if (attr->vrdma_qpn == -1) {
             ctrl->vdev->vrdma_sf.ip = intf_id;
-            SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...sf ip=0x%lx.intf_id=0x%lx.done\n",
-            ctrl->vdev->vrdma_sf.ip, intf_id);
         } else {
             struct vrdma_backend_qp *bk_qp;
 
@@ -1275,7 +1230,6 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
 	if (attr->backend_dev) {
 		uint8_t name_size;
 		
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...backend_dev %s\n", attr->backend_dev);
         ctrl = ctx->ctrl;
         if (!ctrl) {
             SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
@@ -1291,12 +1245,8 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
         if (attr->backend_mtu != -1) {
             ctrl->vdev->vrdma_sf.mtu = attr->backend_mtu;
         }
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...backend_dev done, sf name %s mtu %d\n",
-						ctrl->vdev->vrdma_sf.sf_name, ctrl->vdev->vrdma_sf.mtu);
     }
 	if (attr->src_addr_idx != -1) {
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...src_addr_idx=0x%x\n",
-        attr->src_addr_idx);
         ctrl = ctx->ctrl;
         if (!ctrl) {
             SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n", attr->emu_manager);
@@ -1304,8 +1254,6 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
         }
         if (attr->vrdma_qpn == -1) {
             ctrl->vdev->vrdma_sf.gid_idx = attr->src_addr_idx;
-            SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...gid_idx=0x%x\n",
-            ctrl->vdev->vrdma_sf.gid_idx);
         } else {
             struct vrdma_backend_qp *bk_qp;
 
@@ -1328,7 +1276,6 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
         struct in_addr inaddr;
         uint32_t ip_len;
 
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...node_ip %s\n", attr->node_ip);
 		ip_len = strlen(attr->node_ip);
 		if (ip_len > (VRDMA_RPC_IP_LEN - 5)) {
 			SPDK_ERRLOG("invalid node ip %s, len %d\n",
@@ -1340,15 +1287,11 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
         inet_aton(attr->node_ip, &inaddr);
         g_node_ip = inaddr.s_addr;
         g_node_ip = g_node_ip << 32;
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...node_ip %s g_node_ip 0x%lx\n",
-        g_vrdma_rpc.node_ip, g_node_ip);
     }
     if (attr->node_rip) {
         struct in_addr inaddr;
         uint32_t ip_len;
 
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...node_rip %s\n",
-        attr->node_rip);
 		ip_len = strlen(attr->node_rip);
 		if (ip_len > (VRDMA_RPC_IP_LEN - 5)) {
 			SPDK_ERRLOG("invalid remote node ip %s, len %d\n",
@@ -1359,12 +1302,8 @@ spdk_vrdma_rpc_controller_configue(struct spdk_jsonrpc_request *request,
         inet_aton(attr->node_rip, &inaddr);
         g_node_rip = inaddr.s_addr;
         g_node_rip = g_node_rip << 32;
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...node_rip %s g_node_rip 0x%lx\n",
-        g_vrdma_rpc.node_rip, g_node_rip);
     }
 	if (attr->show_vqpn != -1) {
-        SPDK_NOTICELOG("lizh spdk_vrdma_rpc_controller_configue...show_vqpn=0x%x\n",
-        attr->show_vqpn);
         ctrl = ctx->ctrl;
         if (!ctrl) {
             SPDK_ERRLOG("Fail to find device controller for emu_manager %s\n",

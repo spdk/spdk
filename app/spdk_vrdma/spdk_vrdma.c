@@ -67,7 +67,6 @@ static void spdk_vrdma_app_start(void *arg)
 {
     struct sigaction act;
 
-    SPDK_NOTICELOG("lizh spdk_vrdma_app_start...start\n");
     /*
      * Set signal handler to allow stop on Ctrl+C.
      */
@@ -111,7 +110,6 @@ vrdma_parse_dev_mac(char *arg)
     uint64_t temp_mac;
     int i;
 
-    SPDK_NOTICELOG("lizh vrdma_parse_dev_mac arg %s mac 0x%lx \n", arg, g_dev_mac.mac);
     snprintf(vrdma_dev, MAX_VRDMA_DEV_LEN, "%s", arg);
     next = vrdma_dev;
 
@@ -120,10 +118,8 @@ vrdma_parse_dev_mac(char *arg)
         pci_str = &next[1];
         *str = '\0';
         memcpy(g_dev_mac.pci_number, pci_str, VRDMA_PCI_NAME_MAXLEN);
-        SPDK_NOTICELOG("lizh vrdma_parse_dev_mac pci_number %s \n", g_dev_mac.pci_number);
         next = str + 2;
     } else {
-        SPDK_NOTICELOG("lizh vrdma_parse_dev_mac next[0] 0x%x \n", next[0]);
         return -EINVAL;
     }
     if (next[0] == '[') {
@@ -131,7 +127,6 @@ vrdma_parse_dev_mac(char *arg)
         for (i = 0; i < 6; i++) {
             if ((i < 5 && mac_str[2] != ':') ||
                 (i == 5 && mac_str[2] != ']') ) {
-                SPDK_NOTICELOG("lizh vrdma_parse_dev_mac mac_str[2] 0x%x\n", mac_str[2]);
                 return -EINVAL;
             }
             if (i < 5)
@@ -140,14 +135,11 @@ vrdma_parse_dev_mac(char *arg)
                 str = strchr(mac_str, ']');
             *str = '\0';
             mac[i] = spdk_strtol(mac_str, 16);
-            SPDK_NOTICELOG("lizh vrdma_parse_dev_mac mac[%d] 0x%x \n", i, mac[i]);
             temp_mac = mac[i] & 0xFF;
             g_dev_mac.mac |= temp_mac << ((5-i) * 8);
             mac_str += 3;
         }
-        SPDK_NOTICELOG("lizh vrdma_parse_dev_mac g_dev_mac.mac 0x%lx \n", g_dev_mac.mac);
     } else {
-        SPDK_NOTICELOG("lizh vrdma_parse_dev_mac next[0] 0x%x next[1] 0x%x\n", next[0], next[1]);
         return -EINVAL;
     }
     return 0;
@@ -158,14 +150,12 @@ vrdma_parse_arg(int ch, char *arg)
 {
 	switch (ch) {
 	case 'v':
-        SPDK_NOTICELOG("lizh vrdma_parse_arg pci_number %s mac 0x%lx \n", arg, g_dev_mac.mac);
         if (vrdma_parse_dev_mac(arg))
             return -EINVAL;
 		vrdma_dev_mac_add(g_dev_mac.pci_number, g_dev_mac.mac);
         memset(&g_dev_mac, 0, sizeof(struct vrdma_dev_mac));
 		break;
 	case 'k':
-        SPDK_NOTICELOG("lizh vrdma_parse_arg ...set_unshared_crossing_mkey\n");
         spdk_vrdma_enable_indirect_mkey_map();
         break;
 	default:

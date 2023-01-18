@@ -58,7 +58,6 @@ int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
 	struct snap_context *sctx;
 	int dev_count;
 
-	SPDK_NOTICELOG("lizh spdk_vrdma_ctx_start...start\n");
 	g_vdev_cnt = 0;
 	memset(&g_vrdma_rpc, 0, sizeof(struct spdk_vrdma_rpc));
 	g_vrdma_rpc.srv.rpc_lock_fd = -1;
@@ -87,9 +86,7 @@ int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
 	}
 	ibv_free_device_list(list);
 	/*Create static PF device*/
-	SPDK_NOTICELOG("lizh spdk_vrdma_ctx_start...max static PFs %d\n",
-	sctx->vrdma_pfs.num_emulated_pfs);
-	for (dev_count = 0; dev_count < sctx->vrdma_pfs.num_emulated_pfs;
+	for (dev_count = 0; (uint32_t)dev_count < sctx->vrdma_pfs.num_emulated_pfs;
 		dev_count++) {
 		vdev = calloc(1, sizeof(*vdev));
 		if (!vdev)
