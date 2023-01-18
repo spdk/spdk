@@ -142,7 +142,7 @@ io_terminate(void *ctx)
 static void
 exit_handler(void)
 {
-	if (g_io_thread.io_ctrlr_path) {
+	if (g_io_thread.io_ctrlr_path && g_io_thread.thread) {
 		spdk_thread_send_msg(g_io_thread.thread, io_terminate, &g_io_thread);
 
 	} else {
@@ -392,6 +392,13 @@ init_io(void *ctx)
 	}
 
 	g_io_thread.thread = spdk_thread_create("io_thread", NULL);
+	if (g_io_thread.thread == NULL) {
+		fprintf(stderr, "cannot create io thread\n");
+		spdk_app_stop(-1);
+		pthread_kill(g_fuzz_td, SIGSEGV);
+		return NULL;
+	}
+
 	spdk_thread_send_msg(g_io_thread.thread, start_io_poller, &g_io_thread);
 
 	return NULL;
@@ -400,15 +407,25 @@ init_io(void *ctx)
 static void
 begin_fuzz(void *ctx)
 {
+	int rc = 0;
+
 	g_reactor_td = pthread_self();
 
-	pthread_create(&g_fuzz_td, NULL, start_fuzzer, NULL);
+	rc = pthread_create(&g_fuzz_td, NULL, start_fuzzer, NULL);
+	if (rc != 0) {
+		spdk_app_stop(-1);
+		return;
+	}
 
 	/* posix thread is use to avoid deadlock during spdk_nvme_connect
 	 * vfio-user version negotiation may block when waiting for response
 	 */
 	if (g_io_thread.io_ctrlr_path) {
-		pthread_create(&g_io_thread.io_td, NULL, init_io, NULL);
+		rc = pthread_create(&g_io_thread.io_td, NULL, init_io, NULL);
+		if (rc != 0) {
+			spdk_app_stop(-1);
+			pthread_kill(g_fuzz_td, SIGSEGV);
+		}
 	}
 }
 
