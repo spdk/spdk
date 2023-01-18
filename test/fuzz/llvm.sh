@@ -12,10 +12,10 @@ fuzzers=($(get_fuzzer_targets))
 
 llvm_out=$output_dir/llvm
 
-mkdir -p $rootdir/../corpus/ $llvm_out
+mkdir -p $rootdir/../corpus/ $llvm_out/coverage
 
 function lcov_start() {
-	local out=$llvm_out
+	local out=$llvm_out/coverage
 	local src=$rootdir
 
 	if hash lcov; then
@@ -38,7 +38,7 @@ function lcov_start() {
 }
 
 function lcov_stop() {
-	local out=$llvm_out
+	local out=$llvm_out/coverage
 	local src=$rootdir
 
 	if hash lcov; then
@@ -68,5 +68,5 @@ done
 
 if [[ $SPDK_TEST_FUZZER_SHORT -eq 0 ]]; then
 	lcov_stop
-	genhtml $llvm_out/cov_total.info --output-directory $llvm_out
+	genhtml $llvm_out/coverage/cov_total.info --output-directory $llvm_out/coverage
 fi
