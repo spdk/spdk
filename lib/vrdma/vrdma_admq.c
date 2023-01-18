@@ -407,7 +407,7 @@ static void vrdma_aq_query_gid(struct vrdma_ctrl *ctrl,
 	}
 	aqe->resp.query_gid_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 	for (int i = 0; i < VRDMA_DEV_GID_LEN; i += 4)
-		SPDK_NOTICELOG("\nvrdma_aq_query_gid...gid=0x%x%x%x%x\n",
+		SPDK_NOTICELOG("current gid=0x%x%x%x%x\n",
 			aqe->resp.query_gid_resp.gid[i], aqe->resp.query_gid_resp.gid[i+1],
 			aqe->resp.query_gid_resp.gid[i+2], aqe->resp.query_gid_resp.gid[i+3]);
 }
@@ -427,7 +427,7 @@ static void vrdma_aq_modify_gid(struct vrdma_ctrl *ctrl,
 	memcpy(ctrl->dev.gid, aqe->req.modify_gid_req.gid, VRDMA_DEV_GID_LEN);
 	aqe->resp.modify_gid_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 	for (int i = 0; i < VRDMA_DEV_GID_LEN; i += 4)
-		SPDK_NOTICELOG("\nvrdma_aq_modify_gid...gid=0x%x%x%x%x\n",
+		SPDK_NOTICELOG("new gid=0x%x%x%x%x\n",
 			aqe->req.modify_gid_req.gid[i], aqe->req.modify_gid_req.gid[i+1],
 			aqe->req.modify_gid_req.gid[i+2], aqe->req.modify_gid_req.gid[i+3]);
 }
@@ -455,11 +455,8 @@ static struct ibv_pd *vrdma_create_sf_pd(struct vrdma_ctrl *ctrl)
 	} else {
 		ctrl->vdev->vrdma_sf.gvmi = gvmi;
 	}
-
 	SPDK_NOTICELOG("vrdma sf dev %s(gvmi 0x%x) created pd 0x%p done\n", dev_name, gvmi, sf_pd);
-
 	return sf_pd;
-
 }
 
 static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
@@ -518,8 +515,7 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 	LIST_INSERT_HEAD(&ctrl->vdev->vpd_list, vpd, entry);
 	aqe->resp.create_pd_resp.pd_handle = pd_idx;
 	aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
-	SPDK_NOTICELOG("\nvrdma_aq_create_pd...pd_idx %d pd 0x%p sucessful\n",
-					pd_idx, vpd->ibpd);
+	SPDK_NOTICELOG("pd_idx %d pd 0x%p successfully\n", pd_idx, vpd->ibpd);
 	return;
 free_ibpd:
 	ibv_dealloc_pd(vpd->ibpd);
@@ -534,8 +530,7 @@ static void vrdma_aq_destroy_pd(struct vrdma_ctrl *ctrl,
 {
 	struct spdk_vrdma_pd *vpd = NULL;
 
-	SPDK_NOTICELOG("\nvrdma_aq_destroy_pd...pd_handle %d \n",
-	aqe->req.destroy_pd_req.pd_handle);
+	SPDK_NOTICELOG("pd_handle %d\n", aqe->req.destroy_pd_req.pd_handle);
 	if (!g_vpd_cnt || !ctrl->vdev ||
 		!ctrl->vdev->vpd_cnt) {
 		aqe->resp.destroy_pd_resp.err_code =
@@ -624,7 +619,7 @@ static void vrdma_indirect_mkey_attr_init(struct snap_device *dev,
 	attr->klm_num = log->num_sge;
 	*total_len = size;
 
-	SPDK_NOTICELOG("\ndev(%s): start_addr:0x%lx, total_size:0x%lx, "
+	SPDK_NOTICELOG("dev(%s): start_addr:0x%lx, total_size:0x%lx, "
 		  "crossing key:0x%x, log_entity_size:0x%x klm_num:0x%x\n",
 		  dev->pci->pci_number, attr->addr, attr->size,
 		  crossing_mkey->mkey, attr->log_entity_size, attr->klm_num);
@@ -700,7 +695,7 @@ static int vrdma_create_remote_mkey(struct vrdma_ctrl *ctrl,
 	}
 	if (!lattr->crossing_mkey) {
 		SPDK_ERRLOG("\ndev(%s): Failed to create cross mkey\n", ctrl->name);
-			return -1;
+		return -1;
 	}
 	if (lattr->num_sge == 1 && !lattr->start_vaddr) {
 		lattr->mkey = lattr->crossing_mkey->mkey;
@@ -723,11 +718,11 @@ static int vrdma_create_remote_mkey(struct vrdma_ctrl *ctrl,
 	}
 	if (!vpd->crossing_mkey)
 		vpd->crossing_mkey = lattr->crossing_mkey;
-	SPDK_NOTICELOG("\ndev(%s): Created remote mkey=0x%x, "
-	"start_vaddr=0x%lx, base=0x%lx, size=0x%x\n",
-		  ctrl->name, lattr->mkey, lattr->start_vaddr, lattr->log_base, lattr->log_size);
+	SPDK_NOTICELOG("dev(%s): Created remote mkey=0x%x, "
+			"start_vaddr=0x%lx, base=0x%lx, size=0x%x\n",
+			ctrl->name, lattr->mkey, lattr->start_vaddr,
+			lattr->log_base, lattr->log_size);
 	return 0;
-
 destroy_crossing:
 	if (!vpd->crossing_mkey)
 		vrdma_destroy_crossing_mkey(lattr->crossing_mkey);
@@ -828,9 +823,6 @@ static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
 	}
 	vrdma_reg_mr_create_attr(&aqe->req.create_mr_req, vmr);
 	vmr->vpd = vpd;
-	SPDK_NOTICELOG("register MR remote mkey, pd id %d, pd 0x%p\n",
-				  aqe->req.create_mr_req.pd_handle, vpd->ibpd);
-	
 	if (vrdma_create_remote_mkey(ctrl, vmr)) {
 		aqe->resp.create_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_UNKNOWN;
 		SPDK_ERRLOG("Failed to register MR remote mkey, err(%d)\n",
@@ -856,7 +848,9 @@ static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
 	aqe->resp.create_mr_resp.rkey = vmr->mr_log.mkey;
 	aqe->resp.create_mr_resp.lkey = aqe->resp.create_mr_resp.rkey;
 	aqe->resp.create_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
-	SPDK_NOTICELOG("\nvrdma_aq_reg_mr...mr_idx %d successful\n", mr_idx);
+	SPDK_NOTICELOG("register MR remote mkey, pd id %d, "
+			"pd 0x%p mr_idx %d successfully\n",
+			aqe->req.create_mr_req.pd_handle, vpd->ibpd, mr_idx);
 	return;
 free_mkey:
 	vrdma_destroy_remote_mkey(ctrl, vmr);
@@ -870,8 +864,7 @@ static void vrdma_aq_dereg_mr(struct vrdma_ctrl *ctrl,
 	struct spdk_vrdma_mr *vmr = NULL;
 	struct vrdma_cmd_param param;
 
-	SPDK_NOTICELOG("\nvrdma_aq_dereg_mr..lkey=0x%x\n",
-	aqe->req.destroy_mr_req.lkey);
+	SPDK_NOTICELOG("lkey=0x%x\n", aqe->req.destroy_mr_req.lkey);
 	if (!g_vmr_cnt || !ctrl->vdev ||
 		!ctrl->vdev->vmr_cnt ||
 		!aqe->req.destroy_mr_req.lkey) {
@@ -999,7 +992,8 @@ static void vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,
 	LIST_INSERT_HEAD(&ctrl->vdev->vcq_list, vcq, entry);
 	aqe->resp.create_cq_resp.cq_handle = cq_idx;
 	aqe->resp.create_cq_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
-	SPDK_NOTICELOG("\nvrdma_aq_create_cq...cq_idx %d successful\n", cq_idx);
+	SPDK_NOTICELOG("eq_idx %d cq_idx %d successfully\n",
+		aqe->req.create_cq_req.ceq_handle, cq_idx);
 	return;
 free_cqe_mr:
 	ibv_dereg_mr(vcq->cqe_ci_mr);
@@ -1014,8 +1008,7 @@ static void vrdma_aq_destroy_cq(struct vrdma_ctrl *ctrl,
 {
 	struct spdk_vrdma_cq *vcq = NULL;
 
-	SPDK_NOTICELOG("\nvrdma_aq_destroy_cq..cq_handle=0x%x\n",
-	aqe->req.destroy_cq_req.cq_handle);
+	SPDK_NOTICELOG("cq_handle=0x%x\n", aqe->req.destroy_cq_req.cq_handle);
 	if (!g_vcq_cnt || !ctrl->vdev ||
 		!ctrl->vdev->vcq_cnt) {
 		aqe->resp.destroy_cq_resp.err_code =
@@ -1151,8 +1144,8 @@ static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
 	LIST_INSERT_HEAD(&ctrl->vdev->vqp_list, vqp, entry);
 	aqe->resp.create_qp_resp.qp_handle = qp_idx;
 	aqe->resp.create_qp_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
-	SPDK_NOTICELOG("\nvrdma_aq_create_qp...qp_idx %d qdb_idx %d successful\n",
-		qp_idx, vqp->qdb_idx);
+	SPDK_NOTICELOG("pd %d qp_idx %d qdb_idx %d successfully\n",
+		aqe->req.create_qp_req.pd_handle, qp_idx, vqp->qdb_idx);
 	return;
 destroy_vq:
 	vrdma_destroy_vq(ctrl, vqp);
@@ -1161,12 +1154,12 @@ free_vqp:
 }
 
 static void vrdma_aq_destroy_suspended_qp(struct vrdma_ctrl *ctrl,
-				struct vrdma_admin_cmd_entry *aqe, struct spdk_vrdma_qp *in_vqp)
+				struct vrdma_admin_cmd_entry *aqe,
+				struct spdk_vrdma_qp *in_vqp)
 {
 	struct spdk_vrdma_qp *vqp = in_vqp;
 
-	SPDK_NOTICELOG("\nvrdma_aq_destroy_suspended_qp..qp_handle=0x%x\n",
-	aqe->req.destroy_qp_req.qp_handle);
+	SPDK_NOTICELOG("qp_handle=0x%x\n", aqe->req.destroy_qp_req.qp_handle);
 	if (!vqp)
 		vqp = find_spdk_vrdma_qp_by_idx(ctrl,
 				aqe->req.destroy_qp_req.qp_handle);
@@ -1214,7 +1207,7 @@ static int vrdma_aq_destroy_qp(struct vrdma_ctrl *ctrl,
 {
 	struct spdk_vrdma_qp *vqp = NULL;
 
-	SPDK_NOTICELOG("\nvrdma_aq_destroy_qp..qp_handle=0x%x g_vqp_cnt %d vdev %p vqp_cnt %d\n",
+	SPDK_NOTICELOG("qp_handle=0x%x g_vqp_cnt %d vdev %p vqp_cnt %d\n",
 	aqe->req.destroy_qp_req.qp_handle, g_vqp_cnt, ctrl->vdev, ctrl->vdev->vqp_cnt);
 	if (!g_vqp_cnt || !ctrl->vdev ||
 		!ctrl->vdev->vqp_cnt) {
@@ -1256,8 +1249,7 @@ static void vrdma_aq_query_qp(struct vrdma_ctrl *ctrl,
 {
 	struct spdk_vrdma_qp *vqp = NULL;
 
-	SPDK_NOTICELOG("\nvrdma_aq_query_qp..qp_handle=0x%x\n",
-	aqe->req.query_qp_req.qp_handle);
+	SPDK_NOTICELOG("qp_handle=0x%x\n", aqe->req.query_qp_req.qp_handle);
 	if (!g_vqp_cnt || !ctrl->vdev ||
 		!ctrl->vdev->vqp_cnt) {
 		aqe->resp.query_qp_resp.err_code =
@@ -1299,8 +1291,9 @@ static void vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
 {
 	struct spdk_vrdma_qp *vqp = NULL;
 
-	SPDK_NOTICELOG("\nvrdma_aq_modify_qp..qp_handle=0x%x qp_attr_mask = 0x%x\n",
-				aqe->req.modify_qp_req.qp_handle, aqe->req.modify_qp_req.qp_attr_mask);
+	SPDK_NOTICELOG("vqp %d qp_attr_mask = 0x%x\n",
+				aqe->req.modify_qp_req.qp_handle,
+				aqe->req.modify_qp_req.qp_attr_mask);
 	if (!g_vqp_cnt || !ctrl->vdev ||
 		!ctrl->vdev->vqp_cnt) {
 		aqe->resp.modify_qp_resp.err_code =
@@ -1371,7 +1364,8 @@ static void vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
 		vqp->max_dest_rd_atomic = aqe->req.modify_qp_req.max_dest_rd_atomic;
 	}
 	if (aqe->req.modify_qp_req.qp_attr_mask & IBV_QP_STATE){
-		SPDK_NOTICELOG("\nvrdma_aq_modify_qp..vqp->qp_state=0x%x new qp_state = 0x%x\n",
+		SPDK_NOTICELOG("vqp %d qp_state=0x%x new qp_state = 0x%x\n",
+				aqe->req.modify_qp_req.qp_handle,
 				vqp->qp_state, aqe->req.modify_qp_req.qp_state);
 		if (vqp->qp_state == IBV_QPS_INIT &&
 			aqe->req.modify_qp_req.qp_state == IBV_QPS_RTR) {
@@ -1445,7 +1439,7 @@ static void vrdma_aq_create_ceq(struct vrdma_ctrl *ctrl,
 	LIST_INSERT_HEAD(&ctrl->vdev->veq_list, veq, entry);
 	aqe->resp.create_ceq_resp.ceq_handle = eq_idx;
 	aqe->resp.create_ceq_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
-	SPDK_NOTICELOG("\nvrdma_aq_create_ceq...eq_idx %d vector_idx 0x%x successful\n",
+	SPDK_NOTICELOG("eq_idx %d vector_idx 0x%x successfully\n",
 			eq_idx, veq->vector_idx);
 	return;
 free_veq:
@@ -1465,8 +1459,7 @@ static void vrdma_aq_destroy_ceq(struct vrdma_ctrl *ctrl,
 {
 	struct spdk_vrdma_eq *veq = NULL;
 
-	SPDK_NOTICELOG("\nvrdma_aq_destroy_ceq..ceq_handle=0x%x\n",
-	aqe->req.destroy_ceq_req.ceq_handle);
+	SPDK_NOTICELOG("ceq_handle=0x%x\n", aqe->req.destroy_ceq_req.ceq_handle);
 	if (!g_veq_cnt || !ctrl->vdev ||
 		!ctrl->vdev->veq_cnt) {
 		aqe->resp.destroy_ceq_resp.err_code =
@@ -1566,8 +1559,7 @@ static void vrdma_aq_create_ah(struct vrdma_ctrl *ctrl,
 	LIST_INSERT_HEAD(&ctrl->vdev->vah_list, vah, entry);
 	aqe->resp.create_ah_resp.ah_handle = ah_idx;
 	aqe->resp.create_ah_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
-	SPDK_NOTICELOG("\nvrdma_aq_create_ah...ah_idx %d dip 0x%x successful\n",
-		ah_idx, vah->dip);
+	SPDK_NOTICELOG("ah_idx %d dip 0x%x successfully\n", ah_idx, vah->dip);
 	return;
 free_vah:
 	free(vah);
@@ -1578,8 +1570,7 @@ static void vrdma_aq_destroy_ah(struct vrdma_ctrl *ctrl,
 {
 	struct spdk_vrdma_ah *vah = NULL;
 
-	SPDK_NOTICELOG("\nvrdma_aq_destroy_ah..ah_handle=0x%x\n",
-		aqe->req.destroy_ah_req.ah_handle);
+	SPDK_NOTICELOG("ah_handle=0x%x\n", aqe->req.destroy_ah_req.ah_handle);
 	if (!g_vah_cnt || !ctrl->vdev ||
 		!ctrl->vdev->vah_cnt) {
 		aqe->resp.destroy_ah_resp.err_code =
@@ -1631,8 +1622,7 @@ int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
 		return -1;
 	}
 
-	SPDK_NOTICELOG("\nadmin-queue command entry opcode %d\n",
-			aqe->hdr.opcode);
+	SPDK_NOTICELOG("entry opcode %d\n", aqe->hdr.opcode);
 	switch (aqe->hdr.opcode) {
 			case VRDMA_ADMIN_OPEN_DEVICE:
 				vrdma_aq_open_dev(ctrl, aqe);
