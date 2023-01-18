@@ -424,7 +424,7 @@ function run_bdevperf() {
 	fi
 
 	echo "** Running bdevperf test, this can take a while, depending on the run-time setting."
-	$bdevperf_dir/bdevperf --json $testdir/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -m "[$CPUS_ALLOWED]" -r "$rpc_socket" $main_core_param -z &
+	$_examples_dir/bdevperf --json $testdir/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -m "[$CPUS_ALLOWED]" -r "$rpc_socket" $main_core_param -z &
 	bdevperf_pid=$!
 	waitforlisten $bdevperf_pid
 
@@ -467,7 +467,7 @@ function run_nvmeperf() {
 	echo "** Running nvme perf test, this can take a while, depending on the run-time setting."
 
 	# Run command in separate shell as this solves quoting issues related to r_opt var
-	$SHELL -c "$nvmeperf_dir/perf $r_opt -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -c [$CPUS_ALLOWED]"
+	$SHELL -c "$_examples_dir/perf $r_opt -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -c [$CPUS_ALLOWED]"
 	sleep 1
 }
 
