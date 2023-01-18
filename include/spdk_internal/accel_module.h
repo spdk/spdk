@@ -236,4 +236,23 @@ bool spdk_accel_alloc_sequence_buf(struct spdk_accel_sequence *seq, void *buf,
 				   struct spdk_memory_domain *domain, void *domain_ctx,
 				   spdk_accel_sequence_get_buf_cb cb_fn, void *cb_ctx);
 
+/**
+ * Returns the first task remaining to be executed in a given sequence.
+ *
+ * \param seq Sequence object.
+ *
+ * \return the first remaining task or NULL if all tasks are already completed.
+ */
+struct spdk_accel_task *spdk_accel_sequence_first_task(struct spdk_accel_sequence *seq);
+
+/**
+ * Returns the next remaining task that follows a given task in a sequence.
+ *
+ * \param task Accel task.  This task must be still oustanding (i.e. it wasn't completed through
+ *             `spdk_accel_task_complete()`).
+ *
+ * \return the next task or NULL if `task` was the last task in a sequence.
+ */
+struct spdk_accel_task *spdk_accel_sequence_next_task(struct spdk_accel_task *task);
+
 #endif

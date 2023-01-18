@@ -1253,6 +1253,18 @@ spdk_accel_alloc_sequence_buf(struct spdk_accel_sequence *seq, void *buf,
 	return true;
 }
 
+struct spdk_accel_task *
+spdk_accel_sequence_first_task(struct spdk_accel_sequence *seq)
+{
+	return TAILQ_FIRST(&seq->tasks);
+}
+
+struct spdk_accel_task *
+spdk_accel_sequence_next_task(struct spdk_accel_task *task)
+{
+	return TAILQ_NEXT(task, seq_link);
+}
+
 static inline uint64_t
 accel_get_iovlen(struct iovec *iovs, uint32_t iovcnt)
 {
