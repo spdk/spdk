@@ -357,7 +357,7 @@ static int
 ioat_channel_start(struct spdk_ioat_chan *ioat)
 {
 	uint8_t xfercap, version;
-	uint64_t status;
+	uint64_t status = 0;
 	int i, num_descriptors;
 	uint64_t comp_update_bus_addr = 0;
 	uint64_t phys_addr;
