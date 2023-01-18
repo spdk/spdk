@@ -267,13 +267,14 @@ spdk_vrdma_client_qp_resp_handler(struct spdk_vrdma_rpc_client *client,
         SPDK_ERRLOG("Failed to decode result for qp_msg\n");
         goto free_attr;
     }
-    SPDK_NOTICELOG("spdk_vrdma_client_qp_resp_handler decode:\n"
-    "emu_manager %s node_id=0x%lx  dev_id=0x%x vqpn=0x%x gid_ip=0x%lx "
-    "mac=0x%lx remote_node_id=0x%lx remote_dev_id =0x%x "
-    "remote_vqpn=0x%x remote_gid_ip=0x%lx bk_qpn=0x%x qp_state %d request_id=0x%x\n",
+    SPDK_NOTICELOG("Decode: emu_manager %s node_id=0x%lx "
+    "dev_id=0x%x vqpn=0x%x gid_ip=0x%lx mac=0x%lx\n"
+    "remote_node_id=0x%lx remote_dev_id =0x%x remote_vqpn=0x%x "
+    "remote_gid_ip=0x%lx bk_qpn=0x%x qp_state %d request_id=0x%x\n",
     attr->emu_manager, attr->node_id, attr->dev_id, attr->vqpn,
     attr->gid_ip, attr->sf_mac, attr->remote_node_id, attr->remote_dev_id,
-    attr->remote_vqpn, attr->remote_gid_ip, attr->bk_qpn, attr->qp_state, attr->request_id);
+    attr->remote_vqpn, attr->remote_gid_ip, attr->bk_qpn,
+    attr->qp_state, attr->request_id);
     if (!attr->gid_ip) {
         SPDK_NOTICELOG("Skip decode result for zero gid_ip\n");
         goto free_attr;
@@ -494,6 +495,13 @@ spdk_vrdma_rpc_client_send_qp_msg(struct vrdma_ctrl *ctrl,
             msg->qp_attr.vqpn);
 		goto out;
 	}
+    SPDK_NOTICELOG("emu_manager %s node_id=0x%lx dev_id =0x%x vqpn=%d gid_ip=0x%lx\n"
+    "remote_node_id=0x%lx remote_dev_id =0x%x remote_vqpn=0x%x "
+    "remote_gid_ip=0x%lx bk_qpn=0x%x qp_state=%d request_id =0x%x\n",
+    msg->emu_manager, msg->qp_attr.node_id, msg->qp_attr.dev_id, msg->qp_attr.vqpn,
+    msg->qp_attr.gid_ip, msg->remote_node_id, msg->remote_dev_id,
+    msg->remote_vqpn, msg->remote_gid_ip,
+    msg->bk_qpn, msg->qp_state, request_id);
     return 0;
 out:
 	spdk_vrdma_close_rpc_client(client);
@@ -596,9 +604,9 @@ spdk_vrdma_rpc_srv_qp_req_handle(struct spdk_jsonrpc_request *request,
         SPDK_ERRLOG("invalid emu_manager\n");
         goto invalid;
     }
-    SPDK_NOTICELOG("spdk_vrdma_rpc_srv_qp_req_handle decode:\n"
-    "emu_manager %s node_id=0x%lx  dev_id=0x%x vqpn=0x%x gid_ip=0x%lx "
-    "mac=0x%lx remote_node_id=0x%lx remote_dev_id =0x%x remote_vqpn=0x%x "
+    SPDK_NOTICELOG("Decode: emu_manager %s node_id=0x%lx "
+    "dev_id=0x%x vqpn=0x%x gid_ip=0x%lx mac=0x%lx\n"
+    "remote_node_id=0x%lx remote_dev_id =0x%x remote_vqpn=0x%x "
     "remote_gid_ip=0x%lx bk_qpn=0x%x qp_state=%d request_id =0x%x\n",
     attr->emu_manager, attr->node_id, attr->dev_id, attr->vqpn,
     attr->gid_ip, attr->sf_mac, attr->remote_node_id, attr->remote_dev_id,

@@ -44,8 +44,6 @@ _spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client)
 
 	STAILQ_FOREACH_SAFE(request, &client->request, stailq, temp) {
 		if (request->send_len > 0) {
-			SPDK_NOTICELOG("\nSend RPC request send_len(%d) request_id 0x%x\n",
-				request->send_len, request->request_id);
 			rc = send(client->sockfd, request->send_buf + request->send_offset,
 			  	request->send_len, 0);
 			if (rc < 0) {

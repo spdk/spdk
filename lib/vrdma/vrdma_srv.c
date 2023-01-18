@@ -271,7 +271,7 @@ static int vrdma_srv_device_modify_qp(struct vrdma_dev *rdev,
 		SPDK_ERRLOG("Failed to find qp for modify in service\n");
 		return -1;
 	}
-	SPDK_NOTICELOG("\nvrdma service device modify vqpn %d old qp_state %d new qp_state %d \n",
+	SPDK_NOTICELOG(" vqpn %d old qp_state %d new qp_state %d \n",
 	cmd->req.modify_qp_req.qp_handle, vqp->qp_state, cmd->req.modify_qp_req.qp_state);
 	if (vqp->qp_state == IBV_QPS_INIT &&
 		cmd->req.modify_qp_req.qp_state == IBV_QPS_RTR) {
