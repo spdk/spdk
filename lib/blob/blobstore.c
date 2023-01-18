@@ -9104,5 +9104,16 @@ spdk_blob_set_esnap_bs_dev(struct spdk_blob *blob, struct spdk_bs_dev *back_bs_d
 	blob_freeze_io(blob, blob_frozen_destroy_esnap_channels, ctx);
 }
 
+struct spdk_bs_dev *
+spdk_blob_get_esnap_bs_dev(const struct spdk_blob *blob)
+{
+	if (!blob_is_esnap_clone(blob)) {
+		SPDK_ERRLOG("blob 0x%" PRIx64 ": not an esnap clone\n", blob->id);
+		return NULL;
+	}
+
+	return blob->back_bs_dev;
+}
+
 SPDK_LOG_REGISTER_COMPONENT(blob)
 SPDK_LOG_REGISTER_COMPONENT(blob_esnap)

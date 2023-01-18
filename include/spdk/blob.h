@@ -1134,6 +1134,15 @@ void spdk_bs_set_bstype(struct spdk_blob_store *bs, struct spdk_bs_type bstype);
 void spdk_blob_set_esnap_bs_dev(struct spdk_blob *blob, struct spdk_bs_dev *back_bs_dev,
 				spdk_blob_op_complete cb_fn, void *cb_arg);
 
+/**
+ * Get the existing external snapshot device
+ *
+ * \param blob A blob that is an esnap clone
+ *
+ * \return NULL if the blob is not an esnap clone, else the current external snapshot device.
+ */
+struct spdk_bs_dev *spdk_blob_get_esnap_bs_dev(const struct spdk_blob *blob);
+
 #ifdef __cplusplus
 }
 #endif

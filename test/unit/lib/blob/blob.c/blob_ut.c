@@ -8462,7 +8462,8 @@ blob_esnap_hotplug(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(destroyed1);
 	CU_ASSERT(!destroyed2);
-	SPDK_CU_ASSERT_FATAL(blob->back_bs_dev != NULL);
+	SPDK_CU_ASSERT_FATAL(bs_dev == blob->back_bs_dev);
+	SPDK_CU_ASSERT_FATAL(bs_dev == spdk_blob_get_esnap_bs_dev(blob));
 	esnap_dev = (struct ut_esnap_dev *)blob->back_bs_dev;
 	CU_ASSERT(strcmp(esnap_dev->ut_opts.name, "esnap2") == 0);
 
