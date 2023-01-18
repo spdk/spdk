@@ -1045,6 +1045,8 @@ blob_serialize_extent_rle(const struct spdk_blob *blob,
 	desc_extent_rle->type = SPDK_MD_DESCRIPTOR_TYPE_EXTENT_RLE;
 
 	lba_per_cluster = bs_cluster_to_lba(blob->bs, 1);
+	/* Assert for scan-build false positive */
+	assert(lba_per_cluster > 0);
 
 	lba = blob->active.clusters[start_cluster];
 	lba_count = lba_per_cluster;
