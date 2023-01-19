@@ -53,7 +53,7 @@ struct blob_esnap_channel {
 };
 
 static int blob_esnap_channel_compare(struct blob_esnap_channel *c1, struct blob_esnap_channel *c2);
-static void blob_esnap_destroy_bs_dev_channels(struct spdk_blob *blob,
+static void blob_esnap_destroy_bs_dev_channels(struct spdk_blob *blob, bool abort_io,
 		spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
 static void blob_esnap_destroy_bs_channel(struct spdk_bs_channel *ch);
 RB_GENERATE_STATIC(blob_esnap_channel_tree, blob_esnap_channel, node, blob_esnap_channel_compare)
@@ -382,7 +382,7 @@ blob_back_bs_destroy(struct spdk_blob *blob)
 	SPDK_DEBUGLOG(blob_esnap, "blob 0x%" PRIx64 ": preparing to destroy back_bs_dev\n",
 		      blob->id);
 
-	blob_esnap_destroy_bs_dev_channels(blob, blob_back_bs_destroy_esnap_done,
+	blob_esnap_destroy_bs_dev_channels(blob, false, blob_back_bs_destroy_esnap_done,
 					   blob->back_bs_dev);
 	blob->back_bs_dev = NULL;
 }
@@ -6360,7 +6360,7 @@ bs_snapshot_freeze_cpl(void *cb_arg, int rc)
 		/* Clean up any channels associated with the original blob id because future IO will
 		 * perform IO using the snapshot blob_id.
 		 */
-		blob_esnap_destroy_bs_dev_channels(origblob, NULL, NULL);
+		blob_esnap_destroy_bs_dev_channels(origblob, false, NULL, NULL);
 	}
 	if (newblob->back_bs_dev) {
 		blob_back_bs_destroy(newblob);
@@ -7347,7 +7347,7 @@ delete_snapshot_freeze_io_cb(void *cb_arg, int bserrno)
 	}
 
 	if (blob_is_esnap_clone(ctx->snapshot)) {
-		blob_esnap_destroy_bs_dev_channels(ctx->snapshot,
+		blob_esnap_destroy_bs_dev_channels(ctx->snapshot, false,
 						   delete_snapshot_esnap_channels_destroyed_cb,
 						   ctx);
 		return;
@@ -8034,7 +8034,7 @@ spdk_blob_close(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_ar
 	}
 
 	if (blob->open_ref == 1 && blob_is_esnap_clone(blob)) {
-		blob_esnap_destroy_bs_dev_channels(blob, blob_close_esnap_done, seq);
+		blob_esnap_destroy_bs_dev_channels(blob, false, blob_close_esnap_done, seq);
 		return;
 	}
 
@@ -8860,6 +8860,7 @@ struct blob_esnap_destroy_ctx {
 	void					*cb_arg;
 	struct spdk_blob			*blob;
 	struct spdk_bs_dev			*back_bs_dev;
+	bool					abort_io;
 };
 
 static void
@@ -8902,6 +8903,18 @@ blob_esnap_destroy_one_channel(struct spdk_io_channel_iter *i)
 		SPDK_DEBUGLOG(blob_esnap, "blob 0x%" PRIx64 ": destroying channel on thread %s\n",
 			      blob->id, spdk_thread_get_name(spdk_get_thread()));
 		RB_REMOVE(blob_esnap_channel_tree, &bs_channel->esnap_channels, esnap_channel);
+
+		if (ctx->abort_io) {
+			spdk_bs_user_op_t *op, *tmp;
+
+			TAILQ_FOREACH_SAFE(op, &bs_channel->queued_io, link, tmp) {
+				if (op->back_channel == esnap_channel->channel) {
+					TAILQ_REMOVE(&bs_channel->queued_io, op, link);
+					bs_user_op_abort(op, -EIO);
+				}
+			}
+		}
+
 		bs_dev->destroy_channel(bs_dev, esnap_channel->channel);
 		free(esnap_channel);
 	}
@@ -8914,8 +8927,8 @@ blob_esnap_destroy_one_channel(struct spdk_io_channel_iter *i)
  * used when closing an esnap clone blob and after decoupling from the parent.
  */
 static void
-blob_esnap_destroy_bs_dev_channels(struct spdk_blob *blob, spdk_blob_op_with_handle_complete cb_fn,
-				   void *cb_arg)
+blob_esnap_destroy_bs_dev_channels(struct spdk_blob *blob, bool abort_io,
+				   spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct blob_esnap_destroy_ctx	*ctx;
 
@@ -8937,6 +8950,7 @@ blob_esnap_destroy_bs_dev_channels(struct spdk_blob *blob, spdk_blob_op_with_han
 	ctx->cb_arg = cb_arg;
 	ctx->blob = blob;
 	ctx->back_bs_dev = blob->back_bs_dev;
+	ctx->abort_io = abort_io;
 
 	SPDK_DEBUGLOG(blob_esnap, "blob 0x%" PRIx64 ": destroying channels for this blob\n",
 		      blob->id);
