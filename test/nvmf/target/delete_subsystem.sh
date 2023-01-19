@@ -41,6 +41,9 @@ while kill -0 $perf_pid; do
 	fi
 done
 
+# Verify perf's exit status to make sure we catch a potential crash
+NOT wait "$perf_pid"
+
 #check that traffic goes when a new subsystem is created
 $rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001 -m 10
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
@@ -59,6 +62,9 @@ while kill -0 $perf_pid; do
 		false
 	fi
 done
+
+# Verify perf's exit status to make sure we catch a potential crash
+wait "$perf_pid"
 
 trap - SIGINT SIGTERM EXIT
 
