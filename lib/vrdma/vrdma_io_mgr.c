@@ -48,7 +48,7 @@
 #define SPDK_IO_MGR_THREAD_NAME_PREFIX "VrdmaSnapThread"
 #define SPDK_IO_MGR_THREAD_NAME_LEN 32
 
-#define MAX_POLL_WQE_NUM 64
+#define MAX_POLL_WQE_NUM 64 
 #define MLX5_ATOMIC_SIZE 8
 //#define WQE_DBG
 //#define VCQ_ERR
@@ -250,13 +250,8 @@ static bool vrdma_qp_sm_poll_pi(struct spdk_vrdma_qp *vqp,
 	vqp->stats.sq_dma_tx_cnt++;
 
 	/* #3 poll vqp sq wqe */
+	num = spdk_min(MAX_POLL_WQE_NUM, q_size >> 1);
 	vqp->q_comp.count++;
-	//num = spdk_min(MAX_POLL_WQE_NUM, q_size >> 1);
-	num = vqp->qp_pi->pi.sq_pi - pre_pi;
-	if (num == 0) {
-		return false;
-	}
-	
 	if ((num + pre_pi % q_size) > q_size) {
 		uint16_t tmp_num;
 		/* vq roll back case, first part */
@@ -291,18 +286,18 @@ static bool vrdma_qp_sm_poll_pi(struct spdk_vrdma_qp *vqp,
 		}
 		vqp->stats.sq_dma_tx_cnt++;
 	} else {
-    	sq_poll_size = num * sizeof(struct vrdma_send_wqe);
-    	offset = (pre_pi % q_size) * sizeof(struct vrdma_send_wqe);
-    	local_ring_addr = (uint8_t *)vqp->sq.sq_buff + offset;
-    	host_ring_addr = vqp->sq.comm.wqe_buff_pa + offset;
-    	ret = snap_dma_q_write(vqp->snap_queue->dma_q, (void *)host_ring_addr, sq_poll_size,
+    		sq_poll_size = num * sizeof(struct vrdma_send_wqe);
+    		offset = (pre_pi % q_size) * sizeof(struct vrdma_send_wqe);
+    		local_ring_addr = (uint8_t *)vqp->sq.sq_buff + offset;
+    		host_ring_addr = vqp->sq.comm.wqe_buff_pa + offset;
+    		ret = snap_dma_q_write(vqp->snap_queue->dma_q, (void *)host_ring_addr, sq_poll_size,
     							vqp->snap_queue->ctrl->xmkey->mkey, (uint64_t)local_ring_addr,
     							vqp->qp_mr->lkey, &vqp->q_comp);
-    	if (spdk_unlikely(ret)) {
-    		SPDK_ERRLOG("no roll back failed to read sq WQE entry, ret %d\n", ret);
-    		vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
-    		return true;
-    	}
+    		if (spdk_unlikely(ret)) {
+    			SPDK_ERRLOG("no roll back failed to read sq WQE entry, ret %d\n", ret);
+    			vqp->sm_state = VRDMA_QP_STATE_FATAL_ERR;
+    			return true;
+    		}
 		vqp->stats.sq_dma_tx_cnt++;
 	}
 
@@ -311,7 +306,7 @@ static bool vrdma_qp_sm_poll_pi(struct spdk_vrdma_qp *vqp,
 	return false;
 }
 
-static bool vrdma_qp_sm_handle_pi(struct spdk_vrdma_qp *vqp,
+static bool vrdma_qp_sm_	handle_pi(struct spdk_vrdma_qp *vqp,
 									enum vrdma_qp_sm_op_status status)
 {
 	if (status != VRDMA_QP_SM_OP_OK) {
@@ -426,11 +421,10 @@ static bool vrdma_qp_wqe_sm_parse(struct spdk_vrdma_qp *vqp,
 		return true;
 	}
 
-#if 0
 	if (vqp->sq.comm.num_to_parse > (vqp->qp_pi->pi.sq_pi - vqp->sq.comm.pre_pi)) {
 		vqp->sq.comm.num_to_parse = vqp->qp_pi->pi.sq_pi - vqp->sq.comm.pre_pi;
 	}
-#endif
+
 	vqp->stats.sq_wqe_fetched += vqp->sq.comm.num_to_parse;
 #ifdef WQE_DBG
 	SPDK_NOTICELOG("vrdam parse sq wqe: vq pi %d, pre_pi %d\n",
@@ -595,8 +589,8 @@ static inline void vrdma_wqe_submit(struct snap_vrdma_backend_qp *bk_qp,
 		return;
 	}
 #endif
-	/* ring dbr every 16 wqes */
-	if (!(bk_qp->hw_qp.sq.pi & 0xF)) {
+	/* ring dbr every 32 wqes */
+	if (!(bk_qp->hw_qp.sq.pi & 0x1F)) {
 		vrdma_ring_tx_db(bk_qp, ctrl);
 	}
 	bk_qp->ctrl = ctrl;
@@ -846,11 +840,17 @@ static bool vrdma_qp_wqe_sm_submit(struct spdk_vrdma_qp *vqp,
 
 	for (i = 0; i < num_to_parse; i++) {
 		wqe = vqp->sq.sq_buff + ((vqp->sq.comm.pre_pi + i) % q_size);
+		vqp->sq.meta_buff[(vqp->sq.comm.pre_pi + i) % q_size].req_id = wqe->meta.req_id;
 		opcode = vrdma_ib2mlx_opcode[wqe->meta.opcode];
 		//SPDK_NOTICELOG("vrdam sq submit wqe start, m_qpn %d, opcode 0x%x\n",
 			//			backend_qp->hw_qp.qp_num, opcode);
 #ifdef WQE_DBG
 		vrdma_dump_tencent_wqe(wqe);
+#endif
+#if 0
+		SPDK_NOTICELOG("wqe idx %d meta.req_id %x, meta idx %x\n", 
+						(vqp->sq.comm.pre_pi + i) % q_size,
+						wqe->meta.req_id, vqp->sq.meta_buff[(vqp->sq.comm.pre_pi + i) % q_size].req_id);
 #endif
 		switch (opcode) {
 			case MLX5_OPCODE_RDMA_READ:
@@ -1330,7 +1330,7 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 		vcqe = (struct vrdma_cqe *)vqp->sq_vcq->cqe_buff + cqe_idx;
 		vcqe->imm_data = cqe->imm_inval_pkey;
 		vcqe->length = cqe->byte_cnt;
-		vcqe->req_id = vqp->sq.sq_buff[wqe_idx].meta.req_id;
+		vcqe->req_id = vqp->sq.meta_buff[wqe_idx].req_id;
 		vcqe->local_qpn = vqp->qp_idx;
 		//vcqe->ts = (uint32_t)cqe->timestamp;
 		vcqe->ts = (uint32_t)tv.tv_usec;
@@ -1475,6 +1475,7 @@ void vrdma_dump_vqp_stats(struct vrdma_ctrl *ctrl,
 			lqp->attr.comm.node_id, lqp->attr.comm.dev_id, lqp->attr.comm.gid_ip);
 	if (vqp->pre_bk_qp)
 		printf("vqpn 0x%x, pre_bk_qp 0x%x\n", vqp->qp_idx, vqp->pre_bk_qp->bk_qp.qpnum);
+	printf("sq dma_q  0x%x\n", vqp->snap_queue->dma_q->sw_qp.dv_qp.hw_qp.qp_num);
 	printf("sq pi  %-10d       sq pre pi  %-10d\n",
 			vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi);
 	printf("scq pi %-10d       scq pre pi %-10d     scq ci %-10d\n", 
