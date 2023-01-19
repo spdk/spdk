@@ -1544,51 +1544,40 @@ function pap() {
 }
 
 function get_proc_paths() {
-	local procs proc
-	if [[ $(uname -s) == Linux ]]; then
-		for proc in /proc/[0-9]*; do
-			[[ -e $proc/exe ]] || continue
-			procs[${proc##*/}]=$(readlink -f "$proc/exe")
-		done
-	elif [[ $(uname -s) == FreeBSD ]]; then
-		while read -r proc _ _ path; do
-			[[ -e $path ]] || continue
-			procs[proc]=$path
-		done < <(procstat -ab)
-	fi
-
-	for proc in "${!procs[@]}"; do
-		echo "$proc" "${procs[proc]}"
-	done
+	case "$(uname -s)" in
+		Linux) # ps -e -opid,exe <- not supported under {centos7,rocky8}'s procps-ng
+			local pid
+			for pid in /proc/[0-9]*; do
+				[[ -e $pid/exe ]] || continue
+				echo "${pid##*/} $(readlink -f "$pid/exe")"
+			done
+			;;
+		FreeeBSD) procstat -ab | awk '{print $1, $4}' ;;
+	esac
 }
 
-is_exec_file() { [[ -f $1 && $(file "$1") =~ ELF.+executable ]]; }
+exec_files() { file "$@" | awk -F: '/ELF.+executable/{print $1}'; }
 
 function reap_spdk_processes() {
-	local bins bin
-	local misc_bins
+	local bins test_bins procs
+	local spdk_procs spdk_pids
 
-	while read -r bin; do
-		is_exec_file "$bin" && misc_bins+=("$bin")
-	done < <(find "$rootdir"/test/{app,env,event} -type f)
+	mapfile -t test_bins < <(find "$rootdir"/test/{app,env,event} -type f)
+	mapfile -t bins < <(
+		exec_files "${test_bins[@]}"
+		readlink -f "$SPDK_BIN_DIR/"* "$SPDK_EXAMPLE_DIR/"*
+	)
 
-	mapfile -t bins < <(readlink -f "$SPDK_BIN_DIR/"* "$SPDK_EXAMPLE_DIR/"* "${misc_bins[@]}")
+	mapfile -t spdk_procs < <(get_proc_paths | grep -E "$(
+		IFS="|"
+		echo "${bins[*]#$rootdir/}"
+	)" || true)
+	((${#spdk_procs[@]} > 0)) || return 0
 
-	local spdk_pid spdk_pids path
-	while read -r spdk_pid path; do
-		if [[ ${bins[*]/$path/} != "${bins[*]}" ]]; then
-			echo "$path is still up ($spdk_pid), killing"
-			spdk_pids[spdk_pid]=$path
-		fi
-	done < <(get_proc_paths)
+	printf '%s is still up, killing\n' "${spdk_procs[@]}" >&2
+	mapfile -t spdk_pids < <(printf '%s\n' "${spdk_procs[@]}" | awk '{print $1}')
 
-	((${#spdk_pids[@]} > 0)) || return 0
-
-	kill -SIGTERM "${!spdk_pids[@]}" 2> /dev/null || :
-	# Wait a bit and then use the stick
-	sleep 2
-	kill -SIGKILL "${!spdk_pids[@]}" 2> /dev/null || :
-
+	kill -SIGKILL "${spdk_pids[@]}" 2> /dev/null || :
 	return 1
 }
 
