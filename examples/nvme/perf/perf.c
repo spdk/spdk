@@ -725,7 +725,7 @@ register_file(const char *path)
 		g_io_align = blklen;
 	}
 
-	entry = malloc(sizeof(struct ns_entry));
+	entry = calloc(1, sizeof(struct ns_entry));
 	if (entry == NULL) {
 		close(fd);
 		perror("ns_entry malloc");
