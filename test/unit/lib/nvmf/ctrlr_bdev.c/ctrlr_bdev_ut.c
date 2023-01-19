@@ -743,9 +743,7 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	memset(&rsp, 0, sizeof(rsp));
 
 	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, NULL, &ch, &req);
-	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
-	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
-	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_OPCODE);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 
 	MOCK_SET(spdk_bdev_io_type_supported, true);
 

@@ -181,19 +181,17 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 	SPDK_STATIC_ASSERT(sizeof(nsdata->eui64) == sizeof(ns->opts.eui64), "size mismatch");
 	memcpy(&nsdata->eui64, ns->opts.eui64, sizeof(nsdata->eui64));
 
-	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_COPY)) {
-		max_copy = spdk_bdev_get_max_copy(bdev);
-		if (max_copy == 0 || max_copy > UINT16_MAX) {
-			/* Zero means copy size is unlimited */
-			nsdata->mcl = UINT16_MAX;
-			nsdata->mssrl = UINT16_MAX;
-		} else {
-			nsdata->mcl = max_copy;
-			nsdata->mssrl = max_copy;
-		}
+	/* For now we support just one source range for copy command */
+	nsdata->msrc = 0;
 
-		/* For now we support just one source range */
-		nsdata->msrc = 0;
+	max_copy = spdk_bdev_get_max_copy(bdev);
+	if (max_copy == 0 || max_copy > UINT16_MAX) {
+		/* Zero means copy size is unlimited */
+		nsdata->mcl = UINT16_MAX;
+		nsdata->mssrl = UINT16_MAX;
+	} else {
+		nsdata->mcl = max_copy;
+		nsdata->mssrl = max_copy;
 	}
 }
 
@@ -693,13 +691,6 @@ nvmf_bdev_ctrlr_copy_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			  sizeof(struct spdk_nvme_scc_source_range))) {
 		response->status.sct = SPDK_NVME_SCT_GENERIC;
 		response->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_COPY)) {
-		SPDK_NOTICELOG("Copy command not supported by bdev\n");
-		response->status.sct = SPDK_NVME_SCT_GENERIC;
-		response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 

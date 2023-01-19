@@ -1150,12 +1150,6 @@ bdev_io_types_test(void)
 	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE_ZEROES, true);
 	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE, true);
 
-	/* COPY is not supported */
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_COPY, false);
-	rc = spdk_bdev_copy_blocks(desc, io_ch, 128, 0, 128, io_done, NULL);
-	CU_ASSERT(rc == -ENOTSUP);
-	ut_enable_io_type(SPDK_BDEV_IO_TYPE_COPY, true);
-
 	/* NVME_IO, NVME_IO_MD and NVME_ADMIN are not supported */
 	ut_enable_io_type(SPDK_BDEV_IO_TYPE_NVME_IO, false);
 	ut_enable_io_type(SPDK_BDEV_IO_TYPE_NVME_IO_MD, false);
@@ -6051,22 +6045,32 @@ bdev_copy(void)
 
 	/* First test that if the bdev supports copy, the request won't be split */
 	bdev->md_len = 0;
-	bdev->blocklen = 4096;
-	num_blocks = 512;
+	bdev->blocklen = 512;
+	num_blocks = 128;
 	src_offset = bdev->blockcnt - num_blocks;
 
 	expected_io = ut_alloc_expected_copy_io(SPDK_BDEV_IO_TYPE_COPY, 0, src_offset, num_blocks);
 	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
 	rc = spdk_bdev_copy_blocks(desc, ioch, 0, src_offset, num_blocks, io_done, NULL);
 	CU_ASSERT_EQUAL(rc, 0);
 	num_completed = stub_complete_io(1);
 	CU_ASSERT_EQUAL(num_completed, 1);
 
-	/* Check that if copy is not supported it'll fail */
+	/* Check that if copy is not supported it'll still work */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, src_offset, num_blocks, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 0, num_blocks, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
 	ut_enable_io_type(SPDK_BDEV_IO_TYPE_COPY, false);
 
 	rc = spdk_bdev_copy_blocks(desc, ioch, 0, src_offset, num_blocks, io_done, NULL);
-	CU_ASSERT_EQUAL(rc, -ENOTSUP);
+	CU_ASSERT_EQUAL(rc, 0);
+	num_completed = stub_complete_io(1);
+	CU_ASSERT_EQUAL(num_completed, 1);
+	num_completed = stub_complete_io(1);
+	CU_ASSERT_EQUAL(num_completed, 1);
 
 	ut_enable_io_type(SPDK_BDEV_IO_TYPE_COPY, true);
 	spdk_put_io_channel(ioch);

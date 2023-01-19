@@ -295,6 +295,7 @@ nvmf_ctrlr_cdata_init(struct spdk_nvmf_transport *transport, struct spdk_nvmf_su
 	cdata->oncs.compare = 1;
 	cdata->oncs.reservations = 1;
 	cdata->fuses.compare_and_write = 1;
+	cdata->oncs.copy = 1;
 	cdata->sgls.supported = 1;
 	cdata->sgls.keyed_sgl = 1;
 	cdata->sgls.sgl_offset = 1;
@@ -2764,7 +2765,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->oncs.dsm = nvmf_ctrlr_dsm_supported(ctrlr);
 		cdata->oncs.write_zeroes = nvmf_ctrlr_write_zeroes_supported(ctrlr);
 		cdata->oncs.reservations = ctrlr->cdata.oncs.reservations;
-		cdata->oncs.copy = nvmf_ctrlr_copy_supported(ctrlr);
+		cdata->oncs.copy = ctrlr->cdata.oncs.copy;
 		cdata->ocfs.copy_format0 = cdata->oncs.copy;
 		if (subsystem->flags.ana_reporting) {
 			/* Asymmetric Namespace Access Reporting is supported. */

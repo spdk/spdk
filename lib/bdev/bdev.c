@@ -26,6 +26,7 @@
 
 #include "bdev_internal.h"
 #include "spdk_internal/trace_defs.h"
+#include "spdk_internal/assert.h"
 
 #ifdef SPDK_CONFIG_VTUNE
 #include "ittnotify.h"
@@ -4309,7 +4310,22 @@ spdk_bdev_is_dif_check_enabled(const struct spdk_bdev *bdev,
 uint32_t
 spdk_bdev_get_max_copy(const struct spdk_bdev *bdev)
 {
-	return bdev->max_copy;
+	uint64_t alighed_length;
+	uint64_t max_copy_blocks;
+	uint64_t temp_max_copy_blocks;
+	struct spdk_iobuf_opts opts;
+
+	if (spdk_bdev_io_type_supported((struct spdk_bdev *)bdev, SPDK_BDEV_IO_TYPE_COPY)) {
+		return bdev->max_copy;
+	} else {
+		spdk_iobuf_get_opts(&opts);
+		alighed_length = opts.large_bufsize - spdk_bdev_get_buf_align(bdev);
+		temp_max_copy_blocks = spdk_bdev_is_md_separate(bdev) ?
+				       alighed_length / (bdev->blocklen + bdev->md_len) :
+				       alighed_length / bdev->blocklen;
+		max_copy_blocks = 1 << spdk_u64log2(temp_max_copy_blocks);
+		return max_copy_blocks;
+	}
 }
 
 uint64_t
@@ -9031,6 +9047,88 @@ spdk_bdev_for_each_channel(struct spdk_bdev *bdev, spdk_bdev_for_each_channel_ms
 			      iter, bdev_each_channel_cpl);
 }
 
+static void
+bdev_copy_do_write_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *parent_io = cb_arg;
+
+	/* Check return status of write */
+	parent_io->internal.status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	parent_io->internal.cb(parent_io, success, parent_io->internal.caller_ctx);
+	spdk_bdev_free_io(bdev_io);
+}
+
+static void
+bdev_copy_do_write(void *_bdev_io)
+{
+	struct spdk_bdev_io *bdev_io = _bdev_io;
+	int rc;
+
+	/* Write blocks */
+	rc = spdk_bdev_write_blocks_with_md(bdev_io->internal.desc,
+					    spdk_io_channel_from_ctx(bdev_io->internal.ch), bdev_io->u.bdev.iovs[0].iov_base,
+					    bdev_io->u.bdev.md_buf, bdev_io->u.bdev.offset_blocks,
+					    bdev_io->u.bdev.num_blocks, bdev_copy_do_write_complete, bdev_io);
+
+	if (rc == -ENOMEM) {
+		bdev_queue_io_wait_with_cb(bdev_io, bdev_copy_do_write);
+	} else if (rc != 0) {
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+		bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
+	}
+}
+
+static void
+bdev_copy_do_read_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *parent_io = cb_arg;
+
+	/* Check return status of read */
+	if (!success) {
+		parent_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+		parent_io->internal.cb(parent_io, false, parent_io->internal.caller_ctx);
+		spdk_bdev_free_io(bdev_io);
+		return;
+	}
+
+	spdk_bdev_free_io(bdev_io);
+
+	/* Do write */
+	bdev_copy_do_write(parent_io);
+}
+
+static void
+bdev_copy_do_read(void *_bdev_io)
+{
+	struct spdk_bdev_io *bdev_io = _bdev_io;
+	int rc;
+
+	/* Read blocks */
+	rc = spdk_bdev_read_blocks_with_md(bdev_io->internal.desc,
+					   spdk_io_channel_from_ctx(bdev_io->internal.ch), bdev_io->u.bdev.iovs[0].iov_base,
+					   bdev_io->u.bdev.md_buf, bdev_io->u.bdev.copy.src_offset_blocks,
+					   bdev_io->u.bdev.num_blocks, bdev_copy_do_read_complete, bdev_io);
+
+	if (rc == -ENOMEM) {
+		bdev_queue_io_wait_with_cb(bdev_io, bdev_copy_do_read);
+	} else if (rc != 0) {
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+		bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
+	}
+}
+
+static void
+bdev_copy_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, bool success)
+{
+	if (!success) {
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+		bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
+		return;
+	}
+
+	bdev_copy_do_read(bdev_io);
+}
+
 int
 spdk_bdev_copy_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		      uint64_t dst_offset_blocks, uint64_t src_offset_blocks, uint64_t num_blocks,
@@ -9042,11 +9140,6 @@ spdk_bdev_copy_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 	if (!desc->write) {
 		return -EBADF;
-	}
-
-	if (spdk_unlikely(!bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_COPY))) {
-		SPDK_DEBUGLOG(bdev, "Copy IO type is not supported\n");
-		return -ENOTSUP;
 	}
 
 	if (num_blocks == 0) {
@@ -9076,9 +9169,28 @@ spdk_bdev_copy_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.bdev.num_blocks = num_blocks;
 	bdev_io->u.bdev.memory_domain = NULL;
 	bdev_io->u.bdev.memory_domain_ctx = NULL;
+	bdev_io->u.bdev.iovs = NULL;
+	bdev_io->u.bdev.iovcnt = 0;
+	bdev_io->u.bdev.md_buf = NULL;
 	bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	bdev_io_submit(bdev_io);
+	if (dst_offset_blocks == src_offset_blocks) {
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+		bdev_io->internal.cb(bdev_io, true, bdev_io->internal.caller_ctx);
+
+		return 0;
+	}
+
+	/* If the bdev backing device support copy directly, pass to it to process.
+	 * Else do general processing from bdev layer.
+	 */
+	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_COPY)) {
+		bdev_io_submit(bdev_io);
+		return 0;
+	}
+
+	spdk_bdev_io_get_buf(bdev_io, bdev_copy_get_buf_cb, num_blocks * spdk_bdev_get_block_size(bdev));
+
 	return 0;
 }
 

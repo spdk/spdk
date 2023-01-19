@@ -497,7 +497,10 @@ struct spdk_bdev {
 	/* Maximum write zeroes in unit of logical block */
 	uint32_t max_write_zeroes;
 
-	/* Maximum copy size in unit of logical block */
+	/**
+	 * Maximum copy size in unit of logical block
+	 * Should be set explicitly when backing device support copy command
+	 */
 	uint32_t max_copy;
 
 	/**
