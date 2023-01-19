@@ -12,7 +12,7 @@ lot of hardware-specific options.
 
 ## Interface
 
-The interface is defined in a protobuf files located in `python/spdk/sma/proto`
+The interface is defined in a protobuf files located in `proto`
 directory.  The generic interface common to all types of devices is defined in
 `sma.proto` file, while device-specific options are defined in their separate
 files (e.g. `nvme.proto` for NVMe).
