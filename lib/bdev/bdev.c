@@ -3780,7 +3780,7 @@ spdk_bdev_reset_io_stat(struct spdk_bdev_io_stat *stat, enum spdk_bdev_reset_sta
 	stat->max_copy_latency_ticks = 0;
 	stat->min_copy_latency_ticks = UINT64_MAX;
 
-	if (mode != BDEV_RESET_STAT_ALL) {
+	if (mode != SPDK_BDEV_RESET_STAT_ALL) {
 		return;
 	}
 
@@ -3822,7 +3822,7 @@ bdev_alloc_io_stat(bool io_error_stat)
 		stat->io_error = NULL;
 	}
 
-	spdk_bdev_reset_io_stat(stat, BDEV_RESET_STAT_ALL);
+	spdk_bdev_reset_io_stat(stat, SPDK_BDEV_RESET_STAT_ALL);
 
 	return stat;
 }

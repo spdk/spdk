@@ -561,9 +561,9 @@ rpc_decode_reset_iostat_mode(const struct spdk_json_val *val, void *out)
 	enum spdk_bdev_reset_stat_mode *mode = out;
 
 	if (spdk_json_strequal(val, "all") == true) {
-		*mode = BDEV_RESET_STAT_ALL;
+		*mode = SPDK_BDEV_RESET_STAT_ALL;
 	} else if (spdk_json_strequal(val, "maxmin") == true) {
-		*mode = BDEV_RESET_STAT_MAXMIN;
+		*mode = SPDK_BDEV_RESET_STAT_MAXMIN;
 	} else {
 		SPDK_NOTICELOG("Invalid parameter value: mode\n");
 		return -EINVAL;
@@ -580,7 +580,7 @@ static const struct spdk_json_object_decoder rpc_bdev_reset_iostat_decoders[] = 
 static void
 rpc_bdev_reset_iostat(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
-	struct rpc_bdev_reset_iostat req = { .mode = BDEV_RESET_STAT_ALL, };
+	struct rpc_bdev_reset_iostat req = { .mode = SPDK_BDEV_RESET_STAT_ALL, };
 	struct spdk_bdev_desc *desc = NULL;
 	struct rpc_reset_iostat_ctx *rpc_ctx;
 	struct bdev_reset_iostat_ctx *bdev_ctx;

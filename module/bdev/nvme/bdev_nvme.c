@@ -602,7 +602,7 @@ _bdev_nvme_add_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_ns *nvme_
 			SPDK_ERRLOG("Failed to alloc io_path stat.\n");
 			return -ENOMEM;
 		}
-		spdk_bdev_reset_io_stat(io_path->stat, BDEV_RESET_STAT_MAXMIN);
+		spdk_bdev_reset_io_stat(io_path->stat, SPDK_BDEV_RESET_STAT_MAXMIN);
 	}
 
 	io_path->nvme_ns = nvme_ns;
@@ -3674,7 +3674,7 @@ nvme_ns_alloc(void)
 			free(nvme_ns);
 			return NULL;
 		}
-		spdk_bdev_reset_io_stat(nvme_ns->stat, BDEV_RESET_STAT_MAXMIN);
+		spdk_bdev_reset_io_stat(nvme_ns->stat, SPDK_BDEV_RESET_STAT_MAXMIN);
 	}
 
 	return nvme_ns;

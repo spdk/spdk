@@ -1492,8 +1492,8 @@ void spdk_bdev_add_io_stat(struct spdk_bdev_io_stat *total, struct spdk_bdev_io_
 void spdk_bdev_dump_io_stat_json(struct spdk_bdev_io_stat *stat, struct spdk_json_write_ctx *w);
 
 enum spdk_bdev_reset_stat_mode {
-	BDEV_RESET_STAT_ALL,
-	BDEV_RESET_STAT_MAXMIN,
+	SPDK_BDEV_RESET_STAT_ALL,
+	SPDK_BDEV_RESET_STAT_MAXMIN,
 };
 
 /**
