@@ -438,17 +438,6 @@ _compress_operation(struct compress_io_channel *chan,  struct spdk_accel_task *t
 	assert(chan->device_qp->device != NULL);
 	cdev_id = chan->device_qp->device->cdev_id;
 
-	/* Much of this code was ported from the vbdev compress module where iovecs were
-	 * supported on dst.  In the accel_fw they are not however lets preserve the full
-	 * functionality of the code and make a simple iovec out of the dst.
-	 */
-	if (task->d.iovcnt == 0) {
-		assert(task->dst != NULL);
-		dst_iovcnt = 1;
-		dst_iovs[0].iov_base = task->dst;
-		dst_iovs[0].iov_len = task->nbytes_dst;
-	}
-
 	/* calc our mbuf totals based on max MBUF size allowed so we can pre-alloc mbufs in bulk */
 	for (i = 0 ; i < src_iovcnt; i++) {
 		src_mbuf_total += spdk_divide_round_up(src_iovs[i].iov_len, MBUF_SPLIT);
