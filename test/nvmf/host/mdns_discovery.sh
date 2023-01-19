@@ -9,11 +9,6 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
-if [ "$TEST_TRANSPORT" == "rdma" ]; then
-	echo "Skipping tests on RDMA because the rdma stack fails to configure the same IP for host and target."
-	exit 0
-fi
-
 DISCOVERY_FILTER="address"
 DISCOVERY_PORT=8009
 DISCOVERY_NQN=nqn.2014-08.org.nvmexpress.discovery
