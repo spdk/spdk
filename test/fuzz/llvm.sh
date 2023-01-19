@@ -55,7 +55,7 @@ function lcov_stop() {
 
 # Collect coverage data when run fuzzers for longer period of time
 # this allow to check coverage progression between runs, and grow of corpus files
-if [[ $SPDK_TEST_FUZZER -eq 1 || $SPDK_TEST_FUZZER_SHORT -eq 0 ]]; then
+if [[ $SPDK_TEST_FUZZER_SHORT -eq 0 ]]; then
 	lcov_start
 fi
 
@@ -66,7 +66,7 @@ for fuzzer in "${fuzzers[@]}"; do
 	esac
 done
 
-if [[ $SPDK_TEST_FUZZER -eq 1 || $SPDK_TEST_FUZZER_SHORT -eq 0 ]]; then
+if [[ $SPDK_TEST_FUZZER_SHORT -eq 0 ]]; then
 	lcov_stop
 	genhtml $llvm_out/cov_total.info --output-directory $llvm_out
 fi
