@@ -99,29 +99,34 @@ bdevio_construct_target_open_cb(enum spdk_bdev_event_type type, struct spdk_bdev
 }
 
 static int
-bdevio_construct_target(void *ctx, struct spdk_bdev *bdev)
+bdevio_construct_target_by_name(const char *bdev_name)
 {
 	struct io_target *target;
+	struct spdk_bdev *bdev;
+	uint64_t num_blocks;
+	uint32_t block_size;
 	int rc;
-	uint64_t num_blocks = spdk_bdev_get_num_blocks(bdev);
-	uint32_t block_size = spdk_bdev_get_block_size(bdev);
 
 	target = malloc(sizeof(struct io_target));
 	if (target == NULL) {
 		return -ENOMEM;
 	}
 
-	rc = spdk_bdev_open_ext(spdk_bdev_get_name(bdev), true, bdevio_construct_target_open_cb, NULL,
+	rc = spdk_bdev_open_ext(bdev_name, true, bdevio_construct_target_open_cb, NULL,
 				&target->bdev_desc);
 	if (rc != 0) {
 		free(target);
-		SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
+		SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", bdev_name, rc);
 		return rc;
 	}
 
+	bdev = spdk_bdev_desc_get_bdev(target->bdev_desc);
+
+	num_blocks = spdk_bdev_get_num_blocks(bdev);
+	block_size = spdk_bdev_get_block_size(bdev);
+
 	printf("  %s: %" PRIu64 " blocks of %" PRIu32 " bytes (%" PRIu64 " MiB)\n",
-	       spdk_bdev_get_name(bdev),
-	       num_blocks, block_size,
+	       bdev_name, num_blocks, block_size,
 	       (num_blocks * block_size + 1024 * 1024 - 1) / (1024 * 1024));
 
 	target->bdev = bdev;
@@ -130,6 +135,14 @@ bdevio_construct_target(void *ctx, struct spdk_bdev *bdev)
 	g_io_targets = target;
 
 	return 0;
+}
+
+static int
+bdevio_construct_target(void *ctx, struct spdk_bdev *bdev)
+{
+	const char *bdev_name = spdk_bdev_get_name(bdev);
+
+	return bdevio_construct_target_by_name(bdev_name);
 }
 
 static int
@@ -1482,7 +1495,6 @@ static void
 rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
 	struct rpc_perform_tests req = {NULL};
-	struct spdk_bdev *bdev;
 	int rc;
 
 	if (params && spdk_json_decode_object(params, rpc_perform_tests_decoders,
@@ -1494,20 +1506,12 @@ rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_v
 	}
 
 	if (req.name) {
-		bdev = spdk_bdev_get_by_name(req.name);
-		if (bdev == NULL) {
-			SPDK_ERRLOG("Bdev '%s' does not exist\n", req.name);
-			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-							     "Bdev '%s' does not exist: %s",
-							     req.name, spdk_strerror(ENODEV));
-			goto invalid;
-		}
-		rc = bdevio_construct_target(NULL, bdev);
+		rc = bdevio_construct_target_by_name(req.name);
 		if (rc < 0) {
-			SPDK_ERRLOG("Could not construct target for bdev '%s'\n", spdk_bdev_get_name(bdev));
+			SPDK_ERRLOG("Could not construct target for bdev '%s'\n", req.name);
 			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							     "Could not construct target for bdev '%s': %s",
-							     spdk_bdev_get_name(bdev), spdk_strerror(-rc));
+							     req.name, spdk_strerror(-rc));
 			goto invalid;
 		}
 	} else {
