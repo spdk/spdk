@@ -157,7 +157,7 @@ class Server:
 
         for nic_ip in self.nic_ips:
             nic_name = self.get_nic_name_by_ip(nic_ip)
-            nic_ports = [x[0] for x in self.subsystem_info_list]
+            nic_ports = [x[0] for x in self.subsystem_info_list if nic_ip in x[2]]
 
             tc_qdisc_map_cmd = ["sudo", "tc", "qdisc", "add", "dev", nic_name,
                                 "root", "mqprio", "num_tc", "2", "map", "0", "1",
