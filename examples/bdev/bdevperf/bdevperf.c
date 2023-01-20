@@ -1,6 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation.
- *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES.
+ *   Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
  */
 
@@ -1858,14 +1858,35 @@ make_cli_job_config(const char *filename, int64_t offset, uint64_t range)
 	return 0;
 }
 
+static int
+bdevperf_construct_multithread_job_config(uint32_t num_cores, struct spdk_bdev *bdev)
+{
+	uint32_t i;
+	uint64_t blocks_per_job;
+	int64_t offset;
+	int rc;
+
+	blocks_per_job = spdk_bdev_get_num_blocks(bdev) / num_cores;
+	offset = 0;
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		rc = make_cli_job_config(spdk_bdev_get_name(bdev), offset, blocks_per_job);
+		if (rc) {
+			return rc;
+		}
+
+		offset += blocks_per_job;
+	}
+
+	return 0;
+}
+
 static void
 bdevperf_construct_multithread_job_configs(void)
 {
 	struct spdk_bdev *bdev;
 	uint32_t i;
 	uint32_t num_cores;
-	uint64_t blocks_per_job;
-	int64_t offset;
 
 	num_cores = 0;
 	SPDK_ENV_FOREACH_CORE(i) {
@@ -1883,34 +1904,14 @@ bdevperf_construct_multithread_job_configs(void)
 			fprintf(stderr, "Unable to find bdev '%s'\n", g_job_bdev_name);
 			return;
 		}
-
-		blocks_per_job = spdk_bdev_get_num_blocks(bdev) / num_cores;
-		offset = 0;
-
-		SPDK_ENV_FOREACH_CORE(i) {
-			g_run_rc = make_cli_job_config(g_job_bdev_name, offset, blocks_per_job);
-			if (g_run_rc) {
-				return;
-			}
-
-			offset += blocks_per_job;
-		}
+		g_run_rc = bdevperf_construct_multithread_job_config(num_cores, bdev);
 	} else {
 		bdev = spdk_bdev_first_leaf();
 		while (bdev != NULL) {
-			blocks_per_job = spdk_bdev_get_num_blocks(bdev) / num_cores;
-			offset = 0;
-
-			SPDK_ENV_FOREACH_CORE(i) {
-				g_run_rc = make_cli_job_config(spdk_bdev_get_name(bdev),
-							       offset, blocks_per_job);
-				if (g_run_rc) {
-					return;
-				}
-
-				offset += blocks_per_job;
+			g_run_rc = bdevperf_construct_multithread_job_config(num_cores, bdev);
+			if (g_run_rc) {
+				return;
 			}
-
 			bdev = spdk_bdev_next_leaf(bdev);
 		}
 	}
