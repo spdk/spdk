@@ -71,7 +71,7 @@ function usage() {
 	echo "                           vfio-user initiator is always built-in in Linux."
 	echo "                           example: /usr/src/libvfio-user"
 	echo " --without-vfio-user       No path required."
-	echo " --with-pmdk[=DIR]         Build persistent memory bdev.
+	echo " --with-pmdk[=DIR]         Build persistent memory bdev. (Deprecated)
 					 example: /usr/share/pmdk"
 	echo " --without-pmdk		 No path required."
 	echo " --with-vbdev-compress     Build vbdev compression module and dependencies."
@@ -907,6 +907,8 @@ if [[ "${CONFIG[FC]}" = "y" ]]; then
 fi
 
 if [[ "${CONFIG[PMDK]}" = "y" ]]; then
+	echo "WARNING: PMDK - bdev_pmem is deprecated."
+	echo "WARNING: PMDK - ACCEL_FLAG_PERSISTENT in accel_sw module is deprecated."
 	if ! echo -e '#include <libpmemblk.h>\nint main(void) { return 0; }\n' \
 		| "${BUILD_CMD[@]}" -lpmemblk - 2> /dev/null; then
 		echo "--with-pmdk requires libpmemblk."
@@ -941,6 +943,7 @@ function mlx5_build() {
 }
 
 if [[ "${CONFIG[VBDEV_COMPRESS]}" = "y" ]]; then
+	echo "WARNING: PMDK - Persistent device support with bdev_compress is deprecated."
 	if ! echo -e '#include <libpmem.h>\nint main(void) { return 0; }\n' \
 		| "${BUILD_CMD[@]}" -lpmem - 2> /dev/null; then
 		echo "--with-vbdev-compress requires libpmem."

@@ -374,11 +374,14 @@ delete_pmem_disk(const char *name, spdk_delete_pmem_complete cb_fn, void *cb_arg
 	}
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(bdev_pmem, "PMDK libpmemblk bdev_pmem integration", "SPDK 23.05", 0);
+
 static int
 bdev_pmem_initialize(void)
 {
 	const char *err = pmemblk_check_version(PMEMBLK_MAJOR_VERSION, PMEMBLK_MINOR_VERSION);
 
+	SPDK_LOG_DEPRECATED(bdev_pmem);
 	if (err != NULL) {
 		SPDK_ERRLOG("Invalid libpmemblk version (expected %d.%d): %s\n", PMEMBLK_MAJOR_VERSION,
 			    PMEMBLK_MINOR_VERSION, err);
