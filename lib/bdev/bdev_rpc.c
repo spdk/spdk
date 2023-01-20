@@ -175,30 +175,13 @@ struct bdev_get_iostat_ctx {
 };
 
 static void
-_rpc_get_iostat_started(struct rpc_get_iostat_ctx *rpc_ctx)
+rpc_get_iostat_started(struct rpc_get_iostat_ctx *rpc_ctx)
 {
 	rpc_ctx->w = spdk_jsonrpc_begin_result(rpc_ctx->request);
 
 	spdk_json_write_object_begin(rpc_ctx->w);
 	spdk_json_write_named_uint64(rpc_ctx->w, "tick_rate", spdk_get_ticks_hz());
 	spdk_json_write_named_uint64(rpc_ctx->w, "ticks", spdk_get_ticks());
-}
-
-static void
-rpc_get_iostat_started(struct rpc_get_iostat_ctx *rpc_ctx, struct spdk_bdev_desc *desc)
-{
-	struct spdk_bdev *bdev;
-
-	_rpc_get_iostat_started(rpc_ctx);
-
-	if (rpc_ctx->per_channel == false) {
-		spdk_json_write_named_array_begin(rpc_ctx->w, "bdevs");
-	} else {
-		bdev = spdk_bdev_desc_get_bdev(desc);
-
-		spdk_json_write_named_string(rpc_ctx->w, "name", spdk_bdev_get_name(bdev));
-		spdk_json_write_named_array_begin(rpc_ctx->w, "channels");
-	}
 }
 
 static void
@@ -380,6 +363,7 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 	struct spdk_bdev_desc *desc = NULL;
 	struct rpc_get_iostat_ctx *rpc_ctx;
 	struct bdev_get_iostat_ctx *bdev_ctx;
+	struct spdk_bdev *bdev;
 	int rc;
 
 	if (params != NULL) {
@@ -429,6 +413,8 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 	rpc_ctx->per_channel = req.per_channel;
 
 	if (desc != NULL) {
+		bdev = spdk_bdev_desc_get_bdev(desc);
+
 		bdev_ctx = bdev_iostat_ctx_alloc(req.per_channel == false);
 		if (bdev_ctx == NULL) {
 			SPDK_ERRLOG("Failed to allocate bdev_iostat_ctx struct\n");
@@ -441,13 +427,24 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 			rpc_ctx->bdev_count++;
 			bdev_ctx->rpc_ctx = rpc_ctx;
 			if (req.per_channel == false) {
-				spdk_bdev_get_device_stat(spdk_bdev_desc_get_bdev(desc), bdev_ctx->stat,
-							  bdev_get_iostat_done, bdev_ctx);
+				spdk_bdev_get_device_stat(bdev, bdev_ctx->stat, bdev_get_iostat_done,
+							  bdev_ctx);
 			} else {
-				spdk_bdev_for_each_channel(spdk_bdev_desc_get_bdev(desc),
+				/* If per_channel is true, there is no failure after here and
+				 * we have to start RPC response before executing
+				 * spdk_bdev_for_each_channel().
+				 */
+				rpc_get_iostat_started(rpc_ctx);
+				spdk_json_write_named_string(rpc_ctx->w, "name", spdk_bdev_get_name(bdev));
+				spdk_json_write_named_array_begin(rpc_ctx->w, "channels");
+
+				spdk_bdev_for_each_channel(bdev,
 							   bdev_get_per_channel_stat,
 							   bdev_ctx,
 							   bdev_get_per_channel_stat_done);
+
+				rpc_get_iostat_done(rpc_ctx);
+				return;
 			}
 		}
 	} else {
@@ -458,12 +455,12 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 	}
 
 	if (rpc_ctx->rc == 0) {
-		/* We want to fail the RPC for all failures. The callback function to
-		 * spdk_bdev_for_each_channel() is executed after stack unwinding if
-		 * successful. Hence defer starting RPC response until it is ensured that
+		/* We want to fail the RPC for all failures. If per_channel is false,
+		 * it is enough to defer starting RPC response until it is ensured that
 		 * all spdk_bdev_for_each_channel() calls will succeed or there is no bdev.
 		 */
-		rpc_get_iostat_started(rpc_ctx, desc);
+		rpc_get_iostat_started(rpc_ctx);
+		spdk_json_write_named_array_begin(rpc_ctx->w, "bdevs");
 	}
 
 	rpc_get_iostat_done(rpc_ctx);
