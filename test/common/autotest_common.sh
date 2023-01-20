@@ -29,6 +29,8 @@ function xtrace_disable() {
 	fi
 }
 
+function xtrace_disable_per_cmd() { eval "$* ${BASH_XTRACEFD}> /dev/null"; }
+
 xtrace_disable
 set -e
 shopt -s expand_aliases
