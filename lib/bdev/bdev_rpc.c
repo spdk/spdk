@@ -175,15 +175,21 @@ struct bdev_get_iostat_ctx {
 };
 
 static void
-rpc_get_iostat_started(struct rpc_get_iostat_ctx *rpc_ctx, struct spdk_bdev_desc *desc)
+_rpc_get_iostat_started(struct rpc_get_iostat_ctx *rpc_ctx)
 {
-	struct spdk_bdev *bdev;
-
 	rpc_ctx->w = spdk_jsonrpc_begin_result(rpc_ctx->request);
 
 	spdk_json_write_object_begin(rpc_ctx->w);
 	spdk_json_write_named_uint64(rpc_ctx->w, "tick_rate", spdk_get_ticks_hz());
 	spdk_json_write_named_uint64(rpc_ctx->w, "ticks", spdk_get_ticks());
+}
+
+static void
+rpc_get_iostat_started(struct rpc_get_iostat_ctx *rpc_ctx, struct spdk_bdev_desc *desc)
+{
+	struct spdk_bdev *bdev;
+
+	_rpc_get_iostat_started(rpc_ctx);
 
 	if (rpc_ctx->per_channel == false) {
 		spdk_json_write_named_array_begin(rpc_ctx->w, "bdevs");
