@@ -723,7 +723,9 @@ nvme_rdma_qpair_set_poller(struct spdk_nvme_qpair *qpair)
 
 	rqpair->cq = poller->cq;
 	rqpair->srq = poller->srq;
-	rqpair->rsps = poller->rsps;
+	if (rqpair->srq) {
+		rqpair->rsps = poller->rsps;
+	}
 	rqpair->poller = poller;
 	return 0;
 }
@@ -982,6 +984,7 @@ nvme_rdma_create_reqs(struct nvme_rdma_qpair *rqpair)
 	uint16_t i;
 	int rc;
 
+	assert(!rqpair->rdma_reqs);
 	rqpair->rdma_reqs = spdk_zmalloc(rqpair->num_entries * sizeof(struct spdk_nvme_rdma_req), 0, NULL,
 					 SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 	if (rqpair->rdma_reqs == NULL) {
@@ -989,13 +992,13 @@ nvme_rdma_create_reqs(struct nvme_rdma_qpair *rqpair)
 		goto fail;
 	}
 
+	assert(!rqpair->cmds);
 	rqpair->cmds = spdk_zmalloc(rqpair->num_entries * sizeof(*rqpair->cmds), 0, NULL,
 				    SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 	if (!rqpair->cmds) {
 		SPDK_ERRLOG("Failed to allocate RDMA cmds\n");
 		goto fail;
 	}
-
 
 	TAILQ_INIT(&rqpair->free_reqs);
 	TAILQ_INIT(&rqpair->outstanding_reqs);
@@ -1145,6 +1148,7 @@ nvme_rdma_connect_established(struct nvme_rdma_qpair *rqpair, int ret)
 		return ret;
 	}
 
+	assert(!rqpair->mr_map);
 	rqpair->mr_map = spdk_rdma_create_mem_map(rqpair->rdma_qp->qp->pd, &g_nvme_hooks,
 			 SPDK_RDMA_MEMORY_MAP_ROLE_INITIATOR);
 	if (!rqpair->mr_map) {
@@ -1166,6 +1170,7 @@ nvme_rdma_connect_established(struct nvme_rdma_qpair *rqpair, int ret)
 		opts.srq = NULL;
 		opts.mr_map = rqpair->mr_map;
 
+		assert(!rqpair->rsps);
 		rqpair->rsps = nvme_rdma_create_rsps(&opts);
 		if (!rqpair->rsps) {
 			SPDK_ERRLOG("Unable to create rqpair RDMA responses\n");
@@ -1899,12 +1904,18 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 
 		rqpair->poller = NULL;
 		rqpair->cq = NULL;
-		rqpair->srq = NULL;
-		rqpair->rsps = NULL;
+		if (rqpair->srq) {
+			rqpair->srq = NULL;
+			rqpair->rsps = NULL;
+		}
 	} else if (rqpair->cq) {
 		ibv_destroy_cq(rqpair->cq);
 		rqpair->cq = NULL;
 	}
+
+	nvme_rdma_free_reqs(rqpair);
+	nvme_rdma_free_rsps(rqpair->rsps);
+	rqpair->rsps = NULL;
 }
 
 static void nvme_rdma_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
@@ -2115,8 +2126,6 @@ nvme_rdma_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 
 	nvme_rdma_put_memory_domain(rqpair->memory_domain);
 
-	nvme_rdma_free_reqs(rqpair);
-	nvme_rdma_free_rsps(rqpair->rsps);
 	spdk_free(rqpair);
 
 	return 0;
