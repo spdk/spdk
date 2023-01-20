@@ -101,7 +101,7 @@ $rpc_py nvmf_subsystem_add_listener $NQN -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGE
 $rpc_py nvmf_subsystem_listener_set_ana_state $NQN -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_SECOND_PORT -n optimized
 
 # wait for the io to switch to second port
-sleep 2
+sleep 6
 confirm_io_on_port "optimized" $NVMF_SECOND_PORT
 
 wait $rpc_pid
