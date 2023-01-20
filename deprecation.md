@@ -42,6 +42,13 @@ without the benefits of persistency.
 
 VTune integration is in now deprecated and will be removed in SPDK 23.05.
 
+### OCF
+
+#### `bdev_ocf`
+
+The Open CAS Framework (OCF) integration via bdev module and env_ocf is now deprecated
+and will be removed in SPDK 23.05.
+
 ### nvme
 
 #### `nvme_ctrlr_prepare_for_reset`
