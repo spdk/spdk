@@ -29,8 +29,8 @@
 
 #define ALIGN_4K			0x1000
 #define MAX_TASKS_PER_CHANNEL		0x800
-#define ACCEL_SMALL_CACHE_SIZE		128
-#define ACCEL_LARGE_CACHE_SIZE		16
+#define ACCEL_SMALL_CACHE_SIZE		0
+#define ACCEL_LARGE_CACHE_SIZE		0
 /* Set MSB, so we don't return NULL pointers as buffers */
 #define ACCEL_BUFFER_BASE		((void *)(1ull << 63))
 #define ACCEL_BUFFER_OFFSET_MASK	((uintptr_t)ACCEL_BUFFER_BASE - 1)
