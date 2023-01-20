@@ -186,8 +186,9 @@ spdk_ublk_init(void)
 }
 
 static int
-ublk_ctrl_cmd(uint32_t dev_id, uint32_t cmd_op, void *args)
+ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op, void *args)
 {
+	uint32_t dev_id = ublk->ublk_id;
 	int rc = -EINVAL;
 	struct io_uring_sqe *sqe;
 	struct io_uring_cqe *cqe;
@@ -409,7 +410,7 @@ _ublk_start_kernel(void *arg)
 
 	SPDK_DEBUGLOG(ublk, "Enter start pthread for ublk %d\n", ublk->ublk_id);
 	assert(ublk->dev_info.ublksrv_pid == getpid());
-	rc = ublk_ctrl_cmd(ublk->ublk_id, UBLK_CMD_START_DEV, &ublk->dev_info.ublksrv_pid);
+	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_START_DEV, &ublk->dev_info.ublksrv_pid);
 	if (rc < 0) {
 		SPDK_ERRLOG("start dev %d failed, rc %s\n", ublk->ublk_id,
 			    spdk_strerror(-rc));
@@ -452,7 +453,7 @@ _ublk_stop_kernel(void *arg)
 
 	SPDK_DEBUGLOG(ublk, "Enter stop pthread for ublk %d\n", ublk->ublk_id);
 
-	rc = ublk_ctrl_cmd(ublk->ublk_id, UBLK_CMD_STOP_DEV, NULL);
+	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_STOP_DEV, NULL);
 	if (rc < 0) {
 		SPDK_ERRLOG("stop dev %d failed\n", ublk->ublk_id);
 	}
@@ -695,7 +696,7 @@ ublk_close_dev_done(void *arg)
 		close(ublk->cdev_fd);
 	}
 
-	rc = ublk_ctrl_cmd(ublk->ublk_id, UBLK_CMD_DEL_DEV, NULL);
+	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_DEL_DEV, NULL);
 	if (rc < 0) {
 		SPDK_ERRLOG("delete dev %d failed\n", ublk->ublk_id);
 	}
@@ -1180,14 +1181,14 @@ _ublk_start_disk(struct spdk_ublk_dev *ublk)
 	int rc;
 	char buf[64];
 
-	rc = ublk_ctrl_cmd(ublk->ublk_id, UBLK_CMD_ADD_DEV, &ublk->dev_info);
+	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_ADD_DEV, &ublk->dev_info);
 	if (rc < 0) {
 		SPDK_ERRLOG("UBLK can't add dev %d, rc %s\n", ublk->ublk_id, spdk_strerror(-rc));
 		goto err;
 	}
 
 	ublk->dev_params.len = sizeof(struct ublk_params);
-	rc = ublk_ctrl_cmd(ublk->ublk_id, UBLK_CMD_SET_PARAMS, &ublk->dev_params);
+	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_SET_PARAMS, &ublk->dev_params);
 	if (rc < 0) {
 		SPDK_ERRLOG("UBLK can't set params for dev %d, rc %s\n", ublk->ublk_id, spdk_strerror(-rc));
 		goto err;
