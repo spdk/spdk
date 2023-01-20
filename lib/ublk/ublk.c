@@ -1179,7 +1179,6 @@ static int
 _ublk_start_disk(struct spdk_ublk_dev *ublk)
 {
 	int rc;
-	char buf[64];
 
 	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_ADD_DEV, &ublk->dev_info);
 	if (rc < 0) {
@@ -1191,13 +1190,6 @@ _ublk_start_disk(struct spdk_ublk_dev *ublk)
 	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_SET_PARAMS, &ublk->dev_params);
 	if (rc < 0) {
 		SPDK_ERRLOG("UBLK can't set params for dev %d, rc %s\n", ublk->ublk_id, spdk_strerror(-rc));
-		goto err;
-	}
-	snprintf(buf, 64, "%s%d", UBLK_BLK_CDEV, ublk->ublk_id);
-	ublk->cdev_fd = open(buf, O_RDWR);
-	if (ublk->cdev_fd < 0) {
-		rc = ublk->cdev_fd;
-		SPDK_ERRLOG("can't open %s, rc %d\n", buf, rc);
 		goto err;
 	}
 
@@ -1333,6 +1325,7 @@ ublk_start_disk(const char *bdev_name, uint32_t ublk_id,
 	struct spdk_bdev	*bdev;
 	struct spdk_ublk_dev	*ublk = NULL;
 	struct spdk_thread	*ublk_thread;
+	char			buf[64];
 
 	if (g_ublk_tgt.active == false) {
 		SPDK_ERRLOG("NO ublk target exist\n");
@@ -1392,6 +1385,14 @@ ublk_start_disk(const char *bdev_name, uint32_t ublk_id,
 		     bdev_name, ublk_id);
 	rc = _ublk_start_disk(ublk);
 	if (rc != 0) {
+		goto err;
+	}
+
+	snprintf(buf, 64, "%s%d", UBLK_BLK_CDEV, ublk->ublk_id);
+	ublk->cdev_fd = open(buf, O_RDWR);
+	if (ublk->cdev_fd < 0) {
+		rc = ublk->cdev_fd;
+		SPDK_ERRLOG("can't open %s, rc %d\n", buf, rc);
 		goto err;
 	}
 
