@@ -537,6 +537,9 @@ _allocate_bit_arrays(struct spdk_reduce_vol *vol)
 	return 0;
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(libreduce_pm_file,
+			      "PMDK libpmem reduce integration", "SPDK 23.05", 0);
+
 void
 spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		     struct spdk_reduce_backing_dev *backing_dev,
@@ -548,6 +551,8 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 	uint64_t backing_dev_size;
 	size_t mapped_len;
 	int dir_len, max_dir_len, rc;
+
+	SPDK_LOG_DEPRECATED(libreduce_pm_file);
 
 	/* We need to append a path separator and the UUID to the supplied
 	 * path.

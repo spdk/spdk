@@ -19,6 +19,25 @@ The tags can be matched with the level 4 headers below.
 
 ## Deprecation Notices {#deprecation-notices}
 
+### PMDK
+
+PMDK is no longer supported and integrations with it in SPDK are now deprecated, and will be removed in SPDK 23.05.
+Please see: [UPDATE ON PMDK AND OUR LONG TERM SUPPORT STRATEGY](https://pmem.io/blog/2022/11/update-on-pmdk-and-our-long-term-support-strategy/).
+
+#### `accel_flag_persistent`
+
+Deprecated `ACCEL_FLAG_PERSISTENT` flag in `accel_sw` accel framework module, it will be removed in SPDK 23.05.
+
+#### `bdev_pmem`
+
+Deprecated `bdev_pmem` based on libpmemblk, it will be removed in SPDK 23.05.
+
+#### `libreduce_pm_file`
+
+Reduce library will no longer depend on libpmem. `pm_file_dir` parameter in `spdk_reduce_vol_init()`
+will no longer point to pmem device or pmem file. Instead it will be possible to operate on a file,
+without the benefits of persistency.
+
 ### VTune
 
 VTune integration is in now deprecated and will be removed in SPDK 23.05.

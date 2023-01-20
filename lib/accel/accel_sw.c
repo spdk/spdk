@@ -66,11 +66,15 @@ _add_to_comp_list(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *acc
 	TAILQ_INSERT_TAIL(&sw_ch->tasks_to_complete, accel_task, link);
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(accel_flag_persistent,
+			      "PMDK libpmem accel_sw integration", "SPDK 23.05", 10);
+
 /* Used when the SW engine is selected and the durable flag is set. */
 inline static int
 _check_flags(int flags)
 {
 	if (flags & ACCEL_FLAG_PERSISTENT) {
+		SPDK_LOG_DEPRECATED(accel_flag_persistent);
 #ifndef SPDK_CONFIG_PMDK
 		/* PMDK is required to use this flag. */
 		SPDK_ERRLOG("ACCEL_FLAG_PERSISTENT set but PMDK not configured. Configure PMDK or do not use this flag.\n");
