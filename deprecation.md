@@ -19,6 +19,10 @@ The tags can be matched with the level 4 headers below.
 
 ## Deprecation Notices {#deprecation-notices}
 
+### VTune
+
+VTune integration is in now deprecated and will be removed in SPDK 23.05.
+
 ### nvme
 
 #### `nvme_ctrlr_prepare_for_reset`
