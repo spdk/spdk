@@ -95,7 +95,7 @@ struct spdk_ublk_dev {
 
 	struct spdk_poller	*retry_poller;
 	int			retry_count;
-	uint32_t		q_deinit_num;
+	uint32_t		queues_closed;
 	volatile bool		is_closing;
 	ublk_del_cb		del_cb;
 	void			*cb_arg;
@@ -717,28 +717,40 @@ ublk_delete_dev(struct spdk_ublk_dev *ublk)
 }
 
 static int
-_ublk_try_close_dev(void *arg)
+_ublk_close_dev_retry(void *arg)
 {
 	struct spdk_ublk_dev *ublk = arg;
 
-	assert(spdk_get_thread() == ublk->app_thread);
 	if (ublk->ctrl_ops_in_progress > 0) {
-		if (ublk->retry_poller == NULL) {
-			ublk->retry_count = UBLK_STOP_BUSY_WAITING_MS * 1000ULL / UBLK_BUSY_POLLING_INTERVAL_US;
-			ublk->retry_poller = SPDK_POLLER_REGISTER(_ublk_try_close_dev, ublk,
-					     UBLK_BUSY_POLLING_INTERVAL_US);
-			return SPDK_POLLER_BUSY;
-		}
 		if (ublk->retry_count-- > 0) {
 			return SPDK_POLLER_BUSY;
 		}
 		SPDK_ERRLOG("Timeout on ctrl op completion.\n");
 	}
 	spdk_poller_unregister(&ublk->retry_poller);
-	/* Update queue deinit number */
-	ublk->q_deinit_num += 1;
-	if (ublk->q_deinit_num == ublk->num_queues) {
-		spdk_thread_send_msg(ublk->app_thread, ublk_close_dev_done, ublk);
+	ublk_close_dev_done(ublk);
+	return SPDK_POLLER_BUSY;
+}
+
+static int
+_ublk_try_close_dev(void *arg)
+{
+	struct spdk_ublk_dev *ublk = arg;
+
+	assert(spdk_get_thread() == ublk->app_thread);
+	ublk->queues_closed += 1;
+	if (ublk->queues_closed < ublk->num_queues) {
+		return SPDK_POLLER_BUSY;
+	}
+
+	if (ublk->ctrl_ops_in_progress > 0) {
+		assert(ublk->retry_poller == NULL);
+		ublk->retry_count = UBLK_STOP_BUSY_WAITING_MS * 1000ULL / UBLK_BUSY_POLLING_INTERVAL_US;
+		ublk->retry_poller = SPDK_POLLER_REGISTER(_ublk_close_dev_retry, ublk,
+				     UBLK_BUSY_POLLING_INTERVAL_US);
+		return SPDK_POLLER_BUSY;
+	} else {
+		ublk_close_dev_done(ublk);
 	}
 
 	return SPDK_POLLER_BUSY;
@@ -1352,7 +1364,7 @@ ublk_start_disk(const char *bdev_name, uint32_t ublk_id,
 	bdev = spdk_bdev_desc_get_bdev(ublk->bdev_desc);
 	ublk->bdev = bdev;
 
-	ublk->q_deinit_num = 0;
+	ublk->queues_closed = 0;
 	ublk->app_thread = spdk_get_thread();
 	ublk->ublk_id = ublk_id;
 	ublk->num_queues = num_queues;
