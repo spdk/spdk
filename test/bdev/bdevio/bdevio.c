@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -99,7 +99,7 @@ bdevio_construct_target_open_cb(enum spdk_bdev_event_type type, struct spdk_bdev
 }
 
 static int
-bdevio_construct_target(struct spdk_bdev *bdev)
+bdevio_construct_target(void *ctx, struct spdk_bdev *bdev)
 {
 	struct io_target *target;
 	int rc;
@@ -135,19 +135,14 @@ bdevio_construct_target(struct spdk_bdev *bdev)
 static int
 bdevio_construct_targets(void)
 {
-	struct spdk_bdev *bdev;
 	int rc;
 
 	printf("I/O targets:\n");
 
-	bdev = spdk_bdev_first_leaf();
-	while (bdev != NULL) {
-		rc = bdevio_construct_target(bdev);
-		if (rc < 0) {
-			SPDK_ERRLOG("Could not construct bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
-			return rc;
-		}
-		bdev = spdk_bdev_next_leaf(bdev);
+	rc = spdk_for_each_bdev_leaf(NULL, bdevio_construct_target);
+	if (rc < 0) {
+		SPDK_ERRLOG("Could not complete constructing bdevs, error=%d\n", rc);
+		return rc;
 	}
 
 	if (g_io_targets == NULL) {
@@ -1507,7 +1502,7 @@ rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_v
 							     req.name, spdk_strerror(ENODEV));
 			goto invalid;
 		}
-		rc = bdevio_construct_target(bdev);
+		rc = bdevio_construct_target(NULL, bdev);
 		if (rc < 0) {
 			SPDK_ERRLOG("Could not construct target for bdev '%s'\n", spdk_bdev_get_name(bdev));
 			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
