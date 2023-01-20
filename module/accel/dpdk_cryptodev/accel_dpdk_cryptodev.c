@@ -556,7 +556,6 @@ accel_dpdk_cryptodev_task_alloc_resources(struct rte_mbuf **src_mbufs, struct rt
 					      0x1000);
 #endif
 	/* Allocate crypto operations. */
-	SPDK_NOTICELOG("requested %u ops\n", count);
 	rc = rte_crypto_op_bulk_alloc(g_crypto_op_mp,
 				      RTE_CRYPTO_OP_TYPE_SYMMETRIC,
 				      crypto_ops, count);
