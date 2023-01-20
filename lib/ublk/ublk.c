@@ -1163,7 +1163,7 @@ static void
 ublk_dev_queue_io_init(struct ublk_queue *q)
 {
 	uint32_t i;
-	int rc;
+	int rc __attribute__((unused));
 
 	/* submit all io commands to ublk driver */
 	for (i = 0; i < q->q_depth; i++) {
