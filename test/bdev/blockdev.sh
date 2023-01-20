@@ -244,7 +244,7 @@ function setup_crypto_mlx5_conf() {
 	fi
 
 	# Malloc0 will use MLX5 AES_XTS
-	"$rpc_py" <<- RPC
+	"$rootdir/scripts/rpc.py" <<- RPC
 		dpdk_cryptodev_scan_accel_module
 		dpdk_cryptodev_set_driver -d mlx5_pci
 		accel_assign_opc -o encrypt -m dpdk_cryptodev
