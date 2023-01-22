@@ -5696,11 +5696,17 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 			}
 		}
 		if (!found) {
-			struct discovery_entry_ctx *subnqn_ctx, *new_ctx;
+			struct discovery_entry_ctx *subnqn_ctx = NULL, *new_ctx;
+			struct discovery_ctx *d_ctx;
 
-			TAILQ_FOREACH(subnqn_ctx, &ctx->nvm_entry_ctxs, tailq) {
-				if (!memcmp(subnqn_ctx->entry.subnqn, new_entry->subnqn,
-					    sizeof(new_entry->subnqn))) {
+			TAILQ_FOREACH(d_ctx, &g_discovery_ctxs, tailq) {
+				TAILQ_FOREACH(subnqn_ctx, &d_ctx->nvm_entry_ctxs, tailq) {
+					if (!memcmp(subnqn_ctx->entry.subnqn, new_entry->subnqn,
+						    sizeof(new_entry->subnqn))) {
+						break;
+					}
+				}
+				if (subnqn_ctx) {
 					break;
 				}
 			}
