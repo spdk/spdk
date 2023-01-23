@@ -143,7 +143,7 @@ struct ublk_tgt {
 	TAILQ_HEAD(, spdk_ublk_dev)	ctrl_wait_tailq;
 };
 
-static TAILQ_HEAD(, spdk_ublk_dev) g_ublk_bdevs = TAILQ_HEAD_INITIALIZER(g_ublk_bdevs);
+static TAILQ_HEAD(, spdk_ublk_dev) g_ublk_devs = TAILQ_HEAD_INITIALIZER(g_ublk_devs);
 static struct ublk_tgt g_ublk_tgt;
 
 /* helpers for using io_uring */
@@ -504,12 +504,12 @@ _ublk_fini(void *args)
 {
 	struct spdk_ublk_dev	*ublk, *ublk_tmp;
 
-	TAILQ_FOREACH_SAFE(ublk, &g_ublk_bdevs, tailq, ublk_tmp) {
+	TAILQ_FOREACH_SAFE(ublk, &g_ublk_devs, tailq, ublk_tmp) {
 		ublk_close_dev(ublk);
 	}
 
 	/* Check if all ublks closed */
-	if (TAILQ_EMPTY(&g_ublk_bdevs)) {
+	if (TAILQ_EMPTY(&g_ublk_devs)) {
 		SPDK_DEBUGLOG(ublk, "finish shutdown\n");
 		spdk_poller_unregister(&g_ublk_tgt.ctrl_poller);
 		if (g_ublk_tgt.ctrl_ring.ring_fd >= 0) {
@@ -564,7 +564,7 @@ ublk_dev_find_by_id(uint32_t ublk_id)
 	struct spdk_ublk_dev *ublk;
 
 	/* check whether ublk has already been registered by ublk path. */
-	TAILQ_FOREACH(ublk, &g_ublk_bdevs, tailq) {
+	TAILQ_FOREACH(ublk, &g_ublk_devs, tailq) {
 		if (ublk->ublk_id == ublk_id) {
 			return ublk;
 		}
@@ -581,7 +581,7 @@ ublk_dev_get_id(struct spdk_ublk_dev *ublk)
 
 struct spdk_ublk_dev *ublk_dev_first(void)
 {
-	return TAILQ_FIRST(&g_ublk_bdevs);
+	return TAILQ_FIRST(&g_ublk_devs);
 }
 
 struct spdk_ublk_dev *ublk_dev_next(struct spdk_ublk_dev *prev)
@@ -614,7 +614,7 @@ spdk_ublk_write_config_json(struct spdk_json_write_ctx *w)
 
 	spdk_json_write_array_begin(w);
 
-	TAILQ_FOREACH(ublk, &g_ublk_bdevs, tailq) {
+	TAILQ_FOREACH(ublk, &g_ublk_devs, tailq) {
 		spdk_json_write_object_begin(w);
 
 		spdk_json_write_named_string(w, "method", "ublk_start_disk");
@@ -643,7 +643,7 @@ ublk_dev_list_register(struct spdk_ublk_dev *ublk)
 	}
 
 	UBLK_DEBUGLOG(ublk, "add to tailq\n");
-	TAILQ_INSERT_TAIL(&g_ublk_bdevs, ublk, tailq);
+	TAILQ_INSERT_TAIL(&g_ublk_devs, ublk, tailq);
 
 	return 0;
 }
@@ -658,7 +658,7 @@ ublk_dev_list_unregister(struct spdk_ublk_dev *ublk)
 
 	if (ublk_dev_find_by_id(ublk->ublk_id)) {
 		UBLK_DEBUGLOG(ublk, "remove from tailq\n");
-		TAILQ_REMOVE(&g_ublk_bdevs, ublk, tailq);
+		TAILQ_REMOVE(&g_ublk_devs, ublk, tailq);
 		return;
 	}
 
