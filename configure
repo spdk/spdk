@@ -1109,6 +1109,11 @@ if echo -e '#include <stdlib.h>\nint main(void) { arc4random(); return 0; }\n' \
 	CONFIG[HAVE_ARC4RANDOM]="y"
 fi
 
+if echo -e '#include <uuid/uuid.h>\nint main(void) { uuid_generate_sha1(NULL, NULL, NULL, 0); return 0; }\n' \
+	| "${BUILD_CMD[@]}" - -luuid 2> /dev/null; then
+	CONFIG[HAVE_UUID_GENERATE_SHA1]="y"
+fi
+
 if [[ "${CONFIG[OCF]}" = "y" ]]; then
 	echo "WARNING: OCF - bdev_ocf is deprecated."
 	# If OCF_PATH is a file, assume it is a library and use it to compile with
