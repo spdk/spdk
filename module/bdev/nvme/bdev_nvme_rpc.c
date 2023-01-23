@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *   Copyright (c) 2022 Dell Inc, or its subsidiaries. All rights reserved.
  */
 
@@ -936,7 +936,6 @@ rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 	int					fd = -1;
 	struct stat				fw_stat;
 	struct spdk_nvme_ctrlr			*ctrlr;
-	char					msg[1024];
 	struct spdk_bdev			*bdev;
 	struct spdk_bdev			*bdev2;
 	struct open_descriptors			*opt;
@@ -956,24 +955,29 @@ rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 
 	firm_ctx->req = calloc(1, sizeof(struct rpc_apply_firmware));
 	if (!firm_ctx->req) {
-		snprintf(msg, sizeof(msg), "Memory allocation error.");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Memory allocation error.");
 		goto err;
 	}
 
 	if (spdk_json_decode_object(params, rpc_apply_firmware_decoders,
 				    SPDK_COUNTOF(rpc_apply_firmware_decoders), firm_ctx->req)) {
-		snprintf(msg, sizeof(msg), "spdk_json_decode_object failed.");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed.");
 		goto err;
 	}
 
 	if ((bdev = spdk_bdev_get_by_name(firm_ctx->req->bdev_name)) == NULL) {
-		snprintf(msg, sizeof(msg), "bdev %s were not found", firm_ctx->req->bdev_name);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "bdev %s were not found",
+						     firm_ctx->req->bdev_name);
 		goto err;
 	}
 
 	if ((ctrlr = bdev_nvme_get_ctrlr(bdev)) == NULL) {
-		snprintf(msg, sizeof(msg), "Controller information for %s were not found.",
-			 firm_ctx->req->bdev_name);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Controller information for %s were not found.",
+						     firm_ctx->req->bdev_name);
 		goto err;
 	}
 	firm_ctx->ctrlr = ctrlr;
@@ -985,12 +989,15 @@ rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 		}
 
 		if (!(opt = malloc(sizeof(struct open_descriptors)))) {
-			snprintf(msg, sizeof(msg), "Memory allocation error.");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "Memory allocation error.");
 			goto err;
 		}
 
 		if (spdk_bdev_open_ext(spdk_bdev_get_name(bdev2), true, apply_firmware_open_cb, NULL, &desc) != 0) {
-			snprintf(msg, sizeof(msg), "Device %s is in use.", firm_ctx->req->bdev_name);
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							     "Device %s is in use.",
+							     firm_ctx->req->bdev_name);
 			free(opt);
 			goto err;
 		}
@@ -1015,33 +1022,38 @@ rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 	}
 
 	if (!firm_ctx->desc) {
-		snprintf(msg, sizeof(msg), "No descriptor were found.");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "No descriptor were found.");
 		goto err;
 	}
 
 	firm_ctx->ch = spdk_bdev_get_io_channel(firm_ctx->desc);
 	if (!firm_ctx->ch) {
-		snprintf(msg, sizeof(msg), "No channels were found.");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "No channels were found.");
 		goto err;
 	}
 
 	fd = open(firm_ctx->req->filename, O_RDONLY);
 	if (fd < 0) {
-		snprintf(msg, sizeof(msg), "open file failed.");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "open file failed.");
 		goto err;
 	}
 
 	rc = fstat(fd, &fw_stat);
 	if (rc < 0) {
 		close(fd);
-		snprintf(msg, sizeof(msg), "fstat failed.");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "fstat failed.");
 		goto err;
 	}
 
 	firm_ctx->size = fw_stat.st_size;
 	if (fw_stat.st_size % 4) {
 		close(fd);
-		snprintf(msg, sizeof(msg), "Firmware image size is not multiple of 4.");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Firmware image size is not multiple of 4.");
 		goto err;
 	}
 
@@ -1049,14 +1061,16 @@ rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 					  SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (!firm_ctx->fw_image) {
 		close(fd);
-		snprintf(msg, sizeof(msg), "Memory allocation error.");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Memory allocation error.");
 		goto err;
 	}
 	firm_ctx->p = firm_ctx->fw_image;
 
 	if (read(fd, firm_ctx->p, firm_ctx->size) != ((ssize_t)(firm_ctx->size))) {
 		close(fd);
-		snprintf(msg, sizeof(msg), "Read firmware image failed!");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Read firmware image failed!");
 		goto err;
 	}
 	close(fd);
@@ -1076,9 +1090,9 @@ rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	snprintf(msg, sizeof(msg), "Read firmware image failed!");
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+					 "Read firmware image failed!");
 err:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, msg);
 	apply_firmware_cleanup(firm_ctx);
 }
 SPDK_RPC_REGISTER("bdev_nvme_apply_firmware", rpc_bdev_nvme_apply_firmware, SPDK_RPC_RUNTIME)
