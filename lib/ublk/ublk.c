@@ -646,27 +646,6 @@ ublk_dev_list_unregister(struct spdk_ublk_dev *ublk)
 	}
 }
 
-static inline bool
-ublk_is_ready_to_stop(struct spdk_ublk_dev *ublk)
-{
-	/*
-	 * Stop action should be called only after all ublk_io are completed.
-	 */
-	bool ready_to_stop = true;
-	struct ublk_queue *q;
-	uint32_t i;
-
-	for (i = 0; i < ublk->num_queues; i++) {
-		q = &ublk->queues[i];
-		if (!TAILQ_EMPTY(&q->inflight_io_list) || !TAILQ_EMPTY(&q->completed_io_list) || q->cmd_inflight) {
-			ready_to_stop = false;
-			break;
-		}
-	}
-
-	return ready_to_stop;
-}
-
 static void
 ublk_close_dev_done(void *arg)
 {
@@ -763,15 +742,18 @@ ublk_try_close_dev(void *arg)
 }
 
 static void
-ublk_try_close_queue(void *arg)
+ublk_try_close_queue(struct ublk_queue *q)
 {
-	struct ublk_queue *q = arg;
 	struct spdk_ublk_dev *ublk = q->dev;
 
-	if (!ublk_is_ready_to_stop(ublk)) {
+	/* Close queue until no I/O is submitted to bdev in flight,
+	 * no I/O is waiting to commit result, and all I/Os are aborted back.
+	 */
+	if (!TAILQ_EMPTY(&q->inflight_io_list) || !TAILQ_EMPTY(&q->completed_io_list) || q->cmd_inflight) {
 		/* wait for next retry */
 		return;
 	}
+
 	TAILQ_REMOVE(&q->thread_ctx->queue_list, q, tailq);
 	spdk_put_io_channel(ublk->ch[q->q_id]);
 	ublk->ch[q->q_id] = NULL;
