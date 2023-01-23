@@ -184,8 +184,10 @@ EOF
 			fi
 
 			if [[ $so_name_changed == yes ]]; then
-				# After 22.01 LTS all SO major versions were intentionally increased. Disable this check until SPDK 22.05 release.
-				found_abi_change=true
+				# After 23.01 LTS all SO major versions were intentionally increased. This check can be removed after SPDK 23.05 release.
+				if [[ "$release" == "v23.01.x" ]]; then
+					found_abi_change=true
+				fi
 				if ! $found_abi_change; then
 					echo "SO name for $so_file changed without a change to abi. please revert that change."
 					touch $fail_file

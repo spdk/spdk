@@ -6,8 +6,8 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-SO_VER := 9
-SO_MINOR := 1
+SO_VER := 10
+SO_MINOR := 0
 
 C_SRCS = nvme_ctrlr_cmd.c nvme_ctrlr.c nvme_fabric.c nvme_ns_cmd.c \
 	nvme_ns.c nvme_pcie_common.c nvme_pcie.c nvme_qpair.c nvme.c \

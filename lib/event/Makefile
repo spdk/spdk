@@ -6,7 +6,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-SO_VER := 11
+SO_VER := 12
 SO_MINOR := 0
 
 CFLAGS += $(ENV_CFLAGS) -Wno-address-of-packed-member

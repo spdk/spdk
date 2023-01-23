@@ -6,8 +6,8 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-SO_VER := 3
-SO_MINOR := 1
+SO_VER := 4
+SO_MINOR := 0
 
 C_SRCS = vfio_user_pci.c vfio_user.c
 LIBNAME = vfio_user
