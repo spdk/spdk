@@ -605,53 +605,6 @@ cq_tail_advance(struct nvmf_vfio_user_cq *cq)
 	}
 }
 
-static uint32_t
-cq_free_slots(struct nvmf_vfio_user_cq *cq)
-{
-	uint32_t free_slots;
-
-	assert(cq != NULL);
-
-	if (cq->tail == cq->last_head) {
-		free_slots = cq->size;
-	} else if (cq->tail > cq->last_head) {
-		free_slots = cq->size - (cq->tail - cq->last_head);
-	} else {
-		free_slots = cq->last_head - cq->tail;
-	}
-	assert(free_slots > 0);
-
-	return free_slots - 1;
-}
-
-/*
- * As per NVMe Base spec 3.3.1.2.1, we are supposed to implement CQ flow
- * control: if there is no space in the CQ, we should wait until there is.
- *
- * In practice, we just fail the controller instead: as it happens, all host
- * implementations we care about right-size the CQ: this is required anyway for
- * NVMEoF support (see 3.3.2.8).
- *
- * Since reading the head doorbell is relatively expensive, we use the cached
- * value, so we only have to read it for real if it appears that we are full.
- */
-static inline bool
-cq_is_full(struct nvmf_vfio_user_cq *cq)
-{
-	uint32_t free_cq_slots;
-
-	assert(cq != NULL);
-
-	free_cq_slots = cq_free_slots(cq);
-
-	if (spdk_unlikely(free_cq_slots == 0)) {
-		cq->last_head = *cq_dbl_headp(cq);
-		free_cq_slots = cq_free_slots(cq);
-	}
-
-	return free_cq_slots == 0;
-}
-
 static bool
 io_q_exists(struct nvmf_vfio_user_ctrlr *vu_ctrlr, const uint16_t qid, const bool is_cq)
 {
@@ -1724,6 +1677,46 @@ vfio_user_map_cmd(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *
 static int handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 			  struct nvmf_vfio_user_sq *sq);
 
+static uint32_t
+cq_free_slots(struct nvmf_vfio_user_cq *cq)
+{
+	uint32_t free_slots;
+
+	assert(cq != NULL);
+
+	if (cq->tail == cq->last_head) {
+		free_slots = cq->size;
+	} else if (cq->tail > cq->last_head) {
+		free_slots = cq->size - (cq->tail - cq->last_head);
+	} else {
+		free_slots = cq->last_head - cq->tail;
+	}
+	assert(free_slots > 0);
+
+	return free_slots - 1;
+}
+
+/*
+ * Since reading the head doorbell is relatively expensive, we use the cached
+ * value, so we only have to read it for real if it appears that we are full.
+ */
+static inline bool
+cq_is_full(struct nvmf_vfio_user_cq *cq)
+{
+	uint32_t free_cq_slots;
+
+	assert(cq != NULL);
+
+	free_cq_slots = cq_free_slots(cq);
+
+	if (spdk_unlikely(free_cq_slots == 0)) {
+		cq->last_head = *cq_dbl_headp(cq);
+		free_cq_slots = cq_free_slots(cq);
+	}
+
+	return free_cq_slots == 0;
+}
+
 /*
  * Posts a CQE in the completion queue.
  *
@@ -1753,6 +1746,14 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq
 		assert(spdk_get_thread() == cq->group->group->thread);
 	}
 
+	/*
+	 * As per NVMe Base spec 3.3.1.2.1, we are supposed to implement CQ flow
+	 * control: if there is no space in the CQ, we should wait until there is.
+	 *
+	 * In practice, we just fail the controller instead: as it happens, all host
+	 * implementations we care about right-size the CQ: this is required anyway for
+	 * NVMEoF support (see 3.3.2.8).
+	 */
 	if (cq_is_full(cq)) {
 		SPDK_ERRLOG("%s: cqid:%d full (tail=%d, head=%d)\n",
 			    ctrlr_id(ctrlr), cq->qid, *cq_tailp(cq),
