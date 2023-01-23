@@ -520,11 +520,6 @@ spdk_sock_flush(struct spdk_sock *sock)
 		return -1;
 	}
 
-	/* Sock is in a polling group, so group polling mechanism will work */
-	if (sock->group_impl != NULL) {
-		return 0;
-	}
-
 	return sock->net_impl->flush(sock);
 }
 
