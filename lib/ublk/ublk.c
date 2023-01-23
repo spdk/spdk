@@ -722,15 +722,15 @@ _ublk_close_dev_retry(void *arg)
 	return SPDK_POLLER_BUSY;
 }
 
-static int
-_ublk_try_close_dev(void *arg)
+static void
+ublk_try_close_dev(void *arg)
 {
 	struct spdk_ublk_dev *ublk = arg;
 
 	assert(spdk_get_thread() == ublk->app_thread);
 	ublk->queues_closed += 1;
 	if (ublk->queues_closed < ublk->num_queues) {
-		return SPDK_POLLER_BUSY;
+		return;
 	}
 
 	if (ublk->ctrl_ops_in_progress > 0) {
@@ -738,18 +738,9 @@ _ublk_try_close_dev(void *arg)
 		ublk->retry_count = UBLK_STOP_BUSY_WAITING_MS * 1000ULL / UBLK_BUSY_POLLING_INTERVAL_US;
 		ublk->retry_poller = SPDK_POLLER_REGISTER(_ublk_close_dev_retry, ublk,
 				     UBLK_BUSY_POLLING_INTERVAL_US);
-		return SPDK_POLLER_BUSY;
 	} else {
 		ublk_delete_dev(ublk);
 	}
-
-	return SPDK_POLLER_BUSY;
-}
-
-static void
-ublk_try_close_dev(void *arg)
-{
-	_ublk_try_close_dev(arg);
 }
 
 static void
