@@ -248,24 +248,24 @@ ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op)
 	ublk->next_state_fn = NULL;
 
 	switch (cmd_op) {
-	case UBLK_CMD_START_DEV:
-		cmd->data[0] = getpid();
-		cmd->data[1] = 0;
-		break;
 	case UBLK_CMD_ADD_DEV:
 		ublk->next_state_fn = ublk_set_params;
 		cmd->addr = (__u64)(uintptr_t)&ublk->dev_info;
 		cmd->len = sizeof(ublk->dev_info);
 		break;
-	case UBLK_CMD_STOP_DEV:
-		break;
-	case UBLK_CMD_DEL_DEV:
-		ublk->next_state_fn = ublk_delete_dev;
-		break;
 	case UBLK_CMD_SET_PARAMS:
 		ublk->next_state_fn = ublk_finish_start;
 		cmd->addr = (__u64)(uintptr_t)&ublk->dev_params;
 		cmd->len = sizeof(ublk->dev_params);
+		break;
+	case UBLK_CMD_START_DEV:
+		cmd->data[0] = getpid();
+		cmd->data[1] = 0;
+		break;
+	case UBLK_CMD_STOP_DEV:
+		break;
+	case UBLK_CMD_DEL_DEV:
+		ublk->next_state_fn = ublk_delete_dev;
 		break;
 	default:
 		SPDK_ERRLOG("No match cmd operation,cmd_op = %d\n", cmd_op);
