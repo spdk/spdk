@@ -81,7 +81,7 @@ function cleanup() {
 }
 
 modprobe ublk_drv
-"$SPDK_BIN_DIR/spdk_tgt" -m 0x3 &
+"$SPDK_BIN_DIR/spdk_tgt" -m 0x3 -L ublk &
 spdk_pid=$!
 trap 'cleanup; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid
