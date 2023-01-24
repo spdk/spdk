@@ -956,7 +956,8 @@ if __name__ == "__main__":
                                                       user=args.user,
                                                       config_param=config_param,
                                                       config_file=args.config_file,
-                                                      key_file=args.key_file))
+                                                      key_file=args.key_file,
+                                                      core_mask=args.core_mask))
 
     p = subparsers.add_parser('bdev_rbd_register_cluster',
                               help='Add a Rados cluster with ceph rbd backend')
@@ -966,6 +967,7 @@ if __name__ == "__main__":
                    help="adds a key=value configuration option for rados_conf_set (default: rely on config file)")
     p.add_argument('--config-file', help="The file path of the Rados configuration file", required=False)
     p.add_argument('--key-file', help="The file path of the Rados keyring file", required=False)
+    p.add_argument('--core-mask', help="Set core mask for librbd IO context threads", required=False)
     p.set_defaults(func=bdev_rbd_register_cluster)
 
     def bdev_rbd_unregister_cluster(args):

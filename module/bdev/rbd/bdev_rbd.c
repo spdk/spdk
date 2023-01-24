@@ -64,6 +64,7 @@ struct bdev_rbd_cluster {
 	char **config_param;
 	char *config_file;
 	char *key_file;
+	char *core_mask;
 	rados_t cluster;
 	uint32_t ref;
 	STAILQ_ENTRY(bdev_rbd_cluster) link;
@@ -83,6 +84,7 @@ bdev_rbd_cluster_free(struct bdev_rbd_cluster *entry)
 	free(entry->key_file);
 	free(entry->user_id);
 	free(entry->name);
+	free(entry->core_mask);
 	free(entry);
 }
 
@@ -848,6 +850,10 @@ dump_single_cluster_entry(struct bdev_rbd_cluster *entry, struct spdk_json_write
 		spdk_json_write_named_string(w, "key_file", entry->key_file);
 	}
 
+	if (entry->core_mask) {
+		spdk_json_write_named_string(w, "core_mask", entry->core_mask);
+	}
+
 	spdk_json_write_object_end(w);
 }
 
@@ -903,10 +909,42 @@ static const struct spdk_bdev_fn_table rbd_fn_table = {
 };
 
 static int
+rbd_thread_set_cpumask(struct spdk_cpuset *set)
+{
+#ifdef __linux__
+	uint32_t lcore;
+	cpu_set_t mask;
+
+	assert(set != NULL);
+	CPU_ZERO(&mask);
+
+	/* get the core id on current spdk_cpuset and set to cpu_set_t */
+	for (lcore = 0; lcore < SPDK_CPUSET_SIZE; lcore++) {
+		if (spdk_cpuset_get_cpu(set, lcore)) {
+			CPU_SET(lcore, &mask);
+		}
+	}
+
+	/* change current thread core mask */
+	if (sched_setaffinity(0, sizeof(mask), &mask) < 0) {
+		SPDK_ERRLOG("Set non SPDK thread cpu mask error (errno=%d)\n", errno);
+		return -1;
+	}
+
+	return 0;
+#else
+	SPDK_ERRLOG("SPDK non spdk thread cpumask setup supports only Linux platform now.\n");
+	return -ENOTSUP;
+#endif
+}
+
+
+static int
 rbd_register_cluster(const char *name, const char *user_id, const char *const *config_param,
-		     const char *config_file, const char *key_file)
+		     const char *config_file, const char *key_file, const char *core_mask)
 {
 	struct bdev_rbd_cluster *entry;
+	struct spdk_cpuset rbd_core_mask = {};
 	int rc;
 
 	pthread_mutex_lock(&g_map_bdev_rbd_cluster_mutex);
@@ -964,6 +1002,29 @@ rbd_register_cluster(const char *name, const char *user_id, const char *const *c
 		}
 	}
 
+	if (core_mask) {
+		entry->core_mask = strdup(core_mask);
+		if (entry->core_mask == NULL) {
+			SPDK_ERRLOG("Core_mask=%s allocation failed on entry = %p\n", core_mask, entry);
+			goto err_handle;
+		}
+
+		if (spdk_cpuset_parse(&rbd_core_mask, entry->core_mask) < 0) {
+			SPDK_ERRLOG("Invalid cpumask=%s on entry = %p\n", entry->core_mask, entry);
+			goto err_handle;
+		}
+
+		if (rbd_thread_set_cpumask(&rbd_core_mask) < 0) {
+			SPDK_ERRLOG("Failed to change rbd threads to core_mask %s on entry = %p\n", core_mask, entry);
+			goto err_handle;
+		}
+	}
+
+
+	/* If rbd thread core mask is given, rados_create() must execute with
+	 * the affinity set by rbd_thread_set_cpumask(). The affinity set
+	 * by rbd_thread_set_cpumask() will be reverted once rbd_register_cluster() returns
+	 * and when we leave the spdk_call_unaffinitized context. */
 	rc = rados_create(&entry->cluster, user_id);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to create rados_t struct\n");
@@ -1062,7 +1123,7 @@ _bdev_rbd_register_cluster(void *arg)
 
 	rc = rbd_register_cluster((const char *)info->name, (const char *)info->user_id,
 				  (const char *const *)info->config_param, (const char *)info->config_file,
-				  (const char *)info->key_file);
+				  (const char *)info->key_file, info->core_mask);
 	if (rc) {
 		ret = NULL;
 	}

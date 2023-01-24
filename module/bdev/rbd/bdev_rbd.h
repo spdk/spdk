@@ -17,6 +17,7 @@ struct cluster_register_info {
 	char **config_param;
 	char *config_file;
 	char *key_file;
+	char *core_mask;
 };
 
 void bdev_rbd_free_config(char **config);
