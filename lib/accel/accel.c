@@ -150,6 +150,7 @@ accel_sequence_set_state(struct spdk_accel_sequence *seq, enum accel_sequence_st
 {
 	SPDK_DEBUGLOG(accel, "seq=%p, setting state: %s -> %s\n", seq,
 		      ACCEL_SEQUENCE_STATE_STRING(seq->state), ACCEL_SEQUENCE_STATE_STRING(state));
+	assert(seq->state != ACCEL_SEQUENCE_STATE_ERROR || state == ACCEL_SEQUENCE_STATE_ERROR);
 	seq->state = state;
 }
 
