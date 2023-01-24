@@ -205,6 +205,13 @@ if $rpc_py vhost_create_blk_controller blk_ctrl Malloc0; then
 fi
 $rpc_py bdev_lvol_delete_lvstore -l lvs
 
+notice "Trying to create already existing block transport layer"
+# vhost_user_blk transport is created by default on application start,
+# so first rpc call to create the transport should fail with EEXIST.
+if $rpc_py virtio_blk_create_transport vhost_user_blk; then
+	error "Creating already existing virtio blk transport succeded, but shouldn't"
+fi
+
 notice "Testing done -> shutting down"
 notice "killing vhost app"
 vhost_kill 0
