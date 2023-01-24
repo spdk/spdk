@@ -43,6 +43,7 @@ struct ublk_thread_ctx;
 static void ublk_submit_bdev_io(struct ublk_queue *q, uint16_t tag);
 static void ublk_dev_queue_fini(struct ublk_queue *q);
 static int ublk_poll(void *arg);
+static int ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op);
 
 typedef void (*ublk_next_state_fn)(struct spdk_ublk_dev *ublk);
 static void ublk_set_params(struct spdk_ublk_dev *ublk);
@@ -106,6 +107,7 @@ struct spdk_ublk_dev {
 	uint32_t		ctrl_ops_in_progress;
 
 	TAILQ_ENTRY(spdk_ublk_dev) tailq;
+	TAILQ_ENTRY(spdk_ublk_dev) wait_tailq;
 };
 
 struct ublk_thread_ctx {
@@ -124,6 +126,7 @@ struct ublk_tgt {
 	struct spdk_poller	*ctrl_poller;
 	uint32_t		ctrl_ops_in_progress;
 	struct ublk_thread_ctx	thread_ctx[UBLK_THREAD_MAX];
+	TAILQ_HEAD(, spdk_ublk_dev)	ctrl_wait_tailq;
 };
 
 static TAILQ_HEAD(, spdk_ublk_dev) g_ublk_bdevs = TAILQ_HEAD_INITIALIZER(g_ublk_bdevs);
@@ -219,6 +222,12 @@ ublk_ctrl_poller(void *arg)
 			ublk->next_state_fn(ublk);
 		}
 		io_uring_cqe_seen(ring, cqe);
+		ublk = TAILQ_FIRST(&g_ublk_tgt.ctrl_wait_tailq);
+		if (ublk != NULL) {
+			TAILQ_REMOVE(&g_ublk_tgt.ctrl_wait_tailq, ublk, wait_tailq);
+			rc = ublk_ctrl_cmd(ublk, ublk->ctrl_cmd_op);
+			assert(rc == 0);
+		}
 		count++;
 	}
 
@@ -233,10 +242,14 @@ ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op)
 	struct io_uring_sqe *sqe;
 	struct ublksrv_ctrl_cmd *cmd;
 
+	ublk->ctrl_cmd_op = cmd_op;
 	sqe = io_uring_get_sqe(&g_ublk_tgt.ctrl_ring);
 	if (!sqe) {
-		SPDK_ERRLOG("can't get sqe rc %d\n", rc);
-		return rc;
+		/* The cmd_op was saved in the ublk, to ensure we use the
+		 * correct cmd_op when it later gets resubmitted.
+		 */
+		TAILQ_INSERT_TAIL(&g_ublk_tgt.ctrl_wait_tailq, ublk, wait_tailq);
+		return 0;
 	}
 	cmd = (struct ublksrv_ctrl_cmd *)ublk_get_sqe_cmd(sqe);
 	sqe->fd = g_ublk_tgt.ctrl_fd;
@@ -244,7 +257,6 @@ ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op)
 	sqe->ioprio = 0;
 	cmd->dev_id = dev_id;
 	cmd->queue_id = -1;
-	ublk->ctrl_cmd_op = cmd_op;
 	ublk->next_state_fn = NULL;
 
 	switch (cmd_op) {
@@ -384,6 +396,8 @@ ublk_create_target(const char *cpumask_str)
 		SPDK_ERRLOG("UBLK target has been created\n");
 		return -EBUSY;
 	}
+
+	TAILQ_INIT(&g_ublk_tgt.ctrl_wait_tailq);
 
 	rc = ublk_parse_core_mask(cpumask_str, &cpuset);
 	if (rc != 0) {
