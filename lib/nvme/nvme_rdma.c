@@ -2508,7 +2508,15 @@ nvme_rdma_process_recv_completion(struct nvme_rdma_poller *poller, struct ibv_wc
 		}
 	} else {
 		rqpair = rdma_rsp->rqpair;
+		if (spdk_unlikely(!rqpair)) {
+			/* TODO: Fix forceful QP destroy when it is not async mode.
+			 * CQ itself did not cause any error. Hence, return 0 for now.
+			 */
+			SPDK_WARNLOG("QP might be already destroyed.\n");
+			return 0;
+		}
 	}
+
 
 	assert(rqpair->rsps->current_num_recvs > 0);
 	rqpair->rsps->current_num_recvs--;
