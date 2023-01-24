@@ -233,15 +233,12 @@ ublk_ctrl_poller(void *arg)
 }
 
 static int
-ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op, void *args)
+ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op)
 {
 	uint32_t dev_id = ublk->ublk_id;
 	int rc = -EINVAL;
 	struct io_uring_sqe *sqe;
 	struct ublksrv_ctrl_cmd *cmd;
-	int *ublk_pid;
-	struct ublksrv_ctrl_dev_info *dev_info;
-	struct ublk_params *params;
 
 	sqe = io_uring_get_sqe(&g_ublk_tgt.ctrl_ring);
 	if (!sqe) {
@@ -258,22 +255,19 @@ ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op, void *args)
 
 	switch (cmd_op) {
 	case UBLK_CMD_START_DEV:
-		ublk_pid = args;
-		cmd->data[0] = *ublk_pid;
+		cmd->data[0] = getpid();
 		cmd->data[1] = 0;
 		break;
 	case UBLK_CMD_ADD_DEV:
-		dev_info = args;
-		cmd->addr = (__u64)(uintptr_t)(dev_info);
-		cmd->len = sizeof(*dev_info);
+		cmd->addr = (__u64)(uintptr_t)&ublk->dev_info;
+		cmd->len = sizeof(ublk->dev_info);
 		break;
 	case UBLK_CMD_STOP_DEV:
 	case UBLK_CMD_DEL_DEV:
 		break;
 	case UBLK_CMD_SET_PARAMS:
-		params = args;
-		cmd->addr = (__u64)(uintptr_t)params;
-		cmd->len = sizeof(*params);
+		cmd->addr = (__u64)(uintptr_t)&ublk->dev_params;
+		cmd->len = sizeof(ublk->dev_params);
 		break;
 	default:
 		SPDK_ERRLOG("No match cmd operation,cmd_op = %d\n", cmd_op);
@@ -456,7 +450,7 @@ ublk_start_kernel(void *arg)
 	int rc;
 
 	assert(ublk->dev_info.ublksrv_pid == getpid());
-	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_START_DEV, &ublk->dev_info.ublksrv_pid);
+	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_START_DEV);
 	if (rc < 0) {
 		SPDK_ERRLOG("start dev %d failed, rc %s\n", ublk->ublk_id,
 			    spdk_strerror(-rc));
@@ -470,7 +464,7 @@ ublk_stop_kernel(struct spdk_ublk_dev *ublk)
 {
 	int rc;
 
-	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_STOP_DEV, NULL);
+	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_STOP_DEV);
 	if (rc < 0) {
 		SPDK_ERRLOG("stop dev %d failed\n", ublk->ublk_id);
 	}
@@ -672,7 +666,7 @@ ublk_close_dev_done(void *arg)
 		close(ublk->cdev_fd);
 	}
 
-	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_DEL_DEV, NULL);
+	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_DEL_DEV);
 	if (rc < 0) {
 		SPDK_ERRLOG("delete dev %d failed\n", ublk->ublk_id);
 	}
@@ -1177,7 +1171,7 @@ _ublk_start_disk(struct spdk_ublk_dev *ublk)
 {
 	int rc;
 
-	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_ADD_DEV, &ublk->dev_info);
+	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_ADD_DEV);
 	if (rc < 0) {
 		SPDK_ERRLOG("UBLK can't add dev %d, rc %s\n", ublk->ublk_id, spdk_strerror(-rc));
 	}
@@ -1191,7 +1185,7 @@ ublk_set_params(struct spdk_ublk_dev *ublk)
 	int rc;
 
 	ublk->dev_params.len = sizeof(struct ublk_params);
-	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_SET_PARAMS, &ublk->dev_params);
+	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_SET_PARAMS);
 	if (rc < 0) {
 		SPDK_ERRLOG("UBLK can't set params for dev %d, rc %s\n", ublk->ublk_id, spdk_strerror(-rc));
 		_ublk_try_close_dev(ublk);
