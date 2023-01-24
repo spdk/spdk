@@ -993,7 +993,10 @@ ublk_io_xmit(struct ublk_queue *q)
 	}
 
 	rc = io_uring_submit(&q->ring);
-	assert(rc == count);
+	if (rc != count) {
+		SPDK_ERRLOG("could not submit all commands\n");
+		assert(false);
+	}
 
 	return rc;
 }
