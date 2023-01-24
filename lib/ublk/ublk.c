@@ -444,44 +444,21 @@ ublk_thread_exit(void *args)
 }
 
 static int
-ublk_start_kernel(void *arg)
-{
-	struct spdk_ublk_dev *ublk = arg;
-	int rc;
-
-	assert(ublk->dev_info.ublksrv_pid == getpid());
-	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_START_DEV);
-	if (rc < 0) {
-		SPDK_ERRLOG("start dev %d failed, rc %s\n", ublk->ublk_id,
-			    spdk_strerror(-rc));
-	}
-
-	return rc;
-}
-
-static int
-ublk_stop_kernel(struct spdk_ublk_dev *ublk)
-{
-	int rc;
-
-	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_STOP_DEV);
-	if (rc < 0) {
-		SPDK_ERRLOG("stop dev %d failed\n", ublk->ublk_id);
-	}
-
-	return rc;
-}
-
-static int
 ublk_close_dev(struct spdk_ublk_dev *ublk)
 {
+	int rc;
+
 	/* set is_closing */
 	if (ublk->is_closing) {
 		return -EBUSY;
 	}
 	ublk->is_closing = true;
 
-	return ublk_stop_kernel(ublk);
+	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_STOP_DEV);
+	if (rc < 0) {
+		SPDK_ERRLOG("stop dev %d failed\n", ublk->ublk_id);
+	}
+	return rc;
 }
 
 static void
@@ -1166,19 +1143,6 @@ ublk_dev_queue_io_init(struct ublk_queue *q)
 	assert(rc == (int)q->q_depth);
 }
 
-static int
-_ublk_start_disk(struct spdk_ublk_dev *ublk)
-{
-	int rc;
-
-	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_ADD_DEV);
-	if (rc < 0) {
-		SPDK_ERRLOG("UBLK can't add dev %d, rc %s\n", ublk->ublk_id, spdk_strerror(-rc));
-	}
-
-	return rc;
-}
-
 static void
 ublk_set_params(struct spdk_ublk_dev *ublk)
 {
@@ -1373,8 +1337,9 @@ ublk_start_disk(const char *bdev_name, uint32_t ublk_id,
 
 	SPDK_INFOLOG(ublk, "Enabling kernel access to bdev %s via ublk %d\n",
 		     bdev_name, ublk_id);
-	rc = _ublk_start_disk(ublk);
-	if (rc != 0) {
+	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_ADD_DEV);
+	if (rc < 0) {
+		SPDK_ERRLOG("UBLK can't add dev %d, rc %s\n", ublk->ublk_id, spdk_strerror(-rc));
 		goto err;
 	}
 
@@ -1411,7 +1376,10 @@ ublk_finish_start(struct spdk_ublk_dev *ublk)
 		}
 	}
 
-	if (ublk_start_kernel(ublk) != 0) {
+	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_START_DEV);
+	if (rc < 0) {
+		SPDK_ERRLOG("start dev %d failed, rc %s\n", ublk->ublk_id,
+			    spdk_strerror(-rc));
 		goto err;
 	}
 
