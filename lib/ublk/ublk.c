@@ -43,6 +43,8 @@ struct ublk_thread_ctx;
 static void ublk_submit_bdev_io(struct ublk_queue *q, uint16_t tag);
 static void ublk_dev_queue_fini(struct ublk_queue *q);
 static int ublk_poll(void *arg);
+
+typedef void (*ublk_next_state_fn)(struct spdk_ublk_dev *ublk);
 static void ublk_set_params(struct spdk_ublk_dev *ublk);
 static void ublk_finish_start(struct spdk_ublk_dev *ublk);
 static void ublk_delete_dev(struct spdk_ublk_dev *ublk);
@@ -99,7 +101,8 @@ struct spdk_ublk_dev {
 	volatile bool		is_closing;
 	ublk_del_cb		del_cb;
 	void			*cb_arg;
-	uint32_t		last_cmd_op;
+	uint32_t		ctrl_cmd_op;
+	ublk_next_state_fn	next_state_fn;
 	uint32_t		ctrl_ops_in_progress;
 
 	TAILQ_ENTRY(spdk_ublk_dev) tailq;
@@ -212,18 +215,8 @@ ublk_ctrl_poller(void *arg)
 		}
 		ublk = (struct spdk_ublk_dev *)cqe->user_data;
 		ublk->ctrl_ops_in_progress--;
-		switch (ublk->last_cmd_op) {
-		case UBLK_CMD_ADD_DEV:
-			ublk_set_params(ublk);
-			break;
-		case UBLK_CMD_SET_PARAMS:
-			ublk_finish_start(ublk);
-			break;
-		case UBLK_CMD_DEL_DEV:
-			ublk_delete_dev(ublk);
-			break;
-		default:
-			break;
+		if (ublk->next_state_fn) {
+			ublk->next_state_fn(ublk);
 		}
 		io_uring_cqe_seen(ring, cqe);
 		count++;
@@ -251,7 +244,8 @@ ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op)
 	sqe->ioprio = 0;
 	cmd->dev_id = dev_id;
 	cmd->queue_id = -1;
-	ublk->last_cmd_op = cmd_op;
+	ublk->ctrl_cmd_op = cmd_op;
+	ublk->next_state_fn = NULL;
 
 	switch (cmd_op) {
 	case UBLK_CMD_START_DEV:
@@ -259,13 +253,17 @@ ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op)
 		cmd->data[1] = 0;
 		break;
 	case UBLK_CMD_ADD_DEV:
+		ublk->next_state_fn = ublk_set_params;
 		cmd->addr = (__u64)(uintptr_t)&ublk->dev_info;
 		cmd->len = sizeof(ublk->dev_info);
 		break;
 	case UBLK_CMD_STOP_DEV:
+		break;
 	case UBLK_CMD_DEL_DEV:
+		ublk->next_state_fn = ublk_delete_dev;
 		break;
 	case UBLK_CMD_SET_PARAMS:
+		ublk->next_state_fn = ublk_finish_start;
 		cmd->addr = (__u64)(uintptr_t)&ublk->dev_params;
 		cmd->len = sizeof(ublk->dev_params);
 		break;
