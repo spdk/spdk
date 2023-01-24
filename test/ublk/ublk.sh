@@ -8,11 +8,25 @@ rootdir=$(readlink -f "$testdir/../..")
 source "$rootdir/test/common/autotest_common.sh"
 source "$rootdir/test/lvol/common.sh"
 
-MALLOC_SIZE_MB=128
+if [[ -z $1 ]]; then
+	NUM_DEVS=4
+	NUM_QUEUE=4
+	QUEUE_DEPTH=512
+	MALLOC_SIZE_MB=128
+	# issue ublk_stop_disk cmds before ublk_destroy_target
+	STOP_DISKS=1
+else
+	# Use smaller parameters when user specifies the number
+	# of devices, to guard against memory exhaustion.
+	NUM_DEVS=$1
+	NUM_QUEUE=1
+	QUEUE_DEPTH=16
+	MALLOC_SIZE_MB=2
+fi
+
 MALLOC_BS=4096
-NUM_QUEUE=4
-QUEUE_DEPTH=512
 FILE_SIZE=$((MALLOC_SIZE_MB * 1024 * 1024))
+MAX_DEV_ID=$((NUM_DEVS - 1))
 
 function test_create_ublk() {
 	# create a ublk target
@@ -47,7 +61,7 @@ function test_create_multi_ublk() {
 	# create a ublk target
 	ublk_target=$(rpc_cmd ublk_create_target)
 
-	for i in {0..3}; do
+	for i in $(seq 0 $MAX_DEV_ID); do
 		# create a malloc bdev
 		malloc_name=$(rpc_cmd bdev_malloc_create -b "Malloc${i}" $MALLOC_SIZE_MB $MALLOC_BS)
 		# add ublk device
@@ -55,7 +69,7 @@ function test_create_multi_ublk() {
 	done
 
 	ublk_dev=$(rpc_cmd ublk_get_disks)
-	for i in {0..3}; do
+	for i in $(seq 0 $MAX_DEV_ID); do
 		# verify its parameters
 		[[ "$(jq -r ".[${i}].ublk_device" <<< "$ublk_dev")" = "/dev/ublkb${i}" ]]
 		[[ "$(jq -r ".[${i}].id" <<< "$ublk_dev")" = "${i}" ]]
@@ -64,13 +78,19 @@ function test_create_multi_ublk() {
 		[[ "$(jq -r ".[${i}].bdev_name" <<< "$ublk_dev")" = "Malloc${i}" ]]
 	done
 
-	# clean up
-	for i in {0..3}; do
-		rpc_cmd ublk_stop_disk "${i}"
-	done
-	rpc_cmd ublk_destroy_target
+	# To help test the ctrl cmd queuing logic, we omit the ublk_stop_disk
+	# RPCs.  Then the ublk_destroy_target RPC will stop all of the disks
+	# in very quick succession which exhausts the control io_uring SQEs
+	if [[ "$STOP_DISKS" = "1" ]]; then
+		for i in $(seq 0 $MAX_DEV_ID); do
+			rpc_cmd ublk_stop_disk "${i}"
+		done
+	fi
 
-	for i in {0..3}; do
+	# Shutting down a lot of disks can take a long time, so extend the RPC timeout
+	"$rootdir/scripts/rpc.py" -t 120 ublk_destroy_target
+
+	for i in $(seq 0 $MAX_DEV_ID); do
 		rpc_cmd bdev_malloc_delete "Malloc${i}"
 	done
 	check_leftover_devices
