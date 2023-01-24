@@ -14,6 +14,11 @@ decrypt operations. New RPC `dpdk_cryptodev_scan_accel_module` has been added to
 New accel module `mlx5` was added. It implements crypto operations, enabled when SPDK is configured with
 RDMA provider is mlx5_dv and crypto support.
 
+Introduced the concept of chaining multiple accel operations together and executing them all in a
+single call.  The operation can be chained via one of the `spdk_accel_append_*` functions and then
+executed using `spdk_accel_sequence_finish`.  Currently, copy, decompress, decrypt, encrypt, and
+fill operations support this mode.  This feature is considered experimental.
+
 ### bdev
 
 Added RPCs bdev_nvme_start_mdns_discovery, bdev_nvme_get_mdns_discovery_info and
