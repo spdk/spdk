@@ -963,6 +963,7 @@ ut_sequnce_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *task
 {
 	struct ut_sequence_operation *op = &g_seq_operations[task->op_code];
 
+	op->count++;
 	if (op->submit != NULL) {
 		return op->submit(ch, task);
 	}
@@ -977,7 +978,6 @@ ut_sequnce_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *task
 				       sizeof(struct iovec) * op->dst_iovcnt), 0);
 	}
 
-	op->count++;
 	if (op->submit_status != 0) {
 		return op->submit_status;
 	}
