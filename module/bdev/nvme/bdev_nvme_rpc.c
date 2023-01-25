@@ -789,7 +789,7 @@ struct firmware_update_info {
 	struct spdk_jsonrpc_request	*request;
 	struct spdk_nvme_ctrlr		*ctrlr;
 	open_descriptors_t		desc_head;
-	struct rpc_apply_firmware	*req;
+	struct rpc_apply_firmware	req;
 };
 
 static void
@@ -814,10 +814,7 @@ apply_firmware_cleanup(void *cb_arg)
 		spdk_free(firm_ctx->fw_image);
 	}
 
-	if (firm_ctx->req) {
-		free_rpc_apply_firmware(firm_ctx->req);
-		free(firm_ctx->req);
-	}
+	free_rpc_apply_firmware(&firm_ctx->req);
 
 	if (firm_ctx->ch) {
 		spdk_put_io_channel(firm_ctx->ch);
@@ -953,31 +950,24 @@ rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 	TAILQ_INIT(&firm_ctx->desc_head);
 	firm_ctx->request = request;
 
-	firm_ctx->req = calloc(1, sizeof(struct rpc_apply_firmware));
-	if (!firm_ctx->req) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "Memory allocation error.");
-		goto err;
-	}
-
 	if (spdk_json_decode_object(params, rpc_apply_firmware_decoders,
-				    SPDK_COUNTOF(rpc_apply_firmware_decoders), firm_ctx->req)) {
+				    SPDK_COUNTOF(rpc_apply_firmware_decoders), &firm_ctx->req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed.");
 		goto err;
 	}
 
-	if ((bdev = spdk_bdev_get_by_name(firm_ctx->req->bdev_name)) == NULL) {
+	if ((bdev = spdk_bdev_get_by_name(firm_ctx->req.bdev_name)) == NULL) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "bdev %s were not found",
-						     firm_ctx->req->bdev_name);
+						     firm_ctx->req.bdev_name);
 		goto err;
 	}
 
 	if ((ctrlr = bdev_nvme_get_ctrlr(bdev)) == NULL) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "Controller information for %s were not found.",
-						     firm_ctx->req->bdev_name);
+						     firm_ctx->req.bdev_name);
 		goto err;
 	}
 	firm_ctx->ctrlr = ctrlr;
@@ -997,7 +987,7 @@ rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 		if (spdk_bdev_open_ext(spdk_bdev_get_name(bdev2), true, apply_firmware_open_cb, NULL, &desc) != 0) {
 			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							     "Device %s is in use.",
-							     firm_ctx->req->bdev_name);
+							     firm_ctx->req.bdev_name);
 			free(opt);
 			goto err;
 		}
@@ -1034,7 +1024,7 @@ rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 		goto err;
 	}
 
-	fd = open(firm_ctx->req->filename, O_RDONLY);
+	fd = open(firm_ctx->req.filename, O_RDONLY);
 	if (fd < 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "open file failed.");
