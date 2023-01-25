@@ -40,6 +40,8 @@ without the benefits of persistency.
 
 ### VTune
 
+#### `vtune_support`
+
 VTune integration is in now deprecated and will be removed in SPDK 23.05.
 
 ### OCF
@@ -72,7 +74,7 @@ on the same thread as the examine callback uses.
 
 ### gpt
 
-### `old_gpt_guid`
+#### `old_gpt_guid`
 
 Deprecated the SPDK partition type GUID `7c5222bd-8f5d-4087-9c00-bf9843c7b58c`. Partitions of this
 type have bdevs created that are one block less than the actual size of the partition. Existing
