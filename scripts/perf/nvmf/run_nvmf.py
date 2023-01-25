@@ -1084,6 +1084,7 @@ class SPDKTarget(Target):
         self.scheduler_core_limit = None
         self.iobuf_small_pool_count = 16383
         self.iobuf_large_pool_count = 2047
+        self.num_cqe = 4096
 
         if "num_shared_buffers" in target_config:
             self.num_shared_buffers = target_config["num_shared_buffers"]
@@ -1103,6 +1104,8 @@ class SPDKTarget(Target):
             self.iobuf_small_pool_count = target_config["iobuf_small_pool_count"]
         if "iobuf_large_pool_count" in target_config:
             self.iobuf_large_pool_count = target_config["iobuf_large_pool_count"]
+        if "num_cqe" in target_config:
+            self.num_cqe = target_config["num_cqe"]
 
         self.log.info("====DSA settings:====")
         self.log.info("DSA enabled: %s" % (self.enable_dsa))
@@ -1157,7 +1160,8 @@ class SPDKTarget(Target):
             "num_shared_buffers": self.num_shared_buffers,
             "max_queue_depth": self.max_queue_depth,
             "dif_insert_or_strip": self.dif_insert_strip,
-            "sock_priority": self.adq_priority
+            "sock_priority": self.adq_priority,
+            "num_cqe": self.num_cqe
         }
 
         if self.enable_adq:

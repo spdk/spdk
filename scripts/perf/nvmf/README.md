@@ -165,6 +165,8 @@ Optional, SPDK Target only:
 - max_queue_depth - int, max number of outstanding I/O per queue. Default: 128.
 - dif_insert_strip - bool. Only for TCP transport. Enable DIF option when
   creating transport layer. Default: false.
+- num_cqe - int, number of completion queue entries. See doc/json_rpc.md
+  "nvmf_create_transport" section. Default: 4096.
 - null_block_dif_type - int, 0-3. Level of DIF type to use when creating
   null block bdev. Default: 0.
 - enable_dpdk_memory - bool. Wait for a fio ramp_time to finish and
