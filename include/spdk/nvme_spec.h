@@ -2734,12 +2734,25 @@ struct spdk_nvme_ns_data {
 	/** Maximum Source Range Count */
 	uint8_t	                msrc;
 
-	uint8_t			reserved64[11];
+	uint8_t			reserved81[11];
 
 	/** ANA group identifier */
 	uint32_t		anagrpid;
 
-	uint8_t			reserved96[8];
+	uint8_t			reserved96[3];
+
+	/** namespace attributes */
+	struct {
+		/** Namespace write protected */
+		uint8_t	write_protected	: 1;
+		uint8_t	reserved	: 7;
+	} nsattr;
+
+	/** NVM Set Identifier */
+	uint16_t		nvmsetid;
+
+	/** Endurance group identifier */
+	uint16_t		endgid;
 
 	/** namespace globally unique identifier */
 	uint8_t			nguid[16];
@@ -2793,7 +2806,25 @@ struct spdk_nvme_zns_ns_data {
 	/** finish recommended limit */
 	uint32_t		frl;
 
-	uint8_t			reserved20[2796];
+	/** reset recommended limit 1 */
+	uint32_t		rrl1;
+
+	/** reset recommended limit 2 */
+	uint32_t		rrl2;
+
+	/** reset recommended limit 3 */
+	uint32_t		rrl3;
+
+	/** finish recommended limit 1 */
+	uint32_t		frl1;
+
+	/** finish recommended limit 2 */
+	uint32_t		frl2;
+
+	/** finish recommended limit 3 */
+	uint32_t		frl3;
+
+	uint8_t			reserved44[2772];
 
 	/** zns lba format extension support */
 	struct {

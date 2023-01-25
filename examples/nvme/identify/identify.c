@@ -888,14 +888,50 @@ print_zns_ns_data(const struct spdk_nvme_zns_ns_data *nsdata_zns)
 	if (nsdata_zns->rrl == 0) {
 		printf("Reset Recommended Limit:               Not Reported\n");
 	} else {
-		printf("Reset Recommended Limit:               %"PRIu32"\n",
+		printf("Reset Recommended Limit:               %"PRIu32" seconds\n",
 		       nsdata_zns->rrl);
+	}
+	if (nsdata_zns->rrl1 == 0) {
+		printf("Reset Recommended Limit 1:             Not Reported\n");
+	} else {
+		printf("Reset Recommended Limit 1:             %"PRIu32" seconds\n",
+		       nsdata_zns->rrl1);
+	}
+	if (nsdata_zns->rrl2 == 0) {
+		printf("Reset Recommended Limit 2:             Not Reported\n");
+	} else {
+		printf("Reset Recommended Limit 2:             %"PRIu32" seconds\n",
+		       nsdata_zns->rrl2);
+	}
+	if (nsdata_zns->rrl3 == 0) {
+		printf("Reset Recommended Limit 3:             Not Reported\n");
+	} else {
+		printf("Reset Recommended Limit 3:             %"PRIu32" seconds\n",
+		       nsdata_zns->rrl3);
 	}
 	if (nsdata_zns->frl == 0) {
 		printf("Finish Recommended Limit:              Not Reported\n");
 	} else {
-		printf("Finish Recommended Limit:              %"PRIu32"\n",
+		printf("Finish Recommended Limit:              %"PRIu32" seconds\n",
 		       nsdata_zns->frl);
+	}
+	if (nsdata_zns->frl1 == 0) {
+		printf("Finish Recommended Limit 1:            Not Reported\n");
+	} else {
+		printf("Finish Recommended Limit 1:            %"PRIu32" seconds\n",
+		       nsdata_zns->frl1);
+	}
+	if (nsdata_zns->frl2 == 0) {
+		printf("Finish Recommended Limit 2:            Not Reported\n");
+	} else {
+		printf("Finish Recommended Limit 2:            %"PRIu32" seconds\n",
+		       nsdata_zns->frl2);
+	}
+	if (nsdata_zns->frl3 == 0) {
+		printf("Finish Recommended Limit 3:            Not Reported\n");
+	} else {
+		printf("Finish Recommended Limit 3:            %"PRIu32" seconds\n",
+		       nsdata_zns->frl3);
 	}
 	printf("\n");
 }
@@ -1052,6 +1088,17 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 
 	if (cdata->cmic.ana_reporting) {
 		printf("ANA group ID:                          %u\n", nsdata->anagrpid);
+	}
+
+	printf("Namespace Write Protected:             %s\n",
+	       nsdata->nsattr.write_protected ? "Yes" : "No");
+
+	if (cdata->ctratt.nvm_sets) {
+		printf("NVM set ID:                            %u\n", nsdata->nvmsetid);
+	}
+
+	if (cdata->ctratt.endurance_groups) {
+		printf("Endurance group ID:                    %u\n", nsdata->endgid);
 	}
 
 	printf("Number of LBA Formats:                 %d\n", nsdata->nlbaf + 1);
