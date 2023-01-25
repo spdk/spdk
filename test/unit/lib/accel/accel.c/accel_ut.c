@@ -988,6 +988,12 @@ ut_sequnce_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *task
 }
 
 static void
+ut_clear_operations(void)
+{
+	memset(&g_seq_operations, 0, sizeof(g_seq_operations));
+}
+
+static void
 test_sequence_completion_error(void)
 {
 	struct spdk_accel_sequence *seq = NULL;
@@ -1127,6 +1133,7 @@ test_sequence_completion_error(void)
 		g_modules_opc[i] = modules[i];
 	}
 
+	ut_clear_operations();
 	spdk_put_io_channel(ioch);
 	poll_threads();
 }
@@ -1862,13 +1869,7 @@ test_sequence_copy_elision(void)
 		g_modules_opc[i] = modules[i];
 	}
 
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].src_iovs = NULL;
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].dst_iovs = NULL;
-	g_seq_operations[ACCEL_OPC_ENCRYPT].src_iovs = NULL;
-	g_seq_operations[ACCEL_OPC_ENCRYPT].src_iovs = NULL;
-	g_seq_operations[ACCEL_OPC_DECRYPT].dst_iovs = NULL;
-	g_seq_operations[ACCEL_OPC_DECRYPT].dst_iovs = NULL;
-
+	ut_clear_operations();
 	spdk_put_io_channel(ioch);
 	poll_threads();
 }
@@ -2335,13 +2336,11 @@ test_sequence_accel_buffers(void)
 	STAILQ_SWAP(&accel_ch->iobuf.small.cache, &small_cache, spdk_iobuf_buffer);
 	accel_ch->iobuf.small.cache_count = small_cache_count;
 
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].submit = NULL;
-	g_seq_operations[ACCEL_OPC_COPY].submit = NULL;
-	g_seq_operations[ACCEL_OPC_FILL].submit = NULL;
 	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
 		g_modules_opc[i] = modules[i];
 	}
 
+	ut_clear_operations();
 	spdk_put_io_channel(ioch);
 	poll_threads();
 }
@@ -2705,13 +2704,11 @@ test_sequence_memory_domain(void)
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, -EADDRNOTAVAIL);
 
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].submit = NULL;
-	g_seq_operations[ACCEL_OPC_COPY].submit = NULL;
-	g_seq_operations[ACCEL_OPC_FILL].submit = NULL;
 	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
 		g_modules_opc[i] = modules[i];
 	}
 
+	ut_clear_operations();
 	spdk_put_io_channel(ioch);
 	poll_threads();
 }
@@ -2885,12 +2882,11 @@ test_sequence_module_memory_domain(void)
 	spdk_accel_put_buf(ioch, buf, accel_domain, accel_domain_ctx);
 
 	g_module.supports_memory_domains = false;
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].submit = NULL;
-	g_seq_operations[ACCEL_OPC_FILL].submit = NULL;
 	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
 		g_modules_opc[i] = modules[i];
 	}
 
+	ut_clear_operations();
 	spdk_put_io_channel(ioch);
 	poll_threads();
 }
