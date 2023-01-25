@@ -878,6 +878,13 @@ nvme_ctrlr_set_supported_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
+	if (ctrlr->cdata.ctratt.fdps) {
+		ctrlr->log_page_supported[SPDK_NVME_LOG_FDP_CONFIGURATIONS] = true;
+		ctrlr->log_page_supported[SPDK_NVME_LOG_RECLAIM_UNIT_HANDLE_USAGE] = true;
+		ctrlr->log_page_supported[SPDK_NVME_LOG_FDP_STATISTICS] = true;
+		ctrlr->log_page_supported[SPDK_NVME_LOG_FDP_EVENTS] = true;
+	}
+
 	if (ctrlr->cdata.vid == SPDK_PCI_VID_INTEL &&
 	    ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE &&
 	    !(ctrlr->quirks & NVME_INTEL_QUIRK_NO_LOG_PAGES)) {

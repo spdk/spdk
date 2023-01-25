@@ -3205,7 +3205,21 @@ enum spdk_nvme_log_page {
 	/** Rotational media information (optional) */
 	SPDK_NVME_LOG_ROTATIONAL_MEDIA_INFORMATION	= 0x16,
 
-	/* 0x17-0x6f - reserved */
+	/* 0x17-0x1f - reserved */
+
+	/** FDP configurations (optional) */
+	SPDK_NVME_LOG_FDP_CONFIGURATIONS	= 0x20,
+
+	/** Reclaim unit handle usage (optional) */
+	SPDK_NVME_LOG_RECLAIM_UNIT_HANDLE_USAGE	= 0x21,
+
+	/** FDP statistics (optional) */
+	SPDK_NVME_LOG_FDP_STATISTICS	= 0x22,
+
+	/** FDP events (optional) */
+	SPDK_NVME_LOG_FDP_EVENTS	= 0x23,
+
+	/* 0x24-0x6f - reserved */
 
 	/** Discovery(refer to the NVMe over Fabrics specification) */
 	SPDK_NVME_LOG_DISCOVERY		= 0x70,
@@ -3548,6 +3562,222 @@ struct spdk_nvme_ana_group_descriptor {
 	uint32_t nsid[];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ana_group_descriptor) == 32, "Incorrect size");
+
+/* Reclaim unit handle type */
+enum spdk_nvme_fdp_ruh_type {
+	/* 0x0 Reserved */
+
+	/* Reclaim unit handle type initially isolated */
+	SPDK_NVME_FDP_RUHT_INITIALLY_ISOLATED		= 0x1,
+	/* Reclaim unit handle type persistently isolated */
+	SPDK_NVME_FDP_RUHT_PERSISTENTLY_ISOLATED	= 0x2,
+
+	/* 0x3 - 0xBF Reserved */
+
+	/* 0xC0 - 0xFF Vendor specific */
+};
+
+/* Reclaim unit handle descriptor */
+struct spdk_nvme_fdp_ruh_descriptor {
+	/* Reclaim unit handle type */
+	uint8_t ruht;
+	uint8_t reserved[3];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fdp_ruh_descriptor) == 4, "Incorrect size");
+
+/* FDP configuration descriptor */
+struct spdk_nvme_fdp_cfg_descriptor {
+	/* Descriptor size */
+	uint16_t ds;
+
+	/* FDP attributes */
+	union {
+		uint8_t raw;
+		struct {
+			/* Reclaim group identifier format */
+			uint8_t rgif	: 4;
+			/* FDP volatile write cache */
+			uint8_t fdpvwc	: 1;
+			uint8_t rsvd1	: 2;
+			/* FDP configuration valid */
+			uint8_t fdpcv	: 1;
+		} bits;
+	} fdpa;
+
+	/* Vendor specific size */
+	uint8_t vss;
+	/* Number of reclaim groups */
+	uint32_t nrg;
+	/* Number of reclaim unit handles */
+	uint16_t nruh;
+	/* Max placement identifiers */
+	uint16_t maxpids;
+	/* Number of namespaces supported */
+	uint32_t nns;
+	/* Reclaim unit nominal size */
+	uint64_t runs;
+	/* Estimated reclaim unit time limit */
+	uint32_t erutl;
+	uint8_t rsvd28[36];
+	struct spdk_nvme_fdp_ruh_descriptor ruh_desc[];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fdp_cfg_descriptor) == 64, "Incorrect size");
+
+/* FDP configurations log page (\ref SPDK_NVME_LOG_FDP_CONFIGURATIONS) */
+struct spdk_nvme_fdp_cfg_log_page {
+	/* Number of FDP configurations */
+	uint16_t ncfg;
+	/* Version of log page */
+	uint8_t version;
+	uint8_t reserved1;
+	/* Size of this log page in bytes */
+	uint32_t size;
+	uint8_t reserved2[8];
+	struct spdk_nvme_fdp_cfg_descriptor cfg_desc[];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fdp_cfg_log_page) == 16, "Incorrect size");
+
+/* Reclaim unit handle attributes */
+enum spdk_nvme_fdp_ruh_attributes {
+	/* Not used by a namespace */
+	SPDK_NVME_FDP_RUHA_UNUSED		= 0x0,
+	/* Use a specific reclaim unit handle */
+	SPDK_NVME_FDP_RUHA_HOST_SPECIFIED	= 0x1,
+	/* Use the only default reclaim unit handle  */
+	SPDK_NVME_FDP_RUHA_CTRLR_SPECIFIED	= 0x2,
+
+	/* 0x3 - 0xFF Reserved */
+};
+
+/* Reclaim unit handle usage descriptor */
+struct spdk_nvme_fdp_ruhu_descriptor {
+	/* Reclaim unit handle attributes */
+	uint8_t ruha;
+	uint8_t reserved[7];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fdp_ruhu_descriptor) == 8, "Incorrect size");
+
+/* Reclaim unit handle usage log page (\ref SPDK_NVME_LOG_RECLAIM_UNIT_HANDLE_USAGE) */
+struct spdk_nvme_fdp_ruhu_log_page {
+	/* Number of Reclaim Unit Handles */
+	uint16_t nruh;
+	uint8_t reserved[6];
+	struct spdk_nvme_fdp_ruhu_descriptor ruhu_desc[];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fdp_ruhu_log_page) == 8, "Incorrect size");
+
+/* FDP statistics log page (\ref SPDK_NVME_LOG_FDP_STATISTICS) */
+struct spdk_nvme_fdp_stats_log_page {
+	/* Host bytes with metadata written */
+	uint64_t hbmw[2];
+	/* Media bytes with metadata written */
+	uint64_t mbmw[2];
+	/* Media bytes erased */
+	uint64_t mbe[2];
+	uint8_t rsvd48[16];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fdp_stats_log_page) == 64, "Incorrect size");
+
+/* FDP report event types (cdw10 log specific parameter) */
+enum spdk_nvme_fdp_report_event_type {
+	/* Report FDP controller events */
+	SPDK_NVME_FDP_REPORT_CTRL_EVENTS	= 0x0,
+	/* Report FDP host events */
+	SPDK_NVME_FDP_REPORT_HOST_EVENTS	= 0x1,
+};
+
+/* FDP event type */
+enum spdk_nvme_fdp_event_type {
+	/* FDP host events */
+	/* Reclaim unit not fully written to capacity */
+	SPDK_NVME_FDP_EVENT_RU_NOT_WRITTEN_CAPACITY	= 0x0,
+	/* Reclaim unit time limit exceeded */
+	SPDK_NVME_FDP_EVENT_RU_TIME_LIMIT_EXCEEDED	= 0x1,
+	/* Controller reset modified reclaim unit handles */
+	SPDK_NVME_FDP_EVENT_CTRLR_RESET_MODIFY_RUH	= 0x2,
+	/* Invalid placement identifier */
+	SPDK_NVME_FDP_EVENT_INVALID_PLACEMENT_ID	= 0x3,
+
+	/* 0x4 - 0x6F Reserved */
+
+	/* 0x70 - 0x7F Vendor specific */
+
+	/* FDP controller events */
+	/* Media reallocated */
+	SPDK_NVME_FDP_EVENT_MEDIA_REALLOCATED		= 0x80,
+	/* Implicitly modified reclaim unit handle */
+	SPDK_NVME_FDP_EVENT_IMPLICIT_MODIFIED_RUH	= 0x81,
+
+	/* 0x82 - 0xEF Reserved */
+
+	/* 0xF0 - 0xFF Vendor specific */
+};
+
+/* Media reallocated */
+struct __attribute__((packed)) spdk_nvme_fdp_event_media_reallocated {
+	/* Specific event flags */
+	union {
+		uint8_t raw;
+		struct {
+			/* LBA valid */
+			uint8_t lbav		: 1;
+			uint8_t reserved	: 7;
+		} bits;
+	} sef;
+
+	uint8_t reserved1;
+	/* Number of LBAs moved */
+	uint16_t nlbam;
+	/* Logical block address */
+	uint64_t lba;
+	uint8_t reserved2[4];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fdp_event_media_reallocated) == 16, "Incorrect size");
+
+/* FDP event */
+struct __attribute__((packed)) spdk_nvme_fdp_event {
+	/* Event type */
+	uint8_t etype;
+
+	/* FDP event flags */
+	union {
+		uint8_t raw;
+		struct {
+			/* Placement identifier valid */
+			uint8_t piv		: 1;
+			/* NSID valid */
+			uint8_t nsidv		: 1;
+			/* Location valid */
+			uint8_t lv		: 1;
+			uint8_t reserved	: 5;
+		} bits;
+	} fdpef;
+
+	/* Placement identifier */
+	uint16_t pid;
+	/* Event timestamp */
+	uint64_t timestamp;
+	/* Namespace identifier */
+	uint32_t nsid;
+	/* Event type specific */
+	uint64_t event_type_specific[2];
+	/* Reclaim group identifier */
+	uint16_t rgid;
+	/* Reclaim unit handle identifier */
+	uint16_t ruhid;
+	uint8_t reserved[4];
+	uint8_t vs[24];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fdp_event) == 64, "Incorrect size");
+
+/* FDP events log page (\ref SPDK_NVME_LOG_FDP_EVENTS) */
+struct spdk_nvme_fdp_events_log_page {
+	/* Number of FDP events */
+	uint32_t nevents;
+	uint8_t reserved[60];
+	struct spdk_nvme_fdp_event event[];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fdp_events_log_page) == 64, "Incorrect size");
 
 /**
  * Namespace attachment Type Encoding
