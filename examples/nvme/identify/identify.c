@@ -1424,6 +1424,8 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	       cdata->ctratt.delete_nvm_set ? "Supported" : "Not Supported");
 	printf("  Extended LBA Formats Supported:      %s\n",
 	       cdata->ctratt.elbas ? "Supported" : "Not Supported");
+	printf("  Flexible Data Placement Supported:   %s\n",
+	       cdata->ctratt.fdps ? "Supported" : "Not Supported");
 	printf("\n");
 
 	printf("Controller Memory Buffer Support\n");

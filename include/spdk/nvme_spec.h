@@ -1427,6 +1427,11 @@ enum spdk_nvme_generic_command_status_code {
 	SPDK_NVME_SC_COMMAND_NAMESPACE_IS_PROTECTED	= 0x20,
 	SPDK_NVME_SC_COMMAND_INTERRUPTED		= 0x21,
 	SPDK_NVME_SC_COMMAND_TRANSIENT_TRANSPORT_ERROR	= 0x22,
+	SPDK_NVME_SC_COMMAND_PROHIBITED_BY_LOCKDOWN	= 0x23,
+	SPDK_NVME_SC_ADMIN_COMMAND_MEDIA_NOT_READY	= 0x24,
+
+	SPDK_NVME_SC_FDP_DISABLED			= 0x29,
+	SPDK_NVME_SC_INVALID_PLACEMENT_HANDLE_LIST	= 0x2A,
 
 	SPDK_NVME_SC_LBA_OUT_OF_RANGE			= 0x80,
 	SPDK_NVME_SC_CAPACITY_EXCEEDED			= 0x81,
@@ -2058,7 +2063,12 @@ struct spdk_nvme_cdata_ctratt {
 	/* Supports I/O command set specific extended PI formats */
 	uint32_t	elbas: 1;
 
-	uint32_t	reserved: 16;
+	uint32_t	reserved1: 3;
+
+	/* Supports flexible data placement */
+	uint32_t	fdps: 1;
+
+	uint32_t	reserved2: 12;
 };
 
 struct __attribute__((packed)) spdk_nvme_ctrlr_data {
