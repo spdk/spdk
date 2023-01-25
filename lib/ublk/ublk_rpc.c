@@ -81,6 +81,7 @@ struct rpc_ublk_start_disk {
 	uint32_t	ublk_id;
 	uint32_t	num_queues;
 	uint32_t	queue_depth;
+	struct spdk_jsonrpc_request *request;
 };
 
 static const struct spdk_json_object_decoder rpc_ublk_start_disk_decoders[] = {
@@ -91,38 +92,65 @@ static const struct spdk_json_object_decoder rpc_ublk_start_disk_decoders[] = {
 };
 
 static void
+free_rpc_ublk_start_disk(struct rpc_ublk_start_disk *req)
+{
+	free(req->bdev_name);
+	free(req);
+}
+
+static void
+rpc_ublk_start_disk_done(void *cb_arg, int rc)
+{
+	struct rpc_ublk_start_disk *req = cb_arg;
+	struct spdk_json_write_ctx *w;
+
+	if (rc == 0) {
+		w = spdk_jsonrpc_begin_result(req->request);
+		spdk_json_write_uint32(w, req->ublk_id);
+		spdk_jsonrpc_end_result(req->request, w);
+	} else {
+		spdk_jsonrpc_send_error_response(req->request, rc, spdk_strerror(-rc));
+	}
+
+	free_rpc_ublk_start_disk(req);
+}
+
+static void
 rpc_ublk_start_disk(struct spdk_jsonrpc_request *request,
 		    const struct spdk_json_val *params)
 {
-	struct spdk_json_write_ctx *w;
-	struct rpc_ublk_start_disk req = {};
+	struct rpc_ublk_start_disk *req;
 	int rc;
 
-	req.queue_depth = UBLK_DEV_QUEUE_DEPTH;
-	req.num_queues = UBLK_DEV_NUM_QUEUE;
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		SPDK_ERRLOG("could not allocate request.\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
+		return;
+	}
+	req->request = request;
+	req->queue_depth = UBLK_DEV_QUEUE_DEPTH;
+	req->num_queues = UBLK_DEV_NUM_QUEUE;
 
 	if (spdk_json_decode_object(params, rpc_ublk_start_disk_decoders,
 				    SPDK_COUNTOF(rpc_ublk_start_disk_decoders),
-				    &req)) {
+				    req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
 		goto out;
 	}
 
-	rc = ublk_start_disk(req.bdev_name, req.ublk_id, req.num_queues, req.queue_depth);
+	rc = ublk_start_disk(req->bdev_name, req->ublk_id, req->num_queues, req->queue_depth,
+			     rpc_ublk_start_disk_done, req);
 	if (rc != 0) {
-		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
-		goto out;
+		rpc_ublk_start_disk_done(req, rc);
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_uint32(w, req.ublk_id);
-	spdk_jsonrpc_end_result(request, w);
-	goto out;
+	return;
 
 out:
-	free(req.bdev_name);
+	free_rpc_ublk_start_disk(req);
 }
 
 SPDK_RPC_REGISTER("ublk_start_disk", rpc_ublk_start_disk, SPDK_RPC_RUNTIME)
