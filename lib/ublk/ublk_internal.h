@@ -17,12 +17,14 @@
 extern "C" {
 #endif
 
+typedef void (*ublk_start_cb)(void *cb_arg, int result);
 typedef void (*ublk_del_cb)(void *cb_arg);
 
 int ublk_create_target(const char *cpumask_str);
 int ublk_destroy_target(spdk_ublk_fini_cb cb_fn, void *cb_arg);
 int ublk_start_disk(const char *bdev_name, uint32_t ublk_id,
-		    uint32_t num_queues, uint32_t queue_depth);
+		    uint32_t num_queues, uint32_t queue_depth,
+		    ublk_start_cb start_cb, void *cb_arg);
 int ublk_stop_disk(uint32_t ublk_id, ublk_del_cb del_cb, void *cb_arg);
 struct spdk_ublk_dev *ublk_dev_find_by_id(uint32_t ublk_id);
 uint32_t ublk_dev_get_id(struct spdk_ublk_dev *ublk);

@@ -113,6 +113,7 @@ struct spdk_ublk_dev {
 	int			retry_count;
 	uint32_t		queues_closed;
 	volatile bool		is_closing;
+	ublk_start_cb		start_cb;
 	ublk_del_cb		del_cb;
 	void			*cb_arg;
 	uint32_t		ctrl_cmd_op;
@@ -1197,6 +1198,9 @@ ublk_set_params(struct spdk_ublk_dev *ublk)
 	if (rc < 0) {
 		SPDK_ERRLOG("UBLK can't set params for dev %d, rc %s\n", ublk->ublk_id, spdk_strerror(-rc));
 		ublk_delete_dev(ublk);
+		if (ublk->start_cb) {
+			ublk->start_cb(ublk->cb_arg, rc);
+		}
 	}
 }
 
@@ -1341,7 +1345,8 @@ ublk_queue_run(void *arg1)
 
 int
 ublk_start_disk(const char *bdev_name, uint32_t ublk_id,
-		uint32_t num_queues, uint32_t queue_depth)
+		uint32_t num_queues, uint32_t queue_depth,
+		ublk_start_cb start_cb, void *cb_arg)
 {
 	int			rc;
 	uint32_t		i;
@@ -1362,6 +1367,8 @@ ublk_start_disk(const char *bdev_name, uint32_t ublk_id,
 	if (ublk == NULL) {
 		return -ENOMEM;
 	}
+	ublk->start_cb = start_cb;
+	ublk->cb_arg = cb_arg;
 	ublk->cdev_fd = -1;
 	ublk->ublk_id = ublk_id;
 	UBLK_DEBUGLOG(ublk, "bdev %s num_queues %d queue_depth %d\n",
@@ -1462,10 +1469,14 @@ ublk_finish_start(struct spdk_ublk_dev *ublk)
 		}
 	}
 
-	return;
+	goto out;
 
 err:
 	ublk_delete_dev(ublk);
+out:
+	if (ublk->start_cb) {
+		ublk->start_cb(ublk->cb_arg, rc);
+	}
 }
 
 SPDK_LOG_REGISTER_COMPONENT(ublk)
