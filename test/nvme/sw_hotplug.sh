@@ -8,9 +8,6 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
 
-export PYTHONPATH="$rootdir/examples/nvme/hotplug/"
-rpc_py=$rootdir/scripts/rpc.py
-
 # Pci bus hotplug
 # Helper function to remove/attach cotrollers
 remove_attach_helper() {
@@ -18,6 +15,12 @@ remove_attach_helper() {
 	local hotplug_wait=$2
 	local use_bdev=$3
 	local dev
+
+	# We need to make sure we wait long enough for hotplug to initialize the devices
+	# and start IO - if we start removing devices before that happens we will end up
+	# stepping on hotplug's toes forcing it to fail to report proper count of given
+	# events.
+	sleep "$hotplug_wait"
 
 	while ((hotplug_events--)); do
 		for dev in "${nvmes[@]}"; do
@@ -69,29 +72,30 @@ remove_attach_helper() {
 run_hotplug() {
 	trap 'killprocess $hotplug_pid; exit 1' SIGINT SIGTERM EXIT
 
-	test_time=$((hotplug_events * hotplug_wait * nvme_count))
-
-	# Hotplug may sometimes hang, so start it via timeout command.
-	timeout -k 2s $((test_time + hotplug_wait)) "$SPDK_EXAMPLE_DIR/hotplug" \
+	"$SPDK_EXAMPLE_DIR/hotplug" \
 		-i 0 \
-		-t $((test_time)) \
+		-t $((hotplug_events * hotplug_wait + hotplug_wait * 3)) \
 		-n $((hotplug_events * nvme_count)) \
 		-r $((hotplug_events * nvme_count)) \
-		-l warning --wait-for-rpc &
-	timeout_pid=$!
-	hotplug_pid=$(ps -o pid= --ppid "$timeout_pid")
-
-	# Make sure Hotplug started before removing and inserting devices.
-	waitforlisten "$hotplug_pid"
-
-	$rpc_py --plugin hotplug_plugin perform_tests
+		-l warning &
+	hotplug_pid=$!
 
 	remove_attach_helper "$hotplug_events" "$hotplug_wait" false
 
-	trap - SIGINT SIGTERM EXIT
+	# Wait in case hotplug app is lagging behind
+	# and kill it, if it hung.
+	sleep $hotplug_wait
 
-	# Check timeout return code.
-	wait "$timeout_pid"
+	if ! kill -0 "$hotplug_pid"; then
+		# hotplug already finished, check for the error code.
+		wait "$hotplug_pid"
+	else
+		echo "Killing hotplug application"
+		killprocess $hotplug_pid
+		return 1
+	fi
+
+	trap - SIGINT SIGTERM EXIT
 }
 
 # SPDK target hotplug
