@@ -1346,7 +1346,7 @@ class KernelInitiator(Initiator):
         if "kernel_engine" in initiator_config:
             self.ioengine = initiator_config["kernel_engine"]
             if "io_uring" in self.ioengine:
-                self.extra_params = "--nr-poll-queues=8"
+                self.extra_params += ' --nr-poll-queues=8'
 
     def configure_adq(self):
         self.log.warning("WARNING: ADQ setup not yet supported for Kernel mode. Skipping configuration.")
