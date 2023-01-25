@@ -1925,11 +1925,31 @@ nvmf_rpc_tgt_add_transport_done(void *cb_arg, int status)
 }
 
 static void
+nvmf_rpc_create_transport_done(void *cb_arg, struct spdk_nvmf_transport *transport)
+{
+	struct nvmf_rpc_create_transport_ctx *ctx = cb_arg;
+
+	if (!transport) {
+		SPDK_ERRLOG("Failed to create transport.\n");
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Failed to create transport.");
+		nvmf_rpc_create_transport_ctx_free(ctx);
+		return;
+	}
+
+	ctx->transport = transport;
+
+	spdk_nvmf_tgt_add_transport(spdk_nvmf_get_tgt(ctx->tgt_name), transport,
+				    nvmf_rpc_tgt_add_transport_done, ctx);
+}
+
+static void
 rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct nvmf_rpc_create_transport_ctx *ctx;
 	struct spdk_nvmf_tgt *tgt;
+	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -1989,20 +2009,15 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 
 	/* Transport can parse additional params themselves */
 	ctx->opts.transport_specific = params;
+	ctx->request = request;
 
-	ctx->transport = spdk_nvmf_transport_create(ctx->trtype, &ctx->opts);
-
-	if (!ctx->transport) {
+	rc = spdk_nvmf_transport_create_async(ctx->trtype, &ctx->opts, nvmf_rpc_create_transport_done, ctx);
+	if (rc) {
 		SPDK_ERRLOG("Transport type '%s' create failed\n", ctx->trtype);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "Transport type '%s' create failed", ctx->trtype);
 		nvmf_rpc_create_transport_ctx_free(ctx);
-		return;
 	}
-
-	/* add transport to target */
-	ctx->request = request;
-	spdk_nvmf_tgt_add_transport(tgt, ctx->transport, nvmf_rpc_tgt_add_transport_done, ctx);
 }
 SPDK_RPC_REGISTER("nvmf_create_transport", rpc_nvmf_create_transport, SPDK_RPC_RUNTIME)
 

@@ -166,72 +166,42 @@ nvmf_transport_opts_copy(struct spdk_nvmf_transport_opts *opts,
 #undef FILED_CHECK
 }
 
-struct spdk_nvmf_transport *
-spdk_nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transport_opts *opts)
+struct nvmf_transport_create_ctx {
+	const struct spdk_nvmf_transport_ops *ops;
+	struct spdk_nvmf_transport_opts opts;
+	void *cb_arg;
+	spdk_nvmf_transport_create_done_cb cb_fn;
+};
+
+static void
+nvmf_transport_create_async_done(void *cb_arg, struct spdk_nvmf_transport *transport)
 {
-	const struct spdk_nvmf_transport_ops *ops = NULL;
-	struct spdk_nvmf_transport *transport;
+	struct nvmf_transport_create_ctx *ctx = cb_arg;
 	char spdk_mempool_name[MAX_MEMPOOL_NAME_LENGTH];
 	int chars_written;
-	struct spdk_nvmf_transport_opts opts_local = {};
 
-	if (!opts) {
-		SPDK_ERRLOG("opts should not be NULL\n");
-		return NULL;
-	}
-
-	if (!opts->opts_size) {
-		SPDK_ERRLOG("The opts_size in opts structure should not be zero\n");
-		return NULL;
-	}
-
-	ops = nvmf_get_transport_ops(transport_name);
-	if (!ops) {
-		SPDK_ERRLOG("Transport type '%s' unavailable.\n", transport_name);
-		return NULL;
-	}
-	nvmf_transport_opts_copy(&opts_local, opts, opts->opts_size);
-
-	if (opts_local.max_io_size != 0 && (!spdk_u32_is_pow2(opts_local.max_io_size) ||
-					    opts_local.max_io_size < 8192)) {
-		SPDK_ERRLOG("max_io_size %u must be a power of 2 and be greater than or equal 8KB\n",
-			    opts_local.max_io_size);
-		return NULL;
-	}
-
-	if (opts_local.max_aq_depth < SPDK_NVMF_MIN_ADMIN_MAX_SQ_SIZE) {
-		SPDK_ERRLOG("max_aq_depth %u is less than minimum defined by NVMf spec, use min value\n",
-			    opts_local.max_aq_depth);
-		opts_local.max_aq_depth = SPDK_NVMF_MIN_ADMIN_MAX_SQ_SIZE;
-	}
-
-	transport = ops->create(&opts_local);
 	if (!transport) {
-		SPDK_ERRLOG("Unable to create new transport of type %s\n", transport_name);
-		return NULL;
+		SPDK_ERRLOG("Failed to create transport.\n");
+		goto err;
 	}
 
 	pthread_mutex_init(&transport->mutex, NULL);
 	TAILQ_INIT(&transport->listeners);
-
-	transport->ops = ops;
-	transport->opts = opts_local;
-
+	transport->ops = ctx->ops;
+	transport->opts = ctx->opts;
 	chars_written = snprintf(spdk_mempool_name, MAX_MEMPOOL_NAME_LENGTH, "%s_%s_%s", "spdk_nvmf",
-				 transport_name, "data");
+				 transport->ops->name, "data");
 	if (chars_written < 0) {
 		SPDK_ERRLOG("Unable to generate transport data buffer pool name.\n");
-		ops->destroy(transport, NULL, NULL);
-		return NULL;
+		goto err;
 	}
 
-	if (opts_local.num_shared_buffers) {
+	if (ctx->opts.num_shared_buffers) {
 		transport->data_buf_pool = spdk_mempool_create(spdk_mempool_name,
-					   opts_local.num_shared_buffers,
-					   opts_local.io_unit_size + NVMF_DATA_BUFFER_ALIGNMENT,
+					   ctx->opts.num_shared_buffers,
+					   ctx->opts.io_unit_size + NVMF_DATA_BUFFER_ALIGNMENT,
 					   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 					   SPDK_ENV_SOCKET_ID_ANY);
-
 		if (!transport->data_buf_pool) {
 			if (spdk_mempool_lookup(spdk_mempool_name) != NULL) {
 				SPDK_ERRLOG("Unable to allocate poll group buffer pull: already exists\n");
@@ -240,11 +210,128 @@ spdk_nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transpor
 			} else {
 				SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
 			}
-			ops->destroy(transport, NULL, NULL);
-			return NULL;
+			goto err;
 		}
 	}
 
+	ctx->cb_fn(ctx->cb_arg, transport);
+	free(ctx);
+	return;
+
+err:
+	if (transport) {
+		transport->ops->destroy(transport, NULL, NULL);
+	}
+
+	ctx->cb_fn(ctx->cb_arg, NULL);
+	free(ctx);
+}
+
+static void
+_nvmf_transport_create_done(void *ctx)
+{
+	struct nvmf_transport_create_ctx *_ctx = (struct nvmf_transport_create_ctx *)ctx;
+
+	nvmf_transport_create_async_done(_ctx, _ctx->ops->create(&_ctx->opts));
+}
+
+static int
+nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transport_opts *opts,
+		      spdk_nvmf_transport_create_done_cb cb_fn, void *cb_arg, bool sync)
+{
+	struct nvmf_transport_create_ctx *ctx;
+	int rc;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		return -ENOMEM;
+	}
+
+	if (!opts) {
+		SPDK_ERRLOG("opts should not be NULL\n");
+		goto err;
+	}
+
+	if (!opts->opts_size) {
+		SPDK_ERRLOG("The opts_size in opts structure should not be zero\n");
+		goto err;
+	}
+
+	ctx->ops = nvmf_get_transport_ops(transport_name);
+	if (!ctx->ops) {
+		SPDK_ERRLOG("Transport type '%s' unavailable.\n", transport_name);
+		goto err;
+	}
+
+	nvmf_transport_opts_copy(&ctx->opts, opts, opts->opts_size);
+	if (ctx->opts.max_io_size != 0 && (!spdk_u32_is_pow2(ctx->opts.max_io_size) ||
+					   ctx->opts.max_io_size < 8192)) {
+		SPDK_ERRLOG("max_io_size %u must be a power of 2 and be greater than or equal 8KB\n",
+			    ctx->opts.max_io_size);
+		goto err;
+	}
+
+	if (ctx->opts.max_aq_depth < SPDK_NVMF_MIN_ADMIN_MAX_SQ_SIZE) {
+		SPDK_ERRLOG("max_aq_depth %u is less than minimum defined by NVMf spec, use min value\n",
+			    ctx->opts.max_aq_depth);
+		ctx->opts.max_aq_depth = SPDK_NVMF_MIN_ADMIN_MAX_SQ_SIZE;
+	}
+
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	/* Prioritize sync create operation. */
+	if (ctx->ops->create) {
+		if (sync) {
+			_nvmf_transport_create_done(ctx);
+			return 0;
+		}
+
+		rc = spdk_thread_send_msg(spdk_get_thread(), _nvmf_transport_create_done, ctx);
+		if (rc) {
+			goto err;
+		}
+
+		return 0;
+	}
+
+	assert(ctx->ops->create_async);
+	rc = ctx->ops->create_async(&ctx->opts, nvmf_transport_create_async_done, ctx);
+	if (rc) {
+		SPDK_ERRLOG("Unable to create new transport of type %s\n", transport_name);
+		goto err;
+	}
+
+	return 0;
+err:
+	free(ctx);
+	return -1;
+}
+
+int
+spdk_nvmf_transport_create_async(const char *transport_name, struct spdk_nvmf_transport_opts *opts,
+				 spdk_nvmf_transport_create_done_cb cb_fn, void *cb_arg)
+{
+	return nvmf_transport_create(transport_name, opts, cb_fn, cb_arg, false);
+}
+
+static void
+nvmf_transport_create_sync_done(void *cb_arg, struct spdk_nvmf_transport *transport)
+{
+	struct spdk_nvmf_transport **_transport = cb_arg;
+
+	*_transport = transport;
+}
+
+struct spdk_nvmf_transport *
+spdk_nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transport_opts *opts)
+{
+	struct spdk_nvmf_transport *transport = NULL;
+
+	/* Current implementation supports synchronous version of create operation only. */
+	assert(nvmf_get_transport_ops(transport_name) && nvmf_get_transport_ops(transport_name)->create);
+
+	nvmf_transport_create(transport_name, opts, nvmf_transport_create_sync_done, &transport, true);
 	return transport;
 }
 

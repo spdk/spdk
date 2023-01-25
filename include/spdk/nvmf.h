@@ -968,7 +968,7 @@ spdk_nvmf_transport_opts_init(const char *transport_name,
 			      struct spdk_nvmf_transport_opts *opts, size_t opts_size);
 
 /**
- * Create a protocol transport
+ * Create a protocol transport - deprecated, please use \ref spdk_nvmf_transport_create_async.
  *
  * \param transport_name The transport type to create
  * \param opts The transport options (e.g. max_io_size). It should not be NULL, and opts_size
@@ -978,6 +978,27 @@ spdk_nvmf_transport_opts_init(const char *transport_name,
  */
 struct spdk_nvmf_transport *spdk_nvmf_transport_create(const char *transport_name,
 		struct spdk_nvmf_transport_opts *opts);
+
+typedef void (*spdk_nvmf_transport_create_done_cb)(void *cb_arg,
+		struct spdk_nvmf_transport *transport);
+
+/**
+ * Create a protocol transport
+ *
+ * The callback will be executed asynchronously - i.e. spdk_nvmf_transport_create_async will always return
+ * prior to `cb_fn` being called.
+ *
+ * \param transport_name The transport type to create
+ * \param opts The transport options (e.g. max_io_size). It should not be NULL, and opts_size
+ *        pointed in this structure should not be zero value.
+ * \param cb_fn A callback that will be called once the transport is created
+ * \param cb_arg A context argument passed to cb_fn.
+ *
+ * \return 0 on success, or negative errno on failure (`cb_fn` will not be executed then).
+ */
+int spdk_nvmf_transport_create_async(const char *transport_name,
+				     struct spdk_nvmf_transport_opts *opts,
+				     spdk_nvmf_transport_create_done_cb cb_fn, void *cb_arg);
 
 typedef void (*spdk_nvmf_transport_destroy_done_cb)(void *cb_arg);
 

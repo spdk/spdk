@@ -150,15 +150,17 @@ static struct spdk_nvmf_transport g_transport = {
 	.ops = &g_transport_ops
 };
 
-struct spdk_nvmf_transport *
-spdk_nvmf_transport_create(const char *transport_name,
-			   struct spdk_nvmf_transport_opts *tprt_opts)
+int
+spdk_nvmf_transport_create_async(const char *transport_name,
+				 struct spdk_nvmf_transport_opts *tprt_opts,
+				 spdk_nvmf_transport_create_done_cb cb_fn, void *cb_arg)
 {
 	if (strcasecmp(transport_name, spdk_nvme_transport_id_trtype_str(SPDK_NVME_TRANSPORT_RDMA))) {
-		return &g_transport;
+		cb_fn(cb_arg, &g_transport);
+		return 0;
 	}
 
-	return NULL;
+	return -1;
 }
 
 struct spdk_nvmf_subsystem *

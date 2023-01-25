@@ -26,6 +26,9 @@ was used to format the namespace.
 Added two new APIs `spdk_nvme_ns_cmd_io_mgmt_recv` and `spdk_nvme_ns_cmd_io_mgmt_send` to
 receive and send the I/O management commands.
 
+New `spdk_nvmf_transport_create_async` was added, it accepts a callback and callback argument.
+`spdk_nvmf_transport_create` is marked deprecated.
+
 ## v23.01
 
 ### accel

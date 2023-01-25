@@ -236,9 +236,12 @@ struct spdk_nvmf_transport_ops {
 	void (*opts_init)(struct spdk_nvmf_transport_opts *opts);
 
 	/**
-	 * Create a transport for the given transport opts
+	 * Create a transport for the given transport opts. Either synchronous
+	 * or asynchronous version shall be implemented.
 	 */
 	struct spdk_nvmf_transport *(*create)(struct spdk_nvmf_transport_opts *opts);
+	int (*create_async)(struct spdk_nvmf_transport_opts *opts, spdk_nvmf_transport_create_done_cb cb_fn,
+			    void *cb_arg);
 
 	/**
 	 * Dump transport-specific opts into JSON
