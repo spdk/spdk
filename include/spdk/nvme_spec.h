@@ -1039,8 +1039,7 @@ union spdk_nvme_cmd_cdw10 {
 		/* Log Page Identifier */
 		uint32_t lid       : 8;
 		/* Log Specific Field */
-		uint32_t lsp       : 4;
-		uint32_t reserved  : 3;
+		uint32_t lsp       : 7;
 		/* Retain Asynchronous Event */
 		uint32_t rae       : 1;
 		/* Number of Dwords Lower */
@@ -1705,9 +1704,14 @@ enum spdk_nvme_feat {
 	SPDK_NVME_FEAT_HOST_BEHAVIOR_SUPPORT			= 0x16,
 	SPDK_NVME_FEAT_SANITIZE_CONFIG				= 0x17,
 	SPDK_NVME_FEAT_ENDURANCE_GROUP_EVENT			= 0x18,
-	/* 0x12-0x77 - reserved */
+	SPDK_NVME_FEAT_IO_COMMAND_SET_PROFILE			= 0x19,
+	SPDK_NVME_FEAT_SPINUP_CONTROL				= 0x1A,
+	/* 0x1B-0x77 - reserved */
 
-	/* 0x78-0x7F - NVMe-MI features */
+	/* 0x78-0x7C - NVMe-MI features */
+	SPDK_NVME_FEAT_ENHANCED_CONTROLLER_METADATA		= 0x7D,
+	SPDK_NVME_FEAT_CONTROLLER_METADATA			= 0x7E,
+	SPDK_NVME_FEAT_NAMESPACE_METADATA			= 0x7F,
 
 	/** cdw11 layout defined by \ref spdk_nvme_feat_software_progress_marker */
 	SPDK_NVME_FEAT_SOFTWARE_PROGRESS_MARKER			= 0x80,
@@ -1718,8 +1722,9 @@ enum spdk_nvme_feat {
 	SPDK_NVME_FEAT_HOST_RESERVE_MASK			= 0x82,
 	/** cdw11 layout defined by \ref spdk_nvme_feat_reservation_persistence */
 	SPDK_NVME_FEAT_HOST_RESERVE_PERSIST			= 0x83,
+	SPDK_NVME_FEAT_NAMESPACE_WRITE_PROTECTION_CONFIG	= 0x84,
 
-	/* 0x84-0xBF - command set specific (reserved) */
+	/* 0x85-0xBF - command set specific (reserved) */
 
 	/* 0xC0-0xFF - vendor specific */
 };
@@ -2997,7 +3002,8 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_reservation_notification_log) == 64, 
  * Log page identifiers for SPDK_NVME_OPC_GET_LOG_PAGE
  */
 enum spdk_nvme_log_page {
-	/* 0x00 - reserved */
+	/** Supported log pages (optional) */
+	SPDK_NVME_LOG_SUPPORTED_LOG_PAGES	= 0x00,
 
 	/** Error information (mandatory) - \ref spdk_nvme_error_information_entry */
 	SPDK_NVME_LOG_ERROR			= 0x01,
@@ -3023,12 +3029,48 @@ enum spdk_nvme_log_page {
 	/** Controller initiated telemetry log (optional) */
 	SPDK_NVME_LOG_TELEMETRY_CTRLR_INITIATED	= 0x08,
 
-	/* 0x09-0x0B - reserved */
+	/** Endurance group Information (optional) */
+	SPDK_NVME_LOG_ENDURANCE_GROUP_INFORMATION	= 0x09,
+
+	/** Predictable latency per NVM set (optional) */
+	SPDK_NVME_LOG_PREDICATBLE_LATENCY	= 0x0A,
+
+	/** Predictable latency event aggregrate (optional) */
+	SPDK_NVME_LOG_PREDICTABLE_LATENCY_EVENT	= 0x0B,
 
 	/** Asymmetric namespace access log (optional) */
 	SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS = 0x0C,
 
-	/* 0x0D-0x6F - reserved */
+	/** Persistent event log (optional) */
+	SPDK_NVME_LOG_PERSISTENT_EVENT_LOG = 0x0D,
+
+	/* 0x0E NVM command set specific */
+
+	/** Endurance group event aggregate (optional) */
+	SPDK_NVME_LOG_ENDURANCE_GROUP_EVENT = 0x0F,
+
+	/** Media unit status (optional) */
+	SPDK_NVME_LOG_MEDIA_UNIT_STATUS = 0x10,
+
+	/** Supported capacity configuration list (optional) */
+	SPDK_NVME_LOG_CAPACITY_CONFIGURATION_LIST	= 0x11,
+
+	/** Feature identifiers supported and effects (optional) */
+	SPDK_NVME_LOG_FEATURE_IDS_EFFECTS	= 0x12,
+
+	/** NVMe-MI commands supported and effects (optional) */
+	SPDK_NVME_LOG_NVME_MI_COMMANDS_EFFECTS	= 0x13,
+
+	/** Command and feature lockdown (optional) */
+	SPDK_NVME_LOG_COMMAND_FEATURE_LOCKDOWN	= 0x14,
+
+	/** Boot partition (optional) */
+	SPDK_NVME_LOG_BOOT_PARTITION	= 0x15,
+
+	/** Rotational media information (optional) */
+	SPDK_NVME_LOG_ROTATIONAL_MEDIA_INFORMATION	= 0x16,
+
+	/* 0x17-0x6f - reserved */
 
 	/** Discovery(refer to the NVMe over Fabrics specification) */
 	SPDK_NVME_LOG_DISCOVERY		= 0x70,
@@ -3041,7 +3083,10 @@ enum spdk_nvme_log_page {
 	/** Sanitize status (optional) */
 	SPDK_NVME_LOG_SANITIZE_STATUS = 0x81,
 
-	/* 0x81-0xBF - I/O command set specific */
+	/* 0x82-0xBE - I/O command set specific */
+
+	/** Changed zone list (refer to Zoned Namespace command set) */
+	SPDK_NVME_LOG_CHANGED_ZONE_LIST = 0xBF,
 
 	/* 0xC0-0xFF - vendor specific */
 	SPDK_NVME_LOG_VENDOR_SPECIFIC_START	= 0xc0,
