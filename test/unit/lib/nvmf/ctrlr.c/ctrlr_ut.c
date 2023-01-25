@@ -210,6 +210,9 @@ DEFINE_STUB(spdk_bdev_get_max_open_zones, uint32_t, (const struct spdk_bdev *bde
 DEFINE_STUB(spdk_bdev_get_zone_size, uint64_t, (const struct spdk_bdev *bdev), ZONE_SIZE);
 DEFINE_STUB(spdk_bdev_is_zoned, bool, (const struct spdk_bdev *bdev), false);
 
+DEFINE_STUB(spdk_nvme_ns_get_format_index, uint32_t,
+	    (const struct spdk_nvme_ns_data *nsdata), 0);
+
 int
 spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_cb cb_fn, void *ctx)
 {
@@ -229,6 +232,7 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 	nsdata->nuse = num_blocks;
 	nsdata->nlbaf = 0;
 	nsdata->flbas.format = 0;
+	nsdata->flbas.msb_format = 0;
 	nsdata->lbaf[0].lbads = spdk_u32log2(512);
 }
 

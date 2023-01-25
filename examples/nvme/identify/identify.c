@@ -791,7 +791,7 @@ get_and_print_zns_zone_report(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 	uint64_t handled_zones = 0;
 	uint64_t slba = 0;
 	size_t zdes = 0;
-	uint32_t zds, zrs;
+	uint32_t zds, zrs, format_index;
 	int rc = 0;
 
 	outstanding_commands = 0;
@@ -801,7 +801,9 @@ get_and_print_zns_zone_report(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 
 	zrs = sizeof(struct spdk_nvme_zns_zone_report);
 	zds = sizeof(struct spdk_nvme_zns_zone_desc);
-	zdes = nsdata_zns->lbafe[nsdata->flbas.format].zdes * 64;
+
+	format_index = spdk_nvme_ns_get_format_index(nsdata);
+	zdes = nsdata_zns->lbafe[format_index].zdes * 64;
 
 	report_bufsize = spdk_nvme_ns_get_max_io_xfer_size(ns);
 	report_buf = calloc(1, report_bufsize);
@@ -964,7 +966,7 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	uint32_t				i;
 	uint32_t				flags;
 	char					uuid_str[SPDK_UUID_STRING_LEN];
-	uint32_t				blocksize;
+	uint32_t				blocksize, format_index;
 	enum spdk_nvme_dealloc_logical_block_read_value	dlfeat_read_value;
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
@@ -1017,13 +1019,14 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		printf("Protection Information Transferred as: %s\n",
 		       nsdata->dps.md_start ? "First 8 Bytes" : "Last 8 Bytes");
 	}
-	if (nsdata->lbaf[nsdata->flbas.format].ms > 0) {
+	format_index = spdk_nvme_ns_get_format_index(nsdata);
+	if (nsdata->lbaf[format_index].ms > 0) {
 		printf("Metadata Transferred as:               %s\n",
 		       nsdata->flbas.extended ? "Extended Data LBA" : "Separate Metadata Buffer");
 	}
 	printf("Namespace Sharing Capabilities:        %s\n",
 	       nsdata->nmic.can_share ? "Multiple Controllers" : "Private");
-	blocksize = 1 << nsdata->lbaf[nsdata->flbas.format].lbads;
+	blocksize = 1 << nsdata->lbaf[format_index].lbads;
 	printf("Size (in LBAs):                        %lld (%lldGiB)\n",
 	       (long long)nsdata->nsze,
 	       (long long)nsdata->nsze * blocksize / 1024 / 1024 / 1024);
@@ -1103,7 +1106,7 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 
 	printf("Number of LBA Formats:                 %d\n", nsdata->nlbaf + 1);
 	printf("Current LBA Format:                    LBA Format #%02d\n",
-	       nsdata->flbas.format);
+	       format_index);
 	for (i = 0; i <= nsdata->nlbaf; i++) {
 		printf("LBA Format #%02d: Data Size: %5d  Metadata Size: %5d\n",
 		       i, 1 << nsdata->lbaf[i].lbads, nsdata->lbaf[i].ms);

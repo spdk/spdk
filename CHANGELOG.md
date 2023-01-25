@@ -18,6 +18,11 @@ New function `spdk_env_get_main_core` was added.
 New `spdk_nvmf_request_copy_to/from_buf()` APIs have been added, which support
 iovecs, unlike the deprecated `spdk_nvmf_request_get_data()`.
 
+### nvme
+
+New API `spdk_nvme_ns_get_format_index` was added to calculate the exact format index, that
+was used to format the namespace.
+
 ## v23.01
 
 ### accel

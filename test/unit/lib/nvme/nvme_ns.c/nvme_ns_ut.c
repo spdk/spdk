@@ -253,6 +253,7 @@ test_nvme_ns_set_identify_data(void)
 	ns.nsdata.nsrescap.raw = 1;
 	ns.nsdata.dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE1;
 	ns.nsdata.flbas.format = 0;
+	ns.nsdata.flbas.msb_format = 0;
 	ns.nsdata.lbaf[0].lbads = 9;
 	ns.nsdata.lbaf[0].ms = 8;
 

@@ -2852,6 +2852,18 @@ enum spdk_nvme_pi_type spdk_nvme_ns_get_pi_type(struct spdk_nvme_ns *ns);
 uint32_t spdk_nvme_ns_get_md_size(struct spdk_nvme_ns *ns);
 
 /**
+ * Get the format index of the given namespace.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * \param nsdata pointer to the NVMe namespace data.
+ *
+ * \return the format index of the given namespace.
+ */
+uint32_t spdk_nvme_ns_get_format_index(const struct spdk_nvme_ns_data *nsdata);
+
+/**
  * Check whether if the namespace can support extended LBA when end-to-end data
  * protection enabled.
  *

@@ -2569,9 +2569,12 @@ struct spdk_nvme_ns_data {
 
 	/** formatted lba size */
 	struct {
-		uint8_t		format    : 4;
-		uint8_t		extended  : 1;
-		uint8_t		reserved2 : 3;
+		/** LSB for Format index */
+		uint8_t		format     : 4;
+		uint8_t		extended   : 1;
+		/** MSB for Format index, to be ignored if nlbaf <= 16 */
+		uint8_t		msb_format : 2;
+		uint8_t		reserved2  : 1;
 	} flbas;
 
 	/** metadata capabilities */
@@ -2772,9 +2775,7 @@ struct spdk_nvme_ns_data {
 		uint32_t	rp	  : 2;
 
 		uint32_t	reserved6 : 6;
-	} lbaf[16];
-
-	uint8_t			reserved6[192];
+	} lbaf[64];
 
 	uint8_t			vendor_specific[3712];
 };
@@ -2835,9 +2836,7 @@ struct spdk_nvme_zns_ns_data {
 		uint64_t	zdes : 8;
 
 		uint64_t	reserved15 : 56;
-	} lbafe[16];
-
-	uint8_t			reserved3072[768];
+	} lbafe[64];
 
 	uint8_t			vendor_specific[256];
 };
@@ -3545,13 +3544,21 @@ enum spdk_nvme_metadata_setting {
 	SPDK_NVME_FMT_NVM_METADATA_TRANSFER_AS_LBA	= 0x1,
 };
 
+/* Format - Command Dword 10 */
 struct spdk_nvme_format {
+	/* LBA format lower (LSB 4 bits of format index), also called lbafl in 2.0 spec */
 	uint32_t	lbaf		: 4;
+	/* Metadata settings, also called mset in 2.0 spec */
 	uint32_t	ms		: 1;
+	/* Protection information */
 	uint32_t	pi		: 3;
+	/* Protection information location */
 	uint32_t	pil		: 1;
+	/* Secure erase settings */
 	uint32_t	ses		: 3;
-	uint32_t	reserved	: 20;
+	/* LBA format upper (MSB 2 bits of format index) */
+	uint32_t	lbafu		: 2;
+	uint32_t	reserved	: 18;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_format) == 4, "Incorrect size");
 

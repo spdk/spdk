@@ -161,8 +161,10 @@ display_namespace(struct spdk_nvme_ns *ns)
 {
 	const struct spdk_nvme_ns_data		*nsdata;
 	uint32_t				i;
+	uint32_t				format_index;
 
 	nsdata = spdk_nvme_ns_get_data(ns);
+	format_index = spdk_nvme_ns_get_format_index(nsdata);
 
 	printf("Namespace ID:%d\n", spdk_nvme_ns_get_id(ns));
 
@@ -182,7 +184,7 @@ display_namespace(struct spdk_nvme_ns *ns)
 	}
 	printf("Number of LBA Formats:       %d\n", nsdata->nlbaf + 1);
 	printf("Current LBA Format:          LBA Format #%02d\n",
-	       nsdata->flbas.format);
+	       format_index);
 	for (i = 0; i <= nsdata->nlbaf; i++)
 		printf("LBA Format #%02d: Data Size: %5d  Metadata Size: %5d\n",
 		       i, 1 << nsdata->lbaf[i].lbads, nsdata->lbaf[i].ms);
@@ -467,7 +469,8 @@ ns_manage_add(struct dev *device, uint64_t ns_size, uint64_t ns_capacity, int ns
 
 	ndata->nsze = ns_size;
 	ndata->ncap = ns_capacity;
-	ndata->flbas.format = ns_lbasize;
+	ndata->flbas.format = ns_lbasize & 0xF;
+	ndata->flbas.msb_format = (ns_lbasize >> 4) & 0x3;
 	if (SPDK_NVME_FMT_NVM_PROTECTION_DISABLE != ns_dps_type) {
 		ndata->dps.pit = ns_dps_type;
 		ndata->dps.md_start = ns_dps_location;
@@ -501,11 +504,12 @@ nvme_manage_format(struct dev *device, int ns_id, int ses, int pi, int pil, int 
 	int ret = 0;
 	struct spdk_nvme_format format = {};
 
-	format.lbaf	= lbaf;
+	format.lbaf	= lbaf & 0xF;
 	format.ms	= ms;
 	format.pi	= pi;
 	format.pil	= pil;
 	format.ses	= ses;
+	format.lbafu	= (lbaf >> 4) & 0x3;
 	ret = spdk_nvme_ctrlr_format(device->ctrlr, ns_id, &format);
 	if (ret) {
 		fprintf(stdout, "nvme format: Failed\n");

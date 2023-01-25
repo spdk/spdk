@@ -136,6 +136,7 @@
 	spdk_nvme_ns_get_size;
 	spdk_nvme_ns_get_pi_type;
 	spdk_nvme_ns_get_md_size;
+	spdk_nvme_ns_get_format_index;
 	spdk_nvme_ns_supports_extended_lba;
 	spdk_nvme_ns_supports_compare;
 	spdk_nvme_ns_get_dealloc_logical_block_read_value;
