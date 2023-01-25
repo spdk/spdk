@@ -1254,6 +1254,7 @@ ublk_ios_fini(struct spdk_ublk_dev *ublk)
 			}
 		}
 		free(q->ios);
+		q->ios = NULL;
 	}
 
 	spdk_mempool_free(ublk->io_buf_pool);
@@ -1378,13 +1379,16 @@ ublk_start_disk(const char *bdev_name, uint32_t ublk_id,
 	/* Add ublk_dev to the end of disk list */
 	rc = ublk_dev_list_register(ublk);
 	if (rc != 0) {
-		goto err;
+		spdk_bdev_close(ublk->bdev_desc);
+		free(ublk);
+		return rc;
 	}
 
 	ublk_info_param_init(ublk);
 	rc = ublk_ios_init(ublk);
 	if (rc != 0) {
-		goto err;
+		ublk_delete_dev(ublk);
+		return rc;
 	}
 
 	SPDK_INFOLOG(ublk, "Enabling kernel access to bdev %s via ublk %d\n",
@@ -1392,13 +1396,9 @@ ublk_start_disk(const char *bdev_name, uint32_t ublk_id,
 	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_ADD_DEV);
 	if (rc < 0) {
 		SPDK_ERRLOG("UBLK can't add dev %d, rc %s\n", ublk->ublk_id, spdk_strerror(-rc));
-		goto err;
+		ublk_delete_dev(ublk);
 	}
 
-	return 0;
-
-err:
-	_ublk_try_close_dev(ublk);
 	return rc;
 }
 
