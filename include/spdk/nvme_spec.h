@@ -1025,6 +1025,63 @@ union spdk_nvme_feat_reservation_persistence {
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_reservation_persistence) == 4, "Incorrect size");
 
+/**
+ * Data used by Set Features/Get Features \ref SPDK_NVME_FEAT_FDP
+ */
+union spdk_nvme_feat_fdp_cdw11 {
+	uint32_t raw;
+	struct {
+		/* Endurance Group Identifier */
+		uint32_t endgid   : 16;
+		uint32_t reserved : 16;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_fdp_cdw11) == 4, "Incorrect size");
+
+/**
+ * Data used by Set Features/Get Features \ref SPDK_NVME_FEAT_FDP
+ */
+union spdk_nvme_feat_fdp_cdw12 {
+	uint32_t raw;
+	struct {
+		/* Flexible Data Placement Enable */
+		uint32_t fdpe      : 1;
+		uint32_t reserved1 : 7;
+		/* Flexible Data Placement Configuration Index */
+		uint32_t fdpci     : 8;
+		uint32_t reserved2 : 16;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_fdp_cdw12) == 4, "Incorrect size");
+
+/**
+ * Data used by Set Features/Get Features \ref SPDK_NVME_FEAT_FDP_EVENTS
+ */
+union spdk_nvme_feat_fdp_events_cdw11 {
+	uint32_t raw;
+	struct {
+		/* Placement Handle associated with RUH */
+		uint32_t phndl    : 16;
+		/* Number of FDP event types in data buffer */
+		uint32_t noet     : 8;
+		uint32_t reserved : 8;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_fdp_events_cdw11) == 4, "Incorrect size");
+
+/**
+ * Data used by Set Feature \ref SPDK_NVME_FEAT_FDP_EVENTS
+ */
+union spdk_nvme_feat_fdp_events_cdw12 {
+	uint32_t raw;
+	struct {
+		/* FDP Event Enable */
+		uint32_t fdpee     : 1;
+		uint32_t reserved1 : 31;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_fdp_events_cdw12) == 4, "Incorrect size");
+
 union spdk_nvme_cmd_cdw10 {
 	uint32_t raw;
 	struct {
@@ -1213,6 +1270,8 @@ union spdk_nvme_cmd_cdw11 {
 	union spdk_nvme_feat_host_identifier feat_host_identifier;
 	union spdk_nvme_feat_reservation_notification_mask feat_rsv_notification_mask;
 	union spdk_nvme_feat_reservation_persistence feat_rsv_persistence;
+	union spdk_nvme_feat_fdp_cdw11 feat_fdp_cdw11;
+	union spdk_nvme_feat_fdp_events_cdw11 feat_fdp_events_cdw11;
 
 	struct {
 		/* Attribute – Integral Dataset for Read */
@@ -1249,6 +1308,9 @@ union spdk_nvme_cmd_cdw12 {
 		/* Limited Retry */
 		uint32_t lr        : 1;
 	} copy;
+
+	union spdk_nvme_feat_fdp_cdw12 feat_fdp_cdw12;
+	union spdk_nvme_feat_fdp_events_cdw12 feat_fdp_events_cdw12;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmd_cdw12) == 4, "Incorrect size");
 
@@ -1664,6 +1726,25 @@ struct __attribute__((packed)) spdk_nvme_host_behavior {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_host_behavior) == 512, "Incorrect size");
 
+/**
+ * Supported FDP event descriptor
+ */
+struct spdk_nvme_fdp_event_desc {
+	/* FDP Event type */
+	uint8_t fdp_etype;
+
+	/* FDP event type attributes */
+	union {
+		uint8_t raw;
+		struct {
+			/*  FDP event enabled */
+			uint8_t fdp_ee   : 1;
+			uint8_t reserved : 7;
+		} bits;
+	} fdpeta;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fdp_event_desc) == 2, "Incorrect size");
+
 enum spdk_nvme_feat {
 	/* 0x00 - reserved */
 
@@ -1711,8 +1792,22 @@ enum spdk_nvme_feat {
 	SPDK_NVME_FEAT_ENDURANCE_GROUP_EVENT			= 0x18,
 	SPDK_NVME_FEAT_IO_COMMAND_SET_PROFILE			= 0x19,
 	SPDK_NVME_FEAT_SPINUP_CONTROL				= 0x1A,
-	/* 0x1B-0x77 - reserved */
+	/* 0x1B-0x1C - reserved */
 
+	/**
+	 * cdw11 layout defined by \ref spdk_nvme_feat_fdp_cdw11
+	 * cdw12 layout defined by \ref spdk_nvme_feat_fdp_cdw12
+	 */
+	SPDK_NVME_FEAT_FDP					= 0x1D,
+
+	/**
+	 * cdw11 layout defined by \ref spdk_nvme_feat_fdp_events_cdw11
+	 * cdw12 layout defined by \ref spdk_nvme_feat_fdp_events_cdw12
+	 * data layout defined by \ref spdk_nvme_fdp_event_desc
+	 */
+	SPDK_NVME_FEAT_FDP_EVENTS				= 0x1E,
+
+	/* 0x1F-0x77 - reserved */
 	/* 0x78-0x7C - NVMe-MI features */
 	SPDK_NVME_FEAT_ENHANCED_CONTROLLER_METADATA		= 0x7D,
 	SPDK_NVME_FEAT_CONTROLLER_METADATA			= 0x7E,

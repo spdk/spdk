@@ -177,7 +177,7 @@ get_zns_zone_report_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 }
 
 static int
-get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t fid, uint32_t nsid)
+get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t fid, uint32_t cdw11, uint32_t nsid)
 {
 	struct spdk_nvme_cmd cmd = {};
 	struct feature *feature = &features[fid];
@@ -186,6 +186,7 @@ get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t fid, uint32_t nsid)
 
 	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
 	cmd.cdw10_bits.get_features.fid = fid;
+	cmd.cdw11 = cdw11;
 	cmd.nsid = nsid;
 
 	return spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, get_feature_completion, feature);
@@ -196,6 +197,7 @@ get_features(struct spdk_nvme_ctrlr *ctrlr, uint8_t *features_to_get, size_t num
 	     uint32_t nsid)
 {
 	size_t i;
+	uint32_t cdw11;
 
 	/* Submit only one GET FEATURES at a time. There is a known issue #1799
 	 * with Google Cloud Platform NVMe SSDs that do not handle overlapped
@@ -203,11 +205,25 @@ get_features(struct spdk_nvme_ctrlr *ctrlr, uint8_t *features_to_get, size_t num
 	 */
 	outstanding_commands = 0;
 	for (i = 0; i < num_features; i++) {
+		cdw11 = 0;
 		if (!spdk_nvme_ctrlr_is_ocssd_supported(ctrlr) &&
 		    features_to_get[i] == SPDK_OCSSD_FEAT_MEDIA_FEEDBACK) {
 			continue;
 		}
-		if (get_feature(ctrlr, features_to_get[i], nsid) == 0) {
+		if (features_to_get[i] == SPDK_NVME_FEAT_FDP) {
+			const struct spdk_nvme_ctrlr_data *cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+			struct spdk_nvme_ns *ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+			const struct spdk_nvme_ns_data *nsdata = spdk_nvme_ns_get_data(ns);
+
+			if (!cdata->ctratt.fdps) {
+				continue;
+			} else {
+				cdw11 = nsdata->endgid;
+				/* Endurance group scope */
+				nsid = 0;
+			}
+		}
+		if (get_feature(ctrlr, features_to_get[i], cdw11, nsid) == 0) {
 			outstanding_commands++;
 		} else {
 			printf("get_feature(0x%02X) failed to submit command\n", features_to_get[i]);
@@ -239,6 +255,7 @@ get_ns_features(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
 	uint8_t features_to_get[] = {
 		SPDK_NVME_FEAT_ERROR_RECOVERY,
+		SPDK_NVME_FEAT_FDP,
 	};
 
 	get_features(ctrlr, features_to_get, SPDK_COUNTOF(features_to_get), nsid);
@@ -1117,6 +1134,20 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 
 	}
 	printf("\n");
+
+	if (cdata->ctratt.fdps) {
+		union spdk_nvme_feat_fdp_cdw12 fdp_res;
+
+		if (features[SPDK_NVME_FEAT_FDP].valid) {
+			fdp_res.raw = features[SPDK_NVME_FEAT_FDP].result;
+
+			printf("Get Feature FDP:\n");
+			printf("================\n");
+			printf("  Enabled:                 %s\n",
+			       fdp_res.bits.fdpe ? "Yes" : "No");
+			printf("  FDP configuration index: %u\n\n", fdp_res.bits.fdpci);
+		}
+	}
 
 	if (spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
 		get_ocssd_geometry(ns, &geometry_data);
