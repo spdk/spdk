@@ -3757,6 +3757,7 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_zns_zone_report) == 64, "Incorrect si
 enum spdk_nvme_directive_type {
 	SPDK_NVME_DIRECTIVE_TYPE_IDENTIFY = 0x0,
 	SPDK_NVME_DIRECTIVE_TYPE_STREAMS = 0x1,
+	SPDK_NVME_DIRECTIVE_TYPE_DATA_PLACEMENT = 0x2,
 };
 
 enum spdk_nvme_identify_directive_send_operation {
@@ -3773,7 +3774,9 @@ struct spdk_nvme_ns_identify_directive_param {
 		uint8_t identify	: 1;
 		/* set to 1b if the Streams Directive is supported */
 		uint8_t streams		: 1;
-		uint8_t reserved1	: 6;
+		/* set to 1b if the Data Placement Directive is supported */
+		uint8_t data_pd		: 1;
+		uint8_t reserved1	: 5;
 		uint8_t reserved2[31];
 	} directives_supported;
 	struct {
@@ -3781,11 +3784,33 @@ struct spdk_nvme_ns_identify_directive_param {
 		uint8_t identify	: 1;
 		/* set to 1b if the Streams Directive is enabled */
 		uint8_t streams		: 1;
-		uint8_t reserved1	: 6;
+		/* set to 1b if the Data Placement Directive is enabled */
+		uint8_t data_pd		: 1;
+		uint8_t reserved1	: 5;
 		uint8_t reserved2[31];
 	} directives_enabled;
+	struct {
+		/**
+		 * cleared to 0b as the host is not able to change the state of
+		 * Identify Directive
+		 */
+		uint8_t identify	: 1;
+		/**
+		 * cleared to 0b to indicate that the Streams Directive state
+		 * is not preserved across ctrl reset
+		 */
+		uint8_t streams		: 1;
+		/**
+		 * set to 1b if the Data Placement Directive is supported to
+		 * indicate that the host specified Data Placement Directive
+		 * state is preserved across ctrl reset
+		 */
+		uint8_t data_pd		: 1;
+		uint8_t reserved1	: 5;
+		uint8_t reserved2[31];
+	} directives_persistence;
 
-	uint32_t reserved[1008];
+	uint32_t reserved[1000];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_identify_directive_param) == 4096, "Incorrect size");
 
