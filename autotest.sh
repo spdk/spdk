@@ -215,6 +215,9 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		if [[ $SPDK_TEST_NVME_CMB -eq 1 ]]; then
 			run_test "nvme_cmb" $rootdir/test/nvme/cmb/cmb.sh
 		fi
+		if [[ $SPDK_TEST_NVME_FDP -eq 1 ]]; then
+			run_test "nvme_fdp" test/nvme/nvme_fdp.sh
+		fi
 
 		if [[ $SPDK_TEST_NVME_ZNS -eq 1 ]]; then
 			run_test "nvme_zns" $rootdir/test/nvme/zns/zns.sh

@@ -25,6 +25,10 @@ nvme_simple_copy
 nvme_bp
 nvme_boot_partition
 
+# Waiting on Flexible Data Placement support in CI
+nvme_fdp
+nvme_flexible_data_placement
+
 # Waiting on significant test rewrite
 nvme_opal
 nvme_opal_bdevio
