@@ -40,17 +40,17 @@ message VolumeCryptoParameters {
     TWEAK_MODE_SIMPLE_LBA = 0;
 
     // Tweak[127:0] = {1’b0, ~LBA[62:0], LBA[63:0]}
-    TWEAK_MODE_NOT_AND_LBA = 1;
+    TWEAK_MODE_JOIN_NEG_LBA_WITH_LBA = 1;
 
     // tweak is derived from nvme LBA that is internally incremented by 1 for every 512 bytes processed
     // so initial lba = (BLOCK_SIZE_IN_BYTES / 512) * LBA
     // Tweak[127:0] = {lba[127:0]}
-    TWEAK_MODE_FORCE_512_FULL = 2;
+    TWEAK_MODE_INCR_512_FULL_LBA = 2;
 
     // tweak is derived from nvme LBA that is internally incremented by 1 for every 512 bytes processed
     // so initial lba = (BLOCK_SIZE_IN_BYTES / 512) * LBA
     // Tweak[127:0] = {lba[63:0], 64'b0}
-    TWEAK_MODE_FORCE_512_UPPER = 3;
+    TWEAK_MODE_INCR_512_UPPER_LBA = 3;
   }
   TweakMode tweak_mode = 4;
 }
