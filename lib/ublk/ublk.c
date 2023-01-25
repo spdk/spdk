@@ -47,6 +47,7 @@ static void ublk_submit_bdev_io(struct ublk_queue *q, uint16_t tag);
 static void ublk_dev_queue_fini(struct ublk_queue *q);
 static int ublk_poll(void *arg);
 static int ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op);
+static void ublk_ios_fini(struct spdk_ublk_dev *ublk);
 
 typedef void (*ublk_next_state_fn)(struct spdk_ublk_dev *ublk);
 static void ublk_set_params(struct spdk_ublk_dev *ublk);
@@ -658,24 +659,14 @@ static void
 ublk_close_dev_done(void *arg)
 {
 	struct spdk_ublk_dev *ublk = arg;
-	struct ublk_queue *q;
 	int rc = 0;
-	uint32_t i, q_idx;
+	uint32_t q_idx;
 
 	assert(spdk_get_thread() == ublk->app_thread);
 	for (q_idx = 0; q_idx < ublk->num_queues; q_idx++) {
-		q = &ublk->queues[q_idx];
-		ublk_dev_queue_fini(q);
-		for (i = 0; i < q->q_depth; i++) {
-			if (q->ios[i].payload) {
-				spdk_mempool_put(ublk->io_buf_pool, q->ios[i].payload);
-				q->ios[i].payload = NULL;
-			}
-		}
-		free(q->ios);
+		ublk_dev_queue_fini(&ublk->queues[q_idx]);
 	}
 
-	spdk_mempool_free(ublk->io_buf_pool);
 	if (ublk->cdev_fd >= 0) {
 		close(ublk->cdev_fd);
 	}
@@ -694,6 +685,7 @@ ublk_delete_dev(struct spdk_ublk_dev *ublk)
 		ublk->bdev_desc = NULL;
 	}
 
+	ublk_ios_fini(ublk);
 	ublk_dev_list_unregister(ublk);
 
 	if (ublk->del_cb) {
@@ -1241,6 +1233,32 @@ ublk_info_param_init(struct spdk_ublk_dev *ublk)
 	ublk->dev_params = uparams;
 }
 
+static void
+ublk_ios_fini(struct spdk_ublk_dev *ublk)
+{
+	struct ublk_queue *q;
+	uint32_t i, q_idx;
+
+	for (q_idx = 0; q_idx < ublk->num_queues; q_idx++) {
+		q = &ublk->queues[q_idx];
+
+		/* The ublk_io of this queue are not initialized. */
+		if (q->ios == NULL) {
+			continue;
+		}
+
+		for (i = 0; i < q->q_depth; i++) {
+			if (q->ios[i].payload) {
+				spdk_mempool_put(ublk->io_buf_pool, q->ios[i].payload);
+				q->ios[i].payload = NULL;
+			}
+		}
+		free(q->ios);
+	}
+
+	spdk_mempool_free(ublk->io_buf_pool);
+}
+
 static int
 ublk_ios_init(struct spdk_ublk_dev *ublk)
 {
@@ -1286,12 +1304,7 @@ ublk_ios_init(struct spdk_ublk_dev *ublk)
 	return 0;
 
 err:
-	spdk_mempool_free(ublk->io_buf_pool);
-	for (i = 0; i < ublk->num_queues; i++) {
-		q = &ublk->queues[i];
-
-		free(q->ios);
-	}
+	ublk_ios_fini(ublk);
 	return rc;
 }
 
