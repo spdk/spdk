@@ -1199,6 +1199,14 @@ union spdk_nvme_cmd_cdw10 {
 		uint32_t rtype     : 8;
 		uint32_t reserved2 : 16;
 	} resv_acquire;
+
+	struct {
+		/* Management Operation */
+		uint32_t mo        : 8;
+		uint32_t reserved  : 8;
+		/* Management Operation Specific */
+		uint32_t mos       : 16;
+	} mgmt_send_recv;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmd_cdw10) == 4, "Incorrect size");
 
@@ -1669,9 +1677,11 @@ enum spdk_nvme_nvm_opcode {
 	SPDK_NVME_OPC_RESERVATION_REPORT		= 0x0e,
 
 	SPDK_NVME_OPC_RESERVATION_ACQUIRE		= 0x11,
+	SPDK_NVME_OPC_IO_MANAGEMENT_RECEIVE		= 0x12,
 	SPDK_NVME_OPC_RESERVATION_RELEASE		= 0x15,
 
 	SPDK_NVME_OPC_COPY				= 0x19,
+	SPDK_NVME_OPC_IO_MANAGEMENT_SEND		= 0x1D,
 };
 
 /**
@@ -1744,6 +1754,59 @@ struct spdk_nvme_fdp_event_desc {
 	} fdpeta;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fdp_event_desc) == 2, "Incorrect size");
+
+/**
+ * Reclaim unit handle status descriptor
+ */
+struct spdk_nvme_fdp_ruhs_desc {
+	/* Placement Identifier */
+	uint16_t pid;
+
+	/* Reclaim Unit Handle Identifier */
+	uint16_t ruhid;
+
+	/* Estimated Active Reclaim Unit Time Remaining */
+	uint32_t earutr;
+
+	/* Reclaim Unit Available Media Writes */
+	uint64_t ruamw;
+
+	uint8_t reserved[16];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fdp_ruhs_desc) == 32, "Incorrect size");
+
+/**
+ * Reclaim unit handle status
+ */
+struct spdk_nvme_fdp_ruhs {
+	uint8_t reserved[14];
+
+	/* Number of Reclaim Unit Handle Status Descriptors */
+	uint16_t nruhsd;
+
+	struct spdk_nvme_fdp_ruhs_desc ruhs_desc[];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fdp_ruhs) == 16, "Incorrect size");
+
+/**
+ * Management operation to perform for IO management receive
+ */
+enum spdk_nvme_fdp_mgmt_recv_mo {
+	SPDK_NVME_FDP_IO_MGMT_RECV_NA		= 0x00,
+	SPDK_NVME_FDP_IO_MGMT_RECV_RUHS		= 0x01,
+	/* 0x02-0xFE - reserved */
+	SPDK_NVME_FDP_IO_MGMT_RECV_VS		= 0xFF,
+};
+
+/**
+ * Management operation to perform for IO management send
+ */
+enum spdk_nvme_fdp_mgmt_send_mo {
+	SPDK_NVME_FDP_IO_MGMT_SEND_NA		= 0x00,
+	SPDK_NVME_FDP_IO_MGMT_SEND_RUHU		= 0x01,
+	/* 0x02-0xFE - reserved */
+	SPDK_NVME_FDP_IO_MGMT_SEND_VS		= 0xFF,
+};
 
 enum spdk_nvme_feat {
 	/* 0x00 - reserved */

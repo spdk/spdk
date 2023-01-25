@@ -2,6 +2,7 @@
  *   Copyright (C) 2015 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2023 Samsung Electronics Co., Ltd. All rights reserved.
  */
 
 /** \file
@@ -3593,6 +3594,56 @@ int spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 					struct spdk_nvme_qpair *qpair,
 					void *payload, uint32_t len,
 					spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
+ * Submit an I/O management receive command to the specified NVMe namespace.
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any
+ * given time.
+ *
+ * \param ns NVMe namespace to submit the I/O mgmt receive request.
+ * \param qpair I/O queue pair to submit the request.
+ * \param payload Virtual address pointer for I/O mgmt receive data.
+ * \param len Length bytes for I/O mgmt receive data structure.
+ * \param mo Management operation to perform.
+ * \param mos Management operation specific field for the mo.
+ * \param cb_fn Callback function to invoke when the I/O is completed.
+ * \param cb_arg Argument to pass to the callback function.
+ *
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
+ */
+int spdk_nvme_ns_cmd_io_mgmt_recv(struct spdk_nvme_ns *ns,
+				  struct spdk_nvme_qpair *qpair, void *payload,
+				  uint32_t len, uint8_t mo, uint16_t mos,
+				  spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
+ * Submit an I/O management send command to the specified NVMe namespace.
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any
+ * given time.
+ *
+ * \param ns NVMe namespace to submit the I/O mgmt send request.
+ * \param qpair I/O queue pair to submit the request.
+ * \param payload Virtual address pointer for I/O mgmt send data.
+ * \param len Length bytes for I/O mgmt send data structure.
+ * \param mo Management operation to perform.
+ * \param mos Management operation specific field for the mo.
+ * \param cb_fn Callback function to invoke when the I/O is completed.
+ * \param cb_arg Argument to pass to the callback function.
+ *
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
+ */
+int spdk_nvme_ns_cmd_io_mgmt_send(struct spdk_nvme_ns *ns,
+				  struct spdk_nvme_qpair *qpair, void *payload,
+				  uint32_t len, uint8_t mo, uint16_t mos,
+				  spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
  * Submit a compare I/O to the specified NVMe namespace.

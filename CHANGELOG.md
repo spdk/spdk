@@ -23,6 +23,9 @@ iovecs, unlike the deprecated `spdk_nvmf_request_get_data()`.
 New API `spdk_nvme_ns_get_format_index` was added to calculate the exact format index, that
 was used to format the namespace.
 
+Added two new APIs `spdk_nvme_ns_cmd_io_mgmt_recv` and `spdk_nvme_ns_cmd_io_mgmt_send` to
+receive and send the I/O management commands.
+
 ## v23.01
 
 ### accel

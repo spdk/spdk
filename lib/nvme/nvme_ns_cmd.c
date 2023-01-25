@@ -3,6 +3,7 @@
  *   All rights reserved.
  *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2023 Samsung Electronics Co., Ltd. All rights reserved.
  */
 
 #include "nvme_internal.h"
@@ -1352,6 +1353,60 @@ spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 	cmd->nsid = ns->id;
 
 	cmd->cdw10 = num_dwords;
+
+	return nvme_qpair_submit_request(qpair, req);
+}
+
+int
+spdk_nvme_ns_cmd_io_mgmt_recv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			      void *payload, uint32_t len, uint8_t mo, uint16_t mos,
+			      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	uint32_t		num_dwords;
+	struct nvme_request	*req;
+	struct spdk_nvme_cmd	*cmd;
+
+	if (len & 0x3) {
+		return -EINVAL;
+	}
+
+	req = nvme_allocate_request_user_copy(qpair, payload, len, cb_fn, cb_arg, false);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_IO_MANAGEMENT_RECEIVE;
+	cmd->nsid = ns->id;
+
+	cmd->cdw10_bits.mgmt_send_recv.mo = mo;
+	cmd->cdw10_bits.mgmt_send_recv.mos = mos;
+
+	num_dwords = (len >> 2);
+	cmd->cdw11 = num_dwords - 1; /* 0-based */
+
+	return nvme_qpair_submit_request(qpair, req);
+}
+
+int
+spdk_nvme_ns_cmd_io_mgmt_send(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			      void *payload, uint32_t len, uint8_t mo, uint16_t mos,
+			      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request	*req;
+	struct spdk_nvme_cmd	*cmd;
+
+	req = nvme_allocate_request_user_copy(qpair, payload, len, cb_fn, cb_arg, false);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_IO_MANAGEMENT_SEND;
+	cmd->nsid = ns->id;
+
+	cmd->cdw10_bits.mgmt_send_recv.mo = mo;
+	cmd->cdw10_bits.mgmt_send_recv.mos = mos;
 
 	return nvme_qpair_submit_request(qpair, req);
 }

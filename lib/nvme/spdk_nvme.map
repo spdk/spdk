@@ -165,6 +165,8 @@
 	spdk_nvme_ns_cmd_reservation_release;
 	spdk_nvme_ns_cmd_reservation_acquire;
 	spdk_nvme_ns_cmd_reservation_report;
+	spdk_nvme_ns_cmd_io_mgmt_recv;
+	spdk_nvme_ns_cmd_io_mgmt_send;
 	spdk_nvme_ns_cmd_compare;
 	spdk_nvme_ns_cmd_comparev;
 	spdk_nvme_ns_cmd_comparev_with_md;
