@@ -48,7 +48,7 @@ partition_drive() {
 	done
 
 	# Convert size to sectors for more precise partitioning
-	((size /= $(< "/sys/class/block/$disk/queue/physical_block_size")))
+	((size /= $(< "/sys/class/block/$disk/queue/hw_sector_size")))
 
 	"$rootdir/scripts/sync_dev_uevents.sh" block/partition "${parts[@]}" &
 
