@@ -344,6 +344,9 @@ ublk_open(void)
 		return -rc;
 	}
 
+	/* We need to set SQPOLL for kernels 6.1 and earlier, since they would not defer ublk ctrl
+	 * ring processing to a workqueue.  Ctrl ring processing is minimal, so SQPOLL is fine.
+	 */
 	rc = ublk_setup_ring(UBLK_CTRL_RING_DEPTH, &g_ublk_tgt.ctrl_ring,
 			     IORING_SETUP_SQE128 | IORING_SETUP_SQPOLL);
 	if (rc < 0) {
