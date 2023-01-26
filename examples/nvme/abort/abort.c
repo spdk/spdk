@@ -70,6 +70,7 @@ struct worker_thread {
 	TAILQ_HEAD(, ctrlr_worker_ctx)	ctrlr_ctx;
 	TAILQ_ENTRY(worker_thread)	link;
 	unsigned			lcore;
+	int				status;
 };
 
 static const char *g_workload_type = "read";
@@ -435,6 +436,7 @@ work_fn(void *arg)
 		ns_ctx->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ns_entry->ctrlr, &opts, sizeof(opts));
 		if (ns_ctx->qpair == NULL) {
 			fprintf(stderr, "spdk_nvme_ctrlr_alloc_io_qpair failed\n");
+			worker->status = -ENOMEM;
 			return 1;
 		}
 	}
@@ -1100,6 +1102,13 @@ main(int argc, char **argv)
 	rc = work_fn(main_worker);
 
 	spdk_env_thread_wait_all();
+
+	TAILQ_FOREACH(worker, &g_workers, link) {
+		if (worker->status != 0) {
+			rc = 1;
+			break;
+		}
+	}
 
 cleanup:
 	unregister_trids();
