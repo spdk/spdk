@@ -60,6 +60,10 @@ were added to process I/O statistics outside the generic bdev layer, especially 
 
 vbdev_crypto is updated to use accel framework instead of DPDK PMDs.
 
+### bdev_daos
+
+New RPC `bdev_daos_resize` was added to allow resizing the daos bdev.
+
 ### bdev_malloc
 
 Both of interleaved and separated metadata are now supported by the malloc bdev module.
@@ -104,6 +108,11 @@ Changed `bdev_raid_get_bdevs` RPC output format to include raid_bdev details.
 Promoted the application to example to match similar programs: fio_plugin and perf.
 It can now be found inside `examples/bdev/bdevperf`.
 
+### env
+
+Added `spdk_mempool_mem_iter` that allows to get start address and length of each memory
+chunk in order to create app-specific resources.
+
 ### event
 
 Added core lock file mechanism to prevent the same CPU cores from being used by multiple
@@ -116,6 +125,9 @@ and disable CPU core locks in runtime.
 
 Added `--rpcs-allowed` command line option. Users can specify a comma-separated list of RPC
 names with this option to restrict allowed RPCs to only that list.
+
+Added `--vfio-vf-token` command line option to specify a VF token (UUID)
+shared between SR-IOV PF and VFs for vfio_pci driver.
 
 ### json
 
@@ -146,6 +158,11 @@ value in the IPv4 header. Only RDMA is supported at this time.
 Added API `spdk_nvme_qpair_get_num_outstanding_reqs` to get the number of outstanding reqs of
 a specified qpair.
 
+### nvmf
+
+Added API `spdk_nvmf_tgt_pause_polling` and `spdk_nvmf_tgt_resume_polling` to allow
+pausing polling on poll group of a given target.
+
 ### rpc
 
 Added `spdk_rpc_set_allowlist` to restrict allowed RPCs to the specified list.
@@ -166,6 +183,9 @@ its exit process has started using `spdk_thread_exit`.
 Added API `spdk_spin_init`, `spdk_spin_destroy`, `spdk_spin_lock`, `spdk_spin_unlock`, and
 `spdk_spin_held` to support spinlocks that are aware of the SPDK concurrency model.
 
+Added iobuf buffer pool, set of API calls for allocating data buffers across libraries.
+Please see new API `spdk_iobuf_*`.
+
 ### trace
 
 New `trace_get_info` RPC was added to get name of shared memory file, list of the
@@ -184,6 +204,9 @@ as `/dev/ublkb*`. Before to adding ublk device, need to create ublk target by RP
 
 New API `spdk_fd_group_get_epoll_event` that returns the epoll(7) event that
 caused a function callback in file descriptor group to execute.
+
+Added API `spdk_strarray_from_string`, `spdk_strarray_dup` and `spdk_strarray_free`
+for handling arrays of strings.
 
 A new API `spdk_strcpy_replace` was added to replace all occurrences of the search string
 with the replacement string.
