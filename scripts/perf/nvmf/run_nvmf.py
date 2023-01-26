@@ -986,7 +986,7 @@ class KernelTarget(Target):
                 continue
             if self.get_nvme_device_bdf(dev) in self.nvme_allowlist:
                 nvme_list.append(dev)
-        return dev_list
+        return nvme_list
 
     def nvmet_command(self, nvmet_bin, command):
         return self.exec_cmd([nvmet_bin, *(command.split(" "))])
