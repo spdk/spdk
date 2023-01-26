@@ -131,7 +131,6 @@ detach_rte(struct spdk_pci_device *dev)
 	bool removed;
 
 	if (!spdk_process_is_primary()) {
-		remove_rte_dev(rte_dev);
 		return;
 	}
 
