@@ -11,7 +11,6 @@
 
 #include "spdk/bdev_module.h"
 #include "nvmf/subsystem.c"
-#include <uuid/uuid.h>
 
 SPDK_LOG_REGISTER_COMPONENT(nvmf)
 
@@ -1593,7 +1592,7 @@ test_nvmf_valid_nqn(void)
 	struct spdk_uuid s_uuid = {};
 
 	spdk_uuid_generate(&s_uuid);
-	uuid_unparse((void *)&s_uuid, uuid);
+	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &s_uuid);
 
 	/* discovery nqn */
 	snprintf(nqn, sizeof(nqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
@@ -1659,13 +1658,13 @@ test_nvmf_ns_reservation_restore(void)
 
 	/* Generate and prepare uuids, make sure bdev and info uuid are the same */
 	spdk_uuid_generate(&s_uuid);
-	uuid_unparse((void *)&s_uuid, uuid);
+	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &s_uuid);
 	snprintf(info.holder_uuid, SPDK_UUID_STRING_LEN, "%s", uuid);
 	snprintf(info.bdev_uuid, SPDK_UUID_STRING_LEN, "%s", uuid);
 	snprintf(info.registrants[0].host_uuid, SPDK_UUID_STRING_LEN, "%s", uuid);
 	spdk_uuid_copy(&bdev.uuid, &s_uuid);
 	spdk_uuid_generate(&s_uuid);
-	uuid_unparse((void *)&s_uuid, uuid);
+	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &s_uuid);
 	snprintf(info.registrants[1].host_uuid, SPDK_UUID_STRING_LEN, "%s", uuid);
 
 	/* info->rkey not exist in registrants */
@@ -1695,7 +1694,7 @@ test_nvmf_ns_reservation_restore(void)
 
 	/* Existing bdev UUID is different with configuration */
 	spdk_uuid_generate(&s_uuid);
-	uuid_unparse((void *)&s_uuid, uuid);
+	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &s_uuid);
 	snprintf(info.bdev_uuid, SPDK_UUID_STRING_LEN, "%s", uuid);
 	spdk_uuid_generate(&s_uuid);
 	spdk_uuid_copy(&bdev.uuid, &s_uuid);
