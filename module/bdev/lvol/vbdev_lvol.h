@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #ifndef SPDK_VBDEV_LVOL_H
@@ -115,5 +116,9 @@ struct spdk_lvol *vbdev_lvol_get_from_bdev(struct spdk_bdev *bdev);
  */
 void vbdev_lvs_grow(struct spdk_lvol_store *lvs,
 		    spdk_lvs_op_complete cb_fn, void *cb_arg);
+
+int vbdev_lvol_esnap_dev_create(void *bs_ctx, void *blob_ctx, struct spdk_blob *blob,
+				const void *esnap_id, uint32_t id_len,
+				struct spdk_bs_dev **_bs_dev);
 
 #endif /* SPDK_VBDEV_LVOL_H */

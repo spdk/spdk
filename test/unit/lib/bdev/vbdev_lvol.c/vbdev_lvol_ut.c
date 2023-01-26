@@ -45,6 +45,15 @@ DEFINE_STUB(spdk_blob_is_esnap_clone, bool, (const struct spdk_blob *blob), fals
 DEFINE_STUB(spdk_lvol_iter_immediate_clones, int,
 	    (struct spdk_lvol *lvol, spdk_lvol_iter_cb cb_fn, void *cb_arg), -ENOTSUP);
 
+struct spdk_blob {
+	uint64_t	id;
+	char		name[32];
+};
+
+struct spdk_blob_store {
+	spdk_bs_esnap_dev_create esnap_bs_dev_create;
+};
+
 const struct spdk_bdev_aliases_list *
 spdk_bdev_get_aliases(const struct spdk_bdev *bdev)
 {
@@ -123,6 +132,42 @@ spdk_bdev_destruct_done(struct spdk_bdev *bdev, int bdeverrno)
 	CU_ASSERT(bdeverrno == 0);
 	SPDK_CU_ASSERT_FATAL(bdev->internal.unregister_cb != NULL);
 	bdev->internal.unregister_cb(bdev->internal.unregister_ctx, bdeverrno);
+}
+
+struct ut_bs_dev {
+	struct spdk_bs_dev bs_dev;
+	struct spdk_bdev *bdev;
+};
+
+static void
+ut_bs_dev_destroy(struct spdk_bs_dev *bs_dev)
+{
+	struct ut_bs_dev *ut_bs_dev = SPDK_CONTAINEROF(bs_dev, struct ut_bs_dev, bs_dev);
+
+	free(ut_bs_dev);
+}
+
+int
+spdk_bdev_create_bs_dev(const char *bdev_name, bool write,
+			struct spdk_bdev_bs_dev_opts *opts, size_t opts_size,
+			spdk_bdev_event_cb_t event_cb, void *event_ctx,
+			struct spdk_bs_dev **bs_dev)
+{
+	struct spdk_bdev *bdev;
+	struct ut_bs_dev *ut_bs_dev;
+
+	bdev = spdk_bdev_get_by_name(bdev_name);
+	if (bdev == NULL) {
+		return -ENODEV;
+	}
+
+	ut_bs_dev = calloc(1, sizeof(*ut_bs_dev));
+	SPDK_CU_ASSERT_FATAL(ut_bs_dev != NULL);
+	ut_bs_dev->bs_dev.destroy = ut_bs_dev_destroy;
+	ut_bs_dev->bdev = bdev;
+	*bs_dev = &ut_bs_dev->bs_dev;
+
+	return 0;
 }
 
 void
@@ -259,9 +304,9 @@ spdk_blob_is_thin_provisioned(struct spdk_blob *blob)
 
 static struct spdk_lvol *_lvol_create(struct spdk_lvol_store *lvs);
 
-void
-spdk_lvs_load(struct spdk_bs_dev *dev,
-	      spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+static void
+lvs_load(struct spdk_bs_dev *dev, const struct spdk_lvs_opts *lvs_opts,
+	 spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_store *lvs = NULL;
 	int i;
@@ -279,6 +324,9 @@ spdk_lvs_load(struct spdk_bs_dev *dev,
 
 	lvs = calloc(1, sizeof(*lvs));
 	SPDK_CU_ASSERT_FATAL(lvs != NULL);
+	lvs->blobstore = calloc(1, sizeof(*lvs->blobstore));
+	lvs->blobstore->esnap_bs_dev_create = lvs_opts->esnap_bs_dev_create;
+	SPDK_CU_ASSERT_FATAL(lvs->blobstore != NULL);
 	TAILQ_INIT(&lvs->lvols);
 	TAILQ_INIT(&lvs->pending_lvols);
 	TAILQ_INIT(&lvs->retry_open_lvols);
@@ -292,11 +340,25 @@ spdk_lvs_load(struct spdk_bs_dev *dev,
 	cb_fn(cb_arg, lvs, lvserrno);
 }
 
+void
+spdk_lvs_load(struct spdk_bs_dev *dev,
+	      spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	lvs_load(dev, NULL, cb_fn, cb_arg);
+}
+
+void
+spdk_lvs_load_ext(struct spdk_bs_dev *bs_dev, const struct spdk_lvs_opts *lvs_opts,
+		  spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	lvs_load(bs_dev, lvs_opts, cb_fn, cb_arg);
+}
+
 int
 spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module *module)
 {
 	if (lvol_already_opened == true) {
-		return -1;
+		return -EPERM;
 	}
 
 	lvol_already_opened = true;
@@ -423,6 +485,7 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *c
 	g_lvol_store = NULL;
 
 	lvs->bs_dev->destroy(lvs->bs_dev);
+	free(lvs->blobstore);
 	free(lvs);
 
 	if (cb_fn != NULL) {
@@ -455,6 +518,7 @@ spdk_lvs_destroy(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	g_lvol_store = NULL;
 
 	lvs->bs_dev->destroy(lvs->bs_dev);
+	free(lvs->blobstore);
 	free(lvs);
 
 	if (cb_fn != NULL) {
@@ -492,7 +556,19 @@ spdk_bs_get_cluster_size(struct spdk_blob_store *bs)
 struct spdk_bdev *
 spdk_bdev_get_by_name(const char *bdev_name)
 {
+	struct spdk_uuid uuid;
+	int rc;
+
+	if (g_base_bdev == NULL) {
+		return NULL;
+	}
+
 	if (!strcmp(g_base_bdev->name, bdev_name)) {
+		return g_base_bdev;
+	}
+
+	rc = spdk_uuid_parse(&uuid, bdev_name);
+	if (rc == 0 && spdk_uuid_compare(&uuid, &g_base_bdev->uuid) == 0) {
 		return g_base_bdev;
 	}
 
@@ -660,7 +736,7 @@ spdk_bdev_module_list_add(struct spdk_bdev_module *bdev_module)
 const char *
 spdk_bdev_get_name(const struct spdk_bdev *bdev)
 {
-	return "test";
+	return bdev->name;
 }
 
 int
@@ -997,6 +1073,8 @@ ut_lvs_examine_check(bool success)
 		SPDK_CU_ASSERT_FATAL(lvs_bdev != NULL);
 		g_lvol_store = lvs_bdev->lvs;
 		SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+		SPDK_CU_ASSERT_FATAL(g_lvol_store->blobstore != NULL);
+		CU_ASSERT(g_lvol_store->blobstore->esnap_bs_dev_create != NULL);
 		CU_ASSERT(g_lvol_store->bs_dev != NULL);
 		CU_ASSERT(g_lvol_store->lvols_opened == spdk_min(g_num_lvols, g_registered_bdevs));
 	} else {
@@ -1615,6 +1693,69 @@ ut_lvol_seek(void)
 	free(g_lvol);
 }
 
+static void
+ut_esnap_dev_create(void)
+{
+	struct spdk_lvol_store lvs = { 0 };
+	struct spdk_lvol lvol = { 0 };
+	struct spdk_blob blob = { 0 };
+	struct spdk_bdev bdev = { 0 };
+	const char uuid_str[SPDK_UUID_STRING_LEN] = "a27fd8fe-d4b9-431e-a044-271016228ce4";
+	char bad_uuid_str[SPDK_UUID_STRING_LEN] = "a27fd8fe-d4b9-431e-a044-271016228ce4";
+	char *unterminated;
+	size_t len;
+	struct spdk_bs_dev *bs_dev = NULL;
+	int rc;
+
+	bdev.name = "bdev0";
+	spdk_uuid_parse(&bdev.uuid, uuid_str);
+
+	/* NULL esnap_id */
+	rc = vbdev_lvol_esnap_dev_create(&lvs, &lvol, &blob, NULL, 0, &bs_dev);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(bs_dev == NULL);
+
+	/* Unterminated UUID: asan should catch reads past end of allocated buffer. */
+	len = strlen(uuid_str);
+	unterminated = calloc(1, len);
+	SPDK_CU_ASSERT_FATAL(unterminated != NULL);
+	memcpy(unterminated, uuid_str, len);
+	rc = vbdev_lvol_esnap_dev_create(&lvs, &lvol, &blob, unterminated, len, &bs_dev);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(bs_dev == NULL);
+
+	/* Invaid UUID but the right length is invalid */
+	bad_uuid_str[2] = 'z';
+	rc = vbdev_lvol_esnap_dev_create(&lvs, &lvol, &blob, bad_uuid_str, sizeof(uuid_str),
+					 &bs_dev);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(bs_dev == NULL);
+
+	/* Bdev not found */
+	g_base_bdev = NULL;
+	rc = vbdev_lvol_esnap_dev_create(&lvs, &lvol, &blob, uuid_str, sizeof(uuid_str), &bs_dev);
+	CU_ASSERT(rc == -ENODEV);
+	CU_ASSERT(bs_dev == NULL);
+
+	/* Cannot get a claim */
+	g_base_bdev = &bdev;
+	lvol_already_opened = true;
+	rc = vbdev_lvol_esnap_dev_create(&lvs, &lvol, &blob, uuid_str, sizeof(uuid_str), &bs_dev);
+	CU_ASSERT(rc == -EPERM);
+	CU_ASSERT(bs_dev == NULL);
+
+	/* Happy path */
+	lvol_already_opened = false;
+	rc = vbdev_lvol_esnap_dev_create(&lvs, &lvol, &blob, uuid_str, sizeof(uuid_str), &bs_dev);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(bs_dev != NULL);
+	bs_dev->destroy(bs_dev);
+
+	g_base_bdev = NULL;
+	lvol_already_opened = false;
+	free(unterminated);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1644,6 +1785,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, ut_bdev_finish);
 	CU_ADD_TEST(suite, ut_lvs_rename);
 	CU_ADD_TEST(suite, ut_lvol_seek);
+	CU_ADD_TEST(suite, ut_esnap_dev_create);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
