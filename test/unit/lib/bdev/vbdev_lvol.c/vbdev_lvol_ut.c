@@ -304,6 +304,20 @@ spdk_blob_is_thin_provisioned(struct spdk_blob *blob)
 
 static struct spdk_lvol *_lvol_create(struct spdk_lvol_store *lvs);
 
+int
+spdk_lvol_create_esnap_clone(const void *esnap_id, uint32_t id_len, uint64_t size_bytes,
+			     struct spdk_lvol_store *lvs, const char *clone_name,
+			     spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol *lvol;
+
+	lvol = _lvol_create(lvs);
+	snprintf(lvol->name, sizeof(lvol->name), "%s", clone_name);
+
+	cb_fn(cb_arg, lvol, 0);
+	return 0;
+}
+
 static void
 lvs_load(struct spdk_bs_dev *dev, const struct spdk_lvs_opts *lvs_opts,
 	 spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
@@ -575,6 +589,44 @@ spdk_bdev_get_by_name(const char *bdev_name)
 	return NULL;
 }
 
+struct spdk_bdev_desc {
+	struct spdk_bdev *bdev;
+};
+
+int
+spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
+		   void *event_ctx, struct spdk_bdev_desc **_desc)
+{
+	struct spdk_bdev_desc *desc;
+	struct spdk_bdev *bdev;
+
+	bdev = spdk_bdev_get_by_name(bdev_name);
+	if (bdev == NULL) {
+		return -ENODEV;
+	}
+
+	desc = calloc(1, sizeof(*desc));
+	if (desc == NULL) {
+		return -ENOMEM;
+	}
+
+	desc->bdev = bdev;
+	*_desc = desc;
+	return 0;
+}
+
+void
+spdk_bdev_close(struct spdk_bdev_desc *desc)
+{
+	free(desc);
+}
+
+struct spdk_bdev *
+spdk_bdev_desc_get_bdev(struct spdk_bdev_desc *desc)
+{
+	return desc->bdev;
+}
+
 void
 spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
@@ -737,6 +789,18 @@ const char *
 spdk_bdev_get_name(const struct spdk_bdev *bdev)
 {
 	return bdev->name;
+}
+
+uint32_t
+spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
+{
+	return bdev->blocklen;
+}
+
+uint64_t
+spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
+{
+	return bdev->blockcnt;
 }
 
 int
@@ -1756,6 +1820,64 @@ ut_esnap_dev_create(void)
 	free(unterminated);
 }
 
+static void
+ut_lvol_esnap_clone_bad_args(void)
+{
+	struct spdk_bdev bdev = { 0 };
+	struct spdk_lvol_store *lvs;
+	const char *esnap_uuid = "255f4236-9427-42d0-a9d1-aa17f37dd8db";
+	const char *name_uuid = "5c164b0a-93af-434f-ac35-51af59791f3b";
+	int rc;
+
+	/* Lvol store is successfully created */
+	rc = vbdev_lvs_create("bdev", "lvs", 0, LVS_CLEAR_WITH_UNMAP, 0,
+			      lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	CU_ASSERT(g_lvol_store->bs_dev != NULL);
+	lvs = g_lvol_store;
+
+	rc = spdk_uuid_parse(&bdev.uuid, esnap_uuid);
+	CU_ASSERT(rc == 0);
+	bdev.name = strdup(name_uuid);
+	SPDK_CU_ASSERT_FATAL(bdev.name != NULL);
+	bdev.blocklen = 512;
+	bdev.blockcnt = 8192;
+
+	g_base_bdev = &bdev;
+
+	/* Error when lvs is NULL */
+	g_lvolerrno = 0xbad;
+	vbdev_lvol_create_bdev_clone(esnap_uuid, NULL, "clone1", vbdev_lvol_create_complete, NULL);
+	CU_ASSERT(g_lvolerrno == -EINVAL);
+
+	/* Error when a uuid-like name is provided and that matches the bdev name but not uuid */
+	g_lvolerrno = 0xbad;
+	vbdev_lvol_create_bdev_clone(name_uuid, lvs, "clone1", vbdev_lvol_create_complete, NULL);
+	CU_ASSERT(g_lvolerrno == -EINVAL);
+
+	/* Error when the bdev does not exist */
+	g_base_bdev = NULL;
+	g_lvolerrno = 0xbad;
+	vbdev_lvol_create_bdev_clone(esnap_uuid, lvs, "clone1", vbdev_lvol_create_complete, NULL);
+	CU_ASSERT(g_lvolerrno == -ENODEV);
+
+	/* Success when the stars all align. */
+	g_base_bdev = &bdev;
+	g_lvolerrno = 0xbad;
+	vbdev_lvol_create_bdev_clone(esnap_uuid, lvs, "clone1", vbdev_lvol_create_complete, NULL);
+	CU_ASSERT(g_lvolerrno == 0);
+
+	g_lvol_store = lvs;
+	vbdev_lvs_destruct(g_lvol_store, lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol_store == NULL);
+
+	free(bdev.name);
+	g_base_bdev = NULL;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1786,6 +1908,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, ut_lvs_rename);
 	CU_ADD_TEST(suite, ut_lvol_seek);
 	CU_ADD_TEST(suite, ut_esnap_dev_create);
+	CU_ADD_TEST(suite, ut_lvol_esnap_clone_bad_args);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
