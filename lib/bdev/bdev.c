@@ -6821,6 +6821,12 @@ bdev_destroy_cb(void *io_device)
 	void			*cb_arg;
 
 	bdev = __bdev_from_io_dev(io_device);
+
+	if (bdev->internal.unregister_td != spdk_get_thread()) {
+		spdk_thread_send_msg(bdev->internal.unregister_td, bdev_destroy_cb, io_device);
+		return;
+	}
+
 	cb_fn = bdev->internal.unregister_cb;
 	cb_arg = bdev->internal.unregister_ctx;
 
@@ -6982,6 +6988,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	bdev->internal.status = SPDK_BDEV_STATUS_UNREGISTERING;
 	bdev->internal.unregister_cb = cb_fn;
 	bdev->internal.unregister_ctx = cb_arg;
+	bdev->internal.unregister_td = thread;
 	spdk_spin_unlock(&bdev->internal.spinlock);
 	spdk_spin_unlock(&g_bdev_mgr.spinlock);
 
