@@ -557,6 +557,9 @@ struct spdk_bdev {
 		/** Unregister call context */
 		void *unregister_ctx;
 
+		/** Thread that issued the unregister.  The cb must be called on this thread. */
+		struct spdk_thread *unregister_td;
+
 		/** List of open descriptors for this block device. */
 		TAILQ_HEAD(, spdk_bdev_desc) open_descs;
 
@@ -900,6 +903,9 @@ int spdk_bdev_register(struct spdk_bdev *bdev);
  * and manually close all the descriptors with spdk_bdev_close().
  * The actual bdev unregistration may be deferred until all descriptors are closed.
  *
+ * The cb_fn will be called from the context of the same spdk_thread that called
+ * spdk_bdev_unregister.
+ *
  * Note: spdk_bdev_unregister() can be unsafe unless the bdev is not opened before and
  * closed after unregistration. It is recommended to use spdk_bdev_unregister_by_name().
  *
@@ -914,6 +920,9 @@ void spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn,
  * on this bdev of the hotremoval to request the upper layer to stop using this bdev
  * and manually close all the descriptors with spdk_bdev_close().
  * The actual bdev unregistration may be deferred until all descriptors are closed.
+ *
+ * The cb_fn will be called from the context of the same spdk_thread that called
+ * spdk_bdev_unregister.
  *
  * \param bdev_name Block device name to unregister.
  * \param module Module by which the block device was registered.

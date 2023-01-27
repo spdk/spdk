@@ -449,6 +449,55 @@ unregister_and_close(void)
 }
 
 static void
+unregister_and_close_different_threads(void)
+{
+	bool done;
+	struct spdk_bdev_desc *desc = NULL;
+
+	setup_test();
+	set_thread(0);
+
+	/* setup_test() automatically opens the bdev,
+	 * but this test needs to do that in a different
+	 * way. */
+	spdk_bdev_close(g_desc);
+	poll_threads();
+
+	set_thread(1);
+	spdk_bdev_open_ext("ut_bdev", true, _bdev_event_cb, NULL, &desc);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	done = false;
+
+	set_thread(0);
+	spdk_bdev_unregister(&g_bdev.bdev, _bdev_unregistered, &done);
+
+	/* Poll the threads to allow all events to be processed */
+	poll_threads();
+
+	/* Make sure the bdev was not unregistered. We still have a
+	 * descriptor open */
+	CU_ASSERT(done == false);
+
+	/* Close the descriptor on thread 1.  Poll the thread and confirm the
+	 * unregister did not complete, since it was unregistered on thread 0.
+	 */
+	set_thread(1);
+	spdk_bdev_close(desc);
+	poll_thread(1);
+	CU_ASSERT(done == false);
+
+	/* Now poll thread 0 and confirm the unregister completed. */
+	set_thread(0);
+	poll_thread(0);
+	CU_ASSERT(done == true);
+
+	/* Restore the original g_bdev so that we can use teardown_test(). */
+	register_bdev(&g_bdev, "ut_bdev", &g_io_device);
+	spdk_bdev_open_ext("ut_bdev", true, _bdev_event_cb, NULL, &g_desc);
+	teardown_test();
+}
+
+static void
 reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	bool *done = cb_arg;
@@ -2473,6 +2522,7 @@ main(int argc, char **argv)
 
 	CU_ADD_TEST(suite, basic);
 	CU_ADD_TEST(suite, unregister_and_close);
+	CU_ADD_TEST(suite, unregister_and_close_different_threads);
 	CU_ADD_TEST(suite, basic_qos);
 	CU_ADD_TEST(suite, put_channel_during_reset);
 	CU_ADD_TEST(suite, aborted_reset);
