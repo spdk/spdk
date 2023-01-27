@@ -415,16 +415,6 @@ ssize_t spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 int spdk_sock_recv_next(struct spdk_sock *sock, void **buf, void **ctx);
 
 /**
- * Read message from the given socket asynchronously, calling the provided callback when the whole
- * buffer is filled or an error is encountered.  Only a single read request can be active at a time
- * (including synchronous reads).
- *
- * \param sock Socket to receive message.
- * \param req The read request to submit.
- */
-void spdk_sock_readv_async(struct spdk_sock *sock, struct spdk_sock_request *req);
-
-/**
  * Set the value used to specify the low water mark (in bytes) for this socket.
  *
  * \param sock Socket to set for.

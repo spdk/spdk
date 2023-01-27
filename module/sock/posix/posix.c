@@ -1501,12 +1501,6 @@ posix_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
 	return posix_sock_readv(sock, iov, 1);
 }
 
-static void
-posix_sock_readv_async(struct spdk_sock *sock, struct spdk_sock_request *req)
-{
-	req->cb_fn(req->cb_arg, -ENOTSUP);
-}
-
 static ssize_t
 posix_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 {
@@ -2058,7 +2052,6 @@ static struct spdk_net_impl g_posix_net_impl = {
 	.close		= posix_sock_close,
 	.recv		= posix_sock_recv,
 	.readv		= posix_sock_readv,
-	.readv_async	= posix_sock_readv_async,
 	.writev		= posix_sock_writev,
 	.recv_next	= posix_sock_recv_next,
 	.writev_async	= posix_sock_writev_async,

@@ -1526,12 +1526,6 @@ uring_sock_writev_async(struct spdk_sock *_sock, struct spdk_sock_request *req)
 	}
 }
 
-static void
-uring_sock_readv_async(struct spdk_sock *sock, struct spdk_sock_request *req)
-{
-	req->cb_fn(req->cb_arg, -ENOTSUP);
-}
-
 static int
 uring_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
 {
@@ -2025,7 +2019,6 @@ static struct spdk_net_impl g_uring_net_impl = {
 	.close		= uring_sock_close,
 	.recv		= uring_sock_recv,
 	.readv		= uring_sock_readv,
-	.readv_async	= uring_sock_readv_async,
 	.writev		= uring_sock_writev,
 	.recv_next	= uring_sock_recv_next,
 	.writev_async	= uring_sock_writev_async,
