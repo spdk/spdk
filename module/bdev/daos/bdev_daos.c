@@ -808,14 +808,14 @@ exit:
 }
 
 void
-delete_bdev_daos(struct spdk_bdev *bdev, spdk_delete_daos_complete cb_fn, void *cb_arg)
+delete_bdev_daos(const char *bdev_name, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
-	if (!bdev || bdev->module != &daos_if) {
-		cb_fn(cb_arg, -ENODEV);
-		return;
-	}
+	int rc;
 
-	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+	rc = spdk_bdev_unregister_by_name(bdev_name, &daos_if, cb_fn, cb_arg);
+	if (rc != 0) {
+		cb_fn(cb_arg, rc);
+	}
 }
 
 static int
