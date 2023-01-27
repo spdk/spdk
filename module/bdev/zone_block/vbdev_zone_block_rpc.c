@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2019 Intel Corporation.
+ *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *   All rights reserved.
  */
 
@@ -89,7 +90,11 @@ _rpc_delete_zone_block_cb(void *cb_ctx, int rc)
 {
 	struct spdk_jsonrpc_request *request = cb_ctx;
 
-	spdk_jsonrpc_send_bool_response(request, rc == 0);
+	if (rc == 0) {
+		spdk_jsonrpc_send_bool_response(request, true);
+	} else {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+	}
 }
 
 static void

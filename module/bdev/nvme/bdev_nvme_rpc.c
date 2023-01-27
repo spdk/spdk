@@ -1222,7 +1222,12 @@ _rpc_bdev_nvme_reset_controller_cb(void *_ctx)
 {
 	struct rpc_bdev_nvme_reset_controller_ctx *ctx = _ctx;
 
-	spdk_jsonrpc_send_bool_response(ctx->request, ctx->success);
+	if (ctx->success) {
+		spdk_jsonrpc_send_bool_response(ctx->request, true);
+	} else {
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Controller reset failed");
+	}
 
 	free(ctx);
 }

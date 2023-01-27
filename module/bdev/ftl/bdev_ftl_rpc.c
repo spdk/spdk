@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2020 Intel Corporation.
+ *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *   All rights reserved.
  */
 
@@ -142,7 +143,11 @@ rpc_bdev_ftl_delete_cb(void *cb_arg, int bdeverrno)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 
-	spdk_jsonrpc_send_bool_response(request, bdeverrno == 0);
+	if (bdeverrno == 0) {
+		spdk_jsonrpc_send_bool_response(request, true);
+	} else {
+		spdk_jsonrpc_send_error_response(request, bdeverrno, spdk_strerror(-bdeverrno));
+	}
 }
 
 static void
@@ -190,7 +195,11 @@ rpc_bdev_ftl_unmap_cb(void *cb_arg, int bdeverrno)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 
-	spdk_jsonrpc_send_bool_response(request, bdeverrno == 0);
+	if (bdeverrno == 0) {
+		spdk_jsonrpc_send_bool_response(request, true);
+	} else {
+		spdk_jsonrpc_send_error_response(request, bdeverrno, spdk_strerror(-bdeverrno));
+	}
 }
 
 static void
@@ -300,14 +309,14 @@ rpc_bdev_ftl_get_stats(struct spdk_jsonrpc_request *request,
 
 	stats = calloc(1, sizeof(struct ftl_stats));
 	if (!stats) {
-		spdk_jsonrpc_send_bool_response(request, false);
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
 		goto invalid;
 	}
 
 	rc = bdev_ftl_get_stats(attrs.name, _rpc_bdev_ftl_get_stats, request, stats);
 	if (rc) {
 		free(stats);
-		spdk_jsonrpc_send_bool_response(request, false);
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto invalid;
 	}
 
