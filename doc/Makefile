@@ -13,6 +13,10 @@ all: doc
 
 doc: output
 
+deprecation.md: ../deprecation.md
+	$(Q)sed -e 's/^# Deprecation/# Deprecation {#deprecation}/' \
+	    < $< > $@
+
 changelog.md: ../CHANGELOG.md
 	$(Q)sed -e 's/^# Changelog/# Changelog {#changelog}/' \
 	    -e 's/^##/#/' \
@@ -20,9 +24,9 @@ changelog.md: ../CHANGELOG.md
 	    -e '/# v..\...:/s/\./-/2' \
 	    < $< > $@
 
-output: Doxyfile changelog.md $(wildcard *.md) $(wildcard ../include/spdk/*.h)
+output: Doxyfile changelog.md deprecation.md $(wildcard *.md) $(wildcard ../include/spdk/*.h)
 	$(Q)rm -rf $@
 	$(Q)doxygen Doxyfile
 
 clean:
-	$(Q)rm -rf output changelog.md
+	$(Q)rm -rf output changelog.md deprecation.md

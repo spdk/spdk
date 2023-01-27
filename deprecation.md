@@ -1,6 +1,6 @@
 # Deprecation
 
-## ABI and API Deprecation {#deprecation}
+## ABI and API Deprecation
 
 This document details the policy for maintaining stability of SPDK ABI and API.
 
@@ -17,7 +17,7 @@ Deprecated code paths must be registered with `SPDK_DEPRECATION_REGISTER()` and 
 log at the warn level when `SPDK_LOG_DEPRECATED()` is called, subject to rate limits.
 The tags can be matched with the level 4 headers below.
 
-## Deprecation Notices {#deprecation-notices}
+## Deprecation Notices
 
 ### PMDK
 

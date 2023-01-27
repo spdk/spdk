@@ -813,7 +813,7 @@ INPUT                  += \
                          compression.md \
                          concurrency.md \
                          containers.md \
-                         ../deprecation.md \
+                         deprecation.md \
                          distributions.md \
                          event.md \
                          ftl.md \
