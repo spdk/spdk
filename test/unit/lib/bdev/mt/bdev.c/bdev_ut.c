@@ -274,6 +274,11 @@ _bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
 			*(bool *)event_ctx = true;
 		}
 		break;
+	case SPDK_BDEV_EVENT_RESIZE:
+		if (event_ctx != NULL) {
+			*(int *)event_ctx += 1;
+		}
+		break;
 	default:
 		CU_ASSERT(false);
 		break;
@@ -2507,6 +2512,78 @@ spdk_bdev_examine_wt(void)
 	g_bdev_opts.bdev_auto_examine = save_auto_examine;
 }
 
+static void
+event_notify_and_close(void)
+{
+	int resize_notify_count = 0;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_bdev *bdev;
+	int rc;
+
+	setup_test();
+	set_thread(0);
+
+	/* setup_test() automatically opens the bdev, but this test needs to do
+	 * that in a different way. */
+	spdk_bdev_close(g_desc);
+	poll_threads();
+
+	set_thread(1);
+
+	rc = spdk_bdev_open_ext("ut_bdev", true, _bdev_event_cb, &resize_notify_count, &desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+
+	bdev = spdk_bdev_desc_get_bdev(desc);
+	SPDK_CU_ASSERT_FATAL(bdev != NULL);
+
+	/* Test a normal case that a resize event is notified. */
+	set_thread(0);
+
+	rc = spdk_bdev_notify_blockcnt_change(bdev, 1024 * 2);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bdev->blockcnt == 1024 * 2);
+	CU_ASSERT(desc->refs == 1);
+	CU_ASSERT(resize_notify_count == 0);
+
+	poll_threads();
+
+	CU_ASSERT(desc->refs == 0);
+	CU_ASSERT(resize_notify_count == 1);
+
+	/* Test a complex case if the bdev is closed after two event_notify messages are sent,
+	 * then both event_notify messages are discarded and the desc is freed.
+	 */
+	rc = spdk_bdev_notify_blockcnt_change(bdev, 1024 * 3);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bdev->blockcnt == 1024 * 3);
+	CU_ASSERT(desc->refs == 1);
+	CU_ASSERT(resize_notify_count == 1);
+
+	rc = spdk_bdev_notify_blockcnt_change(bdev, 1024 * 4);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bdev->blockcnt == 1024 * 4);
+	CU_ASSERT(desc->refs == 2);
+	CU_ASSERT(resize_notify_count == 1);
+
+	set_thread(1);
+
+	spdk_bdev_close(desc);
+	CU_ASSERT(desc->closed == true);
+	CU_ASSERT(desc->refs == 2);
+	CU_ASSERT(resize_notify_count == 1);
+
+	poll_threads();
+
+	CU_ASSERT(resize_notify_count == 1);
+
+	set_thread(0);
+
+	/* Restore g_desc. Then, we can execute teardown_test(). */
+	spdk_bdev_open_ext("ut_bdev", true, _bdev_event_cb, NULL, &g_desc);
+	teardown_test();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2542,6 +2619,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, unregister_during_reset);
 	CU_ADD_TEST(suite_wt, spdk_bdev_register_wt);
 	CU_ADD_TEST(suite_wt, spdk_bdev_examine_wt);
+	CU_ADD_TEST(suite, event_notify_and_close);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

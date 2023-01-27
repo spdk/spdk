@@ -4429,20 +4429,20 @@ spdk_bdev_get_current_qd(struct spdk_bdev *bdev, spdk_bdev_get_current_qd_cb cb_
 }
 
 static void
-_resize_notify(void *arg)
+_event_notify(struct spdk_bdev_desc *desc, enum spdk_bdev_event_type type)
 {
-	struct spdk_bdev_desc *desc = arg;
+	assert(desc->thread == spdk_get_thread());
 
 	spdk_spin_lock(&desc->spinlock);
 	desc->refs--;
 	if (!desc->closed) {
 		spdk_spin_unlock(&desc->spinlock);
-		desc->callback.event_fn(SPDK_BDEV_EVENT_RESIZE,
+		desc->callback.event_fn(type,
 					desc->bdev,
 					desc->callback.ctx);
 		return;
-	} else if (0 == desc->refs) {
-		/* This descriptor was closed after this resize_notify message was sent.
+	} else if (desc->refs == 0) {
+		/* This descriptor was closed after this event_notify message was sent.
 		 * spdk_bdev_close() could not free the descriptor since this message was
 		 * in flight, so we free it now using bdev_desc_free().
 		 */
@@ -4451,6 +4451,23 @@ _resize_notify(void *arg)
 		return;
 	}
 	spdk_spin_unlock(&desc->spinlock);
+}
+
+static void
+event_notify(struct spdk_bdev_desc *desc, spdk_msg_fn event_notify_fn)
+{
+	spdk_spin_lock(&desc->spinlock);
+	desc->refs++;
+	spdk_thread_send_msg(desc->thread, event_notify_fn, desc);
+	spdk_spin_unlock(&desc->spinlock);
+}
+
+static void
+_resize_notify(void *ctx)
+{
+	struct spdk_bdev_desc *desc = ctx;
+
+	_event_notify(desc, SPDK_BDEV_EVENT_RESIZE);
 }
 
 int
@@ -4472,12 +4489,7 @@ spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 	} else {
 		bdev->blockcnt = size;
 		TAILQ_FOREACH(desc, &bdev->internal.open_descs, link) {
-			spdk_spin_lock(&desc->spinlock);
-			if (!desc->closed) {
-				desc->refs++;
-				spdk_thread_send_msg(desc->thread, _resize_notify, desc);
-			}
-			spdk_spin_unlock(&desc->spinlock);
+			event_notify(desc, _resize_notify);
 		}
 		ret = 0;
 	}
@@ -6856,23 +6868,7 @@ _remove_notify(void *arg)
 {
 	struct spdk_bdev_desc *desc = arg;
 
-	spdk_spin_lock(&desc->spinlock);
-	desc->refs--;
-
-	if (!desc->closed) {
-		spdk_spin_unlock(&desc->spinlock);
-		desc->callback.event_fn(SPDK_BDEV_EVENT_REMOVE, desc->bdev, desc->callback.ctx);
-		return;
-	} else if (0 == desc->refs) {
-		/* This descriptor was closed after this remove_notify message was sent.
-		 * spdk_bdev_close() could not free the descriptor since this message was
-		 * in flight, so we free it now using bdev_desc_free().
-		 */
-		spdk_spin_unlock(&desc->spinlock);
-		bdev_desc_free(desc);
-		return;
-	}
-	spdk_spin_unlock(&desc->spinlock);
+	_event_notify(desc, SPDK_BDEV_EVENT_REMOVE);
 }
 
 /* returns: 0 - bdev removed and ready to be destructed.
@@ -6890,16 +6886,13 @@ bdev_unregister_unsafe(struct spdk_bdev *bdev)
 	/* Notify each descriptor about hotremoval */
 	TAILQ_FOREACH_SAFE(desc, &bdev->internal.open_descs, link, tmp) {
 		rc = -EBUSY;
-		spdk_spin_lock(&desc->spinlock);
 		/*
 		 * Defer invocation of the event_cb to a separate message that will
 		 *  run later on its thread.  This ensures this context unwinds and
 		 *  we don't recursively unregister this bdev again if the event_cb
 		 *  immediately closes its descriptor.
 		 */
-		desc->refs++;
-		spdk_thread_send_msg(desc->thread, _remove_notify, desc);
-		spdk_spin_unlock(&desc->spinlock);
+		event_notify(desc, _remove_notify);
 	}
 
 	/* If there are no descriptors, proceed removing the bdev */
