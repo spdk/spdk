@@ -302,8 +302,6 @@ At the NVMe driver level, we provide the following support for Hotplug:
 
 ## NVMe Character Devices {#nvme_cuse}
 
-This feature is considered as experimental.
-
 ### Design
 
 ![NVMe character devices processing diagram](nvme_cuse.svg)
