@@ -8059,6 +8059,14 @@ out:
 	return rc;
 }
 
+static void
+_media_management_notify(void *arg)
+{
+	struct spdk_bdev_desc *desc = arg;
+
+	_event_notify(desc, SPDK_BDEV_EVENT_MEDIA_MANAGEMENT);
+}
+
 void
 spdk_bdev_notify_media_management(struct spdk_bdev *bdev)
 {
@@ -8067,8 +8075,7 @@ spdk_bdev_notify_media_management(struct spdk_bdev *bdev)
 	spdk_spin_lock(&bdev->internal.spinlock);
 	TAILQ_FOREACH(desc, &bdev->internal.open_descs, link) {
 		if (!TAILQ_EMPTY(&desc->pending_media_events)) {
-			desc->callback.event_fn(SPDK_BDEV_EVENT_MEDIA_MANAGEMENT, bdev,
-						desc->callback.ctx);
+			event_notify(desc, _media_management_notify);
 		}
 	}
 	spdk_spin_unlock(&bdev->internal.spinlock);
