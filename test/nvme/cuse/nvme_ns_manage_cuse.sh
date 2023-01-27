@@ -5,47 +5,31 @@
 #
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/scripts/common.sh
-source $rootdir/test/common/autotest_common.sh
-
-NVME_CMD="/usr/local/src/nvme-cli/nvme"
-
-rpc_py=$rootdir/scripts/rpc.py
-
-$rootdir/scripts/setup.sh
-sleep 1
-
-bdfs=$(get_nvme_bdfs)
+source "$testdir/common.sh"
 
 $rootdir/scripts/setup.sh reset
+scan_nvme_ctrls
 
 # Find bdf that supports Namespace Management
-for bdf in $bdfs; do
-	nvme_name=$(get_nvme_ctrlr_from_bdf ${bdf})
-	if [[ -z "$nvme_name" ]]; then
-		continue
-	fi
-
+for ctrl in "${!ctrls[@]}"; do
 	# Check Optional Admin Command Support for Namespace Management
-	oacs=$($NVME_CMD id-ctrl /dev/${nvme_name} | grep oacs | cut -d: -f2)
-	oacs_ns_manage=$((oacs & 0x8))
-
-	if [[ "$oacs_ns_manage" -ne 0 ]]; then
-		break
-	fi
+	(($(get_nvme_ctrl_feature "$ctrl" oacs) & 0x8)) && nvme_name=$ctrl && break
 done
 
-if [[ "${nvme_name}" == "" ]] || [[ "$oacs_ns_manage" -eq 0 ]]; then
+if [[ -z $nvme_name ]]; then
 	echo "No NVMe device supporting Namespace management found"
 	$rootdir/scripts/setup.sh
 	exit 1
 fi
 
 nvme_dev=/dev/${nvme_name}
+bdf=${bdfs["$nvme_name"]}
+nsids=($(get_nvme_nss "$nvme_name"))
 
 # Detect supported features and configuration
-oaes=$($NVME_CMD id-ctrl ${nvme_dev} | grep oaes | cut -d: -f2)
+oaes=$(get_nvme_ctrl_feature "$nvme_name" oaes)
 aer_ns_change=$((oaes & 0x100))
+cntlid=$(get_nvme_ctrl_feature "$nvme_name")
 
 function reset_nvme_if_aer_unsupported() {
 	if [[ "$aer_ns_change" -eq "0" ]]; then
@@ -56,33 +40,27 @@ function reset_nvme_if_aer_unsupported() {
 
 function remove_all_namespaces() {
 	info_print "delete all namespaces"
-	active_nsids=$($NVME_CMD list-ns ${nvme_dev} | cut -f2 -d:)
 	# Cant globally detach all namespaces ... must do so one by one
-	for n in ${active_nsids}; do
-		info_print "removing nsid=${n}"
-		$NVME_CMD detach-ns ${nvme_dev} -n ${n} -c 0 || true
-		$NVME_CMD delete-ns ${nvme_dev} -n ${n} || true
+	for nsid in "${nsids[@]}"; do
+		info_print "removing nsid=${nsid}"
+		$NVME_CMD detach-ns ${nvme_dev} -n ${nsid} -c ${cntlid} || true
+		$NVME_CMD delete-ns ${nvme_dev} -n ${nsid} || true
 	done
 }
 
 function clean_up() {
-	$rootdir/scripts/setup.sh reset
-
-	# This assumes every NVMe controller contains single namespace,
-	# encompassing Total NVM Capacity and formatted as 512 block size.
-	# 512 block size is needed for test/vhost/vhost_boot.sh to
-	# successfully run.
-
-	tnvmcap=$($NVME_CMD id-ctrl ${nvme_dev} | grep tnvmcap | cut -d: -f2)
-	blksize=512
-
-	size=$((tnvmcap / blksize))
+	"$rootdir/scripts/setup.sh" reset
+	remove_all_namespaces
 
 	echo "Restoring $nvme_dev..."
-	remove_all_namespaces
-	nsid=$($NVME_CMD create-ns ${nvme_dev} -s ${size} -c ${size} -b ${blksize} | grep -o 'nsid:[0-9].*' | cut -f2 -d:)
-	$NVME_CMD attach-ns ${nvme_dev} -n ${nsid} -c 0
-	$NVME_CMD reset ${nvme_dev}
+	for nsid in "${nsids[@]}"; do
+		ncap=$(get_nvme_ns_feature "$nvme_name" "$nsid" ncap)
+		nsze=$(get_nvme_ns_feature "$nvme_name" "$nsid" nsze)
+		lbaf=$(get_active_lbaf "$nvme_name" "$nsid")
+		$NVME_CMD create-ns ${nvme_dev} -s ${nsze} -c ${ncap} -f ${lbaf}
+		$NVME_CMD attach-ns ${nvme_dev} -n ${nsid} -c ${cntlid}
+		$NVME_CMD reset ${nvme_dev}
+	done
 
 	$rootdir/scripts/setup.sh
 }
@@ -119,32 +97,22 @@ for dev in "${ctrlr}"n*; do
 	[[ ! -c ${dev} ]]
 done
 sleep 1
-nsids=()
 
-for i in {1..2}; do
+for nsid in "${nsids[@]}"; do
 	info_print "create ns: nsze=10000 ncap=10000 flbias=0"
-	nsid=$($NVME_CMD create-ns ${ctrlr} -s 10000 -c 10000 -f 0 | grep -o 'nsid:[0-9].*' | cut -f2 -d:)
-	nsids+=(${nsid})
-	info_print "attach ns: nsid=${nsid} controller=0"
-	$NVME_CMD attach-ns ${ctrlr} -n ${nsid} -c 0
-
+	$NVME_CMD create-ns ${ctrlr} -s 10000 -c 10000 -f 0
+	info_print "attach ns: nsid=${nsid} controller=${cntlid}"
+	$NVME_CMD attach-ns ${ctrlr} -n ${nsid} -c ${cntlid}
 	reset_nvme_if_aer_unsupported ${ctrlr}
 	sleep 1
-
 	[[ -c "${ctrlr}n${nsid}" ]]
-done
-
-for n in "${nsids[@]}"; do
-	info_print "detach ns: nsid=${n} controller=0"
-	$NVME_CMD detach-ns ${ctrlr} -n ${n} -c 0 || true
-
-	info_print "delete ns: nsid=${n}"
-	$NVME_CMD delete-ns ${ctrlr} -n ${n} || true
-
+	info_print "detach ns: nsid=${nsid} controller=${cntlid}"
+	$NVME_CMD detach-ns ${ctrlr} -n ${nsid} -c ${cntlid}
+	info_print "delete ns: nsid=${nsid}"
+	$NVME_CMD delete-ns ${ctrlr} -n ${nsid}
 	reset_nvme_if_aer_unsupported ${ctrlr}
 	sleep 1
-
-	[[ ! -c "${ctrlr}n${n}" ]]
+	[[ ! -c "${ctrlr}n${nsid}" ]]
 done
 
 # Here we should not have any cuse devices
