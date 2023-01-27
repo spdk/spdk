@@ -1393,34 +1393,40 @@ bdevperf_histogram_status_cb(void *cb_arg, int status)
 
 static uint32_t g_construct_job_count = 0;
 
+static int
+_bdevperf_enable_histogram(void *ctx, struct spdk_bdev *bdev)
+{
+	bool *enable = ctx;
+
+	g_bdev_count++;
+
+	spdk_bdev_histogram_enable(bdev, bdevperf_histogram_status_cb, NULL, *enable);
+
+	return 0;
+}
+
 static void
-_bdevperf_enable_histogram(bool enable)
+bdevperf_enable_histogram(bool enable)
 {
 	struct spdk_bdev *bdev;
+	int rc;
+
 	/* increment initial g_bdev_count so that it will never reach 0 in the middle of iteration */
 	g_bdev_count = 1;
 
 	if (g_job_bdev_name != NULL) {
 		bdev = spdk_bdev_get_by_name(g_job_bdev_name);
 		if (bdev) {
-			g_bdev_count++;
-
-			spdk_bdev_histogram_enable(bdev, bdevperf_histogram_status_cb, NULL, enable);
+			rc = _bdevperf_enable_histogram(&enable, bdev);
 		} else {
 			fprintf(stderr, "Unable to find bdev '%s'\n", g_job_bdev_name);
+			rc = -1;
 		}
 	} else {
-		bdev = spdk_bdev_first_leaf();
-
-		while (bdev != NULL) {
-			g_bdev_count++;
-
-			spdk_bdev_histogram_enable(bdev, bdevperf_histogram_status_cb, NULL, enable);
-			bdev = spdk_bdev_next_leaf(bdev);
-		}
+		rc = spdk_for_each_bdev_leaf(&enable, _bdevperf_enable_histogram);
 	}
 
-	bdevperf_histogram_status_cb(NULL, 0);
+	bdevperf_histogram_status_cb(NULL, rc);
 }
 
 static void
@@ -1434,7 +1440,7 @@ _bdevperf_construct_job_done(void *ctx)
 		}
 
 		/* always enable histogram. */
-		_bdevperf_enable_histogram(true);
+		bdevperf_enable_histogram(true);
 	} else if (g_run_rc != 0) {
 		/* Reset error as some jobs constructed right */
 		g_run_rc = 0;
@@ -1859,14 +1865,15 @@ make_cli_job_config(const char *filename, int64_t offset, uint64_t range)
 }
 
 static int
-bdevperf_construct_multithread_job_config(uint32_t num_cores, struct spdk_bdev *bdev)
+bdevperf_construct_multithread_job_config(void *ctx, struct spdk_bdev *bdev)
 {
+	uint32_t *num_cores = ctx;
 	uint32_t i;
 	uint64_t blocks_per_job;
 	int64_t offset;
 	int rc;
 
-	blocks_per_job = spdk_bdev_get_num_blocks(bdev) / num_cores;
+	blocks_per_job = spdk_bdev_get_num_blocks(bdev) / *num_cores;
 	offset = 0;
 
 	SPDK_ENV_FOREACH_CORE(i) {
@@ -1904,17 +1911,18 @@ bdevperf_construct_multithread_job_configs(void)
 			fprintf(stderr, "Unable to find bdev '%s'\n", g_job_bdev_name);
 			return;
 		}
-		g_run_rc = bdevperf_construct_multithread_job_config(num_cores, bdev);
+		g_run_rc = bdevperf_construct_multithread_job_config(&num_cores, bdev);
 	} else {
-		bdev = spdk_bdev_first_leaf();
-		while (bdev != NULL) {
-			g_run_rc = bdevperf_construct_multithread_job_config(num_cores, bdev);
-			if (g_run_rc) {
-				return;
-			}
-			bdev = spdk_bdev_next_leaf(bdev);
-		}
+		g_run_rc = spdk_for_each_bdev_leaf(&num_cores, bdevperf_construct_multithread_job_config);
 	}
+
+}
+
+static int
+bdevperf_construct_job_config(void *ctx, struct spdk_bdev *bdev)
+{
+	/* Construct the job */
+	return make_cli_job_config(spdk_bdev_get_name(bdev), 0, 0);
 }
 
 static void
@@ -1951,17 +1959,7 @@ bdevperf_construct_job_configs(void)
 			fprintf(stderr, "Unable to find bdev '%s'\n", g_job_bdev_name);
 		}
 	} else {
-		bdev = spdk_bdev_first_leaf();
-
-		while (bdev != NULL) {
-			/* Construct the job */
-			g_run_rc = make_cli_job_config(spdk_bdev_get_name(bdev), 0, 0);
-			if (g_run_rc) {
-				break;
-			}
-
-			bdev = spdk_bdev_next_leaf(bdev);
-		}
+		g_run_rc = spdk_for_each_bdev_leaf(NULL, bdevperf_construct_job_config);
 	}
 
 end:
