@@ -4,8 +4,6 @@
 #  All rights reserved.
 #
 
-testdir=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")
-rootdir=$(readlink -f "$testdir/../../../")
 source "$rootdir/test/common/autotest_common.sh"
 
 shopt -s extglob
