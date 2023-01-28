@@ -8,6 +8,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/config.h"
 #include "spdk/env.h"
 #include "spdk/fd.h"
 #include "spdk/nvme.h"
