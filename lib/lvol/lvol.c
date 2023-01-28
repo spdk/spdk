@@ -1696,6 +1696,19 @@ spdk_lvs_grow(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn
 	spdk_bs_grow(bs_dev, &opts, lvs_load_cb, req);
 }
 
+static struct spdk_lvol *
+lvs_get_lvol_by_blob_id(struct spdk_lvol_store *lvs, spdk_blob_id blob_id)
+{
+	struct spdk_lvol *lvol;
+
+	TAILQ_FOREACH(lvol, &lvs->lvols, link) {
+		if (lvol->blob_id == blob_id) {
+			return lvol;
+		}
+	}
+	return NULL;
+}
+
 static int
 lvs_esnap_bs_dev_create(void *bs_ctx, void *blob_ctx, struct spdk_blob *blob,
 			const void *esnap_id, uint32_t id_len,
@@ -1724,6 +1737,22 @@ lvs_esnap_bs_dev_create(void *bs_ctx, void *blob_ctx, struct spdk_blob *blob,
 	if (!lvs->load_esnaps) {
 		*bs_dev = NULL;
 		return 0;
+	}
+
+	if (lvol == NULL) {
+		spdk_blob_id blob_id = spdk_blob_get_id(blob);
+
+		/*
+		 * If spdk_bs_blob_open() is used instead of spdk_bs_blob_open_ext() the lvol will
+		 * not have been passed in. The same is true if the open happens spontaneously due
+		 * to blobstore activity.
+		 */
+		lvol = lvs_get_lvol_by_blob_id(lvs, blob_id);
+		if (lvol == NULL) {
+			SPDK_ERRLOG("lvstore %s: no lvol for blob 0x%" PRIx64 "\n",
+				    lvs->name, blob_id);
+			return -ENODEV;
+		}
 	}
 
 	return lvs->esnap_bs_dev_create(lvs, lvol, blob, esnap_id, id_len, bs_dev);
