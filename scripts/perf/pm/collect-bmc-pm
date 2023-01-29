@@ -7,6 +7,8 @@ set -e
 
 hex() { printf '0x%02x\n' "$@"; }
 
+calc() { bc <<< "scale=2; $*"; }
+
 is_root() {
 	# Talking to local BMC device requires root privileges
 	if ((UID)); then
@@ -346,7 +348,7 @@ get_cpu_socket_reading() {
 		((${#socket_uj[@]} > 1)) || continue
 
 		# Convert to Watts - use bc since $interval can be an actual float
-		reading=$(bc <<< "scale=2; (${socket_uj[-1]} - ${socket_uj[-2]}) / 1000000 / $interval")
+		reading=$(calc "(${socket_uj[-1]} - ${socket_uj[-2]}) / 1000000 / $interval")
 		eval "_socket${_socket_idx}_readings+=($reading)"
 		power_readings["$socket_name-$socket_idx"]="_socket${_socket_idx}_readings[@]"
 
@@ -381,13 +383,13 @@ dump_readings() {
 		fi
 		total=0
 		for reading in "${readings[@]}"; do
-			((total += ${reading%.*}))
+			total=$(calc "$total + $reading")
 		done
-		avg=$((total / ${#readings[@]}))
+		avg=$(calc "$total / ${#readings[@]}")
 
 		readings+=("Total: ${#readings[@]}")
 		sensor="${sensor//[[:space:]]/_}"
-		printf '%u\n' "$avg" > "$output_dir/${prefix:+${prefix}_}avg_${sensor}.bmc.pm.txt"
+		printf '%s\n' "$avg" > "$output_dir/${prefix:+${prefix}_}avg_${sensor}.bmc.pm.txt"
 		printf '%s\n' "${readings[@]}" > "$output_dir/${prefix:+${prefix}_}all_${sensor}.bmc.pm.txt"
 		printf 'Dumped avg to %s\n' "$output_dir/${prefix:+${prefix}_}avg_${sensor}.bmc.pm.txt" >&2
 		printf 'Dumped all to %s\n' "$output_dir/${prefix:+${prefix}_}all_${sensor}.bmc.pm.txt" >&2
