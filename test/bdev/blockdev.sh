@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2016 Intel Corporation
-#  Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES.
+#  Copyright (c) 2022, 2023 NVIDIA CORPORATION & AFFILIATES.
 #  All rights reserved.
 #
 testdir=$(readlink -f $(dirname $0))
@@ -739,8 +739,7 @@ fi
 trap "cleanup" SIGINT SIGTERM EXIT
 
 run_test "bdev_verify" $rootdir/build/examples/bdevperf --json "$conf_file" -q 128 -o 4096 -w verify -t 5 -C -m 0x3 "$env_ctx"
-# TODO: increase queue depth to 128 once issue #2824 is fixed
-run_test "bdev_verify_big_io" $rootdir/build/examples/bdevperf --json "$conf_file" -q 16 -o 65536 -w verify -t 5 -C -m 0x3 "$env_ctx"
+run_test "bdev_verify_big_io" $rootdir/build/examples/bdevperf --json "$conf_file" -q 128 -o 65536 -w verify -t 5 -C -m 0x3 "$env_ctx"
 run_test "bdev_write_zeroes" $rootdir/build/examples/bdevperf --json "$conf_file" -q 128 -o 4096 -w write_zeroes -t 1 "$env_ctx"
 
 # test json config not enclosed with {}
