@@ -437,7 +437,7 @@ work_fn(void *arg)
 		if (ns_ctx->qpair == NULL) {
 			fprintf(stderr, "spdk_nvme_ctrlr_alloc_io_qpair failed\n");
 			worker->status = -ENOMEM;
-			return 1;
+			goto out;
 		}
 	}
 
@@ -477,8 +477,6 @@ work_fn(void *arg)
 			if (ns_ctx->current_queue_depth > 0) {
 				spdk_nvme_qpair_process_completions(ns_ctx->qpair, 0);
 				unfinished_ctx++;
-			} else {
-				spdk_nvme_ctrlr_free_io_qpair(ns_ctx->qpair);
 			}
 		}
 	} while (unfinished_ctx > 0);
@@ -497,8 +495,12 @@ work_fn(void *arg)
 			}
 		} while (unfinished_ctx > 0);
 	}
+out:
+	TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
+		spdk_nvme_ctrlr_free_io_qpair(ns_ctx->qpair);
+	}
 
-	return 0;
+	return worker->status != 0;
 }
 
 static void
