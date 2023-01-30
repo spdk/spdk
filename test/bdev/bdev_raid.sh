@@ -185,17 +185,25 @@ function has_redundancy() {
 function raid_state_function_test() {
 	local raid_level=$1
 	local num_base_bdevs=$2
+	local superblock=$3
 	local raid_bdev
 	local base_bdevs=($(for ((i = 1; i <= num_base_bdevs; i++)); do echo BaseBdev$i; done))
 	local raid_bdev_name="Existed_Raid"
 	local strip_size
 	local strip_size_create_arg
+	local superblock_create_arg
 
 	if [ $raid_level != "raid1" ]; then
 		strip_size=64
 		strip_size_create_arg="-z $strip_size"
 	else
 		strip_size=0
+	fi
+
+	if [ $superblock = true ]; then
+		superblock_create_arg="-s"
+	else
+		superblock_create_arg=""
 	fi
 
 	$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -L bdev_raid &
@@ -205,7 +213,7 @@ function raid_state_function_test() {
 
 	# Step1: create a RAID bdev with no base bdevs
 	# Expect state: CONFIGURING
-	$rpc_py bdev_raid_create $strip_size_create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
+	$rpc_py bdev_raid_create $strip_size_create_arg $superblock_create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
 	if ! verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size; then
 		return 1
 	fi
@@ -213,7 +221,7 @@ function raid_state_function_test() {
 
 	# Step2: create one base bdev and add to the RAID bdev
 	# Expect state: CONFIGURING
-	$rpc_py bdev_raid_create $strip_size_create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
+	$rpc_py bdev_raid_create $strip_size_create_arg $superblock_create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
 	$rpc_py bdev_malloc_create 32 512 -b ${base_bdevs[0]}
 	waitforbdev ${base_bdevs[0]}
 	if ! verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size; then
@@ -221,9 +229,16 @@ function raid_state_function_test() {
 	fi
 	$rpc_py bdev_raid_delete $raid_bdev_name
 
+	if [ $superblock = true ]; then
+		# recreate the bdev to remove superblock
+		$rpc_py bdev_malloc_delete ${base_bdevs[0]}
+		$rpc_py bdev_malloc_create 32 512 -b ${base_bdevs[0]}
+		waitforbdev ${base_bdevs[0]}
+	fi
+
 	# Step3: create remaining base bdevs and add to the RAID bdev
 	# Expect state: ONLINE
-	$rpc_py bdev_raid_create $strip_size_create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
+	$rpc_py bdev_raid_create $strip_size_create_arg $superblock_create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
 	for ((i = 1; i < num_base_bdevs; i++)); do
 		if ! verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size; then
 			return 1
@@ -375,6 +390,18 @@ function raid_superblock_test() {
 		return 1
 	fi
 
+	# Try to create new RAID bdev from malloc bdevs
+	# Should not reach online state due to superblock still present on base bdevs
+	$rpc_py bdev_raid_create $strip_size_create_arg -r $raid_level -b "${base_bdevs_malloc[*]}" -n $raid_bdev_name
+	verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size
+
+	# Stop the RAID bdev
+	$rpc_py bdev_raid_delete $raid_bdev_name
+	raid_bdev=$($rpc_py bdev_raid_get_bdevs all | jq -r '.[]')
+	if [ -n "$raid_bdev" ]; then
+		return 1
+	fi
+
 	# Re-add first base bdev
 	$rpc_py bdev_passthru_create -b ${base_bdevs_malloc[0]} -p ${base_bdevs_pt[0]} -u ${base_bdevs_pt_uuid[0]}
 
@@ -414,14 +441,16 @@ raid0_resize_test
 
 for n in {2..4}; do
 	for level in raid0 concat raid1; do
-		raid_state_function_test $level $n
+		raid_state_function_test $level $n false
+		raid_state_function_test $level $n true
 		raid_superblock_test $level $n
 	done
 done
 
 if [ "$CONFIG_RAID5F" == y ]; then
 	for n in {3..4}; do
-		raid_state_function_test raid5f $n
+		raid_state_function_test raid5f $n false
+		raid_state_function_test raid5f $n true
 		raid_superblock_test raid5f $n
 	done
 fi

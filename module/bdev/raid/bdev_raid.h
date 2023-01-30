@@ -87,6 +87,9 @@ struct raid_base_bdev_info {
 
 	/* io channel for the app thread */
 	struct spdk_io_channel	*app_thread_ch;
+
+	/* Set to true when base bdev has completed the configuration process */
+	bool			is_configured;
 };
 
 /*

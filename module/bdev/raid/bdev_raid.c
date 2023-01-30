@@ -234,8 +234,11 @@ raid_bdev_free_base_bdev_resource(struct raid_base_bdev_info *base_info)
 	spdk_put_io_channel(base_info->app_thread_ch);
 	base_info->app_thread_ch = NULL;
 
-	assert(raid_bdev->num_base_bdevs_discovered);
-	raid_bdev->num_base_bdevs_discovered--;
+	if (base_info->is_configured) {
+		assert(raid_bdev->num_base_bdevs_discovered);
+		raid_bdev->num_base_bdevs_discovered--;
+		base_info->is_configured = false;
+	}
 }
 
 static void
@@ -1614,8 +1617,50 @@ raid_bdev_delete(struct raid_bdev *raid_bdev, raid_bdev_destruct_cb cb_fn, void 
 	}
 }
 
+static void
+raid_bdev_configure_base_bdev_cont(struct raid_base_bdev_info *base_info)
+{
+	struct raid_bdev *raid_bdev = base_info->raid_bdev;
+	int rc;
+
+	base_info->is_configured = true;
+
+	raid_bdev->num_base_bdevs_discovered++;
+	assert(raid_bdev->num_base_bdevs_discovered <= raid_bdev->num_base_bdevs);
+
+	if (raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs) {
+		rc = raid_bdev_configure(raid_bdev);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to configure raid bdev: %s\n", spdk_strerror(-rc));
+		}
+	}
+}
+
+static void
+raid_bdev_configure_base_bdev_check_sb_cb(const struct raid_bdev_superblock *sb, int status,
+		void *ctx)
+{
+	struct raid_base_bdev_info *base_info = ctx;
+
+	switch (status) {
+	case 0:
+		/* valid superblock found */
+		SPDK_ERRLOG("Existing raid superblock found on bdev %s\n", base_info->name);
+		raid_bdev_free_base_bdev_resource(base_info);
+		break;
+	case -EINVAL:
+		/* no valid superblock */
+		raid_bdev_configure_base_bdev_cont(base_info);
+		break;
+	default:
+		SPDK_ERRLOG("Failed to examine bdev %s: %s\n",
+			    base_info->name, spdk_strerror(-status));
+		break;
+	}
+}
+
 static int
-raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info)
+raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existing)
 {
 	struct raid_bdev *raid_bdev = base_info->raid_bdev;
 	struct spdk_bdev_desc *desc;
@@ -1646,6 +1691,7 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info)
 		bdev_name = spdk_bdev_get_name(bdev);
 
 		if (base_info->name == NULL) {
+			assert(existing == true);
 			base_info->name = strdup(bdev_name);
 			if (base_info->name == NULL) {
 				return -ENOMEM;
@@ -1739,13 +1785,15 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info)
 		goto out;
 	}
 
-	raid_bdev->num_base_bdevs_discovered++;
-	assert(raid_bdev->num_base_bdevs_discovered <= raid_bdev->num_base_bdevs);
-
-	if (raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs) {
-		rc = raid_bdev_configure(raid_bdev);
-		if (rc != 0) {
-			SPDK_ERRLOG("Failed to configure raid bdev: %s\n", spdk_strerror(-rc));
+	if (existing) {
+		raid_bdev_configure_base_bdev_cont(base_info);
+	} else {
+		/* check for existing superblock when using a new bdev */
+		rc = raid_bdev_load_base_bdev_superblock(desc, base_info->app_thread_ch,
+				raid_bdev_configure_base_bdev_check_sb_cb, base_info);
+		if (rc) {
+			SPDK_ERRLOG("Failed to read bdev %s superblock: %s\n",
+				    bdev->name, spdk_strerror(-rc));
 		}
 	}
 out:
@@ -1800,7 +1848,7 @@ raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name, uint8_t
 		return -ENOMEM;
 	}
 
-	rc = raid_bdev_configure_base_bdev(base_info);
+	rc = raid_bdev_configure_base_bdev(base_info, false);
 	if (rc != 0) {
 		if (rc != -ENODEV) {
 			SPDK_ERRLOG("Failed to allocate resource for bdev '%s'\n", name);
@@ -1853,8 +1901,7 @@ raid_bdev_examine_no_sb(struct spdk_bdev *bdev)
 		RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
 			if (base_info->desc == NULL && base_info->name != NULL &&
 			    strcmp(bdev->name, base_info->name) == 0) {
-				assert(raid_bdev->sb == NULL);
-				raid_bdev_configure_base_bdev(base_info);
+				raid_bdev_configure_base_bdev(base_info, true);
 				break;
 			}
 		}
@@ -1954,7 +2001,7 @@ raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bd
 		return;
 	}
 
-	rc = raid_bdev_configure_base_bdev(base_info);
+	rc = raid_bdev_configure_base_bdev(base_info, true);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to configure bdev %s as base bdev of raid %s: %s\n",
 			    bdev->name, raid_bdev->bdev.name, spdk_strerror(-rc));
