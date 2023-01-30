@@ -2,6 +2,10 @@
 
 ## v23.05: (Upcoming Release)
 
+### env
+
+New function `spdk_env_get_main_core` was added.
+
 ## v23.01
 
 ### accel

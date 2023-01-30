@@ -21,6 +21,12 @@ spdk_env_get_current_core(void)
 }
 
 uint32_t
+spdk_env_get_main_core(void)
+{
+	return rte_get_main_lcore();
+}
+
+uint32_t
 spdk_env_get_first_core(void)
 {
 	return rte_get_next_lcore(-1, 0, 0);

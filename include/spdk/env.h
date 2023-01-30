@@ -463,6 +463,13 @@ uint32_t spdk_env_get_core_count(void);
 uint32_t spdk_env_get_current_core(void);
 
 /**
+ * Get the index of the main dedicated CPU core for this application.
+ *
+ * \return the index of the main dedicated CPU core.
+ */
+uint32_t spdk_env_get_main_core(void);
+
+/**
  * Get the index of the first dedicated CPU core for this application.
  *
  * \return the index of the first dedicated CPU core.
