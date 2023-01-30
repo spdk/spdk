@@ -143,13 +143,7 @@ offline_cpu() {
 }
 
 mask_cpus() {
-	local cpu
-	local mask=0
-
-	for cpu; do
-		((mask |= 1 << cpu))
-	done
-	printf '0x%x\n' "$mask"
+	printf '[%s]\n' "$(fold_array_onto_string "$@")"
 }
 
 denied_list() {
@@ -162,7 +156,7 @@ filter_allowed_list() {
 	local cpu
 
 	for cpu in "${!allowed[@]}"; do
-		if [[ -n ${denied[cpu]} ]]; then
+		if [[ -n ${denied[cpu]} ]] || ((cpu > 127)); then
 			unset -v "allowed[cpu]"
 		fi
 	done

@@ -34,7 +34,7 @@ thread_stats() {
 idle() {
 	local reactor_framework
 	local reactors thread
-	local cpumask thread_cpumask
+	local thread_cpumask
 	local threads
 
 	exec_under_dynamic_scheduler "${SPDK_APP[@]}" -m "$spdk_cpumask" --main-core "$spdk_main_core"
@@ -53,10 +53,9 @@ idle() {
 
 		for thread in "${threads[@]}"; do
 			thread_cpumask=0x$(jq -r "select(.lcore == $spdk_main_core) | .lw_threads[] | select(.name == \"$thread\") | .cpumask" <<< "$reactor_framework")
-			((cpumask |= thread_cpumask))
+			printf 'SPDK cpumask: %s Thread %s cpumask: %s\n' "$spdk_cpumask" "$thread" "$thread_cpumask"
 		done
 
-		printf 'SPDK cpumask: %x Threads cpumask: %x\n' "$spdk_cpumask" "$cpumask"
 		thread_stats
 	done
 
