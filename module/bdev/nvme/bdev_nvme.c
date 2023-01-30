@@ -5305,6 +5305,60 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	return 0;
 }
 
+static bool
+nvme_path_should_delete(struct nvme_path_id *p, const struct nvme_path_id *path_id)
+{
+	if (path_id->trid.trtype != 0) {
+		if (path_id->trid.trtype == SPDK_NVME_TRANSPORT_CUSTOM) {
+			if (strcasecmp(path_id->trid.trstring, p->trid.trstring) != 0) {
+				return false;
+			}
+		} else {
+			if (path_id->trid.trtype != p->trid.trtype) {
+				return false;
+			}
+		}
+	}
+
+	if (!spdk_mem_all_zero(path_id->trid.traddr, sizeof(path_id->trid.traddr))) {
+		if (strcasecmp(path_id->trid.traddr, p->trid.traddr) != 0) {
+			return false;
+		}
+	}
+
+	if (path_id->trid.adrfam != 0) {
+		if (path_id->trid.adrfam != p->trid.adrfam) {
+			return false;
+		}
+	}
+
+	if (!spdk_mem_all_zero(path_id->trid.trsvcid, sizeof(path_id->trid.trsvcid))) {
+		if (strcasecmp(path_id->trid.trsvcid, p->trid.trsvcid) != 0) {
+			return false;
+		}
+	}
+
+	if (!spdk_mem_all_zero(path_id->trid.subnqn, sizeof(path_id->trid.subnqn))) {
+		if (strcmp(path_id->trid.subnqn, p->trid.subnqn) != 0) {
+			return false;
+		}
+	}
+
+	if (!spdk_mem_all_zero(path_id->hostid.hostaddr, sizeof(path_id->hostid.hostaddr))) {
+		if (strcmp(path_id->hostid.hostaddr, p->hostid.hostaddr) != 0) {
+			return false;
+		}
+	}
+
+	if (!spdk_mem_all_zero(path_id->hostid.hostsvcid, sizeof(path_id->hostid.hostsvcid))) {
+		if (strcmp(path_id->hostid.hostsvcid, p->hostid.hostsvcid) != 0) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 int
 bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 {
@@ -5325,52 +5379,8 @@ bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 
 	TAILQ_FOREACH_SAFE(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq, tmp_nvme_ctrlr) {
 		TAILQ_FOREACH_REVERSE_SAFE(p, &nvme_ctrlr->trids, nvme_paths, link, t) {
-			if (path_id->trid.trtype != 0) {
-				if (path_id->trid.trtype == SPDK_NVME_TRANSPORT_CUSTOM) {
-					if (strcasecmp(path_id->trid.trstring, p->trid.trstring) != 0) {
-						continue;
-					}
-				} else {
-					if (path_id->trid.trtype != p->trid.trtype) {
-						continue;
-					}
-				}
-			}
-
-			if (!spdk_mem_all_zero(path_id->trid.traddr, sizeof(path_id->trid.traddr))) {
-				if (strcasecmp(path_id->trid.traddr, p->trid.traddr) != 0) {
-					continue;
-				}
-			}
-
-			if (path_id->trid.adrfam != 0) {
-				if (path_id->trid.adrfam != p->trid.adrfam) {
-					continue;
-				}
-			}
-
-			if (!spdk_mem_all_zero(path_id->trid.trsvcid, sizeof(path_id->trid.trsvcid))) {
-				if (strcasecmp(path_id->trid.trsvcid, p->trid.trsvcid) != 0) {
-					continue;
-				}
-			}
-
-			if (!spdk_mem_all_zero(path_id->trid.subnqn, sizeof(path_id->trid.subnqn))) {
-				if (strcmp(path_id->trid.subnqn, p->trid.subnqn) != 0) {
-					continue;
-				}
-			}
-
-			if (!spdk_mem_all_zero(path_id->hostid.hostaddr, sizeof(path_id->hostid.hostaddr))) {
-				if (strcmp(path_id->hostid.hostaddr, p->hostid.hostaddr) != 0) {
-					continue;
-				}
-			}
-
-			if (!spdk_mem_all_zero(path_id->hostid.hostsvcid, sizeof(path_id->hostid.hostsvcid))) {
-				if (strcmp(path_id->hostid.hostsvcid, p->hostid.hostsvcid) != 0) {
-					continue;
-				}
+			if (!nvme_path_should_delete(p, path_id)) {
+				continue;
 			}
 
 			/* If we made it here, then this path is a match! Now we need to remove it. */
@@ -5394,8 +5404,6 @@ bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 			if (rc < 0 && rc != -ENXIO) {
 				return rc;
 			}
-
-
 		}
 	}
 
