@@ -25,6 +25,8 @@ extern "C" {
 
 #define NVMF_TGT_NAME_MAX_LENGTH	256
 
+#define SPDK_TLS_PSK_MAX_LEN		200
+
 struct spdk_nvmf_tgt;
 struct spdk_nvmf_subsystem;
 struct spdk_nvmf_ctrlr;
