@@ -5,7 +5,12 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = esnap
+DIRS-y =
+
+ifeq ($(OS),Linux)
+# Tests in this directory mostly depend upon aio bdevs, which are not widely supported.
+DIRS-y += esnap
+endif
 
 .PHONY: all clean $(DIRS-y)
 

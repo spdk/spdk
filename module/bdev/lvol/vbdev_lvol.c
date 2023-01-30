@@ -24,7 +24,8 @@ static TAILQ_HEAD(, lvol_store_bdev) g_spdk_lvol_pairs = TAILQ_HEAD_INITIALIZER(
 static int vbdev_lvs_init(void);
 static void vbdev_lvs_fini_start(void);
 static int vbdev_lvs_get_ctx_size(void);
-static void vbdev_lvs_examine(struct spdk_bdev *bdev);
+static void vbdev_lvs_examine_config(struct spdk_bdev *bdev);
+static void vbdev_lvs_examine_disk(struct spdk_bdev *bdev);
 static bool g_shutdown_started = false;
 
 struct spdk_bdev_module g_lvol_if = {
@@ -32,7 +33,8 @@ struct spdk_bdev_module g_lvol_if = {
 	.module_init = vbdev_lvs_init,
 	.fini_start = vbdev_lvs_fini_start,
 	.async_fini_start = true,
-	.examine_disk = vbdev_lvs_examine,
+	.examine_config = vbdev_lvs_examine_config,
+	.examine_disk = vbdev_lvs_examine_disk,
 	.get_ctx_size = vbdev_lvs_get_ctx_size,
 
 };
@@ -1458,6 +1460,52 @@ end:
 	}
 }
 
+/* Walks a tree of clones that are no longer degraded to create bdevs. */
+static int
+create_esnap_clone_lvol_disks(void *ctx, struct spdk_lvol *lvol)
+{
+	struct spdk_bdev *bdev = ctx;
+	int rc;
+
+	rc = _create_lvol_disk(lvol, false);
+	if (rc != 0) {
+		SPDK_ERRLOG("lvol %s: failed to create bdev after esnap hotplug of %s: %d\n",
+			    lvol->unique_id, spdk_bdev_get_name(bdev), rc);
+		/* Do not prevent creation of other clones in case of one failure. */
+		return 0;
+	}
+
+	return spdk_lvol_iter_immediate_clones(lvol, create_esnap_clone_lvol_disks, ctx);
+}
+
+static void
+vbdev_lvs_hotplug(void *ctx, struct spdk_lvol *lvol, int lvolerrno)
+{
+	struct spdk_bdev *esnap_clone_bdev = ctx;
+
+	if (lvolerrno != 0) {
+		SPDK_ERRLOG("lvol %s: during examine of bdev %s: not creating clone bdev due to "
+			    "error %d\n", lvol->unique_id, spdk_bdev_get_name(esnap_clone_bdev),
+			    lvolerrno);
+		return;
+	}
+	create_esnap_clone_lvol_disks(esnap_clone_bdev, lvol);
+}
+
+static void
+vbdev_lvs_examine_config(struct spdk_bdev *bdev)
+{
+	char uuid_str[SPDK_UUID_STRING_LEN];
+
+	spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &bdev->uuid);
+
+	if (spdk_lvs_notify_hotplug(uuid_str, sizeof(uuid_str), vbdev_lvs_hotplug, bdev)) {
+		SPDK_INFOLOG(vbdev_lvol, "bdev %s: claimed by one ore more esnap clones\n",
+			     uuid_str);
+	}
+	spdk_bdev_module_examine_done(&g_lvol_if);
+}
+
 static void
 _vbdev_lvs_examine_cb(void *arg, struct spdk_lvol_store *lvol_store, int lvserrno)
 {
@@ -1572,7 +1620,7 @@ vbdev_lvs_load(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_f
 }
 
 static void
-vbdev_lvs_examine(struct spdk_bdev *bdev)
+vbdev_lvs_examine_disk(struct spdk_bdev *bdev)
 {
 	struct spdk_lvs_req *req;
 

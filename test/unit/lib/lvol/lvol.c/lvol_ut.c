@@ -2964,7 +2964,8 @@ lvol_esnap_hotplug_scenario(struct hotplug_lvol *hotplug_lvols,
 
 	/* Perform hotplug */
 	for (m_esnap = degraded_lvol_sets_tree; m_esnap->esnap_id != NULL; m_esnap++) {
-		spdk_lvs_notify_hotplug(m_esnap->esnap_id, strlen(m_esnap->esnap_id) + 1);
+		spdk_lvs_notify_hotplug(m_esnap->esnap_id, strlen(m_esnap->esnap_id) + 1,
+					lvol_op_with_handle_complete, NULL);
 	}
 
 	/* Verify lvol->degraded_set and back_bs_dev */

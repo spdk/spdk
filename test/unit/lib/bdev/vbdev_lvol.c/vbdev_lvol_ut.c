@@ -36,6 +36,7 @@ bool g_examine_done = false;
 bool g_bdev_alias_already_exists = false;
 bool g_lvs_with_name_already_exists = false;
 bool g_ext_api_called;
+bool g_bdev_is_missing = false;
 
 DEFINE_STUB_V(spdk_bdev_module_fini_start_done, (void));
 DEFINE_STUB(spdk_bdev_get_memory_domains, int, (struct spdk_bdev *bdev,
@@ -876,6 +877,21 @@ spdk_lvol_create_clone(struct spdk_lvol *lvol, const char *clone_name,
 	cb_fn(cb_arg, clone, 0);
 }
 
+bool
+spdk_lvs_notify_hotplug(const void *esnap_id, uint32_t id_len,
+			spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_uuid uuid = { 0 };
+	char uuid_str[SPDK_UUID_STRING_LEN] = "bad";
+
+	CU_ASSERT(id_len == SPDK_UUID_STRING_LEN);
+	CU_ASSERT(spdk_uuid_parse(&uuid, esnap_id) == 0);
+	CU_ASSERT(spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &uuid) == 0);
+	CU_ASSERT(strcmp(esnap_id, uuid_str) == 0);
+
+	return g_bdev_is_missing;
+}
+
 static void
 lvol_store_op_complete(void *cb_arg, int lvserrno)
 {
@@ -1128,6 +1144,23 @@ ut_lvol_hotremove(void)
 }
 
 static void
+ut_lvol_examine_config(void)
+{
+	/* No esnap clone needs the bdev. */
+	g_bdev_is_missing = false;
+	g_examine_done = false;
+	vbdev_lvs_examine_config(&g_bdev);
+	CU_ASSERT(g_examine_done);
+
+	g_bdev_is_missing = true;
+	g_examine_done = false;
+	vbdev_lvs_examine_config(&g_bdev);
+	CU_ASSERT(g_examine_done);
+
+	g_examine_done = false;
+}
+
+static void
 ut_lvs_examine_check(bool success)
 {
 	struct lvol_store_bdev *lvs_bdev;
@@ -1153,18 +1186,18 @@ ut_lvs_examine_check(bool success)
 }
 
 static void
-ut_lvol_examine(void)
+ut_lvol_examine_disk(void)
 {
 	/* Examine unsuccessfully - bdev already opened */
 	g_lvserrno = -1;
 	lvol_already_opened = true;
-	vbdev_lvs_examine(&g_bdev);
+	vbdev_lvs_examine_disk(&g_bdev);
 	ut_lvs_examine_check(false);
 
 	/* Examine unsuccessfully - fail on lvol store */
 	g_lvserrno = -1;
 	lvol_already_opened = false;
-	vbdev_lvs_examine(&g_bdev);
+	vbdev_lvs_examine_disk(&g_bdev);
 	ut_lvs_examine_check(false);
 
 	/* Examine successfully
@@ -1175,7 +1208,7 @@ ut_lvol_examine(void)
 	g_num_lvols = 1;
 	lvol_already_opened = false;
 	g_registered_bdevs = 0;
-	vbdev_lvs_examine(&g_bdev);
+	vbdev_lvs_examine_disk(&g_bdev);
 	ut_lvs_examine_check(true);
 	CU_ASSERT(g_registered_bdevs == 0);
 	CU_ASSERT(TAILQ_EMPTY(&g_lvol_store->lvols));
@@ -1188,7 +1221,7 @@ ut_lvol_examine(void)
 	g_lvolerrno = 0;
 	g_registered_bdevs = 0;
 	lvol_already_opened = false;
-	vbdev_lvs_examine(&g_bdev);
+	vbdev_lvs_examine_disk(&g_bdev);
 	ut_lvs_examine_check(true);
 	CU_ASSERT(g_registered_bdevs != 0);
 	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_lvol_store->lvols));
@@ -1199,7 +1232,7 @@ ut_lvol_examine(void)
 	g_num_lvols = 4;
 	g_registered_bdevs = 0;
 	lvol_already_opened = false;
-	vbdev_lvs_examine(&g_bdev);
+	vbdev_lvs_examine_disk(&g_bdev);
 	ut_lvs_examine_check(true);
 	CU_ASSERT(g_registered_bdevs == g_num_lvols);
 	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_lvol_store->lvols));
@@ -1211,7 +1244,7 @@ ut_lvol_examine(void)
 	g_lvol_open_enomem = 2;
 	g_registered_bdevs = 0;
 	lvol_already_opened = false;
-	vbdev_lvs_examine(&g_bdev);
+	vbdev_lvs_examine_disk(&g_bdev);
 	ut_lvs_examine_check(true);
 	CU_ASSERT(g_registered_bdevs == g_num_lvols);
 	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_lvol_store->lvols));
@@ -1917,7 +1950,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, ut_vbdev_lvol_io_type_supported);
 	CU_ADD_TEST(suite, ut_lvol_read_write);
 	CU_ADD_TEST(suite, ut_vbdev_lvol_submit_request);
-	CU_ADD_TEST(suite, ut_lvol_examine);
+	CU_ADD_TEST(suite, ut_lvol_examine_config);
+	CU_ADD_TEST(suite, ut_lvol_examine_disk);
 	CU_ADD_TEST(suite, ut_lvol_rename);
 	CU_ADD_TEST(suite, ut_bdev_finish);
 	CU_ADD_TEST(suite, ut_lvs_rename);

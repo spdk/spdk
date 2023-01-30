@@ -1945,26 +1945,37 @@ spdk_lvs_esnap_missing_remove(struct spdk_lvol *lvol)
 	free(degraded_set);
 }
 
+struct lvs_esnap_hotplug_req {
+	struct spdk_lvol			*lvol;
+	spdk_lvol_op_with_handle_complete	cb_fn;
+	void					*cb_arg;
+};
+
 static void
 lvs_esnap_hotplug_done(void *cb_arg, int bserrno)
 {
-	struct spdk_lvol	*lvol = cb_arg;
+	struct lvs_esnap_hotplug_req *req = cb_arg;
+	struct spdk_lvol	*lvol = req->lvol;
 	struct spdk_lvol_store	*lvs = lvol->lvol_store;
 
 	if (bserrno != 0) {
 		SPDK_ERRLOG("lvol %s/%s: failed to hotplug blob_bdev due to error %d\n",
 			    lvs->name, lvol->name, bserrno);
 	}
+	req->cb_fn(req->cb_arg, lvol, bserrno);
+	free(req);
 }
 
 static void
-lvs_esnap_degraded_hotplug(struct spdk_lvs_degraded_lvol_set *degraded_set)
+lvs_esnap_degraded_hotplug(struct spdk_lvs_degraded_lvol_set *degraded_set,
+			   spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_store	*lvs = degraded_set->lvol_store;
 	struct spdk_lvol	*lvol, *tmp, *last_missing;
 	struct spdk_bs_dev	*bs_dev;
 	const void		*esnap_id = degraded_set->esnap_id;
 	uint32_t		id_len = degraded_set->id_len;
+	struct lvs_esnap_hotplug_req *req;
 	int			rc;
 
 	assert(lvs->thread == spdk_get_thread());
@@ -1984,6 +1995,17 @@ lvs_esnap_degraded_hotplug(struct spdk_lvs_degraded_lvol_set *degraded_set)
 	last_missing = TAILQ_LAST(&degraded_set->lvols, degraded_lvols);
 
 	TAILQ_FOREACH_SAFE(lvol, &degraded_set->lvols, degraded_link, tmp) {
+		req = calloc(1, sizeof(*req));
+		if (req == NULL) {
+			SPDK_ERRLOG("lvol %s: failed to create esnap bs_dev: out of memory\n",
+				    lvol->unique_id);
+			cb_fn(cb_arg, lvol, -ENOMEM);
+			/* The next one likely won't succeed either, but keep going so that all the
+			 * failed hotplugs are logged.
+			 */
+			goto next;
+		}
+
 		/*
 		 * Remove the lvol from the tailq so that tailq corruption is avoided if
 		 * lvs->esnap_bs_dev_create() calls spdk_lvs_esnap_missing_add(lvol).
@@ -1998,11 +2020,17 @@ lvs_esnap_degraded_hotplug(struct spdk_lvs_degraded_lvol_set *degraded_set)
 				    lvol->unique_id, rc);
 			lvol->degraded_set = degraded_set;
 			TAILQ_INSERT_TAIL(&degraded_set->lvols, lvol, degraded_link);
-		} else {
-			spdk_blob_set_esnap_bs_dev(lvol->blob, bs_dev,
-						   lvs_esnap_hotplug_done, lvol);
+			cb_fn(cb_arg, lvol, rc);
+			free(req);
+			goto next;
 		}
 
+		req->lvol = lvol;
+		req->cb_fn = cb_fn;
+		req->cb_arg = cb_arg;
+		spdk_blob_set_esnap_bs_dev(lvol->blob, bs_dev, lvs_esnap_hotplug_done, req);
+
+next:
 		if (lvol == last_missing) {
 			/*
 			 * Anything after last_missing was added due to some problem encountered
@@ -2024,7 +2052,8 @@ lvs_esnap_degraded_hotplug(struct spdk_lvs_degraded_lvol_set *degraded_set)
  * that the bdev now exists.
  */
 bool
-spdk_lvs_notify_hotplug(const void *esnap_id, uint32_t id_len)
+spdk_lvs_notify_hotplug(const void *esnap_id, uint32_t id_len,
+			spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvs_degraded_lvol_set *found;
 	struct spdk_lvs_degraded_lvol_set find = { 0 };
@@ -2057,7 +2086,7 @@ spdk_lvs_notify_hotplug(const void *esnap_id, uint32_t id_len)
 		}
 
 		ret = true;
-		lvs_esnap_degraded_hotplug(found);
+		lvs_esnap_degraded_hotplug(found, cb_fn, cb_arg);
 	}
 	pthread_mutex_unlock(&g_lvol_stores_mutex);
 
