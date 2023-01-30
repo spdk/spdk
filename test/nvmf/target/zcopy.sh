@@ -38,11 +38,13 @@ $rootdir/build/examples/bdevperf --json <(gen_nvmf_target_json) \
 	-t 5 -q 128 -w randrw -M 50 -o 8192 &
 perfpid=$!
 
+xtrace_disable
 while kill -0 $perfpid; do
 	# Add the same namespace again.  It'll fail, but will also pause/resume the subsystem and
 	# the namespace forcing the IO requests to be queued/resubmitted.
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 malloc0 -n 1 &> /dev/null || :
 done
+xtrace_restore
 
 wait $perfpid
 
