@@ -423,6 +423,7 @@ work_fn(void *arg)
 	struct spdk_nvme_io_qpair_opts opts;
 	uint64_t tsc_end;
 	uint32_t unfinished_ctx;
+	int rc = 0;
 
 	/* Allocate queue pair for each namespace. */
 	TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
@@ -450,15 +451,27 @@ work_fn(void *arg)
 
 	while (1) {
 		TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
-			spdk_nvme_qpair_process_completions(ns_ctx->qpair, 0);
+			rc = spdk_nvme_qpair_process_completions(ns_ctx->qpair, 0);
+			if (rc < 0) {
+				fprintf(stderr, "spdk_nvme_qpair_process_completions returned "
+					"%d\n", rc);
+				worker->status = rc;
+				goto out;
+			}
 		}
 
 		if (worker->lcore == g_main_core) {
 			TAILQ_FOREACH(ctrlr_ctx, &worker->ctrlr_ctx, link) {
 				/* Hold mutex to guard ctrlr_ctx->current_queue_depth. */
 				pthread_mutex_lock(&ctrlr_ctx->mutex);
-				spdk_nvme_ctrlr_process_admin_completions(ctrlr_ctx->ctrlr);
+				rc = spdk_nvme_ctrlr_process_admin_completions(ctrlr_ctx->ctrlr);
 				pthread_mutex_unlock(&ctrlr_ctx->mutex);
+				if (rc < 0) {
+					fprintf(stderr, "spdk_nvme_ctrlr_process_admin_completions "
+						"returned %d\n", rc);
+					worker->status = rc;
+					goto out;
+				}
 			}
 		}
 
@@ -475,7 +488,13 @@ work_fn(void *arg)
 				ns_ctx->is_draining = true;
 			}
 			if (ns_ctx->current_queue_depth > 0) {
-				spdk_nvme_qpair_process_completions(ns_ctx->qpair, 0);
+				rc = spdk_nvme_qpair_process_completions(ns_ctx->qpair, 0);
+				if (rc < 0) {
+					fprintf(stderr, "spdk_nvme_qpair_process_completions "
+						"returned %d\n", rc);
+					worker->status = rc;
+					goto out;
+				}
 				unfinished_ctx++;
 			}
 		}
@@ -488,15 +507,23 @@ work_fn(void *arg)
 			TAILQ_FOREACH(ctrlr_ctx, &worker->ctrlr_ctx, link) {
 				pthread_mutex_lock(&ctrlr_ctx->mutex);
 				if (ctrlr_ctx->current_queue_depth > 0) {
-					spdk_nvme_ctrlr_process_admin_completions(ctrlr_ctx->ctrlr);
+					rc = spdk_nvme_ctrlr_process_admin_completions(ctrlr_ctx->ctrlr);
 					unfinished_ctx++;
 				}
 				pthread_mutex_unlock(&ctrlr_ctx->mutex);
+				if (rc < 0) {
+					fprintf(stderr, "spdk_nvme_ctrlr_process_admin_completions "
+						"returned %d\n", rc);
+					worker->status = rc;
+					goto out;
+				}
 			}
 		} while (unfinished_ctx > 0);
 	}
 out:
 	TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
+		/* Make sure we don't submit any IOs at this point */
+		ns_ctx->is_draining = true;
 		spdk_nvme_ctrlr_free_io_qpair(ns_ctx->qpair);
 	}
 
