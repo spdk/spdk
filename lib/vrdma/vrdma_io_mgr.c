@@ -306,7 +306,7 @@ static bool vrdma_qp_sm_poll_pi(struct spdk_vrdma_qp *vqp,
 	return false;
 }
 
-static bool vrdma_qp_sm_	handle_pi(struct spdk_vrdma_qp *vqp,
+static bool vrdma_qp_sm_handle_pi(struct spdk_vrdma_qp *vqp,
 									enum vrdma_qp_sm_op_status status)
 {
 	if (status != VRDMA_QP_SM_OP_OK) {
@@ -1301,13 +1301,13 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 	if (spdk_unlikely(!vqp->bk_qp)) {
 		return true;
 	}
-#ifdef POLL_PI_DBG
-	SPDK_NOTICELOG("vrdam gen sq cqe start: vcq pi %d, pre_pi %d, ci %d\n",
-					vcq->pi, vcq->pre_pi, vcq->pici->ci);
-#endif
 	gettimeofday(&tv, NULL);
 	mcq = &vqp->bk_qp->bk_qp.sq_hw_cq;
 	vcq = vqp->sq_vcq;
+#ifdef POLL_PI_DBG
+        SPDK_NOTICELOG("vrdam gen sq cqe start: vcq pi %d, pre_pi %d, ci %d\n",
+                                        vcq->pi, vcq->pre_pi, vcq->pici->ci);
+#endif
 	for (i = 0; i < POLL_CQ_NUM; i++) {
 		cqe = vrdma_poll_mqp_scq(mcq, SNAP_VRDMA_BACKEND_CQE_SIZE);	
 		if (cqe == NULL) {
