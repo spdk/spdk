@@ -1,0 +1,35 @@
+From ce0c0d1239e09fd86f3d1942726e7ac1f50eb862 Mon Sep 17 00:00:00 2001
+From: Wei Zhang <weizhang@nvidia.com>
+Date: Tue, 10 Jan 2023 18:13:06 -0600
+Subject: [PATCH 08/10] flexio-sdk: Remove the dependancy on dpacc
+
+dpacc is for generating pup (pack/unpack) functions, which is
+used by apps sample code to simplify programming.
+However, controller doesn't use dpacc because it needs to
+dynamically generate pup functions per needs.
+The issue with dpacc is that it gets updated frequently which
+impacts the build of controller, thus this patch removes the
+build of apps sample code so that controller not replying on
+dpacc anymore.
+
+Signed-off-by: Wei Zhang <weizhang@nvidia.com>
+---
+ build.sh | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/build.sh b/build.sh
+index 5a98efd..3ba4cbe 100755
+--- a/build.sh
++++ b/build.sh
+@@ -175,8 +175,6 @@ for i in $CONFIGS; do
+ 	meson $i $MESONARGS $MESONEXTARGS
+ 	meson $i --reconfigure -Dunit-tests=false -Dapplications=false
+ 	ninja -C $i $JOBS $VERBOSE
+-	meson $i --reconfigure -Dunit-tests=false -Dapplications=true
+-	ninja -C $i $JOBS $VERBOSE
+ done
+ 
+ if [ $TESTSOPT = 'true' ]; then
+-- 
+2.24.1
+

@@ -1,0 +1,65 @@
+From e28753c5c2e6b5ff5b6a6249aa00cf8e55c9605c Mon Sep 17 00:00:00 2001
+From: Sunil Rani <sunrani@nvidia.com>
+Date: Tue, 20 Dec 2022 09:42:23 +0200
+Subject: [PATCH 07/10] flexio: Add mutex protection for each process call
+
+Temporary workaround to add mutex protection for each
+process call.
+
+Signed-off-by: Sunil Rani <sunrani@nvidia.com>
+---
+ libflexio/src/flexio.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/libflexio/src/flexio.c b/libflexio/src/flexio.c
+index 5c46bdc..bed4267 100644
+--- a/libflexio/src/flexio.c
++++ b/libflexio/src/flexio.c
+@@ -504,6 +504,8 @@ err_out:
+ 		return -FLEXIO_STATUS_FAILED;
+ }
+ 
++int init=0;
++pthread_mutex_t tlock;
+ flexio_status flexio_process_call(struct flexio_process *process, flexio_func_t *host_func,
+ 				  uint64_t *func_ret, ... /* args for the user function */)
+ {
+@@ -513,18 +515,27 @@ flexio_status flexio_process_call(struct flexio_process *process, flexio_func_t
+ 	va_list ap;
+ 	int err;
+ 
++	if(!init) {
++		pthread_mutex_init(&tlock, NULL);
++		init=1;
++	}
++
++	pthread_mutex_lock(&tlock);
+ 	if (!process) {
+ 		flexio_err("Illegal process argument: NULL\n");
++		pthread_mutex_unlock(&tlock);
+ 		return -FLEXIO_STATUS_FAILED;
+ 	}
+ 
+ 	if (get_dev_func_data(process->app, host_func, &dev_func_data)) {
+ 		flexio_err("Failed to retrieve device func by host stub func\n");
++		pthread_mutex_unlock(&tlock);
+ 		return -FLEXIO_STATUS_FAILED;
+ 	}
+ 
+ 	if (!dev_func_data->pup) {
+ 		flexio_err("Device func was registered without pack/unpack info\n");
++		pthread_mutex_unlock(&tlock);
+ 		return -FLEXIO_STATUS_FAILED;
+ 	}
+ 
+@@ -542,6 +553,7 @@ flexio_status flexio_process_call(struct flexio_process *process, flexio_func_t
+ 			   dev_func_params_size, func_ret);
+ 
+ 	free(dev_func_params);
++	pthread_mutex_unlock(&tlock);
+ 
+ 	/* coverity[mixed_enum_type] */
+ 	return err;
+-- 
+2.24.1
+

@@ -1,0 +1,34 @@
+From b9cb439acad78defa22cf89fcfc390d0971171a1 Mon Sep 17 00:00:00 2001
+From: naliu <naliu@nvidia.com>
+Date: Sun, 29 Jan 2023 11:37:51 +0200
+Subject: [PATCH] solve hart confliction issue
+
+Signed-off-by: naliu <naliu@nvidia.com>
+---
+ libflexio/src/flexio.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/libflexio/src/flexio.c b/libflexio/src/flexio.c
+index 5c46bdc..08dac76 100644
+--- a/libflexio/src/flexio.c
++++ b/libflexio/src/flexio.c
+@@ -319,6 +319,7 @@ static int process_call(struct flexio_process *process, flexio_uintptr_t dev_fun
+ 	struct flexio_thread *thread;
+ 	size_t data_to_dev_size;
+ 	struct flexio_cq *cq;
++	static int hart_num;
+ 	struct ibv_mr *mr;
+ 	int err, index;
+ 
+@@ -356,6 +357,8 @@ static int process_call(struct flexio_process *process, flexio_uintptr_t dev_fun
+ 	prm_attr.outbox_id = 0;
+ 	thread_attr.dev_func_addr = func_symbol_val;
+ 	thread_attr.affinity.type = FLEXIO_AFFINITY_NONE;
++	thread_attr.affinity.id = hart_num % 8;
++	hart_num++;
+ 	err = create_thread(process, &prm_attr, &thread_attr, &thread);
+ 	if (err) {
+ 		flexio_err("Failed to create thread");
+-- 
+2.34.1
+

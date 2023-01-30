@@ -1,0 +1,115 @@
+From cd9eb024c718865d9a169ba909047a02b8303fdd Mon Sep 17 00:00:00 2001
+From: jund <jund@nvidia.com>
+Date: Fri, 6 Jan 2023 06:34:37 +0200
+Subject: [PATCH 06/10] flexio: add spin lock to protect memory allocator
+
+Signed-off-by: jund <jund@nvidia.com>
+---
+ libflexio/src/flexio_heap.c | 22 +++++++++++++++++++++-
+ libflexio/src/flexio_priv.h |  2 ++
+ 2 files changed, 23 insertions(+), 1 deletion(-)
+
+diff --git a/libflexio/src/flexio_heap.c b/libflexio/src/flexio_heap.c
+index 7b3df64..7932dff 100644
+--- a/libflexio/src/flexio_heap.c
++++ b/libflexio/src/flexio_heap.c
+@@ -33,6 +33,7 @@
+ #include <unistd.h>
+ #include <infiniband/mlx5dv.h>
+ #include <libflexio/flexio.h>
++#include <libflexio-dev/flexio_dev.h>
+ #include "flexio_prm.h"
+ #include "flexio_log.h"
+ #include "flexio_math.h"
+@@ -43,6 +44,9 @@
+ 
+ #define DEVICE_HEAP_MEMORY_ALIGNMENT 64
+ 
++int m_init=0;
++static struct spinlock_s mlock = {0};
++
+ static struct heap_block *heap_block_create(struct flexio_process *process, size_t size)
+ {
+ 	struct heap_ctx *heap = &process->heap;
+@@ -217,10 +221,14 @@ flexio_uintptr_t heap_malloc(struct flexio_process *process, size_t size)
+ 	struct heap_mem *mem;
+ 	flexio_uintptr_t ptr;
+ 
++	spin_lock(&mlock);
++
+ 	size = (size + DEVICE_HEAP_MEMORY_ALIGNMENT - 1) & ~(DEVICE_HEAP_MEMORY_ALIGNMENT - 1);
+ 	ptr = heap_malloc_from_pool(process, size);
+-	if(ptr)
++	if(ptr) {
++		spin_unlock(&mlock);
+ 		return ptr;
++	}
+ 
+ 	/* Not found, allocate new chunk from FW */
+ 	request_blocks = flexio_align(size, DEVICE_HEAP_MIN_ALLOC_UNIT) /
+@@ -247,9 +255,12 @@ flexio_uintptr_t heap_malloc(struct flexio_process *process, size_t size)
+ 		flexio_err("no dev heap memory");
+ 		goto err_out;
+ 	}
++
++	spin_unlock(&mlock);
+ 	return ptr;
+ 
+ err_out:
++	spin_unlock(&mlock);
+ 	return 0;
+ }
+ 
+@@ -258,12 +269,15 @@ int heap_free_by_addr(struct flexio_process *process, flexio_uintptr_t daddr)
+ 	struct heap_ctx *heap = &process->heap;
+ 	struct heap_mem *mem;
+ 
++	spin_lock(&mlock);
++
+ 	list_for_each(&heap->alloc_mem, mem, node) {
+ 		if (mem->daddr == daddr) {
+ 			heap->total_allocated_mem -= mem->size;
+ 			heap->num_allocated_buffers--;
+ 			list_del(&mem->node);
+ 			heap_add_merge_sorted(&heap->free_mem, mem);
++			spin_unlock(&mlock);
+ 			return 0;
+ 		}
+ 
+@@ -271,6 +285,7 @@ int heap_free_by_addr(struct flexio_process *process, flexio_uintptr_t daddr)
+ 
+ 	flexio_err("Failed to free memory for DUMEM address %#lx - address is not allocated",
+ 		   daddr);
++	spin_unlock(&mlock);
+ 	return -1;
+ }
+ 
+@@ -313,6 +328,11 @@ void heap_init(struct flexio_process *process)
+ {
+ 	struct heap_ctx *heap = &process->heap;
+ 
++	if(!m_init) {
++		spin_init(&mlock);
++		m_init=1;
++	}
++
+ 	list_head_init(&heap->blocks_pool);
+ 	list_head_init(&heap->free_mem);
+ 	list_head_init(&heap->alloc_mem);
+diff --git a/libflexio/src/flexio_priv.h b/libflexio/src/flexio_priv.h
+index 367144e..8337e72 100644
+--- a/libflexio/src/flexio_priv.h
++++ b/libflexio/src/flexio_priv.h
+@@ -37,7 +37,9 @@
+ #include "flexio_prm.h"
+ #include "uthash/uthash.h"
+ 
++#ifndef __unused
+ #define __unused __attribute__((unused))
++#endif
+ 
+ #define LOG_NUM_HOST_SQ_DEPTH 1
+ #define LOG_SQ_STRIDE_BSIZE 6
+-- 
+2.24.1
+
