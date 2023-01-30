@@ -134,6 +134,9 @@ _crypto_operation_complete(void *ref, int status)
 	}
 
 	if (rc) {
+		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+			spdk_bdev_io_put_aux_buf(bdev_io, crypto_io->aux_buf_raw);
+		}
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 
