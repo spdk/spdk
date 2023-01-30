@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES.
+ *   Copyright (c) 2022, 2023 NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
  */
 
@@ -11,10 +11,6 @@
 #include "spdk/thread.h"
 #include "spdk/bdev_module.h"
 #include "spdk/likely.h"
-
-/* Limit the max IO size by some reasonable value. Since in write operation we use aux buffer,
- * let's set the limit to the bdev bounce aux buffer size */
-#define CRYPTO_MAX_IO SPDK_BDEV_LARGE_BUF_MAX_SIZE
 
 struct bdev_names {
 	struct vbdev_crypto_opts	*opts;
@@ -796,7 +792,12 @@ vbdev_crypto_claim(const char *bdev_name)
 	struct bdev_names *name;
 	struct vbdev_crypto *vbdev;
 	struct spdk_bdev *bdev;
+	struct spdk_iobuf_opts iobuf_opts;
 	int rc = 0;
+
+	/* Limit the max IO size by some reasonable value. Since in write operation we use aux buffer,
+	 * let's set the limit to the large_bufsize value */
+	spdk_iobuf_get_opts(&iobuf_opts);
 
 	/* Check our list of names from config versus this bdev and if
 	 * there's a match, create the crypto_bdev & bdev accordingly.
@@ -836,9 +837,9 @@ vbdev_crypto_claim(const char *bdev_name)
 		vbdev->crypto_bdev.write_cache = bdev->write_cache;
 		if (bdev->optimal_io_boundary > 0) {
 			vbdev->crypto_bdev.optimal_io_boundary =
-				spdk_min((CRYPTO_MAX_IO / bdev->blocklen), bdev->optimal_io_boundary);
+				spdk_min((iobuf_opts.large_bufsize / bdev->blocklen), bdev->optimal_io_boundary);
 		} else {
-			vbdev->crypto_bdev.optimal_io_boundary = (CRYPTO_MAX_IO / bdev->blocklen);
+			vbdev->crypto_bdev.optimal_io_boundary = (iobuf_opts.large_bufsize / bdev->blocklen);
 		}
 		vbdev->crypto_bdev.split_on_optimal_io_boundary = true;
 		if (bdev->required_alignment > 0) {
