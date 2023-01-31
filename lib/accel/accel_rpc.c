@@ -230,7 +230,7 @@ struct rpc_accel_crypto_keys_get_ctx {
 };
 
 static const struct spdk_json_object_decoder rpc_accel_crypto_keys_get_decoders[] = {
-	{"key_name", offsetof(struct rpc_accel_crypto_keys_get_ctx, key_name), spdk_json_decode_string},
+	{"key_name", offsetof(struct rpc_accel_crypto_keys_get_ctx, key_name), spdk_json_decode_string, true},
 };
 
 static void
@@ -274,7 +274,7 @@ rpc_accel_crypto_keys_get(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("accel_crypto_keys_get", rpc_accel_crypto_keys_get, SPDK_RPC_RUNTIME)
 
 static const struct spdk_json_object_decoder rpc_accel_crypto_key_destroy_decoders[] = {
-	{"key_name", offsetof(struct rpc_accel_crypto_keys_get_ctx, key_name), spdk_json_decode_string, true},
+	{"key_name", offsetof(struct rpc_accel_crypto_keys_get_ctx, key_name), spdk_json_decode_string},
 };
 
 static void
@@ -285,9 +285,9 @@ rpc_accel_crypto_key_destroy(struct spdk_jsonrpc_request *request,
 	struct spdk_accel_crypto_key *key = NULL;
 	int rc;
 
-	if (params && spdk_json_decode_object(params, rpc_accel_crypto_key_destroy_decoders,
-					      SPDK_COUNTOF(rpc_accel_crypto_key_destroy_decoders),
-					      &req)) {
+	if (spdk_json_decode_object(params, rpc_accel_crypto_key_destroy_decoders,
+				    SPDK_COUNTOF(rpc_accel_crypto_key_destroy_decoders),
+				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "spdk_json_decode_object failed");
 		free(req.key_name);
