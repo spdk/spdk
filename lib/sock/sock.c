@@ -229,6 +229,12 @@ spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport
 	return sock->net_impl->getaddr(sock, saddr, slen, sport, caddr, clen, cport);
 }
 
+const char *
+spdk_sock_get_impl_name(struct spdk_sock *sock)
+{
+	return sock->net_impl->name;
+}
+
 void
 spdk_sock_get_default_opts(struct spdk_sock_opts *opts)
 {

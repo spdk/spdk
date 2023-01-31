@@ -252,6 +252,15 @@ int spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, uint16_t *s
 		      char *caddr, int clen, uint16_t *cport);
 
 /**
+ * Get socket implementation name.
+ *
+ * \param sock Pointer to SPDK socket.
+ *
+ * \return Implementation name of given socket.
+ */
+const char *spdk_sock_get_impl_name(struct spdk_sock *sock);
+
+/**
  * Create a socket using the specific sock implementation, connect the socket
  * to the specified address and port (of the server), and then return the socket.
  * This function is used by client.

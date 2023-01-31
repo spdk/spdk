@@ -70,6 +70,8 @@ TLS PSK identity is now generated from subsystem NQN and host NQN.
 
 Added a callback `get_key()` to `spdk_sock_impl_opts` structure.
 
+New function `spdk_sock_get_impl_name()` was added to retrieve current socket implementation name.
+
 ### nvme
 
 New API `spdk_nvme_ns_get_format_index` was added to calculate the exact format index, that
