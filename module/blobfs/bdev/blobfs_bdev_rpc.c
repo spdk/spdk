@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2019 Intel Corporation.
+ *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *   All rights reserved.
  */
 
@@ -54,7 +55,11 @@ rpc_blobfs_set_cache_size(struct spdk_jsonrpc_request *request,
 
 	rc = spdk_fs_set_cache_size(req.size_in_mb);
 
-	spdk_jsonrpc_send_bool_response(request, rc == 0);
+	if (rc == 0) {
+		spdk_jsonrpc_send_bool_response(request, true);
+	} else {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+	}
 }
 
 SPDK_RPC_REGISTER("blobfs_set_cache_size", rpc_blobfs_set_cache_size,
@@ -89,7 +94,7 @@ _rpc_blobfs_detect_done(void *cb_arg, int fserrno)
 	} else if (fserrno != 0) {
 		spdk_jsonrpc_send_error_response(req->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 spdk_strerror(-fserrno));
-
+		free_rpc_blobfs_detect(req);
 		return;
 	}
 
