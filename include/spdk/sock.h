@@ -173,6 +173,16 @@ struct spdk_sock_impl_opts {
 	 * Context to be passed to get_key() callback.
 	 */
 	void *get_key_ctx;
+
+	/**
+	 * Cipher suite. Used by ssl socket module.
+	 * For connecting side, it must contain a single cipher:
+	 * example: "TLS_AES_256_GCM_SHA384"
+	 *
+	 * For listening side, it may be a colon separated list of ciphers:
+	 * example: "TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256"
+	 */
+	const char *tls_cipher_suites;
 };
 
 /**

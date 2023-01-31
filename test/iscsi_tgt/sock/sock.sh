@@ -141,13 +141,6 @@ if ! echo "$response" | grep -q "$message"; then
 	exit 1
 fi
 
-# send message using hello_sock client using TLS 1.2
-message="**MESSAGE:This is a test message from the hello_sock client with ssl using TLS 1.2**"
-response=$(echo $message | $HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT $PSK -T 12 -m 0x2)
-if ! echo "$response" | grep -q "$message"; then
-	exit 1
-fi
-
 # send message using hello_sock client using incorrect TLS 7
 message="**MESSAGE:This is a test message from the hello_sock client with ssl using incorrect TLS 7**"
 echo $message | $HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT $PSK -T 7 -m 0x2 && exit 1
@@ -174,16 +167,6 @@ response=$( (
 	echo -ne $message
 	sleep 2
 ) | $OPENSSL_APP s_client -debug -state -tlsextdebug -tls1_3 -psk_identity psk.spdk.io -psk "1234567890ABCDEF" -connect $TARGET_IP:$ISCSI_PORT)
-if ! echo "$response" | grep -q "$message"; then
-	exit 1
-fi
-
-# send message using openssl client using TLS 1.2
-message="**MESSAGE:This is a test message from the openssl client using TLS 1.2**"
-response=$( (
-	echo -ne $message
-	sleep 2
-) | $OPENSSL_APP s_client -debug -state -tlsextdebug -tls1_2 -psk_identity psk.spdk.io -psk "1234567890ABCDEF" -connect $TARGET_IP:$ISCSI_PORT)
 if ! echo "$response" | grep -q "$message"; then
 	exit 1
 fi

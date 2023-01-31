@@ -1946,6 +1946,7 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 		impl_opts.psk_identity = tcp_ctrlr->psk_identity;
 		impl_opts.psk_key = tcp_ctrlr->psk;
 		impl_opts.psk_key_size = tcp_ctrlr->psk_size;
+		impl_opts.tls_cipher_suites = "TLS_AES_128_GCM_SHA256";
 	}
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);

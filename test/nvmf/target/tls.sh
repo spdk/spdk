@@ -36,14 +36,6 @@ if [[ "$version" != "13" ]]; then
 	exit 1
 fi
 
-# Check TLS version set to 12
-$rpc_py sock_impl_set_options -i ssl --tls-version 12
-version=$($rpc_py sock_impl_get_options -i ssl | jq -r .tls_version)
-if [[ "$version" != "12" ]]; then
-	echo "TLS version was not set correctly $version != 12"
-	exit 1
-fi
-
 # Check incorrect TLS version set to 7
 $rpc_py sock_impl_set_options -i ssl --tls-version 7
 version=$($rpc_py sock_impl_get_options -i ssl | jq -r .tls_version)
