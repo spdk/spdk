@@ -349,6 +349,18 @@ get_cpu_socket_reading() {
 
 		# Convert to Watts - use bc since $interval can be an actual float
 		reading=$(calc "(${socket_uj[-1]} - ${socket_uj[-2]}) / 1000000 / $interval")
+		if ((reading < 0)); then
+			# Somehow this may happen, probably when the counter wraps over. Consider
+			# this as a faulty reading and don't include it since it may impact overall
+			# avg.
+			printf '(%s) CPU %s %s reading: error(%s) (interval: %ss)\n' \
+				"$ts" \
+				"$socket_name" \
+				"$socket_idx" \
+				"$reading" \
+				"$interval" >&2
+			return 0
+		fi
 		eval "_socket${_socket_idx}_readings+=($reading)"
 		power_readings["$socket_name-$socket_idx"]="_socket${_socket_idx}_readings[@]"
 
