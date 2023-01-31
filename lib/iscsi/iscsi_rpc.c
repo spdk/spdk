@@ -587,7 +587,11 @@ rpc_iscsi_delete_target_node_done(void *cb_arg, int rc)
 	struct rpc_iscsi_delete_target_node_ctx *ctx = cb_arg;
 
 	free_rpc_iscsi_delete_target_node(&ctx->req);
-	spdk_jsonrpc_send_bool_response(ctx->request, rc == 0);
+	if (rc == 0) {
+		spdk_jsonrpc_send_bool_response(ctx->request, true);
+	} else {
+		spdk_jsonrpc_send_error_response(ctx->request, rc, spdk_strerror(-rc));
+	}
 	free(ctx);
 }
 
