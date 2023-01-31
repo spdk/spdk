@@ -417,42 +417,15 @@ error_return:
 	return NULL;
 }
 
-struct delete_xnvme_bdev_ctx {
-	struct bdev_xnvme *xnvme;
-	spdk_delete_xnvme_complete cb_fn;
-	void *cb_arg;
-};
-
-static void
-xnvme_bdev_unregister_cb(void *arg, int bdeverrno)
-{
-	struct delete_xnvme_bdev_ctx *ctx = arg;
-
-	ctx->cb_fn(ctx->cb_arg, bdeverrno);
-	free(ctx);
-}
-
 void
-delete_xnvme_bdev(struct spdk_bdev *bdev, spdk_delete_xnvme_complete cb_fn, void *cb_arg)
+delete_xnvme_bdev(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
-	struct delete_xnvme_bdev_ctx *ctx;
-	struct bdev_xnvme *xnvme = (struct bdev_xnvme *)bdev->ctxt;
+	int rc;
 
-	if (!bdev || bdev->module != &xnvme_if) {
-		cb_fn(cb_arg, -ENODEV);
-		return;
+	rc = spdk_bdev_unregister_by_name(name, &xnvme_if, cb_fn, cb_arg);
+	if (rc != 0) {
+		cb_fn(cb_arg, rc);
 	}
-
-	ctx = calloc(1, sizeof(*ctx));
-	if (ctx == NULL) {
-		cb_fn(cb_arg, -ENOMEM);
-		return;
-	}
-
-	ctx->xnvme = xnvme;
-	ctx->cb_fn = cb_fn;
-	ctx->cb_arg = cb_arg;
-	spdk_bdev_unregister(bdev, xnvme_bdev_unregister_cb, ctx);
 }
 
 static int

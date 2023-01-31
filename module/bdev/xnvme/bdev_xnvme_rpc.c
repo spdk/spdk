@@ -35,11 +35,6 @@ static const struct spdk_json_object_decoder rpc_create_xnvme_decoders[] = {
 	{"conserve_cpu", offsetof(struct rpc_create_xnvme, conserve_cpu), spdk_json_decode_bool, true},
 };
 
-static void
-dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *ctx)
-{
-}
-
 /* Decode the parameters for this RPC method and properly create the xnvme
  * device. Error status returned in the failed cases.
  */
@@ -108,9 +103,6 @@ rpc_bdev_xnvme_delete(struct spdk_jsonrpc_request *request,
 		      const struct spdk_json_val *params)
 {
 	struct rpc_delete_xnvme req = {NULL};
-	struct spdk_bdev_desc *desc;
-	struct spdk_bdev *bdev = NULL;
-	int rc;
 
 	if (spdk_json_decode_object(params, rpc_delete_xnvme_decoders,
 				    SPDK_COUNTOF(rpc_delete_xnvme_decoders),
@@ -120,21 +112,7 @@ rpc_bdev_xnvme_delete(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = spdk_bdev_open_ext(req.name, false, dummy_bdev_event_cb, NULL, &desc);
-	if (rc == 0) {
-		bdev = spdk_bdev_desc_get_bdev(desc);
-		spdk_bdev_close(desc);
-	} else {
-		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
-		goto cleanup;
-	}
-
-	if (bdev == NULL) {
-		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
-		goto cleanup;
-	}
-
-	delete_xnvme_bdev(bdev, _rpc_bdev_xnvme_delete_cb, request);
+	delete_xnvme_bdev(req.name, _rpc_bdev_xnvme_delete_cb, request);
 
 cleanup:
 	free_rpc_delete_xnvme(&req);
