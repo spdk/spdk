@@ -625,8 +625,7 @@ static void vrdma_indirect_mkey_attr_init(struct snap_device *dev,
 		  crossing_mkey->mkey, attr->log_entity_size, attr->klm_num);
 }
 
-static int vrdma_destroy_indirect_mkey(struct snap_device *dev,
-					struct spdk_vrdma_mr_log *lattr)
+static int vrdma_destroy_indirect_mkey(struct spdk_vrdma_mr_log *lattr)
 {
 	int ret = 0;
 	struct vrdma_indirect_mkey *cmkey;
@@ -637,8 +636,7 @@ static int vrdma_destroy_indirect_mkey(struct snap_device *dev,
 			vrdma_del_indirect_mkey_from_list(cmkey);
 		ret = snap_destroy_indirect_mkey(lattr->indirect_mkey);
 		if (ret)
-			SPDK_ERRLOG("\ndev(%s): Failed to destroy indirect mkey, err(%d)\n",
-				  dev->pci->pci_number, ret);
+			SPDK_ERRLOG("\nFailed to destroy indirect mkey, err(%d)\n", ret);
 		lattr->indirect_mkey = NULL;
 		free(lattr->klm_array);
 		lattr->klm_array = NULL;
@@ -738,7 +736,7 @@ void vrdma_destroy_remote_mkey(struct vrdma_ctrl *ctrl,
 		SPDK_ERRLOG("\ndev(%s): remote mkey is not created\n", ctrl->name);
 		return;
 	}
-	vrdma_destroy_indirect_mkey(ctrl->sctrl->sdev, lattr);
+	vrdma_destroy_indirect_mkey(lattr);
 }
 
 static void vrdma_reg_mr_create_attr(struct vrdma_create_mr_req *mr_req,
