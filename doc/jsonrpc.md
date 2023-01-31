@@ -3554,7 +3554,7 @@ Resize @ref bdev_config_null.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
-new_size                | Required | number      | Bdev new capacity in MB
+new_size                | Required | number      | Bdev new capacity in MiB
 
 #### Example
 
@@ -11551,7 +11551,7 @@ Resize @ref bdev_config_daos.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
-new_size                | Required | number      | Bdev new capacity in MB
+new_size                | Required | number      | Bdev new capacity in MiB
 
 #### Example
 
