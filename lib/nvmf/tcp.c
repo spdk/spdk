@@ -3314,10 +3314,6 @@ _nvmf_tcp_qpair_abort_request(void *ctx)
 		nvmf_tcp_req_process(ttransport, tcp_req_to_abort);
 		break;
 
-	case TCP_REQUEST_STATE_ZCOPY_START_COMPLETED:
-		nvmf_tcp_req_set_abort_status(req, tcp_req_to_abort);
-		break;
-
 	case TCP_REQUEST_STATE_AWAITING_R2T_ACK:
 	case TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER:
 		if (spdk_get_ticks() < req->timeout_tsc) {
