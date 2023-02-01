@@ -15,16 +15,15 @@
 flexio_dev_rpc_handler_t vrdma_dpa_msix_send_rpc_handler;
 
 __FLEXIO_ENTRY_POINT_START
-uint64_t vrdma_dpa_msix_send_rpc_handler(uint64_t arg1, uint64_t arg2,
-					   uint64_t __unused arg3)
+uint64_t vrdma_dpa_msix_send_rpc_handler(uint64_t arg1)
 {
 	struct flexio_dev_thread_ctx *dtctx;
-	uint32_t outbox_id = arg2;
-	uint32_t cqn = arg1;
+	struct vrdma_dpa_msix_send *host_data;
 
+	host_data = (struct vrdma_dpa_msix_send *)arg1;
 	flexio_dev_get_thread_ctx(&dtctx);
-	flexio_dev_outbox_config(dtctx, outbox_id);
-	flexio_dev_msix_send(dtctx, cqn);
+	flexio_dev_outbox_config(dtctx, host_data->outbox_id);
+	flexio_dev_msix_send(dtctx, host_data->cqn);
 	return 0;
 }
 

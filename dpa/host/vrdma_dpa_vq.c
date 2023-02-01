@@ -13,6 +13,7 @@
 #include <math.h>
 #include <libflexio/flexio.h>
 #include "snap-rdma/vrdma/snap_vrdma_ctrl.h"
+// #include "snap-rdma/src/snap_vrdma.h"
 // #include "snap-rdma/src/mlx5_ifc.h"
 #include "lib/vrdma/vrdma_providers.h"
 #include <infiniband/verbs.h>
@@ -40,6 +41,44 @@ static int vrdma_dpa_get_hart_to_use(struct vrdma_dpa_ctx *dpa_ctx)
 	return hart_num;
 }
 
+int vrdma_dpa_vq_pup_func_register(struct vrdma_dpa_ctx *dpa_ctx)
+{
+	flexio_func_t *host_stub_func_qp_rpc;
+	int err;
+
+	host_stub_func_qp_rpc = calloc(1, sizeof(flexio_func_t));
+	if (!host_stub_func_qp_rpc) {
+		log_error("Failed to alloc RQ RPC stub func, err(%d)", errno);
+		return -ENOMEM;
+	}
+
+	err = flexio_func_pup_register(dpa_ctx->app,
+				       vrdma_vq_rpc_handler[VRDMA_DPA_VQ_QP],
+				       VRDMA_DPA_RPC_UNPACK_FUNC,
+				       host_stub_func_qp_rpc, sizeof(uint64_t),
+				       vrdma_dpa_rpc_pack_func);
+	if (err) {
+		log_error("Failed to register RQ RPC func, err(%d)", err);
+		goto err_qp_rpc;
+	}
+	dpa_ctx->vq_rpc_func[VRDMA_DPA_VQ_QP] = host_stub_func_qp_rpc;
+
+	return 0;
+
+err_qp_rpc:
+	free(host_stub_func_qp_rpc);
+	return err;
+}
+
+void vrdma_dpa_vq_pup_func_deregister(struct vrdma_dpa_ctx *dpa_ctx)
+{
+	free(dpa_ctx->vq_rpc_func[VRDMA_DPA_VQ_QP]);
+	dpa_ctx->vq_rpc_func[VRDMA_DPA_VQ_QP] = NULL;
+}
+
+
+
+
 /* we need state modify*/
 static int vrdma_dpa_vq_state_modify(struct vrdma_dpa_vq *dpa_vq,
 				enum vrdma_dpa_vq_state state)
@@ -65,8 +104,8 @@ static int vrdma_dpa_vq_state_modify(struct vrdma_dpa_vq *dpa_vq,
 
 	if (state == VRDMA_DPA_VQ_STATE_RDY) {
 		err = flexio_process_call(dpa_vq->dpa_ctx->flexio_process,
-					  vrdma_vq_rpc_handler[VRDMA_DPA_VQ_QP],
-					  dpa_vq->heap_memory, 0, 0, &rpc_ret);
+					  dpa_vq->dpa_ctx->vq_rpc_func[VRDMA_DPA_VQ_QP],
+					  &rpc_ret, dpa_vq->heap_memory);
 		if (err)
 			log_error("Failed to call rpc, err(%d), rpc_ret(%ld)",
 				  err, rpc_ret);
@@ -103,25 +142,30 @@ static int vrdma_dpa_vq_modify(struct vrdma_prov_vq *vq, uint64_t mask,
 
 static int vrdma_event_handler_create(struct vrdma_dpa_vq *dpa_vq,
 				      const char *handler,
+				      flexio_func_t *handler_func,
 				      struct flexio_event_handler **event_handler_ptr)
 {
 	struct flexio_event_handler_attr attr = {};
-	int hart_num;
 	int err;
 
-	attr.func_symbol = handler;
-	hart_num = vrdma_dpa_get_hart_to_use(dpa_vq->dpa_ctx);
-	flexio_hart_mask_bit_set(dpa_vq->dpa_ctx->flexio_process,
-				 hart_num, attr.hart_bitmask);
+	err = flexio_func_register(dpa_vq->dpa_ctx->app, handler, &handler_func);
+	if (err) {
+		log_error("Failed to register function, err(%d)", err);
+		return err;
+	}
+
+	attr.host_stub_func = handler_func;
+	attr.affinity.type = FLEXIO_AFFINITY_STRICT;
+	attr.affinity.id = vrdma_dpa_get_hart_to_use(dpa_vq->dpa_ctx);
+
 	err = flexio_event_handler_create(dpa_vq->dpa_ctx->flexio_process, &attr,
-					  dpa_vq->dpa_ctx->window,
 					  dpa_vq->dpa_ctx->db_outbox,
 					  event_handler_ptr);
 	if (err) {
 		log_error("Failed to create event_handler %s, err(%d)", handler, err);
 		return err;
 	}
-	log_notice("%s use %d hart", handler, hart_num);
+	log_notice("%s use %d hart", handler, attr.affinity.id);
 	return 0;
 }
 
@@ -142,13 +186,17 @@ static int vrdma_dpa_vq_init(struct vrdma_dpa_vq *dpa_vq,
 		return err;
 	}
 
-	err = vrdma_event_handler_create(dpa_vq, db_handler, &dpa_vq->db_handler);
+	err = vrdma_event_handler_create(dpa_vq, db_handler, 
+					dpa_vq->db_handler_func,
+					&dpa_vq->db_handler);
 
 	if (err) {
 		goto err_db_handler_create;
 	}
 
-	err = vrdma_event_handler_create(dpa_vq, rq_dma_q_handler, &dpa_vq->rq_dma_q_handler);
+	err = vrdma_event_handler_create(dpa_vq, rq_dma_q_handler,
+					dpa_vq->rq_dma_q_handler_func,
+					&dpa_vq->rq_dma_q_handler);
 
 	if (err) {
 		goto err_rq_dma_q_handler_create;
@@ -300,7 +348,7 @@ static int vrdma_dpa_dma_q_create(struct vrdma_dpa_vq *dpa_vq,
 
 	qp_attr.qp_wq_buff_qmem.memtype = FLEXIO_MEMTYPE_DPA;
 	qp_attr.qp_wq_buff_qmem.daddr = dpa_vq->dma_qp.buff_daddr;
-	qp_attr.qp_dbr_daddr = dpa_vq->dma_qp.dbr_daddr;
+	qp_attr.qp_wq_dbr_qmem.daddr = dpa_vq->dma_qp.dbr_daddr;
 	err = flexio_qp_create(dpa_ctx->flexio_process, attr->sf_ib_ctx,
 			       &qp_attr, &dpa_vq->dma_qp.qp);
 	if (err) {
@@ -536,7 +584,7 @@ vrdma_dpa_vq_event_handler_init(const struct vrdma_dpa_vq *dpa_vq,
 	/* Update other pointers */
 	eh_data->dma_qp.state = VRDMA_DPA_VQ_STATE_INIT;
 	eh_data->emu_db_to_cq_id =
-		flexio_emu_db_to_cq_ctx_get_id(dpa_vq->guest_db_to_cq_ctx);
+		dpa_vq->guest_db_to_cq_ctx.emu_db_to_cq_id;
 	eh_data->emu_outbox = flexio_outbox_get_id(dpa_ctx->db_outbox);
 	eh_data->sf_outbox = flexio_outbox_get_id(emu_dev_ctx->db_sf_outbox);
 
@@ -595,10 +643,14 @@ _vrdma_dpa_vq_create(struct vrdma_ctrl *ctrl,
 		log_error("Failed to create db_cq, err(%d)", err);
 		goto err_db_cq_create;
 	}
-	err = flexio_emu_db_to_cq_map(emu_ibv_ctx, attr->emu_vhca_id,
-				      attr->qdb_idx, dpa_vq->db_cq.cq,
-				      &dpa_vq->guest_db_to_cq_ctx);
-	if (err) {
+
+	dpa_vq->guest_db_to_cq_ctx.devx_emu_db_to_cq_ctx =
+		mlx_devx_emu_db_to_cq_map(emu_ibv_ctx, attr->emu_vhca_id,
+					attr->qdb_idx,
+					flexio_cq_get_cq_num(dpa_vq->db_cq.cq),
+					&dpa_vq->guest_db_to_cq_ctx.emu_db_to_cq_id);
+	if (!dpa_vq->guest_db_to_cq_ctx.devx_emu_db_to_cq_ctx) {
+		err = -EINVAL;
 		log_error("Failed to map cq_to_db, err(%d)", err);
 		goto err_db_cq_map;
 	}
@@ -608,6 +660,7 @@ _vrdma_dpa_vq_create(struct vrdma_ctrl *ctrl,
 	msix_attr.sf_ib_ctx   = attr->sf_ib_ctx;
 	msix_attr.sf_vhca_id  = attr->sf_vhca_id;
 	msix_attr.msix_vector = attr->sq_msix_vector;
+	msix_attr.cq_size     = attr->tx_qsize;
 	err = vrdma_dpa_msix_create(dpa_vq, dpa_vq->dpa_ctx->flexio_process,
 				      &msix_attr, dpa_vq->emu_dev_ctx, attr->num_msix);
 	if (err) {
@@ -675,13 +728,13 @@ err_dma_q_create:
 	vrdma_dpa_dma_q_cq_destroy(dpa_vq, dpa_vq->dpa_ctx);
 err_dma_q_cq_create:
 	if (attr->sq_msix_vector != attr->rq_msix_vector)
-		vrdma_dpa_msix_destroy(dpa_vq->msix, attr->rq_msix_vector,
+		vrdma_dpa_msix_destroy(attr->rq_msix_vector,
 				 dpa_vq->emu_dev_ctx);
 err_rq_msix_create:
-	vrdma_dpa_msix_destroy(dpa_vq->msix, attr->sq_msix_vector,
+	vrdma_dpa_msix_destroy(attr->sq_msix_vector,
 				 dpa_vq->emu_dev_ctx);
 err_sq_msix_create:
-	flexio_emu_db_to_cq_unmap(dpa_vq->guest_db_to_cq_ctx);
+	mlx_devx_emu_db_to_cq_unmap(dpa_vq->guest_db_to_cq_ctx.devx_emu_db_to_cq_ctx);
 err_db_cq_map:
 	vrdma_dpa_db_cq_destroy(dpa_vq);
 err_db_cq_create:
@@ -695,9 +748,9 @@ static void _vrdma_dpa_vq_destroy(struct vrdma_dpa_vq *dpa_vq)
 {
 	vrdma_dpa_dma_q_destroy(dpa_vq);
 	vrdma_dpa_dma_q_cq_destroy(dpa_vq, dpa_vq->dpa_ctx);
-	vrdma_dpa_msix_destroy(dpa_vq->msix, dpa_vq->msix_vector,
+	vrdma_dpa_msix_destroy(dpa_vq->msix_vector,
 				 dpa_vq->emu_dev_ctx);
-	flexio_emu_db_to_cq_unmap(dpa_vq->guest_db_to_cq_ctx);
+	mlx_devx_emu_db_to_cq_unmap(dpa_vq->guest_db_to_cq_ctx.devx_emu_db_to_cq_ctx);
 	vrdma_dpa_db_cq_destroy(dpa_vq);
 	vrdma_dpa_vq_uninit(dpa_vq);
 	free(dpa_vq);
@@ -740,7 +793,7 @@ static void vrdma_dpa_vq_dump_attribute(struct snap_dma_q_create_attr *rdma_qp_c
 			"sw_qp : %#x sqcq %#x rqcq %#x,\ndpa qp: %#x sqcq %#x rqcq %#x\n",
 			attr->emu_vhca_id, attr->sf_vhca_id,
 			attr->vq_idx, attr->qdb_idx,
-			flexio_emu_db_to_cq_ctx_get_id(virtq->dpa_vq->guest_db_to_cq_ctx),
+			virtq->dpa_vq->guest_db_to_cq_ctx.emu_db_to_cq_id,
 			virtq->dpa_vq->db_cq.cq_num,
 		 	virtq->dma_q->sw_qp.dv_qp.hw_qp.qp_num,
 		 	virtq->dma_q->sw_qp.dv_tx_cq.cq_num,
@@ -863,22 +916,125 @@ err_vq_create:
 	return NULL;
 }
 
+
+static void generate_access_key(unsigned int seed, uint32_t *buf)
+{
+	int i;
+
+	srand(seed);
+	for (i = 0; i < VRDMA_ALIAS_ACCESS_KEY_NUM_DWORD; i++)
+		buf[i] = (rand() % (UINT32_MAX - 1)) + 1;
+}
+
+static struct mlx5dv_devx_obj *
+vrdma_create_alias_eq(struct ibv_context *emu_mgr_ibv_ctx,
+			struct ibv_context *sf_ibv_ctx,
+			uint16_t emu_mgr_vhca_id, uint32_t eqn,
+			uint32_t *alias_eqn)
+{
+	uint32_t access_key[VRDMA_ALIAS_ACCESS_KEY_NUM_DWORD] = {};
+	struct vrdma_allow_other_vhca_access_attr attr;
+	struct mlx5dv_devx_obj *alias_obj = NULL;
+	struct vrdma_alias_attr alias_attr;
+	int i, err;
+
+	attr.type = MLX5_OBJ_TYPE_EMULATED_DEV_EQ;
+	attr.obj_id = eqn;
+	generate_access_key(eqn, access_key);
+	for (i = 0; i < VRDMA_ALIAS_ACCESS_KEY_NUM_DWORD; i++)
+		attr.access_key_be[i] = htobe32(access_key[i]);
+
+	err = mlx_devx_allow_other_vhca_access(emu_mgr_ibv_ctx, &attr);
+	if (err) {
+		log_error("Failed to allow access to object, err(%d)", err);
+		return 0;
+	}
+
+	alias_attr.orig_vhca_id = emu_mgr_vhca_id;
+	alias_attr.type = MLX5_OBJ_TYPE_EMULATED_DEV_EQ;
+	alias_attr.orig_obj_id = eqn;
+	for (i = 0; i < VRDMA_ALIAS_ACCESS_KEY_NUM_DWORD; i++)
+		alias_attr.access_key_be[i] = htobe32(access_key[i]);
+
+	alias_obj = mlx_devx_create_alias_obj(sf_ibv_ctx, &alias_attr, alias_eqn);
+	return alias_obj;
+}
+
+static int
+vrdma_dpa_alias_cq_create(struct flexio_process *process,
+			    struct vrdma_msix_init_attr *attr,
+			    struct vrdma_dpa_emu_dev_ctx *emu_dev_ctx,
+			    uint32_t alias_eqn)
+{
+	struct flexio_cq_attr cq_attr = {};
+	int err;
+
+	err = vrdma_dpa_mm_cq_alloc(process, log2(attr->cq_size),
+			  &emu_dev_ctx->msix[attr->msix_vector].alias_cq);
+	if (err) {
+		log_error("Failed to alloc cq memory, err(%d)", err);
+		return err;
+	}
+
+	cq_attr.element_type = FLEXIO_CQ_ELEMENT_TYPE_DPA_MSIX_EMULATED_CQ;
+	cq_attr.emulated_eqn = alias_eqn;
+	cq_attr.uar_id = emu_dev_ctx->sf_uar->page_id;
+	cq_attr.uar_base_addr = emu_dev_ctx->sf_uar->base_addr;
+	cq_attr.cq_dbr_daddr =
+		emu_dev_ctx->msix[attr->msix_vector].alias_cq.cq_dbr_daddr;
+	cq_attr.cq_ring_qmem.daddr  =
+		emu_dev_ctx->msix[attr->msix_vector].alias_cq.cq_ring_daddr;
+
+	err = flexio_cq_create(process, attr->sf_ib_ctx, &cq_attr,
+			&emu_dev_ctx->msix[attr->msix_vector].alias_cq.cq);
+	if (err) {
+		log_error("Failed to create alias_cq msix(%#x), err(%d)",
+				attr->msix_vector, err);
+		goto err_alias_cq_create;
+	}
+
+	emu_dev_ctx->msix[attr->msix_vector].cqn =
+		flexio_cq_get_cq_num(emu_dev_ctx->msix[attr->msix_vector].alias_cq.cq);
+	return 0;
+
+err_alias_cq_create:
+	vrdma_dpa_mm_cq_free(process,
+			&emu_dev_ctx->msix[attr->msix_vector].alias_cq);
+	return err;
+}
+
+static void
+vrdma_dpa_alias_cq_destroy(struct vrdma_dpa_emu_dev_ctx *emu_dev_ctx,
+			     uint16_t msix_vector)
+{
+	if (emu_dev_ctx->msix[msix_vector].cqn) {
+		flexio_cq_destroy(emu_dev_ctx->msix[msix_vector].alias_cq.cq);
+		vrdma_dpa_mm_cq_free(emu_dev_ctx->flexio_process,
+				&emu_dev_ctx->msix[msix_vector].alias_cq);
+	}
+}
+
 int vrdma_dpa_msix_create(struct vrdma_dpa_vq *dpa_vq,
 			    struct flexio_process *process,
 			    struct vrdma_msix_init_attr *attr,
 			    struct vrdma_dpa_emu_dev_ctx *emu_dev_ctx,
 			    int max_msix)
 {
-	struct flexio_msix **msix;
-	uint64_t eqn = 0;
+	uint32_t eqn = 0, alias_eqn = 0;
 	int err;
 
 	/* msix vector could be 0xFFFF for traffic vq when using
 	 * dpdk based applications/driver. Bypass map creation in
 	 * such case.
 	 */
-	if (attr->msix_vector == 0xFFFF)
+	if (attr->msix_vector == 0xFFFF) {
+		if (dpa_vq)
+			dpa_vq->msix_vector = 0xFFFF;
+		else
+			emu_dev_ctx->msix_config_vector = 0xFFFF;
+
 		return 0;
+	}
 
 	if (attr->msix_vector > max_msix) {
 		log_error("Msix vector (%d) is out of range, max(%d)",
@@ -895,59 +1051,63 @@ int vrdma_dpa_msix_create(struct vrdma_dpa_vq *dpa_vq,
 			  attr->msix_vector,
 			  emu_dev_ctx->msix[attr->msix_vector].eqn,
 			  emu_dev_ctx->msix[attr->msix_vector].cqn);
-
+		rte_atomic32_inc(&emu_dev_ctx->msix[attr->msix_vector].msix_refcount);
 		return 0;
 	}
-
+	/* alias_cq->alias_eq->eq->msix_vector. */
 	emu_dev_ctx->msix[attr->msix_vector].obj =
-		snap_vrdma_mlx_devx_create_eq(attr->emu_ib_ctx, attr->emu_vhca_id,
+		mlx_devx_create_eq(attr->emu_ib_ctx, attr->emu_vhca_id,
 				   attr->msix_vector, &eqn);
 	if (!emu_dev_ctx->msix[attr->msix_vector].obj) {
 		log_error("Failed to create devx eq, errno(%d)", errno);
 		return -errno;
 	}
 
-	msix = dpa_vq ? &dpa_vq->msix : &emu_dev_ctx->flexio_msix;
-
-	err = flexio_emulated_device_msix_create(process, attr->sf_ib_ctx, 0,
-						 emu_dev_ctx->sf_uar->page_id,
-						 attr->msix_vector,
-						 msix, eqn);
-	if (err) {
-		log_error("Failed to create device msix(%#x), err(%d)",
-			  attr->msix_vector, err);
-		goto err_dev_msix;
+	emu_dev_ctx->msix[attr->msix_vector].alias_eq_obj =
+		vrdma_create_alias_eq(attr->emu_ib_ctx, attr->sf_ib_ctx,
+					emu_dev_ctx->dpa_ctx->emu_mgr_vhca_id,
+					eqn, &alias_eqn);
+	if (!emu_dev_ctx->msix[attr->msix_vector].alias_eq_obj) {
+		log_error("Failed to create devx alias eq, errno(%d)", errno);
+		err = -errno;
+		goto err_alias_eq_create;
 	}
 
-	emu_dev_ctx->msix[attr->msix_vector].eqn =
-		flexio_emulated_device_msix_get_eqn(*msix);
-	emu_dev_ctx->msix[attr->msix_vector].cqn =
-		flexio_emulated_device_msix_get_cqn(*msix);
+	emu_dev_ctx->msix[attr->msix_vector].eqn = alias_eqn;
+	err = vrdma_dpa_alias_cq_create(process, attr, emu_dev_ctx, alias_eqn);
+	if (err) {
+		log_error("Failed to alloc cq memory, err(%d)", err);
+		goto err_alias_cq_create;
+	}
+	rte_atomic32_inc(&emu_dev_ctx->msix[attr->msix_vector].msix_refcount);
 
 	if (dpa_vq)
 		dpa_vq->msix_vector = attr->msix_vector;
 	else
 		emu_dev_ctx->msix_config_vector = attr->msix_vector;
 
-	log_notice("idx %d, %s, msix %#x, devx_eqn %#lx, alias_eqn %#x, alias_cqn %#x",
+	log_notice("idx %d, %s, msix %#x, devx_eqn %#x, alias_eqn %#x, alias_cqn %#x",
 		  dpa_vq ? dpa_vq->idx : -1,
 		  dpa_vq ? "qp" : "dev",
 		  attr->msix_vector, eqn,
-		  flexio_emulated_device_msix_get_eqn(*msix),
-		  flexio_emulated_device_msix_get_cqn(*msix));
+		  alias_eqn,
+		  emu_dev_ctx->msix[attr->msix_vector].cqn);
 
 	return 0;
 
-err_dev_msix:
-	snap_vrdma_mlx_devx_destroy_eq(emu_dev_ctx->msix[attr->msix_vector].obj);
+err_alias_cq_create:
+	mlx_devx_destroy_eq(dpa_vq->emu_dev_ctx->msix[dpa_vq->msix_vector].alias_eq_obj);
+err_alias_eq_create:
+	mlx_devx_destroy_eq(dpa_vq->emu_dev_ctx->msix[dpa_vq->msix_vector].obj);
 	return err;
 }
 
 
-void vrdma_dpa_msix_destroy(struct flexio_msix *msix, uint16_t msix_vector,
+void vrdma_dpa_msix_destroy(uint16_t msix_vector,
 			      struct vrdma_dpa_emu_dev_ctx *emu_dev_ctx)
 {
-	if (!msix)
+	if ((msix_vector == 0xFFFF) ||
+	    !rte_atomic32_dec_and_test(&emu_dev_ctx->msix[msix_vector].msix_refcount))
 		return;
 
 	log_notice("Destroy msix %#x, alias_eqn %#x, alias_cqn %#x",
@@ -955,15 +1115,16 @@ void vrdma_dpa_msix_destroy(struct flexio_msix *msix, uint16_t msix_vector,
 		  emu_dev_ctx->msix[msix_vector].eqn,
 		  emu_dev_ctx->msix[msix_vector].cqn);
 
-	flexio_emulated_device_msix_destroy(msix);
-	snap_vrdma_mlx_devx_destroy_eq(emu_dev_ctx->msix[msix_vector].obj);
+	vrdma_dpa_alias_cq_destroy(emu_dev_ctx, msix_vector);
+	mlx_devx_destroy_eq(emu_dev_ctx->msix[msix_vector].alias_eq_obj);
+	mlx_devx_destroy_eq(emu_dev_ctx->msix[msix_vector].obj);
 	memset(&emu_dev_ctx->msix[msix_vector], 0,
 	       sizeof(struct vrdma_dpa_msix));
 }
 
-uint32_t vrdma_dpa_emu_db_to_cq_ctx_get_id(struct spdk_vrdma_qp *vqp)
+static uint32_t vrdma_dpa_emu_db_to_cq_ctx_get_id(struct snap_vrdma_queue *virtq)
 {
-	return flexio_emu_db_to_cq_ctx_get_id(vqp->snap_queue->dpa_vq->guest_db_to_cq_ctx);
+	return virtq->dpa_vq->guest_db_to_cq_ctx.emu_db_to_cq_id;
 }
 
 struct vrdma_vq_ops vrdma_dpa_vq_ops = {

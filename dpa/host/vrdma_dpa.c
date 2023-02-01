@@ -11,17 +11,196 @@
  */
 
 #include <libflexio/flexio.h>
-#include <libflexio/flexio_elf.h>
+// #include <libflexio/flexio_elf.h>
 #include "snap-rdma/src/snap_vrdma.h"
 #include "vrdma_dpa.h"
 #include "vrdma_dpa_vq.h"
 #include "dpa/vrdma_dpa_common.h"
 #include "include/spdk/vrdma.h"
 #include "stdio.h"
+#include <elf.h>
 
 #define DEV_ELF_PATH "dpa/dpa_dev.elf"
 #define PRINF_BUF_SZ	(4 * 2048)
 extern struct vrdma_vq_ops vrdma_dpa_vq_ops;
+
+void vrdma_dpa_rpc_pack_func(void *arg_buf, va_list pa)
+{
+	uint64_t *param = (uint64_t *)arg_buf;
+	*param = (uint64_t)va_arg(pa, uint64_t);
+}
+
+static int
+vrdma_dpa_pup_func_register(struct vrdma_dpa_ctx *dpa_ctx)
+{
+	flexio_func_t *stub_func_msix_send;
+	int err;
+
+	stub_func_msix_send = calloc(1, sizeof(flexio_func_t));
+	if (!stub_func_msix_send) {
+		log_error("Failed to alloc MSIX send RPC stub func, err(%d)",
+			  errno);
+		return -ENOMEM;
+	}
+
+	err = flexio_func_pup_register(
+		dpa_ctx->app,
+		"vrdma_dpa_msix_send_rpc_handler",
+		VRDMA_DPA_RPC_UNPACK_FUNC, stub_func_msix_send,
+		sizeof(uint64_t), vrdma_dpa_rpc_pack_func);
+	if (err) {
+		log_error("Failed to register MSIX send RPC func, err(%d)", err);
+		goto err_msix_send_reg;
+	}
+	dpa_ctx->msix_send_rpc_func = stub_func_msix_send;
+
+	return 0;
+
+err_msix_send_reg:
+	free(stub_func_msix_send);
+	return err;
+}
+
+static void
+vrdma_dpa_pup_func_deregister(struct vrdma_dpa_ctx *dpa_ctx)
+{
+	free(dpa_ctx->msix_send_rpc_func);
+	dpa_ctx->msix_send_rpc_func = NULL;
+}
+
+static int validate_elf_header(void *elf_buf, size_t buf_size)
+{
+	Elf64_Ehdr *header = (Elf64_Ehdr *)elf_buf;
+
+	/* Verify buffer size is at least ELF header size */
+	if (buf_size < (long)sizeof(Elf64_Ehdr)) {
+		log_error("Buffer size %ld is smaller than header size %lu",
+			   buf_size, sizeof(Elf64_Ehdr));
+		return -EINVAL;
+	}
+
+	/* Verify ELF Identification */
+	if ((header->e_ident[EI_MAG0] != ELFMAG0) ||
+	    (header->e_ident[EI_MAG1] != ELFMAG1) ||
+	    (header->e_ident[EI_MAG2] != ELFMAG2) ||
+	    (header->e_ident[EI_MAG3] != ELFMAG3)) {
+		log_error("File does not start with magic '%#x'ELF",
+			  ELFMAG0);
+		return -EINVAL;
+	}
+
+	/* Verify ELF class and data type */
+	if (header->e_ident[EI_CLASS] != ELFCLASS64) {
+		log_error("Class is not ELF64");
+		return -EINVAL;
+	}
+	if (header->e_ident[EI_DATA] != ELFDATA2LSB) {
+		log_error("Data type is not LE");
+		return -EINVAL;
+	}
+
+	/* Verify section table is valid */
+	if (header->e_shoff == SHN_UNDEF) {
+		log_error("Header table offset is undefined");
+		return -EINVAL;
+	}
+	if (header->e_shentsize != sizeof(Elf64_Shdr)) {
+		log_error("Table entry size %u != sizeof(Elf64_Shdr)",
+			   header->e_shentsize);
+		return -EINVAL;
+	}
+
+	/* coverity[sign_extension] */
+	if (header->e_shoff + (header->e_shnum * header->e_shentsize) > buf_size) {
+		log_error("header table exceeds ELF size %lu",
+			  buf_size);
+		return -EINVAL;
+	}
+	if (header->e_shstrndx == SHN_UNDEF) {
+		log_error("Header string section index is undefined");
+		return -EINVAL;
+	}
+	if (header->e_shstrndx >= header->e_shnum) {
+		log_error("Header string section index %u exceeds e_shnum %u",
+			   header->e_shstrndx, header->e_shnum);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int
+get_elf_file(const char *file_name, void **elf_buf, size_t *buf_size)
+{
+	FILE *file = NULL;
+	long file_size;
+	int err;
+
+	*elf_buf = NULL;
+	*buf_size = 0;
+
+	file = fopen(file_name, "rb");
+	if (!file) {
+		log_error("Failed to open file %s", file_name);
+		err = -errno;
+		goto err_out;
+	}
+
+	/* Get file size */
+	if (fseek(file, 0, SEEK_END) == -1) {
+		log_error("Failed to fseek to SEEK_END file %s", file_name);
+		err = -errno;
+		goto err_out;
+	}
+	file_size = ftell(file);
+	if (file_size == -1) {
+		log_error("Failed to ftell file %s", file_name);
+		err = -errno;
+		goto err_out;
+	}
+	if (file_size < (long)sizeof(Elf64_Ehdr)) {
+		log_error("file size %ld < header size %lu",
+			   file_size, sizeof(Elf64_Ehdr));
+		err = -EINVAL;
+		goto err_out;
+	}
+	if (fseek(file, 0, SEEK_SET) == -1) {
+		log_error("Failed to fseek SEEK_SET file %s", file_name);
+		err = -errno;
+		goto err_out;
+	}
+
+	err = posix_memalign(elf_buf, 64, file_size);
+	if (err) {
+		log_error("posix_memalign failed, err(%d)", err);
+		goto err_out;
+	}
+	assert(*elf_buf);
+	memset(*elf_buf, 0, file_size);
+
+	*buf_size = fread(*elf_buf, 1, file_size, file);
+	if (*buf_size != (uint64_t)file_size) {
+		log_error("Read %lu bytes from file %s, but its size is %ld",
+			   *buf_size, file_name, file_size);
+		err = -errno;
+		goto err_out;
+	}
+
+	err = validate_elf_header(*elf_buf, *buf_size);
+	if (err)
+		goto err_out;
+
+	*buf_size = file_size;
+	fclose(file);
+
+	return 0;
+
+err_out:
+	if (file)
+		fclose(file);
+	free(*elf_buf);
+	return err;
+}
 
 static
 int extract_dev_elf(const char *dev_elf_fname, void **elf_buf, size_t *elf_size)
@@ -34,7 +213,8 @@ int extract_dev_elf(const char *dev_elf_fname, void **elf_buf, size_t *elf_size)
 	}
 
 	log_debug("Parsing device ELF file '%s'", dev_elf_fname);
-	err = flexio_get_elf_file(dev_elf_fname, elf_buf, elf_size);
+	// err = flexio_get_elf_file(dev_elf_fname, elf_buf, elf_size);
+	err = get_elf_file(dev_elf_fname, elf_buf, elf_size);
 	if (err)
 		return err;
 
@@ -47,6 +227,9 @@ int extract_dev_elf(const char *dev_elf_fname, void **elf_buf, size_t *elf_size)
 int vrdma_dpa_init(const struct vrdma_prov_init_attr *attr, void **out)
 {
 #define MR_BASE_AND_SIZE_ALIGN 64
+	char app_sig_sec_name[FLEXIO_MAX_NAME_LEN + 1] = {};
+	struct flexio_process_attr process_attr = {};
+	struct flexio_app_attr app_attr = {};
 	struct vrdma_dpa_ctx *dpa_ctx;
 	size_t elf_size;
 	int padding;
@@ -59,14 +242,44 @@ int vrdma_dpa_init(const struct vrdma_prov_init_attr *attr, void **out)
 	}
 	log_debug("===naliu vrdma_dpa_init begin\n");
 	dpa_ctx->core_count = 1;
+
+	dpa_ctx->emu_mgr_vhca_id = attr->emu_mgr_vhca_id;
 	err = extract_dev_elf(DEV_ELF_PATH, &dpa_ctx->elf_buf, &elf_size);
 	if (err) {
 		log_error("Failed to extract dev elf, err(%d)", err);
 		goto err_dev_elf;
 	}
+
+	app_attr.app_name = "vrdma_dpa";
+	app_attr.app_bsize = elf_size;
+	app_attr.app_ptr = dpa_ctx->elf_buf;
+	app_attr.app_sig_sec_name = app_sig_sec_name;
+
+	err = flexio_app_create(&app_attr, &dpa_ctx->app);
+	if (err) {
+		log_error("Failed to create app, err(%d)", err);
+		goto err_app_create;
+	}
+
+	err = vrdma_dpa_pup_func_register(dpa_ctx);
+	if (err) {
+		log_error("Failed to regiser pack/unpack func, err(%d)", err);
+		goto err_pup_reg;
+	}
+
+	err = vrdma_dpa_vq_pup_func_register(dpa_ctx);
+	if (err) {
+		log_error("Failed to register VQ pack/unpack func, err(%d)", err);
+		goto err_vq_pup_reg;
+	}
+
 	log_debug("===naliu vrdma_dpa_init extract_dev_elf done\n");
-	err = flexio_process_create(attr->emu_ctx, dpa_ctx->elf_buf, elf_size,
+	process_attr.pd = attr->emu_pd;
+	// err = flexio_process_create(attr->emu_ctx, dpa_ctx->app,
+	// 			    &process_attr, &dpa_ctx->flexio_process);
+	err = flexio_process_create(attr->emu_ctx, dpa_ctx->app,
 				    NULL, &dpa_ctx->flexio_process);
+
 	if (err) {
 		log_error("Failed to create Flex IO process, err(%d)", err);
 		goto err_process_create;
@@ -149,6 +362,12 @@ err_dev_alloc_uar:
 	flexio_process_destroy(dpa_ctx->flexio_process);
 err_process_create:
 	free(dpa_ctx->elf_buf);
+err_vq_pup_reg:
+	vrdma_dpa_pup_func_deregister(dpa_ctx);
+err_pup_reg:
+	flexio_app_destroy(dpa_ctx->app);
+err_app_create:
+	free(dpa_ctx->elf_buf);
 err_dev_elf:
 	free(dpa_ctx);
 	return err;
@@ -189,10 +408,10 @@ vrdma_dpa_device_msix_create(struct flexio_process *process,
 				       max_msix);
 }
 
-static void vrdma_dpa_device_msix_destroy(struct flexio_msix *msix, uint16_t msix_vector,
+static void vrdma_dpa_device_msix_destroy(uint16_t msix_vector,
 			      struct vrdma_dpa_emu_dev_ctx *emu_dev_ctx)
 {
-	vrdma_dpa_msix_destroy(msix, msix_vector, emu_dev_ctx);
+	vrdma_dpa_msix_destroy(msix_vector, emu_dev_ctx);
 }
 
 int vrdma_dpa_emu_dev_init(const struct vrdma_prov_emu_dev_init_attr *attr,
@@ -200,7 +419,7 @@ int vrdma_dpa_emu_dev_init(const struct vrdma_prov_emu_dev_init_attr *attr,
 {
 	struct vrdma_dpa_emu_dev_ctx *emu_dev_ctx;
 	struct vrdma_dpa_ctx *dpa_ctx;
-	int err;
+	int err, i;
 
 	emu_dev_ctx = calloc(1, sizeof(*emu_dev_ctx));
 	if (!emu_dev_ctx) {
@@ -216,7 +435,11 @@ int vrdma_dpa_emu_dev_init(const struct vrdma_prov_emu_dev_init_attr *attr,
 		goto err_msix_alloc;
 	}
 
+	for (i = 0; i < attr->num_msix; i++)
+		rte_atomic32_init(&emu_dev_ctx->msix[i].msix_refcount);
+
 	dpa_ctx = attr->dpa_handler;
+	emu_dev_ctx->dpa_ctx = dpa_ctx;
 	emu_dev_ctx->flexio_process = dpa_ctx->flexio_process;
 
 	emu_dev_ctx->sf_uar = dpa_ctx->emu_uar;
@@ -271,8 +494,7 @@ void vrdma_dpa_emu_dev_uninit(void *emu_dev_handler)
 {
 	struct vrdma_dpa_emu_dev_ctx *emu_dev_ctx = emu_dev_handler;
 
-	vrdma_dpa_device_msix_destroy(emu_dev_ctx->flexio_msix,
-					emu_dev_ctx->msix_config_vector,
+	vrdma_dpa_device_msix_destroy(emu_dev_ctx->msix_config_vector,
 					emu_dev_ctx);
 	flexio_outbox_destroy(emu_dev_ctx->db_sf_outbox);
 	flexio_uar_destroy(emu_dev_ctx->flexio_uar);
@@ -285,15 +507,25 @@ void vrdma_dpa_emu_dev_uninit(void *emu_dev_handler)
 static int vrdma_dpa_device_msix_send(void *handler)
 {
 	struct vrdma_dpa_emu_dev_ctx *emu_dev_ctx = handler;
-	uint32_t outbox_id;
+	struct vrdma_dpa_ctx *dpa_ctx = emu_dev_ctx->dpa_ctx;
+	struct vrdma_dpa_msix_send host_data = {};
+	flexio_uintptr_t dest_addr;
 	uint64_t rpc_ret;
 	int err;
 
-	outbox_id = flexio_outbox_get_id(emu_dev_ctx->db_sf_outbox);
+	host_data.outbox_id = flexio_outbox_get_id(emu_dev_ctx->db_sf_outbox);
+	host_data.cqn = emu_dev_ctx->msix[emu_dev_ctx->msix_config_vector].cqn;
+	err = flexio_copy_from_host(emu_dev_ctx->flexio_process, &host_data,
+				    sizeof(host_data), &dest_addr);
+	if (err) {
+		log_error("Failed to copy from host, err(%d)", err);
+		return err;
+	}
+
 	err = flexio_process_call(emu_dev_ctx->flexio_process,
-		"vrdma_dpa_msix_send_rpc_handler",
-		emu_dev_ctx->msix[emu_dev_ctx->msix_config_vector].cqn,
-		outbox_id, 0, &rpc_ret);
+		dpa_ctx->msix_send_rpc_func,
+		&rpc_ret,
+		(uint64_t)dest_addr);
 
 	if (err)
 		log_error("Failed to call rpc, err(%d), rpc_ret(%ld)",

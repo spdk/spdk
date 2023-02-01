@@ -17,9 +17,16 @@
 #include "spdk/vrdma_controller.h"
 #include "snap_vrdma_virtq.h"
 
+
+struct vrdma_alias {
+	uint32_t id;
+	struct mlx5dv_devx_obj *devx_obj;
+};
+
 struct vrdma_prov_init_attr {
 	struct ibv_context *emu_ctx;
 	struct ibv_pd *emu_pd;
+	uint16_t emu_mgr_vhca_id;
 };
 
 struct vrdma_prov_emu_dev_init_attr {

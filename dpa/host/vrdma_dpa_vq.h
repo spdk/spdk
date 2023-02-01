@@ -57,16 +57,17 @@ struct vrdma_prov_vq_init_attr {
 	struct vrdma_arm_vq_ctx arm_vq_ctx; /*arm rdma parameters*/
 };
 
-
-enum vrdma_dpa_vq_type {
-	VRDMA_DPA_VQ_QP = 0,
-	VRDMA_DPA_VQ_MAX
+struct vrdma_emu_db_to_cq_ctx {
+	uint32_t emu_db_to_cq_id;
+	struct mlx5dv_devx_obj *devx_emu_db_to_cq_ctx;
 };
 
 struct vrdma_dpa_vq {
 	struct flexio_event_handler *db_handler; /* used to receive db and get pi/wqe*/
+	flexio_func_t *db_handler_func;
 	struct flexio_event_handler *rq_dma_q_handler; /*used to send msix*/
-	struct flexio_emu_db_to_cq_ctx *guest_db_to_cq_ctx;
+	flexio_func_t *rq_dma_q_handler_func;
+	struct vrdma_emu_db_to_cq_ctx guest_db_to_cq_ctx;
 	struct vrdma_dpa_cq db_cq;
 	struct vrdma_dpa_cq dma_q_rqcq;
 	struct vrdma_dpa_cq dma_q_sqcq;
@@ -103,6 +104,7 @@ struct vrdma_msix_init_attr {
 	struct ibv_context *sf_ib_ctx;
 	uint16_t sf_vhca_id;
 	uint16_t msix_vector;
+	uint32_t cq_size;
 };
 
 
@@ -128,13 +130,14 @@ struct vrdma_msix_init_attr {
 // 				  struct virtnet_dpa_ctx *dpa_ctx,
 // 				  struct virtnet_prov_vq_init_attr *attr,
 // 				  struct virtnet_dpa_emu_dev_ctx *emu_dev_ctx);
-
+int vrdma_dpa_vq_pup_func_register(struct vrdma_dpa_ctx *dpa_ctx);
+void vrdma_dpa_vq_pup_func_deregister(struct vrdma_dpa_ctx *dpa_ctx);
 int vrdma_dpa_msix_create(struct vrdma_dpa_vq *dpa_vq,
 			    struct flexio_process *process,
 			    struct vrdma_msix_init_attr *attr,
 			    struct vrdma_dpa_emu_dev_ctx *emu_dev_ctx,
 			    int max_msix);
 
-void vrdma_dpa_msix_destroy(struct flexio_msix *msix, uint16_t msix_vector,
+void vrdma_dpa_msix_destroy(uint16_t msix_vector,
 			      struct vrdma_dpa_emu_dev_ctx *emu_dev_ctx);
 #endif

@@ -19,8 +19,8 @@ EXTERN(vrdma_dpa_msix_send_rpc_handler)
 
 MEMORY
 {
-        code (rx) : ORIGIN =  0x0000000010000000, LENGTH = 128M
-        sdata (rw) : ORIGIN = 0x0000000028000000, LENGTH = 128M
+        code (rx) : ORIGIN =  0x0000000040000000, LENGTH = 128M
+        sdata (rw) : ORIGIN = 0x0000000080000000, LENGTH = 128M
 }
 
 SECTIONS {

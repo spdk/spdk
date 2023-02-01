@@ -191,7 +191,7 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 	flexio_dev_window_mkey_config(dtctx,
 				      ehctx->dma_qp.host_vq_ctx.emu_crossing_mkey);
 	flexio_dev_window_ptr_acquire(dtctx, 0,
-		(flexio_uintptr_t **)&ehctx->window_base_addr);
+		(flexio_uintptr_t *)&ehctx->window_base_addr);
 
 	// printf("---naliu vq_idx %d, emu_outbox %d, emu_crossing_mkey %d\n",
 		// ehctx->vq_index, ehctx->emu_outbox, ehctx->dma_qp.host_vq_ctx.emu_crossing_mkey);
@@ -340,6 +340,6 @@ out:
 	printf("\n------naliu vrdma_db_handler done. cqn: %#x, emu_db_to_cq_id %d, guest_db_cq_ctx.ci %d\n",
 		ehctx->guest_db_cq_ctx.cqn, ehctx->emu_db_to_cq_id, ehctx->guest_db_cq_ctx.ci);
 #endif
-	flexio_dev_return();
+	flexio_dev_reschedule();
 }
 __FLEXIO_ENTRY_POINT_END

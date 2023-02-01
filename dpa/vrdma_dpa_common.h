@@ -50,6 +50,8 @@ struct vrdma_dpa_cq {
 	flexio_uintptr_t cq_ring_daddr;
 	flexio_uintptr_t cq_dbr_daddr;
 	struct flexio_cq *cq;
+	uint32_t overrun_ignore;
+	uint32_t always_armed;
 };
 
 struct vrdma_dpa_vq_desc {
@@ -186,4 +188,13 @@ struct vrdma_dpa_vq_data {
 	uint8_t err;
 } __attribute__((__packed__, aligned(8)));
 
+struct vrdma_dpa_msix_send {
+	uint32_t outbox_id;
+	uint32_t cqn;
+};
+
+enum vrdma_dpa_vq_type {
+	VRDMA_DPA_VQ_QP = 0,
+	VRDMA_DPA_VQ_MAX
+};
 #endif

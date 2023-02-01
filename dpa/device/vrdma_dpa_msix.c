@@ -23,7 +23,7 @@ __FLEXIO_ENTRY_POINT_START
 flexio_dev_event_handler_t vrdma_msix_handler;
 void vrdma_msix_handler(flexio_uintptr_t thread_arg)
 {
-	flexio_dev_return();
+	flexio_dev_reschedule();
 }
 
 #if 0
@@ -55,7 +55,7 @@ out:
 				 ehctx->msix_cq_ctx.ci);
 	flexio_dev_cq_arm(dtctx, ehctx->msix_cq_ctx.ci,
 			  ehctx->msix_cq_ctx.cqn);
-	flexio_dev_return();
+	flexio_dev_reschedule();
 
 }
 
@@ -96,6 +96,6 @@ out:
 // 				 ehctx->msix_cq_ctx.ci);
 // 	flexio_dev_cq_arm(dtctx, ehctx->msix_cq_ctx.ci,
 // 			  ehctx->msix_cq_ctx.cqn);
-// 	flexio_dev_return();
+// 	flexio_dev_reschedule();
 // }
 __FLEXIO_ENTRY_POINT_END

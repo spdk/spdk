@@ -22,6 +22,16 @@
 
 __FLEXIO_ENTRY_POINT_START
 
+flexio_dev_arg_unpack_func_t vrdma_dpa_rpc_unpack_func;
+uint64_t vrdma_dpa_rpc_unpack_func(void *arg_buf, void *func)
+{
+	uint64_t arg1 = *(uint64_t *)arg_buf;
+	flexio_dev_rpc_handler_t *vrdma_rpc_handler = func;
+	(*vrdma_rpc_handler)(arg1);
+	return 0;
+}
+
+#if 0
 flexio_dev_rpc_handler_t test_dpa_flexio_work;
 uint64_t test_dpa_flexio_work(uint64_t arg1, uint64_t arg2, uint64_t arg3)
 {
@@ -36,10 +46,10 @@ uint64_t test_dpa_flexio_work(uint64_t arg1, uint64_t arg2, uint64_t arg3)
 	printf("------naliu DPA says %lu + %lu + %lu is %lu\n", arg1, arg2, arg3, res);
 	return res;
 }
+#endif
 
 flexio_dev_rpc_handler_t vrdma_qp_rpc_handler;
-uint64_t vrdma_qp_rpc_handler(uint64_t arg1, uint64_t __unused arg2,
-				     uint64_t __unused arg3)
+uint64_t vrdma_qp_rpc_handler(uint64_t arg1)
 {
 	struct  vrdma_dpa_event_handler_ctx *ectx;
 	struct flexio_dev_thread_ctx *dtctx;
