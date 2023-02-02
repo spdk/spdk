@@ -2215,11 +2215,7 @@ bdev_nvme_reset_io(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio)
 	bio->cpl.cdw0 = 0;
 	bio->orig_thread = spdk_get_thread();
 
-	/* Reset only the first nvme_ctrlr in the nvme_bdev_ctrlr for now.
-	 *
-	 * TODO: Reset all nvme_ctrlrs in the nvme_bdev_ctrlr sequentially.
-	 * This will be done in the following patches.
-	 */
+	/* Reset all nvme_ctrlrs of a bdev controller sequentially. */
 	io_path = STAILQ_FIRST(&nbdev_ch->io_path_list);
 	assert(io_path != NULL);
 
