@@ -503,8 +503,9 @@ uring_check_io(struct ns_worker_ctx *ns_ctx)
 			assert(ns_ctx->u.uring.cqes[i] != NULL);
 			task = (struct perf_task *)ns_ctx->u.uring.cqes[i]->user_data;
 			if (ns_ctx->u.uring.cqes[i]->res != (int)task->iovs[0].iov_len) {
-				fprintf(stderr, "cqe[i]->status=%d\n", ns_ctx->u.uring.cqes[i]->res);
-				exit(0);
+				fprintf(stderr, "cqe->status=%d, iov_len=%d\n", ns_ctx->u.uring.cqes[i]->res,
+					(int)task->iovs[0].iov_len);
+				exit(1);
 			}
 			io_uring_cqe_seen(&ns_ctx->u.uring.ring, ns_ctx->u.uring.cqes[i]);
 			task_complete(task);
@@ -615,6 +616,7 @@ aio_check_io(struct ns_worker_ctx *ns_ctx)
 {
 	int count, i;
 	struct timespec timeout;
+	struct perf_task *task;
 
 	timeout.tv_sec = 0;
 	timeout.tv_nsec = 0;
@@ -626,6 +628,12 @@ aio_check_io(struct ns_worker_ctx *ns_ctx)
 	}
 
 	for (i = 0; i < count; i++) {
+		task = (struct perf_task *)ns_ctx->u.aio.events[i].data;
+		if (ns_ctx->u.aio.events[i].res != (uint64_t)task->iovs[0].iov_len) {
+			fprintf(stderr, "event->res=%lu, iov_len=%lu\n", ns_ctx->u.aio.events[i].res,
+				(uint64_t)task->iovs[0].iov_len);
+			exit(1);
+		}
 		task_complete(ns_ctx->u.aio.events[i].data);
 	}
 	return count;
