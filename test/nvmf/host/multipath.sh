@@ -74,7 +74,6 @@ function confirm_io_on_port() {
 }
 
 "$rootdir/examples/bdev/bdevperf/bdevperf.py" -t 120 -s $bdevperf_rpc_sock perform_tests &
-rpc_pid=$!
 
 sleep 1
 
@@ -112,10 +111,11 @@ $rpc_py nvmf_subsystem_listener_set_ana_state $NQN -t $TEST_TRANSPORT -a $NVMF_F
 sleep 6
 confirm_io_on_port "optimized" $NVMF_SECOND_PORT
 
-wait $rpc_pid
-cat "$testdir/try.txt"
-
 killprocess $bdevperf_pid
+# Make sure we catch bdevperf's exit status
+wait $bdevperf_pid
+
+cat "$testdir/try.txt"
 
 $rpc_py nvmf_delete_subsystem $NQN
 
