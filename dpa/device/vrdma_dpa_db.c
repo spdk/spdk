@@ -110,8 +110,8 @@ static bool vrdma_dpa_rq_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 				local_addr, size, rq_pi);
 #ifdef DPA_DEBUG_DETAIL
 	printf("---naliu rq: index %#x, wqebb_size %#x, size %#x, remote_key %#x, remote_addr %#lx,"
-			"local_key %#x, local_addr %#lx\n",
-			index, wqebb_size, size, remote_key, remote_addr, local_key, local_addr);
+			"local_key %#x, local_addr %#lx\n rq_start_pi %#x, rq_end_pi %#x\n",
+			index, wqebb_size, size, remote_key, remote_addr, local_key, local_addr, rq_start_pi, rq_end_pi);
 #endif
 	return true;
 }

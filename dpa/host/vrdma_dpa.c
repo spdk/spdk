@@ -275,10 +275,8 @@ int vrdma_dpa_init(const struct vrdma_prov_init_attr *attr, void **out)
 
 	log_debug("===naliu vrdma_dpa_init extract_dev_elf done\n");
 	process_attr.pd = attr->emu_pd;
-	// err = flexio_process_create(attr->emu_ctx, dpa_ctx->app,
-	// 			    &process_attr, &dpa_ctx->flexio_process);
 	err = flexio_process_create(attr->emu_ctx, dpa_ctx->app,
-				    NULL, &dpa_ctx->flexio_process);
+				    &process_attr, &dpa_ctx->flexio_process);
 
 	if (err) {
 		log_error("Failed to create Flex IO process, err(%d)", err);
