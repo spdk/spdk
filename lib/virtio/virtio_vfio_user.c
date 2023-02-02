@@ -229,15 +229,7 @@ virtio_vfio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 	uint64_t queue_mem_phys_addr;
 	int rc;
 
-	/* To ensure physical address contiguity we make the queue occupy
-	 * only a single hugepage (2MB). As of Virtio 1.0, the queue size
-	 * always falls within this limit.
-	 */
-	if (vq->vq_ring_size > VALUE_2MB) {
-		return -ENOMEM;
-	}
-
-	queue_mem = spdk_zmalloc(vq->vq_ring_size, VALUE_2MB, NULL,
+	queue_mem = spdk_zmalloc(vq->vq_ring_size, VIRTIO_PCI_VRING_ALIGN, NULL,
 				 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (queue_mem == NULL) {
 		return -ENOMEM;
