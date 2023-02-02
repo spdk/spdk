@@ -15,8 +15,7 @@ jobs (see [status](https://ci.spdk.io) as a reference).
 
 ## Linux distributions {#linux_list}
 
-* Fedora: Trying to follow new release as per the release cycle whenever
-          possible. Currently at `Fedora35`.
+* Fedora: Trying to follow new release as per the release cycle whenever possible.
 
 ```list
 - autobuild-vg-autotest
