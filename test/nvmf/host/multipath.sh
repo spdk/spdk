@@ -19,6 +19,14 @@ bdevperf_rpc_sock=/var/tmp/bdevperf.sock
 # NQN prefix to use for subsystem NQNs
 NQN=nqn.2016-06.io.spdk:cnode1
 
+cleanup() {
+	process_shm --id $NVMF_APP_SHM_ID || true
+	cat $testdir/try.txt
+	rm -f $testdir/try.txt
+	killprocess $bdevperf_pid
+	nvmftestfini
+}
+
 nvmftestinit
 
 nvmfappstart -m 0x3
@@ -35,7 +43,7 @@ $rpc_py nvmf_subsystem_add_listener $NQN -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGE
 $rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 90 &> $testdir/try.txt &
 bdevperf_pid=$!
 
-trap 'process_shm --id $NVMF_APP_SHM_ID; rm -f $testdir/try.txt; killprocess $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+trap 'cleanup; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $bdevperf_pid $bdevperf_rpc_sock
 
 # Create a controller and set multipath behavior
