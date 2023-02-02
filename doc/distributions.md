@@ -15,7 +15,9 @@ jobs (see [status](https://ci.spdk.io) as a reference).
 
 ## Linux distributions {#linux_list}
 
-* Fedora: Trying to follow new release as per the release cycle whenever possible.
+### Fedora
+
+Trying to follow new release as per the release cycle whenever possible.
 
 ```list
 - autobuild-vg-autotest
@@ -40,21 +42,26 @@ Fedora may vary. In the future these will be aligned with the
 - vhost-autotest
 ```
 
-* Ubuntu: Last two LTS releases. Currently `18.04` and `20.04`.
+### Ubuntu
+
+Last two LTS releases. Currently `20.04` and `22.04`.
 
 ```list
-- ubuntu18-vg-autotest
 - ubuntu20-vg-autotest
+- ubuntu22-vg-autotest
 ```
 
-* CentOS: Maintained releases. Currently `7.9`. Centos 8.3 is only used for testing on 22.01.x branch.
+### CentOS
+
+Maintained releases. Currently `7.9`.
 
 ```list
 - centos7-vg-autotest
-- centos8-vg-autotest
 ```
 
-* Rocky Linux: Last release. Currently `8.6`. CentOS 8 replacement.
+### Rocky Linux
+
+Last release. Currently `8.6`. CentOS 8 replacement.
 
 ```list
 - rocky8-vg-autotest
@@ -62,7 +69,9 @@ Fedora may vary. In the future these will be aligned with the
 
 ## FreeBSD distributions {#freebsd_list}
 
-* FreeBSD: Production release. Currently `12.2`.
+### FreeBSD
+
+Production release. Currently `12.2`
 
 ```list
 - freebsd-vg-autotest
