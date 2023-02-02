@@ -318,6 +318,7 @@ struct spdk_bdev_desc {
 	bool				closed;
 	bool				write;
 	bool				memory_domains_supported;
+	bool				accel_sequence_supported[SPDK_BDEV_NUM_IO_TYPES];
 	struct spdk_spinlock		spinlock;
 	uint32_t			refs;
 	TAILQ_HEAD(, media_event_entry)	pending_media_events;
@@ -6827,7 +6828,7 @@ bdev_register(struct spdk_bdev *bdev)
 {
 	char *bdev_name;
 	char uuid[SPDK_UUID_STRING_LEN];
-	int ret;
+	int ret, i;
 
 	assert(bdev->module != NULL);
 
@@ -6839,6 +6840,28 @@ bdev_register(struct spdk_bdev *bdev)
 	if (!strlen(bdev->name)) {
 		SPDK_ERRLOG("Bdev name must not be an empty string\n");
 		return -EINVAL;
+	}
+
+	for (i = 0; i < SPDK_BDEV_NUM_IO_TYPES; ++i) {
+		if (bdev->fn_table->accel_sequence_supported == NULL) {
+			continue;
+		}
+		if (!bdev->fn_table->accel_sequence_supported(bdev->ctxt,
+				(enum spdk_bdev_io_type)i)) {
+			continue;
+		}
+
+		if (spdk_bdev_get_memory_domains(bdev, NULL, 0) <= 0) {
+			SPDK_ERRLOG("bdev supporting accel sequence is required to support "
+				    "memory domains\n");
+			return -EINVAL;
+		}
+
+		if (spdk_bdev_is_md_separate(bdev)) {
+			SPDK_ERRLOG("Separate metadata is currently unsupported for bdevs with "
+				    "accel sequence support\n");
+			return -EINVAL;
+		}
 	}
 
 	/* Users often register their own I/O devices using the bdev name. In
@@ -7242,7 +7265,7 @@ bdev_desc_alloc(struct spdk_bdev *bdev, spdk_bdev_event_cb_t event_cb, void *eve
 		struct spdk_bdev_desc **_desc)
 {
 	struct spdk_bdev_desc *desc;
-	unsigned int event_id;
+	unsigned int i;
 
 	desc = calloc(1, sizeof(*desc));
 	if (desc == NULL) {
@@ -7267,9 +7290,17 @@ bdev_desc_alloc(struct spdk_bdev *bdev, spdk_bdev_event_cb_t event_cb, void *eve
 			return -ENOMEM;
 		}
 
-		for (event_id = 0; event_id < MEDIA_EVENT_POOL_SIZE; ++event_id) {
+		for (i = 0; i < MEDIA_EVENT_POOL_SIZE; ++i) {
 			TAILQ_INSERT_TAIL(&desc->free_media_events,
-					  &desc->media_events_buffer[event_id], tailq);
+					  &desc->media_events_buffer[i], tailq);
+		}
+	}
+
+	if (bdev->fn_table->accel_sequence_supported != NULL) {
+		for (i = 0; i < SPDK_BDEV_NUM_IO_TYPES; ++i) {
+			desc->accel_sequence_supported[i] =
+				bdev->fn_table->accel_sequence_supported(bdev->ctxt,
+						(enum spdk_bdev_io_type)i);
 		}
 	}
 

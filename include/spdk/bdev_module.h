@@ -358,6 +358,9 @@ struct spdk_bdev_fn_table {
 	 * Dump I/O statistics specific for this bdev context.
 	 */
 	void (*dump_device_stat_json)(void *ctx, struct spdk_json_write_ctx *w);
+
+	/** Check if bdev can handle spdk_accel_sequence to handle I/O of specific type. */
+	bool (*accel_sequence_supported)(void *ctx, enum spdk_bdev_io_type type);
 };
 
 /** bdev I/O completion status */
