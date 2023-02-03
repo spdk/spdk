@@ -4,6 +4,7 @@
  */
 
 #include "util_internal.h"
+#include "crc_internal.h"
 #include "spdk/crc32.h"
 
 void
