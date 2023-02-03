@@ -18,7 +18,6 @@
 #include "spdk/endian.h"
 #include "spdk/assert.h"
 #include "spdk/string.h"
-#include "spdk/thread.h"
 #include "spdk/trace.h"
 #include "spdk/util.h"
 
