@@ -434,7 +434,7 @@ int vrdma_dpa_emu_dev_init(const struct vrdma_prov_emu_dev_init_attr *attr,
 	}
 
 	for (i = 0; i < attr->num_msix; i++)
-		rte_atomic32_init(&emu_dev_ctx->msix[i].msix_refcount);
+		atomic32_init(&emu_dev_ctx->msix[i].msix_refcount);
 
 	dpa_ctx = attr->dpa_handler;
 	emu_dev_ctx->dpa_ctx = dpa_ctx;
