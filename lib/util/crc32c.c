@@ -4,18 +4,8 @@
  */
 
 #include "util_internal.h"
+#include "crc_internal.h"
 #include "spdk/crc32.h"
-
-#ifdef SPDK_CONFIG_ISAL
-#define SPDK_HAVE_ISAL
-#include <isa-l/include/crc.h>
-#elif defined(__aarch64__) && defined(__ARM_FEATURE_CRC32)
-#define SPDK_HAVE_ARM_CRC
-#include <arm_acle.h>
-#elif defined(__x86_64__) && defined(__SSE4_2__)
-#define SPDK_HAVE_SSE4_2
-#include <x86intrin.h>
-#endif
 
 #ifdef SPDK_HAVE_ISAL
 
