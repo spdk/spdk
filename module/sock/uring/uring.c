@@ -1604,6 +1604,7 @@ uring_sock_flush(struct spdk_sock *_sock)
 	int flags = sock->zcopy_send_flags;
 	int retval;
 	bool is_zcopy = false;
+	struct spdk_uring_task *task = &sock->errqueue_task;
 
 	/* Can't flush from within a callback or we end up with recursive calls */
 	if (_sock->cb_cnt > 0) {
@@ -1646,8 +1647,15 @@ uring_sock_flush(struct spdk_sock *_sock)
 	}
 
 #ifdef SPDK_ZEROCOPY
+	/* At least do once to check zero copy case */
 	if (sock->zcopy && !TAILQ_EMPTY(&_sock->pending_reqs)) {
-		_sock_check_zcopy(_sock, 0);
+		retval = recvmsg(sock->fd, &task->msg, MSG_ERRQUEUE);
+		if (retval < 0) {
+			if (errno == EWOULDBLOCK || errno == EAGAIN) {
+				return rc;
+			}
+		}
+		_sock_check_zcopy(_sock, retval);;
 	}
 #endif
 
