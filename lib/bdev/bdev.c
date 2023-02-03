@@ -2903,7 +2903,7 @@ static void bdev_rw_split_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bde
 				     bool success);
 
 static void
-bdev_io_split(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+bdev_io_split(struct spdk_bdev_io *bdev_io)
 {
 	bdev_io->u.bdev.split_current_offset_blocks = bdev_io->u.bdev.offset_blocks;
 	bdev_io->u.bdev.split_remaining_num_blocks = bdev_io->u.bdev.num_blocks;
@@ -3065,7 +3065,7 @@ bdev_io_submit(struct spdk_bdev_io *bdev_io)
 			      spdk_bdev_get_name(bdev));
 
 	if (bdev_io_should_split(bdev_io)) {
-		bdev_io_split(NULL, bdev_io);
+		bdev_io_split(bdev_io);
 		return;
 	}
 
