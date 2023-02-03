@@ -10,7 +10,6 @@
  * provided with the software product.
  */
 
-#include <common/flexio_common.h>
 #include <libflexio-libc/string.h>
 #include <libflexio-libc/stdio.h>
 #include <libflexio-dev/flexio_dev.h>

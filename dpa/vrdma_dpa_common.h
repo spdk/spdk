@@ -15,7 +15,7 @@
 
 #include <string.h>
 #include <stdint.h>
-#include <common/flexio_common.h>
+#include <common/flexio_common_structs.h>
 // #include <libutil/util.h>
 
 
