@@ -13,7 +13,7 @@
 #ifndef __VRDMA_DPA_H__
 #define __VRDMA_DPA_H__
 
-#include <rte_atomic.h>
+#include <atomic.h>
 #include "spdk/log.h"
 #include <libflexio/flexio.h>
 #include <infiniband/mlx5dv.h>
@@ -46,7 +46,7 @@ struct vrdma_dpa_ctx {
 };
 
 struct vrdma_dpa_msix {
-	rte_atomic32_t msix_refcount;
+	atomic32_t msix_refcount;
 	uint32_t cqn;
 	uint32_t eqn;
 	struct mlx5dv_devx_obj *obj;

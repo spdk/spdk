@@ -1051,7 +1051,7 @@ int vrdma_dpa_msix_create(struct vrdma_dpa_vq *dpa_vq,
 			  attr->msix_vector,
 			  emu_dev_ctx->msix[attr->msix_vector].eqn,
 			  emu_dev_ctx->msix[attr->msix_vector].cqn);
-		rte_atomic32_inc(&emu_dev_ctx->msix[attr->msix_vector].msix_refcount);
+		atomic32_inc(&emu_dev_ctx->msix[attr->msix_vector].msix_refcount);
 		return 0;
 	}
 	/* alias_cq->alias_eq->eq->msix_vector. */
@@ -1079,7 +1079,7 @@ int vrdma_dpa_msix_create(struct vrdma_dpa_vq *dpa_vq,
 		log_error("Failed to alloc cq memory, err(%d)", err);
 		goto err_alias_cq_create;
 	}
-	rte_atomic32_inc(&emu_dev_ctx->msix[attr->msix_vector].msix_refcount);
+	atomic32_inc(&emu_dev_ctx->msix[attr->msix_vector].msix_refcount);
 
 	if (dpa_vq)
 		dpa_vq->msix_vector = attr->msix_vector;
@@ -1107,7 +1107,7 @@ void vrdma_dpa_msix_destroy(uint16_t msix_vector,
 			      struct vrdma_dpa_emu_dev_ctx *emu_dev_ctx)
 {
 	if ((msix_vector == 0xFFFF) ||
-	    !rte_atomic32_dec_and_test(&emu_dev_ctx->msix[msix_vector].msix_refcount))
+	    !atomic32_dec_and_test(&emu_dev_ctx->msix[msix_vector].msix_refcount))
 		return;
 
 	log_notice("Destroy msix %#x, alias_eqn %#x, alias_cqn %#x",
