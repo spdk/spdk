@@ -814,6 +814,11 @@ nvme_tcp_qpair_set_recv_state(struct nvme_tcp_qpair *tqpair,
 			    tqpair, state);
 		return;
 	}
+
+	if (state == NVME_TCP_PDU_RECV_STATE_ERROR) {
+		assert(TAILQ_EMPTY(&tqpair->outstanding_reqs));
+	}
+
 	tqpair->recv_state = state;
 }
 
@@ -856,7 +861,7 @@ nvme_tcp_qpair_send_h2c_term_req(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_
 
 	/* Contain the header len of the wrong received pdu */
 	h2c_term_req->common.plen = h2c_term_req->common.hlen + copy_len;
-	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
+	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_QUIESCING);
 	nvme_tcp_qpair_write_pdu(tqpair, rsp_pdu, nvme_tcp_qpair_send_h2c_term_req_complete, tqpair);
 }
 
@@ -1037,7 +1042,7 @@ nvme_tcp_c2h_term_req_payload_handle(struct nvme_tcp_qpair *tqpair,
 				     struct nvme_tcp_pdu *pdu)
 {
 	nvme_tcp_c2h_term_req_dump(&pdu->hdr.term_req);
-	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
+	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_QUIESCING);
 }
 
 static void
@@ -1630,7 +1635,7 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped, uint32_t max_
 						sizeof(struct spdk_nvme_tcp_common_pdu_hdr) - pdu->ch_valid_bytes,
 						(uint8_t *)&pdu->hdr.common + pdu->ch_valid_bytes);
 			if (rc < 0) {
-				nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
+				nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_QUIESCING);
 				break;
 			}
 			pdu->ch_valid_bytes += rc;
@@ -1648,7 +1653,7 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped, uint32_t max_
 						pdu->psh_len - pdu->psh_valid_bytes,
 						(uint8_t *)&pdu->hdr.raw + sizeof(struct spdk_nvme_tcp_common_pdu_hdr) + pdu->psh_valid_bytes);
 			if (rc < 0) {
-				nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
+				nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_QUIESCING);
 				break;
 			}
 
@@ -1676,7 +1681,7 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped, uint32_t max_
 
 			rc = nvme_tcp_read_payload_data(tqpair->sock, pdu);
 			if (rc < 0) {
-				nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
+				nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_QUIESCING);
 				break;
 			}
 
@@ -1688,6 +1693,11 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped, uint32_t max_
 			assert(pdu->rw_offset == data_len);
 			/* All of this PDU has now been read from the socket. */
 			nvme_tcp_pdu_payload_handle(tqpair, reaped);
+			break;
+		case NVME_TCP_PDU_RECV_STATE_QUIESCING:
+			if (TAILQ_EMPTY(&tqpair->outstanding_reqs)) {
+				nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
+			}
 			break;
 		case NVME_TCP_PDU_RECV_STATE_ERROR:
 			memset(pdu, 0, sizeof(struct nvme_tcp_pdu));

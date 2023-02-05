@@ -120,6 +120,9 @@ enum nvme_tcp_pdu_recv_state {
 	/* Active tqpair waiting for payload */
 	NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD,
 
+	/* Active tqpair waiting for all outstanding PDUs to complete */
+	NVME_TCP_PDU_RECV_STATE_QUIESCING,
+
 	/* Active tqpair does not wait for payload */
 	NVME_TCP_PDU_RECV_STATE_ERROR,
 };

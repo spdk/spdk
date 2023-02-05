@@ -874,7 +874,7 @@ test_nvme_tcp_qpair_send_h2c_term_req(void)
 	/* case1: hlen < SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE, Expect: copy_len == hlen */
 	pdu.hdr.common.hlen = 64;
 	nvme_tcp_qpair_send_h2c_term_req(&tqpair, &pdu, fes, error_offset);
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_QUIESCING);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.hlen == sizeof(struct spdk_nvme_tcp_term_req_hdr));
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.plen == tqpair.send_pdu->hdr.term_req.common.hlen +
 		  pdu.hdr.common.hlen);
@@ -883,7 +883,7 @@ test_nvme_tcp_qpair_send_h2c_term_req(void)
 	/* case2: hlen > SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE, Expect: copy_len == SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE */
 	pdu.hdr.common.hlen = 255;
 	nvme_tcp_qpair_send_h2c_term_req(&tqpair, &pdu, fes, error_offset);
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_QUIESCING);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.hlen == sizeof(struct spdk_nvme_tcp_term_req_hdr));
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.plen == (unsigned)
 		  tqpair.send_pdu->hdr.term_req.common.hlen + SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE);
@@ -905,7 +905,7 @@ test_nvme_tcp_pdu_ch_handle(void)
 	tqpair.recv_pdu->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_RESP;
 	tqpair.state = NVME_TCP_QPAIR_STATE_INITIALIZING;
 	nvme_tcp_pdu_ch_handle(&tqpair);
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_QUIESCING);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.hlen == sizeof(struct spdk_nvme_tcp_term_req_hdr));
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.plen == tqpair.send_pdu->hdr.term_req.common.hlen);
@@ -916,7 +916,7 @@ test_nvme_tcp_pdu_ch_handle(void)
 	tqpair.recv_pdu->hdr.common.plen = sizeof(struct spdk_nvme_tcp_ic_resp);
 	tqpair.recv_pdu->hdr.common.hlen = 0;
 	nvme_tcp_pdu_ch_handle(&tqpair);
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_QUIESCING);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.hlen == sizeof(struct spdk_nvme_tcp_term_req_hdr));
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.plen == tqpair.send_pdu->hdr.term_req.common.hlen);
@@ -928,7 +928,7 @@ test_nvme_tcp_pdu_ch_handle(void)
 	tqpair.recv_pdu->hdr.common.plen = sizeof(struct spdk_nvme_tcp_ic_resp);
 	tqpair.recv_pdu->hdr.common.hlen = 0;
 	nvme_tcp_pdu_ch_handle(&tqpair);
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_QUIESCING);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.hlen == sizeof(struct spdk_nvme_tcp_term_req_hdr));
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.plen == tqpair.send_pdu->hdr.term_req.common.hlen);
@@ -939,7 +939,7 @@ test_nvme_tcp_pdu_ch_handle(void)
 	tqpair.recv_pdu->hdr.common.plen = 0;
 	tqpair.recv_pdu->hdr.common.hlen = sizeof(struct spdk_nvme_tcp_ic_resp);
 	nvme_tcp_pdu_ch_handle(&tqpair);
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_QUIESCING);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.hlen == sizeof(struct spdk_nvme_tcp_term_req_hdr));
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.plen == tqpair.send_pdu->hdr.term_req.common.hlen +
@@ -951,7 +951,7 @@ test_nvme_tcp_pdu_ch_handle(void)
 	tqpair.recv_pdu->hdr.common.plen = 0;
 	tqpair.recv_pdu->hdr.common.hlen = sizeof(struct spdk_nvme_tcp_ic_resp);
 	nvme_tcp_pdu_ch_handle(&tqpair);
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_QUIESCING);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.hlen == sizeof(struct spdk_nvme_tcp_term_req_hdr));
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.plen == tqpair.send_pdu->hdr.term_req.common.hlen +
@@ -964,7 +964,7 @@ test_nvme_tcp_pdu_ch_handle(void)
 	tqpair.recv_pdu->hdr.common.plen = 0;
 	tqpair.recv_pdu->hdr.common.hlen = sizeof(struct spdk_nvme_tcp_rsp);
 	nvme_tcp_pdu_ch_handle(&tqpair);
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_QUIESCING);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.hlen == sizeof(struct spdk_nvme_tcp_term_req_hdr));
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.plen == tqpair.send_pdu->hdr.term_req.common.hlen +
@@ -977,7 +977,7 @@ test_nvme_tcp_pdu_ch_handle(void)
 	tqpair.recv_pdu->hdr.common.pdo = 64;
 	tqpair.recv_pdu->hdr.common.hlen = sizeof(struct spdk_nvme_tcp_c2h_data_hdr);
 	nvme_tcp_pdu_ch_handle(&tqpair);
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_QUIESCING);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.hlen == sizeof(struct spdk_nvme_tcp_term_req_hdr));
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.plen == tqpair.send_pdu->hdr.term_req.common.hlen +
@@ -989,7 +989,7 @@ test_nvme_tcp_pdu_ch_handle(void)
 	tqpair.recv_pdu->hdr.common.plen = 0;
 	tqpair.recv_pdu->hdr.common.hlen = sizeof(struct spdk_nvme_tcp_term_req_hdr);
 	nvme_tcp_pdu_ch_handle(&tqpair);
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_QUIESCING);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.hlen == sizeof(struct spdk_nvme_tcp_term_req_hdr));
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.plen == tqpair.send_pdu->hdr.term_req.common.hlen +
@@ -1002,7 +1002,7 @@ test_nvme_tcp_pdu_ch_handle(void)
 	tqpair.recv_pdu->hdr.common.plen = 0;
 	tqpair.recv_pdu->hdr.common.hlen = sizeof(struct spdk_nvme_tcp_r2t_hdr);
 	nvme_tcp_pdu_ch_handle(&tqpair);
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_QUIESCING);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.hlen == sizeof(struct spdk_nvme_tcp_term_req_hdr));
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.plen == tqpair.send_pdu->hdr.term_req.common.hlen +
@@ -1198,7 +1198,7 @@ test_nvme_tcp_c2h_payload_handle(void)
 	pdu.hdr.term_req.fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD;
 	nvme_tcp_c2h_term_req_payload_handle(&tqpair, &pdu);
 
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_QUIESCING);
 	CU_ASSERT(tqpair.qpair.num_outstanding_reqs == 1);
 }
 
@@ -1221,7 +1221,7 @@ test_nvme_tcp_icresp_handle(void)
 
 	nvme_tcp_icresp_handle(&tqpair, &pdu);
 
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_QUIESCING);
 
 	/* case 2: Expected ICResp maxh2cdata and got are different. */
 	pdu.hdr.ic_resp.pfv = 0;
@@ -1229,7 +1229,7 @@ test_nvme_tcp_icresp_handle(void)
 
 	nvme_tcp_icresp_handle(&tqpair, &pdu);
 
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_QUIESCING);
 
 	/* case 3: Expected ICResp cpda and got are different. */
 	pdu.hdr.ic_resp.maxh2cdata = NVME_TCP_PDU_H2C_MIN_DATA_SIZE;
@@ -1237,7 +1237,7 @@ test_nvme_tcp_icresp_handle(void)
 
 	nvme_tcp_icresp_handle(&tqpair, &pdu);
 
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_QUIESCING);
 
 	/* case 4: waiting icreq ack. */
 	pdu.hdr.ic_resp.maxh2cdata = NVME_TCP_PDU_H2C_MIN_DATA_SIZE;
@@ -1322,7 +1322,7 @@ test_nvme_tcp_pdu_payload_handle(void)
 
 	recv_pdu.req = &tcp_req;
 	nvme_tcp_pdu_payload_handle(&tqpair, &reaped);
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_QUIESCING);
 }
 
 static void
@@ -1372,7 +1372,7 @@ test_nvme_tcp_capsule_resp_hdr_handle(void)
 
 	nvme_tcp_capsule_resp_hdr_handle(&tqpair, tqpair.recv_pdu, &reaped);
 	CU_ASSERT(reaped == 0);
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_QUIESCING);
 	nvme_tcp_free_reqs(&tqpair);
 }
 
