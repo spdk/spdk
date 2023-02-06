@@ -3323,6 +3323,12 @@ _nvmf_tcp_qpair_abort_request(void *ctx)
 		break;
 
 	default:
+		/* Requests in other states are either un-abortable (e.g.
+		 * TRANSFERRING_CONTROLLER_TO_HOST) or should never end up here, as they're
+		 * immediately transitioned to other states in nvmf_tcp_req_process() (e.g.
+		 * READY_TO_EXECUTE).  But it is fine to end up here, as we'll simply complete the
+		 * abort request with the bit0 of dword0 set (command not aborted).
+		 */
 		break;
 	}
 
