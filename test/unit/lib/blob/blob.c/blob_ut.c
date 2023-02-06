@@ -4580,8 +4580,10 @@ blob_snapshot_rw(void)
 	uint8_t payload_write[10 * 4096];
 	uint64_t write_bytes_start;
 	uint64_t read_bytes_start;
+	uint64_t copy_bytes_start;
 	uint64_t write_bytes;
 	uint64_t read_bytes;
+	uint64_t copy_bytes;
 
 	free_clusters = spdk_bs_free_cluster_count(bs);
 	cluster_size = spdk_bs_get_cluster_size(bs);
@@ -4631,6 +4633,7 @@ blob_snapshot_rw(void)
 
 	write_bytes_start = g_dev_write_bytes;
 	read_bytes_start = g_dev_read_bytes;
+	copy_bytes_start = g_dev_copy_bytes;
 
 	memset(payload_write, 0xAA, sizeof(payload_write));
 	spdk_blob_io_write(blob, channel, payload_write, 4, 10, blob_op_complete, NULL);
@@ -4643,13 +4646,19 @@ blob_snapshot_rw(void)
 	 */
 	write_bytes = g_dev_write_bytes - write_bytes_start;
 	read_bytes = g_dev_read_bytes - read_bytes_start;
+	copy_bytes = g_dev_copy_bytes - copy_bytes_start;
+	if (g_dev_copy_enabled) {
+		CU_ASSERT(copy_bytes == cluster_size);
+	} else {
+		CU_ASSERT(copy_bytes == 0);
+	}
 	if (g_use_extent_table) {
 		/* Add one more page for EXTENT_PAGE write */
-		CU_ASSERT(write_bytes == page_size * 12 + cluster_size);
+		CU_ASSERT(write_bytes + copy_bytes == page_size * 12 + cluster_size);
 	} else {
-		CU_ASSERT(write_bytes == page_size * 11 + cluster_size);
+		CU_ASSERT(write_bytes + copy_bytes == page_size * 11 + cluster_size);
 	}
-	CU_ASSERT(read_bytes == cluster_size);
+	CU_ASSERT(read_bytes + copy_bytes == cluster_size);
 
 	spdk_blob_io_read(blob, channel, payload_read, 4, 10, blob_op_complete, NULL);
 	poll_threads();
@@ -7580,6 +7589,16 @@ main(int argc, char **argv)
 
 	g_dev_buffer = calloc(1, DEV_BUFFER_SIZE);
 
+	g_dev_copy_enabled = false;
+	CU_basic_set_mode(CU_BRM_VERBOSE);
+	g_use_extent_table = false;
+	CU_basic_run_tests();
+	num_failures = CU_get_number_of_failures();
+	g_use_extent_table = true;
+	CU_basic_run_tests();
+	num_failures += CU_get_number_of_failures();
+
+	g_dev_copy_enabled = true;
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	g_use_extent_table = false;
 	CU_basic_run_tests();
