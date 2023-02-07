@@ -1,0 +1,20 @@
+diff --git a/drivers/crypto/ipsec_mb/ipsec_mb_private.c b/drivers/crypto/ipsec_mb/ipsec_mb_private.c
+index 50b789a..9eebf9b 100644
+--- a/drivers/crypto/ipsec_mb/ipsec_mb_private.c
++++ b/drivers/crypto/ipsec_mb/ipsec_mb_private.c
+@@ -170,13 +170,8 @@
+ 
+ 	if (rte_eal_process_type() == RTE_PROC_PRIMARY) {
+ 		retval = ipsec_mb_mp_request_register();
+-		if (retval && (rte_errno == EEXIST))
+-			/* Safe to proceed, return 0 */
+-			return 0;
+-
+-		if (retval)
+-			IPSEC_MB_LOG(ERR,
+-				"IPSec Multi-buffer register MP request failed.\n");
++		if (retval != 0 && rte_errno == ENOTSUP)
++			retval = 0;
+ 	}
+ 	return retval;
+ }
