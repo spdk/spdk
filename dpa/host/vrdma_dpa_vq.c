@@ -1097,9 +1097,9 @@ int vrdma_dpa_msix_create(struct vrdma_dpa_vq *dpa_vq,
 	return 0;
 
 err_alias_cq_create:
-	mlx_devx_destroy_eq(dpa_vq->emu_dev_ctx->msix[dpa_vq->msix_vector].alias_eq_obj);
+	mlx_devx_destroy_eq(emu_dev_ctx->msix[attr->msix_vector].alias_eq_obj);
 err_alias_eq_create:
-	mlx_devx_destroy_eq(dpa_vq->emu_dev_ctx->msix[dpa_vq->msix_vector].obj);
+	mlx_devx_destroy_eq(emu_dev_ctx->msix[attr->msix_vector].obj);
 	return err;
 }
 

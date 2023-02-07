@@ -216,7 +216,7 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 	ehctx->pi_count++;
 
 	rq_last_fetch_end = rq_pi % ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt;
-	sq_last_fetch_end = sq_pi % ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt;
+	sq_last_fetch_end = sq_pi % ehctx->dma_qp.host_vq_ctx.sq_wqebb_cnt;
 
 	// while ((rq_last_fetch_start != rq_last_fetch_end) || 
 	// 	(sq_last_fetch_start != sq_last_fetch_end))
@@ -291,7 +291,7 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 		sq_pi = *(uint16_t*)(ehctx->window_base_addr + 
 					ehctx->dma_qp.host_vq_ctx.sq_pi_paddr);
 		rq_last_fetch_end = rq_pi % ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt;
-		sq_last_fetch_end = sq_pi % ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt;
+		sq_last_fetch_end = sq_pi % ehctx->dma_qp.host_vq_ctx.sq_wqebb_cnt;
 		ehctx->pi_count++;
 #ifdef DPA_COUNT
 		if ((print != ehctx->wqe_send_count) && (ehctx->wqe_send_count % 512 == 1)) {
