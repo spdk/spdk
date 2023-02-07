@@ -827,6 +827,7 @@ vrdma_dpa_vq_create(struct vrdma_ctrl *ctrl, struct spdk_vrdma_qp *vqp,
 	rdma_qp_create_attr.rx_cb = q_attr->rx_cb;
 	rdma_qp_create_attr.uctx = virtq;
 	rdma_qp_create_attr.mode = SNAP_DMA_Q_MODE_DV;
+	rdma_qp_create_attr.use_devx = true;
 
 	virtq->dma_q = snap_dma_ep_create(ctrl->pd, &rdma_qp_create_attr);
 	if (!virtq->dma_q) {
@@ -835,7 +836,7 @@ vrdma_dpa_vq_create(struct vrdma_ctrl *ctrl, struct spdk_vrdma_qp *vqp,
 	}
 
 	/* Create DPA QP */
-	attr.tisn_or_qpn = virtq->dma_q->sw_qp.qp->verbs_qp->qp_num;
+	attr.tisn_or_qpn = virtq->dma_q->sw_qp.qp->devx_qp.devx.id;
 	attr.vq_idx      = vqp->qp_idx;
 	attr.sq_msix_vector = vqp->sq_vcq->veq->vector_idx;
 	attr.rq_msix_vector = vqp->rq_vcq->veq->vector_idx;
