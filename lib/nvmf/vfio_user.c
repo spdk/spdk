@@ -605,6 +605,25 @@ cq_tail_advance(struct nvmf_vfio_user_cq *cq)
 	}
 }
 
+static uint32_t
+cq_free_slots(struct nvmf_vfio_user_cq *cq)
+{
+	uint32_t free_slots;
+
+	assert(cq != NULL);
+
+	if (cq->tail == cq->last_head) {
+		free_slots = cq->size;
+	} else if (cq->tail > cq->last_head) {
+		free_slots = cq->size - (cq->tail - cq->last_head);
+	} else {
+		free_slots = cq->last_head - cq->tail;
+	}
+	assert(free_slots > 0);
+
+	return free_slots - 1;
+}
+
 /*
  * As per NVMe Base spec 3.3.1.2.1, we are supposed to implement CQ flow
  * control: if there is no space in the CQ, we should wait until there is.
@@ -619,22 +638,18 @@ cq_tail_advance(struct nvmf_vfio_user_cq *cq)
 static inline bool
 cq_is_full(struct nvmf_vfio_user_cq *cq)
 {
-	uint32_t qindex;
+	uint32_t free_cq_slots;
 
 	assert(cq != NULL);
 
-	qindex = *cq_tailp(cq) + 1;
-	if (spdk_unlikely(qindex == cq->size)) {
-		qindex = 0;
+	free_cq_slots = cq_free_slots(cq);
+
+	if (spdk_unlikely(free_cq_slots == 0)) {
+		cq->last_head = *cq_dbl_headp(cq);
+		free_cq_slots = cq_free_slots(cq);
 	}
 
-	if (qindex != cq->last_head) {
-		return false;
-	}
-
-	cq->last_head = *cq_dbl_headp(cq);
-
-	return qindex == cq->last_head;
+	return free_cq_slots == 0;
 }
 
 static bool
@@ -2505,25 +2520,6 @@ consume_cmd(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_sq *sq,
 	}
 
 	return handle_cmd_req(ctrlr, cmd, sq);
-}
-
-static uint32_t
-cq_free_slots(struct nvmf_vfio_user_cq *cq)
-{
-	uint32_t free_slots;
-
-	assert(cq != NULL);
-
-	if (cq->tail == cq->last_head) {
-		free_slots = cq->size;
-	} else if (cq->tail > cq->last_head) {
-		free_slots = cq->size - (cq->tail - cq->last_head);
-	} else {
-		free_slots = cq->last_head - cq->tail;
-	}
-	assert(free_slots > 0);
-
-	return free_slots - 1;
 }
 
 /* Returns the number of commands processed, or a negative value on error. */
