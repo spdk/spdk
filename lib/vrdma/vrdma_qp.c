@@ -261,6 +261,7 @@ vrdma_create_backend_qp(struct vrdma_ctrl *ctrl,
 	qp->bk_qp.qp_attr.sq_max_inline_size = 256;
 	qp->bk_qp.qp_attr.rq_size = vqp->rq.comm.wqebb_cnt;
 	qp->bk_qp.qp_attr.rq_max_sge = 1;
+	qp->bk_qp.qp_attr.is_vrdma = 1;
 	if (snap_vrdma_create_qp_helper(qp->pd, &qp->bk_qp)) {
 		SPDK_ERRLOG("Failed to create backend QP ");
 		goto free_bk_qp;
@@ -318,7 +319,8 @@ int vrdma_modify_backend_qp_to_ready(struct vrdma_ctrl *ctrl,
 	}
 
 	attr_mask = IBV_QP_PATH_MTU | IBV_QP_DEST_QPN |
-				IBV_QP_RQ_PSN | IBV_QP_MIN_RNR_TIMER;
+				IBV_QP_RQ_PSN | IBV_QP_MIN_RNR_TIMER |
+				IBV_QP_MAX_DEST_RD_ATOMIC;
 	path_mtu = ctrl->vdev->vrdma_sf.mtu < ctrl->sctrl->bar_curr->mtu ?
 				ctrl->vdev->vrdma_sf.mtu : ctrl->sctrl->bar_curr->mtu;
 	if (path_mtu >= 4096)
@@ -338,6 +340,7 @@ int vrdma_modify_backend_qp_to_ready(struct vrdma_ctrl *ctrl,
 	}
 	qp_attr.rq_psn = 0;
 	qp_attr.min_rnr_timer = VRDMA_MIN_RNR_TIMER;
+	qp_attr.max_dest_rd_atomic = VRDMA_QP_MAX_DEST_RD_ATOMIC;
 	rdy_attr.dest_mac = bk_qp->dest_mac;
 	rdy_attr.rgid_rip = bk_qp->rgid_rip;
 	rdy_attr.src_addr_index = bk_qp->src_addr_idx;
@@ -347,11 +350,13 @@ int vrdma_modify_backend_qp_to_ready(struct vrdma_ctrl *ctrl,
 	}
 
 	attr_mask = IBV_QP_SQ_PSN | IBV_QP_RETRY_CNT |
-				IBV_QP_RNR_RETRY | IBV_QP_TIMEOUT;
+				IBV_QP_RNR_RETRY | IBV_QP_TIMEOUT |
+				IBV_QP_MAX_QP_RD_ATOMIC;
 	qp_attr.sq_psn = 0;
 	qp_attr.retry_cnt = VRDMA_BACKEND_QP_RNR_RETRY;
 	qp_attr.rnr_retry = VRDMA_BACKEND_QP_RETRY_COUNT;
 	qp_attr.timeout = VRDMA_BACKEND_QP_TIMEOUT;
+	qp_attr.max_rd_atomic = VRDMA_QP_MAX_RD_ATOMIC;
 	if (snap_vrdma_modify_bankend_qp_rtr2rts(sqp, &qp_attr, attr_mask)) {
 		SPDK_ERRLOG("Failed to modify bankend QP RTR to RTS");
 		return -1;
