@@ -12,7 +12,7 @@ source $rootdir/test/nvmf/common.sh
 MATCH_FILE="spdkcli_nvmf.test"
 SPDKCLI_BRANCH="/nvmf"
 
-trap 'on_error_exit' ERR
+trap 'cleanup' EXIT
 
 timing_enter run_nvmf_tgt
 run_nvmf_tgt

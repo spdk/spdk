@@ -14,7 +14,7 @@ SPDKCLI_BRANCH="/bdevs"
 testdir=$(readlink -f $(dirname $0))
 . $testdir/common.sh
 
-trap 'on_error_exit;' ERR
+trap 'cleanup' EXIT
 
 timing_enter run_spdk_tgt
 run_spdk_tgt

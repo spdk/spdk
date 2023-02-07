@@ -14,7 +14,7 @@ SPDKCLI_BRANCH="/"
 sample_aio=$SPDK_TEST_STORAGE/sample_aio
 sample_aio2=$SPDK_TEST_STORAGE/sample_aio2
 
-trap 'on_error_exit' ERR
+trap 'cleanup' EXIT
 timing_enter run_vhost_tgt
 run_vhost_tgt
 timing_exit run_vhost_tgt

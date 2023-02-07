@@ -12,7 +12,7 @@ source $rootdir/test/iscsi_tgt/common.sh
 MATCH_FILE="spdkcli_iscsi.test"
 SPDKCLI_BRANCH="/iscsi"
 
-trap 'on_error_exit;' ERR
+trap 'cleanup' EXIT
 
 timing_enter run_iscsi_tgt
 

@@ -11,7 +11,7 @@ source $rootdir/test/spdkcli/common.sh
 MATCH_FILE="spdkcli_pmem.test"
 SPDKCLI_BRANCH="/bdevs/pmemblk"
 
-trap 'rm -f $testdir/match_files/spdkcli_pmem_info.test; on_error_exit;' ERR
+trap 'rm -f $testdir/match_files/spdkcli_pmem_info.test; cleanup' EXIT
 
 timing_enter run_spdk_tgt
 run_spdk_tgt

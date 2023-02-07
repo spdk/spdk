@@ -11,13 +11,12 @@ source $rootdir/test/spdkcli/common.sh
 MATCH_FILE="spdkcli_rbd.test"
 SPDKCLI_BRANCH="/bdevs/rbd"
 
-trap 'on_error_exit' ERR
+trap 'rbd_cleanup; cleanup' EXIT
 timing_enter run_spdk_tgt
 run_spdk_tgt
 timing_exit run_spdk_tgt
 
 timing_enter spdkcli_create_rbd_config
-trap 'rbd_cleanup; on_error_exit' ERR
 rbd_cleanup
 rbd_setup 127.0.0.1
 $spdkcli_job "\"/bdevs/rbd create rbd foo 512' 'Ceph0' True "\"/bdevs/rbd create rbd foo 512 'Ceph1' True"

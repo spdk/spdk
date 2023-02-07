@@ -8,7 +8,7 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/spdkcli/common.sh
 
-trap 'killprocess $virtio_pid; on_error_exit' ERR
+trap 'killprocess $virtio_pid; cleanup' EXIT
 
 timing_enter run_spdk_tgt
 run_spdk_tgt
