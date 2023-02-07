@@ -661,6 +661,10 @@ _vrdma_dpa_vq_create(struct vrdma_ctrl *ctrl,
 	msix_attr.sf_vhca_id  = attr->sf_vhca_id;
 	msix_attr.msix_vector = attr->sq_msix_vector;
 	msix_attr.cq_size     = attr->tx_qsize;
+
+	dpa_vq->sq_msix_vector = attr->sq_msix_vector;
+	dpa_vq->rq_msix_vector = attr->rq_msix_vector;
+
 	err = vrdma_dpa_msix_create(dpa_vq, dpa_vq->dpa_ctx->flexio_process,
 				      &msix_attr, dpa_vq->emu_dev_ctx, attr->num_msix);
 	if (err) {
@@ -748,8 +752,10 @@ static void _vrdma_dpa_vq_destroy(struct vrdma_dpa_vq *dpa_vq)
 {
 	vrdma_dpa_dma_q_destroy(dpa_vq);
 	vrdma_dpa_dma_q_cq_destroy(dpa_vq, dpa_vq->dpa_ctx);
-	vrdma_dpa_msix_destroy(dpa_vq->msix_vector,
+	vrdma_dpa_msix_destroy(dpa_vq->sq_msix_vector,
 				 dpa_vq->emu_dev_ctx);
+	if (dpa_vq->sq_msix_vector != dpa_vq->rq_msix_vector)
+		vrdma_dpa_msix_destroy(dpa_vq->sq_msix_vector, dpa_vq->emu_dev_ctx);
 	mlx_devx_emu_db_to_cq_unmap(dpa_vq->guest_db_to_cq_ctx.devx_emu_db_to_cq_ctx);
 	vrdma_dpa_db_cq_destroy(dpa_vq);
 	vrdma_dpa_vq_uninit(dpa_vq);
@@ -1029,11 +1035,7 @@ int vrdma_dpa_msix_create(struct vrdma_dpa_vq *dpa_vq,
 	 * such case.
 	 */
 	if (attr->msix_vector == 0xFFFF) {
-		if (dpa_vq)
-			dpa_vq->msix_vector = 0xFFFF;
-		else
-			emu_dev_ctx->msix_config_vector = 0xFFFF;
-
+		log_notice("msix_vector %d",attr->msix_vector);
 		return 0;
 	}
 
@@ -1081,11 +1083,6 @@ int vrdma_dpa_msix_create(struct vrdma_dpa_vq *dpa_vq,
 		goto err_alias_cq_create;
 	}
 	atomic32_inc(&emu_dev_ctx->msix[attr->msix_vector].msix_refcount);
-
-	if (dpa_vq)
-		dpa_vq->msix_vector = attr->msix_vector;
-	else
-		emu_dev_ctx->msix_config_vector = attr->msix_vector;
 
 	log_notice("idx %d, %s, msix %#x, devx_eqn %#x, alias_eqn %#x, alias_cqn %#x",
 		  dpa_vq ? dpa_vq->idx : -1,

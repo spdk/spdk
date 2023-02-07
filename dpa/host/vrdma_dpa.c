@@ -465,6 +465,9 @@ int vrdma_dpa_emu_dev_init(const struct vrdma_prov_emu_dev_init_attr *attr,
 		goto err_outbox_create;
 	}
 
+	emu_dev_ctx->msix_config_vector = attr->msix_config_vector;
+	log_notice("emu_dev_ctx->msix_config_vector is %d", emu_dev_ctx->msix_config_vector);
+
 	err = vrdma_dpa_device_msix_create(dpa_ctx->flexio_process, attr,
 					     emu_dev_ctx, attr->num_msix);
 	if (err) {

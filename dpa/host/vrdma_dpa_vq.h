@@ -94,7 +94,8 @@ struct vrdma_dpa_vq {
 		uint32_t log_rq_depth;
 		int qp_num;
 	} dma_qp;
-	uint16_t msix_vector;
+	uint16_t sq_msix_vector;
+	uint16_t rq_msix_vector;
 };
 
 struct vrdma_msix_init_attr {
