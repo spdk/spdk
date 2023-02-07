@@ -43,11 +43,13 @@
 
 /* RTR state params */
 #define VRDMA_MIN_RNR_TIMER 12
+#define VRDMA_QP_MAX_DEST_RD_ATOMIC 16
 
 /* RTS state params */
 #define VRDMA_BACKEND_QP_TIMEOUT 14
 #define VRDMA_BACKEND_QP_RETRY_COUNT 7
 #define VRDMA_BACKEND_QP_RNR_RETRY 7
+#define VRDMA_QP_MAX_RD_ATOMIC 16
 
 struct snap_vrdma_backend_qp;
 
