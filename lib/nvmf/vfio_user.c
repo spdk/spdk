@@ -2507,13 +2507,34 @@ consume_cmd(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_sq *sq,
 	return handle_cmd_req(ctrlr, cmd, sq);
 }
 
+static uint32_t
+cq_free_slots(struct nvmf_vfio_user_cq *cq)
+{
+	uint32_t free_slots;
+
+	assert(cq != NULL);
+
+	if (cq->tail == cq->last_head) {
+		free_slots = cq->size;
+	} else if (cq->tail > cq->last_head) {
+		free_slots = cq->size - (cq->tail - cq->last_head);
+	} else {
+		free_slots = cq->last_head - cq->tail;
+	}
+	assert(free_slots > 0);
+
+	return free_slots - 1;
+}
+
 /* Returns the number of commands processed, or a negative value on error. */
 static int
 handle_sq_tdbl_write(struct nvmf_vfio_user_ctrlr *ctrlr, const uint32_t new_tail,
 		     struct nvmf_vfio_user_sq *sq)
 {
 	struct spdk_nvme_cmd *queue;
+	struct nvmf_vfio_user_cq *cq = ctrlr->cqs[sq->cqid];
 	int count = 0;
+	uint32_t free_cq_slots;
 
 	assert(ctrlr != NULL);
 	assert(sq != NULL);
@@ -2526,11 +2547,38 @@ handle_sq_tdbl_write(struct nvmf_vfio_user_ctrlr *ctrlr, const uint32_t new_tail
 		sq->need_rearm = true;
 	}
 
+	free_cq_slots = cq_free_slots(cq);
 	queue = q_addr(&sq->mapping);
 	while (*sq_headp(sq) != new_tail) {
 		int err;
-		struct spdk_nvme_cmd *cmd = &queue[*sq_headp(sq)];
+		struct spdk_nvme_cmd *cmd;
 
+		/*
+		 * Linux host nvme driver can submit cmd's more than free cq slots
+		 * available. So process only those who have cq slots available.
+		 */
+		if (free_cq_slots-- == 0) {
+			cq->last_head = *cq_dbl_headp(cq);
+
+			free_cq_slots = cq_free_slots(cq);
+			if (free_cq_slots > 0) {
+				continue;
+			}
+
+			/*
+			 * If there are no free cq slots then kick interrupt FD to loop
+			 * again to process remaining sq cmds.
+			 * In case of polling mode we will process remaining sq cmds during
+			 * next polling interation.
+			 * sq head is advanced only for consumed commands.
+			 */
+			if (in_interrupt_mode(ctrlr->transport)) {
+				eventfd_write(ctrlr->intr_fd, 1);
+			}
+			break;
+		}
+
+		cmd = &queue[*sq_headp(sq)];
 		count++;
 
 		/*
