@@ -143,7 +143,12 @@ struct spdk_sock_impl_opts {
 	/**
 	 * Set default PSK key. Used by ssl socket module.
 	 */
-	char *psk_key;
+	uint8_t *psk_key;
+
+	/**
+	 * Size of psk_key.
+	 */
+	uint32_t psk_key_size;
 
 	/**
 	 * Set default PSK identity. Used by ssl socket module.
