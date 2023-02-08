@@ -3,6 +3,7 @@
 #   All rights reserved.
 #
 
+
 def compressdev_scan_accel_module(client, pmd):
     """Scan and enable compressdev module and set pmd option.
 
