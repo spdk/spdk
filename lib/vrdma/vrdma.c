@@ -112,7 +112,9 @@ int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
 		ctrl = ctx->ctrl;
 		ctrl->emu_ctx  = spdk_vrdma_snap_get_ibv_context(vrdma_ctx->emu_manager);
 		//vrdma_ctx->dpa_enabled = 1;
+#if defined (CX7) || defined (BF3)
 		ctrl->dpa_enabled = 1;
+#endif
 	}
 	if (vrdma_ctx->dpa_enabled) {
 		/*Prove init DPA*/
