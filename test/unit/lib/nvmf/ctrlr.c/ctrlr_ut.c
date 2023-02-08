@@ -27,9 +27,9 @@ struct spdk_bdev {
 	uint32_t max_active_zones;
 };
 
-const uint32_t MAX_OPEN_ZONES = 12;
-const uint32_t MAX_ACTIVE_ZONES = 34;
-const uint32_t ZONE_SIZE = 56;
+#define MAX_OPEN_ZONES 12
+#define MAX_ACTIVE_ZONES 34
+#define ZONE_SIZE 56
 
 const char subsystem_default_sn[SPDK_NVME_CTRLR_SN_LEN + 1] = "subsys_default_sn";
 const char subsystem_default_mn[SPDK_NVME_CTRLR_MN_LEN + 1] = "subsys_default_mn";
