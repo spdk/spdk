@@ -53,6 +53,7 @@
 //#define WQE_DBG
 //#define VCQ_ERR
 //#define POLL_PI_DBG
+//#define PREFETCH_WQE
 
 struct mlx5_wqe_inline_seg {
 	__be32		byte_count;
@@ -249,6 +250,7 @@ static bool vrdma_qp_sm_poll_pi(struct spdk_vrdma_qp *vqp,
 	}
 	vqp->stats.sq_dma_tx_cnt++;
 
+#ifdef PREFETCH_WQE
 	/* #3 poll vqp sq wqe */
 	num = spdk_min(MAX_POLL_WQE_NUM, q_size >> 1);
 	vqp->q_comp.count++;
@@ -303,6 +305,8 @@ static bool vrdma_qp_sm_poll_pi(struct spdk_vrdma_qp *vqp,
 
 	vqp->sq.comm.num_to_parse = num;
 
+#endif
+
 	return false;
 }
 
@@ -316,8 +320,12 @@ static bool vrdma_qp_sm_handle_pi(struct spdk_vrdma_qp *vqp,
 	}
 
 	if (vqp->qp_pi->pi.sq_pi != vqp->sq.comm.pre_pi) {
-		//vqp->sm_state = VRDMA_QP_STATE_WQE_READ;
+#ifdef PREFETCH_WQE
 		vqp->sm_state = VRDMA_QP_STATE_WQE_PARSE;
+#else
+		vqp->sm_state = VRDMA_QP_STATE_WQE_READ;
+#endif
+		
 	} else {
 		vqp->sm_state = VRDMA_QP_STATE_GEN_COMP;
 	}
@@ -421,9 +429,11 @@ static bool vrdma_qp_wqe_sm_parse(struct spdk_vrdma_qp *vqp,
 		return true;
 	}
 
+#ifdef PREFETCH_WQE
 	if (vqp->sq.comm.num_to_parse > (vqp->qp_pi->pi.sq_pi - vqp->sq.comm.pre_pi)) {
 		vqp->sq.comm.num_to_parse = vqp->qp_pi->pi.sq_pi - vqp->sq.comm.pre_pi;
 	}
+#endif
 
 	vqp->stats.sq_wqe_fetched += vqp->sq.comm.num_to_parse;
 #ifdef WQE_DBG
@@ -835,6 +845,7 @@ static bool vrdma_qp_wqe_sm_submit(struct spdk_vrdma_qp *vqp,
 	SPDK_NOTICELOG("vrdam submit sq wqe: pi %d, pre_pi %d, num_to_submit %d\n",
 					vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi, num_to_parse);
 #endif
+	/* poll ci is moved to be done with poll pi, just leave code here */
 	//vqp->sm_state = VRDMA_QP_STATE_POLL_CQ_CI;
 	vqp->sm_state = VRDMA_QP_STATE_GEN_COMP;
 
@@ -842,9 +853,10 @@ static bool vrdma_qp_wqe_sm_submit(struct spdk_vrdma_qp *vqp,
 		wqe = vqp->sq.sq_buff + ((vqp->sq.comm.pre_pi + i) % q_size);
 		vqp->sq.meta_buff[(vqp->sq.comm.pre_pi + i) % q_size].req_id = wqe->meta.req_id;
 		opcode = vrdma_ib2mlx_opcode[wqe->meta.opcode];
-		//SPDK_NOTICELOG("vrdam sq submit wqe start, m_qpn %d, opcode 0x%x\n",
-			//			backend_qp->hw_qp.qp_num, opcode);
+
 #ifdef WQE_DBG
+		SPDK_NOTICELOG("vrdam sq submit wqe start, m_qpn %d, opcode 0x%x\n",
+						backend_qp->hw_qp.qp_num, opcode);
 		vrdma_dump_tencent_wqe(wqe);
 #endif
 #if 0
