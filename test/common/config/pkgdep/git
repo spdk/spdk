@@ -410,10 +410,6 @@ function install_vagrant() {
 function install_igb_uio() {
 	git clone "${GIT_REPO_DPDK_KMODS}" "$GIT_REPOS/dpdk-kmods"
 
-	if ge "$kernel_ver" 5.16.0; then
-		patch --dir="$GIT_REPOS/dpdk-kmods" -p1
-	fi < "$rootdir/test/common/config/pkgdep/patches/dpdk_kmods/0001-dma-mask.patch"
-
 	(cd "$GIT_REPOS/dpdk-kmods/linux/igb_uio" && make -j ${jobs})
 	sudo mkdir -p "/lib/modules/$(uname -r)/extra/dpdk"
 	sudo cp "$GIT_REPOS/dpdk-kmods/linux/igb_uio/igb_uio.ko" "/lib/modules/$(uname -r)/extra/dpdk"
