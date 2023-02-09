@@ -2024,9 +2024,16 @@ reclaim_cache_buffers(struct spdk_file *file)
 	/* If not freed, put it in the end of the queue */
 	if (file->tree->present_mask != 0) {
 		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
-	} else {
+	}
+
+	/* tree_free_buffers() may have freed the buffer pointed to by file->last.
+	 * So check if current append_pos is still in the cache, and if not, clear
+	 * file->last.
+	 */
+	if (tree_find_buffer(file->tree, file->append_pos) == NULL) {
 		file->last = NULL;
 	}
+
 	pthread_spin_unlock(&file->lock);
 
 	return 0;
@@ -2431,44 +2438,46 @@ spdk_file_write(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 	pthread_spin_lock(&file->lock);
 	file->open_for_writing = true;
 
-	if ((file->last == NULL) && (file->append_pos % CACHE_BUFFER_SIZE == 0)) {
-		cache_append_buffer(file);
-	}
-
-	if (file->last == NULL) {
-		struct rw_from_file_arg arg = {};
-		int rc;
-
-		arg.channel = channel;
-		arg.rwerrno = 0;
-		file->append_pos += length;
-		pthread_spin_unlock(&file->lock);
-		rc = __send_rw_from_file(file, payload, offset, length, false, &arg);
-		if (rc != 0) {
-			return rc;
+	do {
+		if ((file->last == NULL) && (file->append_pos % CACHE_BUFFER_SIZE == 0)) {
+			cache_append_buffer(file);
 		}
-		sem_wait(&channel->sem);
-		return arg.rwerrno;
-	}
 
-	blob_size = __file_get_blob_size(file);
+		if (file->last == NULL) {
+			struct rw_from_file_arg arg = {};
+			int rc;
 
-	if ((offset + length) > blob_size) {
-		struct spdk_fs_cb_args extend_args = {};
-
-		cluster_sz = file->fs->bs_opts.cluster_sz;
-		extend_args.sem = &channel->sem;
-		extend_args.op.resize.num_clusters = __bytes_to_clusters((offset + length), cluster_sz);
-		extend_args.file = file;
-		BLOBFS_TRACE(file, "start resize to %u clusters\n", extend_args.op.resize.num_clusters);
-		pthread_spin_unlock(&file->lock);
-		file->fs->send_request(__file_extend_blob, &extend_args);
-		sem_wait(&channel->sem);
-		if (extend_args.rc) {
-			return extend_args.rc;
+			arg.channel = channel;
+			arg.rwerrno = 0;
+			file->append_pos += length;
+			pthread_spin_unlock(&file->lock);
+			rc = __send_rw_from_file(file, payload, offset, length, false, &arg);
+			if (rc != 0) {
+				return rc;
+			}
+			sem_wait(&channel->sem);
+			return arg.rwerrno;
 		}
-		pthread_spin_lock(&file->lock);
-	}
+
+		blob_size = __file_get_blob_size(file);
+
+		if ((offset + length) > blob_size) {
+			struct spdk_fs_cb_args extend_args = {};
+
+			cluster_sz = file->fs->bs_opts.cluster_sz;
+			extend_args.sem = &channel->sem;
+			extend_args.op.resize.num_clusters = __bytes_to_clusters((offset + length), cluster_sz);
+			extend_args.file = file;
+			BLOBFS_TRACE(file, "start resize to %u clusters\n", extend_args.op.resize.num_clusters);
+			pthread_spin_unlock(&file->lock);
+			file->fs->send_request(__file_extend_blob, &extend_args);
+			sem_wait(&channel->sem);
+			if (extend_args.rc) {
+				return extend_args.rc;
+			}
+			pthread_spin_lock(&file->lock);
+		}
+	} while (file->last == NULL);
 
 	flush_req = alloc_fs_request(channel);
 	if (flush_req == NULL) {
