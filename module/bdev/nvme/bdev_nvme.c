@@ -1825,7 +1825,7 @@ bdev_nvme_check_op_after_reset(struct nvme_ctrlr *nvme_ctrlr, bool success)
 	}
 }
 
-static int _bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, bool hotplug);
+static int bdev_nvme_delete_ctrlr(struct nvme_ctrlr *nvme_ctrlr, bool hotplug);
 static void bdev_nvme_reconnect_ctrlr(struct nvme_ctrlr *nvme_ctrlr);
 
 static int
@@ -1914,7 +1914,7 @@ _bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 		nvme_ctrlr_unregister(nvme_ctrlr);
 		break;
 	case OP_DESTRUCT:
-		_bdev_nvme_delete(nvme_ctrlr, false);
+		bdev_nvme_delete_ctrlr(nvme_ctrlr, false);
 		break;
 	case OP_DELAYED_RECONNECT:
 		nvme_ctrlr_disconnect(nvme_ctrlr, bdev_nvme_start_reconnect_delay_timer);
@@ -4753,7 +4753,7 @@ _nvme_ctrlr_destruct(void *ctx)
 }
 
 static int
-_bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, bool hotplug)
+bdev_nvme_delete_ctrlr(struct nvme_ctrlr *nvme_ctrlr, bool hotplug)
 {
 	struct nvme_probe_skip_entry *entry;
 
@@ -4789,7 +4789,7 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_ctrlr *nvme_ctrlr = cb_ctx;
 
-	_bdev_nvme_delete(nvme_ctrlr, true);
+	bdev_nvme_delete_ctrlr(nvme_ctrlr, true);
 }
 
 static int
@@ -5389,7 +5389,7 @@ bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 
 				if (!TAILQ_NEXT(p, link)) {
 					/* The current path is the only path. */
-					rc = _bdev_nvme_delete(nvme_ctrlr, false);
+					rc = bdev_nvme_delete_ctrlr(nvme_ctrlr, false);
 				} else {
 					/* There is an alternative path. */
 					rc = bdev_nvme_failover(nvme_ctrlr, true);
