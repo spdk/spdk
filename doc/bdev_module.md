@@ -162,12 +162,12 @@ reading from or writing to the underlying bdev.
 There are two slightly different APIs for taking and releasing claims. The
 preferred interface uses `spdk_bdev_module_claim_bdev_desc()`. This method allows
 claims that ensure there is a single writer with
-`SPDK_BDEV_CLAIM_READ_WRITE_ONCE`, cooperating shared writers with
-`SPDK_BDEV_CLAIM_READ_WRITE_MANY`, and shared readers that prevent any
-writers with `SPDK_BDEV_CLAIM_READ_ONLY_MANY`. In all cases,
+`SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE`, cooperating shared writers with
+`SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED`, and shared readers that prevent any
+writers with `SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE`. In all cases,
 `spdk_bdev_open_ext()` may be used to open the underlying bdev read-only. If a
 read-only bdev descriptor successfully claims a bdev with
-`SPDK_BDEV_CLAIM_READ_WRITE_ONCE` or `SPDK_BDEV_CLAIM_READ_WRITE_MANY`
+`SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE` or `SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED`
 the bdev descriptor is promoted to read-write.
 Any claim that is obtained with `spdk_bdev_module_claim_bdev_desc()` is
 automatically released upon closing the bdev descriptor used to obtain the
