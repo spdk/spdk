@@ -866,9 +866,13 @@ static bool vrdma_qp_wqe_sm_submit(struct spdk_vrdma_qp *vqp,
 	SPDK_NOTICELOG("vrdam submit sq wqe: pi %d, pre_pi %d, num_to_submit %d\n",
 					vqp->qp_pi->pi.sq_pi, vqp->sq.comm.pre_pi, num_to_parse);
 #endif
+
+#ifdef VRDMA_DPA
+	vqp->sm_state = vqp->sm_state;
+#else
 	/* poll ci is moved to be done with poll pi, just leave code here */
-	//vqp->sm_state = VRDMA_QP_STATE_POLL_CQ_CI;
 	vqp->sm_state = VRDMA_QP_STATE_GEN_COMP;
+#endif
 
 	for (i = 0; i < num_to_parse; i++) {
 		wqe = vqp->sq.sq_buff + ((vqp->sq.comm.pre_pi + i) % q_size);
@@ -1325,8 +1329,13 @@ static bool vrdma_qp_sm_gen_completion(struct spdk_vrdma_qp *vqp,
 	SPDK_NOTICELOG("vrdam read cq ci latency %"PRIu64" \n",
 					(start_tv.tv_nsec - g_end_tv.tv_nsec));
 #endif
-					
+
+#ifdef VRDMA_DPA					
+	vqp->sm_state = VRDMA_QP_STATE_POLL_CQ_CI;
+#else
 	vqp->sm_state = VRDMA_QP_STATE_POLL_PI;
+#endif
+
 	if (spdk_unlikely(vqp->flags & VRDMA_SEND_ERR_CQE)) {
 		return vrdma_vqp_send_err_cqe(vqp);
 	}
@@ -1381,12 +1390,6 @@ write_vcq:
 #ifdef POLL_PI_DBG
 		SPDK_NOTICELOG("no cqe to generate, jump to poll sq PI\n");
 #endif
-
-#ifdef VRDMA_DPA
-		if ((vqp->bk_qp->bk_qp.hw_qp.sq.pi % 1024) != (mcq->ci % 1024)) {
-     			vqp->sm_state = VRDMA_QP_STATE_POLL_CQ_CI;
-		}
-#endif
 		return true;
 	}
 	vrdma_ring_mcq_db(mcq);
@@ -1403,13 +1406,6 @@ write_vcq:
 					vcq->pi, vcq->pre_pi);
 #endif
 	vcq->pre_pi = vcq->pi;
-
-#ifdef VRDMA_DPA
-	if ((vqp->bk_qp->bk_qp.hw_qp.sq.pi % 1024) - (mcq->ci % 1024) > 128) {
-		vqp->sm_state = VRDMA_QP_STATE_POLL_CQ_CI;
-		return true;
-	}
-#endif
 	
 	return false;
 }
@@ -1484,7 +1480,15 @@ static int vrdma_qp_wqe_progress(struct spdk_vrdma_qp *vqp,
 void vrdma_dpa_rx_cb(struct spdk_vrdma_qp *vqp,
 		enum vrdma_qp_sm_op_status status)
 {
-	return vrdma_qp_wqe_progress(vqp, status);
+	vrdma_qp_wqe_sm_parse(vqp, status);
+	vqp->stats.sq_wqe_fetched += vqp->sq.comm.num_to_parse;
+	vqp->bk_qp = vrdma_vq_get_mqp(vqp);
+	/* todo for error vcqe handling */
+	if (spdk_unlikely(!vqp->bk_qp)) {
+		SPDK_ERRLOG("vrdma dpa rx, no backend qp is created for vqpn %d\n", vqp->qp_idx);
+		return;
+	}
+	vrdma_qp_wqe_sm_submit(vqp, status);
 }
 
 void vrdma_qp_sm_dma_cb(struct snap_dma_completion *self, int status)
@@ -1509,7 +1513,11 @@ void vrdma_qp_sm_init(struct spdk_vrdma_qp *vqp)
 
 void vrdma_qp_sm_start(struct spdk_vrdma_qp *vqp)
 {
+#ifdef VRDMA_DPA
+	vrdma_qp_sm_poll_cq_ci(vqp, VRDMA_QP_SM_OP_OK);
+#else
 	vrdma_qp_sm_poll_pi(vqp, VRDMA_QP_SM_OP_OK);
+#endif
 }
 
 void vrdma_dump_vqp_stats(struct vrdma_ctrl *ctrl, 
