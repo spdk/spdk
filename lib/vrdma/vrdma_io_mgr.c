@@ -1084,9 +1084,9 @@ static bool vrdma_qp_sm_poll_cq_ci(struct spdk_vrdma_qp *vqp,
 		return true;
 	}
 
-//#ifdef POLL_PI_DBG
+#ifdef POLL_PI_DBG
 	SPDK_NOTICELOG("vrdam poll sq vcq ci: doorbell pa 0x%lx\n", ci_addr);
-//#endif
+#endif
 
 	vqp->sm_state = VRDMA_QP_STATE_GEN_COMP;
 	vqp->q_comp.func = vrdma_qp_sm_dma_cb;
