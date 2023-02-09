@@ -1480,7 +1480,6 @@ static int vrdma_qp_wqe_progress(struct spdk_vrdma_qp *vqp,
 void vrdma_dpa_rx_cb(struct spdk_vrdma_qp *vqp,
 		enum vrdma_qp_sm_op_status status)
 {
-	vrdma_qp_wqe_sm_parse(vqp, status);
 	vqp->stats.sq_wqe_fetched += vqp->sq.comm.num_to_parse;
 	vqp->bk_qp = vrdma_vq_get_mqp(vqp);
 	/* todo for error vcqe handling */
