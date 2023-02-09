@@ -1084,6 +1084,11 @@ static bool vrdma_qp_sm_poll_cq_ci(struct spdk_vrdma_qp *vqp,
 		return true;
 	}
 
+	if (vqp->snap_queue->swq_state == SW_VIRTQ_FLUSHING) {
+		SPDK_NOTICELOG("vqp is in flushing status, stop poll vcq ci\n");
+		return false;
+	}
+
 #ifdef POLL_PI_DBG
 	SPDK_NOTICELOG("vrdam poll sq vcq ci: doorbell pa 0x%lx\n", ci_addr);
 #endif
