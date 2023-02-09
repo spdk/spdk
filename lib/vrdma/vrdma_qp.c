@@ -424,7 +424,6 @@ static void vrdma_vqp_rx_cb(struct snap_dma_q *q, const void *data,
 
 	snap_vqp = (struct snap_vrdma_queue *)q->uctx;
 	vqp = (struct spdk_vrdma_qp *)snap_vqp->ctx;
-	vqp->sm_state = VRDMA_QP_STATE_WQE_PARSE;
 	vqp->qp_pi->pi.sq_pi = pi;
 	vqp->sq.comm.num_to_parse = pi - vqp->sq.comm.pre_pi;
 #ifdef NO_PERF_DEBUG
