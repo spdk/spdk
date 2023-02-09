@@ -2199,11 +2199,10 @@ _bdev_nvme_reset_io(struct nvme_io_path *io_path, struct nvme_bdev_io *bio)
 		 */
 		bdev_io = spdk_bdev_io_from_ctx(bio);
 		TAILQ_INSERT_TAIL(&ctrlr_ch->pending_resets, bdev_io, module_link);
-	} else {
-		return rc;
+		rc = 0;
 	}
 
-	return 0;
+	return rc;
 }
 
 static void
@@ -5359,13 +5358,48 @@ nvme_path_should_delete(struct nvme_path_id *p, const struct nvme_path_id *path_
 	return true;
 }
 
+static int
+_bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, const struct nvme_path_id *path_id)
+{
+	struct nvme_path_id	*p, *t;
+	int			rc = -ENXIO;
+
+	TAILQ_FOREACH_REVERSE_SAFE(p, &nvme_ctrlr->trids, nvme_paths, link, t) {
+		if (!nvme_path_should_delete(p, path_id)) {
+			continue;
+		}
+
+		/* If we made it here, then this path is a match! Now we need to remove it. */
+		if (p == nvme_ctrlr->active_path_id) {
+			/* This is the active path in use right now. The active path is always the first in the list. */
+			if (!TAILQ_NEXT(p, link)) {
+				/* The current path is the only path. */
+				rc = bdev_nvme_delete_ctrlr(nvme_ctrlr, false);
+			} else {
+				/* There is an alternative path. */
+				rc = bdev_nvme_failover(nvme_ctrlr, true);
+			}
+		} else {
+			/* We are not using the specified path. */
+			TAILQ_REMOVE(&nvme_ctrlr->trids, p, link);
+			free(p);
+			rc = 0;
+		}
+
+		if (rc < 0 && rc != -ENXIO) {
+			return rc;
+		}
+	}
+
+	return rc;
+}
+
 int
 bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 {
 	struct nvme_bdev_ctrlr	*nbdev_ctrlr;
 	struct nvme_ctrlr	*nvme_ctrlr, *tmp_nvme_ctrlr;
-	struct nvme_path_id	*p, *t;
-	int			rc = -ENXIO;
+	int			rc = -ENXIO, _rc;
 
 	if (name == NULL || path_id == NULL) {
 		return -EINVAL;
@@ -5378,32 +5412,15 @@ bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 	}
 
 	TAILQ_FOREACH_SAFE(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq, tmp_nvme_ctrlr) {
-		TAILQ_FOREACH_REVERSE_SAFE(p, &nvme_ctrlr->trids, nvme_paths, link, t) {
-			if (!nvme_path_should_delete(p, path_id)) {
-				continue;
-			}
-
-			/* If we made it here, then this path is a match! Now we need to remove it. */
-			if (p == nvme_ctrlr->active_path_id) {
-				/* This is the active path in use right now. The active path is always the first in the list. */
-
-				if (!TAILQ_NEXT(p, link)) {
-					/* The current path is the only path. */
-					rc = bdev_nvme_delete_ctrlr(nvme_ctrlr, false);
-				} else {
-					/* There is an alternative path. */
-					rc = bdev_nvme_failover(nvme_ctrlr, true);
-				}
-			} else {
-				/* We are not using the specified path. */
-				TAILQ_REMOVE(&nvme_ctrlr->trids, p, link);
-				free(p);
-				rc = 0;
-			}
-
-			if (rc < 0 && rc != -ENXIO) {
-				return rc;
-			}
+		_rc = _bdev_nvme_delete(nvme_ctrlr, path_id);
+		if (_rc < 0 && _rc != -ENXIO) {
+			return _rc;
+		} else if (_rc == 0) {
+			/* We traverse all remaining nvme_ctrlrs even if one nvme_ctrlr
+			 * was deleted successfully. To remember the successful deletion,
+			 * overwrite rc only if _rc is zero.
+			 */
+			rc = 0;
 		}
 	}
 
