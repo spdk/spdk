@@ -5823,15 +5823,15 @@ bs_create_blob(struct spdk_blob_store *bs,
 
 	SPDK_DEBUGLOG(blob, "Creating blob with id %" PRIu64 " at page %u\n", id, page_idx);
 
+	spdk_blob_opts_init(&opts_local, sizeof(opts_local));
+	if (opts) {
+		blob_opts_copy(opts, &opts_local);
+	}
+
 	blob = blob_alloc(bs, id);
 	if (!blob) {
 		rc = -ENOMEM;
 		goto error;
-	}
-
-	spdk_blob_opts_init(&opts_local, sizeof(opts_local));
-	if (opts) {
-		blob_opts_copy(opts, &opts_local);
 	}
 
 	blob->use_extent_table = opts_local.use_extent_table;
@@ -5879,6 +5879,8 @@ bs_create_blob(struct spdk_blob_store *bs,
 	return;
 
 error:
+	SPDK_ERRLOG("Failed to create blob: %s, size in clusters/size: %lu (clusters)\n",
+		    spdk_strerror(rc), opts_local.num_clusters);
 	if (blob != NULL) {
 		blob_free(blob);
 	}
