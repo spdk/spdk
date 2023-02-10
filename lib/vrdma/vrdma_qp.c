@@ -507,9 +507,13 @@ int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 		SPDK_NOTICELOG("vqp %d qdb_idx %d lkey %#x rkey %#x\n",
 				vqp->qp_idx, vqp->qdb_idx, vqp->qp_mr->lkey, vqp->qp_mr->rkey);
 		vqp->snap_queue = vrdma_prov_vq_create(ctrl, vqp, &q_attr);
-		SPDK_NOTICELOG("===naliu vrdma_create_vq...end\n");
+
 		if (vqp->snap_queue) {
 			vqp->snap_queue->ctx = vqp;
+			SPDK_NOTICELOG("===naliu vrdma_create_vq...end\n");
+		} else {
+			SPDK_NOTICELOG("===naliu vrdma_create_vq...fail\n");
+			return -1;
 		}
 	}
 	SPDK_NOTICELOG("\nlizh vrdma_create_vq...done\n");
