@@ -213,6 +213,16 @@ vbdev_passthru_queue_io(struct spdk_bdev_io *bdev_io)
 	}
 }
 
+static void
+pt_init_ext_io_opts(struct spdk_bdev_io *bdev_io, struct spdk_bdev_ext_io_opts *opts)
+{
+	memset(opts, 0, sizeof(*opts));
+	opts->size = sizeof(*opts);
+	opts->memory_domain = bdev_io->u.bdev.memory_domain;
+	opts->memory_domain_ctx = bdev_io->u.bdev.memory_domain_ctx;
+	opts->metadata = bdev_io->u.bdev.md_buf;
+}
+
 /* Callback for getting a buf from the bdev pool in the event that the caller passed
  * in NULL, we need to own the buffer so it doesn't get freed by another vbdev module
  * beneath us before we're done with it. That won't happen in this example but it could
@@ -225,6 +235,7 @@ pt_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, boo
 					 pt_bdev);
 	struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(ch);
 	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)bdev_io->driver_ctx;
+	struct spdk_bdev_ext_io_opts io_opts;
 	int rc;
 
 	if (!success) {
@@ -232,20 +243,11 @@ pt_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, boo
 		return;
 	}
 
-	if (bdev_io->u.bdev.ext_opts) {
-		rc = spdk_bdev_readv_blocks_ext(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
-						bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
-						bdev_io->u.bdev.num_blocks, _pt_complete_io,
-						bdev_io, bdev_io->u.bdev.ext_opts);
-	} else {
-		rc = spdk_bdev_readv_blocks_with_md(pt_node->base_desc, pt_ch->base_ch,
-						    bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-						    bdev_io->u.bdev.md_buf,
-						    bdev_io->u.bdev.offset_blocks,
-						    bdev_io->u.bdev.num_blocks,
-						    _pt_complete_io, bdev_io);
-	}
-
+	pt_init_ext_io_opts(bdev_io, &io_opts);
+	rc = spdk_bdev_readv_blocks_ext(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
+					bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
+					bdev_io->u.bdev.num_blocks, _pt_complete_io,
+					bdev_io, &io_opts);
 	if (rc != 0) {
 		if (rc == -ENOMEM) {
 			SPDK_ERRLOG("No memory, start to queue io for passthru.\n");
@@ -268,6 +270,7 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 	struct vbdev_passthru *pt_node = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_passthru, pt_bdev);
 	struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(ch);
 	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)bdev_io->driver_ctx;
+	struct spdk_bdev_ext_io_opts io_opts;
 	int rc = 0;
 
 	/* Setup a per IO context value; we don't do anything with it in the vbdev other
@@ -282,19 +285,11 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		if (bdev_io->u.bdev.ext_opts) {
-			rc = spdk_bdev_writev_blocks_ext(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
-							 bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
-							 bdev_io->u.bdev.num_blocks, _pt_complete_io,
-							 bdev_io, bdev_io->u.bdev.ext_opts);
-		} else {
-			rc = spdk_bdev_writev_blocks_with_md(pt_node->base_desc, pt_ch->base_ch,
-							     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-							     bdev_io->u.bdev.md_buf,
-							     bdev_io->u.bdev.offset_blocks,
-							     bdev_io->u.bdev.num_blocks,
-							     _pt_complete_io, bdev_io);
-		}
+		pt_init_ext_io_opts(bdev_io, &io_opts);
+		rc = spdk_bdev_writev_blocks_ext(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
+						 bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
+						 bdev_io->u.bdev.num_blocks, _pt_complete_io,
+						 bdev_io, &io_opts);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		rc = spdk_bdev_write_zeroes_blocks(pt_node->base_desc, pt_ch->base_ch,

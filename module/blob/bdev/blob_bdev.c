@@ -169,25 +169,27 @@ bdev_blob_writev(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	}
 }
 
+static inline void
+blob_ext_io_opts_to_bdev_opts(struct spdk_bdev_ext_io_opts *dst, struct spdk_blob_ext_io_opts *src)
+{
+	memset(dst, 0, sizeof(*dst));
+	dst->size = sizeof(*dst);
+	dst->memory_domain = src->memory_domain;
+	dst->memory_domain_ctx = src->memory_domain_ctx;
+}
+
 static void
 bdev_blob_readv_ext(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 		    struct iovec *iov, int iovcnt,
 		    uint64_t lba, uint32_t lba_count, struct spdk_bs_dev_cb_args *cb_args,
 		    struct spdk_blob_ext_io_opts *io_opts)
 {
-	struct spdk_bdev_ext_io_opts *bdev_io_opts = NULL;
+	struct spdk_bdev_ext_io_opts bdev_io_opts;
 	int rc;
 
-	if (io_opts) {
-		/* bdev ext API requires ext_io_opts to be allocated by the user, we don't have enough context to allocate
-		 * bdev ext_opts structure here. Also blob and bdev ext_opts are not API/ABI compatible, so we can't use the given
-		 * io_opts. Restore ext_opts passed by the user of this bs_dev */
-		bdev_io_opts = io_opts->user_ctx;
-		assert(bdev_io_opts);
-	}
-
+	blob_ext_io_opts_to_bdev_opts(&bdev_io_opts, io_opts);
 	rc = spdk_bdev_readv_blocks_ext(__get_desc(dev), channel, iov, iovcnt, lba, lba_count,
-					bdev_blob_io_complete, cb_args, bdev_io_opts);
+					bdev_blob_io_complete, cb_args, &bdev_io_opts);
 	if (rc == -ENOMEM) {
 		bdev_blob_queue_io(dev, channel, iov, iovcnt, lba, 0, lba_count, SPDK_BDEV_IO_TYPE_READ, cb_args,
 				   io_opts);
@@ -202,19 +204,12 @@ bdev_blob_writev_ext(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 		     uint64_t lba, uint32_t lba_count, struct spdk_bs_dev_cb_args *cb_args,
 		     struct spdk_blob_ext_io_opts *io_opts)
 {
-	struct spdk_bdev_ext_io_opts *bdev_io_opts = NULL;
+	struct spdk_bdev_ext_io_opts bdev_io_opts;
 	int rc;
 
-	if (io_opts) {
-		/* bdev ext API requires ext_io_opts to be allocated by the user, we don't have enough context to allocate
-		 * bdev ext_opts structure here. Also blob and bdev ext_opts are not API/ABI compatible, so we can't use the given
-		 * io_opts. Restore ext_opts passed by the user of this bs_dev */
-		bdev_io_opts = io_opts->user_ctx;
-		assert(bdev_io_opts);
-	}
-
+	blob_ext_io_opts_to_bdev_opts(&bdev_io_opts, io_opts);
 	rc = spdk_bdev_writev_blocks_ext(__get_desc(dev), channel, iov, iovcnt, lba, lba_count,
-					 bdev_blob_io_complete, cb_args, bdev_io_opts);
+					 bdev_blob_io_complete, cb_args, &bdev_io_opts);
 	if (rc == -ENOMEM) {
 		bdev_blob_queue_io(dev, channel, iov, iovcnt, lba, 0, lba_count, SPDK_BDEV_IO_TYPE_WRITE, cb_args,
 				   io_opts);

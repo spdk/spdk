@@ -155,12 +155,12 @@ static void bdev_nvme_submit_request(struct spdk_io_channel *ch,
 				     struct spdk_bdev_io *bdev_io);
 static int bdev_nvme_readv(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 			   void *md, uint64_t lba_count, uint64_t lba,
-			   uint32_t flags, struct spdk_bdev_ext_io_opts *ext_opts);
+			   uint32_t flags, struct spdk_memory_domain *domain, void *domain_ctx);
 static int bdev_nvme_no_pi_readv(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 				 void *md, uint64_t lba_count, uint64_t lba);
 static int bdev_nvme_writev(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 			    void *md, uint64_t lba_count, uint64_t lba,
-			    uint32_t flags, struct spdk_bdev_ext_io_opts *ext_opts);
+			    uint32_t flags, struct spdk_memory_domain *domain, void *domain_ctx);
 static int bdev_nvme_zone_appendv(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 				  void *md, uint64_t lba_count,
 				  uint64_t zslba, uint32_t flags);
@@ -2298,7 +2298,8 @@ bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 			      bdev_io->u.bdev.num_blocks,
 			      bdev_io->u.bdev.offset_blocks,
 			      bdev->dif_check_flags,
-			      bdev_io->u.bdev.ext_opts);
+			      bdev_io->u.bdev.memory_domain,
+			      bdev_io->u.bdev.memory_domain_ctx);
 
 exit:
 	if (spdk_unlikely(ret != 0)) {
@@ -2324,7 +2325,8 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 					     bdev_io->u.bdev.num_blocks,
 					     bdev_io->u.bdev.offset_blocks,
 					     bdev->dif_check_flags,
-					     bdev_io->u.bdev.ext_opts);
+					     bdev_io->u.bdev.memory_domain,
+					     bdev_io->u.bdev.memory_domain_ctx);
 		} else {
 			spdk_bdev_io_get_buf(bdev_io, bdev_nvme_get_buf_cb,
 					     bdev_io->u.bdev.num_blocks * bdev->blocklen);
@@ -2339,7 +2341,8 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 				      bdev_io->u.bdev.num_blocks,
 				      bdev_io->u.bdev.offset_blocks,
 				      bdev->dif_check_flags,
-				      bdev_io->u.bdev.ext_opts);
+				      bdev_io->u.bdev.memory_domain,
+				      bdev_io->u.bdev.memory_domain_ctx);
 		break;
 	case SPDK_BDEV_IO_TYPE_COMPARE:
 		rc = bdev_nvme_comparev(nbdev_io,
@@ -6571,7 +6574,7 @@ bdev_nvme_no_pi_readv(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 static int
 bdev_nvme_readv(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 		void *md, uint64_t lba_count, uint64_t lba, uint32_t flags,
-		struct spdk_bdev_ext_io_opts *ext_opts)
+		struct spdk_memory_domain *domain, void *domain_ctx)
 {
 	struct spdk_nvme_ns *ns = bio->io_path->nvme_ns->ns;
 	struct spdk_nvme_qpair *qpair = bio->io_path->qpair->qpair;
@@ -6585,30 +6588,16 @@ bdev_nvme_readv(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 	bio->iovpos = 0;
 	bio->iov_offset = 0;
 
-	if (ext_opts) {
-		bio->ext_opts.size = sizeof(struct spdk_nvme_ns_cmd_ext_io_opts);
-		bio->ext_opts.memory_domain = ext_opts->memory_domain;
-		bio->ext_opts.memory_domain_ctx = ext_opts->memory_domain_ctx;
-		bio->ext_opts.io_flags = flags;
-		bio->ext_opts.metadata = md;
+	bio->ext_opts.size = sizeof(struct spdk_nvme_ns_cmd_ext_io_opts);
+	bio->ext_opts.memory_domain = domain;
+	bio->ext_opts.memory_domain_ctx = domain_ctx;
+	bio->ext_opts.io_flags = flags;
+	bio->ext_opts.metadata = md;
 
-		rc = spdk_nvme_ns_cmd_readv_ext(ns, qpair, lba, lba_count,
-						bdev_nvme_readv_done, bio,
-						bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge,
-						&bio->ext_opts);
-	} else if (iovcnt == 1) {
-		rc = spdk_nvme_ns_cmd_read_with_md(ns, qpair, iov[0].iov_base, md, lba,
-						   lba_count,
-						   bdev_nvme_readv_done, bio,
-						   flags,
-						   0, 0);
-	} else {
-		rc = spdk_nvme_ns_cmd_readv_with_md(ns, qpair, lba, lba_count,
-						    bdev_nvme_readv_done, bio, flags,
-						    bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge,
-						    md, 0, 0);
-	}
-
+	rc = spdk_nvme_ns_cmd_readv_ext(ns, qpair, lba, lba_count,
+					bdev_nvme_readv_done, bio,
+					bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge,
+					&bio->ext_opts);
 	if (rc != 0 && rc != -ENOMEM) {
 		SPDK_ERRLOG("readv failed: rc = %d\n", rc);
 	}
@@ -6617,8 +6606,8 @@ bdev_nvme_readv(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 
 static int
 bdev_nvme_writev(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
-		 void *md, uint64_t lba_count, uint64_t lba,
-		 uint32_t flags, struct spdk_bdev_ext_io_opts *ext_opts)
+		 void *md, uint64_t lba_count, uint64_t lba, uint32_t flags,
+		 struct spdk_memory_domain *domain, void *domain_ctx)
 {
 	struct spdk_nvme_ns *ns = bio->io_path->nvme_ns->ns;
 	struct spdk_nvme_qpair *qpair = bio->io_path->qpair->qpair;
@@ -6632,30 +6621,16 @@ bdev_nvme_writev(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 	bio->iovpos = 0;
 	bio->iov_offset = 0;
 
-	if (ext_opts) {
-		bio->ext_opts.size = sizeof(struct spdk_nvme_ns_cmd_ext_io_opts);
-		bio->ext_opts.memory_domain = ext_opts->memory_domain;
-		bio->ext_opts.memory_domain_ctx = ext_opts->memory_domain_ctx;
-		bio->ext_opts.io_flags = flags;
-		bio->ext_opts.metadata = md;
+	bio->ext_opts.size = sizeof(struct spdk_nvme_ns_cmd_ext_io_opts);
+	bio->ext_opts.memory_domain = domain;
+	bio->ext_opts.memory_domain_ctx = domain_ctx;
+	bio->ext_opts.io_flags = flags;
+	bio->ext_opts.metadata = md;
 
-		rc = spdk_nvme_ns_cmd_writev_ext(ns, qpair, lba, lba_count,
-						 bdev_nvme_writev_done, bio,
-						 bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge,
-						 &bio->ext_opts);
-	} else if (iovcnt == 1) {
-		rc = spdk_nvme_ns_cmd_write_with_md(ns, qpair, iov[0].iov_base, md, lba,
-						    lba_count,
-						    bdev_nvme_writev_done, bio,
-						    flags,
-						    0, 0);
-	} else {
-		rc = spdk_nvme_ns_cmd_writev_with_md(ns, qpair, lba, lba_count,
-						     bdev_nvme_writev_done, bio, flags,
-						     bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge,
-						     md, 0, 0);
-	}
-
+	rc = spdk_nvme_ns_cmd_writev_ext(ns, qpair, lba, lba_count,
+					 bdev_nvme_writev_done, bio,
+					 bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge,
+					 &bio->ext_opts);
 	if (rc != 0 && rc != -ENOMEM) {
 		SPDK_ERRLOG("writev failed: rc = %d\n", rc);
 	}

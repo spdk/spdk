@@ -790,8 +790,9 @@ struct spdk_bdev_io {
 			/** Starting offset (in blocks) of the bdev for this I/O. */
 			uint64_t offset_blocks;
 
-			/** Pointer to user's ext opts to be used by bdev modules */
-			struct spdk_bdev_ext_io_opts *ext_opts;
+			/** Memory domain and its context to be used by bdev modules */
+			struct spdk_memory_domain *memory_domain;
+			void *memory_domain_ctx;
 
 			/** stored user callback in case we split the I/O and use a temporary callback */
 			spdk_bdev_io_completion_cb stored_user_cb;
@@ -974,11 +975,9 @@ struct spdk_bdev_io {
 		/** Enables queuing parent I/O when no bdev_ios available for split children. */
 		struct spdk_bdev_io_wait_entry waitq_entry;
 
-		/** Pointer to a structure passed by the user in ext API */
-		struct spdk_bdev_ext_io_opts *ext_opts;
-
-		/** Copy of user's opts, used when I/O is split */
-		struct spdk_bdev_ext_io_opts ext_opts_copy;
+		/** Memory domain and its context passed by the user in ext API */
+		struct spdk_memory_domain *memory_domain;
+		void *memory_domain_ctx;
 
 		/** Data transfer completion callback */
 		void (*data_transfer_cpl)(void *ctx, int rc);

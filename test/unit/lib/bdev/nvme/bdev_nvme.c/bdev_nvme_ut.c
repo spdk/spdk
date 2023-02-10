@@ -2315,7 +2315,6 @@ test_submit_nvme_cmd(void)
 	struct nvme_bdev *bdev;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_io_channel *ch;
-	struct spdk_bdev_ext_io_opts ext_io_opts = {};
 	int rc;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
@@ -2364,18 +2363,11 @@ test_submit_nvme_cmd(void)
 
 	ut_test_submit_fused_nvme_cmd(ch, bdev_io);
 
-	/* Verify that ext NVME API is called if bdev_io ext_opts is set */
-	bdev_io->u.bdev.ext_opts = &ext_io_opts;
+	/* Verify that ext NVME API is called */
 	g_ut_readv_ext_called = false;
 	ut_test_submit_nvme_cmd(ch, bdev_io, SPDK_BDEV_IO_TYPE_READ);
 	CU_ASSERT(g_ut_readv_ext_called == true);
 	g_ut_readv_ext_called = false;
-
-	g_ut_writev_ext_called = false;
-	ut_test_submit_nvme_cmd(ch, bdev_io, SPDK_BDEV_IO_TYPE_WRITE);
-	CU_ASSERT(g_ut_writev_ext_called == true);
-	g_ut_writev_ext_called = false;
-	bdev_io->u.bdev.ext_opts = NULL;
 
 	ut_test_submit_admin_cmd(ch, bdev_io, ctrlr);
 

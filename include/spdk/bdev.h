@@ -208,7 +208,6 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_opts) == 32, "Incorrect size");
 
 /**
  * Structure with optional IO request parameters
- * The content of this structure must be valid until the IO request is completed
  */
 struct spdk_bdev_ext_io_opts {
 	/** Size of this structure in bytes */

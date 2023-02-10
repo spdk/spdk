@@ -273,11 +273,13 @@ raid5f_chunk_write_retry(void *_raid_io)
 }
 
 static inline void
-copy_ext_io_opts(struct spdk_bdev_ext_io_opts *dst, struct spdk_bdev_ext_io_opts *src)
+raid5f_init_ext_io_opts(struct spdk_bdev_io *bdev_io, struct spdk_bdev_ext_io_opts *opts)
 {
-	memset(dst, 0, sizeof(*dst));
-	memcpy(dst, src, src->size);
-	dst->size = sizeof(*dst);
+	memset(opts, 0, sizeof(*opts));
+	opts->size = sizeof(*opts);
+	opts->memory_domain = bdev_io->u.bdev.memory_domain;
+	opts->memory_domain_ctx = bdev_io->u.bdev.memory_domain_ctx;
+	opts->metadata = bdev_io->u.bdev.md_buf;
 }
 
 static int
@@ -292,18 +294,12 @@ raid5f_chunk_write(struct chunk *chunk)
 	uint64_t base_offset_blocks = (stripe_req->stripe_index << raid_bdev->strip_size_shift);
 	int ret;
 
-	if (bdev_io->u.bdev.ext_opts != NULL) {
-		copy_ext_io_opts(&chunk->ext_opts, bdev_io->u.bdev.ext_opts);
-		chunk->ext_opts.metadata = chunk->md_buf;
+	raid5f_init_ext_io_opts(bdev_io, &chunk->ext_opts);
+	chunk->ext_opts.metadata = chunk->md_buf;
 
-		ret = spdk_bdev_writev_blocks_ext(base_info->desc, base_ch, chunk->iovs, chunk->iovcnt,
-						  base_offset_blocks, raid_bdev->strip_size, raid5f_chunk_write_complete_bdev_io,
-						  chunk, &chunk->ext_opts);
-	} else {
-		ret = spdk_bdev_writev_blocks_with_md(base_info->desc, base_ch, chunk->iovs, chunk->iovcnt,
-						      chunk->md_buf, base_offset_blocks, raid_bdev->strip_size,
-						      raid5f_chunk_write_complete_bdev_io, chunk);
-	}
+	ret = spdk_bdev_writev_blocks_ext(base_info->desc, base_ch, chunk->iovs, chunk->iovcnt,
+					  base_offset_blocks, raid_bdev->strip_size, raid5f_chunk_write_complete_bdev_io,
+					  chunk, &chunk->ext_opts);
 
 	if (spdk_unlikely(ret)) {
 		if (ret == -ENOMEM) {
@@ -498,20 +494,14 @@ raid5f_submit_read_request(struct raid_bdev_io *raid_io, uint64_t stripe_index,
 	uint64_t chunk_offset = stripe_offset - (chunk_data_idx << raid_bdev->strip_size_shift);
 	uint64_t base_offset_blocks = (stripe_index << raid_bdev->strip_size_shift) + chunk_offset;
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
+	struct spdk_bdev_ext_io_opts io_opts;
 	int ret;
 
-	if (bdev_io->u.bdev.ext_opts != NULL) {
-		ret = spdk_bdev_readv_blocks_ext(base_info->desc, base_ch, bdev_io->u.bdev.iovs,
-						 bdev_io->u.bdev.iovcnt,
-						 base_offset_blocks, bdev_io->u.bdev.num_blocks, raid5f_chunk_read_complete, raid_io,
-						 bdev_io->u.bdev.ext_opts);
-	} else {
-		ret = spdk_bdev_readv_blocks_with_md(base_info->desc, base_ch,
-						     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-						     bdev_io->u.bdev.md_buf,
-						     base_offset_blocks, bdev_io->u.bdev.num_blocks,
-						     raid5f_chunk_read_complete, raid_io);
-	}
+	raid5f_init_ext_io_opts(bdev_io, &io_opts);
+	ret = spdk_bdev_readv_blocks_ext(base_info->desc, base_ch, bdev_io->u.bdev.iovs,
+					 bdev_io->u.bdev.iovcnt,
+					 base_offset_blocks, bdev_io->u.bdev.num_blocks, raid5f_chunk_read_complete, raid_io,
+					 &io_opts);
 
 	if (spdk_unlikely(ret == -ENOMEM)) {
 		raid_bdev_queue_io_wait(raid_io, base_info->bdev, base_ch,

@@ -1419,8 +1419,6 @@ ut_vbdev_lvol_io_type_supported(void)
 static void
 ut_lvol_read_write(void)
 {
-	struct spdk_bdev_ext_io_opts bdev_ext_opts = {};
-
 	g_io = calloc(1, sizeof(struct spdk_bdev_io) + vbdev_lvs_get_ctx_size());
 	SPDK_CU_ASSERT_FATAL(g_io != NULL);
 	g_base_bdev = calloc(1, sizeof(struct spdk_bdev));
@@ -1440,8 +1438,6 @@ ut_lvol_read_write(void)
 	CU_ASSERT(g_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	g_ext_api_called = false;
-	g_io->u.bdev.ext_opts = &bdev_ext_opts;
-
 	lvol_read(g_ch, g_io);
 	CU_ASSERT(g_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(g_ext_api_called == true);

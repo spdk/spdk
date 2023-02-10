@@ -270,12 +270,6 @@ bdev_io_cleanup(struct spdk_bdev_io *bdev_io)
 		free(bdev_io->u.bdev.iovs);
 	}
 
-	if (bdev_io->u.bdev.ext_opts) {
-		if (bdev_io->u.bdev.ext_opts->metadata) {
-			bdev_io->u.bdev.ext_opts->metadata = NULL;
-		}
-		free(bdev_io->u.bdev.ext_opts);
-	}
 	free(bdev_io);
 }
 
@@ -301,9 +295,7 @@ bdev_io_initialize(struct spdk_bdev_io *bdev_io, struct spdk_io_channel *ch, str
 	SPDK_CU_ASSERT_FATAL(bdev_io->u.bdev.iovs->iov_base != NULL);
 	bdev_io->u.bdev.iovs->iov_len = bdev_io->u.bdev.num_blocks * BLOCK_LEN;
 	bdev_io->internal.ch = channel;
-	bdev_io->u.bdev.ext_opts = calloc(1, sizeof(struct spdk_bdev_ext_io_opts));
-	SPDK_CU_ASSERT_FATAL(bdev_io->u.bdev.ext_opts != NULL);
-	bdev_io->u.bdev.ext_opts->metadata = (void *)0xAEDFEBAC;
+	bdev_io->u.bdev.md_buf = (void *)0xAEDFEBAC;
 }
 
 static void

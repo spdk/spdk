@@ -15,14 +15,6 @@
 DEFINE_STUB_V(raid_bdev_module_list_add, (struct raid_bdev_module *raid_module));
 DEFINE_STUB(spdk_bdev_get_buf_align, size_t, (const struct spdk_bdev *bdev), 0);
 DEFINE_STUB_V(raid_bdev_module_stop_done, (struct raid_bdev *raid_bdev));
-DEFINE_STUB(spdk_bdev_readv_blocks_ext, int, (struct spdk_bdev_desc *desc,
-		struct spdk_io_channel *ch,
-		struct iovec *iov, int iovcnt, uint64_t offset_blocks, uint64_t num_blocks,
-		spdk_bdev_io_completion_cb cb, void *cb_arg, struct spdk_bdev_ext_io_opts *opts), 0);
-DEFINE_STUB(spdk_bdev_writev_blocks_ext, int, (struct spdk_bdev_desc *desc,
-		struct spdk_io_channel *ch,
-		struct iovec *iov, int iovcnt, uint64_t offset_blocks, uint64_t num_blocks,
-		spdk_bdev_io_completion_cb cb, void *cb_arg, struct spdk_bdev_ext_io_opts *opts), 0);
 
 void *
 spdk_bdev_io_get_md_buf(struct spdk_bdev_io *bdev_io)
@@ -447,6 +439,19 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 }
 
 int
+spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			    struct iovec *iov, int iovcnt, uint64_t offset_blocks,
+			    uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg,
+			    struct spdk_bdev_ext_io_opts *opts)
+{
+	CU_ASSERT_PTR_NULL(opts->memory_domain);
+	CU_ASSERT_PTR_NULL(opts->memory_domain_ctx);
+
+	return spdk_bdev_writev_blocks_with_md(desc, ch, iov, iovcnt, opts->metadata, offset_blocks,
+					       num_blocks, cb, cb_arg);
+}
+
+int
 spdk_bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			       struct iovec *iov, int iovcnt, void *md_buf,
 			       uint64_t offset_blocks, uint64_t num_blocks,
@@ -477,6 +482,19 @@ spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 {
 	return spdk_bdev_readv_blocks_with_md(desc, ch, iov, iovcnt, NULL, offset_blocks, num_blocks, cb,
 					      cb_arg);
+}
+
+int
+spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			   struct iovec *iov, int iovcnt, uint64_t offset_blocks,
+			   uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg,
+			   struct spdk_bdev_ext_io_opts *opts)
+{
+	CU_ASSERT_PTR_NULL(opts->memory_domain);
+	CU_ASSERT_PTR_NULL(opts->memory_domain_ctx);
+
+	return spdk_bdev_readv_blocks_with_md(desc, ch, iov, iovcnt, opts->metadata, offset_blocks,
+					      num_blocks, cb, cb_arg);
 }
 
 static void
@@ -680,6 +698,9 @@ test_raid5f_submit_rw_request(struct raid5f_info *r5f_info, struct raid_bdev_io_
 	default:
 		CU_FAIL_FATAL("unsupported io_type");
 	}
+
+	assert(io_info.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	assert(memcmp(io_info.src_buf, io_info.dest_buf, io_info.buf_size) == 0);
 
 	CU_ASSERT(io_info.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(memcmp(io_info.src_buf, io_info.dest_buf, io_info.buf_size) == 0);

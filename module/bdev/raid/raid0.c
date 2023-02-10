@@ -61,6 +61,7 @@ static void
 raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 {
 	struct spdk_bdev_io		*bdev_io = spdk_bdev_io_from_ctx(raid_io);
+	struct spdk_bdev_ext_io_opts	io_opts = {};
 	struct raid_bdev_io_channel	*raid_ch = raid_io->raid_ch;
 	struct raid_bdev		*raid_bdev = raid_io->raid_bdev;
 	uint64_t			pd_strip;
@@ -103,32 +104,22 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 	assert(raid_ch != NULL);
 	assert(raid_ch->base_channel);
 	base_ch = raid_ch->base_channel[pd_idx];
+
+	io_opts.size = sizeof(io_opts);
+	io_opts.memory_domain = bdev_io->u.bdev.memory_domain;
+	io_opts.memory_domain_ctx = bdev_io->u.bdev.memory_domain_ctx;
+	io_opts.metadata = bdev_io->u.bdev.md_buf;
+
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-		if (bdev_io->u.bdev.ext_opts != NULL) {
-			ret = spdk_bdev_readv_blocks_ext(base_info->desc, base_ch,
-							 bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-							 pd_lba, pd_blocks, raid0_bdev_io_completion,
-							 raid_io, bdev_io->u.bdev.ext_opts);
-		} else {
-			ret = spdk_bdev_readv_blocks_with_md(base_info->desc, base_ch,
-							     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-							     bdev_io->u.bdev.md_buf,
-							     pd_lba, pd_blocks,
-							     raid0_bdev_io_completion, raid_io);
-		}
+		ret = spdk_bdev_readv_blocks_ext(base_info->desc, base_ch,
+						 bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+						 pd_lba, pd_blocks, raid0_bdev_io_completion,
+						 raid_io, &io_opts);
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-		if (bdev_io->u.bdev.ext_opts != NULL) {
-			ret = spdk_bdev_writev_blocks_ext(base_info->desc, base_ch,
-							  bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-							  pd_lba, pd_blocks, raid0_bdev_io_completion,
-							  raid_io, bdev_io->u.bdev.ext_opts);
-		} else {
-			ret = spdk_bdev_writev_blocks_with_md(base_info->desc, base_ch,
-							      bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-							      bdev_io->u.bdev.md_buf,
-							      pd_lba, pd_blocks,
-							      raid0_bdev_io_completion, raid_io);
-		}
+		ret = spdk_bdev_writev_blocks_ext(base_info->desc, base_ch,
+						  bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+						  pd_lba, pd_blocks, raid0_bdev_io_completion,
+						  raid_io, &io_opts);
 	} else {
 		SPDK_ERRLOG("Recvd not supported io type %u\n", bdev_io->type);
 		assert(0);

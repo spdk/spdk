@@ -839,27 +839,17 @@ lvol_read(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	uint64_t start_page, num_pages;
 	struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
 	struct spdk_blob *blob = lvol->blob;
+	struct vbdev_lvol_io *lvol_io = (struct vbdev_lvol_io *)bdev_io->driver_ctx;
 
 	start_page = bdev_io->u.bdev.offset_blocks;
 	num_pages = bdev_io->u.bdev.num_blocks;
 
-	if (bdev_io->u.bdev.ext_opts) {
-		struct vbdev_lvol_io *lvol_io = (struct vbdev_lvol_io *)bdev_io->driver_ctx;
+	lvol_io->ext_io_opts.size = sizeof(lvol_io->ext_io_opts);
+	lvol_io->ext_io_opts.memory_domain = bdev_io->u.bdev.memory_domain;
+	lvol_io->ext_io_opts.memory_domain_ctx = bdev_io->u.bdev.memory_domain_ctx;
 
-		lvol_io->ext_io_opts.size = sizeof(lvol_io->ext_io_opts);
-		lvol_io->ext_io_opts.memory_domain = bdev_io->u.bdev.ext_opts->memory_domain;
-		lvol_io->ext_io_opts.memory_domain_ctx = bdev_io->u.bdev.ext_opts->memory_domain_ctx;
-		/* Save a pointer to ext_opts passed by the user, it will be used in bs_dev readv/writev_ext functions
-		 * to restore ext_opts structure. That is done since bdev and blob extended functions use different
-		 * extended opts structures */
-		lvol_io->ext_io_opts.user_ctx = bdev_io->u.bdev.ext_opts;
-
-		spdk_blob_io_readv_ext(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
-				       num_pages, lvol_op_comp, bdev_io, &lvol_io->ext_io_opts);
-	} else {
-		spdk_blob_io_readv(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
-				   num_pages, lvol_op_comp, bdev_io);
-	}
+	spdk_blob_io_readv_ext(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
+			       num_pages, lvol_op_comp, bdev_io, &lvol_io->ext_io_opts);
 }
 
 static void
@@ -867,27 +857,17 @@ lvol_write(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_
 {
 	uint64_t start_page, num_pages;
 	struct spdk_blob *blob = lvol->blob;
+	struct vbdev_lvol_io *lvol_io = (struct vbdev_lvol_io *)bdev_io->driver_ctx;
 
 	start_page = bdev_io->u.bdev.offset_blocks;
 	num_pages = bdev_io->u.bdev.num_blocks;
 
-	if (bdev_io->u.bdev.ext_opts) {
-		struct vbdev_lvol_io *lvol_io = (struct vbdev_lvol_io *)bdev_io->driver_ctx;
+	lvol_io->ext_io_opts.size = sizeof(lvol_io->ext_io_opts);
+	lvol_io->ext_io_opts.memory_domain = bdev_io->u.bdev.memory_domain;
+	lvol_io->ext_io_opts.memory_domain_ctx = bdev_io->u.bdev.memory_domain_ctx;
 
-		lvol_io->ext_io_opts.size = sizeof(lvol_io->ext_io_opts);
-		lvol_io->ext_io_opts.memory_domain = bdev_io->u.bdev.ext_opts->memory_domain;
-		lvol_io->ext_io_opts.memory_domain_ctx = bdev_io->u.bdev.ext_opts->memory_domain_ctx;
-		/* Save a pointer to ext_opts passed by the user, it will be used in bs_dev readv/writev_ext functions
-		 * to restore ext_opts structure. That is done since bdev and blob extended functions use different
-		 * extended opts structures */
-		lvol_io->ext_io_opts.user_ctx = bdev_io->u.bdev.ext_opts;
-
-		spdk_blob_io_writev_ext(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
-					num_pages, lvol_op_comp, bdev_io, &lvol_io->ext_io_opts);
-	} else {
-		spdk_blob_io_writev(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
-				    num_pages, lvol_op_comp, bdev_io);
-	}
+	spdk_blob_io_writev_ext(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
+				num_pages, lvol_op_comp, bdev_io, &lvol_io->ext_io_opts);
 }
 
 static int

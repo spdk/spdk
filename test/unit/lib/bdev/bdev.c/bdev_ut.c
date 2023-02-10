@@ -91,8 +91,6 @@ struct ut_expected_io {
 	int				iovcnt;
 	struct iovec			iov[SPDK_BDEV_IO_NUM_CHILD_IOV];
 	void				*md_buf;
-	struct spdk_bdev_ext_io_opts	*ext_io_opts;
-	bool				copy_opts;
 	TAILQ_ENTRY(ut_expected_io)	link;
 };
 
@@ -282,25 +280,6 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 
 	if (expected_io->md_buf != NULL) {
 		CU_ASSERT(expected_io->md_buf == bdev_io->u.bdev.md_buf);
-		if (bdev_io->u.bdev.ext_opts) {
-			CU_ASSERT(expected_io->md_buf == bdev_io->u.bdev.ext_opts->metadata);
-		}
-	}
-
-	if (expected_io->copy_opts) {
-		if (expected_io->ext_io_opts) {
-			/* opts are not NULL so it should have been copied */
-			CU_ASSERT(expected_io->ext_io_opts != bdev_io->u.bdev.ext_opts);
-			CU_ASSERT(bdev_io->u.bdev.ext_opts == &bdev_io->internal.ext_opts_copy);
-			/* internal opts always points to opts passed */
-			CU_ASSERT(expected_io->ext_io_opts == bdev_io->internal.ext_opts);
-		} else {
-			/* passed opts was NULL so we expect bdev_io opts to be NULL */
-			CU_ASSERT(bdev_io->u.bdev.ext_opts == NULL);
-		}
-	} else {
-		/* opts were not copied so they should be equal */
-		CU_ASSERT(expected_io->ext_io_opts == bdev_io->u.bdev.ext_opts);
 	}
 
 	if (expected_io->length == 0) {
@@ -5555,7 +5534,6 @@ _bdev_io_ext(struct spdk_bdev_ext_io_opts *ext_io_opts)
 	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 32, 14, 1);
 	if (ext_io_opts) {
 		expected_io->md_buf = ext_io_opts->metadata;
-		expected_io->ext_io_opts = ext_io_opts;
 	}
 	ut_expected_io_set_iov(expected_io, 0, iov.iov_base, iov.iov_len);
 	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
@@ -5573,7 +5551,6 @@ _bdev_io_ext(struct spdk_bdev_ext_io_opts *ext_io_opts)
 	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 32, 14, 1);
 	if (ext_io_opts) {
 		expected_io->md_buf = ext_io_opts->metadata;
-		expected_io->ext_io_opts = ext_io_opts;
 	}
 	ut_expected_io_set_iov(expected_io, 0, iov.iov_base, iov.iov_len);
 	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
@@ -5711,15 +5688,11 @@ bdev_io_ext_split(void)
 	/* read */
 	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 14, 2, 1);
 	expected_io->md_buf = ext_io_opts.metadata;
-	expected_io->ext_io_opts = &ext_io_opts;
-	expected_io->copy_opts = true;
 	ut_expected_io_set_iov(expected_io, 0, (void *)0xF000, 2 * 512);
 	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
 	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 16, 6, 1);
 	expected_io->md_buf = ext_io_opts.metadata + 2 * 8;
-	expected_io->ext_io_opts = &ext_io_opts;
-	expected_io->copy_opts = true;
 	ut_expected_io_set_iov(expected_io, 0, (void *)(0xF000 + 2 * 512), 6 * 512);
 	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
@@ -5736,15 +5709,11 @@ bdev_io_ext_split(void)
 	g_io_done = false;
 	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 14, 2, 1);
 	expected_io->md_buf = ext_io_opts.metadata;
-	expected_io->ext_io_opts = &ext_io_opts;
-	expected_io->copy_opts = true;
 	ut_expected_io_set_iov(expected_io, 0, (void *)0xF000, 2 * 512);
 	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
 	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 16, 6, 1);
 	expected_io->md_buf = ext_io_opts.metadata + 2 * 8;
-	expected_io->ext_io_opts = &ext_io_opts;
-	expected_io->copy_opts = true;
 	ut_expected_io_set_iov(expected_io, 0, (void *)(0xF000 + 2 * 512), 6 * 512);
 	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
@@ -5799,8 +5768,6 @@ bdev_io_ext_bounce_buffer(void)
 	g_io_done = false;
 	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 32, 14, 1);
 	ut_expected_io_set_iov(expected_io, 0, iov.iov_base, iov.iov_len);
-	expected_io->ext_io_opts = &ext_io_opts;
-	expected_io->copy_opts = true;
 	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
 	rc = spdk_bdev_readv_blocks_ext(desc, io_ch, &iov, 1, 32, 14, io_done, NULL, &ext_io_opts);
@@ -5816,8 +5783,6 @@ bdev_io_ext_bounce_buffer(void)
 	g_io_done = false;
 	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 32, 14, 1);
 	ut_expected_io_set_iov(expected_io, 0, iov.iov_base, iov.iov_len);
-	expected_io->ext_io_opts = &ext_io_opts;
-	expected_io->copy_opts = true;
 	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
 	rc = spdk_bdev_writev_blocks_ext(desc, io_ch, &iov, 1, 32, 14, io_done, NULL, &ext_io_opts);

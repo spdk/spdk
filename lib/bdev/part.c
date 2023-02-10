@@ -275,6 +275,16 @@ bdev_part_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	spdk_bdev_free_io(bdev_io);
 }
 
+static inline void
+bdev_part_init_ext_io_opts(struct spdk_bdev_io *bdev_io, struct spdk_bdev_ext_io_opts *opts)
+{
+	memset(opts, 0, sizeof(*opts));
+	opts->size = sizeof(*opts);
+	opts->memory_domain = bdev_io->u.bdev.memory_domain;
+	opts->memory_domain_ctx = bdev_io->u.bdev.memory_domain_ctx;
+	opts->metadata = bdev_io->u.bdev.md_buf;
+}
+
 int
 spdk_bdev_part_submit_request_ext(struct spdk_bdev_part_channel *ch, struct spdk_bdev_io *bdev_io,
 				  spdk_bdev_io_completion_cb cb)
@@ -282,6 +292,7 @@ spdk_bdev_part_submit_request_ext(struct spdk_bdev_part_channel *ch, struct spdk
 	struct spdk_bdev_part *part = ch->part;
 	struct spdk_io_channel *base_ch = ch->base_ch;
 	struct spdk_bdev_desc *base_desc = part->internal.base->desc;
+	struct spdk_bdev_ext_io_opts io_opts;
 	uint64_t offset, remapped_offset, remapped_src_offset;
 	int rc = 0;
 
@@ -293,41 +304,22 @@ spdk_bdev_part_submit_request_ext(struct spdk_bdev_part_channel *ch, struct spdk
 	/* Modify the I/O to adjust for the offset within the base bdev. */
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		if (bdev_io->u.bdev.ext_opts) {
-			rc = spdk_bdev_readv_blocks_ext(base_desc, base_ch, bdev_io->u.bdev.iovs,
-							bdev_io->u.bdev.iovcnt, remapped_offset,
-							bdev_io->u.bdev.num_blocks,
-							bdev_part_complete_io, bdev_io,
-							bdev_io->u.bdev.ext_opts);
-		} else {
-			rc = spdk_bdev_readv_blocks_with_md(base_desc, base_ch,
-							    bdev_io->u.bdev.iovs,
-							    bdev_io->u.bdev.iovcnt,
-							    bdev_io->u.bdev.md_buf, remapped_offset,
-							    bdev_io->u.bdev.num_blocks,
-							    bdev_part_complete_io, bdev_io);
-		}
+		bdev_part_init_ext_io_opts(bdev_io, &io_opts);
+		rc = spdk_bdev_readv_blocks_ext(base_desc, base_ch, bdev_io->u.bdev.iovs,
+						bdev_io->u.bdev.iovcnt, remapped_offset,
+						bdev_io->u.bdev.num_blocks,
+						bdev_part_complete_io, bdev_io, &io_opts);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		rc = bdev_part_remap_dif(bdev_io, offset, remapped_offset);
 		if (rc != 0) {
 			return SPDK_BDEV_IO_STATUS_FAILED;
 		}
-
-		if (bdev_io->u.bdev.ext_opts) {
-			rc = spdk_bdev_writev_blocks_ext(base_desc, base_ch, bdev_io->u.bdev.iovs,
-							 bdev_io->u.bdev.iovcnt, remapped_offset,
-							 bdev_io->u.bdev.num_blocks,
-							 bdev_part_complete_io, bdev_io,
-							 bdev_io->u.bdev.ext_opts);
-		} else {
-			rc = spdk_bdev_writev_blocks_with_md(base_desc, base_ch,
-							     bdev_io->u.bdev.iovs,
-							     bdev_io->u.bdev.iovcnt,
-							     bdev_io->u.bdev.md_buf, remapped_offset,
-							     bdev_io->u.bdev.num_blocks,
-							     bdev_part_complete_io, bdev_io);
-		}
+		bdev_part_init_ext_io_opts(bdev_io, &io_opts);
+		rc = spdk_bdev_writev_blocks_ext(base_desc, base_ch, bdev_io->u.bdev.iovs,
+						 bdev_io->u.bdev.iovcnt, remapped_offset,
+						 bdev_io->u.bdev.num_blocks,
+						 bdev_part_complete_io, bdev_io, &io_opts);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		rc = spdk_bdev_write_zeroes_blocks(base_desc, base_ch, remapped_offset,
