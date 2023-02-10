@@ -375,6 +375,7 @@ void vrdma_dpa_uninit(void *in)
 {
 	struct vrdma_dpa_ctx *dpa_ctx;
 
+	log_notice("naliu begin vrdma_dpa_uninit\n");
 	dpa_ctx = (struct vrdma_dpa_ctx *)in;
 	ibv_dereg_mr(dpa_ctx->vq_counter_mr);
 	free(dpa_ctx->vq_data);
@@ -385,6 +386,7 @@ void vrdma_dpa_uninit(void *in)
 	flexio_process_destroy(dpa_ctx->flexio_process);
 	free(dpa_ctx->elf_buf);
 	free(dpa_ctx);
+	log_notice("naliu end vrdma_dpa_uninit\n");
 }
 
 
@@ -494,7 +496,7 @@ err_msix_alloc:
 void vrdma_dpa_emu_dev_uninit(void *emu_dev_handler)
 {
 	struct vrdma_dpa_emu_dev_ctx *emu_dev_ctx = emu_dev_handler;
-
+	log_notice("naliu begin vrdma_dpa_emu_dev_uninit\n");
 	vrdma_dpa_device_msix_destroy(emu_dev_ctx->msix_config_vector,
 					emu_dev_ctx);
 	flexio_outbox_destroy(emu_dev_ctx->db_sf_outbox);
@@ -502,6 +504,7 @@ void vrdma_dpa_emu_dev_uninit(void *emu_dev_handler)
 	mlx5dv_devx_free_uar(emu_dev_ctx->sf_uar);
 	free(emu_dev_ctx->msix);
 	free(emu_dev_ctx);
+	log_notice("naliu end vrdma_dpa_emu_dev_uninit\n");
 }
 
 /*used when device state changed*/

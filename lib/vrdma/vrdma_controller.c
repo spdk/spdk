@@ -291,6 +291,9 @@ static int vrdma_device_start(void *arg)
 
 static int vrdma_device_stop(void *ctx)
 {
+    struct vrdma_ctrl *ctrl = ctx;
+    vrdma_prov_emu_dev_uninit(ctrl->dpa_emu_dev_ctx);
+    vrdma_prov_uninit(ctrl->dpa_ctx);
     return 0;
 };
 
