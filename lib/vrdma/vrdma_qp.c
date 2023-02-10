@@ -512,7 +512,7 @@ int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 			vqp->snap_queue->ctx = vqp;
 			SPDK_NOTICELOG("===naliu vrdma_create_vq...end\n");
 		} else {
-			SPDK_NOTICELOG("===naliu vrdma_create_vq...fail\n");
+			SPDK_ERRLOG("===naliu vrdma_create_vq...fail\n");
 			return -1;
 		}
 	}
