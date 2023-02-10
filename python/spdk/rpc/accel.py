@@ -54,14 +54,14 @@ def accel_crypto_key_create(client, cipher, key, key2, name):
     return client.call('accel_crypto_key_create', params)
 
 
-def accel_crypto_key_destroy(client, name):
+def accel_crypto_key_destroy(client, key_name):
     """Destroy Data Encryption Key.
 
     Args:
-        name: key name
+        key_name: key name
     """
     params = {
-        'name': name
+        'key_name': key_name
     }
 
     return client.call('accel_crypto_key_destroy', params)

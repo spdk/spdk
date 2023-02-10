@@ -2880,7 +2880,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     def accel_crypto_key_destroy(args):
         print_dict(rpc.accel.accel_crypto_key_destroy(args.client,
-                                                      name=args.name))
+                                                      key_name=args.name))
 
     p = subparsers.add_parser('accel_crypto_key_destroy', help='Destroy encryption key')
     p.add_argument('-n', '--name', help='key name', required=True, type=str)
