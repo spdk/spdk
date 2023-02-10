@@ -1094,11 +1094,17 @@ static void
 bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 {
 	uint64_t offset_in_ios;
+	uint64_t rand_value;
 
 	if (job->zipf) {
 		offset_in_ios = spdk_zipf_generate(job->zipf);
 	} else if (job->is_random) {
-		offset_in_ios = rand_r(&job->seed) % job->size_in_ios;
+		/* RAND_MAX is only INT32_MAX, so use 2 calls to rand_r to
+		 * get a large enough value to ensure we are issuing I/O
+		 * uniformly across the whole bdev.
+		 */
+		rand_value = (uint64_t)rand_r(&job->seed) * RAND_MAX + rand_r(&job->seed);
+		offset_in_ios = rand_value % job->size_in_ios;
 	} else {
 		offset_in_ios = job->offset_in_ios++;
 		if (job->offset_in_ios == job->size_in_ios) {
