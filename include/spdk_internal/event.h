@@ -128,13 +128,6 @@ void spdk_for_each_reactor(spdk_event_fn fn, void *arg1, void *arg2, spdk_event_
 int spdk_reactor_set_interrupt_mode(uint32_t lcore, bool new_in_interrupt,
 				    spdk_reactor_set_interrupt_mode_cb cb_fn, void *cb_arg);
 
-/**
- * Get a handle to spdk application thread.
- *
- * \return a pointer to spdk application thread on success or NULL on failure.
- */
-struct spdk_thread *_spdk_get_app_thread(void);
-
 #ifdef __cplusplus
 }
 #endif

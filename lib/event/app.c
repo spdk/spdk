@@ -47,7 +47,6 @@ struct spdk_app {
 static struct spdk_app g_spdk_app;
 static spdk_msg_fn g_start_fn = NULL;
 static void *g_start_arg = NULL;
-static struct spdk_thread *g_app_thread = NULL;
 static bool g_delay_subsystem_init = false;
 static bool g_shutdown_sig_received = false;
 static char *g_executable_name;
@@ -146,7 +145,7 @@ app_start_shutdown(void *ctx)
 void
 spdk_app_start_shutdown(void)
 {
-	spdk_thread_send_critical_msg(g_app_thread, app_start_shutdown);
+	spdk_thread_send_critical_msg(spdk_thread_get_app_thread(), app_start_shutdown);
 }
 
 static void
@@ -259,7 +258,7 @@ app_setup_signal_handlers(struct spdk_app_opts *opts)
 static void
 app_start_application(void)
 {
-	assert(spdk_get_thread() == g_app_thread);
+	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
 	g_start_fn(g_start_arg);
 }
@@ -718,10 +717,9 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 
 	spdk_cpuset_set_cpu(&tmp_cpumask, spdk_env_get_current_core(), true);
 
-	/* Now that the reactors have been initialized, we can create an
-	 * initialization thread. */
-	g_app_thread = spdk_thread_create("app_thread", &tmp_cpumask);
-	if (!g_app_thread) {
+	/* Now that the reactors have been initialized, we can create the app thread. */
+	spdk_thread_create("app_thread", &tmp_cpumask);
+	if (!spdk_thread_get_app_thread()) {
 		SPDK_ERRLOG("Unable to create an spdk_thread for initialization\n");
 		return 1;
 	}
@@ -748,7 +746,7 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	g_start_fn = start_fn;
 	g_start_arg = arg1;
 
-	spdk_thread_send_msg(g_app_thread, bootstrap_fn, NULL);
+	spdk_thread_send_msg(spdk_thread_get_app_thread(), bootstrap_fn, NULL);
 
 	/* This blocks until spdk_app_stop is called */
 	spdk_reactors_start();
@@ -772,7 +770,7 @@ static void
 _start_subsystem_fini(void *arg1)
 {
 	if (g_scheduling_in_progress) {
-		spdk_thread_send_msg(g_app_thread, _start_subsystem_fini, NULL);
+		spdk_thread_send_msg(spdk_thread_get_app_thread(), _start_subsystem_fini, NULL);
 		return;
 	}
 
@@ -823,13 +821,7 @@ spdk_app_stop(int rc)
 	 * We want to run spdk_subsystem_fini() from the same thread where spdk_subsystem_init()
 	 * was called.
 	 */
-	spdk_thread_send_msg(g_app_thread, app_stop, (void *)(intptr_t)rc);
-}
-
-struct spdk_thread *
-_spdk_get_app_thread(void)
-{
-	return g_app_thread;
+	spdk_thread_send_msg(spdk_thread_get_app_thread(), app_stop, (void *)(intptr_t)rc);
 }
 
 static void
@@ -1209,7 +1201,7 @@ rpc_framework_start_init_cpl(int rc, void *arg1)
 {
 	struct spdk_jsonrpc_request *request = arg1;
 
-	assert(spdk_get_thread() == g_app_thread);
+	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,

@@ -13,22 +13,6 @@
 #include "event/scheduler_static.c"
 #include "../module/scheduler/dynamic/scheduler_dynamic.c"
 
-struct spdk_thread *
-_spdk_get_app_thread(void)
-{
-	struct spdk_lw_thread *lw_thread;
-	struct spdk_thread *thread;
-
-	/* Assume there has to be at least one thread on main
-	 * reactor, that has at least one thread. */
-	lw_thread = TAILQ_FIRST(&g_scheduling_reactor->threads);
-	SPDK_CU_ASSERT_FATAL(lw_thread != NULL);
-	thread = spdk_thread_get_from_ctx(lw_thread);
-	SPDK_CU_ASSERT_FATAL(thread != NULL);
-
-	return thread;
-}
-
 static void
 test_create_reactor(void)
 {
@@ -508,7 +492,7 @@ static uint32_t
 _run_events_till_completion(uint32_t reactor_count)
 {
 	struct spdk_reactor *reactor;
-	struct spdk_thread *app_thread = _spdk_get_app_thread();
+	struct spdk_thread *app_thread = spdk_thread_get_app_thread();
 	uint32_t i, events;
 	uint32_t total_events = 0;
 

@@ -334,7 +334,7 @@ _reactor_set_notify_cpuset_cpl(void *arg1, void *arg2)
 
 	if (target->new_in_interrupt == false) {
 		target->set_interrupt_mode_in_progress = false;
-		spdk_thread_send_msg(_spdk_get_app_thread(), target->set_interrupt_mode_cb_fn,
+		spdk_thread_send_msg(spdk_thread_get_app_thread(), target->set_interrupt_mode_cb_fn,
 				     target->set_interrupt_mode_cb_arg);
 	} else {
 		_event_call(target->lcore, _reactor_set_interrupt_mode, target, NULL);
@@ -392,7 +392,7 @@ _reactor_set_interrupt_mode(void *arg1, void *arg2)
 		}
 
 		target->set_interrupt_mode_in_progress = false;
-		spdk_thread_send_msg(_spdk_get_app_thread(), target->set_interrupt_mode_cb_fn,
+		spdk_thread_send_msg(spdk_thread_get_app_thread(), target->set_interrupt_mode_cb_fn,
 				     target->set_interrupt_mode_cb_arg);
 	}
 }
@@ -413,7 +413,7 @@ spdk_reactor_set_interrupt_mode(uint32_t lcore, bool new_in_interrupt,
 		return -ENOTSUP;
 	}
 
-	if (spdk_get_thread() != _spdk_get_app_thread()) {
+	if (spdk_get_thread() != spdk_thread_get_app_thread()) {
 		SPDK_ERRLOG("It is only permitted within spdk application thread.\n");
 		return -EPERM;
 	}
