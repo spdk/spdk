@@ -66,7 +66,6 @@
                 (ACCEL_DPDK_CRYPTODEV_DEFAULT_NUM_XFORMS * \
                  sizeof(struct rte_crypto_sym_xform)))
 #define ACCEL_DPDK_CRYPTODEV_IV_LENGTH			16
-#define ACCEL_DPDK_CRYPTODEV_QUEUED_OP_OFFSET (ACCEL_DPDK_CRYPTODEV_IV_OFFSET + ACCEL_DPDK_CRYPTODEV_IV_LENGTH)
 
 /* Driver names */
 #define ACCEL_DPDK_CRYPTODEV_AESNI_MB	"crypto_aesni_mb"
@@ -145,15 +144,6 @@ struct accel_dpdk_cryptodev_key_priv {
 	TAILQ_HEAD(, accel_dpdk_cryptodev_key_handle) dev_keys;
 };
 
-/* For queueing up crypto operations that we can't submit for some reason */
-struct accel_dpdk_cryptodev_queued_op {
-	struct accel_dpdk_cryptodev_qp *qp;
-	struct rte_crypto_op *crypto_op;
-	struct accel_dpdk_cryptodev_task *task;
-	TAILQ_ENTRY(accel_dpdk_cryptodev_queued_op) link;
-};
-#define ACCEL_DPDK_CRYPTODEV_QUEUED_OP_LENGTH (sizeof(struct accel_dpdk_cryptodev_queued_op))
-
 /* The crypto channel struct. It is allocated and freed on my behalf by the io channel code.
  * We store things in here that are needed on per thread basis like the base_channel for this thread,
  * and the poller for this thread.
@@ -163,8 +153,6 @@ struct accel_dpdk_cryptodev_io_channel {
 	struct spdk_poller *poller;
 	/* Array of qpairs for each available device. The specific device will be selected depending on the crypto key */
 	struct accel_dpdk_cryptodev_qp *device_qp[ACCEL_DPDK_CRYPTODEV_DRIVER_LAST];
-	/* queued for re-submission to CryptoDev. Used when for some reason crypto op was not processed by the driver */
-	TAILQ_HEAD(, accel_dpdk_cryptodev_queued_op) queued_cry_ops;
 	/* Used to queue tasks when qpair is full. No crypto operation was submitted to the driver by the task */
 	TAILQ_HEAD(, accel_dpdk_cryptodev_task) queued_tasks;
 };
@@ -243,43 +231,6 @@ const char *
 accel_dpdk_cryptodev_get_driver(void)
 {
 	return g_driver_names[g_dpdk_cryptodev_driver];
-}
-
-static void
-cancel_queued_crypto_ops(struct accel_dpdk_cryptodev_io_channel *crypto_ch,
-			 struct accel_dpdk_cryptodev_task *task)
-{
-	struct rte_mbuf *mbufs_to_free[2 * ACCEL_DPDK_CRYPTODEV_MAX_DEQUEUE_BURST_SIZE];
-	struct rte_crypto_op *cancelled_ops[ACCEL_DPDK_CRYPTODEV_MAX_DEQUEUE_BURST_SIZE];
-	struct accel_dpdk_cryptodev_queued_op *op_to_cancel, *tmp_op;
-	struct rte_crypto_op *crypto_op;
-	int num_mbufs = 0, num_dequeued_ops = 0;
-
-	/* Remove all ops from the failed IO. Since we don't know the
-	 * order we have to check them all. */
-	TAILQ_FOREACH_SAFE(op_to_cancel, &crypto_ch->queued_cry_ops, link, tmp_op) {
-		/* Checking if this is our op. One IO contains multiple ops. */
-		if (task == op_to_cancel->task) {
-			crypto_op = op_to_cancel->crypto_op;
-			TAILQ_REMOVE(&crypto_ch->queued_cry_ops, op_to_cancel, link);
-
-			/* Populating lists for freeing mbufs and ops. */
-			mbufs_to_free[num_mbufs++] = (void *)crypto_op->sym->m_src;
-			if (crypto_op->sym->m_dst) {
-				mbufs_to_free[num_mbufs++] = (void *)crypto_op->sym->m_dst;
-			}
-			cancelled_ops[num_dequeued_ops++] = crypto_op;
-		}
-	}
-
-	/* Now bulk free both mbufs and crypto operations. */
-	if (num_dequeued_ops > 0) {
-		rte_mempool_put_bulk(g_crypto_op_mp, (void **)cancelled_ops,
-				     num_dequeued_ops);
-		assert(num_mbufs > 0);
-		/* This also releases chained mbufs if any. */
-		rte_pktmbuf_free_bulk(mbufs_to_free, num_mbufs);
-	}
 }
 
 static inline uint16_t
@@ -369,10 +320,8 @@ accel_dpdk_cryptodev_poller(void *args)
 	struct accel_dpdk_cryptodev_io_channel *crypto_ch = args;
 	struct accel_dpdk_cryptodev_qp *qp;
 	struct accel_dpdk_cryptodev_task *task, *task_tmp;
-	struct accel_dpdk_cryptodev_queued_op *op_to_resubmit, *op_to_resubmit_tmp;
 	TAILQ_HEAD(, accel_dpdk_cryptodev_task) queued_tasks_tmp;
 	uint32_t num_dequeued_ops = 0, num_enqueued_ops = 0;
-	uint16_t enqueued;
 	int i, rc;
 
 	for (i = 0; i < ACCEL_DPDK_CRYPTODEV_DRIVER_LAST; i++) {
@@ -380,42 +329,6 @@ accel_dpdk_cryptodev_poller(void *args)
 		/* Avoid polling "idle" qps since it may affect performance */
 		if (qp && qp->num_enqueued_ops) {
 			num_dequeued_ops += accel_dpdk_cryptodev_poll_qp(qp, crypto_ch);
-		}
-	}
-
-	/* Check if there are any queued crypto ops to process */
-	TAILQ_FOREACH_SAFE(op_to_resubmit, &crypto_ch->queued_cry_ops, link, op_to_resubmit_tmp) {
-		task = op_to_resubmit->task;
-		qp = op_to_resubmit->qp;
-		if (qp->num_enqueued_ops == qp->device->qp_desc_nr) {
-			continue;
-		}
-		enqueued = rte_cryptodev_enqueue_burst(qp->device->cdev_id,
-						       qp->qp,
-						       &op_to_resubmit->crypto_op,
-						       1);
-		if (enqueued == 1) {
-			TAILQ_REMOVE(&crypto_ch->queued_cry_ops, op_to_resubmit, link);
-			qp->num_enqueued_ops++;
-			num_enqueued_ops++;
-		} else {
-			if (op_to_resubmit->crypto_op->status == RTE_CRYPTO_OP_STATUS_NOT_PROCESSED) {
-				/* If we couldn't get one, just break and try again later. */
-				break;
-			} else {
-				/* Something is really wrong with the op. Most probably the
-				 * mbuf is broken or the HW is not able to process the request.
-				 * Fail the IO and remove its ops from the queued ops list. */
-				task->is_failed = true;
-
-				cancel_queued_crypto_ops(crypto_ch, task);
-
-				task->cryop_completed++;
-				/* Fail the IO if there is nothing left on device. */
-				if (task->cryop_completed == task->cryop_submitted) {
-					spdk_accel_task_complete(&task->base, -EFAULT);
-				}
-			}
 		}
 	}
 
@@ -639,7 +552,6 @@ accel_dpdk_cryptodev_process_task(struct accel_dpdk_cryptodev_io_channel *crypto
 	uint32_t sgl_offset;
 	uint32_t qp_capacity;
 	uint64_t iv_start;
-	struct accel_dpdk_cryptodev_queued_op *op_to_queue;
 	uint32_t i, crypto_index;
 	struct rte_crypto_op *crypto_ops[ACCEL_DPDK_CRYPTODEV_MAX_ENQUEUE_ARRAY_SIZE];
 	struct rte_mbuf *src_mbufs[ACCEL_DPDK_CRYPTODEV_MAX_ENQUEUE_ARRAY_SIZE];
@@ -729,8 +641,6 @@ accel_dpdk_cryptodev_process_task(struct accel_dpdk_cryptodev_io_channel *crypto
 	if (rc) {
 		return rc;
 	}
-	/* This value is used in the completion callback to determine when the accel task is complete. */
-	task->cryop_submitted += cryop_cnt;
 
 	/* As we don't support chaining because of a decision to use LBA as IV, construction
 	 * of crypto operations is straightforward. We build both the op, the mbuf and the
@@ -749,7 +659,7 @@ accel_dpdk_cryptodev_process_task(struct accel_dpdk_cryptodev_io_channel *crypto
 	for (crypto_index = 0; crypto_index < cryop_cnt; crypto_index++) {
 		rc = accel_dpdk_cryptodev_mbuf_add_single_block(&src, src_mbufs[crypto_index], task);
 		if (spdk_unlikely(rc)) {
-			goto err_free_ops;
+			goto free_ops;
 		}
 		accel_dpdk_cryptodev_op_set_iv(crypto_ops[crypto_index], iv_start);
 		iv_start++;
@@ -769,7 +679,7 @@ accel_dpdk_cryptodev_process_task(struct accel_dpdk_cryptodev_io_channel *crypto
 			/* scan-build thinks that dst_mbufs is not initialized */
 			rc = accel_dpdk_cryptodev_mbuf_add_single_block(&dst, dst_mbufs[crypto_index], task);
 			if (spdk_unlikely(rc)) {
-				goto err_free_ops;
+				goto free_ops;
 			}
 			crypto_ops[crypto_index]->sym->m_dst = dst_mbufs[crypto_index];
 #endif
@@ -780,7 +690,8 @@ accel_dpdk_cryptodev_process_task(struct accel_dpdk_cryptodev_io_channel *crypto
 	 * configured the crypto device for.
 	 */
 	num_enqueued_ops = rte_cryptodev_enqueue_burst(dev->cdev_id, qp->qp, crypto_ops, cryop_cnt);
-
+	/* This value is used in the completion callback to determine when the accel task is complete. */
+	task->cryop_submitted += num_enqueued_ops;
 	qp->num_enqueued_ops += num_enqueued_ops;
 	/* We were unable to enqueue everything but did get some, so need to decide what
 	 * to do based on the status of the last op.
@@ -788,17 +699,22 @@ accel_dpdk_cryptodev_process_task(struct accel_dpdk_cryptodev_io_channel *crypto
 	if (num_enqueued_ops < cryop_cnt) {
 		switch (crypto_ops[num_enqueued_ops]->status) {
 		case RTE_CRYPTO_OP_STATUS_NOT_PROCESSED:
-			/* Queue them up on a linked list to be resubmitted via the poller. */
-			for (crypto_index = num_enqueued_ops; crypto_index < cryop_cnt; crypto_index++) {
-				op_to_queue = (struct accel_dpdk_cryptodev_queued_op *)rte_crypto_op_ctod_offset(
-						      crypto_ops[crypto_index],
-						      uint8_t *, ACCEL_DPDK_CRYPTODEV_QUEUED_OP_OFFSET);
-				op_to_queue->qp = qp;
-				op_to_queue->crypto_op = crypto_ops[crypto_index];
-				op_to_queue->task = task;
-				TAILQ_INSERT_TAIL(&crypto_ch->queued_cry_ops, op_to_queue, link);
+			if (num_enqueued_ops == 0) {
+				/* Nothing was submitted. Free crypto ops and mbufs, treat this case as NOMEM */
+				rc = -ENOMEM;
+				goto free_ops;
 			}
-			break;
+			/* Part of the crypto operations were not submitted, release mbufs and crypto ops.
+			 * The rest crypto ops will be submitted again once current batch is completed */
+			cryop_cnt -= num_enqueued_ops;
+			memmove(crypto_ops, &crypto_ops[num_enqueued_ops], sizeof(crypto_ops[0]) * cryop_cnt);
+			memmove(src_mbufs, &src_mbufs[num_enqueued_ops], sizeof(src_mbufs[0]) * cryop_cnt);
+			if (!task->inplace) {
+				memmove(dst_mbufs, &dst_mbufs[num_enqueued_ops], sizeof(dst_mbufs[0]) * cryop_cnt);
+			}
+
+			rc = 0;
+			goto free_ops;
 		default:
 			/* For all other statuses, mark task as failed so that the poller will pick
 			 * the failure up for the overall task status.
@@ -809,7 +725,7 @@ accel_dpdk_cryptodev_process_task(struct accel_dpdk_cryptodev_io_channel *crypto
 				 * busy, fail it now as the poller won't know anything about it.
 				 */
 				rc = -EINVAL;
-				goto err_free_ops;
+				goto free_ops;
 			}
 			break;
 		}
@@ -818,7 +734,7 @@ accel_dpdk_cryptodev_process_task(struct accel_dpdk_cryptodev_io_channel *crypto
 	return 0;
 
 	/* Error cleanup paths. */
-err_free_ops:
+free_ops:
 	if (!task->inplace) {
 		/* This also releases chained mbufs if any. */
 		rte_pktmbuf_free_bulk(dst_mbufs, cryop_cnt);
@@ -939,8 +855,6 @@ _accel_dpdk_cryptodev_create_cb(void *io_device, void *ctx_buf)
 		return -EINVAL;
 	}
 
-	/* We use this to queue up crypto ops when the device is busy. */
-	TAILQ_INIT(&crypto_ch->queued_cry_ops);
 	/* We use this to queue tasks when qpair is full or no resources in pools */
 	TAILQ_INIT(&crypto_ch->queued_tasks);
 
@@ -1248,7 +1162,7 @@ accel_dpdk_cryptodev_init(void)
 	g_crypto_op_mp = rte_crypto_op_pool_create("dpdk_crypto_op_mp",
 			 RTE_CRYPTO_OP_TYPE_SYMMETRIC, ACCEL_DPDK_CRYPTODEV_NUM_MBUFS, ACCEL_DPDK_CRYPTODEV_POOL_CACHE_SIZE,
 			 (ACCEL_DPDK_CRYPTODEV_DEFAULT_NUM_XFORMS * sizeof(struct rte_crypto_sym_xform)) +
-			 ACCEL_DPDK_CRYPTODEV_IV_LENGTH + ACCEL_DPDK_CRYPTODEV_QUEUED_OP_LENGTH, rte_socket_id());
+			 ACCEL_DPDK_CRYPTODEV_IV_LENGTH, rte_socket_id());
 	if (g_crypto_op_mp == NULL) {
 		SPDK_ERRLOG("Cannot create op pool\n");
 		rc = -ENOMEM;
