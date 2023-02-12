@@ -295,7 +295,6 @@ test_setup(void)
 	/* Prepare essential variables for test routines */
 	g_io_ch = calloc(1, sizeof(*g_io_ch) + sizeof(struct accel_dpdk_cryptodev_io_channel));
 	g_crypto_ch = (struct accel_dpdk_cryptodev_io_channel *)spdk_io_channel_get_ctx(g_io_ch);
-	TAILQ_INIT(&g_crypto_ch->queued_cry_ops);
 	TAILQ_INIT(&g_crypto_ch->queued_tasks);
 
 	g_aesni_crypto_dev.type = ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB;
@@ -322,14 +321,12 @@ test_setup(void)
 	 * same coverage just calloc them here.
 	 */
 	for (i = 0; i < MAX_TEST_BLOCKS; i++) {
-		size_t size = ACCEL_DPDK_CRYPTODEV_IV_OFFSET + ACCEL_DPDK_CRYPTODEV_IV_LENGTH +
-			      ACCEL_DPDK_CRYPTODEV_QUEUED_OP_LENGTH;
+		size_t size = ACCEL_DPDK_CRYPTODEV_IV_OFFSET + ACCEL_DPDK_CRYPTODEV_IV_LENGTH;
 		rc = posix_memalign((void **)&g_test_crypto_ops[i], 64, size);
 		if (rc != 0) {
 			assert(false);
 		}
-		memset(g_test_crypto_ops[i], 0,
-		       ACCEL_DPDK_CRYPTODEV_IV_OFFSET + ACCEL_DPDK_CRYPTODEV_QUEUED_OP_LENGTH);
+		memset(g_test_crypto_ops[i], 0, ACCEL_DPDK_CRYPTODEV_IV_OFFSET);
 	}
 	g_mbuf_offset = DPDK_DYNFIELD_OFFSET;
 
@@ -709,7 +706,8 @@ test_large_enc_dec(void)
 
 	/* Test 1. Multi block size decryption, multi-element, inplace */
 	g_aesni_qp.num_enqueued_ops = 0;
-	g_enqueue_mock = g_dequeue_mock = ut_rte_crypto_op_bulk_alloc = num_blocks;
+	g_enqueue_mock = g_dequeue_mock = ut_rte_crypto_op_bulk_alloc =
+			ACCEL_DPDK_CRYPTODEV_MAX_ENQUEUE_ARRAY_SIZE;
 
 	rc = accel_dpdk_cryptodev_submit_tasks(g_io_ch, &task.base);
 	CU_ASSERT(rc == 0);
@@ -738,7 +736,7 @@ test_large_enc_dec(void)
 	rc = accel_dpdk_cryptodev_process_task(g_crypto_ch, &task);
 
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(task.cryop_submitted == num_blocks);
+	CU_ASSERT(task.cryop_submitted == ACCEL_DPDK_CRYPTODEV_MAX_ENQUEUE_ARRAY_SIZE * 2);
 	CU_ASSERT(task.cryop_total == task.cryop_submitted);
 
 	for (i = 0; i < ACCEL_DPDK_CRYPTODEV_MAX_ENQUEUE_ARRAY_SIZE; i++) {
@@ -757,9 +755,10 @@ test_large_enc_dec(void)
 
 	/* Test 2. Multi block size decryption, multi-element, out-of-place */
 	g_aesni_qp.num_enqueued_ops = 0;
-	g_enqueue_mock = g_dequeue_mock = ut_rte_crypto_op_bulk_alloc = num_blocks;
 	/* Modify dst to make payload out-of-place */
 	dst_iov[0].iov_base -= 1;
+	g_enqueue_mock = g_dequeue_mock = ut_rte_crypto_op_bulk_alloc =
+			ACCEL_DPDK_CRYPTODEV_MAX_ENQUEUE_ARRAY_SIZE;
 
 	rc = accel_dpdk_cryptodev_submit_tasks(g_io_ch, &task.base);
 	CU_ASSERT(rc == 0);
@@ -792,7 +791,7 @@ test_large_enc_dec(void)
 	rc = accel_dpdk_cryptodev_process_task(g_crypto_ch, &task);
 
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(task.cryop_submitted == num_blocks);
+	CU_ASSERT(task.cryop_submitted == ACCEL_DPDK_CRYPTODEV_MAX_ENQUEUE_ARRAY_SIZE * 2);
 	CU_ASSERT(task.cryop_total == task.cryop_submitted);
 
 	for (i = 0; i < ACCEL_DPDK_CRYPTODEV_MAX_ENQUEUE_ARRAY_SIZE; i++) {
@@ -817,9 +816,10 @@ test_large_enc_dec(void)
 	g_aesni_qp.num_enqueued_ops = 0;
 	task.base.op_code = ACCEL_OPC_ENCRYPT;
 	task.cryop_submitted = 0;
-	g_enqueue_mock = g_dequeue_mock = ut_rte_crypto_op_bulk_alloc = num_blocks;
 	/* Modify dst to make payload iplace */
 	dst_iov[0].iov_base += 1;
+	g_enqueue_mock = g_dequeue_mock = ut_rte_crypto_op_bulk_alloc =
+			ACCEL_DPDK_CRYPTODEV_MAX_ENQUEUE_ARRAY_SIZE;
 
 	rc = accel_dpdk_cryptodev_submit_tasks(g_io_ch, &task.base);
 	CU_ASSERT(rc == 0);
@@ -848,7 +848,7 @@ test_large_enc_dec(void)
 	rc = accel_dpdk_cryptodev_process_task(g_crypto_ch, &task);
 
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(task.cryop_submitted == num_blocks);
+	CU_ASSERT(task.cryop_submitted == ACCEL_DPDK_CRYPTODEV_MAX_ENQUEUE_ARRAY_SIZE * 2);
 	CU_ASSERT(task.cryop_total == task.cryop_submitted);
 
 	for (i = 0; i < ACCEL_DPDK_CRYPTODEV_MAX_ENQUEUE_ARRAY_SIZE; i++) {
@@ -868,9 +868,10 @@ test_large_enc_dec(void)
 	/* Multi block size encryption, multi-element, out-of-place */
 	g_aesni_qp.num_enqueued_ops = 0;
 	task.cryop_submitted = 0;
-	g_enqueue_mock = g_dequeue_mock = ut_rte_crypto_op_bulk_alloc = num_blocks;
 	/* Modify dst to make payload out-of-place */
 	dst_iov[0].iov_base -= 1;
+	g_enqueue_mock = g_dequeue_mock = ut_rte_crypto_op_bulk_alloc =
+			ACCEL_DPDK_CRYPTODEV_MAX_ENQUEUE_ARRAY_SIZE;
 
 	rc = accel_dpdk_cryptodev_submit_tasks(g_io_ch, &task.base);
 	CU_ASSERT(task.inplace == false);
@@ -902,7 +903,7 @@ test_large_enc_dec(void)
 	rc = accel_dpdk_cryptodev_process_task(g_crypto_ch, &task);
 
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(task.cryop_submitted == num_blocks);
+	CU_ASSERT(task.cryop_submitted == ACCEL_DPDK_CRYPTODEV_MAX_ENQUEUE_ARRAY_SIZE * 2);
 	CU_ASSERT(task.cryop_total == task.cryop_submitted);
 
 	for (i = 0; i < ACCEL_DPDK_CRYPTODEV_MAX_ENQUEUE_ARRAY_SIZE; i++) {
@@ -928,7 +929,6 @@ static void
 test_dev_full(void)
 {
 	struct accel_dpdk_cryptodev_task task = {};
-	struct accel_dpdk_cryptodev_queued_op *queued_op;
 	struct rte_crypto_sym_op *sym_op;
 	struct iovec src_iov = {.iov_base = (void *)0xDEADBEEF, .iov_len = 1024 };
 	struct iovec dst_iov = src_iov;
@@ -943,17 +943,15 @@ test_dev_full(void)
 	task.base.crypto_key = &g_key;
 	task.base.iv = 1;
 
-	/* Two element block size decryption */
+	/* Two element block size decryption, 2nd op was not submitted */
 	g_aesni_qp.num_enqueued_ops = 0;
 	g_enqueue_mock = g_dequeue_mock = 1;
 	ut_rte_crypto_op_bulk_alloc = 2;
-
 	g_test_crypto_ops[1]->status = RTE_CRYPTO_OP_STATUS_NOT_PROCESSED;
-	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->queued_cry_ops) == true);
 
 	rc = accel_dpdk_cryptodev_submit_tasks(g_io_ch, &task.base);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(task.cryop_submitted == 2);
+	CU_ASSERT(task.cryop_submitted == 1);
 	sym_op = g_test_crypto_ops[0]->sym;
 	CU_ASSERT(sym_op->m_src->buf_addr == src_iov.iov_base);
 	CU_ASSERT(sym_op->m_src->data_len == 512);
@@ -962,24 +960,24 @@ test_dev_full(void)
 	CU_ASSERT(sym_op->cipher.data.offset == 0);
 	CU_ASSERT(*RTE_MBUF_DYNFIELD(sym_op->m_src, g_mbuf_offset, uint64_t *) == (uint64_t)&task);
 	CU_ASSERT(sym_op->m_dst == NULL);
-
-	/* make sure one got queued and confirm its values */
-	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->queued_cry_ops) == false);
-	queued_op = TAILQ_FIRST(&g_crypto_ch->queued_cry_ops);
-	sym_op = queued_op->crypto_op->sym;
-	TAILQ_REMOVE(&g_crypto_ch->queued_cry_ops, queued_op, link);
-	CU_ASSERT(queued_op->task == &task);
-	CU_ASSERT(queued_op->crypto_op == g_test_crypto_ops[1]);
-	CU_ASSERT(sym_op->m_src->buf_addr == (void *)0xDEADBEEF + 512);
-	CU_ASSERT(sym_op->m_src->data_len == 512);
-	CU_ASSERT(sym_op->m_src->next == NULL);
-	CU_ASSERT(sym_op->cipher.data.length == 512);
-	CU_ASSERT(sym_op->cipher.data.offset == 0);
-	CU_ASSERT(*RTE_MBUF_DYNFIELD(sym_op->m_src, g_mbuf_offset, uint64_t *) == (uint64_t)&task);
-	CU_ASSERT(sym_op->m_dst == NULL);
-	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->queued_cry_ops) == true);
+	/* op which was not submitted is already released */
 	rte_pktmbuf_free(g_test_crypto_ops[0]->sym->m_src);
-	rte_pktmbuf_free(g_test_crypto_ops[1]->sym->m_src);
+	task.cryop_submitted = 0;
+
+	/* Two element block size decryption, no ops were submitted, task should be queued */
+	g_aesni_qp.num_enqueued_ops = 0;
+	g_enqueue_mock = g_dequeue_mock = 0;
+	ut_rte_crypto_op_bulk_alloc = 2;
+	g_test_crypto_ops[0]->status = RTE_CRYPTO_OP_STATUS_NOT_PROCESSED;
+	g_test_crypto_ops[1]->status = RTE_CRYPTO_OP_STATUS_NOT_PROCESSED;
+
+	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->queued_tasks) == true);
+	rc = accel_dpdk_cryptodev_submit_tasks(g_io_ch, &task.base);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(task.cryop_submitted == 0);
+	CU_ASSERT(!TAILQ_EMPTY(&g_crypto_ch->queued_tasks));
+	CU_ASSERT(TAILQ_FIRST(&g_crypto_ch->queued_tasks) == &task);
+	TAILQ_INIT(&g_crypto_ch->queued_tasks);
 
 	/* Non-busy reason for enqueue failure, all were rejected. */
 	g_enqueue_mock = 0;
@@ -995,6 +993,7 @@ test_dev_full(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(!TAILQ_EMPTY(&g_crypto_ch->queued_tasks));
 	CU_ASSERT(TAILQ_FIRST(&g_crypto_ch->queued_tasks) == &task);
+	g_aesni_qp.num_enqueued_ops = 0;
 
 	TAILQ_INIT(&g_crypto_ch->queued_tasks);
 }
@@ -1278,7 +1277,6 @@ test_poller(void)
 	struct iovec src_iov = {.iov_base = (void *)0xDEADBEEF, .iov_len = 1024 };
 	struct iovec dst_iov = src_iov;
 	struct rte_mbuf *src_mbufs[2];
-	struct accel_dpdk_cryptodev_queued_op *op_to_resubmit;
 	int rc;
 
 	task.base.op_code = ACCEL_OPC_DECRYPT;
@@ -1307,30 +1305,6 @@ test_poller(void)
 	CU_ASSERT(rc == 1);
 	CU_ASSERT(task.cryop_completed == task.cryop_submitted);
 	CU_ASSERT(g_aesni_qp.num_enqueued_ops == 0);
-
-	/* We have nothing dequeued but have some to resubmit */
-	g_dequeue_mock = 0;
-	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->queued_cry_ops) == true);
-
-	/* add an op to the queued list. */
-	task.cryop_submitted = 1;
-	task.cryop_total = 1;
-	task.cryop_completed = 0;
-	g_resubmit_test = true;
-	op_to_resubmit = (struct accel_dpdk_cryptodev_queued_op *)((uint8_t *)g_test_crypto_ops[0] +
-			 ACCEL_DPDK_CRYPTODEV_QUEUED_OP_OFFSET);
-	op_to_resubmit->crypto_op = (void *)0xDEADBEEF;
-	op_to_resubmit->task = &task;
-	op_to_resubmit->qp = &g_aesni_qp;
-	TAILQ_INSERT_TAIL(&g_crypto_ch->queued_cry_ops,
-			  op_to_resubmit,
-			  link);
-	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->queued_cry_ops) == false);
-	rc = accel_dpdk_cryptodev_poller(g_crypto_ch);
-	g_resubmit_test = false;
-	CU_ASSERT(rc == 1);
-	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->queued_cry_ops) == true);
-	CU_ASSERT(g_aesni_qp.num_enqueued_ops == 1);
 
 	/* 2 to dequeue but 2nd one failed */
 	g_dequeue_mock = g_enqueue_mock = 2;
