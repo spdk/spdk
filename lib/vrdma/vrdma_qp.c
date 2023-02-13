@@ -538,8 +538,13 @@ bool vrdma_set_vq_flush(struct vrdma_ctrl *ctrl,
 void vrdma_destroy_vq(struct vrdma_ctrl *ctrl,
 				struct spdk_vrdma_qp *vqp)
 {
-	if (ctrl->sctrl)
-		ctrl->sctrl->q_ops->destroy(ctrl->sctrl, vqp->snap_queue);
+	if (ctrl->sctrl) {
+		if (!ctrl->dpa_enabled) {
+			ctrl->sctrl->q_ops->destroy(ctrl->sctrl, vqp->snap_queue);
+		} else {
+			vrdma_prov_vq_destroy(vqp->snap_queue);
+		}
+	}
 	if (vqp->qp_mr) {
 		ibv_dereg_mr(vqp->qp_mr);
 		vqp->qp_mr = NULL;

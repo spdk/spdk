@@ -20,7 +20,7 @@
 #include "vrdma_dpa_cq.h"
 
 #define DPA_DEBUG
-// #define DPA_DEBUG_DETAIL
+#define DPA_DEBUG_DETAIL
 // #define DPA_COUNT
 
 static int get_next_qp_swqe_index(uint32_t pi, uint32_t depth)
@@ -109,8 +109,8 @@ static bool vrdma_dpa_rq_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 				local_addr, size, rq_pi);
 #ifdef DPA_DEBUG_DETAIL
 	printf("---naliu rq: index %#x, wqebb_size %#x, size %#x, remote_key %#x, remote_addr %#lx,"
-			"local_key %#x, local_addr %#lx\n rq_start_pi %#x, rq_end_pi %#x\n",
-			index, wqebb_size, size, remote_key, remote_addr, local_key, local_addr, rq_start_pi, rq_end_pi);
+			"local_key %#x, local_addr %#lx\n rq_start_pi %#x, rq_end_pi %#x, rq_pi %#x\n",
+			index, wqebb_size, size, remote_key, remote_addr, local_key, local_addr, rq_start_pi, rq_end_pi, rq_pi);
 #endif
 	return true;
 }
@@ -218,9 +218,9 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 	rq_last_fetch_end = rq_pi % ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt;
 	sq_last_fetch_end = sq_pi % ehctx->dma_qp.host_vq_ctx.sq_wqebb_cnt;
 
-	// while ((rq_last_fetch_start != rq_last_fetch_end) || 
-	// 	(sq_last_fetch_start != sq_last_fetch_end))
-	while (1)
+	while ((rq_last_fetch_start != rq_last_fetch_end) || 
+	 	(sq_last_fetch_start != sq_last_fetch_end))
+	//while (1)
 	{
 		if (rq_last_fetch_start < rq_last_fetch_end) {
 			has_wqe = vrdma_dpa_rq_wr_pi_fetch(ehctx, rq_last_fetch_start, rq_last_fetch_end, rq_pi);

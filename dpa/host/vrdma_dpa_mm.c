@@ -16,13 +16,51 @@
 #include "vrdma_dpa_mm.h"
 #include "vrdma_dpa.h"
 
+int vrdma_dpa_mm_zalloc(struct flexio_process *process, size_t buff_bsize,
+			  flexio_uintptr_t *dest_daddr_p)
+{
+	flexio_status err;
+
+	err = flexio_buf_dev_alloc(process, buff_bsize, dest_daddr_p);
+	if (err) {
+		log_error("Fail to alloc buffer, err(%d)", err);
+		return err;
+	}
+
+	err = flexio_buf_dev_memset(process, 0, buff_bsize, *dest_daddr_p);
+	if (err) {
+		log_error("Fail to memset buffer, err(%d)", err);
+		goto err_memeset;
+	}
+
+	return 0;
+
+err_memeset:
+	flexio_buf_dev_free(process, *dest_daddr_p);
+	return err;
+}
+
+int vrdma_dpa_mm_free(struct flexio_process *process, flexio_uintptr_t daddr)
+{
+	flexio_status err;
+
+	err = flexio_buf_dev_free(process, daddr);
+	if (err) {
+		log_error("Fail to free buffer, err(%d)", err);
+		return err;
+	}
+
+	return 0;
+}
+
+
 flexio_uintptr_t vrdma_dpa_mm_dbr_alloc(struct flexio_process *process)
 {
 	flexio_uintptr_t dbr_daddr;
 	uint32_t dbr[2] = {};
 	flexio_status err;
 
-	err = flexio_buf_dev_alloc(process, sizeof(dbr), &dbr_daddr);
+	err = vrdma_dpa_mm_zalloc(process, sizeof(dbr), &dbr_daddr);
 	if (err) {
 		log_error("Failed to allocate dev memory, err(%d)", err);
 		errno = err;
@@ -57,7 +95,7 @@ flexio_uintptr_t vrdma_dpa_mm_cq_ring_alloc(struct flexio_process *process,
 		mlx5dv_set_cqe_owner(cqe++, 1);
 
 	/* Copy CQEs from host to CQ ring */
-	err = flexio_buf_dev_alloc(process, ring_bsize, &ring_daddr);
+	err = vrdma_dpa_mm_zalloc(process, ring_bsize, &ring_daddr);
 	if (err) {
 		log_error("Failed to allocate dev memory, err(%d)", err);
 		errno = err;
@@ -75,7 +113,7 @@ flexio_uintptr_t vrdma_dpa_mm_cq_ring_alloc(struct flexio_process *process,
 	free(cq_ring_src);
 	return ring_daddr;
 err_host2dev_memcpy:
-	flexio_buf_dev_free(process, ring_daddr);
+	vrdma_dpa_mm_free(process, ring_daddr);
 err_dev_alloc:
 	free(cq_ring_src);
 	return 0;
@@ -101,15 +139,15 @@ int vrdma_dpa_mm_cq_alloc(struct flexio_process *process, int cq_size,
 
 	return 0;
 err_alloc_cq_ring:
-	flexio_buf_dev_free(process, cq->cq_dbr_daddr);
+	vrdma_dpa_mm_free(process, cq->cq_dbr_daddr);
 	return err;
 }
 
 void vrdma_dpa_mm_cq_free(struct flexio_process *process,
 			    struct vrdma_dpa_cq *cq)
 {
-	flexio_buf_dev_free(process, cq->cq_ring_daddr);
-	flexio_buf_dev_free(process, cq->cq_dbr_daddr);
+	vrdma_dpa_mm_free(process, cq->cq_ring_daddr);
+	vrdma_dpa_mm_free(process, cq->cq_dbr_daddr);
 }
 
 flexio_uintptr_t vrdma_dpa_mm_qp_buff_alloc(struct flexio_process *process,
@@ -132,7 +170,7 @@ flexio_uintptr_t vrdma_dpa_mm_qp_buff_alloc(struct flexio_process *process,
 	sq_bsize = sq_size * sizeof(struct mlx5_wqe_data_seg) * 4;
 	buff_bsize += sq_bsize;
 
-	err = flexio_buf_dev_alloc(process, buff_bsize, &buff_daddr);
+	err = vrdma_dpa_mm_zalloc(process, buff_bsize, &buff_daddr);
 	if (err) {
 		log_error("Failed to allocate dev buffer, err(%d)", err);
 		return 0;
@@ -147,7 +185,7 @@ flexio_uintptr_t vrdma_dpa_mm_qp_buff_alloc(struct flexio_process *process,
 void vrdma_dpa_mm_qp_buff_free(struct flexio_process *process,
 				 flexio_uintptr_t buff_daddr)
 {
-	flexio_buf_dev_free(process, buff_daddr);
+	vrdma_dpa_mm_free(process, buff_daddr);
 }
 
 int vrdma_dpa_init_qp_rx_ring(struct vrdma_dpa_vq *dpa_vq,

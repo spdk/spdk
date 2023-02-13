@@ -315,7 +315,6 @@ int vrdma_dpa_init(const struct vrdma_prov_init_attr *attr, void **out)
 		log_error("Failed to create window, err(%d)", err);
 		goto err_window_create;
 	}
-
 	/*Init Print environment*/
 	err = vrdma_dpa_dev_print_init(dpa_ctx->flexio_process,
 					 dpa_ctx->flexio_uar, PRINF_BUF_SZ,
@@ -443,14 +442,8 @@ int vrdma_dpa_emu_dev_init(const struct vrdma_prov_emu_dev_init_attr *attr,
 	emu_dev_ctx->flexio_process = dpa_ctx->flexio_process;
 
 	emu_dev_ctx->sf_uar = dpa_ctx->emu_uar;
-
-
-	if (!emu_dev_ctx->sf_uar) {
-		log_error("Failed to allocate UAR");
-		err = -1;
-		goto err_alloc_uar;
-	}
-
+	emu_dev_ctx->db_sf_outbox = dpa_ctx->db_outbox;
+#if 0
 	err = flexio_uar_create(dpa_ctx->flexio_process, emu_dev_ctx->sf_uar,
 				&emu_dev_ctx->flexio_uar);
 	if (err) {
@@ -466,7 +459,9 @@ int vrdma_dpa_emu_dev_init(const struct vrdma_prov_emu_dev_init_attr *attr,
 		log_error("Failed to create sf outbox, err(%d)", err);
 		goto err_outbox_create;
 	}
-
+#endif
+	emu_dev_ctx->flexio_uar = dpa_ctx->flexio_uar;
+	emu_dev_ctx->db_sf_outbox = dpa_ctx->db_outbox;
 	emu_dev_ctx->msix_config_vector = attr->msix_config_vector;
 	log_notice("emu_dev_ctx->msix_config_vector is %d", emu_dev_ctx->msix_config_vector);
 
@@ -481,12 +476,12 @@ int vrdma_dpa_emu_dev_init(const struct vrdma_prov_emu_dev_init_attr *attr,
 	return 0;
 
 err_msix_create:
+#if 0
 	flexio_outbox_destroy(emu_dev_ctx->db_sf_outbox);
 err_outbox_create:
 	flexio_uar_destroy(emu_dev_ctx->flexio_uar);
 err_uar_create:
-	mlx5dv_devx_free_uar(emu_dev_ctx->sf_uar);
-err_alloc_uar:
+#endif
 	free(emu_dev_ctx->msix);
 err_msix_alloc:
 	free(emu_dev_ctx);
@@ -499,9 +494,10 @@ void vrdma_dpa_emu_dev_uninit(void *emu_dev_handler)
 	log_notice("naliu begin vrdma_dpa_emu_dev_uninit\n");
 	vrdma_dpa_device_msix_destroy(emu_dev_ctx->msix_config_vector,
 					emu_dev_ctx);
+#if 0
 	flexio_outbox_destroy(emu_dev_ctx->db_sf_outbox);
 	flexio_uar_destroy(emu_dev_ctx->flexio_uar);
-	mlx5dv_devx_free_uar(emu_dev_ctx->sf_uar);
+#endif
 	free(emu_dev_ctx->msix);
 	free(emu_dev_ctx);
 	log_notice("naliu end vrdma_dpa_emu_dev_uninit\n");

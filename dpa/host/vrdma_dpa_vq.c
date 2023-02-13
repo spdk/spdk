@@ -106,9 +106,11 @@ static int vrdma_dpa_vq_state_modify(struct vrdma_dpa_vq *dpa_vq,
 		err = flexio_process_call(dpa_vq->dpa_ctx->flexio_process,
 					  dpa_vq->dpa_ctx->vq_rpc_func[VRDMA_DPA_VQ_QP],
 					  &rpc_ret, dpa_vq->heap_memory);
-		if (err)
+		if (err) {
 			log_error("Failed to call rpc, err(%d), rpc_ret(%ld)",
 				  err, rpc_ret);
+			flexio_coredump_create(dpa_vq->dpa_ctx->flexio_process, "/tmp/flexio.core");
+		}
 	}
 
  	return err;
@@ -162,7 +164,7 @@ static int vrdma_event_handler_create(struct vrdma_dpa_vq *dpa_vq,
 					  dpa_vq->dpa_ctx->db_outbox,
 					  event_handler_ptr);
 	if (err) {
-		log_error("Failed to create event_handler %s, err(%d)", handler, err);
+		log_error("Failed to create event_handler %s, hart (%d), err(%d)", handler, attr.affinity.id, err);
 		return err;
 	}
 	log_notice("%s use %d hart", handler, attr.affinity.id);
@@ -177,7 +179,7 @@ static int vrdma_dpa_vq_init(struct vrdma_dpa_vq *dpa_vq,
 
 	int err;
 
-	err = flexio_buf_dev_alloc(dpa_vq->dpa_ctx->flexio_process,
+	err = vrdma_dpa_mm_zalloc(dpa_vq->dpa_ctx->flexio_process,
 				   sizeof(struct vrdma_dpa_event_handler_ctx),
 				   dpa_daddr);
 
@@ -205,7 +207,7 @@ static int vrdma_dpa_vq_init(struct vrdma_dpa_vq *dpa_vq,
 err_rq_dma_q_handler_create:
 	flexio_event_handler_destroy(dpa_vq->db_handler);
 err_db_handler_create:
-	flexio_buf_dev_free(dpa_vq->dpa_ctx->flexio_process, *dpa_daddr);
+	vrdma_dpa_mm_free(dpa_vq->dpa_ctx->flexio_process, *dpa_daddr);
 	return err;
 }
 
@@ -213,7 +215,7 @@ static void vrdma_dpa_vq_uninit(struct vrdma_dpa_vq *dpa_vq)
 {
 	flexio_event_handler_destroy(dpa_vq->rq_dma_q_handler);
 	flexio_event_handler_destroy(dpa_vq->db_handler);
-	flexio_buf_dev_free(dpa_vq->dpa_ctx->flexio_process,
+	vrdma_dpa_mm_free(dpa_vq->dpa_ctx->flexio_process,
 			    dpa_vq->heap_memory);
 }
 
@@ -303,7 +305,7 @@ static int vrdma_dpa_dma_q_create(struct vrdma_dpa_vq *dpa_vq,
 	}
 
 	/* prepare rx ring*/
-	err = flexio_buf_dev_alloc(dpa_vq->emu_dev_ctx->flexio_process,
+	err = vrdma_dpa_mm_zalloc(dpa_vq->emu_dev_ctx->flexio_process,
 				   attr->rx_qsize * attr->rx_elem_size,
 				   &dpa_vq->dma_qp.rx_wqe_buff);
 	if (err) {
@@ -330,7 +332,7 @@ static int vrdma_dpa_dma_q_create(struct vrdma_dpa_vq *dpa_vq,
 	}
 
 	/* prepare tx ring */
-	err = flexio_buf_dev_alloc(dpa_vq->emu_dev_ctx->flexio_process,
+	err = vrdma_dpa_mm_zalloc(dpa_vq->emu_dev_ctx->flexio_process,
 				   attr->tx_qsize * attr->tx_elem_size,
 				   &dpa_vq->dma_qp.tx_wqe_buff);
 	if (err) {
@@ -399,10 +401,10 @@ err_qp_create:
 err_qp_rx_init:
 	vrdma_dpa_mkey_destroy(dpa_vq);
 err_mkey_create:
-	flexio_buf_dev_free(dpa_ctx->flexio_process,
+	vrdma_dpa_mm_free(dpa_ctx->flexio_process,
 			    dpa_vq->dma_qp.rx_wqe_buff);
 err_dev_buf_alloc:
-	flexio_buf_dev_free(dpa_ctx->flexio_process,
+	vrdma_dpa_mm_free(dpa_ctx->flexio_process,
 			    dpa_vq->dma_qp.dbr_daddr);
 err_alloc_dbr:
 	vrdma_dpa_mm_qp_buff_free(dpa_ctx->flexio_process,
@@ -414,9 +416,9 @@ static void vrdma_dpa_dma_q_destroy(struct vrdma_dpa_vq *dpa_vq)
 {
 	flexio_qp_destroy(dpa_vq->dma_qp.qp);
 	vrdma_dpa_mkey_destroy(dpa_vq);
-	flexio_buf_dev_free(dpa_vq->emu_dev_ctx->flexio_process,
+	vrdma_dpa_mm_free(dpa_vq->emu_dev_ctx->flexio_process,
 			    dpa_vq->dma_qp.rx_wqe_buff);
-	flexio_buf_dev_free(dpa_vq->emu_dev_ctx->flexio_process,
+	vrdma_dpa_mm_free(dpa_vq->emu_dev_ctx->flexio_process,
 			    dpa_vq->dma_qp.dbr_daddr);
 	vrdma_dpa_mm_qp_buff_free(dpa_vq->emu_dev_ctx->flexio_process,
 				    dpa_vq->dma_qp.buff_daddr);
