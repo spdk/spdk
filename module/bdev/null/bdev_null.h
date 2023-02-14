@@ -18,6 +18,7 @@ struct spdk_null_bdev_opts {
 	const struct spdk_uuid *uuid;
 	uint64_t num_blocks;
 	uint32_t block_size;
+	uint32_t physical_block_size;
 	uint32_t md_size;
 	bool md_interleave;
 	enum spdk_dif_type dif_type;

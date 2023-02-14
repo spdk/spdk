@@ -201,6 +201,7 @@ bdev_null_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 	spdk_json_write_named_string(w, "name", bdev->name);
 	spdk_json_write_named_uint64(w, "num_blocks", bdev->blockcnt);
 	spdk_json_write_named_uint32(w, "block_size", bdev->blocklen);
+	spdk_json_write_named_uint32(w, "physical_block_size", bdev->phys_blocklen);
 	spdk_json_write_named_uint32(w, "md_size", bdev->md_len);
 	spdk_json_write_named_uint32(w, "dif_type", bdev->dif_type);
 	spdk_json_write_named_bool(w, "dif_is_head_of_md", bdev->dif_is_head_of_md);
@@ -270,6 +271,7 @@ bdev_null_create(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts
 
 	null_disk->bdev.write_cache = 0;
 	null_disk->bdev.blocklen = opts->block_size;
+	null_disk->bdev.phys_blocklen = opts->physical_block_size;
 	null_disk->bdev.blockcnt = opts->num_blocks;
 	null_disk->bdev.md_len = opts->md_size;
 	null_disk->bdev.md_interleave = opts->md_interleave;

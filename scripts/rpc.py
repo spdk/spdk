@@ -421,6 +421,7 @@ if __name__ == "__main__":
         print_json(rpc.bdev.bdev_null_create(args.client,
                                              num_blocks=num_blocks,
                                              block_size=args.block_size,
+                                             physical_block_size=args.physical_block_size,
                                              name=args.name,
                                              uuid=args.uuid,
                                              md_size=args.md_size,
@@ -433,6 +434,7 @@ if __name__ == "__main__":
     p.add_argument('total_size', help='Size of null bdev in MB (int > 0). Includes only data blocks.', type=int)
     p.add_argument('block_size', help='Block size for this bdev.'
                                       'Should be a sum of block size and metadata size if --md-size is used.', type=int)
+    p.add_argument('-p', '--physical-block-size', help='Physical block size for this bdev.', type=int)
     p.add_argument('-m', '--md-size', type=int,
                    help='Metadata size for this bdev. Default=0.')
     p.add_argument('-t', '--dif-type', type=int, choices=[0, 1, 2, 3],

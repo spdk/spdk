@@ -16,6 +16,7 @@ struct rpc_construct_null {
 	char *uuid;
 	uint64_t num_blocks;
 	uint32_t block_size;
+	uint32_t physical_block_size;
 	uint32_t md_size;
 	int32_t dif_type;
 	bool dif_is_head_of_md;
@@ -33,6 +34,7 @@ static const struct spdk_json_object_decoder rpc_construct_null_decoders[] = {
 	{"uuid", offsetof(struct rpc_construct_null, uuid), spdk_json_decode_string, true},
 	{"num_blocks", offsetof(struct rpc_construct_null, num_blocks), spdk_json_decode_uint64},
 	{"block_size", offsetof(struct rpc_construct_null, block_size), spdk_json_decode_uint32},
+	{"physical_block_size", offsetof(struct rpc_construct_null, physical_block_size), spdk_json_decode_uint32, true},
 	{"md_size", offsetof(struct rpc_construct_null, md_size), spdk_json_decode_uint32, true},
 	{"dif_type", offsetof(struct rpc_construct_null, dif_type), spdk_json_decode_int32, true},
 	{"dif_is_head_of_md", offsetof(struct rpc_construct_null, dif_is_head_of_md), spdk_json_decode_bool, true},
@@ -72,6 +74,11 @@ rpc_bdev_null_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
+	if (req.physical_block_size % 512 != 0) {
+		spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
+						     "Physical block size %u is not a multiple of 512", req.physical_block_size);
+	}
+
 	if (req.num_blocks == 0) {
 		spdk_jsonrpc_send_error_response(request, -EINVAL,
 						 "Disk num_blocks must be greater than 0");
@@ -102,6 +109,7 @@ rpc_bdev_null_create(struct spdk_jsonrpc_request *request,
 	opts.uuid = uuid;
 	opts.num_blocks = req.num_blocks;
 	opts.block_size = req.block_size;
+	opts.physical_block_size = req.physical_block_size;
 	opts.md_size = req.md_size;
 	opts.md_interleave = true;
 	opts.dif_type = req.dif_type;
