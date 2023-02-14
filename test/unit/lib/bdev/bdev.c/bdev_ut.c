@@ -24,6 +24,7 @@ DEFINE_STUB(spdk_memory_domain_get_dma_device_type, enum spdk_dma_device_type,
 
 static bool g_memory_domain_pull_data_called;
 static bool g_memory_domain_push_data_called;
+static int g_accel_io_device;
 
 DEFINE_RETURN_MOCK(spdk_memory_domain_pull_data, int);
 int
@@ -49,6 +50,12 @@ spdk_memory_domain_push_data(struct spdk_memory_domain *dst_domain, void *dst_do
 	return 0;
 }
 
+struct spdk_io_channel *
+spdk_accel_get_io_channel(void)
+{
+	return spdk_get_io_channel(&g_accel_io_device);
+}
+
 int g_status;
 int g_count;
 enum spdk_bdev_event_type g_event_type1;
@@ -66,14 +73,29 @@ spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 }
 
 static int
-null_init(void)
+ut_accel_ch_create_cb(void *io_device, void *ctx)
 {
 	return 0;
 }
 
-static int
-null_clean(void)
+static void
+ut_accel_ch_destroy_cb(void *io_device, void *ctx)
 {
+}
+
+static int
+ut_bdev_setup(void)
+{
+	spdk_io_device_register(&g_accel_io_device, ut_accel_ch_create_cb,
+				ut_accel_ch_destroy_cb, 0, NULL);
+	return 0;
+}
+
+static int
+ut_bdev_teardown(void)
+{
+	spdk_io_device_unregister(&g_accel_io_device, NULL);
+
 	return 0;
 }
 
@@ -7012,7 +7034,7 @@ main(int argc, char **argv)
 	CU_set_error_action(CUEA_ABORT);
 	CU_initialize_registry();
 
-	suite = CU_add_suite("bdev", null_init, null_clean);
+	suite = CU_add_suite("bdev", ut_bdev_setup, ut_bdev_teardown);
 
 	CU_ADD_TEST(suite, bytes_to_blocks_test);
 	CU_ADD_TEST(suite, num_blocks_test);

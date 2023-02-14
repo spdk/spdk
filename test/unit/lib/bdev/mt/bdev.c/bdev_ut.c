@@ -50,6 +50,14 @@ spdk_memory_domain_push_data(struct spdk_memory_domain *dst_domain, void *dst_do
 	return 0;
 }
 
+static int g_accel_io_device;
+
+struct spdk_io_channel *
+spdk_accel_get_io_channel(void)
+{
+	return spdk_get_io_channel(&g_accel_io_device);
+}
+
 struct ut_bdev {
 	struct spdk_bdev	bdev;
 	void			*io_target;
@@ -72,6 +80,17 @@ bool g_fini_start_called = true;
 int g_status = 0;
 int g_count = 0;
 struct spdk_histogram_data *g_histogram = NULL;
+
+static int
+ut_accel_ch_create_cb(void *io_device, void *ctx)
+{
+	return 0;
+}
+
+static void
+ut_accel_ch_destroy_cb(void *io_device, void *ctx)
+{
+}
 
 static int
 stub_create_ch(void *io_device, void *ctx_buf)
@@ -300,6 +319,8 @@ setup_test(void)
 	spdk_bdev_initialize(bdev_init_cb, &done);
 	spdk_io_device_register(&g_io_device, stub_create_ch, stub_destroy_ch,
 				sizeof(struct ut_bdev_channel), NULL);
+	spdk_io_device_register(&g_accel_io_device, ut_accel_ch_create_cb,
+				ut_accel_ch_destroy_cb, 0, NULL);
 	register_bdev(&g_bdev, "ut_bdev", &g_io_device);
 	spdk_bdev_open_ext("ut_bdev", true, _bdev_event_cb, NULL, &g_desc);
 }
@@ -320,6 +341,7 @@ teardown_test(void)
 	unregister_bdev(&g_bdev);
 	spdk_io_device_unregister(&g_io_device, NULL);
 	spdk_bdev_finish(finish_cb, NULL);
+	spdk_io_device_unregister(&g_accel_io_device, NULL);
 	spdk_iobuf_finish(finish_cb, NULL);
 	poll_threads();
 	memset(&g_bdev, 0, sizeof(g_bdev));
@@ -2353,7 +2375,6 @@ bdev_init_wt_cb(void *done, int rc)
 {
 }
 
-
 static int
 wrong_thread_setup(void)
 {
@@ -2361,6 +2382,8 @@ wrong_thread_setup(void)
 	allocate_threads(2);
 	set_thread(0);
 
+	spdk_io_device_register(&g_accel_io_device, ut_accel_ch_create_cb,
+				ut_accel_ch_destroy_cb, 0, NULL);
 	spdk_bdev_initialize(bdev_init_wt_cb, NULL);
 	spdk_io_device_register(&g_io_device, stub_create_ch, stub_destroy_ch,
 				sizeof(struct ut_bdev_channel), NULL);
@@ -2388,6 +2411,7 @@ wrong_thread_teardown(void)
 	}
 	g_teardown_done = false;
 
+	spdk_io_device_unregister(&g_accel_io_device, NULL);
 	free_threads();
 	free_cores();
 

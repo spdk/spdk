@@ -8,6 +8,7 @@
 
 #include "spdk/bdev.h"
 
+#include "spdk/accel.h"
 #include "spdk/config.h"
 #include "spdk/env.h"
 #include "spdk/thread.h"
@@ -262,6 +263,9 @@ struct spdk_bdev_channel {
 
 	/* The channel for the underlying device */
 	struct spdk_io_channel	*channel;
+
+	/* Accel channel */
+	struct spdk_io_channel	*accel_channel;
 
 	/* Per io_device per thread data */
 	struct spdk_bdev_shared_resource *shared_resource;
@@ -3277,6 +3281,7 @@ bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 	}
 
 	spdk_put_io_channel(ch->channel);
+	spdk_put_io_channel(ch->accel_channel);
 
 	shared_resource = ch->shared_resource;
 
@@ -3494,6 +3499,12 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
+	ch->accel_channel = spdk_accel_get_io_channel();
+	if (!ch->accel_channel) {
+		spdk_put_io_channel(ch->channel);
+		return -1;
+	}
+
 	spdk_trace_record(TRACE_BDEV_IOCH_CREATE, 0, 0, 0, ch->bdev->name,
 			  spdk_thread_get_id(spdk_io_channel_get_thread(ch->channel)));
 
@@ -3508,6 +3519,7 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 	mgmt_io_ch = spdk_get_io_channel(&g_bdev_mgr);
 	if (!mgmt_io_ch) {
 		spdk_put_io_channel(ch->channel);
+		spdk_put_io_channel(ch->accel_channel);
 		return -1;
 	}
 
@@ -3524,6 +3536,7 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 		shared_resource = calloc(1, sizeof(*shared_resource));
 		if (shared_resource == NULL) {
 			spdk_put_io_channel(ch->channel);
+			spdk_put_io_channel(ch->accel_channel);
 			spdk_put_io_channel(mgmt_io_ch);
 			return -1;
 		}

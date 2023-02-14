@@ -26,6 +26,7 @@ struct bdev_ut_channel {
 
 static uint32_t g_part_ut_io_device;
 static struct bdev_ut_channel *g_bdev_ut_channel;
+static int g_accel_io_device;
 
 DEFINE_STUB(spdk_notify_send, uint64_t, (const char *type, const char *ctx), 0);
 DEFINE_STUB(spdk_notify_type_register, struct spdk_notify_type *, (const char *type), NULL);
@@ -55,6 +56,39 @@ spdk_memory_domain_push_data(struct spdk_memory_domain *dst_domain, void *dst_do
 	HANDLE_RETURN_MOCK(spdk_memory_domain_push_data);
 
 	cpl_cb(cpl_cb_arg, 0);
+	return 0;
+}
+
+struct spdk_io_channel *
+spdk_accel_get_io_channel(void)
+{
+	return spdk_get_io_channel(&g_accel_io_device);
+}
+
+static int
+ut_accel_ch_create_cb(void *io_device, void *ctx)
+{
+	return 0;
+}
+
+static void
+ut_accel_ch_destroy_cb(void *io_device, void *ctx)
+{
+}
+
+static int
+ut_part_setup(void)
+{
+	spdk_io_device_register(&g_accel_io_device, ut_accel_ch_create_cb,
+				ut_accel_ch_destroy_cb, 0, NULL);
+	return 0;
+}
+
+static int
+ut_part_teardown(void)
+{
+	spdk_io_device_unregister(&g_accel_io_device, NULL);
+
 	return 0;
 }
 
@@ -358,7 +392,7 @@ main(int argc, char **argv)
 	CU_set_error_action(CUEA_ABORT);
 	CU_initialize_registry();
 
-	suite = CU_add_suite("bdev_part", NULL, NULL);
+	suite = CU_add_suite("bdev_part", ut_part_setup, ut_part_teardown);
 
 	CU_ADD_TEST(suite, part_test);
 	CU_ADD_TEST(suite, part_free_test);
