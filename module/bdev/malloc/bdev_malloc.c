@@ -499,6 +499,7 @@ bdev_malloc_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx
 	spdk_json_write_named_string(w, "name", bdev->name);
 	spdk_json_write_named_uint64(w, "num_blocks", bdev->blockcnt);
 	spdk_json_write_named_uint32(w, "block_size", bdev->blocklen);
+	spdk_json_write_named_uint32(w, "physical_block_size", bdev->phys_blocklen);
 	spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &bdev->uuid);
 	spdk_json_write_named_string(w, "uuid", uuid_str);
 	spdk_json_write_named_uint32(w, "optimal_io_boundary", bdev->optimal_io_boundary);
@@ -576,6 +577,11 @@ create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 		return -EINVAL;
 	}
 
+	if (opts->physical_block_size % 512) {
+		SPDK_ERRLOG("Physical block must be 512 bytes aligned\n");
+		return -EINVAL;
+	}
+
 	switch (opts->md_size) {
 	case 0:
 	case 8:
@@ -650,6 +656,7 @@ create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 
 	mdisk->disk.write_cache = 1;
 	mdisk->disk.blocklen = block_size;
+	mdisk->disk.phys_blocklen = opts->physical_block_size;
 	mdisk->disk.blockcnt = opts->num_blocks;
 	mdisk->disk.md_len = opts->md_size;
 	mdisk->disk.md_interleave = opts->md_interleave;

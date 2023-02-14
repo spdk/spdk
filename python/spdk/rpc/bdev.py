@@ -268,13 +268,14 @@ def bdev_ocf_flush_status(client, name):
     return client.call('bdev_ocf_flush_status', params)
 
 
-def bdev_malloc_create(client, num_blocks, block_size, name=None, uuid=None, optimal_io_boundary=None,
+def bdev_malloc_create(client, num_blocks, block_size, physical_block_size=None, name=None, uuid=None, optimal_io_boundary=None,
                        md_size=None, md_interleave=None, dif_type=None, dif_is_head_of_md=None):
     """Construct a malloc block device.
 
     Args:
         num_blocks: size of block device in blocks
         block_size: Data block size of device; must be a power of 2 and at least 512
+        physical_block_size: Physical block size of device; must be a power of 2 and at least 512 (optional)
         name: name of block device (optional)
         uuid: UUID of block device (optional)
         optimal_io_boundary: Split on optimal IO boundary, in number of blocks, default 0 (disabled, optional)
@@ -287,6 +288,8 @@ def bdev_malloc_create(client, num_blocks, block_size, name=None, uuid=None, opt
         Name of created block device.
     """
     params = {'num_blocks': num_blocks, 'block_size': block_size}
+    if physical_block_size:
+        params['physical_block_size'] = physical_block_size
     if name:
         params['name'] = name
     if uuid:

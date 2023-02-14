@@ -35,6 +35,7 @@ static const struct spdk_json_object_decoder rpc_construct_malloc_decoders[] = {
 	{"uuid", offsetof(struct malloc_bdev_opts, uuid), decode_mdisk_uuid, true},
 	{"num_blocks", offsetof(struct malloc_bdev_opts, num_blocks), spdk_json_decode_uint64},
 	{"block_size", offsetof(struct malloc_bdev_opts, block_size), spdk_json_decode_uint32},
+	{"physical_block_size", offsetof(struct malloc_bdev_opts, physical_block_size), spdk_json_decode_uint32, true},
 	{"optimal_io_boundary", offsetof(struct malloc_bdev_opts, optimal_io_boundary), spdk_json_decode_uint32, true},
 	{"md_size", offsetof(struct malloc_bdev_opts, md_size), spdk_json_decode_uint32, true},
 	{"md_interleave", offsetof(struct malloc_bdev_opts, md_interleave), spdk_json_decode_bool, true},

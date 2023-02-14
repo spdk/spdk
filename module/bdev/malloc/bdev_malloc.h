@@ -18,6 +18,7 @@ struct malloc_bdev_opts {
 	struct spdk_uuid uuid;
 	uint64_t num_blocks;
 	uint32_t block_size;
+	uint32_t physical_block_size;
 	uint32_t optimal_io_boundary;
 	uint32_t md_size;
 	bool md_interleave;

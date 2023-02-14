@@ -379,6 +379,7 @@ if __name__ == "__main__":
         print_json(rpc.bdev.bdev_malloc_create(args.client,
                                                num_blocks=int(num_blocks),
                                                block_size=args.block_size,
+                                               physical_block_size=args.physical_block_size,
                                                name=args.name,
                                                uuid=args.uuid,
                                                optimal_io_boundary=args.optimal_io_boundary,
@@ -392,6 +393,7 @@ if __name__ == "__main__":
     p.add_argument(
         'total_size', help='Size of malloc bdev in MB (float > 0)', type=float)
     p.add_argument('block_size', help='Data block size for this bdev', type=int)
+    p.add_argument('-p', '--physical-block-size', help='Physical block size for this bdev.', type=int)
     p.add_argument('-o', '--optimal-io-boundary', help="""Split on optimal IO boundary, in number of
     blocks, default 0 (disabled)""", type=int)
     p.add_argument('-m', '--md-size', type=int,
