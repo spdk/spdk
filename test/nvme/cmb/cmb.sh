@@ -79,13 +79,25 @@ xtrace_disable
 # read 0 from the CMBSZ register (meaning CMB is either not supported
 # or the CMBMSC.CRE bit was cleared).
 
+# FIXME: This is akward but under latest kernels, >=6.1.9, the cmb* attrs
+# are gone. Do a quick fallback check via get-pmr and skip registry dump.
+mapfile -t get_pmr < <("$rootdir/scripts/get-pmr")
+
 cmb_nvmes=()
 for nvme in /sys/class/nvme/nvme+([0-9]); do
-	[[ -e $nvme/cmb ]] || continue
-	cmb_nvmes+=("$(< "$nvme/address")")
+	pci=$(< "$nvme/address")
+	if [[ ! -e $nvme/cmb ]]; then
+		if printf '%s\n' "${get_pmr[@]}" | grep -qE "$pci.+:cmb"; then
+			cmb_nvmes+=("$pci")
+		fi
+		# Skip the detailed printout as there's no relevant info to display
+		# in this case.
+		continue
+	fi
+	cmb_nvmes+=("$pci")
 	printf '* %s (%s:%s:%s:%s) CMB:\n' \
 		"${nvme##*/}" \
-		"$(< "$nvme/address")" \
+		"$pci" \
 		"$(< "$nvme/model")" \
 		"$(< "$nvme/serial")" \
 		"$(< "$nvme/transport")"
