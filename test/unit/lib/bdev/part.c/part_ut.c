@@ -34,6 +34,15 @@ DEFINE_STUB(spdk_memory_domain_get_dma_device_id, const char *, (struct spdk_mem
 	    "test_domain");
 DEFINE_STUB(spdk_memory_domain_get_dma_device_type, enum spdk_dma_device_type,
 	    (struct spdk_memory_domain *domain), 0);
+DEFINE_STUB(spdk_accel_sequence_finish, int,
+	    (struct spdk_accel_sequence *seq, spdk_accel_completion_cb cb_fn, void *cb_arg), 0);
+DEFINE_STUB_V(spdk_accel_sequence_abort, (struct spdk_accel_sequence *seq));
+DEFINE_STUB(spdk_accel_append_copy, int,
+	    (struct spdk_accel_sequence **seq, struct spdk_io_channel *ch, struct iovec *dst_iovs,
+	     uint32_t dst_iovcnt, struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+	     struct iovec *src_iovs, uint32_t src_iovcnt, struct spdk_memory_domain *src_domain,
+	     void *src_domain_ctx, int flags, spdk_accel_step_cb cb_fn, void *cb_arg), 0);
+DEFINE_STUB(spdk_accel_get_memory_domain, struct spdk_memory_domain *, (void), NULL);
 
 DEFINE_RETURN_MOCK(spdk_memory_domain_pull_data, int);
 int

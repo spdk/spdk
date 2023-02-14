@@ -800,6 +800,9 @@ struct spdk_bdev_io {
 			struct spdk_memory_domain *memory_domain;
 			void *memory_domain_ctx;
 
+			/* Sequence of accel operations */
+			struct spdk_accel_sequence *accel_sequence;
+
 			/** stored user callback in case we split the I/O and use a temporary callback */
 			spdk_bdev_io_completion_cb stored_user_cb;
 
@@ -987,6 +990,9 @@ struct spdk_bdev_io {
 		/** Memory domain and its context passed by the user in ext API */
 		struct spdk_memory_domain *memory_domain;
 		void *memory_domain_ctx;
+
+		/* Sequence of accel operations passed by the user */
+		struct spdk_accel_sequence *accel_sequence;
 
 		/** Data transfer completion callback */
 		void (*data_transfer_cpl)(void *ctx, int rc);

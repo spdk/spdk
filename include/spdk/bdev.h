@@ -13,6 +13,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/accel.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/nvme_spec.h"
 #include "spdk/json.h"
@@ -221,8 +222,13 @@ struct spdk_bdev_ext_io_opts {
 	void *memory_domain_ctx;
 	/** Metadata buffer, optional */
 	void *metadata;
+	/**
+	 * Sequence of accel operations to be executed before/after (depending on the IO type) the
+	 * request is submitted.
+	 */
+	struct spdk_accel_sequence *accel_sequence;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_ext_io_opts) == 32, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_ext_io_opts) == 40, "Incorrect size");
 
 /**
  * Get the options for the bdev module.
