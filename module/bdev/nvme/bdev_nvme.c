@@ -5365,30 +5365,35 @@ _bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, const struct nvme_path_id *path
 	int			rc = -ENXIO;
 
 	TAILQ_FOREACH_REVERSE_SAFE(p, &nvme_ctrlr->trids, nvme_paths, link, t) {
+		if (p == TAILQ_FIRST(&nvme_ctrlr->trids)) {
+			break;
+		}
+
 		if (!nvme_path_should_delete(p, path_id)) {
 			continue;
 		}
 
-		/* If we made it here, then this path is a match! Now we need to remove it. */
-		if (p == nvme_ctrlr->active_path_id) {
-			/* This is the active path in use right now. The active path is always the first in the list. */
-			if (!TAILQ_NEXT(p, link)) {
-				/* The current path is the only path. */
-				rc = bdev_nvme_delete_ctrlr(nvme_ctrlr, false);
-			} else {
-				/* There is an alternative path. */
-				rc = bdev_nvme_failover(nvme_ctrlr, true);
-			}
-		} else {
-			/* We are not using the specified path. */
-			TAILQ_REMOVE(&nvme_ctrlr->trids, p, link);
-			free(p);
-			rc = 0;
-		}
+		/* We are not using the specified path. */
+		TAILQ_REMOVE(&nvme_ctrlr->trids, p, link);
+		free(p);
+		rc = 0;
+	}
 
-		if (rc < 0 && rc != -ENXIO) {
-			return rc;
-		}
+	if (p == NULL || !nvme_path_should_delete(p, path_id)) {
+		return rc;
+	}
+
+	/* If we made it here, then this path is a match! Now we need to remove it. */
+
+	/* This is the active path in use right now. The active path is always the first in the list. */
+	assert(p == nvme_ctrlr->active_path_id);
+
+	if (!TAILQ_NEXT(p, link)) {
+		/* The current path is the only path. */
+		rc = bdev_nvme_delete_ctrlr(nvme_ctrlr, false);
+	} else {
+		/* There is an alternative path. */
+		rc = bdev_nvme_failover(nvme_ctrlr, true);
 	}
 
 	return rc;
