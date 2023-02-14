@@ -12,7 +12,7 @@ shopt -s nullglob
 [[ $(< /sys/class/dmi/id/chassis_vendor) == QEMU ]] || exit 0
 
 get_bar() {
-	echo "0x$(setpci -s "$1" "$2.L")"
+	echo "0x$(setpci -s "$1" "$2.${3:-L}")"
 }
 
 get_size() {
@@ -34,12 +34,12 @@ info() {
 	local dev=$1
 
 	local pref
+	local head
 
 	local base_addr2
 	local base_addr4
 
-	local bar bar2 bar3 bar4 bar5
-	local bar_type2
+	local bar2 bar3 bar4 bar5
 
 	pref[0]=non-prefetchable
 	pref[1]=prefetchable
@@ -56,10 +56,16 @@ info() {
 			"$bar_type"
 	}
 
+	head=$(get_bar "$dev" 0x0e B)
 	bar2=$(get_bar "$dev" 0x18)
 	bar3=$(get_bar "$dev" 0x1c)
 	bar4=$(get_bar "$dev" 0x20)
 	bar5=$(get_bar "$dev" 0x24)
+
+	if ((head != 0)); then
+		echo "Wrong haeder type under $dev" >&2
+		return 1
+	fi
 
 	# QEMU uses 64-bit BARs. If there is no CMB or PMR present, report
 	# that to the user and signal failure.
@@ -69,12 +75,8 @@ info() {
 	fi
 
 	if ((bar2 & 1 << 2)); then
-		bar_type2=pmr
-		if [[ -e $nvme/cmb ]]; then
-			bar_type2=cmb
-		fi
 		base_addr2=$(((bar2 & ~0xf) + (bar3 << 32)))
-		print_info "$bar2" "$base_addr2" "$bar_type2"
+		print_info "$bar2" "$base_addr2" cmb
 	fi
 
 	if ((bar4 & 1 << 2)); then
