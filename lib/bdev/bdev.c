@@ -379,6 +379,7 @@ static int bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io
 				     struct iovec *iov, int iovcnt, void *md_buf, uint64_t offset_blocks,
 				     uint64_t num_blocks,
 				     struct spdk_memory_domain *domain, void *domain_ctx,
+				     struct spdk_accel_sequence *seq,
 				     spdk_bdev_io_completion_cb cb, void *cb_arg);
 static int bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 				      struct iovec *iov, int iovcnt, void *md_buf,
@@ -1000,13 +1001,26 @@ bdev_io_exec_sequence(struct spdk_bdev_io *bdev_io, spdk_accel_completion_cb cb_
 	int rc;
 
 	assert(bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io));
-	assert(bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE);
+	assert(bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE || bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
+
+	/* Since the operations are appended during submission, they're in the opposite order than
+	 * how we want to execute them for reads (i.e. we need to execute the most recently added
+	 * operation first), so reverse the sequence before executing it.
+	 */
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
+		spdk_accel_sequence_reverse(bdev_io->internal.accel_sequence);
+	}
 
 	rc = spdk_accel_sequence_finish(bdev_io->internal.accel_sequence, cb_fn, bdev_io);
 	if (spdk_unlikely(rc != 0)) {
 		SPDK_ERRLOG("Failed to execute accel sequence, status=%d\n", rc);
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-		bdev_io_complete_unsubmitted(bdev_io);
+		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+			/* Writes haven't been submitted at this point yet */
+			bdev_io_complete_unsubmitted(bdev_io);
+		} else {
+			bdev_io_complete(bdev_io);
+		}
 	}
 }
 
@@ -1138,12 +1152,27 @@ _bdev_io_pull_bounce_data_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t le
 	/* If we need to exec an accel sequence, append a copy operation making accel change the
 	 * src/dst buffers of the previous operation */
 	if (bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io)) {
-		rc = spdk_accel_append_copy(&bdev_io->internal.accel_sequence, ch->accel_channel,
-					    bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, NULL, NULL,
-					    bdev_io->internal.orig_iovs,
-					    bdev_io->internal.orig_iovcnt,
-					    bdev_io->internal.memory_domain,
-					    bdev_io->internal.memory_domain_ctx, 0, NULL, NULL);
+		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+			rc = spdk_accel_append_copy(&bdev_io->internal.accel_sequence, ch->accel_channel,
+						    bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+						    NULL, NULL,
+						    bdev_io->internal.orig_iovs,
+						    bdev_io->internal.orig_iovcnt,
+						    bdev_io->internal.memory_domain,
+						    bdev_io->internal.memory_domain_ctx,
+						    0, NULL, NULL);
+		} else {
+			/* We need to reverse the src/dst for reads */
+			assert(bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
+			rc = spdk_accel_append_copy(&bdev_io->internal.accel_sequence, ch->accel_channel,
+						    bdev_io->internal.orig_iovs,
+						    bdev_io->internal.orig_iovcnt,
+						    bdev_io->internal.memory_domain,
+						    bdev_io->internal.memory_domain_ctx,
+						    bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+						    NULL, NULL, 0, NULL, NULL);
+		}
+
 		if (spdk_unlikely(rc != 0)) {
 			SPDK_ERRLOG("Failed to append copy to accel sequence: %p\n",
 				    bdev_io->internal.accel_sequence);
@@ -1247,7 +1276,8 @@ bdev_submit_request(struct spdk_bdev *bdev, struct spdk_io_channel *ioch,
 	/* After a request is submitted to a bdev module, the ownership of an accel sequence
 	 * associated with that bdev_io is transferred to the bdev module. So, clear the internal
 	 * sequence pointer to make sure we won't touch it anymore. */
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE && bdev_io->u.bdev.accel_sequence != NULL) {
+	if ((bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE ||
+	     bdev_io->type == SPDK_BDEV_IO_TYPE_READ) && bdev_io->u.bdev.accel_sequence != NULL) {
 		assert(!bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io));
 		bdev_io->internal.accel_sequence = NULL;
 	}
@@ -1520,10 +1550,15 @@ _bdev_memory_domain_get_io_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 		return;
 	}
 
-	if (bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io) &&
-	    bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-		bdev_io_exec_sequence(bdev_io, bdev_io_submit_sequence_cb);
-		return;
+	if (bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io)) {
+		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+			bdev_io_exec_sequence(bdev_io, bdev_io_submit_sequence_cb);
+			return;
+		}
+		/* For reads we'll execute the sequence after the data is read, so, for now, only
+		 * clear out accel_sequence pointer and submit the IO */
+		assert(bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
+		bdev_io->u.bdev.accel_sequence = NULL;
 	}
 
 	bdev_io_submit(bdev_io);
@@ -2654,11 +2689,12 @@ bdev_io_split_submit(struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt
 	io_wait_fn = _bdev_rw_split;
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
+		assert(bdev_io->u.bdev.accel_sequence == NULL);
 		rc = bdev_readv_blocks_with_md(bdev_io->internal.desc,
 					       spdk_io_channel_from_ctx(bdev_io->internal.ch),
 					       iov, iovcnt, md_buf, current_offset,
 					       num_blocks, bdev_io->internal.memory_domain,
-					       bdev_io->internal.memory_domain_ctx,
+					       bdev_io->internal.memory_domain_ctx, NULL,
 					       bdev_io_split_done, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
@@ -2955,6 +2991,23 @@ parent_bdev_io_complete(void *ctx, int rc)
 }
 
 static void
+bdev_io_complete_parent_sequence_cb(void *ctx, int status)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+
+	/* u.bdev.accel_sequence should have already been cleared at this point */
+	assert(bdev_io->u.bdev.accel_sequence == NULL);
+	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	bdev_io->internal.accel_sequence = NULL;
+	if (spdk_unlikely(status != 0)) {
+		SPDK_ERRLOG("Failed to execute accel sequence, status=%d\n", status);
+	}
+
+	parent_bdev_io_complete(bdev_io, status);
+}
+
+static void
 bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *parent_io = cb_arg;
@@ -2980,7 +3033,10 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		spdk_trace_record(TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)parent_io, bdev_io->internal.caller_ctx);
 		TAILQ_REMOVE(&parent_io->internal.ch->io_submitted, parent_io, internal.ch_link);
 
-		if (parent_io->internal.orig_iovcnt != 0) {
+		if (bdev_io_needs_sequence_exec(parent_io->internal.desc, parent_io) &&
+		    spdk_likely(success)) {
+			bdev_io_exec_sequence(bdev_io, bdev_io_complete_parent_sequence_cb);
+		} else if (parent_io->internal.orig_iovcnt != 0) {
 			_bdev_io_push_bounce_data_buffer(parent_io, parent_bdev_io_complete);
 			/* bdev IO will be completed in the callback */
 		} else {
@@ -3228,9 +3284,15 @@ _bdev_io_submit_ext(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bdev_io)
 		return;
 	}
 
-	if (needs_exec && bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-		bdev_io_exec_sequence(bdev_io, bdev_io_submit_sequence_cb);
-		return;
+	if (needs_exec) {
+		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+			bdev_io_exec_sequence(bdev_io, bdev_io_submit_sequence_cb);
+			return;
+		}
+		/* For reads we'll execute the sequence after the data is read, so, for now, only
+		 * clear out accel_sequence pointer and submit the IO */
+		assert(bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
+		bdev_io->u.bdev.accel_sequence = NULL;
 	}
 
 	bdev_io_submit(bdev_io);
@@ -4927,6 +4989,7 @@ static int
 bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			  struct iovec *iov, int iovcnt, void *md_buf, uint64_t offset_blocks,
 			  uint64_t num_blocks, struct spdk_memory_domain *domain, void *domain_ctx,
+			  struct spdk_accel_sequence *seq,
 			  spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
@@ -4953,9 +5016,10 @@ bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
 	bdev_io_init(bdev_io, bdev, cb_arg, cb);
 	bdev_io->internal.memory_domain = domain;
 	bdev_io->internal.memory_domain_ctx = domain_ctx;
+	bdev_io->internal.accel_sequence = seq;
 	bdev_io->u.bdev.memory_domain = domain;
 	bdev_io->u.bdev.memory_domain_ctx = domain_ctx;
-	bdev_io->u.bdev.accel_sequence = NULL;
+	bdev_io->u.bdev.accel_sequence = seq;
 
 	_bdev_io_submit_ext(desc, bdev_io);
 
@@ -4969,7 +5033,7 @@ spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	return bdev_readv_blocks_with_md(desc, ch, iov, iovcnt, NULL, offset_blocks,
-					 num_blocks, NULL, NULL, cb, cb_arg);
+					 num_blocks, NULL, NULL, NULL, cb, cb_arg);
 }
 
 int
@@ -4987,7 +5051,7 @@ spdk_bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_chann
 	}
 
 	return bdev_readv_blocks_with_md(desc, ch, iov, iovcnt, md_buf, offset_blocks,
-					 num_blocks, NULL, NULL, cb, cb_arg);
+					 num_blocks, NULL, NULL, NULL, cb, cb_arg);
 }
 
 static inline bool
@@ -5029,14 +5093,11 @@ spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 		return -EINVAL;
 	}
 
-	if (bdev_get_ext_io_opt(opts, accel_sequence, NULL) != NULL) {
-		return -ENOTSUP;
-	}
-
 	return bdev_readv_blocks_with_md(desc, ch, iov, iovcnt, md, offset_blocks,
 					 num_blocks,
 					 bdev_get_ext_io_opt(opts, memory_domain, NULL),
 					 bdev_get_ext_io_opt(opts, memory_domain_ctx, NULL),
+					 bdev_get_ext_io_opt(opts, accel_sequence, NULL),
 					 cb, cb_arg);
 }
 
@@ -6744,6 +6805,31 @@ bdev_unfreeze_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
 	spdk_bdev_for_each_channel_continue(i, 0);
 }
 
+static void
+bdev_io_complete_sequence_cb(void *ctx, int status)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
+	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
+
+	/* u.bdev.accel_sequence should have already been cleared at this point */
+	assert(bdev_io->u.bdev.accel_sequence == NULL);
+	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	bdev_io->internal.accel_sequence = NULL;
+	if (spdk_unlikely(status != 0)) {
+		SPDK_ERRLOG("Failed to execute accel sequence, status=%d\n", status);
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+	}
+
+	_bdev_io_decrement_outstanding(bdev_ch, shared_resource);
+	if (spdk_unlikely(_bdev_io_handle_no_mem(bdev_io))) {
+		return;
+	}
+
+	bdev_io_complete(bdev_io);
+}
+
 void
 spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status)
 {
@@ -6772,7 +6858,11 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 			return;
 		}
 	} else {
-		if (spdk_unlikely(bdev_io->internal.orig_iovcnt != 0)) {
+		if (bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io) &&
+		    spdk_likely(status == SPDK_BDEV_IO_STATUS_SUCCESS)) {
+			bdev_io_exec_sequence(bdev_io, bdev_io_complete_sequence_cb);
+			return;
+		} else if (spdk_unlikely(bdev_io->internal.orig_iovcnt != 0)) {
 			_bdev_io_push_bounce_data_buffer(bdev_io, _bdev_io_complete_push_bounce_done);
 			/* bdev IO will be completed in the callback */
 			return;
