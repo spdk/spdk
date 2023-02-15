@@ -1310,7 +1310,7 @@ test_nvme_ns_cmd_reservation_report(void)
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_RESERVATION_REPORT);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
 
-	CU_ASSERT(g_request->cmd.cdw10 == (size / 4));
+	CU_ASSERT(g_request->cmd.cdw10 == (size >> 2) - 1);
 
 	spdk_free(g_request->payload.contig_or_cb_arg);
 	nvme_free_request(g_request);
