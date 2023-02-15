@@ -1338,10 +1338,9 @@ spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 	struct nvme_request	*req;
 	struct spdk_nvme_cmd	*cmd;
 
-	if (len % 4) {
+	if (len & 0x3) {
 		return -EINVAL;
 	}
-	num_dwords = len / 4;
 
 	req = nvme_allocate_request_user_copy(qpair, payload, len, cb_fn, cb_arg, false);
 	if (req == NULL) {
@@ -1352,7 +1351,8 @@ spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 	cmd->opc = SPDK_NVME_OPC_RESERVATION_REPORT;
 	cmd->nsid = ns->id;
 
-	cmd->cdw10 = num_dwords;
+	num_dwords = (len >> 2);
+	cmd->cdw10 = num_dwords - 1; /* 0-based */
 
 	return nvme_qpair_submit_request(qpair, req);
 }
