@@ -193,7 +193,7 @@ get_zoned_devs
 
 declare -a blocks=()
 declare -A blocks_to_pci=()
-min_disk_size=$((1024 ** 3 * 2)) # 2GB
+min_disk_size=$((1024 ** 3 * 3)) # 3GB
 
 for block in "/sys/block/nvme"*; do
 	pci=$(readlink -f "$block/device/device")
