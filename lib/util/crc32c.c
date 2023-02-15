@@ -20,30 +20,34 @@ spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
 uint32_t
 spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
 {
+	size_t count_pre, count_post, count_mid;
+	const uint64_t *dword_buf;
 	uint64_t crc_tmp64;
-	size_t count;
+
+	/* process the head and tail bytes seperately to make the buf address
+	 * passed to _mm_crc32_u64 is 8 byte aligned. This can avoid unaligned loads.
+	 */
+	count_pre = ((uint64_t)buf & 7) == 0 ? 0 : 8 - ((uint64_t)buf & 7);
+	count_post = (uint64_t)(buf + len) & 7;
+	count_mid = (len - count_pre - count_post) / 8;
+
+	while (count_pre--) {
+		crc = _mm_crc32_u8(crc, *(const uint8_t *)buf);
+		buf++;
+	}
 
 	/* _mm_crc32_u64() needs a 64-bit intermediate value */
 	crc_tmp64 = crc;
+	dword_buf = (const uint64_t *)buf;
 
-	/* Process as much of the buffer as possible in 64-bit blocks. */
-	count = len / 8;
-	while (count--) {
-		uint64_t block;
-
-		/*
-		 * Use memcpy() to avoid unaligned loads, which are undefined behavior in C.
-		 * The compiler will optimize out the memcpy() in release builds.
-		 */
-		memcpy(&block, buf, sizeof(block));
-		crc_tmp64 = _mm_crc32_u64(crc_tmp64, block);
-		buf += sizeof(block);
+	while (count_mid--) {
+		crc_tmp64 = _mm_crc32_u64(crc_tmp64, *dword_buf);
+		dword_buf++;
 	}
-	crc = (uint32_t)crc_tmp64;
 
-	/* Handle any trailing bytes. */
-	count = len & 7;
-	while (count--) {
+	buf = dword_buf;
+	crc = (uint32_t)crc_tmp64;
+	while (count_post--) {
 		crc = _mm_crc32_u8(crc, *(const uint8_t *)buf);
 		buf++;
 	}
@@ -56,19 +60,29 @@ spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
 uint32_t
 spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
 {
-	size_t count;
+	size_t count_pre, count_post, count_mid;
+	const uint64_t *dword_buf;
 
-	count = len / 8;
-	while (count--) {
-		uint64_t block;
+	/* process the head and tail bytes seperately to make the buf address
+	 * passed to crc32_cd is 8 byte aligned. This can avoid unaligned loads.
+	 */
+	count_pre = ((uint64_t)buf & 7) == 0 ? 0 : 8 - ((uint64_t)buf & 7);
+	count_post = (uint64_t)(buf + len) & 7;
+	count_mid = (len - count_pre - count_post) / 8;
 
-		memcpy(&block, buf, sizeof(block));
-		crc = __crc32cd(crc, block);
-		buf += sizeof(block);
+	while (count_pre--) {
+		crc = __crc32cb(crc, *(const uint8_t *)buf);
+		buf++;
 	}
 
-	count = len & 7;
-	while (count--) {
+	dword_buf = (const uint64_t *)buf;
+	while (count_mid--) {
+		crc = __crc32cd(crc, *dword_buf);
+		dword_buf++;
+	}
+
+	buf = dword_buf;
+	while (count_post--) {
 		crc = __crc32cb(crc, *(const uint8_t *)buf);
 		buf++;
 	}
