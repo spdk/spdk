@@ -2226,17 +2226,14 @@ bdev_nvme_reset_io(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio)
 }
 
 static int
-bdev_nvme_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove)
+bdev_nvme_failover_unsafe(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 {
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
 	if (nvme_ctrlr->destruct) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		/* Don't bother resetting if the controller is in the process of being destructed. */
 		return -ENXIO;
 	}
 
 	if (nvme_ctrlr->resetting) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		SPDK_NOTICELOG("Unable to perform reset, already in progress.\n");
 		return -EBUSY;
 	}
@@ -2244,11 +2241,10 @@ bdev_nvme_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 	bdev_nvme_failover_trid(nvme_ctrlr, remove);
 
 	if (nvme_ctrlr->reconnect_is_delayed) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		SPDK_NOTICELOG("Reconnect is already scheduled.\n");
 
 		/* We rely on the next reconnect for the failover. */
-		return 0;
+		return -EALREADY;
 	}
 
 	nvme_ctrlr->resetting = true;
@@ -2256,10 +2252,25 @@ bdev_nvme_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 	assert(nvme_ctrlr->reset_start_tsc == 0);
 	nvme_ctrlr->reset_start_tsc = spdk_get_ticks();
 
+	return 0;
+}
+
+static int
+bdev_nvme_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove)
+{
+	int rc;
+
+	pthread_mutex_lock(&nvme_ctrlr->mutex);
+	rc = bdev_nvme_failover_unsafe(nvme_ctrlr, remove);
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
-	spdk_thread_send_msg(nvme_ctrlr->thread, _bdev_nvme_reset, nvme_ctrlr);
-	return 0;
+	if (rc == 0) {
+		spdk_thread_send_msg(nvme_ctrlr->thread, _bdev_nvme_reset, nvme_ctrlr);
+	} else if (rc == -EALREADY) {
+		rc = 0;
+	}
+
+	return rc;
 }
 
 static int bdev_nvme_unmap(struct nvme_bdev_io *bio, uint64_t offset_blocks,
@@ -4752,23 +4763,19 @@ _nvme_ctrlr_destruct(void *ctx)
 }
 
 static int
-bdev_nvme_delete_ctrlr(struct nvme_ctrlr *nvme_ctrlr, bool hotplug)
+bdev_nvme_delete_ctrlr_unsafe(struct nvme_ctrlr *nvme_ctrlr, bool hotplug)
 {
 	struct nvme_probe_skip_entry *entry;
 
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
-
 	/* The controller's destruction was already started */
 	if (nvme_ctrlr->destruct) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
-		return 0;
+		return -EALREADY;
 	}
 
 	if (!hotplug &&
 	    nvme_ctrlr->active_path_id->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		entry = calloc(1, sizeof(*entry));
 		if (!entry) {
-			pthread_mutex_unlock(&nvme_ctrlr->mutex);
 			return -ENOMEM;
 		}
 		entry->trid = nvme_ctrlr->active_path_id->trid;
@@ -4776,11 +4783,25 @@ bdev_nvme_delete_ctrlr(struct nvme_ctrlr *nvme_ctrlr, bool hotplug)
 	}
 
 	nvme_ctrlr->destruct = true;
+	return 0;
+}
+
+static int
+bdev_nvme_delete_ctrlr(struct nvme_ctrlr *nvme_ctrlr, bool hotplug)
+{
+	int rc;
+
+	pthread_mutex_lock(&nvme_ctrlr->mutex);
+	rc = bdev_nvme_delete_ctrlr_unsafe(nvme_ctrlr, hotplug);
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
-	_nvme_ctrlr_destruct(nvme_ctrlr);
+	if (rc == 0) {
+		_nvme_ctrlr_destruct(nvme_ctrlr);
+	} else if (rc == -EALREADY) {
+		rc = 0;
+	}
 
-	return 0;
+	return rc;
 }
 
 static void
