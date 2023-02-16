@@ -19,8 +19,9 @@
 #include "vrdma_dpa_dev_com.h"
 #include "vrdma_dpa_cq.h"
 
-#define DPA_DEBUG
-#define DPA_DEBUG_DETAIL
+//#define DPA_LATENCY_TEST
+//#define DPA_DEBUG
+//#define DPA_DEBUG_DETAIL
 // #define DPA_COUNT
 
 static int get_next_qp_swqe_index(uint32_t pi, uint32_t depth)
@@ -183,7 +184,7 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 	ehctx = (struct vrdma_dpa_event_handler_ctx *)thread_arg;
 //	printf("%s: --------virtq status %d.\n", __func__, ehctx->dma_qp.state);
 	if (ehctx->dma_qp.state != VRDMA_DPA_VQ_STATE_RDY) {
-		printf("%s: ------virtq status %d is not READY.\n", __func__, ehctx->dma_qp.state);
+		//printf("%s: ------virtq status %d is not READY.\n", __func__, ehctx->dma_qp.state);
 		goto out;
 	}
 	flexio_dev_outbox_config(dtctx, ehctx->emu_outbox);
@@ -217,10 +218,12 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 
 	rq_last_fetch_end = rq_pi % ehctx->dma_qp.host_vq_ctx.rq_wqebb_cnt;
 	sq_last_fetch_end = sq_pi % ehctx->dma_qp.host_vq_ctx.sq_wqebb_cnt;
-
+#ifdef DPA_LATENCY_TEST
+	while (1)
+#else
 	while ((rq_last_fetch_start != rq_last_fetch_end) || 
 	 	(sq_last_fetch_start != sq_last_fetch_end))
-	//while (1)
+#endif
 	{
 		if (rq_last_fetch_start < rq_last_fetch_end) {
 			has_wqe = vrdma_dpa_rq_wr_pi_fetch(ehctx, rq_last_fetch_start, rq_last_fetch_end, rq_pi);
