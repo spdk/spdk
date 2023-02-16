@@ -10,6 +10,9 @@
 # Installation prefix
 CONFIG_PREFIX="/usr/local"
 
+# Destination directory for the Python libraries
+CONFIG_PYDIR=
+
 # Target architecture
 CONFIG_ARCH=native
 

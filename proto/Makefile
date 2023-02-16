@@ -16,8 +16,6 @@ all: $(protopy)
 clean:
 	$(Q)$(RM) $(protopy)
 
-# TODO: we should probably write a proper install rule here instead of just blindly copying all
-# python scripts when building the RPMs
 install:
 uninstall:
 
