@@ -804,8 +804,20 @@ nvme_tcp_req_init(struct nvme_tcp_qpair *tqpair, struct nvme_request *req,
 	req->cmd.dptr.sgl1.unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_TRANSPORT;
 	req->cmd.dptr.sgl1.unkeyed.length = req->payload_size;
 
+	if (spdk_unlikely(req->cmd.opc == SPDK_NVME_OPC_FABRIC)) {
+		struct spdk_nvmf_capsule_cmd *nvmf_cmd = (struct spdk_nvmf_capsule_cmd *)&req->cmd;
+
+		xfer = spdk_nvme_opc_get_data_transfer(nvmf_cmd->fctype);
+	} else {
+		xfer = spdk_nvme_opc_get_data_transfer(req->cmd.opc);
+	}
+
 	if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG) {
-		rc = nvme_tcp_build_contig_request(tqpair, tcp_req);
+		/* For c2h delay filling in the iov until the data arrives.
+		 * For h2c some delay is also possible if data doesn't fit into cmd capsule (not implemented). */
+		if (xfer != SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+			rc = nvme_tcp_build_contig_request(tqpair, tcp_req);
+		}
 	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL) {
 		rc = nvme_tcp_build_sgl_request(tqpair, tcp_req);
 	} else {
@@ -816,13 +828,6 @@ nvme_tcp_req_init(struct nvme_tcp_qpair *tqpair, struct nvme_request *req,
 		return rc;
 	}
 
-	if (spdk_unlikely(req->cmd.opc == SPDK_NVME_OPC_FABRIC)) {
-		struct spdk_nvmf_capsule_cmd *nvmf_cmd = (struct spdk_nvmf_capsule_cmd *)&req->cmd;
-
-		xfer = spdk_nvme_opc_get_data_transfer(nvmf_cmd->fctype);
-	} else {
-		xfer = spdk_nvme_opc_get_data_transfer(req->cmd.opc);
-	}
 	if (xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 		max_in_capsule_data_size = ctrlr->ioccsz_bytes;
 		if (spdk_unlikely((req->cmd.opc == SPDK_NVME_OPC_FABRIC) ||
@@ -1690,6 +1695,17 @@ nvme_tcp_c2h_data_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu 
 		error_offset = offsetof(struct spdk_nvme_tcp_c2h_data_hdr, datal);
 		goto end;
 
+	}
+
+	if (nvme_payload_type(&tcp_req->req->payload) == NVME_PAYLOAD_TYPE_CONTIG) {
+		int rc;
+
+		rc = nvme_tcp_build_contig_request(tqpair, tcp_req);
+		if (rc) {
+			/* Not the right error message but at least it handles the failure. */
+			fes = SPDK_NVME_TCP_TERM_REQ_FES_DATA_TRANSFER_LIMIT_EXCEEDED;
+			goto end;
+		}
 	}
 
 	nvme_tcp_pdu_set_data_buf(pdu, tcp_req->iov, tcp_req->iovcnt,
