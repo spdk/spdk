@@ -32,8 +32,11 @@
 #define _VRDMA_H
 #include <stdio.h>
 #include <stdint.h>
+#include <stdatomic.h>
+
 #include <infiniband/verbs.h>
 #include <sys/queue.h>
+
 #include "snap_mr.h"
 #include "snap_dma.h"
 #include "snap_vrdma_virtq.h"
@@ -140,7 +143,7 @@ struct spdk_vrdma_cq {
 	uint32_t pagesize;
 	uint32_t cqebb_size; /* cqebb_size is base on 64 * (log_cqebb_size + 1) */
 	uint32_t pre_pi;
-	uint32_t pi;
+	atomic_uint pi;
 	union vrdma_align_pici *pici;
 	uint64_t host_pa;
 	uint64_t ci_pa;
@@ -205,7 +208,8 @@ struct vrdma_sq_meta {
 struct vrdma_sq {
 	struct vrdma_q_comm comm;
 	struct vrdma_send_wqe *sq_buff; /* wqe buff */
-	struct vrdma_sq_meta *meta_buff;
+	struct vrdma_sq_meta *meta_buff; /* Todo: maybe move to mqp in future */
+	struct vrdma_cqe *local_cq_buff;
 };
 
 struct vrdma_rq {
