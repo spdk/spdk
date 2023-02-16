@@ -443,7 +443,7 @@ int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 {
 	struct snap_vrdma_vq_create_attr q_attr;
 	uint32_t rq_buff_size, sq_buff_size, q_buff_size;
-	uint16_t sq_meta_size, local_cq_size;
+	uint32_t sq_meta_size, local_cq_size;
 
 	q_attr.bdev = NULL;
 	q_attr.pd = ctrl->pd;

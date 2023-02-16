@@ -1186,7 +1186,7 @@ static int vrdma_write_back_sq_cqe(struct spdk_vrdma_qp *vqp, uint16_t cqe_num)
 						vqp->sq.local_cq_buff, local_ring_addr);
 #endif
 		ret = snap_dma_q_write(vqp->snap_queue->dma_q, local_ring_addr, write_size,
-							vqp->qp_mr.lkey, host_ring_addr,
+							vqp->qp_mr->lkey, host_ring_addr,
 							vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
 		if (spdk_unlikely(ret)) {
 			SPDK_ERRLOG("no roll back failed to write back sq cqe, ret %d\n", ret);
@@ -1209,7 +1209,7 @@ static int vrdma_write_back_sq_cqe(struct spdk_vrdma_qp *vqp, uint16_t cqe_num)
 						vqp->sq.local_cq_buff, local_ring_addr);
 #endif
 		ret = snap_dma_q_write(vqp->snap_queue->dma_q, local_ring_addr, write_size,
-							vqp->qp_mr.lkey, host_ring_addr,
+							vqp->qp_mr->lkey, host_ring_addr,
 							vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
 		if (spdk_unlikely(ret)) {
 			SPDK_ERRLOG("no roll back failed to write back sq cqe, ret %d\n", ret);
@@ -1231,7 +1231,7 @@ static int vrdma_write_back_sq_cqe(struct spdk_vrdma_qp *vqp, uint16_t cqe_num)
 						vqp->sq.local_cq_buff, local_ring_addr);
 #endif
 		ret = snap_dma_q_write(vqp->snap_queue->dma_q, local_ring_addr, write_size,
-							  vqp->qp_mr.lkey, host_ring_addr,
+							  vqp->qp_mr->lkey, host_ring_addr,
 							  vqp->snap_queue->ctrl->xmkey->mkey, &vqp->q_comp);
 		if (spdk_unlikely(ret)) {
 			SPDK_ERRLOG("roll back failed to second write back sq cqe, ret %d\n", ret);
@@ -1295,7 +1295,7 @@ static bool vrdma_vqp_send_err_cqe(struct spdk_vrdma_qp *vqp)
 	struct spdk_vrdma_cq *vcq = vqp->sq_vcq;
 	struct vrdma_cqe *vcqe;
 	uint32_t wqe_idx;
-	uint32_t cqe_num;
+	uint32_t cqe_num = 0;
 	int ret;
 	uint32_t i;
 
