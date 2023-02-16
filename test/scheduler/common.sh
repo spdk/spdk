@@ -348,8 +348,8 @@ set_cpufreq() {
 
 	case "${cpufreq_drivers[cpu]}" in
 		acpi-cpufreq | cppc_cpufreq)
-			if [[ ${cpufreq_governors[cpu]} != userspace ]]; then
-				echo "userspace" > "$cpufreq/scaling_governors"
+			if [[ $(< "$cpufreq/scaling_governor") != userspace ]]; then
+				echo "userspace" > "$cpufreq/scaling_governor"
 			fi
 			echo "$min_freq" > "$cpufreq/scaling_setspeed"
 			;;
