@@ -443,7 +443,7 @@ int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 {
 	struct snap_vrdma_vq_create_attr q_attr;
 	uint32_t rq_buff_size, sq_buff_size, q_buff_size;
-	uint16_t sq_meta_size;
+	uint16_t sq_meta_size, local_cq_size;
 
 	q_attr.bdev = NULL;
 	q_attr.pd = ctrl->pd;
@@ -475,6 +475,8 @@ int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 	q_buff_size += sq_buff_size;
 	sq_meta_size = sizeof(struct vrdma_sq_meta) * vqp->sq.comm.wqebb_cnt;
 	q_buff_size += sq_meta_size;
+	local_cq_size = sizeof(struct vrdma_cqe) * vqp->sq.comm.wqebb_cnt;
+	q_buff_size += local_cq_size;
 
 	vqp->qp_pi = spdk_malloc(q_buff_size, 0x10, NULL, SPDK_ENV_LCORE_ID_ANY,
                              SPDK_MALLOC_DMA);
@@ -485,6 +487,7 @@ int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 	vqp->rq.rq_buff = (struct vrdma_recv_wqe *)((uint8_t *)vqp->qp_pi + sizeof(*vqp->qp_pi));
 	vqp->sq.sq_buff = (struct vrdma_send_wqe *)((uint8_t *)vqp->rq.rq_buff + rq_buff_size);
 	vqp->sq.meta_buff = (struct vrdma_sq_meta *)((uint8_t *)vqp->sq.sq_buff + sq_buff_size);
+	vqp->sq.local_cq_buff = (struct vrdma_cqe *)((uint8_t *)vqp->sq.meta_buff + sq_meta_size);
     vqp->qp_mr = ibv_reg_mr(ctrl->pd, vqp->qp_pi, q_buff_size,
                     IBV_ACCESS_REMOTE_READ |
                     IBV_ACCESS_REMOTE_WRITE |
