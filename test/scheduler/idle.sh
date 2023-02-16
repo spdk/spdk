@@ -14,7 +14,7 @@ trap 'killprocess "$spdk_pid"' EXIT
 
 thread_stats() {
 	local thread
-	local busy_threads=0
+	busy_threads=0
 
 	get_thread_stats
 
@@ -27,8 +27,6 @@ thread_stats() {
 			printf '%s is idle\n' "${thread_map[thread]}"
 		fi
 	done
-
-	((busy_threads == 0))
 }
 
 idle() {
@@ -57,6 +55,11 @@ idle() {
 		done
 
 		thread_stats
+
+		# Allow app_thread is busy for the first sample. Because on some system the dpdk_governor
+		# initiation process on app_thread is time consuming. This may make the busy time greater
+		# than idle time which causes the test to fail.
+		((samples == 1 && busy_threads <= 1 || samples > 1 && busy_threads == 0))
 	done
 
 	xtrace_restore
