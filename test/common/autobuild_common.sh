@@ -167,6 +167,11 @@ _build_native_dpdk() {
 		else
 			patch -p1 < "$rootdir/test/common/config/pkgdep/patches/dpdk/21.11+/dpdk_qat.patch"
 
+			if le $dpdk_ver 23.03.0; then
+				# Commit https://review.spdk.io/gerrit/c/spdk/dpdk/+/16828 is required for DPDK <23.03.0
+				patch -p1 < "$rootdir/test/common/config/pkgdep/patches/dpdk/21.11+/dpdk_rte_thash_gfni.patch"
+			fi
+
 			# Commit https://review.spdk.io/gerrit/c/spdk/dpdk/+/16134 is required for DPDK 22.11+
 			if ge $dpdk_ver 22.11.0; then
 				patch -p1 < "$rootdir/test/common/config/pkgdep/patches/dpdk/22.11+/dpdk_ipsec_mb.patch"
