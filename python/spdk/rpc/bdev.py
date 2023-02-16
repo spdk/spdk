@@ -1162,7 +1162,7 @@ def bdev_error_create(client, base_name):
     return client.call('bdev_error_create', params)
 
 
-def bdev_delay_create(client, base_bdev_name, name, avg_read_latency, p99_read_latency, avg_write_latency, p99_write_latency):
+def bdev_delay_create(client, base_bdev_name, name, avg_read_latency, p99_read_latency, avg_write_latency, p99_write_latency, uuid=None):
     """Construct a delay block device.
 
     Args:
@@ -1172,6 +1172,7 @@ def bdev_delay_create(client, base_bdev_name, name, avg_read_latency, p99_read_l
         p99_read_latency: complete 1% of read ops with this delay
         avg_write_latency: complete 99% of write ops with this delay
         p99_write_latency: complete 1% of write ops with this delay
+        uuid: UUID of block device (optional)
 
     Returns:
         Name of created block device.
@@ -1184,6 +1185,8 @@ def bdev_delay_create(client, base_bdev_name, name, avg_read_latency, p99_read_l
         'avg_write_latency': avg_write_latency,
         'p99_write_latency': p99_write_latency,
     }
+    if uuid:
+        params['uuid'] = uuid
     return client.call('bdev_delay_create', params)
 
 

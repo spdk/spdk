@@ -1024,6 +1024,7 @@ if __name__ == "__main__":
         print_json(rpc.bdev.bdev_delay_create(args.client,
                                               base_bdev_name=args.base_bdev_name,
                                               name=args.name,
+                                              uuid=args.uuid,
                                               avg_read_latency=args.avg_read_latency,
                                               p99_read_latency=args.nine_nine_read_latency,
                                               avg_write_latency=args.avg_write_latency,
@@ -1033,6 +1034,7 @@ if __name__ == "__main__":
                               help='Add a delay bdev on existing bdev')
     p.add_argument('-b', '--base-bdev-name', help="Name of the existing bdev", required=True)
     p.add_argument('-d', '--name', help="Name of the delay bdev", required=True)
+    p.add_argument('-u', '--uuid', help='UUID of the bdev (optional)')
     p.add_argument('-r', '--avg-read-latency',
                    help="Average latency to apply before completing read ops (in microseconds)", required=True, type=int)
     p.add_argument('-t', '--nine-nine-read-latency',

@@ -24,13 +24,15 @@ enum delay_io_type {
  *
  * \param bdev_name Bdev on which delay vbdev will be created.
  * \param vbdev_name Name of the delay bdev.
+ * \param uuid UUID of the delay bdev.
  * \param avg_read_latency Desired typical read latency.
  * \param p99_read_latency Desired p99 read latency
  * \param avg_write_latency Desired typical write latency.
  * \param p99_write_latency Desired p99 write latency
  * \return 0 on success, other on failure.
  */
-int create_delay_disk(const char *bdev_name, const char *vbdev_name, uint64_t avg_read_latency,
+int create_delay_disk(const char *bdev_name, const char *vbdev_name, struct spdk_uuid *uuid,
+		      uint64_t avg_read_latency,
 		      uint64_t p99_read_latency, uint64_t avg_write_latency, uint64_t p99_write_latency);
 
 /**
