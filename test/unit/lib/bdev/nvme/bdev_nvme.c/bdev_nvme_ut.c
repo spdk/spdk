@@ -5251,6 +5251,30 @@ test_reconnect_ctrlr(void)
 	CU_ASSERT(nvme_ctrlr->reconnect_delay_timer != NULL);
 	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == true);
 
+	/* A new reset starts from thread 0. */
+	set_thread(1);
+
+	/* The reset should cancel the reconnect timer and should start from reconnection.
+	 * Then, the reset should fail and a reconnect timer should be registered again.
+	 */
+	ctrlr.fail_reset = true;
+	ctrlr.is_failed = true;
+
+	rc = bdev_nvme_reset(nvme_ctrlr);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(nvme_ctrlr->resetting == true);
+	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == false);
+	CU_ASSERT(ctrlr.is_failed == true);
+
+	poll_threads();
+
+	CU_ASSERT(nvme_ctrlr->resetting == false);
+	CU_ASSERT(ctrlr.is_failed == false);
+	CU_ASSERT(ctrlr_ch1->qpair->qpair == NULL);
+	CU_ASSERT(ctrlr_ch2->qpair->qpair == NULL);
+	CU_ASSERT(nvme_ctrlr->reconnect_delay_timer != NULL);
+	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == true);
+
 	/* Then a reconnect retry should suceeed. */
 	ctrlr.fail_reset = false;
 
