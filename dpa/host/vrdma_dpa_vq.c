@@ -766,8 +766,10 @@ static void _vrdma_dpa_vq_destroy(struct vrdma_dpa_vq *dpa_vq)
 
 static void vrdma_dpa_vq_destroy(struct snap_vrdma_queue *virtq)
 {
+	TAILQ_REMOVE(&virtq->ctrl->virtqs, virtq, vq);
 	_vrdma_dpa_vq_destroy(virtq->dpa_vq);
 	snap_dma_ep_destroy(virtq->dma_q);
+	free(virtq);
 }
 
 static void vrdma_dpa_vq_dump_attribute(struct snap_dma_q_create_attr *rdma_qp_create_attr,
@@ -853,7 +855,6 @@ vrdma_dpa_vq_create(struct vrdma_ctrl *ctrl, struct spdk_vrdma_qp *vqp,
 	attr.rx_qsize     = q_attr->rq_size;
 	attr.tx_elem_size = q_attr->tx_elem_size;
 	attr.rx_elem_size = q_attr->rx_elem_size;
-;
 	/*prepare mkey && pd */
 	attr.emu_ib_ctx  = ctrl->emu_ctx;
 	attr.emu_pd      = ctrl->pd;
@@ -919,9 +920,10 @@ vrdma_dpa_vq_create(struct vrdma_ctrl *ctrl, struct spdk_vrdma_qp *vqp,
 	return virtq;
 err_post_recv:
 err_ep_connect:
-	vrdma_dpa_vq_destroy(virtq);
+	_vrdma_dpa_vq_destroy(virtq->dpa_vq);
 err_vq_create:
 	snap_dma_ep_destroy(virtq->dma_q);
+	free(virtq);
 	return NULL;
 }
 
