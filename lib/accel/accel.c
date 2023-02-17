@@ -657,6 +657,9 @@ spdk_accel_submit_encrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_k
 	accel_task->block_size = block_size;
 	accel_task->flags = flags;
 	accel_task->op_code = ACCEL_OPC_ENCRYPT;
+	accel_task->src_domain = NULL;
+	accel_task->dst_domain = NULL;
+	accel_task->step_cb_fn = NULL;
 
 	return module->submit_tasks(module_ch, accel_task);
 }
@@ -691,6 +694,9 @@ spdk_accel_submit_decrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_k
 	accel_task->block_size = block_size;
 	accel_task->flags = flags;
 	accel_task->op_code = ACCEL_OPC_DECRYPT;
+	accel_task->src_domain = NULL;
+	accel_task->dst_domain = NULL;
+	accel_task->step_cb_fn = NULL;
 
 	return module->submit_tasks(module_ch, accel_task);
 }
