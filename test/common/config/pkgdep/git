@@ -346,12 +346,8 @@ function install_git() {
 	tar -C "$GIT_REPOS" -xzof <(wget -qO- "$GIT_REPO_GIT")
 	(cd "$GIT_REPOS/git-$GIT_VERSION" \
 		&& make configure \
-		&& ./configure --prefix=/usr/local/git \
+		&& ./configure \
 		&& sudo make -j${jobs} install)
-	sudo sh -c "echo 'export PATH=/usr/local/git/bin:$PATH' >> /etc/bashrc"
-	export "PATH=/usr/local/git/bin:$PATH"
-	# Be nice for vagrant-proxyconf setup
-	mkdir -p "/usr/local/git/etc"
 }
 
 function install_extra_pkgs() {
