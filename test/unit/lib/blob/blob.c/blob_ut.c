@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -4578,6 +4578,8 @@ blob_snapshot_rw(void)
 	uint64_t page_size;
 	uint8_t payload_read[10 * 4096];
 	uint8_t payload_write[10 * 4096];
+	uint64_t write_bytes_start;
+	uint64_t read_bytes_start;
 	uint64_t write_bytes;
 	uint64_t read_bytes;
 
@@ -4627,8 +4629,8 @@ blob_snapshot_rw(void)
 
 	CU_ASSERT(spdk_blob_get_num_clusters(snapshot) == 5);
 
-	write_bytes = g_dev_write_bytes;
-	read_bytes = g_dev_read_bytes;
+	write_bytes_start = g_dev_write_bytes;
+	read_bytes_start = g_dev_read_bytes;
 
 	memset(payload_write, 0xAA, sizeof(payload_write));
 	spdk_blob_io_write(blob, channel, payload_write, 4, 10, blob_op_complete, NULL);
@@ -4639,13 +4641,15 @@ blob_snapshot_rw(void)
 	/* For a clone we need to allocate and copy one cluster, update one page of metadata
 	 * and then write 10 pages of payload.
 	 */
+	write_bytes = g_dev_write_bytes - write_bytes_start;
+	read_bytes = g_dev_read_bytes - read_bytes_start;
 	if (g_use_extent_table) {
 		/* Add one more page for EXTENT_PAGE write */
-		CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 12 + cluster_size);
+		CU_ASSERT(write_bytes == page_size * 12 + cluster_size);
 	} else {
-		CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 11 + cluster_size);
+		CU_ASSERT(write_bytes == page_size * 11 + cluster_size);
 	}
-	CU_ASSERT(g_dev_read_bytes - read_bytes == cluster_size);
+	CU_ASSERT(read_bytes == cluster_size);
 
 	spdk_blob_io_read(blob, channel, payload_read, 4, 10, blob_op_complete, NULL);
 	poll_threads();
