@@ -247,6 +247,7 @@ err_dev_cpy:
 int vrdma_dpa_mkey_create(struct vrdma_dpa_vq *dpa_vq,
 			    struct flexio_qp_attr *qp_attr,
 			    uint32_t data_bsize,
+				flexio_uintptr_t wqe_buff,
 			    struct flexio_mkey *mkey)
 {
 	struct flexio_mkey_attr mkey_attr = {};
@@ -254,7 +255,7 @@ int vrdma_dpa_mkey_create(struct vrdma_dpa_vq *dpa_vq,
 
 	mkey_attr.access = qp_attr->qp_access_mask;
 	mkey_attr.pd = qp_attr->pd;
-	mkey_attr.daddr = dpa_vq->dma_qp.rx_wqe_buff;
+	mkey_attr.daddr = wqe_buff;
 	mkey_attr.len = data_bsize;
 	err = flexio_device_mkey_create(dpa_vq->emu_dev_ctx->flexio_process,
 					&mkey_attr, &mkey);
@@ -268,5 +269,12 @@ int vrdma_dpa_mkey_create(struct vrdma_dpa_vq *dpa_vq,
 
 void vrdma_dpa_mkey_destroy(struct vrdma_dpa_vq *dpa_vq)
 {
-	flexio_device_mkey_destroy(dpa_vq->dma_qp.rqd_mkey);
+	if (dpa_vq->dma_qp.rqd_mkey) {
+		flexio_device_mkey_destroy(dpa_vq->dma_qp.rqd_mkey);
+		dpa_vq->dma_qp.rqd_mkey = NULL;
+	}
+	if (dpa_vq->dma_qp.sqd_mkey) {
+		flexio_device_mkey_destroy(dpa_vq->dma_qp.sqd_mkey);
+		dpa_vq->dma_qp.sqd_mkey = NULL;
+	}
 }
