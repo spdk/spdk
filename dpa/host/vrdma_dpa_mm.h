@@ -26,9 +26,6 @@ enum vrdma_dpa_buff_size {
 	VRDMA_DPA_QP_RQ_BUFF_SIZE = 64,
 };
 
-int vrdma_dpa_mm_zalloc(struct flexio_process *process, size_t buff_bsize,
-			  flexio_uintptr_t *dest_daddr_p);
-int vrdma_dpa_mm_free(struct flexio_process *process, flexio_uintptr_t daddr);
 flexio_uintptr_t vrdma_dpa_mm_dbr_alloc(struct flexio_process *process);
 int vrdma_dpa_mm_cq_alloc(struct flexio_process *process, int cq_size,
 			  struct vrdma_dpa_cq *cq);
@@ -50,7 +47,6 @@ int vrdma_dpa_init_qp_rx_ring(struct vrdma_dpa_vq *dpa_vq,
 int vrdma_dpa_mkey_create(struct vrdma_dpa_vq *dpa_vq,
 			    struct flexio_qp_attr *qp_attr,
 			    uint32_t data_bsize,
-				flexio_uintptr_t wqe_buff,
 			    struct flexio_mkey *mkey);
 void vrdma_dpa_mkey_destroy(struct vrdma_dpa_vq *dpa_vq);
 #endif

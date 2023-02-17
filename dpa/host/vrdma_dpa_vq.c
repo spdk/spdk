@@ -315,7 +315,6 @@ static int vrdma_dpa_dma_q_create(struct vrdma_dpa_vq *dpa_vq,
 
 	err = vrdma_dpa_mkey_create(dpa_vq, &qp_attr,
 				    attr->rx_qsize * attr->rx_elem_size,
-					dpa_vq->dma_qp.rx_wqe_buff,
 				    dpa_vq->dma_qp.rqd_mkey);
 	if (err) {
 		log_error("Failed to create rx mkey, err(%d)", err);
@@ -337,17 +336,16 @@ static int vrdma_dpa_dma_q_create(struct vrdma_dpa_vq *dpa_vq,
 				   attr->tx_qsize * attr->tx_elem_size,
 				   &dpa_vq->dma_qp.tx_wqe_buff);
 	if (err) {
-		log_error("Failed to allocate tx dev buffer, err(%d)", err);
-		goto err_qp_rx_init;
+		log_error("Failed to allocate dev buffer, err(%d)", err);
+		goto err_dev_buf_alloc;
 	}
 
 	err = vrdma_dpa_mkey_create(dpa_vq, &qp_attr,
 				      attr->tx_qsize * attr->tx_elem_size,
-					  dpa_vq->dma_qp.tx_wqe_buff,
 				      dpa_vq->dma_qp.sqd_mkey);
 	if (err) {
 		log_error("Failed to create tx mkey, err(%d)", err);
-		goto err_qp_rx_init;
+		goto err_mkey_create;
 	}
 
 	qp_attr.qp_wq_buff_qmem.memtype = FLEXIO_MEMTYPE_DPA;
@@ -403,12 +401,8 @@ err_qp_create:
 err_qp_rx_init:
 	vrdma_dpa_mkey_destroy(dpa_vq);
 err_mkey_create:
-	if (dpa_vq->dma_qp.rx_wqe_buff)
-		vrdma_dpa_mm_free(dpa_ctx->flexio_process,
+	vrdma_dpa_mm_free(dpa_ctx->flexio_process,
 			    dpa_vq->dma_qp.rx_wqe_buff);
-	if (dpa_vq->dma_qp.tx_wqe_buff)
-		vrdma_dpa_mm_free(dpa_ctx->flexio_process,
-			    dpa_vq->dma_qp.tx_wqe_buff);
 err_dev_buf_alloc:
 	vrdma_dpa_mm_free(dpa_ctx->flexio_process,
 			    dpa_vq->dma_qp.dbr_daddr);
@@ -424,8 +418,6 @@ static void vrdma_dpa_dma_q_destroy(struct vrdma_dpa_vq *dpa_vq)
 	vrdma_dpa_mkey_destroy(dpa_vq);
 	vrdma_dpa_mm_free(dpa_vq->emu_dev_ctx->flexio_process,
 			    dpa_vq->dma_qp.rx_wqe_buff);
-	vrdma_dpa_mm_free(dpa_vq->emu_dev_ctx->flexio_process,
-			    dpa_vq->dma_qp.tx_wqe_buff);
 	vrdma_dpa_mm_free(dpa_vq->emu_dev_ctx->flexio_process,
 			    dpa_vq->dma_qp.dbr_daddr);
 	vrdma_dpa_mm_qp_buff_free(dpa_vq->emu_dev_ctx->flexio_process,
@@ -765,7 +757,7 @@ static void _vrdma_dpa_vq_destroy(struct vrdma_dpa_vq *dpa_vq)
 	vrdma_dpa_msix_destroy(dpa_vq->sq_msix_vector,
 				 dpa_vq->emu_dev_ctx);
 	if (dpa_vq->sq_msix_vector != dpa_vq->rq_msix_vector)
-		vrdma_dpa_msix_destroy(dpa_vq->rq_msix_vector, dpa_vq->emu_dev_ctx);
+		vrdma_dpa_msix_destroy(dpa_vq->sq_msix_vector, dpa_vq->emu_dev_ctx);
 	mlx_devx_emu_db_to_cq_unmap(dpa_vq->guest_db_to_cq_ctx.devx_emu_db_to_cq_ctx);
 	vrdma_dpa_db_cq_destroy(dpa_vq);
 	vrdma_dpa_vq_uninit(dpa_vq);
@@ -850,7 +842,7 @@ vrdma_dpa_vq_create(struct vrdma_ctrl *ctrl, struct spdk_vrdma_qp *vqp,
 	virtq->dma_q = snap_dma_ep_create(ctrl->pd, &rdma_qp_create_attr);
 	if (!virtq->dma_q) {
 		log_error("Failed creating SW QP\n");
-		goto err_free_vq;
+		return NULL;
 	}
 
 	/* Create DPA QP */
@@ -931,7 +923,6 @@ err_ep_connect:
 	_vrdma_dpa_vq_destroy(virtq->dpa_vq);
 err_vq_create:
 	snap_dma_ep_destroy(virtq->dma_q);
-err_free_vq:
 	free(virtq);
 	return NULL;
 }
