@@ -2,6 +2,7 @@
 
 ## Release 23.01
 
+- [SPDK 23.01 NVMe Bdev Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_nvme_bdev_perf_report_2301.pdf)
 - [SPDK 23.01 Vhost Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_vhost_perf_report_2301.pdf)
 
 ## Release 22.09
