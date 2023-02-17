@@ -182,9 +182,13 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 
 	flexio_dev_get_thread_ctx(&dtctx);
 	ehctx = (struct vrdma_dpa_event_handler_ctx *)thread_arg;
-//	printf("%s: --------virtq status %d.\n", __func__, ehctx->dma_qp.state);
+#ifdef DPA_DEBUG
+	printf("%s: --------virtq status %d.\n", __func__, ehctx->dma_qp.state);
+#endif
 	if (ehctx->dma_qp.state != VRDMA_DPA_VQ_STATE_RDY) {
-		//printf("%s: ------virtq status %d is not READY.\n", __func__, ehctx->dma_qp.state);
+#ifdef DPA_DEBUG
+		printf("%s: ------virtq status %d is not READY.\n", __func__, ehctx->dma_qp.state);
+#endif
 		goto out;
 	}
 	flexio_dev_outbox_config(dtctx, ehctx->emu_outbox);
@@ -193,10 +197,10 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 	flexio_dev_window_ptr_acquire(dtctx, 0,
 		(flexio_uintptr_t *)&ehctx->window_base_addr);
 
-	// printf("---naliu vq_idx %d, emu_outbox %d, emu_crossing_mkey %d\n",
-		// ehctx->vq_index, ehctx->emu_outbox, ehctx->dma_qp.host_vq_ctx.emu_crossing_mkey);
-	// printf("---naliu window_base_addr %#x\n", ehctx->window_base_addr);
 #ifdef DPA_DEBUG
+	printf("---naliu vq_idx %d, emu_outbox %d, emu_crossing_mkey %d\n",
+		ehctx->vq_index, ehctx->emu_outbox, ehctx->dma_qp.host_vq_ctx.emu_crossing_mkey);
+	printf("---naliu window_base_addr %#x\n", ehctx->window_base_addr);
 	printf("---naliu rq_wqe_buff_pa %#lx, rq_pi_paddr %#lx, rq_wqebb_cnt %#x,"
 			"rq_wqebb_size %#x, sq_wqe_buff_pa %#lx, sq_pi_paddr %#lx,"
 			"sq_wqebb_cnt %#x, sq_wqebb_size %#lx, emu_crossing_mkey %#x,"
