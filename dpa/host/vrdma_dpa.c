@@ -20,7 +20,6 @@
 #include "stdio.h"
 #include <elf.h>
 
-//#define VRDMA_DPA_PRINT
 #define DEV_ELF_PATH "dpa/dpa_dev.elf"
 #define PRINF_BUF_SZ	(4 * 2048)
 extern struct vrdma_vq_ops vrdma_dpa_vq_ops;
@@ -316,7 +315,6 @@ int vrdma_dpa_init(const struct vrdma_prov_init_attr *attr, void **out)
 		log_error("Failed to create window, err(%d)", err);
 		goto err_window_create;
 	}
-#ifdef VRDMA_DPA_PRINT
 	/*Init Print environment*/
 	err = vrdma_dpa_dev_print_init(dpa_ctx->flexio_process,
 					 dpa_ctx->flexio_uar, PRINF_BUF_SZ,
@@ -325,7 +323,6 @@ int vrdma_dpa_init(const struct vrdma_prov_init_attr *attr, void **out)
 		log_error("Failed to init vrdma dpa dev print, err(%d)", err);
 		goto err_print;
 	}
-#endif
 
 	/* size padding allocation of hdata memory = ibv_reg_mr requirement*/
 	padding = sizeof(*dpa_ctx->vq_data) + (MR_BASE_AND_SIZE_ALIGN - 1);
@@ -334,7 +331,7 @@ int vrdma_dpa_init(const struct vrdma_prov_init_attr *attr, void **out)
 			     MR_BASE_AND_SIZE_ALIGN, padding);
 	if (err) {
 		log_error("posix_memalign failed, err(%d)", err);
-		goto err_posix_memalign;
+		goto err_print;
 	}
 	memset(dpa_ctx->vq_data, 0, sizeof(*dpa_ctx->vq_data));
 
@@ -350,11 +347,7 @@ int vrdma_dpa_init(const struct vrdma_prov_init_attr *attr, void **out)
 
 err_reg_mr:
 	free(dpa_ctx->vq_data);
-err_posix_memalign:
-#ifdef VRDMA_DPA_PRINT
-	flexio_print_destroy(dpa_ctx->flexio_process);
 err_print:
-#endif
 	flexio_window_destroy(dpa_ctx->window);
 err_window_create:
 	flexio_outbox_destroy(dpa_ctx->db_outbox);
@@ -365,7 +358,7 @@ err_uar_create:
 err_dev_alloc_uar:
 	flexio_process_destroy(dpa_ctx->flexio_process);
 err_process_create:
-	vrdma_dpa_vq_pup_func_deregister(dpa_ctx);
+	free(dpa_ctx->elf_buf);
 err_vq_pup_reg:
 	vrdma_dpa_pup_func_deregister(dpa_ctx);
 err_pup_reg:
@@ -389,13 +382,7 @@ void vrdma_dpa_uninit(void *in)
 	flexio_outbox_destroy(dpa_ctx->db_outbox);
 	flexio_uar_destroy(dpa_ctx->flexio_uar);
 	mlx5dv_devx_free_uar(dpa_ctx->emu_uar);
-#ifdef VRDMA_DPA_PRINT
-	flexio_print_destroy(dpa_ctx->flexio_process);
-#endif
 	flexio_process_destroy(dpa_ctx->flexio_process);
-	vrdma_dpa_vq_pup_func_deregister(dpa_ctx);
-	vrdma_dpa_pup_func_deregister(dpa_ctx);
-	flexio_app_destroy(dpa_ctx->app);
 	free(dpa_ctx->elf_buf);
 	free(dpa_ctx);
 	log_notice("naliu end vrdma_dpa_uninit\n");
