@@ -7431,7 +7431,7 @@ blob_esnap_create(void)
 	/* Create a normal blob and verify it is not an esnap clone. */
 	ut_spdk_blob_opts_init(&opts);
 	blob = ut_blob_create_and_open(bs, &opts);
-	CU_ASSERT(!blob_is_esnap_clone(blob));
+	CU_ASSERT(!spdk_blob_is_esnap_clone(blob));
 	ut_blob_close_and_delete(bs, blob);
 
 	/* Create an esnap clone blob then verify it is an esnap clone and has the right size */
@@ -7441,7 +7441,7 @@ blob_esnap_create(void)
 	opts.esnap_id_len = sizeof(esnap_opts);
 	opts.num_clusters = esnap_num_clusters;
 	blob = ut_blob_create_and_open(bs, &opts);
-	SPDK_CU_ASSERT_FATAL(blob_is_esnap_clone(blob));
+	SPDK_CU_ASSERT_FATAL(spdk_blob_is_esnap_clone(blob));
 	sz = spdk_blob_get_num_clusters(blob);
 	CU_ASSERT(sz == esnap_num_clusters);
 	ut_blob_close_and_delete(bs, blob);
@@ -7452,7 +7452,7 @@ blob_esnap_create(void)
 	opts.esnap_id = &esnap_opts;
 	opts.esnap_id_len = sizeof(esnap_opts);
 	blob = ut_blob_create_and_open(bs, &opts);
-	SPDK_CU_ASSERT_FATAL(blob_is_esnap_clone(blob));
+	SPDK_CU_ASSERT_FATAL(spdk_blob_is_esnap_clone(blob));
 	sz = spdk_blob_get_num_clusters(blob);
 	CU_ASSERT(sz == 0);
 	spdk_blob_resize(blob, 1, blob_op_complete, NULL);
@@ -7485,7 +7485,7 @@ blob_esnap_create(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blob != NULL);
 	blob = g_blob;
-	SPDK_CU_ASSERT_FATAL(blob_is_esnap_clone(blob));
+	SPDK_CU_ASSERT_FATAL(spdk_blob_is_esnap_clone(blob));
 	sz = spdk_blob_get_num_clusters(blob);
 	CU_ASSERT(sz == esnap_num_clusters + 1);
 
@@ -7516,7 +7516,7 @@ blob_esnap_create(void)
 	/* Opening the blob also triggers the esnap to be loaded */
 	CU_ASSERT(bs_ctx_count == 2);
 	blob = g_blob;
-	SPDK_CU_ASSERT_FATAL(blob_is_esnap_clone(blob));
+	SPDK_CU_ASSERT_FATAL(spdk_blob_is_esnap_clone(blob));
 	sz = spdk_blob_get_num_clusters(blob);
 	CU_ASSERT(sz == esnap_num_clusters + 1);
 	spdk_blob_close(blob, blob_op_complete, NULL);

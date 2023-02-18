@@ -702,6 +702,15 @@ bool spdk_blob_is_clone(struct spdk_blob *blob);
 bool spdk_blob_is_thin_provisioned(struct spdk_blob *blob);
 
 /**
+ * Check if blob is a clone of an external bdev.
+ *
+ * \param blob Blob.
+ *
+ * \return true if blob is a clone of an external bdev.
+ */
+bool spdk_blob_is_esnap_clone(const struct spdk_blob *blob);
+
+/**
  * Delete an existing blob from the given blobstore.
  *
  * \param bs blobstore.

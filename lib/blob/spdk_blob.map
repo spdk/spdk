@@ -34,6 +34,7 @@
 	spdk_blob_is_snapshot;
 	spdk_blob_is_clone;
 	spdk_blob_is_thin_provisioned;
+	spdk_blob_is_esnap_clone;
 	spdk_bs_delete_blob;
 	spdk_bs_inflate_blob;
 	spdk_bs_blob_decouple_parent;

@@ -8242,6 +8242,12 @@ spdk_blob_is_thin_provisioned(struct spdk_blob *blob)
 	return !!(blob->invalid_flags & SPDK_BLOB_THIN_PROV);
 }
 
+bool
+spdk_blob_is_esnap_clone(const struct spdk_blob *blob)
+{
+	return blob_is_esnap_clone(blob);
+}
+
 static void
 blob_update_clear_method(struct spdk_blob *blob)
 {
