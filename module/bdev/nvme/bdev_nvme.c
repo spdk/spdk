@@ -2678,8 +2678,17 @@ bdev_nvme_submit_accel_crc32c(void *ctx, uint32_t *dst, struct iovec *iov,
 	struct nvme_poll_group *group = ctx;
 	int rc;
 
-	assert(group->accel_channel != NULL);
 	assert(cb_fn != NULL);
+
+	if (spdk_unlikely(!group->accel_channel)) {
+		group->accel_channel = spdk_accel_get_io_channel();
+		if (!group->accel_channel) {
+			cb_fn(cb_arg, -ENOMEM);
+			SPDK_ERRLOG("Cannot get the accel_channel for bdev nvme polling group=%p\n",
+				    group);
+			return;
+		}
+	}
 
 	rc = spdk_accel_submit_crc32cv(group->accel_channel, dst, iov, iov_cnt, seed, cb_fn, cb_arg);
 	if (rc) {
@@ -2708,18 +2717,9 @@ bdev_nvme_create_poll_group_cb(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	group->accel_channel = spdk_accel_get_io_channel();
-	if (!group->accel_channel) {
-		spdk_nvme_poll_group_destroy(group->group);
-		SPDK_ERRLOG("Cannot get the accel_channel for bdev nvme polling group=%p\n",
-			    group);
-		return -1;
-	}
-
 	group->poller = SPDK_POLLER_REGISTER(bdev_nvme_poll, group, g_opts.nvme_ioq_poll_period_us);
 
 	if (group->poller == NULL) {
-		spdk_put_io_channel(group->accel_channel);
 		spdk_nvme_poll_group_destroy(group->group);
 		return -1;
 	}
