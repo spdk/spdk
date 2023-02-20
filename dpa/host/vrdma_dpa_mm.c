@@ -267,24 +267,29 @@ int vrdma_dpa_mkey_create(struct vrdma_dpa_vq *dpa_vq,
 	return 0;
 }
 
-void vrdma_dpa_mkey_destroy(struct vrdma_dpa_vq *dpa_vq)
+void vrdma_dpa_mkey_destroy(struct flexio_mkey *mkey)
 {
-	if (dpa_vq->dma_qp.rqd_mkey) {
-		flexio_device_mkey_destroy(dpa_vq->dma_qp.rqd_mkey);
-		dpa_vq->dma_qp.rqd_mkey = NULL;
-	}
-	if (dpa_vq->dma_qp.rx_wqe_buff) {
-		vrdma_dpa_mm_free(dpa_vq->emu_dev_ctx->flexio_process,
-                 dpa_vq->dma_qp.rx_wqe_buff);
-		dpa_vq->dma_qp.rx_wqe_buff = 0;
-	}
-	if (dpa_vq->dma_qp.sqd_mkey) {
-		flexio_device_mkey_destroy(dpa_vq->dma_qp.sqd_mkey);
-		dpa_vq->dma_qp.sqd_mkey = NULL;
-	}
-	if (dpa_vq->dma_qp.tx_wqe_buff) {
-		vrdma_dpa_mm_free(dpa_vq->emu_dev_ctx->flexio_process,
-                 dpa_vq->dma_qp.tx_wqe_buff);
-		dpa_vq->dma_qp.tx_wqe_buff = 0;
-	}
+	flexio_device_mkey_destroy(mkey);
 }
+
+// void vrdma_dpa_mkey_destroy(struct vrdma_dpa_vq *dpa_vq)
+// {
+// 	if (dpa_vq->dma_qp.rqd_mkey) {
+// 		flexio_device_mkey_destroy(dpa_vq->dma_qp.rqd_mkey);
+// 		dpa_vq->dma_qp.rqd_mkey = NULL;
+// 	}
+// 	if (dpa_vq->dma_qp.rx_wqe_buff) {
+// 		vrdma_dpa_mm_free(dpa_vq->emu_dev_ctx->flexio_process,
+//                  dpa_vq->dma_qp.rx_wqe_buff);
+// 		dpa_vq->dma_qp.rx_wqe_buff = 0;
+// 	}
+// 	if (dpa_vq->dma_qp.sqd_mkey) {
+// 		flexio_device_mkey_destroy(dpa_vq->dma_qp.sqd_mkey);
+// 		dpa_vq->dma_qp.sqd_mkey = NULL;
+// 	}
+// 	if (dpa_vq->dma_qp.tx_wqe_buff) {
+// 		vrdma_dpa_mm_free(dpa_vq->emu_dev_ctx->flexio_process,
+//                  dpa_vq->dma_qp.tx_wqe_buff);
+// 		dpa_vq->dma_qp.tx_wqe_buff = 0;
+// 	}
+// }
