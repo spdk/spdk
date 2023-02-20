@@ -426,8 +426,6 @@ BPFTRACE_VERSION=${BPFTRACE_VERSION:-36414d9}
 VFIO_QEMU_BRANCH=${VFIO_QEMU_BRANCH:-vfio-user-patch1-noreq}
 VANILLA_QEMU_BRANCH=${VANILLA_QEMU_BRANCH:-v7.0.0}
 
-: ${GIT_REPO_DPDK=https://github.com/spdk/dpdk.git}
-export GIT_REPO_DPDK
 : ${GIT_REPO_ROCKSDB=https://review.spdk.io/spdk/rocksdb}
 export GIT_REPO_ROCKSDB
 : ${GIT_REPO_FIO=https://github.com/axboe/fio.git}
@@ -440,8 +438,6 @@ export GIT_REPO_QEMU
 export GIT_REPO_QEMU_VFIO
 : ${GIT_REPO_LIBISCSI=https://github.com/sahlberg/libiscsi}
 export GIT_REPO_LIBISCSI
-: ${GIT_REPO_INTEL_IPSEC_MB=https://github.com/spdk/intel-ipsec-mb.git}
-export GIT_REPO_INTEL_IPSEC_MB
 : ${DRIVER_LOCATION_QAT=https://downloadmirror.intel.com/761891/QAT.L.4.20.0-00001.tar.gz}
 export DRIVER_LOCATION_QAT
 : ${GIT_REPO_GIT=https://github.com/git/git/archive/v${GIT_VERSION}.tar.gz}
