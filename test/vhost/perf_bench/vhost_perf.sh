@@ -121,7 +121,7 @@ function cleanup_split_cfg() {
 function cleanup_parted_config() {
 	notice "Removing parted disk configuration"
 	for disk in "${disk_cfg_kernel_names[@]}"; do
-		parted -s /dev/${disk}n1 rm 1
+		wipefs --all "/dev/${disk}n1"
 	done
 }
 
@@ -303,30 +303,27 @@ if [[ "$ctrl_type" == "kernel_vhost" ]]; then
 	for ((i = 0; i < ${#disk_cfg_kernel_names[@]}; i++)); do
 		nvme=${disk_cfg_kernel_names[$i]}
 		splits=${disk_cfg_splits[$i]}
-		notice "  Creating extended partition on disk /dev/${nvme}n1"
-		parted -s /dev/${nvme}n1 mklabel msdos
-		parted -s /dev/${nvme}n1 mkpart extended 2048s 100%
+		notice "  Creating partition table (GPT) on /dev/${nvme}n1"
+		parted -s /dev/${nvme}n1 mklabel gpt
 
 		part_size=$((100 / ${disk_cfg_splits[$i]})) # Split 100% of disk into roughly even parts
 		echo "  Creating  ${splits} partitions of relative disk size ${part_size}"
 		for p in $(seq 0 $((splits - 1))); do
 			p_start=$((p * part_size))
 			p_end=$((p_start + part_size))
-			parted -s /dev/${nvme}n1 mkpart logical ${p_start}% ${p_end}%
-			sleep 3
+			parted -s "/dev/${nvme}n1" mkpart "part$p" ${p_start}% ${p_end}%
 		done
 
+		sleep 3
+
 		# Prepare kernel vhost configuration
-		# Below grep: match only NVMe partitions which are not "Extended" type.
-		# For example: will match nvme0n1p15 but not nvme0n1p1
-		partitions=$(find /dev -name "${nvme}n1*" | sort --version-sort | grep -P 'p(?!1$)\d+')
+		partitions=("/dev/${nvme}n1p"*)
 		# Create block backstores for vhost kernel process
-		for p in $partitions; do
+		for p in "${partitions[@]}"; do
 			backstore_name=$(basename $p)
 			backstores+=("$backstore_name")
 			targetcli backstores/block create $backstore_name $p
 		done
-		partitions=($partitions)
 
 		# Create kernel vhost controllers and add LUNs
 		# Setup VM configurations
