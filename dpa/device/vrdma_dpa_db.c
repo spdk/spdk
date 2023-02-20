@@ -20,8 +20,8 @@
 #include "vrdma_dpa_cq.h"
 
 //#define DPA_LATENCY_TEST
-//#define DPA_DEBUG
-//#define DPA_DEBUG_DETAIL
+//#define VRDMA_DPA_DEBUG
+//#define VRDMA_DPA_DEBUG_DETAIL
 // #define DPA_COUNT
 
 static int get_next_qp_swqe_index(uint32_t pi, uint32_t depth)
@@ -108,7 +108,7 @@ static bool vrdma_dpa_rq_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 	size = (rq_end_pi - rq_start_pi) * wqebb_size;
 	vrdma_dpa_wr_pi_fetch(ehctx, remote_key, remote_addr, local_key,
 				local_addr, size, rq_pi);
-#ifdef DPA_DEBUG_DETAIL
+#ifdef VRDMA_DPA_DEBUG_DETAIL
 	printf("---naliu rq: index %#x, wqebb_size %#x, size %#x, remote_key %#x, remote_addr %#lx,"
 			"local_key %#x, local_addr %#lx\n rq_start_pi %#x, rq_end_pi %#x, rq_pi %#x\n",
 			index, wqebb_size, size, remote_key, remote_addr, local_key, local_addr, rq_start_pi, rq_end_pi, rq_pi);
@@ -142,7 +142,7 @@ static bool vrdma_dpa_sq_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 	}
 	vrdma_dpa_wr_pi_fetch(ehctx, remote_key, remote_addr, local_key,
 				local_addr, size, sq_pi);
-#ifdef DPA_DEBUG_DETAIL
+#ifdef VRDMA_DPA_DEBUG_DETAIL
 	printf("---naliu sq: sq_start_pi %#x, sq_end_pi %#x, sq_pi %#x, wqebb_size %#x, size %#x, remote_key %#x, remote_addr %#lx,"
 			"local_key %#x, local_addr %#lx\n",
 			sq_start_pi, sq_end_pi, sq_pi, wqebb_size, size, remote_key, remote_addr, local_key, local_addr);
@@ -182,11 +182,11 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 
 	flexio_dev_get_thread_ctx(&dtctx);
 	ehctx = (struct vrdma_dpa_event_handler_ctx *)thread_arg;
-#ifdef DPA_DEBUG
+#ifdef VRDMA_DPA_DEBUG
 	printf("%s: --------virtq status %d.\n", __func__, ehctx->dma_qp.state);
 #endif
 	if (ehctx->dma_qp.state != VRDMA_DPA_VQ_STATE_RDY) {
-#ifdef DPA_DEBUG
+#ifdef VRDMA_DPA_DEBUG
 		printf("%s: ------virtq status %d is not READY.\n", __func__, ehctx->dma_qp.state);
 #endif
 		goto out;
@@ -197,7 +197,7 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 	flexio_dev_window_ptr_acquire(dtctx, 0,
 		(flexio_uintptr_t *)&ehctx->window_base_addr);
 
-#ifdef DPA_DEBUG
+#ifdef VRDMA_DPA_DEBUG
 	printf("---naliu vq_idx %d, emu_outbox %d, emu_crossing_mkey %d\n",
 		ehctx->vq_index, ehctx->emu_outbox, ehctx->dma_qp.host_vq_ctx.emu_crossing_mkey);
 	printf("---naliu window_base_addr %#x\n", ehctx->window_base_addr);
@@ -337,7 +337,7 @@ out:
 			      ehctx->emu_db_to_cq_id);
 	flexio_dev_cq_arm(dtctx, ehctx->guest_db_cq_ctx.ci,
 			  ehctx->guest_db_cq_ctx.cqn);
-#ifdef DPA_DEBUG
+#ifdef VRDMA_DPA_DEBUG
 	printf("\n------naliu count[0] %d, count[1] %d, count[2] %d, count[3] %d, count[4] %d",
 		ehctx->count[0], ehctx->count[1], ehctx->count[2], ehctx->count[3], ehctx->count[4]);
 	printf("\n------naliu rq_pi %d, sq_pi %d\n", rq_pi, sq_pi);

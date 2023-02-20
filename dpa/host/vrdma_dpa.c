@@ -20,7 +20,6 @@
 #include "stdio.h"
 #include <elf.h>
 
-//#define VRDMA_DPA_PRINT
 #define DEV_ELF_PATH "dpa/dpa_dev.elf"
 #define PRINF_BUF_SZ	(4 * 2048)
 extern struct vrdma_vq_ops vrdma_dpa_vq_ops;
@@ -316,7 +315,7 @@ int vrdma_dpa_init(const struct vrdma_prov_init_attr *attr, void **out)
 		log_error("Failed to create window, err(%d)", err);
 		goto err_window_create;
 	}
-#ifdef VRDMA_DPA_PRINT
+#ifdef VRDMA_DPA_DEBUG
 	/*Init Print environment*/
 	err = vrdma_dpa_dev_print_init(dpa_ctx->flexio_process,
 					 dpa_ctx->flexio_uar, PRINF_BUF_SZ,
@@ -351,7 +350,7 @@ int vrdma_dpa_init(const struct vrdma_prov_init_attr *attr, void **out)
 err_reg_mr:
 	free(dpa_ctx->vq_data);
 err_posix_memalign:
-#ifdef VRDMA_DPA_PRINT
+#ifdef VRDMA_DPA_DEBUG
 	flexio_print_destroy(dpa_ctx->flexio_process);
 err_print:
 #endif

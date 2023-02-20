@@ -21,11 +21,7 @@
 
 #define DBG_EVENT_HANDLER_CHECK 0x12345604  /*this is only used to check event handler is right*/
 #define BIT_ULL(nr)             (1ULL << (nr))
-// #define MAX_FETCHED_DESC	32
-// #define MAX_EHDR_LEN		142
-// #define MAX_VIRTQ_SIZE		256
-// #define MAX_VIRTQ_NUM		64
-// #define VIRTNET_DPA_SYNC_TIMEOUT 1000
+//#define VRDMA_DPA_DEBUG
 
 enum{
 	MLX5_CTRL_SEG_OPCODE_RDMA_WRITE                      = 0x8,
