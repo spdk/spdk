@@ -593,8 +593,8 @@ struct spdk_nvme_ns_cmd_ext_io_opts {
 	uint16_t apptag_mask;
 	/** Application tag to use end-to-end protection information. */
 	uint16_t apptag;
-	/* Hole at bytes 44-47. */
-	uint8_t reserved44[4];
+	/** Command dword 13 specific field. */
+	uint32_t cdw13;
 } __attribute__((packed));
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_cmd_ext_io_opts) == 48, "Incorrect size");
 

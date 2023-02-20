@@ -2011,7 +2011,7 @@ test_nvme_ns_cmd_setup_request(void)
 	ns.flags = SPDK_NVME_NS_DPS_PI_SUPPORTED;
 
 	_nvme_ns_cmd_setup_request(&ns, &req, SPDK_NVME_OPC_READ,
-				   1024, 256, SPDK_NVME_IO_FLAGS_PRACT, 1, 1);
+				   1024, 256, SPDK_NVME_IO_FLAGS_PRACT, 1, 1, 0);
 	CU_ASSERT(req.cmd.cdw10 == 1024);
 	CU_ASSERT(req.cmd.opc == SPDK_NVME_OPC_READ);
 	CU_ASSERT(req.cmd.nsid == 1);
@@ -2093,7 +2093,8 @@ test_spdk_nvme_ns_cmd_writev_ext(void)
 					 NULL, &sge_length, nvme_request_reset_sgl,
 					 nvme_request_next_sge, &ext_opts);
 	CU_ASSERT(rc != 0);
-	ext_opts.io_flags = SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
+	ext_opts.io_flags = SPDK_NVME_IO_FLAGS_PRCHK_REFTAG | SPDK_NVME_IO_FLAGS_DATA_PLACEMENT_DIRECTIVE;
+	ext_opts.cdw13 = (1 << 16);
 
 	/* Empty reset_sgl cb. Expect fail */
 	rc = spdk_nvme_ns_cmd_writev_ext(&ns, &qpair, 0x1000, lba_count,
@@ -2122,6 +2123,7 @@ test_spdk_nvme_ns_cmd_writev_ext(void)
 	CU_ASSERT(g_request->payload.opts == &ext_opts);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
 	CU_ASSERT((g_request->cmd.cdw12 & SPDK_NVME_IO_FLAGS_CDW12_MASK) == ext_opts.io_flags);
+	CU_ASSERT(g_request->cmd.cdw13 == ext_opts.cdw13);
 	CU_ASSERT(g_request->cmd.cdw15 >> 16 == ext_opts.apptag_mask);
 	CU_ASSERT((g_request->cmd.cdw15 & 0xff) == ext_opts.apptag);
 
