@@ -1,156 +1,3 @@
-function install_spdk() {
-	mkdir -p "$GIT_REPOS/spdk_repo/output" || echo "Can not create spdk_repo/output directory."
-
-	if [[ -d $GIT_REPOS/spdk_repo/spdk/.git ]]; then
-		echo "spdk source already present, not cloning"
-		if [[ $OSID != freebsd ]]; then
-			chown -R "$USER:$USER" "$GIT_REPOS/spdk_repo/spdk"
-		fi
-	else
-		git -C "$GIT_REPOS/spdk_repo" clone "${GIT_REPO_SPDK}"
-	fi
-	git --git-dir=$GIT_REPOS/spdk_repo/spdk/.git config submodule.dpdk.url ${GIT_REPO_DPDK}
-	git --git-dir=$GIT_REPOS/spdk_repo/spdk/.git config submodule.intel-ipsec-mb.url ${GIT_REPO_INTEL_IPSEC_MB}
-	git -C "$GIT_REPOS/spdk_repo/spdk" submodule update --init --recursive
-}
-
-function install_refspdk() {
-	local release
-	local output_dir
-	local config_params
-	local rootdir
-	local version
-	# Note to keep cherry-pick'ed commits in proper order
-	local cherry_picks=()
-
-	version=$1
-
-	# Create a reference SPDK build for ABI tests
-	git -C "$GIT_REPOS/spdk_repo/spdk" fetch --tags --force
-
-	if [[ "$version" == "latest" ]]; then
-		release=${REFSPDK_TAG:-$(git -C "$GIT_REPOS/spdk_repo/spdk" tag | sort --version-sort | grep -vE 'rc|pre' | tail -n 1)}
-		output_dir="$GIT_REPOS/spdk_abi_latest"
-	elif [[ "$version" == "LTS" ]]; then
-		release=$(git -C "$GIT_REPOS/spdk_repo/spdk" describe --tags --exclude=LTS LTS)
-		output_dir="$GIT_REPOS/spdk_abi_lts"
-	fi
-
-	rm -rf "$output_dir"
-
-	if [[ ! -d $output_dir ]]; then
-		cp -R "$GIT_REPOS/spdk_repo/spdk" "$output_dir"
-	fi
-
-	git -C "$output_dir" checkout "$release"
-	git -C "$output_dir" submodule update --init
-
-	git -C "$output_dir" config --global user.name "spdk"
-	git -C "$output_dir" config --global user.email "hotpatch@spdk.io"
-
-	release=${release#v}
-
-	if eq "$release" 22.09 || eq "$release" 22.01.1; then
-		# https://review.spdk.io/gerrit/c/spdk/spdk/+/12893
-		cherry_picks+=("8878c1735f55d1e886fbde0cf6f8e4fbea5dd19c")
-	fi
-
-	if ((gcc_version >= 12)) && eq "$release" 22.01.1; then
-		# https://review.spdk.io/gerrit/c/spdk/spdk/+/13405
-		cherry_picks+=("8c532ae0322edc71003db3e4d3ece138f0f47ef7")
-		# https://review.spdk.io/gerrit/c/spdk/spdk/+/13412
-		cherry_picks+=("98292d1eee805256ff72757de87ef4813f7fb714")
-		# https://review.spdk.io/gerrit/c/spdk/spdk/+/13413
-		cherry_picks+=("862bdb53b984a9ab3fc524bfb253553a2e892753")
-	fi
-
-	if [[ $OSID == "freebsd" ]]; then
-		# Fetch all the branches
-		git -C "$output_dir" fetch origin '+refs/heads/v*:refs/remotes/origin/v*'
-		# Slurp commit from the master and the LTS branch to address changes in the
-		# use of cpu macros under latest freebsd releases (13.x).
-		# https://review.spdk.io/gerrit/c/spdk/spdk/+/13484 - master
-		# https://review.spdk.io/gerrit/c/spdk/spdk/+/13541 - LTS.x
-		case "$version" in
-			LTS) eq "$release" 22.01.1 && cherry_picks+=("1d1248bd1b0e11896ed5e3fa5ce4a8b94c3d5fd0") ;;
-		esac
-	fi
-
-	for cherry in "${cherry_picks[@]}"; do
-		git -C "$output_dir" cherry-pick "$cherry"
-	done
-
-	# Make sure submodules point at proper commits after cherry-picks are applied
-	git -C "$output_dir" submodule update
-
-	if ((gcc_version >= 11)) && eq "$release" 22.01.1; then
-		if ((gcc_version >= 12)); then
-			# This series is needed to cleany apply https://review.spdk.io/gerrit/c/spdk/spdk/+/12639
-			git -C "$output_dir/libvfio-user" cherry-pick 9ad7474568a6c9f1fbb12fb8048f2083078a8144
-			git -C "$output_dir/libvfio-user" cherry-pick 3779fca8c766b18b6d68feda9ed7958aa60bd4cf
-			git -C "$output_dir/libvfio-user" cherry-pick bc44bd1a246dc95b91faae30defafc3c259f5c4d
-		fi
-		# HACK: We can't apply https://review.spdk.io/gerrit/c/spdk/spdk/+/13506 cleanly under
-		# the LTS, however, we can cherry-pick target commit directly into the submodule.
-		git -C "$output_dir/libvfio-user" cherry-pick b52bff72d4eb646a453d19e19ddbd13ed6111a09
-	fi
-	if ((gcc_version >= 12)) && eq "$release" 22.01.1; then
-		# https://review.spdk.io/gerrit/c/spdk/dpdk/+/13411
-		git -C "$output_dir/dpdk" cherry-pick 66866df9602b024541b7071f5c4142ce47c9f640
-	fi
-
-	cat > $HOME/autorun-spdk.conf <<- EOF
-		SPDK_BUILD_SHARED_OBJECT=1
-		SPDK_TEST_AUTOBUILD="full"
-		SPDK_TEST_UNITTEST=1
-		SPDK_TEST_BLOCKDEV=1
-		SPDK_TEST_PMDK=1
-		SPDK_TEST_ISAL=1
-		SPDK_TEST_VBDEV_COMPRESS=1
-		SPDK_TEST_CRYPTO=1
-		SPDK_TEST_FTL=1
-		SPDK_TEST_OCF=1
-		SPDK_TEST_RAID5=1
-		SPDK_TEST_RBD=1
-		SPDK_RUN_ASAN=1
-		SPDK_RUN_UBSAN=1
-		SPDK_TEST_NVME_PMR=1
-		SPDK_TEST_NVME_SCC=1
-		SPDK_TEST_NVME_BP=1
-		SPDK_TEST_NVME_CUSE=1
-		SPDK_TEST_BLOBFS=1
-		SPDK_TEST_URING=1
-		SPDK_TEST_VFIOUSER=1
-		SPDK_TEST_XNVME=1
-		SPDK_TEST_NVMF_MDNS=1
-	EOF
-
-	mkdir -p $HOME/output
-
-	(
-		rootdir="$output_dir"
-		source $HOME/autorun-spdk.conf
-		source $output_dir/test/common/autotest_common.sh
-
-		# Prepare separate, fixed, cmdline for the FreeBSD, Issue #1397.
-		if [[ $OSID == freebsd ]]; then
-			config_params="--enable-debug"
-			config_params+=" --with-idxd --disable-unit-tests"
-
-			MAKE=gmake
-		else
-			config_params="$(get_config_params)"
-		fi
-		$output_dir/configure $(echo $config_params | sed 's/--enable-coverage//g') --without-fio
-		if [[ $OSID != freebsd ]]; then
-			$MAKE -C $output_dir $MAKEFLAGS include/spdk/config.h
-			CONFIG_OCF_PATH="$output_dir/ocf" $MAKE -C $output_dir/lib/env_ocf $MAKEFLAGS exportlib O=$output_dir/ocf.a
-			$output_dir/configure $config_params --with-ocf=$output_dir/ocf.a --with-shared --without-fio
-		fi
-		$MAKE -C $output_dir $MAKEFLAGS
-	)
-}
-
 function install_qat() {
 	if ! hash yasm; then
 		install yasm
@@ -559,7 +406,6 @@ function install_sources() {
 	fi
 	sources+=(install_fio)
 	sources+=(install_vagrant)
-	sources+=(install_spdk)
 
 	sudo mkdir -p /usr/{,local}/src
 	sudo mkdir -p "$GIT_REPOS"
@@ -570,18 +416,6 @@ function install_sources() {
 			"$source"
 		fi
 	done
-
-	if [[ $INSTALL_REFSPDK == true ]]; then
-		# Serialize builds as refspdk depends on spdk
-		[[ $INSTALL_SPDK != true ]] && install_spdk
-		if [[ $ID == fedora ]] && (( VERSION_ID >= 36 )); then
-			echo "Serialized SPDK release builds are not used anymore for newer Fedora images. Skip."
-			return 0
-		else
-			install_refspdk latest
-			install_refspdk LTS
-		fi
-	fi
 }
 
 GIT_VERSION=2.25.1
@@ -592,8 +426,6 @@ BPFTRACE_VERSION=${BPFTRACE_VERSION:-36414d9}
 VFIO_QEMU_BRANCH=${VFIO_QEMU_BRANCH:-vfio-user-patch1-noreq}
 VANILLA_QEMU_BRANCH=${VANILLA_QEMU_BRANCH:-v7.0.0}
 
-: ${GIT_REPO_SPDK=https://github.com/spdk/spdk.git}
-export GIT_REPO_SPDK
 : ${GIT_REPO_DPDK=https://github.com/spdk/dpdk.git}
 export GIT_REPO_DPDK
 : ${GIT_REPO_ROCKSDB=https://review.spdk.io/spdk/rocksdb}
