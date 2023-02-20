@@ -69,6 +69,7 @@ static int g_timeout_in_sec;
 static struct spdk_conf *g_bdevperf_conf = NULL;
 static const char *g_bdevperf_conf_file = NULL;
 static double g_zipf_theta;
+static bool g_random_map = false;
 
 static struct spdk_cpuset g_all_cpuset;
 static struct spdk_poller *g_perf_timer = NULL;
@@ -148,6 +149,7 @@ struct bdevperf_job {
 
 	/* keep channel's histogram data before being destroyed */
 	struct spdk_histogram_data	*histogram;
+	struct spdk_bit_array		*random_map;
 };
 
 struct spdk_bdevperf {
@@ -448,6 +450,7 @@ bdevperf_job_free(struct bdevperf_job *job)
 {
 	spdk_histogram_data_free(job->histogram);
 	spdk_bit_array_free(&job->outstanding);
+	spdk_bit_array_free(&job->random_map);
 	spdk_zipf_free(&job->zipf);
 	free(job->name);
 	free(job);
@@ -1095,6 +1098,7 @@ bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 {
 	uint64_t offset_in_ios;
 	uint64_t rand_value;
+	uint32_t first_clear;
 
 	if (job->zipf) {
 		offset_in_ios = spdk_zipf_generate(job->zipf);
@@ -1105,6 +1109,31 @@ bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 		 */
 		rand_value = (uint64_t)rand_r(&job->seed) * RAND_MAX + rand_r(&job->seed);
 		offset_in_ios = rand_value % job->size_in_ios;
+
+		if (g_random_map) {
+			/* Make sure, that the offset does not exceed the maximum size
+			 * of the bit array (verified during job creation)
+			 */
+			assert(offset_in_ios < UINT32_MAX);
+
+			first_clear = spdk_bit_array_find_first_clear(job->random_map, (uint32_t)offset_in_ios);
+
+			if (first_clear == UINT32_MAX) {
+				first_clear = spdk_bit_array_find_first_clear(job->random_map, 0);
+
+				if (first_clear == UINT32_MAX) {
+					/* If there are no more clear bits in the array, we start over
+					 * and select the previously selected random value.
+					 */
+					spdk_bit_array_clear_mask(job->random_map);
+					first_clear = (uint32_t)offset_in_ios;
+				}
+			}
+
+			spdk_bit_array_set(job->random_map, first_clear);
+
+			offset_in_ios = first_clear;
+		}
 	} else {
 		offset_in_ios = job->offset_in_ios++;
 		if (job->offset_in_ios == job->size_in_ios) {
@@ -1688,6 +1717,21 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 	}
 
 	TAILQ_INIT(&job->task_list);
+
+	if (g_random_map) {
+		if (job->size_in_ios >= UINT32_MAX) {
+			SPDK_ERRLOG("Due to constraints of the random map, the job storage capacity is too large\n");
+			bdevperf_job_free(job);
+			return -ENOMEM;
+		}
+		job->random_map = spdk_bit_array_create(job->size_in_ios);
+		if (job->random_map == NULL) {
+			SPDK_ERRLOG("Could not create random_map array bitmap for bdev %s\n",
+				    spdk_bdev_get_name(bdev));
+			bdevperf_job_free(job);
+			return -ENOMEM;
+		}
+	}
 
 	task_num = job->queue_depth;
 	if (job->reset) {
@@ -2335,6 +2379,8 @@ bdevperf_parse_arg(int ch, char *arg)
 		}
 	} else if (ch == 'l') {
 		g_latency_display_level++;
+	} else if (ch == 'D') {
+		g_random_map = true;
 	} else {
 		tmp = spdk_strtoll(optarg, 10);
 		if (tmp < 0) {
@@ -2399,6 +2445,7 @@ bdevperf_usage(void)
 	printf(" -C                        enable every core to send I/Os to each bdev\n");
 	printf(" -j <filename>             use job config file\n");
 	printf(" -l                        display latency histogram, default: disable. -l display summary, -ll display details\n");
+	printf(" -D                        use a random map for picking offsets not previously read or written (for all jobs)\n");
 }
 
 static int
@@ -2490,6 +2537,16 @@ verify_test_params(struct spdk_app_opts *opts)
 		}
 	}
 
+	if (strcmp(g_workload_type, "randread") &&
+	    strcmp(g_workload_type, "randwrite") &&
+	    strcmp(g_workload_type, "randrw")) {
+		if (g_random_map) {
+			fprintf(stderr, "Ignoring -D option... Please use -D option"
+				" only when using randread, randwrite or randrw.\n");
+			return 1;
+		}
+	}
+
 	return 0;
 out:
 	spdk_app_usage();
@@ -2511,7 +2568,7 @@ main(int argc, char **argv)
 	opts.rpc_addr = NULL;
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "Zzfq:o:t:w:k:CF:M:P:S:T:Xlj:", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "Zzfq:o:t:w:k:CF:M:P:S:T:Xlj:D", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
