@@ -51,6 +51,6 @@ int vrdma_dpa_mkey_create(struct vrdma_dpa_vq *dpa_vq,
 			    struct flexio_qp_attr *qp_attr,
 			    uint32_t data_bsize,
 				flexio_uintptr_t wqe_buff,
-			    struct flexio_mkey *mkey);
-void vrdma_dpa_mkey_destroy(struct vrdma_dpa_vq *dpa_vq);
+			    struct flexio_mkey **mkey);
+void vrdma_dpa_mkey_destroy(struct flexio_mkey *mkey);
 #endif

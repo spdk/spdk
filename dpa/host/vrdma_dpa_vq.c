@@ -316,7 +316,7 @@ static int vrdma_dpa_dma_q_create(struct vrdma_dpa_vq *dpa_vq,
 	err = vrdma_dpa_mkey_create(dpa_vq, &qp_attr,
 				    attr->rx_qsize * attr->rx_elem_size,
 					dpa_vq->dma_qp.rx_wqe_buff,
-				    dpa_vq->dma_qp.rqd_mkey);
+				    &dpa_vq->dma_qp.rqd_mkey);
 	if (err) {
 		log_error("Failed to create rx mkey, err(%d)", err);
 		goto err_rqd_mkey_create;
@@ -332,6 +332,7 @@ static int vrdma_dpa_dma_q_create(struct vrdma_dpa_vq *dpa_vq,
 		goto err_init_qp_rx_ring;
 	}
 
+
 	/* prepare tx ring */
 	err = vrdma_dpa_mm_zalloc(dpa_vq->emu_dev_ctx->flexio_process,
 				   attr->tx_qsize * attr->tx_elem_size,
@@ -344,7 +345,7 @@ static int vrdma_dpa_dma_q_create(struct vrdma_dpa_vq *dpa_vq,
 	err = vrdma_dpa_mkey_create(dpa_vq, &qp_attr,
 				      attr->tx_qsize * attr->tx_elem_size,
 					  dpa_vq->dma_qp.tx_wqe_buff,
-				      dpa_vq->dma_qp.sqd_mkey);
+				      &dpa_vq->dma_qp.sqd_mkey);
 	if (err) {
 		log_error("Failed to create tx mkey, err(%d)", err);
 		goto err_sqd_mkey_create;
@@ -400,13 +401,13 @@ static int vrdma_dpa_dma_q_create(struct vrdma_dpa_vq *dpa_vq,
 err_qp_ready:
 	flexio_qp_destroy(dpa_vq->dma_qp.qp);
 err_qp_create:
-	flexio_device_mkey_destroy(dpa_vq->dma_qp.sqd_mkey);
+	vrdma_dpa_mkey_destroy(dpa_vq->dma_qp.sqd_mkey);
 err_sqd_mkey_create:
 	vrdma_dpa_mm_free(dpa_vq->emu_dev_ctx->flexio_process,
 		dpa_vq->dma_qp.tx_wqe_buff);
 err_tx_wqe_buff_alloc:
 err_init_qp_rx_ring:
-	flexio_device_mkey_destroy(dpa_vq->dma_qp.rqd_mkey);
+	vrdma_dpa_mkey_destroy(dpa_vq->dma_qp.rqd_mkey);
 err_rqd_mkey_create:
 	vrdma_dpa_mm_free(dpa_vq->emu_dev_ctx->flexio_process,
                  dpa_vq->dma_qp.rx_wqe_buff);
