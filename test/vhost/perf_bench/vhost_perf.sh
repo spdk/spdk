@@ -19,7 +19,6 @@ vm_throttle=""
 bpf_traces=()
 ctrl_type="spdk_vhost_scsi"
 use_split=false
-kernel_cpus=""
 run_precondition=false
 lvol_stores=()
 lvol_bdevs=()
@@ -78,7 +77,6 @@ function usage() {
 	echo "                            Default: spdk_vhost_scsi"
 	echo "    --packed-ring           Use packed ring support. Requires Qemu 4.2.0 or greater. Default: disabled."
 	echo "    --use-split             Use split vbdevs instead of Logical Volumes"
-	echo "    --limit-kernel-vhost=INT  Limit kernel vhost to run only on a number of CPU cores."
 	echo "    --run-precondition      Precondition lvols after creating. Default: true."
 	echo "    --precond-fio-bin       FIO binary used for SPDK fio plugin precondition. Default: $CONFIG_FIO_SOURCE_DIR/fio."
 	echo "    --custom-cpu-cfg=PATH   Custom CPU config for test."
@@ -203,7 +201,6 @@ while getopts 'xhip-:' optchar; do
 				use-split) use_split=true ;;
 				run-precondition) run_precondition=true ;;
 				precond-fio-bin=*) precond_fio_bin="${OPTARG#*=}" ;;
-				limit-kernel-vhost=*) kernel_cpus="${OPTARG#*=}" ;;
 				custom-cpu-cfg=*) custom_cpu_cfg="${OPTARG#*=}" ;;
 				disk-map=*) disk_map="${OPTARG#*=}" ;;
 				iobuf-small-pool-count=*) iobuf_small_count="${OPTARG#*=}" ;;
@@ -430,24 +427,6 @@ fi
 # Run VMs
 vm_run $used_vms
 vm_wait_for_boot 300 $used_vms
-
-if [[ -n "$kernel_cpus" ]]; then
-	echo "+cpuset" > /sys/fs/cgroup/cgroup.subtree_control
-	mkdir -p /sys/fs/cgroup/spdk
-	kernel_mask=$vhost_0_reactor_mask
-	kernel_mask=${kernel_mask#"["}
-	kernel_mask=${kernel_mask%"]"}
-
-	echo "threaded" > /sys/fs/cgroup/spdk/cgroup.type
-	echo "$kernel_mask" > /sys/fs/cgroup/spdk/cpuset.cpus
-	echo "0-1" > /sys/fs/cgroup/spdk/cpuset.mems
-
-	kernel_vhost_pids=$(pgrep "vhost" -U root)
-	for kpid in $kernel_vhost_pids; do
-		echo "Limiting kernel vhost pid ${kpid}"
-		echo "${kpid}" > /sys/fs/cgroup/spdk/cgroup.threads
-	done
-fi
 
 # Run FIO
 fio_disks=""
