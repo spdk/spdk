@@ -977,7 +977,8 @@ struct spdk_bdev_io {
 		 *  1. IOs awaiting retry due to NOMEM status,
 		 *  2. IOs awaiting submission due to QoS,
 		 *  3. IOs with an accel sequence being executed,
-		 *  4. queued reset requests.
+		 *  4. IOs awaiting memory domain pull/push,
+		 *  5. queued reset requests.
 		 */
 		TAILQ_ENTRY(spdk_bdev_io) link;
 

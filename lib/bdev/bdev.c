@@ -292,6 +292,9 @@ struct spdk_bdev_channel {
 	/* List of I/Os with accel sequence being currently executed */
 	bdev_io_tailq_t		io_accel_exec;
 
+	/* List of I/Os doing memory domain pull/push */
+	bdev_io_tailq_t		io_memory_domain;
+
 	uint32_t		flags;
 
 	struct spdk_histogram_data *histogram;
@@ -1396,9 +1399,20 @@ _bdev_io_complete_push_bounce_done(void *ctx, int rc)
 	bdev_io_complete(bdev_io);
 }
 
+static void
+_bdev_io_push_bounce_md_buffer_done(void *ctx, int rc)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
+
+	TAILQ_REMOVE(&ch->io_memory_domain, bdev_io, internal.link);
+	bdev_io->internal.data_transfer_cpl(bdev_io, rc);
+}
+
 static inline void
 _bdev_io_push_bounce_md_buffer(struct spdk_bdev_io *bdev_io)
 {
+	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 	int rc = 0;
 
 	/* do the same for metadata buffer */
@@ -1408,18 +1422,20 @@ _bdev_io_push_bounce_md_buffer(struct spdk_bdev_io *bdev_io)
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ &&
 		    bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS) {
 			if (bdev_io_use_memory_domain(bdev_io)) {
+				TAILQ_INSERT_TAIL(&ch->io_memory_domain, bdev_io, internal.link);
 				/* If memory domain is used then we need to call async push function */
 				rc = spdk_memory_domain_push_data(bdev_io->internal.memory_domain,
 								  bdev_io->internal.memory_domain_ctx,
 								  &bdev_io->internal.orig_md_iov,
 								  (uint32_t)bdev_io->internal.orig_iovcnt,
 								  &bdev_io->internal.bounce_md_iov, 1,
-								  bdev_io->internal.data_transfer_cpl,
+								  _bdev_io_push_bounce_md_buffer_done,
 								  bdev_io);
 				if (rc == 0) {
 					/* Continue IO completion in async callback */
 					return;
 				}
+				TAILQ_REMOVE(&ch->io_memory_domain, bdev_io, internal.link);
 				SPDK_ERRLOG("Failed to push md to memory domain %s\n",
 					    spdk_memory_domain_get_dma_device_id(bdev_io->internal.memory_domain));
 			} else {
@@ -1437,8 +1453,10 @@ static void
 _bdev_io_push_bounce_data_buffer_done(void *ctx, int rc)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
+	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 
 	assert(bdev_io->internal.data_transfer_cpl);
+	TAILQ_REMOVE(&ch->io_memory_domain, bdev_io, internal.link);
 
 	if (rc) {
 		bdev_io->internal.data_transfer_cpl(bdev_io, rc);
@@ -1458,8 +1476,10 @@ _bdev_io_push_bounce_data_buffer_done(void *ctx, int rc)
 static inline void
 _bdev_io_push_bounce_data_buffer(struct spdk_bdev_io *bdev_io, bdev_copy_bounce_buffer_cpl cpl_cb)
 {
+	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 	int rc = 0;
 
+	TAILQ_INSERT_TAIL(&ch->io_memory_domain, bdev_io, internal.link);
 	bdev_io->internal.data_transfer_cpl = cpl_cb;
 
 	/* if this is read path, copy data from bounce buffer to original buffer */
@@ -1550,6 +1570,10 @@ static void
 _bdev_memory_domain_get_io_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 			      bool success)
 {
+	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
+
+	TAILQ_REMOVE(&bdev_ch->io_memory_domain, bdev_io, internal.link);
+
 	if (!success) {
 		SPDK_ERRLOG("Failed to get data buffer, completing IO\n");
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
@@ -3266,6 +3290,8 @@ bdev_io_submit(struct spdk_bdev_io *bdev_io)
 static inline void
 _bdev_io_ext_use_bounce_buffer(struct spdk_bdev_io *bdev_io)
 {
+	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
+
 	/* bdev doesn't support memory domains, thereby buffers in this IO request can't
 	 * be accessed directly. It is needed to allocate buffers before issuing IO operation.
 	 * For write operation we need to pull buffers from memory domain before submitting IO.
@@ -3274,6 +3300,7 @@ _bdev_io_ext_use_bounce_buffer(struct spdk_bdev_io *bdev_io)
 	 * This IO request will go through a regular IO flow, so clear memory domains pointers */
 	bdev_io->u.bdev.memory_domain = NULL;
 	bdev_io->u.bdev.memory_domain_ctx = NULL;
+	TAILQ_INSERT_TAIL(&ch->io_memory_domain, bdev_io, internal.link);
 	_bdev_memory_domain_io_get_buf(bdev_io, _bdev_memory_domain_get_io_cb,
 				       bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 }
@@ -3478,6 +3505,7 @@ bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 	assert(TAILQ_EMPTY(&ch->io_locked));
 	assert(TAILQ_EMPTY(&ch->io_submitted));
 	assert(TAILQ_EMPTY(&ch->io_accel_exec));
+	assert(TAILQ_EMPTY(&ch->io_memory_domain));
 	assert(ch->io_outstanding == 0);
 	assert(shared_resource->ref > 0);
 	shared_resource->ref--;
@@ -3750,6 +3778,7 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 	TAILQ_INIT(&ch->io_submitted);
 	TAILQ_INIT(&ch->io_locked);
 	TAILQ_INIT(&ch->io_accel_exec);
+	TAILQ_INIT(&ch->io_memory_domain);
 
 	ch->stat = bdev_alloc_io_stat(false);
 	if (ch->stat == NULL) {
