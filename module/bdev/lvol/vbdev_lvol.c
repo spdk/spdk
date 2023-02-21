@@ -1340,8 +1340,12 @@ _vbdev_lvs_examine_finish(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 	struct spdk_lvol_store *lvs = req->lvol_store;
 
 	if (lvolerrno != 0) {
-		SPDK_ERRLOG("Error opening lvol %s\n", lvol->unique_id);
 		TAILQ_REMOVE(&lvs->lvols, lvol, link);
+		if (lvolerrno == -ENOMEM) {
+			TAILQ_INSERT_TAIL(&lvs->retry_open_lvols, lvol, link);
+			return;
+		}
+		SPDK_ERRLOG("Error opening lvol %s\n", lvol->unique_id);
 		lvs->lvol_count--;
 		free(lvol);
 		goto end;
@@ -1357,6 +1361,13 @@ _vbdev_lvs_examine_finish(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 	SPDK_INFOLOG(vbdev_lvol, "Opening lvol %s succeeded\n", lvol->unique_id);
 
 end:
+	if (!TAILQ_EMPTY(&lvs->retry_open_lvols)) {
+		lvol = TAILQ_FIRST(&lvs->retry_open_lvols);
+		TAILQ_REMOVE(&lvs->retry_open_lvols, lvol, link);
+		TAILQ_INSERT_HEAD(&lvs->lvols, lvol, link);
+		spdk_lvol_open(lvol, _vbdev_lvs_examine_finish, req);
+		return;
+	}
 	if (lvs->lvols_opened >= lvs->lvol_count) {
 		SPDK_INFOLOG(vbdev_lvol, "Opening lvols finished\n");
 		_vbdev_lvs_examine_done(req, 0);
