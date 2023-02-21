@@ -3308,7 +3308,14 @@ _bdev_io_ext_use_bounce_buffer(struct spdk_bdev_io *bdev_io)
 static inline void
 _bdev_io_submit_ext(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bdev_io)
 {
+	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 	bool needs_exec = bdev_io_needs_sequence_exec(desc, bdev_io);
+
+	if (spdk_unlikely(ch->flags & BDEV_CH_RESET_IN_PROGRESS)) {
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_ABORTED;
+		bdev_io_complete_unsubmitted(bdev_io);
+		return;
+	}
 
 	/* We need to allocate bounce buffer if bdev doesn't support memory domains, or if it does
 	 * support them, but we need to execute an accel sequence and the data buffer is from accel
@@ -5974,10 +5981,18 @@ bdev_reset_check_outstanding_io_done(struct spdk_bdev *bdev, void *_ctx, int sta
 			bdev_io->u.reset.wait_poller.poller = SPDK_POLLER_REGISTER(bdev_reset_poll_for_outstanding_io,
 							      ch, BDEV_RESET_CHECK_OUTSTANDING_IO_PERIOD);
 		} else {
-			/* If outstanding IOs are still present and reset_io_drain_timeout seconds passed,
-			 * start the reset. */
 			TAILQ_REMOVE(&ch->queued_resets, bdev_io, internal.link);
-			bdev_io_submit_reset(bdev_io);
+
+			if (TAILQ_EMPTY(&ch->io_memory_domain) && TAILQ_EMPTY(&ch->io_accel_exec)) {
+				/* If outstanding IOs are still present and reset_io_drain_timeout
+				 * seconds passed, start the reset. */
+				bdev_io_submit_reset(bdev_io);
+			} else {
+				/* We still have in progress memory domain pull/push or we're
+				 * executing accel sequence.  Since we cannot abort either of those
+				 * operaions, fail the reset request. */
+				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			}
 		}
 	} else {
 		TAILQ_REMOVE(&ch->queued_resets, bdev_io, internal.link);
@@ -5996,7 +6011,9 @@ bdev_reset_check_outstanding_io(struct spdk_bdev_channel_iter *i, struct spdk_bd
 	struct spdk_bdev_channel *cur_ch = __io_ch_to_bdev_ch(io_ch);
 	int status = 0;
 
-	if (cur_ch->io_outstanding > 0) {
+	if (cur_ch->io_outstanding > 0 ||
+	    !TAILQ_EMPTY(&cur_ch->io_memory_domain) ||
+	    !TAILQ_EMPTY(&cur_ch->io_accel_exec)) {
 		/* If a channel has outstanding IO, set status to -EBUSY code. This will stop
 		 * further iteration over the rest of the channels and pass non-zero status
 		 * to the callback function. */
