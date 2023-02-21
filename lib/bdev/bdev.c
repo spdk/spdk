@@ -1170,6 +1170,13 @@ spdk_bdev_io_put_aux_buf(struct spdk_bdev_io *bdev_io, void *buf)
 	_bdev_io_put_buf(bdev_io, buf, len);
 }
 
+static inline void
+bdev_submit_request(struct spdk_bdev *bdev, struct spdk_io_channel *ioch,
+		    struct spdk_bdev_io *bdev_io)
+{
+	bdev->fn_table->submit_request(ioch, bdev_io);
+}
+
 static void
 bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 {
@@ -1197,7 +1204,7 @@ bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
 		bdev_io->internal.error.nvme.cdw0 = 0;
 		bdev_io->num_retries++;
-		bdev->fn_table->submit_request(spdk_bdev_io_get_io_channel(bdev_io), bdev_io);
+		bdev_submit_request(bdev, spdk_bdev_io_get_io_channel(bdev_io), bdev_io);
 		if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NOMEM) {
 			break;
 		}
@@ -2299,7 +2306,7 @@ bdev_io_do_submit(struct spdk_bdev_channel *bdev_ch, struct spdk_bdev_io *bdev_i
 		bdev_ch->io_outstanding++;
 		shared_resource->io_outstanding++;
 		bdev_io->internal.in_submit_request = true;
-		bdev->fn_table->submit_request(ch, bdev_io);
+		bdev_submit_request(bdev, ch, bdev_io);
 		bdev_io->internal.in_submit_request = false;
 	} else {
 		TAILQ_INSERT_TAIL(&shared_resource->nomem_io, bdev_io, internal.link);
@@ -3129,7 +3136,7 @@ bdev_io_submit_reset(struct spdk_bdev_io *bdev_io)
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_PENDING);
 
 	bdev_io->internal.in_submit_request = true;
-	bdev->fn_table->submit_request(ch, bdev_io);
+	bdev_submit_request(bdev, ch, bdev_io);
 	bdev_io->internal.in_submit_request = false;
 }
 
