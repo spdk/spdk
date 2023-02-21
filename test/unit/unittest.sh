@@ -264,6 +264,10 @@ if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_nvmf_rdma" $valgrind $testdir/lib/nvmf/rdma.c/rdma_ut
 fi
 
+if grep -q '#define SPDK_CONFIG_VFIO_USER 1' $rootdir/include/spdk/config.h; then
+	run_test "unittest_nvmf_vfio_user" $valgrind $testdir/lib/nvmf/vfio_user.c/vfio_user_ut
+fi
+
 run_test "unittest_scsi" unittest_scsi
 run_test "unittest_sock" unittest_sock
 run_test "unittest_thread" $valgrind $testdir/lib/thread/thread.c/thread_ut
