@@ -13,12 +13,6 @@
 #include "accel/accel_sw.c"
 #include "unit/lib/json_mock.c"
 
-#ifdef SPDK_CONFIG_PMDK
-DEFINE_STUB(pmem_msync, int, (const void *addr, size_t len), 0);
-DEFINE_STUB(pmem_memcpy_persist, void *, (void *pmemdest, const void *src, size_t len), NULL);
-DEFINE_STUB(pmem_is_pmem, int, (const void *addr, size_t len), 0);
-DEFINE_STUB(pmem_memset_persist, void *, (void *pmemdest, int c, size_t len), NULL);
-#endif
 DEFINE_STUB_V(spdk_memory_domain_destroy, (struct spdk_memory_domain *domain));
 DEFINE_STUB(spdk_memory_domain_get_dma_device_id, const char *,
 	    (struct spdk_memory_domain *domain), "UT_DMA");

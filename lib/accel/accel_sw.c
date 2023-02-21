@@ -18,10 +18,6 @@
 #include "spdk/util.h"
 #include "spdk/xor.h"
 
-#ifdef SPDK_CONFIG_PMDK
-#include "libpmem.h"
-#endif
-
 #ifdef SPDK_CONFIG_ISAL
 #include "../isa-l/include/igzip_lib.h"
 #ifdef SPDK_CONFIG_ISAL_CRYPTO
@@ -67,24 +63,6 @@ _add_to_comp_list(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *acc
 	TAILQ_INSERT_TAIL(&sw_ch->tasks_to_complete, accel_task, link);
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(accel_flag_persistent,
-			      "PMDK libpmem accel_sw integration", "SPDK 23.05", 10);
-
-/* Used when the SW engine is selected and the durable flag is set. */
-inline static int
-_check_flags(int flags)
-{
-	if (flags & ACCEL_FLAG_PERSISTENT) {
-		SPDK_LOG_DEPRECATED(accel_flag_persistent);
-#ifndef SPDK_CONFIG_PMDK
-		/* PMDK is required to use this flag. */
-		SPDK_ERRLOG("ACCEL_FLAG_PERSISTENT set but PMDK not configured. Configure PMDK or do not use this flag.\n");
-		return -EINVAL;
-#endif
-	}
-	return 0;
-}
-
 static bool
 sw_accel_supports_opcode(enum accel_opcode opc)
 {
@@ -106,40 +84,10 @@ sw_accel_supports_opcode(enum accel_opcode opc)
 	}
 }
 
-static inline void
-_pmem_memcpy(void *dst, const void *src, size_t len)
-{
-#ifdef SPDK_CONFIG_PMDK
-	int is_pmem = pmem_is_pmem(dst, len);
-
-	if (is_pmem) {
-		pmem_memcpy_persist(dst, src, len);
-	} else {
-		memcpy(dst, src, len);
-		pmem_msync(dst, len);
-	}
-#else
-	SPDK_ERRLOG("Function not defined without SPDK_CONFIG_PMDK enabled.\n");
-	assert(0);
-#endif
-}
-
-static void
-_sw_accel_dualcast(void *dst1, void *dst2, void *src, size_t nbytes, int flags)
-{
-	if (flags & ACCEL_FLAG_PERSISTENT) {
-		_pmem_memcpy(dst1, src, nbytes);
-		_pmem_memcpy(dst2, src, nbytes);
-	} else {
-		memcpy(dst1, src, nbytes);
-		memcpy(dst2, src, nbytes);
-	}
-}
-
 static int
 _sw_accel_dualcast_iovs(struct iovec *dst_iovs, uint32_t dst_iovcnt,
 			struct iovec *dst2_iovs, uint32_t dst2_iovcnt,
-			struct iovec *src_iovs, uint32_t src_iovcnt, int flags)
+			struct iovec *src_iovs, uint32_t src_iovcnt)
 {
 	if (spdk_unlikely(dst_iovcnt != 1 || dst2_iovcnt != 1 || src_iovcnt != 1)) {
 		return -EINVAL;
@@ -150,26 +98,15 @@ _sw_accel_dualcast_iovs(struct iovec *dst_iovs, uint32_t dst_iovcnt,
 		return -EINVAL;
 	}
 
-	_sw_accel_dualcast(dst_iovs[0].iov_base, dst2_iovs[0].iov_base, src_iovs[0].iov_base,
-			   dst_iovs[0].iov_len, flags);
+	memcpy(dst_iovs[0].iov_base, src_iovs[0].iov_base, dst_iovs[0].iov_len);
+	memcpy(dst2_iovs[0].iov_base, src_iovs[0].iov_base, dst_iovs[0].iov_len);
 
 	return 0;
 }
 
 static void
-_sw_accel_copy(void *dst, void *src, size_t nbytes, int flags)
-{
-
-	if (flags & ACCEL_FLAG_PERSISTENT) {
-		_pmem_memcpy(dst, src, nbytes);
-	} else {
-		memcpy(dst, src, nbytes);
-	}
-}
-
-static void
 _sw_accel_copy_iovs(struct iovec *dst_iovs, uint32_t dst_iovcnt,
-		    struct iovec *src_iovs, uint32_t src_iovcnt, int flags)
+		    struct iovec *src_iovs, uint32_t src_iovcnt)
 {
 	struct spdk_ioviter iter;
 	void *src, *dst;
@@ -179,7 +116,7 @@ _sw_accel_copy_iovs(struct iovec *dst_iovs, uint32_t dst_iovcnt,
 				      dst_iovs, dst_iovcnt, &src, &dst);
 	     len != 0;
 	     len = spdk_ioviter_next(&iter, &src, &dst)) {
-		_sw_accel_copy(dst, src, len, flags);
+		memcpy(dst, src, len);
 	}
 }
 
@@ -199,7 +136,7 @@ _sw_accel_compare(struct iovec *src_iovs, uint32_t src_iovcnt,
 }
 
 static int
-_sw_accel_fill(struct iovec *iovs, uint32_t iovcnt, uint8_t fill, int flags)
+_sw_accel_fill(struct iovec *iovs, uint32_t iovcnt, uint8_t fill)
 {
 	void *dst;
 	size_t nbytes;
@@ -211,23 +148,7 @@ _sw_accel_fill(struct iovec *iovs, uint32_t iovcnt, uint8_t fill, int flags)
 	dst = iovs[0].iov_base;
 	nbytes = iovs[0].iov_len;
 
-	if (flags & ACCEL_FLAG_PERSISTENT) {
-#ifdef SPDK_CONFIG_PMDK
-		int is_pmem = pmem_is_pmem(dst, nbytes);
-
-		if (is_pmem) {
-			pmem_memset_persist(dst, fill, nbytes);
-		} else {
-			memset(dst, fill, nbytes);
-			pmem_msync(dst, nbytes);
-		}
-#else
-		SPDK_ERRLOG("Function not defined without SPDK_CONFIG_PMDK enabled.\n");
-		assert(0);
-#endif
-	} else {
-		memset(dst, fill, nbytes);
-	}
+	memset(dst, fill, nbytes);
 
 	return 0;
 }
@@ -531,28 +452,17 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 	do {
 		switch (accel_task->op_code) {
 		case ACCEL_OPC_COPY:
-			rc = _check_flags(accel_task->flags);
-			if (rc == 0) {
-				_sw_accel_copy_iovs(accel_task->d.iovs, accel_task->d.iovcnt,
-						    accel_task->s.iovs, accel_task->s.iovcnt,
-						    accel_task->flags);
-			}
+			_sw_accel_copy_iovs(accel_task->d.iovs, accel_task->d.iovcnt,
+					    accel_task->s.iovs, accel_task->s.iovcnt);
 			break;
 		case ACCEL_OPC_FILL:
-			rc = _check_flags(accel_task->flags);
-			if (rc == 0) {
-				rc = _sw_accel_fill(accel_task->d.iovs, accel_task->d.iovcnt,
-						    accel_task->fill_pattern, accel_task->flags);
-			}
+			rc = _sw_accel_fill(accel_task->d.iovs, accel_task->d.iovcnt,
+					    accel_task->fill_pattern);
 			break;
 		case ACCEL_OPC_DUALCAST:
-			rc = _check_flags(accel_task->flags);
-			if (rc == 0) {
-				rc = _sw_accel_dualcast_iovs(accel_task->d.iovs, accel_task->d.iovcnt,
-							     accel_task->d2.iovs, accel_task->d2.iovcnt,
-							     accel_task->s.iovs, accel_task->s.iovcnt,
-							     accel_task->flags);
-			}
+			rc = _sw_accel_dualcast_iovs(accel_task->d.iovs, accel_task->d.iovcnt,
+						     accel_task->d2.iovs, accel_task->d2.iovcnt,
+						     accel_task->s.iovs, accel_task->s.iovcnt);
 			break;
 		case ACCEL_OPC_COMPARE:
 			rc = _sw_accel_compare(accel_task->s.iovs, accel_task->s.iovcnt,
@@ -562,14 +472,10 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 			_sw_accel_crc32cv(accel_task->crc_dst, accel_task->s.iovs, accel_task->s.iovcnt, accel_task->seed);
 			break;
 		case ACCEL_OPC_COPY_CRC32C:
-			rc = _check_flags(accel_task->flags);
-			if (rc == 0) {
-				_sw_accel_copy_iovs(accel_task->d.iovs, accel_task->d.iovcnt,
-						    accel_task->s.iovs, accel_task->s.iovcnt,
-						    accel_task->flags);
-				_sw_accel_crc32cv(accel_task->crc_dst, accel_task->s.iovs,
-						  accel_task->s.iovcnt, accel_task->seed);
-			}
+			_sw_accel_copy_iovs(accel_task->d.iovs, accel_task->d.iovcnt,
+					    accel_task->s.iovs, accel_task->s.iovcnt);
+			_sw_accel_crc32cv(accel_task->crc_dst, accel_task->s.iovs,
+					  accel_task->s.iovcnt, accel_task->seed);
 			break;
 		case ACCEL_OPC_COMPRESS:
 			rc = _sw_accel_compress(sw_ch, accel_task);
