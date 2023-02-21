@@ -239,7 +239,7 @@ fi
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' INT ERR
 
-if [[ -z $disk_map ]]; then
+if [[ ! -f $disk_map ]]; then
 	fail "No disk map provided for test. Exiting."
 fi
 
@@ -268,27 +268,19 @@ if [[ $run_precondition == true ]]; then
 		--iodepth=32 --filename="${fio_filename}" || true
 fi
 
-set +x
-readarray disk_cfg < $disk_map
-for line in "${disk_cfg[@]}"; do
-	echo $line
-	[[ $line == "#"* ]] && continue
-	IFS=","
-	s=($line)
-	disk_cfg_bdfs+=(${s[0]})
-	disk_cfg_spdk_names+=(${s[1]})
-	disk_cfg_splits+=(${s[2]})
-	disk_cfg_vms+=("${s[3]}")
-
+while IFS="," read -r bdf spdk_name split vms; do
+	[[ $bdf == "#"* ]] && continue
+	disk_cfg_bdfs+=("$bdf")
+	disk_cfg_spdk_names+=("$spdk_name")
+	disk_cfg_splits+=("$split")
+	disk_cfg_vms+=("$vms")
 	# Find kernel nvme names
 	if [[ "$ctrl_type" == "kernel_vhost" ]]; then
-		tmp=$(find /sys/devices/pci* -name ${s[0]} -print0 | xargs sh -c 'ls $0/nvme')
-		disk_cfg_kernel_names+=($tmp)
-		IFS=" "
+		disk_cfg_kernel_names+=("/sys/bus/pci/devices/$bdf/nvme/nvme"*)
 	fi
-done
-unset IFS
-set -x
+done < "$disk_map"
+
+disk_cfg_kernel_names=("${disk_cfg_kernel_names[@]##*/}")
 
 if [[ "$ctrl_type" == "kernel_vhost" ]]; then
 	notice "Configuring kernel vhost..."
