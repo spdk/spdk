@@ -983,7 +983,7 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
 	uint64_t len, seg_len;
 	void *src;
 	size_t i;
-	uint64_t prev_crc;
+	uint64_t prev_crc = 0;
 
 	assert(chan != NULL);
 	assert(siov != NULL);
@@ -1078,7 +1078,7 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
 	uint64_t len, seg_len;
 	struct spdk_ioviter iter;
 	struct idxd_vtophys_iter vtophys_iter;
-	uint64_t prev_crc;
+	uint64_t prev_crc = 0;
 
 	assert(chan != NULL);
 	assert(diov != NULL);
