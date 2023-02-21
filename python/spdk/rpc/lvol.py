@@ -58,12 +58,12 @@ def bdev_lvol_grow_lvstore(client, uuid=None, lvs_name=None):
     return client.call('bdev_lvol_grow_lvstore', params)
 
 
-def bdev_lvol_create(client, lvol_name, size, thin_provision=False, uuid=None, lvs_name=None, clear_method=None):
+def bdev_lvol_create(client, lvol_name, size_in_mib, thin_provision=False, uuid=None, lvs_name=None, clear_method=None):
     """Create a logical volume on a logical volume store.
 
     Args:
         lvol_name: name of logical volume to create
-        size: desired size of logical volume in bytes (will be rounded up to a multiple of cluster size)
+        size_in_mib: desired size of logical volume in MiB (will be rounded up to a multiple of cluster size)
         thin_provision: True to enable thin provisioning
         uuid: UUID of logical volume store to create logical volume on (optional)
         lvs_name: name of logical volume store to create logical volume on (optional)
@@ -76,7 +76,7 @@ def bdev_lvol_create(client, lvol_name, size, thin_provision=False, uuid=None, l
     if (uuid and lvs_name) or (not uuid and not lvs_name):
         raise ValueError("Either uuid or lvs_name must be specified, but not both")
 
-    params = {'lvol_name': lvol_name, 'size': size}
+    params = {'lvol_name': lvol_name, 'size_in_mib': size_in_mib}
     if thin_provision:
         params['thin_provision'] = thin_provision
     if uuid:
@@ -136,16 +136,16 @@ def bdev_lvol_rename(client, old_name, new_name):
     return client.call('bdev_lvol_rename', params)
 
 
-def bdev_lvol_resize(client, name, size):
+def bdev_lvol_resize(client, name, size_in_mib):
     """Resize a logical volume.
 
     Args:
         name: name of logical volume to resize
-        size: desired size of logical volume in bytes (will be rounded up to a multiple of cluster size)
+        size_in_mib: desired size of logical volume in MiB (will be rounded up to a multiple of cluster size)
     """
     params = {
         'name': name,
-        'size': size,
+        'size_in_mib': size_in_mib,
     }
     return client.call('bdev_lvol_resize', params)
 

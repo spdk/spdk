@@ -268,10 +268,9 @@ class UILvolBdev(UIBdev):
             lvs_name = lvs
 
         size = self.ui_eval_param(size, "number", None)
-        size *= (1024 * 1024)
         thin_provision = self.ui_eval_param(thin_provision, "bool", False)
 
-        ret_uuid = self.get_root().create_lvol_bdev(lvol_name=name, size=size,
+        ret_uuid = self.get_root().create_lvol_bdev(lvol_name=name, size_in_mib=size,
                                                     lvs_name=lvs_name, uuid=uuid,
                                                     thin_provision=thin_provision)
         self.shell.log.info(ret_uuid)

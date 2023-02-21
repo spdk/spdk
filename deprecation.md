@@ -72,3 +72,12 @@ See GitHub issue [2801](https://github.com/spdk/spdk/issues/2801) for additional
 
 New SPDK partition types should use GUID `6527994e-2c5a-4eec-9613-8f5944074e8b` which will create
 a bdev of the correct size.
+
+### lvol
+
+#### `vbdev_lvol_rpc_req_size`
+
+Param `size` in rpc commands `rpc_bdev_lvol_create` and `rpc_bdev_lvol_resize` is deprecated and
+replace by `size_in_mib`.
+
+See GitHub issue [2346](https://github.com/spdk/spdk/issues/2346) for additional details.

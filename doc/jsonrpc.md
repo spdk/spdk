@@ -9632,7 +9632,8 @@ Create a logical volume on a logical volume store.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 lvol_name               | Required | string      | Name of logical volume to create
-size                    | Required | number      | Desired size of logical volume in bytes
+size                    | Optional | number      | Desired size of logical volume in bytes (Deprecated. Please use size_in_mib instead.)
+size_in_mib             | Optional | number      | Desired size of logical volume in MiB
 thin_provision          | Optional | boolean     | True to enable thin provisioning
 uuid                    | Optional | string      | UUID of logical volume store to create logical volume on
 lvs_name                | Optional | string      | Name of logical volume store to create logical volume on
@@ -9656,7 +9657,7 @@ Example request:
   "id": 1,
   "params": {
     "lvol_name": "LVOL0",
-    "size": 1048576,
+    "size_in_mib": 1,
     "lvs_name": "LVS0",
     "clear_method": "unmap",
     "thin_provision": true
@@ -9802,7 +9803,8 @@ Resize a logical volume.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | UUID or alias of the logical volume to resize
-size                    | Required | number      | Desired size of the logical volume in bytes
+size                    | Optional | number      | Desired size of the logical volume in bytes (Deprecated. Please use size_in_mib instead.)
+size_in_mib             | Optional | number      | Desired size of the logical volume in MiB
 
 #### Example
 
@@ -9815,7 +9817,7 @@ Example request:
   "id": 1,
   "params": {
     "name": "51638754-ca16-43a7-9f8f-294a0805ab0a",
-    "size": 2097152
+    "size_in_mib": 2
   }
 }
 ~~~

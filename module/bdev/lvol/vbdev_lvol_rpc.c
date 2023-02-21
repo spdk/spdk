@@ -269,6 +269,7 @@ struct rpc_bdev_lvol_create {
 	char *lvs_name;
 	char *lvol_name;
 	uint64_t size;
+	uint64_t size_in_mib;
 	bool thin_provision;
 	char *clear_method;
 };
@@ -286,7 +287,8 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_create_decoders[] = {
 	{"uuid", offsetof(struct rpc_bdev_lvol_create, uuid), spdk_json_decode_string, true},
 	{"lvs_name", offsetof(struct rpc_bdev_lvol_create, lvs_name), spdk_json_decode_string, true},
 	{"lvol_name", offsetof(struct rpc_bdev_lvol_create, lvol_name), spdk_json_decode_string},
-	{"size", offsetof(struct rpc_bdev_lvol_create, size), spdk_json_decode_uint64},
+	{"size", offsetof(struct rpc_bdev_lvol_create, size), spdk_json_decode_uint64, true},
+	{"size_in_mib", offsetof(struct rpc_bdev_lvol_create, size_in_mib), spdk_json_decode_uint64, true},
 	{"thin_provision", offsetof(struct rpc_bdev_lvol_create, thin_provision), spdk_json_decode_bool, true},
 	{"clear_method", offsetof(struct rpc_bdev_lvol_create, clear_method), spdk_json_decode_string, true},
 };
@@ -311,6 +313,10 @@ invalid:
 					 spdk_strerror(-lvolerrno));
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(vbdev_lvol_rpc_req_size,
+			      "rpc_bdev_lvol_create/resize req.size",
+			      "v23.09", 0);
+
 static void
 rpc_bdev_lvol_create(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
@@ -319,6 +325,7 @@ rpc_bdev_lvol_create(struct spdk_jsonrpc_request *request,
 	enum lvol_clear_method clear_method;
 	int rc = 0;
 	struct spdk_lvol_store *lvs = NULL;
+	uint64_t size = 0;
 
 	SPDK_INFOLOG(lvol_rpc, "Creating blob\n");
 
@@ -329,6 +336,18 @@ rpc_bdev_lvol_create(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
+	}
+
+	if (req.size > 0 && req.size_in_mib > 0) {
+		SPDK_LOG_DEPRECATED(vbdev_lvol_rpc_req_size);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "size is deprecated. Specify only size_in_mib instead.");
+		goto cleanup;
+	} else if (req.size_in_mib > 0) {
+		size = req.size_in_mib * 1024 * 1024;
+	} else {
+		SPDK_LOG_DEPRECATED(vbdev_lvol_rpc_req_size);
+		size = req.size;
 	}
 
 	rc = vbdev_get_lvol_store_by_uuid_xor_name(req.uuid, req.lvs_name, &lvs);
@@ -352,7 +371,7 @@ rpc_bdev_lvol_create(struct spdk_jsonrpc_request *request,
 		clear_method = LVOL_CLEAR_WITH_DEFAULT;
 	}
 
-	rc = vbdev_lvol_create(lvs, req.lvol_name, req.size, req.thin_provision,
+	rc = vbdev_lvol_create(lvs, req.lvol_name, size, req.thin_provision,
 			       clear_method, rpc_bdev_lvol_create_cb, request);
 	if (rc < 0) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
@@ -712,6 +731,7 @@ SPDK_RPC_REGISTER("bdev_lvol_decouple_parent", rpc_bdev_lvol_decouple_parent, SP
 struct rpc_bdev_lvol_resize {
 	char *name;
 	uint64_t size;
+	uint64_t size_in_mib;
 };
 
 static void
@@ -722,7 +742,8 @@ free_rpc_bdev_lvol_resize(struct rpc_bdev_lvol_resize *req)
 
 static const struct spdk_json_object_decoder rpc_bdev_lvol_resize_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_lvol_resize, name), spdk_json_decode_string},
-	{"size", offsetof(struct rpc_bdev_lvol_resize, size), spdk_json_decode_uint64},
+	{"size", offsetof(struct rpc_bdev_lvol_resize, size), spdk_json_decode_uint64, true},
+	{"size_in_mib", offsetof(struct rpc_bdev_lvol_resize, size_in_mib), spdk_json_decode_uint64, true},
 };
 
 static void
@@ -749,6 +770,7 @@ rpc_bdev_lvol_resize(struct spdk_jsonrpc_request *request,
 	struct rpc_bdev_lvol_resize req = {};
 	struct spdk_bdev *bdev;
 	struct spdk_lvol *lvol;
+	uint64_t size = 0;
 
 	SPDK_INFOLOG(lvol_rpc, "Resizing lvol\n");
 
@@ -759,6 +781,18 @@ rpc_bdev_lvol_resize(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
+	}
+
+	if (req.size > 0 && req.size_in_mib > 0) {
+		SPDK_LOG_DEPRECATED(vbdev_lvol_rpc_req_size);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "size is deprecated. Specify only size_in_mib instead.");
+		goto cleanup;
+	} else if (req.size_in_mib > 0) {
+		size = req.size_in_mib * 1024 * 1024;
+	} else {
+		SPDK_LOG_DEPRECATED(vbdev_lvol_rpc_req_size);
+		size = req.size;
 	}
 
 	bdev = spdk_bdev_get_by_name(req.name);
@@ -774,7 +808,8 @@ rpc_bdev_lvol_resize(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	vbdev_lvol_resize(lvol, req.size, rpc_bdev_lvol_resize_cb, request);
+
+	vbdev_lvol_resize(lvol, size, rpc_bdev_lvol_resize_cb, request);
 
 cleanup:
 	free_rpc_bdev_lvol_resize(&req);
