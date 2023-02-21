@@ -1659,6 +1659,11 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 	}
 
 	if (job->verify) {
+		if (job->size_in_ios >= UINT32_MAX) {
+			SPDK_ERRLOG("Due to constraints of verify operation, the job storage capacity is too large\n");
+			bdevperf_job_free(job);
+			return -ENOMEM;
+		}
 		job->outstanding = spdk_bit_array_create(job->size_in_ios);
 		if (job->outstanding == NULL) {
 			SPDK_ERRLOG("Could not create outstanding array bitmap for bdev %s\n",
