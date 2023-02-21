@@ -972,7 +972,12 @@ struct spdk_bdev_io {
 		/** Callback for when buf is allocated */
 		spdk_bdev_io_get_buf_cb get_buf_cb;
 
-		/** Member used for linking child I/Os together. */
+		/**
+		 * Queue entry used in several cases:
+		 *  1. IOs awaiting retry due to NOMEM status,
+		 *  2. IOs awaiting submission due to QoS,
+		 *  3. queued reset requests.
+		 */
 		TAILQ_ENTRY(spdk_bdev_io) link;
 
 		/** Entry to the list need_buf of struct spdk_bdev. */
