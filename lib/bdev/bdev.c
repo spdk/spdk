@@ -289,6 +289,9 @@ struct spdk_bdev_channel {
 	 */
 	bdev_io_tailq_t		io_locked;
 
+	/* List of I/Os with accel sequence being currently executed */
+	bdev_io_tailq_t		io_accel_exec;
+
 	uint32_t		flags;
 
 	struct spdk_histogram_data *histogram;
@@ -984,6 +987,7 @@ bdev_io_submit_sequence_cb(void *ctx, int status)
 
 	bdev_io->u.bdev.accel_sequence = NULL;
 	bdev_io->internal.accel_sequence = NULL;
+	TAILQ_REMOVE(&bdev_io->internal.ch->io_accel_exec, bdev_io, internal.link);
 
 	if (spdk_unlikely(status != 0)) {
 		SPDK_ERRLOG("Failed to execute accel sequence, status=%d\n", status);
@@ -1011,9 +1015,12 @@ bdev_io_exec_sequence(struct spdk_bdev_io *bdev_io, spdk_accel_completion_cb cb_
 		spdk_accel_sequence_reverse(bdev_io->internal.accel_sequence);
 	}
 
+	TAILQ_INSERT_TAIL(&bdev_io->internal.ch->io_accel_exec, bdev_io, internal.link);
+
 	rc = spdk_accel_sequence_finish(bdev_io->internal.accel_sequence, cb_fn, bdev_io);
 	if (spdk_unlikely(rc != 0)) {
 		SPDK_ERRLOG("Failed to execute accel sequence, status=%d\n", rc);
+		TAILQ_REMOVE(&bdev_io->internal.ch->io_accel_exec, bdev_io, internal.link);
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 			/* Writes haven't been submitted at this point yet */
@@ -2999,7 +3006,9 @@ bdev_io_complete_parent_sequence_cb(void *ctx, int status)
 	assert(bdev_io->u.bdev.accel_sequence == NULL);
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 
+	TAILQ_REMOVE(&bdev_io->internal.ch->io_accel_exec, bdev_io, internal.link);
 	bdev_io->internal.accel_sequence = NULL;
+
 	if (spdk_unlikely(status != 0)) {
 		SPDK_ERRLOG("Failed to execute accel sequence, status=%d\n", status);
 	}
@@ -3468,6 +3477,7 @@ bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 
 	assert(TAILQ_EMPTY(&ch->io_locked));
 	assert(TAILQ_EMPTY(&ch->io_submitted));
+	assert(TAILQ_EMPTY(&ch->io_accel_exec));
 	assert(ch->io_outstanding == 0);
 	assert(shared_resource->ref > 0);
 	shared_resource->ref--;
@@ -3739,6 +3749,7 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 
 	TAILQ_INIT(&ch->io_submitted);
 	TAILQ_INIT(&ch->io_locked);
+	TAILQ_INIT(&ch->io_accel_exec);
 
 	ch->stat = bdev_alloc_io_stat(false);
 	if (ch->stat == NULL) {
@@ -6816,7 +6827,9 @@ bdev_io_complete_sequence_cb(void *ctx, int status)
 	assert(bdev_io->u.bdev.accel_sequence == NULL);
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 
+	TAILQ_REMOVE(&bdev_io->internal.ch->io_accel_exec, bdev_io, internal.link);
 	bdev_io->internal.accel_sequence = NULL;
+
 	if (spdk_unlikely(status != 0)) {
 		SPDK_ERRLOG("Failed to execute accel sequence, status=%d\n", status);
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;

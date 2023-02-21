@@ -976,7 +976,8 @@ struct spdk_bdev_io {
 		 * Queue entry used in several cases:
 		 *  1. IOs awaiting retry due to NOMEM status,
 		 *  2. IOs awaiting submission due to QoS,
-		 *  3. queued reset requests.
+		 *  3. IOs with an accel sequence being executed,
+		 *  4. queued reset requests.
 		 */
 		TAILQ_ENTRY(spdk_bdev_io) link;
 
