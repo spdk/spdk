@@ -496,7 +496,7 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 #ifdef CX7
 	vpd->ibpd = ibv_alloc_pd(ctrl->sctx->context);
 #else
-	vpd->ibpd = vrdma_create_sf_pd(ctrl->vdev->vrdma_sf.sf_name);
+	vpd->ibpd = vrdma_create_sf_pd(ctrl);
 #endif
 	if (!vpd->ibpd) {
 		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;

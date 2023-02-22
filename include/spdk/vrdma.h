@@ -41,8 +41,8 @@
 #include "snap_dma.h"
 #include "snap_vrdma_virtq.h"
 
-#define CX7
-//#define BF3
+//#define CX7
+#define BF3
 
 #define MAX_VRDMA_DEV_NUM 64
 #define MAX_VRDMA_DEV_LEN 32
