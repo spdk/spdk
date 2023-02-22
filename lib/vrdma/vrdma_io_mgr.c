@@ -1166,7 +1166,7 @@ static int vrdma_write_back_sq_cqe(struct spdk_vrdma_qp *vqp, uint16_t cqe_num)
 	SPDK_NOTICELOG("vrdam write back cqe start: vcq pi %d, pre_pi %d, ci %d\n",
 					pi, pre_pi, vcq->pici->ci);
 #endif
-	if (pi - vcq->pici->ci == vcq->cqe_entry_num) {
+	if (pi - vcq->pici->ci > vcq->cqe_entry_num) {
 		SPDK_ERRLOG("vcq is full: vcq pi %d, pre_pi %d, ci %d\n",
 					pi, pre_pi, vcq->pici->ci);
 		return -1;
