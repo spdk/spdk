@@ -66,6 +66,19 @@ int spdk_uuid_compare(const struct spdk_uuid *u1, const struct spdk_uuid *u2);
 void spdk_uuid_generate(struct spdk_uuid *uuid);
 
 /**
+ * Generate a new UUID using SHA1 hash.
+ *
+ * \param[out] uuid User-provided UUID buffer to fill.
+ * \param ns_uuid Well-known namespace UUID for generated UUID.
+ * \param name Arbitrary, binary string.
+ * \param len Length of binary string.
+ *
+ * \return 0 on success, non-zero on failure.
+ */
+int spdk_uuid_generate_sha1(struct spdk_uuid *uuid, struct spdk_uuid *ns_uuid, const char *name,
+			    size_t len);
+
+/**
  * Copy a UUID.
  *
  * \param src Source UUID to copy from.

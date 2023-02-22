@@ -22,6 +22,10 @@ ifeq ($(CONFIG_ISAL), y)
 LOCAL_SYS_LIBS += -L$(ISAL_DIR)/.libs -lisal
 endif
 
+ifeq ($(CONFIG_HAVE_UUID_GENERATE_SHA1), n)
+LOCAL_SYS_LIBS += -lssl
+endif
+
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_util.map)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

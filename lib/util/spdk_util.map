@@ -153,6 +153,7 @@
 	spdk_uuid_fmt_lower;
 	spdk_uuid_compare;
 	spdk_uuid_generate;
+	spdk_uuid_generate_sha1;
 	spdk_uuid_copy;
 
 	# public functions in fd_group.h

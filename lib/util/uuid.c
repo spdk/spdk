@@ -4,6 +4,12 @@
  */
 
 #include "spdk/uuid.h"
+#include "spdk/config.h"
+#include "spdk/log.h"
+
+#ifndef SPDK_CONFIG_HAVE_UUID_GENERATE_SHA1
+#include <openssl/evp.h>
+#endif /* SPDK_CONFIG_HAVE_UUID_GENERATE_SHA1 */
 
 #ifndef __FreeBSD__
 
@@ -103,3 +109,66 @@ spdk_uuid_copy(struct spdk_uuid *dst, const struct spdk_uuid *src)
 }
 
 #endif
+
+int
+spdk_uuid_generate_sha1(struct spdk_uuid *uuid, struct spdk_uuid *ns_uuid, const char *name,
+			size_t len)
+{
+#ifdef SPDK_CONFIG_HAVE_UUID_GENERATE_SHA1
+	uuid_generate_sha1((void *)uuid, (void *)ns_uuid, name, len);
+	return 0;
+#else
+	EVP_MD_CTX *mdctx;
+	const EVP_MD *md;
+	unsigned char md_value[EVP_MAX_MD_SIZE];
+	unsigned int md_len;
+
+	md = EVP_sha1();
+	assert(md != NULL);
+
+	mdctx = EVP_MD_CTX_new();
+	if (mdctx == NULL) {
+		return -ENOMEM;
+	}
+
+	if (EVP_DigestInit_ex(mdctx, md, NULL) != 1) {
+		SPDK_ERRLOG("Could not initialize EVP digest!\n");
+		goto err;
+	}
+	if (EVP_DigestUpdate(mdctx, ns_uuid, sizeof(struct spdk_uuid)) != 1) {
+		SPDK_ERRLOG("Could update EVP digest with namespace UUID!\n");
+		goto err;
+	}
+	if (EVP_DigestUpdate(mdctx, name, len) != 1) {
+		SPDK_ERRLOG("Could update EVP digest with assigned name!\n");
+		goto err;
+	}
+	if (EVP_DigestFinal_ex(mdctx, md_value, &md_len) != 1) {
+		SPDK_ERRLOG("Could not generate EVP digest!\n");
+		goto err;
+	}
+	EVP_MD_CTX_free(mdctx);
+
+	memcpy(uuid, md_value, 16);
+	/* This part mimics original uuid_generate_sha1() from libuuid/src/gen_uuid.c.
+	 * The original uuid structure included from uuid.h looks like this:
+	 * struct uuid {
+	 *	uint32_t	time_low;
+	 *	uint16_t	time_mid;
+	 *	uint16_t	time_hi_and_version;
+	 *	uint16_t	clock_seq;
+	 *	uint8_t		node[6];
+	 * };
+	 * so uuid->u.raw[6] and uuid->u.raw[8] are time_hi_and_version and clock_seq respectively.
+	 */
+	uuid->u.raw[6] = (uuid->u.raw[6] & 0x0f) | 0x50;
+	uuid->u.raw[8] = (uuid->u.raw[8] & 0x3f) | 0x80;
+
+	return 0;
+
+err:
+	EVP_MD_CTX_free(mdctx);
+	return -EINVAL;
+
+#endif /* SPDK_CONFIG_HAVE_UUID_GENERATE_SHA1 */
+}
