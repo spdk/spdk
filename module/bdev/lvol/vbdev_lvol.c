@@ -1326,15 +1326,6 @@ _vbdev_lvs_examine_failed(void *cb_arg, int lvserrno)
 }
 
 static void
-_vbdev_lvol_examine_close_cb(struct spdk_lvol_store *lvs)
-{
-	if (lvs->lvols_opened >= lvs->lvol_count) {
-		SPDK_INFOLOG(vbdev_lvol, "Opening lvols finished\n");
-		spdk_bdev_module_examine_done(&g_lvol_if);
-	}
-}
-
-static void
 _vbdev_lvs_examine_finish(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 {
 	struct spdk_lvol_store *lvs = cb_arg;
@@ -1350,9 +1341,7 @@ _vbdev_lvs_examine_finish(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 	if (_create_lvol_disk(lvol, false)) {
 		SPDK_ERRLOG("Cannot create bdev for lvol %s\n", lvol->unique_id);
 		lvs->lvol_count--;
-		_vbdev_lvol_examine_close_cb(lvs);
-		SPDK_INFOLOG(vbdev_lvol, "Opening lvol %s failed\n", lvol->unique_id);
-		return;
+		goto end;
 	}
 
 	lvs->lvols_opened++;
