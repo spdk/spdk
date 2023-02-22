@@ -57,6 +57,10 @@ Two functions related to Asynchronous Event and error handling have been made pu
 Parameters `cb_fn` and `ctx` of `spdk_nvmf_qpair_disconnect` API are deprecated. These parameters
 will be removed in 23.09 release.
 
+Added a secure_channel parameter to the nvmf_subsystem_add_listener RPC. When true, all connections
+established via this listener will immediately attempt to establish a secure channel, prior to any
+authentication. Only valid for the TCP transport.
+
 ### nvme
 
 New API `spdk_nvme_ns_get_format_index` was added to calculate the exact format index, that

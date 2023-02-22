@@ -800,6 +800,9 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 	struct spdk_nvmf_tcp_port *port;
 	int trsvcid_int;
 	uint8_t adrfam;
+	const char *sock_impl_name;
+	struct spdk_sock_impl_opts impl_opts;
+	size_t impl_opts_size = sizeof(impl_opts);
 	struct spdk_sock_opts opts;
 
 	if (!strlen(trid->trsvcid)) {
@@ -822,12 +825,22 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 	}
 
 	port->trid = trid;
+
+	sock_impl_name = NULL;
+
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
 	opts.priority = ttransport->tcp_opts.sock_priority;
-	/* TODO: also add impl_opts like on the initiator side */
+	if (listen_opts->secure_channel) {
+		sock_impl_name = "ssl";
+		spdk_sock_impl_get_opts(sock_impl_name, &impl_opts, &impl_opts_size);
+		impl_opts.tls_version = SPDK_TLS_VERSION_1_3;
+		opts.impl_opts = &impl_opts;
+		opts.impl_opts_size = sizeof(impl_opts);
+	}
+
 	port->listen_sock = spdk_sock_listen_ext(trid->traddr, trsvcid_int,
-			    NULL, &opts);
+			    sock_impl_name, &opts);
 	if (port->listen_sock == NULL) {
 		SPDK_ERRLOG("spdk_sock_listen(%s, %d) failed: %s (%d)\n",
 			    trid->traddr, trsvcid_int,

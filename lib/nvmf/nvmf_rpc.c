@@ -622,6 +622,7 @@ enum nvmf_rpc_listen_op {
 struct nvmf_rpc_listener_ctx {
 	char				*nqn;
 	char				*tgt_name;
+	bool				secure_channel;
 	struct spdk_nvmf_tgt		*tgt;
 	struct spdk_nvmf_transport	*transport;
 	struct spdk_nvmf_subsystem	*subsystem;
@@ -641,6 +642,7 @@ static const struct spdk_json_object_decoder nvmf_rpc_listener_decoder[] = {
 	{"nqn", offsetof(struct nvmf_rpc_listener_ctx, nqn), spdk_json_decode_string},
 	{"listen_address", offsetof(struct nvmf_rpc_listener_ctx, address), decode_rpc_listen_address},
 	{"tgt_name", offsetof(struct nvmf_rpc_listener_ctx, tgt_name), spdk_json_decode_string, true},
+	{"secure_channel", offsetof(struct nvmf_rpc_listener_ctx, secure_channel), spdk_json_decode_bool, true},
 };
 
 static void
@@ -893,6 +895,13 @@ rpc_nvmf_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 	ctx->op = NVMF_RPC_LISTEN_ADD;
 	spdk_nvmf_listen_opts_init(&ctx->opts, sizeof(ctx->opts));
 	ctx->opts.transport_specific = params;
+	if (subsystem->flags.allow_any_host == 1 && ctx->secure_channel == true) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Cannot establish secure channel, when 'allow_any_host' is set");
+		nvmf_rpc_listener_ctx_free(ctx);
+		return;
+	}
+	ctx->opts.secure_channel = ctx->secure_channel;
 
 	rc = spdk_nvmf_subsystem_pause(subsystem, 0, nvmf_rpc_listen_paused, ctx);
 	if (rc != 0) {

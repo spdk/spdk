@@ -107,8 +107,15 @@ struct spdk_nvmf_listen_opts {
 	size_t opts_size;
 
 	const struct spdk_json_val *transport_specific;
+
+	/**
+	 * Indicates that all newly established connections shall immediately
+	 * establish a secure channel, prior to any authentication.
+	 */
+	bool secure_channel;
+
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listen_opts) == 16, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listen_opts) == 17, "Incorrect size");
 
 /**
  * Initialize listen options

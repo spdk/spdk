@@ -636,11 +636,12 @@ nvmf_listen_opts_copy(struct spdk_nvmf_listen_opts *opts,
     } \
 
 	SET_FIELD(transport_specific);
+	SET_FIELD(secure_channel);
 #undef SET_FIELD
 
 	/* Do not remove this statement, you should always update this statement when you adding a new field,
 	 * and do not forget to add the SET_FIELD statement for your added field. */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listen_opts) == 16, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listen_opts) == 17, "Incorrect size");
 }
 
 void

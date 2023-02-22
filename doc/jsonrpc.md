@@ -7893,6 +7893,7 @@ Name                    | Optional | Type        | Description
 nqn                     | Required | string      | Subsystem NQN
 tgt_name                | Optional | string      | Parent NVMe-oF target name.
 listen_address          | Required | object      | @ref rpc_nvmf_listen_address object
+secure_channel          | Optional | bool        | Whether all connections immediately attempt to establish a secure channel
 
 #### listen_address {#rpc_nvmf_listen_address}
 
