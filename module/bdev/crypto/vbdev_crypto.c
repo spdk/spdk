@@ -62,6 +62,8 @@ struct crypto_bdev_io {
 	uint64_t aux_offset_blocks;			/* block offset on media */
 	void *aux_buf_raw;				/* raw buffer that the bdev layer gave us for write buffer */
 	struct iovec aux_buf_iov;			/* iov representing aligned contig write buffer */
+	struct spdk_memory_domain *aux_domain;		/* memory domain of the aux buf */
+	void *aux_domain_ctx;				/* memory domain ctx of the aux buf */
 	struct spdk_accel_sequence *seq;		/* sequence of accel operations */
 
 	/* for bdev_io_wait */
@@ -77,73 +79,56 @@ static void vbdev_crypto_examine(struct spdk_bdev *bdev);
 static int vbdev_crypto_claim(const char *bdev_name);
 static void vbdev_crypto_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 
-/* Following an encrypt or decrypt we need to then either write the encrypted data or finish
- * the read on decrypted data. Do that here.
- */
 static void
-_crypto_operation_complete(void *ref, int status)
+crypto_write(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io)
 {
-	struct spdk_bdev_io *bdev_io = ref;
 	struct vbdev_crypto *crypto_bdev = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_crypto,
 					   crypto_bdev);
 	struct crypto_bdev_io *crypto_io = (struct crypto_bdev_io *)bdev_io->driver_ctx;
-	struct crypto_io_channel *crypto_ch = crypto_io->crypto_ch;
-	int rc = 0;
+	struct spdk_bdev_ext_io_opts opts = {};
+	int rc;
 
-	if (status || crypto_ch->reset_iter) {
-		/* If we're completing this with an outstanding reset we need to fail it */
-		rc = -EINVAL;
-	}
+	opts.size = sizeof(opts);
+	opts.accel_sequence = crypto_io->seq;
+	opts.memory_domain = crypto_io->aux_domain;
+	opts.memory_domain_ctx = crypto_io->aux_domain_ctx;
 
-	TAILQ_REMOVE(&crypto_ch->in_accel_fw, bdev_io, module_link);
-
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-		if (!rc) {
-			/* Write the encrypted data. */
-			rc = spdk_bdev_writev_blocks(crypto_bdev->base_desc, crypto_ch->base_ch,
-						     &crypto_io->aux_buf_iov, 1, crypto_io->aux_offset_blocks,
-						     crypto_io->aux_num_blocks, _complete_internal_write,
-						     bdev_io);
-			if (rc == -ENOMEM) {
-				vbdev_crypto_queue_io(bdev_io, CRYPTO_IO_ENCRYPT_DONE);
-				goto check_reset;
-			}
+	/* Write the encrypted data. */
+	rc = spdk_bdev_writev_blocks_ext(crypto_bdev->base_desc, crypto_ch->base_ch,
+					 &crypto_io->aux_buf_iov, 1, crypto_io->aux_offset_blocks,
+					 crypto_io->aux_num_blocks, _complete_internal_write,
+					 bdev_io, &opts);
+	if (spdk_unlikely(rc != 0)) {
+		if (rc == -ENOMEM) {
+			SPDK_DEBUGLOG(vbdev_crypto, "No memory, queue the IO.\n");
+			vbdev_crypto_queue_io(bdev_io, CRYPTO_IO_ENCRYPT_DONE);
 		} else {
-			SPDK_ERRLOG("Issue with encryption on bdev_io %p\n", bdev_io);
+			SPDK_ERRLOG("Failed to submit bdev_io!\n");
+			spdk_accel_sequence_abort(crypto_io->seq);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		}
-	} else {
-		SPDK_ERRLOG("Unknown bdev type %u on crypto operation completion\n", bdev_io->type);
-		rc = -EINVAL;
-	}
-
-	if (rc) {
-		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-			spdk_bdev_io_put_aux_buf(bdev_io, crypto_io->aux_buf_raw);
-		}
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-	}
-
-check_reset:
-	/* If the channel iter is not NULL, we need to wait
-	 * until the pending list is empty, then we can move on to the
-	 * next channel.
-	 */
-	if (crypto_ch->reset_iter && TAILQ_EMPTY(&crypto_ch->in_accel_fw)) {
-		SPDK_NOTICELOG("Channel %p has been quiesced.\n", crypto_ch);
-		spdk_for_each_channel_continue(crypto_ch->reset_iter, 0);
-		crypto_ch->reset_iter = NULL;
 	}
 }
 
+static void
+crypto_encrypt_cb(void *cb_arg)
+{
+	struct crypto_bdev_io *crypto_io = cb_arg;
+	struct crypto_io_channel *crypto_ch = crypto_io->crypto_ch;
+
+	spdk_accel_put_buf(crypto_ch->accel_channel, crypto_io->aux_buf_raw,
+			   crypto_io->aux_domain, crypto_io->aux_domain_ctx);
+}
+
 /* We're either encrypting on the way down or decrypting on the way back. */
-static int
-_crypto_encrypt(struct spdk_bdev_io *bdev_io, void *aux_buf)
+static void
+crypto_encrypt(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io)
 {
 	struct crypto_bdev_io *crypto_io = (struct crypto_bdev_io *)bdev_io->driver_ctx;
-	struct crypto_io_channel *crypto_ch = crypto_io->crypto_ch;
 	uint32_t crypto_len = crypto_io->crypto_bdev->crypto_bdev.blocklen;
 	uint64_t total_length;
 	uint64_t alignment;
+	void *aux_buf = crypto_io->aux_buf_raw;
 	int rc;
 
 	/* For encryption, we need to prepare a single contiguous buffer as the encryption
@@ -154,22 +139,33 @@ _crypto_encrypt(struct spdk_bdev_io *bdev_io, void *aux_buf)
 	total_length = bdev_io->u.bdev.num_blocks * crypto_len;
 	alignment = spdk_bdev_get_buf_align(&crypto_io->crypto_bdev->crypto_bdev);
 	crypto_io->aux_buf_iov.iov_len = total_length;
-	crypto_io->aux_buf_raw = aux_buf;
 	crypto_io->aux_buf_iov.iov_base  = (void *)(((uintptr_t)aux_buf + (alignment - 1)) & ~
 					   (alignment - 1));
 	crypto_io->aux_offset_blocks = bdev_io->u.bdev.offset_blocks;
 	crypto_io->aux_num_blocks = bdev_io->u.bdev.num_blocks;
 
-	rc = spdk_accel_submit_encrypt(crypto_ch->accel_channel, crypto_ch->crypto_key,
-				       &crypto_io->aux_buf_iov, 1,
-				       bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+	rc = spdk_accel_append_encrypt(&crypto_io->seq, crypto_ch->accel_channel,
+				       crypto_ch->crypto_key, &crypto_io->aux_buf_iov, 1,
+				       crypto_io->aux_domain, crypto_io->aux_domain_ctx,
+				       bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, NULL, NULL,
 				       bdev_io->u.bdev.offset_blocks, crypto_len, 0,
-				       _crypto_operation_complete, bdev_io);
-	if (!rc) {
-		TAILQ_INSERT_TAIL(&crypto_ch->in_accel_fw, bdev_io, module_link);
+				       crypto_encrypt_cb, crypto_io);
+	if (spdk_unlikely(rc != 0)) {
+		spdk_accel_put_buf(crypto_ch->accel_channel, crypto_io->aux_buf_raw,
+				   crypto_io->aux_domain, crypto_io->aux_domain_ctx);
+		if (rc == -ENOMEM) {
+			SPDK_DEBUGLOG(vbdev_crypto, "No memory, queue the IO.\n");
+			vbdev_crypto_queue_io(bdev_io, CRYPTO_IO_NEW);
+		} else {
+			SPDK_ERRLOG("Failed to submit bdev_io!\n");
+			spdk_accel_sequence_abort(crypto_io->seq);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+
+		return;
 	}
 
-	return rc;
+	crypto_write(crypto_ch, bdev_io);
 }
 
 /* This function is called after all channels have been quiesced following
@@ -231,9 +227,6 @@ _complete_internal_write(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 {
 	struct spdk_bdev_io *orig_io = cb_arg;
 	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
-	struct crypto_bdev_io *orig_ctx = (struct crypto_bdev_io *)orig_io->driver_ctx;
-
-	spdk_bdev_io_put_aux_buf(orig_io, orig_ctx->aux_buf_raw);
 
 	spdk_bdev_io_complete(orig_io, status);
 	spdk_bdev_free_io(bdev_io);
@@ -271,7 +264,7 @@ vbdev_crypto_resubmit_io(void *arg)
 		vbdev_crypto_submit_request(ch, bdev_io);
 		break;
 	case CRYPTO_IO_ENCRYPT_DONE:
-		_crypto_operation_complete(bdev_io, 0);
+		crypto_write(crypto_io->crypto_ch, bdev_io);
 		break;
 	case CRYPTO_IO_DECRYPT_DONE:
 		crypto_read(crypto_io->crypto_ch, bdev_io);
@@ -373,34 +366,6 @@ crypto_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 	crypto_read(crypto_ch, bdev_io);
 }
 
-/* For encryption we don't want to encrypt the data in place as the host isn't
- * expecting us to mangle its data buffers so we need to encrypt into the bdev
- * aux buffer, then we can use that as the source for the disk data transfer.
- */
-static void
-crypto_write_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
-			void *aux_buf)
-{
-	int rc;
-
-	if (spdk_unlikely(!aux_buf)) {
-		SPDK_ERRLOG("Failed to get aux buffer!\n");
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		return;
-	}
-	rc = _crypto_encrypt(bdev_io, aux_buf);
-	if (rc != 0) {
-		spdk_bdev_io_put_aux_buf(bdev_io, aux_buf);
-		if (rc == -ENOMEM) {
-			SPDK_DEBUGLOG(vbdev_crypto, "No memory, queue the IO.\n");
-			vbdev_crypto_queue_io(bdev_io, CRYPTO_IO_NEW);
-		} else {
-			SPDK_ERRLOG("Failed to submit crypto operation!\n");
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		}
-	}
-}
-
 /* Called when someone submits IO to this crypto vbdev. For IO's not relevant to crypto,
  * we're simply passing it on here via SPDK IO calls which in turn allocate another bdev IO
  * and call our cpl callback provided below along with the original bdev_io so that we can
@@ -428,10 +393,17 @@ vbdev_crypto_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		/* Tell the bdev layer that we need an aux buf in addition to the data
-		 * buf already associated with the bdev.
+		/* For encryption we don't want to encrypt the data in place as the host isn't
+		 * expecting us to mangle its data buffers so we need to encrypt into the aux accel
+		 * buffer, then we can use that as the source for the disk data transfer.
 		 */
-		spdk_bdev_io_get_aux_buf(bdev_io, crypto_write_get_buf_cb);
+		rc = spdk_accel_get_buf(crypto_ch->accel_channel,
+					bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
+					&crypto_io->aux_buf_raw, &crypto_io->aux_domain,
+					&crypto_io->aux_domain_ctx);
+		if (rc == 0) {
+			crypto_encrypt(crypto_ch, bdev_io);
+		}
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		rc = spdk_bdev_unmap_blocks(crypto_bdev->base_desc, crypto_ch->base_ch,
@@ -462,6 +434,7 @@ vbdev_crypto_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 			vbdev_crypto_queue_io(bdev_io, CRYPTO_IO_NEW);
 		} else {
 			SPDK_ERRLOG("Failed to submit bdev_io!\n");
+			spdk_accel_sequence_abort(crypto_io->seq);
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		}
 	}
