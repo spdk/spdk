@@ -18,6 +18,7 @@ int g_lvserrno;
 int g_cluster_size;
 int g_registered_bdevs;
 int g_num_lvols = 0;
+int g_lvol_open_enomem = -1;
 struct spdk_lvol_store *g_lvs = NULL;
 struct spdk_lvol *g_lvol = NULL;
 struct lvol_store_bdev *g_lvs_bdev = NULL;
@@ -160,7 +161,16 @@ spdk_lvol_rename(struct spdk_lvol *lvol, const char *new_name,
 void
 spdk_lvol_open(struct spdk_lvol *lvol, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
 {
-	cb_fn(cb_arg, lvol, g_lvolerrno);
+	int lvolerrno;
+
+	if (g_lvol_open_enomem == lvol->lvol_store->lvols_opened) {
+		lvolerrno = -ENOMEM;
+		g_lvol_open_enomem = -1;
+	} else {
+		lvolerrno = g_lvolerrno;
+	}
+
+	cb_fn(cb_arg, lvol, lvolerrno);
 }
 
 uint64_t
@@ -260,10 +270,12 @@ spdk_lvs_load(struct spdk_bs_dev *dev,
 	SPDK_CU_ASSERT_FATAL(lvs != NULL);
 	TAILQ_INIT(&lvs->lvols);
 	TAILQ_INIT(&lvs->pending_lvols);
+	TAILQ_INIT(&lvs->retry_open_lvols);
 	spdk_uuid_generate(&lvs->uuid);
 	lvs->bs_dev = dev;
 	for (i = 0; i < g_num_lvols; i++) {
 		_lvol_create(lvs);
+		lvs->lvol_count++;
 	}
 
 	cb_fn(cb_arg, lvs, lvserrno);
@@ -975,6 +987,7 @@ ut_lvs_examine_check(bool success)
 		g_lvol_store = lvs_bdev->lvs;
 		SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 		CU_ASSERT(g_lvol_store->bs_dev != NULL);
+		CU_ASSERT(g_lvol_store->lvols_opened == spdk_min(g_num_lvols, g_registered_bdevs));
 	} else {
 		SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_spdk_lvol_pairs));
 		g_lvol_store = NULL;
@@ -1020,6 +1033,29 @@ ut_lvol_examine(void)
 	vbdev_lvs_examine(&g_bdev);
 	ut_lvs_examine_check(true);
 	CU_ASSERT(g_registered_bdevs != 0);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_lvol_store->lvols));
+	vbdev_lvs_destruct(g_lvol_store, lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+
+	/* Examine multiple lvols successfully */
+	g_num_lvols = 4;
+	g_registered_bdevs = 0;
+	lvol_already_opened = false;
+	vbdev_lvs_examine(&g_bdev);
+	ut_lvs_examine_check(true);
+	CU_ASSERT(g_registered_bdevs == g_num_lvols);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_lvol_store->lvols));
+	vbdev_lvs_destruct(g_lvol_store, lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+
+	/* Examine multiple lvols successfully - fail one with -ENOMEM on lvol open */
+	g_num_lvols = 4;
+	g_lvol_open_enomem = 2;
+	g_registered_bdevs = 0;
+	lvol_already_opened = false;
+	vbdev_lvs_examine(&g_bdev);
+	ut_lvs_examine_check(true);
+	CU_ASSERT(g_registered_bdevs == g_num_lvols);
 	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_lvol_store->lvols));
 	vbdev_lvs_destruct(g_lvol_store, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
