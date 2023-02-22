@@ -197,11 +197,8 @@ nvmf_transport_create_async_done(void *cb_arg, struct spdk_nvmf_transport *trans
 	}
 
 	if (ctx->opts.num_shared_buffers) {
-		transport->data_buf_pool = spdk_mempool_create(spdk_mempool_name,
-					   ctx->opts.num_shared_buffers,
-					   ctx->opts.io_unit_size + NVMF_DATA_BUFFER_ALIGNMENT,
-					   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-					   SPDK_ENV_SOCKET_ID_ANY);
+		transport->data_buf_pool = spdk_mempool_create(spdk_mempool_name, ctx->opts.num_shared_buffers,
+					   ctx->opts.io_unit_size + NVMF_DATA_BUFFER_ALIGNMENT, 0, SPDK_ENV_SOCKET_ID_ANY);
 		if (!transport->data_buf_pool) {
 			if (spdk_mempool_lookup(spdk_mempool_name) != NULL) {
 				SPDK_ERRLOG("Unable to allocate poll group buffer pull: already exists\n");
