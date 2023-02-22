@@ -23,6 +23,7 @@
 #include "spdk/trace.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/uuid.h"
 
 #include "spdk/bdev_module.h"
 #include "spdk/log.h"
@@ -3242,116 +3243,26 @@ nvme_ns_set_ana_state(const struct spdk_nvme_ana_group_descriptor *desc, void *c
 	return 0;
 }
 
-static void
-merge_nsid_sn_strings(const char *sn, char *nsid, int8_t *out)
-{
-	int i = 0, j = 0;
-	int sn_len = strlen(sn), nsid_len = strlen(nsid);
-
-	for (i = 0; i < nsid_len; i++) {
-		out[i] = nsid[i];
-	}
-
-	/* Since last few characters are more likely to be unique,
-	 * even among the devices from the same manufacturer,
-	 * we use serial number in reverse. We also skip the
-	 * terminating character of serial number string. */
-	for (j = sn_len - 1; j >= 0; j--) {
-		if (i == SPDK_UUID_STRING_LEN - 1) {
-			break;
-		}
-
-		/* There may be a lot of spaces in serial number string
-		 * and they will generate equally large number of the
-		 * same character, so just skip them. */
-		if (sn[j] == ' ') {
-			continue;
-		}
-
-		out[i] = sn[j];
-		i++;
-	}
-}
-
-/* Dictionary of characters for UUID generation. */
-static char dict[17] = "0123456789abcdef";
-
 static struct spdk_uuid
 nvme_generate_uuid(const char *sn, uint32_t nsid)
 {
-	struct spdk_uuid new_uuid;
-	char buf[SPDK_UUID_STRING_LEN] = {'\0'}, merged_str[SPDK_UUID_STRING_LEN] = {'\0'};
-	char nsid_str[NSID_STR_LEN] = {'\0'}, tmp;
-	uint64_t i = 0, j = 0, rem, dict_size = strlen(dict);
-	int rc;
+	struct spdk_uuid new_uuid, namespace_uuid;
+	char merged_str[SPDK_NVME_CTRLR_SN_LEN + NSID_STR_LEN + 1] = {'\0'};
+	/* This namespace UUID was generated using uuid_generate() method. */
+	const char *namespace_str = {"edaed2de-24bc-4b07-b559-f47ecbe730fd"};
+	int size;
 
 	assert(strlen(sn) <= SPDK_NVME_CTRLR_SN_LEN);
 
-	snprintf(nsid_str, NSID_STR_LEN, "%" PRIu32, nsid);
+	memset(&new_uuid, 0, sizeof(new_uuid));
+	memset(&namespace_uuid, 0, sizeof(namespace_uuid));
 
-	merge_nsid_sn_strings(sn, nsid_str, merged_str);
+	size = snprintf(merged_str, sizeof(merged_str), "%s%"PRIu32, sn, nsid);
+	assert(size > 0 && (unsigned long)size < sizeof(merged_str));
 
-	while (i < SPDK_UUID_STRING_LEN) {
-		/* If 'j' is equal to indexes, where '-' should be placed,
-		 * insert this character and continue the loop without
-		 * increasing 'i'. */
-		if ((j == 8 || j == 13 || j == 18 || j == 23)) {
-			buf[j] = '-';
-			j++;
+	spdk_uuid_parse(&namespace_uuid, namespace_str);
 
-			/* Break, if we ran out of characters in
-			 * serial number and namespace ID string. */
-			if (j == strlen(merged_str)) {
-				break;
-			}
-			continue;
-		}
-
-		/* Change character in shuffled string to lower case. */
-		tmp = tolower(merged_str[i]);
-
-		if (isxdigit(tmp)) {
-			/* If character can be represented by a hex
-			 * value as is, copy it to the result buffer. */
-			buf[j] = tmp;
-		} else {
-			/* Otherwise get its code and divide it
-			 * by the number of elements in dictionary.
-			 * The remainder will be the index of dictionary
-			 * character to replace tmp value with. */
-			rem = tmp % dict_size;
-			buf[j] = dict[rem];
-		}
-
-		i++;
-		j++;
-
-		/* Break, if we ran out of characters in
-		 * serial number and namespace ID string. */
-		if (j == strlen(merged_str)) {
-			break;
-		}
-	}
-
-	/* If there are not enough values to fill UUID,
-	 * the rest is taken from dictionary characters. */
-	i = 0;
-	while (j < SPDK_UUID_STRING_LEN - 1) {
-		if ((j == 8 || j == 13 || j == 18 || j == 23)) {
-			buf[j] = '-';
-			j++;
-			continue;
-		}
-		buf[j] = dict[i % dict_size];
-		i++;
-		j++;
-	}
-
-	rc = spdk_uuid_parse(&new_uuid, buf);
-	if (rc != 0) {
-		SPDK_ERRLOG("Unexpected spdk_uuid_parse failure on %s.\n", buf);
-		assert(false);
-	}
+	spdk_uuid_generate_sha1(&new_uuid, &namespace_uuid, merged_str, size);
 
 	return new_uuid;
 }
