@@ -11,6 +11,7 @@
 #include "common/lib/test_env.c"
 
 #define UT_MAX_IOVS 2u
+#define UT_SIZE_IOMS 128u
 
 struct nvme_ns_cmd_ut_cb_arg {
 	struct iovec iovs[UT_MAX_IOVS];
@@ -2231,6 +2232,89 @@ test_nvme_ns_cmd_verify(void)
 	cleanup_after_test(&qpair);
 }
 
+static void
+test_nvme_ns_cmd_io_mgmt_send(void)
+{
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
+	struct spdk_nvme_qpair	qpair;
+	spdk_nvme_cmd_cb	cb_fn = NULL;
+	void			*cb_arg = NULL;
+	uint16_t		list[UT_SIZE_IOMS];
+	uint16_t		i;
+	uint32_t                tmp_cdw10;
+	int			rc = 0;
+
+	prepare_for_test(&ns, &ctrlr, &qpair, 512, 0, 128 * 1024, 0, false);
+
+	for (i = 0; i < UT_SIZE_IOMS; i++) {
+		list[i] = i;
+	}
+
+	/*
+	 * Submit an I/O management send command with a list of 128 placement
+	 * identifiers. The management operation specific field is number of
+	 * placement identifiers which is 0 based value.
+	 */
+	rc = spdk_nvme_ns_cmd_io_mgmt_send(&ns, &qpair, list, UT_SIZE_IOMS * sizeof(uint16_t),
+					   SPDK_NVME_FDP_IO_MGMT_SEND_RUHU, UT_SIZE_IOMS - 1, cb_fn, cb_arg);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_IO_MANAGEMENT_SEND);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+	tmp_cdw10 = SPDK_NVME_FDP_IO_MGMT_SEND_RUHU;
+	tmp_cdw10 |= (UT_SIZE_IOMS - 1) << 16;
+
+	CU_ASSERT(g_request->cmd.cdw10 == tmp_cdw10);
+	spdk_free(g_request->payload.contig_or_cb_arg);
+	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
+}
+
+static void
+test_nvme_ns_cmd_io_mgmt_recv(void)
+{
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
+	struct spdk_nvme_qpair	qpair;
+	struct spdk_nvme_fdp_ruhs *payload;;
+	spdk_nvme_cmd_cb	cb_fn = NULL;
+	void			*cb_arg = NULL;
+	int			rc = 0;
+	uint16_t		mos = 2;
+	uint32_t		tmp_cdw10;
+	uint32_t size = sizeof(struct spdk_nvme_fdp_ruhs);
+
+	prepare_for_test(&ns, &ctrlr, &qpair, 512, 0, 128 * 1024, 0, false);
+
+	payload = calloc(1, size);
+	SPDK_CU_ASSERT_FATAL(payload != NULL);
+
+	rc = spdk_nvme_ns_cmd_io_mgmt_recv(&ns, &qpair, payload, size,
+					   SPDK_NVME_FDP_IO_MGMT_RECV_RUHS, mos, cb_fn, cb_arg);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_IO_MANAGEMENT_RECEIVE);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+
+	tmp_cdw10 = SPDK_NVME_FDP_IO_MGMT_RECV_RUHS;
+	tmp_cdw10 |= (uint32_t)mos << 16;
+
+	CU_ASSERT(g_request->cmd.cdw10 == tmp_cdw10);
+	/* number of dwords which is 0-based */
+	CU_ASSERT(g_request->cmd.cdw11 == (size >> 2) - 1);
+
+	spdk_free(g_request->payload.contig_or_cb_arg);
+	nvme_free_request(g_request);
+	free(payload);
+
+	/* len not multiple of 4 */
+	rc = spdk_nvme_ns_cmd_io_mgmt_recv(&ns, &qpair, NULL, 6,
+					   SPDK_NVME_FDP_IO_MGMT_RECV_RUHS, mos, cb_fn, cb_arg);
+	CU_ASSERT(rc != 0);
+	cleanup_after_test(&qpair);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2272,6 +2356,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_nvme_ns_cmd_writev_ext);
 	CU_ADD_TEST(suite, test_spdk_nvme_ns_cmd_readv_ext);
 	CU_ADD_TEST(suite, test_nvme_ns_cmd_verify);
+	CU_ADD_TEST(suite, test_nvme_ns_cmd_io_mgmt_send);
+	CU_ADD_TEST(suite, test_nvme_ns_cmd_io_mgmt_recv);
 
 	g_spdk_nvme_driver = &_g_nvme_driver;
 
