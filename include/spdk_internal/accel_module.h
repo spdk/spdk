@@ -216,13 +216,6 @@ static void __attribute__((constructor)) _spdk_accel_driver_register_##name(void
 	spdk_accel_driver_register(driver); \
 }
 
-/**
- * Retrieves accel memory domain.
- *
- * \return Accel memory domain.
- */
-struct spdk_memory_domain *spdk_accel_get_memory_domain(void);
-
 typedef void (*spdk_accel_sequence_get_buf_cb)(struct spdk_accel_sequence *seq, void *cb_arg);
 
 /**
