@@ -68,3 +68,41 @@ def log_get_print_level(client):
         Current log print level
     """
     return client.call('log_get_print_level')
+
+
+def log_set_rate_limit_interval(client, interval):
+    """Set log rate limit interval.
+
+    Args:
+        interval: log rate limit interval.
+    """
+    params = {'interval': interval}
+    return client.call('log_set_rate_limit_interval', params)
+
+
+def log_get_rate_limit_interval(client):
+    """Get log rate limit interval
+
+    Returns:
+        Current log rate limit interval
+    """
+    return client.call('log_get_rate_limit_interval')
+
+
+def log_set_rate_limit_burst(client, burst):
+    """Set log rate limit burst.
+
+    Args:
+        burst: log rate limit burst.
+    """
+    params = {'burst': burst}
+    return client.call('log_set_rate_limit_burst', params)
+
+
+def log_get_rate_limit_burst(client):
+    """Get log rate limit burst
+
+    Returns:
+        Current log rate limit burst
+    """
+    return client.call('log_get_rate_limit_burst')

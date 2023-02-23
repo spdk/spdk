@@ -17,6 +17,11 @@
 	spdk_log_clear_flag;
 	spdk_log_usage;
 	spdk_log_enable_timestamps;
+	spdk_log_print_ratelimit;
+   spdk_log_ratelimit_set_burst;
+   spdk_log_ratelimit_get_burst;
+   spdk_log_ratelimit_set_interval;
+   spdk_log_ratelimit_get_interval;
 	spdk_log_deprecation_register;
 	spdk_log_deprecated;
 	spdk_log_for_each_deprecation;
