@@ -26,11 +26,10 @@ struct spdk_lvs_req {
 };
 
 struct spdk_lvs_grow_req {
+	struct spdk_lvs_req	base;
 	spdk_lvs_op_complete	cb_fn;
 	void			*cb_arg;
-	struct spdk_lvol_store	*lvol_store;
 	struct lvol_store_bdev	*lvs_bdev;
-	int			lvserrno;
 	int			lvol_cnt;
 };
 
