@@ -361,6 +361,7 @@ struct spdk_bdev_io_error_stat {
 #define __io_ch_to_bdev_mgmt_ch(io_ch)	((struct spdk_bdev_mgmt_channel *)spdk_io_channel_get_ctx(io_ch))
 
 static inline void bdev_io_complete(void *ctx);
+static inline void bdev_io_complete_unsubmitted(struct spdk_bdev_io *bdev_io);
 
 static void bdev_write_zero_buffer_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 static void bdev_write_zero_buffer_next(void *_bdev_io);
@@ -387,8 +388,6 @@ static int bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_chann
 static int bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 				 uint64_t offset, uint64_t length,
 				 lock_range_cb cb_fn, void *cb_arg);
-
-static inline void bdev_io_complete(void *ctx);
 
 static bool bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_io *bio_to_abort);
 static bool bdev_abort_buf_io(struct spdk_bdev_mgmt_channel *ch, struct spdk_bdev_io *bio_to_abort);
@@ -1416,7 +1415,8 @@ _bdev_memory_domain_get_io_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 {
 	if (!success) {
 		SPDK_ERRLOG("Failed to get data buffer, completing IO\n");
-		bdev_io_complete(bdev_io);
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+		bdev_io_complete_unsubmitted(bdev_io);
 	} else {
 		bdev_io_submit(bdev_io);
 	}
@@ -6485,6 +6485,18 @@ bdev_io_update_io_stat(struct spdk_bdev_io *bdev_io, uint64_t tsc_diff)
 }
 
 static inline void
+_bdev_io_complete(void *ctx)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+
+	assert(bdev_io->internal.cb != NULL);
+	assert(spdk_get_thread() == spdk_bdev_io_get_thread(bdev_io));
+
+	bdev_io->internal.cb(bdev_io, bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS,
+			     bdev_io->internal.caller_ctx);
+}
+
+static inline void
 bdev_io_complete(void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
@@ -6513,12 +6525,23 @@ bdev_io_complete(void *ctx)
 	}
 
 	bdev_io_update_io_stat(bdev_io, tsc_diff);
+	_bdev_io_complete(bdev_io);
+}
 
-	assert(bdev_io->internal.cb != NULL);
-	assert(spdk_get_thread() == spdk_bdev_io_get_thread(bdev_io));
+/* The difference between this function and bdev_io_complete() is that this should be called to
+ * complete IOs that haven't been submitted via bdev_io_submit(), as they weren't added onto the
+ * io_submitted list and don't have submit_tsc updated.
+ */
+static inline void
+bdev_io_complete_unsubmitted(struct spdk_bdev_io *bdev_io)
+{
+	/* Since the IO hasn't been submitted it's bound to be failed */
+	assert(bdev_io->internal.status != SPDK_BDEV_IO_STATUS_SUCCESS);
 
-	bdev_io->internal.cb(bdev_io, bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS,
-			     bdev_io->internal.caller_ctx);
+	/* At this point we don't know if the IO is completed from submission context or not, but,
+	 * since this is an error path, we can always do an spdk_thread_send_msg(). */
+	spdk_thread_send_msg(spdk_bdev_io_get_thread(bdev_io),
+			     _bdev_io_complete, bdev_io);
 }
 
 static void bdev_destroy_cb(void *io_device);
