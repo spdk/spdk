@@ -641,6 +641,31 @@ int spdk_accel_set_driver(const char *name);
  */
 struct spdk_memory_domain *spdk_accel_get_memory_domain(void);
 
+struct spdk_accel_opts {
+	/** Size of this structure */
+	size_t		size;
+	/** Size of the small iobuf cache */
+	uint32_t	small_cache_size;
+	/** Size of the large iobuf cache */
+	uint32_t	large_cache_size;
+} __attribute__((packed));
+
+/**
+ * Set the options for the accel framework.
+ *
+ * \param opts Accel options.
+ *
+ * \return 0 on success, negative errno otherwise.
+ */
+int spdk_accel_set_opts(const struct spdk_accel_opts *opts);
+
+/**
+ * Get the options for the accel framework.
+ *
+ * \param opts Accel options.
+ */
+void spdk_accel_get_opts(struct spdk_accel_opts *opts);
+
 #ifdef __cplusplus
 }
 #endif

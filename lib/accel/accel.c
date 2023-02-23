@@ -62,6 +62,10 @@ static struct accel_module g_modules_opc[ACCEL_OPC_LAST] = {};
 static char *g_modules_opc_override[ACCEL_OPC_LAST] = {};
 TAILQ_HEAD(, spdk_accel_driver) g_accel_drivers = TAILQ_HEAD_INITIALIZER(g_accel_drivers);
 static struct spdk_accel_driver *g_accel_driver;
+static struct spdk_accel_opts g_opts = {
+	.small_cache_size = ACCEL_SMALL_CACHE_SIZE,
+	.large_cache_size = ACCEL_LARGE_CACHE_SIZE,
+};
 
 static const char *g_opcode_strings[ACCEL_OPC_LAST] = {
 	"copy", "fill", "dualcast", "compare", "crc32c", "copy_crc32c",
@@ -2137,8 +2141,8 @@ accel_create_channel(void *io_device, void *ctx_buf)
 		}
 	}
 
-	rc = spdk_iobuf_channel_init(&accel_ch->iobuf, "accel", ACCEL_SMALL_CACHE_SIZE,
-				     ACCEL_LARGE_CACHE_SIZE);
+	rc = spdk_iobuf_channel_init(&accel_ch->iobuf, "accel", g_opts.small_cache_size,
+				     g_opts.large_cache_size);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to initialize iobuf accel channel\n");
 		goto err;
@@ -2342,6 +2346,18 @@ _accel_crypto_key_write_config_json(struct spdk_json_write_ctx *w,
 }
 
 static void
+accel_write_options(struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "accel_set_options");
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_uint32(w, "small_cache_size", g_opts.small_cache_size);
+	spdk_json_write_named_uint32(w, "large_cache_size", g_opts.large_cache_size);
+	spdk_json_write_object_end(w);
+	spdk_json_write_object_end(w);
+}
+
+static void
 _accel_crypto_keys_write_config_json(struct spdk_json_write_ctx *w, bool full_dump)
 {
 	struct spdk_accel_crypto_key *key;
@@ -2369,11 +2385,9 @@ spdk_accel_write_config_json(struct spdk_json_write_ctx *w)
 	struct spdk_accel_module_if *accel_module;
 	int i;
 
-	/*
-	 * The accel fw has no config, there may be some in
-	 * the modules though.
-	 */
 	spdk_json_write_array_begin(w);
+	accel_write_options(w);
+
 	TAILQ_FOREACH(accel_module, &spdk_accel_module_list, tailq) {
 		if (accel_module->write_config_json) {
 			accel_module->write_config_json(w);
@@ -2481,6 +2495,29 @@ spdk_accel_driver_register(struct spdk_accel_driver *driver)
 	}
 
 	TAILQ_INSERT_TAIL(&g_accel_drivers, driver, tailq);
+}
+
+int
+spdk_accel_set_opts(const struct spdk_accel_opts *opts)
+{
+	if (opts->size > sizeof(*opts)) {
+		return -EINVAL;
+	}
+
+	memcpy(&g_opts, opts, opts->size);
+
+	return 0;
+}
+
+void
+spdk_accel_get_opts(struct spdk_accel_opts *opts)
+{
+	size_t size = opts->size;
+
+	assert(size <= sizeof(*opts));
+
+	memcpy(opts, &g_opts, spdk_min(sizeof(*opts), size));
+	opts->size = size;
 }
 
 SPDK_LOG_REGISTER_COMPONENT(accel)

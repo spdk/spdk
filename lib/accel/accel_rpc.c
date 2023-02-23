@@ -354,3 +354,46 @@ cleanup:
 	free_rpc_accel_set_driver(&req);
 }
 SPDK_RPC_REGISTER("accel_set_driver", rpc_accel_set_driver, SPDK_RPC_STARTUP)
+
+struct rpc_accel_opts {
+	uint32_t small_cache_size;
+	uint32_t large_cache_size;
+};
+
+static const struct spdk_json_object_decoder rpc_accel_set_options_decoders[] = {
+	{"small_cache_size", offsetof(struct rpc_accel_opts, small_cache_size), spdk_json_decode_uint32, true},
+	{"large_cache_size", offsetof(struct rpc_accel_opts, large_cache_size), spdk_json_decode_uint32, true},
+};
+
+static void
+rpc_accel_set_options(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	struct spdk_accel_opts opts = { .size = sizeof(opts) };
+	struct rpc_accel_opts rpc_opts;
+	int rc;
+
+	/* We can't pass spdk_accel_opts directly to spdk_json_decode_object(), because that
+	 * structure is packed, leading undefined behavior due to misaligned pointer access */
+	spdk_accel_get_opts(&opts);
+	rpc_opts.small_cache_size = opts.small_cache_size;
+	rpc_opts.large_cache_size = opts.large_cache_size;
+
+	if (spdk_json_decode_object(params, rpc_accel_set_options_decoders,
+				    SPDK_COUNTOF(rpc_accel_set_options_decoders), &rpc_opts)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
+						 "spdk_json_decode_object failed");
+		return;
+	}
+
+	opts.small_cache_size = rpc_opts.small_cache_size;
+	opts.large_cache_size = rpc_opts.large_cache_size;
+
+	rc = spdk_accel_set_opts(&opts);
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		return;
+	}
+
+	spdk_jsonrpc_send_bool_response(request, true);
+}
+SPDK_RPC_REGISTER("accel_set_options", rpc_accel_set_options, SPDK_RPC_STARTUP)

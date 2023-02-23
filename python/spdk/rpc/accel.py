@@ -88,3 +88,15 @@ def accel_set_driver(client, name):
         name: name of the driver
     """
     return client.call('accel_set_driver', {'name': name})
+
+
+def accel_set_options(client, small_cache_size, large_cache_size):
+    """Set accel framework's options."""
+    params = {}
+
+    if small_cache_size is not None:
+        params['small_cache_size'] = small_cache_size
+    if large_cache_size is not None:
+        params['large_cache_size'] = large_cache_size
+
+    return client.call('accel_set_options', params)

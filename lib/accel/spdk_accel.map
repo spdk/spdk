@@ -36,6 +36,8 @@
 	spdk_accel_crypto_key_get;
 	spdk_accel_set_driver;
 	spdk_accel_get_memory_domain;
+	spdk_accel_set_opts;
+	spdk_accel_get_opts;
 
 	# functions needed by modules
 	spdk_accel_module_list_add;

@@ -441,6 +441,7 @@ Example response:
     "framework_get_subsystems",
     "framework_monitor_context_switch",
     "spdk_kill_instance",
+    "accel_set_options",
     "accel_set_driver",
     "accel_crypto_key_create",
     "accel_crypto_key_destroy",
@@ -1929,6 +1930,43 @@ Example request:
   "id": 1
   "params": {
     "name": "xeon"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### accel_set_options {#rpc_accel_set_options}
+
+Set accel framework's options.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- |----------| ----------- | -----------------
+small_cache_size        | Optional | number      | Size of the small iobuf cache
+large_cache_size        | Optional | number      | Size of the large iobuf cache
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "accel_set_options",
+  "id": 1,
+  "params": {
+    "small_cache_size": 128,
+    "large_cache_size": 32
   }
 }
 ~~~
