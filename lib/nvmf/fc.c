@@ -3408,8 +3408,11 @@ nvmf_fc_adm_evnt_nport_delete(void *arg)
 		it_del_args->rpi = rport_iter->rpi;
 		it_del_args->s_id = rport_iter->s_id;
 
-		nvmf_fc_main_enqueue_event(SPDK_FC_IT_DELETE, (void *)it_del_args,
-					   nvmf_fc_adm_delete_nport_cb);
+		err = nvmf_fc_main_enqueue_event(SPDK_FC_IT_DELETE, (void *)it_del_args,
+						 nvmf_fc_adm_delete_nport_cb);
+		if (err) {
+			free(it_del_args);
+		}
 	}
 
 out:
@@ -3660,6 +3663,7 @@ out:
 		SPDK_DEBUGLOG(nvmf_fc_adm_api, "%s", log_str);
 	}
 
+	free(args);
 	free(arg);
 }
 
