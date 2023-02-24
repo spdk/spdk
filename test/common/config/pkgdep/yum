@@ -11,56 +11,76 @@ install() {
 }
 
 packages=(
-	pciutils
-	valgrind
-	jq
-	nvme-cli
-	gdb
-	fio
-	libaio-devel
-	kernel-devel
-	gflags-devel
-	libasan
-	libubsan
+	astyle-devel
 	autoconf
 	automake
-	libtool
-	libmount-devel
-	iscsi-initiator-utils
-	isns-utils-devel pmempool
-	perl-open
-	glib2-devel
-	pixman-devel
-	astyle-devel
+	bc
+	bison
+	ceph
+	clang-analyzer
 	elfutils
 	elfutils-libelf-devel
+	fio
 	flex
-	bison
-	targetcli
-	perl-Switch
-	librdmacm-utils
-	libibverbs-utils
+	gdb
 	gdisk
-	socat
+	gflags-devel
+	glib2-devel
+	iptables
+	iscsi-initiator-utils
+	isns-utils-devel
+	jq
+	kernel-devel
+	kernel-modules-extra
+	libabigail
+	libaio-devel
+	libasan
+	libibverbs-utils
+	libmount-devel
+	librdmacm-utils
+	libtool
+	libubsan
+	llvm
+	nvme-cli
 	openssl
-	sshfs
-	sshpass
+	pciutils
+	perl-open
+	perl-Switch
+	pixman-devel
+	pmempool
+	python3
 	python3-pandas
 	rpm-build
-	iptables
-	clang-analyzer
-	bc
-	kernel-modules-extra
-	systemd-devel
-	python3
-	wget
-	btrfs-progs
-	xfsprogs
 	rpmdevtools
 	ruby-devel
-	llvm
-	avahi
-	avahi-tools
+	smartmontools
+	socat
+	sshfs
+	systemd-devel
+	targetcli
+	valgrind
+	wget
+	xfsprogs
 )
+
+if [[ $OSID != centos && $OSID != rocky ]] || [[ $OSVERSION != 8* ]]; then
+	packages+=(btrfs-progs)
+	packages+=(avahi)
+	packages+=(avahi-tools)
+fi
+
+if [[ $OSID == centos && $OSVERSION == 8* ]]; then
+	packages+=("https://rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/sshpass-1.09-4.el8.x86_64.rpm")
+else
+	packages+=(sshpass)
+fi
+
+if [[ $OSID == fedora ]] && ((OSVERSION == 34)); then
+	packages+=(bpftrace)
+fi
+
+if [[ $OSID == fedora ]] && ((OSVERSION >= 37)); then
+	packages+=(iproute-tc)
+fi
 
 pre_install() { :; }
