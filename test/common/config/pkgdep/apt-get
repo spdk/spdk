@@ -11,7 +11,7 @@ install() {
 }
 
 upgrade() {
-	sudo "$package_manager" update
+	update
 	sudo "$package_manager" upgrade -y
 }
 
@@ -44,7 +44,6 @@ packages=(
 	gdb
 	fio
 	libaio-dev
-	linux-headers-generic
 	libgflags-dev
 	autoconf
 	automake
@@ -94,6 +93,10 @@ install_vagrant_dependencies() {
 	install "${vagrant_packages[@]}"
 }
 
-if [[ $OSID != ubuntu ]]; then
-	echo "Located apt-get package manager, but it was tested for Ubuntu only"
+if [[ $OSID == debian ]]; then
+	packages+=("linux-headers-$kernel_ver-*")
+else
+	packages+=(linux-headers-generic)
 fi
+
+export DEBIAN_FRONTEND=noninteractive
