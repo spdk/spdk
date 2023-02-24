@@ -43,11 +43,23 @@ update_main_core_cpufreq() {
 		intel_pstate | intel_cpufreq) main_core_setspeed=$main_core_set_max_freq ;;
 		cppc_cpufreq) main_core_setspeed=${cpufreq_setspeed[spdk_main_core]} ;;
 	esac
+
+	local thread
+	for thread in "${!cpu_siblings[spdk_main_core]}"; do
+		((thread == spdk_main_core)) && continue # handled by DPDK/scheduler
+		# While assigning cpus to SPDK, we took every thread from given core,
+		# hence the cpufreq governor should already be properly set by the
+		# DPDK. So the only thing we need to take care of is {max,min} freq.
+		# The expectation here is to see actual freq drop on the main cpu in
+		# next iterations. Both, max and min, should be set to the same value.
+		set_cpufreq "$thread" "$main_core_set_min_freq" "$main_core_set_max_freq"
+	done
 }
 
 verify_dpdk_governor() {
 	xtrace_disable
 
+	map_cpus
 	# Run the app and see if DPDK's PM subsystem is doing the proper thing. Aim at the main core.
 	# What we expect to happen is based mainly on what cpufreq driver is in use. The main assumption
 	# is that with all SPDK threads being idle the governor should start lowering the frequency for
@@ -77,6 +89,7 @@ verify_dpdk_governor() {
 	unset -v "cpus[spdk_main_core]"
 
 	local samples=0 all_set=0 dir=-1 old_main_core_setspeed=0
+	local old_main_core_set_cur_freq=0 first_main_core_set_cur_freq=0
 
 	exec_under_dynamic_scheduler "${SPDK_APP[@]}" -m "$spdk_cpumask" --main-core "$spdk_main_core"
 
@@ -94,9 +107,13 @@ verify_dpdk_governor() {
 		elif ((main_core_setspeed < old_main_core_setspeed)); then
 			dir=0
 		elif ((main_core_setspeed == old_main_core_setspeed)); then
-			# Frequency didn't change, skip and wait for a bit
+			# Frequency didn't change, wait for a bit, but then fall to the main check to
+			# see if cur freq actually changed or not.
 			sleep 0.5s
-			continue
+		fi
+
+		if ((first_main_core_set_cur_freq == 0)); then
+			first_main_core_set_cur_freq=$main_core_set_cur_freq
 		fi
 
 		case "$main_core_driver" in
@@ -119,16 +136,10 @@ verify_dpdk_governor() {
 					&& ((main_core_setspeed == main_core_freqs[-1])) \
 					&& ((dir == 0))
 				;;
-		esac && all_set=1
+		esac && ((main_core_set_cur_freq < old_main_core_set_cur_freq)) && all_set=1
 
 		# Print stats after first sane sample was taken
 		if ((old_main_core_setspeed != 0 && dir != -1)); then
-			# Currently, we only determine if DPDK set sysfs attributes to min frequency supported by given cpu.
-			# We don't act on actual frequency cpu ends up spinning at. The reason being all sibling threads of
-			# the main cpu would need to be adjusted manually (i.e. their cpufreq attributes) in order for freq
-			# to start going down. This is deemed as not necessary for the moment since the core objective of
-			# the test is to determine if DPDK's governor did its job, within its current scope, not how it
-			# impacts the system overall.
 			printf 'MAIN DPDK cpu%u current frequency at %u KHz (%u-%u KHz), set frequency %u KHz %s %u KHz\n' \
 				"$spdk_main_core" "$main_core_set_cur_freq" "$main_core_min_freq" "$main_core_max_freq" \
 				"$main_core_setspeed" "${dir_map[dir]}" "$old_main_core_setspeed"
@@ -137,9 +148,14 @@ verify_dpdk_governor() {
 		fi
 
 		old_main_core_setspeed=$main_core_setspeed
+		old_main_core_set_cur_freq=$main_core_set_cur_freq
 	done
 
 	((all_set == 1))
+
+	printf 'Main cpu%u frequency dropped by %u%%\n' \
+		"$spdk_main_core" \
+		$(((first_main_core_set_cur_freq - main_core_set_cur_freq) * 100 / (first_main_core_set_cur_freq - main_core_min_freq)))
 
 	xtrace_restore
 }

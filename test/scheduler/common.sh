@@ -64,6 +64,9 @@ map_cpus_node() {
 			core_idx=$(< "$sysfs_cpu/cpu$cpu_idx/topology/core_id")
 			local -n _cpu_core_map=node_${node_idx}_core_${core_idx}
 			_cpu_core_map+=("$cpu_idx") cpu_core_map[cpu_idx]=$core_idx
+			local -n _cpu_siblings=node_${node_idx}_core_${core_idx}_thread_${cpu_idx}
+			_cpu_siblings=($(parse_cpu_list "$sysfs_cpu/cpu$cpu_idx/topology/thread_siblings_list"))
+			cpu_siblings[cpu_idx]="node_${node_idx}_core_${core_idx}_thread_${cpu_idx}[@]"
 		fi
 		_cpu_node_map[cpu_idx]=$cpu_idx cpu_node_map[cpu_idx]=$node_idx
 		cpus+=("$cpu_idx")
@@ -74,6 +77,7 @@ map_cpus_node() {
 
 map_cpus() {
 	local -g cpus=()
+	local -g cpu_siblings=()
 	local -g nodes=()
 	local -g cpu_node_map=()
 	local -g cpu_core_map=()
@@ -354,11 +358,11 @@ set_cpufreq() {
 			echo "$min_freq" > "$cpufreq/scaling_setspeed"
 			;;
 		intel_pstate | intel_cpufreq)
-			if ((min_freq <= cpufreq_max_freqs[cpu])); then
-				echo "$min_freq" > "$cpufreq/scaling_min_freq"
-			fi
 			if [[ -n $max_freq ]] && ((max_freq >= min_freq)); then
 				echo "$max_freq" > "$cpufreq/scaling_max_freq"
+			fi
+			if ((min_freq <= cpufreq_max_freqs[cpu])); then
+				echo "$min_freq" > "$cpufreq/scaling_min_freq"
 			fi
 			;;
 	esac
