@@ -5294,7 +5294,10 @@ static int
 _bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, const struct nvme_path_id *path_id)
 {
 	struct nvme_path_id	*p, *t;
+	spdk_msg_fn		msg_fn;
 	int			rc = -ENXIO;
+
+	pthread_mutex_lock(&nvme_ctrlr->mutex);
 
 	TAILQ_FOREACH_REVERSE_SAFE(p, &nvme_ctrlr->trids, nvme_paths, link, t) {
 		if (p == TAILQ_FIRST(&nvme_ctrlr->trids)) {
@@ -5312,6 +5315,7 @@ _bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, const struct nvme_path_id *path
 	}
 
 	if (p == NULL || !nvme_path_should_delete(p, path_id)) {
+		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		return rc;
 	}
 
@@ -5322,10 +5326,20 @@ _bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, const struct nvme_path_id *path
 
 	if (!TAILQ_NEXT(p, link)) {
 		/* The current path is the only path. */
-		rc = bdev_nvme_delete_ctrlr(nvme_ctrlr, false);
+		msg_fn = _nvme_ctrlr_destruct;
+		rc = bdev_nvme_delete_ctrlr_unsafe(nvme_ctrlr, false);
 	} else {
 		/* There is an alternative path. */
-		rc = bdev_nvme_failover(nvme_ctrlr, true);
+		msg_fn = _bdev_nvme_reset;
+		rc = bdev_nvme_failover_unsafe(nvme_ctrlr, true);
+	}
+
+	pthread_mutex_unlock(&nvme_ctrlr->mutex);
+
+	if (rc == 0) {
+		spdk_thread_send_msg(nvme_ctrlr->thread, msg_fn, nvme_ctrlr);
+	} else if (rc == -EALREADY) {
+		rc = 0;
 	}
 
 	return rc;
@@ -5342,8 +5356,12 @@ bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 		return -EINVAL;
 	}
 
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
 	if (nbdev_ctrlr == NULL) {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+
 		SPDK_ERRLOG("Failed to find NVMe bdev controller\n");
 		return -ENODEV;
 	}
@@ -5351,6 +5369,8 @@ bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 	TAILQ_FOREACH_SAFE(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq, tmp_nvme_ctrlr) {
 		_rc = _bdev_nvme_delete(nvme_ctrlr, path_id);
 		if (_rc < 0 && _rc != -ENXIO) {
+			pthread_mutex_unlock(&g_bdev_nvme_mutex);
+
 			return _rc;
 		} else if (_rc == 0) {
 			/* We traverse all remaining nvme_ctrlrs even if one nvme_ctrlr
@@ -5360,6 +5380,8 @@ bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 			rc = 0;
 		}
 	}
+
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 	/* All nvme_ctrlrs were deleted or no nvme_ctrlr which had the trid was found. */
 	return rc;
