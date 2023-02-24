@@ -665,7 +665,9 @@ _vrdma_dpa_vq_create(struct vrdma_ctrl *ctrl,
 					&dpa_vq->guest_db_to_cq_ctx.emu_db_to_cq_id);
 	if (!dpa_vq->guest_db_to_cq_ctx.devx_emu_db_to_cq_ctx) {
 		err = -EINVAL;
-		log_error("Failed to map cq_to_db, err(%d)", err);
+		log_error("Failed to map cq_to_db, err(%d), vhca_id %d, qdb_idx%d, cqn %d, emu_db_to_cq_id %d\n",
+			   err, attr->emu_vhca_id, attr->qdb_idx, flexio_cq_get_cq_num(dpa_vq->db_cq.cq),
+			   dpa_vq->guest_db_to_cq_ctx.emu_db_to_cq_id);
 		goto err_db_cq_map;
 	}
 
