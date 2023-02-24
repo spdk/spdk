@@ -21,9 +21,6 @@ extern "C" {
 /** Data Encryption Key identifier */
 struct spdk_accel_crypto_key;
 
-/* Flags for accel operations */
-#define ACCEL_FLAG_PERSISTENT (1 << 0)
-
 struct spdk_accel_crypto_key_create_param {
 	char *cipher;	/**< Cipher to be used for crypto operations */
 	char *hex_key;	/**< Hexlified key */

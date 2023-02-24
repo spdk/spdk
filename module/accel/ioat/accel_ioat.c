@@ -164,11 +164,6 @@ ioat_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task
 	struct spdk_accel_task *tmp;
 	int rc = 0;
 
-	if (accel_task->flags == ACCEL_FLAG_PERSISTENT) {
-		SPDK_ERRLOG("IOAT does not support durable destinations.\n");
-		return -EINVAL;
-	}
-
 	do {
 		switch (accel_task->op_code) {
 		case ACCEL_OPC_FILL:
