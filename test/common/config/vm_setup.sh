@@ -5,8 +5,7 @@
 #
 
 # The purpose of this script is to provide a simple procedure for spinning up a new
-# test environment capable of running our whole test suite. This script will install
-# all of the necessary dependencies to run almost the complete test suite.
+# test environment capable of running most autotest test suites.
 
 sudo() {
 	"$(type -P sudo)" -E "$@"
