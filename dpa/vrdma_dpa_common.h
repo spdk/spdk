@@ -129,13 +129,9 @@ struct vrdma_arm_vq_ctx {
 	uint32_t sq_lkey;
 } __attribute__((__packed__, aligned(8)));
 
-struct vrdma_dpa_batch {
-	uint32_t rq_batch;
-	uint32_t rq_times;
-	uint64_t rq_total_batchess;
-	uint32_t sq_batch;
-	uint32_t sq_times;
-	uint64_t sq_total_batchess;
+#define VRDMA_MAX_DEBUG_COUNT 8
+struct vrdma_debug_data {
+	uint32_t counter[VRDMA_MAX_DEBUG_COUNT];
 };
 
 struct vrdma_dpa_event_handler_ctx {
@@ -172,10 +168,7 @@ struct vrdma_dpa_event_handler_ctx {
 		struct vrdma_arm_vq_ctx arm_vq_ctx; /*arm rdma parameters*/
 		enum vrdma_dpa_vq_state state;
 	} dma_qp;
-	struct vrdma_dpa_batch batch_stats;
-	uint32_t pi_count;
-	uint32_t wqe_send_count;
-	uint32_t count[8];
+	struct vrdma_debug_data debug_data;
 };
 
 struct vrdma_dpa_vq_data {
@@ -193,4 +186,10 @@ enum vrdma_dpa_vq_type {
 	VRDMA_DPA_VQ_QP = 0,
 	VRDMA_DPA_VQ_MAX
 };
+
+static inline void
+vrdma_debug_count_set(struct vrdma_dpa_event_handler_ctx *ehctx, uint32_t cnt_idx)
+{
+	ehctx->debug_data.counter[cnt_idx]++;
+}
 #endif

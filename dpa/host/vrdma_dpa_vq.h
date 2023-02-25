@@ -72,8 +72,8 @@ struct vrdma_dpa_vq {
 	struct vrdma_dpa_cq dma_q_rqcq;
 	struct vrdma_dpa_cq dma_q_sqcq;
 	flexio_uintptr_t heap_memory;
- 	struct vrdma_dpa_ctx *dpa_ctx; /*used for db handler*/
-	struct vrdma_dpa_emu_dev_ctx *emu_dev_ctx; /*used for msix handler*/
+ 	struct vrdma_dpa_ctx *dpa_ctx;
+	struct vrdma_dpa_emu_dev_ctx *emu_dev_ctx;
 	int idx;
 	struct flexio_msix *msix;
         /*now don't have sf, so sf_mkey means emu manager mkey*/

@@ -44,6 +44,7 @@ static int vrdma_dpa_get_hart_to_use(struct vrdma_dpa_ctx *dpa_ctx)
 int vrdma_dpa_vq_pup_func_register(struct vrdma_dpa_ctx *dpa_ctx)
 {
 	flexio_func_t *host_stub_func_qp_rpc;
+	flexio_func_t *host_stub_func_stats_rpc;
 	int err;
 
 	host_stub_func_qp_rpc = calloc(1, sizeof(flexio_func_t));
@@ -63,8 +64,28 @@ int vrdma_dpa_vq_pup_func_register(struct vrdma_dpa_ctx *dpa_ctx)
 	}
 	dpa_ctx->vq_rpc_func[VRDMA_DPA_VQ_QP] = host_stub_func_qp_rpc;
 
-	return 0;
+	host_stub_func_stats_rpc = calloc(1, sizeof(flexio_func_t));
+	if (!host_stub_func_stats_rpc) {
+		log_error("Failed to alloc stats RPC stub func, err(%d)", errno);
+		err = -ENOMEM;
+		goto err_stats_alloc;
+	}
 
+	err = flexio_func_pup_register(dpa_ctx->app, "vrdma_dev2host_copy_handler",
+				       VRDMA_DPA_RPC_UNPACK_FUNC,
+				       host_stub_func_stats_rpc, sizeof(uint64_t),
+				       vrdma_dpa_rpc_pack_func);
+	if (err) {
+		log_error("Failed to register stats PRC func, err(%d)", err);
+		goto err_stats_rpc;
+	}
+	dpa_ctx->dev2host_copy_func = host_stub_func_stats_rpc;
+
+	return 0;
+err_stats_rpc:
+	free(host_stub_func_stats_rpc);
+err_stats_alloc:
+	dpa_ctx->vq_rpc_func[VRDMA_DPA_VQ_QP] = NULL;
 err_qp_rpc:
 	free(host_stub_func_qp_rpc);
 	return err;
@@ -74,10 +95,9 @@ void vrdma_dpa_vq_pup_func_deregister(struct vrdma_dpa_ctx *dpa_ctx)
 {
 	free(dpa_ctx->vq_rpc_func[VRDMA_DPA_VQ_QP]);
 	dpa_ctx->vq_rpc_func[VRDMA_DPA_VQ_QP] = NULL;
+	free(dpa_ctx->dev2host_copy_func);
+	dpa_ctx->dev2host_copy_func = NULL;
 }
-
-
-
 
 /* we need state modify*/
 static int vrdma_dpa_vq_state_modify(struct vrdma_dpa_vq *dpa_vq,
@@ -109,7 +129,9 @@ static int vrdma_dpa_vq_state_modify(struct vrdma_dpa_vq *dpa_vq,
 		if (err) {
 			log_error("Failed to call rpc, err(%d), rpc_ret(%ld)",
 				  err, rpc_ret);
-			flexio_coredump_create(dpa_vq->dpa_ctx->flexio_process, "/tmp/flexio.core");
+			if (flexio_err_status(dpa_vq->dpa_ctx->flexio_process)) {
+				flexio_coredump_create(dpa_vq->dpa_ctx->flexio_process, "/images/flexio.core");
+			}
 		}
 	}
 
@@ -1139,6 +1161,46 @@ void vrdma_dpa_msix_destroy(uint16_t msix_vector,
 	       sizeof(struct vrdma_dpa_msix));
 }
 
+static void vrdma_dpa_vq_dbg_stats_query(struct snap_vrdma_queue *virtq)
+{
+	struct vrdma_window_dev_config window_cfg = {};
+	struct vrdma_dpa_vq_data *host_data;
+	struct vrdma_dpa_ctx *dpa_ctx;
+	struct vrdma_dpa_vq *dpa_vq;
+	flexio_uintptr_t dest_addr;
+	uint64_t func_ret;
+	int err;
+	int i;
+
+	dpa_vq = virtq->dpa_vq;
+	dpa_ctx = dpa_vq->dpa_ctx;
+	host_data = dpa_ctx->vq_data;
+
+	window_cfg.mkey = dpa_ctx->vq_data_mr->lkey;
+	window_cfg.haddr = (uintptr_t)host_data;
+	window_cfg.heap_memory = dpa_vq->heap_memory;
+	err = flexio_copy_from_host(dpa_ctx->flexio_process,
+				    &window_cfg,
+				    sizeof(window_cfg),
+				    &dest_addr);
+	if (err) {
+		log_error("Failed to copy from host, err(%d", err);
+		return;
+	}
+
+	err = flexio_process_call(dpa_ctx->flexio_process,
+				  dpa_ctx->dev2host_copy_func,
+				  &func_ret, (uint64_t)dest_addr);
+	if (err) {
+		log_error("Failed to create thread, err(%d), err");
+		return;
+	}
+	log_notice("dpa_qp debug count");
+	for (i = 0; i < VRDMA_MAX_DEBUG_COUNT && host_data->ehctx.debug_data.counter[i] != 0; i++) {
+		log_notice("count: %d", host_data->ehctx.debug_data.counter[i]);
+	}
+}
+
 static uint32_t vrdma_dpa_emu_db_to_cq_ctx_get_id(struct snap_vrdma_queue *virtq)
 {
 	return virtq->dpa_vq->guest_db_to_cq_ctx.emu_db_to_cq_id;
@@ -1148,6 +1210,7 @@ struct vrdma_vq_ops vrdma_dpa_vq_ops = {
 	.create = vrdma_dpa_vq_create,
 	// .modify = vrdma_dpa_vq_modify,
 	.destroy = vrdma_dpa_vq_destroy,
+	.dbg_stats_query = vrdma_dpa_vq_dbg_stats_query,
 	.get_emu_db_to_cq_id = vrdma_dpa_emu_db_to_cq_ctx_get_id,
 };
 

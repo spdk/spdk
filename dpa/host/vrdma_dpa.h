@@ -35,10 +35,11 @@ struct vrdma_dpa_ctx {
 	uint8_t hart_count;
 	uint8_t core_count;
 	struct vrdma_dpa_vq_data *vq_data;
-	struct ibv_mr *vq_counter_mr;
+	struct ibv_mr *vq_data_mr;
 	struct flexio_app *app;
 	void *vq_rpc_func[VRDMA_DPA_VQ_MAX];
 	void *msix_send_rpc_func;
+	void *dev2host_copy_func;
 	/* Use emulation manager vhca ID for alias eq creation
 	   Alias EQ should be created on the context which the EQ was created,
 	   for emulated device EQ, it was created by emulation manager. */

@@ -1573,6 +1573,7 @@ void vrdma_dump_vqp_stats(struct vrdma_ctrl *ctrl,
 			vqp->snap_queue->dpa_vq->dma_qp.qp_num,
 		 	vqp->snap_queue->dpa_vq->dma_q_sqcq.cq_num,
 		 	vqp->snap_queue->dpa_vq->dma_q_rqcq.cq_num);
+		vrdma_prov_vq_query(vqp->snap_queue);
 	} else {
 		printf("\nsnap_queue is %s, dpa_vq is %s, dma_q is %s\n",
 			vqp->snap_queue ? "not_null" : "null",

@@ -181,6 +181,7 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 #endif
 		goto err_state;
 	}
+	vrdma_debug_count_set(ehctx, 2);
 	flexio_dev_outbox_config(dtctx, ehctx->emu_outbox);
 	flexio_dev_window_mkey_config(dtctx,
 				      ehctx->dma_qp.host_vq_ctx.emu_crossing_mkey);
@@ -309,6 +310,7 @@ out:
 		ehctx->guest_db_cq_ctx.cqn, ehctx->emu_db_to_cq_id, ehctx->guest_db_cq_ctx.ci);
 #endif
 err_state:
+	vrdma_debug_count_set(ehctx, 3);
 	flexio_dev_reschedule();
 }
 __FLEXIO_ENTRY_POINT_END

@@ -337,10 +337,10 @@ int vrdma_dpa_init(const struct vrdma_prov_init_attr *attr, void **out)
 	}
 	memset(dpa_ctx->vq_data, 0, sizeof(*dpa_ctx->vq_data));
 
-	dpa_ctx->vq_counter_mr = ibv_reg_mr(attr->emu_pd, dpa_ctx->vq_data,
+	dpa_ctx->vq_data_mr = ibv_reg_mr(attr->emu_pd, dpa_ctx->vq_data,
 					   padding, IBV_ACCESS_LOCAL_WRITE);
-	if (!dpa_ctx->vq_counter_mr) {
-		log_error("Failed to register MR, err(%d)", errno);
+	if (!dpa_ctx->vq_data_mr) {
+		log_error("Failed to register vq_data MR, err(%d)", errno);
 		goto err_reg_mr;
 	}
 
@@ -382,7 +382,7 @@ void vrdma_dpa_uninit(void *in)
 
 	log_notice("naliu begin vrdma_dpa_uninit\n");
 	dpa_ctx = (struct vrdma_dpa_ctx *)in;
-	ibv_dereg_mr(dpa_ctx->vq_counter_mr);
+	ibv_dereg_mr(dpa_ctx->vq_data_mr);
 	free(dpa_ctx->vq_data);
 	flexio_window_destroy(dpa_ctx->window);
 	flexio_outbox_destroy(dpa_ctx->db_outbox);

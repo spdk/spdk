@@ -50,12 +50,13 @@ uint64_t test_dpa_flexio_work(uint64_t arg1, uint64_t arg2, uint64_t arg3)
 flexio_dev_rpc_handler_t vrdma_qp_rpc_handler;
 uint64_t vrdma_qp_rpc_handler(uint64_t arg1)
 {
+
 	struct  vrdma_dpa_event_handler_ctx *ectx;
 	struct flexio_dev_thread_ctx *dtctx;
 
 	flexio_dev_get_thread_ctx(&dtctx);
 	ectx = (struct vrdma_dpa_event_handler_ctx *)arg1;
-
+	vrdma_debug_count_set(ectx, 0);
 	flexio_dev_outbox_config(dtctx, ectx->emu_outbox);
 	printf("\n------naliu vrdma_qp_rpc_handler cqn: %#x, emu_db_to_cq_id %d,"
 		"guest_db_cq_ctx.ci %d\n", ectx->guest_db_cq_ctx.cqn,
@@ -67,6 +68,30 @@ uint64_t vrdma_qp_rpc_handler(uint64_t arg1)
 			  ectx->guest_db_cq_ctx.cqn);
 	flexio_dev_db_ctx_force_trigger(dtctx, ectx->guest_db_cq_ctx.cqn,
 					ectx->emu_db_to_cq_id);
+	vrdma_debug_count_set(ectx, 1);
+	return 0;
+}
+
+flexio_dev_rpc_handler_t vrdma_dev2host_copy_handler;
+uint64_t vrdma_dev2host_copy_handler(uint64_t arg1)
+{
+	struct vrdma_window_dev_config *window_cfg;
+	struct vrdma_dpa_event_handler_ctx *ehctx;
+	struct vrdma_dpa_vq_data *host_data;
+	struct flexio_dev_thread_ctx *dtctx;
+
+	window_cfg = (struct vrdma_window_dev_config *)arg1;
+	ehctx = (struct vrdma_dpa_event_handler_ctx *)window_cfg->heap_memory;
+	flexio_dev_get_thread_ctx(&dtctx);
+
+	/* get window mkey*/
+	flexio_dev_window_mkey_config(dtctx, window_cfg->mkey);
+
+	/* acquire dev ptr to host memory */
+	flexio_dev_window_ptr_acquire(dtctx, (flexio_uintptr_t)window_cfg->haddr,
+				      (flexio_uintptr_t *)&host_data);
+
+	memcpy(&host_data->ehctx, ehctx, sizeof(host_data->ehctx));
 	return 0;
 }
 

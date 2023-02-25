@@ -16,6 +16,7 @@ EXTERN(vrdma_qp_rpc_handler)
 EXTERN(vrdma_msix_handler)
 EXTERN(vrdma_db_handler)
 EXTERN(vrdma_dpa_msix_send_rpc_handler)
+EXTERN(vrdma_dev2host_copy_handler)
 
 MEMORY
 {

@@ -57,14 +57,11 @@ void vrdma_prov_emu_dev_uninit(void *emu_ctx_in)
 		prov_ops->emu_dev_uninit(emu_ctx_in);
 }
 
-// int virtnet_prov_vq_query(struct virtnet_prov_vq *vq,
-// 			  struct virtnet_prov_vq_attr *attr)
-// {
-// 	if (prov_ops && prov_ops->q_ops && prov_ops->q_ops->query)
-// 		return prov_ops->q_ops->query(vq, attr);
-
-// 	return -EOPNOTSUPP;
-// }
+void vrdma_prov_vq_query(struct snap_vrdma_queue *vq)
+{
+	if (prov_ops && prov_ops->q_ops && prov_ops->q_ops->dbg_stats_query)
+		prov_ops->q_ops->dbg_stats_query(vq);
+}
 
 // int virtnet_prov_caps_query(void *dev, struct virtnet_prov_caps *caps_out)
 // {
