@@ -147,11 +147,6 @@ static void vrdma_dpa_sq_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 #endif
 }
 
-#define VRDMA_COUNT_BATCH(batch, total_batch, times, start_end, pi) \
-batch = start_end; \
-total_batch += start_end; \
-times++;
-
 static inline int vrdma_vq_dpa_rollback(uint16_t pre_pi, uint16_t pi,
 				        uint16_t q_size)
 {
@@ -216,7 +211,6 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 				ehctx->dma_qp.host_vq_ctx.rq_pi_paddr);
 	sq_pi = *(uint16_t*)(ehctx->window_base_addr +
 				ehctx->dma_qp.host_vq_ctx.sq_pi_paddr);
-	// ehctx->pi_count++;
 
 #ifdef DPA_LATENCY_TEST
 	while (1)
@@ -236,11 +230,6 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 				fetch_size = rq_pi % rq_wqebb_cnt;
 				vrdma_dpa_rq_wr_pi_fetch(ehctx, 0, fetch_size, rq_pi, true);
 			}
-			VRDMA_COUNT_BATCH(ehctx->batch_stats.rq_batch,
-					ehctx->batch_stats.rq_total_batchess,
-					ehctx->batch_stats.rq_times,
-					rq_pi - rq_pi_last,
-					rq_pi);
 			has_wqe = true;
 		}
 
@@ -255,11 +244,6 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 				fetch_size = sq_pi % sq_wqebb_cnt;
 				vrdma_dpa_sq_wr_pi_fetch(ehctx, 0, fetch_size, sq_pi, true);
 			}
-			VRDMA_COUNT_BATCH(ehctx->batch_stats.sq_batch,
-					ehctx->batch_stats.sq_total_batchess,
-					ehctx->batch_stats.sq_times,
-					sq_pi - sq_pi_last,
-					sq_pi);
 			has_wqe = true;
 		}
 
@@ -269,7 +253,6 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 					ehctx->dma_qp.hw_qp_sq_pi);
 			flexio_dev_qp_sq_ring_db(dtctx, ehctx->dma_qp.hw_qp_sq_pi,
 					ehctx->dma_qp.qp_num);
-			ehctx->wqe_send_count++;
 			has_wqe = false;
 			change_count++;
 		} else {
@@ -293,32 +276,6 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 					ehctx->dma_qp.host_vq_ctx.rq_pi_paddr);
 		sq_pi = *(uint16_t*)(ehctx->window_base_addr + 
 					ehctx->dma_qp.host_vq_ctx.sq_pi_paddr);
-		ehctx->pi_count++;
-#ifdef DPA_COUNT
-		if ((print != ehctx->wqe_send_count) && (ehctx->wqe_send_count % 512 == 1)) {
-			print = ehctx->wqe_send_count;
-			printf(//"\n------naliu latest_rq_batch %d, avg_rq_batch %d,  rq_total_batches %llu, rq_times %d\n"
-				// "\n-----naliu latest_sq_batch %d, avg_sq_batch %d, sq_total_batchess %llu, sq_times %d\n" 
-				// "\n-----naliu latest_sq_batch %d, sq_total_batchess %llu, sq_times %d\n"
-				// "\n-----naliu pi_query %d, wqe_send_count %d\n",
-				"\n-----naliu latest_sq_batch %d, avg_sq_batch %d, sq_total_batchess %llu, sq_times %d\n",
-			// ehctx->batch_stats.rq_batch,
-			// ehctx->batch_stats.rq_times?ehctx->batch_stats.rq_total_batchess/ehctx->batch_stats.rq_times:0,
-			// ehctx->batch_stats.rq_total_batchess,
-			// ehctx->batch_stats.rq_times,
-			ehctx->batch_stats.sq_batch,
-			ehctx->batch_stats.sq_times?ehctx->batch_stats.sq_total_batchess/ehctx->batch_stats.sq_times:0,
-			ehctx->batch_stats.sq_total_batchess,
-			// ehctx->batch_stats.sq_times,
-			// ehctx->pi_count, ehctx->wqe_send_count);
-			ehctx->batch_stats.sq_times);
-			
-			// for (i = 0 ; i < 5; i++) {
-			// 	printf("count[%d] = %d,", i, cnt[i]);
-			// }
-			printf("\n");
-		}
-#endif
 	}
 out:
 	ehctx->rq_last_fetch_start = rq_pi;
@@ -346,8 +303,6 @@ out:
 	flexio_dev_cq_arm(dtctx, ehctx->guest_db_cq_ctx.ci,
 			  ehctx->guest_db_cq_ctx.cqn);
 #ifdef VRDMA_DPA_DEBUG
-	//printf("\n------naliu count[0] %d, count[1] %d, count[2] %d, count[3] %d, count[4] %d",
-	//	ehctx->count[0], ehctx->count[1], ehctx->count[2], ehctx->count[3], ehctx->count[4]);
 	printf("\n------naliu rq_pi %d, sq_pi %d\n", rq_pi, sq_pi);
 	printf("\n------naliu dma_qp.hw_qp_sq_pi %d\n", ehctx->dma_qp.hw_qp_sq_pi);
 	printf("\n------naliu vrdma_db_handler done. cqn: %#x, emu_db_to_cq_id %d, guest_db_cq_ctx.ci %d\n",
