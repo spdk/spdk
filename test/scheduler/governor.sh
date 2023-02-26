@@ -117,7 +117,7 @@ verify_dpdk_governor() {
 		fi
 
 		case "$main_core_driver" in
-			acpi-cpufreq)
+			acpi-cpufreq | cppc_cpufreq)
 				[[ $main_core_governor == userspace ]] \
 					&& [[ -n ${main_core_freqs_map[main_core_setspeed]} ]] \
 					&& ((main_core_setspeed == main_core_freqs[-1])) \
@@ -128,12 +128,6 @@ verify_dpdk_governor() {
 					&& [[ -n ${main_core_freqs_map[main_core_setspeed]} ]] \
 					&& ((main_core_setspeed == main_core_freqs[-1])) \
 					&& ((main_core_set_max_freq == main_core_set_min_freq)) \
-					&& ((dir == 0))
-				;;
-			cppc_cpufreq)
-				[[ $main_core_governor == userspace ]] \
-					&& [[ -n ${main_core_freqs_map[main_core_setspeed]} ]] \
-					&& ((main_core_setspeed == main_core_freqs[-1])) \
 					&& ((dir == 0))
 				;;
 		esac && ((main_core_set_cur_freq < old_main_core_set_cur_freq)) && all_set=1
