@@ -530,20 +530,39 @@ app_copy_opts(struct spdk_app_opts *opts, struct spdk_app_opts *opts_user, size_
 #undef SET_FIELD
 }
 
-static void
-unclaim_cpu_cores(void)
+static int
+unclaim_cpu_cores(uint32_t *failed_core)
 {
 	char core_name[40];
 	uint32_t i;
+	int rc;
 
 	for (i = 0; i < MAX_CPU_CORES; i++) {
 		if (g_core_locks[i] != -1) {
 			snprintf(core_name, sizeof(core_name), "/var/tmp/spdk_cpu_lock_%03d", i);
-			close(g_core_locks[i]);
+			rc = close(g_core_locks[i]);
+			if (rc) {
+				SPDK_ERRLOG("Failed to close lock fd for core %d, errno: %d\n", i, errno);
+				goto error;
+			}
+
 			g_core_locks[i] = -1;
-			unlink(core_name);
+			rc = unlink(core_name);
+			if (rc) {
+				SPDK_ERRLOG("Failed to unlink lock fd for core %d, errno: %d\n", i, errno);
+				goto error;
+			}
 		}
 	}
+
+	return 0;
+
+error:
+	if (failed_core != NULL) {
+		/* Set number of core we failed to claim. */
+		*failed_core = i;
+	}
+	return -1;
 }
 
 static int
@@ -612,7 +631,7 @@ error:
 		/* Set number of core we failed to claim. */
 		*failed_core = core;
 	}
-	unclaim_cpu_cores();
+	unclaim_cpu_cores(NULL);
 	return -1;
 }
 
@@ -763,7 +782,7 @@ spdk_app_fini(void)
 	spdk_reactors_fini();
 	spdk_env_fini();
 	spdk_log_close();
-	unclaim_cpu_cores();
+	unclaim_cpu_cores(NULL);
 }
 
 static void
@@ -1274,6 +1293,10 @@ static void
 rpc_framework_disable_cpumask_locks(struct spdk_jsonrpc_request *request,
 				    const struct spdk_json_val *params)
 {
+	char msg[128];
+	int rc;
+	uint32_t failed_core;
+
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "framework_disable_cpumask_locks"
@@ -1281,7 +1304,13 @@ rpc_framework_disable_cpumask_locks(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	unclaim_cpu_cores();
+	rc = unclaim_cpu_cores(&failed_core);
+	if (rc) {
+		snprintf(msg, sizeof(msg), "Failed to unclaim CPU core: %" PRIu32, failed_core);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, msg);
+		return;
+	}
+
 	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("framework_disable_cpumask_locks", rpc_framework_disable_cpumask_locks,
