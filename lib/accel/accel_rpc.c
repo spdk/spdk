@@ -356,8 +356,8 @@ cleanup:
 SPDK_RPC_REGISTER("accel_set_driver", rpc_accel_set_driver, SPDK_RPC_STARTUP)
 
 struct rpc_accel_opts {
-	uint32_t small_cache_size;
-	uint32_t large_cache_size;
+	uint32_t	small_cache_size;
+	uint32_t	large_cache_size;
 };
 
 static const struct spdk_json_object_decoder rpc_accel_set_options_decoders[] = {

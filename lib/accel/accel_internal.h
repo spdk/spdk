@@ -20,6 +20,17 @@ struct module_info {
 	uint32_t num_ops;
 };
 
+struct accel_operation_stats {
+	uint64_t executed;
+	uint64_t failed;
+};
+
+struct accel_stats {
+	struct accel_operation_stats	operations[ACCEL_OPC_LAST];
+	uint64_t			sequence_executed;
+	uint64_t			sequence_failed;
+};
+
 typedef void (*_accel_for_each_module_fn)(struct module_info *info);
 void _accel_for_each_module(struct module_info *info, _accel_for_each_module_fn fn);
 int _accel_get_opc_name(enum accel_opcode opcode, const char **opcode_name);

@@ -138,6 +138,7 @@ struct accel_io_channel {
 	TAILQ_HEAD(, spdk_accel_sequence)	seq_pool;
 	TAILQ_HEAD(, accel_buffer)		buf_pool;
 	struct spdk_iobuf_channel		iobuf;
+	struct accel_stats			stats;
 };
 
 TAILQ_HEAD(accel_sequence_tasks, spdk_accel_task);
@@ -154,6 +155,10 @@ struct spdk_accel_sequence {
 	void					*cb_arg;
 	TAILQ_ENTRY(spdk_accel_sequence)	link;
 };
+
+#define accel_update_stats(ch, event) (ch)->stats.event++
+#define accel_update_task_stats(ch, task, event) \
+	accel_update_stats(ch, operations[(task)->op_code].event)
 
 static inline void
 accel_sequence_set_state(struct spdk_accel_sequence *seq, enum accel_sequence_state state)
@@ -257,6 +262,11 @@ spdk_accel_task_complete(struct spdk_accel_task *accel_task, int status)
 	 */
 	TAILQ_INSERT_HEAD(&accel_ch->task_pool, accel_task, link);
 
+	accel_update_task_stats(accel_ch, accel_task, executed);
+	if (spdk_unlikely(status != 0)) {
+		accel_update_task_stats(accel_ch, accel_task, failed);
+	}
+
 	cb_fn(cb_arg, status);
 }
 
@@ -288,8 +298,14 @@ accel_submit_task(struct accel_io_channel *accel_ch, struct spdk_accel_task *tas
 {
 	struct spdk_io_channel *module_ch = accel_ch->module_ch[task->op_code];
 	struct spdk_accel_module_if *module = g_modules_opc[task->op_code].module;
+	int rc;
 
-	return module->submit_tasks(module_ch, task);
+	rc = module->submit_tasks(module_ch, task);
+	if (spdk_unlikely(rc != 0)) {
+		accel_update_task_stats(accel_ch, task, failed);
+	}
+
+	return rc;
 }
 
 /* Accel framework public API for copy function */
@@ -1132,6 +1148,11 @@ static void
 accel_sequence_complete(struct spdk_accel_sequence *seq)
 {
 	SPDK_DEBUGLOG(accel, "Completed sequence: %p with status: %d\n", seq, seq->status);
+
+	accel_update_stats(seq->ch, sequence_executed);
+	if (spdk_unlikely(seq->status != 0)) {
+		accel_update_stats(seq->ch, sequence_failed);
+	}
 
 	/* First notify all users that appended operations to this sequence */
 	accel_sequence_complete_tasks(seq);
@@ -2134,6 +2155,7 @@ err:
 	free(accel_ch->task_pool_base);
 	free(accel_ch->seq_pool_base);
 	free(accel_ch->buf_pool_base);
+
 	return -ENOMEM;
 }
 
