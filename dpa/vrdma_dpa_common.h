@@ -130,8 +130,10 @@ struct vrdma_arm_vq_ctx {
 } __attribute__((__packed__, aligned(8)));
 
 #define VRDMA_MAX_DEBUG_COUNT 8
+#define VRDMA_MAX_DEBUG_VALUE 8
 struct vrdma_debug_data {
 	uint32_t counter[VRDMA_MAX_DEBUG_COUNT];
+	uint32_t value[VRDMA_MAX_DEBUG_VALUE];
 };
 
 struct vrdma_dpa_event_handler_ctx {
@@ -191,5 +193,11 @@ static inline void
 vrdma_debug_count_set(struct vrdma_dpa_event_handler_ctx *ehctx, uint32_t cnt_idx)
 {
 	ehctx->debug_data.counter[cnt_idx]++;
+}
+
+static inline void
+vrdma_debug_value_set(struct vrdma_dpa_event_handler_ctx *ehctx, uint32_t cnt_idx, uint32_t value)
+{
+	ehctx->debug_data.value[cnt_idx] = value;
 }
 #endif

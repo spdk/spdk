@@ -1196,8 +1196,13 @@ static void vrdma_dpa_vq_dbg_stats_query(struct snap_vrdma_queue *virtq)
 		return;
 	}
 	log_notice("dpa_qp debug count");
-	for (i = 0; i < VRDMA_MAX_DEBUG_COUNT && host_data->ehctx.debug_data.counter[i] != 0; i++) {
-		log_notice("count: %d", host_data->ehctx.debug_data.counter[i]);
+	// for (i = 0; i < VRDMA_MAX_DEBUG_COUNT && host_data->ehctx.debug_data.counter[i] != 0; i++) {
+	for (i = 0; i < VRDMA_MAX_DEBUG_COUNT; i++) {
+		log_notice("count[%d]: %d", i, host_data->ehctx.debug_data.counter[i]);
+	}
+
+	for (i = 0; i < VRDMA_MAX_DEBUG_VALUE; i++) {
+		log_notice("value[%d]: %d", i, host_data->ehctx.debug_data.value[i]);
 	}
 }
 
