@@ -26,7 +26,11 @@ locks_exist() {
 
 no_locks() {
 	local lock_files=(/var/tmp/spdk_cpu_lock*)
-	((${#lock_files[@]} == 0))
+	if ((${#lock_files[@]} != 0)); then
+		sleep 1
+		lock_files=(/var/tmp/spdk_cpu_lock*)
+		((${#lock_files[@]} == 0))
+	fi
 }
 
 check_remaining_locks() {
