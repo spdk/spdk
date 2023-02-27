@@ -1166,10 +1166,10 @@ static int vrdma_write_back_sq_cqe(struct spdk_vrdma_qp *vqp, uint16_t cqe_num)
 	SPDK_NOTICELOG("vrdam write back cqe start: vcq pi %d, pre_pi %d, ci %d\n",
 					pi, pre_pi, vcq->pici->ci);
 #endif
-	if (pi - vcq->pici->ci == vcq->cqe_entry_num) {
-		SPDK_ERRLOG("vcq is full: vcq pi %d, pre_pi %d, ci %d\n",
+	if (pi - vcq->pici->ci > vcq->cqe_entry_num) {
+		SPDK_ERRLOG("vcq is full, skip write vcqe: vcq pi %d, pre_pi %d, ci %d\n",
 					pi, pre_pi, vcq->pici->ci);
-		return -1;
+		return 0;
 	}
 	//fetch the delta PI number entry in one time
 	if (!vrdma_vq_rollback(pre_pi, pi, q_size)) {
