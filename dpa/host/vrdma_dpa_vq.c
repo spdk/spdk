@@ -754,12 +754,6 @@ _vrdma_dpa_vq_create(struct vrdma_ctrl *ctrl,
 		log_error("Failed to run event handler, err(%d)", err);
 		goto err_rq_dma_q_handler_run;
 	}
-	err = vrdma_dpa_vq_state_modify(dpa_vq, VRDMA_DPA_VQ_STATE_RDY);
-	if (err) {
-		log_error("Failed to set vq state to READY, err(%d)", err);
-		goto err_vq_state_modify;
-	}
-
 	return dpa_vq;
 err_vq_state_modify:
 err_rq_dma_q_handler_run:
@@ -950,10 +944,16 @@ vrdma_dpa_vq_create(struct vrdma_ctrl *ctrl, struct spdk_vrdma_qp *vqp,
 	/* Todo: later need confirm, because in snap_vrdma_vq_create: virtq->pd = q_attr->pd;*/
 	virtq->pd = ctrl->pd;
 	virtq->dma_mkey = ctrl->sctrl->xmkey->mkey;
+	rc = vrdma_dpa_vq_state_modify(dpa_vq, VRDMA_DPA_VQ_STATE_RDY);
+	if (rc) {
+		log_error("Failed to set vq state to READY, err(%d)", rc);
+		goto err_state_modify;
+	}
 	
 	TAILQ_INSERT_TAIL(&ctrl->sctrl->virtqs, virtq, vq);
 
 	return virtq;
+err_state_modify:
 err_post_recv:
 err_ep_connect:
 	_vrdma_dpa_vq_destroy(virtq->dpa_vq);

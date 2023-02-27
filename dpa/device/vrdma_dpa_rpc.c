@@ -53,15 +53,18 @@ uint64_t vrdma_qp_rpc_handler(uint64_t arg1)
 
 	struct  vrdma_dpa_event_handler_ctx *ectx;
 	struct flexio_dev_thread_ctx *dtctx;
-
+#ifdef VRDMA_RPC_TIMEOUT_ISSUE_DEBUG
+	printf("\n------naliu vrdma_qp_rpc_handler start\n");
+#endif
 	flexio_dev_get_thread_ctx(&dtctx);
 	ectx = (struct vrdma_dpa_event_handler_ctx *)arg1;
 	vrdma_debug_count_set(ectx, 0);
 	flexio_dev_outbox_config(dtctx, ectx->emu_outbox);
+#ifdef VRDMA_RPC_TIMEOUT_ISSUE_DEBUG
 	printf("\n------naliu vrdma_qp_rpc_handler cqn: %#x, emu_db_to_cq_id %d,"
 		"guest_db_cq_ctx.ci %d\n", ectx->guest_db_cq_ctx.cqn,
 		ectx->emu_db_to_cq_id, ectx->guest_db_cq_ctx.ci);
-
+#endif
 	flexio_dev_db_ctx_arm(dtctx, ectx->guest_db_cq_ctx.cqn,
 			      ectx->emu_db_to_cq_id);
 	flexio_dev_cq_arm(dtctx, ectx->guest_db_cq_ctx.ci,
@@ -69,6 +72,9 @@ uint64_t vrdma_qp_rpc_handler(uint64_t arg1)
 	flexio_dev_db_ctx_force_trigger(dtctx, ectx->guest_db_cq_ctx.cqn,
 					ectx->emu_db_to_cq_id);
 	vrdma_debug_count_set(ectx, 1);
+#ifdef VRDMA_RPC_TIMEOUT_ISSUE_DEBUG
+	printf("\n------naliu vrdma_qp_rpc_handler end\n");
+#endif
 	return 0;
 }
 

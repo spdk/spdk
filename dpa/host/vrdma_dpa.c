@@ -326,6 +326,17 @@ int vrdma_dpa_init(const struct vrdma_prov_init_attr *attr, void **out)
 	}
 #endif
 
+#ifdef VRDMA_RPC_TIMEOUT_ISSUE_DEBUG
+	/*Init Print environment*/
+	err = vrdma_dpa_dev_print_init(dpa_ctx->flexio_process,
+					 dpa_ctx->flexio_uar, PRINF_BUF_SZ,
+					 stdout, 0, NULL);
+	if (err) {
+		log_error("Failed to init vrdma dpa dev print, err(%d)", err);
+		goto err_print;
+	}
+#endif
+
 	/* size padding allocation of hdata memory = ibv_reg_mr requirement*/
 	padding = sizeof(*dpa_ctx->vq_data) + (MR_BASE_AND_SIZE_ALIGN - 1);
 	padding -= padding % MR_BASE_AND_SIZE_ALIGN;

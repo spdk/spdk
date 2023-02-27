@@ -174,7 +174,7 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 
 	flexio_dev_get_thread_ctx(&dtctx);
 	ehctx = (struct vrdma_dpa_event_handler_ctx *)thread_arg;
-	printf("%s: --------virtq status %d.\n", __func__, ehctx->dma_qp.state);
+//	printf("%s: --------virtq status %d.\n", __func__, ehctx->dma_qp.state);
 	if (ehctx->dma_qp.state != VRDMA_DPA_VQ_STATE_RDY) {
 #ifdef VRDMA_DPA_DEBUG
 		printf("%s: ------virtq status %d is not READY.\n", __func__, ehctx->dma_qp.state);
@@ -282,9 +282,9 @@ out:
 	ehctx->rq_last_fetch_start = rq_pi;
 	ehctx->sq_last_fetch_start = sq_pi;
 
+err_state:
 	flexio_dev_db_ctx_arm(dtctx, ehctx->guest_db_cq_ctx.cqn,
 			      ehctx->emu_db_to_cq_id);
-#if 0
 	/*fetch rq_pi*/
 	asm volatile("fence iorw, iorw" ::: "memory");
 	rq_pi = *(uint16_t*)(ehctx->window_base_addr +
@@ -293,23 +293,30 @@ out:
 			ehctx->dma_qp.host_vq_ctx.sq_pi_paddr);
 
 	if ((rq_pi_last != rq_pi) || (sq_pi_last != sq_pi)) {
+		vrdma_debug_count_set(ehctx, 4);
 		flexio_dev_db_ctx_force_trigger(dtctx,
 				ehctx->guest_db_cq_ctx.cqn,
 				ehctx->emu_db_to_cq_id);
 	}
-#endif
+
 	vrdma_dpa_db_cq_incr(&ehctx->guest_db_cq_ctx);
 	flexio_dev_dbr_cq_set_ci(ehctx->guest_db_cq_ctx.dbr,
 				 ehctx->guest_db_cq_ctx.ci);
 	flexio_dev_cq_arm(dtctx, ehctx->guest_db_cq_ctx.ci,
 			  ehctx->guest_db_cq_ctx.cqn);
+
+	vrdma_debug_value_set(ehctx, 0, rq_pi);
+	vrdma_debug_value_set(ehctx, 1, sq_pi);
+	vrdma_debug_value_set(ehctx, 2, ehctx->dma_qp.hw_qp_sq_pi);
+	vrdma_debug_value_set(ehctx, 3, ehctx->guest_db_cq_ctx.cqn);
+	vrdma_debug_value_set(ehctx, 4, ehctx->emu_db_to_cq_id);
+	vrdma_debug_value_set(ehctx, 5, ehctx->guest_db_cq_ctx.ci);
 #ifdef VRDMA_DPA_DEBUG
 	printf("\n------naliu rq_pi %d, sq_pi %d\n", rq_pi, sq_pi);
 	printf("\n------naliu dma_qp.hw_qp_sq_pi %d\n", ehctx->dma_qp.hw_qp_sq_pi);
 	printf("\n------naliu vrdma_db_handler done. cqn: %#x, emu_db_to_cq_id %d, guest_db_cq_ctx.ci %d\n",
 		ehctx->guest_db_cq_ctx.cqn, ehctx->emu_db_to_cq_id, ehctx->guest_db_cq_ctx.ci);
 #endif
-err_state:
 	vrdma_debug_count_set(ehctx, 3);
 	flexio_dev_reschedule();
 }

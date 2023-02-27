@@ -22,6 +22,7 @@
 #define DBG_EVENT_HANDLER_CHECK 0x12345604  /*this is only used to check event handler is right*/
 #define BIT_ULL(nr)             (1ULL << (nr))
 //#define VRDMA_DPA_DEBUG
+// #define VRDMA_RPC_TIMEOUT_ISSUE_DEBUG
 
 enum{
 	MLX5_CTRL_SEG_OPCODE_RDMA_WRITE                      = 0x8,
