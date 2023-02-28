@@ -263,6 +263,7 @@ static int vrdma_device_start(void *arg)
 	struct vrdma_prov_emu_dev_init_attr dev_init_attr = {};
 	struct vrdma_prov_init_attr attr = {};
     struct vrdma_ctrl *ctrl = arg;
+    int err;
 
     SPDK_NOTICELOG("ctrl %p name '%s' pf_id %d : vrdma_device_start\n",
             ctrl, ctrl->name, ctrl->pf_id);
@@ -275,7 +276,11 @@ static int vrdma_device_start(void *arg)
 	attr.emu_pd  = ctrl->pd;
     attr.emu_mgr_vhca_id = ctrl->sf_vhca_id;
 	SPDK_NOTICELOG("===naliu start test dev\n");
-	vrdma_prov_init(&attr, &ctrl->dpa_ctx);
+	err = vrdma_prov_init(&attr, &ctrl->dpa_ctx);
+	if (err) {
+		SPDK_NOTICELOG("===naliu vrdma_prov_init failed\n");
+		return err;
+	}
 
 	dev_init_attr.dpa_handler = ctrl->dpa_ctx;
 	dev_init_attr.sf_dev_pd   = attr.emu_pd;
@@ -285,8 +290,17 @@ static int vrdma_device_start(void *arg)
 	dev_init_attr.emu_vhca_id = ctrl->sctrl->sdev->pci->mpci.vhca_id;
 	dev_init_attr.num_msix    = ctrl->sctrl->bar_curr->num_msix;
 	dev_init_attr.msix_config_vector = ctrl->sctrl->bar_curr->msix_config;
-	vrdma_prov_emu_dev_init(&dev_init_attr, &ctrl->dpa_emu_dev_ctx);
+	err = vrdma_prov_emu_dev_init(&dev_init_attr, &ctrl->dpa_emu_dev_ctx);
+
+	if (err) {
+		SPDK_NOTICELOG("===naliu vrdma_prov_emu_dev_init0 failed\n");
+		goto err_prov_emu_dev_init;
+	}
     return 0;
+
+err_prov_emu_dev_init:
+    vrdma_prov_uninit(ctrl->dpa_ctx);
+    return err;
 }
 
 static int vrdma_device_stop(void *ctx)
