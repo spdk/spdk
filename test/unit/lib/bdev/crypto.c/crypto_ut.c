@@ -223,7 +223,6 @@ test_setup(void)
 	g_io_ctx->crypto_ch = g_crypto_ch;
 	g_io_ctx->crypto_bdev = &g_crypto_bdev;
 	g_io_ctx->crypto_bdev->opts = &g_crypto_bdev_opts;
-	TAILQ_INIT(&g_crypto_ch->in_accel_fw);
 
 	return 0;
 }

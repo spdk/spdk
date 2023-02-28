@@ -41,8 +41,6 @@ struct crypto_io_channel {
 	struct spdk_io_channel		*base_ch;	/* IO channel of base device */
 	struct spdk_io_channel		*accel_channel;	/* Accel engine channel used for crypto ops */
 	struct spdk_accel_crypto_key	*crypto_key;
-	TAILQ_HEAD(, spdk_bdev_io)	in_accel_fw;	/* request submitted to accel fw */
-	struct spdk_io_channel_iter	*reset_iter;	/* used with for_each_channel in reset */
 };
 
 enum crypto_io_resubmit_state {
@@ -168,34 +166,6 @@ crypto_encrypt(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io
 	crypto_write(crypto_ch, bdev_io);
 }
 
-/* This function is called after all channels have been quiesced following
- * a bdev reset.
- */
-static void
-_ch_quiesce_done(struct spdk_io_channel_iter *i, int status)
-{
-	struct crypto_bdev_io *crypto_io = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(crypto_io);
-
-	assert(TAILQ_EMPTY(&crypto_io->crypto_ch->in_accel_fw));
-
-	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
-}
-
-static void
-_ch_quiesce(struct spdk_io_channel_iter *i)
-{
-	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
-	struct crypto_io_channel *crypto_ch = spdk_io_channel_get_ctx(ch);
-
-	if (TAILQ_EMPTY(&crypto_ch->in_accel_fw)) {
-		spdk_for_each_channel_continue(i, 0);
-	} else {
-		/* In accel completion callback we will see the non-NULL iter and handle the quiesce */
-		crypto_ch->reset_iter = i;
-	}
-}
-
 /* Completion callback for IO that were issued from this bdev other than read/write.
  * They have their own for readability.
  */
@@ -204,18 +174,6 @@ _complete_internal_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *orig_io = cb_arg;
 	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
-
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
-		struct crypto_bdev_io *orig_ctx = (struct crypto_bdev_io *)orig_io->driver_ctx;
-
-		spdk_bdev_free_io(bdev_io);
-
-		spdk_for_each_channel(orig_ctx->crypto_bdev,
-				      _ch_quiesce,
-				      orig_ctx,
-				      _ch_quiesce_done);
-		return;
-	}
 
 	spdk_bdev_io_complete(orig_io, status);
 	spdk_bdev_free_io(bdev_io);
@@ -584,9 +542,6 @@ crypto_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 	crypto_ch->base_ch = spdk_bdev_get_io_channel(crypto_bdev->base_desc);
 	crypto_ch->accel_channel = spdk_accel_get_io_channel();
 	crypto_ch->crypto_key = crypto_bdev->opts->key;
-
-	/* We use this queue to track outstanding IO in our layer. */
-	TAILQ_INIT(&crypto_ch->in_accel_fw);
 
 	return 0;
 }
