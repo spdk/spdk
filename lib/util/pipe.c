@@ -229,6 +229,14 @@ spdk_pipe_reader_advance(struct spdk_pipe *pipe, uint32_t requested_sz)
 
 	/* We know we advanced at least one byte, so the pipe isn't full. */
 	pipe->full = false;
+
+	if (read == write) {
+		/* The pipe is empty. To re-use the same memory more frequently, jump
+		 * both pointers back to the beginning of the pipe. */
+		read = 0;
+		pipe->write = 0;
+	}
+
 	pipe->read = read;
 
 	return 0;
