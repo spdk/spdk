@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/scripts/common.sh
 source $rootdir/test/nvmf/common.sh
-
-rpc_py="$rootdir/scripts/rpc.py"
 
 nvmftestinit
 

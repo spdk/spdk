@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2019 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -46,26 +18,37 @@
 static struct spdk_poller *g_hotplug_poller;
 static bool g_enabled;
 
+void
+vmd_subsystem_enable(void)
+{
+	g_enabled = true;
+}
+
+bool
+vmd_subsystem_is_enabled(void)
+{
+	return g_enabled;
+}
+
 static int
 vmd_hotplug_monitor(void *ctx)
 {
 	return spdk_vmd_hotplug_monitor();
 }
 
-int
+static void
 vmd_subsystem_init(void)
 {
-	int rc;
+	int rc = 0;
 
-	if (g_enabled) {
-		SPDK_ERRLOG("The initialization has already been performed\n");
-		return -EBUSY;
+	if (!g_enabled) {
+		goto out;
 	}
 
 	rc = spdk_vmd_init();
 	if (spdk_likely(rc != 0)) {
 		SPDK_ERRLOG("Failed to initialize the VMD library\n");
-		return rc;
+		goto out;
 	}
 
 	assert(g_hotplug_poller == NULL);
@@ -73,12 +56,11 @@ vmd_subsystem_init(void)
 	g_hotplug_poller = SPDK_POLLER_REGISTER(vmd_hotplug_monitor, NULL, 1000000ULL);
 	if (g_hotplug_poller == NULL) {
 		SPDK_ERRLOG("Failed to register hotplug monitor poller\n");
-		return -ENOMEM;
+		rc = -ENOMEM;
+		goto out;
 	}
-
-	g_enabled = true;
-
-	return 0;
+out:
+	spdk_subsystem_init_next(rc);
 }
 
 static void
@@ -98,7 +80,7 @@ vmd_write_config_json(struct spdk_json_write_ctx *w)
 
 	if (g_enabled) {
 		spdk_json_write_object_begin(w);
-		spdk_json_write_named_string(w, "method", "enable_vmd");
+		spdk_json_write_named_string(w, "method", "vmd_enable");
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_object_end(w);
 		spdk_json_write_object_end(w);
@@ -109,6 +91,7 @@ vmd_write_config_json(struct spdk_json_write_ctx *w)
 
 static struct spdk_subsystem g_spdk_subsystem_vmd = {
 	.name = "vmd",
+	.init = vmd_subsystem_init,
 	.fini = vmd_subsystem_fini,
 	.write_config_json = vmd_write_config_json,
 };

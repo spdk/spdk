@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef FTL_BAND_H
@@ -37,71 +9,25 @@
 #include "spdk/stdinc.h"
 #include "spdk/bit_array.h"
 #include "spdk/queue.h"
-#include "spdk/bdev_zone.h"
+#include "spdk/crc32.h"
 
 #include "ftl_io.h"
-#include "ftl_addr.h"
+#include "ftl_internal.h"
 #include "ftl_core.h"
 
-/* Number of LBAs that could be stored in a single block */
-#define FTL_NUM_LBA_IN_BLOCK	(FTL_BLOCK_SIZE / sizeof(uint64_t))
+#include "utils/ftl_df.h"
+
+#define FTL_MAX_OPEN_BANDS FTL_LAYOUT_REGION_TYPE_P2L_COUNT
+
+#define FTL_BAND_VERSION_0	0
+#define FTL_BAND_VERSION_1	1
+
+#define FTL_BAND_VERSION_CURRENT FTL_BAND_VERSION_1
 
 struct spdk_ftl_dev;
-struct ftl_lba_map_request;
-
-struct ftl_zone {
-	struct spdk_bdev_zone_info		info;
-
-	/* Indicates that there is inflight write */
-	bool					busy;
-
-	CIRCLEQ_ENTRY(ftl_zone)			circleq;
-};
-
-enum ftl_md_status {
-	FTL_MD_SUCCESS,
-	/* Metadata read failure */
-	FTL_MD_IO_FAILURE,
-	/* Invalid version */
-	FTL_MD_INVALID_VER,
-	/* UUID doesn't match */
-	FTL_MD_NO_MD,
-	/* UUID and version matches but CRC doesn't */
-	FTL_MD_INVALID_CRC,
-	/* Vld or lba map size doesn't match */
-	FTL_MD_INVALID_SIZE
-};
-
-enum ftl_lba_map_seg_state {
-	FTL_LBA_MAP_SEG_CLEAR,
-	FTL_LBA_MAP_SEG_PENDING,
-	FTL_LBA_MAP_SEG_CACHED
-};
-
-struct ftl_lba_map {
-	/* LBA/vld map lock */
-	pthread_spinlock_t			lock;
-
-	/* Number of valid LBAs */
-	size_t					num_vld;
-
-	/* LBA map's reference count */
-	size_t					ref_cnt;
-
-	/* Bitmap of valid LBAs */
-	struct spdk_bit_array			*vld;
-
-	/* LBA map (only valid for open/relocating bands) */
-	uint64_t				*map;
-
-	/* LBA map segment state map (clear, pending, cached) */
-	uint8_t					*segments;
-
-	LIST_HEAD(, ftl_lba_map_request)	request_list;
-
-	/* Metadata DMA buffer (only valid for open/relocating bands) */
-	void					*dma_buf;
-};
+struct ftl_band;
+struct ftl_rq;
+struct ftl_basic_rq;
 
 enum ftl_band_state {
 	FTL_BAND_STATE_FREE,
@@ -114,174 +40,221 @@ enum ftl_band_state {
 	FTL_BAND_STATE_MAX
 };
 
-struct ftl_lba_map_request {
-	/*  Completion callback */
-	ftl_io_fn				cb;
+typedef void (*ftl_band_state_change_fn)(struct ftl_band *band);
+typedef void (*ftl_band_ops_cb)(struct ftl_band *band, void *ctx, bool status);
+typedef void (*ftl_band_md_cb)(struct ftl_band *band, void *ctx, enum ftl_md_status status);
+typedef void (*ftl_band_validate_md_cb)(struct ftl_band *band, bool valid);
 
-	/*  Completion callback context */
-	void					*cb_ctx;
+struct ftl_band_md {
+	/* Band iterator for writing */
+	struct {
+		/* Current physical address of the write pointer */
+		ftl_addr		addr;
 
-	/* Bit array of requested segments */
-	struct spdk_bit_array			*segments;
+		/* Offset from the band's start of the write pointer */
+		uint64_t		offset;
+	} iter;
 
-	/* Number of pending segments to read */
-	size_t					num_pending;
+	/* Band's state */
+	enum ftl_band_state		state;
 
-	LIST_ENTRY(ftl_lba_map_request)		list_entry;
-};
+	/* Band type set during opening */
+	enum ftl_band_type		type;
+
+	/* nv_cache p2l md region associated with band */
+	enum ftl_layout_region_type	p2l_md_region;
+
+	/* Reserved */
+	uint8_t				reserved[4];
+
+	/* Sequence ID when band was opened */
+	uint64_t			seq;
+
+	/* Sequence ID when band was closed */
+	uint64_t			close_seq_id;
+
+	/* Number of times band was fully written (ie. number of free -> closed state cycles) */
+	uint64_t			wr_cnt;
+
+	/* Durable format object id for P2L map, allocated on shared memory */
+	ftl_df_obj_id			df_p2l_map;
+
+	/* CRC32 checksum of the associated P2L map when band is in closed state */
+	uint32_t			p2l_map_checksum;
+
+	/* Reserved */
+	uint8_t				reserved2[4028];
+} __attribute__((packed));
+
+SPDK_STATIC_ASSERT(sizeof(struct ftl_band_md) == FTL_BLOCK_SIZE, "Incorrect metadata size");
 
 struct ftl_band {
 	/* Device this band belongs to */
-	struct spdk_ftl_dev			*dev;
+	struct spdk_ftl_dev		*dev;
 
-	/* Number of operational zones */
-	size_t					num_zones;
+	struct ftl_band_md		*md;
 
-	/* Array of zones */
-	struct ftl_zone				*zone_buf;
+	/* IO queue depth (outstanding IOs) */
+	uint64_t			queue_depth;
 
-	/* List of operational zones */
-	CIRCLEQ_HEAD(, ftl_zone)		zones;
+	/* Fields for owner of the band - compaction, or gc */
+	struct {
+		/* Callback context for the owner */
+		void *priv;
 
-	/* LBA map */
-	struct ftl_lba_map			lba_map;
+		/* State change callback */
+		ftl_band_state_change_fn state_change_fn;
 
-	/* Band's state */
-	enum ftl_band_state			state;
+		/* Callback for the owner */
+		union {
+			ftl_band_ops_cb ops_fn;
+			ftl_band_md_cb md_fn;
+		};
+
+		/* Reference counter */
+		uint64_t cnt;
+	} owner;
+
+	/* P2L map */
+	struct ftl_p2l_map		p2l_map;
+
+	/* Band relocation is in progress */
+	bool				reloc;
 
 	/* Band's index */
-	unsigned int				id;
+	uint32_t			id;
 
-	/* Latest merit calculation */
-	double					merit;
+	/* Band's NAND id - a group multiple bands may be part of the same physical band on base device
+	 * This way the write access pattern will match the actual physical layout more closely, leading
+	 * to lower overall write amplification factor
+	 */
+	uint32_t			phys_id;
 
-	/* High defrag priority - means that the metadata should be copied and */
-	/* the band should be defragged immediately */
-	int					high_prio;
-
-	/* Sequence number */
-	uint64_t				seq;
-
-	/* Number of defrag cycles */
-	uint64_t				wr_cnt;
+	/* Band start addr */
+	ftl_addr			start_addr;
 
 	/* End metadata start addr */
-	struct ftl_addr				tail_md_addr;
+	ftl_addr			tail_md_addr;
 
-	/* Bitmap of all bands that have its data moved onto this band */
-	struct spdk_bit_array			*reloc_bitmap;
-	/* Number of open bands containing data moved from this band */
-	size_t					num_reloc_bands;
-	/* Number of blocks currently being moved from this band */
-	size_t					num_reloc_blocks;
+	/* Metadata request */
+	struct ftl_basic_rq		metadata_rq;
 
-	/* Free/shut bands' lists */
-	LIST_ENTRY(ftl_band)			list_entry;
+	/* Free/shut bands' lists
+	 * Open bands are kept and managed directly by the writer (either GC or compaction). Each writer only
+	 * needs to keep two bands (one currently written to, and a pre-assigned reserve band to make sure flow
+	 * of data is always ongoing as the current one is closing).
+	 */
+	TAILQ_ENTRY(ftl_band)		queue_entry;
 
-	/* High priority queue link */
-	STAILQ_ENTRY(ftl_band)			prio_stailq;
+	/* For writing metadata */
+	struct ftl_md_io_entry_ctx	md_persist_entry_ctx;
+
+	/* Callback function for validate md */
+	ftl_band_validate_md_cb		validate_cb;
 };
 
-uint64_t	ftl_band_block_offset_from_addr(struct ftl_band *band, struct ftl_addr addr);
-struct ftl_addr ftl_band_addr_from_block_offset(struct ftl_band *band, uint64_t block_off);
-void		ftl_band_set_state(struct ftl_band *band, enum ftl_band_state state);
-size_t		ftl_band_age(const struct ftl_band *band);
-void		ftl_band_acquire_lba_map(struct ftl_band *band);
-int		ftl_band_alloc_lba_map(struct ftl_band *band);
-void		ftl_band_clear_lba_map(struct ftl_band *band);
-void		ftl_band_release_lba_map(struct ftl_band *band);
-int		ftl_band_read_lba_map(struct ftl_band *band,
-				      size_t offset, size_t lba_cnt,
-				      ftl_io_fn cb_fn, void *cb_ctx);
-struct ftl_addr ftl_band_next_xfer_addr(struct ftl_band *band, struct ftl_addr addr,
-					size_t num_blocks);
-struct ftl_addr ftl_band_next_addr(struct ftl_band *band, struct ftl_addr addr,
-				   size_t offset);
-size_t		ftl_band_num_usable_blocks(const struct ftl_band *band);
-size_t		ftl_band_user_blocks_left(const struct ftl_band *band, size_t offset);
-size_t		ftl_band_user_blocks(const struct ftl_band *band);
-void		ftl_band_set_addr(struct ftl_band *band, uint64_t lba,
-				  struct ftl_addr addr);
-struct ftl_band *ftl_band_from_addr(struct spdk_ftl_dev *dev, struct ftl_addr addr);
-struct ftl_zone *ftl_band_zone_from_addr(struct ftl_band *band, struct ftl_addr);
-void		ftl_band_md_clear(struct ftl_band *band);
-int		ftl_band_read_tail_md(struct ftl_band *band, struct ftl_addr,
-				      ftl_io_fn cb_fn, void *cb_ctx);
-int		ftl_band_read_head_md(struct ftl_band *band, ftl_io_fn cb_fn, void *cb_ctx);
-int		ftl_band_write_tail_md(struct ftl_band *band, ftl_io_fn cb);
-int		ftl_band_write_head_md(struct ftl_band *band, ftl_io_fn cb);
-struct ftl_addr ftl_band_tail_md_addr(struct ftl_band *band);
-struct ftl_addr ftl_band_head_md_addr(struct ftl_band *band);
-void		ftl_band_write_failed(struct ftl_band *band);
-int		ftl_band_full(struct ftl_band *band, size_t offset);
-int		ftl_band_write_prep(struct ftl_band *band);
-struct ftl_zone *ftl_band_next_operational_zone(struct ftl_band *band,
-		struct ftl_zone *zone);
-size_t		ftl_lba_map_pool_elem_size(struct spdk_ftl_dev *dev);
-void		ftl_band_remove_zone(struct ftl_band *band, struct ftl_zone *zone);
 
+uint64_t ftl_band_block_offset_from_addr(struct ftl_band *band, ftl_addr addr);
+ftl_addr ftl_band_addr_from_block_offset(struct ftl_band *band, uint64_t block_off);
+void ftl_band_set_type(struct ftl_band *band, enum ftl_band_type type);
+void ftl_band_set_state(struct ftl_band *band, enum ftl_band_state state);
+void ftl_band_acquire_p2l_map(struct ftl_band *band);
+int ftl_band_alloc_p2l_map(struct ftl_band *band);
+int ftl_band_open_p2l_map(struct ftl_band *band);
+void ftl_band_release_p2l_map(struct ftl_band *band);
+ftl_addr ftl_band_next_xfer_addr(struct ftl_band *band, ftl_addr addr, size_t num_blocks);
+ftl_addr ftl_band_next_addr(struct ftl_band *band, ftl_addr addr, size_t offset);
+size_t ftl_band_user_blocks_left(const struct ftl_band *band, size_t offset);
+size_t ftl_band_user_blocks(const struct ftl_band *band);
+void ftl_band_set_p2l(struct ftl_band *band, uint64_t lba, ftl_addr addr, uint64_t seq_id);
+void ftl_band_set_addr(struct ftl_band *band, uint64_t lba, ftl_addr addr);
+struct ftl_band *ftl_band_from_addr(struct spdk_ftl_dev *dev, ftl_addr addr);
+ftl_addr ftl_band_tail_md_addr(struct ftl_band *band);
+int ftl_band_filled(struct ftl_band *band, size_t offset);
+int ftl_band_write_prep(struct ftl_band *band);
+size_t ftl_p2l_map_pool_elem_size(struct spdk_ftl_dev *dev);
+struct ftl_band *ftl_band_search_next_to_reloc(struct spdk_ftl_dev *dev);
+void ftl_band_init_gc_iter(struct spdk_ftl_dev *dev);
+ftl_addr ftl_band_p2l_map_addr(struct ftl_band *band);
+void ftl_valid_map_load_state(struct spdk_ftl_dev *dev);
+void ftl_bands_load_state(struct spdk_ftl_dev *dev);
+void ftl_band_open(struct ftl_band *band, enum ftl_band_type type);
+void ftl_band_close(struct ftl_band *band);
+void ftl_band_free(struct ftl_band *band);
+void ftl_band_rq_write(struct ftl_band *band, struct ftl_rq *rq);
+void ftl_band_rq_read(struct ftl_band *band, struct ftl_rq *rq);
+void ftl_band_basic_rq_write(struct ftl_band *band, struct ftl_basic_rq *brq);
+void ftl_band_basic_rq_read(struct ftl_band *band, struct ftl_basic_rq *brq);
+void ftl_band_get_next_gc(struct spdk_ftl_dev *dev, ftl_band_ops_cb cb, void *cntx);
+void ftl_band_read_tail_brq_md(struct ftl_band *band, ftl_band_md_cb cb, void *cntx);
+void ftl_band_initialize_free_state(struct ftl_band *band);
+
+static inline void
+ftl_band_set_owner(struct ftl_band *band,
+		   ftl_band_state_change_fn fn,
+		   void *priv)
+{
+	assert(NULL == band->owner.priv);
+	assert(NULL == band->owner.state_change_fn);
+
+	band->owner.state_change_fn = fn;
+	band->owner.priv = priv;
+}
+
+static inline void
+ftl_band_clear_owner(struct ftl_band *band,
+		     ftl_band_state_change_fn fn,
+		     void *priv)
+{
+	assert(priv == band->owner.priv);
+	assert(fn == band->owner.state_change_fn);
+
+	band->owner.state_change_fn = NULL;
+	band->owner.priv = NULL;
+}
 
 static inline int
 ftl_band_empty(const struct ftl_band *band)
 {
-	return band->lba_map.num_vld == 0;
+	return band->p2l_map.num_valid == 0;
 }
 
-static inline struct ftl_zone *
-ftl_band_next_zone(struct ftl_band *band, struct ftl_zone *zone)
+static inline uint64_t
+ftl_band_qd(const struct ftl_band *band)
 {
-	assert(zone->info.state != SPDK_BDEV_ZONE_STATE_OFFLINE);
-	return CIRCLEQ_LOOP_NEXT(&band->zones, zone, circleq);
+	return band->queue_depth;
+}
+
+static inline bool
+ftl_band_block_offset_valid(struct ftl_band *band, size_t block_off)
+{
+	struct ftl_p2l_map *p2l_map = &band->p2l_map;
+
+	return ftl_bitmap_get(p2l_map->valid, block_off);
 }
 
 static inline void
-ftl_band_set_next_state(struct ftl_band *band)
+ftl_band_iter_init(struct ftl_band *band)
 {
-	ftl_band_set_state(band, (band->state + 1) % FTL_BAND_STATE_MAX);
+	/* Initialize band iterator to begin state */
+	band->md->iter.addr = band->start_addr;
+	band->md->iter.offset = 0;
 }
 
-static inline int
-ftl_band_state_changing(struct ftl_band *band)
+static inline void
+ftl_band_iter_advance(struct ftl_band *band, uint64_t num_blocks)
 {
-	return band->state == FTL_BAND_STATE_OPENING ||
-	       band->state == FTL_BAND_STATE_CLOSING;
+	band->md->iter.offset += num_blocks;
+	band->md->iter.addr = ftl_band_next_xfer_addr(band, band->md->iter.addr, num_blocks);
+	assert(band->md->iter.addr != FTL_ADDR_INVALID);
 }
 
-static inline int
-ftl_band_block_offset_valid(struct ftl_band *band, size_t block_off)
+static inline void
+ftl_band_iter_set(struct ftl_band *band, uint64_t num_blocks)
 {
-	struct ftl_lba_map *lba_map = &band->lba_map;
-
-	pthread_spin_lock(&lba_map->lock);
-	if (spdk_bit_array_get(lba_map->vld, block_off)) {
-		pthread_spin_unlock(&lba_map->lock);
-		return 1;
-	}
-
-	pthread_spin_unlock(&lba_map->lock);
-	return 0;
-}
-
-static inline int
-ftl_band_zone_is_last(struct ftl_band *band, struct ftl_zone *zone)
-{
-	return zone == CIRCLEQ_LAST(&band->zones);
-}
-
-static inline int
-ftl_band_zone_is_first(struct ftl_band *band, struct ftl_zone *zone)
-{
-	return zone == CIRCLEQ_FIRST(&band->zones);
-}
-
-static inline int
-ftl_zone_is_writable(const struct spdk_ftl_dev *dev, const struct ftl_zone *zone)
-{
-	bool busy = ftl_is_append_supported(dev) ? false : zone->busy;
-
-	return (zone->info.state == SPDK_BDEV_ZONE_STATE_OPEN ||
-		zone->info.state == SPDK_BDEV_ZONE_STATE_EMPTY) &&
-	       !busy;
+	band->md->iter.offset = num_blocks;
+	band->md->iter.addr = ftl_band_next_xfer_addr(band, band->md->iter.addr, num_blocks);
+	assert(band->md->iter.addr != FTL_ADDR_INVALID);
 }
 
 #endif /* FTL_BAND_H */

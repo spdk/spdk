@@ -1,0 +1,371 @@
+#!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2022 Intel Corporation.
+#  All rights reserved.
+
+curdir=$(readlink -f "$(dirname "$0")")
+rootdir=$(readlink -f "$curdir/../../../")
+
+source "$rootdir/scripts/common.sh"
+source "$rootdir/test/scheduler/common.sh"
+
+get_auto_cfg() {
+	local vm_cpus vm_node vm vms vms_per_nvme
+	local cpu node nodes_idxs node_idx
+	local nvmes nvme nvme_idx nvme_diff nvmes_per_node
+	local vm_diff aligned_number_of_vms=0
+	local diff iter
+
+	local -g auto_cpu_map=() auto_disk_map=() spdk=()
+
+	map_cpus
+	get_nvme_numa_map
+
+	nodes_idxs=("${!nodes[@]}")
+
+	# Construct initial NUMA-aware setup by pinning VM to given nvme's node. First run is meant
+	# to pin enough number of VMs (as per vm_count) to match the number of available nvme ctrls.
+	vm=0
+	for node in "${nodes_idxs[@]}"; do
+		nvmes=(${!nvme_numa_map[node]})
+		for ((nvme_idx = 0; nvme_idx < ${#nvmes[@]} && vm < vm_count; vm++, nvme_idx++)); do
+			eval "vm${vm}_node=$node"
+		done
+		nvmes_per_node[node]=${#nvmes[@]}
+	done
+
+	vm_diff=$((vm_count - vm))
+
+	# Align extra number of VMs in case nvme ctrls are not distributed evenly across the existing
+	# NUMA nodes.
+	# FIXME: This is targeted for systems with only 2 NUMA nodes. Technically, kernel supports
+	# more than that - it's possible to achieve setups with > 2 NUMA nodes under virtual env
+	# for instance. Should this be of any concern?
+	if ((nvmes_per_node[0] < nvmes_per_node[1])); then
+		nvme_diff=$((nvmes_per_node[1] - nvmes_per_node[0]))
+	elif ((nvmes_per_node[0] > nvmes_per_node[1])); then
+		nvme_diff=$((nvmes_per_node[0] - nvmes_per_node[1]))
+	else
+		nvme_diff=0
+	fi
+
+	diff=$((vm_diff + nvme_diff))
+
+	if ((diff % 2 == 0)); then
+		aligned_number_of_vms=$((diff / ${#nodes_idxs[@]}))
+	fi
+
+	# Second run distributes extra VMs across existing NUMA nodes. In case we can distribute even
+	# number of extra VMs (as per vm_count) then simply assign them in bulk. In case there's an
+	# odd number, do some simple rr balancing where we assign them one by one - first to node0,
+	# second to node1, third to node0, etc.
+	if ((aligned_number_of_vms)); then
+		for node in "${nodes_idxs[@]}"; do
+			for ((iter = 0; iter < aligned_number_of_vms && vm < vm_count; iter++, vm++)); do
+				eval "vm${vm}_node=$node"
+			done
+		done
+	else
+		while ((vm < vm_count)); do
+			for node in "${nodes_idxs[@]}"; do
+				eval "vm${vm}_node=$node"
+				((++vm))
+			done
+		done
+	fi
+
+	local -g vm_numa_map=()
+	for ((vm = 0; vm < vm_count; vm++)); do
+		# Load balance the cpus across available numa nodes based on the pinning
+		# done prior. If there are no cpus left under selected node, iterate over
+		# all available nodes. If no cpus are left, fail. We don't allow to mix
+		# cpus from different nodes for the sake of the performance.
+		node_idx=0 node_idx_perc=0
+		eval "vm_node=\$vm${vm}_node"
+
+		local -n node_cpus=node_${vm_node}_cpu
+		local -n vm_nodes=node_${vm_node}_vm
+
+		vm_numa_map[vm_node]="node_${vm_node}_vm[@]"
+
+		while ((${#node_cpus[@]} < vm_cpu_num && node_idx < ${#nodes_idxs[@]})); do
+			vm_node=${nodes_idxs[node_idx]}
+			local -n node_cpus=node_${nodes_idxs[node_idx++]}_cpu
+		done
+
+		if ((${#node_cpus[@]} < vm_cpu_num)); then
+			printf 'Not enough CPUs available for VM %u (CPUs: %u, Nodes: %u, CPUs per VM: %u)\n' \
+				"$vm" "${#cpus[@]}" "${#nodes_idxs[@]}" "$vm_cpu_num" >&2
+			return 1
+		fi
+
+		# Normalize indexes
+		node_cpus=("${node_cpus[@]}")
+
+		vm_cpus=("${node_cpus[@]::vm_cpu_num}")
+		node_cpus=("${node_cpus[@]:vm_cpu_num}")
+
+		auto_cpu_map+=("$(
+			cat <<- CPU_VM
+				VM_${vm}_qemu_mask=$(
+				IFS=","
+				echo "${vm_cpus[*]}"
+				)
+				VM_${vm}_qemu_numa_node=$vm_node
+			CPU_VM
+		)")
+
+		# Save map of each VM->NUMA node to be able to construct a disk map in later steps.
+		vm_nodes+=("$vm")
+	done
+
+	# auto_cpu_map is ready, all requested VMs should be balanced across all NUMA nodes
+	# making sure each nvme drive will be bound to at least 1 VM placed on the
+	# corresponding NUMA node. Now, construct disk_cfg and assign VMs, with proper
+	# split value, to each nvme - extra VMs will be added to nvme drives in their
+	# bus order.
+	local -A nvme_vm_map=()
+	local iter nvmes_no=0 vms_no=0
+	for node in "${nodes_idxs[@]}"; do
+		if [[ ! -v nvme_numa_map[node] ]]; then
+			# There are no drives available on that node, skip it
+			continue
+		fi
+		nvmes=(${!nvme_numa_map[node]}) nvmes_no=${#nvmes[@]}
+		vms=(${!vm_numa_map[node]}) vms_no=${#vms[@]}
+		for ((iter = 0; iter <= (vms_no - nvmes_no <= 0 ? 1 : vms_no - nvmes_no); iter++)); do
+			for nvme in "${nvmes[@]}"; do
+				if ((${#vms[@]} == 0)); then
+					# No VMs on given node or they have been exhausted - skip all remaining drives.
+					continue 3
+				fi
+				nvme_vm_map["$nvme"]="_${nvme//[:.]/_}_[@]"
+				local -n nvme_vms=_${nvme//[:.]/_}_
+				nvme_vms+=("${vms[0]}") vms=("${vms[@]:1}")
+			done
+		done
+	done
+
+	local sorted_nvmes=()
+	sorted_nvmes=($(printf '%s\n' "${!nvme_vm_map[@]}" | sort))
+	for nvme in "${!sorted_nvmes[@]}"; do
+		vms=(${!nvme_vm_map["${sorted_nvmes[nvme]}"]})
+		auto_disk_map+=("${sorted_nvmes[nvme]},Nvme$((nvme++)),${#vms[*]},${vms[*]}")
+	done
+
+	get_spdk_cpus || return 1
+
+	auto_cpu_map+=("vhost_0_reactor_mask=[$(
+		IFS=","
+		echo "${spdk[*]}"
+	)]")
+	auto_cpu_map+=("vhost_0_master_core=${spdk[0]}")
+}
+
+get_nvme_numa_map() {
+	local nvmes nvme node
+	local -g nvme_numa_map=()
+
+	cache_pci_bus
+
+	for nvme in ${pci_bus_cache[0x010802]}; do
+		node=$(< "/sys/bus/pci/devices/$nvme/numa_node")
+		nvme_numa_map[node]="node_${node}_nvme[@]"
+		local -n node_nvmes=node_${node}_nvme
+		node_nvmes+=("$nvme")
+	done
+}
+
+get_spdk_cpus() {
+	local -g spdk=()
+	local node vms perc
+	local cpus_per_node cpus_exhausted=() cpus_remained=()
+
+	if [[ -z $spdk_cpu_num ]]; then
+		spdk=(0)
+		return 0
+	fi
+
+	if [[ -n $spdk_cpu_list ]]; then
+		spdk=($(parse_cpu_list <(echo "$spdk_cpu_list")))
+		return 0
+	fi
+
+	# Start allocating from NUMA node with greater number of pinned VMs.
+	node_sort=($(for node in "${!vm_numa_map[@]}"; do
+		vms=(${!vm_numa_map[node]})
+		echo "${#vms[@]}:$node"
+	done | sort -rn))
+
+	for _node in "${node_sort[@]}"; do
+		node=${_node#*:} vms=${_node%:*}
+		local -n node_all_cpus=node_${node}_cpu
+		perc=$((vms * 100 / vm_count))
+		cpus_per_node=$((spdk_cpu_num * perc / 100))
+		cpus_per_node=$((cpus_per_node == 0 ? 1 : cpus_per_node))
+
+		if ((${#node_all_cpus[@]} == 0)); then
+			printf 'No CPUs left to allocate for SPDK on node%u. Need %u CPUs\n' \
+				"$node" "$cpus_per_node" >&2
+
+			cpus_exhausted[node]=1
+			continue
+		fi
+		if ((${#node_all_cpus[@]} < cpus_per_node)); then
+			printf 'Not enough CPUs to allocate for SPDK on node%u. Need %u CPUs, getting %u\n' \
+				"$node" "$cpus_per_node" "${#node_all_cpus[@]}" >&2
+			cpus_per_node=${#node_all_cpus[@]}
+			cpus_exhauseted[node]=1
+		fi
+
+		spdk+=("${node_all_cpus[@]::cpus_per_node}")
+		node_all_cpus=("${node_all_cpus[@]:cpus_per_node}")
+		cpus_remained+=("${node_all_cpus[@]}")
+	done
+
+	# If we didn't allocate the entire number of requested cpus in the initial run,
+	# adjust it by adding the remaining portion from the node having greater number
+	# of pinned VMs.
+	if ((${#spdk[@]} < spdk_cpu_num)); then
+		if [[ -n $ALIGN_FROM_ALL_NODES ]] && ((${#cpus_remained[@]} > 0)); then
+			printf 'Trying to get extra CPUs from all nodes\n'
+			local -n node_all_cpus=cpus_remained
+		else
+			node=${node_sort[0]#*:}
+			printf 'Trying to get extra CPUs from the dominant node%u to align: %u < %u\n' \
+				"$node" "${#spdk[@]}" "$spdk_cpu_num"
+			if ((cpus_exhausted[node])); then
+				printf 'No CPUs available on node%u\n' "$node"
+			else
+				local -n node_all_cpus=node_${node}_cpu
+			fi
+		fi
+		spdk+=("${node_all_cpus[@]::spdk_cpu_num-${#spdk[@]}}")
+	fi >&2
+	if ((${#spdk[@]} != spdk_cpu_num)); then
+		printf 'Different number of SPDK CPUs allocated to meet the requirements: requested %u, got %u\n' \
+			"$spdk_cpu_num" "${#spdk[@]}"
+	else
+		printf 'Requested number of SPDK CPUs allocated: %u\n' "$spdk_cpu_num"
+	fi >&2
+}
+
+_p_disk_map() {
+	((${#auto_disk_map[@]} > 0)) || return 0
+	printf '%s\n' "${auto_disk_map[@]}"
+}
+
+_p_cpu_map() {
+	((${#auto_cpu_map[@]} > 0)) || return 0
+	printf '%s\n' "${auto_cpu_map[@]}"
+}
+
+p_disk_map() {
+	cat <<- DISK_MAP
+		# Generated automatically by ${0##*/}
+		# NVMe Drives: ${#auto_disk_map[@]} VM count: $vm_count
+		$(_p_disk_map)
+	DISK_MAP
+}
+
+p_vms_in_node() {
+	((${#vm_numa_map[@]} > 0)) || return 0
+
+	local node vms
+	for node in "${!vm_numa_map[@]}"; do
+		vms=(${!vm_numa_map[node]})
+		echo "Node$node: ${#vms[@]} VMs"
+	done
+}
+
+p_cpu_map() {
+	local node_stats
+
+	mapfile -t node_stats < <(p_vms_in_node)
+	cat <<- CPU_MAP
+		# Generated automatically by ${0##*/}
+		# VM NUMA Nodes: ${#vm_numa_map[@]} VM count: $vm_count CPU Per VM: $vm_cpu_num SPDK CPU count: ${#spdk[@]}
+		$(printf '#  - %s\n' "${node_stats[@]}")
+		$(_p_cpu_map)
+	CPU_MAP
+}
+
+p_all() {
+	p_disk_map
+	printf '\n'
+	p_cpu_map
+}
+
+fetch_env() {
+	spdk_cpu_num=${spdk_cpu_num:-1}
+	vm_count=${vm_count:-1}
+	vm_cpu_num=${vm_cpu_num:-1}
+
+	# Normalize
+	spdk_cpu_num=$((spdk_cpu_num <= 0 ? 1 : spdk_cpu_num))
+	vm_count=$((vm_count <= 0 ? 1 : vm_count))
+	vm_cpu_num=$((vm_cpu_num <= 0 ? 1 : vm_cpu_num))
+
+	cpu_out=${cpu_out:-"$PWD/auto-cpu.conf"}
+	disk_out=${disk_out:-"$PWD/auto-disk.conf"}
+}
+
+help() {
+	cat <<- HELP
+		${0##*/}: [-p all|cpu|disk -s]
+
+		Configuration is generated based on system's cpu and nvme topology. Parameters
+		taken directly from the environment:
+
+		spdk_cpu_list - list of CPUs to assign to a SPDK app
+		spdk_cpu_num  - number of CPUs to use across all NUMA nodes
+		                (spdk_cpu_list takes priority, default: 1)
+		vm_count      - number of VMs to prepare the configuration for
+		                (default: 1)
+		vm_cpu_num    - number of CPUs to assign per VM (default: 1)
+
+		Override parameters:
+		vmN_node      - overrides selected NUMA node for VM N - by default,
+		                this is allocated up to number of nvme drives
+		cpu_out       - with -s, points at location where to save cpu conf
+		disk_out      - with -s, points at location where to save disk conf
+
+		Note: VMs are pinned to nvme drives based on their NUMA location.
+
+		Example:
+		# Allocate 6 cpus from node1 for SPDK. Configure 24 VMs, 2 CPUs per VM
+		$ export spdk_cpu_num=6 vm_count=24 vm_cpu_num=2
+		$ ${0##*/} -p all
+	HELP
+}
+
+print=""
+save=no
+
+fetch_env
+
+while getopts :hsp: arg; do
+	case "$arg" in
+		h)
+			help
+			exit 0
+			;;
+		p) print=$OPTARG ;;
+		s) save=yes ;;
+		*) ;;
+	esac
+done
+
+get_auto_cfg || exit 1
+
+case "$print" in
+	all) p_all ;;
+	cpu) p_cpu_map ;;
+	disk) p_disk_map ;;
+	*) ;;
+esac
+
+if [[ $save == yes ]]; then
+	p_cpu_map > "$cpu_out"
+	p_disk_map > "$disk_out"
+fi

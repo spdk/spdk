@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2019 Intel Corporation
+#  All rights reserved.
+#
 set -e
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
-rpc_py="$rootdir/scripts/rpc.py"
 source "$rootdir/scripts/common.sh"
 source "$rootdir/test/common/autotest_common.sh"
 
@@ -114,12 +116,12 @@ function opal_bdevio() {
 }
 
 function opal_bdevperf() {
-	$rootdir/test/bdev/bdevperf/bdevperf -z -q 8 -o 4096 -w verify -t 10 &
+	$rootdir/build/examples/bdevperf -z -q 8 -o 4096 -w verify -t 10 &
 	bdevperf_pid=$!
 	trap 'revert; killprocess $bdevperf_pid; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $bdevperf_pid
 	setup_test_environment
-	$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests
+	$rootdir/examples/bdev/bdevperf/bdevperf.py perform_tests
 	clean_up
 	revert
 	$rpc_py bdev_nvme_detach_controller nvme0

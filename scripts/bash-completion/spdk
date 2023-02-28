@@ -30,7 +30,7 @@ _get_default_rpc_methods() {
 	while read -r; do
 		# Each method name seems to be prefixed with 20h x 4. Then it can
 		# be followed with list of aliases enclosed inside (). Example:
-		#    ioat_scan_accel_engine (ioat_scan_copy_engine, scan_ioat_copy_engine)
+		#    ioat_scan_accel_module
 		[[ $REPLY =~ ^\ {4}([a-z]+(_[a-z]+)*)(\ *\((.+)\))? ]] || continue
 
 		names=("${BASH_REMATCH[1]}")
@@ -133,7 +133,7 @@ _spdk_opt_to_complete() {
 		--iova-mode)
 			COMPREPLY=($(compgen -W 'pa va' -- "$cur"))
 			;;
-		--tpoint-group-mask | -e)
+		--tpoint-group | -e)
 			COMPREPLY=($(compgen -W '$(_get_tpoint_g_masks)' -- "$cur"))
 			compopt -o nosort
 			;;
@@ -250,7 +250,6 @@ _spdk_apps() {
 
 	apps=(
 		iscsi_tgt
-		iscsi_top
 		nvmf_tgt
 		spdk_dd
 		spdk_tgt

@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -87,8 +59,7 @@ struct bdev_virtio_blk_io_channel {
 	 1ULL << VIRTIO_BLK_F_MQ		|	\
 	 1ULL << VIRTIO_BLK_F_RO		|	\
 	 1ULL << VIRTIO_BLK_F_DISCARD		|	\
-	 1ULL << VIRTIO_RING_F_EVENT_IDX	|	\
-	 1ULL << VHOST_USER_F_PROTOCOL_FEATURES)
+	 1ULL << VIRTIO_RING_F_EVENT_IDX)
 
 /* 10 sec for max poll period */
 #define VIRTIO_BLK_HOTPLUG_POLL_PERIOD_MAX		10000000ULL
@@ -300,20 +271,7 @@ bdev_virtio_disk_destruct(void *ctx)
 int
 bdev_virtio_blk_dev_remove(const char *name, bdev_virtio_remove_cb cb_fn, void *cb_arg)
 {
-	struct spdk_bdev *bdev;
-
-	bdev = spdk_bdev_get_by_name(name);
-	if (bdev == NULL) {
-		return -ENODEV;
-	}
-
-	if (bdev->module != &virtio_blk_if) {
-		return -ENODEV;
-	}
-
-	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
-
-	return 0;
+	return spdk_bdev_unregister_by_name(name, &virtio_blk_if, cb_fn, cb_arg);
 }
 
 static int
@@ -631,6 +589,7 @@ virtio_user_blk_dev_create(const char *name, const char *path,
 			   uint16_t num_queues, uint32_t queue_size)
 {
 	struct virtio_blk_dev *bvdev;
+	uint64_t feature_bits;
 	int rc;
 
 	bvdev = calloc(1, sizeof(*bvdev));
@@ -646,7 +605,9 @@ virtio_user_blk_dev_create(const char *name, const char *path,
 		return NULL;
 	}
 
-	rc = virtio_dev_reset(&bvdev->vdev, VIRTIO_BLK_DEV_SUPPORTED_FEATURES);
+	feature_bits = VIRTIO_BLK_DEV_SUPPORTED_FEATURES;
+	feature_bits |= (1ULL << VHOST_USER_F_PROTOCOL_FEATURES);
+	rc = virtio_dev_reset(&bvdev->vdev, feature_bits);
 	if (rc != 0) {
 		virtio_dev_destruct(&bvdev->vdev);
 		free(bvdev);
@@ -763,6 +724,58 @@ bdev_virtio_user_blk_dev_create(const char *name, const char *path,
 
 	bvdev = virtio_user_blk_dev_create(name, path, num_queues, queue_size);
 	if (bvdev == NULL) {
+		return NULL;
+	}
+
+	return &bvdev->bdev;
+}
+
+struct spdk_bdev *
+bdev_virtio_vfio_user_blk_dev_create(const char *name, const char *path)
+{
+	struct virtio_blk_dev *bvdev;
+	uint16_t num_queues = 0;
+	int rc;
+
+	bvdev = calloc(1, sizeof(*bvdev));
+	if (bvdev == NULL) {
+		SPDK_ERRLOG("calloc failed for virtio device %s: %s\n", name, path);
+		return NULL;
+	}
+
+	rc = virtio_vfio_user_dev_init(&bvdev->vdev, name, path);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to create %s as virtio device\n", path);
+		free(bvdev);
+		return NULL;
+	}
+
+	rc = virtio_dev_reset(&bvdev->vdev, VIRTIO_BLK_DEV_SUPPORTED_FEATURES);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to reset %s as virtio device\n", path);
+		virtio_dev_destruct(&bvdev->vdev);
+		free(bvdev);
+		return NULL;
+	}
+
+	if (virtio_dev_has_feature(&bvdev->vdev, VIRTIO_BLK_F_MQ)) {
+		rc = virtio_dev_read_dev_config(&bvdev->vdev, offsetof(struct virtio_blk_config, num_queues),
+						&num_queues, sizeof(num_queues));
+		if (rc) {
+			SPDK_ERRLOG("%s: config read failed: %s\n", name, spdk_strerror(-rc));
+			virtio_dev_destruct(&bvdev->vdev);
+			free(bvdev);
+			return NULL;
+		}
+	} else {
+		num_queues = 1;
+	}
+
+	rc = virtio_blk_dev_init(bvdev, num_queues);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to initialize %s as virtio device\n", path);
+		virtio_dev_destruct(&bvdev->vdev);
+		free(bvdev);
 		return NULL;
 	}
 

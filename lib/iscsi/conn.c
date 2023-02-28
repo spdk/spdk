@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
+/*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2008-2012 Daisuke Aoyama <aoyama@peach.ne.jp>.
- *   Copyright (c) Intel Corporation.
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -120,7 +92,8 @@ _iscsi_conns_cleanup(void)
 	free(g_conns_array);
 }
 
-int initialize_iscsi_conns(void)
+int
+initialize_iscsi_conns(void)
 {
 	uint32_t i;
 
@@ -639,6 +612,7 @@ _iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 	iscsi_clear_all_transfer_task(conn, NULL, NULL);
 	spdk_poller_unregister(&conn->logout_request_timer);
 	spdk_poller_unregister(&conn->logout_timer);
+	spdk_poller_unregister(&conn->login_timer);
 
 	rc = iscsi_conn_free_tasks(conn);
 	if (rc < 0) {
@@ -1518,11 +1492,13 @@ iscsi_conn_full_feature_migrate(void *arg)
 {
 	struct spdk_iscsi_conn *conn = arg;
 
-	if (conn->state >= ISCSI_CONN_STATE_EXITING) {
-		/* Connection is being exited before this callback is executed. */
-		SPDK_DEBUGLOG(iscsi, "Connection is already exited.\n");
-		return;
-	}
+	assert(conn->state != ISCSI_CONN_STATE_EXITED);
+
+	/* Note: it is possible that connection could have moved to EXITING
+	 * state after this message was sent. We will still add it to the
+	 * poll group in this case.  When the poll group is polled
+	 * again, it will call iscsi_conn_destruct() on it.
+	 */
 
 	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
 		iscsi_conn_open_luns(conn);

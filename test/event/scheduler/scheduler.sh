@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2021 Intel Corporation
+#  All rights reserved.
+#
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
@@ -24,7 +28,10 @@ function scheduler_create_thread() {
 
 rpc=rpc_cmd
 
-$testdir/scheduler -m 0xF -p 0x2 --wait-for-rpc &
+# Use -f to enable spdk_for_each_reactor regression test for #2206.
+# This results in constant event processing even on reactors without any SPDK threads.
+# The utilization of reactors might differ from expected.
+$testdir/scheduler -m 0xF -p 0x2 --wait-for-rpc -f &
 scheduler_pid=$!
 trap 'killprocess $scheduler_pid; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $scheduler_pid

@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/rpc.h"
@@ -93,19 +65,18 @@ rpc_bdev_raid_get_bdevs(struct spdk_jsonrpc_request *request,
 	struct rpc_bdev_raid_get_bdevs   req = {};
 	struct spdk_json_write_ctx  *w;
 	struct raid_bdev            *raid_bdev;
+	enum raid_bdev_state        state;
 
 	if (spdk_json_decode_object(params, rpc_bdev_raid_get_bdevs_decoders,
 				    SPDK_COUNTOF(rpc_bdev_raid_get_bdevs_decoders),
 				    &req)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
 	}
 
-	if (!(strcmp(req.category, "all") == 0 ||
-	      strcmp(req.category, "online") == 0 ||
-	      strcmp(req.category, "configuring") == 0 ||
-	      strcmp(req.category, "offline") == 0)) {
+	state = raid_bdev_str_to_state(req.category);
+	if (state == RAID_BDEV_STATE_MAX && strcmp(req.category, "all") != 0) {
 		spdk_jsonrpc_send_error_response(request, -EINVAL, spdk_strerror(EINVAL));
 		goto cleanup;
 	}
@@ -114,21 +85,12 @@ rpc_bdev_raid_get_bdevs(struct spdk_jsonrpc_request *request,
 	spdk_json_write_array_begin(w);
 
 	/* Get raid bdev list based on the category requested */
-	if (strcmp(req.category, "all") == 0) {
-		TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
-			spdk_json_write_string(w, raid_bdev->bdev.name);
-		}
-	} else if (strcmp(req.category, "online") == 0) {
-		TAILQ_FOREACH(raid_bdev, &g_raid_bdev_configured_list, state_link) {
-			spdk_json_write_string(w, raid_bdev->bdev.name);
-		}
-	} else if (strcmp(req.category, "configuring") == 0) {
-		TAILQ_FOREACH(raid_bdev, &g_raid_bdev_configuring_list, state_link) {
-			spdk_json_write_string(w, raid_bdev->bdev.name);
-		}
-	} else {
-		TAILQ_FOREACH(raid_bdev, &g_raid_bdev_offline_list, state_link) {
-			spdk_json_write_string(w, raid_bdev->bdev.name);
+	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
+		if (raid_bdev->state == state || state == RAID_BDEV_STATE_MAX) {
+			spdk_json_write_object_begin(w);
+			spdk_json_write_named_string(w, "name", raid_bdev->bdev.name);
+			raid_bdev_write_info_json(raid_bdev, w);
+			spdk_json_write_object_end(w);
 		}
 	}
 	spdk_json_write_array_end(w);
@@ -138,7 +100,6 @@ cleanup:
 	free_rpc_bdev_raid_get_bdevs(&req);
 }
 SPDK_RPC_REGISTER("bdev_raid_get_bdevs", rpc_bdev_raid_get_bdevs, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_raid_get_bdevs, get_raid_bdevs)
 
 /*
  * Base bdevs in RPC bdev_raid_create
@@ -199,7 +160,7 @@ decode_raid_level(const struct spdk_json_val *val, void *out)
 
 	ret = spdk_json_decode_string(val, &str);
 	if (ret == 0 && str != NULL) {
-		level = raid_bdev_parse_raid_level(str);
+		level = raid_bdev_str_to_level(str);
 		if (level == INVALID_RAID_LEVEL) {
 			ret = -EINVAL;
 		} else {
@@ -247,60 +208,41 @@ rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
 {
 	struct rpc_bdev_raid_create	req = {};
-	struct raid_bdev_config		*raid_cfg;
+	struct raid_bdev		*raid_bdev;
 	int				rc;
 	size_t				i;
 
 	if (spdk_json_decode_object(params, rpc_bdev_raid_create_decoders,
 				    SPDK_COUNTOF(rpc_bdev_raid_create_decoders),
 				    &req)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
 	}
 
-	if (req.strip_size_kb == 0) {
-		spdk_jsonrpc_send_error_response(request, EINVAL, "strip size not specified");
-		goto cleanup;
-	}
-
-	rc = raid_bdev_config_add(req.name, req.strip_size_kb, req.base_bdevs.num_base_bdevs,
-				  req.level,
-				  &raid_cfg);
+	rc = raid_bdev_create(req.name, req.strip_size_kb, req.base_bdevs.num_base_bdevs,
+			      req.level, &raid_bdev);
 	if (rc != 0) {
-		spdk_jsonrpc_send_error_response_fmt(request, rc,
-						     "Failed to add RAID bdev config %s: %s",
-						     req.name, spdk_strerror(-rc));
-		goto cleanup;
-	}
-
-	for (i = 0; i < req.base_bdevs.num_base_bdevs; i++) {
-		rc = raid_bdev_config_add_base_bdev(raid_cfg, req.base_bdevs.base_bdevs[i], i);
-		if (rc != 0) {
-			raid_bdev_config_cleanup(raid_cfg);
-			spdk_jsonrpc_send_error_response_fmt(request, rc,
-							     "Failed to add base bdev %s to RAID bdev config %s: %s",
-							     req.base_bdevs.base_bdevs[i], req.name,
-							     spdk_strerror(-rc));
-			goto cleanup;
-		}
-	}
-
-	rc = raid_bdev_create(raid_cfg);
-	if (rc != 0) {
-		raid_bdev_config_cleanup(raid_cfg);
 		spdk_jsonrpc_send_error_response_fmt(request, rc,
 						     "Failed to create RAID bdev %s: %s",
 						     req.name, spdk_strerror(-rc));
 		goto cleanup;
 	}
 
-	rc = raid_bdev_add_base_devices(raid_cfg);
-	if (rc != 0) {
-		spdk_jsonrpc_send_error_response_fmt(request, rc,
-						     "Failed to add any base bdev to RAID bdev %s: %s",
-						     req.name, spdk_strerror(-rc));
-		goto cleanup;
+	for (i = 0; i < req.base_bdevs.num_base_bdevs; i++) {
+		const char *base_bdev_name = req.base_bdevs.base_bdevs[i];
+
+		rc = raid_bdev_add_base_device(raid_bdev, base_bdev_name, i);
+		if (rc == -ENODEV) {
+			SPDK_DEBUGLOG(bdev_raid, "base bdev %s doesn't exist now\n", base_bdev_name);
+		} else if (rc != 0) {
+			raid_bdev_delete(raid_bdev, NULL, NULL);
+			spdk_jsonrpc_send_error_response_fmt(request, rc,
+							     "Failed to add base bdev %s to RAID bdev %s: %s",
+							     base_bdev_name, req.name,
+							     spdk_strerror(-rc));
+			goto cleanup;
+		}
 	}
 
 	spdk_jsonrpc_send_bool_response(request, true);
@@ -309,7 +251,6 @@ cleanup:
 	free_rpc_bdev_raid_create(&req);
 }
 SPDK_RPC_REGISTER("bdev_raid_create", rpc_bdev_raid_create, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_raid_create, construct_raid_bdev)
 
 /*
  * Input structure for RPC deleting a raid bdev
@@ -342,7 +283,6 @@ static const struct spdk_json_object_decoder rpc_bdev_raid_delete_decoders[] = {
 
 struct rpc_bdev_raid_delete_ctx {
 	struct rpc_bdev_raid_delete req;
-	struct raid_bdev_config *raid_cfg;
 	struct spdk_jsonrpc_request *request;
 };
 
@@ -358,7 +298,6 @@ static void
 bdev_raid_delete_done(void *cb_arg, int rc)
 {
 	struct rpc_bdev_raid_delete_ctx *ctx = cb_arg;
-	struct raid_bdev_config *raid_cfg;
 	struct spdk_jsonrpc_request *request = ctx->request;
 
 	if (rc != 0) {
@@ -368,11 +307,6 @@ bdev_raid_delete_done(void *cb_arg, int rc)
 						 spdk_strerror(-rc));
 		goto exit;
 	}
-
-	raid_cfg = ctx->raid_cfg;
-	assert(raid_cfg->raid_bdev == NULL);
-
-	raid_bdev_config_cleanup(raid_cfg);
 
 	spdk_jsonrpc_send_bool_response(request, true);
 exit:
@@ -396,6 +330,7 @@ rpc_bdev_raid_delete(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
 {
 	struct rpc_bdev_raid_delete_ctx *ctx;
+	struct raid_bdev *raid_bdev;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -406,23 +341,22 @@ rpc_bdev_raid_delete(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_bdev_raid_delete_decoders,
 				    SPDK_COUNTOF(rpc_bdev_raid_delete_decoders),
 				    &ctx->req)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
 	}
 
-	ctx->raid_cfg = raid_bdev_config_find_by_name(ctx->req.name);
-	if (ctx->raid_cfg == NULL) {
-		spdk_jsonrpc_send_error_response_fmt(request, ENODEV,
-						     "raid bdev %s is not found in config",
+	raid_bdev = raid_bdev_find_by_name(ctx->req.name);
+	if (raid_bdev == NULL) {
+		spdk_jsonrpc_send_error_response_fmt(request, -ENODEV,
+						     "raid bdev %s not found",
 						     ctx->req.name);
 		goto cleanup;
 	}
 
 	ctx->request = request;
 
-	/* Remove all the base bdevs from this raid bdev before deleting the raid bdev */
-	raid_bdev_remove_base_devices(ctx->raid_cfg, bdev_raid_delete_done, ctx);
+	raid_bdev_delete(raid_bdev, bdev_raid_delete_done, ctx);
 
 	return;
 
@@ -431,4 +365,3 @@ cleanup:
 	free(ctx);
 }
 SPDK_RPC_REGISTER("bdev_raid_delete", rpc_bdev_raid_delete, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_raid_delete, destroy_raid_bdev)

@@ -1,43 +1,18 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
 
 #include "spdk_cunit.h"
 #include "spdk/log.h"
+#include "spdk/env.h"
+#include "spdk/string.h"
 
 #include "log/log.c"
 #include "log/log_flags.c"
+#include "log/log_deprecated.c"
 
 static void
 log_test(void)
@@ -86,7 +61,140 @@ log_test(void)
 	spdk_log_close();
 }
 
-int main(int argc, char **argv)
+SPDK_LOG_DEPRECATION_REGISTER(unit_test_not_limited, "not rate limited", "never", 0)
+SPDK_LOG_DEPRECATION_REGISTER(unit_test_limited, "with rate limit", "sometime", 1)
+SPDK_LOG_DEPRECATION_REGISTER(unit_test_never_called, "not called", "maybe", 0)
+
+int g_ut_dep_expect_line;
+const char *g_ut_dep_expect_func;
+const char *g_ut_dep_expect_msg;
+uint32_t g_ut_dep_log_times;
+bool g_ut_dep_saw_suppressed_log;
+
+static void
+log_deprecations(int level, const char *file, const int line, const char *func,
+		 const char *format, va_list args)
+{
+	char *msg;
+
+	g_ut_dep_log_times++;
+
+	CU_ASSERT(level == SPDK_LOG_WARN);
+
+	if (strcmp("spdk_log_deprecated", func) == 0) {
+		g_ut_dep_saw_suppressed_log = true;
+	} else {
+		CU_ASSERT(strcmp(g_ut_dep_expect_func, func) == 0);
+		CU_ASSERT(g_ut_dep_expect_line == line);
+	}
+
+	/* A "starts with" check */
+	msg = spdk_vsprintf_alloc(format, args);
+	SPDK_CU_ASSERT_FATAL(msg != NULL);
+	CU_ASSERT(strncmp(g_ut_dep_expect_msg, msg, strlen(g_ut_dep_expect_msg)) == 0)
+
+	free(msg);
+}
+
+bool g_found_not_limited;
+bool g_found_limited;
+bool g_found_never_called;
+
+static int
+iter_dep_cb(void *ctx, struct spdk_deprecation *dep)
+{
+	/* The getters work from the callback. */
+	if (dep == _deprecated_unit_test_not_limited) {
+		CU_ASSERT(!g_found_not_limited);
+		g_found_not_limited = true;
+		CU_ASSERT(strcmp(spdk_deprecation_get_tag(dep), "unit_test_not_limited") == 0);
+		CU_ASSERT(strcmp(spdk_deprecation_get_description(dep), "not rate limited") == 0);
+		CU_ASSERT(strcmp(spdk_deprecation_get_remove_release(dep), "never") == 0);
+		CU_ASSERT(spdk_deprecation_get_hits(dep) != 0);
+	} else if (dep == _deprecated_unit_test_limited) {
+		CU_ASSERT(!g_found_limited);
+		g_found_limited = true;
+		CU_ASSERT(strcmp(spdk_deprecation_get_tag(dep), "unit_test_limited") == 0);
+		CU_ASSERT(strcmp(spdk_deprecation_get_description(dep), "with rate limit") == 0);
+		CU_ASSERT(strcmp(spdk_deprecation_get_remove_release(dep), "sometime") == 0);
+		CU_ASSERT(spdk_deprecation_get_hits(dep) != 0);
+	} else if (dep == _deprecated_unit_test_never_called) {
+		CU_ASSERT(!g_found_never_called);
+		g_found_never_called = true;
+		CU_ASSERT(strcmp(spdk_deprecation_get_tag(dep), "unit_test_never_called") == 0);
+		CU_ASSERT(strcmp(spdk_deprecation_get_description(dep), "not called") == 0);
+		CU_ASSERT(strcmp(spdk_deprecation_get_remove_release(dep), "maybe") == 0);
+		CU_ASSERT(spdk_deprecation_get_hits(dep) == 0);
+	} else {
+		CU_ASSERT(false);
+	}
+
+	return 0;
+}
+
+static void
+deprecation(void)
+{
+	int rc;
+
+	spdk_log_open(log_deprecations);
+
+	/* A log message is emitted for every message without rate limiting. */
+	g_ut_dep_saw_suppressed_log = false;
+	g_ut_dep_log_times = 0;
+	g_ut_dep_expect_func = __func__;
+	g_ut_dep_expect_msg = "unit_test_not_limited:";
+	g_ut_dep_expect_line = __LINE__ + 1;
+	SPDK_LOG_DEPRECATED(unit_test_not_limited);
+	CU_ASSERT(_deprecated_unit_test_not_limited->hits == 1);
+	CU_ASSERT(_deprecated_unit_test_not_limited->deferred == 0);
+	CU_ASSERT(g_ut_dep_log_times == 1);
+	g_ut_dep_expect_line = __LINE__ + 1;
+	SPDK_LOG_DEPRECATED(unit_test_not_limited);
+	CU_ASSERT(_deprecated_unit_test_not_limited->hits == 2);
+	CU_ASSERT(_deprecated_unit_test_not_limited->deferred == 0);
+	CU_ASSERT(g_ut_dep_log_times == 2);
+	CU_ASSERT(!g_ut_dep_saw_suppressed_log);
+
+	/* Rate limiting keeps track of deferred messages */
+	g_ut_dep_saw_suppressed_log = false;
+	g_ut_dep_log_times = 0;
+	g_ut_dep_expect_msg = "unit_test_limited:";
+	g_ut_dep_expect_line = __LINE__ + 1;
+	SPDK_LOG_DEPRECATED(unit_test_limited);
+	CU_ASSERT(_deprecated_unit_test_limited->hits == 1);
+	CU_ASSERT(_deprecated_unit_test_limited->deferred == 0);
+	CU_ASSERT(g_ut_dep_log_times == 1);
+	SPDK_LOG_DEPRECATED(unit_test_limited);
+	CU_ASSERT(_deprecated_unit_test_limited->hits == 2);
+	CU_ASSERT(_deprecated_unit_test_limited->deferred == 1);
+	CU_ASSERT(g_ut_dep_log_times == 1);
+	CU_ASSERT(!g_ut_dep_saw_suppressed_log);
+
+	/* After a delay, the next log message prints the normal message followed by one that says
+	 * that some messages were suppressed.
+	 */
+	g_ut_dep_saw_suppressed_log = false;
+	sleep(1);
+	g_ut_dep_expect_line = __LINE__ + 1;
+	SPDK_LOG_DEPRECATED(unit_test_limited);
+	CU_ASSERT(_deprecated_unit_test_limited->hits == 3);
+	CU_ASSERT(_deprecated_unit_test_limited->deferred == 0);
+	CU_ASSERT(g_ut_dep_log_times == 3);
+	CU_ASSERT(g_ut_dep_saw_suppressed_log);
+
+	/* spdk_log_for_each_deprecation() visits each registered deprecation */
+	rc = spdk_log_for_each_deprecation(NULL, iter_dep_cb);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_found_not_limited);
+	CU_ASSERT(g_found_limited);
+	CU_ASSERT(g_found_never_called);
+
+	g_log = NULL;
+}
+
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
@@ -97,6 +205,7 @@ int main(int argc, char **argv)
 	suite = CU_add_suite("log", NULL, NULL);
 
 	CU_ADD_TEST(suite, log_test);
+	CU_ADD_TEST(suite, deprecation);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

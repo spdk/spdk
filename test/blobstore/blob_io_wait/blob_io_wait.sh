@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation
+#  All rights reserved.
+#
 SYSTEM=$(uname -s)
 if [ $SYSTEM = "FreeBSD" ]; then
 	echo "blob_io_wait.sh cannot run on FreeBSD currently."
@@ -9,7 +12,6 @@ fi
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
-rpc_py="$rootdir/scripts/rpc.py"
 
 truncate -s 64M $testdir/aio.bdev
 
@@ -29,7 +31,7 @@ $rpc_py save_config > $testdir/bdevperf.json
 
 killprocess $bdev_svc_pid
 
-$rootdir/test/bdev/bdevperf/bdevperf --json $testdir/bdevperf.json -q 128 -o 4096 -w write -t 5 -r /var/tmp/spdk.sock &
+$rootdir/build/examples/bdevperf --json $testdir/bdevperf.json -q 128 -o 4096 -w write -t 5 -r /var/tmp/spdk.sock &
 bdev_perf_pid=$!
 waitforlisten $bdev_perf_pid
 $rpc_py bdev_enable_histogram aio0 -e
@@ -38,7 +40,7 @@ $rpc_py bdev_get_histogram aio0 | $rootdir/scripts/histogram.py
 $rpc_py bdev_enable_histogram aio0 -d
 wait $bdev_perf_pid
 
-$rootdir/test/bdev/bdevperf/bdevperf --json $testdir/bdevperf.json -q 128 -o 4096 -w read -t 5 -r /var/tmp/spdk.sock &
+$rootdir/build/examples/bdevperf --json $testdir/bdevperf.json -q 128 -o 4096 -w read -t 5 -r /var/tmp/spdk.sock &
 bdev_perf_pid=$!
 waitforlisten $bdev_perf_pid
 $rpc_py bdev_enable_histogram aio0 -e
@@ -47,7 +49,7 @@ $rpc_py bdev_get_histogram aio0 | $rootdir/scripts/histogram.py
 $rpc_py bdev_enable_histogram aio0 -d
 wait $bdev_perf_pid
 
-$rootdir/test/bdev/bdevperf/bdevperf --json $testdir/bdevperf.json -q 128 -o 4096 -w unmap -t 1
+$rootdir/build/examples/bdevperf --json $testdir/bdevperf.json -q 128 -o 4096 -w unmap -t 1
 
 sync
 rm -f $testdir/bdevperf.json

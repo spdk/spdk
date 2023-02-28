@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package sma.nvmf;
+
+option go_package = "spdk.io/sma/nvmf";
+
+// Defines an address of an NVMeoF endpoint
+message Address {
+  // Transport type ("rdma" or "tcp")
+  string trtype = 1;
+  // Transport address (IP)
+  string traddr = 2;
+  // Transport service identifier (port number)
+  string trsvcid = 3;
+}
+// NVMeoF connection using discovery service
+message VolumeDiscoveryParameters {
+  // One or more discovery endpoints
+  repeated Address discovery_endpoints = 1;
+}
+
+// Describes connection parameters for an NVMeoF volume (namespace)
+message VolumeConnectionParameters {
+  // Subsystem that the volume is exposed through.  A volume with a given
+  // GUID/UUID won't be created if it's attached to a different subsystem.  This
+  // field is optional and can be left empty.
+  string subnqn = 1;
+  // Host NQN to use when connecting to the subsystem exposing the volume (and,
+  // if using discovery, to the discovery subsystem too).
+  string hostnqn = 2;
+  oneof connection_params {
+    // Connection through discovery service
+    VolumeDiscoveryParameters discovery = 3;
+  }
+}

@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -274,8 +246,15 @@ spdk_reactors_init(size_t msg_mempool_size)
 
 	memset(g_reactors, 0, (g_reactor_count) * sizeof(struct spdk_reactor));
 
-	spdk_thread_lib_init_ext(reactor_thread_op, reactor_thread_op_supported,
-				 sizeof(struct spdk_lw_thread), msg_mempool_size);
+	rc = spdk_thread_lib_init_ext(reactor_thread_op, reactor_thread_op_supported,
+				      sizeof(struct spdk_lw_thread), msg_mempool_size);
+	if (rc != 0) {
+		SPDK_ERRLOG("Initialize spdk thread lib failed\n");
+		spdk_mempool_free(g_spdk_event_mempool);
+		free(g_reactors);
+		free(g_core_infos);
+		return rc;
+	}
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		reactor_construct(&g_reactors[i], i);
@@ -339,20 +318,26 @@ _reactor_set_notify_cpuset(void *arg1, void *arg2)
 }
 
 static void
+_event_call(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2)
+{
+	struct spdk_event *ev;
+
+	ev = spdk_event_allocate(lcore, fn, arg1, arg2);
+	assert(ev);
+	spdk_event_call(ev);
+}
+
+static void
 _reactor_set_notify_cpuset_cpl(void *arg1, void *arg2)
 {
 	struct spdk_reactor *target = arg1;
 
 	if (target->new_in_interrupt == false) {
 		target->set_interrupt_mode_in_progress = false;
-		spdk_thread_send_msg(_spdk_get_app_thread(), target->set_interrupt_mode_cb_fn,
+		spdk_thread_send_msg(spdk_thread_get_app_thread(), target->set_interrupt_mode_cb_fn,
 				     target->set_interrupt_mode_cb_arg);
 	} else {
-		struct spdk_event *ev;
-
-		ev = spdk_event_allocate(target->lcore, _reactor_set_interrupt_mode, target, NULL);
-		assert(ev);
-		spdk_event_call(ev);
+		_event_call(target->lcore, _reactor_set_interrupt_mode, target, NULL);
 	}
 }
 
@@ -379,10 +364,12 @@ _reactor_set_interrupt_mode(void *arg1, void *arg2)
 
 	target->in_interrupt = target->new_in_interrupt;
 
-	/* Align spdk_thread with reactor to interrupt mode or poll mode */
-	TAILQ_FOREACH_SAFE(lw_thread, &target->threads, link, tmp) {
-		thread = spdk_thread_get_from_ctx(lw_thread);
-		spdk_thread_send_msg(thread, _reactor_set_thread_interrupt_mode, target);
+	if (spdk_interrupt_mode_is_enabled()) {
+		/* Align spdk_thread with reactor to interrupt mode or poll mode */
+		TAILQ_FOREACH_SAFE(lw_thread, &target->threads, link, tmp) {
+			thread = spdk_thread_get_from_ctx(lw_thread);
+			spdk_thread_send_msg(thread, _reactor_set_thread_interrupt_mode, target);
+		}
 	}
 
 	if (target->new_in_interrupt == false) {
@@ -405,7 +392,7 @@ _reactor_set_interrupt_mode(void *arg1, void *arg2)
 		}
 
 		target->set_interrupt_mode_in_progress = false;
-		spdk_thread_send_msg(_spdk_get_app_thread(), target->set_interrupt_mode_cb_fn,
+		spdk_thread_send_msg(spdk_thread_get_app_thread(), target->set_interrupt_mode_cb_fn,
 				     target->set_interrupt_mode_cb_arg);
 	}
 }
@@ -426,7 +413,7 @@ spdk_reactor_set_interrupt_mode(uint32_t lcore, bool new_in_interrupt,
 		return -ENOTSUP;
 	}
 
-	if (spdk_get_thread() != _spdk_get_app_thread()) {
+	if (spdk_get_thread() != spdk_thread_get_app_thread()) {
 		SPDK_ERRLOG("It is only permitted within spdk application thread.\n");
 		return -EPERM;
 	}
@@ -454,11 +441,7 @@ spdk_reactor_set_interrupt_mode(uint32_t lcore, bool new_in_interrupt,
 		 * first change the mode of the reactor and then clear the corresponding
 		 * bit of the notify_cpuset of each reactor.
 		 */
-		struct spdk_event *ev;
-
-		ev = spdk_event_allocate(lcore, _reactor_set_interrupt_mode, target, NULL);
-		assert(ev);
-		spdk_event_call(ev);
+		_event_call(lcore, _reactor_set_interrupt_mode, target, NULL);
 	} else {
 		/* For race cases, when setting the reactor to interrupt mode, first set the
 		 * corresponding bit of the notify_cpuset of each reactor and then change the mode.
@@ -583,7 +566,7 @@ event_queue_run_batch(void *arg)
 	}
 
 	/* Execute the events. There are still some remaining events
-	 * that must occur on an SPDK thread. To accomodate those, try to
+	 * that must occur on an SPDK thread. To accommodate those, try to
 	 * run them on the first thread in the list, if it exists. */
 	lw_thread = TAILQ_FIRST(&reactor->threads);
 	if (lw_thread) {
@@ -789,7 +772,6 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 	struct spdk_lw_thread *lw_thread;
 	struct spdk_thread *thread;
 	struct spdk_reactor *reactor;
-	struct spdk_event *evt;
 	uint32_t next_core;
 	uint32_t i = 0;
 
@@ -812,8 +794,7 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 			SPDK_ERRLOG("Failed to allocate memory when gathering metrics on %u\n", reactor->lcore);
 
 			/* Cancel this round of schedule work */
-			evt = spdk_event_allocate(g_scheduling_reactor->lcore, _reactors_scheduler_cancel, NULL, NULL);
-			spdk_event_call(evt);
+			_event_call(g_scheduling_reactor->lcore, _reactors_scheduler_cancel, NULL, NULL);
 			return;
 		}
 
@@ -840,13 +821,11 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 	/* If we've looped back around to the scheduler thread, move to the next phase */
 	if (next_core == g_scheduling_reactor->lcore) {
 		/* Phase 2 of scheduling is rebalancing - deciding which threads to move where */
-		evt = spdk_event_allocate(next_core, _reactors_scheduler_balance, NULL, NULL);
-		spdk_event_call(evt);
+		_event_call(next_core, _reactors_scheduler_balance, NULL, NULL);
 		return;
 	}
 
-	evt = spdk_event_allocate(next_core, _reactors_scheduler_gather_metrics, NULL, NULL);
-	spdk_event_call(evt);
+	_event_call(next_core, _reactors_scheduler_gather_metrics, NULL, NULL);
 }
 
 static int _reactor_schedule_thread(struct spdk_thread *thread);
@@ -874,17 +853,17 @@ reactor_post_process_lw_thread(struct spdk_reactor *reactor, struct spdk_lw_thre
 {
 	struct spdk_thread *thread = spdk_thread_get_from_ctx(lw_thread);
 
-	if (spdk_unlikely(lw_thread->resched)) {
-		lw_thread->resched = false;
-		_reactor_remove_lw_thread(reactor, lw_thread);
-		_reactor_schedule_thread(thread);
-		return true;
-	}
-
 	if (spdk_unlikely(spdk_thread_is_exited(thread) &&
 			  spdk_thread_is_idle(thread))) {
 		_reactor_remove_lw_thread(reactor, lw_thread);
 		spdk_thread_destroy(thread);
+		return true;
+	}
+
+	if (spdk_unlikely(lw_thread->resched)) {
+		lw_thread->resched = false;
+		_reactor_remove_lw_thread(reactor, lw_thread);
+		_reactor_schedule_thread(thread);
 		return true;
 	}
 
@@ -985,8 +964,18 @@ reactor_run(void *arg)
 
 	TAILQ_FOREACH(lw_thread, &reactor->threads, link) {
 		thread = spdk_thread_get_from_ctx(lw_thread);
-		spdk_set_thread(thread);
-		spdk_thread_exit(thread);
+		/* All threads should have already had spdk_thread_exit() called on them, except
+		 * for the app thread.
+		 */
+		if (spdk_thread_is_running(thread)) {
+			if (thread != spdk_thread_get_app_thread()) {
+				SPDK_ERRLOG("spdk_thread_exit() was not called on thread '%s'\n",
+					    spdk_thread_get_name(thread));
+				SPDK_ERRLOG("This will result in a non-zero exit code in a future release.\n");
+			}
+			spdk_set_thread(thread);
+			spdk_thread_exit(thread);
+		}
 	}
 
 	while (!TAILQ_EMPTY(&reactor->threads)) {
@@ -1371,7 +1360,6 @@ void
 spdk_for_each_reactor(spdk_event_fn fn, void *arg1, void *arg2, spdk_event_fn cpl)
 {
 	struct call_reactor *cr;
-	struct spdk_event *evt;
 
 	/* When the application framework is shutting down, we will send one
 	 * final for_each_reactor operation with completion callback _reactors_stop,
@@ -1404,10 +1392,7 @@ spdk_for_each_reactor(spdk_event_fn fn, void *arg1, void *arg2, spdk_event_fn cp
 
 	SPDK_DEBUGLOG(reactor, "Starting reactor iteration from %d\n", cr->orig_core);
 
-	evt = spdk_event_allocate(cr->cur_core, on_reactor, cr, NULL);
-	assert(evt != NULL);
-
-	spdk_event_call(evt);
+	_event_call(cr->cur_core, on_reactor, cr, NULL);
 }
 
 #ifdef __linux__

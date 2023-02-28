@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2015 Intel Corporation. All rights reserved.
  *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk_cunit.h"
@@ -716,11 +688,13 @@ test_nvme_allocate_request(void)
 	memset(&payload, 0x5a, payload_struct_size);
 	STAILQ_INIT(&qpair.free_req);
 	STAILQ_INIT(&qpair.queued_req);
+	qpair.num_outstanding_reqs = 0;
 
 	/* Test trying to allocate a request when no requests are available */
 	req = nvme_allocate_request(&qpair, &payload, payload_struct_size, 0,
 				    cb_fn, cb_arg);
 	CU_ASSERT(req == NULL);
+	CU_ASSERT(qpair.num_outstanding_reqs == 0);
 
 	/* put a dummy on the queue, and then allocate one */
 	STAILQ_INSERT_HEAD(&qpair.free_req, &dummy_req, stailq);
@@ -729,6 +703,7 @@ test_nvme_allocate_request(void)
 
 	/* all the req elements should now match the passed in parameters */
 	SPDK_CU_ASSERT_FATAL(req != NULL);
+	CU_ASSERT(qpair.num_outstanding_reqs == 1);
 	CU_ASSERT(req->cb_fn == cb_fn);
 	CU_ASSERT(req->cb_arg == cb_arg);
 	CU_ASSERT(memcmp(&req->payload, &payload, payload_struct_size) == 0);
@@ -740,12 +715,13 @@ static void
 test_nvme_free_request(void)
 {
 	struct nvme_request match_req;
-	struct spdk_nvme_qpair qpair;
+	struct spdk_nvme_qpair qpair = {0};
 	struct nvme_request *req;
 
 	/* put a req on the Q, take it off and compare */
 	memset(&match_req.cmd, 0x5a, sizeof(struct spdk_nvme_cmd));
 	match_req.qpair = &qpair;
+	qpair.num_outstanding_reqs = 1;
 	/* the code under tests asserts this condition */
 	match_req.num_children = 0;
 	STAILQ_INIT(&qpair.free_req);
@@ -754,6 +730,7 @@ test_nvme_free_request(void)
 	nvme_free_request(&match_req);
 	req = STAILQ_FIRST(&match_req.qpair->free_req);
 	CU_ASSERT(req == &match_req);
+	CU_ASSERT(qpair.num_outstanding_reqs == 0);
 }
 
 static void
@@ -1612,7 +1589,8 @@ test_spdk_nvme_detach_async(void)
 	MOCK_CLEAR(nvme_ctrlr_get_ref_count);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

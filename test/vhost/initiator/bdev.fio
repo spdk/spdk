@@ -11,6 +11,7 @@ iodepth=128
 bs=4K
 runtime=10
 size=13%
+verify_state_save=0
 
 [job_randwrite]
 rw=randwrite

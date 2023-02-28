@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -59,11 +31,14 @@
 #define SPDK_APP_DPDK_DEFAULT_BASE_VIRTADDR	0x200000000000
 #define SPDK_APP_DEFAULT_CORE_LIMIT		0x140000000 /* 5 GiB */
 
+#define MAX_CPU_CORES				128
+
 struct spdk_app {
 	const char			*json_config_file;
 	bool				json_config_ignore_errors;
 	bool				stopped;
 	const char			*rpc_addr;
+	const char			**rpc_allowlist;
 	int				shm_id;
 	spdk_app_shutdown_cb		shutdown_cb;
 	int				rc;
@@ -72,11 +47,13 @@ struct spdk_app {
 static struct spdk_app g_spdk_app;
 static spdk_msg_fn g_start_fn = NULL;
 static void *g_start_arg = NULL;
-static struct spdk_thread *g_app_thread = NULL;
 static bool g_delay_subsystem_init = false;
 static bool g_shutdown_sig_received = false;
 static char *g_executable_name;
 static struct spdk_app_opts g_default_opts;
+static bool g_disable_cpumask_locks = false;
+
+static int g_core_locks[MAX_CPU_CORES];
 
 int
 spdk_app_get_shm_id(void)
@@ -90,8 +67,8 @@ static const struct option g_cmdline_options[] = {
 	{"config",			required_argument,	NULL, CONFIG_FILE_OPT_IDX},
 #define LIMIT_COREDUMP_OPT_IDX 'd'
 	{"limit-coredump",		no_argument,		NULL, LIMIT_COREDUMP_OPT_IDX},
-#define TPOINT_GROUP_MASK_OPT_IDX 'e'
-	{"tpoint-group-mask",		required_argument,	NULL, TPOINT_GROUP_MASK_OPT_IDX},
+#define TPOINT_GROUP_OPT_IDX 'e'
+	{"tpoint-group",		required_argument,	NULL, TPOINT_GROUP_OPT_IDX},
 #define SINGLE_FILE_SEGMENTS_OPT_IDX 'g'
 	{"single-file-segments",	no_argument,		NULL, SINGLE_FILE_SEGMENTS_OPT_IDX},
 #define HELP_OPT_IDX		'h'
@@ -144,6 +121,14 @@ static const struct option g_cmdline_options[] = {
 	{"base-virtaddr",		required_argument,	NULL, BASE_VIRTADDR_OPT_IDX},
 #define ENV_CONTEXT_OPT_IDX	266
 	{"env-context",			required_argument,	NULL, ENV_CONTEXT_OPT_IDX},
+#define DISABLE_CPUMASK_LOCKS_OPT_IDX	267
+	{"disable-cpumask-locks",	no_argument,		NULL, DISABLE_CPUMASK_LOCKS_OPT_IDX},
+#define RPCS_ALLOWED_OPT_IDX	268
+	{"rpcs-allowed",		required_argument,	NULL, RPCS_ALLOWED_OPT_IDX},
+#define ENV_VF_TOKEN_OPT_IDX 269
+	{"vfio-vf-token",		required_argument,	NULL, ENV_VF_TOKEN_OPT_IDX},
+#define MSG_MEMPOOL_SIZE_OPT_IDX 270
+	{"msg-mempool-size",		required_argument,	NULL, MSG_MEMPOOL_SIZE_OPT_IDX},
 };
 
 static void
@@ -160,7 +145,7 @@ app_start_shutdown(void *ctx)
 void
 spdk_app_start_shutdown(void)
 {
-	spdk_thread_send_critical_msg(g_app_thread, app_start_shutdown);
+	spdk_thread_send_critical_msg(spdk_thread_get_app_thread(), app_start_shutdown);
 }
 
 static void
@@ -226,6 +211,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts, size_t opts_size)
 	SET_FIELD(delay_subsystem_init, false);
 	SET_FIELD(disable_signal_handlers, false);
 	SET_FIELD(msg_mempool_size, SPDK_DEFAULT_MSG_MEMPOOL_SIZE);
+	SET_FIELD(rpc_allowlist, NULL);
 #undef SET_FIELD
 }
 
@@ -272,7 +258,7 @@ app_setup_signal_handlers(struct spdk_app_opts *opts)
 static void
 app_start_application(void)
 {
-	assert(spdk_get_thread() == g_app_thread);
+	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
 	g_start_fn(g_start_arg);
 }
@@ -284,6 +270,8 @@ app_start_rpc(int rc, void *arg1)
 		spdk_app_stop(rc);
 		return;
 	}
+
+	spdk_rpc_set_allowlist(g_spdk_app.rpc_allowlist);
 
 	rc = spdk_rpc_initialize(g_spdk_app.rpc_addr);
 	if (rc) {
@@ -352,6 +340,7 @@ app_setup_env(struct spdk_app_opts *opts)
 	env_opts.base_virtaddr = opts->base_virtaddr;
 	env_opts.env_context = opts->env_context;
 	env_opts.iova_mode = opts->iova_mode;
+	env_opts.vf_token = opts->vf_token;
 
 	rc = spdk_env_init(&env_opts);
 	free(env_opts.pci_blocked);
@@ -371,6 +360,7 @@ app_setup_trace(struct spdk_app_opts *opts)
 	uint64_t	tpoint_group_mask, tpoint_mask = -1ULL;
 	char		*end = NULL, *tpoint_group_mask_str, *tpoint_group_str = NULL;
 	char		*tp_g_str, *tpoint_group, *tpoints;
+	bool		error_found = false;
 	uint64_t	group_id;
 
 	if (opts->shm_id >= 0) {
@@ -407,6 +397,7 @@ app_setup_trace(struct spdk_app_opts *opts)
 			if (*end != '\0' || errno) {
 				tpoint_group_mask = spdk_trace_create_tpoint_group_mask(tpoint_group);
 				if (tpoint_group_mask == 0) {
+					error_found = true;
 					break;
 				}
 			}
@@ -416,12 +407,14 @@ app_setup_trace(struct spdk_app_opts *opts)
 			if (!spdk_u64_is_pow2(tpoint_group_mask)) {
 				SPDK_ERRLOG("Tpoint group mask: %s contains multiple tpoint groups.\n", tpoint_group);
 				SPDK_ERRLOG("This is not supported, to prevent from activating tpoints by mistake.\n");
+				error_found = true;
 				break;
 			}
 
 			errno = 0;
 			tpoint_mask = strtoull(tpoints, &end, 16);
 			if (*end != '\0' || errno) {
+				error_found = true;
 				break;
 			}
 		} else {
@@ -430,6 +423,7 @@ app_setup_trace(struct spdk_app_opts *opts)
 			if (*end != '\0' || errno) {
 				tpoint_group_mask = spdk_trace_create_tpoint_group_mask(tpoint_group_str);
 				if (tpoint_group_mask == 0) {
+					error_found = true;
 					break;
 				}
 			}
@@ -443,8 +437,10 @@ app_setup_trace(struct spdk_app_opts *opts)
 		}
 	}
 
-	if (tpoint_group_str != NULL) {
+	if (error_found) {
 		SPDK_ERRLOG("invalid tpoint mask %s\n", opts->tpoint_group_mask);
+		free(tp_g_str);
+		return -1;
 	} else {
 		SPDK_NOTICELOG("Tracepoint Group Mask %s specified.\n", opts->tpoint_group_mask);
 		SPDK_NOTICELOG("Use 'spdk_trace -s %s %s %d' to capture a snapshot of events at runtime.\n",
@@ -474,6 +470,8 @@ bootstrap_fn(void *arg1)
 		if (!g_delay_subsystem_init) {
 			spdk_subsystem_init(app_start_rpc, NULL);
 		} else {
+			spdk_rpc_set_allowlist(g_spdk_app.rpc_allowlist);
+
 			rc = spdk_rpc_initialize(g_spdk_app.rpc_addr);
 			if (rc) {
 				spdk_app_stop(rc);
@@ -522,12 +520,119 @@ app_copy_opts(struct spdk_app_opts *opts, struct spdk_app_opts *opts_user, size_
 	SET_FIELD(base_virtaddr);
 	SET_FIELD(disable_signal_handlers);
 	SET_FIELD(msg_mempool_size);
+	SET_FIELD(rpc_allowlist);
+	SET_FIELD(vf_token);
 
 	/* You should not remove this statement, but need to update the assert statement
 	 * if you add a new field, and also add a corresponding SET_FIELD statement */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 200, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 216, "Incorrect size");
 
 #undef SET_FIELD
+}
+
+static int
+unclaim_cpu_cores(uint32_t *failed_core)
+{
+	char core_name[40];
+	uint32_t i;
+	int rc;
+
+	for (i = 0; i < MAX_CPU_CORES; i++) {
+		if (g_core_locks[i] != -1) {
+			snprintf(core_name, sizeof(core_name), "/var/tmp/spdk_cpu_lock_%03d", i);
+			rc = close(g_core_locks[i]);
+			if (rc) {
+				SPDK_ERRLOG("Failed to close lock fd for core %d, errno: %d\n", i, errno);
+				goto error;
+			}
+
+			g_core_locks[i] = -1;
+			rc = unlink(core_name);
+			if (rc) {
+				SPDK_ERRLOG("Failed to unlink lock fd for core %d, errno: %d\n", i, errno);
+				goto error;
+			}
+		}
+	}
+
+	return 0;
+
+error:
+	if (failed_core != NULL) {
+		/* Set number of core we failed to claim. */
+		*failed_core = i;
+	}
+	return -1;
+}
+
+static int
+claim_cpu_cores(uint32_t *failed_core)
+{
+	char core_name[40];
+	int core_fd, pid;
+	int *core_map;
+	uint32_t core;
+
+	struct flock core_lock = {
+		.l_type = F_WRLCK,
+		.l_whence = SEEK_SET,
+		.l_start = 0,
+		.l_len = 0,
+	};
+
+	SPDK_ENV_FOREACH_CORE(core) {
+		if (g_core_locks[core] != -1) {
+			/* If this core is locked already, do not try lock it again. */
+			continue;
+		}
+
+		snprintf(core_name, sizeof(core_name), "/var/tmp/spdk_cpu_lock_%03d", core);
+		core_fd = open(core_name, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+		if (core_fd == -1) {
+			SPDK_ERRLOG("Could not open %s (%s).\n", core_name, spdk_strerror(errno));
+			/* Return number of core we failed to claim. */
+			goto error;
+		}
+
+		if (ftruncate(core_fd, sizeof(int)) != 0) {
+			SPDK_ERRLOG("Could not truncate %s (%s).\n", core_name, spdk_strerror(errno));
+			close(core_fd);
+			goto error;
+		}
+
+		core_map = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, core_fd, 0);
+		if (core_map == MAP_FAILED) {
+			SPDK_ERRLOG("Could not mmap core %s (%s).\n", core_name, spdk_strerror(errno));
+			close(core_fd);
+			goto error;
+		}
+
+		if (fcntl(core_fd, F_SETLK, &core_lock) != 0) {
+			pid = *core_map;
+			SPDK_ERRLOG("Cannot create lock on core %" PRIu32 ", probably process %d has claimed it.\n",
+				    core, pid);
+			munmap(core_map, sizeof(int));
+			close(core_fd);
+			goto error;
+		}
+
+		/* We write the PID to the core lock file so that other processes trying
+		* to claim the same core will know what process is holding the lock. */
+		*core_map = (int)getpid();
+		munmap(core_map, sizeof(int));
+		g_core_locks[core] = core_fd;
+		/* Keep core_fd open to maintain the lock. */
+	}
+
+	return 0;
+
+error:
+	if (failed_core != NULL) {
+		/* Set number of core we failed to claim. */
+		*failed_core = core;
+	}
+	unclaim_cpu_cores(NULL);
+	return -1;
 }
 
 int
@@ -540,6 +645,7 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	static bool		g_env_was_setup = false;
 	struct spdk_app_opts opts_local = {};
 	struct spdk_app_opts *opts = &opts_local;
+	uint32_t i;
 
 	if (!opts_user) {
 		SPDK_ERRLOG("opts_user should not be NULL\n");
@@ -548,6 +654,11 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 
 	if (!opts_user->opts_size) {
 		SPDK_ERRLOG("The opts_size in opts_user structure should not be zero value\n");
+		return 1;
+	}
+
+	if (opts_user->name == NULL) {
+		SPDK_ERRLOG("spdk_app_opts::name not specified\n");
 		return 1;
 	}
 
@@ -585,6 +696,7 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	g_spdk_app.json_config_file = opts->json_config_file;
 	g_spdk_app.json_config_ignore_errors = opts->json_config_ignore_errors;
 	g_spdk_app.rpc_addr = opts->rpc_addr;
+	g_spdk_app.rpc_allowlist = opts->rpc_allowlist;
 	g_spdk_app.shm_id = opts->shm_id;
 	g_spdk_app.shutdown_cb = opts->shutdown_cb;
 	g_spdk_app.rc = 0;
@@ -600,6 +712,21 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	}
 
 	spdk_log_open(opts->log);
+
+	/* Initialize each lock to -1 to indicate "empty" status */
+	for (i = 0; i < MAX_CPU_CORES; i++) {
+		g_core_locks[i] = -1;
+	}
+
+	if (!g_disable_cpumask_locks) {
+		if (claim_cpu_cores(NULL)) {
+			SPDK_ERRLOG("Unable to acquire lock on assigned core mask - exiting.\n");
+			return 1;
+		}
+	} else {
+		SPDK_NOTICELOG("CPU core locks deactivated.\n");
+	}
+
 	SPDK_NOTICELOG("Total cores available: %d\n", spdk_env_get_core_count());
 
 	if ((rc = spdk_reactors_init(opts->msg_mempool_size)) != 0) {
@@ -609,10 +736,9 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 
 	spdk_cpuset_set_cpu(&tmp_cpumask, spdk_env_get_current_core(), true);
 
-	/* Now that the reactors have been initialized, we can create an
-	 * initialization thread. */
-	g_app_thread = spdk_thread_create("app_thread", &tmp_cpumask);
-	if (!g_app_thread) {
+	/* Now that the reactors have been initialized, we can create the app thread. */
+	spdk_thread_create("app_thread", &tmp_cpumask);
+	if (!spdk_thread_get_app_thread()) {
 		SPDK_ERRLOG("Unable to create an spdk_thread for initialization\n");
 		return 1;
 	}
@@ -639,7 +765,7 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	g_start_fn = start_fn;
 	g_start_arg = arg1;
 
-	spdk_thread_send_msg(g_app_thread, bootstrap_fn, NULL);
+	spdk_thread_send_msg(spdk_thread_get_app_thread(), bootstrap_fn, NULL);
 
 	/* This blocks until spdk_app_stop is called */
 	spdk_reactors_start();
@@ -656,17 +782,33 @@ spdk_app_fini(void)
 	spdk_reactors_fini();
 	spdk_env_fini();
 	spdk_log_close();
+	unclaim_cpu_cores(NULL);
 }
 
 static void
 _start_subsystem_fini(void *arg1)
 {
 	if (g_scheduling_in_progress) {
-		spdk_thread_send_msg(g_app_thread, _start_subsystem_fini, NULL);
+		spdk_thread_send_msg(spdk_thread_get_app_thread(), _start_subsystem_fini, NULL);
 		return;
 	}
 
 	spdk_subsystem_fini(spdk_reactors_stop, NULL);
+}
+
+static int
+log_deprecation_hits(void *ctx, struct spdk_deprecation *dep)
+{
+	uint64_t hits = spdk_deprecation_get_hits(dep);
+
+	if (hits == 0) {
+		return 0;
+	}
+
+	SPDK_WARNLOG("%s: deprecation '%s' scheduled for removal in %s hit %" PRIu64 " times\n",
+		     spdk_deprecation_get_tag(dep), spdk_deprecation_get_description(dep),
+		     spdk_deprecation_get_remove_release(dep), hits);
+	return 0;
 }
 
 static void
@@ -683,6 +825,7 @@ app_stop(void *arg1)
 
 	spdk_rpc_finish();
 	g_spdk_app.stopped = true;
+	spdk_log_for_each_deprecation(NULL, log_deprecation_hits);
 	_start_subsystem_fini(NULL);
 }
 
@@ -697,13 +840,7 @@ spdk_app_stop(int rc)
 	 * We want to run spdk_subsystem_fini() from the same thread where spdk_subsystem_init()
 	 * was called.
 	 */
-	spdk_thread_send_msg(g_app_thread, app_stop, (void *)(intptr_t)rc);
-}
-
-struct spdk_thread *
-_spdk_get_app_thread(void)
-{
-	return g_app_thread;
+	spdk_thread_send_msg(spdk_thread_get_app_thread(), app_stop, (void *)(intptr_t)rc);
 }
 
 static void
@@ -735,7 +872,10 @@ usage(void (*app_usage)(void))
 	{
 		printf("%dMB)\n", g_default_opts.mem_size >= 0 ? g_default_opts.mem_size : 0);
 	}
+	printf("     --disable-cpumask-locks    Disable CPU core lock files.\n");
 	printf("     --silence-noticelog   disable notice level logging to stderr\n");
+	printf("     --msg-mempool-size <size>  global message memory pool size in count (default: %d)\n",
+	       SPDK_DEFAULT_MSG_MEMPOOL_SIZE);
 	printf(" -u, --no-pci              disable PCI access\n");
 	printf("     --wait-for-rpc        wait for RPCs to initialize subsystems\n");
 	printf("     --max-delay <num>     maximum reactor delay (in microseconds)\n");
@@ -750,7 +890,9 @@ usage(void (*app_usage)(void))
 	printf("     --base-virtaddr <addr>      the base virtual address for DPDK (default: 0x200000000000)\n");
 	printf("     --num-trace-entries <num>   number of trace entries for each core, must be power of 2, setting 0 to disable trace (default %d)\n",
 	       SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES);
+	printf("     --rpcs-allowed	   comma-separated list of permitted RPCS\n");
 	printf("     --env-context         Opaque context for use of the env implementation\n");
+	printf("     --vfio-vf-token       VF token (UUID) shared between SR-IOV PF and VFs for vfio_pci driver\n");
 	spdk_log_usage(stdout, "-L");
 	spdk_trace_mask_usage(stdout, "-e");
 	if (app_usage) {
@@ -760,13 +902,14 @@ usage(void (*app_usage)(void))
 
 spdk_app_parse_args_rvals_t
 spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
-		    const char *app_getopt_str, struct option *app_long_opts,
+		    const char *app_getopt_str, const struct option *app_long_opts,
 		    int (*app_parse)(int ch, char *arg),
 		    void (*app_usage)(void))
 {
 	int ch, rc, opt_idx, global_long_opts_len, app_long_opts_len;
 	struct option *cmdline_options;
 	char *cmdline_short_opts = NULL;
+	char *shm_id_str = NULL;
 	enum spdk_app_parse_args_rvals retval = SPDK_APP_PARSE_ARGS_FAIL;
 	long int tmp;
 
@@ -828,7 +971,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		case LIMIT_COREDUMP_OPT_IDX:
 			opts->enable_coredump = false;
 			break;
-		case TPOINT_GROUP_MASK_OPT_IDX:
+		case TPOINT_GROUP_OPT_IDX:
 			opts->tpoint_group_mask = optarg;
 			break;
 		case SINGLE_FILE_SEGMENTS_OPT_IDX:
@@ -839,14 +982,28 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			retval = SPDK_APP_PARSE_ARGS_HELP;
 			goto out;
 		case SHM_ID_OPT_IDX:
-			opts->shm_id = spdk_strtol(optarg, 0);
+			shm_id_str = optarg;
+			/* a negative shm-id disables shared configuration file */
+			if (optarg[0] == '-') {
+				shm_id_str++;
+			}
+			/* check if the positive value of provided shm_id can be parsed as
+			 * an integer
+			 */
+			opts->shm_id = spdk_strtol(shm_id_str, 0);
 			if (opts->shm_id < 0) {
 				SPDK_ERRLOG("Invalid shared memory ID %s\n", optarg);
 				goto out;
 			}
+			if (optarg[0] == '-') {
+				opts->shm_id = -opts->shm_id;
+			}
 			break;
 		case CPUMASK_OPT_IDX:
 			opts->reactor_mask = optarg;
+			break;
+		case DISABLE_CPUMASK_LOCKS_OPT_IDX:
+			g_disable_cpumask_locks = true;
 			break;
 		case MEM_CHANNELS_OPT_IDX:
 			opts->mem_channel = spdk_strtol(optarg, 0);
@@ -895,6 +1052,16 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			opts->mem_size = (int) mem_size_mb;
 			break;
 		}
+		case MSG_MEMPOOL_SIZE_OPT_IDX:
+			tmp = spdk_strtol(optarg, 10);
+			if (tmp <= 0) {
+				SPDK_ERRLOG("Invalid message memory pool size %s\n", optarg);
+				goto out;
+			}
+
+			opts->msg_mempool_size = (size_t)tmp;
+			break;
+
 		case NO_PCI_OPT_IDX:
 			opts->no_pci = true;
 			break;
@@ -985,6 +1152,17 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		case ENV_CONTEXT_OPT_IDX:
 			opts->env_context = optarg;
 			break;
+		case RPCS_ALLOWED_OPT_IDX:
+			opts->rpc_allowlist = (const char **)spdk_strarray_from_string(optarg, ",");
+			if (opts->rpc_allowlist == NULL) {
+				SPDK_ERRLOG("Invalid --rpcs-allowed argument\n");
+				usage(app_usage);
+				goto out;
+			}
+			break;
+		case ENV_VF_TOKEN_OPT_IDX:
+			opts->vf_token = optarg;
+			break;
 		case VERSION_OPT_IDX:
 			printf(SPDK_VERSION_STRING"\n");
 			retval = SPDK_APP_PARSE_ARGS_HELP;
@@ -1018,6 +1196,8 @@ out:
 		opts->pci_blocked = NULL;
 		free(opts->pci_allowed);
 		opts->pci_allowed = NULL;
+		spdk_strarray_free((char **)opts->rpc_allowlist);
+		opts->rpc_allowlist = NULL;
 	}
 	free(cmdline_short_opts);
 	free(cmdline_options);
@@ -1040,7 +1220,7 @@ rpc_framework_start_init_cpl(int rc, void *arg1)
 {
 	struct spdk_jsonrpc_request *request = arg1;
 
-	assert(spdk_get_thread() == g_app_thread);
+	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -1067,7 +1247,6 @@ rpc_framework_start_init(struct spdk_jsonrpc_request *request,
 	spdk_subsystem_init(rpc_framework_start_init_cpl, request);
 }
 SPDK_RPC_REGISTER("framework_start_init", rpc_framework_start_init, SPDK_RPC_STARTUP)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_start_init, start_subsystem_init)
 
 struct subsystem_init_poller_ctx {
 	struct spdk_poller *init_poller;
@@ -1109,4 +1288,57 @@ rpc_framework_wait_init(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("framework_wait_init", rpc_framework_wait_init,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_wait_init, wait_subsystem_init)
+
+static void
+rpc_framework_disable_cpumask_locks(struct spdk_jsonrpc_request *request,
+				    const struct spdk_json_val *params)
+{
+	char msg[128];
+	int rc;
+	uint32_t failed_core;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "framework_disable_cpumask_locks"
+						 "requires no arguments");
+		return;
+	}
+
+	rc = unclaim_cpu_cores(&failed_core);
+	if (rc) {
+		snprintf(msg, sizeof(msg), "Failed to unclaim CPU core: %" PRIu32, failed_core);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, msg);
+		return;
+	}
+
+	spdk_jsonrpc_send_bool_response(request, true);
+}
+SPDK_RPC_REGISTER("framework_disable_cpumask_locks", rpc_framework_disable_cpumask_locks,
+		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+
+static void
+rpc_framework_enable_cpumask_locks(struct spdk_jsonrpc_request *request,
+				   const struct spdk_json_val *params)
+{
+	char msg[128];
+	int rc;
+	uint32_t failed_core;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "framework_enable_cpumask_locks"
+						 "requires no arguments");
+		return;
+	}
+
+	rc = claim_cpu_cores(&failed_core);
+	if (rc) {
+		snprintf(msg, sizeof(msg), "Failed to claim CPU core: %" PRIu32, failed_core);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, msg);
+		return;
+	}
+
+	spdk_jsonrpc_send_bool_response(request, true);
+}
+SPDK_RPC_REGISTER("framework_enable_cpumask_locks", rpc_framework_enable_cpumask_locks,
+		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)

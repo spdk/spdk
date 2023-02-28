@@ -1,123 +1,20 @@
-function install_spdk() {
-	mkdir -p "$GIT_REPOS/spdk_repo/output" || echo "Can not create spdk_repo/output directory."
-
-	if [[ -d $GIT_REPOS/spdk_repo/spdk ]]; then
-		echo "spdk source already present, not cloning"
-	else
-		git -C "$GIT_REPOS/spdk_repo" clone "${GIT_REPO_SPDK}"
-	fi
-	git -C "$GIT_REPOS/spdk_repo/spdk" config submodule.dpdk.url "${GIT_REPO_DPDK}"
-	git -C "$GIT_REPOS/spdk_repo/spdk" config submodule.intel-ipsec-mb.url "${GIT_REPO_INTEL_IPSEC_MB}"
-	git -C "$GIT_REPOS/spdk_repo/spdk" submodule update --init --recursive
-}
-
-function install_refspdk() {
-	local release
-	local output_dir
-	local config_params
-	local rootdir
-	local version
-
-	version=$1
-
-	# Create a reference SPDK build for ABI tests
-	git -C "$GIT_REPOS/spdk_repo/spdk" fetch --tags --force
-
-	if [[ "$version" == "latest" ]]; then
-		release=${REFSPDK_TAG:-$(git -C "$GIT_REPOS/spdk_repo/spdk" tag | sort --version-sort | grep -v rc | tail -n 1)}
-		output_dir="$GIT_REPOS/spdk_abi_latest"
-	elif [[ "$version" == "LTS" ]]; then
-		release=$(git -C "$GIT_REPOS/spdk_repo/spdk" describe --tags --exclude=LTS LTS)
-		output_dir="$GIT_REPOS/spdk_abi_lts"
-	fi
-
-	rm -rf "$output_dir"
-
-	if [[ ! -d $output_dir ]]; then
-		cp -R "$GIT_REPOS/spdk_repo/spdk" "$output_dir"
-	fi
-
-	git -C "$output_dir" checkout "$release"
-	git -C "$output_dir" submodule update --init
-
-	if ((gcc_version >= 11)) && le "${release#v}" 21.04; then
-		git -C "$output_dir" config --global user.name "spdk"
-		git -C "$output_dir" config --global user.email "hotpatch@spdk.io"
-		git -C "$output_dir" cherry-pick 36b5a69bb0699694b53a2f08a13cc0de620450a9
-		git -C "$output_dir" cherry-pick 2ac152158116a17b863270a4731977d9ddedf50d
-	fi
-
-	cat > $HOME/autorun-spdk.conf <<- EOF
-		SPDK_BUILD_SHARED_OBJECT=1
-		SPDK_TEST_AUTOBUILD=1
-		SPDK_TEST_UNITTEST=1
-		SPDK_TEST_BLOCKDEV=1
-		SPDK_TEST_PMDK=1
-		SPDK_TEST_ISAL=1
-		SPDK_TEST_REDUCE=1
-		SPDK_TEST_CRYPTO=1
-		SPDK_TEST_FTL=1
-		SPDK_TEST_OCF=1
-		SPDK_TEST_RAID5=1
-		SPDK_TEST_RBD=1
-		SPDK_RUN_ASAN=1
-		SPDK_RUN_UBSAN=1
-		SPDK_TEST_NVME_PMR=1
-		SPDK_TEST_NVME_SCC=1
-		SPDK_TEST_NVME_BP=1
-		SPDK_TEST_NVME_CUSE=1
-		SPDK_TEST_BLOBFS=1
-		SPDK_TEST_URING=1
-		SPDK_TEST_VFIOUSER=1
-	EOF
-
-	mkdir -p $HOME/output
-
-	(
-		rootdir="$output_dir"
-		source $HOME/autorun-spdk.conf
-		source $output_dir/test/common/autotest_common.sh
-
-		# Prepare separate, fixed, cmdline for the FreeBSD, Issue #1397.
-		if [[ $OSID == freebsd ]]; then
-			config_params="--enable-debug"
-			config_params+=" --without-isal"
-			config_params+=" --with-idxd --disable-unit-tests"
-
-			MAKE=gmake
-		else
-			config_params="$(get_config_params)"
-		fi
-		$output_dir/configure $(echo $config_params | sed 's/--enable-coverage//g') --without-fio
-		if [[ $OSID != freebsd ]]; then
-			$MAKE -C $output_dir $MAKEFLAGS include/spdk/config.h
-			CONFIG_OCF_PATH="$output_dir/ocf" $MAKE -C $output_dir/lib/env_ocf $MAKEFLAGS exportlib O=$output_dir/ocf.a
-			$output_dir/configure $config_params --with-ocf=$output_dir/ocf.a --with-shared --without-fio
-		fi
-		$MAKE -C $output_dir $MAKEFLAGS
-	)
-}
-
 function install_qat() {
-	# Dissect the kernel version into maj, min, release and local version
-	local kernel_maj kernel_min kernel_rel kernel_loc
-	local kernel_ver
+	if ! hash yasm; then
+		install yasm
+	fi
 
 	in_syms() {
 		local syms
 		if [[ -e /proc/kallsyms ]]; then
 			syms=/proc/kallsyms
-		elif [[ -e /boot/System.map-$(< /proc/sys/kernel/osrelease) ]]; then
-			syms=/boot/System.map-$(< /proc/sys/kernel/osrelease)
+		elif [[ -e /boot/System.map-$kernel_ver ]]; then
+			syms=/boot/System.map-$kernel_ver
 		else
 			return 0
 		fi
 
 		grep -q "$1" "$syms"
 	}
-
-	IFS=".-" read -r kernel_{maj,min,rel,loc} < /proc/sys/kernel/osrelease
-	kernel_ver=$((kernel_maj << 16 | kernel_min << 8 | kernel_rel))
 
 	if [[ -e /sys/module/qat_c62x ]]; then
 		sudo modprobe -r qat_c62x || :
@@ -129,49 +26,6 @@ function install_qat() {
 	mkdir "$GIT_REPOS/QAT"
 
 	tar -C "$GIT_REPOS/QAT" -xzof - < <(wget -O- "$DRIVER_LOCATION_QAT")
-
-	# Patch use of hidden types in kernels >= 5.6.3. See .patch for details
-	if ((kernel_ver >= 0x050603)); then
-		# Patch only the driver version that was tested
-		[[ ${DRIVER_LOCATION_QAT##*/} == qat1.7.l.4.9.0-00008.tar.gz ]] && patch --dir="$GIT_REPOS/QAT" -p1
-	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-timespec.patch"
-
-	# Patch name of the pci_aer function which was renamed in kernels >= 5.7.1. See .patch for details
-	if ((kernel_ver >= 0x050701)) || ! in_syms pci_cleanup_aer_uncorrect_error_status; then
-		# Patch only the driver version that was tested
-		if [[ ${DRIVER_LOCATION_QAT##*/} == qat1.7.l.4.9.0-00008.tar.gz ]]; then
-			patch --dir="$GIT_REPOS/QAT" -p1
-		fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-pci_aer.patch"
-		if ((kernel_ver < 0x050701)); then
-			# Older kernel build without pci_cleanup_aer_uncorrect_error_status()? This might be
-			# centos8's build.
-			if [[ ${DRIVER_LOCATION_QAT##*/} == qat1.7.l.4.12.0-00011.tar.gz ]]; then
-				patch --dir="$GIT_REPOS/QAT" -p1
-			fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-pci_aer_centos.patch"
-		fi
-	fi
-
-	# Patch use of cryptohash.h which was removed in favor of crypto/sha.h in kernels >= 5.8. See .patch for details
-	if ((kernel_ver >= 0x050800)); then
-		# Patch only the driver version that was tested
-		[[ ${DRIVER_LOCATION_QAT##*/} == qat1.7.l.4.9.0-00008.tar.gz ]] && patch --dir="$GIT_REPOS/QAT" -p1
-	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-cryptohash.patch"
-
-	# Object files need to be passed via obj-m otherwise they won't be built with kernels >= 5.10
-	if ((kernel_ver >= 0x050a01)); then
-		patch --dir="$GIT_REPOS/QAT" -p1
-	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-set-obj-m.patch"
-
-	# sha.h was split into two separate files, sha1.h and sha2.h in kernels >= 5.11
-	if ((kernel_ver >= 0x050b01)); then
-		# qat_algs_ablkcipher.c doesn't exist in older versions of the driver so simply force the patch
-		patch --force --dir="$GIT_REPOS/QAT" -p1
-	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-sha.patch" || :
-
-	# cipher routines were moved from crypto.h to crypto/internal/cipher.h in kernels >= 5.12
-	if ((kernel_ver >= 0x050c00)); then
-		patch --dir="$GIT_REPOS/QAT" -p1
-	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-cipher-ns.patch"
 
 	(cd "$GIT_REPOS/QAT" && sudo ./configure --enable-icp-sriov=host && sudo make install)
 
@@ -255,16 +109,10 @@ function _install_qemu() {
 
 	opt_params+=("--disable-docs")
 	if ((gcc_version >= 9)); then
-		# GCC 9 fails to compile Qemu due to some old warnings which were not detected by older versions.
-		extra_cflags+=("-Wno-error=stringop-truncation" "-Wno-error=deprecated-declarations")
-		extra_cflags+=("-Wno-error=incompatible-pointer-types" "-Wno-error=format-truncation")
-		extra_cflags+=("-Wno-error=address-of-packed-member")
 		opt_params+=("--disable-glusterfs")
 	fi
 
-	if ((gcc_version >= 11)); then
-		extra_cflags+=("-Wno-error=array-bounds")
-	fi
+	extra_cflags+=("-Wno-error")
 
 	# Most tsocks proxies rely on a configuration file in /etc/tsocks.conf.
 	# If using tsocks, please make sure to complete this config before trying to build qemu.
@@ -306,12 +154,19 @@ function install_nvmecli() {
 	if [[ ! -d $GIT_REPOS/nvme-cli-cuse ]]; then
 		git clone "https://github.com/linux-nvme/nvme-cli.git" "$GIT_REPOS/nvme-cli-cuse"
 	fi
-	git -C "$GIT_REPOS/nvme-cli-cuse" checkout v1.16
-	make -C "$GIT_REPOS/nvme-cli-cuse" CPPFLAGS="-Wno-error=maybe-uninitialized"
+	git -C "$GIT_REPOS/nvme-cli-cuse" checkout v2.0
+
+	cflags=("-Wno-error")
+
+	make -C "$GIT_REPOS/nvme-cli-cuse" CFLAGS="${cflags[*]}"
 	if [ -d "/usr/local/src/nvme-cli" ]; then
 		sudo rm -rf /usr/local/src/nvme-cli
 	fi
 	sudo mv "$GIT_REPOS/nvme-cli-cuse" /usr/local/src/nvme-cli
+	# Make sure binary is available for the cuse tests
+	if [[ -e /usr/local/src/nvme-cli/.build/nvme ]]; then
+		sudo ln -s .build/nvme /usr/local/src/nvme-cli/
+	fi
 }
 
 function install_libiscsi() {
@@ -338,12 +193,8 @@ function install_git() {
 	tar -C "$GIT_REPOS" -xzof <(wget -qO- "$GIT_REPO_GIT")
 	(cd "$GIT_REPOS/git-$GIT_VERSION" \
 		&& make configure \
-		&& ./configure --prefix=/usr/local/git \
+		&& ./configure \
 		&& sudo make -j${jobs} install)
-	sudo sh -c "echo 'export PATH=/usr/local/git/bin:$PATH' >> /etc/bashrc"
-	export "PATH=/usr/local/git/bin:$PATH"
-	# Be nice for vagrant-proxyconf setup
-	mkdir -p "/usr/local/git/etc"
 }
 
 function install_extra_pkgs() {
@@ -354,9 +205,12 @@ function install_extra_pkgs() {
 	if [[ $INSTALL_QEMU == true ]]; then
 		install qemu-system-x86 qemu-img \
 			|| install qemu-system-x86 qemu-utils \
-			|| install qemu \
-			|| :
-	fi
+			|| install qemu
+
+		# Install extra dependency which was removed from Qemu 7.2 source tree
+		install libslirp-devel \
+			|| install libslirp-dev
+	fi || :
 }
 
 function install_vagrant() {
@@ -398,6 +252,7 @@ function install_vagrant() {
 
 function install_igb_uio() {
 	git clone "${GIT_REPO_DPDK_KMODS}" "$GIT_REPOS/dpdk-kmods"
+
 	(cd "$GIT_REPOS/dpdk-kmods/linux/igb_uio" && make -j ${jobs})
 	sudo mkdir -p "/lib/modules/$(uname -r)/extra/dpdk"
 	sudo cp "$GIT_REPOS/dpdk-kmods/linux/igb_uio/igb_uio.ko" "/lib/modules/$(uname -r)/extra/dpdk"
@@ -405,7 +260,7 @@ function install_igb_uio() {
 }
 
 function install_irdma() {
-	local RDMA_CORE_VERSION=35.0
+	local RDMA_CORE_VERSION=42.0
 	local RDMA_CORE=https://github.com/linux-rdma/rdma-core/releases/download/v$RDMA_CORE_VERSION/rdma-core-$RDMA_CORE_VERSION.tar.gz
 
 	if [[ $ID != fedora ]]; then
@@ -413,7 +268,7 @@ function install_irdma() {
 		return 0
 	fi
 
-	# Install extra dependencies needed by the rdma-core-35.0
+	# Install extra dependencies needed by the rdma-core
 	install ninja-build pandoc perl-generators valgrind-devel python-docutils libnl3 libnl3-devel python3-Cython
 
 	rm -rf "$GIT_REPOS/irdma-$IRDMA_VERSION"
@@ -482,15 +337,12 @@ function install_ice() {
 
 	curl -L -o- "$ICE_DRIVER" | tar -C "$GIT_REPOS" -xzf -
 
-	if [[ $OSID == ubuntu && $OSVERSION == 18.04 ]]; then
-		if ge "$(< /proc/sys/kernel/osrelease)" 4.15.0-159; then
-			patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1
-		fi < "$rootdir/test/common/config/pkgdep/patches/ice/0001-undef-skb-frag-off.patch"
+	if ge "$kernel_ver" 6.1.0; then
+		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1 \
+			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-ktermios-const.patch"
+		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1 \
+			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-netif-napi-weight.patch"
 	fi
-
-	if ge "$(< /proc/sys/kernel/osrelease)" 5.15.0; then
-		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1
-	fi < "$rootdir/test/common/config/pkgdep/patches/ice/0001-devlink.patch"
 
 	(
 		cd "$GIT_REPOS/ice-$ICE_VERSION/src"
@@ -504,6 +356,22 @@ function install_lcov() {
 	rm -rf /usr/src/lcov
 	sudo git clone "$GIT_REPO_LCOV" --branch "$lcov_version" /usr/src/lcov
 	(cd /usr/src/lcov; sudo make install)
+}
+
+function install_bpftrace() {
+	install llvm-devel clang-devel cereal-devel gtest-devel gmock-devel cmake
+	rm -rf $GIT_REPOS/bpftrace
+
+	git clone $GIT_REPO_BPFTRACE $GIT_REPOS/bpftrace --recurse-submodules
+	git -C $GIT_REPOS/bpftrace checkout $BPFTRACE_VERSION
+	mkdir -p $GIT_REPOS/bpftrace/build
+
+	# Use build-libs.sh to build necessary libraries in the bpftrace tree
+	(cd $GIT_REPOS/bpftrace/build && ../build-libs.sh)
+
+	cmake -DCMAKE_BUILD_TYPE=Release -B $GIT_REPOS/bpftrace/build -S $GIT_REPOS/bpftrace
+	make -C $GIT_REPOS/bpftrace/build -j$(nproc)
+	sudo make -C $GIT_REPOS/bpftrace/build install
 }
 
 function install_sources() {
@@ -532,12 +400,12 @@ function install_sources() {
 			install_igb_uio
 			install_ice
 			install_lcov
+			install_bpftrace
 		)
 		install_extra_pkgs
 	fi
 	sources+=(install_fio)
 	sources+=(install_vagrant)
-	sources+=(install_spdk)
 
 	sudo mkdir -p /usr/{,local}/src
 	sudo mkdir -p "$GIT_REPOS"
@@ -548,25 +416,16 @@ function install_sources() {
 			"$source"
 		fi
 	done
-
-	if [[ $INSTALL_REFSPDK == true ]]; then
-		# Serialize builds as refspdk depends on spdk
-		[[ $INSTALL_SPDK != true ]] && install_spdk
-		install_refspdk latest
-		install_refspdk LTS
-	fi
 }
 
 GIT_VERSION=2.25.1
-IRDMA_VERSION=1.7.72
-ICE_VERSION=1.7.16
-VFIO_QEMU_BRANCH=${VFIO_QEMU_BRANCH:-vfio-user-v0.93}
-VANILLA_QEMU_BRANCH=${VANILLA_QEMU_BRANCH:-v6.0.0}
+IRDMA_VERSION=1.11.16.6
+ICE_VERSION=1.10.1.2.2
 
-: ${GIT_REPO_SPDK=https://github.com/spdk/spdk.git}
-export GIT_REPO_SPDK
-: ${GIT_REPO_DPDK=https://github.com/spdk/dpdk.git}
-export GIT_REPO_DPDK
+BPFTRACE_VERSION=${BPFTRACE_VERSION:-36414d9}
+VFIO_QEMU_BRANCH=${VFIO_QEMU_BRANCH:-vfio-user-patch1-noreq}
+VANILLA_QEMU_BRANCH=${VANILLA_QEMU_BRANCH:-v7.0.0}
+
 : ${GIT_REPO_ROCKSDB=https://review.spdk.io/spdk/rocksdb}
 export GIT_REPO_ROCKSDB
 : ${GIT_REPO_FIO=https://github.com/axboe/fio.git}
@@ -579,20 +438,26 @@ export GIT_REPO_QEMU
 export GIT_REPO_QEMU_VFIO
 : ${GIT_REPO_LIBISCSI=https://github.com/sahlberg/libiscsi}
 export GIT_REPO_LIBISCSI
-: ${GIT_REPO_INTEL_IPSEC_MB=https://github.com/spdk/intel-ipsec-mb.git}
-export GIT_REPO_INTEL_IPSEC_MB
-: ${DRIVER_LOCATION_QAT=https://01.org/sites/default/files/downloads//qat1.7.l.4.12.0-00011.tar.gz}
+: ${DRIVER_LOCATION_QAT=https://downloadmirror.intel.com/761891/QAT.L.4.20.0-00001.tar.gz}
 export DRIVER_LOCATION_QAT
 : ${GIT_REPO_GIT=https://github.com/git/git/archive/v${GIT_VERSION}.tar.gz}
 export GIT_REPO_GIT
 : ${GIT_REPO_DPDK_KMODS=http://dpdk.org/git/dpdk-kmods}
 export GIT_REPO_DPDK_KMODS
-: ${IRDMA_DRIVER=https://downloadmirror.intel.com/709709/irdma-$IRDMA_VERSION.tgz}
+: ${IRDMA_DRIVER=https://downloadmirror.intel.com/763932/irdma-$IRDMA_VERSION.tgz}
 export IRDMA_DRIVER
 : ${ICE_DRIVER="https://sourceforge.net/projects/e1000/files/ice%20stable/$ICE_VERSION/ice-$ICE_VERSION.tar.gz"}
 export ICE_DRIVER
 : ${GIT_REPO_LCOV=https://github.com/linux-test-project/lcov}
 export GIT_REPO_LCOV
+: ${GIT_REPO_BCC=https://github.com/iovisor/bcc.git}
+export GIT_REPO_BCC
+: ${GIT_REPO_BPFTRACE=https://github.com/iovisor/bpftrace.git}
+export GIT_REPO_BPFTRACE
+
 GIT_REPOS=${GIT_REPOS:-$HOME}
 
 gcc_version=$(gcc -dumpversion) gcc_version=${gcc_version%%.*}
+if [[ -e /proc/sys/kernel/osrelease ]]; then
+	kernel_ver=$(< /proc/sys/kernel/osrelease)
+fi

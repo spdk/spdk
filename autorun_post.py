@@ -1,9 +1,15 @@
 #!/usr/bin/python3
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation.
+#  All rights reserved.
+
 
 import shutil
 import subprocess
 import argparse
+import itertools
 import os
+import sys
 import glob
 import re
 import pandas as pd
@@ -56,34 +62,39 @@ def generateCoverageReport(output_dir, repo_dir):
     if len(covfiles) == 0:
         return
     lcov_opts = [
-        '--rc lcov_branch_coverage=1',
-        '--rc lcov_function_coverage=1',
-        '--rc genhtml_branch_coverage=1',
-        '--rc genhtml_function_coverage=1',
-        '--rc genhtml_legend=1',
-        '--rc geninfo_all_blocks=1',
+        '--rc', 'lcov_branch_coverage=1',
+        '--rc', 'lcov_function_coverage=1',
+        '--rc', 'genhtml_branch_coverage=1',
+        '--rc', 'genhtml_function_coverage=1',
+        '--rc', 'genhtml_legend=1',
+        '--rc', 'geninfo_all_blocks=1',
     ]
+
+    # HACK: This is a workaround for some odd CI assumptions
+    details = '--show-details'
+
     cov_total = os.path.abspath(os.path.join(output_dir, 'cov_total.info'))
     coverage = os.path.join(output_dir, 'coverage')
-    lcov = 'lcov' + ' ' + ' '.join(lcov_opts) + ' -q -a ' + ' -a '.join(covfiles) + ' -o ' + cov_total
-    genhtml = 'genhtml' + ' ' + ' '.join(lcov_opts) + ' -q ' + cov_total + ' --legend' + ' -t "Combined" --show-details -o ' + coverage
+    lcov = ['lcov', *lcov_opts, '-q', *itertools.chain(*[('-a', f) for f in covfiles]), '-o', cov_total]
+    genhtml = ['genhtml', *lcov_opts, '-q', cov_total, '--legend', '-t', 'Combined', *details.split(), '-o', coverage]
     try:
-        subprocess.check_call([lcov], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.check_call(lcov)
     except subprocess.CalledProcessError as e:
         print("lcov failed")
         print(e)
         return
-    cov_total_file = open(cov_total, 'r')
+
+    with open(cov_total, 'r') as cov_total_file:
+        file_contents = cov_total_file.readlines()
+
     replacement = "SF:" + repo_dir
-    file_contents = cov_total_file.readlines()
-    cov_total_file.close()
     os.remove(cov_total)
     with open(cov_total, 'w+') as file:
         for Line in file_contents:
             Line = re.sub("^SF:.*/repo", replacement, Line)
             file.write(Line + '\n')
     try:
-        subprocess.check_call([genhtml], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.check_call(genhtml)
     except subprocess.CalledProcessError as e:
         print("genhtml failed")
         print(e)
@@ -144,9 +155,9 @@ def getSkippedTests(repo_dir):
     skipped_test_file = os.path.join(repo_dir, "test", "common", "skipped_tests.txt")
     if not os.path.exists(skipped_test_file):
         return []
-    else:
-        with open(skipped_test_file, "r") as skipped_test_data:
-            return [x.strip() for x in skipped_test_data.readlines() if "#" not in x and x.strip() != '']
+
+    with open(skipped_test_file, "r") as skipped_test_data:
+        return [x.strip() for x in skipped_test_data.readlines() if "#" not in x and x.strip() != '']
 
 
 def confirmPerPatchTests(test_list, skiplist):
@@ -155,7 +166,7 @@ def confirmPerPatchTests(test_list, skiplist):
     if len(missing_tests) > 0:
         print("Not all tests were run. Failing the build.")
         print(missing_tests)
-        exit(1)
+        sys.exit(1)
 
 
 def aggregateCompletedTests(output_dir, repo_dir, skip_confirm=False):
@@ -188,6 +199,8 @@ def aggregateCompletedTests(output_dir, repo_dir, skip_confirm=False):
     skipped_tests = getSkippedTests(repo_dir)
     if not skip_confirm:
         confirmPerPatchTests(test_list, skipped_tests)
+
+    return 0
 
 
 def main(output_dir, repo_dir, skip_confirm=False):

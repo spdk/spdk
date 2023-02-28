@@ -175,7 +175,7 @@ iterate the spdk lists and build iterable representations of the list objects.
 This will result in errors if these are not available which is very possible if
 gdb is used for reasons other than debugging spdk core dumps.
 
-In the example bellow, I attempted to load the macros when the globals are not
+In the example below, I attempted to load the macros when the globals are not
 available causing gdb to fail loading the gdb_macros:
 
 ~~~{.sh}

@@ -151,13 +151,46 @@ bdev module. Refer to test/external_code/README.md and @ref so_linking for furth
 Block devices are considered virtual if they handle I/O requests by routing
 the I/O to other block devices. The canonical example would be a bdev module
 that implements RAID. Virtual bdevs are created in the same way as regular
-bdevs, but take one additional step. The module can look up the underlying
-bdevs it wishes to route I/O to using spdk_bdev_get_by_name(), where the string
-name is provided by the user via an RPC. The module
-then may proceed is normal by opening the bdev to obtain a descriptor, and
-creating I/O channels for the bdev (probably in response to the
-`get_io_channel` callback). The final step is to have the module use its open
-descriptor to call spdk_bdev_module_claim_bdev(), indicating that it is
-consuming the underlying bdev. This prevents other users from opening
-descriptors with write permissions. This effectively 'promotes' the descriptor
-to write-exclusive and is an operation only available to bdev modules.
+bdevs, but take the one additional step of claiming the bdev.
+
+The module can open the underlying bdevs it wishes to route I/O to using
+spdk_bdev_open_ext(), where the string name is provided by the user via an RPC.
+To ensure that other consumers do not modify the underlying bdev in an unexpected
+way, the virtual bdev should take a claim on the underlying bdev before
+reading from or writing to the underlying bdev.
+
+There are two slightly different APIs for taking and releasing claims. The
+preferred interface uses `spdk_bdev_module_claim_bdev_desc()`. This method allows
+claims that ensure there is a single writer with
+`SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE`, cooperating shared writers with
+`SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED`, and shared readers that prevent any
+writers with `SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE`. In all cases,
+`spdk_bdev_open_ext()` may be used to open the underlying bdev read-only. If a
+read-only bdev descriptor successfully claims a bdev with
+`SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE` or `SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED`
+the bdev descriptor is promoted to read-write.
+Any claim that is obtained with `spdk_bdev_module_claim_bdev_desc()` is
+automatically released upon closing the bdev descriptor used to obtain the
+claim. Shared claims continue to block new incompatible claims and new writers
+until the last claim is released.
+
+The non-preferred interface for obtaining a claim allows the caller to obtain
+an exclusive writer claim with `spdk_bdev_module_claim_bdev()`. It may be
+be released with `spdk_bdev_module_release_bdev()`. If a read-only bdev
+descriptor is passed, it is promoted to read-write.  NULL may be passed instead
+of a bdev descriptor to avoid promotion and to block new writers. New code
+should use `spdk_bdev_module_claim_bdev_desc()` with the claim type that is
+tailored to the virtual bdev's needs.
+
+The descriptor obtained from the successful spdk_bdev_open_ext() may be used
+with spdk_bdev_get_io_channel() to obtain I/O channels for the bdev. This is
+likely done in response to the virtual bdev's `get_io_channel` callback.
+Channels may be obtained before and/or after claiming the underlying bdev, but
+beware there may be other unknown writers until the underlying bdev has been
+claimed.
+
+When a virtual bdev module claims an underlying bdev from its `examine_config`
+callback, it causes the `examine_disk` callback to only be called for this
+module and any others that establish a shared claim. If no claims are taken by
+`examine_config` callbacks, all virtual bdevs' `examine_disk` callbacks are
+called.

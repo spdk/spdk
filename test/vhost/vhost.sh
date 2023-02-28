@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
@@ -68,4 +72,4 @@ run_test "vhost_blk_packed_ring_integrity" $WORKDIR/fiotest/fio.sh -x --fio-bin=
 	--fio-job=$WORKDIR/common/fio_jobs/default_integrity.job \
 	--packed
 
-run_test "spdkcli_vhost" ./test/spdkcli/vhost.sh
+run_test "spdkcli_vhost" $rootdir/test/spdkcli/vhost.sh

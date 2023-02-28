@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <ocf/ocf.h>
@@ -565,7 +537,7 @@ vbdev_ocf_io_submit_cb(struct ocf_io *io, int error)
 
 	if (error == 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
-	} else if (error == -ENOMEM) {
+	} else if (error == -OCF_ERR_NO_MEM) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
 	} else {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -1284,12 +1256,16 @@ error_free:
 	return rc;
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(bdev_ocf, "bdev_ocf support", "SPDK 23.05", 0);
+
 /* Read configuration file at the start of SPDK application
  * This adds vbdevs to global list if some mentioned in config */
 static int
 vbdev_ocf_init(void)
 {
 	int status;
+
+	SPDK_LOG_DEPRECATED(bdev_ocf);
 
 	status = vbdev_ocf_ctx_init();
 	if (status) {
@@ -1516,6 +1492,52 @@ vbdev_ocf_set_cache_mode(struct vbdev_ocf *vbdev,
 	rc = ocf_mngt_cache_set_mode(cache, cache_mode);
 	ocf_mngt_cache_unlock(cache);
 	cb(rc, vbdev, cb_arg);
+}
+
+/* Set sequential cutoff parameters on OCF cache */
+void
+vbdev_ocf_set_seqcutoff(struct vbdev_ocf *vbdev, const char *policy_name, uint32_t threshold,
+			uint32_t promotion_count, void (*cb)(int, void *), void *cb_arg)
+{
+	ocf_cache_t cache;
+	ocf_seq_cutoff_policy policy;
+	int rc;
+
+	cache = vbdev->ocf_cache;
+
+	policy = ocf_get_seqcutoff_policy(policy_name);
+	if (policy == ocf_seq_cutoff_policy_max) {
+		cb(OCF_ERR_INVAL, cb_arg);
+		return;
+	}
+
+	rc = ocf_mngt_cache_trylock(cache);
+	if (rc) {
+		cb(rc, cb_arg);
+		return;
+	}
+
+	rc = ocf_mngt_core_set_seq_cutoff_policy_all(cache, policy);
+	if (rc) {
+		goto end;
+	}
+
+	if (threshold) {
+		threshold = threshold * KiB;
+
+		rc = ocf_mngt_core_set_seq_cutoff_threshold_all(cache, threshold);
+		if (rc) {
+			goto end;
+		}
+	}
+
+	if (promotion_count) {
+		rc = ocf_mngt_core_set_seq_cutoff_promotion_count_all(cache, promotion_count);
+	}
+
+end:
+	ocf_mngt_cache_unlock(cache);
+	cb(rc, cb_arg);
 }
 
 /* This called if new device is created in SPDK application

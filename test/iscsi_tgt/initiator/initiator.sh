@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
@@ -9,8 +12,6 @@ iscsitestinit
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
-
-rpc_py="$rootdir/scripts/rpc.py"
 
 timing_enter start_iscsi_tgt
 
@@ -36,11 +37,11 @@ $rpc_py iscsi_create_target_node disk1 disk1_alias 'Malloc0:0' $PORTAL_TAG:$INIT
 sleep 1
 trap 'killprocess $pid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
 
-"$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w verify -t 5 -s 512
+"$rootdir/build/examples/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w verify -t 5 -s 512
 if [ $RUN_NIGHTLY -eq 1 ]; then
-	"$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w unmap -t 5 -s 512
-	"$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w flush -t 5 -s 512
-	"$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w reset -t 10 -s 512
+	"$rootdir/build/examples/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w unmap -t 5 -s 512
+	"$rootdir/build/examples/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w flush -t 5 -s 512
+	"$rootdir/build/examples/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w reset -t 10 -s 512
 fi
 
 trap - SIGINT SIGTERM EXIT

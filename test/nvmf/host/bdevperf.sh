@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
@@ -8,10 +11,8 @@ source $rootdir/test/nvmf/common.sh
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 function tgt_init() {
-	nvmfappstart -m 0xF
+	nvmfappstart -m 0xE
 
 	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 	$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
@@ -23,9 +24,9 @@ function tgt_init() {
 nvmftestinit
 tgt_init
 
-"$rootdir/test/bdev/bdevperf/bdevperf" --json <(gen_nvmf_target_json) -q 128 -o 4096 -w verify -t 1
+"$rootdir/build/examples/bdevperf" --json <(gen_nvmf_target_json) -q 128 -o 4096 -w verify -t 1
 
-"$rootdir/test/bdev/bdevperf/bdevperf" --json <(gen_nvmf_target_json) -q 128 -o 4096 -w verify -t 15 -f &
+"$rootdir/build/examples/bdevperf" --json <(gen_nvmf_target_json) -q 128 -o 4096 -w verify -t 15 -f &
 bdevperfpid=$!
 
 sleep 3

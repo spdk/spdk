@@ -85,7 +85,7 @@ JSON config:
     "subsystem": "vmd",
     "config": [
       {
-        "method": "enable_vmd",
+        "method": "vmd_enable",
         "params": {}
       }
     ]
@@ -95,7 +95,7 @@ JSON config:
 or use RPC call before framework starts e.g.
 ```
 $ ./build/bin/spdk_tgt --wait_for_rpc
-$ ./scripts/rpc.py enable_vmd
+$ ./scripts/rpc.py vmd_enable
 $ ./scripts/rpc.py framework_start_init
 ```
 ## Applications w/o application framework {#vmd_app}

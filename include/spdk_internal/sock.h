@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2018 Intel Corporation. All rights reserved.
  *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /** \file
@@ -62,6 +34,7 @@ struct spdk_sock {
 
 	TAILQ_HEAD(, spdk_sock_request)	queued_reqs;
 	TAILQ_HEAD(, spdk_sock_request)	pending_reqs;
+	struct spdk_sock_request	*read_req;
 	int				queued_iovcnt;
 	int				cb_cnt;
 	spdk_sock_cb			cb_fn;
@@ -70,6 +43,7 @@ struct spdk_sock {
 		uint8_t		closed		: 1;
 		uint8_t		reserved	: 7;
 	} flags;
+	struct spdk_sock_impl_opts	impl_opts;
 };
 
 struct spdk_sock_group {
@@ -104,6 +78,7 @@ struct spdk_net_impl {
 	ssize_t (*writev)(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 
 	void (*writev_async)(struct spdk_sock *sock, struct spdk_sock_request *req);
+	void (*readv_async)(struct spdk_sock *sock, struct spdk_sock_request *req);
 	int (*flush)(struct spdk_sock *sock);
 
 	int (*set_recvlowat)(struct spdk_sock *sock, int nbytes);
@@ -114,7 +89,8 @@ struct spdk_net_impl {
 	bool (*is_ipv4)(struct spdk_sock *sock);
 	bool (*is_connected)(struct spdk_sock *sock);
 
-	struct spdk_sock_group_impl *(*group_impl_get_optimal)(struct spdk_sock *sock);
+	struct spdk_sock_group_impl *(*group_impl_get_optimal)(struct spdk_sock *sock,
+			struct spdk_sock_group_impl *hint);
 	struct spdk_sock_group_impl *(*group_impl_create)(void);
 	int (*group_impl_add_sock)(struct spdk_sock_group_impl *group, struct spdk_sock *sock);
 	int (*group_impl_remove_sock)(struct spdk_sock_group_impl *group, struct spdk_sock *sock);
@@ -139,28 +115,35 @@ static void __attribute__((constructor)) net_impl_register_##name(void) \
 static inline void
 spdk_sock_request_queue(struct spdk_sock *sock, struct spdk_sock_request *req)
 {
+	assert(req->internal.curr_list == NULL);
 	TAILQ_INSERT_TAIL(&sock->queued_reqs, req, internal.link);
+#ifdef DEBUG
+	req->internal.curr_list = &sock->queued_reqs;
+#endif
 	sock->queued_iovcnt += req->iovcnt;
 }
 
 static inline void
 spdk_sock_request_pend(struct spdk_sock *sock, struct spdk_sock_request *req)
 {
+	assert(req->internal.curr_list == &sock->queued_reqs);
 	TAILQ_REMOVE(&sock->queued_reqs, req, internal.link);
 	assert(sock->queued_iovcnt >= req->iovcnt);
 	sock->queued_iovcnt -= req->iovcnt;
 	TAILQ_INSERT_TAIL(&sock->pending_reqs, req, internal.link);
+#ifdef DEBUG
+	req->internal.curr_list = &sock->pending_reqs;
+#endif
 }
 
 static inline int
-spdk_sock_request_put(struct spdk_sock *sock, struct spdk_sock_request *req, int err)
+spdk_sock_request_complete(struct spdk_sock *sock, struct spdk_sock_request *req, int err)
 {
 	bool closed;
 	int rc = 0;
 
-	TAILQ_REMOVE(&sock->pending_reqs, req, internal.link);
-
 	req->internal.offset = 0;
+	req->internal.is_zcopy = 0;
 
 	closed = sock->flags.closed;
 	sock->cb_cnt++;
@@ -178,6 +161,17 @@ spdk_sock_request_put(struct spdk_sock *sock, struct spdk_sock_request *req, int
 }
 
 static inline int
+spdk_sock_request_put(struct spdk_sock *sock, struct spdk_sock_request *req, int err)
+{
+	assert(req->internal.curr_list == &sock->pending_reqs);
+	TAILQ_REMOVE(&sock->pending_reqs, req, internal.link);
+#ifdef DEBUG
+	req->internal.curr_list = NULL;
+#endif
+	return spdk_sock_request_complete(sock, req, err);
+}
+
+static inline int
 spdk_sock_abort_requests(struct spdk_sock *sock)
 {
 	struct spdk_sock_request *req;
@@ -189,7 +183,11 @@ spdk_sock_abort_requests(struct spdk_sock *sock)
 
 	req = TAILQ_FIRST(&sock->pending_reqs);
 	while (req) {
+		assert(req->internal.curr_list == &sock->pending_reqs);
 		TAILQ_REMOVE(&sock->pending_reqs, req, internal.link);
+#ifdef DEBUG
+		req->internal.curr_list = NULL;
+#endif
 
 		req->cb_fn(req->cb_arg, -ECANCELED);
 
@@ -198,7 +196,11 @@ spdk_sock_abort_requests(struct spdk_sock *sock)
 
 	req = TAILQ_FIRST(&sock->queued_reqs);
 	while (req) {
+		assert(req->internal.curr_list == &sock->queued_reqs);
 		TAILQ_REMOVE(&sock->queued_reqs, req, internal.link);
+#ifdef DEBUG
+		req->internal.curr_list = NULL;
+#endif
 
 		assert(sock->queued_iovcnt >= req->iovcnt);
 		sock->queued_iovcnt -= req->iovcnt;
@@ -206,6 +208,12 @@ spdk_sock_abort_requests(struct spdk_sock *sock)
 		req->cb_fn(req->cb_arg, -ECANCELED);
 
 		req = TAILQ_FIRST(&sock->queued_reqs);
+	}
+
+	req = sock->read_req;
+	if (req != NULL) {
+		sock->read_req = NULL;
+		req->cb_fn(req->cb_arg, -ECANCELED);
 	}
 	assert(sock->cb_cnt > 0);
 	sock->cb_cnt--;
@@ -223,12 +231,47 @@ spdk_sock_abort_requests(struct spdk_sock *sock)
 }
 
 static inline int
-spdk_sock_prep_reqs(struct spdk_sock *_sock, struct iovec *iovs, int index,
-		    struct spdk_sock_request **last_req)
+spdk_sock_prep_req(struct spdk_sock_request *req, struct iovec *iovs, int index,
+		   uint64_t *num_bytes)
 {
-	int iovcnt, i;
-	struct spdk_sock_request *req;
 	unsigned int offset;
+	int iovcnt, i;
+
+	assert(index < IOV_BATCH_SIZE);
+	offset = req->internal.offset;
+	iovcnt = index;
+
+	for (i = 0; i < req->iovcnt; i++) {
+		/* Consume any offset first */
+		if (offset >= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len) {
+			offset -= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len;
+			continue;
+		}
+
+		iovs[iovcnt].iov_base = SPDK_SOCK_REQUEST_IOV(req, i)->iov_base + offset;
+		iovs[iovcnt].iov_len = SPDK_SOCK_REQUEST_IOV(req, i)->iov_len - offset;
+		if (num_bytes != NULL) {
+			*num_bytes += iovs[iovcnt].iov_len;
+		}
+
+		iovcnt++;
+		offset = 0;
+
+		if (iovcnt >= IOV_BATCH_SIZE) {
+			break;
+		}
+	}
+
+	return iovcnt;
+}
+
+static inline int
+spdk_sock_prep_reqs(struct spdk_sock *_sock, struct iovec *iovs, int index,
+		    struct spdk_sock_request **last_req, int *flags)
+{
+	int iovcnt;
+	struct spdk_sock_request *req;
+	uint64_t total = 0;
 
 	/* Gather an iov */
 	iovcnt = index;
@@ -243,25 +286,7 @@ spdk_sock_prep_reqs(struct spdk_sock *_sock, struct iovec *iovs, int index,
 	}
 
 	while (req) {
-		offset = req->internal.offset;
-
-		for (i = 0; i < req->iovcnt; i++) {
-			/* Consume any offset first */
-			if (offset >= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len) {
-				offset -= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len;
-				continue;
-			}
-
-			iovs[iovcnt].iov_base = SPDK_SOCK_REQUEST_IOV(req, i)->iov_base + offset;
-			iovs[iovcnt].iov_len = SPDK_SOCK_REQUEST_IOV(req, i)->iov_len - offset;
-			iovcnt++;
-
-			offset = 0;
-
-			if (iovcnt >= IOV_BATCH_SIZE) {
-				break;
-			}
-		}
+		iovcnt = spdk_sock_prep_req(req, iovs, iovcnt, &total);
 		if (iovcnt >= IOV_BATCH_SIZE) {
 			break;
 		}
@@ -273,6 +298,14 @@ spdk_sock_prep_reqs(struct spdk_sock *_sock, struct iovec *iovs, int index,
 	}
 
 end:
+
+#if defined(MSG_ZEROCOPY)
+	/* if data size < zerocopy_threshold, remove MSG_ZEROCOPY flag */
+	if (total < _sock->impl_opts.zerocopy_threshold && flags != NULL) {
+		*flags = *flags & (~MSG_ZEROCOPY);
+	}
+#endif
+
 	return iovcnt;
 }
 
@@ -323,7 +356,7 @@ void spdk_sock_map_release(struct spdk_sock_map *map, int placement_id);
  * Look up the group for the given placement_id.
  */
 int spdk_sock_map_lookup(struct spdk_sock_map *map, int placement_id,
-			 struct spdk_sock_group_impl **group_impl);
+			 struct spdk_sock_group_impl **group_impl, struct spdk_sock_group_impl *hint);
 
 /**
  * Find a placement id with no associated group

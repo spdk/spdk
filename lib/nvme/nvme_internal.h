@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2015 Intel Corporation. All rights reserved.
  *   Copyright (c) 2020, 2021 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef __NVME_INTERNAL_H__
@@ -61,6 +33,8 @@
 #include "spdk/log.h"
 
 extern pid_t g_spdk_nvme_pid;
+
+extern struct spdk_nvme_transport_opts g_spdk_nvme_transport_opts;
 
 /*
  * Some Intel devices support vendor-unique read latency log page even
@@ -163,6 +137,18 @@ extern pid_t g_spdk_nvme_pid;
  */
 #define NVME_QUIRK_MDTS_EXCLUDE_MD 0x8000
 
+/**
+ * Force not to use SGL even the controller report that it can
+ * support it.
+ */
+#define NVME_QUIRK_NOT_USE_SGL 0x10000
+
+/*
+ * Some SSDs require the admin submission queue size to equate to an even
+ * 4KiB multiple.
+ */
+#define NVME_QUIRK_MINIMUM_ADMIN_QUEUE_SIZE 0x20000
+
 #define NVME_MAX_ASYNC_EVENTS	(8)
 
 // ZIV_P2P
@@ -187,6 +173,8 @@ extern pid_t g_spdk_nvme_pid;
 
 #define SPDK_NVME_TRANSPORT_ACK_TIMEOUT_DISABLED	(0)
 #define SPDK_NVME_DEFAULT_TRANSPORT_ACK_TIMEOUT	SPDK_NVME_TRANSPORT_ACK_TIMEOUT_DISABLED
+
+#define SPDK_NVME_TRANSPORT_TOS_DISABLED	(0)
 
 #define MIN_KEEP_ALIVE_TIMEOUT_IN_MS	(10000)
 
@@ -447,12 +435,14 @@ struct spdk_nvme_qpair {
 	 */
 	uint8_t					no_deletion_notification_needed: 1;
 
-	uint8_t					first_fused_submitted: 1;
+	uint8_t					last_fuse: 2;
 
 	uint8_t					transport_failure_reason: 2;
 	uint8_t					last_transport_failure_reason: 2;
 
 	enum spdk_nvme_transport_type		trtype;
+
+	uint32_t				num_outstanding_reqs;
 
 	/* request object used only for this qpair's FABRICS/CONNECT command (if needed) */
 	struct nvme_request			*reserved_req;
@@ -628,6 +618,11 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0_WAIT_FOR_CSTS,
 
 	/**
+	 * The controller is disabled. (CC.EN and CSTS.RDY are 0.)
+	 */
+	NVME_CTRLR_STATE_DISABLED,
+
+	/**
 	 * Enable the controller by writing CC.EN to 1
 	 */
 	NVME_CTRLR_STATE_ENABLE,
@@ -794,6 +789,11 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_WAIT_FOR_HOST_ID,
 
 	/**
+	 * Let transport layer do its part of initialization.
+	 */
+	NVME_CTRLR_STATE_TRANSPORT_READY,
+
+	/**
 	 * Controller initialization has completed and the controller is ready.
 	 */
 	NVME_CTRLR_STATE_READY,
@@ -858,11 +858,9 @@ struct nvme_register_completion {
 	spdk_nvme_reg_cb			cb_fn;
 	void					*cb_ctx;
 	STAILQ_ENTRY(nvme_register_completion)	stailq;
+	pid_t					pid;
 };
 
-/*
- * One of these per allocated PCI device.
- */
 struct spdk_nvme_ctrlr {
 	/* Hot data (accessed in I/O path) starts here. */
 
@@ -1178,6 +1176,8 @@ int	nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 				       struct nvme_ctrlr_detach_ctx *ctx);
 void	nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove);
 int	nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr);
+void	nvme_ctrlr_disable(struct spdk_nvme_ctrlr *ctrlr);
+int	nvme_ctrlr_disable_poll(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ctrlr_connected(struct spdk_nvme_probe_ctx *probe_ctx,
 			     struct spdk_nvme_ctrlr *ctrlr);
 
@@ -1195,6 +1195,7 @@ void    nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr *ctrlr,
 				       const struct spdk_nvme_cpl *cpl);
 void nvme_ctrlr_disconnect_qpair(struct spdk_nvme_qpair *qpair);
 void nvme_ctrlr_complete_queued_async_events(struct spdk_nvme_ctrlr *ctrlr);
+void nvme_ctrlr_abort_queued_aborts(struct spdk_nvme_ctrlr *ctrlr);
 int nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 		    struct spdk_nvme_ctrlr *ctrlr,
 		    enum spdk_nvme_qprio qprio,
@@ -1275,6 +1276,7 @@ nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 	}
 
 	STAILQ_REMOVE_HEAD(&qpair->free_req, stailq);
+	qpair->num_outstanding_reqs++;
 
 	/*
 	 * Only memset/zero fields that need it.  All other fields
@@ -1364,6 +1366,9 @@ nvme_free_request(struct nvme_request *req)
 	 */
 	if (spdk_likely(req->qpair->reserved_req != req)) {
 		STAILQ_INSERT_HEAD(&req->qpair->free_req, req, stailq);
+
+		assert(req->qpair->num_outstanding_reqs > 0);
+		req->qpair->num_outstanding_reqs--;
 	}
 }
 
@@ -1388,6 +1393,9 @@ nvme_qpair_free_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 	assert(req->num_children == 0);
 
 	STAILQ_INSERT_HEAD(&qpair->free_req, req, stailq);
+
+	assert(req->qpair->num_outstanding_reqs > 0);
+	req->qpair->num_outstanding_reqs--;
 }
 
 static inline void
@@ -1488,6 +1496,7 @@ struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_tr
 int nvme_transport_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr);
 int nvme_transport_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx, bool direct_connect);
 int nvme_transport_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr);
+int nvme_transport_ctrlr_ready(struct spdk_nvme_ctrlr *ctrlr);
 int nvme_transport_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value);
 int nvme_transport_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value);
 int nvme_transport_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value);

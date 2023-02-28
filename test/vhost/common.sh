@@ -1,6 +1,11 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation
+#  All rights reserved.
+#
+
 : ${SPDK_VHOST_VERBOSE=false}
 : ${VHOST_DIR="$HOME/vhost_test"}
-: ${QEMU_BIN="qemu-system-x86_64"}
+: ${QEMU_BIN:="qemu-system-x86_64"}
 : ${QEMU_IMG_BIN="qemu-img"}
 
 TEST_DIR=$(readlink -f $rootdir/..)
@@ -15,7 +20,7 @@ FIO_BIN=${FIO_BIN:-"$DEFAULT_FIO_BIN"}
 WORKDIR=$(readlink -f "$(dirname "$0")")
 
 if ! hash $QEMU_IMG_BIN $QEMU_BIN; then
-	error 'QEMU is not installed on this system. Unable to run vhost tests.'
+	echo 'ERROR: QEMU is not installed on this system. Unable to run vhost tests.' >&2
 	exit 1
 fi
 
@@ -161,12 +166,24 @@ function vhost_run() {
 
 	timing_enter vhost_start
 
-	$cmd &
+	iobuf_small_count=${iobuf_small_count:-16383}
+	iobuf_large_count=${iobuf_large_count:-2047}
+
+	$cmd --wait-for-rpc &
 	vhost_pid=$!
 	echo $vhost_pid > $vhost_pid_file
 
 	notice "waiting for app to run..."
 	waitforlisten "$vhost_pid" "$vhost_dir/rpc.sock"
+
+	"$rootdir/scripts/rpc.py" -s "$vhost_dir/rpc.sock" \
+		iobuf_set_options \
+		--small-pool-count="$iobuf_small_count" \
+		--large-pool-count="$iobuf_large_count"
+
+	"$rootdir/scripts/rpc.py" -s "$vhost_dir/rpc.sock" \
+		framework_start_init
+
 	#do not generate nvmes if pci access is disabled
 	if [[ "$cmd" != *"--no-pci"* ]] && [[ "$cmd" != *"-u"* ]] && $run_gen_nvme; then
 		$rootdir/scripts/gen_nvme.sh | $rootdir/scripts/rpc.py -s $vhost_dir/rpc.sock load_subsystem_config
@@ -213,7 +230,6 @@ function vhost_kill() {
 		if kill -0 $vhost_pid; then
 			error "ERROR: vhost was NOT killed - sending SIGABRT"
 			kill -ABRT $vhost_pid
-			rm $vhost_pid_file
 			rc=1
 		else
 			while kill -0 $vhost_pid; do
@@ -228,9 +244,6 @@ function vhost_kill() {
 	fi
 
 	timing_exit vhost_kill
-	if [[ $rc == 0 ]]; then
-		rm $vhost_pid_file
-	fi
 
 	rm -rf "$vhost_dir"
 
@@ -361,7 +374,7 @@ function vm_is_running() {
 		fi
 
 		# not running - remove pid file
-		rm $vm_dir/qemu.pid
+		rm -f $vm_dir/qemu.pid
 		return 1
 	fi
 }
@@ -429,7 +442,6 @@ function vm_kill() {
 	# First kill should fail, second one must fail
 	if /bin/kill $vm_pid; then
 		notice "process $vm_pid killed"
-		rm $vm_dir/qemu.pid
 		rm -rf $vm_dir
 	elif vm_is_running $1; then
 		error "Process $vm_pid NOT killed"
@@ -599,7 +611,7 @@ function vm_setup() {
 
 	if [[ "$os_mode" == "backing" ]]; then
 		notice "Creating backing file for OS image file: $os"
-		if ! $QEMU_IMG_BIN create -f qcow2 -b $os $vm_dir/os.qcow2; then
+		if ! $QEMU_IMG_BIN create -f qcow2 -b $os $vm_dir/os.qcow2 -F qcow2; then
 			error "Failed to create OS backing file in '$vm_dir/os.qcow2' using '$os'"
 			return 1
 		fi
@@ -701,26 +713,13 @@ function vm_setup() {
 				local raw_name="RAWSCSI"
 				local raw_disk=$vm_dir/test.img
 
-				if [[ -n $disk ]]; then
-					[[ ! -b $disk ]] && touch $disk
-					local raw_disk
-					raw_disk=$(readlink -f $disk)
-				fi
-
 				# Create disk file if it not exist or it is smaller than 1G
-				if { [[ -f $raw_disk ]] && [[ $(stat --printf="%s" $raw_disk) -lt $((1024 * 1024 * 1024)) ]]; } \
-					|| [[ ! -e $raw_disk ]]; then
-					if [[ $raw_disk =~ /dev/.* ]]; then
-						error \
-							"ERROR: Virtio disk point to missing device ($raw_disk) -\n" \
-							"       this is probably not what you want."
-						return 1
-					fi
-
+				if [[ -f $disk && $(stat --printf="%s" $disk) -ge $((1024 * 1024 * 1024)) ]]; then
+					raw_disk=$disk
+					notice "Using existing image $raw_disk"
+				else
 					notice "Creating Virtio disc $raw_disk"
 					dd if=/dev/zero of=$raw_disk bs=1024k count=1024
-				else
-					notice "Using existing image $raw_disk"
 				fi
 
 				cmd+=(-device "virtio-scsi-pci,num_queues=$queue_number")
@@ -764,14 +763,22 @@ function vm_setup() {
 				;;
 			vfio_user)
 				notice "using socket $VM_DIR/$vm_num/domain/muser$disk/$disk/cntrl"
-				cmd+=(-device "vfio-user-pci,socket=$VM_DIR/$vm_num/muser/domain/muser$disk/$disk/cntrl")
+				cmd+=(-device "vfio-user-pci,x-msg-timeout=5000,socket=$VM_DIR/$vm_num/muser/domain/muser$disk/$disk/cntrl")
+				if [[ "$disk" == "$boot_from" ]]; then
+					cmd[-1]+=",bootindex=0"
+					boot_disk_present=true
+				fi
+				;;
+			vfio_user_virtio)
+				notice "using socket $VM_DIR/vfu_tgt/virtio.$disk"
+				cmd+=(-device "vfio-user-pci,x-msg-timeout=5000,socket=$VM_DIR/vfu_tgt/virtio.$disk")
 				if [[ "$disk" == "$boot_from" ]]; then
 					cmd[-1]+=",bootindex=0"
 					boot_disk_present=true
 				fi
 				;;
 			*)
-				error "unknown mode '$disk_type', use: virtio, spdk_vhost_scsi, spdk_vhost_blk, kernel_vhost or vfio_user"
+				error "unknown mode '$disk_type', use: virtio, spdk_vhost_scsi, spdk_vhost_blk, kernel_vhost, vfio_user or vfio_user_virtio"
 				return 1
 				;;
 		esac
@@ -786,6 +793,8 @@ function vm_setup() {
 	notice "Saving to $vm_dir/run.sh"
 	cat <<- RUN > "$vm_dir/run.sh"
 		#!/bin/bash
+		rootdir=$rootdir
+		source "\$rootdir/test/scheduler/common.sh"
 		qemu_log () {
 			echo "=== qemu.log ==="
 			[[ -s $vm_dir/qemu.log ]] && cat $vm_dir/qemu.log
@@ -803,12 +812,18 @@ function vm_setup() {
 		chmod +r $vm_dir/*
 		echo "Running VM in $vm_dir"
 		rm -f $qemu_pid_file
+		cgroup=\$(get_cgroup \$$)
+		set_cgroup_attr_top_bottom \$$ cgroup.subtree_control "+cpuset"
+		create_cgroup \$cgroup/qemu.$vm_num
+		set_cgroup_attr "\$cgroup/qemu.$vm_num" cpuset.mems "$node_num"
+		set_cgroup_attr "\$cgroup/qemu.$vm_num" cpuset.cpus "$task_mask"
 		"\${qemu_cmd[@]}"
 
 		echo "Waiting for QEMU pid file"
 		sleep 1
 		[[ ! -f $qemu_pid_file ]] && sleep 1
 		[[ ! -f $qemu_pid_file ]] && echo "ERROR: no qemu pid file found" && exit 1
+		set_cgroup_attr "\$cgroup/qemu.$vm_num" cgroup.threads \$(< "$qemu_pid_file")
 		exit 0
 		# EOF
 	RUN
@@ -1033,7 +1048,7 @@ function vm_check_blk_location() {
 }
 
 function vm_check_nvme_location() {
-	SCSI_DISK="$(vm_exec $1 grep -l SPDK /sys/class/nvme/*/model | awk -F/ '{print $5"n1"}')"
+	SCSI_DISK="$(vm_exec $1 "grep -l SPDK /sys/class/nvme/*/model" | awk -F/ '{print $5"n1"}')"
 	if [[ -z "$SCSI_DISK" ]]; then
 		error "no vfio-user nvme test disk found!"
 		return 1
@@ -1177,6 +1192,7 @@ function parse_fio_results() {
 	local client_stats iops bw
 	local read_avg_lat read_min_lat read_max_lat
 	local write_avg_lat write_min_lat write_min_lat
+	local clients
 
 	declare -A results
 	results["iops"]=0
@@ -1189,16 +1205,23 @@ function parse_fio_results() {
 	# matching files. This is in case we ran fio test multiple times.
 	log_files=("$fio_log_dir/$fio_log_filename"*)
 	for log_file in "${log_files[@]}"; do
-		rwmode=$(jq -r '.["client_stats"][0]["job options"]["rw"]' "$log_file")
+		# Save entire array to avoid opening $log_file multiple times
+		clients=$(jq -r '.client_stats' "$log_file")
+		[[ -n $clients ]]
+		rwmode=$(jq -r '.[0]["job options"]["rw"]' <<< "$clients")
 		mixread=1
 		mixwrite=1
 		if [[ $rwmode = *"rw"* ]]; then
-			mixread=$(jq -r '.["client_stats"][0]["job options"]["rwmixread"]' "$log_file")
+			mixread=$(jq -r '.[0]["job options"]["rwmixread"]' <<< "$clients")
 			mixread=$(bc -l <<< "scale=3; $mixread/100")
 			mixwrite=$(bc -l <<< "scale=3; 1-$mixread")
 		fi
 
-		client_stats=$(jq -r '.["client_stats"][] | select(.jobname == "All clients")' "$log_file")
+		client_stats=$(jq -r '.[] | select(.jobname == "All clients")' <<< "$clients")
+		if [[ -z $client_stats ]]; then
+			# Potentially single client (single VM)
+			client_stats=$(jq -r '.[]' <<< "$clients")
+		fi
 
 		# Check latency unit and later normalize to microseconds
 		lat_key="lat_us"

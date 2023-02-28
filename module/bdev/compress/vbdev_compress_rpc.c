@@ -1,34 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2018 Intel Corporation.
+ *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "vbdev_compress.h"
@@ -98,49 +71,6 @@ rpc_bdev_compress_get_orphans(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("bdev_compress_get_orphans", rpc_bdev_compress_get_orphans, SPDK_RPC_RUNTIME)
 
-struct rpc_compress_set_pmd {
-	enum compress_pmd pmd;
-};
-
-static const struct spdk_json_object_decoder rpc_compress_pmd_decoder[] = {
-	{"pmd", offsetof(struct rpc_compress_set_pmd, pmd), spdk_json_decode_int32},
-};
-
-static void
-rpc_bdev_compress_set_pmd(struct spdk_jsonrpc_request *request,
-			  const struct spdk_json_val *params)
-{
-	struct rpc_compress_set_pmd req;
-	int rc = 0;
-
-	if (spdk_json_decode_object(params, rpc_compress_pmd_decoder,
-				    SPDK_COUNTOF(rpc_compress_pmd_decoder),
-				    &req)) {
-		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "spdk_json_decode_object failed");
-		return;
-	}
-
-	if (req.pmd >= COMPRESS_PMD_MAX) {
-		spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
-						     "PMD value %d should be less than %d", req.pmd, COMPRESS_PMD_MAX);
-		return;
-	}
-
-	rc = compress_set_pmd(&req.pmd);
-	if (rc) {
-		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
-		return;
-	}
-
-	spdk_jsonrpc_send_bool_response(request, true);
-}
-SPDK_RPC_REGISTER("bdev_compress_set_pmd", rpc_bdev_compress_set_pmd,
-		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_compress_set_pmd, set_compress_pmd)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_compress_set_pmd, compress_set_pmd)
-
 /* Structure to hold the parameters for this RPC method. */
 struct rpc_construct_compress {
 	char *base_bdev_name;
@@ -160,7 +90,7 @@ free_rpc_construct_compress(struct rpc_construct_compress *r)
 static const struct spdk_json_object_decoder rpc_construct_compress_decoders[] = {
 	{"base_bdev_name", offsetof(struct rpc_construct_compress, base_bdev_name), spdk_json_decode_string},
 	{"pm_path", offsetof(struct rpc_construct_compress, pm_path), spdk_json_decode_string},
-	{"lb_size", offsetof(struct rpc_construct_compress, lb_size), spdk_json_decode_uint32},
+	{"lb_size", offsetof(struct rpc_construct_compress, lb_size), spdk_json_decode_uint32, true},
 };
 
 /* Decode the parameters for this RPC method and properly construct the compress
@@ -204,7 +134,6 @@ cleanup:
 	free_rpc_construct_compress(&req);
 }
 SPDK_RPC_REGISTER("bdev_compress_create", rpc_bdev_compress_create, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_compress_create, construct_compress_bdev)
 
 struct rpc_delete_compress {
 	char *name;
@@ -225,7 +154,11 @@ _rpc_bdev_compress_delete_cb(void *cb_arg, int bdeverrno)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 
-	spdk_jsonrpc_send_bool_response(request, bdeverrno == 0);
+	if (bdeverrno == 0) {
+		spdk_jsonrpc_send_bool_response(request, true);
+	} else {
+		spdk_jsonrpc_send_error_response(request, bdeverrno, spdk_strerror(-bdeverrno));
+	}
 }
 
 static void
@@ -246,4 +179,3 @@ rpc_bdev_compress_delete(struct spdk_jsonrpc_request *request,
 	free_rpc_delete_compress(&req);
 }
 SPDK_RPC_REGISTER("bdev_compress_delete", rpc_bdev_compress_delete, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_compress_delete, delete_compress_bdev)

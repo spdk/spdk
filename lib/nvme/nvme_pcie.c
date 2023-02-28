@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2017, IBM Corporation. All rights reserved.
  *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /*
@@ -132,12 +104,10 @@ _nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
 	struct spdk_nvme_ctrlr *ctrlr, *tmp;
 	struct spdk_pci_event event;
 
-	if (g_spdk_nvme_driver->hotplug_fd < 0) {
-		return 0;
-	}
-
-	while (spdk_pci_get_event(g_spdk_nvme_driver->hotplug_fd, &event) > 0) {
-		_nvme_pcie_event_process(&event, probe_ctx->cb_ctx);
+	if (g_spdk_nvme_driver->hotplug_fd >= 0) {
+		while (spdk_pci_get_event(g_spdk_nvme_driver->hotplug_fd, &event) > 0) {
+			_nvme_pcie_event_process(&event, probe_ctx->cb_ctx);
+		}
 	}
 
 	/* Initiate removal of physically hotremoved PCI controllers. Even after
@@ -1002,6 +972,10 @@ static struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_
 	pctrlr->devhandle = devhandle;
 	pctrlr->ctrlr.opts = *opts;
 	pctrlr->ctrlr.trid = *trid;
+	pctrlr->ctrlr.opts.admin_queue_size = spdk_max(pctrlr->ctrlr.opts.admin_queue_size,
+					      NVME_PCIE_MIN_ADMIN_QUEUE_SIZE);
+	pci_id = spdk_pci_device_get_id(pci_dev);
+	pctrlr->ctrlr.quirks = nvme_get_quirks(&pci_id);
 
 	rc = nvme_ctrlr_construct(&pctrlr->ctrlr);
 	if (rc != 0) {
@@ -1032,9 +1006,6 @@ static struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_
 	/* Doorbell stride is 2 ^ (dstrd + 2),
 	 * but we want multiples of 4, so drop the + 2 */
 	pctrlr->doorbell_stride_u32 = 1 << cap.bits.dstrd;
-
-	pci_id = spdk_pci_device_get_id(pci_dev);
-	pctrlr->ctrlr.quirks = nvme_get_quirks(&pci_id);
 
 	rc = nvme_pcie_ctrlr_construct_admin_qpair(&pctrlr->ctrlr, pctrlr->ctrlr.opts.admin_queue_size);
 	if (rc != 0) {
@@ -1160,39 +1131,6 @@ void
 spdk_nvme_pcie_set_hotplug_filter(spdk_nvme_pcie_hotplug_filter_cb filter_cb)
 {
 	g_hotplug_filter_cb = filter_cb;
-}
-
-static int
-nvme_pcie_poll_group_get_stats(struct spdk_nvme_transport_poll_group *tgroup,
-			       struct spdk_nvme_transport_poll_group_stat **_stats)
-{
-	struct nvme_pcie_poll_group *group;
-	struct spdk_nvme_transport_poll_group_stat *stats;
-
-	if (tgroup == NULL || _stats == NULL) {
-		SPDK_ERRLOG("Invalid stats or group pointer\n");
-		return -EINVAL;
-	}
-
-	group = SPDK_CONTAINEROF(tgroup, struct nvme_pcie_poll_group, group);
-	stats = calloc(1, sizeof(*stats));
-	if (!stats) {
-		SPDK_ERRLOG("Can't allocate memory for RDMA stats\n");
-		return -ENOMEM;
-	}
-	stats->trtype = SPDK_NVME_TRANSPORT_PCIE;
-	memcpy(&stats->pcie, &group->stats, sizeof(group->stats));
-
-	*_stats = stats;
-
-	return 0;
-}
-
-static void
-nvme_pcie_poll_group_free_stats(struct spdk_nvme_transport_poll_group *tgroup,
-				struct spdk_nvme_transport_poll_group_stat *stats)
-{
-	free(stats);
 }
 
 static struct spdk_pci_id nvme_pci_driver_id[] = {

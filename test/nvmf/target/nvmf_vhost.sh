@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2019 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$testdir/../../..
 source $rootdir/test/common/autotest_common.sh
@@ -20,7 +23,7 @@ vhosttestinit
 nvmftestinit
 
 # Start Apps
-"${NVMF_APP[@]}" -r $NVMF_SOCK &
+"${NVMF_APP[@]}" -r $NVMF_SOCK -m 0x1 &
 nvmfpid=$!
 waitforlisten $nvmfpid $NVMF_SOCK
 
@@ -28,7 +31,7 @@ trap 'process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1' SIGINT SIGTERM EX
 
 mkdir -p "$(get_vhost_dir 3)"
 
-"${VHOST_APP[@]}" -S "$(get_vhost_dir 3)" &
+"${VHOST_APP[@]}" -S "$(get_vhost_dir 3)" -m 0x2 &
 vhostpid=$!
 waitforlisten $vhostpid $NVMF_SOCK
 
@@ -37,7 +40,7 @@ trap 'process_shm --id $NVMF_APP_SHM_ID; killprocess $vhostpid nvmftestfini; exi
 # Configure NVMF tgt on host machine
 malloc_bdev="$($NVMF_RPC bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 
-$NVMF_RPC nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192 -m 4
+$NVMF_RPC nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 $NVMF_RPC nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 $NVMF_RPC nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 "$malloc_bdev"
 $NVMF_RPC nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT

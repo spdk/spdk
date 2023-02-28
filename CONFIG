@@ -1,42 +1,20 @@
-#
-#  BSD LICENSE
-#
-#  Copyright (c) Intel Corporation.
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2015 Intel Corporation.
 #  All rights reserved.
-#  Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#  Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#  Copyright (c) 2022 Dell Inc, or its subsidiaries.
 #
-#  Redistribution and use in source and binary forms, with or without
-#  modification, are permitted provided that the following conditions
-#  are met:
-#
-#    * Redistributions of source code must retain the above copyright
-#      notice, this list of conditions and the following disclaimer.
-#    * Redistributions in binary form must reproduce the above copyright
-#      notice, this list of conditions and the following disclaimer in
-#      the documentation and/or other materials provided with the
-#      distribution.
-#    * Neither the name of Intel Corporation nor the names of its
-#      contributors may be used to endorse or promote products derived
-#      from this software without specific prior written permission.
-#
-#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-#  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-#  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-#  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-#  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-#  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-#  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-#  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-#  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-#  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
+
+# configure options: __CONFIGURE_OPTIONS__
 
 # Installation prefix
 CONFIG_PREFIX="/usr/local"
 
 # Target architecture
 CONFIG_ARCH=native
+
+# Destination directory for the libraries
+CONFIG_LIBDIR=
 
 # Prefix for cross compilation
 CONFIG_CROSS_PREFIX=
@@ -115,6 +93,7 @@ CONFIG_FIO_SOURCE_DIR=/usr/src/fio
 CONFIG_RDMA=n
 CONFIG_RDMA_SEND_WITH_INVAL=n
 CONFIG_RDMA_SET_ACK_TIMEOUT=n
+CONFIG_RDMA_SET_TOS=n
 CONFIG_RDMA_PROV=verbs
 
 # Enable NVMe Character Devices.
@@ -128,6 +107,14 @@ CONFIG_FC_PATH=
 # Build Ceph RBD support in bdev modules
 # Requires librbd development libraries
 CONFIG_RBD=n
+
+# Build DAOS support in bdev modules
+# Requires daos development libraries
+CONFIG_DAOS=n
+CONFIG_DAOS_DIR=
+
+# Build UBLK support
+CONFIG_UBLK=n
 
 # Build vhost library.
 CONFIG_VHOST=y
@@ -143,11 +130,17 @@ CONFIG_VFIO_USER_DIR=
 CONFIG_PMDK=n
 CONFIG_PMDK_DIR=
 
-# Enable the dependencies for building the compress vbdev
-CONFIG_REDUCE=n
+# Build with xNVMe
+CONFIG_XNVME=n
 
-# Enable mlx5_pci dpdk compress PMD, enabled automatically if CONFIG_REDUCE=y and libmlx5 exists
-CONFIG_REDUCE_MLX5=n
+# Enable the dependencies for building the DPDK accel compress module
+CONFIG_DPDK_COMPRESSDEV=n
+
+# Enable the dependencies for building the compress vbdev, includes the reduce library
+CONFIG_VBDEV_COMPRESS=n
+
+# Enable mlx5_pci dpdk compress PMD, enabled automatically if CONFIG_VBDEV_COMPRESS=y and libmlx5 exists
+CONFIG_VBDEV_COMPRESS_MLX5=n
 
 # Enable mlx5_pci dpdk crypto PMD, enabled automatically if CONFIG_CRYPTO=y and libmlx5 exists
 CONFIG_CRYPTO_MLX5=n
@@ -161,7 +154,7 @@ CONFIG_CRYPTO=n
 # Build spdk shared libraries in addition to the static ones.
 CONFIG_SHARED=n
 
-# Build with VTune suport.
+# Build with VTune support.
 CONFIG_VTUNE=n
 CONFIG_VTUNE_DIR=
 
@@ -176,17 +169,26 @@ CONFIG_CUSTOMOCF=n
 # Build ISA-L library
 CONFIG_ISAL=y
 
+# Build ISA-L-crypto library
+CONFIG_ISAL_CRYPTO=y
+
 # Build with IO_URING support
 CONFIG_URING=n
+
+# Build IO_URING bdev with ZNS support
+CONFIG_URING_ZNS=n
 
 # Path to custom built IO_URING library
 CONFIG_URING_PATH=
 
+# Path to custom built OPENSSL library
+CONFIG_OPENSSL_PATH=
+
 # Build with FUSE support
 CONFIG_FUSE=n
 
-# Build with RAID5 support
-CONFIG_RAID5=n
+# Build with RAID5f support
+CONFIG_RAID5F=n
 
 # Build with IDXD support
 # In this mode, SPDK fully controls the DSA device.
@@ -199,8 +201,23 @@ CONFIG_USDT=n
 # In this mode, SPDK shares the DSA device with the kernel.
 CONFIG_IDXD_KERNEL=n
 
+# arc4random is available in stdlib.h
+CONFIG_HAVE_ARC4RANDOM=n
+
+# uuid_generate_sha1 is available in uuid/uuid.h
+CONFIG_HAVE_UUID_GENERATE_SHA1=n
+
 # Is DPDK using libbsd?
 CONFIG_HAVE_LIBBSD=n
 
+# Is DPDK using libarchive?
+CONFIG_HAVE_LIBARCHIVE=n
+
 # Path to IPSEC_MB used by DPDK
 CONFIG_IPSEC_MB_DIR=
+
+# Generate Storage Management Agent's protobuf interface
+CONFIG_SMA=n
+
+# Build with Avahi support
+CONFIG_AVAHI=n

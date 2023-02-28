@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2021 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 rpc_py=$rootdir/scripts/rpc.py
@@ -15,11 +18,6 @@ nvme_bdev=nvme0
 # Since we're connecting the same bdev, we need to use a different NGUID to avoid errors when
 # registering the bdev during bdev_nvme_attach_controller
 nguid=$(uuidgen | tr -d '-')
-
-if [ "$TEST_TRANSPORT" != "tcp" ]; then
-	echo "This test can only be executed with TCP for now"
-	exit 0
-fi
 
 nvmftestinit
 nvmfappstart -m 0x1

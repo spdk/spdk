@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
@@ -82,6 +85,8 @@ function usage() {
 	echo "                            NVME PCI BDF,Spdk Bdev Name,Split Count,VM List"
 	echo "                            0000:1a:00.0,Nvme0,2,0 1"
 	echo "                            0000:1b:00.0,Nvme1,2,2 3"
+	echo "    --iobuf-small-pool-count=INT   number of small buffers in the global pool"
+	echo "    --iobuf-large-pool-count=INT   number of large buffers in the global pool"
 	echo "-x                          set -x for script debug"
 	exit 0
 }
@@ -195,6 +200,8 @@ while getopts 'xh-:' optchar; do
 				limit-kernel-vhost=*) kernel_cpus="${OPTARG#*=}" ;;
 				custom-cpu-cfg=*) custom_cpu_cfg="${OPTARG#*=}" ;;
 				disk-map=*) disk_map="${OPTARG#*=}" ;;
+				iobuf-small-pool-count=*) iobuf_small_count="${OPTARG#*=}" ;;
+				iobuf-large-pool-count=*) iobuf_large_count="${OPTARG#*=}" ;;
 				*) usage $0 "Invalid argument '$OPTARG'" ;;
 			esac
 			;;
@@ -260,6 +267,7 @@ set +x
 readarray disk_cfg < $disk_map
 for line in "${disk_cfg[@]}"; do
 	echo $line
+	[[ $line == "#"* ]] && continue
 	IFS=","
 	s=($line)
 	disk_cfg_bdfs+=(${s[0]})
@@ -392,7 +400,7 @@ else
 			vms_to_run=(${disk_cfg_vms[i]})
 			for ((j = 0; j < ${disk_cfg_splits[$i]}; j++)); do
 				free_mb=$(get_lvs_free_mb "$ls_guid")
-				size=$((free_mb / ((${disk_cfg_splits[$i]} - j))))
+				size=$((free_mb / (disk_cfg_splits[i] - j)))
 				lb_name=$($rpc_py bdev_lvol_create -u $ls_guid lbd_$j $size --clear-method none)
 				lvol_bdevs+=("$lb_name")
 				notice "Created LVOL Bdev $lb_name on Lvol Store $ls_guid on Bdev $nvme_bdev"

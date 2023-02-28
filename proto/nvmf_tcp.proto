@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package sma.nvmf_tcp;
+
+option go_package = "spdk.io/sma/nvmf_tcp";
+
+// Create device NVMe/TCP-specific parameters
+message DeviceParameters {
+  // Subsystem NQN
+  string subnqn = 1;
+  // Address family ("ipv4", "ipv6")
+  string adrfam = 2;
+  // Transport address
+  string traddr = 3;
+  // Transport service ID (port number)
+  string trsvcid = 4;
+  // Allow any host to connect
+  bool allow_any_host = 5;
+  // List of host NQNs that are allowed to connect to the subsystem (if
+  // allow_any_host is false)
+  repeated string hosts = 6;
+}

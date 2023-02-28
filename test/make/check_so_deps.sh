@@ -1,8 +1,29 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2019 Intel Corporation
+#  All rights reserved.
+#
 shopt -s extglob
+git_repo_abi="https://github.com/spdk/spdk-abi.git"
 
-function get_git_tag() {
-	git -C "${1:-$rootdir}" describe --tags --abbrev=0 --exclude=LTS
+function get_spdk_abi() {
+	local dest=$1
+	mkdir -p $dest
+	if [[ -d $SPDK_ABI_DIR ]]; then
+		echo "spdk-abi found at $SPDK_ABI_DIR"
+		cp -r "$SPDK_ABI_DIR"/* "$dest/"
+	else
+		# In case that someone run test manually and did not set existing
+		# spdk-abi directory via SPDK_ABI_DIR
+		echo "spdk-abi has not been found at $SPDK_ABI_DIR, cloning"
+		git clone $git_repo_abi "$dest"
+	fi
+}
+
+function get_release_branch() {
+	tag=$(git describe --tags --abbrev=0 --exclude=LTS --exclude=*-pre)
+	branch="${tag:0:6}.x"
+	echo "$branch"
 }
 
 if [ "$(uname -s)" = "FreeBSD" ]; then
@@ -24,45 +45,76 @@ libdir="$rootdir/build/lib"
 libdeps_file="$rootdir/mk/spdk.lib_deps.mk"
 suppression_file="$HOME/abigail_suppressions.ini"
 
-spdk_tag=$(get_git_tag)
-spdk_lts_tag=$(get_git_tag "$HOME/spdk_abi_lts")
-repo="spdk_abi_latest"
-if [[ "$spdk_tag" == "$spdk_lts_tag" ]]; then
-	repo="spdk_abi_lts"
-fi
-source_abi_dir="$HOME/$repo/build/lib"
+function check_header_filenames() {
+	local dups_found=0
+
+	xtrace_disable
+
+	include_headers=$(git ls-files -- $rootdir/include/spdk $rootdir/include/spdk_internal | xargs -n 1 basename)
+	dups=
+	for file in $include_headers; do
+		if [[ $(git ls-files "$rootdir/lib/**/$file" "$rootdir/module/**/$file" --error-unmatch 2> /dev/null) ]]; then
+			dups+=" $file"
+			dups_found=1
+		fi
+	done
+
+	xtrace_restore
+
+	if ((dups_found == 1)); then
+		echo "Private header file(s) found with same name as public header file."
+		echo "This is not allowed since it can confuse abidiff when determining if"
+		echo "data structure changes impact ABI."
+		echo $dups
+		return 1
+	fi
+}
 
 function confirm_abi_deps() {
 	local processed_so=0
 	local abidiff_output
+	local release
+	local source_abi_dir="$rootdir/test/make/abi"
 
-	echo "* Running ${FUNCNAME[0]} against $repo" >&2
+	release=$(get_release_branch)
+
+	get_spdk_abi "$source_abi_dir"
+	echo "* Running ${FUNCNAME[0]} against the latest (${release%.*}) release" >&2
 
 	if ! hash abidiff; then
 		echo "Unable to check ABI compatibility. Please install abidiff."
 		return 1
 	fi
 
-	if [ ! -d $source_abi_dir ]; then
-		echo "No source ABI available, failing this test."
-		return 1
-	fi
-
 	cat << EOF > ${suppression_file}
+[suppress_type]
+	name = spdk_nvme_power_state
+[suppress_type]
+	name = spdk_nvme_ctrlr_data
+[suppress_type]
+	name = spdk_nvme_cdata_oacs
+[suppress_type]
+	name = spdk_nvme_cdata_nvmf_specific
+[suppress_type]
+	name = spdk_nvme_cmd
+[suppress_type]
+	name = spdk_bs_opts
+[suppress_type]
+	name = spdk_app_opts
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
 		abidiff_output=0
 
 		so_file=$(basename $object)
-		if [ ! -f "$source_abi_dir/$so_file" ]; then
+		if [ ! -f "$source_abi_dir/$release/$so_file" ]; then
 			echo "No corresponding object for $so_file in canonical directory. Skipping."
 			continue
 		fi
 
 		cmd_args=('abidiff'
-			$source_abi_dir/$so_file $libdir/$so_file
-			'--headers-dir1' $source_abi_dir/../../include
+			$source_abi_dir/$release/$so_file "$libdir/$so_file"
+			'--headers-dir1' $source_abi_dir/$release/include
 			'--headers-dir2' $rootdir/include
 			'--leaf-changes-only' '--suppressions' $suppression_file)
 
@@ -71,7 +123,7 @@ EOF
 			output=$(sed "s/ [()][^)]*[)]//g" <<< "$output")
 
 			IFS="." read -r _ _ new_so_maj new_so_min < <(readlink "$libdir/$so_file")
-			IFS="." read -r _ _ old_so_maj old_so_min < <(readlink "$source_abi_dir/$so_file")
+			IFS="." read -r _ _ old_so_maj old_so_min < <(readlink "$source_abi_dir/$release/$so_file")
 
 			found_abi_change=false
 			so_name_changed=no
@@ -132,8 +184,10 @@ EOF
 			fi
 
 			if [[ $so_name_changed == yes ]]; then
-				# After 22.01 LTS all SO major versions were intentionally increased. Disable this check until SPDK 22.05 release.
-				found_abi_change=true
+				# After 23.01 LTS all SO major versions were intentionally increased. This check can be removed after SPDK 23.05 release.
+				if [[ "$release" == "v23.01.x" ]]; then
+					found_abi_change=true
+				fi
 				if ! $found_abi_change; then
 					echo "SO name for $so_file changed without a change to abi. please revert that change."
 					touch $fail_file
@@ -163,6 +217,7 @@ EOF
 	done
 	rm -f $suppression_file
 	echo "Processed $processed_so objects."
+	rm -rf "$source_abi_dir"
 }
 
 function get_lib_shortname() {
@@ -243,13 +298,18 @@ function confirm_makefile_deps() {
 	)
 }
 
+run_test "check_header_filenames" check_header_filenames
+
 config_params=$(get_config_params)
 if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 	config_params="$config_params --with-ocf=$rootdir/ocf.a"
 fi
 
-$MAKE $MAKEFLAGS clean
-./configure $config_params --with-shared
+if [[ -f $rootdir/mk/config.mk ]]; then
+	$MAKE $MAKEFLAGS clean
+fi
+
+$rootdir/configure $config_params --with-shared
 # By setting SPDK_NO_LIB_DEPS=1, we ensure that we won't create any link dependencies.
 # Then we can be sure we get a valid accounting of the symbol dependencies we have.
 SPDK_NO_LIB_DEPS=1 $MAKE $MAKEFLAGS

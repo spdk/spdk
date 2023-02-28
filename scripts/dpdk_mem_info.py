@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2019 Intel Corporation
+#  All rights reserved.
+#
 
 import argparse
 import os
@@ -286,12 +290,12 @@ def parse_mem_stats(stat_path):
             if state == parse_state.PARSE_MEMZONES:
                 if line.find("Zone") == 0:
                     zone = parse_zone(line)
+                    memory_struct.add_memzone(zone)
                     state = parse_state.PARSE_MEMZONE_SEGMENTS
                 line = stats.readline()
 
             if state == parse_state.PARSE_MEMZONE_SEGMENTS:
                 if line.find("Zone") == 0:
-                    memory_struct.add_memzone(zone)
                     state = parse_state.PARSE_MEMZONES
                     continue
                 elif line.lstrip().find("addr:") == 0:
@@ -385,7 +389,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if not os.path.exists(args.stats_file):
-        print("Error, specified stats file does not exist. Please make sure you have run the"
+        print("Error, specified stats file does not exist. Please make sure you have run the "
               "env_dpdk_get_mem_stats rpc on the spdk app you want to analyze.")
         exit(1)
 

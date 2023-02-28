@@ -27,6 +27,7 @@
 	virtio_pci_dev_enumerate;
 	virtio_pci_dev_attach;
 	virtio_user_dev_init;
+	virtio_vfio_user_dev_init;
 	virtio_pci_dev_init;
 	virtio_pci_dev_event_process;
 

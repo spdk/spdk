@@ -1,34 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2019 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "bdev_raid.h"
@@ -65,8 +38,7 @@ raid0_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 	}
 }
 
-static void
-raid0_submit_rw_request(struct raid_bdev_io *raid_io);
+static void raid0_submit_rw_request(struct raid_bdev_io *raid_io);
 
 static void
 _raid0_submit_rw_request(void *_raid_io)
@@ -89,6 +61,7 @@ static void
 raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 {
 	struct spdk_bdev_io		*bdev_io = spdk_bdev_io_from_ctx(raid_io);
+	struct spdk_bdev_ext_io_opts	io_opts = {};
 	struct raid_bdev_io_channel	*raid_ch = raid_io->raid_ch;
 	struct raid_bdev		*raid_bdev = raid_io->raid_bdev;
 	uint64_t			pd_strip;
@@ -131,16 +104,22 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 	assert(raid_ch != NULL);
 	assert(raid_ch->base_channel);
 	base_ch = raid_ch->base_channel[pd_idx];
+
+	io_opts.size = sizeof(io_opts);
+	io_opts.memory_domain = bdev_io->u.bdev.memory_domain;
+	io_opts.memory_domain_ctx = bdev_io->u.bdev.memory_domain_ctx;
+	io_opts.metadata = bdev_io->u.bdev.md_buf;
+
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-		ret = spdk_bdev_readv_blocks(base_info->desc, base_ch,
-					     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-					     pd_lba, pd_blocks, raid0_bdev_io_completion,
-					     raid_io);
+		ret = spdk_bdev_readv_blocks_ext(base_info->desc, base_ch,
+						 bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+						 pd_lba, pd_blocks, raid0_bdev_io_completion,
+						 raid_io, &io_opts);
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-		ret = spdk_bdev_writev_blocks(base_info->desc, base_ch,
-					      bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-					      pd_lba, pd_blocks, raid0_bdev_io_completion,
-					      raid_io);
+		ret = spdk_bdev_writev_blocks_ext(base_info->desc, base_ch,
+						  bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+						  pd_lba, pd_blocks, raid0_bdev_io_completion,
+						  raid_io, &io_opts);
 	} else {
 		SPDK_ERRLOG("Recvd not supported io type %u\n", bdev_io->type);
 		assert(0);
@@ -175,12 +154,14 @@ _raid0_get_io_range(struct raid_bdev_io_range *io_range,
 {
 	uint64_t	start_strip;
 	uint64_t	end_strip;
+	uint64_t	total_blocks;
 
 	io_range->strip_size = strip_size;
+	total_blocks = offset_blocks + num_blocks - (num_blocks > 0);
 
 	/* The start and end strip index in raid0 bdev scope */
 	start_strip = offset_blocks >> strip_size_shift;
-	end_strip = (offset_blocks + num_blocks - 1) >> strip_size_shift;
+	end_strip = total_blocks >> strip_size_shift;
 	io_range->start_strip_in_disk = start_strip / num_base_bdevs;
 	io_range->end_strip_in_disk = end_strip / num_base_bdevs;
 
@@ -189,7 +170,7 @@ _raid0_get_io_range(struct raid_bdev_io_range *io_range,
 	 * Strips between them certainly have aligned offset and length to boundaries.
 	 */
 	io_range->start_offset_in_strip = offset_blocks % strip_size;
-	io_range->end_offset_in_strip = (offset_blocks + num_blocks - 1) % strip_size;
+	io_range->end_offset_in_strip = total_blocks % strip_size;
 
 	/* The base bdev indexes in which start and end strips are located */
 	io_range->start_disk = start_strip % num_base_bdevs;
@@ -252,8 +233,7 @@ _raid0_split_io_range(struct raid_bdev_io_range *io_range, uint8_t disk_idx,
 	*_nblocks_in_disk = nblocks_in_disk;
 }
 
-static void
-raid0_submit_null_payload_request(struct raid_bdev_io *raid_io);
+static void raid0_submit_null_payload_request(struct raid_bdev_io *raid_io);
 
 static void
 _raid0_submit_null_payload_request(void *_raid_io)
@@ -355,7 +335,8 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 	}
 }
 
-static int raid0_start(struct raid_bdev *raid_bdev)
+static uint64_t
+raid0_calculate_blockcnt(struct raid_bdev *raid_bdev)
 {
 	uint64_t min_blockcnt = UINT64_MAX;
 	struct raid_base_bdev_info *base_info;
@@ -372,8 +353,15 @@ static int raid0_start(struct raid_bdev *raid_bdev)
 	 */
 	SPDK_DEBUGLOG(bdev_raid0, "min blockcount %" PRIu64 ",  numbasedev %u, strip size shift %u\n",
 		      min_blockcnt, raid_bdev->num_base_bdevs, raid_bdev->strip_size_shift);
-	raid_bdev->bdev.blockcnt = ((min_blockcnt >> raid_bdev->strip_size_shift) <<
-				    raid_bdev->strip_size_shift)  * raid_bdev->num_base_bdevs;
+
+	return ((min_blockcnt >> raid_bdev->strip_size_shift) <<
+		raid_bdev->strip_size_shift)  * raid_bdev->num_base_bdevs;
+}
+
+static int
+raid0_start(struct raid_bdev *raid_bdev)
+{
+	raid_bdev->bdev.blockcnt = raid0_calculate_blockcnt(raid_bdev);
 
 	if (raid_bdev->num_base_bdevs > 1) {
 		raid_bdev->bdev.optimal_io_boundary = raid_bdev->strip_size;
@@ -387,12 +375,36 @@ static int raid0_start(struct raid_bdev *raid_bdev)
 	return 0;
 }
 
+static void
+raid0_resize(struct raid_bdev *raid_bdev)
+{
+	uint64_t blockcnt;
+	int rc;
+
+	blockcnt = raid0_calculate_blockcnt(raid_bdev);
+
+	if (blockcnt == raid_bdev->bdev.blockcnt) {
+		return;
+	}
+
+	SPDK_NOTICELOG("raid0 '%s': min blockcount was changed from %" PRIu64 " to %" PRIu64 "\n",
+		       raid_bdev->bdev.name,
+		       raid_bdev->bdev.blockcnt,
+		       blockcnt);
+
+	rc = spdk_bdev_notify_blockcnt_change(&raid_bdev->bdev, blockcnt);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to notify blockcount change\n");
+	}
+}
+
 static struct raid_bdev_module g_raid0_module = {
 	.level = RAID0,
 	.base_bdevs_min = 1,
 	.start = raid0_start,
 	.submit_rw_request = raid0_submit_rw_request,
 	.submit_null_payload_request = raid0_submit_null_payload_request,
+	.resize = raid0_resize,
 };
 RAID_MODULE_REGISTER(&g_raid0_module)
 

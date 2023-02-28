@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2020 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019, 2021 Mellanox Technologies LTD. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /** \file
@@ -49,6 +21,11 @@
 
 /* The maximum number of buffers per request */
 #define NVMF_REQ_MAX_BUFFERS	(SPDK_NVMF_MAX_SGL_ENTRIES * 2 + 1)
+
+/* Maximum pending AERs that can be migrated */
+#define SPDK_NVMF_MIGR_MAX_PENDING_AERS 256
+
+#define SPDK_NVMF_MAX_ASYNC_EVENTS 4
 
 /* AIO backend requires block size aligned data buffers,
  * extra 4KiB aligned data buffer should work for most devices.
@@ -80,6 +57,12 @@ struct spdk_nvmf_dif_info {
 	uint32_t				orig_length;
 };
 
+struct spdk_nvmf_stripped_data {
+	uint32_t			iovcnt;
+	struct iovec			iov[NVMF_REQ_MAX_BUFFERS];
+	void				*buffers[NVMF_REQ_MAX_BUFFERS];
+};
+
 enum spdk_nvmf_zcopy_phase {
 	NVMF_ZCOPY_PHASE_NONE,        /* Request is not using ZCOPY */
 	NVMF_ZCOPY_PHASE_INIT,        /* Requesting Buffers */
@@ -104,6 +87,7 @@ struct spdk_nvmf_request {
 	uint32_t			iovcnt;
 	struct iovec			iov[NVMF_REQ_MAX_BUFFERS];
 	void				*buffers[NVMF_REQ_MAX_BUFFERS];
+	struct spdk_nvmf_stripped_data  *stripped_data;
 
 	struct spdk_nvmf_dif_info	dif;
 
@@ -139,6 +123,7 @@ struct spdk_nvmf_qpair {
 	uint16_t				qid;
 	uint16_t				sq_head;
 	uint16_t				sq_head_max;
+	bool					connect_received;
 	bool					disconnect_started;
 
 	struct spdk_nvmf_request		*first_fused_req;
@@ -172,6 +157,12 @@ struct spdk_nvmf_poll_group {
 	struct spdk_nvmf_subsystem_poll_group		*sgroups;
 	uint32_t					num_sgroups;
 
+	/* Protected by mutex. Counts qpairs that have connected at a
+	 * transport level, but are not associated with a subsystem
+	 * or controller yet (because the CONNECT capsule hasn't
+	 * been received). */
+	uint32_t					current_unassociated_qpairs;
+
 	/* All of the queue pairs that belong to this poll group */
 	TAILQ_HEAD(, spdk_nvmf_qpair)			qpairs;
 
@@ -182,6 +173,8 @@ struct spdk_nvmf_poll_group {
 	void						*destroy_cb_arg;
 
 	TAILQ_ENTRY(spdk_nvmf_poll_group)		link;
+
+	pthread_mutex_t					mutex;
 };
 
 struct spdk_nvmf_listener {
@@ -203,7 +196,9 @@ struct spdk_nvmf_ctrlr_data {
 	uint16_t ssvid;
 	/** ieee oui identifier */
 	uint8_t ieee[3];
+	struct spdk_nvme_cdata_oacs oacs;
 	struct spdk_nvme_cdata_oncs oncs;
+	struct spdk_nvme_cdata_fuses fuses;
 	struct spdk_nvme_cdata_sgls sgls;
 	struct spdk_nvme_cdata_nvmf_specific nvmf_specific;
 };
@@ -218,6 +213,8 @@ struct spdk_nvmf_transport {
 
 	TAILQ_HEAD(, spdk_nvmf_listener)	listeners;
 	TAILQ_ENTRY(spdk_nvmf_transport)	link;
+
+	pthread_mutex_t				mutex;
 };
 
 typedef void (*spdk_nvmf_transport_qpair_fini_cb)(void *cb_arg);
@@ -239,9 +236,12 @@ struct spdk_nvmf_transport_ops {
 	void (*opts_init)(struct spdk_nvmf_transport_opts *opts);
 
 	/**
-	 * Create a transport for the given transport opts
+	 * Create a transport for the given transport opts. Either synchronous
+	 * or asynchronous version shall be implemented.
 	 */
 	struct spdk_nvmf_transport *(*create)(struct spdk_nvmf_transport_opts *opts);
+	int (*create_async)(struct spdk_nvmf_transport_opts *opts, spdk_nvmf_transport_create_done_cb cb_fn,
+			    void *cb_arg);
 
 	/**
 	 * Dump transport-specific opts into JSON
@@ -432,6 +432,7 @@ struct spdk_nvmf_registers {
 	uint64_t			asq;
 	uint64_t			acq;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_registers) == 40, "Incorrect size");
 
 const struct spdk_nvmf_registers *spdk_nvmf_ctrlr_get_regs(struct spdk_nvmf_ctrlr *ctrlr);
 
@@ -482,8 +483,105 @@ spdk_nvmf_ctrlr_get_subsystem(struct spdk_nvmf_ctrlr *ctrlr);
  *
  * \return The NVMe-oF controller ID
  */
-uint16_t
-spdk_nvmf_ctrlr_get_id(struct spdk_nvmf_ctrlr *ctrlr);
+uint16_t spdk_nvmf_ctrlr_get_id(struct spdk_nvmf_ctrlr *ctrlr);
+
+struct spdk_nvmf_ctrlr_feat {
+	union spdk_nvme_feat_arbitration arbitration;
+	union spdk_nvme_feat_power_management power_management;
+	union spdk_nvme_feat_error_recovery error_recovery;
+	union spdk_nvme_feat_volatile_write_cache volatile_write_cache;
+	union spdk_nvme_feat_number_of_queues number_of_queues;
+	union spdk_nvme_feat_interrupt_coalescing interrupt_coalescing;
+	union spdk_nvme_feat_interrupt_vector_configuration interrupt_vector_configuration;
+	union spdk_nvme_feat_write_atomicity write_atomicity;
+	union spdk_nvme_feat_async_event_configuration async_event_configuration;
+	union spdk_nvme_feat_keep_alive_timer keep_alive_timer;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ctrlr_feat) == 40, "Incorrect size");
+
+/*
+ * Migration data structure used to save & restore a NVMe-oF controller.
+ *
+ * The data structure is experimental.
+ *
+ */
+struct spdk_nvmf_ctrlr_migr_data {
+	/* `data_size` is valid size of `spdk_nvmf_ctrlr_migr_data` without counting `unused`.
+	 * We use this field to migrate `spdk_nvmf_ctrlr_migr_data` from source VM and restore
+	 * it in destination VM.
+	 */
+	uint32_t data_size;
+	/* `regs_size` is valid size of `spdk_nvmf_registers`. */
+	uint32_t regs_size;
+	/* `feat_size` is valid size of `spdk_nvmf_ctrlr_feat`. */
+	uint32_t feat_size;
+	uint32_t reserved;
+
+	struct spdk_nvmf_registers regs;
+	uint8_t regs_reserved[216];
+
+	struct spdk_nvmf_ctrlr_feat feat;
+	uint8_t feat_reserved[216];
+
+	uint16_t cntlid;
+	uint8_t acre;
+	uint8_t num_aer_cids;
+	uint32_t num_async_events;
+
+	union spdk_nvme_async_event_completion async_events[SPDK_NVMF_MIGR_MAX_PENDING_AERS];
+	uint16_t aer_cids[SPDK_NVMF_MAX_ASYNC_EVENTS];
+	uint64_t notice_aen_mask;
+
+	uint8_t unused[2516];
+};
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvmf_ctrlr_migr_data,
+			    regs) - offsetof(struct spdk_nvmf_ctrlr_migr_data, data_size) == 16, "Incorrect header size");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvmf_ctrlr_migr_data,
+			    feat) - offsetof(struct spdk_nvmf_ctrlr_migr_data, regs) == 256, "Incorrect regs size");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvmf_ctrlr_migr_data,
+			    cntlid) - offsetof(struct spdk_nvmf_ctrlr_migr_data, feat) == 256, "Incorrect feat size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ctrlr_migr_data) == 4096, "Incorrect size");
+
+/**
+ * Save the NVMe-oF controller state and configuration.
+ *
+ * The API is experimental.
+ *
+ * It is allowed to save the data only when the nvmf subystem is in paused
+ * state i.e. there are no outstanding cmds in nvmf layer (other than aer),
+ * pending async event completions are getting blocked.
+ *
+ * To preserve thread safety this function must be executed on the same thread
+ * the NVMe-OF controller was created.
+ *
+ * \param ctrlr The NVMe-oF controller
+ * \param data The NVMe-oF controller state and configuration to be saved
+ *
+ * \return 0 on success or a negated errno on failure.
+ */
+int spdk_nvmf_ctrlr_save_migr_data(struct spdk_nvmf_ctrlr *ctrlr,
+				   struct spdk_nvmf_ctrlr_migr_data *data);
+
+/**
+ * Restore the NVMe-oF controller state and configuration.
+ *
+ * The API is experimental.
+ *
+ * It is allowed to restore the data only when the nvmf subystem is in paused
+ * state.
+ *
+ * To preserve thread safety this function must be executed on the same thread
+ * the NVMe-OF controller was created.
+ *
+ * AERs shall be restored using spdk_nvmf_request_exec after this function is executed.
+ *
+ * \param ctrlr The NVMe-oF controller
+ * \param data The NVMe-oF controller state and configuration to be restored
+ *
+ * \return 0 on success or a negated errno on failure.
+ */
+int spdk_nvmf_ctrlr_restore_migr_data(struct spdk_nvmf_ctrlr *ctrlr,
+				      const struct spdk_nvmf_ctrlr_migr_data *data);
 
 static inline enum spdk_nvme_data_transfer
 spdk_nvmf_req_get_xfer(struct spdk_nvmf_request *req) {
@@ -536,6 +634,6 @@ spdk_nvmf_req_get_xfer(struct spdk_nvmf_request *req) {
 static void __attribute__((constructor)) _spdk_nvmf_transport_register_##name(void) \
 { \
 	spdk_nvmf_transport_register(transport_ops); \
-}\
+}
 
 #endif

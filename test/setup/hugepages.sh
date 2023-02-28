@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir/../../")
 source "$testdir/common.sh"
@@ -87,13 +91,33 @@ verify_nr_hugepages() {
 	local node
 	local sorted_t
 	local sorted_s
+	local surp
+	local resv
+	local anon
+
+	if [[ $(< /sys/kernel/mm/transparent_hugepage/enabled) != *"[never]"* ]]; then
+		anon=$(get_meminfo AnonHugePages)
+	fi
+	surp=$(get_meminfo HugePages_Surp)
+	resv=$(get_meminfo HugePages_Rsvd)
 
 	echo "nr_hugepages=$nr_hugepages"
-	(($(< "$default_huge_nr") == nr_hugepages))
+	echo "resv_hugepages=$resv"
+	echo "surplus_hugepages=$surp"
+	echo "anon_hugepages=${anon:-disabled}"
+
+	(($(< "$default_huge_nr") == nr_hugepages + surp + resv))
+	# This knob doesn't account for the surp, resv hugepages
 	(($(< "$global_huge_nr") == nr_hugepages))
-	(($(get_meminfo HugePages_Total) == nr_hugepages))
+	(($(get_meminfo HugePages_Total) == nr_hugepages + surp + resv))
 
 	get_nodes
+
+	# Take global resv and per-node surplus hugepages into account
+	for node in "${!nodes_test[@]}"; do
+		((nodes_test[node] += resv))
+		((nodes_test[node] += $(get_meminfo HugePages_Surp "$node")))
+	done
 
 	# There's no obvious way of determining which NUMA node is going to end
 	# up with an odd number of hugepages in case such number was actually
@@ -103,7 +127,7 @@ verify_nr_hugepages() {
 
 	for node in "${!nodes_test[@]}"; do
 		sorted_t[nodes_test[node]]=1 sorted_s[nodes_sys[node]]=1
-		echo "node$node=${nodes_sys[node]}"
+		echo "node$node=${nodes_sys[node]} expecting ${nodes_test[node]}"
 	done
 	[[ ${!sorted_s[*]} == "${!sorted_t[*]}" ]]
 }
@@ -166,20 +190,20 @@ custom_alloc() {
 	nr_hugepages=$_nr_hugepages verify_nr_hugepages
 }
 
-hp_status() {
-	# Parse status from last verification
+no_shrink_alloc() {
+	# Defalut HUGEMEM (2G) alloc on node0
+	# attempt to shrink by half: 2G should remain
 
-	local node
-	local size free total
+	get_test_nr_hugepages $((2048 * 1024)) 0
 
-	((${#nodes_sys[@]} > 0))
+	# Verify the default first
+	setup
+	verify_nr_hugepages
 
-	while read -r node size free _ total; do
-		size=${size/kB/} node=${node#node}
-		((size == default_hugepages)) || continue
-		((free == nodes_test[node]))
-		((total == nodes_test[node]))
-	done < <(setup output status |& grep "node[0-9]")
+	# Now attempt to shrink the hp number
+	CLEAR_HUGE=no NRHUGE=$((nr_hugepages / 2)) setup
+	# 2G should remain
+	verify_nr_hugepages
 }
 
 get_nodes
@@ -190,6 +214,6 @@ run_test "per_node_2G_alloc" per_node_2G_alloc
 run_test "even_2G_alloc" even_2G_alloc
 run_test "odd_alloc" odd_alloc
 run_test "custom_alloc" custom_alloc
-run_test "hp_status" hp_status
+run_test "no_shrink_alloc" no_shrink_alloc
 
 clear_hp

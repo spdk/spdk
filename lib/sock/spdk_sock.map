@@ -15,6 +15,7 @@
 	spdk_sock_writev;
 	spdk_sock_writev_async;
 	spdk_sock_readv;
+	spdk_sock_readv_async;
 	spdk_sock_set_recvlowat;
 	spdk_sock_set_recvbuf;
 	spdk_sock_set_sendbuf;

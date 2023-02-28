@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation
+#  All rights reserved.
+#
 # Virtual Machine environment requirements:
 # 8 GiB of RAM (for DPDK)
 # enable intel_kvm on your host machine
@@ -44,7 +47,7 @@ function usage() {
 	echo "  -h --help"
 	echo "  -u --upgrade Run $package_manager upgrade"
 	echo "  -i --install-deps Install $package_manager based dependencies"
-	echo "  -t --test-conf List of test configurations to enable (${CONF},irdma,lcov)"
+	echo "  -t --test-conf List of test configurations to enable (${CONF},irdma,lcov,bpftrace)"
 	echo "  -c --conf-path Path to configuration file"
 	echo "  -d --dir-git Path to where git sources should be saved"
 	echo "  -s --disable-tsocks Disable use of tsocks"
@@ -173,7 +176,7 @@ if [[ ! -e ~/autorun-spdk.conf ]]; then
 SPDK_RUN_VALGRIND=1
 SPDK_TEST_CRYPTO=1
 SPDK_RUN_FUNCTIONAL_TEST=1
-SPDK_TEST_AUTOBUILD=1
+SPDK_TEST_AUTOBUILD="full"
 SPDK_TEST_UNITTEST=1
 SPDK_TEST_ISCSI=1
 SPDK_TEST_ISCSI_INITIATOR=1
@@ -183,6 +186,7 @@ SPDK_TEST_NVME_SCC=1
 SPDK_TEST_NVME_BP=1
 SPDK_TEST_NVME_CLI=1
 SPDK_TEST_NVMF=1
+SPDK_TEST_NVMF_MDNS=1
 SPDK_TEST_VFIOUSER=1
 SPDK_TEST_RBD=1
 SPDK_TEST_BLOCKDEV=1
@@ -199,6 +203,7 @@ SPDK_TEST_IOAT=0
 # requires some extra configuration. see TEST_ENV_SETUP_README
 SPDK_TEST_VHOST=0
 SPDK_TEST_VHOST_INIT=0
+SPDK_TEST_DAOS=0
 
 EOF
 fi

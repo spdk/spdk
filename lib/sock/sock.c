@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -38,9 +10,12 @@
 #include "spdk_internal/sock.h"
 #include "spdk/log.h"
 #include "spdk/env.h"
+#include "spdk/util.h"
 
 #define SPDK_SOCK_DEFAULT_PRIORITY 0
 #define SPDK_SOCK_DEFAULT_ZCOPY true
+#define SPDK_SOCK_DEFAULT_ACK_TIMEOUT 0
+
 #define SPDK_SOCK_OPTS_FIELD_OK(opts, field) (offsetof(struct spdk_sock_opts, field) + sizeof(opts->field) <= (opts->opts_size))
 
 static STAILQ_HEAD(, spdk_net_impl) g_net_impls = STAILQ_HEAD_INITIALIZER(g_net_impls);
@@ -66,51 +41,66 @@ sock_get_group_impl_from_group(struct spdk_sock *sock, struct spdk_sock_group *g
 	return NULL;
 }
 
+/* Called under map->mtx lock */
+static struct spdk_sock_placement_id_entry *
+_sock_map_entry_alloc(struct spdk_sock_map *map, int placement_id)
+{
+	struct spdk_sock_placement_id_entry *entry;
+
+	entry = calloc(1, sizeof(*entry));
+	if (!entry) {
+		SPDK_ERRLOG("Cannot allocate an entry for placement_id=%u\n", placement_id);
+		return NULL;
+	}
+
+	entry->placement_id = placement_id;
+
+	STAILQ_INSERT_TAIL(&map->entries, entry, link);
+
+	return entry;
+}
+
 int
 spdk_sock_map_insert(struct spdk_sock_map *map, int placement_id,
 		     struct spdk_sock_group_impl *group)
 {
 	struct spdk_sock_placement_id_entry *entry;
+	int rc = 0;
 
 	pthread_mutex_lock(&map->mtx);
 	STAILQ_FOREACH(entry, &map->entries, link) {
 		if (placement_id == entry->placement_id) {
 			/* Can't set group to NULL if it is already not-NULL */
 			if (group == NULL) {
-				pthread_mutex_unlock(&map->mtx);
-				return (entry->group == NULL) ? 0 : -EINVAL;
+				rc = (entry->group == NULL) ? 0 : -EINVAL;
+				goto end;
 			}
 
 			if (entry->group == NULL) {
 				entry->group = group;
 			} else if (entry->group != group) {
-				pthread_mutex_unlock(&map->mtx);
-				return -EINVAL;
+				rc = -EINVAL;
+				goto end;
 			}
 
 			entry->ref++;
-			pthread_mutex_unlock(&map->mtx);
-			return 0;
+			goto end;
 		}
 	}
 
-	entry = calloc(1, sizeof(*entry));
-	if (!entry) {
-		SPDK_ERRLOG("Cannot allocate an entry for placement_id=%u\n", placement_id);
-		pthread_mutex_unlock(&map->mtx);
-		return -ENOMEM;
+	entry = _sock_map_entry_alloc(map, placement_id);
+	if (entry == NULL) {
+		rc = -ENOMEM;
+		goto end;
 	}
-
-	entry->placement_id = placement_id;
 	if (group) {
 		entry->group = group;
 		entry->ref++;
 	}
-
-	STAILQ_INSERT_TAIL(&map->entries, entry, link);
+end:
 	pthread_mutex_unlock(&map->mtx);
 
-	return 0;
+	return rc;
 }
 
 void
@@ -136,24 +126,43 @@ spdk_sock_map_release(struct spdk_sock_map *map, int placement_id)
 
 int
 spdk_sock_map_lookup(struct spdk_sock_map *map, int placement_id,
-		     struct spdk_sock_group_impl **group)
+		     struct spdk_sock_group_impl **group, struct spdk_sock_group_impl *hint)
 {
 	struct spdk_sock_placement_id_entry *entry;
-	int rc = -EINVAL;
 
 	*group = NULL;
 	pthread_mutex_lock(&map->mtx);
 	STAILQ_FOREACH(entry, &map->entries, link) {
 		if (placement_id == entry->placement_id) {
-			assert(entry->group != NULL);
 			*group = entry->group;
-			rc = 0;
+			if (*group != NULL) {
+				/* Return previously assigned sock_group */
+				pthread_mutex_unlock(&map->mtx);
+				return 0;
+			}
 			break;
 		}
 	}
+
+	/* No entry with assigned sock_group, nor hint to use */
+	if (hint == NULL) {
+		pthread_mutex_unlock(&map->mtx);
+		return -EINVAL;
+	}
+
+	/* Create new entry if there is none with matching placement_id */
+	if (entry == NULL) {
+		entry = _sock_map_entry_alloc(map, placement_id);
+		if (entry == NULL) {
+			pthread_mutex_unlock(&map->mtx);
+			return -ENOMEM;
+		}
+	}
+
+	entry->group = hint;
 	pthread_mutex_unlock(&map->mtx);
 
-	return rc;
+	return 0;
 }
 
 void
@@ -189,13 +198,22 @@ spdk_sock_map_find_free(struct spdk_sock_map *map)
 }
 
 int
-spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group **group)
+spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group **group,
+				 struct spdk_sock_group *hint)
 {
 	struct spdk_sock_group_impl *group_impl;
+	struct spdk_sock_group_impl *hint_group_impl = NULL;
 
 	assert(group != NULL);
 
-	group_impl = sock->net_impl->group_impl_get_optimal(sock);
+	if (hint != NULL) {
+		hint_group_impl = sock_get_group_impl_from_group(sock, hint);
+		if (hint_group_impl == NULL) {
+			return -EINVAL;
+		}
+	}
+
+	group_impl = sock->net_impl->group_impl_get_optimal(sock, hint_group_impl);
 
 	if (group_impl) {
 		*group = group_impl->group;
@@ -223,6 +241,18 @@ spdk_sock_get_default_opts(struct spdk_sock_opts *opts)
 	if (SPDK_SOCK_OPTS_FIELD_OK(opts, zcopy)) {
 		opts->zcopy = SPDK_SOCK_DEFAULT_ZCOPY;
 	}
+
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, ack_timeout)) {
+		opts->ack_timeout = SPDK_SOCK_DEFAULT_ACK_TIMEOUT;
+	}
+
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, impl_opts)) {
+		opts->impl_opts = NULL;
+	}
+
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, impl_opts_size)) {
+		opts->impl_opts_size = 0;
+	}
 }
 
 /*
@@ -247,10 +277,22 @@ sock_init_opts(struct spdk_sock_opts *opts, struct spdk_sock_opts *opts_user)
 	if (SPDK_SOCK_OPTS_FIELD_OK(opts, zcopy)) {
 		opts->zcopy = opts_user->zcopy;
 	}
+
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, ack_timeout)) {
+		opts->ack_timeout = opts_user->ack_timeout;
+	}
+
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, impl_opts)) {
+		opts->impl_opts = opts_user->impl_opts;
+	}
+
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, impl_opts)) {
+		opts->impl_opts_size = opts_user->impl_opts_size;
+	}
 }
 
 struct spdk_sock *
-spdk_sock_connect(const char *ip, int port, char *impl_name)
+spdk_sock_connect(const char *ip, int port, const char *impl_name)
 {
 	struct spdk_sock_opts opts;
 
@@ -260,7 +302,7 @@ spdk_sock_connect(const char *ip, int port, char *impl_name)
 }
 
 struct spdk_sock *
-spdk_sock_connect_ext(const char *ip, int port, char *_impl_name, struct spdk_sock_opts *opts)
+spdk_sock_connect_ext(const char *ip, int port, const char *_impl_name, struct spdk_sock_opts *opts)
 {
 	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock *sock;
@@ -289,9 +331,13 @@ spdk_sock_connect_ext(const char *ip, int port, char *_impl_name, struct spdk_so
 		if (sock != NULL) {
 			/* Copy the contents, both the two structures are the same ABI version */
 			memcpy(&sock->opts, &opts_local, sizeof(sock->opts));
+			/* Clear out impl_opts to make sure we don't keep reference to a dangling
+			 * pointer */
+			sock->opts.impl_opts = NULL;
 			sock->net_impl = impl;
 			TAILQ_INIT(&sock->queued_reqs);
 			TAILQ_INIT(&sock->pending_reqs);
+
 			return sock;
 		}
 	}
@@ -300,7 +346,7 @@ spdk_sock_connect_ext(const char *ip, int port, char *_impl_name, struct spdk_so
 }
 
 struct spdk_sock *
-spdk_sock_listen(const char *ip, int port, char *impl_name)
+spdk_sock_listen(const char *ip, int port, const char *impl_name)
 {
 	struct spdk_sock_opts opts;
 
@@ -310,7 +356,7 @@ spdk_sock_listen(const char *ip, int port, char *impl_name)
 }
 
 struct spdk_sock *
-spdk_sock_listen_ext(const char *ip, int port, char *_impl_name, struct spdk_sock_opts *opts)
+spdk_sock_listen_ext(const char *ip, int port, const char *_impl_name, struct spdk_sock_opts *opts)
 {
 	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock *sock;
@@ -339,6 +385,9 @@ spdk_sock_listen_ext(const char *ip, int port, char *_impl_name, struct spdk_soc
 		if (sock != NULL) {
 			/* Copy the contents, both the two structures are the same ABI version */
 			memcpy(&sock->opts, &opts_local, sizeof(sock->opts));
+			/* Clear out impl_opts to make sure we don't keep reference to a dangling
+			 * pointer */
+			sock->opts.impl_opts = NULL;
 			sock->net_impl = impl;
 			/* Don't need to initialize the request queues for listen
 			 * sockets. */
@@ -420,6 +469,25 @@ spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 	return sock->net_impl->readv(sock, iov, iovcnt);
 }
 
+void
+spdk_sock_readv_async(struct spdk_sock *sock, struct spdk_sock_request *req)
+{
+	assert(req->cb_fn != NULL);
+
+	if (spdk_unlikely(sock == NULL || sock->flags.closed)) {
+		req->cb_fn(req->cb_arg, -EBADF);
+		return;
+	}
+
+	/* The socket needs to be part of a poll group */
+	if (spdk_unlikely(sock->group_impl == NULL)) {
+		req->cb_fn(req->cb_arg, -EPERM);
+		return;
+	}
+
+	sock->net_impl->readv_async(sock, req);
+}
+
 ssize_t
 spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 {
@@ -448,12 +516,8 @@ int
 spdk_sock_flush(struct spdk_sock *sock)
 {
 	if (sock == NULL || sock->flags.closed) {
-		return -EBADF;
-	}
-
-	/* Sock is in a polling group, so group polling mechanism will work */
-	if (sock->group_impl != NULL) {
-		return 0;
+		errno = EBADF;
+		return -1;
 	}
 
 	return sock->net_impl->flush(sock);
@@ -684,8 +748,7 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 	STAILQ_FOREACH_SAFE(group_impl, &(*group)->group_impls, link, tmp) {
 		rc = group_impl->net_impl->group_impl_close(group_impl);
 		if (rc != 0) {
-			SPDK_ERRLOG("group_impl_close for net(%s) failed\n",
-				    group_impl->net_impl->name);
+			SPDK_ERRLOG("group_impl_close for net failed\n");
 		}
 	}
 
@@ -796,6 +859,15 @@ spdk_sock_write_config_json(struct spdk_json_write_ctx *w)
 			spdk_json_write_named_uint32(w, "enable_placement_id", opts.enable_placement_id);
 			spdk_json_write_named_bool(w, "enable_zerocopy_send_server", opts.enable_zerocopy_send_server);
 			spdk_json_write_named_bool(w, "enable_zerocopy_send_client", opts.enable_zerocopy_send_client);
+			spdk_json_write_named_uint32(w, "zerocopy_threshold", opts.zerocopy_threshold);
+			spdk_json_write_named_uint32(w, "tls_version", opts.tls_version);
+			spdk_json_write_named_bool(w, "enable_ktls", opts.enable_ktls);
+			if (opts.psk_key) {
+				spdk_json_write_named_string(w, "psk_key", opts.psk_key);
+			}
+			if (opts.psk_identity) {
+				spdk_json_write_named_string(w, "psk_identity", opts.psk_identity);
+			}
 			spdk_json_write_object_end(w);
 			spdk_json_write_object_end(w);
 		} else {
@@ -827,7 +899,8 @@ spdk_net_impl_register(struct spdk_net_impl *impl, int priority)
 	}
 }
 
-int spdk_sock_set_default_impl(const char *impl_name)
+int
+spdk_sock_set_default_impl(const char *impl_name)
 {
 	struct spdk_net_impl *impl;
 

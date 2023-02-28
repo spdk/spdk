@@ -27,6 +27,9 @@ To run the scripts in your environment please follow steps below.
   to /usr/src/local directory in order to configure NIC ports IRQ affinity.
   If custom directory is to be used, then it must be set using irq_scripts_dir
   option in Target and Initiator configuration sections.
+- `sysstat` package must be installed for SAR CPU utilization measurements.
+- `bwm-ng` package must be installed for NIC bandwidth utilization measurements.
+- `pcm` package must be installed for pcm, pcm-power and pcm-memory measurements.
 
 ### Optional
 
@@ -83,15 +86,21 @@ Optional:
   "core_mask": "[1-10]",
   "null_block_devices": 8,
   "nvmet_bin": "/path/to/nvmetcli",
-  "sar_settings": [true, 30, 1, 60],
-  "pcm_settings": [/tmp/pcm, 30, 1, 60],
+  "sar_settings": true,
+  "pcm_settings": false,
   "enable_bandwidth": [true, 60],
-  "enable_dpdk_memory": [true, 30]
+  "enable_dpdk_memory": true
   "num_shared_buffers": 4096,
   "scheduler_settings": "static",
   "zcopy_settings": false,
   "dif_insert_strip": true,
-  "null_block_dif_type": 3
+  "null_block_dif_type": 3,
+  "pm_settings": [true, 30, 1, 60],
+  "irq_settings": {
+    "mode": "cpulist",
+    "cpulist": "[0-10]",
+    "exclude_cpulist": false
+  }
 }
 ```
 
@@ -110,22 +119,35 @@ Optional, common:
 
 - null_block_devices - int, number of null block devices to create.
   Detected NVMe devices are not used if option is present. Default: 0.
-- sar_settings - [bool, int(x), int(y), int(z)];
-  Enable SAR CPU utilization measurement on Target side.
-  Wait for "x" seconds before starting measurements, then do "z" samples
-  with "y" seconds intervals between them. Default: disabled.
-- pcm_settings - [path, int(x), int(y), int(z)];
-  Enable [PCM](https://github.com/opcm/pcm.git) measurements on Tartet side.
-  Measurements include CPU, memory and power consumption. "path" points to a
-  directory where pcm executables are present. Default: disabled.
-- enable_bandwidth - [bool, int]. Wait a given number of seconds and run
-  bwm-ng until the end of test to measure bandwidth utilization on network
-  interfaces. Default: disabled.
+- sar_settings - bool
+  Enable SAR CPU utilization measurement on Target side. SAR thread will
+  wait until fio finishes it's "ramp_time" and then start measurement for
+  fio "run_time" duration. Default: enabled.
+- pcm_settings - bool
+  Enable [PCM](https://github.com/opcm/pcm.git) measurements on Target side.
+  Measurements include CPU, memory and power consumption. Default: enabled.
+- enable_bandwidth - bool. Measure bandwidth utilization on network
+  interfaces. Default: enabled.
 - tuned_profile - tunedadm profile to apply on the system before starting
   the test.
 - irq_scripts_dir - path to scripts directory of Mellanox mlnx-tools package;
   Used to run set_irq_affinity.sh script.
   Default: /usr/src/local/mlnx-tools/ofed_scripts
+- enable_pm - bool;
+  if bool is set to true, power measurement is enabled via collect-bmc-pm on
+  the target side. Default: true.
+- irq_settings - dict;
+  Choose how to adjust network interface IRQ settings.
+  mode: default - run IRQ alignment script with no additional options.
+  mode: bynode - align IRQs to be processed only on CPU cores matching NIC
+    NUMA node.
+  mode: cpulist - align IRQs to be processed only on CPU cores provided
+    in the cpulist parameter.
+  cpulist: list of CPU cores to use for cpulist mode. Can be provided as
+    list of individual cores ("[0,1,10]"), core ranges ("[0-10]"), or mix
+    of both ("[0-1,10,20-22]")
+  exclude_cpulist: reverse the effect of cpulist mode. Allow IRQ processing
+    only on CPU cores which are not provided in cpulist parameter.
 
 Optional, Kernel Target only:
 
@@ -143,19 +165,32 @@ Optional, SPDK Target only:
 - max_queue_depth - int, max number of outstanding I/O per queue. Default: 128.
 - dif_insert_strip - bool. Only for TCP transport. Enable DIF option when
   creating transport layer. Default: false.
+- num_cqe - int, number of completion queue entries. See doc/json_rpc.md
+  "nvmf_create_transport" section. Default: 4096.
 - null_block_dif_type - int, 0-3. Level of DIF type to use when creating
   null block bdev. Default: 0.
-- enable_dpdk_memory - [bool, int]. Wait for a given number of seconds and
-  call env_dpdk_get_mem_stats RPC call to dump DPDK memory stats. Typically
-  wait time should be at least ramp_time of fio described in another section.
+- enable_dpdk_memory - bool. Wait for a fio ramp_time to finish and
+  call env_dpdk_get_mem_stats RPC call to dump DPDK memory stats.
+  Default: enabled.
 - adq_enable - bool; only for TCP transport.
   Configure system modules, NIC settings and create priority traffic classes
   for ADQ testing. You need and ADQ-capable NIC like the Intel E810.
 - bpf_scripts - list of bpftrace scripts that will be attached during the
   test run. Available scripts can be found in the spdk/scripts/bpf directory.
-- idxd_settings - bool. Only for TCP transport. Enable offloading CRC32C
-  calculation to IDXD. You need a CPU with the Intel(R) Data Streaming
+- dsa_settings - bool. Only for TCP transport. Enable offloading CRC32C
+  calculation to DSA. You need a CPU with the Intel(R) Data Streaming
   Accelerator (DSA) engine.
+- scheduler_core_limit - int, 0-100. Dynamic scheduler option to load limit on
+  the core to be considered full.
+- irq_settings - dict;
+  Choose how to adjust network interface IRQ settings.
+  Same as in common options section, but SPDK Target allows more modes:
+  mode: shared - align IRQs to be processed only on the same CPU cores which
+    are already used by SPDK Target process.
+  mode: split - align IRQs to be processed only on CPU cores which are not
+    used by SPDK Target process.
+  mode: split-bynode - same as "split", but reduce the number of CPU cores
+    to use for IRQ processing to only these matching NIC NUMA node.
 
 ### Initiator system settings section
 
@@ -174,7 +209,8 @@ There can be one or more `initiatorX` setting sections, depending on the test se
   "num_cores": 4,
   "cpu_frequency": 2100000,
   "adq_enable": false,
-  "kernel_engine": "io_uring"
+  "kernel_engine": "io_uring",
+  "irq_settings": { "mode": "bynode" }
 }
 ```
 
@@ -224,6 +260,8 @@ Optional, common:
   Available options:
   - libaio (default)
   - io_uring
+- irq_settings - dict;
+  Same as "irq_settings" in Target common options section.
 
 Optional, SPDK Initiator only:
 
@@ -245,6 +283,8 @@ Optional, SPDK Initiator only:
   "rwmixread": 100,
   "rate_iops": 10000,
   "num_jobs": 2,
+  "offset": true,
+  "offset_inc": 10,
   "run_time": 30,
   "ramp_time": 30,
   "run_num": 3
@@ -267,6 +307,16 @@ Required:
 Optional:
 
 - rate_iops - limit IOPS to this number
+- offset - bool; enable offseting of the IO to the file. When this option is
+  enabled the file is "split" into a number of chunks equal to "num_jobs"
+  parameter value, and each "num_jobs" fio thread gets it's own chunk to
+  work with.
+  For more detail see "offset", "offset_increment" and "size" in fio man
+  pages. Default: false.
+- offset_inc - int; Percentage value determining the offset, size and
+  offset_increment when "offset" option is enabled. By default if "offset"
+  is enabled fio file will get split evenly between fio threads doing the
+  IO. Offset_inc can be used to specify a custom value.
 
 #### Test Combinations
 
@@ -370,18 +420,18 @@ Run the script on the NVMe-oF target system:
 
 ``` ~sh
 cd spdk
-sudo PYTHONPATH=$PYTHONPATH:$PWD/scripts scripts/perf/nvmf/run_nvmf.py
+sudo PYTHONPATH=$PYTHONPATH:$PWD/python scripts/perf/nvmf/run_nvmf.py
 ```
 
 By default script uses config.json configuration file in the scripts/perf/nvmf
 directory. You can specify a different configuration file at runtime as below:
 
 ``` ~sh
-sudo PYTHONPATH=$PYTHONPATH:$PWD/scripts scripts/perf/nvmf/run_nvmf.py -c /path/to/config.json
+sudo PYTHONPATH=$PYTHONPATH:$PWD/python scripts/perf/nvmf/run_nvmf.py -c /path/to/config.json
 ```
 
 PYTHONPATH environment variable is needed because script uses SPDK-local Python
-modules. If you'd like to get rid of `PYTHONPATH=$PYTHONPATH:$PWD/scripts`
+modules. If you'd like to get rid of `PYTHONPATH=$PYTHONPATH:$PWD/python`
 you need to modify your environment so that Python interpreter is aware of
 `spdk/scripts` directory.
 

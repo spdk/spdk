@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation
+#  All rights reserved.
+#
 # create mon
 
 set -x
@@ -131,6 +135,10 @@ ceph -c ${ceph_conf} osd create ${uuid} $i
 ceph-osd -c ${ceph_conf} -i $i --mkfs --mkkey --osd-uuid ${uuid} ${ceph_osd_extra_config}
 ceph -c ${ceph_conf} osd crush add osd.${i} 1.0 host=$(hostname) root=default
 ceph -c ${ceph_conf} -i ${mnt_dir}/osd-device-${i}-data/keyring auth add osd.${i} osd "allow *" mon "allow profile osd" mgr "allow *"
+
+class_dir=/$(ceph -c "$ceph_conf" config get osd osd_class_dir)
+[[ -e $class_dir ]]
+ceph -c "$ceph_conf" config set osd osd_class_dir "$class_dir"
 
 # start osd
 pkill -9 ceph-osd || true

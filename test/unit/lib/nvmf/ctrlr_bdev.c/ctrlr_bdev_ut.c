@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -70,6 +42,7 @@ DEFINE_STUB(spdk_bdev_abort, int,
 
 DEFINE_STUB_V(spdk_bdev_io_get_iovec,
 	      (struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *iovcntp));
+DEFINE_STUB(spdk_bdev_get_write_unit_size, uint32_t, (const struct spdk_bdev *bdev), 1);
 
 uint32_t
 spdk_bdev_get_optimal_io_boundary(const struct spdk_bdev *bdev)
@@ -89,7 +62,11 @@ spdk_bdev_is_md_interleaved(const struct spdk_bdev *bdev)
 	return (bdev->md_len != 0) && bdev->md_interleave;
 }
 
-enum spdk_dif_type spdk_bdev_get_dif_type(const struct spdk_bdev *bdev)
+/* We have to use the typedef in the function declaration to appease astyle. */
+typedef enum spdk_dif_type spdk_dif_type_t;
+
+spdk_dif_type_t
+spdk_bdev_get_dif_type(const struct spdk_bdev *bdev)
 {
 	if (bdev->md_len != 0) {
 		return bdev->dif_type;
@@ -229,6 +206,14 @@ DEFINE_STUB(spdk_bdev_zcopy_end, int,
 	     spdk_bdev_io_completion_cb cb, void *cb_arg),
 	    0);
 
+DEFINE_STUB(spdk_bdev_copy_blocks, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     uint64_t dst_offset_blocks, uint64_t src_offset_blocks, uint64_t num_blocks,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg),
+	    0);
+
+DEFINE_STUB(spdk_bdev_get_max_copy, uint32_t, (const struct spdk_bdev *bdev), 0);
+
 struct spdk_nvmf_ns *
 spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 {
@@ -267,15 +252,17 @@ static uint32_t g_bdev_nvme_status_cdw0;
 static uint32_t g_bdev_nvme_status_sct = SPDK_NVME_SCT_GENERIC;
 static uint32_t g_bdev_nvme_status_sc = SPDK_NVME_SC_SUCCESS;
 
-static void reset_bdev_nvme_status(void)
+static void
+reset_bdev_nvme_status(void)
 {
 	g_bdev_nvme_status_cdw0 = 0;
 	g_bdev_nvme_status_sct = SPDK_NVME_SCT_GENERIC;
 	g_bdev_nvme_status_sc = SPDK_NVME_SC_SUCCESS;
 }
 
-void spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, uint32_t *cdw0, int *sct,
-				  int *sc)
+void
+spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, uint32_t *cdw0, int *sct,
+			     int *sc)
 {
 	*cdw0 = g_bdev_nvme_status_cdw0;
 	*sct = g_bdev_nvme_status_sct;
@@ -487,12 +474,12 @@ test_nvmf_bdev_ctrlr_identify_ns(void)
 	memcpy(ns.opts.eui64, eui64, 8);
 
 	bdev.blockcnt = 10;
-	bdev.acwu = 0;
+	bdev.acwu = 1;
 	bdev.md_len = 512;
 	bdev.dif_type = SPDK_DIF_TYPE1;
 	bdev.blocklen = 4096;
 	bdev.md_interleave = 0;
-	bdev.optimal_io_boundary = BDEV_IO_NUM_CHILD_IOV;
+	bdev.optimal_io_boundary = SPDK_BDEV_IO_NUM_CHILD_IOV;
 	bdev.dif_is_head_of_md = true;
 
 	nvmf_bdev_ctrlr_identify_ns(&ns, &nsdata, false);
@@ -501,12 +488,12 @@ test_nvmf_bdev_ctrlr_identify_ns(void)
 	CU_ASSERT(nsdata.nuse == 10);
 	CU_ASSERT(nsdata.nlbaf == 0);
 	CU_ASSERT(nsdata.flbas.format == 0);
+	CU_ASSERT(nsdata.flbas.msb_format == 0);
 	CU_ASSERT(nsdata.nacwu == 0);
 	CU_ASSERT(nsdata.lbaf[0].lbads == spdk_u32log2(4096));
 	CU_ASSERT(nsdata.lbaf[0].ms == 512);
-	CU_ASSERT(nsdata.dpc.pit1 == 1);
-	CU_ASSERT(nsdata.dps.pit == SPDK_NVME_FMT_NVM_PROTECTION_TYPE1);
-	CU_ASSERT(nsdata.noiob == BDEV_IO_NUM_CHILD_IOV);
+	CU_ASSERT(nsdata.dps.pit == SPDK_NVME_FMT_NVM_PROTECTION_DISABLE);
+	CU_ASSERT(nsdata.noiob == SPDK_BDEV_IO_NUM_CHILD_IOV);
 	CU_ASSERT(nsdata.nmic.can_share == 1);
 	CU_ASSERT(nsdata.nsrescap.rescap.persist == 1);
 	CU_ASSERT(nsdata.nsrescap.rescap.write_exclusive == 1);
@@ -530,9 +517,10 @@ test_nvmf_bdev_ctrlr_identify_ns(void)
 	CU_ASSERT(nsdata.nuse == 10);
 	CU_ASSERT(nsdata.nlbaf == 0);
 	CU_ASSERT(nsdata.flbas.format == 0);
+	CU_ASSERT(nsdata.flbas.msb_format == 0);
 	CU_ASSERT(nsdata.nacwu == 0);
 	CU_ASSERT(nsdata.lbaf[0].lbads == spdk_u32log2(4096));
-	CU_ASSERT(nsdata.noiob == BDEV_IO_NUM_CHILD_IOV);
+	CU_ASSERT(nsdata.noiob == SPDK_BDEV_IO_NUM_CHILD_IOV);
 	CU_ASSERT(nsdata.nmic.can_share == 1);
 	CU_ASSERT(nsdata.lbaf[0].ms == 0);
 	CU_ASSERT(nsdata.nsrescap.rescap.persist == 1);
@@ -643,6 +631,7 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	struct spdk_nvmf_qpair qpair = {};
 	union nvmf_h2c_msg cmd = {};
 	union nvmf_c2h_msg rsp = {};
+	struct spdk_nvme_scc_source_range range = {};
 
 	req.cmd = &cmd;
 	req.rsp = &rsp;
@@ -734,6 +723,67 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
+
+	/* Copy blocks status asynchronous */
+	MOCK_SET(spdk_bdev_io_type_supported, true);
+	cmd.nvme_cmd.cdw10 = 1024;
+	cmd.nvme_cmd.cdw11 = 0;
+	cmd.nvme_cmd.cdw12 = 0;
+	cmd.nvme_cmd.cdw12_bits.copy.nr = 0;
+	range.slba = 512;
+	range.nlb = 511;
+	req.data = &range;
+	req.length = 32;
+	spdk_iov_one(req.iov, &req.iovcnt, &range, req.length);
+	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+
+	/* Copy command not supported */
+	MOCK_SET(spdk_bdev_io_type_supported, false);
+	memset(&rsp, 0, sizeof(rsp));
+
+	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_OPCODE);
+
+	MOCK_SET(spdk_bdev_io_type_supported, true);
+
+	/* Unsupported number of source ranges */
+	cmd.nvme_cmd.cdw12_bits.copy.nr = 1;
+	req.length = 64;
+	memset(&rsp, 0, sizeof(rsp));
+
+	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_CMD_SIZE_LIMIT_SIZE_EXCEEDED);
+
+	cmd.nvme_cmd.cdw12_bits.copy.nr = 0;
+	req.length = 32;
+
+	/* Unsupported source range descriptor format */
+	cmd.nvme_cmd.cdw12_bits.copy.df = 1;
+	memset(&rsp, 0, sizeof(rsp));
+
+	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
+	cmd.nvme_cmd.cdw12_bits.copy.df = 0;
+
+	/* Bdev copy command failed */
+	MOCK_SET(spdk_bdev_copy_blocks, -1);
+	memset(&rsp, 0, sizeof(rsp));
+
+	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
+
+	MOCK_CLEAR(spdk_bdev_copy_blocks);
+	MOCK_CLEAR(spdk_bdev_io_type_supported);
 }
 
 static void
@@ -792,6 +842,7 @@ test_nvmf_bdev_ctrlr_nvme_passthru(void)
 	req.qpair = &qpair;
 	req.cmd = (union nvmf_h2c_msg *)&cmd;
 	req.rsp = &rsp;
+	spdk_iov_one(req.iov, &req.iovcnt, NULL, 0);
 
 	cmd.nsid = 1;
 	cmd.opc = 0xFF;
@@ -872,7 +923,8 @@ test_nvmf_bdev_ctrlr_nvme_passthru(void)
 	MOCK_SET(spdk_bdev_nvme_admin_passthru, 0);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

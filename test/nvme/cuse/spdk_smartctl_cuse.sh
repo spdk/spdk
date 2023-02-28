@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2019 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/common.sh
@@ -59,7 +62,7 @@ if [ "$CUSE_SMART_ERRLOG" != "$KERNEL_SMART_ERRLOG" ]; then
 	exit 1
 fi
 
-# Data integrity was checked before, now make sure other commads didn't fail
+# Data integrity was checked before, now make sure other commands didn't fail
 ${SMARTCTL_CMD} -i /dev/spdk/nvme0n1
 ${SMARTCTL_CMD} -c /dev/spdk/nvme0
 ${SMARTCTL_CMD} -A /dev/spdk/nvme0

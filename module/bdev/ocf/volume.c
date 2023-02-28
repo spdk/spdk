@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2019 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <ocf/ocf.h>
@@ -88,7 +60,8 @@ vbdev_ocf_volume_io_set_data(struct ocf_io *io, ctx_data_t *data,
 	io_ctx->offset = offset;
 	io_ctx->data = data;
 
-	if (io_ctx->data && offset >= io_ctx->data->size) {
+	assert(io_ctx->data != NULL);
+	if (io_ctx->data->iovs && offset >= io_ctx->data->size) {
 		return -ENOBUFS;
 	}
 
@@ -174,7 +147,7 @@ vbdev_ocf_volume_submit_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *
 	assert(io_ctx != NULL);
 
 	if (!success) {
-		io_ctx->error |= 1;
+		io_ctx->error = io_ctx->error ? : -OCF_ERR_IO;
 	}
 
 	if (io_ctx->iovs_allocated && bdev_io != NULL) {
@@ -359,10 +332,13 @@ vbdev_ocf_volume_submit_io(struct ocf_io *io)
 
 end:
 	if (status) {
-		/* TODO [ENOMEM]: implement ENOMEM handling when submitting IO to base device */
+		if (status == -ENOMEM) {
+			io_ctx->error = -OCF_ERR_NO_MEM;
+		} else {
+			SPDK_ERRLOG("submission failed with status=%d\n", status);
+		}
 
 		/* Since callback is not called, we need to do it manually to free io structures */
-		SPDK_ERRLOG("submission failed with status=%d\n", status);
 		vbdev_ocf_volume_submit_io_cb(NULL, false, io);
 	}
 }

@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright(c) 2010-2016 Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2010-2016 Intel Corporation. All rights reserved.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -189,26 +161,24 @@ virtio_free_queues(struct virtio_dev *dev)
 }
 
 static int
-virtio_alloc_queues(struct virtio_dev *dev, uint16_t request_vq_num, uint16_t fixed_vq_num)
+virtio_alloc_queues(struct virtio_dev *dev, uint16_t max_queues, uint16_t fixed_vq_num)
 {
-	uint16_t nr_vq;
 	uint16_t i;
 	int ret;
 
-	nr_vq = request_vq_num + fixed_vq_num;
-	if (nr_vq == 0) {
+	if (max_queues == 0) {
 		/* perfectly fine to have a device with no virtqueues. */
 		return 0;
 	}
 
 	assert(dev->vqs == NULL);
-	dev->vqs = calloc(1, sizeof(struct virtqueue *) * nr_vq);
+	dev->vqs = calloc(1, sizeof(struct virtqueue *) * max_queues);
 	if (!dev->vqs) {
-		SPDK_ERRLOG("failed to allocate %"PRIu16" vqs\n", nr_vq);
+		SPDK_ERRLOG("failed to allocate %"PRIu16" vqs\n", max_queues);
 		return -ENOMEM;
 	}
 
-	for (i = 0; i < nr_vq; i++) {
+	for (i = 0; i < max_queues; i++) {
 		ret = virtio_init_queue(dev, i);
 		if (ret < 0) {
 			virtio_free_queues(dev);
@@ -216,7 +186,7 @@ virtio_alloc_queues(struct virtio_dev *dev, uint16_t request_vq_num, uint16_t fi
 		}
 	}
 
-	dev->max_queues = nr_vq;
+	dev->max_queues = max_queues;
 	dev->fixed_queues_num = fixed_vq_num;
 	return 0;
 }

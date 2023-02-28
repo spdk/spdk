@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -229,6 +201,7 @@ bdev_null_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 	spdk_json_write_named_string(w, "name", bdev->name);
 	spdk_json_write_named_uint64(w, "num_blocks", bdev->blockcnt);
 	spdk_json_write_named_uint32(w, "block_size", bdev->blocklen);
+	spdk_json_write_named_uint32(w, "physical_block_size", bdev->phys_blocklen);
 	spdk_json_write_named_uint32(w, "md_size", bdev->md_len);
 	spdk_json_write_named_uint32(w, "dif_type", bdev->dif_type);
 	spdk_json_write_named_bool(w, "dif_is_head_of_md", bdev->dif_is_head_of_md);
@@ -298,6 +271,7 @@ bdev_null_create(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts
 
 	null_disk->bdev.write_cache = 0;
 	null_disk->bdev.blocklen = opts->block_size;
+	null_disk->bdev.phys_blocklen = opts->physical_block_size;
 	null_disk->bdev.blockcnt = opts->num_blocks;
 	null_disk->bdev.md_len = opts->md_size;
 	null_disk->bdev.md_interleave = opts->md_interleave;
@@ -344,14 +318,14 @@ bdev_null_create(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts
 }
 
 void
-bdev_null_delete(struct spdk_bdev *bdev, spdk_delete_null_complete cb_fn, void *cb_arg)
+bdev_null_delete(const char *bdev_name, spdk_delete_null_complete cb_fn, void *cb_arg)
 {
-	if (!bdev || bdev->module != &null_if) {
-		cb_fn(cb_arg, -ENODEV);
-		return;
-	}
+	int rc;
 
-	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+	rc = spdk_bdev_unregister_by_name(bdev_name, &null_if, cb_fn, cb_arg);
+	if (rc != 0) {
+		cb_fn(cb_arg, rc);
+	}
 }
 
 static int
@@ -420,21 +394,38 @@ bdev_null_initialize(void)
 	return 0;
 }
 
-int
-bdev_null_resize(struct spdk_bdev *bdev, const uint64_t new_size_in_mb)
+static void
+dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *ctx)
 {
+}
+
+int
+bdev_null_resize(const char *bdev_name, const uint64_t new_size_in_mb)
+{
+	struct spdk_bdev_desc *desc;
+	struct spdk_bdev *bdev;
 	uint64_t current_size_in_mb;
 	uint64_t new_size_in_byte;
-	int rc;
+	int rc = 0;
+
+	rc = spdk_bdev_open_ext(bdev_name, false, dummy_bdev_event_cb, NULL, &desc);
+	if (rc != 0) {
+		SPDK_ERRLOG("failed to open bdev; %s.\n", bdev_name);
+		return rc;
+	}
+
+	bdev = spdk_bdev_desc_get_bdev(desc);
 
 	if (bdev->module != &null_if) {
-		return -EINVAL;
+		rc = -EINVAL;
+		goto exit;
 	}
 
 	current_size_in_mb = bdev->blocklen * bdev->blockcnt / (1024 * 1024);
 	if (new_size_in_mb < current_size_in_mb) {
 		SPDK_ERRLOG("The new bdev size must not be smaller than current bdev size.\n");
-		return -EINVAL;
+		rc = -EINVAL;
+		goto exit;
 	}
 
 	new_size_in_byte = new_size_in_mb * 1024 * 1024;
@@ -442,10 +433,11 @@ bdev_null_resize(struct spdk_bdev *bdev, const uint64_t new_size_in_mb)
 	rc = spdk_bdev_notify_blockcnt_change(bdev, new_size_in_byte / bdev->blocklen);
 	if (rc != 0) {
 		SPDK_ERRLOG("failed to notify block cnt change.\n");
-		return rc;
 	}
 
-	return 0;
+exit:
+	spdk_bdev_close(desc);
+	return rc;
 }
 
 static void

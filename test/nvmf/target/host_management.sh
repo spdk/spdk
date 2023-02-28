@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
@@ -7,8 +10,6 @@ source $rootdir/test/nvmf/common.sh
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
-
-rpc_py="$rootdir/scripts/rpc.py"
 
 function starttarget() {
 	# Start the target
@@ -68,7 +69,7 @@ function nvmf_host_management() {
 	starttarget
 
 	# Run bdevperf
-	$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "0") -q 64 -o 65536 -w verify -t 10 &
+	$rootdir/build/examples/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "0") -q 64 -o 65536 -w verify -t 10 &
 	perfpid=$!
 	waitforlisten $perfpid /var/tmp/bdevperf.sock
 	$rpc_py -s /var/tmp/bdevperf.sock framework_wait_init
@@ -89,8 +90,14 @@ function nvmf_host_management() {
 	# and so it will never shut down. Just kill it.
 	kill -9 $perfpid || true
 
+	# Since we abruptly terminate $perfpid above, we need to do some cleanup on our own.
+	# In particular, we need to get rid of the cpu lock files that may potentially prevent
+	# the next instance of bdevperf from running.
+	# FIXME: Can't we just SIGTERM $perfpid above?
+	rm -f /var/tmp/spdk_cpu_lock*
+
 	# Run bdevperf
-	$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "0") -q 64 -o 65536 -w verify -t 1
+	$rootdir/build/examples/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "0") -q 64 -o 65536 -w verify -t 1
 
 	stoptarget
 }

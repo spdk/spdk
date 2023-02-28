@@ -1,36 +1,13 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2019 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include "spdk/stdinc.h"
+#include "spdk/config.h"
+#include "spdk/log.h"
+#include "spdk/nvme.h"
 
+#ifdef SPDK_CONFIG_NVME_CUSE
 #define FUSE_USE_VERSION 31
 
 #include <fuse3/cuse_lowlevel.h>
@@ -856,7 +833,8 @@ cuse_ns_ioctl(fuse_req_t req, int cmd, void *arg,
  * CUSE threads initialization.
  */
 
-static void cuse_open(fuse_req_t req, struct fuse_file_info *fi)
+static void
+cuse_open(fuse_req_t req, struct fuse_file_info *fi)
 {
 	fuse_reply_open(req, fi);
 }
@@ -871,7 +849,8 @@ static const struct cuse_lowlevel_ops cuse_ns_clop = {
 	.ioctl		= cuse_ns_ioctl,
 };
 
-static int cuse_session_create(struct cuse_device *cuse_device)
+static int
+cuse_session_create(struct cuse_device *cuse_device)
 {
 	char *cuse_argv[] = { "cuse", "-f" };
 	int multithreaded;
@@ -1371,3 +1350,41 @@ spdk_nvme_cuse_get_ns_name(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, char *n
 }
 
 SPDK_LOG_REGISTER_COMPONENT(nvme_cuse)
+
+#else /* SPDK_CONFIG_NVME_CUSE */
+
+int
+spdk_nvme_cuse_get_ctrlr_name(struct spdk_nvme_ctrlr *ctrlr, char *name, size_t *size)
+{
+	SPDK_ERRLOG("spdk_nvme_cuse_get_ctrlr_name() is unsupported\n");
+	return -ENOTSUP;
+}
+
+int
+spdk_nvme_cuse_get_ns_name(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, char *name, size_t *size)
+{
+	SPDK_ERRLOG("spdk_nvme_cuse_get_ns_name() is unsupported\n");
+	return -ENOTSUP;
+}
+
+int
+spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr)
+{
+	SPDK_ERRLOG("spdk_nvme_cuse_register() is unsupported\n");
+	return -ENOTSUP;
+}
+
+int
+spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr)
+{
+	SPDK_ERRLOG("spdk_nvme_cuse_unregister() is unsupported\n");
+	return -ENOTSUP;
+}
+
+void
+spdk_nvme_cuse_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
+{
+	SPDK_ERRLOG("spdk_nvme_cuse_update_namespaces() is unsupported\n");
+}
+
+#endif

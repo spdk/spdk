@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
@@ -90,7 +62,7 @@ struct spdk_trace_object {
 #define SPDK_TRACE_ARG_TYPE_PTR 1
 #define SPDK_TRACE_ARG_TYPE_STR 2
 
-#define SPDK_TRACE_MAX_ARGS_COUNT 5
+#define SPDK_TRACE_MAX_ARGS_COUNT 8
 #define SPDK_TRACE_MAX_RELATIONS 16
 
 struct spdk_trace_argument {
@@ -185,16 +157,18 @@ spdk_get_trace_histories_size(struct spdk_trace_histories *trace_histories)
 static inline struct spdk_trace_history *
 spdk_get_per_lcore_history(struct spdk_trace_histories *trace_histories, unsigned lcore)
 {
-	char *lcore_history_offset;
+	uint64_t lcore_history_offset;
 
 	if (lcore >= SPDK_TRACE_MAX_LCORE) {
 		return NULL;
 	}
 
-	lcore_history_offset = (char *)trace_histories;
-	lcore_history_offset += trace_histories->flags.lcore_history_offsets[lcore];
+	lcore_history_offset = trace_histories->flags.lcore_history_offsets[lcore];
+	if (lcore_history_offset == 0) {
+		return NULL;
+	}
 
-	return (struct spdk_trace_history *)lcore_history_offset;
+	return (struct spdk_trace_history *)(((char *)trace_histories) + lcore_history_offset);
 }
 
 void _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
@@ -368,7 +342,7 @@ struct spdk_trace_tpoint_opts {
 
 /**
  * Register the description for a number of tpoints. This function allows the user to register
- * tracepoints with multiple arguments (up to 5).
+ * tracepoints with multiple arguments.
  *
  * \param opts Array of structures describing tpoints and their arguments.
  * \param num_opts Number of tpoints to register (size of the opts array).

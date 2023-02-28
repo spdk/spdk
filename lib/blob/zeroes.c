@@ -1,38 +1,12 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
 #include "spdk/blob.h"
+#include "spdk/dma.h"
 
 #include "blobstore.h"
 
@@ -84,6 +58,49 @@ zeroes_writev(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 }
 
 static void
+_read_memory_domain_memzero_done(void *ctx, int rc)
+{
+	struct spdk_bs_dev_cb_args *cb_args = (struct spdk_bs_dev_cb_args *)ctx;
+
+	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, rc);
+}
+
+static void
+zeroes_readv_ext(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+		 struct iovec *iov, int iovcnt,
+		 uint64_t lba, uint32_t lba_count, struct spdk_bs_dev_cb_args *cb_args,
+		 struct spdk_blob_ext_io_opts *ext_io_opts)
+{
+	int i, rc;
+
+	if (ext_io_opts->memory_domain) {
+		rc = spdk_memory_domain_memzero(ext_io_opts->memory_domain, ext_io_opts->memory_domain_ctx, iov,
+						iovcnt, _read_memory_domain_memzero_done, cb_args);
+		if (rc) {
+			cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, rc);
+		}
+		return;
+	}
+
+	for (i = 0; i < iovcnt; i++) {
+		memset(iov[i].iov_base, 0, iov[i].iov_len);
+	}
+
+	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, 0);
+}
+
+static void
+zeroes_writev_ext(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+		  struct iovec *iov, int iovcnt,
+		  uint64_t lba, uint32_t lba_count,
+		  struct spdk_bs_dev_cb_args *cb_args,
+		  struct spdk_blob_ext_io_opts *ext_io_opts)
+{
+	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, -EPERM);
+	assert(false);
+}
+
+static void
 zeroes_write_zeroes(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 		    uint64_t lba, uint64_t lba_count,
 		    struct spdk_bs_dev_cb_args *cb_args)
@@ -101,6 +118,18 @@ zeroes_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	assert(false);
 }
 
+static bool
+zeroes_is_zeroes(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_count)
+{
+	return true;
+}
+
+static bool
+zeroes_translate_lba(struct spdk_bs_dev *dev, uint64_t lba, uint64_t *base_lba)
+{
+	return false;
+}
+
 static struct spdk_bs_dev g_zeroes_bs_dev = {
 	.blockcnt = UINT64_MAX,
 	.blocklen = 512,
@@ -111,8 +140,12 @@ static struct spdk_bs_dev g_zeroes_bs_dev = {
 	.write = zeroes_write,
 	.readv = zeroes_readv,
 	.writev = zeroes_writev,
+	.readv_ext = zeroes_readv_ext,
+	.writev_ext = zeroes_writev_ext,
 	.write_zeroes = zeroes_write_zeroes,
 	.unmap = zeroes_unmap,
+	.is_zeroes = zeroes_is_zeroes,
+	.translate_lba = zeroes_translate_lba,
 };
 
 struct spdk_bs_dev *

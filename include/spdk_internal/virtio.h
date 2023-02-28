@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
+/*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright(c) 2010-2015 Intel Corporation. All rights reserved.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef SPDK_VIRTIO_H
@@ -278,7 +250,7 @@ int virtio_dev_reset(struct virtio_dev *vdev, uint64_t req_features);
  * \param max_queues number of queues to allocate. The max number of
  * usable I/O queues is also limited by the host device. `vdev` will be
  * started successfully even if the host supports less queues than requested.
- * \param fixed_queue_num number of queues preceeding the first
+ * \param fixed_queue_num number of queues preceding the first
  * request queue. For Virtio-SCSI this is equal to 2, as there are
  * additional event and control queues.
  */
@@ -472,6 +444,17 @@ int virtio_user_dev_init(struct virtio_dev *vdev, const char *name, const char *
 			 uint32_t queue_size);
 
 /**
+ * Connect to a vfio-user device and init corresponding virtio_dev struct.
+ * The virtio_dev will have to be freed with \c virtio_dev_free.
+ *
+ * \param vdev preallocated vhost device struct to operate on
+ * \param name name of this virtio device
+ * \param path path to the Unix domain socket of the vhost-user device
+ * \return virtio device
+ */
+int virtio_vfio_user_dev_init(struct virtio_dev *vdev, const char *name, const char *path);
+
+/**
  * Initialize virtio_dev for a given PCI device.
  * The virtio_dev has to be freed with \c virtio_dev_destruct.
  *
@@ -492,7 +475,6 @@ int virtio_pci_dev_init(struct virtio_dev *vdev, const char *name,
  * \return the name of the virtio device on success, NULL means it
  * is not a suitable uevent.
  */
-const char *
-virtio_pci_dev_event_process(int fd, uint16_t device_id);
+const char *virtio_pci_dev_event_process(int fd, uint16_t device_id);
 
 #endif /* SPDK_VIRTIO_H */

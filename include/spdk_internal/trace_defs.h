@@ -1,35 +1,7 @@
-/*
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2021 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef SPDK_INTERNAL_TRACE_DEFS
@@ -39,13 +11,17 @@
 #define OWNER_ISCSI_CONN	0x1
 #define OWNER_BDEV		0x2
 #define OWNER_NVME_PCIE_QP	0x3
+#define OWNER_NVME_TCP_QP	0x4
 #define OWNER_SCSI_DEV		0x10
 #define OWNER_FTL		0x20
+#define OWNER_NVMF_TCP		0x30
 
 /* Object definitions */
 #define OBJECT_ISCSI_PDU	0x1
 #define OBJECT_BDEV_IO		0x2
-#define OBJECT_NVME_PCIE_TR	0x3
+#define OBJECT_NVME_PCIE_REQ	0x3
+#define OBJECT_NVME_TCP_REQ	0x4
+#define OBJECT_BDEV_NVME_IO	0x5
 #define OBJECT_SCSI_TASK	0x10
 #define OBJECT_NVMF_RDMA_IO	0x40
 #define OBJECT_NVMF_TCP_IO	0x80
@@ -60,9 +36,12 @@
 #define TRACE_GROUP_FTL		0x6
 #define TRACE_GROUP_BLOBFS	0x7
 #define TRACE_GROUP_NVMF_FC	0x8
-#define TRACE_GROUP_IDXD	0x9
+#define TRACE_GROUP_ACCEL_DSA	0x9
 #define TRACE_GROUP_THREAD	0xA
 #define TRACE_GROUP_NVME_PCIE	0xB
+#define TRACE_GROUP_ACCEL_IAA	0xC
+#define TRACE_GROUP_NVME_TCP	0xD
+#define TRACE_GROUP_BDEV_NVME	0xE
 
 /* Bdev tracepoint definitions */
 #define TRACE_BDEV_IO_START		SPDK_TPOINT_ID(TRACE_GROUP_BDEV, 0x0)
@@ -165,7 +144,17 @@
 #define TRACE_NVME_PCIE_COMPLETE	SPDK_TPOINT_ID(TRACE_GROUP_NVME_PCIE, 0x1)
 
 /* idxd trace definitions */
-#define TRACE_IDXD_OP_SUBMIT	SPDK_TPOINT_ID(TRACE_GROUP_IDXD, 0x0)
-#define TRACE_IDXD_OP_COMPLETE	SPDK_TPOINT_ID(TRACE_GROUP_IDXD, 0x1)
+#define TRACE_ACCEL_DSA_OP_SUBMIT	SPDK_TPOINT_ID(TRACE_GROUP_ACCEL_DSA, 0x0)
+#define TRACE_ACCEL_DSA_OP_COMPLETE	SPDK_TPOINT_ID(TRACE_GROUP_ACCEL_DSA, 0x1)
+#define TRACE_ACCEL_IAA_OP_SUBMIT	SPDK_TPOINT_ID(TRACE_GROUP_ACCEL_IAA, 0x0)
+#define TRACE_ACCEL_IAA_OP_COMPLETE	SPDK_TPOINT_ID(TRACE_GROUP_ACCEL_IAA, 0x1)
+
+/* NVMe TCP tracepoint definitions */
+#define TRACE_NVME_TCP_SUBMIT		SPDK_TPOINT_ID(TRACE_GROUP_NVME_TCP, 0x0)
+#define TRACE_NVME_TCP_COMPLETE		SPDK_TPOINT_ID(TRACE_GROUP_NVME_TCP, 0x1)
+
+/* Bdev nvme tracepoint definitions */
+#define TRACE_BDEV_NVME_IO_START	SPDK_TPOINT_ID(TRACE_GROUP_BDEV_NVME, 0x0)
+#define TRACE_BDEV_NVME_IO_DONE		SPDK_TPOINT_ID(TRACE_GROUP_BDEV_NVME, 0x1)
 
 #endif /* SPDK_INTERNAL_TRACE_DEFS */

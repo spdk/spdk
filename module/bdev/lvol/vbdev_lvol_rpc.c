@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/rpc.h"
@@ -45,6 +17,7 @@ struct rpc_bdev_lvol_create_lvstore {
 	char *bdev_name;
 	uint32_t cluster_sz;
 	char *clear_method;
+	uint32_t num_md_pages_per_cluster_ratio;
 };
 
 static int
@@ -90,6 +63,7 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_create_lvstore_decode
 	{"cluster_sz", offsetof(struct rpc_bdev_lvol_create_lvstore, cluster_sz), spdk_json_decode_uint32, true},
 	{"lvs_name", offsetof(struct rpc_bdev_lvol_create_lvstore, lvs_name), spdk_json_decode_string},
 	{"clear_method", offsetof(struct rpc_bdev_lvol_create_lvstore, clear_method), spdk_json_decode_string, true},
+	{"num_md_pages_per_cluster_ratio", offsetof(struct rpc_bdev_lvol_create_lvstore, num_md_pages_per_cluster_ratio), spdk_json_decode_uint32, true},
 };
 
 static void
@@ -148,9 +122,9 @@ rpc_bdev_lvol_create_lvstore(struct spdk_jsonrpc_request *request,
 	}
 
 	rc = vbdev_lvs_create(req.bdev_name, req.lvs_name, req.cluster_sz, clear_method,
-			      rpc_lvol_store_construct_cb, request);
+			      req.num_md_pages_per_cluster_ratio, rpc_lvol_store_construct_cb, request);
 	if (rc < 0) {
-		spdk_jsonrpc_send_error_response(request, -rc, spdk_strerror(rc));
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
 	}
 	free_rpc_bdev_lvol_create_lvstore(&req);
@@ -161,7 +135,6 @@ cleanup:
 	free_rpc_bdev_lvol_create_lvstore(&req);
 }
 SPDK_RPC_REGISTER("bdev_lvol_create_lvstore", rpc_bdev_lvol_create_lvstore, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_create_lvstore, construct_lvol_store)
 
 struct rpc_bdev_lvol_rename_lvstore {
 	char *old_name;
@@ -226,7 +199,6 @@ cleanup:
 	free_rpc_bdev_lvol_rename_lvstore(&req);
 }
 SPDK_RPC_REGISTER("bdev_lvol_rename_lvstore", rpc_bdev_lvol_rename_lvstore, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_rename_lvstore, rename_lvol_store)
 
 struct rpc_bdev_lvol_delete_lvstore {
 	char *uuid;
@@ -291,7 +263,6 @@ cleanup:
 	free_rpc_bdev_lvol_delete_lvstore(&req);
 }
 SPDK_RPC_REGISTER("bdev_lvol_delete_lvstore", rpc_bdev_lvol_delete_lvstore, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_delete_lvstore, destroy_lvol_store)
 
 struct rpc_bdev_lvol_create {
 	char *uuid;
@@ -393,7 +364,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_create", rpc_bdev_lvol_create, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_create, construct_lvol_bdev)
 
 struct rpc_bdev_lvol_snapshot {
 	char *lvol_name;
@@ -472,7 +442,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_snapshot", rpc_bdev_lvol_snapshot, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_snapshot, snapshot_lvol_bdev)
 
 struct rpc_bdev_lvol_clone {
 	char *snapshot_name;
@@ -551,7 +520,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_clone", rpc_bdev_lvol_clone, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_clone, clone_lvol_bdev)
 
 struct rpc_bdev_lvol_rename {
 	char *old_name;
@@ -627,7 +595,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_rename", rpc_bdev_lvol_rename, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_rename, rename_lvol_bdev)
 
 struct rpc_bdev_lvol_inflate {
 	char *name;
@@ -700,7 +667,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_inflate", rpc_bdev_lvol_inflate, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_inflate, inflate_lvol_bdev)
 
 static void
 rpc_bdev_lvol_decouple_parent(struct spdk_jsonrpc_request *request,
@@ -742,7 +708,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_decouple_parent", rpc_bdev_lvol_decouple_parent, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_decouple_parent, decouple_parent_lvol_bdev)
 
 struct rpc_bdev_lvol_resize {
 	char *name;
@@ -816,7 +781,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_resize", rpc_bdev_lvol_resize, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_resize, resize_lvol_bdev)
 
 struct rpc_set_ro_lvol_bdev {
 	char *name;
@@ -894,7 +858,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_set_read_only", rpc_bdev_lvol_set_read_only, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_set_read_only, set_read_only_lvol_bdev)
 
 struct rpc_bdev_lvol_delete {
 	char *name;
@@ -964,7 +927,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_delete", rpc_bdev_lvol_delete, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_delete, destroy_lvol_bdev)
 
 struct rpc_bdev_lvol_get_lvstores {
 	char *uuid;
@@ -1067,3 +1029,66 @@ cleanup:
 
 SPDK_RPC_REGISTER("bdev_lvol_get_lvstores", rpc_bdev_lvol_get_lvstores, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_get_lvstores, get_lvol_stores)
+
+struct rpc_bdev_lvol_grow_lvstore {
+	char *uuid;
+	char *lvs_name;
+};
+
+static void
+free_rpc_bdev_lvol_grow_lvstore(struct rpc_bdev_lvol_grow_lvstore *req)
+{
+	free(req->uuid);
+	free(req->lvs_name);
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_lvol_grow_lvstore_decoders[] = {
+	{"uuid", offsetof(struct rpc_bdev_lvol_grow_lvstore, uuid), spdk_json_decode_string, true},
+	{"lvs_name", offsetof(struct rpc_bdev_lvol_grow_lvstore, lvs_name), spdk_json_decode_string, true},
+};
+
+static void
+rpc_bdev_lvol_grow_lvstore_cb(void *cb_arg, int lvserrno)
+{
+	struct spdk_jsonrpc_request *request = cb_arg;
+
+	if (lvserrno != 0) {
+		goto invalid;
+	}
+
+	spdk_jsonrpc_send_bool_response(request, true);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-lvserrno));
+}
+
+static void
+rpc_bdev_lvol_grow_lvstore(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
+{
+	struct rpc_bdev_lvol_grow_lvstore req = {};
+	struct spdk_lvol_store *lvs = NULL;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_bdev_lvol_grow_lvstore_decoders,
+				    SPDK_COUNTOF(rpc_bdev_lvol_grow_lvstore_decoders),
+				    &req)) {
+		SPDK_INFOLOG(lvol_rpc, "spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	rc = vbdev_get_lvol_store_by_uuid_xor_name(req.uuid, req.lvs_name, &lvs);
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
+	}
+	vbdev_lvs_grow(lvs, rpc_bdev_lvol_grow_lvstore_cb, request);
+
+cleanup:
+	free_rpc_bdev_lvol_grow_lvstore(&req);
+}
+SPDK_RPC_REGISTER("bdev_lvol_grow_lvstore", rpc_bdev_lvol_grow_lvstore, SPDK_RPC_RUNTIME)

@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2015 Intel Corporation. All rights reserved.
  *   Copyright (c) 2020, 2021 Mellanox Technologies LTD. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "nvme_internal.h"
@@ -49,15 +21,17 @@ void
 nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ns_data	*nsdata;
+	uint32_t			format_index;
 
 	nsdata = _nvme_ns_get_data(ns);
 
 	ns->flags = 0x0000;
+	format_index = spdk_nvme_ns_get_format_index(nsdata);
 
-	ns->sector_size = 1 << nsdata->lbaf[nsdata->flbas.format].lbads;
+	ns->sector_size = 1 << nsdata->lbaf[format_index].lbads;
 	ns->extended_lba_size = ns->sector_size;
 
-	ns->md_size = nsdata->lbaf[nsdata->flbas.format].ms;
+	ns->md_size = nsdata->lbaf[format_index].ms;
 	if (nsdata->flbas.extended) {
 		ns->flags |= SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED;
 		ns->extended_lba_size += ns->md_size;
@@ -108,7 +82,7 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 	}
 
 	ns->pi_type = SPDK_NVME_FMT_NVM_PROTECTION_DISABLE;
-	if (nsdata->lbaf[nsdata->flbas.format].ms && nsdata->dps.pit) {
+	if (nsdata->lbaf[format_index].ms && nsdata->dps.pit) {
 		ns->flags |= SPDK_NVME_NS_DPS_PI_SUPPORTED;
 		ns->pi_type = nsdata->dps.pit;
 	}
@@ -355,13 +329,28 @@ spdk_nvme_ns_get_md_size(struct spdk_nvme_ns *ns)
 	return ns->md_size;
 }
 
+uint32_t
+spdk_nvme_ns_get_format_index(const struct spdk_nvme_ns_data *nsdata)
+{
+	if (nsdata->nlbaf < 16) {
+		return nsdata->flbas.format;
+	} else {
+		return ((nsdata->flbas.msb_format << 4) + nsdata->flbas.format);
+	}
+}
+
 const struct spdk_nvme_ns_data *
 spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns)
 {
 	return _nvme_ns_get_data(ns);
 }
 
-enum spdk_nvme_dealloc_logical_block_read_value spdk_nvme_ns_get_dealloc_logical_block_read_value(
+/* We have to use the typedef in the function declaration to appease astyle. */
+typedef enum spdk_nvme_dealloc_logical_block_read_value
+spdk_nvme_dealloc_logical_block_read_value_t;
+
+spdk_nvme_dealloc_logical_block_read_value_t
+spdk_nvme_ns_get_dealloc_logical_block_read_value(
 	struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
@@ -529,8 +518,9 @@ spdk_nvme_ns_get_ana_state(const struct spdk_nvme_ns *ns) {
 	return ns->ana_state;
 }
 
-int nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
-		      struct spdk_nvme_ctrlr *ctrlr)
+int
+nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
+		  struct spdk_nvme_ctrlr *ctrlr)
 {
 	int	rc;
 
@@ -567,7 +557,8 @@ int nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
 	return 0;
 }
 
-void nvme_ns_destruct(struct spdk_nvme_ns *ns)
+void
+nvme_ns_destruct(struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ns_data *nsdata;
 

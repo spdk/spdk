@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef __NVMF_INTERNAL_H__
@@ -48,11 +20,17 @@
 #include "spdk/util.h"
 #include "spdk/thread.h"
 
-#define NVMF_MAX_ASYNC_EVENTS	(4)
-
 /* The spec reserves cntlid values in the range FFF0h to FFFFh. */
 #define NVMF_MIN_CNTLID 1
 #define NVMF_MAX_CNTLID 0xFFEF
+
+enum spdk_nvmf_tgt_state {
+	NVMF_TGT_IDLE = 0,
+	NVMF_TGT_RUNNING,
+	NVMF_TGT_PAUSING,
+	NVMF_TGT_PAUSED,
+	NVMF_TGT_RESUMING,
+};
 
 enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_INACTIVE = 0,
@@ -75,6 +53,8 @@ struct spdk_nvmf_tgt {
 	uint32_t				max_subsystems;
 
 	enum spdk_nvmf_tgt_discovery_filter	discovery_filter;
+
+	enum spdk_nvmf_tgt_state                state;
 
 	/* Array of subsystem pointers of size max_subsystems indexed by sid */
 	struct spdk_nvmf_subsystem		**subsystems;
@@ -195,19 +175,8 @@ struct spdk_nvmf_ns {
 	bool ptpl_activated;
 	/* ZCOPY supported on bdev device */
 	bool zcopy;
-};
-
-struct spdk_nvmf_ctrlr_feat {
-	union spdk_nvme_feat_arbitration arbitration;
-	union spdk_nvme_feat_power_management power_management;
-	union spdk_nvme_feat_error_recovery error_recovery;
-	union spdk_nvme_feat_volatile_write_cache volatile_write_cache;
-	union spdk_nvme_feat_number_of_queues number_of_queues;
-	union spdk_nvme_feat_interrupt_coalescing interrupt_coalescing;
-	union spdk_nvme_feat_interrupt_vector_configuration interrupt_vector_configuration;
-	union spdk_nvme_feat_write_atomicity write_atomicity;
-	union spdk_nvme_feat_async_event_configuration async_event_configuration;
-	union spdk_nvme_feat_keep_alive_timer keep_alive_timer;
+	/* Command Set Identifier */
+	enum spdk_nvme_csi csi;
 };
 
 /*
@@ -248,7 +217,7 @@ struct spdk_nvmf_ctrlr {
 
 	const struct spdk_nvmf_subsystem_listener	*listener;
 
-	struct spdk_nvmf_request *aer_req[NVMF_MAX_ASYNC_EVENTS];
+	struct spdk_nvmf_request *aer_req[SPDK_NVMF_MAX_ASYNC_EVENTS];
 	STAILQ_HEAD(, spdk_nvmf_async_event_completion) async_events;
 	uint64_t notice_aen_mask;
 	uint8_t nr_aer_reqs;
@@ -282,29 +251,6 @@ struct spdk_nvmf_ctrlr {
 	TAILQ_ENTRY(spdk_nvmf_ctrlr)	link;
 };
 
-/* Maximum pending AERs that can be migrated */
-#define NVMF_MIGR_MAX_PENDING_AERS 256
-
-/* spdk_nvmf_ctrlr private migration data structure used to save/restore a controller */
-struct nvmf_ctrlr_migr_data {
-	uint32_t				opts_size;
-
-	uint16_t				cntlid;
-	uint8_t					reserved1[2];
-
-	struct spdk_nvmf_ctrlr_feat		feat;
-	uint32_t				reserved2[2];
-
-	uint32_t				num_async_events;
-	uint32_t				acre_enabled;
-	uint64_t				notice_aen_mask;
-	union spdk_nvme_async_event_completion	async_events[NVMF_MIGR_MAX_PENDING_AERS];
-
-	/* New fields shouldn't go after reserved3 */
-	uint8_t					reserved3[3000];
-};
-SPDK_STATIC_ASSERT(sizeof(struct nvmf_ctrlr_migr_data) == 0x1000, "Incorrect size");
-
 #define NVMF_MAX_LISTENERS_PER_SUBSYSTEM	16
 
 struct spdk_nvmf_subsystem {
@@ -328,6 +274,10 @@ struct spdk_nvmf_subsystem {
 
 	bool						destroying;
 	bool						async_destroy;
+
+	/* Zoned storage related fields */
+	bool						zone_append_supported;
+	uint64_t					max_zone_append_size_kib;
 
 	struct spdk_nvmf_tgt				*tgt;
 
@@ -365,8 +315,6 @@ struct spdk_nvmf_subsystem {
 	uint32_t					*ana_group;
 };
 
-int nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
-				  struct spdk_nvmf_transport *transport);
 int nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 				     struct spdk_nvmf_subsystem *subsystem);
 int nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
@@ -391,6 +339,7 @@ int nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req);
 int nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req);
 bool nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr);
 bool nvmf_ctrlr_write_zeroes_supported(struct spdk_nvmf_ctrlr *ctrlr);
+bool nvmf_ctrlr_copy_supported(struct spdk_nvmf_ctrlr *ctrlr);
 void nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid);
 bool nvmf_ctrlr_use_zcopy(struct spdk_nvmf_request *req);
 
@@ -410,6 +359,8 @@ int nvmf_bdev_ctrlr_flush_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *des
 			      struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
 int nvmf_bdev_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			    struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
+int nvmf_bdev_ctrlr_copy_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+			     struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
 int nvmf_bdev_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 				     struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
 bool nvmf_bdev_ctrlr_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_nvme_cmd *cmd,
@@ -472,11 +423,6 @@ void nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
  * the host to send a subsequent AER.
  */
 void nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr);
-int nvmf_ctrlr_save_aers(struct spdk_nvmf_ctrlr *ctrlr, uint16_t *aer_cids,
-			 uint16_t max_aers);
-
-int nvmf_ctrlr_save_migr_data(struct spdk_nvmf_ctrlr *ctrlr, struct nvmf_ctrlr_migr_data *data);
-int nvmf_ctrlr_restore_migr_data(struct spdk_nvmf_ctrlr *ctrlr, struct nvmf_ctrlr_migr_data *data);
 
 /*
  * Abort zero-copy requests that already got the buffer (received zcopy_start cb), but haven't

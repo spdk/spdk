@@ -1,34 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2019 Intel Corporation.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -444,18 +417,11 @@ zone_block_write(struct bdev_zone_block *bdev_node, struct zone_block_io_channel
 	}
 	pthread_spin_unlock(&zone->lock);
 
-	if (bdev_io->u.bdev.md_buf == NULL) {
-		rc = spdk_bdev_writev_blocks(bdev_node->base_desc, ch->base_ch, bdev_io->u.bdev.iovs,
-					     bdev_io->u.bdev.iovcnt, lba,
-					     bdev_io->u.bdev.num_blocks, _zone_block_complete_write,
-					     bdev_io);
-	} else {
-		rc = spdk_bdev_writev_blocks_with_md(bdev_node->base_desc, ch->base_ch,
-						     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-						     bdev_io->u.bdev.md_buf,
-						     lba, bdev_io->u.bdev.num_blocks,
-						     _zone_block_complete_write, bdev_io);
-	}
+	rc = spdk_bdev_writev_blocks_with_md(bdev_node->base_desc, ch->base_ch,
+					     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+					     bdev_io->u.bdev.md_buf,
+					     lba, bdev_io->u.bdev.num_blocks,
+					     _zone_block_complete_write, bdev_io);
 
 	return rc;
 
@@ -497,18 +463,11 @@ zone_block_read(struct bdev_zone_block *bdev_node, struct zone_block_io_channel 
 		return -EINVAL;
 	}
 
-	if (bdev_io->u.bdev.md_buf == NULL) {
-		rc = spdk_bdev_readv_blocks(bdev_node->base_desc, ch->base_ch, bdev_io->u.bdev.iovs,
-					    bdev_io->u.bdev.iovcnt, lba,
-					    len, _zone_block_complete_read,
-					    bdev_io);
-	} else {
-		rc = spdk_bdev_readv_blocks_with_md(bdev_node->base_desc, ch->base_ch,
-						    bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-						    bdev_io->u.bdev.md_buf,
-						    lba, len,
-						    _zone_block_complete_read, bdev_io);
-	}
+	rc = spdk_bdev_readv_blocks_with_md(bdev_node->base_desc, ch->base_ch,
+					    bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+					    bdev_io->u.bdev.md_buf,
+					    lba, len,
+					    _zone_block_complete_read, bdev_io);
 
 	return rc;
 }
@@ -706,6 +665,7 @@ zone_block_init_zone_info(struct bdev_zone_block *bdev_node)
 		zone->zone_info.capacity = bdev_node->zone_capacity;
 		zone->zone_info.write_pointer = zone->zone_info.zone_id + zone->zone_info.capacity;
 		zone->zone_info.state = SPDK_BDEV_ZONE_STATE_FULL;
+		zone->zone_info.type = SPDK_BDEV_ZONE_TYPE_SEQWR;
 		if (pthread_spin_init(&zone->lock, PTHREAD_PROCESS_PRIVATE)) {
 			SPDK_ERRLOG("pthread_spin_init() failed\n");
 			rc = -ENOMEM;
@@ -913,22 +873,19 @@ void
 vbdev_zone_block_delete(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct bdev_zone_block_config *name_node;
-	struct spdk_bdev *bdev = NULL;
+	int rc;
 
-	bdev = spdk_bdev_get_by_name(name);
-	if (!bdev || bdev->module != &bdev_zoned_if) {
-		cb_fn(cb_arg, -ENODEV);
-		return;
-	}
-
-	TAILQ_FOREACH(name_node, &g_bdev_configs, link) {
-		if (strcmp(name_node->vbdev_name, bdev->name) == 0) {
-			zone_block_remove_config(name_node);
-			break;
+	rc = spdk_bdev_unregister_by_name(name, &bdev_zoned_if, cb_fn, cb_arg);
+	if (rc == 0) {
+		TAILQ_FOREACH(name_node, &g_bdev_configs, link) {
+			if (strcmp(name_node->vbdev_name, name) == 0) {
+				zone_block_remove_config(name_node);
+				break;
+			}
 		}
+	} else {
+		cb_fn(cb_arg, rc);
 	}
-
-	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
 }
 
 static void

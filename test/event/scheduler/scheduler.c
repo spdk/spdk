@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2021 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -48,6 +20,7 @@
 static bool g_is_running = true;
 pthread_mutex_t g_sched_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 #define TIMESLICE_US 100 * 1000
+static bool g_for_each_reactor = false;
 
 struct sched_thread {
 	struct spdk_thread *thread;
@@ -398,9 +371,9 @@ for_each_nop(void *arg1, void *arg2)
 }
 
 static void
-for_each_done(void *arg1, void *arg2)
+for_each_reactor_start(void *arg1, void *arg2)
 {
-	spdk_for_each_reactor(for_each_nop, NULL, NULL, for_each_done);
+	spdk_for_each_reactor(for_each_nop, NULL, NULL, for_each_reactor_start);
 }
 
 static void
@@ -413,7 +386,28 @@ test_start(void *arg1)
 	 * that any pending spdk_for_each_reactor operations are
 	 * completed before reactors are shut down.
 	 */
-	for_each_done(NULL, NULL);
+	if (g_for_each_reactor) {
+		for_each_reactor_start(NULL, NULL);
+	}
+}
+
+static void
+scheduler_usage(void)
+{
+	printf(" -f                        Enable spdk_for_each_reactor regression test\n");
+}
+
+static int
+scheduler_parse_arg(int ch, char *arg)
+{
+	switch (ch) {
+	case 'f':
+		g_for_each_reactor = true;
+		break;
+	default:
+		return -EINVAL;
+	}
+	return 0;
 }
 
 int
@@ -427,7 +421,7 @@ main(int argc, char **argv)
 	opts.shutdown_cb = test_shutdown;
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts,
-				      NULL, NULL, NULL, NULL)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
+				      "f", NULL, scheduler_parse_arg, scheduler_usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
 	}
 

@@ -5,7 +5,7 @@ filename=${FTL_BDEV_NAME}
 direct=1
 thread=1
 buffered=0
-size=256M
+size=100%
 randrepeat=0
 time_based
 norandommap
@@ -15,4 +15,4 @@ bs=4k
 numjobs=1
 rw=randwrite
 iodepth=64
-runtime=10
+runtime=1200

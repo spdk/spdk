@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -77,6 +49,10 @@ write_cb(void *cb_ctx, const void *data, size_t size)
 #define END_NOCMP() \
 	CU_ASSERT(spdk_json_write_end(w) == 0)
 
+#define END_SIZE_NOCMP(size) \
+	CU_ASSERT(spdk_json_write_end(w) == 0); \
+	CU_ASSERT(g_write_pos - g_buf == size)
+
 #define END_FAIL() \
 	CU_ASSERT(spdk_json_write_end(w) < 0)
 
@@ -121,6 +97,8 @@ write_cb(void *cb_ctx, const void *data, size_t size)
 	CU_ASSERT(spdk_json_write_uint128(w, low, high) == 0);
 #define VAL_NAME_UINT128(name, low, high) \
 	CU_ASSERT(spdk_json_write_named_uint128(w, name, low, high) == 0);
+
+#define VAL_DOUBLE(d) CU_ASSERT(spdk_json_write_double(w, d) == 0);
 
 #define VAL_ARRAY_BEGIN() CU_ASSERT(spdk_json_write_array_begin(w) == 0)
 #define VAL_ARRAY_END() CU_ASSERT(spdk_json_write_array_end(w) == 0)
@@ -550,6 +528,29 @@ test_write_number_uint64(void)
 }
 
 static void
+test_write_number_double(void)
+{
+	struct spdk_json_write_ctx *w;
+
+	BEGIN();
+	VAL_DOUBLE(0);
+	END_SIZE("0.00000000000000000000e+00", 26);
+
+	BEGIN();
+	VAL_DOUBLE(1.2);
+	END_SIZE("1.19999999999999995559e+00", 26);
+
+
+	BEGIN();
+	VAL_DOUBLE(1234.5678);
+	END_SIZE("1.23456780000000003383e+03", 26);
+
+	BEGIN();
+	VAL_DOUBLE(-1234.5678);
+	END_SIZE("-1.23456780000000003383e+03", 27);
+}
+
+static void
 test_write_array(void)
 {
 	struct spdk_json_write_ctx *w;
@@ -844,7 +845,8 @@ test_write_val(void)
 	END("{\"a\":[1,2,3],\"b\":{\"c\":\"d\"},\"e\":true,\"f\":false,\"g\":null}");
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
@@ -864,6 +866,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_write_string_number_uint128);
 	CU_ADD_TEST(suite, test_write_number_int64);
 	CU_ADD_TEST(suite, test_write_number_uint64);
+	CU_ADD_TEST(suite, test_write_number_double);
 	CU_ADD_TEST(suite, test_write_array);
 	CU_ADD_TEST(suite, test_write_object);
 	CU_ADD_TEST(suite, test_write_nesting);

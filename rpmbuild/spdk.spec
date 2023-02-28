@@ -8,6 +8,9 @@
 %{!?requirements:%define requirements 0}
 %{!?build_requirements:%define build_requirements 0}
 %{!?shared:%define shared 0}
+%{!?rbd:%define rbd 0}
+%{!?libdir:%define libdir /usr/local/lib}
+%{!?vfio_user:%define vfio_user 0}
 
 # Spec metadata
 Name:           spdk
@@ -33,6 +36,8 @@ Requires: zlib
 Requires: %(echo "%{requirements_list}")
 %endif
 
+BuildRequires: python3-devel
+
 %if %{build_requirements}
 BuildRequires: %(echo "%{build_requirements_list}")
 %endif
@@ -50,42 +55,67 @@ polled mode instead of relying on interrupts, which avoids kernel context switch
 eliminates interrupt handling overhead.
 
 %prep
-make clean &>/dev/null || :
+make clean %{make} &>/dev/null || :
 %setup
 
 %build
+set +x
+
+cfs() {
+	(($# > 1)) || return 0
+
+	local dst=$1 f
+
+	mkdir -p "$dst"
+	shift; for f; do [[ -e $f ]] && cp -a "$f" "$dst"; done
+}
+
+cl() {
+	[[ -e $2 ]] || return 0
+
+	cfs "$1" $(find "$2" -name '*.so*' -type f -o -type l | grep -v .symbols)
+}
+
 %if %{deps}
-./scripts/pkgdep.sh --docs --pmem --rdma --uring
+_PKGDEP_OPTS="--docs --pmem --rdma --uring"
+%if %{rbd}
+_PKGDEP_OPTS="$_PKGDEP_OPTS --rbd"
+%endif
+./scripts/pkgdep.sh $_PKGDEP_OPTS
 %endif
 
 # Rely mainly on CONFIG
+git submodule update --init
 ./configure --disable-unit-tests --disable-tests %{configure}
 make %{make}
-make DESTDIR=%{buildroot} install
+make DESTDIR=%{buildroot} install %{make}
 
 # Include DPDK libs in case --with-shared is in use.
 %if %{dpdk}
-mkdir -p %{buildroot}/usr/local/lib/dpdk
-cp -a %{dpdk_build_path}/lib/* %{buildroot}/usr/local/lib/dpdk/
+cfs %{buildroot}/usr/local/lib/dpdk %{dpdk_build_path}/lib/*
 # Special case for SPDK_RUN_EXTERNAL_DPDK setup
-[[ -e %{dpdk_path}/intel-ipsec-mb ]] && find %{dpdk_path}/intel-ipsec-mb/ -name '*.so*' -exec cp -a {} %{buildroot}/usr/local/lib/dpdk/ ';'
-[[ -e %{dpdk_path}/isa-l/build/lib ]] && cp -a %{dpdk_path}/isa-l/build/lib/*.so* %{buildroot}/usr/local/lib/dpdk/
+cl %{buildroot}/usr/local/lib/dpdk %{dpdk_path}/intel-ipsec-mb/
+cl %{buildroot}/usr/local/lib/dpdk %{dpdk_path}/isa-l/
 %endif
 
-# Try to include all the binaries that were potentially built
-[[ -e build/examples ]] && cp -a build/examples/* %{buildroot}/usr/local/bin/
-[[ -e build/bin ]] && cp -a build/bin/* %{buildroot}/usr/local/bin/
-[[ -e build/fio ]] && cp -a build/fio %{buildroot}/usr/local/bin/fio
+# Include libvfio-user libs in case --with-vfio-user is in use together with --with-shared
+%if %{vfio_user} && %{shared}
+cl %{buildroot}/usr/local/lib/libvfio-user build/libvfio-user/
+%endif
+# Try to include extra binaries that were potentially built
+cfs %{buildroot}/usr/local/bin build/fio
 
 # And some useful setup scripts SPDK uses
 mkdir -p %{buildroot}/usr/libexec/spdk
 mkdir -p %{buildroot}/etc/bash_completion.d
 mkdir -p %{buildroot}/etc/profile.d
 mkdir -p %{buildroot}/etc/ld.so.conf.d
+mkdir -p %{buildroot}%{python3_sitelib}
 
 cat <<-EOF > %{buildroot}/etc/ld.so.conf.d/spdk.conf
-/usr/local/lib
+%{libdir}
 /usr/local/lib/dpdk
+/usr/local/lib/libvfio-user
 EOF
 
 cat <<-'EOF' > %{buildroot}/etc/profile.d/spdk_path.sh
@@ -95,7 +125,8 @@ PATH=$PATH:/usr/libexec/spdk/test/common/config
 export PATH
 EOF
 
-cp -a scripts %{buildroot}/usr/libexec/spdk/scripts
+cfs %{buildroot}/usr/libexec/spdk scripts
+cfs  %{buildroot}%{python3_sitelib} python/spdk
 ln -s /usr/libexec/spdk/scripts/bash-completion/spdk %{buildroot}/etc/bash_completion.d/
 
 # We need to take into the account the fact that most of the scripts depend on being
@@ -111,6 +142,7 @@ ln -s /usr/local/include %{buildroot}/usr/libexec/spdk
 /etc/bash_completion.d/*
 /usr/libexec/spdk/*
 /usr/local/bin/*
+%{python3_sitelib}/spdk/*
 
 
 %package devel
@@ -122,7 +154,7 @@ SPDK development libraries and headers
 %files devel
 /usr/local/include/*
 %if %{shared}
-/usr/local/lib/lib*.so
+%{libdir}/lib*.so
 %endif
 
 %package libs
@@ -133,10 +165,10 @@ SPDK libraries
 
 %files libs
 /etc/ld.so.conf.d/*
-/usr/local/lib/lib*.a
-/usr/local/lib/pkgconfig/*.pc
+%{libdir}/lib*.a
+%{libdir}/pkgconfig/*.pc
 %if %{shared}
-/usr/local/lib/lib*.so.*
+%{libdir}/lib*.so.*
 %endif
 
 %post libs
@@ -153,6 +185,20 @@ DPDK libraries
 /usr/local/lib/dpdk
 
 %post dpdk-libs
+ldconfig
+%endif
+
+%if %{vfio_user} && %{shared}
+%package libvfio-user
+Summary: libvfio-user libraries
+
+%description libvfio-user
+libvfio-user libraries
+
+%files libvfio-user
+/usr/local/lib/libvfio-user
+
+%post libvfio-user
 ldconfig
 %endif
 

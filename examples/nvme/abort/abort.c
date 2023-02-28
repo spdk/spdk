@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2020 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -98,6 +70,7 @@ struct worker_thread {
 	TAILQ_HEAD(, ctrlr_worker_ctx)	ctrlr_ctx;
 	TAILQ_ENTRY(worker_thread)	link;
 	unsigned			lcore;
+	int				status;
 };
 
 static const char *g_workload_type = "read";
@@ -450,6 +423,7 @@ work_fn(void *arg)
 	struct spdk_nvme_io_qpair_opts opts;
 	uint64_t tsc_end;
 	uint32_t unfinished_ctx;
+	int rc = 0;
 
 	/* Allocate queue pair for each namespace. */
 	TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
@@ -463,7 +437,8 @@ work_fn(void *arg)
 		ns_ctx->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ns_entry->ctrlr, &opts, sizeof(opts));
 		if (ns_ctx->qpair == NULL) {
 			fprintf(stderr, "spdk_nvme_ctrlr_alloc_io_qpair failed\n");
-			return 1;
+			worker->status = -ENOMEM;
+			goto out;
 		}
 	}
 
@@ -476,15 +451,27 @@ work_fn(void *arg)
 
 	while (1) {
 		TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
-			spdk_nvme_qpair_process_completions(ns_ctx->qpair, 0);
+			rc = spdk_nvme_qpair_process_completions(ns_ctx->qpair, 0);
+			if (rc < 0) {
+				fprintf(stderr, "spdk_nvme_qpair_process_completions returned "
+					"%d\n", rc);
+				worker->status = rc;
+				goto out;
+			}
 		}
 
 		if (worker->lcore == g_main_core) {
 			TAILQ_FOREACH(ctrlr_ctx, &worker->ctrlr_ctx, link) {
 				/* Hold mutex to guard ctrlr_ctx->current_queue_depth. */
 				pthread_mutex_lock(&ctrlr_ctx->mutex);
-				spdk_nvme_ctrlr_process_admin_completions(ctrlr_ctx->ctrlr);
+				rc = spdk_nvme_ctrlr_process_admin_completions(ctrlr_ctx->ctrlr);
 				pthread_mutex_unlock(&ctrlr_ctx->mutex);
+				if (rc < 0) {
+					fprintf(stderr, "spdk_nvme_ctrlr_process_admin_completions "
+						"returned %d\n", rc);
+					worker->status = rc;
+					goto out;
+				}
 			}
 		}
 
@@ -501,12 +488,14 @@ work_fn(void *arg)
 				ns_ctx->is_draining = true;
 			}
 			if (ns_ctx->current_queue_depth > 0) {
-				spdk_nvme_qpair_process_completions(ns_ctx->qpair, 0);
-				if (ns_ctx->current_queue_depth == 0) {
-					spdk_nvme_ctrlr_free_io_qpair(ns_ctx->qpair);
-				} else {
-					unfinished_ctx++;
+				rc = spdk_nvme_qpair_process_completions(ns_ctx->qpair, 0);
+				if (rc < 0) {
+					fprintf(stderr, "spdk_nvme_qpair_process_completions "
+						"returned %d\n", rc);
+					worker->status = rc;
+					goto out;
 				}
+				unfinished_ctx++;
 			}
 		}
 	} while (unfinished_ctx > 0);
@@ -518,17 +507,27 @@ work_fn(void *arg)
 			TAILQ_FOREACH(ctrlr_ctx, &worker->ctrlr_ctx, link) {
 				pthread_mutex_lock(&ctrlr_ctx->mutex);
 				if (ctrlr_ctx->current_queue_depth > 0) {
-					spdk_nvme_ctrlr_process_admin_completions(ctrlr_ctx->ctrlr);
-					if (ctrlr_ctx->current_queue_depth > 0) {
-						unfinished_ctx++;
-					}
+					rc = spdk_nvme_ctrlr_process_admin_completions(ctrlr_ctx->ctrlr);
+					unfinished_ctx++;
 				}
 				pthread_mutex_unlock(&ctrlr_ctx->mutex);
+				if (rc < 0) {
+					fprintf(stderr, "spdk_nvme_ctrlr_process_admin_completions "
+						"returned %d\n", rc);
+					worker->status = rc;
+					goto out;
+				}
 			}
 		} while (unfinished_ctx > 0);
 	}
+out:
+	TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
+		/* Make sure we don't submit any IOs at this point */
+		ns_ctx->is_draining = true;
+		spdk_nvme_ctrlr_free_io_qpair(ns_ctx->qpair);
+	}
 
-	return 0;
+	return worker->status != 0;
 }
 
 static void
@@ -563,7 +562,7 @@ usage(char *program_name)
 #ifdef DEBUG
 	printf("\t[-G enable debug logging]\n");
 #else
-	printf("\t[-G enable debug logging (flag disabled, must reconfigure with --enable-debug)\n");
+	printf("\t[-G enable debug logging (flag disabled, must reconfigure with --enable-debug)]\n");
 #endif
 	printf("\t[-l log level]\n");
 	printf("\t Available log levels:\n");
@@ -875,6 +874,9 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	min_aq_size = spdk_divide_round_up(g_queue_depth, g_abort_interval) + 8;
 	opts->admin_queue_size = spdk_max(opts->admin_queue_size, min_aq_size);
 
+	/* Avoid possible nvme_qpair_abort_queued_reqs_with_cbarg ERROR when IO queue size is 128. */
+	opts->disable_error_logging = true;
+
 	return true;
 }
 
@@ -1048,7 +1050,8 @@ associate_workers_with_ns(void)
 	return 0;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	int rc;
 	struct worker_thread *worker, *main_worker;
@@ -1128,6 +1131,13 @@ int main(int argc, char **argv)
 	rc = work_fn(main_worker);
 
 	spdk_env_thread_wait_all();
+
+	TAILQ_FOREACH(worker, &g_workers, link) {
+		if (worker->status != 0) {
+			rc = 1;
+			break;
+		}
+	}
 
 cleanup:
 	unregister_trids();

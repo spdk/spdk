@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.  All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.  All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
@@ -48,6 +20,7 @@
 #include "spdk/queue.h"
 #include "spdk/log.h"
 #include "spdk/thread.h"
+#include "spdk/assert.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -90,23 +63,42 @@ struct spdk_app_opts {
 	const char *name;
 	const char *json_config_file;
 	bool json_config_ignore_errors;
+
+	/* Hole at bytes 17-23. */
+	uint8_t	reserved17[7];
+
 	const char *rpc_addr; /* Can be UNIX domain socket path or IP address + TCP port */
 	const char *reactor_mask;
 	const char *tpoint_group_mask;
 
 	int shm_id;
 
+	/* Hole at bytes 52-55. */
+	uint8_t			reserved52[4];
+
 	spdk_app_shutdown_cb	shutdown_cb;
 
 	bool			enable_coredump;
+
+	/* Hole at bytes 65-67. */
+	uint8_t			reserved65[3];
+
 	int			mem_channel;
 	int			main_core;
 	int			mem_size;
 	bool			no_pci;
 	bool			hugepage_single_segments;
 	bool			unlink_hugepage;
+
+	/* Hole at bytes 83-85. */
+	uint8_t			reserved83[5];
+
 	const char		*hugedir;
 	enum spdk_log_level	print_level;
+
+	/* Hole at bytes 100-103. */
+	uint8_t			reserved100[4];
+
 	size_t			num_pci_addr;
 	struct spdk_pci_addr	*pci_blocked;
 	struct spdk_pci_addr	*pci_allowed;
@@ -116,6 +108,9 @@ struct spdk_app_opts {
 	 * when this flag is enabled.
 	 */
 	bool			delay_subsystem_init;
+
+	/* Hole at bytes 137-143. */
+	uint8_t			reserved137[7];
 
 	/* Number of trace entries allocated for each core */
 	uint64_t		num_entries;
@@ -148,13 +143,28 @@ struct spdk_app_opts {
 	 */
 	bool disable_signal_handlers;
 
+	/* Hole at bytes 185-191. */
+	uint8_t reserved185[7];
+
 	/**
 	 * The allocated size for the message pool used by the threading library.
 	 *
 	 * Default is `SPDK_DEFAULT_MSG_MEMPOOL_SIZE`.
 	 */
 	size_t msg_mempool_size;
-};
+
+	/*
+	 *  If non-NULL, a string array of allowed RPC methods.
+	 */
+	const char **rpc_allowlist;
+
+	/**
+	 * Used to pass vf_token to vfio_pci driver through DPDK.
+	 * The vf_token is an UUID that shared between SR-IOV PF and VF.
+	 */
+	const char		*vf_token;
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 216, "Incorrect size");
 
 /**
  * Initialize the default value of opts
@@ -272,7 +282,7 @@ typedef enum spdk_app_parse_args_rvals spdk_app_parse_args_rvals_t;
  */
 spdk_app_parse_args_rvals_t spdk_app_parse_args(int argc, char **argv,
 		struct spdk_app_opts *opts, const char *getopt_str,
-		struct option *app_long_opts, int (*parse)(int ch, char *arg),
+		const struct option *app_long_opts, int (*parse)(int ch, char *arg),
 		void (*usage)(void));
 
 /**

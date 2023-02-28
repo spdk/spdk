@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation
+#  All rights reserved.
+#
 function configure_performance() {
 	echo -n "Placing all CPUs in performance mode..."
 	for governor in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do

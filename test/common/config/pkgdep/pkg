@@ -21,7 +21,9 @@ packages=(
 	bison
 	gdisk
 	socat
+	openssl
 	sshpass
 	wget
 	llvm-devel
+	avahi
 )

@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2022 Intel Corporation
+#  All rights reserved.
+#
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
@@ -11,8 +15,6 @@ BDEV_SIZE=64
 BDEV_NEW_SIZE=128
 BLOCK_SIZE=512
 RESIZE_SOCK="/var/tmp/spdk-resize.sock"
-
-rpc_py="$rootdir/scripts/rpc.py"
 
 timing_enter start_iscsi_tgt
 
@@ -41,13 +43,13 @@ sleep 1
 trap 'killprocess $pid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
 
 # Start bdevperf with another sock file and iSCSI initiator
-"$rootdir/test/bdev/bdevperf/bdevperf" -r $RESIZE_SOCK --json <(initiator_json_config) -q 16 -o 4096 -w read -t 5 -R -s 128 -z &
+"$rootdir/build/examples/bdevperf" -r $RESIZE_SOCK --json <(initiator_json_config) -q 16 -o 4096 -w read -t 5 -R -s 128 -z &
 bdevperf_pid=$!
 waitforlisten $bdevperf_pid $RESIZE_SOCK
 # Resize the Bdev from iSCSI target
 $rpc_py bdev_null_resize Null0 $BDEV_NEW_SIZE
 # Obtain the Bdev from bdevperf with iSCSI initiator
-num_block=$($rpc_py -s $RESIZE_SOCK bdev_get_bdevs | grep num_blocks | sed 's/[^[:digit:]]//g')
+num_block=$($rpc_py -s $RESIZE_SOCK bdev_get_bdevs | jq '.[].num_blocks')
 # Size is not changed as no IO sent yet and resize notification is deferred.
 total_size=$((num_block * BLOCK_SIZE / 1048576))
 if [ $total_size != $BDEV_SIZE ]; then
@@ -56,9 +58,9 @@ if [ $total_size != $BDEV_SIZE ]; then
 fi
 sleep 2
 # Start the bdevperf IO
-$rootdir/test/bdev/bdevperf/bdevperf.py -s $RESIZE_SOCK perform_tests
+$rootdir/examples/bdev/bdevperf/bdevperf.py -s $RESIZE_SOCK perform_tests
 # Obtain the Bdev from bdevperf with iSCSI initiator
-num_block=$($rpc_py -s $RESIZE_SOCK bdev_get_bdevs | grep num_blocks | sed 's/[^[:digit:]]//g')
+num_block=$($rpc_py -s $RESIZE_SOCK bdev_get_bdevs | jq '.[].num_blocks')
 # Get the new bdev size in MiB.
 total_size=$((num_block * BLOCK_SIZE / 1048576))
 if [ $total_size != $BDEV_NEW_SIZE ]; then

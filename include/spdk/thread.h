@@ -1,34 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 /** \file
@@ -38,8 +11,16 @@
 #ifndef SPDK_THREAD_H_
 #define SPDK_THREAD_H_
 
+#ifdef __linux__
+#include <sys/epoll.h>
+#endif
+
+#include "spdk/fd_group.h"
 #include "spdk/stdinc.h"
+#include "spdk/assert.h"
 #include "spdk/cpuset.h"
+#include "spdk/env.h"
+#include "spdk/util.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -255,6 +236,10 @@ void spdk_thread_lib_fini(void);
 /**
  * Creates a new SPDK thread object.
  *
+ * Note that the first thread created via spdk_thread_create() will be designated as
+ * the app thread.  Other SPDK libraries may place restrictions on certain APIs to
+ * only be called in the context of this app thread.
+ *
  * \param name Human-readable name for the thread; can be retrieved with spdk_thread_get_name().
  * The string is copied, so the pointed-to data only needs to be valid during the
  * spdk_thread_create() call. May be NULL to specify no name.
@@ -264,7 +249,16 @@ void spdk_thread_lib_fini(void);
  *
  * \return a pointer to the allocated thread on success or NULL on failure..
  */
-struct spdk_thread *spdk_thread_create(const char *name, struct spdk_cpuset *cpumask);
+struct spdk_thread *spdk_thread_create(const char *name, const struct spdk_cpuset *cpumask);
+
+/**
+ * Return the app thread.
+ *
+ * The app thread is the first thread created using spdk_thread_create().
+ *
+ * \return a pointer to the app thread, or NULL if no thread has been created yet.
+ */
+struct spdk_thread *spdk_thread_get_app_thread(void);
 
 /**
  * Force the current system thread to act as if executing the given SPDK thread.
@@ -284,7 +278,10 @@ void spdk_set_thread(struct spdk_thread *thread);
  * this function. This function will complete these processing. The completion can
  * be queried by spdk_thread_is_exited().
  *
- * \param thread The thread to destroy.
+ * Note that this function must not be called on the app thread until after it
+ * has been called for all other threads.
+ *
+ * \param thread The thread to exit.
  *
  * \return always 0. (return value was deprecated but keep it for ABI compatibility.)
  */
@@ -293,11 +290,27 @@ int spdk_thread_exit(struct spdk_thread *thread);
 /**
  * Returns whether the thread is marked as exited.
  *
+ * A thread is exited only after it has spdk_thread_exit() called on it, and
+ * it has been polled until any outstanding operations targeting this
+ * thread have completed.  This may include poller unregistrations, io channel
+ * unregistrations, or outstanding spdk_thread_send_msg calls.
+ *
  * \param thread The thread to query.
  *
  * \return true if marked as exited, false otherwise.
  */
 bool spdk_thread_is_exited(struct spdk_thread *thread);
+
+/**
+ * Returns whether the thread is still running.
+ *
+ * A thread is considered running until it has * spdk_thread_exit() called on it.
+ *
+ * \param thread The thread to query.
+ *
+ * \return true if still running, false otherwise.
+ */
+bool spdk_thread_is_running(struct spdk_thread *thread);
 
 /**
  * Destroy a thread, releasing all of its resources. May only be called
@@ -467,7 +480,7 @@ int spdk_thread_get_stats(struct spdk_thread_stats *stats);
 /**
  * Return the TSC value from the end of the last time this thread was polled.
  *
- * \param thread Thread to query.
+ * \param thread Thread to query.  If NULL, use current thread.
  *
  * \return TSC value from the end of the last time this thread was polled.
  */
@@ -830,9 +843,15 @@ struct spdk_interrupt *spdk_interrupt_register(int efd, spdk_interrupt_fn fn,
 void spdk_interrupt_unregister(struct spdk_interrupt **pintr);
 
 enum spdk_interrupt_event_types {
-	SPDK_INTERRUPT_EVENT_IN = 0x001,
+#ifdef __linux__
+	SPDK_INTERRUPT_EVENT_IN = EPOLLIN,
+	SPDK_INTERRUPT_EVENT_OUT = EPOLLOUT,
+	SPDK_INTERRUPT_EVENT_ET = EPOLLET
+#else
+	SPDK_INTERRUPT_EVENT_IN =  0x001,
 	SPDK_INTERRUPT_EVENT_OUT = 0x004,
 	SPDK_INTERRUPT_EVENT_ET = 1u << 31
+#endif
 };
 
 /**
@@ -857,6 +876,17 @@ int spdk_interrupt_set_event_types(struct spdk_interrupt *intr,
 int spdk_thread_get_interrupt_fd(struct spdk_thread *thread);
 
 /**
+ * Return an fd_group that becomes ready whenever any of the registered
+ * interrupt file descriptors are ready
+ *
+ *
+ * \param thread The thread to get.
+ *
+ * \return The spdk_fd_group of the thread itself.
+ */
+struct spdk_fd_group *spdk_thread_get_interrupt_fd_group(struct spdk_thread *thread);
+
+/**
  * Set SPDK run as event driven mode
  *
  * \return 0 on success or -errno on failure
@@ -869,6 +899,301 @@ int spdk_interrupt_mode_enable(void);
  * \return True if interrupt mode is set, false otherwise.
  */
 bool spdk_interrupt_mode_is_enabled(void);
+
+/**
+ * A spinlock augmented with safety checks for use with SPDK.
+ *
+ * SPDK code that uses spdk_spinlock runs from an SPDK thread, which itself is associated with a
+ * pthread. There are typically many SPDK threads associated with each pthread. The SPDK application
+ * may migrate SPDK threads between pthreads from time to time to balance the load on those threads.
+ * Migration of SPDK threads only happens when the thread is off CPU, and as such it is only safe to
+ * hold a lock so long as an SPDK thread stays on CPU.
+ *
+ * It is not safe to lock a spinlock, return from the event or poller, then unlock it at some later
+ * time because:
+ *
+ *   - Even though the SPDK thread may be the same, the SPDK thread may be running on different
+ *     pthreads during lock and unlock. A pthread spinlock may consider this to be an unlock by a
+ *     non-owner, which results in undefined behavior.
+ *   - A lock that is acquired by a poller or event may be needed by another poller or event that
+ *     runs on the same pthread. This can lead to deadlock or detection of deadlock.
+ *   - A lock that is acquired by a poller or event that is needed by another poller or event that
+ *     runs on a second pthread will block the second pthread from doing any useful work until the
+ *     lock is released. Because the lock holder and the lock acquirer are on the same pthread, this
+ *     would lead to deadlock.
+ *
+ * If an SPDK spinlock is used erroneously, the program will abort.
+ */
+struct spdk_spinlock {
+	pthread_spinlock_t spinlock;
+	struct spdk_thread *thread;
+};
+
+/**
+ * Initialize an spdk_spinlock.
+ *
+ * \param sspin The SPDK spinlock to initialize.
+ */
+void spdk_spin_init(struct spdk_spinlock *sspin);
+
+/**
+ * Destroy an spdk_spinlock.
+ *
+ * \param sspin The SPDK spinlock to initialize.
+ */
+void spdk_spin_destroy(struct spdk_spinlock *sspin);
+
+/**
+ * Lock an SPDK spin lock.
+ *
+ * \param sspin An SPDK spinlock.
+ */
+void spdk_spin_lock(struct spdk_spinlock *sspin);
+
+/**
+ * Unlock an SPDK spinlock.
+ *
+ * \param sspin An SPDK spinlock.
+ */
+void spdk_spin_unlock(struct spdk_spinlock *sspin);
+
+/**
+ * Determine if the caller holds this SPDK spinlock.
+ *
+ * \param sspin An SPDK spinlock.
+ * \return true if spinlock is held by this thread, else false
+ */
+bool spdk_spin_held(struct spdk_spinlock *sspin);
+
+struct spdk_iobuf_opts {
+	/** Maximum number of small buffers */
+	uint64_t small_pool_count;
+	/** Maximum number of large buffers */
+	uint64_t large_pool_count;
+	/** Size of a single small buffer */
+	uint32_t small_bufsize;
+	/** Size of a single large buffer */
+	uint32_t large_bufsize;
+};
+
+struct spdk_iobuf_entry;
+
+typedef void (*spdk_iobuf_get_cb)(struct spdk_iobuf_entry *entry, void *buf);
+
+/** iobuf queue entry */
+struct spdk_iobuf_entry {
+	spdk_iobuf_get_cb		cb_fn;
+	const void			*module;
+	STAILQ_ENTRY(spdk_iobuf_entry)	stailq;
+};
+
+
+struct spdk_iobuf_buffer {
+	STAILQ_ENTRY(spdk_iobuf_buffer)	stailq;
+};
+
+typedef STAILQ_HEAD(, spdk_iobuf_entry) spdk_iobuf_entry_stailq_t;
+typedef STAILQ_HEAD(, spdk_iobuf_buffer) spdk_iobuf_buffer_stailq_t;
+
+struct spdk_iobuf_pool {
+	/** Buffer pool */
+	struct spdk_mempool		*pool;
+	/** Buffer cache */
+	spdk_iobuf_buffer_stailq_t	cache;
+	/** Number of elements in the cache */
+	uint32_t			cache_count;
+	/** Size of the cache */
+	uint32_t			cache_size;
+	/** Buffer wait queue */
+	spdk_iobuf_entry_stailq_t	*queue;
+	/** Buffer size */
+	uint32_t			bufsize;
+};
+
+/** iobuf channel */
+struct spdk_iobuf_channel {
+	/** Small buffer memory pool */
+	struct spdk_iobuf_pool		small;
+	/** Large buffer memory pool */
+	struct spdk_iobuf_pool		large;
+	/** Module pointer */
+	const void			*module;
+	/** Parent IO channel */
+	struct spdk_io_channel		*parent;
+};
+
+/**
+ * Initialize and allocate iobuf pools.
+ *
+ * \return 0 on success, negative errno otherwise.
+ */
+int spdk_iobuf_initialize(void);
+
+typedef void (*spdk_iobuf_finish_cb)(void *cb_arg);
+
+/**
+ * Clean up and free iobuf pools.
+ *
+ * \param cb_fn Callback to be executed once the clean up is completed.
+ * \param cb_arg Callback argument.
+ */
+void spdk_iobuf_finish(spdk_iobuf_finish_cb cb_fn, void *cb_arg);
+
+/**
+ * Set iobuf options.  These options will be used during `spdk_iobuf_initialize()`.
+ *
+ * \param opts Options describing the size of the pools to reserve.
+ *
+ * \return 0 on success, negative errno otherwise.
+ */
+int spdk_iobuf_set_opts(const struct spdk_iobuf_opts *opts);
+
+/**
+ * Get iobuf options.
+ *
+ * \param opts Options to fill in.
+ */
+void spdk_iobuf_get_opts(struct spdk_iobuf_opts *opts);
+
+/**
+ * Register a module as an iobuf pool user.  Only registered users can request buffers from the
+ * iobuf pool.
+ *
+ * \name Name of the module.
+ *
+ * \return 0 on success, negative errno otherwise.
+ */
+int spdk_iobuf_register_module(const char *name);
+
+/**
+ * Initialize an iobuf channel.
+ *
+ * \param ch iobuf channel to initialize.
+ * \param name Name of the module registered via `spdk_iobuf_register_module()`.
+ * \param small_cache_size Number of small buffers to be cached by this channel.
+ * \param large_cache_size Number of large buffers to be cached by this channel.
+ *
+ * \return 0 on success, negative errno otherwise.
+ */
+int spdk_iobuf_channel_init(struct spdk_iobuf_channel *ch, const char *name,
+			    uint32_t small_cache_size, uint32_t large_cache_size);
+
+/**
+ * Release resources tied to an iobuf channel.
+ *
+ * \param ch iobuf channel.
+ */
+void spdk_iobuf_channel_fini(struct spdk_iobuf_channel *ch);
+
+typedef int (*spdk_iobuf_for_each_entry_fn)(struct spdk_iobuf_channel *ch,
+		struct spdk_iobuf_entry *entry, void *ctx);
+
+/**
+ * Iterate over all entries on a given queue and execute a callback on those that were requested
+ * using `ch`.  The iteration is stopped if the callback returns non-zero status.
+ *
+ * \param ch iobuf channel to iterate over.
+ * \param pool Pool to iterate over (`small` or `large`).
+ * \param cb_fn Callback to execute on each entry on the queue that was requested using `ch`.
+ * \param cb_ctx Argument passed to `cb_fn`.
+ *
+ * \return status of the last callback.
+ */
+int spdk_iobuf_for_each_entry(struct spdk_iobuf_channel *ch, struct spdk_iobuf_pool *pool,
+			      spdk_iobuf_for_each_entry_fn cb_fn, void *cb_ctx);
+
+/**
+ * Abort an outstanding request waiting for a buffer.
+ *
+ * \param ch iobuf channel on which the entry is waiting.
+ * \param entry Entry to remove from the wait queue.
+ * \param len Length of the requested buffer (must be the exact same value as specified in
+ *            `spdk_iobuf_get()`.
+ */
+void spdk_iobuf_entry_abort(struct spdk_iobuf_channel *ch, struct spdk_iobuf_entry *entry,
+			    uint64_t len);
+
+/**
+ * Get a buffer from the iobuf pool.  If no buffers are available, the request is queued until a
+ * buffer is released.
+ *
+ * \param ch iobuf channel.
+ * \param len Length of the buffer to retrieve.  The user is responsible for making sure the length
+ *            doesn't exceed large_bufsize.
+ * \param entry Wait queue entry.
+ * \param cb_fn Callback to be executed once a buffer becomes available.  If a buffer is available
+ *              immediately, it is NOT be executed.
+ *
+ * \return pointer to a buffer or NULL if no buffers are currently available.
+ */
+static inline void *
+spdk_iobuf_get(struct spdk_iobuf_channel *ch, uint64_t len,
+	       struct spdk_iobuf_entry *entry, spdk_iobuf_get_cb cb_fn)
+{
+	struct spdk_iobuf_pool *pool;
+	void *buf;
+
+	assert(spdk_io_channel_get_thread(ch->parent) == spdk_get_thread());
+	if (len <= ch->small.bufsize) {
+		pool = &ch->small;
+	} else {
+		assert(len <= ch->large.bufsize);
+		pool = &ch->large;
+	}
+
+	buf = (void *)STAILQ_FIRST(&pool->cache);
+	if (buf) {
+		STAILQ_REMOVE_HEAD(&pool->cache, stailq);
+		assert(pool->cache_count > 0);
+		pool->cache_count--;
+	} else {
+		buf = spdk_mempool_get(pool->pool);
+		if (!buf) {
+			STAILQ_INSERT_TAIL(pool->queue, entry, stailq);
+			entry->module = ch->module;
+			entry->cb_fn = cb_fn;
+
+			return NULL;
+		}
+	}
+
+	return (char *)buf;
+}
+
+/**
+ * Release a buffer back to the iobuf pool.  If there are outstanding requests waiting for a buffer,
+ * this buffer will be passed to one of them.
+ *
+ * \param ch iobuf channel.
+ * \param buf Buffer to release
+ * \param len Length of the buffer (must be the exact same value as specified in `spdk_iobuf_get()`).
+ */
+static inline void
+spdk_iobuf_put(struct spdk_iobuf_channel *ch, void *buf, uint64_t len)
+{
+	struct spdk_iobuf_entry *entry;
+	struct spdk_iobuf_pool *pool;
+
+	assert(spdk_io_channel_get_thread(ch->parent) == spdk_get_thread());
+	if (len <= ch->small.bufsize) {
+		pool = &ch->small;
+	} else {
+		pool = &ch->large;
+	}
+
+	if (STAILQ_EMPTY(pool->queue)) {
+		if (pool->cache_count < pool->cache_size) {
+			STAILQ_INSERT_HEAD(&pool->cache, (struct spdk_iobuf_buffer *)buf, stailq);
+			pool->cache_count++;
+		} else {
+			spdk_mempool_put(pool->pool, buf);
+		}
+	} else {
+		entry = STAILQ_FIRST(pool->queue);
+		STAILQ_REMOVE_HEAD(pool->queue, stailq);
+		entry->cb_fn(entry, buf);
+	}
+}
 
 #ifdef __cplusplus
 }

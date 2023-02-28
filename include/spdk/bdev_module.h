@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *   Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 /** \file
@@ -55,6 +27,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define SPDK_BDEV_CLAIM_NAME_LEN	32
+
+/* This parameter is best defined for bdevs that share an underlying bdev,
+ * such as multiple lvol bdevs sharing an nvme device, to avoid unnecessarily
+ * resetting the underlying bdev and affecting other bdevs that are sharing it. */
+#define SPDK_BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE 5
 
 /** Block device module */
 struct spdk_bdev_module {
@@ -168,6 +147,11 @@ struct spdk_bdev_module {
 	 */
 	struct __bdev_module_internal_fields {
 		/**
+		 * Protects action_in_progress. Take no locks while holding this one.
+		 */
+		struct spdk_spinlock spinlock;
+
+		/**
 		 * Count of bdev inits/examinations in progress. Used by generic bdev
 		 * layer and must not be modified by bdev modules.
 		 *
@@ -178,6 +162,100 @@ struct spdk_bdev_module {
 		TAILQ_ENTRY(spdk_bdev_module) tailq;
 	} internal;
 };
+
+/** Claim types */
+enum spdk_bdev_claim_type {
+	/* Not claimed. Must not be used to request a claim. */
+	SPDK_BDEV_CLAIM_NONE = 0,
+
+	/**
+	 * Exclusive writer, with allowances for legacy behavior.  This matches the behavior of
+	 * `spdk_bdev_module_claim_bdev()` as of SPDK 22.09.  New consumer should use
+	 * SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE instead.
+	 */
+	SPDK_BDEV_CLAIM_EXCL_WRITE,
+
+	/**
+	 * The descriptor passed with this claim request is the only writer. Other claimless readers
+	 * are allowed.
+	 */
+	SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE,
+
+	/**
+	 * Any number of readers, no writers. Readers without a claim are allowed.
+	 */
+	SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE,
+
+	/**
+	 * Any number of writers with matching shared_claim_key. After the first writer establishes
+	 * a claim, future aspiring writers should open read-only and pass the read-only descriptor.
+	 * If the shared claim is granted to the aspiring writer, the descriptor will be upgraded to
+	 * read-write.
+	 */
+	SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED
+};
+
+/** Options used when requesting a claim. */
+struct spdk_bdev_claim_opts {
+	/* Size of this structure in bytes */
+	size_t opts_size;
+	/**
+	 * An arbitrary name for the claim. If set, it should be a string suitable for printing in
+	 * error messages. Must be '\0' terminated.
+	 */
+	char name[SPDK_BDEV_CLAIM_NAME_LEN];
+	/**
+	 * Used with SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED claims. Any non-zero value is considered
+	 * a key.
+	 */
+	uint64_t shared_claim_key;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_claim_opts) == 48, "Incorrect size");
+
+/**
+ * Retrieve the name of the bdev module claim type. The mapping between claim types and their names
+ * is:
+ *
+ *   SPDK_BDEV_CLAIM_NONE			"not_claimed"
+ *   SPDK_BDEV_CLAIM_EXCL_WRITE			"exclusive_write"
+ *   SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE	"read_many_write_one"
+ *   SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE	"read_many_write_none"
+ *   SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED	"read_many_write_shared"
+ *
+ * Any other value will return "invalid_claim".
+ *
+ * \param claim_type The claim type.
+ * \return A string that describes the claim type.
+ */
+const char *spdk_bdev_claim_get_name(enum spdk_bdev_claim_type claim_type);
+
+/**
+ * Initialize bdev module claim options structure.
+ *
+ * \param opts The structure to initialize.
+ * \param size The size of *opts.
+ */
+void spdk_bdev_claim_opts_init(struct spdk_bdev_claim_opts *opts, size_t size);
+
+/**
+ * Claim the bdev referenced by the open descriptor. The claim is released as the descriptor is
+ * closed.
+ *
+ * \param desc An open bdev descriptor. Some claim types may upgrade this from read-only to
+ * read-write.
+ * \param type The type of claim to establish.
+ * \param opts NULL or options required by the particular claim type.
+ * \param module The bdev module making this claim.
+ * \return 0 on success
+ * \return -ENOMEM if insufficient memory to track the claim
+ * \return -EBUSY if the claim cannot be granted due to a conflict
+ * \return -EINVAL if the claim type required options that were not passed or required parameters
+ * were NULL.
+ */
+int spdk_bdev_module_claim_bdev_desc(struct spdk_bdev_desc *desc,
+				     enum spdk_bdev_claim_type type,
+				     struct spdk_bdev_claim_opts *opts,
+				     struct spdk_bdev_module *module);
 
 /**
  * Called by a bdev module to lay exclusive claim to a bdev.
@@ -270,6 +348,16 @@ struct spdk_bdev_fn_table {
 	 * Vbdev module must inspect types of memory domains returned by base bdev and report only those
 	 * memory domains that it can work with. */
 	int (*get_memory_domains)(void *ctx, struct spdk_memory_domain **domains, int array_size);
+
+	/**
+	 * Reset I/O statistics specific for this bdev context.
+	 */
+	void (*reset_device_stat)(void *ctx);
+
+	/**
+	 * Dump I/O statistics specific for this bdev context.
+	 */
+	void (*dump_device_stat_json)(void *ctx, struct spdk_json_write_ctx *w);
 };
 
 /** bdev I/O completion status */
@@ -290,6 +378,11 @@ enum spdk_bdev_io_status {
 	SPDK_BDEV_IO_STATUS_FAILED = -1,
 	SPDK_BDEV_IO_STATUS_PENDING = 0,
 	SPDK_BDEV_IO_STATUS_SUCCESS = 1,
+
+	/* This may be used as the size of an error status array by negation.
+	 * Hence, this should be updated when adding new error statuses.
+	 */
+	SPDK_MIN_BDEV_IO_STATUS = SPDK_BDEV_IO_STATUS_AIO_ERROR,
 };
 
 struct spdk_bdev_name {
@@ -301,6 +394,13 @@ struct spdk_bdev_name {
 struct spdk_bdev_alias {
 	struct spdk_bdev_name alias;
 	TAILQ_ENTRY(spdk_bdev_alias) tailq;
+};
+
+struct spdk_bdev_module_claim {
+	struct spdk_bdev_module *module;
+	struct spdk_bdev_desc *desc;
+	char name[SPDK_BDEV_CLAIM_NAME_LEN];
+	TAILQ_ENTRY(spdk_bdev_module_claim) link;
 };
 
 typedef TAILQ_HEAD(, spdk_bdev_io) bdev_io_tailq_t;
@@ -331,6 +431,20 @@ struct spdk_bdev {
 
 	/** Number of blocks */
 	uint64_t blockcnt;
+
+	/**
+	 * Specifies whether the write_unit_size is mandatory or
+	 * only advisory. If set to true, the bdev layer will split
+	 * WRITE I/O that span the write_unit_size before
+	 * submitting them to the bdev module.
+	 *
+	 * This field takes precedence over split_on_optimal_io_boundary
+	 * for WRITE I/O if both are set to true.
+	 *
+	 * Note that this field cannot be used to force splitting of
+	 * UNMAP, WRITE_ZEROES or FLUSH I/O.
+	 */
+	bool split_on_write_unit;
 
 	/** Number of blocks required for write */
 	uint32_t write_unit_size;
@@ -383,11 +497,13 @@ struct spdk_bdev {
 	/* Maximum write zeroes in unit of logical block */
 	uint32_t max_write_zeroes;
 
+	/* Maximum copy size in unit of logical block */
+	uint32_t max_copy;
+
 	/**
 	 * UUID for this bdev.
 	 *
-	 * Fill with zeroes if no uuid is available. The bdev layer
-	 * will automatically populate this if necessary.
+	 * Fill with zeroes if no uuid is available.
 	 */
 	struct spdk_uuid uuid;
 
@@ -459,6 +575,25 @@ struct spdk_bdev {
 	 */
 	bool media_events;
 
+	/* Upon receiving a reset request, this is the amount of time in seconds
+	 * to wait for all I/O to complete before moving forward with the reset.
+	 * If all I/O completes prior to this time out, the reset will be skipped.
+	 * A value of 0 is special and will always send resets immediately, even
+	 * if there is no I/O outstanding.
+	 *
+	 * Use case example:
+	 * A shared bdev (e.g. multiple lvol bdevs sharing an underlying nvme bdev)
+	 * needs to be reset. For a non-zero value bdev reset code will wait
+	 * `reset_io_drain_timeout` seconds for outstanding IO that are present
+	 * on any bdev channel, before sending a reset down to the underlying device.
+	 * That way we can avoid sending "empty" resets and interrupting work of
+	 * other lvols that use the same bdev. SPDK_BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE
+	 * is a good choice for the value of this parameter.
+	 *
+	 * If this parameter remains equal to zero, the bdev reset will be forcefully
+	 * sent down to the device, without any delays and waiting for outstanding IO. */
+	uint16_t reset_io_drain_timeout;
+
 	/**
 	 * Pointer to the bdev module that registered this bdev.
 	 */
@@ -477,23 +612,61 @@ struct spdk_bdev {
 		/** True if the state of the QoS is being modified */
 		bool qos_mod_in_progress;
 
-		/** Mutex protecting claimed */
-		pthread_mutex_t mutex;
+		/**
+		 * SPDK spinlock protecting many of the internal fields of this structure. If
+		 * multiple locks need to be held, the following order must be used:
+		 *   g_bdev_mgr.spinlock
+		 *   bdev->internal.spinlock
+		 *   bdev_desc->spinlock
+		 *   bdev_module->internal.spinlock
+		 */
+		struct spdk_spinlock spinlock;
 
 		/** The bdev status */
 		enum spdk_bdev_status status;
 
 		/**
-		 * Pointer to the module that has claimed this bdev for purposes of creating virtual
-		 *  bdevs on top of it.  Set to NULL if the bdev has not been claimed.
+		 * How many bdev_examine() calls are iterating claim.v2.claims. When non-zero claims
+		 * that are released will be cleared but remain on the claims list until
+		 * bdev_examine() finishes. Must hold spinlock on all updates.
 		 */
-		struct spdk_bdev_module *claim_module;
+		uint32_t examine_in_progress;
+
+		/**
+		 * The claim type: used in conjunction with claim. Must hold spinlock on all
+		 * updates.
+		 */
+		enum spdk_bdev_claim_type claim_type;
+
+		/** Which module has claimed this bdev. Must hold spinlock on all updates. */
+		union __bdev_internal_claim {
+			/** Claims acquired with spdk_bdev_module_claim_bdev() */
+			struct __bdev_internal_claim_v1 {
+				/**
+				 * Pointer to the module that has claimed this bdev for purposes of
+				 * creating virtual bdevs on top of it. Set to NULL and set
+				 * claim_type to SPDK_BDEV_CLAIM_NONE if the bdev has not been
+				 * claimed.
+				 */
+				struct spdk_bdev_module		*module;
+			} v1;
+			/** Claims acquired with spdk_bdev_module_claim_bdev_desc() */
+			struct __bdev_internal_claim_v2 {
+				/** The claims on this bdev */
+				TAILQ_HEAD(v2_claims, spdk_bdev_module_claim) claims;
+				/** See spdk_bdev_claim_opts.shared_claim_key */
+				uint64_t key;
+			} v2;
+		} claim;
 
 		/** Callback function that will be called after bdev destruct is completed. */
 		spdk_bdev_unregister_cb	unregister_cb;
 
 		/** Unregister call context */
 		void *unregister_ctx;
+
+		/** Thread that issued the unregister.  The cb must be called on this thread. */
+		struct spdk_thread *unregister_td;
 
 		/** List of open descriptors for this block device. */
 		TAILQ_HEAD(, spdk_bdev_desc) open_descs;
@@ -506,8 +679,14 @@ struct spdk_bdev {
 		/** poller for tracking the queue_depth of a device, NULL if not tracking */
 		struct spdk_poller *qd_poller;
 
+		/** open descriptor to use qd_poller safely */
+		struct spdk_bdev_desc *qd_desc;
+
 		/** period at which we poll for queue depth information */
 		uint64_t period;
+
+		/** new period to be used to poll for queue depth information */
+		uint64_t new_period;
 
 		/** used to aggregate queue depth while iterating across the bdev's open channels */
 		uint64_t temporary_queue_depth;
@@ -522,7 +701,10 @@ struct spdk_bdev {
 		uint64_t weighted_io_time;
 
 		/** accumulated I/O statistics for previously deleted channels of this bdev */
-		struct spdk_bdev_io_stat stat;
+		struct spdk_bdev_io_stat *stat;
+
+		/** true if tracking the queue_depth of a device is in progress */
+		bool	qd_poll_in_progress;
 
 		/** histogram enabled on this bdev */
 		bool	histogram_enabled;
@@ -564,7 +746,8 @@ typedef void (*spdk_bdev_io_get_buf_cb)(struct spdk_io_channel *ch, struct spdk_
 typedef void (*spdk_bdev_io_get_aux_buf_cb)(struct spdk_io_channel *ch,
 		struct spdk_bdev_io *bdev_io, void *aux_buf);
 
-#define BDEV_IO_NUM_CHILD_IOV 32
+/* Maximum number of IOVs used for I/O splitting */
+#define SPDK_BDEV_IO_NUM_CHILD_IOV 32
 
 struct spdk_bdev_io {
 	/** The block device that this I/O belongs to. */
@@ -580,7 +763,7 @@ struct spdk_bdev_io {
 	struct iovec iov;
 
 	/** Array of iovecs used for I/O splitting. */
-	struct iovec child_iov[BDEV_IO_NUM_CHILD_IOV];
+	struct iovec child_iov[SPDK_BDEV_IO_NUM_CHILD_IOV];
 
 	union {
 		struct {
@@ -606,6 +789,10 @@ struct spdk_bdev_io {
 
 			/** Starting offset (in blocks) of the bdev for this I/O. */
 			uint64_t offset_blocks;
+
+			/** Memory domain and its context to be used by bdev modules */
+			struct spdk_memory_domain *memory_domain;
+			void *memory_domain_ctx;
 
 			/** stored user callback in case we split the I/O and use a temporary callback */
 			spdk_bdev_io_completion_cb stored_user_cb;
@@ -636,10 +823,26 @@ struct spdk_bdev_io {
 				 */
 				void *bio_cb_arg;
 			} abort;
+
+			struct {
+				/** The offset of next data/hole.  */
+				uint64_t offset;
+			} seek;
+
+			struct {
+				/** Starting source offset (in blocks) of the bdev for copy I/O. */
+				uint64_t src_offset_blocks;
+			} copy;
 		} bdev;
 		struct {
 			/** Channel reference held while messages for this reset are in progress. */
 			struct spdk_io_channel *ch_ref;
+			struct {
+				/* Handle to timed poller that checks each channel for outstanding IO. */
+				struct spdk_poller *poller;
+				/* Store calculated time value, when a poller should stop its work. */
+				uint64_t  stop_time_tsc;
+			} wait_poller;
 		} reset;
 		struct {
 			/** The outstanding request matching bio_cb_arg which this abort attempts to cancel. */
@@ -746,6 +949,7 @@ struct spdk_bdev_io {
 
 		/** if the request is double buffered, store original request iovs here */
 		struct iovec  bounce_iov;
+		struct iovec  bounce_md_iov;
 		struct iovec  orig_md_iov;
 		struct iovec *orig_iovs;
 		int           orig_iovcnt;
@@ -765,11 +969,18 @@ struct spdk_bdev_io {
 		/** Entry to the list io_submitted of struct spdk_bdev_channel */
 		TAILQ_ENTRY(spdk_bdev_io) ch_link;
 
+		/** iobuf queue entry */
+		struct spdk_iobuf_entry iobuf;
+
 		/** Enables queuing parent I/O when no bdev_ios available for split children. */
 		struct spdk_bdev_io_wait_entry waitq_entry;
 
-		/** Pointer to a structure passed by the user in ext API */
-		struct spdk_bdev_ext_io_opts *ext_opts;
+		/** Memory domain and its context passed by the user in ext API */
+		struct spdk_memory_domain *memory_domain;
+		void *memory_domain_ctx;
+
+		/** Data transfer completion callback */
+		void (*data_transfer_cpl)(void *ctx, int rc);
 	} internal;
 
 	/**
@@ -783,6 +994,8 @@ struct spdk_bdev_io {
 /**
  * Register a new bdev.
  *
+ * This function must be called from the SPDK app thread.
+ *
  * \param bdev Block device to register.
  *
  * \return 0 on success.
@@ -793,15 +1006,40 @@ int spdk_bdev_register(struct spdk_bdev *bdev);
 
 /**
  * Start unregistering a bdev. This will notify each currently open descriptor
- * on this bdev about the hotremoval in hopes that the upper layers will stop
- * using this bdev and manually close all the descriptors with spdk_bdev_close().
+ * on this bdev of the hotremoval to request the upper layers to stop using this bdev
+ * and manually close all the descriptors with spdk_bdev_close().
  * The actual bdev unregistration may be deferred until all descriptors are closed.
+ *
+ * The cb_fn will be called from the context of the same spdk_thread that called
+ * spdk_bdev_unregister.
+ *
+ * Note: spdk_bdev_unregister() can be unsafe unless the bdev is not opened before and
+ * closed after unregistration. It is recommended to use spdk_bdev_unregister_by_name().
  *
  * \param bdev Block device to unregister.
  * \param cb_fn Callback function to be called when the unregister is complete.
  * \param cb_arg Argument to be supplied to cb_fn
  */
 void spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg);
+
+/**
+ * Start unregistering a bdev. This will notify each currently open descriptor
+ * on this bdev of the hotremoval to request the upper layer to stop using this bdev
+ * and manually close all the descriptors with spdk_bdev_close().
+ * The actual bdev unregistration may be deferred until all descriptors are closed.
+ *
+ * The cb_fn will be called from the context of the same spdk_thread that called
+ * spdk_bdev_unregister.
+ *
+ * \param bdev_name Block device name to unregister.
+ * \param module Module by which the block device was registered.
+ * \param cb_fn Callback function to be called when the unregister is complete.
+ * \param cb_arg Argument to be supplied to cb_fn
+ *
+ * \return 0 on success, or suitable errno value otherwise
+ */
+int spdk_bdev_unregister_by_name(const char *bdev_name, struct spdk_bdev_module *module,
+				 spdk_bdev_unregister_cb cb_fn, void *cb_arg);
 
 /**
  * Invokes the unregister callback of a bdev backing a virtual bdev.
@@ -829,8 +1067,8 @@ void spdk_bdev_module_examine_done(struct spdk_bdev_module *module);
 /**
  * Indicate to the bdev layer that the module is done initializing.
  *
- * To be called once during module_init or asynchronously after
- * an asynchronous operation required for module initialization is completed.
+ * To be called once after an asynchronous operation required for module initialization is
+ * completed. If module->async_init is false, the module must not call this function.
  *
  * \param module Pointer to the module completing the initialization.
  */
@@ -901,7 +1139,8 @@ const struct spdk_bdev_aliases_list *spdk_bdev_get_aliases(const struct spdk_bde
  * callback on read path.  The buffer will be freed automatically
  * on \c spdk_bdev_free_io() call. This call will never fail.
  * In case of lack of memory given callback \c cb will be deferred
- * until enough memory is freed.
+ * until enough memory is freed.  This function *must* be called
+ * from the thread issuing \c bdev_io.
  *
  * \param bdev_io I/O to allocate buffer for.
  * \param cb callback to be called when the buffer is allocated
@@ -1009,6 +1248,15 @@ struct spdk_thread *spdk_bdev_io_get_thread(struct spdk_bdev_io *bdev_io);
  * \return the bdev module's I/O channel that the given bdev_io was submitted on.
  */
 struct spdk_io_channel *spdk_bdev_io_get_io_channel(struct spdk_bdev_io *bdev_io);
+
+/**
+ * Get the submit_tsc of a bdev I/O.
+ *
+ * \param bdev_io The bdev I/O to get the submit_tsc.
+ *
+ * \return The submit_tsc of the specified bdev I/O.
+ */
+uint64_t spdk_bdev_io_get_submit_tsc(struct spdk_bdev_io *bdev_io);
 
 /**
  * Resize for a bdev.
@@ -1221,6 +1469,25 @@ int spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_
 int spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bdev_io *bdev_io);
 
 /**
+ * Forwards I/O from an spdk_bdev_part to the underlying base bdev.
+ *
+ * This function will apply the offset_blocks the user provided to
+ * spdk_bdev_part_construct to the I/O. The user should not manually
+ * apply this offset before submitting any I/O through this function.
+ *
+ * This function enables user to specify a completion callback. It is required that
+ * the completion callback calls spdk_bdev_io_complete() for the forwarded I/O.
+ *
+ * \param ch The I/O channel associated with the spdk_bdev_part.
+ * \param bdev_io The I/O to be submitted to the underlying bdev.
+ * \param cb Called when the forwarded I/O completes.
+ * \return 0 on success or non-zero if submit request failed.
+ */
+int spdk_bdev_part_submit_request_ext(struct spdk_bdev_part_channel *ch,
+				      struct spdk_bdev_io *bdev_io,
+				      spdk_bdev_io_completion_cb cb);
+
+/**
  * Return a pointer to this part's spdk_bdev.
  *
  * \param part An spdk_bdev_part object.
@@ -1283,6 +1550,76 @@ int spdk_bdev_push_media_events(struct spdk_bdev *bdev, const struct spdk_bdev_m
  */
 void spdk_bdev_notify_media_management(struct spdk_bdev *bdev);
 
+typedef int (*spdk_bdev_io_fn)(void *ctx, struct spdk_bdev_io *bdev_io);
+typedef void (*spdk_bdev_for_each_io_cb)(void *ctx, int rc);
+
+/**
+ * Call the provided function on the appropriate thread for each bdev_io submitted
+ * to the provided bdev.
+ *
+ * Note: This function should be used only in the bdev module and it should be
+ * ensured that the bdev is not unregistered while executing the function.
+ * Both fn and cb are required to specify.
+ *
+ * \param bdev Block device to query.
+ * \param ctx Context passed to the function for each bdev_io and the completion
+ * callback function.
+ * \param fn Called on the appropriate thread for each bdev_io submitted to the bdev.
+ * \param cb Called when this operation completes.
+ */
+void spdk_bdev_for_each_bdev_io(struct spdk_bdev *bdev, void *ctx, spdk_bdev_io_fn fn,
+				spdk_bdev_for_each_io_cb cb);
+
+typedef void (*spdk_bdev_get_current_qd_cb)(struct spdk_bdev *bdev, uint64_t current_qd,
+		void *cb_arg, int rc);
+
+/**
+ * Measure and return the queue depth from a bdev.
+ *
+ * Note: spdk_bdev_get_qd() works only when the user enables queue depth sampling,
+ * while this new function works even when queue depth sampling is disabled.
+ * The returned queue depth may not be exact, for example, some additional I/Os may
+ * have been submitted or completed during the for_each_channel operation.
+ * This function should be used only in the bdev module and it should be ensured
+ * that the dev is not unregistered while executing the function.
+ * cb_fn is required to specify.
+ *
+ * \param bdev Block device to query.
+ * \param cb_fn Callback function to be called with queue depth measured for a bdev.
+ * \param cb_arg Argument to pass to callback function.
+ */
+void spdk_bdev_get_current_qd(struct spdk_bdev *bdev,
+			      spdk_bdev_get_current_qd_cb cb_fn, void *cb_arg);
+
+/**
+ * Add I/O statictics.
+ *
+ * \param total The aggregated I/O statictics.
+ * \param add The I/O statictics to be added.
+ */
+void spdk_bdev_add_io_stat(struct spdk_bdev_io_stat *total, struct spdk_bdev_io_stat *add);
+
+/**
+ * Output bdev I/O statictics information to a JSON stream.
+ *
+ * \param stat The bdev I/O statictics to output.
+ * \param w JSON write context.
+ */
+void spdk_bdev_dump_io_stat_json(struct spdk_bdev_io_stat *stat, struct spdk_json_write_ctx *w);
+
+enum spdk_bdev_reset_stat_mode {
+	SPDK_BDEV_RESET_STAT_ALL,
+	SPDK_BDEV_RESET_STAT_MAXMIN,
+};
+
+/**
+ * Reset I/O statictics structure.
+ *
+ * \param stat The I/O statictics to reset.
+ * \param mode The mode to reset I/O statictics.
+ */
+void spdk_bdev_reset_io_stat(struct spdk_bdev_io_stat *stat, enum spdk_bdev_reset_stat_mode mode);
+
 /*
  *  Macro used to register module for later initialization.
  */
@@ -1290,7 +1627,7 @@ void spdk_bdev_notify_media_management(struct spdk_bdev *bdev);
 static void __attribute__((constructor)) _spdk_bdev_module_register_##name(void) \
 { \
 	spdk_bdev_module_list_add(module); \
-} \
+}
 
 #endif /* __SPDK_BDEV_MODULE_ONLY */
 

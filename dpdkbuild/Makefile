@@ -1,35 +1,7 @@
-#
-#  BSD LICENSE
-#
-#  Copyright (c) Intel Corporation.
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation.
 #  All rights reserved.
 #  Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-#  Redistribution and use in source and binary forms, with or without
-#  modification, are permitted provided that the following conditions
-#  are met:
-#
-#    * Redistributions of source code must retain the above copyright
-#      notice, this list of conditions and the following disclaimer.
-#    * Redistributions in binary form must reproduce the above copyright
-#      notice, this list of conditions and the following disclaimer in
-#      the documentation and/or other materials provided with the
-#      distribution.
-#    * Neither the name of Intel Corporation nor the names of its
-#      contributors may be used to endorse or promote products derived
-#      from this software without specific prior written permission.
-#
-#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-#  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-#  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-#  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-#  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-#  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-#  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-#  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-#  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-#  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
@@ -51,6 +23,13 @@ ifeq ($(CONFIG_DEBUG),y)
 DPDK_OPTS += --buildtype=debug
 endif
 
+ifeq ($(CONFIG_LTO),y)
+# dpdk complains about compiler not supporting fat LTO objects when clang is in use so don't enable it in such a instance
+ifneq ($(CC_TYPE),clang)
+DPDK_OPTS += -Db_lto=true
+endif
+endif
+
 # the drivers we use
 DPDK_DRIVERS = bus bus/pci bus/vdev mempool/ring
 
@@ -60,35 +39,45 @@ DPDK_LIBS += kvargs telemetry
 # Governor required libs
 DPDK_LIBS += power timer ethdev net
 
-# common crypto/reduce drivers
-ifeq ($(findstring y,$(CONFIG_CRYPTO)$(CONFIG_REDUCE)),y)
+# common crypto/compress drivers
+ifeq ($(findstring y,$(CONFIG_DPDK_COMPRESSDEV)$(CONFIG_CRYPTO)$(CONFIG_VBDEV_COMPRESS)),y)
 DPDK_DRIVERS += crypto/qat compress/qat common/qat
 endif
 
 # common mlx5 libs
-ifeq ($(findstring y,$(CONFIG_CRYPTO_MLX5)$(CONFIG_REDUCE_MLX5)),y)
+ifeq ($(findstring y,$(CONFIG_CRYPTO_MLX5)$(CONFIG_VBDEV_COMPRESS_MLX5)),y)
 DPDK_DRIVERS += common/mlx5 bus/auxiliary
 endif
 
 ifeq ($(CONFIG_CRYPTO),y)
-DPDK_DRIVERS += crypto crypto/ipsec_mb
+DPDK_DRIVERS += crypto
 # aesni_mb is name of the PMD in DPDK 21.08 and earlier
 DPDK_DRIVERS += crypto/aesni_mb
 ifeq ($(CONFIG_CRYPTO_MLX5),y)
 DPDK_DRIVERS += crypto/mlx5
 endif
+ifeq ($(CONFIG_IPSEC_MB),y)
+DPDK_DRIVERS += crypto/ipsec_mb
 DPDK_CFLAGS += -I$(IPSEC_MB_DIR)
+# Workaround for DPDK 22.07 and DPDK 22.11.1,
+# will be able to remove starting with DPDK 23.03.
+ifeq ($(shell grep "define NO_COMPAT_IMB_API_053" $(SPDK_ROOT_DIR)/dpdk/drivers/crypto/qat/qat_sym_session.c), )
+DPDK_CFLAGS += -DNO_COMPAT_IMB_API_053
+endif
 DPDK_LDFLAGS += -L$(IPSEC_MB_DIR)
 endif
+endif
 
-ifeq ($(CONFIG_REDUCE),y)
+ifeq ($(findstring y,$(CONFIG_DPDK_COMPRESSDEV)$(CONFIG_VBDEV_COMPRESS)),y)
 DPDK_DRIVERS += compress compress/isal
-ifeq ($(CONFIG_REDUCE_MLX5),y)
+ifeq ($(CONFIG_VBDEV_COMPRESS_MLX5),y)
 DPDK_DRIVERS += compress/mlx5
 endif
 DPDK_CFLAGS += -I$(ISAL_DIR)
 DPDK_LDFLAGS += -L$(ISAL_DIR)/.libs -lisal
 endif
+
+DPDK_ENABLED_DRIVERS = $(shell echo $(DPDK_DRIVERS) | sed -E "s/ +/,/g")
 
 # crypto & compress deps
 DPDK_LIBS += reorder cryptodev
@@ -96,12 +85,12 @@ DPDK_LIBS += compressdev
 DPDK_LIBS += security
 
 # vhost and deps
-DPDK_LIBS += cryptodev mbuf cmdline meter hash vhost
+DPDK_LIBS += cryptodev mbuf cmdline meter hash vhost dmadev
 
 # raid5 deps
 DPDK_LIBS += hash rcu
 
-DPDK_OPTS += -Dmachine=$(TARGET_ARCHITECTURE)
+DPDK_OPTS += -Dcpu_instruction_set=$(TARGET_ARCHITECTURE)
 
 ifneq ($(CONFIG_CROSS_PREFIX),)
 ifeq ($(findstring mingw,$(CONFIG_CROSS_PREFIX)),mingw)
@@ -142,6 +131,14 @@ ifeq ($(shell test $(GCC_MAJOR) -ge 10 && echo 1), 1)
 #aesni_mb_logtype_driver symbol which is defined in header file and presented in several
 #translation units
 DPDK_CFLAGS += -Wno-stringop-overflow -fcommon
+ifeq ($(shell test $(GCC_MAJOR) -ge 12 && echo 1), 1)
+# 3. gcc 12 reports reading incorect size from a region. Seems like false positive,
+# see issue #2460
+DPDK_CFLAGS += -Wno-stringop-overread
+# 4. gcc 12 reports array subscript * is outside array bounds. Seems like false positive,
+# see issue #2668
+DPDK_CFLAGS += -Wno-array-bounds
+endif
 endif
 endif
 
@@ -150,7 +147,13 @@ SUB_CC = $(patsubst %ccc-analyzer,$(DEFAULT_CC),$(CC))
 
 DPDK_ALL_LIB_DIRS = $(shell find $(SPDK_ROOT_DIR)/dpdk/lib -mindepth 1 -maxdepth 1 -type d)
 DPDK_ALL_LIBS = $(DPDK_ALL_LIB_DIRS:$(SPDK_ROOT_DIR)/dpdk/lib/%=%)
-DPDK_DISABLED_LIBS = $(filter-out $(DPDK_LIBS),$(DPDK_ALL_LIBS))
+DPDK_DISABLED_LIBS = $(shell echo $(filter-out $(DPDK_LIBS),$(DPDK_ALL_LIBS)) | sed -E "s/ +/,/g")
+
+ifeq ($(shell grep -q disable_apps $(SPDK_ROOT_DIR)/dpdk/meson_options.txt && echo 1), 1)
+DPDK_ALL_APP_DIRS = $(shell find $(SPDK_ROOT_DIR)/dpdk/app -mindepth 1 -maxdepth 1 -type d)
+DPDK_ALL_APPS = $(DPDK_ALL_APP_DIRS:$(SPDK_ROOT_DIR)/dpdk/app/%=%)
+DPDK_DISABLED_APPS = -Ddisable_apps="$(shell echo $(DPDK_ALL_APPS) | sed -E "s/ +/,/g")"
+endif
 
 ifneq ($(OS),FreeBSD)
 SED_INPLACE_FLAG = "-i"
@@ -192,15 +195,8 @@ all: $(SPDK_ROOT_DIR)/dpdk/build-tmp
 
 $(SPDK_ROOT_DIR)/dpdk/build-tmp: $(SPDK_ROOT_DIR)/mk/cc.mk $(SPDK_ROOT_DIR)/include/spdk/config.h
 	$(Q)rm -rf $(SPDK_ROOT_DIR)/dpdk/build $(SPDK_ROOT_DIR)/dpdk/build-tmp
-	$(Q)cd "$(SPDK_ROOT_DIR)/dpdk"; CC="$(SUB_CC)" meson --prefix="$(MESON_PREFIX)" --libdir lib -Dc_args="$(DPDK_CFLAGS)" -Dc_link_args="$(DPDK_LDFLAGS)" $(DPDK_OPTS) -Denable_drivers="$(shell echo $(DPDK_DRIVERS) | sed -E "s/ +/,/g")" -Ddisable_libs="$(shell echo $(DPDK_DISABLED_LIBS) | sed -E "s/ +/,/g")" build-tmp
+	$(Q)cd "$(SPDK_ROOT_DIR)/dpdk"; CC="$(SUB_CC)" meson setup --prefix="$(MESON_PREFIX)" --libdir lib -Dc_args="$(DPDK_CFLAGS)" -Dc_link_args="$(DPDK_LDFLAGS)" $(DPDK_OPTS) -Denable_drivers="$(DPDK_ENABLED_DRIVERS)" -Ddisable_libs="$(DPDK_DISABLED_LIBS)" $(DPDK_DISABLED_APPS) $(DPDKBUILD_FLAGS) build-tmp
 	$(Q)sed $(SED_INPLACE_FLAG) 's/#define RTE_EAL_PMD_PATH .*/#define RTE_EAL_PMD_PATH ""/g' $(SPDK_ROOT_DIR)/dpdk/build-tmp/rte_build_config.h
-	$(Q) \
-	# TODO Meson build adds libbsd and/or libarchive dependency when it's available. This means any app will be \
-	# forced to link with -lbsd and/or -larchive, but only if it's available on the system. The clean way to \
-	# handle this would be to rely on DPDK's pkg-config file which will contain the -lbsd/-larchive when \
-	# required. For now just remove the dependencies. DPDK will fallback to its internal functions.
-	$(Q)sed $(SED_INPLACE_FLAG) 's/#define RTE_USE_LIBBSD .*//g' $(SPDK_ROOT_DIR)/dpdk/build-tmp/rte_build_config.h
-	$(Q)sed $(SED_INPLACE_FLAG) 's/#define RTE_HAS_LIBARCHIVE .*//g' $(SPDK_ROOT_DIR)/dpdk/build-tmp/rte_build_config.h
 
 clean:
 	$(Q)rm -rf $(SPDK_ROOT_DIR)/dpdk/build $(SPDK_ROOT_DIR)/dpdk/build-tmp

@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -228,6 +200,7 @@ bdev_rados_cluster_init(const char *user_id, const char *const *config,
 			if (ret < 0) {
 				SPDK_ERRLOG("Failed to set %s = %s\n", entry[0], entry[1]);
 				rados_shutdown(*cluster);
+				*cluster = NULL;
 				return -1;
 			}
 			entry += 2;
@@ -237,6 +210,7 @@ bdev_rados_cluster_init(const char *user_id, const char *const *config,
 		if (ret < 0) {
 			SPDK_ERRLOG("Failed to read conf file\n");
 			rados_shutdown(*cluster);
+			*cluster = NULL;
 			return -1;
 		}
 	}
@@ -245,6 +219,7 @@ bdev_rados_cluster_init(const char *user_id, const char *const *config,
 	if (ret < 0) {
 		SPDK_ERRLOG("Failed to connect to rbd_pool\n");
 		rados_shutdown(*cluster);
+		*cluster = NULL;
 		return -1;
 	}
 
@@ -358,6 +333,7 @@ bdev_rbd_init(struct bdev_rbd *rbd)
 
 	if (spdk_call_unaffinitized(bdev_rbd_init_context, rbd) == NULL) {
 		SPDK_ERRLOG("Cannot init rbd context for rbd=%p\n", rbd);
+		return -1;
 	}
 
 	return ret;
@@ -423,8 +399,8 @@ bdev_rbd_finish_aiocb(rbd_completion_t cb, void *arg)
 }
 
 static void
-bdev_rbd_start_aio(struct bdev_rbd *disk, struct spdk_bdev_io *bdev_io,
-		   struct iovec *iov, int iovcnt, uint64_t offset, size_t len)
+_bdev_rbd_start_aio(struct bdev_rbd *disk, struct spdk_bdev_io *bdev_io,
+		    struct iovec *iov, int iovcnt, uint64_t offset, size_t len)
 {
 	int ret;
 	struct bdev_rbd_io *rbd_io = (struct bdev_rbd_io *)bdev_io->driver_ctx;
@@ -449,8 +425,12 @@ bdev_rbd_start_aio(struct bdev_rbd *disk, struct spdk_bdev_io *bdev_io,
 		} else {
 			ret = rbd_aio_writev(image, iov, iovcnt, offset, rbd_io->comp);
 		}
+	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_UNMAP) {
+		ret = rbd_aio_discard(image, offset, len, rbd_io->comp);
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_FLUSH) {
 		ret = rbd_aio_flush(image, rbd_io->comp);
+	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE_ZEROES) {
+		ret = rbd_aio_write_zeroes(image, offset, len, rbd_io->comp, /* zero_flags */ 0, /* op_flags */ 0);
 	}
 
 	if (ret < 0) {
@@ -462,6 +442,20 @@ bdev_rbd_start_aio(struct bdev_rbd *disk, struct spdk_bdev_io *bdev_io,
 
 err:
 	bdev_rbd_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+}
+
+static void
+bdev_rbd_start_aio(void *ctx)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+	struct bdev_rbd *disk = (struct bdev_rbd *)bdev_io->bdev->ctxt;
+
+	_bdev_rbd_start_aio(disk,
+			    bdev_io,
+			    bdev_io->u.bdev.iovs,
+			    bdev_io->u.bdev.iovcnt,
+			    bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen,
+			    bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 }
 
 static int bdev_rbd_library_init(void);
@@ -482,32 +476,56 @@ static struct spdk_bdev_module rbd_if = {
 };
 SPDK_BDEV_MODULE_REGISTER(rbd, &rbd_if)
 
+static int bdev_rbd_reset_timer(void *arg);
+
+static void
+bdev_rbd_check_outstanding_ios(struct spdk_bdev *bdev, uint64_t current_qd,
+			       void *cb_arg, int rc)
+{
+	struct bdev_rbd *disk = cb_arg;
+	enum spdk_bdev_io_status bio_status;
+
+	if (rc == 0 && current_qd > 0) {
+		disk->reset_timer = SPDK_POLLER_REGISTER(bdev_rbd_reset_timer, disk, 1000);
+		return;
+	}
+
+	if (rc != 0) {
+		bio_status = SPDK_BDEV_IO_STATUS_FAILED;
+	} else {
+		bio_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	}
+
+	bdev_rbd_io_complete(disk->reset_bdev_io, bio_status);
+	disk->reset_bdev_io = NULL;
+}
+
 static int
 bdev_rbd_reset_timer(void *arg)
 {
 	struct bdev_rbd *disk = arg;
 
-	/*
-	 * TODO: This should check if any I/O is still in flight before completing the reset.
-	 * For now, just complete after the timer expires.
-	 */
-	bdev_rbd_io_complete(disk->reset_bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 	spdk_poller_unregister(&disk->reset_timer);
-	disk->reset_bdev_io = NULL;
+
+	spdk_bdev_get_current_qd(&disk->disk, bdev_rbd_check_outstanding_ios, disk);
 
 	return SPDK_POLLER_BUSY;
 }
 
 static void
-bdev_rbd_reset(struct bdev_rbd *disk, struct spdk_bdev_io *bdev_io)
+bdev_rbd_reset(void *ctx)
 {
+	struct spdk_bdev_io *bdev_io = ctx;
+	struct bdev_rbd *disk = (struct bdev_rbd *)bdev_io->bdev->ctxt;
+
 	/*
 	 * HACK: Since librbd doesn't provide any way to cancel outstanding aio, just kick off a
-	 * timer to wait for in-flight I/O to complete.
+	 * poller to wait for in-flight I/O to complete.
 	 */
 	assert(disk->reset_bdev_io == NULL);
 	disk->reset_bdev_io = bdev_io;
-	disk->reset_timer = SPDK_POLLER_REGISTER(bdev_rbd_reset_timer, disk, 1 * 1000 * 1000);
+
+	bdev_rbd_reset_timer(disk);
 }
 
 static void
@@ -582,46 +600,7 @@ bdev_rbd_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		return;
 	}
 
-	bdev_rbd_start_aio(disk,
-			   bdev_io,
-			   bdev_io->u.bdev.iovs,
-			   bdev_io->u.bdev.iovcnt,
-			   bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen,
-			   bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
-}
-
-static void
-_bdev_rbd_submit_request(void *ctx)
-{
-	struct spdk_bdev_io *bdev_io = ctx;
-	struct bdev_rbd *disk = (struct bdev_rbd *)bdev_io->bdev->ctxt;
-
-	switch (bdev_io->type) {
-	case SPDK_BDEV_IO_TYPE_READ:
-		spdk_bdev_io_get_buf(bdev_io, bdev_rbd_get_buf_cb,
-				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
-		break;
-
-	case SPDK_BDEV_IO_TYPE_WRITE:
-	case SPDK_BDEV_IO_TYPE_FLUSH:
-		bdev_rbd_start_aio(disk,
-				   bdev_io,
-				   bdev_io->u.bdev.iovs,
-				   bdev_io->u.bdev.iovcnt,
-				   bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen,
-				   bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
-		break;
-
-	case SPDK_BDEV_IO_TYPE_RESET:
-		bdev_rbd_reset((struct bdev_rbd *)bdev_io->bdev->ctxt,
-			       bdev_io);
-		break;
-
-	default:
-		SPDK_ERRLOG("Unsupported IO type =%d\n", bdev_io->type);
-		bdev_rbd_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		break;
-	}
+	spdk_thread_exec_msg(disk->main_td, bdev_rbd_start_aio, bdev_io);
 }
 
 static void
@@ -632,10 +611,27 @@ bdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 	struct bdev_rbd *disk = (struct bdev_rbd *)bdev_io->bdev->ctxt;
 
 	rbd_io->submit_td = submit_td;
-	if (disk->main_td != submit_td) {
-		spdk_thread_send_msg(disk->main_td, _bdev_rbd_submit_request, bdev_io);
-	} else {
-		_bdev_rbd_submit_request(bdev_io);
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		spdk_bdev_io_get_buf(bdev_io, bdev_rbd_get_buf_cb,
+				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+		break;
+
+	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		spdk_thread_exec_msg(disk->main_td, bdev_rbd_start_aio, bdev_io);
+		break;
+
+	case SPDK_BDEV_IO_TYPE_RESET:
+		spdk_thread_exec_msg(disk->main_td, bdev_rbd_reset, bdev_io);
+		break;
+
+	default:
+		SPDK_ERRLOG("Unsupported IO type =%d\n", bdev_io->type);
+		bdev_rbd_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		break;
 	}
 }
 
@@ -645,8 +641,10 @@ bdev_rbd_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_RESET:
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		return true;
 
 	default:
@@ -1269,33 +1267,49 @@ bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
 }
 
 void
-bdev_rbd_delete(struct spdk_bdev *bdev, spdk_delete_rbd_complete cb_fn, void *cb_arg)
+bdev_rbd_delete(const char *name, spdk_delete_rbd_complete cb_fn, void *cb_arg)
 {
-	if (!bdev || bdev->module != &rbd_if) {
-		cb_fn(cb_arg, -ENODEV);
-		return;
-	}
+	int rc;
 
-	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+	rc = spdk_bdev_unregister_by_name(name, &rbd_if, cb_fn, cb_arg);
+	if (rc != 0) {
+		cb_fn(cb_arg, rc);
+	}
+}
+
+static void
+dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *ctx)
+{
 }
 
 int
-bdev_rbd_resize(struct spdk_bdev *bdev, const uint64_t new_size_in_mb)
+bdev_rbd_resize(const char *name, const uint64_t new_size_in_mb)
 {
+	struct spdk_bdev_desc *desc;
+	struct spdk_bdev *bdev;
 	struct spdk_io_channel *ch;
 	struct bdev_rbd_io_channel *rbd_io_ch;
-	int rc;
+	int rc = 0;
 	uint64_t new_size_in_byte;
 	uint64_t current_size_in_mb;
 
+	rc = spdk_bdev_open_ext(name, false, dummy_bdev_event_cb, NULL, &desc);
+	if (rc != 0) {
+		return rc;
+	}
+
+	bdev = spdk_bdev_desc_get_bdev(desc);
+
 	if (bdev->module != &rbd_if) {
-		return -EINVAL;
+		rc = -EINVAL;
+		goto exit;
 	}
 
 	current_size_in_mb = bdev->blocklen * bdev->blockcnt / (1024 * 1024);
 	if (current_size_in_mb > new_size_in_mb) {
-		SPDK_ERRLOG("The new bdev size must be lager than current bdev size.\n");
-		return -EINVAL;
+		SPDK_ERRLOG("The new bdev size must be larger than current bdev size.\n");
+		rc = -EINVAL;
+		goto exit;
 	}
 
 	ch = bdev_rbd_get_io_channel(bdev);
@@ -1306,15 +1320,16 @@ bdev_rbd_resize(struct spdk_bdev *bdev, const uint64_t new_size_in_mb)
 	spdk_put_io_channel(ch);
 	if (rc != 0) {
 		SPDK_ERRLOG("failed to resize the ceph bdev.\n");
-		return rc;
+		goto exit;
 	}
 
 	rc = spdk_bdev_notify_blockcnt_change(bdev, new_size_in_byte / bdev->blocklen);
 	if (rc != 0) {
 		SPDK_ERRLOG("failed to notify block cnt change.\n");
-		return rc;
 	}
 
+exit:
+	spdk_bdev_close(desc);
 	return rc;
 }
 

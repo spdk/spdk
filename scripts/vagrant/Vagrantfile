@@ -13,11 +13,15 @@ def get_box_type(distro, force_distro)
     'ubuntu1604' => 'peru/ubuntu-16.04-server-amd64',
     'ubuntu1804' => 'peru/ubuntu-18.04-server-amd64',
     'ubuntu2004' => 'peru/ubuntu-20.04-server-amd64',
+    'ubuntu2204' => 'generic/ubuntu2204',
     'fedora33'   => 'generic/fedora33',
-    'fedora34'   => 'fedora/34-cloud-base',
-    # Placeholder for F35, no generic image on Vagrant Cloud yet
+    'fedora34'   => 'generic/fedora34',
+    'fedora35'   => 'generic/fedora35',
+    'fedora36'   => 'generic/fedora36',
     'arch'       => 'generic/arch',
     'freebsd12'  => 'generic/freebsd12',
+    'freebsd13'  => 'generic/freebsd13',
+    'rocky8'     => 'rockylinux/8'
   }
   abort("Invalid argument! #{distro}") unless distro_to_type.key?(distro) || force_distro
 
@@ -132,6 +136,8 @@ def setup_nvme_disk(libvirt, disk, index)
   nvme_cmbs=(ENV['NVME_CMB'] || "").split(',')
   nvme_pmrs=(ENV['NVME_PMR'] || "").split(',')
   nvme_zns=(ENV['NVME_ZNS'] || "").split(',')
+  nvme_ms=(ENV['NVME_MS'] || "").split(',')
+
 
   namespace_disks = []
   pmr_cmdline = ""
@@ -184,10 +190,11 @@ def setup_nvme_disk(libvirt, disk, index)
       next
     end
     zoned = nvme_zns[index].nil? ? "false" : "true"
+    ms = nvme_ms[index].nil? ? "" : ",ms=64"
     libvirt.qemuargs :value => "-drive"
     libvirt.qemuargs :value => "format=raw,file=#{disk},if=none,id=#{nvme_disk_id}-drive#{nsid}"
     libvirt.qemuargs :value => "-device"
-    libvirt.qemuargs :value => "nvme-ns,drive=#{nvme_disk_id}-drive#{nsid},bus=#{nvme_disk_id},nsid=#{nsid + 1},zoned=#{zoned},logical_block_size=4096,physical_block_size=4096"
+    libvirt.qemuargs :value => "nvme-ns,drive=#{nvme_disk_id}-drive#{nsid},bus=#{nvme_disk_id},nsid=#{nsid + 1},zoned=#{zoned},logical_block_size=4096,physical_block_size=4096#{ms}"
   }
 
 end
@@ -308,11 +315,6 @@ provider = (ENV['SPDK_VAGRANT_PROVIDER'] || "virtualbox")
 vmcpu = (ENV['SPDK_VAGRANT_VMCPU'] || 2)
 vmram = (ENV['SPDK_VAGRANT_VMRAM'] || 4096)
 
-# generic/freebsd boxes do not work properly with vagrant-proxyconf and
-# have issues installing rsync and sshfs for syncing files. NFS is
-# pre-installed, so use it.
-# generic/fedora boxes on the other hand have problems running NFS
-# service so use sshfs+rsync combo instead.
 force_distro = ENV['FORCE_DISTRO'] == "true" ? true : false
 
 distro_to_use = get_box_type(distro, force_distro)
@@ -342,8 +344,6 @@ Vagrant.configure(2) do |config|
   # Copy in the user's tools if they exists
   copy_vagrant_tools(config,files_sync_backend)
 
-  # rsync the spdk directory if provision hasn't happened yet
-  # Warning: rsync does not work with freebsd boxes, so this step is disabled
   copy_spdk_dir(config, files_sync_backend)
 
   # rsync artifacts from build
@@ -355,11 +355,15 @@ Vagrant.configure(2) do |config|
   # Virtualbox configuration
   setup_virtualbox(config,vmcpu,vmram)
 
-  # This setup was Tested on Fedora 27
-  # libvirt configuration need modern Qemu(tested on 2.10) & vagrant-libvirt in version 0.0.39+
-  # There are few limitation for SElinux - The file added outside libvirt must have proper SE ACL policy or setenforce 0
   setup_libvirt(config,vmcpu,vmram,distro)
 
   # provision the vm with all of the necessary spdk dependencies for running the autorun.sh tests
   deploy_test_vm(config, distro, plugins_sync_backend)
+end
+
+if ENV['EXTRA_VAGRANTFILES']
+  loaders = (ENV['EXTRA_VAGRANTFILES'].split(','))
+  loaders.each { |loader|
+    load loader if File.exists?(loader)
+  }
 end

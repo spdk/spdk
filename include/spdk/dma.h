@@ -1,33 +1,5 @@
-/*-
- *   BSD LICENSE
- *
+/*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Nvidia Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 
@@ -58,6 +30,8 @@ enum spdk_dma_device_type {
 	/** DMA devices are capable of performing DMA operations on memory domains using physical or
 	 *  I/O virtual addresses. */
 	SPDK_DMA_DEVICE_TYPE_DMA,
+	/** Virtual memory domain representing memory being transformed by accel framework */
+	SPDK_DMA_DEVICE_TYPE_ACCEL,
 	/**
 	 * Start of the range of vendor-specific DMA device types
 	 */
@@ -71,7 +45,7 @@ enum spdk_dma_device_type {
 struct spdk_memory_domain;
 
 /**
- * Definition of completion callback to be called by pull or push functions.
+ * Definition of completion callback to be called by pull, push or memzero functions.
  *
  * \param ctx User context passed to pull of push functions
  * \param rc Result of asynchronous data pull or push function
@@ -116,6 +90,20 @@ typedef int (*spdk_memory_domain_push_data_cb)(struct spdk_memory_domain *dst_do
 		void *dst_domain_ctx,
 		struct iovec *dst_iov, uint32_t dst_iovcnt, struct iovec *src_iov, uint32_t src_iovcnt,
 		spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg);
+
+/**
+ * Definition of function which asynchronously fills memory in \b domain with zeroes
+ *
+ * \param domain Memory domain in which address space data buffer is located
+ * \param domain_ctx User defined context
+ * \param iov iov in \b domain memory space to be filled with zeroes
+ * \param iovcnt \b iov array size
+ * \param cpl_cb Completion callback
+ * \param cpl_cb_arg Completion callback argument
+ * \return 0 on success, negated errno on failure
+ */
+typedef int (*spdk_memory_domain_memzero_cb)(struct spdk_memory_domain *domain, void *domain_ctx,
+		struct iovec *iov, uint32_t iovcnt, spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg);
 
 struct spdk_memory_domain_translation_result {
 	/** size of this structure in bytes */
@@ -229,6 +217,15 @@ void spdk_memory_domain_set_push(struct spdk_memory_domain *domain,
 				 spdk_memory_domain_push_data_cb push_cb);
 
 /**
+ * Set memzero function for memory domain. Overwrites existing memzero function.
+ *
+ * \param domain Memory domain
+ * \param memzero_cb memzero function
+ */
+void spdk_memory_domain_set_memzero(struct spdk_memory_domain *domain,
+				    spdk_memory_domain_memzero_cb memzero_cb);
+
+/**
  * Get the context passed by the user in \ref spdk_memory_domain_create
  *
  * \param domain Memory domain
@@ -318,6 +315,21 @@ int spdk_memory_domain_push_data(struct spdk_memory_domain *dst_domain, void *ds
 int spdk_memory_domain_translate_data(struct spdk_memory_domain *src_domain, void *src_domain_ctx,
 				      struct spdk_memory_domain *dst_domain, struct spdk_memory_domain_translation_ctx *dst_domain_ctx,
 				      void *addr, size_t len, struct spdk_memory_domain_translation_result *result);
+
+/**
+ * Fills memory in \b domain with zeroes
+ *
+ * \param domain Memory domain in which address space data buffer is located
+ * \param domain_ctx User defined context
+ * \param iov iov in \b domain memory space to be filled with zeroes
+ * \param iovcnt \b iov array size
+ * \param cpl_cb Completion callback
+ * \param cpl_cb_arg Completion callback argument
+ * \return 0 on success, negated errno on failure. memzero implementation must only call the callback when 0
+ * is returned
+ */
+int spdk_memory_domain_memzero(struct spdk_memory_domain *domain, void *domain_ctx,
+			       struct iovec *iov, uint32_t iovcnt, spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg);
 
 /**
  * Get the first memory domain.

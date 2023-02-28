@@ -30,9 +30,11 @@
 	spdk_mempool_put_bulk;
 	spdk_mempool_count;
 	spdk_mempool_obj_iter;
+	spdk_mempool_mem_iter;
 	spdk_mempool_lookup;
 	spdk_env_get_core_count;
 	spdk_env_get_current_core;
+	spdk_env_get_main_core;
 	spdk_env_get_first_core;
 	spdk_env_get_last_core;
 	spdk_env_get_next_core;
@@ -97,6 +99,7 @@
 	spdk_pci_hook_device;
 	spdk_pci_unhook_device;
 	spdk_pci_device_get_type;
+	spdk_pci_register_device_provider;
 	spdk_unaffinitize_thread;
 	spdk_call_unaffinitized;
 	spdk_mem_map_alloc;

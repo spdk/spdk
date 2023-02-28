@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation
+#  All rights reserved.
+#
 set -e
 
 # Dir variables and sourcing common files
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 plugin_dir=$rootdir/build/fio
-bdevperf_dir=$rootdir/test/bdev/bdevperf
-nvmeperf_dir=$rootdir/build/examples
 source $testdir/common.sh
 source $rootdir/scripts/common.sh || exit 1
 source $rootdir/test/common/autotest_common.sh
@@ -87,8 +89,10 @@ function usage() {
 	echo "    --driver=STR            Selects tool used for testing. Choices available:"
 	echo "                               - spdk-perf-nvme (SPDK nvme perf)"
 	echo "                               - spdk-perf-bdev (SPDK bdev perf)"
+	echo "                               - spdk-perf-xnvme-bdev (SPDK xnvme bdev perf with io_uring io_mechanism)"
 	echo "                               - spdk-plugin-nvme (SPDK nvme fio plugin)"
 	echo "                               - spdk-plugin-bdev (SPDK bdev fio plugin)"
+	echo "                               - spdk-plugin-bdev-xnvme (SPDK bdev fio plugin with xnvme bdevs)"
 	echo "                               - kernel-classic-polling"
 	echo "                               - kernel-hybrid-polling"
 	echo "                               - kernel-libaio"
@@ -198,14 +202,25 @@ echo "num_of_disks,iops,avg_lat[usec],p90[usec],p99[usec],p99.99[usec],stdev[use
 
 trap 'rm -f *.state $testdir/bdev.conf; kill $perf_pid; wait $dpdk_mem_pid; print_backtrace' ERR SIGTERM SIGABRT
 
-if [[ "$PLUGIN" =~ "bdev" ]]; then
+if [[ "$PLUGIN" =~ "xnvme" ]]; then
+	create_spdk_xnvme_bdev_conf "$BDEV_CACHE" "$BDEV_POOL"
+elif [[ "$PLUGIN" =~ "bdev" ]]; then
 	create_spdk_bdev_conf "$BDEV_CACHE" "$BDEV_POOL"
+fi
+
+if [[ -s $testdir/bdev.conf ]]; then
 	echo "INFO: Generated bdev.conf file:"
 	cat $testdir/bdev.conf
 fi
+
 verify_disk_number
-DISK_NAMES=$(get_disks $PLUGIN)
-DISKS_NUMA=$(get_numa_node $PLUGIN "$DISK_NAMES")
+if [[ "$PLUGIN" =~ "xnvme" ]]; then
+	DISK_NAMES=$(get_disks)
+	DISKS_NUMA=$(get_numa_node "" "$DISK_NAMES")
+else
+	DISK_NAMES=$(get_disks $PLUGIN)
+	DISKS_NUMA=$(get_numa_node $PLUGIN "$DISK_NAMES")
+fi
 CORES=$(get_cores "$CPUS_ALLOWED")
 NO_CORES_ARRAY=($CORES)
 NO_CORES=${#NO_CORES_ARRAY[@]}
@@ -214,7 +229,7 @@ if $PRECONDITIONING; then
 	preconditioning
 fi
 
-if [[ "$PLUGIN" =~ "kernel" ]]; then
+if [[ "$PLUGIN" =~ "kernel" || "$PLUGIN" =~ "xnvme" ]]; then
 	$rootdir/scripts/setup.sh reset
 	fio_ioengine_opt="${KERNEL_ENGINES[$PLUGIN]}"
 
@@ -226,7 +241,7 @@ if [[ "$PLUGIN" =~ "kernel" ]]; then
 		for disk in $DISK_NAMES; do
 			echo 0 > /sys/block/$disk/queue/io_poll_delay
 		done
-	elif [[ $PLUGIN = "kernel-io-uring" ]]; then
+	elif [[ $PLUGIN = "kernel-io-uring" || $PLUGIN =~ "xnvme" ]]; then
 		modprobe -rv nvme
 		modprobe nvme poll_queues=8
 		wait_for_nvme_reload $DISK_NAMES
@@ -304,7 +319,7 @@ mean_slat_disks_usec=0
 mean_clat_disks_usec=0
 #Run each workload $REPEAT_NO times
 for ((j = 0; j < REPEAT_NO; j++)); do
-	if [ $PLUGIN = "spdk-perf-bdev" ]; then
+	if [[ $PLUGIN == "spdk-perf-bdev" || $PLUGIN =~ "xnvme-bdev" ]]; then
 		run_bdevperf > $TMP_RESULT_FILE
 		read -r iops bandwidth <<< $(get_bdevperf_results)
 		iops_disks=$(bc "$iops_disks + $iops")
@@ -378,7 +393,7 @@ fi
 #Write results to csv file
 iops_disks=$(bc "$iops_disks / $REPEAT_NO")
 bw=$(bc "$bw / $REPEAT_NO")
-if [[ "$PLUGIN" =~ "plugin" ]] || [[ "$PLUGIN" =~ "kernel" ]]; then
+if [[ "$PLUGIN" =~ "plugin" || "$PLUGIN" =~ "kernel" ]] && [[ ! $PLUGIN =~ "xnvme-bdev" ]]; then
 	mean_lat_disks_usec=$(bc "$mean_lat_disks_usec / $REPEAT_NO")
 	p90_lat_disks_usec=$(bc "$p90_lat_disks_usec / $REPEAT_NO")
 	p99_lat_disks_usec=$(bc "$p99_lat_disks_usec / $REPEAT_NO")
@@ -397,7 +412,7 @@ if [[ -n "$CPUFREQ" ]]; then
 	cpupower frequency-set -g $cpu_governor
 fi
 
-if [ $PLUGIN = "kernel-io-uring" ]; then
+if [[ $PLUGIN = "kernel-io-uring" || $PLUGIN =~ "xnvme" ]]; then
 	# Reload the nvme driver so that other test runs are not affected
 	modprobe -rv nvme
 	modprobe nvme

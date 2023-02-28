@@ -92,6 +92,10 @@
 	# public functions in file.h
 	spdk_posix_file_load;
 
+	# public functions in hexlify.h
+	spdk_hexlify;
+	spdk_unhexlify;
+
 	# public functions in pipe.h
 	spdk_pipe_create;
 	spdk_pipe_destroy;
@@ -119,13 +123,26 @@
 	spdk_mem_all_zero;
 	spdk_strtol;
 	spdk_strtoll;
+	spdk_strarray_from_string;
+	spdk_strarray_dup;
+	spdk_strarray_free;
+	spdk_strcpy_replace;
 
 	# public functions in util.h
 	spdk_u32log2;
 	spdk_u64log2;
 	spdk_iovcpy;
+	spdk_iovmove;
 	spdk_ioviter_first;
 	spdk_ioviter_next;
+	spdk_iov_memset;
+	spdk_iov_one;
+	spdk_iov_xfer_init;
+	spdk_iov_xfer_from_buf;
+	spdk_iov_xfer_to_buf;
+	spdk_copy_iovs_to_buf;
+	spdk_copy_buf_to_iovs;
+	spdk_memset_s;
 
 	# resolvers for functions in util.h
 	spdk_u32log2.resolver;
@@ -136,16 +153,22 @@
 	spdk_uuid_fmt_lower;
 	spdk_uuid_compare;
 	spdk_uuid_generate;
+	spdk_uuid_generate_sha1;
 	spdk_uuid_copy;
 
 	# public functions in fd_group.h
 	spdk_fd_group_create;
 	spdk_fd_group_destroy;
+	spdk_fd_group_get_epoll_event;
 	spdk_fd_group_wait;
 	spdk_fd_group_add;
 	spdk_fd_group_remove;
 	spdk_fd_group_event_modify;
 	spdk_fd_group_get_fd;
+
+	# public functions in xor.h
+	spdk_xor_gen;
+	spdk_xor_get_optimal_alignment;
 
 	# public functions in zipf.h
 	spdk_zipf_create;

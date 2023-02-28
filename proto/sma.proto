@@ -1,0 +1,217 @@
+syntax = "proto3";
+
+import "nvme.proto";
+import "virtio_blk.proto";
+import "nvmf_tcp.proto";
+import "nvmf.proto";
+
+// This file provides the generic definitions for the Storage Management Agent
+// gRPC calls.  All of the methods are supposed to be idempotent.  Errors are
+// reported as standard gRPC status codes.
+
+package sma;
+
+option go_package = "spdk.io/sma";
+
+// Enumeration defining types of devices
+enum DeviceType {
+  DEVICE_TYPE_INVALID = 0;
+  DEVICE_TYPE_NVME = 1;
+  DEVICE_TYPE_VIRTIO_BLK = 2;
+  DEVICE_TYPE_NVMF_TCP = 3;
+}
+
+// Volume's crypto parameters
+message VolumeCryptoParameters {
+  // Key to be used for encryption
+  bytes key = 1;
+  // Second key (only required by some ciphers)
+  bytes key2 = 2;
+  enum Cipher {
+    AES_CBC = 0;
+    AES_XTS = 1;
+  }
+  // Cipher to use
+  Cipher cipher = 3;
+  // Tweak mode - determine how nvme LBA is converted into tweak
+  enum TweakMode {
+    // default for SPDK bdev_crypto
+    // Tweak[127:0] = {64'b0, LBA[63:0]}
+    TWEAK_MODE_SIMPLE_LBA = 0;
+
+    // Tweak[127:0] = {1’b0, ~LBA[62:0], LBA[63:0]}
+    TWEAK_MODE_JOIN_NEG_LBA_WITH_LBA = 1;
+
+    // tweak is derived from nvme LBA that is internally incremented by 1 for every 512 bytes processed
+    // so initial lba = (BLOCK_SIZE_IN_BYTES / 512) * LBA
+    // Tweak[127:0] = {lba[127:0]}
+    TWEAK_MODE_INCR_512_FULL_LBA = 2;
+
+    // tweak is derived from nvme LBA that is internally incremented by 1 for every 512 bytes processed
+    // so initial lba = (BLOCK_SIZE_IN_BYTES / 512) * LBA
+    // Tweak[127:0] = {lba[63:0], 64'b0}
+    TWEAK_MODE_INCR_512_UPPER_LBA = 3;
+  }
+  TweakMode tweak_mode = 4;
+}
+
+// Parameters describing a volume
+message VolumeParameters {
+  // Volume GUID/UUID
+  bytes volume_id = 1;
+  oneof connection_params {
+    // NVMeoF volume
+    nvmf.VolumeConnectionParameters nvmf = 2;
+  }
+  // Crypto parameters (optional)
+  VolumeCryptoParameters crypto = 3;
+}
+
+// Create device request
+message CreateDeviceRequest {
+  // Volume to immediately attach to the created device.  This field may be
+  // optional for some device types (e.g. NVMe), while it may be required for
+  // others (e.g. virtio-blk).
+  VolumeParameters volume = 1;
+  // Device-specific parameters
+  oneof params {
+    // NVMe parameters
+    nvme.DeviceParameters nvme = 2;
+    // Virtio-blk parameters
+    virtio_blk.DeviceParameters virtio_blk = 3;
+    // NVMe/TCP parameters
+    nvmf_tcp.DeviceParameters nvmf_tcp = 4;
+  }
+}
+
+// Create device response
+message CreateDeviceResponse {
+  // Device handle that can uniquely identify a device within an instance of
+  // Storage Management Agent
+  string handle = 1;
+}
+
+// Delete device request
+message DeleteDeviceRequest {
+  // Device handle
+  string handle = 1;
+}
+
+// Delete device response
+message DeleteDeviceResponse {}
+
+// Attach volume request
+message AttachVolumeRequest {
+  // Volume parameters
+  VolumeParameters volume = 1;
+  // Device handle
+  string device_handle = 2;
+}
+
+// Attach volume response
+message AttachVolumeResponse {}
+
+// Detach volume request
+message DetachVolumeRequest {
+  // Volume GUID/UUID
+  bytes volume_id = 1;
+  // Device handle
+  string device_handle = 2;
+}
+
+// Detach volume response
+message DetachVolumeResponse {}
+
+// QoS limit values.  0 means unlimited, while UINT64_MAX means to leave the
+// current limit value unchanged.  If one of the limits isn't supported by a
+// given device/volume, it must be set to 0.
+message QosLimit {
+  // Read kIOPS
+  uint64 rd_iops = 1;
+  // Write kIOPS
+  uint64 wr_iops = 2;
+  // Read/write kIOPS
+  uint64 rw_iops = 3;
+  // Read bandwidth (MB/s)
+  uint64 rd_bandwidth = 4;
+  // Write bandwidth (MB/s)
+  uint64 wr_bandwidth = 5;
+  // Read/write bandwidth (MB/s)
+  uint64 rw_bandwidth = 6;
+}
+
+// SetQos request
+message SetQosRequest {
+  // Device handle
+  string device_handle = 1;
+  // GUID/UUID of a volume to configure QoS on.  If this parameter is omitted,
+  // the QoS will be set up on the whole device (all volumes attached to that
+  // device will share QoS settings).  Some device types might only support
+  // configuring QoS on per-device (volume_id must be empty) or per-volume level
+  // (volume_id cannot be empty).  This information can be obtained by sending a
+  // GetQosCapabilities request.
+  bytes volume_id = 2;
+  // Maximum allowed IOPS/bandwidth
+  QosLimit maximum = 3;
+}
+
+// SetQos response
+message SetQosResponse {}
+
+// Get QoS capabilities request
+message GetQosCapabilitiesRequest {
+  // Type of a device to query for QoS capabilities
+  DeviceType device_type = 1;
+}
+
+// Get QoS capabilities response
+message GetQosCapabilitiesResponse {
+  message QosCapabilities {
+    // Read IOPS
+    bool rd_iops = 1;
+    // Write IOPS
+    bool wr_iops = 2;
+    // Read/write IOPS
+    bool rw_iops = 3;
+    // Read bandwidth
+    bool rd_bandwidth = 4;
+    // Write bandwidth
+    bool wr_bandwidth = 5;
+    // Read/write bandwidth
+    bool rw_bandwidth = 6;
+  }
+  // Device level maximum QoS limits
+  QosCapabilities max_device_caps = 1;
+  // Volume level maximum QoS limits
+  QosCapabilities max_volume_caps = 2;
+};
+
+// Storage Management Agent gRPC service definition
+service StorageManagementAgent {
+  // Creates a new device.  A device is an entity that can be used to expose
+  // volumes (e.g. an NVMeoF subsystem).
+  rpc CreateDevice (CreateDeviceRequest)
+    returns (CreateDeviceResponse) {}
+  // Deletes a device.  It is only allowed to delete a device with volumes still
+  // attached if that device doesn't support attaching volumes through
+  // AttachVolume (e.g. virtio-blk).   In other cases, it is forbidden and
+  // FAILED_PRECONDITION status will be returned.
+  rpc DeleteDevice (DeleteDeviceRequest)
+    returns (DeleteDeviceResponse) {}
+  // Attaches a volume to a specified device making it available through that
+  // device (e.g. for NVMeoF this results in adding a namespace to an NVMeoF
+  // subsystem).  The type of volume doesn't need to match the type of device
+  // (e.g. it's perfectly fine to attach an NVMe/TCP volume to a virtio-blk
+  // device).
+  rpc AttachVolume (AttachVolumeRequest)
+    returns (AttachVolumeResponse) {}
+  // Detaches a volume from a device
+  rpc DetachVolume (DetachVolumeRequest)
+    returns (DetachVolumeResponse) {}
+  // Configures QoS on a device/volume
+  rpc SetQos (SetQosRequest)
+    returns (SetQosResponse) {}
+  // Returns QoS capabilities of a given device type
+  rpc GetQosCapabilities (GetQosCapabilitiesRequest)
+    returns (GetQosCapabilitiesResponse) {}
+}

@@ -1,34 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2018 Intel Corporation.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /*
@@ -262,57 +235,68 @@ bdev_part_remap_dif(struct spdk_bdev_io *bdev_io, uint32_t offset,
 }
 
 static void
-bdev_part_complete_read_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
-{
-	struct spdk_bdev_io *part_io = cb_arg;
-	uint32_t offset, remapped_offset;
-	int rc, status;
-
-	offset = bdev_io->u.bdev.offset_blocks;
-	remapped_offset = part_io->u.bdev.offset_blocks;
-
-	if (success) {
-		rc = bdev_part_remap_dif(bdev_io, offset, remapped_offset);
-		if (rc != 0) {
-			success = false;
-		}
-	}
-
-	status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
-
-	spdk_bdev_io_complete(part_io, status);
-	spdk_bdev_free_io(bdev_io);
-}
-
-static void
 bdev_part_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *part_io = cb_arg;
-	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	uint32_t offset, remapped_offset;
+	spdk_bdev_io_completion_cb cb;
+	int rc, status;
 
-	spdk_bdev_io_complete(part_io, status);
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		if (success) {
+			offset = bdev_io->u.bdev.offset_blocks;
+			remapped_offset = part_io->u.bdev.offset_blocks;
+
+			rc = bdev_part_remap_dif(bdev_io, offset, remapped_offset);
+			if (rc != 0) {
+				success = false;
+			}
+		}
+		break;
+	case SPDK_BDEV_IO_TYPE_ZCOPY:
+		spdk_bdev_io_set_buf(part_io, bdev_io->u.bdev.iovs[0].iov_base,
+				     bdev_io->u.bdev.iovs[0].iov_len);
+		break;
+	default:
+		break;
+	}
+
+
+	cb = part_io->u.bdev.stored_user_cb;
+	if (cb != NULL) {
+		cb(part_io, success, NULL);
+	} else {
+		status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+
+		spdk_bdev_io_complete(part_io, status);
+	}
+
 	spdk_bdev_free_io(bdev_io);
 }
 
-static void
-bdev_part_complete_zcopy_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+static inline void
+bdev_part_init_ext_io_opts(struct spdk_bdev_io *bdev_io, struct spdk_bdev_ext_io_opts *opts)
 {
-	struct spdk_bdev_io *part_io = cb_arg;
-	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
-
-	spdk_bdev_io_set_buf(part_io, bdev_io->u.bdev.iovs[0].iov_base, bdev_io->u.bdev.iovs[0].iov_len);
-	spdk_bdev_io_complete(part_io, status);
-	spdk_bdev_free_io(bdev_io);
+	memset(opts, 0, sizeof(*opts));
+	opts->size = sizeof(*opts);
+	opts->memory_domain = bdev_io->u.bdev.memory_domain;
+	opts->memory_domain_ctx = bdev_io->u.bdev.memory_domain_ctx;
+	opts->metadata = bdev_io->u.bdev.md_buf;
 }
 
 int
-spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bdev_io *bdev_io)
+spdk_bdev_part_submit_request_ext(struct spdk_bdev_part_channel *ch, struct spdk_bdev_io *bdev_io,
+				  spdk_bdev_io_completion_cb cb)
 {
 	struct spdk_bdev_part *part = ch->part;
 	struct spdk_io_channel *base_ch = ch->base_ch;
 	struct spdk_bdev_desc *base_desc = part->internal.base->desc;
-	uint64_t offset, remapped_offset;
+	struct spdk_bdev_ext_io_opts io_opts;
+	uint64_t offset, remapped_offset, remapped_src_offset;
 	int rc = 0;
+
+	bdev_io->u.bdev.stored_user_cb = cb;
 
 	offset = bdev_io->u.bdev.offset_blocks;
 	remapped_offset = offset + part->internal.offset_blocks;
@@ -320,39 +304,22 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 	/* Modify the I/O to adjust for the offset within the base bdev. */
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		if (bdev_io->u.bdev.md_buf == NULL) {
-			rc = spdk_bdev_readv_blocks(base_desc, base_ch, bdev_io->u.bdev.iovs,
-						    bdev_io->u.bdev.iovcnt, remapped_offset,
-						    bdev_io->u.bdev.num_blocks,
-						    bdev_part_complete_read_io, bdev_io);
-		} else {
-			rc = spdk_bdev_readv_blocks_with_md(base_desc, base_ch,
-							    bdev_io->u.bdev.iovs,
-							    bdev_io->u.bdev.iovcnt,
-							    bdev_io->u.bdev.md_buf, remapped_offset,
-							    bdev_io->u.bdev.num_blocks,
-							    bdev_part_complete_read_io, bdev_io);
-		}
+		bdev_part_init_ext_io_opts(bdev_io, &io_opts);
+		rc = spdk_bdev_readv_blocks_ext(base_desc, base_ch, bdev_io->u.bdev.iovs,
+						bdev_io->u.bdev.iovcnt, remapped_offset,
+						bdev_io->u.bdev.num_blocks,
+						bdev_part_complete_io, bdev_io, &io_opts);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		rc = bdev_part_remap_dif(bdev_io, offset, remapped_offset);
 		if (rc != 0) {
 			return SPDK_BDEV_IO_STATUS_FAILED;
 		}
-
-		if (bdev_io->u.bdev.md_buf == NULL) {
-			rc = spdk_bdev_writev_blocks(base_desc, base_ch, bdev_io->u.bdev.iovs,
-						     bdev_io->u.bdev.iovcnt, remapped_offset,
-						     bdev_io->u.bdev.num_blocks,
-						     bdev_part_complete_io, bdev_io);
-		} else {
-			rc = spdk_bdev_writev_blocks_with_md(base_desc, base_ch,
-							     bdev_io->u.bdev.iovs,
-							     bdev_io->u.bdev.iovcnt,
-							     bdev_io->u.bdev.md_buf, remapped_offset,
-							     bdev_io->u.bdev.num_blocks,
-							     bdev_part_complete_io, bdev_io);
-		}
+		bdev_part_init_ext_io_opts(bdev_io, &io_opts);
+		rc = spdk_bdev_writev_blocks_ext(base_desc, base_ch, bdev_io->u.bdev.iovs,
+						 bdev_io->u.bdev.iovcnt, remapped_offset,
+						 bdev_io->u.bdev.num_blocks,
+						 bdev_part_complete_io, bdev_io, &io_opts);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		rc = spdk_bdev_write_zeroes_blocks(base_desc, base_ch, remapped_offset,
@@ -376,7 +343,40 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 	case SPDK_BDEV_IO_TYPE_ZCOPY:
 		rc = spdk_bdev_zcopy_start(base_desc, base_ch, NULL, 0, remapped_offset,
 					   bdev_io->u.bdev.num_blocks, bdev_io->u.bdev.zcopy.populate,
-					   bdev_part_complete_zcopy_io, bdev_io);
+					   bdev_part_complete_io, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_COMPARE:
+		if (!bdev_io->u.bdev.md_buf) {
+			rc = spdk_bdev_comparev_blocks(base_desc, base_ch,
+						       bdev_io->u.bdev.iovs,
+						       bdev_io->u.bdev.iovcnt,
+						       remapped_offset,
+						       bdev_io->u.bdev.num_blocks,
+						       bdev_part_complete_io, bdev_io);
+		} else {
+			rc = spdk_bdev_comparev_blocks_with_md(base_desc, base_ch,
+							       bdev_io->u.bdev.iovs,
+							       bdev_io->u.bdev.iovcnt,
+							       bdev_io->u.bdev.md_buf,
+							       remapped_offset,
+							       bdev_io->u.bdev.num_blocks,
+							       bdev_part_complete_io, bdev_io);
+		}
+		break;
+	case SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE:
+		rc = spdk_bdev_comparev_and_writev_blocks(base_desc, base_ch, bdev_io->u.bdev.iovs,
+				bdev_io->u.bdev.iovcnt,
+				bdev_io->u.bdev.fused_iovs,
+				bdev_io->u.bdev.fused_iovcnt,
+				remapped_offset,
+				bdev_io->u.bdev.num_blocks,
+				bdev_part_complete_io, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_COPY:
+		remapped_src_offset = bdev_io->u.bdev.copy.src_offset_blocks + part->internal.offset_blocks;
+		rc = spdk_bdev_copy_blocks(base_desc, base_ch, remapped_offset, remapped_src_offset,
+					   bdev_io->u.bdev.num_blocks, bdev_part_complete_io,
+					   bdev_io);
 		break;
 	default:
 		SPDK_ERRLOG("unknown I/O type %d\n", bdev_io->type);
@@ -384,6 +384,12 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 	}
 
 	return rc;
+}
+
+int
+spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	return spdk_bdev_part_submit_request_ext(ch, bdev_io, NULL);
 }
 
 static int
@@ -496,6 +502,9 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 			 char *name, uint64_t offset_blocks, uint64_t num_blocks,
 			 char *product_name)
 {
+	int rc;
+	bool first_claimed = false;
+
 	part->internal.bdev.blocklen = base->bdev->blocklen;
 	part->internal.bdev.blockcnt = num_blocks;
 	part->internal.offset_blocks = offset_blocks;
@@ -537,9 +546,11 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 			SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(base->bdev));
 			free(part->internal.bdev.name);
 			free(part->internal.bdev.product_name);
+			base->ref--;
 			return -1;
 		}
 		base->claimed = true;
+		first_claimed = true;
 	}
 
 	spdk_io_device_register(part, bdev_part_channel_create_cb,
@@ -547,8 +558,20 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 				base->channel_size,
 				name);
 
-	spdk_bdev_register(&part->internal.bdev);
-	TAILQ_INSERT_TAIL(base->tailq, part, tailq);
+	rc = spdk_bdev_register(&part->internal.bdev);
+	if (rc == 0) {
+		TAILQ_INSERT_TAIL(base->tailq, part, tailq);
+	} else {
+		spdk_io_device_unregister(part, NULL);
+		if (--base->ref == 0) {
+			spdk_bdev_module_release_bdev(base->bdev);
+		}
+		free(part->internal.bdev.name);
+		free(part->internal.bdev.product_name);
+		if (first_claimed == true) {
+			base->claimed = false;
+		}
+	}
 
-	return 0;
+	return rc;
 }

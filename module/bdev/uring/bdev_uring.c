@@ -1,40 +1,12 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2019 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "bdev_uring.h"
 
 #include "spdk/stdinc.h"
-
+#include "spdk/config.h"
 #include "spdk/barrier.h"
 #include "spdk/bdev.h"
 #include "spdk/env.h"
@@ -47,6 +19,17 @@
 
 #include "spdk/log.h"
 #include "spdk_internal/uring.h"
+
+#ifdef SPDK_CONFIG_URING_ZNS
+#include <linux/blkzoned.h>
+#define SECTOR_SHIFT 9
+#endif
+
+struct bdev_uring_zoned_dev {
+	uint64_t		num_zones;
+	uint32_t		zone_shift;
+	uint32_t		lba_shift;
+};
 
 struct bdev_uring_io_channel {
 	struct bdev_uring_group_channel		*group_ch;
@@ -67,6 +50,7 @@ struct bdev_uring_task {
 
 struct bdev_uring {
 	struct spdk_bdev	bdev;
+	struct bdev_uring_zoned_dev	zd;
 	char			*filename;
 	int			fd;
 	TAILQ_ENTRY(bdev_uring)  link;
@@ -148,6 +132,11 @@ bdev_uring_readv(struct bdev_uring *uring, struct spdk_io_channel *ch,
 	struct io_uring_sqe *sqe;
 
 	sqe = io_uring_get_sqe(&group_ch->uring);
+	if (!sqe) {
+		SPDK_DEBUGLOG(uring, "get sqe failed as out of resource\n");
+		return -ENOMEM;
+	}
+
 	io_uring_prep_readv(sqe, uring->fd, iov, iovcnt, offset);
 	io_uring_sqe_set_data(sqe, uring_task);
 	uring_task->len = nbytes;
@@ -170,6 +159,11 @@ bdev_uring_writev(struct bdev_uring *uring, struct spdk_io_channel *ch,
 	struct io_uring_sqe *sqe;
 
 	sqe = io_uring_get_sqe(&group_ch->uring);
+	if (!sqe) {
+		SPDK_DEBUGLOG(uring, "get sqe failed as out of resource\n");
+		return -ENOMEM;
+	}
+
 	io_uring_prep_writev(sqe, uring->fd, iov, iovcnt, offset);
 	io_uring_sqe_set_data(sqe, uring_task);
 	uring_task->len = nbytes;
@@ -267,9 +261,12 @@ bdev_uring_group_poll(void *arg)
 	}
 }
 
-static void bdev_uring_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
-				  bool success)
+static void
+bdev_uring_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+		      bool success)
 {
+	int64_t ret = 0;
+
 	if (!success) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
@@ -277,32 +274,322 @@ static void bdev_uring_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_i
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		bdev_uring_readv((struct bdev_uring *)bdev_io->bdev->ctxt,
-				 ch,
-				 (struct bdev_uring_task *)bdev_io->driver_ctx,
-				 bdev_io->u.bdev.iovs,
-				 bdev_io->u.bdev.iovcnt,
-				 bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
-				 bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
+		ret = bdev_uring_readv((struct bdev_uring *)bdev_io->bdev->ctxt,
+				       ch,
+				       (struct bdev_uring_task *)bdev_io->driver_ctx,
+				       bdev_io->u.bdev.iovs,
+				       bdev_io->u.bdev.iovcnt,
+				       bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
+				       bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		bdev_uring_writev((struct bdev_uring *)bdev_io->bdev->ctxt,
-				  ch,
-				  (struct bdev_uring_task *)bdev_io->driver_ctx,
-				  bdev_io->u.bdev.iovs,
-				  bdev_io->u.bdev.iovcnt,
-				  bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
-				  bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
+		ret = bdev_uring_writev((struct bdev_uring *)bdev_io->bdev->ctxt,
+					ch,
+					(struct bdev_uring_task *)bdev_io->driver_ctx,
+					bdev_io->u.bdev.iovs,
+					bdev_io->u.bdev.iovcnt,
+					bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
+					bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
 		break;
 	default:
 		SPDK_ERRLOG("Wrong io type\n");
 		break;
 	}
+
+	if (ret == -ENOMEM) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+	}
 }
 
-static int _bdev_uring_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+#ifdef SPDK_CONFIG_URING_ZNS
+static int
+bdev_uring_read_sysfs_attr(const char *devname, const char *attr, char *str, int str_len)
 {
+	char *path = NULL;
+	char *device = NULL;
+	FILE *file;
+	int ret = 0;
+
+	device = basename(devname);
+	path = spdk_sprintf_alloc("/sys/block/%s/%s", device, attr);
+	if (!path) {
+		return -EINVAL;
+	}
+
+	file = fopen(path, "r");
+	if (!file) {
+		free(path);
+		return -ENOENT;
+	}
+
+	if (!fgets(str, str_len, file)) {
+		ret = -EINVAL;
+		goto close;
+	}
+
+	spdk_str_chomp(str);
+
+close:
+	free(path);
+	fclose(file);
+	return ret;
+}
+
+static int
+bdev_uring_read_sysfs_attr_long(const char *devname, const char *attr, long *val)
+{
+	char str[128];
+	int ret;
+
+	ret = bdev_uring_read_sysfs_attr(devname, attr, str, sizeof(str));
+	if (ret) {
+		return ret;
+	}
+
+	*val = spdk_strtol(str, 10);
+
+	return 0;
+}
+
+static int
+bdev_uring_fill_zone_type(struct spdk_bdev_zone_info *zone_info, struct blk_zone *zones_rep)
+{
+	switch (zones_rep->type) {
+	case BLK_ZONE_TYPE_CONVENTIONAL:
+		zone_info->type = SPDK_BDEV_ZONE_TYPE_CNV;
+		break;
+	case BLK_ZONE_TYPE_SEQWRITE_REQ:
+		zone_info->type = SPDK_BDEV_ZONE_TYPE_SEQWR;
+		break;
+	case BLK_ZONE_TYPE_SEQWRITE_PREF:
+		zone_info->type = SPDK_BDEV_ZONE_TYPE_SEQWP;
+		break;
+	default:
+		SPDK_ERRLOG("Invalid zone type: %#x in zone report\n", zones_rep->type);
+		return -EIO;
+	}
+	return 0;
+}
+
+static int
+bdev_uring_fill_zone_state(struct spdk_bdev_zone_info *zone_info, struct blk_zone *zones_rep)
+{
+	switch (zones_rep->cond) {
+	case BLK_ZONE_COND_EMPTY:
+		zone_info->state = SPDK_BDEV_ZONE_STATE_EMPTY;
+		break;
+	case BLK_ZONE_COND_IMP_OPEN:
+		zone_info->state = SPDK_BDEV_ZONE_STATE_IMP_OPEN;
+		break;
+	case BLK_ZONE_COND_EXP_OPEN:
+		zone_info->state = SPDK_BDEV_ZONE_STATE_EXP_OPEN;
+		break;
+	case BLK_ZONE_COND_CLOSED:
+		zone_info->state = SPDK_BDEV_ZONE_STATE_CLOSED;
+		break;
+	case BLK_ZONE_COND_READONLY:
+		zone_info->state = SPDK_BDEV_ZONE_STATE_READ_ONLY;
+		break;
+	case BLK_ZONE_COND_FULL:
+		zone_info->state = SPDK_BDEV_ZONE_STATE_FULL;
+		break;
+	case BLK_ZONE_COND_OFFLINE:
+		zone_info->state = SPDK_BDEV_ZONE_STATE_OFFLINE;
+		break;
+	case BLK_ZONE_COND_NOT_WP:
+		zone_info->state = SPDK_BDEV_ZONE_STATE_NOT_WP;
+		break;
+	default:
+		SPDK_ERRLOG("Invalid zone state: %#x in zone report\n", zones_rep->cond);
+		return -EIO;
+	}
+	return 0;
+}
+
+static int
+bdev_uring_zone_management_op(struct spdk_bdev_io *bdev_io)
+{
+	struct bdev_uring *uring;
+	struct blk_zone_range range;
+	long unsigned zone_mgmt_op;
+	uint64_t zone_id = bdev_io->u.zone_mgmt.zone_id;
+
+	uring = (struct bdev_uring *)bdev_io->bdev->ctxt;
+
+	switch (bdev_io->u.zone_mgmt.zone_action) {
+	case SPDK_BDEV_ZONE_RESET:
+		zone_mgmt_op = BLKRESETZONE;
+		break;
+	case SPDK_BDEV_ZONE_OPEN:
+		zone_mgmt_op = BLKOPENZONE;
+		break;
+	case SPDK_BDEV_ZONE_CLOSE:
+		zone_mgmt_op = BLKCLOSEZONE;
+		break;
+	case SPDK_BDEV_ZONE_FINISH:
+		zone_mgmt_op = BLKFINISHZONE;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	range.sector = (zone_id << uring->zd.lba_shift);
+	range.nr_sectors = (uring->bdev.zone_size << uring->zd.lba_shift);
+
+	if (ioctl(uring->fd, zone_mgmt_op, &range)) {
+		SPDK_ERRLOG("Ioctl BLKXXXZONE(%#x) failed errno: %d(%s)\n",
+			    bdev_io->u.zone_mgmt.zone_action, errno, strerror(errno));
+		return -EINVAL;
+	}
+
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	return 0;
+}
+
+static int
+bdev_uring_zone_get_info(struct spdk_bdev_io *bdev_io)
+{
+	struct bdev_uring *uring;
+	struct blk_zone *zones;
+	struct blk_zone_report *rep;
+	struct spdk_bdev_zone_info *zone_info = bdev_io->u.zone_mgmt.buf;
+	size_t repsize;
+	uint32_t i, shift;
+	uint32_t num_zones = bdev_io->u.zone_mgmt.num_zones;
+	uint64_t zone_id = bdev_io->u.zone_mgmt.zone_id;
+
+	uring = (struct bdev_uring *)bdev_io->bdev->ctxt;
+	shift = uring->zd.lba_shift;
+
+	if ((num_zones > uring->zd.num_zones) || !num_zones) {
+		return -EINVAL;
+	}
+
+	repsize = sizeof(struct blk_zone_report) + (sizeof(struct blk_zone) * num_zones);
+	rep = (struct blk_zone_report *)malloc(repsize);
+	if (!rep) {
+		return -ENOMEM;
+	}
+
+	zones = (struct blk_zone *)(rep + 1);
+
+	while (num_zones && ((zone_id >> uring->zd.zone_shift) <= num_zones)) {
+		memset(rep, 0, repsize);
+		rep->sector = zone_id;
+		rep->nr_zones = num_zones;
+
+		if (ioctl(uring->fd, BLKREPORTZONE, rep)) {
+			SPDK_ERRLOG("Ioctl BLKREPORTZONE failed errno: %d(%s)\n",
+				    errno, strerror(errno));
+			free(rep);
+			return -EINVAL;
+		}
+
+		if (!rep->nr_zones) {
+			break;
+		}
+
+		for (i = 0; i < rep->nr_zones; i++) {
+			zone_info->zone_id = ((zones + i)->start >> shift);
+			zone_info->write_pointer = ((zones + i)->wp >> shift);
+			zone_info->capacity = ((zones + i)->capacity >> shift);
+
+			bdev_uring_fill_zone_state(zone_info, zones + i);
+			bdev_uring_fill_zone_type(zone_info, zones + i);
+
+			zone_id = ((zones + i)->start + (zones + i)->len) >> shift;
+			zone_info++;
+			num_zones--;
+		}
+	}
+
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	free(rep);
+	return 0;
+}
+
+static int
+bdev_uring_check_zoned_support(struct bdev_uring *uring, const char *name, const char *filename)
+{
+	char str[128];
+	long int val = 0;
+	uint32_t zinfo;
+	int retval = -1;
+
+	uring->bdev.zoned = false;
+
+	/* Check if this is a zoned block device */
+	if (bdev_uring_read_sysfs_attr(filename, "queue/zoned", str, sizeof(str))) {
+		SPDK_ERRLOG("Unable to open file %s/queue/zoned. errno: %d\n", filename, errno);
+	} else if (strcmp(str, "host-aware") == 0 || strcmp(str, "host-managed") == 0) {
+		/* Only host-aware & host-managed zns devices */
+		uring->bdev.zoned = true;
+
+		if (ioctl(uring->fd, BLKGETNRZONES, &zinfo)) {
+			SPDK_ERRLOG("ioctl BLKNRZONES failed %d (%s)\n", errno, strerror(errno));
+			goto err_ret;
+		}
+		uring->zd.num_zones = zinfo;
+
+		if (ioctl(uring->fd, BLKGETZONESZ, &zinfo)) {
+			SPDK_ERRLOG("ioctl BLKGETZONESZ failed %d (%s)\n", errno, strerror(errno));
+			goto err_ret;
+		}
+
+		uring->zd.lba_shift = uring->bdev.required_alignment - SECTOR_SHIFT;
+		uring->bdev.zone_size = (zinfo >> uring->zd.lba_shift);
+		uring->zd.zone_shift = spdk_u32log2(zinfo >> uring->zd.lba_shift);
+
+		if (bdev_uring_read_sysfs_attr_long(filename, "queue/max_open_zones", &val)) {
+			SPDK_ERRLOG("Failed to get max open zones %d (%s)\n", errno, strerror(errno));
+			goto err_ret;
+		}
+		uring->bdev.max_open_zones = uring->bdev.optimal_open_zones = (uint32_t)val;
+
+		if (bdev_uring_read_sysfs_attr_long(filename, "queue/max_active_zones", &val)) {
+			SPDK_ERRLOG("Failed to get max active zones %d (%s)\n", errno, strerror(errno));
+			goto err_ret;
+		}
+		uring->bdev.max_active_zones = (uint32_t)val;
+		retval = 0;
+	} else {
+		retval = 0;        /* queue/zoned=none */
+	}
+
+err_ret:
+	return retval;
+}
+#else
+/* No support for zoned devices */
+static int
+bdev_uring_zone_management_op(struct spdk_bdev_io *bdev_io)
+{
+	return -1;
+}
+
+static int
+bdev_uring_zone_get_info(struct spdk_bdev_io *bdev_io)
+{
+	return -1;
+}
+
+static int
+bdev_uring_check_zoned_support(struct bdev_uring *uring, const char *name, const char *filename)
+{
+	return 0;
+}
+#endif
+
+static int
+_bdev_uring_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+
 	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_GET_ZONE_INFO:
+		return bdev_uring_zone_get_info(bdev_io);
+	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
+		return bdev_uring_zone_management_op(bdev_io);
 	/* Read and write operations must be performed on buffers aligned to
 	 * bdev->required_alignment. If user specified unaligned buffers,
 	 * get the aligned buffer from the pool by calling spdk_bdev_io_get_buf. */
@@ -316,7 +603,8 @@ static int _bdev_uring_submit_request(struct spdk_io_channel *ch, struct spdk_bd
 	}
 }
 
-static void bdev_uring_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+static void
+bdev_uring_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	if (_bdev_uring_submit_request(ch, bdev_io) < 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -327,6 +615,10 @@ static bool
 bdev_uring_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
 	switch (io_type) {
+#ifdef SPDK_CONFIG_URING_ZNS
+	case SPDK_BDEV_IO_TYPE_GET_ZONE_INFO:
+	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
+#endif
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		return true;
@@ -402,7 +694,8 @@ static const struct spdk_bdev_fn_table uring_fn_table = {
 	.write_config_json	= bdev_uring_write_json_config,
 };
 
-static void uring_free_bdev(struct bdev_uring *uring)
+static void
+uring_free_bdev(struct bdev_uring *uring)
 {
 	if (uring == NULL) {
 		return;
@@ -507,6 +800,11 @@ create_uring_bdev(const char *name, const char *filename, uint32_t block_size)
 	uring->bdev.blocklen = block_size;
 	uring->bdev.required_alignment = spdk_u32log2(block_size);
 
+	rc = bdev_uring_check_zoned_support(uring, name, filename);
+	if (rc) {
+		goto error_return;
+	}
+
 	if (bdev_size % uring->bdev.blocklen != 0) {
 		SPDK_ERRLOG("Disk size %" PRIu64 " is not a multiple of block size %" PRIu32 "\n",
 			    bdev_size, uring->bdev.blocklen);
@@ -551,14 +849,10 @@ uring_bdev_unregister_cb(void *arg, int bdeverrno)
 }
 
 void
-delete_uring_bdev(struct spdk_bdev *bdev, spdk_delete_uring_complete cb_fn, void *cb_arg)
+delete_uring_bdev(const char *name, spdk_delete_uring_complete cb_fn, void *cb_arg)
 {
 	struct delete_uring_bdev_ctx *ctx;
-
-	if (!bdev || bdev->module != &uring_if) {
-		cb_fn(cb_arg, -ENODEV);
-		return;
-	}
+	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
@@ -568,7 +862,10 @@ delete_uring_bdev(struct spdk_bdev *bdev, spdk_delete_uring_complete cb_fn, void
 
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
-	spdk_bdev_unregister(bdev, uring_bdev_unregister_cb, ctx);
+	rc = spdk_bdev_unregister_by_name(name, &uring_if, uring_bdev_unregister_cb, ctx);
+	if (rc != 0) {
+		uring_bdev_unregister_cb(ctx, rc);
+	}
 }
 
 static int

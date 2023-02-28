@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /*
@@ -111,8 +83,7 @@ struct passthru_bdev_io {
 	struct spdk_bdev_io_wait_entry bdev_io_wait;
 };
 
-static void
-vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
+static void vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 
 
 /* Callback for unregistering the IO device. */
@@ -242,6 +213,16 @@ vbdev_passthru_queue_io(struct spdk_bdev_io *bdev_io)
 	}
 }
 
+static void
+pt_init_ext_io_opts(struct spdk_bdev_io *bdev_io, struct spdk_bdev_ext_io_opts *opts)
+{
+	memset(opts, 0, sizeof(*opts));
+	opts->size = sizeof(*opts);
+	opts->memory_domain = bdev_io->u.bdev.memory_domain;
+	opts->memory_domain_ctx = bdev_io->u.bdev.memory_domain_ctx;
+	opts->metadata = bdev_io->u.bdev.md_buf;
+}
+
 /* Callback for getting a buf from the bdev pool in the event that the caller passed
  * in NULL, we need to own the buffer so it doesn't get freed by another vbdev module
  * beneath us before we're done with it. That won't happen in this example but it could
@@ -254,6 +235,7 @@ pt_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, boo
 					 pt_bdev);
 	struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(ch);
 	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)bdev_io->driver_ctx;
+	struct spdk_bdev_ext_io_opts io_opts;
 	int rc;
 
 	if (!success) {
@@ -261,20 +243,11 @@ pt_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, boo
 		return;
 	}
 
-	if (bdev_io->u.bdev.md_buf == NULL) {
-		rc = spdk_bdev_readv_blocks(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
-					    bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
-					    bdev_io->u.bdev.num_blocks, _pt_complete_io,
-					    bdev_io);
-	} else {
-		rc = spdk_bdev_readv_blocks_with_md(pt_node->base_desc, pt_ch->base_ch,
-						    bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-						    bdev_io->u.bdev.md_buf,
-						    bdev_io->u.bdev.offset_blocks,
-						    bdev_io->u.bdev.num_blocks,
-						    _pt_complete_io, bdev_io);
-	}
-
+	pt_init_ext_io_opts(bdev_io, &io_opts);
+	rc = spdk_bdev_readv_blocks_ext(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
+					bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
+					bdev_io->u.bdev.num_blocks, _pt_complete_io,
+					bdev_io, &io_opts);
 	if (rc != 0) {
 		if (rc == -ENOMEM) {
 			SPDK_ERRLOG("No memory, start to queue io for passthru.\n");
@@ -297,6 +270,7 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 	struct vbdev_passthru *pt_node = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_passthru, pt_bdev);
 	struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(ch);
 	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)bdev_io->driver_ctx;
+	struct spdk_bdev_ext_io_opts io_opts;
 	int rc = 0;
 
 	/* Setup a per IO context value; we don't do anything with it in the vbdev other
@@ -311,19 +285,11 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		if (bdev_io->u.bdev.md_buf == NULL) {
-			rc = spdk_bdev_writev_blocks(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
-						     bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
-						     bdev_io->u.bdev.num_blocks, _pt_complete_io,
-						     bdev_io);
-		} else {
-			rc = spdk_bdev_writev_blocks_with_md(pt_node->base_desc, pt_ch->base_ch,
-							     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-							     bdev_io->u.bdev.md_buf,
-							     bdev_io->u.bdev.offset_blocks,
-							     bdev_io->u.bdev.num_blocks,
-							     _pt_complete_io, bdev_io);
-		}
+		pt_init_ext_io_opts(bdev_io, &io_opts);
+		rc = spdk_bdev_writev_blocks_ext(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
+						 bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
+						 bdev_io->u.bdev.num_blocks, _pt_complete_io,
+						 bdev_io, &io_opts);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		rc = spdk_bdev_write_zeroes_blocks(pt_node->base_desc, pt_ch->base_ch,
@@ -356,6 +322,13 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 	case SPDK_BDEV_IO_TYPE_ABORT:
 		rc = spdk_bdev_abort(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.abort.bio_to_abort,
 				     _pt_complete_io, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_COPY:
+		rc = spdk_bdev_copy_blocks(pt_node->base_desc, pt_ch->base_ch,
+					   bdev_io->u.bdev.offset_blocks,
+					   bdev_io->u.bdev.copy.src_offset_blocks,
+					   bdev_io->u.bdev.num_blocks,
+					   _pt_complete_io, bdev_io);
 		break;
 	default:
 		SPDK_ERRLOG("passthru: unknown I/O type %d\n", bdev_io->type);
@@ -737,31 +710,30 @@ bdev_passthru_create_disk(const char *bdev_name, const char *vbdev_name)
 }
 
 void
-bdev_passthru_delete_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
+bdev_passthru_delete_disk(const char *bdev_name, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct bdev_names *name;
+	int rc;
 
-	if (!bdev || bdev->module != &passthru_if) {
-		cb_fn(cb_arg, -ENODEV);
-		return;
-	}
-
-	/* Remove the association (vbdev, bdev) from g_bdev_names. This is required so that the
-	 * vbdev does not get re-created if the same bdev is constructed at some other time,
-	 * unless the underlying bdev was hot-removed.
-	 */
-	TAILQ_FOREACH(name, &g_bdev_names, link) {
-		if (strcmp(name->vbdev_name, bdev->name) == 0) {
-			TAILQ_REMOVE(&g_bdev_names, name, link);
-			free(name->bdev_name);
-			free(name->vbdev_name);
-			free(name);
-			break;
+	/* Some cleanup happens in the destruct callback. */
+	rc = spdk_bdev_unregister_by_name(bdev_name, &passthru_if, cb_fn, cb_arg);
+	if (rc == 0) {
+		/* Remove the association (vbdev, bdev) from g_bdev_names. This is required so that the
+		 * vbdev does not get re-created if the same bdev is constructed at some other time,
+		 * unless the underlying bdev was hot-removed.
+		 */
+		TAILQ_FOREACH(name, &g_bdev_names, link) {
+			if (strcmp(name->vbdev_name, bdev_name) == 0) {
+				TAILQ_REMOVE(&g_bdev_names, name, link);
+				free(name->bdev_name);
+				free(name->vbdev_name);
+				free(name);
+				break;
+			}
 		}
+	} else {
+		cb_fn(cb_arg, rc);
 	}
-
-	/* Additional cleanup happens in the destruct callback. */
-	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
 }
 
 /* Because we specified this function in our pt bdev function table when we

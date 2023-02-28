@@ -1,33 +1,5 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2020 Intel Corporation. All rights reserved.
  */
 
 /* VFIO transport extensions for spdk_nvme_ctrlr */
@@ -49,7 +21,6 @@ struct nvme_vfio_ctrlr {
 	struct nvme_pcie_ctrlr pctrlr;
 
 	volatile uint32_t *doorbell_base;
-	int bar0_fd;
 	struct vfio_device *dev;
 };
 
@@ -148,42 +119,18 @@ nvme_vfio_ctrlr_set_aqa(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_aqa
 					 aqa->raw);
 }
 
-/* Instead of using path as the bar0 file descriptor, we can also use
- * SPARSE MMAP to get the doorbell mmaped address.
- */
 static int
-nvme_vfio_setup_bar0(struct nvme_vfio_ctrlr *vctrlr, const char *path)
+nvme_vfio_setup_bar0(struct nvme_vfio_ctrlr *vctrlr)
 {
-	volatile uint32_t *doorbell;
-	int fd;
+	void *doorbell;
 
-	fd = open(path, O_RDWR);
-	if (fd < 0) {
-		SPDK_ERRLOG("Failed to open file %s\n", path);
-		return fd;
+	doorbell = spdk_vfio_user_get_bar_addr(vctrlr->dev, 0, 0x1000, 0x1000);
+	if (!doorbell) {
+		return -EINVAL;
 	}
 
-	doorbell = mmap(NULL, 0x1000, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0x1000);
-	if (doorbell == MAP_FAILED) {
-		SPDK_ERRLOG("Failed to mmap file %s\n", path);
-		close(fd);
-		return -EFAULT;
-	}
-
-	vctrlr->bar0_fd = fd;
-	vctrlr->doorbell_base = doorbell;
-
+	vctrlr->doorbell_base = (volatile uint32_t *)doorbell;
 	return 0;
-}
-
-static void
-nvme_vfio_bar0_destruct(struct nvme_vfio_ctrlr *vctrlr)
-{
-	if (vctrlr->doorbell_base) {
-		munmap((void *)vctrlr->doorbell_base, 0x1000);
-	}
-
-	close(vctrlr->bar0_fd);
 }
 
 static struct spdk_nvme_ctrlr *
@@ -197,20 +144,11 @@ static struct spdk_nvme_ctrlr *
 	union spdk_nvme_cap_register cap;
 	int ret;
 	char ctrlr_path[PATH_MAX];
-	char ctrlr_bar0[PATH_MAX];
 
 	snprintf(ctrlr_path, sizeof(ctrlr_path), "%s/cntrl", trid->traddr);
-	snprintf(ctrlr_bar0, sizeof(ctrlr_bar0), "%s/bar0", trid->traddr);
-
 	ret = access(ctrlr_path, F_OK);
 	if (ret != 0) {
 		SPDK_ERRLOG("Access path %s failed\n", ctrlr_path);
-		return NULL;
-	}
-
-	ret = access(ctrlr_bar0, F_OK);
-	if (ret != 0) {
-		SPDK_ERRLOG("Access path %s failed\n", ctrlr_bar0);
 		return NULL;
 	}
 
@@ -219,18 +157,17 @@ static struct spdk_nvme_ctrlr *
 		return NULL;
 	}
 
-	ret = nvme_vfio_setup_bar0(vctrlr, ctrlr_bar0);
-	if (ret != 0) {
+	vctrlr->dev = spdk_vfio_user_setup(ctrlr_path);
+	if (!vctrlr->dev) {
+		SPDK_ERRLOG("Error to setup vfio device\n");
 		free(vctrlr);
 		return NULL;
 	}
 
-	vctrlr->dev = spdk_vfio_user_setup(ctrlr_path);
-	if (!vctrlr->dev) {
-		SPDK_ERRLOG("Error to setup vfio device\n");
-		nvme_vfio_bar0_destruct(vctrlr);
-		free(vctrlr);
-		return NULL;
+	ret = nvme_vfio_setup_bar0(vctrlr);
+	if (ret != 0) {
+		SPDK_ERRLOG("Error to get device BAR0\n");
+		goto exit;
 	}
 
 	pctrlr = &vctrlr->pctrlr;
@@ -239,6 +176,8 @@ static struct spdk_nvme_ctrlr *
 	pctrlr->ctrlr.opts = *opts;
 	pctrlr->ctrlr.trid = *trid;
 	pctrlr->ctrlr.opts.use_cmb_sqs = false;
+	pctrlr->ctrlr.opts.admin_queue_size = spdk_max(pctrlr->ctrlr.opts.admin_queue_size,
+					      NVME_PCIE_MIN_ADMIN_QUEUE_SIZE);
 
 	ret = nvme_ctrlr_construct(&pctrlr->ctrlr);
 	if (ret != 0) {
@@ -249,6 +188,7 @@ static struct spdk_nvme_ctrlr *
 	ret = spdk_vfio_user_pci_bar_access(vctrlr->dev, VFIO_PCI_CONFIG_REGION_INDEX, 4, 2,
 					    &cmd_reg, false);
 	if (ret != 0) {
+		nvme_ctrlr_destruct(&pctrlr->ctrlr);
 		SPDK_ERRLOG("Read PCI CMD REG failed\n");
 		goto exit;
 	}
@@ -256,11 +196,13 @@ static struct spdk_nvme_ctrlr *
 	ret = spdk_vfio_user_pci_bar_access(vctrlr->dev, VFIO_PCI_CONFIG_REGION_INDEX, 4, 2,
 					    &cmd_reg, true);
 	if (ret != 0) {
+		nvme_ctrlr_destruct(&pctrlr->ctrlr);
 		SPDK_ERRLOG("Write PCI CMD REG failed\n");
 		goto exit;
 	}
 
 	if (nvme_ctrlr_get_cap(&pctrlr->ctrlr, &cap)) {
+		nvme_ctrlr_destruct(&pctrlr->ctrlr);
 		SPDK_ERRLOG("get_cap() failed\n");
 		goto exit;
 	}
@@ -285,7 +227,6 @@ static struct spdk_nvme_ctrlr *
 	return &pctrlr->ctrlr;
 
 exit:
-	nvme_vfio_bar0_destruct(vctrlr);
 	spdk_vfio_user_release(vctrlr->dev);
 	free(vctrlr);
 	return NULL;
@@ -354,7 +295,6 @@ nvme_vfio_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 
 	nvme_ctrlr_free_processes(ctrlr);
 
-	nvme_vfio_bar0_destruct(vctrlr);
 	spdk_vfio_user_release(vctrlr->dev);
 	free(vctrlr);
 
@@ -407,6 +347,8 @@ const struct spdk_nvme_transport_ops vfio_ops = {
 	.poll_group_remove = nvme_pcie_poll_group_remove,
 	.poll_group_process_completions = nvme_pcie_poll_group_process_completions,
 	.poll_group_destroy = nvme_pcie_poll_group_destroy,
+	.poll_group_get_stats = nvme_pcie_poll_group_get_stats,
+	.poll_group_free_stats = nvme_pcie_poll_group_free_stats
 };
 
 SPDK_NVME_TRANSPORT_REGISTER(vfio, &vfio_ops);

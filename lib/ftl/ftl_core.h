@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef FTL_CORE_H
@@ -38,276 +10,222 @@
 #include "spdk/uuid.h"
 #include "spdk/thread.h"
 #include "spdk/util.h"
-#include "spdk/log.h"
 #include "spdk/likely.h"
 #include "spdk/queue.h"
 #include "spdk/ftl.h"
 #include "spdk/bdev.h"
-#include "spdk/bdev_zone.h"
 
-#include "ftl_addr.h"
+#include "ftl_internal.h"
 #include "ftl_io.h"
 #include "ftl_trace.h"
+#include "ftl_nv_cache.h"
+#include "ftl_writer.h"
+#include "ftl_layout.h"
+#include "ftl_sb.h"
+#include "ftl_l2p.h"
+#include "utils/ftl_bitmap.h"
+#include "utils/ftl_log.h"
 
-#ifdef SPDK_CONFIG_PMDK
-#include "libpmem.h"
-#endif /* SPDK_CONFIG_PMDK */
+/*
+ * We need to reserve at least 2 buffers for band close / open sequence
+ * alone, plus additional (8) buffers for handling relocations.
+ */
+#define P2L_MEMPOOL_SIZE (2 + 8)
 
-struct spdk_ftl_dev;
-struct ftl_band;
-struct ftl_zone;
-struct ftl_io;
-struct ftl_restore;
-struct ftl_wptr;
-struct ftl_flush;
-struct ftl_reloc;
-struct ftl_anm_event;
-struct ftl_band_flush;
-
-struct ftl_stats {
-	/* Number of writes scheduled directly by the user */
-	uint64_t				write_user;
-
-	/* Total number of writes */
-	uint64_t				write_total;
-
-	/* Traces */
-	struct ftl_trace			trace;
-
-	/* Number of limits applied */
-	uint64_t				limits[SPDK_FTL_LIMIT_MAX];
-};
-
-struct ftl_global_md {
-	/* Device instance */
-	struct spdk_uuid			uuid;
-	/* Size of the l2p table */
-	uint64_t				num_lbas;
-};
-
-struct ftl_nv_cache {
-	/* Write buffer cache bdev */
-	struct spdk_bdev_desc			*bdev_desc;
-	/* Write pointer */
-	uint64_t				current_addr;
-	/* Number of available blocks left */
-	uint64_t				num_available;
-	/* Maximum number of blocks */
-	uint64_t				num_data_blocks;
-	/*
-	 * Phase of the current cycle of writes. Each time whole cache area is filled, the phase is
-	 * advanced. Current phase is saved in every IO's metadata, as well as in the header saved
-	 * in the first sector. By looking at the phase of each block, it's possible to find the
-	 * oldest block and replay the order of the writes when recovering the data from the cache.
-	 */
-	unsigned int				phase;
-	/* Indicates that the data can be written to the cache */
-	bool					ready;
-	/* Metadata pool */
-	struct spdk_mempool			*md_pool;
-	/* DMA buffer for writing the header */
-	void					*dma_buf;
-	/* Cache lock */
-	pthread_spinlock_t			lock;
-};
-
-struct ftl_batch {
-	/* Queue of write buffer entries, can reach up to xfer_size entries */
-	TAILQ_HEAD(, ftl_wbuf_entry)		entries;
-	/* Number of entries in the queue above */
-	uint32_t				num_entries;
-	/* Index within spdk_ftl_dev.batch_array */
-	uint32_t				index;
-	struct iovec				*iov;
-	void					*metadata;
-	TAILQ_ENTRY(ftl_batch)			tailq;
-};
+/* When using VSS on nvcache, FTL sometimes doesn't require the contents of metadata.
+ * Some devices have bugs when sending a NULL pointer as part of metadata when namespace
+ * is formatted with VSS. This buffer is passed to such calls to avoid the bug. */
+#define FTL_ZERO_BUFFER_SIZE 0x100000
+extern void *g_ftl_write_buf;
+extern void *g_ftl_read_buf;
 
 struct spdk_ftl_dev {
-	/* Device instance */
-	struct spdk_uuid			uuid;
-	/* Device name */
-	char					*name;
 	/* Configuration */
-	struct spdk_ftl_conf			conf;
+	struct spdk_ftl_conf		conf;
 
-	/* Indicates the device is fully initialized */
-	int					initialized;
-	/* Indicates the device is about to be stopped */
-	int					halt;
-	/* Indicates the device is about to start stopping - use to handle multiple stop request */
-	bool					halt_started;
+	/* FTL device layout */
+	struct ftl_layout		layout;
+
+	/* FTL superblock */
+	struct ftl_superblock		*sb;
+
+	/* FTL shm superblock */
+	struct ftl_superblock_shm	*sb_shm;
+	struct ftl_md			*sb_shm_md;
+
+	/* Queue of registered IO channels */
+	TAILQ_HEAD(, ftl_io_channel)	ioch_queue;
 
 	/* Underlying device */
-	struct spdk_bdev_desc			*base_bdev_desc;
+	struct spdk_bdev_desc		*base_bdev_desc;
+
+	/* Cached properties of the underlying device */
+	uint64_t			num_blocks_in_band;
+	bool				is_zoned;
+
+	/* Indicates the device is fully initialized */
+	bool				initialized;
+
+	/* Indicates the device is about to be stopped */
+	bool				halt;
+
+	/* Indicates if the device is registered as an IO device */
+	bool				io_device_registered;
+
+	/* Management process to be continued after IO device unregistration completes */
+	struct ftl_mngt_process		*unregister_process;
 
 	/* Non-volatile write buffer cache */
-	struct ftl_nv_cache			nv_cache;
+	struct ftl_nv_cache		nv_cache;
 
-	/* LBA map memory pool */
-	struct spdk_mempool			*lba_pool;
+	/* P2L map memory pool */
+	struct ftl_mempool		*p2l_pool;
 
-	/* LBA map requests pool */
-	struct spdk_mempool			*lba_request_pool;
+	/* Underlying SHM buf for P2L map mempool */
+	struct ftl_md			*p2l_pool_md;
 
-	/* Media management events pool */
-	struct spdk_mempool			*media_events_pool;
+	/* Band md memory pool */
+	struct ftl_mempool		*band_md_pool;
+
+	/* Traces */
+	struct ftl_trace		trace;
 
 	/* Statistics */
-	struct ftl_stats			stats;
-
-	/* Current sequence number */
-	uint64_t				seq;
+	struct ftl_stats		stats;
 
 	/* Array of bands */
-	struct ftl_band				*bands;
-	/* Number of operational bands */
-	size_t					num_bands;
-	/* Next write band */
-	struct ftl_band				*next_band;
-	/* Free band list */
-	LIST_HEAD(, ftl_band)			free_bands;
-	/* Closed bands list */
-	LIST_HEAD(, ftl_band)			shut_bands;
-	/* Number of free bands */
-	size_t					num_free;
+	struct ftl_band			*bands;
 
-	/* List of write pointers */
-	LIST_HEAD(, ftl_wptr)			wptr_list;
+	/* Number of operational bands */
+	uint64_t			num_bands;
+
+	/* Next write band */
+	struct ftl_band			*next_band;
+
+	/* Free band list */
+	TAILQ_HEAD(, ftl_band)		free_bands;
+
+	/* Closed bands list */
+	TAILQ_HEAD(, ftl_band)		shut_bands;
+
+	/* Number of free bands */
+	uint64_t			num_free;
 
 	/* Logical -> physical table */
-	void					*l2p;
+	void				*l2p;
+
+	/* l2p deferred pins list */
+	TAILQ_HEAD(, ftl_l2p_pin_ctx)	l2p_deferred_pins;
+
 	/* Size of the l2p table */
-	uint64_t				num_lbas;
-	/* Size of pages mmapped for l2p, valid only for mapping on persistent memory */
-	size_t					l2p_pmem_len;
+	uint64_t			num_lbas;
 
-	/* Address size */
-	size_t					addr_len;
-
-	/* Flush list */
-	LIST_HEAD(, ftl_flush)			flush_list;
-	/* List of band flush requests */
-	LIST_HEAD(, ftl_band_flush)		band_flush_list;
-
-	/* Device specific md buffer */
-	struct ftl_global_md			global_md;
+	/* P2L valid map */
+	struct ftl_bitmap		*valid_map;
 
 	/* Metadata size */
-	size_t					md_size;
-	void					*md_buf;
+	uint64_t			md_size;
 
 	/* Transfer unit size */
-	size_t					xfer_size;
+	uint64_t			xfer_size;
 
 	/* Current user write limit */
-	int					limit;
+	int				limit;
 
 	/* Inflight IO operations */
-	uint32_t				num_inflight;
+	uint32_t			num_inflight;
 
 	/* Manages data relocation */
-	struct ftl_reloc			*reloc;
+	struct ftl_reloc		*reloc;
 
 	/* Thread on which the poller is running */
-	struct spdk_thread			*core_thread;
-	/* IO channel */
-	struct spdk_io_channel			*ioch;
+	struct spdk_thread		*core_thread;
+
+	/* IO channel to the FTL device, used for internal management operations
+	 * consuming FTL's external API
+	 */
+	struct spdk_io_channel		*ioch;
+
+	/* Underlying device IO channel */
+	struct spdk_io_channel		*base_ioch;
+
 	/* Poller */
-	struct spdk_poller			*core_poller;
+	struct spdk_poller		*core_poller;
 
-	/* IO channel array provides means for retrieving write buffer entries
-	 * from their address stored in L2P.  The address is divided into two
-	 * parts - IO channel offset poining at specific IO channel (within this
-	 * array) and entry offset pointing at specific entry within that IO
-	 * channel.
-	 */
-	struct ftl_io_channel			**ioch_array;
-	TAILQ_HEAD(, ftl_io_channel)		ioch_queue;
-	uint64_t				num_io_channels;
-	/* Value required to shift address of a write buffer entry to retrieve
-	 * the IO channel it's part of.  The other part of the address describes
-	 * the offset of an entry within the IO channel's entry array.
-	 */
-	uint64_t				ioch_shift;
+	/* Read submission queue */
+	TAILQ_HEAD(, ftl_io)		rd_sq;
 
-	/* Write buffer batches */
-#define FTL_BATCH_COUNT 4096
-	struct ftl_batch			batch_array[FTL_BATCH_COUNT];
-	/* Iovec buffer used by batches */
-	struct iovec				*iov_buf;
-	/* Batch currently being filled  */
-	struct ftl_batch			*current_batch;
-	/* Full and ready to be sent batches. A batch is put on this queue in
-	 * case it's already filled, but cannot be sent.
-	 */
-	TAILQ_HEAD(, ftl_batch)			pending_batches;
-	TAILQ_HEAD(, ftl_batch)			free_batches;
+	/* Write submission queue */
+	TAILQ_HEAD(, ftl_io)		wr_sq;
 
-	/* Devices' list */
-	STAILQ_ENTRY(spdk_ftl_dev)		stailq;
+	/* Trim submission queue */
+	TAILQ_HEAD(, ftl_io)		unmap_sq;
+
+	/* Trim valid map */
+	struct ftl_bitmap		*unmap_map;
+	struct ftl_md			*unmap_map_md;
+	size_t				unmap_qd;
+	bool				unmap_in_progress;
+
+	/* Writer for user IOs */
+	struct ftl_writer		writer_user;
+
+	/* Writer for GC IOs */
+	struct ftl_writer		writer_gc;
+
+	uint32_t			num_logical_bands_in_physical;
+
+	/* Retry init sequence */
+	bool				init_retry;
+
+	/* P2L checkpointing */
+	struct {
+		/* Free regions */
+		TAILQ_HEAD(, ftl_p2l_ckpt)	free;
+		/* In use regions */
+		TAILQ_HEAD(, ftl_p2l_ckpt)	inuse;
+	} p2l_ckpt;
 };
 
-struct ftl_nv_cache_header {
-	/* Version of the header */
-	uint32_t				version;
-	/* UUID of the FTL device */
-	struct spdk_uuid			uuid;
-	/* Size of the non-volatile cache (in blocks) */
-	uint64_t				size;
-	/* Contains the next address to be written after clean shutdown, invalid LBA otherwise */
-	uint64_t				current_addr;
-	/* Current phase */
-	uint8_t					phase;
-	/* Checksum of the header, needs to be last element */
-	uint32_t				checksum;
-} __attribute__((packed));
+void ftl_apply_limits(struct spdk_ftl_dev *dev);
 
-struct ftl_media_event {
-	/* Owner */
-	struct spdk_ftl_dev			*dev;
-	/* Media event */
-	struct spdk_bdev_media_event		event;
-};
+void ftl_invalidate_addr(struct spdk_ftl_dev *dev, ftl_addr addr);
 
-typedef void (*ftl_restore_fn)(struct ftl_restore *, int, void *cb_arg);
+int ftl_core_poller(void *ctx);
 
-void	ftl_apply_limits(struct spdk_ftl_dev *dev);
-void	ftl_io_read(struct ftl_io *io);
-void	ftl_io_write(struct ftl_io *io);
-int	ftl_flush_wbuf(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg);
-int	ftl_current_limit(const struct spdk_ftl_dev *dev);
-int	ftl_invalidate_addr(struct spdk_ftl_dev *dev, struct ftl_addr addr);
-int	ftl_task_core(void *ctx);
-int	ftl_task_read(void *ctx);
-void	ftl_process_anm_event(struct ftl_anm_event *event);
-size_t	ftl_tail_md_num_blocks(const struct spdk_ftl_dev *dev);
-size_t	ftl_tail_md_hdr_num_blocks(void);
-size_t	ftl_vld_map_num_blocks(const struct spdk_ftl_dev *dev);
-size_t	ftl_lba_map_num_blocks(const struct spdk_ftl_dev *dev);
-size_t	ftl_head_md_num_blocks(const struct spdk_ftl_dev *dev);
-int	ftl_restore_md(struct spdk_ftl_dev *dev, ftl_restore_fn cb, void *cb_arg);
-int	ftl_restore_device(struct ftl_restore *restore, ftl_restore_fn cb, void *cb_arg);
-void	ftl_restore_nv_cache(struct ftl_restore *restore, ftl_restore_fn cb, void *cb_arg);
-int	ftl_band_set_direct_access(struct ftl_band *band, bool access);
-bool	ftl_addr_is_written(struct ftl_band *band, struct ftl_addr addr);
-int	ftl_flush_active_bands(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg);
-int	ftl_nv_cache_write_header(struct ftl_nv_cache *nv_cache, bool shutdown,
-				  spdk_bdev_io_completion_cb cb_fn, void *cb_arg);
-int	ftl_nv_cache_scrub(struct ftl_nv_cache *nv_cache, spdk_bdev_io_completion_cb cb_fn,
-			   void *cb_arg);
-void	ftl_get_media_events(struct spdk_ftl_dev *dev);
-int	ftl_io_channel_poll(void *arg);
-void	ftl_evict_cache_entry(struct spdk_ftl_dev *dev, struct ftl_wbuf_entry *entry);
-struct spdk_io_channel *ftl_get_io_channel(const struct spdk_ftl_dev *dev);
+int ftl_io_channel_poll(void *arg);
+
 struct ftl_io_channel *ftl_io_channel_get_ctx(struct spdk_io_channel *ioch);
 
+bool ftl_needs_reloc(struct spdk_ftl_dev *dev);
 
-#define ftl_to_addr(address) \
-	(struct ftl_addr) { .offset = (uint64_t)(address) }
+struct ftl_band *ftl_band_get_next_free(struct spdk_ftl_dev *dev);
 
-#define ftl_to_addr_packed(address) \
-	(struct ftl_addr) { .pack.offset = (uint32_t)(address) }
+void ftl_set_unmap_map(struct spdk_ftl_dev *dev, uint64_t lba, uint64_t num_blocks,
+		       uint64_t seq_id);
+
+void ftl_recover_max_seq(struct spdk_ftl_dev *dev);
+
+void ftl_stats_bdev_io_completed(struct spdk_ftl_dev *dev, enum ftl_stats_type type,
+				 struct spdk_bdev_io *bdev_io);
+
+void ftl_stats_crc_error(struct spdk_ftl_dev *dev, enum ftl_stats_type type);
+
+int ftl_unmap(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_channel *ch,
+	      uint64_t lba, size_t lba_cnt, spdk_ftl_fn cb_fn, void *cb_arg);
+
+static inline uint64_t
+ftl_get_num_blocks_in_band(const struct spdk_ftl_dev *dev)
+{
+	return dev->num_blocks_in_band;
+}
+
+static inline uint32_t
+ftl_get_write_unit_size(struct spdk_bdev *bdev)
+{
+	/* Full block of P2L map worth of xfer_sz is needed for P2L checkpointing */
+	return FTL_NUM_LBA_IN_BLOCK;
+}
 
 static inline struct spdk_thread *
 ftl_get_core_thread(const struct spdk_ftl_dev *dev)
@@ -315,238 +233,91 @@ ftl_get_core_thread(const struct spdk_ftl_dev *dev)
 	return dev->core_thread;
 }
 
-static inline size_t
+static inline void
+ftl_add_io_activity(struct spdk_ftl_dev *dev)
+{
+	dev->stats.io_activity_total++;
+}
+
+static inline uint64_t
 ftl_get_num_bands(const struct spdk_ftl_dev *dev)
 {
 	return dev->num_bands;
 }
 
-static inline size_t
-ftl_get_num_punits(const struct spdk_ftl_dev *dev)
+static inline bool
+ftl_check_core_thread(const struct spdk_ftl_dev *dev)
 {
-	return spdk_bdev_get_optimal_open_zones(spdk_bdev_desc_get_bdev(dev->base_bdev_desc));
-}
-
-static inline size_t
-ftl_get_num_zones(const struct spdk_ftl_dev *dev)
-{
-	return ftl_get_num_bands(dev) * ftl_get_num_punits(dev);
-}
-
-static inline size_t
-ftl_get_num_blocks_in_zone(const struct spdk_ftl_dev *dev)
-{
-	return spdk_bdev_get_zone_size(spdk_bdev_desc_get_bdev(dev->base_bdev_desc));
-}
-
-static inline uint64_t
-ftl_get_num_blocks_in_band(const struct spdk_ftl_dev *dev)
-{
-	return ftl_get_num_punits(dev) * ftl_get_num_blocks_in_zone(dev);
-}
-
-static inline uint64_t
-ftl_addr_get_zone_slba(const struct spdk_ftl_dev *dev, struct ftl_addr addr)
-{
-	return addr.offset -= (addr.offset % ftl_get_num_blocks_in_zone(dev));
-}
-
-static inline uint64_t
-ftl_addr_get_band(const struct spdk_ftl_dev *dev, struct ftl_addr addr)
-{
-	return addr.offset / ftl_get_num_blocks_in_band(dev);
-}
-
-static inline uint64_t
-ftl_addr_get_punit(const struct spdk_ftl_dev *dev, struct ftl_addr addr)
-{
-	return (addr.offset / ftl_get_num_blocks_in_zone(dev)) % ftl_get_num_punits(dev);
-}
-
-static inline uint64_t
-ftl_addr_get_zone_offset(const struct spdk_ftl_dev *dev, struct ftl_addr addr)
-{
-	return addr.offset % ftl_get_num_blocks_in_zone(dev);
-}
-
-static inline size_t
-ftl_vld_map_size(const struct spdk_ftl_dev *dev)
-{
-	return (size_t)spdk_divide_round_up(ftl_get_num_blocks_in_band(dev), CHAR_BIT);
+	return dev->core_thread == spdk_get_thread();
 }
 
 static inline int
 ftl_addr_packed(const struct spdk_ftl_dev *dev)
 {
-	return dev->addr_len < 32;
-}
-
-static inline void
-ftl_l2p_lba_persist(const struct spdk_ftl_dev *dev, uint64_t lba)
-{
-#ifdef SPDK_CONFIG_PMDK
-	size_t ftl_addr_size = ftl_addr_packed(dev) ? 4 : 8;
-	pmem_persist((char *)dev->l2p + (lba * ftl_addr_size), ftl_addr_size);
-#else /* SPDK_CONFIG_PMDK */
-	SPDK_ERRLOG("Libpmem not available, cannot flush l2p to pmem\n");
-	assert(0);
-#endif /* SPDK_CONFIG_PMDK */
+	return dev->layout.l2p.addr_size < sizeof(ftl_addr);
 }
 
 static inline int
-ftl_addr_invalid(struct ftl_addr addr)
+ftl_addr_in_nvc(const struct spdk_ftl_dev *dev, ftl_addr addr)
 {
-	return addr.offset == ftl_to_addr(FTL_ADDR_INVALID).offset;
-}
-
-static inline int
-ftl_addr_cached(struct ftl_addr addr)
-{
-	return !ftl_addr_invalid(addr) && addr.cached;
-}
-
-static inline struct ftl_addr
-ftl_addr_to_packed(const struct spdk_ftl_dev *dev, struct ftl_addr addr)
-{
-	struct ftl_addr p = {};
-
-	if (ftl_addr_invalid(addr)) {
-		p = ftl_to_addr_packed(FTL_ADDR_INVALID);
-	} else if (ftl_addr_cached(addr)) {
-		p.pack.cached = 1;
-		p.pack.cache_offset = (uint32_t) addr.cache_offset;
-	} else {
-		p.pack.offset = (uint32_t) addr.offset;
-	}
-
-	return p;
-}
-
-static inline struct ftl_addr
-ftl_addr_from_packed(const struct spdk_ftl_dev *dev, struct ftl_addr p)
-{
-	struct ftl_addr addr = {};
-
-	if (p.pack.offset == (uint32_t)FTL_ADDR_INVALID) {
-		addr = ftl_to_addr(FTL_ADDR_INVALID);
-	} else if (p.pack.cached) {
-		addr.cached = 1;
-		addr.cache_offset = p.pack.cache_offset;
-	} else {
-		addr = p;
-	}
-
-	return addr;
-}
-
-#define _ftl_l2p_set(l2p, off, val, bits) \
-	__atomic_store_n(((uint##bits##_t *)(l2p)) + (off), val, __ATOMIC_SEQ_CST)
-
-#define _ftl_l2p_set32(l2p, off, val) \
-	_ftl_l2p_set(l2p, off, val, 32)
-
-#define _ftl_l2p_set64(l2p, off, val) \
-	_ftl_l2p_set(l2p, off, val, 64)
-
-#define _ftl_l2p_get(l2p, off, bits) \
-	__atomic_load_n(((uint##bits##_t *)(l2p)) + (off), __ATOMIC_SEQ_CST)
-
-#define _ftl_l2p_get32(l2p, off) \
-	_ftl_l2p_get(l2p, off, 32)
-
-#define _ftl_l2p_get64(l2p, off) \
-	_ftl_l2p_get(l2p, off, 64)
-
-#define ftl_addr_cmp(p1, p2) \
-	((p1).offset == (p2).offset)
-
-static inline void
-ftl_l2p_set(struct spdk_ftl_dev *dev, uint64_t lba, struct ftl_addr addr)
-{
-	assert(dev->num_lbas > lba);
-
-	if (ftl_addr_packed(dev)) {
-		_ftl_l2p_set32(dev->l2p, lba, ftl_addr_to_packed(dev, addr).offset);
-	} else {
-		_ftl_l2p_set64(dev->l2p, lba, addr.offset);
-	}
-
-	if (dev->l2p_pmem_len != 0) {
-		ftl_l2p_lba_persist(dev, lba);
-	}
-}
-
-static inline struct ftl_addr
-ftl_l2p_get(struct spdk_ftl_dev *dev, uint64_t lba)
-{
-	assert(dev->num_lbas > lba);
-
-	if (ftl_addr_packed(dev)) {
-		return ftl_addr_from_packed(dev, ftl_to_addr_packed(
-						    _ftl_l2p_get32(dev->l2p, lba)));
-	} else {
-		return ftl_to_addr(_ftl_l2p_get64(dev->l2p, lba));
-	}
-}
-
-static inline bool
-ftl_dev_has_nv_cache(const struct spdk_ftl_dev *dev)
-{
-	return dev->nv_cache.bdev_desc != NULL;
-}
-
-#define FTL_NV_CACHE_HEADER_VERSION	(1)
-#define FTL_NV_CACHE_DATA_OFFSET	(1)
-#define FTL_NV_CACHE_PHASE_OFFSET	(62)
-#define FTL_NV_CACHE_PHASE_COUNT	(4)
-#define FTL_NV_CACHE_PHASE_MASK		(3ULL << FTL_NV_CACHE_PHASE_OFFSET)
-#define FTL_NV_CACHE_LBA_INVALID	(FTL_LBA_INVALID & ~FTL_NV_CACHE_PHASE_MASK)
-
-static inline bool
-ftl_nv_cache_phase_is_valid(unsigned int phase)
-{
-	return phase > 0 && phase <= 3;
-}
-
-static inline unsigned int
-ftl_nv_cache_next_phase(unsigned int current)
-{
-	static const unsigned int phases[] = { 0, 2, 3, 1 };
-	assert(ftl_nv_cache_phase_is_valid(current));
-	return phases[current];
-}
-
-static inline unsigned int
-ftl_nv_cache_prev_phase(unsigned int current)
-{
-	static const unsigned int phases[] = { 0, 3, 1, 2 };
-	assert(ftl_nv_cache_phase_is_valid(current));
-	return phases[current];
+	assert(addr != FTL_ADDR_INVALID);
+	return addr >= dev->layout.base.total_blocks;
 }
 
 static inline uint64_t
-ftl_nv_cache_pack_lba(uint64_t lba, unsigned int phase)
+ftl_addr_to_nvc_offset(const struct spdk_ftl_dev *dev, ftl_addr addr)
 {
-	assert(ftl_nv_cache_phase_is_valid(phase));
-	return (lba & ~FTL_NV_CACHE_PHASE_MASK) | ((uint64_t)phase << FTL_NV_CACHE_PHASE_OFFSET);
+	assert(ftl_addr_in_nvc(dev, addr));
+	return addr - dev->layout.base.total_blocks;
 }
 
-static inline void
-ftl_nv_cache_unpack_lba(uint64_t in_lba, uint64_t *out_lba, unsigned int *phase)
+static inline ftl_addr
+ftl_addr_from_nvc_offset(const struct spdk_ftl_dev *dev, uint64_t cache_offset)
 {
-	*out_lba = in_lba & ~FTL_NV_CACHE_PHASE_MASK;
-	*phase = (in_lba & FTL_NV_CACHE_PHASE_MASK) >> FTL_NV_CACHE_PHASE_OFFSET;
+	return cache_offset + dev->layout.base.total_blocks;
+}
 
-	/* If the phase is invalid the block wasn't written yet, so treat the LBA as invalid too */
-	if (!ftl_nv_cache_phase_is_valid(*phase) || *out_lba == FTL_NV_CACHE_LBA_INVALID) {
-		*out_lba = FTL_LBA_INVALID;
-	}
+static inline uint64_t
+ftl_get_next_seq_id(struct spdk_ftl_dev *dev)
+{
+	return ++dev->sb->seq_id;
+}
+
+static inline size_t
+ftl_p2l_map_num_blocks(const struct spdk_ftl_dev *dev)
+{
+	return spdk_divide_round_up(ftl_get_num_blocks_in_band(dev) *
+				    sizeof(struct ftl_p2l_map_entry), FTL_BLOCK_SIZE);
+}
+
+static inline size_t
+ftl_tail_md_num_blocks(const struct spdk_ftl_dev *dev)
+{
+	return spdk_divide_round_up(
+		       ftl_p2l_map_num_blocks(dev),
+		       dev->xfer_size) * dev->xfer_size;
+}
+
+/*
+ * shm_ready being set is a necessary part of the validity of the shm superblock
+ * If it's not set, then the recovery or startup must proceed from disk
+ *
+ * - If both sb and shm_sb are clean, then shm memory can be relied on for startup
+ * - If shm_sb wasn't set to clean, then disk startup/recovery needs to be done (which depends on the sb->clean flag)
+ * - sb->clean clear and sb_shm->clean is technically not possible (due to the order of these operations), but it should
+ * probably do a full recovery from disk to be on the safe side (which the ftl_fast_recovery will guarantee)
+ */
+
+static inline bool
+ftl_fast_startup(const struct spdk_ftl_dev *dev)
+{
+	return dev->sb->clean && dev->sb_shm->shm_clean && dev->sb_shm->shm_ready;
 }
 
 static inline bool
-ftl_is_append_supported(const struct spdk_ftl_dev *dev)
+ftl_fast_recovery(const struct spdk_ftl_dev *dev)
 {
-	return dev->conf.use_append;
+	return !dev->sb->clean && !dev->sb_shm->shm_clean && dev->sb_shm->shm_ready;
 }
 
 #endif /* FTL_CORE_H */

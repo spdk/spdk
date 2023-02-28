@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2018-2021 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /** \file
@@ -100,6 +72,9 @@ struct spdk_nvmf_transport_opts {
 	uint32_t	buf_cache_size;
 	bool		dif_insert_or_strip;
 
+	/* Hole at bytes 29-31. */
+	uint8_t		reserved29[3];
+
 	uint32_t	abort_timeout_sec;
 	/* ms */
 	uint32_t	association_timeout;
@@ -116,7 +91,11 @@ struct spdk_nvmf_transport_opts {
 	uint32_t acceptor_poll_rate;
 	/* Use zero-copy operations if the underlying bdev supports them */
 	bool zcopy;
-};
+
+	/* Hole at bytes 61-63. */
+	uint8_t reserved61[3];
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 64, "Incorrect size");
 
 struct spdk_nvmf_listen_opts {
 	/**
@@ -128,7 +107,8 @@ struct spdk_nvmf_listen_opts {
 	size_t opts_size;
 
 	const struct spdk_json_val *transport_specific;
-};
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listen_opts) == 16, "Incorrect size");
 
 /**
  * Initialize listen options
@@ -148,6 +128,8 @@ struct spdk_nvmf_poll_group_stat {
 	/* current io qpair count */
 	uint32_t current_io_qpairs;
 	uint64_t pending_bdev_io;
+	/* NVMe IO commands completed (excludes admin commands) */
+	uint64_t completed_nvme_io;
 };
 
 /**
@@ -754,6 +736,9 @@ struct spdk_nvmf_ns_opts {
 	 */
 	struct spdk_uuid uuid;
 
+	/* Hole at bytes 44-47. */
+	uint8_t reserved44[4];
+
 	/**
 	 * The size of spdk_nvmf_ns_opts according to the caller of this library is used for ABI
 	 * compatibility.  The library uses this field to know how many fields in this structure
@@ -768,7 +753,11 @@ struct spdk_nvmf_ns_opts {
 	 * Set to be equal with the NSID if not specified.
 	 */
 	uint32_t anagrpid;
-};
+
+	/* Hole at bytes 60-63. */
+	uint8_t reserved60[4];
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ns_opts) == 64, "Incorrect size");
 
 /**
  * Get default namespace creation options.
@@ -979,7 +968,7 @@ spdk_nvmf_transport_opts_init(const char *transport_name,
 			      struct spdk_nvmf_transport_opts *opts, size_t opts_size);
 
 /**
- * Create a protocol transport
+ * Create a protocol transport - deprecated, please use \ref spdk_nvmf_transport_create_async.
  *
  * \param transport_name The transport type to create
  * \param opts The transport options (e.g. max_io_size). It should not be NULL, and opts_size
@@ -989,6 +978,27 @@ spdk_nvmf_transport_opts_init(const char *transport_name,
  */
 struct spdk_nvmf_transport *spdk_nvmf_transport_create(const char *transport_name,
 		struct spdk_nvmf_transport_opts *opts);
+
+typedef void (*spdk_nvmf_transport_create_done_cb)(void *cb_arg,
+		struct spdk_nvmf_transport *transport);
+
+/**
+ * Create a protocol transport
+ *
+ * The callback will be executed asynchronously - i.e. spdk_nvmf_transport_create_async will always return
+ * prior to `cb_fn` being called.
+ *
+ * \param transport_name The transport type to create
+ * \param opts The transport options (e.g. max_io_size). It should not be NULL, and opts_size
+ *        pointed in this structure should not be zero value.
+ * \param cb_fn A callback that will be called once the transport is created
+ * \param cb_arg A context argument passed to cb_fn.
+ *
+ * \return 0 on success, or negative errno on failure (`cb_fn` will not be executed then).
+ */
+int spdk_nvmf_transport_create_async(const char *transport_name,
+				     struct spdk_nvmf_transport_opts *opts,
+				     spdk_nvmf_transport_create_done_cb cb_fn, void *cb_arg);
 
 typedef void (*spdk_nvmf_transport_destroy_done_cb)(void *cb_arg);
 
@@ -1081,6 +1091,46 @@ void spdk_nvmf_tgt_add_transport(struct spdk_nvmf_tgt *tgt,
 				 struct spdk_nvmf_transport *transport,
 				 spdk_nvmf_tgt_add_transport_done_fn cb_fn,
 				 void *cb_arg);
+
+/**
+ * Function to be called once target pause is complete.
+ *
+ * \param cb_arg Callback argument passed to this function.
+ * \param status 0 if it completed successfully, or negative errno if it failed.
+ */
+typedef void (*spdk_nvmf_tgt_pause_polling_cb_fn)(void *cb_arg, int status);
+
+/**
+ * Pause polling on the given target.
+ *
+ * \param tgt The target to pause
+ * \param cb_fn A callback that will be called once the target is paused
+ * \param cb_arg A context argument passed to cb_fn.
+ *
+ * \return 0 if it completed successfully, or negative errno if it failed.
+ */
+int spdk_nvmf_tgt_pause_polling(struct spdk_nvmf_tgt *tgt, spdk_nvmf_tgt_pause_polling_cb_fn cb_fn,
+				void *cb_arg);
+
+/**
+ * Function to be called once target resume is complete.
+ *
+ * \param cb_arg Callback argument passed to this function.
+ * \param status 0 if it completed successfully, or negative errno if it failed.
+ */
+typedef void (*spdk_nvmf_tgt_resume_polling_cb_fn)(void *cb_arg, int status);
+
+/**
+ * Resume polling on the given target.
+ *
+ * \param tgt The target to resume
+ * \param cb_fn A callback that will be called once the target is resumed
+ * \param cb_arg A context argument passed to cb_fn.
+ *
+ * \return 0 if it completed successfully, or negative errno if it failed.
+ */
+int spdk_nvmf_tgt_resume_polling(struct spdk_nvmf_tgt *tgt,
+				 spdk_nvmf_tgt_resume_polling_cb_fn cb_fn, void *cb_arg);
 
 /**
  * Add listener to transport and begin accepting new connections.

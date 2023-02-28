@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -149,6 +121,21 @@ DEFINE_STUB(spdk_scsi_lun_id_fmt_to_int, int, (uint64_t lun_fmt), 0);
 DEFINE_STUB(spdk_scsi_lun_get_dif_ctx, bool,
 	    (struct spdk_scsi_lun *lun, struct spdk_scsi_task *task,
 	     struct spdk_dif_ctx *dif_ctx), false);
+
+static void
+alloc_mock_mobj(struct spdk_mobj *mobj, int len)
+{
+	mobj->buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(len));
+	SPDK_CU_ASSERT_FATAL(mobj->buf != NULL);
+
+	g_iscsi.pdu_immediate_data_pool = (struct spdk_mempool *)100;
+	g_iscsi.pdu_data_out_pool = (struct spdk_mempool *)200;
+	if (len == SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
+		mobj->mp = g_iscsi.pdu_data_out_pool;
+	} else {
+		mobj->mp = g_iscsi.pdu_immediate_data_pool;
+	}
+}
 
 static void
 op_login_check_target_test(void)
@@ -2065,11 +2052,8 @@ pdu_payload_read_test(void)
 
 	g_iscsi.FirstBurstLength = SPDK_ISCSI_FIRST_BURST_LENGTH;
 
-	mobj1.buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH));
-	SPDK_CU_ASSERT_FATAL(mobj1.buf != NULL);
-
-	mobj2.buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH));
-	SPDK_CU_ASSERT_FATAL(mobj2.buf != NULL);
+	alloc_mock_mobj(&mobj1, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+	alloc_mock_mobj(&mobj2, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 
 	MOCK_SET(spdk_mempool_get, &mobj1);
 
@@ -2240,14 +2224,9 @@ data_out_pdu_sequence_test(void)
 
 	TAILQ_INSERT_TAIL(&dev.luns, &lun, tailq);
 
-	mobj1.buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH));
-	SPDK_CU_ASSERT_FATAL(mobj1.buf != NULL);
-
-	mobj2.buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH));
-	SPDK_CU_ASSERT_FATAL(mobj2.buf != NULL);
-
-	mobj3.buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH));
-	SPDK_CU_ASSERT_FATAL(mobj3.buf != NULL);
+	alloc_mock_mobj(&mobj1, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+	alloc_mock_mobj(&mobj2, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+	alloc_mock_mobj(&mobj3, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 
 	/* Test scenario is as follows.
 	 *
@@ -2410,8 +2389,7 @@ immediate_data_and_data_out_pdu_sequence_test(void)
 
 	TAILQ_INSERT_TAIL(&dev.luns, &lun, tailq);
 
-	mobj.buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH));
-	SPDK_CU_ASSERT_FATAL(mobj.buf != NULL);
+	alloc_mock_mobj(&mobj, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 
 	/* Test scenario is as follows.
 	 *

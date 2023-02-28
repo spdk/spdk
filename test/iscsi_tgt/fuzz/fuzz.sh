@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2019 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
@@ -22,11 +25,9 @@ timing_enter iscsi_fuzz
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=4096
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 timing_enter start_iscsi_tgt
 
-"${ISCSI_APP[@]}" -m $ISCSI_TEST_CORE_MASK --wait-for-rpc &
+"${ISCSI_APP[@]}" -m $ISCSI_TEST_CORE_MASK --disable-cpumask-locks --wait-for-rpc &
 iscsipid=$!
 echo "Process iscsipid: $iscsipid"
 

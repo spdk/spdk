@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2020 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef SPDK_NVMF_CMD_H_
@@ -52,6 +24,42 @@ enum spdk_nvmf_request_exec_status {
  */
 int spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr,
 				   struct spdk_nvme_ctrlr_data *cdata);
+
+/**
+ * Fills the I/O Command Set specific Identify Namespace data structure (CNS
+ * 05h)
+ *
+ * \param ctrlr The NVMe-oF controller
+ * \param cmd The NVMe command
+ * \param rsp The NVMe command completion
+ * \param nsdata The filled in I/O command set specific identify namespace
+ * attributes
+ * \param nsdata_size The size of nsdata
+ * \return \ref spdk_nvmf_request_exec_status
+ */
+int spdk_nvmf_ns_identify_iocs_specific(struct spdk_nvmf_ctrlr *ctrlr,
+					struct spdk_nvme_cmd *cmd,
+					struct spdk_nvme_cpl *rsp,
+					void *nsdata,
+					size_t nsdata_size);
+
+/**
+ * Fills the I/O Command Set specific Identify Controller data structure (CNS
+ * 06h)
+ *
+ * \param ctrlr The NVMe-oF controller
+ * \param cmd The NVMe command
+ * \param rsp The NVMe command completion
+ * \param cdata The filled in I/O command set specific identify controller
+ * attributes
+ * \param cdata_size The size of cdata
+ * \return \ref spdk_nvmf_request_exec_status
+ */
+int spdk_nvmf_ctrlr_identify_iocs_specific(struct spdk_nvmf_ctrlr *ctrlr,
+		struct spdk_nvme_cmd *cmd,
+		struct spdk_nvme_cpl *rsp,
+		void *cdata,
+		size_t cdata_size);
 
 /**
  * Fills the identify namespace attributes for the specified controller
@@ -189,11 +197,36 @@ struct spdk_nvmf_subsystem *spdk_nvmf_request_get_subsystem(struct spdk_nvmf_req
 /**
  * Get the data and length associated with this request.
  *
+ *
  * \param req The NVMe-oF request
  * \param data The data buffer associated with this request
  * \param length The length of the data buffer
  */
 void spdk_nvmf_request_get_data(struct spdk_nvmf_request *req, void **data, uint32_t *length);
+
+/**
+ * Copy the data from the given @buf into the request iovec.
+ *
+ * \param req The NVMe-oF request
+ * \param buf The data buffer
+ * \param buflen The length of the data buffer
+ *
+ * \return the number of bytes copied
+ */
+size_t spdk_nvmf_request_copy_from_buf(struct spdk_nvmf_request *req,
+				       void *buf, size_t buflen);
+
+/**
+ * Copy the data from the request iovec into the given @buf.
+ *
+ * \param req The NVMe-oF request
+ * \param buf The data buffer
+ * \param buflen The length of the data buffer
+ *
+ * \return the number of bytes copied
+ */
+size_t spdk_nvmf_request_copy_to_buf(struct spdk_nvmf_request *req,
+				     void *buf, size_t buflen);
 
 /**
  * Get the NVMe-oF command associated with this request.

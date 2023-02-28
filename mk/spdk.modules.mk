@@ -1,35 +1,7 @@
-#
-#  BSD LICENSE
-#
-#  Copyright (c) Intel Corporation.
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2016 Intel Corporation.
+#  Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES.
 #  All rights reserved.
-#  Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-#  Redistribution and use in source and binary forms, with or without
-#  modification, are permitted provided that the following conditions
-#  are met:
-#
-#    * Redistributions of source code must retain the above copyright
-#      notice, this list of conditions and the following disclaimer.
-#    * Redistributions in binary form must reproduce the above copyright
-#      notice, this list of conditions and the following disclaimer in
-#      the documentation and/or other materials provided with the
-#      distribution.
-#    * Neither the name of Intel Corporation nor the names of its
-#      contributors may be used to endorse or promote products derived
-#      from this software without specific prior written permission.
-#
-#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-#  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-#  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-#  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-#  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-#  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-#  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-#  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-#  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-#  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
 BLOCKDEV_MODULES_LIST = bdev_malloc bdev_null bdev_nvme bdev_passthru bdev_lvol
@@ -41,6 +13,10 @@ BLOCKDEV_MODULES_LIST += blobfs blobfs_bdev blob_bdev blob lvol vmd nvme
 INTR_BLOCKDEV_MODULES_LIST = bdev_malloc bdev_passthru bdev_error bdev_gpt bdev_split bdev_raid
 # Logical volume, blobstore and blobfs can directly run in both interrupt mode and poll mode.
 INTR_BLOCKDEV_MODULES_LIST += bdev_lvol blobfs blobfs_bdev blob_bdev blob lvol
+
+ifeq ($(CONFIG_XNVME),y)
+BLOCKDEV_MODULES_LIST += bdev_xnvme
+endif
 
 ifeq ($(CONFIG_VFIO_USER),y)
 BLOCKDEV_MODULES_LIST += vfio_user
@@ -58,10 +34,10 @@ BLOCKDEV_MODULES_LIST += bdev_ocf
 BLOCKDEV_MODULES_LIST += ocfenv
 endif
 
-ifeq ($(CONFIG_REDUCE),y)
+ifeq ($(CONFIG_VBDEV_COMPRESS),y)
 BLOCKDEV_MODULES_LIST += bdev_compress reduce
 BLOCKDEV_MODULES_PRIVATE_LIBS += -lpmem
-ifeq ($(CONFIG_REDUCE_MLX5),y)
+ifeq ($(CONFIG_VBDEV_COMPRESS_MLX5),y)
 BLOCKDEV_MODULES_PRIVATE_LIBS += -lmlx5 -libverbs
 endif
 endif
@@ -75,10 +51,10 @@ endif
 endif
 
 ifeq ($(OS),Linux)
-BLOCKDEV_MODULES_LIST += bdev_ftl ftl
 BLOCKDEV_MODULES_LIST += bdev_aio
 BLOCKDEV_MODULES_PRIVATE_LIBS += -laio
 INTR_BLOCKDEV_MODULES_LIST += bdev_aio
+BLOCKDEV_MODULES_LIST += bdev_ftl ftl
 ifeq ($(CONFIG_VIRTIO),y)
 BLOCKDEV_MODULES_LIST += bdev_virtio virtio
 endif
@@ -108,6 +84,11 @@ BLOCKDEV_MODULES_LIST += bdev_pmem
 BLOCKDEV_MODULES_PRIVATE_LIBS += -lpmemblk -lpmem
 endif
 
+ifeq ($(CONFIG_DAOS),y)
+BLOCKDEV_MODULES_LIST += bdev_daos
+BLOCKDEV_MODULES_PRIVATE_LIBS += -ldaos -ldaos_common -ldfs -lgurt -luuid -ldl
+endif
+
 SOCK_MODULES_LIST = sock_posix
 
 ifeq ($(OS), Linux)
@@ -118,17 +99,30 @@ endif
 
 ACCEL_MODULES_LIST = accel_ioat ioat
 ifeq ($(CONFIG_IDXD),y)
-ACCEL_MODULES_LIST += accel_idxd idxd
+ACCEL_MODULES_LIST += accel_dsa accel_iaa idxd
+endif
+ifeq ($(CONFIG_CRYPTO),y)
+ACCEL_MODULES_LIST += accel_dpdk_cryptodev
+endif
+ifeq ($(CONFIG_DPDK_COMPRESSDEV),y)
+ACCEL_MODULES_LIST += accel_dpdk_compressdev
+endif
+
+ifeq ($(CONFIG_RDMA_PROV)|$(CONFIG_CRYPTO),mlx5_dv|y)
+ACCEL_MODULES_LIST += accel_mlx5
 endif
 
 SCHEDULER_MODULES_LIST = scheduler_dynamic
-ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
-ifeq ($(OS),Linux)
+ifeq (y,$(DPDK_POWER))
 SCHEDULER_MODULES_LIST += env_dpdk scheduler_dpdk_governor scheduler_gscheduler
 endif
+
+ifeq ($(CONFIG_VFIO_USER),y)
+VFU_DEVICE_MODULES_LIST = vfu_device
 endif
 
-EVENT_BDEV_SUBSYSTEM = event_bdev event_accel event_vmd event_sock
+EVENT_BDEV_SUBSYSTEM = event_bdev event_accel event_vmd event_sock event_iobuf
 
 ALL_MODULES_LIST = $(BLOCKDEV_MODULES_LIST) $(ACCEL_MODULES_LIST) $(SCHEDULER_MODULES_LIST) $(SOCK_MODULES_LIST)
+ALL_MODULES_LIST += $(VFU_DEVICE_MODULES_LIST)
 SYS_LIBS += $(BLOCKDEV_MODULES_PRIVATE_LIBS)

@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2021 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $testdir/interrupt_common.sh
 
-export PYTHONPATH=$rootdir/examples/interrupt_tgt
+export PYTHONPATH=$PYTHONPATH:$rootdir/examples/interrupt_tgt
 
 function reactor_set_intr_mode() {
 	local spdk_pid=$1
@@ -29,10 +32,10 @@ function reactor_set_intr_mode() {
 
 	if [ "$without_thd"x != x ]; then
 		# Schedule all spdk_threads to reactor 1
-		for i in ${thd0_ids[*]}; do
+		for i in "${thd0_ids[@]}"; do
 			$rpc_py thread_set_cpumask -i $i -m $r1_mask
 		done
-		for i in ${thd2_ids[*]}; do
+		for i in "${thd2_ids[@]}"; do
 			$rpc_py thread_set_cpumask -i $i -m $r1_mask
 		done
 	fi
@@ -48,7 +51,7 @@ function reactor_set_intr_mode() {
 	$rpc_py --plugin interrupt_plugin reactor_set_interrupt_mode 2
 	if [ "$without_thd"x != x ]; then
 		# Schedule spdk_threads in thd2_ids back to reactor 2
-		for i in ${thd2_ids[*]}; do
+		for i in "${thd2_ids[@]}"; do
 			$rpc_py thread_set_cpumask -i $i -m $r2_mask
 		done
 	fi
@@ -59,7 +62,7 @@ function reactor_set_intr_mode() {
 	$rpc_py --plugin interrupt_plugin reactor_set_interrupt_mode 0
 	if [ "$without_thd"x != x ]; then
 		# Schedule spdk_threads in thd2_ids back to reactor 0
-		for i in ${thd0_ids[*]}; do
+		for i in "${thd0_ids[@]}"; do
 			$rpc_py thread_set_cpumask -i $i -m $r0_mask
 		done
 	fi

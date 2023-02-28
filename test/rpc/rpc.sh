@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2019 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
@@ -37,17 +40,29 @@ function rpc_plugins() {
 	}
 }
 
-$SPDK_BIN_DIR/spdk_tgt &
+function rpc_trace_cmd_test() {
+	local info
+
+	info=$($rpc trace_get_info)
+	[ "$(jq length <<< "$info")" -gt 2 ]
+	[ "$(jq 'has("tpoint_group_mask")' <<< "$info")" = "true" ]
+	[ "$(jq 'has("tpoint_shm_path")' <<< "$info")" = "true" ]
+	[ "$(jq 'has("bdev")' <<< "$info")" = "true" ]
+	[ "$(jq -r .bdev.tpoint_mask <<< "$info")" != "0x0" ]
+}
+
+$SPDK_BIN_DIR/spdk_tgt -e bdev &
 spdk_pid=$!
 trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid
 
-export PYTHONPATH=$testdir
+export PYTHONPATH=$PYTHONPATH:$testdir
 
 # basic integrity test
 rpc=rpc_cmd
 run_test "rpc_integrity" rpc_integrity
 run_test "rpc_plugins" rpc_plugins
+run_test "rpc_trace_cmd_test" rpc_trace_cmd_test
 # same integrity test, but with rpc_cmd() instead
 rpc="rpc_cmd"
 run_test "rpc_daemon_integrity" rpc_integrity

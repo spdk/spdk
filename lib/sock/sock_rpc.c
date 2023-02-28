@@ -1,34 +1,7 @@
-/*-
- *   BSD LICENSE
- *
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2020 Intel Corporation.
  *   Copyright (c) 2020, 2021 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/sock.h"
@@ -79,6 +52,15 @@ rpc_sock_impl_get_options(struct spdk_jsonrpc_request *request,
 	spdk_json_write_named_uint32(w, "enable_placement_id", sock_opts.enable_placement_id);
 	spdk_json_write_named_bool(w, "enable_zerocopy_send_server", sock_opts.enable_zerocopy_send_server);
 	spdk_json_write_named_bool(w, "enable_zerocopy_send_client", sock_opts.enable_zerocopy_send_client);
+	spdk_json_write_named_uint32(w, "zerocopy_threshold", sock_opts.zerocopy_threshold);
+	spdk_json_write_named_uint32(w, "tls_version", sock_opts.tls_version);
+	spdk_json_write_named_bool(w, "enable_ktls", sock_opts.enable_ktls);
+	if (sock_opts.psk_key) {
+		spdk_json_write_named_string(w, "psk_key", sock_opts.psk_key);
+	}
+	if (sock_opts.psk_identity) {
+		spdk_json_write_named_string(w, "psk_identity", sock_opts.psk_identity);
+	}
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(request, w);
 	free(impl_name);
@@ -123,6 +105,26 @@ static const struct spdk_json_object_decoder rpc_sock_impl_set_opts_decoders[] =
 	{
 		"enable_zerocopy_send_client", offsetof(struct spdk_rpc_sock_impl_set_opts, sock_opts.enable_zerocopy_send_client),
 		spdk_json_decode_bool, true
+	},
+	{
+		"zerocopy_threshold", offsetof(struct spdk_rpc_sock_impl_set_opts, sock_opts.zerocopy_threshold),
+		spdk_json_decode_uint32, true
+	},
+	{
+		"tls_version", offsetof(struct spdk_rpc_sock_impl_set_opts, sock_opts.tls_version),
+		spdk_json_decode_uint32, true
+	},
+	{
+		"enable_ktls", offsetof(struct spdk_rpc_sock_impl_set_opts, sock_opts.enable_ktls),
+		spdk_json_decode_bool, true
+	},
+	{
+		"psk_key", offsetof(struct spdk_rpc_sock_impl_set_opts, sock_opts.psk_key),
+		spdk_json_decode_string, true
+	},
+	{
+		"psk_identity", offsetof(struct spdk_rpc_sock_impl_set_opts, sock_opts.psk_identity),
+		spdk_json_decode_string, true
 	}
 };
 

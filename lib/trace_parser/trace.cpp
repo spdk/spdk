@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2021 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -125,9 +97,8 @@ spdk_trace_parser::entry_count(uint16_t lcore) const
 	}
 
 	history = spdk_get_per_lcore_history(_histories, lcore);
-	assert(history);
 
-	return history->num_entries;
+	return history == NULL ? 0 : history->num_entries;
 }
 
 spdk_trace_entry_buffer *
@@ -155,6 +126,10 @@ spdk_trace_parser::build_arg(argument_context *argctx, const spdk_trace_argument
 	size_t curlen, argoff;
 
 	argoff = 0;
+	/* Make sure that if we only copy a 4-byte integer, that the upper bytes have already been
+	 * zeroed.
+	 */
+	pe->args[argid].integer = 0;
 	while (argoff < arg->size) {
 		if (argctx->offset == sizeof(buffer->data)) {
 			buffer = get_next_buffer(buffer, argctx->lcore);
@@ -364,8 +339,7 @@ spdk_trace_parser::init(const spdk_trace_parser_opts *opts)
 	if (opts->lcore == SPDK_TRACE_MAX_LCORE) {
 		for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 			history = spdk_get_per_lcore_history(_histories, i);
-			assert(history);
-			if (history->num_entries == 0 || history->entries[0].tsc == 0) {
+			if (history == NULL || history->num_entries == 0 || history->entries[0].tsc == 0) {
 				continue;
 			}
 
@@ -373,7 +347,11 @@ spdk_trace_parser::init(const spdk_trace_parser_opts *opts)
 		}
 	} else {
 		history = spdk_get_per_lcore_history(_histories, opts->lcore);
-		assert(history);
+		if (history == NULL) {
+			SPDK_ERRLOG("Trace file %s has no trace history for lcore %d\n",
+				    opts->filename, opts->lcore);
+			return false;
+		}
 		if (history->num_entries > 0 && history->entries[0].tsc != 0) {
 			populate_events(history, history->num_entries);
 		}

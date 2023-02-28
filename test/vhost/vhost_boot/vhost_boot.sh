@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation
+#  All rights reserved.
+#
 set -xe
 
 testdir=$(readlink -f $(dirname $0))
@@ -104,7 +108,7 @@ timing_exit setup_vm
 start_part_sector=0 drive_size=0
 while IFS=":" read -r id start end _; do
 	start=${start%s} end=${end%s}
-	[[ -b $id ]] && drive_size=$start
+	[[ $id == /dev/sda ]] && drive_size=$start
 	[[ $id =~ ^[0-9]+$ ]] && start_part_sector=$((end + 1))
 done < <(vm_exec "$vm_no" "parted /dev/sda -ms unit s print")
 
@@ -118,7 +122,7 @@ vm_exec $vm_no "mkfs.ext4 -F /dev/sda2; mkdir -p /mnt/sda2test; mount /dev/sda2 
 vm_exec $vm_no "fio --name=integrity --bsrange=4k-512k --iodepth=128 --numjobs=1 --direct=1 \
  --thread=1 --group_reporting=1 --rw=randrw --rwmixread=70 --filename=/mnt/sda2test/test_file \
  --verify=md5 --do_verify=1 --verify_backlog=1024 --fsync_on_close=1 --runtime=20 \
- --time_based=1 --size=1024m"
+ --time_based=1 --size=1024m --verify_state_save=0"
 vm_exec $vm_no "umount /mnt/sda2test; rm -rf /mnt/sda2test"
 alignment_offset=$(vm_exec $vm_no "cat /sys/block/sda/sda1/alignment_offset")
 echo "alignment_offset: $alignment_offset"

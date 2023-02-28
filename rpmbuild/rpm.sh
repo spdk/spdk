@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2021 Intel Corporation
+#  All rights reserved.
+#
 
 set -e
 
@@ -21,10 +25,11 @@ fi
 
 get_config() {
 	# Intercept part of the ./configure's cmdline we are interested in
-	configure_opts=($(getopt -l "$1::" -o "" -- $configure 2> /dev/null))
-	# Drop "--"
-	configure_opts=("${configure_opts[@]::${#configure_opts[@]}-1}")
-	((${#configure_opts[@]} > 0)) || return 1
+	configure_opts=($(getopt -l "$1::" -o "" -- $configure 2> /dev/null)) || true
+	# If "--" is the first argument then either the cmdline is empty or doesn't
+	# match on what we are looking for. In either case simply return as there
+	# is nothing to check.
+	[[ ${configure_opts[0]} == "--" ]] && return 1
 
 	if [[ $2 == has-arg ]]; then
 		[[ -n ${configure_opts[1]} && ${configure_opts[1]} != "''" ]]
@@ -95,14 +100,34 @@ build_macros() {
 			# Don't build dpdk rpm rather define proper requirements for the spdk.
 			macros+=(-D "dpdk 0")
 			macros+=(-D "shared 1")
-			requirements=${requirements:+$requirements, }"dpdk-devel >= 19.11"
-			build_requirements=${build_requirements:+$build_requirements, }"dpdk-devel >= 19.11"
+			# This maps how Epoch is used inside dpdk packages across different distros. It's
+			# mainly relevant when comparing version of required packages. Default maps to 0.
+			local -A dpdk_rpm_epoch["fedora"]=2
+			local dpdk_version_min=${dpdk_rpm_epoch["$ID"]:-0}:20.11
+			local dpdk_req="dpdk-devel >= $dpdk_version_min"
+
+			requirements=${requirements:+$requirements, }"$dpdk_req"
+			build_requirements=${build_requirements:+$build_requirements, }"$dpdk_req"
 		else
 			dpdk_build_path=$(get_config with-dpdk print)
 			dpdk_path=$(dirname "$dpdk_build_path")
 			macros+=(-D "dpdk_build_path $dpdk_build_path")
 			macros+=(-D "dpdk_path $dpdk_path")
 		fi
+	fi
+
+	if get_config with-rbd; then
+		macros+=(-D "rbd 1")
+		requirements=${requirements:+$requirements, }"librados2, librbd1"
+		build_requirements=${build_requirements:+$build_requirements, }"librados-devel, librbd-devel"
+	fi
+
+	if get_config libdir has-arg; then
+		macros+=(-D "libdir $(get_config libdir print)")
+	fi
+
+	if get_config with-vfio-user; then
+		macros+=(-D "vfio_user 1")
 	fi
 
 	if [[ $deps == no ]]; then
@@ -118,6 +143,23 @@ build_macros() {
 		macros+=(-D "build_requirements 1")
 		macros+=(-D "build_requirements_list $build_requirements")
 	fi
+
+	build_macros_flags
+}
+
+build_macros_flags() {
+	local flags flag
+
+	flags=(CFLAGS CXXFLAGS LDFLAGS)
+
+	for flag in "${flags[@]}"; do
+		# If we are running in the environment where the flag is set, don't touch it -
+		# rpmbuild will use it as is during the build. If it's not set, make sure the
+		# rpmbuild won't set its defaults which may affect the build in an unpredictable
+		# manner.
+		[[ -n ${!flag} ]] && continue
+		macros+=(-D "build_${flag,,} %{nil}")
+	done
 }
 
 gen_spec() {

@@ -1,10 +1,18 @@
 #!/usr/bin/env python3
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2019 Intel Corporation
+#  All rights reserved.
+#
 
 import logging
+import os
 import sys
 import argparse
 import time
-import rpc
+
+sys.path.append(os.path.dirname(__file__) + '/../python')
+
+import spdk.rpc as rpc  # noqa
 
 
 SPDK_CPU_STAT = "/proc/stat"

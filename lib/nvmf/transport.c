@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2018-2019, 2021 Mellanox Technologies LTD. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -156,9 +128,10 @@ spdk_nvmf_get_transport_name(struct spdk_nvmf_transport *transport)
 	return transport->ops->name;
 }
 
-static void nvmf_transport_opts_copy(struct spdk_nvmf_transport_opts *opts,
-				     struct spdk_nvmf_transport_opts *opts_src,
-				     size_t opts_size)
+static void
+nvmf_transport_opts_copy(struct spdk_nvmf_transport_opts *opts,
+			 struct spdk_nvmf_transport_opts *opts_src,
+			 size_t opts_size)
 {
 	assert(opts);
 	assert(opts_src);
@@ -193,78 +166,169 @@ static void nvmf_transport_opts_copy(struct spdk_nvmf_transport_opts *opts,
 #undef FILED_CHECK
 }
 
-struct spdk_nvmf_transport *
-spdk_nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transport_opts *opts)
+struct nvmf_transport_create_ctx {
+	const struct spdk_nvmf_transport_ops *ops;
+	struct spdk_nvmf_transport_opts opts;
+	void *cb_arg;
+	spdk_nvmf_transport_create_done_cb cb_fn;
+};
+
+static void
+nvmf_transport_create_async_done(void *cb_arg, struct spdk_nvmf_transport *transport)
 {
-	const struct spdk_nvmf_transport_ops *ops = NULL;
-	struct spdk_nvmf_transport *transport;
+	struct nvmf_transport_create_ctx *ctx = cb_arg;
 	char spdk_mempool_name[MAX_MEMPOOL_NAME_LENGTH];
 	int chars_written;
-	struct spdk_nvmf_transport_opts opts_local = {};
+
+	if (!transport) {
+		SPDK_ERRLOG("Failed to create transport.\n");
+		goto err;
+	}
+
+	pthread_mutex_init(&transport->mutex, NULL);
+	TAILQ_INIT(&transport->listeners);
+	transport->ops = ctx->ops;
+	transport->opts = ctx->opts;
+	chars_written = snprintf(spdk_mempool_name, MAX_MEMPOOL_NAME_LENGTH, "%s_%s_%s", "spdk_nvmf",
+				 transport->ops->name, "data");
+	if (chars_written < 0) {
+		SPDK_ERRLOG("Unable to generate transport data buffer pool name.\n");
+		goto err;
+	}
+
+	if (ctx->opts.num_shared_buffers) {
+		transport->data_buf_pool = spdk_mempool_create(spdk_mempool_name, ctx->opts.num_shared_buffers,
+					   ctx->opts.io_unit_size + NVMF_DATA_BUFFER_ALIGNMENT, 0, SPDK_ENV_SOCKET_ID_ANY);
+		if (!transport->data_buf_pool) {
+			if (spdk_mempool_lookup(spdk_mempool_name) != NULL) {
+				SPDK_ERRLOG("Unable to allocate poll group buffer pull: already exists\n");
+				SPDK_ERRLOG("Probably running in multiprocess environment, which is "
+					    "unsupported by the nvmf library\n");
+			} else {
+				SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
+			}
+			goto err;
+		}
+	}
+
+	ctx->cb_fn(ctx->cb_arg, transport);
+	free(ctx);
+	return;
+
+err:
+	if (transport) {
+		transport->ops->destroy(transport, NULL, NULL);
+	}
+
+	ctx->cb_fn(ctx->cb_arg, NULL);
+	free(ctx);
+}
+
+static void
+_nvmf_transport_create_done(void *ctx)
+{
+	struct nvmf_transport_create_ctx *_ctx = (struct nvmf_transport_create_ctx *)ctx;
+
+	nvmf_transport_create_async_done(_ctx, _ctx->ops->create(&_ctx->opts));
+}
+
+static int
+nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transport_opts *opts,
+		      spdk_nvmf_transport_create_done_cb cb_fn, void *cb_arg, bool sync)
+{
+	struct nvmf_transport_create_ctx *ctx;
+	int rc;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		return -ENOMEM;
+	}
 
 	if (!opts) {
 		SPDK_ERRLOG("opts should not be NULL\n");
-		return NULL;
+		goto err;
 	}
 
 	if (!opts->opts_size) {
 		SPDK_ERRLOG("The opts_size in opts structure should not be zero\n");
-		return NULL;
+		goto err;
 	}
 
-	ops = nvmf_get_transport_ops(transport_name);
-	if (!ops) {
+	ctx->ops = nvmf_get_transport_ops(transport_name);
+	if (!ctx->ops) {
 		SPDK_ERRLOG("Transport type '%s' unavailable.\n", transport_name);
-		return NULL;
+		goto err;
 	}
-	nvmf_transport_opts_copy(&opts_local, opts, opts->opts_size);
 
-	if (opts_local.max_io_size != 0 && (!spdk_u32_is_pow2(opts_local.max_io_size) ||
-					    opts_local.max_io_size < 8192)) {
+	nvmf_transport_opts_copy(&ctx->opts, opts, opts->opts_size);
+	if (ctx->opts.max_io_size != 0 && (!spdk_u32_is_pow2(ctx->opts.max_io_size) ||
+					   ctx->opts.max_io_size < 8192)) {
 		SPDK_ERRLOG("max_io_size %u must be a power of 2 and be greater than or equal 8KB\n",
-			    opts_local.max_io_size);
-		return NULL;
+			    ctx->opts.max_io_size);
+		goto err;
 	}
 
-	if (opts_local.max_aq_depth < SPDK_NVMF_MIN_ADMIN_MAX_SQ_SIZE) {
+	if (ctx->opts.max_aq_depth < SPDK_NVMF_MIN_ADMIN_MAX_SQ_SIZE) {
 		SPDK_ERRLOG("max_aq_depth %u is less than minimum defined by NVMf spec, use min value\n",
-			    opts_local.max_aq_depth);
-		opts_local.max_aq_depth = SPDK_NVMF_MIN_ADMIN_MAX_SQ_SIZE;
+			    ctx->opts.max_aq_depth);
+		ctx->opts.max_aq_depth = SPDK_NVMF_MIN_ADMIN_MAX_SQ_SIZE;
 	}
 
-	transport = ops->create(&opts_local);
-	if (!transport) {
-		SPDK_ERRLOG("Unable to create new transport of type %s\n", transport_name);
-		return NULL;
-	}
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
 
-	TAILQ_INIT(&transport->listeners);
-
-	transport->ops = ops;
-	transport->opts = opts_local;
-
-	chars_written = snprintf(spdk_mempool_name, MAX_MEMPOOL_NAME_LENGTH, "%s_%s_%s", "spdk_nvmf",
-				 transport_name, "data");
-	if (chars_written < 0) {
-		SPDK_ERRLOG("Unable to generate transport data buffer pool name.\n");
-		ops->destroy(transport, NULL, NULL);
-		return NULL;
-	}
-
-	if (opts_local.num_shared_buffers) {
-		transport->data_buf_pool = spdk_mempool_create(spdk_mempool_name,
-					   opts_local.num_shared_buffers,
-					   opts_local.io_unit_size + NVMF_DATA_BUFFER_ALIGNMENT,
-					   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-					   SPDK_ENV_SOCKET_ID_ANY);
-
-		if (!transport->data_buf_pool) {
-			SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
-			ops->destroy(transport, NULL, NULL);
-			return NULL;
+	/* Prioritize sync create operation. */
+	if (ctx->ops->create) {
+		if (sync) {
+			_nvmf_transport_create_done(ctx);
+			return 0;
 		}
+
+		rc = spdk_thread_send_msg(spdk_get_thread(), _nvmf_transport_create_done, ctx);
+		if (rc) {
+			goto err;
+		}
+
+		return 0;
 	}
 
+	assert(ctx->ops->create_async);
+	rc = ctx->ops->create_async(&ctx->opts, nvmf_transport_create_async_done, ctx);
+	if (rc) {
+		SPDK_ERRLOG("Unable to create new transport of type %s\n", transport_name);
+		goto err;
+	}
+
+	return 0;
+err:
+	free(ctx);
+	return -1;
+}
+
+int
+spdk_nvmf_transport_create_async(const char *transport_name, struct spdk_nvmf_transport_opts *opts,
+				 spdk_nvmf_transport_create_done_cb cb_fn, void *cb_arg)
+{
+	return nvmf_transport_create(transport_name, opts, cb_fn, cb_arg, false);
+}
+
+static void
+nvmf_transport_create_sync_done(void *cb_arg, struct spdk_nvmf_transport *transport)
+{
+	struct spdk_nvmf_transport **_transport = cb_arg;
+
+	*_transport = transport;
+}
+
+struct spdk_nvmf_transport *
+spdk_nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transport_opts *opts)
+{
+	struct spdk_nvmf_transport *transport = NULL;
+
+	/* Current implementation supports synchronous version of create operation only. */
+	assert(nvmf_get_transport_ops(transport_name) && nvmf_get_transport_ops(transport_name)->create);
+
+	nvmf_transport_create(transport_name, opts, nvmf_transport_create_sync_done, &transport, true);
 	return transport;
 }
 
@@ -302,6 +366,7 @@ spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport,
 		free(listener);
 	}
 
+	pthread_mutex_destroy(&transport->mutex);
 	return transport->ops->destroy(transport, cb_fn, cb_arg);
 }
 
@@ -337,7 +402,9 @@ spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 		listener->ref = 1;
 		listener->trid = *trid;
 		TAILQ_INSERT_TAIL(&transport->listeners, listener, link);
+		pthread_mutex_lock(&transport->mutex);
 		rc = transport->ops->listen(transport, &listener->trid, opts);
+		pthread_mutex_unlock(&transport->mutex);
 		if (rc != 0) {
 			TAILQ_REMOVE(&transport->listeners, listener, link);
 			free(listener);
@@ -363,7 +430,9 @@ spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 
 	if (--listener->ref == 0) {
 		TAILQ_REMOVE(&transport->listeners, listener, link);
+		pthread_mutex_lock(&transport->mutex);
 		transport->ops->stop_listen(transport, trid);
+		pthread_mutex_unlock(&transport->mutex);
 		free(listener);
 	}
 
@@ -471,7 +540,9 @@ nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport,
 	struct spdk_nvmf_transport_pg_cache_buf **bufs;
 	uint32_t i;
 
+	pthread_mutex_lock(&transport->mutex);
 	tgroup = transport->ops->poll_group_create(transport, group);
+	pthread_mutex_unlock(&transport->mutex);
 	if (!tgroup) {
 		return NULL;
 	}
@@ -518,8 +589,14 @@ struct spdk_nvmf_transport_poll_group *
 nvmf_transport_get_optimal_poll_group(struct spdk_nvmf_transport *transport,
 				      struct spdk_nvmf_qpair *qpair)
 {
+	struct spdk_nvmf_transport_poll_group *tgroup;
+
 	if (transport->ops->get_optimal_poll_group) {
-		return transport->ops->get_optimal_poll_group(qpair);
+		pthread_mutex_lock(&transport->mutex);
+		tgroup = transport->ops->get_optimal_poll_group(qpair);
+		pthread_mutex_unlock(&transport->mutex);
+
+		return tgroup;
 	} else {
 		return NULL;
 	}
@@ -529,6 +606,9 @@ void
 nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_transport_pg_cache_buf *buf, *tmp;
+	struct spdk_nvmf_transport *transport;
+
+	transport = group->transport;
 
 	if (!STAILQ_EMPTY(&group->pending_buf_queue)) {
 		SPDK_ERRLOG("Pending I/O list wasn't empty on poll group destruction\n");
@@ -536,9 +616,12 @@ nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 
 	STAILQ_FOREACH_SAFE(buf, &group->buf_cache, link, tmp) {
 		STAILQ_REMOVE(&group->buf_cache, buf, spdk_nvmf_transport_pg_cache_buf, link);
-		spdk_mempool_put(group->transport->data_buf_pool, buf);
+		spdk_mempool_put(transport->data_buf_pool, buf);
 	}
-	group->transport->ops->poll_group_destroy(group);
+
+	pthread_mutex_lock(&transport->mutex);
+	transport->ops->poll_group_destroy(group);
+	pthread_mutex_unlock(&transport->mutex);
 }
 
 int
@@ -687,10 +770,13 @@ spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
 		req->buffers[i] = NULL;
 		req->iov[i].iov_len = 0;
 	}
+	req->iovcnt = 0;
 	req->data_from_pool = false;
 }
 
-static inline int
+typedef int (*set_buffer_callback)(struct spdk_nvmf_request *req, void *buf,
+				   uint32_t length,	uint32_t io_unit_size);
+static int
 nvmf_request_set_buffer(struct spdk_nvmf_request *req, void *buf, uint32_t length,
 			uint32_t io_unit_size)
 {
@@ -708,9 +794,9 @@ static int
 nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 			 struct spdk_nvmf_transport_poll_group *group,
 			 struct spdk_nvmf_transport *transport,
-			 uint32_t length)
+			 uint32_t length, uint32_t io_unit_size,
+			 set_buffer_callback cb_func)
 {
-	uint32_t io_unit_size = transport->opts.io_unit_size;
 	uint32_t num_buffers;
 	uint32_t i = 0, j;
 	void *buffer, *buffers[NVMF_REQ_MAX_BUFFERS];
@@ -730,7 +816,7 @@ nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 			STAILQ_REMOVE_HEAD(&group->buf_cache, link);
 			assert(buffer != NULL);
 
-			length = nvmf_request_set_buffer(req, buffer, length, io_unit_size);
+			length = cb_func(req, buffer, length, io_unit_size);
 			i++;
 		} else {
 			if (spdk_mempool_get_bulk(transport->data_buf_pool, buffers,
@@ -738,7 +824,7 @@ nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 				return -ENOMEM;
 			}
 			for (j = 0; j < num_buffers - i; j++) {
-				length = nvmf_request_set_buffer(req, buffers[j], length, io_unit_size);
+				length = cb_func(req, buffers[j], length, io_unit_size);
 			}
 			i += num_buffers - i;
 		}
@@ -746,7 +832,6 @@ nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 
 	assert(length == 0);
 
-	req->data_from_pool = true;
 	return 0;
 }
 
@@ -759,11 +844,90 @@ spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 	int rc;
 
 	req->iovcnt = 0;
-
-	rc = nvmf_request_get_buffers(req, group, transport, length);
-	if (rc == -ENOMEM) {
+	rc = nvmf_request_get_buffers(req, group, transport, length,
+				      transport->opts.io_unit_size,
+				      nvmf_request_set_buffer);
+	if (!rc) {
+		req->data_from_pool = true;
+	} else if (rc == -ENOMEM) {
 		spdk_nvmf_request_free_buffers(req, group, transport);
+		return rc;
 	}
 
+	return rc;
+}
+
+static int
+nvmf_request_set_stripped_buffer(struct spdk_nvmf_request *req, void *buf, uint32_t length,
+				 uint32_t io_unit_size)
+{
+	struct spdk_nvmf_stripped_data *data = req->stripped_data;
+
+	data->buffers[data->iovcnt] = buf;
+	data->iov[data->iovcnt].iov_base = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) &
+					   ~NVMF_DATA_BUFFER_MASK);
+	data->iov[data->iovcnt].iov_len  = spdk_min(length, io_unit_size);
+	length -= data->iov[data->iovcnt].iov_len;
+	data->iovcnt++;
+
+	return length;
+}
+
+void
+nvmf_request_free_stripped_buffers(struct spdk_nvmf_request *req,
+				   struct spdk_nvmf_transport_poll_group *group,
+				   struct spdk_nvmf_transport *transport)
+{
+	struct spdk_nvmf_stripped_data *data = req->stripped_data;
+	uint32_t i;
+
+	for (i = 0; i < data->iovcnt; i++) {
+		if (group->buf_cache_count < group->buf_cache_size) {
+			STAILQ_INSERT_HEAD(&group->buf_cache,
+					   (struct spdk_nvmf_transport_pg_cache_buf *)data->buffers[i],
+					   link);
+			group->buf_cache_count++;
+		} else {
+			spdk_mempool_put(transport->data_buf_pool, data->buffers[i]);
+		}
+	}
+	free(data);
+	req->stripped_data = NULL;
+}
+
+int
+nvmf_request_get_stripped_buffers(struct spdk_nvmf_request *req,
+				  struct spdk_nvmf_transport_poll_group *group,
+				  struct spdk_nvmf_transport *transport,
+				  uint32_t length)
+{
+	uint32_t block_size = req->dif.dif_ctx.block_size;
+	uint32_t data_block_size = block_size - req->dif.dif_ctx.md_size;
+	uint32_t io_unit_size = transport->opts.io_unit_size / block_size * data_block_size;
+	struct spdk_nvmf_stripped_data *data;
+	uint32_t i;
+	int rc;
+
+	/* Data blocks must be block aligned */
+	for (i = 0; i < req->iovcnt; i++) {
+		if (req->iov[i].iov_len % block_size) {
+			return -EINVAL;
+		}
+	}
+
+	data = calloc(1, sizeof(*data));
+	if (data == NULL) {
+		SPDK_ERRLOG("Unable to allocate memory for stripped_data.\n");
+		return -ENOMEM;
+	}
+	req->stripped_data = data;
+	req->stripped_data->iovcnt = 0;
+
+	rc = nvmf_request_get_buffers(req, group, transport, length, io_unit_size,
+				      nvmf_request_set_stripped_buffer);
+	if (rc == -ENOMEM) {
+		nvmf_request_free_stripped_buffers(req, group, transport);
+		return rc;
+	}
 	return rc;
 }

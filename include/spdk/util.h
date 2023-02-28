@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /** \file
@@ -37,6 +9,9 @@
 
 #ifndef SPDK_UTIL_H
 #define SPDK_UTIL_H
+
+/* memset_s is only available if __STDC_WANT_LIB_EXT1__ is set to 1 before including \<string.h\> */
+#define __STDC_WANT_LIB_EXT1__ 1
 
 #include "spdk/stdinc.h"
 
@@ -130,13 +105,6 @@ spdk_divide_round_up(uint64_t num, uint64_t divisor)
 }
 
 /**
- * Copy the data described by the source iovec to the destination iovec.
- *
- * \return The number of bytes copied.
- */
-size_t spdk_iovcpy(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_t diovcnt);
-
-/**
  * An iovec iterator. Can be allocated on the stack.
  */
 struct spdk_ioviter {
@@ -174,6 +142,75 @@ size_t spdk_ioviter_first(struct spdk_ioviter *iter,
  * the iteration is complete on the fifth call.
  */
 size_t spdk_ioviter_next(struct spdk_ioviter *iter, void **src, void **dst);
+
+/**
+ * Operate like memset across an iovec.
+ */
+void
+spdk_iov_memset(struct iovec *iovs, int iovcnt, int c);
+
+/**
+ * Initialize an iovec with just the single given buffer.
+ */
+void
+spdk_iov_one(struct iovec *iov, int *iovcnt, void *buf, size_t buflen);
+
+/**
+ * Copy the data described by the source iovec to the destination iovec.
+ *
+ * \return The number of bytes copied.
+ */
+size_t spdk_iovcpy(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_t diovcnt);
+
+/**
+ * Same as spdk_iovcpy(), but the src/dst buffers might overlap.
+ *
+ * \return The number of bytes copied.
+ */
+size_t spdk_iovmove(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_t diovcnt);
+
+/**
+ * Transfer state for iterative copying in or out of an iovec.
+ */
+struct spdk_iov_xfer {
+	struct iovec *iovs;
+	int iovcnt;
+	int cur_iov_idx;
+	size_t cur_iov_offset;
+};
+
+/**
+ * Initialize a transfer context to point to the given iovec.
+ */
+void
+spdk_iov_xfer_init(struct spdk_iov_xfer *ix, struct iovec *iovs, int iovcnt);
+
+/**
+ * Copy from the given buf up to buf_len bytes, into the given ix iovec
+ * iterator, advancing the iterator as needed.. Returns the number of bytes
+ * copied.
+ */
+size_t
+spdk_iov_xfer_from_buf(struct spdk_iov_xfer *ix, const void *buf, size_t buf_len);
+
+/**
+ * Copy from the given ix iovec iterator into the given buf up to buf_len
+ * bytes, advancing the iterator as needed. Returns the number of bytes copied.
+ */
+size_t
+spdk_iov_xfer_to_buf(struct spdk_iov_xfer *ix, const void *buf, size_t buf_len);
+
+/**
+ * Copy iovs contents to buf through memcpy.
+ */
+void spdk_copy_iovs_to_buf(void *buf, size_t buf_len, struct iovec *iovs,
+			   int iovcnt);
+
+/**
+ * Copy buf contents to iovs through memcpy.
+ */
+void spdk_copy_buf_to_iovs(struct iovec *iovs, int iovcnt, void *buf,
+			   size_t buf_len);
 
 /**
  * Scan build is really pessimistic and assumes that mempool functions can
@@ -237,6 +274,38 @@ spdk_sn32_gt(uint32_t s1, uint32_t s2)
 	return (s1 != s2) &&
 	       ((s1 < s2 && s2 - s1 > SPDK_SN32_CMPMAX) ||
 		(s1 > s2 && s1 - s2 < SPDK_SN32_CMPMAX));
+}
+
+/**
+ * Copies the value (unsigned char)ch into each of the first \b count characters of the object pointed to by \b data
+ * \b data_size is used to check that filling \b count bytes won't lead to buffer overflow
+ *
+ * \param data Buffer to fill
+ * \param data_size Size of the buffer
+ * \param ch Fill byte
+ * \param count Number of bytes to fill
+ */
+static inline void
+spdk_memset_s(void *data, size_t data_size, int ch, size_t count)
+{
+#ifdef __STDC_LIB_EXT1__
+	/* memset_s was introduced as an optional feature in C11 */
+	memset_s(data, data_size, ch, count);
+#else
+	size_t i;
+	volatile unsigned char *buf = (volatile unsigned char *)data;
+
+	if (!buf) {
+		return;
+	}
+	if (count > data_size) {
+		count = data_size;
+	}
+
+	for (i = 0; i < count; i++) {
+		buf[i] = (unsigned char)ch;
+	}
+#endif
 }
 
 #ifdef __cplusplus

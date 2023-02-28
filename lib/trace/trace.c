@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -39,6 +11,9 @@
 #include "spdk/util.h"
 #include "spdk/barrier.h"
 #include "spdk/log.h"
+#include "spdk/cpuset.h"
+#include "spdk/likely.h"
+#include "trace_internal.h"
 
 static int g_trace_fd = -1;
 static char g_shm_name[64];
@@ -66,11 +41,12 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 	va_list vl;
 
 	lcore = spdk_env_get_current_core();
-	if (lcore >= SPDK_TRACE_MAX_LCORE) {
+	if (spdk_unlikely(lcore >= SPDK_TRACE_MAX_LCORE)) {
 		return;
 	}
 
 	lcore_history = spdk_get_per_lcore_history(g_trace_histories, lcore);
+
 	if (tsc == 0) {
 		tsc = spdk_get_ticks();
 	}
@@ -79,7 +55,7 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 
 	tpoint = &g_trace_flags->tpoint[tpoint_id];
 	/* Make sure that the number of arguments passed matches tracepoint definition */
-	if (tpoint->num_args != num_args) {
+	if (spdk_unlikely(tpoint->num_args != num_args)) {
 		assert(0 && "Unexpected number of tracepoint arguments");
 		return;
 	}
@@ -110,9 +86,13 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 			break;
 		case SPDK_TRACE_ARG_TYPE_INT:
 		case SPDK_TRACE_ARG_TYPE_PTR:
-			intval = va_arg(vl, uint64_t);
+			if (argument->size == 8) {
+				intval = va_arg(vl, uint64_t);
+			} else {
+				intval = va_arg(vl, uint32_t);
+			}
 			argval = &intval;
-			arglen = sizeof(uint64_t);
+			arglen = argument->size;
 			break;
 		default:
 			assert(0 && "Invalid trace argument type");
@@ -129,7 +109,7 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 		argoff = 0;
 		while (argoff < argument->size) {
 			/* Current buffer is full, we need to acquire another one */
-			if (offset == sizeof(buffer->data)) {
+			if (spdk_unlikely(offset == sizeof(buffer->data))) {
 				buffer = (struct spdk_trace_entry_buffer *) get_trace_entry(
 						 lcore_history,
 						 lcore_history->next_entry + num_entries);
@@ -140,7 +120,7 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 			}
 
 			curlen = spdk_min(sizeof(buffer->data) - offset, argument->size - argoff);
-			if (argoff < arglen) {
+			if (spdk_likely(argoff < arglen)) {
 				assert(argval != NULL);
 				memcpy(&buffer->data[offset], (uint8_t *)argval + argoff,
 				       spdk_min(curlen, arglen - argoff));
@@ -151,7 +131,7 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 		}
 
 		/* Make sure that truncated strings are NULL-terminated */
-		if (argument->type == SPDK_TRACE_ARG_TYPE_STR) {
+		if (spdk_unlikely(argument->type == SPDK_TRACE_ARG_TYPE_STR)) {
 			assert(offset > 0);
 			buffer->data[offset - 1] = '\0';
 		}
@@ -166,20 +146,24 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 int
 spdk_trace_init(const char *shm_name, uint64_t num_entries)
 {
-	int i = 0;
+	uint32_t i = 0;
 	int histories_size;
-	uint64_t lcore_offsets[SPDK_TRACE_MAX_LCORE + 1];
+	uint64_t lcore_offsets[SPDK_TRACE_MAX_LCORE + 1] = { 0 };
+	struct spdk_cpuset cpuset = {};
 
 	/* 0 entries requested - skip trace initialization */
 	if (num_entries == 0) {
 		return 0;
 	}
 
-	lcore_offsets[0] = sizeof(struct spdk_trace_flags);
-	for (i = 1; i < (int)SPDK_COUNTOF(lcore_offsets); i++) {
-		lcore_offsets[i] = spdk_get_trace_history_size(num_entries) + lcore_offsets[i - 1];
+	spdk_cpuset_zero(&cpuset);
+	histories_size = sizeof(struct spdk_trace_flags);
+	SPDK_ENV_FOREACH_CORE(i) {
+		spdk_cpuset_set_cpu(&cpuset, i, true);
+		lcore_offsets[i] = histories_size;
+		histories_size += spdk_get_trace_history_size(num_entries);
 	}
-	histories_size = lcore_offsets[SPDK_TRACE_MAX_LCORE];
+	lcore_offsets[SPDK_TRACE_MAX_LCORE] = histories_size;
 
 	snprintf(g_shm_name, sizeof(g_shm_name), "%s", shm_name);
 
@@ -226,6 +210,10 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries)
 		struct spdk_trace_history *lcore_history;
 
 		g_trace_flags->lcore_history_offsets[i] = lcore_offsets[i];
+		if (lcore_offsets[i] == 0) {
+			continue;
+		}
+		assert(spdk_cpuset_get_cpu(&cpuset, i));
 		lcore_history = spdk_get_per_lcore_history(g_trace_histories, i);
 		lcore_history->lcore = i;
 		lcore_history->num_entries = num_entries;
@@ -252,7 +240,7 @@ trace_init_err:
 void
 spdk_trace_cleanup(void)
 {
-	bool unlink;
+	bool unlink = true;
 	int i;
 	struct spdk_trace_history *lcore_history;
 
@@ -267,6 +255,9 @@ spdk_trace_cleanup(void)
 	 */
 	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 		lcore_history = spdk_get_per_lcore_history(g_trace_histories, i);
+		if (lcore_history == NULL) {
+			continue;
+		}
 		unlink = lcore_history->entries[0].tsc == 0;
 		if (!unlink) {
 			break;
@@ -280,4 +271,10 @@ spdk_trace_cleanup(void)
 	if (unlink) {
 		shm_unlink(g_shm_name);
 	}
+}
+
+const char *
+trace_get_shm_name(void)
+{
+	return g_shm_name;
 }

@@ -1,33 +1,5 @@
-/*-
- *   BSD LICENSE
- *
+/*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Nvidia Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -75,9 +47,23 @@ struct dma_test_task {
 	struct dma_test_req *reqs;
 	struct spdk_thread *thread;
 	const char *bdev_name;
+	uint64_t num_translations;
+	uint64_t num_pull_push;
+	uint64_t num_mem_zero;
 	uint32_t lcore;
 
 	TAILQ_ENTRY(dma_test_task) link;
+};
+
+struct dma_test_data_cpl_ctx {
+	spdk_memory_domain_data_cpl_cb data_cpl;
+	void *data_cpl_arg;
+};
+
+enum dma_test_domain_ops {
+	DMA_TEST_DOMAIN_OP_TRANSLATE = 1u << 0,
+	DMA_TEST_DOMAIN_OP_PULL_PUSH = 1u << 1,
+	DMA_TEST_DOMAIN_OP_MEMZERO = 1u << 2,
 };
 
 TAILQ_HEAD(, dma_test_task) g_tasks = TAILQ_HEAD_INITIALIZER(g_tasks);
@@ -90,7 +76,9 @@ static uint32_t g_queue_depth;
 static uint32_t g_io_size;
 static uint32_t g_run_time_sec;
 static uint32_t g_run_count;
+static uint32_t g_test_ops;
 static bool g_is_random;
+static bool g_force_memory_domains_support;
 
 static struct spdk_thread *g_main_thread;
 static struct spdk_poller *g_runtime_poller;
@@ -197,6 +185,7 @@ dma_test_check_and_signal_task_done(struct dma_test_task *task)
 		spdk_put_io_channel(task->channel);
 		spdk_bdev_close(task->desc);
 		spdk_thread_send_msg(g_main_thread, dma_test_task_complete, task);
+		spdk_thread_exit(spdk_get_thread());
 	}
 }
 
@@ -272,6 +261,86 @@ dma_test_task_is_read(struct dma_test_task *task)
 	return false;
 }
 
+static void
+dma_test_data_cpl(void *ctx)
+{
+	struct dma_test_data_cpl_ctx *cpl_ctx = ctx;
+
+	cpl_ctx->data_cpl(cpl_ctx->data_cpl_arg, 0);
+	free(cpl_ctx);
+}
+
+static int
+dma_test_copy_memory(struct dma_test_req *req, struct iovec *dst_iov, uint32_t dst_iovcnt,
+		     struct iovec *src_iov, uint32_t src_iovcnt, spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+{
+	struct dma_test_data_cpl_ctx *cpl_ctx;
+
+	cpl_ctx = calloc(1, sizeof(*cpl_ctx));
+	if (!cpl_ctx) {
+		return -ENOMEM;
+	}
+
+	cpl_ctx->data_cpl = cpl_cb;
+	cpl_ctx->data_cpl_arg = cpl_cb_arg;
+
+	spdk_iovcpy(src_iov, src_iovcnt, dst_iov, dst_iovcnt);
+	req->task->num_pull_push++;
+	spdk_thread_send_msg(req->task->thread, dma_test_data_cpl, cpl_ctx);
+
+	return 0;
+}
+
+static int
+dma_test_push_memory_cb(struct spdk_memory_domain *dst_domain,
+			void *dst_domain_ctx,
+			struct iovec *dst_iov, uint32_t dst_iovcnt, struct iovec *src_iov, uint32_t src_iovcnt,
+			spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+{
+	struct dma_test_req *req = dst_domain_ctx;
+
+	return dma_test_copy_memory(req, dst_iov, dst_iovcnt, src_iov, src_iovcnt, cpl_cb, cpl_cb_arg);
+}
+
+static int
+dma_test_pull_memory_cb(struct spdk_memory_domain *src_domain,
+			void *src_domain_ctx,
+			struct iovec *src_iov, uint32_t src_iovcnt, struct iovec *dst_iov, uint32_t dst_iovcnt,
+			spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+{
+	struct dma_test_req *req = src_domain_ctx;
+
+	return dma_test_copy_memory(req, dst_iov, dst_iovcnt, src_iov, src_iovcnt, cpl_cb, cpl_cb_arg);
+}
+
+static int
+dma_test_memzero_cb(struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+		    struct iovec *iov, uint32_t iovcnt,
+		    spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+{
+	struct dma_test_req *req = src_domain_ctx;
+	struct dma_test_data_cpl_ctx *cpl_ctx;
+	uint32_t i;
+
+	cpl_ctx = calloc(1, sizeof(*cpl_ctx));
+	if (!cpl_ctx) {
+		return -ENOMEM;
+	}
+
+	cpl_ctx->data_cpl = cpl_cb;
+	cpl_ctx->data_cpl_arg = cpl_cb_arg;
+
+	for (i = 0; i < iovcnt; i++) {
+		memset(iov[i].iov_base, 0, iov[i].iov_len);
+	}
+	req->task->num_mem_zero++;
+
+	spdk_thread_send_msg(req->task->thread, dma_test_data_cpl, cpl_ctx);
+
+	return 0;
+}
+
+
 static int
 dma_test_translate_memory_cb(struct spdk_memory_domain *src_domain, void *src_domain_ctx,
 			     struct spdk_memory_domain *dst_domain, struct spdk_memory_domain_translation_ctx *dst_domain_ctx,
@@ -296,6 +365,8 @@ dma_test_translate_memory_cb(struct spdk_memory_domain *src_domain, void *src_do
 	result->rdma.lkey = req->mr->lkey;
 	result->rdma.rkey = req->mr->rkey;
 	result->dst_domain = dst_domain;
+
+	req->task->num_translations++;
 
 	return 0;
 }
@@ -353,7 +424,8 @@ dma_test_bdev_dummy_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *b
 {
 }
 
-static void dma_test_task_run(void *ctx)
+static void
+dma_test_task_run(void *ctx)
 {
 	struct dma_test_task *task = ctx;
 	uint32_t i;
@@ -599,6 +671,63 @@ destroy_tasks(void)
 	}
 }
 
+static int
+verify_tasks(void)
+{
+	struct dma_test_task *task;
+	uint64_t total_requests = 0;
+	uint64_t num_translations = 0;
+	uint64_t num_pull_push = 0;
+	uint64_t num_memzero = 0;
+	int rc = 0;
+
+	if (!g_test_ops) {
+		/* No specific ops were requested, nothing to check */
+		return rc;
+	}
+
+	TAILQ_FOREACH(task, &g_tasks, link) {
+		total_requests += task->stats.io_completed;
+		num_translations += task->num_translations;
+		num_pull_push += task->num_pull_push;
+		num_memzero += task->num_mem_zero;
+	}
+
+	if (g_test_ops & DMA_TEST_DOMAIN_OP_TRANSLATE) {
+		if (num_translations == 0) {
+			fprintf(stderr, "Requested \"translate\" operation, but it was not executed\n");
+			rc = -EINVAL;
+		}
+	}
+	if (g_test_ops & DMA_TEST_DOMAIN_OP_PULL_PUSH) {
+		if (num_pull_push == 0) {
+			fprintf(stderr, "Requested \"pull_push\" operation, but it was not executed\n");
+			rc = -EINVAL;
+		}
+	}
+	if (g_test_ops & DMA_TEST_DOMAIN_OP_MEMZERO) {
+		if (num_memzero == 0) {
+			fprintf(stderr, "Requested \"memzero\" operation, but it was not executed\n");
+			rc = -EINVAL;
+		}
+	}
+
+	/* bdev request can be split, so the total number of pull_push +translate operations
+	 * can be bigger than total_number of requests */
+	if (num_translations + num_pull_push + num_memzero < total_requests) {
+		fprintf(stderr,
+			"Operations number mismatch: translate %"PRIu64", pull_push %"PRIu64", mem_zero %"PRIu64" expected total %"PRIu64"\n",
+			num_translations, num_pull_push, num_memzero, total_requests);
+		rc = -EINVAL;
+	} else {
+		fprintf(stdout,
+			"Total operations: %"PRIu64", translate %"PRIu64" pull_push %"PRIu64" memzero %"PRIu64"\n",
+			total_requests, num_translations, num_pull_push, num_memzero);
+	}
+
+	return rc;
+}
+
 static void
 dma_test_start(void *arg)
 {
@@ -615,7 +744,10 @@ dma_test_start(void *arg)
 		return;
 	}
 	bdev = spdk_bdev_desc_get_bdev(desc);
-	if (!dma_test_check_bdev_supports_rdma_memory_domain(bdev)) {
+	/* This function checks if bdev supports memory domains. Test is not failed if there are
+	 * no memory domains since bdev layer can pull/push data */
+	if (!dma_test_check_bdev_supports_rdma_memory_domain(bdev) && g_force_memory_domains_support) {
+		fprintf(stderr, "Test aborted due to \"-f\" (force memory domains support) option\n");
 		spdk_bdev_close(desc);
 		spdk_app_stop(-ENODEV);
 		return;
@@ -643,6 +775,9 @@ dma_test_start(void *arg)
 		return;
 	}
 	spdk_memory_domain_set_translation(g_domain, dma_test_translate_memory_cb);
+	spdk_memory_domain_set_pull(g_domain, dma_test_pull_memory_cb);
+	spdk_memory_domain_set_push(g_domain, dma_test_push_memory_cb);
+	spdk_memory_domain_set_memzero(g_domain, dma_test_memzero_cb);
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		rc = allocate_task(i, g_bdev_name);
@@ -667,11 +802,51 @@ static void
 print_usage(void)
 {
 	printf(" -b <bdev>         bdev name for test\n");
+	printf(" -f                force memory domains support - abort test if bdev doesn't report memory domains\n");
 	printf(" -q <val>          io depth\n");
 	printf(" -o <val>          io size in bytes\n");
 	printf(" -t <val>          run time in seconds\n");
+	printf(" -x <op,op>        Comma separated memory domain operations expected in the test. Values are \"translate\" and \"pull_push\"\n");
 	printf(" -w <str>          io pattern (read, write, randread, randwrite, randrw)\n");
 	printf(" -M <0-100>        rw percentage (100 for reads, 0 for writes)\n");
+}
+
+static int
+parse_expected_ops(const char *_str)
+{
+	char *str = strdup(_str);
+	char *tok;
+	int rc = 0;
+
+	if (!str) {
+		fprintf(stderr, "Failed to dup args\n");
+		return -ENOMEM;
+	}
+
+	tok = strtok(str, ",");
+	while (tok) {
+		if (strcmp(tok, "translate") == 0) {
+			g_test_ops |= DMA_TEST_DOMAIN_OP_TRANSLATE;
+		} else if (strcmp(tok, "pull_push") == 0) {
+			g_test_ops |= DMA_TEST_DOMAIN_OP_PULL_PUSH;
+		} else if (strcmp(tok, "memzero") == 0) {
+			g_test_ops |= DMA_TEST_DOMAIN_OP_MEMZERO;
+		} else {
+			fprintf(stderr, "Unknown value %s\n", tok);
+			rc = -EINVAL;
+			break;
+		}
+		tok = strtok(NULL, ",");
+	}
+
+	free(str);
+
+	if (g_test_ops == 0 || rc) {
+		fprintf(stderr, "-e \"%s\" specified but nothing was parsed\n", _str);
+		return -EINVAL;
+	}
+
+	return rc;
 }
 
 static int
@@ -711,7 +886,14 @@ parse_arg(int ch, char *arg)
 	case 'b':
 		g_bdev_name = arg;
 		break;
-
+	case 'f':
+		g_force_memory_domains_support = true;
+		break;
+	case 'x':
+		if (parse_expected_ops(arg)) {
+			return 1;
+		}
+		break;
 	default:
 		fprintf(stderr, "Unknown option %c\n", ch);
 		return 1;
@@ -777,7 +959,7 @@ main(int argc, char **argv)
 	opts.name = "test_dma";
 	opts.shutdown_cb = dma_test_shutdown_cb;
 
-	rc = spdk_app_parse_args(argc, argv, &opts, "b:q:o:t:w:M:", NULL, parse_arg, print_usage);
+	rc = spdk_app_parse_args(argc, argv, &opts, "b:fq:o:t:x:w:M:", NULL, parse_arg, print_usage);
 	if (rc != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
 	}
@@ -788,6 +970,9 @@ main(int argc, char **argv)
 	}
 
 	rc = spdk_app_start(&opts, dma_test_start, NULL);
+	if (rc == 0) {
+		rc = verify_tasks();
+	}
 	destroy_tasks();
 	spdk_app_fini();
 

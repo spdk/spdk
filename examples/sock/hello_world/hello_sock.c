@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -51,7 +23,12 @@ static char *g_host;
 static char *g_sock_impl_name;
 static int g_port;
 static bool g_is_server;
+static int g_zcopy;
+static int g_ktls;
+static int g_tls_version;
 static bool g_verbose;
+static char *g_psk_key;
+static char *g_psk_identity;
 
 /*
  * We'll use this struct to gather housekeeping hello_context to pass between
@@ -62,6 +39,11 @@ struct hello_context_t {
 	char *host;
 	char *sock_impl_name;
 	int port;
+	int zcopy;
+	int ktls;
+	int tls_version;
+	char *psk_key;
+	char *psk_identity;
 
 	bool verbose;
 	int bytes_in;
@@ -83,21 +65,35 @@ struct hello_context_t {
 static void
 hello_sock_usage(void)
 {
+	printf(" -E psk_key    Default PSK KEY in hexadecimal digits, e.g. 1234567890ABCDEF (only applies when sock_impl == ssl)\n");
 	printf(" -H host_addr  host address\n");
+	printf(" -I psk_id     Default PSK ID, e.g. psk.spdk.io (only applies when sock_impl == ssl)\n");
 	printf(" -P port       port number\n");
 	printf(" -N sock_impl  socket implementation, e.g., -N posix or -N uring\n");
 	printf(" -S            start in server mode\n");
-	printf(" -V            print out additional informations\n");
+	printf(" -T tls_ver    TLS version, e.g., -T 12 or -T 13. If omitted, auto-negotiation will take place\n");
+	printf(" -k            disable KTLS for the given sock implementation (default)\n");
+	printf(" -K            enable KTLS for the given sock implementation\n");
+	printf(" -V            print out additional information\n");
+	printf(" -z            disable zero copy send for the given sock implementation\n");
+	printf(" -Z            enable zero copy send for the given sock implementation\n");
 }
 
 /*
  * This function is called to parse the parameters that are specific to this application
  */
-static int hello_sock_parse_arg(int ch, char *arg)
+static int
+hello_sock_parse_arg(int ch, char *arg)
 {
 	switch (ch) {
+	case 'E':
+		g_psk_key = arg;
+		break;
 	case 'H':
 		g_host = arg;
+		break;
+	case 'I':
+		g_psk_identity = arg;
 		break;
 	case 'N':
 		g_sock_impl_name = arg;
@@ -112,8 +108,27 @@ static int hello_sock_parse_arg(int ch, char *arg)
 	case 'S':
 		g_is_server = 1;
 		break;
+	case 'K':
+		g_ktls = 1;
+		break;
+	case 'k':
+		g_ktls = 0;
+		break;
+	case 'T':
+		g_tls_version = spdk_strtol(arg, 10);
+		if (g_tls_version < 0) {
+			fprintf(stderr, "Invalid TLS version\n");
+			return g_tls_version;
+		}
+		break;
 	case 'V':
 		g_verbose = true;
+		break;
+	case 'Z':
+		g_zcopy = 1;
+		break;
+	case 'z':
+		g_zcopy = 0;
 		break;
 	default:
 		return -EINVAL;
@@ -215,11 +230,26 @@ hello_sock_connect(struct hello_context_t *ctx)
 	int rc;
 	char saddr[ADDR_STR_LEN], caddr[ADDR_STR_LEN];
 	uint16_t cport, sport;
+	struct spdk_sock_impl_opts impl_opts;
+	size_t impl_opts_size = sizeof(impl_opts);
+	struct spdk_sock_opts opts;
+
+	spdk_sock_impl_get_opts(ctx->sock_impl_name, &impl_opts, &impl_opts_size);
+	impl_opts.enable_ktls = ctx->ktls;
+	impl_opts.tls_version = ctx->tls_version;
+	impl_opts.psk_key = ctx->psk_key;
+	impl_opts.psk_identity = ctx->psk_identity;
+
+	opts.opts_size = sizeof(opts);
+	spdk_sock_get_default_opts(&opts);
+	opts.zcopy = ctx->zcopy;
+	opts.impl_opts = &impl_opts;
+	opts.impl_opts_size = sizeof(impl_opts);
 
 	SPDK_NOTICELOG("Connecting to the server on %s:%d with sock_impl(%s)\n", ctx->host, ctx->port,
 		       ctx->sock_impl_name);
 
-	ctx->sock = spdk_sock_connect(ctx->host, ctx->port, ctx->sock_impl_name);
+	ctx->sock = spdk_sock_connect_ext(ctx->host, ctx->port, ctx->sock_impl_name, &opts);
 	if (ctx->sock == NULL) {
 		SPDK_ERRLOG("connect error(%d): %s\n", errno, spdk_strerror(errno));
 		return -1;
@@ -301,7 +331,7 @@ hello_sock_accept_poll(void *arg)
 			rc = spdk_sock_getaddr(sock, saddr, sizeof(saddr), &sport, caddr, sizeof(caddr), &cport);
 			if (rc < 0) {
 				SPDK_ERRLOG("Cannot get connection addresses\n");
-				spdk_sock_close(&ctx->sock);
+				spdk_sock_close(&sock);
 				return SPDK_POLLER_IDLE;
 			}
 
@@ -346,7 +376,23 @@ hello_sock_group_poll(void *arg)
 static int
 hello_sock_listen(struct hello_context_t *ctx)
 {
-	ctx->sock = spdk_sock_listen(ctx->host, ctx->port, ctx->sock_impl_name);
+	struct spdk_sock_impl_opts impl_opts;
+	size_t impl_opts_size = sizeof(impl_opts);
+	struct spdk_sock_opts opts;
+
+	spdk_sock_impl_get_opts(ctx->sock_impl_name, &impl_opts, &impl_opts_size);
+	impl_opts.enable_ktls = ctx->ktls;
+	impl_opts.tls_version = ctx->tls_version;
+	impl_opts.psk_key = ctx->psk_key;
+	impl_opts.psk_identity = ctx->psk_identity;
+
+	opts.opts_size = sizeof(opts);
+	spdk_sock_get_default_opts(&opts);
+	opts.zcopy = ctx->zcopy;
+	opts.impl_opts = &impl_opts;
+	opts.impl_opts_size = sizeof(impl_opts);
+
+	ctx->sock = spdk_sock_listen_ext(ctx->host, ctx->port, ctx->sock_impl_name, &opts);
 	if (ctx->sock == NULL) {
 		SPDK_ERRLOG("Cannot create server socket\n");
 		return -1;
@@ -413,7 +459,7 @@ main(int argc, char **argv)
 	opts.name = "hello_sock";
 	opts.shutdown_cb = hello_sock_shutdown_cb;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "H:N:P:SV", NULL, hello_sock_parse_arg,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "E:H:I:kKN:P:ST:VzZ", NULL, hello_sock_parse_arg,
 				      hello_sock_usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
 	}
@@ -421,6 +467,11 @@ main(int argc, char **argv)
 	hello_context.host = g_host;
 	hello_context.sock_impl_name = g_sock_impl_name;
 	hello_context.port = g_port;
+	hello_context.zcopy = g_zcopy;
+	hello_context.ktls = g_ktls;
+	hello_context.tls_version = g_tls_version;
+	hello_context.psk_key = g_psk_key;
+	hello_context.psk_identity = g_psk_identity;
 	hello_context.verbose = g_verbose;
 
 	rc = spdk_app_start(&opts, hello_start, &hello_context);

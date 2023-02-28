@@ -24,6 +24,5 @@
 	spdk_jsonrpc_client_get_response;
 	spdk_jsonrpc_client_free_response;
 
-
 	local: *;
 };

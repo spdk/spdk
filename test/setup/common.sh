@@ -1,3 +1,8 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation
+#  All rights reserved.
+#
+
 source "$rootdir/test/common/autotest_common.sh"
 
 setup() {
@@ -9,8 +14,6 @@ setup() {
 }
 
 get_meminfo() {
-	xtrace_disable
-
 	local get=$1
 	local node=$2
 	local var val
@@ -19,6 +22,8 @@ get_meminfo() {
 	mem_f=/proc/meminfo
 	if [[ -e /sys/devices/system/node/node$node/meminfo ]]; then
 		mem_f=/sys/devices/system/node/node$node/meminfo
+	elif [[ -n $node ]]; then
+		return 1
 	fi
 	mapfile -t mem < "$mem_f"
 	mem=("${mem[@]#Node +([0-9]) }")
@@ -28,8 +33,6 @@ get_meminfo() {
 		echo "$val" && return 0
 	done < <(printf '%s\n' "${mem[@]}")
 	return 1
-
-	xtrace_restore
 }
 
 partition_drive() {
@@ -45,7 +48,7 @@ partition_drive() {
 	done
 
 	# Convert size to sectors for more precise partitioning
-	((size /= $(< "/sys/class/block/$disk/queue/physical_block_size")))
+	((size /= $(< "/sys/class/block/$disk/queue/hw_sector_size")))
 
 	"$rootdir/scripts/sync_dev_uevents.sh" block/partition "${parts[@]}" &
 

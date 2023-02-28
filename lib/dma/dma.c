@@ -1,33 +1,5 @@
-/*-
- *   BSD LICENSE
- *
+/*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Nvidia Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/dma.h"
@@ -44,6 +16,7 @@ struct spdk_memory_domain {
 	spdk_memory_domain_pull_data_cb pull_cb;
 	spdk_memory_domain_push_data_cb push_cb;
 	spdk_memory_domain_translate_memory_cb translate_cb;
+	spdk_memory_domain_memzero_cb memzero_cb;
 	TAILQ_ENTRY(spdk_memory_domain) link;
 	struct spdk_memory_domain_ctx *ctx;
 	char *id;
@@ -138,6 +111,17 @@ spdk_memory_domain_set_push(struct spdk_memory_domain *domain,
 	domain->push_cb = push_cb;
 }
 
+void
+spdk_memory_domain_set_memzero(struct spdk_memory_domain *domain,
+			       spdk_memory_domain_memzero_cb memzero_cb)
+{
+	if (!domain) {
+		return;
+	}
+
+	domain->memzero_cb = memzero_cb;
+}
+
 struct spdk_memory_domain_ctx *
 spdk_memory_domain_get_context(struct spdk_memory_domain *domain)
 {
@@ -146,7 +130,11 @@ spdk_memory_domain_get_context(struct spdk_memory_domain *domain)
 	return domain->ctx;
 }
 
-enum spdk_dma_device_type spdk_memory_domain_get_dma_device_type(struct spdk_memory_domain *domain)
+/* We have to use the typedef in the function declaration to appease astyle. */
+typedef enum spdk_dma_device_type spdk_dma_device_type_t;
+
+spdk_dma_device_type_t
+spdk_memory_domain_get_dma_device_type(struct spdk_memory_domain *domain)
 {
 	assert(domain);
 
@@ -226,6 +214,21 @@ spdk_memory_domain_translate_data(struct spdk_memory_domain *src_domain, void *s
 
 	return src_domain->translate_cb(src_domain, src_domain_ctx, dst_domain, dst_domain_ctx, addr, len,
 					result);
+}
+
+int
+spdk_memory_domain_memzero(struct spdk_memory_domain *domain, void *domain_ctx, struct iovec *iov,
+			   uint32_t iovcnt, spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+{
+	assert(domain);
+	assert(iov);
+	assert(iovcnt);
+
+	if (spdk_unlikely(!domain->memzero_cb)) {
+		return -ENOTSUP;
+	}
+
+	return domain->memzero_cb(domain, domain_ctx, iov, iovcnt, cpl_cb, cpl_cb_arg);
 }
 
 struct spdk_memory_domain *

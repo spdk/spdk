@@ -1,3 +1,7 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation.
+#  All rights reserved.
+
 # Select cores for the test
 xtrace_disable
 

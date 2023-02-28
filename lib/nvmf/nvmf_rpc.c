@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2018-2021 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/bdev.h"
@@ -362,7 +334,6 @@ rpc_nvmf_get_subsystems(struct spdk_jsonrpc_request *request,
 	free(req.nqn);
 }
 SPDK_RPC_REGISTER("nvmf_get_subsystems", rpc_nvmf_get_subsystems, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nvmf_get_subsystems, get_nvmf_subsystems)
 
 struct rpc_subsystem_create {
 	char *nqn;
@@ -498,7 +469,6 @@ cleanup:
 	}
 }
 SPDK_RPC_REGISTER("nvmf_create_subsystem", rpc_nvmf_create_subsystem, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nvmf_create_subsystem, nvmf_subsystem_create)
 
 struct rpc_delete_subsystem {
 	char *nqn;
@@ -512,7 +482,8 @@ free_rpc_delete_subsystem(struct rpc_delete_subsystem *r)
 	free(r->tgt_name);
 }
 
-static void rpc_nvmf_subsystem_destroy_complete_cb(void *cb_arg)
+static void
+rpc_nvmf_subsystem_destroy_complete_cb(void *cb_arg)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 
@@ -603,7 +574,6 @@ invalid_custom_response:
 	free_rpc_delete_subsystem(&req);
 }
 SPDK_RPC_REGISTER("nvmf_delete_subsystem", rpc_nvmf_delete_subsystem, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nvmf_delete_subsystem, delete_nvmf_subsystem)
 
 struct rpc_listen_address {
 	char *transport;
@@ -1955,11 +1925,31 @@ nvmf_rpc_tgt_add_transport_done(void *cb_arg, int status)
 }
 
 static void
+nvmf_rpc_create_transport_done(void *cb_arg, struct spdk_nvmf_transport *transport)
+{
+	struct nvmf_rpc_create_transport_ctx *ctx = cb_arg;
+
+	if (!transport) {
+		SPDK_ERRLOG("Failed to create transport.\n");
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Failed to create transport.");
+		nvmf_rpc_create_transport_ctx_free(ctx);
+		return;
+	}
+
+	ctx->transport = transport;
+
+	spdk_nvmf_tgt_add_transport(spdk_nvmf_get_tgt(ctx->tgt_name), transport,
+				    nvmf_rpc_tgt_add_transport_done, ctx);
+}
+
+static void
 rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct nvmf_rpc_create_transport_ctx *ctx;
 	struct spdk_nvmf_tgt *tgt;
+	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -2019,20 +2009,15 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 
 	/* Transport can parse additional params themselves */
 	ctx->opts.transport_specific = params;
+	ctx->request = request;
 
-	ctx->transport = spdk_nvmf_transport_create(ctx->trtype, &ctx->opts);
-
-	if (!ctx->transport) {
+	rc = spdk_nvmf_transport_create_async(ctx->trtype, &ctx->opts, nvmf_rpc_create_transport_done, ctx);
+	if (rc) {
 		SPDK_ERRLOG("Transport type '%s' create failed\n", ctx->trtype);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "Transport type '%s' create failed", ctx->trtype);
 		nvmf_rpc_create_transport_ctx_free(ctx);
-		return;
 	}
-
-	/* add transport to target */
-	ctx->request = request;
-	spdk_nvmf_tgt_add_transport(tgt, ctx->transport, nvmf_rpc_tgt_add_transport_done, ctx);
 }
 SPDK_RPC_REGISTER("nvmf_create_transport", rpc_nvmf_create_transport, SPDK_RPC_RUNTIME)
 
@@ -2103,7 +2088,6 @@ rpc_nvmf_get_transports(struct spdk_jsonrpc_request *request,
 	free(req.tgt_name);
 }
 SPDK_RPC_REGISTER("nvmf_get_transports", rpc_nvmf_get_transports, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nvmf_get_transports, get_nvmf_transports)
 
 struct rpc_nvmf_get_stats_ctx {
 	char *tgt_name;

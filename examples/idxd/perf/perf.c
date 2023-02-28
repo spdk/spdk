@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2021 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/idxd.h"
@@ -166,13 +138,20 @@ attach_cb(void *cb_ctx, struct spdk_idxd_device *idxd)
 	g_num_devices++;
 }
 
+static bool
+probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
+{
+	/* this tool will gladly claim all types of IDXD devices. */
+	return true;
+}
+
 static int
 idxd_init(void)
 {
 	spdk_idxd_set_config(g_idxd_kernel_mode);
 
-	if (spdk_idxd_probe(NULL, attach_cb) != 0) {
-		fprintf(stderr, "idxd_probe() failed\n");
+	if (spdk_idxd_probe(NULL, attach_cb, probe_cb) != 0) {
+		fprintf(stderr, "spdk_idxd_probe() failed\n");
 		return 1;
 	}
 
@@ -207,7 +186,7 @@ usage(void)
 	printf("\t[-o transfer size in bytes]\n");
 	printf("\t[-P for compare workload, percentage of operations that should miscompare (percent, default 0)\n");
 	printf("\t[-q queue depth per core]\n");
-	printf("\t[-R max idxd devices per core can drive (default 1)]\n");
+	printf("\t[-r max idxd devices per core can drive (default 1)]\n");
 	printf("\t[-s for crc32c workload, use this seed value (default 0)\n");
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-w workload type must be one of these: copy, fill, crc32c, copy_crc32c, compare, dualcast\n");
@@ -459,7 +438,7 @@ _get_task_data_bufs(struct idxd_task *task)
 		}
 	}
 
-	if (g_workload_selection != IDXD_COPY_CRC32C) {
+	if (g_workload_selection != IDXD_CRC32C) {
 		task->dst = spdk_dma_zmalloc(dst_buff_len, align, NULL);
 		if (task->dst == NULL) {
 			fprintf(stderr, "Unable to alloc dst buffer\n");
@@ -574,10 +553,16 @@ _submit_single(struct idxd_chan_entry *t, struct idxd_task *task)
 		rc = spdk_idxd_submit_dualcast(t->ch, task->dst, task->dst2,
 					       task->src, g_xfer_size_bytes, flags, idxd_done, task);
 		break;
+	case IDXD_COPY_CRC32C:
+		diov.iov_base = task->dst;
+		diov.iov_len = g_xfer_size_bytes;
+		rc = spdk_idxd_submit_copy_crc32c(t->ch, &diov, 1, task->iovs, task->iov_cnt, g_crc32c_seed,
+						  &task->crc_dst,
+						  flags, idxd_done, task);
+		break;
 	default:
 		assert(false);
 		break;
-
 	}
 
 queue:
@@ -702,7 +687,7 @@ dump_result(void)
 	struct idxd_chan_entry *t;
 
 	printf("\nIDXD_ChanID   Core      Transfers      Bandwidth     Failed     Miscompares\n");
-	printf("------------------------------------------------------------------------\n");
+	printf("---------------------------------------------------------------------------\n");
 	while (worker != NULL) {
 		t = worker->ctx;
 		while (t) {
@@ -715,7 +700,7 @@ dump_result(void)
 			total_miscompared += t->injected_miscompares;
 
 			if (xfer_per_sec) {
-				printf("%10d%5u%15" PRIu64 "/s%9" PRIu64 " MiB/s%7" PRIu64 " %11" PRIu64 "\n",
+				printf("%10d%5u%16" PRIu64 "/s%9" PRIu64 " MiB/s%11" PRIu64 " %15" PRIu64 "\n",
 				       t->idxd_chan_id, worker->core, xfer_per_sec, bw_in_MiBps, t->xfer_failed,
 				       t->injected_miscompares);
 			}
@@ -729,8 +714,8 @@ dump_result(void)
 	total_bw_in_MiBps = (total_completed * g_xfer_size_bytes) /
 			    (g_time_in_sec * 1024 * 1024);
 
-	printf("=========================================================================\n");
-	printf("Total:%25" PRIu64 "/s%9" PRIu64 " MiB/s%6" PRIu64 " %11" PRIu64"\n\n",
+	printf("===========================================================================\n");
+	printf("Total:%25" PRIu64 "/s%9" PRIu64 " MiB/s%11" PRIu64 " %15" PRIu64"\n\n",
 	       total_xfer_per_sec, total_bw_in_MiBps, total_failed, total_miscompared);
 
 	return total_failed ? 1 : 0;

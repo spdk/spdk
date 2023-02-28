@@ -1,3 +1,8 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation
+#  All rights reserved.
+#
+
 source "$rootdir/test/common/autotest_common.sh"
 source "$rootdir/scripts/common.sh"
 
@@ -185,4 +190,13 @@ set_zram_dev() {
 	[[ -e /sys/block/zram$id ]]
 
 	echo "$size" > "/sys/block/zram$id/disksize"
+}
+
+init_null_blk() {
+	[[ -e /sys/module/null_blk ]] || modprobe null_blk "$@"
+	return
+}
+
+remove_null_blk() {
+	modprobe -r null_blk
 }

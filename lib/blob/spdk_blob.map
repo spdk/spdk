@@ -15,10 +15,13 @@
 	spdk_bs_get_io_unit_size;
 	spdk_bs_free_cluster_count;
 	spdk_bs_total_data_cluster_count;
+	spdk_bs_grow;
 	spdk_blob_get_id;
 	spdk_blob_get_num_pages;
 	spdk_blob_get_num_io_units;
 	spdk_blob_get_num_clusters;
+	spdk_blob_get_next_allocated_io_unit;
+	spdk_blob_get_next_unallocated_io_unit;
 	spdk_blob_opts_init;
 	spdk_bs_create_blob_ext;
 	spdk_bs_create_blob;
@@ -46,6 +49,8 @@
 	spdk_blob_io_read;
 	spdk_blob_io_writev;
 	spdk_blob_io_readv;
+	spdk_blob_io_readv_ext;
+	spdk_blob_io_writev_ext;
 	spdk_blob_io_unmap;
 	spdk_blob_io_write_zeroes;
 	spdk_bs_iter_first;

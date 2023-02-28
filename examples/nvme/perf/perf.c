@@ -1,41 +1,14 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2015 Intel Corporation.
  *   All rights reserved.
  *
  *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
 
+#include "spdk/config.h"
 #include "spdk/env.h"
 #include "spdk/fd.h"
 #include "spdk/nvme.h"
@@ -135,6 +108,7 @@ static const double g_latency_cutoffs[] = {
 };
 
 struct ns_worker_stats {
+	uint64_t		io_submitted;
 	uint64_t		io_completed;
 	uint64_t		last_io_completed;
 	uint64_t		total_tsc;
@@ -253,10 +227,11 @@ static uint32_t g_metacfg_pract_flag;
 static uint32_t g_metacfg_prchk_flags;
 static int g_rw_percentage = -1;
 static int g_is_random;
-static int g_queue_depth;
+static uint32_t g_queue_depth;
 static int g_nr_io_queues_per_ns = 1;
 static int g_nr_unused_io_queues;
 static int g_time_in_sec;
+static uint64_t g_number_ios;
 static uint64_t g_elapsed_time_in_usec;
 static int g_warmup_time_in_sec;
 static uint32_t g_max_completions;
@@ -277,6 +252,13 @@ static double g_zipf_theta;
  * to MQES to maximize the io_queue_size as much as possible.
  */
 static uint32_t g_io_queue_size = UINT16_MAX;
+
+static uint32_t g_sock_zcopy_threshold;
+static char *g_sock_threshold_impl;
+
+static uint8_t g_transport_tos = 0;
+
+static uint32_t g_rdma_srq_size;
 
 /* When user specifies -Q, some error messages are rate limited.  When rate
  * limited, we only print the error message every g_quiet_count times the
@@ -317,11 +299,10 @@ static TAILQ_HEAD(, trid_entry) g_trid_list = TAILQ_HEAD_INITIALIZER(g_trid_list
 
 static int g_file_optind; /* Index of first filename in argv */
 
-static inline void
-task_complete(struct perf_task *task);
+static inline void task_complete(struct perf_task *task);
 
 static void
-perf_set_sock_zcopy(const char *impl_name, bool enable)
+perf_set_sock_opts(const char *impl_name, const char *field, uint32_t val, const char *valstr)
 {
 	struct spdk_sock_impl_opts sock_opts = {};
 	size_t opts_size = sizeof(sock_opts);
@@ -344,11 +325,45 @@ perf_set_sock_zcopy(const char *impl_name, bool enable)
 		opts_size = sizeof(sock_opts);
 	}
 
-	sock_opts.enable_zerocopy_send_client = enable;
+	if (!field) {
+		fprintf(stderr, "Warning: no socket opts field specified\n");
+		return;
+	} else if (strcmp(field, "enable_zerocopy_send_client") == 0) {
+		sock_opts.enable_zerocopy_send_client = val;
+	} else if (strcmp(field, "tls_version") == 0) {
+		sock_opts.tls_version = val;
+	} else if (strcmp(field, "ktls") == 0) {
+		sock_opts.enable_ktls = val;
+	} else if (strcmp(field, "psk_key") == 0) {
+		if (!valstr) {
+			fprintf(stderr, "No socket opts value specified\n");
+			return;
+		}
+		sock_opts.psk_key = strdup(valstr);
+		if (sock_opts.psk_key == NULL) {
+			fprintf(stderr, "Failed to allocate psk_key in sock_impl\n");
+			return;
+		}
+	} else if (strcmp(field, "psk_identity") == 0) {
+		if (!valstr) {
+			fprintf(stderr, "No socket opts value specified\n");
+			return;
+		}
+		sock_opts.psk_identity = strdup(valstr);
+		if (sock_opts.psk_identity == NULL) {
+			fprintf(stderr, "Failed to allocate psk_identity in sock_impl\n");
+			return;
+		}
+	} else if (strcmp(field, "zerocopy_threshold") == 0) {
+		sock_opts.zerocopy_threshold = val;
+	} else {
+		fprintf(stderr, "Warning: invalid or unprocessed socket opts field: %s\n", field);
+		return;
+	}
 
 	if (spdk_sock_impl_set_opts(impl_name, &sock_opts, opts_size)) {
-		fprintf(stderr, "Failed to %s zcopy send for sock impl %s: error %d (%s)\n",
-			enable ? "enable" : "disable", impl_name, errno, strerror(errno));
+		fprintf(stderr, "Failed to set %s: %d for sock impl %s : error %d (%s)\n", field, val, impl_name,
+			errno, strerror(errno));
 	}
 }
 
@@ -489,8 +504,9 @@ uring_check_io(struct ns_worker_ctx *ns_ctx)
 			assert(ns_ctx->u.uring.cqes[i] != NULL);
 			task = (struct perf_task *)ns_ctx->u.uring.cqes[i]->user_data;
 			if (ns_ctx->u.uring.cqes[i]->res != (int)task->iovs[0].iov_len) {
-				fprintf(stderr, "cqe[i]->status=%d\n", ns_ctx->u.uring.cqes[i]->res);
-				exit(0);
+				fprintf(stderr, "cqe->status=%d, iov_len=%d\n", ns_ctx->u.uring.cqes[i]->res,
+					(int)task->iovs[0].iov_len);
+				exit(1);
 			}
 			io_uring_cqe_seen(&ns_ctx->u.uring.ring, ns_ctx->u.uring.cqes[i]);
 			task_complete(task);
@@ -601,6 +617,7 @@ aio_check_io(struct ns_worker_ctx *ns_ctx)
 {
 	int count, i;
 	struct timespec timeout;
+	struct perf_task *task;
 
 	timeout.tv_sec = 0;
 	timeout.tv_nsec = 0;
@@ -612,6 +629,12 @@ aio_check_io(struct ns_worker_ctx *ns_ctx)
 	}
 
 	for (i = 0; i < count; i++) {
+		task = (struct perf_task *)ns_ctx->u.aio.events[i].data;
+		if (ns_ctx->u.aio.events[i].res != (uint64_t)task->iovs[0].iov_len) {
+			fprintf(stderr, "event->res=%lu, iov_len=%lu\n", ns_ctx->u.aio.events[i].res,
+				(uint64_t)task->iovs[0].iov_len);
+			exit(1);
+		}
 		task_complete(ns_ctx->u.aio.events[i].data);
 	}
 	return count;
@@ -712,7 +735,7 @@ register_file(const char *path)
 		g_io_align = blklen;
 	}
 
-	entry = malloc(sizeof(struct ns_entry));
+	entry = calloc(1, sizeof(struct ns_entry));
 	if (entry == NULL) {
 		close(fd);
 		perror("ns_entry malloc");
@@ -735,8 +758,11 @@ register_file(const char *path)
 	entry->size_in_ios = size / g_io_size_bytes;
 	entry->io_size_blocks = g_io_size_bytes / blklen;
 
-	if (g_is_random && g_zipf_theta > 0) {
-		entry->zipf = spdk_zipf_create(entry->size_in_ios, g_zipf_theta, 0);
+	if (g_is_random) {
+		entry->seed = rand();
+		if (g_zipf_theta > 0) {
+			entry->zipf = spdk_zipf_create(entry->size_in_ios, g_zipf_theta, 0);
+		}
 	}
 
 	snprintf(entry->name, sizeof(entry->name), "%s", path);
@@ -1211,13 +1237,6 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		return;
 	}
 
-	if (g_io_size_bytes % sector_size != 0) {
-		printf("WARNING: IO size %u (-o) is not a multiple of nsid %u sector size %u."
-		       " Removing this ns from test\n", g_io_size_bytes, spdk_nvme_ns_get_id(ns), sector_size);
-		g_warn = true;
-		return;
-	}
-
 	max_xfer_size = spdk_nvme_ns_get_max_io_xfer_size(ns);
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
 	/* NVMe driver may add additional entries based on
@@ -1251,8 +1270,11 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	entry->size_in_ios = ns_size / g_io_size_bytes;
 	entry->io_size_blocks = g_io_size_bytes / sector_size;
 
-	if (g_is_random && g_zipf_theta > 0) {
-		entry->zipf = spdk_zipf_create(entry->size_in_ios, g_zipf_theta, 0);
+	if (g_is_random) {
+		entry->seed = rand();
+		if (g_zipf_theta > 0) {
+			entry->zipf = spdk_zipf_create(entry->size_in_ios, g_zipf_theta, 0);
+		}
 	}
 
 	entry->block_size = spdk_nvme_ns_get_extended_sector_size(ns);
@@ -1272,6 +1294,15 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	 */
 	if ((entry->io_flags & SPDK_NVME_IO_FLAGS_PRACT) && (entry->md_size == 8)) {
 		entry->block_size = spdk_nvme_ns_get_sector_size(ns);
+	}
+
+	if (g_io_size_bytes % entry->block_size != 0) {
+		printf("WARNING: IO size %u (-o) is not a multiple of nsid %u sector size %u."
+		       " Removing this ns from test\n", g_io_size_bytes, spdk_nvme_ns_get_id(ns), entry->block_size);
+		g_warn = true;
+		spdk_zipf_free(&entry->zipf);
+		free(entry);
+		return;
 	}
 
 	if (g_max_io_md_size < entry->md_size) {
@@ -1296,6 +1327,15 @@ unregister_namespaces(void)
 	TAILQ_FOREACH_SAFE(entry, &g_namespaces, link, tmp) {
 		TAILQ_REMOVE(&g_namespaces, entry, link);
 		spdk_zipf_free(&entry->zipf);
+		if (g_use_uring) {
+#ifdef SPDK_CONFIG_URING
+			close(entry->u.uring.fd);
+#endif
+		} else {
+#if HAVE_LIBAIO
+			close(entry->u.aio.fd);
+#endif
+		}
 		free(entry);
 	}
 }
@@ -1392,6 +1432,8 @@ submit_single_io(struct perf_task *task)
 	struct ns_worker_ctx	*ns_ctx = task->ns_ctx;
 	struct ns_entry		*entry = ns_ctx->entry;
 
+	assert(!ns_ctx->is_draining);
+
 	if (entry->zipf) {
 		offset_in_ios = spdk_zipf_generate(entry->zipf);
 	} else if (g_is_random) {
@@ -1422,6 +1464,11 @@ submit_single_io(struct perf_task *task)
 		free(task);
 	} else {
 		ns_ctx->current_queue_depth++;
+		ns_ctx->stats.io_submitted++;
+	}
+
+	if (spdk_unlikely(g_number_ios && ns_ctx->stats.io_submitted >= g_number_ios)) {
+		ns_ctx->is_draining = true;
 	}
 }
 
@@ -1454,10 +1501,10 @@ task_complete(struct perf_task *task)
 	}
 
 	/*
-	 * is_draining indicates when time has expired for the test run
-	 * and we are just waiting for the previously submitted I/O
-	 * to complete.  In this case, do not submit a new I/O to replace
-	 * the one just completed.
+	 * is_draining indicates when time has expired or io_submitted exceeded
+	 * g_number_ios for the test run and we are just waiting for the previously
+	 * submitted I/O to complete. In this case, do not submit a new I/O to
+	 * replace the one just completed.
 	 */
 	if (spdk_unlikely(ns_ctx->is_draining)) {
 		spdk_dma_free(task->iovs[0].iov_base);
@@ -1640,6 +1687,8 @@ work_fn(void *arg)
 	}
 
 	while (spdk_likely(!g_exit)) {
+		bool all_draining = true;
+
 		/*
 		 * Check for completed I/O for each controller. A new
 		 * I/O will be submitted in the io_complete callback
@@ -1655,6 +1704,14 @@ work_fn(void *arg)
 				ns_ctx->stats.idle_tsc += check_now - ns_ctx->stats.last_tsc;
 			}
 			ns_ctx->stats.last_tsc = check_now;
+
+			if (!ns_ctx->is_draining) {
+				all_draining = false;
+			}
+		}
+
+		if (spdk_unlikely(all_draining)) {
+			break;
 		}
 
 		tsc_current = spdk_get_ticks();
@@ -1673,6 +1730,7 @@ work_fn(void *arg)
 				TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 					memset(&ns_ctx->stats, 0, sizeof(ns_ctx->stats));
 					ns_ctx->stats.min_tsc = UINT64_MAX;
+					spdk_histogram_data_reset(ns_ctx->histogram);
 				}
 
 				if (worker->lcore == g_main_core && isatty(STDOUT_FILENO)) {
@@ -1726,7 +1784,8 @@ work_fn(void *arg)
 	return 0;
 }
 
-static void usage(char *program_name)
+static void
+usage(char *program_name)
 {
 	printf("%s options", program_name);
 #if defined(SPDK_CONFIG_URING) || defined(HAVE_LIBAIO)
@@ -1745,7 +1804,7 @@ static void usage(char *program_name)
 	printf("\t[-w, --io-pattern <pattern> io pattern type, must be one of\n");
 	printf("\t\t(read, write, randread, randwrite, rw, randrw)]\n");
 	printf("\t[-M, --rwmixread <0-100> rwmixread (100 for reads, 0 for writes)]\n");
-	printf("\t[-F, --zipf <theta> use zipf distribution for random I/O\n");
+	printf("\t[-F, --zipf <theta> use zipf distribution for random I/O]\n");
 	printf("\t[-L, --enable-sw-latency-tracking enable latency tracking via sw, default: disabled]\n");
 	printf("\t\t-L for latency summary, -LL for detailed histogram\n");
 	printf("\t[-l, --enable-ssd-latency-tracking enable latency tracking via ssd (if supported), default: disabled]\n");
@@ -1753,6 +1812,8 @@ static void usage(char *program_name)
 	printf("\t[-a, --warmup-time <sec> warmup time in seconds]\n");
 	printf("\t[-c, --core-mask <mask> core mask for I/O submission/completion.]\n");
 	printf("\t\t(default: 1)\n");
+	printf("\t[-d, --number-ios <val> number of I/O to perform per thread on each namespace. Note: this is additional exit criteria.]\n");
+	printf("\t\t(default: 0 - unlimited)\n");
 	printf("\t[-D, --disable-sq-cmb disable submission queue in controller memory buffer, default: enabled]\n");
 	printf("\t[-H, --enable-tcp-hdgst enable header digest for TCP transport, default: disabled]\n");
 	printf("\t[-I, --enable-tcp-ddgst enable data digest for TCP transport, default: disabled]\n");
@@ -1782,7 +1843,7 @@ static void usage(char *program_name)
 	printf("\t[-C, --max-completion-per-poll <val> max completions per poll]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
 	printf("\t[-i, --shmem-grp-id <id> shared memory group ID]\n");
-	printf("\t[-Q, --skip-errors log I/O errors every N times (default: 1)\n");
+	printf("\t[-Q, --skip-errors log I/O errors every N times (default: 1)]\n");
 	printf("\t");
 	spdk_log_usage(stdout, "-T");
 	printf("\t[-V, --enable-vmd enable VMD enumeration]\n");
@@ -1798,11 +1859,20 @@ static void usage(char *program_name)
 #ifdef DEBUG
 	printf("\t[-G, --enable-debug enable debug logging]\n");
 #else
-	printf("\t[-G, --enable-debug enable debug logging (flag disabled, must reconfigure with --enable-debug)\n");
+	printf("\t[-G, --enable-debug enable debug logging (flag disabled, must reconfigure with --enable-debug)]\n");
 #endif
 	printf("\t[--transport-stats dump transport statistics]\n");
 	printf("\t[--iova-mode <mode> specify DPDK IOVA mode: va|pa]\n");
 	printf("\t[--io-queue-size <val> size of NVMe IO queue. Default: maximum allowed by controller]\n");
+	printf("\t[--disable-ktls disable Kernel TLS. Only valid for ssl impl. Default for ssl impl]\n");
+	printf("\t[--enable-ktls enable Kernel TLS. Only valid for ssl impl]\n");
+	printf("\t[--tls-version <val> TLS version to use. Only valid for ssl impl. Default: 0 (auto-negotiation)]\n");
+	printf("\t[--psk-key <val> Default PSK KEY in hexadecimal digits, e.g. 1234567890ABCDEF (only applies when sock_impl == ssl)]\n");
+	printf("\t[--psk-identity <val> Default PSK ID, e.g. psk.spdk.io (only applies when sock_impl == ssl)]\n");
+	printf("\t[--zerocopy-threshold <val> data is sent with MSG_ZEROCOPY if size is greater than this val. Default: 0 to disable it]\n");
+	printf("\t[--zerocopy-threshold-sock-impl <impl> specify the sock implementation to set zerocopy_threshold]\n");
+	printf("\t[--transport-tos <val> specify the type of service for RDMA transport. Default: 0 (disabled)]\n");
+	printf("\t[--rdma-srq-size <val> The size of a shared rdma receive queue. Default: 0 (disabled)]\n");
 }
 
 static void
@@ -2056,9 +2126,6 @@ add_trid(const char *trid_str)
 		return 1;
 	}
 
-	spdk_nvme_transport_id_populate_trstring(trid,
-			spdk_nvme_transport_id_trtype_str(trid->trtype));
-
 	ns = strcasestr(trid_str, "ns:");
 	if (ns) {
 		char nsid_str[6]; /* 5 digits maximum in an nsid */
@@ -2218,8 +2285,8 @@ parse_metadata(const char *metacfg_str)
 
 	return 0;
 }
-// ZIV_P2Pc
-#define PERF_GETOPT_SHORT "a:b:c:e:gi:lpmo:q:r:k:s:t:w:z:A:C:DF:GHILM:NO:P:Q:RS:T:U:VZ:"
+// ZIV_P2P
+#define PERF_GETOPT_SHORT "a:b:c:d:e:gi:lpmo:q:r:k:s:t:w:z:A:C:DF:GHILM:NO:P:Q:RS:T:U:VZ:"
 
 static const struct option g_perf_cmdline_opts[] = {
 #define PERF_WARMUP_TIME	'a'
@@ -2253,6 +2320,8 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"hugemem-size",			required_argument,	NULL, PERF_HUGEMEM_SIZE},
 #define PERF_TIME	't'
 	{"time",			required_argument,	NULL, PERF_TIME},
+#define PERF_NUMBER_IOS	'd'
+	{"number-ios",			required_argument,	NULL, PERF_NUMBER_IOS},
 #define PERF_IO_PATTERN	'w'
 	{"io-pattern",			required_argument,	NULL, PERF_IO_PATTERN},
 #define PERF_DISABLE_ZCOPY	'z'
@@ -2301,6 +2370,24 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"iova-mode", required_argument, NULL, PERF_IOVA_MODE},
 #define PERF_IO_QUEUE_SIZE	259
 	{"io-queue-size", required_argument, NULL, PERF_IO_QUEUE_SIZE},
+#define PERF_DISABLE_KTLS	260
+	{"disable-ktls", no_argument, NULL, PERF_DISABLE_KTLS},
+#define PERF_ENABLE_KTLS	261
+	{"enable-ktls", no_argument, NULL, PERF_ENABLE_KTLS},
+#define PERF_TLS_VERSION	262
+	{"tls-version", required_argument, NULL, PERF_TLS_VERSION},
+#define PERF_PSK_KEY		263
+	{"psk-key", required_argument, NULL, PERF_PSK_KEY},
+#define PERF_PSK_IDENTITY	264
+	{"psk-identity ", required_argument, NULL, PERF_PSK_IDENTITY},
+#define PERF_ZEROCOPY_THRESHOLD		265
+	{"zerocopy-threshold", required_argument, NULL, PERF_ZEROCOPY_THRESHOLD},
+#define PERF_SOCK_IMPL		266
+	{"zerocopy-threshold-sock-impl", required_argument, NULL, PERF_SOCK_IMPL},
+#define PERF_TRANSPORT_TOS		267
+	{"transport-tos", required_argument, NULL, PERF_TRANSPORT_TOS},
+#define PERF_RDMA_SRQ_SIZE	268
+	{"rdma-srq-size", required_argument, NULL, PERF_RDMA_SRQ_SIZE},
 	/* Should be the last element */
 	{0, 0, 0, 0}
 };
@@ -2310,8 +2397,11 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 {
 	int op, long_idx;
 	long int val;
+	long long int val2;
 	int rc;
 	char *endptr;
+	bool ssl_used = false;
+	char *sock_impl = "posix";
 
 	while ((op = getopt_long(argc, argv, PERF_GETOPT_SHORT, g_perf_cmdline_opts, &long_idx)) != -1) {
 		switch (op) {
@@ -2330,6 +2420,8 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		case PERF_NUM_UNUSED_IO_QPAIRS:
 		case PERF_SKIP_ERRORS:
 		case PERF_IO_QUEUE_SIZE:
+		case PERF_ZEROCOPY_THRESHOLD:
+		case PERF_RDMA_SRQ_SIZE:
 			val = spdk_strtol(optarg, 10);
 			if (val < 0) {
 				fprintf(stderr, "Converting a string to integer failed\n");
@@ -2389,7 +2481,22 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			case PERF_IO_QUEUE_SIZE:
 				g_io_queue_size = val;
 				break;
+			case PERF_ZEROCOPY_THRESHOLD:
+				g_sock_zcopy_threshold = val;
+				break;
+			case PERF_RDMA_SRQ_SIZE:
+				g_rdma_srq_size = val;
+				break;
 			}
+			break;
+		case PERF_NUMBER_IOS:
+			val2 = spdk_strtoll(optarg, 10);
+			if (val2 < 0) {
+				fprintf(stderr, "Converting a string to integer failed\n");
+				return val2;
+			}
+
+			g_number_ios = (uint64_t)val2;
 			break;
 		case PERF_ZIPF:
 			errno = 0;
@@ -2486,13 +2593,39 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		case PERF_ENABLE_VMD:
 			g_vmd = true;
 			break;
+		case PERF_DISABLE_KTLS:
+			ssl_used = true;
+			perf_set_sock_opts("ssl", "ktls", 0, NULL);
+			break;
+		case PERF_ENABLE_KTLS:
+			ssl_used = true;
+			perf_set_sock_opts("ssl", "ktls", 1, NULL);
+			break;
+		case PERF_TLS_VERSION:
+			ssl_used = true;
+			val = spdk_strtol(optarg, 10);
+			if (val < 0) {
+				fprintf(stderr, "Illegal tls version value %s\n", optarg);
+				return val;
+			}
+			perf_set_sock_opts("ssl", "tls_version", val, NULL);
+			break;
+		case PERF_PSK_KEY:
+			ssl_used = true;
+			perf_set_sock_opts("ssl", "psk_key", 0, optarg);
+			break;
+		case PERF_PSK_IDENTITY:
+			ssl_used = true;
+			perf_set_sock_opts("ssl", "psk_identity", 0, optarg);
+			break;
 		case PERF_DISABLE_ZCOPY:
-			perf_set_sock_zcopy(optarg, false);
+			perf_set_sock_opts(optarg, "enable_zerocopy_send_client", 0, NULL);
 			break;
 		case PERF_ENABLE_ZCOPY:
-			perf_set_sock_zcopy(optarg, true);
+			perf_set_sock_opts(optarg, "enable_zerocopy_send_client", 1, NULL);
 			break;
 		case PERF_DEFAULT_SOCK_IMPL:
+			sock_impl = optarg;
 			rc = spdk_sock_set_default_impl(optarg);
 			if (rc) {
 				fprintf(stderr, "Failed to set sock impl %s, err %d (%s)\n", optarg, errno, strerror(errno));
@@ -2504,6 +2637,17 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			break;
 		case PERF_IOVA_MODE:
 			env_opts->iova_mode = optarg;
+			break;
+		case PERF_SOCK_IMPL:
+			g_sock_threshold_impl = optarg;
+			break;
+		case PERF_TRANSPORT_TOS:
+			val = spdk_strtol(optarg, 10);
+			if (val < 0) {
+				fprintf(stderr, "Invalid TOS value\n");
+				return 1;
+			}
+			g_transport_tos = val;
 			break;
 		default:
 			usage(argv[0]);
@@ -2551,6 +2695,13 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		g_workload_type = &g_workload_type[4];
 	}
 
+	if (ssl_used && strncmp(sock_impl, "ssl", 3) != 0) {
+		fprintf(stderr, "sock impl is not SSL but tried to use one of the SSL only options\n");
+		usage(argv[0]);
+		return 1;
+	}
+
+
 	if (strcmp(g_workload_type, "read") == 0 || strcmp(g_workload_type, "write") == 0) {
 		g_rw_percentage = strcmp(g_workload_type, "read") == 0 ? 100 : 0;
 		if (g_mix_specified) {
@@ -2569,6 +2720,39 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			"-w (--io-pattern) io pattern type must be one of\n"
 			"(read, write, randread, randwrite, rw, randrw)\n");
 		return 1;
+	}
+
+	if (g_sock_zcopy_threshold > 0) {
+		if (!g_sock_threshold_impl) {
+			fprintf(stderr,
+				"--zerocopy-threshold must be set with sock implementation specified(--zerocopy-threshold-sock-impl <impl>)\n");
+			return 1;
+		}
+
+		perf_set_sock_opts(g_sock_threshold_impl, "zerocopy_threshold", g_sock_zcopy_threshold, NULL);
+	}
+
+	if (g_number_ios && g_warmup_time_in_sec) {
+		fprintf(stderr, "-d (--number-ios) with -a (--warmup-time) is not supported\n");
+		return 1;
+	}
+
+	if (g_number_ios && g_number_ios < g_queue_depth) {
+		fprintf(stderr, "-d (--number-ios) less than -q (--io-depth) is not supported\n");
+		return 1;
+	}
+
+	if (g_rdma_srq_size != 0) {
+		struct spdk_nvme_transport_opts opts;
+
+		spdk_nvme_transport_get_opts(&opts, sizeof(opts));
+		opts.rdma_srq_size = g_rdma_srq_size;
+
+		rc = spdk_nvme_transport_set_opts(&opts, sizeof(opts));
+		if (rc != 0) {
+			fprintf(stderr, "Failed to set NVMe transport options.\n");
+			return 1;
+		}
 	}
 
 	if (TAILQ_EMPTY(&g_trid_list)) {
@@ -2661,6 +2845,8 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	opts->data_digest = g_data_digest;
 	opts->keep_alive_timeout_ms = g_keep_alive_timeout_in_ms;
 	memcpy(opts->hostnqn, trid_entry->hostnqn, sizeof(opts->hostnqn));
+
+	opts->transport_tos = g_transport_tos;
 
 	return true;
 }
@@ -2764,13 +2950,36 @@ unregister_controllers(void)
 }
 
 static int
+allocate_ns_worker(struct ns_entry *entry, struct worker_thread *worker)
+{
+	struct ns_worker_ctx	*ns_ctx;
+
+	ns_ctx = calloc(1, sizeof(struct ns_worker_ctx));
+	if (!ns_ctx) {
+		return -1;
+	}
+
+	printf("Associating %s with lcore %d\n", entry->name, worker->lcore);
+	ns_ctx->stats.min_tsc = UINT64_MAX;
+	ns_ctx->entry = entry;
+	ns_ctx->histogram = spdk_histogram_data_alloc();
+	TAILQ_INSERT_TAIL(&worker->ns_ctx, ns_ctx, link);
+
+	return 0;
+}
+
+static int
 associate_workers_with_ns(void)
 {
 	struct ns_entry		*entry = TAILQ_FIRST(&g_namespaces);
 	struct worker_thread	*worker = TAILQ_FIRST(&g_workers);
-	struct ns_worker_ctx	*ns_ctx;
 	int			i, count;
 
+	/* Each core contains single worker, and namespaces are associated as follows:
+	 * 1) equal workers and namespaces - each worker associated with single namespace
+	 * 2) more workers than namespaces - each namespace is associated with one or more workers
+	 * 3) more namespaces than workers - each worker is associated with one or more namespaces
+	 */
 	count = g_num_namespaces > g_num_workers ? g_num_namespaces : g_num_workers;
 
 	for (i = 0; i < count; i++) {
@@ -2778,16 +2987,9 @@ associate_workers_with_ns(void)
 			break;
 		}
 
-		ns_ctx = calloc(1, sizeof(struct ns_worker_ctx));
-		if (!ns_ctx) {
+		if (allocate_ns_worker(entry, worker) != 0) {
 			return -1;
 		}
-
-		printf("Associating %s with lcore %d\n", entry->name, worker->lcore);
-		ns_ctx->stats.min_tsc = UINT64_MAX;
-		ns_ctx->entry = entry;
-		ns_ctx->histogram = spdk_histogram_data_alloc();
-		TAILQ_INSERT_TAIL(&worker->ns_ctx, ns_ctx, link);
 
 		worker = TAILQ_NEXT(worker, link);
 		if (worker == NULL) {
@@ -2863,12 +3065,16 @@ setup_sig_handlers(void)
 	return 0;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	int rc;
 	struct worker_thread *worker, *main_worker;
 	struct spdk_env_opts opts;
 	pthread_t thread_id = 0;
+
+	/* Use the runtime PID to set the random seed */
+	srand(getpid());
 
 	spdk_env_opts_init(&opts);
 	opts.name = "perf";

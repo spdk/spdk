@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation
+#  All rights reserved.
+#
 # Install main dependencies
-swupd bundle-add -y c-basic make cmake dev-utils openssl devpkg-libiscsi \
+swupd bundle-add -y c-basic make dev-utils openssl devpkg-libiscsi \
 	devpkg-ncurses python3-basic python-extras devpkg-open-iscsi devpkg-json-c \
 	storage-utils
 # Additional dependencies for ISA-L used in compression
@@ -22,6 +25,10 @@ fi
 if [[ $INSTALL_FUSE == "true" ]]; then
 	# Additional dependencies for FUSE and NVMe-CUSE
 	swupd bundle-add -y devpkg-fuse
+fi
+if [[ $INSTALL_RBD == "true" ]]; then
+	# Additional dependencies for RBD bdev in NVMe over Fabrics
+	swupd bundle-add -y librados-devel librbd-devel
 fi
 if [[ $INSTALL_RDMA == "true" ]]; then
 	# Additional dependencies for RDMA transport in NVMe over Fabrics

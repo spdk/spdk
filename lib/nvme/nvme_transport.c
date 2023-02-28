@@ -1,36 +1,8 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
  *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /*
@@ -53,6 +25,10 @@ TAILQ_HEAD(nvme_transport_list, spdk_nvme_transport) g_spdk_nvme_transports =
 struct spdk_nvme_transport g_spdk_transports[SPDK_MAX_NUM_OF_TRANSPORTS] = {};
 int g_current_transport_index = 0;
 
+struct spdk_nvme_transport_opts g_spdk_nvme_transport_opts = {
+	.rdma_srq_size = 0,
+};
+
 const struct spdk_nvme_transport *
 nvme_get_first_transport(void)
 {
@@ -69,7 +45,7 @@ nvme_get_next_transport(const struct spdk_nvme_transport *transport)
  * Unfortunately, due to NVMe PCIe multiprocess support, we cannot store the
  * transport object in either the controller struct or the admin qpair. THis means
  * that a lot of admin related transport calls will have to call nvme_get_transport
- * in order to knwo which functions to call.
+ * in order to know which functions to call.
  * In the I/O path, we have the ability to store the transport struct in the I/O
  * qpairs to avoid taking a performance hit.
  */
@@ -99,7 +75,8 @@ spdk_nvme_transport_available_by_name(const char *transport_name)
 	return nvme_get_transport(transport_name) == NULL ? false : true;
 }
 
-void spdk_nvme_transport_register(const struct spdk_nvme_transport_ops *ops)
+void
+spdk_nvme_transport_register(const struct spdk_nvme_transport_ops *ops)
 {
 	struct spdk_nvme_transport *new_transport;
 
@@ -180,6 +157,19 @@ nvme_transport_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 int
+nvme_transport_ctrlr_ready(struct spdk_nvme_ctrlr *ctrlr)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_ready) {
+		return transport->ops.ctrlr_ready(ctrlr);
+	}
+
+	return 0;
+}
+
+int
 nvme_transport_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value)
 {
 	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
@@ -221,7 +211,7 @@ nvme_queue_register_operation_completion(struct spdk_nvme_ctrlr *ctrlr, uint64_t
 {
 	struct nvme_register_completion *ctx;
 
-	ctx = calloc(1, sizeof(*ctx));
+	ctx = spdk_zmalloc(sizeof(*ctx), 0, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 	if (ctx == NULL) {
 		return -ENOMEM;
 	}
@@ -231,6 +221,7 @@ nvme_queue_register_operation_completion(struct spdk_nvme_ctrlr *ctrlr, uint64_t
 	ctx->cb_fn = cb_fn;
 	ctx->cb_ctx = cb_ctx;
 	ctx->value = value;
+	ctx->pid = getpid();
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	STAILQ_INSERT_TAIL(&ctrlr->register_operations, ctx, stailq);
@@ -508,7 +499,7 @@ nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nv
 	if (!qpair->async) {
 		/* Busy wait until the qpair exits the connecting state */
 		while (nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTING) {
-			if (qpair->poll_group) {
+			if (qpair->poll_group && spdk_nvme_ctrlr_is_fabrics(ctrlr)) {
 				rc = spdk_nvme_poll_group_process_completions(
 					     qpair->poll_group->group, 0,
 					     nvme_transport_connect_qpair_fail);
@@ -546,7 +537,8 @@ nvme_transport_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk
 
 	nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTING);
 	assert(transport != NULL);
-	if (qpair->poll_group) {
+
+	if (qpair->poll_group && (qpair->active_proc == nvme_ctrlr_get_current_process(ctrlr))) {
 		nvme_poll_group_disconnect_qpair(qpair);
 	}
 
@@ -556,8 +548,9 @@ nvme_transport_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk
 void
 nvme_transport_ctrlr_disconnect_qpair_done(struct spdk_nvme_qpair *qpair)
 {
-	nvme_qpair_abort_all_queued_reqs(qpair, 0);
-	nvme_transport_qpair_abort_reqs(qpair, 0);
+	if (qpair->active_proc == nvme_ctrlr_get_current_process(qpair->ctrlr)) {
+		nvme_qpair_abort_all_queued_reqs(qpair, 0);
+	}
 	nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
 }
 
@@ -809,7 +802,64 @@ nvme_transport_poll_group_free_stats(struct spdk_nvme_transport_poll_group *tgro
 	}
 }
 
-enum spdk_nvme_transport_type nvme_transport_get_trtype(const struct spdk_nvme_transport *transport)
+spdk_nvme_transport_type_t
+nvme_transport_get_trtype(const struct spdk_nvme_transport *transport)
 {
 	return transport->ops.type;
+}
+
+void
+spdk_nvme_transport_get_opts(struct spdk_nvme_transport_opts *opts, size_t opts_size)
+{
+	if (opts == NULL) {
+		SPDK_ERRLOG("opts should not be NULL.\n");
+		return;
+	}
+
+	if (opts_size == 0) {
+		SPDK_ERRLOG("opts_size should not be zero.\n");
+		return;
+	}
+
+	opts->opts_size = opts_size;
+
+#define SET_FIELD(field) \
+	if (offsetof(struct spdk_nvme_transport_opts, field) + sizeof(opts->field) <= opts_size) { \
+		opts->field = g_spdk_nvme_transport_opts.field; \
+	} \
+
+	SET_FIELD(rdma_srq_size);
+
+	/* Do not remove this statement, you should always update this statement when you adding a new field,
+	 * and do not forget to add the SET_FIELD statement for your added field. */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_transport_opts) == 12, "Incorrect size");
+
+#undef SET_FIELD
+}
+
+int
+spdk_nvme_transport_set_opts(const struct spdk_nvme_transport_opts *opts, size_t opts_size)
+{
+	if (opts == NULL) {
+		SPDK_ERRLOG("opts should not be NULL.\n");
+		return -EINVAL;
+	}
+
+	if (opts_size == 0) {
+		SPDK_ERRLOG("opts_size should not be zero.\n");
+		return -EINVAL;
+	}
+
+#define SET_FIELD(field) \
+	if (offsetof(struct spdk_nvme_transport_opts, field) + sizeof(opts->field) <= opts->opts_size) { \
+		g_spdk_nvme_transport_opts.field = opts->field; \
+	} \
+
+	SET_FIELD(rdma_srq_size);
+
+	g_spdk_nvme_transport_opts.opts_size = opts->opts_size;
+
+#undef SET_FIELD
+
+	return 0;
 }

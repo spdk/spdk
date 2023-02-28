@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef __OCF_LIST_H__
@@ -55,7 +27,8 @@ struct list_head {
  * @param it list entry to be added
  * @param l1 list main node (head)
  */
-static inline void list_add(struct list_head *it, struct list_head *l1)
+static inline void
+list_add(struct list_head *it, struct list_head *l1)
 {
 	it->prev = l1;
 	it->next = l1->next;
@@ -69,7 +42,8 @@ static inline void list_add(struct list_head *it, struct list_head *l1)
  * @param it list entry to be added
  * @param l1 list main node (head)
  */
-static inline void list_add_tail(struct list_head *it, struct list_head *l1)
+static inline void
+list_add_tail(struct list_head *it, struct list_head *l1)
 {
 	it->prev = l1->prev;
 	it->next = l1;
@@ -81,7 +55,8 @@ static inline void list_add_tail(struct list_head *it, struct list_head *l1)
 /**
  * check if a list is empty (return true)
  */
-static inline int list_empty(struct list_head *it)
+static inline int
+list_empty(struct list_head *it)
 {
 	return it->next == it;
 }
@@ -89,21 +64,24 @@ static inline int list_empty(struct list_head *it)
 /**
  * delete an entry from a list
  */
-static inline void list_del(struct list_head *it)
+static inline void
+list_del(struct list_head *it)
 {
 	it->next->prev = it->prev;
 	it->prev->next = it->next;
 }
 
-static inline void list_move_tail(struct list_head *list,
-				  struct list_head *head)
+static inline void
+list_move_tail(struct list_head *list,
+	       struct list_head *head)
 {
 	list_del(list);
 	list_add_tail(list, head);
 }
 
-static inline void list_move(struct list_head *list,
-			     struct list_head *head)
+static inline void
+list_move(struct list_head *list,
+	  struct list_head *head)
 {
 	list_del(list);
 	list_add(list, head);

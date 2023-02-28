@@ -1,6 +1,5 @@
 The SPDK repo contains multiple git submodules each with its own
-license info. Unless otherwise noted all other code in this repo
-is BSD as stated below.
+license info.
 
 Submodule license info:
 dpdk: see dpdk/license
@@ -9,35 +8,23 @@ isa-l: see isa-l/LICENSE
 libvfio-user: see libvfio-user/LICENSE
 ocf: see ocf/LICENSE
 
-The rest of the SPDK repo:
+The rest of the SPDK repository uses the Open Source BSD-3-Clause
+license.  SPDK also uses SPDX Unique License Identifiers to eliminate
+the need to copy the license text into each individual file.
 
-BSD LICENSE
+Any new file contributions to SPDK shall adhere to the BSD-3-Clause
+license and use SPDX identifiers. Exceptions are subject to usual
+review and must be listed in this file.
 
-Copyright (c) Intel Corporation.
-All rights reserved.
+Exceptions:
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
+* include/linux/* header files are BSD-3-Clause but do not use SPDX
+  identifier to keep them identical to the same header files in the
+  Linux kernel source tree.
 
-  * Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
-  * Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in
-    the documentation and/or other materials provided with the
-    distribution.
-  * Neither the name of Intel Corporation nor the names of its
-    contributors may be used to endorse or promote products derived
-    from this software without specific prior written permission.
+* include/spdk/tree.h and include/spdk/queue_extras are BSD-2-Clause,
+  since there were primarily imported from FreeBSD.  tree.h uses an SPDX
+  identifier but also the license text to reduce differences from the
+  FreeBSD source tree.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+* lib/util/base64_neon.c is BSD-2-Clause.

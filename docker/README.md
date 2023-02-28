@@ -39,7 +39,7 @@ Running `docker-compose build` creates 5 docker images:
 - traffic-generator-virtio
 
 The `build_base` image provides the core components required to containerize SPDK
-applications. The fedora:33 image from the Fedora Container Registry is used and then SPDK is installed. SPDK is installed out of `build_base/spdk.tar.gz` provided.
+applications. The fedora:35 image from the Fedora Container Registry is used and then SPDK is installed. SPDK is installed out of `build_base/spdk.tar.gz` provided.
 See `build_base` folder for details on what's included in the final image.
 
 Running `docker-compose up` creates 3 docker containers:
@@ -75,7 +75,7 @@ docker-compose run traffic-generator-nvme
 docker-compose run traffic-generator-virtio
 ~~~
 
-Enviroment variables to containers can be passed as shown in
+Environment variables to containers can be passed as shown in
 [docs](https://docs.docker.com/compose/environment-variables/).
 For example extra arguments to fio can be passed as so:
 

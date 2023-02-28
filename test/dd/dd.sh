@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir/../../")
 source "$testdir/common.sh"
@@ -20,3 +24,4 @@ run_test "spdk_dd_bdev_to_bdev" "$testdir/bdev_to_bdev.sh" "${nvmes[@]}"
 if ((SPDK_TEST_URING == 1)); then
 	run_test "spdk_dd_uring" "$testdir/uring.sh"
 fi
+run_test "spdk_dd_sparse" "$testdir/sparse.sh"

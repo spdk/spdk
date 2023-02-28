@@ -32,6 +32,7 @@
     "qd": [128],
     "rw": ["randrw"],
     "rwmixread": 100,
+    "num_jobs": 1,
     "run_time": 5,
     "ramp_time": 1,
     "run_num": 3

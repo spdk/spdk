@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
@@ -216,6 +188,7 @@ int spdk_json_write_uint32(struct spdk_json_write_ctx *w, uint32_t val);
 int spdk_json_write_int64(struct spdk_json_write_ctx *w, int64_t val);
 int spdk_json_write_uint64(struct spdk_json_write_ctx *w, uint64_t val);
 int spdk_json_write_uint128(struct spdk_json_write_ctx *w, uint64_t low_val, uint64_t high_val);
+int spdk_json_write_double(struct spdk_json_write_ctx *w, double val);
 int spdk_json_write_string(struct spdk_json_write_ctx *w, const char *val);
 int spdk_json_write_string_raw(struct spdk_json_write_ctx *w, const char *val, size_t len);
 int spdk_json_write_bytearray(struct spdk_json_write_ctx *w, const void *val, size_t len);
@@ -271,6 +244,8 @@ int spdk_json_write_named_int64(struct spdk_json_write_ctx *w, const char *name,
 int spdk_json_write_named_uint64(struct spdk_json_write_ctx *w, const char *name, uint64_t val);
 int spdk_json_write_named_uint128(struct spdk_json_write_ctx *w, const char *name,
 				  uint64_t low_val, uint64_t high_val);
+int spdk_json_write_named_double(struct spdk_json_write_ctx *w, const char *name, double val);
+
 int spdk_json_write_named_string(struct spdk_json_write_ctx *w, const char *name, const char *val);
 int spdk_json_write_named_string_fmt(struct spdk_json_write_ctx *w, const char *name,
 				     const char *fmt, ...) __attribute__((__format__(__printf__, 3, 4)));
@@ -294,6 +269,7 @@ int spdk_json_write_named_object_begin(struct spdk_json_write_ctx *w, const char
  * -EINVAL - json object is invalid
  * -ENOENT - key not found
  * -EDOM - key exists but value type mismatch.
+ * -EPROTOTYPE - json not enclosed in {}.
  */
 int spdk_json_find(struct spdk_json_val *object, const char *key_name, struct spdk_json_val **key,
 		   struct spdk_json_val **val, enum spdk_json_val_type type);

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2021 Intel Corporation
+#  All rights reserved.
+#
 curdir=$(dirname $(readlink -f "${BASH_SOURCE[0]}"))
 rootdir=$(readlink -f $curdir/../../..)
 source $rootdir/test/common/autotest_common.sh
@@ -51,6 +54,10 @@ for cache_mode in "${cache_modes[@]}"; do
 	$rpc_py save_subsystem_config -n bdev | jq -e \
 		".config | .[] | select(.method == \"bdev_ocf_create\") | .params.mode == \"$cache_mode\""
 done
+
+# Change sequential cutoff
+$rpc_py bdev_ocf_set_seqcutoff Cache0 -p always -t 64
+$rpc_py bdev_ocf_set_seqcutoff Cache0 -p never -t 16
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid

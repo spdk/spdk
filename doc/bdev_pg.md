@@ -63,7 +63,7 @@ to tear down the bdev library, call spdk_bdev_finish().
 All block devices have a simple string name. At any time, a pointer to the
 device object can be obtained by calling spdk_bdev_get_by_name(), or the entire
 set of bdevs may be iterated using spdk_bdev_first() and spdk_bdev_next() and
-their variants.
+their variants or spdk_for_each_bdev() and its variant.
 
 Some block devices may also be given aliases, which are also string names.
 Aliases behave like symlinks - they can be used interchangeably with the real

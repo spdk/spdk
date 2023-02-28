@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
@@ -28,7 +31,7 @@ function app_repeat_test() {
 		# This SIGTERM is sent to the app_repeat test app - it doesn't actually
 		# terminate the app, it just causes it go through another
 		# spdk_app_stop/spdk_app_start cycle
-		./scripts/rpc.py -s $rpc_server spdk_kill_instance SIGTERM
+		$rootdir/scripts/rpc.py -s $rpc_server spdk_kill_instance SIGTERM
 	done
 
 	waitforlisten $repeat_pid $rpc_server
@@ -46,5 +49,8 @@ if [ $(uname -s) = Linux ]; then
 	run_test "event_scheduler" $testdir/scheduler/scheduler.sh
 	if modprobe -n nbd; then
 		run_test "app_repeat" app_repeat_test
+	fi
+	if ((SPDK_TEST_CRYPTO == 0)); then
+		run_test "cpu_locks" "$testdir/cpu_locks.sh"
 	fi
 fi

@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2015 Intel Corporation
+#  All rights reserved.
+#
 if [[ $(uname -s) == Darwin ]]; then
 	# SPDK is not supported on MacOS, but as a developer
 	# convenience we support running the check_format.sh
 	# script on MacOS.
-	# Running "brew install bash greadlink ggrep" should be
+	# Running "brew install bash coreutils grep" should be
 	# sufficient to get the correct versions of these utilities.
 	if [[ $(type -t mapfile) != builtin ]]; then
 		# We need bash version >= 4.0 for mapfile builtin
@@ -64,9 +67,14 @@ function array_contains_string() {
 rc=0
 
 function check_permissions() {
-	echo -n "Checking file permissions..."
+	local rc=0 files=()
 
-	local rc=0
+	mapfile -t files < <(git ls-files)
+	mapfile -t files < <(get_diffed_dups "${files[@]}")
+
+	((${#files[@]} > 0)) || return 0
+
+	echo -n "Checking file permissions..."
 
 	while read -r perm _res0 _res1 path; do
 		if [ ! -f "$path" ]; then
@@ -107,7 +115,7 @@ function check_permissions() {
 				;;
 		esac
 
-	done <<< "$(git grep -I --name-only --untracked -e . | git ls-files -s)"
+	done < <(git ls-files -s "${files[@]}")
 
 	if [ $rc -eq 0 ]; then
 		echo " OK"
@@ -126,12 +134,11 @@ function check_c_style() {
 		else
 			rm -f astyle.log
 			touch astyle.log
-			# Exclude rte_vhost code imported from DPDK - we want to keep the original code
-			#  as-is to enable ongoing work to synch with a generic upstream DPDK vhost library,
-			#  rather than making diffs more complicated by a lot of changes to follow SPDK
-			#  coding standards.
-			git ls-files '*.[ch]' '*.cpp' '*.cc' '*.cxx' '*.hh' '*.hpp' \
-				| grep -v rte_vhost | grep -v cpp_headers \
+			# Exclude DPDK header files copied into our tree
+			git ls-files '*.[ch]' ':!:*/env_dpdk/*/*.h' \
+				| xargs -P$(nproc) -n10 astyle --break-return-type --attach-return-type-decl \
+					--options=.astylerc >> astyle.log
+			git ls-files '*.cpp' '*.cc' '*.cxx' '*.hh' '*.hpp' \
 				| xargs -P$(nproc) -n10 astyle --options=.astylerc >> astyle.log
 			if grep -q "^Formatted" astyle.log; then
 				echo " errors detected"
@@ -270,7 +277,9 @@ function check_posix_includes() {
 	local rc=0
 
 	echo -n "Checking for POSIX includes..."
-	git grep -I -i -f scripts/posix.txt -- './*' ':!include/spdk/stdinc.h' ':!include/linux/**' ':!lib/rte_vhost*/**' ':!scripts/posix.txt' ':!*.patch' > scripts/posix.log || true
+	git grep -I -i -f scripts/posix.txt -- './*' ':!include/spdk/stdinc.h' \
+		':!include/linux/**' ':!scripts/posix.txt' ':!lib/env_dpdk/*/*.h' \
+		':!*.patch' ':!configure' > scripts/posix.log || true
 	if [ -s scripts/posix.log ]; then
 		echo "POSIX includes detected. Please include spdk/stdinc.h instead."
 		cat scripts/posix.log
@@ -295,9 +304,9 @@ function check_naming_conventions() {
 
 	# Build an array of all the modified C libraries.
 	mapfile -t changed_c_libs < <(git diff --name-only HEAD $commit_to_compare -- lib/**/*.c module/**/*.c | xargs -r dirname | sort | uniq)
-	# Matching groups are 1. qualifiers / return type. 2. function name 3. argument list / comments and stuff after that.
-	# Capture just the names of newly added (or modified) function definitions.
-	mapfile -t declared_symbols < <(git diff -U0 $commit_to_compare HEAD -- include/spdk*/*.h | sed -En 's/(^[+].*)(spdk[a-z,A-Z,0-9,_]*)(\(.*)/\2/p')
+	# Capture the names of all function declarations
+	mapfile -t declared_symbols < <(grep -Eh 'spdk_[a-zA-Z0-9_]*\(' include/spdk*/*.h \
+		| sed -En 's/.*(spdk[a-z,A-Z,0-9,_]*)\(.*/\1/p')
 
 	for c_lib in "${changed_c_libs[@]}"; do
 		lib_map_file="mk/spdk_blank.map"
@@ -410,16 +419,20 @@ function get_bash_files() {
 	mapfile -t sh < <(git ls-files '*.sh')
 	mapfile -t shebang < <(git grep -l '^#!.*bash')
 
-	printf '%s\n' "${sh[@]}" "${shebang[@]}" | sort -u
+	get_diffed_dups "${sh[@]}" "${shebang[@]}"
 }
 
 function check_bash_style() {
 	local rc=0
 
 	# find compatible shfmt binary
-	shfmt_bins=$(compgen -c | grep '^shfmt' || true)
+	shfmt_bins=$(compgen -c | grep '^shfmt' | uniq || true)
 	for bin in $shfmt_bins; do
-		if version_lt "$("$bin" --version)" "3.1.0"; then
+		shfmt_version=$("$bin" --version)
+		if [ $shfmt_version != "v3.1.0" ]; then
+			echo "$bin version $shfmt_version not used (only v3.1.0 is supported)"
+			echo "v3.1.0 can be installed using 'scripts/pkgdep.sh -d'"
+		else
 			shfmt=$bin
 			break
 		fi
@@ -471,14 +484,17 @@ function check_bash_style() {
 			fi
 		fi
 	else
-		echo "shfmt not detected, Bash style formatting check is skipped"
+		echo "Supported version of shfmt not detected, Bash style formatting check is skipped"
 	fi
 
 	return $rc
 }
 
 function check_bash_static_analysis() {
-	local rc=0
+	local rc=0 files=()
+
+	mapfile -t files < <(get_bash_files)
+	((${#files[@]} > 0)) || return 0
 
 	if hash shellcheck 2> /dev/null; then
 		echo -n "Checking Bash static analysis with shellcheck..."
@@ -532,7 +548,7 @@ SC2119,SC2120,SC2128,SC2148,SC2153,SC2154,SC2164,SC2174,SC2178,SC2001,SC2206,SC2
 			echo "shellcheck $shellcheck_v detected, recommended >= 0.4.0."
 		fi
 
-		get_bash_files | xargs -P$(nproc) -n1 shellcheck $SHCH_ARGS &> shellcheck.log
+		printf '%s\n' "${files[@]}" | xargs -P$(nproc) -n1 shellcheck $SHCH_ARGS &> shellcheck.log
 		if [[ -s shellcheck.log ]]; then
 			echo " Bash shellcheck errors detected!"
 
@@ -606,7 +622,7 @@ function check_json_rpc() {
 			echo "Missing JSON-RPC documentation for ${rpc}"
 			rc=1
 		fi
-	done < <(git grep -h -E "^SPDK_RPC_REGISTER\(" ':!test/*')
+	done < <(git grep -h -E "^SPDK_RPC_REGISTER\(" ':!test/*' ':!examples/*')
 
 	if [ $rc -eq 0 ]; then
 		echo " OK"
@@ -653,6 +669,101 @@ function check_rpc_args() {
 	return $rc
 }
 
+function get_files_for_lic() {
+	local f_shebang="" f_suffix=() f_type=() f_all=() exceptions=""
+
+	f_shebang+="bash|"
+	f_shebang+="make|"
+	f_shebang+="perl|"
+	f_shebang+="python|"
+	f_shebang+="sh"
+
+	f_suffix+=("*.c")
+	f_suffix+=("*.cpp")
+	f_suffix+=("*.h")
+	f_suffix+=("*.go")
+	f_suffix+=("*.mk")
+	f_suffix+=("*.pl")
+	f_suffix+=("*.py")
+	f_suffix+=("*.sh")
+	f_suffix+=("*.yaml")
+
+	f_type+=("*Dockerfile")
+	f_type+=("*Makefile")
+
+	# Exclude files that may match the above types but should not
+	# fall under SPDX check.
+	exceptions+="include/linux|"
+	exceptions+="include/spdk/queue_extras.h"
+
+	mapfile -t f_all < <(
+		git ls-files "${f_suffix[@]}" "${f_type[@]}"
+		git grep -lE "^#!.*($f_shebang)"
+	)
+
+	printf '%s\n' "${f_all[@]}" | sort -u | grep -vE "$exceptions"
+}
+
+function check_spdx_lic() {
+	local files_missing_license_header=() hint=()
+	local rc=0
+
+	hint+=("SPDX-License-Identifier: BSD-3-Clause")
+	hint+=("All rights reserved.")
+
+	printf 'Checking SPDX-license...'
+
+	mapfile -t files_missing_license_header < <(
+		grep -LE "SPDX-License-Identifier:.+" $(get_files_for_lic)
+	)
+
+	if ((${#files_missing_license_header[@]} > 0)); then
+		printf '\nFollowing files are missing SPDX-license header:\n'
+		printf '  @%s\n' "${files_missing_license_header[@]}"
+		printf '\nExample:\n'
+		printf '  #  %s\n' "${hint[@]}"
+		return 1
+	fi
+
+	printf 'OK\n'
+}
+
+function get_diffed_files() {
+	# Get files where changes are meant to be committed
+	git diff --name-only HEAD HEAD~1
+	# Get files from staging
+	git diff --name-only --cached HEAD
+	git diff --name-only HEAD
+}
+
+function get_diffed_dups() {
+	local files=("$@") diff=() _diff=()
+
+	# Sort and get rid of duplicates from the main list
+	mapfile -t files < <(printf '%s\n' "${files[@]}" | sort -u)
+	# Get staged|committed files
+	mapfile -t diff < <(get_diffed_files | sort -u)
+
+	if [[ ! -v CHECK_FORMAT_ONLY_DIFF ]]; then
+		# Just return the main list
+		printf '%s\n' "${files[@]}"
+		return 0
+	fi
+
+	if ((${#diff[@]} > 0)); then
+		# Check diff'ed files against the main list to see if they are a subset
+		# of it. If yes, then we return the duplicates which are the files that
+		# should be committed, modified.
+		mapfile -t _diff < <(
+			printf '%s\n' "${diff[@]}" "${files[@]}" | sort | uniq -d
+		)
+		if ((${#_diff[@]} > 0)); then
+			printf '%s\n' "${_diff[@]}"
+			return 0
+		fi
+	fi
+}
+
 rc=0
 
 check_permissions || rc=1
@@ -682,5 +793,6 @@ check_bash_static_analysis || rc=1
 check_changelog || rc=1
 check_json_rpc || rc=1
 check_rpc_args || rc=1
+check_spdx_lic || rc=1
 
 exit $rc

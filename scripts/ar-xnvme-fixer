@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2022 Intel Corporation
+#  All rights reserved.
+
+# The xnvme build executes library_bundler.py which wraps itself around ar
+# to create libxnvme.a. It builds a set of MRI commands which then is
+# passed to ar via stdin. The set of members is declared via ADDLIB
+# followed by an absolute path to the file. On the physical nodes this
+# path may look as the following:
+#
+#   /workspace/foo-job@tmp/...
+#
+# The '@' has a special meaning for ar when spotted on the cmdline.
+# It ends up splitting the path into /workspace/foo-job treating it
+# as a member path which doesn't exist. This causes the entire build
+# to fail. To workaround this, we inject ourselves via AR_TOOL and
+# modify the MRI commands such that the absolute paths to members are
+# replaced with relative ones (relative to xnvme/builddir from where
+# the library_bundler.py is executed).
+
+curdir=$(readlink -f "$(dirname "$0")")
+rootdir=$(readlink -f "$curdir/../")
+
+[[ ! -t 0 ]] || exit 1
+
+while read -r cmd arg; do
+	if [[ $cmd == ADDLIB && $arg == /* ]]; then
+		arg=${arg/"$rootdir/xnvme/"/"../"}
+	fi
+	mri+=("$cmd${arg:+ $arg}")
+done
+
+ar "$@" < <(printf '%s\n' "${mri[@]}")

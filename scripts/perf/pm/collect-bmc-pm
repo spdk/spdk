@@ -1,0 +1,509 @@
+#!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2022 Intel Corporation
+#  All rights reserved.
+
+set -e
+
+hex() { printf '0x%02x\n' "$@"; }
+
+calc() { bc <<< "scale=2; $*"; }
+
+is_root() {
+	# Talking to local BMC device requires root privileges
+	if ((UID)); then
+		printf '%s, you need to be root to run this script\n' "$USER" >&2
+		return 1
+	fi
+
+}
+
+is_ipmitool() {
+	if ! type -P ipmitool; then
+		printf 'ipmitool not detected, cannot run commands against the BMC\n' >&2
+		return 1
+	fi
+}
+
+ipmi_load() {
+	# Silently attempt to load core ipmi drivers - we will pick up the device later on.
+	modprobe -qa ipmi_si ipmi_devintf ipmi_msghandler || return 0
+}
+
+ipmi_supported() {
+	# Verify if kernel detected and registered at least one BMC under
+	# the ipmi platform. Look for KCS specifically as this the type
+	# of the interface the script was tested against.
+
+	local ipmi=/sys/class/ipmi/ipmi0
+
+	# Keep these details global for easy access if needed.
+	local -g man_id prod_id dev_id ipmi_ver platform board ipmitool
+
+	ipmi_load
+
+	if [[ ! -e $ipmi ]]; then
+		printf 'BMC not detected. Please, make sure your platform is IPMI-compatible\n'
+		return 1
+	fi >&2
+
+	type=$(< "$ipmi/device/type")
+
+	if [[ $type != kcs ]]; then
+		printf 'No supported BMC interface detected (%s) - only KCS is supported\n' "$type"
+		return 1
+	fi >&2
+
+	man_id=$(< "$ipmi/device/bmc/manufacturer_id")
+	prod_id=$(< "$ipmi/device/bmc/product_id")
+	dev_id=$(hex "$(< "$ipmi/device/bmc/device_id")")
+	ipmi_ver=$(< "$ipmi/device/bmc/ipmi_version")
+
+	if [[ -e /sys/class/dmi/id/board_vendor ]]; then
+		platform=$(< /sys/class/dmi/id/board_vendor)
+	fi
+
+	if [[ -e /sys/class/dmi/id/board_name ]]; then
+		board=$(< /sys/class/dmi/id/board_name)
+	fi
+
+	# Keep output similar to ipmi_si's
+	cat <<- BMC_DEV >&2
+
+		BMC detected, details below:
+		Manufacturer ID: $man_id
+		Product ID: $prod_id
+		Device ID: $dev_id
+		IPMI Version: $ipmi_ver
+		Platform: ${platform:-unknown}
+		Board: ${board:-unknown}
+
+	BMC_DEV
+
+	# Verify if we have proper tools to work with
+	ipmitool=$(is_ipmitool)
+}
+
+ipmiraw() {
+	# For the majority of commands we use raw payload to not depend on specific ipmitool version
+	# and the way how it interprets/parses the returned data. This also allows us to inspect the
+	# integrity of data more closely to make sure we don't report nonsensical values to the user.
+
+	local rsp
+
+	rsp=($("$ipmitool" raw "$@" 2> /dev/null))
+	# Slap hex prefix to work with proper base
+	rsp=("${rsp[@]/#/0x}")
+
+	hex "${rsp[@]}"
+}
+
+dcmiraw() {
+	local cmd=$1 data=("${@:2}")
+
+	ipmiraw 0x2c "$cmd" 0xdc "${data[@]}"
+}
+
+print_dcmi_available_time_periods() {
+	local time_periods=${enhanced_power_attr[4]}
+	local -g available_time_periods=()
+	local -g available_time_periods_in_seconds=()
+
+	available_time_periods[0]="NOW"
+
+	if ((time_periods > 0)); then
+		local time_idx=5
+		local offset=$time_idx
+		local units unit time time_s units_mask=0xc0 to_sec
+
+		units[0x0]=seconds
+		units[0x1]=minutes
+		units[0x2]=hours
+		units[0x3]=days
+
+		to_sec[0x0]=1
+		to_sec[0x1]=60
+		to_sec[0x2]=3600
+		to_sec[0x3]=86400
+
+		while ((offset < time_idx + time_periods)); do
+			time=$((enhanced_power_attr[offset] & ~units_mask))
+			unit=${units[enhanced_power_attr[offset] >> 6]:-unknown}
+			time_s=$((time * to_sec[enhanced_power_attr[offset] >> 6]))
+			if ((time != 0)); then
+				available_time_periods[offset]="$time $unit"
+				available_time_periods_in_seconds[time_s]=${enhanced_power_attr[offset]}
+			fi
+			((++offset))
+		done
+	fi
+	cat <<- TIME_PERIODS >&2
+
+		Available averaging time periods to request:
+		$(printf '  - %s\n' "${available_time_periods[@]}")
+
+	TIME_PERIODS
+}
+
+dcmi_power_support() {
+	# Verify if the BMC conforms to the DCMI spec
+	local rsp
+
+	# Table 6-2, Get DCMI Capabilities Command Format
+	if ! rsp=($(dcmiraw 0x1 0x1)); then
+		printf 'Cannot determine if BMC supports DCMI Power Management capability\n' >&2
+		return 1
+	fi
+
+	# Table 6-3, DCMI Capabilities Parameters:
+	#  - Supported DCMI Capabilities:
+	#    - Byte 2 Platform capabilities: [0] Power management
+	if ((!(rsp[5] & (1 << 0)))); then
+		printf 'BMC does not provide DCMI Power Mangament capability\n' >&2
+		return 1
+	fi
+
+	# Check if BMC provides Enhanced System Power Statistics attributes - this allows to issue
+	# requests for power readings at averaging time period, .e.g. from last 5 seconds, 30 minutes,
+	# 1 hour and so on. With this we can provide more detailed view on power usage within a
+	# specific period of time. Without it, we need to depend only on current reading that should
+	# be always available (the "NOW" reading).
+
+	local -g enhanced_power_attr=()
+
+	# Table 6-3, DCMI Capabilities Parameters:
+	#  - Enhanced System Power Statistics attributes
+	if enhanced_power_attr=($(dcmiraw 0x1 0x5)); then
+		print_dcmi_available_time_periods
+	fi
+
+	printf 'Using DCMI Power Management\n' >&2
+}
+
+sdr_power_support() {
+	# This is a fallback which only some platforms may provide (confirmed PowerEdge and CYP).
+	# We are looking for a full, threshold sensor which reports overall power usage in Watts.
+	# Different BMCs may have SDRs which describe such sensor(s) differently so this is not
+	# 100% reliable. To make sure we pick up a proper sensor we also narrow it down to a
+	# specific entity (System Board or Power Supply). Readings from the sensor should be
+	# considered as "NOW" readings (without access to min, max readings).
+
+	local -g power_sensors=()
+	local sensor entity unit status
+
+	# Cache SDR to speed up sensor readings
+	if [[ ! -f $sdr_cache ]]; then
+		printf 'Saving SDR cache at %s\n' "$sdr_cache" >&2
+		"$ipmitool" sdr dump "$sdr_cache" > /dev/null
+	fi
+
+	if ((${#extra_power_sensors[@]} > 0)); then
+		power_sensors+=("${extra_power_sensors[@]}")
+	fi
+
+	while IFS="," read -r sensor _ unit status _ entity _; do
+		[[ $unit == Watts && $status == ok ]] || continue
+		[[ $entity == "System Board" || $entity == "Power Supply" ]] || continue
+		power_sensors+=("$sensor")
+	done < <("$ipmitool" -S "$sdr_cache" -vc sdr list full 2>&1)
+
+	if ((${#power_sensors[@]} > 0)); then
+		printf 'Using SDR (Power sensors: %s)\n' "${power_sensors[*]}"
+	else
+		printf 'Cannot locate power sensors\n'
+		return 1
+	fi >&2
+}
+
+power_support() {
+	local -g support cpu_support=0
+
+	if ((include_cpu == 1)) && rapl_supported; then
+		cpu_support=1
+	fi
+
+	if [[ $interface == dcmi || $interface == sdr ]]; then
+		# override
+		"${interface}_power_support"
+		support=$interface
+	elif dcmi_power_support; then
+		support=dcmi
+	elif sdr_power_support; then
+		support=sdr
+	else
+		printf 'BMC does not provide Power Management support, cannot gather system-wide power measurements\n' >&2
+		if ((cpu_support)); then
+			printf 'Only CPU measurements will be provided\n' >&2
+			return 0
+		fi
+		return 1
+	fi
+}
+
+get_dcmi_now_reading() {
+	local rsp reading=0 max min avg ts timeframe mode=01h
+	local get_cmd get_avg=0 print
+
+	# Table 6-16, Get Power Reading Command:
+	get_cmd=(0x2 0x1 0x0 0x0)
+
+	if [[ $interval =~ ^[0-9]+$ && -n ${available_time_periods_in_seconds[interval]} ]]; then
+		get_cmd=(0x2 0x2 "${available_time_periods_in_seconds[interval]}" 0x0)
+		get_avg=1
+		mode=02h
+	fi
+
+	# We use System Power Statistics mode to get the "NOW" reading by default. In case
+	# interval matches one supported by Enhanced System Power Statistics we use that
+	# mode to obtain extra min, max, avg statistics.
+
+	if ! rsp=($(dcmiraw "${get_cmd[@]}")); then
+		printf 'DCMI reading: error\n'
+	else
+		# Note that the BMC timestamp depends on the hwclock setup which we then attempt
+		# to represent in UTC.
+		ts=$((rsp[12] << 24 | rsp[11] << 16 | rsp[10] << 8 | rsp[9]))
+		# This is interpreted differently by different BMCs so for now we make a note of
+		# it but don't present it to the user.
+		timeframe=$((rsp[16] << 24 | rsp[15] << 16 | rsp[14] << 8 | rsp[13]))
+		reading=$((rsp[2] << 8 | rsp[1]))
+		if ((get_avg == 1)); then
+			min=$((rsp[4] << 8 | rsp[3]))
+			max=$((rsp[6] << 8 | rsp[5]))
+			avg=$((rsp[8] << 8 | rsp[7]))
+			_DCMI_min+=("$min")
+			_DCMI_max+=("$max")
+			_DCMI_avg+=("$avg")
+			power_readings["DCMI_MIN"]="_DCMI_min[@]"
+			power_readings["DCMI_MAX"]="_DCMI_max[@]"
+			power_readings["DCMI_AVG"]="_DCMI_avg[@]"
+		fi
+		_DCMI+=("$reading")
+		power_readings["DCMI"]="_DCMI[@]"
+
+		for print in min max avg reading; do
+			[[ -n ${!print} ]] || continue
+			printf '(%s) DCMI %s (mode: %s): %u Watts (interval: %ss)\n' \
+				"$(utc "$ts")" \
+				"$print" \
+				"$mode" \
+				"${!print}" \
+				"$interval"
+		done
+	fi >&2
+}
+
+get_sdr_now_reading() {
+	local sensor reading=0 ts unit
+
+	if ((${#power_sensors[@]} == 0)); then
+		printf 'No power sensors were provided\n' >&2
+		return 1
+	fi
+
+	for sensor in "${!power_sensors[@]}"; do
+		ts=$(utc)
+		if ! IFS="," read -r _ reading unit _; then
+			reading=error
+		else
+			eval "_sensor${sensor}_readings+=($reading)"
+			power_readings["${power_sensors[sensor]}"]="_sensor${sensor}_readings[@]"
+			reading+=" $unit"
+		fi < <("$ipmitool" -c -S "$sdr_cache" sdr get "${power_sensors[sensor]}") 2> /dev/null
+		printf '(%s) Sensor %s reading: %s (interval %ss)\n' \
+			"$ts" \
+			"${power_sensors[sensor]}" \
+			"$reading" \
+			"$interval" >&2
+	done
+}
+
+rapl_supported() {
+	[[ -e /sys/class/powercap/intel-rapl ]]
+}
+
+get_cpu_socket_reading() {
+	local rapl=/sys/class/powercap
+	local socket socket_idx _socket_idx socket_name
+	local ts reading
+
+	# power_uw is usually not available so we need to relay on energy_uj. It's also rarely
+	# rw so we can't zero it out, hence we need to keep track of the initial counter. For
+	# details see kernel documentation (powercap.rst).
+	ts=$(utc)
+	for socket in /sys/class/powercap/intel-rapl:*; do
+		[[ -e $socket ]] || continue
+
+		socket_idx=${socket#*:} socket_name=$(< "$socket/name")
+		# Adjust for different domains, see linux/intel_rapl.h
+		case "$socket_name" in
+			dram | core | uncore) _socket_idx=${socket_idx//:/_} socket_idx=${socket_idx%:*} ;;
+			package-*) _socket_idx=$socket_idx socket_name=socket ;;
+			psys*) _socket_idx=$socket_idx socket_name=platform ;;
+		esac
+
+		local -n socket_uj=socket_${_socket_idx}_uj
+		socket_uj+=("$(< "$socket/energy_uj")")
+		# We need at least two readings for comparison
+		((${#socket_uj[@]} > 1)) || continue
+
+		# Convert to Watts - use bc since $interval can be an actual float
+		reading=$(calc "(${socket_uj[-1]} - ${socket_uj[-2]}) / 1000000 / $interval")
+		if ((reading < 0)); then
+			# Somehow this may happen, probably when the counter wraps over. Consider
+			# this as a faulty reading and don't include it since it may impact overall
+			# avg.
+			printf '(%s) CPU %s %s reading: error(%s) (interval: %ss)\n' \
+				"$ts" \
+				"$socket_name" \
+				"$socket_idx" \
+				"$reading" \
+				"$interval" >&2
+			return 0
+		fi
+		eval "_socket${_socket_idx}_readings+=($reading)"
+		power_readings["$socket_name-$socket_idx"]="_socket${_socket_idx}_readings[@]"
+
+		printf '(%s) CPU %s %s reading: %s Watts (interval: %ss)\n' \
+			"$ts" \
+			"$socket_name" \
+			"$socket_idx" \
+			"$reading" \
+			"$interval" >&2
+	done
+}
+
+get_now_reading() {
+	case "$support" in
+		dcmi) get_dcmi_now_reading ;;
+		sdr) get_sdr_now_reading ;;
+		*) ;;
+	esac
+}
+
+dump_readings() {
+	local sensor reading readings avg total
+
+	((${#power_readings[@]} > 0)) || return 1
+	printf 'Dumping average sensors reading from %s\n' "${!power_readings[*]}" >&2
+
+	for sensor in "${!power_readings[@]}"; do
+		readings=("${!power_readings["$sensor"]}")
+		if ((${#readings[@]} == 0)); then
+			printf 'No readings available for %s sensor\n' "$sensor" >&2
+			continue
+		fi
+		total=0
+		for reading in "${readings[@]}"; do
+			total=$(calc "$total + $reading")
+		done
+		avg=$(calc "$total / ${#readings[@]}")
+
+		readings+=("Total: ${#readings[@]}")
+		sensor="${sensor//[[:space:]]/_}"
+		printf '%s\n' "$avg" > "$output_dir/${prefix:+${prefix}_}avg_${sensor}.bmc.pm.txt"
+		printf '%s\n' "${readings[@]}" > "$output_dir/${prefix:+${prefix}_}all_${sensor}.bmc.pm.txt"
+		printf 'Dumped avg to %s\n' "$output_dir/${prefix:+${prefix}_}avg_${sensor}.bmc.pm.txt" >&2
+		printf 'Dumped all to %s\n' "$output_dir/${prefix:+${prefix}_}all_${sensor}.bmc.pm.txt" >&2
+	done
+}
+
+utc() {
+	date --utc ${1:+-"d@$1"}
+}
+
+cleanup() {
+	[[ -f $sdr_cache && $remove_sdr_cache == yes ]] && rm "$sdr_cache"
+	dump_readings
+}
+
+collect_readings() {
+	local _count=$count
+	if ((_count == 1 && cpu_support)); then
+		# We need at least two readings to get a meaningful data
+		((_count += 1))
+	fi
+	while ((count <= 0 ? 1 : _count--)); do
+		get_now_reading
+		((cpu_support)) && get_cpu_socket_reading
+		sleep "${interval}s"
+	done
+}
+
+help() {
+	cat <<- HELP
+
+		Usage: $0 [-h] [-d dir] [-i sdr|dcmi] [-s SENSOR_NAME] [-t interval] [-l log_file] [-p prefix] [-c count] [-r]
+
+		  -h - Print this message.
+		  -d - Directory where the results should be saved. Default is /tmp.
+		  -i - Type of interface to use for requesting power usage. "sdr" or "dcmi".
+		       If not set, available interface is used ("dcmi" has priority).
+		  -t - How long to wait before each get power command in seconds. In case
+		       this value matches one of supported averaging time periods special
+		       variant of the command will be used to obtain the reading - this
+		       variant is used only with the "dcmi" interface. Default is 1s.
+		  -s - In case "sdr" interface is in use, try to read data from SENSOR_NAME.
+		  -x - In case "sdr" interface is in use, don't remove SDR cache. This can
+		       speed up subsequent runs of the script.
+		  -l - Save output of the script to a log file (dir/${0##*/}.bmc.pm.log).
+		  -p - Add prefix to saved files.
+		  -c - Read power usage count times. 0 is the default and it means to run
+		       indefinitely.
+		  -r - Include readings from CPU sockets (RAPL-dependent)
+
+		When started, ${0##*/} will enter loop to continuously read power usage from either
+		DCMI interface or dedicated Watts sensors every interval. Each reading will be
+		logged to stderr. Upon termination, average power usage will be dumped to /tmp or
+		directory set by -d.
+
+	HELP
+}
+
+is_root
+
+output_dir=/tmp
+interval=1
+remove_sdr_cache=yes
+log_to_file=no
+prefix=""
+count=0
+include_cpu=0
+
+declare -A power_readings=()
+declare -a extra_power_sensors=()
+
+while getopts :hi:s:d:t:xlp:c:r arg; do
+	case "$arg" in
+		h)
+			help
+			exit 0
+			;;
+		d) output_dir=$OPTARG ;;
+		s) extra_power_sensors+=("$OPTARG") ;;
+		i) interface=${OPTARG,,} ;;
+		t) interval=$OPTARG ;;
+		x) remove_sdr_cache=no ;;
+		l) log_to_file=yes ;;
+		p) prefix=$OPTARG ;;
+		c) count=$OPTARG ;;
+		r) include_cpu=1 ;;
+		*) ;;
+	esac
+done
+
+declare -r sdr_cache=$output_dir/sdr.cache
+declare -r log_file=${prefix:+${prefix}_}${0##*/}.bmc.pm.log
+
+mkdir -p "$output_dir"
+if [[ $log_to_file == yes ]]; then
+	printf 'Redirecting to %s\n' "$output_dir/$log_file" >&2
+	exec > "$output_dir/$log_file" 2>&1
+fi
+
+trap 'cleanup' EXIT
+
+ipmi_supported
+power_support
+
+collect_readings

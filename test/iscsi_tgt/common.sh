@@ -1,3 +1,8 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation
+#  All rights reserved.
+#
+
 # Network configuration
 # There is one initiator interface and it is accessed directly.
 # There are two target interfaces and they are accessed through an namespace.
@@ -21,7 +26,7 @@ INITIATOR_TAG=2
 INITIATOR_NAME=ANY
 PORTAL_TAG=1
 ISCSI_APP=("${TARGET_NS_CMD[@]}" "${ISCSI_APP[@]}")
-ISCSI_TEST_CORE_MASK=0xFF
+ISCSI_TEST_CORE_MASK=0xF
 
 function create_veth_interfaces() {
 	ip link set $INITIATOR_BRIDGE nomaster || true
@@ -75,6 +80,7 @@ function create_veth_interfaces() {
 
 	# Accept connections from veth interface
 	iptables -I INPUT 1 -i $INITIATOR_INTERFACE -p tcp --dport $ISCSI_PORT -j ACCEPT
+	iptables -A FORWARD -i $ISCSI_BRIDGE -o $ISCSI_BRIDGE -j ACCEPT
 
 	# Verify connectivity
 	ping -c 1 $TARGET_IP

@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
@@ -50,13 +22,13 @@ extern "C" {
 #endif
 
 /**
- * Callback for spdk_vhost_init().
+ * Callback for spdk_vhost_blk|scsi_init().
  *
  * \param rc 0 on success, negative errno on failure
  */
 typedef void (*spdk_vhost_init_cb)(int rc);
 
-/** Callback for spdk_vhost_fini(). */
+/** Callback for spdk_vhost_blk|scsi_fini(). */
 typedef void (*spdk_vhost_fini_cb)(void);
 
 /**
@@ -75,22 +47,42 @@ int spdk_vhost_set_socket_path(const char *basename);
  *
  * \param init_cb Function to be called when the initialization is complete.
  */
-void spdk_vhost_init(spdk_vhost_init_cb init_cb);
+void spdk_vhost_scsi_init(spdk_vhost_init_cb init_cb);
 
 /**
  * Clean up the environment of vhost.
  *
  * \param fini_cb Function to be called when the cleanup is complete.
  */
-void spdk_vhost_fini(spdk_vhost_fini_cb fini_cb);
-
+void spdk_vhost_scsi_fini(spdk_vhost_fini_cb fini_cb);
 
 /**
  * Write vhost subsystem configuration into provided JSON context.
  *
  * \param w JSON write context
  */
-void spdk_vhost_config_json(struct spdk_json_write_ctx *w);
+void spdk_vhost_scsi_config_json(struct spdk_json_write_ctx *w);
+
+/**
+ * Init vhost environment.
+ *
+ * \param init_cb Function to be called when the initialization is complete.
+ */
+void spdk_vhost_blk_init(spdk_vhost_init_cb init_cb);
+
+/**
+ * Clean up the environment of vhost.
+ *
+ * \param fini_cb Function to be called when the cleanup is complete.
+ */
+void spdk_vhost_blk_fini(spdk_vhost_fini_cb fini_cb);
+
+/**
+ * Write vhost subsystem configuration into provided JSON context.
+ *
+ * \param w JSON write context
+ */
+void spdk_vhost_blk_config_json(struct spdk_json_write_ctx *w);
 
 /**
  * Deinit vhost application. This is called once by SPDK app layer.
@@ -312,14 +304,17 @@ int spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tg
  * is allowed but not required. The mask itself can be constructed as:
  * ((1 << cpu0) | (1 << cpu1) | ... | (1 << cpuN)).
  * \param dev_name bdev name to associate with this vhost device
- * \param readonly if set, all writes to the device will fail with
+ * \param transport virtio blk transport name (default: vhost_user_blk)
+ * \param params JSON value object containing variables:
+ * readonly if set, all writes to the device will fail with
  * \c VIRTIO_BLK_S_IOERR error code.
- * \param packed_ring this controller supports packed ring if set.
+ * packed_ring this controller supports packed ring if set.
+ * packed_ring_recovery
  *
  * \return 0 on success, negative errno on error.
  */
 int spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_name,
-			     bool readonly, bool packed_ring);
+			     const char *transport, const struct spdk_json_val *params);
 
 /**
  * Remove a vhost device. The device must not have any open connections on it's socket.

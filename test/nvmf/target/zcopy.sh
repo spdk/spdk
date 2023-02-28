@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2021 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 nvmftestinit
-nvmfappstart
+nvmfappstart -m 0x2
 
 if [ "$TEST_TRANSPORT" != tcp ]; then
 	echo "Unsupported transport: $TEST_TRANSPORT"
@@ -29,19 +30,21 @@ $rpc_py bdev_malloc_create 32 4096 -b malloc0
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 malloc0 -n 1
 
 # First send IO with verification
-$rootdir/test/bdev/bdevperf/bdevperf --json <(gen_nvmf_target_json) \
+$rootdir/build/examples/bdevperf --json <(gen_nvmf_target_json) \
 	-t 10 -q 128 -w verify -o 8192
 
 # Then send IO in the background while pausing/resuming the subsystem
-$rootdir/test/bdev/bdevperf/bdevperf --json <(gen_nvmf_target_json) \
+$rootdir/build/examples/bdevperf --json <(gen_nvmf_target_json) \
 	-t 5 -q 128 -w randrw -M 50 -o 8192 &
 perfpid=$!
 
+xtrace_disable
 while kill -0 $perfpid; do
 	# Add the same namespace again.  It'll fail, but will also pause/resume the subsystem and
 	# the namespace forcing the IO requests to be queued/resubmitted.
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 malloc0 -n 1 &> /dev/null || :
 done
+xtrace_restore
 
 wait $perfpid
 

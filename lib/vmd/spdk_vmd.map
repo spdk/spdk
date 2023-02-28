@@ -8,6 +8,8 @@
 	spdk_vmd_set_led_state;
 	spdk_vmd_get_led_state;
 	spdk_vmd_hotplug_monitor;
+	spdk_vmd_remove_device;
+	spdk_vmd_rescan;
 
 	local: *;
 };

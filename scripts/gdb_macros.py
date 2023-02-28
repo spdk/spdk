@@ -1,3 +1,8 @@
+#   SPDX-License-Identifier: BSD-3-Clause
+#   Copyright (C) 2019 Intel Corporation.
+#   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#
+
 import gdb
 
 
@@ -23,6 +28,37 @@ class SpdkNormalTailqList(SpdkTailqList):
     def __init__(self, list_pointer, list_member):
         super(SpdkNormalTailqList, self).__init__(list_pointer, list_member,
                                                   ['tailq'])
+
+
+class SpdkRbTree(object):
+
+    def __init__(self, tree_pointer, tree_member, tree_name_list):
+        self.tree_pointer = tree_pointer
+        self.tree_name_list = tree_name_list
+        self.tree_member = tree_member
+        self.tree = gdb.parse_and_eval(self.tree_pointer)
+
+    def get_left_node(self, node):
+        return node['node']['rbe_left']
+
+    def get_right_node(self, node):
+        return node['node']['rbe_right']
+
+    def traverse_rb_tree(self, node):
+        if node:
+            self.rb_list.append(node)
+            self.traverse_rb_tree(self.get_left_node(node))
+            self.traverse_rb_tree(self.get_right_node(node))
+
+    def __iter__(self):
+        self.rb_list = []
+        tree_top = self.tree['rbh_root']
+        if tree_top:
+            self.traverse_rb_tree(tree_top)
+            for rb_node in self.rb_list:
+                yield self.tree_member(rb_node)
+        else:
+            yield
 
 
 class SpdkArr(object):
@@ -82,16 +118,20 @@ class IoDevice(SpdkObject):
     type_name = 'struct io_device'
 
 
-class IoDevices(SpdkTailqList):
+class IoDevices(SpdkRbTree):
 
     def __init__(self):
-        super(IoDevices, self).__init__('g_io_devices', IoDevice, ['tailq'])
+        super(IoDevices, self).__init__('g_io_devices', IoDevice, ['rbh_root'])
 
 
 class spdk_print_io_devices(SpdkPrintCommand):
 
     def __init__(self):
-        io_devices = IoDevices()
+        try:
+            io_devices = IoDevices()
+        except RuntimeError as e:
+            print("Cannot load IO devices: " + str(e))
+            return
         name = 'spdk_print_io_devices'
         super(spdk_print_io_devices, self).__init__(name, io_devices)
 
@@ -112,7 +152,11 @@ class spdk_print_bdevs(SpdkPrintCommand):
     name = 'spdk_print_bdevs'
 
     def __init__(self):
-        bdevs = BdevMgrBdevs()
+        try:
+            bdevs = BdevMgrBdevs()
+        except RuntimeError as e:
+            print("Cannot load bdevs: " + str(e))
+            return
         super(spdk_print_bdevs, self).__init__(self.name, bdevs)
 
 
@@ -162,7 +206,7 @@ class NvmfSubsystem(SpdkObject):
         s += '\nnqn %s' % self.get_name()
         s += '\nID %d' % self.get_id()
         for ns in self.get_ns_list():
-            s + '\t%s' % str(ns)
+            s += '\t%s' % str(ns)
         return s
 
 
@@ -175,7 +219,11 @@ class SpdkNvmfTgtSubsystems(SpdkArr):
             return int(self.spdk_nvmf_tgt['opts']['max_subsystems'])
 
     def __init__(self):
-        self.spdk_nvmf_tgt = gdb.parse_and_eval("g_spdk_nvmf_tgt")
+        try:
+            self.spdk_nvmf_tgt = gdb.parse_and_eval("g_spdk_nvmf_tgt")
+        except RuntimeError as e:
+            print("Cannot load nvmf target subsystems: " + str(e))
+            return
         subsystems = gdb.parse_and_eval("g_spdk_nvmf_tgt->subsystems")
         super(SpdkNvmfTgtSubsystems, self).__init__(subsystems,
                                                     self.get_num_subsystems(),
@@ -214,13 +262,12 @@ class IoChannel(SpdkObject):
         return s
 
 
-# TODO - create TailqList type that gets a gdb object instead of a pointer
-class IoChannels(SpdkTailqList):
+class IoChannels(SpdkRbTree):
 
-    def __init__(self, list_obj):
-        self.tailq_name_list = ['tailq']
-        self.list_member = IoChannel
-        self.list = list_obj
+    def __init__(self, tree_obj):
+        self.tree_name_list = ['rbh_root']
+        self.tree_member = IoChannel
+        self.tree = tree_obj
 
 
 class SpdkThread(SpdkObject):

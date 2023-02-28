@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2018 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019, 2021 Mellanox Technologies LTD. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -78,6 +50,8 @@ DEFINE_STUB_V(spdk_nvmf_tgt_new_qpair, (struct spdk_nvmf_tgt *tgt, struct spdk_n
 DEFINE_STUB(nvmf_ctrlr_abort_request, int, (struct spdk_nvmf_request *req), 0);
 DEFINE_STUB(spdk_nvme_transport_id_adrfam_str, const char *, (enum spdk_nvmf_adrfam adrfam), NULL);
 DEFINE_STUB(ibv_dereg_mr, int, (struct ibv_mr *mr), 0);
+DEFINE_STUB(ibv_resize_cq, int, (struct ibv_cq *cq, int cqe), 0);
+DEFINE_STUB(spdk_mempool_lookup, struct spdk_mempool *, (const char *name), NULL);
 
 /* ibv_reg_mr can be a macro, need to undefine it */
 #ifdef ibv_reg_mr
@@ -96,8 +70,9 @@ ibv_reg_mr(struct ibv_pd *pd, void *addr, size_t length, int access)
 	}
 }
 
-int ibv_query_qp(struct ibv_qp *qp, struct ibv_qp_attr *attr,
-		 int attr_mask, struct ibv_qp_init_attr *init_attr)
+int
+ibv_query_qp(struct ibv_qp *qp, struct ibv_qp_attr *attr,
+	     int attr_mask, struct ibv_qp_init_attr *init_attr)
 {
 	if (qp == NULL) {
 		return -1;
@@ -150,13 +125,13 @@ spdk_nvme_transport_id_populate_trstring(struct spdk_nvme_transport_id *trid, co
 	return 0;
 }
 
-static void reset_nvmf_rdma_request(struct spdk_nvmf_rdma_request *rdma_req)
+static void
+reset_nvmf_rdma_request(struct spdk_nvmf_rdma_request *rdma_req)
 {
 	int i;
 
 	rdma_req->req.length = 0;
 	rdma_req->req.data_from_pool = false;
-	rdma_req->req.data = NULL;
 	rdma_req->data.wr.num_sge = 0;
 	rdma_req->data.wr.wr.rdma.remote_addr = 0;
 	rdma_req->data.wr.wr.rdma.rkey = 0;
@@ -172,6 +147,10 @@ static void reset_nvmf_rdma_request(struct spdk_nvmf_rdma_request *rdma_req)
 		rdma_req->data.wr.sg_list[i].lkey = 0;
 	}
 	rdma_req->req.iovcnt = 0;
+	if (rdma_req->req.stripped_data) {
+		free(rdma_req->req.stripped_data);
+		rdma_req->req.stripped_data = NULL;
+	}
 }
 
 static void
@@ -234,7 +213,8 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rdma_req.req.data_from_pool == true);
 	CU_ASSERT(rdma_req.req.length == rtransport.transport.opts.io_unit_size / 2);
-	CU_ASSERT((uint64_t)rdma_req.req.data == 0x2000);
+	CU_ASSERT((uint64_t)rdma_req.req.iovcnt == 1);
+	CU_ASSERT((uint64_t)rdma_req.req.iov[0].iov_base == 0x2000);
 	CU_ASSERT(rdma_req.data.wr.num_sge == 1);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0xEEEE);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.remote_addr == 0xFFFF);
@@ -276,7 +256,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rdma_req.req.data_from_pool == false);
-	CU_ASSERT(rdma_req.req.data == NULL);
+	CU_ASSERT(rdma_req.req.iovcnt == 0);
 	CU_ASSERT(rdma_req.data.wr.num_sge == 0);
 	CU_ASSERT(rdma_req.req.buffers[0] == NULL);
 	CU_ASSERT(rdma_req.data.wr.sg_list[0].addr == 0);
@@ -295,7 +275,8 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	rc = nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
 
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(rdma_req.req.data == (void *)0xDDDD);
+	CU_ASSERT(rdma_req.req.iovcnt == 1);
+	CU_ASSERT(rdma_req.req.iov[0].iov_base == (void *)0xDDDD);
 	CU_ASSERT(rdma_req.req.length == rtransport.transport.opts.in_capsule_data_size);
 	CU_ASSERT(rdma_req.req.data_from_pool == false);
 
@@ -464,7 +445,8 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	CU_ASSERT(rdma_req.req.data_from_pool == true);
 	CU_ASSERT(rdma_req.req.length == rtransport.transport.opts.io_unit_size * 4);
-	CU_ASSERT((uint64_t)rdma_req.req.data == (((uint64_t)&bufs[0] + NVMF_DATA_BUFFER_MASK) &
+	CU_ASSERT(rdma_req.req.iovcnt == 4);
+	CU_ASSERT((uint64_t)rdma_req.req.iov[0].iov_base == (((uint64_t)&bufs[0] + NVMF_DATA_BUFFER_MASK) &
 			~NVMF_DATA_BUFFER_MASK));
 	CU_ASSERT(rdma_req.data.wr.num_sge == 4);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0xEEEE);
@@ -485,7 +467,8 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	CU_ASSERT(rdma_req.req.data_from_pool == true);
 	CU_ASSERT(rdma_req.req.length == rtransport.transport.opts.io_unit_size * 4);
-	CU_ASSERT((uint64_t)rdma_req.req.data == 0x2000);
+	CU_ASSERT(rdma_req.req.iovcnt == 4);
+	CU_ASSERT((uint64_t)rdma_req.req.iov[0].iov_base == 0x2000);
 	CU_ASSERT(rdma_req.data.wr.num_sge == 4);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0xEEEE);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.remote_addr == 0xFFFF);
@@ -510,7 +493,8 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	CU_ASSERT(rdma_req.req.data_from_pool == true);
 	CU_ASSERT(rdma_req.req.length == rtransport.transport.opts.io_unit_size * 4);
-	CU_ASSERT((uint64_t)rdma_req.req.data == (((uint64_t)&bufs[0] + NVMF_DATA_BUFFER_MASK) &
+	CU_ASSERT(rdma_req.req.iovcnt == 4);
+	CU_ASSERT((uint64_t)rdma_req.req.iov[0].iov_base == (((uint64_t)&bufs[0] + NVMF_DATA_BUFFER_MASK) &
 			~NVMF_DATA_BUFFER_MASK));
 	CU_ASSERT(rdma_req.data.wr.num_sge == 4);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0xEEEE);
@@ -810,15 +794,16 @@ test_nvmf_rdma_get_optimal_poll_group(void)
 	struct spdk_nvmf_transport_poll_group *groups[TEST_GROUPS_COUNT];
 	struct spdk_nvmf_rdma_poll_group *rgroups[TEST_GROUPS_COUNT];
 	struct spdk_nvmf_transport_poll_group *result;
+	struct spdk_nvmf_poll_group group = {};
 	uint32_t i;
 
 	rqpair.qpair.transport = transport;
-	pthread_mutex_init(&rtransport.lock, NULL);
 	TAILQ_INIT(&rtransport.poll_groups);
 
 	for (i = 0; i < TEST_GROUPS_COUNT; i++) {
 		groups[i] = nvmf_rdma_poll_group_create(transport, NULL);
 		CU_ASSERT(groups[i] != NULL);
+		groups[i]->group = &group;
 		rgroups[i] = SPDK_CONTAINEROF(groups[i], struct spdk_nvmf_rdma_poll_group, group);
 		groups[i]->transport = transport;
 	}
@@ -876,8 +861,6 @@ test_nvmf_rdma_get_optimal_poll_group(void)
 	rqpair.qpair.qid = 1;
 	result = nvmf_rdma_get_optimal_poll_group(&rqpair.qpair);
 	CU_ASSERT(result == NULL);
-
-	pthread_mutex_destroy(&rtransport.lock);
 }
 #undef TEST_GROUPS_COUNT
 
@@ -943,6 +926,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 			  0, 0, 0, 0, 0);
 	rdma_req.req.dif_enabled = true;
 	rtransport.transport.opts.io_unit_size = data_bs * 8;
+	rdma_req.req.qpair->transport = &rtransport.transport;
 	sgl->keyed.length = data_bs * 4;
 
 	rc = nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
@@ -952,17 +936,16 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	CU_ASSERT(rdma_req.req.length == data_bs * 4);
 	CU_ASSERT(rdma_req.req.dif.orig_length == rdma_req.req.length);
 	CU_ASSERT(rdma_req.req.dif.elba_length == (data_bs + md_size) * 4);
-	CU_ASSERT((uint64_t)rdma_req.req.data == 0x2000);
-	CU_ASSERT(rdma_req.data.wr.num_sge == 4);
+	CU_ASSERT(rdma_req.req.iovcnt == 1);
+	CU_ASSERT((uint64_t)rdma_req.req.iov[0].iov_base == 0x2000);
+	CU_ASSERT(rdma_req.data.wr.num_sge == 1);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0xEEEE);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.remote_addr == 0xFFFF);
 	CU_ASSERT((uint64_t)rdma_req.req.buffers[0] == 0x2000);
 
-	for (i = 0; i < 4; ++i) {
-		CU_ASSERT(rdma_req.data.wr.sg_list[i].addr == 0x2000 + i * (data_bs + md_size));
-		CU_ASSERT(rdma_req.data.wr.sg_list[i].length == data_bs);
-		CU_ASSERT(rdma_req.data.wr.sg_list[i].lkey == RDMA_UT_LKEY);
-	}
+	CU_ASSERT(rdma_req.data.wr.sg_list[0].addr == 0x2000);
+	CU_ASSERT(rdma_req.data.wr.sg_list[0].length == rdma_req.req.length);
+	CU_ASSERT(rdma_req.data.wr.sg_list[0].lkey == RDMA_UT_LKEY);
 
 	/* Part 2: simple I/O, one SGL equal to io unit size, io_unit_size is not aligned with md_size,
 		block size 512 */
@@ -982,7 +965,8 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	CU_ASSERT(rdma_req.req.length == data_bs * 4);
 	CU_ASSERT(rdma_req.req.dif.orig_length == rdma_req.req.length);
 	CU_ASSERT(rdma_req.req.dif.elba_length == (data_bs + md_size) * 4);
-	CU_ASSERT((uint64_t)rdma_req.req.data == 0x2000);
+	CU_ASSERT(rdma_req.req.iovcnt == 2);
+	CU_ASSERT((uint64_t)rdma_req.req.iov[0].iov_base == 0x2000);
 	CU_ASSERT(rdma_req.data.wr.num_sge == 5);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0xEEEE);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.remote_addr == 0xFFFF);
@@ -1019,7 +1003,8 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	CU_ASSERT(rdma_req.req.length == data_bs);
 	CU_ASSERT(rdma_req.req.dif.orig_length == rdma_req.req.length);
 	CU_ASSERT(rdma_req.req.dif.elba_length == data_bs + md_size);
-	CU_ASSERT((uint64_t)rdma_req.req.data == 0x2000);
+	CU_ASSERT(rdma_req.req.iovcnt == 2);
+	CU_ASSERT((uint64_t)rdma_req.req.iov[0].iov_base == 0x2000);
 	CU_ASSERT(rdma_req.data.wr.num_sge == 1);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0xEEEE);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.remote_addr == 0xFFFF);
@@ -1054,17 +1039,16 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	CU_ASSERT(rdma_req.req.length == data_bs * 4);
 	CU_ASSERT(rdma_req.req.dif.orig_length == rdma_req.req.length);
 	CU_ASSERT(rdma_req.req.dif.elba_length == (data_bs + md_size) * 4);
-	CU_ASSERT((uint64_t)rdma_req.req.data == 0x2000);
-	CU_ASSERT(rdma_req.data.wr.num_sge == 4);
+	CU_ASSERT(rdma_req.req.iovcnt == 1);
+	CU_ASSERT((uint64_t)rdma_req.req.iov[0].iov_base == 0x2000);
+	CU_ASSERT(rdma_req.data.wr.num_sge == 1);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0xEEEE);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.remote_addr == 0xFFFF);
 	CU_ASSERT((uint64_t)rdma_req.req.buffers[0] == 0x2000);
 
-	for (i = 0; i < 4; ++i) {
-		CU_ASSERT(rdma_req.data.wr.sg_list[i].addr == 0x2000 + i * (data_bs + md_size));
-		CU_ASSERT(rdma_req.data.wr.sg_list[i].length == data_bs);
-		CU_ASSERT(rdma_req.data.wr.sg_list[i].lkey == RDMA_UT_LKEY);
-	}
+	CU_ASSERT(rdma_req.data.wr.sg_list[0].addr == 0x2000);
+	CU_ASSERT(rdma_req.data.wr.sg_list[0].length == rdma_req.req.length);
+	CU_ASSERT(rdma_req.data.wr.sg_list[0].lkey == RDMA_UT_LKEY);
 
 	/* Part 5: simple I/O, one SGL equal to 2x io unit size, io_unit_size is aligned with md_size,
 	   block size 512 */
@@ -1084,19 +1068,16 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	CU_ASSERT(rdma_req.req.length == data_bs * 4);
 	CU_ASSERT(rdma_req.req.dif.orig_length == rdma_req.req.length);
 	CU_ASSERT(rdma_req.req.dif.elba_length == (data_bs + md_size) * 4);
-	CU_ASSERT((uint64_t)rdma_req.req.data == 0x2000);
-	CU_ASSERT(rdma_req.data.wr.num_sge == 4);
+	CU_ASSERT(rdma_req.req.iovcnt == 2);
+	CU_ASSERT((uint64_t)rdma_req.req.iov[0].iov_base == 0x2000);
+	CU_ASSERT(rdma_req.data.wr.num_sge == 2);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0xEEEE);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.remote_addr == 0xFFFF);
 	CU_ASSERT((uint64_t)rdma_req.req.buffers[0] == 0x2000);
 
 	for (i = 0; i < 2; ++i) {
-		CU_ASSERT(rdma_req.data.wr.sg_list[i].addr == 0x2000 + i * (data_bs + md_size));
-		CU_ASSERT(rdma_req.data.wr.sg_list[i].length == data_bs);
-	}
-	for (i = 0; i < 2; ++i) {
-		CU_ASSERT(rdma_req.data.wr.sg_list[i + 2].addr == 0x2000 + i * (data_bs + md_size));
-		CU_ASSERT(rdma_req.data.wr.sg_list[i + 2].length == data_bs);
+		CU_ASSERT(rdma_req.data.wr.sg_list[i].addr == 0x2000);
+		CU_ASSERT(rdma_req.data.wr.sg_list[i].length == data_bs * 2);
 	}
 
 	/* Part 6: simple I/O, one SGL larger than the transport io unit size, io_unit_size is not aligned to md_size,
@@ -1117,7 +1098,8 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	CU_ASSERT(rdma_req.req.length == data_bs * 6);
 	CU_ASSERT(rdma_req.req.dif.orig_length == rdma_req.req.length);
 	CU_ASSERT(rdma_req.req.dif.elba_length == (data_bs + md_size) * 6);
-	CU_ASSERT((uint64_t)rdma_req.req.data == 0x2000);
+	CU_ASSERT(rdma_req.req.iovcnt == 2);
+	CU_ASSERT((uint64_t)rdma_req.req.iov[0].iov_base == 0x2000);
 	CU_ASSERT(rdma_req.data.wr.num_sge == 7);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0xEEEE);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.remote_addr == 0xFFFF);
@@ -1166,7 +1148,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	CU_ASSERT(rdma_req.req.iovcnt == 2);
 	CU_ASSERT(rdma_req.req.dif.orig_length == rdma_req.req.length);
 	CU_ASSERT(rdma_req.req.dif.elba_length == (data_bs + md_size) * 16);
-	CU_ASSERT(rdma_req.req.data == aligned_buffer);
+	CU_ASSERT(rdma_req.req.iov[0].iov_base == aligned_buffer);
 	CU_ASSERT(rdma_req.data.wr.num_sge == 16);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0xEEEE);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.remote_addr == 0xFFFF);
@@ -1209,7 +1191,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	CU_ASSERT(rdma_req.req.iovcnt == 3);
 	CU_ASSERT(rdma_req.req.dif.orig_length == rdma_req.req.length);
 	CU_ASSERT(rdma_req.req.dif.elba_length == (data_bs + md_size) * 2);
-	CU_ASSERT(rdma_req.req.data == (void *)0x2000);
+	CU_ASSERT(rdma_req.req.iov[0].iov_base == (void *)0x2000);
 	CU_ASSERT(rdma_req.data.wr.num_sge == 2);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0xEEEE);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.remote_addr == 0xFFFF);
@@ -1257,26 +1239,21 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	CU_ASSERT(rdma_req.req.length == data_bs * 4 * 2);
 	CU_ASSERT(rdma_req.req.dif.orig_length == rdma_req.req.length);
 	CU_ASSERT(rdma_req.req.dif.elba_length == (data_bs + md_size) * 4 * 2);
-	CU_ASSERT(rdma_req.data.wr.num_sge == 4);
-	for (i = 0; i < 4; ++i) {
-		CU_ASSERT(rdma_req.data.wr.sg_list[i].addr == (uintptr_t)((unsigned char *)aligned_buffer) + i *
-			  (data_bs + md_size));
-		CU_ASSERT(rdma_req.data.wr.sg_list[i].length == data_bs);
-	}
+	CU_ASSERT(rdma_req.data.wr.num_sge == 1);
+	CU_ASSERT(rdma_req.data.wr.sg_list[0].addr == (uintptr_t)(aligned_buffer));
+	CU_ASSERT(rdma_req.data.wr.sg_list[0].length == data_bs * 4);
 
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0x44);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.remote_addr == 0x4000);
 	CU_ASSERT(rdma_req.data.wr.next == &data->wr);
 	CU_ASSERT(data->wr.wr.rdma.rkey == 0x44);
 	CU_ASSERT(data->wr.wr.rdma.remote_addr == 0x4000 + data_bs * 4);
-	CU_ASSERT(data->wr.num_sge == 4);
-	for (i = 0; i < 4; ++i) {
-		CU_ASSERT(data->wr.sg_list[i].addr == (uintptr_t)((unsigned char *)aligned_buffer) + i *
-			  (data_bs + md_size));
-		CU_ASSERT(data->wr.sg_list[i].length == data_bs);
-	}
+	CU_ASSERT(data->wr.num_sge == 1);
+	CU_ASSERT(data->wr.sg_list[0].addr == (uintptr_t)(aligned_buffer));
+	CU_ASSERT(data->wr.sg_list[0].length == data_bs * 4);
 
 	CU_ASSERT(data->wr.next == &rdma_req.rsp.wr);
+	reset_nvmf_rdma_request(&rdma_req);
 }
 
 static void
@@ -1454,7 +1431,84 @@ test_nvmf_rdma_qpair_compare(void)
 	CU_ASSERT(nvmf_rdma_qpair_compare(&rqpair2, &rqpair1) > 0);
 }
 
-int main(int argc, char **argv)
+static void
+test_nvmf_rdma_resize_cq(void)
+{
+	int rc = -1;
+	int tnum_wr = 0;
+	int tnum_cqe = 0;
+	struct spdk_nvmf_rdma_qpair rqpair = {};
+	struct spdk_nvmf_rdma_poller rpoller = {};
+	struct spdk_nvmf_rdma_device rdevice = {};
+	struct ibv_context ircontext = {};
+	struct ibv_device idevice = {};
+
+	rdevice.context = &ircontext;
+	rqpair.poller = &rpoller;
+	ircontext.device = &idevice;
+
+	/* Test1: Current capacity support required size. */
+	rpoller.required_num_wr = 10;
+	rpoller.num_cqe = 20;
+	rqpair.max_queue_depth = 2;
+	tnum_wr = rpoller.required_num_wr;
+	tnum_cqe = rpoller.num_cqe;
+
+	rc = nvmf_rdma_resize_cq(&rqpair, &rdevice);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rpoller.required_num_wr == 10 + MAX_WR_PER_QP(rqpair.max_queue_depth));
+	CU_ASSERT(rpoller.required_num_wr > tnum_wr);
+	CU_ASSERT(rpoller.num_cqe == tnum_cqe);
+
+	/* Test2: iWARP doesn't support CQ resize. */
+	tnum_wr = rpoller.required_num_wr;
+	tnum_cqe = rpoller.num_cqe;
+	idevice.transport_type = IBV_TRANSPORT_IWARP;
+
+	rc = nvmf_rdma_resize_cq(&rqpair, &rdevice);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(rpoller.required_num_wr == tnum_wr);
+	CU_ASSERT(rpoller.num_cqe == tnum_cqe);
+
+
+	/* Test3: RDMA CQE requirement exceeds device max_cqe limitation. */
+	tnum_wr = rpoller.required_num_wr;
+	tnum_cqe = rpoller.num_cqe;
+	idevice.transport_type = IBV_TRANSPORT_UNKNOWN;
+	rdevice.attr.max_cqe = 3;
+
+	rc = nvmf_rdma_resize_cq(&rqpair, &rdevice);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(rpoller.required_num_wr == tnum_wr);
+	CU_ASSERT(rpoller.num_cqe == tnum_cqe);
+
+	/* Test4: RDMA CQ resize failed. */
+	tnum_wr = rpoller.required_num_wr;
+	tnum_cqe = rpoller.num_cqe;
+	idevice.transport_type = IBV_TRANSPORT_IB;
+	rdevice.attr.max_cqe = 30;
+	MOCK_SET(ibv_resize_cq, -1);
+
+	rc = nvmf_rdma_resize_cq(&rqpair, &rdevice);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(rpoller.required_num_wr == tnum_wr);
+	CU_ASSERT(rpoller.num_cqe == tnum_cqe);
+
+	/* Test5: RDMA CQ resize success. rsize = MIN(MAX(num_cqe * 2, required_num_wr), device->attr.max_cqe). */
+	tnum_wr = rpoller.required_num_wr;
+	tnum_cqe = rpoller.num_cqe;
+	MOCK_SET(ibv_resize_cq, 0);
+
+	rc = nvmf_rdma_resize_cq(&rqpair, &rdevice);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rpoller.num_cqe = 30);
+	CU_ASSERT(rpoller.required_num_wr == 18 + MAX_WR_PER_QP(rqpair.max_queue_depth));
+	CU_ASSERT(rpoller.required_num_wr > tnum_wr);
+	CU_ASSERT(rpoller.num_cqe > tnum_cqe);
+}
+
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
@@ -1473,6 +1527,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_rdma_update_ibv_state);
 	CU_ADD_TEST(suite, test_nvmf_rdma_resources_create);
 	CU_ADD_TEST(suite, test_nvmf_rdma_qpair_compare);
+	CU_ADD_TEST(suite, test_nvmf_rdma_resize_cq);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

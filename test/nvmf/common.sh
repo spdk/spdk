@@ -1,3 +1,8 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2016 Intel Corporation
+#  All rights reserved.
+#
+
 NVMF_PORT=4420
 NVMF_SECOND_PORT=4421
 NVMF_THIRD_PORT=4422
@@ -6,6 +11,7 @@ NVMF_IP_LEAST_ADDR=8
 NVMF_TCP_IP_ADDRESS="127.0.0.1"
 NVMF_TRANSPORT_OPTS=""
 NVMF_SERIAL=SPDK00000000000001
+NVME_CONNECT="nvme connect"
 NET_TYPE=${NET_TYPE:-phy-fallback}
 
 function build_nvmf_app_args() {
@@ -46,18 +52,11 @@ function load_ib_rdma_modules() {
 
 	modprobe ib_cm
 	modprobe ib_core
-	# Newer kernels do not have the ib_ucm module
-	modprobe ib_ucm || true
 	modprobe ib_umad
 	modprobe ib_uverbs
 	modprobe iw_cm
 	modprobe rdma_cm
 	modprobe rdma_ucm
-}
-
-function detect_soft_roce_nics() {
-	rxe_cfg stop # make sure we run tests with a clean slate
-	rxe_cfg start
 }
 
 function allocate_nic_ips() {
@@ -86,9 +85,7 @@ function get_rdma_if_list() {
 	mapfile -t rxe_net_devs < <(rxe_cfg rxe-net)
 
 	if ((${#net_devs[@]} == 0)); then
-		# No rdma-capable nics on board, using soft-RoCE
-		printf '%s\n' "${rxe_net_devs[@]}"
-		return 0
+		return 1
 	fi
 
 	# Pick only these devices which were found during gather_supported_nvmf_pci_devs() run
@@ -298,6 +295,7 @@ function gather_supported_nvmf_pci_devs() {
 	x722+=(${pci_bus_cache["$intel:0x37d2"]})
 	# ConnectX-5
 	mlx+=(${pci_bus_cache["$mellanox:0x1017"]})
+	mlx+=(${pci_bus_cache["$mellanox:0x1019"]})
 	# ConnectX-4
 	mlx+=(${pci_bus_cache["$mellanox:0x1015"]})
 	mlx+=(${pci_bus_cache["$mellanox:0x1013"]})
@@ -331,6 +329,20 @@ function gather_supported_nvmf_pci_devs() {
 		if [[ ${pci_bus_driver["$pci"]} == unbound ]]; then
 			echo "$pci not bound, needs ${pci_mod_resolved["$pci"]}"
 			pci_drivers["${pci_mod_resolved["$pci"]}"]=1
+		fi
+		if [[ ${pci_ids_device["$pci"]} == "0x1017" ]] \
+			|| [[ ${pci_ids_device["$pci"]} == "0x1019" ]] \
+			|| [[ $TEST_TRANSPORT == rdma ]]; then
+			# Reduce maximum number of queues when connecting with
+			# ConnectX-5 NICs. When using host systems with nproc > 64
+			# connecting with default options (where default equals to
+			# number of host online CPUs) creating all IO queues
+			# takes too much time and results in keep-alive timeout.
+			# See:
+			# https://github.com/spdk/spdk/issues/2772
+			# 0x1017 - MT27800 Family ConnectX-5
+			# 0x1019 - MT28800 Family ConnectX-5 Ex
+			NVME_CONNECT="nvme connect -i 15"
 		fi
 	done
 
@@ -388,12 +400,13 @@ prepare_net_devs() {
 	fi
 
 	# NET_TYPE == virt or phy-fallback
-	if [[ $TEST_TRANSPORT == rdma ]]; then
-		detect_soft_roce_nics
-	elif [[ $TEST_TRANSPORT == tcp ]]; then
+	if [[ $TEST_TRANSPORT == tcp ]]; then
 		nvmf_veth_init
+		return 0
 	fi
 
+	echo "ERROR: virt and fallback setup is not supported for $TEST_TRANSPORT"
+	return 1
 }
 
 function nvmftestinit() {
@@ -402,7 +415,7 @@ function nvmftestinit() {
 		return 1
 	fi
 
-	trap 'process_shm --id $NVMF_APP_SHM_ID || :; nvmftestfini' SIGINT SIGTERM EXIT
+	trap 'nvmftestfini' SIGINT SIGTERM EXIT
 
 	prepare_net_devs
 
@@ -417,7 +430,7 @@ function nvmftestinit() {
 		NVMF_SECOND_TARGET_IP=$(echo "$RDMA_IP_LIST" | tail -n +2 | head -n 1)
 		if [ -z $NVMF_FIRST_TARGET_IP ]; then
 			echo "no RDMA NIC for nvmf test"
-			exit 0
+			exit 1
 		fi
 	elif [[ "$TEST_TRANSPORT" == "tcp" ]]; then
 		NVMF_TRANSPORT_OPTS="$NVMF_TRANSPORT_OPTS -o"
@@ -439,6 +452,7 @@ function nvmfappstart() {
 	nvmfpid=$!
 	waitforlisten $nvmfpid
 	timing_exit start_nvmf_tgt
+	trap 'process_shm --id $NVMF_APP_SHM_ID || :; nvmftestfini' SIGINT SIGTERM EXIT
 }
 
 function nvmftestfini() {
@@ -457,17 +471,6 @@ function nvmftestfini() {
 function rdma_device_init() {
 	load_ib_rdma_modules
 	allocate_nic_ips
-}
-
-function revert_soft_roce() {
-	rxe_cfg stop
-}
-
-function check_ip_is_soft_roce() {
-	if [ "$TEST_TRANSPORT" != "rdma" ]; then
-		return 0
-	fi
-	rxe_cfg status rxe | grep -wq "$1"
 }
 
 function nvme_connect() {
@@ -566,4 +569,74 @@ function remove_spdk_ns() {
 	done < <(ip netns list)
 	# Let it settle
 	sleep 1
+}
+
+configure_kernel_target() {
+	# Keep it global in scope for easier cleanup
+	kernel_name=${1:-kernel_target}
+	nvmet=/sys/kernel/config/nvmet
+	kernel_subsystem=$nvmet/subsystems/$kernel_name
+	kernel_namespace=$kernel_subsystem/namespaces/1
+	kernel_port=$nvmet/ports/1
+
+	local block nvme
+
+	if [[ ! -e /sys/module/nvmet ]]; then
+		modprobe nvmet
+	fi
+
+	[[ -e $nvmet ]]
+
+	"$rootdir/scripts/setup.sh" reset
+
+	# Find nvme with an active ns device
+	for block in /sys/block/nvme*; do
+		[[ -e $block ]] || continue
+		block_in_use "${block##*/}" || nvme="/dev/${block##*/}"
+	done
+
+	[[ -b $nvme ]]
+
+	mkdir "$kernel_subsystem"
+	mkdir "$kernel_namespace"
+	mkdir "$kernel_port"
+
+	# It allows only %llx value and for some reason kernel swaps the byte order
+	# so setting the serial is not very useful here
+	# "$kernel_subsystem/attr_serial"
+	echo "SPDK-$kernel_name" > "$kernel_subsystem/attr_model"
+
+	echo 1 > "$kernel_subsystem/attr_allow_any_host"
+	echo "$nvme" > "$kernel_namespace/device_path"
+	echo 1 > "$kernel_namespace/enable"
+
+	# By default use initiator ip which was set by nvmftestinit(). This is the
+	# interface which resides in the main net namespace and which is visible
+	# to nvmet.
+
+	echo "$NVMF_INITIATOR_IP" > "$kernel_port/addr_traddr"
+	echo "$TEST_TRANSPORT" > "$kernel_port/addr_trtype"
+	echo "$NVMF_PORT" > "$kernel_port/addr_trsvcid"
+	echo ipv4 > "$kernel_port/addr_adrfam"
+
+	# Enable the listener by linking the port to previously created subsystem
+	ln -s "$kernel_subsystem" "$kernel_port/subsystems/"
+
+	# Check if target is available
+	nvme discover -a "$NVMF_INITIATOR_IP" -t "$TEST_TRANSPORT" -s "$NVMF_PORT"
+}
+
+clean_kernel_target() {
+	[[ -e $kernel_subsystem ]] || return 0
+
+	echo 0 > "$kernel_namespace/enable"
+
+	rm -f "$kernel_port/subsystems/$kernel_name"
+	rmdir "$kernel_namespace"
+	rmdir "$kernel_port"
+	rmdir "$kernel_subsystem"
+
+	modules=(/sys/module/nvmet/holders/*)
+
+	modprobe -r "${modules[@]##*/}" nvmet
 }

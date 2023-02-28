@@ -1,35 +1,8 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2015 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *   Copyright (c) 2023 Samsung Electronics Co., Ltd. All rights reserved.
  */
 
 /** \file
@@ -86,6 +59,9 @@ struct spdk_nvme_ctrlr_opts {
 	 */
 	bool no_shn_notification;
 
+	/* Hole at bytes 6-7. */
+	uint8_t	reserved6[2];
+
 	/**
 	 * Type of arbitration mechanism
 	 */
@@ -133,6 +109,9 @@ struct spdk_nvme_ctrlr_opts {
 	 * Specify the retry number when there is issue with the transport
 	 */
 	uint8_t transport_retry_count;
+
+	/* Hole at bytes 21-23. */
+	uint8_t reserved21[3];
 
 	/**
 	 * The queue depth of each NVMe I/O queue.
@@ -185,6 +164,9 @@ struct spdk_nvme_ctrlr_opts {
 	 */
 	uint8_t extended_host_id[16];
 
+	/* Hole at bytes 570-571. */
+	uint8_t reserved570[2];
+
 	/**
 	 * The I/O command set to select.
 	 *
@@ -227,9 +209,10 @@ struct spdk_nvme_ctrlr_opts {
 	bool disable_error_logging;
 
 	/**
-	 * It is used for RDMA transport
+	 * It is used for both RDMA & TCP transport
 	 * Specify the transport ACK timeout. The value should be in range 0-31 where 0 means
-	 * use driver-specific default value. The value is applied to each RDMA qpair
+	 * use driver-specific default value.
+	 * RDMA: The value is applied to each qpair
 	 * and affects the time that qpair waits for transport layer acknowledgement
 	 * until it retransmits a packet. The value should be chosen empirically
 	 * to meet the needs of a particular application. A low value means less time
@@ -237,6 +220,11 @@ struct spdk_nvme_ctrlr_opts {
 	 * A large value can increase the time the connection is closed.
 	 * The value of ACK timeout is calculated according to the formula
 	 * 4.096 * 2^(transport_ack_timeout) usec.
+	 * TCP: The value is applied to each qpair
+	 * and affects the time that qpair waits for transport layer acknowledgement
+	 * until connection is closed forcefully.
+	 * The value of ACK timeout is calculated according to the formula
+	 * 2^(transport_ack_timeout) msec.
 	 */
 	uint8_t transport_ack_timeout;
 
@@ -244,6 +232,9 @@ struct spdk_nvme_ctrlr_opts {
 	 * The queue depth of NVMe Admin queue.
 	 */
 	uint16_t admin_queue_size;
+
+	/* Hole at bytes 586-591. */
+	uint8_t reserved586[6];
 
 	/**
 	 * The size of spdk_nvme_ctrlr_opts according to the caller of this library is used for ABI
@@ -265,7 +256,35 @@ struct spdk_nvme_ctrlr_opts {
 	 * Default is `false` (ANA log page is read).
 	 */
 	bool disable_read_ana_log_page;
-};
+
+	/* Hole at bytes 610-616. */
+	uint8_t reserved610[7];
+
+	/**
+	 * Disable reading CHANGED_NS_LIST log page in response to an NS_ATTR_CHANGED AEN
+	 * The upper layer should reading CHANGED_NS_LIST log page instead if set to true.
+	 *
+	 * Default is `false` (CHANGED_NS_LIST log page is read).
+	 */
+	uint8_t disable_read_changed_ns_list_log_page;
+
+	/**
+	 * Set PSK and enable SSL socket implementation for NVMe/TCP only.
+	 *
+	 * If empty, a default socket implementation will be used.
+	 * The TLS PSK interchange format is: NVMeTLSkey-1:xx:[Base64 encoded string]:
+	 * 12B (header) + 2B (hash) + 176B (base64 for 1024b + crc32) + 3B (colons) + 1B (NULL) + 6B (extra space for future)
+	 */
+	char psk[200];
+
+	/**
+	 * It is used for RDMA transport.
+	 *
+	 * Set the IP protocol type of service value for RDMA transport. Default is 0, which means that the TOS will not be set.
+	 */
+	uint8_t transport_tos;
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_opts) == 818, "Incorrect size");
 
 /**
  * NVMe acceleration operation callback.
@@ -385,6 +404,11 @@ enum spdk_nvme_transport_type {
 	 * Custom Transport (Not spec defined)
 	 */
 	SPDK_NVME_TRANSPORT_CUSTOM = 4096,
+
+	/**
+	 * Custom Fabric Transport (Not spec defined)
+	 */
+	SPDK_NVME_TRANSPORT_CUSTOM_FABRICS = 4097,
 };
 
 static inline bool spdk_nvme_trtype_is_fabrics(enum spdk_nvme_transport_type trtype)
@@ -392,7 +416,7 @@ static inline bool spdk_nvme_trtype_is_fabrics(enum spdk_nvme_transport_type trt
 	/* We always define non-fabrics trtypes outside of the 8-bit range
 	 * of NVMe-oF trtype.
 	 */
-	return trtype <= UINT8_MAX;
+	return trtype <= UINT8_MAX || trtype == SPDK_NVME_TRANSPORT_CUSTOM_FABRICS;
 }
 
 /* typedef added for coding style reasons */
@@ -561,13 +585,18 @@ struct spdk_nvme_ns_cmd_ext_io_opts {
 	void *memory_domain_ctx;
 	/** Flags for this IO, defined in nvme_spec.h */
 	uint32_t io_flags;
+	/* Hole at bytes 28-31. */
+	uint8_t reserved28[4];
 	/** Virtual address pointer to the metadata payload, the length of metadata is specified by \ref spdk_nvme_ns_get_md_size */
 	void *metadata;
 	/** Application tag mask to use end-to-end protection information. */
 	uint16_t apptag_mask;
 	/** Application tag to use end-to-end protection information. */
 	uint16_t apptag;
-};
+	/* Hole at bytes 44-47. */
+	uint8_t reserved44[4];
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_cmd_ext_io_opts) == 48, "Incorrect size");
 
 /**
  * Parse the string representation of a transport ID.
@@ -1000,7 +1029,7 @@ struct spdk_nvme_detach_ctx;
  * This function should be called from a single thread while no other threads are
  * actively using the NVMe device.
  *
- * \param ctrlr Opaque handle to HVMe controller.
+ * \param ctrlr Opaque handle to NVMe controller.
  * \param detach_ctx Reference to the context in a sequence. An new context is allocated
  * if this call is the first successful start of detachment in a sequence, or use the
  * passed context.
@@ -1082,6 +1111,7 @@ int spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
  * Inform the driver that the application is preparing to reset the specified NVMe controller.
+ * (Deprecated, please use spdk_nvme_ctrlr_disconnect() before freeing I/O qpairs instead.)
  *
  * This function allows the driver to make decisions knowing that a reset is about to happen.
  * For example, the pcie transport in this case could skip sending DELETE_CQ and DELETE_SQ
@@ -1375,7 +1405,7 @@ bool spdk_nvme_ctrlr_is_feature_supported(struct spdk_nvme_ctrlr *ctrlr, uint8_t
 typedef void (*spdk_nvme_cmd_cb)(void *ctx, const struct spdk_nvme_cpl *cpl);
 
 /**
- * Signature for callback function invoked when an asynchronous error request
+ * Signature for callback function invoked when an asynchronous event request
  * command is completed.
  *
  * \param aer_cb_arg Context specified by spdk_nvme_register_aer_callback().
@@ -1390,13 +1420,29 @@ typedef void (*spdk_nvme_aer_cb)(void *aer_cb_arg,
  * given NVMe controller.
  *
  * \param ctrlr Opaque handle to NVMe controller.
- * \param aer_cb_fn Callback function invoked when an asynchronous error request
+ * \param aer_cb_fn Callback function invoked when an asynchronous event request
  * command is completed.
  * \param aer_cb_arg Argument passed to callback function.
  */
 void spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 		spdk_nvme_aer_cb aer_cb_fn,
 		void *aer_cb_arg);
+
+/**
+ * Disable reading the CHANGED_NS_LIST log page for the specified controller.
+ *
+ * Applications that register an AER callback may wish to read the CHANGED_NS_LIST
+ * log page itself, rather than relying on the driver to do it.  Calling this
+ * function will ensure that the driver does not read this log page if the
+ * controller returns a NS_ATTR_CHANGED AEN.
+ *
+ * Reading of this log page can alternatively be disabled by setting the
+ * disable_read_changed_ns_list_log_page flag in the spdk_nvme_ctrlr_opts
+ * when attaching the controller.
+ *
+ * \param ctrlr NVMe controller on which to disable the log page read.
+ */
+void spdk_nvme_ctrlr_disable_read_changed_ns_list_log_page(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
  * Opaque handle to a queue pair.
@@ -1530,6 +1576,9 @@ struct spdk_nvme_io_qpair_opts {
 		bool delay_pcie_doorbell;
 	};
 
+	/* Hole at bytes 13-15. */
+	uint8_t reserved13[3];
+
 	/**
 	 * These fields allow specifying the memory buffers for the submission and/or
 	 * completion queues.
@@ -1572,7 +1621,11 @@ struct spdk_nvme_io_qpair_opts {
 	 * false to create io qpair synchronously.
 	 */
 	bool async_mode;
-};
+
+	/* Hole at bytes 66-71. */
+	uint8_t reserved66[6];
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_io_qpair_opts) == 72, "Incorrect size");
 
 /**
  * Get the default options for I/O qpair creation for a specific NVMe controller.
@@ -2814,6 +2867,18 @@ enum spdk_nvme_pi_type spdk_nvme_ns_get_pi_type(struct spdk_nvme_ns *ns);
 uint32_t spdk_nvme_ns_get_md_size(struct spdk_nvme_ns *ns);
 
 /**
+ * Get the format index of the given namespace.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * \param nsdata pointer to the NVMe namespace data.
+ *
+ * \return the format index of the given namespace.
+ */
+uint32_t spdk_nvme_ns_get_format_index(const struct spdk_nvme_ns_data *nsdata);
+
+/**
  * Check whether if the namespace can support extended LBA when end-to-end data
  * protection enabled.
  *
@@ -3152,6 +3217,32 @@ int spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpai
 				  uint64_t lba, uint32_t lba_count,
 				  spdk_nvme_cmd_cb cb_fn, void *cb_arg,
 				  uint32_t io_flags);
+
+/**
+ * Submit a verify I/O to the specified NVMe namespace.
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any
+ * given time.
+ *
+ * \param ns NVMe namespace to submit the verify I/O.
+ * \param qpair I/O queue pair to submit the request.
+ * \param lba Starting LBA to verify the data.
+ * \param lba_count Length (in sectors) for the verify operation.
+ * \param cb_fn Callback function to invoke when the I/O is completed.
+ * \param cb_arg Argument to pass to the callback function.
+ * \param io_flags Set flags, defined by the SPDK_NVME_IO_FLAGS_* entries in
+ * spdk/nvme_spec.h, for this I/O.
+ *
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -EINVAL: The request is malformed.
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
+ */
+int spdk_nvme_ns_cmd_verify(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			    uint64_t lba, uint32_t lba_count,
+			    spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+			    uint32_t io_flags);
 
 /**
  * Submit a write uncorrectable I/O to the specified NVMe namespace.
@@ -3519,6 +3610,56 @@ int spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 					spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
+ * Submit an I/O management receive command to the specified NVMe namespace.
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any
+ * given time.
+ *
+ * \param ns NVMe namespace to submit the I/O mgmt receive request.
+ * \param qpair I/O queue pair to submit the request.
+ * \param payload Virtual address pointer for I/O mgmt receive data.
+ * \param len Length bytes for I/O mgmt receive data structure.
+ * \param mo Management operation to perform.
+ * \param mos Management operation specific field for the mo.
+ * \param cb_fn Callback function to invoke when the I/O is completed.
+ * \param cb_arg Argument to pass to the callback function.
+ *
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
+ */
+int spdk_nvme_ns_cmd_io_mgmt_recv(struct spdk_nvme_ns *ns,
+				  struct spdk_nvme_qpair *qpair, void *payload,
+				  uint32_t len, uint8_t mo, uint16_t mos,
+				  spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
+ * Submit an I/O management send command to the specified NVMe namespace.
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any
+ * given time.
+ *
+ * \param ns NVMe namespace to submit the I/O mgmt send request.
+ * \param qpair I/O queue pair to submit the request.
+ * \param payload Virtual address pointer for I/O mgmt send data.
+ * \param len Length bytes for I/O mgmt send data structure.
+ * \param mo Management operation to perform.
+ * \param mos Management operation specific field for the mo.
+ * \param cb_fn Callback function to invoke when the I/O is completed.
+ * \param cb_arg Argument to pass to the callback function.
+ *
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
+ */
+int spdk_nvme_ns_cmd_io_mgmt_send(struct spdk_nvme_ns *ns,
+				  struct spdk_nvme_qpair *qpair, void *payload,
+				  uint32_t len, uint8_t mo, uint16_t mos,
+				  spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
  * Submit a compare I/O to the specified NVMe namespace.
  *
  * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
@@ -3694,6 +3835,14 @@ void spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 const char *spdk_nvme_cpl_get_status_string(const struct spdk_nvme_status *status);
 
 /**
+ * \brief Given NVMe status, return ASCII string for the type of that error.
+ *
+ * \param status Status from NVMe completion queue element.
+ * \return Returns status type as an ASCII string.
+ */
+const char *spdk_nvme_cpl_get_status_type_string(const struct spdk_nvme_status *status);
+
+/**
  * \brief Prints (SPDK_NOTICELOG) the contents of an NVMe submission queue entry (command).
  *
  * \param qpair Pointer to the NVMe queue pair - used to determine admin versus I/O queue.
@@ -3718,6 +3867,20 @@ void spdk_nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair,
  * \returns ID for the specified qpair.
  */
 uint16_t spdk_nvme_qpair_get_id(struct spdk_nvme_qpair *qpair);
+
+/**
+ * Gets the number of outstanding requests for the specified qpair.
+ *
+ * This number is not decremented until after a request's callback function is completed.
+ *
+ * This number is not matched necessarily to the number of NVMe commands submitted by the
+ * user. For example, nvme driver may split a request due to MDTS limitations, that will
+ * also allocate a request for the parent, etc.
+ *
+ * \param qpair Pointer to the NVMe queue pair.
+ * \returns number of outstanding requests for the specified qpair.
+ */
+uint32_t spdk_nvme_qpair_get_num_outstanding_reqs(struct spdk_nvme_qpair *qpair);
 
 /**
  * \brief Prints (SPDK_NOTICELOG) the contents of an NVMe submission queue entry (command).
@@ -3995,6 +4158,8 @@ struct spdk_nvme_transport_ops {
 	int (*ctrlr_get_memory_domains)(const struct spdk_nvme_ctrlr *ctrlr,
 					struct spdk_memory_domain **domains,
 					int array_size);
+
+	int (*ctrlr_ready)(struct spdk_nvme_ctrlr *ctrlr);
 };
 
 /**
@@ -4014,7 +4179,45 @@ void spdk_nvme_transport_register(const struct spdk_nvme_transport_ops *ops);
 static void __attribute__((constructor)) _spdk_nvme_transport_register_##name(void) \
 { \
 	spdk_nvme_transport_register(transport_ops); \
-}\
+}
+
+/**
+ * NVMe transport options.
+ */
+struct spdk_nvme_transport_opts {
+	/**
+	 * It is used for RDMA transport.
+	 *
+	 * The queue depth of a shared rdma receive queue.
+	 */
+	uint32_t rdma_srq_size;
+
+	/**
+	 * The size of spdk_nvme_transport_opts according to the caller of this library is used for ABI
+	 * compatibility.  The library uses this field to know how many fields in this
+	 * structure are valid. And the library will populate any remaining fields with default values.
+	 */
+	size_t opts_size;
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_transport_opts) == 12, "Incorrect size");
+
+/**
+ * Get the current NVMe transport options.
+ *
+ * \param[out] opts Will be filled with the current options for spdk_nvme_transport_set_opts().
+ * \param opts_size Must be set to sizeof(struct spdk_nvme_transport_opts).
+ */
+void spdk_nvme_transport_get_opts(struct spdk_nvme_transport_opts *opts, size_t opts_size);
+
+/**
+ * Set the NVMe transport options.
+ *
+ * \param opts Pointer to the allocated spdk_nvme_transport_opts structure with new values.
+ * \param opts_size Must be set to sizeof(struct spdk_nvme_transport_opts).
+ *
+ * \return 0 on success, or negated errno on failure.
+ */
+int spdk_nvme_transport_set_opts(const struct spdk_nvme_transport_opts *opts, size_t opts_size);
 
 #ifdef __cplusplus
 }

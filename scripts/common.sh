@@ -1,3 +1,8 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation
+#  All rights reserved.
+#
+
 # Common shell utility functions
 
 # Check if PCI device is in PCI_ALLOWED and not in PCI_BLOCKED
@@ -128,18 +133,22 @@ cache_pci_bus_pciconf() {
 
 	cache_pci_init || return 0
 
-	local class vd vendor device
-	local pci domain bus device function
+	local class vendor device
+	local pci pci_info
+	local chip driver
 
-	while read -r pci class _ vd _; do
-		IFS=":" read -r domain bus device function _ <<< "${pci##*pci}"
-		pci=$(printf '%04x:%02x:%02x:%x' \
-			"$domain" "$bus" "$device" "$function")
-		class=$(printf '0x%06x' $((class)))
-		vendor=$(printf '0x%04x' $((vd & 0xffff)))
-		device=$(printf '0x%04x' $(((vd >> 16) & 0xffff)))
-
-		cache_pci "$pci" "$class" "$vendor" "$device"
+	while read -r pci pci_info; do
+		driver=${pci%@*}
+		pci=${pci##*pci} pci=${pci%:}
+		source <(echo "$pci_info")
+		# pciconf under FreeBSD 13.1 provides vendor and device IDs in its
+		# output under separate, dedicated fields. For 12.x they need to
+		# be extracted from the chip field.
+		if [[ -n $chip ]]; then
+			vendor=$(printf '0x%04x' $((chip & 0xffff)))
+			device=$(printf '0x%04x' $(((chip >> 16) & 0xffff)))
+		fi
+		cache_pci "$pci" "$class" "$vendor" "$device" "$driver"
 	done < <(pciconf -l)
 }
 
@@ -190,7 +199,7 @@ function iter_all_pci_class_code() {
 	elif hash pciconf &> /dev/null; then
 		local addr=($(pciconf -l | grep -i "class=0x${class}${subclass}${progif}" \
 			| cut -d$'\t' -f1 | sed -e 's/^[a-zA-Z0-9_]*@pci//g' | tr ':' ' '))
-		printf "%04x:%02x:%02x:%x\n" ${addr[0]} ${addr[1]} ${addr[2]} ${addr[3]}
+		echo "${addr[0]}:${addr[1]}:${addr[2]}:${addr[3]}"
 	elif iter_all_pci_sysfs "$(printf '0x%06x' $((0x$progif | 0x$subclass << 8 | 0x$class << 16)))"; then
 		:
 	else
@@ -210,9 +219,9 @@ function iter_all_pci_dev_id() {
 		lspci -mm -n -D | awk -v ven="\"$ven_id\"" -v dev="\"${dev_id}\"" -F " " \
 			'{if (ven ~ $3 && dev ~ $4) print $1}' | tr -d '"'
 	elif hash pciconf &> /dev/null; then
-		local addr=($(pciconf -l | grep -i "chip=0x${dev_id}${ven_id}" \
+		local addr=($(pciconf -l | grep -iE "chip=0x${dev_id}${ven_id}|vendor=0x$ven_id device=0x$dev_id" \
 			| cut -d$'\t' -f1 | sed -e 's/^[a-zA-Z0-9_]*@pci//g' | tr ':' ' '))
-		printf "%04x:%02x:%02x:%x\n" ${addr[0]} ${addr[1]} ${addr[2]} ${addr[3]}
+		echo "${addr[0]}:${addr[1]}:${addr[2]}:${addr[3]}"
 	elif iter_all_pci_sysfs "0x$ven_id:0x$dev_id"; then
 		:
 	else
@@ -352,12 +361,25 @@ block_in_use() {
 	return 0
 }
 
+get_spdk_gpt_old() {
+	local spdk_guid
+
+	[[ -e $rootdir/module/bdev/gpt/gpt.h ]] || return 1
+
+	GPT_H="$rootdir/module/bdev/gpt/gpt.h"
+	IFS="()" read -r _ spdk_guid _ < <(grep -w SPDK_GPT_PART_TYPE_GUID_OLD "$GPT_H")
+	spdk_guid=${spdk_guid//, /-} spdk_guid=${spdk_guid//0x/}
+
+	echo "$spdk_guid"
+}
+
 get_spdk_gpt() {
 	local spdk_guid
 
 	[[ -e $rootdir/module/bdev/gpt/gpt.h ]] || return 1
 
-	IFS="()" read -r _ spdk_guid _ < <(grep SPDK_GPT_PART_TYPE_GUID "$rootdir/module/bdev/gpt/gpt.h")
+	GPT_H="$rootdir/module/bdev/gpt/gpt.h"
+	IFS="()" read -r _ spdk_guid _ < <(grep -w SPDK_GPT_PART_TYPE_GUID "$GPT_H")
 	spdk_guid=${spdk_guid//, /-} spdk_guid=${spdk_guid//0x/}
 
 	echo "$spdk_guid"

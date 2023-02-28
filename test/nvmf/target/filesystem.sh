@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2016 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/setup/common.sh
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
 MALLOC_BDEV_SIZE=128
 MALLOC_BLOCK_SIZE=512
-
-rpc_py="$rootdir/scripts/rpc.py"
 
 nvmftestinit
 
@@ -45,23 +47,31 @@ function nvmf_filesystem_part() {
 	in_capsule=$1
 
 	nvmfappstart -m 0xF
+	malloc_name=Malloc1
 
 	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192 -c $in_capsule
-	$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc1
+	$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b $malloc_name
 	$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s $NVMF_SERIAL
-	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1
+	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 $malloc_name
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
-	nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+	malloc_size=$(($(get_bdev_size $malloc_name) * 1024 * 1024))
+
+	$NVME_CONNECT -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 	waitforserial "$NVMF_SERIAL"
 	nvme_name=$(lsblk -l -o NAME,SERIAL | grep -oP "([\w]*)(?=\s+${NVMF_SERIAL})")
+	nvme_size=$(sec_size_to_bytes $nvme_name)
 
 	mkdir -p /mnt/device
-
-	parted -s /dev/${nvme_name} mklabel msdos mkpart primary '0%' '100%'
-	partprobe
-	sleep 1
+	if ((nvme_size == malloc_size)); then
+		parted -s /dev/${nvme_name} mklabel gpt mkpart SPDK_TEST '0%' '100%'
+		partprobe
+		sleep 1
+	else
+		echo "ERR: Created dev size is not as expected"
+		exit 1
+	fi
 
 	if [ $in_capsule -eq 0 ]; then
 		run_test "filesystem_ext4" nvmf_filesystem_create "ext4" ${nvme_name}
@@ -76,7 +86,8 @@ function nvmf_filesystem_part() {
 	parted -s /dev/${nvme_name} rm 1
 
 	sync
-	nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
+	nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
+	waitforserial_disconnect "$NVMF_SERIAL"
 
 	$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 

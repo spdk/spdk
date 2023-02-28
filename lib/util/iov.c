@@ -1,37 +1,30 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2019 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/util.h"
+
+void
+spdk_iov_memset(struct iovec *iovs, int iovcnt, int c)
+{
+	int iov_idx = 0;
+	struct iovec *iov;
+
+	while (iov_idx < iovcnt) {
+		iov = &iovs[iov_idx];
+		memset(iov->iov_base, c, iov->iov_len);
+		iov_idx++;
+	}
+}
+
+void
+spdk_iov_one(struct iovec *iov, int *iovcnt, void *buf, size_t buflen)
+{
+	iov->iov_base = buf;
+	iov->iov_len = buflen;
+	*iovcnt = 1;
+}
 
 size_t
 spdk_ioviter_first(struct spdk_ioviter *iter,
@@ -130,4 +123,100 @@ spdk_iovcpy(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_t diovc
 	}
 
 	return total_sz;
+}
+
+size_t
+spdk_iovmove(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_t diovcnt)
+{
+	struct spdk_ioviter iter;
+	size_t len, total_sz;
+	void *src, *dst;
+
+	total_sz = 0;
+	for (len = spdk_ioviter_first(&iter, siov, siovcnt, diov, diovcnt, &src, &dst);
+	     len != 0;
+	     len = spdk_ioviter_next(&iter, &src, &dst)) {
+		memmove(dst, src, len);
+		total_sz += len;
+	}
+
+	return total_sz;
+}
+
+void
+spdk_iov_xfer_init(struct spdk_iov_xfer *ix, struct iovec *iovs, int iovcnt)
+{
+	ix->iovs = iovs;
+	ix->iovcnt = iovcnt;
+	ix->cur_iov_idx = 0;
+	ix->cur_iov_offset = 0;
+}
+
+static size_t
+iov_xfer(struct spdk_iov_xfer *ix, const void *buf, size_t buf_len, bool to_buf)
+{
+	size_t len, iov_remain_len, copied_len = 0;
+	struct iovec *iov;
+
+	if (buf_len == 0) {
+		return 0;
+	}
+
+	while (ix->cur_iov_idx < ix->iovcnt) {
+		iov = &ix->iovs[ix->cur_iov_idx];
+		iov_remain_len = iov->iov_len - ix->cur_iov_offset;
+		if (iov_remain_len == 0) {
+			ix->cur_iov_idx++;
+			ix->cur_iov_offset = 0;
+			continue;
+		}
+
+		len = spdk_min(iov_remain_len, buf_len - copied_len);
+
+		if (to_buf) {
+			memcpy((char *)buf + copied_len,
+			       iov->iov_base + ix->cur_iov_offset, len);
+		} else {
+			memcpy((char *)iov->iov_base + ix->cur_iov_offset,
+			       (const char *)buf + copied_len, len);
+		}
+		copied_len += len;
+		ix->cur_iov_offset += len;
+
+		if (buf_len == copied_len) {
+			return copied_len;
+		}
+	}
+
+	return copied_len;
+}
+
+size_t
+spdk_iov_xfer_from_buf(struct spdk_iov_xfer *ix, const void *buf, size_t buf_len)
+{
+	return iov_xfer(ix, buf, buf_len, false);
+}
+
+size_t
+spdk_iov_xfer_to_buf(struct spdk_iov_xfer *ix, const void *buf, size_t buf_len)
+{
+	return iov_xfer(ix, buf, buf_len, true);
+}
+
+void
+spdk_copy_iovs_to_buf(void *buf, size_t buf_len, struct iovec *iovs, int iovcnt)
+{
+	struct spdk_iov_xfer ix;
+
+	spdk_iov_xfer_init(&ix, iovs, iovcnt);
+	spdk_iov_xfer_to_buf(&ix, buf, buf_len);
+}
+
+void
+spdk_copy_buf_to_iovs(struct iovec *iovs, int iovcnt, void *buf, size_t buf_len)
+{
+	struct spdk_iov_xfer ix;
+
+	spdk_iov_xfer_init(&ix, iovs, iovcnt);
+	spdk_iov_xfer_from_buf(&ix, buf, buf_len);
 }

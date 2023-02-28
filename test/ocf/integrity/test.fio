@@ -10,6 +10,7 @@ verify_backlog=1024
 iodepth=128
 bs=4K
 runtime=10
+verify_state_save=0
 
 size=20%
 

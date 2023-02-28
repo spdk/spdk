@@ -139,7 +139,7 @@ argument that adds new RPC calls (subparsers.add_parser()).  The new parsers sho
 functions registered within the external module using the SPDK_RPC_REGISTER() macro.  Example:
 
 ~~~python
-from rpc.client import print_json
+from spdk.rpc.client import print_json
 
 
 def example_create(client, num_blocks, block_size, name=None, uuid=None):
@@ -441,8 +441,16 @@ Example response:
     "framework_get_subsystems",
     "framework_monitor_context_switch",
     "spdk_kill_instance",
-    "ioat_scan_accel_engine",
-    "idxd_scan_accel_engine",
+    "accel_get_opc_assignments",
+    "accel_crypto_key_create",
+    "accel_crypto_key_destroy",
+    "accel_crypto_keys_get",
+    "ioat_scan_accel_module",
+    "dsa_scan_accel_module",
+    "dpdk_cryptodev_scan_accel_module",
+    "dpdk_cryptodev_set_driver",
+    "dpdk_cryptodev_get_driver",
+    "mlx5_scan_accel_module",
     "bdev_virtio_attach_controller",
     "bdev_virtio_scsi_get_devices",
     "bdev_virtio_detach_controller",
@@ -465,7 +473,11 @@ Example response:
     "bdev_malloc_delete",
     "bdev_malloc_create",
     "bdev_ftl_delete",
+    "bdev_ftl_unload",
     "bdev_ftl_create",
+    "bdev_ftl_load",
+    "bdev_ftl_unmap",
+    "bdev_ftl_get_stats",
     "bdev_lvol_get_lvstores",
     "bdev_lvol_delete",
     "bdev_lvol_resize",
@@ -478,7 +490,10 @@ Example response:
     "bdev_lvol_create",
     "bdev_lvol_delete_lvstore",
     "bdev_lvol_rename_lvstore",
-    "bdev_lvol_create_lvstore"
+    "bdev_lvol_create_lvstore",
+    "bdev_daos_delete",
+    "bdev_daos_create",
+    "bdev_daos_resize"
   ]
 }
 ~~~
@@ -789,6 +804,82 @@ Example response:
 }
 ~~~
 
+### framework_enable_cpumask_locks
+
+Enable CPU core lock files to block multiple SPDK applications from running on the same cpumask.
+The CPU core locks are enabled by default, unless user specified `--disable-cpumask-locks` command
+line option when launching SPDK.
+
+This RPC may be called after locks have already been enabled, with no effect and no error response.
+
+#### Parameters
+
+This method has no parameters.
+
+#### Response
+
+true on success
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "framework_enable_cpumask_locks"
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### framework_disable_cpumask_locks
+
+Disable CPU core lock files. The locks can also be disabled during startup, when
+user specifies `--disable-cpumask-locks` command line option during SPDK launch.
+
+This RPC may be called after locks have already been disabled, with no effect and no error
+response.
+
+#### Parameters
+
+This method has no parameters.
+
+#### Response
+
+true on success
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "framework_disable_cpumask_locks"
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### thread_get_stats {#rpc_thread_get_stats}
 
 Retrieve current statistics of all the threads.
@@ -1084,6 +1175,76 @@ Example response:
   "blobfs": {
     "enabled": false,
     "mask": "0x80"
+    }
+  }
+}
+~~~
+
+### trace_get_info {#rpc_trace_get_info}
+
+Get name of shared memory file, list of the available trace point groups
+and mask of the available trace points for each group
+
+#### Parameters
+
+No parameters required
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "trace_get_info",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "tpoint_shm_path": "/dev/shm/spdk_tgt_trace.pid3071944",
+    "tpoint_group_mask": "0x8",
+    "iscsi_conn": {
+      "mask": "0x2",
+      "tpoint_mask": "0x0"
+    },
+    "scsi": {
+      "mask": "0x4",
+      "tpoint_mask": "0x0"
+    },
+    "bdev": {
+      "mask": "0x8",
+      "tpoint_mask": "0xffffffffffffffff"
+    },
+    "nvmf_tcp": {
+      "mask": "0x20",
+      "tpoint_mask": "0x0"
+    },
+    "blobfs": {
+      "mask": "0x80",
+      "tpoint_mask": "0x0"
+    },
+    "thread": {
+      "mask": "0x400",
+      "tpoint_mask": "0x0"
+    },
+    "nvme_pcie": {
+      "mask": "0x800",
+      "tpoint_mask": "0x0"
+    },
+    "nvme_tcp": {
+      "mask": "0x2000",
+      "tpoint_mask": "0x0"
+    },
+    "bdev_nvme": {
+      "mask": "0x4000",
+      "tpoint_mask": "0x0"
     }
   }
 }
@@ -1493,9 +1654,332 @@ Example response:
 
 ## Acceleration Framework Layer {#jsonrpc_components_accel_fw}
 
-### idxd_scan_accel_engine {#rpc_idxd_scan_accel_engine}
+### accel_get_module_info {#accel_get_module_info}
 
-Set config and enable idxd accel engine offload.
+Get a list of valid module names and their supported operations.
+
+#### Parameters
+
+None
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "accel_get_module_info",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+[
+  {
+    "module": "software",
+    "supported ops": [
+      "copy",
+      "fill",
+      "dualcast",
+      "compare",
+      "crc32c",
+      "copy_crc32c",
+      "compress",
+      "decompress"
+    ]
+  },
+  {
+    "module": "dsa",
+    "supported ops": [
+      "copy",
+      "fill",
+      "dualcast",
+      "compare",
+      "crc32c",
+      "copy_crc32c"
+    ]
+  }
+]
+~~~
+
+### accel_get_opc_assignments {#rpc_accel_get_opc_assignments}
+
+Get a list of opcode names and their assigned accel_fw modules.
+
+#### Parameters
+
+None
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "accel_get_opc_assignments",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "copy": "software",
+      "fill": "software",
+      "dualcast": "software",
+      "compare": "software",
+      "crc32c": "software",
+      "copy_crc32c": "software",
+      "compress": "software",
+      "decompress": "software"
+    }
+  ]
+}
+~~~
+
+### accel_assign_opc {#rpc_accel_assign_opc}
+
+Manually assign an operation to a module.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------------
+opname                  | Required | string      | name of operation
+module                  | Required | string      | name of module
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "accel_assign_opc",
+  "id": 1,
+  "params": {
+    "opname": "copy",
+    "module": "software"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### accel_crypto_key_create {#rpc_accel_crypto_key_create}
+
+Create a crypto key which will be used in accel framework
+
+#### Parameters
+
+Name       | Optional | Type        | Description
+-----------|----------| ----------- | -----------------
+cipher     | Required | string      | crypto cipher to use
+key        | Required | string      | Key in **hex** form
+key2       | Optional | string      | Optional 2nd part of the key or a tweak in **hex** form
+name       | Required | string      | The key name
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "accel_crypto_key_create",
+  "id": 1,
+  "params": {
+    "cipher": "AES_XTS",
+    "key": "00112233445566778899001122334455",
+    "key2": "00112233445566778899001122334455",
+    "name": "super_key"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### accel_crypto_key_destroy {#rpc_accel_crypto_key_destroy}
+
+Destroy a crypto key. The user is responsible for ensuring that the deleted key is not used by acceleration modules.
+
+#### Parameters
+
+Name       | Optional | Type        | Description
+-----------|----------| ----------- | -----------------
+name       | Required | string      | The key name
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "accel_crypto_key_destroy",
+  "id": 1,
+  "params": {
+    "name": "super_key"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### accel_crypto_keys_get {#rpc_accel_crypto_keys_get}
+
+Get information about existing crypto keys
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- |----------| ----------- | -----------------
+key_name                | Optional | string      | If specified, return info about a specific key
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "accel_crypto_keys_get",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "name": "test_dek",
+      "cipher": "AES_XTS",
+      "key": "00112233445566778899001122334455",
+      "key2": "11223344556677889900112233445500"
+    },
+    {
+      "name": "test_dek2",
+      "cipher": "AES_XTS",
+      "key": "11223344556677889900112233445500",
+      "key2": "22334455667788990011223344550011"
+    }
+  ]
+}
+~~~
+
+### accel_set_driver {#rpc_accel_set_driver}
+
+Select platform driver to execute operation chains.  Until a driver is selected, all operations are
+executed through accel modules.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- |----------| ----------- | -----------------
+name                    | Required | string      | Name of the platform driver
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "accel_set_driver",
+  "id": 1
+  "params": {
+    "name": "xeon"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### compressdev_scan_accel_module {#rpc_compressdev_scan_accel_module}
+
+Set config and enable compressdev accel module offload.
+Select the DPDK polled mode driver (pmd) for the accel compress module,
+0 = auto-select, 1= QAT only, 2 = mlx5_pci only.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+pmd                     | Required | int         | pmd selection
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "pmd": 1
+  },
+  "jsonrpc": "2.0",
+  "method": "compressdev_scan_accel_module",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### dsa_scan_accel_module {#rpc_dsa_scan_accel_module}
+
+Set config and enable dsa accel module offload.
 This feature is considered as experimental.
 
 #### Parameters
@@ -1514,7 +1998,7 @@ Example request:
     "config_kernel_mode": false
   },
   "jsonrpc": "2.0",
-  "method": "idxd_scan_accel_engine",
+  "method": "dsa_scan_accel_module",
   "id": 1
 }
 ~~~
@@ -1529,9 +2013,10 @@ Example response:
 }
 ~~~
 
-### ioat_scan_accel_engine {#rpc_ioat_scan_accel_engine}
+### iaa_scan_accel_module {#rpc_iaa_scan_accel_module}
 
-Enable ioat accel engine offload.
+Enable IAA accel module offload.
+This feature is considered as experimental.
 
 #### Parameters
 
@@ -1544,8 +2029,170 @@ Example request:
 ~~~json
 {
   "jsonrpc": "2.0",
-  "method": "ioat_scan_accel_engine",
+  "method": "iaa_scan_accel_module",
   "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### ioat_scan_accel_module {#rpc_ioat_scan_accel_module}
+
+Enable ioat accel module offload.
+
+#### Parameters
+
+None
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "ioat_scan_accel_module",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### dpdk_cryptodev_scan_accel_module {#rpc_dpdk_cryptodev_scan_accel_module}
+
+Enable dpdk_cryptodev accel offload
+
+#### Parameters
+
+None
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "dpdk_cryptodev_scan_accel_module",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### dpdk_cryptodev_set_driver {#rpc_dpdk_cryptodev_set_driver}
+
+Set the DPDK cryptodev driver
+
+#### Parameters
+
+Name                    | Optional | Type   | Description
+----------------------- |----------|--------| -----------
+crypto_pmd              | Required | string | The driver, can be one of crypto_aesni_mb, crypto_qat or mlx5_pci
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "dpdk_cryptodev_set_driver",
+  "id": 1,
+  "params": {
+    "crypto_pmd": "crypto_aesni_mb"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### dpdk_cryptodev_get_driver {#rpc_dpdk_cryptodev_get_driver}
+
+Get the DPDK cryptodev driver
+
+#### Parameters
+
+None
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "dpdk_cryptodev_get_driver",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "crypto_aesni_mb"
+}
+~~~
+
+### mlx5_scan_accel_module {#rpc_mlx5_scan_accel_module}
+
+Enable mlx5 accel offload
+
+#### Parameters
+
+Name                    | Optional | Type   | Description
+----------------------- | -------- |--------| -----------
+qp_size                 | Optional | number | qpair size
+num_requests            | Optional | number | Size of the shared requests pool
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "mlx5_scan_accel_module",
+  "id": 1,
+  "params": {
+    "qp_size": 256,
+    "num_requests": 2047
+  }
 }
 ~~~
 
@@ -1607,11 +2254,14 @@ Get information about block devices (bdevs).
 #### Parameters
 
 The user may specify no parameters in order to list all block devices, or a block device may be
-specified by name.
+specified by name.  If a timeout is specified, the method will block until a bdev with a specified
+name appears or the timeout expires.  By default, the timeout is zero, meaning the method returns
+immediately whether the bdev exists or not.
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Optional | string      | Block device name
+timeout                 | Optional | number      | Time (ms) to wait for a bdev with specified name to appear
 
 #### Response
 
@@ -1750,6 +2400,7 @@ specified by name.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Optional | string      | Block device name
+per_channel             | Optional | bool        | Display per channel data for specified block device.
 
 #### Response
 
@@ -1765,7 +2416,8 @@ Example request:
   "id": 1,
   "method": "bdev_get_iostat",
   "params": {
-    "name": "Nvme0n1"
+    "name": "Nvme0n1",
+    "per_channel": false
   }
 }
 ~~~
@@ -1797,6 +2449,46 @@ Example response:
       }
     ]
   }
+}
+~~~
+
+### bdev_reset_iostat {#rpc_bdev_reset_iostat}
+
+Reset I/O statistics of block devices (bdevs). Note that if one consumer resets I/O statistics,
+it affects all other consumers.
+
+#### Parameters
+
+The user may specify no parameters in order to reset I/O statistics for all block devices, or
+a block device may be specified by name.
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Optional | string      | Block device name
+mode                    | Optional | string      | Mode to reset I/O statistics: all, maxmin (default: all)
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "bdev_reset_iostat",
+  "params": {
+    "name": "Nvme0n1"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
 }
 ~~~
 
@@ -2068,42 +2760,6 @@ Example response:
 }
 ~~~
 
-### bdev_compress_set_pmd {#rpc_bdev_compress_set_pmd}
-
-Select the DPDK polled mode driver (pmd) for a compressed bdev,
-0 = auto-select, 1= QAT only, 2 = ISAL only, 3 = mlx5_pci only.
-
-#### Parameters
-
-Name                    | Optional | Type        | Description
------------------------ | -------- | ----------- | -----------
-pmd                     | Required | int         | pmd selection
-
-#### Example
-
-Example request:
-
-~~~json
-{
-  "params": {
-    "pmd": 1
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_compress_set_pmd",
-  "id": 1
-}
-~~~
-
-Example response:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": true
-}
-~~~
-
 ### bdev_crypto_create {#rpc_bdev_crypto_create}
 
 Create a new crypto bdev on a given base bdev.
@@ -2111,13 +2767,18 @@ Create a new crypto bdev on a given base bdev.
 #### Parameters
 
 Name                    | Optional | Type        | Description
------------------------ | -------- | ----------- | -----------
+----------------------- |----------| ----------- | -----------
 base_bdev_name          | Required | string      | Name of the base bdev
 name                    | Required | string      | Name of the crypto vbdev to create
-crypto_pmd              | Required | string      | Name of the crypto device driver
-key                     | Required | string      | Key
-cipher                  | Required | string      | Cipher to use, AES_CBC or AES_XTS (QAT only)
-key2                    | Required | string      | 2nd key only required for cipher AET_XTS
+crypto_pmd              | Optional | string      | Name of the crypto device driver. Obsolete, see accel_crypto_key_create
+key                     | Optional | string      | Key in hex form. Obsolete, see accel_crypto_key_create
+cipher                  | Optional | string      | Cipher to use, AES_CBC or AES_XTS (QAT and MLX5). Obsolete, see accel_crypto_key_create
+key2                    | Optional | string      | 2nd key in hex form only required for cipher AET_XTS. Obsolete, see accel_crypto_key_create
+key_name                | Optional | string      | Name of the key created with accel_crypto_key_create
+module                  | Optional | string      | Name of the accel module which is used to create a key (if no key_name specified)
+
+Both key and key2 must be passed in the hexlified form. For example, 256bit AES key may look like this:
+afd9477abf50254219ccb75965fbe39f23ebead5676e292582a0a67f66b88215
 
 #### Result
 
@@ -2133,7 +2794,7 @@ Example request:
     "base_bdev_name": "Nvme0n1",
     "name": "my_crypto_bdev",
     "crypto_pmd": "crypto_aesni_mb",
-    "key": "1234567890123456",
+    "key": "12345678901234561234567890123456",
     "cipher": "AES_CBC"
   },
   "jsonrpc": "2.0",
@@ -2566,19 +3227,169 @@ Example response:
 }
 ~~~
 
+### bdev_ocf_set_seqcutoff {#rpc_bdev_ocf_set_seqcutoff}
+
+Set sequential cutoff parameters on all cores for the given OCF cache device.
+A brief description of this functionality can be found in [OpenCAS documentation](https://open-cas.github.io/guide_tool_details.html#seq-cutoff).
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+policy                  | Required | string      | Sequential cutoff policy: always, full, never
+threshold               | Optional | int         | Activation threshold in KiB
+promotion_count         | Optional | int         | Promotion request count
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "ocf0",
+    "policy": "full",
+    "threshold": 4,
+    "promotion_count": 2
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_ocf_set_seqcutoff",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_ocf_flush_start {#rpc_bdev_ocf_flush_start}
+
+Start flushing OCF cache device.
+
+Automatic flushes of dirty data are managed by OCF cleaning policy settings.
+In addition to that, all dirty data is flushed to core device when there is
+an attempt to stop caching.
+On the other hand, this RPC call gives a possibility to flush dirty data manually
+when there is a need for it, e.g. to speed up the shutdown process when data
+hasn't been flushed for a long time.
+This RPC returns immediately, and flush is then being performed in the
+background. To see the status of flushing operation use bdev_ocf_flush_status.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "ocf0"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_ocf_flush_start",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_ocf_flush_status {#rpc_bdev_ocf_flush_status}
+
+Get flush status of OCF cache device.
+
+Automatic flushes of dirty data are managed by OCF cleaning policy settings.
+In addition to that, all dirty data is flushed to core device when there is
+an attempt to stop caching.
+On the other hand, there is a possibility to flush dirty data manually
+when there is a need for it, e.g. to speed up the shutdown process when data
+hasn't been flushed for a long time.
+This RPC reports if such manual flush is still in progress and if the operation
+was successful. To start manual flush use bdev_ocf_flush_start.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+#### Response
+
+Status of OCF cache device flush.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "ocf0"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_ocf_flush_status",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "in_progress": false,
+    "status": 0
+  }
+}
+~~~
+
 ### bdev_malloc_create {#rpc_bdev_malloc_create}
 
 Construct @ref bdev_config_malloc
+
+The `dif_type` parameter can have 0, 1, 2, or 3, and controls the check of the guard tag and the reference tag.
+If the `dif_type` is 1, 2, or 3, the malloc bdev compares the guard tag to the CRC-16 computed over the block data.
+If the `dif_type` is 1 or 2, the malloc bdev compares the reference tag to the computed reference tag.
+The computed reference tag for the first block of the I/O is the `init_ref_tag` of the DIF context, and
+the computed reference tag is incremented for each subsequent block.
+If the `dif_type` is 3, the malloc bdev does not check the reference tag.
+The application tag is not checked by the malloc bdev because the current block device API does not expose
+it to the upper layer yet.
 
 #### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Optional | string      | Bdev name to use
-block_size              | Required | number      | Block size in bytes -must be multiple of 512
+block_size              | Required | number      | Data block size in bytes -must be multiple of 512
 num_blocks              | Required | number      | Number of blocks
 uuid                    | Optional | string      | UUID of new bdev
 optimal_io_boundary     | Optional | number      | Split on optimal IO boundary, in number of blocks, default 0
+md_size                 | Optional | number      | Metadata size for this bdev (0, 8, 16, 32, 64, or 128). Default is 0.
+md_interleave           | Optional | boolean     | Metadata location, interleaved if true, and separated if false. Default is false.
+dif_type                | Optional | number      | Protection information type. Parameter --md-size needs to be set along --dif-type. Default=0 - no protection.
+dif_is_head_of_md       | Optional | boolean     | Protection information is in the first 8 bytes of metadata. Default=false.
 
 #### Result
 
@@ -2828,7 +3639,7 @@ name                    | Required | string      | Bdev name
 
 Example request:
 
-~~json
+~~~json
 {
   "params": {
     "name": "Aio0"
@@ -2837,17 +3648,17 @@ Example request:
   "method": "bdev_aio_rescan",
   "id": 1
 }
-~~
+~~~
 
 Example response:
 
-~~json
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
   "result": true
 }
-~~
+~~~
 
 ### bdev_aio_delete {#rpc_bdev_aio_delete}
 
@@ -2911,10 +3722,16 @@ io_queue_requests          | Optional | number      | The number of requests all
 delay_cmd_submit           | Optional | boolean     | Enable delaying NVMe command submission to allow batching of multiple commands. Default: `true`.
 transport_retry_count      | Optional | number      | The number of attempts per I/O in the transport layer before an I/O fails.
 bdev_retry_count           | Optional | number      | The number of attempts per I/O in the bdev layer before an I/O fails. -1 means infinite retries.
-transport_ack_timeout      | Optional | number      | Time to wait ack until packet retransmission. RDMA specific. Range 0-31 where 0 is driver-specific default value.
+transport_ack_timeout      | Optional | number      | Time to wait ack until retransmission for RDMA or connection close for TCP. Range 0-31 where 0 means use default.
 ctrlr_loss_timeout_sec     | Optional | number      | Time to wait until ctrlr is reconnected before deleting ctrlr.  -1 means infinite reconnects. 0 means no reconnect.
 reconnect_delay_sec        | Optional | number      | Time to delay a reconnect trial. 0 means no reconnect.
 fast_io_fail_timeout_sec   | Optional | number      | Time to wait until ctrlr is reconnected before failing I/O to ctrlr. 0 means no such timeout.
+disable_auto_failback      | Optional | boolean     | Disable automatic failback. The RPC bdev_nvme_set_preferred_path can be used to do manual failback.
+generate_uuids             | Optional | boolean     | Enable generation of UUIDs for NVMe bdevs that do not provide this value themselves.
+transport_tos              | Optional | number      | IPv4 Type of Service value. Only applicable for RDMA transport. Default: 0 (no TOS is applied).
+nvme_error_stat            | Optional | boolean     | Enable collecting NVMe error counts.
+rdma_srq_size              | Optional | number      | Set the size of a shared rdma receive queue. Default: 0 (disabled).
+io_path_stat               | Optional | boolean     | Enable collecting I/O stat of each nvme bdev io path. Default: `false`.
 
 #### Example
 
@@ -3031,6 +3848,7 @@ num_io_queues              | Optional | uint32_t    | The number of IO queues to
 ctrlr_loss_timeout_sec     | Optional | number      | Time to wait until ctrlr is reconnected before deleting ctrlr.  -1 means infinite reconnects. 0 means no reconnect.
 reconnect_delay_sec        | Optional | number      | Time to delay a reconnect trial. 0 means no reconnect.
 fast_io_fail_timeout_sec   | Optional | number      | Time to wait until ctrlr is reconnected before failing I/O to ctrlr. 0 means no such timeout.
+psk                        | Optional | string      | PSK in hexadecimal digits, e.g. 1234567890ABCDEF (Enables SSL socket implementation for TCP)
 
 #### Example
 
@@ -3105,7 +3923,8 @@ Example response:
       "trid": {
         "trtype": "PCIe",
         "traddr": "0000:05:00.0"
-      }
+      },
+      "cntlid": 0
     }
   ]
 }
@@ -3224,6 +4043,11 @@ traddr                     | Required | string      | NVMe-oF target address: ip
 adrfam                     | Optional | string      | NVMe-oF target adrfam: ipv4, ipv6
 trsvcid                    | Optional | string      | NVMe-oF target trsvcid: port number
 hostnqn                    | Optional | string      | NVMe-oF target hostnqn
+wait_for_attach            | Optional | bool        | Wait to complete until all discovered NVM subsystems are attached
+attach_timeout_ms          | Optional | number      | Time to wait until the discovery and all discovered NVM subsystems are attached
+ctrlr_loss_timeout_sec     | Optional | number      | Time to wait until ctrlr is reconnected before deleting ctrlr.  -1 means infinite reconnects. 0 means no reconnect.
+reconnect_delay_sec        | Optional | number      | Time to delay a reconnect trial. 0 means no reconnect.
+fast_io_fail_timeout_sec   | Optional | number      | Time to wait until ctrlr is reconnected before failing I/O to ctrlr. 0 means no such timeout.
 
 #### Example
 
@@ -3288,6 +4112,274 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": true
+}
+~~~
+
+### bdev_nvme_get_discovery_info {#rpc_bdev_nvme_get_discovery_info}
+
+Get information about the discovery service.
+
+#### Example
+
+Example request:
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_get_discovery_info",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "name": "nvme-disc",
+      "trid": {
+        "trtype": "TCP",
+        "adrfam": "IPv4",
+        "traddr": "127.0.0.1",
+        "trsvcid": "8009",
+        "subnqn": "nqn.2014-08.org.nvmexpress.discovery"
+      },
+      "referrals": []
+    }
+  ]
+}
+~~~
+
+### bdev_nvme_get_io_paths {#rpc_bdev_nvme_get_io_paths}
+
+Display all or the specified NVMe bdev's active I/O paths.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Optional | string      | Name of the NVMe bdev
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_get_io_paths",
+  "id": 1,
+  "params": {
+    "name": "Nvme0n1"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "poll_groups": [
+      {
+        "thread": "app_thread",
+        "io_paths": [
+          {
+            "bdev_name": "Nvme0n1",
+            "cntlid": 0,
+            "current": true,
+            "connected": true,
+            "accessible": true,
+            "transport": {
+              "trtype": "RDMA",
+              "traddr": "1.2.3.4",
+              "trsvcid": "4420",
+              "adrfam": "IPv4"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+~~~
+
+### bdev_nvme_set_preferred_path {#rpc_bdev_nvme_set_preferred_path}
+
+Set the preferred I/O path for an NVMe bdev in multipath mode.
+
+NOTE: This RPC does not support NVMe bdevs in failover mode.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of the NVMe bdev
+cntlid                  | Required | number      | NVMe-oF controller ID
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_set_preferred_path",
+  "id": 1,
+  "params": {
+    "name": "Nvme0n1",
+    "cntlid": 0
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_nvme_set_multipath_policy {#rpc_bdev_nvme_set_multipath_policy}
+
+Set multipath policy of the NVMe bdev in multipath mode or set multipath
+selector for active-active multipath policy.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of the NVMe bdev
+policy                  | Required | string      | Multipath policy: active_active or active_passive
+selector                | Optional | string      | Multipath selector: round_robin or queue_depth, used in active-active mode. Default is round_robin
+rr_min_io               | Optional | number      | Number of I/Os routed to current io path before switching to another for round-robin selector. The min value is 1.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_set_multipath_policy",
+  "id": 1,
+  "params": {
+    "name": "Nvme0n1",
+    "policy": "active_passive"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_nvme_get_path_iostat {#rpc_bdev_nvme_get_path_iostat}
+
+Get I/O statistics for IO paths of the block device. Call RPC bdev_nvme_set_options to set enable_io_path_stat
+true before using this RPC.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of the NVMe bdev
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_get_path_iostat",
+  "id": 1,
+  "params": {
+    "name": "NVMe0n1"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "name": "NVMe0n1",
+    "stats": [
+      {
+        "trid": {
+          "trtype": "TCP",
+          "adrfam": "IPv4",
+          "traddr": "10.169.204.201",
+          "trsvcid": "4420",
+          "subnqn": "nqn.2016-06.io.spdk:cnode1"
+        },
+        "stat": {
+          "bytes_read": 676691968,
+          "num_read_ops": 165201,
+          "bytes_written": 0,
+          "num_write_ops": 0,
+          "bytes_unmapped": 0,
+          "num_unmap_ops": 0,
+          "max_read_latency_ticks": 521487,
+          "min_read_latency_ticks": 0,
+          "write_latency_ticks": 0,
+          "max_write_latency_ticks": 0,
+          "min_write_latency_ticks": 0,
+          "unmap_latency_ticks": 0,
+          "max_unmap_latency_ticks": 0,
+          "min_unmap_latency_ticks": 0,
+          "copy_latency_ticks": 0,
+          "max_copy_latency_ticks": 0,
+          "min_copy_latency_ticks": 0
+        }
+      },
+      {
+        "trid": {
+          "trtype": "TCP",
+          "adrfam": "IPv4",
+          "traddr": "8.8.8.6",
+          "trsvcid": "4420",
+          "subnqn": "nqn.2016-06.io.spdk:cnode1"
+        },
+        "stat": {
+          "bytes_read": 677138432,
+          "num_read_ops": 165317,
+          "bytes_written": 0,
+          "num_write_ops": 0,
+          "bytes_unmapped": 0,
+          "num_unmap_ops": 0,
+          "max_read_latency_ticks": 108525,
+          "min_read_latency_ticks": 0,
+          "write_latency_ticks": 0,
+          "max_write_latency_ticks": 0,
+          "min_write_latency_ticks": 0,
+          "unmap_latency_ticks": 0,
+          "max_unmap_latency_ticks": 0,
+          "min_unmap_latency_ticks": 0,
+          "copy_latency_ticks": 0,
+          "max_copy_latency_ticks": 0,
+          "min_copy_latency_ticks": 0
+        }
+      }
+    ]
+  }
 }
 ~~~
 
@@ -3653,7 +4745,7 @@ This method is available only if SPDK was build with Ceph RBD support.
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
-name                    | Required | string      | Registerd Rados cluster object name
+name                    | Required | string      | Registered Rados cluster object name
 user_id                 | Optional | string      | Ceph ID (i.e. admin, not client.admin)
 config_param            | Optional | string map  | Explicit librados configuration
 config_file             | Optional | string      | File path of libraodos configuration file
@@ -3822,7 +4914,11 @@ default), the "user_id" has to be set.
 
 If provided with cluster_name option, it will use the Rados cluster object
 referenced by the name (created by bdev_rbd_register_cluster RPC) and ignores
-"user_id + config" combination to create its own Rados cluster.
+"user_id + config" combination to create its own Rados cluster. In this scenario,
+all the bdevs will share the same cluster with one connection of Ceph in librbd module.
+Performance tuning on the I/O workload could be done by estimating how many io_contxt
+threads and messager threads in Ceph side and how many cores would be reasonable to provide
+for SPDK to get up to your projections.
 
 #### Result
 
@@ -4185,8 +5281,10 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Name of the error injection bdev
 io_type                 | Required | string      | io type 'clear' 'read' 'write' 'unmap' 'flush' 'all'
-error_type              | Required | string      | error type 'failure' 'pending'
+error_type              | Required | string      | error type 'failure' 'pending' 'corrupt_data'
 num                     | Optional | int         | the number of commands you want to fail.(default:1)
+corrupt_offset          | Optional | int         | the offset in bytes to xor with corrupt_value
+corrupt_value           | Optional | int         | the value for xor (1-255, 0 is invalid)
 
 #### Example
 
@@ -4203,6 +5301,42 @@ Example request:
     "error_type": "pending",
     "num": 1
   }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_iscsi_set_options {#rpc_bdev_iscsi_set_options}
+
+This RPC can be called at any time, but the new value will only take effect for new iSCSI bdevs.
+
+#### Parameters
+
+Name                       | Optional | Type        | Description
+-------------------------- | -------- | ----------- | -----------
+timeout_sec                | Optional | number      | Timeout for command, in seconds, if 0, don't track timeout
+
+#### Example
+
+Example request:
+
+~~~json
+request:
+{
+  "params": {
+    "timeout_sec": 30
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_iscsi_set_options",
+  "id": 1
 }
 ~~~
 
@@ -4309,11 +5443,12 @@ This RPC is subject to change.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
-trtype                  | Required | string      | Transport type
-traddr                  | Required | string      | NVMe target address
-punits                  | Required | string      | Parallel unit range in the form of start-end e.g 4-8
+base_bdev               | Required | string      | Name of the base device
+cache                   | Required | string      | Name of the cache device
 uuid                    | Optional | string      | UUID of restored bdev (not applicable when creating new instance)
-cache                   | Optional | string      | Name of the bdev to be used as a write buffer cache
+core_mask               | Optional | string      | CPU core(s) possible for placement of the ftl core thread, application main thread by default
+overprovisioning        | Optional | int         | Percentage of base device used for relocation, 20% by default
+fast_shutdown           | Optional | bool        | When set FTL will minimize persisted data on target application shutdown and rely on shared memory during next load
 
 #### Result
 
@@ -4326,11 +5461,12 @@ Example request:
 ~~~json
 {
   "params": {
-    "name": "nvme0"
-    "trtype" "pcie"
-    "traddr": "0000:00:04.0"
-    "punits": "0-3"
-    "uuid": "4a7481ce-786f-41a0-9b86-8f7465c8f4d3"
+    "name": "ftl0",
+    "base_bdev": "nvme0n1",
+    "cache": "nvme1n1",
+    "uuid": "4a7481ce-786f-41a0-9b86-8f7465c8f4d3",
+    "core_mask": "[0]",
+    "overprovisioning": 10
   },
   "jsonrpc": "2.0",
   "method": "bdev_ftl_create",
@@ -4345,7 +5481,62 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": {
-      "name" : "nvme0"
+      "name" : "ftl0"
+      "uuid" : "4a7481ce-786f-41a0-9b86-8f7465c8f4d3"
+  }
+}
+~~~
+
+### bdev_ftl_load {#rpc_bdev_ftl_load}
+
+Loads FTL bdev.
+
+This RPC is subject to change.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+base_bdev               | Required | string      | Name of the base device
+cache                   | Required | string      | Name of the cache device
+uuid                    | Required | string      | UUID of restored bdev
+core_mask               | Optional | string      | CPU core(s) possible for placement of the ftl core thread, application main thread by default
+overprovisioning        | Optional | int         | Percentage of base device used for relocation, 20% by default
+fast_shutdown           | Optional | bool        | When set FTL will minimize persisted data on target application shutdown and rely on shared memory during next load
+
+#### Result
+
+Name of loaded bdev.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "ftl0",
+    "base_bdev": "nvme0n1",
+    "cache": "nvme1n1",
+    "uuid": "4a7481ce-786f-41a0-9b86-8f7465c8f4d3",
+    "core_mask": "[0]",
+    "overprovisioning": 10
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_ftl_load",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+      "name" : "ftl0"
       "uuid" : "4a7481ce-786f-41a0-9b86-8f7465c8f4d3"
   }
 }
@@ -4362,6 +5553,7 @@ This RPC is subject to change.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
+fast_shutdown           | Optional | bool        | When set FTL will minimize persisted data during deletion and rely on shared memory during next load
 
 #### Example
 
@@ -4370,7 +5562,7 @@ Example request:
 ~~~json
 {
   "params": {
-    "name": "nvme0"
+    "name": "ftl0"
   },
   "jsonrpc": "2.0",
   "method": "bdev_ftl_delete",
@@ -4388,6 +5580,257 @@ Example response:
 }
 ~~~
 
+### bdev_ftl_unload {#rpc_bdev_ftl_unload}
+
+Unloads FTL bdev.
+
+This RPC is subject to change.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+fast_shutdown           | Optional | bool        | When set FTL will minimize persisted data during deletion and rely on shared memory during next load
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "ftl0"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_ftl_unload",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_ftl_unmap {#rpc_bdev_ftl_unmap}
+
+Unmap range of LBAs.
+
+This RPC is subject to change.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+lba                     | Required | number      | start lba, aligned to 1024
+num_blocks              | Required | number      | number of blocks, aligned to 1024
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "ftl0"
+    "lba": "0"
+    "num_blocks": "1024"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_ftl_unmap",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_ftl_get_stats {#rpc_bdev_ftl_get_stats}
+
+Get IO statistics for FTL bdev
+
+This RPC is subject to change.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+#### Response
+
+The response is an object containing IO statistics for an FTL instance, split into multiple subobjects:
+
+- `user` - contains information about number of IOs, and errors for any incoming requests,
+- `cmp` - information about IO for the compaction process,
+- `gc` - information about IO for the garbage collection process,
+- `md_base` - internal metadata requests to the base FTL device,
+- `md_nv_cache` - internal metadata requests to the cache device,
+- `l2p` - requests done on the L2P cache region.
+
+Each subobject contains the following information:
+
+- `ios` - describes the total number of IOs requested,
+- `blocks` - the total number of requested blocks,
+- `errors` - describes the number of detected errors for a given operation, with the following distinctions:
+  - `media` - media errors,
+  - `crc` - mismatch in calculated CRC versus saved checksum in the metadata,
+  - `other` - any other errors.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "ftl0"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_ftl_get_stats",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+      "name": "ftl0",
+      "user": {
+        "read": {
+          "ios": 0,
+          "blocks": 0,
+          "errors": {
+            "media": 0,
+            "crc": 0,
+            "other": 0
+          }
+        },
+        "write": {
+          "ios": 318707,
+          "blocks": 318707,
+          "errors": {
+            "media": 0,
+            "other": 0
+          }
+        }
+      },
+      "cmp": {
+        "read": {
+          "ios": 0,
+          "blocks": 0,
+          "errors": {
+            "media": 0,
+            "crc": 0,
+            "other": 0
+          }
+        },
+        "write": {
+          "ios": 0,
+          "blocks": 0,
+          "errors": {
+            "media": 0,
+            "other": 0
+          }
+        }
+      },
+      "gc": {
+        "read": {
+          "ios": 0,
+          "blocks": 0,
+          "errors": {
+            "media": 0,
+            "crc": 0,
+            "other": 0
+          }
+        },
+        "write": {
+          "ios": 0,
+          "blocks": 0,
+          "errors": {
+            "media": 0,
+            "other": 0
+          }
+        }
+      },
+      "md_base": {
+        "read": {
+          "ios": 0,
+          "blocks": 0,
+          "errors": {
+            "media": 0,
+            "crc": 0,
+            "other": 0
+          }
+        },
+        "write": {
+          "ios": 1,
+          "blocks": 32,
+          "errors": {
+            "media": 0,
+            "other": 0
+          }
+        }
+      },
+      "md_nv_cache": {
+        "read": {
+          "ios": 0,
+          "blocks": 0,
+          "errors": {
+            "media": 0,
+            "crc": 0,
+            "other": 0
+          }
+        },
+        "write": {
+          "ios": 1064,
+          "blocks": 1073896,
+          "errors": {
+            "media": 0,
+            "other": 0
+          }
+        }
+      },
+      "l2p": {
+        "read": {
+          "ios": 240659,
+          "blocks": 240659,
+          "errors": {
+            "media": 0,
+            "crc": 0,
+            "other": 0
+          }
+        },
+        "write": {
+          "ios": 235745,
+          "blocks": 235745,
+          "errors": {
+            "media": 0,
+            "other": 0
+          }
+        }
+      }
+    }
+}
+~~~
 ### bdev_pmem_create_pool {#rpc_bdev_pmem_create_pool}
 
 Create a @ref bdev_config_pmem blk pool file. It is equivalent of following `pmempool create` command:
@@ -4670,6 +6113,87 @@ Example request:
   },
   "jsonrpc": "2.0",
   "method": "bdev_passthru_delete",
+  "id": 1
+}
+
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_xnvme_create {#rpc_bdev_xnvme_create}
+
+Create xnvme bdev. This bdev type redirects all IO to its underlying backend.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | name of xNVMe bdev to create
+filename                | Required | string      | path to device or file (ex: /dev/nvme0n1)
+io_mechanism            | Required | string      | IO mechanism to use (ex: libaio, io_uring, io_uring_cmd, etc.)
+conserve_cpu            | Optional | boolean     | Whether or not to conserve CPU when polling (default: false)
+
+#### Result
+
+Name of newly created bdev.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_xnvme_create",
+  "id": 1,
+  "params": {
+    "name": "bdev_ng0n1",
+    "filename": "/dev/ng0n1",
+    "io_mechanism": "io_uring_cmd",
+    "conserve_cpu": false,
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "bdev_ng0n1"
+}
+~~~
+
+### bdev_xnvme_delete {#rpc_bdev_xnvme_delete}
+
+Delete xnvme bdev.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | name of xnvme bdev to delete
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "bdev_ng0n1"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_xnvme_delete",
   "id": 1
 }
 
@@ -6254,7 +7778,7 @@ io_unit_size                | Optional | number  | I/O unit size (bytes)
 max_aq_depth                | Optional | number  | Max number of admin cmds per AQ
 num_shared_buffers          | Optional | number  | The number of pooled data buffers available to the transport
 buf_cache_size              | Optional | number  | The number of shared buffers to reserve for each poll group
-num_cqe                     | Optional | number  | The number of CQ entires. Only used when no_srq=true (RDMA only)
+num_cqe                     | Optional | number  | The number of CQ entries. Only used when no_srq=true (RDMA only)
 max_srq_depth               | Optional | number  | The number of elements in a per-thread shared receive queue (RDMA only)
 no_srq                      | Optional | boolean | Disable shared receive queue even for devices that support it. (RDMA only)
 c2h_success                 | Optional | boolean | Disable C2H success optimization (TCP only)
@@ -6265,6 +7789,8 @@ abort_timeout_sec           | Optional | number  | Abort execution timeout value
 no_wr_batching              | Optional | boolean | Disable work requests batching (RDMA only)
 control_msg_num             | Optional | number  | The number of control messages per poll group (TCP only)
 disable_mappable_bar0       | Optional | boolean | disable client mmap() of BAR0 (VFIO-USER only)
+disable_adaptive_irq        | Optional | boolean | Disable adaptive interrupt feature (VFIO-USER only)
+disable_shadow_doorbells    | Optional | boolean | disable shadow doorbell support (VFIO-USER only)
 zcopy                       | Optional | boolean | Use zero-copy operations if the underlying bdev supports them
 
 #### Example
@@ -7152,6 +8678,240 @@ crdt1                   | Optional | number      | Command Retry Delay Time 1
 crdt2                   | Optional | number      | Command Retry Delay Time 2
 crdt3                   | Optional | number      | Command Retry Delay Time 3
 
+## Vfio-user Target
+
+### vfu_tgt_set_base_path {#rpc_vfu_tgt_set_base_path}
+
+Set base path of Unix Domain socket file.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+path                    | Required | string      | Base path
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "path": "/var/run/vfu_tgt"
+  },
+  "jsonrpc": "2.0",
+  "method": "vfu_tgt_set_base_path",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### vfu_virtio_delete_endpoint {#rpc_vfu_virtio_delete_endpoint}
+
+Delete PCI device via endpoint name.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Endpoint name
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "vfu.0"
+  },
+  "jsonrpc": "2.0",
+  "method": "vfu_virtio_delete_endpoint",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### vfu_virtio_create_blk_endpoint {#rpc_vfu_virtio_create_blk_endpoint}
+
+Create vfio-user virtio-blk PCI endpoint.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Endpoint name
+bdev_name               | Required | string      | Block device name
+cpumask                 | Optional | string      | CPU masks
+num_queues              | Optional | number      | Number of queues
+qsize                   | Optional | number      | Queue size
+packed_ring             | Optional | boolean     | Enable packed ring
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "vfu.0",
+    "bdev_name": "Malloc0",
+    "cpumask": "0x2",
+    "num_queues": 4,
+    "qsize": 256
+  },
+  "jsonrpc": "2.0",
+  "method": "vfu_virtio_create_blk_endpoint",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### vfu_virtio_scsi_add_target {#rpc_vfu_virtio_scsi_add_target}
+
+Add block device to specified SCSI target of vfio-user virtio-scsi PCI endpoint.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Endpoint name
+scsi_target_num         | Required | number      | SCSI target number
+bdev_name               | Required | string      | Block device name
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "vfu.0",
+    "scsi_target_num": 0,
+    "bdev_name": "Malloc0"
+  },
+  "jsonrpc": "2.0",
+  "method": "vfu_virtio_scsi_add_target",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### vfu_virtio_scsi_remove_target {#rpc_vfu_virtio_scsi_remove_target}
+
+Remove a SCSI target of vfio-user virtio-scsi PCI endpoint.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Endpoint name
+scsi_target_num         | Required | number      | SCSI target number
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "vfu.0",
+    "scsi_target_num": 0
+  },
+  "jsonrpc": "2.0",
+  "method": "vfu_virtio_scsi_remove_target",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### vfu_virtio_create_scsi_endpoint {#rpc_vfu_virtio_create_scsi_endpoint}
+
+Create vfio-user virtio-scsi PCI endpoint.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Endpoint name
+cpumask                 | Optional | string      | CPU masks
+num_io_queues           | Optional | number      | Number of IO queues
+qsize                   | Optional | number      | Queue size
+packed_ring             | Optional | boolean     | Enable packed ring
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "vfu.0",
+    "cpumask": "0x2",
+    "num_io_queues": 4,
+    "qsize": 256
+  },
+  "jsonrpc": "2.0",
+  "method": "vfu_virtio_create_scsi_endpoint",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## Vhost Target {#jsonrpc_components_vhost_tgt}
 
 The following common preconditions need to be met in all target types.
@@ -7325,6 +9085,78 @@ Example response:
 }
 ~~~
 
+### virtio_blk_create_transport {#rpc_virtio_blk_create_transport}
+
+Create virtio blk transport.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Transport name
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "vhost_user_blk"
+  },
+  "jsonrpc": "2.0",
+  "method": "virtio_blk_create_transport",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### virtio_blk_get_transports {#rpc_virtio_blk_get_transports}
+
+#### Parameters
+
+The user may specify no parameters in order to list all transports,
+or a transport name may be specified.
+
+Name                        | Optional | Type        | Description
+--------------------------- | -------- | ------------| -----------
+name                        | Optional | string      | Transport name.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "virtio_blk_get_transports",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "name": "vhost_user_blk"
+    }
+  ]
+}
+~~~
+
 ### vhost_create_blk_controller {#rpc_vhost_create_blk_controller}
 
 Create vhost block controller
@@ -7340,6 +9172,7 @@ ctrlr                   | Required | string      | Controller name
 bdev_name               | Required | string      | Name of bdev to expose block device
 readonly                | Optional | boolean     | If true, this target will be read only (default: false)
 cpumask                 | Optional | string      | @ref cpu_mask for this controller
+transport               | Optional | string      | virtio blk transport name (default: vhost_user_blk)
 
 #### Example
 
@@ -7390,7 +9223,7 @@ ctrlr                   | string      | Controller name
 cpumask                 | string      | @ref cpu_mask of this controller
 delay_base_us           | number      | Base (minimum) coalescing time in microseconds (0 if disabled)
 iops_threshold          | number      | Coalescing activation level
-backend_specific        | object      | Backend specific informations
+backend_specific        | object      | Backend specific information
 
 ### Vhost block {#rpc_vhost_get_controllers_blk}
 
@@ -7575,12 +9408,27 @@ Construct a logical volume store.
 
 #### Parameters
 
-Name                    | Optional | Type        | Description
------------------------ | -------- | ----------- | -----------
-bdev_name               | Required | string      | Bdev on which to construct logical volume store
-lvs_name                | Required | string      | Name of the logical volume store to create
-cluster_sz              | Optional | number      | Cluster size of the logical volume store in bytes
-clear_method            | Optional | string      | Change clear method for data region. Available: none, unmap (default), write_zeroes
+Name                          | Optional | Type        | Description
+----------------------------- | -------- | ----------- | -----------
+bdev_name                     | Required | string      | Bdev on which to construct logical volume store
+lvs_name                      | Required | string      | Name of the logical volume store to create
+cluster_sz                    | Optional | number      | Cluster size of the logical volume store in bytes (Default: 4MiB)
+clear_method                  | Optional | string      | Change clear method for data region. Available: none, unmap (default), write_zeroes
+num_md_pages_per_cluster_ratio| Optional | number      | Reserved metadata pages per cluster (Default: 100)
+
+The num_md_pages_per_cluster_ratio defines the amount of metadata to
+allocate when the logical volume store is created. The default value
+is '100', which translates to 1 4KiB per cluster. For the default 4MiB
+cluster size, this equates to about 0.1% of the underlying block
+device allocated for metadata. Logical volume stores can be grown, if
+the size of the underlying block device grows in the future, but only
+if enough metadata pages were allocated to support the growth. So
+num_md_pages_per_cluster_ratio should be set to a higher value if
+wanting to support future growth. For example,
+num_md_pages_per_cluster_ratio = 200 would support future 2x growth of
+the logical volume store, and would result in 0.2% of the underlying
+block device allocated for metadata (with a default 4MiB cluster
+size).
 
 #### Response
 
@@ -7723,6 +9571,44 @@ Example request:
   "params": {
     "old_name": "LVS0",
     "new_name": "LVS2"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_lvol_grow_lvstore {#rpc_bdev_lvol_grow_lvstore}
+
+Grow the logical volume store to fill the underlying bdev
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+uuid                    | Optional | string      | UUID of the logical volume store to grow
+lvs_name                | Optional | string      | Name of the logical volume store to grow
+
+Either uuid or lvs_name must be specified, but not both.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_lvol_grow_lvstore",
+  "id": 1
+  "params": {
+    "uuid": "a9959197-b5e2-4f2d-8095-251ffb6985a5"
   }
 }
 ~~~
@@ -8091,7 +9977,7 @@ Example response:
 
 ### bdev_raid_get_bdevs {#rpc_bdev_raid_get_bdevs}
 
-This is used to list all the raid bdev names based on the input category requested. Category should be one
+This is used to list all the raid bdev details based on the input category requested. Category should be one
 of 'all', 'online', 'configuring' or 'offline'. 'all' means all the raid bdevs whether they are online or
 configuring or offline. 'online' is the raid bdev which is registered with bdev layer. 'configuring' is
 the raid bdev which does not have full configuration discovered yet. 'offline' is the raid bdev which is
@@ -8126,7 +10012,30 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": [
-    "Raid0"
+    {
+      "name": "RaidBdev0",
+      "strip_size_kb": 128,
+      "state": "online",
+      "raid_level": "raid0",
+      "num_base_bdevs": 2,
+      "num_base_bdevs_discovered": 2,
+      "base_bdevs_list": [
+        "malloc0",
+        "malloc1"
+      ]
+    },
+    {
+      "name": "RaidBdev1",
+      "strip_size_kb": 128,
+      "state": "configuring",
+      "raid_level": "raid0",
+      "num_base_bdevs": 2,
+      "num_base_bdevs_discovered": 1,
+      "base_bdevs_list": [
+        "malloc2",
+        null
+      ]
+    }
   ]
 }
 ~~~
@@ -8703,7 +10612,7 @@ Example response:
 
 ### notify_get_notifications {#notify_get_notifications}
 
-Request notifications. Returns array of notifications that happend since the specified id (or first that is available).
+Request notifications. Returns array of notifications that happened since the specified id (or first that is available).
 
 Notice: Notifications are kept in circular buffer with limited size. Older notifications might be inaccessible
 due to being overwritten by new ones.
@@ -8758,6 +10667,209 @@ Example response:
       "ctx": "Malloc2",
       "type": "bdev_register",
       "id": 2
+    }
+  ]
+}
+~~~
+
+## Linux Userspace Block Device (UBLK) {#jsonrpc_components_ublk}
+
+SPDK supports exporting bdevs though Linux ublk. The motivation behind it is to back a Linux kernel block device
+with an SPDK user space bdev.
+
+To export a device over ublk, first make sure the Linux kernel ublk driver is loaded by running 'modprobe ublk_drv'.
+
+### ublk_create_target {#rpc_ublk_create_target}
+
+Start to create ublk threads and initialize ublk target. It will return an error if user calls this RPC twice without
+ublk_destroy_target in between. It will use current cpumask in SPDK when user does not specify cpumask option.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+cpumask                 | Optional | string      | Cpumask for ublk target
+
+#### Response
+
+True if ublk target initialization is successful; False if failed.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "cpumask": "0x2"
+  },
+  "jsonrpc": "2.0",
+  "method": "ublk_create_target",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### ublk_destroy_target {#rpc_ublk_destroy_target}
+
+Release all UBLK devices and destroy ublk target.
+
+#### Response
+
+True if ublk target destruction is successful; False if failed.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "ublk_destroy_target",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### ublk_start_disk {#rpc_ublk_start_disk}
+
+Start to export one SPDK bdev as a UBLK device
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+bdev_name               | Required | string      | Bdev name to export
+ublk_id                 | Required | int         | Device id
+queue_depth             | Optional | int         | Device queue depth
+num_queues              | Optional | int         | Total number of device queues
+
+#### Response
+
+UBLK device ID
+
+#### Example
+
+Example request:
+
+~~~json
+{
+ "params": {
+    "ublk_id": "1",
+    "bdev_name": "Malloc1"
+  },
+  "jsonrpc": "2.0",
+  "method": "ublk_start_disk",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": 1
+}
+~~~
+
+### ublk_stop_disk {#rpc_ublk_stop_disk}
+
+Delete a UBLK device
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+ublk_id                 | Required | int         | Device id to delete
+
+#### Response
+
+True if UBLK device is deleted successfully; False if failed.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+ "params": {
+    "ublk_id": "1",
+  },
+  "jsonrpc": "2.0",
+  "method": "ublk_stop_disk",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### ublk_get_disks {#rpc_ublk_get_disks}
+
+Display full or specified ublk device list
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+ublk_id                 | Optional | int         | ublk device id to display
+
+#### Response
+
+Display ublk device list
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "ublk_get_disks",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result":  [
+    {
+      "ublk_device": "/dev/ublkb1",
+      "id": 1,
+      "queue_depth": 512,
+      "num_queues": 1,
+      "bdev_name": "Malloc1"
     }
   ]
 }
@@ -9092,7 +11204,12 @@ Example response:
     "enable_quickack": true,
     "enable_placement_id": 0,
     "enable_zerocopy_send_server": true,
-    "enable_zerocopy_send_client": false
+    "enable_zerocopy_send_client": false,
+    "zerocopy_threshold": 0,
+    "tls_version": 13,
+    "enable_ktls": false,
+    "psk_key": "1234567890ABCDEF",
+    "psk_identity": "psk.spdk.io"
   }
 }
 ~~~
@@ -9113,6 +11230,12 @@ enable_quick_ack            | Optional | boolean     | Enable or disable quick A
 enable_placement_id         | Optional | number      | Enable or disable placement_id. 0:disable,1:incoming_napi,2:incoming_cpu
 enable_zerocopy_send_server | Optional | boolean     | Enable or disable zero copy on send for server sockets
 enable_zerocopy_send_client | Optional | boolean     | Enable or disable zero copy on send for client sockets
+zerocopy_threshold          | Optional | number      | Set zerocopy_threshold in bytes. A consecutive sequence of requests' iovecs
+--                          | --       | --          | that fall below this threshold may be sent without zerocopy flag set
+tls_version                 | Optional | number      | TLS protocol version, e.g. 13 for v1.3 (only applies when impl_name == ssl)
+enable_ktls                 | Optional | boolean     | Enable or disable Kernel TLS (only applies when impl_name == ssl)
+psk_key                     | Optional | string      | Default PSK KEY in hexadecimal digits, e.g. 1234567890ABCDEF (only applies when impl_name == ssl)
+psk_identity                | Optional | string      | Default PSK ID, e.g. psk.spdk.io (only applies when impl_name == ssl)
 
 #### Response
 
@@ -9135,7 +11258,12 @@ Example request:
     "enable_quick_ack": false,
     "enable_placement_id": 0,
     "enable_zerocopy_send_server": true,
-    "enable_zerocopy_send_client": false
+    "enable_zerocopy_send_client": false,
+    "zerocopy_threshold": 10240,
+    "tls_version": 13,
+    "enable_ktls": false,
+    "psk_key": "1234567890ABCDEF",
+    "psk_identity": "psk.spdk.io"
   }
 }
 ~~~
@@ -9195,7 +11323,7 @@ Example response:
 
 Send NVMe command directly to NVMe controller or namespace. Parameters and responses encoded by base64 urlsafe need further processing.
 
-Notice: bdev_nvme_send_cmd requires user to guarentee the correctness of NVMe command itself, and also optional parameters.
+Notice: bdev_nvme_send_cmd requires user to guarantee the correctness of NVMe command itself, and also optional parameters.
 Illegal command contents or mismatching buffer size may result in unpredictable behavior.
 
 #### Parameters
@@ -9253,7 +11381,7 @@ Example response:
 }
 ~~~
 
-### enable_vmd {#rpc_enable_vmd}
+### vmd_enable {#rpc_enable_vmd}
 
 Enable VMD enumeration.
 
@@ -9272,7 +11400,7 @@ Example request:
 ~~~json
 {
   "jsonrpc": "2.0",
-  "method": "enable_vmd",
+  "method": "vmd_enable",
   "id": 1
 }
 ~~~
@@ -9284,6 +11412,73 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": true
+}
+~~~
+
+### vmd_remove_device {#rpc_vmd_remove_device}
+
+Remove a device behind a VMD.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+addr                    | Required | string      | Address of the device to remove.
+
+### Example
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "vmd_remove_device",
+  "params": {
+    "addr": "5d0505:01:00.0"
+  }
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### vmd_rescan {#rpc_vmd_rescan}
+
+Force a rescan of the devices behind VMD.
+
+### Parameters
+
+This method has no parameters.
+
+#### Response
+
+The response is the number of new devices found.
+
+### Example
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "vmd_rescan",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "count": 1
+  }
 }
 ~~~
 
@@ -9302,16 +11497,18 @@ The response is the version number including major version number, minor version
 #### Example
 
 Example request:
-~~
+
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
   "method": "spdk_get_version"
 }
-~~
+~~~
 
 Example response:
-~~
+
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -9325,7 +11522,7 @@ Example response:
     }
   }
 }
-~~
+~~~
 
 ### framework_get_pci_devices
 
@@ -9342,17 +11539,19 @@ The response is an array of attached PCIe devices.
 #### Example
 
 Example request:
-~~
+
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
   "method": "framework_get_pci_devices"
 }
-~~
+~~~
 
 Example response:
 Note that the config space buffer was trimmed.
-~~
+
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -9369,7 +11568,7 @@ Note that the config space buffer was trimmed.
     ]
   }
 }
-~~
+~~~
 
 ### bdev_nvme_add_error_injection {#rpc_bdev_nvme_add_error_injection}
 
@@ -9468,4 +11667,309 @@ Example response:
   "result": true
 }
 
+~~~
+
+### bdev_daos_create {#rpc_bdev_daos_create}
+
+Construct @ref bdev_config_daos
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name to use
+pool                    | Required | string      | DAOS pool label or its uuid
+cont                    | Required | string      | DAOS cont label or its uuid
+block_size              | Required | number      | Block size in bytes -must be multiple of 512
+num_blocks              | Required | number      | Number of blocks
+uuid                    | Optional | string      | UUID of new bdev
+oclass                  | Optional | string      | DAOS object class (default SX)
+
+To find more about various object classes please visit [DAOS documentation](https://github.com/daos-stack/daos/blob/master/src/object/README.md).
+Please note, that DAOS bdev module uses the same CLI flag notation as `dmg` and `daos` commands,
+for instance, `SX` or `EC_4P2G2` rather than in DAOS header file `OC_SX` or `OC_EC_4P2G2`.
+
+#### Result
+
+Name of newly created bdev.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "block_size": 4096,
+    "num_blocks": 16384,
+    "name": "daosdev0",
+    "pool": "test-pool",
+    "cont": "test-cont",
+    "oclass": "EC_4P2G2"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_daos_create",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "daosdev0"
+}
+~~~
+
+### bdev_daos_delete {#rpc_bdev_daos_delete}
+
+Delete @ref bdev_config_daos
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "daosdev0"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_daos_delete",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_daos_resize {#rpc_bdev_daos_resize}
+
+Resize @ref bdev_config_daos.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+new_size                | Required | number      | Bdev new capacity in MB
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "daosdev0",
+    "new_size": 8192
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_daos_resize",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### iobuf_set_options {#rpc_iobuf_set_options}
+
+Set iobuf buffer pool options.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+small_pool_count        | Optional | number      | Number of small buffers in the global pool
+large_pool_count        | Optional | number      | Number of large buffers in the global pool
+small_bufsize           | Optional | number      | Size of a small buffer
+large_bufsize           | Optional | number      | Size of a small buffer
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "iobuf_set_options",
+  "params": {
+    "small_pool_count": 16383,
+    "large_pool_count": 2047
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_nvme_start_mdns_discovery {#rpc_bdev_nvme_start_mdns_discovery}
+
+Starts an mDNS based discovery service for the specified service type for the
+auto-discovery of discovery controllers (NVMe TP-8009).
+
+The discovery service will listen for the mDNS discovery events from the
+Avahi-daemon and will connect to the newly learnt discovery controllers.
+Then the discovery service will automatically attach to any subsystem found in the
+discovery log page from the discovery controllers learnt using mDNS.
+When determining a controller name to use when attaching, it will use
+the 'name' parameter as a prefix, followed by a unique integer assigned for each of the
+discovery controllers learnt through mDNS, followed by a unique integer for that discovery
+service. If the discovery service identifies a subsystem that has been previously
+attached but is listed with a different path, it will use the same controller name
+as the previous entry, and connect as a multipath.
+
+When the discovery service sees that a subsystem entry has been removed
+from the log page, it will automatically detach from that controller as well.
+
+The 'name' is also used to later stop the discovery service.
+
+#### Parameters
+
+Name                       | Optional | Type        | Description
+-------------------------- | -------- | ----------- | -----------
+name                       | Required | string      | Prefix for NVMe discovery services found
+svcname                    | Required | string      | Service to discover: e.g. _nvme-disc._tcp
+hostnqn                    | Optional | string      | NVMe-oF hostnqn
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_start_mdns_discovery",
+  "id": 1,
+  "params": {
+    "name": "cdc_auto",
+    "svcname": "_nvme-disc._tcp",
+    "hostnqn": "nqn.2021-12.io.spdk:host1",
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_nvme_stop_mdns_discovery {#rpc_bdev_nvme_stop_mdns_discovery}
+
+Stops a mDNS discovery service. This includes detaching any controllers that were
+discovered via the service that is being stopped.
+
+#### Parameters
+
+Name                       | Optional | Type        | Description
+-------------------------- | -------- | ----------- | -----------
+name                       | Required | string      | Name of mDNS discovery instance to stop
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_stop_mdns_discovery",
+  "id": 1,
+  "params": {
+    "name": "cdc_auto"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_nvme_get_mdns_discovery_info {#rpc_bdev_nvme_get_mdns_discovery_info}
+
+Get the information about the mDNS discovery service instances.
+
+#### Example
+
+Example request:
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_get_mdns_discovery_info",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+[
+  {
+    "name": "cdc_auto",
+    "svcname": "_nvme-disc._tcp",
+    "referrals": [
+      {
+        "name": "cdc_auto0",
+        "trid": {
+          "trtype": "TCP",
+          "adrfam": "IPv4",
+          "traddr": "66.1.2.21",
+          "trsvcid": "8009",
+          "subnqn": "nqn.2014-08.org.nvmexpress.discovery"
+        }
+      },
+      {
+        "name": "cdc_auto1",
+        "trid": {
+          "trtype": "TCP",
+          "adrfam": "IPv4",
+          "traddr": "66.1.1.21",
+          "trsvcid": "8009",
+          "subnqn": "nqn.2014-08.org.nvmexpress.discovery"
+        }
+      }
+    ]
+  }
+]
 ~~~

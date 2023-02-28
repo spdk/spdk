@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2021 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $testdir/interrupt_common.sh
 
-export PYTHONPATH=$rootdir/examples/interrupt_tgt
+export PYTHONPATH=$PYTHONPATH:$rootdir/examples/interrupt_tgt
 
 # Set reactors with intr_tgt in intr mode
 start_intr_tgt

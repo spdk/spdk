@@ -1,33 +1,6 @@
-/*-
- *   BSD LICENSE
- *
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   Copyright (c) 2016 FUJITSU LIMITED, All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of the copyright holder nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk_cunit.h"
@@ -54,12 +27,82 @@ scsi_nvme_translate_test(void)
 
 	/* SPDK_NVME_SCT_GENERIC */
 	bdev_io.internal.error.nvme.sct = SPDK_NVME_SCT_GENERIC;
+	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_SUCCESS;
+	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
+	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_GOOD);
+	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_NO_SENSE);
+	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE);
+	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+
+	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_INVALID_OPCODE;
+	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
+	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_ILLEGAL_REQUEST);
+	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_INVALID_COMMAND_OPERATION_CODE);
+	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+
+	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_INVALID_FIELD;
+	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
+	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_ILLEGAL_REQUEST);
+	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB);
+	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+
+	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_DATA_TRANSFER_ERROR;
+	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
+	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_MEDIUM_ERROR);
+	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE);
+	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+
 	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_ABORTED_POWER_LOSS;
 	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
 	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_TASK_ABORTED);
 	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_ABORTED_COMMAND);
 	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_WARNING);
 	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_POWER_LOSS_EXPECTED);
+
+	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
+	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_HARDWARE_ERROR);
+	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_INTERNAL_TARGET_FAILURE);
+	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+
+	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
+	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
+	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_TASK_ABORTED);
+	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_ABORTED_COMMAND);
+	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE);
+	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+
+	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
+	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_ILLEGAL_REQUEST);
+	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_ACCESS_DENIED);
+	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_INVALID_LU_IDENTIFIER);
+
+	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_LBA_OUT_OF_RANGE;
+	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
+	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_ILLEGAL_REQUEST);
+	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE);
+	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+
+	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_NAMESPACE_NOT_READY;
+	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
+	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_NOT_READY);
+	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_LOGICAL_UNIT_NOT_READY);
+	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+
+	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_RESERVATION_CONFLICT;
+	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
+	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_RESERVATION_CONFLICT);
+	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_NO_SENSE);
+	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE);
+	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 
 	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_INVALID_NUM_SGL_DESCIRPTORS;
 	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
@@ -70,12 +113,33 @@ scsi_nvme_translate_test(void)
 
 	/* SPDK_NVME_SCT_COMMAND_SPECIFIC */
 	bdev_io.internal.error.nvme.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_COMPLETION_QUEUE_INVALID;
+	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
+	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_ILLEGAL_REQUEST);
+	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE);
+	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+
 	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_INVALID_FORMAT;
 	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
 	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_ILLEGAL_REQUEST);
 	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_FORMAT_COMMAND_FAILED);
 	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_FORMAT_COMMAND_FAILED);
+
+	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_CONFLICTING_ATTRIBUTES;
+	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
+	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_ILLEGAL_REQUEST);
+	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB);
+	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+
+	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_ATTEMPTED_WRITE_TO_RO_RANGE;
+	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
+	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_DATA_PROTECT);
+	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_WRITE_PROTECTED);
+	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 
 	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_OVERLAPPING_RANGE;
 	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
@@ -86,12 +150,54 @@ scsi_nvme_translate_test(void)
 
 	/* SPDK_NVME_SCT_MEDIA_ERROR */
 	bdev_io.internal.error.nvme.sct = SPDK_NVME_SCT_MEDIA_ERROR;
+	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_WRITE_FAULTS;
+	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
+	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_MEDIUM_ERROR);
+	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_PERIPHERAL_DEVICE_WRITE_FAULT);
+	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+
+	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_UNRECOVERED_READ_ERROR;
+	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
+	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_MEDIUM_ERROR);
+	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_UNRECOVERED_READ_ERROR);
+	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+
 	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_GUARD_CHECK_ERROR;
 	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
 	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_MEDIUM_ERROR);
 	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_LOGICAL_BLOCK_GUARD_CHECK_FAILED);
 	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_LOGICAL_BLOCK_GUARD_CHECK_FAILED);
+
+	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_APPLICATION_TAG_CHECK_ERROR;
+	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
+	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_MEDIUM_ERROR);
+	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_LOGICAL_BLOCK_APP_TAG_CHECK_FAILED);
+	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_LOGICAL_BLOCK_APP_TAG_CHECK_FAILED);
+
+	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_REFERENCE_TAG_CHECK_ERROR;
+	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
+	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_MEDIUM_ERROR);
+	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_LOGICAL_BLOCK_REF_TAG_CHECK_FAILED);
+	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_LOGICAL_BLOCK_REF_TAG_CHECK_FAILED);
+
+	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_COMPARE_FAILURE;
+	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
+	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_MISCOMPARE);
+	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_MISCOMPARE_DURING_VERIFY_OPERATION);
+	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+
+	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_ACCESS_DENIED;
+	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);
+	CU_ASSERT_EQUAL(sc, SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT_EQUAL(sk, SPDK_SCSI_SENSE_DATA_PROTECT);
+	CU_ASSERT_EQUAL(asc, SPDK_SCSI_ASC_ACCESS_DENIED);
+	CU_ASSERT_EQUAL(ascq, SPDK_SCSI_ASCQ_NO_ACCESS_RIGHTS);
 
 	bdev_io.internal.error.nvme.sc = SPDK_NVME_SC_DEALLOCATED_OR_UNWRITTEN_BLOCK;
 	spdk_scsi_nvme_translate(&bdev_io, &sc, &sk, &asc, &ascq);

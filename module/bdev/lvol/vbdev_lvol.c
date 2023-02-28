@@ -1,34 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/blob_bdev.h"
@@ -39,6 +12,10 @@
 #include "spdk/uuid.h"
 
 #include "vbdev_lvol.h"
+
+struct vbdev_lvol_io {
+	struct spdk_blob_ext_io_opts ext_io_opts;
+};
 
 static TAILQ_HEAD(, lvol_store_bdev) g_spdk_lvol_pairs = TAILQ_HEAD_INITIALIZER(
 			g_spdk_lvol_pairs);
@@ -160,6 +137,8 @@ vbdev_lvs_hotremove_cb(struct spdk_bdev *bdev)
 
 	lvs_bdev = vbdev_get_lvs_bdev_by_bdev(bdev);
 	if (lvs_bdev != NULL) {
+		SPDK_NOTICELOG("bdev %s being removed: closing lvstore %s\n",
+			       spdk_bdev_get_name(bdev), lvs_bdev->lvs->name);
 		vbdev_lvs_unload(lvs_bdev->lvs, NULL, NULL);
 	}
 }
@@ -222,7 +201,8 @@ end:
 
 int
 vbdev_lvs_create(const char *base_bdev_name, const char *name, uint32_t cluster_sz,
-		 enum lvs_clear_method clear_method, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+		 enum lvs_clear_method clear_method, uint32_t num_md_pages_per_cluster_ratio,
+		 spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_dev *bs_dev;
 	struct spdk_lvs_with_handle_req *lvs_req;
@@ -242,6 +222,10 @@ vbdev_lvs_create(const char *base_bdev_name, const char *name, uint32_t cluster_
 
 	if (clear_method != 0) {
 		opts.clear_method = clear_method;
+	}
+
+	if (num_md_pages_per_cluster_ratio != 0) {
+		opts.num_md_pages_per_cluster_ratio = num_md_pages_per_cluster_ratio;
 	}
 
 	if (name == NULL) {
@@ -448,7 +432,6 @@ _vbdev_lvs_remove(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void 
 			spdk_lvs_unload(lvs, _vbdev_lvs_remove_cb, lvs_bdev);
 		}
 	} else {
-		lvs->destruct = destroy;
 		if (destroy) {
 			_vbdev_lvs_remove_lvol_cb(lvs_bdev, 0);
 		} else {
@@ -783,6 +766,8 @@ vbdev_lvol_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 		return !spdk_blob_is_read_only(lvol->blob);
 	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_SEEK_DATA:
+	case SPDK_BDEV_IO_TYPE_SEEK_HOLE:
 		return true;
 	default:
 		return false;
@@ -819,6 +804,24 @@ lvol_unmap(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_
 }
 
 static void
+lvol_seek_data(struct spdk_lvol *lvol, struct spdk_bdev_io *bdev_io)
+{
+	bdev_io->u.bdev.seek.offset = spdk_blob_get_next_allocated_io_unit(lvol->blob,
+				      bdev_io->u.bdev.offset_blocks);
+
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+}
+
+static void
+lvol_seek_hole(struct spdk_lvol *lvol, struct spdk_bdev_io *bdev_io)
+{
+	bdev_io->u.bdev.seek.offset = spdk_blob_get_next_unallocated_io_unit(lvol->blob,
+				      bdev_io->u.bdev.offset_blocks);
+
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+}
+
+static void
 lvol_write_zeroes(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	uint64_t start_page, num_pages;
@@ -836,12 +839,17 @@ lvol_read(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	uint64_t start_page, num_pages;
 	struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
 	struct spdk_blob *blob = lvol->blob;
+	struct vbdev_lvol_io *lvol_io = (struct vbdev_lvol_io *)bdev_io->driver_ctx;
 
 	start_page = bdev_io->u.bdev.offset_blocks;
 	num_pages = bdev_io->u.bdev.num_blocks;
 
-	spdk_blob_io_readv(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
-			   num_pages, lvol_op_comp, bdev_io);
+	lvol_io->ext_io_opts.size = sizeof(lvol_io->ext_io_opts);
+	lvol_io->ext_io_opts.memory_domain = bdev_io->u.bdev.memory_domain;
+	lvol_io->ext_io_opts.memory_domain_ctx = bdev_io->u.bdev.memory_domain_ctx;
+
+	spdk_blob_io_readv_ext(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
+			       num_pages, lvol_op_comp, bdev_io, &lvol_io->ext_io_opts);
 }
 
 static void
@@ -849,12 +857,17 @@ lvol_write(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_
 {
 	uint64_t start_page, num_pages;
 	struct spdk_blob *blob = lvol->blob;
+	struct vbdev_lvol_io *lvol_io = (struct vbdev_lvol_io *)bdev_io->driver_ctx;
 
 	start_page = bdev_io->u.bdev.offset_blocks;
 	num_pages = bdev_io->u.bdev.num_blocks;
 
-	spdk_blob_io_writev(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
-			    num_pages, lvol_op_comp, bdev_io);
+	lvol_io->ext_io_opts.size = sizeof(lvol_io->ext_io_opts);
+	lvol_io->ext_io_opts.memory_domain = bdev_io->u.bdev.memory_domain;
+	lvol_io->ext_io_opts.memory_domain_ctx = bdev_io->u.bdev.memory_domain_ctx;
+
+	spdk_blob_io_writev_ext(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
+				num_pages, lvol_op_comp, bdev_io, &lvol_io->ext_io_opts);
 }
 
 static int
@@ -898,12 +911,29 @@ vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		lvol_write_zeroes(lvol, ch, bdev_io);
 		break;
+	case SPDK_BDEV_IO_TYPE_SEEK_DATA:
+		lvol_seek_data(lvol, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_SEEK_HOLE:
+		lvol_seek_hole(lvol, bdev_io);
+		break;
 	default:
 		SPDK_INFOLOG(vbdev_lvol, "lvol: unsupported I/O type %d\n", bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
 	return;
+}
+
+static int
+vbdev_lvol_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int array_size)
+{
+	struct spdk_lvol *lvol = ctx;
+	struct spdk_bdev *base_bdev;
+
+	base_bdev = lvol->lvol_store->bs_dev->get_base_bdev(lvol->lvol_store->bs_dev);
+
+	return spdk_bdev_get_memory_domains(base_bdev, domains, array_size);
 }
 
 static struct spdk_bdev_fn_table vbdev_lvol_fn_table = {
@@ -913,6 +943,7 @@ static struct spdk_bdev_fn_table vbdev_lvol_fn_table = {
 	.get_io_channel		= vbdev_lvol_get_io_channel,
 	.dump_info_json		= vbdev_lvol_dump_info_json,
 	.write_config_json	= vbdev_lvol_write_config_json,
+	.get_memory_domains	= vbdev_lvol_get_memory_domains,
 };
 
 static void
@@ -990,6 +1021,13 @@ _create_lvol_disk(struct spdk_lvol *lvol, bool destroy)
 	bdev->ctxt = lvol;
 	bdev->fn_table = &vbdev_lvol_fn_table;
 	bdev->module = &g_lvol_if;
+
+	/* Set default bdev reset waiting time. This value indicates how much
+	 * time a reset should wait before forcing a reset down to the underlying
+	 * bdev module.
+	 * Setting this parameter is mainly to avoid "empty" resets to a shared
+	 * bdev that may be used by multiple lvols. */
+	bdev->reset_io_drain_timeout = SPDK_BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE;
 
 	rc = spdk_bdev_register(bdev);
 	if (rc) {
@@ -1278,32 +1316,36 @@ vbdev_lvs_fini_start(void)
 static int
 vbdev_lvs_get_ctx_size(void)
 {
-	return 0;
+	return sizeof(struct vbdev_lvol_io);
+}
+
+static void
+_vbdev_lvs_examine_done(struct spdk_lvs_req *req, int lvserrno)
+{
+	req->cb_fn(req->cb_arg, lvserrno);
 }
 
 static void
 _vbdev_lvs_examine_failed(void *cb_arg, int lvserrno)
 {
-	spdk_bdev_module_examine_done(&g_lvol_if);
-}
+	struct spdk_lvs_req *req = cb_arg;
 
-static void
-_vbdev_lvol_examine_close_cb(struct spdk_lvol_store *lvs)
-{
-	if (lvs->lvols_opened >= lvs->lvol_count) {
-		SPDK_INFOLOG(vbdev_lvol, "Opening lvols finished\n");
-		spdk_bdev_module_examine_done(&g_lvol_if);
-	}
+	_vbdev_lvs_examine_done(req, req->lvserrno);
 }
 
 static void
 _vbdev_lvs_examine_finish(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 {
-	struct spdk_lvol_store *lvs = cb_arg;
+	struct spdk_lvs_req *req = cb_arg;
+	struct spdk_lvol_store *lvs = req->lvol_store;
 
 	if (lvolerrno != 0) {
-		SPDK_ERRLOG("Error opening lvol %s\n", lvol->unique_id);
 		TAILQ_REMOVE(&lvs->lvols, lvol, link);
+		if (lvolerrno == -ENOMEM) {
+			TAILQ_INSERT_TAIL(&lvs->retry_open_lvols, lvol, link);
+			return;
+		}
+		SPDK_ERRLOG("Error opening lvol %s\n", lvol->unique_id);
 		lvs->lvol_count--;
 		free(lvol);
 		goto end;
@@ -1312,19 +1354,23 @@ _vbdev_lvs_examine_finish(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 	if (_create_lvol_disk(lvol, false)) {
 		SPDK_ERRLOG("Cannot create bdev for lvol %s\n", lvol->unique_id);
 		lvs->lvol_count--;
-		_vbdev_lvol_examine_close_cb(lvs);
-		SPDK_INFOLOG(vbdev_lvol, "Opening lvol %s failed\n", lvol->unique_id);
-		return;
+		goto end;
 	}
 
 	lvs->lvols_opened++;
 	SPDK_INFOLOG(vbdev_lvol, "Opening lvol %s succeeded\n", lvol->unique_id);
 
 end:
-
+	if (!TAILQ_EMPTY(&lvs->retry_open_lvols)) {
+		lvol = TAILQ_FIRST(&lvs->retry_open_lvols);
+		TAILQ_REMOVE(&lvs->retry_open_lvols, lvol, link);
+		TAILQ_INSERT_HEAD(&lvs->lvols, lvol, link);
+		spdk_lvol_open(lvol, _vbdev_lvs_examine_finish, req);
+		return;
+	}
 	if (lvs->lvols_opened >= lvs->lvol_count) {
 		SPDK_INFOLOG(vbdev_lvol, "Opening lvols finished\n");
-		spdk_bdev_module_examine_done(&g_lvol_if);
+		_vbdev_lvs_examine_done(req, 0);
 	}
 }
 
@@ -1334,32 +1380,35 @@ _vbdev_lvs_examine_cb(void *arg, struct spdk_lvol_store *lvol_store, int lvserrn
 	struct lvol_store_bdev *lvs_bdev;
 	struct spdk_lvs_with_handle_req *req = (struct spdk_lvs_with_handle_req *)arg;
 	struct spdk_lvol *lvol, *tmp;
+	struct spdk_lvs_req *ori_req = req->cb_arg;
 
 	if (lvserrno == -EEXIST) {
 		SPDK_INFOLOG(vbdev_lvol,
 			     "Name for lvolstore on device %s conflicts with name for already loaded lvs\n",
 			     req->base_bdev->name);
 		/* On error blobstore destroys bs_dev itself */
-		spdk_bdev_module_examine_done(&g_lvol_if);
+		_vbdev_lvs_examine_done(ori_req, lvserrno);
 		goto end;
 	} else if (lvserrno != 0) {
 		SPDK_INFOLOG(vbdev_lvol, "Lvol store not found on %s\n", req->base_bdev->name);
 		/* On error blobstore destroys bs_dev itself */
-		spdk_bdev_module_examine_done(&g_lvol_if);
+		_vbdev_lvs_examine_done(ori_req, lvserrno);
 		goto end;
 	}
 
 	lvserrno = spdk_bs_bdev_claim(lvol_store->bs_dev, &g_lvol_if);
 	if (lvserrno != 0) {
 		SPDK_INFOLOG(vbdev_lvol, "Lvol store base bdev already claimed by another bdev\n");
-		spdk_lvs_unload(lvol_store, _vbdev_lvs_examine_failed, NULL);
+		ori_req->lvserrno = lvserrno;
+		spdk_lvs_unload(lvol_store, _vbdev_lvs_examine_failed, ori_req);
 		goto end;
 	}
 
 	lvs_bdev = calloc(1, sizeof(*lvs_bdev));
 	if (!lvs_bdev) {
 		SPDK_ERRLOG("Cannot alloc memory for lvs_bdev\n");
-		spdk_lvs_unload(lvol_store, _vbdev_lvs_examine_failed, NULL);
+		ori_req->lvserrno = lvserrno;
+		spdk_lvs_unload(lvol_store, _vbdev_lvs_examine_failed, ori_req);
 		goto end;
 	}
 
@@ -1373,13 +1422,15 @@ _vbdev_lvs_examine_cb(void *arg, struct spdk_lvol_store *lvol_store, int lvserrn
 
 	lvol_store->lvols_opened = 0;
 
+	ori_req->lvol_store = lvol_store;
+
 	if (TAILQ_EMPTY(&lvol_store->lvols)) {
 		SPDK_INFOLOG(vbdev_lvol, "Lvol store examination done\n");
-		spdk_bdev_module_examine_done(&g_lvol_if);
+		_vbdev_lvs_examine_done(ori_req, 0);
 	} else {
 		/* Open all lvols */
 		TAILQ_FOREACH_SAFE(lvol, &lvol_store->lvols, link, tmp) {
-			spdk_lvol_open(lvol, _vbdev_lvs_examine_finish, lvol_store);
+			spdk_lvol_open(lvol, _vbdev_lvs_examine_finish, ori_req);
 		}
 	}
 
@@ -1388,7 +1439,8 @@ end:
 }
 
 static void
-vbdev_lvs_examine(struct spdk_bdev *bdev)
+_vbdev_lvs_examine(struct spdk_bdev *bdev, struct spdk_lvs_req *ori_req,
+		   void (*action)(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg))
 {
 	struct spdk_bs_dev *bs_dev;
 	struct spdk_lvs_with_handle_req *req;
@@ -1396,8 +1448,8 @@ vbdev_lvs_examine(struct spdk_bdev *bdev)
 
 	req = calloc(1, sizeof(*req));
 	if (req == NULL) {
-		spdk_bdev_module_examine_done(&g_lvol_if);
 		SPDK_ERRLOG("Cannot alloc memory for vbdev lvol store request pointer\n");
+		_vbdev_lvs_examine_done(ori_req, -ENOMEM);
 		return;
 	}
 
@@ -1405,14 +1457,49 @@ vbdev_lvs_examine(struct spdk_bdev *bdev)
 					 NULL, &bs_dev);
 	if (rc < 0) {
 		SPDK_INFOLOG(vbdev_lvol, "Cannot create bs dev on %s\n", bdev->name);
-		spdk_bdev_module_examine_done(&g_lvol_if);
+		_vbdev_lvs_examine_done(ori_req, rc);
 		free(req);
 		return;
 	}
 
 	req->base_bdev = bdev;
+	req->cb_arg = ori_req;
 
-	spdk_lvs_load(bs_dev, _vbdev_lvs_examine_cb, req);
+	action(bs_dev, _vbdev_lvs_examine_cb, req);
+}
+
+static void
+vbdev_lvs_examine_done(void *arg, int lvserrno)
+{
+	struct spdk_lvs_req *req = arg;
+
+	spdk_bdev_module_examine_done(&g_lvol_if);
+	free(req);
+}
+
+static void
+vbdev_lvs_examine(struct spdk_bdev *bdev)
+{
+	struct spdk_lvs_req *req;
+
+	if (spdk_bdev_get_md_size(bdev) != 0) {
+		SPDK_INFOLOG(vbdev_lvol, "Cannot create bs dev on %s\n which is formatted with metadata",
+			     bdev->name);
+		spdk_bdev_module_examine_done(&g_lvol_if);
+		return;
+	}
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		SPDK_ERRLOG("Cannot alloc memory for vbdev lvol store request pointer\n");
+		spdk_bdev_module_examine_done(&g_lvol_if);
+		return;
+	}
+
+	req->cb_fn = vbdev_lvs_examine_done;
+	req->cb_arg = req;
+
+	_vbdev_lvs_examine(bdev, req, spdk_lvs_load);
 }
 
 struct spdk_lvol *
@@ -1428,6 +1515,92 @@ vbdev_lvol_get_from_bdev(struct spdk_bdev *bdev)
 	}
 
 	return (struct spdk_lvol *)bdev->ctxt;
+}
+
+static void
+_vbdev_lvs_grow_finish(void *arg, int lvserrno)
+{
+	struct spdk_lvs_grow_req *req = arg;
+
+	req->cb_fn(req->cb_arg, lvserrno);
+	free(req);
+}
+
+static void
+_vbdev_lvs_grow_unload_cb(void *cb_arg, int lvserrno)
+{
+	struct spdk_lvs_grow_req *req = cb_arg;
+	struct lvol_store_bdev *lvs_bdev;
+	struct spdk_bdev *bdev;
+
+	if (lvserrno != 0) {
+		_vbdev_lvs_grow_finish(req, lvserrno);
+		return;
+	}
+
+	lvs_bdev = req->lvs_bdev;
+	bdev = lvs_bdev->bdev;
+	TAILQ_REMOVE(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
+	req->base.cb_fn = _vbdev_lvs_grow_finish;
+	req->base.cb_arg = req;
+	_vbdev_lvs_examine(bdev, &req->base, spdk_lvs_grow);
+	free(lvs_bdev);
+}
+
+static void
+_vbdev_lvs_grow_remove_bdev_unregistered_cb(void *cb_arg, int bdeverrno)
+{
+	struct spdk_lvs_grow_req *req = cb_arg;
+	struct spdk_lvol_store *lvs = req->base.lvol_store;
+
+	if (bdeverrno != 0) {
+		SPDK_DEBUGLOG(vbdev_lvol, "Lvol unregistered with errno %d\n", bdeverrno);
+	}
+
+	req->lvol_cnt--;
+
+	if (req->lvol_cnt == 0) {
+		/* Lvol store can be unloaded once all lvols are closed. */
+		if (_vbdev_lvs_are_lvols_closed(lvs)) {
+			spdk_lvs_unload(lvs, _vbdev_lvs_grow_unload_cb, req);
+		} else {
+			_vbdev_lvs_grow_finish(req, -EINVAL);
+		}
+	}
+}
+
+void
+vbdev_lvs_grow(struct spdk_lvol_store *lvs,
+	       spdk_lvs_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvs_grow_req *req;
+	struct spdk_lvol *lvol, *tmp;
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("Cannot alloc memory for vbdev lvol store request pointer\n");
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+	req->base.lvol_store = lvs;
+	req->lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvs);
+	if (req->lvs_bdev == NULL) {
+		SPDK_ERRLOG("Cannot get valid lvs_bdev\n");
+		_vbdev_lvs_grow_finish(req, -EINVAL);
+		return;
+	}
+
+	if (_vbdev_lvs_are_lvols_closed(lvs)) {
+		spdk_lvs_unload(lvs, _vbdev_lvs_grow_unload_cb, req);
+	} else {
+		TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
+			req->lvol_cnt++;
+			spdk_bdev_unregister(lvol->bdev, _vbdev_lvs_grow_remove_bdev_unregistered_cb, req);
+		}
+		assert(req->lvol_cnt > 0);
+	}
 }
 
 SPDK_LOG_REGISTER_COMPONENT(vbdev_lvol)

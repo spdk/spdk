@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation
+#  All rights reserved.
+#
 shopt -s nullglob
 
 rootdir=$(readlink -f $(dirname $0))/..
@@ -132,6 +136,7 @@ else
 	exit 1
 fi
 
+echo -n "8086 37c9" > /sys/bus/pci/drivers/$driver_to_bind/remove_id 2> /dev/null
 echo -n "8086 37c9" > /sys/bus/pci/drivers/$driver_to_bind/new_id
 for vf in "${qat_vf_bdfs[@]}"; do
 	if ! ls -l /sys/bus/pci/devices/$vf/driver | grep -q $driver_to_bind; then

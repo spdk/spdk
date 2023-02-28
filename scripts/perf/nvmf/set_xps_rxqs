@@ -1,6 +1,6 @@
 #!/bin/bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright (c) 2019, Intel Corporation
+# Copyright (C) 2021 Intel Corporation.
 #
 # Script to setup mechanism for Tx queue selection based on Rx queue(s) map.
 # This is done by configuring Rx queue(s) map per Tx queue via sysfs. This

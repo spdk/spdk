@@ -110,6 +110,18 @@ repeatedly call `spdk_thread_poll()` on each `spdk_thread()` that exists. This
 makes SPDK very portable to a wide variety of asynchronous, event-based
 frameworks such as [Seastar](https://www.seastar.io) or [libuv](https://libuv.org/).
 
+## SPDK Spinlocks
+
+There are some cases where locks are used. These should be limited in favor of
+the message passing interface described above. When locks are needed,
+SPDK spinlocks should be used instead of POSIX locks.
+
+POSIX locks like `pthread_mutex_t` and `pthread_spinlock_t` do not properly
+handle locking between SPDK's lightweight threads. SPDK's `spdk_spinlock`
+is safe to use in SPDK libraries and applications. This safety comes from
+imposing restrictions on when locks can be held. See
+[spdk_spinlock](structspdk__spinlock.html) for details.
+
 ## The event Framework
 
 The SPDK project didn't want to officially pick an asynchronous, event-based

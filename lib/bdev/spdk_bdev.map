@@ -15,6 +15,8 @@
 	spdk_bdev_next;
 	spdk_bdev_first_leaf;
 	spdk_bdev_next_leaf;
+	spdk_for_each_bdev;
+	spdk_for_each_bdev_leaf;
 	spdk_bdev_open_ext;
 	spdk_bdev_close;
 	spdk_bdev_desc_get_bdev;
@@ -43,6 +45,7 @@
 	spdk_bdev_get_dif_type;
 	spdk_bdev_is_dif_head_of_md;
 	spdk_bdev_is_dif_check_enabled;
+	spdk_bdev_get_current_qd;
 	spdk_bdev_get_qd;
 	spdk_bdev_get_qd_sampling_period;
 	spdk_bdev_set_qd_sampling_period;
@@ -50,6 +53,8 @@
 	spdk_bdev_get_weighted_io_time;
 	spdk_bdev_get_io_channel;
 	spdk_bdev_get_module_ctx;
+	spdk_bdev_seek_data;
+	spdk_bdev_seek_hole;
 	spdk_bdev_read;
 	spdk_bdev_read_blocks;
 	spdk_bdev_read_blocks_with_md;
@@ -91,16 +96,23 @@
 	spdk_bdev_io_get_iovec;
 	spdk_bdev_io_get_md_buf;
 	spdk_bdev_io_get_cb_arg;
+	spdk_bdev_io_get_seek_offset;
 	spdk_bdev_histogram_enable;
 	spdk_bdev_histogram_get;
+	spdk_bdev_channel_get_histogram;
 	spdk_bdev_get_media_events;
 	spdk_bdev_get_memory_domains;
 	spdk_bdev_readv_blocks_ext;
 	spdk_bdev_writev_blocks_ext;
+	spdk_bdev_for_each_channel;
+	spdk_bdev_for_each_channel_continue;
+	spdk_bdev_get_max_copy;
+	spdk_bdev_copy_blocks;
 
 	# Public functions in bdev_module.h
 	spdk_bdev_register;
 	spdk_bdev_unregister;
+	spdk_bdev_unregister_by_name;
 	spdk_bdev_destruct_done;
 	spdk_bdev_module_examine_done;
 	spdk_bdev_module_init_done;
@@ -108,6 +120,9 @@
 	spdk_bdev_module_fini_start_done;
 	spdk_bdev_module_claim_bdev;
 	spdk_bdev_module_release_bdev;
+	spdk_bdev_claim_get_name;
+	spdk_bdev_claim_opts_init;
+	spdk_bdev_module_claim_bdev_desc;
 	spdk_bdev_alias_add;
 	spdk_bdev_alias_del;
 	spdk_bdev_alias_del_all;
@@ -123,6 +138,7 @@
 	spdk_bdev_io_complete_aio_status;
 	spdk_bdev_io_get_thread;
 	spdk_bdev_io_get_io_channel;
+	spdk_bdev_io_get_submit_tsc;
 	spdk_bdev_notify_blockcnt_change;
 	spdk_scsi_nvme_translate;
 	spdk_bdev_module_list_add;
@@ -138,12 +154,17 @@
 	spdk_bdev_part_base_construct_ext;
 	spdk_bdev_part_construct;
 	spdk_bdev_part_submit_request;
+	spdk_bdev_part_submit_request_ext;
 	spdk_bdev_part_get_bdev;
 	spdk_bdev_part_get_base;
 	spdk_bdev_part_get_base_bdev;
 	spdk_bdev_part_get_offset_blocks;
 	spdk_bdev_push_media_events;
 	spdk_bdev_notify_media_management;
+	spdk_bdev_for_each_bdev_io;
+	spdk_bdev_reset_io_stat;
+	spdk_bdev_add_io_stat;
+	spdk_bdev_dump_io_stat_json;
 
 	# Public functions in bdev_zone.h
 	spdk_bdev_get_zone_size;

@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2019 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -237,33 +209,6 @@ virtio_dev_init(struct virtio_dev *vdev, const char *socket_path, uint64_t flags
 static int
 blk_dev_init(struct virtio_dev *vdev, const char *socket_path, uint16_t max_queues)
 {
-	uint16_t host_max_queues;
-	int rc;
-
-	if (virtio_dev_has_feature(vdev, VIRTIO_BLK_F_MQ)) {
-		rc = virtio_dev_read_dev_config(vdev, offsetof(struct virtio_blk_config, num_queues),
-						&host_max_queues, sizeof(host_max_queues));
-		if (rc) {
-			fprintf(stderr, "%s: config read failed: %s\n", vdev->name, spdk_strerror(-rc));
-			return rc;
-		}
-	} else {
-		host_max_queues = 1;
-	}
-
-	if (max_queues == 0) {
-		fprintf(stderr, "%s: requested 0 request queues (%"PRIu16" available).\n",
-			vdev->name, host_max_queues);
-		return -EINVAL;
-	}
-
-	if (max_queues > host_max_queues) {
-		fprintf(stderr, "%s: requested %"PRIu16" request queues "
-			"but only %"PRIu16" available.\n",
-			vdev->name, max_queues, host_max_queues);
-		max_queues = host_max_queues;
-	}
-
 	return virtio_dev_init(vdev, socket_path, VIRTIO_BLK_DEV_SUPPORTED_FEATURES, max_queues);
 }
 

@@ -1,41 +1,14 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *   Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
 #include "spdk/bdev_zone.h"
-#include "spdk/accel_engine.h"
+#include "spdk/accel.h"
 #include "spdk/env.h"
 #include "spdk/init.h"
 #include "spdk/thread.h"
@@ -43,6 +16,7 @@
 #include "spdk/string.h"
 #include "spdk/queue.h"
 #include "spdk/util.h"
+#include "spdk/rpc.h"
 
 #include "spdk_internal/event.h"
 
@@ -66,11 +40,13 @@ struct spdk_fio_options {
 	void *pad;
 	char *conf;
 	char *json_conf;
+	char *env_context;
 	char *log_flags;
 	unsigned mem_mb;
 	int mem_single_seg;
 	int initial_zone_reset;
 	int zone_append;
+	char *rpc_listen_addr;
 };
 
 struct spdk_fio_request {
@@ -110,8 +86,29 @@ struct spdk_fio_zone_cb_arg {
 	unsigned int nr_zones;
 };
 
+/* On App Thread (oat) context used for making sync calls from async calls. */
+struct spdk_fio_oat_ctx {
+	union {
+		struct spdk_fio_setup_args {
+			struct thread_data *td;
+		} sa;
+		struct spdk_fio_bdev_get_zoned_model_args {
+			struct fio_file *f;
+			enum zbd_zoned_model *model;
+		} zma;
+		struct spdk_fio_bdev_get_max_open_zones_args {
+			struct fio_file *f;
+			unsigned int *max_open_zones;
+		} moza;
+	} u;
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
+	int ret;
+};
+
 static bool g_spdk_env_initialized = false;
 static const char *g_json_config_file = NULL;
+static const char *g_rpc_listen_addr = SPDK_DEFAULT_RPC_ADDR;
 
 static int spdk_fio_init(struct thread_data *td);
 static void spdk_fio_cleanup(struct thread_data *td);
@@ -119,6 +116,7 @@ static size_t spdk_fio_poll_thread(struct spdk_fio_thread *fio_thread);
 static int spdk_fio_handle_options(struct thread_data *td, struct fio_file *f,
 				   struct spdk_bdev *bdev);
 static int spdk_fio_handle_options_per_target(struct thread_data *td, struct fio_file *f);
+static void spdk_fio_setup_oat(void *ctx);
 
 static pthread_t g_init_thread_id = 0;
 static pthread_mutex_t g_init_mtx = PTHREAD_MUTEX_INITIALIZER;
@@ -130,6 +128,39 @@ static TAILQ_HEAD(, spdk_fio_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_thread
 #define SPDK_FIO_POLLING_TIMEOUT 1000000000ULL
 
 static __thread bool g_internal_thread = false;
+
+/* Run msg_fn on app thread ("oat") and wait for it to call spdk_fio_wake_oat_waiter() */
+static void
+spdk_fio_sync_run_oat(void (*msg_fn)(void *), struct spdk_fio_oat_ctx *ctx)
+{
+	assert(spdk_get_thread() != spdk_thread_get_app_thread());
+
+	pthread_mutex_init(&ctx->mutex, NULL);
+	pthread_cond_init(&ctx->cond, NULL);
+	pthread_mutex_lock(&ctx->mutex);
+
+	spdk_thread_send_msg(spdk_thread_get_app_thread(), msg_fn, ctx);
+
+	/* Wake up the poll loop in spdk_init_thread_poll() */
+	pthread_mutex_lock(&g_init_mtx);
+	pthread_cond_signal(&g_init_cond);
+	pthread_mutex_unlock(&g_init_mtx);
+
+	/* Wait for msg_fn() to call spdk_fio_wake_oat_waiter() */
+	pthread_cond_wait(&ctx->cond, &ctx->mutex);
+	pthread_mutex_unlock(&ctx->mutex);
+
+	pthread_mutex_destroy(&ctx->mutex);
+	pthread_cond_destroy(&ctx->cond);
+}
+
+static void
+spdk_fio_wake_oat_waiter(struct spdk_fio_oat_ctx *ctx)
+{
+	pthread_mutex_lock(&ctx->mutex);
+	pthread_cond_signal(&ctx->cond);
+	pthread_mutex_unlock(&ctx->mutex);
+}
 
 static int
 spdk_fio_schedule_thread(struct spdk_thread *thread)
@@ -233,6 +264,10 @@ static void
 spdk_fio_bdev_init_done(int rc, void *cb_arg)
 {
 	*(bool *)cb_arg = true;
+
+	if (spdk_rpc_initialize(g_rpc_listen_addr) == 0) {
+		spdk_rpc_set_state(SPDK_RPC_RUNTIME);
+	}
 }
 
 static void
@@ -248,6 +283,8 @@ static void
 spdk_fio_bdev_fini_done(void *cb_arg)
 {
 	*(bool *)cb_arg = true;
+
+	spdk_rpc_finish();
 }
 
 static void
@@ -291,6 +328,11 @@ spdk_init_thread_poll(void *arg)
 		goto err_exit;
 	}
 
+	/* Initialize the RPC listen address */
+	if (eo->rpc_listen_addr) {
+		g_rpc_listen_addr = eo->rpc_listen_addr;
+	}
+
 	/* Initialize the environment library */
 	spdk_env_opts_init(&opts);
 	opts.name = "fio";
@@ -299,6 +341,9 @@ spdk_init_thread_poll(void *arg)
 		opts.mem_size = eo->mem_mb;
 	}
 	opts.hugepage_single_segments = eo->mem_single_seg;
+	if (eo->env_context) {
+		opts.env_context = eo->env_context;
+	}
 
 	if (spdk_env_init(&opts) < 0) {
 		SPDK_ERRLOG("Unable to initialize SPDK env\n");
@@ -380,11 +425,9 @@ spdk_init_thread_poll(void *arg)
 		rc = pthread_cond_timedwait(&g_init_cond, &g_init_mtx, &ts);
 		pthread_mutex_unlock(&g_init_mtx);
 
-		if (rc != ETIMEDOUT) {
+		if (rc != 0 && rc != ETIMEDOUT) {
 			break;
 		}
-
-
 	}
 
 	spdk_fio_cleanup_thread(fio_thread);
@@ -488,6 +531,26 @@ fio_redirected_to_dev_null(void)
 	return true;
 }
 
+static int
+spdk_fio_init_spdk_env(struct thread_data *td)
+{
+	static pthread_mutex_t setup_lock = PTHREAD_MUTEX_INITIALIZER;
+
+	pthread_mutex_lock(&setup_lock);
+	if (!g_spdk_env_initialized) {
+		if (spdk_fio_init_env(td)) {
+			pthread_mutex_unlock(&setup_lock);
+			SPDK_ERRLOG("failed to initialize\n");
+			return -1;
+		}
+
+		g_spdk_env_initialized = true;
+	}
+	pthread_mutex_unlock(&setup_lock);
+
+	return 0;
+}
+
 /* Called for each thread to fill in the 'real_file_size' member for
  * each file associated with this thread. This is called prior to
  * the init operation (spdk_fio_init()) below. This call will occur
@@ -498,8 +561,7 @@ fio_redirected_to_dev_null(void)
 static int
 spdk_fio_setup(struct thread_data *td)
 {
-	unsigned int i;
-	struct fio_file *f;
+	struct spdk_fio_oat_ctx ctx = { 0 };
 
 	/*
 	 * If we're running in a daemonized FIO instance, it's possible
@@ -522,27 +584,39 @@ spdk_fio_setup(struct thread_data *td)
 		return -1;
 	}
 
-	if (!g_spdk_env_initialized) {
-		if (spdk_fio_init_env(td)) {
-			SPDK_ERRLOG("failed to initialize\n");
-			return -1;
-		}
-
-		g_spdk_env_initialized = true;
+	if (spdk_fio_init_spdk_env(td) != 0) {
+		return -1;
 	}
 
-	if (td->o.nr_files == 1 && strcmp(td->files[0]->file_name, "*") == 0) {
-		struct spdk_bdev *bdev;
+	ctx.u.sa.td = td;
+	spdk_fio_sync_run_oat(spdk_fio_setup_oat, &ctx);
+	return ctx.ret;
+}
 
+static int
+_spdk_fio_add_file(void *ctx, struct spdk_bdev *bdev)
+{
+	struct thread_data *td = ctx;
+
+	add_file(td, spdk_bdev_get_name(bdev), 0, 1);
+	return 0;
+}
+
+static void
+spdk_fio_setup_oat(void *_ctx)
+{
+	struct spdk_fio_oat_ctx *ctx = _ctx;
+	struct thread_data *td = ctx->u.sa.td;
+	unsigned int i;
+	struct fio_file *f;
+
+	if (td->o.nr_files == 1 && strcmp(td->files[0]->file_name, "*") == 0) {
 		/* add all available bdevs as fio targets */
-		for (bdev = spdk_bdev_first_leaf(); bdev; bdev = spdk_bdev_next_leaf(bdev)) {
-			add_file(td, spdk_bdev_get_name(bdev), 0, 1);
-		}
+		spdk_for_each_bdev_leaf(td, _spdk_fio_add_file);
 	}
 
 	for_each_file(td, f, i) {
 		struct spdk_bdev *bdev;
-		int rc;
 
 		if (strcmp(f->file_name, "*") == 0) {
 			continue;
@@ -551,7 +625,8 @@ spdk_fio_setup(struct thread_data *td)
 		bdev = spdk_bdev_get_by_name(f->file_name);
 		if (!bdev) {
 			SPDK_ERRLOG("Unable to find bdev with name %s\n", f->file_name);
-			return -1;
+			ctx->ret = -1;
+			goto out;
 		}
 
 		f->real_file_size = spdk_bdev_get_num_blocks(bdev) *
@@ -559,13 +634,15 @@ spdk_fio_setup(struct thread_data *td)
 		f->filetype = FIO_TYPE_BLOCK;
 		fio_file_set_size_known(f);
 
-		rc = spdk_fio_handle_options(td, f, bdev);
-		if (rc) {
-			return rc;
+		ctx->ret = spdk_fio_handle_options(td, f, bdev);
+		if (ctx->ret) {
+			goto out;
 		}
 	}
 
-	return 0;
+	ctx->ret = 0;
+out:
+	spdk_fio_wake_oat_waiter(ctx);
 }
 
 static void
@@ -651,6 +728,10 @@ spdk_fio_init(struct thread_data *td)
 {
 	struct spdk_fio_thread *fio_thread;
 	int rc;
+
+	if (spdk_fio_init_spdk_env(td) != 0) {
+		return -1;
+	}
 
 	/* If thread has already been initialized, do nothing. */
 	if (td->io_ops_data) {
@@ -899,20 +980,26 @@ spdk_fio_invalidate(struct thread_data *td, struct fio_file *f)
 }
 
 #if FIO_HAS_ZBD
-static int
-spdk_fio_get_zoned_model(struct thread_data *td, struct fio_file *f, enum zbd_zoned_model *model)
+/* Runs on app thread (oat) */
+static void
+spdk_fio_get_zoned_model_oat(void *arg)
 {
+	struct spdk_fio_oat_ctx *ctx = arg;
+	struct fio_file *f = ctx->u.zma.f;
+	enum zbd_zoned_model *model = ctx->u.zma.model;
 	struct spdk_bdev *bdev;
 
 	if (f->filetype != FIO_TYPE_BLOCK) {
 		SPDK_ERRLOG("Unsupported filetype: %d\n", f->filetype);
-		return -EINVAL;
+		ctx->ret = -EINVAL;
+		goto out;
 	}
 
 	bdev = spdk_bdev_get_by_name(f->file_name);
 	if (!bdev) {
 		SPDK_ERRLOG("Cannot get zoned model, no bdev with name: %s\n", f->file_name);
-		return -ENODEV;
+		ctx->ret = -ENODEV;
+		goto out;
 	}
 
 	if (spdk_bdev_is_zoned(bdev)) {
@@ -921,8 +1008,24 @@ spdk_fio_get_zoned_model(struct thread_data *td, struct fio_file *f, enum zbd_zo
 		*model = ZBD_NONE;
 	}
 
-	return 0;
+	ctx->ret = 0;
+out:
+	spdk_fio_wake_oat_waiter(ctx);
 }
+
+static int
+spdk_fio_get_zoned_model(struct thread_data *td, struct fio_file *f, enum zbd_zoned_model *model)
+{
+	struct spdk_fio_oat_ctx ctx = { 0 };
+
+	ctx.u.zma.f = f;
+	ctx.u.zma.model = model;
+
+	spdk_fio_sync_run_oat(spdk_fio_get_zoned_model_oat, &ctx);
+
+	return ctx.ret;
+}
+
 
 static void
 spdk_fio_bdev_get_zone_info_done(struct spdk_bdev_io *bdev_io, bool success, void *arg)
@@ -942,7 +1045,22 @@ spdk_fio_bdev_get_zone_info_done(struct spdk_bdev_io *bdev_io, bool success, voi
 		struct zbd_zone *zone_dest = &cb_arg->fio_zones[handled_zones];
 		uint32_t block_size = spdk_bdev_get_block_size(cb_arg->target->bdev);
 
-		zone_dest->type = ZBD_ZONE_TYPE_SWR;
+		switch (zone_src->type) {
+		case SPDK_BDEV_ZONE_TYPE_SEQWR:
+			zone_dest->type = ZBD_ZONE_TYPE_SWR;
+			break;
+		case SPDK_BDEV_ZONE_TYPE_SEQWP:
+			zone_dest->type = ZBD_ZONE_TYPE_SWP;
+			break;
+		case SPDK_BDEV_ZONE_TYPE_CNV:
+			zone_dest->type = ZBD_ZONE_TYPE_CNV;
+			break;
+		default:
+			spdk_bdev_free_io(bdev_io);
+			cb_arg->completed = -EIO;
+			return;
+		}
+
 		zone_dest->len = spdk_bdev_get_zone_size(cb_arg->target->bdev) * block_size;
 		zone_dest->capacity = zone_src->capacity * block_size;
 		zone_dest->start = zone_src->zone_id * block_size;
@@ -969,6 +1087,11 @@ spdk_fio_bdev_get_zone_info_done(struct spdk_bdev_io *bdev_io, bool success, voi
 			break;
 		case SPDK_BDEV_ZONE_STATE_OFFLINE:
 			zone_dest->cond = ZBD_ZONE_COND_OFFLINE;
+			break;
+		case SPDK_BDEV_ZONE_STATE_NOT_WP:
+			zone_dest->cond = ZBD_ZONE_COND_NOT_WP;
+			/* Set WP to end of zone for zone types w/o WP (e.g. Conv. zones in SMR) */
+			zone_dest->wp = zone_dest->start + zone_dest->capacity;
 			break;
 		default:
 			spdk_bdev_free_io(bdev_io);
@@ -1139,20 +1262,37 @@ spdk_fio_reset_wp(struct thread_data *td, struct fio_file *f, uint64_t offset, u
 #endif
 
 #if FIO_IOOPS_VERSION >= 30
-static int spdk_fio_get_max_open_zones(struct thread_data *td, struct fio_file *f,
-				       unsigned int *max_open_zones)
+static void
+spdk_fio_get_max_open_zones_oat(void *_ctx)
 {
+	struct spdk_fio_oat_ctx *ctx = _ctx;
+	struct fio_file *f = ctx->u.moza.f;
 	struct spdk_bdev *bdev;
 
 	bdev = spdk_bdev_get_by_name(f->file_name);
 	if (!bdev) {
 		SPDK_ERRLOG("Cannot get max open zones, no bdev with name: %s\n", f->file_name);
-		return -ENODEV;
+		ctx->ret = -ENODEV;
+	} else {
+		*ctx->u.moza.max_open_zones = spdk_bdev_get_max_open_zones(bdev);
+		ctx->ret = 0;
 	}
 
-	*max_open_zones = spdk_bdev_get_max_open_zones(bdev);
+	spdk_fio_wake_oat_waiter(ctx);
+}
 
-	return 0;
+static int
+spdk_fio_get_max_open_zones(struct thread_data *td, struct fio_file *f,
+			    unsigned int *max_open_zones)
+{
+	struct spdk_fio_oat_ctx ctx = { 0 };
+
+	ctx.u.moza.f = f;
+	ctx.u.moza.max_open_zones = max_open_zones;
+
+	spdk_fio_sync_run_oat(spdk_fio_get_max_open_zones_oat, &ctx);
+
+	return ctx.ret;
 }
 #endif
 
@@ -1167,7 +1307,9 @@ spdk_fio_handle_options(struct thread_data *td, struct fio_file *f, struct spdk_
 		if (rc) {
 			return rc;
 		}
-		rc = spdk_fio_reset_zones(td->io_ops_data, f->engine_data, 0, f->real_file_size);
+		/* offset used to indicate conventional zones that need to be skipped (reset not allowed) */
+		rc = spdk_fio_reset_zones(td->io_ops_data, f->engine_data, td->o.start_offset,
+					  f->real_file_size - td->o.start_offset);
 		if (rc) {
 			spdk_fio_cleanup(td);
 			return rc;
@@ -1268,6 +1410,24 @@ static struct fio_option options[] = {
 		.group		= FIO_OPT_G_INVALID,
 	},
 	{
+		.name           = "env_context",
+		.lname          = "Environment context options",
+		.type           = FIO_OPT_STR_STORE,
+		.off1           = offsetof(struct spdk_fio_options, env_context),
+		.help           = "Opaque context for use of the env implementation",
+		.category       = FIO_OPT_C_ENGINE,
+		.group          = FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "spdk_rpc_listen_addr",
+		.lname		= "SPDK RPC listen address",
+		.type		= FIO_OPT_STR_STORE,
+		.off1		= offsetof(struct spdk_fio_options, rpc_listen_addr),
+		.help		= "The address to listen the RPC operations",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
 		.name		= NULL,
 	},
 };
@@ -1309,7 +1469,8 @@ struct ioengine_ops ioengine = {
 	.options		= options,
 };
 
-static void fio_init spdk_fio_register(void)
+static void fio_init
+spdk_fio_register(void)
 {
 	register_ioengine(&ioengine);
 }
@@ -1327,7 +1488,8 @@ spdk_fio_finish_env(void)
 	spdk_env_fini();
 }
 
-static void fio_exit spdk_fio_unregister(void)
+static void fio_exit
+spdk_fio_unregister(void)
 {
 	if (g_spdk_env_initialized) {
 		spdk_fio_finish_env();

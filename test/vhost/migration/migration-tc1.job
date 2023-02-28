@@ -1,7 +1,6 @@
 [global]
-blocksize_range=4k-512k
-#bs=512k
-iodepth=128
+bs=4k
+iodepth=8
 ioengine=libaio
 filename=
 group_reporting
@@ -13,6 +12,7 @@ verify=md5
 verify_fatal=1
 verify_dump=1
 size=100%
+verify_state_save=0
 
 [write]
 rw=write

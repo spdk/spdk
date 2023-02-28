@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation
+#  All rights reserved.
+#
+source "$rootdir/test/dd/common.sh"
 
 function discover_bdevs() {
 	local rootdir=$1
 	local config_file=$2
-	local wait_for_spdk_bdev=30
+	local wait_for_spdk_bdev=90
 	local rpc_server=/var/tmp/spdk-discover-bdevs.sock
 
 	if [ ! -e $config_file ]; then
@@ -136,16 +141,12 @@ function get_numa_node() {
 		bdevs=$(discover_bdevs $rootdir $testdir/bdev.conf)
 		for name in $disks; do
 			local bdev_bdf
-			bdev_bdf=$(jq -r ".[] | select(.name==\"$name\").driver_specific.nvme.pci_address" <<< $bdevs)
+			bdev_bdf=$(jq -r ".[] | select(.name==\"$name\").driver_specific.nvme[].pci_address" <<< "$bdevs")
 			cat /sys/bus/pci/devices/$bdev_bdf/numa_node
 		done
 	else
 		for name in $disks; do
-			local bdf
-			# Not reading directly from /sys/block/nvme* because of a kernel bug
-			# which results in NUMA 0 always getting reported.
-			bdf=$(cat /sys/block/$name/device/address)
-			cat /sys/bus/pci/devices/$bdf/numa_node
+			cat "/sys/block/$name/device/numa_node"
 		done
 	fi
 }
@@ -230,7 +231,7 @@ function create_fio_config() {
 		echo "gtod_reduce=1" >> $testdir/config.fio
 	fi
 
-	if [[ $PLUGIN =~ "uring" ]]; then
+	if [[ $PLUGIN =~ "uring" || $PLUGIN =~ "xnvme" ]]; then
 		cat <<- EOF >> $testdir/config.fio
 			fixedbufs=1
 			hipri=1
@@ -254,7 +255,7 @@ function create_fio_config() {
 
 		total_disks_per_core=$disks_per_core
 		# Check how many "stray" disks are unassigned to CPU cores
-		# Assign one disk to current CPU core and substract it from the total of
+		# Assign one disk to current CPU core and subtract it from the total of
 		# unassigned disks
 		if [[ "$disks_per_core_mod" -gt "0" ]]; then
 			total_disks_per_core=$((disks_per_core + 1))
@@ -287,7 +288,7 @@ function create_fio_config() {
 
 				if [[ "$plugin" == "spdk-plugin-nvme" ]]; then
 					fio_job_section+=("filename=trtype=PCIe traddr=${disks[$n]//:/.} ns=1 #NVMe NUMA Node ${disks_numa[$n]}")
-				elif [[ "$plugin" == "spdk-plugin-bdev" ]]; then
+				elif [[ "$plugin" == "spdk-plugin-bdev" || "$plugin" == "spdk-plugin-bdev-xnvme" ]]; then
 					fio_job_section+=("filename=${disks[$n]} #NVMe NUMA Node ${disks_numa[$n]}")
 				elif [[ "$plugin" =~ "kernel" ]]; then
 					fio_job_section+=("filename=/dev/${disks[$n]} #NVMe NUMA Node ${disks_numa[$n]}")
@@ -295,7 +296,7 @@ function create_fio_config() {
 				m=$((m + 1))
 
 				#Mark numa of n'th disk as "x" to mark it as claimed for next loop iterations
-				disks_numa[$n]="x"
+				disks_numa[n]="x"
 			fi
 			n=$((n + 1))
 
@@ -393,7 +394,7 @@ function run_spdk_nvme_fio() {
 	echo "** Running fio test, this can take a while, depending on the run-time and ramp-time setting."
 	if [[ "$plugin" = "spdk-plugin-nvme" ]]; then
 		LD_PRELOAD=$plugin_dir/spdk_nvme $FIO_BIN $testdir/config.fio --output-format=json "${@:2}" --ioengine=spdk
-	elif [[ "$plugin" = "spdk-plugin-bdev" ]]; then
+	elif [[ "$plugin" = "spdk-plugin-bdev" || "$plugin" = "spdk-plugin-bdev-xnvme" ]]; then
 		LD_PRELOAD=$plugin_dir/spdk_bdev $FIO_BIN $testdir/config.fio --output-format=json "${@:2}" --ioengine=spdk_bdev --spdk_json_conf=$testdir/bdev.conf --spdk_mem=4096
 	fi
 
@@ -415,7 +416,7 @@ function run_bdevperf() {
 	local bpf_app_pid
 	local main_core_param=""
 
-	bdevperf_rpc="$rootdir/test/bdev/bdevperf/bdevperf.py"
+	bdevperf_rpc="$rootdir/examples/bdev/bdevperf/bdevperf.py"
 	rpc_socket="/var/tmp/spdk.sock"
 
 	if [[ -n $MAIN_CORE ]]; then
@@ -423,7 +424,7 @@ function run_bdevperf() {
 	fi
 
 	echo "** Running bdevperf test, this can take a while, depending on the run-time setting."
-	$bdevperf_dir/bdevperf --json $testdir/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -m "[$CPUS_ALLOWED]" -r "$rpc_socket" $main_core_param -z &
+	$_examples_dir/bdevperf --json $testdir/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -m "[$CPUS_ALLOWED]" -r "$rpc_socket" $main_core_param -z &
 	bdevperf_pid=$!
 	waitforlisten $bdevperf_pid
 
@@ -440,7 +441,7 @@ function run_bdevperf() {
 		sleep 3
 	fi
 
-	PYTHONPATH=$PYTHONPATH:$rootdir/scripts $bdevperf_rpc -s "$rpc_socket" -t $((RUNTIME + 10)) perform_tests
+	PYTHONPATH=$PYTHONPATH:$rootdir/python $bdevperf_rpc -s "$rpc_socket" -t $((RUNTIME + 10)) perform_tests
 
 	# Using "-z" option causes bdevperf to NOT exit automatically after running the test,
 	# so we need to stop it ourselves.
@@ -466,7 +467,7 @@ function run_nvmeperf() {
 	echo "** Running nvme perf test, this can take a while, depending on the run-time setting."
 
 	# Run command in separate shell as this solves quoting issues related to r_opt var
-	$SHELL -c "$nvmeperf_dir/perf $r_opt -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -c [$CPUS_ALLOWED]"
+	$SHELL -c "$_examples_dir/perf $r_opt -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -c [$CPUS_ALLOWED]"
 	sleep 1
 }
 
@@ -493,4 +494,29 @@ function verify_disk_number() {
 		echo "error: Required devices number ($DISKNO) is not a valid number or it's larger than the number of devices found (${#disks[@]})"
 		false
 	fi
+}
+
+function create_spdk_xnvme_bdev_conf() {
+	local bdev_io_cache_size=$1 bdev_io_pool_size=$2
+	local blocks block_idx io_mechanism=libaio
+
+	(($#)) && local -A method_bdev_set_options_0
+
+	blocks=($(get_disks))
+
+	if [[ -n $bdev_io_cache_size ]]; then
+		method_bdev_set_options_0["bdev_io_cache_size"]=$bdev_io_cache_size
+	fi
+	if [[ -n $bdev_io_pool_size ]]; then
+		method_bdev_set_options_0["bdev_io_pool_size"]=$bdev_io_pool_size
+	fi
+
+	for block_idx in "${!blocks[@]}"; do
+		local -A method_bdev_xnvme_create_$block_idx
+		local -n rpc_ref=method_bdev_xnvme_create_$block_idx
+		rpc_ref["filename"]=/dev/${blocks[block_idx]}
+		rpc_ref["io_mechanism"]=io_uring
+		rpc_ref["name"]=${blocks[block_idx]}
+	done
+	gen_conf > "$testdir/bdev.conf"
 }

@@ -10,6 +10,7 @@
 - @ref nvme_multi_process
 - @ref nvme_hotplug
 - @ref nvme_cuse
+- @ref nvme_led
 
 ## Introduction {#nvme_intro}
 
@@ -302,8 +303,6 @@ At the NVMe driver level, we provide the following support for Hotplug:
 
 ## NVMe Character Devices {#nvme_cuse}
 
-This feature is considered as experimental.
-
 ### Design
 
 ![NVMe character devices processing diagram](nvme_cuse.svg)
@@ -408,3 +407,12 @@ with SPDK NVMe CUSE.
 
 SCSI to NVMe Translation Layer is not implemented. Tools that are using this layer to
 identify, manage or operate device might not work properly or their use may be limited.
+
+## NVMe LED management {#nvme_led}
+
+It is possible to use the ledctl(8) utility to control the state of LEDs in systems supporting
+NPEM (Native PCIe Enclosure Management), even when the NVMe devices are controlled by SPDK.
+However, in this case it is necessary to determine the slot device number because the block device
+is unavailable. The [ledctl.sh](https://github.com/spdk/spdk/tree/master/scripts/ledctl.sh) script
+can be used to help with this. It takes the name of the nvme bdev and invokes ledctl with
+appropriate options.

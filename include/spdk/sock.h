@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2018 Intel Corporation. All rights reserved.
  *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /** \file
@@ -42,6 +14,7 @@
 
 #include "spdk/queue.h"
 #include "spdk/json.h"
+#include "spdk/assert.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,7 +35,11 @@ struct spdk_sock_group;
  */
 struct spdk_sock_request {
 	/* When the request is completed, this callback will be called.
-	 * err will be 0 on success or a negated errno value on failure. */
+	 * On success, err will be:
+	 *   - for writes: 0,
+	 *   - for reads: number of bytes read.
+	 * On failure: negative errno value.
+	 */
 	void	(*cb_fn)(void *cb_arg, int err);
 	void				*cb_arg;
 
@@ -71,7 +48,13 @@ struct spdk_sock_request {
 	 */
 	struct __sock_request_internal {
 		TAILQ_ENTRY(spdk_sock_request)	link;
+#ifdef DEBUG
+		void				*curr_list;
+#endif
 		uint32_t			offset;
+
+		/* Indicate if the whole req or part of it is sent with zerocopy */
+		bool				is_zcopy;
 	} internal;
 
 	int				iovcnt;
@@ -87,6 +70,10 @@ enum spdk_placement_mode {
 	PLACEMENT_MARK,
 };
 
+#define SPDK_TLS_VERSION_1_1 11
+#define SPDK_TLS_VERSION_1_2 12
+#define SPDK_TLS_VERSION_1_3 13
+
 /**
  * SPDK socket implementation options.
  *
@@ -96,12 +83,12 @@ enum spdk_placement_mode {
  */
 struct spdk_sock_impl_opts {
 	/**
-	 * Size of sock receive buffer. Used by posix and uring socket modules.
+	 * Minimum size of sock receive buffer. Used by posix and uring socket modules.
 	 */
 	uint32_t recv_buf_size;
 
 	/**
-	 * Size of sock send buffer. Used by posix and uring socket modules.
+	 * Minimum size of sock send buffer. Used by posix and uring socket modules.
 	 */
 	uint32_t send_buf_size;
 
@@ -128,14 +115,40 @@ struct spdk_sock_impl_opts {
 	uint32_t enable_placement_id;
 
 	/**
-	 * Enable or disable use of zero copy flow on send for server sockets. Used by posix socket module.
+	 * Enable or disable use of zero copy flow on send for server sockets. Used by posix and uring socket modules.
 	 */
 	bool enable_zerocopy_send_server;
 
 	/**
-	 * Enable or disable use of zero copy flow on send for client sockets. Used by posix socket module.
+	 * Enable or disable use of zero copy flow on send for client sockets. Used by posix and uring socket modules.
 	 */
 	bool enable_zerocopy_send_client;
+
+	/**
+	 * Set zerocopy threshold in bytes. A consecutive sequence of requests' iovecs that fall below this
+	 * threshold may be sent without zerocopy flag set.
+	 */
+	uint32_t zerocopy_threshold;
+
+	/**
+	 * TLS protocol version. Used by ssl socket module.
+	 */
+	uint32_t tls_version;
+
+	/**
+	 * Enable or disable kernel TLS. Used by ssl socket modules.
+	 */
+	bool enable_ktls;
+
+	/**
+	 * Set default PSK key. Used by ssl socket module.
+	 */
+	char *psk_key;
+
+	/**
+	 * Set default PSK identity. Used by ssl socket module.
+	 */
+	char *psk_identity;
 };
 
 /**
@@ -161,7 +174,31 @@ struct spdk_sock_opts {
 	 * Used to enable or disable zero copy on socket layer.
 	 */
 	bool zcopy;
-};
+
+	/* Hole at bytes 13-15. */
+	uint8_t reserved13[3];
+
+	/**
+	 * Time in msec to wait ack until connection is closed forcefully.
+	 */
+	uint32_t ack_timeout;
+
+	/* Hole at bytes 20-23. */
+	uint8_t reserved[4];
+
+	/**
+	 * Socket implementation options.  If non-NULL, these will override those set by
+	 * spdk_sock_impl_set_opts().  The library copies this structure internally, so the user can
+	 * free it immediately after a spdk_sock_connect()/spdk_sock_listen() call.
+	 */
+	struct spdk_sock_impl_opts *impl_opts;
+
+	/**
+	 * Size of the impl_opts structure.
+	 */
+	size_t impl_opts_size;
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct spdk_sock_opts) == 40, "Incorrect size");
 
 /**
  * Initialize the default value of opts.
@@ -204,7 +241,7 @@ int spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, uint16_t *s
  *
  * \return a pointer to the connected socket on success, or NULL on failure.
  */
-struct spdk_sock *spdk_sock_connect(const char *ip, int port, char *impl_name);
+struct spdk_sock *spdk_sock_connect(const char *ip, int port, const char *impl_name);
 
 /**
  * Create a socket using the specific sock implementation, connect the socket
@@ -221,7 +258,7 @@ struct spdk_sock *spdk_sock_connect(const char *ip, int port, char *impl_name);
  *
  * \return a pointer to the connected socket on success, or NULL on failure.
  */
-struct spdk_sock *spdk_sock_connect_ext(const char *ip, int port, char *impl_name,
+struct spdk_sock *spdk_sock_connect_ext(const char *ip, int port, const char *impl_name,
 					struct spdk_sock_opts *opts);
 
 /**
@@ -238,7 +275,7 @@ struct spdk_sock *spdk_sock_connect_ext(const char *ip, int port, char *impl_nam
  *
  * \return a pointer to the listened socket on success, or NULL on failure.
  */
-struct spdk_sock *spdk_sock_listen(const char *ip, int port, char *impl_name);
+struct spdk_sock *spdk_sock_listen(const char *ip, int port, const char *impl_name);
 
 /**
  * Create a socket using the specific sock implementation, bind the socket to
@@ -255,7 +292,7 @@ struct spdk_sock *spdk_sock_listen(const char *ip, int port, char *impl_name);
  *
  * \return a pointer to the listened socket on success, or NULL on failure.
  */
-struct spdk_sock *spdk_sock_listen_ext(const char *ip, int port, char *impl_name,
+struct spdk_sock *spdk_sock_listen_ext(const char *ip, int port, const char *impl_name,
 				       struct spdk_sock_opts *opts);
 
 /**
@@ -282,7 +319,7 @@ int spdk_sock_close(struct spdk_sock **sock);
  *
  * \param sock Socket to flush.
  *
- * \return 0 on success, -1 on failure.
+ * \return number of bytes sent on success, -1 (with errno set) on failure
  */
 int spdk_sock_flush(struct spdk_sock *sock);
 
@@ -327,6 +364,16 @@ void spdk_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *re
  * \return the length of the received message on success, -1 on failure.
  */
 ssize_t spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
+
+/**
+ * Read message from the given socket asynchronously, calling the provided callback when the whole
+ * buffer is filled or an error is encountered.  Only a single read request can be active at a time
+ * (including synchronous reads).
+ *
+ * \param sock Socket to receive message.
+ * \param req The read request to submit.
+ */
+void spdk_sock_readv_async(struct spdk_sock *sock, struct spdk_sock_request *req);
 
 /**
  * Set the value used to specify the low water mark (in bytes) for this socket.
@@ -467,10 +514,12 @@ int spdk_sock_group_close(struct spdk_sock_group **group);
  *
  * \param sock The socket
  * \param group Returns the optimal sock group. If there is no optimal sock group, returns NULL.
+ * \param hint When return is 0 and group is set to NULL, hint is used to set optimal sock group for the socket.
  *
  * \return 0 on success. Negated errno on failure.
  */
-int spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group **group);
+int spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group **group,
+				     struct spdk_sock_group *hint);
 
 /**
  * Get current socket implementation options.

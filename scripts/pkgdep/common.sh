@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation
+#  All rights reserved.
+#
 install_liburing() {
 	local GIT_REPO_LIBURING=https://github.com/axboe/liburing.git
 	local liburing_dir=/usr/local/src/liburing
@@ -11,8 +14,8 @@ install_liburing() {
 		git clone "${GIT_REPO_LIBURING}" "$liburing_dir"
 	fi
 	# Use commit we know we can compile against. See #1673 as a reference.
-	git -C "$liburing_dir" checkout liburing-2.0
-	(cd "$liburing_dir" && ./configure --libdir=/usr/lib64 && make install)
+	git -C "$liburing_dir" checkout liburing-2.2
+	(cd "$liburing_dir" && ./configure --libdir=/usr/lib64 --libdevdir=/usr/lib64 && make install)
 	echo /usr/lib64 > /etc/ld.so.conf.d/spdk-liburing.conf
 	ldconfig
 }
@@ -93,10 +96,10 @@ install_markdownlint() {
 		sudo -E git clone --branch "$mdl_version" "$git_repo_mdl" "/usr/src/markdownlint"
 		(
 			cd /usr/src/markdownlint
-			if ! hash rake; then
+			if ! hash rake &> /dev/null; then
 				sudo -E gem install rake
 			fi
-			if ! hash bundler; then
+			if ! hash bundler &> /dev/null; then
 				sudo -E gem install bundler
 			fi
 			sudo -E rake install
@@ -109,7 +112,7 @@ install_markdownlint() {
 if [[ $INSTALL_DEV_TOOLS == true ]]; then
 	install_shfmt
 	install_spdk_bash_completion
-	if [[ $ID != centos ]]; then
+	if [[ $ID != centos && $ID != rocky && $ID != sles ]]; then
 		install_markdownlint
 	else
 		echo "mdl not supported on $ID, disabling"

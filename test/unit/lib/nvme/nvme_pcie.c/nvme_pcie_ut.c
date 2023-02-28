@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
  *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -129,7 +101,7 @@ DEFINE_RETURN_MOCK(spdk_vtophys, uint64_t);
 uint64_t
 spdk_vtophys(const void *buf, uint64_t *size)
 {
-	if (size) {
+	if (size && g_vtophys_size > 0) {
 		*size = g_vtophys_size;
 	}
 
@@ -430,7 +402,8 @@ test_nvme_pcie_hotplug_monitor(void)
 	g_spdk_nvme_driver = NULL;
 }
 
-static void test_shadow_doorbell_update(void)
+static void
+test_shadow_doorbell_update(void)
 {
 	bool ret;
 
@@ -521,7 +494,8 @@ test_build_contig_hw_sgl_request(void)
 static void
 test_nvme_pcie_qpair_build_metadata(void)
 {
-	struct spdk_nvme_qpair qpair = {};
+	struct nvme_pcie_qpair pqpair = {};
+	struct spdk_nvme_qpair *qpair = &pqpair.qpair;
 	struct nvme_tracker tr = {};
 	struct nvme_request req = {};
 	struct spdk_nvme_ctrlr	ctrlr = {};
@@ -529,7 +503,7 @@ test_nvme_pcie_qpair_build_metadata(void)
 
 	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	tr.req = &req;
-	qpair.ctrlr = &ctrlr;
+	qpair->ctrlr = &ctrlr;
 
 	req.payload.md = (void *)0xDEADBEE0;
 	req.md_offset = 0;
@@ -538,7 +512,7 @@ test_nvme_pcie_qpair_build_metadata(void)
 	tr.prp_sgl_bus_addr = 0xDBADBEEF;
 	MOCK_SET(spdk_vtophys, 0xDCADBEE0);
 
-	rc = nvme_pcie_qpair_build_metadata(&qpair, &tr, true, true);
+	rc = nvme_pcie_qpair_build_metadata(qpair, &tr, true, true);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(req.cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_SGL);
 	CU_ASSERT(tr.meta_sgl.address == 0xDCADBEE0);
@@ -546,14 +520,29 @@ test_nvme_pcie_qpair_build_metadata(void)
 	CU_ASSERT(tr.meta_sgl.unkeyed.length == 4096);
 	CU_ASSERT(tr.meta_sgl.unkeyed.subtype == 0);
 	CU_ASSERT(req.cmd.mptr == (0xDBADBEEF - sizeof(struct spdk_nvme_sgl_descriptor)));
+
+	/* Non-IOVA contiguous metadata buffers should fail. */
+	g_vtophys_size = 1024;
+	req.cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
+	rc = nvme_pcie_qpair_build_metadata(qpair, &tr, true, true);
+	CU_ASSERT(rc == -EINVAL);
+	g_vtophys_size = 0;
+
 	MOCK_CLEAR(spdk_vtophys);
 
 	/* Build non sgl metadata */
 	MOCK_SET(spdk_vtophys, 0xDDADBEE0);
 
-	rc = nvme_pcie_qpair_build_metadata(&qpair, &tr, false, true);
+	rc = nvme_pcie_qpair_build_metadata(qpair, &tr, false, true);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(req.cmd.mptr == 0xDDADBEE0);
+
+	/* Non-IOVA contiguous metadata buffers should fail. */
+	g_vtophys_size = 1024;
+	rc = nvme_pcie_qpair_build_metadata(qpair, &tr, false, true);
+	CU_ASSERT(rc == -EINVAL);
+	g_vtophys_size = 0;
+
 	MOCK_CLEAR(spdk_vtophys);
 }
 
@@ -1034,7 +1023,88 @@ test_nvme_pcie_ctrlr_config_pmr(void)
 	CU_ASSERT(rc == -EINVAL);
 }
 
-int main(int argc, char **argv)
+static void
+map_io_pmr_init(struct nvme_pcie_ctrlr *pctrlr, union spdk_nvme_pmrcap_register *pmrcap)
+{
+	pmrcap->raw = 0;
+	pmrcap->bits.rds = 1;
+	pmrcap->bits.wds = 1;
+	nvme_pcie_ctrlr_set_reg_4(&pctrlr->ctrlr, offsetof(struct spdk_nvme_registers, pmrcap.raw),
+				  pmrcap->raw);
+	pctrlr->regs->cap.bits.pmrs = 1;
+	pctrlr->pmr.mem_register_size = 0;
+	pctrlr->pmr.mem_register_addr = NULL;
+	pctrlr->pmr.bar_va = (void *)0x7F7C00E30000;
+	pctrlr->pmr.size = (1 << 22) * 128;
+}
+
+static void
+test_nvme_pcie_ctrlr_map_io_pmr(void)
+{
+	struct nvme_pcie_ctrlr pctrlr = {};
+	struct spdk_nvme_ctrlr *ctrlr;
+	volatile struct spdk_nvme_registers regs = {};
+	union spdk_nvme_pmrcap_register pmrcap;
+	void *mem_reg_addr = NULL;
+	size_t rt_size = 0;
+
+	ctrlr = &pctrlr.ctrlr;
+	pctrlr.regs = &regs;
+
+	/* PMR is not supported by the controller */
+	map_io_pmr_init(&pctrlr, &pmrcap);
+	regs.cap.bits.pmrs = 0;
+
+	mem_reg_addr = nvme_pcie_ctrlr_map_io_pmr(ctrlr, &rt_size);
+	CU_ASSERT(mem_reg_addr == NULL);
+
+	/* mem_register_addr not NULL. */
+	map_io_pmr_init(&pctrlr, &pmrcap);
+	pctrlr.pmr.mem_register_addr = (void *)0xDEADBEEF;
+	pctrlr.pmr.mem_register_size = 1024;
+
+	mem_reg_addr = nvme_pcie_ctrlr_map_io_pmr(ctrlr, &rt_size);
+	CU_ASSERT(rt_size == 1024);
+	CU_ASSERT(mem_reg_addr == (void *)0xDEADBEEF);
+
+	/* PMR not available */
+	map_io_pmr_init(&pctrlr, &pmrcap);
+	pctrlr.pmr.bar_va = NULL;
+	pctrlr.pmr.mem_register_addr = NULL;
+
+	mem_reg_addr = nvme_pcie_ctrlr_map_io_pmr(ctrlr, &rt_size);
+	CU_ASSERT(mem_reg_addr == NULL);
+	CU_ASSERT(rt_size == 0);
+
+	/* WDS / RDS is not supported */
+	map_io_pmr_init(&pctrlr, &pmrcap);
+	pmrcap.bits.rds = 0;
+	pmrcap.bits.wds = 0;
+	nvme_pcie_ctrlr_set_reg_4(&pctrlr.ctrlr, offsetof(struct spdk_nvme_registers, pmrcap.raw),
+				  pmrcap.raw);
+
+	mem_reg_addr = nvme_pcie_ctrlr_map_io_pmr(ctrlr, &rt_size);
+	CU_ASSERT(mem_reg_addr == NULL);
+	CU_ASSERT(rt_size == 0);
+
+	/* PMR is less than 4MiB in size then abort PMR mapping  */
+	map_io_pmr_init(&pctrlr, &pmrcap);
+	pctrlr.pmr.size = (1ULL << 20);
+
+	mem_reg_addr = nvme_pcie_ctrlr_map_io_pmr(ctrlr, &rt_size);
+	CU_ASSERT(mem_reg_addr == NULL);
+	CU_ASSERT(rt_size == 0);
+
+	/* All parameters success */
+	map_io_pmr_init(&pctrlr, &pmrcap);
+
+	mem_reg_addr = nvme_pcie_ctrlr_map_io_pmr(ctrlr, &rt_size);
+	CU_ASSERT(mem_reg_addr == (void *)0x7F7C01000000);
+	CU_ASSERT(rt_size == 0x1FE00000);
+}
+
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
@@ -1056,6 +1126,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_map_io_cmb);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_map_unmap_pmr);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_config_pmr);
+	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_map_io_pmr);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

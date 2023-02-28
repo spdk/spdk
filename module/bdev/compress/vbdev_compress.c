@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "vbdev_compress.h"
@@ -43,80 +15,16 @@
 #include "spdk/thread.h"
 #include "spdk/util.h"
 #include "spdk/bdev_module.h"
-
+#include "spdk/likely.h"
 #include "spdk/log.h"
+#include "spdk/accel.h"
 
-#include <rte_config.h>
-#include <rte_bus_vdev.h>
-#include <rte_compressdev.h>
-#include <rte_comp.h>
-#include <rte_mbuf_dyn.h>
+#include "spdk_internal/accel_module.h"
 
-/* Used to store IO context in mbuf */
-static const struct rte_mbuf_dynfield rte_mbuf_dynfield_io_context = {
-	.name = "context_reduce",
-	.size = sizeof(uint64_t),
-	.align = __alignof__(uint64_t),
-	.flags = 0,
-};
-static int g_mbuf_offset;
 
-#define NUM_MAX_XFORMS 2
-#define NUM_MAX_INFLIGHT_OPS 128
-#define DEFAULT_WINDOW_SIZE 15
-/* We need extra mbufs per operation to accommodate host buffers that
- *  span a 2MB boundary.
- */
-#define MAX_MBUFS_PER_OP (REDUCE_MAX_IOVECS * 2)
 #define CHUNK_SIZE (1024 * 16)
 #define COMP_BDEV_NAME "compress"
 #define BACKING_IO_SZ (4 * 1024)
-
-#define ISAL_PMD "compress_isal"
-#define QAT_PMD "compress_qat"
-#define MLX5_PMD "mlx5_pci"
-#define NUM_MBUFS		8192
-#define POOL_CACHE_SIZE		256
-
-static enum compress_pmd g_opts;
-
-/* Global list of available compression devices. */
-struct compress_dev {
-	struct rte_compressdev_info	cdev_info;	/* includes device friendly name */
-	uint8_t				cdev_id;	/* identifier for the device */
-	void				*comp_xform;	/* shared private xform for comp on this PMD */
-	void				*decomp_xform;	/* shared private xform for decomp on this PMD */
-	TAILQ_ENTRY(compress_dev)	link;
-};
-static TAILQ_HEAD(, compress_dev) g_compress_devs = TAILQ_HEAD_INITIALIZER(g_compress_devs);
-
-/* Although ISAL PMD reports 'unlimited' qpairs, it has an unplanned limit of 99 due to
- * the length of the internal ring name that it creates, it breaks a limit in the generic
- * ring code and fails the qp initialization.
- * FIXME: Reduce number of qpairs to 48, due to issue #2338
- */
-#define MAX_NUM_QP 48
-/* Global list and lock for unique device/queue pair combos */
-struct comp_device_qp {
-	struct compress_dev		*device;	/* ptr to compression device */
-	uint8_t				qp;		/* queue pair for this node */
-	struct spdk_thread		*thread;	/* thread that this qp is assigned to */
-	TAILQ_ENTRY(comp_device_qp)	link;
-};
-static TAILQ_HEAD(, comp_device_qp) g_comp_device_qp = TAILQ_HEAD_INITIALIZER(g_comp_device_qp);
-static pthread_mutex_t g_comp_device_qp_lock = PTHREAD_MUTEX_INITIALIZER;
-
-/* For queueing up compression operations that we can't submit for some reason */
-struct vbdev_comp_op {
-	struct spdk_reduce_backing_dev	*backing_dev;
-	struct iovec			*src_iovs;
-	int				src_iovcnt;
-	struct iovec			*dst_iovs;
-	int				dst_iovcnt;
-	bool				compress;
-	void				*cb_arg;
-	TAILQ_ENTRY(vbdev_comp_op)	link;
-};
 
 struct vbdev_comp_delete_ctx {
 	spdk_delete_compress_complete	cb_fn;
@@ -132,8 +40,7 @@ struct vbdev_compress {
 	struct spdk_io_channel		*base_ch;	/* IO channel of base device */
 	struct spdk_bdev		comp_bdev;	/* the compression virtual bdev */
 	struct comp_io_channel		*comp_ch;	/* channel associated with this bdev */
-	char				*drv_name;	/* name of the compression device driver */
-	struct comp_device_qp		*device_qp;
+	struct spdk_io_channel		*accel_channel;	/* to communicate with the accel framework */
 	struct spdk_thread		*reduce_thread;
 	pthread_mutex_t			reduce_lock;
 	uint32_t			ch_count;
@@ -167,37 +74,6 @@ struct comp_bdev_io {
 	int				status;			/* save for completion on orig thread */
 };
 
-/* Shared mempools between all devices on this system */
-static struct rte_mempool *g_mbuf_mp = NULL;			/* mbuf mempool */
-static struct rte_mempool *g_comp_op_mp = NULL;			/* comp operations, must be rte* mempool */
-static struct rte_mbuf_ext_shared_info g_shinfo = {};		/* used by DPDK mbuf macros */
-static bool g_qat_available = false;
-static bool g_isal_available = false;
-static bool g_mlx5_pci_available = false;
-
-/* Create shared (between all ops per PMD) compress xforms. */
-static struct rte_comp_xform g_comp_xform = {
-	.type = RTE_COMP_COMPRESS,
-	.compress = {
-		.algo = RTE_COMP_ALGO_DEFLATE,
-		.deflate.huffman = RTE_COMP_HUFFMAN_DEFAULT,
-		.level = RTE_COMP_LEVEL_MAX,
-		.window_size = DEFAULT_WINDOW_SIZE,
-		.chksum = RTE_COMP_CHECKSUM_NONE,
-		.hash_algo = RTE_COMP_HASH_ALGO_NONE
-	}
-};
-/* Create shared (between all ops per PMD) decompress xforms. */
-static struct rte_comp_xform g_decomp_xform = {
-	.type = RTE_COMP_DECOMPRESS,
-	.decompress = {
-		.algo = RTE_COMP_ALGO_DEFLATE,
-		.chksum = RTE_COMP_CHECKSUM_NONE,
-		.window_size = DEFAULT_WINDOW_SIZE,
-		.hash_algo = RTE_COMP_HASH_ALGO_NONE
-	}
-};
-
 static void vbdev_compress_examine(struct spdk_bdev *bdev);
 static int vbdev_compress_claim(struct vbdev_compress *comp_bdev);
 static void vbdev_compress_queue_io(struct spdk_bdev_io *bdev_io);
@@ -206,233 +82,16 @@ static void vbdev_compress_submit_request(struct spdk_io_channel *ch, struct spd
 static void comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf);
 static void vbdev_compress_delete_done(void *cb_arg, int bdeverrno);
 
-/* Dummy function used by DPDK to free ext attached buffers
- * to mbufs, we free them ourselves but this callback has to
- * be here.
- */
-static void
-shinfo_free_cb(void *arg1, void *arg2)
-{
-}
-
-/* Called by vbdev_init_compress_drivers() to init each discovered compression device */
-static int
-create_compress_dev(uint8_t index)
-{
-	struct compress_dev *device;
-	uint16_t q_pairs;
-	uint8_t cdev_id;
-	int rc, i;
-	struct comp_device_qp *dev_qp;
-	struct comp_device_qp *tmp_qp;
-
-	device = calloc(1, sizeof(struct compress_dev));
-	if (!device) {
-		return -ENOMEM;
-	}
-
-	/* Get details about this device. */
-	rte_compressdev_info_get(index, &device->cdev_info);
-
-	cdev_id = device->cdev_id = index;
-
-	/* Zero means no limit so choose number of lcores. */
-	if (device->cdev_info.max_nb_queue_pairs == 0) {
-		q_pairs = MAX_NUM_QP;
-	} else {
-		q_pairs = spdk_min(device->cdev_info.max_nb_queue_pairs, MAX_NUM_QP);
-	}
-
-	/* Configure the compression device. */
-	struct rte_compressdev_config config = {
-		.socket_id = rte_socket_id(),
-		.nb_queue_pairs = q_pairs,
-		.max_nb_priv_xforms = NUM_MAX_XFORMS,
-		.max_nb_streams = 0
-	};
-	rc = rte_compressdev_configure(cdev_id, &config);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to configure compressdev %u\n", cdev_id);
-		goto err;
-	}
-
-	/* Pre-setup all potential qpairs now and assign them in the channel
-	 * callback.
-	 */
-	for (i = 0; i < q_pairs; i++) {
-		rc = rte_compressdev_queue_pair_setup(cdev_id, i,
-						      NUM_MAX_INFLIGHT_OPS,
-						      rte_socket_id());
-		if (rc) {
-			if (i > 0) {
-				q_pairs = i;
-				SPDK_NOTICELOG("FYI failed to setup a queue pair on "
-					       "compressdev %u with error %u "
-					       "so limiting to %u qpairs\n",
-					       cdev_id, rc, q_pairs);
-				break;
-			} else {
-				SPDK_ERRLOG("Failed to setup queue pair on "
-					    "compressdev %u with error %u\n", cdev_id, rc);
-				rc = -EINVAL;
-				goto err;
-			}
-		}
-	}
-
-	rc = rte_compressdev_start(cdev_id);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to start device %u: error %d\n",
-			    cdev_id, rc);
-		goto err;
-	}
-
-	if (device->cdev_info.capabilities->comp_feature_flags & RTE_COMP_FF_SHAREABLE_PRIV_XFORM) {
-		rc = rte_compressdev_private_xform_create(cdev_id, &g_comp_xform,
-				&device->comp_xform);
-		if (rc < 0) {
-			SPDK_ERRLOG("Failed to create private comp xform device %u: error %d\n",
-				    cdev_id, rc);
-			goto err;
-		}
-
-		rc = rte_compressdev_private_xform_create(cdev_id, &g_decomp_xform,
-				&device->decomp_xform);
-		if (rc) {
-			SPDK_ERRLOG("Failed to create private decomp xform device %u: error %d\n",
-				    cdev_id, rc);
-			goto err;
-		}
-	} else {
-		SPDK_ERRLOG("PMD does not support shared transforms\n");
-		goto err;
-	}
-
-	/* Build up list of device/qp combinations */
-	for (i = 0; i < q_pairs; i++) {
-		dev_qp = calloc(1, sizeof(struct comp_device_qp));
-		if (!dev_qp) {
-			rc = -ENOMEM;
-			goto err;
-		}
-		dev_qp->device = device;
-		dev_qp->qp = i;
-		dev_qp->thread = NULL;
-		TAILQ_INSERT_TAIL(&g_comp_device_qp, dev_qp, link);
-	}
-
-	TAILQ_INSERT_TAIL(&g_compress_devs, device, link);
-
-	if (strcmp(device->cdev_info.driver_name, QAT_PMD) == 0) {
-		g_qat_available = true;
-	}
-	if (strcmp(device->cdev_info.driver_name, ISAL_PMD) == 0) {
-		g_isal_available = true;
-	}
-	if (strcmp(device->cdev_info.driver_name, MLX5_PMD) == 0) {
-		g_mlx5_pci_available = true;
-	}
-
-	return 0;
-
-err:
-	TAILQ_FOREACH_SAFE(dev_qp, &g_comp_device_qp, link, tmp_qp) {
-		TAILQ_REMOVE(&g_comp_device_qp, dev_qp, link);
-		free(dev_qp);
-	}
-	free(device);
-	return rc;
-}
-
-/* Called from driver init entry point, vbdev_compress_init() */
-static int
-vbdev_init_compress_drivers(void)
-{
-	uint8_t cdev_count, i;
-	struct compress_dev *tmp_dev;
-	struct compress_dev *device;
-	int rc;
-
-	/* We always init the compress_isal PMD */
-	rc = rte_vdev_init(ISAL_PMD, NULL);
-	if (rc == 0) {
-		SPDK_NOTICELOG("created virtual PMD %s\n", ISAL_PMD);
-	} else if (rc == -EEXIST) {
-		SPDK_NOTICELOG("virtual PMD %s already exists.\n", ISAL_PMD);
-	} else {
-		SPDK_ERRLOG("creating virtual PMD %s\n", ISAL_PMD);
-		return -EINVAL;
-	}
-
-	/* If we have no compression devices, there's no reason to continue. */
-	cdev_count = rte_compressdev_count();
-	if (cdev_count == 0) {
-		return 0;
-	}
-	if (cdev_count > RTE_COMPRESS_MAX_DEVS) {
-		SPDK_ERRLOG("invalid device count from rte_compressdev_count()\n");
-		return -EINVAL;
-	}
-
-	g_mbuf_offset = rte_mbuf_dynfield_register(&rte_mbuf_dynfield_io_context);
-	if (g_mbuf_offset < 0) {
-		SPDK_ERRLOG("error registering dynamic field with DPDK\n");
-		return -EINVAL;
-	}
-
-	g_mbuf_mp = rte_pktmbuf_pool_create("comp_mbuf_mp", NUM_MBUFS, POOL_CACHE_SIZE,
-					    sizeof(struct rte_mbuf), 0, rte_socket_id());
-	if (g_mbuf_mp == NULL) {
-		SPDK_ERRLOG("Cannot create mbuf pool\n");
-		rc = -ENOMEM;
-		goto error_create_mbuf;
-	}
-
-	g_comp_op_mp = rte_comp_op_pool_create("comp_op_pool", NUM_MBUFS, POOL_CACHE_SIZE,
-					       0, rte_socket_id());
-	if (g_comp_op_mp == NULL) {
-		SPDK_ERRLOG("Cannot create comp op pool\n");
-		rc = -ENOMEM;
-		goto error_create_op;
-	}
-
-	/* Init all devices */
-	for (i = 0; i < cdev_count; i++) {
-		rc = create_compress_dev(i);
-		if (rc != 0) {
-			goto error_create_compress_devs;
-		}
-	}
-
-	if (g_qat_available == true) {
-		SPDK_NOTICELOG("initialized QAT PMD\n");
-	}
-
-	g_shinfo.free_cb = shinfo_free_cb;
-
-	return 0;
-
-	/* Error cleanup paths. */
-error_create_compress_devs:
-	TAILQ_FOREACH_SAFE(device, &g_compress_devs, link, tmp_dev) {
-		TAILQ_REMOVE(&g_compress_devs, device, link);
-		free(device);
-	}
-error_create_op:
-error_create_mbuf:
-	rte_mempool_free(g_mbuf_mp);
-
-	return rc;
-}
-
 /* for completing rw requests on the orig IO thread. */
 static void
 _reduce_rw_blocks_cb(void *arg)
 {
 	struct comp_bdev_io *io_ctx = arg;
 
-	if (io_ctx->status == 0) {
+	if (spdk_likely(io_ctx->status == 0)) {
 		spdk_bdev_io_complete(io_ctx->orig_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	} else if (io_ctx->status == -ENOMEM) {
+		vbdev_compress_queue_io(spdk_bdev_io_from_ctx(io_ctx));
 	} else {
 		SPDK_ERRLOG("status %d on operation from reduce API\n", io_ctx->status);
 		spdk_bdev_io_complete(io_ctx->orig_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -459,269 +118,28 @@ reduce_rw_blocks_cb(void *arg, int reduce_errno)
 	spdk_thread_exec_msg(orig_thread, _reduce_rw_blocks_cb, io_ctx);
 }
 
-static uint64_t
-_setup_compress_mbuf(struct rte_mbuf **mbufs, int *mbuf_total, uint64_t *total_length,
-		     struct iovec *iovs, int iovcnt, void *reduce_cb_arg)
-{
-	uint64_t updated_length, remainder, phys_addr;
-	uint8_t *current_base = NULL;
-	int iov_index, mbuf_index;
-	int rc = 0;
-
-	/* Setup mbufs */
-	iov_index = mbuf_index = 0;
-	while (iov_index < iovcnt) {
-
-		current_base = iovs[iov_index].iov_base;
-		if (total_length) {
-			*total_length += iovs[iov_index].iov_len;
-		}
-		assert(mbufs[mbuf_index] != NULL);
-		*RTE_MBUF_DYNFIELD(mbufs[mbuf_index], g_mbuf_offset, uint64_t *) = (uint64_t)reduce_cb_arg;
-		updated_length = iovs[iov_index].iov_len;
-		phys_addr = spdk_vtophys((void *)current_base, &updated_length);
-
-		rte_pktmbuf_attach_extbuf(mbufs[mbuf_index],
-					  current_base,
-					  phys_addr,
-					  updated_length,
-					  &g_shinfo);
-		rte_pktmbuf_append(mbufs[mbuf_index], updated_length);
-		remainder = iovs[iov_index].iov_len - updated_length;
-
-		if (mbuf_index > 0) {
-			rte_pktmbuf_chain(mbufs[0], mbufs[mbuf_index]);
-		}
-
-		/* If we crossed 2 2MB boundary we need another mbuf for the remainder */
-		if (remainder > 0) {
-			/* allocate an mbuf at the end of the array */
-			rc = rte_pktmbuf_alloc_bulk(g_mbuf_mp,
-						    (struct rte_mbuf **)&mbufs[*mbuf_total], 1);
-			if (rc) {
-				SPDK_ERRLOG("ERROR trying to get an extra mbuf!\n");
-				return -1;
-			}
-			(*mbuf_total)++;
-			mbuf_index++;
-			*RTE_MBUF_DYNFIELD(mbufs[mbuf_index], g_mbuf_offset, uint64_t *) = (uint64_t)reduce_cb_arg;
-			current_base += updated_length;
-			phys_addr = spdk_vtophys((void *)current_base, &remainder);
-			/* assert we don't cross another */
-			assert(remainder == iovs[iov_index].iov_len - updated_length);
-
-			rte_pktmbuf_attach_extbuf(mbufs[mbuf_index],
-						  current_base,
-						  phys_addr,
-						  remainder,
-						  &g_shinfo);
-			rte_pktmbuf_append(mbufs[mbuf_index], remainder);
-			rte_pktmbuf_chain(mbufs[0], mbufs[mbuf_index]);
-		}
-		iov_index++;
-		mbuf_index++;
-	}
-
-	return 0;
-}
-
 static int
 _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *src_iovs,
 		    int src_iovcnt, struct iovec *dst_iovs,
 		    int dst_iovcnt, bool compress, void *cb_arg)
 {
-	void *reduce_cb_arg = cb_arg;
+	struct spdk_reduce_vol_cb_args *reduce_cb_arg = cb_arg;
 	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(backing_dev, struct vbdev_compress,
 					   backing_dev);
-	struct rte_comp_op *comp_op;
-	struct rte_mbuf *src_mbufs[MAX_MBUFS_PER_OP];
-	struct rte_mbuf *dst_mbufs[MAX_MBUFS_PER_OP];
-	uint8_t cdev_id = comp_bdev->device_qp->device->cdev_id;
-	uint64_t total_length = 0;
-	int rc = 0;
-	struct vbdev_comp_op *op_to_queue;
-	int i;
-	int src_mbuf_total = src_iovcnt;
-	int dst_mbuf_total = dst_iovcnt;
-	bool device_error = false;
+	int rc;
 
-	assert(src_iovcnt < MAX_MBUFS_PER_OP);
-
-#ifdef DEBUG
-	memset(src_mbufs, 0, sizeof(src_mbufs));
-	memset(dst_mbufs, 0, sizeof(dst_mbufs));
-#endif
-
-	comp_op = rte_comp_op_alloc(g_comp_op_mp);
-	if (!comp_op) {
-		SPDK_ERRLOG("trying to get a comp op!\n");
-		goto error_get_op;
-	}
-
-	/* get an mbuf per iov, src and dst */
-	rc = rte_pktmbuf_alloc_bulk(g_mbuf_mp, (struct rte_mbuf **)&src_mbufs[0], src_iovcnt);
-	if (rc) {
-		SPDK_ERRLOG("ERROR trying to get src_mbufs!\n");
-		goto error_get_src;
-	}
-
-	rc = rte_pktmbuf_alloc_bulk(g_mbuf_mp, (struct rte_mbuf **)&dst_mbufs[0], dst_iovcnt);
-	if (rc) {
-		SPDK_ERRLOG("ERROR trying to get dst_mbufs!\n");
-		goto error_get_dst;
-	}
-
-	/* There is a 1:1 mapping between a bdev_io and a compression operation, but
-	 * all compression PMDs that SPDK uses support chaining so build our mbuf chain
-	 * and associate with our single comp_op.
-	 */
-
-	rc = _setup_compress_mbuf(&src_mbufs[0], &src_mbuf_total, &total_length,
-				  src_iovs, src_iovcnt, reduce_cb_arg);
-	if (rc < 0) {
-		goto error_src_dst;
-	}
-
-	comp_op->m_src = src_mbufs[0];
-	comp_op->src.offset = 0;
-	comp_op->src.length = total_length;
-
-	/* setup dst mbufs, for the current test being used with this code there's only one vector */
-	rc = _setup_compress_mbuf(&dst_mbufs[0], &dst_mbuf_total, NULL,
-				  dst_iovs, dst_iovcnt, reduce_cb_arg);
-	if (rc < 0) {
-		goto error_src_dst;
-	}
-
-	comp_op->m_dst = dst_mbufs[0];
-	comp_op->dst.offset = 0;
-
-	if (compress == true) {
-		comp_op->private_xform = comp_bdev->device_qp->device->comp_xform;
+	if (compress) {
+		assert(dst_iovcnt == 1);
+		rc = spdk_accel_submit_compress(comp_bdev->accel_channel, dst_iovs[0].iov_base, dst_iovs[0].iov_len,
+						src_iovs, src_iovcnt, &reduce_cb_arg->output_size,
+						0, reduce_cb_arg->cb_fn, reduce_cb_arg->cb_arg);
 	} else {
-		comp_op->private_xform = comp_bdev->device_qp->device->decomp_xform;
+		rc = spdk_accel_submit_decompress(comp_bdev->accel_channel, dst_iovs, dst_iovcnt,
+						  src_iovs, src_iovcnt, &reduce_cb_arg->output_size,
+						  0, reduce_cb_arg->cb_fn, reduce_cb_arg->cb_arg);
 	}
 
-	comp_op->op_type = RTE_COMP_OP_STATELESS;
-	comp_op->flush_flag = RTE_COMP_FLUSH_FINAL;
-
-	rc = rte_compressdev_enqueue_burst(cdev_id, comp_bdev->device_qp->qp, &comp_op, 1);
-	assert(rc <= 1);
-
-	/* We always expect 1 got queued, if 0 then we need to queue it up. */
-	if (rc == 1) {
-		return 0;
-	} else if (comp_op->status == RTE_COMP_OP_STATUS_NOT_PROCESSED) {
-		/* we free mbufs differently depending on whether they were chained or not */
-		rte_pktmbuf_free(comp_op->m_src);
-		rte_pktmbuf_free(comp_op->m_dst);
-		goto error_enqueue;
-	} else {
-		device_error = true;
-		goto error_src_dst;
-	}
-
-	/* Error cleanup paths. */
-error_src_dst:
-	for (i = 0; i < dst_mbuf_total; i++) {
-		rte_pktmbuf_free((struct rte_mbuf *)&dst_mbufs[i]);
-	}
-error_get_dst:
-	for (i = 0; i < src_mbuf_total; i++) {
-		rte_pktmbuf_free((struct rte_mbuf *)&src_mbufs[i]);
-	}
-error_get_src:
-error_enqueue:
-	rte_comp_op_free(comp_op);
-error_get_op:
-
-	if (device_error == true) {
-		/* There was an error sending the op to the device, most
-		 * likely with the parameters.
-		 */
-		SPDK_ERRLOG("Compression API returned 0x%x\n", comp_op->status);
-		return -EINVAL;
-	}
-
-	op_to_queue = calloc(1, sizeof(struct vbdev_comp_op));
-	if (op_to_queue == NULL) {
-		SPDK_ERRLOG("unable to allocate operation for queueing.\n");
-		return -ENOMEM;
-	}
-	op_to_queue->backing_dev = backing_dev;
-	op_to_queue->src_iovs = src_iovs;
-	op_to_queue->src_iovcnt = src_iovcnt;
-	op_to_queue->dst_iovs = dst_iovs;
-	op_to_queue->dst_iovcnt = dst_iovcnt;
-	op_to_queue->compress = compress;
-	op_to_queue->cb_arg = cb_arg;
-	TAILQ_INSERT_TAIL(&comp_bdev->queued_comp_ops,
-			  op_to_queue,
-			  link);
-	return 0;
-}
-
-/* Poller for the DPDK compression driver. */
-static int
-comp_dev_poller(void *args)
-{
-	struct vbdev_compress *comp_bdev = args;
-	uint8_t cdev_id = comp_bdev->device_qp->device->cdev_id;
-	struct rte_comp_op *deq_ops[NUM_MAX_INFLIGHT_OPS];
-	uint16_t num_deq;
-	struct spdk_reduce_vol_cb_args *reduce_args;
-	struct vbdev_comp_op *op_to_resubmit;
-	int rc, i;
-
-	num_deq = rte_compressdev_dequeue_burst(cdev_id, comp_bdev->device_qp->qp, deq_ops,
-						NUM_MAX_INFLIGHT_OPS);
-	for (i = 0; i < num_deq; i++) {
-		reduce_args = (struct spdk_reduce_vol_cb_args *)*RTE_MBUF_DYNFIELD(deq_ops[i]->m_src, g_mbuf_offset,
-				uint64_t *);
-		if (deq_ops[i]->status == RTE_COMP_OP_STATUS_SUCCESS) {
-
-			/* tell reduce this is done and what the bytecount was */
-			reduce_args->cb_fn(reduce_args->cb_arg, deq_ops[i]->produced);
-		} else {
-			SPDK_NOTICELOG("FYI storing data uncompressed due to deque status %u\n",
-				       deq_ops[i]->status);
-
-			/* Reduce will simply store uncompressed on neg errno value. */
-			reduce_args->cb_fn(reduce_args->cb_arg, -EINVAL);
-		}
-
-		/* Now free both mbufs and the compress operation. The rte_pktmbuf_free()
-		 * call takes care of freeing all of the mbufs in the chain back to their
-		 * original pool.
-		 */
-		rte_pktmbuf_free(deq_ops[i]->m_src);
-		rte_pktmbuf_free(deq_ops[i]->m_dst);
-
-		/* There is no bulk free for com ops so we have to free them one at a time
-		 * here however it would be rare that we'd ever have more than 1 at a time
-		 * anyways.
-		 */
-		rte_comp_op_free(deq_ops[i]);
-
-		/* Check if there are any pending comp ops to process, only pull one
-		 * at a time off as _compress_operation() may re-queue the op.
-		 */
-		if (!TAILQ_EMPTY(&comp_bdev->queued_comp_ops)) {
-			op_to_resubmit = TAILQ_FIRST(&comp_bdev->queued_comp_ops);
-			rc = _compress_operation(op_to_resubmit->backing_dev,
-						 op_to_resubmit->src_iovs,
-						 op_to_resubmit->src_iovcnt,
-						 op_to_resubmit->dst_iovs,
-						 op_to_resubmit->dst_iovcnt,
-						 op_to_resubmit->compress,
-						 op_to_resubmit->cb_arg);
-			if (rc == 0) {
-				TAILQ_REMOVE(&comp_bdev->queued_comp_ops, op_to_resubmit, link);
-				free(op_to_resubmit);
-			}
-		}
-	}
-	return num_deq == 0 ? SPDK_POLLER_IDLE : SPDK_POLLER_BUSY;
+	return rc;
 }
 
 /* Entry point for reduce lib to issue a compress operation. */
@@ -756,6 +174,31 @@ _comp_reduce_decompress(struct spdk_reduce_backing_dev *dev,
 	}
 }
 
+static void
+_comp_submit_write(void *ctx)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_compress,
+					   comp_bdev);
+
+	spdk_reduce_vol_writev(comp_bdev->vol, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+			       bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
+			       reduce_rw_blocks_cb, bdev_io);
+}
+
+static void
+_comp_submit_read(void *ctx)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_compress,
+					   comp_bdev);
+
+	spdk_reduce_vol_readv(comp_bdev->vol, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+			      bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
+			      reduce_rw_blocks_cb, bdev_io);
+}
+
+
 /* Callback for getting a buf from the bdev pool in the event that the caller passed
  * in NULL, we need to own the buffer so it doesn't get freed by another vbdev module
  * beneath us before we're done with it.
@@ -766,75 +209,13 @@ comp_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, b
 	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_compress,
 					   comp_bdev);
 
-	spdk_reduce_vol_readv(comp_bdev->vol, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-			      bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
-			      reduce_rw_blocks_cb, bdev_io);
-}
-
-/* scheduled for completion on IO thread */
-static void
-_complete_other_io(void *arg)
-{
-	struct comp_bdev_io *io_ctx = (struct comp_bdev_io *)arg;
-	if (io_ctx->status == 0) {
-		spdk_bdev_io_complete(io_ctx->orig_io, SPDK_BDEV_IO_STATUS_SUCCESS);
-	} else {
-		spdk_bdev_io_complete(io_ctx->orig_io, SPDK_BDEV_IO_STATUS_FAILED);
-	}
-}
-
-/* scheduled for submission on reduce thread */
-static void
-_comp_bdev_io_submit(void *arg)
-{
-	struct spdk_bdev_io *bdev_io = arg;
-	struct comp_bdev_io *io_ctx = (struct comp_bdev_io *)bdev_io->driver_ctx;
-	struct spdk_io_channel *ch = spdk_io_channel_from_ctx(io_ctx->comp_ch);
-	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_compress,
-					   comp_bdev);
-	struct spdk_thread *orig_thread;
-	int rc = 0;
-
-	switch (bdev_io->type) {
-	case SPDK_BDEV_IO_TYPE_READ:
-		spdk_bdev_io_get_buf(bdev_io, comp_read_get_buf_cb,
-				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+	if (spdk_unlikely(!success)) {
+		SPDK_ERRLOG("Failed to get data buffer\n");
+		reduce_rw_blocks_cb(bdev_io, -ENOMEM);
 		return;
-	case SPDK_BDEV_IO_TYPE_WRITE:
-		spdk_reduce_vol_writev(comp_bdev->vol, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-				       bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
-				       reduce_rw_blocks_cb, bdev_io);
-		return;
-	/* TODO in future patch in the series */
-	case SPDK_BDEV_IO_TYPE_RESET:
-		break;
-	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
-	case SPDK_BDEV_IO_TYPE_UNMAP:
-	case SPDK_BDEV_IO_TYPE_FLUSH:
-	default:
-		SPDK_ERRLOG("Unknown I/O type %d\n", bdev_io->type);
-		rc = -EINVAL;
 	}
 
-	if (rc) {
-		if (rc == -ENOMEM) {
-			SPDK_ERRLOG("No memory, start to queue io for compress.\n");
-			io_ctx->ch = ch;
-			vbdev_compress_queue_io(bdev_io);
-			return;
-		} else {
-			SPDK_ERRLOG("on bdev_io submission!\n");
-			io_ctx->status = rc;
-		}
-	}
-
-	/* Complete this on the orig IO thread. */
-	orig_thread = spdk_io_channel_get_thread(ch);
-	if (orig_thread != spdk_get_thread()) {
-		spdk_thread_send_msg(orig_thread, _complete_other_io, io_ctx);
-	} else {
-		_complete_other_io(io_ctx);
-	}
+	spdk_thread_exec_msg(comp_bdev->reduce_thread, _comp_submit_read, bdev_io);
 }
 
 /* Called when someone above submits IO to this vbdev. */
@@ -851,11 +232,23 @@ vbdev_compress_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 	io_ctx->comp_ch = comp_ch;
 	io_ctx->orig_io = bdev_io;
 
-	/* Send this request to the reduce_thread if that's not what we're on. */
-	if (spdk_get_thread() != comp_bdev->reduce_thread) {
-		spdk_thread_send_msg(comp_bdev->reduce_thread, _comp_bdev_io_submit, bdev_io);
-	} else {
-		_comp_bdev_io_submit(bdev_io);
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		spdk_bdev_io_get_buf(bdev_io, comp_read_get_buf_cb,
+				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+		return;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		spdk_thread_exec_msg(comp_bdev->reduce_thread, _comp_submit_write, bdev_io);
+		return;
+	/* TODO support RESET in future patch in the series */
+	case SPDK_BDEV_IO_TYPE_RESET:
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+	default:
+		SPDK_ERRLOG("Unknown I/O type %d\n", bdev_io->type);
+		spdk_bdev_io_complete(io_ctx->orig_io, SPDK_BDEV_IO_STATUS_FAILED);
+		break;
 	}
 }
 
@@ -1099,7 +492,6 @@ vbdev_compress_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&comp_bdev->comp_bdev));
 	spdk_json_write_named_string(w, "base_bdev_name", spdk_bdev_get_name(comp_bdev->base_bdev));
-	spdk_json_write_named_string(w, "compression_pmd", comp_bdev->drv_name);
 	spdk_json_write_object_end(w);
 
 	return 0;
@@ -1110,6 +502,13 @@ static int
 vbdev_compress_config_json(struct spdk_json_write_ctx *w)
 {
 	struct vbdev_compress *comp_bdev;
+	const char *module_name = NULL;
+	int rc;
+
+	rc = spdk_accel_get_opc_module_name(ACCEL_OPC_COMPRESS, &module_name);
+	if (rc) {
+		SPDK_ERRLOG("error getting module name (%d)\n", rc);
+	}
 
 	TAILQ_FOREACH(comp_bdev, &g_vbdev_comp, link) {
 		spdk_json_write_object_begin(w);
@@ -1117,7 +516,6 @@ vbdev_compress_config_json(struct spdk_json_write_ctx *w)
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "base_bdev_name", spdk_bdev_get_name(comp_bdev->base_bdev));
 		spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&comp_bdev->comp_bdev));
-		spdk_json_write_named_string(w, "compression_pmd", comp_bdev->drv_name);
 		spdk_json_write_object_end(w);
 		spdk_json_write_object_end(w);
 	}
@@ -1332,7 +730,6 @@ _prepare_for_load_init(struct spdk_bdev_desc *bdev_desc, uint32_t lb_size)
 		return NULL;
 	}
 
-	meta_ctx->drv_name = "None";
 	meta_ctx->backing_dev.unmap = _comp_reduce_unmap;
 	meta_ctx->backing_dev.readv = _comp_reduce_readv;
 	meta_ctx->backing_dev.writev = _comp_reduce_writev;
@@ -1357,31 +754,6 @@ _prepare_for_load_init(struct spdk_bdev_desc *bdev_desc, uint32_t lb_size)
 	return meta_ctx;
 }
 
-static bool
-_set_pmd(struct vbdev_compress *comp_dev)
-{
-	if (g_opts == COMPRESS_PMD_AUTO) {
-		if (g_qat_available) {
-			comp_dev->drv_name = QAT_PMD;
-		} else if (g_mlx5_pci_available) {
-			comp_dev->drv_name = MLX5_PMD;
-		} else {
-			comp_dev->drv_name = ISAL_PMD;
-		}
-	} else if (g_opts == COMPRESS_PMD_QAT_ONLY && g_qat_available) {
-		comp_dev->drv_name = QAT_PMD;
-	} else if (g_opts == COMPRESS_PMD_ISAL_ONLY && g_isal_available) {
-		comp_dev->drv_name = ISAL_PMD;
-	} else if (g_opts == COMPRESS_PMD_MLX5_PCI_ONLY && g_mlx5_pci_available) {
-		comp_dev->drv_name = MLX5_PMD;
-	} else {
-		SPDK_ERRLOG("Requested PMD is not available.\n");
-		return false;
-	}
-	SPDK_NOTICELOG("PMD being used: %s\n", comp_dev->drv_name);
-	return true;
-}
-
 /* Call reducelib to initialize a new volume */
 static int
 vbdev_init_reduce(const char *bdev_name, const char *pm_path, uint32_t lb_size)
@@ -1399,13 +771,6 @@ vbdev_init_reduce(const char *bdev_name, const char *pm_path, uint32_t lb_size)
 
 	meta_ctx = _prepare_for_load_init(bdev_desc, lb_size);
 	if (meta_ctx == NULL) {
-		spdk_bdev_close(bdev_desc);
-		return -EINVAL;
-	}
-
-	if (_set_pmd(meta_ctx) == false) {
-		SPDK_ERRLOG("could not find required pmd\n");
-		free(meta_ctx);
 		spdk_bdev_close(bdev_desc);
 		return -EINVAL;
 	}
@@ -1432,7 +797,6 @@ static int
 comp_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 {
 	struct vbdev_compress *comp_bdev = io_device;
-	struct comp_device_qp *device_qp;
 
 	/* Now set the reduce channel if it's not already set. */
 	pthread_mutex_lock(&comp_bdev->reduce_lock);
@@ -1445,46 +809,20 @@ comp_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 
 		comp_bdev->base_ch = spdk_bdev_get_io_channel(comp_bdev->base_desc);
 		comp_bdev->reduce_thread = spdk_get_thread();
-		comp_bdev->poller = SPDK_POLLER_REGISTER(comp_dev_poller, comp_bdev, 0);
-		/* Now assign a q pair */
-		pthread_mutex_lock(&g_comp_device_qp_lock);
-		TAILQ_FOREACH(device_qp, &g_comp_device_qp, link) {
-			if (strcmp(device_qp->device->cdev_info.driver_name, comp_bdev->drv_name) == 0) {
-				if (device_qp->thread == spdk_get_thread()) {
-					comp_bdev->device_qp = device_qp;
-					break;
-				}
-				if (device_qp->thread == NULL) {
-					comp_bdev->device_qp = device_qp;
-					device_qp->thread = spdk_get_thread();
-					break;
-				}
-			}
-		}
-		pthread_mutex_unlock(&g_comp_device_qp_lock);
+		comp_bdev->accel_channel = spdk_accel_get_io_channel();
 	}
 	comp_bdev->ch_count++;
 	pthread_mutex_unlock(&comp_bdev->reduce_lock);
 
-	if (comp_bdev->device_qp != NULL) {
-		return 0;
-	} else {
-		SPDK_ERRLOG("out of qpairs, cannot assign one to comp_bdev %p\n", comp_bdev);
-		assert(false);
-		return -ENOMEM;
-	}
+	return 0;
 }
 
 static void
 _channel_cleanup(struct vbdev_compress *comp_bdev)
 {
-	/* Note: comp_bdevs can share a device_qp if they are
-	 * on the same thread so we leave the device_qp element
-	 * alone for this comp_bdev and just clear the reduce thread.
-	 */
 	spdk_put_io_channel(comp_bdev->base_ch);
+	spdk_put_io_channel(comp_bdev->accel_channel);
 	comp_bdev->reduce_thread = NULL;
-	spdk_poller_unregister(&comp_bdev->poller);
 }
 
 /* Used to reroute destroy_ch to the correct thread */
@@ -1541,15 +879,9 @@ create_compress_bdev(const char *bdev_name, const char *pm_path, uint32_t lb_siz
 	return vbdev_init_reduce(bdev_name, pm_path, lb_size);
 }
 
-/* On init, just init the compress drivers. All metadata is stored on disk. */
 static int
 vbdev_compress_init(void)
 {
-	if (vbdev_init_compress_drivers()) {
-		SPDK_ERRLOG("Error setting up compression devices\n");
-		return -EINVAL;
-	}
-
 	return 0;
 }
 
@@ -1557,17 +889,7 @@ vbdev_compress_init(void)
 static void
 vbdev_compress_finish(void)
 {
-	struct comp_device_qp *dev_qp;
 	/* TODO: unload vol in a future patch */
-
-	while ((dev_qp = TAILQ_FIRST(&g_comp_device_qp))) {
-		TAILQ_REMOVE(&g_comp_device_qp, dev_qp, link);
-		free(dev_qp);
-	}
-	pthread_mutex_destroy(&g_comp_device_qp_lock);
-
-	rte_mempool_free(g_comp_op_mp);
-	rte_mempool_free(g_mbuf_mp);
 }
 
 /* During init we'll be asked how much memory we'd like passed to us
@@ -1638,15 +960,6 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 	comp_bdev->comp_bdev.product_name = COMP_BDEV_NAME;
 	comp_bdev->comp_bdev.write_cache = comp_bdev->base_bdev->write_cache;
 
-	if (strcmp(comp_bdev->drv_name, QAT_PMD) == 0) {
-		comp_bdev->comp_bdev.required_alignment =
-			spdk_max(spdk_u32log2(comp_bdev->base_bdev->blocklen),
-				 comp_bdev->base_bdev->required_alignment);
-		SPDK_NOTICELOG("QAT in use: Required alignment set to %u\n",
-			       comp_bdev->comp_bdev.required_alignment);
-	} else {
-		comp_bdev->comp_bdev.required_alignment = comp_bdev->base_bdev->required_alignment;
-	}
 	comp_bdev->comp_bdev.optimal_io_boundary =
 		comp_bdev->params.chunk_size / comp_bdev->params.logical_block_size;
 
@@ -1775,11 +1088,6 @@ _vbdev_reduce_load_cb(void *ctx)
 	spdk_put_io_channel(meta_ctx->base_ch);
 
 	if (meta_ctx->reduce_errno == 0) {
-		if (_set_pmd(meta_ctx) == false) {
-			SPDK_ERRLOG("could not find required pmd\n");
-			goto err;
-		}
-
 		rc = vbdev_compress_claim(meta_ctx);
 		if (rc != 0) {
 			goto err;
@@ -1883,14 +1191,6 @@ vbdev_compress_examine(struct spdk_bdev *bdev)
 
 	meta_ctx->base_ch = spdk_bdev_get_io_channel(meta_ctx->base_desc);
 	spdk_reduce_vol_load(&meta_ctx->backing_dev, vbdev_reduce_load_cb, meta_ctx);
-}
-
-int
-compress_set_pmd(enum compress_pmd *opts)
-{
-	g_opts = *opts;
-
-	return 0;
 }
 
 SPDK_LOG_REGISTER_COMPONENT(vbdev_compress)

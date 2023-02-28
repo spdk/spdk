@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
@@ -36,7 +39,7 @@ fio_py="$rootdir/scripts/fio-wrapper"
 timing_enter start_iscsi_tgt
 
 echo "start iscsi_tgt with trace enabled"
-"${ISCSI_APP[@]}" -m 0xf --num-trace-entries $NUM_TRACE_ENTRIES --tpoint-group-mask 0xf &
+"${ISCSI_APP[@]}" -m 0xf --num-trace-entries $NUM_TRACE_ENTRIES --tpoint-group all &
 iscsi_pid=$!
 echo "Process pid: $iscsi_pid"
 
@@ -49,7 +52,7 @@ echo "iscsi_tgt is listening. Running tests..."
 timing_exit start_iscsi_tgt
 
 mkdir -p ${TRACE_TMP_FOLDER}
-./build/bin/spdk_trace_record -s iscsi -p ${iscsi_pid} -f ${TRACE_RECORD_OUTPUT} -q 1> ${TRACE_RECORD_NOTICE_LOG} &
+$rootdir/build/bin/spdk_trace_record -s iscsi -p ${iscsi_pid} -f ${TRACE_RECORD_OUTPUT} -q 1> ${TRACE_RECORD_NOTICE_LOG} &
 record_pid=$!
 echo "Trace record pid: $record_pid"
 
@@ -90,7 +93,7 @@ trap 'delete_tmp_files; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
 
 killprocess $iscsi_pid
 killprocess $record_pid
-./build/bin/spdk_trace -f ${TRACE_RECORD_OUTPUT} > ${TRACE_TOOL_LOG}
+$rootdir/build/bin/spdk_trace -f ${TRACE_RECORD_OUTPUT} > ${TRACE_TOOL_LOG}
 
 #verify trace record and trace tool
 #trace entries str in trace-record, like "Trace Size of lcore (0): 4136"

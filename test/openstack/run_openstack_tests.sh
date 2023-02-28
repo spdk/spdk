@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2019 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
-rpc_py=$rootdir/scripts/rpc.py
 
-set -- "--iso" "--transport=rdma" "$@"
+set -- "--iso" "--transport=tcp" "$@"
 
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
+
+rpc_py=$rootdir/scripts/rpc.py
 
 HUGE_EVEN_ALLOC=yes HUGEMEM=1024 nvmftestinit
 
@@ -17,6 +21,10 @@ function finish_test() {
 		kill -9 $rpc_proxy_pid
 		rm "$testdir/conf.json"
 	} || :
+}
+
+function tox() {
+	source /opt/stack/devstack/openrc "$(type -P tox)" "$@"
 }
 
 $rootdir/scripts/gen_nvme.sh --json-with-subsystems > $testdir/conf.json

@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -128,10 +100,8 @@ static void *g_fini_cb_arg;
 
 static void _nbd_fini(void *arg1);
 
-static int
-nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io);
-static int
-nbd_io_recv_internal(struct spdk_nbd_disk *nbd);
+static int nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io);
+static int nbd_io_recv_internal(struct spdk_nbd_disk *nbd);
 
 int
 spdk_nbd_init(void)
@@ -865,7 +835,7 @@ nbd_poll(void *arg)
 		spdk_nbd_stop(nbd);
 	}
 
-	return SPDK_POLLER_BUSY;
+	return rc == 0 ? SPDK_POLLER_IDLE : SPDK_POLLER_BUSY;
 }
 
 static void *
@@ -965,11 +935,16 @@ nbd_start_complete(struct spdk_nbd_start_ctx *ctx)
 #endif
 
 #ifdef NBD_FLAG_SEND_FLUSH
-	nbd_flags |= NBD_FLAG_SEND_FLUSH;
+	if (spdk_bdev_io_type_supported(ctx->nbd->bdev, SPDK_BDEV_IO_TYPE_FLUSH)) {
+		nbd_flags |= NBD_FLAG_SEND_FLUSH;
+	}
 #endif
 #ifdef NBD_FLAG_SEND_TRIM
-	nbd_flags |= NBD_FLAG_SEND_TRIM;
+	if (spdk_bdev_io_type_supported(ctx->nbd->bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+		nbd_flags |= NBD_FLAG_SEND_TRIM;
+	}
 #endif
+
 	if (nbd_flags) {
 		rc = ioctl(ctx->nbd->dev_fd, NBD_SET_FLAGS, nbd_flags);
 		if (rc == -1) {

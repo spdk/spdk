@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -477,7 +449,8 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	fio_file_set_size_known(f);
 }
 
-static void parse_prchk_flags(const char *prchk_str)
+static void
+parse_prchk_flags(const char *prchk_str)
 {
 	if (!prchk_str) {
 		return;
@@ -494,7 +467,8 @@ static void parse_prchk_flags(const char *prchk_str)
 	}
 }
 
-static void parse_pract_flag(int pract)
+static void
+parse_pract_flag(int pract)
 {
 	if (pract == 1) {
 		g_spdk_pract_flag = SPDK_NVME_IO_FLAGS_PRACT;
@@ -529,7 +503,8 @@ fio_redirected_to_dev_null(void)
  * 'key=value [key=value] ... ns=value'
  * For example, For local PCIe NVMe device  - 'trtype=PCIe traddr=0000.04.00.0 ns=1'
  * For remote exported by NVMe-oF target, 'trtype=RDMA adrfam=IPv4 traddr=192.168.100.8 trsvcid=4420 ns=1' */
-static int spdk_fio_setup(struct thread_data *td)
+static int
+spdk_fio_setup(struct thread_data *td)
 {
 	struct spdk_fio_thread *fio_thread;
 	struct spdk_fio_options *fio_options = td->eo;
@@ -704,7 +679,8 @@ static int spdk_fio_setup(struct thread_data *td)
 	return rc;
 }
 
-static int spdk_fio_open(struct thread_data *td, struct fio_file *f)
+static int
+spdk_fio_open(struct thread_data *td, struct fio_file *f)
 {
 	struct spdk_fio_qpair *fio_qpair = f->engine_data;
 	struct spdk_fio_ctrlr *fio_ctrlr = fio_qpair->fio_ctrlr;
@@ -734,7 +710,8 @@ static int spdk_fio_open(struct thread_data *td, struct fio_file *f)
 	return 0;
 }
 
-static int spdk_fio_close(struct thread_data *td, struct fio_file *f)
+static int
+spdk_fio_close(struct thread_data *td, struct fio_file *f)
 {
 	struct spdk_fio_qpair *fio_qpair = f->engine_data;
 
@@ -744,18 +721,21 @@ static int spdk_fio_close(struct thread_data *td, struct fio_file *f)
 	return 0;
 }
 
-static int spdk_fio_iomem_alloc(struct thread_data *td, size_t total_mem)
+static int
+spdk_fio_iomem_alloc(struct thread_data *td, size_t total_mem)
 {
 	td->orig_buffer = spdk_dma_zmalloc(total_mem, NVME_IO_ALIGN, NULL);
 	return td->orig_buffer == NULL;
 }
 
-static void spdk_fio_iomem_free(struct thread_data *td)
+static void
+spdk_fio_iomem_free(struct thread_data *td)
 {
 	spdk_dma_free(td->orig_buffer);
 }
 
-static int spdk_fio_io_u_init(struct thread_data *td, struct io_u *io_u)
+static int
+spdk_fio_io_u_init(struct thread_data *td, struct io_u *io_u)
 {
 	struct spdk_fio_thread	*fio_thread = td->io_ops_data;
 	struct spdk_fio_request	*fio_req;
@@ -782,7 +762,8 @@ static int spdk_fio_io_u_init(struct thread_data *td, struct io_u *io_u)
 	return 0;
 }
 
-static void spdk_fio_io_u_free(struct thread_data *td, struct io_u *io_u)
+static void
+spdk_fio_io_u_free(struct thread_data *td, struct io_u *io_u)
 {
 	struct spdk_fio_request *fio_req = io_u->engine_data;
 
@@ -951,7 +932,8 @@ fio_separate_md_verify_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 	return rc;
 }
 
-static void spdk_fio_completion_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
+static void
+spdk_fio_completion_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_fio_request		*fio_req = ctx;
 	struct spdk_fio_thread		*fio_thread = fio_req->fio_thread;
@@ -1130,7 +1112,8 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	return FIO_Q_QUEUED;
 }
 
-static struct io_u *spdk_fio_event(struct thread_data *td, int event)
+static struct io_u *
+spdk_fio_event(struct thread_data *td, int event)
 {
 	struct spdk_fio_thread *fio_thread = td->io_ops_data;
 
@@ -1139,8 +1122,9 @@ static struct io_u *spdk_fio_event(struct thread_data *td, int event)
 	return fio_thread->iocq[event];
 }
 
-static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
-			      unsigned int max, const struct timespec *t)
+static int
+spdk_fio_getevents(struct thread_data *td, unsigned int min,
+		   unsigned int max, const struct timespec *t)
 {
 	struct spdk_fio_thread *fio_thread = td->io_ops_data;
 	struct spdk_fio_qpair *fio_qpair = NULL;
@@ -1165,6 +1149,15 @@ static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 		}
 
 		while (fio_qpair != NULL) {
+			/*
+			 * We can be called while spdk_fio_open()s are still
+			 * ongoing, in which case, ->qpair can still be NULL.
+			 */
+			if (fio_qpair->qpair == NULL) {
+				fio_qpair = TAILQ_NEXT(fio_qpair, link);
+				continue;
+			}
+
 			spdk_nvme_qpair_process_completions(fio_qpair->qpair, max - fio_thread->iocq_count);
 
 			if (fio_thread->iocq_count >= min) {
@@ -1193,7 +1186,8 @@ static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 	return fio_thread->iocq_count;
 }
 
-static int spdk_fio_invalidate(struct thread_data *td, struct fio_file *f)
+static int
+spdk_fio_invalidate(struct thread_data *td, struct fio_file *f)
 {
 	/* TODO: This should probably send a flush to the device, but for now just return successful. */
 	return 0;
@@ -1406,8 +1400,9 @@ spdk_fio_reset_wp(struct thread_data *td, struct fio_file *f, uint64_t offset, u
 #endif
 
 #if FIO_IOOPS_VERSION >= 30
-static int spdk_fio_get_max_open_zones(struct thread_data *td, struct fio_file *f,
-				       unsigned int *max_open_zones)
+static int
+spdk_fio_get_max_open_zones(struct thread_data *td, struct fio_file *f,
+			    unsigned int *max_open_zones)
 {
 	struct spdk_fio_thread *fio_thread = td->io_ops_data;
 	struct spdk_fio_qpair *fio_qpair = NULL;
@@ -1424,7 +1419,8 @@ static int spdk_fio_get_max_open_zones(struct thread_data *td, struct fio_file *
 }
 #endif
 
-static void spdk_fio_cleanup(struct thread_data *td)
+static void
+spdk_fio_cleanup(struct thread_data *td)
 {
 	struct spdk_fio_thread	*fio_thread = td->io_ops_data;
 	struct spdk_fio_qpair	*fio_qpair, *fio_qpair_tmp;
@@ -1732,12 +1728,14 @@ struct ioengine_ops ioengine = {
 	.option_struct_size	= sizeof(struct spdk_fio_options),
 };
 
-static void fio_init fio_spdk_register(void)
+static void fio_init
+fio_spdk_register(void)
 {
 	register_ioengine(&ioengine);
 }
 
-static void fio_exit fio_spdk_unregister(void)
+static void fio_exit
+fio_spdk_unregister(void)
 {
 	if (g_spdk_env_initialized) {
 		spdk_env_fini();

@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -131,7 +103,6 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_virtio_detach_controller",
 		  rpc_bdev_virtio_detach_controller, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_virtio_detach_controller, remove_virtio_bdev)
 
 static void
 rpc_bdev_virtio_scsi_get_devices(struct spdk_jsonrpc_request *request,
@@ -151,7 +122,6 @@ rpc_bdev_virtio_scsi_get_devices(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("bdev_virtio_scsi_get_devices",
 		  rpc_bdev_virtio_scsi_get_devices, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_virtio_scsi_get_devices, get_virtio_scsi_devs)
 
 struct rpc_bdev_virtio_attach_controller_ctx {
 	char *name;
@@ -214,10 +184,9 @@ rpc_bdev_virtio_attach_controller(struct spdk_jsonrpc_request *request,
 				  const struct spdk_json_val *params)
 {
 	struct rpc_bdev_virtio_attach_controller_ctx *req;
-	struct spdk_bdev *bdev;
+	struct spdk_bdev *bdev = NULL;
 	struct spdk_pci_addr pci_addr;
-	bool pci;
-	int rc;
+	int rc = 0;
 
 	req = calloc(1, sizeof(*req));
 	if (!req) {
@@ -247,12 +216,16 @@ rpc_bdev_virtio_attach_controller(struct spdk_jsonrpc_request *request,
 			spdk_jsonrpc_send_error_response_fmt(request, EINVAL, "Invalid PCI address '%s'", req->traddr);
 			goto cleanup;
 		}
-
-		pci = true;
 	} else if (strcmp(req->trtype, "user") == 0) {
 		req->vq_count = req->vq_count == 0 ? SPDK_VIRTIO_USER_DEFAULT_VQ_COUNT : req->vq_count;
 		req->vq_size = req->vq_size == 0 ? SPDK_VIRTIO_USER_DEFAULT_QUEUE_SIZE : req->vq_size;
-		pci = false;
+	} else if (strcmp(req->trtype, "vfio-user") == 0) {
+		if (req->vq_count != 0 || req->vq_size != 0) {
+			SPDK_ERRLOG("VQ count or size is not allowed for vfio-user transport type\n");
+			spdk_jsonrpc_send_error_response(request, EINVAL,
+							 "vq_count or vq_size is not allowed for vfio-user transport type.");
+			goto cleanup;
+		}
 	} else {
 		SPDK_ERRLOG("Invalid trtype '%s'\n", req->trtype);
 		spdk_jsonrpc_send_error_response_fmt(request, EINVAL, "Invalid trtype '%s'", req->trtype);
@@ -261,21 +234,25 @@ rpc_bdev_virtio_attach_controller(struct spdk_jsonrpc_request *request,
 
 	req->request = request;
 	if (strcmp(req->dev_type, "blk") == 0) {
-		if (pci) {
+		if (strcmp(req->trtype, "pci") == 0) {
 			bdev = bdev_virtio_pci_blk_dev_create(req->name, &pci_addr);
-		} else {
+		} else if (strcmp(req->trtype, "user") == 0) {
 			bdev = bdev_virtio_user_blk_dev_create(req->name, req->traddr, req->vq_count, req->vq_size);
+		} else if (strcmp(req->trtype, "vfio-user") == 0) {
+			bdev = bdev_virtio_vfio_user_blk_dev_create(req->name, req->traddr);
 		}
 
 		/* Virtio blk doesn't use callback so call it manually to send result. */
 		rc = bdev ? 0 : -EINVAL;
 		rpc_create_virtio_dev_cb(req, rc, &bdev, bdev ? 1 : 0);
 	} else if (strcmp(req->dev_type, "scsi") == 0) {
-		if (pci) {
+		if (strcmp(req->trtype, "pci") == 0) {
 			rc = bdev_virtio_pci_scsi_dev_create(req->name, &pci_addr, rpc_create_virtio_dev_cb, req);
-		} else {
+		} else if (strcmp(req->trtype, "user") == 0) {
 			rc = bdev_virtio_user_scsi_dev_create(req->name, req->traddr, req->vq_count, req->vq_size,
 							      rpc_create_virtio_dev_cb, req);
+		} else if (strcmp(req->trtype, "vfio-user") == 0) {
+			rc = bdev_vfio_user_scsi_dev_create(req->name, req->traddr, rpc_create_virtio_dev_cb, req);
 		}
 
 		if (rc < 0) {
@@ -295,4 +272,3 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_virtio_attach_controller",
 		  rpc_bdev_virtio_attach_controller, SPDK_RPC_RUNTIME);
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_virtio_attach_controller, construct_virtio_dev)

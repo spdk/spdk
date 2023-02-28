@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation
+#  All rights reserved.
+#
 
 import sys
 import json
@@ -15,7 +19,7 @@ def sort_json_object(o):
             sorted_o[key] = sort_json_object(o[key])
         return sorted_o
     if isinstance(o, list):
-        """ Keep list in the same orded but sort each item """
+        """ Keep list in the same order but sort each item """
         return [sort_json_object(item) for item in o]
     else:
         return o
@@ -23,7 +27,7 @@ def sort_json_object(o):
 
 def filter_methods(do_remove_global_rpcs):
     global_rpcs = [
-        'idxd_scan_accel_engine',
+        'dsa_scan_accel_module',
         'iscsi_set_options',
         'nvmf_set_config',
         'nvmf_set_max_subsystems',
@@ -31,11 +35,17 @@ def filter_methods(do_remove_global_rpcs):
         'nvmf_set_crdt',
         'bdev_set_options',
         'bdev_wait_for_examine',
+        'bdev_iscsi_set_options',
         'bdev_nvme_set_options',
         'bdev_nvme_set_hotplug',
         'sock_impl_set_options',
         'sock_set_default_impl',
         'framework_set_scheduler',
+        'accel_crypto_key_create',
+        'accel_assign_opc',
+        'dpdk_cryptodev_scan_accel_module',
+        'dpdk_cryptodev_set_driver',
+        'virtio_blk_create_transport',
     ]
 
     data = json.loads(sys.stdin.read())

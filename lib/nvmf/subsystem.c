@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -46,6 +18,7 @@
 #include "spdk/json.h"
 #include "spdk/file.h"
 #include "spdk/bit_array.h"
+#include "spdk/bdev.h"
 
 #define __SPDK_BDEV_MODULE_ONLY
 #include "spdk/bdev_module.h"
@@ -433,6 +406,19 @@ _nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	return 0;
 }
 
+static struct spdk_nvmf_ns *
+_nvmf_subsystem_get_first_zoned_ns(struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_ns *ns = spdk_nvmf_subsystem_get_first_ns(subsystem);
+	while (ns != NULL) {
+		if (ns->csi == SPDK_NVME_CSI_ZNS) {
+			return ns;
+		}
+		ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns);
+	}
+	return NULL;
+}
+
 int
 spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem, nvmf_subsystem_destroy_cb cpl_cb,
 			    void *cpl_cb_arg)
@@ -448,8 +434,8 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem, nvmf_subsyste
 	assert(spdk_get_thread() == subsystem->thread);
 
 	if (subsystem->state != SPDK_NVMF_SUBSYSTEM_INACTIVE) {
-		SPDK_ERRLOG("Subsystem can only be destroyed in inactive state\n");
-		assert(0);
+		SPDK_ERRLOG("Subsystem can only be destroyed in inactive state, %s state %d\n",
+			    subsystem->subnqn, subsystem->state);
 		return -EAGAIN;
 	}
 	if (subsystem->destroying) {
@@ -1312,8 +1298,7 @@ nvmf_subsystem_ns_changed(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 	}
 }
 
-static uint32_t
-nvmf_ns_reservation_clear_all_registrants(struct spdk_nvmf_ns *ns);
+static uint32_t nvmf_ns_reservation_clear_all_registrants(struct spdk_nvmf_ns *ns);
 
 int
 spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
@@ -1379,7 +1364,10 @@ _nvmf_ns_hot_remove(struct spdk_nvmf_subsystem *subsystem,
 		SPDK_ERRLOG("Failed to make changes to NVME-oF subsystem with id: %u\n", subsystem->id);
 	}
 
-	spdk_nvmf_subsystem_resume(subsystem, NULL, NULL);
+	rc = spdk_nvmf_subsystem_resume(subsystem, NULL, NULL);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to resume NVME-oF subsystem with id: %u\n", subsystem->id);
+	}
 
 	free(ctx);
 }
@@ -1442,7 +1430,9 @@ _nvmf_ns_resize(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
 	struct subsystem_ns_change_ctx *ctx = cb_arg;
 
 	nvmf_subsystem_ns_changed(subsystem, ctx->nsid);
-	spdk_nvmf_subsystem_resume(subsystem, NULL, NULL);
+	if (spdk_nvmf_subsystem_resume(subsystem, NULL, NULL) != 0) {
+		SPDK_ERRLOG("Failed to resume NVME-oF subsystem with id: %u\n", subsystem->id);
+	}
 
 	free(ctx);
 }
@@ -1588,10 +1578,9 @@ static struct spdk_bdev_module ns_bdev_module = {
 	.name	= "NVMe-oF Target",
 };
 
-static int
-nvmf_ns_load_reservation(const char *file, struct spdk_nvmf_reservation_info *info);
-static int
-nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservation_info *info);
+static int nvmf_ns_load_reservation(const char *file, struct spdk_nvmf_reservation_info *info);
+static int nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns,
+				       struct spdk_nvmf_reservation_info *info);
 
 uint32_t
 spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char *bdev_name,
@@ -1603,6 +1592,8 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 	struct spdk_nvmf_ns *ns;
 	struct spdk_nvmf_reservation_info info = {0};
 	int rc;
+	bool zone_append_supported;
+	uint64_t max_zone_append_size_kib;
 
 	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
 	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
@@ -1668,11 +1659,21 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 
 	ns->bdev = spdk_bdev_desc_get_bdev(ns->desc);
 
-	if (spdk_bdev_get_md_size(ns->bdev) != 0 && !spdk_bdev_is_md_interleaved(ns->bdev)) {
-		SPDK_ERRLOG("Can't attach bdev with separate metadata.\n");
-		spdk_bdev_close(ns->desc);
-		free(ns);
-		return 0;
+	if (spdk_bdev_get_md_size(ns->bdev) != 0) {
+		if (!spdk_bdev_is_md_interleaved(ns->bdev)) {
+			SPDK_ERRLOG("Can't attach bdev with separate metadata.\n");
+			spdk_bdev_close(ns->desc);
+			free(ns);
+			return 0;
+		}
+
+		if (spdk_bdev_get_md_size(ns->bdev) > SPDK_BDEV_MAX_INTERLEAVED_MD_SIZE) {
+			SPDK_ERRLOG("Maximum supported interleaved md size %u, current md size %u\n",
+				    SPDK_BDEV_MAX_INTERLEAVED_MD_SIZE, spdk_bdev_get_md_size(ns->bdev));
+			spdk_bdev_close(ns->desc);
+			free(ns);
+			return 0;
+		}
 	}
 
 	rc = spdk_bdev_module_claim_bdev(ns->bdev, ns->desc, &ns_bdev_module);
@@ -1693,6 +1694,26 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 	if (spdk_mem_all_zero(opts.nguid, sizeof(opts.nguid))) {
 		SPDK_STATIC_ASSERT(sizeof(opts.nguid) == sizeof(opts.uuid), "size mismatch");
 		memcpy(opts.nguid, spdk_bdev_get_uuid(ns->bdev), sizeof(opts.nguid));
+	}
+
+	if (spdk_bdev_is_zoned(ns->bdev)) {
+		SPDK_DEBUGLOG(nvmf, "The added namespace is backed by a zoned block device.\n");
+		ns->csi = SPDK_NVME_CSI_ZNS;
+
+		zone_append_supported = spdk_bdev_io_type_supported(ns->bdev,
+					SPDK_BDEV_IO_TYPE_ZONE_APPEND);
+		max_zone_append_size_kib = spdk_bdev_get_max_zone_append_size(
+						   ns->bdev) * spdk_bdev_get_block_size(ns->bdev);
+
+		if (_nvmf_subsystem_get_first_zoned_ns(subsystem) != NULL &&
+		    (subsystem->zone_append_supported != zone_append_supported ||
+		     subsystem->max_zone_append_size_kib != max_zone_append_size_kib)) {
+			SPDK_ERRLOG("Namespaces with different zone append support or different zone append size are not allowed.\n");
+			goto err_ns_reservation_restore;
+		}
+
+		subsystem->zone_append_supported = zone_append_supported;
+		subsystem->max_zone_append_size_kib = max_zone_append_size_kib;
 	}
 
 	ns->opts = opts;
@@ -1886,7 +1907,11 @@ spdk_nvmf_subsystem_get_nqn(const struct spdk_nvmf_subsystem *subsystem)
 	return subsystem->subnqn;
 }
 
-enum spdk_nvmf_subtype spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem)
+/* We have to use the typedef in the function declaration to appease astyle. */
+typedef enum spdk_nvmf_subtype spdk_nvmf_subtype_t;
+
+spdk_nvmf_subtype_t
+spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem)
 {
 	return subsystem->subtype;
 }
@@ -2152,8 +2177,7 @@ exit:
 	return rc;
 }
 
-static bool
-nvmf_ns_reservation_all_registrants_type(struct spdk_nvmf_ns *ns);
+static bool nvmf_ns_reservation_all_registrants_type(struct spdk_nvmf_ns *ns);
 
 static int
 nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservation_info *info)
@@ -2559,9 +2583,9 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 			     struct spdk_nvmf_ctrlr *ctrlr,
 			     struct spdk_nvmf_request *req)
 {
+	struct spdk_nvme_reservation_register_data key = { 0 };
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	uint8_t rrega, iekey, cptpl, rtype;
-	struct spdk_nvme_reservation_register_data key;
 	struct spdk_nvmf_registrant *reg;
 	uint8_t status = SPDK_NVME_SC_SUCCESS;
 	bool update_sgroup = false;
@@ -2573,8 +2597,10 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 	iekey = cmd->cdw10_bits.resv_register.iekey;
 	cptpl = cmd->cdw10_bits.resv_register.cptpl;
 
-	if (req->data && req->length >= sizeof(key)) {
-		memcpy(&key, req->data, sizeof(key));
+	if (req->iovcnt > 0 && req->length >= sizeof(key)) {
+		struct spdk_iov_xfer ix;
+		spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+		spdk_iov_xfer_to_buf(&ix, &key, sizeof(key));
 	} else {
 		SPDK_ERRLOG("No key provided. Failing request.\n");
 		status = SPDK_NVME_SC_INVALID_FIELD;
@@ -2709,9 +2735,9 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 			    struct spdk_nvmf_ctrlr *ctrlr,
 			    struct spdk_nvmf_request *req)
 {
+	struct spdk_nvme_reservation_acquire_data key = { 0 };
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	uint8_t racqa, iekey, rtype;
-	struct spdk_nvme_reservation_acquire_data key;
 	struct spdk_nvmf_registrant *reg;
 	bool all_regs = false;
 	uint32_t count = 0;
@@ -2727,8 +2753,10 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 	iekey = cmd->cdw10_bits.resv_acquire.iekey;
 	rtype = cmd->cdw10_bits.resv_acquire.rtype;
 
-	if (req->data && req->length >= sizeof(key)) {
-		memcpy(&key, req->data, sizeof(key));
+	if (req->iovcnt > 0 && req->length >= sizeof(key)) {
+		struct spdk_iov_xfer ix;
+		spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+		spdk_iov_xfer_to_buf(&ix, &key, sizeof(key));
 	} else {
 		SPDK_ERRLOG("No key provided. Failing request.\n");
 		status = SPDK_NVME_SC_INVALID_FIELD;
@@ -2879,7 +2907,7 @@ nvmf_ns_reservation_release(struct spdk_nvmf_ns *ns,
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	uint8_t rrela, iekey, rtype;
 	struct spdk_nvmf_registrant *reg;
-	uint64_t crkey;
+	uint64_t crkey = 0;
 	uint8_t status = SPDK_NVME_SC_SUCCESS;
 	bool update_sgroup = true;
 	struct spdk_uuid hostid_list[SPDK_NVMF_MAX_NUM_REGISTRANTS];
@@ -2889,8 +2917,10 @@ nvmf_ns_reservation_release(struct spdk_nvmf_ns *ns,
 	iekey = cmd->cdw10_bits.resv_release.iekey;
 	rtype = cmd->cdw10_bits.resv_release.rtype;
 
-	if (req->data && req->length >= sizeof(crkey)) {
-		memcpy(&crkey, req->data, sizeof(crkey));
+	if (req->iovcnt > 0 && req->length >= sizeof(crkey)) {
+		struct spdk_iov_xfer ix;
+		spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+		spdk_iov_xfer_to_buf(&ix, &crkey, sizeof(crkey));
 	} else {
 		SPDK_ERRLOG("No key provided. Failing request.\n");
 		status = SPDK_NVME_SC_INVALID_FIELD;
@@ -2983,14 +3013,13 @@ nvmf_ns_reservation_report(struct spdk_nvmf_ns *ns,
 {
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvmf_registrant *reg, *tmp;
-	struct spdk_nvme_reservation_status_extended_data *status_data;
-	struct spdk_nvme_registered_ctrlr_extended_data *ctrlr_data;
-	uint8_t *payload;
-	uint32_t transfer_len, payload_len = 0;
+	struct spdk_nvme_reservation_status_extended_data status_data = { 0 };
+	struct spdk_iov_xfer ix;
+	uint32_t transfer_len;
 	uint32_t regctl = 0;
 	uint8_t status = SPDK_NVME_SC_SUCCESS;
 
-	if (req->data == NULL) {
+	if (req->iovcnt == 0) {
 		SPDK_ERRLOG("No data transfer specified for request. "
 			    " Unable to transfer back response.\n");
 		status = SPDK_NVME_SC_INVALID_FIELD;
@@ -3006,35 +3035,44 @@ nvmf_ns_reservation_report(struct spdk_nvmf_ns *ns,
 
 	/* Number of Dwords of the Reservation Status data structure to transfer */
 	transfer_len = (cmd->cdw10 + 1) * sizeof(uint32_t);
-	payload = req->data;
 
 	if (transfer_len < sizeof(struct spdk_nvme_reservation_status_extended_data)) {
 		status = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		goto exit;
 	}
 
-	status_data = (struct spdk_nvme_reservation_status_extended_data *)payload;
-	status_data->data.gen = ns->gen;
-	status_data->data.rtype = ns->rtype;
-	status_data->data.ptpls = ns->ptpl_activated;
-	payload_len += sizeof(struct spdk_nvme_reservation_status_extended_data);
+	spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+
+	status_data.data.gen = ns->gen;
+	status_data.data.rtype = ns->rtype;
+	status_data.data.ptpls = ns->ptpl_activated;
 
 	TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, tmp) {
-		payload_len += sizeof(struct spdk_nvme_registered_ctrlr_extended_data);
-		if (payload_len > transfer_len) {
-			break;
-		}
-
-		ctrlr_data = (struct spdk_nvme_registered_ctrlr_extended_data *)
-			     (payload + sizeof(*status_data) + sizeof(*ctrlr_data) * regctl);
-		/* Set to 0xffffh for dynamic controller */
-		ctrlr_data->cntlid = 0xffff;
-		ctrlr_data->rcsts.status = (ns->holder == reg) ? true : false;
-		ctrlr_data->rkey = reg->rkey;
-		spdk_uuid_copy((struct spdk_uuid *)ctrlr_data->hostid, &reg->hostid);
 		regctl++;
 	}
-	status_data->data.regctl = regctl;
+
+	/*
+	 * We report the number of registrants as per the spec here, even if
+	 * the iov isn't big enough to contain them all. In that case, the
+	 * spdk_iov_xfer_from_buf() won't actually copy any of the remaining
+	 * data; as it keeps track of the iov cursor itself, it's simplest to
+	 * just walk the entire list anyway.
+	 */
+	status_data.data.regctl = regctl;
+
+	spdk_iov_xfer_from_buf(&ix, &status_data, sizeof(status_data));
+
+	TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, tmp) {
+		struct spdk_nvme_registered_ctrlr_extended_data ctrlr_data = { 0 };
+
+		/* Set to 0xffffh for dynamic controller */
+		ctrlr_data.cntlid = 0xffff;
+		ctrlr_data.rcsts.status = (ns->holder == reg) ? true : false;
+		ctrlr_data.rkey = reg->rkey;
+		spdk_uuid_copy((struct spdk_uuid *)ctrlr_data.hostid, &reg->hostid);
+
+		spdk_iov_xfer_from_buf(&ix, &ctrlr_data, sizeof(ctrlr_data));
+	}
 
 exit:
 	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;

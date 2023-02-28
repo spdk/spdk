@@ -1,34 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -355,13 +328,14 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 	struct config_entry cfg = {};
 	struct spdk_json_val *params_end;
 	size_t params_len = 0;
+	uint32_t state_mask = 0, cur_state_mask, startup_runtime = SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME;
 	int rc;
 
 	if (ctx->config_it == NULL) {
 		SPDK_DEBUG_APP_CFG("Subsystem '%.*s': configuration done.\n", ctx->subsystem_name->len,
 				   (char *)ctx->subsystem_name->start);
 		ctx->subsystems_it = spdk_json_next(ctx->subsystems_it);
-		/* Invoke later to avoid recurrency */
+		/* Invoke later to avoid recurrence */
 		spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem, ctx);
 		return;
 	}
@@ -373,10 +347,25 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 		goto out;
 	}
 
-	rc = spdk_rpc_is_method_allowed(cfg.method, spdk_rpc_get_state());
-	if (rc == -EPERM) {
+	rc = spdk_rpc_get_method_state_mask(cfg.method, &state_mask);
+	if (rc == -ENOENT) {
+		SPDK_ERRLOG("Method '%s' was not found\n", cfg.method);
+		app_json_config_load_done(ctx, rc);
+		goto out;
+	}
+	cur_state_mask = spdk_rpc_get_state();
+	if ((state_mask & cur_state_mask) != cur_state_mask) {
 		SPDK_DEBUG_APP_CFG("Method '%s' not allowed -> skipping\n", cfg.method);
-		/* Invoke later to avoid recurrency */
+		/* Invoke later to avoid recurrence */
+		ctx->config_it = spdk_json_next(ctx->config_it);
+		spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem_config_entry, ctx);
+		goto out;
+	}
+	if ((state_mask & startup_runtime) == startup_runtime && cur_state_mask == SPDK_RPC_RUNTIME) {
+		/* Some methods are allowed to be run in both STARTUP and RUNTIME states.
+		 * We should not call such methods twice, so ignore the second attempt in RUNTIME state */
+		SPDK_DEBUG_APP_CFG("Method '%s' has already been run in STARTUP state\n", cfg.method);
+		/* Invoke later to avoid recurrence */
 		ctx->config_it = spdk_json_next(ctx->config_it);
 		spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem_config_entry, ctx);
 		goto out;
@@ -594,14 +583,26 @@ spdk_subsystem_init_from_json_config(const char *json_config_file, const char *r
 
 	/* Capture subsystems array */
 	rc = spdk_json_find_array(ctx->values, "subsystems", NULL, &ctx->subsystems);
-	if (rc) {
-		SPDK_WARNLOG("No 'subsystems' key JSON configuration file.\n");
-	} else {
+	switch (rc) {
+	case 0:
 		/* Get first subsystem */
 		ctx->subsystems_it = spdk_json_array_first(ctx->subsystems);
 		if (ctx->subsystems_it == NULL) {
 			SPDK_NOTICELOG("'subsystems' configuration is empty\n");
 		}
+		break;
+	case -EPROTOTYPE:
+		SPDK_ERRLOG("Invalid JSON configuration: not enclosed in {}.\n");
+		goto fail;
+	case -ENOENT:
+		SPDK_WARNLOG("No 'subsystems' key JSON configuration file.\n");
+		break;
+	case -EDOM:
+		SPDK_ERRLOG("Invalid JSON configuration: 'subsystems' should be an array.\n");
+		goto fail;
+	default:
+		SPDK_ERRLOG("Failed to parse JSON configuration.\n");
+		goto fail;
 	}
 
 	/* If rpc_addr is not an Unix socket use default address as prefix. */

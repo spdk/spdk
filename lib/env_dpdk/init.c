@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -182,64 +154,50 @@ push_arg(char *args[], int *argcount, char *arg)
 #define SPDK_IOMMU_VA_REQUIRED_WIDTH 48
 #define VTD_CAP_MGAW_SHIFT 16
 #define VTD_CAP_MGAW_MASK (0x3F << VTD_CAP_MGAW_SHIFT)
+#define RD_AMD_CAP_VASIZE_SHIFT 15
+#define RD_AMD_CAP_VASIZE_MASK (0x7F << RD_AMD_CAP_VASIZE_SHIFT)
 
 static int
 get_iommu_width(void)
 {
-	DIR *dir;
-	FILE *file;
-	struct dirent *entry;
-	char mgaw_path[64];
-	char buf[64];
-	char *end;
-	long long int val;
-	int width, tmp;
+	int width = 0;
+	glob_t glob_results = {};
 
-	dir = opendir("/sys/devices/virtual/iommu/");
-	if (dir == NULL) {
-		return -EINVAL;
-	}
+	/* Break * and / into separate strings to appease check_format.sh comment style check. */
+	glob("/sys/devices/virtual/iommu/dmar*" "/intel-iommu/cap", 0, NULL, &glob_results);
+	glob("/sys/class/iommu/ivhd*" "/amd-iommu/cap", GLOB_APPEND, NULL, &glob_results);
 
-	width = 0;
+	for (size_t i = 0; i < glob_results.gl_pathc; i++) {
+		const char *filename = glob_results.gl_pathv[0];
+		FILE *file = fopen(filename, "r");
+		uint64_t cap_reg = 0;
 
-	while ((entry = readdir(dir)) != NULL) {
-		/* Find directories named "dmar0", "dmar1", etc */
-		if (strncmp(entry->d_name, "dmar", sizeof("dmar") - 1) != 0) {
-			continue;
-		}
-
-		tmp = snprintf(mgaw_path, sizeof(mgaw_path), "/sys/devices/virtual/iommu/%s/intel-iommu/cap",
-			       entry->d_name);
-		if ((unsigned)tmp >= sizeof(mgaw_path)) {
-			continue;
-		}
-
-		file = fopen(mgaw_path, "r");
 		if (file == NULL) {
 			continue;
 		}
 
-		if (fgets(buf, sizeof(buf), file) == NULL) {
-			fclose(file);
-			continue;
-		}
+		if (fscanf(file, "%" PRIx64, &cap_reg) == 1) {
+			if (strstr(filename, "intel-iommu") != NULL) {
+				/* We have an Intel IOMMU */
+				int mgaw = ((cap_reg & VTD_CAP_MGAW_MASK) >> VTD_CAP_MGAW_SHIFT) + 1;
 
-		val = strtoll(buf, &end, 16);
-		if (val == LLONG_MIN || val == LLONG_MAX) {
-			fclose(file);
-			continue;
-		}
+				if (width == 0 || (mgaw > 0 && mgaw < width)) {
+					width = mgaw;
+				}
+			} else if (strstr(filename, "amd-iommu") != NULL) {
+				/* We have an AMD IOMMU */
+				int mgaw = ((cap_reg & RD_AMD_CAP_VASIZE_MASK) >> RD_AMD_CAP_VASIZE_SHIFT) + 1;
 
-		tmp = ((val & VTD_CAP_MGAW_MASK) >> VTD_CAP_MGAW_SHIFT) + 1;
-		if (width == 0 || tmp < width) {
-			width = tmp;
+				if (width == 0 || (mgaw > 0 && mgaw < width)) {
+					width = mgaw;
+				}
+			}
 		}
 
 		fclose(file);
 	}
 
-	closedir(dir);
-
+	globfree(&glob_results);
 	return width;
 }
 
@@ -505,6 +463,15 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 			return -1;
 		}
 	}
+
+	/* --vfio-vf-token used for VF initialized by vfio_pci driver. */
+	if (opts->vf_token) {
+		args = push_arg(args, &argcount, _sprintf_alloc("--vfio-vf-token=%s",
+				opts->vf_token));
+		if (args == NULL) {
+			return -1;
+		}
+	}
 #endif
 
 	g_eal_cmdline = args;
@@ -517,7 +484,11 @@ spdk_env_dpdk_post_init(bool legacy_mem)
 {
 	int rc;
 
-	pci_env_init();
+	rc = pci_env_init();
+	if (rc < 0) {
+		SPDK_ERRLOG("pci_env_init() failed\n");
+		return rc;
+	}
 
 	rc = mem_map_init(legacy_mem);
 	if (rc < 0) {
@@ -548,6 +519,7 @@ int
 spdk_env_init(const struct spdk_env_opts *opts)
 {
 	char **dpdk_args = NULL;
+	char *args_print = NULL, *args_tmp = NULL;
 	int i, rc;
 	int orig_optind;
 	bool legacy_mem;
@@ -579,11 +551,22 @@ spdk_env_init(const struct spdk_env_opts *opts)
 	}
 
 	SPDK_PRINTF("Starting %s / %s initialization...\n", SPDK_VERSION_STRING, rte_version());
-	SPDK_PRINTF("[ DPDK EAL parameters: ");
-	for (i = 0; i < g_eal_cmdline_argcount; i++) {
-		SPDK_PRINTF("%s ", g_eal_cmdline[i]);
+
+	args_print = _sprintf_alloc("[ DPDK EAL parameters: ");
+	if (args_print == NULL) {
+		return -ENOMEM;
 	}
-	SPDK_PRINTF("]\n");
+	for (i = 0; i < g_eal_cmdline_argcount; i++) {
+		args_tmp = args_print;
+		args_print = _sprintf_alloc("%s%s ", args_tmp, g_eal_cmdline[i]);
+		if (args_print == NULL) {
+			free(args_tmp);
+			return -ENOMEM;
+		}
+		free(args_tmp);
+	}
+	SPDK_PRINTF("%s]\n", args_print);
+	free(args_print);
 
 	// ZIV_P2P
 	if (opts->nvme_p2p_en) {

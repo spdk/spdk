@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2020 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /*
@@ -110,8 +82,7 @@ struct passthru_bdev_io {
 	struct spdk_bdev_io_wait_entry bdev_io_wait;
 };
 
-static void
-vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
+static void vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 
 
 /* Callback for unregistering the IO device. */
@@ -726,13 +697,15 @@ bdev_passthru_external_create_disk(const char *bdev_name, const char *vbdev_name
 }
 
 void
-bdev_passthru_external_delete_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn,
+bdev_passthru_external_delete_disk(const char *bdev_name, spdk_bdev_unregister_cb cb_fn,
 				   void *cb_arg)
 {
 	struct bdev_names *name;
+	int rc;
 
-	if (!bdev || bdev->module != &passthru_if) {
-		cb_fn(cb_arg, -ENODEV);
+	rc = spdk_bdev_unregister_by_name(bdev_name, &passthru_if, cb_fn, cb_arg);
+	if (rc != 0) {
+		cb_fn(cb_arg, rc);
 		return;
 	}
 
@@ -741,7 +714,7 @@ bdev_passthru_external_delete_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_
 	 * unless the underlying bdev was hot-removed.
 	 */
 	TAILQ_FOREACH(name, &g_bdev_names, link) {
-		if (strcmp(name->vbdev_name, bdev->name) == 0) {
+		if (strcmp(name->vbdev_name, bdev_name) == 0) {
 			TAILQ_REMOVE(&g_bdev_names, name, link);
 			free(name->bdev_name);
 			free(name->vbdev_name);
@@ -749,9 +722,6 @@ bdev_passthru_external_delete_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_
 			break;
 		}
 	}
-
-	/* Additional cleanup happens in the destruct callback. */
-	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
 }
 
 /* Because we specified this function in our pt bdev function table when we

@@ -1,3 +1,8 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation
+#  All rights reserved.
+#
+
 source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
 

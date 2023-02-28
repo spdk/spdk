@@ -1,34 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
+ *   Copyright (c) 2023, NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -223,13 +196,6 @@ spdk_mempool_create_ctor(const char *name, size_t count,
 {
 	struct rte_mempool *mp;
 	size_t tmp;
-	unsigned dpdk_flags = 0;
-
-#if RTE_VERSION >= RTE_VERSION_NUM(21, 11, 0, 0)
-	dpdk_flags |= RTE_MEMPOOL_F_NO_IOVA_CONTIG;
-#else
-	dpdk_flags |= MEMPOOL_F_NO_IOVA_CONTIG;
-#endif
 
 	if (socket_id == SPDK_ENV_SOCKET_ID_ANY) {
 		socket_id = SOCKET_ID_ANY;
@@ -247,7 +213,7 @@ spdk_mempool_create_ctor(const char *name, size_t count,
 
 	mp = rte_mempool_create(name, count, ele_size, cache_size,
 				0, NULL, NULL, (rte_mempool_obj_cb_t *)obj_init, obj_init_arg,
-				socket_id, dpdk_flags);
+				socket_id, 0);
 
 	return (struct spdk_mempool *)mp;
 }
@@ -318,6 +284,33 @@ spdk_mempool_obj_iter(struct spdk_mempool *mp, spdk_mempool_obj_cb_t obj_cb,
 				    obj_cb_arg);
 }
 
+struct env_mempool_mem_iter_ctx {
+	spdk_mempool_mem_cb_t *user_cb;
+	void *user_arg;
+};
+
+static void
+mempool_mem_iter_remap(struct rte_mempool *mp, void *opaque, struct rte_mempool_memhdr *memhdr,
+		       unsigned mem_idx)
+{
+	struct env_mempool_mem_iter_ctx *ctx = opaque;
+
+	ctx->user_cb((struct spdk_mempool *)mp, ctx->user_arg, memhdr->addr, memhdr->iova, memhdr->len,
+		     mem_idx);
+}
+
+uint32_t
+spdk_mempool_mem_iter(struct spdk_mempool *mp, spdk_mempool_mem_cb_t mem_cb,
+		      void *mem_cb_arg)
+{
+	struct env_mempool_mem_iter_ctx ctx = {
+		.user_cb = mem_cb,
+		.user_arg = mem_cb_arg
+	};
+
+	return rte_mempool_mem_iter((struct rte_mempool *)mp, mempool_mem_iter_remap, &ctx);
+}
+
 struct spdk_mempool *
 spdk_mempool_lookup(const char *name)
 {
@@ -330,22 +323,26 @@ spdk_process_is_primary(void)
 	return (rte_eal_process_type() == RTE_PROC_PRIMARY);
 }
 
-uint64_t spdk_get_ticks(void)
+uint64_t
+spdk_get_ticks(void)
 {
 	return rte_get_timer_cycles();
 }
 
-uint64_t spdk_get_ticks_hz(void)
+uint64_t
+spdk_get_ticks_hz(void)
 {
 	return rte_get_timer_hz();
 }
 
-void spdk_delay_us(unsigned int us)
+void
+spdk_delay_us(unsigned int us)
 {
 	rte_delay_us(us);
 }
 
-void spdk_pause(void)
+void
+spdk_pause(void)
 {
 	rte_pause();
 }

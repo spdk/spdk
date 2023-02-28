@@ -3,9 +3,7 @@
 ## Getting the Source Code {#getting_started_source}
 
 ~~~{.sh}
-git clone https://github.com/spdk/spdk
-cd spdk
-git submodule update --init
+git clone https://github.com/spdk/spdk --recursive
 ~~~
 
 ## Installing Prerequisites {#getting_started_prerequisites}

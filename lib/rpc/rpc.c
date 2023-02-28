@@ -1,34 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include <sys/file.h>
@@ -50,6 +23,7 @@ static int g_rpc_lock_fd = -1;
 static struct spdk_jsonrpc_server *g_jsonrpc_server = NULL;
 static uint32_t g_rpc_state;
 static bool g_rpcs_correct = true;
+static char **g_rpcs_allowlist = NULL;
 
 struct spdk_rpc_method {
 	const char *name;
@@ -75,6 +49,25 @@ spdk_rpc_get_state(void)
 	return g_rpc_state;
 }
 
+static bool
+rpc_is_allowed(const char *name)
+{
+	size_t i;
+
+	if (g_rpcs_allowlist == NULL) {
+		return true;
+	}
+
+	for (i = 0; g_rpcs_allowlist[i] != NULL; i++) {
+		if (strcmp(name, g_rpcs_allowlist[i]) == 0) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
 static struct spdk_rpc_method *
 _get_rpc_method(const struct spdk_json_val *method)
 {
@@ -82,6 +75,9 @@ _get_rpc_method(const struct spdk_json_val *method)
 
 	SLIST_FOREACH(m, &g_rpc_methods, slist) {
 		if (spdk_json_strequal(method, m->name)) {
+			if (!rpc_is_allowed(m->name)) {
+				return NULL;
+			}
 			return m;
 		}
 	}
@@ -171,7 +167,7 @@ spdk_rpc_listen(const char *listen_addr)
 		return -1;
 	}
 
-	g_rpc_lock_fd = open(g_rpc_lock_path, O_RDONLY | O_CREAT, 0600);
+	g_rpc_lock_fd = open(g_rpc_lock_path, O_RDWR | O_CREAT, 0600);
 	if (g_rpc_lock_fd == -1) {
 		SPDK_ERRLOG("Cannot open lock file %s: %s\n",
 			    g_rpc_lock_path, spdk_strerror(errno));
@@ -286,6 +282,10 @@ spdk_rpc_is_method_allowed(const char *method, uint32_t state_mask)
 {
 	struct spdk_rpc_method *m;
 
+	if (!rpc_is_allowed(method)) {
+		return -ENOENT;
+	}
+
 	SLIST_FOREACH(m, &g_rpc_methods, slist) {
 		if (strcmp(m->name, method) != 0) {
 			continue;
@@ -299,6 +299,35 @@ spdk_rpc_is_method_allowed(const char *method, uint32_t state_mask)
 	}
 
 	return -ENOENT;
+}
+
+int
+spdk_rpc_get_method_state_mask(const char *method, uint32_t *state_mask)
+{
+	struct spdk_rpc_method *m;
+
+	SLIST_FOREACH(m, &g_rpc_methods, slist) {
+		if (strcmp(m->name, method) == 0) {
+			*state_mask = m->state_mask;
+			return 0;
+		}
+	}
+
+	return -ENOENT;
+}
+
+void
+spdk_rpc_set_allowlist(const char **rpc_allowlist)
+{
+	spdk_strarray_free(g_rpcs_allowlist);
+
+	if (rpc_allowlist == NULL) {
+		g_rpcs_allowlist = NULL;
+		return;
+	}
+
+	g_rpcs_allowlist = spdk_strarray_dup(rpc_allowlist);
+	assert(g_rpcs_allowlist != NULL);
 }
 
 void
@@ -356,6 +385,9 @@ rpc_get_methods(struct spdk_jsonrpc_request *request, const struct spdk_json_val
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_array_begin(w);
 	SLIST_FOREACH(m, &g_rpc_methods, slist) {
+		if (!rpc_is_allowed(m->name)) {
+			continue;
+		}
 		if (m->is_alias_of != NULL && !req.include_aliases) {
 			continue;
 		}
@@ -368,7 +400,6 @@ rpc_get_methods(struct spdk_jsonrpc_request *request, const struct spdk_json_val
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("rpc_get_methods", rpc_get_methods, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(rpc_get_methods, get_rpc_methods)
 
 static void
 rpc_spdk_get_version(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
@@ -400,4 +431,3 @@ rpc_spdk_get_version(struct spdk_jsonrpc_request *request, const struct spdk_jso
 }
 SPDK_RPC_REGISTER("spdk_get_version", rpc_spdk_get_version,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(spdk_get_version, get_spdk_version)

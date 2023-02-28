@@ -1,34 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2015 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -59,6 +32,7 @@ DEFINE_STUB_V(nvme_transport_ctrlr_disconnect_qpair, (struct spdk_nvme_ctrlr *ct
 DEFINE_STUB_V(nvme_ctrlr_disconnect_qpair, (struct spdk_nvme_qpair *qpair));
 
 DEFINE_STUB_V(nvme_ctrlr_complete_queued_async_events, (struct spdk_nvme_ctrlr *ctrlr));
+DEFINE_STUB_V(nvme_ctrlr_abort_queued_aborts, (struct spdk_nvme_ctrlr *ctrlr));
 
 void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
@@ -153,7 +127,8 @@ test_ctrlr_failed(void)
 	cleanup_submit_request_test(&qpair);
 }
 
-static void struct_packing(void)
+static void
+struct_packing(void)
 {
 	/* ctrlr is the first field in nvme_qpair after the fields
 	 * that are used in the I/O path. Make sure the I/O path fields
@@ -175,7 +150,8 @@ dummy_cb_fn(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 	}
 }
 
-static void test_nvme_qpair_process_completions(void)
+static void
+test_nvme_qpair_process_completions(void)
 {
 	struct spdk_nvme_qpair		admin_qp = {0};
 	struct spdk_nvme_qpair		qpair = {0};
@@ -200,6 +176,7 @@ static void test_nvme_qpair_process_completions(void)
 	STAILQ_INIT(&qpair.queued_req);
 	STAILQ_INSERT_TAIL(&qpair.queued_req, &dummy_1, stailq);
 	STAILQ_INSERT_TAIL(&qpair.queued_req, &dummy_2, stailq);
+	qpair.num_outstanding_reqs = 2;
 
 	/* If the controller is failed, return -ENXIO */
 	ctrlr.is_failed = true;
@@ -209,6 +186,7 @@ static void test_nvme_qpair_process_completions(void)
 	CU_ASSERT(!STAILQ_EMPTY(&qpair.queued_req));
 	CU_ASSERT(g_num_cb_passed == 0);
 	CU_ASSERT(g_num_cb_failed == 0);
+	CU_ASSERT(qpair.num_outstanding_reqs == 2);
 
 	/* Same if the qpair is failed at the transport layer. */
 	ctrlr.is_failed = false;
@@ -219,6 +197,7 @@ static void test_nvme_qpair_process_completions(void)
 	CU_ASSERT(!STAILQ_EMPTY(&qpair.queued_req));
 	CU_ASSERT(g_num_cb_passed == 0);
 	CU_ASSERT(g_num_cb_failed == 0);
+	CU_ASSERT(qpair.num_outstanding_reqs == 2);
 
 	/* If the controller is removed, make sure we abort the requests. */
 	ctrlr.is_failed = true;
@@ -229,6 +208,7 @@ static void test_nvme_qpair_process_completions(void)
 	CU_ASSERT(STAILQ_EMPTY(&qpair.queued_req));
 	CU_ASSERT(g_num_cb_passed == 0);
 	CU_ASSERT(g_num_cb_failed == 2);
+	CU_ASSERT(qpair.num_outstanding_reqs == 0);
 
 	/* If we are resetting, make sure that we don't call into the transport. */
 	STAILQ_INSERT_TAIL(&qpair.queued_req, &dummy_1, stailq);
@@ -299,7 +279,8 @@ static void test_nvme_qpair_process_completions(void)
 	free(admin_qp.req_buf);
 }
 
-static void test_nvme_completion_is_retry(void)
+static void
+test_nvme_completion_is_retry(void)
 {
 	struct spdk_nvme_cpl	cpl = {};
 
@@ -649,10 +630,12 @@ test_nvme_qpair_manual_complete_request(void)
 	qpair.ctrlr->opts.disable_error_logging = false;
 	STAILQ_INIT(&qpair.free_req);
 	SPDK_CU_ASSERT_FATAL(STAILQ_EMPTY(&qpair.free_req));
+	qpair.num_outstanding_reqs = 1;
 
 	nvme_qpair_manual_complete_request(&qpair, &req, SPDK_NVME_SCT_GENERIC,
 					   SPDK_NVME_SC_SUCCESS, 1, true);
 	CU_ASSERT(!STAILQ_EMPTY(&qpair.free_req));
+	CU_ASSERT(qpair.num_outstanding_reqs == 0);
 }
 
 static void
@@ -711,12 +694,14 @@ test_nvme_qpair_init_deinit(void)
 	STAILQ_REMOVE(&qpair.free_req, reqs[2], nvme_request, stailq);
 	STAILQ_INSERT_TAIL(&qpair.err_req_head, reqs[2], stailq);
 	CU_ASSERT(STAILQ_EMPTY(&qpair.free_req));
+	qpair.num_outstanding_reqs = 3;
 
 	nvme_qpair_deinit(&qpair);
 	CU_ASSERT(STAILQ_EMPTY(&qpair.queued_req));
 	CU_ASSERT(STAILQ_EMPTY(&qpair.aborting_queued_req));
 	CU_ASSERT(STAILQ_EMPTY(&qpair.err_req_head));
 	CU_ASSERT(TAILQ_EMPTY(&qpair.err_cmd_head));
+	CU_ASSERT(qpair.num_outstanding_reqs == 0);
 }
 
 static void
@@ -741,25 +726,26 @@ test_nvme_get_sgl_print_info(void)
 	cmd.dptr.sgl1.generic.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
 	cmd.dptr.sgl1.generic.subtype = 0;
 	cmd.dptr.sgl1.address = 0xdeadbeef;
-	cmd.dptr.sgl1.keyed.length = 0x1000;
-	cmd.dptr.sgl1.keyed.key = 0xababccdd;
+	cmd.dptr.sgl1.unkeyed.length = 0x1000;
 
 	nvme_get_sgl(buf, NVME_CMD_DPTR_STR_SIZE, &cmd);
-	CU_ASSERT(!strncmp(buf, "SGL DATA BLOCK ADDRESS 0xdeadbeef len:0x1000 key:0xababccdd",
+	CU_ASSERT(!strncmp(buf, "SGL DATA BLOCK ADDRESS 0xdeadbeef len:0x1000",
 			   NVME_CMD_DPTR_STR_SIZE));
 
 	memset(&cmd.dptr.sgl1, 0, sizeof(cmd.dptr.sgl1));
 	cmd.dptr.sgl1.generic.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
 	cmd.dptr.sgl1.generic.subtype = 0;
 	cmd.dptr.sgl1.address = 0xdeadbeef;
-	cmd.dptr.sgl1.unkeyed.length = 0x1000;
+	cmd.dptr.sgl1.keyed.length = 0x1000;
+	cmd.dptr.sgl1.keyed.key = 0xababccdd;
 
 	nvme_get_sgl(buf, NVME_CMD_DPTR_STR_SIZE, &cmd);
-	CU_ASSERT(!strncmp(buf, "SGL RESERVED ADDRESS 0xdeadbeef len:0x1000",
+	CU_ASSERT(!strncmp(buf, "SGL KEYED DATA BLOCK ADDRESS 0xdeadbeef len:0x1000 key:0xababccdd",
 			   NVME_CMD_DPTR_STR_SIZE));
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

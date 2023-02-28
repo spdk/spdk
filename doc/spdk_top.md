@@ -15,6 +15,10 @@ spdk_top utility gets the fine grained metrics from the pollers, analyzes and re
 This information enables users to identify CPU cores that are busy doing real work so that they can determine if the application
 needs more or less CPU resources.
 
+spdk_top uses RPCs to communicate with the app it is viewing, so it will work only with those that run RPC server and support
+`thread_get_stats`, `thread_get_pollers`, `framework_get_reactors` methods. Apps currently meeting this criteria:
+spdk_tgt, nvmf_tgt, vhost, iscsi_tgt.
+
 ## Run spdk_top
 
 Before running spdk_top you need to run the SPDK application whose performance you want to analyze using spdk_top.
@@ -83,4 +87,9 @@ window allows to select a thread and display thread details pop-up on top of it.
 
 ## Help Window
 
-Help window pop-up can be invoked by pressing H key inside any tab. It contains explanations for each key used inside the spdk_top application.
+Help window pop-up can be invoked by pressing 'h' key inside any tab. It contains explanations for each key used inside the spdk_top application.
+
+## Scheduler Pop-up
+
+Current scheduler information may be displayed with 'g' key inside all tabs. It contains scheduler name and period along with governor
+name.

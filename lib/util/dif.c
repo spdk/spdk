@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2022 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/dif.h"
@@ -141,6 +113,22 @@ _dif_sgl_is_bytes_multiple(struct _dif_sgl *s, uint32_t bytes)
 	}
 
 	return true;
+}
+
+static bool
+_dif_sgl_is_valid_block_aligned(struct _dif_sgl *s, uint32_t num_blocks, uint32_t block_size)
+{
+	uint32_t count = 0;
+	int i;
+
+	for (i = 0; i < s->iovcnt; i++) {
+		if (s->iov[i].iov_len % block_size) {
+			return false;
+		}
+		count += s->iov[i].iov_len / block_size;
+	}
+
+	return count >= num_blocks;
 }
 
 /* This function must be used before starting iteration. */
@@ -880,20 +868,25 @@ dif_generate_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 }
 
 int
-spdk_dif_generate_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
-		       uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+spdk_dif_generate_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iovs,
+		       int bounce_iovcnt, uint32_t num_blocks,
+		       const struct spdk_dif_ctx *ctx)
 {
 	struct _dif_sgl src_sgl, dst_sgl;
 	uint32_t data_block_size;
 
 	_dif_sgl_init(&src_sgl, iovs, iovcnt);
-	_dif_sgl_init(&dst_sgl, bounce_iov, 1);
+	_dif_sgl_init(&dst_sgl, bounce_iovs, bounce_iovcnt);
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
-	if (!_dif_sgl_is_valid(&src_sgl, data_block_size * num_blocks) ||
-	    !_dif_sgl_is_valid(&dst_sgl, ctx->block_size * num_blocks)) {
+	if (!_dif_sgl_is_valid(&src_sgl, data_block_size * num_blocks)) {
 		SPDK_ERRLOG("Size of iovec arrays are not valid.\n");
+		return -EINVAL;
+	}
+
+	if (!_dif_sgl_is_valid_block_aligned(&dst_sgl, num_blocks, ctx->block_size)) {
+		SPDK_ERRLOG("Size of bounce_iovs arrays are not valid or misaligned with block_size.\n");
 		return -EINVAL;
 	}
 
@@ -1013,21 +1006,26 @@ dif_verify_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 }
 
 int
-spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
-		     uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iovs,
+		     int bounce_iovcnt, uint32_t num_blocks,
+		     const struct spdk_dif_ctx *ctx,
 		     struct spdk_dif_error *err_blk)
 {
 	struct _dif_sgl src_sgl, dst_sgl;
 	uint32_t data_block_size;
 
-	_dif_sgl_init(&src_sgl, bounce_iov, 1);
+	_dif_sgl_init(&src_sgl, bounce_iovs, bounce_iovcnt);
 	_dif_sgl_init(&dst_sgl, iovs, iovcnt);
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
-	if (!_dif_sgl_is_valid(&dst_sgl, data_block_size * num_blocks) ||
-	    !_dif_sgl_is_valid(&src_sgl, ctx->block_size * num_blocks)) {
+	if (!_dif_sgl_is_valid(&dst_sgl, data_block_size * num_blocks)) {
 		SPDK_ERRLOG("Size of iovec arrays are not valid\n");
+		return -EINVAL;
+	}
+
+	if (!_dif_sgl_is_valid_block_aligned(&src_sgl, num_blocks, ctx->block_size)) {
+		SPDK_ERRLOG("Size of bounce_iovs arrays are not valid or misaligned with block_size.\n");
 		return -EINVAL;
 	}
 

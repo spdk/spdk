@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
  *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk_internal/lvolstore.h"
@@ -206,7 +178,10 @@ load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 		goto invalid;
 	}
 
-	lvol->blob = blob;
+	/*
+	 * Do not store a reference to blob now because spdk_bs_iter_next() will close it.
+	 * Storing blob_id for future lookups is fine.
+	 */
 	lvol->blob_id = blob_id;
 	lvol->lvol_store = lvs;
 	lvol->thin_provision = spdk_blob_is_thin_provisioned(blob);
@@ -376,6 +351,7 @@ lvs_load_cb(void *cb_arg, struct spdk_blob_store *bs, int lvolerrno)
 	lvs->bs_dev = req->bs_dev;
 	TAILQ_INIT(&lvs->lvols);
 	TAILQ_INIT(&lvs->pending_lvols);
+	TAILQ_INIT(&lvs->retry_open_lvols);
 
 	req->lvol_store = lvs;
 
@@ -426,6 +402,15 @@ remove_bs_on_error_cb(void *cb_arg, int bserrno)
 }
 
 static void
+exit_error_lvs_req(struct spdk_lvs_with_handle_req *req, struct spdk_lvol_store *lvs, int lvolerrno)
+{
+	req->cb_fn(req->cb_arg, NULL, lvolerrno);
+	spdk_bs_destroy(lvs->blobstore, remove_bs_on_error_cb, NULL);
+	lvs_free(lvs);
+	free(req);
+}
+
+static void
 super_create_close_cb(void *cb_arg, int lvolerrno)
 {
 	struct spdk_lvs_with_handle_req *req = cb_arg;
@@ -433,10 +418,7 @@ super_create_close_cb(void *cb_arg, int lvolerrno)
 
 	if (lvolerrno < 0) {
 		SPDK_ERRLOG("Lvol store init failed: could not close super blob\n");
-		req->cb_fn(req->cb_arg, NULL, lvolerrno);
-		spdk_bs_destroy(lvs->blobstore, remove_bs_on_error_cb, NULL);
-		lvs_free(lvs);
-		free(req);
+		exit_error_lvs_req(req, lvs, lvolerrno);
 		return;
 	}
 
@@ -452,11 +434,8 @@ super_blob_set_cb(void *cb_arg, int lvolerrno)
 	struct spdk_blob *blob = lvs->super_blob;
 
 	if (lvolerrno < 0) {
-		req->cb_fn(req->cb_arg, NULL, lvolerrno);
 		SPDK_ERRLOG("Lvol store init failed: could not set uuid for super blob\n");
-		spdk_bs_destroy(lvs->blobstore, remove_bs_on_error_cb, NULL);
-		lvs_free(lvs);
-		free(req);
+		exit_error_lvs_req(req, lvs, lvolerrno);
 		return;
 	}
 
@@ -472,11 +451,8 @@ super_blob_init_cb(void *cb_arg, int lvolerrno)
 	char uuid[SPDK_UUID_STRING_LEN];
 
 	if (lvolerrno < 0) {
-		req->cb_fn(req->cb_arg, NULL, lvolerrno);
 		SPDK_ERRLOG("Lvol store init failed: could not set super blob\n");
-		spdk_bs_destroy(lvs->blobstore, remove_bs_on_error_cb, NULL);
-		lvs_free(lvs);
-		free(req);
+		exit_error_lvs_req(req, lvs, lvolerrno);
 		return;
 	}
 
@@ -494,11 +470,8 @@ super_blob_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	struct spdk_lvol_store *lvs = req->lvol_store;
 
 	if (lvolerrno < 0) {
-		req->cb_fn(req->cb_arg, NULL, lvolerrno);
 		SPDK_ERRLOG("Lvol store init failed: could not open super blob\n");
-		spdk_bs_destroy(lvs->blobstore, remove_bs_on_error_cb, NULL);
-		lvs_free(lvs);
-		free(req);
+		exit_error_lvs_req(req, lvs, lvolerrno);
 		return;
 	}
 
@@ -516,11 +489,8 @@ super_blob_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 	struct spdk_blob_store *bs;
 
 	if (lvolerrno < 0) {
-		req->cb_fn(req->cb_arg, NULL, lvolerrno);
 		SPDK_ERRLOG("Lvol store init failed: could not create super blob\n");
-		spdk_bs_destroy(lvs->blobstore, remove_bs_on_error_cb, NULL);
-		lvs_free(lvs);
-		free(req);
+		exit_error_lvs_req(req, lvs, lvolerrno);
 		return;
 	}
 
@@ -548,6 +518,7 @@ lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 	lvs->blobstore = bs;
 	TAILQ_INIT(&lvs->lvols);
 	TAILQ_INIT(&lvs->pending_lvols);
+	TAILQ_INIT(&lvs->retry_open_lvols);
 
 	SPDK_INFOLOG(lvol, "Lvol store initialized\n");
 
@@ -560,16 +531,18 @@ spdk_lvs_opts_init(struct spdk_lvs_opts *o)
 {
 	o->cluster_sz = SPDK_LVS_OPTS_CLUSTER_SZ;
 	o->clear_method = LVS_CLEAR_WITH_UNMAP;
+	o->num_md_pages_per_cluster_ratio = 100;
 	memset(o->name, 0, sizeof(o->name));
 }
 
 static void
-setup_lvs_opts(struct spdk_bs_opts *bs_opts, struct spdk_lvs_opts *o)
+setup_lvs_opts(struct spdk_bs_opts *bs_opts, struct spdk_lvs_opts *o, uint32_t total_clusters)
 {
 	assert(o != NULL);
 	lvs_bs_opts_init(bs_opts);
 	bs_opts->cluster_sz = o->cluster_sz;
 	bs_opts->clear_method = (enum bs_clear_method)o->clear_method;
+	bs_opts->num_md_pages = (o->num_md_pages_per_cluster_ratio * total_clusters) / 100;
 }
 
 int
@@ -579,6 +552,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	struct spdk_lvol_store *lvs;
 	struct spdk_lvs_with_handle_req *lvs_req;
 	struct spdk_bs_opts opts = {};
+	uint32_t total_clusters;
 	int rc;
 
 	if (bs_dev == NULL) {
@@ -591,7 +565,14 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 		return -EINVAL;
 	}
 
-	setup_lvs_opts(&opts, o);
+	if (o->cluster_sz < bs_dev->blocklen) {
+		SPDK_ERRLOG("Cluster size %" PRIu32 " is smaller than blocklen %" PRIu32 "\n",
+			    o->cluster_sz, bs_dev->blocklen);
+		return -EINVAL;
+	}
+	total_clusters = bs_dev->blockcnt / (o->cluster_sz / bs_dev->blocklen);
+
+	setup_lvs_opts(&opts, o, total_clusters);
 
 	if (strnlen(o->name, SPDK_LVS_NAME_MAX) == SPDK_LVS_NAME_MAX) {
 		SPDK_ERRLOG("Name has no null terminator.\n");
@@ -631,7 +612,6 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	lvs_req->cb_arg = cb_arg;
 	lvs_req->lvol_store = lvs;
 	lvs->bs_dev = bs_dev;
-	lvs->destruct = false;
 
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "LVOLSTORE");
 
@@ -1511,4 +1491,35 @@ spdk_lvol_decouple_parent(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, v
 	blob_id = spdk_blob_get_id(lvol->blob);
 	spdk_bs_blob_decouple_parent(lvol->lvol_store->blobstore, req->channel, blob_id,
 				     lvol_inflate_cb, req);
+}
+
+void
+spdk_lvs_grow(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvs_with_handle_req *req;
+	struct spdk_bs_opts opts = {};
+
+	assert(cb_fn != NULL);
+
+	if (bs_dev == NULL) {
+		SPDK_ERRLOG("Blobstore device does not exist\n");
+		cb_fn(cb_arg, NULL, -ENODEV);
+		return;
+	}
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		SPDK_ERRLOG("Cannot alloc memory for request structure\n");
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
+
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+	req->bs_dev = bs_dev;
+
+	lvs_bs_opts_init(&opts);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "LVOLSTORE");
+
+	spdk_bs_grow(bs_dev, &opts, lvs_load_cb, req);
 }

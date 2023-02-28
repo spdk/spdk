@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation
+#  All rights reserved.
+#
 # Install main dependencies
-pacman -Sy --needed --noconfirm gcc make cmake cunit libaio openssl \
+pacman -Sy --needed --noconfirm gcc make cunit libaio openssl \
 	libutil-linux libiscsi python ncurses json-c cmocka ninja meson
 # Additional dependencies for SPDK CLI
 pacman -Sy --needed --noconfirm python-pexpect python-pip libffi
@@ -9,6 +12,9 @@ pip install configshell_fb
 pip install pyelftools
 pip install ijson
 pip install python-magic
+pip install grpcio
+pip install grpcio-tools
+pip install pyyaml
 # Additional dependencies for DPDK
 pacman -Sy --needed --noconfirm numactl nasm
 # Additional dependencies for ISA-L used in compression
@@ -49,6 +55,10 @@ fi
 if [[ $INSTALL_FUSE == "true" ]]; then
 	# Additional dependencies for FUSE and NVMe-CUSE
 	pacman -Sy --needed --noconfirm fuse3
+fi
+if [[ $INSTALL_RBD == "true" ]]; then
+	echo "Arch Linux does not have librados-devel and librbd-devel in mainline repositories."
+	echo "You can install them manually"
 fi
 if [[ $INSTALL_RDMA == "true" ]]; then
 	# Additional dependencies for RDMA transport in NVMe over Fabrics

@@ -1,33 +1,5 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2021 Intel Corporation. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -65,8 +37,6 @@ DEFINE_STUB_V(spdk_nvme_trid_populate_transport, (struct spdk_nvme_transport_id 
 		enum spdk_nvme_transport_type trtype));
 DEFINE_STUB(nvmf_ctrlr_abort_request, int, (struct spdk_nvmf_request *req), 0);
 DEFINE_STUB(spdk_nvmf_request_complete, int, (struct spdk_nvmf_request *req), 0);
-DEFINE_STUB(ut_transport_create, struct spdk_nvmf_transport *,
-	    (struct spdk_nvmf_transport_opts *opts), NULL);
 DEFINE_STUB(ut_transport_destroy, int, (struct spdk_nvmf_transport *transport,
 					spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg), 0);
 DEFINE_STUB(ibv_get_device_name, const char *, (struct ibv_device *device), NULL);
@@ -112,6 +82,12 @@ DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid, int, (struct spdk_nvmf_qpair *qpair
 DEFINE_STUB(ibv_reg_mr_iova2, struct ibv_mr *, (struct ibv_pd *pd, void *addr, size_t length,
 		uint64_t iova, unsigned int access), NULL);
 DEFINE_STUB(spdk_nvme_transport_id_adrfam_str, const char *, (enum spdk_nvmf_adrfam adrfam), NULL);
+DEFINE_STUB_V(ut_opts_init, (struct spdk_nvmf_transport_opts *opts));
+DEFINE_STUB(ut_transport_listen, int, (struct spdk_nvmf_transport *transport,
+				       const struct spdk_nvme_transport_id *trid, struct spdk_nvmf_listen_opts *opts), 0);
+DEFINE_STUB_V(ut_transport_stop_listen, (struct spdk_nvmf_transport *transport,
+		const struct spdk_nvme_transport_id *trid));
+DEFINE_STUB(spdk_mempool_lookup, struct spdk_mempool *, (const char *name), NULL);
 
 /* ibv_reg_mr can be a macro, need to undefine it */
 #ifdef ibv_reg_mr
@@ -130,29 +106,49 @@ ibv_reg_mr(struct ibv_pd *pd, void *addr, size_t length, int access)
 	}
 }
 
+struct spdk_nvmf_transport ut_transport = {};
+
+static int
+ut_transport_create(struct spdk_nvmf_transport_opts *opts, spdk_nvmf_transport_create_done_cb cb_fn,
+		    void *cb_arg)
+{
+	cb_fn(cb_arg, &ut_transport);
+	return 0;
+}
+
+static void
+test_nvmf_create_transport_done(void *cb_arg, struct spdk_nvmf_transport *transport)
+{
+	struct spdk_nvmf_transport **ctx = cb_arg;
+
+	*ctx = transport;
+}
+
 static void
 test_spdk_nvmf_transport_create(void)
 {
 	int rc;
-	struct spdk_nvmf_transport ut_transport = {};
 	struct spdk_nvmf_transport *transport = NULL;
 	struct nvmf_transport_ops_list_element *ops_element;
 	struct spdk_nvmf_transport_ops ops = {
 		.name = "new_ops",
 		.type = (enum spdk_nvme_transport_type)SPDK_NVMF_TRTYPE_RDMA,
-		.create = ut_transport_create,
+		.create_async = ut_transport_create,
 		.destroy = ut_transport_destroy
 	};
 
 	/* No available ops element */
-	transport = spdk_nvmf_transport_create("new_ops", &g_rdma_ut_transport_opts);
+	rc = spdk_nvmf_transport_create_async("new_ops", &g_rdma_ut_transport_opts,
+					      test_nvmf_create_transport_done, &transport);
+	CU_ASSERT(rc != 0);
 	CU_ASSERT(transport == NULL);
 
 	/* Create transport successfully */
-	MOCK_SET(ut_transport_create, &ut_transport);
 	spdk_nvmf_transport_register(&ops);
 
-	transport = spdk_nvmf_transport_create("new_ops", &g_rdma_ut_transport_opts);
+	rc = spdk_nvmf_transport_create_async("new_ops", &g_rdma_ut_transport_opts,
+					      test_nvmf_create_transport_done, &transport);
+	CU_ASSERT(rc == 0);
 	CU_ASSERT(transport == &ut_transport);
 	CU_ASSERT(!memcmp(&transport->opts, &g_rdma_ut_transport_opts, sizeof(g_rdma_ut_transport_opts)));
 	CU_ASSERT(!memcmp(transport->ops, &ops, sizeof(ops)));
@@ -162,9 +158,12 @@ test_spdk_nvmf_transport_create(void)
 	CU_ASSERT(rc == 0);
 
 	/* transport_opts parameter invalid */
+	transport = NULL;
 	g_rdma_ut_transport_opts.max_io_size = 4096;
 
-	transport = spdk_nvmf_transport_create("new_ops", &g_rdma_ut_transport_opts);
+	rc = spdk_nvmf_transport_create_async("new_ops", &g_rdma_ut_transport_opts,
+					      test_nvmf_create_transport_done, &transport);
+	CU_ASSERT(rc != 0);
 	CU_ASSERT(transport == NULL);
 	g_rdma_ut_transport_opts.max_io_size = (SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE *
 						RDMA_UT_UNITS_IN_MAX_IO);
@@ -172,7 +171,6 @@ test_spdk_nvmf_transport_create(void)
 	ops_element = TAILQ_LAST(&g_spdk_nvmf_transport_ops, nvmf_transport_ops_list);
 	TAILQ_REMOVE(&g_spdk_nvmf_transport_ops, ops_element, link);
 	free(ops_element);
-	MOCK_CLEAR(ut_transport_create);
 }
 
 static struct spdk_nvmf_transport_poll_group *
@@ -227,7 +225,150 @@ test_nvmf_transport_poll_group_create(void)
 	spdk_mempool_free(transport.data_buf_pool);
 }
 
-int main(int argc, char **argv)
+static void
+test_spdk_nvmf_transport_opts_init(void)
+{
+	int rc;
+	bool rcbool;
+	size_t opts_size;
+	struct spdk_nvmf_transport *transport = NULL;
+	struct spdk_nvmf_transport_opts opts = {};
+	const struct spdk_nvmf_transport_ops *tops;
+	struct spdk_nvmf_transport_ops ops = {
+		.name = "ut_ops",
+		.type = (enum spdk_nvme_transport_type)SPDK_NVMF_TRTYPE_RDMA,
+		.create_async = ut_transport_create,
+		.destroy = ut_transport_destroy,
+		.opts_init = ut_opts_init
+	};
+
+	spdk_nvmf_transport_register(&ops);
+	rc = spdk_nvmf_transport_create_async("ut_ops", &g_rdma_ut_transport_opts,
+					      test_nvmf_create_transport_done, &transport);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(transport == &ut_transport);
+
+	tops = nvmf_get_transport_ops(ops.name);
+	CU_ASSERT(memcmp(tops, &ops, sizeof(struct spdk_nvmf_transport_ops)) == 0);
+
+	/* Test1: Invalid parameter: unavailable transport type */
+	opts_size = sizeof(struct spdk_nvmf_transport_opts);
+
+	rcbool = spdk_nvmf_transport_opts_init("invalid_ops", &opts, opts_size);
+	CU_ASSERT(rcbool == false);
+
+	/* Test2: Invalid parameter: NULL pointer */
+	rcbool = true;
+
+	rcbool = spdk_nvmf_transport_opts_init(ops.name, NULL, opts_size);
+	CU_ASSERT(rcbool == false);
+
+	/* Test3: Invalid parameter: opts_size inside opts be zero value */
+	rcbool = true;
+	opts_size = 0;
+
+	rcbool = spdk_nvmf_transport_opts_init(ops.name, &opts, opts_size);
+	CU_ASSERT(rcbool == false);
+
+	/* Test4: success */
+	opts.opts_size = 0;
+	opts_size = sizeof(struct spdk_nvmf_transport_opts);
+
+	rcbool = spdk_nvmf_transport_opts_init(ops.name, &opts, opts_size);
+	CU_ASSERT(rcbool == true);
+	CU_ASSERT(opts.opts_size == opts_size);
+
+	rc = spdk_nvmf_transport_destroy(transport, NULL, NULL);
+	CU_ASSERT(rc == 0);
+}
+
+static void
+test_spdk_nvmf_transport_listen_ext(void)
+{
+	int rc;
+	struct spdk_nvmf_transport *transport = NULL;
+	struct spdk_nvme_transport_id trid1 = {};
+	struct spdk_nvme_transport_id trid2 = {};
+	struct spdk_nvmf_listen_opts lopts = {};
+	struct spdk_nvmf_listener *tlistener;
+	struct spdk_nvmf_transport_ops ops = {
+		.name = "ut_ops1",
+		.type = (enum spdk_nvme_transport_type)SPDK_NVMF_TRTYPE_RDMA,
+		.create_async = ut_transport_create,
+		.destroy = ut_transport_destroy,
+		.opts_init = ut_opts_init,
+		.listen = ut_transport_listen,
+		.stop_listen = ut_transport_stop_listen
+	};
+
+	trid1.trtype = (enum spdk_nvme_transport_type)SPDK_NVMF_TRTYPE_RDMA;
+	trid1.adrfam = (enum spdk_nvmf_adrfam)SPDK_NVMF_ADRFAM_IPV4;
+	trid1.priority = 4;
+	memcpy(trid1.traddr, "192.168.100.72", sizeof("192.168.100.72"));
+	memcpy(trid1.trsvcid, "4420", sizeof("4420"));
+
+	spdk_nvmf_transport_register(&ops);
+	rc = spdk_nvmf_transport_create_async("ut_ops1", &g_rdma_ut_transport_opts,
+					      test_nvmf_create_transport_done, &transport);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(transport == &ut_transport);
+
+	/* Test1: Execute listen failed */
+	MOCK_SET(ut_transport_listen, -1);
+
+	rc = spdk_nvmf_transport_listen(transport, &trid1, &lopts);
+	tlistener = nvmf_transport_find_listener(transport, &trid1);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(tlistener == NULL);
+
+	/* Test2: Execute listen success */
+	MOCK_SET(ut_transport_listen, 0);
+
+	rc = spdk_nvmf_transport_listen(transport, &trid1, &lopts);
+	tlistener = nvmf_transport_find_listener(transport, &trid1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tlistener != NULL);
+	CU_ASSERT(tlistener->ref == 1);
+	CU_ASSERT(memcmp(&tlistener->trid, &trid1, sizeof(trid1)) == 0);
+
+	/* Test3: Listen for an identifier repeatedly */
+	tlistener = NULL;
+
+	rc = spdk_nvmf_transport_listen(transport, &trid1, &lopts);
+	tlistener = nvmf_transport_find_listener(transport, &trid1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tlistener != NULL);
+	CU_ASSERT(tlistener->ref == 2);
+	CU_ASSERT(memcmp(&tlistener->trid, &trid1, sizeof(trid1)) == 0);
+
+	/* Test4: Stop listen when ref >1, Listen will not be released */
+	tlistener = NULL;
+
+	rc = spdk_nvmf_transport_stop_listen(transport, &trid1);
+	tlistener = nvmf_transport_find_listener(transport, &trid1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tlistener != NULL);
+	CU_ASSERT(tlistener->ref == 1);
+	CU_ASSERT(memcmp(&tlistener->trid, &trid1, sizeof(trid1)) == 0);
+
+	/* Test5: Stop listen when ref == 1, Listen will be released */
+
+	rc = spdk_nvmf_transport_stop_listen(transport, &trid1);
+	tlistener = nvmf_transport_find_listener(transport, &trid1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tlistener == NULL);
+
+	/* Test6: Release unrecognized listener */
+	rc = spdk_nvmf_transport_stop_listen(transport, &trid2);
+
+	CU_ASSERT(rc == -ENOENT);
+
+	rc = spdk_nvmf_transport_destroy(transport, NULL, NULL);
+	CU_ASSERT(rc == 0);
+}
+
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
@@ -239,6 +380,8 @@ int main(int argc, char **argv)
 
 	CU_ADD_TEST(suite, test_spdk_nvmf_transport_create);
 	CU_ADD_TEST(suite, test_nvmf_transport_poll_group_create);
+	CU_ADD_TEST(suite, test_spdk_nvmf_transport_opts_init);
+	CU_ADD_TEST(suite, test_spdk_nvmf_transport_listen_ext);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

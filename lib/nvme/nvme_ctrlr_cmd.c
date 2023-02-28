@@ -1,37 +1,10 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2015 Intel Corporation. All rights reserved.
  *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "nvme_internal.h"
+#include "spdk/nvme.h"
 
 int
 spdk_nvme_ctrlr_io_cmd_raw_no_payload_build(struct spdk_nvme_ctrlr *ctrlr,
@@ -407,10 +380,11 @@ spdk_nvme_ctrlr_cmd_get_feature_ns(struct spdk_nvme_ctrlr *ctrlr, uint8_t featur
 	return rc;
 }
 
-int spdk_nvme_ctrlr_cmd_set_feature_ns(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
-				       uint32_t cdw11, uint32_t cdw12, void *payload,
-				       uint32_t payload_size, spdk_nvme_cmd_cb cb_fn,
-				       void *cb_arg, uint32_t ns_id)
+int
+spdk_nvme_ctrlr_cmd_set_feature_ns(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
+				   uint32_t cdw11, uint32_t cdw12, void *payload,
+				   uint32_t payload_size, spdk_nvme_cmd_cb cb_fn,
+				   void *cb_arg, uint32_t ns_id)
 {
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
@@ -573,6 +547,12 @@ nvme_ctrlr_retry_queued_abort(struct spdk_nvme_ctrlr *ctrlr)
 	int rc;
 
 	if (ctrlr->is_resetting || ctrlr->is_destructed || ctrlr->is_failed) {
+		/* Don't resubmit aborts if ctrlr is failing */
+		return;
+	}
+
+	if (spdk_nvme_ctrlr_get_admin_qp_failure_reason(ctrlr) != SPDK_NVME_QPAIR_FAILURE_NONE) {
+		/* Don't resubmit aborts if admin qpair is failed */
 		return;
 	}
 
@@ -617,6 +597,7 @@ nvme_ctrlr_cmd_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
 
 	ctrlr = req->qpair->ctrlr;
 
+	assert(ctrlr->outstanding_aborts > 0);
 	ctrlr->outstanding_aborts--;
 	nvme_ctrlr_retry_queued_abort(ctrlr);
 
@@ -665,6 +646,7 @@ nvme_complete_abort_request(void *ctx, const struct spdk_nvme_cpl *cpl)
 
 	ctrlr = req->qpair->ctrlr;
 
+	assert(ctrlr->outstanding_aborts > 0);
 	ctrlr->outstanding_aborts--;
 	nvme_ctrlr_retry_queued_abort(ctrlr);
 

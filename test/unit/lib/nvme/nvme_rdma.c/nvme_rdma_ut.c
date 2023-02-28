@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2018 Intel Corporation. All rights reserved.
  *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -70,6 +42,12 @@ DEFINE_STUB_V(spdk_memory_domain_destroy, (struct spdk_memory_domain *device));
 DEFINE_STUB(spdk_memory_domain_pull_data, int, (struct spdk_memory_domain *src_domain,
 		void *src_domain_ctx, struct iovec *src_iov, uint32_t src_iov_cnt, struct iovec *dst_iov,
 		uint32_t dst_iov_cnt, spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg), 0);
+
+DEFINE_STUB_V(spdk_nvme_qpair_print_command, (struct spdk_nvme_qpair *qpair,
+		struct spdk_nvme_cmd *cmd));
+
+DEFINE_STUB_V(spdk_nvme_qpair_print_completion, (struct spdk_nvme_qpair *qpair,
+		struct spdk_nvme_cpl *cpl));
 
 DEFINE_RETURN_MOCK(spdk_memory_domain_create, int);
 int
@@ -160,7 +138,8 @@ ibv_query_device(struct ibv_context *context,
 }
 
 /* essentially a simplification of bdev_nvme_next_sge and bdev_nvme_reset_sgl */
-static void nvme_rdma_ut_reset_sgl(void *cb_arg, uint32_t offset)
+static void
+nvme_rdma_ut_reset_sgl(void *cb_arg, uint32_t offset)
 {
 	struct nvme_rdma_ut_bdev_io *bio = cb_arg;
 	struct iovec *iov;
@@ -178,7 +157,8 @@ static void nvme_rdma_ut_reset_sgl(void *cb_arg, uint32_t offset)
 	SPDK_CU_ASSERT_FATAL(bio->iovpos < NVME_RDMA_MAX_SGL_DESCRIPTORS);
 }
 
-static int nvme_rdma_ut_next_sge(void *cb_arg, void **address, uint32_t *length)
+static int
+nvme_rdma_ut_next_sge(void *cb_arg, void **address, uint32_t *length)
 {
 	struct nvme_rdma_ut_bdev_io *bio = cb_arg;
 	struct iovec *iov;
@@ -469,7 +449,7 @@ test_nvme_rdma_build_contig_inline_request(void)
 }
 
 static void
-test_nvme_rdma_alloc_reqs(void)
+test_nvme_rdma_create_reqs(void)
 {
 	struct nvme_rdma_qpair rqpair = {};
 	int rc;
@@ -479,7 +459,7 @@ test_nvme_rdma_alloc_reqs(void)
 	/* Test case 1: zero entry. Expect: FAIL */
 	rqpair.num_entries = 0;
 
-	rc = nvme_rdma_alloc_reqs(&rqpair);
+	rc = nvme_rdma_create_reqs(&rqpair);
 	CU_ASSERT(rqpair.rdma_reqs == NULL);
 	SPDK_CU_ASSERT_FATAL(rc == -ENOMEM);
 
@@ -487,8 +467,9 @@ test_nvme_rdma_alloc_reqs(void)
 	memset(&rqpair, 0, sizeof(rqpair));
 	rqpair.num_entries = 1;
 
-	rc = nvme_rdma_alloc_reqs(&rqpair);
+	rc = nvme_rdma_create_reqs(&rqpair);
 	CU_ASSERT(rc == 0);
+	CU_ASSERT(rqpair.rdma_reqs[0].send_sgl[0].lkey == g_rdma_mr.lkey);
 	CU_ASSERT(rqpair.rdma_reqs[0].send_sgl[0].addr
 		  == (uint64_t)&rqpair.cmds[0]);
 	CU_ASSERT(rqpair.rdma_reqs[0].send_wr.wr_id
@@ -506,9 +487,10 @@ test_nvme_rdma_alloc_reqs(void)
 	memset(&rqpair, 0, sizeof(rqpair));
 	rqpair.num_entries = 5;
 
-	rc = nvme_rdma_alloc_reqs(&rqpair);
+	rc = nvme_rdma_create_reqs(&rqpair);
 	CU_ASSERT(rc == 0);
 	for (int i = 0; i < 5; i++) {
+		CU_ASSERT(rqpair.rdma_reqs[i].send_sgl[0].lkey == g_rdma_mr.lkey);
 		CU_ASSERT(rqpair.rdma_reqs[i].send_sgl[0].addr
 			  == (uint64_t)&rqpair.cmds[i]);
 		CU_ASSERT(rqpair.rdma_reqs[i].send_wr.wr_id
@@ -526,29 +508,35 @@ test_nvme_rdma_alloc_reqs(void)
 }
 
 static void
-test_nvme_rdma_alloc_rsps(void)
+test_nvme_rdma_create_rsps(void)
 {
-	struct nvme_rdma_qpair rqpair = {};
-	int rc;
+	struct nvme_rdma_rsp_opts opts = {};
+	struct nvme_rdma_rsps *rsps;
+	struct spdk_rdma_qp *rdma_qp = (struct spdk_rdma_qp *)0xfeedf00d;
+	struct nvme_rdma_qpair rqpair = { .rdma_qp = rdma_qp, };
 
 	memset(&g_nvme_hooks, 0, sizeof(g_nvme_hooks));
 
+	opts.rqpair = &rqpair;
+
 	/* Test case 1 calloc false */
-	rqpair.num_entries = 0;
-	rc = nvme_rdma_alloc_rsps(&rqpair);
-	CU_ASSERT(rqpair.rsp_sgls == NULL);
-	SPDK_CU_ASSERT_FATAL(rc == -ENOMEM);
+	opts.num_entries = 0;
+	rsps = nvme_rdma_create_rsps(&opts);
+	SPDK_CU_ASSERT_FATAL(rsps == NULL);
 
 	/* Test case 2 calloc success */
-	memset(&rqpair, 0, sizeof(rqpair));
-	rqpair.num_entries = 1;
+	opts.num_entries = 1;
 
-	rc = nvme_rdma_alloc_rsps(&rqpair);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(rqpair.rsp_sgls != NULL);
-	CU_ASSERT(rqpair.rsp_recv_wrs != NULL);
-	CU_ASSERT(rqpair.rsps != NULL);
-	nvme_rdma_free_rsps(&rqpair);
+	rsps = nvme_rdma_create_rsps(&opts);
+	SPDK_CU_ASSERT_FATAL(rsps != NULL);
+	CU_ASSERT(rsps->rsp_sgls != NULL);
+	CU_ASSERT(rsps->rsp_recv_wrs != NULL);
+	CU_ASSERT(rsps->rsps != NULL);
+	CU_ASSERT(rsps->rsp_sgls[0].lkey == g_rdma_mr.lkey);
+	CU_ASSERT(rsps->rsp_sgls[0].addr == (uint64_t)&rsps->rsps[0]);
+	CU_ASSERT(rsps->rsp_recv_wrs[0].wr_id == (uint64_t)&rsps->rsps[0].rdma_wr);
+
+	nvme_rdma_free_rsps(rsps);
 }
 
 static void
@@ -565,36 +553,26 @@ test_nvme_rdma_ctrlr_create_qpair(void)
 
 	qpair = nvme_rdma_ctrlr_create_qpair(&ctrlr, qid, qsize,
 					     SPDK_NVME_QPRIO_URGENT, 1,
-					     false);
+					     false, false);
 	CU_ASSERT(qpair != NULL);
 	rqpair = SPDK_CONTAINEROF(qpair, struct nvme_rdma_qpair, qpair);
 	CU_ASSERT(qpair == &rqpair->qpair);
 	CU_ASSERT(rqpair->num_entries == qsize - 1);
 	CU_ASSERT(rqpair->delay_cmd_submit == false);
-	CU_ASSERT(rqpair->rsp_sgls != NULL);
-	CU_ASSERT(rqpair->rsp_recv_wrs != NULL);
-	CU_ASSERT(rqpair->rsps != NULL);
 
-	nvme_rdma_free_reqs(rqpair);
-	nvme_rdma_free_rsps(rqpair);
-	nvme_rdma_free(rqpair);
+	spdk_free(rqpair);
 	rqpair = NULL;
 
 	/* Test case 2: queue size 2. Expect: PASS */
 	qsize = 2;
 	qpair = nvme_rdma_ctrlr_create_qpair(&ctrlr, qid, qsize,
 					     SPDK_NVME_QPRIO_URGENT, 1,
-					     false);
+					     false, false);
 	CU_ASSERT(qpair != NULL);
 	rqpair = SPDK_CONTAINEROF(qpair, struct nvme_rdma_qpair, qpair);
 	CU_ASSERT(rqpair->num_entries == qsize - 1);
-	CU_ASSERT(rqpair->rsp_sgls != NULL);
-	CU_ASSERT(rqpair->rsp_recv_wrs != NULL);
-	CU_ASSERT(rqpair->rsps != NULL);
 
-	nvme_rdma_free_reqs(rqpair);
-	nvme_rdma_free_rsps(rqpair);
-	nvme_rdma_free(rqpair);
+	spdk_free(rqpair);
 	rqpair = NULL;
 
 	/* Test case 3: queue size zero. Expect: FAIL */
@@ -602,14 +580,14 @@ test_nvme_rdma_ctrlr_create_qpair(void)
 
 	qpair = nvme_rdma_ctrlr_create_qpair(&ctrlr, qid, qsize,
 					     SPDK_NVME_QPRIO_URGENT, 1,
-					     false);
+					     false, false);
 	SPDK_CU_ASSERT_FATAL(qpair == NULL);
 
 	/* Test case 4: queue size 1. Expect: FAIL */
 	qsize = 1;
 	qpair = nvme_rdma_ctrlr_create_qpair(&ctrlr, qid, qsize,
 					     SPDK_NVME_QPRIO_URGENT, 1,
-					     false);
+					     false, false);
 	SPDK_CU_ASSERT_FATAL(qpair == NULL);
 }
 
@@ -621,20 +599,50 @@ static void
 test_nvme_rdma_poller_create(void)
 {
 	struct nvme_rdma_poll_group	group = {};
-	struct ibv_context *contexts = (struct ibv_context *)0xDEADBEEF;
+	struct ibv_context context = {
+		.device = (struct ibv_device *)0xDEADBEEF
+	};
+	struct ibv_context context_2 = {
+		.device = (struct ibv_device *)0xBAADBEEF
+	};
+	struct nvme_rdma_poller *poller_1, *poller_2, *poller_3;
 
 	/* Case: calloc and ibv not need to fail test */
 	STAILQ_INIT(&group.pollers);
-	group.num_pollers = 1;
-	int rc = nvme_rdma_poller_create(&group, contexts);
 
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(group.num_pollers = 2);
-	CU_ASSERT(&group.pollers != NULL);
-	CU_ASSERT(group.pollers.stqh_first->device == contexts);
-	CU_ASSERT(group.pollers.stqh_first->cq == (struct ibv_cq *)0xFEEDBEEF);
-	CU_ASSERT(group.pollers.stqh_first->current_num_wc == DEFAULT_NVME_RDMA_CQ_SIZE);
-	CU_ASSERT(group.pollers.stqh_first->required_num_wc == 0);
+	poller_1 = nvme_rdma_poll_group_get_poller(&group, &context);
+	SPDK_CU_ASSERT_FATAL(poller_1 != NULL);
+	CU_ASSERT(group.num_pollers == 1);
+	CU_ASSERT(STAILQ_FIRST(&group.pollers) == poller_1);
+	CU_ASSERT(poller_1->refcnt == 1);
+	CU_ASSERT(poller_1->device == &context);
+	CU_ASSERT(poller_1->cq == (struct ibv_cq *)0xFEEDBEEF);
+	CU_ASSERT(poller_1->current_num_wc == DEFAULT_NVME_RDMA_CQ_SIZE);
+	CU_ASSERT(poller_1->required_num_wc == 0);
+
+	poller_2 = nvme_rdma_poll_group_get_poller(&group, &context_2);
+	SPDK_CU_ASSERT_FATAL(poller_2 != NULL);
+	CU_ASSERT(group.num_pollers == 2);
+	CU_ASSERT(STAILQ_FIRST(&group.pollers) == poller_2);
+	CU_ASSERT(poller_2->refcnt == 1);
+	CU_ASSERT(poller_2->device == &context_2);
+
+	poller_3 = nvme_rdma_poll_group_get_poller(&group, &context);
+	SPDK_CU_ASSERT_FATAL(poller_3 != NULL);
+	CU_ASSERT(poller_3 == poller_1);
+	CU_ASSERT(group.num_pollers == 2);
+	CU_ASSERT(poller_3->refcnt == 2);
+
+	nvme_rdma_poll_group_put_poller(&group, poller_2);
+	CU_ASSERT(group.num_pollers == 1);
+
+	nvme_rdma_poll_group_put_poller(&group, poller_1);
+	CU_ASSERT(group.num_pollers == 1);
+	CU_ASSERT(poller_3->refcnt == 1);
+
+	nvme_rdma_poll_group_put_poller(&group, poller_3);
+	CU_ASSERT(STAILQ_EMPTY(&group.pollers));
+	CU_ASSERT(group.num_pollers == 0);
 
 	nvme_rdma_poll_group_free_pollers(&group);
 }
@@ -728,33 +736,6 @@ test_nvme_rdma_qpair_process_cm_event(void)
 }
 
 static void
-test_nvme_rdma_mr_get_lkey(void)
-{
-	union nvme_rdma_mr mr = {};
-	struct ibv_mr	ibv_mr = {};
-	uint64_t mr_key;
-	uint32_t lkey;
-
-	memset(&g_nvme_hooks, 0, sizeof(g_nvme_hooks));
-	ibv_mr.lkey = 1;
-	mr_key = 2;
-
-	/* Case 1:  get key form key address */
-	mr.key = (uint64_t)&mr_key;
-	g_nvme_hooks.get_rkey = (void *)0xAEADBEEF;
-
-	lkey = nvme_rdma_mr_get_lkey(&mr);
-	CU_ASSERT(lkey == mr_key);
-
-	/* Case 2: Get key from ibv_mr  */
-	g_nvme_hooks.get_rkey = NULL;
-	mr.mr = &ibv_mr;
-
-	lkey = nvme_rdma_mr_get_lkey(&mr);
-	CU_ASSERT(lkey == ibv_mr.lkey);
-}
-
-static void
 test_nvme_rdma_ctrlr_construct(void)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
@@ -790,9 +771,6 @@ test_nvme_rdma_ctrlr_construct(void)
 	rqpair = SPDK_CONTAINEROF(ctrlr->adminq, struct nvme_rdma_qpair, qpair);
 	CU_ASSERT(rqpair->num_entries == opts.admin_queue_size - 1);
 	CU_ASSERT(rqpair->delay_cmd_submit == false);
-	CU_ASSERT(rqpair->rsp_sgls != NULL);
-	CU_ASSERT(rqpair->rsp_recv_wrs != NULL);
-	CU_ASSERT(rqpair->rsps != NULL);
 	MOCK_CLEAR(rdma_create_event_channel);
 
 	/* Hardcode the trtype, because nvme_qpair_init() is stub function. */
@@ -987,113 +965,6 @@ test_nvme_rdma_validate_cm_event(void)
 }
 
 static void
-test_nvme_rdma_register_and_unregister_reqs(void)
-{
-	struct nvme_rdma_qpair rqpair = {};
-	struct spdk_nvmf_cmd cmds = {};
-	struct rdma_cm_id cm_id = {};
-	struct spdk_nvme_rdma_req rdma_reqs[50] = {};
-	int rc;
-
-	rqpair.cm_id = &cm_id;
-	rqpair.cmds = &cmds;
-	g_nvme_hooks.get_rkey = NULL;
-	rqpair.rdma_reqs = rdma_reqs;
-	/* case 1: nvme_rdma_register_req: nvme_rdma_reg_mr fail, expect: fail */
-	rqpair.num_entries = 0;
-
-	rc = nvme_rdma_register_reqs(&rqpair);
-	CU_ASSERT(rc == -ENOMEM);
-	CU_ASSERT(rqpair.cmd_mr.mr == NULL);
-
-	/* case 2: nvme_rdma_register_req: single entry, expect: PASS */
-	rqpair.num_entries = 1;
-
-	rc = nvme_rdma_register_reqs(&rqpair);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(rqpair.cmd_mr.mr == &g_rdma_mr);
-	CU_ASSERT(rqpair.rdma_reqs[0].send_sgl[0].lkey == rqpair.cmd_mr.mr->lkey);
-
-	/* case 3: nvme_rdma_register_req: multiple entry, expect: PASS */
-	rqpair.num_entries = 50;
-
-	rc = nvme_rdma_register_reqs(&rqpair);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(rqpair.cmd_mr.mr == &g_rdma_mr);
-	for (int i = 0; i < rqpair.num_entries; i++) {
-		CU_ASSERT(rqpair.rdma_reqs[i].send_sgl[0].lkey == rqpair.cmd_mr.mr->lkey);
-	}
-
-	/* case4: nvme_rdma_unregister_reqs, expect: PASS */
-	nvme_rdma_unregister_reqs(&rqpair);
-	CU_ASSERT(rqpair.cmd_mr.mr == NULL);
-}
-
-static void
-test_nvme_rdma_poll_group_connect_disconnect_qpair(void)
-{
-	int					rc;
-	struct nvme_rdma_poll_group		group = {};
-	struct rdma_cm_id			cm_id = {};
-	struct nvme_rdma_qpair			*rqpair = NULL;
-	struct nvme_rdma_destroyed_qpair	*qpair_tracker = NULL;
-	struct ibv_context			*contexts = (void *)0xDEADBEEF;
-
-	/* Allocate memory for deleting qpair to free */
-	rqpair = calloc(1, sizeof(struct nvme_rdma_qpair));
-	rqpair->cm_id =  &cm_id;
-	rqpair->qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
-	rqpair->qpair.poll_group = &group.group;
-	rqpair->qpair.state = NVME_QPAIR_DESTROYING;
-	cm_id.verbs = (void *)0xDEADBEEF;
-
-	STAILQ_INIT(&group.destroyed_qpairs);
-	STAILQ_INIT(&group.pollers);
-	rc = nvme_rdma_poller_create(&group, contexts);
-	SPDK_CU_ASSERT_FATAL(rc == 0);
-
-	rc = nvme_rdma_poll_group_connect_qpair(&rqpair->qpair);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(rqpair->cq == (void *)0xFEEDBEEF);
-	CU_ASSERT(rqpair->poller != NULL);
-
-	MOCK_SET(spdk_get_ticks, 10);
-	rc = nvme_rdma_poll_group_disconnect_qpair(&rqpair->qpair);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(rqpair->defer_deletion_to_pg == true);
-	CU_ASSERT(rqpair->cq == NULL);
-	CU_ASSERT(!STAILQ_EMPTY(&group.destroyed_qpairs));
-
-	qpair_tracker = STAILQ_FIRST(&group.destroyed_qpairs);
-	CU_ASSERT(qpair_tracker->destroyed_qpair_tracker == rqpair);
-	CU_ASSERT(qpair_tracker->timeout_ticks == 10 + (NVME_RDMA_QPAIR_CM_EVENT_TIMEOUT_US *
-			spdk_get_ticks_hz()) / SPDK_SEC_TO_USEC);
-
-	nvme_rdma_poll_group_delete_qpair(&group, qpair_tracker);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(STAILQ_EMPTY(&group.destroyed_qpairs));
-
-	nvme_rdma_poll_group_free_pollers(&group);
-	CU_ASSERT(STAILQ_EMPTY(&group.pollers));
-	MOCK_CLEAR(spdk_get_ticks);
-
-	/* No available poller */
-	rqpair = calloc(1, sizeof(struct nvme_rdma_qpair));
-
-	rqpair->cm_id =  &cm_id;
-	rqpair->qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
-	rqpair->qpair.poll_group = &group.group;
-	rqpair->qpair.state = NVME_QPAIR_DESTROYING;
-	cm_id.verbs = (void *)0xDEADBEEF;
-
-	rc = nvme_rdma_poll_group_connect_qpair(&rqpair->qpair);
-	CU_ASSERT(rc == -EINVAL);
-	CU_ASSERT(rqpair->cq == NULL);
-
-	free(rqpair);
-}
-
-static void
 test_nvme_rdma_parse_addr(void)
 {
 	struct sockaddr_storage dst_addr;
@@ -1126,6 +997,7 @@ test_nvme_rdma_qpair_init(void)
 	rqpair.qpair.poll_group = NULL;
 	rqpair.qpair.ctrlr = &rctrlr.ctrlr;
 	g_spdk_rdma_qp.qp = &qp;
+	MOCK_SET(spdk_rdma_get_pd, pd);
 
 	rc = nvme_rdma_qpair_init(&rqpair);
 	CU_ASSERT(rc == 0);
@@ -1134,9 +1006,10 @@ test_nvme_rdma_qpair_init(void)
 	CU_ASSERT(rqpair.max_send_sge == NVME_RDMA_DEFAULT_TX_SGE);
 	CU_ASSERT(rqpair.max_recv_sge == NVME_RDMA_DEFAULT_RX_SGE);
 	CU_ASSERT(rqpair.current_num_sends == 0);
-	CU_ASSERT(rqpair.current_num_recvs == 0);
 	CU_ASSERT(rqpair.cq == (struct ibv_cq *)0xFEEDBEEF);
 	CU_ASSERT(rqpair.memory_domain != NULL);
+
+	MOCK_CLEAR(spdk_rdma_get_pd);
 }
 
 static void
@@ -1159,7 +1032,7 @@ test_nvme_rdma_qpair_submit_request(void)
 	rqpair.qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
 	rqpair.poller = &poller;
 
-	rc = nvme_rdma_alloc_reqs(&rqpair);
+	rc = nvme_rdma_create_reqs(&rqpair);
 	CU_ASSERT(rc == 0);
 	/* Give send_wr.next a non null value */
 	rdma_req = TAILQ_FIRST(&rqpair.free_reqs);
@@ -1324,50 +1197,40 @@ test_rdma_get_memory_translation(void)
 }
 
 static void
-test_nvme_rdma_poll_group_get_qpair_by_id(void)
+test_get_rdma_qpair_from_wc(void)
 {
 	const uint32_t test_qp_num = 123;
 	struct nvme_rdma_poll_group	group = {};
-	struct nvme_rdma_destroyed_qpair tracker = {};
 	struct nvme_rdma_qpair rqpair = {};
 	struct spdk_rdma_qp rdma_qp = {};
 	struct ibv_qp qp = { .qp_num = test_qp_num };
+	struct ibv_wc wc = { .qp_num = test_qp_num };
 
 	STAILQ_INIT(&group.group.disconnected_qpairs);
 	STAILQ_INIT(&group.group.connected_qpairs);
-	STAILQ_INIT(&group.destroyed_qpairs);
 	rqpair.qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
-	tracker.destroyed_qpair_tracker = &rqpair;
 
 	/* Test 1 - Simulate case when nvme_rdma_qpair is disconnected but still in one of lists.
-	 * nvme_rdma_poll_group_get_qpair_by_id must return NULL */
+	 * get_rdma_qpair_from_wc must return NULL */
 	STAILQ_INSERT_HEAD(&group.group.disconnected_qpairs, &rqpair.qpair, poll_group_stailq);
-	CU_ASSERT(nvme_rdma_poll_group_get_qpair_by_id(&group, test_qp_num) == NULL);
+	CU_ASSERT(get_rdma_qpair_from_wc(&group, &wc) == NULL);
 	STAILQ_REMOVE_HEAD(&group.group.disconnected_qpairs, poll_group_stailq);
 
 	STAILQ_INSERT_HEAD(&group.group.connected_qpairs, &rqpair.qpair, poll_group_stailq);
-	CU_ASSERT(nvme_rdma_poll_group_get_qpair_by_id(&group, test_qp_num) == NULL);
+	CU_ASSERT(get_rdma_qpair_from_wc(&group, &wc) == NULL);
 	STAILQ_REMOVE_HEAD(&group.group.connected_qpairs, poll_group_stailq);
-
-	STAILQ_INSERT_HEAD(&group.destroyed_qpairs, &tracker, link);
-	CU_ASSERT(nvme_rdma_poll_group_get_qpair_by_id(&group, test_qp_num) == NULL);
-	STAILQ_REMOVE_HEAD(&group.destroyed_qpairs, link);
 
 	/* Test 2 - nvme_rdma_qpair with valid rdma_qp/ibv_qp and qp_num */
 	rdma_qp.qp = &qp;
 	rqpair.rdma_qp = &rdma_qp;
 
 	STAILQ_INSERT_HEAD(&group.group.disconnected_qpairs, &rqpair.qpair, poll_group_stailq);
-	CU_ASSERT(nvme_rdma_poll_group_get_qpair_by_id(&group, test_qp_num) == &rqpair);
+	CU_ASSERT(get_rdma_qpair_from_wc(&group, &wc) == &rqpair);
 	STAILQ_REMOVE_HEAD(&group.group.disconnected_qpairs, poll_group_stailq);
 
 	STAILQ_INSERT_HEAD(&group.group.connected_qpairs, &rqpair.qpair, poll_group_stailq);
-	CU_ASSERT(nvme_rdma_poll_group_get_qpair_by_id(&group, test_qp_num) == &rqpair);
+	CU_ASSERT(get_rdma_qpair_from_wc(&group, &wc) == &rqpair);
 	STAILQ_REMOVE_HEAD(&group.group.connected_qpairs, poll_group_stailq);
-
-	STAILQ_INSERT_HEAD(&group.destroyed_qpairs, &tracker, link);
-	CU_ASSERT(nvme_rdma_poll_group_get_qpair_by_id(&group, test_qp_num) == &rqpair);
-	STAILQ_REMOVE_HEAD(&group.destroyed_qpairs, link);
 }
 
 static void
@@ -1398,7 +1261,203 @@ test_nvme_rdma_ctrlr_get_max_sges(void)
 	CU_ASSERT(nvme_rdma_ctrlr_get_max_sges(&rctrlr.ctrlr) == 2);
 }
 
-int main(int argc, char **argv)
+static void
+test_nvme_rdma_poll_group_get_stats(void)
+{
+	int rc = -1;
+	struct spdk_nvme_transport_poll_group_stat *tpointer = NULL;
+	struct nvme_rdma_poll_group tgroup = {};
+	struct ibv_device dev1, dev2 = {};
+	struct ibv_context contexts1, contexts2 = {};
+	struct nvme_rdma_poller *tpoller1 = NULL;
+	struct nvme_rdma_poller *tpoller2 = NULL;
+
+	memcpy(dev1.name, "/dev/test1", sizeof("/dev/test1"));
+	memcpy(dev2.name, "/dev/test2", sizeof("/dev/test2"));
+	contexts1.device = &dev1;
+	contexts2.device = &dev2;
+
+	/* Initialization */
+	STAILQ_INIT(&tgroup.pollers);
+	tpoller2 = nvme_rdma_poller_create(&tgroup, &contexts1);
+	SPDK_CU_ASSERT_FATAL(tpoller2 != NULL);
+	CU_ASSERT(tgroup.num_pollers == 1);
+
+	tpoller1 = nvme_rdma_poller_create(&tgroup, &contexts2);
+	SPDK_CU_ASSERT_FATAL(tpoller1 != NULL);
+	CU_ASSERT(tgroup.num_pollers == 2);
+	CU_ASSERT(&tgroup.pollers != NULL);
+
+	CU_ASSERT(tpoller1->device == &contexts2);
+	CU_ASSERT(tpoller2->device == &contexts1);
+	CU_ASSERT(strcmp(tpoller1->device->device->name, "/dev/test2") == 0);
+	CU_ASSERT(strcmp(tpoller2->device->device->name, "/dev/test1") == 0);
+	CU_ASSERT(tpoller1->current_num_wc == DEFAULT_NVME_RDMA_CQ_SIZE);
+	CU_ASSERT(tpoller2->current_num_wc == DEFAULT_NVME_RDMA_CQ_SIZE);
+	CU_ASSERT(tpoller1->required_num_wc == 0);
+	CU_ASSERT(tpoller2->required_num_wc == 0);
+
+	/* Test1: Invalid stats */
+	rc = nvme_rdma_poll_group_get_stats(NULL, &tpointer);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* Test2: Invalid group pointer */
+	rc = nvme_rdma_poll_group_get_stats(&tgroup.group, NULL);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* Test3: Success member variables should be correct */
+	tpoller1->stats.polls = 111;
+	tpoller1->stats.idle_polls = 112;
+	tpoller1->stats.completions = 113;
+	tpoller1->stats.queued_requests = 114;
+	tpoller1->stats.rdma_stats.send.num_submitted_wrs = 121;
+	tpoller1->stats.rdma_stats.send.doorbell_updates = 122;
+	tpoller1->stats.rdma_stats.recv.num_submitted_wrs = 131;
+	tpoller1->stats.rdma_stats.recv.doorbell_updates = 132;
+	tpoller2->stats.polls = 211;
+	tpoller2->stats.idle_polls = 212;
+	tpoller2->stats.completions = 213;
+	tpoller2->stats.queued_requests = 214;
+	tpoller2->stats.rdma_stats.send.num_submitted_wrs = 221;
+	tpoller2->stats.rdma_stats.send.doorbell_updates = 222;
+	tpoller2->stats.rdma_stats.recv.num_submitted_wrs = 231;
+	tpoller2->stats.rdma_stats.recv.doorbell_updates = 232;
+
+	rc = nvme_rdma_poll_group_get_stats(&tgroup.group, &tpointer);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tpointer != NULL);
+	CU_ASSERT(tpointer->trtype == SPDK_NVME_TRANSPORT_RDMA);
+	CU_ASSERT(tpointer->rdma.num_devices == tgroup.num_pollers);
+	CU_ASSERT(tpointer->rdma.device_stats != NULL);
+
+	CU_ASSERT(strcmp(tpointer->rdma.device_stats[0].name, "/dev/test2") == 0);
+	CU_ASSERT(tpointer->rdma.device_stats[0].polls == 111);
+	CU_ASSERT(tpointer->rdma.device_stats[0].idle_polls == 112);
+	CU_ASSERT(tpointer->rdma.device_stats[0].completions == 113);
+	CU_ASSERT(tpointer->rdma.device_stats[0].queued_requests == 114);
+	CU_ASSERT(tpointer->rdma.device_stats[0].total_send_wrs == 121);
+	CU_ASSERT(tpointer->rdma.device_stats[0].send_doorbell_updates == 122);
+	CU_ASSERT(tpointer->rdma.device_stats[0].total_recv_wrs == 131);
+	CU_ASSERT(tpointer->rdma.device_stats[0].recv_doorbell_updates == 132);
+
+	CU_ASSERT(strcmp(tpointer->rdma.device_stats[1].name, "/dev/test1") == 0);
+	CU_ASSERT(tpointer->rdma.device_stats[1].polls == 211);
+	CU_ASSERT(tpointer->rdma.device_stats[1].idle_polls == 212);
+	CU_ASSERT(tpointer->rdma.device_stats[1].completions == 213);
+	CU_ASSERT(tpointer->rdma.device_stats[1].queued_requests == 214);
+	CU_ASSERT(tpointer->rdma.device_stats[1].total_send_wrs == 221);
+	CU_ASSERT(tpointer->rdma.device_stats[1].send_doorbell_updates == 222);
+	CU_ASSERT(tpointer->rdma.device_stats[1].total_recv_wrs == 231);
+	CU_ASSERT(tpointer->rdma.device_stats[1].recv_doorbell_updates == 232);
+
+	nvme_rdma_poll_group_free_stats(&tgroup.group, tpointer);
+	nvme_rdma_poll_group_free_pollers(&tgroup);
+}
+
+static void
+test_nvme_rdma_qpair_set_poller(void)
+{
+	int rc = -1;
+	struct nvme_rdma_poll_group *group;
+	struct spdk_nvme_transport_poll_group *tgroup;
+	struct nvme_rdma_poller *poller;
+	struct nvme_rdma_qpair rqpair = {};
+	struct rdma_cm_id cm_id = {};
+
+	/* Case1: Test function nvme_rdma_poll_group_create */
+	/* Test1: Function nvme_rdma_poll_group_create success */
+	tgroup = nvme_rdma_poll_group_create();
+	SPDK_CU_ASSERT_FATAL(tgroup != NULL);
+
+	group = nvme_rdma_poll_group(tgroup);
+	CU_ASSERT(group != NULL);
+	CU_ASSERT(STAILQ_EMPTY(&group->pollers));
+
+	/* Case2: Test function nvme_rdma_qpair_set_poller */
+	rqpair.qpair.poll_group = tgroup;
+	rqpair.qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	rqpair.cm_id = &cm_id;
+
+	/* Test1: Function ibv_create_cq failed */
+	cm_id.verbs = (void *)0xFEEDBEEF;
+	MOCK_SET(ibv_create_cq, NULL);
+
+	rc = nvme_rdma_qpair_set_poller(&rqpair.qpair);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(rqpair.cq == NULL);
+	CU_ASSERT(STAILQ_EMPTY(&group->pollers));
+
+	MOCK_CLEAR(ibv_create_cq);
+
+	/* Test2: Unable to find a cq for qpair on poll group */
+	cm_id.verbs = NULL;
+
+	rc = nvme_rdma_qpair_set_poller(&rqpair.qpair);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(rqpair.cq == NULL);
+	CU_ASSERT(STAILQ_EMPTY(&group->pollers));
+
+	/* Test3: Match cq success, current_num_wc is enough */
+	MOCK_SET(ibv_create_cq, (struct ibv_cq *)0xFEEDBEEF);
+
+	cm_id.verbs = (void *)0xFEEDBEEF;
+	rqpair.num_entries = 0;
+
+	rc = nvme_rdma_qpair_set_poller(&rqpair.qpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rqpair.cq == (void *)0xFEEDBEEF);
+
+	poller = STAILQ_FIRST(&group->pollers);
+	SPDK_CU_ASSERT_FATAL(poller != NULL);
+	CU_ASSERT(STAILQ_NEXT(poller, link) == NULL);
+	CU_ASSERT(poller->device == (struct ibv_context *)0xFEEDBEEF);
+	CU_ASSERT(poller->current_num_wc == DEFAULT_NVME_RDMA_CQ_SIZE);
+	CU_ASSERT(poller->required_num_wc == 0);
+	CU_ASSERT(rqpair.poller == poller);
+
+	rqpair.qpair.poll_group_tailq_head = &tgroup->disconnected_qpairs;
+
+	rc = nvme_rdma_poll_group_remove(tgroup, &rqpair.qpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rqpair.cq == NULL);
+	CU_ASSERT(rqpair.poller == NULL);
+	CU_ASSERT(STAILQ_EMPTY(&group->pollers));
+
+	rqpair.qpair.poll_group_tailq_head = &tgroup->connected_qpairs;
+
+	/* Test4: Match cq success, function ibv_resize_cq failed */
+	rqpair.cq = NULL;
+	rqpair.num_entries = DEFAULT_NVME_RDMA_CQ_SIZE - 1;
+	MOCK_SET(ibv_resize_cq, -1);
+
+	rc = nvme_rdma_qpair_set_poller(&rqpair.qpair);
+	CU_ASSERT(rc == -EPROTO);
+	CU_ASSERT(STAILQ_EMPTY(&group->pollers));
+
+	/* Test5: Current_num_wc is not enough, resize success */
+	MOCK_SET(ibv_resize_cq, 0);
+
+	rc = nvme_rdma_qpair_set_poller(&rqpair.qpair);
+	CU_ASSERT(rc == 0);
+
+	poller = STAILQ_FIRST(&group->pollers);
+	SPDK_CU_ASSERT_FATAL(poller != NULL);
+	CU_ASSERT(poller->current_num_wc == DEFAULT_NVME_RDMA_CQ_SIZE * 2);
+	CU_ASSERT(poller->required_num_wc == (DEFAULT_NVME_RDMA_CQ_SIZE - 1) * 2);
+	CU_ASSERT(rqpair.cq == poller->cq);
+	CU_ASSERT(rqpair.poller == poller);
+
+	rqpair.qpair.poll_group_tailq_head = &tgroup->disconnected_qpairs;
+
+	rc = nvme_rdma_poll_group_remove(tgroup, &rqpair.qpair);
+	CU_ASSERT(rc == 0);
+
+	rc = nvme_rdma_poll_group_destroy(tgroup);
+	CU_ASSERT(rc == 0);
+}
+
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
@@ -1411,26 +1470,25 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_build_sgl_inline_request);
 	CU_ADD_TEST(suite, test_nvme_rdma_build_contig_request);
 	CU_ADD_TEST(suite, test_nvme_rdma_build_contig_inline_request);
-	CU_ADD_TEST(suite, test_nvme_rdma_alloc_reqs);
-	CU_ADD_TEST(suite, test_nvme_rdma_alloc_rsps);
+	CU_ADD_TEST(suite, test_nvme_rdma_create_reqs);
+	CU_ADD_TEST(suite, test_nvme_rdma_create_rsps);
 	CU_ADD_TEST(suite, test_nvme_rdma_ctrlr_create_qpair);
 	CU_ADD_TEST(suite, test_nvme_rdma_poller_create);
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_process_cm_event);
-	CU_ADD_TEST(suite, test_nvme_rdma_mr_get_lkey);
 	CU_ADD_TEST(suite, test_nvme_rdma_ctrlr_construct);
 	CU_ADD_TEST(suite, test_nvme_rdma_req_put_and_get);
 	CU_ADD_TEST(suite, test_nvme_rdma_req_init);
 	CU_ADD_TEST(suite, test_nvme_rdma_validate_cm_event);
-	CU_ADD_TEST(suite, test_nvme_rdma_register_and_unregister_reqs);
-	CU_ADD_TEST(suite, test_nvme_rdma_poll_group_connect_disconnect_qpair);
 	CU_ADD_TEST(suite, test_nvme_rdma_parse_addr);
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_init);
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_submit_request);
 	CU_ADD_TEST(suite, test_nvme_rdma_memory_domain);
 	CU_ADD_TEST(suite, test_rdma_ctrlr_get_memory_domains);
 	CU_ADD_TEST(suite, test_rdma_get_memory_translation);
-	CU_ADD_TEST(suite, test_nvme_rdma_poll_group_get_qpair_by_id);
+	CU_ADD_TEST(suite, test_get_rdma_qpair_from_wc);
 	CU_ADD_TEST(suite, test_nvme_rdma_ctrlr_get_max_sges);
+	CU_ADD_TEST(suite, test_nvme_rdma_poll_group_get_stats);
+	CU_ADD_TEST(suite, test_nvme_rdma_qpair_set_poller);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

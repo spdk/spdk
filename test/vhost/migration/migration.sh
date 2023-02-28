@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
@@ -97,7 +100,6 @@ function vm_migrate() {
 	timing_enter vm_migrate
 	notice "Migrating VM $1 to VM "$(basename $target_vm_dir)
 	echo -e \
-		"migrate_set_speed 1g\n" \
 		"migrate tcp:$target_ip:$target_vm_migration_port\n" \
 		"info migrate\n" \
 		"quit" | vm_monitor_send $1 "$from_vm_dir/migration_result"
@@ -113,8 +115,8 @@ function vm_migrate() {
 	# If you need this check then perform it on your own.
 	if [[ "$target_ip" == "127.0.0.1" ]]; then
 		if ! vm_os_booted $target_vm; then
-			fail "VM$target_vm is not running"
 			cat $target_vm $target_vm_dir/cont_result
+			fail "VM$target_vm is not running"
 		fi
 	fi
 

@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2020 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /** \file
@@ -105,6 +77,15 @@ typedef void (*spdk_idxd_req_cb)(void *arg, int status);
 typedef void (*spdk_idxd_attach_cb)(void *cb_ctx, struct spdk_idxd_device *idxd);
 
 /**
+ * Callback for spdk_idxd_probe() to report a device that has been found.
+ *
+ * \param cb_ctx User-specified opaque value corresponding to cb_ctx from spdk_idxd_probe().
+ * \param dev PCI device that is in question.
+ * \return true if the caller wants the device, false if not..
+ */
+typedef bool (*spdk_idxd_probe_cb)(void *cb_ctx, struct spdk_pci_device *dev);
+
+/**
  * Enumerate the IDXD devices attached to the system and attach the userspace
  * IDXD driver to them if desired.
  *
@@ -116,12 +97,14 @@ typedef void (*spdk_idxd_attach_cb)(void *cb_ctx, struct spdk_idxd_device *idxd)
  *
  * \param cb_ctx Opaque value which will be passed back in cb_ctx parameter of
  * the callbacks.
+ * \param probe_cb callback to determine if the device being probe should be attached.
  * \param attach_cb will be called for devices for which probe_cb returned true
  * once the IDXD controller has been attached to the userspace driver.
  *
  * \return 0 on success, -1 on failure.
  */
-int spdk_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb);
+int spdk_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb,
+		    spdk_idxd_probe_cb probe_cb);
 
 /**
  * Detach specified device returned by spdk_idxd_probe() from the IDXD driver.
@@ -274,6 +257,72 @@ int spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
 				 struct iovec *siov, size_t siovcnt,
 				 uint32_t seed, uint32_t *crc_dst, int flags,
 				 spdk_idxd_req_cb cb_fn, void *cb_arg);
+
+/**
+ * Build and submit an IAA memory compress request.
+ *
+ * This function will build the compress descriptor and then immediately submit
+ * by writing to the proper device portal.
+ *
+ * \param chan IDXD channel to submit request.
+ * \param dst Destination to write the compressed data to.
+ * \param nbytes Length in bytes. The dst buffer should be large enough to hold the compressed data.
+ * \param siov Source iovec
+ * \param siovcnt Number of elements in siov
+ * \param output_size The size of the compressed data
+ * \param flags Flags, optional flags that can vary per operation.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in
+ * the completion callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_idxd_submit_compress(struct spdk_idxd_io_channel *chan,
+			      void *dst, uint64_t nbytes,
+			      struct iovec *siov, uint32_t siovcnt, uint32_t *output_size,
+			      int flags, spdk_idxd_req_cb cb_fn, void *cb_arg);
+
+/**
+ * Build and submit an IAA memory decompress request.
+ *
+ * This function will build the decompress descriptor and then immediately submit
+ * by writing to the proper device portal.
+ *
+ * \param chan IDXD channel to submit request.
+ * \param diov Destination iovec. diov with diovcnt must be large enough to hold decompressed data.
+ * \param diovcnt Number of elements in diov for decompress buffer.
+ * \param siov Source iovec
+ * \param siovcnt Number of elements in siov
+ * \param flags Flags, optional flags that can vary per operation.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in
+ * the completion callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_idxd_submit_decompress(struct spdk_idxd_io_channel *chan,
+				struct iovec *diov, uint32_t diovcnt,
+				struct iovec *siov, uint32_t siovcnt,
+				int flags, spdk_idxd_req_cb cb_fn, void *cb_arg);
+
+/**
+ * Build and submit an IDXD raw request.
+ *
+ * This function will process the supplied descriptor and then immediately submit
+ * by writing to the proper device portal.
+ *
+ * \param chan IDXD channel to submit request.
+ * \param desc proprely formatted IDXD descriptor.  Memory addresses should be physical.
+ * The completion address will be filled in by the lower level library.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in
+ * the completion callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_idxd_submit_raw_desc(struct spdk_idxd_io_channel *chan,
+			      struct idxd_hw_desc *desc,
+			      spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
  * Check for completed requests on an IDXD channel.

@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -38,6 +10,9 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/log.h"
+#include "spdk/rpc.h"
+
+static const char *g_rpc_addr = "/var/tmp/spdk.sock";
 
 struct dev_ctx {
 	TAILQ_ENTRY(dev_ctx)	tailq;
@@ -77,12 +52,13 @@ static const char *g_iova_mode = NULL;
 static uint64_t g_timeout_in_us = SPDK_SEC_TO_USEC;
 static struct spdk_nvme_detach_ctx *g_detach_ctx;
 
-static void
-task_complete(struct perf_task *task);
+static bool g_wait_for_rpc = false;
+static bool g_rpc_received = false;
 
-static void
-timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
-	   struct spdk_nvme_qpair *qpair, uint16_t cid);
+static void task_complete(struct perf_task *task);
+
+static void timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
+		       struct spdk_nvme_qpair *qpair, uint16_t cid);
 
 static void
 register_dev(struct spdk_nvme_ctrlr *ctrlr)
@@ -394,17 +370,18 @@ io_loop(void)
 			}
 		}
 
+		if (g_insert_times == g_expected_insert_times && g_removal_times == g_expected_removal_times) {
+			break;
+		}
+
 		now = spdk_get_ticks();
 		if (now > tsc_end) {
+			SPDK_ERRLOG("Timing out hotplug application!\n");
 			break;
 		}
 		if (now > next_stats_tsc) {
 			print_stats();
 			next_stats_tsc += g_tsc_rate;
-		}
-
-		if (g_insert_times == g_expected_insert_times && g_removal_times == g_expected_removal_times) {
-			break;
 		}
 	}
 
@@ -418,7 +395,8 @@ io_loop(void)
 	}
 }
 
-static void usage(char *program_name)
+static void
+usage(char *program_name)
 {
 	printf("%s options", program_name);
 	printf("\n");
@@ -431,24 +409,34 @@ static void usage(char *program_name)
 	printf("\t[-l log level]\n");
 	printf("\t Available log levels:\n");
 	printf("\t  disabled, error, warning, notice, info, debug\n");
+	printf("\t[--wait-for-rpc wait for RPC perform_tests\n");
+	printf("\t  to proceed with starting IO on NVMe disks]\n");
 }
+
+static const struct option g_wait_option[] = {
+#define WAIT_FOR_RPC_OPT_IDX	257
+	{"wait-for-rpc", no_argument, NULL, WAIT_FOR_RPC_OPT_IDX},
+};
 
 static int
 parse_args(int argc, char **argv)
 {
-	int op;
+	int op, opt_idx;
 	long int val;
 
 	/* default value */
 	g_time_in_sec = 0;
 
-	while ((op = getopt(argc, argv, "c:i:l:m:n:r:t:")) != -1) {
+	while ((op = getopt_long(argc, argv, "c:i:l:m:n:r:t:", g_wait_option, &opt_idx)) != -1) {
 		if (op == '?') {
 			usage(argv[0]);
 			return 1;
 		}
 
 		switch (op) {
+		case WAIT_FOR_RPC_OPT_IDX:
+			g_wait_for_rpc = true;
+			break;
 		case 'c':
 		case 'i':
 		case 'n':
@@ -527,7 +515,41 @@ register_controllers(void)
 	return 0;
 }
 
-int main(int argc, char **argv)
+/* Hotplug RPC */
+static void
+rpc_perform_tests(struct spdk_jsonrpc_request *request,
+		  const struct spdk_json_val *params)
+{
+	if (params) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "'perform_tests' requires no arguments");
+		return;
+	}
+
+	spdk_jsonrpc_send_bool_response(request, true);
+
+	g_rpc_received = true;
+}
+SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME);
+
+static void
+wait_for_rpc_call(void)
+{
+	fprintf(stderr,
+		"Listening for perform_tests to start the application...\n");
+	spdk_rpc_listen(g_rpc_addr);
+	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
+
+	while (!g_rpc_received) {
+		spdk_rpc_accept();
+	}
+	/* Run spdk_rpc_accept() one more time to trigger
+	 * spdk_jsonrpv_server_poll() and send the RPC response. */
+	spdk_rpc_accept();
+}
+
+int
+main(int argc, char **argv)
 {
 	int rc;
 	struct spdk_env_opts opts;
@@ -557,6 +579,10 @@ int main(int argc, char **argv)
 	if (register_controllers() != 0) {
 		rc = 1;
 		goto cleanup;
+	}
+
+	if (g_wait_for_rpc) {
+		wait_for_rpc_call();
 	}
 
 	fprintf(stderr, "Initialization complete. Starting I/O...\n");

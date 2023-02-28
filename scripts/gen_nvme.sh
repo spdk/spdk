@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation
+#  All rights reserved.
+#
 set -e
 
 rootdir=$(readlink -f $(dirname $0))/..
@@ -22,16 +25,19 @@ function usage() {
 	echo "                               IP addresses, port numbers and NQN names."
 	echo "                               Example: tcp:127.0.0.1:4420:nqn.2016-06.io.spdk:cnode1,tcp:127.0.0.1:4421:nqn.2016-06.io.spdk:cnode2"
 	echo "    --json-with-subsystems     Wrap bdev subsystem JSON configuration with higher level 'subsystems' dictionary."
+	echo "-n, --bdev-count               Defines number of nvme bdevs to use in the configuration."
 	exit 0
 }
 
 function create_local_json_config() {
 	local bdev_json_cfg=()
 	local bdfs=()
+	local max_bdfs
 
 	bdfs=($(nvme_in_userspace))
+	max_bdfs=$((bdev_count > 0 && bdev_count < ${#bdfs[@]} ? bdev_count : ${#bdfs[@]}))
 
-	for i in "${!bdfs[@]}"; do
+	for ((i = 0; i < max_bdfs; i++)); do
 		bdev_json_cfg+=("$(
 			cat <<- JSON
 				{
@@ -97,7 +103,7 @@ function create_remote_json_config() {
 	JSON
 }
 
-while getopts 'h-:' optchar; do
+while getopts 'hn:-:' optchar; do
 	case "$optchar" in
 		-)
 			case "$OPTARG" in
@@ -108,10 +114,12 @@ while getopts 'h-:' optchar; do
 					;;
 				trid=*) remote_trid="${OPTARG#*=}" ;;
 				json-with-subsystems) gen_subsystems=true ;;
+				bdev-count=*) bdev_count=${OPTARG#*=} ;;
 				*) echo "Invalid argument '$OPTARG'" && usage ;;
 			esac
 			;;
 		h) usage ;;
+		n) bdev_count=$OPTARG ;;
 		*) echo "Invalid argument '$OPTARG'" && usage ;;
 	esac
 done

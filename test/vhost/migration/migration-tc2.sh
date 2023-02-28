@@ -1,3 +1,8 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation
+#  All rights reserved.
+#
+
 source $rootdir/test/nvmf/common.sh
 
 function migration_tc2_cleanup_nvmf_tgt() {
@@ -16,7 +21,7 @@ function migration_tc2_cleanup_vhost_config() {
 	$rpc_0 bdev_nvme_detach_controller Nvme0
 	$rpc_0 vhost_delete_controller $incoming_vm_ctrlr
 
-	$rpc_1 delete_nvme_controller Nvme0
+	$rpc_1 bdev_nvme_detach_controller Nvme0
 	$rpc_1 vhost_delete_controller $target_vm_ctrlr
 
 	notice "killing vhost app"
@@ -119,6 +124,8 @@ function migration_tc2() {
 	# Use 2 VMs:
 	# incoming VM - the one we want to migrate
 	# targe VM - the one which will accept migration
+	# VM uses 1 GiB memory, here we use light IO workload to keep number of dirty pages
+	# is in low rate of VM's memory, see https://github.com/spdk/spdk/issues/2805.
 	local job_file="$testdir/migration-tc2.job"
 	local log_file
 	log_file="/root/$(basename ${job_file%%.*}).log"

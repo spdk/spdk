@@ -130,11 +130,9 @@ After cloning SPDK repo and initialize submodules, FC LLD library is built which
 the fc transport.
 
 ~~~{.sh}
-git clone https://github.com/spdk/spdk spdk
+git clone https://github.com/spdk/spdk --recursive
 git clone https://github.com/ecdufcdrvr/bcmufctdrvr fc
-cd spdk
-git submodule update --init
-cd ../fc
+cd fc
 make DPDK_DIR=../spdk/dpdk/build SPDK_DIR=../spdk
 cd ../spdk
 ./configure --with-fc=../fc/build
@@ -270,3 +268,8 @@ nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
 
 SPDK has a tracing framework for capturing low-level event information at runtime.
 @ref nvmf_tgt_tracepoints enable analysis of both performance and application crashes.
+
+## Enabling NVMe-oF Multipath
+
+The SPDK NVMe-oF target and initiator support multiple independent paths to the same NVMe-oF subsystem.
+For step-by-step instructions for configuring and switching between paths, see @ref nvmf_multipath_howto .

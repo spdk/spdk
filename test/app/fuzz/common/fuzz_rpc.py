@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2019 Intel Corporation
+#  All rights reserved.
+#
 
-from rpc.client import print_dict, JSONRPCException
+from spdk.rpc.client import print_dict, JSONRPCException
 
 import logging
 import argparse
-import rpc
+import spdk.rpc as rpc
 import sys
 import shlex
 
@@ -45,7 +49,7 @@ def _fuzz_vhost_create_dev(client, socket, is_blk, use_bogus_buffer, use_valid_b
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description='SPDK RPC command line interface. NOTE: spdk/scripts/ is expected in PYTHONPATH')
+        description='SPDK RPC command line interface. NOTE: spdk/python is expected in PYTHONPATH')
     parser.add_argument('-s', dest='server_addr',
                         help='RPC domain socket path or IP address', default='/var/tmp/spdk.sock')
     parser.add_argument('-p', dest='port',

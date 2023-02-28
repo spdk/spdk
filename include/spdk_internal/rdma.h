@@ -1,35 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (c) Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef SPDK_RDMA_H
@@ -278,8 +249,9 @@ int spdk_rdma_get_translation(struct spdk_rdma_mem_map *map, void *address,
  * \param translation Memory translation
  * \return Local Memory Key
  */
-static inline uint32_t spdk_rdma_memory_translation_get_lkey(struct spdk_rdma_memory_translation
-		*translation)
+static inline uint32_t
+spdk_rdma_memory_translation_get_lkey(struct spdk_rdma_memory_translation
+				      *translation)
 {
 	return translation->translation_type == SPDK_RDMA_TRANSLATION_MR ?
 	       translation->mr_or_key.mr->lkey : (uint32_t)translation->mr_or_key.key;
@@ -292,11 +264,28 @@ static inline uint32_t spdk_rdma_memory_translation_get_lkey(struct spdk_rdma_me
  * \param translation Memory translation
  * \return Remote Memory Key
  */
-static inline uint32_t spdk_rdma_memory_translation_get_rkey(struct spdk_rdma_memory_translation
-		*translation)
+static inline uint32_t
+spdk_rdma_memory_translation_get_rkey(struct spdk_rdma_memory_translation
+				      *translation)
 {
 	return translation->translation_type == SPDK_RDMA_TRANSLATION_MR ?
 	       translation->mr_or_key.mr->rkey : (uint32_t)translation->mr_or_key.key;
 }
+
+/**
+ * Get a Protection Domain for an RDMA device context.
+ *
+ * \param context RDMA device context
+ * \return Pointer to the allocated Protection Domain
+ */
+struct ibv_pd *
+spdk_rdma_get_pd(struct ibv_context *context);
+
+/**
+ * Return a Protection Domain.
+ *
+ * \param pd Pointer to the Protection Domain
+ */
+void spdk_rdma_put_pd(struct ibv_pd *pd);
 
 #endif /* SPDK_RDMA_H */

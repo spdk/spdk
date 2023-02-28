@@ -27,6 +27,7 @@ test/common/lib/test_env
 test/common/lib/test_sock
 test/common/lib/ut_multithread
 test/common/lib/test_rdma
+test/unit/lib/bdev/raid/common
 test/unit/lib/blob/bs_dev_common
 test/unit/lib/blob/bs_scheduler
 test/unit/lib/ftl/common/utils
@@ -45,3 +46,23 @@ test/external_code/nvme/identify
 # This file requires some additional work in CI and test scripts before it can
 # be part of autotest.
 test/app/fuzz/llvm_nvme_fuzz/llvm_nvme_fuzz
+test/app/fuzz/llvm_vfio_fuzz/llvm_vfio_fuzz
+
+# Disable DAOS. Development libraries are not available for Fedora which is
+# used for the main build and scanbuild tests.
+module/bdev/daos/bdev_daos
+module/bdev/daos/bdev_daos_rpc
+
+# Not configured to test xNVMe bdev
+module/bdev/xnvme/bdev_xnvme
+module/bdev/xnvme/bdev_xnvme_rpc
+
+# Not configured to test mlx5 accel module & crypto lib
+module/accel/mlx5/accel_mlx5
+module/accel/mlx5/accel_mlx5_rpc
+lib/mlx5/mlx5_crypto
+
+# Not configured to test ublk
+lib/ublk/ublk
+lib/ublk/ublk_rpc
+module/event/subsystems/ublk/ublk

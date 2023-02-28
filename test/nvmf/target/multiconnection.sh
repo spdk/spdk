@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
@@ -10,18 +13,8 @@ MALLOC_BLOCK_SIZE=512
 
 NVMF_SUBSYS=11
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 nvmftestinit
 nvmfappstart -m 0xF
-
-# SoftRoce does not have enough queues available for
-# multiconnection tests. Detect if we're using software RDMA.
-# If so - lower the number of subsystems for test.
-if check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
-	echo "Using software RDMA, lowering number of NVMeOF subsystems."
-	NVMF_SUBSYS=1
-fi
 
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 
@@ -33,7 +26,7 @@ for i in $(seq 1 $NVMF_SUBSYS); do
 done
 
 for i in $(seq 1 $NVMF_SUBSYS); do
-	nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+	$NVME_CONNECT -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 	waitforserial SPDK$i
 done
 
@@ -42,7 +35,8 @@ $rootdir/scripts/fio-wrapper -p nvmf -i 262144 -d 64 -t randwrite -r 10
 
 sync
 for i in $(seq 1 $NVMF_SUBSYS); do
-	nvme disconnect -n "nqn.2016-06.io.spdk:cnode${i}" || true
+	nvme disconnect -n "nqn.2016-06.io.spdk:cnode${i}"
+	waitforserial_disconnect SPDK$i
 	$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode${i}
 done
 

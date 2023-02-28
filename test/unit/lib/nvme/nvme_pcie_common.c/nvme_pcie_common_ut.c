@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2021 Intel Corporation.
  *   All rights reserved.
  *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -75,12 +47,17 @@ DEFINE_STUB(nvme_request_check_timeout, int, (struct nvme_request *req, uint16_t
 		struct spdk_nvme_ctrlr_process *active_proc, uint64_t now_tick), 0);
 DEFINE_STUB(spdk_strerror, const char *, (int errnum), NULL);
 
+DEFINE_STUB_V(nvme_ctrlr_disable, (struct spdk_nvme_ctrlr *ctrlr));
+
+DEFINE_STUB(nvme_ctrlr_disable_poll, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
+
 DEFINE_STUB_V(nvme_transport_ctrlr_disconnect_qpair_done, (struct spdk_nvme_qpair *qpair));
 
-int nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
-		    struct spdk_nvme_ctrlr *ctrlr,
-		    enum spdk_nvme_qprio qprio,
-		    uint32_t num_requests, bool async)
+int
+nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
+		struct spdk_nvme_ctrlr *ctrlr,
+		enum spdk_nvme_qprio qprio,
+		uint32_t num_requests, bool async)
 {
 	qpair->id = id;
 	qpair->qprio = qprio;
@@ -568,7 +545,42 @@ test_nvme_pcie_ctrlr_construct_admin_qpair(void)
 	CU_ASSERT(rc == 0);
 }
 
-int main(int argc, char **argv)
+static void
+test_nvme_pcie_poll_group_get_stats(void)
+{
+	int rc = 0;
+	struct nvme_pcie_poll_group *pgroup = NULL;
+	struct spdk_nvme_transport_poll_group *tgroup = NULL;
+	struct spdk_nvme_transport_poll_group_stat *tgroup_stat = NULL;
+
+	tgroup = nvme_pcie_poll_group_create();
+	CU_ASSERT(tgroup != NULL);
+	pgroup = SPDK_CONTAINEROF(tgroup, struct nvme_pcie_poll_group, group);
+	CU_ASSERT(pgroup != NULL);
+
+	/* Invalid group pointer, expect fail and return -EINVAL */
+	rc = nvme_pcie_poll_group_get_stats(NULL, &tgroup_stat);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(tgroup_stat == NULL);
+
+	/* Invalid stats, expect fail and return -EINVAL */
+	rc = nvme_pcie_poll_group_get_stats(tgroup, NULL);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* Get state success */
+	rc = nvme_pcie_poll_group_get_stats(tgroup, &tgroup_stat);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tgroup_stat != NULL);
+	CU_ASSERT(tgroup_stat->trtype == SPDK_NVME_TRANSPORT_PCIE);
+	CU_ASSERT(memcmp(&tgroup_stat->pcie, &pgroup->stats, sizeof(struct spdk_nvme_pcie_stat)) == 0);
+
+	nvme_pcie_poll_group_free_stats(tgroup, tgroup_stat);
+	rc = nvme_pcie_poll_group_destroy(tgroup);
+	CU_ASSERT(rc == 0);
+}
+
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
@@ -582,6 +594,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_cmd_create_delete_io_queue);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_connect_qpair);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_construct_admin_qpair);
+	CU_ADD_TEST(suite, test_nvme_pcie_poll_group_get_stats);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

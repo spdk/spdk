@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2019 Intel Corporation
+#  All rights reserved.
+#
 rootdir=$(readlink -f $(dirname $0))/../..
 source $rootdir/test/common/autotest_common.sh
 source "$rootdir/scripts/common.sh"
@@ -8,7 +11,7 @@ TEST_TIMEOUT=1200
 
 VHOST_APP+=(-p 0)
 FUZZ_RPC_SOCK="/var/tmp/spdk_fuzz.sock"
-VHOST_FUZZ_APP+=(-r "$FUZZ_RPC_SOCK" --wait-for-rpc -g)
+VHOST_FUZZ_APP+=(-r "$FUZZ_RPC_SOCK" -g -s 256 -m 0x2 --wait-for-rpc)
 
 vhost_rpc_py="$rootdir/scripts/rpc.py"
 fuzz_generic_rpc_py="$rootdir/scripts/rpc.py -s $FUZZ_RPC_SOCK"

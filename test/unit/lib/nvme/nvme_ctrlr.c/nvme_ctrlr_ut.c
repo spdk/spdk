@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2015 Intel Corporation. All rights reserved.
  *   Copyright (c) 2020, 2021 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -90,6 +62,14 @@ nvme_transport_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
 {
 	HANDLE_RETURN_MOCK(nvme_transport_ctrlr_get_memory_domains);
 
+	return 0;
+}
+
+DEFINE_RETURN_MOCK(nvme_transport_ctrlr_ready, int);
+int
+nvme_transport_ctrlr_ready(struct spdk_nvme_ctrlr *ctrlr)
+{
+	HANDLE_RETURN_MOCK(nvme_transport_ctrlr_ready);
 	return 0;
 }
 
@@ -307,10 +287,11 @@ nvme_driver_init(void)
 	return 0;
 }
 
-int nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
-		    struct spdk_nvme_ctrlr *ctrlr,
-		    enum spdk_nvme_qprio qprio,
-		    uint32_t num_requests, bool async)
+int
+nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
+		struct spdk_nvme_ctrlr *ctrlr,
+		enum spdk_nvme_qprio qprio,
+		uint32_t num_requests, bool async)
 {
 	qpair->id = id;
 	qpair->qprio = qprio;
@@ -698,7 +679,8 @@ spdk_pci_device_detach(struct spdk_pci_device *device)
 						\
 	STAILQ_INIT(&adminq.free_req);		\
 	STAILQ_INSERT_HEAD(&adminq.free_req, &req, stailq);	\
-	ctrlr.adminq = &adminq;
+	ctrlr.adminq = &adminq;					\
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_CUSTOM;
 
 static void
 test_nvme_ctrlr_init_en_1_rdy_0(void)
@@ -738,6 +720,12 @@ test_nvme_ctrlr_init_en_1_rdy_0(void)
 	 * Transition to CSTS.RDY = 0.
 	 */
 	g_ut_nvme_regs.csts.bits.rdy = 0;
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
+
+	/*
+	 * Start enabling the controller.
+	 */
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE);
 
@@ -795,6 +783,12 @@ test_nvme_ctrlr_init_en_1_rdy_1(void)
 	 * Transition to CSTS.RDY = 0.
 	 */
 	g_ut_nvme_regs.csts.bits.rdy = 0;
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
+
+	/*
+	 * Start enabling the controller.
+	 */
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE);
 
@@ -858,6 +852,8 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1);
@@ -892,6 +888,8 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) != 0);
 	CU_ASSERT(g_ut_nvme_regs.cc.bits.en == 0);
@@ -922,6 +920,8 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	}
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) != 0);
@@ -954,6 +954,8 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) != 0);
 	CU_ASSERT(g_ut_nvme_regs.cc.bits.en == 0);
@@ -984,6 +986,8 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	}
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
@@ -1045,6 +1049,8 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1);
@@ -1078,6 +1084,8 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	}
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
@@ -1113,6 +1121,8 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) != 0);
 	CU_ASSERT(g_ut_nvme_regs.cc.bits.en == 0);
@@ -1144,6 +1154,8 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) != 0);
 	CU_ASSERT(g_ut_nvme_regs.cc.bits.en == 0);
@@ -1174,6 +1186,8 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	}
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
@@ -1234,6 +1248,8 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1);
@@ -1268,6 +1284,8 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) != 0);
 	CU_ASSERT(g_ut_nvme_regs.cc.bits.en == 0);
@@ -1298,6 +1316,8 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	}
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
@@ -1333,6 +1353,8 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) != 0);
 	CU_ASSERT(g_ut_nvme_regs.cc.bits.en == 0);
@@ -1363,6 +1385,8 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	}
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
@@ -1412,6 +1436,9 @@ test_nvme_ctrlr_init_en_0_rdy_0(void)
 	}
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
+
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
 
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE);
@@ -1465,6 +1492,12 @@ test_nvme_ctrlr_init_en_0_rdy_1(void)
 	 * Transition to CSTS.RDY = 0.
 	 */
 	g_ut_nvme_regs.csts.bits.rdy = 0;
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
+
+	/*
+	 * Start enabling the controller.
+	 */
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE);
 
@@ -1716,7 +1749,8 @@ test_alloc_io_qpair_wrr_2(void)
 
 bool g_connect_qpair_called = false;
 int g_connect_qpair_return_code = 0;
-int nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+int
+nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	g_connect_qpair_called = true;
 	qpair->state = NVME_QPAIR_CONNECTED;
@@ -1804,10 +1838,6 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	/* Get quirks for a device with all 0 vendor/device id */
 	ctrlr.quirks = nvme_get_quirks(&pci_id);
 	CU_ASSERT(ctrlr.quirks == 0);
-
-	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);
-	res = spdk_nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE);
-	CU_ASSERT(res == false);
 
 	/* Set the vendor to Intel, but provide no device id */
 	pci_id.class_id = SPDK_PCI_CLASS_NVME;
@@ -2239,6 +2269,9 @@ test_nvme_ctrlr_init_delay(void)
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
 
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
+
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE);
 
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
@@ -2427,6 +2460,31 @@ test_nvme_ctrlr_init_set_nvmf_ioccsz(void)
 
 	CU_ASSERT(ctrlr.ioccsz_bytes == 0);
 	CU_ASSERT(ctrlr.icdoff == 0);
+
+	nvme_ctrlr_destruct(&ctrlr);
+
+	/* Check CUSTOM_FABRICS trtype, */
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_CUSTOM_FABRICS;
+
+	ctrlr.state = NVME_CTRLR_STATE_IDENTIFY;
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_CONFIGURE_AER);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_IDENTIFY_IOCS_SPECIFIC);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_NUM_QUEUES);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_IDENTIFY_NS);
+
+	CU_ASSERT(ctrlr.ioccsz_bytes == 4096);
+	CU_ASSERT(ctrlr.icdoff == 1);
+	ctrlr.ioccsz_bytes = 0;
+	ctrlr.icdoff = 0;
 
 	nvme_ctrlr_destruct(&ctrlr);
 
@@ -2753,7 +2811,8 @@ test_nvme_ctrlr_ns_mgmt(void)
 	nvme_ctrlr_destruct(&ctrlr);
 }
 
-static void check_en_set_rdy(void)
+static void
+check_en_set_rdy(void)
 {
 	if (g_ut_nvme_regs.cc.bits.en == 1) {
 		g_ut_nvme_regs.csts.bits.rdy = 1;
@@ -3043,6 +3102,7 @@ test_nvme_ctrlr_set_intel_supported_log_pages(void)
 
 	ctrlr.opts.admin_timeout_ms = NVME_TIMEOUT_INFINITE;
 	ctrlr.cdata.vid = SPDK_PCI_VID_INTEL;
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	ctrlr.state = NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES;
 
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
@@ -3090,7 +3150,7 @@ test_nvme_ctrlr_parse_ana_log_page(void)
 	ctrlr.cdata.nanagrpid = 3;
 	ctrlr.active_ns_count = 3;
 
-	rc = nvme_ctrlr_init_ana_log_page(&ctrlr);
+	rc = nvme_ctrlr_update_ana_log_page(&ctrlr);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(ctrlr.ana_log_page != NULL);
 	CU_ASSERT(ctrlr.copied_ana_desc != NULL);
@@ -3250,7 +3310,26 @@ test_nvme_ctrlr_get_memory_domains(void)
 	MOCK_CLEAR(nvme_transport_ctrlr_get_memory_domains);
 }
 
-int main(int argc, char **argv)
+static void
+test_nvme_transport_ctrlr_ready(void)
+{
+	DECLARE_AND_CONSTRUCT_CTRLR();
+
+	/* Transport init succeeded */
+	ctrlr.state = NVME_CTRLR_STATE_TRANSPORT_READY;
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_READY);
+
+	/* Transport init failed */
+	ctrlr.state = NVME_CTRLR_STATE_TRANSPORT_READY;
+	MOCK_SET(nvme_transport_ctrlr_ready, -1);
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_process_init(&ctrlr) == -1);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ERROR);
+	MOCK_CLEAR(nvme_transport_ctrlr_ready);
+}
+
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
@@ -3304,6 +3383,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ctrlr_parse_ana_log_page);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_ana_resize);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_get_memory_domains);
+	CU_ADD_TEST(suite, test_nvme_transport_ctrlr_ready);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /** \file
@@ -41,8 +13,24 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/gpt_spec.h"
+#include "spdk/log.h"
 
-#define SPDK_GPT_PART_TYPE_GUID SPDK_GPT_GUID(0x7c5222bd, 0x8f5d, 0x4087, 0x9c00, 0xbf9843c7b58c)
+#define SPDK_GPT_PART_TYPE_GUID     SPDK_GPT_GUID(0x6527994e, 0x2c5a, 0x4eec, 0x9613, 0x8f5944074e8b)
+
+/* PART_TYPE_GUID_OLD partitions will be constructed as bdevs with one fewer block than expected.
+ * See GitHub issue #2801.
+ */
+#ifdef REGISTER_GUID_DEPRECATION
+/* Register the deprecation in the header file, to make it clear to readers that this GUID
+ * shouldn't be used for new SPDK GPT partitions.  We will never actually log this deprecation
+ * though, since we are not recommending that users try to migrate existing partitions with the
+ * old GUID to the new GUID. Wrap it in this REGISTER_GUID_DEPRECATION flag to avoid defining
+ * this deprecation in multiple compilation units.
+ */
+SPDK_LOG_DEPRECATION_REGISTER(old_gpt_guid, "old gpt guid", "Never", 0)
+#endif
+#define SPDK_GPT_PART_TYPE_GUID_OLD SPDK_GPT_GUID(0x7c5222bd, 0x8f5d, 0x4087, 0x9c00, 0xbf9843c7b58c)
+
 #define SPDK_GPT_BUFFER_SIZE 32768  /* 32KB */
 #define	SPDK_GPT_GUID_EQUAL(x,y) (memcmp(x, y, sizeof(struct spdk_gpt_guid)) == 0)
 

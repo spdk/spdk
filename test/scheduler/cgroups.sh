@@ -1,3 +1,7 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2021 Intel Corporation.
+#  All rights reserved.
+
 check_cgroup() {
 	# Try to work with both, cgroup-v1 and cgroup-v2. Verify which version is
 	# in use by looking up interfaces common for either of the versions.
@@ -11,7 +15,7 @@ check_cgroup() {
 }
 
 init_cpuset_cgroup() {
-	local cgroup
+	local cgroup pid
 	local -A cgroups=()
 
 	# For cgroup-v2 we need to prepare cpuset subsystem on our own
@@ -26,9 +30,8 @@ init_cpuset_cgroup() {
 		# maintaining user's session. To recreate the simple /cpuset setup from
 		# v1, move all the threads from all the existing cgroups to the top
 		# cgroup / and then migrate it to the /cpuset we created above.
-		for cgroup in /proc/+([0-9])/cgroup; do
-			cgroup=$(< "$cgroup") || continue
-			cgroup=${cgroup##*:}
+		for pid in /proc/+([0-9]); do
+			cgroup=$(get_cgroup "${pid##*/}") || continue
 			[[ $cgroup != / ]] || continue
 			cgroups["$cgroup"]=$cgroup
 		done 2> /dev/null
@@ -151,6 +154,37 @@ remove_cpuset_cgroup() {
 	if ((cgroup_version == 2)); then
 		remove_cgroup /cpuset
 	fi
+}
+
+get_cgroup() {
+	local pid=${1:-self} cgroup
+
+	[[ -e /proc/$pid/cgroup ]] || return 1
+	cgroup=$(< "/proc/$pid/cgroup")
+	echo "${cgroup##*:}"
+}
+
+get_cgroup_path() {
+	local cgroup
+
+	cgroup=$(get_cgroup "$1") || return 1
+	echo "$sysfs_cgroup$cgroup"
+}
+
+_set_cgroup_attr_top_bottom() {
+	local cgroup_path=$1 attr=$2 val=$3
+
+	if [[ -e ${cgroup_path%/*}/$attr ]]; then
+		_set_cgroup_attr_top_bottom "${cgroup_path%/*}" "$attr" "$val"
+	fi
+
+	if [[ -e $cgroup_path/$attr ]]; then
+		echo "$val" > "$cgroup_path/$attr"
+	fi
+}
+
+set_cgroup_attr_top_bottom() {
+	_set_cgroup_attr_top_bottom "$(get_cgroup_path "$1")" "$2" "$3"
 }
 
 declare -r sysfs_cgroup=/sys/fs/cgroup

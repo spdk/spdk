@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -52,6 +24,7 @@ static uint64_t g_histories_size;
 struct lcore_trace_record_ctx {
 	char lcore_file[TRACE_PATH_MAX];
 	int fd;
+	bool valid;
 	struct spdk_trace_history *in_history;
 	struct spdk_trace_history *out_history;
 
@@ -122,11 +95,15 @@ input_trace_file_mmap(struct aggr_trace_record_ctx *ctx, const char *shm_name)
 
 	ctx->trace_histories = (struct spdk_trace_histories *)history_ptr;
 	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
-		ctx->lcore_ports[i].in_history = spdk_get_per_lcore_history(ctx->trace_histories, i);
+		struct spdk_trace_history *history;
 
-		if (g_verbose) {
+		history = spdk_get_per_lcore_history(ctx->trace_histories, i);
+		ctx->lcore_ports[i].in_history = history;
+		ctx->lcore_ports[i].valid = (history != NULL);
+
+		if (g_verbose && history) {
 			printf("Number of trace entries for lcore (%d): %ju\n", i,
-			       ctx->lcore_ports[i].in_history->num_entries);
+			       history->num_entries);
 		}
 	}
 
@@ -176,6 +153,10 @@ output_trace_files_prepare(struct aggr_trace_record_ctx *ctx, const char *aggr_p
 
 	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 		port_ctx = &ctx->lcore_ports[i];
+
+		if (!port_ctx->valid) {
+			continue;
+		}
 
 		port_ctx->fd = open(port_ctx->lcore_file, flags, 0600);
 		if (port_ctx->fd < 0) {
@@ -460,6 +441,7 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 	uint64_t lcore_offsets[SPDK_TRACE_MAX_LCORE + 1];
 	int rc, i;
 	ssize_t len = 0;
+	uint64_t current_offset;
 	uint64_t len_sum;
 
 	ctx->out_fd = open(ctx->out_file, flags, 0600);
@@ -481,11 +463,17 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 	}
 
 	/* Update and append lcore offsets converged trace file */
-	lcore_offsets[0] = sizeof(struct spdk_trace_flags);
-	for (i = 1; i < (int)SPDK_COUNTOF(lcore_offsets); i++) {
-		lcore_offsets[i] = spdk_get_trace_history_size(ctx->lcore_ports[i - 1].num_entries) +
-				   lcore_offsets[i - 1];
+	current_offset = sizeof(struct spdk_trace_flags);
+	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
+		lcore_port = &ctx->lcore_ports[i];
+		if (lcore_port->valid) {
+			lcore_offsets[i] = current_offset;
+			current_offset += spdk_get_trace_history_size(lcore_port->num_entries);
+		} else {
+			lcore_offsets[i] = 0;
+		}
 	}
+	lcore_offsets[SPDK_TRACE_MAX_LCORE] = current_offset;
 
 	rc = cont_write(ctx->out_fd, lcore_offsets, sizeof(lcore_offsets));
 	if (rc < 0) {
@@ -496,6 +484,10 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 	/* Append each lcore trace file into converged trace file */
 	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 		lcore_port = &ctx->lcore_ports[i];
+
+		if (!lcore_port->valid) {
+			continue;
+		}
 
 		lcore_port->out_history->num_entries = lcore_port->num_entries;
 		rc = cont_write(ctx->out_fd, lcore_port->out_history, sizeof(struct spdk_trace_history));
@@ -520,6 +512,9 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 				goto out;
 			}
 		}
+
+		/* Clear rc so that the last cont_write() doesn't get interpreted as a failure. */
+		rc = 0;
 
 		if (len_sum != lcore_port->num_entries * sizeof(struct spdk_trace_entry)) {
 			fprintf(stderr, "Len of lcore trace file doesn't match number of entries for lcore\n");
@@ -566,7 +561,8 @@ setup_exit_signal_handler(void)
 	return rc;
 }
 
-static void usage(void)
+static void
+usage(void)
 {
 	printf("\n%s is used to record all SPDK generated trace entries\n", g_exe_name);
 	printf("from SPDK trace shared-memory to specified file.\n\n");
@@ -582,7 +578,8 @@ static void usage(void)
 	printf("                 '-h' to print usage information\n");
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	const char			*app_name = NULL;
 	const char			*file_name = NULL;
@@ -665,6 +662,9 @@ int main(int argc, char **argv)
 		for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 			lcore_port = &ctx.lcore_ports[i];
 
+			if (!lcore_port->valid) {
+				continue;
+			}
 			rc = lcore_trace_record(lcore_port);
 			if (rc) {
 				break;

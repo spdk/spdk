@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /*
@@ -58,6 +30,8 @@ static TAILQ_HEAD(, spdk_vbdev_error_config) g_error_config
 struct vbdev_error_info {
 	uint32_t			error_type;
 	uint32_t			error_num;
+	uint64_t			corrupt_offset;
+	uint8_t				corrupt_value;
 };
 
 /* Context for each error bdev */
@@ -94,21 +68,39 @@ static struct spdk_bdev_module error_if = {
 
 SPDK_BDEV_MODULE_REGISTER(error, &error_if)
 
-int
-vbdev_error_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint32_t error_num)
+static void
+dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *ctx)
 {
+}
+
+int
+vbdev_error_inject_error(char *name, const struct vbdev_error_inject_opts *opts)
+{
+	struct spdk_bdev_desc *desc;
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_part *part;
 	struct error_disk *error_disk = NULL;
 	uint32_t i;
+	int rc = 0;
+
+	if (opts->error_type == VBDEV_IO_CORRUPT_DATA) {
+		if (opts->corrupt_value == 0) {
+			/* If corrupt_value is 0, XOR cannot cause data corruption. */
+			SPDK_ERRLOG("corrupt_value should be non-zero.\n");
+			return -EINVAL;
+		}
+	}
 
 	pthread_mutex_lock(&g_vbdev_error_mutex);
-	bdev = spdk_bdev_get_by_name(name);
-	if (!bdev) {
-		SPDK_ERRLOG("Could not find ErrorInjection bdev %s\n", name);
+
+	rc = spdk_bdev_open_ext(name, false, dummy_bdev_event_cb, NULL, &desc);
+	if (rc != 0) {
+		SPDK_ERRLOG("Could not open ErrorInjection bdev %s\n", name);
 		pthread_mutex_unlock(&g_vbdev_error_mutex);
-		return -ENODEV;
+		return rc;
 	}
+
+	bdev = spdk_bdev_desc_get_bdev(desc);
 
 	TAILQ_FOREACH(part, &g_error_disks, tailq) {
 		if (bdev == spdk_bdev_part_get_bdev(part)) {
@@ -119,25 +111,32 @@ vbdev_error_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint
 
 	if (error_disk == NULL) {
 		SPDK_ERRLOG("Could not find ErrorInjection bdev %s\n", name);
-		pthread_mutex_unlock(&g_vbdev_error_mutex);
-		return -ENODEV;
+		rc = -ENODEV;
+		goto exit;
 	}
 
-	if (0xffffffff == io_type) {
+	if (0xffffffff == opts->io_type) {
 		for (i = 0; i < SPDK_COUNTOF(error_disk->error_vector); i++) {
-			error_disk->error_vector[i].error_type = error_type;
-			error_disk->error_vector[i].error_num = error_num;
+			error_disk->error_vector[i].error_type = opts->error_type;
+			error_disk->error_vector[i].error_num = opts->error_num;
+			error_disk->error_vector[i].corrupt_offset = opts->corrupt_offset;
+			error_disk->error_vector[i].corrupt_value = opts->corrupt_value;
 		}
-	} else if (0 == io_type) {
+	} else if (0 == opts->io_type) {
 		for (i = 0; i < SPDK_COUNTOF(error_disk->error_vector); i++) {
 			error_disk->error_vector[i].error_num = 0;
 		}
 	} else {
-		error_disk->error_vector[io_type].error_type = error_type;
-		error_disk->error_vector[io_type].error_num = error_num;
+		error_disk->error_vector[opts->io_type].error_type = opts->error_type;
+		error_disk->error_vector[opts->io_type].error_num = opts->error_num;
+		error_disk->error_vector[opts->io_type].corrupt_offset = opts->corrupt_offset;
+		error_disk->error_vector[opts->io_type].corrupt_value = opts->corrupt_value;
 	}
+
+exit:
+	spdk_bdev_close(desc);
 	pthread_mutex_unlock(&g_vbdev_error_mutex);
-	return 0;
+	return rc;
 }
 
 static void
@@ -155,10 +154,64 @@ vbdev_error_reset(struct error_disk *error_disk, struct spdk_bdev_io *bdev_io)
 static uint32_t
 vbdev_error_get_error_type(struct error_disk *error_disk, uint32_t io_type)
 {
+	switch (io_type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+		break;
+	default:
+		return 0;
+	}
+
 	if (error_disk->error_vector[io_type].error_num) {
 		return error_disk->error_vector[io_type].error_type;
 	}
 	return 0;
+}
+
+static void
+vbdev_error_corrupt_io_data(struct spdk_bdev_io *bdev_io, uint64_t corrupt_offset,
+			    uint8_t corrupt_value)
+{
+	uint8_t *buf;
+	int i;
+
+	if (bdev_io->u.bdev.iovs == NULL || bdev_io->u.bdev.iovs[0].iov_base == NULL) {
+		return;
+	}
+
+	for (i = 0; i < bdev_io->u.bdev.iovcnt; i++) {
+		if (bdev_io->u.bdev.iovs[i].iov_len > corrupt_offset) {
+			buf = (uint8_t *)bdev_io->u.bdev.iovs[i].iov_base;
+
+			buf[corrupt_offset] ^= corrupt_value;
+			break;
+		}
+
+		corrupt_offset -= bdev_io->u.bdev.iovs[i].iov_len;
+	}
+}
+
+static void
+vbdev_error_complete_request(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	struct error_disk *error_disk = bdev_io->bdev->ctxt;
+	uint32_t error_type;
+
+	if (success && bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
+		error_type = vbdev_error_get_error_type(error_disk, bdev_io->type);
+		if (error_type == VBDEV_IO_CORRUPT_DATA) {
+			error_disk->error_vector[bdev_io->type].error_num--;
+
+			vbdev_error_corrupt_io_data(bdev_io,
+						    error_disk->error_vector[bdev_io->type].corrupt_offset,
+						    error_disk->error_vector[bdev_io->type].corrupt_value);
+		}
+	}
+
+	spdk_bdev_io_complete(bdev_io, status);
 }
 
 static void
@@ -167,37 +220,44 @@ vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bde
 	struct error_channel *ch = spdk_io_channel_get_ctx(_ch);
 	struct error_disk *error_disk = bdev_io->bdev->ctxt;
 	uint32_t error_type;
+	int rc;
 
-	switch (bdev_io->type) {
-	case SPDK_BDEV_IO_TYPE_READ:
-	case SPDK_BDEV_IO_TYPE_WRITE:
-	case SPDK_BDEV_IO_TYPE_UNMAP:
-	case SPDK_BDEV_IO_TYPE_FLUSH:
-		break;
-	case SPDK_BDEV_IO_TYPE_RESET:
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
 		vbdev_error_reset(error_disk, bdev_io);
-		return;
-	default:
-		SPDK_ERRLOG("Error Injection: unknown I/O type %d\n", bdev_io->type);
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
 
 	error_type = vbdev_error_get_error_type(error_disk, bdev_io->type);
-	if (error_type == 0) {
-		int rc = spdk_bdev_part_submit_request(&ch->part_ch, bdev_io);
+	switch (error_type) {
+	case VBDEV_IO_FAILURE:
+		error_disk->error_vector[bdev_io->type].error_num--;
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		break;
+	case VBDEV_IO_PENDING:
+		TAILQ_INSERT_TAIL(&error_disk->pending_ios, bdev_io, module_link);
+		error_disk->error_vector[bdev_io->type].error_num--;
+		break;
+	case VBDEV_IO_CORRUPT_DATA:
+		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+			error_disk->error_vector[bdev_io->type].error_num--;
+
+			vbdev_error_corrupt_io_data(bdev_io,
+						    error_disk->error_vector[bdev_io->type].corrupt_offset,
+						    error_disk->error_vector[bdev_io->type].corrupt_value);
+		}
+	/* fallthrough */
+	case 0:
+		rc = spdk_bdev_part_submit_request_ext(&ch->part_ch, bdev_io,
+						       vbdev_error_complete_request);
 
 		if (rc) {
 			SPDK_ERRLOG("bdev_error: submit request failed, rc=%d\n", rc);
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		}
-		return;
-	} else if (error_type == VBDEV_IO_FAILURE) {
-		error_disk->error_vector[bdev_io->type].error_num--;
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-	} else if (error_type == VBDEV_IO_PENDING) {
-		TAILQ_INSERT_TAIL(&error_disk->pending_ios, bdev_io, module_link);
-		error_disk->error_vector[bdev_io->type].error_num--;
+		break;
+	default:
+		assert(false);
+		break;
 	}
 }
 
@@ -332,14 +392,14 @@ vbdev_error_create(const char *base_bdev_name)
 }
 
 void
-vbdev_error_delete(struct spdk_bdev *vbdev, spdk_delete_error_complete cb_fn, void *cb_arg)
+vbdev_error_delete(const char *error_vbdev_name, spdk_delete_error_complete cb_fn, void *cb_arg)
 {
-	if (!vbdev || vbdev->module != &error_if) {
-		cb_fn(cb_arg, -ENODEV);
-		return;
-	}
+	int rc;
 
-	spdk_bdev_unregister(vbdev, cb_fn, cb_arg);
+	rc = spdk_bdev_unregister_by_name(error_vbdev_name, &error_if, cb_fn, cb_arg);
+	if (rc != 0) {
+		cb_fn(cb_arg, rc);
+	}
 }
 
 static void

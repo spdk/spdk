@@ -1,34 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #ifndef SPDK_BLOBSTORE_H
@@ -39,6 +12,7 @@
 #include "spdk/queue.h"
 #include "spdk/util.h"
 #include "spdk/tree.h"
+#include "spdk/thread.h"
 
 #include "request.h"
 
@@ -187,17 +161,17 @@ struct spdk_blob_store {
 
 	struct spdk_bs_dev		*dev;
 
-	struct spdk_bit_array		*used_md_pages;
-	struct spdk_bit_pool		*used_clusters;
+	struct spdk_bit_array		*used_md_pages;		/* Protected by used_lock */
+	struct spdk_bit_pool		*used_clusters;		/* Protected by used_lock */
 	struct spdk_bit_array		*used_blobids;
 	struct spdk_bit_array		*open_blobids;
 
-	pthread_mutex_t			used_clusters_mutex;
+	struct spdk_spinlock		used_lock;
 
 	uint32_t			cluster_sz;
 	uint64_t			total_clusters;
 	uint64_t			total_data_clusters;
-	uint64_t			num_free_clusters;
+	uint64_t			num_free_clusters;	/* Protected by used_lock */
 	uint64_t			pages_per_cluster;
 	uint8_t				pages_per_cluster_shift;
 	uint32_t			io_unit_size;
@@ -222,6 +196,9 @@ struct spdk_bs_channel {
 
 	struct spdk_bs_dev		*dev;
 	struct spdk_io_channel		*dev_channel;
+
+	/* This page is only used during insert of a new cluster. */
+	struct spdk_blob_md_page	*new_cluster_page;
 
 	TAILQ_HEAD(, spdk_bs_request_set) need_cluster_alloc;
 	TAILQ_HEAD(, spdk_bs_request_set) queued_io;
@@ -519,6 +496,8 @@ bs_page_to_cluster(struct spdk_blob_store *bs, uint64_t page)
 static inline uint64_t
 bs_cluster_to_lba(struct spdk_blob_store *bs, uint32_t cluster)
 {
+	assert(bs->cluster_sz / bs->dev->blocklen > 0);
+
 	return (uint64_t)cluster * (bs->cluster_sz / bs->dev->blocklen);
 }
 
@@ -551,6 +530,21 @@ bs_cluster_to_extent_page(struct spdk_blob *blob, uint64_t cluster_num)
 	assert(extent_table_id < blob->active.extent_pages_array_size);
 
 	return &blob->active.extent_pages[extent_table_id];
+}
+
+static inline uint64_t
+bs_io_units_per_cluster(struct spdk_blob *blob)
+{
+	uint64_t	io_units_per_cluster;
+	uint8_t		shift = blob->bs->pages_per_cluster_shift;
+
+	if (shift != 0) {
+		io_units_per_cluster = bs_io_unit_per_page(blob->bs) << shift;
+	} else {
+		io_units_per_cluster = bs_io_unit_per_page(blob->bs) * blob->bs->pages_per_cluster;
+	}
+
+	return io_units_per_cluster;
 }
 
 /* End basic conversions */
@@ -613,13 +607,8 @@ static inline uint32_t
 bs_num_io_units_to_cluster_boundary(struct spdk_blob *blob, uint64_t io_unit)
 {
 	uint64_t	io_units_per_cluster;
-	uint8_t		shift = blob->bs->pages_per_cluster_shift;
 
-	if (shift != 0) {
-		io_units_per_cluster = bs_io_unit_per_page(blob->bs) << shift;
-	} else {
-		io_units_per_cluster = bs_io_unit_per_page(blob->bs) * blob->bs->pages_per_cluster;
-	}
+	io_units_per_cluster = bs_io_units_per_cluster(blob);
 
 	return io_units_per_cluster - (io_unit % io_units_per_cluster);
 }

@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2020 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
@@ -54,73 +26,90 @@ extern "C" {
 #define PORTAL_MASK			(PORTAL_SIZE - 1)
 #define WQCFG_SHIFT			5
 
-#define CFG_ENGINE_OFFSET		0x20
-#define CFG_FLAG_OFFSET			0x28
-
-#define IDXD_CMD_SHIFT			20
-
-#define IDXD_VERSION_OFFSET		0x00
-#define IDXD_GENCAP_OFFSET		0x10
-#define IDXD_WQCAP_OFFSET		0x20
-#define IDXD_GRPCAP_OFFSET		0x30
-#define IDXD_OPCAP_OFFSET		0x40
-#define IDXD_ENGCAP_OFFSET		0x38
-#define IDXD_OPCAP_OFFSET		0x40
-#define IDXD_TABLE_OFFSET		0x60
-#define IDXD_GENCFG_OFFSET		0x80
-#define IDXD_GENCTRL_OFFSET		0x88
-#define IDXD_GENSTATUS_OFFSET		0x90
-#define IDXD_INTCAUSE_OFFSET		0x98
-#define IDXD_CMD_OFFSET			0xa0
-#define IDXD_CMDSTS_OFFSET		0xa8
-#define IDXD_SWERR_OFFSET		0xc0
 #define IDXD_TABLE_OFFSET_MULT		0x100
-
-#define IDXD_OPCAP_WORDS		0x4
 
 #define IDXD_CLEAR_CRC_FLAGS		0xFFFFu
 
-#define IDXD_FLAG_FENCE                 (1 << 0)
-#define IDXD_FLAG_COMPLETION_ADDR_VALID (1 << 2)
-#define IDXD_FLAG_REQUEST_COMPLETION    (1 << 3)
-#define IDXD_FLAG_CACHE_CONTROL         (1 << 8)
+#define IDXD_FLAG_FENCE			(1 << 0)
+#define IDXD_FLAG_COMPLETION_ADDR_VALID	(1 << 2)
+#define IDXD_FLAG_REQUEST_COMPLETION	(1 << 3)
+#define IDXD_FLAG_CACHE_CONTROL		(1 << 8)
+#define IDXD_FLAG_DEST_READBACK		(1 << 14)
 #define IDXD_FLAG_DEST_STEERING_TAG	(1 << 15)
 #define IDXD_FLAG_CRC_READ_CRC_SEED	(1 << 16)
 
+#define IAA_FLAG_RD_SRC2_AECS		(1 << 16)
+#define IAA_COMP_FLUSH_OUTPUT		(1 << 1)
+#define IAA_COMP_APPEND_EOB		(1 << 2)
+#define IAA_COMP_FLAGS			(IAA_COMP_FLUSH_OUTPUT | IAA_COMP_APPEND_EOB)
+#define IAA_DECOMP_ENABLE		(1 << 0)
+#define IAA_DECOMP_FLUSH_OUTPUT		(1 << 1)
+#define IAA_DECOMP_CHECK_FOR_EOB	(1 << 2)
+#define IAA_DECOMP_STOP_ON_EOB		(1 << 3)
+#define IAA_DECOMP_FLAGS		(IAA_DECOMP_ENABLE | \
+					IAA_DECOMP_FLUSH_OUTPUT | \
+					IAA_DECOMP_CHECK_FOR_EOB | \
+					IAA_DECOMP_STOP_ON_EOB)
+
 /*
- * IDXD is a family of devices, DSA is the only currently
- * supported one.
+ * IDXD is a family of devices, DSA and IAA.
  */
 enum dsa_completion_status {
-	IDXD_COMP_NONE			= 0,
-	IDXD_COMP_SUCCESS		= 1,
-	IDXD_COMP_SUCCESS_PRED		= 2,
-	IDXD_COMP_PAGE_FAULT_NOBOF	= 3,
-	IDXD_COMP_PAGE_FAULT_IR		= 4,
-	IDXD_COMP_BATCH_FAIL		= 5,
-	IDXD_COMP_BATCH_PAGE_FAULT	= 6,
-	IDXD_COMP_DR_OFFSET_NOINC	= 7,
-	IDXD_COMP_DR_OFFSET_ERANGE	= 8,
-	IDXD_COMP_DIF_ERR		= 9,
-	IDXD_COMP_BAD_OPCODE		= 16,
-	IDXD_COMP_INVALID_FLAGS		= 17,
-	IDXD_COMP_NOZERO_RESERVE	= 18,
-	IDXD_COMP_XFER_ERANGE		= 19,
-	IDXD_COMP_DESC_CNT_ERANGE	= 20,
-	IDXD_COMP_DR_ERANGE		= 21,
-	IDXD_COMP_OVERLAP_BUFFERS	= 22,
-	IDXD_COMP_DCAST_ERR		= 23,
-	IDXD_COMP_DESCLIST_ALIGN	= 24,
-	IDXD_COMP_INT_HANDLE_INVAL	= 25,
-	IDXD_COMP_CRA_XLAT		= 26,
-	IDXD_COMP_CRA_ALIGN		= 27,
-	IDXD_COMP_ADDR_ALIGN		= 28,
-	IDXD_COMP_PRIV_BAD		= 29,
-	IDXD_COMP_TRAFFIC_CLASS_CONF	= 30,
-	IDXD_COMP_PFAULT_RDBA		= 31,
-	IDXD_COMP_HW_ERR1		= 32,
-	IDXD_COMP_HW_ERR_DRB		= 33,
-	IDXD_COMP_TRANSLATION_FAIL	= 34,
+	DSA_COMP_NONE			= 0,
+	DSA_COMP_SUCCESS		= 1,
+	DSA_COMP_SUCCESS_PRED		= 2,
+	DSA_COMP_PAGE_FAULT_NOBOF	= 3,
+	DSA_COMP_PAGE_FAULT_IR		= 4,
+	DSA_COMP_BATCH_FAIL		= 5,
+	DSA_COMP_BATCH_PAGE_FAULT	= 6,
+	DSA_COMP_DR_OFFSET_NOINC	= 7,
+	DSA_COMP_DR_OFFSET_ERANGE	= 8,
+	DSA_COMP_DIF_ERR		= 9,
+	DSA_COMP_BAD_OPCODE		= 16,
+	DSA_COMP_INVALID_FLAGS		= 17,
+	DSA_COMP_NOZERO_RESERVE		= 18,
+	DSA_COMP_XFER_ERANGE		= 19,
+	DSA_COMP_DESC_CNT_ERANGE	= 20,
+	DSA_COMP_DR_ERANGE		= 21,
+	DSA_COMP_OVERLAP_BUFFERS	= 22,
+	DSA_COMP_DCAST_ERR		= 23,
+	DSA_COMP_DESCLIST_ALIGN		= 24,
+	DSA_COMP_INT_HANDLE_INVAL	= 25,
+	DSA_COMP_CRA_XLAT		= 26,
+	DSA_COMP_CRA_ALIGN		= 27,
+	DSA_COMP_ADDR_ALIGN		= 28,
+	DSA_COMP_PRIV_BAD		= 29,
+	DSA_COMP_TRAFFIC_CLASS_CONF	= 30,
+	DSA_COMP_PFAULT_RDBA		= 31,
+	DSA_COMP_HW_ERR1		= 32,
+	DSA_COMP_HW_ERR_DRB		= 33,
+	DSA_COMP_TRANSLATION_FAIL	= 34,
+};
+
+enum iaa_completion_status {
+	IAA_COMP_NONE			= 0,
+	IAA_COMP_SUCCESS		= 1,
+	IAA_COMP_PAGE_FAULT_IR		= 4,
+	IAA_COMP_OUTBUF_OVERFLOW	= 5,
+	IAA_COMP_BAD_OPCODE		= 16,
+	IAA_COMP_INVALID_FLAGS		= 17,
+	IAA_COMP_NOZERO_RESERVE		= 18,
+	IAA_COMP_INVALID_SIZE		= 19,
+	IAA_COMP_OVERLAP_BUFFERS	= 22,
+	IAA_COMP_INT_HANDLE_INVAL	= 25,
+	IAA_COMP_CRA_XLAT		= 32,
+	IAA_COMP_CRA_ALIGN		= 33,
+	IAA_COMP_ADDR_ALIGN		= 34,
+	IAA_COMP_PRIV_BAD		= 35,
+	IAA_COMP_TRAFFIC_CLASS_CONF	= 36,
+	IAA_COMP_PFAULT_RDBA		= 37,
+	IAA_COMP_HW_ERR1		= 38,
+	IAA_COMP_TRANSLATION_FAIL	= 39,
+	IAA_COMP_PRS_TIMEOUT		= 40,
+	IAA_COMP_WATCHDOG		= 41,
+	IAA_COMP_INVALID_COMP_FLAG	= 48,
+	IAA_COMP_INVALID_FILTER_FLAG	= 49,
+	IAA_COMP_INVALID_NUM_ELEMS	= 50,
 };
 
 enum idxd_wq_state {
@@ -211,6 +200,7 @@ struct idxd_hw_desc {
 	uint64_t	completion_addr;
 	union {
 		uint64_t	src_addr;
+		uint64_t	src1_addr;
 		uint64_t	readback_addr;
 		uint64_t	pattern;
 		uint64_t	desc_list_addr;
@@ -222,12 +212,24 @@ struct idxd_hw_desc {
 		uint64_t	comp_pattern;
 	};
 	union {
+		uint32_t	src1_size;
 		uint32_t	xfer_size;
 		uint32_t	desc_count;
 	};
 	uint16_t	int_handle;
-	uint16_t	rsvd1;
 	union {
+		uint16_t	rsvd1;
+		uint16_t	compr_flags;
+		uint16_t	decompr_flags;
+	};
+	union {
+		struct {
+			uint64_t	src2_addr;
+			uint32_t	max_dst_size;
+			uint32_t	src2_size;
+			uint32_t	filter_flags;
+			uint32_t	num_inputs;
+		} iaa;
 		uint8_t		expected_res;
 		struct {
 			uint64_t	addr;
@@ -275,7 +277,7 @@ struct idxd_hw_desc {
 } __attribute((aligned(64)));
 SPDK_STATIC_ASSERT(sizeof(struct idxd_hw_desc) == 64, "size mismatch");
 
-struct idxd_hw_comp_record {
+struct dsa_hw_comp_record {
 	volatile uint8_t	status;
 	union {
 		uint8_t		result;
@@ -309,7 +311,37 @@ struct idxd_hw_comp_record {
 		uint8_t		op_specific[16];
 	};
 };
-SPDK_STATIC_ASSERT(sizeof(struct idxd_hw_comp_record) == 32, "size mismatch");
+SPDK_STATIC_ASSERT(sizeof(struct dsa_hw_comp_record) == 32, "size mismatch");
+
+struct iaa_hw_comp_record {
+	volatile uint8_t	status;
+	uint8_t			error_code;
+	uint16_t		rsvd;
+	uint32_t		bytes_completed;
+	uint64_t		fault_addr;
+	uint32_t		invalid_flags;
+	uint32_t		rsvd2;
+	uint32_t		output_size;
+	uint8_t			output_bits;
+	uint8_t			rsvd3;
+	uint16_t		rsvd4;
+	uint64_t		rsvd5[4];
+};
+SPDK_STATIC_ASSERT(sizeof(struct iaa_hw_comp_record) == 64, "size mismatch");
+
+struct iaa_aecs {
+	uint32_t crc;
+	uint32_t xor_checksum;
+	uint32_t rsvd[5];
+	uint32_t num_output_accum_bits;
+	uint8_t output_accum[256];
+	uint32_t ll_sym[286];
+	uint32_t rsvd1;
+	uint32_t rsvd3;
+	uint32_t d_sym[30];
+	uint32_t pad[2];
+};
+SPDK_STATIC_ASSERT(sizeof(struct iaa_aecs) == 1568, "size mismatch");
 
 union idxd_gencap_register {
 	struct {
@@ -557,8 +589,17 @@ struct idxd_grpcfg {
 	uint64_t wqs[4];
 	uint64_t engines;
 	union idxd_group_flags flags;
+
+	/* This is not part of the definition, but in practice the stride in the table
+	 * is 64 bytes. */
+	uint32_t reserved0;
+	uint64_t reserved1[2];
 };
-SPDK_STATIC_ASSERT(sizeof(struct idxd_grpcfg) == 48, "size mismatch");
+SPDK_STATIC_ASSERT(sizeof(struct idxd_grpcfg) == 64, "size mismatch");
+
+struct idxd_grptbl {
+	struct idxd_grpcfg group[1];
+};
 
 union idxd_wqcfg {
 	struct {

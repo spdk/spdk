@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2015 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -72,7 +44,8 @@ struct io_request {
 	uint32_t misalign;
 };
 
-static void nvme_request_reset_sgl(void *cb_arg, uint32_t sgl_offset)
+static void
+nvme_request_reset_sgl(void *cb_arg, uint32_t sgl_offset)
 {
 	uint32_t i;
 	uint32_t offset = 0;
@@ -91,7 +64,8 @@ static void nvme_request_reset_sgl(void *cb_arg, uint32_t sgl_offset)
 	return;
 }
 
-static int nvme_request_next_sge(void *cb_arg, void **address, uint32_t *length)
+static int
+nvme_request_next_sge(void *cb_arg, void **address, uint32_t *length)
 {
 	struct io_request *req = (struct io_request *)cb_arg;
 	struct sgl_element *iov;
@@ -128,7 +102,8 @@ io_complete(void *ctx, const struct spdk_nvme_cpl *cpl)
 	}
 }
 
-static void build_io_request_0(struct io_request *req)
+static void
+build_io_request_0(struct io_request *req)
 {
 	req->nseg = 1;
 
@@ -136,7 +111,8 @@ static void build_io_request_0(struct io_request *req)
 	req->iovs[0].len = 0x800;
 }
 
-static void build_io_request_1(struct io_request *req)
+static void
+build_io_request_1(struct io_request *req)
 {
 	req->nseg = 1;
 
@@ -145,7 +121,8 @@ static void build_io_request_1(struct io_request *req)
 	req->iovs[0].len = 0x200;
 }
 
-static void build_io_request_2(struct io_request *req)
+static void
+build_io_request_2(struct io_request *req)
 {
 	req->nseg = 1;
 
@@ -154,7 +131,8 @@ static void build_io_request_2(struct io_request *req)
 	req->iovs[0].len = 0x40000;
 }
 
-static void build_io_request_3(struct io_request *req)
+static void
+build_io_request_3(struct io_request *req)
 {
 	req->nseg = 3;
 
@@ -173,7 +151,8 @@ static void build_io_request_3(struct io_request *req)
 	req->iovs[2].len = 0x3000;
 }
 
-static void build_io_request_4(struct io_request *req)
+static void
+build_io_request_4(struct io_request *req)
 {
 	uint32_t i;
 
@@ -190,7 +169,8 @@ static void build_io_request_4(struct io_request *req)
 	}
 }
 
-static void build_io_request_5(struct io_request *req)
+static void
+build_io_request_5(struct io_request *req)
 {
 	req->nseg = 1;
 
@@ -199,7 +179,8 @@ static void build_io_request_5(struct io_request *req)
 	req->iovs[0].len = 0x2000;
 }
 
-static void build_io_request_6(struct io_request *req)
+static void
+build_io_request_6(struct io_request *req)
 {
 	req->nseg = 2;
 
@@ -212,7 +193,8 @@ static void build_io_request_6(struct io_request *req)
 	req->iovs[1].len = 0x1000;
 }
 
-static void build_io_request_7(struct io_request *req)
+static void
+build_io_request_7(struct io_request *req)
 {
 	uint8_t *base;
 
@@ -228,7 +210,8 @@ static void build_io_request_7(struct io_request *req)
 	req->iovs[0].len = 0x10000;
 }
 
-static void build_io_request_8(struct io_request *req)
+static void
+build_io_request_8(struct io_request *req)
 {
 	req->nseg = 2;
 
@@ -249,7 +232,8 @@ static void build_io_request_8(struct io_request *req)
 	req->iovs[1].len = 0x400;
 }
 
-static void build_io_request_9(struct io_request *req)
+static void
+build_io_request_9(struct io_request *req)
 {
 	/*
 	 * Check if mixed PRP complaint and not complaint requests are handled
@@ -271,7 +255,8 @@ static void build_io_request_9(struct io_request *req)
 	}
 }
 
-static void build_io_request_10(struct io_request *req)
+static void
+build_io_request_10(struct io_request *req)
 {
 	/*
 	 * Test the case where we have a valid PRP list, but the first and last
@@ -292,7 +277,8 @@ static void build_io_request_10(struct io_request *req)
 	}
 }
 
-static void build_io_request_11(struct io_request *req)
+static void
+build_io_request_11(struct io_request *req)
 {
 	/* This test case focuses on the last element not starting on a page boundary. */
 	const size_t req_len[] = { 512, 512 };
@@ -490,7 +476,8 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	printf("Attached to %s\n", dev->name);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	struct dev		*iter;
 	int			rc;

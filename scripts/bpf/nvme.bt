@@ -10,12 +10,6 @@ usdt:__EXE__:bdev_nvme_ctrlr_release {
 	       str(arg1), arg2);
 }
 
-usdt:__EXE__:bdev_nvme_destroy_qpair {
-	printf("%d.%06d: controller: %s delete qpair with ID: %d\n",
-	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
-	       str(arg1), arg2);
-}
-
 usdt:__EXE__:bdev_nvme_destruct {
 	printf("%d.%06d: delete nvme disk: %s, with nsid: %d\n",
 	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),

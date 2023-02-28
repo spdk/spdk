@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef SPDK_FTL_H
@@ -44,6 +16,7 @@ extern "C" {
 #endif
 
 struct spdk_ftl_dev;
+struct ftl_io;
 
 /* Limit thresholds */
 enum {
@@ -54,122 +27,159 @@ enum {
 	SPDK_FTL_LIMIT_MAX
 };
 
-struct spdk_ftl_limit {
-	/* Threshold from which the limiting starts */
-	size_t					thld;
-
-	/* Limit percentage */
-	size_t					limit;
+struct ftl_stats_error {
+	uint64_t media;
+	uint64_t crc;
+	uint64_t other;
 };
 
+struct ftl_stats_group {
+	uint64_t ios;
+	uint64_t blocks;
+	struct ftl_stats_error errors;
+};
+
+struct ftl_stats_entry {
+	struct ftl_stats_group read;
+	struct ftl_stats_group write;
+};
+
+enum ftl_stats_type {
+	FTL_STATS_TYPE_USER = 0,
+	FTL_STATS_TYPE_CMP,
+	FTL_STATS_TYPE_GC,
+	FTL_STATS_TYPE_MD_BASE,
+	FTL_STATS_TYPE_MD_NV_CACHE,
+	FTL_STATS_TYPE_L2P,
+	FTL_STATS_TYPE_MAX,
+};
+
+struct ftl_stats {
+	/* Number of times write limits were triggered by FTL writers
+	 * (gc and compaction) dependent on number of free bands. GC starts at
+	 * SPDK_FTL_LIMIT_START level, while at SPDK_FTL_LIMIT_CRIT compaction stops
+	 * and only GC is allowed to work.
+	 */
+	uint64_t		limits[SPDK_FTL_LIMIT_MAX];
+
+	/* Total number of blocks with IO to the underlying devices
+	 * 1. nv cache read/write
+	 * 2. base bdev read/write
+	 */
+	uint64_t		io_activity_total;
+
+	struct ftl_stats_entry	entries[FTL_STATS_TYPE_MAX];
+};
+
+typedef void (*spdk_ftl_stats_fn)(struct ftl_stats *stats, void *cb_arg);
+
+/*
+ * FTL configuration.
+ *
+ * NOTE: Do not change the layout of this structure. Only add new fields at the end.
+ */
 struct spdk_ftl_conf {
-	/* Number of reserved addresses not exposed to the user */
-	size_t					lba_rsvd;
+	/* Device's name */
+	char					*name;
 
-	/* Size of the per-io_channel write buffer */
-	size_t					write_buffer_size;
+	/* Device UUID (valid when restoring device from disk) */
+	struct spdk_uuid			uuid;
 
-	/* Threshold for opening new band */
-	size_t					band_thld;
+	/* Percentage of base device blocks not exposed to the user */
+	uint64_t				overprovisioning;
 
-	/* Maximum IO depth per band relocate */
-	size_t					max_reloc_qdepth;
+	/* l2p cache size that could reside in DRAM (in MiB) */
+	size_t					l2p_dram_limit;
 
-	/* Maximum active band relocates */
-	size_t					max_active_relocs;
+	/* Core mask - core thread plus additional relocation threads */
+	char					*core_mask;
 
 	/* IO pool size per user thread */
 	size_t					user_io_pool_size;
 
-	/* Lowest percentage of invalid blocks for a band to be defragged */
-	size_t					invalid_thld;
-
 	/* User writes limits */
-	struct spdk_ftl_limit			limits[SPDK_FTL_LIMIT_MAX];
+	size_t					limits[SPDK_FTL_LIMIT_MAX];
 
-	/* Allow for partial recovery from open bands instead of returning error */
-	bool					allow_open_bands;
-
-	/* Use append instead of write */
-	bool					use_append;
-
-	/* Maximum supported number of IO channels */
-	uint32_t				max_io_channels;
+	/* FTL startup mode mask, see spdk_ftl_mode enum for possible values */
+	uint32_t				mode;
 
 	struct {
-		/* Maximum number of concurrent requests */
-		size_t				max_request_cnt;
-		/* Maximum number of blocks per one request */
-		size_t				max_request_size;
+		/* Start compaction when full chunks exceed given % of entire chunks */
+		uint32_t			chunk_compaction_threshold;
+
+		/* Percentage of chunks to maintain free */
+		uint32_t			chunk_free_target;
 	} nv_cache;
 
-	/* Create l2p table on l2p_path persistent memory file or device instead of in DRAM */
-	const char				*l2p_path;
-};
+	/* Hole at bytes 0x60 - 0x67. */
+	uint8_t					reserved[4];
+
+	/* Name of base block device (zoned or non-zoned) */
+	char					*base_bdev;
+
+	/* Name of cache block device (must support extended metadata) */
+	char					*cache_bdev;
+
+	/* Enable fast shutdown path */
+	bool					fast_shutdown;
+
+	/* Hole at bytes 0x79 - 0x7f. */
+	uint8_t					reserved2[7];
+
+	/*
+	 * The size of spdk_ftl_conf according to the caller of this library is used for ABI
+	 * compatibility. The library uses this field to know how many fields in this
+	 * structure are valid. And the library will populate any remaining fields with default values.
+	 */
+	size_t					conf_size;
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct spdk_ftl_conf) == 136, "Incorrect size");
 
 enum spdk_ftl_mode {
 	/* Create new device */
 	SPDK_FTL_MODE_CREATE = (1 << 0),
 };
 
-struct spdk_ftl_dev_init_opts {
-	/* Underlying device */
-	const char				*base_bdev;
-	/* Write buffer cache */
-	const char				*cache_bdev;
-
-	/* Thread responsible for core tasks execution */
-	struct spdk_thread			*core_thread;
-
-	/* Device's config */
-	const struct spdk_ftl_conf		*conf;
-	/* Device's name */
-	const char				*name;
-	/* Mode flags */
-	unsigned int				mode;
-	/* Device UUID (valid when restoring device from disk) */
-	struct spdk_uuid			uuid;
-};
-
+/*
+ * FTL device attributes.
+ *
+ * NOTE: Do not change the layout of this structure. Only add new fields at the end.
+ */
 struct spdk_ftl_attrs {
-	/* Device's UUID */
-	struct spdk_uuid			uuid;
 	/* Number of logical blocks */
-	uint64_t				num_blocks;
+	uint64_t			num_blocks;
 	/* Logical block size */
-	size_t					block_size;
-	/* Underlying device */
-	const char				*base_bdev;
-	/* Write buffer cache */
-	const char				*cache_bdev;
-	/* Number of zones per parallel unit in the underlying device (including any offline ones) */
-	size_t					num_zones;
-	/* Number of logical blocks per zone */
-	size_t					zone_size;
-	/* Device specific configuration */
-	struct spdk_ftl_conf			conf;
+	uint64_t			block_size;
+	/* Optimal IO size - bdev layer will split requests over this size */
+	uint64_t			optimum_io_size;
 };
 
-typedef void (*spdk_ftl_fn)(void *, int);
-typedef void (*spdk_ftl_init_fn)(struct spdk_ftl_dev *, void *, int);
+typedef void (*spdk_ftl_fn)(void *cb_arg, int status);
+typedef void (*spdk_ftl_init_fn)(struct spdk_ftl_dev *dev, void *cb_arg, int status);
 
 /**
- * Initialize the FTL on given NVMe device and parallel unit range.
+ * Initializes the FTL library.
  *
- * Covers the following:
- * - retrieve zone device information,
- * - allocate buffers and resources,
- * - initialize internal structures,
- * - initialize internal thread(s),
- * - restore or create L2P table.
+ * @return 0 on success, negative errno otherwise.
+ */
+int spdk_ftl_init(void);
+
+/**
+ * Deinitializes the FTL library.
+ */
+void spdk_ftl_fini(void);
+
+/**
+ * Initialize the FTL on the given pair of bdevs - base and cache bdev.
+ * Upon receiving a successful completion callback user is free to use I/O calls.
  *
- * \param opts configuration for new device
+ * \param conf configuration for new device
  * \param cb callback function to call when the device is created
  * \param cb_arg callback's argument
  *
  * \return 0 if initialization was started successfully, negative errno otherwise.
  */
-int spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_fn cb, void *cb_arg);
+int spdk_ftl_dev_init(const struct spdk_ftl_conf *conf, spdk_ftl_init_fn cb, void *cb_arg);
 
 /**
  * Deinitialize and free given device.
@@ -178,29 +188,67 @@ int spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_f
  * \param cb callback function to call when the device is freed
  * \param cb_arg callback's argument
  *
- * \return 0 if successfully scheduled free, negative errno otherwise.
+ * \return 0 if deinitialization was started successfully, negative errno otherwise.
  */
-int spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb, void *cb_arg);
-
-/**
- * Initialize FTL configuration structure with default values.
- *
- * \param conf FTL configuration to initialize
- */
-void spdk_ftl_conf_init_defaults(struct spdk_ftl_conf *conf);
+int spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_fn cb, void *cb_arg);
 
 /**
  * Retrieve device’s attributes.
  *
  * \param dev device
  * \param attr Attribute structure to fill
+ * \param attrs_size Must be set to sizeof(struct spdk_ftl_attrs)
  */
-void spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attr);
+void spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attr,
+			    size_t attrs_size);
+
+/**
+ * Retrieve device’s configuration.
+ *
+ * \param dev device
+ * \param conf FTL configuration structure to fill
+ * \param conf_size Must be set to sizeof(struct spdk_ftl_conf)
+ */
+void spdk_ftl_dev_get_conf(const struct spdk_ftl_dev *dev, struct spdk_ftl_conf *conf,
+			   size_t conf_size);
+
+/**
+ * Obtain an I/O channel for the device.
+ *
+ * \param dev device
+ *
+ * \return A handle to the I/O channel or NULL on failure.
+ */
+struct spdk_io_channel *spdk_ftl_get_io_channel(struct spdk_ftl_dev *dev);
+
+/**
+ * Make a deep copy of an FTL configuration structure
+ *
+ * \param dst The destination FTL configuration
+ * \param src The source FTL configuration
+ */
+int spdk_ftl_conf_copy(struct spdk_ftl_conf *dst, const struct spdk_ftl_conf *src);
+
+/**
+ * Release the FTL configuration resources. This does not free the structure itself.
+ *
+ * \param conf FTL configuration to deinitialize
+ */
+void spdk_ftl_conf_deinit(struct spdk_ftl_conf *conf);
+
+/**
+ * Initialize FTL configuration structure with default values.
+ *
+ * \param conf FTL configuration to initialize
+ * \param conf_size Must be set to sizeof(struct spdk_ftl_conf)
+ */
+void spdk_ftl_get_default_conf(struct spdk_ftl_conf *conf, size_t conf_size);
 
 /**
  * Submits a read to the specified device.
  *
  * \param dev Device
+ * \param io Allocated ftl_io
  * \param ch I/O channel
  * \param lba Starting LBA to read the data
  * \param lba_cnt Number of sectors to read
@@ -211,14 +259,15 @@ void spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attr
  *
  * \return 0 if successfully submitted, negative errno otherwise.
  */
-int spdk_ftl_read(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba,
-		  size_t lba_cnt,
-		  struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn, void *cb_arg);
+int spdk_ftl_readv(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_channel *ch,
+		   uint64_t lba, uint64_t lba_cnt,
+		   struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn, void *cb_arg);
 
 /**
  * Submits a write to the specified device.
  *
  * \param dev Device
+ * \param io Allocated ftl_io
  * \param ch I/O channel
  * \param lba Starting LBA to write the data
  * \param lba_cnt Number of sectors to write
@@ -229,20 +278,53 @@ int spdk_ftl_read(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t
  *
  * \return 0 if successfully submitted, negative errno otherwise.
  */
-int spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba,
-		   size_t lba_cnt,
-		   struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn, void *cb_arg);
+int spdk_ftl_writev(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_channel *ch,
+		    uint64_t lba, uint64_t lba_cnt,
+		    struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn, void *cb_arg);
 
 /**
- * Submits a flush request to the specified device.
+ * Submits a unmap to the specified device.
  *
- * \param dev device
- * \param cb_fn Callback function to invoke when all prior IOs have been completed
+ * \param dev Device
+ * \param io Allocated ftl_io
+ * \param ch I/O channel
+ * \param lba Starting LBA to write the data
+ * \param lba_cnt Number of blocks to unmap
+ * \param cb_fn Callback function to invoke when the I/O is completed
  * \param cb_arg Argument to pass to the callback function
  *
  * \return 0 if successfully submitted, negative errno otherwise.
  */
-int spdk_ftl_flush(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg);
+int spdk_ftl_unmap(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_channel *ch,
+		   uint64_t lba, uint64_t lba_cnt, spdk_ftl_fn cb_fn, void *cb_arg);
+
+/**
+ * Returns the size of ftl_io struct that needs to be passed to spdk_ftl_read/write
+ *
+ * \return The size of struct
+ */
+size_t spdk_ftl_io_size(void);
+
+/**
+ * Enable fast shutdown.
+ *
+ * During fast shutdown FTL will keep the necessary metadata in shared memory instead
+ * of serializing it to storage. This allows for shorter downtime during upgrade process.
+ */
+void spdk_ftl_dev_set_fast_shutdown(struct spdk_ftl_dev *dev, bool fast_shutdown);
+
+/*
+ * Returns current FTL I/O statistics.
+ *
+ * \param dev Device
+ * \param stats Allocated ftl_stats
+ * \param cb_fn Callback function to invoke when the call is completed
+ * \param cb_arg Argument to pass to the callback function
+ *
+ * \return 0 if successfully submitted, negative errno otherwise.
+ */
+int spdk_ftl_get_stats(struct spdk_ftl_dev *dev, struct ftl_stats *stats, spdk_ftl_stats_fn cb_fn,
+		       void *cb_arg);
 
 #ifdef __cplusplus
 }

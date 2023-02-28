@@ -1,82 +1,63 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2019 Intel Corporation
+#  All rights reserved.
+#
+
 # Common utility functions to be sourced by the libftl test scripts
 
-function get_chunk_size() {
-	$SPDK_EXAMPLE_DIR/identify -r "trtype:PCIe traddr:$1" \
-		| grep 'Logical blks per chunk' | sed 's/[^0-9]//g'
-}
-
-function get_num_group() {
-	$SPDK_EXAMPLE_DIR/identify -r "trtype:PCIe traddr:$1" \
-		| grep 'Groups' | sed 's/[^0-9]//g'
-}
-
-function get_num_pu() {
-	$SPDK_EXAMPLE_DIR/identify -r "trtype:PCIe traddr:$1" \
-		| grep 'PUs' | sed 's/[^0-9]//g'
-}
-
-function gen_ftl_nvme_conf() {
-	jq . <<- JSON
-		{
-		  "subsystems": [
-		    {
-		      "subsystem": "bdev",
-		      "config": [
-		        {
-		          "params": {
-		            "nvme_adminq_poll_period_us": 100
-		          },
-		          "method": "bdev_nvme_set_options"
-		        }
-		      ]
-		    }
-		  ]
-		}
-	JSON
-}
-
-get_ftl_nvme_dev() {
-	# Find device with LBA matching the FTL_BLOCK_SIZE
-	local nvmes nvme identify lba
-
-	for nvme in $(nvme_in_userspace); do
-		identify=$("$SPDK_EXAMPLE_DIR/identify" -r trtype:pcie -r "traddr:$nvme")
-		# TODO: Skip zoned nvme devices - such setup for FTL is currently not
-		# supported. See https://github.com/spdk/spdk/issues/1992 for details.
-		[[ $identity =~ "NVMe ZNS Zone Report" ]] && continue
-		[[ $identify =~ "Current LBA Format:"\ +"LBA Format #"([0-9]+) ]]
-		[[ $identify =~ "LBA Format #${BASH_REMATCH[1]}: Data Size:"\ +([0-9]+) ]]
-		lba=${BASH_REMATCH[1]}
-		((lba && lba % FTL_BLOCK_SIZE == 0)) && nvmes+=("$nvme")
+function clear_lvols() {
+	stores=$("$rootdir/scripts/rpc.py" bdev_lvol_get_lvstores | jq -r ".[] | .uuid")
+	for lvs in $stores; do
+		"$rootdir/scripts/rpc.py" bdev_lvol_delete_lvstore -u $lvs
 	done
-	((${#nvmes[@]} > 0)) || return 1
-	printf '%s\n' "${nvmes[@]}"
 }
 
-bdev_create_zone() {
-	local base_bdev=$1
+function create_nv_cache_bdev() {
+	local name=$1
+	local cache_bdf=$2
+	local base_bdev=$3
 
-	# TODO: Consider use of ZNSed nvme controllers
-	"$rpc_py" bdev_zone_block_create \
-		-b "$ZONE_DEV" \
-		-o "$OPTIMAL_OPEN_ZONES" \
-		-z "$ZONE_CAPACITY" \
-		-n "$base_bdev"
+	# use 5% space of base bdev
+	local size=$(($(get_bdev_size $base_bdev) * 5 / 100))
+
+	# Create NVMe bdev on specified device and split it so that it has the desired size
+	local nvc_bdev
+	nvc_bdev=$($rootdir/scripts/rpc.py bdev_nvme_attach_controller -b $name -t PCIe -a $cache_bdf)
+
+	local nvc_size
+	nvc_size=$(get_bdev_size $nvc_bdev)
+	if [[ $size -gt $nvc_size ]]; then
+		size=nvc_size
+	fi
+	$rootdir/scripts/rpc.py bdev_split_create $nvc_bdev -s $size 1
 }
 
-bdev_delete_zone() {
-	local zone_dev=$1
+function create_base_bdev() {
+	local name=$1
+	local base_bdf=$2
+	local size=$3
 
-	# TODO: Consider use of ZNSed nvme controllers
-	"$rpc_py" bdev_zone_block_delete "$zone_dev"
+	# Create NVMe bdev on specified device and split it so that it has the desired size
+	local base_bdev
+	base_bdev=$($rootdir/scripts/rpc.py bdev_nvme_attach_controller -b $name -t PCIe -a $base_bdf)
+
+	local base_size
+	base_size=$(get_bdev_size $base_bdev)
+	if [[ $size -le $base_size ]]; then
+		$rootdir/scripts/rpc.py bdev_split_create $base_bdev -s $size 1
+	else
+		clear_lvols
+		lvs=$($rootdir/scripts/rpc.py bdev_lvol_create_lvstore $base_bdev lvs)
+		$rootdir/scripts/rpc.py bdev_lvol_create ${base_bdev}p0 $size -t -u $lvs
+	fi
 }
 
-# Optimal number of zones refers to the number of zones that need to be written at the same
-# time in order to maximize drive's write bandwidth.
-# ZONE_CAPACITY * FTL_BLOCK_SIZE * OPTIMAL_OPEN_ZONES should be <= size of the drive.
-FTL_BLOCK_SIZE=4096
-ZONE_CAPACITY=4096
-OPTIMAL_OPEN_ZONES=32
-ZONE_DEV=zone0
-
-rpc_py=$rootdir/scripts/rpc.py
+# Remove not needed files from shared memory
+function remove_shm() {
+	echo Remove shared memory files
+	rm -f rm -f /dev/shm/ftl*
+	rm -f rm -f /dev/hugepages/ftl*
+	rm -f rm -f /dev/shm/spdk*
+	rm -f rm -f /dev/shm/iscsi
+	rm -f rm -f /dev/hugepages/spdk*
+}

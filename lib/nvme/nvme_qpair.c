@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2015 Intel Corporation.
  *   All rights reserved.
  *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "nvme_internal.h"
@@ -136,6 +108,7 @@ static const struct nvme_string sgl_type[] = {
 	{ SPDK_NVME_SGL_TYPE_BIT_BUCKET, "BIT BUCKET" },
 	{ SPDK_NVME_SGL_TYPE_SEGMENT, "SEGMENT" },
 	{ SPDK_NVME_SGL_TYPE_LAST_SEGMENT, "LAST SEGMENT" },
+	{ SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK, "KEYED DATA BLOCK" },
 	{ SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK, "TRANSPORT DATA BLOCK" },
 	{ SPDK_NVME_SGL_TYPE_VENDOR_SPECIFIC, "VENDOR SPECIFIC" },
 	{ 0xFFFF, "RESERVED" }
@@ -191,11 +164,11 @@ nvme_get_sgl(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
 		     nvme_get_string(sgl_subtype, sgl->generic.subtype), sgl->address);
 	assert(c >= 0 && (size_t)c < size);
 
-	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
+	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK) {
 		nvme_get_sgl_unkeyed(buf + c, size - c, cmd);
 	}
 
-	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK) {
+	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
 		nvme_get_sgl_keyed(buf + c, size - c, cmd);
 	}
 }
@@ -306,6 +279,15 @@ spdk_nvme_qpair_print_command(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cm
 	spdk_nvme_print_command(qpair->id, cmd);
 }
 
+static const struct nvme_string status_type[] = {
+	{ SPDK_NVME_SCT_GENERIC, "GENERIC" },
+	{ SPDK_NVME_SCT_COMMAND_SPECIFIC, "COMMAND SPECIFIC" },
+	{ SPDK_NVME_SCT_MEDIA_ERROR, "MEDIA ERROR" },
+	{ SPDK_NVME_SCT_PATH, "PATH" },
+	{ SPDK_NVME_SCT_VENDOR_SPECIFIC, "VENDOR SPECIFIC" },
+	{ 0xFFFF, "RESERVED" },
+};
+
 static const struct nvme_string generic_status[] = {
 	{ SPDK_NVME_SC_SUCCESS, "SUCCESS" },
 	{ SPDK_NVME_SC_INVALID_OPCODE, "INVALID OPCODE" },
@@ -338,11 +320,19 @@ static const struct nvme_string generic_status[] = {
 	{ SPDK_NVME_SC_SANITIZE_IN_PROGRESS, "SANITIZE IN PROGRESS" },
 	{ SPDK_NVME_SC_SGL_DATA_BLOCK_GRANULARITY_INVALID, "DATA BLOCK GRANULARITY INVALID" },
 	{ SPDK_NVME_SC_COMMAND_INVALID_IN_CMB, "COMMAND NOT SUPPORTED FOR QUEUE IN CMB" },
+	{ SPDK_NVME_SC_COMMAND_NAMESPACE_IS_PROTECTED, "COMMAND NAMESPACE IS PROTECTED" },
+	{ SPDK_NVME_SC_COMMAND_INTERRUPTED, "COMMAND INTERRUPTED" },
+	{ SPDK_NVME_SC_COMMAND_TRANSIENT_TRANSPORT_ERROR, "COMMAND TRANSIENT TRANSPORT ERROR" },
 	{ SPDK_NVME_SC_LBA_OUT_OF_RANGE, "LBA OUT OF RANGE" },
 	{ SPDK_NVME_SC_CAPACITY_EXCEEDED, "CAPACITY EXCEEDED" },
 	{ SPDK_NVME_SC_NAMESPACE_NOT_READY, "NAMESPACE NOT READY" },
 	{ SPDK_NVME_SC_RESERVATION_CONFLICT, "RESERVATION CONFLICT" },
 	{ SPDK_NVME_SC_FORMAT_IN_PROGRESS, "FORMAT IN PROGRESS" },
+	{ SPDK_NVME_SC_INVALID_VALUE_SIZE, "INVALID VALUE SIZE" },
+	{ SPDK_NVME_SC_INVALID_KEY_SIZE, "INVALID KEY SIZE" },
+	{ SPDK_NVME_SC_KV_KEY_DOES_NOT_EXIST, "KV KEY DOES NOT EXIST" },
+	{ SPDK_NVME_SC_UNRECOVERED_ERROR, "UNRECOVERED ERROR" },
+	{ SPDK_NVME_SC_KEY_EXISTS, "KEY EXISTS" },
 	{ 0xFFFF, "GENERIC" }
 };
 
@@ -380,10 +370,30 @@ static const struct nvme_string command_specific_status[] = {
 	{ SPDK_NVME_SC_INVALID_SECONDARY_CTRLR_STATE, "INVALID SECONDARY CONTROLLER STATE" },
 	{ SPDK_NVME_SC_INVALID_NUM_CTRLR_RESOURCES, "INVALID NUMBER OF CONTROLLER RESOURCES" },
 	{ SPDK_NVME_SC_INVALID_RESOURCE_ID, "INVALID RESOURCE IDENTIFIER" },
+	{ SPDK_NVME_SC_SANITIZE_PROHIBITED, "SANITIZE PROHIBITED" },
+	{ SPDK_NVME_SC_ANA_GROUP_IDENTIFIER_INVALID, "ANA GROUP IDENTIFIER INVALID" },
+	{ SPDK_NVME_SC_ANA_ATTACH_FAILED, "ANA ATTACH FAILED" },
+	{ SPDK_NVME_SC_INSUFFICIENT_CAPACITY, "INSUFFICIENT CAPACITY" },
+	{ SPDK_NVME_SC_NAMESPACE_ATTACH_LIMIT_EXCEEDED, "NAMESPACE ATTACH LIMIT EXCEEDED" },
+	{ SPDK_NVME_SC_PROHIBIT_CMD_EXEC_NOT_SUPPORTED, "PROHIBIT COMMAND EXEC NOT SUPPORTED" },
+	{ SPDK_NVME_SC_IOCS_NOT_SUPPORTED, "IOCS NOT SUPPORTED" },
+	{ SPDK_NVME_SC_IOCS_NOT_ENABLED, "IOCS NOT ENABLED" },
+	{ SPDK_NVME_SC_IOCS_COMBINATION_REJECTED, "IOCS COMBINATION REJECTED" },
+	{ SPDK_NVME_SC_INVALID_IOCS, "INVALID IOCS" },
+	{ SPDK_NVME_SC_IDENTIFIER_UNAVAILABLE, "IDENTIFIER UNAVAILABLE" },
 	{ SPDK_NVME_SC_STREAM_RESOURCE_ALLOCATION_FAILED, "STREAM RESOURCE ALLOCATION FAILED"},
 	{ SPDK_NVME_SC_CONFLICTING_ATTRIBUTES, "CONFLICTING ATTRIBUTES" },
 	{ SPDK_NVME_SC_INVALID_PROTECTION_INFO, "INVALID PROTECTION INFO" },
 	{ SPDK_NVME_SC_ATTEMPTED_WRITE_TO_RO_RANGE, "WRITE TO RO RANGE" },
+	{ SPDK_NVME_SC_CMD_SIZE_LIMIT_SIZE_EXCEEDED, "CMD SIZE LIMIT SIZE EXCEEDED" },
+	{ SPDK_NVME_SC_ZONED_BOUNDARY_ERROR, "ZONED BOUNDARY ERROR" },
+	{ SPDK_NVME_SC_ZONE_IS_FULL, "ZONE IS FULL" },
+	{ SPDK_NVME_SC_ZONE_IS_READ_ONLY, "ZONE IS READ ONLY" },
+	{ SPDK_NVME_SC_ZONE_IS_OFFLINE, "ZONE IS OFFLINE" },
+	{ SPDK_NVME_SC_ZONE_INVALID_WRITE, "ZONE INVALID WRITE" },
+	{ SPDK_NVME_SC_TOO_MANY_ACTIVE_ZONES, "TOO MANY ACTIVE ZONES" },
+	{ SPDK_NVME_SC_TOO_MANY_OPEN_ZONES, "TOO MANY OPEN ZONES" },
+	{ SPDK_NVME_SC_INVALID_ZONE_STATE_TRANSITION, "INVALID ZONE STATE TRANSITION" },
 	{ 0xFFFF, "COMMAND SPECIFIC" }
 };
 
@@ -396,6 +406,7 @@ static const struct nvme_string media_error_status[] = {
 	{ SPDK_NVME_SC_COMPARE_FAILURE, "COMPARE FAILURE" },
 	{ SPDK_NVME_SC_ACCESS_DENIED, "ACCESS DENIED" },
 	{ SPDK_NVME_SC_DEALLOCATED_OR_UNWRITTEN_BLOCK, "DEALLOCATED OR UNWRITTEN BLOCK" },
+	{ SPDK_NVME_SC_END_TO_END_STORAGE_TAG_CHECK_ERROR, "END TO END STORAGE TAG CHECK ERROR" },
 	{ SPDK_OCSSD_SC_OFFLINE_CHUNK, "RESET OFFLINE CHUNK" },
 	{ SPDK_OCSSD_SC_INVALID_RESET, "INVALID RESET" },
 	{ SPDK_OCSSD_SC_WRITE_FAIL_WRITE_NEXT_UNIT, "WRITE FAIL WRITE NEXT UNIT" },
@@ -407,6 +418,9 @@ static const struct nvme_string media_error_status[] = {
 
 static const struct nvme_string path_status[] = {
 	{ SPDK_NVME_SC_INTERNAL_PATH_ERROR, "INTERNAL PATH ERROR" },
+	{ SPDK_NVME_SC_ASYMMETRIC_ACCESS_PERSISTENT_LOSS, "ASYMMETRIC ACCESS PERSISTENT LOSS" },
+	{ SPDK_NVME_SC_ASYMMETRIC_ACCESS_INACCESSIBLE, "ASYMMETRIC ACCESS INACCESSIBLE" },
+	{ SPDK_NVME_SC_ASYMMETRIC_ACCESS_TRANSITION, "ASYMMETRIC ACCESS TRANSITION" },
 	{ SPDK_NVME_SC_CONTROLLER_PATH_ERROR, "CONTROLLER PATH ERROR" },
 	{ SPDK_NVME_SC_HOST_PATH_ERROR, "HOST PATH ERROR" },
 	{ SPDK_NVME_SC_ABORTED_BY_HOST, "ABORTED BY HOST" },
@@ -438,6 +452,12 @@ spdk_nvme_cpl_get_status_string(const struct spdk_nvme_status *status)
 	}
 
 	return nvme_get_string(entry, status->sc);
+}
+
+const char *
+spdk_nvme_cpl_get_status_type_string(const struct spdk_nvme_status *status)
+{
+	return nvme_get_string(status_type, status->sct);
 }
 
 void
@@ -560,7 +580,7 @@ nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 			SPDK_ERRLOG("aborting queued i/o\n");
 		}
 		nvme_qpair_manual_complete_request(qpair, req, SPDK_NVME_SCT_GENERIC,
-						   SPDK_NVME_SC_ABORTED_BY_REQUEST, dnr, true);
+						   SPDK_NVME_SC_ABORTED_SQ_DELETION, dnr, true);
 	}
 }
 
@@ -597,14 +617,17 @@ nvme_qpair_abort_queued_reqs_with_cbarg(struct spdk_nvme_qpair *qpair, void *cmd
 	uint32_t		aborting = 0;
 
 	STAILQ_FOREACH_SAFE(req, &qpair->queued_req, stailq, tmp) {
-		if (req->cb_arg == cmd_cb_arg) {
-			STAILQ_REMOVE(&qpair->queued_req, req, nvme_request, stailq);
-			STAILQ_INSERT_TAIL(&qpair->aborting_queued_req, req, stailq);
-			if (!qpair->ctrlr->opts.disable_error_logging) {
-				SPDK_ERRLOG("aborting queued i/o\n");
-			}
-			aborting++;
+		if ((req->cb_arg != cmd_cb_arg) &&
+		    (req->parent == NULL || req->parent->cb_arg != cmd_cb_arg)) {
+			continue;
 		}
+
+		STAILQ_REMOVE(&qpair->queued_req, req, nvme_request, stailq);
+		STAILQ_INSERT_TAIL(&qpair->aborting_queued_req, req, stailq);
+		if (!qpair->ctrlr->opts.disable_error_logging) {
+			SPDK_ERRLOG("aborting queued i/o\n");
+		}
+		aborting++;
 	}
 
 	return aborting;
@@ -694,13 +717,22 @@ nvme_qpair_resubmit_requests(struct spdk_nvme_qpair *qpair, uint32_t num_request
 static void
 nvme_complete_register_operations(struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_register_completion *ctx;
+	struct nvme_register_completion *ctx, *tmp;
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
 	STAILQ_HEAD(, nvme_register_completion) operations;
 
 	STAILQ_INIT(&operations);
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
-	STAILQ_SWAP(&ctrlr->register_operations, &operations, nvme_register_completion);
+	STAILQ_FOREACH_SAFE(ctx, &ctrlr->register_operations, stailq, tmp) {
+		/* We need to make sure we complete the register operation in
+		 * the correct process.
+		 */
+		if (ctx->pid != getpid()) {
+			continue;
+		}
+		STAILQ_REMOVE(&ctrlr->register_operations, ctx, nvme_register_completion, stailq);
+		STAILQ_INSERT_TAIL(&operations, ctx, stailq);
+	}
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	while (!STAILQ_EMPTY(&operations)) {
@@ -709,7 +741,7 @@ nvme_complete_register_operations(struct spdk_nvme_qpair *qpair)
 		if (ctx->cb_fn != NULL) {
 			ctx->cb_fn(ctx->cb_ctx, ctx->value, &ctx->cpl);
 		}
-		free(ctx);
+		spdk_free(ctx);
 	}
 }
 
@@ -718,6 +750,11 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 {
 	int32_t ret;
 	struct nvme_request *req, *tmp;
+
+	/* Complete any pending register operations */
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		nvme_complete_register_operations(qpair);
+	}
 
 	if (spdk_unlikely(qpair->ctrlr->is_failed &&
 			  nvme_qpair_get_state(qpair) != NVME_QPAIR_DISCONNECTING)) {
@@ -780,11 +817,8 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	 */
 	if (ret > 0) {
 		nvme_qpair_resubmit_requests(qpair, ret);
-	}
-
-	/* Complete any pending register operations */
-	if (nvme_qpair_is_admin_queue(qpair)) {
-		nvme_complete_register_operations(qpair);
+	} else {
+		_nvme_qpair_complete_abort_queued_reqs(qpair);
 	}
 
 	return ret;
@@ -818,6 +852,7 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 	qpair->is_new_qpair = true;
 	qpair->async = async;
 	qpair->poll_status = NULL;
+	qpair->num_outstanding_reqs = 0;
 
 	STAILQ_INIT(&qpair->free_req);
 	STAILQ_INIT(&qpair->queued_req);
@@ -907,11 +942,9 @@ _nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *r
 			nvme_request_free_children(child_req);
 			nvme_free_request(child_req);
 		}
-		if (req->parent != NULL) {
-			nvme_request_remove_child(req->parent, req);
-		}
-		nvme_free_request(req);
-		return -ENXIO;
+
+		rc = -ENXIO;
+		goto error;
 	}
 
 	if (req->num_children) {
@@ -1023,6 +1056,10 @@ error:
 		return rc;
 	}
 
+	if (req->user_buffer && req->payload_size) {
+		spdk_free(req->payload.contig_or_cb_arg);
+	}
+
 	nvme_free_request(req);
 
 	return rc;
@@ -1085,6 +1122,9 @@ nvme_qpair_abort_all_queued_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	nvme_qpair_complete_error_reqs(qpair);
 	nvme_qpair_abort_queued_reqs(qpair, dnr);
 	_nvme_qpair_complete_abort_queued_reqs(qpair);
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		nvme_ctrlr_abort_queued_aborts(qpair->ctrlr);
+	}
 }
 
 int
@@ -1162,4 +1202,10 @@ uint16_t
 spdk_nvme_qpair_get_id(struct spdk_nvme_qpair *qpair)
 {
 	return qpair->id;
+}
+
+uint32_t
+spdk_nvme_qpair_get_num_outstanding_reqs(struct spdk_nvme_qpair *qpair)
+{
+	return qpair->num_outstanding_reqs;
 }

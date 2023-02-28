@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2016 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
@@ -13,7 +16,6 @@ fi
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
-rpc_py="$rootdir/scripts/rpc.py"
 devs=()
 
 nvmftestinit
@@ -32,7 +34,7 @@ $rpc_py nvmf_subsystem_add_listener discovery -t $TEST_TRANSPORT -a $NVMF_FIRST_
 
 nvme discover -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
 devs=($(get_nvme_devs)) nvme_num_before_connection=${#devs[@]}
-nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+$NVME_CONNECT -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 waitforserial $NVMF_SERIAL 2
 if [[ -z $(get_nvme_devs) ]]; then
@@ -61,6 +63,7 @@ done
 
 devs=($(get_nvme_devs)) nvme_num=${#devs[@]}
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
+waitforserial_disconnect "$NVMF_SERIAL"
 if ((nvme_num <= nvme_num_before_connection)); then
 	echo "nvme-cli connect target devices failed"
 	exit 1

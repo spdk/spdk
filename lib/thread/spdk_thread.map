@@ -6,8 +6,10 @@
 	spdk_thread_lib_init_ext;
 	spdk_thread_lib_fini;
 	spdk_thread_create;
+	spdk_thread_get_app_thread;
 	spdk_set_thread;
 	spdk_thread_exit;
+	spdk_thread_is_running;
 	spdk_thread_is_exited;
 	spdk_thread_destroy;
 	spdk_thread_get_ctx;
@@ -53,8 +55,23 @@
 	spdk_interrupt_unregister;
 	spdk_interrupt_set_event_types;
 	spdk_thread_get_interrupt_fd;
+	spdk_thread_get_interrupt_fd_group;
 	spdk_interrupt_mode_enable;
 	spdk_interrupt_mode_is_enabled;
+	spdk_spin_init;
+	spdk_spin_destroy;
+	spdk_spin_lock;
+	spdk_spin_unlock;
+	spdk_spin_held;
+	spdk_iobuf_initialize;
+	spdk_iobuf_finish;
+	spdk_iobuf_set_opts;
+	spdk_iobuf_get_opts;
+	spdk_iobuf_channel_init;
+	spdk_iobuf_channel_fini;
+	spdk_iobuf_register_module;
+	spdk_iobuf_for_each_entry;
+	spdk_iobuf_entry_abort;
 
 	# internal functions in spdk_internal/thread.h
 	spdk_poller_get_name;

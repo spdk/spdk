@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2018 Intel Corporation
+#  All rights reserved.
+#  Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Environment variables:
 #  $valgrind    Specify the valgrind command line, if not
@@ -16,6 +20,8 @@ function unittest_bdev() {
 	$valgrind $testdir/lib/bdev/bdev.c/bdev_ut
 	$valgrind $testdir/lib/bdev/nvme/bdev_nvme.c/bdev_nvme_ut
 	$valgrind $testdir/lib/bdev/raid/bdev_raid.c/bdev_raid_ut
+	$valgrind $testdir/lib/bdev/raid/concat.c/concat_ut
+	$valgrind $testdir/lib/bdev/raid/raid1.c/raid1_ut
 	$valgrind $testdir/lib/bdev/bdev_zone.c/bdev_zone_ut
 	$valgrind $testdir/lib/bdev/gpt/gpt.c/gpt_ut
 	$valgrind $testdir/lib/bdev/part.c/part_ut
@@ -31,6 +37,7 @@ function unittest_blob() {
 	if [[ -e $testdir/lib/blob/blob.c/blob_ut ]]; then
 		$valgrind $testdir/lib/blob/blob.c/blob_ut
 	fi
+	$valgrind $testdir/lib/blob/blob_bdev.c/blob_bdev_ut
 	$valgrind $testdir/lib/blobfs/tree.c/tree_ut
 	$valgrind $testdir/lib/blobfs/blobfs_async_ut/blobfs_async_ut
 	# blobfs_sync_ut hangs when run under valgrind, so don't use $valgrind
@@ -44,12 +51,14 @@ function unittest_event() {
 }
 
 function unittest_ftl() {
-	$valgrind $testdir/lib/ftl/ftl_ppa/ftl_ppa_ut
 	$valgrind $testdir/lib/ftl/ftl_band.c/ftl_band_ut
-	$valgrind $testdir/lib/ftl/ftl_reloc.c/ftl_reloc_ut
-	$valgrind $testdir/lib/ftl/ftl_wptr/ftl_wptr_ut
-	$valgrind $testdir/lib/ftl/ftl_md/ftl_md_ut
+	$valgrind $testdir/lib/ftl/ftl_bitmap.c/ftl_bitmap_ut
 	$valgrind $testdir/lib/ftl/ftl_io.c/ftl_io_ut
+	$valgrind $testdir/lib/ftl/ftl_mngt/ftl_mngt_ut
+	$valgrind $testdir/lib/ftl/ftl_mempool.c/ftl_mempool_ut
+	$valgrind $testdir/lib/ftl/ftl_l2p/ftl_l2p_ut
+	$valgrind $testdir/lib/ftl/ftl_sb/ftl_sb_ut
+	$valgrind $testdir/lib/ftl/ftl_layout_upgrade/ftl_layout_upgrade_ut
 }
 
 function unittest_iscsi() {
@@ -130,19 +139,33 @@ function unittest_util() {
 	$valgrind $testdir/lib/util/iov.c/iov_ut
 	$valgrind $testdir/lib/util/math.c/math_ut
 	$valgrind $testdir/lib/util/pipe.c/pipe_ut
+	$valgrind $testdir/lib/util/xor.c/xor_ut
 }
 
 function unittest_init() {
 	$valgrind $testdir/lib/init/subsystem.c/subsystem_ut
 }
 
+if [ $SPDK_RUN_VALGRIND -eq 1 ] && [ $SPDK_RUN_ASAN -eq 1 ]; then
+	echo "ERR: Tests cannot be run if both SPDK_RUN_VALGRIND and SPDK_RUN_ASAN options are selected simultaneously"
+	exit 1
+fi
+
 # if ASAN is enabled, use it.  If not use valgrind if installed but allow
 # the env variable to override the default shown below.
 if [ -z ${valgrind+x} ]; then
 	if grep -q '#undef SPDK_CONFIG_ASAN' $rootdir/include/spdk/config.h && hash valgrind; then
-		valgrind='valgrind --leak-check=full --error-exitcode=2'
+		valgrind='valgrind --leak-check=full --error-exitcode=2 --verbose'
 	else
 		valgrind=''
+	fi
+fi
+if [ $SPDK_RUN_VALGRIND -eq 1 ]; then
+	if [ -n "$valgrind" ]; then
+		run_test "valgrind" echo "Using valgrind for unit tests"
+	else
+		echo "ERR: SPDK_RUN_VALGRIND option is enabled but valgrind is not available"
+		exit 1
 	fi
 fi
 
@@ -158,8 +181,10 @@ else
 fi
 if [ "$cov_avail" = "yes" ]; then
 	# set unit test output dir if not specified in env var
-	if [ -z ${UT_COVERAGE+x} ]; then
+	if [[ -z $output_dir ]]; then
 		UT_COVERAGE="ut_coverage"
+	else
+		UT_COVERAGE=$output_dir/ut_coverage
 	fi
 	mkdir -p $UT_COVERAGE
 	export LCOV_OPTS="
@@ -185,18 +210,24 @@ run_test "unittest_include" $valgrind $testdir/include/spdk/histogram_data.h/his
 run_test "unittest_bdev" unittest_bdev
 if grep -q '#define SPDK_CONFIG_CRYPTO 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_bdev_crypto" $valgrind $testdir/lib/bdev/crypto.c/crypto_ut
+	run_test "unittest_bdev_crypto" $valgrind $testdir/lib/accel/dpdk_cryptodev.c/accel_dpdk_cryptodev_ut
 fi
 
-if grep -q '#define SPDK_CONFIG_REDUCE 1' $rootdir/include/spdk/config.h; then
-	run_test "unittest_bdev_reduce" $valgrind $testdir/lib/bdev/compress.c/compress_ut
+if grep -q '#define SPDK_CONFIG_VBDEV_COMPRESS 1' $rootdir/include/spdk/config.h; then
+	run_test "unittest_bdev_compress" $valgrind $testdir/lib/bdev/compress.c/compress_ut
+	run_test "unittest_lib_reduce" $valgrind $testdir/lib/reduce/reduce.c/reduce_ut
+fi
+
+if grep -q '#define SPDK_CONFIG_DPDK_COMPRESSDEV 1' $rootdir/include/spdk/config.h; then
+	run_test "unittest_dpdk_compressdev" $valgrind $testdir/lib/accel/dpdk_compressdev.c/accel_dpdk_compressdev_ut
 fi
 
 if grep -q '#define SPDK_CONFIG_PMDK 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_bdev_pmem" $valgrind $testdir/lib/bdev/pmem/bdev_pmem_ut
 fi
 
-if grep -q '#define SPDK_CONFIG_RAID5 1' $rootdir/include/spdk/config.h; then
-	run_test "unittest_bdev_raid5" $valgrind $testdir/lib/bdev/raid/raid5.c/raid5_ut
+if grep -q '#define SPDK_CONFIG_RAID5F 1' $rootdir/include/spdk/config.h; then
+	run_test "unittest_bdev_raid5f" $valgrind $testdir/lib/bdev/raid/raid5f.c/raid5f_ut
 fi
 
 run_test "unittest_blob_blobfs" unittest_blob
@@ -205,7 +236,7 @@ if [ $(uname -s) = Linux ]; then
 	run_test "unittest_ftl" unittest_ftl
 fi
 
-run_test "unittest_accel" $valgrind $testdir/lib/accel/accel.c/accel_engine_ut
+run_test "unittest_accel" $valgrind $testdir/lib/accel/accel.c/accel_ut
 run_test "unittest_ioat" $valgrind $testdir/lib/ioat/ioat.c/ioat_ut
 if grep -q '#define SPDK_CONFIG_IDXD 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_idxd_user" $valgrind $testdir/lib/idxd/idxd_user.c/idxd_user_ut
@@ -220,6 +251,7 @@ run_test "unittest_lvol" $valgrind $testdir/lib/lvol/lvol.c/lvol_ut
 if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_nvme_rdma" $valgrind $testdir/lib/nvme/nvme_rdma.c/nvme_rdma_ut
 	run_test "unittest_nvmf_transport" $valgrind $testdir/lib/nvmf/transport.c/transport_ut
+	run_test "unittest_rdma" $valgrind $testdir/lib/rdma/common.c/common_ut
 fi
 
 if grep -q '#define SPDK_CONFIG_NVME_CUSE 1' $rootdir/include/spdk/config.h; then
@@ -254,13 +286,14 @@ if [ "$cov_avail" = "yes" ] && ! [[ "$CC_TYPE" == *"clang"* ]]; then
 	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info "$rootdir/app/*" -o $UT_COVERAGE/ut_cov_unit.info
 	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info "$rootdir/dpdk/*" -o $UT_COVERAGE/ut_cov_unit.info
 	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info "$rootdir/examples/*" -o $UT_COVERAGE/ut_cov_unit.info
-	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info "$rootdir/include/*" -o $UT_COVERAGE/ut_cov_unit.info
 	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info "$rootdir/lib/vhost/rte_vhost/*" -o $UT_COVERAGE/ut_cov_unit.info
 	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info "$rootdir/test/*" -o $UT_COVERAGE/ut_cov_unit.info
 	rm -f $UT_COVERAGE/ut_cov_base.info $UT_COVERAGE/ut_cov_test.info
 	genhtml $UT_COVERAGE/ut_cov_unit.info --output-directory $UT_COVERAGE
 	# git -C option not used for compatibility reasons
-	(cd $rootdir && git clean -f "*.gcda")
+	owner=$(stat -c "%U" $rootdir)
+	cd $rootdir
+	sudo -u $owner git clean -f "*.gcda"
 fi
 
 set +x

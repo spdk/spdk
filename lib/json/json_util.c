@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/json.h"
@@ -558,11 +530,17 @@ spdk_json_find(struct spdk_json_val *object, const char *key_name, struct spdk_j
 {
 	struct spdk_json_val *_key = NULL;
 	struct spdk_json_val *_val = NULL;
-	struct spdk_json_val *it;
+	struct spdk_json_val *it_first, *it;
 
 	assert(object != NULL);
 
-	for (it = json_first(object, SPDK_JSON_VAL_ARRAY_BEGIN | SPDK_JSON_VAL_OBJECT_BEGIN);
+	it_first = json_first(object, SPDK_JSON_VAL_OBJECT_BEGIN);
+	if (!it_first) {
+		SPDK_JSON_DEBUG("Not enclosed in {}\n");
+		return -EPROTOTYPE;
+	}
+
+	for (it = it_first;
 	     it != NULL;
 	     it = spdk_json_next(it)) {
 		if (it->type != SPDK_JSON_VAL_NAME) {
@@ -581,7 +559,7 @@ spdk_json_find(struct spdk_json_val *object, const char *key_name, struct spdk_j
 		_key = it;
 		_val = json_value(_key);
 
-		if (type != SPDK_JSON_VAL_INVALID && (_val->type & type) == 0) {
+		if (type != SPDK_JSON_VAL_ANY && (_val->type & type) == 0) {
 			SPDK_JSON_DEBUG("key '%s' type is %#x but expected one of %#x\n", key_name, _val->type, type);
 			return -EDOM;
 		}

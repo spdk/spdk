@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef SPDK_BDEV_RAID_INTERNAL_H
@@ -39,7 +11,9 @@
 enum raid_level {
 	INVALID_RAID_LEVEL	= -1,
 	RAID0			= 0,
-	RAID5			= 5,
+	RAID1			= 1,
+	RAID5F			= 95, /* 0x5f */
+	CONCAT			= 99,
 };
 
 /*
@@ -62,8 +36,8 @@ enum raid_bdev_state {
 	 */
 	RAID_BDEV_STATE_OFFLINE,
 
-	/* raid bdev max, new states should be added before this */
-	RAID_BDEV_MAX
+	/* raid bdev state max, new states should be added before this */
+	RAID_BDEV_STATE_MAX
 };
 
 /*
@@ -72,6 +46,9 @@ enum raid_bdev_state {
  * required per base device for raid bdev will be kept here
  */
 struct raid_base_bdev_info {
+	/* name of the bdev */
+	char			*name;
+
 	/* pointer to base spdk bdev */
 	struct spdk_bdev	*bdev;
 
@@ -85,8 +62,8 @@ struct raid_base_bdev_info {
 	 */
 	bool			remove_scheduled;
 
-	/* thread where base device is opened */
-	struct spdk_thread	*thread;
+	/* Hold the number of blocks to know how large the base bdev is resized. */
+	uint64_t		blockcnt;
 };
 
 /*
@@ -107,6 +84,9 @@ struct raid_bdev_io {
 	uint64_t			base_bdev_io_remaining;
 	uint8_t				base_bdev_io_submitted;
 	uint8_t				base_bdev_io_status;
+
+	/* Private data for the raid module */
+	void				*module_private;
 };
 
 /*
@@ -118,14 +98,8 @@ struct raid_bdev {
 	/* raid bdev device, this will get registered in bdev layer */
 	struct spdk_bdev		bdev;
 
-	/* link of raid bdev to link it to configured, configuring or offline list */
-	TAILQ_ENTRY(raid_bdev)		state_link;
-
 	/* link of raid bdev to link it to global raid bdev list */
 	TAILQ_ENTRY(raid_bdev)		global_link;
-
-	/* pointer to config file entry */
-	struct raid_bdev_config		*config;
 
 	/* array of base bdev info */
 	struct raid_base_bdev_info	*base_bdev_info;
@@ -151,11 +125,11 @@ struct raid_bdev {
 	/* number of base bdevs discovered */
 	uint8_t				num_base_bdevs_discovered;
 
+	/* minimum number of viable base bdevs that are required by array to operate */
+	uint8_t				min_base_bdevs_operational;
+
 	/* Raid Level of this raid bdev */
 	enum raid_level			level;
-
-	/* Set to true if destruct is called for this raid bdev */
-	bool				destruct_called;
 
 	/* Set to true if destroy of this raid bdev is started. */
 	bool				destroy_started;
@@ -171,52 +145,6 @@ struct raid_bdev {
 	for (i = r->base_bdev_info; i < r->base_bdev_info + r->num_base_bdevs; i++)
 
 /*
- * raid_base_bdev_config is the per base bdev data structure which contains
- * information w.r.t to per base bdev during parsing config
- */
-struct raid_base_bdev_config {
-	/* base bdev name from config file */
-	char				*name;
-};
-
-/*
- * raid_bdev_config contains the raid bdev config related information after
- * parsing the config file
- */
-struct raid_bdev_config {
-	/* base bdev config per underlying bdev */
-	struct raid_base_bdev_config	*base_bdev;
-
-	/* Points to already created raid bdev  */
-	struct raid_bdev		*raid_bdev;
-
-	char				*name;
-
-	/* strip size of this raid bdev in KB */
-	uint32_t			strip_size;
-
-	/* number of base bdevs */
-	uint8_t				num_base_bdevs;
-
-	/* raid level */
-	enum raid_level			level;
-
-	TAILQ_ENTRY(raid_bdev_config)	link;
-};
-
-/*
- * raid_config is the top level structure representing the raid bdev config as read
- * from config file for all raids
- */
-struct raid_config {
-	/* raid bdev  context from config file */
-	TAILQ_HEAD(, raid_bdev_config) raid_bdev_config_head;
-
-	/* total raid bdev  from config file */
-	uint8_t total_raid_bdev;
-};
-
-/*
  * raid_bdev_io_channel is the context of spdk_io_channel for raid bdev device. It
  * contains the relationship of raid bdev io channel with base bdev io channels.
  */
@@ -226,34 +154,28 @@ struct raid_bdev_io_channel {
 
 	/* Number of IO channels */
 	uint8_t			num_channels;
+
+	/* Private raid module IO channel */
+	struct spdk_io_channel	*module_channel;
 };
 
-/* TAIL heads for various raid bdev lists */
-TAILQ_HEAD(raid_configured_tailq, raid_bdev);
-TAILQ_HEAD(raid_configuring_tailq, raid_bdev);
+/* TAIL head for raid bdev list */
 TAILQ_HEAD(raid_all_tailq, raid_bdev);
-TAILQ_HEAD(raid_offline_tailq, raid_bdev);
 
-extern struct raid_configured_tailq	g_raid_bdev_configured_list;
-extern struct raid_configuring_tailq	g_raid_bdev_configuring_list;
 extern struct raid_all_tailq		g_raid_bdev_list;
-extern struct raid_offline_tailq	g_raid_bdev_offline_list;
-extern struct raid_config		g_raid_config;
 
 typedef void (*raid_bdev_destruct_cb)(void *cb_ctx, int rc);
 
-int raid_bdev_create(struct raid_bdev_config *raid_cfg);
-int raid_bdev_add_base_devices(struct raid_bdev_config *raid_cfg);
-void raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg,
-				   raid_bdev_destruct_cb cb_fn, void *cb_ctx);
-int raid_bdev_config_add(const char *raid_name, uint32_t strip_size, uint8_t num_base_bdevs,
-			 enum raid_level level, struct raid_bdev_config **_raid_cfg);
-int raid_bdev_config_add_base_bdev(struct raid_bdev_config *raid_cfg,
-				   const char *base_bdev_name, uint8_t slot);
-void raid_bdev_config_cleanup(struct raid_bdev_config *raid_cfg);
-struct raid_bdev_config *raid_bdev_config_find_by_name(const char *raid_name);
-enum raid_level raid_bdev_parse_raid_level(const char *str);
+int raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
+		     enum raid_level level, struct raid_bdev **raid_bdev_out);
+void raid_bdev_delete(struct raid_bdev *raid_bdev, raid_bdev_destruct_cb cb_fn, void *cb_ctx);
+int raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name, uint8_t slot);
+struct raid_bdev *raid_bdev_find_by_name(const char *name);
+enum raid_level raid_bdev_str_to_level(const char *str);
 const char *raid_bdev_level_to_str(enum raid_level level);
+enum raid_bdev_state raid_bdev_str_to_state(const char *str);
+const char *raid_bdev_state_to_str(enum raid_bdev_state state);
+void raid_bdev_write_info_json(struct raid_bdev *raid_bdev, struct spdk_json_write_ctx *w);
 
 /*
  * RAID module descriptor
@@ -266,10 +188,17 @@ struct raid_bdev_module {
 	uint8_t base_bdevs_min;
 
 	/*
-	 * Maximum number of base bdevs that can be removed without failing
-	 * the array.
+	 * RAID constraint. Determines number of base bdevs that can be removed
+	 * without failing the array.
 	 */
-	uint8_t base_bdevs_max_degraded;
+	struct {
+		enum {
+			CONSTRAINT_UNSET = 0,
+			CONSTRAINT_MAX_BASE_BDEVS_REMOVED,
+			CONSTRAINT_MIN_BASE_BDEVS_OPERATIONAL,
+		} type;
+		uint8_t value;
+	} base_bdevs_constraint;
 
 	/*
 	 * Called when the raid is starting, right before changing the state to
@@ -283,14 +212,30 @@ struct raid_bdev_module {
 	/*
 	 * Called when the raid is stopping, right before changing the state to
 	 * offline and unregistering the bdev. Optional.
+	 *
+	 * The function should return false if it is asynchronous. Then, after
+	 * the async operation has completed and the module is fully stopped
+	 * raid_bdev_module_stop_done() must be called.
 	 */
-	void (*stop)(struct raid_bdev *raid_bdev);
+	bool (*stop)(struct raid_bdev *raid_bdev);
 
 	/* Handler for R/W requests */
 	void (*submit_rw_request)(struct raid_bdev_io *raid_io);
 
 	/* Handler for requests without payload (flush, unmap). Optional. */
 	void (*submit_null_payload_request)(struct raid_bdev_io *raid_io);
+
+	/*
+	 * Called when the bdev's IO channel is created to get the module's private IO channel.
+	 * Optional.
+	 */
+	struct spdk_io_channel *(*get_io_channel)(struct raid_bdev *raid_bdev);
+
+	/*
+	 * Called when a base_bdev is resized to resize the raid if the condition
+	 * is satisfied.
+	 */
+	void (*resize)(struct raid_bdev *raid_bdev);
 
 	TAILQ_ENTRY(raid_bdev_module) link;
 };
@@ -307,13 +252,11 @@ __RAID_MODULE_REGISTER(__LINE__)(void)					\
     raid_bdev_module_list_add(_module);					\
 }
 
-bool
-raid_bdev_io_complete_part(struct raid_bdev_io *raid_io, uint64_t completed,
-			   enum spdk_bdev_io_status status);
-void
-raid_bdev_queue_io_wait(struct raid_bdev_io *raid_io, struct spdk_bdev *bdev,
-			struct spdk_io_channel *ch, spdk_bdev_io_wait_cb cb_fn);
-void
-raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status);
+bool raid_bdev_io_complete_part(struct raid_bdev_io *raid_io, uint64_t completed,
+				enum spdk_bdev_io_status status);
+void raid_bdev_queue_io_wait(struct raid_bdev_io *raid_io, struct spdk_bdev *bdev,
+			     struct spdk_io_channel *ch, spdk_bdev_io_wait_cb cb_fn);
+void raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status);
+void raid_bdev_module_stop_done(struct raid_bdev *raid_bdev);
 
 #endif /* SPDK_BDEV_RAID_INTERNAL_H */

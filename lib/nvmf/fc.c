@@ -1,35 +1,8 @@
-/*
- *   BSD LICENSE
- *
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2019 Intel Corporation.
  *   Copyright (c) 2018-2019 Broadcom.  All Rights Reserved.
  *   The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
  *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /*
@@ -1242,7 +1215,7 @@ nvmf_fc_req_bdev_abort(void *arg1)
 	 * Connect -> Special case (async. handling). Not sure how to
 	 * handle at this point. Let it run to completion.
 	 */
-	for (i = 0; i < NVMF_MAX_ASYNC_EVENTS; i++) {
+	for (i = 0; i < SPDK_NVMF_MAX_ASYNC_EVENTS; i++) {
 		if (ctrlr->aer_req[i] == &fc_req->req) {
 			SPDK_NOTICELOG("Abort AER request\n");
 			nvmf_qpair_free_aer(fc_req->req.qpair);
@@ -1960,8 +1933,7 @@ nvmf_fc_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->num_shared_buffers =   SPDK_NVMF_FC_DEFAULT_NUM_SHARED_BUFFERS;
 }
 
-static int
-nvmf_fc_accept(void *ctx);
+static int nvmf_fc_accept(void *ctx);
 
 static struct spdk_nvmf_transport *
 nvmf_fc_create(struct spdk_nvmf_transport_opts *opts)
@@ -3079,7 +3051,7 @@ nvmf_fc_adm_evnt_hw_port_offline(void *arg)
 
 		free(arg);
 
-		/* Wait untill all the hwqps are removed from poll groups. */
+		/* Wait until all the hwqps are removed from poll groups. */
 		return;
 	} else {
 		SPDK_ERRLOG("Unable to find the SPDK FC port %d\n", args->port_handle);

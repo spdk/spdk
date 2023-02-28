@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation
+#  All rights reserved.
+#
 test_root=$(readlink -f $(dirname $0))
 rootdir="$test_root/../.."
 
@@ -17,8 +20,10 @@ sudo HUGEMEM="$EXTERNAL_MAKE_HUGEMEM" $SPDK_DIR/scripts/setup.sh
 if [ -n "$SPDK_RUN_EXTERNAL_DPDK" ]; then
 	WITH_DPDK="--with-dpdk=$SPDK_RUN_EXTERNAL_DPDK"
 fi
-make -C $SPDK_DIR clean
-$SPDK_DIR/configure --with-shared --without-isal --without-ocf --disable-asan $WITH_DPDK
+if [[ -e $SPDK_DIR/mk/config.mk ]]; then
+	make -C $SPDK_DIR clean
+fi
+$SPDK_DIR/configure --with-shared --without-ocf --disable-asan $WITH_DPDK
 make -C $SPDK_DIR -j$(nproc)
 
 export SPDK_HEADER_DIR="$SPDK_DIR/include"
@@ -58,7 +63,7 @@ run_test "external_run_nvme_shared" $_sudo $test_root/nvme/identify.sh
 make -C $test_root clean
 
 make -C $SPDK_DIR clean
-$SPDK_DIR/configure --without-shared --without-isal --without-ocf --disable-asan $WITH_DPDK
+$SPDK_DIR/configure --without-shared --without-ocf --disable-asan $WITH_DPDK
 make -C $SPDK_DIR -j$(nproc)
 
 # Make both the application and bdev against individual SPDK archives.

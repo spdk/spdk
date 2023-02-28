@@ -1,7 +1,5 @@
 {
-  "aliases": [
-    "$(UUID)"
-  ],
+  "aliases": [],
   "assigned_rate_limits": {
     "r_mbytes_per_sec": $(N),
     "rw_ios_per_sec": $(N),
@@ -20,6 +18,9 @@
   "num_blocks": $(N),
   "product_name": "Split Disk",
   "supported_io_types": {
+    "abort": $(S),
+    "compare": $(S),
+    "compare_and_write": $(S),
     "flush": $(S),
     "nvme_admin": $(S),
     "nvme_io": $(S),
@@ -29,6 +30,5 @@
     "write": $(S),
     "write_zeroes": $(S)
   },
-  "uuid": "$(S)",
   "zoned": false
 }

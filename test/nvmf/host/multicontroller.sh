@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
-
-rpc_py="$rootdir/scripts/rpc.py"
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
@@ -21,7 +22,7 @@ fi
 
 nvmftestinit
 
-nvmfappstart -m 0xF
+nvmfappstart -m 0xE
 
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 
@@ -39,7 +40,7 @@ $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode2 Malloc1
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode2 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode2 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_SECOND_PORT
 
-$rootdir/test/bdev/bdevperf/bdevperf -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w write -t 1 -f &> $testdir/try.txt &
+$rootdir/build/examples/bdevperf -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w write -t 1 -f &> $testdir/try.txt &
 bdevperf_pid=$!
 
 trap 'process_shm --id $NVMF_APP_SHM_ID; pap "$testdir/try.txt"; killprocess $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
@@ -91,7 +92,7 @@ if [ "$($rpc_py -s $bdevperf_rpc_sock bdev_nvme_get_controllers | grep -c NVMe)"
 	exit 1
 fi
 
-$rootdir/test/bdev/bdevperf/bdevperf.py -s $bdevperf_rpc_sock perform_tests
+$rootdir/examples/bdev/bdevperf/bdevperf.py -s $bdevperf_rpc_sock perform_tests
 
 # Remove the second controller
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_detach_controller NVMe1

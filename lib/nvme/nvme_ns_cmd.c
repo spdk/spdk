@@ -1,36 +1,9 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2015 Intel Corporation.
  *   All rights reserved.
  *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
  *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *   Copyright (c) 2023 Samsung Electronics Co., Ltd. All rights reserved.
  */
 
 #include "nvme_internal.h"
@@ -1116,6 +1089,40 @@ spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 }
 
 int
+spdk_nvme_ns_cmd_verify(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			uint64_t lba, uint32_t lba_count,
+			spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+			uint32_t io_flags)
+{
+	struct nvme_request	*req;
+	struct spdk_nvme_cmd	*cmd;
+
+	if (!_is_io_flags_valid(io_flags)) {
+		return -EINVAL;
+	}
+
+	if (lba_count == 0 || lba_count > UINT16_MAX + 1) {
+		return -EINVAL;
+	}
+
+	req = nvme_allocate_request_null(qpair, cb_fn, cb_arg);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_VERIFY;
+	cmd->nsid = ns->id;
+
+	*(uint64_t *)&cmd->cdw10 = lba;
+	cmd->cdw12 = lba_count - 1;
+	cmd->fuse = (io_flags & SPDK_NVME_IO_FLAGS_FUSE_MASK);
+	cmd->cdw12 |= (io_flags & SPDK_NVME_IO_FLAGS_CDW12_MASK);
+
+	return nvme_qpair_submit_request(qpair, req);
+}
+
+int
 spdk_nvme_ns_cmd_write_uncorrectable(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				     uint64_t lba, uint32_t lba_count,
 				     spdk_nvme_cmd_cb cb_fn, void *cb_arg)
@@ -1331,10 +1338,9 @@ spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 	struct nvme_request	*req;
 	struct spdk_nvme_cmd	*cmd;
 
-	if (len % 4) {
+	if (len & 0x3) {
 		return -EINVAL;
 	}
-	num_dwords = len / 4;
 
 	req = nvme_allocate_request_user_copy(qpair, payload, len, cb_fn, cb_arg, false);
 	if (req == NULL) {
@@ -1345,7 +1351,62 @@ spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 	cmd->opc = SPDK_NVME_OPC_RESERVATION_REPORT;
 	cmd->nsid = ns->id;
 
-	cmd->cdw10 = num_dwords;
+	num_dwords = (len >> 2);
+	cmd->cdw10 = num_dwords - 1; /* 0-based */
+
+	return nvme_qpair_submit_request(qpair, req);
+}
+
+int
+spdk_nvme_ns_cmd_io_mgmt_recv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			      void *payload, uint32_t len, uint8_t mo, uint16_t mos,
+			      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	uint32_t		num_dwords;
+	struct nvme_request	*req;
+	struct spdk_nvme_cmd	*cmd;
+
+	if (len & 0x3) {
+		return -EINVAL;
+	}
+
+	req = nvme_allocate_request_user_copy(qpair, payload, len, cb_fn, cb_arg, false);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_IO_MANAGEMENT_RECEIVE;
+	cmd->nsid = ns->id;
+
+	cmd->cdw10_bits.mgmt_send_recv.mo = mo;
+	cmd->cdw10_bits.mgmt_send_recv.mos = mos;
+
+	num_dwords = (len >> 2);
+	cmd->cdw11 = num_dwords - 1; /* 0-based */
+
+	return nvme_qpair_submit_request(qpair, req);
+}
+
+int
+spdk_nvme_ns_cmd_io_mgmt_send(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			      void *payload, uint32_t len, uint8_t mo, uint16_t mos,
+			      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request	*req;
+	struct spdk_nvme_cmd	*cmd;
+
+	req = nvme_allocate_request_user_copy(qpair, payload, len, cb_fn, cb_arg, false);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_IO_MANAGEMENT_SEND;
+	cmd->nsid = ns->id;
+
+	cmd->cdw10_bits.mgmt_send_recv.mo = mo;
+	cmd->cdw10_bits.mgmt_send_recv.mos = mos;
 
 	return nvme_qpair_submit_request(qpair, req);
 }

@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2021 Intel Corporation
+#  All rights reserved.
+#
+
 
 from argparse import ArgumentParser
 from dataclasses import dataclass, field
@@ -18,7 +23,7 @@ UCHAR_MAX = (1 << 8) - 1
 TRACE_MAX_LCORE = 128
 TRACE_MAX_GROUP_ID = 16
 TRACE_MAX_TPOINT_ID = TRACE_MAX_GROUP_ID * 64
-TRACE_MAX_ARGS_COUNT = 5
+TRACE_MAX_ARGS_COUNT = 8
 TRACE_MAX_RELATIONS = 16
 TRACE_INVALID_OBJECT = (1 << 64) - 1
 OBJECT_NONE = 0

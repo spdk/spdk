@@ -59,8 +59,13 @@ schedulers in different scenarios and workloads.
 
 The `static` scheduler is the default scheduler and does no dynamic scheduling.
 Lightweight threads are distributed round-robin among reactors, respecting
-their requested cpu_mask, and then they are never moved. This is equivalent to
-the previous behavior of the SPDK event/application framework.
+their requested cpu_mask, only at application startup, and then they are never
+moved. This is equivalent to the previous behavior of the SPDK event/application
+framework.
+
+The `static` scheduler cannot be re-enabled after a different scheduler has been
+selected, because currently there is no way to save original SPDK thread distribution
+configuration.
 
 ### dynamic
 

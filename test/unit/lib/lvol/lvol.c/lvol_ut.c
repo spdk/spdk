@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
  *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk_cunit.h"
@@ -97,14 +69,16 @@ struct lvol_ut_bs_dev {
 	struct spdk_blob_store	*bs;
 };
 
-void spdk_bs_inflate_blob(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
-			  spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg)
+void
+spdk_bs_inflate_blob(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
+		     spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	cb_fn(cb_arg, g_inflate_rc);
 }
 
-void spdk_bs_blob_decouple_parent(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
-				  spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg)
+void
+spdk_bs_blob_decouple_parent(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
+			     spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	cb_fn(cb_arg, g_inflate_rc);
 }
@@ -143,7 +117,8 @@ spdk_bs_iter_first(struct spdk_blob_store *bs,
 	cb_fn(cb_arg, first, _errno);
 }
 
-uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob)
+uint64_t
+spdk_blob_get_num_clusters(struct spdk_blob *blob)
 {
 	return 0;
 }
@@ -181,6 +156,13 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts,
 	cb_fn(cb_arg, bs, ut_dev->load_status);
 }
 
+void
+spdk_bs_grow(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
+	     spdk_bs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	cb_fn(cb_arg, NULL, -EINVAL);
+}
+
 struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
 {
 	if (g_io_channel == NULL) {
@@ -191,7 +173,8 @@ struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
 	return g_io_channel;
 }
 
-void spdk_bs_free_io_channel(struct spdk_io_channel *channel)
+void
+spdk_bs_free_io_channel(struct spdk_io_channel *channel)
 {
 	g_io_channel->ref--;
 	if (g_io_channel->ref == 0) {
@@ -234,7 +217,8 @@ spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
 	return -ENOENT;
 }
 
-bool spdk_blob_is_thin_provisioned(struct spdk_blob *blob)
+bool
+spdk_blob_is_thin_provisioned(struct spdk_blob *blob)
 {
 	return blob->thin_provisioned;
 }
@@ -347,7 +331,8 @@ spdk_bs_opts_init(struct spdk_bs_opts *opts, size_t opts_size)
 
 DEFINE_STUB(spdk_bs_get_cluster_size, uint64_t, (struct spdk_blob_store *bs), BS_CLUSTER_SIZE);
 
-void spdk_blob_close(struct spdk_blob *b, spdk_blob_op_complete cb_fn, void *cb_arg)
+void
+spdk_blob_close(struct spdk_blob *b, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	b->ref--;
 
@@ -1111,7 +1096,7 @@ lvs_load(void)
 
 	/* Fail on closing super blob */
 	g_lvserrno = 0;
-	spdk_blob_set_xattr(super_blob, "name", "lvs", strnlen("lvs", SPDK_LVS_NAME_MAX) + 1);
+	spdk_blob_set_xattr(super_blob, "name", "lvs", strlen("lvs") + 1);
 	super_blob->close_status = -1;
 	spdk_lvs_load(&dev.bs_dev, lvol_store_op_with_handle_complete, req);
 	CU_ASSERT(g_lvserrno == -ENODEV);
@@ -1156,7 +1141,7 @@ lvols_load(void)
 	SPDK_CU_ASSERT_FATAL(super_blob != NULL);
 	super_blob->id = 0x100;
 	spdk_blob_set_xattr(super_blob, "uuid", uuid, SPDK_UUID_STRING_LEN);
-	spdk_blob_set_xattr(super_blob, "name", "lvs", strnlen("lvs", SPDK_LVS_NAME_MAX) + 1);
+	spdk_blob_set_xattr(super_blob, "name", "lvs", strlen("lvs") + 1);
 	TAILQ_INSERT_TAIL(&dev.bs->blobs, super_blob, link);
 	dev.bs->super_blobid = 0x100;
 
@@ -1168,21 +1153,21 @@ lvols_load(void)
 	SPDK_CU_ASSERT_FATAL(blob1 != NULL);
 	blob1->id = 0x1;
 	spdk_blob_set_xattr(blob1, "uuid", uuid, SPDK_UUID_STRING_LEN);
-	spdk_blob_set_xattr(blob1, "name", "lvol1", strnlen("lvol1", SPDK_LVOL_NAME_MAX) + 1);
+	spdk_blob_set_xattr(blob1, "name", "lvol1", strlen("lvol1") + 1);
 	blob1->uuid[SPDK_UUID_STRING_LEN - 2] = '1';
 
 	blob2 = calloc(1, sizeof(*blob2));
 	SPDK_CU_ASSERT_FATAL(blob2 != NULL);
 	blob2->id = 0x2;
 	spdk_blob_set_xattr(blob2, "uuid", uuid, SPDK_UUID_STRING_LEN);
-	spdk_blob_set_xattr(blob2, "name", "lvol2", strnlen("lvol2", SPDK_LVOL_NAME_MAX) + 1);
+	spdk_blob_set_xattr(blob2, "name", "lvol2", strlen("lvol2") + 1);
 	blob2->uuid[SPDK_UUID_STRING_LEN - 2] = '2';
 
 	blob3 = calloc(1, sizeof(*blob3));
 	SPDK_CU_ASSERT_FATAL(blob3 != NULL);
 	blob3->id = 0x2;
 	spdk_blob_set_xattr(blob3, "uuid", uuid, SPDK_UUID_STRING_LEN);
-	spdk_blob_set_xattr(blob3, "name", "lvol3", strnlen("lvol3", SPDK_LVOL_NAME_MAX) + 1);
+	spdk_blob_set_xattr(blob3, "name", "lvol3", strlen("lvol3") + 1);
 	blob3->uuid[SPDK_UUID_STRING_LEN - 2] = '3';
 
 	/* Load lvs with 0 blobs */
@@ -1263,7 +1248,7 @@ lvol_open(void)
 	SPDK_CU_ASSERT_FATAL(super_blob != NULL);
 	super_blob->id = 0x100;
 	spdk_blob_set_xattr(super_blob, "uuid", uuid, SPDK_UUID_STRING_LEN);
-	spdk_blob_set_xattr(super_blob, "name", "lvs", strnlen("lvs", SPDK_LVS_NAME_MAX) + 1);
+	spdk_blob_set_xattr(super_blob, "name", "lvs", strlen("lvs") + 1);
 	TAILQ_INSERT_TAIL(&dev.bs->blobs, super_blob, link);
 	dev.bs->super_blobid = 0x100;
 
@@ -1275,21 +1260,21 @@ lvol_open(void)
 	SPDK_CU_ASSERT_FATAL(blob1 != NULL);
 	blob1->id = 0x1;
 	spdk_blob_set_xattr(blob1, "uuid", uuid, SPDK_UUID_STRING_LEN);
-	spdk_blob_set_xattr(blob1, "name", "lvol1", strnlen("lvol1", SPDK_LVOL_NAME_MAX) + 1);
+	spdk_blob_set_xattr(blob1, "name", "lvol1", strlen("lvol1") + 1);
 	blob1->uuid[SPDK_UUID_STRING_LEN - 2] = '1';
 
 	blob2 = calloc(1, sizeof(*blob2));
 	SPDK_CU_ASSERT_FATAL(blob2 != NULL);
 	blob2->id = 0x2;
 	spdk_blob_set_xattr(blob2, "uuid", uuid, SPDK_UUID_STRING_LEN);
-	spdk_blob_set_xattr(blob2, "name", "lvol2", strnlen("lvol2", SPDK_LVOL_NAME_MAX) + 1);
+	spdk_blob_set_xattr(blob2, "name", "lvol2", strlen("lvol2") + 1);
 	blob2->uuid[SPDK_UUID_STRING_LEN - 2] = '2';
 
 	blob3 = calloc(1, sizeof(*blob3));
 	SPDK_CU_ASSERT_FATAL(blob3 != NULL);
 	blob3->id = 0x2;
 	spdk_blob_set_xattr(blob3, "uuid", uuid, SPDK_UUID_STRING_LEN);
-	spdk_blob_set_xattr(blob3, "name", "lvol3", strnlen("lvol3", SPDK_LVOL_NAME_MAX) + 1);
+	spdk_blob_set_xattr(blob3, "name", "lvol3", strlen("lvol3") + 1);
 	blob3->uuid[SPDK_UUID_STRING_LEN - 2] = '3';
 
 	TAILQ_INSERT_TAIL(&dev.bs->blobs, blob1, link);
@@ -1839,7 +1824,8 @@ lvs_rename(void)
 	CU_ASSERT(g_lvserrno == 0);
 	g_lvol_store = NULL;
 }
-static void lvol_refcnt(void)
+static void
+lvol_refcnt(void)
 {
 	struct lvol_ut_bs_dev dev;
 	struct spdk_lvs_opts opts;
@@ -2103,7 +2089,8 @@ lvol_get_xattr(void)
 	free_dev(&dev);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

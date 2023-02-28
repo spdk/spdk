@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /*
@@ -36,6 +8,7 @@
  * each partition.
  */
 
+#define REGISTER_GUID_DEPRECATION
 #include "gpt.h"
 
 #include "spdk/endian.h"
@@ -110,11 +83,14 @@ gpt_base_bdev_hotremove_cb(void *_part_base)
 static int vbdev_gpt_destruct(void *ctx);
 static void vbdev_gpt_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io);
 static int vbdev_gpt_dump_info_json(void *ctx, struct spdk_json_write_ctx *w);
+static int vbdev_gpt_get_memory_domains(void *ctx, struct spdk_memory_domain **domains,
+					int array_size);
 
 static struct spdk_bdev_fn_table vbdev_gpt_fn_table = {
 	.destruct		= vbdev_gpt_destruct,
 	.submit_request		= vbdev_gpt_submit_request,
 	.dump_info_json		= vbdev_gpt_dump_info_json,
+	.get_memory_domains	= vbdev_gpt_get_memory_domains,
 };
 
 static struct gpt_base *
@@ -169,8 +145,7 @@ vbdev_gpt_destruct(void *ctx)
 	return spdk_bdev_part_free(&gpt_disk->part);
 }
 
-static void
-_vbdev_gpt_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io);
+static void _vbdev_gpt_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io);
 
 static void
 vbdev_gpt_resubmit_request(void *arg)
@@ -301,6 +276,22 @@ vbdev_gpt_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 }
 
 static int
+vbdev_gpt_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int array_size)
+{
+	struct gpt_disk *gpt_disk = SPDK_CONTAINEROF(ctx, struct gpt_disk, part);
+	struct spdk_bdev_part_base *part_base = spdk_bdev_part_get_base(&gpt_disk->part);
+	struct spdk_bdev *part_base_bdev = spdk_bdev_part_base_get_bdev(part_base);
+
+	if (part_base_bdev->dif_check_flags & SPDK_DIF_FLAGS_REFTAG_CHECK) {
+		/* bdev_part remaps reftag and touches metadata buffer, that means it can't support memory domains
+		 * if dif is enabled */
+		return 0;
+	}
+
+	return spdk_bdev_get_memory_domains(part_base_bdev, domains, array_size);
+}
+
+static int
 vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 {
 	uint32_t num_partition_entries;
@@ -323,12 +314,26 @@ vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 		p = &gpt->partitions[i];
 		uint64_t lba_start = from_le64(&p->starting_lba);
 		uint64_t lba_end = from_le64(&p->ending_lba);
+		uint64_t partition_size = lba_end - lba_start + 1;
 
-		if (!SPDK_GPT_GUID_EQUAL(&gpt->partitions[i].part_type_guid,
-					 &SPDK_GPT_PART_TYPE_GUID) ||
-		    lba_start == 0) {
+		if (lba_start == 0) {
 			continue;
 		}
+
+		if (SPDK_GPT_GUID_EQUAL(&gpt->partitions[i].part_type_guid,
+					&SPDK_GPT_PART_TYPE_GUID_OLD)) {
+			/* GitHub issue #2801 - we continue to report these partitions with
+			 * off-by-one sizing error to ensure we don't break layouts based
+			 * on that smaller size. */
+			partition_size -= 1;
+		} else if (!SPDK_GPT_GUID_EQUAL(&gpt->partitions[i].part_type_guid,
+						&SPDK_GPT_PART_TYPE_GUID)) {
+			/* Partition type isn't TYPE_GUID or TYPE_GUID_OLD, so this isn't
+			 * an SPDK parition.  Continue to the next partition.
+			 */
+			continue;
+		}
+
 		if (lba_start < head_lba_start || lba_end > head_lba_end) {
 			continue;
 		}
@@ -349,7 +354,7 @@ vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 		}
 
 		rc = spdk_bdev_part_construct(&d->part, gpt_base->part_base, name,
-					      lba_start, lba_end - lba_start, "GPT Disk");
+					      lba_start, partition_size, "GPT Disk");
 		free(name);
 		if (rc) {
 			SPDK_ERRLOG("could not construct bdev part\n");

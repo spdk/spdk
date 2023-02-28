@@ -15,10 +15,9 @@ spdk_idxd_submit_crc32c()               | @copybrief spdk_idxd_submit_crc32c()
 spdk_idxd_submit_dualcast               | @copybrief spdk_idxd_submit_dualcast()
 spdk_idxd_submit_fill()                 | @copybrief spdk_idxd_submit_fill()
 
-## Pre-defined configurations {#idxd_configs}
+## Kernel vs User {#idxd_configs}
 
-The RPC `idxd_scan_accel_engine` is used to both enable IDXD and set it's
-configuration to one of two pre-defined configs:
-
-Config #0: 4 groups, 1 work queue per group, 1 engine per group.
-Config #1: 2 groups, 2 work queues per group, 2 engines per group.
+The low level library can be initialized either directly via `spdk_idxd_set_config`,
+passing in a value of `true` indicates that the IDXD kernel driver is loaded and
+that SPDK will use work queue(s) surfaced by the driver.  Passing in `false` means
+that the SPDK user space driver will be used to initialize the hardware.

@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2019 Intel Corporation.
  *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "spdk/stdinc.h"
@@ -223,6 +195,138 @@ test_complex_iov(void)
 	CU_ASSERT(_check_val(ddata, 64, 1) == 0);
 }
 
+static void
+test_iovs_to_buf(void)
+{
+	struct iovec iov[4];
+	uint8_t sdata[64];
+	uint8_t ddata[64];
+
+	memset(&sdata, 1, sizeof(sdata));
+	memset(&ddata, 6, sizeof(ddata));
+
+	iov[0].iov_base = sdata;
+	iov[0].iov_len = 3;
+	iov[1].iov_base = iov[0].iov_base + iov[0].iov_len;
+	iov[1].iov_len = 11;
+	iov[2].iov_base = iov[1].iov_base + iov[1].iov_len;
+	iov[2].iov_len = 21;
+	iov[3].iov_base = iov[2].iov_base + iov[2].iov_len;
+	iov[3].iov_len = 29;
+
+	spdk_copy_iovs_to_buf(ddata, 64, iov, 4);
+	CU_ASSERT(_check_val(ddata, 64, 1) == 0);
+}
+
+static void
+test_buf_to_iovs(void)
+{
+	struct iovec iov[4];
+	uint8_t sdata[64];
+	uint8_t ddata[64];
+	uint8_t iov_buffer[64];
+
+	memset(&sdata, 7, sizeof(sdata));
+	memset(&ddata, 4, sizeof(ddata));
+	memset(&iov_buffer, 1, sizeof(iov_buffer));
+
+	iov[0].iov_base = iov_buffer;
+	iov[0].iov_len = 5;
+	iov[1].iov_base = iov[0].iov_base + iov[0].iov_len;
+	iov[1].iov_len = 15;
+	iov[2].iov_base = iov[1].iov_base + iov[1].iov_len;
+	iov[2].iov_len = 21;
+	iov[3].iov_base = iov[2].iov_base + iov[2].iov_len;
+	iov[3].iov_len = 23;
+
+	spdk_copy_buf_to_iovs(iov, 4, sdata, 64);
+	spdk_copy_iovs_to_buf(ddata, 64, iov, 4);
+
+	CU_ASSERT(_check_val(ddata, 64, 7) == 0);
+}
+
+static void
+test_memset(void)
+{
+	struct iovec iov[4];
+	uint8_t iov_buffer[64];
+
+	memset(&iov_buffer, 1, sizeof(iov_buffer));
+
+	iov[0].iov_base = iov_buffer;
+	iov[0].iov_len = 5;
+	iov[1].iov_base = iov[0].iov_base + iov[0].iov_len;
+	iov[1].iov_len = 15;
+	iov[2].iov_base = iov[1].iov_base + iov[1].iov_len;
+	iov[2].iov_len = 21;
+	iov[3].iov_base = iov[2].iov_base + iov[2].iov_len;
+	iov[3].iov_len = 23;
+
+	spdk_iov_memset(iov, 4, 0);
+
+	CU_ASSERT(_check_val(iov_buffer, 64, 0) == 0);
+}
+
+static void
+test_iov_one(void)
+{
+	struct iovec iov = { 0 };
+	int iovcnt;
+	char buf[4];
+
+	spdk_iov_one(&iov, &iovcnt, buf, sizeof(buf));
+
+	CU_ASSERT(iov.iov_base == buf);
+	CU_ASSERT(iov.iov_len == sizeof(buf));
+	CU_ASSERT(iovcnt == 1);
+}
+
+static void
+test_iov_xfer(void)
+{
+	struct spdk_iov_xfer ix;
+	uint8_t data[64] = { 0 };
+	uint8_t iov_buffer[64];
+	struct iovec iov[4];
+	size_t i;
+
+	for (i = 0; i < sizeof(iov_buffer); i++) {
+		iov_buffer[i] = i;
+	}
+
+	iov[0].iov_base = iov_buffer;
+	iov[0].iov_len = 5;
+	iov[1].iov_base = iov[0].iov_base + iov[0].iov_len;
+	iov[1].iov_len = 15;
+	iov[2].iov_base = iov[1].iov_base + iov[1].iov_len;
+	iov[2].iov_len = 21;
+	iov[3].iov_base = iov[2].iov_base + iov[2].iov_len;
+	iov[3].iov_len = 23;
+
+	spdk_iov_xfer_init(&ix, iov, 4);
+
+	spdk_iov_xfer_to_buf(&ix, data, 8);
+	spdk_iov_xfer_to_buf(&ix, data + 8, 56);
+
+	for (i = 0; i < sizeof(data); i++) {
+		CU_ASSERT(data[i] == i);
+	}
+
+	for (i = 0; i < sizeof(data); i++) {
+		data[i] = sizeof(data) - i;
+	}
+
+	spdk_iov_xfer_init(&ix, iov, 4);
+
+	spdk_iov_xfer_from_buf(&ix, data, 5);
+	spdk_iov_xfer_from_buf(&ix, data + 5, 3);
+	spdk_iov_xfer_from_buf(&ix, data + 8, 56);
+
+	for (i = 0; i < sizeof(iov_buffer); i++) {
+		CU_ASSERT(iov_buffer[i] == sizeof(iov_buffer) - i);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -237,6 +341,11 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_single_iov);
 	CU_ADD_TEST(suite, test_simple_iov);
 	CU_ADD_TEST(suite, test_complex_iov);
+	CU_ADD_TEST(suite, test_iovs_to_buf);
+	CU_ADD_TEST(suite, test_buf_to_iovs);
+	CU_ADD_TEST(suite, test_memset);
+	CU_ADD_TEST(suite, test_iov_one);
+	CU_ADD_TEST(suite, test_iov_xfer);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2020 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir/../../")
 source "$testdir/common.sh"
@@ -50,16 +54,20 @@ verify() {
 
 	local found=0
 
-	: > "$test_file"
+	if [[ -n $test_file ]]; then
+		: > "$test_file"
+	fi
 
 	local pci status
 	while read -r pci _ _ status; do
 		if [[ $pci == "$dev" && \
-			$status == *"Active mountpoints on $mounts"* ]]; then
+			$status == *"Active devices: "*"$mounts"* ]]; then
 			found=1
 		fi
 	done < <(PCI_ALLOWED="$dev" setup output config)
 	((found == 1))
+
+	[[ -n $mount_point ]] || return 0
 
 	# Does the mount still exist?
 	mountpoint -q "$mount_point"
@@ -112,6 +120,12 @@ nvme_mount() {
 		"$nvme_mount" \
 		"$nvme_dummy_test_file"
 
+	# umount the nvme device and verify again - device should not be touched
+	# when a valid fs is still present.
+	umount "$nvme_mount"
+
+	verify "${blocks_to_pci["$nvme_disk"]}" "data@$nvme_disk" "" ""
+
 	# All done, final cleanup
 	cleanup_nvme
 }
@@ -139,7 +153,7 @@ dm_mount() {
 	dm_mount=$SPDK_TEST_STORAGE/dm_mount
 	dm_dummy_test_file=$dm_mount/test_dm
 
-	# Each partition is 1G in size, join their halfs
+	# Each partition is 1G in size, join their halves
 	dmsetup create "$dm_name" <<- DM_TABLE
 		0 1048576 linear /dev/$pv0 0
 		1048576 1048576 linear /dev/$pv1 0
@@ -160,6 +174,13 @@ dm_mount() {
 		"$dm_mount" \
 		"$dm_dummy_test_file"
 
+	# umount the dm device and verify again - device should not be
+	# touched when it's actively being hold, regardless if it's mounted
+	# or not.
+	umount "$dm_mount"
+
+	verify "${blocks_to_pci["$pv"]}" "holder@$pv0:$dm,holder@$pv1:$dm" "" ""
+
 	# All done, start tiding up
 	cleanup_dm
 }
@@ -172,7 +193,7 @@ get_zoned_devs
 
 declare -a blocks=()
 declare -A blocks_to_pci=()
-min_disk_size=$((1024 ** 3 * 2)) # 2GB
+min_disk_size=$((1024 ** 3 * 3)) # 3GB
 
 for block in "/sys/block/nvme"*; do
 	pci=$(readlink -f "$block/device/device")

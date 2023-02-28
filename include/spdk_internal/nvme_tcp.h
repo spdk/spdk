@@ -1,34 +1,6 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation. All rights reserved.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2018 Intel Corporation. All rights reserved.
  *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef SPDK_INTERNAL_NVME_TCP_H
@@ -126,6 +98,7 @@ struct nvme_tcp_pdu {
 
 	void						*req; /* data tied to a tcp request */
 	void						*qpair;
+	SLIST_ENTRY(nvme_tcp_pdu)			slist;
 };
 SPDK_STATIC_ASSERT(offsetof(struct nvme_tcp_pdu,
 			    sock_req) + sizeof(struct spdk_sock_request) == offsetof(struct nvme_tcp_pdu, iov),
@@ -226,7 +199,6 @@ nvme_tcp_pdu_calc_data_digest(struct nvme_tcp_pdu *pdu)
 		assert(pad_length <= sizeof(pad));
 		crc32c = spdk_crc32c_update(pad, pad_length, crc32c);
 	}
-	crc32c = crc32c ^ SPDK_CRC32C_XOR;
 	return crc32c;
 }
 
@@ -558,10 +530,19 @@ nvme_tcp_pdu_calc_psh_len(struct nvme_tcp_pdu *pdu, bool hdgst_enable)
 		psh_len += SPDK_NVME_TCP_DIGEST_LEN;
 	}
 	if (pdu->hdr.common.plen > psh_len) {
-		pdo = pdu->hdr.common.pdo;
-		padding_len = pdo - psh_len;
-		if (padding_len > 0) {
-			psh_len = pdo;
+		switch (pdu->hdr.common.pdu_type) {
+		case SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD:
+		case SPDK_NVME_TCP_PDU_TYPE_H2C_DATA:
+		case SPDK_NVME_TCP_PDU_TYPE_C2H_DATA:
+			pdo = pdu->hdr.common.pdo;
+			padding_len = pdo - psh_len;
+			if (padding_len > 0) {
+				psh_len = pdo;
+			}
+			break;
+		default:
+			/* There is no padding for other PDU types */
+			break;
 		}
 	}
 

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2019 Intel Corporation
+#  All rights reserved.
+#
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
@@ -7,8 +10,6 @@ source $rootdir/test/nvmf/common.sh
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
-
-rpc_py="$rootdir/scripts/rpc.py"
 
 nvmftestinit
 nvmfappstart -m 0xF
@@ -25,7 +26,7 @@ $rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s $NVMF_SERIAL
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Delay0
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
-nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+$NVME_CONNECT -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 waitforserial "$NVMF_SERIAL"
 
@@ -52,7 +53,8 @@ $rpc_py bdev_delay_update_latency Delay0 p99_write 30
 fio_status=0
 wait $fio_pid || fio_status=$?
 
-nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
+nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
+waitforserial_disconnect "$NVMF_SERIAL"
 
 if [ $fio_status -eq 0 ]; then
 	echo "nvmf hotplug test: fio successful as expected"

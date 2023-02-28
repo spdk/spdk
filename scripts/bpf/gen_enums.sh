@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2021 Intel Corporation
+#  All rights reserved.
+#
+
 set -e
 
 rootdir=$(git rev-parse --show-toplevel)
@@ -9,7 +14,7 @@ _print_enums() {
 	output=$(< "$rootdir/$(git -C "$rootdir" grep -G -l "$enum_string" -- lib module)")
 
 	# Isolate the enum block
-	output=${output#*$enum_string$'\n'} output=${output%%$'\n'\};*}
+	output=${output#*"$enum_string"$'\n'} output=${output%%$'\n'\};*}
 	# Fold it onto an array
 	IFS="," read -ra output <<< "${output//[[:space:]]/}"
 	# Drop the assignments
@@ -42,7 +47,10 @@ state_prefix["subsystem"]=SPDK_NVMF_SUBSYSTEM_
 enums=$(print_enums)
 clear=$(print_clear)
 
+# Add an empty line before "BEGIN {" to avoid it being commented out
+# when there is annotation at the end of bpftrace script
 cat <<- ENUM
+
 	BEGIN {
 		$enums
 	}

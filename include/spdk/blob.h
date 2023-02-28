@@ -1,35 +1,7 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 /** \file
@@ -62,6 +34,7 @@
 #define SPDK_BLOB_H
 
 #include "spdk/stdinc.h"
+#include "spdk/assert.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -149,6 +122,22 @@ struct spdk_bs_dev_cb_args {
 	void			*cb_arg;
 };
 
+/**
+ * Structure with optional IO request parameters
+ * The content of this structure must be valid until the IO request is completed
+ */
+struct spdk_blob_ext_io_opts {
+	/** Size of this structure in bytes */
+	size_t size;
+	/** Memory domain which describes payload in this IO request. */
+	struct spdk_memory_domain *memory_domain;
+	/** Context to be passed to memory domain operations */
+	void *memory_domain_ctx;
+	/** Optional user context */
+	void *user_ctx;
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct spdk_blob_ext_io_opts) == 32, "Incorrect size");
+
 struct spdk_bs_dev {
 	/* Create a new channel which is a software construct that is used
 	 * to submit I/O. */
@@ -181,6 +170,18 @@ struct spdk_bs_dev {
 		       uint64_t lba, uint32_t lba_count,
 		       struct spdk_bs_dev_cb_args *cb_args);
 
+	void (*readv_ext)(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+			  struct iovec *iov, int iovcnt,
+			  uint64_t lba, uint32_t lba_count,
+			  struct spdk_bs_dev_cb_args *cb_args,
+			  struct spdk_blob_ext_io_opts *ext_io_opts);
+
+	void (*writev_ext)(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+			   struct iovec *iov, int iovcnt,
+			   uint64_t lba, uint32_t lba_count,
+			   struct spdk_bs_dev_cb_args *cb_args,
+			   struct spdk_blob_ext_io_opts *ext_io_opts);
+
 	void (*flush)(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 		      struct spdk_bs_dev_cb_args *cb_args);
 
@@ -193,6 +194,21 @@ struct spdk_bs_dev {
 		      struct spdk_bs_dev_cb_args *cb_args);
 
 	struct spdk_bdev *(*get_base_bdev)(struct spdk_bs_dev *dev);
+
+	bool (*is_zeroes)(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_count);
+
+	/* Translate blob lba to lba on the underlying bdev.
+	 * This operation recurses down the whole chain of bs_dev's.
+	 * Returns true and initializes value of base_lba on success.
+	 * Returns false on failure.
+	 * The function may fail when blob lba is not backed by the bdev lba.
+	 * For example, when we eventually hit zeroes device in the chain.
+	 */
+	bool (*translate_lba)(struct spdk_bs_dev *dev, uint64_t lba, uint64_t *base_lba);
+
+	void (*copy)(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+		     uint64_t dst_lba, uint64_t src_lba, uint64_t lba_count,
+		     struct spdk_bs_dev_cb_args *cb_args);
 
 	uint64_t	blockcnt;
 	uint32_t	blocklen; /* In bytes */
@@ -221,6 +237,9 @@ struct spdk_bs_opts {
 	/** Blobstore type */
 	struct spdk_bs_type bstype;
 
+	/* Hole at bytes 36-39. */
+	uint8_t reserved36[4];
+
 	/** Callback function to invoke for each blob. */
 	spdk_blob_op_with_handle_complete iter_cb_fn;
 
@@ -237,7 +256,8 @@ struct spdk_bs_opts {
 
 	/** Force recovery during import. This is a uint64_t for padding reasons, treated as a bool. */
 	uint64_t force_recover;
-};
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_opts) == 72, "Incorrect size");
 
 /**
  * Initialize a spdk_bs_opts structure to the default blobstore option values.
@@ -256,6 +276,17 @@ void spdk_bs_opts_init(struct spdk_bs_opts *opts, size_t opts_size);
  * \param cb_arg Argument passed to function cb_fn.
  */
 void spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts,
+		  spdk_bs_op_with_handle_complete cb_fn, void *cb_arg);
+
+/**
+ * Grow a blobstore to fill the underlying device
+ *
+ * \param dev Blobstore block device.
+ * \param opts The structure which contains the option values for the blobstore.
+ * \param cb_fn Called when the loading is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ */
+void spdk_bs_grow(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts,
 		  spdk_bs_op_with_handle_complete cb_fn, void *cb_arg);
 
 /**
@@ -410,6 +441,34 @@ uint64_t spdk_blob_get_num_io_units(struct spdk_blob *blob);
  */
 uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob);
 
+/**
+ * Get next allocated io_unit
+ *
+ * Starting at 'offset' io_units into the blob, returns the offset of
+ * the first allocated io unit found.
+ * If 'offset' points to an allocated io_unit, same offset is returned.
+ *
+ * \param blob Blob struct to query.
+ * \param offset Offset is in io units from the beginning of the blob.
+ *
+ * \return offset in io_units or UINT64_MAX if no allocated io_unit found
+ */
+uint64_t spdk_blob_get_next_allocated_io_unit(struct spdk_blob *blob, uint64_t offset);
+
+/**
+ * Get next unallocated io_unit
+ *
+ * Starting at 'offset' io_units into the blob, returns the offset of
+ * the first unallocated io unit found.
+ * If 'offset' points to an unallocated io_unit, same offset is returned.
+ *
+ * \param blob Blob struct to query.
+ * \param offset Offset is in io units from the beginning of the blob.
+ *
+ * \return offset in io_units or UINT64_MAX if only allocated io_unit found
+ */
+uint64_t spdk_blob_get_next_unallocated_io_unit(struct spdk_blob *blob, uint64_t offset);
+
 struct spdk_blob_xattr_opts {
 	/* Number of attributes */
 	size_t	count;
@@ -439,6 +498,7 @@ struct spdk_blob_opts {
 	 */
 	size_t opts_size;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_blob_opts) == 64, "Incorrect size");
 
 /**
  * Initialize a spdk_blob_opts structure to the default blob option values.
@@ -455,7 +515,7 @@ void spdk_blob_opts_init(struct spdk_blob_opts *opts, size_t opts_size);
  * \param bs blobstore.
  * \param opts The structure which contains the option values for the new blob.
  * \param cb_fn Called when the operation is complete.
- * \param cb_arg Argument passed to funcion cb_fn.
+ * \param cb_arg Argument passed to function cb_fn.
  */
 void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_opts *opts,
 			     spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
@@ -627,6 +687,7 @@ struct spdk_blob_open_opts {
 	 */
 	size_t opts_size;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_blob_open_opts) == 16, "Incorrect size");
 
 /**
  * Initialize a spdk_blob_open_opts structure to the default blob option values.
@@ -781,6 +842,44 @@ void spdk_blob_io_writev(struct spdk_blob *blob, struct spdk_io_channel *channel
 void spdk_blob_io_readv(struct spdk_blob *blob, struct spdk_io_channel *channel,
 			struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
 			spdk_blob_op_complete cb_fn, void *cb_arg);
+
+/**
+ * Write the data described by 'iov' to 'length' io_units beginning at 'offset' io_units
+ * into the blob. Accepts extended IO request options
+ *
+ * \param blob Blob to write.
+ * \param channel I/O channel used to submit requests.
+ * \param iov The pointer points to an array of iovec structures.
+ * \param iovcnt The number of buffers.
+ * \param offset Offset is in io units from the beginning of the blob.
+ * \param length Size of data in io units.
+ * \param cb_fn Called when the operation is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ * \param io_opts Optional extended IO request options
+ */
+void spdk_blob_io_writev_ext(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			     struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+			     spdk_blob_op_complete cb_fn, void *cb_arg,
+			     struct spdk_blob_ext_io_opts *io_opts);
+
+/**
+ * Read 'length' io_units starting at 'offset' io_units into the blob into the memory
+ * described by 'iov'. Accepts extended IO request options
+ *
+ * \param blob Blob to read.
+ * \param channel I/O channel used to submit requests.
+ * \param iov The pointer points to an array of iovec structures.
+ * \param iovcnt The number of buffers.
+ * \param offset Offset is in io units from the beginning of the blob.
+ * \param length Size of data in io units.
+ * \param cb_fn Called when the operation is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ * \param io_opts Optional extended IO request options
+ */
+void spdk_blob_io_readv_ext(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			    struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+			    spdk_blob_op_complete cb_fn, void *cb_arg,
+			    struct spdk_blob_ext_io_opts *io_opts);
 
 /**
  * Unmap 'length' io_units beginning at 'offset' io_units on the blob as unused. Unmapped

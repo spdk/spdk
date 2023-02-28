@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2017 Intel Corporation
+#  All rights reserved.
+#
 SYSTEM=$(uname -s)
 if [ $SYSTEM = "FreeBSD" ]; then
 	echo "blobstore.sh cannot run on FreeBSD currently."
@@ -11,7 +14,7 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 
 # Nvme0 target configuration
-$rootdir/scripts/gen_nvme.sh --json-with-subsystems > $testdir/blobcli.json
+"$rootdir/scripts/gen_nvme.sh" --json-with-subsystems -n 1 > "$testdir/blobcli.json"
 
 # generate random data file for import/export diff
 dd if=/dev/urandom of=$testdir/test.pattern bs=1M count=1

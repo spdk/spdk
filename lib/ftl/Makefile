@@ -1,47 +1,58 @@
-#
-#  BSD LICENSE
-#
-#  Copyright (c) Intel Corporation.
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2015 Intel Corporation.
 #  All rights reserved.
-#
-#  Redistribution and use in source and binary forms, with or without
-#  modification, are permitted provided that the following conditions
-#  are met:
-#
-#    * Redistributions of source code must retain the above copyright
-#      notice, this list of conditions and the following disclaimer.
-#    * Redistributions in binary form must reproduce the above copyright
-#      notice, this list of conditions and the following disclaimer in
-#      the documentation and/or other materials provided with the
-#      distribution.
-#    * Neither the name of Intel Corporation nor the names of its
-#      contributors may be used to endorse or promote products derived
-#      from this software without specific prior written permission.
-#
-#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-#  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-#  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-#  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-#  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-#  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-#  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-#  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-#  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-#  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-SO_VER := 4
+SO_VER := 7
 SO_MINOR := 0
 
-C_SRCS = ftl_band.c ftl_core.c ftl_debug.c ftl_io.c ftl_reloc.c \
-	 ftl_restore.c ftl_init.c ftl_trace.c
+ifdef SPDK_FTL_VSS_EMU
+CFLAGS += -DSPDK_FTL_VSS_EMU
+endif
+
+ifdef SPDK_FTL_RETRY_ON_ERROR
+CFLAGS += -DSPDK_FTL_RETRY_ON_ERROR
+endif
+
+ifdef SPDK_FTL_L2P_FLAT
+CFLAGS += -DSPDK_FTL_L2P_FLAT
+endif
+
+ifneq ($(strip $(SPDK_FTL_ZONE_EMU_BLOCKS)),)
+CFLAGS += -DSPDK_FTL_ZONE_EMU_BLOCKS=$(SPDK_FTL_ZONE_EMU_BLOCKS)
+endif
+
+CFLAGS += -I.
+
+FTL_SUBDIRS := mngt utils upgrade
+
+C_SRCS = ftl_core.c ftl_init.c ftl_layout.c ftl_debug.c ftl_io.c ftl_sb.c ftl_l2p.c ftl_l2p_flat.c
+C_SRCS += ftl_nv_cache.c ftl_band.c ftl_band_ops.c ftl_writer.c ftl_rq.c ftl_reloc.c ftl_l2p_cache.c
+C_SRCS += ftl_p2l.c ftl_trace.c
+C_SRCS += mngt/ftl_mngt.c mngt/ftl_mngt_bdev.c mngt/ftl_mngt_shutdown.c mngt/ftl_mngt_startup.c
+C_SRCS += mngt/ftl_mngt_md.c mngt/ftl_mngt_misc.c mngt/ftl_mngt_ioch.c mngt/ftl_mngt_l2p.c
+C_SRCS += mngt/ftl_mngt_band.c mngt/ftl_mngt_self_test.c mngt/ftl_mngt_p2l.c
+C_SRCS += mngt/ftl_mngt_recovery.c mngt/ftl_mngt_upgrade.c
+C_SRCS += utils/ftl_conf.c utils/ftl_md.c utils/ftl_mempool.c utils/ftl_bitmap.c
+C_SRCS += upgrade/ftl_layout_upgrade.c upgrade/ftl_sb_upgrade.c upgrade/ftl_p2l_upgrade.c
+C_SRCS += upgrade/ftl_band_upgrade.c upgrade/ftl_chunk_upgrade.c
 
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_ftl.map)
 
 LIBNAME = ftl
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+
+# TODO: This should be handled by spdk.subdirs.mk
+CLEAN_FTL_SUBDIRS = $(addprefix clean_ftl_, $(FTL_SUBDIRS))
+
+clean: $(CLEAN_FTL_SUBDIRS)
+
+.PHONY: $(CLEAN_FTL_SUBDIRS)
+$(CLEAN_FTL_SUBDIRS): _Q := $(Q)
+$(CLEAN_FTL_SUBDIRS): Q :=
+$(CLEAN_FTL_SUBDIRS): clean_ftl_%:%
+	$(_Q)cd $< && $(CLEAN_C)
