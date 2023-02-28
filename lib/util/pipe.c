@@ -5,6 +5,17 @@
 
 #include "spdk/pipe.h"
 #include "spdk/util.h"
+#include "spdk/queue.h"
+#include "spdk/log.h"
+
+struct spdk_pipe_buf {
+	SLIST_ENTRY(spdk_pipe_buf)	link;
+	uint32_t			sz;
+};
+
+struct spdk_pipe_group {
+	SLIST_HEAD(, spdk_pipe_buf) bufs;
+};
 
 struct spdk_pipe {
 	uint8_t	*buf;
@@ -13,6 +24,8 @@ struct spdk_pipe {
 	uint32_t write;
 	uint32_t read;
 	bool full;
+
+	struct spdk_pipe_group *group;
 };
 
 struct spdk_pipe *
@@ -40,9 +53,38 @@ spdk_pipe_destroy(struct spdk_pipe *pipe)
 		return NULL;
 	}
 
+	if (pipe->group) {
+		spdk_pipe_group_remove(pipe->group, pipe);
+	}
+
 	buf = pipe->buf;
 	free(pipe);
 	return buf;
+}
+
+static void
+pipe_alloc_buf_from_group(struct spdk_pipe *pipe)
+{
+	struct spdk_pipe_buf *buf;
+	struct spdk_pipe_group *group;
+
+	assert(pipe->group != NULL);
+	group = pipe->group;
+
+	/* We have to pick a buffer that's the correct size. It's almost always
+	 * the first one. */
+	buf = SLIST_FIRST(&group->bufs);
+	while (buf != NULL) {
+		if (buf->sz == pipe->sz) {
+			/* TODO: Could track the previous and do an SLIST_REMOVE_AFTER */
+			SLIST_REMOVE(&pipe->group->bufs, buf, spdk_pipe_buf, link);
+			pipe->buf = (void *)buf;
+			return;
+		}
+		buf = SLIST_NEXT(buf, link);
+	}
+	/* Should never get here. */
+	assert(false);
 }
 
 int
@@ -59,6 +101,10 @@ spdk_pipe_writer_get_buffer(struct spdk_pipe *pipe, uint32_t requested_sz, struc
 		iovs[0].iov_base = NULL;
 		iovs[0].iov_len = 0;
 		return 0;
+	}
+
+	if (pipe->buf == NULL) {
+		pipe_alloc_buf_from_group(pipe);
 	}
 
 	if (read <= write) {
@@ -243,9 +289,81 @@ spdk_pipe_reader_advance(struct spdk_pipe *pipe, uint32_t requested_sz)
 		 * both pointers back to the beginning of the pipe. */
 		read = 0;
 		pipe->write = 0;
+
+		/* Additionally, release the buffer to the shared pool */
+		if (pipe->group) {
+			struct spdk_pipe_buf *buf = (struct spdk_pipe_buf *)pipe->buf;
+			buf->sz = pipe->sz;
+			SLIST_INSERT_HEAD(&pipe->group->bufs, buf, link);
+			pipe->buf = NULL;
+		}
 	}
 
 	pipe->read = read;
 
+	return 0;
+}
+
+struct spdk_pipe_group *
+spdk_pipe_group_create(void)
+{
+	struct spdk_pipe_group *group;
+
+	group = calloc(1, sizeof(*group));
+	if (!group) {
+		return NULL;
+	}
+
+	SLIST_INIT(&group->bufs);
+
+	return group;
+}
+
+void
+spdk_pipe_group_destroy(struct spdk_pipe_group *group)
+{
+	if (!SLIST_EMPTY(&group->bufs)) {
+		SPDK_ERRLOG("Destroying a pipe group that still has buffers!\n");
+		assert(false);
+	}
+
+	free(group);
+}
+
+int
+spdk_pipe_group_add(struct spdk_pipe_group *group, struct spdk_pipe *pipe)
+{
+	struct spdk_pipe_buf *buf;
+
+	assert(pipe->group == NULL);
+
+	pipe->group = group;
+	if (pipe->read != pipe->write || pipe->full) {
+		/* Pipe currently has valid data, so keep the buffer attached
+		 * to the pipe for now.  We can move it to the group's SLIST
+		 * later when it gets emptied.
+		 */
+		return 0;
+	}
+
+	buf = (struct spdk_pipe_buf *)pipe->buf;
+	buf->sz = pipe->sz;
+	SLIST_INSERT_HEAD(&group->bufs, buf, link);
+	pipe->buf = NULL;
+	return 0;
+}
+
+int
+spdk_pipe_group_remove(struct spdk_pipe_group *group, struct spdk_pipe *pipe)
+{
+	assert(pipe->group == group);
+
+	if (pipe->buf == NULL) {
+		/* Associate a buffer with the pipe before returning. */
+		pipe_alloc_buf_from_group(pipe);
+		assert(pipe->buf != NULL);
+	}
+
+	pipe->group = NULL;
 	return 0;
 }

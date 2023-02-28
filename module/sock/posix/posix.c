@@ -65,6 +65,7 @@ struct spdk_posix_sock_group_impl {
 	int				fd;
 	struct spdk_has_data_list	socks_with_data;
 	int				placement_id;
+	struct spdk_pipe_group		*pipe_group;
 };
 
 static struct spdk_sock_impl_opts g_posix_impl_opts = {
@@ -358,6 +359,13 @@ posix_sock_alloc_pipe(struct spdk_posix_sock *sock, int sz)
 
 	sock->recv_buf_sz = sz;
 	sock->recv_pipe = new_pipe;
+
+	if (sock->base.group_impl) {
+		struct spdk_posix_sock_group_impl *group;
+
+		group = __posix_group_impl(sock->base.group_impl);
+		spdk_pipe_group_add(group->pipe_group, sock->recv_pipe);
+	}
 
 	return 0;
 }
@@ -1790,6 +1798,14 @@ _sock_group_impl_create(uint32_t enable_placement_id)
 		return NULL;
 	}
 
+	group_impl->pipe_group = spdk_pipe_group_create();
+	if (group_impl->pipe_group == NULL) {
+		SPDK_ERRLOG("pipe_group allocation failed\n");
+		free(group_impl);
+		close(fd);
+		return NULL;
+	}
+
 	group_impl->fd = fd;
 	TAILQ_INIT(&group_impl->socks_with_data);
 	group_impl->placement_id = -1;
@@ -1902,6 +1918,9 @@ posix_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct spdk_
 		sock->pipe_has_data = true;
 		sock->socket_has_data = false;
 		TAILQ_INSERT_TAIL(&group->socks_with_data, sock, link);
+	} else if (sock->recv_pipe != NULL) {
+		rc = spdk_pipe_group_add(group->pipe_group, sock->recv_pipe);
+		assert(rc == 0);
 	}
 
 	if (_sock->impl_opts.enable_placement_id == PLACEMENT_MARK) {
@@ -1928,6 +1947,9 @@ posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, struct sp
 		TAILQ_REMOVE(&group->socks_with_data, sock, link);
 		sock->pipe_has_data = false;
 		sock->socket_has_data = false;
+	} else if (sock->recv_pipe != NULL) {
+		rc = spdk_pipe_group_remove(group->pipe_group, sock->recv_pipe);
+		assert(rc == 0);
 	}
 
 	if (sock->placement_id != -1) {
@@ -2150,6 +2172,7 @@ _sock_group_impl_close(struct spdk_sock_group_impl *_group, uint32_t enable_plac
 		spdk_sock_map_release(&g_map, spdk_env_get_current_core());
 	}
 
+	spdk_pipe_group_destroy(group->pipe_group);
 	rc = close(group->fd);
 	free(group);
 	return rc;

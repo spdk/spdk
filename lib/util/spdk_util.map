@@ -108,6 +108,10 @@
 	spdk_pipe_reader_bytes_available;
 	spdk_pipe_reader_get_buffer;
 	spdk_pipe_reader_advance;
+	spdk_pipe_group_create;
+	spdk_pipe_group_destroy;
+	spdk_pipe_group_add;
+	spdk_pipe_group_remove;
 
 	# public functions in string.h
 	spdk_sprintf_alloc;
