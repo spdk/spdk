@@ -165,7 +165,8 @@ extern pid_t g_spdk_nvme_pid;
 
 #define NVME_MAX_ASYNC_EVENTS	(8)
 
-#define NVME_MAX_ADMIN_TIMEOUT_IN_SECS	(30)
+// ZIV_P2P
+#define NVME_MAX_ADMIN_TIMEOUT_IN_SECS	(120)
 
 /* Maximum log page size to fetch for AERs. */
 #define NVME_MAX_AER_LOG_SIZE		(4096)
@@ -1011,6 +1012,9 @@ struct spdk_nvme_ctrlr {
 	STAILQ_HEAD(, nvme_register_completion)	register_operations;
 
 	union spdk_nvme_cc_register		process_init_cc;
+
+	// ZIV_P2P - add P2P indication - should be init based on test command line parameter
+	bool					p2p_en;
 };
 
 struct spdk_nvme_probe_ctx {
@@ -1546,6 +1550,27 @@ void nvme_transport_poll_group_free_stats(struct spdk_nvme_transport_poll_group 
 		struct spdk_nvme_transport_poll_group_stat *stats);
 enum spdk_nvme_transport_type nvme_transport_get_trtype(const struct spdk_nvme_transport
 		*transport);
+
+// ZIV_P2P
+static inline void 
+spdk_refresh_dcache(void* arg, size_t size)
+{
+	size_t i;
+	uint64_t tmpaddr;
+
+	if (size > 0 && size < 64) {
+		tmpaddr = (uint64_t)arg;
+		spdk_ivdt_dcache(tmpaddr);
+		return;
+	}
+
+	for (i = 0; i < size/64; i++) {
+		tmpaddr = (uint64_t)arg + (i<<6);
+		spdk_ivdt_dcache(tmpaddr);
+		//printf("spdk_refresh_dcache: Refresh address %lx\n", tmpaddr);
+	}
+}
+
 /*
  * Below ref related functions must be called with the global
  *  driver lock held for the multi-process condition.
@@ -1561,5 +1586,69 @@ _is_page_aligned(uint64_t address, uint64_t page_size)
 {
 	return (address & (page_size - 1)) == 0;
 }
+
+// ZIV_P2P
+#define NVME_P2P_DBDF_LEN 		16
+#define NVME_P2P_NUM_NVME_DEVS 		8
+#define P2P_INIT_MEM_DEV 		"/dev/udmabuf0"
+#define P2P_NVME_ACCESS_MEM_DEV 	"/dev/udmabuf1"
+#define P2P_IO_MEM_DEV 			"/dev/udmabuf2"
+#define P2P_TRANS_TBL_MEM_DEV 		"/dev/udmabuf3"
+// Single NVME access memory range: 16K per device
+#define P2P_NVME_DEVICE_ACCESS_MEM_RANGE 0x4000
+// Total all NVME devices access memory range
+#define P2P_ALL_NVME_DEVICES_ACCESS_MEM_RANGE (P2P_NVME_DEVICE_ACCESS_MEM_RANGE*NVME_P2P_NUM_NVME_DEVS)
+// Offset from memory start where the HW translation table should reside
+#define P2P_TRANS_TBL_MEM_SIZE 		0x400
+// IO memory size
+#define P2P_IO_MEM_SIZE 		0x80000000
+// NVME ACCESS HW ACC physical address
+#define P2P_NVME_ACCESS_PHY_ADDR	0x1008000000
+
+struct nvme_pci_p2p_header {
+	// board-host init sync mechanism 
+	uint64_t sync_0;
+	uint64_t sync_1;
+	/* BAR0 of PCIe endpoint that runs SPDK*/
+	uint64_t ep_device_bar0;
+	/* BAR2 of PCIe endpoint that runs SPDK*/
+	uint64_t ep_device_bar2;
+	/* BAR4 of PCIe endpoint that runs SPDK*/
+	uint64_t ep_device_bar4;
+	/* PCIe endpoint domain, bus, device, function info*/
+	char 	 ep_device_dbdf[NVME_P2P_DBDF_LEN];
+	// Number of NVME devices that host scanned and for which SPDK needs to work P2P
+	uint64_t num_nvme_devices;
+};
+
+// Host report of scanned NVME PCIE devices
+struct nvme_pci_p2p_data {
+	char nvme_dbdf[NVME_P2P_DBDF_LEN];
+	uint32_t class_id;
+	uint16_t vendor_id;
+	uint16_t device_id;
+	uint16_t subvendor_id;
+	uint16_t subdevice_id;
+	uint32_t reserved;
+	uint64_t nvme_bar0;
+	union spdk_nvme_cap_register nvme_caps;
+};
+
+struct nvme_pci_p2p_host_info {
+	struct nvme_pci_p2p_header p2p_header;
+	struct nvme_pci_p2p_data   p2p_data[NVME_P2P_NUM_NVME_DEVS];
+};
+
+struct nvme_p2p_hw_trans_table_info {
+	uint64_t nvme_bar0[NVME_P2P_NUM_NVME_DEVS];
+};
+
+struct spdk_nvme_p2p_params {
+	struct nvme_pci_p2p_host_info p2p_host_info;
+	void* 			      nvme_access_virt_base_addr;	
+	uint8_t			      curr_dev_idx;
+};
+
+extern struct spdk_nvme_p2p_params *g_nvme_p2p_params;
 
 #endif /* __NVME_INTERNAL_H__ */

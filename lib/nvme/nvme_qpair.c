@@ -803,6 +803,7 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 		uint32_t num_requests, bool async)
 {
 	size_t req_size_padded;
+	size_t buf_len;
 	uint32_t i;
 
 	qpair->id = id;
@@ -831,6 +832,11 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 
 	qpair->req_buf = spdk_zmalloc(req_size_padded * num_requests, 64, NULL,
 				      SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+
+	//ZIV_P2P
+	buf_len = req_size_padded * num_requests;
+	spdk_refresh_dcache(qpair->req_buf, buf_len);
+
 	if (qpair->req_buf == NULL) {
 		SPDK_ERRLOG("no memory to allocate qpair(cntlid:0x%x sqid:%d) req_buf with %d request\n",
 			    ctrlr->cntlid, qpair->id, num_requests);

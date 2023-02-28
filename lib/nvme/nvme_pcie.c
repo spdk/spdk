@@ -901,6 +901,76 @@ nvme_pcie_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 	}
 }
 
+// ZIV_P2P
+static struct spdk_nvme_ctrlr *nvme_pcie_p2p_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
+								const struct spdk_nvme_ctrlr_opts *opts)
+{
+	// Define SPDK and PCIE controllers
+	struct nvme_pcie_ctrlr *pctrlr;
+	struct nvme_pci_p2p_data* curr_p2p_data;
+	struct spdk_pci_id pci_id;
+	int rc;
+	uint8_t idx;
+
+	idx = g_nvme_p2p_params->curr_dev_idx;
+	curr_p2p_data = &g_nvme_p2p_params->p2p_host_info.p2p_data[idx];
+
+	// Set PCI ID
+	pci_id.class_id = curr_p2p_data->class_id;
+	pci_id.vendor_id = curr_p2p_data->vendor_id;
+	pci_id.device_id = curr_p2p_data->device_id;
+	pci_id.subvendor_id = curr_p2p_data->subvendor_id;
+	pci_id.subdevice_id = curr_p2p_data->subdevice_id;
+
+	// Allocate PCI controller		
+	pctrlr = spdk_zmalloc(sizeof(struct nvme_pcie_ctrlr), 64, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+	
+	if (pctrlr == NULL) {
+		SPDK_ERRLOG("nvme_pcie_p2p_ctrlr_construct: could not allocate ctrlr\n");
+		return NULL;
+	}
+	
+	// Initialize SPDK PCIE controller:
+	pctrlr->is_remapped = false;
+	pctrlr->devhandle = NULL;
+	pctrlr->regs = (volatile struct spdk_nvme_registers *)((uint8_t*)g_nvme_p2p_params->nvme_access_virt_base_addr + (idx * P2P_NVME_DEVICE_ACCESS_MEM_RANGE));
+	pctrlr->regs_size = P2P_NVME_DEVICE_ACCESS_MEM_RANGE;
+	pctrlr->doorbell_stride_u32 = 1 << curr_p2p_data->nvme_caps.bits.dstrd;
+	pctrlr->doorbell_base = (volatile uint32_t *)&pctrlr->regs->doorbell[0].sq_tdbl;
+
+	// Initialize SPDK NVME controller:
+	// Set registers virtual base address according to device offset
+	pctrlr->ctrlr.is_removed = false;
+	pctrlr->ctrlr.opts = *opts;
+	pctrlr->ctrlr.trid = *trid;
+	pctrlr->ctrlr.quirks = nvme_get_quirks(&pci_id);
+
+	nvme_ctrlr_construct(&pctrlr->ctrlr);
+	
+	// Create admin queue
+	rc = nvme_pcie_ctrlr_construct_admin_qpair(&pctrlr->ctrlr, pctrlr->ctrlr.opts.admin_queue_size);
+	if (rc != 0) {
+		nvme_ctrlr_destruct(&pctrlr->ctrlr);
+		SPDK_ERRLOG("nvme_pcie_p2p_ctrlr_construct: construct adminq failed!\n");
+		return NULL;
+	}
+
+	rc = nvme_ctrlr_add_process(&pctrlr->ctrlr, NULL);
+	if (rc != 0) {
+		nvme_ctrlr_destruct(&pctrlr->ctrlr);
+		SPDK_ERRLOG("P2P: add process failed!\n");
+		return NULL;
+	}
+
+	if (g_sigset != true) {
+		spdk_pci_register_error_handler(nvme_sigbus_fault_sighandler,
+						NULL);
+		g_sigset = true;
+	}
+
+	return &pctrlr->ctrlr;
+}
+
 static struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		const struct spdk_nvme_ctrlr_opts *opts,
 		void *devhandle)
@@ -1044,6 +1114,25 @@ nvme_pcie_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+// ZIV_P2P
+static int
+nvme_pcie_p2p_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+	
+	if (ctrlr->adminq) {
+		nvme_pcie_qpair_destroy(ctrlr->adminq);
+	}
+
+	nvme_ctrlr_destruct_finish(ctrlr);
+
+	nvme_ctrlr_free_processes(ctrlr);
+
+	spdk_free(pctrlr);
+
+	return 0;
+}
+
 static int
 nvme_pcie_qpair_iterate_requests(struct spdk_nvme_qpair *qpair,
 				 int (*iter_fn)(struct nvme_request *req, void *arg),
@@ -1124,8 +1213,12 @@ const struct spdk_nvme_transport_ops pcie_ops = {
 	.name = "PCIE",
 	.type = SPDK_NVME_TRANSPORT_PCIE,
 	.ctrlr_construct = nvme_pcie_ctrlr_construct,
+	//ZIV_P2P
+	.p2p_ctrlr_construct = nvme_pcie_p2p_ctrlr_construct,
 	.ctrlr_scan = nvme_pcie_ctrlr_scan,
 	.ctrlr_destruct = nvme_pcie_ctrlr_destruct,
+	// ZIV_P2P
+	.p2p_ctrlr_destruct = nvme_pcie_p2p_ctrlr_destruct,
 	.ctrlr_enable = nvme_pcie_ctrlr_enable,
 
 	.ctrlr_set_reg_4 = nvme_pcie_ctrlr_set_reg_4,

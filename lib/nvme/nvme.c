@@ -40,6 +40,9 @@
 #define SPDK_NVME_DRIVER_NAME "spdk_nvme_driver"
 
 struct nvme_driver	*g_spdk_nvme_driver;
+// ZIV_P2P
+struct spdk_nvme_p2p_params 	*g_nvme_p2p_params = NULL;
+
 pid_t			g_spdk_nvme_pid;
 
 /* gross timeout of 180 seconds in milliseconds */
@@ -422,7 +425,12 @@ nvme_user_copy_cmd_complete(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_request *req = arg;
 	enum spdk_nvme_data_transfer xfer;
+	int i;
 
+	// ZIV_P2P
+	printf("nvme_user_copy_cmd_complete: user: %lx, req_payload: %lx, size: %d\n", req->user_buffer, req->payload.contig_or_cb_arg, req->payload_size);
+	spdk_refresh_dcache(req->payload.contig_or_cb_arg, req->payload_size);
+	
 	if (req->user_buffer && req->payload_size) {
 		/* Copy back to the user buffer and free the contig buffer */
 		assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
@@ -431,13 +439,51 @@ nvme_user_copy_cmd_complete(void *arg, const struct spdk_nvme_cpl *cpl)
 		    xfer == SPDK_NVME_DATA_BIDIRECTIONAL) {
 			assert(req->pid == getpid());
 			memcpy(req->user_buffer, req->payload.contig_or_cb_arg, req->payload_size);
+			
+			// ZIV_P2P
+			printf("ZIV_P2P: msg payload print:\n");
+		    for (i = 0; i < req->payload_size; i++) {
+		    	if (i%64==0) {
+				printf("\n");
+			}
+		        printf("%x ", *((uint8_t*)(req->payload.contig_or_cb_arg) + i));
+                    }
+		    printf("\n");
+
+		    printf("ZIV_P2P: user payload print:\n");
+		    //nvme_delay(10000000);
+		    for (i = 0; i < req->payload_size; i++) {
+			if (i%64==0) {
+				 printf("\n");
+			}
+			printf("%x ", *((uint8_t*)(req->user_buffer) + i));
+		    }
+		    printf("\n");
 		}
 
 		spdk_free(req->payload.contig_or_cb_arg);
+		
+		// ZIV_P2P
+		spdk_refresh_dcache(req->payload.contig_or_cb_arg, req->payload_size);
 	}
+
+// ZIV_P2P
+#ifdef __PPC64__
+	/*
+	 ** This memory barrier prevents reordering of:
+	 ** - load after store from/to tr
+	 ** - load after load cpl phase and cpl cid
+	 **/
+	//spdk_mb();
+#elif defined(__aarch64__)
+//	__asm volatile("dmb oshld" ::: "memory");
+#endif
 
 	/* Call the user's original callback now that the buffer has been copied */
 	req->user_cb_fn(req->user_cb_arg, cpl);
+	
+	// ZIV_P2P
+	spdk_refresh_dcache(req->user_buffer, req->payload_size);
 }
 
 /**
@@ -817,6 +863,148 @@ nvme_get_ctrlr_by_trid_unsafe(const struct spdk_nvme_transport_id *trid)
 	return NULL;
 }
 
+// ZIV_P2P
+void spdk_free_p2p_resources(void)
+{
+	if (g_nvme_p2p_params) {
+		free(g_nvme_p2p_params);
+	}
+}
+
+int 
+spdk_fetch_nvme_p2p_host_init(struct spdk_env_opts* opts)
+{
+	void* init_data_virt_base_addr;
+	void* huge_mem_virt_base_addr;
+	void* nvme_trans_tbl_virt_base_addr;
+	int fd_nvme_init;
+	int fd_nvme_access;
+	int fd_trans_tbl;
+	int fd_nvme_huge_mem;
+	uint8_t i;
+	struct nvme_p2p_hw_trans_table_info nvme_p2p_hw_trans_table = {0};
+	
+	// Point to start of host init memory space
+	if ((fd_nvme_init = open("/dev/mem"/*P2P_INIT_MEM_DEV*/, O_RDWR)) != -1//  && 
+   	   // (fd_nvme_access = open(P2P_NVME_ACCESS_MEM_DEV, O_RDWR)) != -1 &&
+	   // (fd_nvme_huge_mem = open(P2P_IO_MEM_DEV, O_RDWR | O_SYNC)) != -1  &&
+	   // (fd_trans_tbl = open(P2P_TRANS_TBL_MEM_DEV, O_RDWR)) != -1) {
+	) {
+		// Initialize P2P global info structure
+		g_nvme_p2p_params = calloc(1, sizeof(struct spdk_nvme_p2p_params));
+		if (!g_nvme_p2p_params) {
+			return -1;
+		}        	
+		
+		// Set init data base virtual address
+		init_data_virt_base_addr = mmap(NULL, sizeof(struct nvme_pci_p2p_host_info), PROT_READ|PROT_WRITE, MAP_SHARED, fd_nvme_init, 0x1002000000);
+		
+		if (init_data_virt_base_addr == MAP_FAILED) {
+			fprintf(stderr, "spdk_fetch_nvme_p2p_host_init: Unable to mmap nvme init memory.\n");
+			exit(1);
+		}
+		
+		// Set IO data base virtual address
+		huge_mem_virt_base_addr = mmap(0x200000000000, P2P_IO_MEM_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd_nvme_init/*fd_nvme_huge_mem*/, 0x2000000000);
+		
+		if (huge_mem_virt_base_addr == MAP_FAILED) {
+			fprintf(stderr, "spdk_fetch_nvme_p2p_host_init: Unable to mmap nvme IO memory.\n");
+			exit(1);
+		}
+		
+		// Set SPDK env base virtual address for huge-mem start
+		opts->base_virtaddr = (uint64_t)huge_mem_virt_base_addr;
+		
+
+		// Set NVME access base virtual address
+		g_nvme_p2p_params->nvme_access_virt_base_addr = mmap(NULL, P2P_ALL_NVME_DEVICES_ACCESS_MEM_RANGE, PROT_READ|PROT_WRITE, MAP_SHARED, fd_nvme_init/*fd_nvme_access*/, P2P_NVME_ACCESS_PHY_ADDR);
+		
+		if (g_nvme_p2p_params->nvme_access_virt_base_addr == MAP_FAILED) {
+			fprintf(stderr, "spdk_fetch_nvme_p2p_host_init: Unable to mmap nvme access memory.\n");
+			exit(1);
+		}
+
+		nvme_trans_tbl_virt_base_addr = mmap(NULL, P2P_TRANS_TBL_MEM_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd_nvme_init/*fd_trans_tbl*/, 0x1004001000);
+
+		if (nvme_trans_tbl_virt_base_addr == MAP_FAILED) {
+			fprintf(stderr, "spdk_fetch_nvme_p2p_host_init: Unable to mmap translation table memory.\n");
+			exit(1);
+		}
+		// Read init info from memory
+		g_nvme_p2p_params->p2p_host_info = *((struct nvme_pci_p2p_host_info*)init_data_virt_base_addr);
+		
+		// Set P2P memory information
+		g_mem_p2p_en = true;
+		g_spdk_p2p_dev_hugemem_base_phys_addr = g_nvme_p2p_params->p2p_host_info.p2p_header.ep_device_bar4;	               
+       		g_p2p_hugemem_virt_base_addr = (uint64_t)huge_mem_virt_base_addr;
+		
+		// Initialize HW translation table
+		for (i = 0; i < g_nvme_p2p_params->p2p_host_info.p2p_header.num_nvme_devices && i < NVME_P2P_NUM_NVME_DEVS; i++) {
+			nvme_p2p_hw_trans_table.nvme_bar0[i] = g_nvme_p2p_params->p2p_host_info.p2p_data[i].nvme_bar0;
+		}
+		
+		// Write to memory
+		*(struct nvme_p2p_hw_trans_table_info*)nvme_trans_tbl_virt_base_addr = nvme_p2p_hw_trans_table;
+	
+		//ZIV_P2P_TEST:	
+		*(struct nvme_p2p_hw_trans_table_info*)((uint8_t*)huge_mem_virt_base_addr + 0x100)= nvme_p2p_hw_trans_table;
+		*(struct nvme_p2p_hw_trans_table_info*)huge_mem_virt_base_addr = nvme_p2p_hw_trans_table;
+
+		close(fd_nvme_init);        	
+		//close(fd_nvme_access);
+		//close(fd_nvme_huge_mem);
+		//close(fd_trans_tbl);
+		
+		return 0;
+    	}
+	
+	fprintf(stderr, "spdk_fetch_nvme_p2p_host_init: unable to open files.\n");
+	return -1;
+}
+
+static int 
+nvme_p2p_init_controllers(struct spdk_nvme_probe_ctx * probe_ctx)
+{
+	uint8_t i;
+	bool init_done = false;
+	
+	// Go over all reported NVME devices and intialize controllers
+	for (i = 0; i < g_nvme_p2p_params->p2p_host_info.p2p_header.num_nvme_devices && i < NVME_P2P_NUM_NVME_DEVS; i++) {
+		struct spdk_nvme_transport_id trid = {};
+		
+		spdk_nvme_trid_populate_transport(&trid, SPDK_NVME_TRANSPORT_PCIE);
+		strcpy(trid.traddr, g_nvme_p2p_params->p2p_host_info.p2p_data[i].nvme_dbdf);
+		
+		g_nvme_p2p_params->curr_dev_idx = i;
+
+		// Check if user entered specific NVME DBDF. If so then create controller only for this device
+		if (strlen(probe_ctx->trid.traddr) != 0) {
+			if (strcmp(probe_ctx->trid.traddr, g_nvme_p2p_params->p2p_host_info.p2p_data[i].nvme_dbdf) == 0) {
+				if (nvme_ctrlr_probe(&trid, probe_ctx, NULL) < 0) {
+					SPDK_ERRLOG("nvme_p2p_init_controllers: specific single controller init failed: %s\n", trid.traddr);
+					return -1;
+				}				
+				return 0;
+			}			
+		}
+		else
+		{
+			// Create controllers for all host scanned devices
+			if (nvme_ctrlr_probe(&trid, probe_ctx, NULL) < 0) {
+				SPDK_ERRLOG("nvme_p2p_init_controllers: single controller init failed!\n");
+				return -1;
+			}
+			init_done = true;
+		}
+	}
+
+	if (init_done) {
+		return 0;
+	}
+
+	return -1;
+}
+
 /* This function must only be called while holding g_spdk_nvme_driver->lock */
 static int
 nvme_probe_internal(struct spdk_nvme_probe_ctx *probe_ctx,
@@ -833,7 +1021,14 @@ nvme_probe_internal(struct spdk_nvme_probe_ctx *probe_ctx,
 
 	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 
-	rc = nvme_transport_ctrlr_scan(probe_ctx, direct_connect);
+	// ZIV_P2P
+	if (g_nvme_p2p_params) {
+		rc = nvme_p2p_init_controllers(probe_ctx);
+	}
+	else {
+		rc = nvme_transport_ctrlr_scan(probe_ctx, direct_connect);
+	}
+
 	if (rc != 0) {
 		SPDK_ERRLOG("NVMe ctrlr scan failed\n");
 		TAILQ_FOREACH_SAFE(ctrlr, &probe_ctx->init_ctrlrs, tailq, ctrlr_tmp) {

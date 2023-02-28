@@ -131,7 +131,12 @@ struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_tr
 		return NULL;
 	}
 
-	ctrlr = transport->ops.ctrlr_construct(trid, opts, devhandle);
+	// ZIV_P2P
+	if (g_nvme_p2p_params) {
+		ctrlr = transport->ops.p2p_ctrlr_construct(trid, opts);
+	} else {
+		ctrlr = transport->ops.ctrlr_construct(trid, opts, devhandle);
+	}
 
 	return ctrlr;
 }
@@ -156,7 +161,13 @@ nvme_transport_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
-	return transport->ops.ctrlr_destruct(ctrlr);
+
+	// ZIV_P2P
+	if (g_nvme_p2p_params) {
+		return transport->ops.p2p_ctrlr_destruct(ctrlr);
+	} else {
+		return transport->ops.ctrlr_destruct(ctrlr);
+	}
 }
 
 int

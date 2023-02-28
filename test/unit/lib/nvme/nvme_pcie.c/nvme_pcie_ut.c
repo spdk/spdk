@@ -43,6 +43,9 @@
 #include "common/lib/nvme/common_stubs.h"
 
 pid_t g_spdk_nvme_pid;
+// ZIV_P2P
+struct spdk_nvme_p2p_params 	*g_nvme_p2p_params = NULL;
+
 DEFINE_STUB(spdk_mem_register, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
 

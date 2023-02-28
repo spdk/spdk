@@ -847,6 +847,20 @@ int spdk_nvme_probe(const struct spdk_nvme_transport_id *trid,
 		    spdk_nvme_attach_cb attach_cb,
 		    spdk_nvme_remove_cb remove_cb);
 
+// ZIV_P2P
+/**
+ * Fetch P2P Host initialized data from dedicated section in RAM. Initialize
+ * global database to be used by NVME probe infrastructure
+ */
+
+int spdk_fetch_nvme_p2p_host_init(struct spdk_env_opts* opts);
+
+/**
+ * Free allocated memory for P2P info
+ */
+
+void spdk_free_p2p_resources(void);
+
 /**
  * Connect the NVMe driver to the device located at the given transport ID.
  *
@@ -3880,11 +3894,17 @@ struct spdk_nvme_transport_ops {
 	struct spdk_nvme_ctrlr *(*ctrlr_construct)(const struct spdk_nvme_transport_id *trid,
 			const struct spdk_nvme_ctrlr_opts *opts,
 			void *devhandle);
-
+	// ZIV_P2P
+	struct spdk_nvme_ctrlr *(*p2p_ctrlr_construct)(const struct spdk_nvme_transport_id *trid,
+			const struct spdk_nvme_ctrlr_opts *opts);
+	
 	int (*ctrlr_scan)(struct spdk_nvme_probe_ctx *probe_ctx, bool direct_connect);
 
 	int (*ctrlr_destruct)(struct spdk_nvme_ctrlr *ctrlr);
-
+	
+	// ZIV_P2P
+	int (*p2p_ctrlr_destruct)(struct spdk_nvme_ctrlr *ctrlr);
+	
 	int (*ctrlr_enable)(struct spdk_nvme_ctrlr *ctrlr);
 
 	int (*ctrlr_set_reg_4)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value);

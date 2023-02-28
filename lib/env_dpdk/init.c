@@ -585,6 +585,11 @@ spdk_env_init(const struct spdk_env_opts *opts)
 	}
 	SPDK_PRINTF("]\n");
 
+	// ZIV_P2P
+	if (opts->nvme_p2p_en) {
+		g_nvme_p2p_en = true;
+	}
+	
 	/* DPDK rearranges the array we pass to it, so make a copy
 	 * before passing so we can still free the individual strings
 	 * correctly.

@@ -58,6 +58,12 @@
 #include <linux/vfio.h>
 #include <rte_vfio.h>
 
+// ZIV_P2P
+bool g_mem_p2p_en = false;
+// SPDK huge-mem area as seen from host (e.g. BAR4)
+uint64_t g_spdk_p2p_dev_hugemem_base_phys_addr;
+uint64_t g_p2p_hugemem_virt_base_addr;
+
 struct spdk_vfio_dma_map {
 	struct vfio_iommu_type1_dma_map map;
 	TAILQ_ENTRY(spdk_vfio_dma_map) tailq;
@@ -1415,6 +1421,15 @@ spdk_vtophys(const void *buf, uint64_t *size)
 	uint64_t vaddr, paddr_2mb;
 
 	vaddr = (uint64_t)buf;
+
+	// ZIV_P2P: translate virtual address to host viewed physical address
+	if (g_mem_p2p_en) {
+		// Get current virtual address offset from huge-mem base virtual address
+		// and add to host viewed hug-mem physical base address (assumption is that virtual
+		// address is consecutive)
+		return ((vaddr - g_p2p_hugemem_virt_base_addr) + g_spdk_p2p_dev_hugemem_base_phys_addr);
+	}
+
 	paddr_2mb = spdk_mem_map_translate(g_vtophys_map, vaddr, size);
 
 	/*

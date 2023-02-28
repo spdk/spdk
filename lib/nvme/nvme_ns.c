@@ -121,6 +121,9 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 	struct spdk_nvme_ns_data		*nsdata;
 	int					rc;
 
+	// ZIV_P2P
+	printf("ZIV_P2P: nvme_ctrlr_identify_ns called\n");
+
 	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
@@ -159,6 +162,9 @@ nvme_ctrlr_identify_ns_iocs_specific(struct spdk_nvme_ns *ns)
 	struct nvme_completion_poll_status *status;
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 	int rc;
+
+	// ZIV_P2P
+	printf("ZIV_P2P: nvme_ctrlr_identify_ns_iocs_specific called\n");
 
 	switch (ns->csi) {
 	case SPDK_NVME_CSI_ZNS:
@@ -213,6 +219,9 @@ nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 {
 	struct nvme_completion_poll_status      *status;
 	int                                     rc;
+
+	// ZIV_P2P
+	printf("ZIV_P2P: nvme_ctrlr_identify_id_desc called\n");
 
 	memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
 

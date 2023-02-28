@@ -68,6 +68,7 @@ nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
 	uint32_t i;
+	size_t queue_len;
 
 	/* all head/tail vals are set to 0 */
 	pqpair->last_sq_tail = pqpair->sq_tail = pqpair->sq_head = pqpair->cq_head = 0;
@@ -83,6 +84,10 @@ nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair)
 	for (i = 0; i < pqpair->num_entries; i++) {
 		pqpair->cpl[i].status.p = 0;
 	}
+
+	//ZIV_P2P
+	queue_len = pqpair->num_entries * sizeof(struct spdk_nvme_cmd);
+	spdk_refresh_dcache(pqpair->cpl, queue_len);
 
 	return 0;
 }
@@ -187,6 +192,10 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 			queue_len = pqpair->num_entries * sizeof(struct spdk_nvme_cmd);
 			queue_align = spdk_max(spdk_align32pow2(queue_len), page_align);
 			pqpair->cmd = spdk_zmalloc(queue_len, queue_align, NULL, SPDK_ENV_SOCKET_ID_ANY, flags);
+
+			//ZIV_P2P
+			spdk_refresh_dcache(pqpair->cmd, queue_len);
+
 			if (pqpair->cmd == NULL) {
 				SPDK_ERRLOG("alloc qpair_cmd failed\n");
 				return -ENOMEM;
@@ -634,6 +643,9 @@ nvme_pcie_copy_command(struct spdk_nvme_cmd *dst, const struct spdk_nvme_cmd *sr
 	_mm_stream_si128(&d128[2], _mm_load_si128(&s128[2]));
 	_mm_stream_si128(&d128[3], _mm_load_si128(&s128[3]));
 #else
+	// ZIV_P2P
+	spdk_refresh_dcache(dst, sizeof(struct spdk_nvme_cmd));
+
 	*dst = *src;
 #endif
 }
@@ -904,8 +916,14 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		cpl = &pqpair->cpl[pqpair->cq_head];
 
 		if (!next_is_valid && cpl->status.p != pqpair->flags.phase) {
+			// ZIV_P2P
+			spdk_refresh_dcache(cpl, sizeof(struct spdk_nvme_cpl));
+			
 			break;
 		}
+
+		// ZIV_P2P
+		//printf("ZIV_P2P: handle CQ - CONS: %x. CQE CID: %x\n", pqpair->cq_head, cpl->cid); 
 
 		if (spdk_likely(pqpair->cq_head + 1 != pqpair->num_entries)) {
 			next_cq_head = pqpair->cq_head + 1;
@@ -917,6 +935,8 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		next_cpl = &pqpair->cpl[next_cq_head];
 		next_is_valid = (next_cpl->status.p == next_phase);
 		if (next_is_valid) {
+			// ZIV_P2P
+			//	printf("ZIV_P2P: prefetch TR: %lx\n", (uint64_t)&pqpair->tr[next_cpl->cid]);
 			__builtin_prefetch(&pqpair->tr[next_cpl->cid]);
 		}
 
@@ -937,10 +957,16 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		}
 
 		tr = &pqpair->tr[cpl->cid];
+
+		// ZIV_P2P
+		SPDK_DEBUGLOG(nvme, "ZIV_P2P: CPL cid:%u, sqhd:%u, sqid:%u, csts:%u\n", cpl->cid, cpl->sqhd, cpl->sqid, cpl->status_raw);
+
 		/* Prefetch the req's STAILQ_ENTRY since we'll need to access it
 		 * as part of putting the req back on the qpair's free list.
 		 */
 		__builtin_prefetch(&tr->req->stailq);
+		// ZIV_P2P
+		//printf("ZIV_P2P: TR tailq: %lx\n", (uint64_t)&tr->req->stailq);
 		pqpair->sq_head = cpl->sqhd;
 
 		if (tr->req) {
@@ -986,6 +1012,9 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 
 	if (spdk_unlikely(pqpair->flags.has_pending_vtophys_failures)) {
 		struct nvme_tracker *tr, *tmp;
+
+		// ZIV_P2P
+		printf("ZIV_P2P: BAD VTOPHYS\n");
 
 		TAILQ_FOREACH_SAFE(tr, &pqpair->outstanding_tr, tq_list, tmp) {
 			if (tr->bad_vtophys) {

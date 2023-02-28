@@ -399,7 +399,8 @@ static int TestOneInput(const uint8_t *data, size_t size)
 {
 	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
 
-	g_ctrlr = spdk_nvme_connect(&g_trid, NULL, 0);
+	// ZIV_P2P
+	g_ctrlr = spdk_nvme_connect(&g_trid, NULL, 0, 0);
 	if (g_ctrlr == NULL) {
 		fprintf(stderr, "spdk_nvme_connect() failed for transport address '%s'\n",
 			g_trid.traddr);

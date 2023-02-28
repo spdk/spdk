@@ -1973,6 +1973,9 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int	rc;
 
+	// ZIV_P2P
+	printf("ZIV_P2P: nvme_ctrlr_identify called\n");
+
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY,
 			     ctrlr->opts.admin_timeout_ms);
 
@@ -2087,6 +2090,9 @@ static int
 nvme_ctrlr_identify_iocs_specific(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int	rc;
+
+	// ZIV_P2P
+	printf("ZIV_P2P: nvme_ctrlr_identify_iocs_specific called\n");
 
 	if (!nvme_ctrlr_multi_iocs_enabled(ctrlr)) {
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QUEUES,
@@ -2320,6 +2326,9 @@ nvme_ctrlr_identify_active_ns_async(struct nvme_active_ns_ctx *ctx)
 		goto out;
 	}
 
+	// ZIV_P2P
+	printf("ZIV_P2P: nvme_ctrlr_identify_active_ns_async called\n");
+
 	assert(ctx->new_ns_list != NULL);
 
 	/*
@@ -2482,6 +2491,9 @@ nvme_ctrlr_identify_ns_async(struct spdk_nvme_ns *ns)
 
 	nsdata = &ns->nsdata;
 
+	// ZIV_P2P
+	printf("ZIV_P2P: nvme_ctrlr_identify_ns_async called. NS ID: %x\n", ns->id);
+
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS,
 			     ctrlr->opts.admin_timeout_ms);
 	return nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS, 0, ns->id, 0,
@@ -2579,6 +2591,9 @@ nvme_ctrlr_identify_ns_iocs_specific_async(struct spdk_nvme_ns *ns)
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 	int rc;
 
+	// ZIV_P2P
+	printf("ZIV_P2P: nvme_ctrlr_identify_ns_iocs_specific_async called\n");
+
 	switch (ns->csi) {
 	case SPDK_NVME_CSI_ZNS:
 		break;
@@ -2630,6 +2645,9 @@ nvme_ctrlr_identify_id_desc_async_done(void *arg, const struct spdk_nvme_cpl *cp
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 	uint32_t nsid;
 	int rc;
+
+	// ZIV_P2P
+	printf("ZIV_P2P: nvme_ctrlr_identify_id_desc_async_done called\n");
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		/*

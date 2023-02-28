@@ -242,7 +242,8 @@ static pthread_barrier_t g_worker_sync_barrier;
 static uint64_t g_tsc_rate;
 
 static bool g_monitor_perf_cores = false;
-
+// ZIV_P2P
+static bool g_p2p_en = false;
 static uint32_t g_io_align = 0x200;
 static bool g_io_align_specified;
 static uint32_t g_io_size_bytes;
@@ -1736,6 +1737,8 @@ static void usage(char *program_name)
 	printf("\t Example: -b 0000:d8:00.0 -b 0000:d9:00.0\n");
 	printf("\t[-q, --io-depth <val> io depth]\n");
 	printf("\t[-o, --io-size <val> io size in bytes]\n");
+	// ZIV_P2P
+	printf("\t[-p, --p2p-enable enable to run P2P IO vs. NVME devices that reside on the same host\n");
 	printf("\t[-O, --io-unit-size io unit size in bytes (4-byte aligned) for SPDK driver. default: same as io size]\n");
 	printf("\t[-P, --num-qpairs <val> number of io queues per namespace. default: 1]\n");
 	printf("\t[-U, --num-unused-qpairs <val> number of unused io queues per controller. default: 0]\n");
@@ -2215,8 +2218,8 @@ parse_metadata(const char *metacfg_str)
 
 	return 0;
 }
-
-#define PERF_GETOPT_SHORT "a:b:c:e:gi:lmo:q:r:k:s:t:w:z:A:C:DF:GHILM:NO:P:Q:RS:T:U:VZ:"
+// ZIV_P2Pc
+#define PERF_GETOPT_SHORT "a:b:c:e:gi:lpmo:q:r:k:s:t:w:z:A:C:DF:GHILM:NO:P:Q:RS:T:U:VZ:"
 
 static const struct option g_perf_cmdline_opts[] = {
 #define PERF_WARMUP_TIME	'a'
@@ -2237,6 +2240,9 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"cpu-usage", no_argument, NULL, PERF_CPU_USAGE},
 #define PERF_IO_SIZE	'o'
 	{"io-size",			required_argument,	NULL, PERF_IO_SIZE},
+// ZIV_P2P
+#define PERF_P2P_EN	'p'
+	{"p2p-enable", no_argument, NULL, PERF_P2P_EN},
 #define PERF_IO_DEPTH	'q'
 	{"io-depth",			required_argument,	NULL, PERF_IO_DEPTH},
 #define PERF_TRANSPORT	'r'
@@ -2416,6 +2422,11 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			break;
 		case PERF_CPU_USAGE:
 			g_monitor_perf_cores = true;
+			break;
+		// ZIV_P2P
+		case PERF_P2P_EN:
+			g_p2p_en = true;
+			env_opts->nvme_p2p_en = true;
 			break;
 		case PERF_TRANSPORT:
 			if (add_trid(optarg)) {
@@ -2667,7 +2678,8 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		printf("Attached to NVMe over Fabrics controller at %s:%s: %s\n",
 		       trid->traddr, trid->trsvcid,
 		       trid->subnqn);
-	} else {
+	// ZIV_P2P
+	} else if (!g_p2p_en) {
 		if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
 			return;
 		}
@@ -2682,6 +2694,9 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		printf("Attached to NVMe Controller at %s [%04x:%04x]\n",
 		       trid->traddr,
 		       pci_id.vendor_id, pci_id.device_id);
+	} else {
+		// ZIV_P2P
+		printf("Attached to %s\n", trid->traddr);
 	}
 
 	register_ctrlr(ctrlr, trid_entry);
@@ -2869,6 +2884,13 @@ int main(int argc, char **argv)
 		fprintf(stderr, "Failed to init mutex\n");
 		return -1;
 	}
+	
+	// ZIV_P2P
+	if (g_p2p_en && spdk_fetch_nvme_p2p_host_init(&opts) < 0) {
+		fprintf(stderr, "Perf P2P: Failed to initialize P2P host database.\n");
+		return -1;
+	}
+	
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
 		unregister_trids();
@@ -2963,6 +2985,8 @@ cleanup:
 	unregister_namespaces();
 	unregister_controllers();
 	unregister_workers();
+	// ZIV_P2P
+	spdk_free_p2p_resources();
 
 	spdk_env_fini();
 

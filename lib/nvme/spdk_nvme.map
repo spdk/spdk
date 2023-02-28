@@ -29,7 +29,9 @@
 	spdk_nvme_detach_poll;
 
 	spdk_nvme_pcie_set_hotplug_filter;
-
+	
+	spdk_fetch_nvme_p2p_host_init;
+	
 	spdk_nvme_ctrlr_is_discovery;
 	spdk_nvme_ctrlr_is_fabrics;
 	spdk_nvme_ctrlr_get_default_ctrlr_opts;

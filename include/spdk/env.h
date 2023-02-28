@@ -87,6 +87,8 @@ struct spdk_env_opts {
 	struct spdk_pci_addr	*pci_allowed;
 	const char		*iova_mode;
 	uint64_t		base_virtaddr;
+	// ZIV_P2P
+	bool			nvme_p2p_en;	
 
 	/** Opaque context for use of the env implementation. */
 	void			*env_context;
