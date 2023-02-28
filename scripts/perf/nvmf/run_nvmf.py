@@ -56,6 +56,7 @@ class Server:
 
         self.enable_adq = False
         self.adq_priority = None
+        self.enable_arfs = server_config.get("enable_arfs", False)
         self.irq_settings = {"mode": "default"}
 
         if "adq_enable" in server_config and server_config["adq_enable"]:
@@ -126,6 +127,7 @@ class Server:
         self.load_drivers()
         self.configure_services()
         self.configure_sysctl()
+        self.configure_arfs()
         self.configure_tuned()
         self.configure_cpu_governor()
         self.configure_irq_affinity(**self.irq_settings)
@@ -164,6 +166,21 @@ class Server:
         else:
             self.reload_driver("irdma", "roce_ena=0")
             self.log.info("Loaded irdma driver with iWARP enabled")
+
+    def configure_arfs(self):
+        rps_flow_cnt = 512
+        if not self.enable_arfs:
+            rps_flow_cnt = 0
+
+        nic_names = [self.get_nic_name_by_ip(n) for n in self.nic_ips]
+        for nic_name in nic_names:
+            self.exec_cmd(["sudo", "ethtool", "-K", nic_name, "ntuple", "on"])
+            self.log.info(f"Setting rps_flow_cnt for {nic_name}")
+            queue_files = self.exec_cmd(["ls", f"/sys/class/net/{nic_name}/queues/"]).strip().split("\n")
+            queue_files = filter(lambda x: x.startswith("rx-"), queue_files)
+
+            for qf in queue_files:
+                self.exec_cmd(["sudo", "bash", "-c", f"echo {rps_flow_cnt} > /sys/class/net/{nic_name}/queues/{qf}/rps_flow_cnt"])
 
     def configure_adq(self):
         self.adq_load_modules()
@@ -318,10 +335,14 @@ class Server:
             "net.ipv4.tcp_wmem": "8192 1048576 33554432",
             "net.ipv4.route.flush": 1,
             "vm.overcommit_memory": 1,
+            "net.core.rps_sock_flow_entries": 0
         }
 
         if self.enable_adq:
             sysctl_opts.update(self.adq_set_busy_read(1))
+
+        if self.enable_arfs:
+            sysctl_opts.update({"net.core.rps_sock_flow_entries": 32768})
 
         for opt, value in sysctl_opts.items():
             self.sysctl_restore_dict.update({opt: self.exec_cmd(["sysctl", "-n", opt]).strip()})
