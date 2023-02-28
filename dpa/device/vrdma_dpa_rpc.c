@@ -47,7 +47,8 @@ uint64_t test_dpa_flexio_work(uint64_t arg1, uint64_t arg2, uint64_t arg3)
 }
 #endif
 
-__dpa_rpc__ uint64_t vrdma_qp_rpc_handler(uint64_t arg1, enum vrdma_dpa_vq_state state)
+flexio_dev_rpc_handler_t vrdma_qp_rpc_handler;
+uint64_t vrdma_qp_rpc_handler(uint64_t arg1)
 {
 
 	struct  vrdma_dpa_event_handler_ctx *ectx;
@@ -64,7 +65,6 @@ __dpa_rpc__ uint64_t vrdma_qp_rpc_handler(uint64_t arg1, enum vrdma_dpa_vq_state
 		"guest_db_cq_ctx.ci %d\n", ectx->guest_db_cq_ctx.cqn,
 		ectx->emu_db_to_cq_id, ectx->guest_db_cq_ctx.ci);
 #endif
-	ectx->dma_qp.state = state;
 	flexio_dev_db_ctx_arm(dtctx, ectx->guest_db_cq_ctx.cqn,
 			      ectx->emu_db_to_cq_id);
 	flexio_dev_cq_arm(dtctx, ectx->guest_db_cq_ctx.ci,

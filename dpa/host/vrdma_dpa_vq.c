@@ -104,12 +104,28 @@ static int vrdma_dpa_vq_state_modify(struct vrdma_dpa_vq *dpa_vq,
 				enum vrdma_dpa_vq_state state)
 {
 	uint64_t rpc_ret;
+	char *dst_addr;
+	int value;
 	int err;
+
+	/* Just update the state. placed it as last field in struct */
+	value = state;
+	dst_addr = (char *)dpa_vq->heap_memory +
+		   offsetof(struct vrdma_dpa_event_handler_ctx,
+			    dma_qp.state);
+
+	err = flexio_host2dev_memcpy(dpa_vq->dpa_ctx->flexio_process,
+				     &value, sizeof(value),
+				     (uintptr_t)dst_addr);
+	if (err) {
+		log_error("Failed to copy vq_state to dev, err(%d)", err);
+		return err;
+	}
 
 	if (state == VRDMA_DPA_VQ_STATE_RDY) {
 		err = flexio_process_call(dpa_vq->dpa_ctx->flexio_process,
 					  dpa_vq->dpa_ctx->vq_rpc_func[VRDMA_DPA_VQ_QP],
-					  &rpc_ret, dpa_vq->heap_memory, state);
+					  &rpc_ret, dpa_vq->heap_memory);
 		if (err) {
 			log_error("Failed to call rpc, err(%d), rpc_ret(%ld)",
 				  err, rpc_ret);
@@ -739,7 +755,7 @@ _vrdma_dpa_vq_create(struct vrdma_ctrl *ctrl,
 		goto err_rq_dma_q_handler_run;
 	}
 	return dpa_vq;
-
+err_vq_state_modify:
 err_rq_dma_q_handler_run:
 err_db_handler_run:
 err_handler_init:
@@ -1176,7 +1192,7 @@ static void vrdma_dpa_vq_dbg_stats_query(struct snap_vrdma_queue *virtq)
 				  dpa_ctx->dev2host_copy_func,
 				  &func_ret, (uint64_t)dest_addr);
 	if (err) {
-		log_error("Failed to create thread, err(%d)", err);
+		log_error("Failed to create thread, err(%d), err");
 		return;
 	}
 	log_notice("dpa_qp debug count");
