@@ -35,6 +35,7 @@ class Server:
         self.username = general_config["username"]
         self.password = general_config["password"]
         self.transport = general_config["transport"].lower()
+        self.skip_spdk_install = general_config.get('skip_spdk_install', False)
         self.nic_ips = server_config["nic_ips"]
         self.mode = server_config["mode"]
         self.irdma_roce_enable = False
@@ -529,7 +530,7 @@ class Target(Server):
         self.spdk_dir = os.path.abspath(os.path.join(self.script_dir, "../../../"))
         self.set_local_nic_info(self.set_local_nic_info_helper())
 
-        if "skip_spdk_install" not in general_config or general_config["skip_spdk_install"] is False:
+        if self.skip_spdk_install is False:
             self.zip_spdk_sources(self.spdk_dir, "/tmp/spdk.zip")
 
         self.configure_system()
@@ -728,8 +729,9 @@ class Initiator(Server):
         self.exec_cmd(["mkdir", "-p", "%s" % self.spdk_dir])
         self._nics_json_obj = json.loads(self.exec_cmd(["ip", "-j", "address", "show"]))
 
-        if "skip_spdk_install" not in general_config or general_config["skip_spdk_install"] is False:
+        if self.skip_spdk_install is False:
             self.copy_spdk("/tmp/spdk.zip")
+
         self.set_local_nic_info(self.set_local_nic_info_helper())
         self.set_cpu_frequency()
         self.configure_system()
@@ -1491,7 +1493,7 @@ class SPDKInitiator(Initiator):
     def __init__(self, name, general_config, initiator_config):
         super().__init__(name, general_config, initiator_config)
 
-        if "skip_spdk_install" not in general_config or general_config["skip_spdk_install"] is False:
+        if self.skip_spdk_install is False:
             self.install_spdk()
 
         # Optional fields
