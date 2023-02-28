@@ -397,3 +397,46 @@ rpc_accel_set_options(struct spdk_jsonrpc_request *request, const struct spdk_js
 	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("accel_set_options", rpc_accel_set_options, SPDK_RPC_STARTUP)
+
+static void
+rpc_accel_get_stats_done(struct accel_stats *stats, void *cb_arg)
+{
+	struct spdk_jsonrpc_request *request = cb_arg;
+	struct spdk_json_write_ctx *w;
+	const char *name;
+	int i;
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_uint64(w, "sequence_executed", stats->sequence_executed);
+	spdk_json_write_named_uint64(w, "sequence_failed", stats->sequence_failed);
+	spdk_json_write_named_array_begin(w, "operations");
+	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+		if (stats->operations[i].executed + stats->operations[i].failed == 0) {
+			continue;
+		}
+		_accel_get_opc_name(i, &name);
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "opcode", name);
+		spdk_json_write_named_uint64(w, "executed", stats->operations[i].executed);
+		spdk_json_write_named_uint64(w, "failed", stats->operations[i].failed);
+		spdk_json_write_object_end(w);
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_object_end(w);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+static void
+rpc_accel_get_stats(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	int rc;
+
+	rc = accel_get_stats(rpc_accel_get_stats_done, request);
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+	}
+}
+SPDK_RPC_REGISTER("accel_get_stats", rpc_accel_get_stats, SPDK_RPC_RUNTIME)

@@ -100,3 +100,9 @@ def accel_set_options(client, small_cache_size, large_cache_size):
         params['large_cache_size'] = large_cache_size
 
     return client.call('accel_set_options', params)
+
+
+def accel_get_stats(client):
+    """Get accel framework's statistics"""
+
+    return client.call('accel_get_stats')

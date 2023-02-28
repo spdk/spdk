@@ -2874,6 +2874,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('--large-cache-size', type=int, help='Size of the large iobuf cache')
     p.set_defaults(func=accel_set_options)
 
+    def accel_get_stats(args):
+        print_dict(rpc.accel.accel_get_stats(args.client))
+
+    p = subparsers.add_parser('accel_get_stats', help='Display accel framework\'s statistics')
+    p.set_defaults(func=accel_get_stats)
+
     # ioat
     def ioat_scan_accel_module(args):
         rpc.ioat.ioat_scan_accel_module(args.client)

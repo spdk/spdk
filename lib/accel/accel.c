@@ -2520,4 +2520,57 @@ spdk_accel_get_opts(struct spdk_accel_opts *opts)
 	opts->size = size;
 }
 
+struct accel_get_stats_ctx {
+	struct accel_stats	stats;
+	accel_get_stats_cb	cb_fn;
+	void			*cb_arg;
+};
+
+static void
+accel_get_channel_stats_done(struct spdk_io_channel_iter *iter, int status)
+{
+	struct accel_get_stats_ctx *ctx = spdk_io_channel_iter_get_ctx(iter);
+
+	ctx->cb_fn(&ctx->stats, ctx->cb_arg);
+	free(ctx);
+}
+
+static void
+accel_get_channel_stats(struct spdk_io_channel_iter *iter)
+{
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(iter);
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+	struct accel_get_stats_ctx *ctx = spdk_io_channel_iter_get_ctx(iter);
+	struct accel_stats *stats = &ctx->stats;
+	int i;
+
+	stats->sequence_executed += accel_ch->stats.sequence_executed;
+	stats->sequence_failed += accel_ch->stats.sequence_failed;
+	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+		stats->operations[i].executed += accel_ch->stats.operations[i].executed;
+		stats->operations[i].failed += accel_ch->stats.operations[i].failed;
+	}
+
+	spdk_for_each_channel_continue(iter, 0);
+}
+
+int
+accel_get_stats(accel_get_stats_cb cb_fn, void *cb_arg)
+{
+	struct accel_get_stats_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		return -ENOMEM;
+	}
+
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	spdk_for_each_channel(&spdk_accel_module_list, accel_get_channel_stats, ctx,
+			      accel_get_channel_stats_done);
+
+	return 0;
+}
+
 SPDK_LOG_REGISTER_COMPONENT(accel)

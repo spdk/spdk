@@ -1981,6 +1981,57 @@ Example response:
 }
 ~~~
 
+### accel_get_stats {#rpc_accel_get_stats}
+
+Retrieve accel framework's statistics.  Statistics for opcodes that have never been executed (i.e.
+all their stats are at 0) aren't included in the `operations` array.
+
+#### Parameters
+
+None.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "accel_get_stats",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "sequence_executed": 256,
+    "sequence_failed": 0,
+    "operations": [
+      {
+        "opcode": "copy",
+        "executed": 256,
+        "failed": 0
+      },
+      {
+        "opcode": "encrypt",
+        "executed": 128,
+        "failed": 0
+      },
+      {
+        "opcode": "decrypt",
+        "executed": 128,
+        "failed": 0
+      }
+    ]
+  }
+}
+~~~
+
 ### compressdev_scan_accel_module {#rpc_compressdev_scan_accel_module}
 
 Set config and enable compressdev accel module offload.
