@@ -2363,11 +2363,13 @@ test_submit_nvme_cmd(void)
 
 	ut_test_submit_fused_nvme_cmd(ch, bdev_io);
 
-	/* Verify that ext NVME API is called */
+	/* Verify that ext NVME API is called when data is described by memory domain  */
 	g_ut_readv_ext_called = false;
+	bdev_io->u.bdev.memory_domain = (void *)0xdeadbeef;
 	ut_test_submit_nvme_cmd(ch, bdev_io, SPDK_BDEV_IO_TYPE_READ);
 	CU_ASSERT(g_ut_readv_ext_called == true);
 	g_ut_readv_ext_called = false;
+	bdev_io->u.bdev.memory_domain = NULL;
 
 	ut_test_submit_admin_cmd(ch, bdev_io, ctrlr);
 
