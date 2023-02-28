@@ -155,8 +155,6 @@ struct vrdma_dpa_event_handler_ctx {
 	uint16_t vq_index;
 	uint16_t rq_last_fetch_start;
 	uint16_t sq_last_fetch_start;
-	uint16_t rq_last_fetch_end;
-	uint16_t sq_last_fetch_end;
 	struct {
 		struct vrdma_dpa_cq qp_rqcq;
 		uint32_t hw_qp_sq_pi;

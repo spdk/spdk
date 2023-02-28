@@ -281,10 +281,6 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 out:
 	ehctx->rq_last_fetch_start = rq_pi;
 	ehctx->sq_last_fetch_start = sq_pi;
-
-err_state:
-	flexio_dev_db_ctx_arm(dtctx, ehctx->guest_db_cq_ctx.cqn,
-			      ehctx->emu_db_to_cq_id);
 	/*fetch rq_pi*/
 	asm volatile("fence iorw, iorw" ::: "memory");
 	rq_pi = *(uint16_t*)(ehctx->window_base_addr +
@@ -298,6 +294,10 @@ err_state:
 				ehctx->guest_db_cq_ctx.cqn,
 				ehctx->emu_db_to_cq_id);
 	}
+
+err_state:
+	flexio_dev_db_ctx_arm(dtctx, ehctx->guest_db_cq_ctx.cqn,
+			      ehctx->emu_db_to_cq_id);
 
 	vrdma_dpa_db_cq_incr(&ehctx->guest_db_cq_ctx);
 	flexio_dev_dbr_cq_set_ci(ehctx->guest_db_cq_ctx.dbr,
