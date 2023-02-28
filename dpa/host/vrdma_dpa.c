@@ -399,7 +399,7 @@ void vrdma_dpa_uninit(void *in)
 	flexio_outbox_destroy(dpa_ctx->db_outbox);
 	flexio_uar_destroy(dpa_ctx->flexio_uar);
 	mlx5dv_devx_free_uar(dpa_ctx->emu_uar);
-#ifdef VRDMA_DPA_PRINT
+#ifdef VRDMA_DPA_DEBUG
 	flexio_print_destroy(dpa_ctx->flexio_process);
 #endif
 	flexio_process_destroy(dpa_ctx->flexio_process);
