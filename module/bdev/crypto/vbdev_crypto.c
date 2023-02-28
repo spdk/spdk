@@ -72,7 +72,6 @@ struct crypto_bdev_io {
 static void vbdev_crypto_queue_io(struct spdk_bdev_io *bdev_io,
 				  enum crypto_io_resubmit_state state);
 static void _complete_internal_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
-static void _complete_internal_write(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 static void vbdev_crypto_examine(struct spdk_bdev *bdev);
 static int vbdev_crypto_claim(const char *bdev_name);
 static void vbdev_crypto_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
@@ -94,7 +93,7 @@ crypto_write(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io)
 	/* Write the encrypted data. */
 	rc = spdk_bdev_writev_blocks_ext(crypto_bdev->base_desc, crypto_ch->base_ch,
 					 &crypto_io->aux_buf_iov, 1, crypto_io->aux_offset_blocks,
-					 crypto_io->aux_num_blocks, _complete_internal_write,
+					 crypto_io->aux_num_blocks, _complete_internal_io,
 					 bdev_io, &opts);
 	if (spdk_unlikely(rc != 0)) {
 		if (rc == -ENOMEM) {
@@ -166,41 +165,11 @@ crypto_encrypt(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io
 	crypto_write(crypto_ch, bdev_io);
 }
 
-/* Completion callback for IO that were issued from this bdev other than read/write.
- * They have their own for readability.
- */
 static void
 _complete_internal_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *orig_io = cb_arg;
 	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
-
-	spdk_bdev_io_complete(orig_io, status);
-	spdk_bdev_free_io(bdev_io);
-}
-
-/* Completion callback for writes that were issued from this bdev. */
-static void
-_complete_internal_write(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
-{
-	struct spdk_bdev_io *orig_io = cb_arg;
-	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
-
-	spdk_bdev_io_complete(orig_io, status);
-	spdk_bdev_free_io(bdev_io);
-}
-
-/* Completion callback for reads that were issued from this bdev. */
-static void
-_complete_internal_read(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
-{
-	struct spdk_bdev_io *orig_io = cb_arg;
-	enum spdk_bdev_io_status status = SPDK_BDEV_IO_STATUS_SUCCESS;
-
-	if (spdk_unlikely(!success)) {
-		SPDK_ERRLOG("Failed to read prior to decrypting!\n");
-		status = SPDK_BDEV_IO_STATUS_FAILED;
-	}
 
 	spdk_bdev_io_complete(orig_io, status);
 	spdk_bdev_free_io(bdev_io);
@@ -270,7 +239,7 @@ crypto_read(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io)
 	rc = spdk_bdev_readv_blocks_ext(crypto_bdev->base_desc, crypto_ch->base_ch,
 					bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 					bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
-					_complete_internal_read, bdev_io, &opts);
+					_complete_internal_io, bdev_io, &opts);
 	if (rc != 0) {
 		if (rc == -ENOMEM) {
 			SPDK_DEBUGLOG(vbdev_crypto, "No memory, queue the IO.\n");

@@ -426,7 +426,7 @@ test_crypto_op_complete(void)
 	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	g_bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
 	g_completion_called = false;
-	_complete_internal_read(NULL, true, g_bdev_io);
+	_complete_internal_io(NULL, true, g_bdev_io);
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(g_completion_called == true);
 
