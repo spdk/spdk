@@ -1902,6 +1902,8 @@ bdev_nvme_start_reconnect_delay_timer(struct nvme_ctrlr *nvme_ctrlr)
 					    nvme_ctrlr->opts.reconnect_delay_sec * SPDK_SEC_TO_USEC);
 }
 
+static void remove_discovery_entry(struct nvme_ctrlr *nvme_ctrlr);
+
 static void
 _bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 {
@@ -1947,6 +1949,7 @@ _bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 		break;
 	case OP_DESTRUCT:
 		bdev_nvme_delete_ctrlr(nvme_ctrlr, false);
+		remove_discovery_entry(nvme_ctrlr);
 		break;
 	case OP_DELAYED_RECONNECT:
 		nvme_ctrlr_disconnect(nvme_ctrlr, bdev_nvme_start_reconnect_delay_timer);
@@ -5626,6 +5629,34 @@ stop_discovery(struct discovery_ctx *ctx, spdk_bdev_nvme_stop_discovery_fn cb_fn
 
 	free(ctx->entry_ctx_in_use);
 	ctx->entry_ctx_in_use = NULL;
+}
+
+static void
+remove_discovery_entry(struct nvme_ctrlr *nvme_ctrlr)
+{
+	struct discovery_ctx *d_ctx;
+	struct nvme_path_id *path_id;
+	struct spdk_nvme_transport_id trid;
+	struct discovery_entry_ctx *entry_ctx, *tmp;
+
+	path_id = TAILQ_FIRST(&nvme_ctrlr->trids);
+
+	TAILQ_FOREACH(d_ctx, &g_discovery_ctxs, tailq) {
+		TAILQ_FOREACH_SAFE(entry_ctx, &d_ctx->nvm_entry_ctxs, tailq, tmp) {
+			build_trid_from_log_page_entry(&trid, &entry_ctx->entry);
+			if (spdk_nvme_transport_id_compare(&trid, &path_id->trid) != 0) {
+				continue;
+			}
+
+			TAILQ_REMOVE(&d_ctx->nvm_entry_ctxs, entry_ctx, tailq);
+			free(entry_ctx);
+			DISCOVERY_INFOLOG(d_ctx, "Remove discovery entry: %s:%s:%s\n",
+					  trid.subnqn, trid.traddr, trid.trsvcid);
+
+			/* Fail discovery ctrlr to force reattach attempt */
+			spdk_nvme_ctrlr_fail(d_ctx->ctrlr);
+		}
+	}
 }
 
 static void
