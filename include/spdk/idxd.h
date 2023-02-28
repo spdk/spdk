@@ -35,11 +35,6 @@ extern "C" {
  */
 #define SPDK_IDXD_FLAG_NONTEMPORAL IDXD_FLAG_CACHE_CONTROL
 
-/* The following flag is optional and specifies that the destination is persistent memory. The
- * low level library will not set this flag.
- */
-#define SPDK_IDXD_FLAG_PERSISTENT IDXD_FLAG_DEST_STEERING_TAG
-
 /**
  * Opaque handle for a single IDXD channel.
  */
