@@ -47,6 +47,8 @@ function delete_device() {
 trap "cleanup; exit 1" SIGINT SIGTERM EXIT
 
 vm_no=0
+bus_size=32
+
 timing_enter setup_vm
 vm_setup \
 	--force=$vm_no \
@@ -79,9 +81,9 @@ $rootdir/scripts/sma.py -c <(
 		    params:
 		      buses:
 		      - name: 'pci.spdk.0'
-		        count: 32
+		        count: $bus_size
 		      - name: 'pci.spdk.1'
-		        count: 32
+		        count: $bus_size
 		      qmp_addr: 127.0.0.1
 		      qmp_port: 9090
 		crypto:
@@ -145,24 +147,19 @@ delete_device "$devid1"
 # At the end check if vhost devices are gone
 [[ $(vm_exec $vm_no "lsblk | grep -E \"^vd.\" | wc -l") -eq 0 ]]
 
-# Create 31 bdevs, two already exist
-for ((i = 2; i < 33; i++)); do
-	rpc_cmd bdev_null_create null$i 100 4096
-done
-
 devids=()
 
-# Now try to add 33 devices, max for one bus + one device on the next bus
-for ((i = 0; i < 33; i++)); do
-	uuid=$(rpc_cmd bdev_get_bdevs -b null$i | jq -r '.[].uuid')
-	devids[i]=$(create_device $i $uuid | jq -r '.handle')
-done
+# Create two devices, one on each bus
+uuid=$(rpc_cmd bdev_get_bdevs -b null0 | jq -r '.[].uuid')
+devids[0]=$(create_device 0 $uuid | jq -r '.handle')
+uuid=$(rpc_cmd bdev_get_bdevs -b null1 | jq -r '.[].uuid')
+devids[1]=$(create_device $bus_size $uuid | jq -r '.handle')
 
-[[ $(vm_exec $vm_no "lsblk | grep -E \"^vd.\" | wc -l") -eq 33 ]]
+[[ $(vm_exec $vm_no "lsblk | grep -E \"^vd.\" | wc -l") -eq 2 ]]
 
 # Cleanup at the end
-for ((i = 0; i < 33; i++)); do
-	delete_device ${devids[$i]}
+for id in "${devids[@]}"; do
+	delete_device "$id"
 done
 
 # And back to none
@@ -170,9 +167,9 @@ done
 
 key0=1234567890abcdef1234567890abcdef
 rpc_cmd bdev_malloc_create -b malloc0 32 4096
-uuidc=$(rpc_cmd bdev_get_bdevs -b malloc0 | jq -r '.[].uuid')
+uuid=$(rpc_cmd bdev_get_bdevs -b malloc0 | jq -r '.[].uuid')
 
-#Try to create controller with bdev crypto
+# Try to create controller with bdev crypto
 devid0=$(
 	"$rootdir/scripts/sma-client.py" <<- CREATE | jq -r '.handle'
 		{
@@ -183,7 +180,7 @@ devid0=$(
 		      "virtual_id": "0"
 		    },
 		    "volume": {
-		      "volume_id": "$(uuid2base64 $uuidc)",
+		      "volume_id": "$(uuid2base64 $uuid)",
 		      "crypto": {
 		        "cipher": "$(get_cipher AES_CBC)",
 		        "key": "$(format_key $key0)"
@@ -210,6 +207,7 @@ delete_device $devid0
 
 # Test qos
 device_vhost=2
+uuid=$(rpc_cmd bdev_get_bdevs -b null0 | jq -r '.[].uuid')
 device=$(create_device 0 $uuid | jq -r '.handle')
 
 # First check the capabilities
@@ -251,7 +249,7 @@ diff <(get_qos_caps $device_vhost | jq --sort-keys) <(
 EOF
 
 # Make sure that limits were changed
-diff <(rpc_cmd bdev_get_bdevs -b null32 | jq --sort-keys '.[].assigned_rate_limits') <(
+diff <(rpc_cmd bdev_get_bdevs -b "$uuid" | jq --sort-keys '.[].assigned_rate_limits') <(
 	jq --sort-keys <<- EOF
 		{
 		  "rw_ios_per_sec": 3000,
@@ -282,7 +280,7 @@ diff <(rpc_cmd bdev_get_bdevs -b null32 | jq --sort-keys '.[].assigned_rate_limi
 EOF
 
 # Make sure that limits were changed even if volume id is not set
-diff <(rpc_cmd bdev_get_bdevs -b null32 | jq --sort-keys '.[].assigned_rate_limits') <(
+diff <(rpc_cmd bdev_get_bdevs -b "$uuid" | jq --sort-keys '.[].assigned_rate_limits') <(
 	jq --sort-keys <<- EOF
 		{
 		  "rw_ios_per_sec": 4000,
@@ -332,7 +330,7 @@ NOT "$rootdir/scripts/sma-client.py" <<- EOF
 EOF
 
 # Values remain unchanged
-diff <(rpc_cmd bdev_get_bdevs -b null32 | jq --sort-keys '.[].assigned_rate_limits') <(
+diff <(rpc_cmd bdev_get_bdevs -b "$uuid" | jq --sort-keys '.[].assigned_rate_limits') <(
 	jq --sort-keys <<- EOF
 		{
 		  "rw_ios_per_sec": 4000,
