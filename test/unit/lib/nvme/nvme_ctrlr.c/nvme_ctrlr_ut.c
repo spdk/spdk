@@ -3328,6 +3328,38 @@ test_nvme_transport_ctrlr_ready(void)
 	MOCK_CLEAR(nvme_transport_ctrlr_ready);
 }
 
+static void
+test_nvme_ctrlr_disable(void)
+{
+	DECLARE_AND_CONSTRUCT_CTRLR();
+	int rc;
+
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+
+	ctrlr.state = NVME_CTRLR_STATE_TRANSPORT_READY;
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_READY);
+
+	/* Start a Controller Level Reset. */
+	ctrlr.is_disconnecting = true;
+	nvme_ctrlr_disable(&ctrlr);
+
+	g_ut_nvme_regs.cc.bits.en = 0;
+
+	rc = nvme_ctrlr_disable_poll(&ctrlr);
+	CU_ASSERT(rc == -EAGAIN);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
+
+	g_ut_nvme_regs.csts.bits.rdy = 0;
+
+	rc = nvme_ctrlr_disable_poll(&ctrlr);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLED);
+
+	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
+	nvme_ctrlr_destruct(&ctrlr);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -3384,6 +3416,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ctrlr_ana_resize);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_get_memory_domains);
 	CU_ADD_TEST(suite, test_nvme_transport_ctrlr_ready);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_disable);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
