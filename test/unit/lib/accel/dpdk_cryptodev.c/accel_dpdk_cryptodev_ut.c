@@ -296,6 +296,7 @@ test_setup(void)
 	g_io_ch = calloc(1, sizeof(*g_io_ch) + sizeof(struct accel_dpdk_cryptodev_io_channel));
 	g_crypto_ch = (struct accel_dpdk_cryptodev_io_channel *)spdk_io_channel_get_ctx(g_io_ch);
 	TAILQ_INIT(&g_crypto_ch->queued_tasks);
+	TAILQ_INIT(&g_crypto_ch->completed_tasks);
 
 	g_aesni_crypto_dev.type = ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB;
 	g_aesni_crypto_dev.qp_desc_nr = ACCEL_DPDK_CRYPTODEV_QP_DESCRIPTORS;
@@ -952,6 +953,7 @@ test_dev_full(void)
 	rc = accel_dpdk_cryptodev_submit_tasks(g_io_ch, &task.base);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(task.cryop_submitted == 1);
+	CU_ASSERT(task.cryop_total == 2);
 	sym_op = g_test_crypto_ops[0]->sym;
 	CU_ASSERT(sym_op->m_src->buf_addr == src_iov.iov_base);
 	CU_ASSERT(sym_op->m_src->data_len == 512);
@@ -996,6 +998,61 @@ test_dev_full(void)
 	g_aesni_qp.num_enqueued_ops = 0;
 
 	TAILQ_INIT(&g_crypto_ch->queued_tasks);
+
+	/* Two element block size decryption, 2nd op was not submitted, but has RTE_CRYPTO_OP_STATUS_SUCCESS status */
+	g_aesni_qp.num_enqueued_ops = 0;
+	g_enqueue_mock = g_dequeue_mock = 1;
+	ut_rte_crypto_op_bulk_alloc = 2;
+	g_test_crypto_ops[1]->status = RTE_CRYPTO_OP_STATUS_SUCCESS;
+
+	rc = accel_dpdk_cryptodev_submit_tasks(g_io_ch, &task.base);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(task.cryop_total == 2);
+	CU_ASSERT(task.cryop_submitted == 2);
+	CU_ASSERT(task.cryop_completed == 1);
+	sym_op = g_test_crypto_ops[0]->sym;
+	CU_ASSERT(sym_op->m_src->buf_addr == src_iov.iov_base);
+	CU_ASSERT(sym_op->m_src->data_len == 512);
+	CU_ASSERT(sym_op->m_src->next == NULL);
+	CU_ASSERT(sym_op->cipher.data.length == 512);
+	CU_ASSERT(sym_op->cipher.data.offset == 0);
+	CU_ASSERT(*RTE_MBUF_DYNFIELD(sym_op->m_src, g_mbuf_offset, uint64_t *) == (uint64_t)&task);
+	CU_ASSERT(sym_op->m_dst == NULL);
+	/* op which was not submitted is already released */
+	rte_pktmbuf_free(g_test_crypto_ops[0]->sym->m_src);
+
+	/* Two element block size decryption, 1st op was not submitted, but has RTE_CRYPTO_OP_STATUS_SUCCESS status */
+	g_aesni_qp.num_enqueued_ops = 0;
+	g_enqueue_mock = g_dequeue_mock = 0;
+	ut_rte_crypto_op_bulk_alloc = 2;
+	g_test_crypto_ops[0]->status = RTE_CRYPTO_OP_STATUS_SUCCESS;
+
+	rc = accel_dpdk_cryptodev_submit_tasks(g_io_ch, &task.base);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(task.cryop_total == 2);
+	CU_ASSERT(task.cryop_submitted == 1);
+	CU_ASSERT(task.cryop_completed == 1);
+	CU_ASSERT(!TAILQ_EMPTY(&g_crypto_ch->queued_tasks));
+	CU_ASSERT(TAILQ_FIRST(&g_crypto_ch->queued_tasks) == &task);
+	TAILQ_INIT(&g_crypto_ch->queued_tasks);
+
+	/* Single element block size decryption, 1st op was not submitted, but has RTE_CRYPTO_OP_STATUS_SUCCESS status.
+	 * Task should be queued in the completed_tasks list */
+	src_iov.iov_len = 512;
+	dst_iov.iov_len = 512;
+	g_aesni_qp.num_enqueued_ops = 0;
+	g_enqueue_mock = g_dequeue_mock = 0;
+	ut_rte_crypto_op_bulk_alloc = 1;
+	g_test_crypto_ops[0]->status = RTE_CRYPTO_OP_STATUS_SUCCESS;
+
+	rc = accel_dpdk_cryptodev_submit_tasks(g_io_ch, &task.base);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(task.cryop_total == 1);
+	CU_ASSERT(task.cryop_submitted == 1);
+	CU_ASSERT(task.cryop_completed == 1);
+	CU_ASSERT(!TAILQ_EMPTY(&g_crypto_ch->completed_tasks));
+	CU_ASSERT(TAILQ_FIRST(&g_crypto_ch->completed_tasks) == &task);
+	TAILQ_INIT(&g_crypto_ch->completed_tasks);
 }
 
 static void
@@ -1388,6 +1445,14 @@ test_poller(void)
 	CU_ASSERT(g_aesni_qp.num_enqueued_ops == 1);
 	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->queued_tasks));
 	rte_pktmbuf_free(g_test_crypto_ops[0]->sym->m_src);
+
+	/* Complete tasks in the dedicated list */
+	g_dequeue_mock = g_enqueue_mock = 0;
+	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->completed_tasks));
+	TAILQ_INSERT_TAIL(&g_crypto_ch->completed_tasks, &task, link);
+	rc = accel_dpdk_cryptodev_poller(g_crypto_ch);
+	CU_ASSERT(rc == 1);
+	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->completed_tasks));
 }
 
 /* Helper function for accel_dpdk_cryptodev_assign_device_qps() */
