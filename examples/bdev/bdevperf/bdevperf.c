@@ -270,12 +270,12 @@ performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job
 	uint64_t total_io;
 	struct latency_info latency_info = {};
 
-	printf("\r Job: %s (Core Mask 0x%s)\n", spdk_thread_get_name(job->thread),
+	printf("\r Job: %s (Core Mask 0x%s)\n", job->name,
 	       spdk_cpuset_fmt(spdk_thread_get_cpumask(job->thread)));
 
 	if (job->io_failed > 0 && !job->reset && !job->continue_on_failure) {
 		printf("\r Job: %s ended in about %.2f seconds with error\n",
-		       spdk_thread_get_name(job->thread), (double)job->run_time_in_usec / SPDK_SEC_TO_USEC);
+		       job->name, (double)job->run_time_in_usec / SPDK_SEC_TO_USEC);
 	}
 	if (job->verify) {
 		printf("\t Verification LBA range: start 0x%" PRIx64 " length 0x%" PRIx64 "\n",
@@ -561,7 +561,7 @@ bdevperf_test_done(void *ctx)
 	printf("\n Latency summary\n");
 	TAILQ_FOREACH_SAFE(job, &g_bdevperf.jobs, link, jtmp) {
 		printf("\r =============================================\n");
-		printf("\r Job: %s (Core Mask 0x%s)\n", spdk_thread_get_name(job->thread),
+		printf("\r Job: %s (Core Mask 0x%s)\n", job->name,
 		       spdk_cpuset_fmt(spdk_thread_get_cpumask(job->thread)));
 
 		const double *cutoff = g_latency_cutoffs;
@@ -578,7 +578,7 @@ bdevperf_test_done(void *ctx)
 	printf("\r Latency histogram\n");
 	TAILQ_FOREACH_SAFE(job, &g_bdevperf.jobs, link, jtmp) {
 		printf("\r =============================================\n");
-		printf("\r Job: %s (Core Mask 0x%s)\n", spdk_thread_get_name(job->thread),
+		printf("\r Job: %s (Core Mask 0x%s)\n", job->name,
 		       spdk_cpuset_fmt(spdk_thread_get_cpumask(job->thread)));
 
 		spdk_histogram_data_iterate(job->histogram, print_bucket, NULL);
