@@ -973,7 +973,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 
 		if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING) {
 			rc = nvme_ctrlr_disable_poll(qpair->ctrlr);
-			if (rc == 0) {
+			if (rc != -EAGAIN) {
 				nvme_transport_ctrlr_disconnect_qpair_done(qpair);
 			}
 		}
