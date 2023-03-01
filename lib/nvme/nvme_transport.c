@@ -537,7 +537,8 @@ nvme_transport_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk
 void
 nvme_transport_ctrlr_disconnect_qpair_done(struct spdk_nvme_qpair *qpair)
 {
-	if (qpair->active_proc == nvme_ctrlr_get_current_process(qpair->ctrlr)) {
+	if (qpair->active_proc == nvme_ctrlr_get_current_process(qpair->ctrlr) ||
+	    nvme_qpair_is_admin_queue(qpair)) {
 		nvme_qpair_abort_all_queued_reqs(qpair, 0);
 	}
 	nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
