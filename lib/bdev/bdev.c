@@ -6488,6 +6488,20 @@ bdev_abort_io(struct spdk_bdev_desc *desc, struct spdk_bdev_channel *channel,
 	return 0;
 }
 
+static bool
+bdev_io_on_tailq(struct spdk_bdev_io *bdev_io, bdev_io_tailq_t *tailq)
+{
+	struct spdk_bdev_io *iter;
+
+	TAILQ_FOREACH(iter, tailq, internal.link) {
+		if (iter == bdev_io) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 static uint32_t
 _bdev_abort(struct spdk_bdev_io *parent_io)
 {
@@ -6521,6 +6535,13 @@ _bdev_abort(struct spdk_bdev_io *parent_io)
 		if (bio_to_abort->internal.submit_tsc > parent_io->internal.submit_tsc) {
 			/* Any I/O which was submitted after this abort command should be excluded. */
 			continue;
+		}
+
+		/* We can't abort a request that's being pushed/pulled or executed by accel */
+		if (bdev_io_on_tailq(bio_to_abort, &channel->io_accel_exec) ||
+		    bdev_io_on_tailq(bio_to_abort, &channel->io_memory_domain)) {
+			parent_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+			break;
 		}
 
 		rc = bdev_abort_io(desc, channel, bio_to_abort, bdev_abort_io_done, parent_io);
