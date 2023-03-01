@@ -72,6 +72,9 @@ DEFINE_STUB(spdk_accel_append_encrypt, int,
 DEFINE_STUB_V(spdk_accel_sequence_abort, (struct spdk_accel_sequence *seq));
 DEFINE_STUB_V(spdk_accel_put_buf, (struct spdk_io_channel *ch, void *buf,
 				   struct spdk_memory_domain *domain, void *domain_ctx));
+DEFINE_STUB(spdk_bdev_get_memory_domains, int,
+	    (struct spdk_bdev *bdev, struct spdk_memory_domain **domains, int sz), 0);
+DEFINE_STUB(spdk_accel_get_memory_domain, struct spdk_memory_domain *, (void), (void *)0xdeadbeef);
 
 /* global vars and setup/cleanup functions used for all test functions */
 struct spdk_bdev_io *g_bdev_io;

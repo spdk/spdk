@@ -154,7 +154,9 @@ crypto_encrypt(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io
 	rc = spdk_accel_append_encrypt(&crypto_io->seq, crypto_ch->accel_channel,
 				       crypto_ch->crypto_key, &crypto_io->aux_buf_iov, 1,
 				       crypto_io->aux_domain, crypto_io->aux_domain_ctx,
-				       bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, NULL, NULL,
+				       bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+				       bdev_io->u.bdev.memory_domain,
+				       bdev_io->u.bdev.memory_domain_ctx,
 				       bdev_io->u.bdev.offset_blocks, crypto_len, 0,
 				       crypto_encrypt_cb, crypto_io);
 	if (spdk_unlikely(rc != 0)) {
@@ -243,6 +245,8 @@ crypto_read(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io)
 
 	opts.size = sizeof(opts);
 	opts.accel_sequence = crypto_io->seq;
+	opts.memory_domain = bdev_io->u.bdev.memory_domain;
+	opts.memory_domain_ctx = bdev_io->u.bdev.memory_domain_ctx;
 
 	rc = spdk_bdev_readv_blocks_ext(crypto_bdev->base_desc, crypto_ch->base_ch,
 					bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
@@ -278,9 +282,13 @@ crypto_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 	}
 
 	rc = spdk_accel_append_decrypt(&crypto_io->seq, crypto_ch->accel_channel,
-				       crypto_ch->crypto_key, bdev_io->u.bdev.iovs,
-				       bdev_io->u.bdev.iovcnt, NULL, NULL,
-				       bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, NULL, NULL,
+				       crypto_ch->crypto_key,
+				       bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+				       bdev_io->u.bdev.memory_domain,
+				       bdev_io->u.bdev.memory_domain_ctx,
+				       bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+				       bdev_io->u.bdev.memory_domain,
+				       bdev_io->u.bdev.memory_domain_ctx,
 				       bdev_io->u.bdev.offset_blocks, blocklen, 0,
 				       NULL, NULL);
 	if (rc != 0) {
@@ -672,6 +680,21 @@ vbdev_crypto_base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev
 	}
 }
 
+static int
+vbdev_crypto_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int array_size)
+{
+	struct vbdev_crypto *crypto_bdev = ctx;
+	int num_domains;
+
+	/* Report base bdev's memory domains plus accel memory domain */
+	num_domains = spdk_bdev_get_memory_domains(crypto_bdev->base_bdev, domains, array_size);
+	if (domains != NULL && num_domains < array_size) {
+		domains[num_domains] = spdk_accel_get_memory_domain();
+	}
+
+	return num_domains + 1;
+}
+
 /* When we register our bdev this is how we specify our entry points. */
 static const struct spdk_bdev_fn_table vbdev_crypto_fn_table = {
 	.destruct		= vbdev_crypto_destruct,
@@ -679,6 +702,7 @@ static const struct spdk_bdev_fn_table vbdev_crypto_fn_table = {
 	.io_type_supported	= vbdev_crypto_io_type_supported,
 	.get_io_channel		= vbdev_crypto_get_io_channel,
 	.dump_info_json		= vbdev_crypto_dump_info_json,
+	.get_memory_domains	= vbdev_crypto_get_memory_domains,
 };
 
 static struct spdk_bdev_module crypto_if = {
