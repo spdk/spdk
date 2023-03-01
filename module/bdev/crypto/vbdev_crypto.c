@@ -695,14 +695,27 @@ vbdev_crypto_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, 
 	return num_domains + 1;
 }
 
+static bool
+vbdev_crypto_sequence_supported(void *ctx, enum spdk_bdev_io_type type)
+{
+	switch (type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		return true;
+	default:
+		return false;
+	}
+}
+
 /* When we register our bdev this is how we specify our entry points. */
 static const struct spdk_bdev_fn_table vbdev_crypto_fn_table = {
-	.destruct		= vbdev_crypto_destruct,
-	.submit_request		= vbdev_crypto_submit_request,
-	.io_type_supported	= vbdev_crypto_io_type_supported,
-	.get_io_channel		= vbdev_crypto_get_io_channel,
-	.dump_info_json		= vbdev_crypto_dump_info_json,
-	.get_memory_domains	= vbdev_crypto_get_memory_domains,
+	.destruct			= vbdev_crypto_destruct,
+	.submit_request			= vbdev_crypto_submit_request,
+	.io_type_supported		= vbdev_crypto_io_type_supported,
+	.get_io_channel			= vbdev_crypto_get_io_channel,
+	.dump_info_json			= vbdev_crypto_dump_info_json,
+	.get_memory_domains		= vbdev_crypto_get_memory_domains,
+	.accel_sequence_supported	= vbdev_crypto_sequence_supported,
 };
 
 static struct spdk_bdev_module crypto_if = {
