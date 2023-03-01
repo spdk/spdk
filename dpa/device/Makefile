@@ -30,7 +30,7 @@ dpa_dev_LDFLAGS = -L/usr/include//lib -lflexio_dev -lflexio-libc -lflexio_os -Wl
 				  -Wl,-uflexio_hw_rpc -Wl,-urpc_print_cfg \
 				  -lclang_rt.builtins-riscv64 -z nognustack -z norelro \
 				  -Wl,--no-rosegment
-dpa_dev_SOURCES = vrdma_dpa_rpc.c vrdma_dpa_db.c vrdma_dpa_msix.c vrdma_dpa_dev.c
+dpa_dev_SOURCES = vrdma_dpa_rpc.c vrdma_dpa_db.c vrdma_dpa_msix.c vrdma_dpa_dev.c vrdma_dpa_cq.c
 DPA_LINKER_SCRIPT = vrdma_dpa_linker.ld
 
 .PHONY: all clean

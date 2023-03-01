@@ -486,7 +486,6 @@ _vrdma_dpa_dma_q_cq_create(struct flexio_process *process,
 	cq_attr.uar_id = emu_dev_ctx->sf_uar->page_id;
 	cq_attr.cq_dbr_daddr = rq_dpacq->cq_dbr_daddr;
 	cq_attr.cq_ring_qmem.daddr = rq_dpacq->cq_ring_daddr;
-	cq_attr.overrun_ignore = 1;
 	err = flexio_cq_create(process, ibv_ctx, &cq_attr, &rq_dpacq->cq);
 	if (err) {
 		log_error("Failed to create dma_q rqcq, err(%d)", err);
@@ -547,9 +546,8 @@ vrdma_dpa_dma_q_cq_create(struct vrdma_dpa_vq *dpa_vq,
 
 	dpa_vq->dma_q_rqcq.cq_num = flexio_cq_get_cq_num(dpa_vq->dma_q_rqcq.cq);
 	dpa_vq->dma_q_sqcq.cq_num = flexio_cq_get_cq_num(dpa_vq->dma_q_sqcq.cq);
-	dpa_vq->dma_q_rqcq.log_cq_size = attr->rx_elem_size;
-	dpa_vq->dma_q_sqcq.log_cq_size = attr->tx_elem_size;
-
+	dpa_vq->dma_q_rqcq.log_cq_size = log2(attr->rx_qsize);
+	dpa_vq->dma_q_sqcq.log_cq_size = log2(attr->tx_qsize);
 	return 0;
 }
 
@@ -606,7 +604,7 @@ vrdma_dpa_vq_event_handler_init(const struct vrdma_dpa_vq *dpa_vq,
 	eh_data->msix_cq_ctx.hw_owner_bit = 1;
 
 	/*prepare dma_qp address*/
-	eh_data->dma_qp.hw_qp_depth = attr->tx_qsize;
+	eh_data->dma_qp.hw_sq_size = attr->tx_qsize;
 	eh_data->dma_qp.qp_rqcq = dpa_vq->dma_q_rqcq;
 	eh_data->dma_qp.qp_sq_buff = dpa_vq->dma_qp.sq_daddr;
 	eh_data->dma_qp.qp_rq_buff = dpa_vq->dma_qp.rq_daddr;
@@ -617,6 +615,15 @@ vrdma_dpa_vq_event_handler_init(const struct vrdma_dpa_vq *dpa_vq,
 	eh_data->dma_qp.host_vq_ctx = attr->host_vq_ctx;
 	eh_data->dma_qp.arm_vq_ctx  = attr->arm_vq_ctx;
 
+	/*prepare dma_sqcq_ctx*/
+	eh_data->dma_sqcq_ctx.cqn = flexio_cq_get_cq_num(dpa_vq->dma_q_sqcq.cq);
+	eh_data->dma_sqcq_ctx.ring =
+		(struct flexio_dev_cqe64 *)dpa_vq->dma_q_sqcq.cq_ring_daddr;
+	eh_data->dma_sqcq_ctx.dbr = (uint32_t *)dpa_vq->dma_q_sqcq.cq_dbr_daddr;
+	eh_data->dma_sqcq_ctx.cqe = eh_data->dma_sqcq_ctx.ring;
+	eh_data->dma_sqcq_ctx.log_cq_depth = dpa_vq->dma_q_sqcq.log_cq_size;
+	eh_data->dma_sqcq_ctx.hw_owner_bit = 0;
+	log_error("===naliu eh_data->dma_sqcq_ctx.log_cq_depth %d", eh_data->dma_sqcq_ctx.log_cq_depth);
 	/* Update other pointers */
 	eh_data->dma_qp.state = VRDMA_DPA_VQ_STATE_INIT;
 	eh_data->emu_db_to_cq_id =
@@ -626,6 +633,8 @@ vrdma_dpa_vq_event_handler_init(const struct vrdma_dpa_vq *dpa_vq,
 
 	eh_data->vq_index = attr->vq_idx;
 	eh_data->window_id = flexio_window_get_id(dpa_ctx->window);
+	eh_data->ce_set_threshold = attr->tx_qsize/2;
+	log_notice("===naliu ce_set_threshold %d", eh_data->ce_set_threshold);
 	// eh_data->vq_depth = attr->common.size;
 
 	/*virtnet use host msix to send msix,but vrdma don't need, vrdma get cqn from dma rq.wqe*/
@@ -644,7 +653,7 @@ vrdma_dpa_vq_event_handler_init(const struct vrdma_dpa_vq *dpa_vq,
 	return err;
 }
 
-static struct vrdma_dpa_vq* 
+static struct vrdma_dpa_vq*
 _vrdma_dpa_vq_create(struct vrdma_ctrl *ctrl,
 		    struct vrdma_prov_vq_init_attr *attr)
 {
@@ -1192,7 +1201,10 @@ static void vrdma_dpa_vq_dbg_stats_query(struct snap_vrdma_queue *virtq)
 				  dpa_ctx->dev2host_copy_func,
 				  &func_ret, (uint64_t)dest_addr);
 	if (err) {
-		log_error("Failed to create thread, err(%d), err");
+		log_error("Failed to flexio_process_call, err(%d)", err);
+		if (flexio_err_status(dpa_vq->dpa_ctx->flexio_process)) {
+			flexio_coredump_create(dpa_vq->dpa_ctx->flexio_process, "/images/flexio.core");
+		}
 		return;
 	}
 	log_notice("dpa_qp debug count");

@@ -52,6 +52,21 @@ static void swqe_seg_ctrl_set_rdmaw(union flexio_dev_sqe_seg *swqe, uint32_t sq_
 	swqe->ctrl.signature_fm_ce_se = cpu_to_be32(ce << 2);
 }
 
+static void
+vrdma_dpa_process_sq_ci(struct vrdma_dpa_event_handler_ctx *ehctx)
+{
+	vrdma_dpa_cq_wait(&ehctx->dma_sqcq_ctx,
+			    POW2MASK(ehctx->dma_sqcq_ctx.log_cq_depth),
+			    &ehctx->dma_qp.hw_qp_sq_ci);
+
+	ehctx->dma_qp.hw_qp_sq_ci++;
+}
+
+static inline uint32_t vrdma_get_sq_free_wqe_num(struct vrdma_dpa_event_handler_ctx *ehctx)
+{
+	return (ehctx->dma_qp.hw_sq_size + ehctx->dma_qp.hw_qp_sq_ci - ehctx->dma_qp.hw_qp_sq_pi);
+}
+
 static void vrdma_dpa_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 					uint32_t remote_key,
 					uint64_t remote_addr,
@@ -61,19 +76,33 @@ static void vrdma_dpa_wr_pi_fetch(struct vrdma_dpa_event_handler_ctx *ehctx,
 					uint16_t wr_pi,
 					bool imm_flag)
 {
-	int swqe_index;
 	union flexio_dev_sqe_seg *swqe;
+	int swqe_index;
+	uint32_t ce;
+
+	if (vrdma_get_sq_free_wqe_num(ehctx) == ehctx->ce_set_threshold) {
+		ce = MLX5_CTRL_SEG_CE_CQE_ALWAYS;
+		vrdma_debug_count_set(ehctx, 7);
+#ifdef VRDMA_DPA_DEBUG_DETAIL
+		printf("---naliu set ce as MLX5_CTRL_SEG_CE_CQE_ALWAYS,"
+		"dma.sq.pi %d, dma.sq.ci %d, ehctx->ce_set_threshold %d\n",
+		ehctx->dma_qp.hw_qp_sq_pi, ehctx->dma_qp.hw_qp_sq_ci, ehctx->ce_set_threshold);
+#endif
+	} else {
+		ce = MLX5_CTRL_SEG_CE_CQE_ON_CQE_ERROR;
+	}
 
 	swqe_index = get_next_qp_swqe_index(ehctx->dma_qp.hw_qp_sq_pi,
-					    ehctx->dma_qp.hw_qp_depth);
+					    ehctx->dma_qp.hw_sq_size);
 	swqe = (union flexio_dev_sqe_seg *)
 		(ehctx->dma_qp.qp_sq_buff + (swqe_index * 64));
 
-	/* Fill out 1-st segment (Control) rdma write/rdma write immediately*/
-	swqe_seg_ctrl_set_rdmaw(swqe, ehctx->dma_qp.hw_qp_sq_pi,
-			ehctx->dma_qp.qp_num,
-			MLX5_CTRL_SEG_CE_CQE_ALWAYS,
-			ehctx->vq_index<<16 | wr_pi, imm_flag);
+        /* Fill out 1-st segment (Control) rdma write/rdma write immediately*/
+        swqe_seg_ctrl_set_rdmaw(swqe, ehctx->dma_qp.hw_qp_sq_pi,
+                        ehctx->dma_qp.qp_num,
+                        ce,
+                        ehctx->vq_index<<16 | wr_pi, imm_flag);
+
 	/* Fill out 2-nd segment (RDMA) */
 	swqe++;
 	flexio_dev_swqe_seg_rdma_set(swqe, remote_key,
@@ -156,7 +185,6 @@ static inline int vrdma_vq_dpa_rollback(uint16_t pre_pi, uint16_t pi,
 		return !(pi % q_size > pre_pi % q_size);
 }
 
-
 __FLEXIO_ENTRY_POINT_START
 flexio_dev_event_handler_t vrdma_db_handler;
 void vrdma_db_handler(flexio_uintptr_t thread_arg)
@@ -168,17 +196,18 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 	uint32_t print = print;
 	uint16_t rq_wqebb_cnt, sq_wqebb_cnt;
 	uint16_t fetch_size;
+	uint32_t sq_free_wqe_num = 0;
 	// uint32_t i, cnt[5];
 	bool has_wqe = false;
 	uint32_t empty_count = 0, change_count = 0;
 
 	flexio_dev_get_thread_ctx(&dtctx);
 	ehctx = (struct vrdma_dpa_event_handler_ctx *)thread_arg;
-//	printf("%s: --------virtq status %d.\n", __func__, ehctx->dma_qp.state);
-	if (ehctx->dma_qp.state != VRDMA_DPA_VQ_STATE_RDY) {
 #ifdef VRDMA_DPA_DEBUG
-		printf("%s: ------virtq status %d is not READY.\n", __func__, ehctx->dma_qp.state);
+	printf("%s: --------virtq status %d.\n", __func__, ehctx->dma_qp.state);
 #endif
+	if (ehctx->dma_qp.state != VRDMA_DPA_VQ_STATE_RDY) {
+		printf("%s: ------virtq status %d is not READY.\n", __func__, ehctx->dma_qp.state);
 		goto err_state;
 	}
 	vrdma_debug_count_set(ehctx, 2);
@@ -220,6 +249,15 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 	 	(sq_pi_last != sq_pi))
 #endif
 	{
+		sq_free_wqe_num = vrdma_get_sq_free_wqe_num(ehctx);
+
+		if (sq_free_wqe_num < VRDMA_CQ_WAIT_THRESHOLD) {
+			vrdma_dpa_process_sq_ci(ehctx);
+#ifdef VRDMA_DPA_DEBUG_DETAIL
+			printf("---naliu sq_free_wqe_num < VRDMA_CQ_WAIT_THRESHOLD sq_free_wqe_num %d, dma.sq.pi %d, dma.sq.ci %d\n",
+			 sq_free_wqe_num, ehctx->dma_qp.hw_qp_sq_pi, ehctx->dma_qp.hw_qp_sq_ci);
+#endif
+		}
 		if (rq_pi_last != rq_pi) {
 			if (!vrdma_vq_dpa_rollback(rq_pi_last, rq_pi, rq_wqebb_cnt)) {
 				vrdma_dpa_rq_wr_pi_fetch(ehctx, rq_pi_last % rq_wqebb_cnt,
@@ -273,14 +311,16 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 
 		/*fetch rq_pi*/
 		asm volatile("fence iorw, iorw" ::: "memory");
-		rq_pi = *(uint16_t*)(ehctx->window_base_addr + 
+		rq_pi = *(uint16_t*)(ehctx->window_base_addr +
 					ehctx->dma_qp.host_vq_ctx.rq_pi_paddr);
-		sq_pi = *(uint16_t*)(ehctx->window_base_addr + 
+		sq_pi = *(uint16_t*)(ehctx->window_base_addr +
 					ehctx->dma_qp.host_vq_ctx.sq_pi_paddr);
 	}
 out:
 	ehctx->rq_last_fetch_start = rq_pi;
 	ehctx->sq_last_fetch_start = sq_pi;
+	flexio_dev_db_ctx_arm(dtctx, ehctx->guest_db_cq_ctx.cqn,
+			      ehctx->emu_db_to_cq_id);
 	/*fetch rq_pi*/
 	asm volatile("fence iorw, iorw" ::: "memory");
 	rq_pi = *(uint16_t*)(ehctx->window_base_addr +
@@ -296,9 +336,6 @@ out:
 	}
 
 err_state:
-	flexio_dev_db_ctx_arm(dtctx, ehctx->guest_db_cq_ctx.cqn,
-			      ehctx->emu_db_to_cq_id);
-
 	vrdma_dpa_db_cq_incr(&ehctx->guest_db_cq_ctx);
 	flexio_dev_dbr_cq_set_ci(ehctx->guest_db_cq_ctx.dbr,
 				 ehctx->guest_db_cq_ctx.ci);

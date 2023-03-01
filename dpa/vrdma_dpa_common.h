@@ -21,8 +21,13 @@
 
 #define DBG_EVENT_HANDLER_CHECK 0x12345604  /*this is only used to check event handler is right*/
 #define BIT_ULL(nr)             (1ULL << (nr))
-//#define VRDMA_DPA_DEBUG
+#define VRDMA_CQ_WAIT_THRESHOLD  50
+// #define VRDMA_DPA_DEBUG
 // #define VRDMA_RPC_TIMEOUT_ISSUE_DEBUG
+
+#define POW2(log) (1 << (log))
+#define POW2MASK(log) (POW2(log) - 1)
+
 
 enum{
 	MLX5_CTRL_SEG_OPCODE_RDMA_WRITE                      = 0x8,
@@ -66,20 +71,6 @@ struct vrdma_dpa_cq_ctx {
 	uint32_t *dbr;
 	uint8_t hw_owner_bit;
 	uint32_t log_cq_depth;
-};
-
-struct vrdma_dpa_ring_ctx {
-        /*Todo: need check*/
-	uint32_t num;
-	/* Stores the q number which is right shifted by 8 bits to directly
-	 * write into the WQE
-	 */
-	uint32_t num_shift;
-	union flexio_dev_sqe_seg *ring;
-	uint32_t wqe_seg_idx;
-	uint32_t *dbr;
-	uint32_t pi;
-	uint32_t ci;
 };
 
 /* vrdma_dpa_vq_state values:
@@ -141,6 +132,7 @@ struct vrdma_dpa_event_handler_ctx {
 	uint32_t dbg_signature; /*Todo: used to confirm event handler is right*/
 
 	struct vrdma_dpa_cq_ctx guest_db_cq_ctx;
+	struct vrdma_dpa_cq_ctx dma_sqcq_ctx;
 	struct vrdma_dpa_cq_ctx msix_cq_ctx;
 
 	struct flexio_cq *db_handler_cq;
@@ -158,8 +150,8 @@ struct vrdma_dpa_event_handler_ctx {
 	struct {
 		struct vrdma_dpa_cq qp_rqcq;
 		uint32_t hw_qp_sq_pi;
-		uint32_t hw_qp_cq_ci;
-		uint32_t hw_qp_depth;
+		uint32_t hw_qp_sq_ci; /*get from dma_sqcq_ctx->cqe->wqe_count+1*/
+		uint32_t hw_sq_size;
 		uint16_t qp_num;
 		uint16_t reserved1;
 		flexio_uintptr_t qp_sq_buff;
@@ -170,6 +162,7 @@ struct vrdma_dpa_event_handler_ctx {
 		enum vrdma_dpa_vq_state state;
 	} dma_qp;
 	struct vrdma_debug_data debug_data;
+	uint32_t ce_set_threshold;
 };
 
 struct vrdma_dpa_vq_data {

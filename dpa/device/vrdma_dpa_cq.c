@@ -10,10 +10,14 @@
  * provided with the software product.
  */
 
+#include <libflexio-libc/string.h>
+#include <libflexio-libc/stdio.h>
 #include <libflexio-dev/flexio_dev.h>
 #include <libflexio-dev/flexio_dev_queue_access.h>
 #include <libflexio-dev/flexio_dev_debug.h>
-#include "vrdma_dpa_common.h"
+#include "vrdma_dpa_dev_com.h"
+#include "vrdma_dpa_cq.h"
+#include "../vrdma_dpa_common.h"
 
 static int vrdma_dpa_is_hw_owner(struct vrdma_dpa_cq_ctx *cq_ctx,
 				   struct flexio_dev_cqe64 *cqe)
@@ -47,18 +51,30 @@ vrdma_dpa_cqe_get(struct vrdma_dpa_cq_ctx *cq_ctx, uint16_t mask)
 	return cqe;
 }
 
-void vrdma_dpa_cq_wait(struct vrdma_dpa_cq_ctx *cq_ctx, uint16_t mask)
+void vrdma_dpa_cq_wait(struct vrdma_dpa_cq_ctx *cq_ctx, uint16_t mask,
+			uint32_t *comp_wqe_idx)
 {
 	struct flexio_dev_cqe64 *cqe;
+	uint8_t opcode;
 	uint32_t ci;
 
 	ci = cq_ctx->ci & mask;
 	cqe = &cq_ctx->ring[ci];
 
 	do {
-		fence_all();
+		/* Ensure that previously read CQE is invalidated to force
+		 * read again that might have updated value.
+		 */
+		fence_r();
 	} while (vrdma_dpa_is_hw_owner(cq_ctx, cqe));
 
+	opcode = vrdma_dpa_cqe_get_opcode(cqe);
+	if (opcode == MLX5_CQE_RESP_ERR ||
+	    opcode == MLX5_CQE_REQ_ERR) {
+		printf("---vrdma_dpa_cq_wait cqe err %d\n", opcode);
+	}
+
+	*comp_wqe_idx = be16_to_cpu(cqe->wqe_counter);
 	cq_ctx->ci++;
 
 	/* owner bit wraparound */
