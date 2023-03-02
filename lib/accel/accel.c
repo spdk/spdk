@@ -1156,42 +1156,40 @@ accel_sequence_complete(struct spdk_accel_sequence *seq)
 }
 
 static void
-accel_update_buf(void **buf, struct accel_buffer *accel_buf)
+accel_update_virt_iov(struct iovec *diov, struct iovec *siov, struct accel_buffer *accel_buf)
 {
 	uintptr_t offset;
 
-	offset = (uintptr_t)(*buf) & ACCEL_BUFFER_OFFSET_MASK;
+	offset = (uintptr_t)siov->iov_base & ACCEL_BUFFER_OFFSET_MASK;
 	assert(offset < accel_buf->len);
 
-	*buf = (char *)accel_buf->buf + offset;
-}
-
-static void
-accel_update_iovs(struct iovec *iovs, uint32_t iovcnt, struct accel_buffer *buf)
-{
-	uint32_t i;
-
-	for (i = 0; i < iovcnt; ++i) {
-		accel_update_buf(&iovs[i].iov_base, buf);
-	}
+	diov->iov_base = (char *)accel_buf->buf + offset;
+	diov->iov_len = siov->iov_len;
 }
 
 static void
 accel_sequence_set_virtbuf(struct spdk_accel_sequence *seq, struct accel_buffer *buf)
 {
 	struct spdk_accel_task *task;
+	struct iovec *iov;
 
 	/* Now that we've allocated the actual data buffer for this accel_buffer, update all tasks
 	 * in a sequence that were using it.
 	 */
 	TAILQ_FOREACH(task, &seq->tasks, seq_link) {
 		if (task->src_domain == g_accel_domain && task->src_domain_ctx == buf) {
-			accel_update_iovs(task->s.iovs, task->s.iovcnt, buf);
+			iov = &task->aux_iovs[SPDK_ACCEL_AXU_IOV_VIRT_SRC];
+			assert(task->s.iovcnt == 1);
+			accel_update_virt_iov(iov, &task->s.iovs[0], buf);
 			task->src_domain = NULL;
+			task->s.iovs = iov;
 		}
 		if (task->dst_domain == g_accel_domain && task->dst_domain_ctx == buf) {
-			accel_update_iovs(task->d.iovs, task->d.iovcnt, buf);
+			iov = &task->aux_iovs[SPDK_ACCEL_AXU_IOV_VIRT_DST];
+			assert(task->d.iovcnt == 1);
+			accel_update_virt_iov(iov, &task->d.iovs[0], buf);
 			task->dst_domain = NULL;
+			task->d.iovs = iov;
 		}
 	}
 }

@@ -3574,6 +3574,170 @@ test_sequence_driver(void)
 	poll_threads();
 }
 
+struct ut_saved_iovs {
+	struct iovec src;
+	struct iovec dst;
+};
+
+static struct ut_saved_iovs g_seq_saved_iovs[ACCEL_OPC_LAST];
+
+static int
+ut_submit_save_iovs(struct spdk_io_channel *ch, struct spdk_accel_task *task)
+{
+	SPDK_CU_ASSERT_FATAL(task->s.iovcnt == 1);
+	SPDK_CU_ASSERT_FATAL(task->d.iovcnt == 1);
+
+	g_seq_saved_iovs[task->op_code].src = task->s.iovs[0];
+	g_seq_saved_iovs[task->op_code].dst = task->d.iovs[0];
+
+	spdk_iovmove(task->s.iovs, task->s.iovcnt, task->d.iovs, task->d.iovcnt);
+
+	spdk_accel_task_complete(task, 0);
+
+	return 0;
+}
+
+static void
+test_sequence_same_iovs(void)
+{
+	struct spdk_accel_sequence *seq = NULL;
+	struct spdk_io_channel *ioch;
+	struct spdk_accel_crypto_key key = {};
+	struct ut_sequence ut_seq;
+	struct accel_module modules[ACCEL_OPC_LAST];
+	char buf[4096], tmp[4096], expected[4096];
+	struct iovec iovs[3], expected_siov, expected_diov;
+	struct spdk_memory_domain *domain;
+	void *accel_buf, *domain_ctx;
+	int i, rc, completed = 0;
+
+	ioch = spdk_accel_get_io_channel();
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
+
+	/* Override the submit_tasks function */
+	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
+	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+		modules[i] = g_modules_opc[i];
+		g_modules_opc[i] = g_module;
+	}
+	/* Intercept crypto operations, as they should be executed by an accel module */
+	g_seq_operations[ACCEL_OPC_ENCRYPT].submit = ut_submit_save_iovs;
+	g_seq_operations[ACCEL_OPC_DECRYPT].submit = ut_submit_save_iovs;
+	g_seq_operations[ACCEL_OPC_ENCRYPT].count = 0;
+	g_seq_operations[ACCEL_OPC_DECRYPT].count = 0;
+
+	/* Check that it's possible to use the same iovec ptr for different operations */
+	seq = NULL;
+	completed = 0;
+	memset(buf, 0, sizeof(buf));
+	memset(expected, 0xa5, sizeof(expected));
+
+	iovs[0].iov_base = expected;
+	iovs[0].iov_len = sizeof(expected);
+	iovs[1].iov_base = tmp;
+	iovs[1].iov_len = sizeof(tmp);
+	rc = spdk_accel_append_encrypt(&seq, ioch, &key, &iovs[1], 1, NULL, NULL,
+				       &iovs[0], 1, NULL, NULL, 0, 4096, 0,
+				       ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+	/* Reuse iov[1] as src */
+	iovs[2].iov_base = buf;
+	iovs[2].iov_len = sizeof(buf);
+	rc = spdk_accel_append_decrypt(&seq, ioch, &key, &iovs[2], 1, NULL, NULL,
+				       &iovs[1], 1, NULL, NULL, 0, 4096, 0,
+				       ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 2);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_ENCRYPT].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECRYPT].count, 1);
+	CU_ASSERT_EQUAL(memcmp(buf, expected, sizeof(buf)), 0);
+	expected_siov.iov_base = expected;
+	expected_siov.iov_len = sizeof(expected);
+	expected_diov.iov_base = tmp;
+	expected_diov.iov_len = sizeof(tmp);
+	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[ACCEL_OPC_ENCRYPT].src,
+			       &expected_siov, sizeof(expected_siov)), 0);
+	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[ACCEL_OPC_ENCRYPT].dst,
+			       &expected_diov, sizeof(expected_diov)), 0);
+	expected_siov.iov_base = tmp;
+	expected_siov.iov_len = sizeof(tmp);
+	expected_diov.iov_base = buf;
+	expected_diov.iov_len = sizeof(buf);
+	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[ACCEL_OPC_DECRYPT].src,
+			       &expected_siov, sizeof(expected_siov)), 0);
+	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[ACCEL_OPC_DECRYPT].dst,
+			       &expected_diov, sizeof(expected_diov)), 0);
+	g_seq_operations[ACCEL_OPC_ENCRYPT].count = 0;
+	g_seq_operations[ACCEL_OPC_DECRYPT].count = 0;
+
+	/* Check the same with an accel buffer */
+	seq = NULL;
+	completed = 0;
+	memset(buf, 0, sizeof(buf));
+	memset(expected, 0x5a, sizeof(expected));
+
+	rc = spdk_accel_get_buf(ioch, sizeof(buf), &accel_buf, &domain, &domain_ctx);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	iovs[0].iov_base = expected;
+	iovs[0].iov_len = sizeof(expected);
+	iovs[1].iov_base = accel_buf;
+	iovs[1].iov_len = sizeof(buf);
+	rc = spdk_accel_append_encrypt(&seq, ioch, &key, &iovs[1], 1, domain, domain_ctx,
+				       &iovs[0], 1, NULL, NULL, 0, 4096, 0,
+				       ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+	/* Reuse iov[1] as src */
+	iovs[2].iov_base = buf;
+	iovs[2].iov_len = sizeof(buf);
+	rc = spdk_accel_append_decrypt(&seq, ioch, &key, &iovs[2], 1, NULL, NULL,
+				       &iovs[1], 1, domain, domain_ctx, 0, 4096, 0,
+				       ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	rc = spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 2);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_ENCRYPT].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECRYPT].count, 1);
+	CU_ASSERT_EQUAL(memcmp(buf, expected, sizeof(buf)), 0);
+	expected_siov.iov_base = expected;
+	expected_siov.iov_len = sizeof(expected);
+	expected_diov.iov_base = buf;
+	expected_diov.iov_len = sizeof(buf);
+	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[ACCEL_OPC_ENCRYPT].src,
+			       &expected_siov, sizeof(expected_siov)), 0);
+	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[ACCEL_OPC_DECRYPT].dst,
+			       &expected_diov, sizeof(expected_diov)), 0);
+	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[ACCEL_OPC_ENCRYPT].dst,
+			       &g_seq_saved_iovs[ACCEL_OPC_DECRYPT].src,
+			       sizeof(struct iovec)), 0);
+	spdk_accel_put_buf(ioch, accel_buf, domain, domain_ctx);
+
+	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+		g_modules_opc[i] = modules[i];
+	}
+
+	ut_clear_operations();
+	spdk_put_io_channel(ioch);
+	poll_threads();
+}
+
 static int
 test_sequence_setup(void)
 {
@@ -3659,6 +3823,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(seq_suite, test_sequence_crypto);
 #endif
 	CU_ADD_TEST(seq_suite, test_sequence_driver);
+	CU_ADD_TEST(seq_suite, test_sequence_same_iovs);
 
 	suite = CU_add_suite("accel", test_setup, test_cleanup);
 	CU_ADD_TEST(suite, test_spdk_accel_task_complete);
