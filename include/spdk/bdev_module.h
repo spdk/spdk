@@ -911,9 +911,6 @@ struct spdk_bdev_io {
 		/** The bdev I/O channel that this was handled on. */
 		struct spdk_bdev_channel *ch;
 
-		/** The bdev I/O channel that this was submitted on. */
-		struct spdk_bdev_channel *io_submit_ch;
-
 		/** The bdev descriptor that was used when submitting this I/O. */
 		struct spdk_bdev_desc *desc;
 
