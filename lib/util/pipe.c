@@ -31,10 +31,18 @@ spdk_pipe_create(void *buf, uint32_t sz)
 	return pipe;
 }
 
-void
+void *
 spdk_pipe_destroy(struct spdk_pipe *pipe)
 {
+	void *buf;
+
+	if (pipe == NULL) {
+		return NULL;
+	}
+
+	buf = pipe->buf;
 	free(pipe);
+	return buf;
 }
 
 int

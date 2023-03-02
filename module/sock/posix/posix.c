@@ -45,7 +45,6 @@ struct spdk_posix_sock {
 	uint32_t		sendmsg_idx;
 
 	struct spdk_pipe	*recv_pipe;
-	void			*recv_buf;
 	int			recv_buf_sz;
 	bool			pipe_has_data;
 	bool			socket_has_data;
@@ -299,7 +298,7 @@ enum posix_sock_create_type {
 static int
 posix_sock_alloc_pipe(struct spdk_posix_sock *sock, int sz)
 {
-	uint8_t *new_buf;
+	uint8_t *new_buf, *old_buf;
 	struct spdk_pipe *new_pipe;
 	struct iovec siov[2];
 	struct iovec diov[2];
@@ -313,10 +312,9 @@ posix_sock_alloc_pipe(struct spdk_posix_sock *sock, int sz)
 
 	/* If the new size is 0, just free the pipe */
 	if (sz == 0) {
-		spdk_pipe_destroy(sock->recv_pipe);
-		free(sock->recv_buf);
+		old_buf = spdk_pipe_destroy(sock->recv_pipe);
+		free(old_buf);
 		sock->recv_pipe = NULL;
-		sock->recv_buf = NULL;
 		return 0;
 	} else if (sz < MIN_SOCK_PIPE_SIZE) {
 		SPDK_ERRLOG("The size of the pipe must be larger than %d\n", MIN_SOCK_PIPE_SIZE);
@@ -343,8 +341,8 @@ posix_sock_alloc_pipe(struct spdk_posix_sock *sock, int sz)
 		sbytes = spdk_pipe_reader_get_buffer(sock->recv_pipe, sock->recv_buf_sz, siov);
 		if (sbytes > sz) {
 			/* Too much data to fit into the new pipe size */
-			spdk_pipe_destroy(new_pipe);
-			free(new_buf);
+			old_buf = spdk_pipe_destroy(new_pipe);
+			free(old_buf);
 			return -EINVAL;
 		}
 
@@ -354,12 +352,11 @@ posix_sock_alloc_pipe(struct spdk_posix_sock *sock, int sz)
 		bytes = spdk_iovcpy(siov, 2, diov, 2);
 		spdk_pipe_writer_advance(new_pipe, bytes);
 
-		spdk_pipe_destroy(sock->recv_pipe);
-		free(sock->recv_buf);
+		old_buf = spdk_pipe_destroy(sock->recv_pipe);
+		free(old_buf);
 	}
 
 	sock->recv_buf_sz = sz;
-	sock->recv_buf = new_buf;
 	sock->recv_pipe = new_pipe;
 
 	return 0;
@@ -1199,6 +1196,7 @@ static int
 posix_sock_close(struct spdk_sock *_sock)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	void *pipe_buf;
 
 	assert(TAILQ_EMPTY(&_sock->pending_reqs));
 
@@ -1214,8 +1212,8 @@ posix_sock_close(struct spdk_sock *_sock)
 	SSL_free(sock->ssl);
 	SSL_CTX_free(sock->ctx);
 
-	spdk_pipe_destroy(sock->recv_pipe);
-	free(sock->recv_buf);
+	pipe_buf = spdk_pipe_destroy(sock->recv_pipe);
+	free(pipe_buf);
 	free(sock);
 
 	return 0;

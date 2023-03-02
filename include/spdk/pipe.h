@@ -35,8 +35,11 @@ struct spdk_pipe *spdk_pipe_create(void *buf, uint32_t sz);
  * make it safe for the user to release the buffer.
  *
  * \param pipe The pipe to operate on.
+ * \return Pipe buffer associated with the pipe when destroyed.  The
+ *         caller should free this buffer.  It may not be the same
+ *         buffer that was passed to spdk_pipe_create.
  */
-void spdk_pipe_destroy(struct spdk_pipe *pipe);
+void *spdk_pipe_destroy(struct spdk_pipe *pipe);
 
 /**
  * Acquire memory from the pipe for writing.
