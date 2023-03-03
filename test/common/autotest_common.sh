@@ -1477,14 +1477,15 @@ function nvme_namespace_revert() {
 				continue
 			fi
 			tnvmcap=$(nvme id-ctrl ${nvme_ctrlr} | grep tnvmcap | cut -d: -f2)
+			cntlid=$(nvme id-ctrl ${nvme_ctrlr} | grep cntlid | cut -d: -f2)
 			blksize=512
 
 			size=$((tnvmcap / blksize))
 
-			nvme detach-ns ${nvme_ctrlr} -n 0xffffffff -c 0 || true
+			nvme detach-ns ${nvme_ctrlr} -n 0xffffffff -c $cntlid || true
 			nvme delete-ns ${nvme_ctrlr} -n 0xffffffff || true
 			nvme create-ns ${nvme_ctrlr} -s ${size} -c ${size} -b ${blksize}
-			nvme attach-ns ${nvme_ctrlr} -n 1 -c 0
+			nvme attach-ns ${nvme_ctrlr} -n 1 -c $cntlid
 			nvme reset ${nvme_ctrlr}
 			waitforfile "${nvme_ctrlr}n1"
 		fi
