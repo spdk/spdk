@@ -22,7 +22,6 @@ if ((SPDK_TEST_BLOCKDEV + \
 	SPDK_TEST_NVMF + \
 	SPDK_TEST_VHOST + \
 	SPDK_TEST_VHOST_INIT + \
-	SPDK_TEST_PMDK + \
 	SPDK_TEST_RBD == 0)); then
 	echo "WARNING: No tests are enabled so not running JSON configuration tests"
 	exit 0
@@ -225,14 +224,6 @@ function create_bdev_subsystem_config() {
 		)
 	fi
 
-	if [[ $SPDK_TEST_PMDK -eq 1 ]]; then
-		pmem_pool_file=$(mktemp /tmp/pool_file1.XXXXX)
-		rm -f $pmem_pool_file
-		tgt_rpc bdev_pmem_create_pool $pmem_pool_file 128 4096
-		tgt_rpc bdev_pmem_create -n pmem1 $pmem_pool_file
-		expected_notifications+=(bdev_register:pmem1)
-	fi
-
 	if [[ $SPDK_TEST_RBD -eq 1 ]]; then
 		rbd_setup 127.0.0.1
 		tgt_rpc bdev_rbd_create $RBD_POOL $RBD_NAME 4096
@@ -256,12 +247,6 @@ function cleanup_bdev_subsystem_config() {
 
 	if [[ $(uname -s) = Linux ]]; then
 		rm -f "$SPDK_TEST_STORAGE/sample_aio"
-	fi
-
-	if [[ $SPDK_TEST_PMDK -eq 1 && -n "$pmem_pool_file" && -f "$pmem_pool_file" ]]; then
-		tgt_rpc bdev_pmem_delete pmem1
-		tgt_rpc bdev_pmem_delete_pool $pmem_pool_file
-		rm -f $pmem_pool_file
 	fi
 
 	if [[ $SPDK_TEST_RBD -eq 1 ]]; then

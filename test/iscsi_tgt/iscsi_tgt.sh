@@ -39,9 +39,6 @@ run_test "iscsi_tgt_trace_record" $rootdir/test/iscsi_tgt/trace_record/trace_rec
 run_test "iscsi_tgt_login_redirection" $rootdir/test/iscsi_tgt/login_redirection/login_redirection.sh
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
-	if [ $SPDK_TEST_PMDK -eq 1 ]; then
-		run_test "iscsi_tgt_pmem" $rootdir/test/iscsi_tgt/pmem/iscsi_pmem.sh 4096 10
-	fi
 	run_test "iscsi_tgt_ext4test" $rootdir/test/iscsi_tgt/ext4test/ext4test.sh
 	run_test "iscsi_tgt_digests" $rootdir/test/iscsi_tgt/digests/digests.sh
 fi

@@ -13,8 +13,6 @@ DIRS-$(CONFIG_CRYPTO) += crypto.c
 # enable once new mocks are added for compressdev
 DIRS-$(CONFIG_VBDEV_COMPRESS) += compress.c
 
-DIRS-$(CONFIG_PMDK) += pmem
-
 .PHONY: all clean $(DIRS-y)
 
 all: $(DIRS-y)

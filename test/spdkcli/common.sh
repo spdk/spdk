@@ -19,7 +19,7 @@ function cleanup() {
 	if [ -n "$vhost_tgt_pid" ]; then
 		killprocess $vhost_tgt_pid
 	fi
-	rm -f $testdir/${MATCH_FILE} $testdir/match_files/spdkcli_details_vhost.test /tmp/sample_aio /tmp/sample_pmem
+	rm -f $testdir/${MATCH_FILE} $testdir/match_files/spdkcli_details_vhost.test /tmp/sample_aio
 }
 
 function run_spdk_tgt() {

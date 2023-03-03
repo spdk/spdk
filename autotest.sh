@@ -305,12 +305,6 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		timing_exit vhost_initiator
 	fi
 
-	if [ $SPDK_TEST_PMDK -eq 1 ]; then
-		run_test "blockdev_pmem" $rootdir/test/bdev/blockdev.sh "pmem"
-		run_test "pmem" $rootdir/test/pmem/pmem.sh -x
-		run_test "spdkcli_pmem" $rootdir/test/spdkcli/pmem.sh
-	fi
-
 	if [ $SPDK_TEST_RBD -eq 1 ]; then
 		run_test "blockdev_rbd" $rootdir/test/bdev/blockdev.sh "rbd"
 		run_test "spdkcli_rbd" $rootdir/test/spdkcli/rbd.sh
