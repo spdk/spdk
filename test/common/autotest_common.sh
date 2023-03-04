@@ -1562,10 +1562,11 @@ function pap() {
 function get_proc_paths() {
 	case "$(uname -s)" in
 		Linux) # ps -e -opid,exe <- not supported under {centos7,rocky8}'s procps-ng
-			local pid
+			local pid exe
 			for pid in /proc/[0-9]*; do
-				[[ -e $pid/exe ]] || continue
-				echo "${pid##*/} $(readlink -f "$pid/exe")"
+				exe=$(readlink "$pid/exe") || continue
+				exe=${exe/ (deleted)/}
+				echo "${pid##*/} $exe"
 			done
 			;;
 		FreeeBSD) procstat -ab | awk '{print $1, $4}' ;;
