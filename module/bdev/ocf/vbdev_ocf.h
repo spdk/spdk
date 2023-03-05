@@ -57,7 +57,7 @@ struct vbdev_ocf_config {
 	struct ocf_mngt_cache_config        cache;
 
 	/* Cache device config */
-	struct ocf_mngt_cache_device_config device;
+	struct ocf_mngt_cache_attach_config attach;
 
 	/* Core initial config */
 	struct ocf_mngt_core_config         core;
