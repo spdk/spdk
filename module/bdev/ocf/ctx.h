@@ -19,7 +19,6 @@ extern ocf_ctx_t vbdev_ocf_ctx;
 /* Context of cache instance */
 struct vbdev_ocf_cache_ctx {
 	ocf_queue_t                  mngt_queue;
-	ocf_queue_t                  cleaner_queue;
 	pthread_mutex_t              lock;
 	env_atomic                   refcnt;
 };

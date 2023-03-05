@@ -208,7 +208,7 @@ prepare_submit(struct ocf_io *io)
 		return -EFAULT;
 	}
 
-	if (q == cctx->cleaner_queue || q == cctx->mngt_queue) {
+	if (q == cctx->mngt_queue) {
 		io_ctx->ch = base->management_channel;
 		return 0;
 	}

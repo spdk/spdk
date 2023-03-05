@@ -300,7 +300,7 @@ vbdev_ocf_cache_ctx_get(struct vbdev_ocf_cache_ctx *ctx)
 
 struct cleaner_priv {
 	struct spdk_poller *poller;
-	ocf_queue_t         queue;
+	ocf_queue_t         mngt_queue;
 	uint64_t            next_run;
 };
 
@@ -309,23 +309,13 @@ cleaner_poll(void *arg)
 {
 	ocf_cleaner_t cleaner = arg;
 	struct cleaner_priv *priv = ocf_cleaner_get_priv(cleaner);
-	uint32_t iono = ocf_queue_pending_io(priv->queue);
-	int i, max = spdk_min(32, iono);
-
-	for (i = 0; i < max; i++) {
-		ocf_queue_run_single(priv->queue);
-	}
 
 	if (spdk_get_ticks() >= priv->next_run) {
-		ocf_cleaner_run(cleaner, priv->queue);
+		ocf_cleaner_run(cleaner, priv->mngt_queue);
 		return SPDK_POLLER_BUSY;
 	}
 
-	if (iono > 0) {
-		return SPDK_POLLER_BUSY;
-	} else {
-		return SPDK_POLLER_IDLE;
-	}
+	return SPDK_POLLER_IDLE;
 }
 
 static void
@@ -336,32 +326,9 @@ cleaner_cmpl(ocf_cleaner_t c, uint32_t interval)
 	priv->next_run = spdk_get_ticks() + ((interval * spdk_get_ticks_hz()) / 1000);
 }
 
-static void
-cleaner_queue_kick(ocf_queue_t q)
-{
-}
-
-static void
-cleaner_queue_stop(ocf_queue_t q)
-{
-	struct cleaner_priv *cpriv = ocf_queue_get_priv(q);
-
-	if (cpriv) {
-		spdk_poller_unregister(&cpriv->poller);
-		free(cpriv);
-	}
-}
-
-const struct ocf_queue_ops cleaner_queue_ops = {
-	.kick_sync = cleaner_queue_kick,
-	.kick = cleaner_queue_kick,
-	.stop = cleaner_queue_stop,
-};
-
 static int
 vbdev_ocf_ctx_cleaner_init(ocf_cleaner_t c)
 {
-	int rc;
 	struct cleaner_priv        *priv  = calloc(1, sizeof(*priv));
 	ocf_cache_t                 cache = ocf_cleaner_get_cache(c);
 	struct vbdev_ocf_cache_ctx *cctx  = ocf_cache_get_priv(cache);
@@ -370,15 +337,7 @@ vbdev_ocf_ctx_cleaner_init(ocf_cleaner_t c)
 		return -ENOMEM;
 	}
 
-	rc = vbdev_ocf_queue_create(cache, &priv->queue, &cleaner_queue_ops);
-	if (rc) {
-		free(priv);
-		return rc;
-	}
-
-	ocf_queue_set_priv(priv->queue, priv);
-
-	cctx->cleaner_queue  = priv->queue;
+	priv->mngt_queue = cctx->mngt_queue;
 
 	ocf_cleaner_set_cmpl(c, cleaner_cmpl);
 	ocf_cleaner_set_priv(c, priv);
@@ -391,7 +350,10 @@ vbdev_ocf_ctx_cleaner_stop(ocf_cleaner_t c)
 {
 	struct cleaner_priv *priv = ocf_cleaner_get_priv(c);
 
-	vbdev_ocf_queue_put(priv->queue);
+	if (priv) {
+		spdk_poller_unregister(&priv->poller);
+		free(priv);
+	}
 }
 
 static void
