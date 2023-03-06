@@ -33,9 +33,10 @@
 How to use SPDK test on ARM 
 ===========================
 
-Basic BF2 version
+Basic BF3 version
 ==================
-DOCA_v1.2.0_BlueField_OS_Ubuntu_20.04-5.4.0-1022-bluefield-5.5-1.0.3.2-3.8.0.11969-1-aarch64.bfb
+Ubuntu_22.04_x86_64_kvm
+python /.autodirect/GLIT/SCRIPTS/AUTOINSTALL/Multihost/os_installer_new.py linux -o Ubuntu_22.04_x86_64_kvm -t gen-l-vrt-293
 
 How to get code
 ==================
@@ -43,9 +44,15 @@ git clone git@github.com:LiZhang-2020/spdk.git spdk_vrdma_view,
 
 cd spdk_vrdma_view
 
-<spdk_vrdma_view>git checkout lizh-spdk-vrdma-19-10-1
+<spdk_vrdma_view>git checkout lizh-spdk-vrdma-19-10-1-bf3
 
-<spdk_vrdma_view>git submodule update --init
+<spdk_vrdma_view>git submodule update --init --recursive
+
+<spdk_vrdma_view>cd flexio-sdk/
+
+<spdk_vrdma_view>git am ../patches/flexio/*.patch
+
+<spdk_vrdma_view>../flexio.sh
 
 #Note: need snap-rdma username and token to get snap-rdma submodule
 
