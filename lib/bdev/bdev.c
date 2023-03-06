@@ -2923,6 +2923,8 @@ static void bdev_rw_split_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bde
 static void
 bdev_io_split(struct spdk_bdev_io *bdev_io)
 {
+	assert(bdev_io_should_split(bdev_io));
+
 	bdev_io->u.bdev.split_current_offset_blocks = bdev_io->u.bdev.offset_blocks;
 	bdev_io->u.bdev.split_remaining_num_blocks = bdev_io->u.bdev.num_blocks;
 	bdev_io->u.bdev.split_outstanding = 0;
@@ -3082,7 +3084,7 @@ bdev_io_submit(struct spdk_bdev_io *bdev_io)
 			      bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
 			      spdk_bdev_get_name(bdev));
 
-	if (bdev_io_should_split(bdev_io)) {
+	if (bdev_io->internal.split) {
 		bdev_io_split(bdev_io);
 		return;
 	}
@@ -3162,6 +3164,7 @@ bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->internal.memory_domain = NULL;
 	bdev_io->internal.memory_domain_ctx = NULL;
 	bdev_io->internal.data_transfer_cpl = NULL;
+	bdev_io->internal.split = bdev_io_should_split(bdev_io);
 }
 
 static bool
@@ -6212,7 +6215,8 @@ bdev_abort_io(struct spdk_bdev_desc *desc, struct spdk_bdev_channel *channel,
 	bdev_io->type = SPDK_BDEV_IO_TYPE_ABORT;
 	bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	if (bdev->split_on_optimal_io_boundary && bdev_io_should_split(bio_to_abort)) {
+	if (bdev->split_on_optimal_io_boundary && bio_to_abort->internal.split) {
+		assert(bdev_io_should_split(bio_to_abort));
 		bdev_io->u.bdev.abort.bio_cb_arg = bio_to_abort;
 
 		/* Parent abort request is not submitted directly, but to manage its

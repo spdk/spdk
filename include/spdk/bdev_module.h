@@ -947,6 +947,9 @@ struct spdk_bdev_io {
 		/** Status for the IO */
 		int8_t status;
 
+		/** Indicates whether the IO is split */
+		bool split;
+
 		/** bdev allocated memory associated with this request */
 		void *buf;
 
