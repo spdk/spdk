@@ -694,8 +694,6 @@ create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 	}
 	if (!spdk_mem_all_zero(&opts->uuid, sizeof(opts->uuid))) {
 		spdk_uuid_copy(&mdisk->disk.uuid, &opts->uuid);
-	} else {
-		spdk_uuid_generate(&mdisk->disk.uuid);
 	}
 
 	mdisk->disk.max_copy = 0;

@@ -295,8 +295,6 @@ bdev_null_create(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts
 	}
 	if (opts->uuid) {
 		null_disk->bdev.uuid = *opts->uuid;
-	} else {
-		spdk_uuid_generate(&null_disk->bdev.uuid);
 	}
 
 	null_disk->bdev.ctxt = null_disk;

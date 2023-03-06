@@ -699,8 +699,6 @@ create_bdev_daos(struct spdk_bdev **bdev,
 
 	if (uuid) {
 		daos->disk.uuid = *uuid;
-	} else {
-		spdk_uuid_generate(&daos->disk.uuid);
 	}
 
 	daos->disk.ctxt = daos;
