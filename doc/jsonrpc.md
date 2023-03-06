@@ -5208,6 +5208,7 @@ Construct error bdev.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 base_name               | Required | string      | Base bdev name
+uuid                    | Optional | string      | UUID for this bdev
 
 #### Example
 

@@ -8,6 +8,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/bdev.h"
+#include "spdk/uuid.h"
 
 enum vbdev_error_type {
 	VBDEV_IO_FAILURE = 1,
@@ -21,9 +22,10 @@ typedef void (*spdk_delete_error_complete)(void *cb_arg, int bdeverrno);
  * Create a vbdev on the base bdev to inject error into it.
  *
  * \param base_bdev_name Name of the base bdev.
+ * \param uuid Optional UUID to assign to the bdev.
  * \return 0 on success or negative on failure.
  */
-int vbdev_error_create(const char *base_bdev_name);
+int vbdev_error_create(const char *base_bdev_name, const struct spdk_uuid *uuid);
 
 /**
  * Delete vbdev used to inject errors.

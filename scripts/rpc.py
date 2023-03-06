@@ -1069,10 +1069,12 @@ if __name__ == "__main__":
 
     def bdev_error_create(args):
         print_json(rpc.bdev.bdev_error_create(args.client,
-                                              base_name=args.base_name))
+                                              base_name=args.base_name,
+                                              uuid=args.uuid))
 
     p = subparsers.add_parser('bdev_error_create', help='Add bdev with error injection backend')
     p.add_argument('base_name', help='base bdev name')
+    p.add_argument('--uuid', help='UUID for this bdev', required=False)
     p.set_defaults(func=bdev_error_create)
 
     def bdev_error_delete(args):

@@ -21,6 +21,7 @@
 
 struct spdk_vbdev_error_config {
 	char *base_bdev;
+	struct spdk_uuid uuid;
 	TAILQ_ENTRY(spdk_vbdev_error_config) tailq;
 };
 
@@ -54,7 +55,7 @@ static void vbdev_error_fini(void);
 static void vbdev_error_examine(struct spdk_bdev *bdev);
 static int vbdev_error_config_json(struct spdk_json_write_ctx *w);
 
-static int vbdev_error_config_add(const char *base_bdev_name);
+static int vbdev_error_config_add(const char *base_bdev_name, const struct spdk_uuid *uuid);
 static int vbdev_error_config_remove(const char *base_bdev_name);
 
 static struct spdk_bdev_module error_if = {
@@ -314,11 +315,11 @@ vbdev_error_base_bdev_hotremove_cb(void *_part_base)
 }
 
 static int
-_vbdev_error_create(const char *base_bdev_name)
+_vbdev_error_create(const char *base_bdev_name, const struct spdk_uuid *uuid)
 {
 	struct spdk_bdev_part_base *base = NULL;
 	struct error_disk *disk = NULL;
-	struct spdk_bdev *base_bdev;
+	struct spdk_bdev *base_bdev, *bdev;
 	char *name;
 	int rc;
 
@@ -351,6 +352,11 @@ _vbdev_error_create(const char *base_bdev_name)
 		return -ENOMEM;
 	}
 
+	if (uuid) {
+		bdev = spdk_bdev_part_get_bdev(&disk->part);
+		spdk_uuid_copy(&bdev->uuid, uuid);
+	}
+
 	rc = spdk_bdev_part_construct(&disk->part, base, name, 0, base_bdev->blockcnt,
 				      "Error Injection Disk");
 	free(name);
@@ -368,18 +374,18 @@ _vbdev_error_create(const char *base_bdev_name)
 }
 
 int
-vbdev_error_create(const char *base_bdev_name)
+vbdev_error_create(const char *base_bdev_name, const struct spdk_uuid *uuid)
 {
 	int rc;
 
-	rc = vbdev_error_config_add(base_bdev_name);
+	rc = vbdev_error_config_add(base_bdev_name, uuid);
 	if (rc != 0) {
 		SPDK_ERRLOG("Adding config for ErrorInjection bdev %s failed (rc=%d)\n",
 			    base_bdev_name, rc);
 		return rc;
 	}
 
-	rc = _vbdev_error_create(base_bdev_name);
+	rc = _vbdev_error_create(base_bdev_name, uuid);
 	if (rc == -ENODEV) {
 		rc = 0;
 	} else if (rc != 0) {
@@ -429,7 +435,7 @@ vbdev_error_config_find_by_base_name(const char *base_bdev_name)
 }
 
 static int
-vbdev_error_config_add(const char *base_bdev_name)
+vbdev_error_config_add(const char *base_bdev_name, const struct spdk_uuid *uuid)
 {
 	struct spdk_vbdev_error_config *cfg;
 
@@ -451,6 +457,10 @@ vbdev_error_config_add(const char *base_bdev_name)
 		free(cfg);
 		SPDK_ERRLOG("strdup() failed for base_bdev_name\n");
 		return -ENOMEM;
+	}
+
+	if (uuid) {
+		spdk_uuid_copy(&cfg->uuid, uuid);
 	}
 
 	TAILQ_INSERT_TAIL(&g_error_config, cfg, tailq);
@@ -494,7 +504,7 @@ vbdev_error_examine(struct spdk_bdev *bdev)
 
 	cfg = vbdev_error_config_find_by_base_name(bdev->name);
 	if (cfg != NULL) {
-		rc = _vbdev_error_create(bdev->name);
+		rc = _vbdev_error_create(bdev->name, &cfg->uuid);
 		if (rc != 0) {
 			SPDK_ERRLOG("could not create error vbdev for bdev %s at examine\n",
 				    bdev->name);
@@ -508,6 +518,7 @@ static int
 vbdev_error_config_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_vbdev_error_config *cfg;
+	char uuid_str[SPDK_UUID_STRING_LEN];
 
 	TAILQ_FOREACH(cfg, &g_error_config, tailq) {
 		spdk_json_write_object_begin(w);
@@ -515,6 +526,10 @@ vbdev_error_config_json(struct spdk_json_write_ctx *w)
 		spdk_json_write_named_string(w, "method", "bdev_error_create");
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "base_name", cfg->base_bdev);
+		if (!spdk_mem_all_zero(&cfg->uuid, sizeof(struct spdk_uuid))) {
+			spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &cfg->uuid);
+			spdk_json_write_named_string(w, "uuid", uuid_str);
+		}
 		spdk_json_write_object_end(w);
 
 		spdk_json_write_object_end(w);

@@ -1152,13 +1152,16 @@ def bdev_rbd_resize(client, name, new_size):
     return client.call('bdev_rbd_resize', params)
 
 
-def bdev_error_create(client, base_name):
+def bdev_error_create(client, base_name, uuid=None):
     """Construct an error injection block device.
 
     Args:
         base_name: base bdev name
+        uuid: UUID for this bdev (optional)
     """
     params = {'base_name': base_name}
+    if uuid is not None:
+        params['uuid'] = uuid
     return client.call('bdev_error_create', params)
 
 
