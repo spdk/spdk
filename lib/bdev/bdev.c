@@ -7231,21 +7231,22 @@ bdev_register(struct spdk_bdev *bdev)
 		return ret;
 	}
 
-	/* UUID has to be specified by the user or defined by bdev itself.
-	 * Otherwise this field must remain empty, to indicate that this
-	 * value cannot be depended upon. */
-	if (!spdk_mem_all_zero(&bdev->uuid, sizeof(bdev->uuid))) {
-		/* Add the UUID alias only if it's different than the name */
-		spdk_uuid_fmt_lower(uuid, sizeof(uuid), &bdev->uuid);
-		if (strcmp(bdev->name, uuid) != 0) {
-			ret = spdk_bdev_alias_add(bdev, uuid);
-			if (ret != 0) {
-				SPDK_ERRLOG("Unable to add uuid:%s alias for bdev %s\n", uuid, bdev->name);
-				bdev_name_del(&bdev->internal.bdev_name);
-				bdev_free_io_stat(bdev->internal.stat);
-				free(bdev_name);
-				return ret;
-			}
+	/* UUID may be specified by the user or defined by bdev itself.
+	 * Otherwise it will be generated here, so this field will never be empty. */
+	if (spdk_mem_all_zero(&bdev->uuid, sizeof(bdev->uuid))) {
+		spdk_uuid_generate(&bdev->uuid);
+	}
+
+	/* Add the UUID alias only if it's different than the name */
+	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &bdev->uuid);
+	if (strcmp(bdev->name, uuid) != 0) {
+		ret = spdk_bdev_alias_add(bdev, uuid);
+		if (ret != 0) {
+			SPDK_ERRLOG("Unable to add uuid:%s alias for bdev %s\n", uuid, bdev->name);
+			bdev_name_del(&bdev->internal.bdev_name);
+			bdev_free_io_stat(bdev->internal.stat);
+			free(bdev_name);
+			return ret;
 		}
 	}
 

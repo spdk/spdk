@@ -1,5 +1,7 @@
 {
-  "aliases": [],
+  "aliases": [
+    "$(UUID)"
+  ],
   "assigned_rate_limits": {
     "r_mbytes_per_sec": $(N),
     "rw_ios_per_sec": $(N),
@@ -30,5 +32,6 @@
     "write": $(S),
     "write_zeroes": $(S)
   },
+  "uuid": "$(UUID)",
   "zoned": false
 }
