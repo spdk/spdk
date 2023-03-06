@@ -128,8 +128,6 @@ export SPDK_TEST_IOAT
 export SPDK_TEST_BLOBFS
 : ${SPDK_TEST_VHOST_INIT=0}
 export SPDK_TEST_VHOST_INIT
-: ${SPDK_TEST_PMDK=0}
-export SPDK_TEST_PMDK
 : ${SPDK_TEST_LVOL=0}
 export SPDK_TEST_LVOL
 : ${SPDK_TEST_VBDEV_COMPRESS=0}
@@ -437,11 +435,6 @@ function get_config_params() {
 
 	if [ $SPDK_TEST_NVME_CUSE -eq 1 ]; then
 		config_params+=' --with-nvme-cuse'
-	fi
-
-	# for options with both dependencies and a test flag, set them here
-	if [ -f /usr/include/libpmemblk.h ] && [ $SPDK_TEST_PMDK -eq 1 ]; then
-		config_params+=' --with-pmdk'
 	fi
 
 	if [ -f /usr/include/libpmem.h ] && [ $SPDK_TEST_VBDEV_COMPRESS -eq 1 ]; then

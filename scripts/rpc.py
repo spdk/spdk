@@ -1110,24 +1110,6 @@ if __name__ == "__main__":
     p.add_argument('name', help='iSCSI bdev name')
     p.set_defaults(func=bdev_iscsi_delete)
 
-    def bdev_pmem_create(args):
-        print_json(rpc.bdev.bdev_pmem_create(args.client,
-                                             pmem_file=args.pmem_file,
-                                             name=args.name))
-
-    p = subparsers.add_parser('bdev_pmem_create', help='Add a bdev with pmem backend')
-    p.add_argument('pmem_file', help='Path to pmemblk pool file')
-    p.add_argument('-n', '--name', help='Block device name', required=True)
-    p.set_defaults(func=bdev_pmem_create)
-
-    def bdev_pmem_delete(args):
-        rpc.bdev.bdev_pmem_delete(args.client,
-                                  name=args.name)
-
-    p = subparsers.add_parser('bdev_pmem_delete', help='Delete a pmem bdev')
-    p.add_argument('name', help='pmem bdev name')
-    p.set_defaults(func=bdev_pmem_delete)
-
     def bdev_passthru_create(args):
         print_json(rpc.bdev.bdev_passthru_create(args.client,
                                                  base_bdev_name=args.base_bdev_name,
@@ -2592,36 +2574,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-t2', '--crdt2', help='Command Retry Delay Time 2, in units of 100 milliseconds', type=int)
     p.add_argument('-t3', '--crdt3', help='Command Retry Delay Time 3, in units of 100 milliseconds', type=int)
     p.set_defaults(func=nvmf_set_crdt)
-
-    # pmem
-    def bdev_pmem_create_pool(args):
-        num_blocks = int((args.total_size * 1024 * 1024) / args.block_size)
-        rpc.pmem.bdev_pmem_create_pool(args.client,
-                                       pmem_file=args.pmem_file,
-                                       num_blocks=num_blocks,
-                                       block_size=args.block_size)
-
-    p = subparsers.add_parser('bdev_pmem_create_pool', help='Create pmem pool')
-    p.add_argument('pmem_file', help='Path to pmemblk pool file')
-    p.add_argument('total_size', help='Size of pmem bdev in MB (int > 0)', type=int)
-    p.add_argument('block_size', help='Block size for this pmem pool', type=int)
-    p.set_defaults(func=bdev_pmem_create_pool)
-
-    def bdev_pmem_get_pool_info(args):
-        print_dict(rpc.pmem.bdev_pmem_get_pool_info(args.client,
-                                                    pmem_file=args.pmem_file))
-
-    p = subparsers.add_parser('bdev_pmem_get_pool_info', help='Display pmem pool info and check consistency')
-    p.add_argument('pmem_file', help='Path to pmemblk pool file')
-    p.set_defaults(func=bdev_pmem_get_pool_info)
-
-    def bdev_pmem_delete_pool(args):
-        rpc.pmem.bdev_pmem_delete_pool(args.client,
-                                       pmem_file=args.pmem_file)
-
-    p = subparsers.add_parser('bdev_pmem_delete_pool', help='Delete pmem pool')
-    p.add_argument('pmem_file', help='Path to pmemblk pool file')
-    p.set_defaults(func=bdev_pmem_delete_pool)
 
     # subsystem
     def framework_get_subsystems(args):

@@ -209,30 +209,6 @@ class UIRoot(UINode):
         rpc.lvol.bdev_lvol_delete_lvstore(self.client, **kwargs)
 
     @verbose
-    def bdev_pmem_create_pool(self, **kwargs):
-        response = rpc.pmem.bdev_pmem_create_pool(self.client, **kwargs)
-        return response
-
-    @verbose
-    def bdev_pmem_delete_pool(self, **kwargs):
-        rpc.pmem.bdev_pmem_delete_pool(self.client, **kwargs)
-
-    @verbose
-    def bdev_pmem_get_pool_info(self, **kwargs):
-        response = rpc.pmem.bdev_pmem_get_pool_info(self.client, **kwargs)
-        return response
-
-    @verbose
-    def bdev_pmem_create(self, **kwargs):
-        response = rpc.bdev.bdev_pmem_create(self.client, **kwargs)
-        return response
-
-    @verbose
-    def bdev_pmem_delete(self, **kwargs):
-        response = rpc.bdev.bdev_pmem_delete(self.client, **kwargs)
-        return response
-
-    @verbose
     def create_rbd_bdev(self, **kwargs):
         response = rpc.bdev.bdev_rbd_create(self.client, **kwargs)
         return response

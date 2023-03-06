@@ -19,7 +19,6 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 fi
 if [[ $INSTALL_PMEM == "true" ]]; then
 	# Additional dependencies for building pmem based backends
-	zypper install -y libpmemblk-devel
 	zypper install -y libpmemobj-devel
 fi
 if [[ $INSTALL_FUSE == "true" ]]; then

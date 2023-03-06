@@ -1272,33 +1272,6 @@ def bdev_iscsi_delete(client, name):
     return client.call('bdev_iscsi_delete', params)
 
 
-def bdev_pmem_create(client, pmem_file, name):
-    """Construct a libpmemblk block device.
-
-    Args:
-        pmem_file: path to pmemblk pool file
-        name: name of block device
-
-    Returns:
-        Name of created block device.
-    """
-    params = {
-        'pmem_file': pmem_file,
-        'name': name
-    }
-    return client.call('bdev_pmem_create', params)
-
-
-def bdev_pmem_delete(client, name):
-    """Remove pmem bdev from the system.
-
-    Args:
-        name: name of pmem bdev to delete
-    """
-    params = {'name': name}
-    return client.call('bdev_pmem_delete', params)
-
-
 def bdev_passthru_create(client, base_bdev_name, name):
     """Construct a pass-through block device.
 

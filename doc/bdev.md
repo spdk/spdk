@@ -533,43 +533,6 @@ Example commands
 
 `rpc.py bdev_passthru_delete pt`
 
-## Pmem {#bdev_config_pmem}
-
-The SPDK pmem bdev driver uses pmemblk pool as the target for block I/O operations. For
-details on Pmem memory please refer to PMDK documentation on http://pmem.io website.
-First, user needs to configure SPDK to include PMDK support:
-
-`configure --with-pmdk`
-
-To create pmemblk pool for use with SPDK user should use `bdev_pmem_create_pool` RPC command.
-
-Example command
-
-`rpc.py bdev_pmem_create_pool /path/to/pmem_pool 25 4096`
-
-To get information on created pmem pool file user can use `bdev_pmem_get_pool_info` RPC command.
-
-Example command
-
-`rpc.py bdev_pmem_get_pool_info /path/to/pmem_pool`
-
-To remove pmem pool file user can use `bdev_pmem_delete_pool` RPC command.
-
-Example command
-
-`rpc.py bdev_pmem_delete_pool /path/to/pmem_pool`
-
-To create bdev based on pmemblk pool file user should use `bdev_pmem_create` RPC
-command.
-
-Example command
-
-`rpc.py bdev_pmem_create /path/to/pmem_pool -n pmem`
-
-To remove a block device representation use the bdev_pmem_delete command.
-
-`rpc.py bdev_pmem_delete pmem`
-
 ## RAID {#bdev_ug_raid}
 
 RAID virtual bdev module provides functionality to combine any SPDK bdevs into

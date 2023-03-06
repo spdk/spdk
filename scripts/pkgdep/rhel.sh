@@ -150,7 +150,6 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 fi
 if [[ $INSTALL_PMEM == "true" ]]; then
 	# Additional dependencies for building pmem based backends
-	yum install -y libpmemblk-devel || true
 	yum install -y libpmemobj-devel || true
 fi
 if [[ $INSTALL_FUSE == "true" ]]; then

@@ -59,7 +59,6 @@ if [[ $INSTALL_PMEM == "true" ]]; then
 	# Additional dependencies for building pmem based backends
 	if [[ $NAME == "Ubuntu" ]] && [[ $VERSION_ID_NUM -gt 1800 ]]; then
 		apt-get install -y libpmem-dev
-		apt-get install -y libpmemblk-dev
 		apt-get install -y libpmemobj-dev
 	fi
 fi

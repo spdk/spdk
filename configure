@@ -71,9 +71,6 @@ function usage() {
 	echo "                           vfio-user initiator is always built-in in Linux."
 	echo "                           example: /usr/src/libvfio-user"
 	echo " --without-vfio-user       No path required."
-	echo " --with-pmdk[=DIR]         Build persistent memory bdev. (Deprecated)
-					 example: /usr/share/pmdk"
-	echo " --without-pmdk		 No path required."
 	echo " --with-vbdev-compress     Build vbdev compression module and dependencies."
 	echo " --without-vbdev-compress  No path required."
 	echo " --with-dpdk-compressdev   Build accel DPDK compression module and dependencies."
@@ -527,18 +524,6 @@ for i in "$@"; do
 		--without-vfio-user)
 			CONFIG[VFIO_USER]=n
 			;;
-		--with-pmdk)
-			CONFIG[PMDK]=y
-			CONFIG[PMDK_DIR]=""
-			;;
-		--with-pmdk=*)
-			CONFIG[PMDK]=y
-			check_dir "$i"
-			CONFIG[PMDK_DIR]=$(readlink -f ${i#*=})
-			;;
-		--without-pmdk)
-			CONFIG[PMDK]=n
-			;;
 		--with-vbdev-compress)
 			CONFIG[VBDEV_COMPRESS]=y
 			;;
@@ -903,17 +888,6 @@ fi
 if [[ "${CONFIG[FC]}" = "y" ]]; then
 	if [[ -n "${CONFIG[FC_PATH]}" ]]; then
 		check_dir "${CONFIG[FC_PATH]}"
-	fi
-fi
-
-if [[ "${CONFIG[PMDK]}" = "y" ]]; then
-	echo "WARNING: PMDK - bdev_pmem is deprecated."
-	echo "WARNING: PMDK - ACCEL_FLAG_PERSISTENT in accel_sw module is deprecated."
-	if ! echo -e '#include <libpmemblk.h>\nint main(void) { return 0; }\n' \
-		| "${BUILD_CMD[@]}" -lpmemblk - 2> /dev/null; then
-		echo "--with-pmdk requires libpmemblk."
-		echo "Please install then re-run this script."
-		exit 1
 	fi
 fi
 

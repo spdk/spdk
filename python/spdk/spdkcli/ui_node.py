@@ -53,8 +53,7 @@ class UINode(ConfigNode):
                 command in ["create", "delete", "delete_all", "add_initiator",
                             "allow_any_host", "bdev_split_create", "add_lun",
                             "iscsi_target_node_add_pg_ig_maps", "remove_target", "add_secret",
-                            "bdev_split_delete", "bdev_pmem_delete_pool",
-                            "bdev_pmem_create_pool", "delete_secret_all",
+                            "bdev_split_delete", "delete_secret_all",
                             "delete_initiator", "set_auth", "delete_secret",
                             "iscsi_target_node_remove_pg_ig_maps", "load_config",
                             "load_subsystem_config"]:
@@ -76,7 +75,6 @@ class UIBdevs(UINode):
         UINullBdev(self)
         UIErrorBdev(self)
         UISplitBdev(self)
-        UIPmemBdev(self)
         UIRbdBdev(self)
         UIiSCSIBdev(self)
         UIVirtioBlkBdev(self)
@@ -422,44 +420,6 @@ class UISplitBdev(UIBdev):
         """
 
         self.get_root().bdev_split_delete(base_bdev=base_bdev)
-
-
-class UIPmemBdev(UIBdev):
-    def __init__(self, parent):
-        UIBdev.__init__(self, "pmemblk", parent)
-
-    def delete(self, name):
-        self.get_root().bdev_pmem_delete(name=name)
-
-    def ui_command_bdev_pmem_create_pool(self, pmem_file, total_size, block_size):
-        total_size = self.ui_eval_param(total_size, "number", None)
-        block_size = self.ui_eval_param(block_size, "number", None)
-        num_blocks = int((total_size * 1024 * 1024) / block_size)
-
-        self.get_root().bdev_pmem_create_pool(pmem_file=pmem_file,
-                                              num_blocks=num_blocks,
-                                              block_size=block_size)
-
-    def ui_command_bdev_pmem_delete_pool(self, pmem_file):
-        self.get_root().bdev_pmem_delete_pool(pmem_file=pmem_file)
-
-    def ui_command_bdev_pmem_get_pool_info(self, pmem_file):
-        ret = self.get_root().bdev_pmem_get_pool_info(pmem_file=pmem_file)
-        self.shell.log.info(json.dumps(ret, indent=2))
-
-    def ui_command_create(self, pmem_file, name):
-        ret_name = self.get_root().bdev_pmem_create(pmem_file=pmem_file,
-                                                    name=name)
-        self.shell.log.info(ret_name)
-
-    def ui_command_delete(self, name):
-        """
-        Deletes pmem bdev from configuration.
-
-        Arguments:
-        name - Is a unique identifier of the pmem bdev to be deleted - UUID number or name alias.
-        """
-        self.delete(name)
 
 
 class UIRbdBdev(UIBdev):

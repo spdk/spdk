@@ -79,11 +79,6 @@ BLOCKDEV_MODULES_LIST += bdev_rbd
 BLOCKDEV_MODULES_PRIVATE_LIBS += -lrados -lrbd
 endif
 
-ifeq ($(CONFIG_PMDK),y)
-BLOCKDEV_MODULES_LIST += bdev_pmem
-BLOCKDEV_MODULES_PRIVATE_LIBS += -lpmemblk -lpmem
-endif
-
 ifeq ($(CONFIG_DAOS),y)
 BLOCKDEV_MODULES_LIST += bdev_daos
 BLOCKDEV_MODULES_PRIVATE_LIBS += -ldaos -ldaos_common -ldfs -lgurt -luuid -ldl
