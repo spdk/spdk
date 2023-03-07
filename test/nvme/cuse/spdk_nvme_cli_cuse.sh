@@ -5,8 +5,7 @@
 #
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/scripts/common.sh
-source $rootdir/test/common/autotest_common.sh
+source "$testdir/common.sh"
 
 rm -Rf $testdir/match_files
 mkdir $testdir/match_files
@@ -17,17 +16,17 @@ CUSE_OUT=$testdir/match_files/cuse.out
 NVME_CMD=/usr/local/src/nvme-cli/nvme
 rpc_py=$rootdir/scripts/rpc.py
 
-bdf=$(get_first_nvme_bdf)
+"$rootdir/scripts/setup.sh" reset
+scan_nvme_ctrls
 
-PCI_ALLOWED="${bdf}" $rootdir/scripts/setup.sh reset
-nvme_name=$(get_nvme_ctrlr_from_bdf ${bdf})
-if [[ -z "$nvme_name" ]]; then
-	echo "setup.sh failed bind kernel driver to ${bdf}"
+if ! nvme_name=$(get_nvme_with_ns_management); then
+	echo "Failed to find suitable nvme for the test" >&2
 	return 1
 fi
 
 ctrlr="/dev/${nvme_name}"
 ns="/dev/${nvme_name}n1"
+bdf=${bdfs["$nvme_name"]}
 
 waitforblk "${nvme_name}n1"
 

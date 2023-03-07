@@ -118,3 +118,46 @@ get_active_lbaf() {
 	done
 	return 1
 }
+
+get_oacs() {
+	local ctrl=${1:-nvme0} bit=${2:-nsmgt}
+	local -A bits
+
+	# Figure 275: Identify – Identify Controller Data Structure, I/O Command Set Independent
+	bits["ss/sr"]=$((1 << 0))
+	bits["fnvme"]=$((1 << 1))
+	bits["fc/fi"]=$((1 << 2))
+	bits["nsmgt"]=$((1 << 3))
+	bits["self-test"]=$((1 << 4))
+	bits["directives"]=$((1 << 5))
+	bits["nvme-mi-s/r"]=$((1 << 6))
+	bits["virtmgt"]=$((1 << 7))
+	bits["doorbellbuf"]=$((1 << 8))
+	bits["getlba"]=$((1 << 9))
+	bits["commfeatlock"]=$((1 << 10))
+
+	bit=${bit,,}
+	[[ -n ${bits["$bit"]} ]] || return 1
+
+	(($(get_nvme_ctrl_feature "$ctrl" oacs) & bits["$bit"]))
+}
+
+get_nvmes_with_ns_management() {
+	((${#ctrls[@]} == 0)) && scan_nvme_ctrls
+
+	local ctrl
+	for ctrl in "${!ctrls[@]}"; do
+		get_oacs "$ctrl" nsmgt && echo "$ctrl"
+	done
+}
+
+get_nvme_with_ns_management() {
+	local _ctrls
+
+	_ctrls=($(get_nvmes_with_ns_management))
+	if ((${#_ctrls[@]} > 0)); then
+		echo "${_ctrls[0]}"
+		return 0
+	fi
+	return 1
+}

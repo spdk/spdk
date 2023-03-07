@@ -11,12 +11,7 @@ $rootdir/scripts/setup.sh reset
 scan_nvme_ctrls
 
 # Find bdf that supports Namespace Management
-for ctrl in "${!ctrls[@]}"; do
-	# Check Optional Admin Command Support for Namespace Management
-	(($(get_nvme_ctrl_feature "$ctrl" oacs) & 0x8)) && nvme_name=$ctrl && break
-done
-
-if [[ -z $nvme_name ]]; then
+if ! nvme_name=$(get_nvme_with_ns_management); then
 	echo "No NVMe device supporting Namespace management found"
 	$rootdir/scripts/setup.sh
 	exit 1
