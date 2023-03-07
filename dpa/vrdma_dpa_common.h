@@ -149,8 +149,8 @@ struct vrdma_dpa_event_handler_ctx {
 	uint16_t sq_last_fetch_start;
 	struct {
 		struct vrdma_dpa_cq qp_rqcq;
-		uint32_t hw_qp_sq_pi;
-		uint32_t hw_qp_sq_ci; /*get from dma_sqcq_ctx->cqe->wqe_count+1*/
+		uint16_t hw_qp_sq_pi;
+		uint16_t hw_qp_sq_ci; /*get from dma_sqcq_ctx->cqe->wqe_count+1*/
 		uint32_t hw_sq_size;
 		uint16_t qp_num;
 		uint16_t reserved1;

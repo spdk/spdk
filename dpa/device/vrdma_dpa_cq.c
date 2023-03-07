@@ -52,7 +52,7 @@ vrdma_dpa_cqe_get(struct vrdma_dpa_cq_ctx *cq_ctx, uint16_t mask)
 }
 
 void vrdma_dpa_cq_wait(struct vrdma_dpa_cq_ctx *cq_ctx, uint16_t mask,
-			uint32_t *comp_wqe_idx)
+			uint16_t *comp_wqe_idx)
 {
 	struct flexio_dev_cqe64 *cqe;
 	uint8_t opcode;

@@ -24,7 +24,7 @@ void vrdma_dpa_cq_incr(struct vrdma_dpa_cq_ctx *cq_ctx, uint16_t mask);
 volatile struct flexio_dev_cqe64 *
 vrdma_dpa_cqe_get(struct vrdma_dpa_cq_ctx *ctx, uint16_t mask);
 void vrdma_dpa_cq_wait(struct vrdma_dpa_cq_ctx *cq_ctx, uint16_t mask,
-			uint32_t *comp_wqe_idx);
+			uint16_t *comp_wqe_idx);
 static inline uint8_t vrdma_dpa_cqe_get_opcode(struct flexio_dev_cqe64 *cqe)
 {
 	return cqe->op_own >> 4;
