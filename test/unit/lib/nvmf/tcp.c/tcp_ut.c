@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021, 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -829,7 +829,6 @@ test_nvmf_tcp_send_c2h_term_req(void)
 	enum spdk_nvme_tcp_term_req_fes fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD;
 	uint32_t error_offset = 1;
 
-	mgmt_pdu.sgl.total_size = 0;
 	mgmt_pdu.qpair = &tqpair;
 	tqpair.mgmt_pdu = &mgmt_pdu;
 	tqpair.pdu_in_progress = &pdu_in_progress;
