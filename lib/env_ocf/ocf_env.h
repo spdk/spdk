@@ -751,22 +751,50 @@ env_ticks_to_secs(uint64_t j)
 	return j / spdk_get_ticks_hz();
 }
 
+/**
+ * @brief Dividing first tick_hz by 1000 is better than multiply j by 1000
+ * because if we would multiply j by 1000 we could only handle j
+ * up to 54b (*1000 is 10b).
+ * with this implementation we can handle all 64b in j.
+ * we only assume that ticks_hz is perfectly divisible by 1000
+ * which is probably good assumption because CPU frequency is in GHz/MHz scale.
+ *
+ * @param[in] j ticks count
+ */
 static inline uint64_t
 env_ticks_to_msecs(uint64_t j)
 {
-	return env_ticks_to_secs(j) * 1000;
+	return j / (spdk_get_ticks_hz() / 1000);
 }
 
-static inline uint64_t
-env_ticks_to_nsecs(uint64_t j)
-{
-	return env_ticks_to_secs(j) * 1000 * 1000;
-}
-
+/**
+ * @brief Same as in msec case
+ * we divide ticks_hz by 1000 * 1000.
+ * so we use all 64b in j here as well.
+ * we assume that ticks_hz is perfectly divisible by 1000 * 1000
+ * i.e. CPU frequency is divisible by 1MHz.
+ *
+ * @param[in] j ticks count
+ */
 static inline uint64_t
 env_ticks_to_usecs(uint64_t j)
 {
-	return env_ticks_to_secs(j) * 1000 * 1000 * 1000;
+	return j / (spdk_get_ticks_hz() / (1000 * 1000));
+}
+
+/**
+ * @brief We can't divide ticks_hz by 10^9
+ * because we can't assume that CPU frequency is prefectly divisible by 10^9.
+ * for example there are CPUs with 2.8GHz or 3.3GHz.
+ * so in here we multiply j by 1000
+ * which means we can only handle 54b of j correctly.
+ *
+ * @param[in] j ticks count
+ */
+static inline uint64_t
+env_ticks_to_nsecs(uint64_t j)
+{
+	return (j * 1000) / (spdk_get_ticks_hz() / (1000 * 1000));
 }
 
 static inline uint64_t
