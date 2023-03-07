@@ -64,12 +64,12 @@ typedef uint64_t sector_t;
 
 #define ENV_WARN(cond, fmt, args...) ({ \
 		if (spdk_unlikely((uintptr_t)(cond))) \
-			SPDK_NOTICELOG("WARNING" fmt, ##args); \
+			SPDK_WARNLOG(fmt, ##args); \
 	})
 
 #define ENV_WARN_ON(cond) ({ \
 	if (spdk_unlikely((uintptr_t)(cond))) \
-		SPDK_NOTICELOG("WARNING\n"); \
+		SPDK_WARNLOG("\n"); \
 	})
 
 #define ENV_BUG() ({ \
