@@ -307,10 +307,8 @@ void vrdma_db_handler(flexio_uintptr_t thread_arg)
 		rq_pi_last = rq_pi;
 		sq_pi_last = sq_pi;
 
-#if 0
-		if((empty_count == 100000) || (change_count == 10))
+		if((empty_count == 10) || (change_count == 10))
 			goto out;
-#endif
 
 		/*fetch rq_pi*/
 		asm volatile("fence iorw, iorw" ::: "memory");
