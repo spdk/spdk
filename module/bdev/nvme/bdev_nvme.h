@@ -115,6 +115,7 @@ struct nvme_ctrlr {
 	uint32_t				destruct : 1;
 	uint32_t				ana_log_page_updating : 1;
 	uint32_t				io_path_cache_clearing : 1;
+	uint32_t				dont_retry : 1;
 
 	struct nvme_ctrlr_opts			opts;
 

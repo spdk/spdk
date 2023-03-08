@@ -1923,6 +1923,7 @@ _bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
 	nvme_ctrlr->resetting = false;
+	nvme_ctrlr->dont_retry = false;
 
 	path_id = TAILQ_FIRST(&nvme_ctrlr->trids);
 	assert(path_id != NULL);
@@ -1984,6 +1985,9 @@ bdev_nvme_reset_destroy_qpair(struct spdk_io_channel_iter *i)
 	_bdev_nvme_clear_io_path_cache(nvme_qpair);
 
 	if (nvme_qpair->qpair != NULL) {
+		if (nvme_qpair->ctrlr->dont_retry) {
+			spdk_nvme_qpair_set_abort_dnr(nvme_qpair->qpair, true);
+		}
 		spdk_nvme_ctrlr_disconnect_io_qpair(nvme_qpair->qpair);
 
 		/* The current full reset sequence will move to the next
@@ -2133,6 +2137,7 @@ bdev_nvme_reset(struct nvme_ctrlr *nvme_ctrlr)
 	}
 
 	nvme_ctrlr->resetting = true;
+	nvme_ctrlr->dont_retry = true;
 
 	if (nvme_ctrlr->reconnect_is_delayed) {
 		SPDK_DEBUGLOG(bdev_nvme, "Reconnect is already scheduled.\n");
@@ -2167,8 +2172,9 @@ bdev_nvme_reset_rpc(struct nvme_ctrlr *nvme_ctrlr, bdev_nvme_reset_cb cb_fn, voi
 static int _bdev_nvme_reset_io(struct nvme_io_path *io_path, struct nvme_bdev_io *bio);
 
 static void
-bdev_nvme_reset_io_complete(struct nvme_bdev_io *bio)
+_bdev_nvme_reset_io_complete(struct spdk_io_channel_iter *i, int status)
 {
+	struct nvme_bdev_io *bio = spdk_io_channel_iter_get_ctx(i);
 	enum spdk_bdev_io_status io_status;
 
 	if (bio->cpl.cdw0 == 0) {
@@ -2178,6 +2184,30 @@ bdev_nvme_reset_io_complete(struct nvme_bdev_io *bio)
 	}
 
 	__bdev_nvme_io_complete(spdk_bdev_io_from_ctx(bio), io_status, NULL);
+}
+
+static void
+bdev_nvme_abort_bdev_channel(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct nvme_bdev_channel *nbdev_ch = spdk_io_channel_get_ctx(_ch);
+
+	bdev_nvme_abort_retry_ios(nbdev_ch);
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+bdev_nvme_reset_io_complete(struct nvme_bdev_io *bio)
+{
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
+
+	/* Abort all queued I/Os for retry. */
+	spdk_for_each_channel(nbdev,
+			      bdev_nvme_abort_bdev_channel,
+			      bio,
+			      _bdev_nvme_reset_io_complete);
 }
 
 static void
