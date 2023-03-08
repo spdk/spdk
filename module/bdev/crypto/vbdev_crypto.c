@@ -77,6 +77,17 @@ static int vbdev_crypto_claim(const char *bdev_name);
 static void vbdev_crypto_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 
 static void
+crypto_io_fail(struct crypto_bdev_io *crypto_io)
+{
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(crypto_io);
+
+	/* This function can only be used to fail an IO that hasn't been sent to the base bdev,
+	 * otherwise accel sequence might have already been executed/aborted. */
+	spdk_accel_sequence_abort(crypto_io->seq);
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+}
+
+static void
 crypto_write(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io)
 {
 	struct vbdev_crypto *crypto_bdev = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_crypto,
@@ -101,8 +112,7 @@ crypto_write(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io)
 			vbdev_crypto_queue_io(bdev_io, CRYPTO_IO_ENCRYPT_DONE);
 		} else {
 			SPDK_ERRLOG("Failed to submit bdev_io!\n");
-			spdk_accel_sequence_abort(crypto_io->seq);
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			crypto_io_fail(crypto_io);
 		}
 	}
 }
@@ -155,8 +165,7 @@ crypto_encrypt(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io
 			vbdev_crypto_queue_io(bdev_io, CRYPTO_IO_NEW);
 		} else {
 			SPDK_ERRLOG("Failed to submit bdev_io!\n");
-			spdk_accel_sequence_abort(crypto_io->seq);
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			crypto_io_fail(crypto_io);
 		}
 
 		return;
@@ -219,8 +228,7 @@ vbdev_crypto_queue_io(struct spdk_bdev_io *bdev_io, enum crypto_io_resubmit_stat
 				     &crypto_io->bdev_io_wait);
 	if (rc != 0) {
 		SPDK_ERRLOG("Queue io failed in vbdev_crypto_queue_io, rc=%d.\n", rc);
-		spdk_accel_sequence_abort(crypto_io->seq);
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		crypto_io_fail(crypto_io);
 	}
 }
 
@@ -246,8 +254,7 @@ crypto_read(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io)
 			vbdev_crypto_queue_io(bdev_io, CRYPTO_IO_DECRYPT_DONE);
 		} else {
 			SPDK_ERRLOG("Failed to submit bdev_io!\n");
-			spdk_accel_sequence_abort(crypto_io->seq);
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			crypto_io_fail(crypto_io);
 		}
 	}
 }
@@ -266,8 +273,7 @@ crypto_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 	int rc;
 
 	if (!success) {
-		spdk_accel_sequence_abort(crypto_io->seq);
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		crypto_io_fail(crypto_io);
 		return;
 	}
 
@@ -283,8 +289,7 @@ crypto_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 			vbdev_crypto_queue_io(bdev_io, CRYPTO_IO_NEW);
 		} else {
 			SPDK_ERRLOG("Failed to submit bdev_io!\n");
-			spdk_accel_sequence_abort(crypto_io->seq);
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			crypto_io_fail(crypto_io);
 		}
 
 		return;
@@ -351,8 +356,8 @@ vbdev_crypto_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	default:
 		SPDK_ERRLOG("crypto: unknown I/O type %d\n", bdev_io->type);
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		return;
+		rc = -EINVAL;
+		break;
 	}
 
 	if (rc != 0) {
@@ -361,8 +366,7 @@ vbdev_crypto_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 			vbdev_crypto_queue_io(bdev_io, CRYPTO_IO_NEW);
 		} else {
 			SPDK_ERRLOG("Failed to submit bdev_io!\n");
-			spdk_accel_sequence_abort(crypto_io->seq);
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			crypto_io_fail(crypto_io);
 		}
 	}
 }
