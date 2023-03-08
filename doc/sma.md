@@ -37,7 +37,11 @@ Input:
 
 - `volume`: Volume parameters describing a volume to immediately attach to the
   created device.  This field may be optional for some device types (e.g. NVMe),
-  while it may be required for others (e.g. virtio-blk).
+  while it may be required for others (e.g. virtio-blk). Extending parameters with
+  crypto attributes like encryption type, keys, tweak mode allows the user to configure
+  crypto when attaching a volume to a device. Users must specify the crypto engine
+  to use under `crypto` section in config. It is also possible to register out-of-tree
+  crypto engines by inheriting from the `CryptoEngine` class.
 - `params`: Device-specific parameters.  The type of this structure determines
   the type of device to create.
 
@@ -67,7 +71,11 @@ Input:
 
 - `volume`: Parameters describing the volume to attach.  The type of this
   structure determines the method to create it (e.g. direct NVMe-oF connection,
-  NVMe-oF through discovery service, iSCSI, etc.).
+  NVMe-oF through discovery service, iSCSI, etc.). Extending parameters with
+  crypto attributes like type, keys, tweak mode allowing the user to configure crypto
+  when attaching a volume to a device. Users must specify the crypto engine to use under
+  `crypto` section in config. It is also possible to register out-of-tree crypto engines
+  by inheriting from the `CryptoEngine` class.
 - `device_handle`: Device handle obtained from `CreateDevice`.
 
 ### DetachVolume
@@ -79,6 +87,36 @@ Input:
 
 - `volume_id`: Volume UUID/GUID.
 - `device_handle`: Device handle obtained from `CreateDevice`.
+
+### SetQos
+
+This method configures QoS on a per-device or per-volume level.
+Not all QoS settings have to be supported by each device, so users
+can use `GetQosCapabilities` to get capabilities.
+
+Input:
+
+- `handle`: Device handle obtained from `CreateDevice`.
+- `volume_id`: Volume UUID/GUID. If this parameter is omitted, the QoS will be set up
+  on the whole device (all volumes attached to that device will share QoS settings).
+  Some device types might only support configuring QoS on per-device
+  (volume_id must be empty) or per-volume level (volume_id cannot be empty).
+  This information can be obtained by sending a GetQosCapabilities request.
+- `maximum`: Maximum allowed IOPS/bandwidth values.
+
+### GetQosCapabilities
+
+This method queries supported QoS settings.
+
+Input:
+
+- `device_type`: Type of a device to query for QoS capabilities.
+
+Output:
+
+- `capabilities`: QoS capabilities response including device/volume
+   QoS limits like read IOPS, write IOPS, read/write IOPS, read bandwidth,
+   write bandwidth, read/write bandwidth.
 
 ## Running and Configuration
 
