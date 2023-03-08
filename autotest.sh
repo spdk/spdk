@@ -336,6 +336,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		run_test "blockdev_crypto_aesni" $rootdir/test/bdev/blockdev.sh "crypto_aesni"
 		run_test "blockdev_crypto_sw" $rootdir/test/bdev/blockdev.sh "crypto_sw"
 		run_test "blockdev_crypto_qat" $rootdir/test/bdev/blockdev.sh "crypto_qat"
+		run_test "chaining" $rootdir/test/bdev/chaining.sh
 	fi
 
 	if [[ $SPDK_TEST_SCHEDULER -eq 1 ]]; then
