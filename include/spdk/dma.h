@@ -154,6 +154,17 @@ typedef int (*spdk_memory_domain_translate_memory_cb)(struct spdk_memory_domain 
 		struct spdk_memory_domain_translation_ctx *dst_domain_ctx, void *addr, size_t len,
 		struct spdk_memory_domain_translation_result *result);
 
+/**
+ * Definition of function which invalidates the data range in the given domain
+ *
+ * \param domain Memory domain to which the data buffer belongs
+ * \param domain_ctx Optional context passed by upper layer
+ * \param iov Iov array in \b domain memory space to be invalidated
+ * \param iovcnt Iov array size
+ */
+typedef void (*spdk_memory_domain_invalidate_data_cb)(struct spdk_memory_domain *domain,
+		void *domain_ctx, struct iovec *iov, uint32_t iovcnt);
+
 /** Context of memory domain of RDMA type */
 struct spdk_memory_domain_rdma_ctx {
 	/** size of this structure in bytes */
@@ -197,6 +208,15 @@ int spdk_memory_domain_create(struct spdk_memory_domain **domain, enum spdk_dma_
  */
 void spdk_memory_domain_set_translation(struct spdk_memory_domain *domain,
 					spdk_memory_domain_translate_memory_cb translate_cb);
+
+/**
+ * Set invalidate function for memory domain. Overwrites existing invalidate function.
+ *
+ * @param domain Memory domain
+ * @param invalidate_cb Invalidate function
+ */
+void spdk_memory_domain_set_invalidate(struct spdk_memory_domain *domain,
+				       spdk_memory_domain_invalidate_data_cb invalidate_cb);
 
 /**
  * Set pull function for memory domain. Overwrites existing pull function.
@@ -315,6 +335,21 @@ int spdk_memory_domain_push_data(struct spdk_memory_domain *dst_domain, void *ds
 int spdk_memory_domain_translate_data(struct spdk_memory_domain *src_domain, void *src_domain_ctx,
 				      struct spdk_memory_domain *dst_domain, struct spdk_memory_domain_translation_ctx *dst_domain_ctx,
 				      void *addr, size_t len, struct spdk_memory_domain_translation_result *result);
+
+/**
+ * Invalidate memory in the given domain.
+ *
+ * This function calls \b domain invalidate callback, the callback needs to be set using \ref
+ * spdk_memory_domain_set_invalidate function.
+ * This operation is optional and is meant to be executed on the translation result \ref spdk_memory_domain_translate_data.
+ *
+ * \param domain Memory domain in which address space of the buffer is located
+ * \param domain_ctx User defined context
+ * \param iov Iov vector in \b domain memory space to be invalidated
+ * \param iovcnt iov array size
+ */
+void spdk_memory_domain_invalidate_data(struct spdk_memory_domain *domain, void *domain_ctx,
+					struct iovec *iov, uint32_t iovcnt);
 
 /**
  * Fills memory in \b domain with zeroes

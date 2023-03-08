@@ -16,6 +16,7 @@ struct spdk_memory_domain {
 	spdk_memory_domain_pull_data_cb pull_cb;
 	spdk_memory_domain_push_data_cb push_cb;
 	spdk_memory_domain_translate_memory_cb translate_cb;
+	spdk_memory_domain_invalidate_data_cb invalidate_cb;
 	spdk_memory_domain_memzero_cb memzero_cb;
 	TAILQ_ENTRY(spdk_memory_domain) link;
 	struct spdk_memory_domain_ctx *ctx;
@@ -105,6 +106,15 @@ spdk_memory_domain_set_translation(struct spdk_memory_domain *domain,
 	}
 
 	domain->translate_cb = translate_cb;
+}
+
+void
+spdk_memory_domain_set_invalidate(struct spdk_memory_domain *domain,
+				  spdk_memory_domain_invalidate_data_cb invalidate_cb)
+{
+	assert(domain);
+
+	domain->invalidate_cb = invalidate_cb;
 }
 
 void
@@ -234,6 +244,19 @@ spdk_memory_domain_translate_data(struct spdk_memory_domain *src_domain, void *s
 
 	return src_domain->translate_cb(src_domain, src_domain_ctx, dst_domain, dst_domain_ctx, addr, len,
 					result);
+}
+
+void
+spdk_memory_domain_invalidate_data(struct spdk_memory_domain *domain, void *domain_ctx,
+				   struct iovec *iov, uint32_t iovcnt)
+{
+	assert(domain);
+
+	if (spdk_unlikely(!domain->invalidate_cb)) {
+		return;
+	}
+
+	domain->invalidate_cb(domain, domain_ctx, iov, iovcnt);
 }
 
 int

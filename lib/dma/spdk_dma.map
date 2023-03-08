@@ -4,6 +4,7 @@
 	# public functions
 	spdk_memory_domain_create;
 	spdk_memory_domain_set_translation;
+	spdk_memory_domain_set_invalidate;
 	spdk_memory_domain_set_pull;
 	spdk_memory_domain_set_push;
 	spdk_memory_domain_set_memzero;
@@ -14,6 +15,7 @@
 	spdk_memory_domain_pull_data;
 	spdk_memory_domain_push_data;
 	spdk_memory_domain_translate_data;
+	spdk_memory_domain_invalidate_data;
 	spdk_memory_domain_memzero;
 	spdk_memory_domain_get_first;
 	spdk_memory_domain_get_next;
