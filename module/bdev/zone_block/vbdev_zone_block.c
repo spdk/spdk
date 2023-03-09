@@ -14,6 +14,9 @@
 
 #include "spdk/log.h"
 
+/* This namespace UUID was generated using uuid_generate() method. */
+#define BDEV_ZONE_BLOCK_NAMESPACE_UUID "5f3f485a-d6bb-4443-9de7-023683b77389"
+
 static int zone_block_init(void);
 static int zone_block_get_ctx_size(void);
 static void zone_block_finish(void);
@@ -689,8 +692,11 @@ zone_block_register(const char *base_bdev_name)
 	struct spdk_bdev *base_bdev;
 	struct bdev_zone_block_config *name, *tmp;
 	struct bdev_zone_block *bdev_node;
+	struct spdk_uuid ns_uuid;
 	uint64_t zone_size;
 	int rc = 0;
+
+	spdk_uuid_parse(&ns_uuid, BDEV_ZONE_BLOCK_NAMESPACE_UUID);
 
 	/* Check our list of names from config versus this bdev and if
 	 * there's a match, create the bdev_node & bdev accordingly.
@@ -780,6 +786,14 @@ zone_block_register(const char *base_bdev_name)
 		bdev_node->bdev.fn_table = &zone_block_fn_table;
 		bdev_node->bdev.module = &bdev_zoned_if;
 
+		/* Generate UUID based on namespace UUID + base bdev UUID. */
+		rc = spdk_uuid_generate_sha1(&bdev_node->bdev.uuid, &ns_uuid,
+					     (const char *)&base_bdev->uuid, sizeof(struct spdk_uuid));
+		if (rc) {
+			SPDK_ERRLOG("Unable to generate new UUID for zone block bdev\n");
+			goto uuid_generation_failed;
+		}
+
 		/* bdev specific info */
 		bdev_node->bdev.zone_size = zone_size;
 
@@ -822,6 +836,7 @@ claim_failed:
 	TAILQ_REMOVE(&g_bdev_nodes, bdev_node, link);
 	spdk_io_device_unregister(bdev_node, NULL);
 zone_info_failed:
+uuid_generation_failed:
 	free(bdev_node->zones);
 calloc_failed:
 roundup_failed:
