@@ -26,6 +26,9 @@
 #define COMP_BDEV_NAME "compress"
 #define BACKING_IO_SZ (4 * 1024)
 
+/* This namespace UUID was generated using uuid_generate() method. */
+#define BDEV_COMPRESS_NAMESPACE_UUID "c3fad6da-832f-4cc0-9cdc-5c552b225e7b"
+
 struct vbdev_comp_delete_ctx {
 	spdk_delete_compress_complete	cb_fn;
 	void				*cb_arg;
@@ -947,6 +950,7 @@ static int _set_compbdev_name(struct vbdev_compress *comp_bdev)
 static int
 vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 {
+	struct spdk_uuid ns_uuid;
 	int rc;
 
 	if (_set_compbdev_name(comp_bdev)) {
@@ -975,6 +979,15 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 	comp_bdev->comp_bdev.ctxt = comp_bdev;
 	comp_bdev->comp_bdev.fn_table = &vbdev_compress_fn_table;
 	comp_bdev->comp_bdev.module = &compress_if;
+
+	/* Generate UUID based on namespace UUID + base bdev UUID. */
+	spdk_uuid_parse(&ns_uuid, BDEV_COMPRESS_NAMESPACE_UUID);
+	rc = spdk_uuid_generate_sha1(&comp_bdev->comp_bdev.uuid, &ns_uuid,
+				     (const char *)&comp_bdev->base_bdev->uuid, sizeof(struct spdk_uuid));
+	if (rc) {
+		SPDK_ERRLOG("Unable to generate new UUID for compress bdev\n");
+		return -EINVAL;
+	}
 
 	pthread_mutex_init(&comp_bdev->reduce_lock, NULL);
 
