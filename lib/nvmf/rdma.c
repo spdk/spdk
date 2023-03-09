@@ -2802,7 +2802,7 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_t
 	if (rc) {
 		SPDK_ERRLOG("getaddrinfo failed: %s (%d)\n", gai_strerror(rc), rc);
 		free(port);
-		return -EINVAL;
+		return -(abs(rc));
 	}
 
 	rc = rdma_create_id(rtransport->event_channel, &port->id, port, RDMA_PS_TCP);

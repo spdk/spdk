@@ -282,7 +282,7 @@ spdk_jsonrpc_client_connect(const char *addr, int addr_family)
 		rc = getaddrinfo(host, port, &hints, &res);
 		if (rc != 0) {
 			SPDK_ERRLOG("Unable to look up RPC connect address '%s' (%d): %s\n", addr, rc, gai_strerror(rc));
-			rc = -EINVAL;
+			rc = -(abs(rc));
 			goto err;
 		}
 
