@@ -194,16 +194,17 @@ bdev_malloc_check_iov_len(struct iovec *iovs, int iovcnt, size_t nbytes)
 
 static void
 bdev_malloc_readv(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
-		  struct malloc_task *task,
-		  struct iovec *iov, int iovcnt, size_t len, uint64_t offset,
-		  void *md_buf, size_t md_len, uint64_t md_offset)
+		  struct malloc_task *task, struct spdk_bdev_io *bdev_io)
 {
-	int64_t res = 0;
+	uint64_t len, offset, md_offset;
+	int i, res = 0;
 	void *src;
-	void *md_src;
-	int i;
+	size_t md_len;
 
-	if (bdev_malloc_check_iov_len(iov, iovcnt, len)) {
+	len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+	offset = bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen;
+
+	if (bdev_malloc_check_iov_len(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, len)) {
 		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(task),
 				      SPDK_BDEV_IO_STATUS_FAILED);
 		return;
@@ -213,36 +214,37 @@ bdev_malloc_readv(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 	task->num_outstanding = 0;
 
 	SPDK_DEBUGLOG(bdev_malloc, "read %zu bytes from offset %#" PRIx64 ", iovcnt=%d\n",
-		      len, offset, iovcnt);
+		      len, offset, bdev_io->u.bdev.iovcnt);
 
 	src = mdisk->malloc_buf + offset;
 
-	for (i = 0; i < iovcnt; i++) {
+	for (i = 0; i < bdev_io->u.bdev.iovcnt; i++) {
 		task->num_outstanding++;
-		res = spdk_accel_submit_copy(ch, iov[i].iov_base,
-					     src, iov[i].iov_len, 0, malloc_done, task);
+		res = spdk_accel_submit_copy(ch, bdev_io->u.bdev.iovs[i].iov_base, src,
+					     bdev_io->u.bdev.iovs[i].iov_len, 0, malloc_done, task);
 
 		if (res != 0) {
 			malloc_done(task, res);
 			break;
 		}
 
-		src += iov[i].iov_len;
-		len -= iov[i].iov_len;
+		src += bdev_io->u.bdev.iovs[i].iov_len;
+		len -= bdev_io->u.bdev.iovs[i].iov_len;
 	}
 
-	if (md_buf == NULL) {
+	if (bdev_io->u.bdev.md_buf == NULL) {
 		return;
 	}
+
+	md_len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->md_len;
+	md_offset = bdev_io->u.bdev.offset_blocks * bdev_io->bdev->md_len;
 
 	SPDK_DEBUGLOG(bdev_malloc, "read metadata %zu bytes from offset%#" PRIx64 "\n",
 		      md_len, md_offset);
 
-	md_src = mdisk->malloc_md_buf + md_offset;
-
 	task->num_outstanding++;
-	res = spdk_accel_submit_copy(ch, md_buf, md_src, md_len, 0, malloc_done, task);
-
+	res = spdk_accel_submit_copy(ch, bdev_io->u.bdev.md_buf, mdisk->malloc_md_buf + md_offset,
+				     md_len, 0, malloc_done, task);
 	if (res != 0) {
 		malloc_done(task, res);
 	}
@@ -359,14 +361,7 @@ _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bde
 			return 0;
 		}
 
-		bdev_malloc_readv(disk, mch->accel_channel, task,
-				  bdev_io->u.bdev.iovs,
-				  bdev_io->u.bdev.iovcnt,
-				  bdev_io->u.bdev.num_blocks * block_size,
-				  bdev_io->u.bdev.offset_blocks * block_size,
-				  bdev_io->u.bdev.md_buf,
-				  bdev_io->u.bdev.num_blocks * md_size,
-				  bdev_io->u.bdev.offset_blocks * md_size);
+		bdev_malloc_readv(disk, mch->accel_channel, task, bdev_io);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
