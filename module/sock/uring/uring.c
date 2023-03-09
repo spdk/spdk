@@ -483,7 +483,7 @@ uring_sock_create(const char *ip, int port,
 	hints.ai_flags |= AI_NUMERICHOST;
 	rc = getaddrinfo(ip, portnum, &hints, &res0);
 	if (rc != 0) {
-		SPDK_ERRLOG("getaddrinfo() failed (errno=%d)\n", errno);
+		SPDK_ERRLOG("getaddrinfo() failed %s (%d)\n", gai_strerror(rc), rc);
 		return NULL;
 	}
 
