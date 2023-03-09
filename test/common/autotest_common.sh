@@ -240,7 +240,7 @@ export LSAN_OPTIONS=suppressions="$asan_suppression_file"
 export DEFAULT_RPC_ADDR="/var/tmp/spdk.sock"
 
 if [ -z "${DEPENDENCY_DIR:-}" ]; then
-	export DEPENDENCY_DIR=$HOME/spdk_dependencies
+	export DEPENDENCY_DIR=/var/spdk/dependencies
 else
 	export DEPENDENCY_DIR
 fi
