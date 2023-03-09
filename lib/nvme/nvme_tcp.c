@@ -1884,6 +1884,13 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 
 	memset(&dst_addr, 0, sizeof(dst_addr));
 
+	port = spdk_strtol(ctrlr->trid.trsvcid, 10);
+	if (port <= 0 || port >= INT_MAX) {
+		SPDK_ERRLOG("Invalid port: %s\n", ctrlr->trid.trsvcid);
+		rc = -1;
+		return rc;
+	}
+
 	SPDK_DEBUGLOG(nvme, "trsvcid is %s\n", ctrlr->trid.trsvcid);
 	rc = nvme_tcp_parse_addr(&dst_addr, family, ctrlr->trid.traddr, ctrlr->trid.trsvcid);
 	if (rc != 0) {
@@ -1898,13 +1905,6 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 			SPDK_ERRLOG("src_addr nvme_tcp_parse_addr() failed\n");
 			return rc;
 		}
-	}
-
-	port = spdk_strtol(ctrlr->trid.trsvcid, 10);
-	if (port <= 0 || port >= INT_MAX) {
-		SPDK_ERRLOG("Invalid port: %s\n", ctrlr->trid.trsvcid);
-		rc = -1;
-		return rc;
 	}
 
 	sock_impl_name = ctrlr->opts.psk[0] ? "ssl" : NULL;
