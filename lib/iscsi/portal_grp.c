@@ -219,7 +219,7 @@ iscsi_parse_redirect_addr(struct sockaddr_storage *sa,
 	rc = getaddrinfo(host, port, &hints, &res);
 	if (rc != 0) {
 		SPDK_ERRLOG("getaddinrfo failed: %s (%d)\n", gai_strerror(rc), rc);
-		return -EINVAL;
+		return -(abs(rc));
 	}
 
 	if (res->ai_addrlen > sizeof(*sa)) {

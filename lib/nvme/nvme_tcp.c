@@ -225,7 +225,7 @@ nvme_tcp_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, c
 	ret = getaddrinfo(addr, service, &hints, &res);
 	if (ret) {
 		SPDK_ERRLOG("getaddrinfo failed: %s (%d)\n", gai_strerror(ret), ret);
-		return ret;
+		return -(abs(ret));
 	}
 
 	if (res->ai_addrlen > sizeof(*sa)) {
