@@ -19,6 +19,9 @@
 #include "spdk/log.h"
 #include "spdk/cpuset.h"
 
+/* This namespace UUID was generated using uuid_generate() method. */
+#define BDEV_OCF_NAMESPACE_UUID "f92b7f49-f6c0-44c8-bd23-3205e8c3b6ad"
+
 static struct spdk_bdev_module ocf_if;
 
 static TAILQ_HEAD(, vbdev_ocf) g_ocf_vbdev_head
@@ -920,6 +923,7 @@ vbdev_ocf_mngt_exit(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn *rollback_path, i
 static void
 finish_register(struct vbdev_ocf *vbdev)
 {
+	struct spdk_uuid ns_uuid;
 	int result;
 
 	/* Copy properties of the base bdev */
@@ -934,6 +938,16 @@ finish_register(struct vbdev_ocf *vbdev)
 	vbdev->exp_bdev.ctxt = vbdev;
 	vbdev->exp_bdev.fn_table = &cache_dev_fn_table;
 	vbdev->exp_bdev.module = &ocf_if;
+
+	/* Generate UUID based on namespace UUID + base bdev UUID. */
+	spdk_uuid_parse(&ns_uuid, BDEV_OCF_NAMESPACE_UUID);
+	result = spdk_uuid_generate_sha1(&vbdev->exp_bdev.uuid, &ns_uuid,
+					 (const char *)&vbdev->core.bdev->uuid, sizeof(struct spdk_uuid));
+	if (result) {
+		SPDK_ERRLOG("Unable to generate new UUID for ocf bdev\n");
+		vbdev_ocf_mngt_exit(vbdev, unregister_path_dirty, result);
+		return;
+	}
 
 	/* Finally register vbdev in SPDK */
 	spdk_io_device_register(vbdev, io_device_create_cb, io_device_destroy_cb,
