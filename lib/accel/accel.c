@@ -1782,7 +1782,7 @@ accel_sequence_merge_tasks(struct spdk_accel_sequence *seq, struct spdk_accel_ta
 	}
 }
 
-int
+void
 spdk_accel_sequence_finish(struct spdk_accel_sequence *seq,
 			   spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
@@ -1800,8 +1800,6 @@ spdk_accel_sequence_finish(struct spdk_accel_sequence *seq,
 	seq->cb_arg = cb_arg;
 
 	accel_process_sequence(seq);
-
-	return 0;
 }
 
 void

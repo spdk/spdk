@@ -1005,8 +1005,6 @@ bdev_io_submit_sequence_cb(void *ctx, int status)
 static void
 bdev_io_exec_sequence(struct spdk_bdev_io *bdev_io, spdk_accel_completion_cb cb_fn)
 {
-	int rc;
-
 	assert(bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io));
 	assert(bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE || bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
 
@@ -1019,19 +1017,7 @@ bdev_io_exec_sequence(struct spdk_bdev_io *bdev_io, spdk_accel_completion_cb cb_
 	}
 
 	TAILQ_INSERT_TAIL(&bdev_io->internal.ch->io_accel_exec, bdev_io, internal.link);
-
-	rc = spdk_accel_sequence_finish(bdev_io->internal.accel_sequence, cb_fn, bdev_io);
-	if (spdk_unlikely(rc != 0)) {
-		SPDK_ERRLOG("Failed to execute accel sequence, status=%d\n", rc);
-		TAILQ_REMOVE(&bdev_io->internal.ch->io_accel_exec, bdev_io, internal.link);
-		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-			/* Writes haven't been submitted at this point yet */
-			bdev_io_complete_unsubmitted(bdev_io);
-		} else {
-			bdev_io_complete(bdev_io);
-		}
-	}
+	spdk_accel_sequence_finish(bdev_io->internal.accel_sequence, cb_fn, bdev_io);
 }
 
 static void
