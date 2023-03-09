@@ -1261,7 +1261,7 @@ nvme_rdma_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, 
 
 	if (res->ai_addrlen > sizeof(*sa)) {
 		SPDK_ERRLOG("getaddrinfo() ai_addrlen %zu too large\n", (size_t)res->ai_addrlen);
-		ret = EINVAL;
+		ret = -EINVAL;
 	} else {
 		memcpy(sa, res->ai_addr, res->ai_addrlen);
 	}
