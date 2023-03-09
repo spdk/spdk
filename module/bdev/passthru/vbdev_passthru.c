@@ -22,6 +22,8 @@
 #include "spdk/bdev_module.h"
 #include "spdk/log.h"
 
+/* This namespace UUID was generated using uuid_generate() method. */
+#define BDEV_PASSTHRU_NAMESPACE_UUID "7e25812e-c8c0-4d3f-8599-16d790555b85"
 
 static int vbdev_passthru_init(void);
 static int vbdev_passthru_get_ctx_size(void);
@@ -581,7 +583,10 @@ vbdev_passthru_register(const char *bdev_name)
 	struct bdev_names *name;
 	struct vbdev_passthru *pt_node;
 	struct spdk_bdev *bdev;
+	struct spdk_uuid ns_uuid;
 	int rc = 0;
+
+	spdk_uuid_parse(&ns_uuid, BDEV_PASSTHRU_NAMESPACE_UUID);
 
 	/* Check our list of names from config versus this bdev and if
 	 * there's a match, create the pt_node & bdev accordingly.
@@ -623,6 +628,17 @@ vbdev_passthru_register(const char *bdev_name)
 
 		bdev = spdk_bdev_desc_get_bdev(pt_node->base_desc);
 		pt_node->base_bdev = bdev;
+
+		/* Generate UUID based on namespace UUID + base bdev UUID. */
+		rc = spdk_uuid_generate_sha1(&pt_node->pt_bdev.uuid, &ns_uuid,
+					     (const char *)&pt_node->base_bdev->uuid, sizeof(struct spdk_uuid));
+		if (rc) {
+			SPDK_ERRLOG("Unable to generate new UUID for passthru bdev\n");
+			spdk_bdev_close(pt_node->base_desc);
+			free(pt_node->pt_bdev.name);
+			free(pt_node);
+			break;
+		}
 
 		/* Copy some properties from the underlying base bdev. */
 		pt_node->pt_bdev.write_cache = bdev->write_cache;
