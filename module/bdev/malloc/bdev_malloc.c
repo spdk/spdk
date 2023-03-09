@@ -10,6 +10,7 @@
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/accel.h"
+#include "spdk/dma.h"
 #include "spdk/likely.h"
 #include "spdk/string.h"
 
@@ -43,6 +44,7 @@ malloc_verify_pi(struct spdk_bdev_io *bdev_io)
 	struct spdk_dif_error err_blk;
 	int rc;
 
+	assert(bdev_io->u.bdev.memory_domain == NULL);
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       bdev->blocklen,
 			       bdev->md_len,
@@ -379,6 +381,7 @@ _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bde
 	case SPDK_BDEV_IO_TYPE_READ:
 		if (bdev_io->u.bdev.iovs[0].iov_base == NULL) {
 			assert(bdev_io->u.bdev.iovcnt == 1);
+			assert(bdev_io->u.bdev.memory_domain == NULL);
 			bdev_io->u.bdev.iovs[0].iov_base =
 				disk->malloc_buf + bdev_io->u.bdev.offset_blocks * block_size;
 			bdev_io->u.bdev.iovs[0].iov_len = bdev_io->u.bdev.num_blocks * block_size;
@@ -508,12 +511,36 @@ bdev_malloc_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx
 	spdk_json_write_object_end(w);
 }
 
+static int
+bdev_malloc_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int array_size)
+{
+	struct malloc_disk *malloc_disk = ctx;
+	struct spdk_memory_domain *domain;
+	int num_domains = 0;
+
+	if (malloc_disk->disk.dif_type != SPDK_DIF_DISABLE) {
+		return 0;
+	}
+
+	/* Report support for every memory domain */
+	for (domain = spdk_memory_domain_get_first(NULL); domain != NULL;
+	     domain = spdk_memory_domain_get_next(domain, NULL)) {
+		if (domains != NULL && num_domains < array_size) {
+			domains[num_domains] = domain;
+		}
+		num_domains++;
+	}
+
+	return num_domains;
+}
+
 static const struct spdk_bdev_fn_table malloc_fn_table = {
 	.destruct		= bdev_malloc_destruct,
 	.submit_request		= bdev_malloc_submit_request,
 	.io_type_supported	= bdev_malloc_io_type_supported,
 	.get_io_channel		= bdev_malloc_get_io_channel,
 	.write_config_json	= bdev_malloc_write_json_config,
+	.get_memory_domains	= bdev_malloc_get_memory_domains,
 };
 
 static int
