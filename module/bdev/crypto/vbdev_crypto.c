@@ -12,6 +12,9 @@
 #include "spdk/bdev_module.h"
 #include "spdk/likely.h"
 
+/* This namespace UUID was generated using uuid_generate() method. */
+#define BDEV_CRYPTO_NAMESPACE_UUID "078e3cf7-f4b4-4545-b2c3-d40045a64ae2"
+
 struct bdev_names {
 	struct vbdev_crypto_opts	*opts;
 	TAILQ_ENTRY(bdev_names)		link;
@@ -729,7 +732,10 @@ vbdev_crypto_claim(const char *bdev_name)
 	struct vbdev_crypto *vbdev;
 	struct spdk_bdev *bdev;
 	struct spdk_iobuf_opts iobuf_opts;
+	struct spdk_uuid ns_uuid;
 	int rc = 0;
+
+	spdk_uuid_parse(&ns_uuid, BDEV_CRYPTO_NAMESPACE_UUID);
 
 	/* Limit the max IO size by some reasonable value. Since in write operation we use aux buffer,
 	 * let's set the limit to the large_bufsize value */
@@ -800,6 +806,14 @@ vbdev_crypto_claim(const char *bdev_name)
 		 * the module is unloaded and all names removed from the list. */
 		vbdev->opts = name->opts;
 
+		/* Generate UUID based on namespace UUID + base bdev UUID */
+		rc = spdk_uuid_generate_sha1(&vbdev->crypto_bdev.uuid, &ns_uuid,
+					     (const char *)&vbdev->base_bdev->uuid, sizeof(struct spdk_uuid));
+		if (rc) {
+			SPDK_ERRLOG("Unable to generate new UUID for crypto bdev\n");
+			goto error_uuid;
+		}
+
 		TAILQ_INSERT_TAIL(&g_vbdev_crypto, vbdev, link);
 
 		spdk_io_device_register(vbdev, crypto_bdev_ch_create_cb, crypto_bdev_ch_destroy_cb,
@@ -833,6 +847,7 @@ error_bdev_register:
 error_claim:
 	TAILQ_REMOVE(&g_vbdev_crypto, vbdev, link);
 	spdk_io_device_unregister(vbdev, NULL);
+error_uuid:
 	spdk_bdev_close(vbdev->base_desc);
 error_open:
 	free(vbdev->crypto_bdev.name);
