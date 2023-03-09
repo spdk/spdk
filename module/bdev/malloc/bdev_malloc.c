@@ -282,8 +282,7 @@ bdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		   struct malloc_task *task, struct spdk_bdev_io *bdev_io)
 {
 	uint64_t len, offset, md_offset;
-	int i, res = 0;
-	void *dst;
+	int res = 0;
 	size_t md_len;
 
 	len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
@@ -295,26 +294,25 @@ bdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		return;
 	}
 
+	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	task->num_outstanding = 0;
+	task->iov.iov_base = mdisk->malloc_buf + offset;
+	task->iov.iov_len = len;
+
 	SPDK_DEBUGLOG(bdev_malloc, "wrote %zu bytes to offset %#" PRIx64 ", iovcnt=%d\n",
 		      len, offset, bdev_io->u.bdev.iovcnt);
 
-	dst = mdisk->malloc_buf + offset;
-
-	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
-	task->num_outstanding = 0;
-
-	for (i = 0; i < bdev_io->u.bdev.iovcnt; i++) {
-		task->num_outstanding++;
-		res = spdk_accel_submit_copy(ch, dst, bdev_io->u.bdev.iovs[i].iov_base,
-					     bdev_io->u.bdev.iovs[i].iov_len, 0, malloc_done, task);
-
-		if (res != 0) {
-			malloc_done(task, res);
-			break;
-		}
-
-		dst += bdev_io->u.bdev.iovs[i].iov_len;
+	task->num_outstanding++;
+	res = spdk_accel_append_copy(&bdev_io->u.bdev.accel_sequence, ch, &task->iov, 1, NULL, NULL,
+				     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+				     bdev_io->u.bdev.memory_domain,
+				     bdev_io->u.bdev.memory_domain_ctx, 0, NULL, NULL);
+	if (spdk_unlikely(res != 0)) {
+		malloc_sequence_fail(task, res);
+		return;
 	}
+
+	spdk_accel_sequence_finish(bdev_io->u.bdev.accel_sequence, malloc_sequence_done, task);
 
 	if (bdev_io->u.bdev.md_buf == NULL) {
 		return;
