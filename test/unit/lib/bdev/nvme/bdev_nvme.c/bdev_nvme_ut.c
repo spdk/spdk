@@ -6432,7 +6432,7 @@ test_retry_io_to_same_path(void)
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 
 	/* Set retry count to non-zero. */
-	g_opts.bdev_retry_count = 1;
+	g_opts.bdev_retry_count = 2;
 
 	/* Inject an I/O error. */
 	req->cpl.status.sc = SPDK_NVME_SC_NAMESPACE_NOT_READY;
@@ -6456,12 +6456,52 @@ test_retry_io_to_same_path(void)
 	CU_ASSERT(bio->io_path == io_path2);
 	CU_ASSERT(io_path2->qpair->qpair->num_outstanding_reqs == 1);
 
+	req = ut_get_outstanding_nvme_request(io_path2->qpair->qpair, bio);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+
+	/* Inject an I/O error again. */
+	req->cpl.status.sc = SPDK_NVME_SC_NAMESPACE_NOT_READY;
+	req->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	req->cpl.status.crd = 1;
+
+	ctrlr2->cdata.crdt[1] = 1;
+
+	/* The 2nd I/O should be queued to nbdev_ch. */
+	spdk_delay_us(1);
+	poll_thread_times(0, 1);
+
+	CU_ASSERT(io_path2->qpair->qpair->num_outstanding_reqs == 0);
+	CU_ASSERT(bdev_io->internal.in_submit_request == true);
+	CU_ASSERT(bdev_io == TAILQ_FIRST(&nbdev_ch->retry_io_list));
+
+	/* The 2nd I/O should keep caching io_path2. */
+	CU_ASSERT(bio->io_path == io_path2);
+
+	/* Detach ctrlr2 dynamically. */
+	rc = bdev_nvme_delete("nvme0", &path2);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
+
+	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path2.trid) == NULL);
+
+	poll_threads();
+	spdk_delay_us(100000);
+	poll_threads();
 	spdk_delay_us(1);
 	poll_threads();
 
-	CU_ASSERT(io_path2->qpair->qpair->num_outstanding_reqs == 0);
+	/* The 2nd I/O should succeed by io_path1. */
 	CU_ASSERT(bdev_io->internal.in_submit_request == false);
-	CU_ASSERT(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(bio->io_path == io_path1);
 
 	free(bdev_io);
 

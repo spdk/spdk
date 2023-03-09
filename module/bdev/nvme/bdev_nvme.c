@@ -649,6 +649,21 @@ _bdev_nvme_add_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_ns *nvme_
 }
 
 static void
+bdev_nvme_clear_retry_io_path(struct nvme_bdev_channel *nbdev_ch,
+			      struct nvme_io_path *io_path)
+{
+	struct spdk_bdev_io *bdev_io;
+	struct nvme_bdev_io *bio;
+
+	TAILQ_FOREACH(bdev_io, &nbdev_ch->retry_io_list, module_link) {
+		bio = (struct nvme_bdev_io *)bdev_io->driver_ctx;
+		if (bio->io_path == io_path) {
+			bio->io_path = NULL;
+		}
+	}
+}
+
+static void
 _bdev_nvme_delete_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_io_path *io_path)
 {
 	struct spdk_io_channel *ch;
@@ -666,6 +681,7 @@ _bdev_nvme_delete_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_io_pat
 	pthread_mutex_unlock(&nbdev->mutex);
 
 	bdev_nvme_clear_current_io_path(nbdev_ch);
+	bdev_nvme_clear_retry_io_path(nbdev_ch, io_path);
 
 	STAILQ_REMOVE(&nbdev_ch->io_path_list, io_path, nvme_io_path, stailq);
 	io_path->nbdev_ch = NULL;
