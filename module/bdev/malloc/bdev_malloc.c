@@ -534,13 +534,32 @@ bdev_malloc_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, i
 	return num_domains;
 }
 
+static bool
+bdev_malloc_accel_sequence_supported(void *ctx, enum spdk_bdev_io_type type)
+{
+	struct malloc_disk *malloc_disk = ctx;
+
+	if (malloc_disk->disk.dif_type != SPDK_DIF_DISABLE) {
+		return false;
+	}
+
+	switch (type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		return true;
+	default:
+		return false;
+	}
+}
+
 static const struct spdk_bdev_fn_table malloc_fn_table = {
-	.destruct		= bdev_malloc_destruct,
-	.submit_request		= bdev_malloc_submit_request,
-	.io_type_supported	= bdev_malloc_io_type_supported,
-	.get_io_channel		= bdev_malloc_get_io_channel,
-	.write_config_json	= bdev_malloc_write_json_config,
-	.get_memory_domains	= bdev_malloc_get_memory_domains,
+	.destruct			= bdev_malloc_destruct,
+	.submit_request			= bdev_malloc_submit_request,
+	.io_type_supported		= bdev_malloc_io_type_supported,
+	.get_io_channel			= bdev_malloc_get_io_channel,
+	.write_config_json		= bdev_malloc_write_json_config,
+	.get_memory_domains		= bdev_malloc_get_memory_domains,
+	.accel_sequence_supported	= bdev_malloc_accel_sequence_supported,
 };
 
 static int
