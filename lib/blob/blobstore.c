@@ -388,6 +388,8 @@ blob_freeze_io(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg
 {
 	struct freeze_io_ctx *ctx;
 
+	blob_verify_md_op(blob);
+
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
 		cb_fn(cb_arg, -ENOMEM);
@@ -402,18 +404,15 @@ blob_freeze_io(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg
 	/* Freeze I/O on blob */
 	blob->frozen_refcnt++;
 
-	if (blob->frozen_refcnt == 1) {
-		spdk_for_each_channel(blob->bs, blob_io_sync, ctx, blob_io_cpl);
-	} else {
-		cb_fn(cb_arg, 0);
-		free(ctx);
-	}
+	spdk_for_each_channel(blob->bs, blob_io_sync, ctx, blob_io_cpl);
 }
 
 static void
 blob_unfreeze_io(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	struct freeze_io_ctx *ctx;
+
+	blob_verify_md_op(blob);
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -430,12 +429,7 @@ blob_unfreeze_io(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_a
 
 	blob->frozen_refcnt--;
 
-	if (blob->frozen_refcnt == 0) {
-		spdk_for_each_channel(blob->bs, blob_execute_queued_io, ctx, blob_io_cpl);
-	} else {
-		cb_fn(cb_arg, 0);
-		free(ctx);
-	}
+	spdk_for_each_channel(blob->bs, blob_execute_queued_io, ctx, blob_io_cpl);
 }
 
 static int

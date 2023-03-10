@@ -7525,6 +7525,97 @@ blob_esnap_create(void)
 }
 
 static void
+freeze_done(void *cb_arg, int bserrno)
+{
+	uint32_t *freeze_cnt = cb_arg;
+
+	CU_ASSERT(bserrno == 0);
+	(*freeze_cnt)++;
+}
+
+static void
+unfreeze_done(void *cb_arg, int bserrno)
+{
+	uint32_t *unfreeze_cnt = cb_arg;
+
+	CU_ASSERT(bserrno == 0);
+	(*unfreeze_cnt)++;
+}
+
+static void
+blob_nested_freezes(void)
+{
+	struct spdk_blob_store *bs = g_bs;
+	struct spdk_blob *blob;
+	struct spdk_io_channel *channel[2];
+	struct spdk_blob_opts opts;
+	uint32_t freeze_cnt, unfreeze_cnt;
+	int i;
+
+	for (i = 0; i < 2; i++) {
+		set_thread(i);
+		channel[i] = spdk_bs_alloc_io_channel(bs);
+		SPDK_CU_ASSERT_FATAL(channel[i] != NULL);
+	}
+
+	set_thread(0);
+
+	ut_spdk_blob_opts_init(&opts);
+	blob = ut_blob_create_and_open(bs, &opts);
+
+	/* First just test a single freeze/unfreeze. */
+	freeze_cnt = 0;
+	unfreeze_cnt = 0;
+	CU_ASSERT(blob->frozen_refcnt == 0);
+	blob_freeze_io(blob, freeze_done, &freeze_cnt);
+	CU_ASSERT(blob->frozen_refcnt == 1);
+	CU_ASSERT(freeze_cnt == 0);
+	poll_threads();
+	CU_ASSERT(freeze_cnt == 1);
+	blob_unfreeze_io(blob, unfreeze_done, &unfreeze_cnt);
+	CU_ASSERT(blob->frozen_refcnt == 0);
+	CU_ASSERT(unfreeze_cnt == 0);
+	poll_threads();
+	CU_ASSERT(unfreeze_cnt == 1);
+
+	/* Now nest multiple freeze/unfreeze operations.  We should
+	 * expect a callback for each operation, but only after
+	 * the threads have been polled to ensure a for_each_channel()
+	 * was executed.
+	 */
+	freeze_cnt = 0;
+	unfreeze_cnt = 0;
+	CU_ASSERT(blob->frozen_refcnt == 0);
+	blob_freeze_io(blob, freeze_done, &freeze_cnt);
+	CU_ASSERT(blob->frozen_refcnt == 1);
+	CU_ASSERT(freeze_cnt == 0);
+	blob_freeze_io(blob, freeze_done, &freeze_cnt);
+	CU_ASSERT(blob->frozen_refcnt == 2);
+	CU_ASSERT(freeze_cnt == 0);
+	poll_threads();
+	CU_ASSERT(freeze_cnt == 2);
+	blob_unfreeze_io(blob, unfreeze_done, &unfreeze_cnt);
+	CU_ASSERT(blob->frozen_refcnt == 1);
+	CU_ASSERT(unfreeze_cnt == 0);
+	blob_unfreeze_io(blob, unfreeze_done, &unfreeze_cnt);
+	CU_ASSERT(blob->frozen_refcnt == 0);
+	CU_ASSERT(unfreeze_cnt == 0);
+	poll_threads();
+	CU_ASSERT(unfreeze_cnt == 2);
+
+	for (i = 0; i < 2; i++) {
+		set_thread(i);
+		spdk_bs_free_io_channel(channel[i]);
+	}
+	set_thread(0);
+	ut_blob_close_and_delete(bs, blob);
+
+	poll_threads();
+	g_blob = NULL;
+	g_blobid = 0;
+}
+
+static void
 suite_bs_setup(void)
 {
 	struct spdk_bs_dev *dev;
@@ -7721,6 +7812,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite_bs, blob_decouple_snapshot);
 	CU_ADD_TEST(suite_bs, blob_seek_io_unit);
 	CU_ADD_TEST(suite_esnap_bs, blob_esnap_create);
+	CU_ADD_TEST(suite_bs, blob_nested_freezes);
 
 	allocate_threads(2);
 	set_thread(0);
