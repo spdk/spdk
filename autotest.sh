@@ -83,7 +83,7 @@ if hash lcov && ! [[ "$CC_TYPE" == *"clang"* ]]; then
 fi
 
 # Make sure the disks are clean (no leftover partition tables)
-timing_enter cleanup
+timing_enter pre_cleanup
 # Remove old domain socket pathname just in case
 rm -f /var/tmp/spdk*.sock
 
@@ -129,7 +129,7 @@ if [[ $(uname -s) == Linux ]]; then
 	nvme_namespace_revert
 fi
 
-timing_exit cleanup
+timing_exit pre_cleanup
 
 # set up huge pages
 timing_enter afterboot
@@ -360,9 +360,9 @@ fi
 
 trap - SIGINT SIGTERM EXIT
 
-timing_enter cleanup
+timing_enter post_cleanup
 autotest_cleanup
-timing_exit cleanup
+timing_exit post_cleanup
 
 timing_exit autotest
 chmod a+r $output_dir/timing.txt
