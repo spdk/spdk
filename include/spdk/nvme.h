@@ -1873,6 +1873,16 @@ int32_t spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 spdk_nvme_qp_failure_reason spdk_nvme_qpair_get_failure_reason(struct spdk_nvme_qpair *qpair);
 
 /**
+ * Control if DNR is set or not for aborted commands.
+ *
+ * The default value is false.
+ *
+ * \param qpair The qpair to set.
+ * \param dnr Set the DNR bit to 1 if true or 0 if false for aborted commands.
+ */
+void spdk_nvme_qpair_set_abort_dnr(struct spdk_nvme_qpair *qpair, bool dnr);
+
+/**
  * Send the given admin command to the NVMe controller.
  *
  * This is a low level interface for submitting admin commands directly. Prefer

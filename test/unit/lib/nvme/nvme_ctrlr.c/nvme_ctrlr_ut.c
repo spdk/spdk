@@ -41,7 +41,7 @@ DEFINE_STUB(nvme_ctrlr_cmd_set_host_id, int,
 DEFINE_STUB_V(nvme_ns_set_identify_data, (struct spdk_nvme_ns *ns));
 DEFINE_STUB_V(nvme_ns_set_id_desc_list_data, (struct spdk_nvme_ns *ns));
 DEFINE_STUB_V(nvme_ns_free_iocs_specific_data, (struct spdk_nvme_ns *ns));
-DEFINE_STUB_V(nvme_qpair_abort_all_queued_reqs, (struct spdk_nvme_qpair *qpair, uint32_t dnr));
+DEFINE_STUB_V(nvme_qpair_abort_all_queued_reqs, (struct spdk_nvme_qpair *qpair));
 DEFINE_STUB(spdk_nvme_poll_group_remove, int, (struct spdk_nvme_poll_group *group,
 		struct spdk_nvme_qpair *qpair), 0);
 DEFINE_STUB_V(nvme_io_msg_ctrlr_update, (struct spdk_nvme_ctrlr *ctrlr));
@@ -53,7 +53,7 @@ DEFINE_STUB(spdk_nvme_ctrlr_cmd_security_receive, int, (struct spdk_nvme_ctrlr *
 DEFINE_STUB(spdk_nvme_ctrlr_cmd_security_send, int, (struct spdk_nvme_ctrlr *ctrlr,
 		uint8_t secp, uint16_t spsp, uint8_t nssf, void *payload,
 		uint32_t payload_size, spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
-DEFINE_STUB_V(nvme_qpair_abort_queued_reqs, (struct spdk_nvme_qpair *qpair, uint32_t dnr));
+DEFINE_STUB_V(nvme_qpair_abort_queued_reqs, (struct spdk_nvme_qpair *qpair));
 
 DEFINE_RETURN_MOCK(nvme_transport_ctrlr_get_memory_domains, int);
 int
@@ -277,7 +277,7 @@ nvme_transport_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 }
 
 void
-nvme_transport_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
+nvme_transport_qpair_abort_reqs(struct spdk_nvme_qpair *qpair)
 {
 }
 
