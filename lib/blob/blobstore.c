@@ -2132,7 +2132,12 @@ blob_resize(struct spdk_blob *blob, uint64_t sz)
 		lfmd = 0;
 		for (i = num_clusters; i < sz; i++) {
 			bs_allocate_cluster(blob, i, &cluster, &lfmd, true);
-			lfmd++;
+			/* Do not increment lfmd here.  lfmd will get updated
+			 * to the md_page allocated (if any) when a new extent
+			 * page is needed.  Just pass that value again,
+			 * bs_allocate_cluster will just start at that index
+			 * to find the next free md_page when needed.
+			 */
 		}
 	}
 

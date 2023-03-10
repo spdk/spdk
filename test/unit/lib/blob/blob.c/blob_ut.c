@@ -7616,6 +7616,48 @@ blob_nested_freezes(void)
 }
 
 static void
+blob_ext_md_pages(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	struct spdk_blob_opts opts;
+	struct spdk_bs_opts bs_opts;
+	uint64_t free_clusters;
+
+	dev = init_dev();
+	spdk_bs_opts_init(&bs_opts, sizeof(bs_opts));
+	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "TESTTYPE");
+	/* Issue #2932 was a bug in how we use bs_allocate_cluster() during resize.
+	 * It requires num_md_pages that is much smaller than the number of clusters.
+	 * Make sure we can create a blob that uses all of the free clusters.
+	 */
+	bs_opts.cluster_sz = 65536;
+	bs_opts.num_md_pages = 16;
+
+	/* Initialize a new blob store */
+	spdk_bs_init(dev, &bs_opts, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	free_clusters = spdk_bs_free_cluster_count(bs);
+
+	ut_spdk_blob_opts_init(&opts);
+	opts.num_clusters = free_clusters;
+
+	blob = ut_blob_create_and_open(bs, &opts);
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+
+static void
 suite_bs_setup(void)
 {
 	struct spdk_bs_dev *dev;
@@ -7813,6 +7855,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite_bs, blob_seek_io_unit);
 	CU_ADD_TEST(suite_esnap_bs, blob_esnap_create);
 	CU_ADD_TEST(suite_bs, blob_nested_freezes);
+	CU_ADD_TEST(suite, blob_ext_md_pages);
 
 	allocate_threads(2);
 	set_thread(0);
