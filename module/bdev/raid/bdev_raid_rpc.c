@@ -127,6 +127,9 @@ struct rpc_bdev_raid_create {
 
 	/* Base bdevs information */
 	struct rpc_bdev_raid_create_base_bdevs base_bdevs;
+
+	/* UUID for this raid bdev */
+	char *uuid;
 };
 
 /*
@@ -143,6 +146,7 @@ free_rpc_bdev_raid_create(struct rpc_bdev_raid_create *req)
 	size_t i;
 
 	free(req->name);
+	free(req->uuid);
 	for (i = 0; i < req->base_bdevs.num_base_bdevs; i++) {
 		free(req->base_bdevs.base_bdevs[i]);
 	}
@@ -191,6 +195,7 @@ static const struct spdk_json_object_decoder rpc_bdev_raid_create_decoders[] = {
 	{"strip_size_kb", offsetof(struct rpc_bdev_raid_create, strip_size_kb), spdk_json_decode_uint32, true},
 	{"raid_level", offsetof(struct rpc_bdev_raid_create, level), decode_raid_level},
 	{"base_bdevs", offsetof(struct rpc_bdev_raid_create, base_bdevs), decode_base_bdevs},
+	{"uuid", offsetof(struct rpc_bdev_raid_create, uuid), spdk_json_decode_string, true},
 };
 
 /*
@@ -211,6 +216,8 @@ rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 	struct raid_bdev		*raid_bdev;
 	int				rc;
 	size_t				i;
+	struct spdk_uuid		*uuid = NULL;
+	struct spdk_uuid		decoded_uuid;
 
 	if (spdk_json_decode_object(params, rpc_bdev_raid_create_decoders,
 				    SPDK_COUNTOF(rpc_bdev_raid_create_decoders),
@@ -220,8 +227,17 @@ rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
+	if (req.uuid) {
+		if (spdk_uuid_parse(&decoded_uuid, req.uuid)) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Failed to parse bdev UUID");
+			goto cleanup;
+		}
+		uuid = &decoded_uuid;
+	}
+
 	rc = raid_bdev_create(req.name, req.strip_size_kb, req.base_bdevs.num_base_bdevs,
-			      req.level, &raid_bdev);
+			      req.level, &raid_bdev, uuid);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response_fmt(request, rc,
 						     "Failed to create RAID bdev %s: %s",

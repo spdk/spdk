@@ -915,7 +915,7 @@ raid_bdev_init(void)
  */
 int
 raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
-		 enum raid_level level, struct raid_bdev **raid_bdev_out)
+		 enum raid_level level, struct raid_bdev **raid_bdev_out, const struct spdk_uuid *uuid)
 {
 	struct raid_bdev *raid_bdev;
 	struct spdk_bdev *raid_bdev_gen;
@@ -1019,6 +1019,10 @@ raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 	raid_bdev_gen->fn_table = &g_raid_bdev_fn_table;
 	raid_bdev_gen->module = &g_raid_if;
 	raid_bdev_gen->write_cache = 0;
+
+	if (uuid) {
+		spdk_uuid_copy(&raid_bdev_gen->uuid, uuid);
+	}
 
 	TAILQ_INSERT_TAIL(&g_raid_bdev_list, raid_bdev, global_link);
 
