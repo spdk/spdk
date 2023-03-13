@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2017 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019, 2020 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021, 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -131,8 +131,12 @@ _nvmf_ctrlr_disconnect_qpairs_on_pg(struct spdk_io_channel_iter *i, bool include
 		if (qpair->ctrlr == ctrlr && (include_admin || !nvmf_qpair_is_admin_queue(qpair))) {
 			rc = spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
 			if (rc) {
-				SPDK_ERRLOG("Qpair disconnect failed\n");
-				return rc;
+				if (rc == -EINPROGRESS) {
+					rc = 0;
+				} else {
+					SPDK_ERRLOG("Qpair disconnect failed\n");
+					return rc;
+				}
 			}
 		}
 	}
@@ -1001,7 +1005,7 @@ nvmf_ctrlr_association_remove(void *ctx)
 
 	if (ctrlr->admin_qpair) {
 		rc = spdk_nvmf_qpair_disconnect(ctrlr->admin_qpair, NULL, NULL);
-		if (rc < 0) {
+		if (rc < 0 && rc != -EINPROGRESS) {
 			SPDK_ERRLOG("Fail to disconnect admin ctrlr qpair\n");
 			assert(false);
 		}

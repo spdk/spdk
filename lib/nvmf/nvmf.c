@@ -231,7 +231,7 @@ _nvmf_tgt_disconnect_qpairs(void *ctx)
 
 	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, link, qpair_tmp) {
 		rc = spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
-		if (rc) {
+		if (rc && rc != -EINPROGRESS) {
 			break;
 		}
 	}
@@ -1249,10 +1249,7 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 	struct nvmf_qpair_disconnect_ctx *qpair_ctx;
 
 	if (__atomic_test_and_set(&qpair->disconnect_started, __ATOMIC_RELAXED)) {
-		if (cb_fn) {
-			cb_fn(ctx);
-		}
-		return 0;
+		return -EINPROGRESS;
 	}
 
 	/* If we get a qpair in the uninitialized state, we can just destroy it immediately */
@@ -1595,7 +1592,7 @@ nvmf_poll_group_remove_subsystem_msg(void *ctx)
 		if ((qpair->ctrlr != NULL) && (qpair->ctrlr->subsys == subsystem)) {
 			qpairs_found = true;
 			rc = spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
-			if (rc) {
+			if (rc && rc != -EINPROGRESS) {
 				break;
 			}
 		}
