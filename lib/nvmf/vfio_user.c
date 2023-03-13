@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2020 Intel Corporation.
  *   Copyright (c) 2019-2022, Nutanix Inc. All rights reserved.
- *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2022, 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 /*
@@ -317,6 +317,8 @@ struct nvmf_vfio_user_sq {
 	 * `post_create_io_sq_completion` flag.
 	 */
 	struct spdk_nvme_cmd			create_io_sq_cmd;
+
+	struct vfio_user_delete_sq_ctx		*delete_ctx;
 
 	/* Currently unallocated reqs. */
 	TAILQ_HEAD(, nvmf_vfio_user_req)	free_reqs;
@@ -2240,11 +2242,11 @@ out:
 }
 
 /* For ADMIN I/O DELETE SUBMISSION QUEUE the NVMf library will disconnect and free
- * queue pair, so save the command in a context.
+ * queue pair, so save the command id and controller in a context.
  */
 struct vfio_user_delete_sq_ctx {
 	struct nvmf_vfio_user_ctrlr *vu_ctrlr;
-	struct spdk_nvme_cmd delete_io_sq_cmd;
+	uint16_t cid;
 };
 
 static void
@@ -2263,7 +2265,7 @@ vfio_user_qpair_delete_cb(void *cb_arg)
 				     cb_arg);
 	} else {
 		post_completion(vu_ctrlr, admin_cq, 0, 0,
-				ctx->delete_io_sq_cmd.cid,
+				ctx->cid,
 				SPDK_NVME_SC_SUCCESS, SPDK_NVME_SCT_GENERIC);
 		free(ctx);
 	}
@@ -2280,7 +2282,6 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 	uint16_t sc = SPDK_NVME_SC_SUCCESS;
 	struct nvmf_vfio_user_sq *sq;
 	struct nvmf_vfio_user_cq *cq;
-	struct vfio_user_delete_sq_ctx *ctx;
 
 	SPDK_DEBUGLOG(nvmf_vfio, "%s: delete I/O %cqid:%d\n",
 		      ctrlr_id(ctrlr), is_cq ? 'c' : 's',
@@ -2309,21 +2310,20 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		 * VM reboot or CC.EN change, so we have to delete it in all
 		 * other cases.
 		 */
-		ctx = calloc(1, sizeof(*ctx));
-		if (!ctx) {
+		sq = ctrlr->sqs[cmd->cdw10_bits.delete_io_q.qid];
+		sq->delete_ctx = calloc(1, sizeof(*sq->delete_ctx));
+		if (!sq->delete_ctx) {
 			sct = SPDK_NVME_SCT_GENERIC;
 			sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			goto out;
 		}
-		ctx->vu_ctrlr = ctrlr;
-		ctx->delete_io_sq_cmd = *cmd;
-
-		sq = ctrlr->sqs[cmd->cdw10_bits.delete_io_q.qid];
+		sq->delete_ctx->vu_ctrlr = ctrlr;
+		sq->delete_ctx->cid = cmd->cid;
 		sq->sq_state = VFIO_USER_SQ_DELETED;
 		assert(ctrlr->cqs[sq->cqid]->cq_ref);
 		ctrlr->cqs[sq->cqid]->cq_ref--;
 
-		spdk_nvmf_qpair_disconnect(&sq->qpair, vfio_user_qpair_delete_cb, ctx);
+		spdk_nvmf_qpair_disconnect(&sq->qpair, NULL, NULL);
 		return 0;
 	}
 
@@ -5325,11 +5325,14 @@ nvmf_vfio_user_close_qpair(struct spdk_nvmf_qpair *qpair,
 	struct nvmf_vfio_user_sq *sq;
 	struct nvmf_vfio_user_ctrlr *vu_ctrlr;
 	struct nvmf_vfio_user_endpoint *endpoint;
+	struct vfio_user_delete_sq_ctx *del_ctx;
 
 	assert(qpair != NULL);
 	sq = SPDK_CONTAINEROF(qpair, struct nvmf_vfio_user_sq, qpair);
 	vu_ctrlr = sq->ctrlr;
 	endpoint = vu_ctrlr->endpoint;
+	del_ctx = sq->delete_ctx;
+	sq->delete_ctx = NULL;
 
 	pthread_mutex_lock(&endpoint->lock);
 	TAILQ_REMOVE(&vu_ctrlr->connected_sqs, sq, tailq);
@@ -5347,6 +5350,10 @@ nvmf_vfio_user_close_qpair(struct spdk_nvmf_qpair *qpair,
 		free_ctrlr(vu_ctrlr);
 	}
 	pthread_mutex_unlock(&endpoint->lock);
+
+	if (del_ctx) {
+		vfio_user_qpair_delete_cb(del_ctx);
+	}
 
 	if (cb_fn) {
 		cb_fn(cb_arg);
