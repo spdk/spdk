@@ -165,6 +165,9 @@ a specified qpair.
 Added API `spdk_nvmf_tgt_pause_polling` and `spdk_nvmf_tgt_resume_polling` to allow
 pausing polling on poll group of a given target.
 
+Parameters `cb_fn` and `ctx` of `spdk_nvmf_qpair_disconnect` API are deprecated. These parameters
+will be removed in 23.09 release.
+
 ### rpc
 
 Added `spdk_rpc_set_allowlist` to restrict allowed RPCs to the specified list.

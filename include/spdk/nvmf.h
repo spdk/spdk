@@ -291,8 +291,8 @@ typedef void (*nvmf_qpair_disconnect_cb)(void *ctx);
  * Disconnect an NVMe-oF qpair
  *
  * \param qpair The NVMe-oF qpair to disconnect.
- * \param cb_fn The function to call upon completion of the disconnect.
- * \param ctx The context to pass to the callback function.
+ * \param cb_fn Deprecated, will be removed in v23.09. The function to call upon completion of the disconnect.
+ * \param ctx Deprecated, will be removed in v23.09. The context to pass to the callback function.
  *
  * \return 0 upon success.
  * \return -ENOMEM if the function specific context could not be allocated.
