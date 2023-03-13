@@ -60,6 +60,9 @@ vrdma_dpa_process_sq_ci(struct vrdma_dpa_event_handler_ctx *ehctx)
 			    &ehctx->dma_qp.hw_qp_sq_ci);
 
 	ehctx->dma_qp.hw_qp_sq_ci++;
+
+	flexio_dev_dbr_cq_set_ci(ehctx->dma_sqcq_ctx.dbr,
+				 ehctx->dma_sqcq_ctx.ci);
 }
 
 static inline uint32_t vrdma_get_sq_free_wqe_num(struct vrdma_dpa_event_handler_ctx *ehctx)
