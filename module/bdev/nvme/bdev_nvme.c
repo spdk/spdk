@@ -74,9 +74,6 @@ struct nvme_bdev_io {
 	/** Extended IO opts passed by the user to bdev layer and mapped to NVME format */
 	struct spdk_nvme_ns_cmd_ext_io_opts ext_opts;
 
-	/** Originating thread */
-	struct spdk_thread *orig_thread;
-
 	/** Keeps track if first of fused commands was submitted */
 	bool first_fused_submitted;
 
@@ -2249,10 +2246,11 @@ static void
 bdev_nvme_reset_io_continue(void *cb_arg, bool success)
 {
 	struct nvme_bdev_io *bio = cb_arg;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
 	bio->cpl.cdw0 = !success;
 
-	spdk_thread_send_msg(bio->orig_thread, _bdev_nvme_reset_io_continue, bio);
+	spdk_thread_send_msg(spdk_bdev_io_get_thread(bdev_io), _bdev_nvme_reset_io_continue, bio);
 }
 
 static int
@@ -2295,7 +2293,6 @@ bdev_nvme_reset_io(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio)
 	int rc;
 
 	bio->cpl.cdw0 = 0;
-	bio->orig_thread = spdk_get_thread();
 
 	/* Reset all nvme_ctrlrs of a bdev controller sequentially. */
 	io_path = STAILQ_FIRST(&nbdev_ch->io_path_list);
@@ -6560,18 +6557,20 @@ static void
 bdev_nvme_abort_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_bdev_io *bio = ref;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
 	bio->cpl = *cpl;
-	spdk_thread_send_msg(bio->orig_thread, bdev_nvme_abort_complete, bio);
+	spdk_thread_send_msg(spdk_bdev_io_get_thread(bdev_io), bdev_nvme_abort_complete, bio);
 }
 
 static void
 bdev_nvme_admin_passthru_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_bdev_io *bio = ref;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
 	bio->cpl = *cpl;
-	spdk_thread_send_msg(bio->orig_thread,
+	spdk_thread_send_msg(spdk_bdev_io_get_thread(bdev_io),
 			     bdev_nvme_admin_passthru_complete_nvme_status, bio);
 }
 
@@ -7055,9 +7054,6 @@ bdev_nvme_admin_passthru(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io
 			goto err;
 		}
 
-		bio->io_path = io_path;
-		bio->orig_thread = spdk_get_thread();
-
 		rc = spdk_nvme_ctrlr_cmd_admin_raw(nvme_ctrlr->ctrlr, cmd, buf, (uint32_t)nbytes,
 						   bdev_nvme_admin_passthru_done, bio);
 		if (rc == 0) {
@@ -7131,8 +7127,6 @@ bdev_nvme_abort(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio,
 	struct nvme_io_path *io_path;
 	struct nvme_ctrlr *nvme_ctrlr;
 	int rc = 0;
-
-	bio->orig_thread = spdk_get_thread();
 
 	rc = bdev_nvme_abort_retry_io(nbdev_ch, bio_to_abort);
 	if (rc == 0) {

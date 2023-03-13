@@ -1298,6 +1298,12 @@ spdk_bdev_io_get_io_channel(struct spdk_bdev_io *bdev_io)
 	return (struct spdk_io_channel *)bdev_io->internal.ch;
 }
 
+struct spdk_thread *
+spdk_bdev_io_get_thread(struct spdk_bdev_io *bdev_io)
+{
+	return spdk_io_channel_get_thread(spdk_bdev_io_get_io_channel(bdev_io));
+}
+
 void
 spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status)
 {
