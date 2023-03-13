@@ -2,6 +2,7 @@
  *   Copyright (C) 2020 Intel Corporation.
  *   Copyright (c) 2018-2019 Broadcom.  All Rights Reserved.
  *   The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
+ *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/env.h"
@@ -1482,8 +1483,8 @@ nvmf_fc_poller_conn_abort_done(void *hwqp, int32_t status, void *cb_args)
 
 			if (!conn_args->backend_initiated && (fc_conn->qpair.state != SPDK_NVMF_QPAIR_DEACTIVATING)) {
 				/* disconnect qpair from nvmf controller */
-				spdk_nvmf_qpair_disconnect(&fc_conn->qpair,
-							   nvmf_fc_disconnect_qpair_cb, &conn_args->cb_info);
+				spdk_nvmf_qpair_disconnect(&fc_conn->qpair, NULL, NULL);
+				nvmf_fc_disconnect_qpair_cb(&conn_args->cb_info);
 			} else {
 				nvmf_fc_poller_api_perform_cb(&conn_args->cb_info, SPDK_NVMF_FC_POLLER_API_SUCCESS);
 			}
@@ -1542,8 +1543,8 @@ nvmf_fc_poller_api_del_connection(void *arg)
 
 		if (!conn_args->backend_initiated && (fc_conn->qpair.state != SPDK_NVMF_QPAIR_DEACTIVATING)) {
 			/* disconnect qpair from nvmf controller */
-			spdk_nvmf_qpair_disconnect(&fc_conn->qpair, nvmf_fc_disconnect_qpair_cb,
-						   &conn_args->cb_info);
+			spdk_nvmf_qpair_disconnect(&fc_conn->qpair, NULL, NULL);
+			nvmf_fc_disconnect_qpair_cb(&conn_args->cb_info);
 		} else {
 			nvmf_fc_poller_api_perform_cb(&conn_args->cb_info, SPDK_NVMF_FC_POLLER_API_SUCCESS);
 		}

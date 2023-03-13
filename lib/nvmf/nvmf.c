@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2018-2019, 2021 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021, 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -46,7 +46,6 @@ struct nvmf_qpair_disconnect_many_ctx {
 	struct spdk_nvmf_poll_group *group;
 	spdk_nvmf_poll_group_mod_done cpl_fn;
 	void *cpl_ctx;
-	uint32_t count;
 };
 
 static void
@@ -222,26 +221,31 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 }
 
 static void
-_nvmf_tgt_disconnect_next_qpair(void *ctx)
+_nvmf_tgt_disconnect_qpairs(void *ctx)
 {
-	struct spdk_nvmf_qpair *qpair;
+	struct spdk_nvmf_qpair *qpair, *qpair_tmp;
 	struct nvmf_qpair_disconnect_many_ctx *qpair_ctx = ctx;
 	struct spdk_nvmf_poll_group *group = qpair_ctx->group;
 	struct spdk_io_channel *ch;
-	int rc = 0;
+	int rc;
 
-	qpair = TAILQ_FIRST(&group->qpairs);
-
-	if (qpair) {
-		rc = spdk_nvmf_qpair_disconnect(qpair, _nvmf_tgt_disconnect_next_qpair, ctx);
+	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, link, qpair_tmp) {
+		rc = spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+		if (rc) {
+			break;
+		}
 	}
 
-	if (!qpair || rc != 0) {
+	if (TAILQ_EMPTY(&group->qpairs)) {
 		/* When the refcount from the channels reaches 0, nvmf_tgt_destroy_poll_group will be called. */
 		ch = spdk_io_channel_from_ctx(group);
 		spdk_put_io_channel(ch);
 		free(qpair_ctx);
+		return;
 	}
+
+	/* Some qpairs are in process of being disconnected. Send a message and try to remove them again */
+	spdk_thread_send_msg(spdk_get_thread(), _nvmf_tgt_disconnect_qpairs, ctx);
 }
 
 static void
@@ -258,7 +262,7 @@ nvmf_tgt_destroy_poll_group_qpairs(struct spdk_nvmf_poll_group *group)
 	}
 
 	ctx->group = group;
-	_nvmf_tgt_disconnect_next_qpair(ctx);
+	_nvmf_tgt_disconnect_qpairs(ctx);
 }
 
 struct spdk_nvmf_tgt *
@@ -1575,23 +1579,6 @@ fini:
 static void nvmf_poll_group_remove_subsystem_msg(void *ctx);
 
 static void
-remove_subsystem_qpair_cb(void *ctx)
-{
-	struct nvmf_qpair_disconnect_many_ctx *qpair_ctx = ctx;
-
-	assert(qpair_ctx->count > 0);
-	qpair_ctx->count--;
-	if (qpair_ctx->count == 0) {
-		/* All of the asynchronous callbacks for this context have been
-		 * completed.  Call nvmf_poll_group_remove_subsystem_msg() again
-		 * to check if all associated qpairs for this subsystem have
-		 * been removed from the poll group.
-		 */
-		nvmf_poll_group_remove_subsystem_msg(ctx);
-	}
-}
-
-static void
 nvmf_poll_group_remove_subsystem_msg(void *ctx)
 {
 	struct spdk_nvmf_qpair *qpair, *qpair_tmp;
@@ -1604,38 +1591,23 @@ nvmf_poll_group_remove_subsystem_msg(void *ctx)
 	group = qpair_ctx->group;
 	subsystem = qpair_ctx->subsystem;
 
-	/* Initialize count to 1.  This acts like a ref count, to ensure that if spdk_nvmf_qpair_disconnect
-	 * immediately invokes the callback (i.e. the qpairs is already in process of being disconnected)
-	 * that we don't recursively call nvmf_poll_group_remove_subsystem_msg before we've iterated the
-	 * full list of qpairs.
-	 */
-	qpair_ctx->count = 1;
 	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, link, qpair_tmp) {
 		if ((qpair->ctrlr != NULL) && (qpair->ctrlr->subsys == subsystem)) {
 			qpairs_found = true;
-			qpair_ctx->count++;
-			rc = spdk_nvmf_qpair_disconnect(qpair, remove_subsystem_qpair_cb, ctx);
+			rc = spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
 			if (rc) {
 				break;
 			}
 		}
 	}
-	qpair_ctx->count--;
 
 	if (!qpairs_found) {
 		_nvmf_poll_group_remove_subsystem_cb(ctx, 0);
 		return;
 	}
 
-	if (qpair_ctx->count == 0 || rc) {
-		/* If count == 0, it means there were some qpairs in the poll group but they
-		 * were already in process of being disconnected.  So we send a message to this
-		 * same thread so that this function executes again later.  We won't actually
-		 * invoke the remove_subsystem_cb until all of the qpairs are actually removed
-		 * from the poll group.
-		 */
-		spdk_thread_send_msg(spdk_get_thread(), nvmf_poll_group_remove_subsystem_msg, ctx);
-	}
+	/* Some qpairs are in process of being disconnected. Send a message and try to remove them again */
+	spdk_thread_send_msg(spdk_get_thread(), nvmf_poll_group_remove_subsystem_msg, ctx);
 }
 
 void
