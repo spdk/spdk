@@ -1,5 +1,6 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2016 Intel Corporation
+#  Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES
 #  All rights reserved.
 #
 
@@ -293,6 +294,14 @@ function gather_supported_nvmf_pci_devs() {
 	e810+=(${pci_bus_cache["$intel:0x159b"]})
 	# X722 10G
 	x722+=(${pci_bus_cache["$intel:0x37d2"]})
+	# BlueField 3
+	mlx+=(${pci_bus_cache["$mellanox:0xa2dc"]})
+	# ConnectX-7
+	mlx+=(${pci_bus_cache["$mellanox:0x1021"]})
+	# BlueField 2
+	mlx+=(${pci_bus_cache["$mellanox:0xa2d6"]})
+	# ConnectX-6 Dx
+	mlx+=(${pci_bus_cache["$mellanox:0x101d"]})
 	# ConnectX-5
 	mlx+=(${pci_bus_cache["$mellanox:0x1017"]})
 	mlx+=(${pci_bus_cache["$mellanox:0x1019"]})
