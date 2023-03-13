@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2018-2021 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021, 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 /** \file
@@ -296,6 +296,7 @@ typedef void (*nvmf_qpair_disconnect_cb)(void *ctx);
  *
  * \return 0 upon success.
  * \return -ENOMEM if the function specific context could not be allocated.
+ * \return -EINPROGRESS if the qpair is already in the process of disconnect.
  */
 int spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_cb cb_fn,
 			       void *ctx);
