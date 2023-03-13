@@ -1242,6 +1242,9 @@ _nvmf_qpair_disconnect_msg(void *ctx)
 	free(ctx);
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_qpair_disconnect, "cb_fn and ctx are deprecated", "v23.09",
+			      0);
+
 int
 spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_cb cb_fn, void *ctx)
 {
@@ -1250,6 +1253,10 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 
 	if (__atomic_test_and_set(&qpair->disconnect_started, __ATOMIC_RELAXED)) {
 		return -EINPROGRESS;
+	}
+
+	if (cb_fn || ctx) {
+		SPDK_LOG_DEPRECATED(spdk_nvmf_qpair_disconnect);
 	}
 
 	/* If we get a qpair in the uninitialized state, we can just destroy it immediately */

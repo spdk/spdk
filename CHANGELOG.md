@@ -27,6 +27,9 @@ Two functions related to Asynchronous Event and error handling have been made pu
 -	`spdk_nvmf_ctrlr_async_event_error_event`,
 -	`spdk_nvmf_ctrlr_abort_aer`.
 
+Parameters `cb_fn` and `ctx` of `spdk_nvmf_qpair_disconnect` API are deprecated. These parameters
+will be removed in 23.09 release.
+
 ### nvme
 
 New API `spdk_nvme_ns_get_format_index` was added to calculate the exact format index, that

@@ -53,6 +53,13 @@ then.
 Deprecated `spdk_nvme_ctrlr_prepare_for_reset` API, which will be removed in SPDK 22.01.
 For PCIe transport, `spdk_nvme_ctrlr_disconnect` should be used before freeing I/O qpairs.
 
+### nvmf
+
+#### `spdk_nvmf_qpair_disconnect`
+
+Parameters `cb_fn` and `ctx` of `spdk_nvmf_qpair_disconnect` API are deprecated. These parameters
+will be removed in 23.09 release.
+
 ### gpt
 
 #### `old_gpt_guid`
