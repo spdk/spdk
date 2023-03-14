@@ -184,7 +184,6 @@ load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	 */
 	lvol->blob_id = blob_id;
 	lvol->lvol_store = lvs;
-	lvol->thin_provision = spdk_blob_is_thin_provisioned(blob);
 
 	rc = spdk_blob_get_xattr_value(blob, "uuid", (const void **)&attr, &value_len);
 	if (rc != 0 || value_len != SPDK_UUID_STRING_LEN || attr[SPDK_UUID_STRING_LEN - 1] != '\0' ||
@@ -1040,7 +1039,6 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	}
 	lvol->lvol_store = lvs;
 	num_clusters = spdk_divide_round_up(sz, spdk_bs_get_cluster_size(bs));
-	lvol->thin_provision = thin_provision;
 	lvol->clear_method = (enum blob_clear_method)clear_method;
 	snprintf(lvol->name, sizeof(lvol->name), "%s", name);
 	TAILQ_INSERT_TAIL(&lvol->lvol_store->pending_lvols, lvol, link);
