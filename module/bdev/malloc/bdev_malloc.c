@@ -98,7 +98,9 @@ malloc_done(void *ref, int status)
 
 	if (status != 0) {
 		if (status == -ENOMEM) {
-			task->status = SPDK_BDEV_IO_STATUS_NOMEM;
+			if (task->status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+				task->status = SPDK_BDEV_IO_STATUS_NOMEM;
+			}
 		} else {
 			task->status = SPDK_BDEV_IO_STATUS_FAILED;
 		}
