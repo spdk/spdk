@@ -6815,20 +6815,16 @@ bs_inflate_blob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 
 	_blob->locked_operation_in_progress = true;
 
-	if (!ctx->allocate_all && _blob->parent_id == SPDK_BLOBID_INVALID) {
-		/* This blob have no parent, so we cannot decouple it. */
-		SPDK_ERRLOG("Cannot decouple parent of blob with no parent.\n");
-		bs_clone_snapshot_origblob_cleanup(ctx, -EINVAL);
-		return;
-	}
-
-	if (spdk_blob_is_thin_provisioned(_blob) == false) {
-		/* This is not thin provisioned blob. No need to inflate. */
-		bs_clone_snapshot_origblob_cleanup(ctx, 0);
-		return;
-	}
-
-	if (_blob->parent_id == SPDK_BLOBID_EXTERNAL_SNAPSHOT) {
+	switch (_blob->parent_id) {
+	case SPDK_BLOBID_INVALID:
+		if (!ctx->allocate_all) {
+			/* This blob has no parent, so we cannot decouple it. */
+			SPDK_ERRLOG("Cannot decouple parent of blob with no parent.\n");
+			bs_clone_snapshot_origblob_cleanup(ctx, -EINVAL);
+			return;
+		}
+		break;
+	case SPDK_BLOBID_EXTERNAL_SNAPSHOT:
 		/*
 		 * It would be better to rely on back_bs_dev->is_zeroes(), to determine which
 		 * clusters require allocation. Until there is a blobstore consumer that
@@ -6836,6 +6832,15 @@ bs_inflate_blob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 		 * worth the effort.
 		 */
 		ctx->allocate_all = true;
+		break;
+	default:
+		break;
+	}
+
+	if (spdk_blob_is_thin_provisioned(_blob) == false) {
+		/* This is not thin provisioned blob. No need to inflate. */
+		bs_clone_snapshot_origblob_cleanup(ctx, 0);
+		return;
 	}
 
 	/* Do two passes - one to verify that we can obtain enough clusters
