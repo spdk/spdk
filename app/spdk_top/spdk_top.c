@@ -1384,9 +1384,9 @@ draw_thread_tab_row(uint64_t current_row, uint8_t item_index)
 
 	if (!col_desc[COL_THREADS_CPU_USAGE].disabled) {
 		core_num = g_threads_info[current_row].core_num;
-		uint64_t core_busy_period = g_cores_info[core_num].busy - g_cores_info[core_num].last_busy;
-		uint64_t core_idle_period = g_cores_info[core_num].idle - g_cores_info[core_num].last_idle;
 		if (core_num >= 0 && core_num < RPC_MAX_CORES) {
+			uint64_t core_busy_period = g_cores_info[core_num].busy - g_cores_info[core_num].last_busy;
+			uint64_t core_idle_period = g_cores_info[core_num].idle - g_cores_info[core_num].last_idle;
 			get_cpu_usage_str(busy_period, core_busy_period + core_idle_period, cpu_usage);
 		} else {
 			snprintf(cpu_usage, sizeof(cpu_usage), "n/a");
