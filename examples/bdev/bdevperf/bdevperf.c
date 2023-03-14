@@ -1865,7 +1865,7 @@ config_filename_next(const char *filename, char *out)
 	for (i = 0, k = 0;
 	     filename[i] != '\0' &&
 	     filename[i] != ':' &&
-	     i < BDEVPERF_CONFIG_MAX_FILENAME;
+	     k < BDEVPERF_CONFIG_MAX_FILENAME;
 	     i++) {
 		if (filename[i] == ' ' || filename[i] == '\t') {
 			continue;
