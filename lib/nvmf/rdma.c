@@ -2362,7 +2362,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 #define SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE 131072
 #define SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE (SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE / SPDK_NVMF_MAX_SGL_ENTRIES)
 #define SPDK_NVMF_RDMA_DEFAULT_NUM_SHARED_BUFFERS 4095
-#define SPDK_NVMF_RDMA_DEFAULT_BUFFER_CACHE_SIZE 32
+#define SPDK_NVMF_RDMA_DEFAULT_BUFFER_CACHE_SIZE UINT32_MAX
 #define SPDK_NVMF_RDMA_DEFAULT_NO_SRQ false
 #define SPDK_NVMF_RDMA_DIF_INSERT_OR_STRIP false
 #define SPDK_NVMF_RDMA_ACCEPTOR_BACKLOG 100
@@ -2607,14 +2607,17 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
-	min_shared_buffers = spdk_env_get_core_count() * opts->buf_cache_size;
-	if (min_shared_buffers > opts->num_shared_buffers) {
-		SPDK_ERRLOG("There are not enough buffers to satisfy"
-			    "per-poll group caches for each thread. (%" PRIu32 ")"
-			    "supplied. (%" PRIu32 ") required\n", opts->num_shared_buffers, min_shared_buffers);
-		SPDK_ERRLOG("Please specify a larger number of shared buffers\n");
-		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
-		return NULL;
+	/* If buf_cache_size == UINT32_MAX, we will dynamically pick a cache size later that we know will fit. */
+	if (opts->buf_cache_size < UINT32_MAX) {
+		min_shared_buffers = spdk_env_get_core_count() * opts->buf_cache_size;
+		if (min_shared_buffers > opts->num_shared_buffers) {
+			SPDK_ERRLOG("There are not enough buffers to satisfy"
+				    "per-poll group caches for each thread. (%" PRIu32 ")"
+				    "supplied. (%" PRIu32 ") required\n", opts->num_shared_buffers, min_shared_buffers);
+			SPDK_ERRLOG("Please specify a larger number of shared buffers\n");
+			nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
+			return NULL;
+		}
 	}
 
 	sge_count = opts->max_io_size / opts->io_unit_size;

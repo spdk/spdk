@@ -42,7 +42,7 @@
 #define SPDK_NVMF_TCP_DEFAULT_MAX_IO_SIZE 131072
 #define SPDK_NVMF_TCP_DEFAULT_IO_UNIT_SIZE 131072
 #define SPDK_NVMF_TCP_DEFAULT_NUM_SHARED_BUFFERS 511
-#define SPDK_NVMF_TCP_DEFAULT_BUFFER_CACHE_SIZE 32
+#define SPDK_NVMF_TCP_DEFAULT_BUFFER_CACHE_SIZE UINT32_MAX
 #define SPDK_NVMF_TCP_DEFAULT_DIF_INSERT_OR_STRIP false
 #define SPDK_NVMF_TCP_DEFAULT_ABORT_TIMEOUT_SEC 1
 
@@ -702,14 +702,17 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
-	min_shared_buffers = spdk_env_get_core_count() * opts->buf_cache_size;
-	if (min_shared_buffers > opts->num_shared_buffers) {
-		SPDK_ERRLOG("There are not enough buffers to satisfy "
-			    "per-poll group caches for each thread. (%" PRIu32 ") "
-			    "supplied. (%" PRIu32 ") required\n", opts->num_shared_buffers, min_shared_buffers);
-		SPDK_ERRLOG("Please specify a larger number of shared buffers\n");
-		free(ttransport);
-		return NULL;
+	/* If buf_cache_size == UINT32_MAX, we will dynamically pick a cache size later that we know will fit. */
+	if (opts->buf_cache_size < UINT32_MAX) {
+		min_shared_buffers = spdk_env_get_core_count() * opts->buf_cache_size;
+		if (min_shared_buffers > opts->num_shared_buffers) {
+			SPDK_ERRLOG("There are not enough buffers to satisfy "
+				    "per-poll group caches for each thread. (%" PRIu32 ") "
+				    "supplied. (%" PRIu32 ") required\n", opts->num_shared_buffers, min_shared_buffers);
+			SPDK_ERRLOG("Please specify a larger number of shared buffers\n");
+			free(ttransport);
+			return NULL;
+		}
 	}
 
 	ttransport->accept_poller = SPDK_POLLER_REGISTER(nvmf_tcp_accept, &ttransport->transport,
