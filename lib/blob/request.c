@@ -72,7 +72,7 @@ bs_sequence_completion(struct spdk_io_channel *channel, void *cb_arg, int bserrn
 	set->u.sequence.cb_fn((spdk_bs_sequence_t *)set, set->u.sequence.cb_arg, bserrno);
 }
 
-spdk_bs_sequence_t *
+static spdk_bs_sequence_t *
 bs_sequence_start(struct spdk_io_channel *_channel,
 		  struct spdk_bs_cpl *cpl)
 {
@@ -98,6 +98,21 @@ bs_sequence_start(struct spdk_io_channel *_channel,
 	set->ext_io_opts = NULL;
 
 	return (spdk_bs_sequence_t *)set;
+}
+
+/* Use when performing IO directly on the blobstore (e.g. metadata - not a blob). */
+spdk_bs_sequence_t *
+bs_sequence_start_bs(struct spdk_io_channel *_channel, struct spdk_bs_cpl *cpl)
+{
+	return bs_sequence_start(_channel, cpl);
+}
+
+/* Use when performing IO on a blob. */
+spdk_bs_sequence_t *
+bs_sequence_start_blob(struct spdk_io_channel *_channel, struct spdk_bs_cpl *cpl,
+		       struct spdk_blob *blob)
+{
+	return bs_sequence_start(_channel, cpl);
 }
 
 void

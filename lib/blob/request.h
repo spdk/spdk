@@ -129,8 +129,11 @@ struct spdk_bs_request_set {
 
 void bs_call_cpl(struct spdk_bs_cpl *cpl, int bserrno);
 
-spdk_bs_sequence_t *bs_sequence_start(struct spdk_io_channel *channel,
-				      struct spdk_bs_cpl *cpl);
+spdk_bs_sequence_t *bs_sequence_start_bs(struct spdk_io_channel *channel,
+		struct spdk_bs_cpl *cpl);
+
+spdk_bs_sequence_t *bs_sequence_start_blob(struct spdk_io_channel *channel,
+		struct spdk_bs_cpl *cpl, struct spdk_blob *blob);
 
 void bs_sequence_read_bs_dev(spdk_bs_sequence_t *seq, struct spdk_bs_dev *bs_dev,
 			     void *payload, uint64_t lba, uint32_t lba_count,
