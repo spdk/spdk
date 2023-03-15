@@ -325,7 +325,8 @@ mdns_resolve_callback(
 				free(trid);
 				avahi_free(subnqn);
 				avahi_free(proto);
-				break;
+				avahi_service_resolver_free(r);
+				return;
 			}
 		}
 		entry_ctx = create_mdns_discovery_entry_ctx(ctx, trid);
