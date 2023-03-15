@@ -54,28 +54,29 @@
 struct vrdma_dev_mac_list_head vrdma_dev_mac_list =
 				LIST_HEAD_INITIALIZER(vrdma_dev_mac_list);
 
-void vrdma_dev_mac_add(char *pci_number, uint64_t mac)
+void vrdma_dev_mac_add(char *pci_number, uint64_t mac, char *sf_name)
 {
     struct vrdma_dev_mac *dev_mac;
 
-    SPDK_NOTICELOG("\nConfigure vrdma device pci_number %s mac 0x%lx\n",
-    pci_number, mac);
+    SPDK_NOTICELOG("\nConfigure vrdma device pci_number %s mac 0x%lx sf %s\n",
+    pci_number, mac, sf_name);
     dev_mac = calloc(1, sizeof(*dev_mac));
     if (!dev_mac)
         return;
     memcpy(dev_mac->pci_number, pci_number, VRDMA_PCI_NAME_MAXLEN);
+    memcpy(dev_mac->sf_name, sf_name, VRDMA_DEV_NAME_LEN);
     dev_mac->mac = mac;
     LIST_INSERT_HEAD(&vrdma_dev_mac_list, dev_mac, entry);
 }
 
-struct vrdma_dev_mac *
+static struct vrdma_dev_mac *
 vrdma_find_dev_mac_by_pci(char *pci_number)
 {
 	struct vrdma_dev_mac *dev_mac;
 
 	LIST_FOREACH(dev_mac, &vrdma_dev_mac_list, entry) {
-        SPDK_NOTICELOG("\nFind vrdma device pci_number %s: device entry pci_number %s mac 0x%lx\n",
-            pci_number, dev_mac->pci_number, dev_mac->mac);
+        SPDK_NOTICELOG("\nFind vrdma device pci_number %s: device entry pci_number %s mac 0x%lx sf %s\n",
+            pci_number, dev_mac->pci_number, dev_mac->mac, dev_mac->sf_name);
         if (!strcmp(dev_mac->pci_number, pci_number))
             return dev_mac;
     }
@@ -311,6 +312,33 @@ static int vrdma_device_stop(void *ctx)
     return 0;
 };
 
+static bool vrdma_create_sf_pd(struct vrdma_ctrl *ctrl)
+{
+	struct ibv_context *dev_ctx;
+	char *dev_name = ctrl->vdev->vrdma_sf.sf_name;
+	int gvmi;
+	
+	dev_ctx = snap_vrdma_open_device(dev_name);
+	if (!dev_ctx) {
+		SPDK_ERRLOG("NULL dev sctx, dev name %s\n", dev_name);
+		return true;
+	}
+	ctrl->vdev->vrdma_sf.sf_pd = ibv_alloc_pd(dev_ctx);
+	if (!ctrl->vdev->vrdma_sf.sf_pd) {
+		SPDK_ERRLOG("get NULL PD, dev name %s\n", dev_name);
+		return true;
+	}
+	gvmi = snap_get_dev_vhca_id(dev_ctx);
+	if (gvmi == -1) {
+		SPDK_ERRLOG("get NULL gvmi, dev name %s\n", dev_name);
+	} else {
+		ctrl->vdev->vrdma_sf.gvmi = gvmi;
+	}
+	SPDK_NOTICELOG("vrdma sf dev %s(gvmi 0x%x) created pd 0x%p done\n", dev_name, gvmi,
+    ctrl->vdev->vrdma_sf.sf_pd);
+	return false;
+}
+
 struct vrdma_ctrl *
 vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
 {
@@ -356,22 +384,42 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
                 attr->pf_id, attr->force_in_order, attr->emu_manager_name, attr->pf_id);
         goto dereg_mr;
     }
+    ctrl->vdev = attr->vdev;
     dev_mac = vrdma_find_dev_mac_by_pci(ctrl->sctrl->sdev->pci->pci_number);
     if (dev_mac) {
         ctrl->sctrl->mac = dev_mac->mac;
+        #ifdef CX7
+	    ctrl->vdev->vrdma_sf.sf_pd = ibv_alloc_pd(ctrl->sctx->context);
+        if(!ctrl->vdev->vrdma_sf.sf_pd) {
+            SPDK_ERRLOG("Failed to create sf pd");
+            goto sctrl_close;
+        }
+        #else
+        memcpy(ctrl->vdev->vrdma_sf.sf_name, dev_mac->sf_name, VRDMA_DEV_NAME_LEN);
+        if(vrdma_create_sf_pd(ctrl)) {
+            SPDK_ERRLOG("Failed to create sf pd");
+            goto sctrl_close;
+        }
+        #endif
+        ctrl->crossing_mkey = snap_create_cross_mkey(ctrl->vdev->vrdma_sf.sf_pd,
+								ctrl->sctrl->sdev);
+        if(!ctrl->crossing_mkey) {
+            SPDK_ERRLOG("Failed to create crossing mkey with sf pd");
+            goto dealloc_sf_pd;
+        }
     }
     snap_vrdma_device_mac_init(ctrl->sctrl);
     ctrl->pf_id = attr->pf_id;
-    ctrl->vdev = attr->vdev;
     ctrl->dev.rdev_idx = attr->vdev->devid;
     LIST_INIT(&ctrl->bk_qp_list);
     vrdma_srv_device_init(ctrl);
     SPDK_NOTICELOG("new VRDMA controller %d [in order %d]"
                   " was opened successfully over RDMA device %s "
-                  "vhca_id %d pci %s mac 0x%lx\n",
+                  "vhca_id %d pci %s mac 0x%lx sf_name %s\n",
                   attr->pf_id, attr->force_in_order, attr->emu_manager_name,
                   ctrl->sctrl->sdev->pci->mpci.vhca_id,
-                  ctrl->sctrl->sdev->pci->pci_number, ctrl->sctrl->mac);
+                  ctrl->sctrl->sdev->pci->pci_number, ctrl->sctrl->mac,
+                  ctrl->vdev->vrdma_sf.sf_name);
     snprintf(ctrl->name, VRDMA_EMU_NAME_MAXLEN,
                 "%s%dpf%d", VRDMA_EMU_NAME_PREFIX,
                 vrdma_dev_name_to_id(attr->emu_manager_name), attr->pf_id);
@@ -379,6 +427,10 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
             SPDK_EMU_MANAGER_NAME_MAXLEN - 1);
     return ctrl;
 
+dealloc_sf_pd:
+    ibv_dealloc_pd(ctrl->vdev->vrdma_sf.sf_pd);
+sctrl_close:
+    snap_vrdma_ctrl_close(ctrl->sctrl);
 dereg_mr:
     ibv_dereg_mr(ctrl->mr);
     spdk_free(ctrl->sw_qp.admq);
@@ -405,7 +457,11 @@ static void vrdma_ctrl_free(struct vrdma_ctrl *ctrl)
     ibv_dealloc_pd(ctrl->pd);
     if (ctrl->destroy_done_cb)
         ctrl->destroy_done_cb(ctrl->destroy_done_cb_arg);
+    if (ctrl->crossing_mkey)
+        snap_destroy_cross_mkey(ctrl->crossing_mkey);
     if (ctrl->vdev) {
+        if (ctrl->vdev->vrdma_sf.sf_pd)
+            ibv_dealloc_pd(ctrl->vdev->vrdma_sf.sf_pd);
         spdk_vrdma_adminq_resource_destory(ctrl);
         free(ctrl->vdev);
     }

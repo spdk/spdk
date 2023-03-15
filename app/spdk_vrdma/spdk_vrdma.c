@@ -40,7 +40,7 @@
 #include "spdk/event.h"
 #include "spdk/vrdma.h"
 #include "spdk/vrdma_controller.h"
-#include "spdk/vrdma_admq.h"
+#include "spdk/vrdma_mr.h"
 
 static struct spdk_thread *g_vrdma_app_thread;
 static struct spdk_vrdma_ctx g_vrdma_ctx;
@@ -97,20 +97,20 @@ err:
 static void
 vrdma_usage(void)
 {
-	fprintf(stderr, " -v --pci_mac   [pci_number]:[mac], such as [af:00.2]:[11:22:33:44:55:66]\n");
+	fprintf(stderr, " -v --pci_mac [pci_number]:[sf_name]:[vrdma_dev_mac], such as [af:00.2]:[mlx5_2]:[11:22:33:44:55:66]\n");
     fprintf(stderr, " -k --indirect_mkey map to crossing_mkey \n");
 }
 
 static int
 vrdma_parse_dev_mac(char *arg)
 {
-    char vrdma_dev[MAX_VRDMA_DEV_LEN];
-    char *str, *next, *pci_str, *mac_str;
+    char vrdma_dev[64];
+    char *str, *next, *pci_str, *mac_str, *sf_str;
     char mac[6];
     uint64_t temp_mac;
     int i;
 
-    snprintf(vrdma_dev, MAX_VRDMA_DEV_LEN, "%s", arg);
+    snprintf(vrdma_dev, 64, "%s", arg);
     next = vrdma_dev;
 
 	if (next[0] == '[') {
@@ -118,6 +118,15 @@ vrdma_parse_dev_mac(char *arg)
         pci_str = &next[1];
         *str = '\0';
         memcpy(g_dev_mac.pci_number, pci_str, VRDMA_PCI_NAME_MAXLEN);
+        next = str + 2;
+    } else {
+        return -EINVAL;
+    }
+    if (next[0] == '[') {
+		str = strchr(next, ']');
+        sf_str = &next[1];
+        *str = '\0';
+        memcpy(g_dev_mac.sf_name, sf_str, VRDMA_DEV_NAME_LEN);
         next = str + 2;
     } else {
         return -EINVAL;
@@ -152,10 +161,10 @@ vrdma_parse_arg(int ch, char *arg)
 	case 'v':
         if (vrdma_parse_dev_mac(arg))
             return -EINVAL;
-		vrdma_dev_mac_add(g_dev_mac.pci_number, g_dev_mac.mac);
+		vrdma_dev_mac_add(g_dev_mac.pci_number, g_dev_mac.mac, g_dev_mac.sf_name);
         memset(&g_dev_mac, 0, sizeof(struct vrdma_dev_mac));
 		break;
-	case 'k':
+    case 'k':
         spdk_vrdma_enable_indirect_mkey_map();
         break;
 	default:

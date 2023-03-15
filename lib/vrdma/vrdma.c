@@ -41,6 +41,7 @@
 #include "spdk/vrdma_qp.h"
 #include "spdk/vrdma_rpc.h"
 #include "spdk/vrdma_admq.h"
+#include "spdk/vrdma_mr.h"
 
 static uint32_t g_vdev_cnt;
 
@@ -50,6 +51,7 @@ void spdk_vrdma_ctx_stop(void (*fini_cb)(void))
 	vrdma_del_bk_qp_list();
 	vrdma_dev_mac_list_del();
 	vrdma_del_indirect_mkey_list();
+	vrdma_del_r_vkey_list();
 }
 
 int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
@@ -106,8 +108,6 @@ int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
 			goto free_vdev;
 		if (spdk_emu_controller_vrdma_create(vdev))
 			goto free_vdev;
-		/* init sf name */
-		strcpy(vdev->vrdma_sf.sf_name, "dummy");
 		ctx = spdk_emu_ctx_find_by_pci_id(vrdma_ctx->emu_manager, vdev->devid);
 		ctrl = ctx->ctrl;
 		ctrl->emu_ctx  = spdk_vrdma_snap_get_ibv_context(vrdma_ctx->emu_manager);

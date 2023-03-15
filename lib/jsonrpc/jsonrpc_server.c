@@ -250,13 +250,15 @@ spdk_jsonrpc_get_conn(struct spdk_jsonrpc_request *request)
 
 /* Never return NULL */
 static struct spdk_json_write_ctx *
-begin_response(struct spdk_jsonrpc_request *request)
+begin_response(struct spdk_jsonrpc_request *request, const char *method)
 {
 	struct spdk_json_write_ctx *w = request->response;
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "jsonrpc", "2.0");
-
+	if (method) {
+		spdk_json_write_named_string(w, "method", method);
+	}
 	spdk_json_write_name(w, "id");
 	if (request->id) {
 		spdk_json_write_val(w, request->id);
@@ -305,9 +307,18 @@ spdk_jsonrpc_free_request(struct spdk_jsonrpc_request *request)
 }
 
 struct spdk_json_write_ctx *
+spdk_jsonrpc_begin_result_with_method(struct spdk_jsonrpc_request *request, const char *method)
+{
+	struct spdk_json_write_ctx *w = begin_response(request, method);
+
+	spdk_json_write_name(w, "result");
+	return w;
+}
+
+struct spdk_json_write_ctx *
 spdk_jsonrpc_begin_result(struct spdk_jsonrpc_request *request)
 {
-	struct spdk_json_write_ctx *w = begin_response(request);
+	struct spdk_json_write_ctx *w = begin_response(request, NULL);
 
 	spdk_json_write_name(w, "result");
 	return w;
@@ -331,7 +342,7 @@ void
 spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 				 int error_code, const char *msg)
 {
-	struct spdk_json_write_ctx *w = begin_response(request);
+	struct spdk_json_write_ctx *w = begin_response(request, NULL);
 
 	spdk_json_write_named_object_begin(w, "error");
 	spdk_json_write_named_int32(w, "code", error_code);
@@ -345,7 +356,7 @@ void
 spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
 				     int error_code, const char *fmt, ...)
 {
-	struct spdk_json_write_ctx *w = begin_response(request);
+	struct spdk_json_write_ctx *w = begin_response(request, NULL);
 	va_list args;
 
 	spdk_json_write_named_object_begin(w, "error");

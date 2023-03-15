@@ -60,6 +60,7 @@ static int spdk_emu_ctx_io_threads_create(struct spdk_emu_ctx *ctrl_ctx);
 static void spdk_emu_ctrl_destroy(struct spdk_emu_ctx *ctx,
                                   void (*done_cb)(void *arg),
                                   void *done_cb_arg);
+static char g_emu_manager_name[SPDK_EMU_MANAGER_NAME_MAXLEN];
 
 pthread_mutex_t spdk_emu_list_lock = PTHREAD_MUTEX_INITIALIZER;
 struct spdk_emu_list_head spdk_emu_list =
@@ -94,9 +95,10 @@ spdk_emu_ctx_find_by_gid_ip(const char *emu_manager, uint64_t gid_ip)
 {
     struct spdk_emu_ctx *ctx;
     struct vrdma_ctrl *ctrl;
+    const char *tmp_emu_manager = emu_manager ? emu_manager : g_emu_manager_name;
 
     LIST_FOREACH(ctx, &spdk_emu_list, entry) {
-        if (strncmp(ctx->emu_manager, emu_manager,
+        if (strncmp(ctx->emu_manager, tmp_emu_manager,
                     SPDK_EMU_MANAGER_NAME_MAXLEN) ||
             ctx->spci->type != SNAP_VRDMA_PF)
             continue;
@@ -202,6 +204,9 @@ static int spdk_emu_ctrl_vrdma_create(struct spdk_emu_ctx *ctx,
         goto err;
 
     ctx->ctrl_ops = &spdk_emu_ctx_ctrl_ops_vrdma;
+    memcpy(g_emu_manager_name, attr->emu_manager,
+            SPDK_EMU_MANAGER_NAME_MAXLEN);
+    SPDK_NOTICELOG("emu_manager name %s \n", g_emu_manager_name);
     return 0;
 
 err:

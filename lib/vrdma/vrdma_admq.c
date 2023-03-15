@@ -48,6 +48,7 @@
 #include "spdk/vrdma_emu_mgr.h"
 #include "spdk/vrdma_io_mgr.h"
 #include "spdk/vrdma_qp.h"
+#include "spdk/vrdma_mr.h"
 
 static uint32_t g_vpd_cnt;
 static uint32_t g_vmr_cnt;
@@ -55,113 +56,6 @@ static uint32_t g_vah_cnt;
 static uint32_t g_vqp_cnt;
 static uint32_t g_vcq_cnt;
 static uint32_t g_veq_cnt;
-static bool g_indirect_mkey_map;
-
-/* TODO: use a hash table or sorted list */
-struct vrdma_indirect_mkey_list_head vrdma_indirect_mkey_list =
-				LIST_HEAD_INITIALIZER(vrdma_indirect_mkey_list);
-
-void spdk_vrdma_disable_indirect_mkey_map(void)
-{
-	g_indirect_mkey_map = false;
-}
-void spdk_vrdma_enable_indirect_mkey_map(void)
-{
-	g_indirect_mkey_map = true;
-}
-
-static struct vrdma_indirect_mkey *
-vrdma_find_indirect_mkey_by_key(uint32_t mkey)
-{
-	struct vrdma_indirect_mkey *cmkey, *cmkey_tmp;
-
-	if (!g_indirect_mkey_map)
-		return NULL;
-	LIST_FOREACH_SAFE(cmkey, &vrdma_indirect_mkey_list, entry, cmkey_tmp) {
-		if (cmkey->indirect_mkey == mkey)
-			return cmkey;
-	}
-	return NULL;
-}
-
-void
-vrdma_get_va_crossing_mkey_by_key(uint32_t *mkey, uint64_t *va2pa)
-{
-	struct vrdma_indirect_mkey *cmkey, *cmkey_tmp;
-	uint32_t i;
-	uint64_t va = *va2pa;
-
-	if (!g_indirect_mkey_map)
-		return;
-	LIST_FOREACH_SAFE(cmkey, &vrdma_indirect_mkey_list, entry, cmkey_tmp) {
-		if (cmkey->indirect_mkey == *mkey) {
-			for (i = 0; i < cmkey->num_sge; i++) {
-				if (va >= cmkey->vapa[i].vaddr &&
-					va < (cmkey->vapa[i].vaddr + cmkey->vapa[i].size)) {
-						*va2pa = cmkey->vapa[i].paddr + (va - cmkey->vapa[i].vaddr);
-						*mkey = cmkey->crossing_mkey;
-						return;
-				}
-			}
-			return;
-		}
-	}
-}
-
-static void vrdma_del_indirect_mkey_from_list(struct vrdma_indirect_mkey *cmkey)
-{
-	LIST_REMOVE(cmkey, entry);
-	free(cmkey);
-}
-
-static void vrdma_destroy_crossing_mkey(struct snap_cross_mkey *crossing_mkey)
-{
-	int ret = 0;
-
-	ret = snap_destroy_cross_mkey(crossing_mkey);
-	if (ret)
-		SPDK_ERRLOG("Failed to destroy cross mkey, err(%d)\n",ret);
-}
-
-void vrdma_del_indirect_mkey_list(void)
-{
-	struct vrdma_indirect_mkey *cmkey, *cmkey_tmp;
-
-	LIST_FOREACH_SAFE(cmkey, &vrdma_indirect_mkey_list, entry, cmkey_tmp) {
-		vrdma_del_indirect_mkey_from_list(cmkey);
-	}
-}
-
-static void vrdma_add_indirect_mkey_list(uint32_t crossing_mkey,
-				uint32_t indirect_mkey, struct spdk_vrdma_mr_log *log)
-{
-	struct vrdma_indirect_mkey *cmkey;
-	uint64_t total_size = 0;
-	uint32_t i;
-
-	if (!g_indirect_mkey_map)
-		return;
-	if (log->num_sge > MAX_VRDMA_MR_SGE_NUM) {
-		SPDK_ERRLOG("Invalid sge number 0x%x", log->num_sge);
-		return;
-	}
-    cmkey = calloc(1, sizeof(*cmkey));
-    if (!cmkey) {
-		SPDK_ERRLOG("Failed to allocate crossing_mkey memory for indirect_mkey 0x%x",
-			indirect_mkey);
-		return;
-	}
-	cmkey->crossing_mkey = crossing_mkey;
-	cmkey->indirect_mkey = indirect_mkey;
-	cmkey->num_sge = log->num_sge;
-	for (i = 0; i < log->num_sge; ++i) {
-		cmkey->vapa[i].vaddr = log->start_vaddr + total_size;
-		cmkey->vapa[i].paddr = log->sge[i].paddr;
-		cmkey->vapa[i].size = log->sge[i].size;
-		total_size += log->sge[i].size;
-	}
-	LIST_INSERT_HEAD(&vrdma_indirect_mkey_list, cmkey, entry);
-}
 
 static struct spdk_bit_array *
 spdk_vrdma_create_id_pool(uint32_t max_num)
@@ -432,33 +326,6 @@ static void vrdma_aq_modify_gid(struct vrdma_ctrl *ctrl,
 			aqe->req.modify_gid_req.gid[i+2], aqe->req.modify_gid_req.gid[i+3]);
 }
 
-static struct ibv_pd *vrdma_create_sf_pd(struct vrdma_ctrl *ctrl)
-{
-	struct ibv_context *dev_ctx;
-	struct ibv_pd *sf_pd;
-	char *dev_name = ctrl->vdev->vrdma_sf.sf_name;
-	int gvmi;
-	
-	dev_ctx = snap_vrdma_open_device(dev_name);
-	if (!dev_ctx) {
-		SPDK_ERRLOG("NULL dev sctx, dev name %s\n", dev_name);
-		return NULL;
-	}
-	sf_pd = ibv_alloc_pd(dev_ctx);
-	if (!sf_pd) {
-		SPDK_ERRLOG("get NULL PD, dev name %s\n", dev_name);
-		return NULL;
-	}
-	gvmi = snap_get_dev_vhca_id(dev_ctx);
-	if (gvmi == -1) {
-		SPDK_ERRLOG("get NULL gvmi, dev name %s\n", dev_name);
-	} else {
-		ctrl->vdev->vrdma_sf.gvmi = gvmi;
-	}
-	SPDK_NOTICELOG("vrdma sf dev %s(gvmi 0x%x) created pd 0x%p done\n", dev_name, gvmi, sf_pd);
-	return sf_pd;
-}
-
 static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
@@ -474,11 +341,6 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 				  aqe->resp.create_pd_resp.err_code);
 		return;
 	}
-	//if (!strcmp(ctrl->vdev->vrdma_sf.sf_name, "dummy")) {
-	//	aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
-	//	SPDK_ERRLOG("no vrdma sf dev name is configured \n");
-	//	return;
-	//}
 	pd_idx = spdk_bit_array_find_first_clear(ctrl->vdev->free_vpd_ids, 0);
 	if (pd_idx == UINT32_MAX) {
 		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
@@ -493,11 +355,7 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 				  aqe->resp.create_pd_resp.err_code);
 		return;
 	}
-#ifdef CX7
-	vpd->ibpd = ibv_alloc_pd(ctrl->sctx->context);
-#else
-	vpd->ibpd = vrdma_create_sf_pd(ctrl);
-#endif
+	vpd->ibpd = ctrl->vdev->vrdma_sf.sf_pd;
 	if (!vpd->ibpd) {
 		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
 		SPDK_ERRLOG("Failed to allocate PD, err(%d)\n",
@@ -510,7 +368,7 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
 		SPDK_ERRLOG("Failed to notify PD in service, err(%d)\n",
 				  aqe->resp.create_pd_resp.err_code);
-		goto free_ibpd;
+		goto free_vpd;
 	}
 	g_vpd_cnt++;
 	ctrl->vdev->vpd_cnt++;
@@ -519,15 +377,12 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 	LIST_INSERT_HEAD(&ctrl->vdev->vpd_list, vpd, entry);
 	aqe->resp.create_pd_resp.pd_handle = pd_idx;
 	aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
-	SPDK_NOTICELOG("pd_idx %d pd 0x%p successfully\n", pd_idx, vpd->ibpd);
+	SPDK_NOTICELOG("pd_idx %d pd %p successfully\n", pd_idx, vpd->ibpd);
 	return;
-free_ibpd:
-	ibv_dealloc_pd(vpd->ibpd);
+
 free_vpd:
 	free(vpd);
 }
-
-
 
 static void vrdma_aq_destroy_pd(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
@@ -569,193 +424,11 @@ static void vrdma_aq_destroy_pd(struct vrdma_ctrl *ctrl,
 		return;
 	}
 	LIST_REMOVE(vpd, entry);
-    ibv_dealloc_pd(vpd->ibpd);
-	if (vpd->crossing_mkey)
-		vrdma_destroy_crossing_mkey(vpd->crossing_mkey);
 	spdk_bit_array_clear(ctrl->vdev->free_vpd_ids, vpd->pd_idx);
     free(vpd);
 	g_vpd_cnt--;
 	ctrl->vdev->vpd_cnt--;
 	aqe->resp.destroy_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
-}
-
-static inline unsigned int log2above(unsigned int v)
-{
-	unsigned int l;
-	unsigned int r;
-
-	for (l = 0, r = 0; (v >> 1); ++l, v >>= 1)
-		r |= (v & 1);
-	return l + r;
-}
-
-static void vrdma_indirect_mkey_attr_init(struct snap_device *dev,
-					 struct spdk_vrdma_mr_log *log,
-					 struct snap_cross_mkey *crossing_mkey,
-					 struct mlx5_devx_mkey_attr* attr,
-					 uint32_t *total_len)
-{
-	uint32_t sge_size = log->sge[0].size;
-	struct mlx5_klm *klm_array = attr->klm_array;
-	uint64_t size = 0;
-	uint32_t i;
-
-	attr->log_entity_size = log2above(sge_size);
-	if (((uint32_t)(1 << attr->log_entity_size) != sge_size) ||
-	    (attr->log_entity_size < LOG_4K_PAGE_SIZE))
-		attr->log_entity_size = 0;
-	for (i = 0; i < log->num_sge; ++i) {
-		size += log->sge[i].size;
-
-		if (log->sge[i].size != sge_size)
-			attr->log_entity_size = 0;
-	}
-	for (i = 0; i < log->num_sge; ++i) {
-		if (!attr->log_entity_size)
-			klm_array[i].byte_count = log->sge[i].size;
-
-		klm_array[i].mkey = crossing_mkey->mkey;
-		klm_array[i].address = log->sge[i].paddr;
-	}
-
-	attr->addr = log->start_vaddr;
-	attr->size = size; /* total size */
-	attr->klm_num = log->num_sge;
-	*total_len = size;
-
-	SPDK_NOTICELOG("dev(%s): start_addr:0x%lx, total_size:0x%lx, "
-		  "crossing key:0x%x, log_entity_size:0x%x klm_num:0x%x\n",
-		  dev->pci->pci_number, attr->addr, attr->size,
-		  crossing_mkey->mkey, attr->log_entity_size, attr->klm_num);
-}
-
-static int vrdma_destroy_indirect_mkey(struct spdk_vrdma_mr_log *lattr)
-{
-	int ret = 0;
-	struct vrdma_indirect_mkey *cmkey;
-
-	if (lattr->indirect_mkey) {
-		cmkey = vrdma_find_indirect_mkey_by_key(lattr->indirect_mkey->mkey);
-		if (cmkey)
-			vrdma_del_indirect_mkey_from_list(cmkey);
-		ret = snap_destroy_indirect_mkey(lattr->indirect_mkey);
-		if (ret)
-			SPDK_ERRLOG("\nFailed to destroy indirect mkey, err(%d)\n", ret);
-		lattr->indirect_mkey = NULL;
-		free(lattr->klm_array);
-		lattr->klm_array = NULL;
-	}
-	return ret;
-}
-
-static struct snap_indirect_mkey*
-vrdma_create_indirect_mkey(struct snap_device *dev,
-					struct spdk_vrdma_mr *vmr,
-				    struct spdk_vrdma_mr_log *log,
-				    uint32_t *total_len)
-{
-	struct snap_cross_mkey *crossing_mkey = log->crossing_mkey;
-	struct snap_indirect_mkey *indirect_mkey;
-	struct mlx5_devx_mkey_attr attr = {0};
-
-	attr.klm_array = calloc(log->num_sge, sizeof(struct mlx5_klm));
-	if (!attr.klm_array)
-		return NULL;
-
-	vrdma_indirect_mkey_attr_init(dev, log,
-						 crossing_mkey,
-						 &attr, total_len);
-
-	indirect_mkey = snap_create_indirect_mkey(vmr->vpd->ibpd, &attr);
-	if (indirect_mkey == NULL) {
-		SPDK_ERRLOG("\ndev(%s): Failed to create indirect mkey\n",
-			  dev->pci->pci_number);
-		goto free_klm_array;
-	}
-	log->klm_array = attr.klm_array;
-	vrdma_add_indirect_mkey_list(crossing_mkey->mkey,
-				indirect_mkey->mkey, log);
-	return indirect_mkey;
-free_klm_array:
-	free(attr.klm_array);
-	return NULL;
-}
-
-static int vrdma_create_remote_mkey(struct vrdma_ctrl *ctrl,
-					struct spdk_vrdma_mr *vmr)
-{
-	struct spdk_vrdma_mr_log *lattr;
-	uint32_t total_len = 0;
-	struct spdk_vrdma_pd *vpd = vmr->vpd;
-
-	lattr = &vmr->mr_log;
-	if (vpd->crossing_mkey) {
-		lattr->crossing_mkey = vpd->crossing_mkey;
-	} else {
-		lattr->crossing_mkey = snap_create_cross_mkey(vmr->vpd->ibpd,
-								ctrl->sctrl->sdev);
-	}
-	if (!lattr->crossing_mkey) {
-		SPDK_ERRLOG("\ndev(%s): Failed to create cross mkey\n", ctrl->name);
-		return -1;
-	}
-	if (lattr->num_sge == 1 && !lattr->start_vaddr) {
-		lattr->mkey = lattr->crossing_mkey->mkey;
-		lattr->log_base = lattr->sge[0].paddr;
-		lattr->log_size = lattr->sge[0].size;
-		vrdma_add_indirect_mkey_list(lattr->crossing_mkey->mkey,
-				lattr->crossing_mkey->mkey, lattr);
-	} else {
-		/* 3 layers TPT traslation: indirect_mkey -> crossing_mkey -> crossed_mkey */
-		lattr->indirect_mkey = vrdma_create_indirect_mkey(ctrl->sctrl->sdev,
-									vmr, lattr, &total_len);
-		if (!lattr->indirect_mkey) {
-			SPDK_ERRLOG("\ndev(%s): Failed to create indirect mkey\n",
-					ctrl->name);
-			goto destroy_crossing;
-		}
-		lattr->mkey = lattr->indirect_mkey->mkey;
-		lattr->log_size = total_len;
-		lattr->log_base = 0;
-	}
-	if (!vpd->crossing_mkey)
-		vpd->crossing_mkey = lattr->crossing_mkey;
-	SPDK_NOTICELOG("dev(%s): Created remote mkey=0x%x, "
-			"start_vaddr=0x%lx, base=0x%lx, size=0x%x\n",
-			ctrl->name, lattr->mkey, lattr->start_vaddr,
-			lattr->log_base, lattr->log_size);
-	return 0;
-destroy_crossing:
-	if (!vpd->crossing_mkey)
-		vrdma_destroy_crossing_mkey(lattr->crossing_mkey);
-	return -1;
-}
-
-void vrdma_destroy_remote_mkey(struct vrdma_ctrl *ctrl,
-					struct spdk_vrdma_mr *vmr)
-{
-	struct spdk_vrdma_mr_log *lattr = &vmr->mr_log;
-
-	if (!lattr->mkey) {
-		SPDK_ERRLOG("\ndev(%s): remote mkey is not created\n", ctrl->name);
-		return;
-	}
-	vrdma_destroy_indirect_mkey(lattr);
-}
-
-static void vrdma_reg_mr_create_attr(struct vrdma_create_mr_req *mr_req,
-				struct spdk_vrdma_mr *vmr)
-{
-	struct spdk_vrdma_mr_log *lattr = &vmr->mr_log;
-	uint32_t i;
- 
-	lattr->start_vaddr = mr_req->vaddr;
-	lattr->num_sge = mr_req->sge_count;
-	for (i = 0; i < lattr->num_sge; i++) {
-		lattr->sge[i].paddr = mr_req->sge_list[i].pa;
-		lattr->sge[i].size = mr_req->sge_list[i].length;
-	}
-	/*TODO use mr_type and access_flag in future. Not support in POC.*/
 }
 
 static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
@@ -809,7 +482,7 @@ static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
 				aqe->resp.create_mr_resp.err_code);
 		return;
 	}
-	mr_idx = spdk_bit_array_find_first_clear(ctrl->vdev->free_vmr_ids, 0);
+	mr_idx = spdk_bit_array_find_first_clear(ctrl->vdev->free_vmr_ids, VRDMA_MR_START_IDX);
 	if (mr_idx == UINT32_MAX) {
 		aqe->resp.create_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
 		SPDK_ERRLOG("Failed to allocate mr_idx, err(%d)\n",
@@ -831,9 +504,10 @@ static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
 				  aqe->resp.create_mr_resp.err_code);
 		goto free_vmr;
 	}
+
 	param.param.create_mr_param.mr_handle = mr_idx;
-	param.param.create_mr_param.lkey = vmr->mr_log.mkey;
-	param.param.create_mr_param.rkey = vmr->mr_log.mkey;
+	param.param.create_mr_param.lkey = mr_idx;
+	param.param.create_mr_param.rkey = mr_idx;
 	if (ctrl->srv_ops->vrdma_device_create_mr(&ctrl->dev, aqe, &param)) {
 		aqe->resp.create_mr_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
@@ -847,11 +521,14 @@ static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
 	vpd->ref_cnt++;
 	spdk_bit_array_set(ctrl->vdev->free_vmr_ids, mr_idx);
 	LIST_INSERT_HEAD(&ctrl->vdev->vmr_list, vmr, entry);
-	aqe->resp.create_mr_resp.rkey = vmr->mr_log.mkey;
+	/*Install vkey*/
+	ctrl->vdev->l_vkey_tbl.vkey[mr_idx].mkey = vmr->mr_log.mkey;
+	ctrl->vdev->l_vkey_tbl.vkey[mr_idx].vpd = vpd;
+	aqe->resp.create_mr_resp.rkey = mr_idx;
 	aqe->resp.create_mr_resp.lkey = aqe->resp.create_mr_resp.rkey;
 	aqe->resp.create_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 	SPDK_NOTICELOG("register MR remote mkey, pd id %d, "
-			"pd 0x%p mr_idx %d successfully\n",
+			"pd %p mr_idx %d successfully\n",
 			aqe->req.create_mr_req.pd_handle, vpd->ibpd, mr_idx);
 	return;
 free_mkey:
@@ -863,6 +540,7 @@ free_vmr:
 static void vrdma_aq_dereg_mr(struct vrdma_ctrl *ctrl,
 			struct vrdma_admin_cmd_entry *aqe)
 {
+	struct spdk_vrdma_qp *vqp_tmp, *vqp = NULL;
 	struct spdk_vrdma_mr *vmr = NULL;
 	struct vrdma_cmd_param param;
 
@@ -876,7 +554,7 @@ static void vrdma_aq_dereg_mr(struct vrdma_ctrl *ctrl,
 				  aqe->resp.destroy_mr_resp.err_code);
 		return;
 	}
-	vmr = find_spdk_vrdma_mr_by_key(ctrl, aqe->req.destroy_mr_req.lkey);
+	vmr = find_spdk_vrdma_mr_by_idx(ctrl, aqe->req.destroy_mr_req.lkey);
 	if (!vmr) {
 		aqe->resp.destroy_mr_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
@@ -904,6 +582,14 @@ static void vrdma_aq_dereg_mr(struct vrdma_ctrl *ctrl,
 	}
 	LIST_REMOVE(vmr, entry);
 	vrdma_destroy_remote_mkey(ctrl, vmr);
+	ctrl->vdev->l_vkey_tbl.vkey[vmr->mr_idx].mkey = 0;
+	ctrl->vdev->l_vkey_tbl.vkey[vmr->mr_idx].vpd = 0;
+	LIST_FOREACH_SAFE(vqp, &ctrl->vdev->vqp_list, entry, vqp_tmp) {
+        if (vqp->last_l_vkey == vmr->mr_idx) {
+			vqp->last_l_vkey = 0;
+			vqp->last_l_mkey = 0;
+		}
+	}
 	spdk_bit_array_clear(ctrl->vdev->free_vmr_ids, vmr->mr_idx);
 	g_vmr_cnt--;
 	ctrl->vdev->vmr_cnt--;
@@ -1118,12 +804,13 @@ static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
 				  aqe->resp.create_qp_resp.err_code);
 		return;
 	}
-	SPDK_NOTICELOG("create vqp pd 0x%p \n", vpd->ibpd);
+	SPDK_NOTICELOG("create vqp pd %p \n", vpd->ibpd);
 	vqp->vpd = vpd;
 	vqp->sq_vcq = sq_vcq;
 	vqp->rq_vcq = rq_vcq;
 	vqp->qp_idx = qp_idx;
 	vqp->qdb_idx = aqe->req.create_qp_req.qdb_idx;
+	vqp->l_vkey_tbl = &ctrl->vdev->l_vkey_tbl;
 	if (vrdma_create_vq(ctrl, aqe, vqp, rq_vcq, sq_vcq)) {
 		aqe->resp.create_qp_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_UNKNOWN;
 		goto free_vqp;
@@ -1327,6 +1014,7 @@ static void vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
 	}
 	if (aqe->req.modify_qp_req.qp_attr_mask & IBV_QP_DEST_QPN){
 		vqp->dest_qp_num = aqe->req.modify_qp_req.dest_qp_num;
+		vqp->remote_gid_ip = ctrl->vdev->vrdma_sf.remote_ip;
 	}
 	if (aqe->req.modify_qp_req.qp_attr_mask & IBV_QP_AV){
 		vqp->sip = aqe->req.modify_qp_req.sip;
@@ -2131,7 +1819,7 @@ void spdk_vrdma_adminq_resource_destory(struct vrdma_ctrl *ctrl)
     }
     LIST_FOREACH_SAFE(vmr, &vdev->vmr_list, entry, vmr_tmp) {
 		aqe.hdr.opcode = VRDMA_ADMIN_DEREG_MR;
-		aqe.req.destroy_mr_req.lkey = vmr->mr_log.mkey;
+		aqe.req.destroy_mr_req.lkey = vmr->mr_idx;
 		vrdma_aq_dereg_mr(ctrl, &aqe);
     }
     LIST_FOREACH_SAFE(vpd, &vdev->vpd_list, entry, vpd_tmp) {
