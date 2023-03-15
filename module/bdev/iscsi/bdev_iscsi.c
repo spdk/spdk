@@ -269,8 +269,6 @@ bdev_iscsi_command_cb(struct iscsi_context *context, int status, void *_task, vo
 	iscsi_io->asc = (task->sense.ascq >> 8) & 0xFF;
 	iscsi_io->ascq = task->sense.ascq & 0xFF;
 
-	scsi_free_scsi_task(task);
-
 	if (_bdev_iscsi_is_size_change(status, task)) {
 		bdev_iscsi_readcapacity16(context, iscsi_io->lun);
 
@@ -285,6 +283,8 @@ bdev_iscsi_command_cb(struct iscsi_context *context, int status, void *_task, vo
 	} else {
 		bdev_iscsi_io_complete(iscsi_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 	}
+
+	scsi_free_scsi_task(task);
 }
 
 static int
