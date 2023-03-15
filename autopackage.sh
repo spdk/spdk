@@ -4,21 +4,8 @@
 #  All rights reserved.
 #
 
-set -e
-
-# If the configuration of tests is not provided, no tests will be carried out.
-if [[ ! -f $1 ]]; then
-	echo "ERROR: SPDK test configuration not specified"
-	exit 1
-fi
-
-source "$1"
-
 rootdir=$(readlink -f $(dirname $0))
-testdir=$rootdir # to get the storage space for tests
-source "$rootdir/test/common/autotest_common.sh"
-
-out=$PWD
+source "$rootdir/test/common/autobuild_common.sh"
 
 MAKEFLAGS=${MAKEFLAGS:--j16}
 cd $rootdir
@@ -36,7 +23,7 @@ fi
 timing_exit porcelain_check
 
 if [[ $SPDK_TEST_RELEASE_BUILD -eq 1 ]]; then
-	run_test "packaging" $rootdir/test/packaging/packaging.sh
+	build_packaging
 	$MAKE clean
 fi
 

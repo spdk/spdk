@@ -436,6 +436,10 @@ build_native_dpdk() {
 	run_test "build_native_dpdk" _build_native_dpdk
 }
 
+build_packaging() {
+	run_test "packaging" "$rootdir/test/packaging/packaging.sh"
+}
+
 out=$output_dir
 SPDK_WORKSPACE=$(mktemp -dt "spdk_$(date +%s).XXXXXX")
 
