@@ -6,7 +6,7 @@
 #
 # Minimal install
 zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
-	libuuid-devel python-base ncurses-devel libjson-c-devel libcmocka-devel \
+	libuuid-devel python3-base ncurses-devel libjson-c-devel libcmocka-devel \
 	ninja meson python3-pyelftools
 # Additional dependencies for DPDK
 zypper install -y libnuma-devel nasm
