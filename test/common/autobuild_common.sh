@@ -3,6 +3,14 @@
 # Copyright (C) 2022 Intel Corporation.
 # All rights reserved.
 
+spdk_conf=${spdk_conf:-"$1"}
+
+if [[ ! -f $spdk_conf ]]; then
+	echo "ERROR: SPDK test configuration not specified"
+	return 1
+fi
+
+source "$spdk_conf"
 source "$rootdir/test/common/autotest_common.sh"
 source "$rootdir/scripts/common.sh"
 
@@ -446,10 +454,3 @@ scanbuild_exclude+=" --exclude $rootdir/xnvme --exclude /tmp"
 
 scanbuild="scan-build -o $output_dir/scan-build-tmp $scanbuild_exclude --status-bugs"
 config_params=$(get_config_params)
-
-spdk_conf=${spdk_conf:-"$1"}
-
-if [[ ! -f $spdk_conf ]]; then
-	echo "ERROR: SPDK test configuration not specified"
-	return 1
-fi

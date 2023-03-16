@@ -6,7 +6,6 @@
 
 rootdir=$(readlink -f $(dirname $0))
 
-source "$1"
 source "$rootdir/test/common/autobuild_common.sh"
 
 SPDK_TEST_AUTOBUILD=${SPDK_TEST_AUTOBUILD:-}
