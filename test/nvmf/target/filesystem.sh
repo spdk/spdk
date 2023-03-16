@@ -9,7 +9,7 @@ source $rootdir/test/setup/common.sh
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
-MALLOC_BDEV_SIZE=128
+MALLOC_BDEV_SIZE=512
 MALLOC_BLOCK_SIZE=512
 
 nvmftestinit
