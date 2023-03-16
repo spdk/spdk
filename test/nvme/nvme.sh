@@ -146,6 +146,8 @@ if [ $(uname) != "FreeBSD" ]; then
 	kill_stub
 fi
 
+run_test "bdev_nvme_reset_stuck_adm_cmd" $rootdir/test/nvme/nvme_reset_stuck_adm_cmd.sh
+
 if [[ $CONFIG_FIO_PLUGIN == y ]]; then
 	run_test "nvme_fio" nvme_fio_test
 fi
