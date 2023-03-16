@@ -629,6 +629,26 @@ spdk_nvmf_req_get_xfer(struct spdk_nvmf_request *req) {
 	return xfer;
 }
 
+/**
+ * Complete Asynchronous Event as Error.
+ *
+ * \param ctrlr Controller whose AER is going to be completed.
+ * \param info Asynchronous Event Error Information to be reported.
+ *
+ * \return int. 0 if it completed successfully, or negative errno if it failed.
+ */
+int spdk_nvmf_ctrlr_async_event_error_event(struct spdk_nvmf_ctrlr *ctrlr,
+		enum spdk_nvme_async_event_info_error info);
+
+/**
+ * Abort outstanding Asynchronous Event Requests (AERs).
+ *
+ * Completes AERs with ABORTED_BY_REQUEST status code.
+ *
+ * \param ctrlr Controller whose AERs are going to be aborted.
+ */
+void spdk_nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr);
+
 /*
  * Macro used to register new transports.
  */

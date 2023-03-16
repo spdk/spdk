@@ -22,6 +22,11 @@ New function `spdk_env_get_main_core` was added.
 New `spdk_nvmf_request_copy_to/from_buf()` APIs have been added, which support
 iovecs, unlike the deprecated `spdk_nvmf_request_get_data()`.
 
+Two functions related to Asynchronous Event and error handling have been made public:
+
+-	`spdk_nvmf_ctrlr_async_event_error_event`,
+-	`spdk_nvmf_ctrlr_abort_aer`.
+
 ### nvme
 
 New API `spdk_nvme_ns_get_format_index` was added to calculate the exact format index, that

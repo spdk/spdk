@@ -411,19 +411,12 @@ int nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);
 int nvmf_ctrlr_async_event_ana_change_notice(struct spdk_nvmf_ctrlr *ctrlr);
 void nvmf_ctrlr_async_event_discovery_log_change_notice(void *ctx);
 void nvmf_ctrlr_async_event_reservation_notification(struct spdk_nvmf_ctrlr *ctrlr);
-int nvmf_ctrlr_async_event_error_event(struct spdk_nvmf_ctrlr *ctrlr,
-				       union spdk_nvme_async_event_completion event);
+
 void nvmf_ns_reservation_request(void *ctx);
 void nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
 				       struct spdk_nvmf_ns *ns,
 				       enum spdk_nvme_reservation_notification_log_page_type type);
 
-/*
- * Abort aer is sent on a per controller basis and sends a completion for the aer to the host.
- * This function should be called when attempting to recover in error paths when it is OK for
- * the host to send a subsequent AER.
- */
-void nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr);
 
 /*
  * Abort zero-copy requests that already got the buffer (received zcopy_start cb), but haven't

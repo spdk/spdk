@@ -26,9 +26,9 @@ DEFINE_STUB(spdk_nvmf_subsystem_pause, int, (struct spdk_nvmf_subsystem *subsyst
 		uint32_t nsid, spdk_nvmf_subsystem_state_change_done cb_fn, void *cb_arg), 0);
 DEFINE_STUB(spdk_nvmf_subsystem_resume, int, (struct spdk_nvmf_subsystem *subsystem,
 		spdk_nvmf_subsystem_state_change_done cb_fn, void *cb_arg), 0);
-DEFINE_STUB_V(nvmf_ctrlr_abort_aer, (struct spdk_nvmf_ctrlr *ctrlr));
-DEFINE_STUB(nvmf_ctrlr_async_event_error_event, int, (struct spdk_nvmf_ctrlr *ctrlr,
-		union spdk_nvme_async_event_completion event), 0);
+DEFINE_STUB_V(spdk_nvmf_ctrlr_abort_aer, (struct spdk_nvmf_ctrlr *ctrlr));
+DEFINE_STUB(spdk_nvmf_ctrlr_async_event_error_event, int, (struct spdk_nvmf_ctrlr *ctrlr,
+		enum spdk_nvme_async_event_info_error info), 0);
 DEFINE_STUB(spdk_nvme_transport_id_adrfam_str, const char *, (enum spdk_nvmf_adrfam adrfam), NULL);
 DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid, int, (struct spdk_nvmf_qpair *qpair,
 		struct spdk_nvme_transport_id *trid), 0);

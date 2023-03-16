@@ -2796,7 +2796,7 @@ disable_ctrlr(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 	 * For PCIe controller reset or shutdown, we will drop all AER
 	 * responses.
 	 */
-	nvmf_ctrlr_abort_aer(vu_ctrlr->ctrlr);
+	spdk_nvmf_ctrlr_abort_aer(vu_ctrlr->ctrlr);
 
 	/* Free the shadow doorbell buffer. */
 	vfio_user_ctrlr_switch_doorbells(vu_ctrlr, false);
@@ -5658,13 +5658,9 @@ nvmf_vfio_user_sq_poll(struct nvmf_vfio_user_sq *sq)
 
 	new_tail = new_tail & 0xffffu;
 	if (spdk_unlikely(new_tail >= sq->size)) {
-		union spdk_nvme_async_event_completion event = {};
-
 		SPDK_DEBUGLOG(nvmf_vfio, "%s: invalid sqid:%u doorbell value %u\n", ctrlr_id(ctrlr), sq->qid,
 			      new_tail);
-		event.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_ERROR;
-		event.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_INVALID_DB_WRITE;
-		nvmf_ctrlr_async_event_error_event(ctrlr->ctrlr, event);
+		spdk_nvmf_ctrlr_async_event_error_event(ctrlr->ctrlr, SPDK_NVME_ASYNC_EVENT_INVALID_DB_WRITE);
 
 		return -1;
 	}

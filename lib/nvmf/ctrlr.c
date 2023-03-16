@@ -3764,17 +3764,22 @@ nvmf_ctrlr_async_event_discovery_log_change_notice(void *ctx)
 }
 
 int
-nvmf_ctrlr_async_event_error_event(struct spdk_nvmf_ctrlr *ctrlr,
-				   union spdk_nvme_async_event_completion event)
+spdk_nvmf_ctrlr_async_event_error_event(struct spdk_nvmf_ctrlr *ctrlr,
+					enum spdk_nvme_async_event_info_error info)
 {
+	union spdk_nvme_async_event_completion event;
+
 	if (!nvmf_ctrlr_mask_aen(ctrlr, SPDK_NVME_ASYNC_EVENT_ERROR_MASK_BIT)) {
 		return 0;
 	}
 
-	if (event.bits.async_event_type != SPDK_NVME_ASYNC_EVENT_TYPE_ERROR ||
-	    event.bits.async_event_info > SPDK_NVME_ASYNC_EVENT_FW_IMAGE_LOAD) {
+	if (info > SPDK_NVME_ASYNC_EVENT_FW_IMAGE_LOAD) {
 		return 0;
 	}
+
+	event.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_ERROR;
+	event.bits.log_page_identifier = SPDK_NVME_LOG_ERROR;
+	event.bits.async_event_info = info;
 
 	return nvmf_ctrlr_async_event_notification(ctrlr, &event);
 }
@@ -3800,7 +3805,7 @@ nvmf_qpair_free_aer(struct spdk_nvmf_qpair *qpair)
 }
 
 void
-nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr)
+spdk_nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	struct spdk_nvmf_request *req;
 	int i;
