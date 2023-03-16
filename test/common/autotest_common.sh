@@ -225,6 +225,10 @@ leak:libtcmalloc_minimal.so
 
 # Suppress leaks in libiscsi
 leak:libiscsi.so
+
+# Suppress leaks in libcrypto
+# Below is caused by openssl 3.0.8 leaks
+leak:libcrypto.so
 EOL
 
 # Suppress leaks in libfuse3
