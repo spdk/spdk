@@ -16,6 +16,9 @@
 
 #include "spdk/bdev_module.h"
 
+/* This namespace UUID was generated using uuid_generate() method. */
+#define BDEV_PART_NAMESPACE_UUID "976b899e-3e1e-4d71-ab69-c2b08e9df8b8"
+
 struct spdk_bdev_part_base {
 	struct spdk_bdev		*bdev;
 	struct spdk_bdev_desc		*desc;
@@ -553,6 +556,7 @@ spdk_bdev_part_construct_ext(struct spdk_bdev_part *part, struct spdk_bdev_part_
 	int rc;
 	bool first_claimed = false;
 	struct spdk_bdev_part_construct_opts opts;
+	struct spdk_uuid ns_uuid;
 
 	if (_opts == NULL) {
 		spdk_bdev_part_construct_opts_init(&opts, sizeof(opts));
@@ -590,7 +594,38 @@ spdk_bdev_part_construct_ext(struct spdk_bdev_part *part, struct spdk_bdev_part_
 		return -1;
 	}
 
-	spdk_uuid_copy(&part->internal.bdev.uuid, &opts.uuid);
+	/* The caller may have already specified a UUID.  If not, we'll generate one
+	 * based on the namespace UUID, the base bdev's UUID and the block range of the
+	 * partition.
+	 */
+	if (!spdk_mem_all_zero(&opts.uuid, sizeof(opts.uuid))) {
+		spdk_uuid_copy(&part->internal.bdev.uuid, &opts.uuid);
+	} else {
+		struct {
+			struct spdk_uuid	uuid;
+			uint64_t		offset_blocks;
+			uint64_t		num_blocks;
+		} base_name;
+
+		/* We need to create a unique base name for this partition.  We can't just use
+		 * the base bdev's UUID, since it may be used for multiple partitions.  So
+		 * construct a binary name consisting of the uuid + the block range for this
+		 * partition.
+		 */
+		spdk_uuid_copy(&base_name.uuid, &base->bdev->uuid);
+		base_name.offset_blocks = offset_blocks;
+		base_name.num_blocks = num_blocks;
+
+		spdk_uuid_parse(&ns_uuid, BDEV_PART_NAMESPACE_UUID);
+		rc = spdk_uuid_generate_sha1(&part->internal.bdev.uuid, &ns_uuid,
+					     (const char *)&base_name, sizeof(base_name));
+		if (rc) {
+			SPDK_ERRLOG("Could not generate new UUID\n");
+			free(part->internal.bdev.name);
+			free(part->internal.bdev.product_name);
+			return -1;
+		}
+	}
 
 	base->ref++;
 	part->internal.base = base;
