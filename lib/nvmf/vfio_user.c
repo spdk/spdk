@@ -5395,6 +5395,11 @@ get_nvmf_io_req_length(struct spdk_nvmf_request *req)
 		return nr * sizeof(struct spdk_nvme_dsm_range);
 	}
 
+	if (cmd->opc == SPDK_NVME_OPC_COPY) {
+		nr = (cmd->cdw12 & 0x000000ffu) + 1;
+		return nr * sizeof(struct spdk_nvme_scc_source_range);
+	}
+
 	nlb = (cmd->cdw12 & 0x0000ffffu) + 1;
 	return nlb * spdk_bdev_get_block_size(ns->bdev);
 }
