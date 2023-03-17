@@ -362,6 +362,10 @@ function json_config_test_fini() {
 	local ret=0
 
 	if [[ -n "${app_pid[initiator]}" ]]; then
+		if [[ $SPDK_TEST_VHOST_INIT -eq 1 ]]; then
+			initiator_rpc bdev_virtio_detach_controller VirtioScsiCtrlr0 || :
+			initiator_rpc bdev_virtio_detach_controller VirtioBlk0 || :
+		fi
 		killprocess ${app_pid[initiator]}
 	fi
 
