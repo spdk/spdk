@@ -1634,8 +1634,8 @@ draw_core_tab_row(uint64_t current_row, uint8_t item_index)
 		col += col_desc[COL_CORES_POLLERS].max_data_string;
 	}
 
-	uint64_t idle_period = g_threads_info[current_row].idle - g_threads_info[current_row].last_idle;
-	uint64_t busy_period = g_threads_info[current_row].busy - g_threads_info[current_row].last_busy;
+	uint64_t idle_period = g_cores_info[current_row].idle - g_cores_info[current_row].last_idle;
+	uint64_t busy_period = g_cores_info[current_row].busy - g_cores_info[current_row].last_busy;
 	if (!col_desc[COL_CORES_IDLE_TIME].disabled) {
 		if (g_interval_data == true) {
 			get_time_str(idle_period, idle_time);
