@@ -5,64 +5,50 @@
 #
 set -xe
 
-err_wipe() {
-	[[ -n $devs ]] || return 0
-	local _devs
+cleanup() {
+	local _devs=()
 
-	_devs=($devs) _devs=("${_devs[@]/#//dev/}")
+	((${#devs[@]} > 0)) || return 0
+
+	_devs=("${devs[@]/#//dev/}")
 
 	umount "${_devs[@]}" || :
-	wipefs --all "${_devs[@]}" || :
+	wipefs --all --force "${_devs[@]}" || :
 }
 
 MAKE="make -j$(($(nproc) * 2))"
 
+devs=()
 if [[ $1 == "spdk_vhost_scsi" ]]; then
-	devs=""
 	for entry in /sys/block/sd*; do
-		if grep -Eq '(INTEL|RAWSCSI|LIO-ORG)' $entry/device/vendor; then
-			devs+="$(basename $entry) "
+		if [[ $(< "$entry/device/vendor") =~ (INTEL|RAWSCSI|LIO-ORG) ]]; then
+			devs+=("${entry##*/}")
 		fi
 	done
 elif [[ $1 == "spdk_vhost_blk" ]]; then
-	devs=$(
-		cd /sys/block
-		echo vd*
-	)
+	devs=(/sys/block/vd*)
 fi
 
 fs=$2
+devs=("${devs[@]##*/}")
 
-trap "err_wipe; exit 1" SIGINT SIGTERM EXIT
+trap "cleanup; exit 1" SIGINT SIGTERM EXIT
 
 for fs in $fs; do
-	for dev in $devs; do
-		i=0
-		parted_cmd="parted -s /dev/${dev}"
+	for dev in "${devs[@]}"; do
+		[[ -b /dev/$dev ]]
+		wipefs --all --force "/dev/$dev"
+		echo "INFO: Creating partition table on $dev disk"
+		parted "/dev/$dev" -s mklabel gpt mkpart SPDK_TEST 2048s 100%
+		sleep 1s
+		wipefs --all --force "/dev/${dev}1"
+		echo "INFO: Creating filesystem on /dev/${dev}1"
 
-		echo "INFO: Creating partition table on disk using: $parted_cmd mklabel gpt"
-		$parted_cmd mklabel gpt
-		while ! ($parted_cmd print | grep -q gpt); do
-			[[ $i -lt 100 ]] || break
-			i=$((i + 1))
-			sleep 0.1
-		done
-		$parted_cmd mkpart SPDK_TEST 2048s 100%
-
-		mkfs_cmd="mkfs.$fs"
-		if [[ $fs == "ntfs" ]] || [[ $fs == "btrfs" ]]; then
-			mkfs_cmd+=" -f"
+		if [[ $fs == ext4 ]]; then
+			"mkfs.$fs" -F "/dev/${dev}1"
+		else
+			"mkfs.$fs" -f "/dev/${dev}1"
 		fi
-		mkfs_cmd+=" /dev/${dev}1"
-		echo "INFO: Creating filesystem using: $mkfs_cmd"
-		i=0
-		until wipefs -a /dev/${dev}1; do
-			[[ $i -lt 100 ]] || break
-			i=$((i + 1))
-			echo "Waiting for /dev/${dev}1"
-			sleep 0.1
-		done
-		$mkfs_cmd
 
 		mkdir -p /mnt/${dev}dir
 		mount -o sync /dev/${dev}1 /mnt/${dev}dir
@@ -75,14 +61,10 @@ for fs in $fs; do
 
 		# Print out space consumed on target device
 		df -h /dev/$dev
-	done
 
-	for dev in $devs; do
 		umount /mnt/${dev}dir
 		rm -rf /mnt/${dev}dir
 		stats=($(cat /sys/block/$dev/stat))
-		wipefs --all "/dev/$dev"
-
 		echo ""
 		echo "$dev stats"
 		printf "READ  IO cnt: % 8u merges: % 8u sectors: % 8u ticks: % 8u\n" \
@@ -96,3 +78,4 @@ for fs in $fs; do
 done
 
 trap - SIGINT SIGTERM EXIT
+cleanup
