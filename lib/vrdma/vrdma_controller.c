@@ -48,8 +48,8 @@
 #include "spdk/vrdma_snap_pci_mgr.h"
 #include "spdk/vrdma_admq.h"
 #include "spdk/vrdma_srv.h"
+#include "spdk/vrdma_mr.h"
 #include "vrdma_providers.h"
-
 
 struct vrdma_dev_mac_list_head vrdma_dev_mac_list =
 				LIST_HEAD_INITIALIZER(vrdma_dev_mac_list);
@@ -159,6 +159,7 @@ void vrdma_ctrl_progress(void *arg)
     struct vrdma_ctrl *ctrl = arg;
 
     snap_vrdma_ctrl_progress(ctrl->sctrl);
+    spdk_vrdma_vkey_age_progress();
 }
 
 #ifndef HAVE_SPDK_POLLER_BUSY

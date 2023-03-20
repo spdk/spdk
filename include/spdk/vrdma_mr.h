@@ -38,6 +38,9 @@
 #include "vrdma.h"
 #include "vrdma_admq.h"
 
+#define VRDMA_VKEY_PROGRESS_TIMEOUT_S  (10U) /* 10s */
+#define VRDMA_VKEY_AGE_TIMEOUT_US (10U * 1000U * 1000U) /* 10s timeout */
+
 struct vrdma_vapa_map {
 	uint64_t vaddr;
 	uint64_t paddr;
@@ -80,9 +83,11 @@ int vrdma_create_remote_mkey(struct vrdma_ctrl *ctrl,
 					struct spdk_vrdma_mr *vmr);
 void vrdma_reg_mr_create_attr(struct vrdma_create_mr_req *mr_req,
 				struct spdk_vrdma_mr *vmr);
+void spdk_vrdma_set_vkey_tv(void);
+void spdk_vrdma_vkey_age_progress(void);
 void vrdma_del_r_vkey_list(void);
-uint32_t vrdma_find_r_mkey(uint64_t gid_ip, uint32_t vkey_idx,
-				uint32_t rvqpn, bool *wait_mkey);
+uint32_t vrdma_find_r_mkey(struct spdk_vrdma_qp *vqp, uint32_t vkey_idx,
+			bool *wait_mkey);
 void vrdma_add_r_vkey_list(uint64_t gid_ip, uint32_t vkey_idx,
 				struct vrdma_r_vkey_entry *vkey);
 #endif
