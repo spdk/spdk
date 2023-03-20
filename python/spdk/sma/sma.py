@@ -141,9 +141,10 @@ class StorageManagementAgent(pb2_grpc.StorageManagementAgentServicer):
         response = pb2.DetachVolumeResponse()
         try:
             device = self._find_device_by_handle(request.device_handle)
-            if device is not None:
-                device.detach_volume(request)
-                self._volume_mgr.disconnect_volume(request.volume_id)
+            if device is None:
+                raise DeviceException(grpc.StatusCode.NOT_FOUND, 'Invalid device handle')
+            device.detach_volume(request)
+            self._volume_mgr.disconnect_volume(request.volume_id)
         except DeviceException as ex:
             context.set_details(ex.message)
             context.set_code(ex.code)
