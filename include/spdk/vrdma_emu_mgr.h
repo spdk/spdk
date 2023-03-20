@@ -89,5 +89,5 @@ struct spdk_emu_ctx *
 spdk_emu_ctx_create(const struct spdk_emu_ctx_create_attr *attr);
 int spdk_emu_controller_vrdma_create(struct spdk_vrdma_dev *vdev);
 void spdk_emu_ctx_destroy(struct spdk_emu_ctx *ctx);
-
+void spdk_vrdma_clear_vqp_vkey(uint64_t gid_ip, uint32_t vkey_idx);
 #endif

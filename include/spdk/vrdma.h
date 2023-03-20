@@ -279,6 +279,7 @@ struct spdk_vrdma_qp {
 	struct vrdma_vkey_tbl *l_vkey_tbl;
 	uint32_t wait_vkey;
 	uint32_t last_r_mkey;
+	uint64_t *last_r_mkey_ts;
 	uint32_t last_l_vkey;
 	uint32_t last_l_mkey;
 	struct timespec mkey_tv;

@@ -48,6 +48,7 @@
 #include "spdk/vrdma_qp.h"
 
 static bool g_indirect_mkey_map;
+static struct timespec g_last_vkey_tv;
 
 /* TODO: use a hash table or sorted list */
 struct vrdma_indirect_mkey_list_head vrdma_indirect_mkey_list =
@@ -316,6 +317,17 @@ void vrdma_reg_mr_create_attr(struct vrdma_create_mr_req *mr_req,
 	/*TODO use mr_type and access_flag in future. Not support in POC.*/
 }
 
+void spdk_vrdma_set_vkey_tv(void)
+{
+	clock_gettime(CLOCK_REALTIME, &g_last_vkey_tv);
+}
+
+static void
+spdk_vrdma_vkey_set_ts(uint64_t *ts)
+{
+	*ts = spdk_get_ticks() + VRDMA_VKEY_AGE_TIMEOUT_US * spdk_get_ticks_hz() / (1000 * 1000);
+}
+
 static void vrdma_del_r_vkey_tbl_from_list(struct vrdma_r_vkey *r_vkey)
 {
 	LIST_REMOVE(r_vkey, entry);
@@ -341,7 +353,7 @@ void vrdma_add_r_vkey_list(uint64_t gid_ip, uint32_t vkey_idx,
 	LIST_FOREACH_SAFE(r_vkey, &vrdma_r_vkey_list, entry, vkey_tmp) {
 		if (r_vkey->vkey_tbl.gid_ip == gid_ip) {
 			r_vkey->vkey_tbl.vkey[vkey_idx].mkey = vkey->mkey;
-			r_vkey->vkey_tbl.vkey[vkey_idx].ts = vkey->ts;
+			spdk_vrdma_vkey_set_ts(&r_vkey->vkey_tbl.vkey[vkey_idx].ts);
 			return;
 		}
 	}
@@ -353,8 +365,37 @@ void vrdma_add_r_vkey_list(uint64_t gid_ip, uint32_t vkey_idx,
 	}
 	r_vkey->vkey_tbl.gid_ip = gid_ip;
 	r_vkey->vkey_tbl.vkey[vkey_idx].mkey = vkey->mkey;
-	r_vkey->vkey_tbl.vkey[vkey_idx].ts = vkey->ts;
+	spdk_vrdma_vkey_set_ts(&r_vkey->vkey_tbl.vkey[vkey_idx].ts);
 	LIST_INSERT_HEAD(&vrdma_r_vkey_list, r_vkey, entry);
+}
+
+void spdk_vrdma_vkey_age_progress(void)
+{
+	
+	struct vrdma_r_vkey *r_vkey, *vkey_tmp;
+	struct timespec vkey_tv;
+	uint32_t i;
+
+	clock_gettime(CLOCK_REALTIME, &vkey_tv);
+	if ((vkey_tv.tv_sec - g_last_vkey_tv.tv_sec) <= VRDMA_VKEY_PROGRESS_TIMEOUT_S)
+		return;
+
+	clock_gettime(CLOCK_REALTIME, &g_last_vkey_tv);
+	LIST_FOREACH_SAFE(r_vkey, &vrdma_r_vkey_list, entry, vkey_tmp) {
+		for (i = 0; i < VRDMA_DEV_MAX_MR; i++) {
+			if (!r_vkey->vkey_tbl.vkey[i].mkey)
+				continue;
+			if (r_vkey->vkey_tbl.vkey[i].ts) {
+				if (r_vkey->vkey_tbl.vkey[i].ts < spdk_get_ticks()) {
+					/* vkey age timeout */
+					spdk_vrdma_clear_vqp_vkey(r_vkey->vkey_tbl.gid_ip, i);
+					vrdma_del_r_vkey_tbl_from_list(r_vkey);
+				}
+			} else {
+				spdk_vrdma_vkey_set_ts(&r_vkey->vkey_tbl.vkey[i].ts);
+			}
+		}
+	}
 }
 
 static int vrdma_query_remote_mkey_by_rpc(uint64_t gid_ip,
@@ -377,21 +418,26 @@ static int vrdma_query_remote_mkey_by_rpc(uint64_t gid_ip,
 }
 
 uint32_t
-vrdma_find_r_mkey(uint64_t gid_ip, uint32_t vkey_idx, uint32_t rvqpn, bool *wait_mkey)
+vrdma_find_r_mkey(struct spdk_vrdma_qp *vqp, uint32_t vkey_idx,
+			bool *wait_mkey)
 {
 	struct vrdma_r_vkey *r_vkey, *vkey_tmp;
 
 	if (vkey_idx >= VRDMA_DEV_MAX_MR)
 		return 0;
 	LIST_FOREACH_SAFE(r_vkey, &vrdma_r_vkey_list, entry, vkey_tmp) {
-		if (r_vkey->vkey_tbl.gid_ip == gid_ip) {
-			if (r_vkey->vkey_tbl.vkey[vkey_idx].mkey)
+		if (r_vkey->vkey_tbl.gid_ip == vqp->remote_gid_ip) {
+			if (r_vkey->vkey_tbl.vkey[vkey_idx].mkey) {
+				r_vkey->vkey_tbl.vkey[vkey_idx].ts = 0;
+				vqp->last_r_mkey_ts = &r_vkey->vkey_tbl.vkey[vkey_idx].ts;
 				return r_vkey->vkey_tbl.vkey[vkey_idx].mkey;
+			}
 			break;
 		}
 	}
 	/* Send rpc to get remote mkey */
-	if (vrdma_query_remote_mkey_by_rpc(gid_ip, rvqpn, vkey_idx))
+	if (vrdma_query_remote_mkey_by_rpc(vqp->remote_gid_ip,
+				vqp->dest_qp_num, vkey_idx))
 		return 0;
 	/* Waiting for rpc resp */
 	*wait_mkey = true;

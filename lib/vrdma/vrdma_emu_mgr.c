@@ -461,3 +461,27 @@ err:
     SPDK_ERRLOG("failed to create VRDMA controller");
     return -1;
 }
+
+void spdk_vrdma_clear_vqp_vkey(uint64_t gid_ip, uint32_t vkey_idx)
+{
+	struct spdk_vrdma_qp *vqp_tmp, *vqp = NULL;
+    struct spdk_emu_ctx *ctx;
+	struct vrdma_ctrl *ctrl;
+
+    pthread_mutex_lock(&spdk_emu_list_lock);
+    LIST_FOREACH(ctx, &spdk_emu_list, entry) {
+        if (ctx->spci->type != SNAP_VRDMA_PF)
+            continue;
+		ctrl = ctx->ctrl;
+        LIST_FOREACH_SAFE(vqp, &ctrl->vdev->vqp_list, entry, vqp_tmp) {
+			if (vqp->remote_gid_ip != gid_ip ||
+				vqp->wait_vkey != vkey_idx ||
+				!vqp->last_r_mkey)
+				continue;
+			vqp->wait_vkey = 0;
+			vqp->last_r_mkey = 0;
+			vqp->last_r_mkey_ts = NULL;
+		}
+    }
+    pthread_mutex_unlock(&spdk_emu_list_lock);
+}

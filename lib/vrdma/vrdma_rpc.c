@@ -769,7 +769,6 @@ spdk_vrdma_client_mkey_resp_handler(struct spdk_vrdma_rpc_client *client,
         goto free_attr;
     }
     r_vkey.mkey = attr->mkey;
-    r_vkey.ts = spdk_get_ticks();
     vrdma_add_r_vkey_list(attr->gid_ip, attr->vkey, &r_vkey);
 free_attr:
     request_id = attr->request_id;

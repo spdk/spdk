@@ -950,8 +950,7 @@ static int vrdma_rw_wqe_submit(struct vrdma_send_wqe *wqe,
 	if (vqp->wait_vkey == wqe->rdma_rw.rkey && vqp->last_r_mkey)
 		r_mkey = vqp->last_r_mkey;
 	else
-		r_mkey = vrdma_find_r_mkey(vqp->remote_gid_ip,
-					wqe->rdma_rw.rkey, vqp->dest_qp_num, &wait_mkey);
+		r_mkey = vrdma_find_r_mkey(vqp, wqe->rdma_rw.rkey, &wait_mkey);
 	if (wait_mkey) {
 		vqp->sm_state = VRDMA_QP_STATE_MKEY_WAIT;
 		vqp->wait_vkey = wqe->rdma_rw.rkey;
@@ -966,6 +965,7 @@ static int vrdma_rw_wqe_submit(struct vrdma_send_wqe *wqe,
 	}
 	vqp->wait_vkey = wqe->rdma_rw.rkey;
 	vqp->last_r_mkey = r_mkey;
+	*vqp->last_r_mkey_ts = 0;
 	vrdma_set_raddr_seg(rseg, (uintptr_t)wqe->rdma_rw.remote_addr, r_mkey);
 
 	seg  += sizeof(*rseg);
@@ -1010,9 +1010,11 @@ static int vrdma_atomic_wqe_submit(struct vrdma_send_wqe *wqe,
 	ds += sizeof(*ctrl) / 16;
 
 	rseg = (struct mlx5_wqe_raddr_seg *)(ctrl + 1);
-	/* rkey map to mkey */
-	r_mkey = vrdma_find_r_mkey(vqp->remote_gid_ip,
-					wqe->rdma_atomic.rkey, vqp->dest_qp_num, &wait_mkey);
+	/* Change rkey to mkey */
+	if (vqp->wait_vkey == wqe->rdma_atomic.rkey && vqp->last_r_mkey)
+		r_mkey = vqp->last_r_mkey;
+	else
+		r_mkey = vrdma_find_r_mkey(vqp, wqe->rdma_atomic.rkey, &wait_mkey);
 	if (wait_mkey) {
 		vqp->sm_state = VRDMA_QP_STATE_MKEY_WAIT;
 		vqp->wait_vkey = wqe->rdma_atomic.rkey;
@@ -1025,6 +1027,9 @@ static int vrdma_atomic_wqe_submit(struct vrdma_send_wqe *wqe,
 		vrdma_vqp_mkey_err_cqe(vqp, IBV_WC_REM_INV_REQ_ERR, offset);
 		return 0;
 	}
+	vqp->wait_vkey = wqe->rdma_atomic.rkey;
+	vqp->last_r_mkey = r_mkey;
+	*vqp->last_r_mkey_ts = 0;
 	vrdma_set_raddr_seg(rseg, (uintptr_t)wqe->rdma_atomic.remote_addr, r_mkey);
 	seg += sizeof(*rseg);
 
