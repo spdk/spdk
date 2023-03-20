@@ -71,6 +71,7 @@ capture_any(const struct spdk_json_val *val, void *out)
 
 static const struct spdk_json_object_decoder jsonrpc_response_decoders[] = {
 	{"jsonrpc", offsetof(struct spdk_jsonrpc_client_response, version), capture_version},
+	{"method", offsetof(struct spdk_jsonrpc_client_response, method), capture_any},
 	{"id", offsetof(struct spdk_jsonrpc_client_response, id), capture_id, true},
 	{"result", offsetof(struct spdk_jsonrpc_client_response, result), capture_any, true},
 	{"error", offsetof(struct spdk_jsonrpc_client_response, error), capture_any, true},

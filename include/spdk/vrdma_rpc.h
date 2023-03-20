@@ -45,12 +45,7 @@
 #define VRDMA_RPC_UNIX_PATH_MAX	108
 #define VRDMA_RPC_LISTEN_LOCK_PATH_SIZE (VRDMA_RPC_UNIX_PATH_MAX + sizeof(".lock"))
 #define VRDMA_RPC_IP_LEN 32
-
-struct spdk_vrdma_rpc_method {
-	const char *name;
-	spdk_rpc_method_handler func;
-	SLIST_ENTRY(spdk_vrdma_rpc_method) slist;
-};
+#define VRDMA_RPC_MKEY_TIMEOUT_S  (2U) /* 2s */
 
 struct spdk_jsonrpc_client_request {
 	/* Total space allocated for send_buf */
@@ -71,6 +66,13 @@ struct spdk_jsonrpc_client_request {
 struct spdk_vrdma_rpc_client;
 typedef void (*vrdma_client_resp_handler)(struct spdk_vrdma_rpc_client *,
 				    struct spdk_jsonrpc_client_response *);
+
+struct spdk_vrdma_rpc_method {
+	const char *name;
+	spdk_rpc_method_handler func;
+	vrdma_client_resp_handler resp_cb;
+	SLIST_ENTRY(spdk_vrdma_rpc_method) slist;
+};
 
 struct spdk_vrdma_rpc_client {
 	struct spdk_jsonrpc_client *client_conn;
@@ -146,6 +148,20 @@ struct spdk_vrdma_rpc_qp_attr {
     uint32_t qp_state;
 };
 
-int spdk_vrdma_rpc_send_qp_msg(struct vrdma_ctrl *ctrl, const char *addr,
+struct spdk_vrdma_rpc_mkey_attr {
+	uint32_t request_id;
+	uint64_t gid_ip;
+    uint32_t vqpn;
+    uint32_t vkey;
+	uint32_t mkey;
+};
+
+struct spdk_vrdma_rpc_mkey_msg {
+	struct spdk_vrdma_rpc_mkey_attr mkey_attr;
+};
+
+int spdk_vrdma_rpc_send_qp_msg(const char *addr,
                 struct spdk_vrdma_rpc_qp_msg *msg);
+int spdk_vrdma_rpc_send_mkey_msg(const char *addr,
+                struct spdk_vrdma_rpc_mkey_msg *msg);
 #endif

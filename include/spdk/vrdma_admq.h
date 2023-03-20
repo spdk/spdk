@@ -105,24 +105,6 @@ struct vrdma_query_device_req {
 enum vrdma_device_cap_flags {
 	VRDMA_DEVICE_RC_RNR_NAK_GEN		= (1 << 0),
 };
-#define VRDMA_MAX_PD_NUM     0x40000
-#define VRDMA_DEV_MAX_PD     0x2000
-#define VRDMA_MAX_MR_NUM     0x40000
-#define VRDMA_MAX_AH_NUM     0x40000
-#define VRDMA_DEV_MAX_AH     0x2000
-#define VRDMA_DEV_MAX_MR     0x2000
-#define VRDMA_MAX_QP_NUM     0x40000
-#define VRDMA_DEV_MAX_QP     0x2000
-#define VRDMA_DEV_MAX_QP_SZ  0x2000000
-#define VRDMA_NORMAL_VQP_START_IDX  0x2
-#define VRDMA_MAX_CQ_NUM     0x40000
-#define VRDMA_DEV_MAX_CQ     0x2000
-#define VRDMA_MAX_EQ_NUM     0x40000
-#define VRDMA_DEV_MAX_EQ     0x2000
-#define VRDMA_DEV_MAX_CQ_DP  0x20000
-#define VRDMA_DEV_MAX_SQ_DP  0x2000
-#define VRDMA_DEV_MAX_RQ_DP  0x2000
-#define VRDMA_MAX_LOG_SQ_WQEBB_CNT 13 /* 8K */
 
 struct vrdma_query_device_resp {
 	uint32_t err_code:8;
@@ -602,35 +584,14 @@ struct vrdma_state_machine {
 	uint16_t sme;
 };
 
-struct vrdma_vapa_map {
-	uint64_t vaddr;
-	uint64_t paddr;
-	uint32_t size;
-};
-struct vrdma_indirect_mkey {
-	LIST_ENTRY(vrdma_indirect_mkey) entry;
-	uint32_t indirect_mkey;
-	uint32_t crossing_mkey;
-	uint32_t num_sge;
-	struct vrdma_vapa_map vapa[MAX_VRDMA_MR_SGE_NUM];
-};
-LIST_HEAD(vrdma_indirect_mkey_list_head, vrdma_indirect_mkey);
-extern struct vrdma_indirect_mkey_list_head vrdma_indirect_mkey_list;
-
 struct vrdma_ctrl;
 
-void spdk_vrdma_disable_indirect_mkey_map(void);
-void spdk_vrdma_enable_indirect_mkey_map(void);
-void vrdma_del_indirect_mkey_list(void);
-void vrdma_get_va_crossing_mkey_by_key(uint32_t *mkey, uint64_t *va2pa);
 int spdk_vrdma_init_all_id_pool(struct spdk_vrdma_dev *vdev);
 int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe);
 int spdk_vrdma_adminq_resource_init(void);
 void spdk_vrdma_adminq_resource_destory(struct vrdma_ctrl *ctrl);
 void vrdma_aq_sm_dma_cb(struct snap_dma_completion *self, int status);
-void vrdma_destroy_remote_mkey(struct vrdma_ctrl *ctrl,
-					struct spdk_vrdma_mr *vmr);
 struct spdk_vrdma_pd *
 find_spdk_vrdma_pd_by_idx(struct vrdma_ctrl *ctrl, uint32_t pd_idx);
 struct spdk_vrdma_mr *

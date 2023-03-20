@@ -54,6 +54,7 @@ struct vrdma_dev_mac {
     LIST_ENTRY(vrdma_dev_mac) entry;
     char pci_number[VRDMA_PCI_NAME_MAXLEN];
     uint64_t mac;
+    char sf_name[VRDMA_DEV_NAME_LEN];
 };
 LIST_HEAD(vrdma_dev_mac_list_head, vrdma_dev_mac);
 extern struct vrdma_dev_mac_list_head vrdma_dev_mac_list;
@@ -72,6 +73,7 @@ struct vrdma_ctrl {
     struct ibv_mr *mr;
     struct vrdma_admin_sw_qp sw_qp;
     struct snap_vrdma_ctrl *sctrl;
+    struct snap_cross_mkey *crossing_mkey;
 	uint32_t dpa_enabled:1;
     uint16_t sf_vhca_id;
 	void *dpa_ctx;
@@ -94,9 +96,7 @@ struct vrdma_ctrl_init_attr {
     bool suspended;
 };
 
-void vrdma_dev_mac_add(char *pci_number, uint64_t mac);
-struct vrdma_dev_mac *
-vrdma_find_dev_mac_by_pci(char *pci_number);
+void vrdma_dev_mac_add(char *pci_number, uint64_t mac, char *sf_name);
 void vrdma_dev_mac_list_del(void);
 
 int vrdma_ctrl_adminq_progress(void *ctrl);

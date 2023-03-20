@@ -70,17 +70,17 @@ How to run
 ==================
 #reset config on host
 
-mlxconfig -d /dev/mst/mt41686_pciconf0 r
+mlxconfig -d /dev/mst/mt41692_pciconf0 r
 
 #reset config on ARM
 
-mlxconfig -d /dev/mst/mt41686_pciconf0 r
+mlxconfig -d /dev/mst/mt41692_pciconf0 r
 
-mlxconfig -d /dev/mst/mt41686_pciconf0 s PF_BAR2_ENABLE=0 PER_PF_NUM_SF=1 PF_TOTAL_SF=10 PF_SF_BAR_SIZE=10
+mlxconfig -d /dev/mst/mt41692_pciconf0 s PF_BAR2_ENABLE=0 PER_PF_NUM_SF=1 PF_TOTAL_SF=10 PF_SF_BAR_SIZE=10
 
-mlxconfig -d /dev/mst/mt41686_pciconf0 s LINK_TYPE_P1=2
+mlxconfig -d /dev/mst/mt41692_pciconf0 s LINK_TYPE_P1=2
 
-mlxconfig -d /dev/mst/mt41686_pciconf0 s LINK_TYPE_P2=2
+mlxconfig -d /dev/mst/mt41692_pciconf0 s LINK_TYPE_P2=2
 
 #Note: need FW reset to let NVCONFIG work
 
@@ -98,15 +98,15 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/snap/lib #will be deleted thi
 
 echo 4096 > /sys/devices/system/node/node0/hugepages/hugepages-2048kB/nr_hugepages
 
-<spdk_vrdma_view>./app/spdk_vrdma/spdk_vrdma -v [dev_pci_number]:[vrdma_dev_mac]
+<spdk_vrdma_view>./app/spdk_vrdma/spdk_vrdma -v [dev_pci_number]:[sf_name]:[vrdma_dev_mac]
 
 #Note:Must run spdk on ARM before dpdk on host to make sure device reset successfully.
 
 #It supports configure vrdma device mac option when app start.
 
-<spdk_vrdma_view>./app/spdk_vrdma/spdk_vrdma -v [dev_pci_number]:[vrdma_dev_mac]
+<spdk_vrdma_view>./app/spdk_vrdma/spdk_vrdma -v [dev_pci_number]:[sf_name]:[vrdma_dev_mac]
 
-<spdk_vrdma_view>./app/spdk_vrdma/spdk_vrdma  -v [5e:00.3]:[11:22:33:44:55:66] -v [5e:00.4]:[66:77:88:99:aa:cc]
+<spdk_vrdma_view>./app/spdk_vrdma/spdk_vrdma -v [5e:00.3]:[mlx5_2]:[11:22:33:44:55:66] -v [5e:00.4]:[mlx5_3]:[66:77:88:99:aa:cc]
 
 #Create SF interface in ARM, following cmd is suitable for mlnx-sf 1.0 version
 

@@ -50,8 +50,29 @@
 #define MAX_VRDMA_MR_SGE_NUM 8
 #define VRDMA_DEV_NAME_LEN 32
 
+#define VRDMA_MAX_PD_NUM     0x40000
+#define VRDMA_DEV_MAX_PD     0x2000
+#define VRDMA_MAX_MR_NUM     0x40000
+#define VRDMA_MR_START_IDX   0x1
+#define VRDMA_MAX_AH_NUM     0x40000
+#define VRDMA_DEV_MAX_AH     0x2000
+#define VRDMA_DEV_MAX_MR     0x2000
+#define VRDMA_MAX_QP_NUM     0x40000
+#define VRDMA_DEV_MAX_QP     0x2000
+#define VRDMA_DEV_MAX_QP_SZ  0x2000000
+#define VRDMA_NORMAL_VQP_START_IDX  0x2
+#define VRDMA_MAX_CQ_NUM     0x40000
+#define VRDMA_DEV_MAX_CQ     0x2000
+#define VRDMA_MAX_EQ_NUM     0x40000
+#define VRDMA_DEV_MAX_EQ     0x2000
+#define VRDMA_DEV_MAX_CQ_DP  0x20000
+#define VRDMA_DEV_MAX_SQ_DP  0x2000
+#define VRDMA_DEV_MAX_RQ_DP  0x2000
+#define VRDMA_MAX_LOG_SQ_WQEBB_CNT 13 /* 8K */
+
 struct spdk_vrdma_sf {
 	char sf_name[VRDMA_DEV_NAME_LEN];
+	struct ibv_pd *sf_pd;
 	uint32_t mtu;
 	uint32_t gid_idx;
 	uint64_t remote_ip;
@@ -78,7 +99,6 @@ struct spdk_vrdma_pd {
     LIST_ENTRY(spdk_vrdma_pd) entry;
 	uint32_t pd_idx;
 	struct ibv_pd *ibpd;
-	struct snap_cross_mkey *crossing_mkey;
 	uint32_t ref_cnt;
 };
 
@@ -162,6 +182,7 @@ enum vrdma_qp_sm_state_type {
         VRDMA_QP_STATE_WQE_PARSE,
         VRDMA_QP_STATE_WQE_MAP_BACKEND,
         VRDMA_QP_STATE_WQE_SUBMIT,
+		VRDMA_QP_STATE_MKEY_WAIT,
         VRDMA_QP_STATE_POLL_CQ_CI,
         VRDMA_QP_STATE_GEN_COMP,
         VRDMA_QP_STATE_FATAL_ERR,
@@ -173,6 +194,7 @@ struct vrdma_qp_stats {
 	uint64_t sq_dma_rx_cnt;
 	uint64_t sq_wqe_fetched;
 	uint64_t sq_wqe_submitted;
+	uint64_t sq_wqe_mkey_invalid;
 	uint64_t sq_wqe_wr;
 	uint64_t sq_wqe_atomic;
 	uint64_t sq_wqe_ud;
@@ -221,6 +243,14 @@ enum {
 	VRDMA_SEND_ERR_CQE = 1,
 };
 
+struct vrdma_vkey_entry {
+	uint32_t mkey;
+	struct spdk_vrdma_pd *vpd;
+};
+struct vrdma_vkey_tbl {
+	struct vrdma_vkey_entry vkey[VRDMA_DEV_MAX_MR];
+};
+
 struct spdk_vrdma_qp {
 	LIST_ENTRY(spdk_vrdma_qp) entry;
 	uint32_t qp_idx;
@@ -229,6 +259,7 @@ struct spdk_vrdma_qp {
 	uint32_t rq_psn;
 	uint32_t sq_psn;
 	uint32_t dest_qp_num;
+	uint64_t remote_gid_ip;
 	uint32_t sip;
 	uint32_t dip;
 	uint32_t qkey;
@@ -245,6 +276,12 @@ struct spdk_vrdma_qp {
 	uint8_t	max_dest_rd_atomic;
 	uint32_t qdb_idx;	
 	uint32_t flags;
+	struct vrdma_vkey_tbl *l_vkey_tbl;
+	uint32_t wait_vkey;
+	uint32_t last_r_mkey;
+	uint32_t last_l_vkey;
+	uint32_t last_l_mkey;
+	struct timespec mkey_tv;
 	struct spdk_vrdma_pd *vpd;
 	struct spdk_vrdma_cq *rq_vcq;
 	struct spdk_vrdma_cq *sq_vcq;
@@ -265,6 +302,7 @@ struct spdk_vrdma_dev {
 	uint32_t devid; /*PF_id*/
 	char emu_name[MAX_VRDMA_DEV_LEN];
 	struct spdk_vrdma_sf vrdma_sf;
+	struct vrdma_vkey_tbl l_vkey_tbl;
 	struct ibv_device *emu_mgr;
 	struct spdk_bit_array *free_vpd_ids;
 	struct spdk_bit_array *free_vmr_ids;

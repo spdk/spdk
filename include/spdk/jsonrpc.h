@@ -69,6 +69,7 @@ struct spdk_jsonrpc_client_request;
 
 struct spdk_jsonrpc_client_response {
 	struct spdk_json_val *version;
+	struct spdk_json_val *method;
 	struct spdk_json_val *id;
 	struct spdk_json_val *result;
 	struct spdk_json_val *error;
@@ -189,6 +190,9 @@ int spdk_jsonrpc_conn_del_close_cb(struct spdk_jsonrpc_server_conn *conn,
  * \return Non-NULL pointer to JSON write context to write the response object to.
  */
 struct spdk_json_write_ctx *spdk_jsonrpc_begin_result(struct spdk_jsonrpc_request *request);
+
+struct spdk_json_write_ctx *
+spdk_jsonrpc_begin_result_with_method(struct spdk_jsonrpc_request *request, const char *method);
 
 /**
  * Complete and send a JSON-RPC response.
