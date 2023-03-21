@@ -202,6 +202,7 @@ struct rpc_thread_info {
 	char *name;
 	uint64_t id;
 	int core_num;
+	int core_idx;
 	char *cpumask;
 	uint64_t busy;
 	uint64_t last_busy;
@@ -651,9 +652,9 @@ subsort_threads(enum column_threads_type sort_column, const void *p1, const void
 		break;
 	case COL_THREADS_CPU_USAGE:
 		count1 = get_cpu_usage(thread_info1.busy - thread_info1.last_busy,
-				       g_cores_info[thread_info1.core_num].busy + g_cores_info[thread_info1.core_num].idle);
+				       g_cores_info[thread_info1.core_idx].busy + g_cores_info[thread_info1.core_idx].idle);
 		count2 = get_cpu_usage(thread_info2.busy - thread_info2.last_busy,
-				       g_cores_info[thread_info2.core_num].busy + g_cores_info[thread_info2.core_num].idle);
+				       g_cores_info[thread_info2.core_idx].busy + g_cores_info[thread_info2.core_idx].idle);
 		break;
 	case COL_THREADS_NONE:
 	default:
@@ -767,6 +768,7 @@ get_thread_data(void)
 				thread = &g_threads_info[k];
 				if (thread->id == core_info->threads.thread[j].id) {
 					thread->core_num = core_info->lcore;
+					thread->core_idx = i;
 					break;
 				}
 			}
@@ -1313,7 +1315,7 @@ draw_thread_tab_row(uint64_t current_row, uint8_t item_index)
 {
 	struct col_desc *col_desc = g_col_desc[THREADS_TAB];
 	uint16_t col = TABS_DATA_START_COL;
-	int core_num, color_attr = COLOR_PAIR(6);
+	int core_idx, color_attr = COLOR_PAIR(6);
 	char pollers_number[MAX_POLLER_COUNT_STR_LEN], idle_time[MAX_TIME_STR_LEN],
 	     busy_time[MAX_TIME_STR_LEN], core_str[MAX_CORE_MASK_STR_LEN],
 	     cpu_usage[MAX_CPU_STR_LEN], *status_str;
@@ -1383,10 +1385,10 @@ draw_thread_tab_row(uint64_t current_row, uint8_t item_index)
 	}
 
 	if (!col_desc[COL_THREADS_CPU_USAGE].disabled) {
-		core_num = g_threads_info[current_row].core_num;
-		if (core_num >= 0 && core_num < RPC_MAX_CORES) {
-			uint64_t core_busy_period = g_cores_info[core_num].busy - g_cores_info[core_num].last_busy;
-			uint64_t core_idle_period = g_cores_info[core_num].idle - g_cores_info[core_num].last_idle;
+		core_idx = g_threads_info[current_row].core_idx;
+		if (core_idx >= 0 && core_idx < RPC_MAX_CORES) {
+			uint64_t core_busy_period = g_cores_info[core_idx].busy - g_cores_info[core_idx].last_busy;
+			uint64_t core_idle_period = g_cores_info[core_idx].idle - g_cores_info[core_idx].last_idle;
 			get_cpu_usage_str(busy_period, core_busy_period + core_idle_period, cpu_usage);
 		} else {
 			snprintf(cpu_usage, sizeof(cpu_usage), "n/a");
