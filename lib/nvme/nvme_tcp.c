@@ -20,6 +20,7 @@
 #include "spdk/string.h"
 #include "spdk/trace.h"
 #include "spdk/util.h"
+#include "spdk/nvmf.h"
 
 #include "spdk_internal/nvme_tcp.h"
 #include "spdk_internal/trace_defs.h"
@@ -46,6 +47,8 @@
 struct nvme_tcp_ctrlr {
 	struct spdk_nvme_ctrlr			ctrlr;
 	char					psk_identity[NVMF_PSK_IDENTITY_LEN];
+	uint8_t					psk[SPDK_TLS_PSK_MAX_LEN];
+	int					psk_size;
 };
 
 struct nvme_tcp_poll_group {
