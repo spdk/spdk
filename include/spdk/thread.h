@@ -108,29 +108,6 @@ typedef void (*spdk_thread_pass_msg)(spdk_msg_fn fn, void *ctx,
 typedef int (*spdk_poller_fn)(void *ctx);
 
 /**
- * Function to be called to start a poller for the thread.
- *
- * \param thread_ctx Context for the thread.
- * \param fn Callback function for a poller.
- * \param arg Argument passed to callback.
- * \param period_microseconds Polling period in microseconds.
- *
- * \return a pointer to the poller on success, or NULL on failure.
- */
-typedef struct spdk_poller *(*spdk_start_poller)(void *thread_ctx,
-		spdk_poller_fn fn,
-		void *arg,
-		uint64_t period_microseconds);
-
-/**
- * Function to be called to stop a poller.
- *
- * \param poller Poller to stop.
- * \param thread_ctx Context for the thread.
- */
-typedef void (*spdk_stop_poller)(struct spdk_poller *poller, void *thread_ctx);
-
-/**
  * Callback function to set poller into interrupt mode or back to poll mode.
  *
  * \param poller Poller to set interrupt or poll mode.
