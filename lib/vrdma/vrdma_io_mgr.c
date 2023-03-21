@@ -1346,7 +1346,7 @@ static bool vrdma_qp_wqe_sm_mkey_wait(struct spdk_vrdma_qp *vqp,
 
 	LIST_FOREACH_SAFE(r_vkey, &vrdma_r_vkey_list, entry, vkey_tmp) {
 		if (r_vkey->vkey_tbl.gid_ip == vqp->remote_gid_ip) {
-			if (r_vkey->vkey_tbl.vkey[vqp->wait_vkey].ts) {
+			if (r_vkey->vkey_tbl.vkey[vqp->wait_vkey].mkey) {
 				/* remote mkey found */
 				vqp->sq.comm.num_to_parse = vqp->qp_pi->pi.sq_pi - vqp->sq.comm.pre_pi;
 				vqp->sm_state = VRDMA_QP_STATE_GEN_COMP;
