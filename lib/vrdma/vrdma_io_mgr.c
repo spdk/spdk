@@ -977,6 +977,10 @@ static int vrdma_rw_wqe_submit(struct vrdma_send_wqe *wqe,
 	vrdma_set_ctrl_seg(ctrl, bk_qp->hw_qp.sq.pi, opcode, 0, bk_qp->hw_qp.qp_num,
 					fm_ce_se, ds, sig, imm);
 #ifdef WQE_DBG
+	printf("Dump wqe vqp_idx %d, r_vkey_idx 0x%x "
+			"r_mkey 0x%x l_vkey_idx 0x%x l_mkey 0x%x\n",
+			vqp->qp_idx, vqp->wait_vkey, vqp->last_r_mkey,
+			vqp->last_l_vkey, vqp->last_l_mkey);
 	idx = bk_qp->hw_qp.sq.pi & (bk_qp->hw_qp.sq.wqe_cnt - 1);
 	vrdma_dump_wqe(idx, ds, bk_qp);
 #endif
@@ -1697,6 +1701,8 @@ void vrdma_dump_vqp_stats(struct vrdma_ctrl *ctrl,
 	printf("sq wqe map latency %-15lu\n", vqp->stats.latency_map);
 	printf("sq wqe submit latency %-15lu\n", vqp->stats.latency_submit);
 	printf("sq wqe total latency %-15lu\n", vqp->stats.latency_one_total);
+	printf("r_vkey_idx 0x%x last_r_mkey 0x%x\n", vqp->wait_vkey, vqp->last_r_mkey);
+	printf("l_vkey_idx 0x%x last_l_mkey 0x%x\n", vqp->last_l_vkey, vqp->last_l_mkey);
 
 	printf("\n========= dma qp(snap_queue) debug info =========\n");
 	if (vqp->snap_queue && vqp->snap_queue->dpa_vq && vqp->snap_queue->dma_q) {

@@ -328,6 +328,12 @@ spdk_vrdma_vkey_set_ts(uint64_t *ts)
 	*ts = spdk_get_ticks() + VRDMA_VKEY_AGE_TIMEOUT_US * spdk_get_ticks_hz() / (1000 * 1000);
 }
 
+static void vrdma_del_r_vkey_entry(struct vrdma_r_vkey *r_vkey, uint32_t vkey_idx)
+{
+	r_vkey->vkey_tbl.vkey[vkey_idx].mkey = 0;
+	r_vkey->vkey_tbl.vkey[vkey_idx].ts = 0;
+}
+
 static void vrdma_del_r_vkey_tbl_from_list(struct vrdma_r_vkey *r_vkey)
 {
 	LIST_REMOVE(r_vkey, entry);
@@ -354,6 +360,8 @@ void vrdma_add_r_vkey_list(uint64_t gid_ip, uint32_t vkey_idx,
 		if (r_vkey->vkey_tbl.gid_ip == gid_ip) {
 			r_vkey->vkey_tbl.vkey[vkey_idx].mkey = vkey->mkey;
 			spdk_vrdma_vkey_set_ts(&r_vkey->vkey_tbl.vkey[vkey_idx].ts);
+			SPDK_NOTICELOG("Add vkey entry gid_ip 0x%lx vkey 0x%x mkey 0x%x ts 0x%lx\n",
+					gid_ip, vkey_idx, vkey->mkey, r_vkey->vkey_tbl.vkey[vkey_idx].ts);
 			return;
 		}
 	}
@@ -367,6 +375,8 @@ void vrdma_add_r_vkey_list(uint64_t gid_ip, uint32_t vkey_idx,
 	r_vkey->vkey_tbl.vkey[vkey_idx].mkey = vkey->mkey;
 	spdk_vrdma_vkey_set_ts(&r_vkey->vkey_tbl.vkey[vkey_idx].ts);
 	LIST_INSERT_HEAD(&vrdma_r_vkey_list, r_vkey, entry);
+	SPDK_NOTICELOG("Add vkey entry gid_ip 0x%lx vkey 0x%x mkey 0x%x ts 0x%lx\n",
+			gid_ip, vkey_idx, vkey->mkey, r_vkey->vkey_tbl.vkey[vkey_idx].ts);
 }
 
 void spdk_vrdma_vkey_age_progress(void)
@@ -374,7 +384,7 @@ void spdk_vrdma_vkey_age_progress(void)
 	
 	struct vrdma_r_vkey *r_vkey, *vkey_tmp;
 	struct timespec vkey_tv;
-	uint32_t i;
+	uint32_t i, count;
 
 	clock_gettime(CLOCK_REALTIME, &vkey_tv);
 	if ((vkey_tv.tv_sec - g_last_vkey_tv.tv_sec) <= VRDMA_VKEY_PROGRESS_TIMEOUT_S)
@@ -382,18 +392,29 @@ void spdk_vrdma_vkey_age_progress(void)
 
 	clock_gettime(CLOCK_REALTIME, &g_last_vkey_tv);
 	LIST_FOREACH_SAFE(r_vkey, &vrdma_r_vkey_list, entry, vkey_tmp) {
+		count = 0;
 		for (i = 0; i < VRDMA_DEV_MAX_MR; i++) {
 			if (!r_vkey->vkey_tbl.vkey[i].mkey)
 				continue;
+			count++;
 			if (r_vkey->vkey_tbl.vkey[i].ts) {
 				if (r_vkey->vkey_tbl.vkey[i].ts < spdk_get_ticks()) {
 					/* vkey age timeout */
+					SPDK_NOTICELOG("Del vkey entry for age timeout: gid_ip 0x%lx "
+					"vkey_idx 0x%x mkey 0x%x ts 0x%lx current ts 0x%lx entry count %d\n",
+					r_vkey->vkey_tbl.gid_ip, i, r_vkey->vkey_tbl.vkey[i].mkey,
+					r_vkey->vkey_tbl.vkey[i].ts, spdk_get_ticks(), count);
 					spdk_vrdma_clear_vqp_vkey(r_vkey->vkey_tbl.gid_ip, i);
-					vrdma_del_r_vkey_tbl_from_list(r_vkey);
+					vrdma_del_r_vkey_entry(r_vkey, i);
 				}
 			} else {
 				spdk_vrdma_vkey_set_ts(&r_vkey->vkey_tbl.vkey[i].ts);
 			}
+		}
+		if (!count) {
+			SPDK_NOTICELOG("Del vkey table (gid_ip 0x%lx) for age timeout.\n",
+					r_vkey->vkey_tbl.gid_ip);
+			vrdma_del_r_vkey_tbl_from_list(r_vkey);
 		}
 	}
 }
