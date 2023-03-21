@@ -65,6 +65,7 @@ __attribute__((unused)) = {
 
 struct ublk_io {
 	void			*payload;
+	void			*mpool_entry;
 	uint32_t		payload_size;
 	uint32_t		cmd_op;
 	int32_t			result;
@@ -1262,8 +1263,7 @@ ublk_ios_fini(struct spdk_ublk_dev *ublk)
 
 		for (i = 0; i < q->q_depth; i++) {
 			if (q->ios[i].payload) {
-				spdk_mempool_put(ublk->io_buf_pool, q->ios[i].payload);
-				q->ios[i].payload = NULL;
+				spdk_mempool_put(ublk->io_buf_pool, q->ios[i].mpool_entry);
 			}
 		}
 		free(q->ios);
@@ -1286,8 +1286,8 @@ ublk_ios_init(struct spdk_ublk_dev *ublk)
 	/* Create a mempool to allocate buf for each io */
 	ublk->io_buf_pool = spdk_mempool_create(mempool_name,
 						ublk->num_queues * ublk->queue_depth,
-						UBLK_IO_MAX_BYTES,
-						0,
+						UBLK_IO_MAX_BYTES + 4096,
+						SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 						SPDK_ENV_SOCKET_ID_ANY);
 	if (ublk->io_buf_pool == NULL) {
 		rc = -ENOMEM;
@@ -1311,7 +1311,9 @@ ublk_ios_init(struct spdk_ublk_dev *ublk)
 		}
 		for (j = 0; j < q->q_depth; j++) {
 			q->ios[j].q = q;
-			q->ios[j].payload = spdk_mempool_get(ublk->io_buf_pool);
+			q->ios[j].mpool_entry = spdk_mempool_get(ublk->io_buf_pool);
+			q->ios[j].payload = (void *)(uintptr_t)SPDK_ALIGN_CEIL((uint64_t)(uintptr_t)q->ios[j].mpool_entry,
+					    4096ULL);
 		}
 	}
 
