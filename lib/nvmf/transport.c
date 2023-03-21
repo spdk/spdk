@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2018-2019, 2021 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -469,6 +470,14 @@ nvmf_stop_listen_fini(struct spdk_io_channel_iter *i, int status)
 	free(ctx);
 }
 
+static void nvmf_stop_listen_disconnect_qpairs(struct spdk_io_channel_iter *i);
+
+static void
+nvmf_stop_listen_disconnect_qpairs_msg(void *ctx)
+{
+	nvmf_stop_listen_disconnect_qpairs((struct spdk_io_channel_iter *)ctx);
+}
+
 static void
 nvmf_stop_listen_disconnect_qpairs(struct spdk_io_channel_iter *i)
 {
@@ -477,6 +486,7 @@ nvmf_stop_listen_disconnect_qpairs(struct spdk_io_channel_iter *i)
 	struct spdk_io_channel *ch;
 	struct spdk_nvmf_qpair *qpair, *tmp_qpair;
 	struct spdk_nvme_transport_id tmp_trid;
+	bool qpair_found = false;
 
 	ctx = spdk_io_channel_iter_get_ctx(i);
 	ch = spdk_io_channel_iter_get_channel(i);
@@ -492,9 +502,15 @@ nvmf_stop_listen_disconnect_qpairs(struct spdk_io_channel_iter *i)
 			if (ctx->subsystem == NULL || qpair->ctrlr == NULL ||
 			    ctx->subsystem == qpair->ctrlr->subsys) {
 				spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+				qpair_found = true;
 			}
 		}
 	}
+	if (qpair_found) {
+		spdk_thread_send_msg(spdk_get_thread(), nvmf_stop_listen_disconnect_qpairs_msg, i);
+		return;
+	}
+
 	spdk_for_each_channel_continue(i, 0);
 }
 
