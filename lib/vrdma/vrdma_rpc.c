@@ -1304,6 +1304,10 @@ spdk_vrdma_rpc_vqp_info_json(struct vrdma_ctrl *ctrl,
 	spdk_json_write_named_uint64(w, "sq wqe map latency", vqp->stats.latency_map);
 	spdk_json_write_named_uint64(w, "sq wqe submit latency", vqp->stats.latency_submit);
 	spdk_json_write_named_uint64(w, "sq wqe total latency", vqp->stats.latency_one_total);
+    spdk_json_write_named_uint32(w, "last remote vkey_idx", vqp->wait_vkey);
+    spdk_json_write_named_uint32(w, "last remote mkey", vqp->last_r_mkey);
+    spdk_json_write_named_uint32(w, "last local vkey_idx", vqp->last_l_vkey);
+    spdk_json_write_named_uint32(w, "last local mkey", vqp->last_l_mkey);
     if (vqp->bk_qp) {
 	    spdk_json_write_named_uint32(w, "msq pi", vqp->bk_qp->bk_qp.hw_qp.sq.pi);
 	    spdk_json_write_named_uint32(w, "msq dbred pi", vqp->stats.msq_dbred_pi);
