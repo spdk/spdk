@@ -45,6 +45,7 @@
 /* NVMe TCP transport extensions for spdk_nvme_ctrlr */
 struct nvme_tcp_ctrlr {
 	struct spdk_nvme_ctrlr			ctrlr;
+	char					psk_identity[NVMF_PSK_IDENTITY_LEN];
 };
 
 struct nvme_tcp_poll_group {
