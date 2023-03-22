@@ -283,13 +283,10 @@ test_error_paths(void)
 
 	/* test error returned by accel fw */
 	MOCK_SET(spdk_accel_submit_encrypt, -ENOMEM);
+	g_completion_called = false;
 	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
-	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
-	CU_ASSERT(g_io_ctx->bdev_io_wait.bdev == &g_crypto_bdev.crypto_bdev);
-	CU_ASSERT(g_io_ctx->bdev_io_wait.cb_fn == vbdev_crypto_resubmit_io);
-	CU_ASSERT(g_io_ctx->bdev_io_wait.cb_arg == g_bdev_io);
-	CU_ASSERT(g_io_ctx->resubmit_state == CRYPTO_IO_NEW);
-	memset(&g_io_ctx->bdev_io_wait, 0, sizeof(g_io_ctx->bdev_io_wait));
+	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NOMEM);
+	CU_ASSERT(g_completion_called);
 
 	MOCK_SET(spdk_accel_submit_encrypt, -EINVAL);
 	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
@@ -365,15 +362,13 @@ test_error_paths(void)
 	/* test error returned by accel fw */
 	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	MOCK_SET(spdk_accel_submit_decrypt, -ENOMEM);
+	g_completion_called = false;
 	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
 	poll_threads();
-	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
-	CU_ASSERT(g_io_ctx->bdev_io_wait.bdev == &g_crypto_bdev.crypto_bdev);
-	CU_ASSERT(g_io_ctx->bdev_io_wait.cb_fn == vbdev_crypto_resubmit_io);
-	CU_ASSERT(g_io_ctx->bdev_io_wait.cb_arg == g_bdev_io);
-	CU_ASSERT(g_io_ctx->resubmit_state == CRYPTO_IO_READ_DONE);
-	memset(&g_io_ctx->bdev_io_wait, 0, sizeof(g_io_ctx->bdev_io_wait));
+	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NOMEM);
+	CU_ASSERT(g_completion_called);
 	MOCK_CLEAR(spdk_accel_submit_decrypt);
+	g_completion_called = false;
 
 	/* test error returned in accel cpl */
 	ut_spdk_accel_submit_decrypt_cb_rc = -EINVAL;

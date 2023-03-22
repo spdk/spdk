@@ -282,8 +282,8 @@ _complete_internal_read(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 		} else {
 			if (rc == -ENOMEM) {
 				SPDK_DEBUGLOG(vbdev_crypto, "No memory, queue the IO.\n");
-				/* We will repeat crypto operation later */
-				vbdev_crypto_queue_io(orig_io, CRYPTO_IO_READ_DONE);
+				spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_NOMEM);
+				spdk_bdev_free_io(bdev_io);
 				return;
 			} else {
 				SPDK_ERRLOG("Failed to decrypt, rc %d\n", rc);
@@ -393,7 +393,7 @@ crypto_write_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 		spdk_bdev_io_put_aux_buf(bdev_io, aux_buf);
 		if (rc == -ENOMEM) {
 			SPDK_DEBUGLOG(vbdev_crypto, "No memory, queue the IO.\n");
-			vbdev_crypto_queue_io(bdev_io, CRYPTO_IO_NEW);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
 		} else {
 			SPDK_ERRLOG("Failed to submit crypto operation!\n");
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
