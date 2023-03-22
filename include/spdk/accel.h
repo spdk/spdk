@@ -646,6 +646,12 @@ struct spdk_accel_opts {
 	uint32_t	small_cache_size;
 	/** Size of the large iobuf cache */
 	uint32_t	large_cache_size;
+	/** Maximum number of tasks per IO channel */
+	uint32_t	task_count;
+	/** Maximum number of sequences per IO channel */
+	uint32_t	sequence_count;
+	/** Maximum number of accel buffers per IO channel */
+	uint32_t	buf_count;
 } __attribute__((packed));
 
 /**

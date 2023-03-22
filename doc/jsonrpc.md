@@ -1954,6 +1954,9 @@ Name                    | Optional | Type        | Description
 ----------------------- |----------| ----------- | -----------------
 small_cache_size        | Optional | number      | Size of the small iobuf cache
 large_cache_size        | Optional | number      | Size of the large iobuf cache
+task_count              | Optional | number      | Maximum number of tasks per IO channel
+sequence_count          | Optional | number      | Maximum number of sequences per IO channel
+buf_count               | Optional | number      | Maximum number of accel buffers per IO channel
 
 #### Example
 

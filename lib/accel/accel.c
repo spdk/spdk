@@ -65,6 +65,9 @@ static struct spdk_accel_driver *g_accel_driver;
 static struct spdk_accel_opts g_opts = {
 	.small_cache_size = ACCEL_SMALL_CACHE_SIZE,
 	.large_cache_size = ACCEL_LARGE_CACHE_SIZE,
+	.task_count = MAX_TASKS_PER_CHANNEL,
+	.sequence_count = MAX_TASKS_PER_CHANNEL,
+	.buf_count = MAX_TASKS_PER_CHANNEL,
 };
 static struct accel_stats g_stats;
 static struct spdk_spinlock g_stats_lock;
@@ -2100,19 +2103,20 @@ accel_create_channel(void *io_device, void *ctx_buf)
 	struct spdk_accel_sequence *seq;
 	struct accel_buffer *buf;
 	uint8_t *task_mem;
-	int i = 0, j, rc;
+	uint32_t i = 0, j;
+	int rc;
 
-	accel_ch->task_pool_base = calloc(MAX_TASKS_PER_CHANNEL, g_max_accel_module_size);
+	accel_ch->task_pool_base = calloc(g_opts.task_count, g_max_accel_module_size);
 	if (accel_ch->task_pool_base == NULL) {
 		return -ENOMEM;
 	}
 
-	accel_ch->seq_pool_base = calloc(MAX_TASKS_PER_CHANNEL, sizeof(struct spdk_accel_sequence));
+	accel_ch->seq_pool_base = calloc(g_opts.sequence_count, sizeof(struct spdk_accel_sequence));
 	if (accel_ch->seq_pool_base == NULL) {
 		goto err;
 	}
 
-	accel_ch->buf_pool_base = calloc(MAX_TASKS_PER_CHANNEL, sizeof(struct accel_buffer));
+	accel_ch->buf_pool_base = calloc(g_opts.buf_count, sizeof(struct accel_buffer));
 	if (accel_ch->buf_pool_base == NULL) {
 		goto err;
 	}
@@ -2120,15 +2124,20 @@ accel_create_channel(void *io_device, void *ctx_buf)
 	TAILQ_INIT(&accel_ch->task_pool);
 	TAILQ_INIT(&accel_ch->seq_pool);
 	TAILQ_INIT(&accel_ch->buf_pool);
+
 	task_mem = accel_ch->task_pool_base;
-	for (i = 0 ; i < MAX_TASKS_PER_CHANNEL; i++) {
+	for (i = 0; i < g_opts.task_count; i++) {
 		accel_task = (struct spdk_accel_task *)task_mem;
-		seq = &accel_ch->seq_pool_base[i];
-		buf = &accel_ch->buf_pool_base[i];
 		TAILQ_INSERT_TAIL(&accel_ch->task_pool, accel_task, link);
-		TAILQ_INSERT_TAIL(&accel_ch->seq_pool, seq, link);
-		TAILQ_INSERT_TAIL(&accel_ch->buf_pool, buf, link);
 		task_mem += g_max_accel_module_size;
+	}
+	for (i = 0; i < g_opts.sequence_count; i++) {
+		seq = &accel_ch->seq_pool_base[i];
+		TAILQ_INSERT_TAIL(&accel_ch->seq_pool, seq, link);
+	}
+	for (i = 0; i < g_opts.buf_count; i++) {
+		buf = &accel_ch->buf_pool_base[i];
+		TAILQ_INSERT_TAIL(&accel_ch->buf_pool, buf, link);
 	}
 
 	/* Assign modules and get IO channels for each */
@@ -2372,6 +2381,9 @@ accel_write_options(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_uint32(w, "small_cache_size", g_opts.small_cache_size);
 	spdk_json_write_named_uint32(w, "large_cache_size", g_opts.large_cache_size);
+	spdk_json_write_named_uint32(w, "task_count", g_opts.task_count);
+	spdk_json_write_named_uint32(w, "sequence_count", g_opts.sequence_count);
+	spdk_json_write_named_uint32(w, "buf_count", g_opts.buf_count);
 	spdk_json_write_object_end(w);
 	spdk_json_write_object_end(w);
 }

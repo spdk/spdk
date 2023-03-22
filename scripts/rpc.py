@@ -2867,11 +2867,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=accel_set_driver)
 
     def accel_set_options(args):
-        rpc.accel.accel_set_options(args.client, args.small_cache_size, args.large_cache_size)
+        rpc.accel.accel_set_options(args.client, args.small_cache_size, args.large_cache_size,
+                                    args.task_count, args.sequence_count, args.buf_count)
 
     p = subparsers.add_parser('accel_set_options', help='Set accel framework\'s options')
     p.add_argument('--small-cache-size', type=int, help='Size of the small iobuf cache')
     p.add_argument('--large-cache-size', type=int, help='Size of the large iobuf cache')
+    p.add_argument('--task-count', type=int, help='Maximum number of tasks per IO channel')
+    p.add_argument('--sequence-count', type=int, help='Maximum number of sequences per IO channel')
+    p.add_argument('--buf-count', type=int, help='Maximum number of buffers per IO channel')
     p.set_defaults(func=accel_set_options)
 
     def accel_get_stats(args):

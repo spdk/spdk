@@ -358,11 +358,17 @@ SPDK_RPC_REGISTER("accel_set_driver", rpc_accel_set_driver, SPDK_RPC_STARTUP)
 struct rpc_accel_opts {
 	uint32_t	small_cache_size;
 	uint32_t	large_cache_size;
+	uint32_t	task_count;
+	uint32_t	sequence_count;
+	uint32_t	buf_count;
 };
 
 static const struct spdk_json_object_decoder rpc_accel_set_options_decoders[] = {
 	{"small_cache_size", offsetof(struct rpc_accel_opts, small_cache_size), spdk_json_decode_uint32, true},
 	{"large_cache_size", offsetof(struct rpc_accel_opts, large_cache_size), spdk_json_decode_uint32, true},
+	{"task_count", offsetof(struct rpc_accel_opts, task_count), spdk_json_decode_uint32, true},
+	{"sequence_count", offsetof(struct rpc_accel_opts, sequence_count), spdk_json_decode_uint32, true},
+	{"buf_count", offsetof(struct rpc_accel_opts, buf_count), spdk_json_decode_uint32, true},
 };
 
 static void
@@ -377,6 +383,9 @@ rpc_accel_set_options(struct spdk_jsonrpc_request *request, const struct spdk_js
 	spdk_accel_get_opts(&opts);
 	rpc_opts.small_cache_size = opts.small_cache_size;
 	rpc_opts.large_cache_size = opts.large_cache_size;
+	rpc_opts.task_count = opts.task_count;
+	rpc_opts.sequence_count = opts.sequence_count;
+	rpc_opts.buf_count = opts.buf_count;
 
 	if (spdk_json_decode_object(params, rpc_accel_set_options_decoders,
 				    SPDK_COUNTOF(rpc_accel_set_options_decoders), &rpc_opts)) {
@@ -387,6 +396,9 @@ rpc_accel_set_options(struct spdk_jsonrpc_request *request, const struct spdk_js
 
 	opts.small_cache_size = rpc_opts.small_cache_size;
 	opts.large_cache_size = rpc_opts.large_cache_size;
+	opts.task_count = rpc_opts.task_count;
+	opts.sequence_count = rpc_opts.sequence_count;
+	opts.buf_count = rpc_opts.buf_count;
 
 	rc = spdk_accel_set_opts(&opts);
 	if (rc != 0) {
