@@ -6,10 +6,9 @@
 #include "spdk/stdinc.h"
 #include "spdk_internal/cunit.h"
 #include "spdk/env.h"
-#include "thread/thread_internal.h"
-#include "spdk_internal/mock.h"
 
-#include "bdev/raid/bdev_raid.h"
+#include "common/lib/ut_multithread.c"
+
 #include "bdev/raid/concat.c"
 #include "../common.c"
 
@@ -317,15 +316,10 @@ submit_and_verify_rw(enum CONCAT_IO_TYPE io_type, struct raid_params *params)
 		bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
 		SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
 		raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
-		raid_ch = calloc(1, sizeof(struct raid_bdev_io_channel));
-		SPDK_CU_ASSERT_FATAL(raid_ch != NULL);
-		raid_ch->base_channel = calloc(params->num_base_bdevs,
-					       sizeof(struct spdk_io_channel));
-		SPDK_CU_ASSERT_FATAL(raid_ch->base_channel != NULL);
+		raid_ch = raid_test_create_io_channel(raid_bdev);
 		raid_io->raid_ch = raid_ch;
 		raid_io->raid_bdev = raid_bdev;
-		ch = calloc(1, sizeof(struct spdk_io_channel));
-		SPDK_CU_ASSERT_FATAL(ch != NULL);
+		ch = (void *)1;
 
 		switch (io_type) {
 		case CONCAT_WRITEV:
@@ -358,9 +352,7 @@ submit_and_verify_rw(enum CONCAT_IO_TYPE io_type, struct raid_params *params)
 		CU_ASSERT(g_req_records.count == 1);
 		CU_ASSERT(g_req_records.md == (void *)0xAEDFEBAC);
 		bdev_io_cleanup(bdev_io);
-		free(ch);
-		free(raid_ch->base_channel);
-		free(raid_ch);
+		raid_test_destroy_io_channel(raid_ch);
 		delete_concat(raid_bdev);
 		lba += params->base_bdev_blockcnt;
 	}
@@ -412,14 +404,11 @@ submit_and_verify_null_payload(enum CONCAT_IO_TYPE io_type, struct raid_params *
 	bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
 	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
 	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
-	raid_ch = calloc(1, sizeof(struct raid_bdev_io_channel));
-	SPDK_CU_ASSERT_FATAL(raid_ch != NULL);
-	raid_ch->base_channel = calloc(params->num_base_bdevs,
-				       sizeof(struct spdk_io_channel));
-	SPDK_CU_ASSERT_FATAL(raid_ch->base_channel != NULL);
+	raid_ch = raid_test_create_io_channel(raid_bdev);
 	raid_io->raid_ch = raid_ch;
 	raid_io->raid_bdev = raid_bdev;
-	ch = calloc(1, sizeof(struct spdk_io_channel));
+	ch = (void *)1;
+
 	SPDK_CU_ASSERT_FATAL(ch != NULL);
 
 	switch (io_type) {
@@ -459,9 +448,7 @@ submit_and_verify_null_payload(enum CONCAT_IO_TYPE io_type, struct raid_params *
 		CU_ASSERT(g_req_records.io_type[1] == io_type);
 	}
 	bdev_io_cleanup(bdev_io);
-	free(ch);
-	free(raid_ch->base_channel);
-	free(raid_ch);
+	raid_test_destroy_io_channel(raid_ch);
 	delete_concat(raid_bdev);
 }
 
@@ -494,7 +481,13 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_concat_rw);
 	CU_ADD_TEST(suite, test_concat_null_payload);
 
+	allocate_threads(1);
+	set_thread(0);
+
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
+
+	free_threads();
+
 	return num_failures;
 }

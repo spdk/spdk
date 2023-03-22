@@ -907,31 +907,18 @@ run_for_each_raid5f_config(void (*test_fn)(struct raid_bdev *raid_bdev,
 
 	RAID_PARAMS_FOR_EACH(params) {
 		struct raid5f_info *r5f_info;
-		struct raid_bdev_io_channel raid_ch = { 0 };
-		int i;
+		struct raid_bdev_io_channel *raid_ch;
 
 		r5f_info = create_raid5f(params);
+		raid_ch = raid_test_create_io_channel(r5f_info->raid_bdev);
 
-		raid_ch.base_channel = calloc(params->num_base_bdevs, sizeof(struct spdk_io_channel *));
-		SPDK_CU_ASSERT_FATAL(raid_ch.base_channel != NULL);
-
-		for (i = 0; i < params->num_base_bdevs; i++) {
-			if (g_test_degraded && i == 0) {
-				continue;
-			}
-			raid_ch.base_channel[i] = (void *)1;
+		if (g_test_degraded) {
+			raid_ch->base_channel[0] = NULL;
 		}
 
-		raid_ch.module_channel = raid5f_get_io_channel(r5f_info->raid_bdev);
-		SPDK_CU_ASSERT_FATAL(raid_ch.module_channel);
+		test_fn(r5f_info->raid_bdev, raid_ch);
 
-		test_fn(r5f_info->raid_bdev, &raid_ch);
-
-		spdk_put_io_channel(raid_ch.module_channel);
-		poll_threads();
-
-		free(raid_ch.base_channel);
-
+		raid_test_destroy_io_channel(raid_ch);
 		delete_raid5f(r5f_info);
 	}
 }

@@ -162,31 +162,14 @@ run_for_each_raid1_config(void (*test_fn)(struct raid_bdev *raid_bdev,
 
 	RAID_PARAMS_FOR_EACH(params) {
 		struct raid1_info *r1_info;
-		struct raid_bdev_io_channel raid_ch = { 0 };
-		int i;
+		struct raid_bdev_io_channel *raid_ch;
 
 		r1_info = create_raid1(params);
+		raid_ch = raid_test_create_io_channel(r1_info->raid_bdev);
 
-		raid_ch.base_channel = calloc(params->num_base_bdevs, sizeof(struct spdk_io_channel *));
-		SPDK_CU_ASSERT_FATAL(raid_ch.base_channel != NULL);
-		for (i = 0; i < params->num_base_bdevs; i++) {
-			raid_ch.base_channel[i] = calloc(1, sizeof(*raid_ch.base_channel));
-			SPDK_CU_ASSERT_FATAL(raid_ch.base_channel[i] != NULL);
-		}
+		test_fn(r1_info->raid_bdev, raid_ch);
 
-		raid_ch.module_channel = raid1_get_io_channel(r1_info->raid_bdev);
-		SPDK_CU_ASSERT_FATAL(raid_ch.module_channel);
-
-		test_fn(r1_info->raid_bdev, &raid_ch);
-
-		spdk_put_io_channel(raid_ch.module_channel);
-		poll_threads();
-
-		for (i = 0; i < params->num_base_bdevs; i++) {
-			free(raid_ch.base_channel[i]);
-		}
-		free(raid_ch.base_channel);
-
+		raid_test_destroy_io_channel(raid_ch);
 		delete_raid1(r1_info);
 	}
 }
@@ -270,5 +253,8 @@ main(int argc, char **argv)
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
+
+	free_threads();
+
 	return num_failures;
 }
