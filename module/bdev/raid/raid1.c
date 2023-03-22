@@ -22,7 +22,7 @@ static void
 raid1_channel_inc_read_counters(struct raid_bdev_io_channel *raid_ch, uint8_t idx,
 				uint64_t num_blocks)
 {
-	struct raid1_io_channel *raid1_ch = spdk_io_channel_get_ctx(raid_ch->module_channel);
+	struct raid1_io_channel *raid1_ch = raid_bdev_channel_get_module_ctx(raid_ch);
 
 	assert(raid1_ch->read_blocks_outstanding[idx] <= UINT64_MAX - num_blocks);
 	raid1_ch->read_blocks_outstanding[idx] += num_blocks;
@@ -32,7 +32,7 @@ static void
 raid1_channel_dec_read_counters(struct raid_bdev_io_channel *raid_ch, uint8_t idx,
 				uint64_t num_blocks)
 {
-	struct raid1_io_channel *raid1_ch = spdk_io_channel_get_ctx(raid_ch->module_channel);
+	struct raid1_io_channel *raid1_ch = raid_bdev_channel_get_module_ctx(raid_ch);
 
 	assert(raid1_ch->read_blocks_outstanding[idx] >= num_blocks);
 	raid1_ch->read_blocks_outstanding[idx] -= num_blocks;
@@ -90,13 +90,13 @@ raid1_init_ext_io_opts(struct spdk_bdev_ext_io_opts *opts, struct raid_bdev_io *
 static uint8_t
 raid1_channel_next_read_base_bdev(struct raid_bdev *raid_bdev, struct raid_bdev_io_channel *raid_ch)
 {
-	struct raid1_io_channel *raid1_ch = spdk_io_channel_get_ctx(raid_ch->module_channel);
+	struct raid1_io_channel *raid1_ch = raid_bdev_channel_get_module_ctx(raid_ch);
 	uint64_t read_blocks_min = UINT64_MAX;
 	uint8_t idx = UINT8_MAX;
 	uint8_t i;
 
 	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
-		if (raid_ch->base_channel[i] != NULL &&
+		if (raid_bdev_channel_get_base_channel(raid_ch, i) != NULL &&
 		    raid1_ch->read_blocks_outstanding[i] < read_blocks_min) {
 			read_blocks_min = raid1_ch->read_blocks_outstanding[i];
 			idx = i;
@@ -124,7 +124,7 @@ raid1_submit_read_request(struct raid_bdev_io *raid_io)
 	}
 
 	base_info = &raid_bdev->base_bdev_info[idx];
-	base_ch = raid_ch->base_channel[idx];
+	base_ch = raid_bdev_channel_get_base_channel(raid_ch, idx);
 
 	raid_io->base_bdev_io_remaining = 1;
 
@@ -163,7 +163,7 @@ raid1_submit_write_request(struct raid_bdev_io *raid_io)
 	raid1_init_ext_io_opts(&io_opts, raid_io);
 	for (idx = raid_io->base_bdev_io_submitted; idx < raid_bdev->num_base_bdevs; idx++) {
 		base_info = &raid_bdev->base_bdev_info[idx];
-		base_ch = raid_io->raid_ch->base_channel[idx];
+		base_ch = raid_bdev_channel_get_base_channel(raid_io->raid_ch, idx);
 
 		if (base_ch == NULL) {
 			/* skip a missing base bdev's slot */

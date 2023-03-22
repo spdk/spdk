@@ -425,7 +425,8 @@ raid5f_chunk_submit(struct chunk *chunk)
 	struct raid_bdev_io *raid_io = stripe_req->raid_io;
 	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
 	struct raid_base_bdev_info *base_info = &raid_bdev->base_bdev_info[chunk->index];
-	struct spdk_io_channel *base_ch = raid_io->raid_ch->base_channel[chunk->index];
+	struct spdk_io_channel *base_ch = raid_bdev_channel_get_base_channel(raid_io->raid_ch,
+					  chunk->index);
 	uint64_t base_offset_blocks = (stripe_req->stripe_index << raid_bdev->strip_size_shift);
 	struct spdk_bdev_ext_io_opts io_opts;
 	int ret;
@@ -622,7 +623,7 @@ static int
 raid5f_submit_write_request(struct raid_bdev_io *raid_io, uint64_t stripe_index)
 {
 	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
-	struct raid5f_io_channel *r5ch = spdk_io_channel_get_ctx(raid_io->raid_ch->module_channel);
+	struct raid5f_io_channel *r5ch = raid_bdev_channel_get_module_ctx(raid_io->raid_ch);
 	struct stripe_request *stripe_req;
 	int ret;
 
@@ -643,7 +644,7 @@ raid5f_submit_write_request(struct raid_bdev_io *raid_io, uint64_t stripe_index)
 	raid_io->module_private = stripe_req;
 	raid_io->base_bdev_io_remaining = raid_bdev->num_base_bdevs;
 
-	if (raid_io->raid_ch->base_channel[stripe_req->parity_chunk->index] != NULL) {
+	if (raid_bdev_channel_get_base_channel(raid_io->raid_ch, stripe_req->parity_chunk->index) != NULL) {
 		raid5f_xor_stripe(stripe_req, raid5f_stripe_write_request_xor_done);
 	} else {
 		raid5f_stripe_write_request_xor_done(stripe_req, 0);
@@ -705,7 +706,7 @@ raid5f_submit_reconstruct_read(struct raid_bdev_io *raid_io, uint64_t stripe_ind
 			       uint8_t chunk_idx, uint64_t chunk_offset)
 {
 	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
-	struct raid5f_io_channel *r5ch = spdk_io_channel_get_ctx(raid_io->raid_ch->module_channel);
+	struct raid5f_io_channel *r5ch = raid_bdev_channel_get_module_ctx(raid_io->raid_ch);
 	void *raid_io_md = raid_io->md_buf;
 	struct stripe_request *stripe_req;
 	struct chunk *chunk;
@@ -772,7 +773,7 @@ raid5f_submit_read_request(struct raid_bdev_io *raid_io, uint64_t stripe_index,
 	uint8_t p_idx = raid5f_stripe_parity_chunk_index(raid_bdev, stripe_index);
 	uint8_t chunk_idx = chunk_data_idx < p_idx ? chunk_data_idx : chunk_data_idx + 1;
 	struct raid_base_bdev_info *base_info = &raid_bdev->base_bdev_info[chunk_idx];
-	struct spdk_io_channel *base_ch = raid_io->raid_ch->base_channel[chunk_idx];
+	struct spdk_io_channel *base_ch = raid_bdev_channel_get_base_channel(raid_io->raid_ch, chunk_idx);
 	uint64_t chunk_offset = stripe_offset - (chunk_data_idx << raid_bdev->strip_size_shift);
 	uint64_t base_offset_blocks = (stripe_index << raid_bdev->strip_size_shift) + chunk_offset;
 	struct spdk_bdev_ext_io_opts io_opts;

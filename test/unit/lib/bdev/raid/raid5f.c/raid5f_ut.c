@@ -600,7 +600,7 @@ test_raid5f_write_request(struct raid_io_info *io_info)
 		uint32_t strip_len;
 
 		for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
-			if (io_info->raid_ch->base_channel[i] == NULL) {
+			if (!raid_bdev_channel_get_base_channel(io_info->raid_ch, i)) {
 				break;
 			}
 		}
@@ -867,7 +867,7 @@ run_for_each_raid5f_config(void (*test_fn)(struct raid_bdev *raid_bdev,
 		raid_ch = raid_test_create_io_channel(r5f_info->raid_bdev);
 
 		if (g_test_degraded) {
-			raid_ch->base_channel[0] = NULL;
+			raid_ch->_base_channels[0] = NULL;
 		}
 
 		test_fn(r5f_info->raid_bdev, raid_ch);
@@ -918,7 +918,7 @@ static void
 __test_raid5f_stripe_request_map_iovecs(struct raid_bdev *raid_bdev,
 					struct raid_bdev_io_channel *raid_ch)
 {
-	struct raid5f_io_channel *r5ch = spdk_io_channel_get_ctx(raid_ch->module_channel);
+	struct raid5f_io_channel *r5ch = raid_bdev_channel_get_module_ctx(raid_ch);
 	size_t strip_bytes = raid_bdev->strip_size * raid_bdev->bdev.blocklen;
 	struct raid_bdev_io raid_io = {};
 	struct stripe_request *stripe_req;

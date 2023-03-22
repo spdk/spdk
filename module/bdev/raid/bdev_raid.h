@@ -201,17 +201,7 @@ struct raid_bdev {
 #define RAID_FOR_EACH_BASE_BDEV(r, i) \
 	for (i = r->base_bdev_info; i < r->base_bdev_info + r->num_base_bdevs; i++)
 
-/*
- * raid_bdev_io_channel is the context of spdk_io_channel for raid bdev device. It
- * contains the relationship of raid bdev io channel with base bdev io channels.
- */
-struct raid_bdev_io_channel {
-	/* Array of IO channels of base bdevs */
-	struct spdk_io_channel	**base_channel;
-
-	/* Private raid module IO channel */
-	struct spdk_io_channel	*module_channel;
-};
+struct raid_bdev_io_channel;
 
 /* TAIL head for raid bdev list */
 TAILQ_HEAD(raid_all_tailq, raid_bdev);
@@ -233,6 +223,9 @@ const char *raid_bdev_state_to_str(enum raid_bdev_state state);
 void raid_bdev_write_info_json(struct raid_bdev *raid_bdev, struct spdk_json_write_ctx *w);
 int raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev, raid_bdev_remove_base_bdev_cb cb_fn,
 			       void *cb_ctx);
+struct spdk_io_channel *raid_bdev_channel_get_base_channel(struct raid_bdev_io_channel *raid_ch,
+		uint8_t idx);
+void *raid_bdev_channel_get_module_ctx(struct raid_bdev_io_channel *raid_ch);
 
 /*
  * RAID module descriptor

@@ -172,7 +172,7 @@ static void
 _test_raid1_read_balancing(struct raid_bdev *raid_bdev, struct raid_bdev_io_channel *raid_ch)
 {
 	struct raid1_info *r1_info = raid_bdev->module_private;
-	struct raid1_io_channel *raid1_ch = spdk_io_channel_get_ctx(raid_ch->module_channel);
+	struct raid1_io_channel *raid1_ch = raid_bdev_channel_get_module_ctx(raid_ch);
 	uint8_t big_io_base_bdev_idx;
 	const uint64_t big_io_blocks = 256;
 	const uint64_t small_io_blocks = 4;

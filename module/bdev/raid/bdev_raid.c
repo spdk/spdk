@@ -20,6 +20,18 @@ struct raid_all_tailq g_raid_bdev_list = TAILQ_HEAD_INITIALIZER(g_raid_bdev_list
 
 static TAILQ_HEAD(, raid_bdev_module) g_raid_modules = TAILQ_HEAD_INITIALIZER(g_raid_modules);
 
+/*
+ * raid_bdev_io_channel is the context of spdk_io_channel for raid bdev device. It
+ * contains the relationship of raid bdev io channel with base bdev io channels.
+ */
+struct raid_bdev_io_channel {
+	/* Array of IO channels of base bdevs */
+	struct spdk_io_channel	**base_channel;
+
+	/* Private raid module IO channel */
+	struct spdk_io_channel	*module_channel;
+};
+
 static struct raid_bdev_module *
 raid_bdev_module_find(enum raid_level level)
 {
@@ -44,6 +56,20 @@ raid_bdev_module_list_add(struct raid_bdev_module *raid_module)
 	} else {
 		TAILQ_INSERT_TAIL(&g_raid_modules, raid_module, link);
 	}
+}
+
+struct spdk_io_channel *
+raid_bdev_channel_get_base_channel(struct raid_bdev_io_channel *raid_ch, uint8_t idx)
+{
+	return raid_ch->base_channel[idx];
+}
+
+void *
+raid_bdev_channel_get_module_ctx(struct raid_bdev_io_channel *raid_ch)
+{
+	assert(raid_ch->module_channel != NULL);
+
+	return spdk_io_channel_get_ctx(raid_ch->module_channel);
 }
 
 /* Function declarations */

@@ -101,8 +101,7 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 	 * function and function callback context
 	 */
 	assert(raid_ch != NULL);
-	assert(raid_ch->base_channel);
-	base_ch = raid_ch->base_channel[pd_idx];
+	base_ch = raid_bdev_channel_get_base_channel(raid_ch, pd_idx);
 
 	io_opts.size = sizeof(io_opts);
 	io_opts.memory_domain = raid_io->memory_domain;
@@ -294,7 +293,7 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 		 */
 		disk_idx = (io_range.start_disk + raid_io->base_bdev_io_submitted) % raid_bdev->num_base_bdevs;
 		base_info = &raid_bdev->base_bdev_info[disk_idx];
-		base_ch = raid_io->raid_ch->base_channel[disk_idx];
+		base_ch = raid_bdev_channel_get_base_channel(raid_io->raid_ch, disk_idx);
 
 		_raid0_split_io_range(&io_range, disk_idx, &offset_in_disk, &nblocks_in_disk);
 

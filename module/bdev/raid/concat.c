@@ -100,8 +100,7 @@ concat_submit_rw_request(struct raid_bdev_io *raid_io)
 	 * function and function callback context
 	 */
 	assert(raid_ch != NULL);
-	assert(raid_ch->base_channel);
-	base_ch = raid_ch->base_channel[pd_idx];
+	base_ch = raid_bdev_channel_get_base_channel(raid_ch, pd_idx);
 
 	io_opts.size = sizeof(io_opts);
 	io_opts.memory_domain = raid_io->memory_domain;
@@ -236,7 +235,7 @@ concat_submit_null_payload_request(struct raid_bdev_io *raid_io)
 			continue;
 		}
 		base_info = &raid_bdev->base_bdev_info[i];
-		base_ch = raid_io->raid_ch->base_channel[i];
+		base_ch = raid_bdev_channel_get_base_channel(raid_io->raid_ch, i);
 		switch (raid_io->type) {
 		case SPDK_BDEV_IO_TYPE_UNMAP:
 			ret = raid_bdev_unmap_blocks(base_info, base_ch,

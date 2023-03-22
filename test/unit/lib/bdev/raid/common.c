@@ -137,6 +137,23 @@ raid_test_delete_raid_bdev(struct raid_bdev *raid_bdev)
 	free(raid_bdev);
 }
 
+struct raid_bdev_io_channel {
+	struct spdk_io_channel **_base_channels;
+	struct spdk_io_channel *_module_channel;
+};
+
+struct spdk_io_channel *
+raid_bdev_channel_get_base_channel(struct raid_bdev_io_channel *raid_ch, uint8_t idx)
+{
+	return raid_ch->_base_channels[idx];
+}
+
+void *
+raid_bdev_channel_get_module_ctx(struct raid_bdev_io_channel *raid_ch)
+{
+	return spdk_io_channel_get_ctx(raid_ch->_module_channel);
+}
+
 static struct raid_bdev_io_channel *
 raid_test_create_io_channel(struct raid_bdev *raid_bdev)
 {
@@ -146,16 +163,16 @@ raid_test_create_io_channel(struct raid_bdev *raid_bdev)
 	raid_ch = calloc(1, sizeof(*raid_ch));
 	SPDK_CU_ASSERT_FATAL(raid_ch != NULL);
 
-	raid_ch->base_channel = calloc(raid_bdev->num_base_bdevs, sizeof(struct spdk_io_channel *));
-	SPDK_CU_ASSERT_FATAL(raid_ch->base_channel != NULL);
+	raid_ch->_base_channels = calloc(raid_bdev->num_base_bdevs, sizeof(struct spdk_io_channel *));
+	SPDK_CU_ASSERT_FATAL(raid_ch->_base_channels != NULL);
 
 	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
-		raid_ch->base_channel[i] = (void *)1;
+		raid_ch->_base_channels[i] = (void *)1;
 	}
 
 	if (raid_bdev->module->get_io_channel) {
-		raid_ch->module_channel = raid_bdev->module->get_io_channel(raid_bdev);
-		SPDK_CU_ASSERT_FATAL(raid_ch->module_channel != NULL);
+		raid_ch->_module_channel = raid_bdev->module->get_io_channel(raid_bdev);
+		SPDK_CU_ASSERT_FATAL(raid_ch->_module_channel != NULL);
 	}
 
 	return raid_ch;
@@ -164,10 +181,10 @@ raid_test_create_io_channel(struct raid_bdev *raid_bdev)
 static void
 raid_test_destroy_io_channel(struct raid_bdev_io_channel *raid_ch)
 {
-	free(raid_ch->base_channel);
+	free(raid_ch->_base_channels);
 
-	if (raid_ch->module_channel) {
-		spdk_put_io_channel(raid_ch->module_channel);
+	if (raid_ch->_module_channel) {
+		spdk_put_io_channel(raid_ch->_module_channel);
 		poll_threads();
 	}
 
