@@ -265,11 +265,10 @@ def parse_segment(line):
 
 
 def parse_mempool_name(line):
-    trash, info = line.split()
     name, addr = line.split('@')
     name = name.replace("<", "")
     name = name.replace(">", "")
-    trash, name = name.split()
+    trash, sep, name = name.partition(' ')
 
     return name
 
