@@ -912,7 +912,6 @@ run_for_each_raid5f_config(void (*test_fn)(struct raid_bdev *raid_bdev,
 
 		r5f_info = create_raid5f(params);
 
-		raid_ch.num_channels = params->num_base_bdevs;
 		raid_ch.base_channel = calloc(params->num_base_bdevs, sizeof(struct spdk_io_channel *));
 		SPDK_CU_ASSERT_FATAL(raid_ch.base_channel != NULL);
 

@@ -193,9 +193,6 @@ struct raid_bdev_io_channel {
 	/* Array of IO channels of base bdevs */
 	struct spdk_io_channel	**base_channel;
 
-	/* Number of IO channels */
-	uint8_t			num_channels;
-
 	/* Private raid module IO channel */
 	struct spdk_io_channel	*module_channel;
 };

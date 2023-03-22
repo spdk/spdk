@@ -88,14 +88,14 @@ raid1_init_ext_io_opts(struct spdk_bdev_io *bdev_io, struct spdk_bdev_ext_io_opt
 }
 
 static uint8_t
-raid1_channel_next_read_base_bdev(struct raid_bdev_io_channel *raid_ch)
+raid1_channel_next_read_base_bdev(struct raid_bdev *raid_bdev, struct raid_bdev_io_channel *raid_ch)
 {
 	struct raid1_io_channel *raid1_ch = spdk_io_channel_get_ctx(raid_ch->module_channel);
 	uint64_t read_blocks_min = UINT64_MAX;
 	uint8_t idx = UINT8_MAX;
 	uint8_t i;
 
-	for (i = 0; i < raid_ch->num_channels; i++) {
+	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		if (raid_ch->base_channel[i] != NULL &&
 		    raid1_ch->read_blocks_outstanding[i] < read_blocks_min) {
 			read_blocks_min = raid1_ch->read_blocks_outstanding[i];
@@ -122,7 +122,7 @@ raid1_submit_read_request(struct raid_bdev_io *raid_io)
 	pd_lba = bdev_io->u.bdev.offset_blocks;
 	pd_blocks = bdev_io->u.bdev.num_blocks;
 
-	idx = raid1_channel_next_read_base_bdev(raid_ch);
+	idx = raid1_channel_next_read_base_bdev(raid_bdev, raid_ch);
 	if (spdk_unlikely(idx == UINT8_MAX)) {
 		raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return 0;

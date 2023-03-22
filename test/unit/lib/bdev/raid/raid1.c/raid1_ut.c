@@ -167,10 +167,9 @@ run_for_each_raid1_config(void (*test_fn)(struct raid_bdev *raid_bdev,
 
 		r1_info = create_raid1(params);
 
-		raid_ch.num_channels = params->num_base_bdevs;
 		raid_ch.base_channel = calloc(params->num_base_bdevs, sizeof(struct spdk_io_channel *));
 		SPDK_CU_ASSERT_FATAL(raid_ch.base_channel != NULL);
-		for (i = 0; i < raid_ch.num_channels; i++) {
+		for (i = 0; i < params->num_base_bdevs; i++) {
 			raid_ch.base_channel[i] = calloc(1, sizeof(*raid_ch.base_channel));
 			SPDK_CU_ASSERT_FATAL(raid_ch.base_channel[i] != NULL);
 		}
@@ -183,7 +182,7 @@ run_for_each_raid1_config(void (*test_fn)(struct raid_bdev *raid_bdev,
 		spdk_put_io_channel(raid_ch.module_channel);
 		poll_threads();
 
-		for (i = 0; i < raid_ch.num_channels; i++) {
+		for (i = 0; i < params->num_base_bdevs; i++) {
 			free(raid_ch.base_channel[i]);
 		}
 		free(raid_ch.base_channel);
