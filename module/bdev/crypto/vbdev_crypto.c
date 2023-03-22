@@ -44,7 +44,6 @@ struct crypto_io_channel {
 };
 
 enum crypto_io_resubmit_state {
-	CRYPTO_IO_NEW,		/* Resubmit IO from the scratch */
 	CRYPTO_IO_DECRYPT_DONE,	/* Appended decrypt, need to read */
 	CRYPTO_IO_ENCRYPT_DONE,	/* Need to write */
 };
@@ -164,7 +163,7 @@ crypto_encrypt(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io
 				   crypto_io->aux_domain, crypto_io->aux_domain_ctx);
 		if (rc == -ENOMEM) {
 			SPDK_DEBUGLOG(vbdev_crypto, "No memory, queue the IO.\n");
-			vbdev_crypto_queue_io(bdev_io, CRYPTO_IO_NEW);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
 		} else {
 			SPDK_ERRLOG("Failed to submit bdev_io!\n");
 			crypto_io_fail(crypto_io);
@@ -193,14 +192,8 @@ vbdev_crypto_resubmit_io(void *arg)
 {
 	struct spdk_bdev_io *bdev_io = (struct spdk_bdev_io *)arg;
 	struct crypto_bdev_io *crypto_io = (struct crypto_bdev_io *)bdev_io->driver_ctx;
-	struct spdk_io_channel *ch;
 
 	switch (crypto_io->resubmit_state) {
-	case CRYPTO_IO_NEW:
-		assert(crypto_io->crypto_ch);
-		ch = spdk_io_channel_from_ctx(crypto_io->crypto_ch);
-		vbdev_crypto_submit_request(ch, bdev_io);
-		break;
 	case CRYPTO_IO_ENCRYPT_DONE:
 		crypto_write(crypto_io->crypto_ch, bdev_io);
 		break;
@@ -223,9 +216,6 @@ vbdev_crypto_queue_io(struct spdk_bdev_io *bdev_io, enum crypto_io_resubmit_stat
 	crypto_io->bdev_io_wait.cb_arg = bdev_io;
 	crypto_io->resubmit_state = state;
 
-	/* TODO: We shouldn't use spdk_bdev_queue_io_wait() for queueing IOs due to receiving ENOMEM
-	 * from anything other than one of the bdev functions (e.g. accel).  We should have a
-	 * different mechanism for handling such requests. */
 	rc = spdk_bdev_queue_io_wait(bdev_io->bdev, crypto_io->crypto_ch->base_ch,
 				     &crypto_io->bdev_io_wait);
 	if (rc != 0) {
@@ -294,7 +284,7 @@ crypto_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 	if (rc != 0) {
 		if (rc == -ENOMEM) {
 			SPDK_DEBUGLOG(vbdev_crypto, "No memory, queue the IO.\n");
-			vbdev_crypto_queue_io(bdev_io, CRYPTO_IO_NEW);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
 		} else {
 			SPDK_ERRLOG("Failed to submit bdev_io!\n");
 			crypto_io_fail(crypto_io);
@@ -371,7 +361,7 @@ vbdev_crypto_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 	if (rc != 0) {
 		if (rc == -ENOMEM) {
 			SPDK_DEBUGLOG(vbdev_crypto, "No memory, queue the IO.\n");
-			vbdev_crypto_queue_io(bdev_io, CRYPTO_IO_NEW);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
 		} else {
 			SPDK_ERRLOG("Failed to submit bdev_io!\n");
 			crypto_io_fail(crypto_io);

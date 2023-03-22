@@ -49,17 +49,21 @@ update_stats() {
 	stats[copy_executed]=$(get_stat executed copy)
 }
 
-cleanup() {
+tgtcleanup() {
 	[[ -v input ]] && rm -f "$input" || :
 	[[ -v output ]] && rm -f "$output" || :
 	nvmftestfini
+}
+
+bperfcleanup() {
+	[[ -v bperfpid ]] && killprocess $bperfpid
 }
 
 nvmftestinit
 nvmfappstart -m 0x2
 
 input=$(mktemp) output=$(mktemp)
-trap 'cleanup; exit 1' SIGINT SIGTERM EXIT
+trap 'tgtcleanup; exit 1' SIGINT SIGTERM EXIT
 
 rpc_cmd <<- CONFIG
 	bdev_malloc_create 32 4096 -b malloc0
@@ -115,4 +119,27 @@ spdk_dd --of "$output" --ib Nvme0n1 --bs 4096 --count 16
 cmp "$input" "$output"
 
 trap - SIGINT SIGTERM EXIT
-cleanup
+tgtcleanup
+
+# Verify bdev crypto ENOMEM handling by setting low accel task count and sending IO with high qd
+trap 'bperfcleanup; exit 1' SIGINT SIGTERM EXIT
+
+"$rootdir/build/examples/bdevperf" -t 5 -w verify -o 4096 -q 256 --wait-for-rpc -z &
+bperfpid=$!
+
+waitforlisten $bperfpid
+rpc_cmd <<- CONFIG
+	accel_set_options --task-count 16
+	framework_start_init
+	bdev_malloc_create 32 4096 -b malloc0
+	accel_crypto_key_create -c AES_XTS -k "${key0[0]}" -e "${key0[1]}" -n key0
+	accel_crypto_key_create -c AES_XTS -k "${key1[0]}" -e "${key1[1]}" -n key1
+	bdev_crypto_create malloc0 crypto0 -n key0
+	bdev_crypto_create crypto0 crypto1 -n key1
+CONFIG
+
+"$rootdir/examples/bdev/bdevperf/bdevperf.py" perform_tests
+
+trap - SIGINT SIGTERM EXIT
+killprocess $bperfpid
+wait $bperfpid
