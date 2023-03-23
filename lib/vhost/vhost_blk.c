@@ -1129,11 +1129,11 @@ vhost_session_bdev_resize_cb(struct spdk_vhost_dev *vdev,
 			     struct spdk_vhost_session *vsession,
 			     void *ctx)
 {
-#if RTE_VERSION >= RTE_VERSION_NUM(20, 02, 0, 0)
 	SPDK_NOTICELOG("bdev send slave msg to vid(%d)\n", vsession->vid);
-	rte_vhost_slave_config_change(vsession->vid, false);
+#if RTE_VERSION >= RTE_VERSION_NUM(23, 03, 0, 0)
+	rte_vhost_backend_config_change(vsession->vid, false);
 #else
-	SPDK_NOTICELOG("bdev does not support resize until DPDK submodule version >= 20.02\n");
+	rte_vhost_slave_config_change(vsession->vid, false);
 #endif
 
 	return 0;

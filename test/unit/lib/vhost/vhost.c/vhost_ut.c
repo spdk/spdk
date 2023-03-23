@@ -128,7 +128,11 @@ DEFINE_STUB(spdk_bdev_flush, int,
 DEFINE_STUB(rte_vhost_set_inflight_desc_split, int, (int vid, uint16_t vring_idx, uint16_t idx), 0);
 DEFINE_STUB(rte_vhost_set_inflight_desc_packed, int, (int vid, uint16_t vring_idx, uint16_t head,
 		uint16_t last, uint16_t *inflight_entry), 0);
+#if RTE_VERSION >= RTE_VERSION_NUM(23, 03, 0, 0)
+DEFINE_STUB(rte_vhost_backend_config_change, int, (int vid, bool need_reply), 0);
+#else
 DEFINE_STUB(rte_vhost_slave_config_change, int, (int vid, bool need_reply), 0);
+#endif
 DEFINE_STUB(spdk_json_decode_bool, int, (const struct spdk_json_val *val, void *out), 0);
 DEFINE_STUB(spdk_json_decode_object_relaxed, int,
 	    (const struct spdk_json_val *values, const struct spdk_json_object_decoder *decoders,
