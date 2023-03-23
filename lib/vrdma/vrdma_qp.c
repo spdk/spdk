@@ -424,6 +424,10 @@ static void vrdma_vqp_rx_cb(struct snap_dma_q *q, const void *data,
 	struct snap_vrdma_queue *snap_vqp;
 
 	snap_vqp = (struct snap_vrdma_queue *)q->uctx;
+
+	if (snap_vqp && snap_vqp->swq_state == SW_VIRTQ_FLUSHING) {
+		return;
+	}
 	vqp = (struct spdk_vrdma_qp *)snap_vqp->ctx;
 	vqp->qp_pi->pi.sq_pi = pi;
 	vqp->sq.comm.num_to_parse = pi - vqp->sq.comm.pre_pi;
