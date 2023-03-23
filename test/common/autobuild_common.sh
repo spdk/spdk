@@ -173,7 +173,7 @@ _build_native_dpdk() {
 			fi
 
 			# Commit https://review.spdk.io/gerrit/c/spdk/dpdk/+/16134 is required for DPDK 22.11+
-			if ge $dpdk_ver 22.11.0; then
+			if ge $dpdk_ver 22.11.0 && lt $dpdk_ver 23.03.0; then
 				patch -p1 < "$rootdir/test/common/config/pkgdep/patches/dpdk/22.11+/dpdk_ipsec_mb.patch"
 			fi
 		fi
