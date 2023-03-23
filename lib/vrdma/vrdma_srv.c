@@ -30,14 +30,19 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <infiniband/verbs.h>
+#include "snap.h"
+#include "snap_vrdma_ctrl.h"
+#include "snap_vrdma_virtq.h"
 #include "spdk/stdinc.h"
 #include "spdk/env.h"
 #include "spdk/conf.h"
 #include "spdk/log.h"
 #include "spdk/vrdma_admq.h"
+#include "spdk/vrdma_qp.h"
 #include "spdk/vrdma_srv.h"
 #include "spdk/vrdma_controller.h"
 #include "spdk/vrdma_admq.h"
+#include "spdk/vrdma_io_mgr.h"
 
 struct vrdma_srv_qp_list_head srv_qp_list =
                               LIST_HEAD_INITIALIZER(srv_qp_list);
@@ -48,35 +53,35 @@ static int vrdma_srv_device_notify(struct vrdma_dev *rdev)
 	return 0;
 }
 
-static int vrdma_srv_device_open_device(struct vrdma_dev *rdev, 
+static int vrdma_srv_device_open_device(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_srv_device_query_device(struct vrdma_dev *rdev, 
+static int vrdma_srv_device_query_device(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_srv_device_query_port(struct vrdma_dev *rdev, 
+static int vrdma_srv_device_query_port(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_srv_device_query_gid(struct vrdma_dev *rdev, 
+static int vrdma_srv_device_query_gid(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_srv_device_modify_gid(struct vrdma_dev *rdev, 
+static int vrdma_srv_device_modify_gid(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd,
 					struct vrdma_cmd_param *param)
 {
@@ -84,7 +89,7 @@ static int vrdma_srv_device_modify_gid(struct vrdma_dev *rdev,
 	return 0;
 }
 
-static int vrdma_srv_device_create_eq(struct vrdma_dev *rdev, 
+static int vrdma_srv_device_create_eq(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd,
 					struct vrdma_cmd_param *param)
 {
@@ -92,60 +97,60 @@ static int vrdma_srv_device_create_eq(struct vrdma_dev *rdev,
 	return 0;
 }
 
-static int vrdma_srv_device_modify_eq(struct vrdma_dev *rdev, 
+static int vrdma_srv_device_modify_eq(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_srv_device_destroy_eq(struct vrdma_dev *rdev, 
+static int vrdma_srv_device_destroy_eq(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_srv_device_create_pd(struct vrdma_dev *rdev, 
-					struct vrdma_admin_cmd_entry *cmd, 
+static int vrdma_srv_device_create_pd(struct vrdma_dev *rdev,
+					struct vrdma_admin_cmd_entry *cmd,
 					struct vrdma_cmd_param *param)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_srv_device_destroy_pd(struct vrdma_dev *rdev, 
+static int vrdma_srv_device_destroy_pd(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_srv_device_create_mr(struct vrdma_dev *rdev, 
-					struct vrdma_admin_cmd_entry *cmd, 
+static int vrdma_srv_device_create_mr(struct vrdma_dev *rdev,
+					struct vrdma_admin_cmd_entry *cmd,
 					struct vrdma_cmd_param *param)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_srv_device_destroy_mr(struct vrdma_dev *rdev, 
-					struct vrdma_admin_cmd_entry *cmd, 
+static int vrdma_srv_device_destroy_mr(struct vrdma_dev *rdev,
+					struct vrdma_admin_cmd_entry *cmd,
 					struct vrdma_cmd_param *param)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_srv_device_create_cq(struct vrdma_dev *rdev, 
-					struct vrdma_admin_cmd_entry *cmd, 
+static int vrdma_srv_device_create_cq(struct vrdma_dev *rdev,
+					struct vrdma_admin_cmd_entry *cmd,
 					struct vrdma_cmd_param *param)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_srv_device_destroy_cq(struct vrdma_dev *rdev, 
+static int vrdma_srv_device_destroy_cq(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
@@ -163,8 +168,8 @@ static struct vrdma_srv_qp *vrdma_srv_device_find_qp(uint32_t qp_idx)
 	return NULL;
 }
 
-static int vrdma_srv_device_create_qp(struct vrdma_dev *rdev, 
-					struct vrdma_admin_cmd_entry *cmd, 
+static int vrdma_srv_device_create_qp(struct vrdma_dev *rdev,
+					struct vrdma_admin_cmd_entry *cmd,
 					struct vrdma_cmd_param *param)
 {
 	struct vrdma_srv_qp *vqp;
@@ -183,7 +188,7 @@ static int vrdma_srv_device_create_qp(struct vrdma_dev *rdev,
 	return 0;
 }
 
-static int vrdma_srv_device_destroy_qp(struct vrdma_dev *rdev, 
+static int vrdma_srv_device_destroy_qp(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	struct vrdma_srv_qp *vqp = NULL;
@@ -203,68 +208,98 @@ static int vrdma_srv_device_destroy_qp(struct vrdma_dev *rdev,
 	return 0;
 }
 
-static int vrdma_srv_device_query_qp(struct vrdma_dev *rdev, 
+static int vrdma_srv_device_query_qp(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO
 	return 0;
 }
 
-int vrdma_srv_bind_channel(struct vrdma_dev *rdev, union ibv_gid *v_rgid, struct ibv_pd *pd,
-							enum ibv_qp_state qp_state, uint32_t vqpn, uint32_t remote_vqpn)
+int vrdma_srv_bind_channel(struct vrdma_dev *rdev,
+                           uint32_t vqpn,
+                           struct vrdma_tgid_node *tgid_node)
 {
-	struct vrdma_srv_qp *vqp;
+	struct spdk_vrdma_qp *vqp;
 	struct vrdma_ctrl *ctrl;
+	struct vrdma_backend_qp *local_mqp = NULL;
+    struct snap_pg *pg;
+    uint8_t mqp_idx;
 
-	vqp = vrdma_srv_device_find_qp(vqpn);
+    ctrl = vrdma_find_ctrl_by_srv_dev(rdev);
+    if (!ctrl) {
+        SPDK_ERRLOG("Failed to find controller for modify qp in service\n");
+        return -1;
+    }
+	vqp = find_spdk_vrdma_qp_by_idx(ctrl, vqpn);
 	if (!vqp) {
 		SPDK_ERRLOG("Failed to find qp for modify in service\n");
 		return -1;
 	}
-	ctrl = vrdma_find_ctrl_by_srv_dev(rdev);
-	if (!ctrl) {
-		SPDK_ERRLOG("Failed to find controller for modify qp in service\n");
-		return -1;
-	}
-	vqp->bk_qp[0] = vrdma_create_backend_qp(ctrl, vqpn, remote_vqpn);
-	if (!vqp->bk_qp[0]) {
-		SPDK_ERRLOG("Failed to create bankend qp %d\n",vqpn);
-		return -1;
-	}
-	if (vrdma_qp_notify_remote_by_rpc(ctrl, vqpn, remote_vqpn, vqp->bk_qp[0])) {
-        SPDK_ERRLOG("Fail to notify qp %d to send rpc\n", vqpn);
-		goto destroy_bk_qp;
+    /* try to find an existing local backend qp */
+	local_mqp = vrdma_find_mqp(ctrl, tgid_node, &mqp_idx);
+	if (!local_mqp) {
+        return -1;
     }
-	return 0;
 
-destroy_bk_qp:
-	vrdma_destroy_backend_qp(ctrl, vqpn);
-	return -1;
+    /* only put vqp on mqp, set mqp on vqp later when mqp is RTS */
+    if (vrdma_mqp_add_vqp_to_list(local_mqp, vqp, vqpn)) {
+        SPDK_ERRLOG("Fail to add vqp %d to backend qp 0x%x\n", vqpn, local_mqp->bk_qp.qpnum);
+        return -1;
+    }
+    if (!vqp->pre_bk_qp) {
+        SPDK_ERRLOG("vqp=%u has not bond to a mqp\n", vqp->qp_idx);
+        return -1;
+    }
+    if (vqp->pre_bk_qp->poller_core == VRDMA_INVALID_POLLER_CORE) {
+        pg = snap_pg_get_next(&ctrl->sctrl->pg_ctx);
+        vqp->pre_bk_qp->poller_core = pg->id;
+        SPDK_NOTICELOG("vqp=%u mqp=0x%x has bond to new poller_core=%u\n",
+                       vqp->qp_idx, vqp->pre_bk_qp->bk_qp.qpnum, pg->id);
+    } else {
+        pg = &ctrl->sctrl->pg_ctx.pgs[vqp->pre_bk_qp->poller_core];
+        SPDK_NOTICELOG("vqp=%u mqp=0x%x has exsiting poller_core=%u\n",
+                       vqp->qp_idx, vqp->pre_bk_qp->bk_qp.qpnum,
+                       vqp->pre_bk_qp->poller_core);
+    }
+    /* init2rtr vqp join poller-group */
+    snap_vrdma_sched_vq_by_pg(ctrl->sctrl, vqp->snap_queue, pg);
+    vrdma_qp_sm_start(vqp);
+	return 0;
 }
 
 int vrdma_srv_unbind_channel(struct vrdma_dev *rdev, uint32_t vqpn)
 {
 	struct vrdma_ctrl *ctrl;
+    struct spdk_vrdma_qp *vqp = NULL;
 
 	ctrl = vrdma_find_ctrl_by_srv_dev(rdev);
 	if (!ctrl) {
 		SPDK_ERRLOG("Failed to find controller for modify qp in service\n");
 		return -1;
 	}
-	vrdma_destroy_backend_qp(ctrl, vqpn);
+    vqp = find_spdk_vrdma_qp_by_idx(ctrl, vqpn);
+    if (!vqp) {
+        SPDK_ERRLOG("Failed to find VQP %d for destroy qp\n", vqpn);
+        return -1;
+    }
+    vrdma_mqp_del_vqp_from_list(vqp->bk_qp, vqpn);
 	return 0;
 }
 
 int vrdma_srv_map_backend_mqp(uint32_t vqpn, struct vrdma_backend_qp *bk_qp)
 {
 	//TODO
-	return 0;	
+	return 0;
 }
 
-static int vrdma_srv_device_modify_qp(struct vrdma_dev *rdev, 
+static int vrdma_srv_device_modify_qp(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
-	struct vrdma_srv_qp *vqp;
+    struct vrdma_srv_qp *vqp;
+    struct vrdma_tgid_node *tgid_node = NULL;
+    union ibv_gid local_tgid = {0};
+    union ibv_gid remote_tgid = {0};
+    struct vrdma_ctrl *ctrl;
 
 	vqp = vrdma_srv_device_find_qp(cmd->req.modify_qp_req.qp_handle);
 	if (!vqp) {
@@ -275,19 +310,47 @@ static int vrdma_srv_device_modify_qp(struct vrdma_dev *rdev,
 	cmd->req.modify_qp_req.qp_handle, vqp->qp_state, cmd->req.modify_qp_req.qp_state);
 	if (vqp->qp_state == IBV_QPS_INIT &&
 		cmd->req.modify_qp_req.qp_state == IBV_QPS_RTR) {
-		/* For POC, it hardcode v_rgid to NULL, as only one remote node.*/
-		vqp->remote_vqpn = cmd->req.modify_qp_req.dest_qp_num;
-		if (vrdma_srv_bind_channel(rdev, NULL, vqp->pd,
-					cmd->req.modify_qp_req.qp_state, vqp->qp_idx, vqp->remote_vqpn)) {
-			SPDK_ERRLOG("Failed to bind channel for modify qp in service\n");
-			return -1;
-		}
+        ctrl = vrdma_find_ctrl_by_srv_dev(rdev);
+        if (!ctrl) {
+            SPDK_ERRLOG("Failed to find controller for modify qp in service\n");
+            return -1;
+        }
+#if 0
+		local_tgid = (union ibv_gid *)cmd->req.modify_qp_req.l_tgid;
+		remote_tgid = (union ibv_gid *)cmd->req.modify_qp_req.r_tgid;
+#else
+        /*vm does not have cm, hard code as mac*/
+        memcpy(&local_tgid, ctrl->vdev->vrdma_sf.mac, sizeof(ctrl->vdev->vrdma_sf.mac));
+        memcpy(&remote_tgid, ctrl->vdev->vrdma_sf.dest_mac, sizeof(ctrl->vdev->vrdma_sf.dest_mac));
+#endif
+#ifdef MPATH_DBG
+        SPDK_NOTICELOG("%s: sizeof(ctrl->vdev->vrdma_sf.mac)= %lu l_tgid.global.interface_id=%llx, l_tgid.global.subnet_prefix=%llx\n"
+                       "r_tgid.global.interface_id=%llx, r_tgid.global.subnet_prefix=%llx\n", __func__,
+                       sizeof(ctrl->vdev->vrdma_sf.mac), local_tgid.global.interface_id, local_tgid.global.subnet_prefix,
+                       remote_tgid.global.interface_id, remote_tgid.global.subnet_prefix);
+#endif
+        tgid_node = vrdma_find_tgid_node(&remote_tgid, &local_tgid);
+        if (!tgid_node) {
+            tgid_node = vrdma_create_tgid_node(&remote_tgid, &local_tgid,
+                                               ctrl->vdev,
+                                               ctrl->vdev->vrdma_sf.sf_pd,
+                                               0xc000,
+                                               VRDMA_DEV_SRC_UDP_CNT);
+            if (!tgid_node) {
+                return -1;
+            }
+        }
+        vqp->remote_vqpn = cmd->req.modify_qp_req.dest_qp_num;
+        if (vrdma_srv_bind_channel(rdev, vqp->qp_idx, tgid_node)) {
+            SPDK_ERRLOG("Failed to bind channel for modify qp in service\n");
+            return -1;
+        }
 	}
 	vqp->qp_state = cmd->req.modify_qp_req.qp_state;
 	return 0;
 }
 
-static int vrdma_srv_device_create_ah(struct vrdma_dev *rdev, 
+static int vrdma_srv_device_create_ah(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd,
 					struct vrdma_cmd_param *param)
 {
@@ -295,7 +358,7 @@ static int vrdma_srv_device_create_ah(struct vrdma_dev *rdev,
 	return 0;
 }
 
-static int vrdma_srv_device_destroy_ah(struct vrdma_dev *rdev, 
+static int vrdma_srv_device_destroy_ah(struct vrdma_dev *rdev,
 					struct vrdma_admin_cmd_entry *cmd)
 {
 	//TODO

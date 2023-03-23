@@ -113,39 +113,17 @@ enum spdk_vrdma_rpc_qp_state {
 	SPDK_VRDMA_RPC_QP_DESTROYED,
 };
 
-struct vrdma_bk_qp_connect {
-	uint64_t node_id; /* classic ip:bridge IP */
-	uint32_t dev_id; /* vhca_id */
-	uint32_t vqpn;
-	uint64_t gid_ip; /* SF IP */
-	uint8_t mac[6]; /* SF MAC */
-};
-
 struct spdk_vrdma_rpc_qp_msg {
-	char *emu_manager;
-	struct vrdma_bk_qp_connect qp_attr;
-	uint64_t remote_node_id; /* remote classic ip:bridge IP */
-	uint32_t remote_dev_id; /* remote vhca_id */
-	uint32_t remote_vqpn;
-	uint64_t remote_gid_ip; /* remote SF IP */
-	uint32_t bk_qpn;
-	uint32_t qp_state;
-};
-
-struct spdk_vrdma_rpc_qp_attr {
     char *emu_manager;
 	uint32_t request_id;
-    uint64_t node_id;
-    uint32_t dev_id;
-    uint32_t vqpn;
-    uint64_t gid_ip;
     uint64_t sf_mac;
-	uint64_t remote_node_id;
-	uint32_t remote_dev_id;
-    uint32_t remote_vqpn;
-	uint64_t remote_gid_ip;
     uint32_t bk_qpn;
     uint32_t qp_state;
+    uint8_t  mqp_idx;
+    union ibv_gid local_tgid;
+    union ibv_gid remote_tgid;
+    union ibv_gid local_mgid;
+    union ibv_gid remote_mgid;
 };
 
 struct spdk_vrdma_rpc_mkey_attr {

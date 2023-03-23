@@ -36,8 +36,8 @@
 #include "spdk/vrdma.h"
 #include "spdk/vrdma_admq.h"
 #include "spdk/vrdma_emu_mgr.h"
-#include "spdk/vrdma_srv.h"
 #include "spdk/vrdma_qp.h"
+#include "spdk/vrdma_srv.h"
 #include "spdk/vrdma_rpc.h"
 
 #define VRDMA_EMU_NAME_PREFIX "VrdmaEmu"
@@ -84,7 +84,6 @@ struct vrdma_ctrl {
 	const struct vRdmaServiceOps *srv_ops;
     void (*destroy_done_cb)(void *arg);
     void *destroy_done_cb_arg;
-    LIST_HEAD(bk_qp_list, vrdma_backend_qp) bk_qp_list;
 };
 
 struct vrdma_ctrl_init_attr {
