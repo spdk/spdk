@@ -6029,6 +6029,7 @@ bs_create_blob(struct spdk_blob_store *bs,
 		if (opts_local.esnap_id_len > UINT16_MAX) {
 			SPDK_ERRLOG("esnap id length %" PRIu64 "is too long\n",
 				    opts_local.esnap_id_len);
+			rc = -EINVAL;
 			goto error;
 
 		}
