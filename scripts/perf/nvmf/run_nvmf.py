@@ -136,7 +136,7 @@ class Server:
     def check_rdma_protocol(self):
         try:
             roce_ena = self.exec_cmd(["cat", "/sys/module/irdma/parameters/roce_ena"])
-            roce_ena = roce_ena.decode().strip()
+            roce_ena = roce_ena.strip()
             if roce_ena == "0":
                 return self.RDMA_PROTOCOL_IWARP
             else:
@@ -157,10 +157,12 @@ class Server:
             return
         if self.irdma_roce_enable and current_mode == self.RDMA_PROTOCOL_IWARP:
             self.reload_driver("irdma", "roce_ena=1")
+            self.log.info("Loaded irdma driver with RoCE enabled")
         elif self.irdma_roce_enable and current_mode == self.RDMA_PROTOCOL_ROCE:
             self.log.info("Leaving irdma driver with RoCE enabled")
         else:
             self.reload_driver("irdma", "roce_ena=0")
+            self.log.info("Loaded irdma driver with iWARP enabled")
 
     def configure_adq(self):
         self.adq_load_modules()
