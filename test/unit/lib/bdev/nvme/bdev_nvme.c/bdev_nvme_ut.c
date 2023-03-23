@@ -5395,9 +5395,6 @@ test_retry_failover_ctrlr(void)
 	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == true);
 	CU_ASSERT(path_id1->is_failed == true);
 
-	CU_ASSERT(nvme_ctrlr->reconnect_delay_timer != NULL);
-	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == true);
-
 	path_id2 = ut_get_path_id_by_trid(nvme_ctrlr, &trid2);
 	SPDK_CU_ASSERT_FATAL(path_id2 != NULL);
 	CU_ASSERT(path_id2->is_failed == false);
