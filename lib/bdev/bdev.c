@@ -6924,6 +6924,12 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
 	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
 
+	if (bdev_io->internal.status != SPDK_BDEV_IO_STATUS_PENDING) {
+		SPDK_ERRLOG("Unexpected completion on IO from %s module, status was %s\n",
+			    spdk_bdev_get_module_name(bdev),
+			    bdev_io_status_get_string(bdev_io->internal.status));
+		assert(false);
+	}
 	bdev_io->internal.status = status;
 
 	if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_RESET)) {
@@ -6968,17 +6974,19 @@ void
 spdk_bdev_io_complete_scsi_status(struct spdk_bdev_io *bdev_io, enum spdk_scsi_status sc,
 				  enum spdk_scsi_sense sk, uint8_t asc, uint8_t ascq)
 {
+	enum spdk_bdev_io_status status;
+
 	if (sc == SPDK_SCSI_STATUS_GOOD) {
-		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+		status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	} else {
-		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SCSI_ERROR;
+		status = SPDK_BDEV_IO_STATUS_SCSI_ERROR;
 		bdev_io->internal.error.scsi.sc = sc;
 		bdev_io->internal.error.scsi.sk = sk;
 		bdev_io->internal.error.scsi.asc = asc;
 		bdev_io->internal.error.scsi.ascq = ascq;
 	}
 
-	spdk_bdev_io_complete(bdev_io, bdev_io->internal.status);
+	spdk_bdev_io_complete(bdev_io, status);
 }
 
 void
@@ -7018,15 +7026,17 @@ spdk_bdev_io_get_scsi_status(const struct spdk_bdev_io *bdev_io,
 void
 spdk_bdev_io_complete_aio_status(struct spdk_bdev_io *bdev_io, int aio_result)
 {
+	enum spdk_bdev_io_status status;
+
 	if (aio_result == 0) {
-		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+		status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	} else {
-		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_AIO_ERROR;
+		status = SPDK_BDEV_IO_STATUS_AIO_ERROR;
 	}
 
 	bdev_io->internal.error.aio_result = aio_result;
 
-	spdk_bdev_io_complete(bdev_io, bdev_io->internal.status);
+	spdk_bdev_io_complete(bdev_io, status);
 }
 
 void
@@ -7046,19 +7056,21 @@ spdk_bdev_io_get_aio_status(const struct spdk_bdev_io *bdev_io, int *aio_result)
 void
 spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, uint32_t cdw0, int sct, int sc)
 {
+	enum spdk_bdev_io_status status;
+
 	if (sct == SPDK_NVME_SCT_GENERIC && sc == SPDK_NVME_SC_SUCCESS) {
-		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+		status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	} else if (sct == SPDK_NVME_SCT_GENERIC && sc == SPDK_NVME_SC_ABORTED_BY_REQUEST) {
-		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_ABORTED;
+		status = SPDK_BDEV_IO_STATUS_ABORTED;
 	} else {
-		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_NVME_ERROR;
+		status = SPDK_BDEV_IO_STATUS_NVME_ERROR;
 	}
 
 	bdev_io->internal.error.nvme.cdw0 = cdw0;
 	bdev_io->internal.error.nvme.sct = sct;
 	bdev_io->internal.error.nvme.sc = sc;
 
-	spdk_bdev_io_complete(bdev_io, bdev_io->internal.status);
+	spdk_bdev_io_complete(bdev_io, status);
 }
 
 void
