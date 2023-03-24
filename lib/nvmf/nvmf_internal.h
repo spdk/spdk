@@ -69,6 +69,7 @@ struct spdk_nvmf_tgt {
 	void					*destroy_cb_arg;
 
 	uint16_t				crdt[3];
+	uint16_t				num_poll_groups;
 
 	TAILQ_ENTRY(spdk_nvmf_tgt)		link;
 };

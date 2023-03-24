@@ -131,6 +131,7 @@ nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 
 	pthread_mutex_lock(&tgt->mutex);
 	TAILQ_REMOVE(&tgt->poll_groups, group, link);
+	tgt->num_poll_groups--;
 	pthread_mutex_unlock(&tgt->mutex);
 
 	assert(!(tgt->state == NVMF_TGT_PAUSING || tgt->state == NVMF_TGT_RESUMING));
@@ -212,6 +213,7 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	}
 
 	pthread_mutex_lock(&tgt->mutex);
+	tgt->num_poll_groups++;
 	TAILQ_INSERT_TAIL(&tgt->poll_groups, group, link);
 	pthread_mutex_unlock(&tgt->mutex);
 
@@ -307,6 +309,7 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *opts)
 	tgt->discovery_genctr = 0;
 	TAILQ_INIT(&tgt->transports);
 	TAILQ_INIT(&tgt->poll_groups);
+	tgt->num_poll_groups = 0;
 
 	tgt->subsystems = calloc(tgt->max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
 	if (!tgt->subsystems) {

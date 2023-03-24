@@ -174,6 +174,7 @@ test_nvmf_tgt_create_poll_group(void)
 
 	TAILQ_INIT(&tgt.transports);
 	TAILQ_INIT(&tgt.poll_groups);
+	tgt.num_poll_groups = 0;
 	pthread_mutex_init(&tgt.mutex, NULL);
 	transport.tgt = &tgt;
 	TAILQ_INSERT_TAIL(&tgt.transports, &transport, link);
@@ -191,11 +192,13 @@ test_nvmf_tgt_create_poll_group(void)
 	CU_ASSERT(group.sgroups[0].ns_info[0].crkey == 0xaa);
 	CU_ASSERT(group.sgroups[0].ns_info[0].rtype == 0xbb);
 	CU_ASSERT(TAILQ_FIRST(&tgt.poll_groups) == &group);
+	CU_ASSERT(tgt.num_poll_groups == 1);
 	CU_ASSERT(group.thread == thread);
 	CU_ASSERT(group.poller != NULL);
 
 	nvmf_tgt_destroy_poll_group((void *)&tgt, (void *)&group);
 	CU_ASSERT(TAILQ_EMPTY(&tgt.poll_groups));
+	CU_ASSERT(tgt.num_poll_groups == 0);
 	free(tgt.subsystems[0]->ns);
 	free(tgt.subsystems);
 
