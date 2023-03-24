@@ -223,14 +223,9 @@ struct vrdma_q_comm {
 	uint16_t num_to_parse;
 };
 
-struct vrdma_sq_meta {
-	uint16_t req_id;
-};
-
 struct vrdma_sq {
 	struct vrdma_q_comm comm;
 	struct vrdma_send_wqe *sq_buff; /* wqe buff */
-	struct vrdma_sq_meta *meta_buff; /* Todo: maybe move to mqp in future */
 	struct vrdma_cqe *local_cq_buff;
 };
 

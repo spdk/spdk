@@ -32,6 +32,7 @@
 #define __VRDMA_SRV_H__
 
 #include <stdint.h>
+#include "vrdma_qp.h"
 #include "vrdma_admq.h"
 
 #define VRDMA_MAX_BK_QP_PER_VQP 4
@@ -44,7 +45,7 @@ struct vrdma_srv_qp {
 	uint32_t qp_state;
 	uint32_t sq_size;
 	uint32_t rq_size;
-	struct vrdma_backend_qp *bk_qp[VRDMA_MAX_BK_QP_PER_VQP];
+	struct vrdma_backend_qp *bk_qp;
 };
 
 struct vrdma_srv_pd {
@@ -239,6 +240,27 @@ struct vrdma_ceqe {
     uint32_t reserved2: 12;
 } __attribute__((packed));
 
+struct vrdma_udp_sport_node {
+    uint16_t udp_src_port;
+    struct vrdma_backend_qp *mqp;
+};
+
+struct vrdma_tgid_key {
+    union ibv_gid local_tgid;
+    union ibv_gid remote_tgid;
+};
+
+/* one remote vrdma device has a tgid */
+struct vrdma_tgid_node {
+    LIST_ENTRY(vrdma_tgid_node)     entry;
+    struct vrdma_tgid_key           key;
+    struct spdk_vrdma_dev           *local_vdev;
+    struct ibv_pd                   *pd;
+#define VRDMA_DEV_SRC_UDP_CNT       2
+    uint8_t                         rsvd[3];
+    struct vrdma_udp_sport_node     src_udp[VRDMA_DEV_SRC_UDP_CNT];
+};
+
 /*
 for following cb functions, device layer need care following return values
 1, for create operation, return handle (int type) for gid/eq/cq/qp/pd/ah
@@ -386,8 +408,7 @@ void vrdma_srv_device_init(struct vrdma_ctrl *ctrl);
 //@qp_state  passed as parameter in modify_qp
 //@vqpn      
 //return 0 success, else failed
-int vrdma_srv_bind_channel(struct vrdma_dev *rdev, union ibv_gid *v_rgid, struct ibv_pd *pd,
-							enum ibv_qp_state qp_state, uint32_t vqpn, uint32_t remote_vqpn);
+int vrdma_srv_bind_channel(struct vrdma_dev *rdev, uint32_t vqpn, struct vrdma_tgid_node *tgid_node);
 //@vqpn
 //return 0 success, else failed
 int vrdma_srv_unbind_channel(struct vrdma_dev *rdev, uint32_t vqpn);
@@ -400,4 +421,7 @@ int vrdma_srv_map_backend_mqp(uint32_t vqpn, struct vrdma_backend_qp *bk_qp);
 //@bk_qp    if service has switched mqp for network error, returned bk_qp, else nothing change
 //@return 0 success, else failed
 int vrdma_srv_update_backend_channel(uint8_t synchrome, uint32_t vqpn, struct vrdma_backend_qp *bk_qp);
+struct vrdma_backend_qp *vrdma_find_mqp(struct vrdma_ctrl *ctrl, 
+                                        struct vrdma_tgid_node *tgid_node,
+                                        uint8_t *mqp_idx);
 #endif

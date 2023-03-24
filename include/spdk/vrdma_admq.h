@@ -372,6 +372,8 @@ struct vrdma_modify_qp_req {
 	uint8_t	port_num;
 	uint8_t	max_rd_atomic;
 	uint8_t	max_dest_rd_atomic;
+    uint8_t l_tgid[16];
+    uint8_t r_tgid[16];
 } __attribute__((packed));
 
 struct vrdma_modify_qp_resp { 

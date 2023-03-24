@@ -44,91 +44,52 @@
 /* RTR state params */
 #define VRDMA_MIN_RNR_TIMER 12
 #define VRDMA_QP_MAX_DEST_RD_ATOMIC 16
+#define VRDMA_MQP_SRC_ADDR_INDEX 1
 
 /* RTS state params */
 #define VRDMA_BACKEND_QP_TIMEOUT 14
 #define VRDMA_BACKEND_QP_RETRY_COUNT 7
 #define VRDMA_BACKEND_QP_RNR_RETRY 7
+#define VRDMA_BACKEND_QP_SQ_SIZE 32*1024
+#define VRDMA_BACKEND_QP_RQ_SIZE 32*1024
 #define VRDMA_QP_MAX_RD_ATOMIC 16
-
+//#define MPATH_DBG
 struct snap_vrdma_backend_qp;
 
+struct mqp_sq_meta {
+    uint16_t req_id;
+    struct spdk_vrdma_qp *vqp;
+};
+
 struct vrdma_backend_qp {
-    LIST_ENTRY(vrdma_backend_qp) entry;
     struct ibv_pd *pd;
-    union ibv_gid lgid_lip;
-	union ibv_gid rgid_rip;
+#define VRDMA_INVALID_POLLER_CORE 0xFFFFFFFF
     uint32_t poller_core;
     struct snap_vrdma_backend_qp bk_qp;
+    LIST_HEAD(, vrdma_vqp) vqp_list;
     uint32_t remote_qpn;
-	uint32_t remote_vqpn;
-	uint32_t src_addr_idx;
-    uint8_t dest_mac[6];
-	uint8_t local_mac[6];
+    uint32_t qp_state;
+    struct mqp_sq_meta *sq_meta_buf;
 };
 
-struct vrdma_local_bk_qp_attr {
-	struct vrdma_bk_qp_connect comm;
-	uint32_t core_id;
-	uint32_t qp_state;
-};
-#define VRDMA_LOCAL_BK_QP_ATTR_SIZE sizeof(struct vrdma_local_bk_qp_attr)
-
-struct vrdma_local_bk_qp {
-	LIST_ENTRY(vrdma_local_bk_qp) entry;
-	union {
-		struct vrdma_local_bk_qp_attr attr;
-		uint8_t data[VRDMA_LOCAL_BK_QP_ATTR_SIZE];
-	};
-	uint32_t bk_qpn;
-	uint64_t remote_node_id;
-	uint32_t remote_dev_id;
-	uint32_t remote_qpn;
-	uint64_t remote_gid_ip;
-	struct vrdma_backend_qp *bk_qp;
+struct vrdma_vqp {
+    LIST_ENTRY(vrdma_vqp) entry;
+    uint32_t qpn;
+    struct spdk_vrdma_qp *vqp;
 };
 
-struct vrdma_remote_bk_qp_attr {
-	struct vrdma_bk_qp_connect comm;
-	uint32_t qp_state;
-};
-#define VRDMA_REMOTE_BK_QP_ATTR_SIZE sizeof(struct vrdma_remote_bk_qp_attr)
-
-struct vrdma_remote_bk_qp {
-	LIST_ENTRY(vrdma_remote_bk_qp) entry;
-	union {
-		struct vrdma_remote_bk_qp_attr attr;
-		uint8_t data[VRDMA_REMOTE_BK_QP_ATTR_SIZE];
-	};
-	uint32_t bk_qpn;
-};
-
-LIST_HEAD(vrdma_lbk_qp_list_head, vrdma_local_bk_qp);
-LIST_HEAD(vrdma_rbk_qp_list_head, vrdma_remote_bk_qp);
-extern struct vrdma_lbk_qp_list_head vrdma_lbk_qp_list;
-extern struct vrdma_rbk_qp_list_head vrdma_rbk_qp_list;
+LIST_HEAD(vrdma_tgid_list_head, vrdma_tgid_node);
+extern struct vrdma_tgid_list_head vrdma_tgid_list;
 
 struct spdk_vrdma_qp *
 find_spdk_vrdma_qp_by_idx(struct vrdma_ctrl *ctrl, uint32_t qp_idx);
-void vrdma_del_bk_qp_list(void);
-int vrdma_add_rbk_qp_list(struct vrdma_ctrl *ctrl, uint64_t gid_ip,
-		uint32_t vqp_idx, uint32_t remote_qpn,
-		struct vrdma_remote_bk_qp_attr *qp_attr);
-void vrdma_del_rbk_qp_from_list(struct vrdma_remote_bk_qp *rqp);
-struct vrdma_remote_bk_qp *
-vrdma_find_rbk_qp_by_vqp(uint64_t remote_gid_ip, uint32_t remote_vqpn);
-struct vrdma_local_bk_qp *
-vrdma_find_lbk_qp_by_vqp(uint64_t gid_ip, uint32_t vqp_idx);
-int vrdma_qp_notify_remote_by_rpc(struct vrdma_ctrl *ctrl, uint32_t vqpn,
-		uint32_t remote_vqpn, struct vrdma_backend_qp *bk_qp);
-struct vrdma_backend_qp *
-vrdma_create_backend_qp(struct vrdma_ctrl *ctrl,
-				uint32_t vqp_idx, uint32_t remote_vqpn);
-int vrdma_modify_backend_qp_to_ready(struct vrdma_ctrl *ctrl,
-				struct vrdma_backend_qp *bk_qp, bool remote_ready);
-void vrdma_destroy_backend_qp(struct vrdma_ctrl *ctrl, uint32_t vqp_idx);
-void set_spdk_vrdma_bk_qp_active(struct vrdma_ctrl *ctrl,
-		struct vrdma_backend_qp *pre_bk_qp);
+void vrdma_destroy_backend_qp(struct vrdma_backend_qp **local_mqp);
+int vrdma_modify_backend_qp_to_init(struct vrdma_backend_qp *bk_qp);
+int vrdma_modify_backend_qp_to_rtr(struct vrdma_backend_qp *bk_qp,
+				struct ibv_qp_attr *qp_attr, int attr_mask,
+			    struct snap_vrdma_bk_qp_rdy_attr *rdy_attr);
+int vrdma_modify_backend_qp_to_rts(struct vrdma_backend_qp *bk_qp);
+void set_spdk_vrdma_bk_qp_active(struct vrdma_backend_qp *bk_qp);
 int vrdma_create_vq(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe,
 				struct spdk_vrdma_qp *vqp,
@@ -140,4 +101,42 @@ void vrdma_destroy_vq(struct vrdma_ctrl *ctrl,
 				struct spdk_vrdma_qp *vqp);
 bool vrdma_qp_is_suspended(struct vrdma_ctrl *ctrl, uint32_t qp_handle);
 bool vrdma_qp_is_connected_ready(struct spdk_vrdma_qp *vqp);
+struct vrdma_tgid_node *
+vrdma_find_tgid_node(union ibv_gid *remote_tgid, union ibv_gid *local_tgid);
+void vrdma_destroy_tgid_list(void);
+struct vrdma_tgid_node *
+vrdma_create_tgid_node(union ibv_gid *remote_tgid,
+                       union ibv_gid *local_tgid,
+                       struct spdk_vrdma_dev *local_vdev,
+                       struct ibv_pd *local_pd,
+                       uint16_t udp_sport_start,
+                       uint32_t max_mqp_cnt);
+struct vrdma_backend_qp *
+vrdma_create_backend_qp(struct vrdma_tgid_node *tgid_node,
+                        uint8_t mqp_idx);
+struct spdk_vrdma_qp *
+vrdma_mqp_find_vqp(struct vrdma_backend_qp *mqp,
+                   uint32_t vqp_idx);
+int vrdma_qp_notify_remote_by_rpc(struct vrdma_ctrl *ctrl,
+                                  struct vrdma_tgid_node *tgid_node,
+                                  uint8_t mqp_idx);
+int vrdma_mqp_add_vqp_to_list(struct vrdma_backend_qp *mqp,
+                              struct spdk_vrdma_qp *vqp,
+                              uint32_t vqp_idx);
+void
+vrdma_mqp_del_vqp_from_list(struct vrdma_backend_qp *mqp,
+                            uint32_t vqp_idx);
+void vrdma_set_rpc_msg_with_mqp_info(struct vrdma_ctrl *ctrl,
+                                     struct vrdma_tgid_node *tgid_node,
+                                     uint8_t mqp_idx,
+                                     struct spdk_vrdma_rpc_qp_msg *msg);
+
+static inline int vrdma_vq_rollback(uint16_t pre_pi, uint16_t pi,
+								   uint16_t q_size)
+{
+	if (pi % q_size == 0) {
+		return 0;
+	}
+	return !(pi % q_size > pre_pi % q_size);
+}
 #endif
