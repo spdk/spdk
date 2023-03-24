@@ -1321,11 +1321,15 @@ bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 		TAILQ_REMOVE(&shared_resource->nomem_io, bdev_io, internal.link);
 		bdev_io->internal.ch->io_outstanding++;
 		shared_resource->io_outstanding++;
-		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
 		bdev_io->internal.error.nvme.cdw0 = 0;
 		bdev_io->num_retries++;
 		bdev_submit_request(bdev, spdk_bdev_io_get_io_channel(bdev_io), bdev_io);
-		if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NOMEM) {
+		if (bdev_io == TAILQ_FIRST(&shared_resource->nomem_io)) {
+			/* This IO completed again with NOMEM status, so break the loop and
+			 * don't try anymore.  Note that a bdev_io that fails with NOMEM
+			 * always gets requeued at the front of the list, to maintain
+			 * ordering.
+			 */
 			break;
 		}
 	}
@@ -1348,6 +1352,7 @@ _bdev_io_handle_no_mem(struct spdk_bdev_io *bdev_io)
 	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
 
 	if (spdk_unlikely(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NOMEM)) {
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
 		TAILQ_INSERT_HEAD(&shared_resource->nomem_io, bdev_io, internal.link);
 		/*
 		 * Wait for some of the outstanding I/O to complete before we
