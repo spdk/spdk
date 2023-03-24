@@ -557,6 +557,24 @@ nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport,
 	}
 
 	tgroup->buf_cache_size = transport->opts.buf_cache_size;
+	/* buf_cache_size of UINT32_MAX means the value should be calculated dynamically
+	 * based on the number of buffers in the shared pool and the number of poll groups
+	 * that are sharing them.  We allocate 75% of the pool for the cache, and then
+	 * divide that by number of poll groups to determine the buf_cache_size for this
+	 * poll group.
+	 */
+	if (tgroup->buf_cache_size == UINT32_MAX) {
+		uint32_t num_shared_buffers = transport->opts.num_shared_buffers;
+		/* Theoretically the nvmf library can dynamically add poll groups to
+		 * the target, after transports have already been created.  We aren't
+		 * going to try to really handle this case efficiently, just do enough
+		 * here to ensure we don't divide-by-zero.
+		 */
+		uint16_t num_poll_groups = group->tgt->num_poll_groups ? : spdk_env_get_core_count();
+
+		tgroup->buf_cache_size = (num_shared_buffers * 3 / 4) / num_poll_groups;
+	}
+
 	bufs = calloc(tgroup->buf_cache_size, sizeof(struct spdk_nvmf_transport_pg_cache_buf *));
 
 	if (!bufs) {
