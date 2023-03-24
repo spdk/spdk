@@ -174,6 +174,7 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	uint32_t sid;
 	int rc;
 
+	group->tgt = tgt;
 	TAILQ_INIT(&group->tgroups);
 	TAILQ_INIT(&group->qpairs);
 	group->thread = thread;

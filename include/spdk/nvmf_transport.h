@@ -172,6 +172,8 @@ struct spdk_nvmf_poll_group {
 	spdk_nvmf_poll_group_destroy_done_fn		destroy_cb_fn;
 	void						*destroy_cb_arg;
 
+	struct spdk_nvmf_tgt				*tgt;
+
 	TAILQ_ENTRY(spdk_nvmf_poll_group)		link;
 
 	pthread_mutex_t					mutex;
