@@ -220,6 +220,29 @@ vbdev_gpt_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_
 }
 
 static void
+gpt_guid_to_uuid(const struct spdk_gpt_guid *guid, struct spdk_uuid *uuid)
+{
+#pragma pack(push, 1)
+	struct tmp_uuid {
+		uint32_t b0;
+		uint16_t b4;
+		uint16_t b6;
+		uint16_t b8;
+		uint16_t b10;
+		uint32_t b12;
+	} *ret = (struct tmp_uuid *)uuid;
+#pragma pack(pop)
+	SPDK_STATIC_ASSERT(sizeof(*ret) == sizeof(*uuid), "wrong size");
+
+	ret->b0 = from_be32(&guid->raw[0]);
+	ret->b4 = from_be16(&guid->raw[4]);
+	ret->b6 = from_be16(&guid->raw[6]);
+	ret->b8 = from_le16(&guid->raw[8]);
+	ret->b10 = from_le16(&guid->raw[10]);
+	ret->b12 = from_le32(&guid->raw[12]);
+}
+
+static void
 write_guid(struct spdk_json_write_ctx *w, const struct spdk_gpt_guid *guid)
 {
 	spdk_json_write_string_fmt(w, "%08x-%04x-%04x-%04x-%04x%08x",
@@ -315,6 +338,7 @@ vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 		uint64_t lba_start = from_le64(&p->starting_lba);
 		uint64_t lba_end = from_le64(&p->ending_lba);
 		uint64_t partition_size = lba_end - lba_start + 1;
+		struct spdk_bdev_part_construct_opts opts;
 
 		if (lba_start == 0) {
 			continue;
@@ -353,8 +377,10 @@ vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 			return -1;
 		}
 
-		rc = spdk_bdev_part_construct(&d->part, gpt_base->part_base, name,
-					      lba_start, partition_size, "GPT Disk");
+		spdk_bdev_part_construct_opts_init(&opts, sizeof(opts));
+		gpt_guid_to_uuid(&p->unique_partition_guid, &opts.uuid);
+		rc = spdk_bdev_part_construct_ext(&d->part, gpt_base->part_base, name, lba_start,
+						  partition_size, "GPT Disk", &opts);
 		free(name);
 		if (rc) {
 			SPDK_ERRLOG("could not construct bdev part\n");

@@ -17,6 +17,10 @@ multiple readers.
 
 New function `spdk_env_get_main_core` was added.
 
+### gpt
+
+GPT bdevs now use the GPT Unique Partition ID as the bdev's UUID.
+
 ### lvol
 
 New API `spdk_lvol_iter_immediate_clones` was added to iterate the clones of an lvol.

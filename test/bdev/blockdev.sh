@@ -117,13 +117,20 @@ function setup_gpt_conf() {
 		fi
 	done
 	if [[ -n $gpt_nvme ]]; then
+		# These Unique Partition GUIDs were randomly generated for testing and are distinct
+		# from the Partition Type GUIDs (SPDK_GPT_OLD_GUID and SPDK_GPT_GUID) which have
+		# special meaning to SPDK. See section 5.3.3 of UEFI Spec 2.3 for the distinction
+		# between Unique Partition GUID and Partition Type GUID.
+		typeset -g g_unique_partguid=6f89f330-603b-4116-ac73-2ca8eae53030
+		typeset -g g_unique_partguid_old=abf1734f-66e5-4c0f-aa29-4021d4d307df
+
 		# Create gpt partition table
 		parted -s "$gpt_nvme" mklabel gpt mkpart SPDK_TEST_first '0%' '50%' mkpart SPDK_TEST_second '50%' '100%'
 		# Change the partition type GUIDs to SPDK partition type values
 		SPDK_GPT_OLD_GUID=$(get_spdk_gpt_old)
 		SPDK_GPT_GUID=$(get_spdk_gpt)
-		sgdisk -t "1:$SPDK_GPT_GUID" "$gpt_nvme"
-		sgdisk -t "2:$SPDK_GPT_OLD_GUID" "$gpt_nvme"
+		sgdisk -t "1:$SPDK_GPT_GUID" -u "1:$g_unique_partguid" "$gpt_nvme"
+		sgdisk -t "2:$SPDK_GPT_OLD_GUID" -u "2:$g_unique_partguid_old" "$gpt_nvme"
 		"$rootdir/scripts/setup.sh"
 		"$rpc_py" bdev_get_bdevs
 		setup_nvme_conf
@@ -609,6 +616,27 @@ function stat_test_suite() {
 	trap - SIGINT SIGTERM EXIT
 }
 
+function bdev_gpt_uuid() {
+	local bdev
+
+	start_spdk_tgt
+
+	"$rpc_py" load_config -j "$conf_file"
+	"$rpc_py" bdev_wait_for_examine
+
+	bdev=$("$rpc_py" bdev_get_bdevs -b "$g_unique_partguid")
+	[[ "$(jq -r 'length' <<< "$bdev")" == "1" ]]
+	[[ "$(jq -r '.[0].aliases[0]' <<< "$bdev")" == "$g_unique_partguid" ]]
+	[[ "$(jq -r '.[0].driver_specific.gpt.unique_partition_guid' <<< "$bdev")" == "$g_unique_partguid" ]]
+
+	bdev=$("$rpc_py" bdev_get_bdevs -b "$g_unique_partguid_old")
+	[[ "$(jq -r 'length' <<< "$bdev")" == "1" ]]
+	[[ "$(jq -r '.[0].aliases[0]' <<< "$bdev")" == "$g_unique_partguid_old" ]]
+	[[ "$(jq -r '.[0].driver_specific.gpt.unique_partition_guid' <<< "$bdev")" == "$g_unique_partguid_old" ]]
+
+	killprocess "$spdk_tgt_pid"
+}
+
 # Initial bdev creation and configuration
 #-----------------------------------------------------
 QOS_DEV_1="Malloc_0"
@@ -741,6 +769,10 @@ if [[ $test_type == bdev ]]; then
 	run_test "bdev_qd_sampling" qd_sampling_test_suite "$env_ctx"
 	run_test "bdev_error" error_test_suite "$env_ctx"
 	run_test "bdev_stat" stat_test_suite "$env_ctx"
+fi
+
+if [[ $test_type == gpt ]]; then
+	run_test "bdev_gpt_uuid" bdev_gpt_uuid
 fi
 
 # Temporarily disabled - infinite loop
