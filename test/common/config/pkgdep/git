@@ -438,7 +438,7 @@ export GIT_REPO_QEMU
 export GIT_REPO_QEMU_VFIO
 : ${GIT_REPO_LIBISCSI=https://github.com/sahlberg/libiscsi}
 export GIT_REPO_LIBISCSI
-: ${DRIVER_LOCATION_QAT=https://downloadmirror.intel.com/761891/QAT.L.4.20.0-00001.tar.gz}
+: ${DRIVER_LOCATION_QAT=https://downloadmirror.intel.com/773821/QAT.L.4.21.0-00001.tar.gz}
 export DRIVER_LOCATION_QAT
 : ${GIT_REPO_GIT=https://github.com/git/git/archive/v${GIT_VERSION}.tar.gz}
 export GIT_REPO_GIT
