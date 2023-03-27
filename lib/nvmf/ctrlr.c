@@ -216,15 +216,6 @@ ctrlr_add_qpair_and_update_rsp(struct spdk_nvmf_qpair *qpair,
 {
 	assert(ctrlr->admin_qpair->group->thread == spdk_get_thread());
 
-	/* check if we would exceed ctrlr connection limit */
-	if (qpair->qid >= spdk_bit_array_capacity(ctrlr->qpair_mask)) {
-		SPDK_ERRLOG("Requested QID %u but Max QID is %u\n",
-			    qpair->qid, spdk_bit_array_capacity(ctrlr->qpair_mask) - 1);
-		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-		rsp->status.sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
-		return;
-	}
-
 	if (spdk_bit_array_get(ctrlr->qpair_mask, qpair->qid)) {
 		SPDK_ERRLOG("Got I/O connect with duplicate QID %u\n", qpair->qid);
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
@@ -589,6 +580,15 @@ nvmf_ctrlr_add_io_qpair(void *ctx)
 		 * state to DEACTIVATING and removing it from poll group */
 		SPDK_ERRLOG("Inactive admin qpair (state %d, group %p)\n", admin_qpair->state, admin_qpair->group);
 		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
+		goto end;
+	}
+
+	/* check if we would exceed ctrlr connection limit */
+	if (qpair->qid >= spdk_bit_array_capacity(ctrlr->qpair_mask)) {
+		SPDK_ERRLOG("Requested QID %u but Max QID is %u\n",
+			    qpair->qid, spdk_bit_array_capacity(ctrlr->qpair_mask) - 1);
+		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
 		goto end;
 	}
 
