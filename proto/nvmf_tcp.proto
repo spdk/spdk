@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package sma.nvmf_tcp;
 
-option go_package = "spdk.io/sma/nvmf_tcp";
+option go_package = "github.com/spdk/sma-goapi/v1alpha1/nvmf_tcp";
 
 // Create device NVMe/TCP-specific parameters
 message DeviceParameters {

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package sma.nvme;
 
-option go_package = "spdk.io/sma/nvme";
+option go_package = "github.com/spdk/sma-goapi/v1alpha1/nvme";
 
 message DeviceParameters {
   // Physical function index
