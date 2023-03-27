@@ -1098,15 +1098,25 @@ enable_device_vq(struct spdk_vhost_session *vsession, uint16_t qid)
 		q->packed.used_phase = q->last_used_idx >> 15;
 		q->last_used_idx = q->last_used_idx & 0x7FFF;
 
-		if (!vsession->interrupt_mode) {
+		if (!spdk_interrupt_mode_is_enabled()) {
 			/* Disable I/O submission notifications, we'll be polling. */
 			q->vring.device_event->flags = VRING_PACKED_EVENT_FLAG_DISABLE;
+		} else {
+			/* Enable I/O submission notifications, we'll be interrupting. */
+			q->vring.device_event->flags = VRING_PACKED_EVENT_FLAG_ENABLE;
 		}
 	} else {
-		if (!vsession->interrupt_mode) {
+		if (!spdk_interrupt_mode_is_enabled()) {
 			/* Disable I/O submission notifications, we'll be polling. */
 			q->vring.used->flags = VRING_USED_F_NO_NOTIFY;
+		} else {
+			/* Enable I/O submission notifications, we'll be interrupting. */
+			q->vring.used->flags = 0;
 		}
+	}
+
+	if (spdk_interrupt_mode_is_enabled() && backend->register_vq_interrupt) {
+		backend->register_vq_interrupt(vsession, q);
 	}
 
 	q->packed.packed_ring = packed_ring;
@@ -1405,10 +1415,7 @@ void
 vhost_user_session_set_interrupt_mode(struct spdk_vhost_session *vsession, bool interrupt_mode)
 {
 	uint16_t i;
-	bool packed_ring;
 	int rc = 0;
-
-	packed_ring = ((vsession->negotiated_features & (1ULL << VIRTIO_F_RING_PACKED)) != 0);
 
 	for (i = 0; i < vsession->max_queues; i++) {
 		struct spdk_vhost_virtqueue *q = &vsession->virtqueue[i];
@@ -1422,12 +1429,6 @@ vhost_user_session_set_interrupt_mode(struct spdk_vhost_session *vsession, bool 
 		}
 
 		if (interrupt_mode) {
-			/* Enable I/O submission notifications, we'll be interrupting. */
-			if (packed_ring) {
-				* (volatile uint16_t *) &q->vring.device_event->flags = VRING_PACKED_EVENT_FLAG_ENABLE;
-			} else {
-				* (volatile uint16_t *) &q->vring.used->flags = 0;
-			}
 
 			/* In case of race condition, always kick vring when switch to intr */
 			rc = write(q->vring.kickfd, &num_events, sizeof(num_events));
@@ -1437,18 +1438,11 @@ vhost_user_session_set_interrupt_mode(struct spdk_vhost_session *vsession, bool 
 
 			vsession->interrupt_mode = true;
 		} else {
-			/* Disable I/O submission notifications, we'll be polling. */
-			if (packed_ring) {
-				* (volatile uint16_t *) &q->vring.device_event->flags = VRING_PACKED_EVENT_FLAG_DISABLE;
-			} else {
-				* (volatile uint16_t *) &q->vring.used->flags = VRING_USED_F_NO_NOTIFY;
-			}
 
 			vsession->interrupt_mode = false;
 		}
 	}
 }
-
 
 static int
 extern_vhost_pre_msg_handler(int vid, void *_msg)
