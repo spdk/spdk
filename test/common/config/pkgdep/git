@@ -337,12 +337,9 @@ function install_ice() {
 
 	curl -L -o- "$ICE_DRIVER" | tar -C "$GIT_REPOS" -xzf -
 
-	if ge "$kernel_ver" 6.1.0; then
-		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1 \
-			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-ktermios-const.patch"
-		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1 \
-			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-netif-napi-weight.patch"
-	fi
+	if ge "$kernel_ver" 6.2.0; then
+		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1
+	fi < "$rootdir/test/common/config/pkgdep/patches/ice/0001-devlink-info-driver.patch"
 
 	(
 		cd "$GIT_REPOS/ice-$ICE_VERSION/src"
@@ -420,7 +417,7 @@ function install_sources() {
 
 GIT_VERSION=2.25.1
 IRDMA_VERSION=1.11.16.6
-ICE_VERSION=1.10.1.2.2
+ICE_VERSION=1.11.14
 
 BPFTRACE_VERSION=${BPFTRACE_VERSION:-36414d9}
 VFIO_QEMU_BRANCH=${VFIO_QEMU_BRANCH:-vfio-user-patch1-noreq}

@@ -1,0 +1,24 @@
+See: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=226bf980550627c88549b112ac6c8fb40873afb4
+---
+ src/ice_devlink.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/src/ice_devlink.c b/src/ice_devlink.c
+index 8fbdcef..1fd2ab3 100644
+--- a/src/ice_devlink.c
++++ b/src/ice_devlink.c
+@@ -357,12 +357,6 @@ static int ice_devlink_info_get(struct devlink *devlink,
+ 		}
+ 	}
+ 
+-	err = devlink_info_driver_name_put(req, KBUILD_MODNAME);
+-	if (err) {
+-		NL_SET_ERR_MSG_MOD(extack, "Unable to set driver name");
+-		goto out_free_ctx;
+-	}
+-
+ 	ice_info_get_dsn(pf, ctx);
+ 
+ 	err = devlink_info_serial_number_put(req, ctx->buf);
+-- 
+
