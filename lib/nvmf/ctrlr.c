@@ -210,16 +210,19 @@ nvmf_ctrlr_start_keep_alive_timer(struct spdk_nvmf_ctrlr *ctrlr)
 }
 
 static void
-ctrlr_add_qpair_and_update_rsp(struct spdk_nvmf_qpair *qpair,
-			       struct spdk_nvmf_ctrlr *ctrlr,
-			       struct spdk_nvmf_fabric_connect_rsp *rsp)
+ctrlr_add_qpair_and_send_rsp(struct spdk_nvmf_qpair *qpair,
+			     struct spdk_nvmf_ctrlr *ctrlr,
+			     struct spdk_nvmf_request *req)
 {
+	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
+
 	assert(ctrlr->admin_qpair->group->thread == spdk_get_thread());
 
 	if (spdk_bit_array_get(ctrlr->qpair_mask, qpair->qid)) {
 		SPDK_ERRLOG("Got I/O connect with duplicate QID %u\n", qpair->qid);
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		rsp->status.sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
+		spdk_nvmf_request_complete(req);
 		return;
 	}
 
@@ -230,6 +233,7 @@ ctrlr_add_qpair_and_update_rsp(struct spdk_nvmf_qpair *qpair,
 	rsp->status_code_specific.success.cntlid = ctrlr->cntlid;
 	SPDK_DEBUGLOG(nvmf, "connect capsule response: cntlid = 0x%04x\n",
 		      rsp->status_code_specific.success.cntlid);
+	spdk_nvmf_request_complete(req);
 
 	SPDK_DTRACE_PROBE4(nvmf_ctrlr_add_qpair, qpair, qpair->qid, ctrlr->subsys->subnqn,
 			   ctrlr->hostnqn);
@@ -239,15 +243,13 @@ static void
 _nvmf_ctrlr_add_admin_qpair(void *ctx)
 {
 	struct spdk_nvmf_request *req = ctx;
-	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 
 	ctrlr->admin_qpair = qpair;
 	ctrlr->association_timeout = qpair->transport->opts.association_timeout;
 	nvmf_ctrlr_start_keep_alive_timer(ctrlr);
-	ctrlr_add_qpair_and_update_rsp(qpair, ctrlr, rsp);
-	_nvmf_request_complete(req);
+	ctrlr_add_qpair_and_send_rsp(qpair, ctrlr, req);
 }
 
 static void
@@ -592,7 +594,8 @@ nvmf_ctrlr_add_io_qpair(void *ctx)
 		goto end;
 	}
 
-	ctrlr_add_qpair_and_update_rsp(qpair, ctrlr, rsp);
+	ctrlr_add_qpair_and_send_rsp(qpair, ctrlr, req);
+	return;
 end:
 	spdk_nvmf_request_complete(req);
 }
