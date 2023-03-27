@@ -8122,7 +8122,7 @@ spdk_bdev_module_claim_bdev_desc(struct spdk_bdev_desc *desc, enum spdk_bdev_cla
 				 struct spdk_bdev_claim_opts *_opts,
 				 struct spdk_bdev_module *module)
 {
-	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev *bdev;
 	struct spdk_bdev_claim_opts opts;
 	int rc = 0;
 
@@ -8130,6 +8130,8 @@ spdk_bdev_module_claim_bdev_desc(struct spdk_bdev_desc *desc, enum spdk_bdev_cla
 		SPDK_ERRLOG("descriptor must not be NULL\n");
 		return -EINVAL;
 	}
+
+	bdev = desc->bdev;
 
 	if (_opts == NULL) {
 		spdk_bdev_claim_opts_init(&opts, sizeof(opts));
