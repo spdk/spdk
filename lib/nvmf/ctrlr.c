@@ -31,6 +31,8 @@
 
 #define NVMF_CTRLR_RESET_SHN_TIMEOUT_IN_MS	(NVMF_CC_RESET_SHN_TIMEOUT_IN_MS + 5000)
 
+#define DUPLICATE_QID_RETRY_US 100
+
 /*
  * Report the SPDK version as the firmware revision.
  * SPDK_VERSION_STRING won't fit into FR (only 8 bytes), so try to fit the most important parts.
@@ -209,6 +211,8 @@ nvmf_ctrlr_start_keep_alive_timer(struct spdk_nvmf_ctrlr *ctrlr)
 	}
 }
 
+static int _retry_qid_check(void *ctx);
+
 static void
 ctrlr_add_qpair_and_send_rsp(struct spdk_nvmf_qpair *qpair,
 			     struct spdk_nvmf_ctrlr *ctrlr,
@@ -219,10 +223,22 @@ ctrlr_add_qpair_and_send_rsp(struct spdk_nvmf_qpair *qpair,
 	assert(ctrlr->admin_qpair->group->thread == spdk_get_thread());
 
 	if (spdk_bit_array_get(ctrlr->qpair_mask, qpair->qid)) {
-		SPDK_ERRLOG("Got I/O connect with duplicate QID %u\n", qpair->qid);
-		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-		rsp->status.sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
-		spdk_nvmf_request_complete(req);
+		if (qpair->connect_req != NULL) {
+			SPDK_ERRLOG("Got I/O connect with duplicate QID %u\n", qpair->qid);
+			rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+			rsp->status.sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
+			qpair->connect_req = NULL;
+			qpair->ctrlr = NULL;
+			spdk_nvmf_request_complete(req);
+		} else {
+			SPDK_WARNLOG("Duplicate QID detected, re-check in %dus\n",
+				     DUPLICATE_QID_RETRY_US);
+			qpair->connect_req = req;
+			/* Set qpair->ctrlr here so that we'll have it when the poller expires. */
+			qpair->ctrlr = ctrlr;
+			req->poller = SPDK_POLLER_REGISTER(_retry_qid_check, qpair,
+							   DUPLICATE_QID_RETRY_US);
+		}
 		return;
 	}
 
@@ -237,6 +253,18 @@ ctrlr_add_qpair_and_send_rsp(struct spdk_nvmf_qpair *qpair,
 
 	SPDK_DTRACE_PROBE4(nvmf_ctrlr_add_qpair, qpair, qpair->qid, ctrlr->subsys->subnqn,
 			   ctrlr->hostnqn);
+}
+
+static int
+_retry_qid_check(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair = ctx;
+	struct spdk_nvmf_request *req = qpair->connect_req;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+
+	spdk_poller_unregister(&req->poller);
+	ctrlr_add_qpair_and_send_rsp(qpair, ctrlr, req);
+	return SPDK_POLLER_BUSY;
 }
 
 static void

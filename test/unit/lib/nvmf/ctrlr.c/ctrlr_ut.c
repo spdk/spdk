@@ -811,12 +811,45 @@ test_connect(void)
 	sgroups[subsystem.id].mgmt_io_outstanding++;
 	TAILQ_INSERT_TAIL(&qpair.outstanding, &req, link);
 	rc = nvmf_ctrlr_cmd_connect(&req);
-	poll_threads();
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+	poll_threads();
+	/* First time, it will detect duplicate QID and schedule a retry.  So for
+	 * now we should expect the response to still be all zeroes.
+	 */
+	CU_ASSERT(spdk_mem_all_zero(&rsp, sizeof(rsp)));
+	CU_ASSERT(sgroups[subsystem.id].mgmt_io_outstanding == 1);
+
+	/* Now advance the clock, so that the retry poller executes. */
+	spdk_delay_us(DUPLICATE_QID_RETRY_US * 2);
+	poll_threads();
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER);
 	CU_ASSERT(qpair.ctrlr == NULL);
 	CU_ASSERT(sgroups[subsystem.id].mgmt_io_outstanding == 0);
+
+	/* I/O connect with temporarily duplicate queue ID. This covers race
+	 * where qpair_mask bit may not yet be cleared, even though initiator
+	 * has closed the connection.  See issue #2955. */
+	memset(&rsp, 0, sizeof(rsp));
+	sgroups[subsystem.id].mgmt_io_outstanding++;
+	TAILQ_INSERT_TAIL(&qpair.outstanding, &req, link);
+	rc = nvmf_ctrlr_cmd_connect(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+	poll_threads();
+	/* First time, it will detect duplicate QID and schedule a retry.  So for
+	 * now we should expect the response to still be all zeroes.
+	 */
+	CU_ASSERT(spdk_mem_all_zero(&rsp, sizeof(rsp)));
+	CU_ASSERT(sgroups[subsystem.id].mgmt_io_outstanding == 1);
+
+	/* Now advance the clock, so that the retry poller executes. */
+	spdk_bit_array_clear(ctrlr.qpair_mask, 1);
+	spdk_delay_us(DUPLICATE_QID_RETRY_US * 2);
+	poll_threads();
+	CU_ASSERT(nvme_status_success(&rsp.nvme_cpl.status));
+	CU_ASSERT(qpair.ctrlr == &ctrlr);
+	CU_ASSERT(sgroups[subsystem.id].mgmt_io_outstanding == 0);
+	qpair.ctrlr = NULL;
 
 	/* I/O connect when admin qpair is being destroyed */
 	admin_qpair.group = NULL;

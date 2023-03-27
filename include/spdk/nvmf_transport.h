@@ -126,7 +126,10 @@ struct spdk_nvmf_qpair {
 	bool					connect_received;
 	bool					disconnect_started;
 
-	struct spdk_nvmf_request		*first_fused_req;
+	union {
+		struct spdk_nvmf_request	*first_fused_req;
+		struct spdk_nvmf_request	*connect_req;
+	};
 
 	TAILQ_HEAD(, spdk_nvmf_request)		outstanding;
 	TAILQ_ENTRY(spdk_nvmf_qpair)		link;
