@@ -1723,6 +1723,26 @@ accel_compare_iovs(struct iovec *iova, uint32_t iovacnt, struct iovec *iovb, uin
 	return memcmp(iova, iovb, sizeof(*iova) * iovacnt) == 0;
 }
 
+static bool
+accel_task_set_dstbuf(struct spdk_accel_task *task, struct spdk_accel_task *next)
+{
+	if (task->dst_domain != next->src_domain) {
+		return false;
+	}
+
+	if (!accel_compare_iovs(task->d.iovs, task->d.iovcnt,
+				next->s.iovs, next->s.iovcnt)) {
+		return false;
+	}
+
+	task->d.iovs = next->d.iovs;
+	task->d.iovcnt = next->d.iovcnt;
+	task->dst_domain = next->dst_domain;
+	task->dst_domain_ctx = next->dst_domain_ctx;
+
+	return true;
+}
+
 static void
 accel_sequence_merge_tasks(struct spdk_accel_sequence *seq, struct spdk_accel_task *task,
 			   struct spdk_accel_task **next_task)
@@ -1764,17 +1784,9 @@ accel_sequence_merge_tasks(struct spdk_accel_sequence *seq, struct spdk_accel_ta
 		if (next->op_code != ACCEL_OPC_COPY) {
 			break;
 		}
-		if (task->dst_domain != next->src_domain) {
+		if (!accel_task_set_dstbuf(task, next)) {
 			break;
 		}
-		if (!accel_compare_iovs(task->d.iovs, task->d.iovcnt,
-					next->s.iovs, next->s.iovcnt)) {
-			break;
-		}
-		task->d.iovs = next->d.iovs;
-		task->d.iovcnt = next->d.iovcnt;
-		task->dst_domain = next->dst_domain;
-		task->dst_domain_ctx = next->dst_domain_ctx;
 		/* We're removing next_task from the tasks queue, so we need to update its pointer,
 		 * so that the TAILQ_FOREACH_SAFE() loop below works correctly */
 		*next_task = TAILQ_NEXT(next, seq_link);
