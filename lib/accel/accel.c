@@ -1752,6 +1752,7 @@ accel_sequence_merge_tasks(struct spdk_accel_sequence *seq, struct spdk_accel_ta
 		next->s.iovs = task->s.iovs;
 		next->s.iovcnt = task->s.iovcnt;
 		next->src_domain = task->src_domain;
+		next->src_domain_ctx = task->src_domain_ctx;
 		TAILQ_REMOVE(&seq->tasks, task, seq_link);
 		TAILQ_INSERT_TAIL(&seq->completed, task, seq_link);
 		break;
@@ -1773,6 +1774,7 @@ accel_sequence_merge_tasks(struct spdk_accel_sequence *seq, struct spdk_accel_ta
 		task->d.iovs = next->d.iovs;
 		task->d.iovcnt = next->d.iovcnt;
 		task->dst_domain = next->dst_domain;
+		task->dst_domain_ctx = next->dst_domain_ctx;
 		/* We're removing next_task from the tasks queue, so we need to update its pointer,
 		 * so that the TAILQ_FOREACH_SAFE() loop below works correctly */
 		*next_task = TAILQ_NEXT(next, seq_link);

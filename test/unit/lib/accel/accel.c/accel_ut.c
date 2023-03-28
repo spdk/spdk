@@ -975,8 +975,12 @@ struct ut_sequence_operation {
 	int count;
 	struct iovec *src_iovs;
 	uint32_t src_iovcnt;
+	struct spdk_memory_domain *src_domain;
+	void *src_domain_ctx;
 	struct iovec *dst_iovs;
 	uint32_t dst_iovcnt;
+	struct spdk_memory_domain *dst_domain;
+	void *dst_domain_ctx;
 	int (*submit)(struct spdk_io_channel *ch, struct spdk_accel_task *t);
 };
 
@@ -1000,6 +1004,15 @@ ut_sequnce_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *task
 		CU_ASSERT_EQUAL(task->d.iovcnt, op->dst_iovcnt);
 		CU_ASSERT_EQUAL(memcmp(task->d.iovs, op->dst_iovs,
 				       sizeof(struct iovec) * op->dst_iovcnt), 0);
+	}
+
+	CU_ASSERT_EQUAL(task->src_domain, op->src_domain);
+	CU_ASSERT_EQUAL(task->dst_domain, op->dst_domain);
+	if (op->src_domain != NULL) {
+		CU_ASSERT_EQUAL(task->src_domain_ctx, op->src_domain_ctx);
+	}
+	if (op->dst_domain != NULL) {
+		CU_ASSERT_EQUAL(task->dst_domain_ctx, op->dst_domain_ctx);
 	}
 
 	if (op->submit_status != 0) {
@@ -1491,6 +1504,7 @@ test_sequence_copy_elision(void)
 
 	/* Override the submit_tasks function */
 	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
+	g_module.supports_memory_domains = true;
 	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
 		g_seq_operations[i].complete_status = 0;
 		g_seq_operations[i].submit_status = 0;
@@ -1869,11 +1883,69 @@ test_sequence_copy_elision(void)
 	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 0);
 	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECRYPT].count, 1);
 
+	/* Check a sequence with memory domains and verify their pointers (and their contexts) are
+	 * correctly set on the next/prev task when a copy is removed */
+	seq = NULL;
+	completed = 0;
+	g_seq_operations[ACCEL_OPC_COPY].count = 0;
+	g_seq_operations[ACCEL_OPC_DECRYPT].count = 0;
+	g_seq_operations[ACCEL_OPC_DECRYPT].dst_iovcnt = 1;
+	g_seq_operations[ACCEL_OPC_DECRYPT].src_iovcnt = 1;
+	g_seq_operations[ACCEL_OPC_DECRYPT].src_iovs = &exp_iovs[0];
+	g_seq_operations[ACCEL_OPC_DECRYPT].dst_iovs = &exp_iovs[1];
+	g_seq_operations[ACCEL_OPC_DECRYPT].dst_domain = (void *)0x1;
+	g_seq_operations[ACCEL_OPC_DECRYPT].dst_domain_ctx = (void *)0x2;
+	g_seq_operations[ACCEL_OPC_DECRYPT].src_domain = (void *)0x3;
+	g_seq_operations[ACCEL_OPC_DECRYPT].src_domain_ctx = (void *)0x4;
+	exp_iovs[0].iov_base = tmp[0];
+	exp_iovs[0].iov_len = sizeof(tmp[0]);
+	exp_iovs[1].iov_base = buf;
+	exp_iovs[1].iov_len = sizeof(buf);
+
+	dst_iovs[0].iov_base = tmp[1];
+	dst_iovs[0].iov_len = sizeof(tmp[1]);
+	src_iovs[0].iov_base = tmp[0];
+	src_iovs[0].iov_len = sizeof(tmp[0]);
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[0], 1, (void *)0xdead, (void *)0xbeef,
+				    &src_iovs[0], 1, (void *)0x3, (void *)0x4, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	dst_iovs[1].iov_base = tmp[2];
+	dst_iovs[1].iov_len = sizeof(tmp[2]);
+	src_iovs[1].iov_base = tmp[1];
+	src_iovs[1].iov_len = sizeof(tmp[1]);
+	rc = spdk_accel_append_decrypt(&seq, ioch, &key, &dst_iovs[1], 1, (void *)0xdead, (void *)0xbeef,
+				       &src_iovs[1], 1, (void *)0xdead, (void *)0xbeef, 0,
+				       sizeof(tmp[2]), 0, ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	dst_iovs[2].iov_base = buf;
+	dst_iovs[2].iov_len = sizeof(buf);
+	src_iovs[2].iov_base = tmp[2];
+	src_iovs[2].iov_len = sizeof(tmp[2]);
+	rc = spdk_accel_append_copy(&seq, ioch, &dst_iovs[2], 1, (void *)0x1, (void *)0x2,
+				    &src_iovs[2], 1, (void *)0xdead, (void *)0xbeef, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 3);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECRYPT].count, 1);
+
 	/* Cleanup module pointers to make subsequent tests work correctly */
 	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
 		g_modules_opc[i] = modules[i];
 	}
 
+	g_module.supports_memory_domains = false;
 	ut_clear_operations();
 	spdk_put_io_channel(ioch);
 	poll_threads();
