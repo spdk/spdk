@@ -2811,7 +2811,7 @@ spdk_interrupt_register(int efd, spdk_interrupt_fn fn,
 	intr->fn = fn;
 	intr->arg = arg;
 
-	ret = spdk_fd_group_add(thread->fgrp, efd, _interrupt_wrapper, intr, name);
+	ret = spdk_fd_group_add(thread->fgrp, efd, _interrupt_wrapper, intr, intr->name);
 
 	if (ret != 0) {
 		SPDK_ERRLOG("thread %s: failed to add fd %d: %s\n",
