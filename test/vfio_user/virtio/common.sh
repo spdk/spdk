@@ -13,7 +13,7 @@ function vfu_tgt_run() {
 	mkdir -p $vfio_user_dir
 
 	timing_enter vfu_tgt_start
-	$rootdir/build/bin/spdk_tgt -r $vfio_user_dir/rpc.sock -m 0xf &
+	$rootdir/build/bin/spdk_tgt -r $vfio_user_dir/rpc.sock -m 0xf -s 512 &
 	vfupid=$!
 	echo $vfupid > $vfu_pid_file
 

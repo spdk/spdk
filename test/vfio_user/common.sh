@@ -3,7 +3,7 @@
 #  All rights reserved.
 #
 
-: ${MALLOC_BDEV_SIZE=256}
+: ${MALLOC_BDEV_SIZE=128}
 : ${MALLOC_BLOCK_SIZE=512}
 
 source "$rootdir/test/vhost/common.sh"

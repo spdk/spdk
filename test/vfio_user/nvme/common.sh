@@ -23,7 +23,7 @@ function vfio_user_run() {
 	mkdir -p $vfio_user_dir
 
 	timing_enter vfio_user_start
-	$rootdir/build/bin/nvmf_tgt -r $vfio_user_dir/rpc.sock -m 0xf &
+	$rootdir/build/bin/nvmf_tgt -r $vfio_user_dir/rpc.sock -m 0xf -s 512 &
 	nvmfpid=$!
 	echo $nvmfpid > $nvmf_pid_file
 
