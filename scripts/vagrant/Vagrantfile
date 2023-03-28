@@ -323,7 +323,12 @@ distro_to_use = get_box_type(distro, force_distro)
 # local VM we don't need to worry about saturating the local link so skip
 # the compression to speed up the whole transfer.
 files_sync_backend = {type: "rsync", rsync__auto: false, rsync__args: ["--archive", "--verbose", "--delete"]}
-plugins_sync_backend = {type: :nfs, nfs_udp: false, nfs_version: 4}
+
+if ENV['NFS4_BACKEND'] or not Vagrant.has_plugin?("vagrant-sshfs")
+  plugins_sync_backend = {type: :nfs, nfs_udp: false, nfs_version: 4}
+else
+  plugins_sync_backend = {type: :sshfs}
+end
 
 Vagrant.configure(2) do |config|
   config.vm.box = distro_to_use

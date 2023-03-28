@@ -48,6 +48,7 @@ display_help() {
 	echo "  -a                              Copy spdk/autorun.sh artifacts from VM to host system."
 	echo "  -d                              Deploy a test vm by provisioning all prerequisites for spdk autotest"
 	echo "  -o                              Add network interface for openstack tests"
+	echo "  -N                              Use NFSv4 backend"
 	echo "  --qemu-emulator=<path>          Path to custom QEMU binary. Only works with libvirt provider"
 	echo "  --vagrantfiles-dir=<path>       Destination directory to put Vagrantfile into."
 	echo "  --package-box                   Install all dependencies for SPDK and create a local vagrant box version."
@@ -97,10 +98,11 @@ VAGRANT_PACKAGE_BOX=0
 VAGRANT_HUGE_MEM=0
 VAGRANTFILE=$DIR/Vagrantfile
 FORCE_DISTRO=false
+NFS4_BACKEND=0
 VAGRANT_BOX_VERSION=""
 EXTRA_VAGRANTFILES=""
 
-while getopts ":b:n:s:x:p:uvcraldoHhf-:" opt; do
+while getopts ":b:n:s:x:p:uvcraldoHNhf-:" opt; do
 	case "${opt}" in
 		-)
 			case "${OPTARG}" in
@@ -163,6 +165,9 @@ while getopts ":b:n:s:x:p:uvcraldoHhf-:" opt; do
 			;;
 		f)
 			FORCE_DISTRO=true
+			;;
+		N)
+			NFS4_BACKEND=1
 			;;
 		*)
 			echo "  Invalid argument: -$OPTARG" >&2
