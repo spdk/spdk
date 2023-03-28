@@ -792,11 +792,9 @@ test_connect(void)
 	CU_ASSERT(sgroups[subsystem.id].mgmt_io_outstanding == 0);
 	ctrlr.vcprop.cc.bits.iocqes = 4;
 
-	/* I/O connect with too many existing qpairs */
+	/* I/O connect with qid that is too large */
 	memset(&rsp, 0, sizeof(rsp));
-	spdk_bit_array_set(ctrlr.qpair_mask, 0);
-	spdk_bit_array_set(ctrlr.qpair_mask, 1);
-	spdk_bit_array_set(ctrlr.qpair_mask, 2);
+	cmd.connect_cmd.qid = 3;
 	sgroups[subsystem.id].mgmt_io_outstanding++;
 	TAILQ_INSERT_TAIL(&qpair.outstanding, &req, link);
 	rc = nvmf_ctrlr_cmd_connect(&req);
@@ -806,9 +804,6 @@ test_connect(void)
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER);
 	CU_ASSERT(qpair.ctrlr == NULL);
 	CU_ASSERT(sgroups[subsystem.id].mgmt_io_outstanding == 0);
-	spdk_bit_array_clear(ctrlr.qpair_mask, 0);
-	spdk_bit_array_clear(ctrlr.qpair_mask, 1);
-	spdk_bit_array_clear(ctrlr.qpair_mask, 2);
 
 	/* I/O connect with duplicate queue ID */
 	memset(&rsp, 0, sizeof(rsp));
