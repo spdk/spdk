@@ -1077,6 +1077,11 @@ iscsi_conn_params_update(struct spdk_iscsi_conn *conn)
 		}
 	}
 
+	if (conn->sock == NULL) {
+		SPDK_INFOLOG(iscsi, "socket is already closed.\n");
+		return -ENXIO;
+	}
+
 	/* The socket receive buffer may need to be adjusted based on the new parameters */
 
 	/* Don't allow the recv buffer to be 0 or very large. */
