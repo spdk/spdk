@@ -414,7 +414,6 @@ test_connect(void)
 	struct spdk_nvmf_request req;
 	struct spdk_nvmf_qpair admin_qpair;
 	struct spdk_nvmf_qpair qpair;
-	struct spdk_nvmf_qpair qpair2;
 	struct spdk_nvmf_ctrlr ctrlr;
 	struct spdk_nvmf_tgt tgt;
 	union nvmf_h2c_msg cmd;
@@ -807,9 +806,6 @@ test_connect(void)
 
 	/* I/O connect with duplicate queue ID */
 	memset(&rsp, 0, sizeof(rsp));
-	memset(&qpair2, 0, sizeof(qpair2));
-	qpair2.group = &group;
-	qpair2.qid = 1;
 	spdk_bit_array_set(ctrlr.qpair_mask, 1);
 	cmd.connect_cmd.qid = 1;
 	sgroups[subsystem.id].mgmt_io_outstanding++;
