@@ -136,30 +136,30 @@ verify_nr_hugepages() {
 default_setup() {
 	# Default HUGEMEM (2G) alloc on node0
 	get_test_nr_hugepages $((2048 * 1024)) 0
-	setup
+	setup output
 	verify_nr_hugepages
 }
 
-per_node_2G_alloc() {
-	# 2G alloc per node, total N*2G pages
+per_node_1G_alloc() {
+	# 1G alloc per node, total N*1G pages
 	local IFS=","
 
-	get_test_nr_hugepages $((2048 * 1024)) "${!nodes_sys[@]}"
-	NRHUGE=$nr_hugepages HUGENODE="${!nodes_sys[*]}" setup
+	get_test_nr_hugepages $((1024 * 1024)) "${!nodes_sys[@]}"
+	NRHUGE=$nr_hugepages HUGENODE="${!nodes_sys[*]}" setup output
 	nr_hugepages=$((nr_hugepages * ${#nodes_sys[@]})) verify_nr_hugepages
 }
 
 even_2G_alloc() {
 	# 2G alloc spread across N nodes
 	get_test_nr_hugepages $((2048 * 1024))
-	NRHUGE=$nr_hugepages HUGE_EVEN_ALLOC=yes setup
+	NRHUGE=$nr_hugepages HUGE_EVEN_ALLOC=yes setup output
 	verify_nr_hugepages
 }
 
 odd_alloc() {
 	# Odd 2049MB alloc across N nodes
 	get_test_nr_hugepages $((2049 * 1024))
-	HUGEMEM=2049 HUGE_EVEN_ALLOC=yes setup
+	HUGEMEM=2049 HUGE_EVEN_ALLOC=yes setup output
 	verify_nr_hugepages
 }
 
@@ -186,7 +186,7 @@ custom_alloc() {
 	done
 
 	get_test_nr_hugepages_per_node
-	HUGENODE="${HUGENODE[*]}" setup
+	HUGENODE="${HUGENODE[*]}" setup output
 	nr_hugepages=$_nr_hugepages verify_nr_hugepages
 }
 
@@ -197,11 +197,11 @@ no_shrink_alloc() {
 	get_test_nr_hugepages $((2048 * 1024)) 0
 
 	# Verify the default first
-	setup
+	setup output
 	verify_nr_hugepages
 
 	# Now attempt to shrink the hp number
-	CLEAR_HUGE=no NRHUGE=$((nr_hugepages / 2)) setup
+	CLEAR_HUGE=no NRHUGE=$((nr_hugepages / 2)) setup output
 	# 2G should remain
 	verify_nr_hugepages
 }
@@ -210,7 +210,7 @@ get_nodes
 clear_hp
 
 run_test "default_setup" default_setup
-run_test "per_node_2G_alloc" per_node_2G_alloc
+run_test "per_node_1G_alloc" per_node_1G_alloc
 run_test "even_2G_alloc" even_2G_alloc
 run_test "odd_alloc" odd_alloc
 run_test "custom_alloc" custom_alloc
