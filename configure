@@ -821,7 +821,7 @@ if [ "${CONFIG[RDMA]}" = "y" ]; then
 	if ! echo -e '#include <infiniband/verbs.h>\n#include <rdma/rdma_verbs.h>\n' \
 		'int main(void) { return 0; }\n' \
 		| "${BUILD_CMD[@]}" -libverbs -lrdmacm - 2> /dev/null; then
-		echo "--with-rdma requires libverbs and librdmacm."
+		echo "--with-rdma requires libibverbs and librdmacm."
 		echo "Please install then re-run this script."
 		exit 1
 	fi
