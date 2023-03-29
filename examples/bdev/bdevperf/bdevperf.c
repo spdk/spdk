@@ -1770,6 +1770,7 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 		task = calloc(1, sizeof(struct bdevperf_task));
 		if (!task) {
 			fprintf(stderr, "Failed to allocate task from memory\n");
+			spdk_zipf_free(&job->zipf);
 			return -ENOMEM;
 		}
 
@@ -1777,6 +1778,7 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 					 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 		if (!task->buf) {
 			fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
+			spdk_zipf_free(&job->zipf);
 			free(task);
 			return -ENOMEM;
 		}
@@ -1787,6 +1789,7 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 						    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 			if (!task->md_buf) {
 				fprintf(stderr, "Cannot allocate md buf for task=%p\n", task);
+				spdk_zipf_free(&job->zipf);
 				spdk_free(task->buf);
 				free(task);
 				return -ENOMEM;
