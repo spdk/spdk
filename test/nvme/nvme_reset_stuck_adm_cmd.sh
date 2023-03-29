@@ -7,6 +7,14 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 
+function base64_decode_bits() {
+	local bin_array status
+
+	bin_array=($(base64 -d <(printf '%s' "$1") | hexdump -ve '/1 "0x%02x\n"'))
+	status=$((bin_array[-1] << 8 | bin_array[-2]))
+	printf '0x%x' $(((status >> $2) & $3))
+}
+
 ctrlr_name="nvme0"
 # Error injection timeout - 15 sec (in usec)
 err_injection_timeout=15000000
@@ -23,16 +31,6 @@ if [ -z "${bdf}" ]; then
 	echo "No NVMe drive found but test requires it. Failing the test."
 	exit 1
 fi
-
-function base64_decode_bits() {
-	python3 <<- EOF
-		import base64
-		bin_array = bytearray(base64.b64decode("$1"))
-		array_length = len(bin_array)
-		status = (bin_array[array_length-1] << 8) | bin_array[array_length-2]
-		print("0x%x" % ((status >> $2) & $3))
-	EOF
-}
 
 "$SPDK_BIN_DIR/spdk_tgt" -m 0xF &
 spdk_target_pid=$!
