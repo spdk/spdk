@@ -47,6 +47,7 @@ extern "C" {
 struct spdk_env_opts {
 	const char		*name;
 	const char		*core_mask;
+	const char		*lcore_map;
 	int			shm_id;
 	int			mem_channel;
 	int			main_core;

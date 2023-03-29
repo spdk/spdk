@@ -66,7 +66,6 @@ struct spdk_app_opts {
 
 	/* Hole at bytes 17-23. */
 	uint8_t	reserved17[7];
-
 	const char *rpc_addr; /* Can be UNIX domain socket path or IP address + TCP port */
 	const char *reactor_mask;
 	const char *tpoint_group_mask;
@@ -163,8 +162,14 @@ struct spdk_app_opts {
 	 * The vf_token is an UUID that shared between SR-IOV PF and VF.
 	 */
 	const char		*vf_token;
+
+	/**
+	 * Used to store lcore to CPU mappig to pass it to DPDK
+	 */
+	const char *lcore_map; /* lcore mapping */
+
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 216, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 224, "Incorrect size");
 
 /**
  * Initialize the default value of opts
