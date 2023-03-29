@@ -6,7 +6,7 @@
 
 #include "spdk_cunit.h"
 #include "spdk_internal/mock.h"
-#include "spdk_internal/accel_module.h"
+#include "spdk/accel_module.h"
 #include "thread/thread_internal.h"
 #include "common/lib/ut_multithread.c"
 #include "common/lib/test_iobuf.c"

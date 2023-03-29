@@ -19,7 +19,7 @@
 #include "spdk/log.h"
 #include "spdk/accel.h"
 
-#include "spdk_internal/accel_module.h"
+#include "spdk/accel_module.h"
 
 
 #define CHUNK_SIZE (1024 * 16)

@@ -5,7 +5,7 @@
  */
 
 #include "accel_internal.h"
-#include "spdk_internal/accel_module.h"
+#include "spdk/accel_module.h"
 
 #include "spdk/rpc.h"
 #include "spdk/util.h"

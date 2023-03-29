@@ -13,7 +13,7 @@
 #include "spdk/string.h"
 #include "spdk/log.h"
 #include "spdk/accel.h"
-#include "spdk_internal/accel_module.h"
+#include "spdk/accel_module.h"
 
 #include "spdk/bdev.h"
 

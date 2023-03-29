@@ -7,7 +7,7 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk_internal/accel_module.h"
+#include "spdk/accel_module.h"
 #include "spdk/log.h"
 #include "spdk_internal/idxd.h"
 

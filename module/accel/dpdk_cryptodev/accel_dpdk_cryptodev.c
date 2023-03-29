@@ -7,7 +7,7 @@
 #include "accel_dpdk_cryptodev.h"
 
 #include "spdk/accel.h"
-#include "spdk_internal/accel_module.h"
+#include "spdk/accel_module.h"
 #include "spdk/env.h"
 #include "spdk/likely.h"
 #include "spdk/thread.h"
