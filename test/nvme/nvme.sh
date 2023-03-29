@@ -64,6 +64,12 @@ function nvme_multi_secondary() {
 	wait $pid1
 }
 
+function nvme_doorbell_aers() {
+	for bdf in $(get_nvme_bdfs); do
+		timeout --preserve-status 10 $testdir/doorbell_aers/doorbell_aers -r "trtype:PCIe traddr:${bdf}"
+	done
+}
+
 if [ $(uname) = Linux ]; then
 	# check that our setup.sh script does not bind NVMe devices to uio/vfio if they
 	# have an active mountpoint
@@ -137,6 +143,7 @@ run_test "nvme_err_injection" $testdir/err_injection/err_injection
 run_test "nvme_overhead" $testdir/overhead/overhead -o 4096 -t 1 -H -i 0
 run_test "nvme_arbitration" $SPDK_EXAMPLE_DIR/arbitration -t 3 -i 0
 run_test "nvme_single_aen" $testdir/aer/aer -T -i 0 -L log
+run_test "nvme_doorbell_aers" nvme_doorbell_aers
 
 if [ $(uname) != "FreeBSD" ]; then
 	run_test "nvme_multi_aen" $testdir/aer/aer -m -T -i 0 -L log
