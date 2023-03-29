@@ -88,8 +88,8 @@ struct spdk_uring_sock_group_impl {
 };
 
 static struct spdk_sock_impl_opts g_spdk_uring_sock_impl_opts = {
-	.recv_buf_size = MIN_SO_RCVBUF_SIZE,
-	.send_buf_size = MIN_SO_SNDBUF_SIZE,
+	.recv_buf_size = DEFAULT_SO_RCVBUF_SIZE,
+	.send_buf_size = DEFAULT_SO_SNDBUF_SIZE,
 	.enable_recv_pipe = true,
 	.enable_quickack = false,
 	.enable_placement_id = PLACEMENT_NONE,

@@ -925,8 +925,8 @@ posix_sock_impl_get_set_opts(void)
 	rc = spdk_sock_impl_get_opts("posix", &opts, &len);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(len == sizeof(opts));
-	CU_ASSERT(opts.recv_buf_size == MIN_SO_RCVBUF_SIZE);
-	CU_ASSERT(opts.send_buf_size == MIN_SO_SNDBUF_SIZE);
+	CU_ASSERT(opts.recv_buf_size == DEFAULT_SO_RCVBUF_SIZE);
+	CU_ASSERT(opts.send_buf_size == DEFAULT_SO_SNDBUF_SIZE);
 
 	/* Try to request zero opts */
 	len = 0;
