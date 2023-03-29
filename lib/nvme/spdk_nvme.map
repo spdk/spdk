@@ -117,6 +117,7 @@
 	spdk_nvme_ctrlr_set_remove_cb;
 	spdk_nvme_ctrlr_get_memory_domains;
 	spdk_nvme_ctrlr_get_discovery_log_page;
+	spdk_nvme_ctrlr_get_registers;
 
 	spdk_nvme_poll_group_create;
 	spdk_nvme_poll_group_add;

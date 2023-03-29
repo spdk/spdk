@@ -853,3 +853,15 @@ spdk_nvme_transport_set_opts(const struct spdk_nvme_transport_opts *opts, size_t
 
 	return 0;
 }
+
+volatile struct spdk_nvme_registers *
+spdk_nvme_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+
+	if (transport->ops.ctrlr_get_registers) {
+		return transport->ops.ctrlr_get_registers(ctrlr);
+	}
+
+	return NULL;
+}

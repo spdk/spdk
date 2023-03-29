@@ -4140,6 +4140,8 @@ struct spdk_nvme_transport_ops {
 					int array_size);
 
 	int (*ctrlr_ready)(struct spdk_nvme_ctrlr *ctrlr);
+
+	volatile struct spdk_nvme_registers *(*ctrlr_get_registers)(struct spdk_nvme_ctrlr *ctrlr);
 };
 
 /**

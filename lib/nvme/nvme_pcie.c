@@ -148,6 +148,14 @@ nvme_pcie_reg_addr(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset)
 	return (volatile void *)((uintptr_t)pctrlr->regs + offset);
 }
 
+static volatile struct spdk_nvme_registers *
+nvme_pcie_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+
+	return pctrlr->regs;
+}
+
 static int
 nvme_pcie_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value)
 {
@@ -1067,6 +1075,7 @@ const struct spdk_nvme_transport_ops pcie_ops = {
 	.ctrlr_destruct = nvme_pcie_ctrlr_destruct,
 	.ctrlr_enable = nvme_pcie_ctrlr_enable,
 
+	.ctrlr_get_registers = nvme_pcie_ctrlr_get_registers,
 	.ctrlr_set_reg_4 = nvme_pcie_ctrlr_set_reg_4,
 	.ctrlr_set_reg_8 = nvme_pcie_ctrlr_set_reg_8,
 	.ctrlr_get_reg_4 = nvme_pcie_ctrlr_get_reg_4,

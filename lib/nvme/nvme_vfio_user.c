@@ -32,6 +32,14 @@ nvme_vfio_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 	return SPDK_CONTAINEROF(pctrlr, struct nvme_vfio_ctrlr, pctrlr);
 }
 
+static volatile struct spdk_nvme_registers *
+nvme_vfio_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_vfio_ctrlr *vctrlr = nvme_vfio_ctrlr(ctrlr);
+
+	return vctrlr->pctrlr.regs;
+}
+
 static int
 nvme_vfio_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value)
 {
@@ -321,6 +329,7 @@ const struct spdk_nvme_transport_ops vfio_ops = {
 	.ctrlr_destruct = nvme_vfio_ctrlr_destruct,
 	.ctrlr_enable = nvme_vfio_ctrlr_enable,
 
+	.ctrlr_get_registers = nvme_vfio_ctrlr_get_registers,
 	.ctrlr_set_reg_4 = nvme_vfio_ctrlr_set_reg_4,
 	.ctrlr_set_reg_8 = nvme_vfio_ctrlr_set_reg_8,
 	.ctrlr_get_reg_4 = nvme_vfio_ctrlr_get_reg_4,
