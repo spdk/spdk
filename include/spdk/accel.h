@@ -472,6 +472,27 @@ int spdk_accel_append_decrypt(struct spdk_accel_sequence **seq, struct spdk_io_c
 			      spdk_accel_step_cb cb_fn, void *cb_arg);
 
 /**
+ * Append a crc32c operation to a sequence.
+ *
+ * \param seq Sequence object.  If NULL, a new sequence object will be created.
+ * \param ch I/O channel.
+ * \param dst Destination to write the calculated value.
+ * \param iovs Source I/O vector array.
+ * \param iovcnt Size of the `iovs` array.
+ * \param domain Memory domain to which the source buffers belong.
+ * \param domain_ctx Source buffer domain context.
+ * \param seed Initial value.
+ * \param cb_fn Callback to be executed once this operation is completed.
+ * \param cb_arg Argument to be passed to `cb_fn`.
+ *
+ * \return 0 if operation was successfully added to the sequence, negative errno otherwise.
+ */
+int spdk_accel_append_crc32c(struct spdk_accel_sequence **seq, struct spdk_io_channel *ch,
+			     uint32_t *dst, struct iovec *iovs, uint32_t iovcnt,
+			     struct spdk_memory_domain *domain, void *domain_ctx,
+			     uint32_t seed, spdk_accel_step_cb cb_fn, void *cb_arg);
+
+/**
  * Finish a sequence and execute all its operations. After the completion callback is executed, the
  * sequence object is automatically freed.
  *

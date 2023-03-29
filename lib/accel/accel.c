@@ -1086,6 +1086,48 @@ spdk_accel_append_decrypt(struct spdk_accel_sequence **pseq, struct spdk_io_chan
 }
 
 int
+spdk_accel_append_crc32c(struct spdk_accel_sequence **pseq, struct spdk_io_channel *ch,
+			 uint32_t *dst, struct iovec *iovs, uint32_t iovcnt,
+			 struct spdk_memory_domain *domain, void *domain_ctx,
+			 uint32_t seed, spdk_accel_step_cb cb_fn, void *cb_arg)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_accel_task *task;
+	struct spdk_accel_sequence *seq = *pseq;
+
+	if (seq == NULL) {
+		seq = accel_sequence_get(accel_ch);
+		if (spdk_unlikely(seq == NULL)) {
+			return -ENOMEM;
+		}
+	}
+
+	assert(seq->ch == accel_ch);
+	task = accel_sequence_get_task(accel_ch, seq, cb_fn, cb_arg);
+	if (spdk_unlikely(task == NULL)) {
+		if (*pseq == NULL) {
+			accel_sequence_put(seq);
+		}
+
+		return -ENOMEM;
+	}
+
+	task->s.iovs = iovs;
+	task->s.iovcnt = iovcnt;
+	task->src_domain = domain;
+	task->src_domain_ctx = domain_ctx;
+	task->crc_dst = dst;
+	task->seed = seed;
+	task->op_code = ACCEL_OPC_CRC32C;
+	task->dst_domain = NULL;
+
+	TAILQ_INSERT_TAIL(&seq->tasks, task, seq_link);
+	*pseq = seq;
+
+	return 0;
+}
+
+int
 spdk_accel_get_buf(struct spdk_io_channel *ch, uint64_t len, void **buf,
 		   struct spdk_memory_domain **domain, void **domain_ctx)
 {
@@ -1726,6 +1768,8 @@ accel_compare_iovs(struct iovec *iova, uint32_t iovacnt, struct iovec *iovb, uin
 static bool
 accel_task_set_dstbuf(struct spdk_accel_task *task, struct spdk_accel_task *next)
 {
+	struct spdk_accel_task *prev;
+
 	switch (task->op_code) {
 	case ACCEL_OPC_DECOMPRESS:
 	case ACCEL_OPC_FILL:
@@ -1742,6 +1786,28 @@ accel_task_set_dstbuf(struct spdk_accel_task *task, struct spdk_accel_task *next
 		task->d.iovcnt = next->d.iovcnt;
 		task->dst_domain = next->dst_domain;
 		task->dst_domain_ctx = next->dst_domain_ctx;
+		break;
+	case ACCEL_OPC_CRC32C:
+		/* crc32 is special, because it doesn't have a dst buffer */
+		if (task->src_domain != next->src_domain) {
+			return false;
+		}
+		if (!accel_compare_iovs(task->s.iovs, task->s.iovcnt,
+					next->s.iovs, next->s.iovcnt)) {
+			return false;
+		}
+		/* We can only change crc32's buffer if we can change previous task's buffer */
+		prev = TAILQ_PREV(task, accel_sequence_tasks, seq_link);
+		if (prev == NULL) {
+			return false;
+		}
+		if (!accel_task_set_dstbuf(prev, next)) {
+			return false;
+		}
+		task->s.iovs = next->d.iovs;
+		task->s.iovcnt = next->d.iovcnt;
+		task->src_domain = next->dst_domain;
+		task->src_domain_ctx = next->dst_domain_ctx;
 		break;
 	default:
 		return false;
@@ -1766,7 +1832,8 @@ accel_sequence_merge_tasks(struct spdk_accel_sequence *seq, struct spdk_accel_ta
 		if (next->op_code != ACCEL_OPC_DECOMPRESS &&
 		    next->op_code != ACCEL_OPC_COPY &&
 		    next->op_code != ACCEL_OPC_ENCRYPT &&
-		    next->op_code != ACCEL_OPC_DECRYPT) {
+		    next->op_code != ACCEL_OPC_DECRYPT &&
+		    next->op_code != ACCEL_OPC_CRC32C) {
 			break;
 		}
 		if (task->dst_domain != next->src_domain) {
@@ -1787,6 +1854,7 @@ accel_sequence_merge_tasks(struct spdk_accel_sequence *seq, struct spdk_accel_ta
 	case ACCEL_OPC_FILL:
 	case ACCEL_OPC_ENCRYPT:
 	case ACCEL_OPC_DECRYPT:
+	case ACCEL_OPC_CRC32C:
 		/* We can only merge tasks when one of them is a copy */
 		if (next->op_code != ACCEL_OPC_COPY) {
 			break;
