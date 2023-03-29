@@ -60,6 +60,7 @@ out=$output_dir
 cd $src
 
 freebsd_update_contigmem_mod
+freebsd_set_maxsock_buf
 
 # lcov takes considerable time to process clang coverage.
 # Disabling lcov allow us to do this.

@@ -1405,6 +1405,15 @@ function freebsd_update_contigmem_mod() {
 	fi
 }
 
+function freebsd_set_maxsock_buf() {
+	# FreeBSD needs 4MB maxsockbuf size to pass socket unit tests.
+	# Otherwise tests fail due to ENOBUFS when trying to do setsockopt(SO_RCVBUF|SO_SNDBUF).
+	# See https://github.com/spdk/spdk/issues/2943
+	if [[ $(uname) = FreeBSD ]] && (($(sysctl -n kern.ipc.maxsockbuf) < 4194304)); then
+		sysctl kern.ipc.maxsockbuf=4194304
+	fi
+}
+
 function get_nvme_name_from_bdf() {
 	blkname=()
 
