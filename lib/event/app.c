@@ -129,6 +129,8 @@ static const struct option g_cmdline_options[] = {
 	{"vfio-vf-token",		required_argument,	NULL, ENV_VF_TOKEN_OPT_IDX},
 #define MSG_MEMPOOL_SIZE_OPT_IDX 270
 	{"msg-mempool-size",		required_argument,	NULL, MSG_MEMPOOL_SIZE_OPT_IDX},
+#define LCORES_OPT_IDX	271
+	{"lcores",			required_argument,	NULL, LCORES_OPT_IDX},
 };
 
 static void
@@ -203,7 +205,6 @@ spdk_app_opts_init(struct spdk_app_opts *opts, size_t opts_size)
 	SET_FIELD(mem_size, SPDK_APP_DPDK_DEFAULT_MEM_SIZE);
 	SET_FIELD(main_core, SPDK_APP_DPDK_DEFAULT_MAIN_CORE);
 	SET_FIELD(mem_channel, SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL);
-	SET_FIELD(reactor_mask, SPDK_APP_DPDK_DEFAULT_CORE_MASK);
 	SET_FIELD(base_virtaddr, SPDK_APP_DPDK_DEFAULT_BASE_VIRTADDR);
 	SET_FIELD(print_level, SPDK_APP_DEFAULT_LOG_PRINT_LEVEL);
 	SET_FIELD(rpc_addr, SPDK_DEFAULT_RPC_ADDR);
@@ -326,6 +327,7 @@ app_setup_env(struct spdk_app_opts *opts)
 
 	env_opts.name = opts->name;
 	env_opts.core_mask = opts->reactor_mask;
+	env_opts.lcore_map = opts->lcore_map;
 	env_opts.shm_id = opts->shm_id;
 	env_opts.mem_channel = opts->mem_channel;
 	env_opts.main_core = opts->main_core;
@@ -497,6 +499,7 @@ app_copy_opts(struct spdk_app_opts *opts, struct spdk_app_opts *opts_user, size_
 	SET_FIELD(json_config_ignore_errors);
 	SET_FIELD(rpc_addr);
 	SET_FIELD(reactor_mask);
+	SET_FIELD(lcore_map);
 	SET_FIELD(tpoint_group_mask);
 	SET_FIELD(shm_id);
 	SET_FIELD(shutdown_cb);
@@ -667,6 +670,11 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	if (!start_fn) {
 		SPDK_ERRLOG("start_fn should not be NULL\n");
 		return 1;
+	}
+
+	if (!(opts->lcore_map || opts->reactor_mask)) {
+		/* Set default CPU mask */
+		opts->reactor_mask = SPDK_APP_DPDK_DEFAULT_CORE_MASK;
 	}
 
 	tty = ttyname(STDERR_FILENO);
@@ -860,6 +868,13 @@ usage(void (*app_usage)(void))
 	printf(" -h, --help                show this usage\n");
 	printf(" -i, --shm-id <id>         shared memory ID (optional)\n");
 	printf(" -m, --cpumask <mask or list>    core mask (like 0xF) or core list of '[]' embraced (like [0,1,10]) for DPDK\n");
+	printf("     --lcores <list>       lcore to CPU mapping list. The list is in the format:\n");
+	printf("                           <lcores[@CPUs]>[<,lcores[@CPUs]>...]\n");
+	printf("                           lcores and cpus list are grouped by '(' and ')', e.g '--lcores \"(5-7)@(10-12)\"'\n");
+	printf("                           Within the group, '-' is used for range separator,\n");
+	printf("                           ',' is used for single number separator.\n");
+	printf("                           '( )' can be omitted for single element group,\n");
+	printf("                           '@' can be omitted if cpus and lcores have the same value\n");
 	printf(" -n, --mem-channels <num>  channel number of memory channels used for DPDK\n");
 	printf(" -p, --main-core <id>      main (primary) core for DPDK\n");
 	printf(" -r, --rpc-socket <path>   RPC listen address (default %s)\n", SPDK_DEFAULT_RPC_ADDR);
@@ -1001,7 +1016,18 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			}
 			break;
 		case CPUMASK_OPT_IDX:
+			if (opts->lcore_map) {
+				SPDK_ERRLOG("lcore map and core mask can't be set simultaneously\n");
+				goto out;
+			}
 			opts->reactor_mask = optarg;
+			break;
+		case LCORES_OPT_IDX:
+			if (opts->reactor_mask) {
+				SPDK_ERRLOG("lcore map and core mask can't be set simultaneously\n");
+				goto out;
+			}
+			opts->lcore_map = optarg;
 			break;
 		case DISABLE_CPUMASK_LOCKS_OPT_IDX:
 			g_disable_cpumask_locks = true;

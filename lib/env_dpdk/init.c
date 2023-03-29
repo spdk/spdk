@@ -225,19 +225,34 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
-	/*
-	 * Set the coremask:
-	 *
-	 * - if it starts with '-', we presume it's literal EAL arguments such
-	 *   as --lcores.
-	 *
-	 * - if it starts with '[', we presume it's a core list to use with the
-	 *   -l option.
-	 *
-	 * - otherwise, it's a CPU mask of the form "0xff.." as expected by the
-	 *   -c option.
-	 */
-	if (opts->core_mask[0] == '-') {
+	/* Either lcore_map or core_mask must be set. If both, or none specified, fail */
+	if ((opts->core_mask == NULL) == (opts->lcore_map == NULL)) {
+		if (opts->core_mask && opts->lcore_map) {
+			fprintf(stderr,
+				"Both, lcore map and core mask are provided, while only one can be set\n");
+		} else {
+			fprintf(stderr, "Core mask or lcore map must be specified\n");
+		}
+		free_args(args, argcount);
+		return -1;
+	}
+
+	if (opts->lcore_map) {
+		/* If lcore list is set, generate --lcores parameter */
+		args = push_arg(args, &argcount, _sprintf_alloc("--lcores=%s", opts->lcore_map));
+	} else if (opts->core_mask[0] == '-') {
+		/*
+		 * Set the coremask:
+		 *
+		 * - if it starts with '-', we presume it's literal EAL arguments such
+		 *   as --lcores.
+		 *
+		 * - if it starts with '[', we presume it's a core list to use with the
+		 *   -l option.
+		 *
+		 * - otherwise, it's a CPU mask of the form "0xff.." as expected by the
+		 *   -c option.
+		 */
 		args = push_arg(args, &argcount, _sprintf_alloc("%s", opts->core_mask));
 	} else if (opts->core_mask[0] == '[') {
 		char *l_arg = _sprintf_alloc("-l %s", opts->core_mask + 1);
