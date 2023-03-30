@@ -925,13 +925,13 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		}
 
 		tr = &pqpair->tr[cpl->cid];
-		/* Prefetch the req's STAILQ_ENTRY since we'll need to access it
-		 * as part of putting the req back on the qpair's free list.
-		 */
-		__builtin_prefetch(&tr->req->stailq);
 		pqpair->sq_head = cpl->sqhd;
 
 		if (tr->req) {
+			/* Prefetch the req's STAILQ_ENTRY since we'll need to access it
+			 * as part of putting the req back on the qpair's free list.
+			 */
+			__builtin_prefetch(&tr->req->stailq);
 			nvme_pcie_qpair_complete_tracker(qpair, tr, cpl, true);
 		} else {
 			SPDK_ERRLOG("cpl does not map to outstanding cmd\n");
