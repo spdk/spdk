@@ -15,7 +15,7 @@ function get_spdk_abi() {
 	else
 		# In case that someone run test manually and did not set existing
 		# spdk-abi directory via SPDK_ABI_DIR
-		echo "spdk-abi has not been found at $SPDK_ABI_DIR, cloning"
+		echo "spdk-abi has not been found${SPDK_ABI_DIR:+ at $SPDK_ABI_DIR}, cloning"
 		git clone $git_repo_abi "$dest"
 	fi
 }
