@@ -175,6 +175,13 @@ function verify_raid_bdev_state() (
 	fi
 )
 
+function has_redundancy() {
+	case $1 in
+		"raid1" | "raid5f") return 0 ;;
+		*) return 1 ;;
+	esac
+}
+
 function raid_state_function_test() {
 	local raid_level=$1
 	local num_base_bdevs=$2
@@ -231,7 +238,7 @@ function raid_state_function_test() {
 	# Step4: delete one base bdev from the RAID bdev
 	$rpc_py bdev_malloc_delete ${base_bdevs[0]}
 	local expected_state
-	if [ $raid_level != "raid1" ]; then
+	if ! has_redundancy $raid_level; then
 		expected_state="offline"
 	else
 		expected_state="online"
@@ -312,10 +319,16 @@ raid_function_test raid0
 raid_function_test concat
 raid0_resize_test
 
-for level in raid0 concat raid1; do
-	for n in {2..4}; do
+for n in {2..4}; do
+	for level in raid0 concat raid1; do
 		raid_state_function_test $level $n
 	done
 done
+
+if [ "$CONFIG_RAID5F" == y ]; then
+	for n in {3..4}; do
+		raid_state_function_test raid5f $n
+	done
+fi
 
 rm -f $tmp_file
