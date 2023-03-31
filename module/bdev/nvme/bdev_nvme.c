@@ -3260,27 +3260,39 @@ bdev_nvme_destroy_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 	}
 }
 
+static inline struct spdk_io_channel *
+bdev_nvme_get_accel_channel(struct nvme_poll_group *group)
+{
+	if (spdk_unlikely(!group->accel_channel)) {
+		group->accel_channel = spdk_accel_get_io_channel();
+		if (!group->accel_channel) {
+			SPDK_ERRLOG("Cannot get the accel_channel for bdev nvme polling group=%p\n",
+				    group);
+			return NULL;
+		}
+	}
+
+	return group->accel_channel;
+}
+
 static void
 bdev_nvme_submit_accel_crc32c(void *ctx, uint32_t *dst, struct iovec *iov,
 			      uint32_t iov_cnt, uint32_t seed,
 			      spdk_nvme_accel_completion_cb cb_fn, void *cb_arg)
 {
+	struct spdk_io_channel *accel_ch;
 	struct nvme_poll_group *group = ctx;
 	int rc;
 
 	assert(cb_fn != NULL);
 
-	if (spdk_unlikely(!group->accel_channel)) {
-		group->accel_channel = spdk_accel_get_io_channel();
-		if (!group->accel_channel) {
-			cb_fn(cb_arg, -ENOMEM);
-			SPDK_ERRLOG("Cannot get the accel_channel for bdev nvme polling group=%p\n",
-				    group);
-			return;
-		}
+	accel_ch = bdev_nvme_get_accel_channel(group);
+	if (spdk_unlikely(accel_ch == NULL)) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
 	}
 
-	rc = spdk_accel_submit_crc32cv(group->accel_channel, dst, iov, iov_cnt, seed, cb_fn, cb_arg);
+	rc = spdk_accel_submit_crc32cv(accel_ch, dst, iov, iov_cnt, seed, cb_fn, cb_arg);
 	if (rc) {
 		/* For the two cases, spdk_accel_submit_crc32cv does not call the user's cb_fn */
 		if (rc == -ENOMEM || rc == -EINVAL) {
