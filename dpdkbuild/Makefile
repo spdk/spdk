@@ -103,6 +103,10 @@ endif
 
 DPDK_CFLAGS += -fPIC
 
+ifneq ($(CONFIG_MAX_LCORES),)
+DPDK_OPTS += -Dmax_lcores=$(CONFIG_MAX_LCORES)
+endif
+
 ifeq ($(CONFIG_WERROR),y)
 DPDK_CFLAGS += -Werror
 else
