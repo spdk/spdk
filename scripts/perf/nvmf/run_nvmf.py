@@ -101,6 +101,36 @@ class Server(ABC):
     def get_uncommented_lines(lines):
         return [line for line in lines if line and not line.startswith('#')]
 
+    @staticmethod
+    def get_core_list_from_mask(core_mask):
+        # Generate list of individual cores from hex core mask
+        # (e.g. '0xffff') or list containing:
+        # - individual cores (e.g. '1, 2, 3')
+        # - core ranges (e.g. '0-3')
+        # - mix of both (e.g. '0, 1-4, 9, 11-13')
+
+        core_list = []
+        if "0x" in core_mask:
+            core_mask_int = int(core_mask, 16)
+            for i in range(core_mask_int.bit_length()):
+                if (1 << i) & core_mask_int:
+                    core_list.append(i)
+            return core_list
+        else:
+            # Core list can be provided in .json config with square brackets
+            # remove them first
+            core_mask = core_mask.replace("[", "")
+            core_mask = core_mask.replace("]", "")
+
+            for i in core_mask.split(","):
+                if "-" in i:
+                    start, end = i.split("-")
+                    core_range = range(int(start), int(end) + 1)
+                    core_list.extend(core_range)
+                else:
+                    core_list.append(int(i))
+            return core_list
+
     def get_nic_name_by_ip(self, ip):
         if not self._nics_json_obj:
             nics_json_obj = self.exec_cmd(["ip", "-j", "address", "show"])
@@ -426,35 +456,6 @@ class Server(ABC):
         # This assumes that there is the same CPU scaling governor on each CPU
         self.governor_restore = self.exec_cmd(["cat", "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"]).strip()
         self.exec_cmd(["sudo", "cpupower", "frequency-set", "-g", "performance"])
-
-    def get_core_list_from_mask(self, core_mask):
-        # Generate list of individual cores from hex core mask
-        # (e.g. '0xffff') or list containing:
-        # - individual cores (e.g. '1, 2, 3')
-        # - core ranges (e.g. '0-3')
-        # - mix of both (e.g. '0, 1-4, 9, 11-13')
-
-        core_list = []
-        if "0x" in core_mask:
-            core_mask_int = int(core_mask, 16)
-            for i in range(core_mask_int.bit_length()):
-                if (1 << i) & core_mask_int:
-                    core_list.append(i)
-            return core_list
-        else:
-            # Core list can be provided in .json config with square brackets
-            # remove them first
-            core_mask = core_mask.replace("[", "")
-            core_mask = core_mask.replace("]", "")
-
-            for i in core_mask.split(","):
-                if "-" in i:
-                    start, end = i.split("-")
-                    core_range = range(int(start), int(end) + 1)
-                    core_list.extend(core_range)
-                else:
-                    core_list.append(int(i))
-            return core_list
 
     def configure_irq_affinity(self, mode="default", cpulist=None, exclude_cpulist=False):
         self.log.info("Setting NIC irq affinity for NICs. Using %s mode" % mode)
@@ -951,17 +952,7 @@ rate_iops={rate_iops}
 
         if self.cpus_allowed is not None:
             self.log.info("Limiting FIO workload execution on specific cores %s" % self.cpus_allowed)
-            cpus_num = 0
-            cpus = self.cpus_allowed.split(",")
-            for cpu in cpus:
-                if "-" in cpu:
-                    a, b = cpu.split("-")
-                    a = int(a)
-                    b = int(b)
-                    cpus_num += len(range(a, b))
-                else:
-                    cpus_num += 1
-            self.num_cores = cpus_num
+            self.num_cores = len(self.get_core_list_from_mask(self.cpus_allowed))
             threads = range(0, self.num_cores)
         elif hasattr(self, 'num_cores'):
             self.log.info("Limiting FIO workload execution to %s cores" % self.num_cores)
