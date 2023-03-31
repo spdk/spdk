@@ -12,6 +12,7 @@ import re
 import sys
 import argparse
 import json
+import inspect
 import logging
 import zipfile
 import threading
@@ -931,24 +932,24 @@ class Initiator(Server):
                           "numa_mem_policy=prefer:%s" % section_local_numa])
 
     def gen_fio_config(self, rw, block_size, io_depth, subsys_no, fio_settings):
-        fio_conf_template = """
-[global]
-ioengine={ioengine}
-{spdk_conf}
-thread=1
-group_reporting=1
-direct=1
-percentile_list=50:90:99:99.5:99.9:99.99:99.999
+        fio_conf_template = inspect.cleandoc("""
+            [global]
+            ioengine={ioengine}
+            {spdk_conf}
+            thread=1
+            group_reporting=1
+            direct=1
+            percentile_list=50:90:99:99.5:99.9:99.99:99.999
 
-norandommap=1
-rw={rw}
-rwmixread={rwmixread}
-bs={block_size}
-time_based=1
-ramp_time={ramp_time}
-runtime={run_time}
-rate_iops={rate_iops}
-"""
+            norandommap=1
+            rw={rw}
+            rwmixread={rwmixread}
+            bs={block_size}
+            time_based=1
+            ramp_time={ramp_time}
+            runtime={run_time}
+            rate_iops={rate_iops}
+        """)
 
         if self.cpus_allowed is not None:
             self.log.info("Limiting FIO workload execution on specific cores %s" % self.cpus_allowed)
@@ -973,17 +974,12 @@ rate_iops={rate_iops}
         # io_u error on file /dev/nvme2n1: Operation not supported
         # See comment in KernelInitiator class, init_connect() function
         if "io_uring" in self.ioengine:
-            fio_config = fio_config + """
-fixedbufs=1
-registerfiles=1
-#hipri=1
-        """
+            fio_config = "\n".join([fio_config, "fixedbufs=1", "registerfiles=1", "#hipri=1"])
         if fio_settings["num_jobs"]:
-            fio_config = fio_config + "numjobs=%s \n" % fio_settings["num_jobs"]
+            fio_config = "\n".join([fio_config, f"numjobs={fio_settings['num_jobs']}"])
         if self.cpus_allowed is not None:
-            fio_config = fio_config + "cpus_allowed=%s \n" % self.cpus_allowed
-            fio_config = fio_config + "cpus_allowed_policy=%s \n" % self.cpus_allowed_policy
-        fio_config = fio_config + filename_section
+            fio_config = "\n".join([fio_config, f"cpus_allowed={self.cpus_allowed}", f"cpus_allowed_policy={self.cpus_allowed_policy}"])
+        fio_config = "\n".join([fio_config, filename_section])
 
         fio_config_filename = "%s_%s_%s_m_%s" % (block_size, io_depth, rw, fio_settings["rw_mix_read"])
         if hasattr(self, "num_cores"):
