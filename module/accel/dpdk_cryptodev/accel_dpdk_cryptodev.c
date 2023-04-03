@@ -1,6 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2018 Intel Corporation.
- *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES.
+ *   Copyright (c) 2022, 2023 NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
  */
 
@@ -589,8 +589,10 @@ accel_dpdk_cryptodev_mbuf_add_single_block(struct spdk_iov_sgl *sgl, struct rte_
 	uint8_t *buf_addr;
 	uint64_t phys_len;
 	uint64_t remainder;
-	uint64_t buf_len = spdk_min(task->base.block_size, sgl->iov->iov_len - sgl->iov_offset);
+	uint64_t buf_len;
 
+	assert(sgl->iov->iov_len > sgl->iov_offset);
+	buf_len = spdk_min(task->base.block_size, sgl->iov->iov_len - sgl->iov_offset);
 	buf_addr = sgl->iov->iov_base + sgl->iov_offset;
 	phys_len = accel_dpdk_cryptodev_mbuf_attach_buf(task, mbuf, buf_addr, buf_len);
 	if (spdk_unlikely(phys_len == 0)) {
@@ -737,9 +739,11 @@ accel_dpdk_cryptodev_process_task(struct accel_dpdk_cryptodev_io_channel *crypto
 	 * LBA sized chunk of memory will correspond 1:1 to a crypto operation and a single
 	 * mbuf per crypto operation.
 	 */
-	spdk_iov_sgl_init(&src, task->base.s.iovs, task->base.s.iovcnt, sgl_offset);
+	spdk_iov_sgl_init(&src, task->base.s.iovs, task->base.s.iovcnt, 0);
+	spdk_iov_sgl_advance(&src, sgl_offset);
 	if (!task->inplace) {
-		spdk_iov_sgl_init(&dst, task->base.d.iovs, task->base.d.iovcnt, sgl_offset);
+		spdk_iov_sgl_init(&dst, task->base.d.iovs, task->base.d.iovcnt, 0);
+		spdk_iov_sgl_advance(&dst, sgl_offset);
 	}
 
 	for (crypto_index = 0; crypto_index < cryop_cnt; crypto_index++) {
