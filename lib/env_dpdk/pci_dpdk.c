@@ -32,9 +32,9 @@ dpdk_pci_init(void)
 	 * Only DPDK in development has additional suffix past minor version.
 	 */
 	if (strlen(release) != 0) {
-		if (year == 23 && month == 3 && minor == 0) {
+		if (year == 23 && month == 7 && minor == 0) {
 			g_dpdk_fn_table = &fn_table_2211;
-			SPDK_NOTICELOG("DPDK version 23.03.0 not supported yet. Enabled only for validation.\n");
+			SPDK_NOTICELOG("DPDK version 23.07.0 not supported yet. Enabled only for validation.\n");
 			return 0;
 		}
 	}
