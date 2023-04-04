@@ -3302,9 +3302,48 @@ bdev_nvme_submit_accel_crc32c(void *ctx, uint32_t *dst, struct iovec *iov,
 	}
 }
 
+static void
+bdev_nvme_finish_sequence(void *seq, spdk_nvme_accel_completion_cb cb_fn, void *cb_arg)
+{
+	spdk_accel_sequence_finish(seq, cb_fn, cb_arg);
+}
+
+static void
+bdev_nvme_abort_sequence(void *seq)
+{
+	spdk_accel_sequence_abort(seq);
+}
+
+static void
+bdev_nvme_reverse_sequence(void *seq)
+{
+	spdk_accel_sequence_reverse(seq);
+}
+
+static int
+bdev_nvme_append_crc32c(void *ctx, void **seq, uint32_t *dst, struct iovec *iovs, uint32_t iovcnt,
+			struct spdk_memory_domain *domain, void *domain_ctx, uint32_t seed,
+			spdk_nvme_accel_step_cb cb_fn, void *cb_arg)
+{
+	struct spdk_io_channel *ch;
+	struct nvme_poll_group *group = ctx;
+
+	ch = bdev_nvme_get_accel_channel(group);
+	if (spdk_unlikely(ch == NULL)) {
+		return -ENOMEM;
+	}
+
+	return spdk_accel_append_crc32c((struct spdk_accel_sequence **)seq, ch, dst, iovs, iovcnt,
+					domain, domain_ctx, seed, cb_fn, cb_arg);
+}
+
 static struct spdk_nvme_accel_fn_table g_bdev_nvme_accel_fn_table = {
 	.table_size		= sizeof(struct spdk_nvme_accel_fn_table),
 	.submit_accel_crc32c	= bdev_nvme_submit_accel_crc32c,
+	.append_crc32c		= bdev_nvme_append_crc32c,
+	.finish_sequence	= bdev_nvme_finish_sequence,
+	.reverse_sequence	= bdev_nvme_reverse_sequence,
+	.abort_sequence		= bdev_nvme_abort_sequence,
 };
 
 static int

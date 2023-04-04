@@ -228,6 +228,14 @@ DEFINE_STUB_V(spdk_opal_dev_destruct, (struct spdk_opal_dev *dev));
 DEFINE_STUB(spdk_accel_submit_crc32cv, int, (struct spdk_io_channel *ch, uint32_t *dst,
 		struct iovec *iov,
 		uint32_t iov_cnt, uint32_t seed, spdk_accel_completion_cb cb_fn, void *cb_arg), 0);
+DEFINE_STUB(spdk_accel_append_crc32c, int,
+	    (struct spdk_accel_sequence **seq, struct spdk_io_channel *ch, uint32_t *dst,
+	     struct iovec *iovs, uint32_t iovcnt, struct spdk_memory_domain *domain, void *domain_ctx,
+	     uint32_t seed, spdk_accel_step_cb cb_fn, void *cb_arg), 0);
+DEFINE_STUB_V(spdk_accel_sequence_finish,
+	      (struct spdk_accel_sequence *seq, spdk_accel_completion_cb cb_fn, void *cb_arg));
+DEFINE_STUB_V(spdk_accel_sequence_abort, (struct spdk_accel_sequence *seq));
+DEFINE_STUB_V(spdk_accel_sequence_reverse, (struct spdk_accel_sequence *seq));
 
 struct ut_nvme_req {
 	uint16_t			opc;
