@@ -66,6 +66,8 @@ These functions will notify a transport about adding/removing hosts' access.
 
 TLS PSK identity is now generated from subsystem NQN and host NQN.
 
+PSK interchange format is now expected as input, when configuring TLS in SPDK.
+
 ### sock
 
 Added a callback `get_key()` to `spdk_sock_impl_opts` structure.

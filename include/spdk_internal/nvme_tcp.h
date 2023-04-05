@@ -12,6 +12,8 @@
 #include "spdk/dif.h"
 #include "spdk/hexlify.h"
 #include "spdk/nvmf_spec.h"
+#include "spdk/util.h"
+#include "spdk/base64.h"
 
 #include "sgl.h"
 
@@ -609,23 +611,29 @@ nvme_tcp_generate_psk_identity(char *out_id, size_t out_id_len, const char *host
 	return 0;
 }
 
+enum nvme_tcp_hash_algorithm {
+	NVME_TCP_HASH_ALGORITHM_NONE,
+	NVME_TCP_HASH_ALGORITHM_SHA256,
+	NVME_TCP_HASH_ALGORITHM_SHA384,
+};
+
 static inline int
-nvme_tcp_derive_retained_psk(const char *psk_in, const char *hostnqn, uint8_t *psk_out,
-			     uint64_t psk_out_len)
+nvme_tcp_derive_retained_psk(const uint8_t *psk_in, uint64_t psk_in_size, const char *hostnqn,
+			     uint8_t *psk_out, uint64_t psk_out_len, enum nvme_tcp_hash_algorithm psk_retained_hash)
 {
 	EVP_PKEY_CTX *ctx;
-	uint64_t sha256_digest_len = SHA256_DIGEST_LENGTH;
+	uint64_t digest_len;
 	uint8_t hkdf_info[NVME_TCP_HKDF_INFO_MAX_LEN] = {};
 	const char *label = "tls13 HostNQN";
 	size_t pos, labellen, nqnlen;
-	char *unhexlified = NULL;
+	const EVP_MD *hash;
 	int rc, hkdf_info_size;
 
 	labellen = strlen(label);
 	nqnlen = strlen(hostnqn);
 	assert(nqnlen <= SPDK_NVMF_NQN_MAX_LEN);
 
-	*(uint16_t *)&hkdf_info[0] = htons(strlen(psk_in) / 2);
+	*(uint16_t *)&hkdf_info[0] = htons(psk_in_size);
 	pos = sizeof(uint16_t);
 	hkdf_info[pos] = (uint8_t)labellen;
 	pos += sizeof(uint8_t);
@@ -637,7 +645,21 @@ nvme_tcp_derive_retained_psk(const char *psk_in, const char *hostnqn, uint8_t *p
 	pos += nqnlen;
 	hkdf_info_size = pos;
 
-	if (sha256_digest_len > psk_out_len) {
+	switch (psk_retained_hash) {
+	case NVME_TCP_HASH_ALGORITHM_SHA256:
+		digest_len = SHA256_DIGEST_LENGTH;
+		hash = EVP_sha256();
+		break;
+	case NVME_TCP_HASH_ALGORITHM_SHA384:
+		digest_len = SHA384_DIGEST_LENGTH;
+		hash = EVP_sha384();
+		break;
+	default:
+		SPDK_ERRLOG("Unknown PSK hash requested!\n");
+		return -EOPNOTSUPP;
+	}
+
+	if (digest_len > psk_out_len) {
 		SPDK_ERRLOG("Insufficient buffer size for out key!\n");
 		return -EINVAL;
 	}
@@ -654,19 +676,12 @@ nvme_tcp_derive_retained_psk(const char *psk_in, const char *hostnqn, uint8_t *p
 		rc = -ENOMEM;
 		goto end;
 	}
-	if (EVP_PKEY_CTX_set_hkdf_md(ctx, EVP_sha256()) != 1) {
-		SPDK_ERRLOG("Unable to set SHA256 method for HKDF!\n");
+	if (EVP_PKEY_CTX_set_hkdf_md(ctx, hash) != 1) {
+		SPDK_ERRLOG("Unable to set hash for HKDF!\n");
 		rc = -EOPNOTSUPP;
 		goto end;
 	}
-
-	unhexlified = spdk_unhexlify(psk_in);
-	if (unhexlified == NULL) {
-		SPDK_ERRLOG("Unable to unhexlify PSK!\n");
-		rc = -EINVAL;
-		goto end;
-	}
-	if (EVP_PKEY_CTX_set1_hkdf_key(ctx, unhexlified, strlen(psk_in) / 2) != 1) {
+	if (EVP_PKEY_CTX_set1_hkdf_key(ctx, psk_in, psk_in_size) != 1) {
 		SPDK_ERRLOG("Unable to set PSK key for HKDF!\n");
 		rc = -ENOBUFS;
 		goto end;
@@ -682,22 +697,21 @@ nvme_tcp_derive_retained_psk(const char *psk_in, const char *hostnqn, uint8_t *p
 		rc = -EINVAL;
 		goto end;
 	}
-	if (EVP_PKEY_derive(ctx, psk_out, &sha256_digest_len) != 1) {
+	if (EVP_PKEY_derive(ctx, psk_out, &digest_len) != 1) {
 		SPDK_ERRLOG("Unable to derive the PSK key!\n");
 		rc = -EINVAL;
 		goto end;
 	}
 
-	rc = sha256_digest_len;
+	rc = digest_len;
 
 end:
-	free(unhexlified);
 	EVP_PKEY_CTX_free(ctx);
 	return rc;
 }
 
 static inline int
-nvme_tcp_derive_tls_psk(const uint8_t *psk_in, uint64_t psk_in_len, const char *psk_identity,
+nvme_tcp_derive_tls_psk(const uint8_t *psk_in, uint64_t psk_in_size, const char *psk_identity,
 			uint8_t *psk_out, uint64_t psk_out_size, enum nvme_tcp_cipher_suite tls_cipher_suite)
 {
 	EVP_PKEY_CTX *ctx;
@@ -726,7 +740,7 @@ nvme_tcp_derive_tls_psk(const uint8_t *psk_in, uint64_t psk_in_len, const char *
 		return -1;
 	}
 
-	*(uint16_t *)&hkdf_info[0] = htons(psk_in_len);
+	*(uint16_t *)&hkdf_info[0] = htons(psk_in_size);
 	pos = sizeof(uint16_t);
 	hkdf_info[pos] = (uint8_t)labellen;
 	pos += sizeof(uint8_t);
@@ -759,8 +773,7 @@ nvme_tcp_derive_tls_psk(const uint8_t *psk_in, uint64_t psk_in_len, const char *
 		rc = -EOPNOTSUPP;
 		goto end;
 	}
-	/* PSK should already be in retained form, so we do not need to unhexlify it here. */
-	if (EVP_PKEY_CTX_set1_hkdf_key(ctx, psk_in, psk_in_len) != 1) {
+	if (EVP_PKEY_CTX_set1_hkdf_key(ctx, psk_in, psk_in_size) != 1) {
 		SPDK_ERRLOG("Unable to set PSK key for HKDF!\n");
 		rc = -ENOBUFS;
 		goto end;
@@ -785,6 +798,97 @@ nvme_tcp_derive_tls_psk(const uint8_t *psk_in, uint64_t psk_in_len, const char *
 
 end:
 	EVP_PKEY_CTX_free(ctx);
+	return rc;
+}
+
+static inline int
+nvme_tcp_parse_interchange_psk(const char *psk_in, uint8_t *psk_out, size_t psk_out_size,
+			       uint64_t *psk_out_decoded_size, uint8_t *hash)
+{
+	const char *delim = ":";
+	char psk_cpy[SPDK_TLS_PSK_MAX_LEN] = {};
+	uint8_t psk_base64_decoded[SPDK_TLS_PSK_MAX_LEN] = {};
+	uint64_t psk_configured_size = 0;
+	uint32_t crc32_calc, crc32;
+	char *psk_base64;
+	uint64_t psk_base64_decoded_size = 0;
+	int rc;
+
+	/* Verify PSK format. */
+	if (sscanf(psk_in, "NVMeTLSkey-1:%02hhx:", hash) != 1 || psk_in[strlen(psk_in) - 1] != delim[0]) {
+		SPDK_ERRLOG("Invalid format of PSK interchange!\n");
+		return -EINVAL;
+	}
+
+	if (strlen(psk_in) > SPDK_TLS_PSK_MAX_LEN) {
+		SPDK_ERRLOG("PSK interchange exceeds maximum %d characters!\n", SPDK_TLS_PSK_MAX_LEN);
+		return -EINVAL;
+	}
+	if (*hash != NVME_TCP_HASH_ALGORITHM_NONE && *hash != NVME_TCP_HASH_ALGORITHM_SHA256 &&
+	    *hash != NVME_TCP_HASH_ALGORITHM_SHA384) {
+		SPDK_ERRLOG("Invalid PSK length!\n");
+		return -EINVAL;
+	}
+
+	/* Check provided hash function string. */
+	memcpy(psk_cpy, psk_in, strlen(psk_in));
+	strtok(psk_cpy, delim);
+	strtok(NULL, delim);
+
+	psk_base64 = strtok(NULL, delim);
+	if (psk_base64 == NULL) {
+		SPDK_ERRLOG("Could not get base64 string from PSK interchange!\n");
+		return -EINVAL;
+	}
+
+	rc = spdk_base64_decode(psk_base64_decoded, &psk_base64_decoded_size, psk_base64);
+	if (rc) {
+		SPDK_ERRLOG("Could not decode base64 PSK!\n");
+		return -EINVAL;
+	}
+
+	switch (*hash) {
+	case NVME_TCP_HASH_ALGORITHM_SHA256:
+		psk_configured_size = SHA256_DIGEST_LENGTH;
+		break;
+	case NVME_TCP_HASH_ALGORITHM_SHA384:
+		psk_configured_size = SHA384_DIGEST_LENGTH;
+		break;
+	case NVME_TCP_HASH_ALGORITHM_NONE:
+		if (psk_base64_decoded_size == SHA256_DIGEST_LENGTH + SPDK_CRC32_SIZE_BYTES) {
+			psk_configured_size = SHA256_DIGEST_LENGTH;
+		} else if (psk_base64_decoded_size == SHA384_DIGEST_LENGTH + SPDK_CRC32_SIZE_BYTES) {
+			psk_configured_size = SHA384_DIGEST_LENGTH;
+		}
+		break;
+	default:
+		SPDK_ERRLOG("Invalid key: unsupported key hash\n");
+		assert(0);
+		return -EINVAL;
+	}
+	if (psk_base64_decoded_size != psk_configured_size + SPDK_CRC32_SIZE_BYTES) {
+		SPDK_ERRLOG("Invalid key: unsupported key length\n");
+		return -EINVAL;
+	}
+
+	crc32 = from_le32(&psk_base64_decoded[psk_configured_size]);
+
+	crc32_calc = spdk_crc32_ieee_update(psk_base64_decoded, psk_configured_size, ~0);
+	crc32_calc = ~crc32_calc;
+
+	if (crc32 != crc32_calc) {
+		SPDK_ERRLOG("CRC-32 checksums do not match!\n");
+		return -EINVAL;
+	}
+
+	if (psk_configured_size > psk_out_size) {
+		SPDK_ERRLOG("Insufficient buffer size: %lu for configured PSK of size: %lu!\n",
+			    psk_out_size, psk_configured_size);
+		return -ENOBUFS;
+	}
+	memcpy(psk_out, psk_base64_decoded, psk_configured_size);
+	*psk_out_decoded_size = psk_configured_size;
+
 	return rc;
 }
 

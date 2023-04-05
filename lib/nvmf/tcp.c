@@ -3524,8 +3524,12 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 	struct spdk_nvmf_tcp_transport *ttransport;
 	struct tcp_psk_entry *entry;
 	char psk_identity[NVMF_PSK_IDENTITY_LEN];
+	uint8_t psk_configured[SPDK_TLS_PSK_MAX_LEN] = {};
+	uint8_t tls_cipher_suite;
 	uint64_t key_len;
 	int rc = 0;
+	uint8_t psk_retained_hash;
+	uint64_t psk_configured_size;
 
 	if (transport_specific == NULL) {
 		return 0;
@@ -3547,10 +3551,33 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 		return 0;
 	}
 
+	/* Parse PSK interchange to get length of base64 encoded data.
+	 * This is then used to decide which cipher suite should be used
+	 * to generate PSK identity and TLS PSK later on. */
+	rc = nvme_tcp_parse_interchange_psk(opts.psk, psk_configured, sizeof(psk_configured),
+					    &psk_configured_size, &psk_retained_hash);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to parse PSK interchange!\n");
+		goto end;
+	}
+
+	/* The Base64 string encodes the configured PSK (32 or 48 bytes binary).
+	 * This check also ensures that psk_configured_size is smaller than
+	 * psk_retained buffer size. */
+	if (psk_configured_size == SHA256_DIGEST_LENGTH) {
+		tls_cipher_suite = NVME_TCP_CIPHER_AES_128_GCM_SHA256;
+	} else if (psk_configured_size == SHA384_DIGEST_LENGTH) {
+		tls_cipher_suite = NVME_TCP_CIPHER_AES_256_GCM_SHA384;
+	} else {
+		SPDK_ERRLOG("Unrecognized cipher suite!\n");
+		rc = -EINVAL;
+		goto end;
+	}
+
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 	/* Generate PSK identity. */
 	rc = nvme_tcp_generate_psk_identity(psk_identity, NVMF_PSK_IDENTITY_LEN, hostnqn,
-					    subsystem->subnqn, NVME_TCP_CIPHER_AES_128_GCM_SHA256);
+					    subsystem->subnqn, tls_cipher_suite);
 	if (rc) {
 		rc = -EINVAL;
 		goto end;
@@ -3588,6 +3615,8 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 		free(entry);
 		goto end;
 	}
+	entry->tls_cipher_suite = tls_cipher_suite;
+
 	if (strlen(opts.psk) >= sizeof(entry->psk)) {
 		SPDK_ERRLOG("PSK of length: %ld cannot fit in max buffer size: %ld\n", strlen(opts.psk),
 			    sizeof(entry->psk));
@@ -3595,20 +3624,28 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 		free(entry);
 		goto end;
 	}
-	entry->tls_cipher_suite = NVME_TCP_CIPHER_AES_128_GCM_SHA256;
 
-	/* Derive retained PSK. */
-	rc = nvme_tcp_derive_retained_psk(opts.psk, hostnqn, entry->psk, SPDK_TLS_PSK_MAX_LEN);
-	if (rc < 0) {
-		SPDK_ERRLOG("Unable to derive retained PSK!\n");
-		goto end;
+	/* No hash indicates that Configured PSK must be used as Retained PSK. */
+	if (psk_retained_hash == NVME_TCP_HASH_ALGORITHM_NONE) {
+		/* Psk configured is either 32 or 48 bytes long. */
+		memcpy(entry->psk, psk_configured, psk_configured_size);
+		entry->psk_size = psk_configured_size;
+	} else {
+		/* Derive retained PSK. */
+		rc = nvme_tcp_derive_retained_psk(psk_configured, psk_configured_size, hostnqn, entry->psk,
+						  SPDK_TLS_PSK_MAX_LEN, psk_retained_hash);
+		if (rc < 0) {
+			SPDK_ERRLOG("Unable to derive retained PSK!\n");
+			goto end;
+		}
+		entry->psk_size = rc;
 	}
-	entry->psk_size = rc;
 
 	TAILQ_INSERT_TAIL(&ttransport->psks, entry, link);
 	rc = 0;
 
 end:
+	spdk_memset_s(psk_configured, sizeof(psk_configured), 0, sizeof(psk_configured));
 	key_len = strnlen(opts.psk, SPDK_TLS_PSK_MAX_LEN);
 	spdk_memset_s(opts.psk, key_len, 0, key_len);
 	free(opts.psk);

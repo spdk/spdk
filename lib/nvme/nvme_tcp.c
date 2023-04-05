@@ -2151,36 +2151,72 @@ nvme_tcp_generate_tls_credentials(struct nvme_tcp_ctrlr *tctrlr)
 {
 	int rc;
 	uint8_t psk_retained[SPDK_TLS_PSK_MAX_LEN] = {};
+	uint8_t psk_configured[SPDK_TLS_PSK_MAX_LEN] = {};
+	uint8_t tls_cipher_suite;
+	uint8_t psk_retained_hash;
+	uint64_t psk_configured_size;
 
 	assert(tctrlr != NULL);
 
-	tctrlr->tls_cipher_suite = "TLS_AES_128_GCM_SHA256";
+	rc = nvme_tcp_parse_interchange_psk(tctrlr->ctrlr.opts.psk, psk_configured, sizeof(psk_configured),
+					    &psk_configured_size, &psk_retained_hash);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to parse PSK interchange!\n");
+		goto finish;
+	}
+
+	/* The Base64 string encodes the configured PSK (32 or 48 bytes binary).
+	 * This check also ensures that psk_configured_size is smaller than
+	 * psk_retained buffer size. */
+	if (psk_configured_size == SHA256_DIGEST_LENGTH) {
+		tls_cipher_suite = NVME_TCP_CIPHER_AES_128_GCM_SHA256;
+		tctrlr->tls_cipher_suite = "TLS_AES_128_GCM_SHA256";
+	} else if (psk_configured_size == SHA384_DIGEST_LENGTH) {
+		tls_cipher_suite = NVME_TCP_CIPHER_AES_256_GCM_SHA384;
+		tctrlr->tls_cipher_suite = "TLS_AES_256_GCM_SHA384";
+	} else {
+		SPDK_ERRLOG("Unrecognized cipher suite!\n");
+		rc = -ENOTSUP;
+		goto finish;
+	}
 
 	rc = nvme_tcp_generate_psk_identity(tctrlr->psk_identity, sizeof(tctrlr->psk_identity),
 					    tctrlr->ctrlr.opts.hostnqn, tctrlr->ctrlr.trid.subnqn,
-					    NVME_TCP_CIPHER_AES_128_GCM_SHA256);
+					    tls_cipher_suite);
 	if (rc) {
 		SPDK_ERRLOG("could not generate PSK identity\n");
-		return -EINVAL;
+		goto finish;
 	}
 
-	rc = nvme_tcp_derive_retained_psk(tctrlr->ctrlr.opts.psk, tctrlr->ctrlr.opts.hostnqn, psk_retained,
-					  sizeof(psk_retained));
-	if (rc < 0) {
-		SPDK_ERRLOG("Unable to derive retained PSK!\n");
-		return -EINVAL;
+	/* No hash indicates that Configured PSK must be used as Retained PSK. */
+	if (psk_retained_hash == NVME_TCP_HASH_ALGORITHM_NONE) {
+		assert(psk_configured_size < sizeof(psk_retained));
+		memcpy(psk_retained, psk_configured, psk_configured_size);
+		rc = psk_configured_size;
+	} else {
+		/* Derive retained PSK. */
+		rc = nvme_tcp_derive_retained_psk(psk_configured, psk_configured_size, tctrlr->ctrlr.opts.hostnqn,
+						  psk_retained, sizeof(psk_retained), psk_retained_hash);
+		if (rc < 0) {
+			SPDK_ERRLOG("Unable to derive retained PSK!\n");
+			goto finish;
+		}
 	}
 
 	rc = nvme_tcp_derive_tls_psk(psk_retained, rc, tctrlr->psk_identity, tctrlr->psk,
-				     sizeof(tctrlr->psk), NVME_TCP_CIPHER_AES_128_GCM_SHA256);
+				     sizeof(tctrlr->psk), tls_cipher_suite);
 	if (rc < 0) {
 		SPDK_ERRLOG("Could not generate TLS PSK!\n");
 		return rc;
 	}
 
 	tctrlr->psk_size = rc;
+	rc = 0;
 
-	return 0;
+finish:
+	spdk_memset_s(psk_configured, sizeof(psk_configured), 0, sizeof(psk_configured));
+
+	return rc;
 }
 
 static spdk_nvme_ctrlr_t *

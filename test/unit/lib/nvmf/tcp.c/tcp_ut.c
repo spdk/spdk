@@ -9,13 +9,13 @@
 #include "spdk_cunit.h"
 #include "spdk/bdev_zone.h"
 
-#include "spdk_internal/mock.h"
-
 #include "common/lib/test_env.c"
 #include "common/lib/test_sock.c"
 
 #include "nvmf/ctrlr.c"
 #include "nvmf/tcp.c"
+#include "spdk/sock.h"
+#include "spdk/hexlify.h"
 
 #define UT_IPV4_ADDR "192.168.0.1"
 #define UT_PORT "4420"
@@ -1280,7 +1280,7 @@ test_nvmf_tcp_tls_add_remove_credentials(void)
 	struct spdk_json_val psk_json[] = {
 		{"", 2, SPDK_JSON_VAL_OBJECT_BEGIN},
 		{"psk", 3, SPDK_JSON_VAL_NAME},
-		{"1234567890ABCDEF", 16, SPDK_JSON_VAL_STRING},
+		{"NVMeTLSkey-1:01:VRLbtnN9AQb2WXW3c9+wEf/DRLz0QuLdbYvEhwtdWwNf9LrZ:", 65, SPDK_JSON_VAL_STRING},
 		{"", 0, SPDK_JSON_VAL_OBJECT_END},
 	};
 	bool found = false;
@@ -1353,6 +1353,10 @@ test_nvmf_tcp_tls_generate_psk_id(void)
 	/* Test with a buffer that is too small to fit PSK id. */
 	CU_ASSERT(nvme_tcp_generate_psk_identity(too_small_psk_id, sizeof(too_small_psk_id), hostnqn,
 			subnqn, NVME_TCP_CIPHER_AES_128_GCM_SHA256) != 0);
+
+	/* Test with unknown cipher suite. */
+	CU_ASSERT(nvme_tcp_generate_psk_identity(psk_id, NVMF_PSK_IDENTITY_LEN, hostnqn,
+			subnqn, UINT8_MAX) != 0);
 }
 
 static void
@@ -1361,22 +1365,52 @@ test_nvmf_tcp_tls_generate_retained_psk(void)
 	const char hostnqn[] = {"nqn.2016-06.io.spdk:host1"};
 	const char psk_reference1[] = {"1234567890ABCDEF"};
 	const char psk_reference2[] = {"FEDCBA0987654321"};
+	uint8_t unhexlified_str1[SPDK_TLS_PSK_MAX_LEN] = {};
+	uint8_t unhexlified_str2[SPDK_TLS_PSK_MAX_LEN] = {};
+	char *unhexlified1;
+	char *unhexlified2;
 	uint8_t psk_retained1[SPDK_TLS_PSK_MAX_LEN] = {};
 	uint8_t psk_retained2[SPDK_TLS_PSK_MAX_LEN] = {};
 	uint8_t too_small_psk_retained[5] = {};
+	int psk_retained_len1, psk_retained_len2;
 	int retained_size;
 
-	/* Make sure that retained PSKs are different with different input PSKs. */
-	retained_size = nvme_tcp_derive_retained_psk(psk_reference1, hostnqn, psk_retained1,
-			SPDK_TLS_PSK_MAX_LEN);
+	unhexlified1 = spdk_unhexlify(psk_reference1);
+	SPDK_CU_ASSERT_FATAL(unhexlified1 != NULL);
+	unhexlified2 = spdk_unhexlify(psk_reference2);
+	SPDK_CU_ASSERT_FATAL(unhexlified2 != NULL);
+
+	memcpy(unhexlified_str1, unhexlified1, strlen(psk_reference1) / 2);
+	memcpy(unhexlified_str2, unhexlified2, strlen(psk_reference2) / 2);
+	free(unhexlified1);
+	free(unhexlified2);
+
+	/* Make sure that retained PSKs are different with different input PSKs and the same hash. */
+	retained_size = nvme_tcp_derive_retained_psk(unhexlified_str1, strlen(psk_reference1) / 2, hostnqn,
+			psk_retained1, SPDK_TLS_PSK_MAX_LEN, NVME_TCP_HASH_ALGORITHM_SHA256);
 	CU_ASSERT(retained_size > 0);
-	CU_ASSERT(nvme_tcp_derive_retained_psk(psk_reference2, hostnqn, psk_retained2,
-					       SPDK_TLS_PSK_MAX_LEN) > 0);
+
+	CU_ASSERT(nvme_tcp_derive_retained_psk(unhexlified_str2, strlen(psk_reference2) / 2, hostnqn,
+					       psk_retained2,
+					       SPDK_TLS_PSK_MAX_LEN, NVME_TCP_HASH_ALGORITHM_SHA256) > 0);
 	CU_ASSERT(memcmp(psk_retained1, psk_retained2, retained_size) != 0);
 
+	/* Make sure that retained PSKs are different with different hash and the same input PSKs. */
+	psk_retained_len1 = nvme_tcp_derive_retained_psk(unhexlified_str1, strlen(psk_reference1) / 2,
+			    hostnqn, psk_retained1, SPDK_TLS_PSK_MAX_LEN, NVME_TCP_HASH_ALGORITHM_SHA256);
+	CU_ASSERT(psk_retained_len1 > 0);
+	psk_retained_len2 = nvme_tcp_derive_retained_psk(unhexlified_str1, strlen(psk_reference1) / 2,
+			    hostnqn, psk_retained2, SPDK_TLS_PSK_MAX_LEN, NVME_TCP_HASH_ALGORITHM_SHA384);
+	CU_ASSERT(psk_retained_len2 > 0);
+	CU_ASSERT(psk_retained_len1 < psk_retained_len2);
+
+	/* Make sure that passing unknown value as hash errors out the function. */
+	CU_ASSERT(nvme_tcp_derive_retained_psk(unhexlified_str1, strlen(psk_reference1) / 2, hostnqn,
+					       psk_retained1, SPDK_TLS_PSK_MAX_LEN, -1) < 0);
+
 	/* Make sure that passing buffer insufficient in size errors out the function. */
-	CU_ASSERT(nvme_tcp_derive_retained_psk(psk_reference1, hostnqn, too_small_psk_retained,
-					       sizeof(too_small_psk_retained)) < 0);
+	CU_ASSERT(nvme_tcp_derive_retained_psk(unhexlified_str1, strlen(psk_reference1) / 2, hostnqn,
+					       too_small_psk_retained, sizeof(too_small_psk_retained), NVME_TCP_HASH_ALGORITHM_SHA256) < 0);
 }
 
 static void
@@ -1385,13 +1419,34 @@ test_nvmf_tcp_tls_generate_tls_psk(void)
 	const char psk_id_reference[] = {"NVMe0R01 nqn.2016-06.io.spdk:host1 nqn.2016-06.io.spdk:cnode1"};
 	const char hostnqn[] = {"nqn.2016-06.io.spdk:host1"};
 	const char psk_reference[] = {"1234567890ABCDEF"};
+	char *unhexlified;
+	uint8_t unhexlified_str[SPDK_TLS_PSK_MAX_LEN] = {};
 	uint8_t psk_retained[SPDK_TLS_PSK_MAX_LEN] = {};
+	uint8_t psk_key1[SPDK_TLS_PSK_MAX_LEN] = {}, psk_key2[SPDK_TLS_PSK_MAX_LEN] = {};
 	uint8_t too_small_psk_tls[5] = {};
-	int retained_size;
+	int retained_size, tls_size;
 
-	retained_size = nvme_tcp_derive_retained_psk(psk_reference, hostnqn, psk_retained,
-			SPDK_TLS_PSK_MAX_LEN);
+	unhexlified = spdk_unhexlify(psk_reference);
+	CU_ASSERT(unhexlified != NULL);
+
+	memcpy(unhexlified_str, unhexlified, strlen(psk_reference) / 2);
+	free(unhexlified);
+
+	retained_size = nvme_tcp_derive_retained_psk(unhexlified_str, strlen(psk_reference) / 2, hostnqn,
+			psk_retained, SPDK_TLS_PSK_MAX_LEN, NVME_TCP_HASH_ALGORITHM_SHA256);
 	CU_ASSERT(retained_size > 0);
+
+	/* Make sure that different cipher suites produce different TLS PSKs. */
+	tls_size = nvme_tcp_derive_tls_psk(psk_retained, retained_size, psk_id_reference, psk_key1,
+					   SPDK_TLS_PSK_MAX_LEN, NVME_TCP_CIPHER_AES_128_GCM_SHA256);
+	CU_ASSERT(tls_size > 0);
+	CU_ASSERT(nvme_tcp_derive_tls_psk(psk_retained, retained_size, psk_id_reference, psk_key2,
+					  SPDK_TLS_PSK_MAX_LEN, NVME_TCP_CIPHER_AES_256_GCM_SHA384) > 0);
+	CU_ASSERT(memcmp(psk_key1, psk_key2, tls_size) != 0);
+
+	/* Make sure that passing unknown value as hash errors out the function. */
+	CU_ASSERT(nvme_tcp_derive_tls_psk(psk_retained, retained_size, psk_id_reference,
+					  psk_key1, SPDK_TLS_PSK_MAX_LEN, UINT8_MAX) < 0);
 
 	/* Make sure that passing buffer insufficient in size errors out the function. */
 	CU_ASSERT(nvme_tcp_derive_tls_psk(psk_retained, retained_size, psk_id_reference,
