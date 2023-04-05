@@ -44,8 +44,8 @@ ut_iobuf_foreach_cb(struct spdk_iobuf_channel *ch, struct spdk_iobuf_entry *entr
 	return 0;
 }
 
-#define SMALL_BUFSIZE 128
-#define LARGE_BUFSIZE 512
+#define SMALL_BUFSIZE 4096
+#define LARGE_BUFSIZE 8192
 
 static void
 iobuf(void)

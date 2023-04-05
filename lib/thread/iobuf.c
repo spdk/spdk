@@ -8,17 +8,20 @@
 #include "spdk/likely.h"
 #include "spdk/log.h"
 #include "spdk/thread.h"
-#include "spdk/bdev.h"
 
 #define IOBUF_MIN_SMALL_POOL_SIZE	64
 #define IOBUF_MIN_LARGE_POOL_SIZE	8
 #define IOBUF_DEFAULT_SMALL_POOL_SIZE	8192
 #define IOBUF_DEFAULT_LARGE_POOL_SIZE	1024
 #define IOBUF_ALIGNMENT			4096
-#define IOBUF_MIN_SMALL_BUFSIZE		(SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_SMALL_BUF_MAX_SIZE) + \
-					 IOBUF_ALIGNMENT)
-#define IOBUF_MIN_LARGE_BUFSIZE		(SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_LARGE_BUF_MAX_SIZE) + \
-					 IOBUF_ALIGNMENT)
+#define IOBUF_MIN_SMALL_BUFSIZE		4096
+#define IOBUF_MIN_LARGE_BUFSIZE		8192
+#define IOBUF_DEFAULT_SMALL_BUFSIZE	(8 * 1024)
+/* 132k is a weird choice at first, but this needs to be large enough to accomodate
+ * the default maximum size (128k) plus metadata everywhere. For code paths that
+ * are explicitly configured, the math is instead done properly. This is only
+ * for the default. */
+#define IOBUF_DEFAULT_LARGE_BUFSIZE	(132 * 1024)
 
 SPDK_STATIC_ASSERT(sizeof(struct spdk_iobuf_buffer) <= IOBUF_MIN_SMALL_BUFSIZE,
 		   "Invalid data offset");
@@ -53,8 +56,8 @@ static struct iobuf g_iobuf = {
 	.opts = {
 		.small_pool_count = IOBUF_DEFAULT_SMALL_POOL_SIZE,
 		.large_pool_count = IOBUF_DEFAULT_LARGE_POOL_SIZE,
-		.small_bufsize = IOBUF_MIN_SMALL_BUFSIZE,
-		.large_bufsize = IOBUF_MIN_LARGE_BUFSIZE,
+		.small_bufsize = IOBUF_DEFAULT_SMALL_BUFSIZE,
+		.large_bufsize = IOBUF_DEFAULT_LARGE_BUFSIZE,
 	},
 };
 
@@ -94,8 +97,10 @@ spdk_iobuf_initialize(void)
 		goto error;
 	}
 
-	g_iobuf.small_pool_base = spdk_malloc(opts->small_bufsize * opts->small_pool_count, 0, NULL,
-					      SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+	/* Round up to the nearest alignment so that each element remains aligned */
+	opts->small_bufsize = SPDK_ALIGN_CEIL(opts->small_bufsize, IOBUF_ALIGNMENT);
+	g_iobuf.small_pool_base = spdk_malloc(opts->small_bufsize * opts->small_pool_count, IOBUF_ALIGNMENT,
+					      NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 	if (g_iobuf.small_pool_base == NULL) {
 		SPDK_ERRLOG("Unable to allocate requested small iobuf pool size\n");
 		rc = -ENOMEM;
@@ -110,8 +115,10 @@ spdk_iobuf_initialize(void)
 		goto error;
 	}
 
-	g_iobuf.large_pool_base = spdk_malloc(opts->large_bufsize * opts->large_pool_count, 0, NULL,
-					      SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+	/* Round up to the nearest alignment so that each element remains aligned */
+	opts->large_bufsize = SPDK_ALIGN_CEIL(opts->large_bufsize, IOBUF_ALIGNMENT);
+	g_iobuf.large_pool_base = spdk_malloc(opts->large_bufsize * opts->large_pool_count, IOBUF_ALIGNMENT,
+					      NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 	if (g_iobuf.large_pool_base == NULL) {
 		SPDK_ERRLOG("Unable to allocate requested large iobuf pool size\n");
 		rc = -ENOMEM;
@@ -200,18 +207,20 @@ spdk_iobuf_set_opts(const struct spdk_iobuf_opts *opts)
 			    IOBUF_MIN_LARGE_POOL_SIZE);
 		return -EINVAL;
 	}
-	if (opts->small_bufsize < IOBUF_MIN_SMALL_BUFSIZE) {
-		SPDK_ERRLOG("small_bufsize must be at least %" PRIu32 "\n",
-			    IOBUF_MIN_SMALL_BUFSIZE);
-		return -EINVAL;
-	}
-	if (opts->large_bufsize < IOBUF_MIN_LARGE_BUFSIZE) {
-		SPDK_ERRLOG("large_bufsize must be at least %" PRIu32 "\n",
-			    IOBUF_MIN_LARGE_BUFSIZE);
-		return -EINVAL;
-	}
 
 	g_iobuf.opts = *opts;
+
+	if (opts->small_bufsize < IOBUF_MIN_SMALL_BUFSIZE) {
+		SPDK_ERRLOG("small_bufsize must be at least %" PRIu32 ". Automatically increasing.\n",
+			    IOBUF_MIN_SMALL_BUFSIZE);
+		g_iobuf.opts.large_bufsize = IOBUF_MIN_SMALL_BUFSIZE;
+	}
+
+	if (opts->large_bufsize < IOBUF_MIN_LARGE_BUFSIZE) {
+		SPDK_WARNLOG("large_bufsize must be at least %" PRIu32 ". Automatically increasing.\n",
+			     IOBUF_MIN_LARGE_BUFSIZE);
+		g_iobuf.opts.large_bufsize = IOBUF_MIN_LARGE_BUFSIZE;
+	}
 
 	return 0;
 }

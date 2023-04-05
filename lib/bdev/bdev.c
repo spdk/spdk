@@ -517,7 +517,9 @@ spdk_bdev_set_opts(struct spdk_bdev_opts *opts)
 
 	spdk_iobuf_get_opts(&iobuf_opts);
 	iobuf_opts.small_pool_count = opts->small_buf_pool_size;
+	iobuf_opts.small_bufsize = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_SMALL_BUF_MAX_SIZE);
 	iobuf_opts.large_pool_count = opts->large_buf_pool_size;
+	iobuf_opts.large_bufsize = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_LARGE_BUF_MAX_SIZE);
 
 	rc = spdk_iobuf_set_opts(&iobuf_opts);
 	if (rc != 0) {
