@@ -255,6 +255,7 @@ posix_sock_alloc_pipe(struct spdk_posix_sock *sock, int sz)
 	struct iovec diov[2];
 	int sbytes;
 	ssize_t bytes;
+	int rc;
 
 	if (sock->recv_buf_sz == sz) {
 		return 0;
@@ -273,11 +274,12 @@ posix_sock_alloc_pipe(struct spdk_posix_sock *sock, int sz)
 	}
 
 	/* Round up to next 64 byte multiple */
-	new_buf = calloc(SPDK_ALIGN_CEIL(sz, 64), sizeof(uint8_t));
-	if (!new_buf) {
+	rc = posix_memalign((void **)&new_buf, 64, sz);
+	if (rc != 0) {
 		SPDK_ERRLOG("socket recv buf allocation failed\n");
 		return -ENOMEM;
 	}
+	memset(new_buf, 0, sz);
 
 	new_pipe = spdk_pipe_create(new_buf, sz);
 	if (new_pipe == NULL) {
