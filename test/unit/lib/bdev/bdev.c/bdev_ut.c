@@ -5535,26 +5535,24 @@ bdev_set_options_test(void)
 	CU_ASSERT(rc == -1);
 
 	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
-	bdev_opts.bdev_io_pool_size = 4;
-	bdev_opts.bdev_io_cache_size = 2;
-	bdev_opts.small_buf_pool_size = 4;
 
-	/* Case 2: Do not set valid small_buf_pool_size and large_buf_pool_size */
+	/* Case 2: Invalid small_buf_pool_size */
+	bdev_opts.small_buf_pool_size = 0;
 	rc = spdk_bdev_set_opts(&bdev_opts);
 	CU_ASSERT(rc == -1);
 
-	/* Case 3: Do not set valid large_buf_pool_size */
+	/* Case 3: Invalid large_buf_pool_size */
 	bdev_opts.small_buf_pool_size = BUF_SMALL_POOL_SIZE;
-	bdev_opts.large_buf_pool_size = BUF_LARGE_POOL_SIZE - 1;
+	bdev_opts.large_buf_pool_size = 0;
 	rc = spdk_bdev_set_opts(&bdev_opts);
 	CU_ASSERT(rc == -1);
 
-	/* Case4: set valid large buf_pool_size */
+	/* Case 4: All valid */
 	bdev_opts.large_buf_pool_size = BUF_LARGE_POOL_SIZE;
 	rc = spdk_bdev_set_opts(&bdev_opts);
 	CU_ASSERT(rc == 0);
 
-	/* Case5: Set different valid value for small and large buf pool */
+	/* Case 5: Set different valid value for small and large buf pool */
 	bdev_opts.large_buf_pool_size = BUF_SMALL_POOL_SIZE + 3;
 	bdev_opts.large_buf_pool_size = BUF_LARGE_POOL_SIZE + 3;
 	rc = spdk_bdev_set_opts(&bdev_opts);

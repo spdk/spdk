@@ -10,8 +10,10 @@
 #include "spdk/thread.h"
 #include "spdk/bdev.h"
 
-#define IOBUF_MIN_SMALL_POOL_SIZE	8191
-#define IOBUF_MIN_LARGE_POOL_SIZE	1023
+#define IOBUF_MIN_SMALL_POOL_SIZE	64
+#define IOBUF_MIN_LARGE_POOL_SIZE	8
+#define IOBUF_DEFAULT_SMALL_POOL_SIZE	8192
+#define IOBUF_DEFAULT_LARGE_POOL_SIZE	1024
 #define IOBUF_ALIGNMENT			4096
 #define IOBUF_MIN_SMALL_BUFSIZE		(SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_SMALL_BUF_MAX_SIZE) + \
 					 IOBUF_ALIGNMENT)
@@ -49,8 +51,8 @@ static struct iobuf g_iobuf = {
 	.small_pool_base = NULL,
 	.large_pool_base = NULL,
 	.opts = {
-		.small_pool_count = IOBUF_MIN_SMALL_POOL_SIZE,
-		.large_pool_count = IOBUF_MIN_LARGE_POOL_SIZE,
+		.small_pool_count = IOBUF_DEFAULT_SMALL_POOL_SIZE,
+		.large_pool_count = IOBUF_DEFAULT_LARGE_POOL_SIZE,
 		.small_bufsize = IOBUF_MIN_SMALL_BUFSIZE,
 		.large_bufsize = IOBUF_MIN_LARGE_BUFSIZE,
 	},
