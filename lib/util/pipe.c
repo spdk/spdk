@@ -73,7 +73,7 @@ spdk_pipe_writer_get_buffer(struct spdk_pipe *pipe, uint32_t requested_sz, struc
 	} else {
 		sz = spdk_min(requested_sz, read - write);
 
-		iovs[0].iov_base = (sz == 0) ? NULL : (pipe->buf + write);
+		iovs[0].iov_base = pipe->buf + write;
 		iovs[0].iov_len = sz;
 		iovs[1].iov_base = NULL;
 		iovs[1].iov_len = 0;
@@ -156,7 +156,7 @@ spdk_pipe_reader_get_buffer(struct spdk_pipe *pipe, uint32_t requested_sz, struc
 	read = pipe->read;
 	write = pipe->write;
 
-	if (read == write && !pipe->full) {
+	if ((read == write && !pipe->full) || requested_sz == 0) {
 		iovs[0].iov_base = NULL;
 		iovs[0].iov_len = 0;
 		iovs[1].iov_base = NULL;
@@ -164,14 +164,14 @@ spdk_pipe_reader_get_buffer(struct spdk_pipe *pipe, uint32_t requested_sz, struc
 	} else if (read < write) {
 		sz = spdk_min(requested_sz, write - read);
 
-		iovs[0].iov_base = (sz == 0) ? NULL : (pipe->buf + read);
+		iovs[0].iov_base = pipe->buf + read;
 		iovs[0].iov_len = sz;
 		iovs[1].iov_base = NULL;
 		iovs[1].iov_len = 0;
 	} else {
 		sz = spdk_min(requested_sz, pipe->sz - read);
 
-		iovs[0].iov_base = (sz == 0) ? NULL : (pipe->buf + read);
+		iovs[0].iov_base = pipe->buf + read;
 		iovs[0].iov_len = sz;
 
 		requested_sz -= sz;
