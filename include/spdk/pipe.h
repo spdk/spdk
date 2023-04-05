@@ -23,9 +23,6 @@ struct spdk_pipe;
  * Construct a pipe around the given memory buffer. The pipe treats the memory
  * buffer as a circular ring of bytes.
  *
- * The available size for writing will be one less byte than provided. A single
- * byte must be reserved to distinguish queue full from queue empty conditions.
- *
  * \param buf The data buffer that backs this pipe.
  * \param sz The size of the data buffer.
  *
