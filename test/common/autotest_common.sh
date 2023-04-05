@@ -1340,7 +1340,7 @@ function autotest_cleanup() {
 	# in one swing. We do this in a subshell as vhost/common.sh is too eager to
 	# do some extra work which we don't care about in this context.
 	# shellcheck source=/dev/null
-	vhost_reap() (source "$rootdir/test/vhost/common.sh" || return 0 && at_app_exit)
+	vhost_reap() (source "$rootdir/test/vhost/common.sh" &> /dev/null || return 0 && at_app_exit)
 
 	# catch any stray core files and kill all remaining SPDK processes. Update
 	# autotest_es in case autotest reported success but cores and/or processes
