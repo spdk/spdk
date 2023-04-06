@@ -5,6 +5,7 @@
 - [SPDK 23.01 NVMe Bdev Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_nvme_bdev_perf_report_2301.pdf)
 - [SPDK 23.01 Vhost Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_vhost_perf_report_2301.pdf)
 - [SPDK 23.01 NVMe-oF TCP Performance Report (Mellanox ConnectX-5)](https://ci.spdk.io/download/performance-reports/SPDK_tcp_mlx_perf_report_2301.pdf)
+- [SPDK 23.01 NVMe-oF TCP Performance Report (Intel E810-CQDA2)](https://ci.spdk.io/download/performance-reports/SPDK_tcp_cvl_perf_report_2301.pdf)
 - [SPDK 23.01 NVMe-oF RDMA Performance Report (Mellanox ConnectX-5)](https://ci.spdk.io/download/performance-reports/SPDK_rdma_mlx_perf_report_2301.pdf)
 - [SPDK 23.01 NVMe-oF RDMA Performance Report (Intel E810-CQDA2 iWARP)](https://ci.spdk.io/download/performance-reports/SPDK_rdma_cvl_iwarp_perf_report_2301.pdf)
 - [SPDK 23.01 NVMe-oF RDMA Performance Report (Intel E810-CQDA2 RoCEv2)](https://ci.spdk.io/download/performance-reports/SPDK_rdma_cvl_roce_perf_report_2301.pdf)
