@@ -1248,7 +1248,9 @@ bdev_io_get_max_buf_len(struct spdk_bdev_io *bdev_io, uint64_t len)
 	uint64_t md_len, alignment;
 
 	md_len = spdk_bdev_is_md_separate(bdev) ? bdev_io->u.bdev.num_blocks * bdev->md_len : 0;
-	alignment = spdk_bdev_get_buf_align(bdev);
+
+	/* 1 byte alignment needs 0 byte of extra space, 64 bytes alignment needs 63 bytes of extra space, etc. */
+	alignment = spdk_bdev_get_buf_align(bdev) - 1;
 
 	return len + alignment + md_len;
 }
