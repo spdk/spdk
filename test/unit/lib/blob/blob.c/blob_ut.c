@@ -8506,6 +8506,76 @@ blob_esnap_hotplug(void)
 	CU_ASSERT(g_bserrno == 0);
 }
 
+static bool g_blob_is_degraded;
+static int g_blob_is_degraded_called;
+
+static bool
+_blob_is_degraded(struct spdk_bs_dev *dev)
+{
+	g_blob_is_degraded_called++;
+	return g_blob_is_degraded;
+}
+
+static void
+blob_is_degraded(void)
+{
+	struct spdk_bs_dev bs_is_degraded_null = { 0 };
+	struct spdk_bs_dev bs_is_degraded = { .is_degraded = _blob_is_degraded };
+
+	/* No back_bs_dev, no bs->dev->is_degraded */
+	g_blob_is_degraded_called = 0;
+	CU_ASSERT(!spdk_blob_is_degraded(g_blob));
+	CU_ASSERT(g_blob_is_degraded_called == 0);
+
+	/* No back_bs_dev, blobstore device degraded */
+	g_bs->dev->is_degraded = _blob_is_degraded;
+	g_blob_is_degraded_called = 0;
+	g_blob_is_degraded = true;
+	CU_ASSERT(spdk_blob_is_degraded(g_blob));
+	CU_ASSERT(g_blob_is_degraded_called == 1);
+
+	/* No back_bs_dev, blobstore device not degraded */
+	g_bs->dev->is_degraded = _blob_is_degraded;
+	g_blob_is_degraded_called = 0;
+	g_blob_is_degraded = false;
+	CU_ASSERT(!spdk_blob_is_degraded(g_blob));
+	CU_ASSERT(g_blob_is_degraded_called == 1);
+
+	/* back_bs_dev does not define is_degraded, no bs->dev->is_degraded */
+	g_bs->dev->is_degraded = NULL;
+	g_blob->back_bs_dev = &bs_is_degraded_null;
+	g_blob_is_degraded_called = 0;
+	g_blob_is_degraded = false;
+	CU_ASSERT(!spdk_blob_is_degraded(g_blob));
+	CU_ASSERT(g_blob_is_degraded_called == 0);
+
+	/* back_bs_dev is not degraded, no bs->dev->is_degraded */
+	g_bs->dev->is_degraded = NULL;
+	g_blob->back_bs_dev = &bs_is_degraded;
+	g_blob_is_degraded_called = 0;
+	g_blob_is_degraded = false;
+	CU_ASSERT(!spdk_blob_is_degraded(g_blob));
+	CU_ASSERT(g_blob_is_degraded_called == 1);
+
+	/* back_bs_dev is degraded, no bs->dev->is_degraded */
+	g_bs->dev->is_degraded = NULL;
+	g_blob->back_bs_dev = &bs_is_degraded;
+	g_blob_is_degraded_called = 0;
+	g_blob_is_degraded = true;
+	CU_ASSERT(spdk_blob_is_degraded(g_blob));
+	CU_ASSERT(g_blob_is_degraded_called == 1);
+
+	/* back_bs_dev is not degraded, blobstore device is not degraded */
+	g_bs->dev->is_degraded = _blob_is_degraded;
+	g_blob->back_bs_dev = &bs_is_degraded;
+	g_blob_is_degraded_called = 0;
+	g_blob_is_degraded = false;
+	CU_ASSERT(!spdk_blob_is_degraded(g_blob));
+	CU_ASSERT(g_blob_is_degraded_called == 2);
+
+	g_blob->back_bs_dev = NULL;
+}
+
 static void
 suite_bs_setup(void)
 {
@@ -8717,6 +8787,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite_esnap_bs, blob_esnap_clone_decouple);
 	CU_ADD_TEST(suite_esnap_bs, blob_esnap_clone_reload);
 	CU_ADD_TEST(suite_esnap_bs, blob_esnap_hotplug);
+	CU_ADD_TEST(suite_blob, blob_is_degraded);
 
 	allocate_threads(2);
 	set_thread(0);

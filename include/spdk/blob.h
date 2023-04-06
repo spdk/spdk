@@ -244,6 +244,8 @@ struct spdk_bs_dev {
 		     uint64_t dst_lba, uint64_t src_lba, uint64_t lba_count,
 		     struct spdk_bs_dev_cb_args *cb_args);
 
+	bool (*is_degraded)(struct spdk_bs_dev *dev);
+
 	uint64_t	blockcnt;
 	uint32_t	blocklen; /* In bytes */
 };
@@ -1142,6 +1144,15 @@ void spdk_blob_set_esnap_bs_dev(struct spdk_blob *blob, struct spdk_bs_dev *back
  * \return NULL if the blob is not an esnap clone, else the current external snapshot device.
  */
 struct spdk_bs_dev *spdk_blob_get_esnap_bs_dev(const struct spdk_blob *blob);
+
+/**
+ * Determine if the blob is degraded. A degraded blob cannot perform IO.
+ *
+ * \param blob A blob
+ *
+ * \return true if the blob or any snapshots upon which it depends are degraded, else false.
+ */
+bool spdk_blob_is_degraded(const struct spdk_blob *blob);
 
 #ifdef __cplusplus
 }

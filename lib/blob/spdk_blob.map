@@ -68,6 +68,7 @@
 	spdk_bs_set_bstype;
 	spdk_blob_get_esnap_bs_dev;
 	spdk_blob_set_esnap_bs_dev;
+	spdk_blob_is_degraded;
 
 	local: *;
 };

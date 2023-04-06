@@ -9115,5 +9115,18 @@ spdk_blob_get_esnap_bs_dev(const struct spdk_blob *blob)
 	return blob->back_bs_dev;
 }
 
+bool
+spdk_blob_is_degraded(const struct spdk_blob *blob)
+{
+	if (blob->bs->dev->is_degraded != NULL && blob->bs->dev->is_degraded(blob->bs->dev)) {
+		return true;
+	}
+	if (blob->back_bs_dev == NULL || blob->back_bs_dev->is_degraded == NULL) {
+		return false;
+	}
+
+	return blob->back_bs_dev->is_degraded(blob->back_bs_dev);
+}
+
 SPDK_LOG_REGISTER_COMPONENT(blob)
 SPDK_LOG_REGISTER_COMPONENT(blob_esnap)
