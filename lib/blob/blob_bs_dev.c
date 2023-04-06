@@ -154,6 +154,14 @@ blob_bs_translate_lba(struct spdk_bs_dev *dev, uint64_t lba, uint64_t *base_lba)
 						base_lba);
 }
 
+static bool
+blob_bs_is_degraded(struct spdk_bs_dev *dev)
+{
+	struct spdk_blob_bs_dev *b = (struct spdk_blob_bs_dev *)dev;
+
+	return spdk_blob_is_degraded(b->blob);
+}
+
 struct spdk_bs_dev *
 bs_create_blob_bs_dev(struct spdk_blob *blob)
 {
@@ -180,6 +188,7 @@ bs_create_blob_bs_dev(struct spdk_blob *blob)
 	b->bs_dev.unmap = blob_bs_dev_unmap;
 	b->bs_dev.is_zeroes = blob_bs_is_zeroes;
 	b->bs_dev.translate_lba = blob_bs_translate_lba;
+	b->bs_dev.is_degraded = blob_bs_is_degraded;
 	b->blob = blob;
 
 	return &b->bs_dev;
