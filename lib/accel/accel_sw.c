@@ -53,6 +53,7 @@ static struct spdk_accel_module_if g_sw_module;
 
 static void sw_accel_crypto_key_deinit(struct spdk_accel_crypto_key *_key);
 static int sw_accel_crypto_key_init(struct spdk_accel_crypto_key *key);
+static bool sw_accel_crypto_supports_tweak_mode(enum spdk_accel_crypto_tweak_mode tweak_mode);
 
 /* Post SW completions to a list and complete in a poller as we don't want to
  * complete them on the caller's stack as they'll likely submit another. */
@@ -523,6 +524,7 @@ static struct spdk_accel_module_if g_sw_module = {
 	.submit_tasks		= sw_accel_submit_tasks,
 	.crypto_key_init	= sw_accel_crypto_key_init,
 	.crypto_key_deinit	= sw_accel_crypto_key_deinit,
+	.crypto_supports_tweak_mode	= sw_accel_crypto_supports_tweak_mode,
 };
 
 static int
@@ -680,6 +682,12 @@ sw_accel_crypto_key_deinit(struct spdk_accel_crypto_key *key)
 	}
 
 	free(key->priv);
+}
+
+static bool
+sw_accel_crypto_supports_tweak_mode(enum spdk_accel_crypto_tweak_mode tweak_mode)
+{
+	return tweak_mode == SPDK_ACCEL_CRYPTO_TWEAK_MODE_SIMPLE_LBA;
 }
 
 SPDK_ACCEL_MODULE_REGISTER(sw, &g_sw_module)

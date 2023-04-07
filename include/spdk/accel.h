@@ -25,6 +25,7 @@ struct spdk_accel_crypto_key_create_param {
 	char *cipher;	/**< Cipher to be used for crypto operations */
 	char *hex_key;	/**< Hexlified key */
 	char *hex_key2;	/**< Hexlified key2 */
+	char *tweak_mode;	/**< Tweak mode */
 	char *key_name;	/**< Key name */
 };
 

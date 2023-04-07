@@ -21,12 +21,32 @@ void spdk_accel_task_complete(struct spdk_accel_task *task, int status);
 /** Some reasonable key length used with strnlen() */
 #define SPDK_ACCEL_CRYPTO_KEY_MAX_HEX_LENGTH (256 + 1)
 
+enum spdk_accel_crypto_tweak_mode {
+	/* Tweak[127:0] = {64'b0, LBA[63:0]} */
+	SPDK_ACCEL_CRYPTO_TWEAK_MODE_SIMPLE_LBA,
+
+	/* Tweak[127:0] = {1’b0, ~LBA[62:0], LBA[63:0]} */
+	SPDK_ACCEL_CRYPTO_TWEAK_MODE_JOIN_NEG_LBA_WITH_LBA,
+
+	/* Tweak is derived from LBA that is internally incremented by 1 for every 512 bytes processed
+	 * so initial lba = (BLOCK_SIZE_IN_BYTES / 512) * LBA
+	 * Tweak[127:0] = {lba[127:0]} */
+	SPDK_ACCEL_CRYPTO_TWEAK_MODE_INCR_512_FULL_LBA,
+
+	/* Tweak is derived from LBA that is internally incremented by 1 for every 512 bytes processed
+	 * so initial lba = (BLOCK_SIZE_IN_BYTES / 512) * LBA
+	 * Tweak[127:0] = {lba[63:0], 64'b0} */
+	SPDK_ACCEL_CRYPTO_TWEAK_MODE_INCR_512_UPPER_LBA,
+	SPDK_ACCEL_CRYPTO_TWEAK_MODE_MAX,
+};
+
 struct spdk_accel_crypto_key {
 	void *priv;					/**< Module private data */
 	char *key;					/**< Key in binary form */
 	size_t key_size;				/**< Key size in bytes */
 	char *key2;					/**< Key2 in binary form */
 	size_t key2_size;				/**< Key2 size in bytes */
+	enum spdk_accel_crypto_tweak_mode tweak_mode;
 	struct spdk_accel_module_if *module_if;			/**< Accel module the key belongs to */
 	struct spdk_accel_crypto_key_create_param param;	/**< User input parameters */
 	TAILQ_ENTRY(spdk_accel_crypto_key) link;
@@ -149,6 +169,11 @@ struct spdk_accel_module_if {
 	 */
 	int (*crypto_key_init)(struct spdk_accel_crypto_key *key);
 	void (*crypto_key_deinit)(struct spdk_accel_crypto_key *key);
+
+	/**
+	 * Returns true if given tweak mode is supported. If module doesn't implement that function it shall support SIMPLE LBA mode.
+	 */
+	bool (*crypto_supports_tweak_mode)(enum spdk_accel_crypto_tweak_mode tweak_mode);
 
 	/**
 	 * Returns memory domains supported by the module.  If NULL, the module does not support

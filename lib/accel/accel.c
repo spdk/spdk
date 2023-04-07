@@ -35,6 +35,9 @@
 #define ACCEL_BUFFER_BASE		((void *)(1ull << 63))
 #define ACCEL_BUFFER_OFFSET_MASK	((uintptr_t)ACCEL_BUFFER_BASE - 1)
 
+#define ACCEL_CRYPTO_TWEAK_MODE_DEFAULT	SPDK_ACCEL_CRYPTO_TWEAK_MODE_SIMPLE_LBA
+#define ACCEL_CRYPTO_TWEAK_MODE_CHAR_MAX	32
+
 struct accel_module {
 	struct spdk_accel_module_if	*module;
 	bool				supports_memory_domains;
@@ -1987,6 +1990,7 @@ accel_crypto_key_free_mem(struct spdk_accel_crypto_key *key)
 		spdk_memset_s(key->param.hex_key2, key->key2_size * 2, 0, key->key2_size * 2);
 		free(key->param.hex_key2);
 	}
+	free(key->param.tweak_mode);
 	free(key->param.key_name);
 	free(key->param.cipher);
 	if (key->key) {
@@ -2028,6 +2032,13 @@ accel_aes_xts_keys_equal(const char *k1, size_t k1_len, const char *k2, size_t k
 
 	return x == 0;
 }
+
+static const char *g_tweak_modes[SPDK_ACCEL_CRYPTO_TWEAK_MODE_MAX] = {
+	[SPDK_ACCEL_CRYPTO_TWEAK_MODE_SIMPLE_LBA] = "SIMPLE_LBA",
+	[SPDK_ACCEL_CRYPTO_TWEAK_MODE_JOIN_NEG_LBA_WITH_LBA] = "JOIN_NEG_LBA_WITH_LBA",
+	[SPDK_ACCEL_CRYPTO_TWEAK_MODE_INCR_512_FULL_LBA] = "INCR_512_FULL_LBA",
+	[SPDK_ACCEL_CRYPTO_TWEAK_MODE_INCR_512_UPPER_LBA] = "INCR_512_UPPER_LBA",
+};
 
 int
 spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *param)
@@ -2119,6 +2130,42 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 			rc = -EINVAL;
 			goto error;
 		}
+	}
+
+
+	key->tweak_mode = ACCEL_CRYPTO_TWEAK_MODE_DEFAULT;
+	if (param->tweak_mode) {
+		bool found = false;
+
+		key->param.tweak_mode = strdup(param->tweak_mode);
+		if (!key->param.tweak_mode) {
+			rc = -ENOMEM;
+			goto error;
+		}
+
+		for (uint32_t i = 0; i < SPDK_COUNTOF(g_tweak_modes); ++i) {
+			assert(strlen(g_tweak_modes[i]) < ACCEL_CRYPTO_TWEAK_MODE_CHAR_MAX);
+
+			if (strncmp(param->tweak_mode, g_tweak_modes[i], ACCEL_CRYPTO_TWEAK_MODE_CHAR_MAX) == 0) {
+				key->tweak_mode = i;
+				found = true;
+				break;
+			}
+		}
+
+		if (!found) {
+			SPDK_ERRLOG("Failed to parse tweak mode\n");
+			rc = -EINVAL;
+			goto error;
+		}
+	}
+
+	if ((!module->crypto_supports_tweak_mode && key->tweak_mode != ACCEL_CRYPTO_TWEAK_MODE_DEFAULT) ||
+	    (module->crypto_supports_tweak_mode && !module->crypto_supports_tweak_mode(key->tweak_mode))) {
+		SPDK_ERRLOG("Module %s doesn't support %s tweak mode\n", module->name,
+			    g_tweak_modes[key->tweak_mode]);
+		rc = -EINVAL;
+		goto error;
 	}
 
 	key->module_if = module;
@@ -2459,6 +2506,10 @@ __accel_crypto_key_dump_param(struct spdk_json_write_ctx *w, struct spdk_accel_c
 	spdk_json_write_named_string(w, "key", key->param.hex_key);
 	if (key->param.hex_key2) {
 		spdk_json_write_named_string(w, "key2", key->param.hex_key2);
+	}
+
+	if (key->param.tweak_mode) {
+		spdk_json_write_named_string(w, "tweak_mode", key->param.tweak_mode);
 	}
 }
 

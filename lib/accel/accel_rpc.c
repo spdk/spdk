@@ -183,6 +183,7 @@ static const struct spdk_json_object_decoder rpc_accel_dek_create_decoders[] = {
 	{"cipher", offsetof(struct rpc_accel_crypto_key_create, param.cipher), spdk_json_decode_string},
 	{"key", offsetof(struct rpc_accel_crypto_key_create, param.hex_key),   spdk_json_decode_string},
 	{"key2", offsetof(struct rpc_accel_crypto_key_create, param.hex_key2), spdk_json_decode_string, true},
+	{"tweak_mode", offsetof(struct rpc_accel_crypto_key_create, param.tweak_mode), spdk_json_decode_string, true},
 	{"name", offsetof(struct rpc_accel_crypto_key_create, param.key_name), spdk_json_decode_string},
 };
 
@@ -222,6 +223,7 @@ cleanup:
 		spdk_memset_s(req.param.hex_key2, key_size, 0, key_size);
 		free(req.param.hex_key2);
 	}
+	free(req.param.tweak_mode);
 	free(req.param.key_name);
 }
 SPDK_RPC_REGISTER("accel_crypto_key_create", rpc_accel_crypto_key_create, SPDK_RPC_RUNTIME)

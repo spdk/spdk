@@ -34,13 +34,14 @@ def accel_assign_opc(client, opname, module):
     return client.call('accel_assign_opc', params)
 
 
-def accel_crypto_key_create(client, cipher, key, key2, name):
+def accel_crypto_key_create(client, cipher, key, key2, tweak_mode, name):
     """Create Data Encryption Key Identifier.
 
     Args:
         cipher: cipher
         key: key
         key2: key2
+        tweak_mode: tweak mode
         name: key name
     """
     params = {
@@ -50,6 +51,8 @@ def accel_crypto_key_create(client, cipher, key, key2, name):
     }
     if key2 is not None:
         params['key2'] = key2
+    if tweak_mode is not None:
+        params['tweak_mode'] = tweak_mode
 
     return client.call('accel_crypto_key_create', params)
 
