@@ -97,8 +97,8 @@ COMMON_CFLAGS += -Werror
 endif
 
 ifeq ($(CONFIG_LTO),y)
-COMMON_CFLAGS += -flto
-LDFLAGS += -flto
+COMMON_CFLAGS += -flto=auto
+LDFLAGS += -flto=auto
 endif
 
 ifeq ($(CONFIG_PGO_CAPTURE),y)
