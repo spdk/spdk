@@ -13,6 +13,8 @@
 #include "spdk/queue.h"
 #include "spdk/config.h"
 
+#define ACCEL_AES_XTS "AES_XTS"
+
 struct module_info {
 	struct spdk_json_write_ctx *w;
 	const char *name;

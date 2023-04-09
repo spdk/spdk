@@ -1394,10 +1394,6 @@ accel_dpdk_cryptodev_validate_parameters(enum accel_dpdk_cryptodev_driver_type d
 		}
 		break;
 	case ACCEL_DPDK_CRYPTODEV_CIPHER_AES_XTS:
-		if (!key->key || !key->key_size || !key->key2 || !key->key2_size) {
-			SPDK_ERRLOG("ACCEL_DPDK_CRYPTODEV_AES_XTS requires both key and key2\n");
-			return -1;
-		}
 		break;
 	default:
 		return -1;
@@ -1419,10 +1415,6 @@ accel_dpdk_cryptodev_validate_parameters(enum accel_dpdk_cryptodev_driver_type d
 		}
 		break;
 	case ACCEL_DPDK_CRYPTODEV_CIPHER_AES_XTS:
-		if (key->key_size != key->key2_size) {
-			SPDK_ERRLOG("Cipher %s requires equal key and key2 sizes\n", g_cipher_names[driver]);
-			return -1;
-		}
 		switch (driver) {
 		case ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI:
 			if (key->key_size != ACCEL_DPDK_CRYPTODEV_AES_XTS_128_BLOCK_KEY_LENGTH &&
@@ -1484,11 +1476,6 @@ accel_dpdk_cryptodev_key_init(struct spdk_accel_crypto_key *key)
 	enum accel_dpdk_cryptodev_driver_type driver;
 	enum accel_dpdk_crypto_dev_cipher_type cipher;
 	int rc;
-
-	if (!key->param.cipher) {
-		SPDK_ERRLOG("Cipher is missing\n");
-		return -EINVAL;
-	}
 
 	if (strcmp(key->param.cipher, ACCEL_DPDK_CRYPTODEV_AES_CBC) == 0) {
 		cipher = ACCEL_DPDK_CRYPTODEV_CIPHER_AES_CBC;

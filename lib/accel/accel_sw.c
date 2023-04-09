@@ -27,7 +27,7 @@
 
 #define ACCEL_AES_XTS_128_KEY_SIZE 16
 #define ACCEL_AES_XTS_256_KEY_SIZE 32
-#define ACCEL_AES_XTS "AES_XTS"
+
 /* Per the AES-XTS spec, the size of data unit cannot be bigger than 2^20 blocks, 128b each block */
 #define ACCEL_AES_XTS_MAX_BLOCK_SIZE (1 << 24)
 
@@ -620,17 +620,6 @@ sw_accel_create_aes_xts(struct spdk_accel_crypto_key *key)
 #ifdef SPDK_CONFIG_ISAL_CRYPTO
 	struct sw_accel_crypto_key_data *key_data;
 
-	if (!key->key || !key->key2) {
-		SPDK_ERRLOG("key or key2 are missing\n");
-		return -EINVAL;
-	}
-
-	if (!key->key_size || key->key_size != key->key2_size) {
-		SPDK_ERRLOG("key size %zu is not equal to key2 size %zu or is 0\n", key->key_size,
-			    key->key2_size);
-		return -EINVAL;
-	}
-
 	key_data = calloc(1, sizeof(*key_data));
 	if (!key_data) {
 		return -ENOMEM;
@@ -663,9 +652,6 @@ sw_accel_create_aes_xts(struct spdk_accel_crypto_key *key)
 static int
 sw_accel_crypto_key_init(struct spdk_accel_crypto_key *key)
 {
-	if (!key || !key->param.cipher) {
-		return -EINVAL;
-	}
 	if (strcmp(key->param.cipher, ACCEL_AES_XTS) == 0) {
 		return sw_accel_create_aes_xts(key);
 	} else {

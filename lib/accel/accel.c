@@ -2090,6 +2090,13 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 		rc = -EINVAL;
 		goto error;
 	}
+
+	if (hex_key_size == 0) {
+		SPDK_ERRLOG("key1 size cannot be 0\n");
+		rc = -EINVAL;
+		goto error;
+	}
+
 	key->param.hex_key = strdup(param->hex_key);
 	if (!key->param.hex_key) {
 		rc = -ENOMEM;
@@ -2111,6 +2118,13 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 			rc = -EINVAL;
 			goto error;
 		}
+
+		if (hex_key2_size == 0) {
+			SPDK_ERRLOG("key2 size cannot be 0\n");
+			rc = -EINVAL;
+			goto error;
+		}
+
 		key->param.hex_key2 = strdup(param->hex_key2);
 		if (!key->param.hex_key2) {
 			rc = -ENOMEM;
@@ -2126,7 +2140,7 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 		}
 
 		if (accel_aes_xts_keys_equal(key->key, key->key_size, key->key2, key->key2_size)) {
-			SPDK_ERRLOG("Identical keys are not secure\n");
+			SPDK_ERRLOG("%s identical keys are not secure\n", ACCEL_AES_XTS);
 			rc = -EINVAL;
 			goto error;
 		}
@@ -2166,6 +2180,21 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 			    g_tweak_modes[key->tweak_mode]);
 		rc = -EINVAL;
 		goto error;
+	}
+
+	if (strcmp(key->param.cipher, ACCEL_AES_XTS) == 0) {
+		if (!key->key2) {
+			SPDK_ERRLOG("%s key2 is missing\n", ACCEL_AES_XTS);
+			rc = -EINVAL;
+			goto error;
+		}
+
+		if (key->key_size != key->key2_size) {
+			SPDK_ERRLOG("%s key size %zu is not equal to key2 size %zu\n", ACCEL_AES_XTS, key->key_size,
+				    key->key2_size);
+			rc = -EINVAL;
+			goto error;
+		}
 	}
 
 	key->module_if = module;
