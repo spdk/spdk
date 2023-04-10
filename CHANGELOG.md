@@ -24,6 +24,11 @@ New API `spdk_lvol_iter_immediate_clones` was added to iterate the clones of an 
 New APIs `spdk_lvol_get_by_uuid` and `spdk_lvol_get_by_names` to get lvols by the lvol's UUID or
 lvstore and lvol names.
 
+New `bdev_lvol_get_lvols` RPC to list logical volumes. This provides information about logical
+volumes without providing information about the bdevs. It is useful for listing the lvols
+associated with specific lvol stores and for listing lvols that are degraded and have no
+associated bdev.
+
 ### nvmf
 
 New `spdk_nvmf_request_copy_to/from_buf()` APIs have been added, which support

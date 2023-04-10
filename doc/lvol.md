@@ -150,6 +150,12 @@ bdev_lvol_create [-h] [-u UUID] [-l LVS_NAME] [-t] [-c CLEAR_METHOD] lvol_name s
     optional arguments:
     -h, --help  show help
     -c, --clear-method specify data clusters clear method "none", "unmap" (default), "write_zeroes"
+bdev_lvol_get_lvols [-h] [-u LVS_UUID] [-l LVS_NAME]
+    Display logical volume list, including those that do not have associated bdevs.
+    optional arguments:
+    -h, --help  show help
+    -u LVS_UUID, --lvs_uuid UUID  show volumes only in the specified lvol store
+    -l LVS_NAME, --lvs_name LVS_NAME  show volumes only in the specified lvol store
 bdev_get_bdevs [-h] [-b NAME]
     User can view created bdevs using this call including those created on top of lvols.
     optional arguments:

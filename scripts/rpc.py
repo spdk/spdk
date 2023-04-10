@@ -2052,6 +2052,16 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-l', '--lvs-name', help='lvol store name', required=False)
     p.set_defaults(func=bdev_lvol_get_lvstores)
 
+    def bdev_lvol_get_lvols(args):
+        print_dict(rpc.lvol.bdev_lvol_get_lvols(args.client,
+                                                lvs_uuid=args.lvs_uuid,
+                                                lvs_name=args.lvs_name))
+
+    p = subparsers.add_parser('bdev_lvol_get_lvols', help='Display current logical volume list')
+    p.add_argument('-u', '--lvs-uuid', help='only lvols in  lvol store UUID', required=False)
+    p.add_argument('-l', '--lvs-name', help='only lvols in lvol store name', required=False)
+    p.set_defaults(func=bdev_lvol_get_lvols)
+
     def bdev_raid_get_bdevs(args):
         print_json(rpc.bdev.bdev_raid_get_bdevs(args.client,
                                                 category=args.category))

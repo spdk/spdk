@@ -533,6 +533,31 @@ function test_construct_nested_lvol() {
 	check_leftover_devices
 }
 
+# List lvols without going through the bdev layer.
+function test_lvol_list() {
+	# create an lvol store
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+
+	# An empty lvolstore is not listed by bdev_lvol_get_lvols
+	lvols=$(rpc_cmd bdev_lvol_get_lvols)
+	[ "$(jq -r '. | length' <<< "$lvols")" == "0" ]
+
+	# Create an lvol, it should appear in the list
+	lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$LVS_DEFAULT_CAPACITY_MB")
+	lvols=$(rpc_cmd bdev_lvol_get_lvols)
+	[ "$(jq -r '. | length' <<< "$lvols")" == "1" ]
+	[ "$(jq -r '.[0].uuid' <<< "$lvols")" == "$lvol_uuid" ]
+	[ "$(jq -r '.[0].name' <<< "$lvols")" == "lvol_test" ]
+	[ "$(jq -r '.[0].alias' <<< "$lvols")" == "lvs_test/lvol_test" ]
+	[ "$(jq -r '.[0].lvs.name' <<< "$lvols")" == "lvs_test" ]
+	[ "$(jq -r '.[0].lvs.uuid' <<< "$lvols")" == "$lvs_uuid" ]
+
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+	rpc_cmd bdev_malloc_delete "$malloc_name"
+	check_leftover_devices
+}
+
 # Send SIGTERM after creating lvol store
 function test_sigterm() {
 	# create an lvol store
@@ -563,6 +588,7 @@ run_test "test_construct_lvol_inexistent_lvs" test_construct_lvol_inexistent_lvs
 run_test "test_construct_lvol_full_lvs" test_construct_lvol_full_lvs
 run_test "test_construct_lvol_alias_conflict" test_construct_lvol_alias_conflict
 run_test "test_construct_nested_lvol" test_construct_nested_lvol
+run_test "test_lvol_list" test_lvol_list
 run_test "test_sigterm" test_sigterm
 
 trap - SIGINT SIGTERM EXIT

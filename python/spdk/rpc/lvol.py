@@ -261,3 +261,24 @@ def bdev_lvol_get_lvstores(client, uuid=None, lvs_name=None):
     if lvs_name:
         params['lvs_name'] = lvs_name
     return client.call('bdev_lvol_get_lvstores', params)
+
+
+def bdev_lvol_get_lvols(client, lvs_uuid=None, lvs_name=None):
+    """List logical volumes
+
+    Args:
+        lvs_uuid: Only show volumes in the logical volume store with this UUID (optional)
+        lvs_name: Only show volumes in the logical volume store with this name (optional)
+
+    Either lvs_uuid or lvs_name may be specified, but not both.
+    If both lvs_uuid and lvs_name are omitted, information about volumes in all
+    logical volume stores is returned.
+    """
+    if (lvs_uuid and lvs_name):
+        raise ValueError("Exactly one of uuid or lvs_name may be specified")
+    params = {}
+    if lvs_uuid:
+        params['lvs_uuid'] = lvs_uuid
+    if lvs_name:
+        params['lvs_name'] = lvs_name
+    return client.call('bdev_lvol_get_lvols', params)
