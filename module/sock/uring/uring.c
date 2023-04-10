@@ -1135,7 +1135,7 @@ _sock_prep_read(struct spdk_sock *_sock)
 	struct io_uring_sqe *sqe;
 
 	/* Do not prepare pollin event */
-	if (task->status == SPDK_URING_SOCK_TASK_IN_PROCESS || sock->pending_recv) {
+	if (task->status == SPDK_URING_SOCK_TASK_IN_PROCESS) {
 		return;
 	}
 
@@ -1208,7 +1208,9 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 
 		switch (task->type) {
 		case SPDK_SOCK_TASK_READ:
-			if (status == -EAGAIN || status == -EWOULDBLOCK || status == -ECANCELED) {
+			if (status == -EAGAIN || status == -EWOULDBLOCK) {
+				_sock_prep_read(&sock->base);
+			} else if (status == -ECANCELED) {
 				continue;
 			} else if (spdk_unlikely(status < 0)) {
 				sock->connection_status = status;
@@ -1228,6 +1230,8 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 					sock->pending_recv = true;
 					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
 				}
+
+				_sock_prep_read(&sock->base);
 			}
 			break;
 		case SPDK_SOCK_TASK_POLLERR:
@@ -1570,6 +1574,9 @@ uring_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
 		}
 	}
 
+	/* We get an async read going immediately */
+	_sock_prep_read(&sock->base);
+
 	return 0;
 }
 
@@ -1590,7 +1597,6 @@ uring_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 				continue;
 			}
 			_sock_flush(_sock);
-			_sock_prep_read(_sock);
 #ifdef SPDK_ZEROCOPY
 			if (sock->zcopy) {
 				_sock_prep_pollerr(_sock);
