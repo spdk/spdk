@@ -29,7 +29,6 @@
 
 enum spdk_sock_task_type {
 	SPDK_SOCK_TASK_READ = 0,
-	SPDK_SOCK_TASK_POLLERR,
 	SPDK_SOCK_TASK_ERRQUEUE,
 	SPDK_SOCK_TASK_WRITE,
 	SPDK_SOCK_TASK_CANCEL,
@@ -64,7 +63,6 @@ struct spdk_uring_sock {
 	struct spdk_uring_task			write_task;
 	struct spdk_uring_task			errqueue_task;
 	struct spdk_uring_task			read_task;
-	struct spdk_uring_task			pollerr_task;
 	struct spdk_uring_task			cancel_task;
 	struct spdk_pipe			*recv_pipe;
 	void					*recv_buf;
@@ -1100,33 +1098,6 @@ _sock_flush(struct spdk_sock *_sock)
 	task->status = SPDK_URING_SOCK_TASK_IN_PROCESS;
 }
 
-#ifdef SPDK_ZEROCOPY
-static void
-_sock_prep_pollerr(struct spdk_sock *_sock)
-{
-	struct spdk_uring_sock *sock = __uring_sock(_sock);
-	struct spdk_uring_task *task = &sock->pollerr_task;
-	struct io_uring_sqe *sqe;
-
-	/* Do not prepare pollerr event */
-	if (task->status == SPDK_URING_SOCK_TASK_IN_PROCESS) {
-		return;
-	}
-
-	if (sock->pending_group_remove) {
-		return;
-	}
-
-	assert(sock->group != NULL);
-	sock->group->io_queued++;
-
-	sqe = io_uring_get_sqe(&sock->group->uring);
-	io_uring_prep_poll_add(sqe, sock->fd, POLLERR);
-	io_uring_sqe_set_data(sqe, task);
-	task->status = SPDK_URING_SOCK_TASK_IN_PROCESS;
-}
-#endif
-
 static void
 _sock_prep_read(struct spdk_sock *_sock)
 {
@@ -1234,26 +1205,6 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 				_sock_prep_read(&sock->base);
 			}
 			break;
-		case SPDK_SOCK_TASK_POLLERR:
-#ifdef SPDK_ZEROCOPY
-			if (status == -EAGAIN || status == -EWOULDBLOCK || status == -ECANCELED) {
-				continue;
-			} else if (spdk_unlikely(status < 0)) {
-				sock->connection_status = status;
-				spdk_sock_abort_requests(&sock->base);
-
-				/* The user needs to be notified that this socket is dead. */
-				if (sock->base.cb_fn != NULL &&
-				    sock->pending_recv == false) {
-					sock->pending_recv = true;
-					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
-				}
-			} else {
-				assert((status & POLLERR) == POLLERR);
-				_sock_prep_errqueue(&sock->base);
-			}
-#endif
-			break;
 		case SPDK_SOCK_TASK_WRITE:
 			if (status == -EAGAIN || status == -EWOULDBLOCK ||
 			    (status == -ENOBUFS && sock->zcopy) ||
@@ -1280,10 +1231,12 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 			break;
 #ifdef SPDK_ZEROCOPY
 		case SPDK_SOCK_TASK_ERRQUEUE:
-			if (status == -EAGAIN || status == -EWOULDBLOCK || status == -ECANCELED) {
+			if (status == -EAGAIN || status == -EWOULDBLOCK) {
+				_sock_prep_errqueue(&sock->base);
+			} else if (status == -ECANCELED) {
 				continue;
-			} else if (spdk_unlikely(status < 0)) {
-				sock->connection_status = status;
+			} else if (spdk_unlikely(status <= 0)) {
+				sock->connection_status = status < 0 ? status : -ECONNRESET;
 				spdk_sock_abort_requests(&sock->base);
 
 				/* The user needs to be notified that this socket is dead. */
@@ -1295,6 +1248,7 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 				break;
 			} else {
 				_sock_check_zcopy(&sock->base, status);
+				_sock_prep_errqueue(&sock->base);
 			}
 			break;
 #endif
@@ -1547,9 +1501,6 @@ uring_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
 	sock->read_task.sock = sock;
 	sock->read_task.type = SPDK_SOCK_TASK_READ;
 
-	sock->pollerr_task.sock = sock;
-	sock->pollerr_task.type = SPDK_SOCK_TASK_POLLERR;
-
 	sock->errqueue_task.sock = sock;
 	sock->errqueue_task.type = SPDK_SOCK_TASK_ERRQUEUE;
 	sock->errqueue_task.msg.msg_control = sock->buf;
@@ -1576,6 +1527,11 @@ uring_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
 
 	/* We get an async read going immediately */
 	_sock_prep_read(&sock->base);
+#ifdef SPDK_ZEROCOPY
+	if (sock->zcopy) {
+		_sock_prep_errqueue(_sock);
+	}
+#endif
 
 	return 0;
 }
@@ -1597,11 +1553,6 @@ uring_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 				continue;
 			}
 			_sock_flush(_sock);
-#ifdef SPDK_ZEROCOPY
-			if (sock->zcopy) {
-				_sock_prep_pollerr(_sock);
-			}
-#endif
 		}
 	}
 
@@ -1658,16 +1609,6 @@ uring_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
 		}
 	}
 
-	if (sock->pollerr_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) {
-		_sock_prep_cancel_task(_sock, &sock->pollerr_task);
-		/* Since spdk_sock_group_remove_sock is not asynchronous interface, so
-		 * currently can use a while loop here. */
-		while ((sock->pollerr_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) ||
-		       (sock->cancel_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE)) {
-			uring_sock_group_impl_poll(_group, 32, NULL);
-		}
-	}
-
 	if (sock->errqueue_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) {
 		_sock_prep_cancel_task(_sock, &sock->errqueue_task);
 		/* Since spdk_sock_group_remove_sock is not asynchronous interface, so
@@ -1681,7 +1622,6 @@ uring_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
 	/* Make sure the cancelling the tasks above didn't cause sending new requests */
 	assert(sock->write_task.status == SPDK_URING_SOCK_TASK_NOT_IN_USE);
 	assert(sock->read_task.status == SPDK_URING_SOCK_TASK_NOT_IN_USE);
-	assert(sock->pollerr_task.status == SPDK_URING_SOCK_TASK_NOT_IN_USE);
 	assert(sock->errqueue_task.status == SPDK_URING_SOCK_TASK_NOT_IN_USE);
 
 	if (sock->pending_recv) {
