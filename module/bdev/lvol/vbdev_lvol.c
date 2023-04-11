@@ -639,6 +639,11 @@ vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 
+	if (spdk_blob_is_degraded(lvol->blob)) {
+		spdk_lvol_close(lvol, _vbdev_lvol_destroy_cb, ctx);
+		return;
+	}
+
 	spdk_bdev_unregister(lvol->bdev, _vbdev_lvol_destroy_cb, ctx);
 }
 

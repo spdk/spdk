@@ -407,6 +407,58 @@ function test_esnap_late_arrival() {
 	rpc_cmd bdev_malloc_delete "$esnap_dev"
 }
 
+function test_esnap_remove_degraded() {
+	local bs_dev esnap_dev
+	local block_size=512
+	local esnap_size_mb=1
+	local lvs_cluster_size=$((16 * 1024))
+	local lvs_uuid esnap_uuid eclone_uuid snap_uuid clone_uuid uuid
+	local aio_bdev=test_esnap_reload_aio0
+	local lvols
+
+	# Create the lvstore on an aio device. Can't use malloc because we need to remove
+	# the device and re-add it to trigger an lvstore unload and then load.
+	rm -f $testdir/aio_bdev_0
+	truncate -s "${AIO_SIZE_MB}M" $testdir/aio_bdev_0
+	bs_dev=$(rpc_cmd bdev_aio_create "$testdir/aio_bdev_0" "$aio_bdev" "$block_size")
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore -c "$lvs_cluster_size" "$bs_dev" lvs_test)
+
+	# Create a bdev that will be the external snapshot
+	esnap_uuid=e4b40d8b-f623-416d-8234-baf5a4c83cbd
+	esnap_dev=$(rpc_cmd bdev_malloc_create -u "$esnap_uuid" "$esnap_size_mb" "$block_size")
+	eclone_uuid=$(rpc_cmd bdev_lvol_clone_bdev "$esnap_uuid" lvs_test "eclone")
+	rpc_cmd bdev_get_bdevs -b "$eclone_uuid"
+
+	# Create a clone of eclone
+	rpc_cmd bdev_lvol_set_read_only "$eclone_uuid"
+	clone_uuid=$(rpc_cmd bdev_lvol_clone "$eclone_uuid" clone)
+	rpc_cmd bdev_get_bdevs -b "$clone_uuid"
+
+	# Reload the lvolstore without the external snapshot
+	rpc_cmd bdev_aio_delete "$aio_bdev"
+	NOT rpc_cmd bdev_lvol_get_lvstores -l lvs_test
+	rpc_cmd bdev_malloc_delete "$esnap_dev"
+	bs_dev=$(rpc_cmd bdev_aio_create "$testdir/aio_bdev_0" "$aio_bdev" "$block_size")
+	lvs_uuid=$(rpc_cmd bdev_lvol_get_lvstores -l lvs_test)
+
+	# Verify clone and eclone are degraded
+	lvols=$(rpc_cmd bdev_lvol_get_lvols)
+	[[ "$(jq -r '.[] | select(.uuid == "'$eclone_uuid'").is_degraded' <<< "$lvols")" == "true" ]]
+	[[ "$(jq -r '.[] | select(.uuid == "'$clone_uuid'").is_degraded' <<< "$lvols")" == "true" ]]
+	NOT rpc_cmd bdev_get_bdevs -b "$clone_uuid"
+	NOT rpc_cmd bdev_get_bdevs -b "$eclone_uuid"
+
+	# Delete the lvols and verify they are gone.
+	rpc_cmd bdev_lvol_delete "$clone_uuid"
+	lvols=$(rpc_cmd bdev_lvol_get_lvols)
+	[[ "$(jq -r '. | length' <<< "$lvols")" == "1" ]]
+	rpc_cmd bdev_lvol_delete "$eclone_uuid"
+	lvols=$(rpc_cmd bdev_lvol_get_lvols)
+	[[ "$(jq -r '. | length' <<< "$lvols")" == "0" ]]
+
+	rpc_cmd bdev_aio_delete "$aio_bdev"
+}
+
 $SPDK_BIN_DIR/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; rm -f "$testdir/aio_bdev_0"; exit 1' SIGINT SIGTERM SIGPIPE EXIT
@@ -417,6 +469,7 @@ run_test "test_esnap_reload" test_esnap_reload
 run_test "test_esnap_reload" test_esnap_reload_missing
 run_test "test_esnap_clones" test_esnap_clones
 run_test "test_esnap_late_arrival" test_esnap_late_arrival
+run_test "test_esnap_remove_degraded" test_esnap_remove_degraded
 
 trap - SIGINT SIGTERM SIGPIPE EXIT
 killprocess $spdk_pid

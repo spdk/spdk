@@ -1016,6 +1016,8 @@ rpc_bdev_lvol_delete(struct spdk_jsonrpc_request *request,
 	struct rpc_bdev_lvol_delete req = {};
 	struct spdk_bdev *bdev;
 	struct spdk_lvol *lvol;
+	struct spdk_uuid uuid;
+	char *lvs_name, *lvol_name;
 
 	if (spdk_json_decode_object(params, rpc_bdev_lvol_delete_decoders,
 				    SPDK_COUNTOF(rpc_bdev_lvol_delete_decoders),
@@ -1026,19 +1028,40 @@ rpc_bdev_lvol_delete(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
+	/* lvol is not degraded, get lvol via bdev name or alias */
 	bdev = spdk_bdev_get_by_name(req.name);
-	if (bdev == NULL) {
-		SPDK_ERRLOG("no bdev for provided name %s\n", req.name);
-		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
-		goto cleanup;
+	if (bdev != NULL) {
+		lvol = vbdev_lvol_get_from_bdev(bdev);
+		if (lvol != NULL) {
+			goto done;
+		}
 	}
 
-	lvol = vbdev_lvol_get_from_bdev(bdev);
-	if (lvol == NULL) {
-		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
-		goto cleanup;
+	/* lvol is degraded, get lvol via UUID */
+	if (spdk_uuid_parse(&uuid, req.name) == 0) {
+		lvol = spdk_lvol_get_by_uuid(&uuid);
+		if (lvol != NULL) {
+			goto done;
+		}
 	}
 
+	/* lvol is degraded, get lvol via lvs_name/lvol_name */
+	lvol_name = strchr(req.name, '/');
+	if (lvol_name != NULL) {
+		*lvol_name = '\0';
+		lvol_name++;
+		lvs_name = req.name;
+		lvol = spdk_lvol_get_by_names(lvs_name, lvol_name);
+		if (lvol != NULL) {
+			goto done;
+		}
+	}
+
+	/* Could not find lvol, degraded or not. */
+	spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+	goto cleanup;
+
+done:
 	vbdev_lvol_destroy(lvol, rpc_bdev_lvol_delete_cb, request);
 
 cleanup:
