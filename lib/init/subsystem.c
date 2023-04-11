@@ -91,37 +91,47 @@ subsystem_get_next_depend(struct spdk_subsystem_depend *cur_depend)
 static void
 subsystem_sort(void)
 {
-	bool depends_on, depends_on_sorted;
+	bool has_dependency, all_dependencies_met;
 	struct spdk_subsystem *subsystem, *subsystem_tmp;
 	struct spdk_subsystem_depend *subsystem_dep;
+	struct spdk_subsystem_list sorted_list;
 
-	struct spdk_subsystem_list subsystems_list = TAILQ_HEAD_INITIALIZER(subsystems_list);
-
+	TAILQ_INIT(&sorted_list);
+	/* We will move subsystems from the original g_subsystems TAILQ to the temporary
+	 * sorted_list one at a time. We can only move a subsystem if it either (a) has no
+	 * dependencies, or (b) all of its dependencies have already been moved to the
+	 * sorted_list.
+	 *
+	 * Once all of the subsystems have been moved to the temporary list, we will move
+	 * the list as-is back to the original g_subsystems TAILQ - they will now be sorted
+	 * in the order which they must be initialized.
+	 */
 	while (!TAILQ_EMPTY(&g_subsystems)) {
 		TAILQ_FOREACH_SAFE(subsystem, &g_subsystems, tailq, subsystem_tmp) {
-			depends_on = false;
+			has_dependency = false;
+			all_dependencies_met = true;
 			TAILQ_FOREACH(subsystem_dep, &g_subsystems_deps, tailq) {
 				if (strcmp(subsystem->name, subsystem_dep->name) == 0) {
-					depends_on = true;
-					depends_on_sorted = !!_subsystem_find(&subsystems_list, subsystem_dep->depends_on);
-					if (depends_on_sorted) {
-						continue;
+					has_dependency = true;
+					if (!_subsystem_find(&sorted_list, subsystem_dep->depends_on)) {
+						/* We found a dependency that isn't in the sorted_list yet.
+						 * Clear the flag and break from the inner loop, we know
+						 * we can't move this subsystem to the sorted_list yet.
+						 */
+						all_dependencies_met = false;
+						break;
 					}
-					break;
 				}
 			}
 
-			if (!depends_on || depends_on_sorted) {
+			if (!has_dependency || all_dependencies_met) {
 				TAILQ_REMOVE(&g_subsystems, subsystem, tailq);
-				TAILQ_INSERT_TAIL(&subsystems_list, subsystem, tailq);
+				TAILQ_INSERT_TAIL(&sorted_list, subsystem, tailq);
 			}
 		}
 	}
 
-	TAILQ_FOREACH_SAFE(subsystem, &subsystems_list, tailq, subsystem_tmp) {
-		TAILQ_REMOVE(&subsystems_list, subsystem, tailq);
-		TAILQ_INSERT_TAIL(&g_subsystems, subsystem, tailq);
-	}
+	TAILQ_SWAP(&sorted_list, &g_subsystems, spdk_subsystem, tailq);
 }
 
 void
