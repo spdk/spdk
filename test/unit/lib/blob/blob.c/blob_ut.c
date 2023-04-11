@@ -7486,6 +7486,7 @@ blob_esnap_create(void)
 	SPDK_CU_ASSERT_FATAL(blob != NULL);
 	SPDK_CU_ASSERT_FATAL(spdk_blob_is_esnap_clone(blob));
 	SPDK_CU_ASSERT_FATAL(blob_is_esnap_clone(blob));
+	SPDK_CU_ASSERT_FATAL(!spdk_blob_is_clone(blob));
 	sz = spdk_blob_get_num_clusters(blob);
 	CU_ASSERT(sz == esnap_num_clusters);
 	ut_blob_close_and_delete(bs, blob);

@@ -8478,7 +8478,8 @@ spdk_blob_is_clone(struct spdk_blob *blob)
 {
 	assert(blob != NULL);
 
-	if (blob->parent_id != SPDK_BLOBID_INVALID) {
+	if (blob->parent_id != SPDK_BLOBID_INVALID &&
+	    blob->parent_id != SPDK_BLOBID_EXTERNAL_SNAPSHOT) {
 		assert(spdk_blob_is_thin_provisioned(blob));
 		return true;
 	}

@@ -689,11 +689,13 @@ bool spdk_blob_is_read_only(struct spdk_blob *blob);
 bool spdk_blob_is_snapshot(struct spdk_blob *blob);
 
 /**
- * Check if blob is a clone.
+ * Check if blob is a clone of a blob.
+ *
+ * Clones of external snapshots will return false. See spdk_blob_is_esnap_clone.
  *
  * \param blob Blob.
  *
- * \return true if blob is a clone.
+ * \return true if blob is a clone of a blob.
  */
 bool spdk_blob_is_clone(struct spdk_blob *blob);
 
@@ -707,7 +709,7 @@ bool spdk_blob_is_clone(struct spdk_blob *blob);
 bool spdk_blob_is_thin_provisioned(struct spdk_blob *blob);
 
 /**
- * Check if blob is a clone of an external bdev.
+ * Check if blob is a clone of an external snapshot.
  *
  * \param blob Blob.
  *
