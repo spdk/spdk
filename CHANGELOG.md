@@ -21,6 +21,9 @@ New function `spdk_env_get_main_core` was added.
 
 New API `spdk_lvol_iter_immediate_clones` was added to iterate the clones of an lvol.
 
+New APIs `spdk_lvol_get_by_uuid` and `spdk_lvol_get_by_names` to get lvols by the lvol's UUID or
+lvstore and lvol names.
+
 ### nvmf
 
 New `spdk_nvmf_request_copy_to/from_buf()` APIs have been added, which support

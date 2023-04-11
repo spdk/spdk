@@ -13,6 +13,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/blob.h"
+#include "spdk/uuid.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -280,6 +281,23 @@ void spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *
  * \return -ENOMEM if memory allocation failed, non-zero return from cb_fn(), or 0.
  */
 int spdk_lvol_iter_immediate_clones(struct spdk_lvol *lvol, spdk_lvol_iter_cb cb_fn, void *cb_arg);
+
+/**
+ * Get the lvol that has a particular UUID.
+ *
+ * \param uuid The lvol's UUID.
+ * \return A pointer to the requested lvol on success, else NULL.
+ */
+struct spdk_lvol *spdk_lvol_get_by_uuid(const struct spdk_uuid *uuid);
+
+/**
+ * Get the lvol that has the specified name in the specified lvolstore.
+ *
+ * \param lvs_name Name of the lvolstore.
+ * \param lvol_name Name ofthe lvol.
+ * \return A pointer to the requested lvol on success, else NULL.
+ */
+struct spdk_lvol *spdk_lvol_get_by_names(const char *lvs_name, const char *lvol_name);
 
 /**
  * Get I/O channel of bdev associated with specified lvol.

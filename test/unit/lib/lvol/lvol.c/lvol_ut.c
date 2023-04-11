@@ -3167,6 +3167,118 @@ lvol_esnap_hotplug(void)
 	}
 }
 
+static void
+lvol_get_by(void)
+{
+	struct lvol_ut_bs_dev dev1, dev2;
+	struct spdk_lvol_store *lvs1, *lvs2;
+	struct spdk_lvol *lvol1, *lvol2, *lvol3;
+	struct spdk_lvs_opts opts;
+	int rc = 0;
+	struct spdk_uuid uuid;
+
+	init_dev(&dev1);
+
+	spdk_lvs_opts_init(&opts);
+	snprintf(opts.name, sizeof(opts.name), "lvs");
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_init(&dev1.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	lvs1 = g_lvol_store;
+
+	/* Create lvol name "lvol" */
+	spdk_lvol_create(lvs1, "lvol", 10, true, LVOL_CLEAR_WITH_DEFAULT,
+			 lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+	lvol1 = g_lvol;
+
+	/* Should be able to look up lvol1 by its name and UUID */
+	CU_ASSERT(spdk_lvol_get_by_names("lvs", "lvol") == lvol1);
+	/* Be sure a pointer comparison isn't used. */
+	memcpy(&uuid, &lvol1->uuid, sizeof(uuid));
+	CU_ASSERT(spdk_lvol_get_by_uuid(&uuid) == lvol1);
+
+	/* Shorter and longer values for lvol_name must not match. */
+	CU_ASSERT(spdk_lvol_get_by_names("lvs", "lvoll") == NULL);
+	CU_ASSERT(spdk_lvol_get_by_names("lvs", "lvo") == NULL);
+
+	/* Shorter and longer values for lvs_name must not match. */
+	CU_ASSERT(spdk_lvol_get_by_names("lvss", "lvol") == NULL);
+	CU_ASSERT(spdk_lvol_get_by_names("lv", "lvol") == NULL);
+
+	/* Create lvol name "lvol2" */
+	spdk_lvol_create(lvs1, "lvol2", 10, true, LVOL_CLEAR_WITH_DEFAULT,
+			 lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+	lvol2 = g_lvol;
+
+	/* When there are multiple lvols, the right one is found */
+	CU_ASSERT(spdk_lvol_get_by_names("lvs", "lvol") == lvol1);
+	CU_ASSERT(spdk_lvol_get_by_names("lvs", "lvol2") == lvol2);
+
+	/* Create a second lvolstore */
+	init_dev(&dev2);
+	snprintf(opts.name, sizeof(opts.name), "lvs2");
+	g_lvserrno = -1;
+	rc = spdk_lvs_init(&dev2.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	lvs2 = g_lvol_store;
+
+	/* Lookups that worked with one lvstore still work */
+	memcpy(&uuid, &lvol1->uuid, sizeof(uuid));
+	CU_ASSERT(spdk_lvol_get_by_uuid(&uuid) == lvol1);
+	CU_ASSERT(spdk_lvol_get_by_names("lvs", "lvol") == lvol1);
+	CU_ASSERT(spdk_lvol_get_by_names("lvs", "lvol2") == lvol2);
+
+	/* Add an lvol name "lvol" in the second lvstore */
+	spdk_lvol_create(lvs2, "lvol", 10, true, LVOL_CLEAR_WITH_DEFAULT,
+			 lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+	lvol3 = g_lvol;
+
+	/* Lookups by name find the lvols in the right lvstores */
+	CU_ASSERT(spdk_lvol_get_by_names("lvs", "lvol") == lvol1);
+	CU_ASSERT(spdk_lvol_get_by_names("lvs", "lvol2") == lvol2);
+	CU_ASSERT(spdk_lvol_get_by_names("lvs2", "lvol") == lvol3);
+
+	/* Clean up */
+	g_lvserrno = -1;
+	spdk_lvol_close(lvol1, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+
+	g_lvserrno = -1;
+	spdk_lvol_close(lvol2, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+
+	g_lvserrno = -1;
+	spdk_lvol_close(lvol3, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_unload(lvs1, op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_unload(lvs2, op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+
+	g_lvol_store = NULL;
+	g_lvol = NULL;
+
+	free_dev(&dev1);
+	free_dev(&dev2);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -3212,6 +3324,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, lvol_esnap_load_esnaps);
 	CU_ADD_TEST(suite, lvol_esnap_missing);
 	CU_ADD_TEST(suite, lvol_esnap_hotplug);
+	CU_ADD_TEST(suite, lvol_get_by);
 
 	allocate_threads(1);
 	set_thread(0);

@@ -2114,3 +2114,48 @@ spdk_lvol_iter_immediate_clones(struct spdk_lvol *lvol, spdk_lvol_iter_cb cb_fn,
 	free(ids);
 	return rc;
 }
+
+struct spdk_lvol *
+spdk_lvol_get_by_uuid(const struct spdk_uuid *uuid)
+{
+	struct spdk_lvol_store *lvs;
+	struct spdk_lvol *lvol;
+
+	pthread_mutex_lock(&g_lvol_stores_mutex);
+
+	TAILQ_FOREACH(lvs, &g_lvol_stores, link) {
+		TAILQ_FOREACH(lvol, &lvs->lvols, link) {
+			if (spdk_uuid_compare(uuid, &lvol->uuid) == 0) {
+				pthread_mutex_unlock(&g_lvol_stores_mutex);
+				return lvol;
+			}
+		}
+	}
+
+	pthread_mutex_unlock(&g_lvol_stores_mutex);
+	return NULL;
+}
+
+struct spdk_lvol *
+spdk_lvol_get_by_names(const char *lvs_name, const char *lvol_name)
+{
+	struct spdk_lvol_store *lvs;
+	struct spdk_lvol *lvol;
+
+	pthread_mutex_lock(&g_lvol_stores_mutex);
+
+	TAILQ_FOREACH(lvs, &g_lvol_stores, link) {
+		if (strcmp(lvs_name, lvs->name) != 0) {
+			continue;
+		}
+		TAILQ_FOREACH(lvol, &lvs->lvols, link) {
+			if (strcmp(lvol_name, lvol->name) == 0) {
+				pthread_mutex_unlock(&g_lvol_stores_mutex);
+				return lvol;
+			}
+		}
+	}
+
+	pthread_mutex_unlock(&g_lvol_stores_mutex);
+	return NULL;
+}
