@@ -464,6 +464,8 @@ virtio_blk_process_request(struct spdk_vhost_dev *vdev, struct spdk_io_channel *
 	uint16_t iovcnt;
 	int rc;
 
+	assert(bvdev != NULL);
+
 	task->cb = cb;
 	task->cb_arg = cb_arg;
 
@@ -1233,6 +1235,8 @@ bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
 	struct spdk_vhost_dev *vdev = (struct spdk_vhost_dev *)event_ctx;
 	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
 
+	assert(bvdev != NULL);
+
 	SPDK_DEBUGLOG(vhost_blk, "Bdev event: type %d, name %s\n",
 		      type,
 		      bdev->name);
@@ -1545,6 +1549,8 @@ vhost_blk_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
 {
 	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
 
+	assert(bvdev != NULL);
+
 	return bvdev->ops->set_coalescing(vdev, delay_base_us, iops_threshold);
 }
 
@@ -1553,6 +1559,8 @@ vhost_blk_get_coalescing(struct spdk_vhost_dev *vdev, uint32_t *delay_base_us,
 			 uint32_t *iops_threshold)
 {
 	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+
+	assert(bvdev != NULL);
 
 	bvdev->ops->get_coalescing(vdev, delay_base_us, iops_threshold);
 }
@@ -1581,6 +1589,8 @@ virtio_blk_construct_ctrlr(struct spdk_vhost_dev *vdev, const char *address,
 			   const struct spdk_vhost_user_dev_backend *user_backend)
 {
 	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+
+	assert(bvdev != NULL);
 
 	return bvdev->ops->create_ctrlr(vdev, cpumask, address, params, (void *)user_backend);
 }
@@ -1671,6 +1681,8 @@ virtio_blk_destroy_ctrlr(struct spdk_vhost_dev *vdev)
 {
 	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
 
+	assert(bvdev != NULL);
+
 	return bvdev->ops->destroy_ctrlr(vdev);
 }
 
@@ -1706,6 +1718,8 @@ struct spdk_io_channel *
 vhost_blk_get_io_channel(struct spdk_vhost_dev *vdev)
 {
 	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+
+	assert(bvdev != NULL);
 
 	return spdk_bdev_get_io_channel(bvdev->bdev_desc);
 }
@@ -1763,6 +1777,8 @@ vhost_user_blk_create_ctrlr(struct spdk_vhost_dev *vdev, struct spdk_cpuset *cpu
 {
 	struct rpc_vhost_blk req = {0};
 	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+
+	assert(bvdev != NULL);
 
 	if (spdk_json_decode_object_relaxed(params, rpc_construct_vhost_blk,
 					    SPDK_COUNTOF(rpc_construct_vhost_blk),
