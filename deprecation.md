@@ -24,12 +24,6 @@ The tags can be matched with the level 4 headers below.
 PMDK is no longer supported and integrations with it in SPDK are now deprecated, and will be removed in SPDK 23.05.
 Please see: [UPDATE ON PMDK AND OUR LONG TERM SUPPORT STRATEGY](https://pmem.io/blog/2022/11/update-on-pmdk-and-our-long-term-support-strategy/).
 
-#### `libreduce_pm_file`
-
-Reduce library will no longer depend on libpmem. `pm_file_dir` parameter in `spdk_reduce_vol_init()`
-will no longer point to pmem device or pmem file. Instead it will be possible to operate on a file,
-without the benefits of persistency.
-
 ### VTune
 
 #### `vtune_support`
