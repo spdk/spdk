@@ -586,6 +586,24 @@ ut_cb_res_untouched(const struct ut_cb_res *res)
 	return !memcmp(&pristine, res, sizeof(pristine));
 }
 
+struct count_clones_ctx {
+	struct spdk_lvol *stop_on_lvol;
+	int stop_errno;
+	int count;
+};
+
+static int
+count_clones(void *_ctx, struct spdk_lvol *lvol)
+{
+	struct count_clones_ctx *ctx = _ctx;
+
+	if (ctx->stop_on_lvol == lvol) {
+		return ctx->stop_errno;
+	}
+	ctx->count++;
+	return 0;
+}
+
 static void
 lvs_init_unload_success(void)
 {
@@ -1691,6 +1709,109 @@ lvol_clone_fail(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	g_lvol_store = NULL;
+
+	free_dev(&dev);
+}
+
+static void
+lvol_iter_clones(void)
+{
+	struct lvol_ut_bs_dev dev;
+	struct spdk_lvol *lvol, *snap, *clone;
+	struct spdk_lvs_opts opts;
+	struct count_clones_ctx ctx = { 0 };
+	spdk_blob_id mock_clones[2];
+	int rc = 0;
+
+	init_dev(&dev);
+
+	spdk_lvs_opts_init(&opts);
+	snprintf(opts.name, sizeof(opts.name), "lvs");
+
+	g_spdk_blob_get_clones_ids = mock_clones;
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+
+	/* Create a volume */
+	spdk_lvol_create(g_lvol_store, "lvol", 10, true, LVOL_CLEAR_WITH_DEFAULT,
+			 lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+	lvol = g_lvol;
+
+	/* Create a snapshot of the volume */
+	spdk_lvol_create_snapshot(lvol, "snap", lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+	CU_ASSERT_STRING_EQUAL(g_lvol->name, "snap");
+	snap = g_lvol;
+
+	g_spdk_blob_get_clones_snap_id = snap->blob_id;
+	g_spdk_blob_get_clones_count = 1;
+	mock_clones[0] = lvol->blob_id;
+
+	/* The snapshot turned the lvol into a clone, so the snapshot now has one clone. */
+	memset(&ctx, 0, sizeof(ctx));
+	rc = spdk_lvol_iter_immediate_clones(snap, count_clones, &ctx);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctx.count == 1);
+
+	/* The snapshotted volume still has no clones. */
+	memset(&ctx, 0, sizeof(ctx));
+	rc = spdk_lvol_iter_immediate_clones(lvol, count_clones, &ctx);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctx.count == 0);
+
+	/* Iteration can be stopped and the return value is propagated. */
+	memset(&ctx, 0, sizeof(ctx));
+	ctx.stop_on_lvol = lvol;
+	ctx.stop_errno = 42;
+	rc = spdk_lvol_iter_immediate_clones(snap, count_clones, &ctx);
+	CU_ASSERT(rc == 42);
+	CU_ASSERT(ctx.count == 0);
+
+	/* Create a clone of the snapshot */
+	spdk_lvol_create_clone(snap, "clone", lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+	CU_ASSERT_STRING_EQUAL(g_lvol->name, "clone");
+	clone = g_lvol;
+
+	g_spdk_blob_get_clones_count = 2;
+	mock_clones[1] = clone->blob_id;
+
+	/* The snapshot now has two clones */
+	memset(&ctx, 0, sizeof(ctx));
+	rc = spdk_lvol_iter_immediate_clones(snap, count_clones, &ctx);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctx.count == 2);
+
+	/* Cleanup */
+	g_spdk_blob_get_clones_snap_id = 0xbad;
+	g_spdk_blob_get_clones_count = 0;
+	g_spdk_blob_get_clones_ids = NULL;
+
+	spdk_lvol_close(snap, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+
+	g_lvserrno = -1;
+	spdk_lvol_close(clone, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+
+	g_lvserrno = -1;
+	spdk_lvol_close(lvol, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_unload(g_lvol_store, op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol_store = NULL;
+	g_lvol = NULL;
 
 	free_dev(&dev);
 }
@@ -3076,6 +3197,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, lvol_snapshot_fail);
 	CU_ADD_TEST(suite, lvol_clone);
 	CU_ADD_TEST(suite, lvol_clone_fail);
+	CU_ADD_TEST(suite, lvol_iter_clones);
 	CU_ADD_TEST(suite, lvol_refcnt);
 	CU_ADD_TEST(suite, lvol_names);
 	CU_ADD_TEST(suite, lvol_create_thin_provisioned);

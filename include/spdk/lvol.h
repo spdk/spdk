@@ -116,6 +116,15 @@ typedef void (*spdk_lvol_op_with_handle_complete)(void *cb_arg, struct spdk_lvol
 typedef void (*spdk_lvol_op_complete)(void *cb_arg, int lvolerrno);
 
 /**
+ * Callback definition for spdk_lvol_iter_clones.
+ *
+ * \param lvol An iterated lvol.
+ * \param cb_arg Opaque context passed to spdk_lvol_iter_clone().
+ * \return 0 to continue iterating, any other value to stop iterating.
+ */
+typedef int (*spdk_lvol_iter_cb)(void *cb_arg, struct spdk_lvol *lvol);
+
+/**
  * Initialize lvolstore on given bs_bdev.
  *
  * \param bs_dev This is created on the given bdev by using spdk_bdev_create_bs_dev()
@@ -259,6 +268,18 @@ void spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void
  * \param cb_arg Completion callback custom arguments.
  */
 void spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg);
+
+/**
+ * Iterate clones of an lvol.
+ *
+ * Iteration stops if cb_fn(cb_arg, clone_lvol) returns non-zero.
+ *
+ * \param lvol Handle to lvol.
+ * \param cb_fn Function to call for each lvol that clones this lvol.
+ * \param cb_arg Context to pass wtih cb_fn.
+ * \return -ENOMEM if memory allocation failed, non-zero return from cb_fn(), or 0.
+ */
+int spdk_lvol_iter_immediate_clones(struct spdk_lvol *lvol, spdk_lvol_iter_cb cb_fn, void *cb_arg);
 
 /**
  * Get I/O channel of bdev associated with specified lvol.

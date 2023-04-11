@@ -22,6 +22,7 @@
 	spdk_lvol_inflate;
 	spdk_lvol_decouple_parent;
 	spdk_lvol_create_esnap_clone;
+	spdk_lvol_iter_immediate_clones;
 
 	# internal functions
 	spdk_lvol_resize;

@@ -2063,3 +2063,54 @@ spdk_lvs_notify_hotplug(const void *esnap_id, uint32_t id_len)
 
 	return ret;
 }
+
+int
+spdk_lvol_iter_immediate_clones(struct spdk_lvol *lvol, spdk_lvol_iter_cb cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_store *lvs = lvol->lvol_store;
+	struct spdk_blob_store *bs = lvs->blobstore;
+	struct spdk_lvol *clone;
+	spdk_blob_id *ids;
+	size_t id_cnt = 0;
+	size_t i;
+	int rc;
+
+	rc = spdk_blob_get_clones(bs, lvol->blob_id, NULL, &id_cnt);
+	if (rc != -ENOMEM) {
+		/* -ENOMEM says id_cnt is valid, no other errors should be returned. */
+		assert(rc == 0);
+		return rc;
+	}
+
+	ids = calloc(id_cnt, sizeof(*ids));
+	if (ids == NULL) {
+		SPDK_ERRLOG("lvol %s: out of memory while iterating clones\n", lvol->unique_id);
+		return -ENOMEM;
+	}
+
+	rc = spdk_blob_get_clones(bs, lvol->blob_id, ids, &id_cnt);
+	if (rc != 0) {
+		SPDK_ERRLOG("lvol %s: unable to get clone blob IDs: %d\n", lvol->unique_id, rc);
+		free(ids);
+		return rc;
+	}
+
+	for (i = 0; i < id_cnt; i++) {
+		clone = lvs_get_lvol_by_blob_id(lvs, ids[i]);
+		if (clone == NULL) {
+			SPDK_NOTICELOG("lvol %s: unable to find clone lvol with blob id 0x%"
+				       PRIx64 "\n", lvol->unique_id, ids[i]);
+			continue;
+		}
+		rc = cb_fn(cb_arg, clone);
+		if (rc != 0) {
+			SPDK_DEBUGLOG(lvol, "lvol %s: iteration stopped when lvol %s (blob 0x%"
+				      PRIx64 ") returned %d\n", lvol->unique_id, clone->unique_id,
+				      ids[i], rc);
+			break;
+		}
+	}
+
+	free(ids);
+	return rc;
+}

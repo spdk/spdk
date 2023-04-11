@@ -17,6 +17,10 @@ multiple readers.
 
 New function `spdk_env_get_main_core` was added.
 
+### lvol
+
+New API `spdk_lvol_iter_immediate_clones` was added to iterate the clones of an lvol.
+
 ### nvmf
 
 New `spdk_nvmf_request_copy_to/from_buf()` APIs have been added, which support
