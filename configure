@@ -28,8 +28,10 @@ function usage() {
 	echo " --cross-prefix=prefix     Prefix for cross compilation (default: none)"
 	echo "                           example: aarch64-linux-gnu"
 	echo " --libdir=path             Configure installation path for the libraries (default: \$prefix/lib)"
-	echo " --max-lcores=VAL          DPDK configuration. Maximum number of lcores supported by EAL."
-	echo ""
+	echo " --max-lcores=VAL          DPDK configuration. VAL defines maximum number of lcores supported"
+	echo "                           by EAL, or enables autodetection if set to 'detect'. When 'detect'"
+	echo "                           is specified, DPDK will detect number of cores in the system during"
+	echo "                           compilation, and will set maximum number of lcores to this value"
 	echo " --enable-debug            Configure for debug builds"
 	echo " --enable-werror           Treat compiler warnings as errors"
 	echo " --enable-asan             Enable address sanitizer"
@@ -659,6 +661,7 @@ for i in "$@"; do
 			;;
 		--max-lcores=*)
 			CONFIG[MAX_LCORES]="${i#*=}"
+			CONFIG["MAX_LCORES"]=${CONFIG["MAX_LCORES"],,}
 			;;
 		--)
 			break
@@ -1260,8 +1263,8 @@ if [[ "${CONFIG[AVAHI]}" = "y" ]]; then
 fi
 
 if [[ -n ${CONFIG[MAX_LCORES]} ]]; then
-	if [[ ! ${CONFIG[MAX_LCORES]} =~ ^[1-9][0-9]*$ ]] || ((CONFIG[MAX_LCORES] > 1024)); then
-		echo "ERROR: Max number of lcores must be a decimal number in range [1..1024] (given: ${CONFIG[MAX_LCORES]})"
+	if [[ ! ${CONFIG[MAX_LCORES]} =~ ^([1-9][0-9]*|detect)$ ]] || ((CONFIG[MAX_LCORES] > 1024)); then
+		echo "ERROR: Max number of lcores must be a decimal number in range [1..1024] or 'detect' (given: ${CONFIG[MAX_LCORES]})"
 		exit 1
 	fi
 fi
