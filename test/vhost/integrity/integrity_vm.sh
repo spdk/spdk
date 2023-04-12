@@ -5,6 +5,11 @@
 #
 set -xe
 
+wipe() {
+	wipefs --all --force "$@"
+	sync
+}
+
 cleanup() {
 	local _devs=()
 
@@ -13,7 +18,7 @@ cleanup() {
 	_devs=("${devs[@]/#//dev/}")
 
 	umount "${_devs[@]}" || :
-	wipefs --all --force "${_devs[@]}" || :
+	wipe "${_devs[@]}" || :
 }
 
 MAKE="make -j$(($(nproc) * 2))"
@@ -37,11 +42,11 @@ trap "cleanup; exit 1" SIGINT SIGTERM EXIT
 for fs in $fs; do
 	for dev in "${devs[@]}"; do
 		[[ -b /dev/$dev ]]
-		wipefs --all --force "/dev/$dev"
+		wipe "/dev/$dev"
 		echo "INFO: Creating partition table on $dev disk"
 		parted "/dev/$dev" -s mklabel gpt mkpart SPDK_TEST 2048s 100%
 		sleep 1s
-		wipefs --all --force "/dev/${dev}1"
+		wipe "/dev/${dev}1"
 		echo "INFO: Creating filesystem on /dev/${dev}1"
 
 		if [[ $fs == ext4 ]]; then
