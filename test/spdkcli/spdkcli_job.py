@@ -14,7 +14,7 @@ def execute_command(cmd, element=None, element_exists=False):
     child.sendline(cmd)
     child.expect("/>")
     if "error response" in child.before.decode():
-        print("Error in cmd: %s" % cmd)
+        print("Error in cmd: %s (%s)" % (cmd, child.before.decode()))
         exit(1)
     ls_tree = cmd.split(" ")[0]
     if ls_tree and element:
