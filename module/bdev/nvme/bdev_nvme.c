@@ -582,6 +582,37 @@ _bdev_nvme_get_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_ns *nvme_
 	return io_path;
 }
 
+static struct nvme_io_path *
+nvme_io_path_alloc(void)
+{
+	struct nvme_io_path *io_path;
+
+	io_path = calloc(1, sizeof(*io_path));
+	if (io_path == NULL) {
+		SPDK_ERRLOG("Failed to alloc io_path.\n");
+		return NULL;
+	}
+
+	if (g_opts.io_path_stat) {
+		io_path->stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
+		if (io_path->stat == NULL) {
+			free(io_path);
+			SPDK_ERRLOG("Failed to alloc io_path stat.\n");
+			return NULL;
+		}
+		spdk_bdev_reset_io_stat(io_path->stat, SPDK_BDEV_RESET_STAT_MAXMIN);
+	}
+
+	return io_path;
+}
+
+static void
+nvme_io_path_free(struct nvme_io_path *io_path)
+{
+	free(io_path->stat);
+	free(io_path);
+}
+
 static int
 _bdev_nvme_add_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_ns *nvme_ns)
 {
@@ -590,28 +621,16 @@ _bdev_nvme_add_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_ns *nvme_
 	struct nvme_ctrlr_channel *ctrlr_ch;
 	struct nvme_qpair *nvme_qpair;
 
-	io_path = calloc(1, sizeof(*io_path));
+	io_path = nvme_io_path_alloc();
 	if (io_path == NULL) {
-		SPDK_ERRLOG("Failed to alloc io_path.\n");
 		return -ENOMEM;
-	}
-
-	if (g_opts.io_path_stat) {
-		io_path->stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
-		if (io_path->stat == NULL) {
-			free(io_path);
-			SPDK_ERRLOG("Failed to alloc io_path stat.\n");
-			return -ENOMEM;
-		}
-		spdk_bdev_reset_io_stat(io_path->stat, SPDK_BDEV_RESET_STAT_MAXMIN);
 	}
 
 	io_path->nvme_ns = nvme_ns;
 
 	ch = spdk_get_io_channel(nvme_ns->ctrlr);
 	if (ch == NULL) {
-		free(io_path->stat);
-		free(io_path);
+		nvme_io_path_free(io_path);
 		SPDK_ERRLOG("Failed to alloc io_channel.\n");
 		return -ENOMEM;
 	}
@@ -652,11 +671,10 @@ _bdev_nvme_delete_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_io_pat
 	bdev_nvme_clear_current_io_path(nbdev_ch);
 
 	STAILQ_REMOVE(&nbdev_ch->io_path_list, io_path, nvme_io_path, stailq);
+	io_path->nbdev_ch = NULL;
 
 	nvme_qpair = io_path->qpair;
 	assert(nvme_qpair != NULL);
-
-	TAILQ_REMOVE(&nvme_qpair->io_path_list, io_path, tailq);
 
 	ctrlr_ch = nvme_qpair->ctrlr_ch;
 	assert(ctrlr_ch != NULL);
@@ -664,8 +682,11 @@ _bdev_nvme_delete_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_io_pat
 	ch = spdk_io_channel_from_ctx(ctrlr_ch);
 	spdk_put_io_channel(ch);
 
-	free(io_path->stat);
-	free(io_path);
+	/* After an io_path is removed, I/Os submitted to it may complete and update statistics
+	 * of the io_path. To avoid heap-use-after-free error from this case, do not free the
+	 * io_path here but free the io_path when the associated qpair is freed. It is ensured
+	 * that all I/Os submitted to the io_path are completed when the associated qpair is freed.
+	 */
 }
 
 static void
@@ -1401,6 +1422,9 @@ _bdev_nvme_clear_io_path_cache(struct nvme_qpair *nvme_qpair)
 	struct nvme_io_path *io_path;
 
 	TAILQ_FOREACH(io_path, &nvme_qpair->io_path_list, tailq) {
+		if (io_path->nbdev_ch == NULL) {
+			continue;
+		}
 		bdev_nvme_clear_current_io_path(io_path->nbdev_ch);
 	}
 }
@@ -2624,7 +2648,14 @@ bdev_nvme_create_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 static void
 nvme_qpair_delete(struct nvme_qpair *nvme_qpair)
 {
+	struct nvme_io_path *io_path, *next;
+
 	assert(nvme_qpair->group != NULL);
+
+	TAILQ_FOREACH_SAFE(io_path, &nvme_qpair->io_path_list, tailq, next) {
+		TAILQ_REMOVE(&nvme_qpair->io_path_list, io_path, tailq);
+		nvme_io_path_free(io_path);
+	}
 
 	TAILQ_REMOVE(&nvme_qpair->group->qpair_list, nvme_qpair, tailq);
 
@@ -7249,7 +7280,8 @@ nvme_io_path_info_json(struct spdk_json_write_ctx *w, struct nvme_io_path *io_pa
 	trid = spdk_nvme_ctrlr_get_transport_id(nvme_ctrlr->ctrlr);
 
 	spdk_json_write_named_uint32(w, "cntlid", cdata->cntlid);
-	spdk_json_write_named_bool(w, "current", io_path == io_path->nbdev_ch->current_io_path);
+	spdk_json_write_named_bool(w, "current", io_path->nbdev_ch != NULL &&
+				   io_path == io_path->nbdev_ch->current_io_path);
 	spdk_json_write_named_bool(w, "connected", nvme_io_path_is_connected(io_path));
 	spdk_json_write_named_bool(w, "accessible", nvme_ns_is_accessible(nvme_ns));
 
