@@ -131,8 +131,11 @@ $spdkcli_job "'load_config $testdir/config.json'
 "
 check_match
 $spdk_clear_config_py clear_config
-# FIXME: remove this sleep when NVMe driver will be fixed to wait for reset to complete
-sleep 2
+
+# Make sure we wait long enough for the nvme ctrl to disappear, otherwise
+# we are at risk of hitting -EPERM while loading bdev configuration.
+xtrace_disable_per_cmd wait_for_all_nvme_ctrls_to_detach
+
 $spdkcli_job "'load_subsystem_config $testdir/config_bdev.json'
 'load_subsystem_config $testdir/config_vhost_scsi.json'
 'load_subsystem_config $testdir/config_vhost_blk.json'
