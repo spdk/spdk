@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 /** \file
@@ -39,6 +40,7 @@ extern "C" {
 #include <fcntl.h>
 #include <glob.h>
 #include <ifaddrs.h>
+#include <libgen.h>
 #include <netdb.h>
 #include <poll.h>
 #include <pthread.h>

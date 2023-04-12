@@ -307,11 +307,17 @@ bdev_uring_read_sysfs_attr(const char *devname, const char *attr, char *str, int
 {
 	char *path = NULL;
 	char *device = NULL;
+	char *name;
 	FILE *file;
 	int ret = 0;
 
-	device = basename(devname);
+	name = strdup(devname);
+	if (name == NULL) {
+		return -EINVAL;
+	}
+	device = basename(name);
 	path = spdk_sprintf_alloc("/sys/block/%s/%s", device, attr);
+	free(name);
 	if (!path) {
 		return -EINVAL;
 	}
