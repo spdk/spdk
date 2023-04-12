@@ -65,23 +65,21 @@ _build_native_dpdk() {
 		return 1
 	fi
 
-	if [[ $SPDK_TEST_NATIVE_DPDK != 'main' ]]; then
-		repo='dpdk-stable'
-	fi
-
 	compiler_version=$("$compiler" -dumpversion)
 	compiler_version=${compiler_version%%.*}
 	external_dpdk_dir="$SPDK_RUN_EXTERNAL_DPDK"
 	external_dpdk_base_dir="$(dirname $external_dpdk_dir)"
 
 	if [[ ! -d "$external_dpdk_base_dir" ]]; then
+		if [[ $SPDK_TEST_NATIVE_DPDK != 'main' ]]; then
+			repo='dpdk-stable'
+		fi
+		echo "DPDK directory does not exist at the provided location."
 		sudo mkdir -p "$external_dpdk_base_dir"
 		sudo chown -R $(whoami) "$external_dpdk_base_dir"/..
+		git clone --branch "$SPDK_TEST_NATIVE_DPDK" --depth 1 http://dpdk.org/git/${repo} "$external_dpdk_base_dir"
 	fi
 	orgdir=$PWD
-
-	rm -rf "$external_dpdk_base_dir"
-	git clone --branch $SPDK_TEST_NATIVE_DPDK --depth 1 http://dpdk.org/git/${repo} "$external_dpdk_base_dir"
 	git -C "$external_dpdk_base_dir" log --oneline -n 5
 
 	dpdk_cflags="-fPIC -g -fcommon"
