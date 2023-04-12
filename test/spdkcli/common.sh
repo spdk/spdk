@@ -45,3 +45,7 @@ function check_match() {
 	$rootdir/test/app/match/match $testdir/match_files/${MATCH_FILE}.match
 	rm -f $testdir/match_files/${MATCH_FILE}
 }
+
+function wait_for_all_nvme_ctrls_to_detach() {
+	while (($(rpc_cmd bdev_nvme_get_controllers | jq '.|length') != 0)); do :; done
+}
