@@ -66,6 +66,8 @@ static struct spdk_accel_opts g_opts = {
 	.small_cache_size = ACCEL_SMALL_CACHE_SIZE,
 	.large_cache_size = ACCEL_LARGE_CACHE_SIZE,
 };
+static struct accel_stats g_stats;
+static struct spdk_spinlock g_stats_lock;
 
 static const char *g_opcode_strings[ACCEL_OPC_LAST] = {
 	"copy", "fill", "dualcast", "compare", "crc32c", "copy_crc32c",
@@ -2159,6 +2161,19 @@ err:
 	return -ENOMEM;
 }
 
+static void
+accel_add_stats(struct accel_stats *total, struct accel_stats *stats)
+{
+	int i;
+
+	total->sequence_executed += stats->sequence_executed;
+	total->sequence_failed += stats->sequence_failed;
+	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+		total->operations[i].executed += stats->operations[i].executed;
+		total->operations[i].failed += stats->operations[i].failed;
+	}
+}
+
 /* Framework level channel destroy callback. */
 static void
 accel_destroy_channel(void *io_device, void *ctx_buf)
@@ -2173,6 +2188,11 @@ accel_destroy_channel(void *io_device, void *ctx_buf)
 		spdk_put_io_channel(accel_ch->module_ch[i]);
 		accel_ch->module_ch[i] = NULL;
 	}
+
+	/* Update global stats to make sure channel's stats aren't lost after a channel is gone */
+	spdk_spin_lock(&g_stats_lock);
+	accel_add_stats(&g_stats, &accel_ch->stats);
+	spdk_spin_unlock(&g_stats_lock);
 
 	free(accel_ch->task_pool_base);
 	free(accel_ch->seq_pool_base);
@@ -2221,6 +2241,7 @@ spdk_accel_initialize(void)
 	}
 
 	spdk_spin_init(&g_keyring_spin);
+	spdk_spin_init(&g_stats_lock);
 
 	g_modules_started = true;
 	accel_module_initialize();
@@ -2541,16 +2562,8 @@ accel_get_channel_stats(struct spdk_io_channel_iter *iter)
 	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(iter);
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct accel_get_stats_ctx *ctx = spdk_io_channel_iter_get_ctx(iter);
-	struct accel_stats *stats = &ctx->stats;
-	int i;
 
-	stats->sequence_executed += accel_ch->stats.sequence_executed;
-	stats->sequence_failed += accel_ch->stats.sequence_failed;
-	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
-		stats->operations[i].executed += accel_ch->stats.operations[i].executed;
-		stats->operations[i].failed += accel_ch->stats.operations[i].failed;
-	}
-
+	accel_add_stats(&ctx->stats, &accel_ch->stats);
 	spdk_for_each_channel_continue(iter, 0);
 }
 
@@ -2563,6 +2576,10 @@ accel_get_stats(accel_get_stats_cb cb_fn, void *cb_arg)
 	if (ctx == NULL) {
 		return -ENOMEM;
 	}
+
+	spdk_spin_lock(&g_stats_lock);
+	accel_add_stats(&ctx->stats, &g_stats);
+	spdk_spin_unlock(&g_stats_lock);
 
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
