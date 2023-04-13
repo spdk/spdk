@@ -1115,6 +1115,7 @@ test_lvs_load(void)
 	struct spdk_lvs_with_handle_req *req;
 	struct spdk_bs_opts bs_opts = {};
 	struct spdk_blob *super_blob;
+	struct spdk_lvs_opts opts = {};
 
 	req = calloc(1, sizeof(*req));
 	SPDK_CU_ASSERT_FATAL(req != NULL);
@@ -1176,6 +1177,15 @@ test_lvs_load(void)
 	super_blob->close_status = -1;
 	spdk_lvs_load(&dev.bs_dev, lvol_store_op_with_handle_complete, req);
 	CU_ASSERT(g_lvserrno == -ENODEV);
+	CU_ASSERT(g_lvol_store == NULL);
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_stores));
+
+	/* Fail on invalid options */
+	g_lvserrno = -1;
+	spdk_lvs_opts_init(&opts);
+	opts.opts_size = 0; /* Invalid length */
+	spdk_lvs_load_ext(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == -EINVAL);
 	CU_ASSERT(g_lvol_store == NULL);
 	CU_ASSERT(TAILQ_EMPTY(&g_lvol_stores));
 
