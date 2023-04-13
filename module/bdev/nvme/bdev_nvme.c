@@ -1603,10 +1603,11 @@ bdev_nvme_poll_adminq(void *arg)
 }
 
 static void
-_bdev_nvme_unregister_dev_cb(void *io_device)
+nvme_bdev_free(void *io_device)
 {
 	struct nvme_bdev *nvme_disk = io_device;
 
+	pthread_mutex_destroy(&nvme_disk->mutex);
 	free(nvme_disk->disk.name);
 	free(nvme_disk->err_stat);
 	free(nvme_disk);
@@ -1641,7 +1642,7 @@ bdev_nvme_destruct(void *ctx)
 	TAILQ_REMOVE(&nvme_disk->nbdev_ctrlr->bdevs, nvme_disk, tailq);
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
-	spdk_io_device_unregister(nvme_disk, _bdev_nvme_unregister_dev_cb);
+	spdk_io_device_unregister(nvme_disk, nvme_bdev_free);
 
 	return 0;
 }
@@ -3493,8 +3494,8 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 	return 0;
 }
 
-static int
-nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
+static struct nvme_bdev *
+nvme_bdev_alloc(void)
 {
 	struct nvme_bdev *bdev;
 	int rc;
@@ -3502,7 +3503,7 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 	bdev = calloc(1, sizeof(*bdev));
 	if (!bdev) {
 		SPDK_ERRLOG("bdev calloc() failed\n");
-		return -ENOMEM;
+		return NULL;
 	}
 
 	if (g_opts.nvme_error_stat) {
@@ -3510,7 +3511,7 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 		if (!bdev->err_stat) {
 			SPDK_ERRLOG("err_stat calloc() failed\n");
 			free(bdev);
-			return -ENOMEM;
+			return NULL;
 		}
 	}
 
@@ -3518,7 +3519,7 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 	if (rc != 0) {
 		free(bdev->err_stat);
 		free(bdev);
-		return rc;
+		return NULL;
 	}
 
 	bdev->ref = 1;
@@ -3526,6 +3527,22 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 	bdev->mp_selector = BDEV_NVME_MP_SELECTOR_ROUND_ROBIN;
 	bdev->rr_min_io = UINT32_MAX;
 	TAILQ_INIT(&bdev->nvme_ns_list);
+
+	return bdev;
+}
+
+static int
+nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
+{
+	struct nvme_bdev *bdev;
+	int rc;
+
+	bdev = nvme_bdev_alloc();
+	if (bdev == NULL) {
+		SPDK_ERRLOG("Failed to allocate NVMe bdev\n");
+		return -ENOMEM;
+	}
+
 	TAILQ_INSERT_TAIL(&bdev->nvme_ns_list, nvme_ns, tailq);
 	bdev->opal = nvme_ctrlr->opal_dev != NULL;
 
@@ -3533,9 +3550,7 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 			      nvme_ns->ns, nvme_ctrlr->opts.prchk_flags, bdev);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to create NVMe disk\n");
-		pthread_mutex_destroy(&bdev->mutex);
-		free(bdev->err_stat);
-		free(bdev);
+		nvme_bdev_free(bdev);
 		return rc;
 	}
 
@@ -3549,10 +3564,7 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_bdev_register() failed\n");
 		spdk_io_device_unregister(bdev, NULL);
-		pthread_mutex_destroy(&bdev->mutex);
-		free(bdev->disk.name);
-		free(bdev->err_stat);
-		free(bdev);
+		nvme_bdev_free(bdev);
 		return rc;
 	}
 
