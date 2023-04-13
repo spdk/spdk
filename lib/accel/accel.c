@@ -1726,19 +1726,26 @@ accel_compare_iovs(struct iovec *iova, uint32_t iovacnt, struct iovec *iovb, uin
 static bool
 accel_task_set_dstbuf(struct spdk_accel_task *task, struct spdk_accel_task *next)
 {
-	if (task->dst_domain != next->src_domain) {
+	switch (task->op_code) {
+	case ACCEL_OPC_DECOMPRESS:
+	case ACCEL_OPC_FILL:
+	case ACCEL_OPC_ENCRYPT:
+	case ACCEL_OPC_DECRYPT:
+		if (task->dst_domain != next->src_domain) {
+			return false;
+		}
+		if (!accel_compare_iovs(task->d.iovs, task->d.iovcnt,
+					next->s.iovs, next->s.iovcnt)) {
+			return false;
+		}
+		task->d.iovs = next->d.iovs;
+		task->d.iovcnt = next->d.iovcnt;
+		task->dst_domain = next->dst_domain;
+		task->dst_domain_ctx = next->dst_domain_ctx;
+		break;
+	default:
 		return false;
 	}
-
-	if (!accel_compare_iovs(task->d.iovs, task->d.iovcnt,
-				next->s.iovs, next->s.iovcnt)) {
-		return false;
-	}
-
-	task->d.iovs = next->d.iovs;
-	task->d.iovcnt = next->d.iovcnt;
-	task->dst_domain = next->dst_domain;
-	task->dst_domain_ctx = next->dst_domain_ctx;
 
 	return true;
 }
