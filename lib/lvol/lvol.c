@@ -422,6 +422,7 @@ lvs_load(struct spdk_bs_dev *bs_dev, const struct spdk_lvs_opts *_lvs_opts,
 		if (lvs_opts_copy(_lvs_opts, &lvs_opts) != 0) {
 			SPDK_ERRLOG("Invalid options\n");
 			cb_fn(cb_arg, NULL, -EINVAL);
+			return;
 		}
 	}
 
