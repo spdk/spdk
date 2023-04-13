@@ -35,8 +35,6 @@ DEFINE_STUB(spdk_bdev_create_bs_dev_ro, int,
 	    (const char *bdev_name, spdk_bdev_event_cb_t event_cb, void *event_ctx,
 	     struct spdk_bs_dev **bs_dev), -ENOTSUP);
 DEFINE_STUB(spdk_blob_is_esnap_clone, bool, (const struct spdk_blob *blob), false);
-DEFINE_STUB_V(spdk_blob_set_esnap_bs_dev, (struct spdk_blob *blob, struct spdk_bs_dev *back_bs_dev,
-		spdk_blob_op_complete cb_fn, void *cb_arg));
 
 const char *uuid = "828d9766-ae50-11e7-bd8d-001e67edf350";
 
@@ -51,6 +49,7 @@ struct spdk_blob {
 	char			uuid[SPDK_UUID_STRING_LEN];
 	char			name[SPDK_LVS_NAME_MAX];
 	bool			thin_provisioned;
+	struct spdk_bs_dev	*back_bs_dev;
 };
 
 int g_lvserrno;
@@ -231,6 +230,14 @@ spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
 	}
 
 	return -ENOENT;
+}
+
+void
+spdk_blob_set_esnap_bs_dev(struct spdk_blob *blob, struct spdk_bs_dev *back_bs_dev,
+			   spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	blob->back_bs_dev = back_bs_dev;
+	cb_fn(cb_arg, 0);
 }
 
 bool
@@ -2629,6 +2636,416 @@ lvol_esnap_missing(void)
 	MOCK_CLEAR(spdk_blob_is_esnap_clone);
 }
 
+struct hotplug_lvol {
+	/*
+	 * These fields must be set before calling lvol_esnap_hotplug_scenario().
+	 */
+	char *lvol_name;
+	char *esnap_id;
+	/* How many times hotplug is expected to be called, likely 1. */
+	int expect_hp_count;
+	/* If not 0, return this during hotplug without registering esnap_dev. */
+	int hotplug_retval;
+	/* If true, call spdk_lvs_esnap_missing_add(), return 0, NULL bs_dev */
+	bool register_missing;
+
+	/*
+	 * These fields set are set by lvol_esnap_hotplug_scenario().
+	 */
+	struct spdk_lvol *lvol;
+	int id_len;
+	int hp_count;
+	bool created;
+};
+
+struct missing_esnap {
+	char *esnap_id;
+	struct spdk_bs_dev *esnap_dev;
+	int expect_missing_lvol_count_after_create;
+	int expect_missing_lvol_count_after_hotplug;
+};
+
+/* Arrays. Terminate with a zeroed struct. */
+struct hotplug_lvol *g_hotplug_lvols;
+struct missing_esnap *g_missing_esnap;
+
+static int
+missing_get_lvol_count(struct spdk_lvol_store *lvs, char *esnap_id)
+{
+	struct spdk_lvs_degraded_lvol_set find = { 0 };
+	struct spdk_lvs_degraded_lvol_set *found;
+	struct spdk_lvol *lvol;
+	int count = 0;
+
+	find.esnap_id = esnap_id;
+	find.id_len = strlen(esnap_id) + 1;
+
+	found = RB_FIND(degraded_lvol_sets_tree, &lvs->degraded_lvol_sets_tree, &find);
+	if (found == NULL) {
+		return 0;
+	}
+	TAILQ_FOREACH(lvol, &found->lvols, degraded_link) {
+		count++;
+	}
+	return count;
+}
+
+static struct missing_esnap *
+get_missing_esnap(struct missing_esnap *missing_esnap, const char *esnap_id)
+{
+	for (; missing_esnap->esnap_id != NULL; missing_esnap++) {
+		if (strcmp(missing_esnap->esnap_id, esnap_id) == 0) {
+			return missing_esnap;
+		}
+	}
+	return NULL;
+}
+
+static int
+ut_esnap_hotplug_dev_create(void *bs_ctx, void *blob_ctx, struct spdk_blob *blob,
+			    const void *esnap_id, uint32_t id_len, struct spdk_bs_dev **bs_dev)
+{
+	struct spdk_lvol_store *lvs = bs_ctx;
+	struct spdk_lvol *lvol = blob_ctx;
+	struct hotplug_lvol *hp_lvol;
+	struct missing_esnap *missing_esnap;
+	int rc;
+
+	CU_ASSERT(lvs != NULL);
+	CU_ASSERT(lvol != NULL);
+
+	for (hp_lvol = g_hotplug_lvols; hp_lvol->lvol != NULL; hp_lvol++) {
+		if (hp_lvol->lvol->blob == lvol->blob) {
+			break;
+		}
+	}
+	if (hp_lvol->lvol == NULL) {
+		return -EINVAL;
+	}
+
+	if (!hp_lvol->created) {
+		hp_lvol->created = true;
+		rc = spdk_lvs_esnap_missing_add(lvs, lvol, hp_lvol->esnap_id, hp_lvol->id_len);
+		CU_ASSERT(rc == 0);
+		*bs_dev = NULL;
+		return 0;
+	}
+
+	hp_lvol->hp_count++;
+
+	if (hp_lvol->hotplug_retval != 0) {
+		return hp_lvol->hotplug_retval;
+	}
+
+	missing_esnap = get_missing_esnap(g_missing_esnap, esnap_id);
+	if (missing_esnap == NULL) {
+		return -ENODEV;
+	}
+
+	if (hp_lvol->register_missing) {
+		rc = spdk_lvs_esnap_missing_add(hp_lvol->lvol->lvol_store, hp_lvol->lvol,
+						hp_lvol->esnap_id, hp_lvol->id_len);
+		CU_ASSERT(rc == 0);
+		*bs_dev = NULL;
+		return 0;
+	}
+
+	*bs_dev = missing_esnap->esnap_dev;
+	return 0;
+}
+
+/*
+ * Creates an lvolstore with the specified esnap clone lvols. They are all initially missing their
+ * external snapshots, similar to what would happen if an lvolstore's device is examined before the
+ * devices that act as external snapshots. After the lvols are loaded, the blobstore is notified of
+ * each missing esnap (degraded_set).
+ *
+ * @param hotplug_lvols An array of esnap clone lvols to create. The array is terminated by zeroed
+ * element.
+ * @parm degraded_lvol_sets_tree An array of external snapshots that will be hotplugged. The array is
+ * terminated by a zeroed element.
+ * @desc Unused, but is very helpful when displaying stack traces in a debugger.
+ */
+static bool
+lvol_esnap_hotplug_scenario(struct hotplug_lvol *hotplug_lvols,
+			    struct missing_esnap *degraded_lvol_sets_tree,
+			    char *desc)
+{
+	struct lvol_ut_bs_dev dev;
+	struct spdk_lvs_opts opts;
+	struct spdk_lvol_store *lvs;
+	struct spdk_lvs_degraded_lvol_set *degraded_set;
+	struct hotplug_lvol *hp_lvol;
+	struct missing_esnap *m_esnap;
+	int count;
+	int rc;
+	uint32_t num_failures = CU_get_number_of_failures();
+
+	g_hotplug_lvols = hotplug_lvols;
+	g_missing_esnap = degraded_lvol_sets_tree;
+
+	/* Create the lvstore */
+	init_dev(&dev);
+	spdk_lvs_opts_init(&opts);
+	snprintf(opts.name, sizeof(opts.name), "lvs");
+	g_lvserrno = -1;
+	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	lvs = g_lvol_store;
+	lvs->esnap_bs_dev_create = ut_esnap_hotplug_dev_create;
+
+	/* Create the lvols */
+	for (hp_lvol = hotplug_lvols; hp_lvol->lvol_name != NULL; hp_lvol++) {
+		if (hp_lvol->id_len == 0) {
+			hp_lvol->id_len = strlen(hp_lvol->esnap_id) + 1;
+		}
+
+		g_lvserrno = 0xbad;
+		rc = spdk_lvol_create_esnap_clone(hp_lvol->esnap_id, hp_lvol->id_len,
+						  1, lvs, hp_lvol->lvol_name,
+						  lvol_op_with_handle_complete, NULL);
+		CU_ASSERT(rc == 0);
+		poll_threads();
+		CU_ASSERT(g_lvserrno == 0);
+		CU_ASSERT(g_lvol != NULL);
+		if (g_lvol == NULL) {
+			break;
+		}
+		hp_lvol->lvol = g_lvol;
+		/* This is normally triggered by the blobstore in blob_load_esnap(), but that part
+		 * of blobstore is not mocked by lvol_ut. Later commits will further exercise
+		 * hotplug with a functional blobstore. See test/lvol/esnap/esnap.c and
+		 * test/lvol/external_snapshot.sh in later commits.
+		 */
+		rc = ut_esnap_hotplug_dev_create(lvs, hp_lvol->lvol, hp_lvol->lvol->blob,
+						 hp_lvol->esnap_id, hp_lvol->id_len,
+						 &hp_lvol->lvol->blob->back_bs_dev);
+		CU_ASSERT(rc == 0);
+	}
+
+	/* Verify lvol count in lvs->degraded_lvol_sets_tree tree. */
+	for (m_esnap = degraded_lvol_sets_tree; m_esnap->esnap_id != NULL; m_esnap++) {
+		count = missing_get_lvol_count(lvs, m_esnap->esnap_id);
+		CU_ASSERT(m_esnap->expect_missing_lvol_count_after_create == count);
+	}
+
+	/* Verify lvs->degraded_lvol_sets_tree tree has nothing extra */
+	RB_FOREACH(degraded_set, degraded_lvol_sets_tree, &lvs->degraded_lvol_sets_tree) {
+		m_esnap = get_missing_esnap(degraded_lvol_sets_tree, degraded_set->esnap_id);
+		CU_ASSERT(m_esnap != NULL);
+		if (m_esnap != NULL) {
+			count = missing_get_lvol_count(lvs, m_esnap->esnap_id);
+			CU_ASSERT(m_esnap->expect_missing_lvol_count_after_create == count);
+		}
+	}
+
+	/* Perform hotplug */
+	for (m_esnap = degraded_lvol_sets_tree; m_esnap->esnap_id != NULL; m_esnap++) {
+		spdk_lvs_notify_hotplug(m_esnap->esnap_id, strlen(m_esnap->esnap_id) + 1);
+	}
+
+	/* Verify lvol->degraded_set and back_bs_dev */
+	for (hp_lvol = hotplug_lvols; hp_lvol->lvol != NULL; hp_lvol++) {
+		if (hp_lvol->register_missing || hp_lvol->hotplug_retval != 0) {
+			CU_ASSERT(hp_lvol->lvol->degraded_set != NULL);
+			CU_ASSERT(hp_lvol->lvol->blob->back_bs_dev == NULL);
+		} else {
+			CU_ASSERT(hp_lvol->lvol->degraded_set == NULL);
+			m_esnap = get_missing_esnap(degraded_lvol_sets_tree, hp_lvol->esnap_id);
+			CU_ASSERT(m_esnap != NULL);
+			if (m_esnap != NULL) {
+				CU_ASSERT(hp_lvol->lvol->blob->back_bs_dev == m_esnap->esnap_dev);
+			}
+		}
+	}
+
+	/* Verify hotplug count on lvols */
+	for (hp_lvol = hotplug_lvols; hp_lvol->lvol != NULL; hp_lvol++) {
+		CU_ASSERT(hp_lvol->hp_count == 1);
+	}
+
+	/* Verify lvol count in lvs->degraded_lvol_sets_tree tree. */
+	for (m_esnap = degraded_lvol_sets_tree; m_esnap->esnap_id != NULL; m_esnap++) {
+		count = missing_get_lvol_count(lvs, m_esnap->esnap_id);
+		CU_ASSERT(m_esnap->expect_missing_lvol_count_after_hotplug == count);
+	}
+
+	/* Verify lvs->degraded_lvol_sets_tree tree has nothing extra */
+	RB_FOREACH(degraded_set, degraded_lvol_sets_tree, &lvs->degraded_lvol_sets_tree) {
+		m_esnap = get_missing_esnap(degraded_lvol_sets_tree, degraded_set->esnap_id);
+		CU_ASSERT(m_esnap != NULL);
+		if (m_esnap != NULL) {
+			count = missing_get_lvol_count(lvs, m_esnap->esnap_id);
+			CU_ASSERT(m_esnap->expect_missing_lvol_count_after_hotplug == count);
+		}
+	}
+
+	/* Clean up */
+	for (hp_lvol = hotplug_lvols; hp_lvol->lvol != NULL; hp_lvol++) {
+		g_lvserrno = 0xbad;
+		spdk_lvol_close(hp_lvol->lvol, op_complete, NULL);
+		CU_ASSERT(g_lvserrno == 0);
+		g_lvserrno = 0xbad;
+		spdk_lvol_destroy(hp_lvol->lvol, op_complete, NULL);
+		CU_ASSERT(g_lvserrno == 0);
+	}
+	g_lvserrno = 0xabad;
+	rc = spdk_lvs_destroy(g_lvol_store, op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol = NULL;
+	g_lvol_store = NULL;
+
+	return num_failures == CU_get_number_of_failures();
+}
+
+static void
+lvol_esnap_hotplug(void)
+{
+	struct spdk_bs_dev bs_dev = { 0 };
+	struct spdk_bs_dev bs_dev2 = { 0 };
+	uint64_t i;
+	bool ok;
+#define HOTPLUG_LVOL(_lvol_name, _esnap_id, _hotplug_retval, _register_missing) { \
+	.lvol_name = _lvol_name, \
+	.esnap_id = _esnap_id, \
+	.hotplug_retval = _hotplug_retval, \
+	.register_missing = _register_missing, \
+}
+#define MISSING_ESNAP(_esnap_id, _esnap_dev, _after_create, _after_hotplug) { \
+	.esnap_id = _esnap_id, \
+	.esnap_dev = _esnap_dev, \
+	.expect_missing_lvol_count_after_create = _after_create, \
+	.expect_missing_lvol_count_after_hotplug = _after_hotplug, \
+}
+	struct {
+		char *desc;
+		struct hotplug_lvol h[4];
+		struct missing_esnap m[3];
+	} scenario[] = {
+		{
+			"one missing, happy path",
+			{ HOTPLUG_LVOL("lvol1", "esnap1", 0, false) },
+			{ MISSING_ESNAP("esnap1", &bs_dev, 1, 0) }
+		},
+		{
+			"one missing, cb registers degraded_set",
+			{ HOTPLUG_LVOL("lvol1", "esnap1", 0, true) },
+			{ MISSING_ESNAP("esnap1", &bs_dev, 1, 1) }
+		},
+		{
+			"one missing, cb retuns -ENOMEM",
+			{ HOTPLUG_LVOL("lvol1", "esnap1", -ENOMEM, true) },
+			{ MISSING_ESNAP("esnap1", &bs_dev, 1, 1) }
+		},
+		{
+			"two missing with same esnap, happy path",
+			{
+				HOTPLUG_LVOL("lvol1", "esnap1", 0, false),
+				HOTPLUG_LVOL("lvol2", "esnap1", 0, false)
+			},
+			{ MISSING_ESNAP("esnap1", &bs_dev, 2, 0) }
+		},
+		{
+			"two missing with same esnap, first -ENOMEM",
+			{
+				HOTPLUG_LVOL("lvol1", "esnap1", -ENOMEM, false),
+				HOTPLUG_LVOL("lvol2", "esnap1", 0, false)
+			},
+			{ MISSING_ESNAP("esnap1", &bs_dev, 2, 1) }
+		},
+		{
+			"two missing with same esnap, second -ENOMEM",
+			{
+				HOTPLUG_LVOL("lvol1", "esnap1", 0, false),
+				HOTPLUG_LVOL("lvol2", "esnap1", -ENOMEM, false)
+			},
+			{ MISSING_ESNAP("esnap1", &bs_dev, 2, 1) }
+		},
+		{
+			"two missing with different esnaps, happy path",
+			{
+				HOTPLUG_LVOL("lvol1", "esnap1", 0, false),
+				HOTPLUG_LVOL("lvol2", "esnap2", 0, false)
+			},
+			{
+				MISSING_ESNAP("esnap1", &bs_dev, 1, 0),
+				MISSING_ESNAP("esnap2", &bs_dev2, 1, 0)
+			}
+		},
+		{
+			"two missing with different esnaps, first still missing",
+			{
+				HOTPLUG_LVOL("lvol1", "esnap1", 0, true),
+				HOTPLUG_LVOL("lvol2", "esnap2", 0, false)
+			},
+			{
+				MISSING_ESNAP("esnap1", &bs_dev, 1, 1),
+				MISSING_ESNAP("esnap2", &bs_dev2, 1, 0)
+			}
+		},
+		{
+			"three missing with same esnap, happy path",
+			{
+				HOTPLUG_LVOL("lvol1", "esnap1", 0, false),
+				HOTPLUG_LVOL("lvol2", "esnap1", 0, false),
+				HOTPLUG_LVOL("lvol3", "esnap1", 0, false)
+			},
+			{ MISSING_ESNAP("esnap1", &bs_dev, 3, 0) }
+		},
+		{
+			"three missing with same esnap, first still missing",
+			{
+				HOTPLUG_LVOL("lvol1", "esnap1", 0, true),
+				HOTPLUG_LVOL("lvol2", "esnap1", 0, false),
+				HOTPLUG_LVOL("lvol3", "esnap1", 0, false)
+			},
+			{ MISSING_ESNAP("esnap1", &bs_dev, 3, 1) }
+		},
+		{
+			"three missing with same esnap, first two still missing",
+			{
+				HOTPLUG_LVOL("lvol1", "esnap1", 0, true),
+				HOTPLUG_LVOL("lvol2", "esnap1", 0, true),
+				HOTPLUG_LVOL("lvol3", "esnap1", 0, false)
+			},
+			{ MISSING_ESNAP("esnap1", &bs_dev, 3, 2) }
+		},
+		{
+			"three missing with same esnap, middle still missing",
+			{
+				HOTPLUG_LVOL("lvol1", "esnap1", 0, false),
+				HOTPLUG_LVOL("lvol2", "esnap1", 0, true),
+				HOTPLUG_LVOL("lvol3", "esnap1", 0, false)
+			},
+			{ MISSING_ESNAP("esnap1", &bs_dev, 3, 1) }
+		},
+		{
+			"three missing with same esnap, last still missing",
+			{
+				HOTPLUG_LVOL("lvol1", "esnap1", 0, false),
+				HOTPLUG_LVOL("lvol2", "esnap1", 0, false),
+				HOTPLUG_LVOL("lvol3", "esnap1", 0, true)
+			},
+			{ MISSING_ESNAP("esnap1", &bs_dev, 3, 1) }
+		},
+	};
+#undef HOTPLUG_LVOL
+#undef MISSING_ESNAP
+
+	printf("\n");
+	for (i = 0; i < SPDK_COUNTOF(scenario); i++) {
+		ok = lvol_esnap_hotplug_scenario(scenario[i].h, scenario[i].m, scenario[i].desc);
+		/* Add markers in the output to help correlate failures to scenarios. */
+		CU_ASSERT(ok);
+		printf("\t%s scenario %" PRIu64 ": %s - %s\n", __func__, i,
+		       ok ? "PASS" : "FAIL", scenario[i].desc);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2672,6 +3089,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, lvol_esnap_create_delete);
 	CU_ADD_TEST(suite, lvol_esnap_load_esnaps);
 	CU_ADD_TEST(suite, lvol_esnap_missing);
+	CU_ADD_TEST(suite, lvol_esnap_hotplug);
 
 	allocate_threads(1);
 	set_thread(0);
