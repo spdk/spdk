@@ -8,6 +8,9 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $testdir/interrupt_common.sh
 
+# This test script makes sure that unregistered pollers are
+# reaped correctly when the target is running in interrupt mode.
+
 export PYTHONPATH=$PYTHONPATH:$rootdir/examples/interrupt_tgt
 
 # Set reactors with intr_tgt in intr mode
@@ -23,6 +26,12 @@ native_pollers+=$(jq -r '.timed_pollers[].name' <<< $app_thread)
 # During the creation, vbdev examine process will get bdev_aio create
 # pollers like bdev_aio_group_poll poller, and then unregister it.
 setup_bdev_aio
+
+# Wait for examine to finish, and then sleep a very short amount of
+# time to allow the unregistered pollers to get reaped next time
+# the spdk_threads are polled
+"$rpc_py" bdev_wait_for_examine
+sleep 0.1
 
 # Record names of remaining pollers.
 app_thread=$(rpc_cmd thread_get_pollers | jq -r '.threads[0]')
