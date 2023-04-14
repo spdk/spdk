@@ -161,9 +161,13 @@ struct spdk_accel_sequence {
 	TAILQ_ENTRY(spdk_accel_sequence)	link;
 };
 
-#define accel_update_stats(ch, event) (ch)->stats.event++
-#define accel_update_task_stats(ch, task, event) \
-	accel_update_stats(ch, operations[(task)->op_code].event)
+#define accel_update_stats(ch, event, v) \
+	do { \
+		(ch)->stats.event += (v); \
+	} while (0)
+
+#define accel_update_task_stats(ch, task, event, v) \
+	accel_update_stats(ch, operations[(task)->op_code].event, v)
 
 static inline void
 accel_sequence_set_state(struct spdk_accel_sequence *seq, enum accel_sequence_state state)
@@ -267,9 +271,9 @@ spdk_accel_task_complete(struct spdk_accel_task *accel_task, int status)
 	 */
 	TAILQ_INSERT_HEAD(&accel_ch->task_pool, accel_task, link);
 
-	accel_update_task_stats(accel_ch, accel_task, executed);
+	accel_update_task_stats(accel_ch, accel_task, executed, 1);
 	if (spdk_unlikely(status != 0)) {
-		accel_update_task_stats(accel_ch, accel_task, failed);
+		accel_update_task_stats(accel_ch, accel_task, failed, 1);
 	}
 
 	cb_fn(cb_arg, status);
@@ -307,7 +311,7 @@ accel_submit_task(struct accel_io_channel *accel_ch, struct spdk_accel_task *tas
 
 	rc = module->submit_tasks(module_ch, task);
 	if (spdk_unlikely(rc != 0)) {
-		accel_update_task_stats(accel_ch, task, failed);
+		accel_update_task_stats(accel_ch, task, failed, 1);
 	}
 
 	return rc;
@@ -1209,9 +1213,9 @@ accel_sequence_complete(struct spdk_accel_sequence *seq)
 {
 	SPDK_DEBUGLOG(accel, "Completed sequence: %p with status: %d\n", seq, seq->status);
 
-	accel_update_stats(seq->ch, sequence_executed);
+	accel_update_stats(seq->ch, sequence_executed, 1);
 	if (spdk_unlikely(seq->status != 0)) {
-		accel_update_stats(seq->ch, sequence_failed);
+		accel_update_stats(seq->ch, sequence_failed, 1);
 	}
 
 	/* First notify all users that appended operations to this sequence */
