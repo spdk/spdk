@@ -313,6 +313,19 @@ accel_submit_task(struct accel_io_channel *accel_ch, struct spdk_accel_task *tas
 	return rc;
 }
 
+static inline uint64_t
+accel_get_iovlen(struct iovec *iovs, uint32_t iovcnt)
+{
+	uint64_t result = 0;
+	uint32_t i;
+
+	for (i = 0; i < iovcnt; ++i) {
+		result += iovs[i].iov_len;
+	}
+
+	return result;
+}
+
 /* Accel framework public API for copy function */
 int
 spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src,
@@ -1357,19 +1370,6 @@ struct spdk_accel_task *
 spdk_accel_sequence_next_task(struct spdk_accel_task *task)
 {
 	return TAILQ_NEXT(task, seq_link);
-}
-
-static inline uint64_t
-accel_get_iovlen(struct iovec *iovs, uint32_t iovcnt)
-{
-	uint64_t result = 0;
-	uint32_t i;
-
-	for (i = 0; i < iovcnt; ++i) {
-		result += iovs[i].iov_len;
-	}
-
-	return result;
 }
 
 static inline void
