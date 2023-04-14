@@ -272,6 +272,7 @@ spdk_accel_task_complete(struct spdk_accel_task *accel_task, int status)
 	TAILQ_INSERT_HEAD(&accel_ch->task_pool, accel_task, link);
 
 	accel_update_task_stats(accel_ch, accel_task, executed, 1);
+	accel_update_task_stats(accel_ch, accel_task, num_bytes, accel_task->nbytes);
 	if (spdk_unlikely(status != 0)) {
 		accel_update_task_stats(accel_ch, accel_task, failed, 1);
 	}
@@ -351,6 +352,7 @@ spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src,
 	accel_task->s.iovs[0].iov_base = src;
 	accel_task->s.iovs[0].iov_len = nbytes;
 	accel_task->s.iovcnt = 1;
+	accel_task->nbytes = nbytes;
 	accel_task->op_code = ACCEL_OPC_COPY;
 	accel_task->flags = flags;
 	accel_task->src_domain = NULL;
@@ -391,6 +393,7 @@ spdk_accel_submit_dualcast(struct spdk_io_channel *ch, void *dst1,
 	accel_task->s.iovs[0].iov_base = src;
 	accel_task->s.iovs[0].iov_len = nbytes;
 	accel_task->s.iovcnt = 1;
+	accel_task->nbytes = nbytes;
 	accel_task->flags = flags;
 	accel_task->op_code = ACCEL_OPC_DUALCAST;
 	accel_task->src_domain = NULL;
@@ -422,6 +425,7 @@ spdk_accel_submit_compare(struct spdk_io_channel *ch, void *src1,
 	accel_task->s2.iovs[0].iov_base = src2;
 	accel_task->s2.iovs[0].iov_len = nbytes;
 	accel_task->s2.iovcnt = 1;
+	accel_task->nbytes = nbytes;
 	accel_task->op_code = ACCEL_OPC_COMPARE;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
@@ -448,6 +452,7 @@ spdk_accel_submit_fill(struct spdk_io_channel *ch, void *dst,
 	accel_task->d.iovs[0].iov_base = dst;
 	accel_task->d.iovs[0].iov_len = nbytes;
 	accel_task->d.iovcnt = 1;
+	accel_task->nbytes = nbytes;
 	memset(&accel_task->fill_pattern, fill, sizeof(uint64_t));
 	accel_task->flags = flags;
 	accel_task->op_code = ACCEL_OPC_FILL;
@@ -476,6 +481,7 @@ spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *crc_dst,
 	accel_task->s.iovs[0].iov_base = src;
 	accel_task->s.iovs[0].iov_len = nbytes;
 	accel_task->s.iovcnt = 1;
+	accel_task->nbytes = nbytes;
 	accel_task->crc_dst = crc_dst;
 	accel_task->seed = seed;
 	accel_task->op_code = ACCEL_OPC_CRC32C;
@@ -514,6 +520,7 @@ spdk_accel_submit_crc32cv(struct spdk_io_channel *ch, uint32_t *crc_dst,
 
 	accel_task->s.iovs = iov;
 	accel_task->s.iovcnt = iov_cnt;
+	accel_task->nbytes = accel_get_iovlen(iov, iov_cnt);
 	accel_task->crc_dst = crc_dst;
 	accel_task->seed = seed;
 	accel_task->op_code = ACCEL_OPC_CRC32C;
@@ -546,6 +553,7 @@ spdk_accel_submit_copy_crc32c(struct spdk_io_channel *ch, void *dst,
 	accel_task->s.iovs[0].iov_base = src;
 	accel_task->s.iovs[0].iov_len = nbytes;
 	accel_task->s.iovcnt = 1;
+	accel_task->nbytes = nbytes;
 	accel_task->crc_dst = crc_dst;
 	accel_task->seed = seed;
 	accel_task->flags = flags;
@@ -566,7 +574,6 @@ spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst,
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
 	uint64_t nbytes;
-	uint32_t i;
 
 	if (src_iovs == NULL) {
 		SPDK_ERRLOG("iov should not be NULL");
@@ -585,17 +592,14 @@ spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst,
 		return -ENOMEM;
 	}
 
-	nbytes = 0;
-	for (i = 0; i < iov_cnt; i++) {
-		nbytes += src_iovs[i].iov_len;
-	}
-
+	nbytes = accel_get_iovlen(src_iovs, iov_cnt);
 	accel_task->d.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_DST];
 	accel_task->d.iovs[0].iov_base = dst;
 	accel_task->d.iovs[0].iov_len = nbytes;
 	accel_task->d.iovcnt = 1;
 	accel_task->s.iovs = src_iovs;
 	accel_task->s.iovcnt = iov_cnt;
+	accel_task->nbytes = nbytes;
 	accel_task->crc_dst = crc_dst;
 	accel_task->seed = seed;
 	accel_task->flags = flags;
@@ -627,6 +631,7 @@ spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, uint64_t nbyte
 	accel_task->output_size = output_size;
 	accel_task->s.iovs = src_iovs;
 	accel_task->s.iovcnt = src_iovcnt;
+	accel_task->nbytes = nbytes;
 	accel_task->flags = flags;
 	accel_task->op_code = ACCEL_OPC_COMPRESS;
 	accel_task->src_domain = NULL;
@@ -655,6 +660,7 @@ spdk_accel_submit_decompress(struct spdk_io_channel *ch, struct iovec *dst_iovs,
 	accel_task->s.iovcnt = src_iovcnt;
 	accel_task->d.iovs = dst_iovs;
 	accel_task->d.iovcnt = dst_iovcnt;
+	accel_task->nbytes = accel_get_iovlen(src_iovs, src_iovcnt);
 	accel_task->flags = flags;
 	accel_task->op_code = ACCEL_OPC_DECOMPRESS;
 	accel_task->src_domain = NULL;
@@ -688,6 +694,7 @@ spdk_accel_submit_encrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_k
 	accel_task->s.iovcnt = src_iovcnt;
 	accel_task->d.iovs = dst_iovs;
 	accel_task->d.iovcnt = dst_iovcnt;
+	accel_task->nbytes = accel_get_iovlen(src_iovs, src_iovcnt);
 	accel_task->iv = iv;
 	accel_task->block_size = block_size;
 	accel_task->flags = flags;
@@ -723,6 +730,7 @@ spdk_accel_submit_decrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_k
 	accel_task->s.iovcnt = src_iovcnt;
 	accel_task->d.iovs = dst_iovs;
 	accel_task->d.iovcnt = dst_iovcnt;
+	accel_task->nbytes = accel_get_iovlen(src_iovs, src_iovcnt);
 	accel_task->iv = iv;
 	accel_task->block_size = block_size;
 	accel_task->flags = flags;
@@ -752,6 +760,7 @@ spdk_accel_submit_xor(struct spdk_io_channel *ch, void *dst, void **sources, uin
 	accel_task->d.iovs[0].iov_base = dst;
 	accel_task->d.iovs[0].iov_len = nbytes;
 	accel_task->d.iovcnt = 1;
+	accel_task->nbytes = nbytes;
 	accel_task->op_code = ACCEL_OPC_XOR;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
@@ -888,6 +897,7 @@ spdk_accel_append_copy(struct spdk_accel_sequence **pseq, struct spdk_io_channel
 	task->src_domain_ctx = src_domain_ctx;
 	task->s.iovs = src_iovs;
 	task->s.iovcnt = src_iovcnt;
+	task->nbytes = accel_get_iovlen(src_iovs, src_iovcnt);
 	task->flags = flags;
 	task->op_code = ACCEL_OPC_COPY;
 
@@ -930,6 +940,7 @@ spdk_accel_append_fill(struct spdk_accel_sequence **pseq, struct spdk_io_channel
 	task->d.iovs[0].iov_base = buf;
 	task->d.iovs[0].iov_len = len;
 	task->d.iovcnt = 1;
+	task->nbytes = len;
 	task->src_domain = NULL;
 	task->dst_domain = domain;
 	task->dst_domain_ctx = domain_ctx;
@@ -981,6 +992,7 @@ spdk_accel_append_decompress(struct spdk_accel_sequence **pseq, struct spdk_io_c
 	task->src_domain_ctx = src_domain_ctx;
 	task->s.iovs = src_iovs;
 	task->s.iovcnt = src_iovcnt;
+	task->nbytes = accel_get_iovlen(src_iovs, src_iovcnt);
 	task->flags = flags;
 	task->op_code = ACCEL_OPC_DECOMPRESS;
 
@@ -1035,6 +1047,7 @@ spdk_accel_append_encrypt(struct spdk_accel_sequence **pseq, struct spdk_io_chan
 	task->dst_domain_ctx = dst_domain_ctx;
 	task->d.iovs = dst_iovs;
 	task->d.iovcnt = dst_iovcnt;
+	task->nbytes = accel_get_iovlen(src_iovs, src_iovcnt);
 	task->iv = iv;
 	task->block_size = block_size;
 	task->flags = flags;
@@ -1091,6 +1104,7 @@ spdk_accel_append_decrypt(struct spdk_accel_sequence **pseq, struct spdk_io_chan
 	task->dst_domain_ctx = dst_domain_ctx;
 	task->d.iovs = dst_iovs;
 	task->d.iovcnt = dst_iovcnt;
+	task->nbytes = accel_get_iovlen(src_iovs, src_iovcnt);
 	task->iv = iv;
 	task->block_size = block_size;
 	task->flags = flags;
@@ -1133,6 +1147,7 @@ spdk_accel_append_crc32c(struct spdk_accel_sequence **pseq, struct spdk_io_chann
 	task->s.iovcnt = iovcnt;
 	task->src_domain = domain;
 	task->src_domain_ctx = domain_ctx;
+	task->nbytes = accel_get_iovlen(iovs, iovcnt);
 	task->crc_dst = dst;
 	task->seed = seed;
 	task->op_code = ACCEL_OPC_CRC32C;
@@ -2271,6 +2286,7 @@ accel_add_stats(struct accel_stats *total, struct accel_stats *stats)
 	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
 		total->operations[i].executed += stats->operations[i].executed;
 		total->operations[i].failed += stats->operations[i].failed;
+		total->operations[i].num_bytes += stats->operations[i].num_bytes;
 	}
 }
 

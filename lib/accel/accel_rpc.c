@@ -433,6 +433,7 @@ rpc_accel_get_stats_done(struct accel_stats *stats, void *cb_arg)
 		spdk_json_write_named_string(w, "opcode", name);
 		spdk_json_write_named_uint64(w, "executed", stats->operations[i].executed);
 		spdk_json_write_named_uint64(w, "failed", stats->operations[i].failed);
+		spdk_json_write_named_uint64(w, "num_bytes", stats->operations[i].num_bytes);
 		spdk_json_write_object_end(w);
 	}
 	spdk_json_write_array_end(w);

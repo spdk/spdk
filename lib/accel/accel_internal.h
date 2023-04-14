@@ -23,6 +23,7 @@ struct module_info {
 struct accel_operation_stats {
 	uint64_t executed;
 	uint64_t failed;
+	uint64_t num_bytes;
 };
 
 struct accel_stats {
