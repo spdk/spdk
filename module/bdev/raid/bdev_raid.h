@@ -201,6 +201,9 @@ struct raid_bdev_module {
 		uint8_t value;
 	} base_bdevs_constraint;
 
+	/* Set to true if this module supports memory domains. */
+	bool memory_domains_supported;
+
 	/*
 	 * Called when the raid is starting, right before changing the state to
 	 * online and registering the bdev. Parameters of the bdev like blockcnt

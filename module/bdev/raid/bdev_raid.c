@@ -680,6 +680,10 @@ raid_bdev_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int
 	uint32_t i;
 	int domains_count = 0, rc;
 
+	if (raid_bdev->module->memory_domains_supported == false) {
+		return 0;
+	}
+
 	/* First loop to get the number of memory domains */
 	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		base_bdev = raid_bdev->base_bdev_info[i].bdev;

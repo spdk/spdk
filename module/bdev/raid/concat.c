@@ -321,6 +321,7 @@ concat_stop(struct raid_bdev *raid_bdev)
 static struct raid_bdev_module g_concat_module = {
 	.level = CONCAT,
 	.base_bdevs_min = 1,
+	.memory_domains_supported = true,
 	.start = concat_start,
 	.stop = concat_stop,
 	.submit_rw_request = concat_submit_rw_request,
