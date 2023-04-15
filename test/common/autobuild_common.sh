@@ -210,7 +210,10 @@ _build_native_dpdk() {
 
 	# Save this path. In tests are run using autorun.sh then autotest.sh
 	# script will be unaware of LD_LIBRARY_PATH and will fail tests.
-	echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH" > /tmp/spdk-ld-path
+	cat <<- LD_PATH > /tmp/spdk-ld-path
+		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+		export PKG_CONFIG_PATH=$PKG_CONFIG_PATH
+	LD_PATH
 
 	cd "$orgdir"
 }

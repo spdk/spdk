@@ -93,6 +93,8 @@ build_rpm_from_gen_spec() {
 }
 
 build_shared_native_dpdk_rpm() {
+	[[ -e /tmp/spdk-ld-path ]] # autobuild dependency
+	source /tmp/spdk-ld-path
 	build_rpm --with-shared --with-dpdk="$SPDK_RUN_EXTERNAL_DPDK"
 }
 
