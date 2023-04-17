@@ -25,7 +25,12 @@
 #include "spdk_internal/trace_defs.h"
 
 #define NVME_TCP_RW_BUFFER_SIZE 131072
-#define NVME_TCP_TIME_OUT_IN_SECONDS 2
+
+/* For async connect workloads, allow more time since we are more likely
+ * to be processing lots ICREQs at once.
+ */
+#define ICREQ_TIMEOUT_SYNC 2 /* in seconds */
+#define ICREQ_TIMEOUT_ASYNC 10 /* in seconds */
 
 #define NVME_TCP_HPDA_DEFAULT			0
 #define NVME_TCP_MAX_R2T_DEFAULT		1
@@ -1847,6 +1852,7 @@ nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 {
 	struct spdk_nvme_tcp_ic_req *ic_req;
 	struct nvme_tcp_pdu *pdu;
+	uint32_t timeout_in_sec;
 
 	pdu = tqpair->send_pdu;
 	memset(tqpair->send_pdu, 0, sizeof(*tqpair->send_pdu));
@@ -1863,7 +1869,8 @@ nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 
 	nvme_tcp_qpair_write_pdu(tqpair, pdu, nvme_tcp_send_icreq_complete, tqpair);
 
-	tqpair->icreq_timeout_tsc = spdk_get_ticks() + (NVME_TCP_TIME_OUT_IN_SECONDS * spdk_get_ticks_hz());
+	timeout_in_sec = tqpair->qpair.async ? ICREQ_TIMEOUT_ASYNC : ICREQ_TIMEOUT_SYNC;
+	tqpair->icreq_timeout_tsc = spdk_get_ticks() + (timeout_in_sec * spdk_get_ticks_hz());
 	return 0;
 }
 
