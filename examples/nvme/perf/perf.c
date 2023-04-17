@@ -983,7 +983,8 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 	struct ns_entry *entry = ns_ctx->entry;
 	struct spdk_nvme_poll_group *group;
 	struct spdk_nvme_qpair *qpair;
-	int i;
+	uint64_t poll_timeout_tsc;
+	int i, rc;
 
 	ns_ctx->u.nvme.num_active_qpairs = g_nr_io_queues_per_ns;
 	ns_ctx->u.nvme.num_all_qpairs = g_nr_io_queues_per_ns + g_nr_unused_io_queues;
@@ -998,6 +999,7 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 	}
 	opts.delay_cmd_submit = true;
 	opts.create_only = true;
+	opts.async_mode = true;
 
 	ns_ctx->u.nvme.group = spdk_nvme_poll_group_create(NULL, NULL);
 	if (ns_ctx->u.nvme.group == NULL) {
@@ -1027,7 +1029,22 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 		}
 	}
 
-	return 0;
+	/* Busy poll here until all qpairs are connected - this ensures once we start
+	 * I/O we aren't still waiting for some qpairs to connect. Limit the poll to
+	 * 10 seconds though.
+	 */
+	poll_timeout_tsc = spdk_get_ticks() + 10 * spdk_get_ticks_hz();
+	rc = -EAGAIN;
+	while (spdk_get_ticks() < poll_timeout_tsc && rc == -EAGAIN) {
+		spdk_nvme_poll_group_process_completions(group, 0, perf_disconnect_cb);
+		rc = spdk_nvme_poll_group_all_connected(group);
+		if (rc == 0) {
+			return 0;
+		}
+	}
+
+	/* If we reach here, it means we either timed out, or some connection failed. */
+	assert(spdk_get_ticks() > poll_timeout_tsc || rc == -EIO);
 
 qpair_failed:
 	for (; i > 0; --i) {
