@@ -200,3 +200,17 @@ smalloc: OOM. Consider using --alloc-size to increase the shared memory availabl
 This is because fio needs to allocate memory for the zone-report, that is, retrieve the state of
 zones on the device including auxiliary accounting information. To solve this, then you can follow
 fio's advice and increase ``--alloc-size``.
+
+## FDP
+
+To use FDP enabled device build and run the io-engine against fio version >= 3.34 and add:
+
+```bash
+fdp=1
+```
+
+to your fio-script, also have a look at script-example provided with fio:
+
+```bash
+fio/examples/uring-cmd-fdp.fio
+```

@@ -11,6 +11,7 @@
 #include "spdk/env.h"
 #include "spdk/string.h"
 #include "spdk/log.h"
+#include "spdk/likely.h"
 #include "spdk/endian.h"
 #include "spdk/dif.h"
 #include "spdk/util.h"
@@ -21,8 +22,10 @@
 
 #ifdef for_each_rw_ddir
 #define FIO_HAS_ZBD (FIO_IOOPS_VERSION >= 26)
+#define FIO_HAS_FDP (FIO_IOOPS_VERSION >= 32)
 #else
 #define FIO_HAS_ZBD (0)
+#define FIO_HAS_FDP (0)
 #endif
 
 /* FreeBSD is missing CLOCK_MONOTONIC_RAW,
@@ -1020,6 +1023,9 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	struct spdk_nvme_ns	*ns = NULL;
 	void			*md_buf = NULL;
 	struct spdk_dif_ctx	*dif_ctx = &fio_req->dif_ctx;
+#if FIO_HAS_FDP
+	struct spdk_nvme_ns_cmd_ext_io_opts ext_opts;
+#endif
 	uint32_t		block_size;
 	uint64_t		lba;
 	uint32_t		lba_count;
@@ -1038,6 +1044,15 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	block_size = _nvme_get_host_buffer_sector_size(ns, fio_qpair->io_flags);
 	lba = io_u->offset / block_size;
 	lba_count = io_u->xfer_buflen / block_size;
+
+#if FIO_HAS_FDP
+	/* Only SGL support for write command with directives */
+	if (io_u->ddir == DDIR_WRITE && io_u->dtype && !g_spdk_enable_sgl) {
+		log_err("spdk/nvme: queue() directives require SGL to be enabled\n");
+		io_u->error = -EINVAL;
+		return FIO_Q_COMPLETED;
+	}
+#endif
 
 	/* TODO: considering situations that fio will randomize and verify io_u */
 	if (fio_qpair->nvme_pi_enabled) {
@@ -1081,6 +1096,19 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 			}
 		} else {
 			if (!fio_qpair->zone_append_enabled) {
+#if FIO_HAS_FDP
+				if (spdk_unlikely(io_u->dtype)) {
+					ext_opts.io_flags = fio_qpair->io_flags | (io_u->dtype << 20);
+					ext_opts.metadata = md_buf;
+					ext_opts.cdw13 = (io_u->dspec << 16);
+					ext_opts.apptag = dif_ctx->app_tag;
+					ext_opts.apptag_mask = dif_ctx->apptag_mask;
+					rc = spdk_nvme_ns_cmd_writev_ext(ns, fio_qpair->qpair, lba, lba_count,
+									 spdk_fio_completion_cb, fio_req,
+									 spdk_nvme_io_reset_sgl, spdk_nvme_io_next_sge, &ext_opts);
+					break;
+				}
+#endif
 				rc = spdk_nvme_ns_cmd_writev_with_md(ns, fio_qpair->qpair, lba,
 								     lba_count, spdk_fio_completion_cb, fio_req, fio_qpair->io_flags,
 								     spdk_nvme_io_reset_sgl, spdk_nvme_io_next_sge, md_buf,
@@ -1419,6 +1447,58 @@ spdk_fio_get_max_open_zones(struct thread_data *td, struct fio_file *f,
 }
 #endif
 
+#if FIO_HAS_FDP
+static int
+spdk_fio_fdp_fetch_ruhs(struct thread_data *td, struct fio_file *f,
+			struct fio_ruhs_info *fruhs_info)
+{
+	struct spdk_fio_thread *fio_thread = td->io_ops_data;
+	struct spdk_fio_qpair *fio_qpair = NULL;
+	struct spdk_nvme_qpair *tmp_qpair;
+	struct {
+		struct spdk_nvme_fdp_ruhs ruhs;
+		struct spdk_nvme_fdp_ruhs_desc desc[128];
+	} fdp_ruhs;
+	uint16_t idx;
+	int completed = 0, err;
+
+	fio_qpair = get_fio_qpair(fio_thread, f);
+	if (!fio_qpair) {
+		log_err("spdk/nvme: no ns/qpair or file_name: '%s'\n", f->file_name);
+		return -ENODEV;
+	}
+
+	/* qpair has not been allocated yet (it gets allocated in spdk_fio_open()).
+	 * Create a temporary qpair in order to perform report zones.
+	 */
+	assert(!fio_qpair->qpair);
+
+	tmp_qpair = spdk_nvme_ctrlr_alloc_io_qpair(fio_qpair->fio_ctrlr->ctrlr, NULL, 0);
+	if (!tmp_qpair) {
+		log_err("spdk/nvme: cannot allocate a temporary qpair\n");
+		return -EIO;
+	}
+
+	err = spdk_nvme_ns_cmd_io_mgmt_recv(fio_qpair->ns, tmp_qpair, &fdp_ruhs, sizeof(fdp_ruhs),
+					    SPDK_NVME_FDP_IO_MGMT_RECV_RUHS, 0, pcu_cb, &completed);
+	if (err || pcu(tmp_qpair, &completed) || completed < 0) {
+		log_err("spdk/nvme: fetch_ruhs(): err: %d, cpl: %d\n", err, completed);
+		err = err ? err : -EIO;
+		goto exit;
+	}
+
+	fruhs_info->nr_ruhs = fdp_ruhs.ruhs.nruhsd;
+	for (idx = 0; idx < fdp_ruhs.ruhs.nruhsd; idx++) {
+		fruhs_info->plis[idx] = fdp_ruhs.desc[idx].pid;
+	}
+
+exit:
+	spdk_nvme_ctrlr_free_io_qpair(tmp_qpair);
+
+	return err;
+}
+#endif
+
 static void
 spdk_fio_cleanup(struct thread_data *td)
 {
@@ -1722,6 +1802,9 @@ struct ioengine_ops ioengine = {
 #endif
 #if FIO_IOOPS_VERSION >= 30
 	.get_max_open_zones	= spdk_fio_get_max_open_zones,
+#endif
+#if FIO_HAS_FDP
+	.fdp_fetch_ruhs		= spdk_fio_fdp_fetch_ruhs,
 #endif
 	.flags			= FIO_RAWIO | FIO_NOEXTEND | FIO_NODISKUTIL | FIO_MEMALIGN,
 	.options		= options,
