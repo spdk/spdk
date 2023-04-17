@@ -691,6 +691,26 @@ int spdk_accel_set_opts(const struct spdk_accel_opts *opts);
  */
 void spdk_accel_get_opts(struct spdk_accel_opts *opts);
 
+struct spdk_accel_opcode_stats {
+	/** Number of executed operations */
+	uint64_t	executed;
+	/** Number of failed operations */
+	uint64_t	failed;
+	/** Number of processed bytes */
+	uint64_t	num_bytes;
+} __attribute__((packed));
+
+/**
+ * Retrieve opcode statistics for a given IO channel.
+ *
+ * \param ch I/O channel.
+ * \param opcode Operation to retrieve statistics.
+ * \param stats Per-channel statistics.
+ * \param size Size of the `stats` structure.
+ */
+void spdk_accel_get_opcode_stats(struct spdk_io_channel *ch, enum accel_opcode opcode,
+				 struct spdk_accel_opcode_stats *stats, size_t size);
+
 #ifdef __cplusplus
 }
 #endif

@@ -2715,4 +2715,26 @@ accel_get_stats(accel_get_stats_cb cb_fn, void *cb_arg)
 	return 0;
 }
 
+void
+spdk_accel_get_opcode_stats(struct spdk_io_channel *ch, enum accel_opcode opcode,
+			    struct spdk_accel_opcode_stats *stats, size_t size)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+
+#define FIELD_OK(field) \
+	offsetof(struct spdk_accel_opcode_stats, field) + sizeof(stats->field) <= size
+
+#define SET_FIELD(field, value) \
+	if (FIELD_OK(field)) { \
+		stats->field = value; \
+	}
+
+	SET_FIELD(executed, accel_ch->stats.operations[opcode].executed);
+	SET_FIELD(failed, accel_ch->stats.operations[opcode].failed);
+	SET_FIELD(num_bytes, accel_ch->stats.operations[opcode].num_bytes);
+
+#undef FIELD_OK
+#undef SET_FIELD
+}
+
 SPDK_LOG_REGISTER_COMPONENT(accel)
