@@ -1128,22 +1128,10 @@ _bdev_io_pull_bounce_data_buf_done(void *ctx, int rc)
 }
 
 static void
-_bdev_io_pull_bounce_data_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len,
-			      bdev_copy_bounce_buffer_cpl cpl_cb)
+bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 	int rc = 0;
-
-	bdev_io->internal.data_transfer_cpl = cpl_cb;
-	/* save original iovec */
-	bdev_io->internal.orig_iovs = bdev_io->u.bdev.iovs;
-	bdev_io->internal.orig_iovcnt = bdev_io->u.bdev.iovcnt;
-	/* set bounce iov */
-	bdev_io->u.bdev.iovs = &bdev_io->internal.bounce_iov;
-	bdev_io->u.bdev.iovcnt = 1;
-	/* set bounce buffer for this operation */
-	bdev_io->u.bdev.iovs[0].iov_base = buf;
-	bdev_io->u.bdev.iovs[0].iov_len = len;
 
 	/* If we need to exec an accel sequence, append a copy operation making accel change the
 	 * src/dst buffers of the previous operation */
@@ -1190,11 +1178,33 @@ _bdev_io_pull_bounce_data_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t le
 			SPDK_ERRLOG("Failed to pull data from memory domain %s\n",
 				    spdk_memory_domain_get_dma_device_id(bdev_io->internal.memory_domain));
 		} else {
-			spdk_copy_iovs_to_buf(buf, len, bdev_io->internal.orig_iovs, bdev_io->internal.orig_iovcnt);
+			assert(bdev_io->u.bdev.iovcnt == 1);
+			spdk_copy_iovs_to_buf(bdev_io->u.bdev.iovs[0].iov_base,
+					      bdev_io->u.bdev.iovs[0].iov_len,
+					      bdev_io->internal.orig_iovs,
+					      bdev_io->internal.orig_iovcnt);
 		}
 	}
 
 	_bdev_io_pull_bounce_data_buf_done(bdev_io, rc);
+}
+
+static void
+_bdev_io_pull_bounce_data_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len,
+			      bdev_copy_bounce_buffer_cpl cpl_cb)
+{
+	bdev_io->internal.data_transfer_cpl = cpl_cb;
+	/* save original iovec */
+	bdev_io->internal.orig_iovs = bdev_io->u.bdev.iovs;
+	bdev_io->internal.orig_iovcnt = bdev_io->u.bdev.iovcnt;
+	/* set bounce iov */
+	bdev_io->u.bdev.iovs = &bdev_io->internal.bounce_iov;
+	bdev_io->u.bdev.iovcnt = 1;
+	/* set bounce buffer for this operation */
+	bdev_io->u.bdev.iovs[0].iov_base = buf;
+	bdev_io->u.bdev.iovs[0].iov_len = len;
+
+	bdev_io_pull_data(bdev_io);
 }
 
 static void
