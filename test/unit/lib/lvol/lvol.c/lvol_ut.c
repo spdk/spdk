@@ -2409,10 +2409,13 @@ lvol_esnap_create_bad_args(void)
 	struct ut_cb_res lvres1, lvres2;
 	struct spdk_lvol *lvol;
 	char uuid_str[SPDK_UUID_STRING_LEN];
+	uint64_t block_sz, cluster_sz;
 
 	init_dev(&dev);
+	block_sz = dev.bs_dev.blocklen;
 
 	spdk_lvs_opts_init(&opts);
+	cluster_sz = opts.cluster_sz;
 	snprintf(opts.name, sizeof(opts.name), "lvs");
 	opts.esnap_bs_dev_create = ut_esnap_bs_dev_create;
 	g_lvserrno = -1;
@@ -2426,18 +2429,25 @@ lvol_esnap_create_bad_args(void)
 	MOCK_SET(spdk_bdev_get_by_name, &esnap_bdev);
 
 	/* error with lvs == NULL */
-	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), 1, NULL, "clone1",
+	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), cluster_sz, NULL, "clone1",
 					  lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == -EINVAL);
 
 	/* error with clone name that is too short */
-	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), 1, g_lvol_store, "",
+	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), cluster_sz, g_lvol_store, "",
 					  lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == -EINVAL);
 
 	/* error with clone name that is too long */
 	memset(long_name, 'a', sizeof(long_name));
-	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), 1, g_lvol_store, long_name,
+	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), cluster_sz, g_lvol_store,
+					  long_name, lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* error with size that is not a multiple of an integer multiple of cluster_sz */
+	CU_ASSERT(((cluster_sz + block_sz) % cluster_sz) != 0);
+	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), cluster_sz + block_sz,
+					  g_lvol_store, "clone1",
 					  lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == -EINVAL);
 
@@ -2447,8 +2457,8 @@ lvol_esnap_create_bad_args(void)
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 	lvol = g_lvol;
-	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), 1, g_lvol_store, "lvol",
-					  lvol_op_with_handle_complete, NULL);
+	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), cluster_sz, g_lvol_store,
+					  "lvol", lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == -EEXIST);
 	spdk_lvol_close(lvol, op_complete, ut_cb_res_clear(&lvres1));
 	spdk_lvol_destroy(lvol, op_complete, ut_cb_res_clear(&lvres2));
@@ -2458,11 +2468,12 @@ lvol_esnap_create_bad_args(void)
 	g_lvol = NULL;
 
 	/* error when two clones created at the same time with the same name */
-	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), 1, g_lvol_store, "clone1",
-					  lvol_op_with_handle_complete, ut_cb_res_clear(&lvres1));
-	CU_ASSERT(rc == 0);
-	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), 1, g_lvol_store, "clone1",
-					  lvol_op_with_handle_complete, ut_cb_res_clear(&lvres2));
+	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), cluster_sz, g_lvol_store,
+					  "clone1", lvol_op_with_handle_complete,
+					  ut_cb_res_clear(&lvres1));
+	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), cluster_sz, g_lvol_store,
+					  "clone1", lvol_op_with_handle_complete,
+					  ut_cb_res_clear(&lvres2));
 	CU_ASSERT(rc == -EEXIST);
 	poll_threads();
 	CU_ASSERT(g_lvol != NULL);
@@ -2493,11 +2504,13 @@ lvol_esnap_create_delete(void)
 	struct spdk_lvs_opts opts;
 	char uuid_str[SPDK_UUID_STRING_LEN];
 	int rc;
+	uint64_t cluster_sz;
 
 	init_dev(&dev);
 	init_dev(&g_esnap_dev);
 
 	spdk_lvs_opts_init(&opts);
+	cluster_sz = opts.cluster_sz;
 	snprintf(opts.name, sizeof(opts.name), "lvs");
 	opts.esnap_bs_dev_create = ut_esnap_bs_dev_create;
 	g_lvserrno = -1;
@@ -2510,8 +2523,8 @@ lvol_esnap_create_delete(void)
 	init_bdev(&esnap_bdev, "bdev1", BS_CLUSTER_SIZE);
 	CU_ASSERT(spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &esnap_bdev.uuid) == 0);
 	MOCK_SET(spdk_bdev_get_by_name, &esnap_bdev);
-	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), 1, g_lvol_store, "clone1",
-					  lvol_op_with_handle_complete, NULL);
+	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), cluster_sz, g_lvol_store,
+					  "clone1", lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	poll_threads();
 	CU_ASSERT(g_lvserrno == 0);
@@ -2637,11 +2650,13 @@ lvol_esnap_missing(void)
 	const char		*name1 = "lvol1";
 	const char		*name2 = "lvol2";
 	char			uuid_str[SPDK_UUID_STRING_LEN];
+	uint64_t		cluster_sz;
 	int			rc;
 
 	/* Create an lvstore */
 	init_dev(&dev);
 	spdk_lvs_opts_init(&opts);
+	cluster_sz = opts.cluster_sz;
 	snprintf(opts.name, sizeof(opts.name), "lvs");
 	g_lvserrno = -1;
 	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
@@ -2665,8 +2680,9 @@ lvol_esnap_missing(void)
 	init_bdev(&esnap_bdev, "bdev1", BS_CLUSTER_SIZE);
 	CU_ASSERT(spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &esnap_bdev.uuid) == 0);
 	MOCK_SET(spdk_bdev_get_by_name, &esnap_bdev);
-	rc = spdk_lvol_create_esnap_clone(uuid_str, sizeof(uuid_str), 1, g_lvol_store, name1,
-					  lvol_op_with_handle_complete, ut_cb_res_clear(&cb_res));
+	rc = spdk_lvol_create_esnap_clone(uuid_str, sizeof(uuid_str), cluster_sz, g_lvol_store,
+					  name1, lvol_op_with_handle_complete,
+					  ut_cb_res_clear(&cb_res));
 	CU_ASSERT(rc == -EEXIST);
 	CU_ASSERT(ut_cb_res_untouched(&cb_res));
 	MOCK_CLEAR(spdk_bdev_get_by_name);
@@ -2680,8 +2696,9 @@ lvol_esnap_missing(void)
 	/* Using a unique lvol name allows the clone to be created. */
 	MOCK_SET(spdk_bdev_get_by_name, &esnap_bdev);
 	MOCK_SET(spdk_blob_is_esnap_clone, true);
-	rc = spdk_lvol_create_esnap_clone(uuid_str, sizeof(uuid_str), 1, g_lvol_store, name2,
-					  lvol_op_with_handle_complete, ut_cb_res_clear(&cb_res));
+	rc = spdk_lvol_create_esnap_clone(uuid_str, sizeof(uuid_str), cluster_sz, g_lvol_store,
+					  name2, lvol_op_with_handle_complete,
+					  ut_cb_res_clear(&cb_res));
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	CU_ASSERT(cb_res.err == 0);
 	SPDK_CU_ASSERT_FATAL(cb_res.data != NULL);
@@ -2925,7 +2942,7 @@ lvol_esnap_hotplug_scenario(struct hotplug_lvol *hotplug_lvols,
 
 		g_lvserrno = 0xbad;
 		rc = spdk_lvol_create_esnap_clone(hp_lvol->esnap_id, hp_lvol->id_len,
-						  1, lvs, hp_lvol->lvol_name,
+						  opts.cluster_sz, lvs, hp_lvol->lvol_name,
 						  lvol_op_with_handle_complete, NULL);
 		CU_ASSERT(rc == 0);
 		poll_threads();
