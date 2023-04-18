@@ -893,8 +893,8 @@ blob_parse(const struct spdk_blob_md_page *pages, uint32_t page_count,
 	 * happen for example if a bogus blobid is passed in through open.
 	 */
 	if (blob->id != pages[0].id) {
-		SPDK_ERRLOG("Blobid (%" PRIu64 ") doesn't match what's in metadata (%" PRIu64 ")\n",
-			    blob->id, pages[0].id);
+		SPDK_ERRLOG("Blobid (0x%" PRIx64 ") doesn't match what's in metadata "
+			    "(0x%" PRIx64 ")\n", blob->id, pages[0].id);
 		return -ENOENT;
 	}
 
@@ -1597,7 +1597,7 @@ blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	}
 
 	if (bserrno) {
-		SPDK_ERRLOG("Metadata page %d read failed for blobid %" PRIu64 ": %d\n",
+		SPDK_ERRLOG("Metadata page %d read failed for blobid 0x%" PRIx64 ": %d\n",
 			    current_page, blob->id, bserrno);
 		blob_load_final(ctx, bserrno);
 		return;
@@ -1606,7 +1606,7 @@ blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	page = &ctx->pages[ctx->num_pages - 1];
 	crc = blob_md_page_calc_crc(page);
 	if (crc != page->crc) {
-		SPDK_ERRLOG("Metadata page %d crc mismatch for blobid %" PRIu64 "\n",
+		SPDK_ERRLOG("Metadata page %d crc mismatch for blobid 0x%" PRIx64 "\n",
 			    current_page, blob->id);
 		blob_load_final(ctx, -EINVAL);
 		return;
@@ -5986,7 +5986,7 @@ bs_create_blob(struct spdk_blob_store *bs,
 
 	id = bs_page_to_blobid(page_idx);
 
-	SPDK_DEBUGLOG(blob, "Creating blob with id %" PRIu64 " at page %u\n", id, page_idx);
+	SPDK_DEBUGLOG(blob, "Creating blob with id 0x%" PRIx64 " at page %u\n", id, page_idx);
 
 	spdk_blob_opts_init(&opts_local, sizeof(opts_local));
 	if (opts) {
@@ -6489,8 +6489,8 @@ bs_snapshot_origblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno
 	ctx->original.blob = _blob;
 
 	if (_blob->data_ro || _blob->md_ro) {
-		SPDK_DEBUGLOG(blob, "Cannot create snapshot from read only blob with id %" PRIu64 "\n",
-			      _blob->id);
+		SPDK_DEBUGLOG(blob, "Cannot create snapshot from read only blob with id 0x%"
+			      PRIx64 "\n", _blob->id);
 		ctx->bserrno = -EINVAL;
 		spdk_blob_close(_blob, bs_clone_snapshot_cleanup_finish, ctx);
 		return;
