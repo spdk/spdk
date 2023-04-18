@@ -87,7 +87,7 @@ struct ap_task {
 
 struct worker_thread {
 	struct spdk_io_channel		*ch;
-	uint64_t			xfer_completed;
+	struct spdk_accel_opcode_stats	stats;
 	uint64_t			xfer_failed;
 	uint64_t			injected_miscompares;
 	uint64_t			current_queue_depth;
@@ -270,6 +270,8 @@ unregister_worker(void *arg1)
 {
 	struct worker_thread *worker = arg1;
 
+	spdk_accel_get_opcode_stats(worker->ch, worker->workload,
+				    &worker->stats, sizeof(worker->stats));
 	free(worker->task_base);
 	spdk_put_io_channel(worker->ch);
 	spdk_thread_exit(spdk_get_thread());
@@ -668,7 +670,6 @@ accel_done(void *arg1, int status)
 		worker->xfer_failed++;
 	}
 
-	worker->xfer_completed++;
 	worker->current_queue_depth--;
 
 	if (!worker->is_draining && status == 0) {
@@ -693,11 +694,11 @@ dump_result(void)
 	printf("------------------------------------------------------------------------\n");
 	while (worker != NULL) {
 
-		uint64_t xfer_per_sec = worker->xfer_completed / g_time_in_sec;
-		uint64_t bw_in_MiBps = (worker->xfer_completed * g_xfer_size_bytes) /
+		uint64_t xfer_per_sec = worker->stats.executed / g_time_in_sec;
+		uint64_t bw_in_MiBps = worker->stats.num_bytes /
 				       (g_time_in_sec * 1024 * 1024);
 
-		total_completed += worker->xfer_completed;
+		total_completed += worker->stats.executed;
 		total_failed += worker->xfer_failed;
 		total_miscompared += worker->injected_miscompares;
 
