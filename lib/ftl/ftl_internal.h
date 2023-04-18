@@ -141,7 +141,7 @@ ftl_p2l_validate_ckpt(struct ftl_band *band)
 }
 #endif
 
-int ftl_mngt_p2l_ckpt_get_seq_id(struct spdk_ftl_dev *dev, int md_region);
+uint64_t ftl_mngt_p2l_ckpt_get_seq_id(struct spdk_ftl_dev *dev, int md_region);
 
 int ftl_mngt_p2l_ckpt_restore(struct ftl_band *band, uint32_t md_region, uint64_t seq_id);
 

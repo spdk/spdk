@@ -352,7 +352,7 @@ ftl_mngt_persist_bands_p2l(struct ftl_mngt_process *mngt)
 	ftl_mngt_persist_band_p2l(mngt, ctx);
 }
 
-int
+uint64_t
 ftl_mngt_p2l_ckpt_get_seq_id(struct spdk_ftl_dev *dev, int md_region)
 {
 	struct ftl_layout *layout = &dev->layout;

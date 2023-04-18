@@ -233,9 +233,9 @@ void
 ftl_recover_max_seq(struct spdk_ftl_dev *dev)
 {
 	struct ftl_band *band;
-	size_t band_close_seq_id = 0, band_open_seq_id = 0;
-	size_t chunk_close_seq_id = 0, chunk_open_seq_id = 0;
-	size_t max = 0;
+	uint64_t band_close_seq_id = 0, band_open_seq_id = 0;
+	uint64_t chunk_close_seq_id = 0, chunk_open_seq_id = 0;
+	uint64_t max = 0;
 
 	TAILQ_FOREACH(band, &dev->shut_bands, queue_entry) {
 		band_open_seq_id = spdk_max(band_open_seq_id, band->md->seq);
