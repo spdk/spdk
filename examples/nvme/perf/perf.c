@@ -207,9 +207,9 @@ static bool g_vmd;
 static const char *g_workload_type;
 static TAILQ_HEAD(, ctrlr_entry) g_controllers = TAILQ_HEAD_INITIALIZER(g_controllers);
 static TAILQ_HEAD(, ns_entry) g_namespaces = TAILQ_HEAD_INITIALIZER(g_namespaces);
-static int g_num_namespaces;
+static uint32_t g_num_namespaces;
 static TAILQ_HEAD(, worker_thread) g_workers = TAILQ_HEAD_INITIALIZER(g_workers);
-static int g_num_workers = 0;
+static uint32_t g_num_workers = 0;
 static bool g_use_every_core = false;
 static uint32_t g_main_core;
 static pthread_barrier_t g_worker_sync_barrier;
@@ -2843,6 +2843,9 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	memcpy(opts->hostnqn, trid_entry->hostnqn, sizeof(opts->hostnqn));
 
 	opts->transport_tos = g_transport_tos;
+	if (opts->num_io_queues < g_num_workers * g_nr_io_queues_per_ns) {
+		opts->num_io_queues = g_num_workers * g_nr_io_queues_per_ns;
+	}
 
 	return true;
 }
