@@ -953,6 +953,9 @@ struct spdk_bdev_io {
 		/** Indicates whether the IO is split */
 		bool split;
 
+		/** Retry state (resubmit, re-pull, re-push, etc.) */
+		uint8_t retry_state;
+
 		/** bdev allocated memory associated with this request */
 		void *buf;
 

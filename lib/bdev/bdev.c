@@ -366,6 +366,11 @@ struct spdk_bdev_io_error_stat {
 	uint32_t error_status[-SPDK_MIN_BDEV_IO_STATUS];
 };
 
+enum bdev_io_retry_state {
+	BDEV_IO_RETRY_STATE_INVALID,
+	BDEV_IO_RETRY_STATE_SUBMIT,
+};
+
 #define __bdev_to_io_dev(bdev)		(((char *)bdev) + 1)
 #define __bdev_from_io_dev(io_dev)	((struct spdk_bdev *)(((char *)io_dev) - 1))
 #define __io_ch_to_bdev_ch(io_ch)	((struct spdk_bdev_channel *)spdk_io_channel_get_ctx(io_ch))
@@ -917,7 +922,7 @@ bdev_io_use_accel_sequence(struct spdk_bdev_io *bdev_io)
 
 static inline void
 bdev_queue_nomem_io_head(struct spdk_bdev_shared_resource *shared_resource,
-			 struct spdk_bdev_io *bdev_io)
+			 struct spdk_bdev_io *bdev_io, enum bdev_io_retry_state state)
 {
 	/* Wait for some of the outstanding I/O to complete before we retry any of the nomem_io.
 	 * Normally we will wait for NOMEM_THRESHOLD_COUNT I/O to complete but for low queue depth
@@ -926,17 +931,21 @@ bdev_queue_nomem_io_head(struct spdk_bdev_shared_resource *shared_resource,
 	shared_resource->nomem_threshold = spdk_max((int64_t)shared_resource->io_outstanding / 2,
 					   (int64_t)shared_resource->io_outstanding - NOMEM_THRESHOLD_COUNT);
 
+	assert(state != BDEV_IO_RETRY_STATE_INVALID);
+	bdev_io->internal.retry_state = state;
 	TAILQ_INSERT_HEAD(&shared_resource->nomem_io, bdev_io, internal.link);
 }
 
 static inline void
 bdev_queue_nomem_io_tail(struct spdk_bdev_shared_resource *shared_resource,
-			 struct spdk_bdev_io *bdev_io)
+			 struct spdk_bdev_io *bdev_io, enum bdev_io_retry_state state)
 {
 	/* We only queue IOs at the end of the nomem_io queue if they're submitted by the user while
 	 * the queue isn't empty, so we don't need to update the nomem_threshold here */
 	assert(!TAILQ_EMPTY(&shared_resource->nomem_io));
 
+	assert(state != BDEV_IO_RETRY_STATE_INVALID);
+	bdev_io->internal.retry_state = state;
 	TAILQ_INSERT_TAIL(&shared_resource->nomem_io, bdev_io, internal.link);
 }
 
@@ -1360,7 +1369,16 @@ bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 	while (!TAILQ_EMPTY(&shared_resource->nomem_io)) {
 		bdev_io = TAILQ_FIRST(&shared_resource->nomem_io);
 		TAILQ_REMOVE(&shared_resource->nomem_io, bdev_io, internal.link);
-		bdev_ch_resubmit_io(bdev_ch, bdev_io);
+
+		switch (bdev_io->internal.retry_state) {
+		case BDEV_IO_RETRY_STATE_SUBMIT:
+			bdev_ch_resubmit_io(bdev_ch, bdev_io);
+			break;
+		default:
+			assert(0 && "invalid retry state");
+			break;
+		}
+
 		if (bdev_io == TAILQ_FIRST(&shared_resource->nomem_io)) {
 			/* This IO completed again with NOMEM status, so break the loop and
 			 * don't try anymore.  Note that a bdev_io that fails with NOMEM
@@ -1383,14 +1401,14 @@ _bdev_io_decrement_outstanding(struct spdk_bdev_channel *bdev_ch,
 }
 
 static inline bool
-_bdev_io_handle_no_mem(struct spdk_bdev_io *bdev_io)
+_bdev_io_handle_no_mem(struct spdk_bdev_io *bdev_io, enum bdev_io_retry_state state)
 {
 	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
 	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
 
 	if (spdk_unlikely(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NOMEM)) {
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
-		bdev_queue_nomem_io_head(shared_resource, bdev_io);
+		bdev_queue_nomem_io_head(shared_resource, bdev_io, state);
 
 		/* If bdev module completed an I/O that has an accel sequence with NOMEM status, the
 		 * ownership of that sequence is transferred back to the bdev layer, so we need to
@@ -1429,7 +1447,7 @@ _bdev_io_complete_push_bounce_done(void *ctx, int rc)
 
 	/* Continue with IO completion flow */
 	_bdev_io_decrement_outstanding(bdev_ch, shared_resource);
-	if (spdk_unlikely(_bdev_io_handle_no_mem(bdev_io))) {
+	if (spdk_unlikely(_bdev_io_handle_no_mem(bdev_io, BDEV_IO_RETRY_STATE_INVALID))) {
 		return;
 	}
 
@@ -2507,7 +2525,7 @@ bdev_io_do_submit(struct spdk_bdev_channel *bdev_ch, struct spdk_bdev_io *bdev_i
 		bdev_submit_request(bdev, ch, bdev_io);
 		bdev_io->internal.in_submit_request = false;
 	} else {
-		bdev_queue_nomem_io_tail(shared_resource, bdev_io);
+		bdev_queue_nomem_io_tail(shared_resource, bdev_io, BDEV_IO_RETRY_STATE_SUBMIT);
 	}
 }
 
@@ -6943,7 +6961,7 @@ bdev_io_complete_sequence_cb(void *ctx, int status)
 	}
 
 	_bdev_io_decrement_outstanding(bdev_ch, shared_resource);
-	if (spdk_unlikely(_bdev_io_handle_no_mem(bdev_io))) {
+	if (spdk_unlikely(_bdev_io_handle_no_mem(bdev_io, BDEV_IO_RETRY_STATE_INVALID))) {
 		return;
 	}
 
@@ -6997,7 +7015,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		}
 
 		_bdev_io_decrement_outstanding(bdev_ch, shared_resource);
-		if (spdk_unlikely(_bdev_io_handle_no_mem(bdev_io))) {
+		if (spdk_unlikely(_bdev_io_handle_no_mem(bdev_io, BDEV_IO_RETRY_STATE_SUBMIT))) {
 			return;
 		}
 	}
