@@ -22,9 +22,7 @@ display_help() {
 	echo
 	echo " Usage: ${0##*/} [-b nvme-backing-file] [-n <num-cpus>] [-s <ram-size>] [-x <http-proxy>] [-hvrldcufaoH] <distro>"
 	echo
-	echo "  distro = <centos7 | centos8 | ubuntu1604 | ubuntu1804 | ubuntu2004 | ubuntu2204 | fedora33 |"
-	echo "            fedora34 | fedora35 | fedora36 | fedora37 | freebsd11 | freebsd12 | freebsd13 | arch | "
-	echo "            clearlinux | rocky8>"
+	echo "  distro = <centos7 | ubuntu2004 | ubuntu2204 | fedora37 | fedora38 | freebsd12 | freebsd13 | arch | clearlinux | rocky8>"
 	echo
 	echo "  -s <ram-size> in MB             Default: ${SPDK_VAGRANT_VMRAM}"
 	echo "  -n <num-cpus> 1 to 4            Default: ${SPDK_VAGRANT_VMCPU}"
@@ -65,12 +63,12 @@ display_help() {
 	echo
 	echo " Examples:"
 	echo
-	echo "  $0 -x http://user:password@host:port fedora33"
-	echo "  $0 -s 2048 -n 2 ubuntu16"
+	echo "  $0 -x http://user:password@host:port fedora37"
+	echo "  $0 -s 2048 -n 2 ubuntu2204"
 	echo "  $0 -rv freebsd"
-	echo "  $0 fedora33"
-	echo "  $0 -b /var/lib/libvirt/images/nvme1.img,nvme,/var/lib/libvirt/images/nvme1n1.img fedora33"
-	echo "  $0 -b none fedora33"
+	echo "  $0 fedora37"
+	echo "  $0 -b /var/lib/libvirt/images/nvme1.img,nvme,/var/lib/libvirt/images/nvme1n1.img fedora37"
+	echo "  $0 -b none fedora37"
 	echo
 }
 
@@ -185,10 +183,10 @@ shift "$((OPTIND - 1))" # Discard the options and sentinel --
 SPDK_VAGRANT_DISTRO="$*"
 
 case "${SPDK_VAGRANT_DISTRO}" in
-	centos[78]) ;&
-	ubuntu1[68]04 | ubuntu2[02]04) ;&
-	fedora3[3-7]) ;&
-	freebsd1[1-3]) ;&
+	centos7) ;&
+	ubuntu2[02]04) ;&
+	fedora3[7-8]) ;&
+	freebsd1[2-3]) ;&
 	rocky8) ;&
 	arch | clearlinux) ;;
 	*)

@@ -9,15 +9,10 @@ def get_box_type(distro, force_distro)
 
   distro_to_type = {
     'centos7'    => 'centos/7',
-    'centos8'    => 'centos/8',
-    'ubuntu1604' => 'peru/ubuntu-16.04-server-amd64',
-    'ubuntu1804' => 'peru/ubuntu-18.04-server-amd64',
     'ubuntu2004' => 'peru/ubuntu-20.04-server-amd64',
     'ubuntu2204' => 'generic/ubuntu2204',
-    'fedora33'   => 'generic/fedora33',
-    'fedora34'   => 'generic/fedora34',
-    'fedora35'   => 'generic/fedora35',
-    'fedora36'   => 'generic/fedora36',
+    'fedora37'   => 'generic/fedora37',
+    'fedora38'   => 'generic/fedora38',
     'arch'       => 'generic/arch',
     'freebsd12'  => 'generic/freebsd12',
     'freebsd13'  => 'generic/freebsd13',
@@ -340,8 +335,8 @@ def setup_libvirt(config, vmcpu, vmram, distro)
 end
 
 #################################################################################################
-# Pick the right distro and bootstrap, default is fedora33
-distro = (ENV['SPDK_VAGRANT_DISTRO'] || "fedora33")
+# Pick the right distro and bootstrap, default is fedora37
+distro = (ENV['SPDK_VAGRANT_DISTRO'] || "fedora37")
 provider = (ENV['SPDK_VAGRANT_PROVIDER'] || "virtualbox")
 
 # Get all variables for creating vm
