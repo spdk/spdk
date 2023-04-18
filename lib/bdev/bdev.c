@@ -1283,10 +1283,22 @@ bdev_submit_request(struct spdk_bdev *bdev, struct spdk_io_channel *ioch,
 	bdev->fn_table->submit_request(ioch, bdev_io);
 }
 
+static inline void
+bdev_ch_resubmit_io(struct spdk_bdev_channel *bdev_ch, struct spdk_bdev_io *bdev_io)
+{
+	struct spdk_bdev *bdev = bdev_ch->bdev;
+	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
+
+	bdev_io->internal.ch->io_outstanding++;
+	shared_resource->io_outstanding++;
+	bdev_io->internal.error.nvme.cdw0 = 0;
+	bdev_io->num_retries++;
+	bdev_submit_request(bdev, spdk_bdev_io_get_io_channel(bdev_io), bdev_io);
+}
+
 static void
 bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 {
-	struct spdk_bdev *bdev = bdev_ch->bdev;
 	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
 	struct spdk_bdev_io *bdev_io;
 
@@ -1305,11 +1317,7 @@ bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 	while (!TAILQ_EMPTY(&shared_resource->nomem_io)) {
 		bdev_io = TAILQ_FIRST(&shared_resource->nomem_io);
 		TAILQ_REMOVE(&shared_resource->nomem_io, bdev_io, internal.link);
-		bdev_io->internal.ch->io_outstanding++;
-		shared_resource->io_outstanding++;
-		bdev_io->internal.error.nvme.cdw0 = 0;
-		bdev_io->num_retries++;
-		bdev_submit_request(bdev, spdk_bdev_io_get_io_channel(bdev_io), bdev_io);
+		bdev_ch_resubmit_io(bdev_ch, bdev_io);
 		if (bdev_io == TAILQ_FIRST(&shared_resource->nomem_io)) {
 			/* This IO completed again with NOMEM status, so break the loop and
 			 * don't try anymore.  Note that a bdev_io that fails with NOMEM
