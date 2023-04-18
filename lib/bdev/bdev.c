@@ -1051,17 +1051,9 @@ _bdev_io_pull_buffer_cpl(void *ctx, int rc)
 }
 
 static void
-_bdev_io_pull_bounce_md_buf(struct spdk_bdev_io *bdev_io, void *md_buf, size_t len)
+bdev_io_pull_md_buf(struct spdk_bdev_io *bdev_io)
 {
 	int rc = 0;
-
-	/* save original md_buf */
-	bdev_io->internal.orig_md_iov.iov_base = bdev_io->u.bdev.md_buf;
-	bdev_io->internal.orig_md_iov.iov_len = len;
-	bdev_io->internal.bounce_md_iov.iov_base = md_buf;
-	bdev_io->internal.bounce_md_iov.iov_len = len;
-	/* set bounce md_buf */
-	bdev_io->u.bdev.md_buf = md_buf;
 
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 		if (bdev_io_use_memory_domain(bdev_io)) {
@@ -1078,12 +1070,28 @@ _bdev_io_pull_bounce_md_buf(struct spdk_bdev_io *bdev_io, void *md_buf, size_t l
 			SPDK_ERRLOG("Failed to pull data from memory domain %s, rc %d\n",
 				    spdk_memory_domain_get_dma_device_id(bdev_io->internal.memory_domain), rc);
 		} else {
-			memcpy(md_buf, bdev_io->internal.orig_md_iov.iov_base, bdev_io->internal.orig_md_iov.iov_len);
+			memcpy(bdev_io->internal.bounce_md_iov.iov_base,
+			       bdev_io->internal.orig_md_iov.iov_base,
+			       bdev_io->internal.orig_md_iov.iov_len);
 		}
 	}
 
 	assert(bdev_io->internal.data_transfer_cpl);
 	bdev_io->internal.data_transfer_cpl(bdev_io, rc);
+}
+
+static void
+_bdev_io_pull_bounce_md_buf(struct spdk_bdev_io *bdev_io, void *md_buf, size_t len)
+{
+	/* save original md_buf */
+	bdev_io->internal.orig_md_iov.iov_base = bdev_io->u.bdev.md_buf;
+	bdev_io->internal.orig_md_iov.iov_len = len;
+	bdev_io->internal.bounce_md_iov.iov_base = md_buf;
+	bdev_io->internal.bounce_md_iov.iov_len = len;
+	/* set bounce md_buf */
+	bdev_io->u.bdev.md_buf = md_buf;
+
+	bdev_io_pull_md_buf(bdev_io);
 }
 
 static void
