@@ -356,7 +356,7 @@ function install_lcov() {
 }
 
 function install_bpftrace() {
-	local deps=()
+	local deps=() bcc_rev
 
 	deps+=(cereal-devel)
 	deps+=(clang-devel)
@@ -391,6 +391,11 @@ function install_bpftrace() {
 		sed -i -e 's/set(MAX_LLVM_MAJOR 15)/set(MAX_LLVM_MAJOR 16)/g' \
 			"$GIT_REPOS/bpftrace/CMakeLists.txt"
 	fi
+
+	bcc_rev=$(git -C "$GIT_REPOS/bpftrace/bcc" describe --tags --abbrev=0) bcc_rev=${bcc_rev#v}
+	echo "REVISION:STRING=$bcc_rev" >> "$GIT_REPOS/bpftrace/build/build-libs/bcc/CMakeCache.txt"
+
+
 	# Use build-libs.sh to build necessary libraries in the bpftrace tree
 	(cd $GIT_REPOS/bpftrace/build && ../build-libs.sh)
 
