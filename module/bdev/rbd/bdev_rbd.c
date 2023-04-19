@@ -38,11 +38,8 @@ struct bdev_rbd {
 	rbd_image_t image;
 
 	rbd_image_info_t info;
-	pthread_mutex_t mutex;
 	struct spdk_thread *main_td;
 	struct spdk_thread *destruct_td;
-	uint32_t ch_count;
-	struct spdk_io_channel *group_ch;
 
 	TAILQ_ENTRY(bdev_rbd) tailq;
 	struct spdk_poller *reset_timer;
@@ -51,6 +48,7 @@ struct bdev_rbd {
 
 struct bdev_rbd_io_channel {
 	struct bdev_rbd *disk;
+	struct spdk_io_channel *group_ch;
 };
 
 struct bdev_rbd_io {
@@ -124,6 +122,11 @@ bdev_rbd_free(struct bdev_rbd *rbd)
 		return;
 	}
 
+	if (rbd->image) {
+		rbd_flush(rbd->image);
+		rbd_close(rbd->image);
+	}
+
 	free(rbd->disk.name);
 	free(rbd->rbd_name);
 	free(rbd->user_id);
@@ -141,7 +144,6 @@ bdev_rbd_free(struct bdev_rbd *rbd)
 		rados_shutdown(rbd->cluster);
 	}
 
-	pthread_mutex_destroy(&rbd->mutex);
 	free(rbd);
 }
 
@@ -300,7 +302,6 @@ bdev_rbd_init_context(void *arg)
 	}
 
 	rc = rbd_stat(rbd->image, &rbd->info, sizeof(rbd->info));
-	rbd_close(rbd->image);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to stat specified rbd device\n");
 		return NULL;
@@ -336,14 +337,9 @@ bdev_rbd_init(struct bdev_rbd *rbd)
 		return -1;
 	}
 
-	return ret;
-}
+	rbd->main_td = spdk_get_thread();
 
-static void
-bdev_rbd_exit(rbd_image_t image)
-{
-	rbd_flush(image);
-	rbd_close(image);
+	return ret;
 }
 
 static void
@@ -534,7 +530,6 @@ _bdev_rbd_destruct_done(void *io_device)
 	struct bdev_rbd *rbd = io_device;
 
 	assert(rbd != NULL);
-	assert(rbd->ch_count == 0);
 
 	spdk_bdev_destruct_done(&rbd->disk, 0);
 	bdev_rbd_free(rbd);
@@ -593,14 +588,12 @@ static void
 bdev_rbd_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		    bool success)
 {
-	struct bdev_rbd *disk = (struct bdev_rbd *)bdev_io->bdev->ctxt;
-
 	if (!success) {
 		bdev_rbd_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
 
-	spdk_thread_exec_msg(disk->main_td, bdev_rbd_start_aio, bdev_io);
+	bdev_rbd_start_aio(bdev_io);
 }
 
 static void
@@ -621,7 +614,7 @@ bdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
-		spdk_thread_exec_msg(disk->main_td, bdev_rbd_start_aio, bdev_io);
+		bdev_rbd_start_aio(bdev_io);
 		break;
 
 	case SPDK_BDEV_IO_TYPE_RESET:
@@ -652,121 +645,25 @@ bdev_rbd_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	}
 }
 
-static void
-bdev_rbd_free_channel_resources(struct bdev_rbd *disk)
-{
-	assert(disk != NULL);
-	assert(disk->main_td == spdk_get_thread());
-	assert(disk->ch_count == 0);
-
-	spdk_put_io_channel(disk->group_ch);
-	if (disk->image) {
-		bdev_rbd_exit(disk->image);
-	}
-
-	disk->main_td = NULL;
-	disk->group_ch = NULL;
-}
-
-static void *
-bdev_rbd_handle(void *arg)
-{
-	struct bdev_rbd *disk = arg;
-	void *ret = arg;
-
-	if (rbd_open(disk->io_ctx, disk->rbd_name, &disk->image, NULL) < 0) {
-		SPDK_ERRLOG("Failed to open specified rbd device\n");
-		ret = NULL;
-	}
-
-	return ret;
-}
-
-static int
-_bdev_rbd_create_cb(struct bdev_rbd *disk)
-{
-	disk->group_ch = spdk_get_io_channel(&rbd_if);
-	assert(disk->group_ch != NULL);
-
-	if (spdk_call_unaffinitized(bdev_rbd_handle, disk) == NULL) {
-		bdev_rbd_free_channel_resources(disk);
-		return -1;
-	}
-
-	return 0;
-}
-
 static int
 bdev_rbd_create_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_rbd_io_channel *ch = ctx_buf;
 	struct bdev_rbd *disk = io_device;
-	int rc;
 
 	ch->disk = disk;
-	pthread_mutex_lock(&disk->mutex);
-	if (disk->ch_count == 0) {
-		assert(disk->main_td == NULL);
-		rc = _bdev_rbd_create_cb(disk);
-		if (rc) {
-			SPDK_ERRLOG("Cannot create channel for disk=%p\n", disk);
-			pthread_mutex_unlock(&disk->mutex);
-			return rc;
-		}
-
-		disk->main_td = spdk_get_thread();
-	}
-
-	disk->ch_count++;
-	pthread_mutex_unlock(&disk->mutex);
+	ch->group_ch = spdk_get_io_channel(&rbd_if);
+	assert(ch->group_ch != NULL);
 
 	return 0;
 }
 
 static void
-_bdev_rbd_destroy_cb(void *ctx)
-{
-	struct bdev_rbd *disk = ctx;
-
-	pthread_mutex_lock(&disk->mutex);
-	assert(disk->ch_count > 0);
-	disk->ch_count--;
-
-	if (disk->ch_count > 0) {
-		/* A new channel was created between when message was sent and this function executed */
-		pthread_mutex_unlock(&disk->mutex);
-		return;
-	}
-
-	bdev_rbd_free_channel_resources(disk);
-	pthread_mutex_unlock(&disk->mutex);
-}
-
-static void
 bdev_rbd_destroy_cb(void *io_device, void *ctx_buf)
 {
-	struct bdev_rbd *disk = io_device;
-	struct spdk_thread *thread;
+	struct bdev_rbd_io_channel *ch = ctx_buf;
 
-	pthread_mutex_lock(&disk->mutex);
-	assert(disk->ch_count > 0);
-	disk->ch_count--;
-	if (disk->ch_count == 0) {
-		assert(disk->main_td != NULL);
-		if (disk->main_td != spdk_get_thread()) {
-			/* The final channel was destroyed on a different thread
-			 * than where the first channel was created. Pass a message
-			 * to the main thread to unregister the poller. */
-			disk->ch_count++;
-			thread = disk->main_td;
-			pthread_mutex_unlock(&disk->mutex);
-			spdk_thread_send_msg(thread, _bdev_rbd_destroy_cb, disk);
-			return;
-		}
-
-		bdev_rbd_free_channel_resources(disk);
-	}
-	pthread_mutex_unlock(&disk->mutex);
+	spdk_put_io_channel(ch->group_ch);
 }
 
 static struct spdk_io_channel *
@@ -1175,13 +1072,6 @@ bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
 	if (rbd == NULL) {
 		SPDK_ERRLOG("Failed to allocate bdev_rbd struct\n");
 		return -ENOMEM;
-	}
-
-	ret = pthread_mutex_init(&rbd->mutex, NULL);
-	if (ret) {
-		SPDK_ERRLOG("Cannot init mutex on rbd=%p\n", rbd->disk.name);
-		free(rbd);
-		return ret;
 	}
 
 	rbd->rbd_name = strdup(rbd_name);
