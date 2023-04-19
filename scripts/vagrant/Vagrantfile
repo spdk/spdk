@@ -83,11 +83,20 @@ def copy_vagrant_tools(config,files_sync_backend)
   config.vm.synced_folder src_path, "/home/vagrant/tools", files_sync_backend
 end
 
-def copy_spdk_dir(config, files_sync_backend)
+def copy_sources_dirs(config, files_sync_backend)
   return unless ENV['COPY_SPDK_DIR'] == "1"
   return unless ENV['SPDK_DIR']
 
-  config.vm.synced_folder ENV['SPDK_DIR'], '/home/vagrant/spdk_repo/spdk', files_sync_backend
+  repo_prefix = '/home/vagrant/spdk_repo'
+  config.vm.synced_folder ENV['SPDK_DIR'], "#{repo_prefix}/spdk", files_sync_backend
+
+  # Optional directories
+  for dir in ['spdk-abi', 'dpdk']
+    src_path = "#{ENV['SPDK_DIR']}/../#{dir}"
+    next unless File.directory?(File.expand_path(src_path))
+
+    config.vm.synced_folder src_path, "#{repo_prefix}/#{dir}", files_sync_backend
+  end
 end
 
 def copy_spdk_artifacts(config, plugins_sync_backend)
@@ -344,7 +353,7 @@ Vagrant.configure(2) do |config|
   # Copy in the user's tools if they exists
   copy_vagrant_tools(config,files_sync_backend)
 
-  copy_spdk_dir(config, files_sync_backend)
+  copy_sources_dirs(config, files_sync_backend)
 
   # rsync artifacts from build
   copy_spdk_artifacts(config, plugins_sync_backend)
