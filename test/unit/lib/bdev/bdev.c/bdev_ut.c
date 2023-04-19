@@ -5795,7 +5795,7 @@ bdev_io_ext_bounce_buffer(void)
 	struct spdk_io_channel *io_ch;
 	char io_buf[512];
 	struct iovec iov = { .iov_base = io_buf, .iov_len = 512 };
-	struct ut_expected_io *expected_io;
+	struct ut_expected_io *expected_io, *aux_io;
 	struct spdk_bdev_ext_io_opts ext_io_opts = {
 		.metadata = (void *)0xFF000000,
 		.size = sizeof(ext_io_opts)
@@ -5846,6 +5846,38 @@ bdev_io_ext_bounce_buffer(void)
 	CU_ASSERT(g_memory_domain_pull_data_called == true);
 	CU_ASSERT(g_io_done == false);
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == true);
+
+	/* Verify the request is queued after receiving ENOMEM from pull */
+	g_io_done = false;
+	aux_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 32, 14, 1);
+	ut_expected_io_set_iov(aux_io, 0, iov.iov_base, iov.iov_len);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, aux_io, link);
+	rc = spdk_bdev_writev_blocks(desc, io_ch, &iov, 1, 32, 14, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 32, 14, 1);
+	ut_expected_io_set_iov(expected_io, 0, iov.iov_base, iov.iov_len);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	MOCK_SET(spdk_memory_domain_pull_data, -ENOMEM);
+	rc = spdk_bdev_writev_blocks_ext(desc, io_ch, &iov, 1, 32, 14, io_done, NULL, &ext_io_opts);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+	/* The second IO has been queued */
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+
+	MOCK_CLEAR(spdk_memory_domain_pull_data);
+	g_memory_domain_pull_data_called = false;
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_memory_domain_pull_data_called == true);
+	/* The second IO should be submitted now */
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	g_io_done = false;
 	stub_complete_io(1);
 	CU_ASSERT(g_io_done == true);
 

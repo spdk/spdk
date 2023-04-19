@@ -368,6 +368,8 @@ struct spdk_bdev_io_error_stat {
 
 enum bdev_io_retry_state {
 	BDEV_IO_RETRY_STATE_INVALID,
+	BDEV_IO_RETRY_STATE_PULL,
+	BDEV_IO_RETRY_STATE_PULL_MD,
 	BDEV_IO_RETRY_STATE_SUBMIT,
 };
 
@@ -413,6 +415,8 @@ static bool bdev_abort_buf_io(struct spdk_bdev_mgmt_channel *ch, struct spdk_bde
 static bool claim_type_is_v2(enum spdk_bdev_claim_type type);
 static void bdev_desc_release_claims(struct spdk_bdev_desc *desc);
 static void claim_reset(struct spdk_bdev *bdev);
+
+static void bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch);
 
 #define bdev_get_ext_io_opt(opts, field, defval) \
 	(((opts) != NULL && offsetof(struct spdk_bdev_ext_io_opts, field) + \
@@ -1061,6 +1065,11 @@ bdev_io_exec_sequence_cb(void *ctx, int status)
 
 	TAILQ_REMOVE(&bdev_io->internal.ch->io_accel_exec, bdev_io, internal.link);
 	bdev_io_decrement_outstanding(ch, ch->shared_resource);
+
+	if (spdk_unlikely(!TAILQ_EMPTY(&ch->shared_resource->nomem_io))) {
+		bdev_ch_retry_io(ch);
+	}
+
 	bdev_io->internal.data_transfer_cpl(bdev_io, status);
 }
 
@@ -1126,6 +1135,11 @@ bdev_io_pull_md_buf_done(void *ctx, int status)
 
 	TAILQ_REMOVE(&ch->io_memory_domain, bdev_io, internal.link);
 	bdev_io_decrement_outstanding(ch, ch->shared_resource);
+
+	if (spdk_unlikely(!TAILQ_EMPTY(&ch->shared_resource->nomem_io))) {
+		bdev_ch_retry_io(ch);
+	}
+
 	assert(bdev_io->internal.data_transfer_cpl);
 	bdev_io->internal.data_transfer_cpl(bdev_io, status);
 }
@@ -1151,8 +1165,11 @@ bdev_io_pull_md_buf(struct spdk_bdev_io *bdev_io)
 			}
 			bdev_io_decrement_outstanding(ch, ch->shared_resource);
 			TAILQ_REMOVE(&ch->io_memory_domain, bdev_io, internal.link);
-			SPDK_ERRLOG("Failed to pull data from memory domain %s, rc %d\n",
-				    spdk_memory_domain_get_dma_device_id(bdev_io->internal.memory_domain), rc);
+			if (rc != -ENOMEM) {
+				SPDK_ERRLOG("Failed to pull data from memory domain %s, rc %d\n",
+					    spdk_memory_domain_get_dma_device_id(
+						    bdev_io->internal.memory_domain), rc);
+			}
 		} else {
 			memcpy(bdev_io->internal.bounce_md_iov.iov_base,
 			       bdev_io->internal.orig_md_iov.iov_base,
@@ -1160,8 +1177,12 @@ bdev_io_pull_md_buf(struct spdk_bdev_io *bdev_io)
 		}
 	}
 
-	assert(bdev_io->internal.data_transfer_cpl);
-	bdev_io->internal.data_transfer_cpl(bdev_io, rc);
+	if (spdk_unlikely(rc == -ENOMEM)) {
+		bdev_queue_nomem_io_head(ch->shared_resource, bdev_io, BDEV_IO_RETRY_STATE_PULL_MD);
+	} else {
+		assert(bdev_io->internal.data_transfer_cpl);
+		bdev_io->internal.data_transfer_cpl(bdev_io, rc);
+	}
 }
 
 static void
@@ -1228,6 +1249,10 @@ _bdev_io_pull_bounce_data_buf_done(void *ctx, int status)
 	TAILQ_REMOVE(&ch->io_memory_domain, bdev_io, internal.link);
 	bdev_io_decrement_outstanding(ch, ch->shared_resource);
 
+	if (spdk_unlikely(!TAILQ_EMPTY(&ch->shared_resource->nomem_io))) {
+		bdev_ch_retry_io(ch);
+	}
+
 	bdev_io_pull_bounce_data_buf_done(ctx, status);
 }
 
@@ -1261,7 +1286,7 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 						    NULL, NULL, 0, NULL, NULL);
 		}
 
-		if (spdk_unlikely(rc != 0)) {
+		if (spdk_unlikely(rc != 0 && rc != -ENOMEM)) {
 			SPDK_ERRLOG("Failed to append copy to accel sequence: %p\n",
 				    bdev_io->internal.accel_sequence);
 		}
@@ -1283,8 +1308,11 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 			}
 			TAILQ_REMOVE(&ch->io_memory_domain, bdev_io, internal.link);
 			bdev_io_decrement_outstanding(ch, ch->shared_resource);
-			SPDK_ERRLOG("Failed to pull data from memory domain %s\n",
-				    spdk_memory_domain_get_dma_device_id(bdev_io->internal.memory_domain));
+			if (rc != -ENOMEM) {
+				SPDK_ERRLOG("Failed to pull data from memory domain %s\n",
+					    spdk_memory_domain_get_dma_device_id(
+						    bdev_io->internal.memory_domain));
+			}
 		} else {
 			assert(bdev_io->u.bdev.iovcnt == 1);
 			spdk_copy_iovs_to_buf(bdev_io->u.bdev.iovs[0].iov_base,
@@ -1294,13 +1322,19 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 		}
 	}
 
-	bdev_io_pull_bounce_data_buf_done(bdev_io, rc);
+	if (spdk_unlikely(rc == -ENOMEM)) {
+		bdev_queue_nomem_io_head(ch->shared_resource, bdev_io, BDEV_IO_RETRY_STATE_PULL);
+	} else {
+		bdev_io_pull_bounce_data_buf_done(bdev_io, rc);
+	}
 }
 
 static void
 _bdev_io_pull_bounce_data_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len,
 			      bdev_copy_bounce_buffer_cpl cpl_cb)
 {
+	struct spdk_bdev_shared_resource *shared_resource = bdev_io->internal.ch->shared_resource;
+
 	bdev_io->internal.data_transfer_cpl = cpl_cb;
 	/* save original iovec */
 	bdev_io->internal.orig_iovs = bdev_io->u.bdev.iovs;
@@ -1312,7 +1346,11 @@ _bdev_io_pull_bounce_data_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t le
 	bdev_io->u.bdev.iovs[0].iov_base = buf;
 	bdev_io->u.bdev.iovs[0].iov_len = len;
 
-	bdev_io_pull_data(bdev_io);
+	if (spdk_unlikely(!TAILQ_EMPTY(&shared_resource->nomem_io))) {
+		bdev_queue_nomem_io_tail(shared_resource, bdev_io, BDEV_IO_RETRY_STATE_PULL);
+	} else {
+		bdev_io_pull_data(bdev_io);
+	}
 }
 
 static void
@@ -1437,6 +1475,12 @@ bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 		switch (bdev_io->internal.retry_state) {
 		case BDEV_IO_RETRY_STATE_SUBMIT:
 			bdev_ch_resubmit_io(bdev_ch, bdev_io);
+			break;
+		case BDEV_IO_RETRY_STATE_PULL:
+			bdev_io_pull_data(bdev_io);
+			break;
+		case BDEV_IO_RETRY_STATE_PULL_MD:
+			bdev_io_pull_md_buf(bdev_io);
 			break;
 		default:
 			assert(0 && "invalid retry state");
