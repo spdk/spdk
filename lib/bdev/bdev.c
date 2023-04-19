@@ -1550,7 +1550,7 @@ _bdev_io_complete_push_bounce_done(void *ctx, int rc)
 }
 
 static void
-_bdev_io_push_bounce_md_buffer_done(void *ctx, int rc)
+_bdev_io_push_bounce_md_buf_done(void *ctx, int rc)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
 	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
@@ -1561,7 +1561,7 @@ _bdev_io_push_bounce_md_buffer_done(void *ctx, int rc)
 }
 
 static inline void
-_bdev_io_push_bounce_md_buffer(struct spdk_bdev_io *bdev_io)
+bdev_io_push_bounce_md_buf(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 	int rc = 0;
@@ -1581,7 +1581,7 @@ _bdev_io_push_bounce_md_buffer(struct spdk_bdev_io *bdev_io)
 								  &bdev_io->internal.orig_md_iov,
 								  (uint32_t)bdev_io->internal.orig_iovcnt,
 								  &bdev_io->internal.bounce_md_iov, 1,
-								  _bdev_io_push_bounce_md_buffer_done,
+								  _bdev_io_push_bounce_md_buf_done,
 								  bdev_io);
 				if (rc == 0) {
 					/* Continue IO completion in async callback */
@@ -1624,18 +1624,17 @@ _bdev_io_push_bounce_data_buffer_done(void *ctx, int rc)
 	bdev_io->internal.orig_iovcnt = 0;
 	bdev_io->internal.orig_iovs = NULL;
 
-	_bdev_io_push_bounce_md_buffer(bdev_io);
+	bdev_io_push_bounce_md_buf(bdev_io);
 }
 
 static inline void
-_bdev_io_push_bounce_data_buffer(struct spdk_bdev_io *bdev_io, bdev_copy_bounce_buffer_cpl cpl_cb)
+bdev_io_push_bounce_data(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 	int rc = 0;
 
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	TAILQ_INSERT_TAIL(&ch->io_memory_domain, bdev_io, internal.link);
-	bdev_io->internal.data_transfer_cpl = cpl_cb;
 	bdev_io_increment_outstanding(ch, ch->shared_resource);
 
 	/* if this is read path, copy data from bounce buffer to original buffer */
@@ -1664,6 +1663,13 @@ _bdev_io_push_bounce_data_buffer(struct spdk_bdev_io *bdev_io, bdev_copy_bounce_
 	}
 
 	_bdev_io_push_bounce_data_buffer_done(bdev_io, rc);
+}
+
+static inline void
+_bdev_io_push_bounce_data_buffer(struct spdk_bdev_io *bdev_io, bdev_copy_bounce_buffer_cpl cpl_cb)
+{
+	bdev_io->internal.data_transfer_cpl = cpl_cb;
+	bdev_io_push_bounce_data(bdev_io);
 }
 
 static void
