@@ -1341,6 +1341,8 @@ bdev_nvme_io_complete(struct nvme_bdev_io *bio, int rc)
 	struct nvme_bdev_channel *nbdev_ch;
 	enum spdk_bdev_io_status io_status;
 
+	assert(!bdev_nvme_io_type_is_admin(bdev_io->type));
+
 	switch (rc) {
 	case 0:
 		io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
@@ -1371,7 +1373,7 @@ bdev_nvme_io_complete(struct nvme_bdev_io *bio, int rc)
 }
 
 static inline void
-bdev_nvme_admin_passthru_complete(struct nvme_bdev_io *bio, int rc)
+bdev_nvme_admin_complete(struct nvme_bdev_io *bio, int rc)
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 	enum spdk_bdev_io_status io_status;
@@ -2467,10 +2469,12 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 	case SPDK_BDEV_IO_TYPE_RESET:
 		nbdev_io->io_path = NULL;
 		bdev_nvme_reset_io(nbdev_ch, nbdev_io);
-		break;
+		return;
+
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		bdev_nvme_io_complete(nbdev_io, 0);
-		break;
+		return;
+
 	case SPDK_BDEV_IO_TYPE_ZONE_APPEND:
 		rc = bdev_nvme_zone_appendv(nbdev_io,
 					    bdev_io->u.bdev.iovs,
@@ -2498,7 +2502,8 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 					 &bdev_io->u.nvme_passthru.cmd,
 					 bdev_io->u.nvme_passthru.buf,
 					 bdev_io->u.nvme_passthru.nbytes);
-		break;
+		return;
+
 	case SPDK_BDEV_IO_TYPE_NVME_IO:
 		rc = bdev_nvme_io_passthru(nbdev_io,
 					   &bdev_io->u.nvme_passthru.cmd,
@@ -2519,7 +2524,8 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 		bdev_nvme_abort(nbdev_ch,
 				nbdev_io,
 				nbdev_io_to_abort);
-		break;
+		return;
+
 	case SPDK_BDEV_IO_TYPE_COPY:
 		rc = bdev_nvme_copy(nbdev_io,
 				    bdev_io->u.bdev.offset_blocks,
@@ -7062,7 +7068,7 @@ bdev_nvme_admin_passthru(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io
 	}
 
 err:
-	bdev_nvme_admin_passthru_complete(bio, rc);
+	bdev_nvme_admin_complete(bio, rc);
 }
 
 static int
@@ -7123,14 +7129,13 @@ static void
 bdev_nvme_abort(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio,
 		struct nvme_bdev_io *bio_to_abort)
 {
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 	struct nvme_io_path *io_path;
 	struct nvme_ctrlr *nvme_ctrlr;
 	int rc = 0;
 
 	rc = bdev_nvme_abort_retry_io(nbdev_ch, bio_to_abort);
 	if (rc == 0) {
-		__bdev_nvme_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS, NULL);
+		bdev_nvme_admin_complete(bio, 0);
 		return;
 	}
 
@@ -7166,7 +7171,7 @@ bdev_nvme_abort(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio,
 		/* If no command was found or there was any error, complete the abort
 		 * request with failure.
 		 */
-		__bdev_nvme_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED, NULL);
+		bdev_nvme_admin_complete(bio, rc);
 	}
 }
 
