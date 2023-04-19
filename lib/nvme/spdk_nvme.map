@@ -124,6 +124,7 @@
 	spdk_nvme_poll_group_remove;
 	spdk_nvme_poll_group_destroy;
 	spdk_nvme_poll_group_process_completions;
+	spdk_nvme_poll_group_all_connected;
 	spdk_nvme_poll_group_get_ctx;
 
 	spdk_nvme_ns_get_data;

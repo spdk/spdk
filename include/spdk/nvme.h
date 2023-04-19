@@ -2694,6 +2694,24 @@ int64_t spdk_nvme_poll_group_process_completions(struct spdk_nvme_poll_group *gr
 		uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb);
 
 /**
+ * Check if all qpairs in the poll group are connected.
+ *
+ * This function allows the caller to check if all qpairs in a poll group are
+ * connected. This API is generally only suitable during application startup,
+ * to check when a large number of async connections have completed.
+ *
+ * It is useful for applications like benchmarking tools to create
+ * a large number of qpairs, but then ensuring they are all fully connected before
+ * proceeding with I/O.
+ *
+ * \param group The group on which to poll connecting qpairs.
+ *
+ * return 0 if all qpairs are in CONNECTED state, -EIO if any connections failed to connect, -EAGAIN if
+ * any qpairs are still trying to connected.
+ */
+int spdk_nvme_poll_group_all_connected(struct spdk_nvme_poll_group *group);
+
+/**
  * Retrieve the user context for this specific poll group.
  *
  * \param group The poll group from which to retrieve the context.

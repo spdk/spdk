@@ -140,6 +140,36 @@ spdk_nvme_poll_group_process_completions(struct spdk_nvme_poll_group *group,
 	return error_reason ? error_reason : num_completions;
 }
 
+int
+spdk_nvme_poll_group_all_connected(struct spdk_nvme_poll_group *group)
+{
+	struct spdk_nvme_transport_poll_group *tgroup;
+	struct spdk_nvme_qpair *qpair;
+	int rc = 0;
+
+	STAILQ_FOREACH(tgroup, &group->tgroups, link) {
+		if (!STAILQ_EMPTY(&tgroup->disconnected_qpairs)) {
+			/* Treat disconnected qpairs as highest priority for notification.
+			 * This means we can just return immediately here.
+			 */
+			return -EIO;
+		}
+		STAILQ_FOREACH(qpair, &tgroup->connected_qpairs, poll_group_stailq) {
+			if (nvme_qpair_get_state(qpair) < NVME_QPAIR_CONNECTING) {
+				return -EIO;
+			} else if (nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTING) {
+				rc = -EAGAIN;
+				/* Break so that we can check the remaining transport groups,
+				 * in case any of them have a disconnected qpair.
+				 */
+				break;
+			}
+		}
+	}
+
+	return rc;
+}
+
 void *
 spdk_nvme_poll_group_get_ctx(struct spdk_nvme_poll_group *group)
 {
