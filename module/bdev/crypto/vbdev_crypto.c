@@ -79,6 +79,12 @@ static void
 crypto_io_fail(struct crypto_bdev_io *crypto_io)
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(crypto_io);
+	struct crypto_io_channel *crypto_ch = crypto_io->crypto_ch;
+
+	if (crypto_io->aux_buf_raw) {
+		spdk_accel_put_buf(crypto_ch->accel_channel, crypto_io->aux_buf_raw,
+				   crypto_io->aux_domain, crypto_io->aux_domain_ctx);
+	}
 
 	/* This function can only be used to fail an IO that hasn't been sent to the base bdev,
 	 * otherwise accel sequence might have already been executed/aborted. */
@@ -116,16 +122,6 @@ crypto_write(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io)
 	}
 }
 
-static void
-crypto_encrypt_cb(void *cb_arg)
-{
-	struct crypto_bdev_io *crypto_io = cb_arg;
-	struct crypto_io_channel *crypto_ch = crypto_io->crypto_ch;
-
-	spdk_accel_put_buf(crypto_ch->accel_channel, crypto_io->aux_buf_raw,
-			   crypto_io->aux_domain, crypto_io->aux_domain_ctx);
-}
-
 /* We're either encrypting on the way down or decrypting on the way back. */
 static void
 crypto_encrypt(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io)
@@ -157,7 +153,7 @@ crypto_encrypt(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io
 				       bdev_io->u.bdev.memory_domain,
 				       bdev_io->u.bdev.memory_domain_ctx,
 				       bdev_io->u.bdev.offset_blocks, crypto_len, 0,
-				       crypto_encrypt_cb, crypto_io);
+				       NULL, NULL);
 	if (spdk_unlikely(rc != 0)) {
 		spdk_accel_put_buf(crypto_ch->accel_channel, crypto_io->aux_buf_raw,
 				   crypto_io->aux_domain, crypto_io->aux_domain_ctx);
@@ -179,7 +175,14 @@ static void
 _complete_internal_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *orig_io = cb_arg;
+	struct crypto_bdev_io *crypto_io = (struct crypto_bdev_io *)orig_io->driver_ctx;
+	struct crypto_io_channel *crypto_ch = crypto_io->crypto_ch;
 	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+
+	if (crypto_io->aux_buf_raw) {
+		spdk_accel_put_buf(crypto_ch->accel_channel, crypto_io->aux_buf_raw,
+				   crypto_io->aux_domain, crypto_io->aux_domain_ctx);
+	}
 
 	spdk_bdev_io_complete(orig_io, status);
 	spdk_bdev_free_io(bdev_io);
