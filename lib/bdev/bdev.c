@@ -1024,7 +1024,6 @@ bdev_io_submit_sequence_cb(void *ctx, int status)
 
 	bdev_io->u.bdev.accel_sequence = NULL;
 	bdev_io->internal.accel_sequence = NULL;
-	TAILQ_REMOVE(&bdev_io->internal.ch->io_accel_exec, bdev_io, internal.link);
 
 	if (spdk_unlikely(status != 0)) {
 		SPDK_ERRLOG("Failed to execute accel sequence, status=%d\n", status);
@@ -1037,7 +1036,16 @@ bdev_io_submit_sequence_cb(void *ctx, int status)
 }
 
 static void
-bdev_io_exec_sequence(struct spdk_bdev_io *bdev_io, spdk_accel_completion_cb cb_fn)
+bdev_io_exec_sequence_cb(void *ctx, int status)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+
+	TAILQ_REMOVE(&bdev_io->internal.ch->io_accel_exec, bdev_io, internal.link);
+	bdev_io->internal.data_transfer_cpl(bdev_io, status);
+}
+
+static void
+bdev_io_exec_sequence(struct spdk_bdev_io *bdev_io, void (*cb_fn)(void *ctx, int status))
 {
 	assert(bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io));
 	assert(bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE || bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
@@ -1051,7 +1059,10 @@ bdev_io_exec_sequence(struct spdk_bdev_io *bdev_io, spdk_accel_completion_cb cb_
 	}
 
 	TAILQ_INSERT_TAIL(&bdev_io->internal.ch->io_accel_exec, bdev_io, internal.link);
-	spdk_accel_sequence_finish(bdev_io->internal.accel_sequence, cb_fn, bdev_io);
+	bdev_io->internal.data_transfer_cpl = cb_fn;
+
+	spdk_accel_sequence_finish(bdev_io->internal.accel_sequence,
+				   bdev_io_exec_sequence_cb, bdev_io);
 }
 
 static void
@@ -3105,8 +3116,6 @@ bdev_io_complete_parent_sequence_cb(void *ctx, int status)
 	/* u.bdev.accel_sequence should have already been cleared at this point */
 	assert(bdev_io->u.bdev.accel_sequence == NULL);
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
-
-	TAILQ_REMOVE(&bdev_io->internal.ch->io_accel_exec, bdev_io, internal.link);
 	bdev_io->internal.accel_sequence = NULL;
 
 	if (spdk_unlikely(status != 0)) {
@@ -6969,8 +6978,6 @@ bdev_io_complete_sequence_cb(void *ctx, int status)
 	/* u.bdev.accel_sequence should have already been cleared at this point */
 	assert(bdev_io->u.bdev.accel_sequence == NULL);
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
-
-	TAILQ_REMOVE(&bdev_io->internal.ch->io_accel_exec, bdev_io, internal.link);
 	bdev_io->internal.accel_sequence = NULL;
 
 	if (spdk_unlikely(status != 0)) {
