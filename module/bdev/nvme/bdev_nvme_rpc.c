@@ -165,6 +165,7 @@ struct rpc_bdev_nvme_attach_controller {
 	enum bdev_nvme_multipath_mode multipath;
 	struct nvme_ctrlr_opts bdev_opts;
 	struct spdk_nvme_ctrlr_opts drv_opts;
+	uint32_t max_bdevs;
 };
 
 static void
@@ -257,13 +258,13 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_attach_controller_dec
 	{"reconnect_delay_sec", offsetof(struct rpc_bdev_nvme_attach_controller, bdev_opts.reconnect_delay_sec), spdk_json_decode_uint32, true},
 	{"fast_io_fail_timeout_sec", offsetof(struct rpc_bdev_nvme_attach_controller, bdev_opts.fast_io_fail_timeout_sec), spdk_json_decode_uint32, true},
 	{"psk", offsetof(struct rpc_bdev_nvme_attach_controller, psk), spdk_json_decode_string, true},
+	{"max_bdevs", offsetof(struct rpc_bdev_nvme_attach_controller, max_bdevs), spdk_json_decode_uint32, true},
 };
 
-#define NVME_MAX_BDEVS_PER_RPC 128
+#define DEFAULT_MAX_BDEVS_PER_RPC 128
 
 struct rpc_bdev_nvme_attach_controller_ctx {
 	struct rpc_bdev_nvme_attach_controller req;
-	uint32_t count;
 	size_t bdev_count;
 	const char **names;
 	struct spdk_jsonrpc_request *request;
@@ -336,6 +337,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	/* For now, initialize the multipath parameter to add a failover path. This maintains backward
 	 * compatibility with past behavior. In the future, this behavior will change to "disable". */
 	ctx->req.multipath = BDEV_NVME_MP_MODE_FAILOVER;
+	ctx->req.max_bdevs = DEFAULT_MAX_BDEVS_PER_RPC;
 
 	if (spdk_json_decode_object(params, rpc_bdev_nvme_attach_controller_decoders,
 				    SPDK_COUNTOF(rpc_bdev_nvme_attach_controller_decoders),
@@ -346,7 +348,12 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	ctx->names = calloc(NVME_MAX_BDEVS_PER_RPC, sizeof(char *));
+	if (ctx->req.max_bdevs == 0) {
+		spdk_jsonrpc_send_error_response(request, -EINVAL, "max_bdevs cannot be zero");
+		goto cleanup;
+	}
+
+	ctx->names = calloc(ctx->req.max_bdevs, sizeof(char *));
 	if (ctx->names == NULL) {
 		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
 		goto cleanup;
@@ -517,10 +524,9 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	}
 
 	ctx->request = request;
-	ctx->count = NVME_MAX_BDEVS_PER_RPC;
 	/* Should already be zero due to the calloc(), but set explicitly for clarity. */
 	ctx->req.bdev_opts.from_discovery_service = false;
-	rc = bdev_nvme_create(&trid, ctx->req.name, ctx->names, ctx->count,
+	rc = bdev_nvme_create(&trid, ctx->req.name, ctx->names, ctx->req.max_bdevs,
 			      rpc_bdev_nvme_attach_controller_done, ctx, &ctx->req.drv_opts,
 			      &ctx->req.bdev_opts, multipath);
 	if (rc) {
