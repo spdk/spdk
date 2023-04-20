@@ -1178,7 +1178,8 @@ _sock_check_zcopy(struct spdk_sock *sock)
 		 * we encounter one match we can stop looping as soon as a
 		 * non-match is found.
 		 */
-		for (idx = serr->ee_info; idx <= serr->ee_data; idx++) {
+		idx = serr->ee_info;
+		while (true) {
 			found = false;
 			TAILQ_FOREACH_SAFE(req, &sock->pending_reqs, internal.link, treq) {
 				if (!req->internal.is_zcopy) {
@@ -1196,6 +1197,16 @@ _sock_check_zcopy(struct spdk_sock *sock)
 				} else if (found) {
 					break;
 				}
+			}
+
+			if (idx == serr->ee_data) {
+				break;
+			}
+
+			if (idx == UINT32_MAX) {
+				idx = 0;
+			} else {
+				idx++;
 			}
 		}
 	}
