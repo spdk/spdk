@@ -2460,6 +2460,7 @@ spdk_accel_module_finish(void)
 
 	if (!g_accel_module) {
 		spdk_spin_destroy(&g_keyring_spin);
+		spdk_spin_destroy(&g_stats_lock);
 		accel_module_finish_cb();
 		return;
 	}
