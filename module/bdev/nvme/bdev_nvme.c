@@ -1738,25 +1738,27 @@ bdev_nvme_failover_trid(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 
 	path_id->is_failed = true;
 
-	if (next_path) {
-		assert(path_id->trid.trtype != SPDK_NVME_TRANSPORT_PCIE);
+	if (next_path == NULL) {
+		return;
+	}
 
-		SPDK_NOTICELOG("Start failover from %s:%s to %s:%s\n", path_id->trid.traddr,
-			       path_id->trid.trsvcid,	next_path->trid.traddr, next_path->trid.trsvcid);
+	assert(path_id->trid.trtype != SPDK_NVME_TRANSPORT_PCIE);
 
-		spdk_nvme_ctrlr_fail(nvme_ctrlr->ctrlr);
-		nvme_ctrlr->active_path_id = next_path;
-		rc = spdk_nvme_ctrlr_set_trid(nvme_ctrlr->ctrlr, &next_path->trid);
-		assert(rc == 0);
-		TAILQ_REMOVE(&nvme_ctrlr->trids, path_id, link);
-		if (!remove) {
-			/** Shuffle the old trid to the end of the list and use the new one.
-			 * Allows for round robin through multiple connections.
-			 */
-			TAILQ_INSERT_TAIL(&nvme_ctrlr->trids, path_id, link);
-		} else {
-			free(path_id);
-		}
+	SPDK_NOTICELOG("Start failover from %s:%s to %s:%s\n", path_id->trid.traddr,
+		       path_id->trid.trsvcid,	next_path->trid.traddr, next_path->trid.trsvcid);
+
+	spdk_nvme_ctrlr_fail(nvme_ctrlr->ctrlr);
+	nvme_ctrlr->active_path_id = next_path;
+	rc = spdk_nvme_ctrlr_set_trid(nvme_ctrlr->ctrlr, &next_path->trid);
+	assert(rc == 0);
+	TAILQ_REMOVE(&nvme_ctrlr->trids, path_id, link);
+	if (!remove) {
+		/** Shuffle the old trid to the end of the list and use the new one.
+		 * Allows for round robin through multiple connections.
+		 */
+		TAILQ_INSERT_TAIL(&nvme_ctrlr->trids, path_id, link);
+	} else {
+		free(path_id);
 	}
 }
 
