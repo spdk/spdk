@@ -265,7 +265,7 @@ struct rpc_bdev_nvme_attach_controller_ctx {
 	struct rpc_bdev_nvme_attach_controller req;
 	uint32_t count;
 	size_t bdev_count;
-	const char *names[NVME_MAX_BDEVS_PER_RPC];
+	const char **names;
 	struct spdk_jsonrpc_request *request;
 };
 
@@ -273,6 +273,7 @@ static void
 free_rpc_bdev_nvme_attach_controller_ctx(struct rpc_bdev_nvme_attach_controller_ctx *ctx)
 {
 	free_rpc_bdev_nvme_attach_controller(&ctx->req);
+	free(ctx->names);
 	free(ctx);
 }
 
@@ -342,6 +343,12 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	ctx->names = calloc(NVME_MAX_BDEVS_PER_RPC, sizeof(char *));
+	if (ctx->names == NULL) {
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
 		goto cleanup;
 	}
 
