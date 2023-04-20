@@ -270,6 +270,13 @@ struct rpc_bdev_nvme_attach_controller_ctx {
 };
 
 static void
+free_rpc_bdev_nvme_attach_controller_ctx(struct rpc_bdev_nvme_attach_controller_ctx *ctx)
+{
+	free_rpc_bdev_nvme_attach_controller(&ctx->req);
+	free(ctx);
+}
+
+static void
 rpc_bdev_nvme_attach_controller_examined(void *cb_ctx)
 {
 	struct rpc_bdev_nvme_attach_controller_ctx *ctx = cb_ctx;
@@ -285,8 +292,7 @@ rpc_bdev_nvme_attach_controller_examined(void *cb_ctx)
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
 
-	free_rpc_bdev_nvme_attach_controller(&ctx->req);
-	free(ctx);
+	free_rpc_bdev_nvme_attach_controller_ctx(ctx);
 }
 
 static void
@@ -297,8 +303,7 @@ rpc_bdev_nvme_attach_controller_done(void *cb_ctx, size_t bdev_count, int rc)
 
 	if (rc < 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-		free_rpc_bdev_nvme_attach_controller(&ctx->req);
-		free(ctx);
+		free_rpc_bdev_nvme_attach_controller_ctx(ctx);
 		return;
 	}
 
@@ -519,8 +524,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	return;
 
 cleanup:
-	free_rpc_bdev_nvme_attach_controller(&ctx->req);
-	free(ctx);
+	free_rpc_bdev_nvme_attach_controller_ctx(ctx);
 }
 SPDK_RPC_REGISTER("bdev_nvme_attach_controller", rpc_bdev_nvme_attach_controller,
 		  SPDK_RPC_RUNTIME)
