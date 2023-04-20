@@ -370,7 +370,7 @@ accel_dpdk_cryptodev_poller(void *args)
 
 	TAILQ_FOREACH_SAFE(task, &crypto_ch->completed_tasks, link, task_tmp) {
 		TAILQ_REMOVE(&crypto_ch->completed_tasks, task, link);
-		spdk_accel_task_complete(&task->base, rc);
+		spdk_accel_task_complete(&task->base, 0);
 		num_completed_tasks++;
 	}
 
