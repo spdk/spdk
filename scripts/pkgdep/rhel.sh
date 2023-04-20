@@ -37,7 +37,7 @@ disclaimer
 # First, add extra EPEL, ELRepo, Ceph repos to have a chance of covering most of the packages
 # on the enterprise systems, like RHEL.
 if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
-	repos=() enable=("epel" "elrepo" "elrepo-testing")
+	repos=() enable=("epel" "elrepo" "elrepo-testing") add=()
 	[[ $ID == centos || $ID == rocky ]] && enable+=("extras")
 	if [[ $VERSION_ID == 7* ]]; then
 		repos+=("https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm")
@@ -49,18 +49,40 @@ if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
 			echo "Liburing not supported on ${ID}$VERSION_ID, disabling"
 			INSTALL_LIBURING=false
 		fi
+		add+=("https://packages.daos.io/v2.0/CentOS7/packages/x86_64/daos_packages.repo")
+		enable+=("daos-packages")
 	fi
 	if [[ $VERSION_ID == 8* ]]; then
 		repos+=("https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm")
 		repos+=("https://www.elrepo.org/elrepo-release-8.el8.elrepo.noarch.rpm")
-		[[ $ID == centos || $ID == rocky ]] \
-			&& repos+=("https://download.ceph.com/rpm-nautilus/el8/noarch/ceph-release-1-1.el8.noarch.rpm")
-		# Add PowerTools needed for install CUnit-devel in Centos8
-		if [[ $ID == centos || $ID == rocky ]]; then
-			is_repo "PowerTools" && enable+=("PowerTools")
-			is_repo "powertools" && enable+=("powertools")
-		fi
+		add+=("https://packages.daos.io/v2.0/EL8/packages/x86_64/daos_packages.repo")
+		enable+=("daos-packages")
 	fi
+
+	if [[ $VERSION_ID == 9* ]]; then
+		repos+=("https://www.elrepo.org/elrepo-release-9.el9.elrepo.noarch.rpm")
+		repos+=("https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm")
+		enable+=("crb")
+	fi
+
+	# Add PowerTools needed for install CUnit-devel
+	if [[ ($ID == centos || $ID == rocky) && $VERSION_ID =~ ^[89].* ]]; then
+		is_repo "PowerTools" && enable+=("PowerTools")
+		is_repo "powertools" && enable+=("powertools")
+		repos+=("centos-release-ceph-pacific.noarch")
+		enable+=("centos-ceph-pacific")
+	fi
+
+	if [[ $ID == rocky ]]; then
+		enable+=("devel")
+	fi
+
+	if ((${#add[@]} > 0)); then
+		for _repo in "${add[@]}"; do
+			yum-config-manager --add-repo "$_repo"
+		done
+	fi
+
 	if ((${#repos[@]} > 0)); then
 		yum install -y "${repos[@]}" yum-utils
 		yum-config-manager --enable "${enable[@]}"
@@ -170,16 +192,10 @@ if [[ $INSTALL_DOCS == "true" ]]; then
 	yum install -y doxygen graphviz
 fi
 if [[ $INSTALL_DAOS == "true" ]]; then
-	if [[ $ID == centos || $ID == rocky ]]; then
-		if ! hash yum-config-manager &> /dev/null; then
-			yum install -y yum-utils
-		fi
-		[[ $VERSION_ID == 7* ]] && yum-config-manager --add-repo "https://packages.daos.io/v2.0/CentOS7/packages/x86_64/daos_packages.repo"
-		[[ $VERSION_ID == 8* ]] && yum-config-manager --add-repo "https://packages.daos.io/v2.0/EL8/packages/x86_64/daos_packages.repo"
-		yum-config-manager --enable "daos-packages"
+	if [[ ($ID == centos || $ID == rocky) && $VERSION_ID =~ ^[78].* ]]; then
 		yum install -y daos-devel
 	else
-		echo "Skipping installation of DAOS bdev dependencies. It is supported only for CentOS 7, CentOS 8 and Rocky 8"
+		echo "Skipping installation of DAOS bdev dependencies. Supported only under centos, rocky (variants 7-8)."
 	fi
 fi
 # Additional dependencies for Avahi

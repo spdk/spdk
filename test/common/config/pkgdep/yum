@@ -63,10 +63,22 @@ packages=(
 	xfsprogs
 )
 
-if [[ $OSID != centos && $OSID != rocky ]] || [[ $OSVERSION != 8* ]]; then
+if [[ $OSID != centos && $OSID != rocky ]]; then
 	packages+=(btrfs-progs)
 	packages+=(avahi)
 	packages+=(avahi-tools)
+elif [[ $OSID == rocky ]]; then
+	# 8 and 9 comes with a kernel which does not support btrfs
+	packages+=(avahi)
+	packages+=(avahi-tools) # from the devel repo
+elif [[ $OSID == centos ]]; then
+	packages+=(avahi)
+	# 8 comes with a kernel which does not support btrfs.
+	# 8 does not come with any common repos that include avahi-tools.
+	if [[ $OSVERSION == 7* ]]; then
+		packages+=(avahi-tools)
+		packages+=(btrfs-progs)
+	fi
 fi
 
 if [[ $OSID == centos && $OSVERSION == 8* ]]; then
