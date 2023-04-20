@@ -5895,6 +5895,37 @@ bdev_io_ext_bounce_buffer(void)
 	stub_complete_io(1);
 	CU_ASSERT(g_io_done == true);
 
+	/* Verify the request is queued after receiving ENOMEM from push */
+	g_io_done = false;
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 32, 14, 1);
+	ut_expected_io_set_iov(expected_io, 0, iov.iov_base, iov.iov_len);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	MOCK_SET(spdk_memory_domain_push_data, -ENOMEM);
+	rc = spdk_bdev_readv_blocks_ext(desc, io_ch, &iov, 1, 32, 14, io_done, NULL, &ext_io_opts);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+
+	aux_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 32, 14, 1);
+	ut_expected_io_set_iov(aux_io, 0, iov.iov_base, iov.iov_len);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, aux_io, link);
+	rc = spdk_bdev_writev_blocks(desc, io_ch, &iov, 1, 32, 14, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+
+	stub_complete_io(1);
+	/* The IO isn't done yet, it's still waiting on push */
+	CU_ASSERT(g_io_done == false);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	MOCK_CLEAR(spdk_memory_domain_push_data);
+	g_memory_domain_push_data_called = false;
+	/* Completing the second IO should also trigger push on the first one */
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_memory_domain_push_data_called == true);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
