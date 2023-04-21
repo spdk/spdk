@@ -3535,6 +3535,7 @@ static int
 nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 {
 	struct nvme_bdev *bdev;
+	struct nvme_bdev_ctrlr *nbdev_ctrlr = nvme_ctrlr->nbdev_ctrlr;
 	int rc;
 
 	bdev = nvme_bdev_alloc();
@@ -3543,10 +3544,9 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 		return -ENOMEM;
 	}
 
-	TAILQ_INSERT_TAIL(&bdev->nvme_ns_list, nvme_ns, tailq);
 	bdev->opal = nvme_ctrlr->opal_dev != NULL;
 
-	rc = nvme_disk_create(&bdev->disk, nvme_ctrlr->nbdev_ctrlr->name, nvme_ctrlr->ctrlr,
+	rc = nvme_disk_create(&bdev->disk, nbdev_ctrlr->name, nvme_ctrlr->ctrlr,
 			      nvme_ns->ns, nvme_ctrlr->opts.prchk_flags, bdev);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to create NVMe disk\n");
@@ -3560,19 +3560,22 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 				sizeof(struct nvme_bdev_channel),
 				bdev->disk.name);
 
+	nvme_ns->bdev = bdev;
+	bdev->nsid = nvme_ns->id;
+	TAILQ_INSERT_TAIL(&bdev->nvme_ns_list, nvme_ns, tailq);
+
+	bdev->nbdev_ctrlr = nbdev_ctrlr;
+	TAILQ_INSERT_TAIL(&nbdev_ctrlr->bdevs, bdev, tailq);
+
 	rc = spdk_bdev_register(&bdev->disk);
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_bdev_register() failed\n");
 		spdk_io_device_unregister(bdev, NULL);
+		nvme_ns->bdev = NULL;
+		TAILQ_REMOVE(&nbdev_ctrlr->bdevs, bdev, tailq);
 		nvme_bdev_free(bdev);
 		return rc;
 	}
-
-	nvme_ns->bdev = bdev;
-	bdev->nsid = nvme_ns->id;
-
-	bdev->nbdev_ctrlr = nvme_ctrlr->nbdev_ctrlr;
-	TAILQ_INSERT_TAIL(&nvme_ctrlr->nbdev_ctrlr->bdevs, bdev, tailq);
 
 	return 0;
 }
