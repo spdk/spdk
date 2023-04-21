@@ -53,7 +53,8 @@ class Server(ABC):
             ConfigField(name='password', required=True),
             ConfigField(name='transport', required=True),
             ConfigField(name='skip_spdk_install', default=False),
-            ConfigField(name='irdma_roce_enable', default=False)
+            ConfigField(name='irdma_roce_enable', default=False),
+            ConfigField(name='pause_frames', default=False)
         ]
         self.read_config(config_fields, general_config)
         self.transport = self.transport.lower()
@@ -149,6 +150,7 @@ class Server(ABC):
         self.configure_tuned()
         self.configure_cpu_governor()
         self.configure_irq_affinity(**self.irq_settings)
+        self.configure_pause_frames()
 
     RDMA_PROTOCOL_IWARP = 0
     RDMA_PROTOCOL_ROCE = 1
@@ -184,6 +186,19 @@ class Server(ABC):
         else:
             self.reload_driver("irdma", "roce_ena=0")
             self.log.info("Loaded irdma driver with iWARP enabled")
+
+    def set_pause_frames(self, rx_state, tx_state):
+        for nic_ip in self.nic_ips:
+            nic_name = self.get_nic_name_by_ip(nic_ip)
+            self.exec_cmd(["sudo", "ethtool", "-A", nic_name, "rx", rx_state, "tx", tx_state])
+
+    def configure_pause_frames(self):
+        if not self.pause_frames:
+            self.log.info("Turning off pause frames")
+            self.set_pause_frames("off", "off")
+            return
+        self.log.info("Configuring pause frames")
+        self.set_pause_frames("on", "on")
 
     def configure_arfs(self):
         rps_flow_cnt = 512

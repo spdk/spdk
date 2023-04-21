@@ -60,7 +60,8 @@ The following sub-chapters describe each configuration section in more detail.
     "password": "password",
     "transport": "transport_type",
     "skip_spdk_install": bool,
-    "irdma_roce_enable": bool
+    "irdma_roce_enable": bool,
+    "pause_frames": bool
 }
 ```
 
@@ -79,6 +80,9 @@ Optional:
   Default: false.
 - irdma_roce_enable - loads irdma driver with RoCEv2 network protocol enabled on Target and
   Initiator machines. This option applies only to system with Intel E810 NICs.
+  Default: false
+- pause_frames - configures pause frames when RoCEv2 network protocol is enabled on Target and
+  Initiator machines.
   Default: false
 
 ### Target System Configuration
