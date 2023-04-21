@@ -126,7 +126,7 @@ nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 	struct spdk_nvmf_tgt *tgt = io_device;
 	struct spdk_nvmf_poll_group *group = ctx_buf;
 
-	SPDK_DTRACE_PROBE1(nvmf_destroy_poll_group, spdk_thread_get_id(group->thread));
+	SPDK_DTRACE_PROBE1_TICKS(nvmf_destroy_poll_group, spdk_thread_get_id(group->thread));
 
 	pthread_mutex_lock(&tgt->mutex);
 	TAILQ_REMOVE(&tgt->poll_groups, group, link);
@@ -155,7 +155,8 @@ nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
 		SPDK_ERRLOG("Unable to create poll group for transport\n");
 		return -1;
 	}
-	SPDK_DTRACE_PROBE2(nvmf_transport_poll_group_create, transport, spdk_thread_get_id(group->thread));
+	SPDK_DTRACE_PROBE2_TICKS(nvmf_transport_poll_group_create, transport,
+				 spdk_thread_get_id(group->thread));
 
 	tgroup->group = group;
 	TAILQ_INSERT_TAIL(&group->tgroups, tgroup, link);
@@ -181,7 +182,7 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 
 	group->poller = SPDK_POLLER_REGISTER(nvmf_poll_group_poll, group, 0);
 
-	SPDK_DTRACE_PROBE1(nvmf_create_poll_group, spdk_thread_get_id(thread));
+	SPDK_DTRACE_PROBE1_TICKS(nvmf_create_poll_group, spdk_thread_get_id(thread));
 
 	TAILQ_FOREACH(transport, &tgt->transports, link) {
 		rc = nvmf_poll_group_add_transport(group, transport);
@@ -253,7 +254,7 @@ nvmf_tgt_destroy_poll_group_qpairs(struct spdk_nvmf_poll_group *group)
 {
 	struct nvmf_qpair_disconnect_many_ctx *ctx;
 
-	SPDK_DTRACE_PROBE1(nvmf_destroy_poll_group_qpairs, spdk_thread_get_id(group->thread));
+	SPDK_DTRACE_PROBE1_TICKS(nvmf_destroy_poll_group_qpairs, spdk_thread_get_id(group->thread));
 
 	ctx = calloc(1, sizeof(struct nvmf_qpair_disconnect_many_ctx));
 	if (!ctx) {
@@ -784,7 +785,7 @@ spdk_nvmf_tgt_add_transport(struct spdk_nvmf_tgt *tgt,
 {
 	struct spdk_nvmf_tgt_add_transport_ctx *ctx;
 
-	SPDK_DTRACE_PROBE2(nvmf_tgt_add_transport, transport, tgt->name);
+	SPDK_DTRACE_PROBE2_TICKS(nvmf_tgt_add_transport, transport, tgt->name);
 
 	if (spdk_nvmf_tgt_get_transport(tgt, transport->ops->name)) {
 		cb_fn(cb_arg, -EEXIST);
@@ -842,7 +843,7 @@ spdk_nvmf_tgt_pause_polling(struct spdk_nvmf_tgt *tgt, spdk_nvmf_tgt_pause_polli
 {
 	struct nvmf_tgt_pause_ctx *ctx;
 
-	SPDK_DTRACE_PROBE2(nvmf_tgt_pause_polling, tgt, tgt->name);
+	SPDK_DTRACE_PROBE2_TICKS(nvmf_tgt_pause_polling, tgt, tgt->name);
 
 	switch (tgt->state) {
 	case NVMF_TGT_PAUSING:
@@ -902,7 +903,7 @@ spdk_nvmf_tgt_resume_polling(struct spdk_nvmf_tgt *tgt, spdk_nvmf_tgt_resume_pol
 {
 	struct nvmf_tgt_pause_ctx *ctx;
 
-	SPDK_DTRACE_PROBE2(nvmf_tgt_resume_polling, tgt, tgt->name);
+	SPDK_DTRACE_PROBE2_TICKS(nvmf_tgt_resume_polling, tgt, tgt->name);
 
 	switch (tgt->state) {
 	case NVMF_TGT_PAUSING:
@@ -1080,7 +1081,7 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 
 	/* We add the qpair to the group only it is successfully added into the tgroup */
 	if (rc == 0) {
-		SPDK_DTRACE_PROBE2(nvmf_poll_group_add_qpair, qpair, spdk_thread_get_id(group->thread));
+		SPDK_DTRACE_PROBE2_TICKS(nvmf_poll_group_add_qpair, qpair, spdk_thread_get_id(group->thread));
 		TAILQ_INSERT_TAIL(&group->qpairs, qpair, link);
 		nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ACTIVE);
 	}
@@ -1156,8 +1157,8 @@ spdk_nvmf_poll_group_remove(struct spdk_nvmf_qpair *qpair)
 	struct spdk_nvmf_transport_poll_group *tgroup;
 	int rc;
 
-	SPDK_DTRACE_PROBE2(nvmf_poll_group_remove_qpair, qpair,
-			   spdk_thread_get_id(qpair->group->thread));
+	SPDK_DTRACE_PROBE2_TICKS(nvmf_poll_group_remove_qpair, qpair,
+				 spdk_thread_get_id(qpair->group->thread));
 	nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ERROR);
 
 	/* Find the tgroup and remove the qpair from the tgroup */
@@ -1285,7 +1286,7 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 		return 0;
 	}
 
-	SPDK_DTRACE_PROBE2(nvmf_qpair_disconnect, qpair, spdk_thread_get_id(group->thread));
+	SPDK_DTRACE_PROBE2_TICKS(nvmf_qpair_disconnect, qpair, spdk_thread_get_id(group->thread));
 	assert(qpair->state == SPDK_NVMF_QPAIR_ACTIVE);
 	nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_DEACTIVATING);
 
@@ -1302,7 +1303,7 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 
 	/* Check for outstanding I/O */
 	if (!TAILQ_EMPTY(&qpair->outstanding)) {
-		SPDK_DTRACE_PROBE2(nvmf_poll_group_drain_qpair, qpair, spdk_thread_get_id(group->thread));
+		SPDK_DTRACE_PROBE2_TICKS(nvmf_poll_group_drain_qpair, qpair, spdk_thread_get_id(group->thread));
 		qpair->state_cb = _nvmf_qpair_destroy;
 		qpair->state_cb_arg = qpair_ctx;
 		nvmf_qpair_abort_pending_zcopy_reqs(qpair);
@@ -1539,8 +1540,8 @@ fini:
 		cb_fn(cb_arg, rc);
 	}
 
-	SPDK_DTRACE_PROBE2(nvmf_poll_group_add_subsystem, spdk_thread_get_id(group->thread),
-			   subsystem->subnqn);
+	SPDK_DTRACE_PROBE2_TICKS(nvmf_poll_group_add_subsystem, spdk_thread_get_id(group->thread),
+				 subsystem->subnqn);
 
 	return rc;
 }
@@ -1626,8 +1627,8 @@ nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 	struct nvmf_qpair_disconnect_many_ctx *ctx;
 	uint32_t i;
 
-	SPDK_DTRACE_PROBE3(nvmf_poll_group_remove_subsystem, group, spdk_thread_get_id(group->thread),
-			   subsystem->subnqn);
+	SPDK_DTRACE_PROBE3_TICKS(nvmf_poll_group_remove_subsystem, group, spdk_thread_get_id(group->thread),
+				 subsystem->subnqn);
 
 	ctx = calloc(1, sizeof(struct nvmf_qpair_disconnect_many_ctx));
 	if (!ctx) {

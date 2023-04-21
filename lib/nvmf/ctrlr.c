@@ -255,8 +255,8 @@ ctrlr_add_qpair_and_send_rsp(struct spdk_nvmf_qpair *qpair,
 		      rsp->status_code_specific.success.cntlid);
 	spdk_nvmf_request_complete(req);
 
-	SPDK_DTRACE_PROBE4(nvmf_ctrlr_add_qpair, qpair, qpair->qid, ctrlr->subsys->subnqn,
-			   ctrlr->hostnqn);
+	SPDK_DTRACE_PROBE4_TICKS(nvmf_ctrlr_add_qpair, qpair, qpair->qid, ctrlr->subsys->subnqn,
+				 ctrlr->hostnqn);
 }
 
 static int
@@ -374,8 +374,8 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		ctrlr->cntlid = connect_data->cntlid;
 	}
 
-	SPDK_DTRACE_PROBE3(nvmf_ctrlr_create, ctrlr, subsystem->subnqn,
-			   spdk_thread_get_id(req->qpair->group->thread));
+	SPDK_DTRACE_PROBE3_TICKS(nvmf_ctrlr_create, ctrlr, subsystem->subnqn,
+				 spdk_thread_get_id(req->qpair->group->thread));
 
 	STAILQ_INIT(&ctrlr->async_events);
 	TAILQ_INIT(&ctrlr->log_head);
@@ -522,8 +522,8 @@ _nvmf_ctrlr_destruct(void *ctx)
 	struct spdk_nvmf_reservation_log *log, *log_tmp;
 	struct spdk_nvmf_async_event_completion *event, *event_tmp;
 
-	SPDK_DTRACE_PROBE3(nvmf_ctrlr_destruct, ctrlr, ctrlr->subsys->subnqn,
-			   spdk_thread_get_id(ctrlr->thread));
+	SPDK_DTRACE_PROBE3_TICKS(nvmf_ctrlr_destruct, ctrlr, ctrlr->subsys->subnqn,
+				 spdk_thread_get_id(ctrlr->thread));
 
 	assert(spdk_get_thread() == ctrlr->thread);
 	assert(ctrlr->in_destruct);
@@ -567,8 +567,8 @@ nvmf_ctrlr_add_io_qpair(void *ctx)
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 	struct spdk_nvmf_qpair *admin_qpair = ctrlr->admin_qpair;
 
-	SPDK_DTRACE_PROBE4(nvmf_ctrlr_add_io_qpair, ctrlr, req->qpair, req->qpair->qid,
-			   spdk_thread_get_id(ctrlr->thread));
+	SPDK_DTRACE_PROBE4_TICKS(nvmf_ctrlr_add_io_qpair, ctrlr, req->qpair, req->qpair->qid,
+				 spdk_thread_get_id(ctrlr->thread));
 
 	/* Unit test will check qpair->ctrlr after calling spdk_nvmf_ctrlr_connect.
 	  * For error case, the value should be NULL. So set it to NULL at first.
@@ -4218,9 +4218,9 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	}
 
 	if (spdk_likely(ctrlr->listener != NULL)) {
-		SPDK_DTRACE_PROBE3(nvmf_request_io_exec_path, req,
-				   ctrlr->listener->trid->traddr,
-				   ctrlr->listener->trid->trsvcid);
+		SPDK_DTRACE_PROBE3_TICKS(nvmf_request_io_exec_path, req,
+					 ctrlr->listener->trid->traddr,
+					 ctrlr->listener->trid->trsvcid);
 	}
 
 	/* scan-build falsely reporting dereference of null pointer */

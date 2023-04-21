@@ -107,7 +107,7 @@ class DTrace:
         files = subprocess.check_output(['git', 'ls-files', '*.[ch]',
                                         ':!:include/spdk_internal/usdt.h'])
         files = filter(lambda f: len(f) > 0, str(files, 'ascii').split('\n'))
-        regex = re.compile(r'SPDK_DTRACE_PROBE([0-9]*)\((\w+)')
+        regex = re.compile(r'SPDK_DTRACE_PROBE([0-9]*)_TICKS\((\w+)')
         probes = {}
 
         for fname in files:
