@@ -109,6 +109,7 @@ DEFINE_STUB(nvmf_fc_lld_port_remove, int, (struct spdk_nvmf_fc_port *fc_port), 0
 
 DEFINE_STUB_V(spdk_nvmf_request_zcopy_start, (struct spdk_nvmf_request *req));
 DEFINE_STUB_V(spdk_nvmf_request_zcopy_end, (struct spdk_nvmf_request *req, bool commit));
+DEFINE_STUB(spdk_mempool_lookup, struct spdk_mempool *, (const char *name), NULL);
 
 const char *
 spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
