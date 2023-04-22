@@ -33,38 +33,6 @@
  * SPDK Stuff
  */
 
-#ifdef SPDK_CONFIG_RDMA
-const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
-	.type = SPDK_NVME_TRANSPORT_RDMA,
-	.opts_init = NULL,
-	.create = NULL,
-	.destroy = NULL,
-
-	.listen = NULL,
-	.stop_listen = NULL,
-	.accept = NULL,
-
-	.listener_discover = NULL,
-
-	.poll_group_create = NULL,
-	.poll_group_destroy = NULL,
-	.poll_group_add = NULL,
-	.poll_group_poll = NULL,
-
-	.req_free = NULL,
-	.req_complete = NULL,
-
-	.qpair_fini = NULL,
-	.qpair_get_peer_trid = NULL,
-	.qpair_get_local_trid = NULL,
-	.qpair_get_listen_trid = NULL,
-};
-#endif
-
-const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
-	.type = SPDK_NVME_TRANSPORT_TCP,
-};
-
 DEFINE_STUB(spdk_nvme_transport_id_compare, int,
 	    (const struct spdk_nvme_transport_id *trid1,
 	     const struct spdk_nvme_transport_id *trid2), 0);
@@ -291,10 +259,6 @@ create_transport_test(void)
 	poll_thread(0);
 
 	/* create transport with bad args/options */
-#ifndef SPDK_CONFIG_RDMA
-	CU_ASSERT(spdk_nvmf_transport_create("RDMA", &opts) == NULL);
-#endif
-	CU_ASSERT(spdk_nvmf_transport_create("Bogus Transport", &opts) == NULL);
 	opts.max_io_size = 1024 ^ 3;
 	CU_ASSERT(spdk_nvmf_transport_create("FC", &opts) == NULL);
 	opts.max_io_size = 999;
