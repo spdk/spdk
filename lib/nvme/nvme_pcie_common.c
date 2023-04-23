@@ -530,14 +530,14 @@ _nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 	int	rc;
 
 	/* Statistics may already be allocated in the case of controller reset */
-	if (!pqpair->stat) {
-		if (qpair->poll_group) {
-			struct nvme_pcie_poll_group *group = SPDK_CONTAINEROF(qpair->poll_group,
-							     struct nvme_pcie_poll_group, group);
+	if (qpair->poll_group) {
+		struct nvme_pcie_poll_group *group = SPDK_CONTAINEROF(qpair->poll_group,
+						     struct nvme_pcie_poll_group, group);
 
-			pqpair->stat = &group->stats;
-			pqpair->shared_stats = true;
-		} else {
+		pqpair->stat = &group->stats;
+		pqpair->shared_stats = true;
+	} else {
+		if (pqpair->stat == NULL) {
 			pqpair->stat = calloc(1, sizeof(*pqpair->stat));
 			if (!pqpair->stat) {
 				SPDK_ERRLOG("Failed to allocate qpair statistics\n");
@@ -546,7 +546,6 @@ _nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 			}
 		}
 	}
-
 
 	rc = nvme_pcie_ctrlr_cmd_create_io_cq(ctrlr, qpair, nvme_completion_create_cq_cb, qpair);
 

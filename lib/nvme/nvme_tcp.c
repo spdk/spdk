@@ -2048,10 +2048,16 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 		tqpair->stats = &tgroup->stats;
 		tqpair->shared_stats = true;
 	} else {
-		tqpair->stats = calloc(1, sizeof(*tqpair->stats));
-		if (!tqpair->stats) {
-			SPDK_ERRLOG("tcp stats memory allocation failed\n");
-			return -ENOMEM;
+		/* When resetting a controller, we disconnect adminq and then reconnect. The stats
+		 * is not freed when disconnecting. So when reconnecting, don't allocate memory
+		 * again.
+		 */
+		if (tqpair->stats == NULL) {
+			tqpair->stats = calloc(1, sizeof(*tqpair->stats));
+			if (!tqpair->stats) {
+				SPDK_ERRLOG("tcp stats memory allocation failed\n");
+				return -ENOMEM;
+			}
 		}
 	}
 
