@@ -788,22 +788,22 @@ nvme_ns_is_accessible(struct nvme_ns *nvme_ns)
 }
 
 static inline bool
-nvme_io_path_is_connected(struct nvme_io_path *io_path)
+nvme_qpair_is_connected(struct nvme_qpair *nvme_qpair)
 {
-	if (spdk_unlikely(io_path->qpair->qpair == NULL)) {
+	if (spdk_unlikely(nvme_qpair->qpair == NULL)) {
 		return false;
 	}
 
-	if (spdk_unlikely(spdk_nvme_qpair_get_failure_reason(io_path->qpair->qpair) !=
+	if (spdk_unlikely(spdk_nvme_qpair_get_failure_reason(nvme_qpair->qpair) !=
 			  SPDK_NVME_QPAIR_FAILURE_NONE)) {
 		return false;
 	}
 
-	if (spdk_unlikely(io_path->qpair->ctrlr_ch->reset_iter != NULL)) {
+	if (spdk_unlikely(nvme_qpair->ctrlr_ch->reset_iter != NULL)) {
 		return false;
 	}
 
-	if (spdk_nvme_ctrlr_get_admin_qp_failure_reason(io_path->qpair->ctrlr->ctrlr) !=
+	if (spdk_nvme_ctrlr_get_admin_qp_failure_reason(nvme_qpair->ctrlr->ctrlr) !=
 	    SPDK_NVME_QPAIR_FAILURE_NONE) {
 		return false;
 	}
@@ -814,7 +814,7 @@ nvme_io_path_is_connected(struct nvme_io_path *io_path)
 static inline bool
 nvme_io_path_is_available(struct nvme_io_path *io_path)
 {
-	if (spdk_unlikely(!nvme_io_path_is_connected(io_path))) {
+	if (spdk_unlikely(!nvme_qpair_is_connected(io_path->qpair))) {
 		return false;
 	}
 
@@ -826,12 +826,8 @@ nvme_io_path_is_available(struct nvme_io_path *io_path)
 }
 
 static inline bool
-nvme_io_path_is_failed(struct nvme_io_path *io_path)
+nvme_ctrlr_is_failed(struct nvme_ctrlr *nvme_ctrlr)
 {
-	struct nvme_ctrlr *nvme_ctrlr;
-
-	nvme_ctrlr = io_path->qpair->ctrlr;
-
 	if (nvme_ctrlr->destruct) {
 		return true;
 	}
@@ -902,7 +898,7 @@ _bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 
 	io_path = start;
 	do {
-		if (spdk_likely(nvme_io_path_is_connected(io_path) &&
+		if (spdk_likely(nvme_qpair_is_connected(io_path->qpair) &&
 				!io_path->nvme_ns->ana_state_updating)) {
 			switch (io_path->nvme_ns->ana_state) {
 			case SPDK_NVME_ANA_OPTIMIZED_STATE:
@@ -939,7 +935,7 @@ _bdev_nvme_find_io_path_min_qd(struct nvme_bdev_channel *nbdev_ch)
 	uint32_t num_outstanding_reqs;
 
 	STAILQ_FOREACH(io_path, &nbdev_ch->io_path_list, stailq) {
-		if (spdk_unlikely(!nvme_io_path_is_connected(io_path))) {
+		if (spdk_unlikely(!nvme_qpair_is_connected(io_path->qpair))) {
 			/* The device is currently resetting. */
 			continue;
 		}
@@ -1018,8 +1014,8 @@ any_io_path_may_become_available(struct nvme_bdev_channel *nbdev_ch)
 			continue;
 		}
 
-		if (nvme_io_path_is_connected(io_path) ||
-		    !nvme_io_path_is_failed(io_path)) {
+		if (nvme_qpair_is_connected(io_path->qpair) ||
+		    !nvme_ctrlr_is_failed(io_path->qpair->ctrlr)) {
 			return true;
 		}
 	}
@@ -7387,7 +7383,7 @@ nvme_io_path_info_json(struct spdk_json_write_ctx *w, struct nvme_io_path *io_pa
 	spdk_json_write_named_uint32(w, "cntlid", cdata->cntlid);
 	spdk_json_write_named_bool(w, "current", io_path->nbdev_ch != NULL &&
 				   io_path == io_path->nbdev_ch->current_io_path);
-	spdk_json_write_named_bool(w, "connected", nvme_io_path_is_connected(io_path));
+	spdk_json_write_named_bool(w, "connected", nvme_qpair_is_connected(io_path->qpair));
 	spdk_json_write_named_bool(w, "accessible", nvme_ns_is_accessible(nvme_ns));
 
 	spdk_json_write_named_object_begin(w, "transport");
