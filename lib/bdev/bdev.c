@@ -1057,14 +1057,18 @@ static void
 bdev_io_exec_sequence_cb(void *ctx, int status)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
+	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 
 	TAILQ_REMOVE(&bdev_io->internal.ch->io_accel_exec, bdev_io, internal.link);
+	bdev_io_decrement_outstanding(ch, ch->shared_resource);
 	bdev_io->internal.data_transfer_cpl(bdev_io, status);
 }
 
 static void
 bdev_io_exec_sequence(struct spdk_bdev_io *bdev_io, void (*cb_fn)(void *ctx, int status))
 {
+	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
+
 	assert(bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io));
 	assert(bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE || bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
 
@@ -1077,6 +1081,7 @@ bdev_io_exec_sequence(struct spdk_bdev_io *bdev_io, void (*cb_fn)(void *ctx, int
 	}
 
 	TAILQ_INSERT_TAIL(&bdev_io->internal.ch->io_accel_exec, bdev_io, internal.link);
+	bdev_io_increment_outstanding(ch, ch->shared_resource);
 	bdev_io->internal.data_transfer_cpl = cb_fn;
 
 	spdk_accel_sequence_finish(bdev_io->internal.accel_sequence,
@@ -1120,6 +1125,7 @@ bdev_io_pull_md_buf_done(void *ctx, int status)
 	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 
 	TAILQ_REMOVE(&ch->io_memory_domain, bdev_io, internal.link);
+	bdev_io_decrement_outstanding(ch, ch->shared_resource);
 	assert(bdev_io->internal.data_transfer_cpl);
 	bdev_io->internal.data_transfer_cpl(bdev_io, status);
 }
@@ -1133,6 +1139,7 @@ bdev_io_pull_md_buf(struct spdk_bdev_io *bdev_io)
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 		if (bdev_io_use_memory_domain(bdev_io)) {
 			TAILQ_INSERT_TAIL(&ch->io_memory_domain, bdev_io, internal.link);
+			bdev_io_increment_outstanding(ch, ch->shared_resource);
 			rc = spdk_memory_domain_pull_data(bdev_io->internal.memory_domain,
 							  bdev_io->internal.memory_domain_ctx,
 							  &bdev_io->internal.orig_md_iov, 1,
@@ -1142,6 +1149,7 @@ bdev_io_pull_md_buf(struct spdk_bdev_io *bdev_io)
 				/* Continue to submit IO in completion callback */
 				return;
 			}
+			bdev_io_decrement_outstanding(ch, ch->shared_resource);
 			TAILQ_REMOVE(&ch->io_memory_domain, bdev_io, internal.link);
 			SPDK_ERRLOG("Failed to pull data from memory domain %s, rc %d\n",
 				    spdk_memory_domain_get_dma_device_id(bdev_io->internal.memory_domain), rc);
@@ -1218,6 +1226,8 @@ _bdev_io_pull_bounce_data_buf_done(void *ctx, int status)
 	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 
 	TAILQ_REMOVE(&ch->io_memory_domain, bdev_io, internal.link);
+	bdev_io_decrement_outstanding(ch, ch->shared_resource);
+
 	bdev_io_pull_bounce_data_buf_done(ctx, status);
 }
 
@@ -1259,6 +1269,7 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 		/* if this is write path, copy data from original buffer to bounce buffer */
 		if (bdev_io_use_memory_domain(bdev_io)) {
 			TAILQ_INSERT_TAIL(&ch->io_memory_domain, bdev_io, internal.link);
+			bdev_io_increment_outstanding(ch, ch->shared_resource);
 			rc = spdk_memory_domain_pull_data(bdev_io->internal.memory_domain,
 							  bdev_io->internal.memory_domain_ctx,
 							  bdev_io->internal.orig_iovs,
@@ -1271,6 +1282,7 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 				return;
 			}
 			TAILQ_REMOVE(&ch->io_memory_domain, bdev_io, internal.link);
+			bdev_io_decrement_outstanding(ch, ch->shared_resource);
 			SPDK_ERRLOG("Failed to pull data from memory domain %s\n",
 				    spdk_memory_domain_get_dma_device_id(bdev_io->internal.memory_domain));
 		} else {
@@ -1476,8 +1488,6 @@ static void
 _bdev_io_complete_push_bounce_done(void *ctx, int rc)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
-	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
-	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
 
 	if (rc) {
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
@@ -1488,7 +1498,6 @@ _bdev_io_complete_push_bounce_done(void *ctx, int rc)
 	bdev_io_put_buf(bdev_io);
 
 	/* Continue with IO completion flow */
-	bdev_io_decrement_outstanding(bdev_ch, shared_resource);
 	if (spdk_unlikely(_bdev_io_handle_no_mem(bdev_io, BDEV_IO_RETRY_STATE_INVALID))) {
 		return;
 	}
@@ -1503,6 +1512,7 @@ _bdev_io_push_bounce_md_buffer_done(void *ctx, int rc)
 	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 
 	TAILQ_REMOVE(&ch->io_memory_domain, bdev_io, internal.link);
+	bdev_io_decrement_outstanding(ch, ch->shared_resource);
 	bdev_io->internal.data_transfer_cpl(bdev_io, rc);
 }
 
@@ -1520,6 +1530,7 @@ _bdev_io_push_bounce_md_buffer(struct spdk_bdev_io *bdev_io)
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
 			if (bdev_io_use_memory_domain(bdev_io)) {
 				TAILQ_INSERT_TAIL(&ch->io_memory_domain, bdev_io, internal.link);
+				bdev_io_increment_outstanding(ch, ch->shared_resource);
 				/* If memory domain is used then we need to call async push function */
 				rc = spdk_memory_domain_push_data(bdev_io->internal.memory_domain,
 								  bdev_io->internal.memory_domain_ctx,
@@ -1533,6 +1544,7 @@ _bdev_io_push_bounce_md_buffer(struct spdk_bdev_io *bdev_io)
 					return;
 				}
 				TAILQ_REMOVE(&ch->io_memory_domain, bdev_io, internal.link);
+				bdev_io_decrement_outstanding(ch, ch->shared_resource);
 				SPDK_ERRLOG("Failed to push md to memory domain %s\n",
 					    spdk_memory_domain_get_dma_device_id(bdev_io->internal.memory_domain));
 			} else {
@@ -1554,6 +1566,7 @@ _bdev_io_push_bounce_data_buffer_done(void *ctx, int rc)
 
 	assert(bdev_io->internal.data_transfer_cpl);
 	TAILQ_REMOVE(&ch->io_memory_domain, bdev_io, internal.link);
+	bdev_io_decrement_outstanding(ch, ch->shared_resource);
 
 	if (rc) {
 		bdev_io->internal.data_transfer_cpl(bdev_io, rc);
@@ -1579,6 +1592,7 @@ _bdev_io_push_bounce_data_buffer(struct spdk_bdev_io *bdev_io, bdev_copy_bounce_
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	TAILQ_INSERT_TAIL(&ch->io_memory_domain, bdev_io, internal.link);
 	bdev_io->internal.data_transfer_cpl = cpl_cb;
+	bdev_io_increment_outstanding(ch, ch->shared_resource);
 
 	/* if this is read path, copy data from bounce buffer to original buffer */
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
@@ -6978,8 +6992,6 @@ static void
 bdev_io_complete_sequence_cb(void *ctx, int status)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
-	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
-	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
 
 	/* u.bdev.accel_sequence should have already been cleared at this point */
 	assert(bdev_io->u.bdev.accel_sequence == NULL);
@@ -6991,7 +7003,6 @@ bdev_io_complete_sequence_cb(void *ctx, int status)
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
 	}
 
-	bdev_io_decrement_outstanding(bdev_ch, shared_resource);
 	if (spdk_unlikely(_bdev_io_handle_no_mem(bdev_io, BDEV_IO_RETRY_STATE_INVALID))) {
 		return;
 	}
@@ -7033,6 +7044,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 			return;
 		}
 	} else {
+		bdev_io_decrement_outstanding(bdev_ch, shared_resource);
 		if (spdk_likely(status == SPDK_BDEV_IO_STATUS_SUCCESS)) {
 			if (bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io)) {
 				bdev_io_exec_sequence(bdev_io, bdev_io_complete_sequence_cb);
@@ -7045,7 +7057,6 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 			}
 		}
 
-		bdev_io_decrement_outstanding(bdev_ch, shared_resource);
 		if (spdk_unlikely(_bdev_io_handle_no_mem(bdev_io, BDEV_IO_RETRY_STATE_SUBMIT))) {
 			return;
 		}
