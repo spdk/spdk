@@ -18,6 +18,8 @@
 #include <rte_memzone.h>
 #include <rte_version.h>
 
+static __thread bool g_is_thread_unaffinitized;
+
 static uint64_t
 virt_to_phys(void *vaddr)
 {
@@ -353,6 +355,10 @@ spdk_unaffinitize_thread(void)
 	rte_cpuset_t new_cpuset;
 	long num_cores, i;
 
+	if (g_is_thread_unaffinitized) {
+		return;
+	}
+
 	CPU_ZERO(&new_cpuset);
 
 	num_cores = sysconf(_SC_NPROCESSORS_CONF);
@@ -363,6 +369,7 @@ spdk_unaffinitize_thread(void)
 	}
 
 	rte_thread_set_affinity(&new_cpuset);
+	g_is_thread_unaffinitized = true;
 }
 
 void *
@@ -375,13 +382,17 @@ spdk_call_unaffinitized(void *cb(void *arg), void *arg)
 		return NULL;
 	}
 
-	rte_thread_get_affinity(&orig_cpuset);
+	if (g_is_thread_unaffinitized) {
+		ret = cb(arg);
+	} else {
+		rte_thread_get_affinity(&orig_cpuset);
+		spdk_unaffinitize_thread();
 
-	spdk_unaffinitize_thread();
+		ret = cb(arg);
 
-	ret = cb(arg);
-
-	rte_thread_set_affinity(&orig_cpuset);
+		rte_thread_set_affinity(&orig_cpuset);
+		g_is_thread_unaffinitized = false;
+	}
 
 	return ret;
 }
