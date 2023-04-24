@@ -801,9 +801,16 @@ uring_sock_read(struct spdk_uring_sock *sock)
 }
 
 static int
-uring_sock_recv_next(struct spdk_sock *sock, void **buf, void **ctx)
+uring_sock_recv_next(struct spdk_sock *_sock, void **_buf, void **ctx)
 {
-	errno = ENOTSUP;
+	struct spdk_uring_sock *sock = __uring_sock(_sock);
+
+	if (sock->connection_status < 0) {
+		errno = -sock->connection_status;
+		return -1;
+	}
+
+	errno = -ENOTSUP;
 	return -1;
 }
 
@@ -813,6 +820,11 @@ uring_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	int rc, i;
 	size_t len;
+
+	if (sock->connection_status < 0) {
+		errno = -sock->connection_status;
+		return -1;
+	}
 
 	if (sock->recv_pipe == NULL) {
 		return sock_readv(sock->fd, iov, iovcnt);
@@ -1194,29 +1206,23 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 
 		task->status = SPDK_URING_SOCK_TASK_NOT_IN_USE;
 
-		if (spdk_unlikely(status < 0)) {
-			if (status == -EAGAIN || status == -EWOULDBLOCK ||
-			    (status == -ENOBUFS && sock->zcopy) ||
-			    status == -ECANCELED) {
-				continue;
-			}
-
-			sock->connection_status = status;
-			spdk_sock_abort_requests(&sock->base);
-
-			/* The user needs to be notified that this socket is dead. */
-			if (sock->base.cb_fn != NULL &&
-			    sock->pending_recv == false) {
-				sock->pending_recv = true;
-				TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
-			}
-
-			continue;
-		}
-
 		switch (task->type) {
 		case SPDK_SOCK_TASK_READ:
-			if ((status & POLLIN) == POLLIN) {
+			if (status == -EAGAIN || status == -EWOULDBLOCK || status == -ECANCELED) {
+				continue;
+			} else if (spdk_unlikely(status < 0)) {
+				sock->connection_status = status;
+				spdk_sock_abort_requests(&sock->base);
+
+				/* The user needs to be notified that this socket is dead. */
+				if (sock->base.cb_fn != NULL &&
+				    sock->pending_recv == false) {
+					sock->pending_recv = true;
+					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
+				}
+			} else {
+				assert((status & POLLIN) == POLLIN);
+
 				if (sock->base.cb_fn != NULL &&
 				    sock->pending_recv == false) {
 					sock->pending_recv = true;
@@ -1226,21 +1232,66 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 			break;
 		case SPDK_SOCK_TASK_POLLERR:
 #ifdef SPDK_ZEROCOPY
-			if ((status & POLLERR) == POLLERR) {
+			if (status == -EAGAIN || status == -EWOULDBLOCK || status == -ECANCELED) {
+				continue;
+			} else if (spdk_unlikely(status < 0)) {
+				sock->connection_status = status;
+				spdk_sock_abort_requests(&sock->base);
+
+				/* The user needs to be notified that this socket is dead. */
+				if (sock->base.cb_fn != NULL &&
+				    sock->pending_recv == false) {
+					sock->pending_recv = true;
+					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
+				}
+			} else {
+				assert((status & POLLERR) == POLLERR);
 				_sock_prep_errqueue(&sock->base);
 			}
 #endif
 			break;
 		case SPDK_SOCK_TASK_WRITE:
-			task->last_req = NULL;
-			task->iov_cnt = 0;
-			is_zcopy = task->is_zcopy;
-			task->is_zcopy = false;
-			sock_complete_write_reqs(&sock->base, status, is_zcopy);
+			if (status == -EAGAIN || status == -EWOULDBLOCK ||
+			    (status == -ENOBUFS && sock->zcopy) ||
+			    status == -ECANCELED) {
+				continue;
+			} else if (spdk_unlikely(status) < 0) {
+				sock->connection_status = status;
+				spdk_sock_abort_requests(&sock->base);
+
+				/* The user needs to be notified that this socket is dead. */
+				if (sock->base.cb_fn != NULL &&
+				    sock->pending_recv == false) {
+					sock->pending_recv = true;
+					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
+				}
+			} else {
+				task->last_req = NULL;
+				task->iov_cnt = 0;
+				is_zcopy = task->is_zcopy;
+				task->is_zcopy = false;
+				sock_complete_write_reqs(&sock->base, status, is_zcopy);
+			}
+
 			break;
 #ifdef SPDK_ZEROCOPY
 		case SPDK_SOCK_TASK_ERRQUEUE:
-			_sock_check_zcopy(&sock->base, status);
+			if (status == -EAGAIN || status == -EWOULDBLOCK || status == -ECANCELED) {
+				continue;
+			} else if (spdk_unlikely(status < 0)) {
+				sock->connection_status = status;
+				spdk_sock_abort_requests(&sock->base);
+
+				/* The user needs to be notified that this socket is dead. */
+				if (sock->base.cb_fn != NULL &&
+				    sock->pending_recv == false) {
+					sock->pending_recv = true;
+					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
+				}
+				break;
+			} else {
+				_sock_check_zcopy(&sock->base, status);
+			}
 			break;
 #endif
 		case SPDK_SOCK_TASK_CANCEL:
