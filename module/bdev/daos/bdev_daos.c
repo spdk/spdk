@@ -437,7 +437,7 @@ bdev_daos_channel_poll(void *arg)
 	}
 
 	for (int i = 0; i < rc; ++i) {
-		struct bdev_daos_task *task = container_of(evp[i], struct bdev_daos_task, ev);
+		struct bdev_daos_task *task = SPDK_CONTAINEROF(evp[i], struct bdev_daos_task, ev);
 		enum spdk_bdev_io_status status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
 		assert(task != NULL);
