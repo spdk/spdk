@@ -1602,16 +1602,12 @@ bdev_io_push_bounce_md_buf(struct spdk_bdev_io *bdev_io)
 	bdev_io->internal.data_transfer_cpl(bdev_io, rc);
 }
 
-static void
-_bdev_io_push_bounce_data_buffer_done(void *ctx, int rc)
+static inline void
+bdev_io_push_bounce_data_buffer_done(void *ctx, int rc)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
-	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 
 	assert(bdev_io->internal.data_transfer_cpl);
-	TAILQ_REMOVE(&ch->io_memory_domain, bdev_io, internal.link);
-	bdev_io_decrement_outstanding(ch, ch->shared_resource);
-
 	if (rc) {
 		bdev_io->internal.data_transfer_cpl(bdev_io, rc);
 		return;
@@ -1627,6 +1623,18 @@ _bdev_io_push_bounce_data_buffer_done(void *ctx, int rc)
 	bdev_io_push_bounce_md_buf(bdev_io);
 }
 
+static void
+_bdev_io_push_bounce_data_buffer_done(void *ctx, int status)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
+
+	TAILQ_REMOVE(&ch->io_memory_domain, bdev_io, internal.link);
+	bdev_io_decrement_outstanding(ch, ch->shared_resource);
+
+	bdev_io_push_bounce_data_buffer_done(ctx, status);
+}
+
 static inline void
 bdev_io_push_bounce_data(struct spdk_bdev_io *bdev_io)
 {
@@ -1634,12 +1642,11 @@ bdev_io_push_bounce_data(struct spdk_bdev_io *bdev_io)
 	int rc = 0;
 
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
-	TAILQ_INSERT_TAIL(&ch->io_memory_domain, bdev_io, internal.link);
-	bdev_io_increment_outstanding(ch, ch->shared_resource);
-
 	/* if this is read path, copy data from bounce buffer to original buffer */
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
 		if (bdev_io_use_memory_domain(bdev_io)) {
+			TAILQ_INSERT_TAIL(&ch->io_memory_domain, bdev_io, internal.link);
+			bdev_io_increment_outstanding(ch, ch->shared_resource);
 			/* If memory domain is used then we need to call async push function */
 			rc = spdk_memory_domain_push_data(bdev_io->internal.memory_domain,
 							  bdev_io->internal.memory_domain_ctx,
@@ -1652,6 +1659,9 @@ bdev_io_push_bounce_data(struct spdk_bdev_io *bdev_io)
 				/* Continue IO completion in async callback */
 				return;
 			}
+
+			TAILQ_REMOVE(&ch->io_memory_domain, bdev_io, internal.link);
+			bdev_io_decrement_outstanding(ch, ch->shared_resource);
 			SPDK_ERRLOG("Failed to push data to memory domain %s\n",
 				    spdk_memory_domain_get_dma_device_id(bdev_io->internal.memory_domain));
 		} else {
@@ -1662,7 +1672,7 @@ bdev_io_push_bounce_data(struct spdk_bdev_io *bdev_io)
 		}
 	}
 
-	_bdev_io_push_bounce_data_buffer_done(bdev_io, rc);
+	bdev_io_push_bounce_data_buffer_done(bdev_io, rc);
 }
 
 static inline void
