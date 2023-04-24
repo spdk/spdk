@@ -1,6 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2020 Intel Corporation.
- *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES.
+ *   Copyright (c) 2022, 2023 NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
  */
 
@@ -2424,15 +2424,22 @@ spdk_accel_initialize(void)
 	struct spdk_accel_module_if *accel_module = NULL;
 	int rc;
 
+	/*
+	 * We need a unique identifier for the accel framework, so use the
+	 * spdk_accel_module_list address for this purpose.
+	 */
+	spdk_io_device_register(&spdk_accel_module_list, accel_create_channel, accel_destroy_channel,
+				sizeof(struct accel_io_channel), "accel");
+
+	spdk_spin_init(&g_keyring_spin);
+	spdk_spin_init(&g_stats_lock);
+
 	rc = spdk_memory_domain_create(&g_accel_domain, SPDK_DMA_DEVICE_TYPE_ACCEL, NULL,
 				       "SPDK_ACCEL_DMA_DEVICE");
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to create accel memory domain\n");
 		return rc;
 	}
-
-	spdk_spin_init(&g_keyring_spin);
-	spdk_spin_init(&g_stats_lock);
 
 	g_modules_started = true;
 	accel_module_initialize();
@@ -2458,13 +2465,11 @@ spdk_accel_initialize(void)
 			accel_module = _module_find_by_name(g_modules_opc_override[op]);
 			if (accel_module == NULL) {
 				SPDK_ERRLOG("Invalid module name of %s\n", g_modules_opc_override[op]);
-				rc = -EINVAL;
-				goto error;
+				return -EINVAL;
 			}
 			if (accel_module->supports_opcode(op) == false) {
 				SPDK_ERRLOG("Module %s does not support op code %d\n", accel_module->name, op);
-				rc = -EINVAL;
-				goto error;
+				return -EINVAL;
 			}
 			g_modules_opc[op].module = accel_module;
 		}
@@ -2472,8 +2477,7 @@ spdk_accel_initialize(void)
 
 	if (g_modules_opc[ACCEL_OPC_ENCRYPT].module != g_modules_opc[ACCEL_OPC_DECRYPT].module) {
 		SPDK_ERRLOG("Different accel modules are assigned to encrypt and decrypt operations");
-		rc = -EINVAL;
-		goto error;
+		return -EINVAL;
 	}
 
 	for (op = 0; op < ACCEL_OPC_LAST; op++) {
@@ -2484,29 +2488,16 @@ spdk_accel_initialize(void)
 	rc = spdk_iobuf_register_module("accel");
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to register accel iobuf module\n");
-		goto error;
+		return rc;
 	}
 
-	/*
-	 * We need a unique identifier for the accel framework, so use the
-	 * spdk_accel_module_list address for this purpose.
-	 */
-	spdk_io_device_register(&spdk_accel_module_list, accel_create_channel, accel_destroy_channel,
-				sizeof(struct accel_io_channel), "accel");
-
 	return 0;
-error:
-	spdk_memory_domain_destroy(g_accel_domain);
-
-	return rc;
 }
 
 static void
 accel_module_finish_cb(void)
 {
 	spdk_accel_fini_cb cb_fn = g_fini_cb_fn;
-
-	spdk_memory_domain_destroy(g_accel_domain);
 
 	cb_fn(g_fini_cb_arg);
 	g_fini_cb_fn = NULL;
@@ -2635,6 +2626,10 @@ spdk_accel_module_finish(void)
 	if (!g_accel_module) {
 		spdk_spin_destroy(&g_keyring_spin);
 		spdk_spin_destroy(&g_stats_lock);
+		if (g_accel_domain) {
+			spdk_memory_domain_destroy(g_accel_domain);
+			g_accel_domain = NULL;
+		}
 		accel_module_finish_cb();
 		return;
 	}
