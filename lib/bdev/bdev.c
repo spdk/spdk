@@ -1017,6 +1017,24 @@ bdev_io_needs_sequence_exec(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bd
 	return !desc->accel_sequence_supported[bdev_io->type] || bdev_io->internal.split;
 }
 
+static inline void
+_bdev_io_increment_outstanding(struct spdk_bdev_channel *bdev_ch,
+			       struct spdk_bdev_shared_resource *shared_resource)
+{
+	bdev_ch->io_outstanding++;
+	shared_resource->io_outstanding++;
+}
+
+static inline void
+_bdev_io_decrement_outstanding(struct spdk_bdev_channel *bdev_ch,
+			       struct spdk_bdev_shared_resource *shared_resource)
+{
+	assert(bdev_ch->io_outstanding > 0);
+	assert(shared_resource->io_outstanding > 0);
+	bdev_ch->io_outstanding--;
+	shared_resource->io_outstanding--;
+}
+
 static void
 bdev_io_submit_sequence_cb(void *ctx, int status)
 {
@@ -1375,10 +1393,8 @@ static inline void
 bdev_ch_resubmit_io(struct spdk_bdev_channel *bdev_ch, struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev *bdev = bdev_ch->bdev;
-	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
 
-	bdev_io->internal.ch->io_outstanding++;
-	shared_resource->io_outstanding++;
+	_bdev_io_increment_outstanding(bdev_io->internal.ch, bdev_ch->shared_resource);
 	bdev_io->internal.error.nvme.cdw0 = 0;
 	bdev_io->num_retries++;
 	bdev_submit_request(bdev, spdk_bdev_io_get_io_channel(bdev_io), bdev_io);
@@ -1424,16 +1440,6 @@ bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 			break;
 		}
 	}
-}
-
-static inline void
-_bdev_io_decrement_outstanding(struct spdk_bdev_channel *bdev_ch,
-			       struct spdk_bdev_shared_resource *shared_resource)
-{
-	assert(bdev_ch->io_outstanding > 0);
-	assert(shared_resource->io_outstanding > 0);
-	bdev_ch->io_outstanding--;
-	shared_resource->io_outstanding--;
 }
 
 static inline bool
