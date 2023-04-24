@@ -1797,7 +1797,7 @@ nvme_pcie_poll_group_get_stats(struct spdk_nvme_transport_poll_group *tgroup,
 
 	stats = calloc(1, sizeof(*stats));
 	if (!stats) {
-		SPDK_ERRLOG("Can't allocate memory for RDMA stats\n");
+		SPDK_ERRLOG("Can't allocate memory for stats\n");
 		return -ENOMEM;
 	}
 	stats->trtype = SPDK_NVME_TRANSPORT_PCIE;
