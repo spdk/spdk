@@ -1275,15 +1275,52 @@ bdev_nvme_update_io_path_stat(struct nvme_bdev_io *bio)
 	}
 }
 
+static bool
+bdev_nvme_check_retry_io(struct nvme_bdev_io *bio,
+			 const struct spdk_nvme_cpl *cpl,
+			 struct nvme_bdev_channel *nbdev_ch,
+			 uint64_t *_delay_ms)
+{
+	struct nvme_io_path *io_path = bio->io_path;
+	struct nvme_ctrlr *nvme_ctrlr = io_path->qpair->ctrlr;
+	const struct spdk_nvme_ctrlr_data *cdata;
+
+	if (spdk_nvme_cpl_is_path_error(cpl) ||
+	    spdk_nvme_cpl_is_aborted_sq_deletion(cpl) ||
+	    !nvme_io_path_is_available(io_path) ||
+	    !nvme_ctrlr_is_available(nvme_ctrlr)) {
+		bdev_nvme_clear_current_io_path(nbdev_ch);
+		bio->io_path = NULL;
+		if (spdk_nvme_cpl_is_ana_error(cpl)) {
+			if (nvme_ctrlr_read_ana_log_page(nvme_ctrlr) == 0) {
+				io_path->nvme_ns->ana_state_updating = true;
+			}
+		}
+		if (!any_io_path_may_become_available(nbdev_ch)) {
+			return false;
+		}
+		*_delay_ms = 0;
+	} else {
+		bio->retry_count++;
+
+		cdata = spdk_nvme_ctrlr_get_data(nvme_ctrlr->ctrlr);
+
+		if (cpl->status.crd != 0) {
+			*_delay_ms = cdata->crdt[cpl->status.crd] * 100;
+		} else {
+			*_delay_ms = 0;
+		}
+	}
+
+	return true;
+}
+
 static inline void
 bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 				  const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 	struct nvme_bdev_channel *nbdev_ch;
-	struct nvme_io_path *io_path;
-	struct nvme_ctrlr *nvme_ctrlr;
-	const struct spdk_nvme_ctrlr_data *cdata;
 	uint64_t delay_ms;
 
 	assert(!bdev_nvme_io_type_is_admin(bdev_io->type));
@@ -1305,40 +1342,10 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 
 	nbdev_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
 
-	assert(bio->io_path != NULL);
-	io_path = bio->io_path;
-
-	nvme_ctrlr = io_path->qpair->ctrlr;
-
-	if (spdk_nvme_cpl_is_path_error(cpl) ||
-	    spdk_nvme_cpl_is_aborted_sq_deletion(cpl) ||
-	    !nvme_io_path_is_available(io_path) ||
-	    !nvme_ctrlr_is_available(nvme_ctrlr)) {
-		bdev_nvme_clear_current_io_path(nbdev_ch);
-		bio->io_path = NULL;
-		if (spdk_nvme_cpl_is_ana_error(cpl)) {
-			if (nvme_ctrlr_read_ana_log_page(nvme_ctrlr) == 0) {
-				io_path->nvme_ns->ana_state_updating = true;
-			}
-		}
-		if (!any_io_path_may_become_available(nbdev_ch)) {
-			goto complete;
-		}
-		delay_ms = 0;
-	} else {
-		bio->retry_count++;
-
-		cdata = spdk_nvme_ctrlr_get_data(nvme_ctrlr->ctrlr);
-
-		if (cpl->status.crd != 0) {
-			delay_ms = cdata->crdt[cpl->status.crd] * 100;
-		} else {
-			delay_ms = 0;
-		}
+	if (bdev_nvme_check_retry_io(bio, cpl, nbdev_ch, &delay_ms)) {
+		bdev_nvme_queue_retry_io(nbdev_ch, bio, delay_ms);
+		return;
 	}
-
-	bdev_nvme_queue_retry_io(nbdev_ch, bio, delay_ms);
-	return;
 
 complete:
 	bio->retry_count = 0;
