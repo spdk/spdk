@@ -2471,16 +2471,11 @@ spdk_accel_module_finish(void)
 	}
 }
 
-void
-spdk_accel_finish(spdk_accel_fini_cb cb_fn, void *cb_arg)
+static void
+accel_io_device_unregister_cb(void *io_device)
 {
 	struct spdk_accel_crypto_key *key, *key_tmp;
 	enum accel_opcode op;
-
-	assert(cb_fn != NULL);
-
-	g_fini_cb_fn = cb_fn;
-	g_fini_cb_arg = cb_arg;
 
 	spdk_spin_lock(&g_keyring_spin);
 	TAILQ_FOREACH_SAFE(key, &g_keyring, link, key_tmp) {
@@ -2496,8 +2491,18 @@ spdk_accel_finish(spdk_accel_fini_cb cb_fn, void *cb_arg)
 		g_modules_opc[op].module = NULL;
 	}
 
-	spdk_io_device_unregister(&spdk_accel_module_list, NULL);
 	spdk_accel_module_finish();
+}
+
+void
+spdk_accel_finish(spdk_accel_fini_cb cb_fn, void *cb_arg)
+{
+	assert(cb_fn != NULL);
+
+	g_fini_cb_fn = cb_fn;
+	g_fini_cb_arg = cb_arg;
+
+	spdk_io_device_unregister(&spdk_accel_module_list, accel_io_device_unregister_cb);
 }
 
 static struct spdk_accel_driver *
