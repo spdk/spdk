@@ -160,15 +160,10 @@ def setup_nvme_disk(libvirt, disk, index)
     namespace_disks = namespace_disks + nvme_disk.split()
   elsif !nvme_namespaces[index].nil? && !nvme_namespaces[index].match(/^[0-9]+$/)
     namespace_disks = namespace_disks + nvme_disk.split() + nvme_namespaces[index].split(':')
-  elsif !nvme_namespaces[index].nil? && nvme_namespaces[index].match(/^[0-9]+$/)
-    # Compatibility with spdk-5.0.0 fork
+  elsif !nvme_namespaces[index].nil? && nvme_namespaces[index] == "1"
     libvirt.qemuargs :value => "-drive"
     libvirt.qemuargs :value => "format=raw,file=#{nvme_disk},if=none,id=#{nvme_disk_id}"
-    if nvme_namespaces[index] == "1"
       nvme_controller <<",drive=#{nvme_disk_id}"
-    else
-      nvme_controller <<",namespaces=#{nvme_namespaces[index]},drive=#{nvme_disk_id}"
-    end
   end
 
   if !nvme_cmbs[index].nil? && nvme_cmbs[index] != ""
