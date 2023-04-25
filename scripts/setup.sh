@@ -195,13 +195,19 @@ function linux_hugetlbfs_mounts() {
 
 function get_block_dev_from_bdf() {
 	local bdf=$1
-	local block
+	local block blocks=() ctrl
 
 	for block in /sys/block/*; do
-		if [[ $(readlink -f "$block/device") == *"/$bdf/"* ]]; then
-			echo "${block##*/}"
+		if [[ $block == *nvme* ]]; then
+			ctrl=${block##*/} ctrl=${ctrl%n*}
+			if [[ -e /sys/class/nvme/$ctrl && $(< "/sys/class/nvme/$ctrl/address") == "$bdf" ]]; then
+				blocks+=("${block##*/}")
+			fi
+		elif [[ $(readlink -f "$block/device") == *"/$bdf/"* ]]; then
+			blocks+=("${block##*/}")
 		fi
 	done
+	printf '%s\n' "${blocks[@]}"
 }
 
 function get_used_bdf_block_devs() {

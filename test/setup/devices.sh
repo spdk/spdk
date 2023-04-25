@@ -8,6 +8,7 @@ rootdir=$(readlink -f "$testdir/../../")
 source "$testdir/common.sh"
 
 shopt -s nullglob
+shopt -s extglob
 
 cleanup() {
 	cleanup_nvme
@@ -195,9 +196,9 @@ declare -a blocks=()
 declare -A blocks_to_pci=()
 min_disk_size=$((1024 ** 3 * 3)) # 3GB
 
-for block in "/sys/block/nvme"*; do
-	pci=$(readlink -f "$block/device/device")
-	pci=${pci##*/}
+for block in "/sys/block/nvme"!(*c*); do
+	ctrl=${block##*/} ctrl=${ctrl%n*}
+	pci=$(< "/sys/class/nvme/$ctrl/address")
 	[[ ${zoned_devs[*]} == *"$pci"* ]] && continue
 	if ! block_in_use "${block##*/}" && (($(sec_size_to_bytes "${block##*/}") >= min_disk_size)); then
 		blocks+=("${block##*/}")
