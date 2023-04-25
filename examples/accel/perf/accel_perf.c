@@ -1115,6 +1115,26 @@ error_end:
 	spdk_app_stop(rc);
 }
 
+static void
+worker_shutdown(void *ctx)
+{
+	_worker_stop(ctx);
+}
+
+static void
+shutdown_cb(void)
+{
+	struct worker_thread *worker;
+
+	pthread_mutex_lock(&g_workers_lock);
+	worker = g_workers;
+	while (worker) {
+		spdk_thread_send_msg(worker->thread, worker_shutdown, worker);
+		worker = worker->next;
+	}
+	pthread_mutex_unlock(&g_workers_lock);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1124,6 +1144,7 @@ main(int argc, char **argv)
 	spdk_app_opts_init(&g_opts, sizeof(g_opts));
 	g_opts.name = "accel_perf";
 	g_opts.reactor_mask = "0x1";
+	g_opts.shutdown_cb = shutdown_cb;
 	if (spdk_app_parse_args(argc, argv, &g_opts, "a:C:o:q:t:yw:P:f:T:l:x:", NULL, parse_args,
 				usage) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		g_rc = -1;
