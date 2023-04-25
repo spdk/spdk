@@ -1550,10 +1550,6 @@ _bdev_io_complete_push_bounce_done(void *ctx, int rc)
 	bdev_io_put_buf(bdev_io);
 
 	/* Continue with IO completion flow */
-	if (spdk_unlikely(_bdev_io_handle_no_mem(bdev_io, BDEV_IO_RETRY_STATE_INVALID))) {
-		return;
-	}
-
 	bdev_io_complete(bdev_io);
 }
 
@@ -7090,10 +7086,6 @@ bdev_io_complete_sequence_cb(void *ctx, int status)
 	if (spdk_unlikely(status != 0)) {
 		SPDK_ERRLOG("Failed to execute accel sequence, status=%d\n", status);
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-	}
-
-	if (spdk_unlikely(_bdev_io_handle_no_mem(bdev_io, BDEV_IO_RETRY_STATE_INVALID))) {
-		return;
 	}
 
 	bdev_io_complete(bdev_io);
