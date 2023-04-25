@@ -161,3 +161,37 @@ get_nvme_with_ns_management() {
 	fi
 	return 1
 }
+
+get_ctratt() {
+	local ctrl=$1
+	get_nvme_ctrl_feature "$ctrl" ctratt
+}
+
+ctrl_has_fdp() {
+	local ctrl=$1 ctratt
+
+	ctratt=$(get_ctratt "$ctrl")
+	# See include/spdk/nvme_spec.h
+	((ctratt & 1 << 19))
+}
+
+get_ctrls_with_fdp() {
+	((${#ctrls[@]} == 0)) && scan_nvme_ctrls
+
+	local ctrl
+	for ctrl in "${!ctrls[@]}"; do
+		ctrl_has_fdp "$ctrl" && echo "$ctrl"
+	done
+
+}
+
+get_ctrl_with_fdp() {
+	local _ctrls
+
+	_ctrls=($(get_ctrls_with_fdp))
+	if ((${#_ctrls[@]} > 0)); then
+		echo "${_ctrls[0]}"
+		return 0
+	fi
+	return 1
+}
