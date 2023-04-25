@@ -139,6 +139,28 @@ rpc_cmd <<- CONFIG
 CONFIG
 
 "$rootdir/examples/bdev/bdevperf/bdevperf.py" perform_tests
+killprocess $bperfpid
+
+# Verify ENOMEM handling in the bdev layer by using the same accel configuration, but adding a
+# passthru bdev, which doesn't support memory domains/accel, to force bdev layer to append copies
+# and execute accel sequences
+"$rootdir/build/examples/bdevperf" -t 5 -w verify -o 4096 -q 256 --wait-for-rpc -z &
+bperfpid=$!
+
+waitforlisten $bperfpid
+rpc_cmd <<- CONFIG
+	accel_set_options --task-count 16
+	framework_start_init
+	bdev_malloc_create 32 4096 -b malloc0
+	accel_crypto_key_create -c AES_XTS -k "${key0[0]}" -e "${key0[1]}" -n key0
+	accel_crypto_key_create -c AES_XTS -k "${key1[0]}" -e "${key1[1]}" -n key1
+	bdev_passthru_create -p pt0 -b malloc0
+	bdev_crypto_create pt0 crypto0 -n key0
+	bdev_crypto_create crypto0 crypto1 -n key1
+CONFIG
+
+"$rootdir/examples/bdev/bdevperf/bdevperf.py" perform_tests
+killprocess $bperfpid
 
 trap - SIGINT SIGTERM EXIT
 killprocess $bperfpid
