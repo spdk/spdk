@@ -146,15 +146,37 @@ def setup_nvme_disk(libvirt, disk, index)
   nvme_pmrs=(ENV['NVME_PMR'] || "").split(',')
   nvme_zns=(ENV['NVME_ZNS'] || "").split(',')
   nvme_ms=(ENV['NVME_MS'] || "").split(',')
-
+  nvme_fdp=(ENV['NVME_FDP'] || "").split(',')
 
   namespace_disks = []
   pmr_cmdline = ""
   nvme_controller = ""
+  fdp_subsys = ""
+  fdp_subsys_id = ""
 
   # Define controller
   nvme_controller = "nvme,id=#{nvme_disk_id},serial=1234#{index}"
 
+  # For the FDP, we need to hook our nvme into a dedicated subsystem
+  if !nvme_fdp[index].nil? && nvme_fdp[index] != ""
+    fdp_subsys_id = "fdp-subsys#{index}"
+    fdp = nvme_fdp[index].split(':')[0..3]
+    fdp_ruhs = (nvme_fdp[index].split(':')[4..]) # fdp.ruhs per ns
+
+    # Put some defaults in place if needed
+    fdp_enable = "#{fdp[0] != nil && fdp[0] != '' ? fdp[0] : 'off'}"
+    fdp_runs = "#{fdp[1]   != nil && fdp[1] != '' ? fdp[1] : '96M'}"
+    fdp_nrg = "#{fdp[2]    != nil && fdp[2] != '' ? fdp[2] : 2}"
+    fdp_nruh = "#{fdp[3]   != nil && fdp[3] != '' ? fdp[3] : 8}"
+
+    fdp_subsys = "nvme-subsys,id=#{fdp_subsys_id},fdp=#{fdp_enable}"
+    fdp_subsys << ",fdp.runs=#{fdp_runs},fdp.nrg=#{fdp_nrg},fdp.nruh=#{fdp_nruh}"
+
+    nvme_controller << ",subsys=#{fdp_subsys_id}"
+
+    libvirt.qemuargs :value => "-device"
+    libvirt.qemuargs :value => fdp_subsys
+  end
   # Gather all drives - each namespace requires separate drive
   if nvme_namespaces[index].nil?
     namespace_disks = namespace_disks + nvme_disk.split()
@@ -195,10 +217,14 @@ def setup_nvme_disk(libvirt, disk, index)
     end
     zoned = nvme_zns[index].nil? ? "false" : "true"
     ms = nvme_ms[index].nil? ? "" : ",ms=64"
+    ns = "nvme-ns,drive=#{nvme_disk_id}-drive#{nsid},bus=#{nvme_disk_id},nsid=#{nsid + 1},zoned=#{zoned},logical_block_size=4096,physical_block_size=4096#{ms}"
+    if !fdp_ruhs.nil? && !fdp_ruhs[nsid].nil? && fdp_ruhs[nsid] != ""
+        ns << ",fdp.ruhs=#{fdp_ruhs[nsid]}"
+    end
     libvirt.qemuargs :value => "-drive"
     libvirt.qemuargs :value => "format=raw,file=#{disk},if=none,id=#{nvme_disk_id}-drive#{nsid}"
     libvirt.qemuargs :value => "-device"
-    libvirt.qemuargs :value => "nvme-ns,drive=#{nvme_disk_id}-drive#{nsid},bus=#{nvme_disk_id},nsid=#{nsid + 1},zoned=#{zoned},logical_block_size=4096,physical_block_size=4096#{ms}"
+    libvirt.qemuargs :value => ns
   }
 
 end

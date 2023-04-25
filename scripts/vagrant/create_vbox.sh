@@ -34,13 +34,16 @@ display_help() {
 	echo "                                  If no -b option is specified then this option defaults to emulating single"
 	echo "                                  NVMe with 1 namespace and assumes path: /var/lib/libvirt/images/nvme_disk.img"
 	echo "                                  -b option can be used multiple times for attaching multiple files to the VM"
-	echo "                                  Parameters for -b option: <path>,<type>,<ns_path1[:ns_path1:...]>,<cmb>,<pmr_file[:pmr_size]>,<zns>,<ms>"
+	echo "                                  Parameters for -b option: <path>,<type>,<ns_path1[:ns_path1:...]>,<cmb>,<pmr_file[:pmr_size]>,<zns>,<ms>,<fdp>"
 	echo "                                  Available types: nvme"
 	echo "                                  Default pmr size: 16M"
 	echo "                                  Default cmb: false"
 	echo "                                  Default zns: false"
 	echo "                                  Default ms: none"
-	echo "                                  type, ns_path, cmb, pmr, zns and ms can be empty"
+	echo "                                  Default fdp: 96M:2:8[:1;2;3:1...] (fdp.runs:fdp.nrg:fdp.nruh:fdp.ruhs)"
+	echo "                                  type, ns_path, cmb, pmr, zns, ms  and fdp can be empty"
+	echo "                                  fdp.ruhs defines fdp.ruhs per ns, e.g.: 4;5;6:1 would set 4;5;6 for ns=1,"
+	echo "                                  and 1 for ns=2."
 	echo "  -c                              Create all above disk, default 0"
 	echo "  -H                              Use hugepages for allocating VM memory. Only for libvirt provider. Default: false."
 	echo "  -u                              Use password authentication to the VM instead of SSH keys."
@@ -204,7 +207,7 @@ if [ -z "$NVME_FILE" ]; then
 else
 	TMP=""
 	for args in $NVME_FILE; do
-		while IFS=, read -r path type namespace cmb pmr zns ms; do
+		while IFS=, read -r path type namespace cmb pmr zns ms fdp; do
 			TMP+="$path,"
 			if [ -z "$type" ]; then
 				type="nvme"
@@ -215,6 +218,7 @@ else
 			NVME_DISKS_TYPE+="$type,"
 			NVME_DISKS_NAMESPACES+="$namespace,"
 			NVME_MS+="$ms,"
+			NVME_FDP+="$fdp,"
 			if [ ${NVME_AUTO_CREATE} = 1 ]; then
 				$SPDK_DIR/scripts/vagrant/create_nvme_img.sh -n $path
 			fi
@@ -238,6 +242,7 @@ if [ ${VERBOSE} = 1 ]; then
 	echo NVME_PMR=$NVME_PMR
 	echo NVME_ZNS=$NVME_ZNS
 	echo NVME_MS=$NVME_MS
+	echo NVME_FDP=$NVME_FDP
 	echo SPDK_VAGRANT_DISTRO=$SPDK_VAGRANT_DISTRO
 	echo SPDK_VAGRANT_VMCPU=$SPDK_VAGRANT_VMCPU
 	echo SPDK_VAGRANT_VMRAM=$SPDK_VAGRANT_VMRAM
@@ -265,6 +270,7 @@ export NVME_CMB
 export NVME_PMR
 export NVME_ZNS
 export NVME_MS
+export NVME_FDP
 export NVME_DISKS_TYPE
 export NVME_DISKS_NAMESPACES
 export NVME_FILE
