@@ -781,6 +781,10 @@ TestOneInput(const uint8_t *data, size_t size)
 	int ret = 0;
 	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
 
+	if (size < g_fuzzer->bytes_per_cmd) {
+		return -1;
+	}
+
 	g_ctrlr = spdk_nvme_connect(&g_trid, NULL, 0);
 	if (g_ctrlr == NULL) {
 		fprintf(stderr, "spdk_nvme_connect() failed for transport address '%s'\n",

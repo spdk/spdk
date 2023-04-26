@@ -107,6 +107,10 @@ TestOneInput(const uint8_t *data, size_t size)
 	char ctrlr_path[PATH_MAX];
 	int ret = 0;
 
+	if (size < g_fuzzer->bytes_per_cmd) {
+		return -1;
+	}
+
 	snprintf(ctrlr_path, sizeof(ctrlr_path), "%s/cntrl", g_ctrlr_path);
 	ret = access(ctrlr_path, F_OK);
 	if (ret != 0) {
