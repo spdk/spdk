@@ -93,7 +93,7 @@ struct nvme_path_id {
 	struct spdk_nvme_transport_id		trid;
 	struct spdk_nvme_host_id		hostid;
 	TAILQ_ENTRY(nvme_path_id)		link;
-	bool					is_failed;
+	uint64_t				last_failed_tsc;
 };
 
 typedef void (*bdev_nvme_reset_cb)(void *cb_arg, bool success);
