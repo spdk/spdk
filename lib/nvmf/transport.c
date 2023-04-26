@@ -493,14 +493,16 @@ nvmf_stop_listen_disconnect_qpairs(struct spdk_io_channel_iter *i)
 	group = spdk_io_channel_get_ctx(ch);
 
 	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, link, tmp_qpair) {
-		/* skip qpairs that don't match the TRID. */
 		if (spdk_nvmf_qpair_get_listen_trid(qpair, &tmp_trid)) {
 			continue;
 		}
 
+		/* Skip qpairs that don't match the listen trid and subsystem pointer.  If
+		 * the ctx->subsystem is NULL, it means disconnect all qpairs that match
+		 * the listen trid. */
 		if (!spdk_nvme_transport_id_compare(&ctx->trid, &tmp_trid)) {
-			if (ctx->subsystem == NULL || qpair->ctrlr == NULL ||
-			    ctx->subsystem == qpair->ctrlr->subsys) {
+			if (ctx->subsystem == NULL ||
+			    (qpair->ctrlr != NULL && ctx->subsystem == qpair->ctrlr->subsys)) {
 				spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
 				qpair_found = true;
 			}
