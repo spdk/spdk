@@ -128,11 +128,10 @@ $rpc_py nvmf_subsystem_remove_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANS
 wait $rpc_pid
 cat $testdir/trace.txt
 
-# Disabling this test for now due to issue #2595.
 # Check the frequency of delay reconnect
-#if (("$(grep -c "reconnect delay bdev controller NVMe0" < $testdir/trace.txt)" <= 2)); then
-#	false
-#fi
+if (("$(grep -c "reconnect delay bdev controller NVMe0" < $testdir/trace.txt)" <= 2)); then
+	false
+fi
 
 kill $dtrace_pid
 rm -f $testdir/trace.txt
