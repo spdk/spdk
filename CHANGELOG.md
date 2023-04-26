@@ -1,6 +1,91 @@
 # Changelog
 
-## v23.01.1: (Upcoming Release)
+## v23.01.1
+
+### accel
+
+Corrected the optional `key_name` parameters in `accel_crypto_keys_get` and
+`accel_crypto_key_destroy` RPC commands.
+
+Fixed SGL initialization in `dpdk_cryptodev` module when a task is processed in several iterations.
+
+Fixed memory domain contexts not being copied when removing copy operations.
+
+### bdev
+
+Auxiliary buffer is now freed when crypto operation fails in bdev crypto (#2886).
+
+Uring bdev no longer sets the `write_cache` flag, as it does not support flushing.
+
+The `hdgst` and `ddgst` fields are now output when saving bdev NVMe config.
+
+Fixed off-by-one error in maximum buffer size calculation when determining whether bdev layer can
+allocate a buffer from the iobuf pool.
+
+Crypto bdev no longer uses `spdk_bdev_queue_io_wait()` after receiving ENOMEM from accel.  Instead,
+such IOs are completed with NOMEM status and bdev layer is responsible for retrying them.
+
+### blob
+
+Removed short-circuiting path for `blob_freeze` to ensure that if `blob_freeze_io()` is called twice
+in a row, and the second time occurs before the `for_each_channel` for the first completes, the
+second caller will receive its callback too soon (#2935).
+
+Last `md_page` index is now correctly tracked during a resize (#2932).
+
+### env
+
+Huge-related options are now omitted when --no-huge specified (#2973).
+
+### idxd
+
+Fixed maybe-uninitialized compilation warnings under gcc 12.2.1.
+
+### miscellaneous
+
+bdevperf is now calling `rand_r()` twice to get 64-bit values to ensure it's issuing I/O across the
+full range of the bdev.
+
+### nvme
+
+The destination port is now checked before parsing address in the TCP transport to keep the behavior
+the same across Linux and FreeBSD due to differences in `getaddrinfo()` when port exceeds 65535
+(#2936).
+
+The `numd` field in the Reservation Report command is now filled as a 0 based value in accordance
+with the NVMe spec.
+
+Fixed `nvme_qpair_abort_all_queued_reqs()` not being called for the admin queue in the PCIe
+transport (#2928).
+
+PCIe transport now calls `transport_ctrlr_disconnect_qpair_done()` if `ctrlr_disable_poll()` fails,
+e.g. if the drive is unresponsive (#2931).
+
+RDMA and TCP transports are now correctly initializing `cpl->sqid` when aborting requests (#2930).
+
+Corrected reporting max SGE supported by the TCP transport to avoid unnecessarily splitting
+requests.
+
+### nvmf
+
+Fixed issue with aborting TCP requests awaiting R2T ACK leading to terminating the connection
+(#2789).
+
+Deprecated `cb_fn` argument in `spdk_nvmf_qpair_disconnect()` and updated it to return
+`-EINPROGRESS` when a qpair is already being disconnected.
+
+All trid fields are now initialized by `spdk_nvmf_qpair_get_*_trid()`. This fixed issue with active
+qpairs not getting disconnected after a listener is removed via `nvmf_subsystem_remove_listener`
+(#2595, #2862, #2864, #2865).
+
+### rpc
+
+Fixed the type of `rr-min-io parameter` in `bdev_nvme_set_multipath_policy` RPC to be an integer.
+
+### vhost
+
+Renamed `rte_vhost_slave_config_change()` to `rte_vhost_backend_config_change()` due to changes in
+DPDK.
 
 ## v23.01: accel chained ops, accel crypto, ublk target
 
