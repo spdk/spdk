@@ -507,6 +507,11 @@ spdk_nvmf_transport_stop_listen_async(struct spdk_nvmf_transport *transport,
 {
 	struct nvmf_stop_listen_ctx *ctx;
 
+	if (trid->subnqn[0] != '\0') {
+		SPDK_ERRLOG("subnqn should be empty, use subsystem pointer instead\n");
+		return -EINVAL;
+	}
+
 	ctx = calloc(1, sizeof(struct nvmf_stop_listen_ctx));
 	if (ctx == NULL) {
 		return -ENOMEM;
