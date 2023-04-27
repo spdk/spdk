@@ -7141,7 +7141,6 @@ bdev_nvme_abort(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio,
 		struct nvme_bdev_io *bio_to_abort)
 {
 	struct nvme_io_path *io_path;
-	struct nvme_ctrlr *nvme_ctrlr;
 	int rc = 0;
 
 	rc = bdev_nvme_abort_retry_io(nbdev_ch, bio_to_abort);
@@ -7150,31 +7149,22 @@ bdev_nvme_abort(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio,
 		return;
 	}
 
-	rc = 0;
-
-	/* Even admin commands, they were submitted to only nvme_ctrlrs which were
-	 * on any io_path. So traverse the io_path list for not only I/O commands
-	 * but also admin commands.
-	 */
-	STAILQ_FOREACH(io_path, &nbdev_ch->io_path_list, stailq) {
-		nvme_ctrlr = io_path->qpair->ctrlr;
-
-		rc = spdk_nvme_ctrlr_cmd_abort_ext(nvme_ctrlr->ctrlr,
+	io_path = bio_to_abort->io_path;
+	if (io_path != NULL) {
+		rc = spdk_nvme_ctrlr_cmd_abort_ext(io_path->qpair->ctrlr->ctrlr,
 						   io_path->qpair->qpair,
 						   bio_to_abort,
 						   bdev_nvme_abort_done, bio);
-		if (rc == -ENOENT) {
-			/* If no command was found in I/O qpair, the target command may be
-			 * admin command.
-			 */
-			rc = spdk_nvme_ctrlr_cmd_abort_ext(nvme_ctrlr->ctrlr,
+	} else {
+		STAILQ_FOREACH(io_path, &nbdev_ch->io_path_list, stailq) {
+			rc = spdk_nvme_ctrlr_cmd_abort_ext(io_path->qpair->ctrlr->ctrlr,
 							   NULL,
 							   bio_to_abort,
 							   bdev_nvme_abort_done, bio);
-		}
 
-		if (rc != -ENOENT) {
-			break;
+			if (rc != -ENOENT) {
+				break;
+			}
 		}
 	}
 
