@@ -1434,12 +1434,12 @@ _bdev_io_push_bounce_md_buffer(struct spdk_bdev_io *bdev_io)
 	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 	int rc = 0;
 
+	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	/* do the same for metadata buffer */
 	if (spdk_unlikely(bdev_io->internal.orig_md_iov.iov_base != NULL)) {
 		assert(spdk_bdev_is_md_separate(bdev_io->bdev));
 
-		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ &&
-		    bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
 			if (bdev_io_use_memory_domain(bdev_io)) {
 				TAILQ_INSERT_TAIL(&ch->io_memory_domain, bdev_io, internal.link);
 				/* If memory domain is used then we need to call async push function */
@@ -1498,12 +1498,12 @@ _bdev_io_push_bounce_data_buffer(struct spdk_bdev_io *bdev_io, bdev_copy_bounce_
 	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 	int rc = 0;
 
+	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	TAILQ_INSERT_TAIL(&ch->io_memory_domain, bdev_io, internal.link);
 	bdev_io->internal.data_transfer_cpl = cpl_cb;
 
 	/* if this is read path, copy data from bounce buffer to original buffer */
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ &&
-	    bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
 		if (bdev_io_use_memory_domain(bdev_io)) {
 			/* If memory domain is used then we need to call async push function */
 			rc = spdk_memory_domain_push_data(bdev_io->internal.memory_domain,
@@ -3085,15 +3085,18 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		spdk_trace_record(TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)parent_io, bdev_io->internal.caller_ctx);
 		TAILQ_REMOVE(&parent_io->internal.ch->io_submitted, parent_io, internal.ch_link);
 
-		if (bdev_io_needs_sequence_exec(parent_io->internal.desc, parent_io) &&
-		    spdk_likely(success)) {
-			bdev_io_exec_sequence(parent_io, bdev_io_complete_parent_sequence_cb);
-		} else if (parent_io->internal.orig_iovcnt != 0) {
-			_bdev_io_push_bounce_data_buffer(parent_io, parent_bdev_io_complete);
-			/* bdev IO will be completed in the callback */
-		} else {
-			parent_bdev_io_complete(parent_io, 0);
+		if (spdk_likely(parent_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS)) {
+			if (bdev_io_needs_sequence_exec(parent_io->internal.desc, parent_io)) {
+				bdev_io_exec_sequence(parent_io, bdev_io_complete_parent_sequence_cb);
+				return;
+			} else if (parent_io->internal.orig_iovcnt != 0) {
+				/* bdev IO will be completed in the callback */
+				_bdev_io_push_bounce_data_buffer(parent_io, parent_bdev_io_complete);
+				return;
+			}
 		}
+
+		parent_bdev_io_complete(parent_io, 0);
 		return;
 	}
 
@@ -6963,14 +6966,16 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 			return;
 		}
 	} else {
-		if (bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io) &&
-		    spdk_likely(status == SPDK_BDEV_IO_STATUS_SUCCESS)) {
-			bdev_io_exec_sequence(bdev_io, bdev_io_complete_sequence_cb);
-			return;
-		} else if (spdk_unlikely(bdev_io->internal.orig_iovcnt != 0)) {
-			_bdev_io_push_bounce_data_buffer(bdev_io, _bdev_io_complete_push_bounce_done);
-			/* bdev IO will be completed in the callback */
-			return;
+		if (spdk_likely(status == SPDK_BDEV_IO_STATUS_SUCCESS)) {
+			if (bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io)) {
+				bdev_io_exec_sequence(bdev_io, bdev_io_complete_sequence_cb);
+				return;
+			} else if (spdk_unlikely(bdev_io->internal.orig_iovcnt != 0)) {
+				_bdev_io_push_bounce_data_buffer(bdev_io,
+								 _bdev_io_complete_push_bounce_done);
+				/* bdev IO will be completed in the callback */
+				return;
+			}
 		}
 
 		_bdev_io_decrement_outstanding(bdev_ch, shared_resource);
