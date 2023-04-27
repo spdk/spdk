@@ -3087,7 +3087,7 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 		if (bdev_io_needs_sequence_exec(parent_io->internal.desc, parent_io) &&
 		    spdk_likely(success)) {
-			bdev_io_exec_sequence(bdev_io, bdev_io_complete_parent_sequence_cb);
+			bdev_io_exec_sequence(parent_io, bdev_io_complete_parent_sequence_cb);
 		} else if (parent_io->internal.orig_iovcnt != 0) {
 			_bdev_io_push_bounce_data_buffer(parent_io, parent_bdev_io_complete);
 			/* bdev IO will be completed in the callback */
