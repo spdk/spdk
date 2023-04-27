@@ -915,6 +915,31 @@ bdev_io_use_accel_sequence(struct spdk_bdev_io *bdev_io)
 	return bdev_io->internal.accel_sequence;
 }
 
+static inline void
+bdev_queue_nomem_io_head(struct spdk_bdev_shared_resource *shared_resource,
+			 struct spdk_bdev_io *bdev_io)
+{
+	/* Wait for some of the outstanding I/O to complete before we retry any of the nomem_io.
+	 * Normally we will wait for NOMEM_THRESHOLD_COUNT I/O to complete but for low queue depth
+	 * channels we will instead wait for half to complete.
+	 */
+	shared_resource->nomem_threshold = spdk_max((int64_t)shared_resource->io_outstanding / 2,
+					   (int64_t)shared_resource->io_outstanding - NOMEM_THRESHOLD_COUNT);
+
+	TAILQ_INSERT_HEAD(&shared_resource->nomem_io, bdev_io, internal.link);
+}
+
+static inline void
+bdev_queue_nomem_io_tail(struct spdk_bdev_shared_resource *shared_resource,
+			 struct spdk_bdev_io *bdev_io)
+{
+	/* We only queue IOs at the end of the nomem_io queue if they're submitted by the user while
+	 * the queue isn't empty, so we don't need to update the nomem_threshold here */
+	assert(!TAILQ_EMPTY(&shared_resource->nomem_io));
+
+	TAILQ_INSERT_TAIL(&shared_resource->nomem_io, bdev_io, internal.link);
+}
+
 void
 spdk_bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len)
 {
@@ -1365,15 +1390,8 @@ _bdev_io_handle_no_mem(struct spdk_bdev_io *bdev_io)
 
 	if (spdk_unlikely(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NOMEM)) {
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
-		TAILQ_INSERT_HEAD(&shared_resource->nomem_io, bdev_io, internal.link);
-		/*
-		 * Wait for some of the outstanding I/O to complete before we
-		 *  retry any of the nomem_io.  Normally we will wait for
-		 *  NOMEM_THRESHOLD_COUNT I/O to complete but for low queue
-		 *  depth channels we will instead wait for half to complete.
-		 */
-		shared_resource->nomem_threshold = spdk_max((int64_t)shared_resource->io_outstanding / 2,
-						   (int64_t)shared_resource->io_outstanding - NOMEM_THRESHOLD_COUNT);
+		bdev_queue_nomem_io_head(shared_resource, bdev_io);
+
 		/* If bdev module completed an I/O that has an accel sequence with NOMEM status, the
 		 * ownership of that sequence is transferred back to the bdev layer, so we need to
 		 * restore internal.accel_sequence to make sure that the sequence is handled
@@ -2489,7 +2507,7 @@ bdev_io_do_submit(struct spdk_bdev_channel *bdev_ch, struct spdk_bdev_io *bdev_i
 		bdev_submit_request(bdev, ch, bdev_io);
 		bdev_io->internal.in_submit_request = false;
 	} else {
-		TAILQ_INSERT_TAIL(&shared_resource->nomem_io, bdev_io, internal.link);
+		bdev_queue_nomem_io_tail(shared_resource, bdev_io);
 	}
 }
 
