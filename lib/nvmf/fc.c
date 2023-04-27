@@ -3663,7 +3663,6 @@ out:
 		SPDK_DEBUGLOG(nvmf_fc_adm_api, "%s", log_str);
 	}
 
-	free(args);
 	free(arg);
 }
 
