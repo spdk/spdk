@@ -1463,6 +1463,24 @@ int spdk_bdev_part_base_construct_ext(const char *bdev_name,
 				      spdk_io_channel_destroy_cb ch_destroy_cb,
 				      struct spdk_bdev_part_base **base);
 
+/** Options used when constructing a part bdev. */
+struct spdk_bdev_part_construct_opts {
+	/* Size of this structure in bytes */
+	uint64_t opts_size;
+	/** UUID of the bdev */
+	struct spdk_uuid uuid;
+};
+
+SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_part_construct_opts) == 24, "Incorrect size");
+
+/**
+ * Initialize options that will be passed to spdk_bdev_part_construct_ext().
+ *
+ * \param opts Options structure to initialize
+ * \param size Size of opts structure.
+ */
+void spdk_bdev_part_construct_opts_init(struct spdk_bdev_part_construct_opts *opts, uint64_t size);
+
 /**
  * Create a logical spdk_bdev_part on top of a base.
  *
@@ -1479,6 +1497,25 @@ int spdk_bdev_part_base_construct_ext(const char *bdev_name,
 int spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base *base,
 			     char *name, uint64_t offset_blocks, uint64_t num_blocks,
 			     char *product_name);
+
+/**
+ * Create a logical spdk_bdev_part on top of a base with a non-NULL bdev UUID
+ *
+ * \param part The part object allocated by the user.
+ * \param base The base from which to create the part.
+ * \param name The name of the new spdk_bdev_part.
+ * \param offset_blocks The offset into the base bdev at which this part begins.
+ * \param num_blocks The number of blocks that this part will span.
+ * \param product_name Unique name for this type of block device.
+ * \param opts Additional options.
+ *
+ * \return 0 on success.
+ * \return -1 if the bases underlying bdev cannot be claimed by the current module.
+ */
+int spdk_bdev_part_construct_ext(struct spdk_bdev_part *part, struct spdk_bdev_part_base *base,
+				 char *name, uint64_t offset_blocks, uint64_t num_blocks,
+				 char *product_name,
+				 const struct spdk_bdev_part_construct_opts *opts);
 
 /**
  * Forwards I/O from an spdk_bdev_part to the underlying base bdev.

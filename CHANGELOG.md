@@ -53,6 +53,10 @@ receive and send the I/O management commands.
 New `spdk_nvmf_transport_create_async` was added, it accepts a callback and callback argument.
 `spdk_nvmf_transport_create` is marked deprecated.
 
+### part
+
+New API `spdk_bdev_part_construct_ext` is added and allows the bdev's UUID to be specified.
+
 ### examples
 
 `examples/nvme/perf` application now accepts `--use-every-core` parameter that changes

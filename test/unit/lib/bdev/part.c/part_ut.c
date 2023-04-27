@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk_cunit.h"
@@ -393,6 +394,48 @@ part_get_io_channel_test(void)
 	ut_fini_bdev();
 }
 
+static void
+part_construct_ext(void)
+{
+	struct spdk_bdev_part_base	*base;
+	struct spdk_bdev_part		part1 = {};
+	struct spdk_bdev		bdev_base = {};
+	SPDK_BDEV_PART_TAILQ		tailq = TAILQ_HEAD_INITIALIZER(tailq);
+	const char			*uuid = "7ed764b7-a841-41b1-ba93-6548d9335a44";
+	struct spdk_bdev_part_construct_opts opts;
+	int rc;
+
+	bdev_base.name = "base";
+	bdev_base.fn_table = &base_fn_table;
+	bdev_base.module = &bdev_ut_if;
+	rc = spdk_bdev_register(&bdev_base);
+	CU_ASSERT(rc == 0);
+	rc = spdk_bdev_part_base_construct_ext("base", NULL, &vbdev_ut_if,
+					       &part_fn_table, &tailq, NULL,
+					       NULL, 0, NULL, NULL, &base);
+
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(base != NULL);
+
+	/* Verify opts.uuid is used as bdev UUID */
+	spdk_bdev_part_construct_opts_init(&opts, sizeof(opts));
+	spdk_uuid_parse(&opts.uuid, uuid);
+	rc = spdk_bdev_part_construct_ext(&part1, base, "test1", 0, 100, "test", &opts);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(base->ref == 1);
+	SPDK_CU_ASSERT_FATAL(base->claimed == true);
+	CU_ASSERT(spdk_bdev_get_by_name(uuid) != NULL);
+	CU_ASSERT(spdk_bdev_get_by_name("test1") != NULL);
+
+	/* Clean up */
+	spdk_bdev_part_base_hotremove(base, &tailq);
+	spdk_bdev_part_base_free(base);
+	_part_cleanup(&part1);
+	spdk_bdev_unregister(&bdev_base, NULL, NULL);
+
+	poll_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -407,6 +450,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, part_test);
 	CU_ADD_TEST(suite, part_free_test);
 	CU_ADD_TEST(suite, part_get_io_channel_test);
+	CU_ADD_TEST(suite, part_construct_ext);
 
 	allocate_cores(1);
 	allocate_threads(1);

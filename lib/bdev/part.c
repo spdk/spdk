@@ -497,13 +497,68 @@ spdk_bdev_part_base_construct_ext(const char *bdev_name,
 	return 0;
 }
 
+void
+spdk_bdev_part_construct_opts_init(struct spdk_bdev_part_construct_opts *opts, uint64_t size)
+{
+	if (opts == NULL) {
+		SPDK_ERRLOG("opts should not be NULL\n");
+		assert(opts != NULL);
+		return;
+	}
+	if (size == 0) {
+		SPDK_ERRLOG("size should not be zero\n");
+		assert(size != 0);
+		return;
+	}
+
+	memset(opts, 0, size);
+	opts->opts_size = size;
+}
+
+static void
+part_construct_opts_copy(const struct spdk_bdev_part_construct_opts *src,
+			 struct spdk_bdev_part_construct_opts *dst)
+{
+	if (src->opts_size == 0) {
+		SPDK_ERRLOG("size should not be zero\n");
+		assert(false);
+	}
+
+	memset(dst, 0, sizeof(*dst));
+	dst->opts_size = src->opts_size;
+
+#define FIELD_OK(field) \
+        offsetof(struct spdk_bdev_part_construct_opts, field) + sizeof(src->field) <= src->opts_size
+
+#define SET_FIELD(field) \
+        if (FIELD_OK(field)) { \
+                dst->field = src->field; \
+        } \
+
+	SET_FIELD(uuid);
+
+	/* You should not remove this statement, but need to update the assert statement
+	 * if you add a new field, and also add a corresponding SET_FIELD statement */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_part_construct_opts) == 24, "Incorrect size");
+
+#undef FIELD_OK
+#undef SET_FIELD
+}
+
 int
-spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base *base,
-			 char *name, uint64_t offset_blocks, uint64_t num_blocks,
-			 char *product_name)
+spdk_bdev_part_construct_ext(struct spdk_bdev_part *part, struct spdk_bdev_part_base *base,
+			     char *name, uint64_t offset_blocks, uint64_t num_blocks,
+			     char *product_name, const struct spdk_bdev_part_construct_opts *_opts)
 {
 	int rc;
 	bool first_claimed = false;
+	struct spdk_bdev_part_construct_opts opts;
+
+	if (_opts == NULL) {
+		spdk_bdev_part_construct_opts_init(&opts, sizeof(opts));
+	} else {
+		part_construct_opts_copy(_opts, &opts);
+	}
 
 	part->internal.bdev.blocklen = base->bdev->blocklen;
 	part->internal.bdev.blockcnt = num_blocks;
@@ -534,6 +589,8 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 			    spdk_bdev_get_name(base->bdev));
 		return -1;
 	}
+
+	spdk_uuid_copy(&part->internal.bdev.uuid, &opts.uuid);
 
 	base->ref++;
 	part->internal.base = base;
@@ -574,4 +631,13 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 	}
 
 	return rc;
+}
+
+int
+spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base *base,
+			 char *name, uint64_t offset_blocks, uint64_t num_blocks,
+			 char *product_name)
+{
+	return spdk_bdev_part_construct_ext(part, base, name, offset_blocks, num_blocks,
+					    product_name, NULL);
 }
