@@ -14,6 +14,8 @@
 #include "spdk/stdinc.h"
 #include "spdk/config.h"
 
+#define SPDK_CRC32_SIZE_BYTES 4
+
 #ifdef __cplusplus
 extern "C" {
 #endif
