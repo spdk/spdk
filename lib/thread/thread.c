@@ -276,7 +276,6 @@ struct spdk_msg {
 	SLIST_ENTRY(spdk_msg)	link;
 };
 
-#define SPDK_MSG_MEMPOOL_CACHE_SIZE	1024
 static struct spdk_mempool *g_spdk_msg_mempool = NULL;
 
 static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);

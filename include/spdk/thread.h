@@ -171,6 +171,10 @@ typedef void (*spdk_channel_for_each_cpl)(struct spdk_io_channel_iter *i, int st
 
 #define SPDK_IO_CHANNEL_STRUCT_SIZE	96
 
+/**
+ * Message memory pool size definitions
+ */
+#define SPDK_MSG_MEMPOOL_CACHE_SIZE	1024
 /* Power of 2 minus 1 is optimal for memory consumption */
 #define SPDK_DEFAULT_MSG_MEMPOOL_SIZE (262144 - 1)
 

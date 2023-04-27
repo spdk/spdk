@@ -31,6 +31,14 @@
 #define SPDK_APP_DPDK_DEFAULT_BASE_VIRTADDR	0x200000000000
 #define SPDK_APP_DEFAULT_CORE_LIMIT		0x140000000 /* 5 GiB */
 
+/* For core counts <= 63, the message memory pool size is set to
+ * SPDK_DEFAULT_MSG_MEMPOOL_SIZE.
+ * For core counts > 63, the message memory pool size is dependend on
+ * number of cores. Per core, it is calculated as SPDK_MSG_MEMPOOL_CACHE_SIZE
+ * multiplied by factor of 4 to have space for multiple spdk threads running
+ * on single core (e.g  iscsi + nvmf + vhost ). */
+#define SPDK_APP_PER_CORE_MSG_MEMPOOL_SIZE	(4 * SPDK_MSG_MEMPOOL_CACHE_SIZE)
+
 #define MAX_CPU_CORES				128
 
 struct spdk_app {
@@ -179,6 +187,23 @@ app_opts_validate(const char *app_opts)
 	return 0;
 }
 
+static void
+calculate_mempool_size(struct spdk_app_opts *opts,
+		       struct spdk_app_opts *opts_user)
+{
+	uint32_t core_count = spdk_env_get_core_count();
+
+	if (!opts_user->msg_mempool_size) {
+		/* The user didn't specify msg_mempool_size, so let's calculate it.
+		   Set the default (SPDK_DEFAULT_MSG_MEMPOOL_SIZE) if less than
+		   64 cores, and use 4k per core otherwise */
+		opts->msg_mempool_size = spdk_max(SPDK_DEFAULT_MSG_MEMPOOL_SIZE,
+						  core_count * SPDK_APP_PER_CORE_MSG_MEMPOOL_SIZE);
+	} else {
+		opts->msg_mempool_size = opts_user->msg_mempool_size;
+	}
+}
+
 void
 spdk_app_opts_init(struct spdk_app_opts *opts, size_t opts_size)
 {
@@ -211,7 +236,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts, size_t opts_size)
 	SET_FIELD(num_entries, SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES);
 	SET_FIELD(delay_subsystem_init, false);
 	SET_FIELD(disable_signal_handlers, false);
-	SET_FIELD(msg_mempool_size, SPDK_DEFAULT_MSG_MEMPOOL_SIZE);
+	/* Don't set msg_mempool_size here, it is set or calculated later */
 	SET_FIELD(rpc_allowlist, NULL);
 #undef SET_FIELD
 }
@@ -718,6 +743,10 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	if (app_setup_env(g_env_was_setup ? NULL : opts) < 0) {
 		return 1;
 	}
+
+	/* Calculate mempool size now that the env layer has configured the core count
+	 * for the application */
+	calculate_mempool_size(opts, opts_user);
 
 	spdk_log_open(opts->log);
 
