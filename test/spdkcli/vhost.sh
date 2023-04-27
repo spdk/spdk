@@ -122,6 +122,10 @@ $spdkcli_job "'vhost/scsi/vhost_scsi2 remove_target 2' 'Nvme0n1p3'
 "
 timing_exit spdkcli_clear_config
 
+# Make sure we wait long enough for the nvme ctrl to disappear, otherwise
+# we are at risk of hitting -EPERM while loading bdev configuration.
+xtrace_disable_per_cmd wait_for_all_nvme_ctrls_to_detach
+
 timing_enter spdkcli_load_config
 $spdkcli_job "'load_config $testdir/config.json'
 '/lvol_stores create lvs0 Malloc0' 'lvs0' True
