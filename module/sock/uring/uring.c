@@ -38,6 +38,18 @@ enum spdk_sock_task_type {
 #define SPDK_ZEROCOPY
 #endif
 
+/* We don't know how big the buffers that the user posts will be, but this
+ * is the maximum we'll ever allow it to receive in a single command.
+ * If the user buffers are smaller, it will just receive less. */
+#define URING_MAX_RECV_SIZE (128 * 1024)
+
+/* We don't know how many buffers the user will post, but this is the
+ * maximum number we'll take from the pool to post per group. */
+#define URING_BUF_POOL_SIZE 128
+
+/* We use 1 just so it's not zero and we can validate it's right. */
+#define URING_BUF_GROUP_ID 1
+
 enum spdk_uring_sock_task_status {
 	SPDK_URING_SOCK_TASK_NOT_IN_USE = 0,
 	SPDK_URING_SOCK_TASK_IN_PROCESS,
@@ -1105,7 +1117,7 @@ _sock_prep_read(struct spdk_sock *_sock)
 	struct spdk_uring_task *task = &sock->read_task;
 	struct io_uring_sqe *sqe;
 
-	/* Do not prepare pollin event */
+	/* Do not prepare read event */
 	if (task->status == SPDK_URING_SOCK_TASK_IN_PROCESS) {
 		return;
 	}
@@ -1118,7 +1130,12 @@ _sock_prep_read(struct spdk_sock *_sock)
 	sock->group->io_queued++;
 
 	sqe = io_uring_get_sqe(&sock->group->uring);
-	io_uring_prep_poll_add(sqe, sock->fd, POLLIN);
+	io_uring_prep_recv(sqe, sock->fd, NULL, URING_MAX_RECV_SIZE, 0);
+	/* Because we're using buffer select but have no logic to actually
+	 * post buffers, the recv will complete with ENOBUFS whenever there
+	 * is data on the socket, turning it into a POLLIN operation. */
+	sqe->buf_group = URING_BUF_GROUP_ID;
+	sqe->flags |= IOSQE_BUFFER_SELECT;
 	io_uring_sqe_set_data(sqe, task);
 	task->status = SPDK_URING_SOCK_TASK_IN_PROCESS;
 }
@@ -1180,11 +1197,22 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 		switch (task->type) {
 		case SPDK_SOCK_TASK_READ:
 			if (status == -EAGAIN || status == -EWOULDBLOCK) {
+				/* This likely shouldn't happen, but would indicate that the
+				 * kernel didn't have enough resources to queue a task internally. */
 				_sock_prep_read(&sock->base);
 			} else if (status == -ECANCELED) {
 				continue;
-			} else if (spdk_unlikely(status < 0)) {
-				sock->connection_status = status;
+			} else if (status == -ENOBUFS) {
+				/* There's data in the socket. */
+				if (sock->base.cb_fn != NULL &&
+				    sock->pending_recv == false) {
+					sock->pending_recv = true;
+					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
+				}
+
+				_sock_prep_read(&sock->base);
+			} else if (spdk_unlikely(status <= 0)) {
+				sock->connection_status = status < 0 ? status : -ECONNRESET;
 				spdk_sock_abort_requests(&sock->base);
 
 				/* The user needs to be notified that this socket is dead. */
@@ -1194,14 +1222,8 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
 				}
 			} else {
-				assert((status & POLLIN) == POLLIN);
-
-				if (sock->base.cb_fn != NULL &&
-				    sock->pending_recv == false) {
-					sock->pending_recv = true;
-					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
-				}
-
+				/* This shouldn't happen. We've never provided any buffers. */
+				assert(false);
 				_sock_prep_read(&sock->base);
 			}
 			break;
