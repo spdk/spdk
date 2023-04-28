@@ -27,11 +27,11 @@
 #define SPDK_SOCK_GROUP_QUEUE_DEPTH 4096
 #define SPDK_SOCK_CMG_INFO_SIZE (sizeof(struct cmsghdr) + sizeof(struct sock_extended_err))
 
-enum spdk_sock_task_type {
-	SPDK_SOCK_TASK_READ = 0,
-	SPDK_SOCK_TASK_ERRQUEUE,
-	SPDK_SOCK_TASK_WRITE,
-	SPDK_SOCK_TASK_CANCEL,
+enum uring_task_type {
+	URING_TASK_READ = 0,
+	URING_TASK_ERRQUEUE,
+	URING_TASK_WRITE,
+	URING_TASK_CANCEL,
 };
 
 #if defined(SO_ZEROCOPY) && defined(MSG_ZEROCOPY)
@@ -57,7 +57,7 @@ enum spdk_uring_sock_task_status {
 
 struct spdk_uring_task {
 	enum spdk_uring_sock_task_status	status;
-	enum spdk_sock_task_type		type;
+	enum uring_task_type		type;
 	struct spdk_uring_sock			*sock;
 	struct msghdr				msg;
 	struct iovec				iovs[IOV_BATCH_SIZE];
@@ -1322,7 +1322,7 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 		task->status = SPDK_URING_SOCK_TASK_NOT_IN_USE;
 
 		switch (task->type) {
-		case SPDK_SOCK_TASK_READ:
+		case URING_TASK_READ:
 			if (status == -EAGAIN || status == -EWOULDBLOCK) {
 				/* This likely shouldn't happen, but would indicate that the
 				 * kernel didn't have enough resources to queue a task internally. */
@@ -1375,7 +1375,7 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 				_sock_prep_read(&sock->base);
 			}
 			break;
-		case SPDK_SOCK_TASK_WRITE:
+		case URING_TASK_WRITE:
 			if (status == -EAGAIN || status == -EWOULDBLOCK ||
 			    (status == -ENOBUFS && sock->zcopy) ||
 			    status == -ECANCELED) {
@@ -1400,7 +1400,7 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 
 			break;
 #ifdef SPDK_ZEROCOPY
-		case SPDK_SOCK_TASK_ERRQUEUE:
+		case URING_TASK_ERRQUEUE:
 			if (status == -EAGAIN || status == -EWOULDBLOCK) {
 				_sock_prep_errqueue(&sock->base);
 			} else if (status == -ECANCELED) {
@@ -1422,7 +1422,7 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 			}
 			break;
 #endif
-		case SPDK_SOCK_TASK_CANCEL:
+		case URING_TASK_CANCEL:
 			/* Do nothing */
 			break;
 		default:
@@ -1736,18 +1736,18 @@ uring_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
 
 	sock->group = group;
 	sock->write_task.sock = sock;
-	sock->write_task.type = SPDK_SOCK_TASK_WRITE;
+	sock->write_task.type = URING_TASK_WRITE;
 
 	sock->read_task.sock = sock;
-	sock->read_task.type = SPDK_SOCK_TASK_READ;
+	sock->read_task.type = URING_TASK_READ;
 
 	sock->errqueue_task.sock = sock;
-	sock->errqueue_task.type = SPDK_SOCK_TASK_ERRQUEUE;
+	sock->errqueue_task.type = URING_TASK_ERRQUEUE;
 	sock->errqueue_task.msg.msg_control = sock->buf;
 	sock->errqueue_task.msg.msg_controllen = sizeof(sock->buf);
 
 	sock->cancel_task.sock = sock;
-	sock->cancel_task.type = SPDK_SOCK_TASK_CANCEL;
+	sock->cancel_task.type = URING_TASK_CANCEL;
 
 	/* switched from another polling group due to scheduling */
 	if (spdk_unlikely(sock->recv_pipe != NULL &&
