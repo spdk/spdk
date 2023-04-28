@@ -150,7 +150,7 @@ exit_handler(void)
 	if (g_io_thread.io_ctrlr_path && g_io_thread.thread) {
 		spdk_thread_send_msg(g_io_thread.thread, io_terminate, &g_io_thread);
 
-	} else {
+	} else if (spdk_thread_get_app_thread()) {
 		spdk_app_stop(0);
 	}
 
