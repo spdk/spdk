@@ -373,6 +373,14 @@ void spdk_lvol_inflate(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void
  */
 void spdk_lvol_decouple_parent(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg);
 
+/**
+ * Determine if an lvol is degraded. A degraded lvol cannot perform IO.
+ *
+ * \param lvol Handle to lvol
+ * \return true if the lvol has no open blob or the lvol's blob is degraded, else false.
+ */
+bool spdk_lvol_is_degraded(const struct spdk_lvol *lvol);
+
 #ifdef __cplusplus
 }
 #endif

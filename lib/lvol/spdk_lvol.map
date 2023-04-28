@@ -25,6 +25,7 @@
 	spdk_lvol_iter_immediate_clones;
 	spdk_lvol_get_by_uuid;
 	spdk_lvol_get_by_names;
+	spdk_lvol_is_degraded;
 
 	# internal functions
 	spdk_lvol_resize;

@@ -2197,3 +2197,14 @@ spdk_lvol_get_by_names(const char *lvs_name, const char *lvol_name)
 	pthread_mutex_unlock(&g_lvol_stores_mutex);
 	return NULL;
 }
+
+bool
+spdk_lvol_is_degraded(const struct spdk_lvol *lvol)
+{
+	struct spdk_blob *blob = lvol->blob;
+
+	if (blob == NULL) {
+		return true;
+	}
+	return spdk_blob_is_degraded(blob);
+}
