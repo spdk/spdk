@@ -9302,12 +9302,10 @@ bdev_lba_range_overlaps_tailq(struct lba_range *range, lba_range_tailq_t *tailq)
 }
 
 static int
-bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
-		    uint64_t offset, uint64_t length,
-		    lock_range_cb cb_fn, void *cb_arg)
+_bdev_lock_lba_range(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch,
+		     uint64_t offset, uint64_t length,
+		     lock_range_cb cb_fn, void *cb_arg)
 {
-	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
-	struct spdk_bdev_channel *ch = __io_ch_to_bdev_ch(_ch);
 	struct locked_lba_range_ctx *ctx;
 
 	if (cb_arg == NULL) {
@@ -9341,6 +9339,17 @@ bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 	}
 	spdk_spin_unlock(&bdev->internal.spinlock);
 	return 0;
+}
+
+static int
+bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
+		    uint64_t offset, uint64_t length,
+		    lock_range_cb cb_fn, void *cb_arg)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+	struct spdk_bdev_channel *ch = __io_ch_to_bdev_ch(_ch);
+
+	return _bdev_lock_lba_range(bdev, ch, offset, length, cb_fn, cb_arg);
 }
 
 static void
@@ -9426,12 +9435,10 @@ bdev_unlock_lba_range_get_channel(struct spdk_bdev_channel_iter *i, struct spdk_
 }
 
 static int
-bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
-		      uint64_t offset, uint64_t length,
-		      lock_range_cb cb_fn, void *cb_arg)
+_bdev_unlock_lba_range(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch,
+		       uint64_t offset, uint64_t length,
+		       lock_range_cb cb_fn, void *cb_arg)
 {
-	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
-	struct spdk_bdev_channel *ch = __io_ch_to_bdev_ch(_ch);
 	struct locked_lba_range_ctx *ctx;
 	struct lba_range *range;
 	bool range_found = false;
@@ -9479,6 +9486,17 @@ bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 	spdk_bdev_for_each_channel(bdev, bdev_unlock_lba_range_get_channel, ctx,
 				   bdev_unlock_lba_range_cb);
 	return 0;
+}
+
+static int
+bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
+		      uint64_t offset, uint64_t length,
+		      lock_range_cb cb_fn, void *cb_arg)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+	struct spdk_bdev_channel *ch = __io_ch_to_bdev_ch(_ch);
+
+	return _bdev_unlock_lba_range(bdev, ch, offset, length, cb_fn, cb_arg);
 }
 
 int
