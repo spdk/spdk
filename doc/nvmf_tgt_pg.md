@@ -17,7 +17,7 @@ used in the implementation of the example NVMe-oF target application in
 
 This guide is written assuming that the reader is familiar with both NVMe and
 NVMe over Fabrics. The best way to become familiar with those is to read their
-[specifications](http://nvmexpress.org/resources/specifications/).
+[specifications](https://nvmexpress.org/specifications/).
 
 ## Primitives
 
