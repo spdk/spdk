@@ -185,6 +185,20 @@ def bdev_ocf_get_stats(client, name):
     return client.call('bdev_ocf_get_stats', params)
 
 
+def bdev_ocf_reset_stats(client, name):
+    """Reset statistics of chosen OCF block device
+
+    Args:
+        name: name of OCF bdev
+
+    Returns:
+        None
+    """
+    params = {'name': name}
+
+    return client.call('bdev_ocf_reset_stats', params)
+
+
 def bdev_ocf_get_bdevs(client, name=None):
     """Get list of OCF devices including unregistered ones
 

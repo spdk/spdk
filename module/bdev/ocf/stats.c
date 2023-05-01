@@ -20,6 +20,22 @@ vbdev_ocf_stats_get(ocf_cache_t cache, char *core_name, struct vbdev_ocf_stats *
 	return ocf_stats_collect_core(core, &stats->usage, &stats->reqs, &stats->blocks, &stats->errors);
 }
 
+int
+vbdev_ocf_stats_reset(ocf_cache_t cache, char *core_name)
+{
+	int status;
+	ocf_core_t core;
+
+	status = ocf_core_get_by_name(cache, core_name, strlen(core_name), &core);
+	if (status) {
+		return status;
+	}
+
+	ocf_core_stats_initialize(core);
+
+	return 0;
+}
+
 #define WJSON_STAT(w, stats, group, field, units) \
 	spdk_json_write_named_object_begin(w, #field); \
 	spdk_json_write_named_uint64(w, "count", stats->group.field.value); \

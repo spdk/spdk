@@ -327,6 +327,13 @@ if __name__ == "__main__":
     p.add_argument('name', help='Name of OCF bdev')
     p.set_defaults(func=bdev_ocf_get_stats)
 
+    def bdev_ocf_reset_stats(args):
+        print_dict(rpc.bdev.bdev_ocf_reset_stats(args.client,
+                                                 name=args.name))
+    p = subparsers.add_parser('bdev_ocf_reset_stats', help='Reset statistics of chosen OCF block device')
+    p.add_argument('name', help='Name of OCF bdev')
+    p.set_defaults(func=bdev_ocf_reset_stats)
+
     def bdev_ocf_get_bdevs(args):
         print_dict(rpc.bdev.bdev_ocf_get_bdevs(args.client,
                                                name=args.name))

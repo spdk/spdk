@@ -3235,6 +3235,45 @@ Example response:
 }
 ~~~
 
+### bdev_ocf_reset_stats {#rpc_bdev_ocf_reset_stats}
+
+Reset statistics of chosen OCF block device.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Block device name
+
+#### Response
+
+Completion status of reset statistics operation returned as a boolean.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "ocf0"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_ocf_reset_stats",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### bdev_ocf_get_bdevs {#rpc_bdev_ocf_get_bdevs}
 
 Get list of OCF devices including unregistered ones.

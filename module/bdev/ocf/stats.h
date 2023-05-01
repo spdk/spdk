@@ -17,6 +17,7 @@ struct vbdev_ocf_stats {
 };
 
 int vbdev_ocf_stats_get(ocf_cache_t cache, char *core_name, struct vbdev_ocf_stats *stats);
+int vbdev_ocf_stats_reset(ocf_cache_t cache, char *core_name);
 
 void vbdev_ocf_stats_write_json(struct spdk_json_write_ctx *w, struct vbdev_ocf_stats *stats);
 

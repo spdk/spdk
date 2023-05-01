@@ -224,6 +224,71 @@ end:
 }
 SPDK_RPC_REGISTER("bdev_ocf_get_stats", rpc_bdev_ocf_get_stats, SPDK_RPC_RUNTIME)
 
+static void
+rpc_bdev_ocf_reset_stats_cmpl(ocf_cache_t cache, void *priv, int error)
+{
+	struct get_ocf_stats_ctx *ctx = (struct get_ocf_stats_ctx *) priv;
+
+	if (error) {
+		goto end;
+	}
+
+	error = vbdev_ocf_stats_reset(cache, ctx->core_name);
+
+	ocf_mngt_cache_read_unlock(cache);
+
+end:
+	if (error) {
+		spdk_jsonrpc_send_error_response_fmt(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Could not reset stats: %s",
+						     spdk_strerror(-error));
+	} else {
+		spdk_jsonrpc_send_bool_response(ctx->request, true);
+	}
+	free(ctx);
+}
+
+static void
+rpc_bdev_ocf_reset_stats(struct spdk_jsonrpc_request *request,
+			 const struct spdk_json_val *params)
+{
+	struct rpc_bdev_ocf_name req = {NULL};
+	struct vbdev_ocf *vbdev;
+	struct get_ocf_stats_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Not enough memory to process request");
+		goto end;
+	}
+
+	if (spdk_json_decode_object(params, rpc_bdev_ocf_name_decoders,
+				    SPDK_COUNTOF(rpc_bdev_ocf_name_decoders),
+				    &req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		free(ctx);
+		goto end;
+	}
+
+	vbdev = vbdev_ocf_get_by_name(req.name);
+	if (vbdev == NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 spdk_strerror(ENODEV));
+		free(ctx);
+		goto end;
+	}
+
+	ctx->core_name = vbdev->core.name;
+	ctx->request = request;
+	ocf_mngt_cache_read_lock(vbdev->ocf_cache, rpc_bdev_ocf_reset_stats_cmpl, ctx);
+
+end:
+	free_rpc_bdev_ocf_name(&req);
+}
+SPDK_RPC_REGISTER("bdev_ocf_reset_stats", rpc_bdev_ocf_reset_stats, SPDK_RPC_RUNTIME)
+
 /* Structure to decode the input parameters for this RPC method. */
 static const struct spdk_json_object_decoder rpc_bdev_ocf_get_bdevs_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_ocf_name, name), spdk_json_decode_string, true},
