@@ -201,14 +201,8 @@ user_data_to_op(uint64_t user_data)
 void
 spdk_ublk_init(void)
 {
-	uint32_t i;
-
 	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
-	spdk_cpuset_zero(&g_core_mask);
-	SPDK_ENV_FOREACH_CORE(i) {
-		spdk_cpuset_set_cpu(&g_core_mask, i, true);
-	}
 	g_ublk_tgt.ctrl_fd = -1;
 	g_ublk_tgt.ctrl_ring.ring_fd = -1;
 }
@@ -361,35 +355,31 @@ ublk_open(void)
 }
 
 static int
-ublk_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
+ublk_parse_core_mask(const char *mask)
 {
-	int rc;
 	struct spdk_cpuset tmp_mask;
-
-	if (cpumask == NULL) {
-		return -EPERM;
-	}
+	int rc;
 
 	if (mask == NULL) {
-		spdk_cpuset_copy(cpumask, &g_core_mask);
+		spdk_env_get_cpuset(&g_core_mask);
 		return 0;
 	}
 
-	rc = spdk_cpuset_parse(cpumask, mask);
+	rc = spdk_cpuset_parse(&g_core_mask, mask);
 	if (rc < 0) {
 		SPDK_ERRLOG("invalid cpumask %s\n", mask);
-		return -rc;
+		return -EINVAL;
 	}
 
-	if (spdk_cpuset_count(cpumask) == 0) {
+	if (spdk_cpuset_count(&g_core_mask) == 0) {
 		SPDK_ERRLOG("no cpus specified\n");
 		return -EINVAL;
 	}
 
-	spdk_cpuset_copy(&tmp_mask, cpumask);
+	spdk_env_get_cpuset(&tmp_mask);
 	spdk_cpuset_and(&tmp_mask, &g_core_mask);
 
-	if (!spdk_cpuset_equal(&tmp_mask, cpumask)) {
+	if (!spdk_cpuset_equal(&tmp_mask, &g_core_mask)) {
 		SPDK_ERRLOG("one of selected cpu is outside of core mask(=%s)\n",
 			    spdk_cpuset_fmt(&g_core_mask));
 		return -EINVAL;
@@ -414,7 +404,6 @@ ublk_create_target(const char *cpumask_str)
 	int rc;
 	uint32_t i;
 	char thread_name[32];
-	struct spdk_cpuset cpuset = {};
 	struct ublk_thread_ctx *thread_ctx;
 
 	if (g_ublk_tgt.active == true) {
@@ -424,7 +413,7 @@ ublk_create_target(const char *cpumask_str)
 
 	TAILQ_INIT(&g_ublk_tgt.ctrl_wait_tailq);
 
-	rc = ublk_parse_core_mask(cpumask_str, &cpuset);
+	rc = ublk_parse_core_mask(cpumask_str);
 	if (rc != 0) {
 		return rc;
 	}
@@ -448,12 +437,12 @@ ublk_create_target(const char *cpumask_str)
 	}
 
 	SPDK_ENV_FOREACH_CORE(i) {
-		if (!spdk_cpuset_get_cpu(&cpuset, i)) {
+		if (!spdk_cpuset_get_cpu(&g_core_mask, i)) {
 			continue;
 		}
 		snprintf(thread_name, sizeof(thread_name), "ublk_thread%u", i);
 		thread_ctx = &g_ublk_tgt.thread_ctx[g_num_ublk_threads];
-		thread_ctx->ublk_thread = spdk_thread_create(thread_name, &cpuset);
+		thread_ctx->ublk_thread = spdk_thread_create(thread_name, &g_core_mask);
 		spdk_thread_send_msg(thread_ctx->ublk_thread, ublk_poller_register, thread_ctx);
 		g_num_ublk_threads++;
 	}
