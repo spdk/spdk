@@ -41,6 +41,8 @@ struct spdk_bdev_module g_lvol_if = {
 
 SPDK_BDEV_MODULE_REGISTER(lvol, &g_lvol_if)
 
+static void _vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg);
+
 struct lvol_store_bdev *
 vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig)
 {
@@ -50,8 +52,11 @@ vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig)
 	while (lvs_bdev != NULL) {
 		lvs = lvs_bdev->lvs;
 		if (lvs == lvs_orig) {
-			if (lvs_bdev->req != NULL) {
-				/* We do not allow access to lvs that are being destroyed */
+			if (lvs_bdev->removal_in_progress) {
+				/* We do not allow access to lvs that are being unloaded or
+				 * destroyed */
+				SPDK_DEBUGLOG(vbdev_lvol, "lvs %s: removal in progress\n",
+					      lvs_orig->name);
 				return NULL;
 			} else {
 				return lvs_bdev;
@@ -120,8 +125,11 @@ vbdev_get_lvs_bdev_by_bdev(struct spdk_bdev *bdev_orig)
 
 	while (lvs_bdev != NULL) {
 		if (lvs_bdev->bdev == bdev_orig) {
-			if (lvs_bdev->req != NULL) {
-				/* We do not allow access to lvs that are being destroyed */
+			if (lvs_bdev->removal_in_progress) {
+				/* We do not allow access to lvs that are being unloaded or
+				 * destroyed */
+				SPDK_DEBUGLOG(vbdev_lvol, "lvs %s: removal in progress\n",
+					      lvs_bdev->lvs->name);
 				return NULL;
 			} else {
 				return lvs_bdev;
@@ -359,7 +367,7 @@ _vbdev_lvs_remove_lvol_cb(void *cb_arg, int lvolerrno)
 	lvol = TAILQ_FIRST(&lvs->lvols);
 	while (lvol != NULL) {
 		if (spdk_lvol_deletable(lvol)) {
-			vbdev_lvol_destroy(lvol, _vbdev_lvs_remove_lvol_cb, lvs_bdev);
+			_vbdev_lvol_destroy(lvol, _vbdev_lvs_remove_lvol_cb, lvs_bdev);
 			return;
 		}
 		lvol = TAILQ_NEXT(lvol, link);
@@ -424,6 +432,8 @@ _vbdev_lvs_remove(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void 
 		}
 		return;
 	}
+
+	lvs_bdev->removal_in_progress = true;
 
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
@@ -611,14 +621,18 @@ _vbdev_lvol_destroy_cb(void *cb_arg, int bdeverrno)
 	free(ctx);
 }
 
-void
-vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
+static void
+_vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
 	struct vbdev_lvol_destroy_ctx *ctx;
 	size_t count;
 
 	assert(lvol != NULL);
 	assert(cb_fn != NULL);
+
+	/* Callers other than _vbdev_lvs_remove() must ensure the lvstore is not being removed. */
+	assert(cb_fn == _vbdev_lvs_remove_lvol_cb ||
+	       vbdev_get_lvs_bdev_by_lvs(lvol->lvol_store) != NULL);
 
 	/* Check if it is possible to delete lvol */
 	spdk_blob_get_clones(lvol->lvol_store->blobstore, lvol->blob_id, NULL, &count);
@@ -645,6 +659,26 @@ vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb
 	}
 
 	spdk_bdev_unregister(lvol->bdev, _vbdev_lvol_destroy_cb, ctx);
+}
+
+void
+vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	struct lvol_store_bdev *lvs_bdev;
+
+	/*
+	 * During destruction of an lvolstore, _vbdev_lvs_unload() iterates through lvols until they
+	 * are all deleted. There may be some IO required
+	 */
+	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvol->lvol_store);
+	if (lvs_bdev == NULL) {
+		SPDK_DEBUGLOG(vbdev_lvol, "lvol %s: lvolstore is being removed\n",
+			      lvol->unique_id);
+		cb_fn(cb_arg, -ENODEV);
+		return;
+	}
+
+	_vbdev_lvol_destroy(lvol, cb_fn, cb_arg);
 }
 
 static char *
@@ -1086,6 +1120,7 @@ _create_lvol_disk(struct spdk_lvol *lvol, bool destroy)
 	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvol->lvol_store);
 	if (lvs_bdev == NULL) {
 		SPDK_ERRLOG("No spdk lvs-bdev pair found for lvol %s\n", lvol->unique_id);
+		assert(false);
 		return -ENODEV;
 	}
 

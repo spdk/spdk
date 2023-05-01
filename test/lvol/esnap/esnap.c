@@ -673,6 +673,91 @@ esnap_remove_degraded(void)
 }
 
 static void
+late_delete(void)
+{
+	char aiopath[PATH_MAX];
+	struct spdk_lvol_store *lvs = NULL;
+	const uint32_t bs_size_bytes = 10 * 1024 * 1024;
+	const uint32_t bs_block_size = 4096;
+	const uint32_t cluster_size = 32 * 1024;
+	struct op_with_handle_data owh_data;
+	struct lvol_bdev *lvol_bdev;
+	struct spdk_lvol *lvol;
+	int rc, rc2;
+	int count;
+
+	/* Create device for lvstore. This cannot be a malloc bdev because we need to sneak a
+	 * deletion in while blob_persist() is in progress.
+	 */
+	rc = make_test_file(bs_size_bytes, aiopath, sizeof(aiopath), "late_delete.aio");
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	rc = create_aio_bdev("aio1", aiopath, bs_block_size, false);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	poll_threads();
+
+	/* Create lvstore */
+	rc = vbdev_lvs_create("aio1", "lvs1", cluster_size, 0, 0,
+			      lvs_op_with_handle_cb, clear_owh(&owh_data));
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	poll_error_updated(&owh_data.lvserrno);
+	SPDK_CU_ASSERT_FATAL(owh_data.lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(owh_data.u.lvs != NULL);
+	lvs = owh_data.u.lvs;
+
+	/* Create an lvol */
+	vbdev_lvol_create(lvs, "lvol", 1, true, LVOL_CLEAR_WITH_DEFAULT,
+			  lvol_op_with_handle_cb, clear_owh(&owh_data));
+	poll_error_updated(&owh_data.lvserrno);
+	CU_ASSERT(owh_data.lvserrno == 0);
+	CU_ASSERT(owh_data.u.lvol != NULL);
+
+	/* Verify the lvol can be found both ways */
+	CU_ASSERT(spdk_bdev_get_by_name("lvs1/lvol") != NULL);
+	CU_ASSERT(spdk_lvol_get_by_names("lvs1", "lvol") != NULL);
+
+	/*
+	 * Once the lvolstore deletion starts, it will briefly be possible to look up lvol bdevs and
+	 * degraded lvols in that lvolstore but any attempt to delete them will fail with -ENODEV.
+	 */
+	rc = 0xbad;
+	count = 0;
+	vbdev_lvs_destruct(lvs, lvol_op_complete_cb, &rc);
+	do {
+		lvol_bdev = (struct lvol_bdev *)spdk_bdev_get_by_name("lvs1/lvol");
+		if (lvol_bdev != NULL) {
+			rc2 = 0xbad;
+			vbdev_lvol_destroy(lvol_bdev->lvol, lvol_op_complete_cb, &rc2);
+			CU_ASSERT(rc2 == -ENODEV);
+		}
+		lvol = spdk_lvol_get_by_names("lvs1", "lvol");
+		if (lvol != NULL) {
+			/* If we are here, we are likely reproducing #2998 */
+			rc2 = 0xbad;
+			vbdev_lvol_destroy(lvol, lvol_op_complete_cb, &rc2);
+			CU_ASSERT(rc2 == -ENODEV);
+			count++;
+		}
+
+		spdk_thread_poll(g_ut_threads[0].thread, 0, 0);
+	} while (rc == 0xbad);
+
+	/* Ensure that the test exercised the race */
+	CU_ASSERT(count != 0);
+
+	/* The lvol is now gone */
+	CU_ASSERT(spdk_bdev_get_by_name("lvs1/lvol") == NULL);
+	CU_ASSERT(spdk_lvol_get_by_names("lvs1", "lvol") == NULL);
+
+	/* Clean up */
+	rc = 0xbad;
+	bdev_aio_delete("aio1", unregister_cb, &rc);
+	poll_error_updated(&rc);
+	CU_ASSERT(rc == 0);
+	rc = unlink(aiopath);
+	CU_ASSERT(rc == 0);
+}
+
+static void
 bdev_init_cb(void *arg, int rc)
 {
 	assert(rc == 0);
@@ -706,6 +791,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, esnap_clone_io);
 	CU_ADD_TEST(suite, esnap_hotplug);
 	CU_ADD_TEST(suite, esnap_remove_degraded);
+	CU_ADD_TEST(suite, late_delete);
 
 	allocate_threads(2);
 	set_thread(0);

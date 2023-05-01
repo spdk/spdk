@@ -16,6 +16,7 @@ struct lvol_store_bdev {
 	struct spdk_lvol_store	*lvs;
 	struct spdk_bdev	*bdev;
 	struct spdk_lvs_req	*req;
+	bool			removal_in_progress;
 
 	TAILQ_ENTRY(lvol_store_bdev)	lvol_stores;
 };
