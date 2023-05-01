@@ -202,9 +202,7 @@ test_nvme_rdma_build_sgl_request(void)
 	rdma_req.id = 0;
 	rdma_req.req = &req;
 
-	req.payload.reset_sgl_fn = nvme_rdma_ut_reset_sgl;
-	req.payload.next_sge_fn = nvme_rdma_ut_next_sge;
-	req.payload.contig_or_cb_arg = &bio;
+	req.payload = NVME_PAYLOAD_SGL(nvme_rdma_ut_reset_sgl, nvme_rdma_ut_next_sge, &bio, NULL);
 	req.qpair = &rqpair.qpair;
 
 	for (i = 0; i < NVME_RDMA_MAX_SGL_DESCRIPTORS; i++) {
@@ -311,9 +309,7 @@ test_nvme_rdma_build_sgl_inline_request(void)
 	rdma_req.id = 0;
 	rdma_req.req = &req;
 
-	req.payload.reset_sgl_fn = nvme_rdma_ut_reset_sgl;
-	req.payload.next_sge_fn = nvme_rdma_ut_next_sge;
-	req.payload.contig_or_cb_arg = &bio;
+	req.payload = NVME_PAYLOAD_SGL(nvme_rdma_ut_reset_sgl, nvme_rdma_ut_next_sge, &bio, NULL);
 	req.qpair = &rqpair.qpair;
 
 	/* Test case 1: single inline SGL. Expected: PASS */
@@ -373,7 +369,7 @@ test_nvme_rdma_build_contig_request(void)
 	rdma_req.id = 0;
 	rdma_req.req = &req;
 
-	req.payload.contig_or_cb_arg = (void *)0xdeadbeef;
+	req.payload = NVME_PAYLOAD_CONTIG((void *)0xdeadbeef, NULL);
 	req.qpair = &rqpair.qpair;
 
 	/* Test case 1: contig request. Expected: PASS */
@@ -416,7 +412,7 @@ test_nvme_rdma_build_contig_inline_request(void)
 	rdma_req.id = 0;
 	rdma_req.req = &req;
 
-	req.payload.contig_or_cb_arg = (void *)0xdeadbeef;
+	req.payload = NVME_PAYLOAD_CONTIG((void *)0xdeadbeef, NULL);
 	req.qpair = &rqpair.qpair;
 
 	/* Test case 1: single inline SGL. Expected: PASS */
@@ -831,7 +827,7 @@ test_nvme_rdma_req_init(void)
 	rdma_req.id = 0;
 	req.cmd.opc = SPDK_NVME_DATA_HOST_TO_CONTROLLER;
 
-	req.payload.contig_or_cb_arg = (void *)0xdeadbeef;
+	req.payload = NVME_PAYLOAD_CONTIG((void *)0xdeadbeef, NULL);
 	/* case 1: req->payload_size == 0, expect: pass. */
 	req.payload_size = 0;
 	rqpair.qpair.ctrlr->ioccsz_bytes = 1024;
@@ -853,7 +849,7 @@ test_nvme_rdma_req_init(void)
 	rqpair.qpair.ctrlr->icdoff = 0;
 	req.payload_offset = 0;
 	req.payload_size = 1024;
-	req.payload.reset_sgl_fn = NULL;
+	req.payload = NVME_PAYLOAD_CONTIG((void *)0xdeadbeef, NULL);
 	rc = nvme_rdma_req_init(&rqpair, &req, &rdma_req);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
@@ -870,7 +866,7 @@ test_nvme_rdma_req_init(void)
 	rqpair.qpair.ctrlr->icdoff = 1;
 	req.payload_offset = 0;
 	req.payload_size = 1024;
-	req.payload.reset_sgl_fn = NULL;
+	req.payload = NVME_PAYLOAD_CONTIG((void *)0xdeadbeef, NULL);
 	rc = nvme_rdma_req_init(&rqpair, &req, &rdma_req);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(req.cmd.dptr.sgl1.keyed.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK);
@@ -884,9 +880,7 @@ test_nvme_rdma_req_init(void)
 	/* icd_supported is true */
 	rdma_req.req = NULL;
 	rqpair.qpair.ctrlr->icdoff = 0;
-	req.payload.reset_sgl_fn = nvme_rdma_ut_reset_sgl;
-	req.payload.next_sge_fn = nvme_rdma_ut_next_sge;
-	req.payload.contig_or_cb_arg = &bio;
+	req.payload = NVME_PAYLOAD_SGL(nvme_rdma_ut_reset_sgl, nvme_rdma_ut_next_sge, &bio, NULL);
 	req.qpair = &rqpair.qpair;
 	bio.iovpos = 0;
 	req.payload_offset = 0;
@@ -908,9 +902,7 @@ test_nvme_rdma_req_init(void)
 	/* icd_supported is false */
 	rdma_req.req = NULL;
 	rqpair.qpair.ctrlr->icdoff = 1;
-	req.payload.reset_sgl_fn = nvme_rdma_ut_reset_sgl;
-	req.payload.next_sge_fn = nvme_rdma_ut_next_sge;
-	req.payload.contig_or_cb_arg = &bio;
+	req.payload = NVME_PAYLOAD_SGL(nvme_rdma_ut_reset_sgl, nvme_rdma_ut_next_sge, &bio, NULL);
 	req.qpair = &rqpair.qpair;
 	bio.iovpos = 0;
 	req.payload_offset = 0;
@@ -1023,7 +1015,7 @@ test_nvme_rdma_qpair_submit_request(void)
 	struct spdk_nvme_rdma_req	*rdma_req = NULL;
 
 	req.cmd.opc = SPDK_NVME_DATA_HOST_TO_CONTROLLER;
-	req.payload.contig_or_cb_arg = (void *)0xdeadbeef;
+	req.payload = NVME_PAYLOAD_CONTIG((void *)0xdeadbeef, NULL);
 	req.payload_size = 0;
 	rqpair.mr_map = (struct spdk_rdma_mem_map *)0xdeadbeef;
 	rqpair.rdma_qp = (struct spdk_rdma_qp *)0xdeadbeef;
