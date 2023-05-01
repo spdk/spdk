@@ -16,7 +16,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 LIBNAME := ocfenv
 
-CFLAGS +=  $(ENV_CFLAGS) -I$(CURDIR) -I$(CURDIR)/include -w
+CFLAGS +=  $(ENV_CFLAGS) -I$(CURDIR) -I$(CURDIR)/include -w -MMD
 C_SRCS = $(shell find -name \*.c)
 
 LIB = $(call spdk_lib_list_to_static_libs,$(LIBNAME))
@@ -63,6 +63,8 @@ clean: ocf_distclean
 
 $(LIB): $(OBJS)
 	$(LIB_C)
+
+-include $(OBJS:.o=.d)
 
 install:
 
