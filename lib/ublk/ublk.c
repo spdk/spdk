@@ -856,6 +856,26 @@ ublk_queue_io(struct ublk_io *io)
 }
 
 static void
+ublk_io_get_buffer(struct ublk_io *io)
+{
+	void *buf;
+
+	buf = spdk_mempool_get(io->q->dev->io_buf_pool);
+	io->mpool_entry = buf;
+	io->payload = (void *)(uintptr_t)SPDK_ALIGN_CEIL((uintptr_t)buf, 4096ULL);
+}
+
+static void
+ublk_io_put_buffer(struct ublk_io *io)
+{
+	if (io->payload) {
+		spdk_mempool_put(io->q->dev->io_buf_pool, io->mpool_entry);
+		io->mpool_entry = NULL;
+		io->payload = NULL;
+	}
+}
+
+static void
 ublk_submit_bdev_io(struct ublk_queue *q, uint16_t tag)
 {
 	struct spdk_ublk_dev *ublk = q->dev;
@@ -1262,9 +1282,7 @@ ublk_ios_fini(struct spdk_ublk_dev *ublk)
 		}
 
 		for (i = 0; i < q->q_depth; i++) {
-			if (q->ios[i].payload) {
-				spdk_mempool_put(ublk->io_buf_pool, q->ios[i].mpool_entry);
-			}
+			ublk_io_put_buffer(&q->ios[i]);
 		}
 		free(q->ios);
 		q->ios = NULL;
@@ -1311,9 +1329,7 @@ ublk_ios_init(struct spdk_ublk_dev *ublk)
 		}
 		for (j = 0; j < q->q_depth; j++) {
 			q->ios[j].q = q;
-			q->ios[j].mpool_entry = spdk_mempool_get(ublk->io_buf_pool);
-			q->ios[j].payload = (void *)(uintptr_t)SPDK_ALIGN_CEIL((uint64_t)(uintptr_t)q->ios[j].mpool_entry,
-					    4096ULL);
+			ublk_io_get_buffer(&q->ios[j]);
 		}
 	}
 
