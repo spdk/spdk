@@ -160,6 +160,10 @@ dm_mount() {
 		1048576 1048576 linear /dev/$pv1 0
 	DM_TABLE
 
+	for t in {1..5}; do
+		if [[ -e /dev/mapper/$dm_name ]]; then break; fi
+		sleep 1
+	done
 	[[ -e /dev/mapper/$dm_name ]]
 	dm=$(readlink -f "/dev/mapper/$dm_name")
 	dm=${dm##*/}
