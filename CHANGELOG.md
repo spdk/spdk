@@ -1198,6 +1198,8 @@ Updated OCF submodule to v20.12.2
 
 Added `bdev_ocf_set_cache_mode` RPC to dynamically switch cache mode of OCF bdev.
 
+OCF deprecation notice has removed as Huawei is picking up support for the OCF project.
+
 ### opal
 
 Removed the `spdk_opal_supported` API.
