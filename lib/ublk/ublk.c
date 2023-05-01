@@ -415,7 +415,6 @@ ublk_create_target(const char *cpumask_str)
 	uint32_t i;
 	char thread_name[32];
 	struct spdk_cpuset cpuset = {};
-	struct spdk_cpuset thd_cpuset = {};
 	struct ublk_thread_ctx *thread_ctx;
 
 	if (g_ublk_tgt.active == true) {
@@ -449,15 +448,14 @@ ublk_create_target(const char *cpumask_str)
 	}
 
 	SPDK_ENV_FOREACH_CORE(i) {
-		if (spdk_cpuset_get_cpu(&cpuset, i)) {
-			spdk_cpuset_zero(&thd_cpuset);
-			spdk_cpuset_set_cpu(&thd_cpuset, i, true);
-			snprintf(thread_name, sizeof(thread_name), "ublk_thread%u", i);
-			thread_ctx = &g_ublk_tgt.thread_ctx[g_num_ublk_threads];
-			thread_ctx->ublk_thread = spdk_thread_create(thread_name, &thd_cpuset);
-			spdk_thread_send_msg(thread_ctx->ublk_thread, ublk_poller_register, thread_ctx);
-			g_num_ublk_threads++;
+		if (!spdk_cpuset_get_cpu(&cpuset, i)) {
+			continue;
 		}
+		snprintf(thread_name, sizeof(thread_name), "ublk_thread%u", i);
+		thread_ctx = &g_ublk_tgt.thread_ctx[g_num_ublk_threads];
+		thread_ctx->ublk_thread = spdk_thread_create(thread_name, &cpuset);
+		spdk_thread_send_msg(thread_ctx->ublk_thread, ublk_poller_register, thread_ctx);
+		g_num_ublk_threads++;
 	}
 	g_ublk_tgt.active = true;
 	SPDK_NOTICELOG("UBLK target created successfully\n");
