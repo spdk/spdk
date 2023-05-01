@@ -1286,10 +1286,7 @@ error_free:
 	return rc;
 }
 
-/* This deprecation is likely to be removed, and the ocf support will remain
- * in SPDK.  See deprecation.md for more details.
- */
-SPDK_LOG_DEPRECATION_REGISTER(bdev_ocf, "bdev_ocf support", "SPDK 23.09", 0);
+SPDK_LOG_DEPRECATION_REGISTER(bdev_ocf, "bdev_ocf support", "SPDK 23.05", 0);
 
 /* Read configuration file at the start of SPDK application
  * This adds vbdevs to global list if some mentioned in config */
@@ -1297,6 +1294,8 @@ static int
 vbdev_ocf_init(void)
 {
 	int status;
+
+	SPDK_LOG_DEPRECATED(bdev_ocf);
 
 	status = vbdev_ocf_ctx_init();
 	if (status) {

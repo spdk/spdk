@@ -1101,6 +1101,7 @@ if echo -e '#include <uuid/uuid.h>\nint main(void) { uuid_generate_sha1(NULL, NU
 fi
 
 if [[ "${CONFIG[OCF]}" = "y" ]]; then
+	echo "WARNING: OCF - bdev_ocf is deprecated."
 	# If OCF_PATH is a file, assume it is a library and use it to compile with
 	if [ -f ${CONFIG[OCF_PATH]} ]; then
 		CONFIG[CUSTOMOCF]=y

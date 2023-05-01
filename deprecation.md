@@ -34,11 +34,8 @@ VTune integration is in now deprecated and will be removed in SPDK 23.05.
 
 #### `bdev_ocf`
 
-The Open CAS Framework (OCF) integration via bdev module and env_ocf is currently marked
-deprecated due to discontinued support from Intel. However, Huawei is working to pick up
-support for these components, and the OCF project in general. This code will definitely
-remain in SPDK 23.05 release, in fact it is likely deprecation notice will be removed by
-then.
+The Open CAS Framework (OCF) integration via bdev module and env_ocf is now deprecated
+and will be removed in SPDK 23.05.
 
 ### nvme
 
