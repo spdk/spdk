@@ -15,7 +15,7 @@ multiple readers.
 
 ### env
 
-New function `spdk_env_get_main_core` was added.
+New functions `spdk_env_get_main_core` and `spdk_env_get_cpuset` were added.
 
 ### gpt
 

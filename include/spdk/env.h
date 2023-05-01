@@ -509,6 +509,18 @@ uint32_t spdk_env_get_next_core(uint32_t prev_core);
  */
 uint32_t spdk_env_get_socket_id(uint32_t core);
 
+struct spdk_cpuset;
+
+/**
+ * Create a cpuset with each dedicated core's bit set to true.
+ *
+ * This function will first zero the cpuset and then set the
+ * bit for each core dedicated to this application to true.
+ *
+ * \param cpuset spdk_cpuset to initialize
+ */
+void spdk_env_get_cpuset(struct spdk_cpuset *cpuset);
+
 typedef int (*thread_start_fn)(void *);
 
 /**
