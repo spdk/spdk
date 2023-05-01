@@ -49,6 +49,7 @@ make_test_file(size_t size, char *path, size_t len, const char *name)
 	if (snprintf(path, len, "%s/%s", g_testdir, name) >= (int)len) {
 		return -ENAMETOOLONG;
 	}
+	unlink(path);
 	fd = open(path, O_RDWR | O_CREAT | O_EXCL, 0600);
 	if (fd < 0) {
 		return -errno;
