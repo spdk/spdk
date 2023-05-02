@@ -9603,14 +9603,15 @@ spdk_bdev_for_each_channel(struct spdk_bdev *bdev, spdk_bdev_for_each_channel_ms
 }
 
 static void
-bdev_copy_do_write_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+bdev_copy_do_write_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *parent_io = cb_arg;
+
+	spdk_bdev_free_io(bdev_io);
 
 	/* Check return status of write */
 	parent_io->internal.status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
 	parent_io->internal.cb(parent_io, success, parent_io->internal.caller_ctx);
-	spdk_bdev_free_io(bdev_io);
 }
 
 static void
@@ -9621,9 +9622,10 @@ bdev_copy_do_write(void *_bdev_io)
 
 	/* Write blocks */
 	rc = spdk_bdev_write_blocks_with_md(bdev_io->internal.desc,
-					    spdk_io_channel_from_ctx(bdev_io->internal.ch), bdev_io->u.bdev.iovs[0].iov_base,
+					    spdk_io_channel_from_ctx(bdev_io->internal.ch),
+					    bdev_io->u.bdev.iovs[0].iov_base,
 					    bdev_io->u.bdev.md_buf, bdev_io->u.bdev.offset_blocks,
-					    bdev_io->u.bdev.num_blocks, bdev_copy_do_write_complete, bdev_io);
+					    bdev_io->u.bdev.num_blocks, bdev_copy_do_write_done, bdev_io);
 
 	if (rc == -ENOMEM) {
 		bdev_queue_io_wait_with_cb(bdev_io, bdev_copy_do_write);
@@ -9634,19 +9636,18 @@ bdev_copy_do_write(void *_bdev_io)
 }
 
 static void
-bdev_copy_do_read_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+bdev_copy_do_read_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *parent_io = cb_arg;
+
+	spdk_bdev_free_io(bdev_io);
 
 	/* Check return status of read */
 	if (!success) {
 		parent_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
 		parent_io->internal.cb(parent_io, false, parent_io->internal.caller_ctx);
-		spdk_bdev_free_io(bdev_io);
 		return;
 	}
-
-	spdk_bdev_free_io(bdev_io);
 
 	/* Do write */
 	bdev_copy_do_write(parent_io);
@@ -9660,9 +9661,10 @@ bdev_copy_do_read(void *_bdev_io)
 
 	/* Read blocks */
 	rc = spdk_bdev_read_blocks_with_md(bdev_io->internal.desc,
-					   spdk_io_channel_from_ctx(bdev_io->internal.ch), bdev_io->u.bdev.iovs[0].iov_base,
+					   spdk_io_channel_from_ctx(bdev_io->internal.ch),
+					   bdev_io->u.bdev.iovs[0].iov_base,
 					   bdev_io->u.bdev.md_buf, bdev_io->u.bdev.copy.src_offset_blocks,
-					   bdev_io->u.bdev.num_blocks, bdev_copy_do_read_complete, bdev_io);
+					   bdev_io->u.bdev.num_blocks, bdev_copy_do_read_done, bdev_io);
 
 	if (rc == -ENOMEM) {
 		bdev_queue_io_wait_with_cb(bdev_io, bdev_copy_do_read);
