@@ -382,7 +382,7 @@ static inline void bdev_io_complete(void *ctx);
 static inline void bdev_io_complete_unsubmitted(struct spdk_bdev_io *bdev_io);
 
 static void bdev_write_zero_buffer_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
-static void bdev_write_zero_buffer_next(void *_bdev_io);
+static int bdev_write_zero_buffer(struct spdk_bdev_io *bdev_io);
 
 static void bdev_enable_qos_msg(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
 				struct spdk_io_channel *ch, void *_ctx);
@@ -5989,18 +5989,21 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	bdev_io->u.bdev.memory_domain_ctx = NULL;
 	bdev_io->u.bdev.accel_sequence = NULL;
 
-	if (bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
+	/* If the write_zeroes size is large and should be split, use the generic split
+	 * logic regardless of whether SPDK_BDEV_IO_TYPE_WRITE_ZEREOS is supported or not.
+	 *
+	 * Then, send the write_zeroes request if SPDK_BDEV_IO_TYPE_WRITE_ZEROES is supported
+	 * or emulate it using regular write request otherwise.
+	 */
+	if (bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES) ||
+	    bdev_io->internal.split) {
 		bdev_io_submit(bdev_io);
 		return 0;
 	}
 
-	assert(bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE));
 	assert(_bdev_get_block_size_with_md(bdev) <= ZERO_BUFFER_SIZE);
-	bdev_io->u.bdev.split_remaining_num_blocks = num_blocks;
-	bdev_io->u.bdev.split_current_offset_blocks = offset_blocks;
-	bdev_write_zero_buffer_next(bdev_io);
 
-	return 0;
+	return bdev_write_zero_buffer(bdev_io);
 }
 
 int
@@ -8583,36 +8586,24 @@ spdk_bdev_module_list_find(const char *name)
 	return bdev_module;
 }
 
-static void
-bdev_write_zero_buffer_next(void *_bdev_io)
+static int
+bdev_write_zero_buffer(struct spdk_bdev_io *bdev_io)
 {
-	struct spdk_bdev_io *bdev_io = _bdev_io;
 	uint64_t num_blocks;
 	void *md_buf = NULL;
-	int rc;
 
-	num_blocks = spdk_min(bdev_io->u.bdev.split_remaining_num_blocks,
-			      bdev_io->bdev->max_write_zeroes);
+	num_blocks = bdev_io->u.bdev.num_blocks;
 
 	if (spdk_bdev_is_md_separate(bdev_io->bdev)) {
 		md_buf = (char *)g_bdev_mgr.zero_buffer +
 			 spdk_bdev_get_block_size(bdev_io->bdev) * num_blocks;
 	}
 
-	rc = bdev_write_blocks_with_md(bdev_io->internal.desc,
-				       spdk_io_channel_from_ctx(bdev_io->internal.ch),
-				       g_bdev_mgr.zero_buffer, md_buf,
-				       bdev_io->u.bdev.split_current_offset_blocks, num_blocks,
-				       bdev_write_zero_buffer_done, bdev_io);
-	if (rc == 0) {
-		bdev_io->u.bdev.split_remaining_num_blocks -= num_blocks;
-		bdev_io->u.bdev.split_current_offset_blocks += num_blocks;
-	} else if (rc == -ENOMEM) {
-		bdev_queue_io_wait_with_cb(bdev_io, bdev_write_zero_buffer_next);
-	} else {
-		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-		bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
-	}
+	return bdev_write_blocks_with_md(bdev_io->internal.desc,
+					 spdk_io_channel_from_ctx(bdev_io->internal.ch),
+					 g_bdev_mgr.zero_buffer, md_buf,
+					 bdev_io->u.bdev.offset_blocks, num_blocks,
+					 bdev_write_zero_buffer_done, bdev_io);
 }
 
 static void
@@ -8622,19 +8613,8 @@ bdev_write_zero_buffer_done(struct spdk_bdev_io *bdev_io, bool success, void *cb
 
 	spdk_bdev_free_io(bdev_io);
 
-	if (!success) {
-		parent_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-		parent_io->internal.cb(parent_io, false, parent_io->internal.caller_ctx);
-		return;
-	}
-
-	if (parent_io->u.bdev.split_remaining_num_blocks == 0) {
-		parent_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
-		parent_io->internal.cb(parent_io, true, parent_io->internal.caller_ctx);
-		return;
-	}
-
-	bdev_write_zero_buffer_next(parent_io);
+	parent_io->internal.status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	parent_io->internal.cb(parent_io, success, parent_io->internal.caller_ctx);
 }
 
 static void
