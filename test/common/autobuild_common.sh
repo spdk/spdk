@@ -30,13 +30,12 @@ _ocf_precompile() {
 # Find matching llvm fuzzer library and clang compiler version
 _llvm_precompile() {
 	[[ $(clang --version) =~ "version "(([0-9]+).([0-9]+).([0-9]+)) ]]
-	clang_version=${BASH_REMATCH[1]}
 	clang_num=${BASH_REMATCH[2]}
 
 	export CC=clang-$clang_num
 	export CXX=clang++-$clang_num
 
-	fuzzer_libs=(/usr/lib*/clang/"$clang_version"/lib/linux/libclang_rt.fuzzer_no_main-x86_64.a)
+	fuzzer_libs=(/usr/lib*/clang/"$clang_num"/lib/linux/libclang_rt.fuzzer_no_main-x86_64.a)
 	fuzzer_lib=${fuzzer_libs[0]}
 	[[ -e $fuzzer_lib ]]
 
