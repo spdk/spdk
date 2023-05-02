@@ -1009,7 +1009,7 @@ void
 spdk_nvme_trid_populate_transport(struct spdk_nvme_transport_id *trid,
 				  enum spdk_nvme_transport_type trtype)
 {
-	const char *trstring = "";
+	const char *trstring;
 
 	trid->trtype = trtype;
 	switch (trtype) {
