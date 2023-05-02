@@ -205,12 +205,20 @@ __destruct(void *ctx)
 	return 0;
 }
 
+static bool
+__io_type_supported(void *ctx, enum spdk_bdev_io_type type)
+{
+	return true;
+}
+
 static struct spdk_bdev_fn_table base_fn_table = {
 	.destruct		= __destruct,
 	.get_io_channel = part_ut_get_io_channel,
+	.io_type_supported	= __io_type_supported,
 };
 static struct spdk_bdev_fn_table part_fn_table = {
 	.destruct		= __destruct,
+	.io_type_supported	= __io_type_supported,
 };
 
 static void

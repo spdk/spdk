@@ -4704,23 +4704,22 @@ spdk_bdev_is_dif_check_enabled(const struct spdk_bdev *bdev,
 	}
 }
 
+static uint32_t
+bdev_get_max_write(const struct spdk_bdev *bdev, uint64_t num_bytes)
+{
+	uint64_t aligned_length, max_write_blocks;
+
+	aligned_length = num_bytes - (spdk_bdev_get_buf_align(bdev) - 1);
+	max_write_blocks = aligned_length / _bdev_get_block_size_with_md(bdev);
+	max_write_blocks -= max_write_blocks % bdev->write_unit_size;
+
+	return max_write_blocks;
+}
+
 uint32_t
 spdk_bdev_get_max_copy(const struct spdk_bdev *bdev)
 {
-	uint64_t aligned_length;
-	uint64_t max_copy_blocks;
-	struct spdk_iobuf_opts opts;
-
-	if (spdk_bdev_io_type_supported((struct spdk_bdev *)bdev, SPDK_BDEV_IO_TYPE_COPY)) {
-		return bdev->max_copy;
-	} else {
-		spdk_iobuf_get_opts(&opts);
-		aligned_length = opts.large_bufsize - (spdk_bdev_get_buf_align(bdev) - 1);
-		max_copy_blocks = aligned_length / _bdev_get_block_size_with_md(bdev);
-		max_copy_blocks -= max_copy_blocks % bdev->write_unit_size;
-
-		return max_copy_blocks;
-	}
+	return bdev->max_copy;
 }
 
 uint64_t
@@ -7321,6 +7320,7 @@ bdev_register(struct spdk_bdev *bdev)
 {
 	char *bdev_name;
 	char uuid[SPDK_UUID_STRING_LEN];
+	struct spdk_iobuf_opts iobuf_opts;
 	int ret, i;
 
 	assert(bdev->module != NULL);
@@ -7432,6 +7432,11 @@ bdev_register(struct spdk_bdev *bdev)
 
 	if (bdev->phys_blocklen == 0) {
 		bdev->phys_blocklen = spdk_bdev_get_data_block_size(bdev);
+	}
+
+	if (!bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_COPY)) {
+		spdk_iobuf_get_opts(&iobuf_opts);
+		bdev->max_copy = bdev_get_max_write(bdev, iobuf_opts.large_bufsize);
 	}
 
 	bdev->internal.reset_in_progress = NULL;
