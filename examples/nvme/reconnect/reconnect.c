@@ -411,6 +411,8 @@ submit_single_io(struct perf_task *task)
 
 	if (spdk_unlikely(rc != 0)) {
 		fprintf(stderr, "starting I/O failed\n");
+		spdk_dma_free(task->iov.iov_base);
+		free(task);
 	} else {
 		ns_ctx->current_queue_depth++;
 	}
@@ -537,13 +539,11 @@ work_fn(void *arg)
 				ns_ctx->is_draining = true;
 			}
 
-			if (ns_ctx->current_queue_depth > 0) {
-				check_io(ns_ctx);
-				if (ns_ctx->current_queue_depth == 0) {
-					nvme_cleanup_ns_worker_ctx(ns_ctx);
-				} else {
-					unfinished_ns_ctx++;
-				}
+			check_io(ns_ctx);
+			if (ns_ctx->current_queue_depth == 0) {
+				nvme_cleanup_ns_worker_ctx(ns_ctx);
+			} else {
+				unfinished_ns_ctx++;
 			}
 		}
 	} while (unfinished_ns_ctx > 0);
