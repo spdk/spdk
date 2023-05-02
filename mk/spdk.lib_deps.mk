@@ -141,6 +141,7 @@ DEPDIRS-bdev_crypto := $(BDEV_DEPS_THREAD) accel
 DEPDIRS-bdev_delay := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_iscsi := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_malloc := $(BDEV_DEPS_THREAD) accel dma
+DEPDIRS-bdev_ubi := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_null := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_nvme = $(BDEV_DEPS_THREAD) accel nvme trace
 DEPDIRS-bdev_ocf := $(BDEV_DEPS_THREAD)

@@ -317,6 +317,9 @@ def bdev_malloc_delete(client, name):
     params = {'name': name}
     return client.call('bdev_malloc_delete', params)
 
+def bdev_ubi_create(client, name):
+    params = {'name': name}
+    return client.call('bdev_ubi_create', params)
 
 def bdev_null_create(client, num_blocks, block_size, name, physical_block_size=None, uuid=None, md_size=None,
                      dif_type=None, dif_is_head_of_md=None):

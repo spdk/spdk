@@ -4,13 +4,13 @@
 #  All rights reserved.
 #
 
-BLOCKDEV_MODULES_LIST = bdev_malloc bdev_null bdev_nvme bdev_passthru bdev_lvol
+BLOCKDEV_MODULES_LIST = bdev_malloc bdev_null bdev_nvme bdev_passthru bdev_lvol bdev_ubi
 BLOCKDEV_MODULES_LIST += bdev_raid bdev_error bdev_gpt bdev_split bdev_delay
 BLOCKDEV_MODULES_LIST += bdev_zone_block
 BLOCKDEV_MODULES_LIST += blobfs blobfs_bdev blob_bdev blob lvol vmd nvme
 
 # Some bdev modules don't have pollers, so they can directly run in interrupt mode
-INTR_BLOCKDEV_MODULES_LIST = bdev_malloc bdev_passthru bdev_error bdev_gpt bdev_split bdev_raid
+INTR_BLOCKDEV_MODULES_LIST = bdev_malloc bdev_passthru bdev_error bdev_gpt bdev_split bdev_raid bdev_ubi
 # Logical volume, blobstore and blobfs can directly run in both interrupt mode and poll mode.
 INTR_BLOCKDEV_MODULES_LIST += bdev_lvol blobfs blobfs_bdev blob_bdev blob lvol
 

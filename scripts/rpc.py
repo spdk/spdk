@@ -416,6 +416,14 @@ if __name__ == "__main__":
     p.add_argument('name', help='malloc bdev name')
     p.set_defaults(func=bdev_malloc_delete)
 
+    def bdev_ubi_create(args):
+        rpc.bdev.bdev_ubi_create(args.client,
+                                 name=args.name)
+    
+    p = subparsers.add_parser('bdev_ubi_create', help='Creates a ubi disk')
+    p.add_argument('name', help='malloc bdev name')
+    p.set_defaults(func=bdev_ubi_create)
+
     def bdev_null_create(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
         if args.dif_type and not args.md_size:
