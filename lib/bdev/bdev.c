@@ -8583,15 +8583,17 @@ static void
 bdev_write_zero_buffer_next(void *_bdev_io)
 {
 	struct spdk_bdev_io *bdev_io = _bdev_io;
-	uint64_t num_bytes, num_blocks;
+	uint64_t aligned_length, max_write_zeroes_blocks;
+	uint64_t num_blocks;
 	void *md_buf = NULL;
 	int rc;
 
-	num_bytes = spdk_min(_bdev_get_block_size_with_md(bdev_io->bdev) *
-			     bdev_io->u.bdev.split_remaining_num_blocks,
-			     ZERO_BUFFER_SIZE);
-	num_blocks = num_bytes / _bdev_get_block_size_with_md(bdev_io->bdev);
-	num_blocks -= num_blocks % bdev_io->bdev->write_unit_size;
+	aligned_length = ZERO_BUFFER_SIZE - (spdk_bdev_get_buf_align(bdev_io->bdev) - 1);
+	max_write_zeroes_blocks = aligned_length / _bdev_get_block_size_with_md(bdev_io->bdev);
+	max_write_zeroes_blocks -= max_write_zeroes_blocks % bdev_io->bdev->write_unit_size;
+
+	num_blocks = spdk_min(bdev_io->u.bdev.split_remaining_num_blocks,
+			      max_write_zeroes_blocks);
 
 	if (spdk_bdev_is_md_separate(bdev_io->bdev)) {
 		md_buf = (char *)g_bdev_mgr.zero_buffer +
