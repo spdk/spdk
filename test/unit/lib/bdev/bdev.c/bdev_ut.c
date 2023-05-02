@@ -536,6 +536,40 @@ vbdev_ut_examine_disk(struct spdk_bdev *bdev)
 	spdk_bdev_module_examine_done(&vbdev_ut_if);
 }
 
+static void
+bdev_init_cb(void *arg, int rc)
+{
+	CU_ASSERT(rc == 0);
+}
+
+static void
+bdev_fini_cb(void *arg)
+{
+}
+
+static void
+ut_init_bdev(struct spdk_bdev_opts *opts)
+{
+	int rc;
+
+	if (opts != NULL) {
+		rc = spdk_bdev_set_opts(opts);
+		CU_ASSERT(rc == 0);
+	}
+	rc = spdk_iobuf_initialize();
+	CU_ASSERT(rc == 0);
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+	poll_threads();
+}
+
+static void
+ut_fini_bdev(void)
+{
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	spdk_iobuf_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
 static struct spdk_bdev *
 allocate_bdev_ctx(char *name, void *ctx)
 {
@@ -579,6 +613,8 @@ allocate_vbdev(char *name)
 	bdev->name = name;
 	bdev->fn_table = &fn_table;
 	bdev->module = &vbdev_ut_if;
+	bdev->blockcnt = 1024;
+	bdev->blocklen = 512;
 
 	rc = spdk_bdev_register(bdev);
 	poll_threads();
@@ -700,6 +736,8 @@ open_write_test(void)
 	struct spdk_bdev *bdev[9];
 	struct spdk_bdev_desc *desc[9] = {};
 	int rc;
+
+	ut_init_bdev(NULL);
 
 	/*
 	 * Create a tree of bdevs to test various open w/ write cases.
@@ -826,6 +864,8 @@ open_write_test(void)
 	free_bdev(bdev[1]);
 	free_bdev(bdev[2]);
 	free_bdev(bdev[3]);
+
+	ut_fini_bdev();
 }
 
 static void
@@ -835,6 +875,8 @@ claim_test(void)
 	struct spdk_bdev_desc *desc, *open_desc;
 	int rc;
 	uint32_t count;
+
+	ut_init_bdev(NULL);
 
 	/*
 	 * A vbdev that uses a read-only bdev may need it to remain read-only.
@@ -878,6 +920,7 @@ claim_test(void)
 
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
+	ut_fini_bdev();
 }
 
 static void
@@ -919,46 +962,44 @@ bytes_to_blocks_test(void)
 static void
 num_blocks_test(void)
 {
-	struct spdk_bdev bdev;
+	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc = NULL;
 	int rc;
 
-	memset(&bdev, 0, sizeof(bdev));
-	bdev.name = "num_blocks";
-	bdev.fn_table = &fn_table;
-	bdev.module = &bdev_ut_if;
-	spdk_bdev_register(&bdev);
-	poll_threads();
-	spdk_bdev_notify_blockcnt_change(&bdev, 50);
+	ut_init_bdev(NULL);
+	bdev = allocate_bdev("num_blocks");
+
+	spdk_bdev_notify_blockcnt_change(bdev, 50);
 
 	/* Growing block number */
-	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 70) == 0);
+	CU_ASSERT(spdk_bdev_notify_blockcnt_change(bdev, 70) == 0);
 	/* Shrinking block number */
-	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 30) == 0);
+	CU_ASSERT(spdk_bdev_notify_blockcnt_change(bdev, 30) == 0);
 
 	rc = spdk_bdev_open_ext("num_blocks", false, bdev_open_cb1, &desc, &desc);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(desc != NULL);
-	CU_ASSERT(&bdev == spdk_bdev_desc_get_bdev(desc));
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
 
 	/* Growing block number */
-	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 80) == 0);
+	CU_ASSERT(spdk_bdev_notify_blockcnt_change(bdev, 80) == 0);
 	/* Shrinking block number */
-	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 20) != 0);
+	CU_ASSERT(spdk_bdev_notify_blockcnt_change(bdev, 20) != 0);
 
 	g_event_type1 = 0xFF;
 	/* Growing block number */
-	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 90) == 0);
+	CU_ASSERT(spdk_bdev_notify_blockcnt_change(bdev, 90) == 0);
 
 	poll_threads();
 	CU_ASSERT_EQUAL(g_event_type1, SPDK_BDEV_EVENT_RESIZE);
 
 	g_event_type1 = 0xFF;
 	/* Growing block number and closing */
-	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 100) == 0);
+	CU_ASSERT(spdk_bdev_notify_blockcnt_change(bdev, 100) == 0);
 
 	spdk_bdev_close(desc);
-	spdk_bdev_unregister(&bdev, NULL, NULL);
+	free_bdev(bdev);
+	ut_fini_bdev();
 
 	poll_threads();
 
@@ -1001,6 +1042,8 @@ alias_add_del_test(void)
 {
 	struct spdk_bdev *bdev[3];
 	int rc;
+
+	ut_init_bdev(NULL);
 
 	/* Creating and registering bdevs */
 	bdev[0] = allocate_bdev("bdev0");
@@ -1082,6 +1125,8 @@ alias_add_del_test(void)
 	free(bdev[0]);
 	free(bdev[1]);
 	free(bdev[2]);
+
+	ut_fini_bdev();
 }
 
 static void
@@ -1096,40 +1141,6 @@ io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		spdk_bdev_free_io(bdev_io);
 		g_zcopy_bdev_io = NULL;
 	}
-}
-
-static void
-bdev_init_cb(void *arg, int rc)
-{
-	CU_ASSERT(rc == 0);
-}
-
-static void
-bdev_fini_cb(void *arg)
-{
-}
-
-static void
-ut_init_bdev(struct spdk_bdev_opts *opts)
-{
-	int rc;
-
-	if (opts != NULL) {
-		rc = spdk_bdev_set_opts(opts);
-		CU_ASSERT(rc == 0);
-	}
-	rc = spdk_iobuf_initialize();
-	CU_ASSERT(rc == 0);
-	spdk_bdev_initialize(bdev_init_cb, NULL);
-	poll_threads();
-}
-
-static void
-ut_fini_bdev(void)
-{
-	spdk_bdev_finish(bdev_fini_cb, NULL);
-	spdk_iobuf_finish(bdev_fini_cb, NULL);
-	poll_threads();
 }
 
 struct bdev_ut_io_wait_entry {
