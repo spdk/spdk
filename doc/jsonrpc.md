@@ -3048,6 +3048,9 @@ Example request:
 
 ~~~json
 {
+  "params": {
+    "name": "ocf0"
+  },
   "jsonrpc": "2.0",
   "method": "bdev_ocf_get_stats",
   "id": 1
