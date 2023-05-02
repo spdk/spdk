@@ -7439,6 +7439,10 @@ bdev_register(struct spdk_bdev *bdev)
 		bdev->max_copy = bdev_get_max_write(bdev, iobuf_opts.large_bufsize);
 	}
 
+	if (!bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
+		bdev->max_write_zeroes = bdev_get_max_write(bdev, ZERO_BUFFER_SIZE);
+	}
+
 	bdev->internal.reset_in_progress = NULL;
 	bdev->internal.qd_poll_in_progress = false;
 	bdev->internal.period = 0;
@@ -8583,17 +8587,12 @@ static void
 bdev_write_zero_buffer_next(void *_bdev_io)
 {
 	struct spdk_bdev_io *bdev_io = _bdev_io;
-	uint64_t aligned_length, max_write_zeroes_blocks;
 	uint64_t num_blocks;
 	void *md_buf = NULL;
 	int rc;
 
-	aligned_length = ZERO_BUFFER_SIZE - (spdk_bdev_get_buf_align(bdev_io->bdev) - 1);
-	max_write_zeroes_blocks = aligned_length / _bdev_get_block_size_with_md(bdev_io->bdev);
-	max_write_zeroes_blocks -= max_write_zeroes_blocks % bdev_io->bdev->write_unit_size;
-
 	num_blocks = spdk_min(bdev_io->u.bdev.split_remaining_num_blocks,
-			      max_write_zeroes_blocks);
+			      bdev_io->bdev->max_write_zeroes);
 
 	if (spdk_bdev_is_md_separate(bdev_io->bdev)) {
 		md_buf = (char *)g_bdev_mgr.zero_buffer +

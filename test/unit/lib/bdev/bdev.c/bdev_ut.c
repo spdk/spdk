@@ -4001,6 +4001,7 @@ bdev_write_zeroes(void)
 
 	/* Check that if write zeroes is not supported it'll be replaced by regular writes */
 	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE_ZEROES, false);
+	bdev->max_write_zeroes = bdev_get_max_write(bdev, ZERO_BUFFER_SIZE);
 	num_io_blocks = ZERO_BUFFER_SIZE / bdev->blocklen;
 	num_requests = 2;
 	num_blocks = (ZERO_BUFFER_SIZE / bdev->blocklen) * num_requests;
@@ -4020,6 +4021,7 @@ bdev_write_zeroes(void)
 	bdev->md_interleave = true;
 	bdev->md_len = 64;
 	bdev->blocklen = 4096 + 64;
+	bdev->max_write_zeroes = bdev_get_max_write(bdev, ZERO_BUFFER_SIZE);
 	num_blocks = (ZERO_BUFFER_SIZE / bdev->blocklen) * 2;
 
 	num_requests = offset = 0;
@@ -4043,6 +4045,7 @@ bdev_write_zeroes(void)
 	bdev->md_interleave = false;
 	bdev->md_len = 64;
 	bdev->blocklen = 4096;
+	bdev->max_write_zeroes = bdev_get_max_write(bdev, ZERO_BUFFER_SIZE);
 
 	num_requests = offset = 0;
 	while (offset < num_blocks) {
