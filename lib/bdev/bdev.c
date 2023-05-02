@@ -9739,10 +9739,15 @@ spdk_bdev_copy_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return 0;
 	}
 
-	/* If the bdev backing device support copy directly, pass to it to process.
-	 * Else do general processing from bdev layer.
+
+	/* If the copy size is large and should be split, use the generic split logic
+	 * regardless of whether SPDK_BDEV_IO_TYPE_COPY is supported or not.
+	 *
+	 * Then, send the copy request if SPDK_BDEV_IO_TYPE_COPY is supported or
+	 * emulate it using regular read and write requests otherwise.
 	 */
-	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_COPY)) {
+	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_COPY) ||
+	    bdev_io->internal.split) {
 		bdev_io_submit(bdev_io);
 		return 0;
 	}

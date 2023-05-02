@@ -6282,6 +6282,53 @@ bdev_copy_split_test(void)
 	}
 	CU_ASSERT(g_io_done == true);
 
+	/* Case 4: Same test scenario as the case 2 but the configuration is different.
+	 * Copy is not supported.
+	 */
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_COPY, false);
+
+	num_children = 2;
+	max_copy_blocks = spdk_bdev_get_max_copy(bdev);
+	num_blocks = max_copy_blocks * num_children;
+	src_offset = bdev->blockcnt - num_blocks;
+	offset = 0;
+
+	g_io_done = false;
+	for (i = 0; i < num_children; i++) {
+		expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, src_offset,
+						   max_copy_blocks, 0);
+		TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+		src_offset += max_copy_blocks;
+	}
+	for (i = 0; i < num_children; i++) {
+		expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, offset,
+						   max_copy_blocks, 0);
+		TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+		offset += max_copy_blocks;
+	}
+
+	src_offset = bdev->blockcnt - num_blocks;
+	offset = 0;
+
+	rc = spdk_bdev_copy_blocks(desc, ioch, offset, src_offset, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT(g_io_done == false);
+
+	while (num_children > 0) {
+		num_outstanding = spdk_min(num_children, SPDK_BDEV_MAX_CHILDREN_COPY_REQS);
+
+		/* One copy request is split into one read and one write requests. */
+		CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == num_outstanding);
+		stub_complete_io(num_outstanding);
+		CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == num_outstanding);
+		stub_complete_io(num_outstanding);
+
+		num_children -= num_outstanding;
+	}
+	CU_ASSERT(g_io_done == true);
+
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_COPY, true);
+
 	spdk_put_io_channel(ioch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
