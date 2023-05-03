@@ -107,6 +107,7 @@ struct spdk_ublk_dev {
 	uint32_t		ublk_id;
 	uint32_t		num_queues;
 	uint32_t		queue_depth;
+	uint32_t		sector_per_block_shift;
 	struct ublk_queue	queues[UBLK_DEV_MAX_QUEUES];
 
 	struct spdk_poller	*retry_poller;
@@ -868,16 +869,13 @@ ublk_submit_bdev_io(struct ublk_queue *q, uint16_t tag)
 	struct spdk_io_channel *ch = ublk->ch[q->q_id];
 	uint64_t offset_blocks, num_blocks;
 	uint8_t ublk_op;
-	uint32_t sector_per_block, sector_per_block_shift;
 	void *payload;
 	int rc = 0;
 	const struct ublksrv_io_desc *iod = &q->io_cmd_buf[tag];
 
 	ublk_op = ublksrv_get_op(iod);
-	sector_per_block = spdk_bdev_get_data_block_size(ublk->bdev) >> LINUX_SECTOR_SHIFT;
-	sector_per_block_shift = spdk_u32log2(sector_per_block);
-	offset_blocks = iod->start_sector >> sector_per_block_shift;
-	num_blocks = iod->nr_sectors >> sector_per_block_shift;
+	offset_blocks = iod->start_sector >> ublk->sector_per_block_shift;
+	num_blocks = iod->nr_sectors >> ublk->sector_per_block_shift;
 	payload = (void *)iod->addr;
 
 	io->result = num_blocks * spdk_bdev_get_data_block_size(ublk->bdev);
@@ -1384,6 +1382,7 @@ ublk_start_disk(const char *bdev_name, uint32_t ublk_id,
 	uint32_t		i;
 	struct spdk_bdev	*bdev;
 	struct spdk_ublk_dev	*ublk = NULL;
+	uint32_t		sector_per_block;
 
 	if (g_ublk_tgt.active == false) {
 		SPDK_ERRLOG("NO ublk target exist\n");
@@ -1415,6 +1414,8 @@ ublk_start_disk(const char *bdev_name, uint32_t ublk_id,
 
 	bdev = spdk_bdev_desc_get_bdev(ublk->bdev_desc);
 	ublk->bdev = bdev;
+	sector_per_block = spdk_bdev_get_data_block_size(ublk->bdev) >> LINUX_SECTOR_SHIFT;
+	ublk->sector_per_block_shift = spdk_u32log2(sector_per_block);
 
 	ublk->queues_closed = 0;
 	ublk->app_thread = spdk_get_thread();
