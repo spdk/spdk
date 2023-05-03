@@ -67,10 +67,14 @@ struct ublk_io {
 	void			*payload;
 	void			*mpool_entry;
 	bool			need_data;
+	bool			io_free;
+	uint32_t		sector_per_block_shift;
 	uint32_t		payload_size;
 	uint32_t		cmd_op;
 	int32_t			result;
-	bool			io_free;
+	struct spdk_bdev_desc	*bdev_desc;
+	struct spdk_io_channel	*bdev_ch;
+	const struct ublksrv_io_desc	*iod;
 	struct ublk_queue	*q;
 	/* for bdev io_wait */
 	struct spdk_bdev_io_wait_entry bdev_io_wait;
@@ -865,12 +869,12 @@ ublk_submit_bdev_io(struct ublk_queue *q, uint16_t tag)
 {
 	struct spdk_ublk_dev *ublk = q->dev;
 	struct ublk_io *io = &q->ios[tag];
-	struct spdk_bdev_desc *desc = ublk->bdev_desc;
-	struct spdk_io_channel *ch = q->bdev_ch;
+	struct spdk_bdev_desc *desc = io->bdev_desc;
+	struct spdk_io_channel *ch = io->bdev_ch;
 	uint64_t offset_blocks, num_blocks;
 	uint8_t ublk_op;
 	int rc = 0;
-	const struct ublksrv_io_desc *iod = &q->io_cmd_buf[tag];
+	const struct ublksrv_io_desc *iod = io->iod;
 
 	ublk_op = ublksrv_get_op(iod);
 	offset_blocks = iod->start_sector >> ublk->sector_per_block_shift;
@@ -1150,6 +1154,7 @@ ublk_dev_queue_init(struct ublk_queue *q)
 	for (j = 0; j < q->q_depth; j++) {
 		q->ios[j].cmd_op = UBLK_IO_FETCH_REQ;
 		q->ios[j].io_free = true;
+		q->ios[j].iod = &q->io_cmd_buf[j];
 	}
 
 	rc = ublk_setup_ring(q->q_depth, &q->ring, IORING_SETUP_SQE128);
@@ -1206,10 +1211,15 @@ ublk_dev_queue_io_init(struct ublk_queue *q)
 	 */
 	buf = malloc(64);
 
-	/* submit all io commands to ublk driver */
+	assert(q->bdev_ch != NULL);
+
+	/* Initialize and submit all io commands to ublk driver */
 	for (i = 0; i < q->q_depth; i++) {
 		io = &q->ios[i];
 		io->payload = buf;
+		io->bdev_ch = q->bdev_ch;
+		io->bdev_desc = q->dev->bdev_desc;
+		io->sector_per_block_shift = q->dev->sector_per_block_shift;
 		ublksrv_queue_io_cmd(q, io, i);
 	}
 
@@ -1365,10 +1375,10 @@ ublk_queue_run(void *arg1)
 	struct ublk_poll_group *poll_group = q->poll_group;
 
 	assert(spdk_get_thread() == poll_group->ublk_thread);
+	q->bdev_ch = spdk_bdev_get_io_channel(ublk->bdev_desc);
 	/* Queues must be filled with IO in the io pthread */
 	ublk_dev_queue_io_init(q);
 
-	q->bdev_ch = spdk_bdev_get_io_channel(ublk->bdev_desc);
 	TAILQ_INSERT_TAIL(&poll_group->queue_list, q, tailq);
 }
 
