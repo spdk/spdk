@@ -48,7 +48,6 @@ static void ublk_submit_bdev_io(struct ublk_queue *q, uint16_t tag);
 static void ublk_dev_queue_fini(struct ublk_queue *q);
 static int ublk_poll(void *arg);
 static int ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op);
-static void ublk_ios_fini(struct spdk_ublk_dev *ublk);
 
 typedef void (*ublk_next_state_fn)(struct spdk_ublk_dev *ublk);
 static void ublk_set_params(struct spdk_ublk_dev *ublk);
@@ -690,24 +689,6 @@ ublk_delete_dev(void *arg)
 	}
 }
 
-static void
-ublk_free_dev(struct spdk_ublk_dev *ublk)
-{
-	if (ublk->bdev_desc) {
-		spdk_bdev_close(ublk->bdev_desc);
-		ublk->bdev_desc = NULL;
-	}
-
-	ublk_ios_fini(ublk);
-	ublk_dev_list_unregister(ublk);
-
-	if (ublk->del_cb) {
-		ublk->del_cb(ublk->cb_arg);
-	}
-	SPDK_NOTICELOG("ublk dev %d stopped\n", ublk->ublk_id);
-	free(ublk);
-}
-
 static int
 _ublk_close_dev_retry(void *arg)
 {
@@ -1304,7 +1285,7 @@ ublk_info_param_init(struct spdk_ublk_dev *ublk)
 }
 
 static void
-ublk_ios_fini(struct spdk_ublk_dev *ublk)
+ublk_free_dev(struct spdk_ublk_dev *ublk)
 {
 	struct ublk_queue *q;
 	uint32_t i, q_idx;
@@ -1323,6 +1304,19 @@ ublk_ios_fini(struct spdk_ublk_dev *ublk)
 		free(q->ios);
 		q->ios = NULL;
 	}
+
+	if (ublk->bdev_desc) {
+		spdk_bdev_close(ublk->bdev_desc);
+		ublk->bdev_desc = NULL;
+	}
+
+	ublk_dev_list_unregister(ublk);
+
+	if (ublk->del_cb) {
+		ublk->del_cb(ublk->cb_arg);
+	}
+	SPDK_NOTICELOG("ublk dev %d stopped\n", ublk->ublk_id);
+	free(ublk);
 }
 
 static int
