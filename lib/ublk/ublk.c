@@ -90,6 +90,7 @@ struct ublk_queue {
 	struct io_uring		ring;
 	struct spdk_ublk_dev	*dev;
 	struct ublk_poll_group	*poll_group;
+	struct spdk_io_channel	*bdev_ch;
 
 	TAILQ_ENTRY(ublk_queue)	tailq;
 };
@@ -97,7 +98,6 @@ struct ublk_queue {
 struct spdk_ublk_dev {
 	struct spdk_bdev	*bdev;
 	struct spdk_bdev_desc	*bdev_desc;
-	struct spdk_io_channel	*ch[UBLK_DEV_MAX_QUEUES];
 	struct spdk_thread	*app_thread;
 
 	int			cdev_fd;
@@ -741,8 +741,8 @@ ublk_try_close_queue(struct ublk_queue *q)
 	}
 
 	TAILQ_REMOVE(&q->poll_group->queue_list, q, tailq);
-	spdk_put_io_channel(ublk->ch[q->q_id]);
-	ublk->ch[q->q_id] = NULL;
+	spdk_put_io_channel(q->bdev_ch);
+	q->bdev_ch = NULL;
 
 	spdk_thread_send_msg(ublk->app_thread, ublk_try_close_dev, ublk);
 }
@@ -833,7 +833,7 @@ ublk_queue_io(struct ublk_io *io)
 	io->bdev_io_wait.cb_fn = ublk_resubmit_io;
 	io->bdev_io_wait.cb_arg = io;
 
-	rc = spdk_bdev_queue_io_wait(bdev, q->dev->ch[q->q_id], &io->bdev_io_wait);
+	rc = spdk_bdev_queue_io_wait(bdev, q->bdev_ch, &io->bdev_io_wait);
 	if (rc != 0) {
 		SPDK_ERRLOG("Queue io failed in ublk_queue_io, rc=%d.\n", rc);
 		ublk_io_done(NULL, false, io);
@@ -866,7 +866,7 @@ ublk_submit_bdev_io(struct ublk_queue *q, uint16_t tag)
 	struct spdk_ublk_dev *ublk = q->dev;
 	struct ublk_io *io = &q->ios[tag];
 	struct spdk_bdev_desc *desc = ublk->bdev_desc;
-	struct spdk_io_channel *ch = ublk->ch[q->q_id];
+	struct spdk_io_channel *ch = q->bdev_ch;
 	uint64_t offset_blocks, num_blocks;
 	uint8_t ublk_op;
 	int rc = 0;
@@ -1368,7 +1368,7 @@ ublk_queue_run(void *arg1)
 	/* Queues must be filled with IO in the io pthread */
 	ublk_dev_queue_io_init(q);
 
-	ublk->ch[q->q_id] = spdk_bdev_get_io_channel(ublk->bdev_desc);
+	q->bdev_ch = spdk_bdev_get_io_channel(ublk->bdev_desc);
 	TAILQ_INSERT_TAIL(&poll_group->queue_list, q, tailq);
 }
 
