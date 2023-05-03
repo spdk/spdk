@@ -1199,15 +1199,20 @@ ublk_dev_queue_io_init(struct ublk_queue *q)
 	struct ublk_io *io;
 	uint32_t i;
 	int rc __attribute__((unused));
+	void *buf;
+
+	/* Some older kernels require a buffer to get posted, even
+	 * when NEED_GET_DATA has been specified.  So allocate a
+	 * temporary buffer, only for purposes of this workaround.
+	 * It never actually gets used, so we will free it immediately
+	 * after all of the commands are posted.
+	 */
+	buf = malloc(64);
 
 	/* submit all io commands to ublk driver */
 	for (i = 0; i < q->q_depth; i++) {
 		io = &q->ios[i];
-		/* Some older kernels require a buffer to get posted, even
-		 * when NEED_GET_DATA has been specified.  So allocate the
-		 * buffers temporarily, then free them after the io_uring_submit.
-		 */
-		ublk_io_get_buffer(io);
+		io->payload = buf;
 		ublksrv_queue_io_cmd(q, io, i);
 	}
 
@@ -1215,9 +1220,9 @@ ublk_dev_queue_io_init(struct ublk_queue *q)
 	assert(rc == (int)q->q_depth);
 	for (i = 0; i < q->q_depth; i++) {
 		io = &q->ios[i];
-		assert(io->payload != NULL);
-		ublk_io_put_buffer(io);
+		io->payload = NULL;
 	}
+	free(buf);
 }
 
 static void
