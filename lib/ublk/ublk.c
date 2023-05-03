@@ -1354,7 +1354,10 @@ ublk_ios_init(struct spdk_ublk_dev *ublk)
 	return 0;
 
 err:
-	ublk_ios_fini(ublk);
+	for (i = 0; i < ublk->num_queues; i++) {
+		free(q->ios);
+		q->ios = NULL;
+	}
 	return rc;
 }
 
