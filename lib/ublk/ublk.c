@@ -26,7 +26,7 @@
 
 #define LINUX_SECTOR_SHIFT		9
 #define UBLK_CTRL_RING_DEPTH		32
-#define UBLK_THREAD_MAX			128
+#define UBLK_POLL_GROUP_MAX		128
 #define UBLK_IO_MAX_BYTES		SPDK_BDEV_LARGE_BUF_MAX_SIZE
 #define UBLK_DEV_MAX_QUEUES		32
 #define UBLK_DEV_MAX_QUEUE_DEPTH	1024
@@ -37,13 +37,13 @@
 #define UBLK_DEBUGLOG(ublk, format, ...) \
 	SPDK_DEBUGLOG(ublk, "ublk%d: " format, ublk->ublk_id, ##__VA_ARGS__);
 
-static uint32_t g_num_ublk_threads = 0;
-static uint32_t g_queue_thread_id = 0;
+static uint32_t g_num_ublk_poll_groups = 0;
+static uint32_t g_next_ublk_poll_group = 0;
 static struct spdk_cpuset g_core_mask;
 struct spdk_mempool *g_io_buf_pool;
 
 struct ublk_queue;
-struct ublk_thread_ctx;
+struct ublk_poll_group;
 static void ublk_submit_bdev_io(struct ublk_queue *q, uint16_t tag);
 static void ublk_dev_queue_fini(struct ublk_queue *q);
 static int ublk_poll(void *arg);
@@ -90,7 +90,7 @@ struct ublk_queue {
 	/* ring depth == dev_info->queue_depth. */
 	struct io_uring		ring;
 	struct spdk_ublk_dev	*dev;
-	struct ublk_thread_ctx	*thread_ctx;
+	struct ublk_poll_group	*poll_group;
 
 	TAILQ_ENTRY(ublk_queue)	tailq;
 };
@@ -125,7 +125,7 @@ struct spdk_ublk_dev {
 	TAILQ_ENTRY(spdk_ublk_dev) wait_tailq;
 };
 
-struct ublk_thread_ctx {
+struct ublk_poll_group {
 	struct spdk_thread		*ublk_thread;
 	struct spdk_poller		*ublk_poller;
 	TAILQ_HEAD(, ublk_queue)	queue_list;
@@ -140,7 +140,7 @@ struct ublk_tgt {
 	struct io_uring		ctrl_ring;
 	struct spdk_poller	*ctrl_poller;
 	uint32_t		ctrl_ops_in_progress;
-	struct ublk_thread_ctx	thread_ctx[UBLK_THREAD_MAX];
+	struct ublk_poll_group	poll_group[UBLK_POLL_GROUP_MAX];
 	TAILQ_HEAD(, spdk_ublk_dev)	ctrl_wait_tailq;
 };
 
@@ -391,11 +391,11 @@ ublk_parse_core_mask(const char *mask)
 static void
 ublk_poller_register(void *args)
 {
-	struct ublk_thread_ctx *thread_ctx = args;
+	struct ublk_poll_group *poll_group = args;
 
-	assert(spdk_get_thread() == thread_ctx->ublk_thread);
-	TAILQ_INIT(&thread_ctx->queue_list);
-	thread_ctx->ublk_poller = SPDK_POLLER_REGISTER(ublk_poll, thread_ctx, 0);
+	assert(spdk_get_thread() == poll_group->ublk_thread);
+	TAILQ_INIT(&poll_group->queue_list);
+	poll_group->ublk_poller = SPDK_POLLER_REGISTER(ublk_poll, poll_group, 0);
 }
 
 int
@@ -404,7 +404,7 @@ ublk_create_target(const char *cpumask_str)
 	int rc;
 	uint32_t i;
 	char thread_name[32];
-	struct ublk_thread_ctx *thread_ctx;
+	struct ublk_poll_group *poll_group;
 
 	if (g_ublk_tgt.active == true) {
 		SPDK_ERRLOG("UBLK target has been created\n");
@@ -441,10 +441,10 @@ ublk_create_target(const char *cpumask_str)
 			continue;
 		}
 		snprintf(thread_name, sizeof(thread_name), "ublk_thread%u", i);
-		thread_ctx = &g_ublk_tgt.thread_ctx[g_num_ublk_threads];
-		thread_ctx->ublk_thread = spdk_thread_create(thread_name, &g_core_mask);
-		spdk_thread_send_msg(thread_ctx->ublk_thread, ublk_poller_register, thread_ctx);
-		g_num_ublk_threads++;
+		poll_group = &g_ublk_tgt.poll_group[g_num_ublk_poll_groups];
+		poll_group->ublk_thread = spdk_thread_create(thread_name, &g_core_mask);
+		spdk_thread_send_msg(poll_group->ublk_thread, ublk_poller_register, poll_group);
+		g_num_ublk_poll_groups++;
 	}
 	g_ublk_tgt.active = true;
 	SPDK_NOTICELOG("UBLK target created successfully\n");
@@ -456,8 +456,8 @@ static void
 _ublk_fini_done(void *args)
 {
 	SPDK_DEBUGLOG(ublk, "\n");
-	g_num_ublk_threads = 0;
-	g_queue_thread_id = 0;
+	g_num_ublk_poll_groups = 0;
+	g_next_ublk_poll_group = 0;
 	g_ublk_tgt.is_destroying = false;
 	g_ublk_tgt.active = false;
 	spdk_mempool_free(g_io_buf_pool);
@@ -475,9 +475,9 @@ ublk_thread_exit(void *args)
 	struct spdk_thread *ublk_thread = spdk_get_thread();
 	uint32_t i;
 
-	for (i = 0; i < g_num_ublk_threads; i++) {
-		if (g_ublk_tgt.thread_ctx[i].ublk_thread == ublk_thread) {
-			spdk_poller_unregister(&g_ublk_tgt.thread_ctx[i].ublk_poller);
+	for (i = 0; i < g_num_ublk_poll_groups; i++) {
+		if (g_ublk_tgt.poll_group[i].ublk_thread == ublk_thread) {
+			spdk_poller_unregister(&g_ublk_tgt.poll_group[i].ublk_poller);
 			spdk_thread_exit(ublk_thread);
 		}
 	}
@@ -758,7 +758,7 @@ ublk_try_close_queue(struct ublk_queue *q)
 		return;
 	}
 
-	TAILQ_REMOVE(&q->thread_ctx->queue_list, q, tailq);
+	TAILQ_REMOVE(&q->poll_group->queue_list, q, tailq);
 	spdk_put_io_channel(ublk->ch[q->q_id]);
 	ublk->ch[q->q_id] = NULL;
 
@@ -1091,12 +1091,12 @@ ublk_io_recv(struct ublk_queue *q)
 static int
 ublk_poll(void *arg)
 {
-	struct ublk_thread_ctx *thread_ctx = arg;
+	struct ublk_poll_group *poll_group = arg;
 	struct ublk_queue *q, *q_tmp;
 	struct spdk_ublk_dev *ublk;
 	int sent, received, count = 0;
 
-	TAILQ_FOREACH_SAFE(q, &thread_ctx->queue_list, tailq, q_tmp) {
+	TAILQ_FOREACH_SAFE(q, &poll_group->queue_list, tailq, q_tmp) {
 		sent = ublk_io_xmit(q);
 		received = ublk_io_recv(q);
 		ublk = q->dev;
@@ -1363,14 +1363,14 @@ ublk_queue_run(void *arg1)
 {
 	struct ublk_queue	*q = arg1;
 	struct spdk_ublk_dev *ublk = q->dev;
-	struct ublk_thread_ctx *thread_ctx = q->thread_ctx;
+	struct ublk_poll_group *poll_group = q->poll_group;
 
-	assert(spdk_get_thread() == thread_ctx->ublk_thread);
+	assert(spdk_get_thread() == poll_group->ublk_thread);
 	/* Queues must be filled with IO in the io pthread */
 	ublk_dev_queue_io_init(q);
 
 	ublk->ch[q->q_id] = spdk_bdev_get_io_channel(ublk->bdev_desc);
-	TAILQ_INSERT_TAIL(&thread_ctx->queue_list, q, tailq);
+	TAILQ_INSERT_TAIL(&poll_group->queue_list, q, tailq);
 }
 
 int
@@ -1490,12 +1490,12 @@ ublk_finish_start(struct spdk_ublk_dev *ublk)
 
 	/* Send queue to different spdk_threads for load balance */
 	for (q_id = 0; q_id < ublk->num_queues; q_id++) {
-		ublk->queues[q_id].thread_ctx = &g_ublk_tgt.thread_ctx[g_queue_thread_id];
-		ublk_thread = g_ublk_tgt.thread_ctx[g_queue_thread_id].ublk_thread;
+		ublk->queues[q_id].poll_group = &g_ublk_tgt.poll_group[g_next_ublk_poll_group];
+		ublk_thread = g_ublk_tgt.poll_group[g_next_ublk_poll_group].ublk_thread;
 		spdk_thread_send_msg(ublk_thread, ublk_queue_run, &ublk->queues[q_id]);
-		g_queue_thread_id++;
-		if (g_queue_thread_id == g_num_ublk_threads) {
-			g_queue_thread_id = 0;
+		g_next_ublk_poll_group++;
+		if (g_next_ublk_poll_group == g_num_ublk_poll_groups) {
+			g_next_ublk_poll_group = 0;
 		}
 	}
 
