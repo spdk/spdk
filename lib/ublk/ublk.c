@@ -869,14 +869,12 @@ ublk_submit_bdev_io(struct ublk_queue *q, uint16_t tag)
 	struct spdk_io_channel *ch = ublk->ch[q->q_id];
 	uint64_t offset_blocks, num_blocks;
 	uint8_t ublk_op;
-	void *payload;
 	int rc = 0;
 	const struct ublksrv_io_desc *iod = &q->io_cmd_buf[tag];
 
 	ublk_op = ublksrv_get_op(iod);
 	offset_blocks = iod->start_sector >> ublk->sector_per_block_shift;
 	num_blocks = iod->nr_sectors >> ublk->sector_per_block_shift;
-	payload = (void *)iod->addr;
 
 	io->result = num_blocks * spdk_bdev_get_data_block_size(ublk->bdev);
 	switch (ublk_op) {
@@ -885,7 +883,8 @@ ublk_submit_bdev_io(struct ublk_queue *q, uint16_t tag)
 		rc = spdk_bdev_read_blocks(desc, ch, io->payload, offset_blocks, num_blocks, ublk_io_done, io);
 		break;
 	case UBLK_IO_OP_WRITE:
-		rc = spdk_bdev_write_blocks(desc, ch, payload, offset_blocks, num_blocks, ublk_io_done, io);
+		assert((void *)iod->addr == io->payload);
+		rc = spdk_bdev_write_blocks(desc, ch, io->payload, offset_blocks, num_blocks, ublk_io_done, io);
 		break;
 	case UBLK_IO_OP_FLUSH:
 		rc = spdk_bdev_flush_blocks(desc, ch, offset_blocks, num_blocks, ublk_io_done, io);
