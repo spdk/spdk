@@ -246,6 +246,7 @@ public:
 		mFile = NULL;
 		return Status::OK();
 	}
+	using WritableFile::Append;
 	virtual Status Append(const Slice &data) override;
 	virtual Status Flush() override
 	{
