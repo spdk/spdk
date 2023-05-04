@@ -170,6 +170,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	run_test "thread" $rootdir/test/thread/thread.sh
 	run_test "accel" $rootdir/test/accel/accel.sh
 	run_test "app_cmdline" $rootdir/test/app/cmdline.sh
+	run_test "version" $rootdir/test/app/version.sh
 
 	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 		run_test "blockdev_general" $rootdir/test/bdev/blockdev.sh
