@@ -74,7 +74,6 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 	struct spdk_nvmf_discovery_log_page_entry *entry;
 	struct spdk_nvmf_discovery_log_page *disc_log;
 	size_t cur_size;
-	uint32_t sid;
 
 	SPDK_DEBUGLOG(nvmf, "Generating log page for genctr %" PRIu64 "\n",
 		      tgt->discovery_genctr);
@@ -86,10 +85,10 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 		return NULL;
 	}
 
-	for (sid = 0; sid < tgt->max_subsystems; sid++) {
-		subsystem = tgt->subsystems[sid];
-		if ((subsystem == NULL) ||
-		    (subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE) ||
+	for (subsystem = spdk_nvmf_subsystem_get_first(tgt);
+	     subsystem != NULL;
+	     subsystem = spdk_nvmf_subsystem_get_next(subsystem)) {
+		if ((subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE) ||
 		    (subsystem->state == SPDK_NVMF_SUBSYSTEM_DEACTIVATING)) {
 			continue;
 		}
