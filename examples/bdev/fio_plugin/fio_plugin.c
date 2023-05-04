@@ -619,6 +619,10 @@ spdk_fio_setup_oat(void *_ctx)
 		struct spdk_bdev *bdev;
 
 		if (strcmp(f->file_name, "*") == 0) {
+			/* Explicitly set file size to 0 here to make sure fio doesn't try to
+			 * actually send I/O to this "*" file.
+			 */
+			f->real_file_size = 0;
 			continue;
 		}
 
@@ -1436,7 +1440,7 @@ static struct fio_option options[] = {
 struct ioengine_ops ioengine = {
 	.name			= "spdk_bdev",
 	.version		= FIO_IOOPS_VERSION,
-	.flags			= FIO_RAWIO | FIO_NOEXTEND | FIO_NODISKUTIL | FIO_MEMALIGN,
+	.flags			= FIO_RAWIO | FIO_NOEXTEND | FIO_NODISKUTIL | FIO_MEMALIGN | FIO_DISKLESSIO,
 	.setup			= spdk_fio_setup,
 	.init			= spdk_fio_init,
 	/* .prep		= unused, */

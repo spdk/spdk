@@ -1806,7 +1806,7 @@ struct ioengine_ops ioengine = {
 #if FIO_HAS_FDP
 	.fdp_fetch_ruhs		= spdk_fio_fdp_fetch_ruhs,
 #endif
-	.flags			= FIO_RAWIO | FIO_NOEXTEND | FIO_NODISKUTIL | FIO_MEMALIGN,
+	.flags			= FIO_RAWIO | FIO_NOEXTEND | FIO_NODISKUTIL | FIO_MEMALIGN | FIO_DISKLESSIO,
 	.options		= options,
 	.option_struct_size	= sizeof(struct spdk_fio_options),
 };
