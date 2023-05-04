@@ -430,7 +430,7 @@ def nvmf_subsystem_add_host(client, nqn, host, tgt_name=None, psk=None):
         nqn: Subsystem NQN.
         host: Host NQN to add to the list of allowed host NQNs
         tgt_name: name of the parent NVMe-oF target (optional)
-        psk: PSK for TLS authentication.
+        psk: PSK file path for TLS.
 
     Returns:
         True or False

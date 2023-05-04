@@ -732,7 +732,7 @@ if __name__ == "__main__":
                    less than ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1.""",
                    type=int)
     p.add_argument('-k', '--psk',
-                   help='Set PSK and enable TCP SSL socket implementation: e.g., 1234567890ABCDEF')
+                   help='Set PSK file path and enable TCP SSL socket implementation.')
     p.add_argument('-m', '--max-bdevs', type=int,
                    help='The size of the name array for newly created bdevs. Default is 128',)
 
@@ -2536,7 +2536,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('host', help='Host NQN to allow')
     p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
-    p.add_argument('--psk', help='PSK for TLS authentication (optional). Only applicable for TCP transport.', type=str)
+    p.add_argument('--psk', help='Path to PSK file for TLS authentication (optional). Only applicable for TCP transport.', type=str)
     p.set_defaults(func=nvmf_subsystem_add_host)
 
     def nvmf_subsystem_remove_host(args):

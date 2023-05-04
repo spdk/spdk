@@ -3985,7 +3985,7 @@ num_io_queues              | Optional | number      | The number of IO queues to
 ctrlr_loss_timeout_sec     | Optional | number      | Time to wait until ctrlr is reconnected before deleting ctrlr.  -1 means infinite reconnects. 0 means no reconnect.
 reconnect_delay_sec        | Optional | number      | Time to delay a reconnect trial. 0 means no reconnect.
 fast_io_fail_timeout_sec   | Optional | number      | Time to wait until ctrlr is reconnected before failing I/O to ctrlr. 0 means no such timeout.
-psk                        | Optional | string      | PSK in hexadecimal digits, e.g. 1234567890ABCDEF (Enables SSL socket implementation for TCP)
+psk                        | Optional | string      | Path to a file contatining PSK for TLS (Enables SSL socket implementation for TCP)
 max_bdevs                  | Optional | number      | The size of the name array for newly created bdevs. Default is 128.
 
 #### Example
@@ -8128,6 +8128,7 @@ Name                    | Optional | Type        | Description
 nqn                     | Required | string      | Subsystem NQN
 host                    | Required | string      | Host NQN to add to the list of allowed host NQNs
 tgt_name                | Optional | string      | Parent NVMe-oF target name.
+psk                     | Optional | string      | Path to a file containing PSK for TLS connection
 
 #### Example
 

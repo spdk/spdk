@@ -24,6 +24,7 @@
 #include "spdk/likely.h"
 #include "spdk/sock.h"
 #include "spdk/zipf.h"
+#include "spdk/nvmf.h"
 
 #ifdef SPDK_CONFIG_URING
 #include <liburing.h>
@@ -335,14 +336,28 @@ perf_set_sock_opts(const char *impl_name, const char *field, uint32_t val, const
 		sock_opts.tls_version = val;
 	} else if (strcmp(field, "ktls") == 0) {
 		sock_opts.enable_ktls = val;
-	} else if (strcmp(field, "psk_key") == 0) {
+	} else if (strcmp(field, "psk_path") == 0) {
 		if (!valstr) {
 			fprintf(stderr, "No socket opts value specified\n");
 			return;
 		}
-		g_psk = strdup(valstr);
+		g_psk = calloc(1, SPDK_TLS_PSK_MAX_LEN + 1);
 		if (g_psk == NULL) {
 			fprintf(stderr, "Failed to allocate memory for psk\n");
+			return;
+		}
+		FILE *psk_file = fopen(valstr, "r");
+		if (psk_file == NULL) {
+			fprintf(stderr, "Could not open PSK file\n");
+			return;
+		}
+		if (fscanf(psk_file, "%" SPDK_STRINGIFY(SPDK_TLS_PSK_MAX_LEN) "s", g_psk) != 1) {
+			fprintf(stderr, "Could not retrieve PSK from file\n");
+			fclose(psk_file);
+			return;
+		}
+		if (fclose(psk_file)) {
+			fprintf(stderr, "Failed to close PSK file\n");
 			return;
 		}
 	} else if (strcmp(field, "zerocopy_threshold") == 0) {
@@ -1873,7 +1888,7 @@ usage(char *program_name)
 	printf("\t[--disable-ktls disable Kernel TLS. Only valid for ssl impl. Default for ssl impl]\n");
 	printf("\t[--enable-ktls enable Kernel TLS. Only valid for ssl impl]\n");
 	printf("\t[--tls-version <val> TLS version to use. Only valid for ssl impl. Default: 0 (auto-negotiation)]\n");
-	printf("\t[--psk-key <val> Default PSK KEY in hexadecimal digits, e.g. 1234567890ABCDEF (only applies when sock_impl == ssl)]\n");
+	printf("\t[--psk-path <val> Path to PSK file (only applies when sock_impl == ssl)]\n");
 	printf("\t[--psk-identity <val> Default PSK ID, e.g. psk.spdk.io (only applies when sock_impl == ssl)]\n");
 	printf("\t[--zerocopy-threshold <val> data is sent with MSG_ZEROCOPY if size is greater than this val. Default: 0 to disable it]\n");
 	printf("\t[--zerocopy-threshold-sock-impl <impl> specify the sock implementation to set zerocopy_threshold]\n");
@@ -2380,8 +2395,8 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"enable-ktls", no_argument, NULL, PERF_ENABLE_KTLS},
 #define PERF_TLS_VERSION	262
 	{"tls-version", required_argument, NULL, PERF_TLS_VERSION},
-#define PERF_PSK_KEY		263
-	{"psk-key", required_argument, NULL, PERF_PSK_KEY},
+#define PERF_PSK_PATH		263
+	{"psk-path", required_argument, NULL, PERF_PSK_PATH},
 #define PERF_PSK_IDENTITY	264
 	{"psk-identity ", required_argument, NULL, PERF_PSK_IDENTITY},
 #define PERF_ZEROCOPY_THRESHOLD		265
@@ -2611,9 +2626,9 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			}
 			perf_set_sock_opts("ssl", "tls_version", val, NULL);
 			break;
-		case PERF_PSK_KEY:
+		case PERF_PSK_PATH:
 			ssl_used = true;
-			perf_set_sock_opts("ssl", "psk_key", 0, optarg);
+			perf_set_sock_opts("ssl", "psk_path", 0, optarg);
 			break;
 		case PERF_PSK_IDENTITY:
 			ssl_used = true;
@@ -3101,6 +3116,7 @@ main(int argc, char **argv)
 	opts.pci_allowed = g_allowed_pci_addr;
 	rc = parse_args(argc, argv, &opts);
 	if (rc != 0) {
+		free(g_psk);
 		return rc;
 	}
 	/* Transport statistics are printed from each thread.
@@ -3108,12 +3124,14 @@ main(int argc, char **argv)
 	rc = pthread_mutex_init(&g_stats_mutex, NULL);
 	if (rc != 0) {
 		fprintf(stderr, "Failed to init mutex\n");
+		free(g_psk);
 		return -1;
 	}
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
 		unregister_trids();
 		pthread_mutex_destroy(&g_stats_mutex);
+		free(g_psk);
 		return -1;
 	}
 

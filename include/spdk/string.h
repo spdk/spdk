@@ -17,6 +17,9 @@
 extern "C" {
 #endif
 
+#define _SPDK_STRINGIFY(x) #x
+#define SPDK_STRINGIFY(x) _SPDK_STRINGIFY(x)
+
 /**
  * sprintf with automatic buffer allocation.
  *

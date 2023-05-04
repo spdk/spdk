@@ -1277,13 +1277,11 @@ test_nvmf_tcp_tls_add_remove_credentials(void)
 	struct tcp_psk_entry *entry;
 	const char subnqn[] = {"nqn.2016-06.io.spdk:cnode1"};
 	const char hostnqn[] = {"nqn.2016-06.io.spdk:host1"};
-	struct spdk_json_val psk_json[] = {
-		{"", 2, SPDK_JSON_VAL_OBJECT_BEGIN},
-		{"psk", 3, SPDK_JSON_VAL_NAME},
-		{"NVMeTLSkey-1:01:VRLbtnN9AQb2WXW3c9+wEf/DRLz0QuLdbYvEhwtdWwNf9LrZ:", 65, SPDK_JSON_VAL_STRING},
-		{"", 0, SPDK_JSON_VAL_OBJECT_END},
-	};
+	const char *psk = "NVMeTLSkey-1:01:VRLbtnN9AQb2WXW3c9+wEf/DRLz0QuLdbYvEhwtdWwNf9LrZ:";
+	char *psk_file_path = "/tmp/psk.txt";
 	bool found = false;
+	FILE *psk_file = NULL;
+	mode_t oldmask;
 
 	thread = spdk_thread_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
@@ -1301,6 +1299,21 @@ test_nvmf_tcp_tls_add_remove_credentials(void)
 
 	memset(&subsystem, 0, sizeof(subsystem));
 	snprintf(subsystem.subnqn, sizeof(subsystem.subnqn), "%s", subnqn);
+
+	/* Create a text file containing PSK in interchange format. */
+	oldmask = umask(S_IXUSR | S_IRWXG | S_IRWXO);
+	psk_file = fopen(psk_file_path, "w");
+	CU_ASSERT(psk_file != NULL);
+	CU_ASSERT(fprintf(psk_file, "%s", psk) > 0);
+	CU_ASSERT(fclose(psk_file) == 0);
+	umask(oldmask);
+
+	struct spdk_json_val psk_json[] = {
+		{"", 2, SPDK_JSON_VAL_OBJECT_BEGIN},
+		{"psk", 3, SPDK_JSON_VAL_NAME},
+		{psk_file_path, strlen(psk_file_path), SPDK_JSON_VAL_STRING},
+		{"", 0, SPDK_JSON_VAL_OBJECT_END},
+	};
 
 	nvmf_tcp_subsystem_add_host(transport, &subsystem, hostnqn, psk_json);
 
@@ -1326,6 +1339,8 @@ test_nvmf_tcp_tls_add_remove_credentials(void)
 	}
 
 	CU_ASSERT(found == false);
+
+	CU_ASSERT(remove(psk_file_path) == 0);
 
 	CU_ASSERT(nvmf_tcp_destroy(transport, NULL, NULL) == 0);
 

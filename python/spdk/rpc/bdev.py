@@ -733,7 +733,7 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
         0 means no such timeout.
         If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec and less than
         ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1. (optional)
-        psk: Set PSK and enable TCP SSL socket implementation (optional)
+        psk: Set PSK file path and enable TCP SSL socket implementation (optional)
         max_bdevs: Size of the name array for newly created bdevs. Default is 128. (optional)
 
     Returns:

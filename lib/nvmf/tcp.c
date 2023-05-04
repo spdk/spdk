@@ -46,6 +46,8 @@
 #define SPDK_NVMF_TCP_DEFAULT_DIF_INSERT_OR_STRIP false
 #define SPDK_NVMF_TCP_DEFAULT_ABORT_TIMEOUT_SEC 1
 
+#define TCP_PSK_INVALID_PERMISSIONS 0177
+
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp;
 
 /* spdk nvmf related structure */
@@ -347,6 +349,9 @@ struct tcp_psk_entry {
 	char				subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 	char				psk_identity[NVMF_PSK_IDENTITY_LEN];
 	uint8_t				psk[SPDK_TLS_PSK_MAX_LEN];
+
+	/* Original path saved to emit SPDK configuration via "save_config". */
+	char				psk_path[PATH_MAX];
 	uint32_t			psk_size;
 	enum nvme_tcp_cipher_suite	tls_cipher_suite;
 	TAILQ_ENTRY(tcp_psk_entry)	link;
@@ -3515,6 +3520,44 @@ static const struct spdk_json_object_decoder tcp_subsystem_add_host_opts_decoder
 };
 
 static int
+tcp_load_psk(const char *fname, char *buf, size_t bufsz)
+{
+	FILE *psk_file;
+	struct stat statbuf;
+	int rc;
+
+	if (stat(fname, &statbuf) != 0) {
+		SPDK_ERRLOG("Could not read permissions for PSK file\n");
+		return -EACCES;
+	}
+
+	if ((statbuf.st_mode & TCP_PSK_INVALID_PERMISSIONS) != 0) {
+		SPDK_ERRLOG("Incorrect permissions for PSK file\n");
+		return -EPERM;
+	}
+	if ((size_t)statbuf.st_size >= bufsz) {
+		SPDK_ERRLOG("Invalid PSK: too long\n");
+		return -EINVAL;
+	}
+	psk_file = fopen(fname, "r");
+	if (psk_file == NULL) {
+		SPDK_ERRLOG("Could not open PSK file\n");
+		return -EINVAL;
+	}
+
+	memset(buf, 0, bufsz);
+	rc = fread(buf, 1, statbuf.st_size, psk_file);
+	if (rc != statbuf.st_size) {
+		SPDK_ERRLOG("Failed to read PSK\n");
+		fclose(psk_file);
+		return -EINVAL;
+	}
+
+	fclose(psk_file);
+	return 0;
+}
+
+static int
 nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 			    const struct spdk_nvmf_subsystem *subsystem,
 			    const char *hostnqn,
@@ -3525,8 +3568,8 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 	struct tcp_psk_entry *entry;
 	char psk_identity[NVMF_PSK_IDENTITY_LEN];
 	uint8_t psk_configured[SPDK_TLS_PSK_MAX_LEN] = {};
+	char psk_interchange[SPDK_TLS_PSK_MAX_LEN] = {};
 	uint8_t tls_cipher_suite;
-	uint64_t key_len;
 	int rc = 0;
 	uint8_t psk_retained_hash;
 	uint64_t psk_configured_size;
@@ -3540,7 +3583,7 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 
 	memset(&opts, 0, sizeof(opts));
 
-	/* Decode PSK */
+	/* Decode PSK file path */
 	if (spdk_json_decode_object_relaxed(transport_specific, tcp_subsystem_add_host_opts_decoder,
 					    SPDK_COUNTOF(tcp_subsystem_add_host_opts_decoder), &opts)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
@@ -3550,11 +3593,22 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 	if (opts.psk == NULL) {
 		return 0;
 	}
+	if (strlen(opts.psk) >= sizeof(entry->psk)) {
+		SPDK_ERRLOG("PSK path too long\n");
+		rc = -EINVAL;
+		goto end;
+	}
+
+	rc = tcp_load_psk(opts.psk, psk_interchange, sizeof(psk_interchange));
+	if (rc) {
+		SPDK_ERRLOG("Could not retrieve PSK from file\n");
+		goto end;
+	}
 
 	/* Parse PSK interchange to get length of base64 encoded data.
 	 * This is then used to decide which cipher suite should be used
 	 * to generate PSK identity and TLS PSK later on. */
-	rc = nvme_tcp_parse_interchange_psk(opts.psk, psk_configured, sizeof(psk_configured),
+	rc = nvme_tcp_parse_interchange_psk(psk_interchange, psk_configured, sizeof(psk_configured),
 					    &psk_configured_size, &psk_retained_hash);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to parse PSK interchange!\n");
@@ -3617,14 +3671,6 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 	}
 	entry->tls_cipher_suite = tls_cipher_suite;
 
-	if (strlen(opts.psk) >= sizeof(entry->psk)) {
-		SPDK_ERRLOG("PSK of length: %ld cannot fit in max buffer size: %ld\n", strlen(opts.psk),
-			    sizeof(entry->psk));
-		rc = -EINVAL;
-		free(entry);
-		goto end;
-	}
-
 	/* No hash indicates that Configured PSK must be used as Retained PSK. */
 	if (psk_retained_hash == NVME_TCP_HASH_ALGORITHM_NONE) {
 		/* Psk configured is either 32 or 48 bytes long. */
@@ -3646,8 +3692,8 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 
 end:
 	spdk_memset_s(psk_configured, sizeof(psk_configured), 0, sizeof(psk_configured));
-	key_len = strnlen(opts.psk, SPDK_TLS_PSK_MAX_LEN);
-	spdk_memset_s(opts.psk, key_len, 0, key_len);
+	spdk_memset_s(psk_interchange, sizeof(psk_interchange), 0, sizeof(psk_interchange));
+
 	free(opts.psk);
 
 	return rc;

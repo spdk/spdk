@@ -11,6 +11,13 @@ source $rootdir/test/nvmf/common.sh
 
 rpc_py="$rootdir/scripts/rpc.py"
 
+cleanup() {
+	process_shm --id $NVMF_APP_SHM_ID || true
+	killprocess $bdevperf_pid
+	nvmftestfini || true
+	rm -f $key_path $key_2_path $key_long_path
+}
+
 function run_bdevperf() {
 	local subnqn hostnqn psk
 	subnqn=$1 hostnqn=$2 psk=${3:+--psk $3}
@@ -20,7 +27,7 @@ function run_bdevperf() {
 	$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 &
 	bdevperf_pid=$!
 
-	trap 'process_shm --id $NVMF_APP_SHM_ID; killprocess $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+	trap 'cleanup; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $bdevperf_pid $bdevperf_rpc_sock
 
 	# send RPC
@@ -120,41 +127,63 @@ fi
 key=$(format_interchange_psk 00112233445566778899aabbccddeeff)
 key_2=$(format_interchange_psk ffeeddccbbaa99887766554433221100)
 
+key_path="$testdir/key1.txt"
+key_2_path="$testdir/key2.txt"
+
+echo -n "$key" > $key_path
+echo -n "$key_2" > $key_2_path
+
+chmod 0600 $key_path
+chmod 0600 $key_2_path
+
 $rpc_py sock_impl_set_options -i ssl --tls-version 13
 $rpc_py framework_start_init
 
-setup_nvmf_tgt "$key"
+setup_nvmf_tgt $key_path
 
 # Test #1 - test connectivity with perf and bdevperf application
 # Check connectivity with nvmeperf"
 "${NVMF_TARGET_NS_CMD[@]}" $SPDK_EXAMPLE_DIR/perf -S ssl -q 64 -o 4096 -w randrw -M 30 -t 10 \
 	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \
 subnqn:nqn.2016-06.io.spdk:cnode1 hostnqn:nqn.2016-06.io.spdk:host1" \
-	--psk-key $key
+	--psk-path $key_path
 
-# Check connectivity with bdevperf
-run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 "$key"
+# Check connectivity with bdevperf with 32 bytes long key
+run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 "$key_path"
 
 # Test #2 - test if it is possible to connect with different PSK
-NOT run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 "$key_2"
+NOT run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 "$key_2_path"
 
 # Test #3 - test if it is possible to connect with different hostnqn
-NOT run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host2 "$key"
+NOT run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host2 "$key_path"
 
 # Test #4 - test if it is possible to connect with different subnqn
-NOT run_bdevperf nqn.2016-06.io.spdk:cnode2 nqn.2016-06.io.spdk:host1 "$key"
+NOT run_bdevperf nqn.2016-06.io.spdk:cnode2 nqn.2016-06.io.spdk:host1 "$key_path"
 
 # Test #5 - test if it is possible to connect with POSIX socket to SSL socket (no credentials provided)
 NOT run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 ""
 
-# Test #6 - check connectivity with bdevperf, but with longer PSK
+# Test #6 - check connectivity with bdevperf, but with 48 bytes long key
 killprocess $nvmfpid
 key_long=$(format_interchange_psk 00112233445566778899aabbccddeeff0011223344556677 02)
+key_long_path="$testdir/key_long.txt"
+echo -n "$key_long" > $key_long_path
+chmod 0600 $key_long_path
 nvmfappstart -m 0x2
 
-setup_nvmf_tgt "$key_long"
+setup_nvmf_tgt $key_long_path
 
-run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 "$key_long"
+run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 "$key_long_path"
+
+# Test #7 - check if it is possible to connect with incorrect permissions
+chmod 0666 $key_long_path
+NOT run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 "$key_long_path"
+
+# Test #8 - check if it is possible to setup nvmf_tgt with PSK with incorrect permissions
+killprocess $nvmfpid
+nvmfappstart -m 0x2
+
+NOT setup_nvmf_tgt $key_long_path
 
 trap - SIGINT SIGTERM EXIT
-nvmftestfini
+cleanup
