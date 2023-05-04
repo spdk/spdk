@@ -1230,10 +1230,8 @@ _bdev_io_set_md_buf(struct spdk_bdev_io *bdev_io)
 }
 
 static inline void
-bdev_io_pull_bounce_data_buf_done(void *ctx, int rc)
+bdev_io_pull_data_done(struct spdk_bdev_io *bdev_io, int rc)
 {
-	struct spdk_bdev_io *bdev_io = ctx;
-
 	if (rc) {
 		SPDK_ERRLOG("Failed to get data buffer\n");
 		assert(bdev_io->internal.data_transfer_cpl);
@@ -1245,7 +1243,7 @@ bdev_io_pull_bounce_data_buf_done(void *ctx, int rc)
 }
 
 static void
-_bdev_io_pull_bounce_data_buf_done(void *ctx, int status)
+bdev_io_pull_data_done_and_track(void *ctx, int status)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
 	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
@@ -1257,7 +1255,7 @@ _bdev_io_pull_bounce_data_buf_done(void *ctx, int status)
 		bdev_ch_retry_io(ch);
 	}
 
-	bdev_io_pull_bounce_data_buf_done(ctx, status);
+	bdev_io_pull_data_done(bdev_io, status);
 }
 
 static void
@@ -1304,7 +1302,7 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 							  bdev_io->internal.orig_iovs,
 							  (uint32_t) bdev_io->internal.orig_iovcnt,
 							  bdev_io->u.bdev.iovs, 1,
-							  _bdev_io_pull_bounce_data_buf_done,
+							  bdev_io_pull_data_done_and_track,
 							  bdev_io);
 			if (rc == 0) {
 				/* Continue to submit IO in completion callback */
@@ -1329,7 +1327,7 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 	if (spdk_unlikely(rc == -ENOMEM)) {
 		bdev_queue_nomem_io_head(ch->shared_resource, bdev_io, BDEV_IO_RETRY_STATE_PULL);
 	} else {
-		bdev_io_pull_bounce_data_buf_done(bdev_io, rc);
+		bdev_io_pull_data_done(bdev_io, rc);
 	}
 }
 
@@ -1560,7 +1558,7 @@ _bdev_io_complete_push_bounce_done(void *ctx, int rc)
 }
 
 static void
-_bdev_io_push_bounce_md_buf_done(void *ctx, int rc)
+bdev_io_push_bounce_md_buf_done(void *ctx, int rc)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
 	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
@@ -1596,7 +1594,7 @@ bdev_io_push_bounce_md_buf(struct spdk_bdev_io *bdev_io)
 								  &bdev_io->internal.orig_md_iov,
 								  (uint32_t)bdev_io->internal.orig_iovcnt,
 								  &bdev_io->internal.bounce_md_iov, 1,
-								  _bdev_io_push_bounce_md_buf_done,
+								  bdev_io_push_bounce_md_buf_done,
 								  bdev_io);
 				if (rc == 0) {
 					/* Continue IO completion in async callback */
@@ -1625,10 +1623,8 @@ bdev_io_push_bounce_md_buf(struct spdk_bdev_io *bdev_io)
 }
 
 static inline void
-bdev_io_push_bounce_data_buffer_done(void *ctx, int rc)
+bdev_io_push_bounce_data_done(struct spdk_bdev_io *bdev_io, int rc)
 {
-	struct spdk_bdev_io *bdev_io = ctx;
-
 	assert(bdev_io->internal.data_transfer_cpl);
 	if (rc) {
 		bdev_io->internal.data_transfer_cpl(bdev_io, rc);
@@ -1646,7 +1642,7 @@ bdev_io_push_bounce_data_buffer_done(void *ctx, int rc)
 }
 
 static void
-_bdev_io_push_bounce_data_buffer_done(void *ctx, int status)
+bdev_io_push_bounce_data_done_and_track(void *ctx, int status)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
 	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
@@ -1658,7 +1654,7 @@ _bdev_io_push_bounce_data_buffer_done(void *ctx, int status)
 		bdev_ch_retry_io(ch);
 	}
 
-	bdev_io_push_bounce_data_buffer_done(ctx, status);
+	bdev_io_push_bounce_data_done(bdev_io, status);
 }
 
 static inline void
@@ -1679,7 +1675,7 @@ bdev_io_push_bounce_data(struct spdk_bdev_io *bdev_io)
 							  bdev_io->internal.orig_iovs,
 							  (uint32_t)bdev_io->internal.orig_iovcnt,
 							  &bdev_io->internal.bounce_iov, 1,
-							  _bdev_io_push_bounce_data_buffer_done,
+							  bdev_io_push_bounce_data_done_and_track,
 							  bdev_io);
 			if (rc == 0) {
 				/* Continue IO completion in async callback */
@@ -1704,7 +1700,7 @@ bdev_io_push_bounce_data(struct spdk_bdev_io *bdev_io)
 	if (spdk_unlikely(rc == -ENOMEM)) {
 		bdev_queue_nomem_io_head(ch->shared_resource, bdev_io, BDEV_IO_RETRY_STATE_PUSH);
 	} else {
-		bdev_io_push_bounce_data_buffer_done(bdev_io, rc);
+		bdev_io_push_bounce_data_done(bdev_io, rc);
 	}
 }
 
