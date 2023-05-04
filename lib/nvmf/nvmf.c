@@ -170,8 +170,8 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	struct spdk_nvmf_tgt *tgt = io_device;
 	struct spdk_nvmf_poll_group *group = ctx_buf;
 	struct spdk_nvmf_transport *transport;
+	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_thread *thread = spdk_get_thread();
-	uint32_t sid;
 	int rc;
 
 	group->tgt = tgt;
@@ -199,14 +199,9 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 		return -ENOMEM;
 	}
 
-	for (sid = 0; sid < tgt->max_subsystems; sid++) {
-		struct spdk_nvmf_subsystem *subsystem;
-
-		subsystem = tgt->subsystems[sid];
-		if (!subsystem) {
-			continue;
-		}
-
+	for (subsystem = spdk_nvmf_subsystem_get_first(tgt);
+	     subsystem != NULL;
+	     subsystem = spdk_nvmf_subsystem_get_next(subsystem)) {
 		if (nvmf_poll_group_add_subsystem(group, subsystem, NULL, NULL) != 0) {
 			nvmf_tgt_cleanup_poll_group(group);
 			return -1;
