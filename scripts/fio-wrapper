@@ -44,7 +44,11 @@ fio_config() {
 }
 
 run_fio() {
-	fio_config "$@" | fio -
+	local output_args
+	if [[ -n "$output" ]]; then
+		output_args=("--group_reporting=1" "--output-format=json" "--output=$output")
+	fi
+	fio_config "$@" | fio "${output_args[@]}" -
 }
 
 get_iscsi() {
@@ -128,10 +132,11 @@ numjobs=1
 protocol="nvmf"
 runtime=1
 testtype="read"
+output=""
 verify=0
 
 # Keep short args compatible with fio.py
-while getopts :i:d:n:p:r:t:v arg; do
+while getopts :i:d:n:p:r:t:o:v arg; do
 	case "$arg" in
 		i) blocksize=$OPTARG ;;
 		d) iodepth=$OPTARG ;;
@@ -139,6 +144,7 @@ while getopts :i:d:n:p:r:t:v arg; do
 		p) protocol=$OPTARG ;;
 		r) runtime=$OPTARG ;;
 		t) testtype=$OPTARG ;;
+		o) output=$OPTARG ;;
 		v) verify=1 ;;
 		*) ;;
 	esac
