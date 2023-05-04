@@ -22,11 +22,15 @@ vbdev_ocf_ctx_data_alloc(uint32_t pages)
 	uint32_t sz;
 
 	data = vbdev_ocf_data_alloc(1);
+	if (data == NULL) {
+		return NULL;
+	}
 
 	sz = pages * PAGE_SIZE;
 	buf = spdk_malloc(sz, PAGE_SIZE, NULL,
 			  SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (buf == NULL) {
+		vbdev_ocf_data_free(data);
 		return NULL;
 	}
 
