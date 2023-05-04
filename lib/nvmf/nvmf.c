@@ -360,8 +360,7 @@ static void
 nvmf_tgt_destroy_cb(void *io_device)
 {
 	struct spdk_nvmf_tgt *tgt = io_device;
-	struct spdk_nvmf_subsystem *subsystem;
-	uint32_t i;
+	struct spdk_nvmf_subsystem *subsystem, *subsystem_next;
 	int rc;
 
 	if (tgt->subsystems == NULL) {
@@ -369,11 +368,14 @@ nvmf_tgt_destroy_cb(void *io_device)
 		return;
 	}
 
-	for (i = 0; i < tgt->max_subsystems; i++) {
-		subsystem = tgt->subsystems[i];
-		if (subsystem == NULL) {
-			continue;
-		}
+	/* We will be freeing subsystems in this loop, so we always need to get the next one
+	 * ahead of time, since we can't call get_next() on a subsystem that's been freed.
+	 */
+	for (subsystem = spdk_nvmf_subsystem_get_first(tgt),
+	     subsystem_next = spdk_nvmf_subsystem_get_next(subsystem);
+	     subsystem != NULL;
+	     subsystem = subsystem_next,
+	     subsystem_next = spdk_nvmf_subsystem_get_next(subsystem_next)) {
 		nvmf_subsystem_remove_all_listeners(subsystem, true);
 
 		rc = spdk_nvmf_subsystem_destroy(subsystem, nvmf_tgt_destroy_cb, tgt);
