@@ -23,13 +23,13 @@ fio_config() {
 		iodepth=$iodepth
 		norandommap=$((verify == 1 ? 0 : 1))
 		numjobs=$numjobs
-		verify_dump=1
-		verify_backlog=512
-		verify_state_save=0
 	FIO
 
 	if ((verify == 1)); then
 		cat <<- FIO
+			verify_dump=1
+			verify_backlog=512
+			verify_state_save=0
 			do_verify=$verify
 			verify=crc32c-intel
 		FIO
