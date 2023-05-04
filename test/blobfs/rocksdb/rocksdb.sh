@@ -80,7 +80,7 @@ popd
 
 timing_exit db_bench_build
 
-$rootdir/scripts/gen_nvme.sh --json-with-subsystems > $ROCKSDB_CONF
+$rootdir/scripts/gen_nvme.sh --json-with-subsystems -n 1 > $ROCKSDB_CONF
 
 trap 'dump_db_bench_on_err; run_bsdump || :; rm -f $ROCKSDB_CONF; sanitize_results; exit 1' SIGINT SIGTERM EXIT
 
