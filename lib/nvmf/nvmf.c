@@ -360,29 +360,34 @@ static void
 nvmf_tgt_destroy_cb(void *io_device)
 {
 	struct spdk_nvmf_tgt *tgt = io_device;
+	struct spdk_nvmf_subsystem *subsystem;
 	uint32_t i;
 	int rc;
 
-	if (tgt->subsystems) {
-		for (i = 0; i < tgt->max_subsystems; i++) {
-			if (tgt->subsystems[i]) {
-				nvmf_subsystem_remove_all_listeners(tgt->subsystems[i], true);
-
-				rc = spdk_nvmf_subsystem_destroy(tgt->subsystems[i], nvmf_tgt_destroy_cb, tgt);
-				if (rc) {
-					if (rc == -EINPROGRESS) {
-						/* If rc is -EINPROGRESS, nvmf_tgt_destroy_cb will be called again when subsystem #i
-						 * is destroyed, nvmf_tgt_destroy_cb will continue to destroy other subsystems if any */
-						return;
-					} else {
-						SPDK_ERRLOG("Failed to destroy subsystem %s, rc %d\n", tgt->subsystems[i]->subnqn, rc);
-					}
-				}
-			}
-		}
-		free(tgt->subsystems);
+	if (tgt->subsystems == NULL) {
+		_nvmf_tgt_destroy_next_transport(tgt);
+		return;
 	}
 
+	for (i = 0; i < tgt->max_subsystems; i++) {
+		subsystem = tgt->subsystems[i];
+		if (subsystem == NULL) {
+			continue;
+		}
+		nvmf_subsystem_remove_all_listeners(subsystem, true);
+
+		rc = spdk_nvmf_subsystem_destroy(subsystem, nvmf_tgt_destroy_cb, tgt);
+		if (rc) {
+			if (rc == -EINPROGRESS) {
+				/* If rc is -EINPROGRESS, nvmf_tgt_destroy_cb will be called again when subsystem #i
+				 * is destroyed, nvmf_tgt_destroy_cb will continue to destroy other subsystems if any */
+				return;
+			} else {
+				SPDK_ERRLOG("Failed to destroy subsystem %s, rc %d\n", subsystem->subnqn, rc);
+			}
+		}
+	}
+	free(tgt->subsystems);
 	_nvmf_tgt_destroy_next_transport(tgt);
 }
 
