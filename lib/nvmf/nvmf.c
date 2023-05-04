@@ -938,8 +938,7 @@ spdk_nvmf_tgt_resume_polling(struct spdk_nvmf_tgt *tgt, spdk_nvmf_tgt_resume_pol
 struct spdk_nvmf_subsystem *
 spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 {
-	struct spdk_nvmf_subsystem	*subsystem;
-	uint32_t sid;
+	struct spdk_nvmf_subsystem *subsystem;
 
 	if (!subnqn) {
 		return NULL;
@@ -951,12 +950,9 @@ spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 		return NULL;
 	}
 
-	for (sid = 0; sid < tgt->max_subsystems; sid++) {
-		subsystem = tgt->subsystems[sid];
-		if (subsystem == NULL) {
-			continue;
-		}
-
+	for (subsystem = spdk_nvmf_subsystem_get_first(tgt);
+	     subsystem != NULL;
+	     subsystem = spdk_nvmf_subsystem_get_next(subsystem)) {
 		if (strcmp(subnqn, subsystem->subnqn) == 0) {
 			return subsystem;
 		}
