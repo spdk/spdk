@@ -67,6 +67,12 @@ get_nvme() {
 	printf '%s\n' "${blocks[@]}"
 }
 
+get_ublk() {
+	local blocks
+	blocks=(/sys/block/ublk*)
+	printf '%s\n' "${blocks[@]##*/}"
+}
+
 get_devices() {
 	local devs=("$@")
 
@@ -74,6 +80,7 @@ get_devices() {
 		case "$protocol" in
 			iscsi) devs=($(get_iscsi)) ;;
 			nvmf) devs=($(get_nvme)) ;;
+			ublk) devs=($(get_ublk)) ;;
 			*) ;;
 		esac
 	fi
