@@ -300,7 +300,7 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 		 MODEL_NUMBER_DEFAULT);
 
 	spdk_bit_array_set(tgt->subsystem_ids, sid);
-	tgt->subsystems[sid] = subsystem;
+	RB_INSERT(subsystem_tree, &tgt->subsystems, subsystem);
 
 	SPDK_DTRACE_PROBE1(nvmf_subsystem_create, subsystem->subnqn);
 
@@ -382,7 +382,7 @@ _nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	free(subsystem->ns);
 	free(subsystem->ana_group);
 
-	subsystem->tgt->subsystems[subsystem->id] = NULL;
+	RB_REMOVE(subsystem_tree, &subsystem->tgt->subsystems, subsystem);
 	assert(spdk_bit_array_get(subsystem->tgt->subsystem_ids, subsystem->id) == true);
 	spdk_bit_array_clear(subsystem->tgt->subsystem_ids, subsystem->id);
 
@@ -760,39 +760,17 @@ spdk_nvmf_subsystem_resume(struct spdk_nvmf_subsystem *subsystem,
 struct spdk_nvmf_subsystem *
 spdk_nvmf_subsystem_get_first(struct spdk_nvmf_tgt *tgt)
 {
-	struct spdk_nvmf_subsystem	*subsystem;
-	uint32_t sid;
-
-	for (sid = 0; sid < tgt->max_subsystems; sid++) {
-		subsystem = tgt->subsystems[sid];
-		if (subsystem) {
-			return subsystem;
-		}
-	}
-
-	return NULL;
+	return RB_MIN(subsystem_tree, &tgt->subsystems);
 }
 
 struct spdk_nvmf_subsystem *
 spdk_nvmf_subsystem_get_next(struct spdk_nvmf_subsystem *subsystem)
 {
-	uint32_t sid;
-	struct spdk_nvmf_tgt *tgt;
-
 	if (!subsystem) {
 		return NULL;
 	}
 
-	tgt = subsystem->tgt;
-
-	for (sid = subsystem->id + 1; sid < tgt->max_subsystems; sid++) {
-		subsystem = tgt->subsystems[sid];
-		if (subsystem) {
-			return subsystem;
-		}
-	}
-
-	return NULL;
+	return RB_NEXT(subsystem_tree, &tgt->subsystems, subsystem);
 }
 
 /* Must hold subsystem->mutex while calling this function */

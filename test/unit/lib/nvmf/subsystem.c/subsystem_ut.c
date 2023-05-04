@@ -292,8 +292,7 @@ test_spdk_nvmf_subsystem_add_ns(void)
 	SPDK_CU_ASSERT_FATAL(subsystem.ana_group != NULL);
 
 	tgt.max_subsystems = 1024;
-	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
-	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
+	RB_INIT(&tgt.subsystems);
 
 	/* Request a specific NSID */
 	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
@@ -323,7 +322,6 @@ test_spdk_nvmf_subsystem_add_ns(void)
 
 	free(subsystem.ns);
 	free(subsystem.ana_group);
-	free(tgt.subsystems);
 }
 
 static void
@@ -336,8 +334,7 @@ nvmf_test_create_subsystem(void)
 
 	tgt.max_subsystems = 1024;
 	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
-	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
-	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
+	RB_INIT(&tgt.subsystems);
 
 	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:subsystem1");
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
@@ -457,7 +454,6 @@ nvmf_test_create_subsystem(void)
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
-	free(tgt.subsystems);
 	spdk_bit_array_free(&tgt.subsystem_ids);
 }
 
@@ -1350,8 +1346,7 @@ test_spdk_nvmf_ns_event(void)
 
 	tgt.max_subsystems = 1024;
 	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
-	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
-	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
+	RB_INIT(&tgt.subsystems);
 
 	spdk_io_device_register(&tgt,
 				nvmf_tgt_create_poll_group,
@@ -1405,7 +1400,6 @@ test_spdk_nvmf_ns_event(void)
 
 	free(subsystem.ns);
 	free(subsystem.ana_group);
-	free(tgt.subsystems);
 	spdk_bit_array_free(&tgt.subsystem_ids);
 }
 
@@ -1449,8 +1443,7 @@ test_nvmf_subsystem_add_ctrlr(void)
 
 	tgt.max_subsystems = 1024;
 	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
-	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
-	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
+	RB_INIT(&tgt.subsystems);
 
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
@@ -1467,7 +1460,6 @@ test_nvmf_subsystem_add_ctrlr(void)
 	CU_ASSERT(TAILQ_EMPTY(&subsystem->ctrlrs));
 	rc = spdk_nvmf_subsystem_destroy(subsystem, test_nvmf_subsystem_destroy_cb, NULL);
 	CU_ASSERT(rc == 0);
-	free(tgt.subsystems);
 	spdk_bit_array_free(&tgt.subsystem_ids);
 }
 
@@ -1482,8 +1474,7 @@ test_spdk_nvmf_subsystem_add_host(void)
 
 	tgt.max_subsystems = 1024;
 	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
-	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
-	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
+	RB_INIT(&tgt.subsystems);
 
 	subsystem = spdk_nvmf_subsystem_create(&tgt, subsystemnqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
@@ -1506,7 +1497,6 @@ test_spdk_nvmf_subsystem_add_host(void)
 	CU_ASSERT(rc == -ENOENT);
 
 	spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
-	free(tgt.subsystems);
 	spdk_bit_array_free(&tgt.subsystem_ids);
 }
 
@@ -1720,8 +1710,7 @@ test_nvmf_subsystem_state_change(void)
 
 	tgt.max_subsystems = 1024;
 	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
-	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
-	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
+	RB_INIT(&tgt.subsystems);
 
 	discovery_subsystem = spdk_nvmf_subsystem_create(&tgt, SPDK_NVMF_DISCOVERY_NQN,
 			      SPDK_NVMF_SUBTYPE_DISCOVERY, 0);
@@ -1769,7 +1758,6 @@ test_nvmf_subsystem_state_change(void)
 	spdk_io_device_unregister(&tgt, NULL);
 	poll_threads();
 
-	free(tgt.subsystems);
 	spdk_bit_array_free(&tgt.subsystem_ids);
 }
 

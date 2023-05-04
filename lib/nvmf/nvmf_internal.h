@@ -19,6 +19,7 @@
 #include "spdk/queue.h"
 #include "spdk/util.h"
 #include "spdk/thread.h"
+#include "spdk/tree.h"
 
 /* The spec reserves cntlid values in the range FFF0h to FFFFh. */
 #define NVMF_MIN_CNTLID 1
@@ -43,6 +44,8 @@ enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_NUM_STATES,
 };
 
+RB_HEAD(subsystem_tree, spdk_nvmf_subsystem);
+
 struct spdk_nvmf_tgt {
 	char					name[NVMF_TGT_NAME_MAX_LENGTH];
 
@@ -58,8 +61,7 @@ struct spdk_nvmf_tgt {
 
 	struct spdk_bit_array			*subsystem_ids;
 
-	/* Array of subsystem pointers of size max_subsystems indexed by sid */
-	struct spdk_nvmf_subsystem		**subsystems;
+	struct subsystem_tree			subsystems;
 
 	TAILQ_HEAD(, spdk_nvmf_transport)	transports;
 	TAILQ_HEAD(, spdk_nvmf_poll_group)	poll_groups;
@@ -282,6 +284,7 @@ struct spdk_nvmf_subsystem {
 	uint64_t					max_zone_append_size_kib;
 
 	struct spdk_nvmf_tgt				*tgt;
+	RB_ENTRY(spdk_nvmf_subsystem)			link;
 
 	/* Array of pointers to namespaces of size max_nsid indexed by nsid - 1 */
 	struct spdk_nvmf_ns				**ns;
@@ -316,6 +319,14 @@ struct spdk_nvmf_subsystem {
 	 */
 	uint32_t					*ana_group;
 };
+
+static int
+subsystem_cmp(struct spdk_nvmf_subsystem *subsystem1, struct spdk_nvmf_subsystem *subsystem2)
+{
+	return strncmp(subsystem1->subnqn, subsystem2->subnqn, sizeof(subsystem1->subnqn));
+}
+
+RB_GENERATE_STATIC(subsystem_tree, spdk_nvmf_subsystem, link, subsystem_cmp);
 
 int nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 				     struct spdk_nvmf_subsystem *subsystem);

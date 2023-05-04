@@ -155,10 +155,13 @@ test_nvmf_tgt_create_poll_group(void)
 	MOCK_SET(spdk_bdev_get_io_channel, &ch);
 
 	tgt.max_subsystems = 1;
-	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
-	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
+	RB_INIT(&tgt.subsystems);
 
-	tgt.subsystems[0] = &subsystem;
+	/* Make sure subsystem has enough in subnqn so it can be
+	 * inserted into RB-tree.
+	 */
+	snprintf(subsystem.subnqn, sizeof(subsystem.subnqn), "abc");
+	RB_INSERT(subsystem_tree, &tgt.subsystems, &subsystem);
 	subsystem.id = 0;
 	subsystem.max_nsid = 1;
 	subsystem.ns = calloc(1, sizeof(struct spdk_nvmf_ns *));
@@ -201,7 +204,6 @@ test_nvmf_tgt_create_poll_group(void)
 	CU_ASSERT(TAILQ_EMPTY(&tgt.poll_groups));
 	CU_ASSERT(tgt.num_poll_groups == 0);
 	free(subsystem.ns);
-	free(tgt.subsystems);
 	MOCK_CLEAR(spdk_nvmf_subsystem_get_first);
 
 	spdk_thread_exit(thread);

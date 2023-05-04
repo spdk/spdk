@@ -285,8 +285,7 @@ test_discovery_log(void)
 
 	tgt.max_subsystems = 1024;
 	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
-	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
-	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
+	RB_INIT(&tgt.subsystems);
 
 	/* Add one subsystem and verify that the discovery log contains it */
 	subsystem = spdk_nvmf_subsystem_create(&tgt, "nqn.2016-06.io.spdk:subsystem1",
@@ -374,7 +373,6 @@ test_discovery_log(void)
 	CU_ASSERT(disc_log->genctr != 0);
 	CU_ASSERT(disc_log->numrec == 0);
 
-	free(tgt.subsystems);
 	spdk_bit_array_free(&tgt.subsystem_ids);
 }
 
@@ -420,8 +418,7 @@ test_discovery_log_with_filters(void)
 
 	tgt.max_subsystems = 4;
 	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
-	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
-	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
+	RB_INIT(&tgt.subsystems);
 
 	subsystem = spdk_nvmf_subsystem_create(&tgt, "nqn.2016-06.io.spdk:subsystem1",
 					       SPDK_NVMF_SUBTYPE_NVME, 0);
@@ -641,7 +638,6 @@ test_discovery_log_with_filters(void)
 
 	subsystem->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
 	spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
-	free(tgt.subsystems);
 	spdk_bit_array_free(&tgt.subsystem_ids);
 }
 

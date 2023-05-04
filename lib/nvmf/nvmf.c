@@ -318,12 +318,7 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *opts)
 		return NULL;
 	}
 
-	tgt->subsystems = calloc(tgt->max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
-	if (!tgt->subsystems) {
-		spdk_bit_array_free(&tgt->subsystem_ids);
-		free(tgt);
-		return NULL;
-	}
+	RB_INIT(&tgt->subsystems);
 
 	pthread_mutex_init(&tgt->mutex, NULL);
 
@@ -370,11 +365,6 @@ nvmf_tgt_destroy_cb(void *io_device)
 	struct spdk_nvmf_subsystem *subsystem, *subsystem_next;
 	int rc;
 
-	if (tgt->subsystems == NULL) {
-		_nvmf_tgt_destroy_next_transport(tgt);
-		return;
-	}
-
 	/* We will be freeing subsystems in this loop, so we always need to get the next one
 	 * ahead of time, since we can't call get_next() on a subsystem that's been freed.
 	 */
@@ -396,7 +386,6 @@ nvmf_tgt_destroy_cb(void *io_device)
 			}
 		}
 	}
-	free(tgt->subsystems);
 	spdk_bit_array_free(&tgt->subsystem_ids);
 	_nvmf_tgt_destroy_next_transport(tgt);
 }
@@ -946,7 +935,7 @@ spdk_nvmf_tgt_resume_polling(struct spdk_nvmf_tgt *tgt, spdk_nvmf_tgt_resume_pol
 struct spdk_nvmf_subsystem *
 spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 {
-	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_subsystem subsystem;
 
 	if (!subnqn) {
 		return NULL;
@@ -958,15 +947,8 @@ spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 		return NULL;
 	}
 
-	for (subsystem = spdk_nvmf_subsystem_get_first(tgt);
-	     subsystem != NULL;
-	     subsystem = spdk_nvmf_subsystem_get_next(subsystem)) {
-		if (strcmp(subnqn, subsystem->subnqn) == 0) {
-			return subsystem;
-		}
-	}
-
-	return NULL;
+	snprintf(subsystem.subnqn, sizeof(subsystem.subnqn), "%s", subnqn);
+	return RB_FIND(subsystem_tree, &tgt->subsystems, &subsystem);
 }
 
 struct spdk_nvmf_transport *
