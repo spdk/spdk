@@ -1838,19 +1838,6 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	return rc;
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(nvme_ctrlr_prepare_for_reset,
-			      "spdk_nvme_ctrlr_prepare_for_reset() is deprecated",
-			      "SPDK 22.01", 0);
-
-void
-spdk_nvme_ctrlr_prepare_for_reset(struct spdk_nvme_ctrlr *ctrlr)
-{
-	SPDK_LOG_DEPRECATED(nvme_ctrlr_prepare_for_reset);
-	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
-	ctrlr->prepare_for_reset = true;
-	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
-}
-
 int
 spdk_nvme_ctrlr_reset_subsystem(struct spdk_nvme_ctrlr *ctrlr)
 {

@@ -30,13 +30,6 @@ Please see: [UPDATE ON PMDK AND OUR LONG TERM SUPPORT STRATEGY](https://pmem.io/
 
 VTune integration is in now deprecated and will be removed in SPDK 23.05.
 
-### nvme
-
-#### `nvme_ctrlr_prepare_for_reset`
-
-Deprecated `spdk_nvme_ctrlr_prepare_for_reset` API, which will be removed in SPDK 22.01.
-For PCIe transport, `spdk_nvme_ctrlr_disconnect` should be used before freeing I/O qpairs.
-
 ### nvmf
 
 #### `spdk_nvmf_qpair_disconnect`

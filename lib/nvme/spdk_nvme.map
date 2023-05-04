@@ -39,7 +39,6 @@
 	spdk_nvme_ctrlr_set_trid;
 	spdk_nvme_ctrlr_reset_subsystem;
 	spdk_nvme_ctrlr_reset;
-	spdk_nvme_ctrlr_prepare_for_reset;
 	spdk_nvme_ctrlr_reset_async;
 	spdk_nvme_ctrlr_reset_poll_async;
 	spdk_nvme_ctrlr_disconnect;

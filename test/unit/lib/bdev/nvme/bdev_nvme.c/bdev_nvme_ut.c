@@ -229,8 +229,6 @@ DEFINE_STUB(spdk_accel_submit_crc32cv, int, (struct spdk_io_channel *ch, uint32_
 		struct iovec *iov,
 		uint32_t iov_cnt, uint32_t seed, spdk_accel_completion_cb cb_fn, void *cb_arg), 0);
 
-DEFINE_STUB_V(spdk_nvme_ctrlr_prepare_for_reset, (struct spdk_nvme_ctrlr *ctrlr));
-
 struct ut_nvme_req {
 	uint16_t			opc;
 	spdk_nvme_cmd_cb		cb_fn;
