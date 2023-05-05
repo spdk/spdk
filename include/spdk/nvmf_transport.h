@@ -397,6 +397,25 @@ struct spdk_nvmf_transport_ops {
 	 */
 	void (*poll_group_dump_stat)(struct spdk_nvmf_transport_poll_group *group,
 				     struct spdk_json_write_ctx *w);
+
+	/*
+	 * A notification that a subsystem has been configured to allow access
+	 * from the given host.
+	 * This callback is optional and not all transports need to implement it.
+	 */
+	int (*subsystem_add_host)(struct spdk_nvmf_transport *transport,
+				  const struct spdk_nvmf_subsystem *subsystem,
+				  const char *hostnqn,
+				  const struct spdk_json_val *transport_specific);
+
+	/*
+	 * A notification that a subsystem is no longer configured to allow access
+	 * from the given host.
+	 * This callback is optional and not all transports need to implement it.
+	 */
+	void (*subsystem_remove_host)(struct spdk_nvmf_transport *transport,
+				      const struct spdk_nvmf_subsystem *subsystem,
+				      const char *hostnqn);
 };
 
 /**

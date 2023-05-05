@@ -292,7 +292,7 @@ test_discovery_log(void)
 					       SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 
-	rc = spdk_nvmf_subsystem_add_host(subsystem, hostnqn);
+	rc = spdk_nvmf_subsystem_add_host(subsystem, hostnqn, NULL);
 	CU_ASSERT(rc == 0);
 
 	/* Get only genctr (first field in the header) */

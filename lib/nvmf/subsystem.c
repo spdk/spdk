@@ -422,6 +422,7 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem, nvmf_subsyste
 			    void *cpl_cb_arg)
 {
 	struct spdk_nvmf_host *host, *host_tmp;
+	struct spdk_nvmf_transport *transport;
 
 	if (!subsystem) {
 		return -EINVAL;
@@ -451,6 +452,12 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem, nvmf_subsyste
 	pthread_mutex_lock(&subsystem->mutex);
 
 	TAILQ_FOREACH_SAFE(host, &subsystem->hosts, link, host_tmp) {
+		for (transport = spdk_nvmf_transport_get_first(subsystem->tgt); transport;
+		     transport = spdk_nvmf_transport_get_next(transport)) {
+			if (transport->ops->subsystem_remove_host) {
+				transport->ops->subsystem_remove_host(transport, subsystem, host->nqn);
+			}
+		}
 		nvmf_subsystem_remove_host(subsystem, host);
 	}
 
@@ -789,9 +796,12 @@ nvmf_subsystem_find_host(struct spdk_nvmf_subsystem *subsystem, const char *host
 }
 
 int
-spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
+spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn,
+			     const struct spdk_json_val *params)
 {
 	struct spdk_nvmf_host *host;
+	struct spdk_nvmf_transport *transport;
+	int rc;
 
 	if (!nvmf_valid_nqn(hostnqn)) {
 		return -EINVAL;
@@ -821,6 +831,20 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 		nvmf_update_discovery_log(subsystem->tgt, hostnqn);
 	}
 
+	for (transport = spdk_nvmf_transport_get_first(subsystem->tgt); transport;
+	     transport = spdk_nvmf_transport_get_next(transport)) {
+		if (transport->ops->subsystem_add_host) {
+			rc = transport->ops->subsystem_add_host(transport, subsystem, hostnqn, params);
+			if (rc) {
+				SPDK_ERRLOG("Unable to add host to %s transport\n", transport->ops->name);
+				/* Remove this host from all transports we've managed to add it to. */
+				pthread_mutex_unlock(&subsystem->mutex);
+				spdk_nvmf_subsystem_remove_host(subsystem, hostnqn);
+				return rc;
+			}
+		}
+	}
+
 	pthread_mutex_unlock(&subsystem->mutex);
 
 	return 0;
@@ -830,6 +854,7 @@ int
 spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
 {
 	struct spdk_nvmf_host *host;
+	struct spdk_nvmf_transport *transport;
 
 	pthread_mutex_lock(&subsystem->mutex);
 
@@ -845,6 +870,13 @@ spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, const cha
 
 	if (!TAILQ_EMPTY(&subsystem->listeners)) {
 		nvmf_update_discovery_log(subsystem->tgt, hostnqn);
+	}
+
+	for (transport = spdk_nvmf_transport_get_first(subsystem->tgt); transport;
+	     transport = spdk_nvmf_transport_get_next(transport)) {
+		if (transport->ops->subsystem_remove_host) {
+			transport->ops->subsystem_remove_host(transport, subsystem, hostnqn);
+		}
 	}
 
 	pthread_mutex_unlock(&subsystem->mutex);

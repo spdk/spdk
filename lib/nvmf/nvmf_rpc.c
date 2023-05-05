@@ -1462,9 +1462,9 @@ rpc_nvmf_subsystem_add_host(struct spdk_jsonrpc_request *request,
 	struct spdk_nvmf_tgt *tgt;
 	int rc;
 
-	if (spdk_json_decode_object(params, nvmf_rpc_subsystem_host_decoder,
-				    SPDK_COUNTOF(nvmf_rpc_subsystem_host_decoder),
-				    &ctx)) {
+	if (spdk_json_decode_object_relaxed(params, nvmf_rpc_subsystem_host_decoder,
+					    SPDK_COUNTOF(nvmf_rpc_subsystem_host_decoder),
+					    &ctx)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		nvmf_rpc_host_ctx_free(&ctx);
@@ -1488,7 +1488,7 @@ rpc_nvmf_subsystem_add_host(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	rc = spdk_nvmf_subsystem_add_host(subsystem, ctx.host);
+	rc = spdk_nvmf_subsystem_add_host(subsystem, ctx.host, params);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
 		nvmf_rpc_host_ctx_free(&ctx);

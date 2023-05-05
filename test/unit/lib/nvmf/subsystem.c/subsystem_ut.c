@@ -7,10 +7,12 @@
 
 #include "common/lib/ut_multithread.c"
 #include "spdk_cunit.h"
+#include "spdk/nvmf.h"
 #include "spdk_internal/mock.h"
 
 #include "spdk/bdev_module.h"
 #include "nvmf/subsystem.c"
+#include "nvmf/transport.c"
 
 SPDK_LOG_REGISTER_COMPONENT(nvmf)
 
@@ -35,11 +37,6 @@ DEFINE_STUB(spdk_bdev_io_type_supported, bool,
 	    (struct spdk_bdev *bdev,
 	     enum spdk_bdev_io_type io_type), false);
 
-DEFINE_STUB(spdk_nvmf_transport_stop_listen,
-	    int,
-	    (struct spdk_nvmf_transport *transport,
-	     const struct spdk_nvme_transport_id *trid), 0);
-
 DEFINE_STUB_V(nvmf_update_discovery_log,
 	      (struct spdk_nvmf_tgt *tgt, const char *hostnqn));
 
@@ -47,19 +44,6 @@ DEFINE_STUB(spdk_nvmf_qpair_disconnect,
 	    int,
 	    (struct spdk_nvmf_qpair *qpair,
 	     nvmf_qpair_disconnect_cb cb_fn, void *ctx), 0);
-
-DEFINE_STUB(nvmf_transport_find_listener,
-	    struct spdk_nvmf_listener *,
-	    (struct spdk_nvmf_transport *transport,
-	     const struct spdk_nvme_transport_id *trid), NULL);
-
-DEFINE_STUB(spdk_nvmf_transport_get_first,
-	    struct spdk_nvmf_transport *,
-	    (struct spdk_nvmf_tgt *tgt), NULL);
-
-DEFINE_STUB(spdk_nvmf_transport_get_next,
-	    struct spdk_nvmf_transport *,
-	    (struct spdk_nvmf_transport *transport), NULL);
 
 DEFINE_STUB(spdk_nvmf_request_complete,
 	    int,
@@ -79,35 +63,17 @@ DEFINE_STUB(spdk_bdev_is_zoned, bool,
 DEFINE_STUB(spdk_bdev_get_max_zone_append_size, uint32_t,
 	    (const struct spdk_bdev *bdev), 0);
 
-int
-spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
-			   const struct spdk_nvme_transport_id *trid, struct spdk_nvmf_listen_opts *opts)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_mempool_lookup, struct spdk_mempool *,
+	    (const char *name), NULL);
 
-void
-nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
-				 struct spdk_nvme_transport_id *trid,
-				 struct spdk_nvmf_discovery_log_page_entry *entry)
-{
-	entry->trtype = 42;
-}
+DEFINE_STUB(spdk_nvme_transport_id_adrfam_str, const char *,
+	    (enum spdk_nvmf_adrfam adrfam), NULL);
+
+DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid, int,
+	    (struct spdk_nvmf_qpair *qpair,
+	     struct spdk_nvme_transport_id *trid), 0);
 
 static struct spdk_nvmf_transport g_transport = {};
-
-int
-spdk_nvmf_transport_create_async(const char *transport_name,
-				 struct spdk_nvmf_transport_opts *tprt_opts,
-				 spdk_nvmf_transport_create_done_cb cb_fn, void *cb_arg)
-{
-	if (strcasecmp(transport_name, spdk_nvme_transport_id_trtype_str(SPDK_NVME_TRANSPORT_RDMA))) {
-		cb_fn(cb_arg, &g_transport);
-		return 0;
-	}
-
-	return -1;
-}
 
 struct spdk_nvmf_subsystem *
 spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
@@ -1464,6 +1430,36 @@ test_nvmf_subsystem_add_ctrlr(void)
 }
 
 static void
+_add_transport_cb(void *arg, int status)
+{
+	CU_ASSERT(status == 0);
+}
+
+static int
+transport_subsystem_add_host_err(struct spdk_nvmf_transport *transport,
+				 const struct spdk_nvmf_subsystem *subsystem,
+				 const char *hostnqn,
+				 const struct spdk_json_val *transport_specific)
+{
+	return -1;
+}
+
+void
+spdk_nvmf_tgt_add_transport(struct spdk_nvmf_tgt *tgt,
+			    struct spdk_nvmf_transport *transport,
+			    spdk_nvmf_tgt_add_transport_done_fn cb_fn,
+			    void *cb_arg)
+{
+	TAILQ_INSERT_TAIL(&tgt->transports, transport, link);
+}
+
+static struct spdk_nvmf_transport *
+transport_create(struct spdk_nvmf_transport_opts *opts)
+{
+	return &g_transport;
+}
+
+static void
 test_spdk_nvmf_subsystem_add_host(void)
 {
 	struct spdk_nvmf_tgt tgt = {};
@@ -1471,6 +1467,13 @@ test_spdk_nvmf_subsystem_add_host(void)
 	int rc;
 	const char hostnqn[] = "nqn.2016-06.io.spdk:host1";
 	const char subsystemnqn[] = "nqn.2016-06.io.spdk:subsystem1";
+	struct spdk_nvmf_transport_opts opts = {.opts_size = 1};
+	const struct spdk_nvmf_transport_ops test_ops = {
+		.name = "transport_ut",
+		.create = transport_create,
+		.subsystem_add_host = transport_subsystem_add_host_err,
+	};
+	struct spdk_nvmf_transport *transport;
 
 	tgt.max_subsystems = 1024;
 	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
@@ -1480,12 +1483,12 @@ test_spdk_nvmf_subsystem_add_host(void)
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, subsystemnqn);
 
-	rc = spdk_nvmf_subsystem_add_host(subsystem, hostnqn);
+	rc = spdk_nvmf_subsystem_add_host(subsystem, hostnqn, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(!TAILQ_EMPTY(&subsystem->hosts));
 
 	/* Add existing nqn, this function is allowed to be called if the nqn was previously added. */
-	rc = spdk_nvmf_subsystem_add_host(subsystem, hostnqn);
+	rc = spdk_nvmf_subsystem_add_host(subsystem, hostnqn, NULL);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_nvmf_subsystem_remove_host(subsystem, hostnqn);
@@ -1495,6 +1498,18 @@ test_spdk_nvmf_subsystem_add_host(void)
 	/* No available nqn */
 	rc = spdk_nvmf_subsystem_remove_host(subsystem, hostnqn);
 	CU_ASSERT(rc == -ENOENT);
+
+	/* Ensure hostnqn list remains empty after transport callback fails */
+	spdk_nvmf_transport_register(&test_ops);
+	transport = spdk_nvmf_transport_create("transport_ut", &opts);
+	SPDK_CU_ASSERT_FATAL(transport != NULL);
+
+	TAILQ_INIT(&tgt.transports);
+	spdk_nvmf_tgt_add_transport(&tgt, transport, _add_transport_cb, 0);
+
+	rc = spdk_nvmf_subsystem_add_host(subsystem, hostnqn, NULL);
+	CU_ASSERT(rc != 0);
+	CU_ASSERT(TAILQ_EMPTY(&subsystem->hosts));
 
 	spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
 	spdk_bit_array_free(&tgt.subsystem_ids);

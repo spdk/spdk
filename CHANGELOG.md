@@ -61,6 +61,9 @@ Added a secure_channel parameter to the nvmf_subsystem_add_listener RPC. When tr
 established via this listener will immediately attempt to establish a secure channel, prior to any
 authentication. Only valid for the TCP transport.
 
+Added two optional transport module callbacks: `subsystem_add_host()` and `subsystem_remove_host()`.
+These functions will notify a transport about adding/removing hosts' access.
+
 ### nvme
 
 New API `spdk_nvme_ns_get_format_index` was added to calculate the exact format index, that

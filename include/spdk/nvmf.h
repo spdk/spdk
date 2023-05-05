@@ -511,11 +511,12 @@ struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_get_next(struct spdk_nvmf_subsys
  *
  * \param subsystem Subsystem to add host to.
  * \param hostnqn The NQN for the host.
+ * \param params Transport specific parameters.
  *
  * \return 0 on success, or negated errno value on failure.
  */
 int spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
-				 const char *hostnqn);
+				 const char *hostnqn, const struct spdk_json_val *params);
 
 /**
  * Remove the given host NQN from the list of allowed hosts.
