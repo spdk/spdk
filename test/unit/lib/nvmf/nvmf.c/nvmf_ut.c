@@ -159,13 +159,13 @@ test_nvmf_tgt_create_poll_group(void)
 	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
 
 	tgt.subsystems[0] = &subsystem;
-	tgt.subsystems[0]->id = 0;
-	tgt.subsystems[0]->max_nsid = 1;
-	tgt.subsystems[0]->ns = calloc(1, sizeof(struct spdk_nvmf_ns *));
-	SPDK_CU_ASSERT_FATAL(tgt.subsystems[0]->ns != NULL);
+	subsystem.id = 0;
+	subsystem.max_nsid = 1;
+	subsystem.ns = calloc(1, sizeof(struct spdk_nvmf_ns *));
+	SPDK_CU_ASSERT_FATAL(subsystem.ns != NULL);
 	MOCK_SET(spdk_nvmf_subsystem_get_first, &subsystem);
 
-	tgt.subsystems[0]->ns[0] = &ns;
+	subsystem.ns[0] = &ns;
 	ns.crkey = 0xaa;
 	ns.rtype = 0xbb;
 	TAILQ_INIT(&ns.registrants);
@@ -200,7 +200,7 @@ test_nvmf_tgt_create_poll_group(void)
 	nvmf_tgt_destroy_poll_group((void *)&tgt, (void *)&group);
 	CU_ASSERT(TAILQ_EMPTY(&tgt.poll_groups));
 	CU_ASSERT(tgt.num_poll_groups == 0);
-	free(tgt.subsystems[0]->ns);
+	free(subsystem.ns);
 	free(tgt.subsystems);
 	MOCK_CLEAR(spdk_nvmf_subsystem_get_first);
 
