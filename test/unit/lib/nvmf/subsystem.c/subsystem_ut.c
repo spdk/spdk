@@ -335,6 +335,7 @@ nvmf_test_create_subsystem(void)
 	int rc;
 
 	tgt.max_subsystems = 1024;
+	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
 	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
 	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
 
@@ -457,6 +458,7 @@ nvmf_test_create_subsystem(void)
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
 	free(tgt.subsystems);
+	spdk_bit_array_free(&tgt.subsystem_ids);
 }
 
 static void
@@ -1347,6 +1349,7 @@ test_spdk_nvmf_ns_event(void)
 	SPDK_CU_ASSERT_FATAL(subsystem.ana_group != NULL);
 
 	tgt.max_subsystems = 1024;
+	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
 	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
 	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
 
@@ -1403,6 +1406,7 @@ test_spdk_nvmf_ns_event(void)
 	free(subsystem.ns);
 	free(subsystem.ana_group);
 	free(tgt.subsystems);
+	spdk_bit_array_free(&tgt.subsystem_ids);
 }
 
 static void
@@ -1444,6 +1448,7 @@ test_nvmf_subsystem_add_ctrlr(void)
 	struct spdk_nvmf_subsystem *subsystem = NULL;
 
 	tgt.max_subsystems = 1024;
+	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
 	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
 	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
 
@@ -1463,6 +1468,7 @@ test_nvmf_subsystem_add_ctrlr(void)
 	rc = spdk_nvmf_subsystem_destroy(subsystem, test_nvmf_subsystem_destroy_cb, NULL);
 	CU_ASSERT(rc == 0);
 	free(tgt.subsystems);
+	spdk_bit_array_free(&tgt.subsystem_ids);
 }
 
 static void
@@ -1475,6 +1481,7 @@ test_spdk_nvmf_subsystem_add_host(void)
 	const char subsystemnqn[] = "nqn.2016-06.io.spdk:subsystem1";
 
 	tgt.max_subsystems = 1024;
+	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
 	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
 	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
 
@@ -1500,6 +1507,7 @@ test_spdk_nvmf_subsystem_add_host(void)
 
 	spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
 	free(tgt.subsystems);
+	spdk_bit_array_free(&tgt.subsystem_ids);
 }
 
 static void
@@ -1711,6 +1719,7 @@ test_nvmf_subsystem_state_change(void)
 	int rc;
 
 	tgt.max_subsystems = 1024;
+	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
 	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
 	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
 
@@ -1761,6 +1770,7 @@ test_nvmf_subsystem_state_change(void)
 	poll_threads();
 
 	free(tgt.subsystems);
+	spdk_bit_array_free(&tgt.subsystem_ids);
 }
 
 int

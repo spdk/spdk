@@ -312,8 +312,15 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *opts)
 	TAILQ_INIT(&tgt->poll_groups);
 	tgt->num_poll_groups = 0;
 
+	tgt->subsystem_ids = spdk_bit_array_create(tgt->max_subsystems);
+	if (tgt->subsystem_ids == NULL) {
+		free(tgt);
+		return NULL;
+	}
+
 	tgt->subsystems = calloc(tgt->max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
 	if (!tgt->subsystems) {
+		spdk_bit_array_free(&tgt->subsystem_ids);
 		free(tgt);
 		return NULL;
 	}
@@ -390,6 +397,7 @@ nvmf_tgt_destroy_cb(void *io_device)
 		}
 	}
 	free(tgt->subsystems);
+	spdk_bit_array_free(&tgt->subsystem_ids);
 	_nvmf_tgt_destroy_next_transport(tgt);
 }
 

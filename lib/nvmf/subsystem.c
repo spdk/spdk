@@ -243,15 +243,10 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	}
 
 	/* Find a free subsystem id (sid) */
-	for (sid = 0; sid < tgt->max_subsystems; sid++) {
-		if (tgt->subsystems[sid] == NULL) {
-			break;
-		}
-	}
-	if (sid >= tgt->max_subsystems) {
+	sid = spdk_bit_array_find_first_clear(tgt->subsystem_ids, 0);
+	if (sid == UINT32_MAX) {
 		return NULL;
 	}
-
 	subsystem = calloc(1, sizeof(struct spdk_nvmf_subsystem));
 	if (subsystem == NULL) {
 		return NULL;
@@ -304,6 +299,7 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	snprintf(subsystem->mn, sizeof(subsystem->mn), "%s",
 		 MODEL_NUMBER_DEFAULT);
 
+	spdk_bit_array_set(tgt->subsystem_ids, sid);
 	tgt->subsystems[sid] = subsystem;
 
 	SPDK_DTRACE_PROBE1(nvmf_subsystem_create, subsystem->subnqn);
@@ -387,6 +383,8 @@ _nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	free(subsystem->ana_group);
 
 	subsystem->tgt->subsystems[subsystem->id] = NULL;
+	assert(spdk_bit_array_get(subsystem->tgt->subsystem_ids, subsystem->id) == true);
+	spdk_bit_array_clear(subsystem->tgt->subsystem_ids, subsystem->id);
 
 	pthread_mutex_destroy(&subsystem->mutex);
 

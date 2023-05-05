@@ -56,6 +56,8 @@ struct spdk_nvmf_tgt {
 
 	enum spdk_nvmf_tgt_state                state;
 
+	struct spdk_bit_array			*subsystem_ids;
+
 	/* Array of subsystem pointers of size max_subsystems indexed by sid */
 	struct spdk_nvmf_subsystem		**subsystems;
 

@@ -284,6 +284,7 @@ test_discovery_log(void)
 	iov.iov_len = 8192;
 
 	tgt.max_subsystems = 1024;
+	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
 	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
 	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
 
@@ -374,6 +375,7 @@ test_discovery_log(void)
 	CU_ASSERT(disc_log->numrec == 0);
 
 	free(tgt.subsystems);
+	spdk_bit_array_free(&tgt.subsystem_ids);
 }
 
 static void
@@ -417,6 +419,7 @@ test_discovery_log_with_filters(void)
 	iov.iov_len = 8192;
 
 	tgt.max_subsystems = 4;
+	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
 	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
 	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
 
@@ -639,6 +642,7 @@ test_discovery_log_with_filters(void)
 	subsystem->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
 	spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
 	free(tgt.subsystems);
+	spdk_bit_array_free(&tgt.subsystem_ids);
 }
 
 int
