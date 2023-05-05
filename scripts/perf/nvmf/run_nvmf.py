@@ -22,6 +22,7 @@ import paramiko
 import pandas as pd
 from common import *
 from subprocess import CalledProcessError
+from abc import abstractmethod, ABC
 
 sys.path.append(os.path.dirname(__file__) + '/../../../python')
 
@@ -29,7 +30,7 @@ import spdk.rpc as rpc  # noqa
 import spdk.rpc.client as rpc_client  # noqa
 
 
-class Server:
+class Server(ABC):
     def __init__(self, name, general_config, server_config):
         self.name = name
         self.username = general_config["username"]
@@ -86,6 +87,7 @@ class Server:
                 if ip in addr["local"]:
                     return nic["ifname"]
 
+    @abstractmethod
     def set_local_nic_info_helper(self):
         pass
 
@@ -829,6 +831,15 @@ class Initiator(Server):
             self.log.info(s)
         self.subsystem_info_list = subsystems
 
+    @abstractmethod
+    def init_connect(self):
+        pass
+
+    @abstractmethod
+    def init_disconnect(self):
+        pass
+
+    @abstractmethod
     def gen_fio_filename_conf(self, *args, **kwargs):
         # Logic implemented in SPDKInitiator and KernelInitiator classes
         pass
@@ -1556,7 +1567,7 @@ class SPDKInitiator(Initiator):
     def init_disconnect(self):
         # SPDK Initiator does not need to explicity disconnect as this gets done
         # after fio bdev plugin finishes IO.
-        pass
+        return
 
     def gen_spdk_bdev_conf(self, remote_subsystem_list):
         bdev_cfg_section = {
