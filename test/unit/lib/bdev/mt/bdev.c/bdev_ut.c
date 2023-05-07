@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2017 Intel Corporation.
+ *   Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
- *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk_internal/cunit.h"
@@ -77,6 +77,8 @@ struct ut_bdev_channel {
 	TAILQ_HEAD(, spdk_bdev_io)	outstanding_io;
 	uint32_t			outstanding_cnt;
 	uint32_t			avail_cnt;
+	struct spdk_thread		*thread;
+	TAILQ_ENTRY(ut_bdev_channel)	link;
 };
 
 int g_io_device;
@@ -90,6 +92,7 @@ bool g_fini_start_called = true;
 int g_status = 0;
 int g_count = 0;
 struct spdk_histogram_data *g_histogram = NULL;
+TAILQ_HEAD(, ut_bdev_channel) g_ut_channels;
 
 static int
 ut_accel_ch_create_cb(void *io_device, void *ctx)
@@ -120,12 +123,19 @@ stub_create_ch(void *io_device, void *ctx_buf)
 	 *  value to something much smaller to induce ENOMEM conditions.
 	 */
 	ch->avail_cnt = 2048;
+	ch->thread = spdk_get_thread();
+
+	TAILQ_INSERT_TAIL(&g_ut_channels, ch, link);
+
 	return 0;
 }
 
 static void
 stub_destroy_ch(void *io_device, void *ctx_buf)
 {
+	struct ut_bdev_channel *ch = ctx_buf;
+
+	TAILQ_REMOVE(&g_ut_channels, ch, link);
 }
 
 static struct spdk_io_channel *
@@ -147,18 +157,33 @@ stub_destruct(void *ctx)
 }
 
 static void
+stub_reset_channel(void *ctx)
+{
+	struct ut_bdev_channel *ch = ctx;
+	struct spdk_bdev_io *io;
+
+	while (!TAILQ_EMPTY(&ch->outstanding_io)) {
+		io = TAILQ_FIRST(&ch->outstanding_io);
+		TAILQ_REMOVE(&ch->outstanding_io, io, module_link);
+		ch->outstanding_cnt--;
+		spdk_bdev_io_complete(io, SPDK_BDEV_IO_STATUS_ABORTED);
+		ch->avail_cnt++;
+	}
+}
+
+static void
 stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
-	struct ut_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct ut_bdev_channel *ch = spdk_io_channel_get_ctx(_ch), *tmp_ch;
 	struct spdk_bdev_io *io;
 
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
-		while (!TAILQ_EMPTY(&ch->outstanding_io)) {
-			io = TAILQ_FIRST(&ch->outstanding_io);
-			TAILQ_REMOVE(&ch->outstanding_io, io, module_link);
-			ch->outstanding_cnt--;
-			spdk_bdev_io_complete(io, SPDK_BDEV_IO_STATUS_ABORTED);
-			ch->avail_cnt++;
+		TAILQ_FOREACH(tmp_ch, &g_ut_channels, link) {
+			if (spdk_get_thread() == tmp_ch->thread) {
+				stub_reset_channel(tmp_ch);
+			} else {
+				spdk_thread_send_msg(tmp_ch->thread, stub_reset_channel, tmp_ch);
+			}
 		}
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_ABORT) {
 		TAILQ_FOREACH(io, &ch->outstanding_io, module_link) {
@@ -320,6 +345,8 @@ setup_test(void)
 	bool done = false;
 	int rc;
 
+	TAILQ_INIT(&g_ut_channels);
+
 	allocate_cores(BDEV_UT_NUM_THREADS);
 	allocate_threads(BDEV_UT_NUM_THREADS);
 	set_thread(0);
@@ -359,6 +386,7 @@ teardown_test(void)
 	g_teardown_done = false;
 	free_threads();
 	free_cores();
+	CU_ASSERT(TAILQ_EMPTY(&g_ut_channels))
 }
 
 static uint32_t
