@@ -394,7 +394,7 @@ function check_python_style() {
 	if [ -n "${PEP8}" ]; then
 		echo -n "Checking Python style..."
 
-		PEP8_ARGS+=" --max-line-length=140"
+		PEP8_ARGS=" --max-line-length=140"
 
 		error=0
 		git ls-files '*.py' | xargs -P$(nproc) -n1 $PEP8 $PEP8_ARGS > pep8.log || error=1
