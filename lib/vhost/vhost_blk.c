@@ -1079,6 +1079,8 @@ _vhost_blk_vq_register_interrupt(void *arg)
 	struct spdk_vhost_session *vsession = vq->vsession;
 	struct spdk_vhost_blk_dev *bvdev =  to_blk_dev(vsession->vdev);
 
+	assert(bvdev != NULL);
+
 	if (bvdev->bdev) {
 		vq->intr = spdk_interrupt_register(vq->vring.kickfd, vdev_vq_worker, vq, "vdev_vq_worker");
 	} else {
