@@ -39,7 +39,7 @@ display_help() {
 	echo "                                  Default pmr size: 16M"
 	echo "                                  Default cmb: false"
 	echo "                                  Default zns: false"
-	echo "                                  Default ms: none"
+	echo "                                  Default ms: none (set to 'true' to enable 64M)"
 	echo "                                  Default fdp: 96M:2:8[:1;2;3:1...] (fdp.runs:fdp.nrg:fdp.nruh:fdp.ruhs)"
 	echo "                                  type, ns_path, cmb, pmr, zns, ms  and fdp can be empty"
 	echo "                                  fdp.ruhs defines fdp.ruhs per ns, e.g.: 4;5;6:1 would set 4;5;6 for ns=1,"

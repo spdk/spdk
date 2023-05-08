@@ -153,6 +153,7 @@ def setup_nvme_disk(libvirt, disk, index)
   nvme_controller = ""
   fdp_subsys = ""
   fdp_subsys_id = ""
+  ms = ""
 
   # Define controller
   nvme_controller = "nvme,id=#{nvme_disk_id},serial=1234#{index}"
@@ -216,7 +217,9 @@ def setup_nvme_disk(libvirt, disk, index)
       next
     end
     zoned = nvme_zns[index].nil? ? "false" : "true"
-    ms = nvme_ms[index].nil? ? "" : ",ms=64"
+    if ! nvme_ms[index].nil? && nvme_ms[index] == "true"
+        ms = ",ms=64"
+    end
     ns = "nvme-ns,drive=#{nvme_disk_id}-drive#{nsid},bus=#{nvme_disk_id},nsid=#{nsid + 1},zoned=#{zoned},logical_block_size=4096,physical_block_size=4096#{ms}"
     if !fdp_ruhs.nil? && !fdp_ruhs[nsid].nil? && fdp_ruhs[nsid] != ""
         ns << ",fdp.ruhs=#{fdp_ruhs[nsid]}"
