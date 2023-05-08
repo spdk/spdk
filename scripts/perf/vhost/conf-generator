@@ -10,7 +10,7 @@ source "$rootdir/scripts/common.sh"
 source "$rootdir/test/scheduler/common.sh"
 
 get_auto_cfg() {
-	local vm_cpus vm_node vm vms vms_per_nvme
+	local vm_cpus vm_node vm vms
 	local cpu node nodes_idxs node_idx
 	local nvmes nvme nvme_idx nvme_diff nvmes_per_node
 	local vm_diff aligned_number_of_vms=0
@@ -125,7 +125,7 @@ get_auto_cfg() {
 	# split value, to each nvme - extra VMs will be added to nvme drives in their
 	# bus order.
 	local -A nvme_vm_map=()
-	local iter nvmes_no=0 vms_no=0
+	local iter nvmes_no=0 vms_no=0 _vms_per_nvme
 	for node in "${nodes_idxs[@]}"; do
 		if [[ ! -v nvme_numa_map[node] ]]; then
 			# There are no drives available on that node, skip it
@@ -135,13 +135,16 @@ get_auto_cfg() {
 		vms=(${!vm_numa_map[node]}) vms_no=${#vms[@]}
 		for ((iter = 0; iter <= (vms_no - nvmes_no <= 0 ? 1 : vms_no - nvmes_no); iter++)); do
 			for nvme in "${nvmes[@]}"; do
+				_vms_per_nvme=0
 				if ((${#vms[@]} == 0)); then
 					# No VMs on given node or they have been exhausted - skip all remaining drives.
 					continue 3
 				fi
 				nvme_vm_map["$nvme"]="_${nvme//[:.]/_}_[@]"
 				local -n nvme_vms=_${nvme//[:.]/_}_
-				nvme_vms+=("${vms[0]}") vms=("${vms[@]:1}")
+				while ((++_vms_per_nvme <= vms_per_nvme)); do
+					nvme_vms+=("${vms[0]}") vms=("${vms[@]:1}")
+				done
 			done
 		done
 	done
@@ -300,11 +303,13 @@ fetch_env() {
 	spdk_cpu_num=${spdk_cpu_num:-1}
 	vm_count=${vm_count:-1}
 	vm_cpu_num=${vm_cpu_num:-1}
+	vms_per_nvme=${vms_per_nvme:-1}
 
 	# Normalize
 	spdk_cpu_num=$((spdk_cpu_num <= 0 ? 1 : spdk_cpu_num))
 	vm_count=$((vm_count <= 0 ? 1 : vm_count))
 	vm_cpu_num=$((vm_cpu_num <= 0 ? 1 : vm_cpu_num))
+	vms_per_nvme=$((vms_per_nvme <= 0 ? 1 : vms_per_nvme))
 
 	cpu_out=${cpu_out:-"$PWD/auto-cpu.conf"}
 	disk_out=${disk_out:-"$PWD/auto-disk.conf"}
@@ -323,6 +328,7 @@ help() {
 		vm_count      - number of VMs to prepare the configuration for
 		                (default: 1)
 		vm_cpu_num    - number of CPUs to assign per VM (default: 1)
+		vms_per_nvme  - Number of VMs to pin to a single nvme (default: 1)
 
 		Override parameters:
 		vmN_node      - overrides selected NUMA node for VM N - by default,
