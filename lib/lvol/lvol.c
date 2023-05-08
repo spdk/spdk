@@ -1554,7 +1554,7 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 {
 	struct spdk_lvol_req *req;
 	struct spdk_blob_store *bs;
-	struct spdk_lvol_store	*lvs = lvol->lvol_store;
+	struct spdk_lvol_store	*lvs;
 	spdk_blob_id	clone_id;
 	size_t		count = 1;
 	int		rc;
@@ -1566,6 +1566,8 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 		cb_fn(cb_arg, -ENODEV);
 		return;
 	}
+
+	lvs = lvol->lvol_store;
 
 	if (lvol->ref_count != 0) {
 		SPDK_ERRLOG("Cannot destroy lvol %s because it is still open\n", lvol->unique_id);
