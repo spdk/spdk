@@ -44,12 +44,12 @@ function usage() {
 function clean_lvol_cfg() {
 	notice "Removing lvol bdevs"
 	for lvol_bdev in "${lvol_bdevs[@]}"; do
-		$rpc_py bdev_lvol_delete $lvol_bdev
+		$rpc_py -t 120 bdev_lvol_delete $lvol_bdev
 		notice "lvol bdev $lvol_bdev removed"
 	done
 
 	notice "Removing lvol stores"
-	$rpc_py bdev_lvol_delete_lvstore -u "$ls_guid"
+	$rpc_py -t 120 bdev_lvol_delete_lvstore -u "$ls_guid"
 	notice "lvol store $ls_guid removed"
 }
 
