@@ -34,6 +34,7 @@
 	spdk_sock_impl_get_opts;
 	spdk_sock_impl_set_opts;
 	spdk_sock_set_default_impl;
+	spdk_sock_get_default_impl;
 	spdk_sock_write_config_json;
 
 	# internal function in spdk_internal/sock.h

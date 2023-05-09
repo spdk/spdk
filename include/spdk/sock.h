@@ -597,7 +597,7 @@ int spdk_sock_impl_set_opts(const char *impl_name, const struct spdk_sock_impl_o
 			    size_t len);
 
 /**
- * Set the given sock implementation to be used a default one.
+ * Set the given sock implementation to be used as the default one.
  *
  * Note: passing a specific sock implementation name in some sock API functions
  * (such as @ref spdk_sock_connect, @ref spdk_sock_listen and etc) ignores the default value set by this function.
@@ -606,6 +606,13 @@ int spdk_sock_impl_set_opts(const char *impl_name, const struct spdk_sock_impl_o
  * \return 0 on success, -1 on failure. errno is set to indicate the reason of failure.
  */
 int spdk_sock_set_default_impl(const char *impl_name);
+
+/**
+ * Get the name of the current default implementation
+ *
+ * \return The name of the default implementation
+ */
+const char *spdk_sock_get_default_impl(void);;
 
 /**
  * Write socket subsystem configuration into provided JSON context.

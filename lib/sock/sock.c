@@ -954,4 +954,21 @@ spdk_sock_set_default_impl(const char *impl_name)
 	return 0;
 }
 
+const char *
+spdk_sock_get_default_impl(void)
+{
+	struct spdk_net_impl *impl = NULL;
+
+	if (g_default_impl) {
+		return g_default_impl->name;
+	}
+
+	impl = STAILQ_FIRST(&g_net_impls);
+	if (impl) {
+		return impl->name;
+	}
+
+	return NULL;
+}
+
 SPDK_LOG_REGISTER_COMPONENT(sock)
