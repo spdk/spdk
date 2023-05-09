@@ -133,6 +133,7 @@ typedef void (*lock_range_cb)(void *ctx, int status);
 typedef void (*bdev_copy_bounce_buffer_cpl)(void *ctx, int rc);
 
 struct lba_range {
+	struct spdk_bdev		*bdev;
 	uint64_t			offset;
 	uint64_t			length;
 	void				*locked_ctx;
@@ -9156,7 +9157,6 @@ spdk_bdev_notify_media_management(struct spdk_bdev *bdev)
 
 struct locked_lba_range_ctx {
 	struct lba_range		range;
-	struct spdk_bdev		*bdev;
 	struct lba_range		*current_range;
 	struct lba_range		*owner_range;
 	struct spdk_poller		*poller;
@@ -9324,7 +9324,7 @@ _bdev_lock_lba_range(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch,
 	ctx->range.owner_thread = spdk_get_thread();
 	ctx->range.owner_ch = ch;
 	ctx->range.locked_ctx = cb_arg;
-	ctx->bdev = bdev;
+	ctx->range.bdev = bdev;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 
@@ -9364,7 +9364,7 @@ bdev_lock_lba_range_ctx_msg(void *_ctx)
 {
 	struct locked_lba_range_ctx *ctx = _ctx;
 
-	bdev_lock_lba_range_ctx(ctx->bdev, ctx);
+	bdev_lock_lba_range_ctx(ctx->range.bdev, ctx);
 }
 
 static void
