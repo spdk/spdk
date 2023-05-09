@@ -23,6 +23,7 @@ fio_config() {
 		iodepth=$iodepth
 		norandommap=$((verify == 1 ? 0 : 1))
 		numjobs=$numjobs
+		${rwmixread:+rwmixread=$rwmixread}
 	FIO
 
 	if ((verify == 1)); then
@@ -133,10 +134,11 @@ protocol="nvmf"
 runtime=1
 testtype="read"
 output=""
+rwmixread=""
 verify=0
 
 # Keep short args compatible with fio.py
-while getopts :i:d:n:p:r:t:o:v arg; do
+while getopts :i:d:n:p:r:t:o:m:v arg; do
 	case "$arg" in
 		i) blocksize=$OPTARG ;;
 		d) iodepth=$OPTARG ;;
@@ -145,6 +147,7 @@ while getopts :i:d:n:p:r:t:o:v arg; do
 		r) runtime=$OPTARG ;;
 		t) testtype=$OPTARG ;;
 		o) output=$OPTARG ;;
+		m) rwmixread=$OPTARG ;;
 		v) verify=1 ;;
 		*) ;;
 	esac
