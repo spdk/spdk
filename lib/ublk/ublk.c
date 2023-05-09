@@ -72,7 +72,6 @@ struct ublk_io {
 	void			*payload;
 	void			*mpool_entry;
 	bool			need_data;
-	bool			io_free;
 	uint32_t		sector_per_block_shift;
 	uint32_t		payload_size;
 	uint32_t		cmd_op;
@@ -801,7 +800,6 @@ ublk_mark_io_done(struct ublk_io *io, int res)
 	 * result and fetch new request via io_uring command.
 	 */
 	io->cmd_op = UBLK_IO_COMMIT_AND_FETCH_REQ;
-	io->io_free = true;
 	io->result = res;
 }
 
@@ -978,8 +976,7 @@ ublksrv_queue_io_cmd(struct ublk_queue *q,
 	unsigned int cmd_op = 0;;
 	uint64_t user_data;
 
-	/* check io status is free and each io should have operation of fetching or committing */
-	assert(io->io_free);
+	/* each io should have operation of fetching or committing */
 	assert((io->cmd_op == UBLK_IO_FETCH_REQ) || (io->cmd_op == UBLK_IO_NEED_GET_DATA) ||
 	       (io->cmd_op == UBLK_IO_COMMIT_AND_FETCH_REQ));
 	cmd_op = io->cmd_op;
@@ -1121,7 +1118,6 @@ ublk_io_recv(struct ublk_queue *q)
 				SPDK_ERRLOG("ublk received error io: res %d qid %d tag %u cmd_op %u\n",
 					    cqe->res, q->q_id, tag, cmd_op);
 			}
-			io->io_free = true;
 			TAILQ_REMOVE(&q->inflight_io_list, io, tailq);
 		}
 		count += 1;
@@ -1217,7 +1213,6 @@ ublk_dev_queue_init(struct ublk_queue *q)
 
 	for (j = 0; j < q->q_depth; j++) {
 		q->ios[j].cmd_op = UBLK_IO_FETCH_REQ;
-		q->ios[j].io_free = true;
 		q->ios[j].iod = &q->io_cmd_buf[j];
 	}
 
