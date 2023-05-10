@@ -41,6 +41,7 @@ MAIN_CORE=""
 TMP_BPF_FILE=$testdir/bpftraces.txt
 PLUGIN="nvme"
 DISKCFG=""
+USE_LVOL_BDEVS=false
 BDEV_CACHE=""
 BDEV_POOL=""
 DISKNO="ALL"
@@ -50,6 +51,7 @@ CPUFREQ=""
 PERFTOP=false
 DPDKMEM=false
 BPFTRACES=()
+LVOL_BDEVS=()
 DATE="$(date +'%m_%d_%Y_%H%M%S')"
 
 function usage() {
@@ -100,6 +102,8 @@ function usage() {
 	echo "                            It consists a single column of PCI addresses. SPDK Bdev names will be assigned"
 	echo "                            and Kernel block device names detected."
 	echo "                            Lines starting with # are ignored as comments."
+	echo "    --use-lvol-bdevs        Create Logical Volume Store and Bdev on top of each NVMe drive"
+	echo "                            To be used only with spdk-*-bdev driver options."
 	echo "    --bdev-io-cache-size    Set IO cache size for for SPDK bdev subsystem."
 	echo "    --bdev-io-pool-size     Set IO pool size for for SPDK bdev subsystem."
 	echo "    --max-disk=INT,ALL      Number of disks to test on, this will run multiple workloads with increasing number of disk each run."
@@ -156,6 +160,7 @@ while getopts 'h-:' optchar; do
 						exit 1
 					fi
 					;;
+				use-lvol-bdevs) USE_LVOL_BDEVS=true ;;
 				bdev-io-cache-size=*) BDEV_CACHE="${OPTARG#*=}" ;;
 				bdev-io-pool-size=*) BDEV_POOL="${OPTARG#*=}" ;;
 				max-disk=*) DISKNO="${OPTARG#*=}" ;;
@@ -199,9 +204,17 @@ echo "num_of_disks,iops,avg_lat[usec],p90[usec],p99[usec],p99.99[usec],stdev[use
 
 trap 'rm -f *.state $testdir/bdev.conf; kill $perf_pid; wait $dpdk_mem_pid; print_backtrace' ERR SIGTERM SIGABRT
 
+if $USE_LVOL_BDEVS && ! [[ "$PLUGIN" =~ 'bdev' ]]; then
+	echo 'ERROR: lvol bdevs are supported only with bdev plugin'
+	exit 1
+fi
+
 if [[ "$PLUGIN" =~ "xnvme" ]]; then
 	create_spdk_xnvme_bdev_conf "$BDEV_CACHE" "$BDEV_POOL"
 elif [[ "$PLUGIN" =~ "bdev" ]]; then
+	if $USE_LVOL_BDEVS; then
+		create_lvols
+	fi
 	create_spdk_bdev_conf "$BDEV_CACHE" "$BDEV_POOL"
 fi
 
@@ -331,7 +344,11 @@ for ((j = 0; j < REPEAT_NO; j++)); do
 
 		cp $TMP_RESULT_FILE $result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.output
 	else
-		create_fio_config $DISKNO $PLUGIN "$DISK_NAMES" "$DISKS_NUMA" "$CORES"
+		if $USE_LVOL_BDEVS; then
+			create_fio_config $DISKNO $PLUGIN "$LVOL_BDEVS" "$DISKS_NUMA" "$CORES"
+		else
+			create_fio_config $DISKNO $PLUGIN "$DISK_NAMES" "$DISKS_NUMA" "$CORES"
+		fi
 
 		if $LATENCY_LOG; then
 			write_log_opt="--write_lat_log=$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}_${k}disks_${j}"
@@ -420,4 +437,9 @@ if [[ $PLUGIN = "kernel-io-uring" || $PLUGIN =~ "xnvme" ]]; then
 		cat $backup_dir/$disk/io_poll_delay > $sysfs/io_poll_delay
 	done
 fi
+
+if $USE_LVOL_BDEVS; then
+	cleanup_lvols
+fi
+
 rm -f $testdir/bdev.conf $testdir/config.fio

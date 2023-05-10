@@ -36,15 +36,20 @@ function discover_bdevs() {
 	rm -f /var/run/spdk_bdev0
 }
 
+function get_disk_cfg() {
+	grep -vP "^\s*#" "$DISKCFG"
+}
+
 function create_spdk_bdev_conf() {
 	local output
 	local disk_cfg
 	local bdev_io_cache_size=$1
 	local bdev_io_pool_size=$2
 	local bdev_json_cfg=()
-	local bdev_opts=()
+	local dev_opts=()
+	local i
 
-	disk_cfg=($(grep -vP "^\s*#" "$DISKCFG"))
+	disk_cfg=($(get_disk_cfg))
 
 	if [[ -n "$bdev_io_cache_size" ]]; then
 		bdev_opts+=("\"bdev_io_cache_size\": $bdev_io_cache_size")
@@ -153,9 +158,8 @@ function get_numa_node() {
 
 function get_disks() {
 	local plugin=$1
-	local disk_cfg
+	local disk_cfg=($(get_disk_cfg))
 
-	disk_cfg=($(grep -vP "^\s*#" "$DISKCFG"))
 	if [[ "$plugin" =~ "nvme" ]]; then
 		# PCI BDF address is enough for nvme-perf and nvme-fio-plugin,
 		# so just print them from configuration file
@@ -495,4 +499,70 @@ function create_spdk_xnvme_bdev_conf() {
 		rpc_ref["name"]=${blocks[block_idx]}
 	done
 	gen_conf > "$testdir/bdev.conf"
+}
+
+# LVOL support functions
+function start_spdk_tgt() {
+	$SPDK_BIN_DIR/spdk_tgt -g &
+	spdk_tgt_pid=$!
+
+	waitforlisten $spdk_tgt_pid
+}
+
+function stop_spdk_tgt() {
+	killprocess $spdk_tgt_pid
+}
+
+function attach_bdevs() {
+	local disk_cfg=($(get_disk_cfg))
+	local i
+	for i in "${!disk_cfg[@]}"; do
+		$rpc_py bdev_nvme_attach_controller -b "Nvme${i}" -t pcie -a "${disk_cfg[i]}"
+		echo "Attached NVMe Bdev $nvme_bdev with BDF"
+	done
+}
+
+function cleanup_lvol_cfg() {
+	local -a lvol_stores
+	local -a lvol_bdevs
+	local lvol_store lvol_bdev
+
+	echo "Cleanup lvols"
+	lvol_stores=($($rpc_py bdev_lvol_get_lvstores | jq -r '.[].uuid'))
+	for lvol_store in "${lvol_stores[@]}"; do
+		lvol_bdevs=($($rpc_py bdev_lvol_get_lvols -u $lvol_store | jq -r '.[].uuid'))
+		for lvol_bdev in "${lvol_bdevs[@]}"; do
+			$rpc_py bdev_lvol_delete $lvol_bdev
+			echo "lvol bdev $lvol_bdev removed"
+		done
+
+		$rpc_py bdev_lvol_delete_lvstore -u $lvol_store
+		echo "lvol store $lvol_store removed"
+	done
+}
+
+function cleanup_lvols() {
+	start_spdk_tgt
+	attach_bdevs
+	cleanup_lvol_cfg
+	stop_spdk_tgt
+}
+
+function create_lvols() {
+	start_spdk_tgt
+	attach_bdevs
+	cleanup_lvol_cfg
+
+	nvme_bdevs=($($rpc_py bdev_get_bdevs | jq -r '.[].name'))
+	for nvme_bdev in "${nvme_bdevs[@]}"; do
+		ls_guid=$($rpc_py bdev_lvol_create_lvstore $nvme_bdev lvs_0 --clear-method none)
+		echo "Created LVOL Store $ls_guid on Bdev $nvme_bdev"
+
+		free_mb=$(get_lvs_free_mb "$ls_guid")
+		lb_name=$($rpc_py bdev_lvol_create -u $ls_guid lbd_0 $free_mb --clear-method none)
+		LVOL_BDEVS+=("$lb_name")
+		echo "Created LVOL Bdev $lb_name ($free_mb MB) on Lvol Store $ls_guid on Bdev $nvme_bdev"
+	done
+
+	stop_spdk_tgt
 }
