@@ -10,6 +10,14 @@ source $rootdir/test/common/autotest_common.sh
 
 # Pci bus hotplug
 # Helper function to remove/attach cotrollers
+debug_remove_attach_helper() {
+	local helper_time=0
+
+	helper_time=$(timing_cmd remove_attach_helper "$@")
+	printf 'remove_attach_helper took %ss to complete (handling %u nvme drive(s))' \
+		"$helper_time" "$nvme_count" >&2
+}
+
 remove_attach_helper() {
 	local hotplug_events=$1
 	local hotplug_wait=$2
@@ -64,7 +72,7 @@ run_hotplug() {
 		-l warning &
 	hotplug_pid=$!
 
-	remove_attach_helper "$hotplug_events" "$hotplug_wait" false
+	debug_remove_attach_helper "$hotplug_events" "$hotplug_wait" false
 
 	# Wait in case hotplug app is lagging behind
 	# and kill it, if it hung.
@@ -99,12 +107,12 @@ tgt_run_hotplug() {
 
 	rpc_cmd bdev_nvme_set_hotplug -e
 
-	remove_attach_helper "$hotplug_events" "$hotplug_wait" true
+	debug_remove_attach_helper "$hotplug_events" "$hotplug_wait" true
 	# Verify reregistering hotplug poller
 	rpc_cmd bdev_nvme_set_hotplug -d
 	rpc_cmd bdev_nvme_set_hotplug -e
 
-	remove_attach_helper "$hotplug_events" "$hotplug_wait" true
+	debug_remove_attach_helper "$hotplug_events" "$hotplug_wait" true
 
 	trap - SIGINT SIGTERM EXIT
 	killprocess $spdk_tgt_pid
