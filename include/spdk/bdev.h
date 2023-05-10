@@ -1039,9 +1039,8 @@ int spdk_bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_c
  * \param num_blocks The number of blocks to read.
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
- * \param opts Optional structure with extended IO request options. If set, this structure must be
- * valid until the IO is completed. `size` member of this structure is used for ABI compatibility and
- * must be set to sizeof(struct spdk_bdev_ext_io_opts).
+ * \param opts Optional structure with extended IO request options. `size` member of this structure
+ *             is used for ABI compatibility and must be set to sizeof(struct spdk_bdev_ext_io_opts).
  *
  * \return 0 on success. On success, the callback will always
  * be called (even if the request ultimately failed). Return
@@ -1242,9 +1241,8 @@ int spdk_bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_
  * \param num_blocks The number of blocks to write.
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
- * \param opts Optional structure with extended IO request options. If set, this structure must be
- * valid until the IO is completed. `size` member of this structure is used for ABI compatibility and
- * must be set to sizeof(struct spdk_bdev_ext_io_opts).
+ * \param opts Optional structure with extended IO request options. `size` member of this structure
+ *             is used for ABI compatibility and must be set to sizeof(struct spdk_bdev_ext_io_opts).
  *
  * \return 0 on success. On success, the callback will always
  * be called (even if the request ultimately failed). Return

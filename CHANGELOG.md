@@ -17,6 +17,9 @@ New APIs `spdk_bdev_quiesce`, `spdk_bdev_unquiesce`, `spdk_bdev_quiesce_range` a
 `spdk_bdev_unquiesce_range` were added. These allow I/O to be quiesced on an entire bdev or
 a specified LBA range.
 
+Removed `spdk_bdev_ext_io_opts` from `spdk_bdev_io` and replaced it with fields that were missing in
+`spdk_bdev_io`.
+
 ### env
 
 New functions `spdk_env_get_main_core` and `spdk_env_get_cpuset` were added.
