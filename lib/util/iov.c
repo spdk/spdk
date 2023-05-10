@@ -59,62 +59,43 @@ spdk_ioviter_first(struct spdk_ioviter *iter,
 size_t
 spdk_ioviter_next(struct spdk_ioviter *iter, void **src, void **dst)
 {
-	size_t len = 0;
-	struct spdk_single_ioviter *siter;
-	struct spdk_single_ioviter *diter;
+	struct spdk_single_ioviter *it;
+	size_t len;
+	uint32_t i;
 
-	siter = &iter->iters[0];
-	diter = &iter->iters[1];
+	/* Figure out the minimum size of each iovec's next segment */
+	len = UINT32_MAX;
+	for (i = 0; i < iter->count; i++) {
+		it = &iter->iters[i];
+		if (it->idx == it->iovcnt || it->iov_len == 0) {
+			/* This element has 0 bytes remaining, so we're done. */
+			return 0;
+		}
 
-	if (siter->idx == siter->iovcnt ||
-	    diter->idx == diter->iovcnt ||
-	    siter->iov_len == 0 ||
-	    diter->iov_len == 0) {
-		return 0;
+		len = spdk_min(len, iter->iters[i].iov_len);
 	}
 
-	*src = siter->iov_base;
-	*dst = diter->iov_base;
-	len = spdk_min(siter->iov_len, diter->iov_len);
+	*src = iter->iters[0].iov_base;
+	*dst = iter->iters[1].iov_base;
 
-	if (siter->iov_len == diter->iov_len) {
-		/* Advance both iovs to the next element */
-		siter->idx++;
-		if (siter->idx == siter->iovcnt) {
-			return len;
+	for (i = 0; i < iter->count; i++) {
+		it = &iter->iters[i];
+
+		assert(it->iov_len >= len);
+
+		if (it->iov_len == len) {
+			/* Advance to next element */
+			it->idx++;
+			if (it->idx != it->iovcnt) {
+				/* Set up for next element */
+				it->iov_len = it->iov[it->idx].iov_len;
+				it->iov_base = it->iov[it->idx].iov_base;
+			}
+		} else {
+			/* Partial buffer */
+			it->iov_base += len;
+			it->iov_len -= len;
 		}
-
-		diter->idx++;
-		if (diter->idx == diter->iovcnt) {
-			return len;
-		}
-
-		siter->iov_len = siter->iov[siter->idx].iov_len;
-		siter->iov_base = siter->iov[siter->idx].iov_base;
-		diter->iov_len = diter->iov[diter->idx].iov_len;
-		diter->iov_base = diter->iov[diter->idx].iov_base;
-	} else if (siter->iov_len < diter->iov_len) {
-		/* Advance only the source to the next element */
-		siter->idx++;
-		if (siter->idx == siter->iovcnt) {
-			return len;
-		}
-
-		diter->iov_base += siter->iov_len;
-		diter->iov_len -= siter->iov_len;
-		siter->iov_len = siter->iov[siter->idx].iov_len;
-		siter->iov_base = siter->iov[siter->idx].iov_base;
-	} else {
-		/* Advance only the destination to the next element */
-		diter->idx++;
-		if (diter->idx == diter->iovcnt) {
-			return len;
-		}
-
-		siter->iov_base += diter->iov_len;
-		siter->iov_len -= diter->iov_len;
-		diter->iov_len = diter->iov[diter->idx].iov_len;
-		diter->iov_base = diter->iov[diter->idx].iov_base;
 	}
 
 	return len;
