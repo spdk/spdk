@@ -392,11 +392,11 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	block_size = _nvme_get_host_buffer_sector_size(ns, fio_qpair->io_flags);
 	for_each_rw_ddir(ddir) {
-		if (td->o.bs[ddir] % block_size != 0) {
+		if (td->o.min_bs[ddir] % block_size != 0 || td->o.max_bs[ddir] % block_size != 0) {
 			if (spdk_nvme_ns_supports_extended_lba(ns)) {
-				SPDK_ERRLOG("--bs has to be a multiple of (LBA data size + Metadata size)\n");
+				SPDK_ERRLOG("--bs or other block size related option has to be a multiple of (LBA data size + Metadata size)\n");
 			} else {
-				SPDK_ERRLOG("--bs has to be a multiple of LBA data size\n");
+				SPDK_ERRLOG("--bs or other block size related option has to be a multiple of LBA data size\n");
 			}
 			g_error = true;
 			return;
