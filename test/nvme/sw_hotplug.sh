@@ -138,7 +138,7 @@ nvmes=($(nvme_in_userspace))
 nvme_count=${#nvmes[@]}
 
 xtrace_disable
-cache_pci_bus_sysfs
+cache_pci_bus
 xtrace_restore
 
 # Run pci bus hotplug test
