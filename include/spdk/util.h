@@ -134,6 +134,16 @@ size_t spdk_ioviter_first(struct spdk_ioviter *iter,
 			  void **src, void **dst);
 
 /**
+ * Initialize and move to the first common segment of the N given
+ * iovecs. See spdk_ioviter_nextv().
+ */
+size_t spdk_ioviter_firstv(struct spdk_ioviter *iter,
+			   uint32_t count,
+			   struct iovec **iov,
+			   size_t *iovcnt,
+			   void **out);
+
+/**
  * Move to the next segment in the iterator.
  *
  * This will iterate through the segments of the source and destination
@@ -144,6 +154,18 @@ size_t spdk_ioviter_first(struct spdk_ioviter *iter,
  * the iteration is complete on the fifth call.
  */
 size_t spdk_ioviter_next(struct spdk_ioviter *iter, void **src, void **dst);
+
+/**
+ * Move to the next segment in the iterator.
+ *
+ * This will iterate through the segments of the iovecs in the iterator
+ * and return the individual segments, one by one. For example, if the
+ * set consists one iovec of one element of length 4k and another iovec
+ * of 4 elements each of length 1k, this function will return
+ * 4 1k pairs of buffers, and then return 0 bytes to indicate
+ * the iteration is complete on the fifth call.
+ */
+size_t spdk_ioviter_nextv(struct spdk_ioviter *iter, void **out);
 
 /**
  * Operate like memset across an iovec.

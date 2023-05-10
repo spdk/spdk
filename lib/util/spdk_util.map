@@ -135,6 +135,8 @@
 	spdk_iovmove;
 	spdk_ioviter_first;
 	spdk_ioviter_next;
+	spdk_ioviter_firstv;
+	spdk_ioviter_nextv;
 	spdk_iov_memset;
 	spdk_iov_one;
 	spdk_iov_xfer_init;

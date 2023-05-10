@@ -32,32 +32,69 @@ spdk_ioviter_first(struct spdk_ioviter *iter,
 		   struct iovec *diov, size_t diovcnt,
 		   void **src, void **dst)
 {
-	struct spdk_single_ioviter *siter;
-	struct spdk_single_ioviter *diter;
+	struct iovec *iovs[2];
+	size_t iovcnts[2];
+	void *out[2];
+	size_t len;
 
-	iter->count = 2;
+	iovs[0] = siov;
+	iovcnts[0] = siovcnt;
 
-	siter = &iter->iters[0];
-	diter = &iter->iters[1];
+	iovs[1] = diov;
+	iovcnts[1] = diovcnt;
 
-	siter->iov = siov;
-	siter->iovcnt = siovcnt;
+	len = spdk_ioviter_firstv(iter, 2, iovs, iovcnts, out);
 
-	diter->iov = diov;
-	diter->iovcnt = diovcnt;
+	if (len > 0) {
+		*src = out[0];
+		*dst = out[1];
+	}
 
-	siter->idx = 0;
-	diter->idx = 0;
-	siter->iov_len = siov[0].iov_len;
-	siter->iov_base = siov[0].iov_base;
-	diter->iov_len = diov[0].iov_len;
-	diter->iov_base = diov[0].iov_base;
+	return len;
+}
 
-	return spdk_ioviter_next(iter, src, dst);
+size_t
+spdk_ioviter_firstv(struct spdk_ioviter *iter,
+		    uint32_t count,
+		    struct iovec **iov,
+		    size_t *iovcnt,
+		    void **out)
+{
+	struct spdk_single_ioviter *it;
+	uint32_t i;
+
+	iter->count = count;
+
+	for (i = 0; i < count; i++) {
+		it = &iter->iters[i];
+		it->iov = iov[i];
+		it->iovcnt = iovcnt[i];
+		it->idx = 0;
+		it->iov_len = iov[i][0].iov_len;
+		it->iov_base = iov[i][0].iov_base;
+	}
+
+	return spdk_ioviter_nextv(iter, out);
 }
 
 size_t
 spdk_ioviter_next(struct spdk_ioviter *iter, void **src, void **dst)
+{
+	void *out[2];
+	size_t len;
+
+	len = spdk_ioviter_nextv(iter, out);
+
+	if (len > 0) {
+		*src = out[0];
+		*dst = out[1];
+	}
+
+	return len;
+}
+
+size_t
+spdk_ioviter_nextv(struct spdk_ioviter *iter, void **out)
 {
 	struct spdk_single_ioviter *it;
 	size_t len;
@@ -72,16 +109,13 @@ spdk_ioviter_next(struct spdk_ioviter *iter, void **src, void **dst)
 			return 0;
 		}
 
-		len = spdk_min(len, iter->iters[i].iov_len);
+		len = spdk_min(len, it->iov_len);
 	}
-
-	*src = iter->iters[0].iov_base;
-	*dst = iter->iters[1].iov_base;
 
 	for (i = 0; i < iter->count; i++) {
 		it = &iter->iters[i];
 
-		assert(it->iov_len >= len);
+		out[i] = it->iov_base;
 
 		if (it->iov_len == len) {
 			/* Advance to next element */
