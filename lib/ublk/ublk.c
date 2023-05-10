@@ -624,6 +624,17 @@ spdk_ublk_write_config_json(struct spdk_json_write_ctx *w)
 
 	spdk_json_write_array_begin(w);
 
+	if (g_ublk_tgt.active) {
+		spdk_json_write_object_begin(w);
+
+		spdk_json_write_named_string(w, "method", "ublk_create_target");
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "cpumask", spdk_cpuset_fmt(&g_core_mask));
+		spdk_json_write_object_end(w);
+
+		spdk_json_write_object_end(w);
+	}
+
 	TAILQ_FOREACH(ublk, &g_ublk_devs, tailq) {
 		spdk_json_write_object_begin(w);
 

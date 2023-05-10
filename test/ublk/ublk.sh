@@ -96,11 +96,45 @@ function test_create_multi_ublk() {
 	check_leftover_devices
 }
 
+test_save_config() (
+	local tgtpid blkpath config
+
+	"$rootdir/build/bin/spdk_tgt" -L ublk &
+	tgtpid=$!
+	trap 'killprocess $tgtpid' EXIT
+
+	waitforlisten $tgtpid
+	blkpath=/dev/ublkb0
+	rpc_cmd <<- EOF
+		ublk_create_target
+		bdev_malloc_create -b malloc0 32 4096
+		ublk_start_disk malloc0 0
+	EOF
+
+	# Ensure that ublk properly saves its config
+	config=$(rpc_cmd save_config)
+	killprocess $tgtpid
+
+	"$rootdir/build/bin/spdk_tgt" -L ublk -c <(echo "$config") &
+	tgtpid=$!
+
+	waitforlisten $tgtpid
+	[[ $(rpc_cmd ublk_get_disks | jq -r '.[0].ublk_device') == "$blkpath" ]]
+	[[ -b "$blkpath" ]]
+
+	killprocess $tgtpid
+	trap - EXIT
+)
+
 function cleanup() {
 	killprocess $spdk_pid
 }
 
 modprobe ublk_drv
+
+# test_save_config starts up and terminates its own target process
+run_test "test_save_ublk_config" test_save_config
+
 "$SPDK_BIN_DIR/spdk_tgt" -m 0x3 -L ublk &
 spdk_pid=$!
 trap 'cleanup; exit 1' SIGINT SIGTERM EXIT
