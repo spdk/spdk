@@ -9198,7 +9198,10 @@ bdev_lock_lba_range_cb(struct spdk_bdev *bdev, void *_ctx, int status)
 	 * locking channel, so that this channel will know that it is allowed
 	 * to write to this range.
 	 */
-	ctx->owner_range->owner_ch = ctx->range.owner_ch;
+	if (ctx->owner_range != NULL) {
+		ctx->owner_range->owner_ch = ctx->range.owner_ch;
+	}
+
 	ctx->cb_fn(ctx->cb_arg, status);
 
 	/* Don't free the ctx here.  Its range is in the bdev's global list of
@@ -9283,7 +9286,8 @@ static void
 bdev_lock_lba_range_ctx(struct spdk_bdev *bdev, struct locked_lba_range_ctx *ctx)
 {
 	assert(spdk_get_thread() == ctx->range.owner_thread);
-	assert(spdk_io_channel_get_thread(ctx->range.owner_ch->channel) == ctx->range.owner_thread);
+	assert(ctx->range.owner_ch == NULL ||
+	       spdk_io_channel_get_thread(ctx->range.owner_ch->channel) == ctx->range.owner_thread);
 
 	/* We will add a copy of this range to each channel now. */
 	spdk_bdev_for_each_channel(bdev, bdev_lock_lba_range_get_channel, ctx,
@@ -9309,11 +9313,6 @@ _bdev_lock_lba_range(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch,
 		     lock_range_cb cb_fn, void *cb_arg)
 {
 	struct locked_lba_range_ctx *ctx;
-
-	if (cb_arg == NULL) {
-		SPDK_ERRLOG("cb_arg must not be NULL\n");
-		return -EINVAL;
-	}
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
@@ -9351,6 +9350,11 @@ bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_channel *ch = __io_ch_to_bdev_ch(_ch);
+
+	if (cb_arg == NULL) {
+		SPDK_ERRLOG("cb_arg must not be NULL\n");
+		return -EINVAL;
+	}
 
 	return _bdev_lock_lba_range(bdev, ch, offset, length, cb_fn, cb_arg);
 }
@@ -9452,7 +9456,7 @@ _bdev_unlock_lba_range(struct spdk_bdev *bdev, uint64_t offset, uint64_t length,
 	 */
 	TAILQ_FOREACH(range, &bdev->internal.locked_ranges, tailq) {
 		if (range->offset == offset && range->length == length &&
-		    range->locked_ctx == cb_arg) {
+		    (range->owner_ch == NULL || range->locked_ctx == cb_arg)) {
 			break;
 		}
 	}
