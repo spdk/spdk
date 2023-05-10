@@ -14,6 +14,7 @@ remove_attach_helper() {
 	local hotplug_events=$1
 	local hotplug_wait=$2
 	local use_bdev=$3
+	local nvme_count=${#nvmes[@]}
 	local dev
 
 	# We need to make sure we wait long enough for hotplug to initialize the devices
@@ -65,7 +66,7 @@ remove_attach_helper() {
 		done
 
 		# Wait now for hotplug to reattach to the devices
-		sleep "$hotplug_wait"
+		sleep "$((hotplug_wait * nvme_count))"
 	done
 }
 
