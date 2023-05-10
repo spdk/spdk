@@ -33,6 +33,7 @@
 #define UBLK_QUEUE_REQUEST		32
 #define UBLK_STOP_BUSY_WAITING_MS	10000
 #define UBLK_BUSY_POLLING_INTERVAL_US	20000
+#define UBLK_DEFAULT_CTRL_URING_POLLING_INTERVAL_US	1000
 
 #define UBLK_IOBUF_SMALL_CACHE_SIZE	128
 #define UBLK_IOBUF_LARGE_CACHE_SIZE	32
@@ -453,7 +454,8 @@ ublk_create_target(const char *cpumask_str)
 	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 	g_ublk_tgt.active = true;
 	g_ublk_tgt.ctrl_ops_in_progress = 0;
-	g_ublk_tgt.ctrl_poller = SPDK_POLLER_REGISTER(ublk_ctrl_poller, NULL, 10);
+	g_ublk_tgt.ctrl_poller = SPDK_POLLER_REGISTER(ublk_ctrl_poller, NULL,
+				 UBLK_DEFAULT_CTRL_URING_POLLING_INTERVAL_US);
 
 	SPDK_NOTICELOG("UBLK target created successfully\n");
 
