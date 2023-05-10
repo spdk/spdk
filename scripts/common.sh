@@ -94,12 +94,7 @@ cache_pci_bus_sysfs() {
 
 	for pci in /sys/bus/pci/devices/*; do
 		class=$(< "$pci/class") vendor=$(< "$pci/vendor") device=$(< "$pci/device") driver="" mod=""
-		if [[ -e $pci/driver ]]; then
-			driver=$(readlink -f "$pci/driver")
-			driver=${driver##*/}
-		else
-			driver=unbound
-		fi
+		driver=$(get_pci_driver_sysfs "${pci##*/}")
 		if [[ -e $pci/modalias ]]; then
 			mod=$(< "$pci/modalias")
 		fi
@@ -123,8 +118,12 @@ cache_pci_bus_lspci() {
 		else
 			dev[1]+=00
 		fi
-		# pci class vendor device
-		cache_pci "${dev[@]::4}"
+		# pci class vendor device driver
+		# lspci supports driver listing only under Linux, however, it's not
+		# included when specific display mode (i.e. -mm) is in use, even if
+		# extra -k is slapped on the cmdline. So with that in mind, just
+		# get that info from sysfs.
+		cache_pci "${dev[@]::4}" "$(get_pci_driver_sysfs "${dev[0]}")"
 	done < <(lspci -Dnmm)
 }
 
@@ -150,6 +149,17 @@ cache_pci_bus_pciconf() {
 		fi
 		cache_pci "$pci" "$class" "$vendor" "$device" "$driver"
 	done < <(pciconf -l)
+}
+
+get_pci_driver_sysfs() {
+	local pci=/sys/bus/pci/devices/$1 driver
+
+	if [[ -e $pci/driver ]]; then
+		driver=$(readlink -f "$pci/driver") driver=${driver##*/}
+	else
+		driver=unbound
+	fi
+	echo "$driver"
 }
 
 cache_pci_bus() {
