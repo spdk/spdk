@@ -382,11 +382,12 @@ bdev_rbd_finish_aiocb(rbd_completion_t cb, void *arg)
 		if ((int)rbd_io->total_len != io_status) {
 			bio_status = SPDK_BDEV_IO_STATUS_FAILED;
 		}
-	} else {
-		/* For others, 0 means success */
-		if (io_status != 0) {
-			bio_status = SPDK_BDEV_IO_STATUS_FAILED;
-		}
+#ifdef LIBRBD_SUPPORTS_COMPARE_AND_WRITE_IOVEC
+	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE && io_status == -EILSEQ) {
+		bio_status = SPDK_BDEV_IO_STATUS_MISCOMPARE;
+#endif
+	} else if (io_status != 0) { /* For others, 0 means success */
+		bio_status = SPDK_BDEV_IO_STATUS_FAILED;
 	}
 
 	rbd_aio_release(cb);
@@ -436,6 +437,15 @@ _bdev_rbd_start_aio(struct bdev_rbd *disk, struct spdk_bdev_io *bdev_io,
 		ret = rbd_aio_write_zeroes(image, offset, len, rbd_io->comp, /* zero_flags */ 0,
 					   /* op_flags */ 0);
 		break;
+#ifdef LIBRBD_SUPPORTS_COMPARE_AND_WRITE_IOVEC
+	case SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE:
+		ret = rbd_aio_compare_and_writev(image, offset, iov /* cmp */, iovcnt,
+						 bdev_io->u.bdev.fused_iovs /* write */,
+						 bdev_io->u.bdev.fused_iovcnt,
+						 rbd_io->comp, NULL,
+						 /* op_flags */ 0);
+		break;
+#endif
 	default:
 		/* This should not happen.
 		 * Function should only be called with supported io types in bdev_rbd_submit_request
@@ -630,6 +640,9 @@ bdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+#ifdef LIBRBD_SUPPORTS_COMPARE_AND_WRITE_IOVEC
+	case SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE:
+#endif
 		bdev_rbd_start_aio(bdev_io);
 		break;
 
@@ -654,6 +667,9 @@ bdev_rbd_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+#ifdef LIBRBD_SUPPORTS_COMPARE_AND_WRITE_IOVEC
+	case SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE:
+#endif
 		return true;
 
 	default:
