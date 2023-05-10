@@ -105,21 +105,18 @@ spdk_divide_round_up(uint64_t num, uint64_t divisor)
 }
 
 /**
- * An iovec iterator. Can be allocated on the stack.
+ * A 2-way iovec iterator. Can be allocated on the stack.
  */
 struct spdk_ioviter {
-	struct iovec	*siov;
-	size_t		siovcnt;
+	uint32_t	count;
 
-	struct iovec	*diov;
-	size_t		diovcnt;
-
-	size_t		sidx;
-	size_t		didx;
-	int		siov_len;
-	uint8_t		*siov_base;
-	int		diov_len;
-	uint8_t		*diov_base;
+	struct spdk_single_ioviter {
+		struct iovec	*iov;
+		size_t		iovcnt;
+		size_t		idx;
+		size_t		iov_len;
+		uint8_t		*iov_base;
+	} iters[2];
 };
 
 /**

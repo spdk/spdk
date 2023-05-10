@@ -32,18 +32,26 @@ spdk_ioviter_first(struct spdk_ioviter *iter,
 		   struct iovec *diov, size_t diovcnt,
 		   void **src, void **dst)
 {
-	iter->siov = siov;
-	iter->siovcnt = siovcnt;
+	struct spdk_single_ioviter *siter;
+	struct spdk_single_ioviter *diter;
 
-	iter->diov = diov;
-	iter->diovcnt = diovcnt;
+	iter->count = 2;
 
-	iter->sidx = 0;
-	iter->didx = 0;
-	iter->siov_len = siov[0].iov_len;
-	iter->siov_base = siov[0].iov_base;
-	iter->diov_len = diov[0].iov_len;
-	iter->diov_base = diov[0].iov_base;
+	siter = &iter->iters[0];
+	diter = &iter->iters[1];
+
+	siter->iov = siov;
+	siter->iovcnt = siovcnt;
+
+	diter->iov = diov;
+	diter->iovcnt = diovcnt;
+
+	siter->idx = 0;
+	diter->idx = 0;
+	siter->iov_len = siov[0].iov_len;
+	siter->iov_base = siov[0].iov_base;
+	diter->iov_len = diov[0].iov_len;
+	diter->iov_base = diov[0].iov_base;
 
 	return spdk_ioviter_next(iter, src, dst);
 }
@@ -52,56 +60,61 @@ size_t
 spdk_ioviter_next(struct spdk_ioviter *iter, void **src, void **dst)
 {
 	size_t len = 0;
+	struct spdk_single_ioviter *siter;
+	struct spdk_single_ioviter *diter;
 
-	if (iter->sidx == iter->siovcnt ||
-	    iter->didx == iter->diovcnt ||
-	    iter->siov_len == 0 ||
-	    iter->diov_len == 0) {
+	siter = &iter->iters[0];
+	diter = &iter->iters[1];
+
+	if (siter->idx == siter->iovcnt ||
+	    diter->idx == diter->iovcnt ||
+	    siter->iov_len == 0 ||
+	    diter->iov_len == 0) {
 		return 0;
 	}
 
-	*src = iter->siov_base;
-	*dst = iter->diov_base;
-	len = spdk_min(iter->siov_len, iter->diov_len);
+	*src = siter->iov_base;
+	*dst = diter->iov_base;
+	len = spdk_min(siter->iov_len, diter->iov_len);
 
-	if (iter->siov_len == iter->diov_len) {
+	if (siter->iov_len == diter->iov_len) {
 		/* Advance both iovs to the next element */
-		iter->sidx++;
-		if (iter->sidx == iter->siovcnt) {
+		siter->idx++;
+		if (siter->idx == siter->iovcnt) {
 			return len;
 		}
 
-		iter->didx++;
-		if (iter->didx == iter->diovcnt) {
+		diter->idx++;
+		if (diter->idx == diter->iovcnt) {
 			return len;
 		}
 
-		iter->siov_len = iter->siov[iter->sidx].iov_len;
-		iter->siov_base = iter->siov[iter->sidx].iov_base;
-		iter->diov_len = iter->diov[iter->didx].iov_len;
-		iter->diov_base = iter->diov[iter->didx].iov_base;
-	} else if (iter->siov_len < iter->diov_len) {
+		siter->iov_len = siter->iov[siter->idx].iov_len;
+		siter->iov_base = siter->iov[siter->idx].iov_base;
+		diter->iov_len = diter->iov[diter->idx].iov_len;
+		diter->iov_base = diter->iov[diter->idx].iov_base;
+	} else if (siter->iov_len < diter->iov_len) {
 		/* Advance only the source to the next element */
-		iter->sidx++;
-		if (iter->sidx == iter->siovcnt) {
+		siter->idx++;
+		if (siter->idx == siter->iovcnt) {
 			return len;
 		}
 
-		iter->diov_base += iter->siov_len;
-		iter->diov_len -= iter->siov_len;
-		iter->siov_len = iter->siov[iter->sidx].iov_len;
-		iter->siov_base = iter->siov[iter->sidx].iov_base;
+		diter->iov_base += siter->iov_len;
+		diter->iov_len -= siter->iov_len;
+		siter->iov_len = siter->iov[siter->idx].iov_len;
+		siter->iov_base = siter->iov[siter->idx].iov_base;
 	} else {
 		/* Advance only the destination to the next element */
-		iter->didx++;
-		if (iter->didx == iter->diovcnt) {
+		diter->idx++;
+		if (diter->idx == diter->iovcnt) {
 			return len;
 		}
 
-		iter->siov_base += iter->diov_len;
-		iter->siov_len -= iter->diov_len;
-		iter->diov_len = iter->diov[iter->didx].iov_len;
-		iter->diov_base = iter->diov[iter->didx].iov_base;
+		siter->iov_base += diter->iov_len;
+		siter->iov_len -= diter->iov_len;
+		diter->iov_len = diter->iov[diter->idx].iov_len;
+		diter->iov_base = diter->iov[diter->idx].iov_base;
 	}
 
 	return len;
