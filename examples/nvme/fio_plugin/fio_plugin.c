@@ -391,14 +391,16 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 
 	block_size = _nvme_get_host_buffer_sector_size(ns, fio_qpair->io_flags);
-	if (td->o.bs[DDIR_READ] % block_size != 0 || td->o.bs[DDIR_WRITE] % block_size != 0) {
-		if (spdk_nvme_ns_supports_extended_lba(ns)) {
-			SPDK_ERRLOG("--bs has to be a multiple of (LBA data size + Metadata size)\n");
-		} else {
-			SPDK_ERRLOG("--bs has to be a multiple of LBA data size\n");
+	for_each_rw_ddir(ddir) {
+		if (td->o.bs[ddir] % block_size != 0) {
+			if (spdk_nvme_ns_supports_extended_lba(ns)) {
+				SPDK_ERRLOG("--bs has to be a multiple of (LBA data size + Metadata size)\n");
+			} else {
+				SPDK_ERRLOG("--bs has to be a multiple of LBA data size\n");
+			}
+			g_error = true;
+			return;
 		}
-		g_error = true;
-		return;
 	}
 
 	if (fio_options->zone_append && spdk_nvme_ns_get_csi(ns) == SPDK_NVME_CSI_ZNS) {
