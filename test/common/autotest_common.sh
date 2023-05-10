@@ -687,6 +687,24 @@ function timing() {
 	fi
 }
 
+function timing_cmd() (
+	# The use-case here is this: ts=$(timing_cmd echo bar). Since stdout is always redirected
+	# to a pipe handling the $(), lookup the stdin's device and determine if it's sane to send
+	# cmd's output to it. If not, just null it.
+
+	[[ -t 0 ]] && exec {cmd_out}>&0 || exec {cmd_out}> /dev/null
+
+	local time=0 TIMEFORMAT=%2R # seconds
+
+	# We redirect cmd's std{out,err} to a separate fd dup'ed to stdin's device (or /dev/null) to
+	# catch only output from the time builtin - output from the actual cmd would be still visible,
+	# but $() will return just the time's data, hence making it possible to just do:
+	#  time_of_super_verbose_cmd=$(timing_cmd super_verbose_cmd)
+	time=$({ time "$@" >&"$cmd_out" 2>&1; } 2>&1)
+
+	echo "$time"
+)
+
 function timing_enter() {
 	xtrace_disable
 	timing "enter" "$1"
