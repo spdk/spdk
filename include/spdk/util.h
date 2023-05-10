@@ -105,7 +105,9 @@ spdk_divide_round_up(uint64_t num, uint64_t divisor)
 }
 
 /**
- * A 2-way iovec iterator. Can be allocated on the stack.
+ * An N-way iovec iterator. Calculate the size, given N, using
+ * SPDK_IOVITER_SIZE. For backward compatibility, the structure
+ * has a default size of 2 iovecs.
  */
 struct spdk_ioviter {
 	uint32_t	count;
@@ -118,6 +120,9 @@ struct spdk_ioviter {
 		uint8_t		*iov_base;
 	} iters[2];
 };
+
+/* count must be greater than or equal to 2 */
+#define SPDK_IOVITER_SIZE(count) (sizeof(struct spdk_single_ioviter) * (count - 2) + sizeof(struct spdk_ioviter))
 
 /**
  * Initialize and move to the first common segment of the two given
