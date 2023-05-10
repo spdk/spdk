@@ -408,25 +408,41 @@ _bdev_rbd_start_aio(struct bdev_rbd *disk, struct spdk_bdev_io *bdev_io,
 		goto err;
 	}
 
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
 		rbd_io->total_len = len;
 		if (spdk_likely(iovcnt == 1)) {
-			ret = rbd_aio_read(image, offset, iov[0].iov_len, iov[0].iov_base, rbd_io->comp);
+			ret = rbd_aio_read(image, offset, iov[0].iov_len, iov[0].iov_base,
+					   rbd_io->comp);
 		} else {
 			ret = rbd_aio_readv(image, iov, iovcnt, offset, rbd_io->comp);
 		}
-	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE:
 		if (spdk_likely(iovcnt == 1)) {
-			ret = rbd_aio_write(image, offset, iov[0].iov_len, iov[0].iov_base, rbd_io->comp);
+			ret = rbd_aio_write(image, offset, iov[0].iov_len, iov[0].iov_base,
+					    rbd_io->comp);
 		} else {
 			ret = rbd_aio_writev(image, iov, iovcnt, offset, rbd_io->comp);
 		}
-	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_UNMAP) {
+		break;
+	case SPDK_BDEV_IO_TYPE_UNMAP:
 		ret = rbd_aio_discard(image, offset, len, rbd_io->comp);
-	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_FLUSH) {
+		break;
+	case SPDK_BDEV_IO_TYPE_FLUSH:
 		ret = rbd_aio_flush(image, rbd_io->comp);
-	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE_ZEROES) {
-		ret = rbd_aio_write_zeroes(image, offset, len, rbd_io->comp, /* zero_flags */ 0, /* op_flags */ 0);
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		ret = rbd_aio_write_zeroes(image, offset, len, rbd_io->comp, /* zero_flags */ 0,
+					   /* op_flags */ 0);
+		break;
+	default:
+		/* This should not happen.
+		 * Function should only be called with supported io types in bdev_rbd_submit_request
+		 */
+		SPDK_ERRLOG("Unsupported IO type =%d\n", bdev_io->type);
+		ret = -ENOTSUP;
+		break;
 	}
 
 	if (ret < 0) {
