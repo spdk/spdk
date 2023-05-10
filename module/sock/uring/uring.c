@@ -1194,10 +1194,24 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 
 		task->status = SPDK_URING_SOCK_TASK_NOT_IN_USE;
 
-		if (spdk_unlikely(status <= 0)) {
-			if (status == -EAGAIN || status == -EWOULDBLOCK || (status == -ENOBUFS && sock->zcopy)) {
+		if (spdk_unlikely(status < 0)) {
+			if (status == -EAGAIN || status == -EWOULDBLOCK ||
+			    (status == -ENOBUFS && sock->zcopy) ||
+			    status == -ECANCELED) {
 				continue;
 			}
+
+			sock->connection_status = status;
+			spdk_sock_abort_requests(&sock->base);
+
+			/* The user needs to be notified that this socket is dead. */
+			if (sock->base.cb_fn != NULL &&
+			    sock->pending_recv == false) {
+				sock->pending_recv = true;
+				TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
+			}
+
+			continue;
 		}
 
 		switch (task->type) {
@@ -1222,20 +1236,10 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 			task->iov_cnt = 0;
 			is_zcopy = task->is_zcopy;
 			task->is_zcopy = false;
-			if (spdk_unlikely(status) < 0) {
-				sock->connection_status = status;
-				spdk_sock_abort_requests(&sock->base);
-			} else {
-				sock_complete_write_reqs(&sock->base, status, is_zcopy);
-			}
-
+			sock_complete_write_reqs(&sock->base, status, is_zcopy);
 			break;
 #ifdef SPDK_ZEROCOPY
 		case SPDK_SOCK_TASK_ERRQUEUE:
-			if (spdk_unlikely(status == -ECANCELED)) {
-				sock->connection_status = status;
-				break;
-			}
 			_sock_check_zcopy(&sock->base, status);
 			break;
 #endif
