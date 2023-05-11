@@ -786,7 +786,7 @@ uring_sock_read(struct spdk_uring_sock *sock)
 		bytes = sock_readv(sock->fd, iov, 2);
 		if (bytes > 0) {
 			spdk_pipe_writer_advance(sock->recv_pipe, bytes);
-			if (sock->base.group_impl) {
+			if (sock->base.group_impl && !sock->pending_recv) {
 				group = __uring_group_impl(sock->base.group_impl);
 				TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
 				sock->pending_recv = true;
