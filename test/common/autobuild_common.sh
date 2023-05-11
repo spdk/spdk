@@ -321,7 +321,7 @@ _build_doc() {
 	local doxygenv
 	doxygenv=$(doxygen --version)
 
-	$MAKE -C "$rootdir"/doc --no-print-directory $MAKEFLAGS &> "$out"/doxygen.log
+	$MAKE -C "$rootdir"/doc --no-print-directory $MAKEFLAGS Q=@ &> "$out"/doxygen.log
 	if [ -s "$out"/doxygen.log ]; then
 		if [[ "$doxygenv" == "1.8.20" ]]; then
 			# Doxygen 1.8.20 produces false positives, see:
@@ -380,7 +380,6 @@ build_files() {
 }
 
 build_doc() {
-	"$rootdir/configure" $config_params --without-shared
 	run_test "autobuild_build_doc" _build_doc
 }
 
