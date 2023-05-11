@@ -1,18 +1,10 @@
 # This file represents the tests we are intentionally skipping in CI testing.
 
 # cases
-ftl_dirty_shutdown
 ftl_restore_fast
 ftl_write_after_write
-ftl_fio_basic
 ftl_fio_extended
 ftl_fio_nightly
-ftl_restore_nv_cache
-ftl_bdevperf
-ftl_bdevperf_append
-ftl_json
-ftl_fio
-ftl_restore
 
 # Waiting for test refactor
 iscsi_tgt_fio_remote_nvme
@@ -38,7 +30,6 @@ unittest_nvmf_fc
 unittest_nvmf_fc_ls
 
 # These tests are currently only run manually
-vhost_blk_fs_integrity
 vhost_blk_hot_remove
 vhost_scsi_hot_remove
 vhost_hotplug
@@ -50,9 +41,6 @@ vmd_fio
 vmd_hello_world
 vmd_identify
 vmd_perf
-
-# nvmf llvm fuzz build configuration
-autobuild_llvm_precompile
 
 # nightly tests
 bdev_fio_rw_verify_ext
@@ -90,4 +78,3 @@ vhost_scsi_cores_2ctrl
 busy
 balanced
 core_load
-zoned_fio
