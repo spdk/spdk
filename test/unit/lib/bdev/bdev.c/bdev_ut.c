@@ -4740,13 +4740,13 @@ static bool g_lock_lba_range_done;
 static bool g_unlock_lba_range_done;
 
 static void
-lock_lba_range_done(void *ctx, int status)
+lock_lba_range_done(struct lba_range *range, void *ctx, int status)
 {
 	g_lock_lba_range_done = true;
 }
 
 static void
-unlock_lba_range_done(void *ctx, int status)
+unlock_lba_range_done(struct lba_range *range, void *ctx, int status)
 {
 	g_unlock_lba_range_done = true;
 }

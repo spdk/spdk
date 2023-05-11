@@ -128,7 +128,7 @@ _bdev_init(void)
 	spdk_spin_init(&g_bdev_mgr.spinlock);
 }
 
-typedef void (*lock_range_cb)(void *ctx, int status);
+typedef void (*lock_range_cb)(struct lba_range *range, void *ctx, int status);
 
 typedef void (*bdev_copy_bounce_buffer_cpl)(void *ctx, int rc);
 
@@ -5749,7 +5749,7 @@ spdk_bdev_compare_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_cha
 }
 
 static void
-bdev_comparev_and_writev_blocks_unlocked(void *ctx, int unlock_status)
+bdev_comparev_and_writev_blocks_unlocked(struct lba_range *range, void *ctx, int unlock_status)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
 
@@ -5840,7 +5840,7 @@ bdev_compare_and_write_do_compare(void *_bdev_io)
 }
 
 static void
-bdev_comparev_and_writev_blocks_locked(void *ctx, int status)
+bdev_comparev_and_writev_blocks_locked(struct lba_range *range, void *ctx, int status)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
 
@@ -9169,7 +9169,7 @@ bdev_lock_error_cleanup_cb(struct spdk_bdev *bdev, void *_ctx, int status)
 {
 	struct locked_lba_range_ctx *ctx = _ctx;
 
-	ctx->cb_fn(ctx->cb_arg, -ENOMEM);
+	ctx->cb_fn(&ctx->range, ctx->cb_arg, -ENOMEM);
 	free(ctx);
 }
 
@@ -9202,7 +9202,7 @@ bdev_lock_lba_range_cb(struct spdk_bdev *bdev, void *_ctx, int status)
 		ctx->owner_range->owner_ch = ctx->range.owner_ch;
 	}
 
-	ctx->cb_fn(ctx->cb_arg, status);
+	ctx->cb_fn(&ctx->range, ctx->cb_arg, status);
 
 	/* Don't free the ctx here.  Its range is in the bdev's global list of
 	 * locked ranges still, and will be removed and freed when this range
@@ -9392,7 +9392,7 @@ bdev_unlock_lba_range_cb(struct spdk_bdev *bdev, void *_ctx, int status)
 	}
 	spdk_spin_unlock(&bdev->internal.spinlock);
 
-	ctx->cb_fn(ctx->cb_arg, status);
+	ctx->cb_fn(&ctx->range, ctx->cb_arg, status);
 	free(ctx);
 }
 
