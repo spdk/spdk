@@ -5037,6 +5037,89 @@ lock_lba_range_overlapped(void)
 }
 
 static void
+bdev_quiesce_done(void *ctx, int status)
+{
+	g_lock_lba_range_done = true;
+}
+
+static void
+bdev_unquiesce_done(void *ctx, int status)
+{
+	g_unlock_lba_range_done = true;
+}
+
+static void
+bdev_quiesce(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_channel *channel;
+	struct lba_range *range;
+	int ctx1;
+	int rc;
+
+	ut_init_bdev(NULL);
+	bdev = allocate_bdev("bdev0");
+
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+	channel = spdk_io_channel_get_ctx(io_ch);
+
+	g_lock_lba_range_done = false;
+	rc = spdk_bdev_quiesce(bdev, &bdev_ut_if, bdev_quiesce_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	CU_ASSERT(g_lock_lba_range_done == true);
+	range = TAILQ_FIRST(&channel->locked_ranges);
+	SPDK_CU_ASSERT_FATAL(range != NULL);
+	CU_ASSERT(range->offset == 0);
+	CU_ASSERT(range->length == bdev->blockcnt);
+	CU_ASSERT(range->owner_ch == NULL);
+
+	g_unlock_lba_range_done = false;
+	rc = spdk_bdev_unquiesce(bdev, &bdev_ut_if, bdev_unquiesce_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	spdk_delay_us(100);
+	poll_threads();
+
+	CU_ASSERT(g_unlock_lba_range_done == true);
+	CU_ASSERT(TAILQ_EMPTY(&channel->locked_ranges));
+
+	g_lock_lba_range_done = false;
+	rc = spdk_bdev_quiesce_range(bdev, &bdev_ut_if, 20, 10, bdev_quiesce_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	CU_ASSERT(g_lock_lba_range_done == true);
+	range = TAILQ_FIRST(&channel->locked_ranges);
+	SPDK_CU_ASSERT_FATAL(range != NULL);
+	CU_ASSERT(range->offset == 20);
+	CU_ASSERT(range->length == 10);
+	CU_ASSERT(range->owner_ch == NULL);
+
+	/* Unlocks must exactly match a lock. */
+	g_unlock_lba_range_done = false;
+	rc = spdk_bdev_unquiesce_range(bdev, &bdev_ut_if, 20, 10, bdev_unquiesce_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	spdk_delay_us(100);
+	poll_threads();
+
+	CU_ASSERT(g_unlock_lba_range_done == true);
+	CU_ASSERT(TAILQ_EMPTY(&channel->locked_ranges));
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	ut_fini_bdev();
+}
+
+static void
 abort_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	g_abort_done = true;
@@ -7167,6 +7250,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, lock_lba_range_check_ranges);
 	CU_ADD_TEST(suite, lock_lba_range_with_io_outstanding);
 	CU_ADD_TEST(suite, lock_lba_range_overlapped);
+	CU_ADD_TEST(suite, bdev_quiesce);
 	CU_ADD_TEST(suite, bdev_io_abort);
 	CU_ADD_TEST(suite, bdev_unmap);
 	CU_ADD_TEST(suite, bdev_write_zeroes_split_test);

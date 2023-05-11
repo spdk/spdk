@@ -9505,6 +9505,92 @@ bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 	return _bdev_unlock_lba_range(bdev, offset, length, cb_fn, cb_arg);
 }
 
+struct bdev_quiesce_ctx {
+	spdk_bdev_quiesce_cb cb_fn;
+	void *cb_arg;
+};
+
+static void
+bdev_quiesce_lock_range_cb(struct lba_range *range, void *ctx, int status)
+{
+	struct bdev_quiesce_ctx *quiesce_ctx = ctx;
+
+	if (quiesce_ctx->cb_fn != NULL) {
+		quiesce_ctx->cb_fn(quiesce_ctx->cb_arg, status);
+	}
+
+	free(quiesce_ctx);
+}
+
+static int
+_spdk_bdev_quiesce(struct spdk_bdev *bdev, struct spdk_bdev_module *module,
+		   uint64_t offset, uint64_t length,
+		   spdk_bdev_quiesce_cb cb_fn, void *cb_arg,
+		   bool unquiesce)
+{
+	struct bdev_quiesce_ctx *quiesce_ctx;
+	int rc;
+
+	if (module != bdev->module) {
+		SPDK_ERRLOG("Bdev does not belong to specified module.\n");
+		return -EINVAL;
+	}
+
+	if (!bdev_io_valid_blocks(bdev, offset, length)) {
+		return -EINVAL;
+	}
+
+	quiesce_ctx = malloc(sizeof(*quiesce_ctx));
+	if (quiesce_ctx == NULL) {
+		return -ENOMEM;
+	}
+
+	quiesce_ctx->cb_fn = cb_fn;
+	quiesce_ctx->cb_arg = cb_arg;
+
+	if (unquiesce) {
+		rc = _bdev_unlock_lba_range(bdev, offset, length, bdev_quiesce_lock_range_cb, quiesce_ctx);
+	} else {
+		rc = _bdev_lock_lba_range(bdev, NULL, offset, length, bdev_quiesce_lock_range_cb, quiesce_ctx);
+	}
+
+	if (rc != 0) {
+		free(quiesce_ctx);
+	}
+
+	return rc;
+}
+
+int
+spdk_bdev_quiesce(struct spdk_bdev *bdev, struct spdk_bdev_module *module,
+		  spdk_bdev_quiesce_cb cb_fn, void *cb_arg)
+{
+	return _spdk_bdev_quiesce(bdev, module, 0, bdev->blockcnt, cb_fn, cb_arg, false);
+}
+
+int
+spdk_bdev_unquiesce(struct spdk_bdev *bdev, struct spdk_bdev_module *module,
+		    spdk_bdev_quiesce_cb cb_fn, void *cb_arg)
+{
+	return _spdk_bdev_quiesce(bdev, module, 0, bdev->blockcnt, cb_fn, cb_arg, true);
+}
+
+int
+spdk_bdev_quiesce_range(struct spdk_bdev *bdev, struct spdk_bdev_module *module,
+			uint64_t offset, uint64_t length,
+			spdk_bdev_quiesce_cb cb_fn, void *cb_arg)
+{
+	return _spdk_bdev_quiesce(bdev, module, offset, length, cb_fn, cb_arg, false);
+}
+
+int
+spdk_bdev_unquiesce_range(struct spdk_bdev *bdev, struct spdk_bdev_module *module,
+			  uint64_t offset, uint64_t length,
+			  spdk_bdev_quiesce_cb cb_fn, void *cb_arg)
+{
+	return _spdk_bdev_quiesce(bdev, module, offset, length, cb_fn, cb_arg, true);
+}
+
 int
 spdk_bdev_get_memory_domains(struct spdk_bdev *bdev, struct spdk_memory_domain **domains,
 			     int array_size)

@@ -13,6 +13,10 @@ function requires a bdev descriptor to be passed and the claim is automatically 
 descriptor is closed. It allows bdev modules to claim bdevs as a single writer, multiple writers, or
 multiple readers.
 
+New APIs `spdk_bdev_quiesce`, `spdk_bdev_unquiesce`, `spdk_bdev_quiesce_range` and
+`spdk_bdev_unquiesce_range` were added. These allow I/O to be quiesced on an entire bdev or
+a specified LBA range.
+
 ### env
 
 New functions `spdk_env_get_main_core` and `spdk_env_get_cpuset` were added.

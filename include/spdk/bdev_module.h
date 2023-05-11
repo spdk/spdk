@@ -1682,6 +1682,78 @@ enum spdk_bdev_reset_stat_mode {
  */
 void spdk_bdev_reset_io_stat(struct spdk_bdev_io_stat *stat, enum spdk_bdev_reset_stat_mode mode);
 
+typedef void (*spdk_bdev_quiesce_cb)(void *ctx, int status);
+
+/**
+ * Quiesce a bdev. All I/O submitted after this function is called will be queued until
+ * the bdev is unquiesced. A callback will be called when all outstanding I/O on this bdev
+ * submitted before calling this function have completed.
+ *
+ * Only the module that registered the bdev may call this function.
+ *
+ * \param bdev Block device.
+ * \param module The module that registered the bdev.
+ * \param cb_fn Callback function to be called when the bdev is quiesced. Optional.
+ * \param cb_arg Argument to be supplied to cb_fn.
+ *
+ * \return 0 on success, or suitable errno value otherwise.
+ */
+int spdk_bdev_quiesce(struct spdk_bdev *bdev, struct spdk_bdev_module *module,
+		      spdk_bdev_quiesce_cb cb_fn, void *cb_arg);
+
+/**
+ * Unquiesce a previously quiesced bdev. All I/O queued after the bdev was quiesced
+ * will be submitted.
+ *
+ * Only the module that registered the bdev may call this function.
+ *
+ * \param bdev Block device.
+ * \param module The module that registered the bdev.
+ * \param cb_fn Callback function to be called when the bdev is unquiesced. Optional.
+ * \param cb_arg Argument to be supplied to cb_fn.
+ *
+ * \return 0 on success, or suitable errno value otherwise.
+ */
+int spdk_bdev_unquiesce(struct spdk_bdev *bdev, struct spdk_bdev_module *module,
+			spdk_bdev_quiesce_cb cb_fn, void *cb_arg);
+
+/**
+ * Quiesce a bdev LBA range.
+ * Same as spdk_bdev_quiesce() but limited to the specified LBA range.
+ *
+ * \param bdev Block device.
+ * \param module The module that registered the bdev.
+ * \param offset The offset of the start of the range, in blocks,
+ *               from the start of the block device.
+ * \param length The length of the range, in blocks.
+ * \param cb_fn Callback function to be called when the range is quiesced. Optional.
+ * \param cb_arg Argument to be supplied to cb_fn.
+ *
+ * \return 0 on success, or suitable errno value otherwise.
+ */
+int spdk_bdev_quiesce_range(struct spdk_bdev *bdev, struct spdk_bdev_module *module,
+			    uint64_t offset, uint64_t length,
+			    spdk_bdev_quiesce_cb cb_fn, void *cb_arg);
+
+/**
+ * Unquiesce a previously quiesced bdev LBA range.
+ * Same as spdk_bdev_unquiesce() but limited to the specified LBA range.
+ * The specified range must match exactly a previously quiesced LBA range.
+ *
+ * \param bdev Block device.
+ * \param module The module that registered the bdev.
+ * \param offset The offset of the start of the range, in blocks,
+ *               from the start of the block device.
+ * \param length The length of the range, in blocks.
+ * \param cb_fn Callback function to be called when the range is unquiesced. Optional.
+ * \param cb_arg Argument to be supplied to cb_fn.
+ *
+ * \return 0 on success, or suitable errno value otherwise.
+ */
+int spdk_bdev_unquiesce_range(struct spdk_bdev *bdev, struct spdk_bdev_module *module,
+			      uint64_t offset, uint64_t length,
+			      spdk_bdev_quiesce_cb cb_fn, void *cb_arg);
+
 /*
  *  Macro used to register module for later initialization.
  */
