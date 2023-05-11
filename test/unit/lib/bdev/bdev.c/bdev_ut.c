@@ -5081,6 +5081,11 @@ bdev_quiesce(void)
 	CU_ASSERT(range->offset == 0);
 	CU_ASSERT(range->length == bdev->blockcnt);
 	CU_ASSERT(range->owner_ch == NULL);
+	range = TAILQ_FIRST(&bdev_ut_if.internal.quiesced_ranges);
+	SPDK_CU_ASSERT_FATAL(range != NULL);
+	CU_ASSERT(range->offset == 0);
+	CU_ASSERT(range->length == bdev->blockcnt);
+	CU_ASSERT(range->owner_ch == NULL);
 
 	g_unlock_lba_range_done = false;
 	rc = spdk_bdev_unquiesce(bdev, &bdev_ut_if, bdev_unquiesce_done, &ctx1);
@@ -5090,6 +5095,7 @@ bdev_quiesce(void)
 
 	CU_ASSERT(g_unlock_lba_range_done == true);
 	CU_ASSERT(TAILQ_EMPTY(&channel->locked_ranges));
+	CU_ASSERT(TAILQ_EMPTY(&bdev_ut_if.internal.quiesced_ranges));
 
 	g_lock_lba_range_done = false;
 	rc = spdk_bdev_quiesce_range(bdev, &bdev_ut_if, 20, 10, bdev_quiesce_done, &ctx1);
@@ -5102,9 +5108,18 @@ bdev_quiesce(void)
 	CU_ASSERT(range->offset == 20);
 	CU_ASSERT(range->length == 10);
 	CU_ASSERT(range->owner_ch == NULL);
+	range = TAILQ_FIRST(&bdev_ut_if.internal.quiesced_ranges);
+	SPDK_CU_ASSERT_FATAL(range != NULL);
+	CU_ASSERT(range->offset == 20);
+	CU_ASSERT(range->length == 10);
+	CU_ASSERT(range->owner_ch == NULL);
 
 	/* Unlocks must exactly match a lock. */
 	g_unlock_lba_range_done = false;
+	rc = spdk_bdev_unquiesce_range(bdev, &bdev_ut_if, 20, 1, bdev_unquiesce_done, &ctx1);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(g_unlock_lba_range_done == false);
+
 	rc = spdk_bdev_unquiesce_range(bdev, &bdev_ut_if, 20, 10, bdev_unquiesce_done, &ctx1);
 	CU_ASSERT(rc == 0);
 	spdk_delay_us(100);
@@ -5112,6 +5127,7 @@ bdev_quiesce(void)
 
 	CU_ASSERT(g_unlock_lba_range_done == true);
 	CU_ASSERT(TAILQ_EMPTY(&channel->locked_ranges));
+	CU_ASSERT(TAILQ_EMPTY(&bdev_ut_if.internal.quiesced_ranges));
 
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);

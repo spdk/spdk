@@ -147,7 +147,8 @@ struct spdk_bdev_module {
 	 */
 	struct __bdev_module_internal_fields {
 		/**
-		 * Protects action_in_progress. Take no locks while holding this one.
+		 * Protects action_in_progress and quiesced_ranges.
+		 * Take no locks while holding this one.
 		 */
 		struct spdk_spinlock spinlock;
 
@@ -158,6 +159,11 @@ struct spdk_bdev_module {
 		 * \note Used internally by bdev subsystem, don't change this value in bdev module.
 		 */
 		uint32_t action_in_progress;
+
+		/**
+		 * List of quiesced lba ranges in all bdevs of this module.
+		 */
+		TAILQ_HEAD(, lba_range) quiesced_ranges;
 
 		TAILQ_ENTRY(spdk_bdev_module) tailq;
 	} internal;

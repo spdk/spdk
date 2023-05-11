@@ -140,6 +140,7 @@ struct lba_range {
 	struct spdk_thread		*owner_thread;
 	struct spdk_bdev_channel	*owner_ch;
 	TAILQ_ENTRY(lba_range)		tailq;
+	TAILQ_ENTRY(lba_range)		tailq_module;
 };
 
 static struct spdk_bdev_opts	g_bdev_opts = {
@@ -8592,6 +8593,7 @@ spdk_bdev_module_list_add(struct spdk_bdev_module *bdev_module)
 	}
 
 	spdk_spin_init(&bdev_module->internal.spinlock);
+	TAILQ_INIT(&bdev_module->internal.quiesced_ranges);
 
 	/*
 	 * Modules with examine callbacks must be initialized first, so they are
@@ -9511,7 +9513,7 @@ struct bdev_quiesce_ctx {
 };
 
 static void
-bdev_quiesce_lock_range_cb(struct lba_range *range, void *ctx, int status)
+bdev_unquiesce_range_unlocked(struct lba_range *range, void *ctx, int status)
 {
 	struct bdev_quiesce_ctx *quiesce_ctx = ctx;
 
@@ -9519,6 +9521,26 @@ bdev_quiesce_lock_range_cb(struct lba_range *range, void *ctx, int status)
 		quiesce_ctx->cb_fn(quiesce_ctx->cb_arg, status);
 	}
 
+	free(quiesce_ctx);
+}
+
+static void
+bdev_quiesce_range_locked(struct lba_range *range, void *ctx, int status)
+{
+	struct bdev_quiesce_ctx *quiesce_ctx = ctx;
+	struct spdk_bdev_module *module = range->bdev->module;
+
+	if (status != 0) {
+		goto out;
+	}
+
+	spdk_spin_lock(&module->internal.spinlock);
+	TAILQ_INSERT_TAIL(&module->internal.quiesced_ranges, range, tailq_module);
+	spdk_spin_unlock(&module->internal.spinlock);
+out:
+	if (quiesce_ctx->cb_fn != NULL) {
+		quiesce_ctx->cb_fn(quiesce_ctx->cb_arg, status);
+	}
 	free(quiesce_ctx);
 }
 
@@ -9549,9 +9571,29 @@ _spdk_bdev_quiesce(struct spdk_bdev *bdev, struct spdk_bdev_module *module,
 	quiesce_ctx->cb_arg = cb_arg;
 
 	if (unquiesce) {
-		rc = _bdev_unlock_lba_range(bdev, offset, length, bdev_quiesce_lock_range_cb, quiesce_ctx);
+		struct lba_range *range;
+
+		/* Make sure the specified range is actually quiesced in the specified module and
+		 * then remove it from the list. Note that the range must match exactly.
+		 */
+		spdk_spin_lock(&module->internal.spinlock);
+		TAILQ_FOREACH(range, &module->internal.quiesced_ranges, tailq_module) {
+			if (range->bdev == bdev && range->offset == offset && range->length == length) {
+				TAILQ_REMOVE(&module->internal.quiesced_ranges, range, tailq_module);
+				break;
+			}
+		}
+		spdk_spin_unlock(&module->internal.spinlock);
+
+		if (range == NULL) {
+			SPDK_ERRLOG("The range to unquiesce was not found.\n");
+			free(quiesce_ctx);
+			return -EINVAL;
+		}
+
+		rc = _bdev_unlock_lba_range(bdev, offset, length, bdev_unquiesce_range_unlocked, quiesce_ctx);
 	} else {
-		rc = _bdev_lock_lba_range(bdev, NULL, offset, length, bdev_quiesce_lock_range_cb, quiesce_ctx);
+		rc = _bdev_lock_lba_range(bdev, NULL, offset, length, bdev_quiesce_range_locked, quiesce_ctx);
 	}
 
 	if (rc != 0) {
