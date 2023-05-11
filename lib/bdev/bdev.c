@@ -9438,35 +9438,17 @@ bdev_unlock_lba_range_get_channel(struct spdk_bdev_channel_iter *i, struct spdk_
 }
 
 static int
-_bdev_unlock_lba_range(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch,
-		       uint64_t offset, uint64_t length,
+_bdev_unlock_lba_range(struct spdk_bdev *bdev, uint64_t offset, uint64_t length,
 		       lock_range_cb cb_fn, void *cb_arg)
 {
 	struct locked_lba_range_ctx *ctx;
 	struct lba_range *range;
-	bool range_found = false;
-
-	/* Let's make sure the specified channel actually has a lock on
-	 * the specified range.  Note that the range must match exactly.
-	 */
-	TAILQ_FOREACH(range, &ch->locked_ranges, tailq) {
-		if (range->offset == offset && range->length == length &&
-		    range->owner_ch == ch && range->locked_ctx == cb_arg) {
-			range_found = true;
-			break;
-		}
-	}
-
-	if (!range_found) {
-		return -EINVAL;
-	}
 
 	spdk_spin_lock(&bdev->internal.spinlock);
-	/* We confirmed that this channel has locked the specified range.  To
-	 * start the unlock the process, we find the range in the bdev's locked_ranges
-	 * and remove it.  This ensures new channels don't inherit the locked range.
-	 * Then we will send a message to each channel (including the one specified
-	 * here) to remove the range from its per-channel list.
+	/* To start the unlock the process, we find the range in the bdev's locked_ranges
+	 * and remove it. This ensures new channels don't inherit the locked range.
+	 * Then we will send a message to each channel to remove the range from its
+	 * per-channel list.
 	 */
 	TAILQ_FOREACH(range, &bdev->internal.locked_ranges, tailq) {
 		if (range->offset == offset && range->length == length &&
@@ -9498,8 +9480,25 @@ bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_channel *ch = __io_ch_to_bdev_ch(_ch);
+	struct lba_range *range;
+	bool range_found = false;
 
-	return _bdev_unlock_lba_range(bdev, ch, offset, length, cb_fn, cb_arg);
+	/* Let's make sure the specified channel actually has a lock on
+	 * the specified range.  Note that the range must match exactly.
+	 */
+	TAILQ_FOREACH(range, &ch->locked_ranges, tailq) {
+		if (range->offset == offset && range->length == length &&
+		    range->owner_ch == ch && range->locked_ctx == cb_arg) {
+			range_found = true;
+			break;
+		}
+	}
+
+	if (!range_found) {
+		return -EINVAL;
+	}
+
+	return _bdev_unlock_lba_range(bdev, offset, length, cb_fn, cb_arg);
 }
 
 int
