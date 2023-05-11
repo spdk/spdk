@@ -505,13 +505,18 @@ test_nvme_pcie_qpair_build_metadata(void)
 	req.payload.md = (void *)0xDEADBEE0;
 	req.md_offset = 0;
 	req.md_size = 4096;
+	/* The nvme_pcie_qpair_build_metadata() function expects the cmd.psdt
+	 * is set to SPDK_NVME_PSDT_SGL_MPTR_CONTIG, and then if metadata is
+	 * built using SGL, cmd.psdt is changed to SPDK_NVME_PSDT_SGL_MPTR_SGL
+	 * by this function. We need to verify if this indeed is the case.
+	 */
 	req.cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
 	tr.prp_sgl_bus_addr = 0xDBADBEEF;
 	MOCK_SET(spdk_vtophys, 0xDCADBEE0);
 
 	rc = nvme_pcie_qpair_build_metadata(qpair, &tr, true, true, true);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(req.cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_SGL);
+	CU_ASSERT(req.cmd.psdt == SPDK_NVME_PSDT_SGL_MPTR_SGL);
 	CU_ASSERT(tr.meta_sgl.address == 0xDCADBEE0);
 	CU_ASSERT(tr.meta_sgl.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
 	CU_ASSERT(tr.meta_sgl.unkeyed.length == 4096);
@@ -532,6 +537,19 @@ test_nvme_pcie_qpair_build_metadata(void)
 
 	rc = nvme_pcie_qpair_build_metadata(qpair, &tr, false, false, true);
 	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.mptr == 0xDDADBEE0);
+
+	/* Build non sgl metadata while sgls are supported */
+	memset(&tr.meta_sgl, 0, sizeof(tr.meta_sgl));
+	/* If SGLs are supported, but not in metadata, the cmd.psdt
+	 * shall not be changed to SPDK_NVME_PSDT_SGL_MPTR_SGL
+	 */
+	req.cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
+	rc = nvme_pcie_qpair_build_metadata(qpair, &tr, true, false, true);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tr.meta_sgl.address == 0);
+	CU_ASSERT(tr.meta_sgl.unkeyed.length == 0);
+	CU_ASSERT(req.cmd.psdt == SPDK_NVME_PSDT_SGL_MPTR_CONTIG);
 	CU_ASSERT(req.cmd.mptr == 0xDDADBEE0);
 
 	/* Non-IOVA contiguous metadata buffers should fail. */
