@@ -9531,17 +9531,23 @@ bdev_quiesce_range_locked(struct lba_range *range, void *ctx, int status)
 	struct spdk_bdev_module *module = range->bdev->module;
 
 	if (status != 0) {
-		goto out;
+		if (quiesce_ctx->cb_fn != NULL) {
+			quiesce_ctx->cb_fn(quiesce_ctx->cb_arg, status);
+		}
+		free(quiesce_ctx);
+		return;
 	}
 
 	spdk_spin_lock(&module->internal.spinlock);
 	TAILQ_INSERT_TAIL(&module->internal.quiesced_ranges, range, tailq_module);
 	spdk_spin_unlock(&module->internal.spinlock);
-out:
+
 	if (quiesce_ctx->cb_fn != NULL) {
 		quiesce_ctx->cb_fn(quiesce_ctx->cb_arg, status);
+		quiesce_ctx->cb_fn = NULL;
+		quiesce_ctx->cb_arg = NULL;
 	}
-	free(quiesce_ctx);
+	/* quiesce_ctx will be freed on unquiesce */
 }
 
 static int
@@ -9562,14 +9568,6 @@ _spdk_bdev_quiesce(struct spdk_bdev *bdev, struct spdk_bdev_module *module,
 		return -EINVAL;
 	}
 
-	quiesce_ctx = malloc(sizeof(*quiesce_ctx));
-	if (quiesce_ctx == NULL) {
-		return -ENOMEM;
-	}
-
-	quiesce_ctx->cb_fn = cb_fn;
-	quiesce_ctx->cb_arg = cb_arg;
-
 	if (unquiesce) {
 		struct lba_range *range;
 
@@ -9587,17 +9585,27 @@ _spdk_bdev_quiesce(struct spdk_bdev *bdev, struct spdk_bdev_module *module,
 
 		if (range == NULL) {
 			SPDK_ERRLOG("The range to unquiesce was not found.\n");
-			free(quiesce_ctx);
 			return -EINVAL;
 		}
 
+		quiesce_ctx = range->locked_ctx;
+		quiesce_ctx->cb_fn = cb_fn;
+		quiesce_ctx->cb_arg = cb_arg;
+
 		rc = _bdev_unlock_lba_range(bdev, offset, length, bdev_unquiesce_range_unlocked, quiesce_ctx);
 	} else {
-		rc = _bdev_lock_lba_range(bdev, NULL, offset, length, bdev_quiesce_range_locked, quiesce_ctx);
-	}
+		quiesce_ctx = malloc(sizeof(*quiesce_ctx));
+		if (quiesce_ctx == NULL) {
+			return -ENOMEM;
+		}
 
-	if (rc != 0) {
-		free(quiesce_ctx);
+		quiesce_ctx->cb_fn = cb_fn;
+		quiesce_ctx->cb_arg = cb_arg;
+
+		rc = _bdev_lock_lba_range(bdev, NULL, offset, length, bdev_quiesce_range_locked, quiesce_ctx);
+		if (rc != 0) {
+			free(quiesce_ctx);
+		}
 	}
 
 	return rc;
