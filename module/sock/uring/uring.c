@@ -1216,14 +1216,12 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 			break;
 		}
 
-		if (spdk_unlikely(sock->base.cb_fn == NULL) ||
-		    (sock->recv_pipe == NULL || spdk_pipe_reader_bytes_available(sock->recv_pipe) == 0)) {
+		/* If the socket's cb_fn is NULL, do not add it to socks array */
+		if (spdk_unlikely(sock->base.cb_fn == NULL)) {
+			assert(sock->pending_recv == true);
 			sock->pending_recv = false;
 			TAILQ_REMOVE(&group->pending_recv, sock, link);
-			if (spdk_unlikely(sock->base.cb_fn == NULL)) {
-				/* If the socket's cb_fn is NULL, do not add it to socks array */
-				continue;
-			}
+			continue;
 		}
 
 		socks[count++] = &sock->base;
