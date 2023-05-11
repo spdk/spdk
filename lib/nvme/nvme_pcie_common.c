@@ -1582,7 +1582,7 @@ static build_req_fn const g_nvme_pcie_build_req_table[][2] = {
 
 static int
 nvme_pcie_qpair_build_metadata(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr,
-			       bool sgl_supported, bool dword_aligned)
+			       bool sgl_supported, bool mptr_sgl_supported, bool dword_aligned)
 {
 	void *md_payload;
 	struct nvme_request *req = tr->req;
@@ -1596,7 +1596,7 @@ nvme_pcie_qpair_build_metadata(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 		}
 
 		mapping_length = req->md_size;
-		if (sgl_supported && dword_aligned) {
+		if (sgl_supported && mptr_sgl_supported && dword_aligned) {
 			assert(req->cmd.psdt == SPDK_NVME_PSDT_SGL_MPTR_CONTIG);
 			req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_SGL;
 
@@ -1632,6 +1632,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
 	enum nvme_payload_type	payload_type;
 	bool			sgl_supported;
+	bool			mptr_sgl_supported;
 	bool			dword_aligned = true;
 
 	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
@@ -1662,6 +1663,8 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 		 */
 		sgl_supported = (ctrlr->flags & SPDK_NVME_CTRLR_SGL_SUPPORTED) != 0 &&
 				!nvme_qpair_is_admin_queue(qpair);
+		mptr_sgl_supported = (ctrlr->flags & SPDK_NVME_CTRLR_MPTR_SGL_SUPPORTED) != 0 &&
+				     !nvme_qpair_is_admin_queue(qpair);
 
 		if (sgl_supported) {
 			/* Don't use SGL for DSM command */
@@ -1686,7 +1689,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 			goto exit;
 		}
 
-		rc = nvme_pcie_qpair_build_metadata(qpair, tr, sgl_supported, dword_aligned);
+		rc = nvme_pcie_qpair_build_metadata(qpair, tr, sgl_supported, mptr_sgl_supported, dword_aligned);
 		if (rc < 0) {
 			assert(rc == -EFAULT);
 			rc = 0;
