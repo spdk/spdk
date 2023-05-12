@@ -261,6 +261,23 @@ nvme_bdev_ctrlr_get_ctrlr(struct nvme_bdev_ctrlr *nbdev_ctrlr,
 	return nvme_ctrlr;
 }
 
+struct nvme_ctrlr *
+nvme_bdev_ctrlr_get_ctrlr_by_id(struct nvme_bdev_ctrlr *nbdev_ctrlr,
+				uint16_t cntlid)
+{
+	struct nvme_ctrlr *nvme_ctrlr;
+	const struct spdk_nvme_ctrlr_data *cdata;
+
+	TAILQ_FOREACH(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
+		cdata = spdk_nvme_ctrlr_get_data(nvme_ctrlr->ctrlr);
+		if (cdata->cntlid == cntlid) {
+			break;
+		}
+	}
+
+	return nvme_ctrlr;
+}
+
 static struct nvme_bdev *
 nvme_bdev_ctrlr_get_bdev(struct nvme_bdev_ctrlr *nbdev_ctrlr, uint32_t nsid)
 {

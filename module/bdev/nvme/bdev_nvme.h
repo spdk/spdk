@@ -240,6 +240,9 @@ void nvme_io_path_info_json(struct spdk_json_write_ctx *w, struct nvme_io_path *
 
 struct nvme_ctrlr *nvme_ctrlr_get_by_name(const char *name);
 
+struct nvme_ctrlr *nvme_bdev_ctrlr_get_ctrlr_by_id(struct nvme_bdev_ctrlr *nbdev_ctrlr,
+		uint16_t cntlid);
+
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get_by_name(const char *name);
 
 typedef void (*nvme_bdev_ctrlr_for_each_fn)(struct nvme_bdev_ctrlr *nbdev_ctrlr, void *ctx);
