@@ -484,7 +484,7 @@ process_ctrlr_init(struct nvme_ctrlr *ctrlr)
 		ctrlr->state = NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0;
 		break;
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1:
-		if (csts.bits.rdy) {
+		if (csts.bits.rdy || csts.bits.cfs) {
 			cc.bits.en = 0;
 			nvme_ctrlr_set_cc(ctrlr, &cc);
 			ctrlr->state = NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0;
@@ -505,6 +505,8 @@ process_ctrlr_init(struct nvme_ctrlr *ctrlr)
 		nvme_ctrlr_set_aqa(ctrlr, &aqa);
 
 		cc.bits.en = 1;
+		cc.bits.iocqes = 4;
+		cc.bits.iosqes = 6;
 		nvme_ctrlr_set_cc(ctrlr, &cc);
 		ctrlr->state = NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1;
 		break;
