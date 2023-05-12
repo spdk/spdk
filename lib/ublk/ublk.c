@@ -403,6 +403,11 @@ ublk_poller_register(void *args)
 	int rc;
 
 	assert(spdk_get_thread() == poll_group->ublk_thread);
+	/* Bind ublk spdk_thread to current CPU core in order to avoid thread context switch
+	 * during uring processing as required by ublk kernel.
+	 */
+	spdk_thread_bind(spdk_get_thread(), true);
+
 	TAILQ_INIT(&poll_group->queue_list);
 	poll_group->ublk_poller = SPDK_POLLER_REGISTER(ublk_poll, poll_group, 0);
 	rc = spdk_iobuf_channel_init(&poll_group->iobuf_ch, "ublk",
@@ -487,6 +492,7 @@ ublk_thread_exit(void *args)
 		if (g_ublk_tgt.poll_group[i].ublk_thread == ublk_thread) {
 			spdk_poller_unregister(&g_ublk_tgt.poll_group[i].ublk_poller);
 			spdk_iobuf_channel_fini(&g_ublk_tgt.poll_group[i].iobuf_ch);
+			spdk_thread_bind(ublk_thread, false);
 			spdk_thread_exit(ublk_thread);
 		}
 	}
