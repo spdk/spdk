@@ -295,10 +295,6 @@ if [ "$cov_avail" = "yes" ] && ! [[ "$CC_TYPE" == *"clang"* ]]; then
 	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info "$rootdir/test/*" -o $UT_COVERAGE/ut_cov_unit.info
 	rm -f $UT_COVERAGE/ut_cov_base.info $UT_COVERAGE/ut_cov_test.info
 	genhtml $UT_COVERAGE/ut_cov_unit.info --output-directory $UT_COVERAGE
-	# git -C option not used for compatibility reasons
-	owner=$(stat -c "%U" $rootdir)
-	cd $rootdir
-	sudo -u $owner git clean -f "*.gcda"
 fi
 
 set +x
