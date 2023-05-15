@@ -246,6 +246,7 @@ struct raid_io_info {
 	void *src_md_buf;
 	void *dest_md_buf;
 	size_t buf_size;
+	size_t buf_md_size;
 	void *parity_buf;
 	void *reference_parity;
 	size_t parity_buf_size;
@@ -666,6 +667,11 @@ test_raid5f_write_request(struct raid_io_info *io_info)
 		offset = i * strip_len;
 
 		memcpy(io_info->dest_buf + offset, io_info->src_buf + offset, strip_len);
+		if (io_info->dest_md_buf) {
+			strip_len = raid_bdev->strip_size * raid_bdev->bdev.md_len;
+			offset = i * strip_len;
+			memcpy(io_info->dest_md_buf + offset, io_info->src_md_buf + offset, strip_len);
+		}
 	}
 
 	if (io_info->status == SPDK_BDEV_IO_STATUS_SUCCESS) {
@@ -776,6 +782,7 @@ init_io_info(struct raid_io_info *io_info, struct raid5f_info *r5f_info,
 	io_info->src_md_buf = src_md_buf;
 	io_info->dest_md_buf = dest_md_buf;
 	io_info->buf_size = buf_size;
+	io_info->buf_md_size = buf_md_size;
 	io_info->status = SPDK_BDEV_IO_STATUS_PENDING;
 
 	TAILQ_INIT(&io_info->bdev_io_queue);
@@ -883,11 +890,11 @@ test_raid5f_submit_rw_request(struct raid5f_info *r5f_info, struct raid_bdev_io_
 		CU_FAIL_FATAL("unsupported io_type");
 	}
 
-	assert(io_info.status == SPDK_BDEV_IO_STATUS_SUCCESS);
-	assert(memcmp(io_info.src_buf, io_info.dest_buf, io_info.buf_size) == 0);
-
 	CU_ASSERT(io_info.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(memcmp(io_info.src_buf, io_info.dest_buf, io_info.buf_size) == 0);
+	if (io_info.buf_md_size) {
+		CU_ASSERT(memcmp(io_info.src_md_buf, io_info.dest_md_buf, io_info.buf_md_size) == 0);
+	}
 
 	deinit_io_info(&io_info);
 }
