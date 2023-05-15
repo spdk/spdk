@@ -119,11 +119,23 @@ to_blk_session(struct spdk_vhost_session *vsession)
 	return (struct spdk_vhost_blk_session *)vsession;
 }
 
-static void
-blk_task_finish(struct spdk_vhost_user_blk_task *task)
+static inline void
+blk_task_inc_task_cnt(struct spdk_vhost_user_blk_task *task)
+{
+	task->bvsession->vsession.task_cnt++;
+}
+
+static inline void
+blk_task_dec_task_cnt(struct spdk_vhost_user_blk_task *task)
 {
 	assert(task->bvsession->vsession.task_cnt > 0);
 	task->bvsession->vsession.task_cnt--;
+}
+
+static void
+blk_task_finish(struct spdk_vhost_user_blk_task *task)
+{
+	blk_task_dec_task_cnt(task);
 	task->used = false;
 }
 
@@ -654,7 +666,7 @@ process_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
 		return;
 	}
 
-	task->bvsession->vsession.task_cnt++;
+	blk_task_inc_task_cnt(task);
 
 	blk_task_init(task);
 
@@ -719,7 +731,7 @@ process_packed_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
 					   req_idx, (req_idx + num_descs - 1) % vq->vring.size,
 					   &task->inflight_head);
 
-	task->bvsession->vsession.task_cnt++;
+	blk_task_inc_task_cnt(task);
 
 	blk_task_init(task);
 
@@ -780,7 +792,7 @@ process_packed_inflight_blk_task(struct spdk_vhost_virtqueue *vq,
 	/* It's for cleaning inflight entries */
 	task->inflight_head = req_idx;
 
-	task->bvsession->vsession.task_cnt++;
+	blk_task_inc_task_cnt(task);
 
 	blk_task_init(task);
 
