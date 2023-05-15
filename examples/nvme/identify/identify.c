@@ -1837,7 +1837,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	printf("Get LBA Status Capability:             %s\n",
 	       cdata->oacs.get_lba_status ? "Supported" : "Not Supported");
 	printf("Command & Feature Lockdown Capability: %s\n",
-	       cdata->oacs.doorbell_buffer_config ? "Supported" : "Not Supported");
+	       cdata->oacs.command_feature_lockdown ? "Supported" : "Not Supported");
 	printf("Abort Command Limit:                   %d\n", cdata->acl + 1);
 	printf("Async Event Request Limit:             %d\n", cdata->aerl + 1);
 	printf("Number of Firmware Slots:              ");
