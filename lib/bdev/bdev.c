@@ -4385,7 +4385,6 @@ bdev_channel_abort_queued_ios(struct spdk_bdev_channel *ch)
 
 	bdev_abort_all_queued_io(&shared_resource->nomem_io, ch);
 	bdev_abort_all_buf_io(mgmt_ch, ch);
-	bdev_abort_all_buf_io(mgmt_ch, ch);
 }
 
 static void
@@ -6287,7 +6286,6 @@ bdev_reset_freeze_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bd
 	}
 
 	bdev_abort_all_queued_io(&shared_resource->nomem_io, channel);
-	bdev_abort_all_buf_io(mgmt_channel, channel);
 	bdev_abort_all_buf_io(mgmt_channel, channel);
 	bdev_abort_all_queued_io(&tmp_queued, channel);
 
