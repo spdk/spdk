@@ -230,23 +230,17 @@ function setup_crypto_mlx5_conf() {
 	local key=$1
 	local block_key
 	local tweak_key
-	if [ ${#key} == 96 ]; then
-		# 96 bytes is 64 + 32 - AES_XTS_256 in hexlified format
-		# Copy first 64 chars into the 'key'. This gives 32 in the
-		# binary or 256 bit.
+	if [ ${#key} == 64 ]; then
+		# 64 bytes is 32 + 32 - AES_XTS_128 in hexlified format
+		block_key=${key:0:32}
+		tweak_key=${key:32:32}
+	elif [ ${#key} == 128 ]; then
+		# 128 bytes is 64 + 64 - AES_XTS_256 in hexlified format
 		block_key=${key:0:64}
-		# Copy the the rest of the key and pass it as the 'key2'.
-		tweak_key=${key:64:32}
-	elif [ ${#key} == 160 ]; then
-		# 160 bytes is 128 + 32 - AES_XTS_512 in hexlified format
-		# Copy first 128 chars into the 'key'. This gives 64 in the
-		# binary or 512 bit.
-		block_key=${key:0:128}
-		# Copy the the rest of the key and pass it as the 'key2'.
-		tweak_key=${key:128:32}
+		tweak_key=${key:64:64}
 	else
 		echo "ERROR: Invalid DEK size for MLX5 crypto setup: ${#key}"
-		echo "ERROR: Supported key sizes for MLX5: 96 bytes (AES_XTS_256) and 160 bytes (AES_XTS_512)."
+		echo "ERROR: Supported key sizes for MLX5: 64 bytes (AES_XTS_128) and 128 bytes (AES_XTS_256)."
 		return 1
 	fi
 
@@ -653,20 +647,11 @@ fi
 
 test_type=${1:-bdev}
 crypto_device=$2
-wcs_file=$3
-dek=$4
+dek=$3
 env_ctx=""
 wait_for_rpc=""
-if [ -n "$crypto_device" ] && [ -n "$wcs_file" ]; then
-	# We need full path here since fio perf test does 'pushd' to the test dir
-	# and crypto login of fio plugin test can fail.
-	wcs_file=$(readlink -f $wcs_file)
-	if [ -f $wcs_file ]; then
-		env_ctx="--env-context=--allow=$crypto_device,class=crypto,wcs_file=$wcs_file"
-	else
-		echo "ERROR: Credentials file $3 is not found!"
-		exit 1
-	fi
+if [ -n "$crypto_device" ]; then
+	env_ctx="--env-context=--allow=$crypto_device,class=crypto"
 fi
 if [[ $test_type == crypto_* ]]; then
 	wait_for_rpc="--wait-for-rpc"

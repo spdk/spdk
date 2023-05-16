@@ -81,9 +81,6 @@
 #define ACCEL_DPDK_CRYPTODEV_AES_CBC_KEY_LENGTH			16
 #define ACCEL_DPDK_CRYPTODEV_AES_XTS_128_BLOCK_KEY_LENGTH	16 /* AES-XTS-128 block key size. */
 #define ACCEL_DPDK_CRYPTODEV_AES_XTS_256_BLOCK_KEY_LENGTH	32 /* AES-XTS-256 block key size. */
-#define ACCEL_DPDK_CRYPTODEV_AES_XTS_512_BLOCK_KEY_LENGTH	64 /* AES-XTS-512 block key size. */
-
-#define ACCEL_DPDK_CRYPTODEV_AES_XTS_TWEAK_KEY_LENGTH		16 /* XTS part key size is always 128 bit. */
 
 /* Limit of the max memory len attached to mbuf - rte_pktmbuf_attach_extbuf has uint16_t `buf_len`
  * parameter, we use closes aligned value 32768 for better performance */
@@ -1422,15 +1419,19 @@ accel_dpdk_cryptodev_validate_parameters(enum accel_dpdk_cryptodev_driver_type d
 		}
 		break;
 	case ACCEL_DPDK_CRYPTODEV_CIPHER_AES_XTS:
+		if (key->key_size != key->key2_size) {
+			SPDK_ERRLOG("Cipher %s requires equal key and key2 sizes\n", g_cipher_names[driver]);
+			return -1;
+		}
 		switch (driver) {
 		case ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI:
-			if (key->key_size != ACCEL_DPDK_CRYPTODEV_AES_XTS_256_BLOCK_KEY_LENGTH &&
-			    key->key_size != ACCEL_DPDK_CRYPTODEV_AES_XTS_512_BLOCK_KEY_LENGTH) {
+			if (key->key_size != ACCEL_DPDK_CRYPTODEV_AES_XTS_128_BLOCK_KEY_LENGTH &&
+			    key->key_size != ACCEL_DPDK_CRYPTODEV_AES_XTS_256_BLOCK_KEY_LENGTH) {
 				SPDK_ERRLOG("Invalid key size %zu for driver %s, cipher %s, supported %d or %d\n",
 					    key->key_size, g_driver_names[ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI],
 					    g_cipher_names[ACCEL_DPDK_CRYPTODEV_CIPHER_AES_XTS],
-					    ACCEL_DPDK_CRYPTODEV_AES_XTS_256_BLOCK_KEY_LENGTH,
-					    ACCEL_DPDK_CRYPTODEV_AES_XTS_512_BLOCK_KEY_LENGTH);
+					    ACCEL_DPDK_CRYPTODEV_AES_XTS_128_BLOCK_KEY_LENGTH,
+					    ACCEL_DPDK_CRYPTODEV_AES_XTS_256_BLOCK_KEY_LENGTH);
 				return -1;
 			}
 			break;
@@ -1445,11 +1446,6 @@ accel_dpdk_cryptodev_validate_parameters(enum accel_dpdk_cryptodev_driver_type d
 		default:
 			SPDK_ERRLOG("Incorrect driver type %d\n", driver);
 			assert(0);
-			return -1;
-		}
-		if (key->key2_size != ACCEL_DPDK_CRYPTODEV_AES_XTS_TWEAK_KEY_LENGTH) {
-			SPDK_ERRLOG("Cipher %s requires key2 size %d\n",
-				    g_cipher_names[ACCEL_DPDK_CRYPTODEV_CIPHER_AES_CBC], ACCEL_DPDK_CRYPTODEV_AES_XTS_TWEAK_KEY_LENGTH);
 			return -1;
 		}
 		break;

@@ -6,6 +6,10 @@
 
 Added API `spdk_accel_submit_xor` to perform XOR.
 
+Configuration of `mlx5_pci` driver of accel_dpdk_cryptodev module was changed. Now key and key2 should have equal
+length and key size in hexlified form can be either 32 bytes for 128b XTS key or 64 bytes for 256b XTS key.
+Support of the wrapped crypto credentials mode for this driver is dropped, only plain text mode is supported.
+
 ### bdev
 
 A new API `spdk_bdev_module_claim_bdev_desc` was added. Unlike `spdk_bdev_module_claim_bdev`, this
