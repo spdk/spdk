@@ -79,6 +79,9 @@ With the removal of this deprecation, calls to vbdev modules' `examine_disk()` a
 maintainers will not need to make any changes to examine callbacks that call `spdk_bdev_register()`
 on the same thread as the examine callback uses.
 
+The `{small,large}_buf_pool_size` options in `spdk_bdev_opts` are depreacted and will be removed in
+v23.05.  Users should use `iobuf_set_options` instead.
+
 ### gpt
 
 #### `old_gpt_guid`
