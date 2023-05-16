@@ -125,3 +125,9 @@ spdk_crc32c_iov_update(struct iovec *iov, int iovcnt, uint32_t crc32c)
 
 	return crc32c;
 }
+
+uint32_t
+spdk_crc32c_nvme(const void *buf, size_t len, uint32_t crc)
+{
+	return ~(spdk_crc32c_update(buf, len, ~crc));
+}

@@ -114,6 +114,56 @@ test_crc32c(void)
 	CU_ASSERT(crc == 0x6087809A);
 }
 
+static void
+test_crc32c_nvme(void)
+{
+	unsigned int buf_size = 4096;
+	char buf[buf_size];
+	uint32_t crc;
+	unsigned int i, j;
+
+	/* All the expected CRC values are compliant with
+	* the NVM Command Set Specification 1.0c */
+
+	/* Input buffer = 0s */
+	memset(buf, 0, buf_size);
+	crc = spdk_crc32c_nvme(buf, buf_size, 0);
+	CU_ASSERT(crc == 0x98F94189);
+
+	/* Input buffer = 1s */
+	memset(buf, 0xFF, buf_size);
+	crc = spdk_crc32c_nvme(buf, buf_size, 0);
+	CU_ASSERT(crc == 0x25C1FE13);
+
+	/* Input buffer = 0x00, 0x01, 0x02, ... */
+	memset(buf, 0, buf_size);
+	j = 0;
+	for (i = 0; i < buf_size; i++) {
+		buf[i] = (char)j;
+		if (j == 0xFF) {
+			j = 0;
+		} else {
+			j++;
+		}
+	}
+	crc = spdk_crc32c_nvme(buf, buf_size, 0);
+	CU_ASSERT(crc == 0x9C71FE32);
+
+	/* Input buffer = 0xFF, 0xFE, 0xFD, ... */
+	memset(buf, 0, buf_size);
+	j = 0xFF;
+	for (i = 0; i < buf_size ; i++) {
+		buf[i] = (char)j;
+		if (j == 0) {
+			j = 0xFF;
+		} else {
+			j--;
+		}
+	}
+	crc = spdk_crc32c_nvme(buf, buf_size, 0);
+	CU_ASSERT(crc == 0x214941A8);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -126,6 +176,7 @@ main(int argc, char **argv)
 	suite = CU_add_suite("crc32c", NULL, NULL);
 
 	CU_ADD_TEST(suite, test_crc32c);
+	CU_ADD_TEST(suite, test_crc32c_nvme);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

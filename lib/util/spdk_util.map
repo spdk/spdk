@@ -62,6 +62,7 @@
 	spdk_crc32_ieee_update;
 	spdk_crc32c_update;
 	spdk_crc32c_iov_update;
+	spdk_crc32c_nvme;
 
 	# public functions in dif.h
 	spdk_dif_ctx_init;
