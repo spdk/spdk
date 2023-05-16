@@ -2850,7 +2850,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def accel_get_module_info(args):
         print_dict(rpc.accel.accel_get_module_info(args.client))
 
-    p = subparsers.add_parser('accel_get_module_info', help='Get list of valid module names and their operations.')
+    p = subparsers.add_parser('accel_get_module_info', aliases=['accel_get_engine_info'],
+                              help='Get list of valid module names and their operations.')
     p.set_defaults(func=accel_get_module_info)
 
     def accel_assign_opc(args):
@@ -2923,7 +2924,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def ioat_scan_accel_module(args):
         rpc.ioat.ioat_scan_accel_module(args.client)
 
-    p = subparsers.add_parser('ioat_scan_accel_module', help='Enable IOAT accel module offload.')
+    p = subparsers.add_parser('ioat_scan_accel_module', aliases=['ioat_scan_accel_engine'],
+                              help='Enable IOAT accel module offload.')
     p.set_defaults(func=ioat_scan_accel_module)
 
     # dpdk compressdev
@@ -2938,7 +2940,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def dsa_scan_accel_module(args):
         rpc.dsa.dsa_scan_accel_module(args.client, config_kernel_mode=args.config_kernel_mode)
 
-    p = subparsers.add_parser('dsa_scan_accel_module',
+    p = subparsers.add_parser('dsa_scan_accel_module', aliases=['dsa_scan_accel_engine'],
                               help='Set config and enable dsa accel module offload.')
     p.add_argument('-k', '--config-kernel-mode', help='Use Kernel mode dsa',
                    action='store_true', dest='config_kernel_mode')
@@ -2948,7 +2950,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def iaa_scan_accel_module(args):
         rpc.iaa.iaa_scan_accel_module(args.client)
 
-    p = subparsers.add_parser('iaa_scan_accel_module',
+    p = subparsers.add_parser('iaa_scan_accel_module', aliases=['iaa_scan_accel_engine'],
                               help='Set config and enable iaa accel module offload.')
     p.set_defaults(func=iaa_scan_accel_module)
 
