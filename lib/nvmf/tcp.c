@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2018 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019, 2020 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2022, 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/accel.h"
@@ -1535,6 +1535,13 @@ nvmf_tcp_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 
 	if (tgroup->accel_channel) {
 		spdk_put_io_channel(tgroup->accel_channel);
+	}
+
+	if (tgroup->group.transport == NULL) {
+		/* Transport can be NULL when nvmf_tcp_poll_group_create()
+		 * calls this function directly in a failure path. */
+		free(tgroup);
+		return;
 	}
 
 	ttransport = SPDK_CONTAINEROF(tgroup->group.transport, struct spdk_nvmf_tcp_transport, transport);
