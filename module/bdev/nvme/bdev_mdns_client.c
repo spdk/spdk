@@ -102,13 +102,14 @@ mdns_bdev_nvme_start_discovery(void *_entry_ctx)
 static void
 free_mdns_discovery_entry_ctx(struct mdns_discovery_ctx *ctx)
 {
-	struct mdns_discovery_entry_ctx *entry_ctx = NULL;
+	struct mdns_discovery_entry_ctx *entry_ctx, *tmp;
 
 	if (!ctx) {
 		return;
 	}
 
-	TAILQ_FOREACH(entry_ctx, &ctx->mdns_discovery_entry_ctxs, tailq) {
+	TAILQ_FOREACH_SAFE(entry_ctx, &ctx->mdns_discovery_entry_ctxs, tailq, tmp) {
+		TAILQ_REMOVE(&ctx->mdns_discovery_entry_ctxs, entry_ctx, tailq);
 		free(entry_ctx);
 	}
 }
