@@ -204,9 +204,9 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		if [[ $SPDK_TEST_NVME_PMR -eq 1 ]]; then
 			run_test "nvme_pmr" $rootdir/test/nvme/nvme_pmr.sh
 		fi
-		if [[ $SPDK_TEST_NVME_SCC -eq 1 ]]; then
-			run_test "nvme_scc" $rootdir/test/nvme/nvme_scc.sh
-		fi
+
+		run_test "nvme_scc" $rootdir/test/nvme/nvme_scc.sh
+
 		if [[ $SPDK_TEST_NVME_BP -eq 1 ]]; then
 			run_test "nvme_bp" $rootdir/test/nvme/nvme_bp.sh
 		fi

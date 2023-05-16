@@ -167,12 +167,25 @@ get_ctratt() {
 	get_nvme_ctrl_feature "$ctrl" ctratt
 }
 
+get_oncs() {
+	local ctrl=$1
+	get_nvme_ctrl_feature "$ctrl" oncs
+}
+
 ctrl_has_fdp() {
 	local ctrl=$1 ctratt
 
 	ctratt=$(get_ctratt "$ctrl")
 	# See include/spdk/nvme_spec.h
 	((ctratt & 1 << 19))
+}
+
+ctrl_has_scc() {
+	local ctrl=$1 oncs
+
+	oncs=$(get_oncs "$ctrl")
+	# See include/spdk/nvme_spec.h
+	((oncs & 1 << 8))
 }
 
 get_ctrls_with_feature() {

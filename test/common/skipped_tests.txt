@@ -9,10 +9,6 @@ ftl_fio_nightly
 # Waiting for test refactor
 iscsi_tgt_fio_remote_nvme
 
-# Waiting on SCC support in CI
-nvme_scc
-nvme_simple_copy
-
 # Waiting on Boot Partition support in CI
 nvme_bp
 nvme_boot_partition
