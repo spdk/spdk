@@ -42,13 +42,6 @@ struct spdk_dif_ctx_init_ext_opts {
 } __attribute__((packed));
 SPDK_STATIC_ASSERT(sizeof(struct spdk_dif_ctx_init_ext_opts) == 12, "Incorrect size");
 
-struct spdk_dif {
-	uint16_t guard;
-	uint16_t app_tag;
-	uint32_t ref_tag;
-};
-SPDK_STATIC_ASSERT(sizeof(struct spdk_dif) == 8, "Incorrect size");
-
 /** DIF context information */
 struct spdk_dif_ctx {
 	/** Block size */

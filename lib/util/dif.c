@@ -10,6 +10,13 @@
 #include "spdk/log.h"
 #include "spdk/util.h"
 
+struct spdk_dif {
+	uint16_t guard;
+	uint16_t app_tag;
+	uint32_t ref_tag;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_dif) == 8, "Incorrect size");
+
 /* Context to iterate or create a iovec array.
  * Each sgl is either iterated or created at a time.
  */
