@@ -28,7 +28,7 @@ Please see: [UPDATE ON PMDK AND OUR LONG TERM SUPPORT STRATEGY](https://pmem.io/
 
 #### `vtune_support`
 
-VTune integration is in now deprecated and will be removed in SPDK 23.05.
+VTune integration is in now deprecated and will be removed in the 23.09 release.
 
 ### nvmf
 
