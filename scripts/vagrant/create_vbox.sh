@@ -22,7 +22,7 @@ display_help() {
 	echo
 	echo " Usage: ${0##*/} [-b nvme-backing-file] [-n <num-cpus>] [-s <ram-size>] [-x <http-proxy>] [-hvrldcufaoH] <distro>"
 	echo
-	echo "  distro = <centos7 | ubuntu2004 | ubuntu2204 | fedora37 | fedora38 | freebsd12 | freebsd13 | arch | clearlinux | rocky8>"
+	echo "  distro = <centos7 | ubuntu2004 | ubuntu2204 | fedora37 | fedora38 | freebsd12 | freebsd13 | arch | clearlinux | rocky8 | rocky9>"
 	echo
 	echo "  -s <ram-size> in MB             Default: ${SPDK_VAGRANT_VMRAM}"
 	echo "  -n <num-cpus> 1 to 4            Default: ${SPDK_VAGRANT_VMCPU}"
@@ -187,7 +187,7 @@ case "${SPDK_VAGRANT_DISTRO}" in
 	ubuntu2[02]04) ;&
 	fedora3[7-8]) ;&
 	freebsd1[2-3]) ;&
-	rocky8) ;&
+	rocky[89]) ;&
 	arch | clearlinux) ;;
 	*)
 		if [[ $FORCE_DISTRO == false ]]; then
