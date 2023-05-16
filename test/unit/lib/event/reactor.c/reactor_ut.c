@@ -16,7 +16,10 @@
 static void
 test_create_reactor(void)
 {
-	struct spdk_reactor reactor = {};
+	/* See SPDK issue #3004.  Seems like a bug with gcc + asan on Fedora 38, so
+	 * we need to explicitly align the variable here.
+	 */
+	struct spdk_reactor reactor __attribute__((aligned(SPDK_CACHE_LINE_SIZE))) = {};
 
 	g_reactors = &reactor;
 	g_reactor_count = 1;
