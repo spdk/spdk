@@ -301,7 +301,7 @@ dif_guard_seed_test(void)
 	CU_ASSERT(rc == 0);
 
 	/* Guard should be zero if the block is all zero and seed is not added. */
-	guard = from_be16(&dif->guard);
+	guard = from_be16(&dif->g16.guard);
 	CU_ASSERT(guard == 0);
 
 	rc = spdk_dif_verify(&iov, 1, 1, &ctx, &err_blk);
@@ -315,7 +315,7 @@ dif_guard_seed_test(void)
 	CU_ASSERT(rc == 0);
 
 	/* Guard should not be zero if the block is all zero but seed is added. */
-	guard = from_be16(&dif->guard);
+	guard = from_be16(&dif->g16.guard);
 	CU_ASSERT(guard != 0);
 
 	rc = spdk_dif_verify(&iov, 1, 1, &ctx, &err_blk);

@@ -11,11 +11,15 @@
 #include "spdk/util.h"
 
 struct spdk_dif {
-	uint16_t guard;
-	uint16_t app_tag;
-	uint32_t ref_tag;
+	union {
+		struct {
+			uint16_t guard;
+			uint16_t app_tag;
+			uint32_t stor_ref_space;
+		} g16;
+	};
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_dif) == 8, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(((struct spdk_dif *)0)->g16) == 8, "Incorrect size");
 
 /* Context to iterate or create a iovec array.
  * Each sgl is either iterated or created at a time.
@@ -217,6 +221,36 @@ _get_guard_interval(uint32_t block_size, uint32_t md_size, bool dif_loc, bool md
 	}
 }
 
+static uint8_t
+_dif_sizeof_guard(enum spdk_dif_pi_format dif_pi_format)
+{
+	return sizeof(((struct spdk_dif *)0)->g16.guard);
+}
+
+static uint8_t
+_dif_offsetof_apptag(enum spdk_dif_pi_format dif_pi_format)
+{
+	return _dif_sizeof_guard(dif_pi_format);
+}
+
+static uint8_t
+_dif_sizeof_apptag(void)
+{
+	return sizeof(((struct spdk_dif *)0)->g16.app_tag);
+}
+
+static uint8_t
+_dif_offsetof_reftag(enum spdk_dif_pi_format dif_pi_format)
+{
+	return _dif_offsetof_apptag(dif_pi_format) + _dif_sizeof_apptag();
+}
+
+static uint8_t
+_dif_sizeof_reftag(enum spdk_dif_pi_format dif_pi_format)
+{
+	return sizeof(((struct spdk_dif *)0)->g16.stor_ref_space);
+}
+
 int
 spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
 		  bool md_interleave, bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
@@ -308,11 +342,11 @@ _dif_generate(void *_dif, uint16_t guard, uint32_t offset_blocks,
 	uint32_t ref_tag;
 
 	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
-		to_be16(&dif->guard, guard);
+		to_be16(&dif->g16.guard, guard);
 	}
 
 	if (ctx->dif_flags & SPDK_DIF_FLAGS_APPTAG_CHECK) {
-		to_be16(&dif->app_tag, ctx->app_tag);
+		to_be16(&dif->g16.app_tag, ctx->app_tag);
 	}
 
 	if (ctx->dif_flags & SPDK_DIF_FLAGS_REFTAG_CHECK) {
@@ -326,7 +360,7 @@ _dif_generate(void *_dif, uint16_t guard, uint32_t offset_blocks,
 			ref_tag = ctx->init_ref_tag + ctx->ref_tag_offset;
 		}
 
-		to_be32(&dif->ref_tag, ref_tag);
+		to_be32(&dif->g16.stor_ref_space, ref_tag);
 	}
 }
 
@@ -482,7 +516,7 @@ _dif_verify(void *_dif, uint16_t guard, uint32_t offset_blocks,
 		/* If Type 1 or 2 is used, then all DIF checks are disabled when
 		 * the Application Tag is 0xFFFF.
 		 */
-		if (dif->app_tag == 0xFFFF) {
+		if (dif->g16.app_tag == 0xFFFF) {
 			return 0;
 		}
 		break;
@@ -490,7 +524,7 @@ _dif_verify(void *_dif, uint16_t guard, uint32_t offset_blocks,
 		/* If Type 3 is used, then all DIF checks are disabled when the
 		 * Application Tag is 0xFFFF and the Reference Tag is 0xFFFFFFFF.
 		 */
-		if (dif->app_tag == 0xFFFF && dif->ref_tag == 0xFFFFFFFF) {
+		if (dif->g16.app_tag == 0xFFFF && dif->g16.stor_ref_space == 0xFFFFFFFF) {
 			return 0;
 		}
 		break;
@@ -512,7 +546,7 @@ _dif_verify(void *_dif, uint16_t guard, uint32_t offset_blocks,
 		/* Compare the DIF Guard field to the CRC computed over the logical
 		 * block data.
 		 */
-		_guard = from_be16(&dif->guard);
+		_guard = from_be16(&dif->g16.guard);
 		if (_guard != guard) {
 			_dif_error_set(err_blk, SPDK_DIF_GUARD_ERROR, _guard, guard,
 				       offset_blocks);
@@ -527,7 +561,7 @@ _dif_verify(void *_dif, uint16_t guard, uint32_t offset_blocks,
 		/* Compare unmasked bits in the DIF Application Tag field to the
 		 * passed Application Tag.
 		 */
-		_app_tag = from_be16(&dif->app_tag);
+		_app_tag = from_be16(&dif->g16.app_tag);
 		if ((_app_tag & ctx->apptag_mask) != ctx->app_tag) {
 			_dif_error_set(err_blk, SPDK_DIF_APPTAG_ERROR, ctx->app_tag,
 				       (_app_tag & ctx->apptag_mask), offset_blocks);
@@ -547,7 +581,7 @@ _dif_verify(void *_dif, uint16_t guard, uint32_t offset_blocks,
 			 * of the LBA when Type 1 is used, and application specific value
 			 * if Type 2 is used,
 			 */
-			_ref_tag = from_be32(&dif->ref_tag);
+			_ref_tag = from_be32(&dif->g16.stor_ref_space);
 			if (_ref_tag != ref_tag) {
 				_dif_error_set(err_blk, SPDK_DIF_REFTAG_ERROR, ref_tag,
 					       _ref_tag, offset_blocks);
@@ -1148,8 +1182,8 @@ spdk_dif_inject_error(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 
 	if (inject_flags & SPDK_DIF_REFTAG_ERROR) {
 		rc = dif_inject_error(&sgl, ctx->block_size, num_blocks,
-				      ctx->guard_interval + offsetof(struct spdk_dif, ref_tag),
-				      SPDK_SIZEOF_MEMBER(struct spdk_dif, ref_tag),
+				      ctx->guard_interval + _dif_offsetof_reftag(ctx->dif_pi_format),
+				      _dif_sizeof_reftag(ctx->dif_pi_format),
 				      inject_offset);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to inject error to Reference Tag.\n");
@@ -1159,8 +1193,8 @@ spdk_dif_inject_error(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 
 	if (inject_flags & SPDK_DIF_APPTAG_ERROR) {
 		rc = dif_inject_error(&sgl, ctx->block_size, num_blocks,
-				      ctx->guard_interval + offsetof(struct spdk_dif, app_tag),
-				      SPDK_SIZEOF_MEMBER(struct spdk_dif, app_tag),
+				      ctx->guard_interval + _dif_offsetof_apptag(ctx->dif_pi_format),
+				      _dif_sizeof_apptag(),
 				      inject_offset);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to inject error to Application Tag.\n");
@@ -1170,7 +1204,7 @@ spdk_dif_inject_error(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 	if (inject_flags & SPDK_DIF_GUARD_ERROR) {
 		rc = dif_inject_error(&sgl, ctx->block_size, num_blocks,
 				      ctx->guard_interval,
-				      SPDK_SIZEOF_MEMBER(struct spdk_dif, guard),
+				      _dif_sizeof_guard(ctx->dif_pi_format),
 				      inject_offset);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to inject error to Guard.\n");
@@ -1440,8 +1474,8 @@ spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 
 	if (inject_flags & SPDK_DIF_REFTAG_ERROR) {
 		rc = dif_inject_error(&md_sgl, ctx->md_size, num_blocks,
-				      ctx->guard_interval + offsetof(struct spdk_dif, ref_tag),
-				      SPDK_SIZEOF_MEMBER(struct spdk_dif, ref_tag),
+				      ctx->guard_interval + _dif_offsetof_reftag(ctx->dif_pi_format),
+				      _dif_sizeof_reftag(ctx->dif_pi_format),
 				      inject_offset);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to inject error to Reference Tag.\n");
@@ -1451,8 +1485,8 @@ spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 
 	if (inject_flags & SPDK_DIF_APPTAG_ERROR) {
 		rc = dif_inject_error(&md_sgl, ctx->md_size, num_blocks,
-				      ctx->guard_interval + offsetof(struct spdk_dif, app_tag),
-				      SPDK_SIZEOF_MEMBER(struct spdk_dif, app_tag),
+				      ctx->guard_interval + _dif_offsetof_apptag(ctx->dif_pi_format),
+				      _dif_sizeof_apptag(),
 				      inject_offset);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to inject error to Application Tag.\n");
@@ -1463,7 +1497,7 @@ spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 	if (inject_flags & SPDK_DIF_GUARD_ERROR) {
 		rc = dif_inject_error(&md_sgl, ctx->md_size, num_blocks,
 				      ctx->guard_interval,
-				      SPDK_SIZEOF_MEMBER(struct spdk_dif, guard),
+				      _dif_sizeof_guard(ctx->dif_pi_format),
 				      inject_offset);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to inject error to Guard.\n");
@@ -1793,7 +1827,7 @@ _dif_remap_ref_tag(struct _dif_sgl *sgl, uint32_t offset_blocks,
 		/* If Type 1 or 2 is used, then all DIF checks are disabled when
 		 * the Application Tag is 0xFFFF.
 		 */
-		if (dif.app_tag == 0xFFFF) {
+		if (dif.g16.app_tag == 0xFFFF) {
 			goto end;
 		}
 		break;
@@ -1801,7 +1835,7 @@ _dif_remap_ref_tag(struct _dif_sgl *sgl, uint32_t offset_blocks,
 		/* If Type 3 is used, then all DIF checks are disabled when the
 		 * Application Tag is 0xFFFF and the Reference Tag is 0xFFFFFFFF.
 		 */
-		if (dif.app_tag == 0xFFFF && dif.ref_tag == 0xFFFFFFFF) {
+		if (dif.g16.app_tag == 0xFFFF && dif.g16.stor_ref_space == 0xFFFFFFFF) {
 			goto end;
 		}
 		break;
@@ -1829,7 +1863,7 @@ _dif_remap_ref_tag(struct _dif_sgl *sgl, uint32_t offset_blocks,
 		 * of the LBA when Type 1 is used, and application specific value
 		 * if Type 2 is used.
 		 */
-		_actual = from_be32(&dif.ref_tag);
+		_actual = from_be32(&dif.g16.stor_ref_space);
 		if (_actual != expected) {
 			_dif_error_set(err_blk, SPDK_DIF_REFTAG_ERROR, expected,
 				       _actual, offset_blocks);
@@ -1849,7 +1883,7 @@ _dif_remap_ref_tag(struct _dif_sgl *sgl, uint32_t offset_blocks,
 	}
 
 	/* Update the stored Reference Tag to the remapped one. */
-	to_be32(&dif.ref_tag, remapped);
+	to_be32(&dif.g16.stor_ref_space, remapped);
 
 	offset = 0;
 	while (offset < sizeof(struct spdk_dif)) {
@@ -1919,7 +1953,7 @@ _dix_remap_ref_tag(struct _dif_sgl *md_sgl, uint32_t offset_blocks,
 		/* If Type 1 or 2 is used, then all DIF checks are disabled when
 		 * the Application Tag is 0xFFFF.
 		 */
-		if (dif->app_tag == 0xFFFF) {
+		if (dif->g16.app_tag == 0xFFFF) {
 			goto end;
 		}
 		break;
@@ -1927,7 +1961,7 @@ _dix_remap_ref_tag(struct _dif_sgl *md_sgl, uint32_t offset_blocks,
 		/* If Type 3 is used, then all DIF checks are disabled when the
 		 * Application Tag is 0xFFFF and the Reference Tag is 0xFFFFFFFF.
 		 */
-		if (dif->app_tag == 0xFFFF && dif->ref_tag == 0xFFFFFFFF) {
+		if (dif->g16.app_tag == 0xFFFF && dif->g16.stor_ref_space == 0xFFFFFFFF) {
 			goto end;
 		}
 		break;
@@ -1955,7 +1989,7 @@ _dix_remap_ref_tag(struct _dif_sgl *md_sgl, uint32_t offset_blocks,
 		 * of the LBA when Type 1 is used, and application specific value
 		 * if Type 2 is used.
 		 */
-		_actual = from_be32(&dif->ref_tag);
+		_actual = from_be32(&dif->g16.stor_ref_space);
 		if (_actual != expected) {
 			_dif_error_set(err_blk, SPDK_DIF_REFTAG_ERROR, expected,
 				       _actual, offset_blocks);
@@ -1975,7 +2009,7 @@ _dix_remap_ref_tag(struct _dif_sgl *md_sgl, uint32_t offset_blocks,
 	}
 
 	/* Update the stored Reference Tag to the remapped one. */
-	to_be32(&dif->ref_tag, remapped);
+	to_be32(&dif->g16.stor_ref_space, remapped);
 
 end:
 	_dif_sgl_advance(md_sgl, ctx->md_size);
