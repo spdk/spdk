@@ -175,20 +175,23 @@ ctrl_has_fdp() {
 	((ctratt & 1 << 19))
 }
 
-get_ctrls_with_fdp() {
+get_ctrls_with_feature() {
 	((${#ctrls[@]} == 0)) && scan_nvme_ctrls
 
-	local ctrl
+	local ctrl feature=${1:-fdp}
+
+	[[ $(type -t "ctrl_has_$feature") == function ]] || return 1
+
 	for ctrl in "${!ctrls[@]}"; do
-		ctrl_has_fdp "$ctrl" && echo "$ctrl"
+		"ctrl_has_$feature" "$ctrl" && echo "$ctrl"
 	done
 
 }
 
-get_ctrl_with_fdp() {
-	local _ctrls
+get_ctrl_with_feature() {
+	local _ctrls feature=${1:-fdp}
 
-	_ctrls=($(get_ctrls_with_fdp))
+	_ctrls=($(get_ctrls_with_feature "$feature"))
 	if ((${#_ctrls[@]} > 0)); then
 		echo "${_ctrls[0]}"
 		return 0
