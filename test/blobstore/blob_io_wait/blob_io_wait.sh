@@ -22,7 +22,8 @@ trap 'rm -f $testdir/bdevperf.json; rm -f $testdir/aio.bdev; killprocess $bdev_s
 
 waitforlisten $bdev_svc_pid
 # Minimal number of bdev io pool (128) and cache (1)
-$rpc_py bdev_set_options --bdev-io-pool-size 128 --bdev-io-cache-size 1 --small-buf-pool-size 8192 --large-buf-pool-size 1024
+$rpc_py iobuf_set_options --small-pool-count 8192 --large-pool-count 1024
+$rpc_py bdev_set_options --bdev-io-pool-size 128 --bdev-io-cache-size 1
 $rpc_py framework_start_init
 $rpc_py bdev_aio_create $testdir/aio.bdev aio0 4096
 $rpc_py bdev_lvol_create_lvstore aio0 lvs0

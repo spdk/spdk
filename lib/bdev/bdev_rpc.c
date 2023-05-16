@@ -27,16 +27,12 @@ struct spdk_rpc_set_bdev_opts {
 	uint32_t bdev_io_pool_size;
 	uint32_t bdev_io_cache_size;
 	bool bdev_auto_examine;
-	uint32_t small_buf_pool_size;
-	uint32_t large_buf_pool_size;
 };
 
 static const struct spdk_json_object_decoder rpc_set_bdev_opts_decoders[] = {
 	{"bdev_io_pool_size", offsetof(struct spdk_rpc_set_bdev_opts, bdev_io_pool_size), spdk_json_decode_uint32, true},
 	{"bdev_io_cache_size", offsetof(struct spdk_rpc_set_bdev_opts, bdev_io_cache_size), spdk_json_decode_uint32, true},
 	{"bdev_auto_examine", offsetof(struct spdk_rpc_set_bdev_opts, bdev_auto_examine), spdk_json_decode_bool, true},
-	{"small_buf_pool_size", offsetof(struct spdk_rpc_set_bdev_opts, small_buf_pool_size), spdk_json_decode_uint32, true},
-	{"large_buf_pool_size", offsetof(struct spdk_rpc_set_bdev_opts, large_buf_pool_size), spdk_json_decode_uint32, true},
 };
 
 static void
@@ -48,8 +44,6 @@ rpc_bdev_set_options(struct spdk_jsonrpc_request *request, const struct spdk_jso
 
 	rpc_opts.bdev_io_pool_size = UINT32_MAX;
 	rpc_opts.bdev_io_cache_size = UINT32_MAX;
-	rpc_opts.small_buf_pool_size = UINT32_MAX;
-	rpc_opts.large_buf_pool_size = UINT32_MAX;
 	rpc_opts.bdev_auto_examine = true;
 
 	if (params != NULL) {
@@ -70,12 +64,6 @@ rpc_bdev_set_options(struct spdk_jsonrpc_request *request, const struct spdk_jso
 		bdev_opts.bdev_io_cache_size = rpc_opts.bdev_io_cache_size;
 	}
 	bdev_opts.bdev_auto_examine = rpc_opts.bdev_auto_examine;
-	if (rpc_opts.small_buf_pool_size != UINT32_MAX) {
-		bdev_opts.small_buf_pool_size = rpc_opts.small_buf_pool_size;
-	}
-	if (rpc_opts.large_buf_pool_size != UINT32_MAX) {
-		bdev_opts.large_buf_pool_size = rpc_opts.large_buf_pool_size;
-	}
 
 	rc = spdk_bdev_set_opts(&bdev_opts);
 

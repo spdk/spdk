@@ -147,8 +147,6 @@ static struct spdk_bdev_opts	g_bdev_opts = {
 	.bdev_io_pool_size = SPDK_BDEV_IO_POOL_SIZE,
 	.bdev_io_cache_size = SPDK_BDEV_IO_CACHE_SIZE,
 	.bdev_auto_examine = SPDK_BDEV_AUTO_EXAMINE,
-	.small_buf_pool_size = BUF_SMALL_POOL_SIZE,
-	.large_buf_pool_size = BUF_LARGE_POOL_SIZE,
 };
 
 static spdk_bdev_init_cb	g_init_cb_fn = NULL;
@@ -452,8 +450,6 @@ spdk_bdev_get_opts(struct spdk_bdev_opts *opts, size_t opts_size)
 	SET_FIELD(bdev_io_pool_size);
 	SET_FIELD(bdev_io_cache_size);
 	SET_FIELD(bdev_auto_examine);
-	SET_FIELD(small_buf_pool_size);
-	SET_FIELD(large_buf_pool_size);
 
 	/* Do not remove this statement, you should always update this statement when you adding a new field,
 	 * and do not forget to add the SET_FIELD statement for your added field. */
@@ -462,16 +458,10 @@ spdk_bdev_get_opts(struct spdk_bdev_opts *opts, size_t opts_size)
 #undef SET_FIELD
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(bdev_opts_small_buf_pool_size, "spdk_bdev_opts.small_buf_pool_size",
-			      "v23.05", 0);
-SPDK_LOG_DEPRECATION_REGISTER(bdev_opts_large_buf_pool_size, "spdk_bdev_opts.large_buf_pool_size",
-			      "v23.05", 0);
 int
 spdk_bdev_set_opts(struct spdk_bdev_opts *opts)
 {
-	struct spdk_iobuf_opts iobuf_opts;
 	uint32_t min_pool_size;
-	int rc;
 
 	if (!opts) {
 		SPDK_ERRLOG("opts cannot be NULL\n");
@@ -497,13 +487,6 @@ spdk_bdev_set_opts(struct spdk_bdev_opts *opts)
 		return -1;
 	}
 
-	if (opts->small_buf_pool_size != BUF_SMALL_POOL_SIZE) {
-		SPDK_LOG_DEPRECATED(bdev_opts_small_buf_pool_size);
-	}
-	if (opts->large_buf_pool_size != BUF_LARGE_POOL_SIZE) {
-		SPDK_LOG_DEPRECATED(bdev_opts_large_buf_pool_size);
-	}
-
 #define SET_FIELD(field) \
         if (offsetof(struct spdk_bdev_opts, field) + sizeof(opts->field) <= opts->opts_size) { \
                 g_bdev_opts.field = opts->field; \
@@ -512,20 +495,6 @@ spdk_bdev_set_opts(struct spdk_bdev_opts *opts)
 	SET_FIELD(bdev_io_pool_size);
 	SET_FIELD(bdev_io_cache_size);
 	SET_FIELD(bdev_auto_examine);
-	SET_FIELD(small_buf_pool_size);
-	SET_FIELD(large_buf_pool_size);
-
-	spdk_iobuf_get_opts(&iobuf_opts);
-	iobuf_opts.small_pool_count = opts->small_buf_pool_size;
-	iobuf_opts.small_bufsize = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_SMALL_BUF_MAX_SIZE);
-	iobuf_opts.large_pool_count = opts->large_buf_pool_size;
-	iobuf_opts.large_bufsize = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_LARGE_BUF_MAX_SIZE);
-
-	rc = spdk_iobuf_set_opts(&iobuf_opts);
-	if (rc != 0) {
-		SPDK_ERRLOG("Failed to set iobuf opts\n");
-		return -1;
-	}
 
 	g_bdev_opts.opts_size = opts->opts_size;
 

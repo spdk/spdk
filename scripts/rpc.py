@@ -204,16 +204,12 @@ if __name__ == "__main__":
         rpc.bdev.bdev_set_options(args.client,
                                   bdev_io_pool_size=args.bdev_io_pool_size,
                                   bdev_io_cache_size=args.bdev_io_cache_size,
-                                  bdev_auto_examine=args.bdev_auto_examine,
-                                  small_buf_pool_size=args.small_buf_pool_size,
-                                  large_buf_pool_size=args.large_buf_pool_size)
+                                  bdev_auto_examine=args.bdev_auto_examine)
 
     p = subparsers.add_parser('bdev_set_options',
                               help="""Set options of bdev subsystem""")
     p.add_argument('-p', '--bdev-io-pool-size', help='Number of bdev_io structures in shared buffer pool', type=int)
     p.add_argument('-c', '--bdev-io-cache-size', help='Maximum number of bdev_io structures cached per thread', type=int)
-    p.add_argument('-s', '--small-buf-pool-size', help='Maximum number of small buf (i.e., 8KB) pool size', type=int)
-    p.add_argument('-l', '--large-buf-pool-size', help='Maximum number of large buf (i.e., 64KB) pool size', type=int)
     group = p.add_mutually_exclusive_group()
     group.add_argument('-e', '--enable-auto-examine', dest='bdev_auto_examine', help='Allow to auto examine', action='store_true')
     group.add_argument('-d', '--disable-auto-examine', dest='bdev_auto_examine', help='Not allow to auto examine', action='store_false')

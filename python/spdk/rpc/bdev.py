@@ -4,16 +4,14 @@
 #  Copyright (c) 2022 Dell Inc, or its subsidiaries.
 
 
-def bdev_set_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None, bdev_auto_examine=None,
-                     small_buf_pool_size=None, large_buf_pool_size=None):
+def bdev_set_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None,
+                     bdev_auto_examine=None):
     """Set parameters for the bdev subsystem.
 
     Args:
         bdev_io_pool_size: number of bdev_io structures in shared buffer pool (optional)
         bdev_io_cache_size: maximum number of bdev_io structures cached per thread (optional)
         bdev_auto_examine: if set to false, the bdev layer will not examine every disks automatically (optional)
-        small_buf_pool_size: maximum number of small buffer (8KB buffer) pool size (optional)
-        large_buf_pool_size: maximum number of large buffer (64KB buffer) pool size (optional)
     """
     params = {}
 
@@ -23,10 +21,6 @@ def bdev_set_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None, bd
         params['bdev_io_cache_size'] = bdev_io_cache_size
     if bdev_auto_examine is not None:
         params["bdev_auto_examine"] = bdev_auto_examine
-    if small_buf_pool_size:
-        params['small_buf_pool_size'] = small_buf_pool_size
-    if large_buf_pool_size:
-        params['large_buf_pool_size'] = large_buf_pool_size
     return client.call('bdev_set_options', params)
 
 

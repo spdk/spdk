@@ -5533,30 +5533,6 @@ bdev_set_options_test(void)
 	/* Case1: Do not set opts_size */
 	rc = spdk_bdev_set_opts(&bdev_opts);
 	CU_ASSERT(rc == -1);
-
-	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
-
-	/* Case 2: Invalid small_buf_pool_size */
-	bdev_opts.small_buf_pool_size = 0;
-	rc = spdk_bdev_set_opts(&bdev_opts);
-	CU_ASSERT(rc == -1);
-
-	/* Case 3: Invalid large_buf_pool_size */
-	bdev_opts.small_buf_pool_size = BUF_SMALL_POOL_SIZE;
-	bdev_opts.large_buf_pool_size = 0;
-	rc = spdk_bdev_set_opts(&bdev_opts);
-	CU_ASSERT(rc == -1);
-
-	/* Case 4: All valid */
-	bdev_opts.large_buf_pool_size = BUF_LARGE_POOL_SIZE;
-	rc = spdk_bdev_set_opts(&bdev_opts);
-	CU_ASSERT(rc == 0);
-
-	/* Case 5: Set different valid value for small and large buf pool */
-	bdev_opts.large_buf_pool_size = BUF_SMALL_POOL_SIZE + 3;
-	bdev_opts.large_buf_pool_size = BUF_LARGE_POOL_SIZE + 3;
-	rc = spdk_bdev_set_opts(&bdev_opts);
-	CU_ASSERT(rc == 0);
 }
 
 static struct spdk_memory_domain *g_bdev_memory_domain = (struct spdk_memory_domain *) 0xf00df00d;
