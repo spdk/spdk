@@ -214,9 +214,19 @@ int
 spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
 		  bool md_interleave, bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
 		  uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag,
-		  uint32_t data_offset, uint16_t guard_seed)
+		  uint32_t data_offset, uint16_t guard_seed, struct spdk_dif_ctx_init_ext_opts *opts)
 {
 	uint32_t data_block_size;
+	enum spdk_dif_pi_format dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+
+	if (opts != NULL) {
+		if (opts->dif_pi_format != SPDK_DIF_PI_FORMAT_16) {
+			SPDK_ERRLOG("No valid DIF PI format provided.\n");
+			return -EINVAL;
+		}
+
+		dif_pi_format = opts->dif_pi_format;
+	}
 
 	if (md_size < sizeof(struct spdk_dif)) {
 		SPDK_ERRLOG("Metadata size is smaller than DIF size.\n");
@@ -245,6 +255,7 @@ spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_siz
 	ctx->block_size = block_size;
 	ctx->md_size = md_size;
 	ctx->md_interleave = md_interleave;
+	ctx->dif_pi_format = dif_pi_format;
 	ctx->guard_interval = _get_guard_interval(block_size, md_size, dif_loc, md_interleave);
 	ctx->dif_type = dif_type;
 	ctx->dif_flags = dif_flags;

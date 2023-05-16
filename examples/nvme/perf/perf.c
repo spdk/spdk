@@ -846,6 +846,7 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 	uint64_t lba;
 	int rc;
 	int qp_num;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
 	enum dif_mode {
 		DIF_MODE_NONE = 0,
@@ -870,10 +871,12 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 	}
 
 	if (mode != DIF_MODE_NONE) {
+		dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+		dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 		rc = spdk_dif_ctx_init(&task->dif_ctx, entry->block_size, entry->md_size,
 				       entry->md_interleave, entry->pi_loc,
 				       (enum spdk_dif_type)entry->pi_type, entry->io_flags,
-				       lba, 0xFFFF, (uint16_t)entry->io_size_blocks, 0, 0);
+				       lba, 0xFFFF, (uint16_t)entry->io_size_blocks, 0, 0, &dif_opts);
 		if (rc != 0) {
 			fprintf(stderr, "Initialization of DIF context failed\n");
 			exit(1);

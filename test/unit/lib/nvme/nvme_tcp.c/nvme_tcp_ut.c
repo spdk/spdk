@@ -288,11 +288,14 @@ test_nvme_tcp_pdu_set_data_buf_with_md(void)
 	struct iovec iovs[7] = {};
 	struct spdk_dif_ctx dif_ctx = {};
 	int rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
 	pdu.dif_ctx = &dif_ctx;
 
+	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&dif_ctx, 520, 8, true, false, SPDK_DIF_DISABLE, 0,
-			       0, 0, 0, 0, 0);
+			       0, 0, 0, 0, 0, &dif_opts);
 	CU_ASSERT(rc == 0);
 
 	/* Single iovec case */
@@ -384,9 +387,12 @@ test_nvme_tcp_build_iovs_with_md(void)
 	struct spdk_dif_ctx dif_ctx = {};
 	uint32_t mapped_length = 0;
 	int rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
+	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&dif_ctx, 520, 8, true, false, SPDK_DIF_DISABLE, 0,
-			       0, 0, 0, 0, 0);
+			       0, 0, 0, 0, 0, &dif_opts);
 	CU_ASSERT(rc == 0);
 
 	pdu.dif_ctx = &dif_ctx;

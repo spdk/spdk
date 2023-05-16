@@ -752,7 +752,10 @@ bdevperf_verify_dif(struct bdevperf_task *task, struct iovec *iovs, int iovcnt)
 	struct spdk_dif_ctx	dif_ctx;
 	struct spdk_dif_error	err_blk = {};
 	int			rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
+	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       spdk_bdev_get_block_size(bdev),
 			       spdk_bdev_get_md_size(bdev),
@@ -760,7 +763,7 @@ bdevperf_verify_dif(struct bdevperf_task *task, struct iovec *iovs, int iovcnt)
 			       spdk_bdev_is_dif_head_of_md(bdev),
 			       spdk_bdev_get_dif_type(bdev),
 			       job->dif_check_flags,
-			       task->offset_blocks, 0, 0, 0, 0);
+			       task->offset_blocks, 0, 0, 0, 0, &dif_opts);
 	if (rc != 0) {
 		fprintf(stderr, "Initialization of DIF context failed\n");
 		return rc;
@@ -927,7 +930,10 @@ bdevperf_generate_dif(struct bdevperf_task *task)
 	struct spdk_bdev	*bdev = job->bdev;
 	struct spdk_dif_ctx	dif_ctx;
 	int			rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
+	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       spdk_bdev_get_block_size(bdev),
 			       spdk_bdev_get_md_size(bdev),
@@ -935,7 +941,7 @@ bdevperf_generate_dif(struct bdevperf_task *task)
 			       spdk_bdev_is_dif_head_of_md(bdev),
 			       spdk_bdev_get_dif_type(bdev),
 			       job->dif_check_flags,
-			       task->offset_blocks, 0, 0, 0, 0);
+			       task->offset_blocks, 0, 0, 0, 0, &dif_opts);
 	if (rc != 0) {
 		fprintf(stderr, "Initialization of DIF context failed\n");
 		return rc;

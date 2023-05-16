@@ -30,6 +30,18 @@ enum spdk_dif_check_type {
 	SPDK_DIF_CHECK_TYPE_GUARD = 3,
 };
 
+enum spdk_dif_pi_format {
+	SPDK_DIF_PI_FORMAT_16 = 1
+};
+
+struct spdk_dif_ctx_init_ext_opts {
+	/** size of this structure in bytes */
+	size_t size;
+
+	enum spdk_dif_pi_format dif_pi_format;
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct spdk_dif_ctx_init_ext_opts) == 12, "Incorrect size");
+
 struct spdk_dif {
 	uint16_t guard;
 	uint16_t app_tag;
@@ -53,6 +65,9 @@ struct spdk_dif_ctx {
 
 	/** DIF type */
 	enum spdk_dif_type	dif_type;
+
+	/** DIF Protection Information format */
+	enum spdk_dif_pi_format dif_pi_format;
 
 	/* Flags to specify the DIF action */
 	uint32_t		dif_flags;
@@ -119,13 +134,14 @@ struct spdk_dif_error {
  * \param app_tag Application tag.
  * \param data_offset Byte offset from the start of the whole data buffer.
  * \param guard_seed Seed value for guard computation.
+ * \param opts Extended options for DIF context.
  *
  * \return 0 on success and negated errno otherwise.
  */
 int spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
 		      bool md_interleave, bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
 		      uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag,
-		      uint32_t data_offset, uint16_t guard_seed);
+		      uint32_t data_offset, uint16_t guard_seed, struct spdk_dif_ctx_init_ext_opts *opts);
 
 /**
  * Update date offset of DIF context.

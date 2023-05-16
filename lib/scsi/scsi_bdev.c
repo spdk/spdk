@@ -1972,6 +1972,7 @@ bdev_scsi_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 	uint32_t ref_tag = 0, dif_check_flags = 0, data_offset;
 	uint8_t *cdb;
 	int rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
 	if (spdk_likely(spdk_bdev_get_md_size(bdev) == 0)) {
 		return false;
@@ -2010,6 +2011,8 @@ bdev_scsi_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		dif_check_flags |= SPDK_DIF_FLAGS_GUARD_CHECK;
 	}
 
+	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(dif_ctx,
 			       spdk_bdev_get_block_size(bdev),
 			       spdk_bdev_get_md_size(bdev),
@@ -2017,7 +2020,7 @@ bdev_scsi_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			       spdk_bdev_is_dif_head_of_md(bdev),
 			       spdk_bdev_get_dif_type(bdev),
 			       dif_check_flags,
-			       ref_tag, 0, 0, data_offset, 0);
+			       ref_tag, 0, 0, data_offset, 0, &dif_opts);
 
 	return (rc == 0) ? true : false;
 }

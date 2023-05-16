@@ -43,8 +43,11 @@ malloc_verify_pi(struct spdk_bdev_io *bdev_io)
 	struct spdk_dif_ctx dif_ctx;
 	struct spdk_dif_error err_blk;
 	int rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
 	assert(bdev_io->u.bdev.memory_domain == NULL);
+	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       bdev->blocklen,
 			       bdev->md_len,
@@ -53,7 +56,7 @@ malloc_verify_pi(struct spdk_bdev_io *bdev_io)
 			       bdev->dif_type,
 			       bdev->dif_check_flags,
 			       bdev_io->u.bdev.offset_blocks & 0xFFFFFFFF,
-			       0xFFFF, 0, 0, 0);
+			       0xFFFF, 0, 0, 0, &dif_opts);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to initialize DIF/DIX context\n");
 		return rc;
@@ -569,7 +572,10 @@ malloc_disk_setup_pi(struct malloc_disk *mdisk)
 	struct spdk_dif_ctx dif_ctx;
 	struct iovec iov, md_iov;
 	int rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
+	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       bdev->blocklen,
 			       bdev->md_len,
@@ -578,7 +584,7 @@ malloc_disk_setup_pi(struct malloc_disk *mdisk)
 			       bdev->dif_type,
 			       bdev->dif_check_flags,
 			       0,	/* configure the whole buffers */
-			       0, 0, 0, 0);
+			       0, 0, 0, 0, &dif_opts);
 	if (rc != 0) {
 		SPDK_ERRLOG("Initialization of DIF/DIX context failed\n");
 		return rc;

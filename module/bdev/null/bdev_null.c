@@ -78,10 +78,13 @@ bdev_null_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_
 	struct spdk_dif_ctx dif_ctx;
 	struct spdk_dif_error err_blk;
 	int rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
 	if (SPDK_DIF_DISABLE != bdev->dif_type &&
 	    (SPDK_BDEV_IO_TYPE_READ == bdev_io->type ||
 	     SPDK_BDEV_IO_TYPE_WRITE == bdev_io->type)) {
+		dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+		dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 		rc = spdk_dif_ctx_init(&dif_ctx,
 				       bdev->blocklen,
 				       bdev->md_len,
@@ -90,7 +93,7 @@ bdev_null_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_
 				       bdev->dif_type,
 				       bdev->dif_check_flags,
 				       bdev_io->u.bdev.offset_blocks & 0xFFFFFFFF,
-				       0xFFFF, 0, 0, 0);
+				       0xFFFF, 0, 0, 0, &dif_opts);
 		if (0 != rc) {
 			SPDK_ERRLOG("Failed to initialize DIF context, error %d\n", rc);
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);

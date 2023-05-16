@@ -834,6 +834,7 @@ nvmf_bdev_ctrlr_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_nvme_cmd *cmd,
 {
 	uint32_t init_ref_tag, dif_check_flags = 0;
 	int rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
 	if (spdk_bdev_get_md_size(bdev) == 0) {
 		return false;
@@ -850,6 +851,8 @@ nvmf_bdev_ctrlr_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_nvme_cmd *cmd,
 		dif_check_flags |= SPDK_DIF_FLAGS_GUARD_CHECK;
 	}
 
+	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(dif_ctx,
 			       spdk_bdev_get_block_size(bdev),
 			       spdk_bdev_get_md_size(bdev),
@@ -857,7 +860,7 @@ nvmf_bdev_ctrlr_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_nvme_cmd *cmd,
 			       spdk_bdev_is_dif_head_of_md(bdev),
 			       spdk_bdev_get_dif_type(bdev),
 			       dif_check_flags,
-			       init_ref_tag, 0, 0, 0, 0);
+			       init_ref_tag, 0, 0, 0, 0, &dif_opts);
 
 	return (rc == 0) ? true : false;
 }

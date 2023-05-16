@@ -788,6 +788,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	const uint32_t data_bs = 512;
 	const uint32_t md_size = 8;
 	int rc, i;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
 	MOCK_CLEAR(spdk_mempool_get);
 	MOCK_CLEAR(spdk_iobuf_get);
@@ -822,9 +823,11 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	/* Part 1: simple I/O, one SGL smaller than the transport io unit size, block size 512 */
 	MOCK_SET(spdk_iobuf_get, (void *)0x2000);
 	reset_nvmf_rdma_request(&rdma_req);
+	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	spdk_dif_ctx_init(&rdma_req.req.dif.dif_ctx, data_bs + md_size, md_size, true, false,
 			  SPDK_DIF_TYPE1, SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_REFTAG_CHECK,
-			  0, 0, 0, 0, 0);
+			  0, 0, 0, 0, 0, &dif_opts);
 	rdma_req.req.dif_enabled = true;
 	rtransport.transport.opts.io_unit_size = data_bs * 8;
 	rdma_req.req.qpair->transport = &rtransport.transport;
@@ -854,7 +857,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	reset_nvmf_rdma_request(&rdma_req);
 	spdk_dif_ctx_init(&rdma_req.req.dif.dif_ctx, data_bs + md_size, md_size, true, false,
 			  SPDK_DIF_TYPE1, SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_REFTAG_CHECK,
-			  0, 0, 0, 0, 0);
+			  0, 0, 0, 0, 0, &dif_opts);
 	rdma_req.req.dif_enabled = true;
 	rtransport.transport.opts.io_unit_size = data_bs * 4;
 	sgl->keyed.length = data_bs * 4;
@@ -892,7 +895,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	reset_nvmf_rdma_request(&rdma_req);
 	spdk_dif_ctx_init(&rdma_req.req.dif.dif_ctx, data_bs + md_size, md_size, true, false,
 			  SPDK_DIF_TYPE1, SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_REFTAG_CHECK,
-			  0, 0, 0, 0, 0);
+			  0, 0, 0, 0, 0, &dif_opts);
 	rdma_req.req.dif_enabled = true;
 	rtransport.transport.opts.io_unit_size = data_bs;
 	sgl->keyed.length = data_bs;
@@ -928,7 +931,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	reset_nvmf_rdma_request(&rdma_req);
 	spdk_dif_ctx_init(&rdma_req.req.dif.dif_ctx, data_bs + md_size, md_size, true, false,
 			  SPDK_DIF_TYPE1, SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_REFTAG_CHECK,
-			  0, 0, 0, 0, 0);
+			  0, 0, 0, 0, 0, &dif_opts);
 	rdma_req.req.dif_enabled = true;
 	rtransport.transport.opts.io_unit_size = (data_bs + md_size) * 4;
 	sgl->keyed.length = data_bs * 4;
@@ -957,7 +960,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	reset_nvmf_rdma_request(&rdma_req);
 	spdk_dif_ctx_init(&rdma_req.req.dif.dif_ctx, data_bs + md_size, md_size, true, false,
 			  SPDK_DIF_TYPE1, SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_REFTAG_CHECK,
-			  0, 0, 0, 0, 0);
+			  0, 0, 0, 0, 0, &dif_opts);
 	rdma_req.req.dif_enabled = true;
 	rtransport.transport.opts.io_unit_size = (data_bs + md_size) * 2;
 	sgl->keyed.length = data_bs * 4;
@@ -987,7 +990,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	reset_nvmf_rdma_request(&rdma_req);
 	spdk_dif_ctx_init(&rdma_req.req.dif.dif_ctx, data_bs + md_size, md_size, true, false,
 			  SPDK_DIF_TYPE1, SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_REFTAG_CHECK,
-			  0, 0, 0, 0, 0);
+			  0, 0, 0, 0, 0, &dif_opts);
 	rdma_req.req.dif_enabled = true;
 	rtransport.transport.opts.io_unit_size = data_bs * 4;
 	sgl->keyed.length = data_bs * 6;
@@ -1035,7 +1038,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	reset_nvmf_rdma_request(&rdma_req);
 	spdk_dif_ctx_init(&rdma_req.req.dif.dif_ctx, data_bs + md_size, md_size, true, false,
 			  SPDK_DIF_TYPE1, SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_REFTAG_CHECK,
-			  0, 0, 0, 0, 0);
+			  0, 0, 0, 0, 0, &dif_opts);
 	rdma_req.req.dif_enabled = true;
 	rtransport.transport.opts.io_unit_size = data_bs * 16;
 	sgl->keyed.length = data_bs * 16;
@@ -1078,7 +1081,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	reset_nvmf_rdma_request(&rdma_req);
 	spdk_dif_ctx_init(&rdma_req.req.dif.dif_ctx, data_bs + md_size, md_size, true, false,
 			  SPDK_DIF_TYPE1, SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_REFTAG_CHECK,
-			  0, 0, 0, 0, 0);
+			  0, 0, 0, 0, 0, &dif_opts);
 	rdma_req.req.dif_enabled = true;
 	rtransport.transport.opts.io_unit_size = 516;
 	sgl->keyed.length = data_bs * 2;
@@ -1118,7 +1121,8 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	reset_nvmf_rdma_request(&rdma_req);
 	spdk_dif_ctx_init(&rdma_req.req.dif.dif_ctx, data_bs + md_size, md_size, true, false,
 			  SPDK_DIF_TYPE1,
-			  SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_REFTAG_CHECK, 0, 0, 0, 0, 0);
+			  SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_REFTAG_CHECK,
+			  0, 0, 0, 0, 0, &dif_opts);
 	rdma_req.req.dif_enabled = true;
 	rtransport.transport.opts.io_unit_size = (data_bs + md_size) * 4;
 	sgl->unkeyed.length = 2 * sizeof(struct spdk_nvme_sgl_descriptor);
