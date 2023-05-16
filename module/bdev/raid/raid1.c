@@ -271,7 +271,11 @@ raid1_start(struct raid_bdev *raid_bdev)
 	r1info->raid_bdev = raid_bdev;
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		min_blockcnt = spdk_min(min_blockcnt, spdk_bdev_desc_get_bdev(base_info->desc)->blockcnt);
+		min_blockcnt = spdk_min(min_blockcnt, base_info->data_size);
+	}
+
+	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
+		base_info->data_size = min_blockcnt;
 	}
 
 	raid_bdev->bdev.blockcnt = min_blockcnt;

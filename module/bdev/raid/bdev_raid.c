@@ -606,6 +606,7 @@ raid_bdev_write_info_json(struct raid_bdev *raid_bdev, struct spdk_json_write_ct
 	spdk_json_write_named_uint32(w, "strip_size_kb", raid_bdev->strip_size_kb);
 	spdk_json_write_named_string(w, "state", raid_bdev_state_to_str(raid_bdev->state));
 	spdk_json_write_named_string(w, "raid_level", raid_bdev_level_to_str(raid_bdev->level));
+	spdk_json_write_named_bool(w, "superblock", raid_bdev->superblock_enabled);
 	spdk_json_write_named_uint32(w, "num_base_bdevs", raid_bdev->num_base_bdevs);
 	spdk_json_write_named_uint32(w, "num_base_bdevs_discovered", raid_bdev->num_base_bdevs_discovered);
 	spdk_json_write_name(w, "base_bdevs_list");
@@ -663,6 +664,11 @@ raid_bdev_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 
 	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
+	if (raid_bdev->superblock_enabled) {
+		/* raid bdev configuration is stored in the superblock */
+		return;
+	}
+
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_named_string(w, "method", "bdev_raid_create");
@@ -673,6 +679,7 @@ raid_bdev_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 	spdk_json_write_named_string(w, "uuid", uuid_str);
 	spdk_json_write_named_uint32(w, "strip_size_kb", raid_bdev->strip_size_kb);
 	spdk_json_write_named_string(w, "raid_level", raid_bdev_level_to_str(raid_bdev->level));
+	spdk_json_write_named_bool(w, "superblock", raid_bdev->superblock_enabled);
 
 	spdk_json_write_named_array_begin(w, "base_bdevs");
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
@@ -937,15 +944,17 @@ raid_bdev_init(void)
  * strip_size - strip size in KB
  * num_base_bdevs - number of base bdevs
  * level - raid level
- * raid_bdev_out - the created raid bdev
+ * superblock_enabled - true if raid should have superblock
  * uuid - uuid to set for the bdev
+ * raid_bdev_out - the created raid bdev
  * returns:
  * 0 - success
  * non zero - failure
  */
 int
 raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
-		 enum raid_level level, struct raid_bdev **raid_bdev_out, const struct spdk_uuid *uuid)
+		 enum raid_level level, bool superblock_enabled, const struct spdk_uuid *uuid,
+		 struct raid_bdev **raid_bdev_out)
 {
 	struct raid_bdev *raid_bdev;
 	struct spdk_bdev *raid_bdev_gen;
@@ -1039,6 +1048,7 @@ raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 	raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
 	raid_bdev->level = level;
 	raid_bdev->min_base_bdevs_operational = min_operational;
+	raid_bdev->superblock_enabled = superblock_enabled;
 
 	raid_bdev_gen = &raid_bdev->bdev;
 
@@ -1547,8 +1557,28 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info)
 
 	base_info->desc = desc;
 	base_info->blockcnt = bdev->blockcnt;
+	base_info->data_offset = 0;
+	base_info->data_size = bdev->blockcnt;
 	raid_bdev->num_base_bdevs_discovered++;
 	assert(raid_bdev->num_base_bdevs_discovered <= raid_bdev->num_base_bdevs);
+
+	if (raid_bdev->superblock_enabled) {
+		assert((RAID_BDEV_MIN_DATA_OFFSET_SIZE % bdev->blocklen) == 0);
+		base_info->data_offset = RAID_BDEV_MIN_DATA_OFFSET_SIZE / bdev->blocklen;
+
+		if (bdev->optimal_io_boundary) {
+			base_info->data_offset = spdk_divide_round_up(base_info->data_offset,
+						 bdev->optimal_io_boundary) * bdev->optimal_io_boundary;
+		}
+
+		if (base_info->data_offset >= bdev->blockcnt) {
+			SPDK_ERRLOG("Data offset %lu exceeds base bdev capacity %lu on bdev '%s'\n",
+				    base_info->data_offset, bdev->blockcnt, base_info->name);
+			return -EINVAL;
+		}
+
+		base_info->data_size = bdev->blockcnt - base_info->data_offset;
+	}
 
 	if (raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs) {
 		rc = raid_bdev_configure(raid_bdev);

@@ -287,9 +287,10 @@ concat_start(struct raid_bdev *raid_bdev)
 
 	int idx = 0;
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		uint64_t strip_cnt = spdk_bdev_desc_get_bdev(base_info->desc)->blockcnt >>
-				     raid_bdev->strip_size_shift;
+		uint64_t strip_cnt = base_info->data_size >> raid_bdev->strip_size_shift;
 		uint64_t pd_block_cnt = strip_cnt << raid_bdev->strip_size_shift;
+
+		base_info->data_size = pd_block_cnt;
 
 		block_range[idx].start = total_blockcnt;
 		block_range[idx].length = pd_block_cnt;

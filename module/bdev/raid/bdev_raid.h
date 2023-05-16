@@ -9,6 +9,8 @@
 #include "spdk/bdev_module.h"
 #include "spdk/uuid.h"
 
+#define RAID_BDEV_MIN_DATA_OFFSET_SIZE	(1024*1024) /* 1 MiB */
+
 enum raid_level {
 	INVALID_RAID_LEVEL	= -1,
 	RAID0			= 0,
@@ -57,6 +59,12 @@ struct raid_base_bdev_info {
 
 	/* pointer to base bdev descriptor opened by raid bdev */
 	struct spdk_bdev_desc	*desc;
+
+	/* offset in blocks from the start of the base bdev to the start of the data region */
+	uint64_t		data_offset;
+
+	/* size in blocks of the base bdev's data region */
+	uint64_t		data_size;
 
 	/*
 	 * When underlying base device calls the hot plug function on drive removal,
@@ -146,6 +154,9 @@ struct raid_bdev {
 	/* Set to true if destroy of this raid bdev is started. */
 	bool				destroy_started;
 
+	/* Set to true if superblock metadata is enabled on this raid bdev */
+	bool				superblock_enabled;
+
 	/* Module for RAID-level specific operations */
 	struct raid_bdev_module		*module;
 
@@ -179,7 +190,8 @@ extern struct raid_all_tailq		g_raid_bdev_list;
 typedef void (*raid_bdev_destruct_cb)(void *cb_ctx, int rc);
 
 int raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
-		     enum raid_level level, struct raid_bdev **raid_bdev_out, const struct spdk_uuid *uuid);
+		     enum raid_level level, bool superblock, const struct spdk_uuid *uuid,
+		     struct raid_bdev **raid_bdev_out);
 void raid_bdev_delete(struct raid_bdev *raid_bdev, raid_bdev_destruct_cb cb_fn, void *cb_ctx);
 int raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name, uint8_t slot);
 struct raid_bdev *raid_bdev_find_by_name(const char *name);
@@ -285,8 +297,8 @@ raid_bdev_readv_blocks_ext(struct raid_base_bdev_info *base_info, struct spdk_io
 			   uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg,
 			   struct spdk_bdev_ext_io_opts *opts)
 {
-	return spdk_bdev_readv_blocks_ext(base_info->desc, ch, iov, iovcnt, offset_blocks, num_blocks, cb,
-					  cb_arg, opts);
+	return spdk_bdev_readv_blocks_ext(base_info->desc, ch, iov, iovcnt,
+					  base_info->data_offset + offset_blocks, num_blocks, cb, cb_arg, opts);
 }
 
 /**
@@ -298,8 +310,8 @@ raid_bdev_writev_blocks_ext(struct raid_base_bdev_info *base_info, struct spdk_i
 			    uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg,
 			    struct spdk_bdev_ext_io_opts *opts)
 {
-	return spdk_bdev_writev_blocks_ext(base_info->desc, ch, iov, iovcnt, offset_blocks, num_blocks, cb,
-					   cb_arg, opts);
+	return spdk_bdev_writev_blocks_ext(base_info->desc, ch, iov, iovcnt,
+					   base_info->data_offset + offset_blocks, num_blocks, cb, cb_arg, opts);
 }
 
 /**
@@ -310,7 +322,8 @@ raid_bdev_unmap_blocks(struct raid_base_bdev_info *base_info, struct spdk_io_cha
 		       uint64_t offset_blocks, uint64_t num_blocks,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return spdk_bdev_unmap_blocks(base_info->desc, ch, offset_blocks, num_blocks, cb, cb_arg);
+	return spdk_bdev_unmap_blocks(base_info->desc, ch, base_info->data_offset + offset_blocks,
+				      num_blocks, cb, cb_arg);
 }
 
 /**
@@ -321,7 +334,8 @@ raid_bdev_flush_blocks(struct raid_base_bdev_info *base_info, struct spdk_io_cha
 		       uint64_t offset_blocks, uint64_t num_blocks,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return spdk_bdev_flush_blocks(base_info->desc, ch, offset_blocks, num_blocks, cb, cb_arg);
+	return spdk_bdev_flush_blocks(base_info->desc, ch, base_info->data_offset + offset_blocks,
+				      num_blocks, cb, cb_arg);
 }
 
 #endif /* SPDK_BDEV_RAID_INTERNAL_H */

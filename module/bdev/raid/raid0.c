@@ -335,15 +335,22 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 	}
 }
 
-static uint64_t
-raid0_calculate_blockcnt(struct raid_bdev *raid_bdev)
+static int
+raid0_start(struct raid_bdev *raid_bdev)
 {
 	uint64_t min_blockcnt = UINT64_MAX;
+	uint64_t base_bdev_data_size;
 	struct raid_base_bdev_info *base_info;
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
 		/* Calculate minimum block count from all base bdevs */
-		min_blockcnt = spdk_min(min_blockcnt, spdk_bdev_desc_get_bdev(base_info->desc)->blockcnt);
+		min_blockcnt = spdk_min(min_blockcnt, base_info->data_size);
+	}
+
+	base_bdev_data_size = (min_blockcnt >> raid_bdev->strip_size_shift) << raid_bdev->strip_size_shift;
+
+	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
+		base_info->data_size = base_bdev_data_size;
 	}
 
 	/*
@@ -354,14 +361,7 @@ raid0_calculate_blockcnt(struct raid_bdev *raid_bdev)
 	SPDK_DEBUGLOG(bdev_raid0, "min blockcount %" PRIu64 ",  numbasedev %u, strip size shift %u\n",
 		      min_blockcnt, raid_bdev->num_base_bdevs, raid_bdev->strip_size_shift);
 
-	return ((min_blockcnt >> raid_bdev->strip_size_shift) <<
-		raid_bdev->strip_size_shift)  * raid_bdev->num_base_bdevs;
-}
-
-static int
-raid0_start(struct raid_bdev *raid_bdev)
-{
-	raid_bdev->bdev.blockcnt = raid0_calculate_blockcnt(raid_bdev);
+	raid_bdev->bdev.blockcnt = base_bdev_data_size * raid_bdev->num_base_bdevs;
 
 	if (raid_bdev->num_base_bdevs > 1) {
 		raid_bdev->bdev.optimal_io_boundary = raid_bdev->strip_size;
@@ -380,8 +380,18 @@ raid0_resize(struct raid_bdev *raid_bdev)
 {
 	uint64_t blockcnt;
 	int rc;
+	uint64_t min_blockcnt = UINT64_MAX;
+	struct raid_base_bdev_info *base_info;
+	uint64_t base_bdev_data_size;
 
-	blockcnt = raid0_calculate_blockcnt(raid_bdev);
+	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
+		struct spdk_bdev *base_bdev = spdk_bdev_desc_get_bdev(base_info->desc);
+
+		min_blockcnt = spdk_min(min_blockcnt, base_bdev->blockcnt - base_info->data_offset);
+	}
+
+	base_bdev_data_size = (min_blockcnt >> raid_bdev->strip_size_shift) << raid_bdev->strip_size_shift;
+	blockcnt = base_bdev_data_size * raid_bdev->num_base_bdevs;
 
 	if (blockcnt == raid_bdev->bdev.blockcnt) {
 		return;
@@ -395,6 +405,11 @@ raid0_resize(struct raid_bdev *raid_bdev)
 	rc = spdk_bdev_notify_blockcnt_change(&raid_bdev->bdev, blockcnt);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to notify blockcount change\n");
+		return;
+	}
+
+	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
+		base_info->data_size = base_bdev_data_size;
 	}
 }
 
