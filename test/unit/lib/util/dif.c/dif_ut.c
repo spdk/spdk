@@ -127,19 +127,20 @@ static void
 _dif_generate_and_verify(struct iovec *iov,
 			 uint32_t block_size, uint32_t md_size, bool dif_loc,
 			 enum spdk_dif_type dif_type, uint32_t dif_flags,
-			 uint32_t ref_tag, uint32_t e_ref_tag,
+			 uint64_t ref_tag, uint64_t e_ref_tag,
 			 uint16_t app_tag, uint16_t apptag_mask, uint16_t e_app_tag,
 			 bool expect_pass)
 {
 	struct spdk_dif_ctx ctx = {};
 	uint32_t guard_interval;
-	uint16_t guard = 0;
+	uint32_t guard = 0;
 	int rc;
 
 	rc = ut_data_pattern_generate(iov, 1, block_size, md_size, 1);
 	CU_ASSERT(rc == 0);
 
-	guard_interval = _get_guard_interval(block_size, md_size, dif_loc, true);
+	guard_interval = _get_guard_interval(block_size, md_size, dif_loc, true,
+					     _dif_size(ctx.dif_pi_format));
 
 	ctx.dif_type = dif_type;
 	ctx.dif_flags = dif_flags;
@@ -281,7 +282,7 @@ dif_guard_seed_test(void)
 	struct spdk_dif_ctx ctx = {};
 	struct spdk_dif_error err_blk = {};
 	struct spdk_dif *dif;
-	uint16_t guard;
+	uint32_t guard;
 	int rc;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
@@ -1798,7 +1799,7 @@ _dif_generate_split_test(void)
 	struct iovec iov;
 	uint8_t *buf1, *buf2;
 	struct _dif_sgl sgl;
-	uint16_t guard = 0, prev_guard;
+	uint32_t guard = 0, prev_guard;
 	uint32_t dif_flags;
 	int rc;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
@@ -2042,7 +2043,7 @@ _dif_verify_split_test(void)
 	struct iovec iov;
 	uint8_t *buf;
 	struct _dif_sgl sgl;
-	uint16_t guard = 0, prev_guard = 0;
+	uint32_t guard = 0, prev_guard = 0;
 	uint32_t dif_flags;
 	int rc;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;

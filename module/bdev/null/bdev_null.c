@@ -136,7 +136,7 @@ bdev_null_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_
 					     bdev_io->u.bdev.num_blocks, &dif_ctx, &err_blk);
 			if (0 != rc) {
 				SPDK_ERRLOG("IO DIF verification failed: lba %" PRIu64 ", num_blocks %" PRIu64 ", "
-					    "err_type %u, expected %u, actual %u, err_offset %u\n",
+					    "err_type %u, expected %lu, actual %lu, err_offset %u\n",
 					    bdev_io->u.bdev.offset_blocks,
 					    bdev_io->u.bdev.num_blocks,
 					    err_blk.err_type,

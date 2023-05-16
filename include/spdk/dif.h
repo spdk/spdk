@@ -66,7 +66,7 @@ struct spdk_dif_ctx {
 	uint32_t		dif_flags;
 
 	/* Initial reference tag */
-	uint32_t		init_ref_tag;
+	uint64_t		init_ref_tag;
 
 	/** Application tag */
 	uint16_t		app_tag;
@@ -85,10 +85,10 @@ struct spdk_dif_ctx {
 	 * Interim guard value is set if the last data block is partial, or
 	 * seed value is set otherwise.
 	 */
-	uint16_t		last_guard;
+	uint32_t		last_guard;
 
 	/* Seed value for guard computation */
-	uint16_t		guard_seed;
+	uint32_t		guard_seed;
 
 	/* Remapped initial reference tag. */
 	uint32_t		remapped_init_ref_tag;
@@ -100,10 +100,10 @@ struct spdk_dif_error {
 	uint8_t		err_type;
 
 	/** Expected value */
-	uint32_t	expected;
+	uint64_t	expected;
 
 	/** Actual value */
-	uint32_t	actual;
+	uint64_t	actual;
 
 	/** Offset the error occurred at, block based */
 	uint32_t	err_offset;
@@ -134,7 +134,7 @@ struct spdk_dif_error {
 int spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
 		      bool md_interleave, bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
 		      uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag,
-		      uint32_t data_offset, uint16_t guard_seed, struct spdk_dif_ctx_init_ext_opts *opts);
+		      uint32_t data_offset, uint32_t guard_seed, struct spdk_dif_ctx_init_ext_opts *opts);
 
 /**
  * Update date offset of DIF context.

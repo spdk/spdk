@@ -84,7 +84,7 @@ malloc_verify_pi(struct spdk_bdev_io *bdev_io)
 
 	if (rc != 0) {
 		SPDK_ERRLOG("DIF/DIX verify failed: lba %" PRIu64 ", num_blocks %" PRIu64 ", "
-			    "err_type %u, expected %u, actual %u, err_offset %u\n",
+			    "err_type %u, expected %lu, actual %lu, err_offset %u\n",
 			    bdev_io->u.bdev.offset_blocks,
 			    bdev_io->u.bdev.num_blocks,
 			    err_blk.err_type,
