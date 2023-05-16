@@ -5580,7 +5580,12 @@ build_trid_from_log_page_entry(struct spdk_nvme_transport_id *trid,
 	trid->adrfam = entry->adrfam;
 	memcpy(trid->traddr, entry->traddr, sizeof(entry->traddr));
 	memcpy(trid->trsvcid, entry->trsvcid, sizeof(entry->trsvcid));
-	memcpy(trid->subnqn, entry->subnqn, sizeof(trid->subnqn));
+	/* Because the source buffer (entry->subnqn) is longer than trid->subnqn, and
+	 * before call to this function trid->subnqn is zeroed out, we need
+	 * to copy sizeof(trid->subnqn) minus one byte to make sure the last character
+	 * remains 0. Then we can shorten the string (replace ' ' with 0) if required
+	 */
+	memcpy(trid->subnqn, entry->subnqn, sizeof(trid->subnqn) - 1);
 
 	/* We want the traddr, trsvcid and subnqn fields to be NULL-terminated.
 	 * But the log page entries typically pad them with spaces, not zeroes.
@@ -5636,7 +5641,7 @@ remove_discovery_entry(struct nvme_ctrlr *nvme_ctrlr)
 {
 	struct discovery_ctx *d_ctx;
 	struct nvme_path_id *path_id;
-	struct spdk_nvme_transport_id trid;
+	struct spdk_nvme_transport_id trid = {};
 	struct discovery_entry_ctx *entry_ctx, *tmp;
 
 	path_id = TAILQ_FIRST(&nvme_ctrlr->trids);
@@ -5665,7 +5670,7 @@ discovery_remove_controllers(struct discovery_ctx *ctx)
 	struct spdk_nvmf_discovery_log_page *log_page = ctx->log_page;
 	struct discovery_entry_ctx *entry_ctx, *tmp;
 	struct spdk_nvmf_discovery_log_page_entry *new_entry, *old_entry;
-	struct spdk_nvme_transport_id old_trid;
+	struct spdk_nvme_transport_id old_trid = {};
 	uint64_t numrec, i;
 	bool found;
 
