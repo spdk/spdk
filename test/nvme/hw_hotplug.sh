@@ -76,7 +76,7 @@ if [ "$driver" = "uio_pci_generic" ]; then
 	mode="-m pa"
 fi
 
-"$SPDK_EXAMPLE_DIR/hotplug" -i 0 -t 100 -n $((2 * nvme_count)) -r $((2 * nvme_count)) \
+"$SPDK_EXAMPLE_DIR/hotplug" -i 0 -t 0 -n $((2 * nvme_count)) -r $((2 * nvme_count)) \
 	$mode --wait-for-rpc &
 hotplug_pid=$!
 

@@ -320,7 +320,16 @@ io_loop(void)
 	uint64_t next_stats_tsc;
 	int rc;
 
-	tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
+	if (g_time_in_sec > 0) {
+		tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
+	} else {
+		/* User specified 0 seconds for timeout, which means no timeout.
+		 * So just set tsc_end to UINT64_MAX which ensures the loop
+		 * will never time out.
+		 */
+		tsc_end = UINT64_MAX;
+	}
+
 	next_stats_tsc = spdk_get_ticks();
 
 	while (1) {
@@ -404,7 +413,7 @@ usage(char *program_name)
 	printf("\t[-i shm id (optional)]\n");
 	printf("\t[-n expected hot insert times]\n");
 	printf("\t[-r expected hot removal times]\n");
-	printf("\t[-t time in seconds]\n");
+	printf("\t[-t time in seconds to wait for all events (default: forever)]\n");
 	printf("\t[-m iova mode: pa or va (optional)\n");
 	printf("\t[-l log level]\n");
 	printf("\t Available log levels:\n");
@@ -490,11 +499,6 @@ parse_args(int argc, char **argv)
 			usage(argv[0]);
 			return 1;
 		}
-	}
-
-	if (!g_time_in_sec) {
-		usage(argv[0]);
-		return 1;
 	}
 
 	return 0;

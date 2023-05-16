@@ -74,7 +74,7 @@ run_hotplug() {
 
 	"$SPDK_EXAMPLE_DIR/hotplug" \
 		-i 0 \
-		-t $((hotplug_events * hotplug_wait + hotplug_wait * 3)) \
+		-t 0 \
 		-n $((hotplug_events * nvme_count)) \
 		-r $((hotplug_events * nvme_count)) \
 		-l warning &
