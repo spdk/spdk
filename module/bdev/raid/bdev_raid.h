@@ -276,4 +276,52 @@ void raid_bdev_queue_io_wait(struct raid_bdev_io *raid_io, struct spdk_bdev *bde
 void raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status);
 void raid_bdev_module_stop_done(struct raid_bdev *raid_bdev);
 
+/**
+ * Raid bdev I/O read/write wrapper for spdk_bdev_readv_blocks_ext function.
+ */
+static inline int
+raid_bdev_readv_blocks_ext(struct raid_base_bdev_info *base_info, struct spdk_io_channel *ch,
+			   struct iovec *iov, int iovcnt, uint64_t offset_blocks,
+			   uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg,
+			   struct spdk_bdev_ext_io_opts *opts)
+{
+	return spdk_bdev_readv_blocks_ext(base_info->desc, ch, iov, iovcnt, offset_blocks, num_blocks, cb,
+					  cb_arg, opts);
+}
+
+/**
+ * Raid bdev I/O read/write wrapper for spdk_bdev_writev_blocks_ext function.
+ */
+static inline int
+raid_bdev_writev_blocks_ext(struct raid_base_bdev_info *base_info, struct spdk_io_channel *ch,
+			    struct iovec *iov, int iovcnt, uint64_t offset_blocks,
+			    uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg,
+			    struct spdk_bdev_ext_io_opts *opts)
+{
+	return spdk_bdev_writev_blocks_ext(base_info->desc, ch, iov, iovcnt, offset_blocks, num_blocks, cb,
+					   cb_arg, opts);
+}
+
+/**
+ * Raid bdev I/O read/write wrapper for spdk_bdev_unmap_blocks function.
+ */
+static inline int
+raid_bdev_unmap_blocks(struct raid_base_bdev_info *base_info, struct spdk_io_channel *ch,
+		       uint64_t offset_blocks, uint64_t num_blocks,
+		       spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return spdk_bdev_unmap_blocks(base_info->desc, ch, offset_blocks, num_blocks, cb, cb_arg);
+}
+
+/**
+ * Raid bdev I/O read/write wrapper for spdk_bdev_flush_blocks function.
+ */
+static inline int
+raid_bdev_flush_blocks(struct raid_base_bdev_info *base_info, struct spdk_io_channel *ch,
+		       uint64_t offset_blocks, uint64_t num_blocks,
+		       spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return spdk_bdev_flush_blocks(base_info->desc, ch, offset_blocks, num_blocks, cb, cb_arg);
+}
+
 #endif /* SPDK_BDEV_RAID_INTERNAL_H */

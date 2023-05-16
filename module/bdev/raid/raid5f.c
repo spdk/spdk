@@ -466,7 +466,7 @@ raid5f_chunk_submit(struct chunk *chunk)
 			return 0;
 		}
 
-		ret = spdk_bdev_writev_blocks_ext(base_info->desc, base_ch, chunk->iovs, chunk->iovcnt,
+		ret = raid_bdev_writev_blocks_ext(base_info, base_ch, chunk->iovs, chunk->iovcnt,
 						  base_offset_blocks, raid_bdev->strip_size,
 						  raid5f_chunk_complete_bdev_io, chunk,
 						  &chunk->ext_opts);
@@ -479,7 +479,7 @@ raid5f_chunk_submit(struct chunk *chunk)
 
 		base_offset_blocks += stripe_req->reconstruct.chunk_offset;
 
-		ret = spdk_bdev_readv_blocks_ext(base_info->desc, base_ch, chunk->iovs, chunk->iovcnt,
+		ret = raid_bdev_readv_blocks_ext(base_info, base_ch, chunk->iovs, chunk->iovcnt,
 						 base_offset_blocks, bdev_io->u.bdev.num_blocks,
 						 raid5f_chunk_complete_bdev_io, chunk,
 						 &chunk->ext_opts);
@@ -785,7 +785,7 @@ raid5f_submit_read_request(struct raid_bdev_io *raid_io, uint64_t stripe_index,
 		return raid5f_submit_reconstruct_read(raid_io, stripe_index, chunk_idx, chunk_offset);
 	}
 
-	ret = spdk_bdev_readv_blocks_ext(base_info->desc, base_ch, bdev_io->u.bdev.iovs,
+	ret = raid_bdev_readv_blocks_ext(base_info, base_ch, bdev_io->u.bdev.iovs,
 					 bdev_io->u.bdev.iovcnt,
 					 base_offset_blocks, bdev_io->u.bdev.num_blocks, raid5f_chunk_read_complete, raid_io,
 					 &io_opts);
