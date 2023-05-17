@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2022 Intel Corporation.
+ *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
  */
 
@@ -273,8 +274,6 @@ static struct spdk_accel_module_if g_iaa_module = {
 	.submit_tasks		= iaa_submit_tasks
 };
 
-SPDK_ACCEL_MODULE_REGISTER(iaa, &g_iaa_module)
-
 static int
 idxd_create_cb(void *io_device, void *ctx_buf)
 {
@@ -337,6 +336,7 @@ accel_iaa_enable_probe(void)
 	g_iaa_enable = true;
 	/* TODO initially only support user mode w/IAA */
 	spdk_idxd_set_config(false);
+	spdk_accel_module_list_add(&g_iaa_module);
 }
 
 static bool
@@ -353,6 +353,7 @@ static int
 accel_iaa_init(void)
 {
 	if (!g_iaa_enable) {
+		assert(0);
 		return -EINVAL;
 	}
 
