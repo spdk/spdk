@@ -31,7 +31,8 @@ enum spdk_dif_check_type {
 };
 
 enum spdk_dif_pi_format {
-	SPDK_DIF_PI_FORMAT_16 = 1
+	SPDK_DIF_PI_FORMAT_16 = 1,
+	SPDK_DIF_PI_FORMAT_32 = 2
 };
 
 struct spdk_dif_ctx_init_ext_opts {
@@ -117,8 +118,8 @@ struct spdk_dif_error {
  * \param md_size Metadata size in a block.
  * \param md_interleave If true, metadata is interleaved with block data.
  * If false, metadata is separated with block data.
- * \param dif_loc DIF location. If true, DIF is set in the first 8 bytes of metadata.
- * If false, DIF is in the last 8 bytes of metadata.
+ * \param dif_loc DIF location. If true, DIF is set in the first 8/16 bytes of metadata.
+ * If false, DIF is in the last 8/16 bytes of metadata.
  * \param dif_type Type of DIF.
  * \param dif_flags Flag to specify the DIF action.
  * \param init_ref_tag Initial reference tag. For type 1, this is the

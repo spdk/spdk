@@ -1335,7 +1335,7 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		printf("End-to-End Data Protection:            Supported\n");
 		printf("Protection Type:                       Type%d\n", nsdata->dps.pit);
 		printf("Protection Information Transferred as: %s\n",
-		       nsdata->dps.md_start ? "First 8 Bytes" : "Last 8 Bytes");
+		       nsdata->dps.md_start ? "First 8/16 Bytes" : "Last 8/16 Bytes");
 	}
 	format_index = spdk_nvme_ns_get_format_index(nsdata);
 	if (nsdata->lbaf[format_index].ms > 0) {

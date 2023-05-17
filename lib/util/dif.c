@@ -12,6 +12,7 @@
 
 #define APPTAG_IGNORE 0xFFFF
 #define REFTAG_MASK_16 0x00000000FFFFFFFF
+#define REFTAG_MASK_32 0xFFFFFFFFFFFFFFFF
 
 struct spdk_dif {
 	union {
@@ -20,9 +21,19 @@ struct spdk_dif {
 			uint16_t app_tag;
 			uint32_t stor_ref_space;
 		} g16;
+		struct {
+			uint32_t guard;
+			uint16_t app_tag;
+			uint16_t stor_ref_space_p1;
+			/* The variable size Storage Tag and Reference Tag is not supported yet,
+			 * so the maximum size of the Reference Tag is assumed.
+			 */
+			uint64_t stor_ref_space_p2;
+		} g32;
 	};
 };
 SPDK_STATIC_ASSERT(SPDK_SIZEOF_MEMBER(struct spdk_dif, g16) == 8, "Incorrect size");
+SPDK_STATIC_ASSERT(SPDK_SIZEOF_MEMBER(struct spdk_dif, g32) == 16, "Incorrect size");
 
 /* Context to iterate or create a iovec array.
  * Each sgl is either iterated or created at a time.
@@ -197,10 +208,18 @@ _dif_is_disabled(enum spdk_dif_type dif_type)
 	}
 }
 
-static size_t
+static inline size_t
 _dif_size(enum spdk_dif_pi_format dif_pi_format)
 {
-	return SPDK_SIZEOF_MEMBER(struct spdk_dif, g16);
+	uint8_t size;
+
+	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
+		size = SPDK_SIZEOF_MEMBER(struct spdk_dif, g16);
+	} else {
+		size = SPDK_SIZEOF_MEMBER(struct spdk_dif, g32);
+	}
+
+	return size;
 }
 
 static uint32_t
@@ -208,9 +227,10 @@ _get_guard_interval(uint32_t block_size, uint32_t md_size, bool dif_loc, bool md
 		    size_t dif_size)
 {
 	if (!dif_loc) {
-		/* For metadata formats with more than 8 bytes, if the DIF is
-		 * contained in the last 8 bytes of metadata, then the CRC
-		 * covers all metadata up to but excluding these last 8 bytes.
+		/* For metadata formats with more than 8/16 bytes (depending on
+		 * the PI format), if the DIF is contained in the last 8/16 bytes
+		 * of metadata, then the CRC covers all metadata up to but excluding
+		 * these last 8/16 bytes.
 		 */
 		if (md_interleave) {
 			return block_size - dif_size;
@@ -218,9 +238,9 @@ _get_guard_interval(uint32_t block_size, uint32_t md_size, bool dif_loc, bool md
 			return md_size - dif_size;
 		}
 	} else {
-		/* For metadata formats with more than 8 bytes, if the DIF is
-		 * contained in the first 8 bytes of metadata, then the CRC
-		 * does not cover any metadata.
+		/* For metadata formats with more than 8/16 bytes (depending on
+		 * the PI format), if the DIF is contained in the first 8/16 bytes
+		 * of metadata, then the CRC does not cover any metadata.
 		 */
 		if (md_interleave) {
 			return block_size - md_size;
@@ -230,107 +250,192 @@ _get_guard_interval(uint32_t block_size, uint32_t md_size, bool dif_loc, bool md
 	}
 }
 
-static uint8_t
-_dif_sizeof_guard(enum spdk_dif_pi_format dif_pi_format)
+static inline uint8_t
+_dif_guard_size(enum spdk_dif_pi_format dif_pi_format)
 {
-	return sizeof(((struct spdk_dif *)0)->g16.guard);
+	uint8_t size;
+
+	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
+		size = SPDK_SIZEOF_MEMBER(struct spdk_dif, g16.guard);
+	} else {
+		size = SPDK_SIZEOF_MEMBER(struct spdk_dif, g32.guard);
+	}
+
+	return size;
 }
 
-static uint8_t
-_dif_offsetof_apptag(enum spdk_dif_pi_format dif_pi_format)
-{
-	return _dif_sizeof_guard(dif_pi_format);
-}
-
-static uint8_t
-_dif_sizeof_apptag(void)
-{
-	return sizeof(((struct spdk_dif *)0)->g16.app_tag);
-}
-
-static uint8_t
-_dif_offsetof_reftag(enum spdk_dif_pi_format dif_pi_format)
-{
-	return _dif_offsetof_apptag(dif_pi_format) + _dif_sizeof_apptag();
-}
-
-static uint8_t
-_dif_sizeof_reftag(enum spdk_dif_pi_format dif_pi_format)
-{
-	return sizeof(((struct spdk_dif *)0)->g16.stor_ref_space);
-}
-
-static void
+static inline void
 _dif_set_guard(struct spdk_dif *dif, uint32_t guard, enum spdk_dif_pi_format dif_pi_format)
 {
-	to_be16(&(dif->g16.guard), (uint16_t)guard);
+	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
+		to_be16(&(dif->g16.guard), (uint16_t)guard);
+	} else {
+		to_be32(&(dif->g32.guard), guard);
+	}
 }
 
-static uint32_t
+static inline uint32_t
 _dif_get_guard(struct spdk_dif *dif, enum spdk_dif_pi_format dif_pi_format)
 {
-	return (uint32_t)from_be16(&(dif->g16.guard));
+	uint32_t guard;
+
+	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
+		guard = (uint32_t)from_be16(&(dif->g16.guard));
+	} else {
+		guard = from_be32(&(dif->g32.guard));
+	}
+
+	return guard;
 }
 
-static uint32_t
+static inline uint32_t
 _dif_generate_guard(uint32_t guard_seed, void *buf, size_t buf_len,
 		    enum spdk_dif_pi_format dif_pi_format)
 {
-	return (uint32_t)spdk_crc16_t10dif((uint16_t)guard_seed, buf, buf_len);
+	uint32_t guard;
+
+	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
+		guard = (uint32_t)spdk_crc16_t10dif((uint16_t)guard_seed, buf, buf_len);
+	} else {
+		guard = spdk_crc32c_nvme(buf, buf_len, guard_seed);
+	}
+
+	return guard;
 }
 
-static uint32_t
+static inline uint32_t
 _dif_generate_guard_copy(uint32_t guard_seed, void *dst, void *src, size_t buf_len,
 			 enum spdk_dif_pi_format dif_pi_format)
 {
-	return (uint32_t)spdk_crc16_t10dif_copy((uint16_t)guard_seed, dst, src, buf_len);
+	uint32_t guard;
+
+	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
+		guard = (uint32_t)spdk_crc16_t10dif_copy((uint16_t)guard_seed, dst, src, buf_len);
+	} else {
+		memcpy(dst, src, buf_len);
+		guard = spdk_crc32c_nvme(src, buf_len, guard_seed);
+	}
+
+	return guard;
 }
 
-static void
+static inline uint8_t
+_dif_apptag_offset(enum spdk_dif_pi_format dif_pi_format)
+{
+	return _dif_guard_size(dif_pi_format);
+}
+
+static inline uint8_t
+_dif_apptag_size(void)
+{
+	return SPDK_SIZEOF_MEMBER(struct spdk_dif, g16.app_tag);
+}
+
+static inline void
 _dif_set_apptag(struct spdk_dif *dif, uint16_t app_tag, enum spdk_dif_pi_format dif_pi_format)
 {
-	to_be16(&(dif->g16.app_tag), app_tag);
+	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
+		to_be16(&(dif->g16.app_tag), app_tag);
+	} else {
+		to_be16(&(dif->g32.app_tag), app_tag);
+	}
 }
 
-static uint16_t
+static inline uint16_t
 _dif_get_apptag(struct spdk_dif *dif, enum spdk_dif_pi_format dif_pi_format)
 {
-	return from_be16(&(dif->g16.app_tag));
+	uint16_t app_tag;
+
+	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
+		app_tag = from_be16(&(dif->g16.app_tag));
+	} else {
+		app_tag = from_be16(&(dif->g32.app_tag));
+	}
+
+	return app_tag;
 }
 
-static bool
+static inline bool
 _dif_apptag_ignore(struct spdk_dif *dif, enum spdk_dif_pi_format dif_pi_format)
 {
 	return _dif_get_apptag(dif, dif_pi_format) == APPTAG_IGNORE;
 }
 
-static void
+static inline uint8_t
+_dif_reftag_offset(enum spdk_dif_pi_format dif_pi_format)
+{
+	uint8_t offset;
+
+	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
+		offset = _dif_apptag_offset(dif_pi_format) + _dif_apptag_size();
+	} else {
+		offset = _dif_apptag_offset(dif_pi_format) + _dif_apptag_size()
+			 + SPDK_SIZEOF_MEMBER(struct spdk_dif, g32.stor_ref_space_p1);
+	}
+
+	return offset;
+}
+
+static inline uint8_t
+_dif_reftag_size(enum spdk_dif_pi_format dif_pi_format)
+{
+	uint8_t size;
+
+	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
+		size = SPDK_SIZEOF_MEMBER(struct spdk_dif, g16.stor_ref_space);
+	} else {
+		size = SPDK_SIZEOF_MEMBER(struct spdk_dif, g32.stor_ref_space_p2);
+	}
+
+	return size;
+}
+
+static inline void
 _dif_set_reftag(struct spdk_dif *dif, uint64_t ref_tag, enum spdk_dif_pi_format dif_pi_format)
 {
-	to_be32(&(dif->g16.stor_ref_space), (uint32_t)ref_tag);
+	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
+		to_be32(&(dif->g16.stor_ref_space), (uint32_t)ref_tag);
+	} else {
+		to_be64(&(dif->g32.stor_ref_space_p2), ref_tag);
+	}
 }
 
-static uint64_t
+static inline uint64_t
 _dif_get_reftag(struct spdk_dif *dif, enum spdk_dif_pi_format dif_pi_format)
 {
-	return (uint64_t)from_be32(&(dif->g16.stor_ref_space));
+	uint64_t ref_tag;
+
+	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
+		ref_tag = (uint64_t)from_be32(&(dif->g16.stor_ref_space));
+	} else {
+		ref_tag = from_be64(&(dif->g32.stor_ref_space_p2));
+	}
+
+	return ref_tag;
 }
 
-static bool
+static inline bool
 _dif_reftag_match(struct spdk_dif *dif, uint64_t ref_tag,
 		  enum spdk_dif_pi_format dif_pi_format)
 {
 	uint64_t _ref_tag;
+	bool match;
 
 	_ref_tag = _dif_get_reftag(dif, dif_pi_format);
 
-	return (_ref_tag == (ref_tag & REFTAG_MASK_16));
+	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
+		match = (_ref_tag == (ref_tag & REFTAG_MASK_16));
+	} else {
+		match = (_ref_tag == ref_tag);
+	}
+
+	return match;
 }
 
-static bool
+static inline bool
 _dif_reftag_ignore(struct spdk_dif *dif, enum spdk_dif_pi_format dif_pi_format)
 {
-	return _dif_reftag_match(dif, REFTAG_MASK_16, dif_pi_format);
+	return _dif_reftag_match(dif, REFTAG_MASK_32, dif_pi_format);
 }
 
 int
@@ -343,7 +448,8 @@ spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_siz
 	enum spdk_dif_pi_format dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 
 	if (opts != NULL) {
-		if (opts->dif_pi_format != SPDK_DIF_PI_FORMAT_16) {
+		if (opts->dif_pi_format != SPDK_DIF_PI_FORMAT_16 &&
+		    opts->dif_pi_format != SPDK_DIF_PI_FORMAT_32) {
 			SPDK_ERRLOG("No valid DIF PI format provided.\n");
 			return -EINVAL;
 		}
@@ -363,10 +469,18 @@ spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_siz
 		}
 		data_block_size = block_size - md_size;
 	} else {
-		if (block_size == 0 || (block_size % 512) != 0) {
-			SPDK_ERRLOG("Zero block size is not allowed\n");
-			return -EINVAL;
+		if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
+			if (block_size == 0 || (block_size % 512) != 0) {
+				SPDK_ERRLOG("Zero block size is not allowed and should be a multiple of 512B\n");
+				return -EINVAL;
+			}
+		} else {
+			if (block_size == 0 || (block_size % 4096) != 0) {
+				SPDK_ERRLOG("Zero block size is not allowed and should be a multiple of 4kB\n");
+				return -EINVAL;
+			}
 		}
+
 		data_block_size = block_size;
 	}
 
@@ -1271,8 +1385,8 @@ spdk_dif_inject_error(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 
 	if (inject_flags & SPDK_DIF_REFTAG_ERROR) {
 		rc = dif_inject_error(&sgl, ctx->block_size, num_blocks,
-				      ctx->guard_interval + _dif_offsetof_reftag(ctx->dif_pi_format),
-				      _dif_sizeof_reftag(ctx->dif_pi_format),
+				      ctx->guard_interval + _dif_reftag_offset(ctx->dif_pi_format),
+				      _dif_reftag_size(ctx->dif_pi_format),
 				      inject_offset);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to inject error to Reference Tag.\n");
@@ -1282,8 +1396,8 @@ spdk_dif_inject_error(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 
 	if (inject_flags & SPDK_DIF_APPTAG_ERROR) {
 		rc = dif_inject_error(&sgl, ctx->block_size, num_blocks,
-				      ctx->guard_interval + _dif_offsetof_apptag(ctx->dif_pi_format),
-				      _dif_sizeof_apptag(),
+				      ctx->guard_interval + _dif_apptag_offset(ctx->dif_pi_format),
+				      _dif_apptag_size(),
 				      inject_offset);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to inject error to Application Tag.\n");
@@ -1293,7 +1407,7 @@ spdk_dif_inject_error(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 	if (inject_flags & SPDK_DIF_GUARD_ERROR) {
 		rc = dif_inject_error(&sgl, ctx->block_size, num_blocks,
 				      ctx->guard_interval,
-				      _dif_sizeof_guard(ctx->dif_pi_format),
+				      _dif_guard_size(ctx->dif_pi_format),
 				      inject_offset);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to inject error to Guard.\n");
@@ -1302,10 +1416,10 @@ spdk_dif_inject_error(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 	}
 
 	if (inject_flags & SPDK_DIF_DATA_ERROR) {
-		/* If the DIF information is contained within the last 8 bytes of
-		 * metadata, then the CRC covers all metadata bytes up to but excluding
-		 * the last 8 bytes. But error injection does not cover these metadata
-		 * because classification is not determined yet.
+		/* If the DIF information is contained within the last 8/16 bytes of
+		 * metadata (depending on the PI format), then the CRC covers all metadata
+		 * bytes up to but excluding the last 8/16 bytes. But error injection does not
+		 * cover these metadata because classification is not determined yet.
 		 *
 		 * Note: Error injection to data block is expected to be detected as
 		 * guard error.
@@ -1571,8 +1685,8 @@ spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 
 	if (inject_flags & SPDK_DIF_REFTAG_ERROR) {
 		rc = dif_inject_error(&md_sgl, ctx->md_size, num_blocks,
-				      ctx->guard_interval + _dif_offsetof_reftag(ctx->dif_pi_format),
-				      _dif_sizeof_reftag(ctx->dif_pi_format),
+				      ctx->guard_interval + _dif_reftag_offset(ctx->dif_pi_format),
+				      _dif_reftag_size(ctx->dif_pi_format),
 				      inject_offset);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to inject error to Reference Tag.\n");
@@ -1582,8 +1696,8 @@ spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 
 	if (inject_flags & SPDK_DIF_APPTAG_ERROR) {
 		rc = dif_inject_error(&md_sgl, ctx->md_size, num_blocks,
-				      ctx->guard_interval + _dif_offsetof_apptag(ctx->dif_pi_format),
-				      _dif_sizeof_apptag(),
+				      ctx->guard_interval + _dif_apptag_offset(ctx->dif_pi_format),
+				      _dif_apptag_size(),
 				      inject_offset);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to inject error to Application Tag.\n");
@@ -1594,7 +1708,7 @@ spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 	if (inject_flags & SPDK_DIF_GUARD_ERROR) {
 		rc = dif_inject_error(&md_sgl, ctx->md_size, num_blocks,
 				      ctx->guard_interval,
-				      _dif_sizeof_guard(ctx->dif_pi_format),
+				      _dif_guard_size(ctx->dif_pi_format),
 				      inject_offset);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to inject error to Guard.\n");

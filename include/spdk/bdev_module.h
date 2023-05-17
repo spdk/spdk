@@ -540,8 +540,8 @@ struct spdk_bdev {
 	/*
 	 * DIF location.
 	 *
-	 * Set to true if DIF is set in the first 8 bytes of metadata or false
-	 * if DIF is set in the last 8 bytes of metadata.
+	 * Set to true if DIF is set in the first 8/16 bytes of metadata or false
+	 * if DIF is set in the last 8/16 bytes of metadata.
 	 *
 	 * Note that this field is valid only if DIF is enabled.
 	 */

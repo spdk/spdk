@@ -123,10 +123,26 @@ _iov_check(struct iovec *iov, void *iov_base, uint32_t iov_len)
 	return (iov->iov_base == iov_base && iov->iov_len == iov_len);
 }
 
+static uint32_t
+_generate_guard(uint32_t guard_seed, void *buf, size_t buf_len,
+		enum spdk_dif_pi_format dif_pi_format)
+{
+	uint32_t guard;
+
+	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
+		guard = (uint32_t)spdk_crc16_t10dif((uint16_t)guard_seed, buf, buf_len);
+	} else {
+		guard = spdk_crc32c_nvme(buf, buf_len, guard_seed);
+	}
+
+	return guard;
+}
+
 static void
 _dif_generate_and_verify(struct iovec *iov,
 			 uint32_t block_size, uint32_t md_size, bool dif_loc,
 			 enum spdk_dif_type dif_type, uint32_t dif_flags,
+			 enum spdk_dif_pi_format dif_pi_format,
 			 uint64_t ref_tag, uint64_t e_ref_tag,
 			 uint16_t app_tag, uint16_t apptag_mask, uint16_t e_app_tag,
 			 bool expect_pass)
@@ -139,6 +155,8 @@ _dif_generate_and_verify(struct iovec *iov,
 	rc = ut_data_pattern_generate(iov, 1, block_size, md_size, 1);
 	CU_ASSERT(rc == 0);
 
+	ctx.dif_pi_format = dif_pi_format;
+
 	guard_interval = _get_guard_interval(block_size, md_size, dif_loc, true,
 					     _dif_size(ctx.dif_pi_format));
 
@@ -148,9 +166,8 @@ _dif_generate_and_verify(struct iovec *iov,
 	ctx.app_tag = app_tag;
 
 	if (dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
-		guard = spdk_crc16_t10dif(0, iov->iov_base, guard_interval);
+		guard = _generate_guard(0, iov->iov_base, guard_interval, ctx.dif_pi_format);
 	}
-
 	_dif_generate(iov->iov_base + guard_interval, guard, 0, &ctx);
 
 	ctx.init_ref_tag = e_ref_tag;
@@ -177,18 +194,36 @@ dif_generate_and_verify_test(void)
 
 	/* Positive cases */
 
-	/* The case that DIF is contained in the first 8 bytes of metadata. */
+	/* The case that DIF is contained in the first 8/16 bytes of metadata. */
 	_dif_generate_and_verify(&iov,
 				 4096 + 128, 128, true,
 				 SPDK_DIF_TYPE1, dif_flags,
+				 SPDK_DIF_PI_FORMAT_16,
 				 22, 22,
 				 0x22, 0xFFFF, 0x22,
 				 true);
 
-	/* The case that DIF is contained in the last 8 bytes of metadata. */
+	_dif_generate_and_verify(&iov,
+				 4096 + 128, 128, true,
+				 SPDK_DIF_TYPE1, dif_flags,
+				 SPDK_DIF_PI_FORMAT_32,
+				 22, 22,
+				 0x22, 0xFFFF, 0x22,
+				 true);
+
+	/* The case that DIF is contained in the last 8/16 bytes of metadata. */
 	_dif_generate_and_verify(&iov,
 				 4096 + 128, 128, false,
 				 SPDK_DIF_TYPE1, dif_flags,
+				 SPDK_DIF_PI_FORMAT_16,
+				 22, 22,
+				 0x22, 0xFFFF, 0x22,
+				 true);
+
+	_dif_generate_and_verify(&iov,
+				 4096 + 128, 128, false,
+				 SPDK_DIF_TYPE1, dif_flags,
+				 SPDK_DIF_PI_FORMAT_32,
 				 22, 22,
 				 0x22, 0xFFFF, 0x22,
 				 true);
@@ -199,6 +234,15 @@ dif_generate_and_verify_test(void)
 	_dif_generate_and_verify(&iov,
 				 4096 + 128, 128, false,
 				 SPDK_DIF_TYPE1, dif_flags,
+				 SPDK_DIF_PI_FORMAT_16,
+				 22, 23,
+				 0x22, 0xFFFF, 0x22,
+				 false);
+
+	_dif_generate_and_verify(&iov,
+				 4096 + 128, 128, false,
+				 SPDK_DIF_TYPE1, dif_flags,
+				 SPDK_DIF_PI_FORMAT_32,
 				 22, 23,
 				 0x22, 0xFFFF, 0x22,
 				 false);
@@ -207,6 +251,15 @@ dif_generate_and_verify_test(void)
 	_dif_generate_and_verify(&iov,
 				 4096 + 128, 128, false,
 				 SPDK_DIF_TYPE1, dif_flags,
+				 SPDK_DIF_PI_FORMAT_16,
+				 22, 22,
+				 0x22, 0xFFFF, 0x23,
+				 false);
+
+	_dif_generate_and_verify(&iov,
+				 4096 + 128, 128, false,
+				 SPDK_DIF_TYPE1, dif_flags,
+				 SPDK_DIF_PI_FORMAT_32,
 				 22, 22,
 				 0x22, 0xFFFF, 0x23,
 				 false);
@@ -231,6 +284,15 @@ dif_disable_check_test(void)
 	_dif_generate_and_verify(&iov,
 				 4096 + 128, 128, false,
 				 SPDK_DIF_TYPE1, dif_flags,
+				 SPDK_DIF_PI_FORMAT_16,
+				 22, 22,
+				 0xFFFF, 0xFFFF, 0x22,
+				 true);
+
+	_dif_generate_and_verify(&iov,
+				 4096 + 128, 128, false,
+				 SPDK_DIF_TYPE1, dif_flags,
+				 SPDK_DIF_PI_FORMAT_32,
 				 22, 22,
 				 0xFFFF, 0xFFFF, 0x22,
 				 true);
@@ -242,6 +304,15 @@ dif_disable_check_test(void)
 	_dif_generate_and_verify(&iov,
 				 4096 + 128, 128, false,
 				 SPDK_DIF_TYPE3, dif_flags,
+				 SPDK_DIF_PI_FORMAT_16,
+				 22, 22,
+				 0xFFFF, 0xFFFF, 0x22,
+				 false);
+
+	_dif_generate_and_verify(&iov,
+				 4096 + 128, 128, false,
+				 SPDK_DIF_TYPE3, dif_flags,
+				 SPDK_DIF_PI_FORMAT_32,
 				 22, 22,
 				 0xFFFF, 0xFFFF, 0x22,
 				 false);
@@ -253,11 +324,89 @@ dif_disable_check_test(void)
 	_dif_generate_and_verify(&iov,
 				 4096 + 128, 128, false,
 				 SPDK_DIF_TYPE3, dif_flags,
+				 SPDK_DIF_PI_FORMAT_16,
 				 0xFFFFFFFF, 22,
 				 0xFFFF, 0xFFFF, 0x22,
 				 true);
 
+	_dif_generate_and_verify(&iov,
+				 4096 + 128, 128, false,
+				 SPDK_DIF_TYPE3, dif_flags,
+				 SPDK_DIF_PI_FORMAT_32,
+				 0xFFFFFFFFFFFFFFFF, 22,
+				 0xFFFF, 0xFFFF, 0x22,
+				 true);
+
 	_iov_free_buf(&iov);
+}
+
+static void
+_dif_generate_and_verify_different_pi_format(uint32_t dif_flags,
+		enum spdk_dif_pi_format dif_pi_format_1, enum spdk_dif_pi_format dif_pi_format_2)
+{
+	struct spdk_dif_ctx ctx_1 = {}, ctx_2 = {};
+	int rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+	struct iovec iov;
+	struct spdk_dif_error err_blk = {};
+	uint8_t expected_err_type = 0;
+
+	if (dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+		expected_err_type = SPDK_DIF_GUARD_ERROR;
+	} else if (dif_flags & SPDK_DIF_FLAGS_APPTAG_CHECK) {
+		expected_err_type = SPDK_DIF_APPTAG_ERROR;
+	} else if (dif_flags & SPDK_DIF_FLAGS_REFTAG_CHECK) {
+		expected_err_type = SPDK_DIF_REFTAG_ERROR;
+	} else {
+		CU_ASSERT(false);
+	}
+
+	CU_ASSERT(dif_pi_format_1 != dif_pi_format_2);
+
+	_iov_alloc_buf(&iov, 4096 + 128);
+
+	rc = ut_data_pattern_generate(&iov, 1, 4096 + 128, 128, 1);
+	CU_ASSERT(rc == 0);
+
+	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.dif_pi_format = dif_pi_format_1;
+	rc = spdk_dif_ctx_init(&ctx_1, 4096 + 128, 128, true, true, SPDK_DIF_TYPE1, dif_flags,
+			       12, 0xFFFF, 23, 0, 0, &dif_opts);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate(&iov, 1, 1, &ctx_1);
+	CU_ASSERT(rc == 0);
+
+	dif_opts.dif_pi_format = dif_pi_format_2;
+	rc = spdk_dif_ctx_init(&ctx_2, 4096 + 128, 128, true, true, SPDK_DIF_TYPE1, dif_flags,
+			       12, 0xFFFF, 23, 0, 0, &dif_opts);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify(&iov, 1, 1, &ctx_2, &err_blk);
+	CU_ASSERT(rc != 0);
+	CU_ASSERT(err_blk.err_type == expected_err_type);
+
+	rc = ut_data_pattern_verify(&iov, 1, 4096 + 128, 128, 1);
+	CU_ASSERT(rc == 0);
+
+	_iov_free_buf(&iov);
+}
+
+static void
+dif_generate_and_verify_different_pi_formats_test(void)
+{
+	_dif_generate_and_verify_different_pi_format(SPDK_DIF_FLAGS_GUARD_CHECK,
+			SPDK_DIF_PI_FORMAT_16, SPDK_DIF_PI_FORMAT_32);
+	_dif_generate_and_verify_different_pi_format(SPDK_DIF_FLAGS_GUARD_CHECK,
+			SPDK_DIF_PI_FORMAT_32, SPDK_DIF_PI_FORMAT_16);
+	_dif_generate_and_verify_different_pi_format(SPDK_DIF_FLAGS_APPTAG_CHECK,
+			SPDK_DIF_PI_FORMAT_16, SPDK_DIF_PI_FORMAT_32);
+	_dif_generate_and_verify_different_pi_format(SPDK_DIF_FLAGS_APPTAG_CHECK,
+			SPDK_DIF_PI_FORMAT_32, SPDK_DIF_PI_FORMAT_16);
+	_dif_generate_and_verify_different_pi_format(SPDK_DIF_FLAGS_REFTAG_CHECK,
+			SPDK_DIF_PI_FORMAT_16, SPDK_DIF_PI_FORMAT_32);
+	_dif_generate_and_verify_different_pi_format(SPDK_DIF_FLAGS_REFTAG_CHECK,
+			SPDK_DIF_PI_FORMAT_32, SPDK_DIF_PI_FORMAT_16);
 }
 
 static void
@@ -270,13 +419,44 @@ dif_sec_512_md_0_error_test(void)
 	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	/* Metadata size is 0. */
-	rc = spdk_dif_ctx_init(&ctx, 512, 0, true, false, SPDK_DIF_TYPE1,
-			       0, 0, 0, 0, 0, 0, &dif_opts);
+	rc = spdk_dif_ctx_init(&ctx, 512, 0, true, false, SPDK_DIF_TYPE1, 0,
+			       0, 0, 0, 0, 0, &dif_opts);
 	CU_ASSERT(rc != 0);
 }
 
 static void
-dif_guard_seed_test(void)
+dif_sec_4096_md_0_error_pi_32_test(void)
+{
+	struct spdk_dif_ctx ctx = {};
+	int rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+
+	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_32;
+	/* Metadata size is 0. */
+	rc = spdk_dif_ctx_init(&ctx, 4096, 0, true, false, SPDK_DIF_TYPE1, 0,
+			       0, 0, 0, 0, 0, &dif_opts);
+	CU_ASSERT(rc != 0);
+}
+
+static void
+dif_sec_4100_md_128_error_pi_32_test(void)
+{
+	struct spdk_dif_ctx ctx = {};
+	int rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+
+	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_32;
+	/* Block size is not multiple of 4kB, MD interleave = false */
+	rc = spdk_dif_ctx_init(&ctx, 4100, 128, false, false, SPDK_DIF_TYPE1, 0,
+			       0, 0, 0, 0, 0, &dif_opts);
+	CU_ASSERT(rc != 0);
+}
+
+static void
+_dif_guard_seed_test(uint32_t block_size, uint32_t md_size,
+		     enum spdk_dif_pi_format dif_pi_format)
 {
 	struct iovec iov;
 	struct spdk_dif_ctx ctx = {};
@@ -286,37 +466,39 @@ dif_guard_seed_test(void)
 	int rc;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
-	_iov_alloc_buf(&iov, 512 + 8);
+	_iov_alloc_buf(&iov, block_size);
 
-	memset(iov.iov_base, 0, 512 + 8);
+	memset(iov.iov_base, 0, block_size);
 
-	dif = (struct spdk_dif *)(iov.iov_base + 512);
+	dif = (struct spdk_dif *)(iov.iov_base + (block_size - md_size));
 
 	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
-	rc = spdk_dif_ctx_init(&ctx, 512 + 8, 8, true, false, SPDK_DIF_TYPE1,
-			       SPDK_DIF_FLAGS_GUARD_CHECK, 0, 0, 0, 0, 0, &dif_opts);
+	dif_opts.dif_pi_format = dif_pi_format;
+	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, true, SPDK_DIF_TYPE1,
+			       SPDK_DIF_FLAGS_GUARD_CHECK,
+			       0, 0, 0, 0, 0, &dif_opts);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_generate(&iov, 1, 1, &ctx);
 	CU_ASSERT(rc == 0);
 
 	/* Guard should be zero if the block is all zero and seed is not added. */
-	guard = from_be16(&dif->g16.guard);
+	guard = _dif_get_guard(dif, ctx.dif_pi_format);
 	CU_ASSERT(guard == 0);
 
 	rc = spdk_dif_verify(&iov, 1, 1, &ctx, &err_blk);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_dif_ctx_init(&ctx, 512 + 8, 8, true, false, SPDK_DIF_TYPE1,
-			       SPDK_DIF_FLAGS_GUARD_CHECK, 0, 0, 0, 0, GUARD_SEED, &dif_opts);
+	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, true, SPDK_DIF_TYPE1,
+			       SPDK_DIF_FLAGS_GUARD_CHECK,
+			       0, 0, 0, 0, GUARD_SEED, &dif_opts);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_generate(&iov, 1, 1, &ctx);
 	CU_ASSERT(rc == 0);
 
 	/* Guard should not be zero if the block is all zero but seed is added. */
-	guard = from_be16(&dif->g16.guard);
+	guard = _dif_get_guard(dif, ctx.dif_pi_format);
 	CU_ASSERT(guard != 0);
 
 	rc = spdk_dif_verify(&iov, 1, 1, &ctx, &err_blk);
@@ -326,9 +508,98 @@ dif_guard_seed_test(void)
 }
 
 static void
+dif_guard_seed_test(void)
+{
+	_dif_guard_seed_test(512 + 8, 8, SPDK_DIF_PI_FORMAT_16);
+}
+
+static void
+_dif_guard_value_test(uint32_t block_size, uint32_t md_size,
+		      enum spdk_dif_pi_format dif_pi_format, struct iovec *iov_input_data,
+		      uint64_t expected_guard)
+{
+	struct spdk_dif_ctx ctx = {};
+	struct spdk_dif_error err_blk = {};
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+	struct spdk_dif *dif;
+	int rc;
+	uint32_t guard;
+
+	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.dif_pi_format = dif_pi_format;
+	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, true, SPDK_DIF_TYPE1,
+			       SPDK_DIF_FLAGS_GUARD_CHECK,
+			       0, 0, 0, 0, 0, &dif_opts);
+	CU_ASSERT(rc == 0);
+
+	dif = (struct spdk_dif *)(iov_input_data->iov_base + (block_size - md_size));
+
+	rc = spdk_dif_generate(iov_input_data, 1, 1, &ctx);
+	CU_ASSERT(rc == 0);
+
+	guard = _dif_get_guard(dif, ctx.dif_pi_format);
+	CU_ASSERT(guard == expected_guard);
+
+	rc = spdk_dif_verify(iov_input_data, 1, 1, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+}
+
+static void
+dif_guard_value_test(void)
+{
+	struct iovec iov;
+	unsigned int i, j;
+	uint32_t block_size = 4096 + 128;
+	uint32_t md_size = 128;
+
+	_iov_alloc_buf(&iov, block_size);
+
+	/* All the expected CRC guard values are compliant with
+	* the NVM Command Set Specification 1.0c */
+
+	/* Guard size = 32, input buffer = 0s */
+	memset(iov.iov_base, 0, block_size);
+	_dif_guard_value_test(block_size, md_size, SPDK_DIF_PI_FORMAT_32, &iov, 0x98F94189);
+
+	/* Guard size = 32, input buffer = 1s */
+	memset(iov.iov_base, 0xFF, block_size);
+	_dif_guard_value_test(block_size, md_size, SPDK_DIF_PI_FORMAT_32, &iov, 0x25C1FE13);
+
+	/* Guard size = 32, input buffer = 0x00, 0x01, 0x02, ... */
+	memset(iov.iov_base, 0, block_size);
+	j = 0;
+	for (i = 0; i < block_size - md_size; i++) {
+		*((uint8_t *)(iov.iov_base) + i) = j;
+		if (j == 0xFF) {
+			j = 0;
+		} else {
+			j++;
+		}
+	}
+	_dif_guard_value_test(block_size, md_size, SPDK_DIF_PI_FORMAT_32, &iov, 0x9C71FE32);
+
+	/* Guard size = 32, input buffer = 0xFF, 0xFE, 0xFD, ... */
+	memset(iov.iov_base, 0, block_size);
+	j = 0xFF;
+	for (i = 0; i < block_size - md_size ; i++) {
+		*((uint8_t *)(iov.iov_base) + i) = j;
+		if (j == 0) {
+			j = 0xFF;
+		} else {
+			j--;
+		}
+	}
+	_dif_guard_value_test(block_size, md_size, SPDK_DIF_PI_FORMAT_32, &iov, 0x214941A8);
+
+
+	_iov_free_buf(&iov);
+}
+
+static void
 dif_generate_and_verify(struct iovec *iovs, int iovcnt,
 			uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
 			bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
+			enum spdk_dif_pi_format dif_pi_format,
 			uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag)
 {
 	struct spdk_dif_ctx ctx = {};
@@ -339,7 +610,7 @@ dif_generate_and_verify(struct iovec *iovs, int iovcnt,
 	CU_ASSERT(rc == 0);
 
 	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc, dif_type, dif_flags,
 			       init_ref_tag, apptag_mask, app_tag, 0, GUARD_SEED, &dif_opts);
 	CU_ASSERT(rc == 0);
@@ -361,7 +632,8 @@ dif_disable_sec_512_md_8_single_iov_test(void)
 
 	_iov_alloc_buf(&iov, 512 + 8);
 
-	dif_generate_and_verify(&iov, 1, 512 + 8, 8, 1, false, SPDK_DIF_DISABLE, 0, 0, 0, 0);
+	dif_generate_and_verify(&iov, 1, 512 + 8, 8, 1, false, SPDK_DIF_DISABLE, 0,
+				SPDK_DIF_PI_FORMAT_16, 0, 0, 0);
 
 	_iov_free_buf(&iov);
 }
@@ -373,7 +645,21 @@ dif_sec_512_md_8_prchk_0_single_iov_test(void)
 
 	_iov_alloc_buf(&iov, 512 + 8);
 
-	dif_generate_and_verify(&iov, 1, 512 + 8, 8, 1, false, SPDK_DIF_TYPE1, 0, 0, 0, 0);
+	dif_generate_and_verify(&iov, 1, 512 + 8, 8, 1, false, SPDK_DIF_TYPE1, 0,
+				SPDK_DIF_PI_FORMAT_16, 0, 0, 0);
+
+	_iov_free_buf(&iov);
+}
+
+static void
+dif_sec_4096_md_128_prchk_0_single_iov_pi_32_test(void)
+{
+	struct iovec iov;
+
+	_iov_alloc_buf(&iov, 4096 + 128);
+
+	dif_generate_and_verify(&iov, 1, 4096 + 128, 128, 1, false, SPDK_DIF_TYPE1, 0,
+				SPDK_DIF_PI_FORMAT_32, 0, 0, 0);
 
 	_iov_free_buf(&iov);
 }
@@ -392,16 +678,46 @@ dif_sec_512_md_8_prchk_0_1_2_4_multi_iovs_test(void)
 	}
 
 	dif_generate_and_verify(iovs, 4, 512 + 8, 8, num_blocks, false, SPDK_DIF_TYPE1,
-				0, 22, 0xFFFF, 0x22);
+				0, SPDK_DIF_PI_FORMAT_16, 22, 0xFFFF, 0x22);
 
 	dif_generate_and_verify(iovs, 4, 512 + 8, 8, num_blocks, false, SPDK_DIF_TYPE1,
-				SPDK_DIF_FLAGS_GUARD_CHECK, 22, 0xFFFF, 0x22);
+				SPDK_DIF_FLAGS_GUARD_CHECK, SPDK_DIF_PI_FORMAT_16, 22, 0xFFFF, 0x22);
 
 	dif_generate_and_verify(iovs, 4, 512 + 8, 8, num_blocks, false, SPDK_DIF_TYPE1,
-				SPDK_DIF_FLAGS_APPTAG_CHECK, 22, 0xFFFF, 0x22);
+				SPDK_DIF_FLAGS_APPTAG_CHECK, SPDK_DIF_PI_FORMAT_16, 22, 0xFFFF, 0x22);
 
 	dif_generate_and_verify(iovs, 4, 512 + 8, 8, num_blocks, false, SPDK_DIF_TYPE1,
-				SPDK_DIF_FLAGS_REFTAG_CHECK, 22, 0xFFFF, 0x22);
+				SPDK_DIF_FLAGS_REFTAG_CHECK, SPDK_DIF_PI_FORMAT_16, 22, 0xFFFF, 0x22);
+
+	for (i = 0; i < 4; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+}
+
+static void
+dif_sec_4096_md_128_prchk_0_1_2_4_multi_iovs_pi_32_test(void)
+{
+	struct iovec iovs[4];
+	int i, num_blocks;
+
+	num_blocks = 0;
+
+	for (i = 0; i < 4; i++) {
+		_iov_alloc_buf(&iovs[i], (4096 + 128) * (i + 1));
+		num_blocks += i + 1;
+	}
+
+	dif_generate_and_verify(iovs, 4, 4096 + 128, 128, num_blocks, false, SPDK_DIF_TYPE1,
+				0, SPDK_DIF_PI_FORMAT_32, 22, 0xFFFF, 0x22);
+
+	dif_generate_and_verify(iovs, 4, 4096 + 128, 128, num_blocks, false, SPDK_DIF_TYPE1,
+				SPDK_DIF_FLAGS_GUARD_CHECK, SPDK_DIF_PI_FORMAT_32, 22, 0xFFFF, 0x22);
+
+	dif_generate_and_verify(iovs, 4, 4096 + 128, 128, num_blocks, false, SPDK_DIF_TYPE1,
+				SPDK_DIF_FLAGS_APPTAG_CHECK, SPDK_DIF_PI_FORMAT_32, 22, 0xFFFF, 0x22);
+
+	dif_generate_and_verify(iovs, 4, 4096 + 128, 128, num_blocks, false, SPDK_DIF_TYPE1,
+				SPDK_DIF_FLAGS_REFTAG_CHECK, SPDK_DIF_PI_FORMAT_32, 22, 0xFFFF, 0x22);
 
 	for (i = 0; i < 4; i++) {
 		_iov_free_buf(&iovs[i]);
@@ -426,10 +742,38 @@ dif_sec_4096_md_128_prchk_7_multi_iovs_test(void)
 	}
 
 	dif_generate_and_verify(iovs, 4, 4096 + 128, 128, num_blocks, false, SPDK_DIF_TYPE1,
-				dif_flags, 22, 0xFFFF, 0x22);
+				dif_flags, SPDK_DIF_PI_FORMAT_16, 22, 0xFFFF, 0x22);
 
 	dif_generate_and_verify(iovs, 4, 4096 + 128, 128, num_blocks, true, SPDK_DIF_TYPE1,
-				dif_flags, 22, 0xFFFF, 0x22);
+				dif_flags, SPDK_DIF_PI_FORMAT_16, 22, 0xFFFF, 0x22);
+
+	for (i = 0; i < 4; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+}
+
+static void
+dif_sec_4096_md_128_prchk_7_multi_iovs_pi_32_test(void)
+{
+	struct iovec iovs[4];
+	int i, num_blocks;
+	uint32_t dif_flags;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	num_blocks = 0;
+
+	for (i = 0; i < 4; i++) {
+		_iov_alloc_buf(&iovs[i], (4096 + 128) * (i + 1));
+		num_blocks += i + 1;
+	}
+
+	dif_generate_and_verify(iovs, 4, 4096 + 128, 128, num_blocks, false, SPDK_DIF_TYPE1,
+				dif_flags, SPDK_DIF_PI_FORMAT_32, 22, 0xFFFF, 0x22);
+
+	dif_generate_and_verify(iovs, 4, 4096 + 128, 128, num_blocks, true, SPDK_DIF_TYPE1,
+				dif_flags, SPDK_DIF_PI_FORMAT_32, 22, 0xFFFF, 0x22);
 
 	for (i = 0; i < 4; i++) {
 		_iov_free_buf(&iovs[i]);
@@ -449,7 +793,26 @@ dif_sec_512_md_8_prchk_7_multi_iovs_split_data_and_md_test(void)
 	_iov_alloc_buf(&iovs[1], 8);
 
 	dif_generate_and_verify(iovs, 2, 512 + 8, 8, 1, false, SPDK_DIF_TYPE1,
-				dif_flags, 22, 0xFFFF, 0x22);
+				dif_flags, SPDK_DIF_PI_FORMAT_16, 22, 0xFFFF, 0x22);
+
+	_iov_free_buf(&iovs[0]);
+	_iov_free_buf(&iovs[1]);
+}
+
+static void
+dif_sec_4096_md_128_prchk_7_multi_iovs_split_data_and_md_pi_32_test(void)
+{
+	struct iovec iovs[2];
+	uint32_t dif_flags;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	_iov_alloc_buf(&iovs[0], 4096);
+	_iov_alloc_buf(&iovs[1], 128);
+
+	dif_generate_and_verify(iovs, 2, 4096 + 128, 128, 1, false, SPDK_DIF_TYPE1,
+				dif_flags, SPDK_DIF_PI_FORMAT_32, 22, 0xFFFF, 0x22);
 
 	_iov_free_buf(&iovs[0]);
 	_iov_free_buf(&iovs[1]);
@@ -468,7 +831,26 @@ dif_sec_512_md_8_prchk_7_multi_iovs_split_data_test(void)
 	_iov_alloc_buf(&iovs[1], 264);
 
 	dif_generate_and_verify(iovs, 2, 512 + 8, 8, 1, false, SPDK_DIF_TYPE1,
-				dif_flags, 22, 0xFFFF, 0x22);
+				dif_flags, SPDK_DIF_PI_FORMAT_16, 22, 0xFFFF, 0x22);
+
+	_iov_free_buf(&iovs[0]);
+	_iov_free_buf(&iovs[1]);
+}
+
+static void
+dif_sec_4096_md_128_prchk_7_multi_iovs_split_data_pi_32_test(void)
+{
+	struct iovec iovs[2];
+	uint32_t dif_flags;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	_iov_alloc_buf(&iovs[0], 2048);
+	_iov_alloc_buf(&iovs[1], 2176);
+
+	dif_generate_and_verify(iovs, 2, 4096 + 128, 128, 1, false, SPDK_DIF_TYPE1,
+				dif_flags, SPDK_DIF_PI_FORMAT_32, 22, 0xFFFF, 0x22);
 
 	_iov_free_buf(&iovs[0]);
 	_iov_free_buf(&iovs[1]);
@@ -487,7 +869,26 @@ dif_sec_512_md_8_prchk_7_multi_iovs_split_guard_test(void)
 	_iov_alloc_buf(&iovs[1], 7);
 
 	dif_generate_and_verify(iovs, 2, 512 + 8, 8, 1, false, SPDK_DIF_TYPE1,
-				dif_flags, 22, 0xFFFF, 0x22);
+				dif_flags, SPDK_DIF_PI_FORMAT_16, 22, 0xFFFF, 0x22);
+
+	_iov_free_buf(&iovs[0]);
+	_iov_free_buf(&iovs[1]);
+}
+
+static void
+dif_sec_4096_md_128_prchk_7_multi_iovs_split_guard_pi_32_test(void)
+{
+	struct iovec iovs[2];
+	uint32_t dif_flags;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	_iov_alloc_buf(&iovs[0], 4097);
+	_iov_alloc_buf(&iovs[1], 127);
+
+	dif_generate_and_verify(iovs, 2, 4096 + 128, 128, 1, false, SPDK_DIF_TYPE1,
+				dif_flags, SPDK_DIF_PI_FORMAT_32, 22, 0xFFFF, 0x22);
 
 	_iov_free_buf(&iovs[0]);
 	_iov_free_buf(&iovs[1]);
@@ -506,7 +907,26 @@ dif_sec_512_md_8_prchk_7_multi_iovs_split_apptag_test(void)
 	_iov_alloc_buf(&iovs[1], 5);
 
 	dif_generate_and_verify(iovs, 2, 512 + 8, 8, 1, false, SPDK_DIF_TYPE1,
-				dif_flags, 22, 0xFFFF, 0x22);
+				dif_flags, SPDK_DIF_PI_FORMAT_16, 22, 0xFFFF, 0x22);
+
+	_iov_free_buf(&iovs[0]);
+	_iov_free_buf(&iovs[1]);
+}
+
+static void
+dif_sec_4096_md_128_prchk_7_multi_iovs_split_apptag_pi_32_test(void)
+{
+	struct iovec iovs[2];
+	uint32_t dif_flags;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	_iov_alloc_buf(&iovs[0], 4101);
+	_iov_alloc_buf(&iovs[1], 123);
+
+	dif_generate_and_verify(iovs, 2, 4096 + 128, 128, 1, false, SPDK_DIF_TYPE1,
+				dif_flags, SPDK_DIF_PI_FORMAT_32, 22, 0xFFFF, 0x22);
 
 	_iov_free_buf(&iovs[0]);
 	_iov_free_buf(&iovs[1]);
@@ -525,7 +945,26 @@ dif_sec_512_md_8_prchk_7_multi_iovs_split_reftag_test(void)
 	_iov_alloc_buf(&iovs[1], 2);
 
 	dif_generate_and_verify(iovs, 2, 512 + 8, 8, 1, false, SPDK_DIF_TYPE1,
-				dif_flags, 22, 0xFFFF, 0x22);
+				dif_flags, SPDK_DIF_PI_FORMAT_16, 22, 0xFFFF, 0x22);
+
+	_iov_free_buf(&iovs[0]);
+	_iov_free_buf(&iovs[1]);
+}
+
+static void
+dif_sec_4096_md_128_prchk_7_multi_iovs_split_reftag_pi_32_test(void)
+{
+	struct iovec iovs[2];
+	uint32_t dif_flags;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	_iov_alloc_buf(&iovs[0], 4108);
+	_iov_alloc_buf(&iovs[1], 116);
+
+	dif_generate_and_verify(iovs, 2, 4096 + 128, 128, 1, false, SPDK_DIF_TYPE1,
+				dif_flags, SPDK_DIF_PI_FORMAT_32, 22, 0xFFFF, 0x22);
 
 	_iov_free_buf(&iovs[0]);
 	_iov_free_buf(&iovs[1]);
@@ -569,7 +1008,7 @@ dif_sec_512_md_8_prchk_7_multi_iovs_complex_splits_test(void)
 	_iov_alloc_buf(&iovs[8], 3);
 
 	dif_generate_and_verify(iovs, 9, 512 + 8, 8, 2, false, SPDK_DIF_TYPE1, dif_flags,
-				22, 0xFFFF, 0x22);
+				SPDK_DIF_PI_FORMAT_16, 22, 0xFFFF, 0x22);
 
 	for (i = 0; i < 9; i++) {
 		_iov_free_buf(&iovs[i]);
@@ -620,9 +1059,13 @@ dif_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_test(void)
 	_iov_alloc_buf(&iovs[10], 118);
 
 	dif_generate_and_verify(iovs, 11, 4096 + 128, 128, 2, false, SPDK_DIF_TYPE1, dif_flags,
-				22, 0xFFFF, 0x22);
+				SPDK_DIF_PI_FORMAT_16, 22, 0xFFFF, 0x22);
 	dif_generate_and_verify(iovs, 11, 4096 + 128, 128, 2, true, SPDK_DIF_TYPE1, dif_flags,
-				22, 0xFFFF, 0x22);
+				SPDK_DIF_PI_FORMAT_16, 22, 0xFFFF, 0x22);
+	dif_generate_and_verify(iovs, 11, 4096 + 128, 128, 2, false, SPDK_DIF_TYPE1, dif_flags,
+				SPDK_DIF_PI_FORMAT_32, 22, 0xFFFF, 0x22);
+	dif_generate_and_verify(iovs, 11, 4096 + 128, 128, 2, true, SPDK_DIF_TYPE1, dif_flags,
+				SPDK_DIF_PI_FORMAT_32, 22, 0xFFFF, 0x22);
 
 	for (i = 0; i < 11; i++) {
 		_iov_free_buf(&iovs[i]);
@@ -632,7 +1075,7 @@ dif_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_test(void)
 static void
 _dif_inject_error_and_verify(struct iovec *iovs, int iovcnt,
 			     uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
-			     uint32_t inject_flags, bool dif_loc)
+			     uint32_t inject_flags, bool dif_loc, enum spdk_dif_pi_format dif_pi_format)
 {
 	struct spdk_dif_ctx ctx = {};
 	struct spdk_dif_error err_blk = {};
@@ -647,9 +1090,10 @@ _dif_inject_error_and_verify(struct iovec *iovs, int iovcnt,
 	CU_ASSERT(rc == 0);
 
 	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc,
-			       SPDK_DIF_TYPE1, dif_flags, 88, 0xFFFF, 0x88, 0, GUARD_SEED, &dif_opts);
+			       SPDK_DIF_TYPE1, dif_flags,
+			       88, 0xFFFF, 0x88, 0, GUARD_SEED, &dif_opts);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_generate(iovs, iovcnt, num_blocks, &ctx);
@@ -675,15 +1119,15 @@ _dif_inject_error_and_verify(struct iovec *iovs, int iovcnt,
 static void
 dif_inject_error_and_verify(struct iovec *iovs, int iovcnt,
 			    uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
-			    uint32_t inject_flags)
+			    uint32_t inject_flags, enum spdk_dif_pi_format dif_pi_format)
 {
-	/* The case that DIF is contained in the first 8 bytes of metadata. */
+	/* The case that DIF is contained in the first 8/16 bytes of metadata. */
 	_dif_inject_error_and_verify(iovs, iovcnt, block_size, md_size, num_blocks,
-				     inject_flags, true);
+				     inject_flags, true, dif_pi_format);
 
-	/* The case that DIF is contained in the last 8 bytes of metadata. */
+	/* The case that DIF is contained in the last 8/16 bytes of metadata. */
 	_dif_inject_error_and_verify(iovs, iovcnt, block_size, md_size, num_blocks,
-				     inject_flags, false);
+				     inject_flags, false, dif_pi_format);
 }
 
 static void
@@ -699,10 +1143,22 @@ dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test(void)
 		num_blocks += i + 1;
 	}
 
-	dif_inject_error_and_verify(iovs, 4, 4096 + 128, 128, num_blocks, SPDK_DIF_GUARD_ERROR);
-	dif_inject_error_and_verify(iovs, 4, 4096 + 128, 128, num_blocks, SPDK_DIF_APPTAG_ERROR);
-	dif_inject_error_and_verify(iovs, 4, 4096 + 128, 128, num_blocks, SPDK_DIF_REFTAG_ERROR);
-	dif_inject_error_and_verify(iovs, 4, 4096 + 128, 128, num_blocks, SPDK_DIF_DATA_ERROR);
+	dif_inject_error_and_verify(iovs, 4, 4096 + 128, 128, num_blocks,
+				    SPDK_DIF_GUARD_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 4, 4096 + 128, 128, num_blocks,
+				    SPDK_DIF_APPTAG_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 4, 4096 + 128, 128, num_blocks,
+				    SPDK_DIF_REFTAG_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 4, 4096 + 128, 128, num_blocks,
+				    SPDK_DIF_DATA_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 4, 4096 + 128, 128, num_blocks,
+				    SPDK_DIF_GUARD_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dif_inject_error_and_verify(iovs, 4, 4096 + 128, 128, num_blocks,
+				    SPDK_DIF_APPTAG_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dif_inject_error_and_verify(iovs, 4, 4096 + 128, 128, num_blocks,
+				    SPDK_DIF_REFTAG_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dif_inject_error_and_verify(iovs, 4, 4096 + 128, 128, num_blocks,
+				    SPDK_DIF_DATA_ERROR, SPDK_DIF_PI_FORMAT_32);
 
 	for (i = 0; i < 4; i++) {
 		_iov_free_buf(&iovs[i]);
@@ -717,10 +1173,22 @@ dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_data_and_md_test(void)
 	_iov_alloc_buf(&iovs[0], 4096);
 	_iov_alloc_buf(&iovs[1], 128);
 
-	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_GUARD_ERROR);
-	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_APPTAG_ERROR);
-	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_REFTAG_ERROR);
-	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_DATA_ERROR);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_GUARD_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_APPTAG_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_REFTAG_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_DATA_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_GUARD_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_APPTAG_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_REFTAG_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_DATA_ERROR, SPDK_DIF_PI_FORMAT_32);
 
 	_iov_free_buf(&iovs[0]);
 	_iov_free_buf(&iovs[1]);
@@ -734,10 +1202,22 @@ dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_data_test(void)
 	_iov_alloc_buf(&iovs[0], 2048);
 	_iov_alloc_buf(&iovs[1], 2048 + 128);
 
-	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_GUARD_ERROR);
-	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_APPTAG_ERROR);
-	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_REFTAG_ERROR);
-	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_DATA_ERROR);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_GUARD_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_APPTAG_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_REFTAG_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_DATA_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_GUARD_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_APPTAG_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_REFTAG_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_DATA_ERROR, SPDK_DIF_PI_FORMAT_32);
 
 	_iov_free_buf(&iovs[0]);
 	_iov_free_buf(&iovs[1]);
@@ -751,10 +1231,23 @@ dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_guard_test(void)
 	_iov_alloc_buf(&iovs[0], 4096 + 1);
 	_iov_alloc_buf(&iovs[1], 127);
 
-	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_GUARD_ERROR);
-	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_APPTAG_ERROR);
-	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_REFTAG_ERROR);
-	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_DATA_ERROR);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_GUARD_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_APPTAG_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_REFTAG_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_DATA_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_GUARD_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_APPTAG_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_REFTAG_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_DATA_ERROR, SPDK_DIF_PI_FORMAT_32);
+
 
 	_iov_free_buf(&iovs[0]);
 	_iov_free_buf(&iovs[1]);
@@ -768,10 +1261,35 @@ dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_apptag_test(void)
 	_iov_alloc_buf(&iovs[0], 4096 + 3);
 	_iov_alloc_buf(&iovs[1], 125);
 
-	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_GUARD_ERROR);
-	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_APPTAG_ERROR);
-	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_REFTAG_ERROR);
-	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_DATA_ERROR);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_GUARD_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_APPTAG_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_REFTAG_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_DATA_ERROR, SPDK_DIF_PI_FORMAT_16);
+
+	_iov_free_buf(&iovs[0]);
+	_iov_free_buf(&iovs[1]);
+}
+
+static void
+dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_apptag_pi_32_test(void)
+{
+	struct iovec iovs[2];
+
+	_iov_alloc_buf(&iovs[0], 4096 + 5);
+	_iov_alloc_buf(&iovs[1], 123);
+
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_GUARD_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_APPTAG_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_REFTAG_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_DATA_ERROR, SPDK_DIF_PI_FORMAT_32);
 
 	_iov_free_buf(&iovs[0]);
 	_iov_free_buf(&iovs[1]);
@@ -785,10 +1303,35 @@ dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_reftag_test(void)
 	_iov_alloc_buf(&iovs[0], 4096 + 6);
 	_iov_alloc_buf(&iovs[1], 122);
 
-	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_GUARD_ERROR);
-	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_APPTAG_ERROR);
-	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_REFTAG_ERROR);
-	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_DATA_ERROR);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_GUARD_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_APPTAG_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_REFTAG_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_DATA_ERROR, SPDK_DIF_PI_FORMAT_16);
+
+	_iov_free_buf(&iovs[0]);
+	_iov_free_buf(&iovs[1]);
+}
+
+static void
+dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_reftag_pi_32_test(void)
+{
+	struct iovec iovs[2];
+
+	_iov_alloc_buf(&iovs[0], 4096 + 9);
+	_iov_alloc_buf(&iovs[1], 119);
+
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_GUARD_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_APPTAG_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_REFTAG_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1,
+				    SPDK_DIF_DATA_ERROR, SPDK_DIF_PI_FORMAT_32);
 
 	_iov_free_buf(&iovs[0]);
 	_iov_free_buf(&iovs[1]);
@@ -798,7 +1341,8 @@ static void
 dif_copy_gen_and_verify(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
 			uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
 			bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
-			uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag)
+			uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag,
+			enum spdk_dif_pi_format dif_pi_format)
 {
 	struct spdk_dif_ctx ctx = {};
 	int rc;
@@ -832,9 +1376,26 @@ dif_copy_sec_512_md_8_prchk_0_single_iov(void)
 	_iov_alloc_buf(&bounce_iov, (512 + 8) * 4);
 
 	dif_copy_gen_and_verify(&iov, 1, &bounce_iov, 512 + 8, 8, 4,
-				false, SPDK_DIF_TYPE1, 0, 0, 0, 0);
+				false, SPDK_DIF_TYPE1, 0, 0, 0, 0, SPDK_DIF_PI_FORMAT_16);
 	dif_copy_gen_and_verify(&iov, 1, &bounce_iov, 512 + 8, 8, 4,
-				true, SPDK_DIF_TYPE1, 0, 0, 0, 0);
+				true, SPDK_DIF_TYPE1, 0, 0, 0, 0, SPDK_DIF_PI_FORMAT_16);
+
+	_iov_free_buf(&iov);
+	_iov_free_buf(&bounce_iov);
+}
+
+static void
+dif_copy_sec_4096_md_128_prchk_0_single_iov_pi_32(void)
+{
+	struct iovec iov, bounce_iov;
+
+	_iov_alloc_buf(&iov, 4096 * 4);
+	_iov_alloc_buf(&bounce_iov, (4096 + 128) * 4);
+
+	dif_copy_gen_and_verify(&iov, 1, &bounce_iov, 4096 + 128, 128, 4,
+				false, SPDK_DIF_TYPE1, 0, 0, 0, 0, SPDK_DIF_PI_FORMAT_32);
+	dif_copy_gen_and_verify(&iov, 1, &bounce_iov, 4096 + 128, 128, 4,
+				true, SPDK_DIF_TYPE1, 0, 0, 0, 0, SPDK_DIF_PI_FORMAT_32);
 
 	_iov_free_buf(&iov);
 	_iov_free_buf(&bounce_iov);
@@ -856,16 +1417,55 @@ dif_copy_sec_512_md_8_prchk_0_1_2_4_multi_iovs(void)
 	_iov_alloc_buf(&bounce_iov, (512 + 8) * num_blocks);
 
 	dif_copy_gen_and_verify(iovs, 4, &bounce_iov, 512 + 8, 8, num_blocks,
-				false, SPDK_DIF_TYPE1, 0, 22, 0xFFFF, 0x22);
+				false, SPDK_DIF_TYPE1, 0, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
 
 	dif_copy_gen_and_verify(iovs, 4, &bounce_iov, 512 + 8, 8, num_blocks,
-				false, SPDK_DIF_TYPE1, SPDK_DIF_FLAGS_GUARD_CHECK, 22, 0xFFFF, 0x22);
+				false, SPDK_DIF_TYPE1, SPDK_DIF_FLAGS_GUARD_CHECK, 22, 0xFFFF, 0x22,
+				SPDK_DIF_PI_FORMAT_16);
 
 	dif_copy_gen_and_verify(iovs, 4, &bounce_iov, 512 + 8, 8, num_blocks,
-				false, SPDK_DIF_TYPE1, SPDK_DIF_FLAGS_APPTAG_CHECK, 22, 0xFFFF, 0x22);
+				false, SPDK_DIF_TYPE1, SPDK_DIF_FLAGS_APPTAG_CHECK, 22, 0xFFFF, 0x22,
+				SPDK_DIF_PI_FORMAT_16);
 
 	dif_copy_gen_and_verify(iovs, 4, &bounce_iov, 512 + 8, 8, num_blocks,
-				false, SPDK_DIF_TYPE1, SPDK_DIF_FLAGS_REFTAG_CHECK, 22, 0xFFFF, 0x22);
+				false, SPDK_DIF_TYPE1, SPDK_DIF_FLAGS_REFTAG_CHECK, 22, 0xFFFF, 0x22,
+				SPDK_DIF_PI_FORMAT_16);
+
+	for (i = 0; i < 4; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+	_iov_free_buf(&bounce_iov);
+}
+
+static void
+dif_copy_sec_4096_md_128_prchk_0_1_2_4_multi_iovs_pi_32(void)
+{
+	struct iovec iovs[4], bounce_iov;
+	int i, num_blocks;
+
+	num_blocks = 0;
+
+	for (i = 0; i < 4; i++) {
+		_iov_alloc_buf(&iovs[i], 4096 * (i + 1));
+		num_blocks += i + 1;
+	}
+
+	_iov_alloc_buf(&bounce_iov, (4096 + 128) * num_blocks);
+
+	dif_copy_gen_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128, num_blocks,
+				false, SPDK_DIF_TYPE1, 0, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_32);
+
+	dif_copy_gen_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128, num_blocks,
+				false, SPDK_DIF_TYPE1, SPDK_DIF_FLAGS_GUARD_CHECK, 22, 0xFFFF, 0x22,
+				SPDK_DIF_PI_FORMAT_32);
+
+	dif_copy_gen_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128, num_blocks,
+				false, SPDK_DIF_TYPE1, SPDK_DIF_FLAGS_APPTAG_CHECK, 22, 0xFFFF, 0x22,
+				SPDK_DIF_PI_FORMAT_32);
+
+	dif_copy_gen_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128, num_blocks,
+				false, SPDK_DIF_TYPE1, SPDK_DIF_FLAGS_REFTAG_CHECK, 22, 0xFFFF, 0x22,
+				SPDK_DIF_PI_FORMAT_32);
 
 	for (i = 0; i < 4; i++) {
 		_iov_free_buf(&iovs[i]);
@@ -893,9 +1493,13 @@ dif_copy_sec_4096_md_128_prchk_7_multi_iovs(void)
 	_iov_alloc_buf(&bounce_iov, (4096 + 128) * num_blocks);
 
 	dif_copy_gen_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128, num_blocks,
-				false, SPDK_DIF_TYPE1, dif_flags, 22, 0xFFFF, 0x22);
+				false, SPDK_DIF_TYPE1, dif_flags, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
 	dif_copy_gen_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128, num_blocks,
-				true, SPDK_DIF_TYPE1, dif_flags, 22, 0xFFFF, 0x22);
+				true, SPDK_DIF_TYPE1, dif_flags, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
+	dif_copy_gen_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128, num_blocks,
+				false, SPDK_DIF_TYPE1, dif_flags, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_32);
+	dif_copy_gen_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128, num_blocks,
+				true, SPDK_DIF_TYPE1, dif_flags, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_32);
 
 	for (i = 0; i < 4; i++) {
 		_iov_free_buf(&iovs[i]);
@@ -918,7 +1522,29 @@ dif_copy_sec_512_md_8_prchk_7_multi_iovs_split_data(void)
 	_iov_alloc_buf(&bounce_iov, 512 + 8);
 
 	dif_copy_gen_and_verify(iovs, 2, &bounce_iov, 512 + 8, 8, 1,
-				false, SPDK_DIF_TYPE1, dif_flags, 22, 0xFFFF, 0x22);
+				false, SPDK_DIF_TYPE1, dif_flags, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
+
+	_iov_free_buf(&iovs[0]);
+	_iov_free_buf(&iovs[1]);
+	_iov_free_buf(&bounce_iov);
+}
+
+static void
+dif_copy_sec_4096_md_128_prchk_7_multi_iovs_split_data_pi_32(void)
+{
+	struct iovec iovs[2], bounce_iov;
+	uint32_t dif_flags;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	_iov_alloc_buf(&iovs[0], 2048);
+	_iov_alloc_buf(&iovs[1], 2048);
+
+	_iov_alloc_buf(&bounce_iov, 4096 + 128);
+
+	dif_copy_gen_and_verify(iovs, 2, &bounce_iov, 4096 + 128, 128, 1,
+				false, SPDK_DIF_TYPE1, dif_flags, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_32);
 
 	_iov_free_buf(&iovs[0]);
 	_iov_free_buf(&iovs[1]);
@@ -956,7 +1582,46 @@ dif_copy_sec_512_md_8_prchk_7_multi_iovs_complex_splits(void)
 	_iov_alloc_buf(&bounce_iov, (512 + 8) * 4);
 
 	dif_copy_gen_and_verify(iovs, 6, &bounce_iov, 512 + 8, 8, 4,
-				true, SPDK_DIF_TYPE1, dif_flags, 22, 0xFFFF, 0x22);
+				true, SPDK_DIF_TYPE1, dif_flags, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
+
+	for (i = 0; i < 6; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+	_iov_free_buf(&bounce_iov);
+}
+
+static void
+dif_copy_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_pi_32(void)
+{
+	struct iovec iovs[6], bounce_iov;
+	uint32_t dif_flags;
+	int i;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	/* data[0][2047:0] */
+	_iov_alloc_buf(&iovs[0], 2048);
+
+	/* data[0][4095:2048], data[1][2047:0] */
+	_iov_alloc_buf(&iovs[1], 2048 + 2048);
+
+	/* data[1][3071:2048] */
+	_iov_alloc_buf(&iovs[2], 1024);
+
+	/* data[1][3072] */
+	_iov_alloc_buf(&iovs[3], 1);
+
+	/* data[1][4094:3073] */
+	_iov_alloc_buf(&iovs[4], 1022);
+
+	/* data[1][4095], data[2][4095:0], data[3][4095:0] */
+	_iov_alloc_buf(&iovs[5], 1 + 4096 * 2);
+
+	_iov_alloc_buf(&bounce_iov, (4096 + 128) * 4);
+
+	dif_copy_gen_and_verify(iovs, 6, &bounce_iov, 4096 + 128, 128, 4,
+				true, SPDK_DIF_TYPE1, dif_flags, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_32);
 
 	for (i = 0; i < 6; i++) {
 		_iov_free_buf(&iovs[i]);
@@ -967,7 +1632,7 @@ dif_copy_sec_512_md_8_prchk_7_multi_iovs_complex_splits(void)
 static void
 _dif_copy_inject_error_and_verify(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
 				  uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
-				  uint32_t inject_flags, bool dif_loc)
+				  uint32_t inject_flags, bool dif_loc, enum spdk_dif_pi_format dif_pi_format)
 {
 	struct spdk_dif_ctx ctx = {};
 	struct spdk_dif_error err_blk = {};
@@ -982,7 +1647,7 @@ _dif_copy_inject_error_and_verify(struct iovec *iovs, int iovcnt, struct iovec *
 	CU_ASSERT(rc == 0);
 
 	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc, SPDK_DIF_TYPE1, dif_flags,
 			       88, 0xFFFF, 0x88, 0, GUARD_SEED, &dif_opts);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
@@ -1006,17 +1671,17 @@ _dif_copy_inject_error_and_verify(struct iovec *iovs, int iovcnt, struct iovec *
 static void
 dif_copy_inject_error_and_verify(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
 				 uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
-				 uint32_t inject_flags)
+				 uint32_t inject_flags, enum spdk_dif_pi_format dif_pi_format)
 {
-	/* The case that DIF is contained in the first 8 bytes of metadata. */
+	/* The case that DIF is contained in the first 8/16 bytes of metadata. */
 	_dif_copy_inject_error_and_verify(iovs, iovcnt, bounce_iov,
 					  block_size, md_size, num_blocks,
-					  inject_flags, true);
+					  inject_flags, true, dif_pi_format);
 
-	/* The case that DIF is contained in the last 8 bytes of metadata. */
+	/* The case that DIF is contained in the last 8/16 bytes of metadata. */
 	_dif_copy_inject_error_and_verify(iovs, iovcnt, bounce_iov,
 					  block_size, md_size, num_blocks,
-					  inject_flags, false);
+					  inject_flags, false, dif_pi_format);
 }
 
 static void
@@ -1035,16 +1700,28 @@ dif_copy_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test(void)
 	_iov_alloc_buf(&bounce_iov, (4096 + 128) * num_blocks);
 
 	dif_copy_inject_error_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128,
-					 num_blocks, SPDK_DIF_GUARD_ERROR);
+					 num_blocks, SPDK_DIF_GUARD_ERROR, SPDK_DIF_PI_FORMAT_16);
 
 	dif_copy_inject_error_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128,
-					 num_blocks, SPDK_DIF_APPTAG_ERROR);
+					 num_blocks, SPDK_DIF_APPTAG_ERROR, SPDK_DIF_PI_FORMAT_16);
 
 	dif_copy_inject_error_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128,
-					 num_blocks, SPDK_DIF_REFTAG_ERROR);
+					 num_blocks, SPDK_DIF_REFTAG_ERROR, SPDK_DIF_PI_FORMAT_16);
 
 	dif_copy_inject_error_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128,
-					 num_blocks, SPDK_DIF_DATA_ERROR);
+					 num_blocks, SPDK_DIF_DATA_ERROR, SPDK_DIF_PI_FORMAT_16);
+
+	dif_copy_inject_error_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128,
+					 num_blocks, SPDK_DIF_GUARD_ERROR, SPDK_DIF_PI_FORMAT_32);
+
+	dif_copy_inject_error_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128,
+					 num_blocks, SPDK_DIF_APPTAG_ERROR, SPDK_DIF_PI_FORMAT_32);
+
+	dif_copy_inject_error_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128,
+					 num_blocks, SPDK_DIF_REFTAG_ERROR, SPDK_DIF_PI_FORMAT_32);
+
+	dif_copy_inject_error_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128,
+					 num_blocks, SPDK_DIF_DATA_ERROR, SPDK_DIF_PI_FORMAT_32);
 
 	for (i = 0; i < 4; i++) {
 		_iov_free_buf(&iovs[i]);
@@ -1066,16 +1743,28 @@ dif_copy_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test(void)
 	_iov_alloc_buf(&bounce_iov, (4096 + 128) * 2);
 
 	dif_copy_inject_error_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128,
-					 2, SPDK_DIF_GUARD_ERROR);
+					 2, SPDK_DIF_GUARD_ERROR, SPDK_DIF_PI_FORMAT_16);
 
 	dif_copy_inject_error_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128,
-					 2, SPDK_DIF_APPTAG_ERROR);
+					 2, SPDK_DIF_APPTAG_ERROR, SPDK_DIF_PI_FORMAT_16);
 
 	dif_copy_inject_error_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128,
-					 2, SPDK_DIF_REFTAG_ERROR);
+					 2, SPDK_DIF_REFTAG_ERROR, SPDK_DIF_PI_FORMAT_16);
 
 	dif_copy_inject_error_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128,
-					 2, SPDK_DIF_DATA_ERROR);
+					 2, SPDK_DIF_DATA_ERROR, SPDK_DIF_PI_FORMAT_16);
+
+	dif_copy_inject_error_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128,
+					 2, SPDK_DIF_GUARD_ERROR, SPDK_DIF_PI_FORMAT_32);
+
+	dif_copy_inject_error_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128,
+					 2, SPDK_DIF_APPTAG_ERROR, SPDK_DIF_PI_FORMAT_32);
+
+	dif_copy_inject_error_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128,
+					 2, SPDK_DIF_REFTAG_ERROR, SPDK_DIF_PI_FORMAT_32);
+
+	dif_copy_inject_error_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128,
+					 2, SPDK_DIF_DATA_ERROR, SPDK_DIF_PI_FORMAT_32);
 
 	for (i = 0; i < 4; i++) {
 		_iov_free_buf(&iovs[i]);
@@ -1092,8 +1781,8 @@ dix_sec_512_md_0_error(void)
 
 	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
-	rc = spdk_dif_ctx_init(&ctx, 512, 0, false, false, SPDK_DIF_TYPE1,
-			       0, 0, 0, 0, 0, 0, &dif_opts);
+	rc = spdk_dif_ctx_init(&ctx, 512, 0, false, false, SPDK_DIF_TYPE1, 0,
+			       0, 0, 0, 0, 0, &dif_opts);
 	CU_ASSERT(rc != 0);
 }
 
@@ -1101,7 +1790,8 @@ static void
 dix_generate_and_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 			uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
 			bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
-			uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag)
+			uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag,
+			enum spdk_dif_pi_format dif_pi_format)
 {
 	struct spdk_dif_ctx ctx;
 	int rc;
@@ -1111,7 +1801,7 @@ dix_generate_and_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 	CU_ASSERT(rc == 0);
 
 	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, false, dif_loc, dif_type, dif_flags,
 			       init_ref_tag, apptag_mask, app_tag, 0, GUARD_SEED, &dif_opts);
 	CU_ASSERT(rc == 0);
@@ -1134,8 +1824,27 @@ dix_sec_512_md_8_prchk_0_single_iov(void)
 	_iov_alloc_buf(&iov, 512 * 4);
 	_iov_alloc_buf(&md_iov, 8 * 4);
 
-	dix_generate_and_verify(&iov, 1, &md_iov, 512, 8, 4, false, SPDK_DIF_TYPE1, 0, 0, 0, 0);
-	dix_generate_and_verify(&iov, 1, &md_iov, 512, 8, 4, true, SPDK_DIF_TYPE1, 0, 0, 0, 0);
+	dix_generate_and_verify(&iov, 1, &md_iov, 512, 8, 4, false, SPDK_DIF_TYPE1, 0, 0, 0, 0,
+				SPDK_DIF_PI_FORMAT_16);
+	dix_generate_and_verify(&iov, 1, &md_iov, 512, 8, 4, true, SPDK_DIF_TYPE1, 0, 0, 0, 0,
+				SPDK_DIF_PI_FORMAT_16);
+
+	_iov_free_buf(&iov);
+	_iov_free_buf(&md_iov);
+}
+
+static void
+dix_sec_4096_md_128_prchk_0_single_iov_pi_32(void)
+{
+	struct iovec iov, md_iov;
+
+	_iov_alloc_buf(&iov, 4096 * 4);
+	_iov_alloc_buf(&md_iov, 128 * 4);
+
+	dix_generate_and_verify(&iov, 1, &md_iov, 4096, 128, 4, false, SPDK_DIF_TYPE1, 0, 0, 0, 0,
+				SPDK_DIF_PI_FORMAT_32);
+	dix_generate_and_verify(&iov, 1, &md_iov, 4096, 128, 4, true, SPDK_DIF_TYPE1, 0, 0, 0, 0,
+				SPDK_DIF_PI_FORMAT_32);
 
 	_iov_free_buf(&iov);
 	_iov_free_buf(&md_iov);
@@ -1156,16 +1865,48 @@ dix_sec_512_md_8_prchk_0_1_2_4_multi_iovs(void)
 	_iov_alloc_buf(&md_iov, 8 * num_blocks);
 
 	dix_generate_and_verify(iovs, 4, &md_iov, 512, 8, num_blocks, false, SPDK_DIF_TYPE1,
-				0, 22, 0xFFFF, 0x22);
+				0, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
 
 	dix_generate_and_verify(iovs, 4, &md_iov, 512, 8, num_blocks, false, SPDK_DIF_TYPE1,
-				SPDK_DIF_FLAGS_GUARD_CHECK, 22, 0xFFFF, 0x22);
+				SPDK_DIF_FLAGS_GUARD_CHECK, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
 
 	dix_generate_and_verify(iovs, 4, &md_iov, 512, 8, num_blocks, false, SPDK_DIF_TYPE1,
-				SPDK_DIF_FLAGS_APPTAG_CHECK, 22, 0xFFFF, 0x22);
+				SPDK_DIF_FLAGS_APPTAG_CHECK, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
 
 	dix_generate_and_verify(iovs, 4, &md_iov, 512, 8, num_blocks, false, SPDK_DIF_TYPE1,
-				SPDK_DIF_FLAGS_REFTAG_CHECK, 22, 0xFFFF, 0x22);
+				SPDK_DIF_FLAGS_REFTAG_CHECK, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
+
+	for (i = 0; i < 4; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+	_iov_free_buf(&md_iov);
+}
+
+static void
+dix_sec_4096_md_128_prchk_0_1_2_4_multi_iovs_pi_32(void)
+{
+	struct iovec iovs[4], md_iov;
+	int i, num_blocks;
+
+	num_blocks = 0;
+
+	for (i = 0; i < 4; i++) {
+		_iov_alloc_buf(&iovs[i], 4096 * (i + 1));
+		num_blocks += i + 1;
+	}
+	_iov_alloc_buf(&md_iov, 128 * num_blocks);
+
+	dix_generate_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks, false, SPDK_DIF_TYPE1,
+				0, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_32);
+
+	dix_generate_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks, false, SPDK_DIF_TYPE1,
+				SPDK_DIF_FLAGS_GUARD_CHECK, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_32);
+
+	dix_generate_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks, false, SPDK_DIF_TYPE1,
+				SPDK_DIF_FLAGS_APPTAG_CHECK, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_32);
+
+	dix_generate_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks, false, SPDK_DIF_TYPE1,
+				SPDK_DIF_FLAGS_REFTAG_CHECK, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_32);
 
 	for (i = 0; i < 4; i++) {
 		_iov_free_buf(&iovs[i]);
@@ -1192,9 +1933,13 @@ dix_sec_4096_md_128_prchk_7_multi_iovs(void)
 	_iov_alloc_buf(&md_iov, 128 * num_blocks);
 
 	dix_generate_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks, false, SPDK_DIF_TYPE1,
-				dif_flags, 22, 0xFFFF, 0x22);
+				dif_flags, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
 	dix_generate_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks, true, SPDK_DIF_TYPE1,
-				dif_flags, 22, 0xFFFF, 0x22);
+				dif_flags, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
+	dix_generate_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks, false, SPDK_DIF_TYPE1,
+				dif_flags, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_32);
+	dix_generate_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks, true, SPDK_DIF_TYPE1,
+				dif_flags, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_32);
 
 	for (i = 0; i < 4; i++) {
 		_iov_free_buf(&iovs[i]);
@@ -1216,7 +1961,28 @@ dix_sec_512_md_8_prchk_7_multi_iovs_split_data(void)
 	_iov_alloc_buf(&md_iov, 8);
 
 	dix_generate_and_verify(iovs, 2, &md_iov, 512, 8, 1, false, SPDK_DIF_TYPE1,
-				dif_flags, 22, 0xFFFF, 0x22);
+				dif_flags, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
+
+	_iov_free_buf(&iovs[0]);
+	_iov_free_buf(&iovs[1]);
+	_iov_free_buf(&md_iov);
+}
+
+static void
+dix_sec_4096_md_128_prchk_7_multi_iovs_split_data_pi_32(void)
+{
+	struct iovec iovs[2], md_iov;
+	uint32_t dif_flags;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	_iov_alloc_buf(&iovs[0], 2048);
+	_iov_alloc_buf(&iovs[1], 2048);
+	_iov_alloc_buf(&md_iov, 128);
+
+	dix_generate_and_verify(iovs, 2, &md_iov, 4096, 128, 1, false, SPDK_DIF_TYPE1,
+				dif_flags, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_32);
 
 	_iov_free_buf(&iovs[0]);
 	_iov_free_buf(&iovs[1]);
@@ -1254,7 +2020,46 @@ dix_sec_512_md_8_prchk_7_multi_iovs_complex_splits(void)
 	_iov_alloc_buf(&md_iov, 8 * 4);
 
 	dix_generate_and_verify(iovs, 6, &md_iov, 512, 8, 4, false, SPDK_DIF_TYPE1,
-				dif_flags, 22, 0xFFFF, 0x22);
+				dif_flags, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
+
+	for (i = 0; i < 6; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+	_iov_free_buf(&md_iov);
+}
+
+static void
+dix_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_pi_32(void)
+{
+	struct iovec iovs[6], md_iov;
+	uint32_t dif_flags;
+	int i;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	/* data[0][2047:0] */
+	_iov_alloc_buf(&iovs[0], 2048);
+
+	/* data[0][4095:2048], data[1][2047:0] */
+	_iov_alloc_buf(&iovs[1], 2048 + 2048);
+
+	/* data[1][3071:2048] */
+	_iov_alloc_buf(&iovs[2], 1024);
+
+	/* data[1][3072] */
+	_iov_alloc_buf(&iovs[3], 1);
+
+	/* data[1][4094:3073] */
+	_iov_alloc_buf(&iovs[4], 1022);
+
+	/* data[1][4095], data[2][4095:0], data[3][4095:0] */
+	_iov_alloc_buf(&iovs[5], 1 + 4096 * 2);
+
+	_iov_alloc_buf(&md_iov, 128 * 4);
+
+	dix_generate_and_verify(iovs, 6, &md_iov, 4096, 128, 4, false, SPDK_DIF_TYPE1,
+				dif_flags, 22, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_32);
 
 	for (i = 0; i < 6; i++) {
 		_iov_free_buf(&iovs[i]);
@@ -1265,7 +2070,7 @@ dix_sec_512_md_8_prchk_7_multi_iovs_complex_splits(void)
 static void
 _dix_inject_error_and_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 			     uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
-			     uint32_t inject_flags, bool dif_loc)
+			     uint32_t inject_flags, bool dif_loc, enum spdk_dif_pi_format dif_pi_format)
 {
 	struct spdk_dif_ctx ctx = {};
 	struct spdk_dif_error err_blk = {};
@@ -1280,7 +2085,7 @@ _dix_inject_error_and_verify(struct iovec *iovs, int iovcnt, struct iovec *md_io
 	CU_ASSERT(rc == 0);
 
 	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, false, dif_loc, SPDK_DIF_TYPE1, dif_flags,
 			       88, 0xFFFF, 0x88, 0, GUARD_SEED, &dif_opts);
 	CU_ASSERT(rc == 0);
@@ -1305,15 +2110,15 @@ _dix_inject_error_and_verify(struct iovec *iovs, int iovcnt, struct iovec *md_io
 static void
 dix_inject_error_and_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 			    uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
-			    uint32_t inject_flags)
+			    uint32_t inject_flags, enum spdk_dif_pi_format dif_pi_format)
 {
-	/* The case that DIF is contained in the first 8 bytes of metadata. */
+	/* The case that DIF is contained in the first 8/16 bytes of metadata. */
 	_dix_inject_error_and_verify(iovs, iovcnt, md_iov, block_size, md_size, num_blocks,
-				     inject_flags, true);
+				     inject_flags, true, dif_pi_format);
 
-	/* The case that DIF is contained in the last 8 bytes of metadata. */
+	/* The case that DIF is contained in the last 8/16 bytes of metadata. */
 	_dix_inject_error_and_verify(iovs, iovcnt, md_iov, block_size, md_size, num_blocks,
-				     inject_flags, false);
+				     inject_flags, false, dif_pi_format);
 }
 
 static void
@@ -1331,10 +2136,22 @@ dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test(void)
 
 	_iov_alloc_buf(&md_iov, 128 * num_blocks);
 
-	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks, SPDK_DIF_GUARD_ERROR);
-	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks, SPDK_DIF_APPTAG_ERROR);
-	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks, SPDK_DIF_REFTAG_ERROR);
-	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks, SPDK_DIF_DATA_ERROR);
+	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks,
+				    SPDK_DIF_GUARD_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks,
+				    SPDK_DIF_APPTAG_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks,
+				    SPDK_DIF_REFTAG_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks,
+				    SPDK_DIF_DATA_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks,
+				    SPDK_DIF_GUARD_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks,
+				    SPDK_DIF_APPTAG_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks,
+				    SPDK_DIF_REFTAG_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks,
+				    SPDK_DIF_DATA_ERROR, SPDK_DIF_PI_FORMAT_32);
 
 	for (i = 0; i < 4; i++) {
 		_iov_free_buf(&iovs[i]);
@@ -1355,10 +2172,22 @@ dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test(void)
 
 	_iov_alloc_buf(&md_iov, 128 * 2);
 
-	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, 2, SPDK_DIF_GUARD_ERROR);
-	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, 2, SPDK_DIF_APPTAG_ERROR);
-	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, 2, SPDK_DIF_REFTAG_ERROR);
-	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, 2, SPDK_DIF_DATA_ERROR);
+	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, 2,
+				    SPDK_DIF_GUARD_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, 2,
+				    SPDK_DIF_APPTAG_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, 2,
+				    SPDK_DIF_REFTAG_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, 2,
+				    SPDK_DIF_DATA_ERROR, SPDK_DIF_PI_FORMAT_16);
+	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, 2,
+				    SPDK_DIF_GUARD_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, 2,
+				    SPDK_DIF_APPTAG_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, 2,
+				    SPDK_DIF_REFTAG_ERROR, SPDK_DIF_PI_FORMAT_32);
+	dix_inject_error_and_verify(iovs, 4, &md_iov, 4096, 128, 2,
+				    SPDK_DIF_DATA_ERROR, SPDK_DIF_PI_FORMAT_32);
 
 	for (i = 0; i < 4; i++) {
 		_iov_free_buf(&iovs[i]);
@@ -1388,7 +2217,7 @@ ut_readv(uint32_t read_base, uint32_t read_len, struct iovec *iovs, int iovcnt)
 }
 
 static void
-set_md_interleave_iovs_test(void)
+_set_md_interleave_iovs_test(enum spdk_dif_pi_format dif_pi_format)
 {
 	struct spdk_dif_ctx ctx = {};
 	struct spdk_dif_error err_blk = {};
@@ -1402,7 +2231,7 @@ set_md_interleave_iovs_test(void)
 			  SPDK_DIF_FLAGS_REFTAG_CHECK;
 
 	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
 			       dif_check_flags, 22, 0xFFFF, 0x22, 0, GUARD_SEED, &dif_opts);
 	CU_ASSERT(rc == 0);
@@ -1517,6 +2346,13 @@ set_md_interleave_iovs_test(void)
 
 	free(buf1);
 	free(buf2);
+}
+
+static void
+set_md_interleave_iovs_test(void)
+{
+	_set_md_interleave_iovs_test(SPDK_DIF_PI_FORMAT_16);
+	_set_md_interleave_iovs_test(SPDK_DIF_PI_FORMAT_32);
 }
 
 static void
@@ -1677,7 +2513,7 @@ set_md_interleave_iovs_split_test(void)
 }
 
 static void
-dif_generate_stream_test(void)
+dif_generate_stream_pi_16_test(void)
 {
 	struct iovec iov;
 	struct spdk_dif_ctx ctx;
@@ -1725,6 +2561,60 @@ dif_generate_stream_test(void)
 	CU_ASSERT(rc == 0);
 
 	rc = ut_data_pattern_verify(&iov, 1, 512 + 8, 8, 5);
+	CU_ASSERT(rc == 0);
+
+	_iov_free_buf(&iov);
+}
+
+static void
+dif_generate_stream_pi_32_test(void)
+{
+	struct iovec iov;
+	struct spdk_dif_ctx ctx;
+	struct spdk_dif_error err_blk;
+	uint32_t dif_flags;
+	int rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+
+	_iov_alloc_buf(&iov, (4096 + 128) * 5);
+
+	rc = ut_data_pattern_generate(&iov, 1, 4096 + 128, 128, 5);
+	CU_ASSERT(rc == 0);
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_32;
+	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1, dif_flags,
+			       22, 0xFFFF, 0x22, 0, GUARD_SEED, &dif_opts);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate_stream(&iov, 1, 0, 4095, &ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate_stream(&iov, 1, 4095, 1, &ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate_stream(&iov, 1, 4096, 2048, &ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate_stream(&iov, 1, 6144, 4096, &ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate_stream(&iov, 1, 10240, 8192, &ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate_stream(&iov, 1, 18432, 2048, &ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate_stream(&iov, 1, 20480, 4096, &ctx);
+	CU_ASSERT(rc == -ERANGE);
+
+	rc = spdk_dif_verify(&iov, 1, 5, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	rc = ut_data_pattern_verify(&iov, 1, 4096 + 128, 128, 5);
 	CU_ASSERT(rc == 0);
 
 	_iov_free_buf(&iov);
@@ -1793,7 +2683,7 @@ set_md_interleave_iovs_alignment_test(void)
 }
 
 static void
-_dif_generate_split_test(void)
+_dif_generate_split_test(enum spdk_dif_pi_format dif_pi_format)
 {
 	struct spdk_dif_ctx ctx = {};
 	struct iovec iov;
@@ -1808,7 +2698,7 @@ _dif_generate_split_test(void)
 		    SPDK_DIF_FLAGS_REFTAG_CHECK;
 
 	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
 			       dif_flags, 0, 0, 0, 0, GUARD_SEED, &dif_opts);
 	CU_ASSERT(rc == 0);
@@ -1827,13 +2717,13 @@ _dif_generate_split_test(void)
 
 	guard = _dif_generate_split(&sgl, 0, 1000, guard, 0, &ctx);
 	CU_ASSERT(sgl.iov_offset == 1000);
-	CU_ASSERT(guard == spdk_crc16_t10dif(prev_guard, buf1, 1000));
+	CU_ASSERT(guard == _generate_guard(prev_guard, buf1, 1000, dif_pi_format));
 
 	prev_guard = guard;
 
 	guard = _dif_generate_split(&sgl, 1000, 3000, guard, 0, &ctx);
 	CU_ASSERT(sgl.iov_offset == 4000);
-	CU_ASSERT(guard == spdk_crc16_t10dif(prev_guard, buf1 + 1000, 3000));
+	CU_ASSERT(guard == _generate_guard(prev_guard, buf1 + 1000, 3000, dif_pi_format));
 
 	guard = _dif_generate_split(&sgl, 4000, 96 + 128, guard, 0, &ctx);
 	CU_ASSERT(guard == GUARD_SEED);
@@ -1875,7 +2765,14 @@ _dif_generate_split_test(void)
 }
 
 static void
-set_md_interleave_iovs_multi_segments_test(void)
+dif_generate_split_test(void)
+{
+	_dif_generate_split_test(SPDK_DIF_PI_FORMAT_16);
+	_dif_generate_split_test(SPDK_DIF_PI_FORMAT_32);
+}
+
+static void
+_set_md_interleave_iovs_multi_segments_test(enum spdk_dif_pi_format dif_pi_format)
 {
 	struct spdk_dif_ctx ctx = {};
 	struct spdk_dif_error err_blk = {};
@@ -1889,7 +2786,7 @@ set_md_interleave_iovs_multi_segments_test(void)
 			  SPDK_DIF_FLAGS_REFTAG_CHECK;
 
 	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
 			       dif_check_flags, 22, 0xFFFF, 0x22, 0, GUARD_SEED, &dif_opts);
 	CU_ASSERT(rc == 0);
@@ -2036,7 +2933,14 @@ set_md_interleave_iovs_multi_segments_test(void)
 }
 
 static void
-_dif_verify_split_test(void)
+set_md_interleave_iovs_multi_segments_test(void)
+{
+	_set_md_interleave_iovs_multi_segments_test(SPDK_DIF_PI_FORMAT_16);
+	_set_md_interleave_iovs_multi_segments_test(SPDK_DIF_PI_FORMAT_32);
+}
+
+static void
+_dif_verify_split_test(enum spdk_dif_pi_format dif_pi_format)
 {
 	struct spdk_dif_ctx ctx = {};
 	struct spdk_dif_error err_blk = {};
@@ -2052,7 +2956,7 @@ _dif_verify_split_test(void)
 		    SPDK_DIF_FLAGS_REFTAG_CHECK;
 
 	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
 			       dif_flags, 0, 0, 0, 0, GUARD_SEED, &dif_opts);
 	CU_ASSERT(rc == 0);
@@ -2075,14 +2979,14 @@ _dif_verify_split_test(void)
 
 	rc = _dif_verify_split(&sgl, 0, 1000, &guard, 0, &ctx, &err_blk);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(guard == spdk_crc16_t10dif(prev_guard, buf, 1000));
+	CU_ASSERT(guard == _generate_guard(prev_guard, buf, 1000, dif_pi_format));
 	CU_ASSERT(sgl.iov_offset == 1000);
 
 	prev_guard = guard;
 
 	rc = _dif_verify_split(&sgl, 1000, 3000, &guard, 0, &ctx, &err_blk);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(guard == spdk_crc16_t10dif(prev_guard, buf + 1000, 3000));
+	CU_ASSERT(guard == _generate_guard(prev_guard, buf + 1000, 3000, dif_pi_format));
 	CU_ASSERT(sgl.iov_offset == 4000);
 
 	rc = _dif_verify_split(&sgl, 4000, 96 + 128, &guard, 0, &ctx, &err_blk);
@@ -2103,7 +3007,14 @@ _dif_verify_split_test(void)
 }
 
 static void
-dif_verify_stream_multi_segments_test(void)
+dif_verify_split_test(void)
+{
+	_dif_verify_split_test(SPDK_DIF_PI_FORMAT_16);
+	_dif_verify_split_test(SPDK_DIF_PI_FORMAT_32);
+}
+
+static void
+_dif_verify_stream_multi_segments_test(enum spdk_dif_pi_format dif_pi_format)
 {
 	struct spdk_dif_ctx ctx = {};
 	struct spdk_dif_error err_blk = {};
@@ -2117,7 +3028,7 @@ dif_verify_stream_multi_segments_test(void)
 		    SPDK_DIF_FLAGS_REFTAG_CHECK;
 
 	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
 			       dif_flags, 22, 0xFFFF, 0x22, 0, GUARD_SEED, &dif_opts);
 	CU_ASSERT(rc == 0);
@@ -2166,10 +3077,17 @@ dif_verify_stream_multi_segments_test(void)
 	free(buf);
 }
 
+static void
+dif_verify_stream_multi_segments_test(void)
+{
+	_dif_verify_stream_multi_segments_test(SPDK_DIF_PI_FORMAT_16);
+	_dif_verify_stream_multi_segments_test(SPDK_DIF_PI_FORMAT_32);
+}
+
 #define UT_CRC32C_XOR	0xffffffffUL
 
 static void
-update_crc32c_test(void)
+update_crc32c_pi_16_test(void)
 {
 	struct spdk_dif_ctx ctx = {};
 	struct iovec iovs[7];
@@ -2263,7 +3181,101 @@ update_crc32c_test(void)
 }
 
 static void
-_dif_update_crc32c_split_test(void)
+update_crc32c_pi_32_test(void)
+{
+	struct spdk_dif_ctx ctx = {};
+	struct iovec iovs[7];
+	uint32_t crc32c1, crc32c2, crc32c3, crc32c4;
+	uint32_t dif_flags;
+	int i, rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_32;
+	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
+			       dif_flags, 0, 0, 0, 0, 0, &dif_opts);
+	CU_ASSERT(rc == 0);
+
+	/* data[0][2047:0] */
+	_iov_alloc_buf(&iovs[0], 2048);
+
+	/* data[0][4095:2048], md[0][0] */
+	_iov_alloc_buf(&iovs[1], 2048 + 1);
+
+	/* md[0][4:1] */
+	_iov_alloc_buf(&iovs[2], 4);
+
+	/* md[0][127:5], data[1][122:0] */
+	_iov_alloc_buf(&iovs[3], 123 + 123);
+
+	/* data[1][4095:123], md[1][5:0] */
+	_iov_alloc_buf(&iovs[4], 3973 + 6);
+
+	/* md[1][127:6], data[2][4095:0], md[2][127:0], data[3][431:0] */
+	_iov_alloc_buf(&iovs[5], 122 + 4096 + 128 + 432);
+
+	/* data[3][511:432], md[3][127:0] */
+	_iov_alloc_buf(&iovs[6], 3665 + 128);
+
+	rc = ut_data_pattern_generate(iovs, 7, 4096 + 128, 128, 4);
+	CU_ASSERT(rc == 0);
+
+	crc32c1 = UT_CRC32C_XOR;
+
+	rc = spdk_dif_update_crc32c(iovs, 7, 4, &crc32c1, &ctx);
+	CU_ASSERT(rc == 0);
+
+	/* Test if DIF doesn't affect CRC for split case. */
+	rc = spdk_dif_generate(iovs, 7, 4, &ctx);
+	CU_ASSERT(rc == 0);
+
+	crc32c2 = UT_CRC32C_XOR;
+
+	rc = spdk_dif_update_crc32c(iovs, 7, 4, &crc32c2, &ctx);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(crc32c1 == crc32c2);
+
+	for (i = 0; i < 7; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+
+	/* Test if CRC is same regardless of splitting. */
+	for (i = 0; i < 4; i++) {
+		_iov_alloc_buf(&iovs[i], 4096 + 128);
+	}
+
+	rc = ut_data_pattern_generate(iovs, 4, 4096 + 128, 128, 4);
+	CU_ASSERT(rc == 0);
+
+	crc32c3 = UT_CRC32C_XOR;
+
+	rc = spdk_dif_update_crc32c(iovs, 4, 4, &crc32c3, &ctx);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(crc32c1 == crc32c3);
+
+	/* Test if DIF doesn't affect CRC for non-split case. */
+	rc = spdk_dif_generate(iovs, 4, 4, &ctx);
+	CU_ASSERT(rc == 0);
+
+	crc32c4 = UT_CRC32C_XOR;
+
+	rc = spdk_dif_update_crc32c(iovs, 4, 4, &crc32c4, &ctx);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(crc32c1 == crc32c4);
+
+	for (i = 0; i < 4; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+}
+
+static void
+_dif_update_crc32c_split_test(enum spdk_dif_pi_format dif_pi_format)
 {
 	struct spdk_dif_ctx ctx = {};
 	struct iovec iov;
@@ -2277,7 +3289,7 @@ _dif_update_crc32c_split_test(void)
 		    SPDK_DIF_FLAGS_REFTAG_CHECK;
 
 	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
 			       dif_flags, 0, 0, 0, 0, GUARD_SEED, &dif_opts);
 	CU_ASSERT(rc == 0);
@@ -2314,7 +3326,14 @@ _dif_update_crc32c_split_test(void)
 }
 
 static void
-dif_update_crc32c_stream_multi_segments_test(void)
+dif_update_crc32c_split_test(void)
+{
+	_dif_update_crc32c_split_test(SPDK_DIF_PI_FORMAT_16);
+	_dif_update_crc32c_split_test(SPDK_DIF_PI_FORMAT_32);
+}
+
+static void
+_dif_update_crc32c_stream_multi_segments_test(enum spdk_dif_pi_format dif_pi_format)
 {
 	struct spdk_dif_ctx ctx = {};
 	struct iovec iov = {};
@@ -2327,7 +3346,7 @@ dif_update_crc32c_stream_multi_segments_test(void)
 		    SPDK_DIF_FLAGS_REFTAG_CHECK;
 
 	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
 			       dif_flags, 22, 0xFFFF, 0x22, 0, GUARD_SEED, &dif_opts);
 	CU_ASSERT(rc == 0);
@@ -2379,6 +3398,13 @@ dif_update_crc32c_stream_multi_segments_test(void)
 }
 
 static void
+dif_update_crc32c_stream_multi_segments_test(void)
+{
+	_dif_update_crc32c_stream_multi_segments_test(SPDK_DIF_PI_FORMAT_16);
+	_dif_update_crc32c_stream_multi_segments_test(SPDK_DIF_PI_FORMAT_32);
+}
+
+static void
 get_range_with_md_test(void)
 {
 	struct spdk_dif_ctx ctx = {};
@@ -2388,8 +3414,8 @@ get_range_with_md_test(void)
 
 	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
-	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false,
-			       0, 0, 0, 0, 0, 0, 0, &dif_opts);
+	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, 0, 0,
+			       0, 0, 0, 0, 0, &dif_opts);
 	CU_ASSERT(rc == 0);
 
 	spdk_dif_get_range_with_md(0, 2048, &buf_offset, &buf_len, &ctx);
@@ -2417,7 +3443,8 @@ dif_generate_remap_and_verify(struct iovec *iovs, int iovcnt,
 			      uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
 			      bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
 			      uint32_t init_ref_tag, uint32_t remapped_init_ref_tag,
-			      uint16_t apptag_mask, uint16_t app_tag)
+			      uint16_t apptag_mask, uint16_t app_tag,
+			      enum spdk_dif_pi_format dif_pi_format)
 {
 	struct spdk_dif_ctx ctx = {};
 	int rc;
@@ -2427,7 +3454,7 @@ dif_generate_remap_and_verify(struct iovec *iovs, int iovcnt,
 	CU_ASSERT(rc == 0);
 
 	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc, dif_type, dif_flags,
 			       init_ref_tag, apptag_mask, app_tag, 0, GUARD_SEED, &dif_opts);
 	CU_ASSERT(rc == 0);
@@ -2452,7 +3479,7 @@ dif_generate_remap_and_verify(struct iovec *iovs, int iovcnt,
 }
 
 static void
-dif_sec_4096_md_128_prchk_7_multi_iovs_remap_test(void)
+dif_sec_512_md_8_prchk_7_multi_iovs_remap_pi_16_test(void)
 {
 	struct iovec iovs[4];
 	int i, num_blocks;
@@ -2469,10 +3496,38 @@ dif_sec_4096_md_128_prchk_7_multi_iovs_remap_test(void)
 	}
 
 	dif_generate_remap_and_verify(iovs, 4, 512 + 8, 8, num_blocks, false, SPDK_DIF_TYPE1,
-				      dif_flags, 22, 99, 0xFFFF, 0x22);
+				      dif_flags, 22, 99, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
 
 	dif_generate_remap_and_verify(iovs, 4, 512 + 8, 8, num_blocks, true, SPDK_DIF_TYPE1,
-				      dif_flags, 22, 99, 0xFFFF, 0x22);
+				      dif_flags, 22, 99, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
+
+	for (i = 0; i < 4; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+}
+
+static void
+dif_sec_4096_md_128_prchk_7_multi_iovs_remap_pi_32_test(void)
+{
+	struct iovec iovs[4];
+	int i, num_blocks;
+	uint32_t dif_flags;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	num_blocks = 0;
+
+	for (i = 0; i < 4; i++) {
+		_iov_alloc_buf(&iovs[i], (4096 + 128) * (i + 1));
+		num_blocks += i + 1;
+	}
+
+	dif_generate_remap_and_verify(iovs, 4, 4096 + 128, 128, num_blocks, false, SPDK_DIF_TYPE1,
+				      dif_flags, 22, 99, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_32);
+
+	dif_generate_remap_and_verify(iovs, 4, 4096 + 128, 128, num_blocks, true, SPDK_DIF_TYPE1,
+				      dif_flags, 22, 99, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_32);
 
 	for (i = 0; i < 4; i++) {
 		_iov_free_buf(&iovs[i]);
@@ -2523,9 +3578,13 @@ dif_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_remap_test(void)
 	_iov_alloc_buf(&iovs[10], 118);
 
 	dif_generate_remap_and_verify(iovs, 11, 4096 + 128, 128, 2, false, SPDK_DIF_TYPE1, dif_flags,
-				      22, 99, 0xFFFF, 0x22);
+				      22, 99, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
 	dif_generate_remap_and_verify(iovs, 11, 4096 + 128, 128, 2, true, SPDK_DIF_TYPE1, dif_flags,
-				      22, 99, 0xFFFF, 0x22);
+				      22, 99, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
+	dif_generate_remap_and_verify(iovs, 11, 4096 + 128, 128, 2, false, SPDK_DIF_TYPE1, dif_flags,
+				      22, 99, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_32);
+	dif_generate_remap_and_verify(iovs, 11, 4096 + 128, 128, 2, true, SPDK_DIF_TYPE1, dif_flags,
+				      22, 99, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_32);
 
 	for (i = 0; i < 11; i++) {
 		_iov_free_buf(&iovs[i]);
@@ -2537,7 +3596,8 @@ dix_generate_remap_and_verify(struct iovec *iovs, int iovcnt, struct iovec *md_i
 			      uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
 			      bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
 			      uint32_t init_ref_tag, uint32_t remapped_init_ref_tag,
-			      uint16_t apptag_mask, uint16_t app_tag)
+			      uint16_t apptag_mask, uint16_t app_tag,
+			      enum spdk_dif_pi_format dif_pi_format)
 {
 	struct spdk_dif_ctx ctx;
 	int rc;
@@ -2547,7 +3607,7 @@ dix_generate_remap_and_verify(struct iovec *iovs, int iovcnt, struct iovec *md_i
 	CU_ASSERT(rc == 0);
 
 	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, false, dif_loc, dif_type, dif_flags,
 			       init_ref_tag, apptag_mask, app_tag, 0, GUARD_SEED, &dif_opts);
 	CU_ASSERT(rc == 0);
@@ -2590,9 +3650,13 @@ dix_sec_4096_md_128_prchk_7_multi_iovs_remap(void)
 	_iov_alloc_buf(&md_iov, 128 * num_blocks);
 
 	dix_generate_remap_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks, false, SPDK_DIF_TYPE1,
-				      dif_flags, 22, 99, 0xFFFF, 0x22);
+				      dif_flags, 22, 99, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
 	dix_generate_remap_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks, true, SPDK_DIF_TYPE1,
-				      dif_flags, 22, 99, 0xFFFF, 0x22);
+				      dif_flags, 22, 99, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
+	dix_generate_remap_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks, false, SPDK_DIF_TYPE1,
+				      dif_flags, 22, 99, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_32);
+	dix_generate_remap_and_verify(iovs, 4, &md_iov, 4096, 128, num_blocks, true, SPDK_DIF_TYPE1,
+				      dif_flags, 22, 99, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_32);
 
 	for (i = 0; i < 4; i++) {
 		_iov_free_buf(&iovs[i]);
@@ -2601,7 +3665,7 @@ dix_sec_4096_md_128_prchk_7_multi_iovs_remap(void)
 }
 
 static void
-dix_sec_512_md_8_prchk_7_multi_iovs_complex_splits_remap(void)
+dix_sec_512_md_8_prchk_7_multi_iovs_complex_splits_remap_pi_16_test(void)
 {
 	struct iovec iovs[6], md_iov;
 	uint32_t dif_flags;
@@ -2631,7 +3695,46 @@ dix_sec_512_md_8_prchk_7_multi_iovs_complex_splits_remap(void)
 	_iov_alloc_buf(&md_iov, 8 * 4);
 
 	dix_generate_remap_and_verify(iovs, 6, &md_iov, 512, 8, 4, false, SPDK_DIF_TYPE1,
-				      dif_flags, 22, 99, 0xFFFF, 0x22);
+				      dif_flags, 22, 99, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
+
+	for (i = 0; i < 6; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+	_iov_free_buf(&md_iov);
+}
+
+static void
+dix_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_remap_pi_32_test(void)
+{
+	struct iovec iovs[6], md_iov;
+	uint32_t dif_flags;
+	int i;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	/* data[0][2047:0] */
+	_iov_alloc_buf(&iovs[0], 2048);
+
+	/* data[0][4095:2048], data[1][2047:0] */
+	_iov_alloc_buf(&iovs[1], 2048 + 2048);
+
+	/* data[1][3071:2048] */
+	_iov_alloc_buf(&iovs[2], 1024);
+
+	/* data[1][3072] */
+	_iov_alloc_buf(&iovs[3], 1);
+
+	/* data[1][4094:3073] */
+	_iov_alloc_buf(&iovs[4], 1022);
+
+	/* data[1][4095], data[2][4095:0], data[3][4095:0] */
+	_iov_alloc_buf(&iovs[5], 1 + 4096 * 2);
+
+	_iov_alloc_buf(&md_iov, 128 * 4);
+
+	dix_generate_remap_and_verify(iovs, 6, &md_iov, 4096, 128, 4, false, SPDK_DIF_TYPE1,
+				      dif_flags, 22, 99, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
 
 	for (i = 0; i < 6; i++) {
 		_iov_free_buf(&iovs[i]);
@@ -2652,17 +3755,29 @@ main(int argc, char **argv)
 
 	CU_ADD_TEST(suite, dif_generate_and_verify_test);
 	CU_ADD_TEST(suite, dif_disable_check_test);
+	CU_ADD_TEST(suite, dif_generate_and_verify_different_pi_formats_test);
 	CU_ADD_TEST(suite, dif_sec_512_md_0_error_test);
+	CU_ADD_TEST(suite, dif_sec_4096_md_0_error_pi_32_test);
+	CU_ADD_TEST(suite, dif_sec_4100_md_128_error_pi_32_test);
 	CU_ADD_TEST(suite, dif_guard_seed_test);
+	CU_ADD_TEST(suite, dif_guard_value_test);
 	CU_ADD_TEST(suite, dif_disable_sec_512_md_8_single_iov_test);
 	CU_ADD_TEST(suite, dif_sec_512_md_8_prchk_0_single_iov_test);
+	CU_ADD_TEST(suite, dif_sec_4096_md_128_prchk_0_single_iov_pi_32_test);
 	CU_ADD_TEST(suite, dif_sec_512_md_8_prchk_0_1_2_4_multi_iovs_test);
+	CU_ADD_TEST(suite, dif_sec_4096_md_128_prchk_0_1_2_4_multi_iovs_pi_32_test);
 	CU_ADD_TEST(suite, dif_sec_4096_md_128_prchk_7_multi_iovs_test);
+	CU_ADD_TEST(suite, dif_sec_4096_md_128_prchk_7_multi_iovs_pi_32_test);
 	CU_ADD_TEST(suite, dif_sec_512_md_8_prchk_7_multi_iovs_split_data_and_md_test);
+	CU_ADD_TEST(suite, dif_sec_4096_md_128_prchk_7_multi_iovs_split_data_and_md_pi_32_test);
 	CU_ADD_TEST(suite, dif_sec_512_md_8_prchk_7_multi_iovs_split_data_test);
+	CU_ADD_TEST(suite, dif_sec_4096_md_128_prchk_7_multi_iovs_split_data_pi_32_test);
 	CU_ADD_TEST(suite, dif_sec_512_md_8_prchk_7_multi_iovs_split_guard_test);
+	CU_ADD_TEST(suite, dif_sec_4096_md_128_prchk_7_multi_iovs_split_guard_pi_32_test);
 	CU_ADD_TEST(suite, dif_sec_512_md_8_prchk_7_multi_iovs_split_apptag_test);
+	CU_ADD_TEST(suite, dif_sec_4096_md_128_prchk_7_multi_iovs_split_apptag_pi_32_test);
 	CU_ADD_TEST(suite, dif_sec_512_md_8_prchk_7_multi_iovs_split_reftag_test);
+	CU_ADD_TEST(suite, dif_sec_4096_md_128_prchk_7_multi_iovs_split_reftag_pi_32_test);
 	CU_ADD_TEST(suite, dif_sec_512_md_8_prchk_7_multi_iovs_complex_splits_test);
 	CU_ADD_TEST(suite, dif_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_test);
 	CU_ADD_TEST(suite, dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test);
@@ -2670,38 +3785,52 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_data_test);
 	CU_ADD_TEST(suite, dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_guard_test);
 	CU_ADD_TEST(suite, dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_apptag_test);
+	CU_ADD_TEST(suite, dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_apptag_pi_32_test);
 	CU_ADD_TEST(suite, dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_reftag_test);
+	CU_ADD_TEST(suite, dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_reftag_pi_32_test);
 	CU_ADD_TEST(suite, dif_copy_sec_512_md_8_prchk_0_single_iov);
+	CU_ADD_TEST(suite, dif_copy_sec_4096_md_128_prchk_0_single_iov_pi_32);
 	CU_ADD_TEST(suite, dif_copy_sec_512_md_8_prchk_0_1_2_4_multi_iovs);
+	CU_ADD_TEST(suite, dif_copy_sec_4096_md_128_prchk_0_1_2_4_multi_iovs_pi_32);
 	CU_ADD_TEST(suite, dif_copy_sec_4096_md_128_prchk_7_multi_iovs);
 	CU_ADD_TEST(suite, dif_copy_sec_512_md_8_prchk_7_multi_iovs_split_data);
+	CU_ADD_TEST(suite, dif_copy_sec_4096_md_128_prchk_7_multi_iovs_split_data_pi_32);
 	CU_ADD_TEST(suite, dif_copy_sec_512_md_8_prchk_7_multi_iovs_complex_splits);
+	CU_ADD_TEST(suite, dif_copy_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_pi_32);
 	CU_ADD_TEST(suite, dif_copy_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test);
 	CU_ADD_TEST(suite, dif_copy_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test);
 	CU_ADD_TEST(suite, dix_sec_512_md_0_error);
 	CU_ADD_TEST(suite, dix_sec_512_md_8_prchk_0_single_iov);
+	CU_ADD_TEST(suite, dix_sec_4096_md_128_prchk_0_single_iov_pi_32);
 	CU_ADD_TEST(suite, dix_sec_512_md_8_prchk_0_1_2_4_multi_iovs);
+	CU_ADD_TEST(suite, dix_sec_4096_md_128_prchk_0_1_2_4_multi_iovs_pi_32);
 	CU_ADD_TEST(suite, dix_sec_4096_md_128_prchk_7_multi_iovs);
 	CU_ADD_TEST(suite, dix_sec_512_md_8_prchk_7_multi_iovs_split_data);
+	CU_ADD_TEST(suite, dix_sec_4096_md_128_prchk_7_multi_iovs_split_data_pi_32);
 	CU_ADD_TEST(suite, dix_sec_512_md_8_prchk_7_multi_iovs_complex_splits);
+	CU_ADD_TEST(suite, dix_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_pi_32);
 	CU_ADD_TEST(suite, dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test);
 	CU_ADD_TEST(suite, dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test);
 	CU_ADD_TEST(suite, set_md_interleave_iovs_test);
 	CU_ADD_TEST(suite, set_md_interleave_iovs_split_test);
-	CU_ADD_TEST(suite, dif_generate_stream_test);
+	CU_ADD_TEST(suite, dif_generate_stream_pi_16_test);
+	CU_ADD_TEST(suite, dif_generate_stream_pi_32_test);
 	CU_ADD_TEST(suite, set_md_interleave_iovs_alignment_test);
-	CU_ADD_TEST(suite, _dif_generate_split_test);
+	CU_ADD_TEST(suite, dif_generate_split_test);
 	CU_ADD_TEST(suite, set_md_interleave_iovs_multi_segments_test);
-	CU_ADD_TEST(suite, _dif_verify_split_test);
+	CU_ADD_TEST(suite, dif_verify_split_test);
 	CU_ADD_TEST(suite, dif_verify_stream_multi_segments_test);
-	CU_ADD_TEST(suite, update_crc32c_test);
-	CU_ADD_TEST(suite, _dif_update_crc32c_split_test);
+	CU_ADD_TEST(suite, update_crc32c_pi_16_test);
+	CU_ADD_TEST(suite, update_crc32c_pi_32_test);
+	CU_ADD_TEST(suite, dif_update_crc32c_split_test);
 	CU_ADD_TEST(suite, dif_update_crc32c_stream_multi_segments_test);
 	CU_ADD_TEST(suite, get_range_with_md_test);
-	CU_ADD_TEST(suite, dif_sec_4096_md_128_prchk_7_multi_iovs_remap_test);
+	CU_ADD_TEST(suite, dif_sec_512_md_8_prchk_7_multi_iovs_remap_pi_16_test);
+	CU_ADD_TEST(suite, dif_sec_4096_md_128_prchk_7_multi_iovs_remap_pi_32_test);
 	CU_ADD_TEST(suite, dif_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_remap_test);
 	CU_ADD_TEST(suite, dix_sec_4096_md_128_prchk_7_multi_iovs_remap);
-	CU_ADD_TEST(suite, dix_sec_512_md_8_prchk_7_multi_iovs_complex_splits_remap);
+	CU_ADD_TEST(suite, dix_sec_512_md_8_prchk_7_multi_iovs_complex_splits_remap_pi_16_test);
+	CU_ADD_TEST(suite, dix_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_remap_pi_32_test);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
