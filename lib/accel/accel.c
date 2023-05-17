@@ -2396,14 +2396,24 @@ spdk_accel_get_io_channel(void)
 	return spdk_get_io_channel(&spdk_accel_module_list);
 }
 
-static void
+static int
 accel_module_initialize(void)
 {
-	struct spdk_accel_module_if *accel_module;
+	struct spdk_accel_module_if *accel_module, *tmp_module;
+	int rc = 0, module_rc;
 
-	TAILQ_FOREACH(accel_module, &spdk_accel_module_list, tailq) {
-		accel_module->module_init();
+	TAILQ_FOREACH_SAFE(accel_module, &spdk_accel_module_list, tailq, tmp_module) {
+		module_rc = accel_module->module_init();
+		if (module_rc) {
+			SPDK_ERRLOG("Module %s initialization failed with %d\n", accel_module->name, module_rc);
+			TAILQ_REMOVE(&spdk_accel_module_list, accel_module, tailq);
+			if (!rc) {
+				rc = module_rc;
+			}
+		}
 	}
+
+	return rc;
 }
 
 static void
@@ -2442,7 +2452,10 @@ spdk_accel_initialize(void)
 	}
 
 	g_modules_started = true;
-	accel_module_initialize();
+	rc = accel_module_initialize();
+	if (rc) {
+		return rc;
+	}
 
 	/* Create our priority global map of opcodes to modules, we populate starting
 	 * with the software module (guaranteed to be first on the list) and then
