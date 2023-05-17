@@ -1397,12 +1397,6 @@ accel_dpdk_cryptodev_validate_parameters(enum accel_dpdk_cryptodev_driver_type d
 	/* Check driver/cipher combinations and key lengths */
 	switch (key->cipher) {
 	case SPDK_ACCEL_CIPHER_AES_CBC:
-		if (driver == ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI) {
-			SPDK_ERRLOG("Driver %s only supports cipher %s\n",
-				    g_driver_names[ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI],
-				    g_cipher_names[SPDK_ACCEL_CIPHER_AES_XTS]);
-			return -1;
-		}
 		if (key->key_size != ACCEL_DPDK_CRYPTODEV_AES_CBC_KEY_LENGTH) {
 			SPDK_ERRLOG("Invalid key size %zu for cipher %s, should be %d\n", key->key_size,
 				    g_cipher_names[SPDK_ACCEL_CIPHER_AES_CBC], ACCEL_DPDK_CRYPTODEV_AES_CBC_KEY_LENGTH);
@@ -1465,6 +1459,20 @@ accel_dpdk_cryptodev_key_deinit(struct spdk_accel_crypto_key *key)
 	free(priv);
 }
 
+static bool
+accel_dpdk_cryptodev_supports_cipher(enum spdk_accel_cipher cipher)
+{
+	switch (g_dpdk_cryptodev_driver) {
+	case ACCEL_DPDK_CRYPTODEV_DRIVER_QAT:
+	case ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB:
+		return cipher == SPDK_ACCEL_CIPHER_AES_XTS || cipher == SPDK_ACCEL_CIPHER_AES_CBC;
+	case ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI:
+		return cipher == SPDK_ACCEL_CIPHER_AES_XTS;
+	default:
+		return false;
+	}
+}
+
 static int
 accel_dpdk_cryptodev_key_init(struct spdk_accel_crypto_key *key)
 {
@@ -1473,15 +1481,6 @@ accel_dpdk_cryptodev_key_init(struct spdk_accel_crypto_key *key)
 	struct accel_dpdk_cryptodev_key_handle *key_handle;
 	enum accel_dpdk_cryptodev_driver_type driver;
 	int rc;
-
-	switch (key->cipher) {
-	case SPDK_ACCEL_CIPHER_AES_CBC:
-	case SPDK_ACCEL_CIPHER_AES_XTS:
-		break;
-	default:
-		SPDK_ERRLOG("Unsupported cipher name %s.\n", key->param.cipher);
-		return -EINVAL;
-	}
 
 	driver = g_dpdk_cryptodev_driver;
 
@@ -1573,4 +1572,5 @@ static struct spdk_accel_module_if g_accel_dpdk_cryptodev_module = {
 	.submit_tasks		= accel_dpdk_cryptodev_submit_tasks,
 	.crypto_key_init	= accel_dpdk_cryptodev_key_init,
 	.crypto_key_deinit	= accel_dpdk_cryptodev_key_deinit,
+	.crypto_supports_cipher	= accel_dpdk_cryptodev_supports_cipher,
 };

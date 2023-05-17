@@ -54,6 +54,7 @@ static struct spdk_accel_module_if g_sw_module;
 static void sw_accel_crypto_key_deinit(struct spdk_accel_crypto_key *_key);
 static int sw_accel_crypto_key_init(struct spdk_accel_crypto_key *key);
 static bool sw_accel_crypto_supports_tweak_mode(enum spdk_accel_crypto_tweak_mode tweak_mode);
+static bool sw_accel_crypto_supports_cipher(enum spdk_accel_cipher cipher);
 
 /* Post SW completions to a list and complete in a poller as we don't want to
  * complete them on the caller's stack as they'll likely submit another. */
@@ -525,6 +526,7 @@ static struct spdk_accel_module_if g_sw_module = {
 	.crypto_key_init	= sw_accel_crypto_key_init,
 	.crypto_key_deinit	= sw_accel_crypto_key_deinit,
 	.crypto_supports_tweak_mode	= sw_accel_crypto_supports_tweak_mode,
+	.crypto_supports_cipher	= sw_accel_crypto_supports_cipher,
 };
 
 static int
@@ -652,11 +654,6 @@ sw_accel_create_aes_xts(struct spdk_accel_crypto_key *key)
 static int
 sw_accel_crypto_key_init(struct spdk_accel_crypto_key *key)
 {
-	if (key->cipher != SPDK_ACCEL_CIPHER_AES_XTS) {
-		SPDK_ERRLOG("Only %s cipher is supported\n", ACCEL_AES_XTS);
-		return -EINVAL;
-	}
-
 	return sw_accel_create_aes_xts(key);
 }
 
@@ -674,6 +671,12 @@ static bool
 sw_accel_crypto_supports_tweak_mode(enum spdk_accel_crypto_tweak_mode tweak_mode)
 {
 	return tweak_mode == SPDK_ACCEL_CRYPTO_TWEAK_MODE_SIMPLE_LBA;
+}
+
+static bool
+sw_accel_crypto_supports_cipher(enum spdk_accel_cipher cipher)
+{
+	return cipher == SPDK_ACCEL_CIPHER_AES_XTS;
 }
 
 SPDK_ACCEL_MODULE_REGISTER(sw, &g_sw_module)

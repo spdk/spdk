@@ -2068,7 +2068,8 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 		SPDK_ERRLOG("No accel module found assigned for crypto operation\n");
 		return -ENOENT;
 	}
-	if (!module->crypto_key_init) {
+
+	if (!module->crypto_key_init || !module->crypto_supports_cipher) {
 		SPDK_ERRLOG("Accel module \"%s\" doesn't support crypto operations\n", module->name);
 		return -ENOTSUP;
 	}
@@ -2193,6 +2194,12 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 	    (module->crypto_supports_tweak_mode && !module->crypto_supports_tweak_mode(key->tweak_mode))) {
 		SPDK_ERRLOG("Module %s doesn't support %s tweak mode\n", module->name,
 			    g_tweak_modes[key->tweak_mode]);
+		rc = -EINVAL;
+		goto error;
+	}
+
+	if (!module->crypto_supports_cipher(key->cipher)) {
+		SPDK_ERRLOG("Module %s doesn't support %s cipher\n", module->name, g_ciphers[key->cipher]);
 		rc = -EINVAL;
 		goto error;
 	}

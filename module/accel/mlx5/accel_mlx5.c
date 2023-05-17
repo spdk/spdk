@@ -1164,6 +1164,12 @@ accel_mlx5_crypto_key_deinit(struct spdk_accel_crypto_key *key)
 	spdk_mlx5_crypto_keytag_destroy(key->priv);
 }
 
+static bool
+accel_mlx5_crypto_supports_cipher(enum spdk_accel_cipher cipher)
+{
+	return cipher == SPDK_ACCEL_CIPHER_AES_XTS;
+}
+
 static struct accel_mlx5_module g_accel_mlx5 = {
 	.module = {
 		.module_init		= accel_mlx5_init,
@@ -1176,6 +1182,7 @@ static struct accel_mlx5_module g_accel_mlx5 = {
 		.submit_tasks		= accel_mlx5_submit_tasks,
 		.crypto_key_init	= accel_mlx5_crypto_key_init,
 		.crypto_key_deinit	= accel_mlx5_crypto_key_deinit,
+		.crypto_supports_cipher	= accel_mlx5_crypto_supports_cipher,
 	}
 };
 
