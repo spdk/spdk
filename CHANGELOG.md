@@ -40,6 +40,12 @@ New functions `spdk_env_get_main_core` and `spdk_env_get_cpuset` were added.
 It is now possible to run applications on cores with IDs greater than 128 by passing a core map
 using the `--lcores` parameter.
 
+### examples
+
+`examples/nvme/perf` application now accepts `--use-every-core` parameter that changes
+the existing worker and namespace association logic to access every namespace from each worker.
+This replicates behavior of bdevperf application when `-C` option is provided.
+
 ### gpt
 
 GPT bdevs now use the GPT Unique Partition ID as the bdev's UUID.
@@ -63,6 +69,14 @@ associated bdev.
 Added support for external snapshots making it possible to create clones of any (including non-lvol)
 bdev.  Users can create such clones using the `bdev_lvol_clone_bdev` RPC.
 
+### nvme
+
+New API `spdk_nvme_ns_get_format_index` was added to calculate the exact format index, that
+was used to format the namespace.
+
+Added two new APIs `spdk_nvme_ns_cmd_io_mgmt_recv` and `spdk_nvme_ns_cmd_io_mgmt_send` to
+receive and send the I/O management commands.
+
 ### nvmf
 
 New `spdk_nvmf_request_copy_to/from_buf()` APIs have been added, which support
@@ -72,6 +86,9 @@ Two functions related to Asynchronous Event and error handling have been made pu
 
 - `spdk_nvmf_ctrlr_async_event_error_event`,
 - `spdk_nvmf_ctrlr_abort_aer`.
+
+New `spdk_nvmf_transport_create_async` was added, it accepts a callback and callback argument.
+`spdk_nvmf_transport_create` is marked deprecated.
 
 Parameters `cb_fn` and `ctx` of `spdk_nvmf_qpair_disconnect` API are deprecated. These parameters
 will be removed in 23.09 release.
@@ -86,6 +103,10 @@ These functions will notify a transport about adding/removing hosts' access.
 TLS PSK identity is now generated from subsystem NQN and host NQN.  PSK interchange format is now
 expected as input, when configuring TLS in SPDK.  TLS feature is considered experimental.
 
+### part
+
+New API `spdk_bdev_part_construct_ext` is added and allows the bdev's UUID to be specified.
+
 ### sock
 
 Added a zero copy receive interface allowing users to provide buffers to a socket group (via
@@ -97,31 +118,10 @@ Added a callback `get_key()` to `spdk_sock_impl_opts` structure.
 
 New function `spdk_sock_get_impl_name()` was added to retrieve current socket implementation name.
 
-### nvme
-
-New API `spdk_nvme_ns_get_format_index` was added to calculate the exact format index, that
-was used to format the namespace.
-
-Added two new APIs `spdk_nvme_ns_cmd_io_mgmt_recv` and `spdk_nvme_ns_cmd_io_mgmt_send` to
-receive and send the I/O management commands.
-
-New `spdk_nvmf_transport_create_async` was added, it accepts a callback and callback argument.
-`spdk_nvmf_transport_create` is marked deprecated.
-
 ### thread
 
 Added two new APIs `spdk_thread_bind` and `spdk_thread_is_bound` to bind or unbind `spdk_thread`
 to its current CPU core, and check bound status.
-
-### part
-
-New API `spdk_bdev_part_construct_ext` is added and allows the bdev's UUID to be specified.
-
-### examples
-
-`examples/nvme/perf` application now accepts `--use-every-core` parameter that changes
-the existing worker and namespace association logic to access every namespace from each worker.
-This replicates behavior of bdevperf application when `-C` option is provided.
 
 ### ublk
 
