@@ -96,7 +96,7 @@ struct nvme_path_id {
 	uint64_t				last_failed_tsc;
 };
 
-typedef void (*bdev_nvme_reset_cb)(void *cb_arg, int rc);
+typedef void (*bdev_nvme_ctrlr_op_cb)(void *cb_arg, int rc);
 typedef void (*nvme_ctrlr_disconnected_cb)(struct nvme_ctrlr *nvme_ctrlr);
 
 struct nvme_ctrlr {
@@ -128,8 +128,8 @@ struct nvme_ctrlr {
 	struct spdk_poller			*adminq_timer_poller;
 	struct spdk_thread			*thread;
 
-	bdev_nvme_reset_cb			reset_cb_fn;
-	void					*reset_cb_arg;
+	bdev_nvme_ctrlr_op_cb			ctrlr_op_cb_fn;
+	void					*ctrlr_op_cb_arg;
 	/* Poller used to check for reset/detach completion */
 	struct spdk_poller			*reset_detach_poller;
 	struct spdk_nvme_detach_ctx		*detach_ctx;
@@ -337,16 +337,16 @@ struct spdk_nvme_ctrlr *bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
 int bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id);
 
 /**
- * Reset NVMe controller.
+ * Operate NVMe controller for reset.
  *
- * \param nvme_ctrlr The specified NVMe controller to reset
- * \param cb_fn Function to be called back after reset completes
+ * \param nvme_ctrlr The specified NVMe controller to operate
+ * \param cb_fn Function to be called back after operation completes
  * \param cb_arg Argument for callback function
  * \return zero on success. Negated errno on the following error conditions:
  * -ENXIO: controller is being destroyed.
- * -EBUSY: controller is already being reset.
+ * -EBUSY: controller is already being operated.
  */
-int bdev_nvme_reset_rpc(struct nvme_ctrlr *nvme_ctrlr, bdev_nvme_reset_cb cb_fn, void *cb_arg);
+int nvme_ctrlr_op_rpc(struct nvme_ctrlr *nvme_ctrlr, bdev_nvme_ctrlr_op_cb cb_fn, void *cb_arg);
 
 typedef void (*bdev_nvme_set_preferred_path_cb)(void *cb_arg, int rc);
 

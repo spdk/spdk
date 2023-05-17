@@ -1493,13 +1493,13 @@ test_reset_ctrlr(void)
 	CU_ASSERT(rc == 0);
 
 	detect_remove = false;
-	nvme_ctrlr->reset_cb_fn = ut_check_hotplug_on_reset;
-	nvme_ctrlr->reset_cb_arg = &detect_remove;
+	nvme_ctrlr->ctrlr_op_cb_fn = ut_check_hotplug_on_reset;
+	nvme_ctrlr->ctrlr_op_cb_arg = &detect_remove;
 
 	poll_threads();
 
-	CU_ASSERT(nvme_ctrlr->reset_cb_fn == NULL);
-	CU_ASSERT(nvme_ctrlr->reset_cb_arg == NULL);
+	CU_ASSERT(nvme_ctrlr->ctrlr_op_cb_fn == NULL);
+	CU_ASSERT(nvme_ctrlr->ctrlr_op_cb_arg == NULL);
 	CU_ASSERT(detect_remove == true);
 
 	ctrlr.is_removed = false;
@@ -4073,7 +4073,7 @@ test_reset_bdev_ctrlr(void)
 	bdev_nvme_submit_request(ch1, first_bdev_io);
 	CU_ASSERT(first_bio->io_path == io_path11);
 	CU_ASSERT(nvme_ctrlr1->resetting == true);
-	CU_ASSERT(nvme_ctrlr1->reset_cb_arg == first_bio);
+	CU_ASSERT(nvme_ctrlr1->ctrlr_op_cb_arg == first_bio);
 
 	poll_thread_times(0, 3);
 	CU_ASSERT(io_path11->qpair->qpair == NULL);
@@ -4175,7 +4175,7 @@ test_reset_bdev_ctrlr(void)
 	bdev_nvme_submit_request(ch2, second_bdev_io);
 
 	CU_ASSERT(nvme_ctrlr1->resetting == true);
-	CU_ASSERT(nvme_ctrlr1->reset_cb_arg == first_bio);
+	CU_ASSERT(nvme_ctrlr1->ctrlr_op_cb_arg == first_bio);
 	CU_ASSERT(TAILQ_FIRST(&io_path21->qpair->ctrlr_ch->pending_resets) == second_bdev_io);
 
 	poll_threads();

@@ -1343,7 +1343,7 @@ rpc_bdev_nvme_reset_controller(struct spdk_jsonrpc_request *request,
 	ctx->request = request;
 	ctx->orig_thread = spdk_get_thread();
 
-	rc = bdev_nvme_reset_rpc(nvme_ctrlr, rpc_bdev_nvme_reset_controller_cb, ctx);
+	rc = nvme_ctrlr_op_rpc(nvme_ctrlr, rpc_bdev_nvme_reset_controller_cb, ctx);
 	if (rc != 0) {
 		SPDK_NOTICELOG("Failed at bdev_nvme_reset_rpc\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(-rc));

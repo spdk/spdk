@@ -1974,14 +1974,14 @@ _bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 {
 	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_io_device(i);
 	bool success = spdk_io_channel_iter_get_ctx(i) == NULL;
-	bdev_nvme_reset_cb reset_cb_fn = nvme_ctrlr->reset_cb_fn;
-	void *reset_cb_arg = nvme_ctrlr->reset_cb_arg;
+	bdev_nvme_ctrlr_op_cb ctrlr_op_cb_fn = nvme_ctrlr->ctrlr_op_cb_fn;
+	void *ctrlr_op_cb_arg = nvme_ctrlr->ctrlr_op_cb_arg;
 	enum bdev_nvme_op_after_reset op_after_reset;
 
 	assert(nvme_ctrlr->thread == spdk_get_thread());
 
-	nvme_ctrlr->reset_cb_fn = NULL;
-	nvme_ctrlr->reset_cb_arg = NULL;
+	nvme_ctrlr->ctrlr_op_cb_fn = NULL;
+	nvme_ctrlr->ctrlr_op_cb_arg = NULL;
 
 	if (!success) {
 		SPDK_ERRLOG("Resetting controller failed.\n");
@@ -1997,8 +1997,8 @@ _bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 	op_after_reset = bdev_nvme_check_op_after_reset(nvme_ctrlr, success);
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
-	if (reset_cb_fn) {
-		reset_cb_fn(reset_cb_arg, success ? 0 : -1);
+	if (ctrlr_op_cb_fn) {
+		ctrlr_op_cb_fn(ctrlr_op_cb_arg, success ? 0 : -1);
 	}
 
 	switch (op_after_reset) {
@@ -2285,14 +2285,14 @@ bdev_nvme_reset(struct nvme_ctrlr *nvme_ctrlr)
 }
 
 int
-bdev_nvme_reset_rpc(struct nvme_ctrlr *nvme_ctrlr, bdev_nvme_reset_cb cb_fn, void *cb_arg)
+nvme_ctrlr_op_rpc(struct nvme_ctrlr *nvme_ctrlr, bdev_nvme_ctrlr_op_cb cb_fn, void *cb_arg)
 {
 	int rc;
 
 	rc = bdev_nvme_reset(nvme_ctrlr);
 	if (rc == 0) {
-		nvme_ctrlr->reset_cb_fn = cb_fn;
-		nvme_ctrlr->reset_cb_arg = cb_arg;
+		nvme_ctrlr->ctrlr_op_cb_fn = cb_fn;
+		nvme_ctrlr->ctrlr_op_cb_arg = cb_arg;
 	}
 	return rc;
 }
@@ -2392,10 +2392,10 @@ _bdev_nvme_reset_io(struct nvme_io_path *io_path, struct nvme_bdev_io *bio)
 		assert(bio->io_path == NULL);
 		bio->io_path = io_path;
 
-		assert(nvme_ctrlr->reset_cb_fn == NULL);
-		assert(nvme_ctrlr->reset_cb_arg == NULL);
-		nvme_ctrlr->reset_cb_fn = bdev_nvme_reset_io_continue;
-		nvme_ctrlr->reset_cb_arg = bio;
+		assert(nvme_ctrlr->ctrlr_op_cb_fn == NULL);
+		assert(nvme_ctrlr->ctrlr_op_cb_arg == NULL);
+		nvme_ctrlr->ctrlr_op_cb_fn = bdev_nvme_reset_io_continue;
+		nvme_ctrlr->ctrlr_op_cb_arg = bio;
 	} else if (rc == -EBUSY) {
 		ctrlr_ch = io_path->qpair->ctrlr_ch;
 		assert(ctrlr_ch != NULL);
