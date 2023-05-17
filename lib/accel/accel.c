@@ -2138,14 +2138,7 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 			rc = -EINVAL;
 			goto error;
 		}
-
-		if (accel_aes_xts_keys_equal(key->key, key->key_size, key->key2, key->key2_size)) {
-			SPDK_ERRLOG("%s identical keys are not secure\n", ACCEL_AES_XTS);
-			rc = -EINVAL;
-			goto error;
-		}
 	}
-
 
 	key->tweak_mode = ACCEL_CRYPTO_TWEAK_MODE_DEFAULT;
 	if (param->tweak_mode) {
@@ -2192,6 +2185,12 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 		if (key->key_size != key->key2_size) {
 			SPDK_ERRLOG("%s key size %zu is not equal to key2 size %zu\n", ACCEL_AES_XTS, key->key_size,
 				    key->key2_size);
+			rc = -EINVAL;
+			goto error;
+		}
+
+		if (accel_aes_xts_keys_equal(key->key, key->key_size, key->key2, key->key2_size)) {
+			SPDK_ERRLOG("%s identical keys are not secure\n", ACCEL_AES_XTS);
 			rc = -EINVAL;
 			goto error;
 		}
