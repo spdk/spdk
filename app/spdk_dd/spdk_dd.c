@@ -218,7 +218,7 @@ dd_show_progress(bool finish)
 	char *speed_type_str[2] = {"", "average "};
 	char *size_unit_str = "";
 	char *speed_unit_str = "";
-	char *speed_type = "";
+	char *speed_type;
 	uint64_t size_unit = 1;
 	uint64_t speed_unit = 1;
 	uint64_t speed, tmp_speed;
