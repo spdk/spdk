@@ -25,9 +25,6 @@
 #endif
 #endif
 
-#define ACCEL_AES_XTS_128_KEY_SIZE 16
-#define ACCEL_AES_XTS_256_KEY_SIZE 32
-
 /* Per the AES-XTS spec, the size of data unit cannot be bigger than 2^20 blocks, 128b each block */
 #define ACCEL_AES_XTS_MAX_BLOCK_SIZE (1 << 24)
 
@@ -54,7 +51,7 @@ static struct spdk_accel_module_if g_sw_module;
 static void sw_accel_crypto_key_deinit(struct spdk_accel_crypto_key *_key);
 static int sw_accel_crypto_key_init(struct spdk_accel_crypto_key *key);
 static bool sw_accel_crypto_supports_tweak_mode(enum spdk_accel_crypto_tweak_mode tweak_mode);
-static bool sw_accel_crypto_supports_cipher(enum spdk_accel_cipher cipher);
+static bool sw_accel_crypto_supports_cipher(enum spdk_accel_cipher cipher, size_t key_size);
 
 /* Post SW completions to a list and complete in a poller as we don't want to
  * complete them on the caller's stack as they'll likely submit another. */
@@ -628,17 +625,16 @@ sw_accel_create_aes_xts(struct spdk_accel_crypto_key *key)
 	}
 
 	switch (key->key_size) {
-	case ACCEL_AES_XTS_128_KEY_SIZE:
+	case SPDK_ACCEL_AES_XTS_128_KEY_SIZE:
 		key_data->encrypt = XTS_AES_128_enc;
 		key_data->decrypt = XTS_AES_128_dec;
 		break;
-	case ACCEL_AES_XTS_256_KEY_SIZE:
+	case SPDK_ACCEL_AES_XTS_256_KEY_SIZE:
 		key_data->encrypt = XTS_AES_256_enc;
 		key_data->decrypt = XTS_AES_256_dec;
 		break;
 	default:
-		SPDK_ERRLOG("Incorrect key size  %zu, should be %d for AEX_XTS_128 or %d for AES_XTS_256\n",
-			    key->key_size, ACCEL_AES_XTS_128_KEY_SIZE, ACCEL_AES_XTS_256_KEY_SIZE);
+		assert(0);
 		free(key_data);
 		return -EINVAL;
 	}
@@ -674,9 +670,14 @@ sw_accel_crypto_supports_tweak_mode(enum spdk_accel_crypto_tweak_mode tweak_mode
 }
 
 static bool
-sw_accel_crypto_supports_cipher(enum spdk_accel_cipher cipher)
+sw_accel_crypto_supports_cipher(enum spdk_accel_cipher cipher, size_t key_size)
 {
-	return cipher == SPDK_ACCEL_CIPHER_AES_XTS;
+	switch (cipher) {
+	case SPDK_ACCEL_CIPHER_AES_XTS:
+		return key_size == SPDK_ACCEL_AES_XTS_128_KEY_SIZE || key_size == SPDK_ACCEL_AES_XTS_256_KEY_SIZE;
+	default:
+		return false;
+	}
 }
 
 SPDK_ACCEL_MODULE_REGISTER(sw, &g_sw_module)

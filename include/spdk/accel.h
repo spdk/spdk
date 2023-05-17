@@ -18,6 +18,9 @@
 extern "C" {
 #endif
 
+#define SPDK_ACCEL_AES_XTS_128_KEY_SIZE 16
+#define SPDK_ACCEL_AES_XTS_256_KEY_SIZE 32
+
 /** Data Encryption Key identifier */
 struct spdk_accel_crypto_key;
 

@@ -178,9 +178,9 @@ struct spdk_accel_module_if {
 	bool (*crypto_supports_tweak_mode)(enum spdk_accel_crypto_tweak_mode tweak_mode);
 
 	/**
-	 * Returns true if given cipher is supported.
+	 * Returns true if given pair (cipher, key size) is supported.
 	 */
-	bool (*crypto_supports_cipher)(enum spdk_accel_cipher cipher);
+	bool (*crypto_supports_cipher)(enum spdk_accel_cipher cipher, size_t key_size);
 
 	/**
 	 * Returns memory domains supported by the module.  If NULL, the module does not support

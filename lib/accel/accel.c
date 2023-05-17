@@ -2205,8 +2205,9 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 		goto error;
 	}
 
-	if (!module->crypto_supports_cipher(key->cipher)) {
-		SPDK_ERRLOG("Module %s doesn't support %s cipher\n", module->name, g_ciphers[key->cipher]);
+	if (!module->crypto_supports_cipher(key->cipher, key->key_size)) {
+		SPDK_ERRLOG("Module %s doesn't support %s cipher with %zu key size\n", module->name,
+			    g_ciphers[key->cipher], key->key_size);
 		rc = -EINVAL;
 		goto error;
 	}

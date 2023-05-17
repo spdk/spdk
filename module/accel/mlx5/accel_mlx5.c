@@ -1165,9 +1165,14 @@ accel_mlx5_crypto_key_deinit(struct spdk_accel_crypto_key *key)
 }
 
 static bool
-accel_mlx5_crypto_supports_cipher(enum spdk_accel_cipher cipher)
+accel_mlx5_crypto_supports_cipher(enum spdk_accel_cipher cipher, size_t key_size)
 {
-	return cipher == SPDK_ACCEL_CIPHER_AES_XTS;
+	switch (cipher) {
+	case SPDK_ACCEL_CIPHER_AES_XTS:
+		return key_size == SPDK_ACCEL_AES_XTS_128_KEY_SIZE || key_size == SPDK_ACCEL_AES_XTS_256_KEY_SIZE;
+	default:
+		return false;
+	}
 }
 
 static struct accel_mlx5_module g_accel_mlx5 = {
