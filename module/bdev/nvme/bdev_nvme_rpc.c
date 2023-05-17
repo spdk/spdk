@@ -1280,7 +1280,7 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_reset_controller_req_
 
 struct rpc_bdev_nvme_reset_controller_ctx {
 	struct spdk_jsonrpc_request *request;
-	bool success;
+	int rc;
 	struct spdk_thread *orig_thread;
 };
 
@@ -1289,22 +1289,21 @@ _rpc_bdev_nvme_reset_controller_cb(void *_ctx)
 {
 	struct rpc_bdev_nvme_reset_controller_ctx *ctx = _ctx;
 
-	if (ctx->success) {
+	if (ctx->rc == 0) {
 		spdk_jsonrpc_send_bool_response(ctx->request, true);
 	} else {
-		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "Controller reset failed");
+		spdk_jsonrpc_send_error_response(ctx->request, ctx->rc, spdk_strerror(-ctx->rc));
 	}
 
 	free(ctx);
 }
 
 static void
-rpc_bdev_nvme_reset_controller_cb(void *cb_arg, bool success)
+rpc_bdev_nvme_reset_controller_cb(void *cb_arg, int rc)
 {
 	struct rpc_bdev_nvme_reset_controller_ctx *ctx = cb_arg;
 
-	ctx->success = success;
+	ctx->rc = rc;
 
 	spdk_thread_send_msg(ctx->orig_thread, _rpc_bdev_nvme_reset_controller_cb, ctx);
 }

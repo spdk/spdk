@@ -1372,11 +1372,11 @@ test_create_ctrlr(void)
 }
 
 static void
-ut_check_hotplug_on_reset(void *cb_arg, bool success)
+ut_check_hotplug_on_reset(void *cb_arg, int rc)
 {
 	bool *detect_remove = cb_arg;
 
-	CU_ASSERT(success == false);
+	CU_ASSERT(rc != 0);
 	SPDK_CU_ASSERT_FATAL(detect_remove != NULL);
 
 	*detect_remove = true;

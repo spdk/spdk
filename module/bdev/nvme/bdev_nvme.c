@@ -1998,7 +1998,7 @@ _bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	if (reset_cb_fn) {
-		reset_cb_fn(reset_cb_arg, success);
+		reset_cb_fn(reset_cb_arg, success ? 0 : -1);
 	}
 
 	switch (op_after_reset) {
@@ -2369,12 +2369,12 @@ complete:
 }
 
 static void
-bdev_nvme_reset_io_continue(void *cb_arg, bool success)
+bdev_nvme_reset_io_continue(void *cb_arg, int rc)
 {
 	struct nvme_bdev_io *bio = cb_arg;
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
-	bio->cpl.cdw0 = !success;
+	bio->cpl.cdw0 = (rc == 0) ? 0 : 1;
 
 	spdk_thread_send_msg(spdk_bdev_io_get_thread(bdev_io), _bdev_nvme_reset_io_continue, bio);
 }
