@@ -510,7 +510,7 @@ _delay_write_conf_values(struct vbdev_delay *delay_node, struct spdk_json_write_
 
 	spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&delay_node->delay_bdev));
 	spdk_json_write_named_string(w, "base_bdev_name", spdk_bdev_get_name(delay_node->base_bdev));
-	if (!spdk_mem_all_zero(uuid, sizeof(uuid))) {
+	if (!spdk_mem_all_zero(uuid, sizeof(*uuid))) {
 		spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), uuid);
 		spdk_json_write_named_string(w, "uuid", uuid_str);
 	}
