@@ -44,6 +44,11 @@ enum accel_opcode {
 	ACCEL_OPC_LAST			= 11,
 };
 
+enum spdk_accel_cipher {
+	SPDK_ACCEL_CIPHER_AES_CBC,
+	SPDK_ACCEL_CIPHER_AES_XTS,
+};
+
 /**
  * Acceleration operation callback.
  *

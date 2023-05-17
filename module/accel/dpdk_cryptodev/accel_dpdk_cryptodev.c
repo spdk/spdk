@@ -103,11 +103,6 @@ enum accel_dpdk_cryptodev_driver_type {
 	ACCEL_DPDK_CRYPTODEV_DRIVER_LAST
 };
 
-enum accel_dpdk_crypto_dev_cipher_type {
-	ACCEL_DPDK_CRYPTODEV_CIPHER_AES_CBC,
-	ACCEL_DPDK_CRYPTODEV_CIPHER_AES_XTS
-};
-
 struct accel_dpdk_cryptodev_qp {
 	struct accel_dpdk_cryptodev_device *device;	/* ptr to crypto device */
 	uint32_t num_enqueued_ops;	/* Used to decide whether to poll the qp or not */
@@ -136,7 +131,7 @@ struct accel_dpdk_cryptodev_key_handle {
 
 struct accel_dpdk_cryptodev_key_priv {
 	enum accel_dpdk_cryptodev_driver_type driver;
-	enum accel_dpdk_crypto_dev_cipher_type cipher;
+	enum spdk_accel_cipher cipher;
 	char *xts_key;
 	TAILQ_HEAD(, accel_dpdk_cryptodev_key_handle) dev_keys;
 };
@@ -185,8 +180,8 @@ static const char *g_driver_names[] = {
 	[ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI]	= ACCEL_DPDK_CRYPTODEV_MLX5
 };
 static const char *g_cipher_names[] = {
-	[ACCEL_DPDK_CRYPTODEV_CIPHER_AES_CBC]	= ACCEL_DPDK_CRYPTODEV_AES_CBC,
-	[ACCEL_DPDK_CRYPTODEV_CIPHER_AES_XTS]	= ACCEL_DPDK_CRYPTODEV_AES_XTS,
+	[SPDK_ACCEL_CIPHER_AES_CBC]	= ACCEL_DPDK_CRYPTODEV_AES_CBC,
+	[SPDK_ACCEL_CIPHER_AES_XTS]	= ACCEL_DPDK_CRYPTODEV_AES_XTS,
 };
 
 static enum accel_dpdk_cryptodev_driver_type g_dpdk_cryptodev_driver =
@@ -1342,12 +1337,12 @@ accel_dpdk_cryptodev_key_handle_configure(struct spdk_accel_crypto_key *key,
 	key_handle->cipher_xform.cipher.iv.length = ACCEL_DPDK_CRYPTODEV_IV_LENGTH;
 
 	switch (priv->cipher) {
-	case ACCEL_DPDK_CRYPTODEV_CIPHER_AES_CBC:
+	case SPDK_ACCEL_CIPHER_AES_CBC:
 		key_handle->cipher_xform.cipher.key.data = key->key;
 		key_handle->cipher_xform.cipher.key.length = key->key_size;
 		key_handle->cipher_xform.cipher.algo = RTE_CRYPTO_CIPHER_AES_CBC;
 		break;
-	case ACCEL_DPDK_CRYPTODEV_CIPHER_AES_XTS:
+	case SPDK_ACCEL_CIPHER_AES_XTS:
 		key_handle->cipher_xform.cipher.key.data = priv->xts_key;
 		key_handle->cipher_xform.cipher.key.length = key->key_size + key->key2_size;
 		key_handle->cipher_xform.cipher.algo = RTE_CRYPTO_CIPHER_AES_XTS;
@@ -1379,11 +1374,11 @@ accel_dpdk_cryptodev_key_handle_configure(struct spdk_accel_crypto_key *key,
 
 static int
 accel_dpdk_cryptodev_validate_parameters(enum accel_dpdk_cryptodev_driver_type driver,
-		enum accel_dpdk_crypto_dev_cipher_type cipher, struct spdk_accel_crypto_key *key)
+		struct spdk_accel_crypto_key *key)
 {
 	/* Check that all required parameters exist */
-	switch (cipher) {
-	case ACCEL_DPDK_CRYPTODEV_CIPHER_AES_CBC:
+	switch (key->cipher) {
+	case SPDK_ACCEL_CIPHER_AES_CBC:
 		if (!key->key || !key->key_size) {
 			SPDK_ERRLOG("ACCEL_DPDK_CRYPTODEV_AES_CBC requires a key\n");
 			return -1;
@@ -1393,35 +1388,35 @@ accel_dpdk_cryptodev_validate_parameters(enum accel_dpdk_cryptodev_driver_type d
 			return -1;
 		}
 		break;
-	case ACCEL_DPDK_CRYPTODEV_CIPHER_AES_XTS:
+	case SPDK_ACCEL_CIPHER_AES_XTS:
 		break;
 	default:
 		return -1;
 	}
 
 	/* Check driver/cipher combinations and key lengths */
-	switch (cipher) {
-	case ACCEL_DPDK_CRYPTODEV_CIPHER_AES_CBC:
+	switch (key->cipher) {
+	case SPDK_ACCEL_CIPHER_AES_CBC:
 		if (driver == ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI) {
 			SPDK_ERRLOG("Driver %s only supports cipher %s\n",
 				    g_driver_names[ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI],
-				    g_cipher_names[ACCEL_DPDK_CRYPTODEV_CIPHER_AES_XTS]);
+				    g_cipher_names[SPDK_ACCEL_CIPHER_AES_XTS]);
 			return -1;
 		}
 		if (key->key_size != ACCEL_DPDK_CRYPTODEV_AES_CBC_KEY_LENGTH) {
 			SPDK_ERRLOG("Invalid key size %zu for cipher %s, should be %d\n", key->key_size,
-				    g_cipher_names[ACCEL_DPDK_CRYPTODEV_CIPHER_AES_CBC], ACCEL_DPDK_CRYPTODEV_AES_CBC_KEY_LENGTH);
+				    g_cipher_names[SPDK_ACCEL_CIPHER_AES_CBC], ACCEL_DPDK_CRYPTODEV_AES_CBC_KEY_LENGTH);
 			return -1;
 		}
 		break;
-	case ACCEL_DPDK_CRYPTODEV_CIPHER_AES_XTS:
+	case SPDK_ACCEL_CIPHER_AES_XTS:
 		switch (driver) {
 		case ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI:
 			if (key->key_size != ACCEL_DPDK_CRYPTODEV_AES_XTS_128_BLOCK_KEY_LENGTH &&
 			    key->key_size != ACCEL_DPDK_CRYPTODEV_AES_XTS_256_BLOCK_KEY_LENGTH) {
 				SPDK_ERRLOG("Invalid key size %zu for driver %s, cipher %s, supported %d or %d\n",
 					    key->key_size, g_driver_names[ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI],
-					    g_cipher_names[ACCEL_DPDK_CRYPTODEV_CIPHER_AES_XTS],
+					    g_cipher_names[SPDK_ACCEL_CIPHER_AES_XTS],
 					    ACCEL_DPDK_CRYPTODEV_AES_XTS_128_BLOCK_KEY_LENGTH,
 					    ACCEL_DPDK_CRYPTODEV_AES_XTS_256_BLOCK_KEY_LENGTH);
 				return -1;
@@ -1441,6 +1436,9 @@ accel_dpdk_cryptodev_validate_parameters(enum accel_dpdk_cryptodev_driver_type d
 			return -1;
 		}
 		break;
+	default:
+		assert(0);
+		return -1;
 	}
 
 	return 0;
@@ -1474,21 +1472,20 @@ accel_dpdk_cryptodev_key_init(struct spdk_accel_crypto_key *key)
 	struct accel_dpdk_cryptodev_key_priv *priv;
 	struct accel_dpdk_cryptodev_key_handle *key_handle;
 	enum accel_dpdk_cryptodev_driver_type driver;
-	enum accel_dpdk_crypto_dev_cipher_type cipher;
 	int rc;
 
-	if (strcmp(key->param.cipher, ACCEL_DPDK_CRYPTODEV_AES_CBC) == 0) {
-		cipher = ACCEL_DPDK_CRYPTODEV_CIPHER_AES_CBC;
-	} else if (strcmp(key->param.cipher, ACCEL_DPDK_CRYPTODEV_AES_XTS) == 0) {
-		cipher = ACCEL_DPDK_CRYPTODEV_CIPHER_AES_XTS;
-	} else {
+	switch (key->cipher) {
+	case SPDK_ACCEL_CIPHER_AES_CBC:
+	case SPDK_ACCEL_CIPHER_AES_XTS:
+		break;
+	default:
 		SPDK_ERRLOG("Unsupported cipher name %s.\n", key->param.cipher);
 		return -EINVAL;
 	}
 
 	driver = g_dpdk_cryptodev_driver;
 
-	if (accel_dpdk_cryptodev_validate_parameters(driver, cipher, key)) {
+	if (accel_dpdk_cryptodev_validate_parameters(driver, key)) {
 		return -EINVAL;
 	}
 
@@ -1499,10 +1496,10 @@ accel_dpdk_cryptodev_key_init(struct spdk_accel_crypto_key *key)
 	}
 	key->priv = priv;
 	priv->driver = driver;
-	priv->cipher = cipher;
+	priv->cipher = key->cipher;
 	TAILQ_INIT(&priv->dev_keys);
 
-	if (cipher == ACCEL_DPDK_CRYPTODEV_CIPHER_AES_XTS) {
+	if (key->cipher == SPDK_ACCEL_CIPHER_AES_XTS) {
 		/* DPDK expects the keys to be concatenated together. */
 		priv->xts_key = calloc(key->key_size + key->key2_size + 1, sizeof(char));
 		if (!priv->xts_key) {

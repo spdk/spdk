@@ -652,12 +652,12 @@ sw_accel_create_aes_xts(struct spdk_accel_crypto_key *key)
 static int
 sw_accel_crypto_key_init(struct spdk_accel_crypto_key *key)
 {
-	if (strcmp(key->param.cipher, ACCEL_AES_XTS) == 0) {
-		return sw_accel_create_aes_xts(key);
-	} else {
+	if (key->cipher != SPDK_ACCEL_CIPHER_AES_XTS) {
 		SPDK_ERRLOG("Only %s cipher is supported\n", ACCEL_AES_XTS);
 		return -EINVAL;
 	}
+
+	return sw_accel_create_aes_xts(key);
 }
 
 static void

@@ -46,6 +46,7 @@ struct spdk_accel_crypto_key {
 	size_t key_size;				/**< Key size in bytes */
 	char *key2;					/**< Key2 in binary form */
 	size_t key2_size;				/**< Key2 size in bytes */
+	enum spdk_accel_cipher cipher;
 	enum spdk_accel_crypto_tweak_mode tweak_mode;
 	struct spdk_accel_module_if *module_if;			/**< Accel module the key belongs to */
 	struct spdk_accel_crypto_key_create_param param;	/**< User input parameters */

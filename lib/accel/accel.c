@@ -2040,12 +2040,19 @@ static const char *g_tweak_modes[SPDK_ACCEL_CRYPTO_TWEAK_MODE_MAX] = {
 	[SPDK_ACCEL_CRYPTO_TWEAK_MODE_INCR_512_UPPER_LBA] = "INCR_512_UPPER_LBA",
 };
 
+static const char *g_ciphers[] = {
+	[SPDK_ACCEL_CIPHER_AES_CBC] = "AES_CBC",
+	[SPDK_ACCEL_CIPHER_AES_XTS] = "AES_XTS",
+};
+
 int
 spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *param)
 {
 	struct spdk_accel_module_if *module;
 	struct spdk_accel_crypto_key *key;
 	size_t hex_key_size, hex_key2_size;
+	bool found = false;
+	size_t i;
 	int rc;
 
 	if (!param || !param->hex_key || !param->cipher || !param->key_name) {
@@ -2075,6 +2082,22 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 	key->param.key_name = strdup(param->key_name);
 	if (!key->param.key_name) {
 		rc = -ENOMEM;
+		goto error;
+	}
+
+	for (i = 0; i < SPDK_COUNTOF(g_ciphers); ++i) {
+		assert(g_ciphers[i]);
+
+		if (strncmp(param->cipher, g_ciphers[i], strlen(g_ciphers[i])) == 0) {
+			key->cipher = i;
+			found = true;
+			break;
+		}
+	}
+
+	if (!found) {
+		SPDK_ERRLOG("Failed to parse cipher\n");
+		rc = -EINVAL;
 		goto error;
 	}
 
@@ -2142,7 +2165,7 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 
 	key->tweak_mode = ACCEL_CRYPTO_TWEAK_MODE_DEFAULT;
 	if (param->tweak_mode) {
-		bool found = false;
+		found = false;
 
 		key->param.tweak_mode = strdup(param->tweak_mode);
 		if (!key->param.tweak_mode) {
@@ -2175,22 +2198,23 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 		goto error;
 	}
 
-	if (strcmp(key->param.cipher, ACCEL_AES_XTS) == 0) {
+	if (key->cipher == SPDK_ACCEL_CIPHER_AES_XTS) {
 		if (!key->key2) {
-			SPDK_ERRLOG("%s key2 is missing\n", ACCEL_AES_XTS);
+			SPDK_ERRLOG("%s key2 is missing\n", g_ciphers[key->cipher]);
 			rc = -EINVAL;
 			goto error;
 		}
 
 		if (key->key_size != key->key2_size) {
-			SPDK_ERRLOG("%s key size %zu is not equal to key2 size %zu\n", ACCEL_AES_XTS, key->key_size,
+			SPDK_ERRLOG("%s key size %zu is not equal to key2 size %zu\n", g_ciphers[key->cipher],
+				    key->key_size,
 				    key->key2_size);
 			rc = -EINVAL;
 			goto error;
 		}
 
 		if (accel_aes_xts_keys_equal(key->key, key->key_size, key->key2, key->key2_size)) {
-			SPDK_ERRLOG("%s identical keys are not secure\n", ACCEL_AES_XTS);
+			SPDK_ERRLOG("%s identical keys are not secure\n", g_ciphers[key->cipher]);
 			rc = -EINVAL;
 			goto error;
 		}

@@ -307,7 +307,7 @@ test_setup(void)
 
 	g_key_handle.device = &g_aesni_crypto_dev;
 	g_key_priv.driver = ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB;
-	g_key_priv.cipher = ACCEL_DPDK_CRYPTODEV_CIPHER_AES_CBC;
+	g_key_priv.cipher = SPDK_ACCEL_CIPHER_AES_CBC;
 	TAILQ_INIT(&g_key_priv.dev_keys);
 	TAILQ_INSERT_TAIL(&g_key_priv.dev_keys, &g_key_handle, link);
 	g_key.priv = &g_key_priv;
@@ -395,7 +395,7 @@ test_error_paths(void)
 
 	/* case 2 - crypto key with wrong module_if  */
 	key_priv.driver = ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB;
-	key_priv.cipher = ACCEL_DPDK_CRYPTODEV_CIPHER_AES_CBC;
+	key_priv.cipher = SPDK_ACCEL_CIPHER_AES_CBC;
 	TAILQ_INIT(&key_priv.dev_keys);
 	key.priv = &key_priv;
 	key.module_if = (struct spdk_accel_module_if *) 0x1;
