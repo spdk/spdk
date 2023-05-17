@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2022 Intel Corporation.
+ *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
  */
 
@@ -276,6 +277,7 @@ static bool
 dsa_supports_opcode(enum accel_opcode opc)
 {
 	if (!g_dsa_initialized) {
+		assert(0);
 		return false;
 	}
 
@@ -306,8 +308,6 @@ static struct spdk_accel_module_if g_dsa_module = {
 	.get_io_channel		= dsa_get_io_channel,
 	.submit_tasks		= dsa_submit_tasks
 };
-
-SPDK_ACCEL_MODULE_REGISTER(dsa, &g_dsa_module)
 
 static int
 dsa_create_cb(void *io_device, void *ctx_buf)
@@ -371,6 +371,7 @@ accel_dsa_enable_probe(bool kernel_mode)
 	g_kernel_mode = kernel_mode;
 	g_dsa_enable = true;
 	spdk_idxd_set_config(g_kernel_mode);
+	spdk_accel_module_list_add(&g_dsa_module);
 }
 
 static bool
