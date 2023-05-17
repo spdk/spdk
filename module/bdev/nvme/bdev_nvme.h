@@ -111,6 +111,8 @@ struct nvme_ctrlr {
 
 	uint32_t				resetting : 1;
 	uint32_t				reconnect_is_delayed : 1;
+	uint32_t				in_failover : 1;
+	uint32_t				pending_failover : 1;
 	uint32_t				fast_io_fail_timedout : 1;
 	uint32_t				destruct : 1;
 	uint32_t				ana_log_page_updating : 1;

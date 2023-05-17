@@ -1474,11 +1474,11 @@ test_reset_ctrlr(void)
 
 	poll_thread_times(0, 2);
 	CU_ASSERT(nvme_ctrlr->resetting == true);
+	CU_ASSERT(curr_trid->last_failed_tsc == 0);
 	poll_thread_times(1, 1);
 	CU_ASSERT(nvme_ctrlr->resetting == true);
 	poll_thread_times(0, 1);
 	CU_ASSERT(nvme_ctrlr->resetting == false);
-	CU_ASSERT(curr_trid->last_failed_tsc == 0);
 
 	/* Case 4: ctrlr is already removed. */
 	ctrlr.is_removed = true;
@@ -1644,7 +1644,7 @@ test_failover_ctrlr(void)
 	nvme_ctrlr->resetting = true;
 
 	rc = bdev_nvme_failover(nvme_ctrlr, false);
-	CU_ASSERT(rc == -EBUSY);
+	CU_ASSERT(rc == -EINPROGRESS);
 
 	/* Case 3: reset completes successfully. */
 	nvme_ctrlr->resetting = false;
@@ -1683,7 +1683,7 @@ test_failover_ctrlr(void)
 	nvme_ctrlr->resetting = true;
 
 	rc = bdev_nvme_failover(nvme_ctrlr, false);
-	CU_ASSERT(rc == -EBUSY);
+	CU_ASSERT(rc == -EINPROGRESS);
 
 	/* Case 5: failover completes successfully. */
 	nvme_ctrlr->resetting = false;
@@ -6561,6 +6561,148 @@ test_retry_io_to_same_path(void)
 	g_opts.bdev_retry_count = 0;
 }
 
+/* This case is to verify a fix for a complex race condition that
+ * failover is lost if fabric connect command gets timeout while
+ * controller is being reset.
+ */
+static void
+test_race_between_reset_and_disconnected(void)
+{
+	struct spdk_nvme_transport_id trid = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct nvme_ctrlr *nvme_ctrlr = NULL;
+	struct nvme_path_id *curr_trid;
+	struct spdk_io_channel *ch1, *ch2;
+	struct nvme_ctrlr_channel *ctrlr_ch1, *ctrlr_ch2;
+	int rc;
+
+	ut_init_trid(&trid);
+	TAILQ_INIT(&ctrlr.active_io_qpairs);
+
+	set_thread(0);
+
+	rc = nvme_ctrlr_create(&ctrlr, "nvme0", &trid, NULL);
+	CU_ASSERT(rc == 0);
+
+	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
+
+	curr_trid = TAILQ_FIRST(&nvme_ctrlr->trids);
+	SPDK_CU_ASSERT_FATAL(curr_trid != NULL);
+
+	ch1 = spdk_get_io_channel(nvme_ctrlr);
+	SPDK_CU_ASSERT_FATAL(ch1 != NULL);
+
+	ctrlr_ch1 = spdk_io_channel_get_ctx(ch1);
+	CU_ASSERT(ctrlr_ch1->qpair != NULL);
+
+	set_thread(1);
+
+	ch2 = spdk_get_io_channel(nvme_ctrlr);
+	SPDK_CU_ASSERT_FATAL(ch2 != NULL);
+
+	ctrlr_ch2 = spdk_io_channel_get_ctx(ch2);
+	CU_ASSERT(ctrlr_ch2->qpair != NULL);
+
+	/* Reset starts from thread 1. */
+	set_thread(1);
+
+	nvme_ctrlr->resetting = false;
+	curr_trid->last_failed_tsc = spdk_get_ticks();
+	ctrlr.is_failed = true;
+
+	rc = bdev_nvme_reset(nvme_ctrlr);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(nvme_ctrlr->resetting == true);
+	CU_ASSERT(ctrlr_ch1->qpair != NULL);
+	CU_ASSERT(ctrlr_ch2->qpair != NULL);
+
+	poll_thread_times(0, 3);
+	CU_ASSERT(ctrlr_ch1->qpair->qpair == NULL);
+	CU_ASSERT(ctrlr_ch2->qpair->qpair != NULL);
+
+	poll_thread_times(0, 1);
+	poll_thread_times(1, 1);
+	CU_ASSERT(ctrlr_ch1->qpair->qpair == NULL);
+	CU_ASSERT(ctrlr_ch2->qpair->qpair == NULL);
+	CU_ASSERT(ctrlr.is_failed == true);
+
+	poll_thread_times(1, 1);
+	poll_thread_times(0, 1);
+	CU_ASSERT(ctrlr.is_failed == false);
+	CU_ASSERT(ctrlr.adminq.is_connected == false);
+
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_thread_times(0, 2);
+	CU_ASSERT(ctrlr.adminq.is_connected == true);
+
+	poll_thread_times(0, 1);
+	CU_ASSERT(ctrlr_ch1->qpair->qpair != NULL);
+	CU_ASSERT(ctrlr_ch2->qpair->qpair == NULL);
+
+	poll_thread_times(1, 1);
+	CU_ASSERT(ctrlr_ch1->qpair->qpair != NULL);
+	CU_ASSERT(ctrlr_ch2->qpair->qpair != NULL);
+	CU_ASSERT(nvme_ctrlr->resetting == true);
+	CU_ASSERT(curr_trid->last_failed_tsc != 0);
+
+	poll_thread_times(0, 2);
+	CU_ASSERT(nvme_ctrlr->resetting == true);
+	CU_ASSERT(curr_trid->last_failed_tsc == 0);
+	poll_thread_times(1, 1);
+	CU_ASSERT(nvme_ctrlr->resetting == true);
+	CU_ASSERT(nvme_ctrlr->pending_failover == false);
+
+	/* Here is just one poll before _bdev_nvme_reset_complete() is executed.
+	 *
+	 * spdk_nvme_ctrlr_reconnect_poll_async() returns success before fabric
+	 * connect command is executed. If fabric connect command gets timeout,
+	 * bdev_nvme_failover() is executed. This should be deferred until
+	 * _bdev_nvme_reset_complete() sets ctrlr->resetting to false.
+	 *
+	 * Simulate fabric connect command timeout by calling bdev_nvme_failover().
+	 */
+	rc = bdev_nvme_failover(nvme_ctrlr, false);
+	CU_ASSERT(rc == -EINPROGRESS);
+	CU_ASSERT(nvme_ctrlr->resetting == true);
+	CU_ASSERT(nvme_ctrlr->pending_failover == true);
+	CU_ASSERT(curr_trid->last_failed_tsc == 0);
+
+	poll_thread_times(0, 1);
+
+	CU_ASSERT(nvme_ctrlr->resetting == true);
+	CU_ASSERT(nvme_ctrlr->pending_failover == false);
+	CU_ASSERT(curr_trid->last_failed_tsc != 0);
+
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	CU_ASSERT(nvme_ctrlr->resetting == false);
+	CU_ASSERT(nvme_ctrlr->pending_failover == false);
+	CU_ASSERT(curr_trid->last_failed_tsc == 0);
+	CU_ASSERT(ctrlr_ch1->qpair->qpair != NULL);
+	CU_ASSERT(ctrlr_ch2->qpair->qpair != NULL);
+
+
+	spdk_put_io_channel(ch2);
+
+	set_thread(0);
+
+	spdk_put_io_channel(ch1);
+
+	poll_threads();
+
+	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
+
+	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -6614,6 +6756,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_set_multipath_policy);
 	CU_ADD_TEST(suite, test_uuid_generation);
 	CU_ADD_TEST(suite, test_retry_io_to_same_path);
+	CU_ADD_TEST(suite, test_race_between_reset_and_disconnected);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
