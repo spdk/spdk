@@ -404,8 +404,7 @@ raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io)
 		raid_io->base_bdev_io_remaining = raid_bdev->num_base_bdevs;
 	}
 
-	while (raid_io->base_bdev_io_submitted < raid_bdev->num_base_bdevs) {
-		i = raid_io->base_bdev_io_submitted;
+	for (i = raid_io->base_bdev_io_submitted; i < raid_bdev->num_base_bdevs; i++) {
 		base_info = &raid_bdev->base_bdev_info[i];
 		base_ch = raid_io->raid_ch->base_channel[i];
 		ret = spdk_bdev_reset(base_info->desc, base_ch,
