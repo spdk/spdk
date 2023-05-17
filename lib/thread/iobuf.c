@@ -213,7 +213,7 @@ spdk_iobuf_set_opts(const struct spdk_iobuf_opts *opts)
 	if (opts->small_bufsize < IOBUF_MIN_SMALL_BUFSIZE) {
 		SPDK_ERRLOG("small_bufsize must be at least %" PRIu32 ". Automatically increasing.\n",
 			    IOBUF_MIN_SMALL_BUFSIZE);
-		g_iobuf.opts.large_bufsize = IOBUF_MIN_SMALL_BUFSIZE;
+		g_iobuf.opts.small_bufsize = IOBUF_MIN_SMALL_BUFSIZE;
 	}
 
 	if (opts->large_bufsize < IOBUF_MIN_LARGE_BUFSIZE) {
