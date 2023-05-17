@@ -6,9 +6,15 @@
 
 Added API `spdk_accel_submit_xor` to perform XOR.
 
-Configuration of `mlx5_pci` driver of accel_dpdk_cryptodev module was changed. Now key and key2 should have equal
-length and key size in hexlified form can be either 32 bytes for 128b XTS key or 64 bytes for 256b XTS key.
-Support of the wrapped crypto credentials mode for this driver is dropped, only plain text mode is supported.
+Configuration of `mlx5_pci` driver of `accel_dpdk_cryptodev` module was changed. Now key and key2
+should have equal length and key size in hexlified form can be either 32 bytes for 128b XTS key or
+64 bytes for 256b XTS key.  Support of the wrapped crypto credentials mode for this driver is
+dropped, only plain text mode is supported.
+
+The accel library will now collect statistics on the number of executed operations and processed
+bytes.  These statistics can be retreived using the `accel_get_stats` RPC.
+
+Added support for appending a crc32 calculation to an accel sequence.
 
 ### bdev
 
@@ -24,13 +30,23 @@ a specified LBA range.
 Removed `spdk_bdev_ext_io_opts` from `spdk_bdev_io` and replaced it with fields that were missing in
 `spdk_bdev_io`.
 
+It is now possible to submit an I/O with an associated accel sequence.  All operations in such
+sequence will be executed prior to sending the I/O (writes) or after its completion (reads).
+
 ### env
 
 New functions `spdk_env_get_main_core` and `spdk_env_get_cpuset` were added.
 
+It is now possible to run applications on cores with IDs greater than 128 by passing a core map
+using the `--lcores` parameter.
+
 ### gpt
 
 GPT bdevs now use the GPT Unique Partition ID as the bdev's UUID.
+
+### idxd
+
+Removed the `SPDK_IDXD_FLAG_PERSISTENT` flag.
 
 ### lvol
 
@@ -44,6 +60,9 @@ volumes without providing information about the bdevs. It is useful for listing 
 associated with specific lvol stores and for listing lvols that are degraded and have no
 associated bdev.
 
+Added support for external snapshots making it possible to create clones of any (including non-lvol)
+bdev.  Users can create such clones using the `bdev_lvol_clone_bdev` RPC.
+
 ### nvmf
 
 New `spdk_nvmf_request_copy_to/from_buf()` APIs have been added, which support
@@ -51,26 +70,28 @@ iovecs, unlike the deprecated `spdk_nvmf_request_get_data()`.
 
 Two functions related to Asynchronous Event and error handling have been made public:
 
--	`spdk_nvmf_ctrlr_async_event_error_event`,
--	`spdk_nvmf_ctrlr_abort_aer`.
+- `spdk_nvmf_ctrlr_async_event_error_event`,
+- `spdk_nvmf_ctrlr_abort_aer`.
 
 Parameters `cb_fn` and `ctx` of `spdk_nvmf_qpair_disconnect` API are deprecated. These parameters
 will be removed in 23.09 release.
 
-Added a secure_channel parameter to the nvmf_subsystem_add_listener RPC. When true, all connections
-established via this listener will immediately attempt to establish a secure channel, prior to any
-authentication. Only valid for the TCP transport.
+Added a `secure_channel` parameter to the `nvmf_subsystem_add_listener` RPC. When true, all
+connections established via this listener will immediately attempt to establish a secure channel,
+prior to any authentication. Only valid for the TCP transport.
 
 Added two optional transport module callbacks: `subsystem_add_host()` and `subsystem_remove_host()`.
 These functions will notify a transport about adding/removing hosts' access.
 
-TLS PSK identity is now generated from subsystem NQN and host NQN.
-
-PSK interchange format is now expected as input, when configuring TLS in SPDK.
-
-TLS feature in SPDK is considered experimental
+TLS PSK identity is now generated from subsystem NQN and host NQN.  PSK interchange format is now
+expected as input, when configuring TLS in SPDK.  TLS feature is considered experimental.
 
 ### sock
+
+Added a zero copy receive interface allowing users to provide buffers to a socket group (via
+`spdk_sock_group_provide_buf()`), which will then get filled with the next portions of the stream on
+each socket.  After that, pointer to the buffer holding the next part of the data can be obtained
+using `spdk_sock_recv_next()`.
 
 Added a callback `get_key()` to `spdk_sock_impl_opts` structure.
 
@@ -89,7 +110,7 @@ New `spdk_nvmf_transport_create_async` was added, it accepts a callback and call
 
 ### thread
 
-Added two new APIs `spdk_thread_bind` and `spdk_thread_is_bound` to bind or unbind spdk_thread
+Added two new APIs `spdk_thread_bind` and `spdk_thread_is_bound` to bind or unbind `spdk_thread`
 to its current CPU core, and check bound status.
 
 ### part
@@ -102,10 +123,19 @@ New API `spdk_bdev_part_construct_ext` is added and allows the bdev's UUID to be
 the existing worker and namespace association logic to access every namespace from each worker.
 This replicates behavior of bdevperf application when `-C` option is provided.
 
+### ublk
+
+Enabled support for `UBLK_F_NEED_GET_DATA`.  The buffers are no longer pre-allocated during
+initialization, but are allocated on-demand.  Additionally, they're now allocated from the `iobuf`
+buffer pools.
+
 ### util
 
 New APIs `spdk_uuid_is_null` and `spdk_uuid_set_null` were added to compare and
 set UUID to NULL value.
+
+Added new functions, `spdk_fd_group_{nest,unnest}`, providing efficient way of adding one
+`fd_group`'s file descriptors to another `fd_group`.
 
 ## v23.01
 
