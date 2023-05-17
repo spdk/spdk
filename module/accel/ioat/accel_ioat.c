@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2020 Intel Corporation.
+ *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
  */
 
@@ -91,8 +92,6 @@ static struct spdk_accel_module_if g_ioat_module = {
 	.submit_tasks		= ioat_submit_tasks
 };
 
-SPDK_ACCEL_MODULE_REGISTER(ioat, &g_ioat_module)
-
 static void
 ioat_done(void *cb_arg)
 {
@@ -116,6 +115,7 @@ static bool
 ioat_supports_opcode(enum accel_opcode opc)
 {
 	if (!g_ioat_initialized) {
+		assert(0);
 		return false;
 	}
 
@@ -126,7 +126,6 @@ ioat_supports_opcode(enum accel_opcode opc)
 	default:
 		return false;
 	}
-
 }
 
 static int
@@ -274,12 +273,14 @@ void
 accel_ioat_enable_probe(void)
 {
 	g_ioat_enable = true;
+	spdk_accel_module_list_add(&g_ioat_module);
 }
 
 static int
 accel_ioat_init(void)
 {
 	if (!g_ioat_enable) {
+		assert(0);
 		return 0;
 	}
 
