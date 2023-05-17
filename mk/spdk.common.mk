@@ -533,3 +533,19 @@ endef
 define pkgconfig_filename
 $(SPDK_ROOT_DIR)/build/lib/pkgconfig/$(1).pc
 endef
+
+define cc_version
+$(shell $(CC) --version | head -n1 | awk '{print $$3}')
+endef
+
+define cc_version_le
+$(shell printf '%s\n%s' $(1) $(call cc_version) | sort -CV && echo 0 || echo 1)
+endef
+
+define cc_version_ge
+$(shell printf '%s\n%s' $(1) $(call cc_version) | sort -CV && echo 1 || echo 0)
+endef
+
+define cc_version_eq
+$(shell [ "$(call cc_version)" = "$(1)" ] && echo 1 || echo 0)
+endef
