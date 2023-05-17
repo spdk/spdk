@@ -501,6 +501,7 @@ struct nvmf_vfio_user_endpoint {
 	int					accept_intr_fd;
 	struct spdk_interrupt			*accept_intr;
 
+	volatile uint32_t			*bar0;
 	volatile uint32_t			*bar0_doorbells;
 
 	int					migr_fd;
@@ -1198,8 +1199,10 @@ nvmf_vfio_user_destroy_endpoint(struct nvmf_vfio_user_endpoint *endpoint)
 	spdk_interrupt_unregister(&endpoint->accept_intr);
 	spdk_poller_unregister(&endpoint->accept_poller);
 
-	if (endpoint->bar0_doorbells) {
-		munmap((void *)endpoint->bar0_doorbells, NVMF_VFIO_USER_DOORBELLS_SIZE);
+	if (endpoint->bar0) {
+		munmap((void *)endpoint->bar0, NVME_REG_BAR0_SIZE);
+		endpoint->bar0 = NULL;
+		endpoint->bar0_doorbells = NULL;
 	}
 
 	if (endpoint->devmem_fd > 0) {
@@ -4259,7 +4262,7 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 
 	vfu_setup_device_quiesce_cb(vfu_ctx, vfio_user_dev_quiesce_cb);
 
-	migr_sparse_mmap.iov_base = (void *)4096;
+	migr_sparse_mmap.iov_base = (void *)PAGE_SIZE;
 	migr_sparse_mmap.iov_len = vfio_user_migr_data_len();
 	ret = vfu_setup_region(vfu_ctx, VFU_PCI_DEV_MIGR_REGION_IDX,
 			       vfu_get_migr_register_area_size() + vfio_user_migr_data_len(),
@@ -4504,14 +4507,22 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 		goto out;
 	}
 
-	endpoint->bar0_doorbells = mmap(NULL, NVMF_VFIO_USER_DOORBELLS_SIZE,
-					PROT_READ | PROT_WRITE, MAP_SHARED, endpoint->devmem_fd, NVME_DOORBELLS_OFFSET);
-	if (endpoint->bar0_doorbells == MAP_FAILED) {
+	/*
+	 * The doorbell offset is fixed at 0x1000.
+	 * But mmap requires the offset must be a multiple of the page size as returned by
+	 * sysconf(_SC_PAGE_SIZE).
+	 * In order to avoid the mmap failure in non-4K page size kernel,
+	 * set 0 to mmap's offset, and then change to doorbell offset manually.
+	 */
+	endpoint->bar0 = mmap(NULL, NVME_REG_BAR0_SIZE, PROT_READ | PROT_WRITE,
+			      MAP_SHARED, endpoint->devmem_fd, 0);
+	if (endpoint->bar0 == MAP_FAILED) {
 		SPDK_ERRLOG("%s: error to mmap file %s: %s.\n", endpoint_id(endpoint), path, spdk_strerror(errno));
-		endpoint->bar0_doorbells = NULL;
+		endpoint->bar0 = NULL;
 		ret = -1;
 		goto out;
 	}
+	endpoint->bar0_doorbells = (uint32_t *)(((unsigned long)endpoint->bar0) + NVME_DOORBELLS_OFFSET);
 
 	ret = snprintf(path, PATH_MAX, "%s/migr", endpoint_id(endpoint));
 	if (ret < 0 || ret >= PATH_MAX) {
