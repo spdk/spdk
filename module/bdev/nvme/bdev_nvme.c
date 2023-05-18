@@ -1610,7 +1610,7 @@ bdev_nvme_poll_adminq(void *arg)
 		disconnected_cb = nvme_ctrlr->disconnected_cb;
 		nvme_ctrlr->disconnected_cb = NULL;
 
-		if (rc == -ENXIO && disconnected_cb != NULL) {
+		if (disconnected_cb != NULL) {
 			bdev_nvme_change_adminq_poll_period(nvme_ctrlr,
 							    g_opts.nvme_adminq_poll_period_us);
 			disconnected_cb(nvme_ctrlr);
