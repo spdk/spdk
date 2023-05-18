@@ -617,11 +617,12 @@ nvme_tcp_derive_retained_psk(const char *psk_in, const char *hostnqn, uint8_t *p
 	hkdf_info[pos] = (uint8_t)labellen;
 	pos += sizeof(uint8_t);
 	memcpy(&hkdf_info[pos], label, labellen);
+	pos += labellen;
 	hkdf_info[pos] = (uint8_t)nqnlen;
 	pos += sizeof(uint8_t);
 	memcpy(&hkdf_info[pos], hostnqn, nqnlen);
-
-	hkdf_info_size = pos * sizeof(uint8_t) + nqnlen;
+	pos += nqnlen;
+	hkdf_info_size = pos;
 
 	if (sha256_digest_len > psk_out_len) {
 		SPDK_ERRLOG("Insufficient buffer size for out key!\n");

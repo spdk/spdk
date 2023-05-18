@@ -1366,8 +1366,9 @@ test_nvmf_tcp_tls_generate_retained_psk(void)
 	int retained_size;
 
 	/* Make sure that retained PSKs are different with different input PSKs. */
-	CU_ASSERT((retained_size = nvme_tcp_derive_retained_psk(psk_reference1,
-				   hostnqn, psk_retained1, SPDK_TLS_PSK_MAX_LEN)) > 0);
+	retained_size = nvme_tcp_derive_retained_psk(psk_reference1, hostnqn, psk_retained1,
+			SPDK_TLS_PSK_MAX_LEN);
+	CU_ASSERT(retained_size > 0);
 	CU_ASSERT(nvme_tcp_derive_retained_psk(psk_reference2, hostnqn, psk_retained2,
 					       SPDK_TLS_PSK_MAX_LEN) > 0);
 	CU_ASSERT(memcmp(psk_retained1, psk_retained2, retained_size) != 0);
