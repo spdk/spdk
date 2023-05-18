@@ -118,6 +118,7 @@ struct nvme_ctrlr {
 	uint32_t				ana_log_page_updating : 1;
 	uint32_t				io_path_cache_clearing : 1;
 	uint32_t				dont_retry : 1;
+	uint32_t				disabled : 1;
 
 	struct nvme_ctrlr_opts			opts;
 
@@ -341,6 +342,8 @@ int bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id);
 
 enum nvme_ctrlr_op {
 	NVME_CTRLR_OP_RESET = 1,
+	NVME_CTRLR_OP_ENABLE,
+	NVME_CTRLR_OP_DISABLE,
 };
 
 /**
