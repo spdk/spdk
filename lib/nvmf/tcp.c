@@ -3682,6 +3682,7 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 						  SPDK_TLS_PSK_MAX_LEN, psk_retained_hash);
 		if (rc < 0) {
 			SPDK_ERRLOG("Unable to derive retained PSK!\n");
+			free(entry);
 			goto end;
 		}
 		entry->psk_size = rc;
