@@ -2472,6 +2472,8 @@ accel_module_initialize(void)
 				rc = module_rc;
 			}
 		}
+
+		SPDK_DEBUGLOG(accel, "Module %s initialized.\n", accel_module->name);
 	}
 
 	return rc;

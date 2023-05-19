@@ -599,7 +599,6 @@ sw_accel_module_get_ctx_size(void)
 static int
 sw_accel_module_init(void)
 {
-	SPDK_NOTICELOG("Accel framework software module initialized.\n");
 	spdk_io_device_register(&g_sw_module, sw_accel_create_cb, sw_accel_destroy_cb,
 				sizeof(struct sw_accel_io_channel), "sw_accel_module");
 

@@ -295,7 +295,6 @@ accel_ioat_init(void)
 	}
 
 	g_ioat_initialized = true;
-	SPDK_NOTICELOG("Accel framework IOAT module initialized.\n");
 	spdk_io_device_register(&g_ioat_module, ioat_create_cb, ioat_destroy_cb,
 				sizeof(struct ioat_io_channel), "ioat_accel_module");
 	return 0;

@@ -368,7 +368,6 @@ accel_iaa_init(void)
 	}
 
 	g_iaa_initialized = true;
-	SPDK_NOTICELOG("Accel framework IAA module initialized.\n");
 	spdk_io_device_register(&g_iaa_module, idxd_create_cb, idxd_destroy_cb,
 				sizeof(struct idxd_io_channel), "iaa_accel_module");
 	return 0;

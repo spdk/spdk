@@ -711,11 +711,9 @@ accel_compress_init(void)
 	}
 
 	g_compressdev_initialized = true;
-	SPDK_NOTICELOG("Accel framework compressdev module initialized.\n");
 	spdk_io_device_register(&g_compress_module, compress_create_cb, compress_destroy_cb,
 				sizeof(struct compress_io_channel), "compressdev_accel_module");
 	return 0;
-
 }
 
 static int

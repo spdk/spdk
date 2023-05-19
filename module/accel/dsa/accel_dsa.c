@@ -402,7 +402,6 @@ accel_dsa_init(void)
 	}
 
 	g_dsa_initialized = true;
-	SPDK_NOTICELOG("Accel framework DSA module initialized.\n");
 	spdk_io_device_register(&g_dsa_module, dsa_create_cb, dsa_destroy_cb,
 				sizeof(struct idxd_io_channel), "dsa_accel_module");
 	return 0;
