@@ -44,9 +44,7 @@ fi
 pip3 install pyyaml
 
 # Additional dependencies for SPDK CLI 
-if ! echo "$ID $VERSION_ID" | grep -E -q 'rhel 7|centos 7|mariner 2'; then
-	sudo tdnf install -y python3-configshell python3-pexpect
-fi
+sudo tdnf install -y python3-pexpect
 # Additional dependencies for ISA-L used in compression
 sudo tdnf install -y autoconf automake libtool help2man
 # Additional dependencies for DPDK
