@@ -537,7 +537,8 @@ bdev_aio_create_cb(void *io_device, void *ctx_buf)
 	struct bdev_aio_io_channel *ch = ctx_buf;
 
 	if (io_setup(SPDK_AIO_QUEUE_DEPTH, &ch->io_ctx) < 0) {
-		SPDK_ERRLOG("async I/O context setup failure\n");
+		SPDK_ERRLOG("Async I/O context setup failure, likely due to exceeding kernel limit.\n");
+		SPDK_ERRLOG("This limit may be increased using 'sysctl -w fs.aio-max-nr'.\n");
 		return -1;
 	}
 
