@@ -450,6 +450,11 @@ hello_sock_listen(struct hello_context_t *ctx)
 	 * Create sock group for server socket
 	 */
 	ctx->group = spdk_sock_group_create(NULL);
+	if (ctx->group == NULL) {
+		SPDK_ERRLOG("Cannot create sock group\n");
+		spdk_sock_close(&ctx->sock);
+		return -1;
+	}
 
 	/*
 	 * Provide a buffer to the group to be used with receive.
