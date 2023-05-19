@@ -21,6 +21,7 @@
 #include "spdk/cpuset.h"
 #include "spdk/env.h"
 #include "spdk/util.h"
+#include "spdk/likely.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -719,6 +720,11 @@ void spdk_put_io_channel(struct spdk_io_channel *ch);
 static inline void *
 spdk_io_channel_get_ctx(struct spdk_io_channel *ch)
 {
+	if (spdk_unlikely(!ch)) {
+		assert(false);
+		return NULL;
+	}
+
 	return (uint8_t *)ch + SPDK_IO_CHANNEL_STRUCT_SIZE;
 }
 
