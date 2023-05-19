@@ -1872,6 +1872,15 @@ spdk_nvme_qp_failure_reason spdk_nvme_qpair_get_failure_reason(struct spdk_nvme_
 void spdk_nvme_qpair_set_abort_dnr(struct spdk_nvme_qpair *qpair, bool dnr);
 
 /**
+ * Return the connection status of a given qpair.
+ *
+ * \param qpair The qpair to check.
+ *
+ * \return true if the qpair is connected, or false otherwise.
+ */
+bool spdk_nvme_qpair_is_connected(struct spdk_nvme_qpair *qpair);
+
+/**
  * Send the given admin command to the NVMe controller.
  *
  * This is a low level interface for submitting admin commands directly. Prefer
