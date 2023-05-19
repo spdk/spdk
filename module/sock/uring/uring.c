@@ -1405,8 +1405,7 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 				_sock_prep_errqueue(&sock->base);
 			} else if (status == -ECANCELED) {
 				continue;
-			} else if (spdk_unlikely(status <= 0)) {
-				sock->connection_status = status < 0 ? status : -ECONNRESET;
+			} else if (spdk_unlikely(status < 0)) {
 				spdk_sock_abort_requests(&sock->base);
 
 				/* The user needs to be notified that this socket is dead. */
