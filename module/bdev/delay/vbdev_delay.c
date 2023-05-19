@@ -510,7 +510,7 @@ _delay_write_conf_values(struct vbdev_delay *delay_node, struct spdk_json_write_
 
 	spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&delay_node->delay_bdev));
 	spdk_json_write_named_string(w, "base_bdev_name", spdk_bdev_get_name(delay_node->base_bdev));
-	if (!spdk_mem_all_zero(uuid, sizeof(*uuid))) {
+	if (!spdk_uuid_is_null(uuid)) {
 		spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), uuid);
 		spdk_json_write_named_string(w, "uuid", uuid_str);
 	}
@@ -827,7 +827,7 @@ vbdev_delay_register(const char *bdev_name)
 		delay_node->average_write_latency_ticks = ticks_mhz * assoc->avg_write_latency;
 		delay_node->p99_write_latency_ticks = ticks_mhz * assoc->p99_write_latency;
 
-		if (spdk_mem_all_zero(&assoc->uuid, sizeof(assoc->uuid))) {
+		if (spdk_uuid_is_null(&assoc->uuid)) {
 			/* Generate UUID based on namespace UUID + base bdev UUID */
 			rc = spdk_uuid_generate_sha1(&delay_node->delay_bdev.uuid, &ns_uuid,
 						     (const char *)&bdev->uuid, sizeof(struct spdk_uuid));

@@ -3655,8 +3655,8 @@ nvme_generate_uuid(const char *sn, uint32_t nsid)
 
 	assert(strlen(sn) <= SPDK_NVME_CTRLR_SN_LEN);
 
-	memset(&new_uuid, 0, sizeof(new_uuid));
-	memset(&namespace_uuid, 0, sizeof(namespace_uuid));
+	spdk_uuid_set_null(&new_uuid);
+	spdk_uuid_set_null(&namespace_uuid);
 
 	size = snprintf(merged_str, sizeof(merged_str), "%s%"PRIu32, sn, nsid);
 	assert(size > 0 && (unsigned long)size < sizeof(merged_str));

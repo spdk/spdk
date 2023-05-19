@@ -526,7 +526,7 @@ vbdev_error_config_json(struct spdk_json_write_ctx *w)
 		spdk_json_write_named_string(w, "method", "bdev_error_create");
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "base_name", cfg->base_bdev);
-		if (!spdk_mem_all_zero(&cfg->uuid, sizeof(struct spdk_uuid))) {
+		if (!spdk_uuid_is_null(&cfg->uuid)) {
 			spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &cfg->uuid);
 			spdk_json_write_named_string(w, "uuid", uuid_str);
 		}

@@ -601,7 +601,7 @@ spdk_bdev_part_construct_ext(struct spdk_bdev_part *part, struct spdk_bdev_part_
 	 * based on the namespace UUID, the base bdev's UUID and the block range of the
 	 * partition.
 	 */
-	if (!spdk_mem_all_zero(&opts.uuid, sizeof(opts.uuid))) {
+	if (!spdk_uuid_is_null(&opts.uuid)) {
 		spdk_uuid_copy(&part->internal.bdev.uuid, &opts.uuid);
 	} else {
 		struct {
