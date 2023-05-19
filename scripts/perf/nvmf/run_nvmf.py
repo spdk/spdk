@@ -1139,7 +1139,7 @@ class SPDKTarget(Target):
         self.enable_dsa = False
         self.scheduler_core_limit = None
         self.iobuf_small_pool_count = 16383
-        self.iobuf_large_pool_count = 4095
+        self.iobuf_large_pool_count = 8191
         self.num_cqe = 4096
 
         if "num_shared_buffers" in target_config:
