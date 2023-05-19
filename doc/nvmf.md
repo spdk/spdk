@@ -278,7 +278,7 @@ For step-by-step instructions for configuring and switching between paths, see @
 
 The SPDK NVMe-oF target and initiator support establishing a secure TCP connection using Transport
 Layer Security (TLS) protocol in compliance with NVMe TCP transport specification. Only version 1.3
-of the TLS protocol is supported.
+of the TLS protocol is supported. This feature is considered experimental.
 
 Currently, it is only possible to establish a fabric secure channel using TLS and NVMe-oF in-band
 authentication is not supported. The channel is protected by a symmetric pre-shared key (PSK) using

@@ -18,6 +18,8 @@
 
 #include "nvmf_internal.h"
 
+static bool g_tls_log = false;
+
 static int
 json_write_hex_str(struct spdk_json_write_ctx *w, const void *data, size_t size)
 {
@@ -902,6 +904,10 @@ rpc_nvmf_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 		return;
 	}
 	ctx->opts.secure_channel = ctx->secure_channel;
+	if (ctx->opts.secure_channel && !g_tls_log) {
+		SPDK_NOTICELOG("TLS support is considered experimental\n");
+		g_tls_log = true;
+	}
 
 	rc = spdk_nvmf_subsystem_pause(subsystem, 0, nvmf_rpc_listen_paused, ctx);
 	if (rc != 0) {

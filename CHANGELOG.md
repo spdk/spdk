@@ -68,6 +68,8 @@ TLS PSK identity is now generated from subsystem NQN and host NQN.
 
 PSK interchange format is now expected as input, when configuring TLS in SPDK.
 
+TLS feature in SPDK is considered experimental
+
 ### sock
 
 Added a callback `get_key()` to `spdk_sock_impl_opts` structure.

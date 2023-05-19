@@ -23,6 +23,8 @@
 
 #define TCP_PSK_INVALID_PERMISSIONS 0177
 
+static bool g_tls_log = false;
+
 static int
 rpc_decode_action_on_timeout(const struct spdk_json_val *val, void *out)
 {
@@ -468,6 +470,10 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	}
 
 	if (ctx->req.psk) {
+		if (!g_tls_log) {
+			SPDK_NOTICELOG("TLS support is considered experimental\n");
+			g_tls_log = true;
+		}
 		rc = tcp_load_psk(ctx->req.psk, ctx->req.drv_opts.psk, sizeof(ctx->req.drv_opts.psk));
 		if (rc) {
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Could not retrieve PSK from file: %s",
