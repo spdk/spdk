@@ -2077,7 +2077,7 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 	}
 
 	if (!module->crypto_key_init || !module->crypto_supports_cipher) {
-		SPDK_ERRLOG("Accel module \"%s\" doesn't support crypto operations\n", module->name);
+		SPDK_ERRLOG("Module %s doesn't support crypto operations\n", module->name);
 		return -ENOTSUP;
 	}
 
@@ -2305,7 +2305,7 @@ void
 spdk_accel_module_list_add(struct spdk_accel_module_if *accel_module)
 {
 	if (_module_find_by_name(accel_module->name)) {
-		SPDK_NOTICELOG("Accel module %s already registered\n", accel_module->name);
+		SPDK_NOTICELOG("Module %s already registered\n", accel_module->name);
 		assert(false);
 		return;
 	}
