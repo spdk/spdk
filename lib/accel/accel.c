@@ -2249,7 +2249,9 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 		rc = -EEXIST;
 	} else {
 		rc = module->crypto_key_init(key);
-		if (!rc) {
+		if (rc) {
+			SPDK_ERRLOG("Module %s failed to initialize crypto key\n", module->name);
+		} else {
 			TAILQ_INSERT_TAIL(&g_keyring, key, link);
 		}
 	}
@@ -2374,6 +2376,7 @@ accel_create_channel(void *io_device, void *ctx_buf)
 		accel_ch->module_ch[i] = g_modules_opc[i].module->get_io_channel();
 		/* This can happen if idxd runs out of channels. */
 		if (accel_ch->module_ch[i] == NULL) {
+			SPDK_ERRLOG("Module %s failed to get io channel\n", g_modules_opc[i].module->name);
 			goto err;
 		}
 	}
