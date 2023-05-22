@@ -572,6 +572,7 @@ nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 
 		spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
 		nvmf_transport_listen_dump_opts(listener->transport, trid, w);
+		spdk_json_write_named_bool(w, "secure_channel", listener->opts.secure_channel);
 
 		/*     } "params" */
 		spdk_json_write_object_end(w);

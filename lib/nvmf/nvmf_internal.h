@@ -92,6 +92,7 @@ struct spdk_nvmf_subsystem_listener {
 	enum spdk_nvme_ana_state			*ana_state;
 	uint64_t					ana_state_change_count;
 	uint16_t					id;
+	struct spdk_nvmf_listener_opts			opts;
 	TAILQ_ENTRY(spdk_nvmf_subsystem_listener)	link;
 };
 

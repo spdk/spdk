@@ -49,6 +49,7 @@
 #define TCP_PSK_INVALID_PERMISSIONS 0177
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp;
+static bool g_tls_log = false;
 
 /* spdk nvmf related structure */
 enum spdk_nvmf_tcp_req_state {
@@ -904,6 +905,10 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 	spdk_sock_get_default_opts(&opts);
 	opts.priority = ttransport->tcp_opts.sock_priority;
 	if (listen_opts->secure_channel) {
+		if (!g_tls_log) {
+			SPDK_NOTICELOG("TLS support is considered experimental\n");
+			g_tls_log = true;
+		}
 		sock_impl_name = "ssl";
 		spdk_sock_impl_get_opts(sock_impl_name, &impl_opts, &impl_opts_size);
 		impl_opts.tls_version = SPDK_TLS_VERSION_1_3;

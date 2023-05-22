@@ -1073,10 +1073,73 @@ _nvmf_subsystem_add_listener_done(void *ctx, int status)
 }
 
 void
-spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
-				 struct spdk_nvme_transport_id *trid,
-				 spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
-				 void *cb_arg)
+spdk_nvmf_subsystem_listener_opts_init(struct spdk_nvmf_listener_opts *opts, size_t size)
+{
+	if (opts == NULL) {
+		SPDK_ERRLOG("opts should not be NULL\n");
+		assert(false);
+		return;
+	}
+	if (size == 0) {
+		SPDK_ERRLOG("size should not be zero\n");
+		assert(false);
+		return;
+	}
+
+	memset(opts, 0, size);
+	opts->opts_size = size;
+
+#define FIELD_OK(field) \
+	offsetof(struct spdk_nvmf_listener_opts, field) + sizeof(opts->field) <= size
+
+#define SET_FIELD(field, value) \
+	if (FIELD_OK(field)) { \
+		opts->field = value; \
+	} \
+
+	SET_FIELD(secure_channel, false);
+
+#undef FIELD_OK
+#undef SET_FIELD
+}
+
+static int
+listener_opts_copy(struct spdk_nvmf_listener_opts *src, struct spdk_nvmf_listener_opts *dst)
+{
+	if (src->opts_size == 0) {
+		SPDK_ERRLOG("source structure size should not be zero\n");
+		assert(false);
+		return -EINVAL;
+	}
+
+	memset(dst, 0, sizeof(*dst));
+	dst->opts_size = src->opts_size;
+
+#define FIELD_OK(field) \
+	offsetof(struct spdk_nvmf_listener_opts, field) + sizeof(src->field) <= src->opts_size
+
+#define SET_FIELD(field) \
+	if (FIELD_OK(field)) { \
+		dst->field = src->field; \
+	} \
+
+	SET_FIELD(secure_channel);
+
+	/* We should not remove this statement, but need to update the assert statement
+	 * if we add a new field, and also add a corresponding SET_FIELD statement. */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listener_opts) == 9, "Incorrect size");
+
+#undef SET_FIELD
+#undef FIELD_OK
+
+	return 0;
+}
+
+static void
+_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
+			     struct spdk_nvme_transport_id *trid,
+			     spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
+			     void *cb_arg, struct spdk_nvmf_listener_opts *opts)
 {
 	struct spdk_nvmf_transport *transport;
 	struct spdk_nvmf_subsystem_listener *listener;
@@ -1132,6 +1195,18 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 		return;
 	}
 
+	spdk_nvmf_subsystem_listener_opts_init(&listener->opts, sizeof(listener->opts));
+	if (opts != NULL) {
+		rc = listener_opts_copy(opts, &listener->opts);
+		if (rc) {
+			SPDK_ERRLOG("Unable to copy listener options\n");
+			free(listener->ana_state);
+			free(listener);
+			cb_fn(cb_arg, -EINVAL);
+			return;
+		}
+	}
+
 	id = spdk_bit_array_find_first_clear(subsystem->used_listener_ids, 0);
 	if (id == UINT32_MAX) {
 		SPDK_ERRLOG("Cannot add any more listeners\n");
@@ -1156,6 +1231,24 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 			   listener->trid->traddr, listener->trid->trsvcid);
 
 	_nvmf_subsystem_add_listener_done(listener, rc);
+}
+
+void
+spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
+				 struct spdk_nvme_transport_id *trid,
+				 spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
+				 void *cb_arg)
+{
+	_nvmf_subsystem_add_listener(subsystem, trid, cb_fn, cb_arg, NULL);
+}
+
+void
+spdk_nvmf_subsystem_add_listener_ext(struct spdk_nvmf_subsystem *subsystem,
+				     struct spdk_nvme_transport_id *trid,
+				     spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
+				     void *cb_arg, struct spdk_nvmf_listener_opts *opts)
+{
+	_nvmf_subsystem_add_listener(subsystem, trid, cb_fn, cb_arg, opts);
 }
 
 int

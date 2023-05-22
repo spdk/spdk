@@ -18,8 +18,6 @@
 
 #include "nvmf_internal.h"
 
-static bool g_tls_log = false;
-
 static int
 json_write_hex_str(struct spdk_json_write_ctx *w, const void *data, size_t size)
 {
@@ -624,7 +622,6 @@ enum nvmf_rpc_listen_op {
 struct nvmf_rpc_listener_ctx {
 	char				*nqn;
 	char				*tgt_name;
-	bool				secure_channel;
 	struct spdk_nvmf_tgt		*tgt;
 	struct spdk_nvmf_transport	*transport;
 	struct spdk_nvmf_subsystem	*subsystem;
@@ -638,13 +635,16 @@ struct nvmf_rpc_listener_ctx {
 	enum nvmf_rpc_listen_op		op;
 	bool				response_sent;
 	struct spdk_nvmf_listen_opts	opts;
+
+	/* Additional options for listener creation. */
+	struct spdk_nvmf_listener_opts	listener_opts;
 };
 
 static const struct spdk_json_object_decoder nvmf_rpc_listener_decoder[] = {
 	{"nqn", offsetof(struct nvmf_rpc_listener_ctx, nqn), spdk_json_decode_string},
 	{"listen_address", offsetof(struct nvmf_rpc_listener_ctx, address), decode_rpc_listen_address},
 	{"tgt_name", offsetof(struct nvmf_rpc_listener_ctx, tgt_name), spdk_json_decode_string, true},
-	{"secure_channel", offsetof(struct nvmf_rpc_listener_ctx, secure_channel), spdk_json_decode_bool, true},
+	{"secure_channel", offsetof(struct nvmf_rpc_listener_ctx, listener_opts.secure_channel), spdk_json_decode_bool, true},
 };
 
 static void
@@ -755,7 +755,8 @@ nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 		if (!nvmf_subsystem_find_listener(subsystem, &ctx->trid)) {
 			rc = spdk_nvmf_tgt_listen_ext(ctx->tgt, &ctx->trid, &ctx->opts);
 			if (rc == 0) {
-				spdk_nvmf_subsystem_add_listener(ctx->subsystem, &ctx->trid, nvmf_rpc_subsystem_listen, ctx);
+				spdk_nvmf_subsystem_add_listener_ext(ctx->subsystem, &ctx->trid, nvmf_rpc_subsystem_listen, ctx,
+								     &ctx->listener_opts);
 				return;
 			}
 
@@ -858,6 +859,8 @@ rpc_nvmf_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 
 	ctx->request = request;
 
+	spdk_nvmf_subsystem_listener_opts_init(&ctx->listener_opts, sizeof(ctx->listener_opts));
+
 	if (spdk_json_decode_object_relaxed(params, nvmf_rpc_listener_decoder,
 					    SPDK_COUNTOF(nvmf_rpc_listener_decoder),
 					    ctx)) {
@@ -897,17 +900,13 @@ rpc_nvmf_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 	ctx->op = NVMF_RPC_LISTEN_ADD;
 	spdk_nvmf_listen_opts_init(&ctx->opts, sizeof(ctx->opts));
 	ctx->opts.transport_specific = params;
-	if (subsystem->flags.allow_any_host == 1 && ctx->secure_channel == true) {
+	if (subsystem->flags.allow_any_host == 1 && ctx->listener_opts.secure_channel == true) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Cannot establish secure channel, when 'allow_any_host' is set");
 		nvmf_rpc_listener_ctx_free(ctx);
 		return;
 	}
-	ctx->opts.secure_channel = ctx->secure_channel;
-	if (ctx->opts.secure_channel && !g_tls_log) {
-		SPDK_NOTICELOG("TLS support is considered experimental\n");
-		g_tls_log = true;
-	}
+	ctx->opts.secure_channel = ctx->listener_opts.secure_channel;
 
 	rc = spdk_nvmf_subsystem_pause(subsystem, 0, nvmf_rpc_listen_paused, ctx);
 	if (rc != 0) {
