@@ -1814,87 +1814,104 @@ usage(char *program_name)
 #if defined(SPDK_CONFIG_URING) || defined(HAVE_LIBAIO)
 	printf(" [Kernel device(s)]...");
 #endif
-	printf("\n");
-	printf("\t[-b, --allowed-pci-addr <addr> allowed local PCIe device address]\n");
-	printf("\t Example: -b 0000:d8:00.0 -b 0000:d9:00.0\n");
-	printf("\t[-q, --io-depth <val> io depth]\n");
-	printf("\t[-o, --io-size <val> io size in bytes]\n");
-	printf("\t[-O, --io-unit-size io unit size in bytes (4-byte aligned) for SPDK driver. default: same as io size]\n");
-	printf("\t[-P, --num-qpairs <val> number of io queues per namespace. default: 1]\n");
-	printf("\t[-U, --num-unused-qpairs <val> number of unused io queues per controller. default: 0]\n");
-	printf("\t[-w, --io-pattern <pattern> io pattern type, must be one of\n");
-	printf("\t\t(read, write, randread, randwrite, rw, randrw)]\n");
-	printf("\t[-M, --rwmixread <0-100> rwmixread (100 for reads, 0 for writes)]\n");
-	printf("\t[-F, --zipf <theta> use zipf distribution for random I/O]\n");
-	printf("\t[-L, --enable-sw-latency-tracking enable latency tracking via sw, default: disabled]\n");
-	printf("\t\t-L for latency summary, -LL for detailed histogram\n");
-	printf("\t[-l, --enable-ssd-latency-tracking enable latency tracking via ssd (if supported), default: disabled]\n");
-	printf("\t[-t, --time <sec> time in seconds]\n");
-	printf("\t[-a, --warmup-time <sec> warmup time in seconds]\n");
-	printf("\t[-c, --core-mask <mask> core mask for I/O submission/completion.]\n");
+	printf("\n\n");
+	printf("==== BASIC OPTIONS ====\n\n");
+	printf("\t-q, --io-depth <val> io depth\n");
+	printf("\t-o, --io-size <val> io size in bytes\n");
+	printf("\t-w, --io-pattern <pattern> io pattern type, must be one of\n");
+	printf("\t\t(read, write, randread, randwrite, rw, randrw)\n");
+	printf("\t-M, --rwmixread <0-100> rwmixread (100 for reads, 0 for writes)\n");
+	printf("\t-t, --time <sec> time in seconds\n");
+	printf("\t-a, --warmup-time <sec> warmup time in seconds\n");
+	printf("\t-c, --core-mask <mask> core mask for I/O submission/completion.\n");
 	printf("\t\t(default: 1)\n");
-	printf("\t[-d, --number-ios <val> number of I/O to perform per thread on each namespace. Note: this is additional exit criteria.]\n");
-	printf("\t\t(default: 0 - unlimited)\n");
-	printf("\t[-D, --disable-sq-cmb disable submission queue in controller memory buffer, default: enabled]\n");
-	printf("\t[-H, --enable-tcp-hdgst enable header digest for TCP transport, default: disabled]\n");
-	printf("\t[-I, --enable-tcp-ddgst enable data digest for TCP transport, default: disabled]\n");
-	printf("\t[-N, --no-shst-notification no shutdown notification process for controllers, default: disabled]\n");
-	printf("\t[-r, --transport <fmt> Transport ID for local PCIe NVMe or NVMeoF]\n");
-	printf("\t Format: 'key:value [key:value] ...'\n");
-	printf("\t Keys:\n");
-	printf("\t  trtype      Transport type (e.g. PCIe, RDMA)\n");
-	printf("\t  adrfam      Address family (e.g. IPv4, IPv6)\n");
-	printf("\t  traddr      Transport address (e.g. 0000:04:00.0 for PCIe or 192.168.100.8 for RDMA)\n");
-	printf("\t  trsvcid     Transport service identifier (e.g. 4420)\n");
-	printf("\t  subnqn      Subsystem NQN (default: %s)\n", SPDK_NVMF_DISCOVERY_NQN);
-	printf("\t  ns          NVMe namespace ID (all active namespaces are used by default)\n");
-	printf("\t  hostnqn     Host NQN\n");
-	printf("\t Example: -r 'trtype:PCIe traddr:0000:04:00.0' for PCIe or\n");
-	printf("\t          -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420' for NVMeoF\n");
-	printf("\t Note: can be specified multiple times to test multiple disks/targets.\n");
-	printf("\t[-e, --metadata <fmt> metadata configuration]\n");
-	printf("\t Keys:\n");
-	printf("\t  PRACT      Protection Information Action bit (PRACT=1 or PRACT=0)\n");
-	printf("\t  PRCHK      Control of Protection Information Checking (PRCHK=GUARD|REFTAG|APPTAG)\n");
-	printf("\t Example: -e 'PRACT=0,PRCHK=GUARD|REFTAG|APPTAG'\n");
-	printf("\t          -e 'PRACT=1,PRCHK=GUARD'\n");
-	printf("\t[-k, --keepalive <ms> keep alive timeout period in millisecond]\n");
-	printf("\t[-s, --hugemem-size <MB> DPDK huge memory size in MB.]\n");
-	printf("\t[-g, --mem-single-seg use single file descriptor for DPDK memory segments]\n");
-	printf("\t[-C, --max-completion-per-poll <val> max completions per poll]\n");
-	printf("\t\t(default: 0 - unlimited)\n");
-	printf("\t[-i, --shmem-grp-id <id> shared memory group ID]\n");
-	printf("\t[-Q, --skip-errors log I/O errors every N times (default: 1)]\n");
-	printf("\t");
-	spdk_log_usage(stdout, "-T");
-	printf("\t[-V, --enable-vmd enable VMD enumeration]\n");
-	printf("\t[-z, --disable-zcopy <impl> disable zero copy send for the given sock implementation. Default for posix impl]\n");
-	printf("\t[-Z, --enable-zcopy <impl> enable zero copy send for the given sock implementation]\n");
-	printf("\t[-A, --buffer-alignment IO buffer alignment. Must be power of 2 and not less than cache line (%u)]\n",
+	printf("\t-r, --transport <fmt> Transport ID for local PCIe NVMe or NVMeoF\n");
+	printf("\t\t Format: 'key:value [key:value] ...'\n");
+	printf("\t\t Keys:\n");
+	printf("\t\t  trtype      Transport type (e.g. PCIe, RDMA)\n");
+	printf("\t\t  adrfam      Address family (e.g. IPv4, IPv6)\n");
+	printf("\t\t  traddr      Transport address (e.g. 0000:04:00.0 for PCIe or 192.168.100.8 for RDMA)\n");
+	printf("\t\t  trsvcid     Transport service identifier (e.g. 4420)\n");
+	printf("\t\t  subnqn      Subsystem NQN (default: %s)\n", SPDK_NVMF_DISCOVERY_NQN);
+	printf("\t\t  ns          NVMe namespace ID (all active namespaces are used by default)\n");
+	printf("\t\t  hostnqn     Host NQN\n");
+	printf("\t\t Example: -r 'trtype:PCIe traddr:0000:04:00.0' for PCIe or\n");
+	printf("\t\t          -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420' for NVMeoF\n");
+	printf("\t\t Note: can be specified multiple times to test multiple disks/targets.\n");
+	printf("\n");
+
+	printf("==== ADVANCED OPTIONS ====\n\n");
+	printf("\t--use-every-core for each namespace, I/Os are submitted from all cores\n");
+	printf("\t--io-queue-size <val> size of NVMe IO queue. Default: maximum allowed by controller\n");
+	printf("\t-O, --io-unit-size io unit size in bytes (4-byte aligned) for SPDK driver. default: same as io size\n");
+	printf("\t-P, --num-qpairs <val> number of io queues per namespace. default: 1\n");
+	printf("\t-U, --num-unused-qpairs <val> number of unused io queues per controller. default: 0\n");
+	printf("\t-A, --buffer-alignment IO buffer alignment. Must be power of 2 and not less than cache line (%u)\n",
 	       SPDK_CACHE_LINE_SIZE);
-	printf("\t[-S, --default-sock-impl <impl> set the default sock impl, e.g. \"posix\"]\n");
-	printf("\t[-m, --cpu-usage display real-time overall cpu usage on used cores]\n");
+	printf("\t-s, --hugemem-size <MB> DPDK huge memory size in MB.\n");
+	printf("\t-g, --mem-single-seg use single file descriptor for DPDK memory segments\n");
+	printf("\t-C, --max-completion-per-poll <val> max completions per poll\n");
+	printf("\t\t(default: 0 - unlimited)\n");
+	printf("\t-i, --shmem-grp-id <id> shared memory group ID\n");
+	printf("\t-d, --number-ios <val> number of I/O to perform per thread on each namespace. Note: this is additional exit criteria.\n");
+	printf("\t\t(default: 0 - unlimited)\n");
+	printf("\t-e, --metadata <fmt> metadata configuration\n");
+	printf("\t\t Keys:\n");
+	printf("\t\t  PRACT      Protection Information Action bit (PRACT=1 or PRACT=0)\n");
+	printf("\t\t  PRCHK      Control of Protection Information Checking (PRCHK=GUARD|REFTAG|APPTAG)\n");
+	printf("\t\t Example: -e 'PRACT=0,PRCHK=GUARD|REFTAG|APPTAG'\n");
+	printf("\t\t          -e 'PRACT=1,PRCHK=GUARD'\n");
+	printf("\t-F, --zipf <theta> use zipf distribution for random I/O\n");
 #ifdef SPDK_CONFIG_URING
-	printf("\t[-R, --enable-uring enable using liburing to drive kernel devices (Default: libaio)]\n");
+	printf("\t-R, --enable-uring enable using liburing to drive kernel devices (Default: libaio)\n");
 #endif
+	printf("\t--iova-mode <mode> specify DPDK IOVA mode: va|pa\n");
+	printf("\n");
+
+	printf("==== PCIe OPTIONS ====\n\n");
+	printf("\t-b, --allowed-pci-addr <addr> allowed local PCIe device address\n");
+	printf("\t\t Example: -b 0000:d8:00.0 -b 0000:d9:00.0\n");
+	printf("\t-V, --enable-vmd enable VMD enumeration\n");
+	printf("\t-D, --disable-sq-cmb disable submission queue in controller memory buffer, default: enabled\n");
+	printf("\n");
+
+	printf("==== TCP OPTIONS ====\n\n");
+	printf("\t-S, --default-sock-impl <impl> set the default sock impl, e.g. \"posix\"\n");
+	printf("\t--disable-ktls disable Kernel TLS. Only valid for ssl impl. Default for ssl impl\n");
+	printf("\t--enable-ktls enable Kernel TLS. Only valid for ssl impl\n");
+	printf("\t--tls-version <val> TLS version to use. Only valid for ssl impl. Default: 0 (auto-negotiation)\n");
+	printf("\t--psk-path <val> Path to PSK file (only applies when sock_impl == ssl)\n");
+	printf("\t--psk-identity <val> Default PSK ID, e.g. psk.spdk.io (only applies when sock_impl == ssl)\n");
+	printf("\t--zerocopy-threshold <val> data is sent with MSG_ZEROCOPY if size is greater than this val. Default: 0 to disable it\n");
+	printf("\t--zerocopy-threshold-sock-impl <impl> specify the sock implementation to set zerocopy_threshold\n");
+	printf("\t-z, --disable-zcopy <impl> disable zero copy send for the given sock implementation. Default for posix impl\n");
+	printf("\t-Z, --enable-zcopy <impl> enable zero copy send for the given sock implementation\n");
+	printf("\t-k, --keepalive <ms> keep alive timeout period in millisecond\n");
+	printf("\t-H, --enable-tcp-hdgst enable header digest for TCP transport, default: disabled\n");
+	printf("\t-I, --enable-tcp-ddgst enable data digest for TCP transport, default: disabled\n");
+	printf("\n");
+
+	printf("==== RDMA OPTIONS ====\n\n");
+	printf("\t--transport-tos <val> specify the type of service for RDMA transport. Default: 0 (disabled)\n");
+	printf("\t--rdma-srq-size <val> The size of a shared rdma receive queue. Default: 0 (disabled)\n");
+	printf("\t-k, --keepalive <ms> keep alive timeout period in millisecond\n");
+	printf("\n");
+
+	printf("==== LOGGING ====\n\n");
+	printf("\t-L, --enable-sw-latency-tracking enable latency tracking via sw, default: disabled\n");
+	printf("\t\t-L for latency summary, -LL for detailed histogram\n");
+	printf("\t-l, --enable-ssd-latency-tracking enable latency tracking via ssd (if supported), default: disabled\n");
+	printf("\t-N, --no-shst-notification no shutdown notification process for controllers, default: disabled\n");
+	printf("\t-Q, --skip-errors log I/O errors every N times (default: 1)\n");
+	spdk_log_usage(stdout, "\t-T");
+	printf("\t-m, --cpu-usage display real-time overall cpu usage on used cores\n");
 #ifdef DEBUG
-	printf("\t[-G, --enable-debug enable debug logging]\n");
+	printf("\t-G, --enable-debug enable debug logging\n");
 #else
-	printf("\t[-G, --enable-debug enable debug logging (flag disabled, must reconfigure with --enable-debug)]\n");
+	printf("\t-G, --enable-debug enable debug logging (flag disabled, must reconfigure with --enable-debug)\n");
 #endif
-	printf("\t[--transport-stats dump transport statistics]\n");
-	printf("\t[--iova-mode <mode> specify DPDK IOVA mode: va|pa]\n");
-	printf("\t[--io-queue-size <val> size of NVMe IO queue. Default: maximum allowed by controller]\n");
-	printf("\t[--disable-ktls disable Kernel TLS. Only valid for ssl impl. Default for ssl impl]\n");
-	printf("\t[--enable-ktls enable Kernel TLS. Only valid for ssl impl]\n");
-	printf("\t[--tls-version <val> TLS version to use. Only valid for ssl impl. Default: 0 (auto-negotiation)]\n");
-	printf("\t[--psk-path <val> Path to PSK file (only applies when sock_impl == ssl)]\n");
-	printf("\t[--psk-identity <val> Default PSK ID, e.g. psk.spdk.io (only applies when sock_impl == ssl)]\n");
-	printf("\t[--zerocopy-threshold <val> data is sent with MSG_ZEROCOPY if size is greater than this val. Default: 0 to disable it]\n");
-	printf("\t[--zerocopy-threshold-sock-impl <impl> specify the sock implementation to set zerocopy_threshold]\n");
-	printf("\t[--transport-tos <val> specify the type of service for RDMA transport. Default: 0 (disabled)]\n");
-	printf("\t[--rdma-srq-size <val> The size of a shared rdma receive queue. Default: 0 (disabled)]\n");
-	printf("\t[--use-every-core for each namespace, I/Os are submitted from all cores]\n");
+	printf("\t--transport-stats dump transport statistics\n");
+	printf("\n\n");
 }
 
 static void
