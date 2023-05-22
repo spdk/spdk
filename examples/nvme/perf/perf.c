@@ -157,6 +157,8 @@ struct ns_worker_ctx {
 
 	TAILQ_ENTRY(ns_worker_ctx)	link;
 
+	TAILQ_HEAD(, perf_task)		queued_tasks;
+
 	struct spdk_histogram_data	*histogram;
 };
 
@@ -173,6 +175,7 @@ struct perf_task {
 #if HAVE_LIBAIO
 	struct iocb		iocb;
 #endif
+	TAILQ_ENTRY(perf_task)	link;
 };
 
 struct worker_thread {
@@ -247,6 +250,7 @@ static bool g_mix_specified;
 static bool g_exit;
 /* Default to 10 seconds for the keep alive value. This value is arbitrary. */
 static uint32_t g_keep_alive_timeout_in_ms = 10000;
+static bool g_continue_on_error = false;
 static uint32_t g_quiet_count = 1;
 static double g_zipf_theta;
 /* Set default io_queue_size to UINT16_MAX, NVMe driver will then reduce this
@@ -1480,11 +1484,17 @@ submit_single_io(struct perf_task *task)
 	rc = entry->fn_table->submit_io(task, ns_ctx, entry, offset_in_ios);
 
 	if (spdk_unlikely(rc != 0)) {
-		RATELIMIT_LOG("starting I/O failed\n");
-		spdk_dma_free(task->iovs[0].iov_base);
-		free(task->iovs);
-		spdk_dma_free(task->md_iov.iov_base);
-		free(task);
+		if (g_continue_on_error) {
+			/* We can't just resubmit here or we can get in a loop that
+			 * stack overflows. */
+			TAILQ_INSERT_TAIL(&ns_ctx->queued_tasks, task, link);
+		} else {
+			RATELIMIT_LOG("starting I/O failed: %d\n", rc);
+			spdk_dma_free(task->iovs[0].iov_base);
+			free(task->iovs);
+			spdk_dma_free(task->md_iov.iov_base);
+			free(task);
+		}
 	} else {
 		ns_ctx->current_queue_depth++;
 		ns_ctx->stats.io_submitted++;
@@ -1552,7 +1562,8 @@ io_complete(void *ctx, const struct spdk_nvme_cpl *cpl)
 			RATELIMIT_LOG("Write completed with error (sct=%d, sc=%d)\n",
 				      cpl->status.sct, cpl->status.sc);
 		}
-		if (cpl->status.sct == SPDK_NVME_SCT_GENERIC &&
+		if (!g_continue_on_error &&
+		    cpl->status.sct == SPDK_NVME_SCT_GENERIC &&
 		    cpl->status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT) {
 			/* The namespace was hotplugged.  Stop trying to send I/O to it. */
 			task->ns_ctx->is_draining = true;
@@ -1594,12 +1605,19 @@ submit_io(struct ns_worker_ctx *ns_ctx, int queue_depth)
 static int
 init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 {
+	TAILQ_INIT(&ns_ctx->queued_tasks);
 	return ns_ctx->entry->fn_table->init_ns_worker_ctx(ns_ctx);
 }
 
 static void
 cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 {
+	struct perf_task *task, *ttask;
+
+	TAILQ_FOREACH_SAFE(task, &ns_ctx->queued_tasks, link, ttask) {
+		TAILQ_REMOVE(&ns_ctx->queued_tasks, task, link);
+		task_complete(task);
+	}
 	ns_ctx->entry->fn_table->cleanup_ns_worker_ctx(ns_ctx);
 }
 
@@ -1676,6 +1694,8 @@ work_fn(void *arg)
 	int rc;
 	int64_t check_rc;
 	uint64_t check_now;
+	TAILQ_HEAD(, perf_task)	swap;
+	struct perf_task *task;
 
 	/* Allocate queue pairs for each namespace. */
 	TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
@@ -1718,6 +1738,15 @@ work_fn(void *arg)
 		 * to replace each I/O that is completed.
 		 */
 		TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
+			if (g_continue_on_error) {
+				/* Submit any I/O that is queued up */
+				TAILQ_INIT(&swap);
+				TAILQ_SWAP(&swap, &ns_ctx->queued_tasks, perf_task, link);
+				TAILQ_FOREACH(task, &swap, link) {
+					submit_single_io(task);
+				}
+			}
+
 			check_now = spdk_get_ticks();
 			check_rc = ns_ctx->entry->fn_table->check_io(ns_ctx);
 
@@ -1902,7 +1931,7 @@ usage(char *program_name)
 	printf("\t\t-L for latency summary, -LL for detailed histogram\n");
 	printf("\t-l, --enable-ssd-latency-tracking enable latency tracking via ssd (if supported), default: disabled\n");
 	printf("\t-N, --no-shst-notification no shutdown notification process for controllers, default: disabled\n");
-	printf("\t-Q, --skip-errors log I/O errors every N times (default: 1)\n");
+	printf("\t-Q, --continue-on-error <val> Do not stop on error. Log I/O errors every N times (default: 1)\n");
 	spdk_log_usage(stdout, "\t-T");
 	printf("\t-m, --cpu-usage display real-time overall cpu usage on used cores\n");
 #ifdef DEBUG
@@ -2386,8 +2415,8 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"io-unit-size",			required_argument,	NULL, PERF_IO_UNIT_SIZE},
 #define PERF_IO_QUEUES_PER_NS	'P'
 	{"num-qpairs", required_argument, NULL, PERF_IO_QUEUES_PER_NS},
-#define PERF_SKIP_ERRORS	'Q'
-	{"skip-errors",			required_argument,	NULL, PERF_SKIP_ERRORS},
+#define PERF_CONTINUE_ON_ERROR	'Q'
+	{"continue-on-error",			required_argument,	NULL, PERF_CONTINUE_ON_ERROR},
 #define PERF_ENABLE_URING	'R'
 	{"enable-uring", no_argument, NULL, PERF_ENABLE_URING},
 #define PERF_DEFAULT_SOCK_IMPL	'S'
@@ -2456,7 +2485,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		case PERF_TIME:
 		case PERF_RW_MIXREAD:
 		case PERF_NUM_UNUSED_IO_QPAIRS:
-		case PERF_SKIP_ERRORS:
+		case PERF_CONTINUE_ON_ERROR:
 		case PERF_IO_QUEUE_SIZE:
 		case PERF_ZEROCOPY_THRESHOLD:
 		case PERF_RDMA_SRQ_SIZE:
@@ -2500,8 +2529,9 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 				g_rw_percentage = val;
 				g_mix_specified = true;
 				break;
-			case PERF_SKIP_ERRORS:
+			case PERF_CONTINUE_ON_ERROR:
 				g_quiet_count = val;
+				g_continue_on_error = true;
 				break;
 			case PERF_NUM_UNUSED_IO_QPAIRS:
 				g_nr_unused_io_queues = val;
@@ -2721,7 +2751,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		return 1;
 	}
 	if (!g_quiet_count) {
-		fprintf(stderr, "-Q (--skip-errors) value must be greater than 0\n");
+		fprintf(stderr, "-Q (--continue-on-error) value must be greater than 0\n");
 		usage(argv[0]);
 		return 1;
 	}
