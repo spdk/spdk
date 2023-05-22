@@ -820,7 +820,7 @@ nvme_tcp_parse_interchange_psk(const char *psk_in, uint8_t *psk_out, size_t psk_
 		return -EINVAL;
 	}
 
-	if (strlen(psk_in) > SPDK_TLS_PSK_MAX_LEN) {
+	if (strlen(psk_in) >= SPDK_TLS_PSK_MAX_LEN) {
 		SPDK_ERRLOG("PSK interchange exceeds maximum %d characters!\n", SPDK_TLS_PSK_MAX_LEN);
 		return -EINVAL;
 	}
