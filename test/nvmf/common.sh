@@ -441,6 +441,7 @@ function nvmftestinit() {
 			echo "no RDMA NIC for nvmf test"
 			exit 1
 		fi
+		NVMF_TRANSPORT_OPTS="$NVMF_TRANSPORT_OPTS --num-shared-buffers 1024"
 	elif [[ "$TEST_TRANSPORT" == "tcp" ]]; then
 		NVMF_TRANSPORT_OPTS="$NVMF_TRANSPORT_OPTS -o"
 	fi
