@@ -1501,6 +1501,7 @@ bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_
 	struct nvme_poll_group *group = poll_group_ctx;
 	struct nvme_qpair *nvme_qpair;
 	struct nvme_ctrlr_channel *ctrlr_ch;
+	int status;
 
 	nvme_qpair = nvme_poll_group_get_qpair(group, qpair);
 	if (nvme_qpair == NULL) {
@@ -1518,12 +1519,20 @@ bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_
 
 	if (ctrlr_ch != NULL) {
 		if (ctrlr_ch->reset_iter != NULL) {
-			/* If we are already in a full reset sequence, we do not have
-			 * to restart it. Just move to the next ctrlr_channel.
-			 */
-			SPDK_DEBUGLOG(bdev_nvme, "qpair %p was disconnected and freed in a reset ctrlr sequence.\n",
-				      qpair);
-			spdk_for_each_channel_continue(ctrlr_ch->reset_iter, 0);
+			/* We are in a full reset sequence. */
+			if (ctrlr_ch->connect_poller != NULL) {
+				/* qpair was failed to connect. Abort the reset sequence. */
+				SPDK_DEBUGLOG(bdev_nvme, "qpair %p was failed to connect. abort the reset ctrlr sequence.\n",
+					      qpair);
+				spdk_poller_unregister(&ctrlr_ch->connect_poller);
+				status = -1;
+			} else {
+				/* qpair was completed to disconnect. Just move to the next ctrlr_channel. */
+				SPDK_DEBUGLOG(bdev_nvme, "qpair %p was disconnected and freed in a reset ctrlr sequence.\n",
+					      qpair);
+				status = 0;
+			}
+			spdk_for_each_channel_continue(ctrlr_ch->reset_iter, status);
 			ctrlr_ch->reset_iter = NULL;
 		} else {
 			/* qpair was disconnected unexpectedly. Reset controller for recovery. */
@@ -2098,6 +2107,33 @@ bdev_nvme_reset_create_qpairs_done(struct spdk_io_channel_iter *i, int status)
 	}
 }
 
+static int
+bdev_nvme_reset_check_qpair_connected(void *ctx)
+{
+	struct nvme_ctrlr_channel *ctrlr_ch = ctx;
+
+	if (ctrlr_ch->reset_iter == NULL) {
+		/* qpair was already failed to connect and the reset sequence is being aborted. */
+		assert(ctrlr_ch->connect_poller == NULL);
+		assert(ctrlr_ch->qpair->qpair == NULL);
+		return SPDK_POLLER_BUSY;
+	}
+
+	assert(ctrlr_ch->qpair->qpair != NULL);
+
+	if (!spdk_nvme_qpair_is_connected(ctrlr_ch->qpair->qpair)) {
+		return SPDK_POLLER_BUSY;
+	}
+
+	spdk_poller_unregister(&ctrlr_ch->connect_poller);
+
+	/* qpair was completed to connect. Move to the next ctrlr_channel */
+	spdk_for_each_channel_continue(ctrlr_ch->reset_iter, 0);
+	ctrlr_ch->reset_iter = NULL;
+
+	return SPDK_POLLER_BUSY;
+}
+
 static void
 bdev_nvme_reset_create_qpair(struct spdk_io_channel_iter *i)
 {
@@ -2106,8 +2142,18 @@ bdev_nvme_reset_create_qpair(struct spdk_io_channel_iter *i)
 	int rc;
 
 	rc = bdev_nvme_create_qpair(ctrlr_ch->qpair);
+	if (rc == 0) {
+		ctrlr_ch->connect_poller = SPDK_POLLER_REGISTER(bdev_nvme_reset_check_qpair_connected,
+					   ctrlr_ch, 0);
 
-	spdk_for_each_channel_continue(i, rc);
+		/* The current full reset sequence will move to the next
+		 * ctrlr_channel after the qpair is actually connected.
+		 */
+		assert(ctrlr_ch->reset_iter == NULL);
+		ctrlr_ch->reset_iter = i;
+	} else {
+		spdk_for_each_channel_continue(i, rc);
+	}
 }
 
 static int

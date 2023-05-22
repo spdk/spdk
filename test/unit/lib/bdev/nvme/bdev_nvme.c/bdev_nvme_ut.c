@@ -1136,6 +1136,12 @@ spdk_nvme_qpair_get_failure_reason(struct spdk_nvme_qpair *qpair)
 	return qpair->failure_reason;
 }
 
+bool
+spdk_nvme_qpair_is_connected(struct spdk_nvme_qpair *qpair)
+{
+	return qpair->is_connected;
+}
+
 int32_t
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 				    uint32_t max_completions)
