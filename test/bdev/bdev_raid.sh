@@ -179,6 +179,18 @@ function verify_raid_bdev_state() {
 	xtrace_restore
 }
 
+function verify_raid_bdev_process() {
+	local raid_bdev_name=$1
+	local process_type=$2
+	local target=$3
+	local raid_bdev_info
+
+	raid_bdev_info=$($rpc_py bdev_raid_get_bdevs all | jq -r ".[] | select(.name == \"$raid_bdev_name\")")
+
+	[[ $(jq -r '.process.type // "none"' <<< "$raid_bdev_info") == "$process_type" ]]
+	[[ $(jq -r '.process.target // "none"' <<< "$raid_bdev_info") == "$target" ]]
+}
+
 function has_redundancy() {
 	case $1 in
 		"raid1" | "raid5f") return 0 ;;
@@ -504,9 +516,120 @@ function raid_superblock_test() {
 	return 0
 }
 
+function raid_rebuild_test() {
+	local raid_level=$1
+	local num_base_bdevs=$2
+	local superblock=$3
+	local base_bdevs=($(for ((i = 1; i <= num_base_bdevs; i++)); do echo BaseBdev$i; done))
+	local raid_bdev_name="raid_bdev1"
+	local strip_size
+	local create_arg
+	local raid_bdev_size
+	local data_offset
+
+	if [ $raid_level != "raid1" ]; then
+		strip_size=64
+		create_arg+=" -z $strip_size"
+	else
+		strip_size=0
+	fi
+
+	if [ $superblock = true ]; then
+		create_arg+=" -s"
+	fi
+
+	"$rootdir/test/app/bdev_svc/bdev_svc" -r $rpc_server -L bdev_raid &
+	raid_pid=$!
+	waitforlisten $raid_pid $rpc_server
+
+	# Create base bdevs
+	for ((i = 0; i < num_base_bdevs; i++)); do
+		if [ $superblock = true ]; then
+			$rpc_py bdev_malloc_create 32 512 -b ${base_bdevs[$i]}_malloc
+			$rpc_py bdev_passthru_create -b ${base_bdevs[$i]}_malloc -p ${base_bdevs[$i]}
+		else
+			$rpc_py bdev_malloc_create 32 512 -b ${base_bdevs[$i]}
+		fi
+	done
+
+	# Create spare bdev
+	$rpc_py bdev_malloc_create 32 512 -b "spare_malloc"
+	$rpc_py bdev_delay_create -b "spare_malloc" -d "spare_delay" -r 0 -t 0 -w 100000 -n 100000
+	$rpc_py bdev_passthru_create -b "spare_delay" -p "spare"
+
+	# Create RAID bdev
+	$rpc_py bdev_raid_create $create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
+	verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $num_base_bdevs
+
+	# Get RAID bdev's size
+	raid_bdev_size=$($rpc_py bdev_get_bdevs -b $raid_bdev_name | jq -r '.[].num_blocks')
+
+	# Get base bdev's data offset
+	data_offset=$($rpc_py bdev_raid_get_bdevs all | jq -r '.[].base_bdevs_list[0].data_offset')
+
+	# Write random data to the RAID bdev
+	nbd_start_disks $rpc_server $raid_bdev_name /dev/nbd0
+	dd if=/dev/urandom of=/dev/nbd0 bs=512 count=$raid_bdev_size oflag=direct
+	nbd_stop_disks $rpc_server /dev/nbd0
+
+	# Remove one base bdev
+	$rpc_py bdev_raid_remove_base_bdev ${base_bdevs[0]}
+
+	# Check if the RAID bdev is in online state (degraded)
+	verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $((num_base_bdevs - 1))
+
+	# Add bdev for rebuild
+	$rpc_py bdev_raid_add_base_bdev $raid_bdev_name "spare"
+	sleep 1
+
+	# Check if rebuild started
+	verify_raid_bdev_process $raid_bdev_name "rebuild" "spare"
+
+	# Wait for rebuild to finish
+	local timeout=$((SECONDS + 30))
+	while ((SECONDS < timeout)); do
+		if ! verify_raid_bdev_process $raid_bdev_name "rebuild" "spare" > /dev/null; then
+			break
+		fi
+		sleep 1
+	done
+
+	# Check if rebuild is not running and the RAID bdev has the correct number of operational devices
+	verify_raid_bdev_process $raid_bdev_name "none" "none"
+	verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $num_base_bdevs
+
+	# Stop the RAID bdev
+	$rpc_py bdev_raid_delete $raid_bdev_name
+	[[ $($rpc_py bdev_raid_get_bdevs all | jq 'length') == 0 ]]
+
+	# Compare data on the removed and rebuilt base bdevs
+	nbd_start_disks $rpc_server "${base_bdevs[0]} spare" "/dev/nbd0 /dev/nbd1"
+	cmp -i $((data_offset * 512)) /dev/nbd0 /dev/nbd1
+	nbd_stop_disks $rpc_server "/dev/nbd0 /dev/nbd1"
+
+	if [ $superblock = true ]; then
+		# Remove the passthru base bdevs, then re-add them to assemble the raid bdev again
+		for ((i = 0; i < num_base_bdevs; i++)); do
+			$rpc_py bdev_passthru_delete ${base_bdevs[$i]}
+			$rpc_py bdev_passthru_create -b ${base_bdevs[$i]}_malloc -p ${base_bdevs[$i]}
+		done
+		$rpc_py bdev_passthru_delete "spare"
+		$rpc_py bdev_passthru_create -b "spare_delay" -p "spare"
+
+		verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $num_base_bdevs
+		verify_raid_bdev_process $raid_bdev_name "none" "none"
+		[[ $($rpc_py bdev_raid_get_bdevs all | jq -r '.[].base_bdevs_list[0].name') == "spare" ]]
+	fi
+
+	killprocess $raid_pid
+
+	return 0
+}
+
 trap 'on_error_exit;' ERR
 
 if [ $(uname -s) = Linux ] && modprobe -n nbd; then
+	has_nbd=true
 	modprobe nbd
 	run_test "raid_function_test_raid0" raid_function_test raid0
 	run_test "raid_function_test_concat" raid_function_test concat
@@ -521,6 +644,13 @@ for n in {2..4}; do
 		run_test "raid_superblock_test" raid_superblock_test $level $n
 	done
 done
+
+if [ "$has_nbd" = true ]; then
+	for n in 2 4; do
+		run_test "raid_rebuild_test" raid_rebuild_test raid1 $n false
+		run_test "raid_rebuild_test_sb" raid_rebuild_test raid1 $n true
+	done
+fi
 
 if [ "$CONFIG_RAID5F" == y ]; then
 	for n in {3..4}; do
