@@ -185,5 +185,17 @@ nvmfappstart -m 0x2
 
 NOT setup_nvmf_tgt $key_long_path
 
+# Test #9 - test saving/loading JSON configuration by connecting to bdevperf
+killprocess $nvmfpid
+chmod 0600 $key_long_path
+
+nvmfappstart -m 0x2
+setup_nvmf_tgt $key_long_path
+tgtconf=$($rpc_py save_config)
+killprocess $nvmfpid
+
+nvmfappstart -m 0x2 -c <(echo "$tgtconf")
+run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 "$key_long_path"
+
 trap - SIGINT SIGTERM EXIT
 cleanup

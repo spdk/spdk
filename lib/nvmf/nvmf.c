@@ -462,6 +462,7 @@ nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 	struct spdk_nvmf_ns_opts ns_opts;
 	uint32_t max_namespaces;
 	char uuid_str[SPDK_UUID_STRING_LEN];
+	struct spdk_nvmf_transport *transport;
 
 	if (spdk_nvmf_subsystem_get_type(subsystem) != SPDK_NVMF_SUBTYPE_NVME) {
 		return;
@@ -504,6 +505,12 @@ nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 
 		spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
 		spdk_json_write_named_string(w, "host", spdk_nvmf_host_get_nqn(host));
+
+		TAILQ_FOREACH(transport, &subsystem->tgt->transports, link) {
+			if (transport->ops->subsystem_dump_host != NULL) {
+				transport->ops->subsystem_dump_host(transport, subsystem, host->nqn, w);
+			}
+		}
 
 		/*     } "params" */
 		spdk_json_write_object_end(w);

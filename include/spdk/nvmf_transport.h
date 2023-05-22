@@ -415,6 +415,14 @@ struct spdk_nvmf_transport_ops {
 	void (*subsystem_remove_host)(struct spdk_nvmf_transport *transport,
 				      const struct spdk_nvmf_subsystem *subsystem,
 				      const char *hostnqn);
+
+	/*
+	 * A callback used to dump subsystem's host data for a specific transport.
+	 * This callback is optional and not all transports need to implement it.
+	 */
+	void (*subsystem_dump_host)(struct spdk_nvmf_transport *transport,
+				    const struct spdk_nvmf_subsystem *subsystem,
+				    const char *hostnqn, struct spdk_json_write_ctx *w);
 };
 
 /**

@@ -3695,6 +3695,14 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 		entry->psk_size = rc;
 	}
 
+	rc = snprintf(entry->psk_path, sizeof(entry->psk_path), "%s", opts.psk);
+	if (rc < 0 || (size_t)rc >= sizeof(entry->psk_path)) {
+		SPDK_ERRLOG("Could not save PSK path!\n");
+		rc = -ENAMETOOLONG;
+		free(entry);
+		goto end;
+	}
+
 	TAILQ_INSERT_TAIL(&ttransport->psks, entry, link);
 	rc = 0;
 
@@ -3725,6 +3733,27 @@ nvmf_tcp_subsystem_remove_host(struct spdk_nvmf_transport *transport,
 			TAILQ_REMOVE(&ttransport->psks, entry, link);
 			spdk_memset_s(entry->psk, sizeof(entry->psk), 0, sizeof(entry->psk));
 			free(entry);
+			break;
+		}
+	}
+}
+
+static void
+nvmf_tcp_subsystem_dump_host(struct spdk_nvmf_transport *transport,
+			     const struct spdk_nvmf_subsystem *subsystem, const char *hostnqn,
+			     struct spdk_json_write_ctx *w)
+{
+	struct spdk_nvmf_tcp_transport *ttransport;
+	struct tcp_psk_entry *entry;
+
+	assert(transport != NULL);
+	assert(subsystem != NULL);
+
+	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
+	TAILQ_FOREACH(entry, &ttransport->psks, link) {
+		if ((strncmp(entry->hostnqn, hostnqn, SPDK_NVMF_NQN_MAX_LEN)) == 0 &&
+		    (strncmp(entry->subnqn, subsystem->subnqn, SPDK_NVMF_NQN_MAX_LEN)) == 0) {
+			spdk_json_write_named_string(w, "psk", entry->psk_path);
 			break;
 		}
 	}
@@ -3776,6 +3805,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
 	.qpair_abort_request = nvmf_tcp_qpair_abort_request,
 	.subsystem_add_host = nvmf_tcp_subsystem_add_host,
 	.subsystem_remove_host = nvmf_tcp_subsystem_remove_host,
+	.subsystem_dump_host = nvmf_tcp_subsystem_dump_host,
 };
 
 SPDK_NVMF_TRANSPORT_REGISTER(tcp, &spdk_nvmf_transport_tcp);
