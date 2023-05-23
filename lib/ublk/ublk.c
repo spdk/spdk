@@ -98,6 +98,7 @@ struct ublk_queue {
 	TAILQ_HEAD(, ublk_io)	completed_io_list;
 	TAILQ_HEAD(, ublk_io)	inflight_io_list;
 	uint32_t		cmd_inflight;
+	bool			is_stopping;
 	struct ublksrv_io_desc	*io_cmd_buf;
 	/* ring depth == dev_info->queue_depth. */
 	struct io_uring		ring;
@@ -125,13 +126,13 @@ struct spdk_ublk_dev {
 	struct spdk_poller	*retry_poller;
 	int			retry_count;
 	uint32_t		queues_closed;
-	volatile bool		is_closing;
 	ublk_start_cb		start_cb;
 	ublk_del_cb		del_cb;
 	void			*cb_arg;
 	uint32_t		ctrl_cmd_op;
 	ublk_next_state_fn	next_state_fn;
 	uint32_t		ctrl_ops_in_progress;
+	bool			is_closing;
 
 	TAILQ_ENTRY(spdk_ublk_dev) tailq;
 	TAILQ_ENTRY(spdk_ublk_dev) wait_tailq;
@@ -1031,7 +1032,7 @@ ublksrv_queue_io_cmd(struct ublk_queue *q,
 
 	SPDK_DEBUGLOG(ublk_io, "(qid %d tag %u cmd_op %u) iof %x stopping %d\n",
 		      q->q_id, tag, cmd_op,
-		      io->cmd_op, q->dev->is_closing);
+		      io->cmd_op, q->is_stopping);
 }
 
 static int
@@ -1104,7 +1105,6 @@ ublk_io_recv(struct ublk_queue *q)
 	unsigned head, tag;
 	int fetch, count = 0;
 	struct ublk_io *io;
-	struct spdk_ublk_dev *dev = q->dev;
 	struct spdk_iobuf_channel *iobuf_ch;
 	unsigned __attribute__((unused)) cmd_op;
 
@@ -1116,7 +1116,7 @@ ublk_io_recv(struct ublk_queue *q)
 	io_uring_for_each_cqe(&q->ring, head, cqe) {
 		tag = user_data_to_tag(cqe->user_data);
 		cmd_op = user_data_to_op(cqe->user_data);
-		fetch = (cqe->res != UBLK_IO_RES_ABORT) && !dev->is_closing;
+		fetch = (cqe->res != UBLK_IO_RES_ABORT) && !q->is_stopping;
 
 		SPDK_DEBUGLOG(ublk_io, "res %d qid %d tag %u cmd_op %u\n",
 			      cqe->res, q->q_id, tag, cmd_op);
@@ -1125,7 +1125,7 @@ ublk_io_recv(struct ublk_queue *q)
 		io = &q->ios[tag];
 
 		if (!fetch) {
-			dev->is_closing = true;
+			q->is_stopping = true;
 			if (io->cmd_op == UBLK_IO_FETCH_REQ) {
 				io->cmd_op = 0;
 			}
@@ -1158,14 +1158,12 @@ ublk_poll(void *arg)
 {
 	struct ublk_poll_group *poll_group = arg;
 	struct ublk_queue *q, *q_tmp;
-	struct spdk_ublk_dev *ublk;
 	int sent, received, count = 0;
 
 	TAILQ_FOREACH_SAFE(q, &poll_group->queue_list, tailq, q_tmp) {
 		sent = ublk_io_xmit(q);
 		received = ublk_io_recv(q);
-		ublk = q->dev;
-		if (spdk_unlikely(ublk->is_closing)) {
+		if (spdk_unlikely(q->is_stopping)) {
 			ublk_try_close_queue(q);
 		}
 		count += sent + received;
