@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2015 Intel Corporation. All rights reserved.
  *   Copyright (c) 2020, 2021 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #ifndef __NVME_INTERNAL_H__
@@ -440,6 +440,8 @@ struct spdk_nvme_qpair {
 	uint8_t					last_transport_failure_reason: 2;
 
 	uint8_t					abort_dnr: 1;
+	/* The user is destroying qpair */
+	uint8_t					destroy_in_progress: 1;
 
 	enum spdk_nvme_transport_type		trtype;
 
