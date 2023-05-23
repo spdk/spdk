@@ -536,10 +536,11 @@ Example commands
 ## RAID {#bdev_ug_raid}
 
 RAID virtual bdev module provides functionality to combine any SPDK bdevs into
-one RAID bdev. Currently SPDK supports only RAID 0. RAID functionality does not
-store on-disk metadata on the member disks, so user must recreate the RAID
-volume when restarting application. User may specify member disks to create RAID
-volume event if they do not exists yet - as the member disks are registered at
+one RAID bdev. Currently SPDK supports only RAID 0. RAID metadata may be stored
+on member disks if enabled when creating the RAID bdev, so user does not have to
+recreate the RAID volume when restarting application. It is not enabled by
+default for backward compatibility. User may specify member disks to create
+RAID volume even if they do not exist yet - as the member disks are registered at
 a later time, the RAID module will claim them and will surface the RAID volume
 after all of the member disks are available. It is allowed to use disks of
 different sizes - the smallest disk size will be the amount of space used on

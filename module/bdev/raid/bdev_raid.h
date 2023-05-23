@@ -81,6 +81,9 @@ struct raid_base_bdev_info {
 
 	/* Hold the number of blocks to know how large the base bdev is resized. */
 	uint64_t		blockcnt;
+
+	/* io channel for the app thread */
+	struct spdk_io_channel	*app_thread_ch;
 };
 
 /*
@@ -154,14 +157,14 @@ struct raid_bdev {
 	/* Set to true if destroy of this raid bdev is started. */
 	bool				destroy_started;
 
-	/* Set to true if superblock metadata is enabled on this raid bdev */
-	bool				superblock_enabled;
-
 	/* Module for RAID-level specific operations */
 	struct raid_bdev_module		*module;
 
 	/* Private data for the raid module */
 	void				*module_private;
+
+	/* Superblock */
+	struct raid_bdev_superblock	*sb;
 };
 
 #define RAID_FOR_EACH_BASE_BDEV(r, i) \
@@ -337,5 +340,94 @@ raid_bdev_flush_blocks(struct raid_base_bdev_info *base_info, struct spdk_io_cha
 	return spdk_bdev_flush_blocks(base_info->desc, ch, base_info->data_offset + offset_blocks,
 				      num_blocks, cb, cb_arg);
 }
+
+/*
+ * Definitions related to raid bdev superblock
+ */
+
+#define RAID_BDEV_SB_VERSION_MAJOR	1
+#define RAID_BDEV_SB_VERSION_MINOR	0
+
+#define RAID_BDEV_SB_NAME_SIZE		64
+
+enum raid_bdev_sb_base_bdev_state {
+	RAID_SB_BASE_BDEV_MISSING	= 0,
+	RAID_SB_BASE_BDEV_CONFIGURED	= 1,
+	RAID_SB_BASE_BDEV_FAILED	= 2,
+	RAID_SB_BASE_BDEV_SPARE		= 3,
+};
+
+struct raid_bdev_sb_base_bdev {
+	/* uuid of the base bdev */
+	struct spdk_uuid	uuid;
+	/* offset in blocks from base device start to the start of raid data area */
+	uint64_t		data_offset;
+	/* size in blocks of the base device raid data area */
+	uint64_t		data_size;
+	/* state of the base bdev */
+	uint32_t		state;
+	/* feature/status flags */
+	uint32_t		flags;
+	/* slot number of this base bdev in the raid */
+	uint8_t			slot;
+
+	uint8_t			reserved[23];
+};
+SPDK_STATIC_ASSERT(sizeof(struct raid_bdev_sb_base_bdev) == 64, "incorrect size");
+
+struct raid_bdev_superblock {
+#define RAID_BDEV_SB_SIG "SPDKRAID"
+	uint8_t			signature[8];
+	struct {
+		/* incremented when a breaking change in the superblock structure is made */
+		uint16_t	major;
+		/* incremented for changes in the superblock that are backward compatible */
+		uint16_t	minor;
+	} version;
+	/* length in bytes of the entire superblock */
+	uint32_t		length;
+	/* crc32c checksum of the entire superblock */
+	uint32_t		crc;
+	/* feature/status flags */
+	uint32_t		flags;
+	/* unique id of the raid bdev */
+	struct spdk_uuid	uuid;
+	/* name of the raid bdev */
+	uint8_t			name[RAID_BDEV_SB_NAME_SIZE];
+	/* size of the raid bdev in blocks */
+	uint64_t		raid_size;
+	/* the raid bdev block size - must be the same for all base bdevs */
+	uint32_t		block_size;
+	/* the raid level */
+	uint32_t		level;
+	/* strip (chunk) size in blocks */
+	uint32_t		strip_size;
+	/* state of the raid */
+	uint32_t		state;
+	/* sequence number, incremented on every superblock update */
+	uint64_t		seq_number;
+	/* number of raid base devices */
+	uint8_t			num_base_bdevs;
+
+	uint8_t			reserved[118];
+
+	/* size of the base bdevs array */
+	uint8_t			base_bdevs_size;
+	/* array of base bdev descriptors */
+	struct raid_bdev_sb_base_bdev base_bdevs[];
+};
+SPDK_STATIC_ASSERT(sizeof(struct raid_bdev_superblock) == 256, "incorrect size");
+
+#define RAID_BDEV_SB_MAX_LENGTH \
+	SPDK_ALIGN_CEIL((sizeof(struct raid_bdev_superblock) + UINT8_MAX * sizeof(struct raid_bdev_sb_base_bdev)), 0x1000)
+
+SPDK_STATIC_ASSERT(RAID_BDEV_SB_MAX_LENGTH < RAID_BDEV_MIN_DATA_OFFSET_SIZE,
+		   "Incorrect min data offset");
+
+typedef void (*raid_bdev_write_sb_cb)(int status, struct raid_bdev *raid_bdev, void *ctx);
+
+void raid_bdev_init_superblock(struct raid_bdev *raid_bdev);
+void raid_bdev_write_superblock(struct raid_bdev *raid_bdev, raid_bdev_write_sb_cb cb,
+				void *cb_ctx);
 
 #endif /* SPDK_BDEV_RAID_INTERNAL_H */

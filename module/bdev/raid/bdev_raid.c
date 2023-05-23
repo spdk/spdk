@@ -189,6 +189,7 @@ raid_bdev_cleanup(struct raid_bdev *raid_bdev)
 static void
 raid_bdev_free(struct raid_bdev *raid_bdev)
 {
+	spdk_dma_free(raid_bdev->sb);
 	spdk_spin_destroy(&raid_bdev->base_bdev_lock);
 	free(raid_bdev->base_bdev_info);
 	free(raid_bdev->bdev.name);
@@ -208,8 +209,7 @@ raid_bdev_cleanup_and_free(struct raid_bdev *raid_bdev)
  * params:
  * base_info - raid base bdev info
  * returns:
- * 0 - success
- * non zero - failure
+ * none
  */
 static void
 raid_bdev_free_base_bdev_resource(struct raid_base_bdev_info *base_info)
@@ -228,6 +228,8 @@ raid_bdev_free_base_bdev_resource(struct raid_base_bdev_info *base_info)
 	spdk_bdev_module_release_bdev(spdk_bdev_desc_get_bdev(base_info->desc));
 	spdk_bdev_close(base_info->desc);
 	base_info->desc = NULL;
+	spdk_put_io_channel(base_info->app_thread_ch);
+	base_info->app_thread_ch = NULL;
 
 	assert(raid_bdev->num_base_bdevs_discovered);
 	raid_bdev->num_base_bdevs_discovered--;
@@ -606,7 +608,7 @@ raid_bdev_write_info_json(struct raid_bdev *raid_bdev, struct spdk_json_write_ct
 	spdk_json_write_named_uint32(w, "strip_size_kb", raid_bdev->strip_size_kb);
 	spdk_json_write_named_string(w, "state", raid_bdev_state_to_str(raid_bdev->state));
 	spdk_json_write_named_string(w, "raid_level", raid_bdev_level_to_str(raid_bdev->level));
-	spdk_json_write_named_bool(w, "superblock", raid_bdev->superblock_enabled);
+	spdk_json_write_named_bool(w, "superblock", raid_bdev->sb != NULL);
 	spdk_json_write_named_uint32(w, "num_base_bdevs", raid_bdev->num_base_bdevs);
 	spdk_json_write_named_uint32(w, "num_base_bdevs_discovered", raid_bdev->num_base_bdevs_discovered);
 	spdk_json_write_name(w, "base_bdevs_list");
@@ -664,7 +666,7 @@ raid_bdev_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 
 	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
-	if (raid_bdev->superblock_enabled) {
+	if (raid_bdev->sb != NULL) {
 		/* raid bdev configuration is stored in the superblock */
 		return;
 	}
@@ -679,7 +681,7 @@ raid_bdev_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 	spdk_json_write_named_string(w, "uuid", uuid_str);
 	spdk_json_write_named_uint32(w, "strip_size_kb", raid_bdev->strip_size_kb);
 	spdk_json_write_named_string(w, "raid_level", raid_bdev_level_to_str(raid_bdev->level));
-	spdk_json_write_named_bool(w, "superblock", raid_bdev->superblock_enabled);
+	spdk_json_write_named_bool(w, "superblock", raid_bdev->sb != NULL);
 
 	spdk_json_write_named_array_begin(w, "base_bdevs");
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
@@ -936,31 +938,21 @@ raid_bdev_init(void)
 	return 0;
 }
 
-/*
- * brief:
- * raid_bdev_create allocates raid bdev based on passed configuration
- * params:
- * name - name for raid bdev
- * strip_size - strip size in KB
- * num_base_bdevs - number of base bdevs
- * level - raid level
- * superblock_enabled - true if raid should have superblock
- * uuid - uuid to set for the bdev
- * raid_bdev_out - the created raid bdev
- * returns:
- * 0 - success
- * non zero - failure
- */
-int
-raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
-		 enum raid_level level, bool superblock_enabled, const struct spdk_uuid *uuid,
-		 struct raid_bdev **raid_bdev_out)
+static int
+_raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
+		  enum raid_level level, bool superblock_enabled, const struct spdk_uuid *uuid,
+		  struct raid_bdev **raid_bdev_out)
 {
 	struct raid_bdev *raid_bdev;
 	struct spdk_bdev *raid_bdev_gen;
 	struct raid_bdev_module *module;
 	struct raid_base_bdev_info *base_info;
 	uint8_t min_operational;
+
+	if (strnlen(name, RAID_BDEV_SB_NAME_SIZE) == RAID_BDEV_SB_NAME_SIZE) {
+		SPDK_ERRLOG("Raid bdev name '%s' exceeds %d characters\n", name, RAID_BDEV_SB_NAME_SIZE - 1);
+		return -EINVAL;
+	}
 
 	if (raid_bdev_find_by_name(name) != NULL) {
 		SPDK_ERRLOG("Duplicate raid bdev name found: %s\n", name);
@@ -1048,7 +1040,15 @@ raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 	raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
 	raid_bdev->level = level;
 	raid_bdev->min_base_bdevs_operational = min_operational;
-	raid_bdev->superblock_enabled = superblock_enabled;
+
+	if (superblock_enabled) {
+		raid_bdev->sb = spdk_dma_zmalloc(RAID_BDEV_SB_MAX_LENGTH, 0x1000, NULL);
+		if (!raid_bdev->sb) {
+			SPDK_ERRLOG("Failed to allocate raid bdev sb buffer\n");
+			raid_bdev_free(raid_bdev);
+			return -ENOMEM;
+		}
+	}
 
 	raid_bdev_gen = &raid_bdev->bdev;
 
@@ -1067,6 +1067,47 @@ raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 	spdk_uuid_copy(&raid_bdev_gen->uuid, uuid);
 
 	TAILQ_INSERT_TAIL(&g_raid_bdev_list, raid_bdev, global_link);
+
+	*raid_bdev_out = raid_bdev;
+
+	return 0;
+}
+
+/*
+ * brief:
+ * raid_bdev_create allocates raid bdev based on passed configuration
+ * params:
+ * name - name for raid bdev
+ * strip_size - strip size in KB
+ * num_base_bdevs - number of base bdevs
+ * level - raid level
+ * superblock_enabled - true if raid should have superblock
+ * uuid - uuid to set for the bdev
+ * raid_bdev_out - the created raid bdev
+ * returns:
+ * 0 - success
+ * non zero - failure
+ */
+int
+raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
+		 enum raid_level level, bool superblock_enabled, const struct spdk_uuid *uuid,
+		 struct raid_bdev **raid_bdev_out)
+{
+	struct raid_bdev *raid_bdev;
+	int rc;
+
+	assert(uuid != NULL);
+
+	rc = _raid_bdev_create(name, strip_size, num_base_bdevs, level, superblock_enabled, uuid,
+			       &raid_bdev);
+	if (rc != 0) {
+		return rc;
+	}
+
+	if (superblock_enabled && spdk_uuid_is_null(uuid)) {
+		/* we need to have the uuid to store in the superblock before the bdev is registered */
+		spdk_uuid_generate(&raid_bdev->bdev.uuid);
+	}
 
 	*raid_bdev_out = raid_bdev;
 
@@ -1116,6 +1157,48 @@ raid_bdev_configure_md(struct raid_bdev *raid_bdev)
 	return 0;
 }
 
+static void
+raid_bdev_configure_cont(struct raid_bdev *raid_bdev)
+{
+	struct spdk_bdev *raid_bdev_gen = &raid_bdev->bdev;
+	int rc;
+
+	raid_bdev->state = RAID_BDEV_STATE_ONLINE;
+	SPDK_DEBUGLOG(bdev_raid, "io device register %p\n", raid_bdev);
+	SPDK_DEBUGLOG(bdev_raid, "blockcnt %" PRIu64 ", blocklen %u\n",
+		      raid_bdev_gen->blockcnt, raid_bdev_gen->blocklen);
+	spdk_io_device_register(raid_bdev, raid_bdev_create_cb, raid_bdev_destroy_cb,
+				sizeof(struct raid_bdev_io_channel),
+				raid_bdev_gen->name);
+	rc = spdk_bdev_register(raid_bdev_gen);
+	if (rc != 0) {
+		SPDK_ERRLOG("Unable to register raid bdev and stay at configuring state\n");
+		if (raid_bdev->module->stop != NULL) {
+			raid_bdev->module->stop(raid_bdev);
+		}
+		spdk_io_device_unregister(raid_bdev, NULL);
+		raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
+		return;
+	}
+	SPDK_DEBUGLOG(bdev_raid, "raid bdev generic %p\n", raid_bdev_gen);
+	SPDK_DEBUGLOG(bdev_raid, "raid bdev is created with name %s, raid_bdev %p\n",
+		      raid_bdev_gen->name, raid_bdev);
+}
+
+static void
+raid_bdev_configure_write_sb_cb(int status, struct raid_bdev *raid_bdev, void *ctx)
+{
+	if (status == 0) {
+		raid_bdev_configure_cont(raid_bdev);
+	} else {
+		SPDK_ERRLOG("Failed to write raid bdev '%s' superblock: %s\n",
+			    raid_bdev->bdev.name, spdk_strerror(-status));
+		if (raid_bdev->module->stop != NULL) {
+			raid_bdev->module->stop(raid_bdev);
+		}
+	}
+}
+
 /*
  * brief:
  * If raid bdev config is complete, then only register the raid bdev to
@@ -1131,7 +1214,6 @@ static int
 raid_bdev_configure(struct raid_bdev *raid_bdev)
 {
 	uint32_t blocklen = 0;
-	struct spdk_bdev *raid_bdev_gen;
 	struct raid_base_bdev_info *base_info;
 	struct spdk_bdev *base_bdev;
 	int rc = 0;
@@ -1166,9 +1248,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	}
 	raid_bdev->strip_size_shift = spdk_u32log2(raid_bdev->strip_size);
 	raid_bdev->blocklen_shift = spdk_u32log2(blocklen);
-
-	raid_bdev_gen = &raid_bdev->bdev;
-	raid_bdev_gen->blocklen = blocklen;
+	raid_bdev->bdev.blocklen = blocklen;
 
 	rc = raid_bdev_configure_md(raid_bdev);
 	if (rc != 0) {
@@ -1181,26 +1261,13 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 		SPDK_ERRLOG("raid module startup callback failed\n");
 		return rc;
 	}
-	raid_bdev->state = RAID_BDEV_STATE_ONLINE;
-	SPDK_DEBUGLOG(bdev_raid, "io device register %p\n", raid_bdev);
-	SPDK_DEBUGLOG(bdev_raid, "blockcnt %" PRIu64 ", blocklen %u\n",
-		      raid_bdev_gen->blockcnt, raid_bdev_gen->blocklen);
-	spdk_io_device_register(raid_bdev, raid_bdev_create_cb, raid_bdev_destroy_cb,
-				sizeof(struct raid_bdev_io_channel),
-				raid_bdev->bdev.name);
-	rc = spdk_bdev_register(raid_bdev_gen);
-	if (rc != 0) {
-		SPDK_ERRLOG("Unable to register raid bdev and stay at configuring state\n");
-		if (raid_bdev->module->stop != NULL) {
-			raid_bdev->module->stop(raid_bdev);
-		}
-		spdk_io_device_unregister(raid_bdev, NULL);
-		raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
-		return rc;
+
+	if (raid_bdev->sb != NULL) {
+		raid_bdev_init_superblock(raid_bdev);
+		raid_bdev_write_superblock(raid_bdev, raid_bdev_configure_write_sb_cb, NULL);
+	} else {
+		raid_bdev_configure_cont(raid_bdev);
 	}
-	SPDK_DEBUGLOG(bdev_raid, "raid bdev generic %p\n", raid_bdev_gen);
-	SPDK_DEBUGLOG(bdev_raid, "raid bdev is created with name %s, raid_bdev %p\n",
-		      raid_bdev_gen->name, raid_bdev);
 
 	return 0;
 }
@@ -1555,6 +1622,14 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info)
 
 	assert(raid_bdev->state != RAID_BDEV_STATE_ONLINE);
 
+	base_info->app_thread_ch = spdk_bdev_get_io_channel(desc);
+	if (base_info->app_thread_ch == NULL) {
+		SPDK_ERRLOG("Failed to get io channel\n");
+		spdk_bdev_module_release_bdev(bdev);
+		spdk_bdev_close(desc);
+		return -ENOMEM;
+	}
+
 	base_info->desc = desc;
 	base_info->blockcnt = bdev->blockcnt;
 	base_info->data_offset = 0;
@@ -1562,7 +1637,7 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info)
 	raid_bdev->num_base_bdevs_discovered++;
 	assert(raid_bdev->num_base_bdevs_discovered <= raid_bdev->num_base_bdevs);
 
-	if (raid_bdev->superblock_enabled) {
+	if (raid_bdev->sb != NULL) {
 		assert((RAID_BDEV_MIN_DATA_OFFSET_SIZE % bdev->blocklen) == 0);
 		base_info->data_offset = RAID_BDEV_MIN_DATA_OFFSET_SIZE / bdev->blocklen;
 

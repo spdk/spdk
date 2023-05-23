@@ -92,7 +92,6 @@ raid_test_create_raid_bdev(struct raid_params *params, struct raid_bdev_module *
 		CU_FAIL_FATAL("unsupported raid constraint type");
 	};
 
-	raid_bdev->superblock_enabled = false;
 	raid_bdev->base_bdev_info = calloc(raid_bdev->num_base_bdevs,
 					   sizeof(struct raid_base_bdev_info));
 	SPDK_CU_ASSERT_FATAL(raid_bdev->base_bdev_info != NULL);
