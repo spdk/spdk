@@ -679,21 +679,12 @@ spdk_ublk_write_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_array_end(w);
 }
 
-static int
+static void
 ublk_dev_list_register(struct spdk_ublk_dev *ublk)
 {
-	/* Make sure ublk_id is not used in this SPDK app */
-	if (ublk_dev_find_by_id(ublk->ublk_id)) {
-		SPDK_NOTICELOG("%d is already exported with bdev %s\n",
-			       ublk->ublk_id, ublk_dev_get_bdev_name(ublk));
-		return -EBUSY;
-	}
-
 	UBLK_DEBUGLOG(ublk, "add to tailq\n");
 	TAILQ_INSERT_TAIL(&g_ublk_devs, ublk, tailq);
 	g_ublk_tgt.num_ublk_devs++;
-
-	return 0;
 }
 
 static void
@@ -1335,6 +1326,7 @@ ublk_set_params(struct spdk_ublk_dev *ublk)
 		ublk_delete_dev(ublk);
 		if (ublk->start_cb) {
 			ublk->start_cb(ublk->cb_arg, rc);
+			ublk->start_cb = NULL;
 		}
 	}
 }
@@ -1429,8 +1421,13 @@ ublk_free_dev(struct spdk_ublk_dev *ublk)
 		 * When it's done, it will set q->ios to NULL and send a message
 		 * back to this function to continue.
 		 */
-		spdk_thread_send_msg(q->poll_group->ublk_thread, free_buffers, q);
-		return;
+		if (q->poll_group) {
+			spdk_thread_send_msg(q->poll_group->ublk_thread, free_buffers, q);
+			return;
+		} else {
+			free(q->ios);
+			q->ios = NULL;
+		}
 	}
 
 	/* All of the buffers associated with the queues have been freed, so now
@@ -1570,23 +1567,19 @@ ublk_start_disk(const char *bdev_name, uint32_t ublk_id,
 		ublk->queues[i].ring.ring_fd = -1;
 	}
 
-	/* Add ublk_dev to the end of disk list */
-	rc = ublk_dev_list_register(ublk);
+	ublk_info_param_init(ublk);
+	rc = ublk_ios_init(ublk);
 	if (rc != 0) {
 		spdk_bdev_close(ublk->bdev_desc);
 		free(ublk);
 		return rc;
 	}
 
-	ublk_info_param_init(ublk);
-	rc = ublk_ios_init(ublk);
-	if (rc != 0) {
-		ublk_free_dev(ublk);
-		return rc;
-	}
-
 	SPDK_INFOLOG(ublk, "Enabling kernel access to bdev %s via ublk %d\n",
 		     bdev_name, ublk_id);
+
+	/* Add ublk_dev to the end of disk list */
+	ublk_dev_list_register(ublk);
 	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_ADD_DEV);
 	if (rc < 0) {
 		SPDK_ERRLOG("UBLK can't add dev %d, rc %s\n", ublk->ublk_id, spdk_strerror(-rc));
@@ -1644,6 +1637,7 @@ err:
 out:
 	if (ublk->start_cb) {
 		ublk->start_cb(ublk->cb_arg, rc);
+		ublk->start_cb = NULL;
 	}
 }
 
