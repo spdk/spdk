@@ -343,16 +343,16 @@ enum nvme_ctrlr_op {
 /**
  * Operate NVMe controller for the specified code.
  *
+ * NOTE: The callback function is always called after this function returns except for
+ * out of memory cases.
+ *
  * \param nvme_ctrlr The specified NVMe controller to operate
  * \param op Operation code
  * \param cb_fn Function to be called back after operation completes
  * \param cb_arg Argument for callback function
- * \return zero on success. Negated errno on the following error conditions:
- * -ENXIO: controller is being destroyed.
- * -EBUSY: controller is already being operated.
  */
-int nvme_ctrlr_op_rpc(struct nvme_ctrlr *nvme_ctrlr, enum nvme_ctrlr_op op,
-		      bdev_nvme_ctrlr_op_cb cb_fn, void *cb_arg);
+void nvme_ctrlr_op_rpc(struct nvme_ctrlr *nvme_ctrlr, enum nvme_ctrlr_op op,
+		       bdev_nvme_ctrlr_op_cb cb_fn, void *cb_arg);
 
 typedef void (*bdev_nvme_set_preferred_path_cb)(void *cb_arg, int rc);
 

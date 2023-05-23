@@ -2284,9 +2284,9 @@ bdev_nvme_reset(struct nvme_ctrlr *nvme_ctrlr)
 	return 0;
 }
 
-int
-nvme_ctrlr_op_rpc(struct nvme_ctrlr *nvme_ctrlr, enum nvme_ctrlr_op op,
-		  bdev_nvme_ctrlr_op_cb cb_fn, void *cb_arg)
+static int
+nvme_ctrlr_op(struct nvme_ctrlr *nvme_ctrlr, enum nvme_ctrlr_op op,
+	      bdev_nvme_ctrlr_op_cb cb_fn, void *cb_arg)
 {
 	int rc;
 
@@ -2300,10 +2300,70 @@ nvme_ctrlr_op_rpc(struct nvme_ctrlr *nvme_ctrlr, enum nvme_ctrlr_op op,
 	}
 
 	if (rc == 0) {
+		assert(nvme_ctrlr->ctrlr_op_cb_fn == NULL);
+		assert(nvme_ctrlr->ctrlr_op_cb_arg == NULL);
 		nvme_ctrlr->ctrlr_op_cb_fn = cb_fn;
 		nvme_ctrlr->ctrlr_op_cb_arg = cb_arg;
 	}
 	return rc;
+}
+
+struct nvme_ctrlr_op_rpc_ctx {
+	struct spdk_thread *orig_thread;
+	int rc;
+	bdev_nvme_ctrlr_op_cb cb_fn;
+	void *cb_arg;
+};
+
+static void
+_nvme_ctrlr_op_rpc_complete(void *_ctx)
+{
+	struct nvme_ctrlr_op_rpc_ctx *ctx = _ctx;
+
+	assert(ctx != NULL);
+	assert(ctx->cb_fn != NULL);
+
+	ctx->cb_fn(ctx->cb_arg, ctx->rc);
+
+	free(ctx);
+}
+
+static void
+nvme_ctrlr_op_rpc_complete(void *cb_arg, int rc)
+{
+	struct nvme_ctrlr_op_rpc_ctx *ctx = cb_arg;
+
+	ctx->rc = rc;
+
+	spdk_thread_send_msg(ctx->orig_thread, _nvme_ctrlr_op_rpc_complete, ctx);
+}
+
+void
+nvme_ctrlr_op_rpc(struct nvme_ctrlr *nvme_ctrlr, enum nvme_ctrlr_op op,
+		  bdev_nvme_ctrlr_op_cb cb_fn, void *cb_arg)
+{
+	struct nvme_ctrlr_op_rpc_ctx *ctx;
+	int rc;
+
+	assert(cb_fn != NULL);
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate nvme_ctrlr_op_rpc_ctx.\n");
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->orig_thread = spdk_get_thread();
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	rc = nvme_ctrlr_op(nvme_ctrlr, op, nvme_ctrlr_op_rpc_complete, ctx);
+	if (rc == 0) {
+		return;
+	}
+
+	nvme_ctrlr_op_rpc_complete(ctx, rc);
 }
 
 static int _bdev_nvme_reset_io(struct nvme_io_path *io_path, struct nvme_bdev_io *bio);
@@ -2391,20 +2451,15 @@ bdev_nvme_reset_io_continue(void *cb_arg, int rc)
 static int
 _bdev_nvme_reset_io(struct nvme_io_path *io_path, struct nvme_bdev_io *bio)
 {
-	struct nvme_ctrlr *nvme_ctrlr = io_path->qpair->ctrlr;
 	struct nvme_ctrlr_channel *ctrlr_ch;
 	struct spdk_bdev_io *bdev_io;
 	int rc;
 
-	rc = bdev_nvme_reset(nvme_ctrlr);
+	rc = nvme_ctrlr_op(io_path->qpair->ctrlr, NVME_CTRLR_OP_RESET,
+			   bdev_nvme_reset_io_continue, bio);
 	if (rc == 0) {
 		assert(bio->io_path == NULL);
 		bio->io_path = io_path;
-
-		assert(nvme_ctrlr->ctrlr_op_cb_fn == NULL);
-		assert(nvme_ctrlr->ctrlr_op_cb_arg == NULL);
-		nvme_ctrlr->ctrlr_op_cb_fn = bdev_nvme_reset_io_continue;
-		nvme_ctrlr->ctrlr_op_cb_arg = bio;
 	} else if (rc == -EBUSY) {
 		ctrlr_ch = io_path->qpair->ctrlr_ch;
 		assert(ctrlr_ch != NULL);
