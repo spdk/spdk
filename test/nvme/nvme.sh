@@ -13,7 +13,6 @@ function nvme_identify() {
 	for bdf in $(get_nvme_bdfs); do
 		$SPDK_EXAMPLE_DIR/identify -r "trtype:PCIe traddr:${bdf}" -i 0
 	done
-	timing_exit identify
 }
 
 function nvme_perf() {
