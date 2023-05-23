@@ -38,7 +38,6 @@ struct bdev_rbd {
 	rbd_image_t image;
 
 	rbd_image_info_t info;
-	struct spdk_thread *main_td;
 	struct spdk_thread *destruct_td;
 
 	TAILQ_ENTRY(bdev_rbd) tailq;
@@ -339,8 +338,6 @@ bdev_rbd_init(struct bdev_rbd *rbd)
 		return -1;
 	}
 
-	rbd->main_td = spdk_get_thread();
-
 	return ret;
 }
 
@@ -588,13 +585,6 @@ static int
 bdev_rbd_destruct(void *ctx)
 {
 	struct bdev_rbd *rbd = ctx;
-	struct spdk_thread *td;
-
-	if (rbd->main_td == NULL) {
-		td = spdk_get_thread();
-	} else {
-		td = rbd->main_td;
-	}
 
 	/* Start the destruct operation on the rbd bdev's
 	 * main thread.  This guarantees it will only start
@@ -605,8 +595,8 @@ bdev_rbd_destruct(void *ctx)
 	 * channel delete messages in flight to this thread.
 	 */
 	assert(rbd->destruct_td == NULL);
-	rbd->destruct_td = td;
-	spdk_thread_send_msg(td, _bdev_rbd_destruct, rbd);
+	rbd->destruct_td = spdk_get_thread();
+	spdk_thread_send_msg(spdk_thread_get_app_thread(), _bdev_rbd_destruct, rbd);
 
 	/* Return 1 to indicate the destruct path is asynchronous. */
 	return 1;
@@ -629,7 +619,6 @@ bdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 {
 	struct spdk_thread *submit_td = spdk_io_channel_get_thread(ch);
 	struct bdev_rbd_io *rbd_io = (struct bdev_rbd_io *)bdev_io->driver_ctx;
-	struct bdev_rbd *disk = (struct bdev_rbd *)bdev_io->bdev->ctxt;
 
 	rbd_io->submit_td = submit_td;
 	switch (bdev_io->type) {
@@ -649,7 +638,7 @@ bdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 		break;
 
 	case SPDK_BDEV_IO_TYPE_RESET:
-		spdk_thread_exec_msg(disk->main_td, bdev_rbd_reset, bdev_io);
+		spdk_thread_exec_msg(spdk_thread_get_app_thread(), bdev_rbd_reset, bdev_io);
 		break;
 
 	default:
