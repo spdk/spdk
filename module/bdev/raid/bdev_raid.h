@@ -57,6 +57,9 @@ struct raid_base_bdev_info {
 	/* name of the bdev */
 	char			*name;
 
+	/* uuid of the bdev */
+	struct spdk_uuid	uuid;
+
 	/* pointer to base bdev descriptor opened by raid bdev */
 	struct spdk_bdev_desc	*desc;
 
@@ -425,9 +428,12 @@ SPDK_STATIC_ASSERT(RAID_BDEV_SB_MAX_LENGTH < RAID_BDEV_MIN_DATA_OFFSET_SIZE,
 		   "Incorrect min data offset");
 
 typedef void (*raid_bdev_write_sb_cb)(int status, struct raid_bdev *raid_bdev, void *ctx);
+typedef void (*raid_bdev_load_sb_cb)(const struct raid_bdev_superblock *sb, int status, void *ctx);
 
 void raid_bdev_init_superblock(struct raid_bdev *raid_bdev);
 void raid_bdev_write_superblock(struct raid_bdev *raid_bdev, raid_bdev_write_sb_cb cb,
 				void *cb_ctx);
+int raid_bdev_load_base_bdev_superblock(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+					raid_bdev_load_sb_cb cb, void *cb_ctx);
 
 #endif /* SPDK_BDEV_RAID_INTERNAL_H */

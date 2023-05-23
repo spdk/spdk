@@ -87,8 +87,12 @@ rpc_bdev_raid_get_bdevs(struct spdk_jsonrpc_request *request,
 	/* Get raid bdev list based on the category requested */
 	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
 		if (raid_bdev->state == state || state == RAID_BDEV_STATE_MAX) {
+			char uuid_str[SPDK_UUID_STRING_LEN];
+
 			spdk_json_write_object_begin(w);
 			spdk_json_write_named_string(w, "name", raid_bdev->bdev.name);
+			spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &raid_bdev->bdev.uuid);
+			spdk_json_write_named_string(w, "uuid", uuid_str);
 			raid_bdev_write_info_json(raid_bdev, w);
 			spdk_json_write_object_end(w);
 		}

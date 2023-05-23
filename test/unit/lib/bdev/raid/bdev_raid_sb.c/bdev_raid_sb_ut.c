@@ -18,9 +18,12 @@ DEFINE_STUB(spdk_bdev_desc_get_bdev, struct spdk_bdev *, (struct spdk_bdev_desc 
 DEFINE_STUB(spdk_bdev_get_block_size, uint32_t, (const struct spdk_bdev *bdev), TEST_BLOCK_SIZE);
 DEFINE_STUB(spdk_bdev_queue_io_wait, int, (struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		struct spdk_bdev_io_wait_entry *entry), 0);
+DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "test_bdev");
+DEFINE_STUB(spdk_bdev_get_buf_align, size_t, (const struct spdk_bdev *bdev), TEST_BUF_ALIGN);
 
 void *g_buf;
 TAILQ_HEAD(, spdk_bdev_io) g_bdev_io_queue = TAILQ_HEAD_INITIALIZER(g_bdev_io_queue);
+int g_read_counter;
 
 static int
 test_setup(void)
@@ -51,6 +54,17 @@ void
 spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 {
 	free(bdev_io);
+}
+
+int
+spdk_bdev_read(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	       void *buf, uint64_t offset, uint64_t nbytes,
+	       spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	g_read_counter++;
+	memcpy(buf, g_buf + offset, nbytes);
+	cb(NULL, true, cb_arg);
+	return 0;
 }
 
 int
@@ -126,6 +140,130 @@ test_raid_bdev_write_superblock(void)
 	CU_ASSERT(status == 0);
 }
 
+static void
+load_sb_cb(const struct raid_bdev_superblock *sb, int status, void *ctx)
+{
+	int *status_out = ctx;
+
+	if (status == 0) {
+		CU_ASSERT(memcmp(sb, g_buf, sb->length) == 0);
+	}
+
+	*status_out = status;
+}
+
+static void
+test_raid_bdev_load_base_bdev_superblock(void)
+{
+	struct raid_bdev_superblock *sb = g_buf;
+	int rc;
+	int status;
+
+	/* valid superblock */
+	prepare_sb(sb);
+
+	g_read_counter = 0;
+	status = INT_MAX;
+	rc = raid_bdev_load_base_bdev_superblock(NULL, NULL, load_sb_cb, &status);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(g_read_counter == 1);
+
+	/* invalid signature */
+	prepare_sb(sb);
+	sb->signature[3] = 'Z';
+	raid_bdev_sb_update_crc(sb);
+
+	g_read_counter = 0;
+	status = INT_MAX;
+	rc = raid_bdev_load_base_bdev_superblock(NULL, NULL, load_sb_cb, &status);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(status == -EINVAL);
+	CU_ASSERT(g_read_counter == 1);
+
+	/* make the sb longer than 1 bdev block - expect 2 reads */
+	prepare_sb(sb);
+	sb->length = TEST_BLOCK_SIZE * 3;
+	raid_bdev_sb_update_crc(sb);
+
+	g_read_counter = 0;
+	status = INT_MAX;
+	rc = raid_bdev_load_base_bdev_superblock(NULL, NULL, load_sb_cb, &status);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(g_read_counter == 2);
+
+	/* corrupted sb contents, length > 1 bdev block - expect 2 reads */
+	prepare_sb(sb);
+	sb->length = TEST_BLOCK_SIZE * 3;
+	raid_bdev_sb_update_crc(sb);
+	sb->reserved[0] = 0xff;
+
+	g_read_counter = 0;
+	status = INT_MAX;
+	rc = raid_bdev_load_base_bdev_superblock(NULL, NULL, load_sb_cb, &status);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(status == -EINVAL);
+	CU_ASSERT(g_read_counter == 2);
+
+	/* invalid signature, length > 1 bdev block - expect 1 read */
+	prepare_sb(sb);
+	sb->signature[3] = 'Z';
+	sb->length = TEST_BLOCK_SIZE * 3;
+	raid_bdev_sb_update_crc(sb);
+
+	g_read_counter = 0;
+	status = INT_MAX;
+	rc = raid_bdev_load_base_bdev_superblock(NULL, NULL, load_sb_cb, &status);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(status == -EINVAL);
+	CU_ASSERT(g_read_counter == 1);
+}
+
+static void
+test_raid_bdev_parse_superblock(void)
+{
+	struct raid_bdev_superblock *sb = g_buf;
+	struct raid_bdev_read_sb_ctx ctx = {
+		.buf = g_buf,
+		.buf_size = TEST_BLOCK_SIZE,
+	};
+
+	/* valid superblock */
+	prepare_sb(sb);
+	CU_ASSERT(raid_bdev_parse_superblock(&ctx) == 0);
+
+	/* invalid signature */
+	prepare_sb(sb);
+	sb->signature[3] = 'Z';
+	raid_bdev_sb_update_crc(sb);
+	CU_ASSERT(raid_bdev_parse_superblock(&ctx) == -EINVAL);
+
+	/* invalid crc */
+	prepare_sb(sb);
+	sb->crc = 0xdeadbeef;
+	CU_ASSERT(raid_bdev_parse_superblock(&ctx) == -EINVAL);
+
+	/* corrupted sb contents */
+	prepare_sb(sb);
+	sb->reserved[0] = 0xff;
+	CU_ASSERT(raid_bdev_parse_superblock(&ctx) == -EINVAL);
+
+	/* invalid major version */
+	prepare_sb(sb);
+	sb->version.major = 9999;
+	raid_bdev_sb_update_crc(sb);
+	CU_ASSERT(raid_bdev_parse_superblock(&ctx) == -EINVAL);
+
+	/* sb longer than 1 bdev block */
+	prepare_sb(sb);
+	sb->length = TEST_BLOCK_SIZE * 3;
+	raid_bdev_sb_update_crc(sb);
+	CU_ASSERT(raid_bdev_parse_superblock(&ctx) == -EAGAIN);
+	ctx.buf_size = sb->length;
+	CU_ASSERT(raid_bdev_parse_superblock(&ctx) == 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -136,6 +274,8 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("raid_sb", test_setup, test_cleanup);
 	CU_ADD_TEST(suite, test_raid_bdev_write_superblock);
+	CU_ADD_TEST(suite, test_raid_bdev_load_base_bdev_superblock);
+	CU_ADD_TEST(suite, test_raid_bdev_parse_superblock);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();

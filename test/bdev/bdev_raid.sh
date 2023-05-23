@@ -322,6 +322,8 @@ function raid_superblock_test() {
 	local raid_bdev_name="raid_bdev1"
 	local strip_size
 	local strip_size_create_arg
+	local raid_bdev_uuid
+	local raid_bdev
 
 	if [ $raid_level != "raid1" ]; then
 		strip_size=64
@@ -351,6 +353,53 @@ function raid_superblock_test() {
 	# Create RAID bdev with superblock
 	$rpc_py bdev_raid_create $strip_size_create_arg -r $raid_level -b "${base_bdevs_pt[*]}" -n $raid_bdev_name -s
 	verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size
+
+	# Get RAID bdev's UUID
+	raid_bdev_uuid=$($rpc_py bdev_get_bdevs -b $raid_bdev_name | jq -r '.[] | .uuid')
+	if [ -z "$raid_bdev_uuid" ]; then
+		return 1
+	fi
+
+	# Stop the RAID bdev
+	$rpc_py bdev_raid_delete $raid_bdev_name
+	raid_bdev=$($rpc_py bdev_raid_get_bdevs all | jq -r '.[]')
+	if [ -n "$raid_bdev" ]; then
+		return 1
+	fi
+
+	# Delete the passthru bdevs
+	for i in "${base_bdevs_pt[@]}"; do
+		$rpc_py bdev_passthru_delete $i
+	done
+	if [ "$($rpc_py bdev_get_bdevs | jq -r '[.[] | select(.product_name == "passthru")] | any')" == "true" ]; then
+		return 1
+	fi
+
+	# Re-add first base bdev
+	$rpc_py bdev_passthru_create -b ${base_bdevs_malloc[0]} -p ${base_bdevs_pt[0]} -u ${base_bdevs_pt_uuid[0]}
+
+	# Check if the RAID bdev was assembled from superblock
+	verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size
+
+	if [ $num_base_bdevs -gt 2 ]; then
+		# Re-add the second base bdev and remove it again
+		$rpc_py bdev_passthru_create -b ${base_bdevs_malloc[1]} -p ${base_bdevs_pt[1]} -u ${base_bdevs_pt_uuid[1]}
+		$rpc_py bdev_passthru_delete ${base_bdevs_pt[1]}
+		verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size $num_base_bdevs
+	fi
+
+	# Re-add remaining base bdevs
+	for ((i = 1; i < num_base_bdevs; i++)); do
+		$rpc_py bdev_passthru_create -b ${base_bdevs_malloc[$i]} -p ${base_bdevs_pt[$i]} -u ${base_bdevs_pt_uuid[$i]}
+	done
+
+	# Check if the RAID bdev is in online state
+	verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size
+
+	# Check if the RAID bdev has the same UUID as when first created
+	if [ "$($rpc_py bdev_get_bdevs -b $raid_bdev_name | jq -r '.[] | .uuid')" != "$raid_bdev_uuid" ]; then
+		return 1
+	fi
 
 	killprocess $raid_pid
 
