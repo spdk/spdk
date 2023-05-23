@@ -344,7 +344,7 @@ enum nvme_ctrlr_op {
 };
 
 /**
- * Operate NVMe controller for the specified code.
+ * Perform specified operation on an NVMe controller.
  *
  * NOTE: The callback function is always called after this function returns except for
  * out of memory cases.
@@ -356,6 +356,20 @@ enum nvme_ctrlr_op {
  */
 void nvme_ctrlr_op_rpc(struct nvme_ctrlr *nvme_ctrlr, enum nvme_ctrlr_op op,
 		       bdev_nvme_ctrlr_op_cb cb_fn, void *cb_arg);
+
+/**
+ * Perform specified operation on all NVMe controllers in an NVMe bdev controller.
+ *
+ * NOTE: The callback function is always called after this function returns except for
+ * out of memory cases.
+ *
+ * \param nbdev_ctrlr The specified NVMe bdev controller to operate
+ * \param op Operation code
+ * \param cb_fn Function to be called back after operation completes
+ * \param cb_arg Argument for callback function
+ */
+void nvme_bdev_ctrlr_op_rpc(struct nvme_bdev_ctrlr *nbdev_ctrlr, enum nvme_ctrlr_op op,
+			    bdev_nvme_ctrlr_op_cb cb_fn, void *cb_arg);
 
 typedef void (*bdev_nvme_set_preferred_path_cb)(void *cb_arg, int rc);
 

@@ -777,11 +777,14 @@ if __name__ == "__main__":
     p.set_defaults(func=bdev_nvme_detach_controller)
 
     def bdev_nvme_reset_controller(args):
-        rpc.bdev.bdev_nvme_reset_controller(args.client, name=args.name)
+        rpc.bdev.bdev_nvme_reset_controller(args.client,
+                                            name=args.name,
+                                            cntlid=args.cntlid)
 
     p = subparsers.add_parser('bdev_nvme_reset_controller',
-                              help='Reset an NVMe controller')
+                              help='Reset an NVMe controller or all NVMe controllers in an NVMe bdev controller')
     p.add_argument('name', help="Name of the NVMe controller")
+    p.add_argument('-c', '--cntlid', help="NVMe controller ID", type=int)
     p.set_defaults(func=bdev_nvme_reset_controller)
 
     def bdev_nvme_start_discovery(args):

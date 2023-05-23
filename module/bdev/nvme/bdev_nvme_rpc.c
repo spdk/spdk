@@ -1266,6 +1266,7 @@ SPDK_RPC_REGISTER("bdev_nvme_get_transport_statistics", rpc_bdev_nvme_get_transp
 
 struct rpc_bdev_nvme_reset_controller_req {
 	char *name;
+	uint16_t cntlid;
 };
 
 static void
@@ -1276,6 +1277,7 @@ free_rpc_bdev_nvme_reset_controller_req(struct rpc_bdev_nvme_reset_controller_re
 
 static const struct spdk_json_object_decoder rpc_bdev_nvme_reset_controller_req_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_nvme_reset_controller_req, name), spdk_json_decode_string},
+	{"cntlid", offsetof(struct rpc_bdev_nvme_reset_controller_req, cntlid), spdk_json_decode_uint16, true},
 };
 
 static void
@@ -1295,6 +1297,7 @@ rpc_bdev_nvme_reset_controller(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
 	struct rpc_bdev_nvme_reset_controller_req req = {NULL};
+	struct nvme_bdev_ctrlr *nbdev_ctrlr;
 	struct nvme_ctrlr *nvme_ctrlr;
 
 	if (spdk_json_decode_object(params, rpc_bdev_nvme_reset_controller_req_decoders,
@@ -1305,14 +1308,26 @@ rpc_bdev_nvme_reset_controller(struct spdk_jsonrpc_request *request,
 		goto exit;
 	}
 
-	nvme_ctrlr = nvme_ctrlr_get_by_name(req.name);
-	if (nvme_ctrlr == NULL) {
-		SPDK_ERRLOG("Failed at device lookup\n");
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name(req.name);
+	if (nbdev_ctrlr == NULL) {
+		SPDK_ERRLOG("Failed at NVMe bdev controller lookup\n");
 		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
 		goto exit;
 	}
 
-	nvme_ctrlr_op_rpc(nvme_ctrlr, NVME_CTRLR_OP_RESET, rpc_bdev_nvme_reset_controller_cb, request);
+	if (req.cntlid == 0) {
+		nvme_bdev_ctrlr_op_rpc(nbdev_ctrlr, NVME_CTRLR_OP_RESET,
+				       rpc_bdev_nvme_reset_controller_cb, request);
+	} else {
+		nvme_ctrlr = nvme_bdev_ctrlr_get_ctrlr_by_id(nbdev_ctrlr, req.cntlid);
+		if (nvme_ctrlr == NULL) {
+			SPDK_ERRLOG("Failed at NVMe controller lookup\n");
+			spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+			goto exit;
+		}
+		nvme_ctrlr_op_rpc(nvme_ctrlr, NVME_CTRLR_OP_RESET,
+				  rpc_bdev_nvme_reset_controller_cb, request);
+	}
 
 exit:
 	free_rpc_bdev_nvme_reset_controller_req(&req);

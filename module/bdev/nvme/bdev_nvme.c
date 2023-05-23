@@ -2326,7 +2326,9 @@ nvme_ctrlr_op(struct nvme_ctrlr *nvme_ctrlr, enum nvme_ctrlr_op op,
 }
 
 struct nvme_ctrlr_op_rpc_ctx {
+	struct nvme_ctrlr *nvme_ctrlr;
 	struct spdk_thread *orig_thread;
+	enum nvme_ctrlr_op op;
 	int rc;
 	bdev_nvme_ctrlr_op_cb cb_fn;
 	void *cb_arg;
@@ -2381,6 +2383,84 @@ nvme_ctrlr_op_rpc(struct nvme_ctrlr *nvme_ctrlr, enum nvme_ctrlr_op op,
 	}
 
 	nvme_ctrlr_op_rpc_complete(ctx, rc);
+}
+
+static void nvme_bdev_ctrlr_op_rpc_continue(void *cb_arg, int rc);
+
+static void
+_nvme_bdev_ctrlr_op_rpc_continue(void *_ctx)
+{
+	struct nvme_ctrlr_op_rpc_ctx *ctx = _ctx;
+	struct nvme_ctrlr *prev_nvme_ctrlr, *next_nvme_ctrlr;
+	int rc;
+
+	prev_nvme_ctrlr = ctx->nvme_ctrlr;
+	ctx->nvme_ctrlr = NULL;
+
+	if (ctx->rc != 0) {
+		goto complete;
+	}
+
+	next_nvme_ctrlr = TAILQ_NEXT(prev_nvme_ctrlr, tailq);
+	if (next_nvme_ctrlr == NULL) {
+		goto complete;
+	}
+
+	rc = nvme_ctrlr_op(next_nvme_ctrlr, ctx->op, nvme_bdev_ctrlr_op_rpc_continue, ctx);
+	if (rc == 0) {
+		ctx->nvme_ctrlr = next_nvme_ctrlr;
+		return;
+	}
+
+	ctx->rc = rc;
+
+complete:
+	ctx->cb_fn(ctx->cb_arg, ctx->rc);
+	free(ctx);
+}
+
+static void
+nvme_bdev_ctrlr_op_rpc_continue(void *cb_arg, int rc)
+{
+	struct nvme_ctrlr_op_rpc_ctx *ctx = cb_arg;
+
+	ctx->rc = rc;
+
+	spdk_thread_send_msg(ctx->orig_thread, _nvme_bdev_ctrlr_op_rpc_continue, ctx);
+}
+
+void
+nvme_bdev_ctrlr_op_rpc(struct nvme_bdev_ctrlr *nbdev_ctrlr, enum nvme_ctrlr_op op,
+		       bdev_nvme_ctrlr_op_cb cb_fn, void *cb_arg)
+{
+	struct nvme_ctrlr_op_rpc_ctx *ctx;
+	struct nvme_ctrlr *nvme_ctrlr;
+	int rc;
+
+	assert(cb_fn != NULL);
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate nvme_ctrlr_op_rpc_ctx.\n");
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->orig_thread = spdk_get_thread();
+	ctx->op = op;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	nvme_ctrlr = TAILQ_FIRST(&nbdev_ctrlr->ctrlrs);
+	assert(nvme_ctrlr != NULL);
+
+	rc = nvme_ctrlr_op(nvme_ctrlr, op, nvme_bdev_ctrlr_op_rpc_continue, ctx);
+	if (rc == 0) {
+		ctx->nvme_ctrlr = nvme_ctrlr;
+		return;
+	}
+
+	nvme_bdev_ctrlr_op_rpc_continue(ctx, rc);
 }
 
 static int _bdev_nvme_reset_io(struct nvme_io_path *io_path, struct nvme_bdev_io *bio);

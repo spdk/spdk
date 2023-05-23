@@ -849,14 +849,18 @@ def bdev_nvme_detach_controller(client, name, trtype=None, traddr=None,
     return client.call('bdev_nvme_detach_controller', params)
 
 
-def bdev_nvme_reset_controller(client, name):
-    """Reset NVMe controller.
+def bdev_nvme_reset_controller(client, name, cntlid):
+    """Reset an NVMe controller or all NVMe controllers in an NVMe bdev controller.
 
     Args:
         name: controller name
+        cntlid: NVMe controller ID (optional)
     """
 
     params = {'name': name}
+
+    if cntlid is not None:
+        params['cntlid'] = cntlid
 
     return client.call('bdev_nvme_reset_controller', params)
 
