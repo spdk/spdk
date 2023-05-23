@@ -687,8 +687,7 @@ static int
 raid_bdev_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int array_size)
 {
 	struct raid_bdev *raid_bdev = ctx;
-	struct spdk_bdev *base_bdev;
-	uint32_t i;
+	struct raid_base_bdev_info *base_info;
 	int domains_count = 0, rc = 0;
 
 	if (raid_bdev->module->memory_domains_supported == false) {
@@ -698,12 +697,11 @@ raid_bdev_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int
 	spdk_spin_lock(&raid_bdev->base_bdev_lock);
 
 	/* First loop to get the number of memory domains */
-	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
-		base_bdev = raid_bdev->base_bdev_info[i].bdev;
-		if (base_bdev == NULL) {
+	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
+		if (base_info->bdev == NULL) {
 			continue;
 		}
-		rc = spdk_bdev_get_memory_domains(base_bdev, NULL, 0);
+		rc = spdk_bdev_get_memory_domains(base_info->bdev, NULL, 0);
 		if (rc < 0) {
 			goto out;
 		}
@@ -714,12 +712,11 @@ raid_bdev_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int
 		goto out;
 	}
 
-	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
-		base_bdev = raid_bdev->base_bdev_info[i].bdev;
-		if (base_bdev == NULL) {
+	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
+		if (base_info->bdev == NULL) {
 			continue;
 		}
-		rc = spdk_bdev_get_memory_domains(base_bdev, domains, array_size);
+		rc = spdk_bdev_get_memory_domains(base_info->bdev, domains, array_size);
 		if (rc < 0) {
 			goto out;
 		}
