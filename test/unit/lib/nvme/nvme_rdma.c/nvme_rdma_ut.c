@@ -1,6 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2018 Intel Corporation. All rights reserved.
- *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -1409,10 +1409,7 @@ test_nvme_rdma_qpair_set_poller(void)
 
 	rqpair.qpair.poll_group_tailq_head = &tgroup->disconnected_qpairs;
 
-	rc = nvme_rdma_poll_group_remove(tgroup, &rqpair.qpair);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(rqpair.cq == NULL);
-	CU_ASSERT(rqpair.poller == NULL);
+	nvme_rdma_poll_group_put_poller(group, rqpair.poller);
 	CU_ASSERT(STAILQ_EMPTY(&group->pollers));
 
 	rqpair.qpair.poll_group_tailq_head = &tgroup->connected_qpairs;
@@ -1441,8 +1438,8 @@ test_nvme_rdma_qpair_set_poller(void)
 
 	rqpair.qpair.poll_group_tailq_head = &tgroup->disconnected_qpairs;
 
-	rc = nvme_rdma_poll_group_remove(tgroup, &rqpair.qpair);
-	CU_ASSERT(rc == 0);
+	nvme_rdma_poll_group_put_poller(group, rqpair.poller);
+	CU_ASSERT(STAILQ_EMPTY(&group->pollers));
 
 	rc = nvme_rdma_poll_group_destroy(tgroup);
 	CU_ASSERT(rc == 0);
