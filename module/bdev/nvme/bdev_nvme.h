@@ -336,17 +336,23 @@ struct spdk_nvme_ctrlr *bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
  */
 int bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id);
 
+enum nvme_ctrlr_op {
+	NVME_CTRLR_OP_RESET = 1,
+};
+
 /**
- * Operate NVMe controller for reset.
+ * Operate NVMe controller for the specified code.
  *
  * \param nvme_ctrlr The specified NVMe controller to operate
+ * \param op Operation code
  * \param cb_fn Function to be called back after operation completes
  * \param cb_arg Argument for callback function
  * \return zero on success. Negated errno on the following error conditions:
  * -ENXIO: controller is being destroyed.
  * -EBUSY: controller is already being operated.
  */
-int nvme_ctrlr_op_rpc(struct nvme_ctrlr *nvme_ctrlr, bdev_nvme_ctrlr_op_cb cb_fn, void *cb_arg);
+int nvme_ctrlr_op_rpc(struct nvme_ctrlr *nvme_ctrlr, enum nvme_ctrlr_op op,
+		      bdev_nvme_ctrlr_op_cb cb_fn, void *cb_arg);
 
 typedef void (*bdev_nvme_set_preferred_path_cb)(void *cb_arg, int rc);
 

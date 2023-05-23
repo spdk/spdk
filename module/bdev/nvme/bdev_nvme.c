@@ -2285,11 +2285,20 @@ bdev_nvme_reset(struct nvme_ctrlr *nvme_ctrlr)
 }
 
 int
-nvme_ctrlr_op_rpc(struct nvme_ctrlr *nvme_ctrlr, bdev_nvme_ctrlr_op_cb cb_fn, void *cb_arg)
+nvme_ctrlr_op_rpc(struct nvme_ctrlr *nvme_ctrlr, enum nvme_ctrlr_op op,
+		  bdev_nvme_ctrlr_op_cb cb_fn, void *cb_arg)
 {
 	int rc;
 
-	rc = bdev_nvme_reset(nvme_ctrlr);
+	switch (op) {
+	case NVME_CTRLR_OP_RESET:
+		rc = bdev_nvme_reset(nvme_ctrlr);
+		break;
+	default:
+		rc = -EINVAL;
+		break;
+	}
+
 	if (rc == 0) {
 		nvme_ctrlr->ctrlr_op_cb_fn = cb_fn;
 		nvme_ctrlr->ctrlr_op_cb_arg = cb_arg;
