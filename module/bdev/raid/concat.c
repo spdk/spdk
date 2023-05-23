@@ -125,8 +125,8 @@ concat_submit_rw_request(struct raid_bdev_io *raid_io)
 	}
 
 	if (ret == -ENOMEM) {
-		raid_bdev_queue_io_wait(raid_io, base_info->bdev, base_ch,
-					_concat_submit_rw_request);
+		raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(base_info->desc),
+					base_ch, _concat_submit_rw_request);
 	} else if (ret != 0) {
 		SPDK_ERRLOG("bdev io submit error not due to ENOMEM, it should not happen\n");
 		assert(false);
@@ -259,8 +259,8 @@ concat_submit_null_payload_request(struct raid_bdev_io *raid_io)
 		if (ret == 0) {
 			raid_io->base_bdev_io_submitted++;
 		} else if (ret == -ENOMEM) {
-			raid_bdev_queue_io_wait(raid_io, base_info->bdev, base_ch,
-						_concat_submit_null_payload_request);
+			raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(base_info->desc),
+						base_ch, _concat_submit_null_payload_request);
 			return;
 		} else {
 			SPDK_ERRLOG("bdev io submit error not due to ENOMEM, it should not happen\n");
@@ -287,7 +287,8 @@ concat_start(struct raid_bdev *raid_bdev)
 
 	int idx = 0;
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		uint64_t strip_cnt = base_info->bdev->blockcnt >> raid_bdev->strip_size_shift;
+		uint64_t strip_cnt = spdk_bdev_desc_get_bdev(base_info->desc)->blockcnt >>
+				     raid_bdev->strip_size_shift;
 		uint64_t pd_block_cnt = strip_cnt << raid_bdev->strip_size_shift;
 
 		block_range[idx].start = total_blockcnt;

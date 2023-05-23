@@ -179,7 +179,6 @@ raid_bdev_cleanup(struct raid_bdev *raid_bdev)
 	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		assert(base_info->bdev == NULL);
 		assert(base_info->desc == NULL);
 		free(base_info->name);
 	}
@@ -222,15 +221,13 @@ raid_bdev_free_base_bdev_resource(struct raid_base_bdev_info *base_info)
 	free(base_info->name);
 	base_info->name = NULL;
 
-	if (base_info->bdev == NULL) {
+	if (base_info->desc == NULL) {
 		return;
 	}
 
-	assert(base_info->desc);
-	spdk_bdev_module_release_bdev(base_info->bdev);
+	spdk_bdev_module_release_bdev(spdk_bdev_desc_get_bdev(base_info->desc));
 	spdk_bdev_close(base_info->desc);
 	base_info->desc = NULL;
-	base_info->bdev = NULL;
 
 	assert(raid_bdev->num_base_bdevs_discovered);
 	raid_bdev->num_base_bdevs_discovered--;
@@ -425,8 +422,8 @@ raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io)
 		if (ret == 0) {
 			raid_io->base_bdev_io_submitted++;
 		} else if (ret == -ENOMEM) {
-			raid_bdev_queue_io_wait(raid_io, base_info->bdev, base_ch,
-						_raid_bdev_submit_reset_request);
+			raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(base_info->desc),
+						base_ch, _raid_bdev_submit_reset_request);
 			return;
 		} else {
 			SPDK_ERRLOG("bdev io submit error not due to ENOMEM, it should not happen\n");
@@ -534,11 +531,11 @@ _raid_bdev_io_type_supported(struct raid_bdev *raid_bdev, enum spdk_bdev_io_type
 	}
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		if (base_info->bdev == NULL) {
+		if (base_info->desc == NULL) {
 			continue;
 		}
 
-		if (spdk_bdev_io_type_supported(base_info->bdev, io_type) == false) {
+		if (spdk_bdev_io_type_supported(spdk_bdev_desc_get_bdev(base_info->desc), io_type) == false) {
 			return false;
 		}
 	}
@@ -611,8 +608,8 @@ raid_bdev_write_info_json(struct raid_bdev *raid_bdev, struct spdk_json_write_ct
 	spdk_json_write_name(w, "base_bdevs_list");
 	spdk_json_write_array_begin(w);
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		if (base_info->bdev) {
-			spdk_json_write_string(w, base_info->bdev->name);
+		if (base_info->desc) {
+			spdk_json_write_string(w, spdk_bdev_desc_get_bdev(base_info->desc)->name);
 		} else {
 			spdk_json_write_null(w);
 		}
@@ -673,8 +670,8 @@ raid_bdev_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 
 	spdk_json_write_named_array_begin(w, "base_bdevs");
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		if (base_info->bdev) {
-			spdk_json_write_string(w, base_info->bdev->name);
+		if (base_info->desc) {
+			spdk_json_write_string(w, spdk_bdev_desc_get_bdev(base_info->desc)->name);
 		}
 	}
 	spdk_json_write_array_end(w);
@@ -698,10 +695,10 @@ raid_bdev_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int
 
 	/* First loop to get the number of memory domains */
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		if (base_info->bdev == NULL) {
+		if (base_info->desc == NULL) {
 			continue;
 		}
-		rc = spdk_bdev_get_memory_domains(base_info->bdev, NULL, 0);
+		rc = spdk_bdev_get_memory_domains(spdk_bdev_desc_get_bdev(base_info->desc), NULL, 0);
 		if (rc < 0) {
 			goto out;
 		}
@@ -713,10 +710,10 @@ raid_bdev_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int
 	}
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		if (base_info->bdev == NULL) {
+		if (base_info->desc == NULL) {
 			continue;
 		}
-		rc = spdk_bdev_get_memory_domains(base_info->bdev, domains, array_size);
+		rc = spdk_bdev_get_memory_domains(spdk_bdev_desc_get_bdev(base_info->desc), domains, array_size);
 		if (rc < 0) {
 			goto out;
 		}
@@ -1081,7 +1078,7 @@ raid_bdev_configure_md(struct raid_bdev *raid_bdev)
 	uint8_t i;
 
 	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
-		base_bdev = raid_bdev->base_bdev_info[i].bdev;
+		base_bdev = spdk_bdev_desc_get_bdev(raid_bdev->base_bdev_info[i].desc);
 
 		if (i == 0) {
 			raid_bdev->bdev.md_len = spdk_bdev_get_md_size(base_bdev);
@@ -1122,17 +1119,19 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	uint32_t blocklen = 0;
 	struct spdk_bdev *raid_bdev_gen;
 	struct raid_base_bdev_info *base_info;
+	struct spdk_bdev *base_bdev;
 	int rc = 0;
 
 	assert(raid_bdev->state == RAID_BDEV_STATE_CONFIGURING);
 	assert(raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs);
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		assert(base_info->bdev != NULL);
+		assert(base_info->desc != NULL);
+		base_bdev = spdk_bdev_desc_get_bdev(base_info->desc);
 		/* Check blocklen for all base bdevs that it should be same */
 		if (blocklen == 0) {
-			blocklen = base_info->bdev->blocklen;
-		} else if (blocklen != base_info->bdev->blocklen) {
+			blocklen = base_bdev->blocklen;
+		} else if (blocklen != base_bdev->blocklen) {
 			/*
 			 * Assumption is that all the base bdevs for any raid bdev should
 			 * have same blocklen
@@ -1238,7 +1237,8 @@ raid_bdev_find_base_info_by_bdev(struct spdk_bdev *base_bdev)
 
 	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
 		RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-			if (base_info->bdev == base_bdev) {
+			if (base_info->desc != NULL &&
+			    spdk_bdev_desc_get_bdev(base_info->desc) == base_bdev) {
 				return base_info;
 			}
 		}
@@ -1518,7 +1518,7 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info)
 
 	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 	assert(base_info->name != NULL);
-	assert(base_info->bdev == NULL);
+	assert(base_info->desc == NULL);
 
 	rc = spdk_bdev_open_ext(base_info->name, true, raid_bdev_event_base_bdev, NULL, &desc);
 	if (rc != 0) {
@@ -1541,7 +1541,6 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info)
 
 	assert(raid_bdev->state != RAID_BDEV_STATE_ONLINE);
 
-	base_info->bdev = bdev;
 	base_info->desc = desc;
 	base_info->blockcnt = bdev->blockcnt;
 	raid_bdev->num_base_bdevs_discovered++;
@@ -1623,7 +1622,7 @@ raid_bdev_examine(struct spdk_bdev *bdev)
 
 	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
 		RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-			if (base_info->bdev == NULL && base_info->name != NULL &&
+			if (base_info->desc == NULL && base_info->name != NULL &&
 			    strcmp(bdev->name, base_info->name) == 0) {
 				raid_bdev_configure_base_bdev(base_info);
 				break;

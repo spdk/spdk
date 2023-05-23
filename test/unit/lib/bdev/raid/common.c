@@ -29,6 +29,12 @@ size_t g_params_size;
 #define RAID_PARAMS_FOR_EACH(p) \
 	for (p = g_params; p < g_params + g_params_count; p++)
 
+struct spdk_bdev *
+spdk_bdev_desc_get_bdev(struct spdk_bdev_desc *desc)
+{
+	return desc->bdev;
+}
+
 static int
 raid_test_params_alloc(size_t count)
 {
@@ -103,7 +109,6 @@ raid_test_create_raid_bdev(struct raid_params *params, struct raid_bdev_module *
 		SPDK_CU_ASSERT_FATAL(desc != NULL);
 		desc->bdev = bdev;
 
-		base_info->bdev = bdev;
 		base_info->desc = desc;
 	}
 
@@ -123,7 +128,7 @@ raid_test_delete_raid_bdev(struct raid_bdev *raid_bdev)
 	struct raid_base_bdev_info *base_info;
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		free(base_info->bdev);
+		free(base_info->desc->bdev);
 		free(base_info->desc);
 	}
 	free(raid_bdev->base_bdev_info);

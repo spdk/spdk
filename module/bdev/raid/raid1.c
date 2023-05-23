@@ -84,8 +84,8 @@ raid1_submit_read_request(struct raid_bdev_io *raid_io)
 	if (spdk_likely(ret == 0)) {
 		raid_io->base_bdev_io_submitted++;
 	} else if (spdk_unlikely(ret == -ENOMEM)) {
-		raid_bdev_queue_io_wait(raid_io, base_info->bdev, base_ch,
-					_raid1_submit_rw_request);
+		raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(base_info->desc),
+					base_ch, _raid1_submit_rw_request);
 		return 0;
 	}
 
@@ -130,8 +130,8 @@ raid1_submit_write_request(struct raid_bdev_io *raid_io)
 						  raid_io, &io_opts);
 		if (spdk_unlikely(ret != 0)) {
 			if (spdk_unlikely(ret == -ENOMEM)) {
-				raid_bdev_queue_io_wait(raid_io, base_info->bdev, base_ch,
-							_raid1_submit_rw_request);
+				raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(base_info->desc),
+							base_ch, _raid1_submit_rw_request);
 				return 0;
 			}
 
@@ -190,7 +190,7 @@ raid1_start(struct raid_bdev *raid_bdev)
 	r1info->raid_bdev = raid_bdev;
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		min_blockcnt = spdk_min(min_blockcnt, base_info->bdev->blockcnt);
+		min_blockcnt = spdk_min(min_blockcnt, spdk_bdev_desc_get_bdev(base_info->desc)->blockcnt);
 	}
 
 	raid_bdev->bdev.blockcnt = min_blockcnt;

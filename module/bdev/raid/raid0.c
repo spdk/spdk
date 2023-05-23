@@ -126,8 +126,8 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 	}
 
 	if (ret == -ENOMEM) {
-		raid_bdev_queue_io_wait(raid_io, base_info->bdev, base_ch,
-					_raid0_submit_rw_request);
+		raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(base_info->desc),
+					base_ch, _raid0_submit_rw_request);
 	} else if (ret != 0) {
 		SPDK_ERRLOG("bdev io submit error not due to ENOMEM, it should not happen\n");
 		assert(false);
@@ -323,8 +323,8 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 		if (ret == 0) {
 			raid_io->base_bdev_io_submitted++;
 		} else if (ret == -ENOMEM) {
-			raid_bdev_queue_io_wait(raid_io, base_info->bdev, base_ch,
-						_raid0_submit_null_payload_request);
+			raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(base_info->desc),
+						base_ch, _raid0_submit_null_payload_request);
 			return;
 		} else {
 			SPDK_ERRLOG("bdev io submit error not due to ENOMEM, it should not happen\n");
@@ -343,7 +343,7 @@ raid0_calculate_blockcnt(struct raid_bdev *raid_bdev)
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
 		/* Calculate minimum block count from all base bdevs */
-		min_blockcnt = spdk_min(min_blockcnt, base_info->bdev->blockcnt);
+		min_blockcnt = spdk_min(min_blockcnt, spdk_bdev_desc_get_bdev(base_info->desc)->blockcnt);
 	}
 
 	/*

@@ -393,8 +393,8 @@ raid5f_chunk_write(struct chunk *chunk)
 
 	if (spdk_unlikely(ret)) {
 		if (ret == -ENOMEM) {
-			raid_bdev_queue_io_wait(raid_io, base_info->bdev, base_ch,
-						raid5f_chunk_write_retry);
+			raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(base_info->desc),
+						base_ch, raid5f_chunk_write_retry);
 		} else {
 			/*
 			 * Implicitly complete any I/Os not yet submitted as FAILED. If completing
@@ -583,8 +583,8 @@ raid5f_submit_read_request(struct raid_bdev_io *raid_io, uint64_t stripe_index,
 					 &io_opts);
 
 	if (spdk_unlikely(ret == -ENOMEM)) {
-		raid_bdev_queue_io_wait(raid_io, base_info->bdev, base_ch,
-					_raid5f_submit_rw_request);
+		raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(base_info->desc),
+					base_ch, _raid5f_submit_rw_request);
 		return 0;
 	}
 
@@ -777,8 +777,11 @@ raid5f_start(struct raid_bdev *raid_bdev)
 	r5f_info->raid_bdev = raid_bdev;
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		min_blockcnt = spdk_min(min_blockcnt, base_info->bdev->blockcnt);
-		alignment = spdk_max(alignment, spdk_bdev_get_buf_align(base_info->bdev));
+		struct spdk_bdev *base_bdev;
+
+		base_bdev = spdk_bdev_desc_get_bdev(base_info->desc);
+		min_blockcnt = spdk_min(min_blockcnt, base_bdev->blockcnt);
+		alignment = spdk_max(alignment, spdk_bdev_get_buf_align(base_bdev));
 	}
 
 	r5f_info->total_stripes = min_blockcnt / raid_bdev->strip_size;

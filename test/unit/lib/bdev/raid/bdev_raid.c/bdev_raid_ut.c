@@ -206,7 +206,7 @@ check_and_remove_raid_bdev(struct raid_bdev *raid_bdev)
 	assert(raid_bdev->base_bdev_info != NULL);
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		if (base_info->bdev) {
+		if (base_info->desc) {
 			raid_bdev_free_base_bdev_resource(base_info);
 		}
 	}
@@ -884,8 +884,8 @@ verify_raid_bdev(struct rpc_bdev_raid_create *r, bool presence, uint32_t raid_st
 			CU_ASSERT(pbdev->level == r->level);
 			CU_ASSERT(pbdev->base_bdev_info != NULL);
 			RAID_FOR_EACH_BASE_BDEV(pbdev, base_info) {
-				CU_ASSERT(base_info->bdev != NULL);
-				bdev = spdk_bdev_get_by_name(base_info->bdev->name);
+				CU_ASSERT(base_info->desc != NULL);
+				bdev = spdk_bdev_desc_get_bdev(base_info->desc);
 				CU_ASSERT(bdev != NULL);
 				CU_ASSERT(base_info->remove_scheduled == false);
 

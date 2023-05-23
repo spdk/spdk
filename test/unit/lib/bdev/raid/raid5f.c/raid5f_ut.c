@@ -901,7 +901,7 @@ __test_raid5f_chunk_write_error(struct raid_bdev *raid_bdev, struct raid_bdev_io
 					     stripe_index * r5f_info->stripe_blocks, r5f_info->stripe_blocks);
 
 				io_info.error.type = error_type;
-				io_info.error.bdev = base_bdev_info->bdev;
+				io_info.error.bdev = base_bdev_info->desc->bdev;
 
 				test_raid5f_write_request(&io_info);
 
@@ -961,11 +961,11 @@ __test_raid5f_chunk_write_error_with_enomem(struct raid_bdev *raid_bdev,
 					     stripe_index * r5f_info->stripe_blocks, r5f_info->stripe_blocks);
 
 				io_info.error.type = TEST_BDEV_ERROR_NOMEM;
-				io_info.error.bdev = base_bdev_info->bdev;
+				io_info.error.bdev = base_bdev_info->desc->bdev;
 				io_info.error.on_enomem_cb = chunk_write_error_with_enomem_cb;
 				io_info.error.on_enomem_cb_ctx = &on_enomem_cb_ctx;
 				on_enomem_cb_ctx.error_type = error_type;
-				on_enomem_cb_ctx.bdev = base_bdev_info_last->bdev;
+				on_enomem_cb_ctx.bdev = base_bdev_info_last->desc->bdev;
 
 				test_raid5f_write_request(&io_info);
 

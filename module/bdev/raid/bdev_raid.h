@@ -55,9 +55,6 @@ struct raid_base_bdev_info {
 	/* name of the bdev */
 	char			*name;
 
-	/* pointer to base spdk bdev */
-	struct spdk_bdev	*bdev;
-
 	/* pointer to base bdev descriptor opened by raid bdev */
 	struct spdk_bdev_desc	*desc;
 
