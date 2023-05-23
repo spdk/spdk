@@ -878,6 +878,38 @@ def bdev_nvme_reset_controller(client, name, cntlid):
     return client.call('bdev_nvme_reset_controller', params)
 
 
+def bdev_nvme_enable_controller(client, name, cntlid):
+    """Enable an NVMe controller or all NVMe controllers in an NVMe bdev controller.
+
+    Args:
+        name: controller name
+        cntlid: NVMe controller ID (optional)
+    """
+
+    params = {'name': name}
+
+    if cntlid is not None:
+        params['cntlid'] = cntlid
+
+    return client.call('bdev_nvme_enable_controller', params)
+
+
+def bdev_nvme_disable_controller(client, name, cntlid):
+    """Disable an NVMe controller or all NVMe controllers in an NVMe bdev controller.
+
+    Args:
+        name: controller name
+        cntlid: NVMe controller ID (optional)
+    """
+
+    params = {'name': name}
+
+    if cntlid is not None:
+        params['cntlid'] = cntlid
+
+    return client.call('bdev_nvme_disable_controller', params)
+
+
 def bdev_nvme_start_discovery(client, name, trtype, traddr, adrfam=None, trsvcid=None,
                               hostnqn=None, wait_for_attach=None, ctrlr_loss_timeout_sec=None,
                               reconnect_delay_sec=None, fast_io_fail_timeout_sec=None,

@@ -1340,6 +1340,23 @@ rpc_bdev_nvme_reset_controller(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("bdev_nvme_reset_controller", rpc_bdev_nvme_reset_controller, SPDK_RPC_RUNTIME)
 
+static void
+rpc_bdev_nvme_enable_controller(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
+{
+	rpc_bdev_nvme_controller_op(request, params, NVME_CTRLR_OP_ENABLE);
+}
+SPDK_RPC_REGISTER("bdev_nvme_enable_controller", rpc_bdev_nvme_enable_controller, SPDK_RPC_RUNTIME)
+
+static void
+rpc_bdev_nvme_disable_controller(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
+{
+	rpc_bdev_nvme_controller_op(request, params, NVME_CTRLR_OP_DISABLE);
+}
+SPDK_RPC_REGISTER("bdev_nvme_disable_controller", rpc_bdev_nvme_disable_controller,
+		  SPDK_RPC_RUNTIME)
+
 struct rpc_get_controller_health_info {
 	char *name;
 };

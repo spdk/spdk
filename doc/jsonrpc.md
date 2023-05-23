@@ -4123,7 +4123,7 @@ For non NVMe multipath, reset an NVMe controller whose name is given by the `nam
 
 For NVMe multipath, an NVMe bdev controller is created and it aggregates multiple NVMe controllers.
 The `name` parameter is an NVMe bdev controller name and the `cntlid` parameter is used to identify
-an NVMe controller in the NVMe bdev controller. Reset only one NVMe-oF controlelr if the `cntlid`
+an NVMe controller in the NVMe bdev controller. Reset only one NVMe-oF controller if the `cntlid`
 parameter is specified, or all NVMe-oF controllers in an NVMe bdev controller if it is omitted.
 
 Returns true if the controller reset was successful, false otherwise.
@@ -4144,6 +4144,92 @@ Example request:
   "jsonrpc": "2.0",
   "id": 1,
   "method": "bdev_nvme_reset_controller",
+  "params": {
+    "name": "Nvme0"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_nvme_enable_controller {#rpc_bdev_nvme_enable_controller}
+
+For non NVMe multipath, enable an NVMe controller whose name is given by the `name` parameter.
+
+For NVMe multipath, an NVMe bdev controller is created and it aggregates multiple NVMe controllers.
+The `name` parameter is an NVMe bdev controller name and the `cntlid` parameter is used to identify
+an NVMe controller in the NVMe bdev controller. Enable only one NVMe-oF controller if the `cntlid`
+parameter is specified, or all NVMe-oF controllers in an NVMe bdev controller if it is omitted.
+
+Returns true if the controller enablement was successful or a controller was already enabled, false otherwise.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | NVMe controller name (or NVMe bdev controller name for multipath)
+cntlid                  | Optional | number      | NVMe controller ID (used as NVMe controller name for multipath)
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "bdev_nvme_enable_controller",
+  "params": {
+    "name": "Nvme0"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_nvme_disable_controller {#rpc_bdev_nvme_disable_controller}
+
+For non NVMe multipath, disable an NVMe controller whose name is given by the `name` parameter.
+
+For NVMe multipath, an NVMe bdev controller is created and it aggregates multiple NVMe controllers.
+The `name` parameter is an NVMe bdev controller name and the `cntlid` parameter is used to identify
+an NVMe controller in the NVMe bdev controller. Disable only one NVMe-oF controller if the `cntlid`
+parameter is specified, or all NVMe-oF controllers in an NVMe bdev controller if it is omitted.
+
+Returns true if the controller disablement was successful or a controller was already disabled, false otherwise.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | NVMe controller name (or NVMe bdev controller name for multipath)
+cntlid                  | Optional | number      | NVMe controller ID (used as NVMe controller name for multipath)
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "bdev_nvme_disable_controller",
   "params": {
     "name": "Nvme0"
   }
