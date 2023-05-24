@@ -133,7 +133,7 @@ static __thread bool g_internal_thread = false;
 static void
 spdk_fio_sync_run_oat(void (*msg_fn)(void *), struct spdk_fio_oat_ctx *ctx)
 {
-	assert(spdk_get_thread() != spdk_thread_get_app_thread());
+	assert(!spdk_thread_is_app_thread(NULL));
 
 	pthread_mutex_init(&ctx->mutex, NULL);
 	pthread_cond_init(&ctx->cond, NULL);

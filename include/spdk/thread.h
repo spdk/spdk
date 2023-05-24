@@ -242,6 +242,14 @@ struct spdk_thread *spdk_thread_create(const char *name, const struct spdk_cpuse
 struct spdk_thread *spdk_thread_get_app_thread(void);
 
 /**
+ * Check if the specified spdk_thread is the app thread.
+ *
+ * \param thread The thread to check. If NULL, check the current spdk_thread.
+ * \return true if the specified spdk_thread is the app thread, false otherwise.
+ */
+bool spdk_thread_is_app_thread(struct spdk_thread *thread);
+
+/**
  * Force the current system thread to act as if executing the given SPDK thread.
  *
  * \param thread The thread to set.

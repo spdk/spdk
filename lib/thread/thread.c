@@ -591,6 +591,16 @@ spdk_thread_get_app_thread(void)
 	return g_app_thread;
 }
 
+bool
+spdk_thread_is_app_thread(struct spdk_thread *thread)
+{
+	if (thread == NULL) {
+		thread = _get_thread();
+	}
+
+	return g_app_thread == thread;
+}
+
 void
 spdk_thread_bind(struct spdk_thread *thread, bool bind)
 {

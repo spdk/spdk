@@ -284,7 +284,7 @@ app_setup_signal_handlers(struct spdk_app_opts *opts)
 static void
 app_start_application(void)
 {
-	assert(spdk_get_thread() == spdk_thread_get_app_thread());
+	assert(spdk_thread_is_app_thread(NULL));
 
 	g_start_fn(g_start_arg);
 }
@@ -1274,7 +1274,7 @@ rpc_framework_start_init_cpl(int rc, void *arg1)
 {
 	struct spdk_jsonrpc_request *request = arg1;
 
-	assert(spdk_get_thread() == spdk_thread_get_app_thread());
+	assert(spdk_thread_is_app_thread(NULL));
 
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,

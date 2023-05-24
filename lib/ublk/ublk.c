@@ -215,7 +215,7 @@ user_data_to_op(uint64_t user_data)
 void
 spdk_ublk_init(void)
 {
-	assert(spdk_get_thread() == spdk_thread_get_app_thread());
+	assert(spdk_thread_is_app_thread(NULL));
 
 	g_ublk_tgt.ctrl_fd = -1;
 	g_ublk_tgt.ctrl_ring.ring_fd = -1;
@@ -476,7 +476,7 @@ ublk_create_target(const char *cpumask_str)
 		g_num_ublk_poll_groups++;
 	}
 
-	assert(spdk_get_thread() == spdk_thread_get_app_thread());
+	assert(spdk_thread_is_app_thread(NULL));
 	g_ublk_tgt.active = true;
 	g_ublk_tgt.ctrl_ops_in_progress = 0;
 	g_ublk_tgt.ctrl_poller = SPDK_POLLER_REGISTER(ublk_ctrl_poller, NULL,
@@ -566,7 +566,7 @@ _ublk_fini(void *args)
 int
 spdk_ublk_fini(spdk_ublk_fini_cb cb_fn, void *cb_arg)
 {
-	assert(spdk_get_thread() == spdk_thread_get_app_thread());
+	assert(spdk_thread_is_app_thread(NULL));
 
 	if (g_ublk_tgt.is_destroying == true) {
 		/* UBLK target is being destroying */
@@ -715,7 +715,7 @@ ublk_delete_dev(void *arg)
 	int rc = 0;
 	uint32_t q_idx;
 
-	assert(spdk_get_thread() == spdk_thread_get_app_thread());
+	assert(spdk_thread_is_app_thread(NULL));
 	for (q_idx = 0; q_idx < ublk->num_queues; q_idx++) {
 		ublk_dev_queue_fini(&ublk->queues[q_idx]);
 	}
@@ -751,7 +751,7 @@ ublk_try_close_dev(void *arg)
 {
 	struct spdk_ublk_dev *ublk = arg;
 
-	assert(spdk_get_thread() == spdk_thread_get_app_thread());
+	assert(spdk_thread_is_app_thread(NULL));
 	ublk->queues_closed += 1;
 	if (ublk->queues_closed < ublk->num_queues) {
 		return;
@@ -792,7 +792,7 @@ ublk_stop_disk(uint32_t ublk_id, ublk_del_cb del_cb, void *cb_arg)
 {
 	struct spdk_ublk_dev *ublk;
 
-	assert(spdk_get_thread() == spdk_thread_get_app_thread());
+	assert(spdk_thread_is_app_thread(NULL));
 
 	ublk = ublk_dev_find_by_id(ublk_id);
 	if (ublk == NULL) {
@@ -1507,7 +1507,7 @@ ublk_start_disk(const char *bdev_name, uint32_t ublk_id,
 	struct spdk_ublk_dev	*ublk = NULL;
 	uint32_t		sector_per_block;
 
-	assert(spdk_get_thread() == spdk_thread_get_app_thread());
+	assert(spdk_thread_is_app_thread(NULL));
 
 	if (g_ublk_tgt.active == false) {
 		SPDK_ERRLOG("NO ublk target exist\n");

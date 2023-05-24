@@ -7,6 +7,7 @@
 	spdk_thread_lib_fini;
 	spdk_thread_create;
 	spdk_thread_get_app_thread;
+	spdk_thread_is_app_thread;
 	spdk_set_thread;
 	spdk_thread_exit;
 	spdk_thread_is_running;

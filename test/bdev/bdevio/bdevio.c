@@ -1256,7 +1256,7 @@ __stop_init_thread(void *arg)
 		return;
 	}
 	assert(spdk_get_thread() == g_thread_init);
-	assert(spdk_get_thread() == spdk_thread_get_app_thread());
+	assert(spdk_thread_is_app_thread(NULL));
 	execute_spdk_function(__exit_io_thread, NULL);
 	spdk_app_stop(num_failures);
 }

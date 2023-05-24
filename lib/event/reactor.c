@@ -422,7 +422,7 @@ spdk_reactor_set_interrupt_mode(uint32_t lcore, bool new_in_interrupt,
 		return -ENOTSUP;
 	}
 
-	if (spdk_get_thread() != spdk_thread_get_app_thread()) {
+	if (!spdk_thread_is_app_thread(NULL)) {
 		SPDK_ERRLOG("It is only permitted within spdk application thread.\n");
 		return -EPERM;
 	}
@@ -979,7 +979,7 @@ reactor_run(void *arg)
 		 * for the app thread.
 		 */
 		if (spdk_thread_is_running(thread)) {
-			if (thread != spdk_thread_get_app_thread()) {
+			if (!spdk_thread_is_app_thread(thread)) {
 				SPDK_ERRLOG("spdk_thread_exit() was not called on thread '%s'\n",
 					    spdk_thread_get_name(thread));
 				SPDK_ERRLOG("This will result in a non-zero exit code in a future release.\n");

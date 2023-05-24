@@ -774,7 +774,7 @@ spdk_bdev_examine(const char *name)
 	struct spdk_bdev_examine_item *item;
 	struct spdk_thread *thread = spdk_get_thread();
 
-	if (spdk_unlikely(spdk_thread_get_app_thread() != thread)) {
+	if (spdk_unlikely(!spdk_thread_is_app_thread(thread))) {
 		SPDK_ERRLOG("Cannot examine bdev %s on thread %p (%s)\n", name, thread,
 			    thread ? spdk_thread_get_name(thread) : "null");
 		return -EINVAL;
@@ -7949,7 +7949,7 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 	struct spdk_thread *thread = spdk_get_thread();
 	int rc;
 
-	if (spdk_unlikely(spdk_thread_get_app_thread() != spdk_get_thread())) {
+	if (spdk_unlikely(!spdk_thread_is_app_thread(NULL))) {
 		SPDK_ERRLOG("Cannot examine bdev %s on thread %p (%s)\n", bdev->name, thread,
 			    thread ? spdk_thread_get_name(thread) : "null");
 		return -EINVAL;
