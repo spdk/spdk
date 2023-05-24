@@ -68,7 +68,7 @@ struct spdk_posix_sock_group_impl {
 	int				placement_id;
 };
 
-static struct spdk_sock_impl_opts g_spdk_posix_sock_impl_opts = {
+static struct spdk_sock_impl_opts g_posix_impl_opts = {
 	.recv_buf_size = DEFAULT_SO_RCVBUF_SIZE,
 	.send_buf_size = DEFAULT_SO_SNDBUF_SIZE,
 	.enable_recv_pipe = true,
@@ -146,8 +146,8 @@ posix_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
 	assert(sizeof(*opts) >= *len);
 	memset(opts, 0, *len);
 
-	posix_sock_copy_impl_opts(opts, &g_spdk_posix_sock_impl_opts, *len);
-	*len = spdk_min(*len, sizeof(g_spdk_posix_sock_impl_opts));
+	posix_sock_copy_impl_opts(opts, &g_posix_impl_opts, *len);
+	*len = spdk_min(*len, sizeof(g_posix_impl_opts));
 
 	return 0;
 }
@@ -161,7 +161,7 @@ posix_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
 	}
 
 	assert(sizeof(*opts) >= len);
-	posix_sock_copy_impl_opts(&g_spdk_posix_sock_impl_opts, opts, len);
+	posix_sock_copy_impl_opts(&g_posix_impl_opts, opts, len);
 
 	return 0;
 }
@@ -170,7 +170,7 @@ static void
 posix_opts_get_impl_opts(const struct spdk_sock_opts *opts, struct spdk_sock_impl_opts *dest)
 {
 	/* Copy the default impl_opts first to cover cases when user's impl_opts is smaller */
-	memcpy(dest, &g_spdk_posix_sock_impl_opts, sizeof(*dest));
+	memcpy(dest, &g_posix_impl_opts, sizeof(*dest));
 
 	if (opts->impl_opts != NULL) {
 		assert(sizeof(*dest) >= opts->impl_opts_size);
@@ -340,8 +340,8 @@ posix_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 	}
 
 	/* Set kernel buffer size to be at least MIN_SO_RCVBUF_SIZE and
-	 * g_spdk_posix_sock_impl_opts.recv_buf_size. */
-	min_size = spdk_max(MIN_SO_RCVBUF_SIZE, g_spdk_posix_sock_impl_opts.recv_buf_size);
+	 * g_posix_impl_opts.recv_buf_size. */
+	min_size = spdk_max(MIN_SO_RCVBUF_SIZE, g_posix_impl_opts.recv_buf_size);
 
 	if (sz < min_size) {
 		sz = min_size;
@@ -367,8 +367,8 @@ posix_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 	assert(sock != NULL);
 
 	/* Set kernel buffer size to be at least MIN_SO_SNDBUF_SIZE and
-	 * g_spdk_posix_sock_impl_opts.send_buf_size. */
-	min_size = spdk_max(MIN_SO_SNDBUF_SIZE, g_spdk_posix_sock_impl_opts.send_buf_size);
+	 * g_posix_impl_opts.send_buf_size. */
+	min_size = spdk_max(MIN_SO_SNDBUF_SIZE, g_posix_impl_opts.send_buf_size);
 
 	if (sz < min_size) {
 		sz = min_size;
@@ -1784,7 +1784,7 @@ posix_sock_group_impl_create(void)
 	TAILQ_INIT(&group_impl->socks_with_data);
 	group_impl->placement_id = -1;
 
-	if (g_spdk_posix_sock_impl_opts.enable_placement_id == PLACEMENT_CPU) {
+	if (g_posix_impl_opts.enable_placement_id == PLACEMENT_CPU) {
 		spdk_sock_map_insert(&g_map, spdk_env_get_current_core(), &group_impl->base);
 		group_impl->placement_id = spdk_env_get_current_core();
 	}
@@ -1882,7 +1882,7 @@ posix_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct spdk_
 		TAILQ_INSERT_TAIL(&group->socks_with_data, sock, link);
 	}
 
-	if (g_spdk_posix_sock_impl_opts.enable_placement_id == PLACEMENT_MARK) {
+	if (g_posix_impl_opts.enable_placement_id == PLACEMENT_MARK) {
 		posix_sock_update_mark(_group, _sock);
 	} else if (sock->placement_id != -1) {
 		rc = spdk_sock_map_insert(&g_map, sock->placement_id, &group->base);
@@ -2124,7 +2124,7 @@ posix_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
 	int rc;
 
-	if (g_spdk_posix_sock_impl_opts.enable_placement_id == PLACEMENT_CPU) {
+	if (g_posix_impl_opts.enable_placement_id == PLACEMENT_CPU) {
 		spdk_sock_map_release(&g_map, spdk_env_get_current_core());
 	}
 
