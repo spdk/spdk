@@ -87,6 +87,21 @@ static struct spdk_sock_impl_opts g_posix_impl_opts = {
 	.tls_cipher_suites = NULL
 };
 
+static struct spdk_sock_impl_opts g_ssl_impl_opts = {
+	.recv_buf_size = MIN_SO_RCVBUF_SIZE,
+	.send_buf_size = MIN_SO_SNDBUF_SIZE,
+	.enable_recv_pipe = true,
+	.enable_quickack = false,
+	.enable_placement_id = PLACEMENT_NONE,
+	.enable_zerocopy_send_server = true,
+	.enable_zerocopy_send_client = false,
+	.zerocopy_threshold = 0,
+	.tls_version = 0,
+	.enable_ktls = false,
+	.psk_key = NULL,
+	.psk_identity = NULL
+};
+
 static struct spdk_sock_map g_map = {
 	.entries = STAILQ_HEAD_INITIALIZER(g_map.entries),
 	.mtx = PTHREAD_MUTEX_INITIALIZER
@@ -136,7 +151,8 @@ posix_sock_copy_impl_opts(struct spdk_sock_impl_opts *dest, const struct spdk_so
 }
 
 static int
-posix_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
+_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, struct spdk_sock_impl_opts *impl_opts,
+		    size_t *len)
 {
 	if (!opts || !len) {
 		errno = EINVAL;
@@ -146,14 +162,27 @@ posix_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
 	assert(sizeof(*opts) >= *len);
 	memset(opts, 0, *len);
 
-	posix_sock_copy_impl_opts(opts, &g_posix_impl_opts, *len);
-	*len = spdk_min(*len, sizeof(g_posix_impl_opts));
+	posix_sock_copy_impl_opts(opts, impl_opts, *len);
+	*len = spdk_min(*len, sizeof(*impl_opts));
 
 	return 0;
 }
 
 static int
-posix_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
+posix_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
+{
+	return _sock_impl_get_opts(opts, &g_posix_impl_opts, len);
+}
+
+static int
+ssl_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
+{
+	return _sock_impl_get_opts(opts, &g_ssl_impl_opts, len);
+}
+
+static int
+_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, struct spdk_sock_impl_opts *impl_opts,
+		    size_t len)
 {
 	if (!opts) {
 		errno = EINVAL;
@@ -161,16 +190,29 @@ posix_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
 	}
 
 	assert(sizeof(*opts) >= len);
-	posix_sock_copy_impl_opts(&g_posix_impl_opts, opts, len);
+	posix_sock_copy_impl_opts(impl_opts, opts, len);
 
 	return 0;
 }
 
+static int
+posix_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
+{
+	return _sock_impl_set_opts(opts, &g_posix_impl_opts, len);
+}
+
+static int
+ssl_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
+{
+	return _sock_impl_set_opts(opts, &g_ssl_impl_opts, len);
+}
+
 static void
-posix_opts_get_impl_opts(const struct spdk_sock_opts *opts, struct spdk_sock_impl_opts *dest)
+_opts_get_impl_opts(const struct spdk_sock_opts *opts, struct spdk_sock_impl_opts *dest,
+		    const struct spdk_sock_impl_opts *default_impl)
 {
 	/* Copy the default impl_opts first to cover cases when user's impl_opts is smaller */
-	memcpy(dest, &g_posix_impl_opts, sizeof(*dest));
+	memcpy(dest, default_impl, sizeof(*dest));
 
 	if (opts->impl_opts != NULL) {
 		assert(sizeof(*dest) >= opts->impl_opts_size);
@@ -340,8 +382,8 @@ posix_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 	}
 
 	/* Set kernel buffer size to be at least MIN_SO_RCVBUF_SIZE and
-	 * g_posix_impl_opts.recv_buf_size. */
-	min_size = spdk_max(MIN_SO_RCVBUF_SIZE, g_posix_impl_opts.recv_buf_size);
+	 * _sock->impl_opts.recv_buf_size. */
+	min_size = spdk_max(MIN_SO_RCVBUF_SIZE, _sock->impl_opts.recv_buf_size);
 
 	if (sz < min_size) {
 		sz = min_size;
@@ -367,8 +409,8 @@ posix_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 	assert(sock != NULL);
 
 	/* Set kernel buffer size to be at least MIN_SO_SNDBUF_SIZE and
-	 * g_posix_impl_opts.send_buf_size. */
-	min_size = spdk_max(MIN_SO_SNDBUF_SIZE, g_posix_impl_opts.send_buf_size);
+	 * _sock->impl_opts.send_buf_size. */
+	min_size = spdk_max(MIN_SO_SNDBUF_SIZE, _sock->impl_opts.send_buf_size);
 
 	if (sz < min_size) {
 		sz = min_size;
@@ -950,7 +992,11 @@ posix_sock_create(const char *ip, int port,
 	SSL *ssl = 0;
 
 	assert(opts != NULL);
-	posix_opts_get_impl_opts(opts, &impl_opts);
+	if (enable_ssl) {
+		_opts_get_impl_opts(opts, &impl_opts, &g_ssl_impl_opts);
+	} else {
+		_opts_get_impl_opts(opts, &impl_opts, &g_posix_impl_opts);
+	}
 
 	if (ip == NULL) {
 		return NULL;
@@ -1759,7 +1805,7 @@ posix_sock_group_impl_get_optimal(struct spdk_sock *_sock, struct spdk_sock_grou
 }
 
 static struct spdk_sock_group_impl *
-posix_sock_group_impl_create(void)
+_sock_group_impl_create(uint32_t enable_placement_id)
 {
 	struct spdk_posix_sock_group_impl *group_impl;
 	int fd;
@@ -1784,12 +1830,24 @@ posix_sock_group_impl_create(void)
 	TAILQ_INIT(&group_impl->socks_with_data);
 	group_impl->placement_id = -1;
 
-	if (g_posix_impl_opts.enable_placement_id == PLACEMENT_CPU) {
+	if (enable_placement_id == PLACEMENT_CPU) {
 		spdk_sock_map_insert(&g_map, spdk_env_get_current_core(), &group_impl->base);
 		group_impl->placement_id = spdk_env_get_current_core();
 	}
 
 	return &group_impl->base;
+}
+
+static struct spdk_sock_group_impl *
+posix_sock_group_impl_create(void)
+{
+	return _sock_group_impl_create(g_posix_impl_opts.enable_placement_id);
+}
+
+static struct spdk_sock_group_impl *
+ssl_sock_group_impl_create(void)
+{
+	return _sock_group_impl_create(g_ssl_impl_opts.enable_placement_id);
 }
 
 static void
@@ -1882,7 +1940,7 @@ posix_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct spdk_
 		TAILQ_INSERT_TAIL(&group->socks_with_data, sock, link);
 	}
 
-	if (g_posix_impl_opts.enable_placement_id == PLACEMENT_MARK) {
+	if (_sock->impl_opts.enable_placement_id == PLACEMENT_MARK) {
 		posix_sock_update_mark(_group, _sock);
 	} else if (sock->placement_id != -1) {
 		rc = spdk_sock_map_insert(&g_map, sock->placement_id, &group->base);
@@ -2119,18 +2177,30 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 }
 
 static int
-posix_sock_group_impl_close(struct spdk_sock_group_impl *_group)
+_sock_group_impl_close(struct spdk_sock_group_impl *_group, uint32_t enable_placement_id)
 {
 	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
 	int rc;
 
-	if (g_posix_impl_opts.enable_placement_id == PLACEMENT_CPU) {
+	if (enable_placement_id == PLACEMENT_CPU) {
 		spdk_sock_map_release(&g_map, spdk_env_get_current_core());
 	}
 
 	rc = close(group->fd);
 	free(group);
 	return rc;
+}
+
+static int
+posix_sock_group_impl_close(struct spdk_sock_group_impl *_group)
+{
+	return _sock_group_impl_close(_group, g_posix_impl_opts.enable_placement_id);
+}
+
+static int
+ssl_sock_group_impl_close(struct spdk_sock_group_impl *_group)
+{
+	return _sock_group_impl_close(_group, g_ssl_impl_opts.enable_placement_id);
 }
 
 static struct spdk_net_impl g_posix_net_impl = {
@@ -2202,13 +2272,13 @@ static struct spdk_net_impl g_ssl_net_impl = {
 	.is_ipv4	= posix_sock_is_ipv4,
 	.is_connected	= posix_sock_is_connected,
 	.group_impl_get_optimal	= posix_sock_group_impl_get_optimal,
-	.group_impl_create	= posix_sock_group_impl_create,
+	.group_impl_create	= ssl_sock_group_impl_create,
 	.group_impl_add_sock	= posix_sock_group_impl_add_sock,
 	.group_impl_remove_sock = posix_sock_group_impl_remove_sock,
 	.group_impl_poll	= posix_sock_group_impl_poll,
-	.group_impl_close	= posix_sock_group_impl_close,
-	.get_opts	= posix_sock_impl_get_opts,
-	.set_opts	= posix_sock_impl_set_opts,
+	.group_impl_close	= ssl_sock_group_impl_close,
+	.get_opts	= ssl_sock_impl_get_opts,
+	.set_opts	= ssl_sock_impl_set_opts,
 };
 
 SPDK_NET_IMPL_REGISTER(ssl, &g_ssl_net_impl, DEFAULT_SOCK_PRIORITY);
