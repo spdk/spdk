@@ -171,4 +171,7 @@ trap - SIGINT SIGTERM EXIT
 
 run_bsdump
 rm -f $ROCKSDB_CONF
+
+[[ -z "$SKIP_GIT_CLEAN" ]] && git -C "$DB_BENCH_DIR" clean -xfd
+
 sanitize_results
