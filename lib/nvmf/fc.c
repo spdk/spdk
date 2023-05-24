@@ -2236,6 +2236,10 @@ _nvmf_fc_close_qpair(void *arg)
 		}
 
 		SPDK_ERRLOG("%s: Delete FC connection failed.\n", __func__);
+	} else if (fc_conn->conn_state == SPDK_NVMF_FC_OBJECT_TO_BE_DELETED) {
+		/* This is the case where deletion started from FC layer. */
+		spdk_thread_send_msg(fc_ctx->qpair_thread, fc_conn->qpair_disconnect_cb_fn,
+				     fc_conn->qpair_disconnect_ctx);
 	}
 
 	nvmf_fc_connection_delete_done_cb(fc_ctx);
