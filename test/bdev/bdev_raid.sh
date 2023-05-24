@@ -520,6 +520,7 @@ function raid_rebuild_test() {
 	local raid_level=$1
 	local num_base_bdevs=$2
 	local superblock=$3
+	local background_io=$4
 	local base_bdevs=($(for ((i = 1; i <= num_base_bdevs; i++)); do echo BaseBdev$i; done))
 	local raid_bdev_name="raid_bdev1"
 	local strip_size
@@ -528,6 +529,10 @@ function raid_rebuild_test() {
 	local data_offset
 
 	if [ $raid_level != "raid1" ]; then
+		if [ $background_io = true ]; then
+			echo "skipping rebuild test with io for level $raid_level"
+			return 1
+		fi
 		strip_size=64
 		create_arg+=" -z $strip_size"
 	else
@@ -538,17 +543,17 @@ function raid_rebuild_test() {
 		create_arg+=" -s"
 	fi
 
-	"$rootdir/test/app/bdev_svc/bdev_svc" -r $rpc_server -L bdev_raid &
+	"$rootdir/build/examples/bdevperf" -r $rpc_server -T $raid_bdev_name -t 60 -w randrw -M 50 -o 3M -q 2 -U -z -L bdev_raid &
 	raid_pid=$!
 	waitforlisten $raid_pid $rpc_server
 
 	# Create base bdevs
-	for ((i = 0; i < num_base_bdevs; i++)); do
+	for bdev in "${base_bdevs[@]}"; do
 		if [ $superblock = true ]; then
-			$rpc_py bdev_malloc_create 32 512 -b ${base_bdevs[$i]}_malloc
-			$rpc_py bdev_passthru_create -b ${base_bdevs[$i]}_malloc -p ${base_bdevs[$i]}
+			$rpc_py bdev_malloc_create 32 512 -b ${bdev}_malloc
+			$rpc_py bdev_passthru_create -b ${bdev}_malloc -p $bdev
 		else
-			$rpc_py bdev_malloc_create 32 512 -b ${base_bdevs[$i]}
+			$rpc_py bdev_malloc_create 32 512 -b $bdev
 		fi
 	done
 
@@ -567,10 +572,15 @@ function raid_rebuild_test() {
 	# Get base bdev's data offset
 	data_offset=$($rpc_py bdev_raid_get_bdevs all | jq -r '.[].base_bdevs_list[0].data_offset')
 
-	# Write random data to the RAID bdev
-	nbd_start_disks $rpc_server $raid_bdev_name /dev/nbd0
-	dd if=/dev/urandom of=/dev/nbd0 bs=512 count=$raid_bdev_size oflag=direct
-	nbd_stop_disks $rpc_server /dev/nbd0
+	if [ $background_io = true ]; then
+		# Start user I/O
+		"$rootdir/examples/bdev/bdevperf/bdevperf.py" -s $rpc_server perform_tests &
+	else
+		# Write random data to the RAID bdev
+		nbd_start_disks $rpc_server $raid_bdev_name /dev/nbd0
+		dd if=/dev/urandom of=/dev/nbd0 bs=512 count=$raid_bdev_size oflag=direct
+		nbd_stop_disks $rpc_server /dev/nbd0
+	fi
 
 	# Remove one base bdev
 	$rpc_py bdev_raid_remove_base_bdev ${base_bdevs[0]}
@@ -602,16 +612,27 @@ function raid_rebuild_test() {
 	$rpc_py bdev_raid_delete $raid_bdev_name
 	[[ $($rpc_py bdev_raid_get_bdevs all | jq 'length') == 0 ]]
 
-	# Compare data on the removed and rebuilt base bdevs
-	nbd_start_disks $rpc_server "${base_bdevs[0]} spare" "/dev/nbd0 /dev/nbd1"
-	cmp -i $((data_offset * 512)) /dev/nbd0 /dev/nbd1
-	nbd_stop_disks $rpc_server "/dev/nbd0 /dev/nbd1"
+	if [ $background_io = true ]; then
+		# Compare data on the rebuilt and other base bdevs
+		nbd_start_disks $rpc_server "spare" "/dev/nbd0"
+		for bdev in "${base_bdevs[@]:1}"; do
+			nbd_start_disks $rpc_server $bdev "/dev/nbd1"
+			cmp -i $((data_offset * 512)) /dev/nbd0 /dev/nbd1
+			nbd_stop_disks $rpc_server "/dev/nbd1"
+		done
+		nbd_stop_disks $rpc_server "/dev/nbd0"
+	else
+		# Compare data on the removed and rebuilt base bdevs
+		nbd_start_disks $rpc_server "${base_bdevs[0]} spare" "/dev/nbd0 /dev/nbd1"
+		cmp -i $((data_offset * 512)) /dev/nbd0 /dev/nbd1
+		nbd_stop_disks $rpc_server "/dev/nbd0 /dev/nbd1"
+	fi
 
 	if [ $superblock = true ]; then
 		# Remove the passthru base bdevs, then re-add them to assemble the raid bdev again
-		for ((i = 0; i < num_base_bdevs; i++)); do
-			$rpc_py bdev_passthru_delete ${base_bdevs[$i]}
-			$rpc_py bdev_passthru_create -b ${base_bdevs[$i]}_malloc -p ${base_bdevs[$i]}
+		for bdev in "${base_bdevs[@]}"; do
+			$rpc_py bdev_passthru_delete $bdev
+			$rpc_py bdev_passthru_create -b ${bdev}_malloc -p $bdev
 		done
 		$rpc_py bdev_passthru_delete "spare"
 		$rpc_py bdev_passthru_create -b "spare_delay" -p "spare"
@@ -647,8 +668,10 @@ done
 
 if [ "$has_nbd" = true ]; then
 	for n in 2 4; do
-		run_test "raid_rebuild_test" raid_rebuild_test raid1 $n false
-		run_test "raid_rebuild_test_sb" raid_rebuild_test raid1 $n true
+		run_test "raid_rebuild_test" raid_rebuild_test raid1 $n false false
+		run_test "raid_rebuild_test_sb" raid_rebuild_test raid1 $n true false
+		run_test "raid_rebuild_test_io" raid_rebuild_test raid1 $n false true
+		run_test "raid_rebuild_test_sb_io" raid_rebuild_test raid1 $n true true
 	done
 fi
 
