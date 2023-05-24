@@ -192,6 +192,9 @@ struct spdk_nvmf_fc_nport {
  */
 struct spdk_nvmf_fc_conn {
 	struct spdk_nvmf_qpair qpair;
+	nvmf_qpair_disconnect_cb qpair_disconnect_cb_fn;
+	void *qpair_disconnect_ctx;
+
 	struct spdk_nvme_transport_id trid;
 
 	uint32_t s_id;

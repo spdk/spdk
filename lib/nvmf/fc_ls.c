@@ -330,6 +330,8 @@ nvmf_fc_ls_new_connection(struct spdk_nvmf_fc_association *assoc, uint16_t qid,
 	fc_conn->conn_state = SPDK_NVMF_FC_OBJECT_CREATED;
 	TAILQ_INIT(&fc_conn->in_use_reqs);
 	TAILQ_INIT(&fc_conn->fused_waiting_queue);
+	fc_conn->qpair_disconnect_cb_fn = NULL;
+	fc_conn->qpair_disconnect_ctx = NULL;
 
 	/* save target port trid in connection (for subsystem
 	 * listener validation in fabric connect command)
@@ -1483,8 +1485,9 @@ nvmf_fc_poller_conn_abort_done(void *hwqp, int32_t status, void *cb_args)
 
 			if (!conn_args->backend_initiated && (fc_conn->qpair.state != SPDK_NVMF_QPAIR_DEACTIVATING)) {
 				/* disconnect qpair from nvmf controller */
+				fc_conn->qpair_disconnect_cb_fn = nvmf_fc_disconnect_qpair_cb;
+				fc_conn->qpair_disconnect_ctx = &conn_args->cb_info;
 				spdk_nvmf_qpair_disconnect(&fc_conn->qpair, NULL, NULL);
-				nvmf_fc_disconnect_qpair_cb(&conn_args->cb_info);
 			} else {
 				nvmf_fc_poller_api_perform_cb(&conn_args->cb_info, SPDK_NVMF_FC_POLLER_API_SUCCESS);
 			}
@@ -1543,8 +1546,9 @@ nvmf_fc_poller_api_del_connection(void *arg)
 
 		if (!conn_args->backend_initiated && (fc_conn->qpair.state != SPDK_NVMF_QPAIR_DEACTIVATING)) {
 			/* disconnect qpair from nvmf controller */
+			fc_conn->qpair_disconnect_cb_fn = nvmf_fc_disconnect_qpair_cb;
+			fc_conn->qpair_disconnect_ctx = &conn_args->cb_info;
 			spdk_nvmf_qpair_disconnect(&fc_conn->qpair, NULL, NULL);
-			nvmf_fc_disconnect_qpair_cb(&conn_args->cb_info);
 		} else {
 			nvmf_fc_poller_api_perform_cb(&conn_args->cb_info, SPDK_NVMF_FC_POLLER_API_SUCCESS);
 		}
