@@ -734,18 +734,17 @@ raid5f_ioch_create(void *io_device, void *ctx_buf)
 {
 	struct raid5f_io_channel *r5ch = ctx_buf;
 	struct raid5f_info *r5f_info = io_device;
-	int status = 0;
 	int i;
 
 	TAILQ_INIT(&r5ch->free_stripe_requests);
+	TAILQ_INIT(&r5ch->xor_retry_queue);
 
 	for (i = 0; i < RAID5F_MAX_STRIPES; i++) {
 		struct stripe_request *stripe_req;
 
 		stripe_req = raid5f_stripe_request_alloc(r5ch);
 		if (!stripe_req) {
-			status = -ENOMEM;
-			goto out;
+			goto err;
 		}
 
 		TAILQ_INSERT_HEAD(&r5ch->free_stripe_requests, stripe_req, link);
@@ -754,16 +753,14 @@ raid5f_ioch_create(void *io_device, void *ctx_buf)
 	r5ch->accel_ch = spdk_accel_get_io_channel();
 	if (!r5ch->accel_ch) {
 		SPDK_ERRLOG("Failed to get accel framework's IO channel\n");
-		goto out;
+		goto err;
 	}
 
-	TAILQ_INIT(&r5ch->xor_retry_queue);
-out:
-	if (status) {
-		SPDK_ERRLOG("Failed to initialize io channel\n");
-		raid5f_ioch_destroy(r5f_info, r5ch);
-	}
-	return status;
+	return 0;
+err:
+	SPDK_ERRLOG("Failed to initialize io channel\n");
+	raid5f_ioch_destroy(r5f_info, r5ch);
+	return -ENOMEM;
 }
 
 static int
