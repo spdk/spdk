@@ -1428,14 +1428,14 @@ test_reset_ctrlr(void)
 	/* Case 1: ctrlr is already being destructed. */
 	nvme_ctrlr->destruct = true;
 
-	rc = bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == -ENXIO);
 
 	/* Case 2: reset is in progress. */
 	nvme_ctrlr->destruct = false;
 	nvme_ctrlr->resetting = true;
 
-	rc = bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == -EBUSY);
 
 	/* Case 3: reset completes successfully. */
@@ -1443,7 +1443,7 @@ test_reset_ctrlr(void)
 	curr_trid->last_failed_tsc = spdk_get_ticks();
 	ctrlr.is_failed = true;
 
-	rc = bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_ctrlr->resetting == true);
 	CU_ASSERT(ctrlr_ch1->qpair != NULL);
@@ -1489,7 +1489,7 @@ test_reset_ctrlr(void)
 	/* Case 4: ctrlr is already removed. */
 	ctrlr.is_removed = true;
 
-	rc = bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == 0);
 
 	detect_remove = false;
@@ -1553,7 +1553,7 @@ test_race_between_reset_and_destruct_ctrlr(void)
 	/* Reset starts from thread 1. */
 	set_thread(1);
 
-	rc = bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_ctrlr->resetting == true);
 
@@ -1576,7 +1576,7 @@ test_race_between_reset_and_destruct_ctrlr(void)
 	CU_ASSERT(nvme_ctrlr->resetting == false);
 
 	/* New reset request is rejected. */
-	rc = bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == -ENXIO);
 
 	/* Additional polling called spdk_io_device_unregister() to ctrlr,
@@ -1641,7 +1641,7 @@ test_failover_ctrlr(void)
 	/* Case 1: ctrlr is already being destructed. */
 	nvme_ctrlr->destruct = true;
 
-	rc = bdev_nvme_failover(nvme_ctrlr, false);
+	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr, false);
 	CU_ASSERT(rc == -ENXIO);
 	CU_ASSERT(curr_trid->last_failed_tsc == 0);
 
@@ -1649,13 +1649,13 @@ test_failover_ctrlr(void)
 	nvme_ctrlr->destruct = false;
 	nvme_ctrlr->resetting = true;
 
-	rc = bdev_nvme_failover(nvme_ctrlr, false);
+	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr, false);
 	CU_ASSERT(rc == -EINPROGRESS);
 
 	/* Case 3: reset completes successfully. */
 	nvme_ctrlr->resetting = false;
 
-	rc = bdev_nvme_failover(nvme_ctrlr, false);
+	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr, false);
 	CU_ASSERT(rc == 0);
 
 	CU_ASSERT(nvme_ctrlr->resetting == true);
@@ -1688,13 +1688,13 @@ test_failover_ctrlr(void)
 	/* Case 4: reset is in progress. */
 	nvme_ctrlr->resetting = true;
 
-	rc = bdev_nvme_failover(nvme_ctrlr, false);
+	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr, false);
 	CU_ASSERT(rc == -EINPROGRESS);
 
 	/* Case 5: failover completes successfully. */
 	nvme_ctrlr->resetting = false;
 
-	rc = bdev_nvme_failover(nvme_ctrlr, false);
+	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr, false);
 	CU_ASSERT(rc == 0);
 
 	CU_ASSERT(nvme_ctrlr->resetting == true);
@@ -1790,7 +1790,7 @@ test_race_between_failover_and_add_secondary_trid(void)
 
 	ctrlr.fail_reset = true;
 
-	rc = bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -1798,7 +1798,7 @@ test_race_between_failover_and_add_secondary_trid(void)
 	CU_ASSERT(path_id1->last_failed_tsc != 0);
 	CU_ASSERT(path_id1 == nvme_ctrlr->active_path_id);
 
-	rc = bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == 0);
 
 	rc = bdev_nvme_add_secondary_trid(nvme_ctrlr, &ctrlr, &trid3);
@@ -4860,7 +4860,7 @@ test_concurrent_read_ana_log_page(void)
 	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 1);
 
 	/* Reset request while reading ANA log page should not be rejected. */
-	rc = bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -4873,7 +4873,7 @@ test_concurrent_read_ana_log_page(void)
 	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 0);
 
 	/* Read ANA log page while resetting ctrlr should be rejected. */
-	rc = bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == 0);
 
 	nvme_ctrlr_read_ana_log_page(nvme_ctrlr);
@@ -5282,7 +5282,7 @@ test_reconnect_ctrlr(void)
 	ctrlr.fail_reset = true;
 	ctrlr.is_failed = true;
 
-	rc = bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_ctrlr->resetting == true);
 	CU_ASSERT(ctrlr.is_failed == true);
@@ -5305,7 +5305,7 @@ test_reconnect_ctrlr(void)
 	ctrlr.fail_reset = true;
 	ctrlr.is_failed = true;
 
-	rc = bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_ctrlr->resetting == true);
 	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == false);
@@ -5340,7 +5340,7 @@ test_reconnect_ctrlr(void)
 	ctrlr.fail_reset = true;
 	ctrlr.is_failed = true;
 
-	rc = bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_ctrlr->resetting == true);
 	CU_ASSERT(ctrlr.is_failed == true);
@@ -5462,7 +5462,7 @@ test_retry_failover_ctrlr(void)
 	ctrlr.fail_reset = true;
 	ctrlr.is_failed = true;
 
-	rc = bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -5483,7 +5483,7 @@ test_retry_failover_ctrlr(void)
 	/* If we remove trid1 while reconnect is scheduled, trid1 is removed and path_id is
 	 * switched to trid2 but reset is not started.
 	 */
-	rc = bdev_nvme_failover(nvme_ctrlr, true);
+	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr, true);
 	CU_ASSERT(rc == 0);
 
 	CU_ASSERT(ut_get_path_id_by_trid(nvme_ctrlr, &trid1) == NULL);
@@ -5608,7 +5608,7 @@ test_fail_path(void)
 	ctrlr->fail_reset = true;
 	ctrlr->is_failed = true;
 
-	rc = bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_ctrlr->resetting == true);
 	CU_ASSERT(ctrlr->is_failed == true);
@@ -6128,7 +6128,7 @@ test_disable_auto_failback(void)
 	ctrlr1->fail_reset = true;
 	ctrlr1->is_failed = true;
 
-	bdev_nvme_reset(nvme_ctrlr1);
+	bdev_nvme_reset_ctrlr(nvme_ctrlr1);
 
 	poll_threads();
 	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
@@ -6617,7 +6617,7 @@ test_race_between_reset_and_disconnected(void)
 	curr_trid->last_failed_tsc = spdk_get_ticks();
 	ctrlr.is_failed = true;
 
-	rc = bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_ctrlr->resetting == true);
 	CU_ASSERT(ctrlr_ch1->qpair != NULL);
@@ -6663,12 +6663,12 @@ test_race_between_reset_and_disconnected(void)
 	 *
 	 * spdk_nvme_ctrlr_reconnect_poll_async() returns success before fabric
 	 * connect command is executed. If fabric connect command gets timeout,
-	 * bdev_nvme_failover() is executed. This should be deferred until
+	 * bdev_nvme_failover_ctrlr() is executed. This should be deferred until
 	 * _bdev_nvme_reset_complete() sets ctrlr->resetting to false.
 	 *
-	 * Simulate fabric connect command timeout by calling bdev_nvme_failover().
+	 * Simulate fabric connect command timeout by calling bdev_nvme_failover_ctrlr().
 	 */
-	rc = bdev_nvme_failover(nvme_ctrlr, false);
+	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr, false);
 	CU_ASSERT(rc == -EINPROGRESS);
 	CU_ASSERT(nvme_ctrlr->resetting == true);
 	CU_ASSERT(nvme_ctrlr->pending_failover == true);
