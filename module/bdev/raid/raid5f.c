@@ -159,16 +159,21 @@ static void raid5f_xor_stripe_retry(struct stripe_request *stripe_req);
 static void
 raid5f_xor_stripe_done(struct stripe_request *stripe_req)
 {
+	struct raid5f_io_channel *r5ch = stripe_req->r5ch;
+
 	if (stripe_req->xor.status != 0) {
+		struct raid_bdev_io *raid_io = stripe_req->raid_io;
+
 		SPDK_ERRLOG("stripe xor failed: %s\n", spdk_strerror(-stripe_req->xor.status));
-		raid_bdev_io_complete(stripe_req->raid_io, SPDK_BDEV_IO_STATUS_FAILED);
+		raid5f_stripe_request_release(stripe_req);
+		raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
 	} else {
 		raid5f_stripe_request_submit_chunks(stripe_req);
 	}
 
-	if (!TAILQ_EMPTY(&stripe_req->r5ch->xor_retry_queue)) {
-		stripe_req = TAILQ_FIRST(&stripe_req->r5ch->xor_retry_queue);
-		TAILQ_REMOVE(&stripe_req->r5ch->xor_retry_queue, stripe_req, link);
+	if (!TAILQ_EMPTY(&r5ch->xor_retry_queue)) {
+		stripe_req = TAILQ_FIRST(&r5ch->xor_retry_queue);
+		TAILQ_REMOVE(&r5ch->xor_retry_queue, stripe_req, link);
 		raid5f_xor_stripe_retry(stripe_req);
 	}
 }
