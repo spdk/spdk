@@ -1181,7 +1181,7 @@ if [[ $arch == x86_64* ]] || [[ $arch == aarch64* ]]; then
 	fi
 	# check gas version on aarch64
 	if [[ $arch == aarch64* ]]; then
-		ver=$(as --version 2> /dev/null | awk 'NR==1{print $7}')
+		ver=$(as --version 2> /dev/null | awk '/GNU assembler/{print $NF}')
 		if lt "$ver" 2.24; then
 			# ISA-L, compression & crypto require gas version 2.24 or newer.
 			CONFIG[ISAL]=n
