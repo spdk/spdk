@@ -398,6 +398,24 @@ raid5f_chunk_write(struct chunk *chunk)
 }
 
 static int
+raid5f_chunk_set_iovcnt(struct chunk *chunk, int iovcnt)
+{
+	if (iovcnt > chunk->iovcnt_max) {
+		struct iovec *iovs = chunk->iovs;
+
+		iovs = realloc(iovs, iovcnt * sizeof(*iovs));
+		if (!iovs) {
+			return -ENOMEM;
+		}
+		chunk->iovs = iovs;
+		chunk->iovcnt_max = iovcnt;
+	}
+	chunk->iovcnt = iovcnt;
+
+	return 0;
+}
+
+static int
 raid5f_stripe_request_map_iovecs(struct stripe_request *stripe_req)
 {
 	struct raid_bdev *raid_bdev = stripe_req->raid_io->raid_bdev;
@@ -416,6 +434,7 @@ raid5f_stripe_request_map_iovecs(struct stripe_request *stripe_req)
 		int chunk_iovcnt = 0;
 		uint64_t len = raid_bdev->strip_size << raid_bdev->blocklen_shift;
 		size_t off = raid_io_iov_offset;
+		int ret;
 
 		for (i = raid_io_iov_idx; i < raid_io_iovcnt; i++) {
 			chunk_iovcnt++;
@@ -427,17 +446,10 @@ raid5f_stripe_request_map_iovecs(struct stripe_request *stripe_req)
 
 		assert(raid_io_iov_idx + chunk_iovcnt <= raid_io_iovcnt);
 
-		if (chunk_iovcnt > chunk->iovcnt_max) {
-			struct iovec *iovs = chunk->iovs;
-
-			iovs = realloc(iovs, chunk_iovcnt * sizeof(*iovs));
-			if (!iovs) {
-				return -ENOMEM;
-			}
-			chunk->iovs = iovs;
-			chunk->iovcnt_max = chunk_iovcnt;
+		ret = raid5f_chunk_set_iovcnt(chunk, chunk_iovcnt);
+		if (ret) {
+			return ret;
 		}
-		chunk->iovcnt = chunk_iovcnt;
 
 		if (raid_io_md) {
 			chunk->md_buf = raid_io_md +
