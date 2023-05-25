@@ -42,6 +42,7 @@ typedef void (*stripe_req_xor_cb)(struct stripe_request *stripe_req, int status)
 struct stripe_request {
 	enum stripe_request_type {
 		STRIPE_REQ_WRITE,
+		STRIPE_REQ_RECONSTRUCT,
 	} type;
 
 	struct raid5f_io_channel *r5ch;
@@ -63,6 +64,14 @@ struct stripe_request {
 			/* Buffer for stripe io metadata parity */
 			void *parity_md_buf;
 		} write;
+
+		struct {
+			/* Array of buffers for reading chunk data */
+			void **chunk_buffers;
+
+			/* Array of buffers for reading chunk metadata */
+			void **chunk_md_buffers;
+		} reconstruct;
 	};
 
 	/* Array of iovec iterators for each chunk */
@@ -106,6 +115,7 @@ struct raid5f_io_channel {
 	/* All available stripe requests on this channel */
 	struct {
 		TAILQ_HEAD(, stripe_request) write;
+		TAILQ_HEAD(, stripe_request) reconstruct;
 	} free_stripe_requests;
 
 	/* accel_fw channel */
@@ -165,6 +175,8 @@ raid5f_stripe_request_release(struct stripe_request *stripe_req)
 {
 	if (spdk_likely(stripe_req->type == STRIPE_REQ_WRITE)) {
 		TAILQ_INSERT_HEAD(&stripe_req->r5ch->free_stripe_requests.write, stripe_req, link);
+	} else if (stripe_req->type == STRIPE_REQ_RECONSTRUCT) {
+		TAILQ_INSERT_HEAD(&stripe_req->r5ch->free_stripe_requests.reconstruct, stripe_req, link);
 	} else {
 		assert(false);
 	}
@@ -686,6 +698,24 @@ raid5f_stripe_request_free(struct stripe_request *stripe_req)
 	if (stripe_req->type == STRIPE_REQ_WRITE) {
 		spdk_dma_free(stripe_req->write.parity_buf);
 		spdk_dma_free(stripe_req->write.parity_md_buf);
+	} else if (stripe_req->type == STRIPE_REQ_RECONSTRUCT) {
+		struct raid5f_info *r5f_info = raid5f_ch_to_r5f_info(stripe_req->r5ch);
+		struct raid_bdev *raid_bdev = r5f_info->raid_bdev;
+		uint8_t i;
+
+		if (stripe_req->reconstruct.chunk_buffers) {
+			for (i = 0; i < raid5f_stripe_data_chunks_num(raid_bdev); i++) {
+				spdk_dma_free(stripe_req->reconstruct.chunk_buffers[i]);
+			}
+			free(stripe_req->reconstruct.chunk_buffers);
+		}
+
+		if (stripe_req->reconstruct.chunk_md_buffers) {
+			for (i = 0; i < raid5f_stripe_data_chunks_num(raid_bdev); i++) {
+				spdk_dma_free(stripe_req->reconstruct.chunk_md_buffers[i]);
+			}
+			free(stripe_req->reconstruct.chunk_md_buffers);
+		}
 	} else {
 		assert(false);
 	}
@@ -705,6 +735,7 @@ raid5f_stripe_request_alloc(struct raid5f_io_channel *r5ch, enum stripe_request_
 	uint32_t raid_io_md_size = spdk_bdev_get_md_size(&raid_bdev->bdev);
 	struct stripe_request *stripe_req;
 	struct chunk *chunk;
+	size_t chunk_len;
 
 	stripe_req = calloc(1, sizeof(*stripe_req) + sizeof(*chunk) * raid_bdev->num_base_bdevs);
 	if (!stripe_req) {
@@ -723,9 +754,10 @@ raid5f_stripe_request_alloc(struct raid5f_io_channel *r5ch, enum stripe_request_
 		}
 	}
 
+	chunk_len = raid_bdev->strip_size << raid_bdev->blocklen_shift;
+
 	if (type == STRIPE_REQ_WRITE) {
-		stripe_req->write.parity_buf = spdk_dma_malloc(raid_bdev->strip_size << raid_bdev->blocklen_shift,
-					       r5f_info->buf_alignment, NULL);
+		stripe_req->write.parity_buf = spdk_dma_malloc(chunk_len, r5f_info->buf_alignment, NULL);
 		if (!stripe_req->write.parity_buf) {
 			goto err;
 		}
@@ -735,6 +767,38 @@ raid5f_stripe_request_alloc(struct raid5f_io_channel *r5ch, enum stripe_request_
 							  r5f_info->buf_alignment, NULL);
 			if (!stripe_req->write.parity_md_buf) {
 				goto err;
+			}
+		}
+	} else if (type == STRIPE_REQ_RECONSTRUCT) {
+		uint8_t n = raid5f_stripe_data_chunks_num(raid_bdev);
+		void *buf;
+		uint8_t i;
+
+		stripe_req->reconstruct.chunk_buffers = calloc(n, sizeof(void *));
+		if (!stripe_req->reconstruct.chunk_buffers) {
+			goto err;
+		}
+
+		for (i = 0; i < n; i++) {
+			buf = spdk_dma_malloc(chunk_len, r5f_info->buf_alignment, NULL);
+			if (!buf) {
+				goto err;
+			}
+			stripe_req->reconstruct.chunk_buffers[i] = buf;
+		}
+
+		if (raid_io_md_size != 0) {
+			stripe_req->reconstruct.chunk_md_buffers = calloc(n, sizeof(void *));
+			if (!stripe_req->reconstruct.chunk_md_buffers) {
+				goto err;
+			}
+
+			for (i = 0; i < n; i++) {
+				buf = spdk_dma_malloc(raid_bdev->strip_size * raid_io_md_size, r5f_info->buf_alignment, NULL);
+				if (!buf) {
+					goto err;
+				}
+				stripe_req->reconstruct.chunk_md_buffers[i] = buf;
 			}
 		}
 	} else {
@@ -778,6 +842,11 @@ raid5f_ioch_destroy(void *io_device, void *ctx_buf)
 		raid5f_stripe_request_free(stripe_req);
 	}
 
+	while ((stripe_req = TAILQ_FIRST(&r5ch->free_stripe_requests.reconstruct))) {
+		TAILQ_REMOVE(&r5ch->free_stripe_requests.reconstruct, stripe_req, link);
+		raid5f_stripe_request_free(stripe_req);
+	}
+
 	if (r5ch->accel_ch) {
 		spdk_put_io_channel(r5ch->accel_ch);
 	}
@@ -793,20 +862,29 @@ raid5f_ioch_create(void *io_device, void *ctx_buf)
 	struct raid5f_io_channel *r5ch = ctx_buf;
 	struct raid5f_info *r5f_info = io_device;
 	struct raid_bdev *raid_bdev = r5f_info->raid_bdev;
+	struct stripe_request *stripe_req;
 	int i;
 
 	TAILQ_INIT(&r5ch->free_stripe_requests.write);
+	TAILQ_INIT(&r5ch->free_stripe_requests.reconstruct);
 	TAILQ_INIT(&r5ch->xor_retry_queue);
 
 	for (i = 0; i < RAID5F_MAX_STRIPES; i++) {
-		struct stripe_request *stripe_req;
-
 		stripe_req = raid5f_stripe_request_alloc(r5ch, STRIPE_REQ_WRITE);
 		if (!stripe_req) {
 			goto err;
 		}
 
 		TAILQ_INSERT_HEAD(&r5ch->free_stripe_requests.write, stripe_req, link);
+	}
+
+	for (i = 0; i < RAID5F_MAX_STRIPES; i++) {
+		stripe_req = raid5f_stripe_request_alloc(r5ch, STRIPE_REQ_RECONSTRUCT);
+		if (!stripe_req) {
+			goto err;
+		}
+
+		TAILQ_INSERT_HEAD(&r5ch->free_stripe_requests.reconstruct, stripe_req, link);
 	}
 
 	r5ch->accel_ch = spdk_accel_get_io_channel();
