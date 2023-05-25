@@ -162,11 +162,26 @@ def main():
                             'larger values to leave some buffers in the global pool.')
     parser.add_argument('--core-mask', '-m', help='Core mask', type=lambda v: int(v, 0))
     parser.add_argument('--config', '-c', help='Config file', required=True)
+    parser.add_argument('--format', '-f', help='Output format (json, text)', default='text')
 
     args = parser.parse_args()
+    if args.format not in ('json', 'text'):
+        print(f'{appname}: {args.format}: Invalid format')
+        sys.exit(1)
     try:
         with open(args.config, 'r') as f:
-            pool = parse_config(json.load(f), args.core_mask)
+            config = json.load(f)
+        pool = parse_config(config, args.core_mask)
+        if args.format == 'json':
+            opts = next(Subsystem.get_method(Subsystem.get_subsystem_config(config, 'iobuf'),
+                                             'iobuf_set_options'), None)
+            if opts is None:
+                opts = {'method': 'iobuf_set_options',
+                        'params': {'small_bufsize': 8 * 1024, 'large_bufsize': 132 * 1024}}
+            opts['params']['small_pool_count'] = pool.small
+            opts['params']['large_pool_count'] = pool.large
+            print(json.dumps(opts))
+        else:
             print('This script will only calculate the minimum values required to populate the '
                   'per-thread caches.\nMost users will usually want to use larger values to leave '
                   'some buffers in the global pool.\n')
