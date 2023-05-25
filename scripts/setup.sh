@@ -85,6 +85,9 @@ function usage() {
 	echo "PCI_BLOCK_SYNC_ON_RESET"
 	echo "                  If set in the environment, the attempt to wait for block devices associated"
 	echo "                  with given PCI device will be made upon reset"
+	echo "UNBIND_ENTIRE_IOMMU_GROUP"
+	echo "                  If set, all devices from nvme's iommu group will be unbound from their drivers."
+	echo "                  Use with caution."
 	exit 0
 }
 
@@ -130,9 +133,9 @@ function pci_dev_echo() {
 	echo "$bdf (${pci_ids_vendor["$bdf"]#0x} ${pci_ids_device["$bdf"]#0x}): $*"
 }
 
-function linux_bind_driver() {
-	bdf="$1"
-	driver_name="$2"
+function probe_driver() {
+	local bdf=$1
+	local driver_name=$2
 	old_driver_name=${drivers_d["$bdf"]:-no driver}
 
 	if [[ $driver_name == "$old_driver_name" ]]; then
@@ -163,6 +166,13 @@ function linux_bind_driver() {
 		pci_dev_echo "$bdf" "failed to bind to $driver_name, aborting"
 		return 1
 	fi
+}
+
+function linux_bind_driver() {
+	local bdf="$1"
+	local driver_name="$2"
+
+	probe_driver "$bdf" "$driver_name"
 
 	iommu_group=$(basename $(readlink -f /sys/bus/pci/devices/$bdf/iommu_group))
 	if [ -e "/dev/vfio/$iommu_group" ]; then
@@ -170,6 +180,27 @@ function linux_bind_driver() {
 			chown "$TARGET_USER" "/dev/vfio/$iommu_group"
 		fi
 	fi
+
+	local iommug=("/sys/bus/pci/devices/$bdf/iommu_group/devices/"!($bdf))
+	local _bdf _driver
+	if ((${#iommug[@]} > 0)) && [[ $driver_name == vfio* ]]; then
+		pci_dev_echo "$bdf" "WARNING: detected multiple devices (${#iommug[@]}) under the same IOMMU group!"
+		for _bdf in "${iommug[@]}"; do
+			_driver=$(readlink -f "$_bdf/driver")
+			if [[ ! -e $_driver || ${_driver##*/} == "$driver_name" ]]; then
+				continue
+			fi
+			# See what DPDK considers to be a "viable" iommu group: dpdk/lib/eal/linux/eal_vfio.c -> rte_vfio_setup_device()
+			pci_dev_echo "$bdf" "WARNING: ${_bdf##*/} not bound to $driver_name (${_driver##*/})"
+			pci_dev_echo "$bdf" "WARNING All devices in the IOMMU group must be bound to the same driver or unbound"
+			if [[ $UNBIND_ENTIRE_IOMMU_GROUP == yes ]]; then
+				pci_dev_echo "$bdf" "WARNING: Attempting to unbind ${_bdf##*/}"
+				drivers_d["${_bdf##*/}"]=${_driver##*/}
+				probe_driver "${_bdf##*/}" none
+			fi
+		done
+	fi
+
 }
 
 function linux_unbind_driver() {
