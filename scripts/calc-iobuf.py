@@ -7,6 +7,7 @@ import errno
 import json
 import os
 import sys
+import typing
 
 
 @dataclasses.dataclass
@@ -17,6 +18,13 @@ class PoolConfig:
     def add(self, other):
         self.small += other.small
         self.large += other.large
+
+
+@dataclasses.dataclass
+class UserInput:
+    name: str
+    prefix: str = ''
+    conv: typing.Callable = lambda x: x
 
 
 class Subsystem:
@@ -31,6 +39,15 @@ class Subsystem:
 
     def ask_config(self):
         raise NotImplementedError()
+
+    def _get_input(self, inputs):
+        result = {}
+        for i in inputs:
+            value = input(f'{i.prefix}{i.name}: ')
+            if value == '':
+                continue
+            result[i.name] = i.conv(value)
+        return result
 
     @staticmethod
     def register(cls):
@@ -59,6 +76,21 @@ class Subsystem:
         return filter(lambda m: m['method'] == name, config)
 
 
+class IobufSubsystem(Subsystem):
+    def __init__(self):
+        super().__init__('iobuf')
+
+    def ask_config(self):
+        prov = input('Provide iobuf config [y/N]: ')
+        if prov.lower() != 'y':
+            return None
+        print('iobuf_set_options:')
+        return [{'method': 'iobuf_set_options', 'params':
+                 self._get_input([
+                     UserInput('small_bufsize', '\t', lambda x: int(x, 0)),
+                     UserInput('large_bufsize', '\t', lambda x: int(x, 0))])}]
+
+
 class AccelSubsystem(Subsystem):
     def __init__(self):
         super().__init__('accel')
@@ -72,6 +104,16 @@ class AccelSubsystem(Subsystem):
         cpucnt = mask.bit_count()
         return PoolConfig(small=small * cpucnt, large=large * cpucnt)
 
+    def ask_config(self):
+        prov = input('Provide accel config [y/N]: ')
+        if prov.lower() != 'y':
+            return None
+        print('accel_set_options:')
+        return [{'method': 'accel_set_options', 'params':
+                self._get_input([
+                    UserInput('small_cache_size', '\t', lambda x: int(x, 0)),
+                    UserInput('large_cache_size', '\t', lambda x: int(x, 0))])}]
+
 
 class BdevSubsystem(Subsystem):
     def __init__(self):
@@ -82,6 +124,10 @@ class BdevSubsystem(Subsystem):
         pool = PoolConfig(small=128 * cpucnt, large=16 * cpucnt)
         pool.add(self.get('accel').calc(config, mask))
         return pool
+
+    def ask_config(self):
+        # There's nothing in bdev layer's config that we care about
+        pass
 
 
 class NvmfSubsystem(Subsystem):
@@ -120,6 +166,25 @@ class NvmfSubsystem(Subsystem):
             pool.add(PoolConfig(small=buf_cache_size * cpucnt, large=large * cpucnt))
         return pool
 
+    def ask_config(self):
+        prov = input('Provide nvmf config [y/N]: ')
+        if prov.lower() != 'y':
+            return None
+        transports = []
+        while True:
+            trtype = input('Provide next nvmf transport config (empty string to stop) '
+                           '[trtype]: ').strip()
+            if len(trtype) == 0:
+                break
+            print('nvmf_create_transport:')
+            transports.append({'method': 'nvmf_create_transport', 'params':
+                               {'trtype': trtype,
+                                **self._get_input([
+                                    UserInput('buf_cache_size', '\t', lambda x: int(x, 0)),
+                                    UserInput('io_unit_size', '\t', lambda x: int(x, 0)),
+                                    UserInput('num_shared_buffers', '\t', lambda x: int(x, 0))])}})
+        return transports
+
 
 class UblkSubsystem(Subsystem):
     def __init__(self):
@@ -137,6 +202,14 @@ class UblkSubsystem(Subsystem):
         cpucnt = int(target['cpumask'], 0).bit_count()
         return PoolConfig(small=128 * cpucnt, large=32 * cpucnt)
 
+    def ask_config(self):
+        prov = input('Provide ublk config [y/N]: ')
+        if prov.lower() != 'y':
+            return None
+        print('ublk_create_target:')
+        return [{'method': 'ublk_create_target',
+                 'params': self._get_input([UserInput('cpumask', '\t')])}]
+
 
 def parse_config(config, mask):
     pool = PoolConfig()
@@ -148,11 +221,20 @@ def parse_config(config, mask):
     return pool
 
 
+def ask_config():
+    subsys_config = []
+    for subsystem in Subsystem.foreach():
+        subsys_config.append({'subsystem': subsystem.name,
+                              'config': subsystem.ask_config() or []})
+    return {'subsystems': subsys_config}
+
+
 def main():
     Subsystem.register(AccelSubsystem)
     Subsystem.register(BdevSubsystem)
     Subsystem.register(NvmfSubsystem)
     Subsystem.register(UblkSubsystem)
+    Subsystem.register(IobufSubsystem)
 
     appname = sys.argv[0]
     parser = ArgumentParser(description='Utility to help calculate minimum iobuf pool size based '
@@ -160,17 +242,25 @@ def main():
                             'This script will only calculate the minimum values required to '
                             'populate the per-thread caches.  Most users will usually want to use '
                             'larger values to leave some buffers in the global pool.')
-    parser.add_argument('--core-mask', '-m', help='Core mask', type=lambda v: int(v, 0))
-    parser.add_argument('--config', '-c', help='Config file', required=True)
+    parser.add_argument('--core-mask', '-m', help='Core mask', type=lambda v: int(v, 0), required=True)
     parser.add_argument('--format', '-f', help='Output format (json, text)', default='text')
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--config', '-c', help='Config file')
+    group.add_argument('--interactive', '-i', help='Instead of using a config file as input, user '
+                       'will be asked a series of questions to provide the necessary parameters. '
+                       'For the description of these parameters, consult the documentation of the '
+                       'respective RPC.', action='store_true')
 
     args = parser.parse_args()
     if args.format not in ('json', 'text'):
         print(f'{appname}: {args.format}: Invalid format')
         sys.exit(1)
     try:
-        with open(args.config, 'r') as f:
-            config = json.load(f)
+        if not args.interactive:
+            with open(args.config, 'r') as f:
+                config = json.load(f)
+        else:
+            config = ask_config()
         pool = parse_config(config, args.core_mask)
         if args.format == 'json':
             opts = next(Subsystem.get_method(Subsystem.get_subsystem_config(config, 'iobuf'),
