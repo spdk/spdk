@@ -45,7 +45,7 @@ timing_exit start_vfio_user
 used_vms=""
 timing_enter launch_vms
 for i in $(seq 0 $vm_no); do
-	vm_setup --disk-type=vfio_user --force=$i --os=$VM_IMAGE --disks="$i"
+	vm_setup --disk-type=vfio_user --force=$i --os=$VM_IMAGE --memory=768 --disks="$i"
 	used_vms+=" $i"
 done
 
