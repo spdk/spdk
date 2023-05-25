@@ -1370,31 +1370,6 @@ accel_dpdk_cryptodev_key_handle_configure(struct spdk_accel_crypto_key *key,
 	return 0;
 }
 
-static int
-accel_dpdk_cryptodev_validate_parameters(enum accel_dpdk_cryptodev_driver_type driver,
-		struct spdk_accel_crypto_key *key)
-{
-	/* Check that all required parameters exist */
-	switch (key->cipher) {
-	case SPDK_ACCEL_CIPHER_AES_CBC:
-		if (!key->key || !key->key_size) {
-			SPDK_ERRLOG("ACCEL_DPDK_CRYPTODEV_AES_CBC requires a key\n");
-			return -1;
-		}
-		if (key->key2 || key->key2_size) {
-			SPDK_ERRLOG("ACCEL_DPDK_CRYPTODEV_AES_CBC doesn't use key2\n");
-			return -1;
-		}
-		break;
-	case SPDK_ACCEL_CIPHER_AES_XTS:
-		break;
-	default:
-		return -1;
-	}
-
-	return 0;
-}
-
 static void
 accel_dpdk_cryptodev_key_deinit(struct spdk_accel_crypto_key *key)
 {
@@ -1452,10 +1427,6 @@ accel_dpdk_cryptodev_key_init(struct spdk_accel_crypto_key *key)
 	int rc;
 
 	driver = g_dpdk_cryptodev_driver;
-
-	if (accel_dpdk_cryptodev_validate_parameters(driver, key)) {
-		return -EINVAL;
-	}
 
 	priv = calloc(1, sizeof(*priv));
 	if (!priv) {

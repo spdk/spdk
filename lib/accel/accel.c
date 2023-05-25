@@ -2234,6 +2234,14 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 		}
 	}
 
+	if (key->cipher == SPDK_ACCEL_CIPHER_AES_CBC) {
+		if (key->key2_size) {
+			SPDK_ERRLOG("%s doesn't use key2\n", g_ciphers[key->cipher]);
+			rc = -EINVAL;
+			goto error;
+		}
+	}
+
 	key->module_if = module;
 
 	spdk_spin_lock(&g_keyring_spin);
