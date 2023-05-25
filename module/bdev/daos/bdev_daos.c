@@ -507,13 +507,11 @@ static const struct spdk_bdev_fn_table daos_fn_table = {
 	.write_config_json	= bdev_daos_write_json_config,
 };
 
-static void *
-_bdev_daos_io_channel_create_cb(void *ctx)
+static int
+bdev_daos_io_channel_setup_daos(struct bdev_daos_io_channel *ch)
 {
-	int rc = 0 ;
-	struct bdev_daos_io_channel *ch = ctx;
+	int rc = 0;
 	struct bdev_daos *daos = ch->disk;
-
 	daos_pool_info_t pinfo;
 	daos_cont_info_t cinfo;
 
@@ -523,14 +521,14 @@ _bdev_daos_io_channel_create_cb(void *ctx)
 	rc = bdev_get_daos_engine();
 	if (rc) {
 		SPDK_ERRLOG("could not initialize DAOS engine: " DF_RC "\n", DP_RC(rc));
-		return NULL;
+		return rc;
 	}
 
 	SPDK_DEBUGLOG(bdev_daos, "connecting to daos pool '%s'\n", daos->pool_name);
 	if ((rc = daos_pool_connect(daos->pool_name, NULL, DAOS_PC_RW, &ch->pool, &pinfo, NULL))) {
 		SPDK_ERRLOG("%s: could not connect to daos pool: " DF_RC "\n",
 			    daos->disk.name, DP_RC(rc));
-		return NULL;
+		return rc;
 	}
 	SPDK_DEBUGLOG(bdev_daos, "connecting to daos container '%s'\n", daos->cont_name);
 	if ((rc = daos_cont_open(ch->pool, daos->cont_name, DAOS_COO_RW, &ch->cont, &cinfo, NULL))) {
@@ -557,7 +555,7 @@ _bdev_daos_io_channel_create_cb(void *ctx)
 		goto cleanup_obj;
 	}
 
-	return ctx;
+	return 0;
 
 cleanup_obj:
 	dfs_release(ch->obj);
@@ -568,7 +566,7 @@ cleanup_cont:
 cleanup_pool:
 	daos_pool_disconnect(ch->pool, NULL);
 
-	return NULL;
+	return rc;
 }
 
 static int
@@ -578,7 +576,7 @@ bdev_daos_io_channel_create_cb(void *io_device, void *ctx_buf)
 
 	ch->disk = io_device;
 
-	if (spdk_call_unaffinitized(_bdev_daos_io_channel_create_cb, ch) == NULL) {
+	if (bdev_daos_io_channel_setup_daos(ch)) {
 		return -EINVAL;
 	}
 
