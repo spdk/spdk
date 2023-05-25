@@ -100,7 +100,9 @@ struct raid5f_info {
 
 struct raid5f_io_channel {
 	/* All available stripe requests on this channel */
-	TAILQ_HEAD(, stripe_request) free_stripe_requests;
+	struct {
+		TAILQ_HEAD(, stripe_request) write;
+	} free_stripe_requests;
 
 	/* accel_fw channel */
 	struct spdk_io_channel *accel_ch;
@@ -157,7 +159,11 @@ raid5f_stripe_parity_chunk_index(const struct raid_bdev *raid_bdev, uint64_t str
 static inline void
 raid5f_stripe_request_release(struct stripe_request *stripe_req)
 {
-	TAILQ_INSERT_HEAD(&stripe_req->r5ch->free_stripe_requests, stripe_req, link);
+	if (spdk_likely(stripe_req->type == STRIPE_REQ_WRITE)) {
+		TAILQ_INSERT_HEAD(&stripe_req->r5ch->free_stripe_requests.write, stripe_req, link);
+	} else {
+		assert(false);
+	}
 }
 
 static void raid5f_stripe_request_submit_chunks(struct stripe_request *stripe_req);
@@ -532,7 +538,7 @@ raid5f_submit_write_request(struct raid_bdev_io *raid_io, uint64_t stripe_index)
 	struct stripe_request *stripe_req;
 	int ret;
 
-	stripe_req = TAILQ_FIRST(&r5ch->free_stripe_requests);
+	stripe_req = TAILQ_FIRST(&r5ch->free_stripe_requests.write);
 	if (!stripe_req) {
 		return -ENOMEM;
 	}
@@ -547,7 +553,7 @@ raid5f_submit_write_request(struct raid_bdev_io *raid_io, uint64_t stripe_index)
 		return ret;
 	}
 
-	TAILQ_REMOVE(&r5ch->free_stripe_requests, stripe_req, link);
+	TAILQ_REMOVE(&r5ch->free_stripe_requests.write, stripe_req, link);
 
 	raid_io->module_private = stripe_req;
 	raid_io->base_bdev_io_remaining = raid_bdev->num_base_bdevs;
@@ -740,8 +746,8 @@ raid5f_ioch_destroy(void *io_device, void *ctx_buf)
 
 	assert(TAILQ_EMPTY(&r5ch->xor_retry_queue));
 
-	while ((stripe_req = TAILQ_FIRST(&r5ch->free_stripe_requests))) {
-		TAILQ_REMOVE(&r5ch->free_stripe_requests, stripe_req, link);
+	while ((stripe_req = TAILQ_FIRST(&r5ch->free_stripe_requests.write))) {
+		TAILQ_REMOVE(&r5ch->free_stripe_requests.write, stripe_req, link);
 		raid5f_stripe_request_free(stripe_req);
 	}
 
@@ -762,7 +768,7 @@ raid5f_ioch_create(void *io_device, void *ctx_buf)
 	struct raid_bdev *raid_bdev = r5f_info->raid_bdev;
 	int i;
 
-	TAILQ_INIT(&r5ch->free_stripe_requests);
+	TAILQ_INIT(&r5ch->free_stripe_requests.write);
 	TAILQ_INIT(&r5ch->xor_retry_queue);
 
 	for (i = 0; i < RAID5F_MAX_STRIPES; i++) {
@@ -773,7 +779,7 @@ raid5f_ioch_create(void *io_device, void *ctx_buf)
 			goto err;
 		}
 
-		TAILQ_INSERT_HEAD(&r5ch->free_stripe_requests, stripe_req, link);
+		TAILQ_INSERT_HEAD(&r5ch->free_stripe_requests.write, stripe_req, link);
 	}
 
 	r5ch->accel_ch = spdk_accel_get_io_channel();
