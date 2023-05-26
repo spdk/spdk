@@ -104,6 +104,14 @@ spdk_divide_round_up(uint64_t num, uint64_t divisor)
 	return (num + divisor - 1) / divisor;
 }
 
+struct spdk_single_ioviter {
+	struct iovec	*iov;
+	size_t		iovcnt;
+	size_t		idx;
+	size_t		iov_len;
+	uint8_t		*iov_base;
+};
+
 /**
  * An N-way iovec iterator. Calculate the size, given N, using
  * SPDK_IOVITER_SIZE. For backward compatibility, the structure
@@ -112,13 +120,10 @@ spdk_divide_round_up(uint64_t num, uint64_t divisor)
 struct spdk_ioviter {
 	uint32_t	count;
 
-	struct spdk_single_ioviter {
-		struct iovec	*iov;
-		size_t		iovcnt;
-		size_t		idx;
-		size_t		iov_len;
-		uint8_t		*iov_base;
-	} iters[2];
+	union {
+		struct spdk_single_ioviter iters_compat[2];
+		struct spdk_single_ioviter iters[0];
+	};
 };
 
 /* count must be greater than or equal to 2 */
