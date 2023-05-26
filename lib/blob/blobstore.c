@@ -6241,8 +6241,7 @@ bs_snapshot_copy_xattr(struct spdk_blob *toblob, struct spdk_blob *fromblob, con
 
 	bserrno = blob_get_xattr_value(fromblob, name, &val, &len, true);
 	if (bserrno != 0) {
-		SPDK_ERRLOG("blob 0x%" PRIx64 " missing %s xattr"
-			    BLOB_EXTERNAL_SNAPSHOT_ID " XATTR\n", fromblob->id, name);
+		SPDK_ERRLOG("blob 0x%" PRIx64 " missing %s XATTR\n", fromblob->id, name);
 		return bserrno;
 	}
 
