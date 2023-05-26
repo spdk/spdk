@@ -29,6 +29,12 @@ function get_bdev_list() {
 	$rpc_py -s $host_sock bdev_get_bdevs | jq -r '.[].name' | sort | xargs
 }
 
+function wait_for_bdev() {
+	while [[ $(get_bdev_list) != "$1" ]]; do
+		sleep 1
+	done
+}
+
 # Start test that check discovery service reconnect ability
 nvmftestinit
 nvmfappstart -m 0x2
@@ -61,27 +67,23 @@ $rpc_py -s $host_sock framework_start_init
 
 # start discovery controller with CTRLR_LOSS_TIMEOUT_SEC
 $rpc_py -s $host_sock bdev_nvme_start_discovery -b nvme -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
-	-s $discovery_port -f ipv4 -q $host_nqn -l 2 -o 1 -u 1 --wait-for-attach
-[[ $(get_bdev_list) == "nvme0n1" ]]
+	-s $discovery_port -f ipv4 -q $host_nqn --ctrlr-loss-timeout-sec 2 \
+	--reconnect-delay-sec 1 --fast-io-fail-timeout-sec 1 --wait-for-attach
+wait_for_bdev "nvme0n1"
 
 # Delete network interface to trigger reconnection attempts
 "${NVMF_TARGET_NS_CMD[@]}" ip addr del $NVMF_FIRST_TARGET_IP/24 dev $NVMF_TARGET_INTERFACE
 "${NVMF_TARGET_NS_CMD[@]}" ip link set $NVMF_TARGET_INTERFACE down
 
-sleep 2
-[[ $(get_bdev_list) == "nvme0n1" ]]
-
 # Wait a few sec to ensure that ctrlr is removed and ctrlr_loss_timeout_sec exceeded
-sleep 5
-[[ $(get_bdev_list) == "" ]]
+wait_for_bdev ""
 
 # Resume network connection
 "${NVMF_TARGET_NS_CMD[@]}" ip addr add $NVMF_FIRST_TARGET_IP/24 dev $NVMF_TARGET_INTERFACE
 "${NVMF_TARGET_NS_CMD[@]}" ip link set $NVMF_TARGET_INTERFACE up
 
 # Wait some more for discovery controller to reattached bdev
-sleep 5
-[[ $(get_bdev_list) == "nvme1n1" ]]
+wait_for_bdev "nvme1n1"
 
 trap - SIGINT SIGTERM EXIT
 
