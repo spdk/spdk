@@ -1,6 +1,6 @@
 # Changelog
 
-## v23.05: (Upcoming Release)
+## v23.05: NVMe-oF/TCP TLS, Logical Volume External Snapshots
 
 ### accel
 
