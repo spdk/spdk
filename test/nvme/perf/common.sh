@@ -320,30 +320,6 @@ function create_fio_config() {
 	cat $testdir/config.fio
 }
 
-function preconditioning() {
-	local dev_name=""
-	local filename=""
-	local nvme_list
-
-	HUGEMEM=8192 $rootdir/scripts/setup.sh
-	cp $testdir/config.fio.tmp $testdir/config.fio
-	echo "[Preconditioning]" >> $testdir/config.fio
-
-	# Generate filename argument for FIO.
-	# We only want to target NVMes not bound to nvme driver.
-	# If they're still bound to nvme that means they were skipped by
-	# setup.sh on purpose.
-	nvme_list=$(get_disks nvme)
-	for nvme in $nvme_list; do
-		dev_name='trtype=PCIe traddr='${nvme//:/.}' ns=1'
-		filename+=$(printf %s":" "$dev_name")
-	done
-	echo "** Preconditioning disks, this can take a while, depending on the size of disks."
-	run_spdk_nvme_fio "spdk-plugin-nvme" --filename="$filename" --size=100% --loops=2 --bs=1M \
-		--rw=write --iodepth=32 --output-format=normal
-	rm -f $testdir/config.fio
-}
-
 function bc() {
 	$(type -P bc) -l <<< "scale=3; $1"
 }

@@ -46,7 +46,6 @@ BDEV_POOL=""
 DISKNO="ALL"
 CPUS_ALLOWED=1
 NOIOSCALING=false
-PRECONDITIONING=true
 CPUFREQ=""
 PERFTOP=false
 DPDKMEM=false
@@ -107,7 +106,6 @@ function usage() {
 	echo "                            If =ALL then test on all found disk. [default=$DISKNO]"
 	echo "    --cpu-allowed=INT/PATH  Comma-separated list of CPU cores used to run the workload. Ranges allowed."
 	echo "                            Can also point to a file containing list of CPUs. [default=$CPUS_ALLOWED]"
-	echo "    --no-preconditioning    Skip preconditioning"
 	echo "    --no-io-scaling         Do not scale iodepth for each device in SPDK fio plugin. [default=$NOIOSCALING]"
 	echo "    --cpu-frequency=INT     Run tests with CPUs set to a desired frequency. 'intel_pstate=disable' must be set in"
 	echo "                            GRUB options. You can use 'cpupower frequency-info' and 'cpupower frequency-set' to"
@@ -167,7 +165,6 @@ while getopts 'h-:' optchar; do
 						CPUS_ALLOWED=$(cat "$CPUS_ALLOWED")
 					fi
 					;;
-				no-preconditioning) PRECONDITIONING=false ;;
 				no-io-scaling) NOIOSCALING=true ;;
 				cpu-frequency=*) CPUFREQ="${OPTARG#*=}" ;;
 				perftop) PERFTOP=true ;;
@@ -224,10 +221,6 @@ fi
 CORES=$(get_cores "$CPUS_ALLOWED")
 NO_CORES_ARRAY=($CORES)
 NO_CORES=${#NO_CORES_ARRAY[@]}
-
-if $PRECONDITIONING; then
-	preconditioning
-fi
 
 if [[ "$PLUGIN" =~ "kernel" || "$PLUGIN" =~ "xnvme" ]]; then
 	$rootdir/scripts/setup.sh reset
