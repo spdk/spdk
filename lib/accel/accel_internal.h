@@ -32,6 +32,13 @@ struct accel_stats {
 	struct accel_operation_stats	operations[SPDK_ACCEL_OPC_LAST];
 	uint64_t			sequence_executed;
 	uint64_t			sequence_failed;
+
+	struct {
+		uint64_t task;
+		uint64_t sequence;
+		uint64_t iobuf;
+		uint64_t bufdesc;
+	} retry;
 };
 
 typedef void (*_accel_for_each_module_fn)(struct module_info *info);

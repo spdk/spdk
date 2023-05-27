@@ -445,6 +445,11 @@ rpc_accel_get_stats_done(struct accel_stats *stats, void *cb_arg)
 	}
 	spdk_json_write_array_end(w);
 
+	spdk_json_write_named_uint64(w, "retry_task", stats->retry.task);
+	spdk_json_write_named_uint64(w, "retry_sequence", stats->retry.sequence);
+	spdk_json_write_named_uint64(w, "retry_iobuf", stats->retry.iobuf);
+	spdk_json_write_named_uint64(w, "retry_bufdesc", stats->retry.bufdesc);
+
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(request, w);
 }

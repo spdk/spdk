@@ -299,6 +299,7 @@ _get_task(struct accel_io_channel *accel_ch, spdk_accel_completion_cb cb_fn, voi
 
 	accel_task = TAILQ_FIRST(&accel_ch->task_pool);
 	if (spdk_unlikely(accel_task == NULL)) {
+		accel_update_stats(accel_ch, retry.task, 1);
 		return NULL;
 	}
 
@@ -788,6 +789,7 @@ accel_get_buf(struct accel_io_channel *ch, uint64_t len)
 
 	buf = TAILQ_FIRST(&ch->buf_pool);
 	if (spdk_unlikely(buf == NULL)) {
+		accel_update_stats(ch, retry.bufdesc, 1);
 		return NULL;
 	}
 
@@ -817,6 +819,7 @@ accel_sequence_get(struct accel_io_channel *ch)
 
 	seq = TAILQ_FIRST(&ch->seq_pool);
 	if (spdk_unlikely(seq == NULL)) {
+		accel_update_stats(ch, retry.sequence, 1);
 		return NULL;
 	}
 
@@ -1319,6 +1322,7 @@ accel_sequence_alloc_buf(struct spdk_accel_sequence *seq, struct accel_buffer *b
 	buf->seq = seq;
 	buf->buf = spdk_iobuf_get(&ch->iobuf, buf->len, &buf->iobuf, cb_fn);
 	if (buf->buf == NULL) {
+		accel_update_stats(ch, retry.iobuf, 1);
 		return false;
 	}
 
