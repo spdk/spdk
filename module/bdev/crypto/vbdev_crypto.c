@@ -517,7 +517,20 @@ crypto_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 	struct vbdev_crypto *crypto_bdev = io_device;
 
 	crypto_ch->base_ch = spdk_bdev_get_io_channel(crypto_bdev->base_desc);
+	if (crypto_ch->base_ch == NULL) {
+		SPDK_ERRLOG("Failed to get base bdev IO channel (bdev: %s)\n",
+			    crypto_bdev->crypto_bdev.name);
+		return -ENOMEM;
+	}
+
 	crypto_ch->accel_channel = spdk_accel_get_io_channel();
+	if (crypto_ch->accel_channel == NULL) {
+		SPDK_ERRLOG("Failed to get accel IO channel (bdev: %s)\n",
+			    crypto_bdev->crypto_bdev.name);
+		spdk_put_io_channel(crypto_ch->base_ch);
+		return -ENOMEM;
+	}
+
 	crypto_ch->crypto_key = crypto_bdev->opts->key;
 
 	return 0;
