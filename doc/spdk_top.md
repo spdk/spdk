@@ -3,8 +3,8 @@
 The spdk_top application is designed to resemble the standard top in that it provides a real-time insights into CPU cores usage by SPDK
 lightweight threads and pollers. Have you ever wondered which CPU core is used most by your SPDK instance? Are you building your own bdev
 or library and want to know if your code is running efficiently? Are your new pollers busy most of the time? The spdk_top application uses
-RPC calls to collect performance metrics and displays them in a report that you can analyze and determine if your code is running efficiently
-so that you can tune your implementation and get more from SPDK.
+[RPC](https://spdk.io/doc/jsonrpc.html) calls to collect performance metrics and displays them in a report that you can analyze and determine
+if your code is running efficiently so that you can tune your implementation and get more from SPDK.
 
 Why doesn't the classic top utility work for SPDK? SPDK uses a polled-mode design; a reactor thread running on each CPU core assigned to
 an SPDK application schedules SPDK lightweight threads and pollers to run on the CPU core. Therefore, the standard Linux top utility is
