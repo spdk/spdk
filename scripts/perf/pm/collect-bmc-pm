@@ -349,7 +349,7 @@ get_cpu_socket_reading() {
 
 		# Convert to Watts - use bc since $interval can be an actual float
 		reading=$(calc "(${socket_uj[-1]} - ${socket_uj[-2]}) / 1000000 / $interval")
-		if ((reading < 0)); then
+		if [[ $reading == "-"* ]]; then
 			# Somehow this may happen, probably when the counter wraps over. Consider
 			# this as a faulty reading and don't include it since it may impact overall
 			# avg.
