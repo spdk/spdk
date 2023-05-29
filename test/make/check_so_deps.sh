@@ -101,6 +101,9 @@ function confirm_abi_deps() {
 	name = spdk_bs_opts
 [suppress_type]
 	name = spdk_app_opts
+# To be removed, comes from nvme_internal.h
+[suppress_type]
+	name = spdk_nvme_qpair
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
@@ -114,8 +117,6 @@ EOF
 
 		cmd_args=('abidiff'
 			$source_abi_dir/$release/$so_file "$libdir/$so_file"
-			'--headers-dir1' $source_abi_dir/$release/include
-			'--headers-dir2' $rootdir/include
 			'--leaf-changes-only' '--suppressions' $suppression_file)
 
 		if ! output=$("${cmd_args[@]}" --stat); then
