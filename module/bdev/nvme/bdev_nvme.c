@@ -6152,11 +6152,16 @@ build_trid_from_log_page_entry(struct spdk_nvme_transport_id *trid,
 }
 
 static void
-stop_discovery(struct discovery_ctx *ctx, spdk_bdev_nvme_stop_discovery_fn cb_fn, void *cb_ctx)
+_stop_discovery(void *_ctx)
 {
+	struct discovery_ctx *ctx = _ctx;
+
+	if (ctx->attach_in_progress > 0) {
+		spdk_thread_send_msg(spdk_get_thread(), _stop_discovery, ctx);
+		return;
+	}
+
 	ctx->stop = true;
-	ctx->stop_cb_fn = cb_fn;
-	ctx->cb_ctx = cb_ctx;
 
 	while (!TAILQ_EMPTY(&ctx->nvm_entry_ctxs)) {
 		struct discovery_entry_ctx *entry_ctx;
@@ -6179,6 +6184,20 @@ stop_discovery(struct discovery_ctx *ctx, spdk_bdev_nvme_stop_discovery_fn cb_fn
 
 	free(ctx->entry_ctx_in_use);
 	ctx->entry_ctx_in_use = NULL;
+}
+
+static void
+stop_discovery(struct discovery_ctx *ctx, spdk_bdev_nvme_stop_discovery_fn cb_fn, void *cb_ctx)
+{
+	ctx->stop_cb_fn = cb_fn;
+	ctx->cb_ctx = cb_ctx;
+
+	if (ctx->attach_in_progress > 0) {
+		DISCOVERY_INFOLOG(ctx, "stopping discovery with attach_in_progress: %"PRIu32"\n",
+				  ctx->attach_in_progress);
+	}
+
+	_stop_discovery(ctx);
 }
 
 static void
