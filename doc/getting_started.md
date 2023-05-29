@@ -112,4 +112,8 @@ A good example to start with is `build/examples/identify`, which prints
 out information about all of the NVMe devices on your system.
 
 Larger, more fully functional applications are available in the `app`
-directory. This includes the iSCSI and NVMe-oF target.
+directory. This includes the [iSCSI target](https://spdk.io/doc/iscsi.html)
+and [NVMe-oF target](https://spdk.io/doc/nvmf.html) and tools like
+[spdk_top](https://spdk.io/doc/spdk_top.html). This neat program simulates
+regular `top` application and shows SPDK threads, pollers and SPDK assigned
+CPU cores statistics in a form of interactive list.
