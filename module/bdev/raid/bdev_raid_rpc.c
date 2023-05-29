@@ -402,6 +402,11 @@ rpc_bdev_raid_remove_base_bdev_done(void *ctx, int status)
 	spdk_jsonrpc_send_bool_response(request, true);
 }
 
+static void
+rpc_bdev_raid_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
+{
+}
+
 /*
  * brief:
  * bdev_raid_remove_base_bdev function is the RPC for removing base bdev from a raid bdev.
@@ -416,7 +421,7 @@ static void
 rpc_bdev_raid_remove_base_bdev(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
-	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
 	char *name = NULL;
 	int rc;
 
@@ -428,18 +433,21 @@ rpc_bdev_raid_remove_base_bdev(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	bdev = spdk_bdev_get_by_name(name);
-	if (bdev == NULL) {
-		spdk_jsonrpc_send_error_response_fmt(request, -ENODEV, "base bdev %s is not found in config", name);
-		goto cleanup;
-	}
-
-	rc = raid_bdev_remove_base_bdev(bdev, rpc_bdev_raid_remove_base_bdev_done, request);
-	if (rc != 0) {
-		rpc_bdev_raid_remove_base_bdev_done(request, rc);
-	}
-
-cleanup:
+	rc = spdk_bdev_open_ext(name, false, rpc_bdev_raid_event_cb, NULL, &desc);
 	free(name);
+	if (rc != 0) {
+		goto err;
+	}
+
+	rc = raid_bdev_remove_base_bdev(spdk_bdev_desc_get_bdev(desc), rpc_bdev_raid_remove_base_bdev_done,
+					request);
+	spdk_bdev_close(desc);
+	if (rc != 0) {
+		goto err;
+	}
+
+	return;
+err:
+	rpc_bdev_raid_remove_base_bdev_done(request, rc);
 }
 SPDK_RPC_REGISTER("bdev_raid_remove_base_bdev", rpc_bdev_raid_remove_base_bdev, SPDK_RPC_RUNTIME)
