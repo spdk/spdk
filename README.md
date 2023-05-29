@@ -235,6 +235,27 @@ setup.sh for advanced users. To see the full list, run:
 scripts/setup.sh --help
 ~~~
 
+<a id="targets"></a>
+## Target applications
+
+After completing the build process, SPDK target applications can be found in
+`spdk/build/bin` directory:
+
+* [nvmf_tgt](https://spdk.io/doc/nvmf.html) - SPDK NVMe over Fabrics target
+  presents block devices over a fabrics,
+* [iscsi_tgt](https://spdk.io/doc/iscsi.html) - SPDK iSCSI target runs I/O
+  operations remotely with TCP/IP protocol,
+* [vhost](https://spdk.io/doc/vhost.html) - A vhost target provides a local
+  storage service as a process running on a local machine,
+* spdk_tgt - combines capabilities of all three applications.
+
+SPDK runs in a polled mode, which means it continuously checks for operation completions.
+This approach assures faster response than interrupt mode, but also lessens usefulness
+of tools like `top`, which only shows 100% CPU usage for SPDK assigned cores.
+[spdk_top](https://spdk.io/doc/spdk_top.html) is a program which simulates `top` application
+and uses SPDK's [JSON RPC](https://spdk.io/doc/jsonrpc.html) interface to present statistics
+about SPDK threads, pollers and CPU cores as an interactive list.
+
 <a id="examples"></a>
 ## Example Code
 
