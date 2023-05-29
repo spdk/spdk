@@ -106,6 +106,18 @@
  *
  */
 
+/* gcc-13 reports bogus Wdangling-pointer warnings on some of the macros below (see issue #3030) */
+#if defined(__GNUC__) && (__GNUC__ >= 13)
+#define SPDK_QE_SUPPRESS_WARNINGS() do {				\
+	_Pragma("GCC diagnostic push")					\
+	_Pragma("GCC diagnostic ignored \"-Wdangling-pointer\"")	\
+} while (0)
+#define SPDK_QE_UNSUPPRESS_WARNINGS() _Pragma("GCC diagnostic pop")
+#else
+#define SPDK_QE_SUPPRESS_WARNINGS()
+#define SPDK_QE_UNSUPPRESS_WARNINGS()
+#endif
+
 /*
  * Singly-linked Tail queue declarations.
  */
@@ -323,6 +335,7 @@ struct {								\
 	(*(((struct headname *)((elm)->field.tqe_prev))->tqh_last))
 
 #define TAILQ_SWAP(head1, head2, type, field) do {			\
+	SPDK_QE_SUPPRESS_WARNINGS();					\
 	struct type *swap_first = (head1)->tqh_first;			\
 	struct type **swap_last = (head1)->tqh_last;			\
 	(head1)->tqh_first = (head2)->tqh_first;			\
@@ -337,6 +350,7 @@ struct {								\
 		swap_first->field.tqe_prev = &(head2)->tqh_first;	\
 	else								\
 		(head2)->tqh_last = &(head2)->tqh_first;		\
+	SPDK_QE_UNSUPPRESS_WARNINGS();					\
 } while (0)
 
 #endif
