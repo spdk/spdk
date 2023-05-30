@@ -1928,8 +1928,6 @@ static void nvme_rdma_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t d
 static int
 nvme_rdma_qpair_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
 {
-	nvme_rdma_qpair_abort_reqs(&rqpair->qpair, 0);
-
 	if (ret) {
 		SPDK_DEBUGLOG(nvme, "Target did not respond to qpair disconnect.\n");
 		goto quiet;
@@ -1959,6 +1957,7 @@ nvme_rdma_qpair_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
 quiet:
 	rqpair->state = NVME_RDMA_QPAIR_STATE_EXITED;
 
+	nvme_rdma_qpair_abort_reqs(&rqpair->qpair, 0);
 	nvme_rdma_qpair_destroy(rqpair);
 	nvme_transport_ctrlr_disconnect_qpair_done(&rqpair->qpair);
 
@@ -1976,6 +1975,7 @@ nvme_rdma_qpair_wait_until_quiet(struct nvme_rdma_qpair *rqpair)
 
 	rqpair->state = NVME_RDMA_QPAIR_STATE_EXITED;
 
+	nvme_rdma_qpair_abort_reqs(&rqpair->qpair, 0);
 	nvme_rdma_qpair_destroy(rqpair);
 	nvme_transport_ctrlr_disconnect_qpair_done(&rqpair->qpair);
 
