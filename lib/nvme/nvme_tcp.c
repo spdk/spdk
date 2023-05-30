@@ -220,6 +220,16 @@ nvme_tcp_req_put(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *tcp_req)
 	TAILQ_INSERT_HEAD(&tqpair->free_reqs, tcp_req, link);
 }
 
+static inline void
+nvme_tcp_accel_submit_crc32c(struct nvme_tcp_poll_group *tgroup, uint32_t *dst,
+			     struct iovec *iovs, uint32_t iovcnt, uint32_t seed,
+			     spdk_nvme_accel_completion_cb cb_fn, void *cb_arg)
+{
+	struct spdk_nvme_poll_group *pg = tgroup->group.group;
+
+	pg->accel_fn_table.submit_accel_crc32c(pg->ctx, dst, iovs, iovcnt, seed, cb_fn, cb_arg);
+}
+
 static int
 nvme_tcp_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, const char *service)
 {
@@ -483,9 +493,9 @@ pdu_accel_compute_crc32(struct nvme_tcp_pdu *pdu)
 		return false;
 	}
 
-	tgroup->group.group->accel_fn_table.submit_accel_crc32c(tgroup->group.group->ctx,
-			&pdu->data_digest_crc32, pdu->data_iov,
-			pdu->data_iovcnt, 0, pdu_accel_compute_crc32_done, pdu);
+	nvme_tcp_accel_submit_crc32c(tgroup, &pdu->data_digest_crc32,
+				     pdu->data_iov, pdu->data_iovcnt, 0,
+				     pdu_accel_compute_crc32_done, pdu);
 
 	return true;
 }
@@ -1186,9 +1196,9 @@ nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair,
 			tcp_req->pdu->data_len = pdu->data_len;
 
 			nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
-			tgroup->group.group->accel_fn_table.submit_accel_crc32c(tgroup->group.group->ctx,
-					&tcp_req->pdu->data_digest_crc32, tcp_req->pdu->data_iov,
-					tcp_req->pdu->data_iovcnt, 0, tcp_data_recv_crc32_done, tcp_req);
+			nvme_tcp_accel_submit_crc32c(tgroup, &tcp_req->pdu->data_digest_crc32,
+						     tcp_req->pdu->data_iov, tcp_req->pdu->data_iovcnt, 0,
+						     tcp_data_recv_crc32_done, tcp_req);
 			return;
 		}
 
