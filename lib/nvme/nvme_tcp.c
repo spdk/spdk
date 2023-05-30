@@ -465,23 +465,41 @@ pdu_accel_compute_crc32_done(void *cb_arg, int status)
 	_tcp_write_pdu(pdu);
 }
 
+static bool
+pdu_accel_compute_crc32(struct nvme_tcp_pdu *pdu)
+{
+	struct nvme_tcp_qpair *tqpair = pdu->qpair;
+	struct nvme_tcp_poll_group *tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
+
+	/* Only support this limited case for the first step */
+	if (spdk_unlikely(nvme_qpair_get_state(&tqpair->qpair) < NVME_QPAIR_CONNECTED ||
+			  pdu->dif_ctx != NULL ||
+			  pdu->data_len % SPDK_NVME_TCP_DIGEST_ALIGNMENT != 0)) {
+		return false;
+	}
+
+	if (tqpair->qpair.poll_group == NULL ||
+	    tgroup->group.group->accel_fn_table.submit_accel_crc32c == NULL) {
+		return false;
+	}
+
+	tgroup->group.group->accel_fn_table.submit_accel_crc32c(tgroup->group.group->ctx,
+			&pdu->data_digest_crc32, pdu->data_iov,
+			pdu->data_iovcnt, 0, pdu_accel_compute_crc32_done, pdu);
+
+	return true;
+}
+
 static void
 pdu_compute_crc32(struct nvme_tcp_pdu *pdu)
 {
 	struct nvme_tcp_qpair *tqpair = pdu->qpair;
 	uint32_t crc32c;
-	struct nvme_tcp_poll_group *tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
 
 	/* Data Digest */
 	if (pdu->data_len > 0 && g_nvme_tcp_ddgst[pdu->hdr.common.pdu_type] &&
 	    tqpair->flags.host_ddgst_enable) {
-		/* Only support this limited case for the first step */
-		if ((nvme_qpair_get_state(&tqpair->qpair) >= NVME_QPAIR_CONNECTED) &&
-		    (tgroup != NULL && tgroup->group.group->accel_fn_table.submit_accel_crc32c) &&
-		    spdk_likely(!pdu->dif_ctx && (pdu->data_len % SPDK_NVME_TCP_DIGEST_ALIGNMENT == 0))) {
-			tgroup->group.group->accel_fn_table.submit_accel_crc32c(tgroup->group.group->ctx,
-					&pdu->data_digest_crc32, pdu->data_iov,
-					pdu->data_iovcnt, 0, pdu_accel_compute_crc32_done, pdu);
+		if (pdu_accel_compute_crc32(pdu)) {
 			return;
 		}
 
