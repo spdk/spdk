@@ -45,6 +45,6 @@ $rpc_py nvmf_delete_subsystem $nqn
 
 killprocess $nvmfpid
 
-rm -rf $traddr
+rm -rf $traddr "$output_dir/"vfio_user_fuzz_*.txt
 
 trap - SIGINT SIGTERM EXIT
