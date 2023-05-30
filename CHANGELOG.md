@@ -2,6 +2,10 @@
 
 ## v23.09: (Upcoming Release)
 
+### dpdk
+
+Updated DPDK submodule to DPDK 23.03.
+
 ## v23.05
 
 ### accel
