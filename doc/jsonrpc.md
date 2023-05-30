@@ -11984,6 +11984,76 @@ Example response:
 }
 ~~~
 
+### iobuf_get_stats {#rpc_iobuf_get_stats}
+
+Retrieve iobuf's statistics.
+
+#### Parameters
+
+None.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "iobuf_get_stats",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "module": "accel",
+      "small_pool": {
+        "cache": 0,
+        "main": 0,
+        "retry": 0
+      },
+      "large_pool": {
+        "cache": 0,
+        "main": 0,
+        "retry": 0
+      }
+    },
+    {
+      "module": "bdev",
+      "small_pool": {
+        "cache": 421965,
+        "main": 1218,
+        "retry": 0
+      },
+      "large_pool": {
+        "cache": 0,
+        "main": 0,
+        "retry": 0
+      }
+    },
+    {
+      "module": "spdk_nvmf_TCP_data",
+      "small_pool": {
+        "cache": 7,
+        "main": 0,
+        "retry": 0
+      },
+      "large_pool": {
+        "cache": 0,
+        "main": 0,
+        "retry": 0
+      }
+    }
+  ]
+}
+~~~
+
 ### bdev_nvme_start_mdns_discovery {#rpc_bdev_nvme_start_mdns_discovery}
 
 Starts an mDNS based discovery service for the specified service type for the

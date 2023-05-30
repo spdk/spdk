@@ -24,3 +24,9 @@ def iobuf_set_options(client, small_pool_count, large_pool_count, small_bufsize,
         params['large_bufsize'] = large_bufsize
 
     return client.call('iobuf_set_options', params)
+
+
+def iobuf_get_stats(client):
+    """Get iobuf statistics"""
+
+    return client.call('iobuf_get_stats')

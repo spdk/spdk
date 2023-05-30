@@ -993,6 +993,21 @@ struct spdk_iobuf_opts {
 	uint32_t large_bufsize;
 };
 
+struct spdk_iobuf_pool_stats {
+	/** Buffer got from local per-thread cache */
+	uint64_t	cache;
+	/** Buffer got from the main shared pool */
+	uint64_t	main;
+	/** Buffer missed and request to get buffer was queued */
+	uint64_t	retry;
+};
+
+struct spdk_iobuf_module_stats {
+	struct spdk_iobuf_pool_stats	small_pool;
+	struct spdk_iobuf_pool_stats	large_pool;
+	const char			*module;
+};
+
 struct spdk_iobuf_entry;
 
 typedef void (*spdk_iobuf_get_cb)(struct spdk_iobuf_entry *entry, void *buf);
@@ -1003,7 +1018,6 @@ struct spdk_iobuf_entry {
 	const void			*module;
 	STAILQ_ENTRY(spdk_iobuf_entry)	stailq;
 };
-
 
 struct spdk_iobuf_buffer {
 	STAILQ_ENTRY(spdk_iobuf_buffer)	stailq;
@@ -1025,6 +1039,8 @@ struct spdk_iobuf_pool {
 	spdk_iobuf_entry_stailq_t	*queue;
 	/** Buffer size */
 	uint32_t			bufsize;
+	/** Pool usage statistics */
+	struct spdk_iobuf_pool_stats	stats;
 };
 
 /** iobuf channel */
@@ -1164,6 +1180,19 @@ void *spdk_iobuf_get(struct spdk_iobuf_channel *ch, uint64_t len, struct spdk_io
  * \param len Length of the buffer (must be the exact same value as specified in `spdk_iobuf_get()`).
  */
 void spdk_iobuf_put(struct spdk_iobuf_channel *ch, void *buf, uint64_t len);
+
+typedef void (*spdk_iobuf_get_stats_cb)(struct spdk_iobuf_module_stats *modules,
+					uint32_t num_modules, void *cb_arg);
+
+/**
+ * Get iobuf statistics.
+ *
+ * \param cb_fn Callback to be executed once stats are gathered.
+ * \param cb_arg Argument passed to the callback function.
+ *
+ * \return 0 on success, negative errno otherwise.
+ */
+int spdk_iobuf_get_stats(spdk_iobuf_get_stats_cb cb_fn, void *cb_arg);
 
 #ifdef __cplusplus
 }

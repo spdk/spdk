@@ -3423,6 +3423,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('--large-bufsize', help='size of a large buffer', type=int)
     p.set_defaults(func=iobuf_set_options)
 
+    def iobuf_get_stats(args):
+        print_dict(rpc.iobuf.iobuf_get_stats(args.client))
+
+    p = subparsers.add_parser('iobuf_get_stats', help='Display iobuf statistics')
+    p.set_defaults(func=iobuf_get_stats)
+
     def bdev_nvme_start_mdns_discovery(args):
         rpc.bdev.bdev_nvme_start_mdns_discovery(args.client,
                                                 name=args.name,

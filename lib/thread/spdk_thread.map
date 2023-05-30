@@ -78,6 +78,7 @@
 	spdk_iobuf_entry_abort;
 	spdk_iobuf_get;
 	spdk_iobuf_put;
+	spdk_iobuf_get_stats;
 
 	# internal functions in spdk_internal/thread.h
 	spdk_poller_get_name;

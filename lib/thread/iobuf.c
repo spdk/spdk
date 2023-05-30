@@ -22,13 +22,15 @@
  * are explicitly configured, the math is instead done properly. This is only
  * for the default. */
 #define IOBUF_DEFAULT_LARGE_BUFSIZE	(132 * 1024)
+#define IOBUF_MAX_CHANNELS		64
 
 SPDK_STATIC_ASSERT(sizeof(struct spdk_iobuf_buffer) <= IOBUF_MIN_SMALL_BUFSIZE,
 		   "Invalid data offset");
 
 struct iobuf_channel {
-	spdk_iobuf_entry_stailq_t small_queue;
-	spdk_iobuf_entry_stailq_t large_queue;
+	spdk_iobuf_entry_stailq_t	small_queue;
+	spdk_iobuf_entry_stailq_t	large_queue;
+	struct spdk_iobuf_channel	*channels[IOBUF_MAX_CHANNELS];
 };
 
 struct iobuf_module {
@@ -59,6 +61,13 @@ static struct iobuf g_iobuf = {
 		.small_bufsize = IOBUF_DEFAULT_SMALL_BUFSIZE,
 		.large_bufsize = IOBUF_DEFAULT_LARGE_BUFSIZE,
 	},
+};
+
+struct iobuf_get_stats_ctx {
+	struct spdk_iobuf_module_stats	*modules;
+	uint32_t			num_modules;
+	spdk_iobuf_get_stats_cb		cb_fn;
+	void				*cb_arg;
 };
 
 static int
@@ -260,6 +269,18 @@ spdk_iobuf_channel_init(struct spdk_iobuf_channel *ch, const char *name,
 
 	iobuf_ch = spdk_io_channel_get_ctx(ioch);
 
+	for (i = 0; i < IOBUF_MAX_CHANNELS; ++i) {
+		if (iobuf_ch->channels[i] == NULL) {
+			iobuf_ch->channels[i] = ch;
+			break;
+		}
+	}
+
+	if (i == IOBUF_MAX_CHANNELS) {
+		SPDK_ERRLOG("Max number of iobuf channels (%" PRIu32 ") exceeded.\n", i);
+		goto error;
+	}
+
 	ch->small.queue = &iobuf_ch->small_queue;
 	ch->large.queue = &iobuf_ch->large_queue;
 	ch->small.pool = g_iobuf.small_pool;
@@ -313,6 +334,8 @@ spdk_iobuf_channel_fini(struct spdk_iobuf_channel *ch)
 {
 	struct spdk_iobuf_entry *entry __attribute__((unused));
 	struct spdk_iobuf_buffer *buf;
+	struct iobuf_channel *iobuf_ch;
+	uint32_t i;
 
 	/* Make sure none of the wait queue entries are coming from this module */
 	STAILQ_FOREACH(entry, ch->small.queue, stailq) {
@@ -338,6 +361,14 @@ spdk_iobuf_channel_fini(struct spdk_iobuf_channel *ch)
 
 	assert(ch->small.cache_count == 0);
 	assert(ch->large.cache_count == 0);
+
+	iobuf_ch = spdk_io_channel_get_ctx(ch->parent);
+	for (i = 0; i < IOBUF_MAX_CHANNELS; ++i) {
+		if (iobuf_ch->channels[i] == ch) {
+			iobuf_ch->channels[i] = NULL;
+			break;
+		}
+	}
 
 	spdk_put_io_channel(ch->parent);
 	ch->parent = NULL;
@@ -447,6 +478,7 @@ spdk_iobuf_get(struct spdk_iobuf_channel *ch, uint64_t len,
 		STAILQ_REMOVE_HEAD(&pool->cache, stailq);
 		assert(pool->cache_count > 0);
 		pool->cache_count--;
+		pool->stats.cache++;
 	} else {
 		struct spdk_iobuf_buffer *bufs[IOBUF_BATCH_SIZE];
 		size_t sz, i;
@@ -459,11 +491,13 @@ spdk_iobuf_get(struct spdk_iobuf_channel *ch, uint64_t len,
 				STAILQ_INSERT_TAIL(pool->queue, entry, stailq);
 				entry->module = ch->module;
 				entry->cb_fn = cb_fn;
+				pool->stats.retry++;
 			}
 
 			return NULL;
 		}
 
+		pool->stats.main++;
 		for (i = 0; i < (sz - 1); i++) {
 			STAILQ_INSERT_HEAD(&pool->cache, bufs[i], stailq);
 			pool->cache_count++;
@@ -524,4 +558,85 @@ spdk_iobuf_put(struct spdk_iobuf_channel *ch, void *buf, uint64_t len)
 		STAILQ_REMOVE_HEAD(pool->queue, stailq);
 		entry->cb_fn(entry, buf);
 	}
+}
+
+static void
+iobuf_get_channel_stats_done(struct spdk_io_channel_iter *iter, int status)
+{
+	struct iobuf_get_stats_ctx *ctx = spdk_io_channel_iter_get_ctx(iter);
+
+	ctx->cb_fn(ctx->modules, ctx->num_modules, ctx->cb_arg);
+	free(ctx->modules);
+	free(ctx);
+}
+
+static void
+iobuf_get_channel_stats(struct spdk_io_channel_iter *iter)
+{
+	struct iobuf_get_stats_ctx *ctx = spdk_io_channel_iter_get_ctx(iter);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(iter);
+	struct iobuf_channel *iobuf_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_iobuf_channel *channel;
+	struct iobuf_module *module;
+	struct spdk_iobuf_module_stats *it;
+	uint32_t i, j;
+
+	for (i = 0; i < ctx->num_modules; ++i) {
+		for (j = 0; j < IOBUF_MAX_CHANNELS; ++j) {
+			channel = iobuf_ch->channels[j];
+			if (channel == NULL) {
+				continue;
+			}
+
+			it = &ctx->modules[i];
+			module = (struct iobuf_module *)channel->module;
+			if (strcmp(it->module, module->name) == 0) {
+				it->small_pool.cache += channel->small.stats.cache;
+				it->small_pool.main += channel->small.stats.main;
+				it->small_pool.retry += channel->small.stats.retry;
+				it->large_pool.cache += channel->large.stats.cache;
+				it->large_pool.main += channel->large.stats.main;
+				it->large_pool.retry += channel->large.stats.retry;
+				break;
+			}
+		}
+	}
+
+	spdk_for_each_channel_continue(iter, 0);
+}
+
+int
+spdk_iobuf_get_stats(spdk_iobuf_get_stats_cb cb_fn, void *cb_arg)
+{
+	struct iobuf_module *module;
+	struct iobuf_get_stats_ctx *ctx;
+	uint32_t i;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		return -ENOMEM;
+	}
+
+	TAILQ_FOREACH(module, &g_iobuf.modules, tailq) {
+		++ctx->num_modules;
+	}
+
+	ctx->modules = calloc(ctx->num_modules, sizeof(struct spdk_iobuf_module_stats));
+	if (ctx->modules == NULL) {
+		free(ctx);
+		return -ENOMEM;
+	}
+
+	i = 0;
+	TAILQ_FOREACH(module, &g_iobuf.modules, tailq) {
+		ctx->modules[i].module = module->name;
+		++i;
+	}
+
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	spdk_for_each_channel(&g_iobuf, iobuf_get_channel_stats, ctx,
+			      iobuf_get_channel_stats_done);
+	return 0;
 }
