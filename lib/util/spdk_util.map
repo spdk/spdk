@@ -64,6 +64,9 @@
 	spdk_crc32c_iov_update;
 	spdk_crc32c_nvme;
 
+	# public functions in crc64.h
+	spdk_crc64_nvme;
+
 	# public functions in dif.h
 	spdk_dif_ctx_init;
 	spdk_dif_ctx_set_data_offset;
