@@ -6,6 +6,7 @@
 #include "spdk/dif.h"
 #include "spdk/crc16.h"
 #include "spdk/crc32.h"
+#include "spdk/crc64.h"
 #include "spdk/endian.h"
 #include "spdk/log.h"
 #include "spdk/util.h"
@@ -13,7 +14,11 @@
 #define APPTAG_IGNORE 0xFFFF
 #define REFTAG_MASK_16 0x00000000FFFFFFFF
 #define REFTAG_MASK_32 0xFFFFFFFFFFFFFFFF
+#define REFTAG_MASK_64 0x0000FFFFFFFFFFFF
 
+/* The variable size Storage Tag and Reference Tag is not supported yet,
+ * so the maximum size of the Reference Tag is assumed.
+ */
 struct spdk_dif {
 	union {
 		struct {
@@ -25,15 +30,19 @@ struct spdk_dif {
 			uint32_t guard;
 			uint16_t app_tag;
 			uint16_t stor_ref_space_p1;
-			/* The variable size Storage Tag and Reference Tag is not supported yet,
-			 * so the maximum size of the Reference Tag is assumed.
-			 */
 			uint64_t stor_ref_space_p2;
 		} g32;
+		struct {
+			uint64_t guard;
+			uint16_t app_tag;
+			uint16_t stor_ref_space_p1;
+			uint32_t stor_ref_space_p2;
+		} g64;
 	};
 };
 SPDK_STATIC_ASSERT(SPDK_SIZEOF_MEMBER(struct spdk_dif, g16) == 8, "Incorrect size");
 SPDK_STATIC_ASSERT(SPDK_SIZEOF_MEMBER(struct spdk_dif, g32) == 16, "Incorrect size");
+SPDK_STATIC_ASSERT(SPDK_SIZEOF_MEMBER(struct spdk_dif, g64) == 16, "Incorrect size");
 
 /* Context to iterate or create a iovec array.
  * Each sgl is either iterated or created at a time.
@@ -215,8 +224,10 @@ _dif_size(enum spdk_dif_pi_format dif_pi_format)
 
 	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
 		size = SPDK_SIZEOF_MEMBER(struct spdk_dif, g16);
-	} else {
+	} else if (dif_pi_format == SPDK_DIF_PI_FORMAT_32) {
 		size = SPDK_SIZEOF_MEMBER(struct spdk_dif, g32);
+	} else {
+		size = SPDK_SIZEOF_MEMBER(struct spdk_dif, g64);
 	}
 
 	return size;
@@ -257,63 +268,74 @@ _dif_guard_size(enum spdk_dif_pi_format dif_pi_format)
 
 	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
 		size = SPDK_SIZEOF_MEMBER(struct spdk_dif, g16.guard);
-	} else {
+	} else if (dif_pi_format == SPDK_DIF_PI_FORMAT_32) {
 		size = SPDK_SIZEOF_MEMBER(struct spdk_dif, g32.guard);
+	} else {
+		size = SPDK_SIZEOF_MEMBER(struct spdk_dif, g64.guard);
 	}
 
 	return size;
 }
 
 static inline void
-_dif_set_guard(struct spdk_dif *dif, uint32_t guard, enum spdk_dif_pi_format dif_pi_format)
+_dif_set_guard(struct spdk_dif *dif, uint64_t guard, enum spdk_dif_pi_format dif_pi_format)
 {
 	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
 		to_be16(&(dif->g16.guard), (uint16_t)guard);
+	} else if (dif_pi_format == SPDK_DIF_PI_FORMAT_32) {
+		to_be32(&(dif->g32.guard), (uint32_t)guard);
 	} else {
-		to_be32(&(dif->g32.guard), guard);
+		to_be64(&(dif->g64.guard), guard);
 	}
 }
 
-static inline uint32_t
+static inline uint64_t
 _dif_get_guard(struct spdk_dif *dif, enum spdk_dif_pi_format dif_pi_format)
 {
-	uint32_t guard;
+	uint64_t guard;
 
 	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
-		guard = (uint32_t)from_be16(&(dif->g16.guard));
+		guard = (uint64_t)from_be16(&(dif->g16.guard));
+	} else if (dif_pi_format == SPDK_DIF_PI_FORMAT_32) {
+		guard = (uint64_t)from_be32(&(dif->g32.guard));
 	} else {
-		guard = from_be32(&(dif->g32.guard));
+		guard = from_be64(&(dif->g64.guard));
 	}
 
 	return guard;
 }
 
-static inline uint32_t
-_dif_generate_guard(uint32_t guard_seed, void *buf, size_t buf_len,
+static inline uint64_t
+_dif_generate_guard(uint64_t guard_seed, void *buf, size_t buf_len,
 		    enum spdk_dif_pi_format dif_pi_format)
 {
-	uint32_t guard;
+	uint64_t guard;
 
 	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
-		guard = (uint32_t)spdk_crc16_t10dif((uint16_t)guard_seed, buf, buf_len);
+		guard = (uint64_t)spdk_crc16_t10dif((uint16_t)guard_seed, buf, buf_len);
+	} else if (dif_pi_format == SPDK_DIF_PI_FORMAT_32) {
+		guard = (uint64_t)spdk_crc32c_nvme(buf, buf_len, guard_seed);
 	} else {
-		guard = spdk_crc32c_nvme(buf, buf_len, guard_seed);
+		guard = spdk_crc64_nvme(buf, buf_len, guard_seed);
 	}
 
 	return guard;
 }
 
-static inline uint32_t
-_dif_generate_guard_copy(uint32_t guard_seed, void *dst, void *src, size_t buf_len,
+static inline uint64_t
+_dif_generate_guard_copy(uint64_t guard_seed, void *dst, void *src, size_t buf_len,
 			 enum spdk_dif_pi_format dif_pi_format)
 {
-	uint32_t guard;
+	uint64_t guard;
 
 	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
-		guard = (uint32_t)spdk_crc16_t10dif_copy((uint16_t)guard_seed, dst, src, buf_len);
+		guard = (uint64_t)spdk_crc16_t10dif_copy((uint16_t)guard_seed, dst, src, buf_len);
+	} else if (dif_pi_format == SPDK_DIF_PI_FORMAT_32) {
+		memcpy(dst, src, buf_len);
+		guard = (uint64_t)spdk_crc32c_nvme(src, buf_len, guard_seed);
 	} else {
 		memcpy(dst, src, buf_len);
-		guard = spdk_crc32c_nvme(src, buf_len, guard_seed);
+		guard = spdk_crc64_nvme(src, buf_len, guard_seed);
 	}
 
 	return guard;
@@ -336,8 +358,10 @@ _dif_set_apptag(struct spdk_dif *dif, uint16_t app_tag, enum spdk_dif_pi_format 
 {
 	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
 		to_be16(&(dif->g16.app_tag), app_tag);
-	} else {
+	} else if (dif_pi_format == SPDK_DIF_PI_FORMAT_32) {
 		to_be16(&(dif->g32.app_tag), app_tag);
+	} else {
+		to_be16(&(dif->g64.app_tag), app_tag);
 	}
 }
 
@@ -348,8 +372,10 @@ _dif_get_apptag(struct spdk_dif *dif, enum spdk_dif_pi_format dif_pi_format)
 
 	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
 		app_tag = from_be16(&(dif->g16.app_tag));
-	} else {
+	} else if (dif_pi_format == SPDK_DIF_PI_FORMAT_32) {
 		app_tag = from_be16(&(dif->g32.app_tag));
+	} else {
+		app_tag = from_be16(&(dif->g64.app_tag));
 	}
 
 	return app_tag;
@@ -368,9 +394,11 @@ _dif_reftag_offset(enum spdk_dif_pi_format dif_pi_format)
 
 	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
 		offset = _dif_apptag_offset(dif_pi_format) + _dif_apptag_size();
-	} else {
+	} else if (dif_pi_format == SPDK_DIF_PI_FORMAT_32) {
 		offset = _dif_apptag_offset(dif_pi_format) + _dif_apptag_size()
 			 + SPDK_SIZEOF_MEMBER(struct spdk_dif, g32.stor_ref_space_p1);
+	} else {
+		offset = _dif_apptag_offset(dif_pi_format) + _dif_apptag_size();
 	}
 
 	return offset;
@@ -383,8 +411,11 @@ _dif_reftag_size(enum spdk_dif_pi_format dif_pi_format)
 
 	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
 		size = SPDK_SIZEOF_MEMBER(struct spdk_dif, g16.stor_ref_space);
-	} else {
+	} else if (dif_pi_format == SPDK_DIF_PI_FORMAT_32) {
 		size = SPDK_SIZEOF_MEMBER(struct spdk_dif, g32.stor_ref_space_p2);
+	} else {
+		size = SPDK_SIZEOF_MEMBER(struct spdk_dif, g64.stor_ref_space_p1) +
+		       SPDK_SIZEOF_MEMBER(struct spdk_dif, g64.stor_ref_space_p2);
 	}
 
 	return size;
@@ -395,8 +426,11 @@ _dif_set_reftag(struct spdk_dif *dif, uint64_t ref_tag, enum spdk_dif_pi_format 
 {
 	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
 		to_be32(&(dif->g16.stor_ref_space), (uint32_t)ref_tag);
-	} else {
+	} else if (dif_pi_format == SPDK_DIF_PI_FORMAT_32) {
 		to_be64(&(dif->g32.stor_ref_space_p2), ref_tag);
+	} else {
+		to_be16(&(dif->g64.stor_ref_space_p1), (uint16_t)(ref_tag >> 32));
+		to_be32(&(dif->g64.stor_ref_space_p2), (uint32_t)ref_tag);
 	}
 }
 
@@ -407,8 +441,12 @@ _dif_get_reftag(struct spdk_dif *dif, enum spdk_dif_pi_format dif_pi_format)
 
 	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
 		ref_tag = (uint64_t)from_be32(&(dif->g16.stor_ref_space));
-	} else {
+	} else if (dif_pi_format == SPDK_DIF_PI_FORMAT_32) {
 		ref_tag = from_be64(&(dif->g32.stor_ref_space_p2));
+	} else {
+		ref_tag = (uint64_t)from_be16(&(dif->g64.stor_ref_space_p1));
+		ref_tag <<= 32;
+		ref_tag |= (uint64_t)from_be32(&(dif->g64.stor_ref_space_p2));
 	}
 
 	return ref_tag;
@@ -425,8 +463,10 @@ _dif_reftag_match(struct spdk_dif *dif, uint64_t ref_tag,
 
 	if (dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
 		match = (_ref_tag == (ref_tag & REFTAG_MASK_16));
-	} else {
+	} else if (dif_pi_format == SPDK_DIF_PI_FORMAT_32) {
 		match = (_ref_tag == ref_tag);
+	} else {
+		match = (_ref_tag == (ref_tag & REFTAG_MASK_64));
 	}
 
 	return match;
@@ -442,14 +482,15 @@ int
 spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
 		  bool md_interleave, bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
 		  uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag,
-		  uint32_t data_offset, uint32_t guard_seed, struct spdk_dif_ctx_init_ext_opts *opts)
+		  uint32_t data_offset, uint64_t guard_seed, struct spdk_dif_ctx_init_ext_opts *opts)
 {
 	uint32_t data_block_size;
 	enum spdk_dif_pi_format dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 
 	if (opts != NULL) {
 		if (opts->dif_pi_format != SPDK_DIF_PI_FORMAT_16 &&
-		    opts->dif_pi_format != SPDK_DIF_PI_FORMAT_32) {
+		    opts->dif_pi_format != SPDK_DIF_PI_FORMAT_32 &&
+		    opts->dif_pi_format != SPDK_DIF_PI_FORMAT_64) {
 			SPDK_ERRLOG("No valid DIF PI format provided.\n");
 			return -EINVAL;
 		}
@@ -532,7 +573,7 @@ spdk_dif_ctx_set_remapped_init_ref_tag(struct spdk_dif_ctx *ctx,
 }
 
 static void
-_dif_generate(void *_dif, uint32_t guard, uint32_t offset_blocks,
+_dif_generate(void *_dif, uint64_t guard, uint32_t offset_blocks,
 	      const struct spdk_dif_ctx *ctx)
 {
 	struct spdk_dif *dif = _dif;
@@ -566,7 +607,7 @@ dif_generate(struct _dif_sgl *sgl, uint32_t num_blocks, const struct spdk_dif_ct
 {
 	uint32_t offset_blocks = 0;
 	uint8_t *buf;
-	uint32_t guard = 0;
+	uint64_t guard = 0;
 
 	while (offset_blocks < num_blocks) {
 		_dif_sgl_get_buf(sgl, &buf, NULL);
@@ -582,9 +623,9 @@ dif_generate(struct _dif_sgl *sgl, uint32_t num_blocks, const struct spdk_dif_ct
 	}
 }
 
-static uint32_t
+static uint64_t
 _dif_generate_split(struct _dif_sgl *sgl, uint32_t offset_in_block, uint32_t data_len,
-		    uint32_t guard, uint32_t offset_blocks, const struct spdk_dif_ctx *ctx)
+		    uint64_t guard, uint32_t offset_blocks, const struct spdk_dif_ctx *ctx)
 {
 	uint32_t offset_in_dif, buf_len;
 	uint8_t *buf;
@@ -649,7 +690,7 @@ dif_generate_split(struct _dif_sgl *sgl, uint32_t num_blocks,
 		   const struct spdk_dif_ctx *ctx)
 {
 	uint32_t offset_blocks;
-	uint32_t guard = 0;
+	uint64_t guard = 0;
 
 	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 		guard = ctx->guard_seed;
@@ -699,11 +740,11 @@ _dif_error_set(struct spdk_dif_error *err_blk, uint8_t err_type,
 }
 
 static int
-_dif_verify(void *_dif, uint32_t guard, uint32_t offset_blocks,
+_dif_verify(void *_dif, uint64_t guard, uint32_t offset_blocks,
 	    const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err_blk)
 {
 	struct spdk_dif *dif = _dif;
-	uint32_t _guard;
+	uint64_t _guard;
 	uint16_t _app_tag;
 	uint64_t ref_tag, _ref_tag;
 
@@ -751,7 +792,7 @@ _dif_verify(void *_dif, uint32_t guard, uint32_t offset_blocks,
 			_dif_error_set(err_blk, SPDK_DIF_GUARD_ERROR, _guard, guard,
 				       offset_blocks);
 			SPDK_ERRLOG("Failed to compare Guard: LBA=%" PRIu64 "," \
-				    "  Expected=%x, Actual=%x\n",
+				    "  Expected=%lx, Actual=%lx\n",
 				    ref_tag, _guard, guard);
 			return -1;
 		}
@@ -812,7 +853,7 @@ dif_verify(struct _dif_sgl *sgl, uint32_t num_blocks,
 	uint32_t offset_blocks = 0;
 	int rc;
 	uint8_t *buf;
-	uint32_t guard = 0;
+	uint64_t guard = 0;
 
 	while (offset_blocks < num_blocks) {
 		_dif_sgl_get_buf(sgl, &buf, NULL);
@@ -835,12 +876,12 @@ dif_verify(struct _dif_sgl *sgl, uint32_t num_blocks,
 
 static int
 _dif_verify_split(struct _dif_sgl *sgl, uint32_t offset_in_block, uint32_t data_len,
-		  uint32_t *_guard, uint32_t offset_blocks,
+		  uint64_t *_guard, uint32_t offset_blocks,
 		  const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err_blk)
 {
 	uint32_t offset_in_dif, buf_len;
 	uint8_t *buf;
-	uint32_t guard;
+	uint64_t guard;
 	struct spdk_dif dif = {};
 	int rc;
 
@@ -906,7 +947,7 @@ dif_verify_split(struct _dif_sgl *sgl, uint32_t num_blocks,
 		 const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err_blk)
 {
 	uint32_t offset_blocks;
-	uint32_t guard = 0;
+	uint64_t guard = 0;
 	int rc;
 
 	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
@@ -1039,7 +1080,7 @@ dif_generate_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 {
 	uint32_t offset_blocks = 0, data_block_size;
 	uint8_t *src, *dst;
-	uint32_t guard;
+	uint64_t guard;
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
@@ -1070,8 +1111,8 @@ _dif_generate_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 			 uint32_t offset_blocks, const struct spdk_dif_ctx *ctx)
 {
 	uint32_t offset_in_block, src_len, data_block_size;
-	uint32_t guard = 0;
 	uint8_t *src, *dst;
+	uint64_t guard = 0;
 
 	_dif_sgl_get_buf(dst_sgl, &dst, NULL);
 
@@ -1165,7 +1206,7 @@ dif_verify_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 	uint32_t offset_blocks = 0, data_block_size;
 	uint8_t *src, *dst;
 	int rc;
-	uint32_t guard;
+	uint64_t guard;
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
@@ -1202,8 +1243,8 @@ _dif_verify_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 		       struct spdk_dif_error *err_blk)
 {
 	uint32_t offset_in_block, dst_len, data_block_size;
-	uint32_t guard = 0;
 	uint8_t *src, *dst;
+	uint64_t guard = 0;
 
 	_dif_sgl_get_buf(src_sgl, &src, NULL);
 
@@ -1442,8 +1483,8 @@ dix_generate(struct _dif_sgl *data_sgl, struct _dif_sgl *md_sgl,
 	     uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
 {
 	uint32_t offset_blocks = 0;
-	uint32_t guard;
 	uint8_t *data_buf, *md_buf;
+	uint64_t guard;
 
 	while (offset_blocks < num_blocks) {
 		_dif_sgl_get_buf(data_sgl, &data_buf, NULL);
@@ -1470,8 +1511,8 @@ _dix_generate_split(struct _dif_sgl *data_sgl, struct _dif_sgl *md_sgl,
 		    uint32_t offset_blocks, const struct spdk_dif_ctx *ctx)
 {
 	uint32_t offset_in_block, data_buf_len;
-	uint32_t guard = 0;
 	uint8_t *data_buf, *md_buf;
+	uint64_t guard = 0;
 
 	_dif_sgl_get_buf(md_sgl, &md_buf, NULL);
 
@@ -1548,8 +1589,8 @@ dix_verify(struct _dif_sgl *data_sgl, struct _dif_sgl *md_sgl,
 	   struct spdk_dif_error *err_blk)
 {
 	uint32_t offset_blocks = 0;
-	uint32_t guard;
 	uint8_t *data_buf, *md_buf;
+	uint64_t guard;
 	int rc;
 
 	while (offset_blocks < num_blocks) {
@@ -1583,8 +1624,8 @@ _dix_verify_split(struct _dif_sgl *data_sgl, struct _dif_sgl *md_sgl,
 		  struct spdk_dif_error *err_blk)
 {
 	uint32_t offset_in_block, data_buf_len;
-	uint32_t guard = 0;
 	uint8_t *data_buf, *md_buf;
+	uint64_t guard = 0;
 
 	_dif_sgl_get_buf(md_sgl, &md_buf, NULL);
 
@@ -1841,7 +1882,7 @@ spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 {
 	uint32_t buf_len = 0, buf_offset = 0;
 	uint32_t len, offset_in_block, offset_blocks;
-	uint32_t guard = 0;
+	uint64_t guard = 0;
 	struct _dif_sgl sgl;
 	int rc;
 
@@ -1886,7 +1927,7 @@ spdk_dif_verify_stream(struct iovec *iovs, int iovcnt,
 {
 	uint32_t buf_len = 0, buf_offset = 0;
 	uint32_t len, offset_in_block, offset_blocks;
-	uint32_t guard = 0;
+	uint64_t guard = 0;
 	struct _dif_sgl sgl;
 	int rc = 0;
 
