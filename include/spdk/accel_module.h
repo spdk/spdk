@@ -37,7 +37,6 @@ enum spdk_accel_crypto_tweak_mode {
 	 * so initial lba = (BLOCK_SIZE_IN_BYTES / 512) * LBA
 	 * Tweak[127:0] = {lba[63:0], 64'b0} */
 	SPDK_ACCEL_CRYPTO_TWEAK_MODE_INCR_512_UPPER_LBA,
-	SPDK_ACCEL_CRYPTO_TWEAK_MODE_MAX,
 };
 
 struct spdk_accel_crypto_key {

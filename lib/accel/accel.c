@@ -36,7 +36,6 @@
 #define ACCEL_BUFFER_OFFSET_MASK	((uintptr_t)ACCEL_BUFFER_BASE - 1)
 
 #define ACCEL_CRYPTO_TWEAK_MODE_DEFAULT	SPDK_ACCEL_CRYPTO_TWEAK_MODE_SIMPLE_LBA
-#define ACCEL_CRYPTO_TWEAK_MODE_CHAR_MAX	32
 
 struct accel_module {
 	struct spdk_accel_module_if	*module;
@@ -2033,7 +2032,7 @@ accel_aes_xts_keys_equal(const char *k1, size_t k1_len, const char *k2, size_t k
 	return x == 0;
 }
 
-static const char *g_tweak_modes[SPDK_ACCEL_CRYPTO_TWEAK_MODE_MAX] = {
+static const char *g_tweak_modes[] = {
 	[SPDK_ACCEL_CRYPTO_TWEAK_MODE_SIMPLE_LBA] = "SIMPLE_LBA",
 	[SPDK_ACCEL_CRYPTO_TWEAK_MODE_JOIN_NEG_LBA_WITH_LBA] = "JOIN_NEG_LBA_WITH_LBA",
 	[SPDK_ACCEL_CRYPTO_TWEAK_MODE_INCR_512_FULL_LBA] = "INCR_512_FULL_LBA",
@@ -2173,10 +2172,10 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 			goto error;
 		}
 
-		for (uint32_t i = 0; i < SPDK_COUNTOF(g_tweak_modes); ++i) {
-			assert(strlen(g_tweak_modes[i]) < ACCEL_CRYPTO_TWEAK_MODE_CHAR_MAX);
+		for (i = 0; i < SPDK_COUNTOF(g_tweak_modes); ++i) {
+			assert(g_tweak_modes[i]);
 
-			if (strncmp(param->tweak_mode, g_tweak_modes[i], ACCEL_CRYPTO_TWEAK_MODE_CHAR_MAX) == 0) {
+			if (strncmp(param->tweak_mode, g_tweak_modes[i], strlen(g_tweak_modes[i])) == 0) {
 				key->tweak_mode = i;
 				found = true;
 				break;
