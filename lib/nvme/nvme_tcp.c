@@ -438,7 +438,7 @@ _tcp_write_pdu(struct nvme_tcp_pdu *pdu)
 }
 
 static void
-data_crc32_accel_done(void *cb_arg, int status)
+pdu_accel_compute_crc32_done(void *cb_arg, int status)
 {
 	struct nvme_tcp_pdu *pdu = cb_arg;
 
@@ -455,7 +455,7 @@ data_crc32_accel_done(void *cb_arg, int status)
 }
 
 static void
-pdu_data_crc32_compute(struct nvme_tcp_pdu *pdu)
+pdu_compute_crc32(struct nvme_tcp_pdu *pdu)
 {
 	struct nvme_tcp_qpair *tqpair = pdu->qpair;
 	uint32_t crc32c;
@@ -470,7 +470,7 @@ pdu_data_crc32_compute(struct nvme_tcp_pdu *pdu)
 		    spdk_likely(!pdu->dif_ctx && (pdu->data_len % SPDK_NVME_TCP_DIGEST_ALIGNMENT == 0))) {
 			tgroup->group.group->accel_fn_table.submit_accel_crc32c(tgroup->group.group->ctx,
 					&pdu->data_digest_crc32, pdu->data_iov,
-					pdu->data_iovcnt, 0, data_crc32_accel_done, pdu);
+					pdu->data_iovcnt, 0, pdu_accel_compute_crc32_done, pdu);
 			return;
 		}
 
@@ -502,7 +502,7 @@ nvme_tcp_qpair_write_pdu(struct nvme_tcp_qpair *tqpair,
 		MAKE_DIGEST_WORD((uint8_t *)pdu->hdr.raw + hlen, crc32c);
 	}
 
-	pdu_data_crc32_compute(pdu);
+	pdu_compute_crc32(pdu);
 
 	return 0;
 }
