@@ -417,8 +417,8 @@ rpc_accel_get_stats_done(struct accel_stats *stats, void *cb_arg)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w;
-	const char *name;
-	int i;
+	const char *name, *module_name;
+	int i, rc;
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_object_begin(w);
@@ -431,8 +431,13 @@ rpc_accel_get_stats_done(struct accel_stats *stats, void *cb_arg)
 			continue;
 		}
 		_accel_get_opc_name(i, &name);
+		rc = spdk_accel_get_opc_module_name(i, &module_name);
+		if (rc) {
+			continue;
+		}
 		spdk_json_write_object_begin(w);
 		spdk_json_write_named_string(w, "opcode", name);
+		spdk_json_write_named_string(w, "module_name", module_name);
 		spdk_json_write_named_uint64(w, "executed", stats->operations[i].executed);
 		spdk_json_write_named_uint64(w, "failed", stats->operations[i].failed);
 		spdk_json_write_named_uint64(w, "num_bytes", stats->operations[i].num_bytes);
