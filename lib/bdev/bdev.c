@@ -425,7 +425,7 @@ static void bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch);
 
 #define bdev_get_ext_io_opt(opts, field, defval) \
 	(((opts) != NULL && offsetof(struct spdk_bdev_ext_io_opts, field) + \
-	 sizeof((opts)->field) <= sizeof(*(opts))) ? (opts)->field : (defval))
+	 sizeof((opts)->field) <= (opts)->size) ? (opts)->field : (defval))
 
 void
 spdk_bdev_get_opts(struct spdk_bdev_opts *opts, size_t opts_size)
