@@ -12,9 +12,6 @@
 DEFINE_STUB(nvme_io_msg_send, int, (struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 				    spdk_nvme_io_msg_fn fn, void *arg), 0);
 
-DEFINE_STUB(spdk_nvme_ctrlr_alloc_cmb_io_buffer, void *, (struct spdk_nvme_ctrlr *ctrlr,
-		size_t size), NULL);
-
 DEFINE_STUB(spdk_nvme_ctrlr_cmd_admin_raw, int, (struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_cmd *cmd, void *buf, uint32_t len,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);

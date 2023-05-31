@@ -60,12 +60,9 @@ DEFINE_STUB(spdk_mempool_create_ctor, struct spdk_mempool *,
 DEFINE_STUB(spdk_mempool_obj_iter, uint32_t,
 	    (struct spdk_mempool *mp, spdk_mempool_obj_cb_t obj_cb, void *obj_cb_arg), 0);
 DEFINE_STUB_V(ftl_reloc, (struct ftl_reloc *reloc));
-DEFINE_STUB_V(ftl_reloc_add, (struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
-			      size_t num_blocks, int prio, bool defrag));
 DEFINE_STUB_V(ftl_reloc_free, (struct ftl_reloc *reloc));
 DEFINE_STUB_V(ftl_reloc_halt, (struct ftl_reloc *reloc));
 DEFINE_STUB(ftl_reloc_init, struct ftl_reloc *, (struct spdk_ftl_dev *dev), NULL);
-DEFINE_STUB(ftl_reloc_is_defrag_active, bool, (const struct ftl_reloc *reloc), false);
 DEFINE_STUB(ftl_reloc_is_halted, bool, (const struct ftl_reloc *reloc), false);
 DEFINE_STUB_V(ftl_reloc_resume, (struct ftl_reloc *reloc));
 DEFINE_STUB_V(ftl_l2p_unpin, (struct spdk_ftl_dev *dev, uint64_t lba, uint64_t count));
@@ -75,7 +72,6 @@ DEFINE_STUB(ftl_l2p_get, ftl_addr, (struct spdk_ftl_dev *dev, uint64_t lba), 0);
 DEFINE_STUB_V(ftl_mempool_put, (struct ftl_mempool *mpool, void *element));
 
 #if defined(DEBUG)
-DEFINE_STUB_V(ftl_trace_defrag_band, (struct spdk_ftl_dev *dev, const struct ftl_band *band));
 DEFINE_STUB_V(ftl_trace_submission, (struct spdk_ftl_dev *dev, const struct ftl_io *io,
 				     ftl_addr addr, size_t addr_cnt));
 DEFINE_STUB_V(ftl_trace_lba_io_init, (struct spdk_ftl_dev *dev, const struct ftl_io *io));
@@ -83,8 +79,6 @@ DEFINE_STUB_V(ftl_trace_limits, (struct spdk_ftl_dev *dev, int limit, size_t num
 DEFINE_STUB(ftl_trace_alloc_id, uint64_t, (struct spdk_ftl_dev *dev), 0);
 DEFINE_STUB_V(ftl_trace_completion, (struct spdk_ftl_dev *dev, const struct ftl_io *io,
 				     enum ftl_trace_completion type));
-DEFINE_STUB_V(ftl_trace_wbuf_fill, (struct spdk_ftl_dev *dev, const struct ftl_io *io));
-DEFINE_STUB_V(ftl_trace_wbuf_pop, (struct spdk_ftl_dev *dev, const struct ftl_wbuf_entry *entry));
 DEFINE_STUB_V(ftl_trace_write_band, (struct spdk_ftl_dev *dev, const struct ftl_band *band));
 #endif
 

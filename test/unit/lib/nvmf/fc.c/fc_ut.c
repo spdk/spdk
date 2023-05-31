@@ -134,8 +134,6 @@ nvmf_fc_lld_fini(spdk_nvmf_transport_destroy_done_cb cb_fn, void *ctx)
 
 DEFINE_STUB_V(nvmf_fc_lld_start, (void));
 DEFINE_STUB(nvmf_fc_init_q, int, (struct spdk_nvmf_fc_hwqp *hwqp), 0);
-DEFINE_STUB_V(nvmf_fc_reinit_q, (void *queues_prev, void *queues_curr));
-DEFINE_STUB(nvmf_fc_init_rqpair_buffers, int, (struct spdk_nvmf_fc_hwqp *hwqp), 0);
 DEFINE_STUB(nvmf_fc_set_q_online_state, int, (struct spdk_nvmf_fc_hwqp *hwqp, bool online), 0);
 DEFINE_STUB(nvmf_fc_put_xchg, int, (struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_xchg *xri),
 	    0);
@@ -171,9 +169,6 @@ DEFINE_STUB_V(nvmf_fc_dump_all_queues, (struct spdk_nvmf_fc_hwqp *ls_queue,
 					struct spdk_nvmf_fc_hwqp *io_queues,
 					uint32_t num_io_queues,
 					struct spdk_nvmf_fc_queue_dump_info *dump_info));
-DEFINE_STUB_V(nvmf_fc_get_xri_info, (struct spdk_nvmf_fc_hwqp *hwqp,
-				     struct spdk_nvmf_fc_xchg_info *info));
-DEFINE_STUB(nvmf_fc_get_rsvd_thread, struct spdk_thread *, (void), NULL);
 
 uint32_t
 nvmf_fc_process_queue(struct spdk_nvmf_fc_hwqp *hwqp)

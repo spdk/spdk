@@ -198,11 +198,6 @@ DEFINE_STUB(spdk_sock_group_get_ctx,
 	    (struct spdk_sock_group *group),
 	    NULL);
 
-DEFINE_STUB(spdk_sock_set_priority,
-	    int,
-	    (struct spdk_sock *sock, int priority),
-	    0);
-
 DEFINE_STUB_V(nvmf_ns_reservation_request, (void *ctx));
 
 DEFINE_STUB_V(spdk_nvme_trid_populate_transport, (struct spdk_nvme_transport_id *trid,
@@ -238,7 +233,6 @@ DEFINE_STUB(spdk_bdev_get_zone_size, uint64_t, (const struct spdk_bdev *bdev), 0
 DEFINE_STUB(spdk_nvme_ns_get_format_index, uint32_t,
 	    (const struct spdk_nvme_ns_data *nsdata), 0);
 
-DEFINE_STUB(spdk_sock_get_default_impl_name, const char *, (void), "");
 DEFINE_STUB(spdk_sock_get_impl_name, const char *, (struct spdk_sock *sock), "");
 
 struct spdk_io_channel *

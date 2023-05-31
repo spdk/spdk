@@ -18,9 +18,6 @@ SPDK_LOG_REGISTER_COMPONENT(nvme)
 DEFINE_STUB(nvme_qpair_submit_request,
 	    int, (struct spdk_nvme_qpair *qpair, struct nvme_request *req), 0);
 
-DEFINE_STUB(spdk_sock_set_priority,
-	    int, (struct spdk_sock *sock, int priority), 0);
-
 DEFINE_STUB(spdk_nvme_poll_group_remove, int, (struct spdk_nvme_poll_group *group,
 		struct spdk_nvme_qpair *qpair), 0);
 DEFINE_STUB(spdk_sock_get_optimal_sock_group,

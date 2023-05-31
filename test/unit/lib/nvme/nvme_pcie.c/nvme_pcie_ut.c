@@ -50,9 +50,6 @@ DEFINE_STUB(spdk_pci_enumerate, int,
 	    (struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx),
 	    -1);
 
-DEFINE_STUB(nvme_transport_get_name, const char *, (const struct spdk_nvme_transport *transport),
-	    NULL);
-
 SPDK_LOG_REGISTER_COMPONENT(nvme)
 
 struct dev_mem_resource {

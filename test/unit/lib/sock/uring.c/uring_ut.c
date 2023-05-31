@@ -23,9 +23,6 @@ DEFINE_STUB_V(spdk_sock_map_cleanup, (struct spdk_sock_map *map));
 
 DEFINE_STUB_V(spdk_net_impl_register, (struct spdk_net_impl *impl, int priority));
 DEFINE_STUB(spdk_sock_close, int, (struct spdk_sock **s), 0);
-DEFINE_STUB(__io_uring_get_cqe, int, (struct io_uring *ring, struct io_uring_cqe **cqe_ptr,
-				      unsigned submit,
-				      unsigned wait_nr, sigset_t *sigmask), 0);
 DEFINE_STUB(io_uring_submit, int, (struct io_uring *ring), 0);
 DEFINE_STUB(io_uring_queue_init, int, (unsigned entries, struct io_uring *ring, unsigned flags), 0);
 DEFINE_STUB_V(io_uring_queue_exit, (struct io_uring *ring));

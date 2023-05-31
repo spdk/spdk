@@ -80,8 +80,6 @@ DEFINE_STUB(rdma_get_dst_port, __be16, (struct rdma_cm_id *id), 0);
 DEFINE_STUB(rdma_get_src_port, __be16, (struct rdma_cm_id *id), 0);
 DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid, int, (struct spdk_nvmf_qpair *qpair,
 		struct spdk_nvme_transport_id *trid), 0);
-DEFINE_STUB(ibv_reg_mr_iova2, struct ibv_mr *, (struct ibv_pd *pd, void *addr, size_t length,
-		uint64_t iova, unsigned int access), NULL);
 DEFINE_STUB(spdk_nvme_transport_id_adrfam_str, const char *, (enum spdk_nvmf_adrfam adrfam), NULL);
 DEFINE_STUB_V(ut_opts_init, (struct spdk_nvmf_transport_opts *opts));
 DEFINE_STUB(ut_transport_listen, int, (struct spdk_nvmf_transport *transport,

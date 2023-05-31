@@ -34,9 +34,6 @@ DEFINE_STUB_V(ftl_p2l_validate_ckpt, (struct ftl_band *band));
 DEFINE_STUB_V(ftl_trace_limits, (struct spdk_ftl_dev *dev, int limit, size_t num_free));
 DEFINE_STUB_V(ftl_trace_completion, (struct spdk_ftl_dev *dev, const struct ftl_io *io,
 				     enum ftl_trace_completion completion));
-DEFINE_STUB_V(ftl_trace_defrag_band, (struct spdk_ftl_dev *dev, const struct ftl_band *band));
-DEFINE_STUB_V(ftl_trace_wbuf_fill, (struct spdk_ftl_dev *dev, const struct ftl_io *io));
-DEFINE_STUB_V(ftl_trace_wbuf_pop, (struct spdk_ftl_dev *dev, const struct ftl_wbuf_entry *entry));
 DEFINE_STUB_V(ftl_trace_write_band, (struct spdk_ftl_dev *dev, const struct ftl_band *band));
 DEFINE_STUB_V(ftl_trace_submission, (struct spdk_ftl_dev *dev, const struct ftl_io *io,
 				     ftl_addr addr, size_t addr_cnt));
@@ -69,7 +66,6 @@ DEFINE_STUB_V(ftl_io_complete, (struct ftl_io *io));
 DEFINE_STUB(ftl_io_current_lba, uint64_t, (const struct ftl_io *io), 0);
 DEFINE_STUB_V(ftl_io_dec_req, (struct ftl_io *io));
 DEFINE_STUB_V(ftl_io_fail, (struct ftl_io *io, int status));
-DEFINE_STUB_V(ftl_io_free, (struct ftl_io *io));
 DEFINE_STUB(ftl_io_get_lba, uint64_t,
 	    (const struct ftl_io *io, size_t offset), 0);
 DEFINE_STUB_V(ftl_io_inc_req, (struct ftl_io *io));
@@ -80,9 +76,6 @@ DEFINE_STUB(ftl_iovec_num_blocks, size_t,
 	    (struct iovec *iov, size_t iov_cnt), 0);
 DEFINE_STUB_V(ftl_reloc, (struct ftl_reloc *reloc));
 
-DEFINE_STUB_V(ftl_reloc_add, (struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
-			      size_t num_blocks, int prio, bool defrag));
-DEFINE_STUB(ftl_reloc_is_defrag_active, bool, (const struct ftl_reloc *reloc), false);
 DEFINE_STUB(ftl_reloc_is_halted, bool, (const struct ftl_reloc *reloc), false);
 DEFINE_STUB_V(ftl_reloc_halt, (struct ftl_reloc *reloc));
 DEFINE_STUB(spdk_bdev_is_zoned, bool, (const struct spdk_bdev *bdev), true);

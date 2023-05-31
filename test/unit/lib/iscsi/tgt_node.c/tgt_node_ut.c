@@ -33,10 +33,6 @@ DEFINE_STUB(spdk_scsi_lun_get_id,
 	    (const struct spdk_scsi_lun *lun),
 	    0);
 
-DEFINE_STUB_V(spdk_iscsi_op_abort_task_set,
-	      (struct spdk_iscsi_task *task,
-	       uint8_t function));
-
 DEFINE_STUB(spdk_sock_is_ipv6, bool, (struct spdk_sock *sock), false);
 
 DEFINE_STUB(spdk_sock_is_ipv4, bool, (struct spdk_sock *sock), false);
