@@ -239,6 +239,17 @@ nvme_tcp_accel_finish_sequence(struct nvme_tcp_poll_group *tgroup, void *seq,
 	pg->accel_fn_table.finish_sequence(seq, cb_fn, cb_arg);
 }
 
+static inline int
+nvme_tcp_accel_append_crc32c(struct nvme_tcp_poll_group *tgroup, void **seq, uint32_t *dst,
+			     struct iovec *iovs, uint32_t iovcnt, uint32_t seed,
+			     spdk_nvme_accel_step_cb cb_fn, void *cb_arg)
+{
+	struct spdk_nvme_poll_group *pg = tgroup->group.group;
+
+	return pg->accel_fn_table.append_crc32c(pg->ctx, seq, dst, iovs, iovcnt, NULL, NULL,
+						seed, cb_fn, cb_arg);
+}
+
 static int
 nvme_tcp_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, const char *service)
 {
@@ -544,12 +555,22 @@ pdu_accel_compute_crc32_seq_cb(void *cb_arg, int status)
 				     pdu_accel_compute_crc32_done, pdu);
 }
 
+static void
+pdu_accel_seq_compute_crc32_done(void *cb_arg)
+{
+	struct nvme_tcp_pdu *pdu = cb_arg;
+
+	pdu->data_digest_crc32 ^= SPDK_CRC32C_XOR;
+	MAKE_DIGEST_WORD(pdu->data_digest, pdu->data_digest_crc32);
+}
+
 static bool
 pdu_accel_compute_crc32(struct nvme_tcp_pdu *pdu)
 {
 	struct nvme_tcp_qpair *tqpair = pdu->qpair;
 	struct nvme_tcp_poll_group *tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
 	struct nvme_request *req = ((struct nvme_tcp_req *)pdu->req)->req;
+	int rc;
 
 	/* Only support this limited case for the first step */
 	if (spdk_unlikely(nvme_qpair_get_state(&tqpair->qpair) < NVME_QPAIR_CONNECTED ||
@@ -558,21 +579,42 @@ pdu_accel_compute_crc32(struct nvme_tcp_pdu *pdu)
 		return false;
 	}
 
-	if (tqpair->qpair.poll_group == NULL ||
-	    tgroup->group.group->accel_fn_table.submit_accel_crc32c == NULL) {
+	if (tqpair->qpair.poll_group == NULL) {
 		return false;
 	}
 
-	if (req->accel_sequence != NULL) {
-		nvme_tcp_accel_finish_sequence(tgroup, req->accel_sequence,
-					       pdu_accel_compute_crc32_seq_cb, pdu);
-	} else {
-		nvme_tcp_accel_submit_crc32c(tgroup, &pdu->data_digest_crc32,
-					     pdu->data_iov, pdu->data_iovcnt, 0,
-					     pdu_accel_compute_crc32_done, pdu);
+	if (tgroup->group.group->accel_fn_table.append_crc32c != NULL) {
+		rc = nvme_tcp_accel_append_crc32c(tgroup, &req->accel_sequence,
+						  &pdu->data_digest_crc32,
+						  pdu->data_iov, pdu->data_iovcnt, 0,
+						  pdu_accel_seq_compute_crc32_done, pdu);
+		if (spdk_unlikely(rc != 0)) {
+			/* If accel is out of resources, fall back to non-accelerated crc32 */
+			if (rc == -ENOMEM) {
+				return false;
+			}
+
+			SPDK_ERRLOG("Failed to append crc32c operation: %d\n", rc);
+			pdu_write_fail(pdu, rc);
+			return true;
+		}
+
+		tcp_write_pdu(pdu);
+		return true;
+	} else if (tgroup->group.group->accel_fn_table.submit_accel_crc32c != NULL) {
+		if (req->accel_sequence != NULL) {
+			nvme_tcp_accel_finish_sequence(tgroup, req->accel_sequence,
+						       pdu_accel_compute_crc32_seq_cb, pdu);
+		} else {
+			nvme_tcp_accel_submit_crc32c(tgroup, &pdu->data_digest_crc32,
+						     pdu->data_iov, pdu->data_iovcnt, 0,
+						     pdu_accel_compute_crc32_done, pdu);
+		}
+
+		return true;
 	}
 
-	return true;
+	return false;
 }
 
 static void
