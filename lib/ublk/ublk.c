@@ -25,7 +25,6 @@
 #define UBLK_BLK_CDEV					"/dev/ublkc"
 
 #define LINUX_SECTOR_SHIFT				9
-#define UBLK_POLL_GROUP_MAX				128
 #define UBLK_IO_MAX_BYTES				SPDK_BDEV_LARGE_BUF_MAX_SIZE
 #define UBLK_DEV_MAX_QUEUES				32
 #define UBLK_DEV_MAX_QUEUE_DEPTH			1024
@@ -154,7 +153,7 @@ struct ublk_tgt {
 	struct io_uring		ctrl_ring;
 	struct spdk_poller	*ctrl_poller;
 	uint32_t		ctrl_ops_in_progress;
-	struct ublk_poll_group	poll_group[UBLK_POLL_GROUP_MAX];
+	struct ublk_poll_group	*poll_groups;
 	uint32_t		num_ublk_devs;
 };
 
@@ -457,9 +456,16 @@ ublk_create_target(const char *cpumask_str)
 		return rc;
 	}
 
+	assert(g_ublk_tgt.poll_groups == NULL);
+	g_ublk_tgt.poll_groups = calloc(spdk_env_get_core_count(), sizeof(*poll_group));
+	if (!g_ublk_tgt.poll_groups) {
+		return -ENOMEM;
+	}
+
 	rc = ublk_open();
 	if (rc != 0) {
 		SPDK_ERRLOG("Fail to open UBLK, error=%s\n", spdk_strerror(-rc));
+		free(g_ublk_tgt.poll_groups);
 		return rc;
 	}
 
@@ -470,7 +476,7 @@ ublk_create_target(const char *cpumask_str)
 			continue;
 		}
 		snprintf(thread_name, sizeof(thread_name), "ublk_thread%u", i);
-		poll_group = &g_ublk_tgt.poll_group[g_num_ublk_poll_groups];
+		poll_group = &g_ublk_tgt.poll_groups[g_num_ublk_poll_groups];
 		poll_group->ublk_thread = spdk_thread_create(thread_name, &g_core_mask);
 		spdk_thread_send_msg(poll_group->ublk_thread, ublk_poller_register, poll_group);
 		g_num_ublk_poll_groups++;
@@ -491,15 +497,23 @@ static void
 _ublk_fini_done(void *args)
 {
 	SPDK_DEBUGLOG(ublk, "\n");
+
 	g_num_ublk_poll_groups = 0;
 	g_next_ublk_poll_group = 0;
 	g_ublk_tgt.is_destroying = false;
 	g_ublk_tgt.active = false;
+
 	if (g_ublk_tgt.cb_fn) {
 		g_ublk_tgt.cb_fn(g_ublk_tgt.cb_arg);
 		g_ublk_tgt.cb_fn = NULL;
 		g_ublk_tgt.cb_arg = NULL;
 	}
+
+	if (g_ublk_tgt.poll_groups) {
+		free(g_ublk_tgt.poll_groups);
+		g_ublk_tgt.poll_groups = NULL;
+	}
+
 }
 
 static void
@@ -509,9 +523,9 @@ ublk_thread_exit(void *args)
 	uint32_t i;
 
 	for (i = 0; i < g_num_ublk_poll_groups; i++) {
-		if (g_ublk_tgt.poll_group[i].ublk_thread == ublk_thread) {
-			spdk_poller_unregister(&g_ublk_tgt.poll_group[i].ublk_poller);
-			spdk_iobuf_channel_fini(&g_ublk_tgt.poll_group[i].iobuf_ch);
+		if (g_ublk_tgt.poll_groups[i].ublk_thread == ublk_thread) {
+			spdk_poller_unregister(&g_ublk_tgt.poll_groups[i].ublk_poller);
+			spdk_iobuf_channel_fini(&g_ublk_tgt.poll_groups[i].iobuf_ch);
 			spdk_thread_bind(ublk_thread, false);
 			spdk_thread_exit(ublk_thread);
 		}
@@ -1619,8 +1633,8 @@ ublk_finish_start(struct spdk_ublk_dev *ublk)
 
 	/* Send queue to different spdk_threads for load balance */
 	for (q_id = 0; q_id < ublk->num_queues; q_id++) {
-		ublk->queues[q_id].poll_group = &g_ublk_tgt.poll_group[g_next_ublk_poll_group];
-		ublk_thread = g_ublk_tgt.poll_group[g_next_ublk_poll_group].ublk_thread;
+		ublk->queues[q_id].poll_group = &g_ublk_tgt.poll_groups[g_next_ublk_poll_group];
+		ublk_thread = g_ublk_tgt.poll_groups[g_next_ublk_poll_group].ublk_thread;
 		spdk_thread_send_msg(ublk_thread, ublk_queue_run, &ublk->queues[q_id]);
 		g_next_ublk_poll_group++;
 		if (g_next_ublk_poll_group == g_num_ublk_poll_groups) {
