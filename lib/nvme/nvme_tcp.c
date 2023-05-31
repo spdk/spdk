@@ -230,6 +230,15 @@ nvme_tcp_accel_submit_crc32c(struct nvme_tcp_poll_group *tgroup, uint32_t *dst,
 	pg->accel_fn_table.submit_accel_crc32c(pg->ctx, dst, iovs, iovcnt, seed, cb_fn, cb_arg);
 }
 
+static inline void
+nvme_tcp_accel_finish_sequence(struct nvme_tcp_poll_group *tgroup, void *seq,
+			       spdk_nvme_accel_completion_cb cb_fn, void *cb_arg)
+{
+	struct spdk_nvme_poll_group *pg = tgroup->group.group;
+
+	pg->accel_fn_table.finish_sequence(seq, cb_fn, cb_arg);
+}
+
 static int
 nvme_tcp_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, const char *service)
 {
@@ -459,6 +468,46 @@ _tcp_write_pdu(struct nvme_tcp_pdu *pdu)
 }
 
 static void
+tcp_write_pdu_seq_cb(void *ctx, int status)
+{
+	struct nvme_tcp_pdu *pdu = ctx;
+	struct nvme_tcp_req *treq = pdu->req;
+	struct nvme_request *req = treq->req;
+
+	req->accel_sequence = NULL;
+	if (spdk_unlikely(status != 0)) {
+		SPDK_ERRLOG("Failed to execute accel sequence: %d\n", status);
+		pdu_write_fail(pdu, status);
+		return;
+	}
+
+	_tcp_write_pdu(pdu);
+}
+
+static void
+tcp_write_pdu(struct nvme_tcp_pdu *pdu)
+{
+	struct nvme_tcp_req *treq = pdu->req;
+	struct nvme_tcp_qpair *tqpair = pdu->qpair;
+	struct nvme_tcp_poll_group *tgroup;
+	struct nvme_request *req;
+
+	if (spdk_likely(treq != NULL)) {
+		req = treq->req;
+		if (req->accel_sequence != NULL &&
+		    spdk_nvme_opc_get_data_transfer(req->cmd.opc) == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+			assert(tqpair->qpair.poll_group != NULL);
+			tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
+			nvme_tcp_accel_finish_sequence(tgroup, req->accel_sequence,
+						       tcp_write_pdu_seq_cb, pdu);
+			return;
+		}
+	}
+
+	_tcp_write_pdu(pdu);
+}
+
+static void
 pdu_accel_compute_crc32_done(void *cb_arg, int status)
 {
 	struct nvme_tcp_pdu *pdu = cb_arg;
@@ -475,11 +524,32 @@ pdu_accel_compute_crc32_done(void *cb_arg, int status)
 	_tcp_write_pdu(pdu);
 }
 
+static void
+pdu_accel_compute_crc32_seq_cb(void *cb_arg, int status)
+{
+	struct nvme_tcp_pdu *pdu = cb_arg;
+	struct nvme_tcp_qpair *tqpair = pdu->qpair;
+	struct nvme_tcp_poll_group *tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
+	struct nvme_request *req = ((struct nvme_tcp_req *)pdu->req)->req;
+
+	req->accel_sequence = NULL;
+	if (spdk_unlikely(status != 0)) {
+		SPDK_ERRLOG("Failed to execute accel sequence: %d\n", status);
+		pdu_write_fail(pdu, status);
+		return;
+	}
+
+	nvme_tcp_accel_submit_crc32c(tgroup, &pdu->data_digest_crc32,
+				     pdu->data_iov, pdu->data_iovcnt, 0,
+				     pdu_accel_compute_crc32_done, pdu);
+}
+
 static bool
 pdu_accel_compute_crc32(struct nvme_tcp_pdu *pdu)
 {
 	struct nvme_tcp_qpair *tqpair = pdu->qpair;
 	struct nvme_tcp_poll_group *tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
+	struct nvme_request *req = ((struct nvme_tcp_req *)pdu->req)->req;
 
 	/* Only support this limited case for the first step */
 	if (spdk_unlikely(nvme_qpair_get_state(&tqpair->qpair) < NVME_QPAIR_CONNECTED ||
@@ -493,17 +563,45 @@ pdu_accel_compute_crc32(struct nvme_tcp_pdu *pdu)
 		return false;
 	}
 
-	nvme_tcp_accel_submit_crc32c(tgroup, &pdu->data_digest_crc32,
-				     pdu->data_iov, pdu->data_iovcnt, 0,
-				     pdu_accel_compute_crc32_done, pdu);
+	if (req->accel_sequence != NULL) {
+		nvme_tcp_accel_finish_sequence(tgroup, req->accel_sequence,
+					       pdu_accel_compute_crc32_seq_cb, pdu);
+	} else {
+		nvme_tcp_accel_submit_crc32c(tgroup, &pdu->data_digest_crc32,
+					     pdu->data_iov, pdu->data_iovcnt, 0,
+					     pdu_accel_compute_crc32_done, pdu);
+	}
 
 	return true;
+}
+
+static void
+pdu_compute_crc32_seq_cb(void *cb_arg, int status)
+{
+	struct nvme_tcp_pdu *pdu = cb_arg;
+	struct nvme_request *req = ((struct nvme_tcp_req *)pdu->req)->req;
+	uint32_t crc32c;
+
+	req->accel_sequence = NULL;
+	if (spdk_unlikely(status != 0)) {
+		SPDK_ERRLOG("Failed to execute accel sequence: %d\n", status);
+		pdu_write_fail(pdu, status);
+		return;
+	}
+
+	crc32c = nvme_tcp_pdu_calc_data_digest(pdu);
+	crc32c = crc32c ^ SPDK_CRC32C_XOR;
+	MAKE_DIGEST_WORD(pdu->data_digest, crc32c);
+
+	_tcp_write_pdu(pdu);
 }
 
 static void
 pdu_compute_crc32(struct nvme_tcp_pdu *pdu)
 {
 	struct nvme_tcp_qpair *tqpair = pdu->qpair;
+	struct nvme_tcp_poll_group *tgroup;
+	struct nvme_request *req;
 	uint32_t crc32c;
 
 	/* Data Digest */
@@ -513,12 +611,20 @@ pdu_compute_crc32(struct nvme_tcp_pdu *pdu)
 			return;
 		}
 
+		req = ((struct nvme_tcp_req *)pdu->req)->req;
+		if (req->accel_sequence != NULL) {
+			tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
+			nvme_tcp_accel_finish_sequence(tgroup, req->accel_sequence,
+						       pdu_compute_crc32_seq_cb, pdu);
+			return;
+		}
+
 		crc32c = nvme_tcp_pdu_calc_data_digest(pdu);
 		crc32c = crc32c ^ SPDK_CRC32C_XOR;
 		MAKE_DIGEST_WORD(pdu->data_digest, crc32c);
 	}
 
-	_tcp_write_pdu(pdu);
+	tcp_write_pdu(pdu);
 }
 
 static int
@@ -715,6 +821,7 @@ nvme_tcp_qpair_capsule_cmd_send(struct nvme_tcp_qpair *tqpair,
 
 	SPDK_DEBUGLOG(nvme, "enter\n");
 	pdu = tcp_req->pdu;
+	pdu->req = tcp_req;
 
 	capsule_cmd = &pdu->hdr.capsule_cmd;
 	capsule_cmd->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD;
@@ -1477,6 +1584,7 @@ nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
 	tcp_req->ordering.bits.h2c_send_waiting_ack = 0;
 	rsp_pdu = tcp_req->pdu;
 	memset(rsp_pdu, 0, sizeof(*rsp_pdu));
+	rsp_pdu->req = tcp_req;
 	h2c_data = &rsp_pdu->hdr.h2c_data;
 
 	h2c_data->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_H2C_DATA;

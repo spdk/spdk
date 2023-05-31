@@ -713,7 +713,9 @@ test_nvme_tcp_qpair_write_pdu(void)
 {
 	struct nvme_tcp_qpair tqpair = {};
 	struct spdk_nvme_tcp_stat stats = {};
-	struct nvme_tcp_pdu pdu = {};
+	struct nvme_request req = {};
+	struct nvme_tcp_req treq = { .req = &req };
+	struct nvme_tcp_pdu pdu = { .req = &treq };
 	void *cb_arg = (void *)0xDEADBEEF;
 	char iov_base0[4096];
 	char iov_base1[4096];
