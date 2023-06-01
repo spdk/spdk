@@ -7264,7 +7264,7 @@ bdev_nvme_readv(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 	bio->iov_offset = 0;
 
 	if (domain != NULL) {
-		bio->ext_opts.size = sizeof(struct spdk_nvme_ns_cmd_ext_io_opts);
+		bio->ext_opts.size = SPDK_SIZEOF(&bio->ext_opts, cdw13);
 		bio->ext_opts.memory_domain = domain;
 		bio->ext_opts.memory_domain_ctx = domain_ctx;
 		bio->ext_opts.io_flags = flags;
@@ -7310,7 +7310,7 @@ bdev_nvme_writev(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 	bio->iov_offset = 0;
 
 	if (domain != NULL) {
-		bio->ext_opts.size = sizeof(struct spdk_nvme_ns_cmd_ext_io_opts);
+		bio->ext_opts.size = SPDK_SIZEOF(&bio->ext_opts, cdw13);
 		bio->ext_opts.memory_domain = domain;
 		bio->ext_opts.memory_domain_ctx = domain_ctx;
 		bio->ext_opts.io_flags = flags;

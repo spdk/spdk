@@ -28,6 +28,9 @@ extern "C" {
 
 #define SPDK_CONTAINEROF(ptr, type, member) ((type *)((uintptr_t)ptr - offsetof(type, member)))
 
+/** Returns size of an object pointer by ptr up to and including member */
+#define SPDK_SIZEOF(ptr, member) (offsetof(__typeof__(*(ptr)), member) + sizeof((ptr)->member))
+
 /**
  * Get the size of a member of a struct.
  */

@@ -1108,6 +1108,7 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 			if (!fio_qpair->zone_append_enabled) {
 #if FIO_HAS_FDP
 				if (spdk_unlikely(io_u->dtype)) {
+					ext_opts.size = SPDK_SIZEOF(&ext_opts, cdw13);
 					ext_opts.io_flags = fio_qpair->io_flags | (io_u->dtype << 20);
 					ext_opts.metadata = md_buf;
 					ext_opts.cdw13 = (io_u->dspec << 16);

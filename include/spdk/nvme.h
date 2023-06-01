@@ -577,7 +577,7 @@ enum spdk_nvme_ctrlr_flags {
  * Structure with optional IO request parameters
  */
 struct spdk_nvme_ns_cmd_ext_io_opts {
-	/** size of this structure in bytes */
+	/** size of this structure in bytes, use SPDK_SIZEOF(opts, last_member) to obtain it */
 	size_t size;
 	/** Memory domain which describes data payload in IO request. The controller must support
 	 * the corresponding memory domain type, refer to \ref spdk_nvme_ctrlr_get_memory_domains */
@@ -596,7 +596,7 @@ struct spdk_nvme_ns_cmd_ext_io_opts {
 	uint16_t apptag;
 	/** Command dword 13 specific field. */
 	uint32_t cdw13;
-} __attribute__((packed));
+};
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_cmd_ext_io_opts) == 48, "Incorrect size");
 
 /**

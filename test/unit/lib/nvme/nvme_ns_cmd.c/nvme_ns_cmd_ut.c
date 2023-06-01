@@ -2072,7 +2072,6 @@ test_spdk_nvme_ns_cmd_writev_ext(void)
 	struct spdk_nvme_ctrlr		ctrlr;
 	struct spdk_nvme_qpair		qpair;
 	struct spdk_nvme_ns_cmd_ext_io_opts ext_opts = {
-		.size = sizeof(struct spdk_nvme_ns_cmd_ext_io_opts),
 		.memory_domain = (struct spdk_memory_domain *)0xfeedbeef,
 		.memory_domain_ctx = (void *)0xf00df00d,
 		.metadata = (void *)0xdeadbeef,
@@ -2085,6 +2084,7 @@ test_spdk_nvme_ns_cmd_writev_ext(void)
 	uint32_t			md_size = 128;
 	uint64_t			sge_length = lba_count * sector_size;
 
+	ext_opts.size = SPDK_SIZEOF(&ext_opts, cdw13);
 	prepare_for_test(&ns, &ctrlr, &qpair, sector_size,
 			 md_size, 128 * 1024, 0, false);
 
@@ -2144,7 +2144,6 @@ test_spdk_nvme_ns_cmd_readv_ext(void)
 	struct spdk_nvme_ctrlr		ctrlr;
 	struct spdk_nvme_qpair		qpair;
 	struct spdk_nvme_ns_cmd_ext_io_opts ext_opts = {
-		.size = sizeof(struct spdk_nvme_ns_cmd_ext_io_opts),
 		.memory_domain = (struct spdk_memory_domain *)0xfeedbeef,
 		.memory_domain_ctx = (void *)0xf00df00d,
 		.metadata = (void *)0xdeadbeef,
@@ -2157,6 +2156,7 @@ test_spdk_nvme_ns_cmd_readv_ext(void)
 	uint32_t			md_size = 128;
 	uint64_t			sge_length = lba_count * sector_size;
 
+	ext_opts.size = SPDK_SIZEOF(&ext_opts, cdw13);
 	prepare_for_test(&ns, &ctrlr, &qpair, sector_size,
 			 md_size, 128 * 1024, 0, false);
 

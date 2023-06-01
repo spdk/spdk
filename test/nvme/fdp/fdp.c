@@ -6,6 +6,7 @@
 #include "spdk/stdinc.h"
 #include "spdk/nvme.h"
 #include "spdk/env.h"
+#include "spdk/util.h"
 
 #define FDP_LOG_PAGE_SIZE		4096
 #define FDP_NR_RUHS_DESC		256
@@ -285,7 +286,7 @@ check_fdp_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair)
 	g_outstanding_commands = 0;
 	g_fdp_command_result = -1;
 
-	ext_opts.size = sizeof(struct spdk_nvme_ns_cmd_ext_io_opts);
+	ext_opts.size = SPDK_SIZEOF(&ext_opts, cdw13);
 	ext_opts.io_flags = SPDK_NVME_IO_FLAGS_DATA_PLACEMENT_DIRECTIVE;
 	ext_opts.metadata = NULL;
 	ext_opts.cdw13 = (pid_for_ruhu << 16);
