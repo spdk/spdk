@@ -3,11 +3,6 @@
 #  Copyright (C) 2018 Intel Corporation
 #  All rights reserved.
 #
-SYSTEM=$(uname -s)
-if [ $SYSTEM = "FreeBSD" ]; then
-	echo "blob_io_wait.sh cannot run on FreeBSD currently."
-	exit 0
-fi
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)

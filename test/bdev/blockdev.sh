@@ -71,10 +71,9 @@ function setup_bdev_conf() {
 		bdev_set_qos_limit --rw_mbytes_per_sec 100 Malloc3
 		bdev_set_qos_limit --rw_ios_per_sec 20000 Malloc0
 	RPC
-	if [[ $(uname -s) != "FreeBSD" ]]; then
-		dd if=/dev/zero of="$SPDK_TEST_STORAGE/aiofile" bs=2048 count=5000
-		"$rpc_py" bdev_aio_create "$SPDK_TEST_STORAGE/aiofile" AIO0 2048
-	fi
+
+	dd if=/dev/zero of="$SPDK_TEST_STORAGE/aiofile" bs=2048 count=5000
+	"$rpc_py" bdev_aio_create "$SPDK_TEST_STORAGE/aiofile" AIO0 2048
 }
 
 function setup_nvme_conf() {

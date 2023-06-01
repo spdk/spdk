@@ -24,6 +24,10 @@ DIRS-$(CONFIG_ISCSI_INITIATOR) += iscsi
 DIRS-$(CONFIG_VIRTIO) += virtio
 endif
 
+ifeq ($(OS),FreeBSD)
+DIRS-y += aio
+endif
+
 DIRS-$(CONFIG_RBD) += rbd
 
 DIRS-$(CONFIG_DAOS) += daos

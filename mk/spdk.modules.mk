@@ -65,6 +65,10 @@ BLOCKDEV_MODULES_PRIVATE_LIBS += -L/usr/lib64/iscsi -liscsi
 endif
 endif
 
+ifeq ($(OS),FreeBSD)
+BLOCKDEV_MODULES_LIST += bdev_aio
+endif
+
 ifeq ($(CONFIG_URING),y)
 BLOCKDEV_MODULES_LIST += bdev_uring
 BLOCKDEV_MODULES_PRIVATE_LIBS += -luring

@@ -73,6 +73,11 @@ extern "C" {
 #include <sched.h>
 #endif
 
+/* FreeBSD */
+#ifdef __FreeBSD__
+#include <aio.h>
+#endif
+
 #ifdef __cplusplus
 }
 #endif

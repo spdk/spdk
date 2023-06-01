@@ -11,7 +11,10 @@ SO_MINOR := 0
 
 C_SRCS = bdev_aio.c bdev_aio_rpc.c
 LIBNAME = bdev_aio
+
+ifeq ($(OS),Linux)
 LOCAL_SYS_LIBS = -laio
+endif
 
 SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
 
