@@ -111,6 +111,8 @@ static const struct option g_cmdline_options[] = {
 	{"pci-allowed",			required_argument,	NULL, PCI_ALLOWED_OPT_IDX},
 #define PCI_WHITELIST_OPT_IDX	'W'
 	{"pci-whitelist",		required_argument,	NULL, PCI_WHITELIST_OPT_IDX}, /* deprecated */
+#define INTERRUPT_MODE_OPT_IDX	'J'
+	{"interrupt-mode",		no_argument,		NULL, INTERRUPT_MODE_OPT_IDX},
 #define SILENCE_NOTICELOG_OPT_IDX 257
 	{"silence-noticelog",		no_argument,		NULL, SILENCE_NOTICELOG_OPT_IDX},
 #define WAIT_FOR_RPC_OPT_IDX	258
@@ -238,6 +240,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts, size_t opts_size)
 	SET_FIELD(num_entries, SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES);
 	SET_FIELD(delay_subsystem_init, false);
 	SET_FIELD(disable_signal_handlers, false);
+	SET_FIELD(interrupt_mode, false);
 	/* Don't set msg_mempool_size here, it is set or calculated later */
 	SET_FIELD(rpc_allowlist, NULL);
 	SET_FIELD(rpc_log_file, NULL);
@@ -562,6 +565,7 @@ app_copy_opts(struct spdk_app_opts *opts, struct spdk_app_opts *opts_user, size_
 	SET_FIELD(log);
 	SET_FIELD(base_virtaddr);
 	SET_FIELD(disable_signal_handlers);
+	SET_FIELD(interrupt_mode);
 	SET_FIELD(msg_mempool_size);
 	SET_FIELD(rpc_allowlist);
 	SET_FIELD(vf_token);
@@ -741,6 +745,10 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 		setrlimit(RLIMIT_CORE, &core_limits);
 	}
 #endif
+
+	if (opts->interrupt_mode) {
+		spdk_interrupt_mode_enable();
+	}
 
 	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
 	g_spdk_app.json_config_file = opts->json_config_file;
@@ -963,6 +971,7 @@ usage(void (*app_usage)(void))
 	printf("     --vfio-vf-token       VF token (UUID) shared between SR-IOV PF and VFs for vfio_pci driver\n");
 	spdk_log_usage(stdout, "-L");
 	spdk_trace_mask_usage(stdout, "-e");
+	printf(" -J, --interrupt-mode      set app to interrupt mode (Warning: CPU usage will be reduced only if all pollers in the app support interrupt mode)\n");
 	if (app_usage) {
 		app_usage();
 	}
@@ -1246,6 +1255,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			break;
 		case ENV_VF_TOKEN_OPT_IDX:
 			opts->vf_token = optarg;
+			break;
+		case INTERRUPT_MODE_OPT_IDX:
+			opts->interrupt_mode = true;
 			break;
 		case VERSION_OPT_IDX:
 			printf(SPDK_VERSION_STRING"\n");

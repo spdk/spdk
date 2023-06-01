@@ -143,8 +143,10 @@ struct spdk_app_opts {
 	 */
 	bool disable_signal_handlers;
 
-	/* Hole at bytes 185-191. */
-	uint8_t reserved185[7];
+	bool interrupt_mode;
+
+	/* Hole at bytes 186-191. */
+	uint8_t reserved186[6];
 
 	/**
 	 * The allocated size for the message pool used by the threading library.
@@ -271,7 +273,7 @@ int spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask);
  */
 const struct spdk_cpuset *spdk_app_get_core_mask(void);
 
-#define SPDK_APP_GETOPT_STRING "c:de:ghi:m:n:p:r:s:uvA:B:L:RW:"
+#define SPDK_APP_GETOPT_STRING "c:de:ghi:m:n:p:r:s:uvA:B:JL:RW:"
 
 enum spdk_app_parse_args_rvals {
 	SPDK_APP_PARSE_ARGS_HELP = 0,
