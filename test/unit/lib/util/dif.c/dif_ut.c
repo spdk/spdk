@@ -1352,7 +1352,7 @@ dif_copy_gen_and_verify(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov
 	CU_ASSERT(rc == 0);
 
 	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc, dif_type, dif_flags,
 			       init_ref_tag, apptag_mask, app_tag, 0, GUARD_SEED, &dif_opts);
 	CU_ASSERT(rc == 0);
