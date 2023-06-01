@@ -11,6 +11,10 @@
 #include <linux/fs.h>
 #endif
 
+#ifdef __FreeBSD__
+#include <sys/disk.h>
+#endif
+
 static uint64_t
 dev_get_size(int fd)
 {
@@ -34,7 +38,13 @@ dev_get_size(int fd)
 uint32_t
 spdk_fd_get_blocklen(int fd)
 {
-#if defined(DKIOCGETBLOCKSIZE) /* FreeBSD */
+#if defined(DIOCGSECTORSIZE) /* FreeBSD */
+	uint32_t blocklen;
+
+	if (ioctl(fd, DIOCGSECTORSIZE, &blocklen) == 0) {
+		return blocklen;
+	}
+#elif defined(DKIOCGETBLOCKSIZE)
 	uint32_t blocklen;
 
 	if (ioctl(fd, DKIOCGETBLOCKSIZE, &blocklen) == 0) {
