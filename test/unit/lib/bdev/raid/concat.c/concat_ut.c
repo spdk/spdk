@@ -60,13 +60,7 @@ struct req_records {
 bool g_succeed;
 
 DEFINE_STUB_V(raid_bdev_module_list_add, (struct raid_bdev_module *raid_module));
-DEFINE_STUB_V(raid_bdev_io_complete, (struct raid_bdev_io *raid_io,
-				      enum spdk_bdev_io_status status));
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
-DEFINE_STUB(raid_bdev_io_complete_part, bool,
-	    (struct raid_bdev_io *raid_io, uint64_t completed,
-	     enum spdk_bdev_io_status status),
-	    true);
 
 int
 spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
@@ -152,6 +146,12 @@ raid_bdev_queue_io_wait(struct raid_bdev_io *raid_io, struct spdk_bdev *bdev,
 {
 	g_succeed = true;
 	cb_fn(raid_io);
+}
+
+static void
+raid_test_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status)
+{
+	CU_ASSERT(status == SPDK_BDEV_IO_STATUS_SUCCESS);
 }
 
 static void
@@ -260,49 +260,45 @@ test_concat_start(void)
 }
 
 static void
-bdev_io_cleanup(struct spdk_bdev_io *bdev_io)
+raid_io_cleanup(struct raid_bdev_io *raid_io)
 {
-	if (bdev_io->u.bdev.iovs) {
-		if (bdev_io->u.bdev.iovs->iov_base) {
-			free(bdev_io->u.bdev.iovs->iov_base);
-		}
-		free(bdev_io->u.bdev.iovs);
+	if (raid_io->iovs) {
+		free(raid_io->iovs->iov_base);
+		free(raid_io->iovs);
 	}
 
-	free(bdev_io);
+	free(raid_io);
 }
 
 static void
-bdev_io_initialize(struct spdk_bdev_io *bdev_io, struct spdk_io_channel *ch, struct spdk_bdev *bdev,
-		   uint64_t lba, uint64_t blocks, int16_t iotype)
+raid_io_initialize(struct raid_bdev_io *raid_io, struct raid_bdev_io_channel *raid_ch,
+		   struct raid_bdev *raid_bdev, uint64_t lba, uint64_t blocks, int16_t iotype)
 {
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct iovec *iovs;
+	int iovcnt;
+	void *md_buf;
 
-	bdev_io->bdev = bdev;
-	bdev_io->u.bdev.offset_blocks = lba;
-	bdev_io->u.bdev.num_blocks = blocks;
-	bdev_io->type = iotype;
-
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_UNMAP || bdev_io->type == SPDK_BDEV_IO_TYPE_FLUSH) {
-		return;
+	if (iotype == SPDK_BDEV_IO_TYPE_UNMAP || iotype == SPDK_BDEV_IO_TYPE_FLUSH) {
+		iovs = NULL;
+		iovcnt = 0;
+		md_buf = NULL;
+	} else {
+		iovcnt = 1;
+		iovs = calloc(iovcnt, sizeof(struct iovec));
+		SPDK_CU_ASSERT_FATAL(iovs != NULL);
+		iovs->iov_len = raid_io->num_blocks * BLOCK_LEN;
+		iovs->iov_base = calloc(1, iovs->iov_len);
+		SPDK_CU_ASSERT_FATAL(iovs->iov_base != NULL);
+		md_buf = (void *)0xAEDFEBAC;
 	}
 
-	bdev_io->u.bdev.iovcnt = 1;
-	bdev_io->u.bdev.iovs = calloc(1, sizeof(struct iovec));
-	SPDK_CU_ASSERT_FATAL(bdev_io->u.bdev.iovs != NULL);
-	bdev_io->u.bdev.iovs->iov_base = calloc(1, bdev_io->u.bdev.num_blocks * 4096);
-	SPDK_CU_ASSERT_FATAL(bdev_io->u.bdev.iovs->iov_base != NULL);
-	bdev_io->u.bdev.iovs->iov_len = bdev_io->u.bdev.num_blocks * BLOCK_LEN;
-	bdev_io->internal.ch = channel;
-	bdev_io->u.bdev.md_buf = (void *)0xAEDFEBAC;
+	raid_test_bdev_io_init(raid_io, raid_bdev, raid_ch, iotype, lba, blocks, iovs, iovcnt, md_buf);
 }
 
 static void
 submit_and_verify_rw(enum CONCAT_IO_TYPE io_type, struct raid_params *params)
 {
 	struct raid_bdev *raid_bdev;
-	struct spdk_bdev_io *bdev_io;
-	struct spdk_io_channel *ch;
 	struct raid_bdev_io *raid_io;
 	struct raid_bdev_io_channel *raid_ch;
 	uint64_t lba, blocks;
@@ -313,29 +309,25 @@ submit_and_verify_rw(enum CONCAT_IO_TYPE io_type, struct raid_params *params)
 	for (i = 0; i < params->num_base_bdevs; i++) {
 		init_globals();
 		raid_bdev = create_concat(params);
-		bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
-		SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
-		raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+		raid_io = calloc(1, sizeof(*raid_io));
+		SPDK_CU_ASSERT_FATAL(raid_io != NULL);
 		raid_ch = raid_test_create_io_channel(raid_bdev);
-		raid_io->raid_ch = raid_ch;
-		raid_io->raid_bdev = raid_bdev;
-		ch = (void *)1;
 
 		switch (io_type) {
 		case CONCAT_WRITEV:
-			bdev_io_initialize(bdev_io, ch, &raid_bdev->bdev, lba, blocks, SPDK_BDEV_IO_TYPE_WRITE);
+			raid_io_initialize(raid_io, raid_ch, raid_bdev, lba, blocks, SPDK_BDEV_IO_TYPE_WRITE);
 			concat_submit_rw_request(raid_io);
 			break;
 		case CONCAT_READV:
-			bdev_io_initialize(bdev_io, ch, &raid_bdev->bdev, lba, blocks, SPDK_BDEV_IO_TYPE_READ);
+			raid_io_initialize(raid_io, raid_ch, raid_bdev, lba, blocks, SPDK_BDEV_IO_TYPE_READ);
 			concat_submit_rw_request(raid_io);
 			break;
 		case CONCAT_UNMAP:
-			bdev_io_initialize(bdev_io, ch, &raid_bdev->bdev, lba, blocks, SPDK_BDEV_IO_TYPE_UNMAP);
+			raid_io_initialize(raid_io, raid_ch, raid_bdev, lba, blocks, SPDK_BDEV_IO_TYPE_UNMAP);
 			concat_submit_null_payload_request(raid_io);
 			break;
 		case CONCAT_FLUSH:
-			bdev_io_initialize(bdev_io, ch, &raid_bdev->bdev, lba, blocks, SPDK_BDEV_IO_TYPE_FLUSH);
+			raid_io_initialize(raid_io, raid_ch, raid_bdev, lba, blocks, SPDK_BDEV_IO_TYPE_FLUSH);
 			concat_submit_null_payload_request(raid_io);
 			break;
 		default:
@@ -351,7 +343,7 @@ submit_and_verify_rw(enum CONCAT_IO_TYPE io_type, struct raid_params *params)
 		CU_ASSERT(g_req_records.io_type[0] == io_type);
 		CU_ASSERT(g_req_records.count == 1);
 		CU_ASSERT(g_req_records.md == (void *)0xAEDFEBAC);
-		bdev_io_cleanup(bdev_io);
+		raid_io_cleanup(raid_io);
 		raid_test_destroy_io_channel(raid_ch);
 		delete_concat(raid_bdev);
 		lba += params->base_bdev_blockcnt;
@@ -378,8 +370,6 @@ static void
 submit_and_verify_null_payload(enum CONCAT_IO_TYPE io_type, struct raid_params *params)
 {
 	struct raid_bdev *raid_bdev;
-	struct spdk_bdev_io *bdev_io;
-	struct spdk_io_channel *ch;
 	struct raid_bdev_io *raid_io;
 	struct raid_bdev_io_channel *raid_ch;
 	uint64_t lba, blocks;
@@ -401,23 +391,17 @@ submit_and_verify_null_payload(enum CONCAT_IO_TYPE io_type, struct raid_params *
 	}
 	init_globals();
 	raid_bdev = create_concat(params);
-	bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
-	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
-	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+	raid_io = calloc(1, sizeof(*raid_io));
+	SPDK_CU_ASSERT_FATAL(raid_io != NULL);
 	raid_ch = raid_test_create_io_channel(raid_bdev);
-	raid_io->raid_ch = raid_ch;
-	raid_io->raid_bdev = raid_bdev;
-	ch = (void *)1;
-
-	SPDK_CU_ASSERT_FATAL(ch != NULL);
 
 	switch (io_type) {
 	case CONCAT_UNMAP:
-		bdev_io_initialize(bdev_io, ch, &raid_bdev->bdev, lba, blocks, SPDK_BDEV_IO_TYPE_UNMAP);
+		raid_io_initialize(raid_io, raid_ch, raid_bdev, lba, blocks, SPDK_BDEV_IO_TYPE_UNMAP);
 		concat_submit_null_payload_request(raid_io);
 		break;
 	case CONCAT_FLUSH:
-		bdev_io_initialize(bdev_io, ch, &raid_bdev->bdev, lba, blocks, SPDK_BDEV_IO_TYPE_FLUSH);
+		raid_io_initialize(raid_io, raid_ch, raid_bdev, lba, blocks, SPDK_BDEV_IO_TYPE_FLUSH);
 		concat_submit_null_payload_request(raid_io);
 		break;
 	default:
@@ -447,7 +431,7 @@ submit_and_verify_null_payload(enum CONCAT_IO_TYPE io_type, struct raid_params *
 		CU_ASSERT(g_req_records.num_blocks[1] == 2);
 		CU_ASSERT(g_req_records.io_type[1] == io_type);
 	}
-	bdev_io_cleanup(bdev_io);
+	raid_io_cleanup(raid_io);
 	raid_test_destroy_io_channel(raid_ch);
 	delete_concat(raid_bdev);
 }

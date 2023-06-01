@@ -280,7 +280,6 @@ raid5f_xor_stripe(struct stripe_request *stripe_req, stripe_req_xor_cb cb)
 	struct raid5f_io_channel *r5ch = stripe_req->r5ch;
 	struct raid_bdev_io *raid_io = stripe_req->raid_io;
 	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	struct chunk *chunk;
 	struct chunk *dest_chunk;
 	uint64_t num_blocks;
@@ -292,7 +291,7 @@ raid5f_xor_stripe(struct stripe_request *stripe_req, stripe_req_xor_cb cb)
 		num_blocks = raid_bdev->strip_size;
 		dest_chunk = stripe_req->parity_chunk;
 	} else if (stripe_req->type == STRIPE_REQ_RECONSTRUCT) {
-		num_blocks = bdev_io->u.bdev.num_blocks;
+		num_blocks = raid_io->num_blocks;
 		dest_chunk = stripe_req->reconstruct.chunk;
 	} else {
 		assert(false);
@@ -319,7 +318,7 @@ raid5f_xor_stripe(struct stripe_request *stripe_req, stripe_req_xor_cb cb)
 	stripe_req->xor.status = 0;
 	stripe_req->xor.cb = cb;
 
-	if (spdk_bdev_io_get_md_buf(bdev_io)) {
+	if (raid_io->md_buf != NULL) {
 		uint8_t n_src = raid5f_stripe_data_chunks_num(raid_bdev);
 		uint64_t len = num_blocks * spdk_bdev_get_md_size(&raid_bdev->bdev);
 		int ret;
@@ -430,13 +429,13 @@ raid5f_chunk_submit_retry(void *_raid_io)
 }
 
 static inline void
-raid5f_init_ext_io_opts(struct spdk_bdev_io *bdev_io, struct spdk_bdev_ext_io_opts *opts)
+raid5f_init_ext_io_opts(struct spdk_bdev_ext_io_opts *opts, struct raid_bdev_io *raid_io)
 {
 	memset(opts, 0, sizeof(*opts));
 	opts->size = sizeof(*opts);
-	opts->memory_domain = bdev_io->u.bdev.memory_domain;
-	opts->memory_domain_ctx = bdev_io->u.bdev.memory_domain_ctx;
-	opts->metadata = bdev_io->u.bdev.md_buf;
+	opts->memory_domain = raid_io->memory_domain;
+	opts->memory_domain_ctx = raid_io->memory_domain_ctx;
+	opts->metadata = raid_io->md_buf;
 }
 
 static int
@@ -444,7 +443,6 @@ raid5f_chunk_submit(struct chunk *chunk)
 {
 	struct stripe_request *stripe_req = raid5f_chunk_stripe_req(chunk);
 	struct raid_bdev_io *raid_io = stripe_req->raid_io;
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
 	struct raid_base_bdev_info *base_info = &raid_bdev->base_bdev_info[chunk->index];
 	struct spdk_io_channel *base_ch = raid_io->raid_ch->base_channel[chunk->index];
@@ -452,7 +450,7 @@ raid5f_chunk_submit(struct chunk *chunk)
 	struct spdk_bdev_ext_io_opts io_opts;
 	int ret;
 
-	raid5f_init_ext_io_opts(bdev_io, &io_opts);
+	raid5f_init_ext_io_opts(&io_opts, raid_io);
 	io_opts.metadata = chunk->md_buf;
 
 	raid_io->base_bdev_io_submitted++;
@@ -477,7 +475,7 @@ raid5f_chunk_submit(struct chunk *chunk)
 		base_offset_blocks += stripe_req->reconstruct.chunk_offset;
 
 		ret = raid_bdev_readv_blocks_ext(base_info, base_ch, chunk->iovs, chunk->iovcnt,
-						 base_offset_blocks, bdev_io->u.bdev.num_blocks,
+						 base_offset_blocks, raid_io->num_blocks,
 						 raid5f_chunk_complete_bdev_io, chunk, &io_opts);
 		break;
 	default:
@@ -538,11 +536,9 @@ raid5f_chunk_set_iovcnt(struct chunk *chunk, int iovcnt)
 static int
 raid5f_stripe_request_map_iovecs(struct stripe_request *stripe_req)
 {
-	struct raid_bdev *raid_bdev = stripe_req->raid_io->raid_bdev;
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(stripe_req->raid_io);
-	const struct iovec *raid_io_iovs = bdev_io->u.bdev.iovs;
-	int raid_io_iovcnt = bdev_io->u.bdev.iovcnt;
-	void *raid_io_md = spdk_bdev_io_get_md_buf(bdev_io);
+	struct raid_bdev_io *raid_io = stripe_req->raid_io;
+	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
+	void *raid_io_md = raid_io->md_buf;
 	uint32_t raid_io_md_size = spdk_bdev_get_md_size(&raid_bdev->bdev);
 	struct chunk *chunk;
 	int raid_io_iov_idx = 0;
@@ -556,15 +552,15 @@ raid5f_stripe_request_map_iovecs(struct stripe_request *stripe_req)
 		size_t off = raid_io_iov_offset;
 		int ret;
 
-		for (i = raid_io_iov_idx; i < raid_io_iovcnt; i++) {
+		for (i = raid_io_iov_idx; i < raid_io->iovcnt; i++) {
 			chunk_iovcnt++;
-			off += raid_io_iovs[i].iov_len;
+			off += raid_io->iovs[i].iov_len;
 			if (off >= raid_io_offset + len) {
 				break;
 			}
 		}
 
-		assert(raid_io_iov_idx + chunk_iovcnt <= raid_io_iovcnt);
+		assert(raid_io_iov_idx + chunk_iovcnt <= raid_io->iovcnt);
 
 		ret = raid5f_chunk_set_iovcnt(chunk, chunk_iovcnt);
 		if (ret) {
@@ -578,7 +574,7 @@ raid5f_stripe_request_map_iovecs(struct stripe_request *stripe_req)
 
 		for (i = 0; i < chunk_iovcnt; i++) {
 			struct iovec *chunk_iov = &chunk->iovs[i];
-			const struct iovec *raid_io_iov = &raid_io_iovs[raid_io_iov_idx];
+			const struct iovec *raid_io_iov = &raid_io->iovs[raid_io_iov_idx];
 			size_t chunk_iov_offset = raid_io_offset - raid_io_iov_offset;
 
 			chunk_iov->iov_base = raid_io_iov->iov_base + chunk_iov_offset;
@@ -703,8 +699,7 @@ raid5f_submit_reconstruct_read(struct raid_bdev_io *raid_io, uint64_t stripe_ind
 {
 	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
 	struct raid5f_io_channel *r5ch = spdk_io_channel_get_ctx(raid_io->raid_ch->module_channel);
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
-	void *bdev_io_md = spdk_bdev_io_get_md_buf(bdev_io);
+	void *raid_io_md = raid_io->md_buf;
 	struct stripe_request *stripe_req;
 	struct chunk *chunk;
 	int buf_idx;
@@ -725,24 +720,24 @@ raid5f_submit_reconstruct_read(struct raid_bdev_io *raid_io, uint64_t stripe_ind
 			int i;
 			int ret;
 
-			ret = raid5f_chunk_set_iovcnt(chunk, bdev_io->u.bdev.iovcnt);
+			ret = raid5f_chunk_set_iovcnt(chunk, raid_io->iovcnt);
 			if (ret) {
 				return ret;
 			}
 
-			for (i = 0; i < bdev_io->u.bdev.iovcnt; i++) {
-				chunk->iovs[i] = bdev_io->u.bdev.iovs[i];
+			for (i = 0; i < raid_io->iovcnt; i++) {
+				chunk->iovs[i] = raid_io->iovs[i];
 			}
 
-			chunk->md_buf = bdev_io_md;
+			chunk->md_buf = raid_io_md;
 		} else {
 			struct iovec *iov = &chunk->iovs[0];
 
 			iov->iov_base = stripe_req->reconstruct.chunk_buffers[buf_idx];
-			iov->iov_len = bdev_io->u.bdev.num_blocks << raid_bdev->blocklen_shift;
+			iov->iov_len = raid_io->num_blocks << raid_bdev->blocklen_shift;
 			chunk->iovcnt = 1;
 
-			if (bdev_io_md) {
+			if (raid_io_md) {
 				chunk->md_buf = stripe_req->reconstruct.chunk_md_buffers[buf_idx];
 			}
 
@@ -772,20 +767,17 @@ raid5f_submit_read_request(struct raid_bdev_io *raid_io, uint64_t stripe_index,
 	struct spdk_io_channel *base_ch = raid_io->raid_ch->base_channel[chunk_idx];
 	uint64_t chunk_offset = stripe_offset - (chunk_data_idx << raid_bdev->strip_size_shift);
 	uint64_t base_offset_blocks = (stripe_index << raid_bdev->strip_size_shift) + chunk_offset;
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	struct spdk_bdev_ext_io_opts io_opts;
 	int ret;
 
-	raid5f_init_ext_io_opts(bdev_io, &io_opts);
+	raid5f_init_ext_io_opts(&io_opts, raid_io);
 	if (base_ch == NULL) {
 		return raid5f_submit_reconstruct_read(raid_io, stripe_index, chunk_idx, chunk_offset);
 	}
 
-	ret = raid_bdev_readv_blocks_ext(base_info, base_ch, bdev_io->u.bdev.iovs,
-					 bdev_io->u.bdev.iovcnt,
-					 base_offset_blocks, bdev_io->u.bdev.num_blocks, raid5f_chunk_read_complete, raid_io,
-					 &io_opts);
-
+	ret = raid_bdev_readv_blocks_ext(base_info, base_ch, raid_io->iovs, raid_io->iovcnt,
+					 base_offset_blocks, raid_io->num_blocks,
+					 raid5f_chunk_read_complete, raid_io, &io_opts);
 	if (spdk_unlikely(ret == -ENOMEM)) {
 		raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(base_info->desc),
 					base_ch, _raid5f_submit_rw_request);
@@ -798,22 +790,20 @@ raid5f_submit_read_request(struct raid_bdev_io *raid_io, uint64_t stripe_index,
 static void
 raid5f_submit_rw_request(struct raid_bdev_io *raid_io)
 {
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
 	struct raid5f_info *r5f_info = raid_bdev->module_private;
-	uint64_t offset_blocks = bdev_io->u.bdev.offset_blocks;
-	uint64_t stripe_index = offset_blocks / r5f_info->stripe_blocks;
-	uint64_t stripe_offset = offset_blocks % r5f_info->stripe_blocks;
+	uint64_t stripe_index = raid_io->offset_blocks / r5f_info->stripe_blocks;
+	uint64_t stripe_offset = raid_io->offset_blocks % r5f_info->stripe_blocks;
 	int ret;
 
-	switch (bdev_io->type) {
+	switch (raid_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		assert(bdev_io->u.bdev.num_blocks <= raid_bdev->strip_size);
+		assert(raid_io->num_blocks <= raid_bdev->strip_size);
 		ret = raid5f_submit_read_request(raid_io, stripe_index, stripe_offset);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		assert(stripe_offset == 0);
-		assert(bdev_io->u.bdev.num_blocks == r5f_info->stripe_blocks);
+		assert(raid_io->num_blocks == r5f_info->stripe_blocks);
 		ret = raid5f_submit_write_request(raid_io, stripe_index);
 		break;
 	default:

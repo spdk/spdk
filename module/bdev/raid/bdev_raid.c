@@ -465,6 +465,31 @@ raid_bdev_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 	raid_io->raid_bdev->module->submit_rw_request(raid_io);
 }
 
+void
+raid_bdev_io_init(struct raid_bdev_io *raid_io, struct raid_bdev_io_channel *raid_ch,
+		  enum spdk_bdev_io_type type, uint64_t offset_blocks,
+		  uint64_t num_blocks, struct iovec *iovs, int iovcnt, void *md_buf,
+		  struct spdk_memory_domain *memory_domain, void *memory_domain_ctx)
+{
+	struct spdk_io_channel *ch = spdk_io_channel_from_ctx(raid_ch);
+	struct raid_bdev *raid_bdev = spdk_io_channel_get_io_device(ch);
+
+	raid_io->type = type;
+	raid_io->offset_blocks = offset_blocks;
+	raid_io->num_blocks = num_blocks;
+	raid_io->iovs = iovs;
+	raid_io->iovcnt = iovcnt;
+	raid_io->memory_domain = memory_domain;
+	raid_io->memory_domain_ctx = memory_domain_ctx;
+	raid_io->md_buf = md_buf;
+
+	raid_io->raid_bdev = raid_bdev;
+	raid_io->raid_ch = raid_ch;
+	raid_io->base_bdev_io_remaining = 0;
+	raid_io->base_bdev_io_submitted = 0;
+	raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+}
+
 /*
  * brief:
  * raid_bdev_submit_request function is the submit_request function pointer of
@@ -481,11 +506,10 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 {
 	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 
-	raid_io->raid_bdev = bdev_io->bdev->ctxt;
-	raid_io->raid_ch = spdk_io_channel_get_ctx(ch);
-	raid_io->base_bdev_io_remaining = 0;
-	raid_io->base_bdev_io_submitted = 0;
-	raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	raid_bdev_io_init(raid_io, spdk_io_channel_get_ctx(ch), bdev_io->type,
+			  bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
+			  bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.md_buf,
+			  bdev_io->u.bdev.memory_domain, bdev_io->u.bdev.memory_domain_ctx);
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:

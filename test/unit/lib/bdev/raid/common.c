@@ -173,3 +173,53 @@ raid_test_destroy_io_channel(struct raid_bdev_io_channel *raid_ch)
 
 	free(raid_ch);
 }
+
+static void
+raid_test_bdev_io_init(struct raid_bdev_io *raid_io, struct raid_bdev *raid_bdev,
+		       struct raid_bdev_io_channel *raid_ch,
+		       enum spdk_bdev_io_type type, uint64_t offset_blocks,
+		       uint64_t num_blocks, struct iovec *iovs, int iovcnt, void *md_buf)
+{
+	memset(raid_io, 0, sizeof(*raid_io));
+
+	raid_io->raid_bdev = raid_bdev;
+	raid_io->raid_ch = raid_ch;
+
+	raid_io->type = type;
+	raid_io->offset_blocks = offset_blocks;
+	raid_io->num_blocks = num_blocks;
+	raid_io->iovs = iovs;
+	raid_io->iovcnt = iovcnt;
+	raid_io->md_buf = md_buf;
+
+	raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+}
+
+/* needs to be implemented in module unit test files */
+static void raid_test_bdev_io_complete(struct raid_bdev_io *raid_io,
+				       enum spdk_bdev_io_status status);
+
+void
+raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status)
+{
+	raid_test_bdev_io_complete(raid_io, status);
+}
+
+bool
+raid_bdev_io_complete_part(struct raid_bdev_io *raid_io, uint64_t completed,
+			   enum spdk_bdev_io_status status)
+{
+	SPDK_CU_ASSERT_FATAL(raid_io->base_bdev_io_remaining >= completed);
+	raid_io->base_bdev_io_remaining -= completed;
+
+	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
+		raid_io->base_bdev_io_status = status;
+	}
+
+	if (raid_io->base_bdev_io_remaining == 0) {
+		raid_bdev_io_complete(raid_io, raid_io->base_bdev_io_status);
+		return true;
+	} else {
+		return false;
+	}
+}

@@ -65,7 +65,6 @@ _concat_submit_rw_request(void *_raid_io)
 static void
 concat_submit_rw_request(struct raid_bdev_io *raid_io)
 {
-	struct spdk_bdev_io		*bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	struct raid_bdev_io_channel	*raid_ch = raid_io->raid_ch;
 	struct raid_bdev		*raid_bdev = raid_io->raid_bdev;
 	struct concat_block_range	*block_range = raid_bdev->module_private;
@@ -80,15 +79,15 @@ concat_submit_rw_request(struct raid_bdev_io *raid_io)
 
 	pd_idx = -1;
 	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
-		if (block_range[i].start > bdev_io->u.bdev.offset_blocks) {
+		if (block_range[i].start > raid_io->offset_blocks) {
 			break;
 		}
 		pd_idx = i;
 	}
 	assert(pd_idx >= 0);
-	assert(bdev_io->u.bdev.offset_blocks >= block_range[pd_idx].start);
-	pd_lba = bdev_io->u.bdev.offset_blocks - block_range[pd_idx].start;
-	pd_blocks = bdev_io->u.bdev.num_blocks;
+	assert(raid_io->offset_blocks >= block_range[pd_idx].start);
+	pd_lba = raid_io->offset_blocks - block_range[pd_idx].start;
+	pd_blocks = raid_io->num_blocks;
 	base_info = &raid_bdev->base_bdev_info[pd_idx];
 	if (base_info->desc == NULL) {
 		SPDK_ERRLOG("base bdev desc null for pd_idx %u\n", pd_idx);
@@ -105,22 +104,22 @@ concat_submit_rw_request(struct raid_bdev_io *raid_io)
 	base_ch = raid_ch->base_channel[pd_idx];
 
 	io_opts.size = sizeof(io_opts);
-	io_opts.memory_domain = bdev_io->u.bdev.memory_domain;
-	io_opts.memory_domain_ctx = bdev_io->u.bdev.memory_domain_ctx;
-	io_opts.metadata = bdev_io->u.bdev.md_buf;
+	io_opts.memory_domain = raid_io->memory_domain;
+	io_opts.memory_domain_ctx = raid_io->memory_domain_ctx;
+	io_opts.metadata = raid_io->md_buf;
 
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
+	if (raid_io->type == SPDK_BDEV_IO_TYPE_READ) {
 		ret = raid_bdev_readv_blocks_ext(base_info, base_ch,
-						 bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+						 raid_io->iovs, raid_io->iovcnt,
 						 pd_lba, pd_blocks, concat_bdev_io_completion,
 						 raid_io, &io_opts);
-	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+	} else if (raid_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 		ret = raid_bdev_writev_blocks_ext(base_info, base_ch,
-						  bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+						  raid_io->iovs, raid_io->iovcnt,
 						  pd_lba, pd_blocks, concat_bdev_io_completion,
 						  raid_io, &io_opts);
 	} else {
-		SPDK_ERRLOG("Recvd not supported io type %u\n", bdev_io->type);
+		SPDK_ERRLOG("Recvd not supported io type %u\n", raid_io->type);
 		assert(0);
 	}
 
@@ -170,7 +169,6 @@ concat_base_io_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 static void
 concat_submit_null_payload_request(struct raid_bdev_io *raid_io)
 {
-	struct spdk_bdev_io		*bdev_io;
 	struct raid_bdev		*raid_bdev;
 	int				ret;
 	struct raid_base_bdev_info	*base_info;
@@ -182,12 +180,11 @@ concat_submit_null_payload_request(struct raid_bdev_io *raid_io)
 	struct concat_block_range	*block_range;
 	int				i, start_idx, stop_idx;
 
-	bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	raid_bdev = raid_io->raid_bdev;
 	block_range = raid_bdev->module_private;
 
-	offset_blocks = bdev_io->u.bdev.offset_blocks;
-	num_blocks = bdev_io->u.bdev.num_blocks;
+	offset_blocks = raid_io->offset_blocks;
+	num_blocks = raid_io->num_blocks;
 	start_idx = -1;
 	stop_idx = -1;
 	/*
@@ -223,8 +220,8 @@ concat_submit_null_payload_request(struct raid_bdev_io *raid_io)
 	if (raid_io->base_bdev_io_remaining == 0) {
 		raid_io->base_bdev_io_remaining = stop_idx - start_idx + 1;
 	}
-	offset_blocks = bdev_io->u.bdev.offset_blocks;
-	num_blocks = bdev_io->u.bdev.num_blocks;
+	offset_blocks = raid_io->offset_blocks;
+	num_blocks = raid_io->num_blocks;
 	for (i = start_idx; i <= stop_idx; i++) {
 		assert(offset_blocks >= block_range[i].start);
 		assert(offset_blocks < block_range[i].start + block_range[i].length);
@@ -240,7 +237,7 @@ concat_submit_null_payload_request(struct raid_bdev_io *raid_io)
 		}
 		base_info = &raid_bdev->base_bdev_info[i];
 		base_ch = raid_io->raid_ch->base_channel[i];
-		switch (bdev_io->type) {
+		switch (raid_io->type) {
 		case SPDK_BDEV_IO_TYPE_UNMAP:
 			ret = raid_bdev_unmap_blocks(base_info, base_ch,
 						     pd_lba, pd_blocks,
@@ -252,7 +249,7 @@ concat_submit_null_payload_request(struct raid_bdev_io *raid_io)
 						     concat_base_io_complete, raid_io);
 			break;
 		default:
-			SPDK_ERRLOG("submit request, invalid io type with null payload %u\n", bdev_io->type);
+			SPDK_ERRLOG("submit request, invalid io type with null payload %u\n", raid_io->type);
 			assert(false);
 			ret = -EIO;
 		}

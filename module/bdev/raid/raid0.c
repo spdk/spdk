@@ -60,7 +60,6 @@ _raid0_submit_rw_request(void *_raid_io)
 static void
 raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 {
-	struct spdk_bdev_io		*bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	struct spdk_bdev_ext_io_opts	io_opts = {};
 	struct raid_bdev_io_channel	*raid_ch = raid_io->raid_ch;
 	struct raid_bdev		*raid_bdev = raid_io->raid_bdev;
@@ -75,8 +74,8 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 	struct raid_base_bdev_info	*base_info;
 	struct spdk_io_channel		*base_ch;
 
-	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
-	end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
+	start_strip = raid_io->offset_blocks >> raid_bdev->strip_size_shift;
+	end_strip = (raid_io->offset_blocks + raid_io->num_blocks - 1) >>
 		    raid_bdev->strip_size_shift;
 	if (start_strip != end_strip && raid_bdev->num_base_bdevs > 1) {
 		assert(false);
@@ -87,9 +86,9 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 
 	pd_strip = start_strip / raid_bdev->num_base_bdevs;
 	pd_idx = start_strip % raid_bdev->num_base_bdevs;
-	offset_in_strip = bdev_io->u.bdev.offset_blocks & (raid_bdev->strip_size - 1);
+	offset_in_strip = raid_io->offset_blocks & (raid_bdev->strip_size - 1);
 	pd_lba = (pd_strip << raid_bdev->strip_size_shift) + offset_in_strip;
-	pd_blocks = bdev_io->u.bdev.num_blocks;
+	pd_blocks = raid_io->num_blocks;
 	base_info = &raid_bdev->base_bdev_info[pd_idx];
 	if (base_info->desc == NULL) {
 		SPDK_ERRLOG("base bdev desc null for pd_idx %u\n", pd_idx);
@@ -106,22 +105,22 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 	base_ch = raid_ch->base_channel[pd_idx];
 
 	io_opts.size = sizeof(io_opts);
-	io_opts.memory_domain = bdev_io->u.bdev.memory_domain;
-	io_opts.memory_domain_ctx = bdev_io->u.bdev.memory_domain_ctx;
-	io_opts.metadata = bdev_io->u.bdev.md_buf;
+	io_opts.memory_domain = raid_io->memory_domain;
+	io_opts.memory_domain_ctx = raid_io->memory_domain_ctx;
+	io_opts.metadata = raid_io->md_buf;
 
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
+	if (raid_io->type == SPDK_BDEV_IO_TYPE_READ) {
 		ret = raid_bdev_readv_blocks_ext(base_info, base_ch,
-						 bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+						 raid_io->iovs, raid_io->iovcnt,
 						 pd_lba, pd_blocks, raid0_bdev_io_completion,
 						 raid_io, &io_opts);
-	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+	} else if (raid_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 		ret = raid_bdev_writev_blocks_ext(base_info, base_ch,
-						  bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+						  raid_io->iovs, raid_io->iovcnt,
 						  pd_lba, pd_blocks, raid0_bdev_io_completion,
 						  raid_io, &io_opts);
 	} else {
-		SPDK_ERRLOG("Recvd not supported io type %u\n", bdev_io->type);
+		SPDK_ERRLOG("Recvd not supported io type %u\n", raid_io->type);
 		assert(0);
 	}
 
@@ -269,19 +268,17 @@ raid0_base_io_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 static void
 raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 {
-	struct spdk_bdev_io		*bdev_io;
 	struct raid_bdev		*raid_bdev;
 	struct raid_bdev_io_range	io_range;
 	int				ret;
 	struct raid_base_bdev_info	*base_info;
 	struct spdk_io_channel		*base_ch;
 
-	bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	raid_bdev = raid_io->raid_bdev;
 
 	_raid0_get_io_range(&io_range, raid_bdev->num_base_bdevs,
 			    raid_bdev->strip_size, raid_bdev->strip_size_shift,
-			    bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks);
+			    raid_io->offset_blocks, raid_io->num_blocks);
 
 	if (raid_io->base_bdev_io_remaining == 0) {
 		raid_io->base_bdev_io_remaining = io_range.n_disks_involved;
@@ -301,7 +298,7 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 
 		_raid0_split_io_range(&io_range, disk_idx, &offset_in_disk, &nblocks_in_disk);
 
-		switch (bdev_io->type) {
+		switch (raid_io->type) {
 		case SPDK_BDEV_IO_TYPE_UNMAP:
 			ret = raid_bdev_unmap_blocks(base_info, base_ch,
 						     offset_in_disk, nblocks_in_disk,
@@ -315,7 +312,7 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 			break;
 
 		default:
-			SPDK_ERRLOG("submit request, invalid io type with null payload %u\n", bdev_io->type);
+			SPDK_ERRLOG("submit request, invalid io type with null payload %u\n", raid_io->type);
 			assert(false);
 			ret = -EIO;
 		}

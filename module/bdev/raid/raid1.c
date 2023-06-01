@@ -62,7 +62,7 @@ raid1_read_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *
 	struct raid_bdev_io *raid_io = cb_arg;
 
 	raid1_channel_dec_read_counters(raid_io->raid_ch, raid_io->base_bdev_io_submitted,
-					spdk_bdev_io_from_ctx(raid_io)->u.bdev.num_blocks);
+					raid_io->num_blocks);
 
 	raid1_bdev_io_completion(bdev_io, success, raid_io);
 }
@@ -78,13 +78,13 @@ _raid1_submit_rw_request(void *_raid_io)
 }
 
 static void
-raid1_init_ext_io_opts(struct spdk_bdev_io *bdev_io, struct spdk_bdev_ext_io_opts *opts)
+raid1_init_ext_io_opts(struct spdk_bdev_ext_io_opts *opts, struct raid_bdev_io *raid_io)
 {
 	memset(opts, 0, sizeof(*opts));
 	opts->size = sizeof(*opts);
-	opts->memory_domain = bdev_io->u.bdev.memory_domain;
-	opts->memory_domain_ctx = bdev_io->u.bdev.memory_domain_ctx;
-	opts->metadata = bdev_io->u.bdev.md_buf;
+	opts->memory_domain = raid_io->memory_domain;
+	opts->memory_domain_ctx = raid_io->memory_domain_ctx;
+	opts->metadata = raid_io->md_buf;
 }
 
 static uint8_t
@@ -110,17 +110,12 @@ static int
 raid1_submit_read_request(struct raid_bdev_io *raid_io)
 {
 	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	struct raid_bdev_io_channel *raid_ch = raid_io->raid_ch;
 	struct spdk_bdev_ext_io_opts io_opts;
 	struct raid_base_bdev_info *base_info;
 	struct spdk_io_channel *base_ch;
-	uint64_t pd_lba, pd_blocks;
 	uint8_t idx;
 	int ret;
-
-	pd_lba = bdev_io->u.bdev.offset_blocks;
-	pd_blocks = bdev_io->u.bdev.num_blocks;
 
 	idx = raid1_channel_next_read_base_bdev(raid_bdev, raid_ch);
 	if (spdk_unlikely(idx == UINT8_MAX)) {
@@ -133,14 +128,13 @@ raid1_submit_read_request(struct raid_bdev_io *raid_io)
 
 	raid_io->base_bdev_io_remaining = 1;
 
-	raid1_init_ext_io_opts(bdev_io, &io_opts);
-	ret = raid_bdev_readv_blocks_ext(base_info, base_ch,
-					 bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-					 pd_lba, pd_blocks, raid1_read_bdev_io_completion,
-					 raid_io, &io_opts);
+	raid1_init_ext_io_opts(&io_opts, raid_io);
+	ret = raid_bdev_readv_blocks_ext(base_info, base_ch, raid_io->iovs, raid_io->iovcnt,
+					 raid_io->offset_blocks, raid_io->num_blocks,
+					 raid1_read_bdev_io_completion, raid_io, &io_opts);
 
 	if (spdk_likely(ret == 0)) {
-		raid1_channel_inc_read_counters(raid_ch, idx, pd_blocks);
+		raid1_channel_inc_read_counters(raid_ch, idx, raid_io->num_blocks);
 		raid_io->base_bdev_io_submitted = idx;
 	} else if (spdk_unlikely(ret == -ENOMEM)) {
 		raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(base_info->desc),
@@ -155,23 +149,18 @@ static int
 raid1_submit_write_request(struct raid_bdev_io *raid_io)
 {
 	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	struct spdk_bdev_ext_io_opts io_opts;
 	struct raid_base_bdev_info *base_info;
 	struct spdk_io_channel *base_ch;
-	uint64_t pd_lba, pd_blocks;
 	uint8_t idx;
 	uint64_t base_bdev_io_not_submitted;
 	int ret = 0;
-
-	pd_lba = bdev_io->u.bdev.offset_blocks;
-	pd_blocks = bdev_io->u.bdev.num_blocks;
 
 	if (raid_io->base_bdev_io_submitted == 0) {
 		raid_io->base_bdev_io_remaining = raid_bdev->num_base_bdevs;
 	}
 
-	raid1_init_ext_io_opts(bdev_io, &io_opts);
+	raid1_init_ext_io_opts(&io_opts, raid_io);
 	for (idx = raid_io->base_bdev_io_submitted; idx < raid_bdev->num_base_bdevs; idx++) {
 		base_info = &raid_bdev->base_bdev_info[idx];
 		base_ch = raid_io->raid_ch->base_channel[idx];
@@ -183,10 +172,9 @@ raid1_submit_write_request(struct raid_bdev_io *raid_io)
 			continue;
 		}
 
-		ret = raid_bdev_writev_blocks_ext(base_info, base_ch,
-						  bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-						  pd_lba, pd_blocks, raid1_write_bdev_io_completion,
-						  raid_io, &io_opts);
+		ret = raid_bdev_writev_blocks_ext(base_info, base_ch, raid_io->iovs, raid_io->iovcnt,
+						  raid_io->offset_blocks, raid_io->num_blocks,
+						  raid1_write_bdev_io_completion, raid_io, &io_opts);
 		if (spdk_unlikely(ret != 0)) {
 			if (spdk_unlikely(ret == -ENOMEM)) {
 				raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(base_info->desc),
@@ -214,10 +202,9 @@ raid1_submit_write_request(struct raid_bdev_io *raid_io)
 static void
 raid1_submit_rw_request(struct raid_bdev_io *raid_io)
 {
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	int ret;
 
-	switch (bdev_io->type) {
+	switch (raid_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		ret = raid1_submit_read_request(raid_io);
 		break;

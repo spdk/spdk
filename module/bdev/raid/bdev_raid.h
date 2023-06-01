@@ -103,6 +103,15 @@ struct raid_bdev_io {
 	/* The raid bdev associated with this IO */
 	struct raid_bdev *raid_bdev;
 
+	enum spdk_bdev_io_type type;
+	uint64_t offset_blocks;
+	uint64_t num_blocks;
+	struct iovec *iovs;
+	int iovcnt;
+	struct spdk_memory_domain *memory_domain;
+	void *memory_domain_ctx;
+	void *md_buf;
+
 	/* WaitQ entry, used only in waitq logic */
 	struct spdk_bdev_io_wait_entry	waitq_entry;
 
@@ -302,6 +311,10 @@ void raid_bdev_queue_io_wait(struct raid_bdev_io *raid_io, struct spdk_bdev *bde
 			     struct spdk_io_channel *ch, spdk_bdev_io_wait_cb cb_fn);
 void raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status);
 void raid_bdev_module_stop_done(struct raid_bdev *raid_bdev);
+void raid_bdev_io_init(struct raid_bdev_io *raid_io, struct raid_bdev_io_channel *raid_ch,
+		       enum spdk_bdev_io_type type, uint64_t offset_blocks,
+		       uint64_t num_blocks, struct iovec *iovs, int iovcnt, void *md_buf,
+		       struct spdk_memory_domain *memory_domain, void *memory_domain_ctx);
 
 static inline uint8_t
 raid_bdev_base_bdev_slot(struct raid_base_bdev_info *base_info)

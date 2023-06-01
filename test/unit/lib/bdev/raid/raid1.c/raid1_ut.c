@@ -14,10 +14,6 @@
 
 DEFINE_STUB_V(raid_bdev_module_list_add, (struct raid_bdev_module *raid_module));
 DEFINE_STUB_V(raid_bdev_module_stop_done, (struct raid_bdev *raid_bdev));
-DEFINE_STUB_V(raid_bdev_io_complete, (struct raid_bdev_io *raid_io,
-				      enum spdk_bdev_io_status status));
-DEFINE_STUB(raid_bdev_io_complete_part, bool, (struct raid_bdev_io *raid_io, uint64_t completed,
-		enum spdk_bdev_io_status status), true);
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
 DEFINE_STUB_V(raid_bdev_queue_io_wait, (struct raid_bdev_io *raid_io, struct spdk_bdev *bdev,
 					struct spdk_io_channel *ch, spdk_bdev_io_wait_cb cb_fn));
@@ -128,22 +124,12 @@ static struct raid_bdev_io *
 get_raid_io(struct raid1_info *r1_info, struct raid_bdev_io_channel *raid_ch,
 	    enum spdk_bdev_io_type io_type, uint64_t num_blocks)
 {
-	struct spdk_bdev_io *bdev_io;
 	struct raid_bdev_io *raid_io;
 
-	bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
-	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
+	raid_io = calloc(1, sizeof(*raid_io));
+	SPDK_CU_ASSERT_FATAL(raid_io != NULL);
 
-	bdev_io->bdev = &r1_info->raid_bdev->bdev;
-	bdev_io->type = io_type;
-	bdev_io->u.bdev.offset_blocks = 0;
-	bdev_io->u.bdev.num_blocks = num_blocks;
-	bdev_io->internal.cb = NULL;
-	bdev_io->internal.caller_ctx = NULL;
-
-	raid_io = (void *)bdev_io->driver_ctx;
-	raid_io->raid_bdev = r1_info->raid_bdev;
-	raid_io->raid_ch = raid_ch;
+	raid_test_bdev_io_init(raid_io, r1_info->raid_bdev, raid_ch, io_type, 0, num_blocks, NULL, 0, NULL);
 
 	return raid_io;
 }
@@ -151,7 +137,15 @@ get_raid_io(struct raid1_info *r1_info, struct raid_bdev_io_channel *raid_ch,
 static void
 put_raid_io(struct raid_bdev_io *raid_io)
 {
-	free(spdk_bdev_io_from_ctx(raid_io));
+	free(raid_io);
+}
+
+static void
+raid_test_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status)
+{
+	CU_ASSERT(status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	put_raid_io(raid_io);
 }
 
 static void
