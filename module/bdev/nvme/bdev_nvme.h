@@ -49,7 +49,8 @@ struct nvme_async_probe_ctx {
 	struct spdk_nvme_probe_ctx *probe_ctx;
 	const char *base_name;
 	const char **names;
-	uint32_t count;
+	uint32_t max_bdevs;
+	uint32_t reported_bdevs;
 	struct spdk_poller *poller;
 	struct spdk_nvme_transport_id trid;
 	struct nvme_ctrlr_opts bdev_opts;

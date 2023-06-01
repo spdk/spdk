@@ -5034,10 +5034,10 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 }
 
 static void
-populate_namespaces_cb(struct nvme_async_probe_ctx *ctx, size_t count, int rc)
+populate_namespaces_cb(struct nvme_async_probe_ctx *ctx, int rc)
 {
 	if (ctx->cb_fn) {
-		ctx->cb_fn(ctx->cb_ctx, count, rc);
+		ctx->cb_fn(ctx->cb_ctx, ctx->reported_bdevs, rc);
 	}
 
 	ctx->namespaces_populated = true;
@@ -5075,7 +5075,8 @@ nvme_ctrlr_init_ana_log_page_done(void *_ctx, const struct spdk_nvme_cpl *cpl)
 		nvme_ctrlr_delete(nvme_ctrlr);
 
 		if (ctx != NULL) {
-			populate_namespaces_cb(ctx, 0, -1);
+			ctx->reported_bdevs = 0;
+			populate_namespaces_cb(ctx, -1);
 		}
 		return;
 	}
@@ -5567,7 +5568,8 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_ctrlr *nvme_ctrlr,
 	assert(nvme_ctrlr != NULL);
 
 	if (ctx->names == NULL) {
-		populate_namespaces_cb(ctx, 0, 0);
+		ctx->reported_bdevs = 0;
+		populate_namespaces_cb(ctx, 0);
 		return;
 	}
 
@@ -5579,20 +5581,22 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_ctrlr *nvme_ctrlr,
 	nvme_ns = nvme_ctrlr_get_first_active_ns(nvme_ctrlr);
 	while (nvme_ns != NULL) {
 		nvme_bdev = nvme_ns->bdev;
-		if (j < ctx->count) {
+		if (j < ctx->max_bdevs) {
 			ctx->names[j] = nvme_bdev->disk.name;
 			j++;
 		} else {
 			SPDK_ERRLOG("Maximum number of namespaces supported per NVMe controller is %du. Unable to return all names of created bdevs\n",
-				    ctx->count);
-			populate_namespaces_cb(ctx, 0, -ERANGE);
+				    ctx->max_bdevs);
+			ctx->reported_bdevs = 0;
+			populate_namespaces_cb(ctx, -ERANGE);
 			return;
 		}
 
 		nvme_ns = nvme_ctrlr_get_next_active_ns(nvme_ctrlr, nvme_ns);
 	}
 
-	populate_namespaces_cb(ctx, j, 0);
+	ctx->reported_bdevs = j;
+	populate_namespaces_cb(ctx, 0);
 }
 
 static int
@@ -5742,7 +5746,8 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	rc = nvme_ctrlr_create(ctrlr, ctx->base_name, &ctx->trid, ctx);
 	if (rc != 0) {
-		populate_namespaces_cb(ctx, 0, rc);
+		ctx->reported_bdevs = 0;
+		populate_namespaces_cb(ctx, rc);
 	}
 }
 
@@ -5766,7 +5771,8 @@ connect_set_failover_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		rc = -ENODEV;
 	}
 
-	populate_namespaces_cb(ctx, 0, rc);
+	ctx->reported_bdevs = 0;
+	populate_namespaces_cb(ctx, rc);
 }
 
 static int
@@ -5785,7 +5791,8 @@ bdev_nvme_async_poll(void *arg)
 			 * the caller (usually the RPC). populate_namespaces_cb()
 			 * will take care of freeing the nvme_async_probe_ctx.
 			 */
-			populate_namespaces_cb(ctx, 0, -EIO);
+			ctx->reported_bdevs = 0;
+			populate_namespaces_cb(ctx, -EIO);
 		} else if (ctx->namespaces_populated) {
 			/* The namespaces for the attached controller were all
 			 * populated and the response was already sent to the
@@ -5875,7 +5882,7 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	}
 	ctx->base_name = base_name;
 	ctx->names = names;
-	ctx->count = count;
+	ctx->max_bdevs = count;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_ctx = cb_ctx;
 	ctx->trid = *trid;
