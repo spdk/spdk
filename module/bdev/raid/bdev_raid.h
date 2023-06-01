@@ -112,7 +112,7 @@ struct raid_bdev_io {
 	/* Used for tracking progress on io requests sent to member disks. */
 	uint64_t			base_bdev_io_remaining;
 	uint8_t				base_bdev_io_submitted;
-	uint8_t				base_bdev_io_status;
+	enum spdk_bdev_io_status	base_bdev_io_status;
 
 	/* Private data for the raid module */
 	void				*module_private;
