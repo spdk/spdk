@@ -1238,9 +1238,11 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 	int rc = 0;
 
-	/* If we need to exec an accel sequence, append a copy operation making accel change the
-	 * src/dst buffers of the previous operation */
-	if (bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io)) {
+	/* If we need to exec an accel sequence or the IO uses a memory domain buffer and has a
+	 * sequence, append a copy operation making accel change the src/dst buffers of the previous
+	 * operation */
+	if (bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io) ||
+	    (bdev_io_use_accel_sequence(bdev_io) && bdev_io_use_memory_domain(bdev_io))) {
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 			rc = spdk_accel_append_copy(&bdev_io->internal.accel_sequence, ch->accel_channel,
 						    bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
@@ -1639,6 +1641,8 @@ bdev_io_push_bounce_data(struct spdk_bdev_io *bdev_io)
 	int rc = 0;
 
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	assert(!bdev_io_use_accel_sequence(bdev_io));
+
 	/* if this is read path, copy data from bounce buffer to original buffer */
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
 		if (bdev_io_use_memory_domain(bdev_io)) {
@@ -3239,7 +3243,8 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 			if (bdev_io_needs_sequence_exec(parent_io->internal.desc, parent_io)) {
 				bdev_io_exec_sequence(parent_io, bdev_io_complete_parent_sequence_cb);
 				return;
-			} else if (parent_io->internal.orig_iovcnt != 0) {
+			} else if (parent_io->internal.orig_iovcnt != 0 &&
+				   !bdev_io_use_accel_sequence(bdev_io)) {
 				/* bdev IO will be completed in the callback */
 				_bdev_io_push_bounce_data_buffer(parent_io, parent_bdev_io_complete);
 				return;
@@ -7110,7 +7115,8 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 			if (bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io)) {
 				bdev_io_exec_sequence(bdev_io, bdev_io_complete_sequence_cb);
 				return;
-			} else if (spdk_unlikely(bdev_io->internal.orig_iovcnt != 0)) {
+			} else if (spdk_unlikely(bdev_io->internal.orig_iovcnt != 0 &&
+						 !bdev_io_use_accel_sequence(bdev_io))) {
 				_bdev_io_push_bounce_data_buffer(bdev_io,
 								 _bdev_io_complete_push_bounce_done);
 				/* bdev IO will be completed in the callback */
@@ -7356,12 +7362,6 @@ bdev_register(struct spdk_bdev *bdev)
 		if (!bdev->fn_table->accel_sequence_supported(bdev->ctxt,
 				(enum spdk_bdev_io_type)i)) {
 			continue;
-		}
-
-		if (spdk_bdev_get_memory_domains(bdev, NULL, 0) <= 0) {
-			SPDK_ERRLOG("bdev supporting accel sequence is required to support "
-				    "memory domains\n");
-			return -EINVAL;
 		}
 
 		if (spdk_bdev_is_md_separate(bdev)) {
