@@ -147,6 +147,7 @@ test_cuse_update(void)
 	verify_devices(&ctrlr);
 
 	g_active_num_ns = 0;
+	g_active_nsid_min = 1;
 	nvme_cuse_update(&ctrlr);
 	verify_devices(&ctrlr);
 
