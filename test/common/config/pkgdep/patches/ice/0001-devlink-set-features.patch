@@ -1,0 +1,22 @@
+devlink_set_features() was completely removed in 6.3, see:
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fb8421a94c5613fee86e192bab0892ecb1d56e4c
+---
+ src/kcompat_std_defs.h | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/kcompat_std_defs.h b/src/kcompat_std_defs.h
+index 00f3e4d..eea3b0b 100644
+--- a/src/kcompat_std_defs.h
++++ b/src/kcompat_std_defs.h
+@@ -372,4 +372,9 @@
+ #undef HAVE_NDO_GET_DEVLINK_PORT
+ #endif /* 6.2.0 */
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(6,3,0))
++#else
++#undef HAVE_DEVLINK_SET_FEATURES
++#endif
++
+ #endif /* _KCOMPAT_STD_DEFS_H_ */
+-- 
+
