@@ -962,6 +962,9 @@ struct spdk_bdev_io {
 		/** Retry state (resubmit, re-pull, re-push, etc.) */
 		uint8_t retry_state;
 
+		/** Indicates that the IO is associated with an accel sequence */
+		bool has_accel_sequence;
+
 		/** bdev allocated memory associated with this request */
 		void *buf;
 

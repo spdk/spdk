@@ -104,6 +104,17 @@ function confirm_abi_deps() {
 # To be removed, comes from nvme_internal.h
 [suppress_type]
 	name = spdk_nvme_qpair
+# The 4 types below are related to changes in __bdev_io_internal_fields
+[suppress_type]
+	name = spdk_ftl_dev
+[suppress_type]
+	name = ftl_io
+[suppress_type]
+        name = __bdev_io_internal_fields
+        soname_regexp = libspdk_ftl\\.so\\.*
+[suppress_type]
+        name = spdk_bdev_io
+        soname_regexp = libspdk_ftl\\.so\\.*
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do

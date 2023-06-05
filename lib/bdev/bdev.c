@@ -899,7 +899,7 @@ bdev_io_use_memory_domain(struct spdk_bdev_io *bdev_io)
 static inline bool
 bdev_io_use_accel_sequence(struct spdk_bdev_io *bdev_io)
 {
-	return bdev_io->internal.accel_sequence;
+	return bdev_io->internal.has_accel_sequence;
 }
 
 static inline void
@@ -990,7 +990,7 @@ _are_iovs_aligned(struct iovec *iovs, int iovcnt, uint32_t alignment)
 static inline bool
 bdev_io_needs_sequence_exec(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bdev_io)
 {
-	if (!bdev_io_use_accel_sequence(bdev_io)) {
+	if (!bdev_io->internal.accel_sequence) {
 		return false;
 	}
 
@@ -3548,6 +3548,7 @@ bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->internal.data_transfer_cpl = NULL;
 	bdev_io->internal.split = bdev_io_should_split(bdev_io);
 	bdev_io->internal.accel_sequence = NULL;
+	bdev_io->internal.has_accel_sequence = false;
 }
 
 static bool
@@ -5229,6 +5230,7 @@ bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
 	bdev_io->internal.memory_domain = domain;
 	bdev_io->internal.memory_domain_ctx = domain_ctx;
 	bdev_io->internal.accel_sequence = seq;
+	bdev_io->internal.has_accel_sequence = seq != NULL;
 	bdev_io->u.bdev.memory_domain = domain;
 	bdev_io->u.bdev.memory_domain_ctx = domain_ctx;
 	bdev_io->u.bdev.accel_sequence = seq;
@@ -5436,6 +5438,7 @@ bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 	bdev_io->internal.memory_domain = domain;
 	bdev_io->internal.memory_domain_ctx = domain_ctx;
 	bdev_io->internal.accel_sequence = seq;
+	bdev_io->internal.has_accel_sequence = seq != NULL;
 	bdev_io->u.bdev.memory_domain = domain;
 	bdev_io->u.bdev.memory_domain_ctx = domain_ctx;
 	bdev_io->u.bdev.accel_sequence = seq;
