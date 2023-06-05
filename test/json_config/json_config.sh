@@ -70,10 +70,10 @@ function tgt_check_notifications() {
 	local events_to_check
 	local recorded_events
 
-	events_to_check=("$@")
-	recorded_events=($(get_notifications))
+	# Seems like notifications don't necessarily have to come in order, so make sure they are sorted
+	events_to_check=($(printf '%s\n' "$@" | sort))
+	recorded_events=($(get_notifications | sort))
 
-	# These should be in order hence compare entire arrays
 	if [[ ${events_to_check[*]} != "${recorded_events[*]}" ]]; then
 		cat <<- ERROR
 			Expected events did not match.
