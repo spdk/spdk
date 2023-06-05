@@ -60,6 +60,11 @@ reload_intel_qat() {
 bad_driver=true
 driver_to_bind=uio_pci_generic
 
+# try starting the qat service. If this doesn't work, just treat it as a warning for now.
+if ! service qat_service start; then
+	echo "failed to start the qat service. Something may be wrong with your 01.org driver."
+fi
+
 reload_intel_qat
 
 _qat_pci_bdfs=(
@@ -90,11 +95,6 @@ if $bad_driver; then
 	exit 1
 fi
 
-# try starting the qat service. If this doesn't work, just treat it as a warning for now.
-if ! service qat_service start; then
-	echo "failed to start the qat service. Something may be wrong with your 01.org driver."
-fi
-
 expected_num_vfs=0 set_num_vfs=0
 # configure virtual functions for the QAT cards.
 for qat_bdf in "${qat_pci_bdfs[@]}"; do
@@ -102,6 +102,9 @@ for qat_bdf in "${qat_pci_bdfs[@]}"; do
 		echo "(${qat_bdf##*/}) sriov_numvfs interface missing, is SR-IOV enabled?"
 		continue
 	fi
+	# Make sure autoprobe is disabled for the VFs so we don't have to race with the
+	# qat_*vf drivers while binding the devices.
+	echo "0" > "/sys/bus/pci/drivers/$qat_bdf/sriov_drivers_autoprobe"
 	num_vfs=$(< "/sys/bus/pci/drivers/$qat_bdf/sriov_totalvfs")
 	echo "$num_vfs" > /sys/bus/pci/drivers/$qat_bdf/sriov_numvfs
 	num_vfs_set=$(< "/sys/bus/pci/drivers/$qat_bdf/sriov_numvfs")
