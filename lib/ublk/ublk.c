@@ -154,6 +154,9 @@ struct ublk_tgt {
 	uint32_t		ctrl_ops_in_progress;
 	struct ublk_poll_group	*poll_groups;
 	uint32_t		num_ublk_devs;
+	uint64_t		features;
+	/* `ublk_drv` supports UBLK_F_CMD_IOCTL_ENCODE */
+	bool legacy_ioctl;
 };
 
 static TAILQ_HEAD(, spdk_ublk_dev) g_ublk_devs = TAILQ_HEAD_INITIALIZER(g_ublk_devs);
@@ -187,7 +190,46 @@ ublk_get_sqe_cmd(struct io_uring_sqe *sqe)
 static inline void
 ublk_set_sqe_cmd_op(struct io_uring_sqe *sqe, uint32_t cmd_op)
 {
-	sqe->off = cmd_op;
+	uint32_t opc = cmd_op;
+
+	if (g_ublk_tgt.legacy_ioctl) {
+		switch (cmd_op) {
+		/* ctrl uring */
+		case UBLK_CMD_GET_DEV_INFO:
+			opc = _IOR('u', UBLK_CMD_GET_DEV_INFO, struct ublksrv_ctrl_cmd);
+			break;
+		case UBLK_CMD_ADD_DEV:
+			opc = _IOWR('u', UBLK_CMD_ADD_DEV, struct ublksrv_ctrl_cmd);
+			break;
+		case UBLK_CMD_DEL_DEV:
+			opc = _IOWR('u', UBLK_CMD_DEL_DEV, struct ublksrv_ctrl_cmd);
+			break;
+		case UBLK_CMD_START_DEV:
+			opc = _IOWR('u', UBLK_CMD_START_DEV, struct ublksrv_ctrl_cmd);
+			break;
+		case UBLK_CMD_STOP_DEV:
+			opc = _IOWR('u', UBLK_CMD_STOP_DEV, struct ublksrv_ctrl_cmd);
+			break;
+		case UBLK_CMD_SET_PARAMS:
+			opc = _IOWR('u', UBLK_CMD_SET_PARAMS, struct ublksrv_ctrl_cmd);
+			break;
+
+		/* io uring */
+		case UBLK_IO_FETCH_REQ:
+			opc = _IOWR('u', UBLK_IO_FETCH_REQ, struct ublksrv_io_cmd);
+			break;
+		case UBLK_IO_COMMIT_AND_FETCH_REQ:
+			opc = _IOWR('u', UBLK_IO_COMMIT_AND_FETCH_REQ, struct ublksrv_io_cmd);
+			break;
+		case UBLK_IO_NEED_GET_DATA:
+			opc = _IOWR('u', UBLK_IO_NEED_GET_DATA, struct ublksrv_io_cmd);
+			break;
+		default:
+			break;
+		}
+	}
+
+	sqe->off = opc;
 }
 
 static inline uint64_t
@@ -316,6 +358,54 @@ ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op)
 }
 
 static int
+ublk_ctrl_cmd_get_features(void)
+{
+	int rc;
+	struct io_uring_sqe *sqe;
+	struct io_uring_cqe *cqe;
+	struct ublksrv_ctrl_cmd *cmd;
+	uint32_t cmd_op;
+
+	sqe = io_uring_get_sqe(&g_ublk_tgt.ctrl_ring);
+	if (!sqe) {
+		SPDK_ERRLOG("No available sqe in ctrl ring\n");
+		assert(false);
+		return -ENOENT;
+	}
+
+	cmd = (struct ublksrv_ctrl_cmd *)ublk_get_sqe_cmd(sqe);
+	sqe->fd = g_ublk_tgt.ctrl_fd;
+	sqe->opcode = IORING_OP_URING_CMD;
+	sqe->ioprio = 0;
+	cmd->dev_id = -1;
+	cmd->queue_id = -1;
+	cmd->addr = (__u64)(uintptr_t)&g_ublk_tgt.features;
+	cmd->len = sizeof(g_ublk_tgt.features);
+
+	cmd_op = _IOR('u', 0x13, struct ublksrv_ctrl_cmd);
+	ublk_set_sqe_cmd_op(sqe, cmd_op);
+
+	rc = io_uring_submit(&g_ublk_tgt.ctrl_ring);
+	if (rc < 0) {
+		SPDK_ERRLOG("uring submit rc %d\n", rc);
+		return rc;
+	}
+
+	rc = io_uring_wait_cqe(&g_ublk_tgt.ctrl_ring, &cqe);
+	if (rc < 0) {
+		SPDK_ERRLOG("wait cqe rc %d\n", rc);
+		return rc;
+	}
+
+	if (cqe->res == 0) {
+		g_ublk_tgt.legacy_ioctl = !!(g_ublk_tgt.features & (1ULL << 6));
+	}
+	io_uring_cqe_seen(&g_ublk_tgt.ctrl_ring, cqe);
+
+	return 0;
+}
+
+static int
 ublk_queue_cmd_buf_sz(uint32_t q_depth)
 {
 	uint32_t size = q_depth * sizeof(struct ublksrv_io_desc);
@@ -372,12 +462,20 @@ ublk_open(void)
 			     IORING_SETUP_SQE128 | IORING_SETUP_SQPOLL);
 	if (rc < 0) {
 		SPDK_ERRLOG("UBLK ctrl queue_init: %s\n", spdk_strerror(-rc));
-		close(g_ublk_tgt.ctrl_fd);
-		g_ublk_tgt.ctrl_fd = -1;
-		return rc;
+		goto err;
+	}
+
+	rc = ublk_ctrl_cmd_get_features();
+	if (rc) {
+		goto err;
 	}
 
 	return 0;
+
+err:
+	close(g_ublk_tgt.ctrl_fd);
+	g_ublk_tgt.ctrl_fd = -1;
+	return rc;
 }
 
 static int
@@ -499,6 +597,8 @@ _ublk_fini_done(void *args)
 	g_next_ublk_poll_group = 0;
 	g_ublk_tgt.is_destroying = false;
 	g_ublk_tgt.active = false;
+	g_ublk_tgt.features = 0;
+	g_ublk_tgt.legacy_ioctl = false;
 
 	if (g_ublk_tgt.cb_fn) {
 		g_ublk_tgt.cb_fn(g_ublk_tgt.cb_arg);
