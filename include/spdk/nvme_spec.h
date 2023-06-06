@@ -607,7 +607,8 @@ enum spdk_nvme_sgl_descriptor_subtype {
 	SPDK_NVME_SGL_SUBTYPE_TRANSPORT		= 0xa,
 };
 
-struct __attribute__((packed)) spdk_nvme_sgl_descriptor {
+#pragma pack(push, 1)
+struct spdk_nvme_sgl_descriptor {
 	uint64_t address;
 	union {
 		struct {
@@ -632,6 +633,7 @@ struct __attribute__((packed)) spdk_nvme_sgl_descriptor {
 	};
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_sgl_descriptor) == 16, "Incorrect size");
+#pragma pack(pop)
 
 enum spdk_nvme_psdt_value {
 	SPDK_NVME_PSDT_PRP		= 0x0,
@@ -1730,11 +1732,13 @@ spdk_nvme_bytes_to_numd(uint32_t len)
 	return (len >> 2) - 1;
 }
 
-struct __attribute__((packed)) spdk_nvme_host_behavior {
+#pragma pack(push, 1)
+struct spdk_nvme_host_behavior {
 	uint8_t acre;
 	uint8_t reserved[511];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_host_behavior) == 512, "Incorrect size");
+#pragma pack(pop)
 
 /**
  * Supported FDP event descriptor
@@ -2229,7 +2233,8 @@ struct spdk_nvme_cdata_ctratt {
 	uint32_t	reserved2: 12;
 };
 
-struct __attribute__((packed)) spdk_nvme_ctrlr_data {
+#pragma pack(push, 1)
+struct spdk_nvme_ctrlr_data {
 	/* bytes 0-255: controller capabilities and features */
 
 	/** pci vendor id */
@@ -2623,6 +2628,7 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	uint8_t			vs[1024];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_data) == 4096, "Incorrect size");
+#pragma pack(pop)
 
 struct spdk_nvme_zns_ctrlr_data {
 	/** zone append size limit */
@@ -2632,7 +2638,8 @@ struct spdk_nvme_zns_ctrlr_data {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_zns_ctrlr_data) == 4096, "Incorrect size");
 
-struct __attribute__((packed)) spdk_nvme_primary_ctrl_capabilities {
+#pragma pack(push, 1)
+struct spdk_nvme_primary_ctrl_capabilities {
 	/**  controller id */
 	uint16_t		cntlid;
 	/**  port identifier */
@@ -2673,7 +2680,7 @@ struct __attribute__((packed)) spdk_nvme_primary_ctrl_capabilities {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_primary_ctrl_capabilities) == 4096, "Incorrect size");
 
-struct __attribute__((packed)) spdk_nvme_secondary_ctrl_entry {
+struct spdk_nvme_secondary_ctrl_entry {
 	/** controller identifier of the secondary controller */
 	uint16_t		scid;
 	/** controller identifier of the associated primary controller */
@@ -2694,13 +2701,14 @@ struct __attribute__((packed)) spdk_nvme_secondary_ctrl_entry {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_secondary_ctrl_entry) == 32, "Incorrect size");
 
-struct __attribute__((packed)) spdk_nvme_secondary_ctrl_list {
+struct spdk_nvme_secondary_ctrl_list {
 	/** number of Secondary controller entries in the list */
 	uint8_t					number;
 	uint8_t					reserved[31];
 	struct spdk_nvme_secondary_ctrl_entry	entries[127];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_secondary_ctrl_list) == 4096, "Incorrect size");
+#pragma pack(pop)
 
 struct spdk_nvme_ns_data {
 	/** namespace size */
@@ -3068,7 +3076,8 @@ enum spdk_nvme_reservation_acquire_action {
 	SPDK_NVME_RESERVE_PREEMPT_ABORT		= 0x2,
 };
 
-struct __attribute__((packed)) spdk_nvme_reservation_status_data {
+#pragma pack(push, 1)
+struct spdk_nvme_reservation_status_data {
 	/** reservation action generation counter */
 	uint32_t		gen;
 	/** reservation type */
@@ -3082,14 +3091,14 @@ struct __attribute__((packed)) spdk_nvme_reservation_status_data {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_reservation_status_data) == 24, "Incorrect size");
 
-struct __attribute__((packed)) spdk_nvme_reservation_status_extended_data {
+struct spdk_nvme_reservation_status_extended_data {
 	struct spdk_nvme_reservation_status_data	data;
 	uint8_t						reserved[40];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_reservation_status_extended_data) == 64,
 		   "Incorrect size");
 
-struct __attribute__((packed)) spdk_nvme_registered_ctrlr_data {
+struct spdk_nvme_registered_ctrlr_data {
 	/** controller id */
 	uint16_t		cntlid;
 	/** reservation status */
@@ -3105,7 +3114,7 @@ struct __attribute__((packed)) spdk_nvme_registered_ctrlr_data {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_registered_ctrlr_data) == 24, "Incorrect size");
 
-struct __attribute__((packed)) spdk_nvme_registered_ctrlr_extended_data {
+struct spdk_nvme_registered_ctrlr_extended_data {
 	/** controller id */
 	uint16_t		cntlid;
 	/** reservation status */
@@ -3121,6 +3130,7 @@ struct __attribute__((packed)) spdk_nvme_registered_ctrlr_extended_data {
 	uint8_t			reserved3[32];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_registered_ctrlr_extended_data) == 64, "Incorrect size");
+#pragma pack(pop)
 
 /**
  * Change persist through power loss state for
@@ -3330,7 +3340,8 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_error_information_entry) == 64, "Inco
 /**
  * SMART / health information page (\ref SPDK_NVME_LOG_HEALTH_INFORMATION)
  */
-struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_health_information_page {
+#pragma pack(push, 1)
+struct spdk_nvme_health_information_page {
 	union spdk_nvme_critical_warning_state	critical_warning;
 
 	uint16_t		temperature;
@@ -3366,6 +3377,7 @@ struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_health_informa
 	uint8_t			reserved2[296];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_health_information_page) == 512, "Incorrect size");
+#pragma pack(pop)
 
 /* Commands Supported and Effects Data Structure */
 struct spdk_nvme_cmds_and_effect_entry {
@@ -3777,7 +3789,8 @@ enum spdk_nvme_fdp_event_type {
 };
 
 /* Media reallocated */
-struct __attribute__((packed)) spdk_nvme_fdp_event_media_reallocated {
+#pragma pack(push, 1)
+struct spdk_nvme_fdp_event_media_reallocated {
 	/* Specific event flags */
 	union {
 		uint8_t raw;
@@ -3798,7 +3811,7 @@ struct __attribute__((packed)) spdk_nvme_fdp_event_media_reallocated {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fdp_event_media_reallocated) == 16, "Incorrect size");
 
 /* FDP event */
-struct __attribute__((packed)) spdk_nvme_fdp_event {
+struct spdk_nvme_fdp_event {
 	/* Event type */
 	uint8_t etype;
 
@@ -3832,6 +3845,7 @@ struct __attribute__((packed)) spdk_nvme_fdp_event {
 	uint8_t vs[24];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fdp_event) == 64, "Incorrect size");
+#pragma pack(pop)
 
 /* FDP events log page (\ref SPDK_NVME_LOG_FDP_EVENTS) */
 struct spdk_nvme_fdp_events_log_page {

@@ -111,10 +111,12 @@ struct spdk_nvme_intel_smart_attribute {
 	uint8_t			reserved3;
 };
 
-struct __attribute__((packed)) spdk_nvme_intel_smart_information_page {
+#pragma pack(push, 1)
+struct spdk_nvme_intel_smart_information_page {
 	struct spdk_nvme_intel_smart_attribute	attributes[13];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_intel_smart_information_page) == 156, "Incorrect size");
+#pragma pack(pop)
 
 union spdk_nvme_intel_feat_power_governor {
 	uint32_t	raw;
