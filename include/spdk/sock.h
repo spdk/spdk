@@ -231,7 +231,7 @@ struct spdk_sock_opts {
 	 * Size of the impl_opts structure.
 	 */
 	size_t impl_opts_size;
-} __attribute__((packed));
+};
 SPDK_STATIC_ASSERT(sizeof(struct spdk_sock_opts) == 40, "Incorrect size");
 
 /**
