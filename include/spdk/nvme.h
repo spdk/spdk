@@ -283,8 +283,8 @@ struct spdk_nvme_ctrlr_opts {
 	 * Set the IP protocol type of service value for RDMA transport. Default is 0, which means that the TOS will not be set.
 	 */
 	uint8_t transport_tos;
-} __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_opts) == 818, "Incorrect size");
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_opts) == 824, "Incorrect size");
 
 /**
  * NVMe acceleration operation callback.
@@ -1597,7 +1597,7 @@ struct spdk_nvme_io_qpair_opts {
 
 	/* Hole at bytes 66-71. */
 	uint8_t reserved66[6];
-} __attribute__((packed));
+};
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_io_qpair_opts) == 72, "Incorrect size");
 
 /**
@@ -4198,14 +4198,17 @@ struct spdk_nvme_transport_opts {
 	 */
 	uint32_t rdma_srq_size;
 
+	/* Hole at bytes 4-7. */
+	uint8_t reserved4[4];
+
 	/**
 	 * The size of spdk_nvme_transport_opts according to the caller of this library is used for ABI
 	 * compatibility.  The library uses this field to know how many fields in this
 	 * structure are valid. And the library will populate any remaining fields with default values.
 	 */
 	size_t opts_size;
-} __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_transport_opts) == 12, "Incorrect size");
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_transport_opts) == 16, "Incorrect size");
 
 /**
  * Get the current NVMe transport options.
