@@ -4785,7 +4785,7 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 	unsigned int				size_remaining;
 	unsigned int				offset;
 	unsigned int				transfer;
-	void					*p;
+	uint8_t					*p;
 
 	if (!completion_status) {
 		return -EINVAL;
@@ -5081,7 +5081,7 @@ nvme_write_boot_partition_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 
 	if (ctrlr->bp_ws == SPDK_NVME_BP_WS_DOWNLOADING) {
 		NVME_CTRLR_DEBUGLOG(ctrlr, "Boot Partition Downloading at Offset %d Success\n", ctrlr->fw_offset);
-		ctrlr->fw_payload += ctrlr->fw_transfer_size;
+		ctrlr->fw_payload = (uint8_t *)ctrlr->fw_payload + ctrlr->fw_transfer_size;
 		ctrlr->fw_offset += ctrlr->fw_transfer_size;
 		ctrlr->fw_size_remaining -= ctrlr->fw_transfer_size;
 		ctrlr->fw_transfer_size = spdk_min(ctrlr->fw_size_remaining, ctrlr->min_page_size);

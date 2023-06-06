@@ -46,6 +46,8 @@ ifeq ($(CONFIG_NVME_CUSE),y)
 CFLAGS += -D_FILE_OFFSET_BITS=64
 endif
 
+CFLAGS += -Wpointer-arith
+
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_nvme.map)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

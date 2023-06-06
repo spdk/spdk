@@ -77,10 +77,10 @@ _dif_sgl_advance(struct _dif_sgl *s, uint32_t step)
 }
 
 static inline void
-_dif_sgl_get_buf(struct _dif_sgl *s, void **_buf, uint32_t *_buf_len)
+_dif_sgl_get_buf(struct _dif_sgl *s, uint8_t **_buf, uint32_t *_buf_len)
 {
 	if (_buf != NULL) {
-		*_buf = s->iov->iov_base + s->iov_offset;
+		*_buf = (uint8_t *)s->iov->iov_base + s->iov_offset;
 	}
 	if (_buf_len != NULL) {
 		*_buf_len = s->iov->iov_len - s->iov_offset;
@@ -111,7 +111,7 @@ _dif_sgl_append_split(struct _dif_sgl *dst, struct _dif_sgl *src, uint32_t data_
 	uint32_t buf_len;
 
 	while (data_len != 0) {
-		_dif_sgl_get_buf(src, (void *)&buf, &buf_len);
+		_dif_sgl_get_buf(src, &buf, &buf_len);
 		buf_len = spdk_min(buf_len, data_len);
 
 		if (!_dif_sgl_append(dst, buf, buf_len)) {
@@ -565,7 +565,7 @@ static void
 dif_generate(struct _dif_sgl *sgl, uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
 {
 	uint32_t offset_blocks = 0;
-	void *buf;
+	uint8_t *buf;
 	uint32_t guard = 0;
 
 	while (offset_blocks < num_blocks) {
@@ -587,7 +587,7 @@ _dif_generate_split(struct _dif_sgl *sgl, uint32_t offset_in_block, uint32_t dat
 		    uint32_t guard, uint32_t offset_blocks, const struct spdk_dif_ctx *ctx)
 {
 	uint32_t offset_in_dif, buf_len;
-	void *buf;
+	uint8_t *buf;
 	struct spdk_dif dif = {};
 
 	assert(offset_in_block < ctx->guard_interval);
@@ -811,7 +811,7 @@ dif_verify(struct _dif_sgl *sgl, uint32_t num_blocks,
 {
 	uint32_t offset_blocks = 0;
 	int rc;
-	void *buf;
+	uint8_t *buf;
 	uint32_t guard = 0;
 
 	while (offset_blocks < num_blocks) {
@@ -839,7 +839,7 @@ _dif_verify_split(struct _dif_sgl *sgl, uint32_t offset_in_block, uint32_t data_
 		  const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err_blk)
 {
 	uint32_t offset_in_dif, buf_len;
-	void *buf;
+	uint8_t *buf;
 	uint32_t guard;
 	struct spdk_dif dif = {};
 	int rc;
@@ -953,7 +953,7 @@ dif_update_crc32c(struct _dif_sgl *sgl, uint32_t num_blocks,
 		  uint32_t crc32c,  const struct spdk_dif_ctx *ctx)
 {
 	uint32_t offset_blocks;
-	void *buf;
+	uint8_t *buf;
 
 	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
 		_dif_sgl_get_buf(sgl, &buf, NULL);
@@ -971,7 +971,7 @@ _dif_update_crc32c_split(struct _dif_sgl *sgl, uint32_t offset_in_block, uint32_
 			 uint32_t crc32c, const struct spdk_dif_ctx *ctx)
 {
 	uint32_t data_block_size, buf_len;
-	void *buf;
+	uint8_t *buf;
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
@@ -1038,7 +1038,7 @@ dif_generate_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 		  uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
 {
 	uint32_t offset_blocks = 0, data_block_size;
-	void *src, *dst;
+	uint8_t *src, *dst;
 	uint32_t guard;
 
 	data_block_size = ctx->block_size - ctx->md_size;
@@ -1071,7 +1071,7 @@ _dif_generate_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 {
 	uint32_t offset_in_block, src_len, data_block_size;
 	uint32_t guard = 0;
-	void *src, *dst;
+	uint8_t *src, *dst;
 
 	_dif_sgl_get_buf(dst_sgl, &dst, NULL);
 
@@ -1163,7 +1163,7 @@ dif_verify_copy(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 		struct spdk_dif_error *err_blk)
 {
 	uint32_t offset_blocks = 0, data_block_size;
-	void *src, *dst;
+	uint8_t *src, *dst;
 	int rc;
 	uint32_t guard;
 
@@ -1203,7 +1203,7 @@ _dif_verify_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 {
 	uint32_t offset_in_block, dst_len, data_block_size;
 	uint32_t guard = 0;
-	void *src, *dst;
+	uint8_t *src, *dst;
 
 	_dif_sgl_get_buf(src_sgl, &src, NULL);
 
@@ -1313,7 +1313,7 @@ _dif_inject_error(struct _dif_sgl *sgl,
 		  uint32_t inject_offset_bits)
 {
 	uint32_t offset_in_block, buf_len;
-	void *buf;
+	uint8_t *buf;
 
 	_dif_sgl_advance(sgl, block_size * inject_offset_blocks);
 
@@ -1443,7 +1443,7 @@ dix_generate(struct _dif_sgl *data_sgl, struct _dif_sgl *md_sgl,
 {
 	uint32_t offset_blocks = 0;
 	uint32_t guard;
-	void *data_buf, *md_buf;
+	uint8_t *data_buf, *md_buf;
 
 	while (offset_blocks < num_blocks) {
 		_dif_sgl_get_buf(data_sgl, &data_buf, NULL);
@@ -1471,7 +1471,7 @@ _dix_generate_split(struct _dif_sgl *data_sgl, struct _dif_sgl *md_sgl,
 {
 	uint32_t offset_in_block, data_buf_len;
 	uint32_t guard = 0;
-	void *data_buf, *md_buf;
+	uint8_t *data_buf, *md_buf;
 
 	_dif_sgl_get_buf(md_sgl, &md_buf, NULL);
 
@@ -1549,7 +1549,7 @@ dix_verify(struct _dif_sgl *data_sgl, struct _dif_sgl *md_sgl,
 {
 	uint32_t offset_blocks = 0;
 	uint32_t guard;
-	void *data_buf, *md_buf;
+	uint8_t *data_buf, *md_buf;
 	int rc;
 
 	while (offset_blocks < num_blocks) {
@@ -1584,7 +1584,7 @@ _dix_verify_split(struct _dif_sgl *data_sgl, struct _dif_sgl *md_sgl,
 {
 	uint32_t offset_in_block, data_buf_len;
 	uint32_t guard = 0;
-	void *data_buf, *md_buf;
+	uint8_t *data_buf, *md_buf;
 
 	_dif_sgl_get_buf(md_sgl, &md_buf, NULL);
 
@@ -2013,7 +2013,7 @@ _dif_remap_ref_tag(struct _dif_sgl *sgl, uint32_t offset_blocks,
 {
 	uint32_t offset, buf_len;
 	uint64_t expected = 0, _actual, remapped;
-	void *buf;
+	uint8_t *buf;
 	struct _dif_sgl tmp_sgl;
 	struct spdk_dif dif;
 
@@ -2158,7 +2158,7 @@ _dix_remap_ref_tag(struct _dif_sgl *md_sgl, uint32_t offset_blocks,
 	uint8_t *md_buf;
 	struct spdk_dif *dif;
 
-	_dif_sgl_get_buf(md_sgl, (void *)&md_buf, NULL);
+	_dif_sgl_get_buf(md_sgl, &md_buf, NULL);
 
 	dif = (struct spdk_dif *)(md_buf + ctx->guard_interval);
 

@@ -77,10 +77,10 @@ xor_gen_basic(void *dest, void **sources, uint32_t n, uint32_t len)
 		void *sources2[SPDK_XOR_MAX_SRC];
 
 		for (j = 0; j < n; j++) {
-			sources2[j] = sources[j] + len_rem;
+			sources2[j] = (uint8_t *)sources[j] + len_rem;
 		}
 
-		xor_gen_unaligned(dest + len_rem, sources2, n, len - len_rem);
+		xor_gen_unaligned((uint8_t *)dest + len_rem, sources2, n, len - len_rem);
 	}
 }
 

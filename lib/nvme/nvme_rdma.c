@@ -1512,7 +1512,7 @@ nvme_rdma_build_contig_inline_request(struct nvme_rdma_qpair *rqpair,
 {
 	struct nvme_request *req = rdma_req->req;
 	struct nvme_rdma_memory_translation_ctx ctx = {
-		.addr = req->payload.contig_or_cb_arg + req->payload_offset,
+		.addr = (uint8_t *)req->payload.contig_or_cb_arg + req->payload_offset,
 		.length = req->payload_size
 	};
 	int rc;
@@ -1561,7 +1561,7 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair,
 {
 	struct nvme_request *req = rdma_req->req;
 	struct nvme_rdma_memory_translation_ctx ctx = {
-		.addr = req->payload.contig_or_cb_arg + req->payload_offset,
+		.addr = (uint8_t *)req->payload.contig_or_cb_arg + req->payload_offset,
 		.length = req->payload_size
 	};
 	int rc;

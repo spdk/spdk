@@ -826,7 +826,7 @@ opal_discovery0(struct spdk_opal_dev *dev, void *payload, uint32_t payload_size)
 	}
 
 	/* spc4r31 chapter 7.7.1.3 Supported security protocols list description */
-	sp_list_len = from_be16(payload + 6);
+	sp_list_len = from_be16((uint8_t *)payload + 6);
 	sp_list = (uint8_t *)payload + 8;
 
 	if (sp_list_len + 8 > (int)payload_size) {

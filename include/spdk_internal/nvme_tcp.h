@@ -239,7 +239,7 @@ static inline void
 _nvme_tcp_sgl_get_buf(struct spdk_iov_sgl *s, void **_buf, uint32_t *_buf_len)
 {
 	if (_buf != NULL) {
-		*_buf = s->iov->iov_base + s->iov_offset;
+		*_buf = (uint8_t *)s->iov->iov_base + s->iov_offset;
 	}
 	if (_buf_len != NULL) {
 		*_buf_len = s->iov->iov_len - s->iov_offset;

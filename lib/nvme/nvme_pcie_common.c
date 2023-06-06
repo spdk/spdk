@@ -1246,7 +1246,7 @@ nvme_pcie_prp_list_append(struct spdk_nvme_ctrlr *ctrlr, struct nvme_tracker *tr
 		}
 
 		seg_len = spdk_min(seg_len, len);
-		virt_addr += seg_len;
+		virt_addr = (uint8_t *)virt_addr + seg_len;
 		len -= seg_len;
 		i++;
 	}
@@ -1286,7 +1286,7 @@ nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	int rc;
 
 	rc = nvme_pcie_prp_list_append(qpair->ctrlr, tr, &prp_index,
-				       req->payload.contig_or_cb_arg + req->payload_offset,
+				       (uint8_t *)req->payload.contig_or_cb_arg + req->payload_offset,
 				       req->payload_size, qpair->ctrlr->page_size);
 	if (rc) {
 		nvme_pcie_fail_request_bad_vtophys(qpair, tr);
@@ -1305,7 +1305,7 @@ static int
 nvme_pcie_qpair_build_contig_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
 		struct nvme_tracker *tr, bool dword_aligned)
 {
-	void *virt_addr;
+	uint8_t *virt_addr;
 	uint64_t phys_addr, mapping_length;
 	uint32_t length;
 	struct spdk_nvme_sgl_descriptor *sgl;
@@ -1319,7 +1319,9 @@ nvme_pcie_qpair_build_contig_hw_sgl_request(struct spdk_nvme_qpair *qpair, struc
 	req->cmd.dptr.sgl1.unkeyed.subtype = 0;
 
 	length = req->payload_size;
-	virt_addr = req->payload.contig_or_cb_arg + req->payload_offset;
+	/* ubsan complains about applying zero offset to null pointer if contig_or_cb_arg is NULL,
+	 * so just double cast it to make it go away */
+	virt_addr = (uint8_t *)((uintptr_t)req->payload.contig_or_cb_arg + req->payload_offset);
 
 	while (length > 0) {
 		if (nseg >= NVME_MAX_SGL_DESCRIPTORS) {
@@ -1465,7 +1467,7 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 
 			length = spdk_min(remaining_user_sge_len, mapping_length);
 			remaining_user_sge_len -= length;
-			virt_addr += length;
+			virt_addr = (uint8_t *)virt_addr + length;
 
 			if (nseg > 0 && phys_addr ==
 			    (*(sgl - 1)).address + (*(sgl - 1)).unkeyed.length) {
@@ -1589,7 +1591,7 @@ nvme_pcie_qpair_build_metadata(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 	uint64_t mapping_length;
 
 	if (req->payload.md) {
-		md_payload = req->payload.md + req->md_offset;
+		md_payload = (uint8_t *)req->payload.md + req->md_offset;
 		if (dword_aligned && ((uintptr_t)md_payload & 3)) {
 			SPDK_ERRLOG("virt_addr %p not dword aligned\n", md_payload);
 			goto exit;

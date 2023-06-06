@@ -125,8 +125,8 @@ base64_encode_neon64(char **dst, const char *enc_table, const void **src, size_t
 		/* Interleave and store result */
 		vst4q_u8((uint8_t *)*dst, res);
 
-		*src += 48;      /* 3 * 16 bytes of input */
-		*dst += 64;      /* 4 * 16 bytes of output */
+		*src = (uint8_t *)*src + 48;	/* 3 * 16 bytes of input */
+		*dst += 64;			/* 4 * 16 bytes of output */
 		*src_len -= 48;
 	}
 }
@@ -196,7 +196,7 @@ base64_decode_neon64(void **dst, const uint8_t *dec_table_neon64, const uint8_t 
 		vst3q_u8((uint8_t *)*dst, dec);
 
 		*src += 64;
-		*dst += 48;
+		*dst = (uint8_t *)*dst + 48;
 		*src_len -= 64;
 	}
 }

@@ -97,7 +97,7 @@ base64_encode(char *dst, const char *enc_table, const void *src, size_t src_len)
 		*dst++ = enc_table[(raw_u32 >> 8) & BASE64_ENC_BITMASK];
 
 		src_len -= 3;
-		src += 3;
+		src = (uint8_t *)src + 3;
 	}
 
 	if (src_len == 0) {
@@ -207,7 +207,7 @@ base64_decode(void *dst, size_t *_dst_len, const uint8_t *dec_table, const char 
 
 		to_be32(dst, tmp[3] << 8 | tmp[2] << 14 | tmp[1] << 20 | tmp[0] << 26);
 
-		dst += 3;
+		dst = (uint8_t *)dst + 3;
 		src_strlen -= 4;
 	}
 

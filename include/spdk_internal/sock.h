@@ -260,7 +260,7 @@ spdk_sock_prep_req(struct spdk_sock_request *req, struct iovec *iovs, int index,
 			continue;
 		}
 
-		iovs[iovcnt].iov_base = SPDK_SOCK_REQUEST_IOV(req, i)->iov_base + offset;
+		iovs[iovcnt].iov_base = (uint8_t *)SPDK_SOCK_REQUEST_IOV(req, i)->iov_base + offset;
 		iovs[iovcnt].iov_len = SPDK_SOCK_REQUEST_IOV(req, i)->iov_len - offset;
 		if (num_bytes != NULL) {
 			*num_bytes += iovs[iovcnt].iov_len;

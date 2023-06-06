@@ -203,7 +203,7 @@ iov_xfer(struct spdk_iov_xfer *ix, const void *buf, size_t buf_len, bool to_buf)
 
 		if (to_buf) {
 			memcpy((char *)buf + copied_len,
-			       iov->iov_base + ix->cur_iov_offset, len);
+			       (char *)iov->iov_base + ix->cur_iov_offset, len);
 		} else {
 			memcpy((char *)iov->iov_base + ix->cur_iov_offset,
 			       (const char *)buf + copied_len, len);

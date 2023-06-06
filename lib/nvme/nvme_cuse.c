@@ -291,8 +291,8 @@ cuse_nvme_passthru_cmd(fuse_req_t req, int cmd, void *arg,
 	}
 
 	if (data_transfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
-		dptr = (passthru_cmd->addr == 0) ? NULL : in_buf + sizeof(*passthru_cmd);
-		mdptr = (passthru_cmd->metadata == 0) ? NULL : in_buf + sizeof(*passthru_cmd) +
+		dptr = (passthru_cmd->addr == 0) ? NULL : (uint8_t *)in_buf + sizeof(*passthru_cmd);
+		mdptr = (passthru_cmd->metadata == 0) ? NULL : (uint8_t *)in_buf + sizeof(*passthru_cmd) +
 			passthru_cmd->data_len;
 	}
 
@@ -453,7 +453,7 @@ cuse_nvme_submit_io_write(struct cuse_device *cuse_device, fuse_req_t req, int c
 		return;
 	}
 
-	memcpy(ctx->data, in_buf + sizeof(*user_io), ctx->data_len);
+	memcpy(ctx->data, (uint8_t *)in_buf + sizeof(*user_io), ctx->data_len);
 
 	if (user_io->metadata) {
 		ctx->apptag = user_io->apptag;
@@ -471,7 +471,8 @@ cuse_nvme_submit_io_write(struct cuse_device *cuse_device, fuse_req_t req, int c
 			return;
 		}
 
-		memcpy(ctx->metadata, in_buf + sizeof(*user_io) + ctx->data_len, ctx->metadata_len);
+		memcpy(ctx->metadata, (uint8_t *)in_buf + sizeof(*user_io) + ctx->data_len,
+		       ctx->metadata_len);
 	}
 
 	rc = nvme_io_msg_send(cuse_device->ctrlr, cuse_device->nsid, cuse_nvme_submit_io_write_cb,

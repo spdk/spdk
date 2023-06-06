@@ -425,7 +425,7 @@ test_build_contig_hw_sgl_request(void)
 	qpair.ctrlr = &ctrlr;
 	/* Test 1: Payload covered by a single mapping */
 	req.payload_size = 100;
-	req.payload = NVME_PAYLOAD_CONTIG(0, 0);
+	req.payload = NVME_PAYLOAD_CONTIG((void *)0xbeef0, NULL);
 	g_vtophys_size = 100;
 	MOCK_SET(spdk_vtophys, 0xDEADBEEF);
 
@@ -445,7 +445,7 @@ test_build_contig_hw_sgl_request(void)
 	qpair.ctrlr = &ctrlr;
 	req.payload_size = 100;
 	req.payload_offset = 50;
-	req.payload = NVME_PAYLOAD_CONTIG(0, 0);
+	req.payload = NVME_PAYLOAD_CONTIG((void *)0xbeef0, NULL);
 	g_vtophys_size = 1000;
 	MOCK_SET(spdk_vtophys, 0xDEADBEEF);
 
@@ -464,7 +464,7 @@ test_build_contig_hw_sgl_request(void)
 	/* Test 3: Payload spans two mappings */
 	qpair.ctrlr = &ctrlr;
 	req.payload_size = 100;
-	req.payload = NVME_PAYLOAD_CONTIG(0, 0);
+	req.payload = NVME_PAYLOAD_CONTIG((void *)0xbeef0, NULL);
 	g_vtophys_size = 60;
 	tr.prp_sgl_bus_addr = 0xFF0FF;
 	MOCK_SET(spdk_vtophys, 0xDEADBEEF);

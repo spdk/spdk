@@ -8,7 +8,7 @@
 void *
 spdk_posix_file_load(FILE *file, size_t *size)
 {
-	void *newbuf, *buf = NULL;
+	uint8_t *newbuf, *buf = NULL;
 	size_t rc, buf_size, cur_size = 0;
 
 	*size = 0;

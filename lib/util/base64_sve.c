@@ -192,7 +192,7 @@ base64_encode_sve(char **dst, const char *enc_table, const void **src, size_t *s
 			svst4_u8(pred, (uint8_t *)*dst, st_enc_output);
 
 			pred_count = svcntp_b8(pred, pred);
-			*src += pred_count * 3;
+			*src = (uint8_t *)*src + pred_count * 3;
 			*dst += pred_count * 4;
 			*src_len -= pred_count * 3;
 			i += pred_count * 3;
@@ -218,7 +218,7 @@ base64_encode_sve(char **dst, const char *enc_table, const void **src, size_t *s
 			svst4_u8(pred, (uint8_t *)*dst, st_enc_output);
 
 			pred_count = svcntp_b8(pred, pred);
-			*src += pred_count * 3;
+			*src = (uint8_t *)*src + pred_count * 3;
 			*dst += pred_count * 4;
 			*src_len -= pred_count * 3;
 			i += pred_count * 3;
@@ -243,7 +243,7 @@ base64_encode_sve(char **dst, const char *enc_table, const void **src, size_t *s
 			svst4_u8(pred, (uint8_t *)*dst, st_enc_output);
 
 			pred_count = svcntp_b8(pred, pred);
-			*src += pred_count * 3;
+			*src = (uint8_t *)*src + pred_count * 3;
 			*dst += pred_count * 4;
 			*src_len -= pred_count * 3;
 			i += pred_count * 3;
@@ -309,7 +309,7 @@ base64_decode_sve(void **dst, const uint8_t *dec_table, const uint8_t **src, siz
 
 			pred_count = svcntp_b8(pred, pred);
 			*src += pred_count * 4;
-			*dst += pred_count * 3;
+			*dst = (uint8_t *)*dst + pred_count * 3;
 			*src_len -= pred_count * 4;
 			i += pred_count * 4;
 
@@ -347,7 +347,7 @@ base64_decode_sve(void **dst, const uint8_t *dec_table, const uint8_t **src, siz
 
 			pred_count = svcntp_b8(pred, pred);
 			*src += pred_count * 4;
-			*dst += pred_count * 3;
+			*dst = (uint8_t *)*dst + pred_count * 3;
 			*src_len -= pred_count * 4;
 			i += pred_count * 4;
 
@@ -386,7 +386,7 @@ base64_decode_sve(void **dst, const uint8_t *dec_table, const uint8_t **src, siz
 
 			pred_count = svcntp_b8(pred, pred);
 			*src += pred_count * 4;
-			*dst += pred_count * 3;
+			*dst = (uint8_t *)*dst + pred_count * 3;
 			*src_len -= pred_count * 4;
 			i += pred_count * 4;
 
@@ -423,7 +423,7 @@ base64_decode_sve(void **dst, const uint8_t *dec_table, const uint8_t **src, siz
 
 			pred_count = svcntp_b8(pred, pred);
 			*src += pred_count * 4;
-			*dst += pred_count * 3;
+			*dst = (uint8_t *)*dst + pred_count * 3;
 			*src_len -= pred_count * 4;
 			i += pred_count * 4;
 
@@ -464,7 +464,7 @@ base64_decode_sve(void **dst, const uint8_t *dec_table, const uint8_t **src, siz
 
 			pred_count = svcntp_b8(pred, pred);
 			*src += pred_count * 4;
-			*dst += pred_count * 3;
+			*dst = (uint8_t *)*dst + pred_count * 3;
 			*src_len -= pred_count * 4;
 			i += pred_count * 4;
 

@@ -515,7 +515,9 @@ nvme_tcp_build_contig_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req
 {
 	struct nvme_request *req = tcp_req->req;
 
-	tcp_req->iov[0].iov_base = req->payload.contig_or_cb_arg + req->payload_offset;
+	/* ubsan complains about applying zero offset to null pointer if contig_or_cb_arg is NULL,
+	 * so just double cast it to make it go away */
+	tcp_req->iov[0].iov_base = (void *)((uintptr_t)req->payload.contig_or_cb_arg + req->payload_offset);
 	tcp_req->iov[0].iov_len = req->payload_size;
 	tcp_req->iovcnt = 1;
 

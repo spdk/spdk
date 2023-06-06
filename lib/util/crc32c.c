@@ -28,12 +28,12 @@ spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
 	 * passed to _mm_crc32_u64 is 8 byte aligned. This can avoid unaligned loads.
 	 */
 	count_pre = ((uint64_t)buf & 7) == 0 ? 0 : 8 - ((uint64_t)buf & 7);
-	count_post = (uint64_t)(buf + len) & 7;
+	count_post = (uint64_t)((uintptr_t)buf + len) & 7;
 	count_mid = (len - count_pre - count_post) / 8;
 
 	while (count_pre--) {
 		crc = _mm_crc32_u8(crc, *(const uint8_t *)buf);
-		buf++;
+		buf = (uint8_t *)buf + 1;
 	}
 
 	/* _mm_crc32_u64() needs a 64-bit intermediate value */
@@ -49,7 +49,7 @@ spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
 	crc = (uint32_t)crc_tmp64;
 	while (count_post--) {
 		crc = _mm_crc32_u8(crc, *(const uint8_t *)buf);
-		buf++;
+		buf = (uint8_t *)buf + 1;
 	}
 
 	return crc;

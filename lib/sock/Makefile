@@ -14,6 +14,8 @@ C_SRCS = sock.c sock_rpc.c
 
 LIBNAME = sock
 
+CFLAGS += -Wpointer-arith
+
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_sock.map)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
