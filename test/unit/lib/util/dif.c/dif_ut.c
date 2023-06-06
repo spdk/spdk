@@ -3734,7 +3734,7 @@ dix_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_remap_pi_32_test(void)
 	_iov_alloc_buf(&md_iov, 128 * 4);
 
 	dix_generate_remap_and_verify(iovs, 6, &md_iov, 4096, 128, 4, false, SPDK_DIF_TYPE1,
-				      dif_flags, 22, 99, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_16);
+				      dif_flags, 22, 99, 0xFFFF, 0x22, SPDK_DIF_PI_FORMAT_32);
 
 	for (i = 0; i < 6; i++) {
 		_iov_free_buf(&iovs[i]);
