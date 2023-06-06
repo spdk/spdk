@@ -2337,6 +2337,8 @@ spdk_get_io_channel(void *io_device)
 		RB_REMOVE(io_channel_tree, &ch->thread->io_channels, ch);
 		dev->refcnt--;
 		free(ch);
+		SPDK_ERRLOG("could not create io_channel for io_device %s (%p): %s (rc=%d)\n",
+			    dev->name, io_device, spdk_strerror(-rc), rc);
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return NULL;
 	}
