@@ -128,7 +128,6 @@ struct spdk_ublk_dev {
 	ublk_start_cb		start_cb;
 	ublk_del_cb		del_cb;
 	void			*cb_arg;
-	uint32_t		ctrl_cmd_op;
 	ublk_next_state_fn	next_state_fn;
 	uint32_t		ctrl_ops_in_progress;
 	bool			is_closing;
@@ -264,7 +263,6 @@ ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op)
 
 	UBLK_DEBUGLOG(ublk, "ctrl cmd %s\n", ublk_op_name[cmd_op]);
 
-	ublk->ctrl_cmd_op = cmd_op;
 	sqe = io_uring_get_sqe(&g_ublk_tgt.ctrl_ring);
 	if (!sqe) {
 		SPDK_ERRLOG("No available sqe in ctrl ring\n");
@@ -293,7 +291,6 @@ ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op)
 		break;
 	case UBLK_CMD_START_DEV:
 		cmd->data[0] = getpid();
-		cmd->data[1] = 0;
 		break;
 	case UBLK_CMD_STOP_DEV:
 		break;
@@ -1120,7 +1117,6 @@ ublk_io_recv(struct ublk_queue *q)
 	int fetch, count = 0;
 	struct ublk_io *io;
 	struct spdk_iobuf_channel *iobuf_ch;
-	unsigned __attribute__((unused)) cmd_op;
 
 	if (q->cmd_inflight == 0) {
 		return 0;
@@ -1129,11 +1125,10 @@ ublk_io_recv(struct ublk_queue *q)
 	iobuf_ch = &q->poll_group->iobuf_ch;
 	io_uring_for_each_cqe(&q->ring, head, cqe) {
 		tag = user_data_to_tag(cqe->user_data);
-		cmd_op = user_data_to_op(cqe->user_data);
 		fetch = (cqe->res != UBLK_IO_RES_ABORT) && !q->is_stopping;
 
 		SPDK_DEBUGLOG(ublk_io, "res %d qid %d tag %u cmd_op %u\n",
-			      cqe->res, q->q_id, tag, cmd_op);
+			      cqe->res, q->q_id, tag, user_data_to_op(cqe->user_data));
 
 		q->cmd_inflight--;
 		io = &q->ios[tag];
@@ -1153,7 +1148,7 @@ ublk_io_recv(struct ublk_queue *q)
 		} else {
 			if (cqe->res != UBLK_IO_RES_ABORT) {
 				SPDK_ERRLOG("ublk received error io: res %d qid %d tag %u cmd_op %u\n",
-					    cqe->res, q->q_id, tag, cmd_op);
+					    cqe->res, q->q_id, tag, user_data_to_op(cqe->user_data));
 			}
 			TAILQ_REMOVE(&q->inflight_io_list, io, tailq);
 		}
