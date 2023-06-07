@@ -45,7 +45,11 @@ struct bdev_rbd {
 	rados_t *cluster_p;
 	char *cluster_name;
 
-	struct bdev_rbd_pool_ctx *ctx;
+	union rbd_ctx {
+		rados_ioctx_t io_ctx;
+		struct bdev_rbd_pool_ctx *ctx;
+	} rados_ctx;
+
 	rbd_image_t image;
 
 	rbd_image_info_t info;
@@ -161,18 +165,21 @@ bdev_rbd_free(struct bdev_rbd *rbd)
 	free(rbd->pool_name);
 	bdev_rbd_free_config(rbd->config);
 
-	/* When rbd is destructed by bdev_rbd_destruct, it will not enter here
-	 * because the ctx will already freed by bdev_rbd_free_cb in async manner.
-	 * This path only happens during the rbd initialization procedure of rbd */
-	if (rbd->ctx) {
-		bdev_rbd_put_pool_ctx(rbd->ctx);
-		rbd->ctx = NULL;
-	}
-
 	if (rbd->cluster_name) {
+		/* When rbd is destructed by bdev_rbd_destruct, it will not enter here
+		 * because the ctx will already freed by bdev_rbd_free_cb in async manner.
+		 * This path only happens during the rbd initialization procedure of rbd */
+		if (rbd->rados_ctx.ctx) {
+			bdev_rbd_put_pool_ctx(rbd->rados_ctx.ctx);
+			rbd->rados_ctx.ctx = NULL;
+		}
+
 		bdev_rbd_put_cluster(&rbd->cluster_p);
 		free(rbd->cluster_name);
 	} else if (rbd->cluster) {
+		if (rbd->rados_ctx.io_ctx) {
+			rados_ioctx_destroy(rbd->rados_ctx.io_ctx);
+		}
 		rados_shutdown(rbd->cluster);
 	}
 
@@ -371,14 +378,25 @@ bdev_rbd_init_context(void *arg)
 {
 	struct bdev_rbd *rbd = arg;
 	int rc;
+	rados_ioctx_t *io_ctx = NULL;
 
-	if (bdev_rbd_get_pool_ctx(rbd->cluster_p, rbd->pool_name, &rbd->ctx) < 0) {
-		SPDK_ERRLOG("Failed to create ioctx on rbd=%p\n", rbd);
-		return NULL;
+	if (rbd->cluster_name) {
+		if (bdev_rbd_get_pool_ctx(rbd->cluster_p, rbd->pool_name, &rbd->rados_ctx.ctx) < 0) {
+			SPDK_ERRLOG("Failed to create ioctx on rbd=%p with cluster_name=%s\n",
+				    rbd, rbd->cluster_name);
+			return NULL;
+		}
+		io_ctx = &rbd->rados_ctx.ctx->io_ctx;
+	} else {
+		if (rados_ioctx_create(*(rbd->cluster_p), rbd->pool_name, &rbd->rados_ctx.io_ctx) < 0) {
+			SPDK_ERRLOG("Failed to create ioctx on rbd=%p\n", rbd);
+			return NULL;
+		}
+		io_ctx = &rbd->rados_ctx.io_ctx;
 	}
 
-	assert(rbd->ctx != NULL);
-	rc = rbd_open(rbd->ctx->io_ctx, rbd->rbd_name, &rbd->image, NULL);
+	assert(io_ctx != NULL);
+	rc = rbd_open(*io_ctx, rbd->rbd_name, &rbd->image, NULL);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to open specified rbd device\n");
 		return NULL;
@@ -650,9 +668,9 @@ bdev_rbd_free_cb(void *io_device)
 	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
 	/* free the ctx */
-	if (rbd->ctx) {
-		bdev_rbd_put_pool_ctx(rbd->ctx);
-		rbd->ctx = NULL;
+	if (rbd->cluster_name && rbd->rados_ctx.ctx) {
+		bdev_rbd_put_pool_ctx(rbd->rados_ctx.ctx);
+		rbd->rados_ctx.ctx = NULL;
 	}
 
 	/* The io device has been unregistered.  Send a message back to the
