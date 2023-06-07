@@ -382,6 +382,22 @@ function check_include_style() {
 	return $rc
 }
 
+function check_opts_structs() {
+	local IFS="|" out types=(
+		spdk_nvme_ns_cmd_ext_io_opts
+		spdk_dif_ctx_init_ext_opts
+	)
+
+	if out=$(git grep -InE "(\.|->)size[[:space:]]*=[[:space:]]*sizeof\(struct (${types[*]})\)"); then
+		cat <<- WARN
+			Found incorrect *ext_opts struct usage.  Use SPDK_SIZEOF() to calculate its size.
+
+			$out
+		WARN
+		return 1
+	fi
+}
+
 function check_python_style() {
 	local rc=0
 
@@ -787,6 +803,7 @@ check_eof || rc=1
 check_posix_includes || rc=1
 check_naming_conventions || rc=1
 check_include_style || rc=1
+check_opts_structs || rc=1
 check_python_style || rc=1
 check_bash_style || rc=1
 check_bash_static_analysis || rc=1
