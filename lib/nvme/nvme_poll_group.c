@@ -25,11 +25,34 @@ spdk_nvme_poll_group_create(void *ctx, struct spdk_nvme_accel_fn_table *table)
 	} \
 
 		SET_FIELD(submit_accel_crc32c);
+		SET_FIELD(append_crc32c);
+		SET_FIELD(finish_sequence);
+		SET_FIELD(reverse_sequence);
+		SET_FIELD(abort_sequence);
 		/* Do not remove this statement, you should always update this statement when you adding a new field,
 		 * and do not forget to add the SET_FIELD statement for your added field. */
-		SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_accel_fn_table) == 16, "Incorrect size");
+		SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_accel_fn_table) == 48, "Incorrect size");
 
 #undef SET_FIELD
+	}
+
+	/* Make sure either all or none of the sequence manipulation callbacks are implemented */
+	if ((group->accel_fn_table.finish_sequence && group->accel_fn_table.reverse_sequence &&
+	     group->accel_fn_table.abort_sequence) !=
+	    (group->accel_fn_table.finish_sequence || group->accel_fn_table.reverse_sequence ||
+	     group->accel_fn_table.abort_sequence)) {
+		SPDK_ERRLOG("Invalid accel_fn_table configuration: either all or none of the "
+			    "sequence callbacks must be provided\n");
+		free(group);
+		return NULL;
+	}
+
+	/* Make sure that sequence callbacks are implemented if append* callbacks are provided */
+	if (group->accel_fn_table.append_crc32c && !group->accel_fn_table.finish_sequence) {
+		SPDK_ERRLOG("Invalid accel_fn_table configuration: append_crc32c requires sequence "
+			    "callbacks to be provided\n");
+		free(group);
+		return NULL;
 	}
 
 	group->ctx = ctx;

@@ -18,6 +18,7 @@
 extern "C" {
 #endif
 
+#include "spdk/dma.h"
 #include "spdk/env.h"
 #include "spdk/nvme_spec.h"
 #include "spdk/nvmf_spec.h"
@@ -296,6 +297,13 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_opts) == 824, "Incorrect size")
 typedef void (*spdk_nvme_accel_completion_cb)(void *cb_arg, int status);
 
 /**
+ * Completion callback for a single operation in a sequence.
+ *
+ * \param cb_arg Argument provided by the user when appending an operation to a sequence.
+ */
+typedef void (*spdk_nvme_accel_step_cb)(void *cb_arg);
+
+/**
  * Function table for the NVMe accelerator device.
  *
  * This table provides a set of APIs to allow user to leverage
@@ -314,6 +322,20 @@ struct spdk_nvme_accel_fn_table {
 	/** The accelerated crc32c function. */
 	void (*submit_accel_crc32c)(void *ctx, uint32_t *dst, struct iovec *iov,
 				    uint32_t iov_cnt, uint32_t seed, spdk_nvme_accel_completion_cb cb_fn, void *cb_arg);
+
+	/** Finish an accel sequence */
+	void (*finish_sequence)(void *seq, spdk_nvme_accel_completion_cb cb_fn, void *cb_arg);
+
+	/** Reverse an accel sequence */
+	void (*reverse_sequence)(void *seq);
+
+	/** Abort an accel sequence */
+	void (*abort_sequence)(void *seq);
+
+	/** Append a crc32c operation to a sequence */
+	int (*append_crc32c)(void *ctx, void **seq, uint32_t *dst, struct iovec *iovs, uint32_t iovcnt,
+			     struct spdk_memory_domain *memory_domain, void *domain_ctx,
+			     uint32_t seed, spdk_nvme_accel_step_cb cb_fn, void *cb_arg);
 };
 
 /**
