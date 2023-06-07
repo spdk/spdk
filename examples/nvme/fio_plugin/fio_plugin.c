@@ -809,7 +809,7 @@ fio_extended_lba_setup_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 	lba = io_u->offset / extended_lba_size;
 	lba_count = io_u->xfer_buflen / extended_lba_size;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&fio_req->dif_ctx, extended_lba_size, md_size,
 			       true, fio_qpair->md_start,
@@ -858,7 +858,7 @@ fio_separate_md_setup_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 	lba = io_u->offset / block_size;
 	lba_count = io_u->xfer_buflen / block_size;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&fio_req->dif_ctx, block_size, md_size,
 			       false, fio_qpair->md_start,

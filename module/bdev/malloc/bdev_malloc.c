@@ -46,7 +46,7 @@ malloc_verify_pi(struct spdk_bdev_io *bdev_io)
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
 	assert(bdev_io->u.bdev.memory_domain == NULL);
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       bdev->blocklen,
@@ -574,7 +574,7 @@ malloc_disk_setup_pi(struct malloc_disk *mdisk)
 	int rc;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       bdev->blocklen,

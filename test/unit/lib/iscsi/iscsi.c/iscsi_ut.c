@@ -1246,7 +1246,7 @@ build_iovs_with_md_test(void)
 	pdu.bhs.total_ahs_len = 0;
 	pdu.bhs.opcode = ISCSI_OP_SCSI;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&pdu.dif_ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
 			       0, 0, 0, 0, 0, 0, &dif_opts);

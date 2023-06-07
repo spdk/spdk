@@ -83,7 +83,7 @@ bdev_null_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_
 	if (SPDK_DIF_DISABLE != bdev->dif_type &&
 	    (SPDK_BDEV_IO_TYPE_READ == bdev_io->type ||
 	     SPDK_BDEV_IO_TYPE_WRITE == bdev_io->type)) {
-		dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+		dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 		dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 		rc = spdk_dif_ctx_init(&dif_ctx,
 				       bdev->blocklen,

@@ -36,12 +36,12 @@ enum spdk_dif_pi_format {
 };
 
 struct spdk_dif_ctx_init_ext_opts {
-	/** size of this structure in bytes */
+	/** Size of this structure in bytes, use SPDK_SIZEOF() to calculate it */
 	size_t size;
 
-	enum spdk_dif_pi_format dif_pi_format;
-} __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_dif_ctx_init_ext_opts) == 12, "Incorrect size");
+	uint32_t dif_pi_format;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_dif_ctx_init_ext_opts) == 16, "Incorrect size");
 
 /** DIF context information */
 struct spdk_dif_ctx {

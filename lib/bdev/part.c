@@ -207,7 +207,7 @@ bdev_part_remap_dif(struct spdk_bdev_io *bdev_io, uint32_t offset,
 		return 0;
 	}
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       bdev->blocklen, bdev->md_len, bdev->md_interleave,

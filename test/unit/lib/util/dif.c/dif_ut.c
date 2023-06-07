@@ -368,7 +368,7 @@ _dif_generate_and_verify_different_pi_format(uint32_t dif_flags,
 	rc = ut_data_pattern_generate(&iov, 1, 4096 + 128, 128, 1);
 	CU_ASSERT(rc == 0);
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = dif_pi_format_1;
 	rc = spdk_dif_ctx_init(&ctx_1, 4096 + 128, 128, true, true, SPDK_DIF_TYPE1, dif_flags,
 			       12, 0xFFFF, 23, 0, 0, &dif_opts);
@@ -416,7 +416,7 @@ dif_sec_512_md_0_error_test(void)
 	int rc;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	/* Metadata size is 0. */
 	rc = spdk_dif_ctx_init(&ctx, 512, 0, true, false, SPDK_DIF_TYPE1, 0,
@@ -431,7 +431,7 @@ dif_sec_4096_md_0_error_pi_32_test(void)
 	int rc;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_32;
 	/* Metadata size is 0. */
 	rc = spdk_dif_ctx_init(&ctx, 4096, 0, true, false, SPDK_DIF_TYPE1, 0,
@@ -446,7 +446,7 @@ dif_sec_4100_md_128_error_pi_32_test(void)
 	int rc;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_32;
 	/* Block size is not multiple of 4kB, MD interleave = false */
 	rc = spdk_dif_ctx_init(&ctx, 4100, 128, false, false, SPDK_DIF_TYPE1, 0,
@@ -472,7 +472,7 @@ _dif_guard_seed_test(uint32_t block_size, uint32_t md_size,
 
 	dif = (struct spdk_dif *)(iov.iov_base + (block_size - md_size));
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, true, SPDK_DIF_TYPE1,
 			       SPDK_DIF_FLAGS_GUARD_CHECK,
@@ -525,7 +525,7 @@ _dif_guard_value_test(uint32_t block_size, uint32_t md_size,
 	int rc;
 	uint32_t guard;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, true, SPDK_DIF_TYPE1,
 			       SPDK_DIF_FLAGS_GUARD_CHECK,
@@ -609,7 +609,7 @@ dif_generate_and_verify(struct iovec *iovs, int iovcnt,
 	rc = ut_data_pattern_generate(iovs, iovcnt, block_size, md_size, num_blocks);
 	CU_ASSERT(rc == 0);
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc, dif_type, dif_flags,
 			       init_ref_tag, apptag_mask, app_tag, 0, GUARD_SEED, &dif_opts);
@@ -1089,7 +1089,7 @@ _dif_inject_error_and_verify(struct iovec *iovs, int iovcnt,
 	rc = ut_data_pattern_generate(iovs, iovcnt, block_size, md_size, num_blocks);
 	CU_ASSERT(rc == 0);
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc,
 			       SPDK_DIF_TYPE1, dif_flags,
@@ -1351,7 +1351,7 @@ dif_copy_gen_and_verify(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov
 	rc = ut_data_pattern_generate(iovs, iovcnt, block_size - md_size, 0, num_blocks);
 	CU_ASSERT(rc == 0);
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc, dif_type, dif_flags,
 			       init_ref_tag, apptag_mask, app_tag, 0, GUARD_SEED, &dif_opts);
@@ -1646,7 +1646,7 @@ _dif_copy_inject_error_and_verify(struct iovec *iovs, int iovcnt, struct iovec *
 	rc = ut_data_pattern_generate(iovs, iovcnt, block_size - md_size, 0, num_blocks);
 	CU_ASSERT(rc == 0);
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc, SPDK_DIF_TYPE1, dif_flags,
 			       88, 0xFFFF, 0x88, 0, GUARD_SEED, &dif_opts);
@@ -1779,7 +1779,7 @@ dix_sec_512_md_0_error(void)
 	int rc;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&ctx, 512, 0, false, false, SPDK_DIF_TYPE1, 0,
 			       0, 0, 0, 0, 0, &dif_opts);
@@ -1800,7 +1800,7 @@ dix_generate_and_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 	rc = ut_data_pattern_generate(iovs, iovcnt, block_size, 0, num_blocks);
 	CU_ASSERT(rc == 0);
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, false, dif_loc, dif_type, dif_flags,
 			       init_ref_tag, apptag_mask, app_tag, 0, GUARD_SEED, &dif_opts);
@@ -2084,7 +2084,7 @@ _dix_inject_error_and_verify(struct iovec *iovs, int iovcnt, struct iovec *md_io
 	rc = ut_data_pattern_generate(iovs, iovcnt, block_size, 0, num_blocks);
 	CU_ASSERT(rc == 0);
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, false, dif_loc, SPDK_DIF_TYPE1, dif_flags,
 			       88, 0xFFFF, 0x88, 0, GUARD_SEED, &dif_opts);
@@ -2230,7 +2230,7 @@ _set_md_interleave_iovs_test(enum spdk_dif_pi_format dif_pi_format)
 	dif_check_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
 			  SPDK_DIF_FLAGS_REFTAG_CHECK;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
 			       dif_check_flags, 22, 0xFFFF, 0x22, 0, GUARD_SEED, &dif_opts);
@@ -2368,7 +2368,7 @@ set_md_interleave_iovs_split_test(void)
 	dif_check_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
 			  SPDK_DIF_FLAGS_REFTAG_CHECK;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&ctx, 512 + 8, 8, true, false, SPDK_DIF_TYPE1,
 			       dif_check_flags, 22, 0xFFFF, 0x22, 0, GUARD_SEED, &dif_opts);
@@ -2530,7 +2530,7 @@ dif_generate_stream_pi_16_test(void)
 	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
 		    SPDK_DIF_FLAGS_REFTAG_CHECK;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&ctx, 512 + 8, 8, true, false, SPDK_DIF_TYPE1, dif_flags,
 			       22, 0xFFFF, 0x22, 0, GUARD_SEED, &dif_opts);
@@ -2584,7 +2584,7 @@ dif_generate_stream_pi_32_test(void)
 	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
 		    SPDK_DIF_FLAGS_REFTAG_CHECK;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_32;
 	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1, dif_flags,
 			       22, 0xFFFF, 0x22, 0, GUARD_SEED, &dif_opts);
@@ -2629,7 +2629,7 @@ set_md_interleave_iovs_alignment_test(void)
 	struct spdk_dif_ctx ctx;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&ctx, 512 + 8, 8, true, false, SPDK_DIF_TYPE1,
 			       0, 0, 0, 0, 0, 0, &dif_opts);
@@ -2697,7 +2697,7 @@ _dif_generate_split_test(enum spdk_dif_pi_format dif_pi_format)
 	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
 		    SPDK_DIF_FLAGS_REFTAG_CHECK;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
 			       dif_flags, 0, 0, 0, 0, GUARD_SEED, &dif_opts);
@@ -2785,7 +2785,7 @@ _set_md_interleave_iovs_multi_segments_test(enum spdk_dif_pi_format dif_pi_forma
 	dif_check_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
 			  SPDK_DIF_FLAGS_REFTAG_CHECK;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
 			       dif_check_flags, 22, 0xFFFF, 0x22, 0, GUARD_SEED, &dif_opts);
@@ -2955,7 +2955,7 @@ _dif_verify_split_test(enum spdk_dif_pi_format dif_pi_format)
 	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
 		    SPDK_DIF_FLAGS_REFTAG_CHECK;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
 			       dif_flags, 0, 0, 0, 0, GUARD_SEED, &dif_opts);
@@ -3027,7 +3027,7 @@ _dif_verify_stream_multi_segments_test(enum spdk_dif_pi_format dif_pi_format)
 	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
 		    SPDK_DIF_FLAGS_REFTAG_CHECK;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
 			       dif_flags, 22, 0xFFFF, 0x22, 0, GUARD_SEED, &dif_opts);
@@ -3099,7 +3099,7 @@ update_crc32c_pi_16_test(void)
 	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
 		    SPDK_DIF_FLAGS_REFTAG_CHECK;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&ctx, 512 + 8, 8, true, false, SPDK_DIF_TYPE1,
 			       dif_flags, 0, 0, 0, 0, 0, &dif_opts);
@@ -3193,7 +3193,7 @@ update_crc32c_pi_32_test(void)
 	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
 		    SPDK_DIF_FLAGS_REFTAG_CHECK;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_32;
 	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
 			       dif_flags, 0, 0, 0, 0, 0, &dif_opts);
@@ -3288,7 +3288,7 @@ _dif_update_crc32c_split_test(enum spdk_dif_pi_format dif_pi_format)
 	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
 		    SPDK_DIF_FLAGS_REFTAG_CHECK;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
 			       dif_flags, 0, 0, 0, 0, GUARD_SEED, &dif_opts);
@@ -3345,7 +3345,7 @@ _dif_update_crc32c_stream_multi_segments_test(enum spdk_dif_pi_format dif_pi_for
 	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
 		    SPDK_DIF_FLAGS_REFTAG_CHECK;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
 			       dif_flags, 22, 0xFFFF, 0x22, 0, GUARD_SEED, &dif_opts);
@@ -3412,7 +3412,7 @@ get_range_with_md_test(void)
 	int rc;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, 0, 0,
 			       0, 0, 0, 0, 0, &dif_opts);
@@ -3453,7 +3453,7 @@ dif_generate_remap_and_verify(struct iovec *iovs, int iovcnt,
 	rc = ut_data_pattern_generate(iovs, iovcnt, block_size, md_size, num_blocks);
 	CU_ASSERT(rc == 0);
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc, dif_type, dif_flags,
 			       init_ref_tag, apptag_mask, app_tag, 0, GUARD_SEED, &dif_opts);
@@ -3606,7 +3606,7 @@ dix_generate_remap_and_verify(struct iovec *iovs, int iovcnt, struct iovec *md_i
 	rc = ut_data_pattern_generate(iovs, iovcnt, block_size, 0, num_blocks);
 	CU_ASSERT(rc == 0);
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = dif_pi_format;
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, false, dif_loc, dif_type, dif_flags,
 			       init_ref_tag, apptag_mask, app_tag, 0, GUARD_SEED, &dif_opts);

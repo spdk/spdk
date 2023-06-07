@@ -6788,7 +6788,7 @@ bdev_nvme_verify_pi_error(struct nvme_bdev_io *bio)
 	int rc;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       bdev->blocklen, bdev->md_len, bdev->md_interleave,

@@ -823,7 +823,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	/* Part 1: simple I/O, one SGL smaller than the transport io unit size, block size 512 */
 	MOCK_SET(spdk_iobuf_get, (void *)0x2000);
 	reset_nvmf_rdma_request(&rdma_req);
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	spdk_dif_ctx_init(&rdma_req.req.dif.dif_ctx, data_bs + md_size, md_size, true, false,
 			  SPDK_DIF_TYPE1, SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_REFTAG_CHECK,

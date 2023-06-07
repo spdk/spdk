@@ -2011,7 +2011,7 @@ bdev_scsi_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		dif_check_flags |= SPDK_DIF_FLAGS_GUARD_CHECK;
 	}
 
-	dif_opts.size = sizeof(struct spdk_dif_ctx_init_ext_opts);
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(dif_ctx,
 			       spdk_bdev_get_block_size(bdev),
