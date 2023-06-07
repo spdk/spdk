@@ -1900,6 +1900,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		printf("Number of ANA Group Identifiers     : %u\n", cdata->nanagrpid);
 		printf("Max Number of Allowed Namespaces    : %u\n", cdata->mnan);
 	}
+	printf("Subsystem NQN:                         %s\n", cdata->subnqn);
 	printf("Command Effects Log Page:              %s\n",
 	       cdata->lpa.celp ? "Supported" : "Not Supported");
 	printf("Get Log Page Extended Data:            %s\n",
