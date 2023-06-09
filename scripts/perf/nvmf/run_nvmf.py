@@ -52,8 +52,8 @@ class Server(ABC):
             ConfigField(name='username', required=True),
             ConfigField(name='password', required=True),
             ConfigField(name='transport', required=True),
-            ConfigField(name='skip_spdk_install', default=False)
-            ConfigField(name='irdma_roce_enable' default=False)
+            ConfigField(name='skip_spdk_install', default=False),
+            ConfigField(name='irdma_roce_enable', default=False)
         ]
         self.read_config(config_fields, general_config)
         self.transport = self.transport.lower()
@@ -61,8 +61,8 @@ class Server(ABC):
         config_fields = [
             ConfigField(name='nic_ips', required=True),
             ConfigField(name='mode', required=True),
-            ConfigField(name='irq_scripts_dir', default='/usr/src/local/mlnx-tools/ofed_scripts')
-            ConfigField(name='enable_arfs', default=False)
+            ConfigField(name='irq_scripts_dir', default='/usr/src/local/mlnx-tools/ofed_scripts'),
+            ConfigField(name='enable_arfs', default=False),
             ConfigField(name='tuned_profile', default='')
         ]
         self.read_config(config_fields, server_config)
