@@ -1944,7 +1944,6 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 
 	if (sock_impl_name) {
 		spdk_sock_impl_get_opts(sock_impl_name, &impl_opts, &impl_opts_size);
-		impl_opts.enable_ktls = false;
 		impl_opts.tls_version = SPDK_TLS_VERSION_1_3;
 		impl_opts.psk_identity = tcp_ctrlr->psk_identity;
 		impl_opts.psk_key = tcp_ctrlr->psk;
