@@ -1007,6 +1007,16 @@ lvol_close(void)
 	SPDK_CU_ASSERT_FATAL(cb_res.data != NULL);
 	lvol = cb_res.data;
 
+	/* Fail - lvol does not exist */
+	spdk_lvol_close(NULL, op_complete, ut_cb_res_clear(&cb_res));
+	CU_ASSERT(cb_res.err == -ENODEV);
+
+	/* Fail - lvol not open */
+	lvol->ref_count = 0;
+	spdk_lvol_close(lvol, op_complete, ut_cb_res_clear(&cb_res));
+	CU_ASSERT(cb_res.err == -EINVAL);
+	lvol->ref_count = 1;
+
 	/* Success */
 	spdk_lvol_close(lvol, op_complete, ut_cb_res_clear(&cb_res));
 	CU_ASSERT(cb_res.err == 0);
