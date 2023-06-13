@@ -17,8 +17,6 @@ upgrade() {
 
 
 pre_install() {
-	echo "Package perl-open is not available at Ubuntu repositories" >&2
-
 	update
 
 	if [[ $INSTALL_TSOCKS == true ]]; then
@@ -26,14 +24,8 @@ pre_install() {
 	fi
 
 	# asan an ubsan have to be installed together to not mix up gcc versions
-	if install libasan5; then
-		install libubsan1
-	else
-		echo "Latest libasan5 is not available" >&2
-		echo "  installing libasan2 and corresponding libubsan0" >&2
-		install libasan2
-		install libubsan0
-	fi
+	install libasan5 || install libasan6
+	install libubsan1
 }
 
 packages=(
