@@ -543,6 +543,12 @@ lvol_store_op_with_handle_complete(void *cb_arg, struct spdk_lvol_store *lvol_st
 {
 	g_lvol_store = lvol_store;
 	g_lvserrno = lvserrno;
+	if (cb_arg != NULL) {
+		struct ut_cb_res *res = cb_arg;
+
+		res->data = lvol_store;
+		res->err = lvserrno;
+	}
 }
 
 static void
@@ -976,7 +982,11 @@ static void
 lvol_close(void)
 {
 	struct lvol_ut_bs_dev dev;
+	struct spdk_lvol *lvol;
+	struct spdk_lvol_store *lvs;
 	struct spdk_lvs_opts opts;
+	struct ut_cb_res cb_res;
+
 	int rc = 0;
 
 	init_dev(&dev);
@@ -984,25 +994,26 @@ lvol_close(void)
 	spdk_lvs_opts_init(&opts);
 	snprintf(opts.name, sizeof(opts.name), "lvs");
 
-	g_lvserrno = -1;
-	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete,
+			   ut_cb_res_clear(&cb_res));
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(g_lvserrno == 0);
-	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	CU_ASSERT(cb_res.err == 0);
+	SPDK_CU_ASSERT_FATAL(cb_res.data != NULL);
+	lvs = cb_res.data;
 
-	spdk_lvol_create(g_lvol_store, "lvol", 10, false, LVOL_CLEAR_WITH_DEFAULT,
-			 lvol_op_with_handle_complete, NULL);
-	CU_ASSERT(g_lvserrno == 0);
-	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+	spdk_lvol_create(lvs, "lvol", 10, false, LVOL_CLEAR_WITH_DEFAULT,
+			 lvol_op_with_handle_complete, ut_cb_res_clear(&cb_res));
+	CU_ASSERT(cb_res.err == 0);
+	SPDK_CU_ASSERT_FATAL(cb_res.data != NULL);
+	lvol = cb_res.data;
 
-	spdk_lvol_close(g_lvol, op_complete, NULL);
-	CU_ASSERT(g_lvserrno == 0);
+	/* Success */
+	spdk_lvol_close(lvol, op_complete, ut_cb_res_clear(&cb_res));
+	CU_ASSERT(cb_res.err == 0);
 
-	g_lvserrno = -1;
-	rc = spdk_lvs_unload(g_lvol_store, op_complete, NULL);
+	rc = spdk_lvs_unload(lvs, op_complete, ut_cb_res_clear(&cb_res));
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(g_lvserrno == 0);
-	g_lvol_store = NULL;
+	CU_ASSERT(cb_res.err == 0);
 
 	free_dev(&dev);
 }
