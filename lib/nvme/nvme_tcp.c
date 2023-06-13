@@ -379,7 +379,7 @@ nvme_tcp_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static void
-_pdu_write_done(void *cb_arg, int err)
+pdu_write_done(void *cb_arg, int err)
 {
 	struct nvme_tcp_pdu *pdu = cb_arg;
 	struct nvme_tcp_qpair *tqpair = pdu->qpair;
@@ -416,6 +416,17 @@ _pdu_write_done(void *cb_arg, int err)
 }
 
 static void
+pdu_write_fail(struct nvme_tcp_pdu *pdu, int status)
+{
+	struct nvme_tcp_qpair *tqpair = pdu->qpair;
+
+	/* This function is similar to pdu_write_done(), but it should be called before a PDU is
+	 * sent over the socket */
+	TAILQ_INSERT_TAIL(&tqpair->send_queue, pdu, tailq);
+	pdu_write_done(pdu, status);
+}
+
+static void
 _tcp_write_pdu(struct nvme_tcp_pdu *pdu)
 {
 	uint32_t mapped_length = 0;
@@ -428,10 +439,10 @@ _tcp_write_pdu(struct nvme_tcp_pdu *pdu)
 	if (spdk_unlikely(mapped_length < pdu->data_len)) {
 		SPDK_ERRLOG("could not map the whole %u bytes (mapped only %u bytes)\n", pdu->data_len,
 			    mapped_length);
-		_pdu_write_done(pdu, -EINVAL);
+		pdu_write_done(pdu, -EINVAL);
 		return;
 	}
-	pdu->sock_req.cb_fn = _pdu_write_done;
+	pdu->sock_req.cb_fn = pdu_write_done;
 	pdu->sock_req.cb_arg = pdu;
 	tqpair->stats->submitted_requests++;
 	spdk_sock_writev_async(tqpair->sock, &pdu->sock_req);
@@ -444,7 +455,7 @@ pdu_accel_compute_crc32_done(void *cb_arg, int status)
 
 	if (spdk_unlikely(status)) {
 		SPDK_ERRLOG("Failed to compute the data digest for pdu =%p\n", pdu);
-		_pdu_write_done(pdu, status);
+		pdu_write_fail(pdu, status);
 		return;
 	}
 
