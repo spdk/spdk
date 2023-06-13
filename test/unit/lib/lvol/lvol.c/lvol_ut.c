@@ -1305,7 +1305,7 @@ lvols_load(void)
 
 	blob3 = calloc(1, sizeof(*blob3));
 	SPDK_CU_ASSERT_FATAL(blob3 != NULL);
-	blob3->id = 0x2;
+	blob3->id = 0x3;
 	spdk_blob_set_xattr(blob3, "uuid", uuid, SPDK_UUID_STRING_LEN);
 	spdk_blob_set_xattr(blob3, "name", "lvol3", strlen("lvol3") + 1);
 	blob3->uuid[SPDK_UUID_STRING_LEN - 2] = '3';
