@@ -200,16 +200,15 @@ CONFIG
 
 "$rootdir/examples/bdev/bdevperf/bdevperf.py" -s "$bperfsock" perform_tests
 
-# Check the stats and verify that sequence is executed once for the encrypt/decrypt operation and
-# once for the crc32 operation (chaining is disabled since the TCP transport doesn't report accel
-# sequence support)
+# Check the stats and verify that sequence is executed once for all operations (either encrypt+crc32
+# or decrypt+crc32)
 sequence=$(get_stat_bperf sequence_executed)
 encrypt=$(get_stat_bperf executed encrypt)
 decrypt=$(get_stat_bperf executed decrypt)
 crc32c=$(get_stat_bperf executed crc32c)
 
 ((sequence > 0))
-((encrypt + decrypt + crc32c == sequence))
+((encrypt + decrypt == sequence))
 ((encrypt + decrypt == crc32c))
 
 killprocess $bperfpid
@@ -236,7 +235,7 @@ decrypt=$(get_stat_bperf executed decrypt)
 crc32c=$(get_stat_bperf executed crc32c)
 
 ((sequence > 0))
-((encrypt + decrypt + crc32c == sequence))
+((encrypt + decrypt == sequence))
 ((encrypt + decrypt == crc32c))
 
 killprocess $bperfpid
