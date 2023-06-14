@@ -1355,6 +1355,17 @@ end:
 	nvme_tcp_c2h_data_payload_handle(tqpair, tcp_req->pdu, &dummy_reaped);
 }
 
+static void
+nvme_tcp_req_copy_pdu(struct nvme_tcp_req *treq, struct nvme_tcp_pdu *pdu)
+{
+	treq->pdu->hdr = pdu->hdr;
+	treq->pdu->req = treq;
+	memcpy(treq->pdu->data_digest, pdu->data_digest, sizeof(pdu->data_digest));
+	memcpy(treq->pdu->data_iov, pdu->data_iov, sizeof(pdu->data_iov[0]) * pdu->data_iovcnt);
+	treq->pdu->data_iovcnt = pdu->data_iovcnt;
+	treq->pdu->data_len = pdu->data_len;
+}
+
 static bool
 nvme_tcp_accel_recv_compute_crc32(struct nvme_tcp_req *treq, struct nvme_tcp_pdu *pdu)
 {
@@ -1374,13 +1385,7 @@ nvme_tcp_accel_recv_compute_crc32(struct nvme_tcp_req *treq, struct nvme_tcp_pdu
 		return false;
 	}
 
-	treq->pdu->hdr = pdu->hdr;
-	treq->pdu->req = treq;
-	memcpy(treq->pdu->data_digest, pdu->data_digest, sizeof(pdu->data_digest));
-	memcpy(treq->pdu->data_iov, pdu->data_iov, sizeof(pdu->data_iov[0]) * pdu->data_iovcnt);
-	treq->pdu->data_iovcnt = pdu->data_iovcnt;
-	treq->pdu->data_len = pdu->data_len;
-
+	nvme_tcp_req_copy_pdu(treq, pdu);
 	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 	nvme_tcp_accel_submit_crc32c(tgroup, &treq->pdu->data_digest_crc32,
 				     treq->pdu->data_iov, treq->pdu->data_iovcnt, 0,
