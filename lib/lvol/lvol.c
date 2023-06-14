@@ -217,7 +217,7 @@ load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 		} else {
 			TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
 				TAILQ_REMOVE(&lvs->lvols, lvol, link);
-				free(lvol);
+				lvol_free(lvol);
 			}
 			lvs_free(lvs);
 			spdk_bs_unload(bs, bs_unload_with_error_cb, req);
@@ -1059,7 +1059,7 @@ lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	TAILQ_REMOVE(&req->lvol->lvol_store->pending_lvols, req->lvol, link);
 
 	if (lvolerrno < 0) {
-		free(lvol);
+		lvol_free(lvol);
 		req->cb_fn(req->cb_arg, NULL, lvolerrno);
 		free(req);
 		return;
@@ -1086,7 +1086,7 @@ lvol_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 
 	if (lvolerrno < 0) {
 		TAILQ_REMOVE(&req->lvol->lvol_store->pending_lvols, req->lvol, link);
-		free(req->lvol);
+		lvol_free(req->lvol);
 		assert(req->cb_fn != NULL);
 		req->cb_fn(req->cb_arg, NULL, lvolerrno);
 		free(req);
