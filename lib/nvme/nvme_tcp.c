@@ -239,6 +239,14 @@ nvme_tcp_accel_finish_sequence(struct nvme_tcp_poll_group *tgroup, void *seq,
 	pg->accel_fn_table.finish_sequence(seq, cb_fn, cb_arg);
 }
 
+static inline void
+nvme_tcp_accel_reverse_sequence(struct nvme_tcp_poll_group *tgroup, void *seq)
+{
+	struct spdk_nvme_poll_group *pg = tgroup->group.group;
+
+	pg->accel_fn_table.reverse_sequence(seq);
+}
+
 static inline int
 nvme_tcp_accel_append_crc32c(struct nvme_tcp_poll_group *tgroup, void **seq, uint32_t *dst,
 			     struct iovec *iovs, uint32_t iovcnt, uint32_t seed,
@@ -1183,10 +1191,36 @@ get_nvme_active_req_by_cid(struct nvme_tcp_qpair *tqpair, uint32_t cid)
 }
 
 static void
+nvme_tcp_recv_payload_seq_cb(void *cb_arg, int status)
+{
+	struct nvme_tcp_req *treq = cb_arg;
+	struct nvme_request *req = treq->req;
+	struct nvme_tcp_qpair *tqpair = treq->tqpair;
+	struct nvme_tcp_poll_group *group;
+
+	/* We need to force poll the qpair to make sure any queued requests will be resubmitted, see
+	 * comment in pdu_write_done(). */
+	if (tqpair->qpair.poll_group && !tqpair->needs_poll && !STAILQ_EMPTY(&tqpair->qpair.queued_req)) {
+		group = nvme_tcp_poll_group(tqpair->qpair.poll_group);
+		TAILQ_INSERT_TAIL(&group->needs_poll, tqpair, link);
+		tqpair->needs_poll = true;
+	}
+
+	req->accel_sequence = NULL;
+	if (spdk_unlikely(status != 0)) {
+		SPDK_ERRLOG("Failed to execute accel sequence: %d\n", status);
+		treq->rsp.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+	}
+
+	nvme_tcp_req_complete_safe(treq);
+}
+
+static void
 nvme_tcp_c2h_data_payload_handle(struct nvme_tcp_qpair *tqpair,
 				 struct nvme_tcp_pdu *pdu, uint32_t *reaped)
 {
 	struct nvme_tcp_req *tcp_req;
+	struct nvme_tcp_poll_group *tgroup;
 	struct spdk_nvme_tcp_c2h_data_hdr *c2h_data;
 	uint8_t flags;
 
@@ -1209,6 +1243,15 @@ nvme_tcp_c2h_data_payload_handle(struct nvme_tcp_qpair *tqpair,
 		tcp_req->rsp.sqid = tqpair->qpair.id;
 		if (flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS) {
 			tcp_req->ordering.bits.data_recv = 1;
+			if (tcp_req->req->accel_sequence != NULL) {
+				tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
+				nvme_tcp_accel_reverse_sequence(tgroup, tcp_req->req->accel_sequence);
+				nvme_tcp_accel_finish_sequence(tgroup, tcp_req->req->accel_sequence,
+							       nvme_tcp_recv_payload_seq_cb,
+							       tcp_req);
+				return;
+			}
+
 			if (nvme_tcp_req_complete_safe(tcp_req)) {
 				(*reaped)++;
 			}
@@ -1478,6 +1521,7 @@ nvme_tcp_capsule_resp_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_
 				 uint32_t *reaped)
 {
 	struct nvme_tcp_req *tcp_req;
+	struct nvme_tcp_poll_group *tgroup;
 	struct spdk_nvme_tcp_rsp *capsule_resp = &pdu->hdr.capsule_resp;
 	uint32_t cid, error_offset = 0;
 	enum spdk_nvme_tcp_term_req_fes fes;
@@ -1500,6 +1544,15 @@ nvme_tcp_capsule_resp_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_
 
 	/* Recv the pdu again */
 	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
+
+	if (tcp_req->req->accel_sequence != NULL) {
+		tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
+		nvme_tcp_accel_reverse_sequence(tgroup, tcp_req->req->accel_sequence);
+		nvme_tcp_accel_finish_sequence(tgroup, tcp_req->req->accel_sequence,
+					       nvme_tcp_recv_payload_seq_cb,
+					       tcp_req);
+		return;
+	}
 
 	if (nvme_tcp_req_complete_safe(tcp_req)) {
 		(*reaped)++;
