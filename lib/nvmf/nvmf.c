@@ -1478,6 +1478,9 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 
 	if (ns_changed) {
 		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
+			if (ctrlr->thread != spdk_get_thread()) {
+				continue;
+			}
 			/* It is possible that a ctrlr was added but the admin_qpair hasn't been
 			 * assigned yet.
 			 */
