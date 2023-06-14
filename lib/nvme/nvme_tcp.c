@@ -1272,7 +1272,7 @@ _nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 }
 
 static void
-tcp_data_recv_crc32_done(void *cb_arg, int status)
+nvme_tcp_accel_recv_compute_crc32_done(void *cb_arg, int status)
 {
 	struct nvme_tcp_req *tcp_req = cb_arg;
 	struct nvme_tcp_pdu *pdu;
@@ -1310,6 +1310,40 @@ end:
 	nvme_tcp_c2h_data_payload_handle(tqpair, tcp_req->pdu, &dummy_reaped);
 }
 
+static bool
+nvme_tcp_accel_recv_compute_crc32(struct nvme_tcp_req *treq, struct nvme_tcp_pdu *pdu)
+{
+	struct nvme_tcp_qpair *tqpair = treq->tqpair;
+	struct nvme_tcp_poll_group *tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
+	struct nvme_request *req = treq->req;
+
+	/* Only support this limited case that the request has only one c2h pdu */
+	if (spdk_unlikely(nvme_qpair_get_state(&tqpair->qpair) < NVME_QPAIR_CONNECTED ||
+			  tqpair->qpair.poll_group == NULL || pdu->dif_ctx != NULL ||
+			  pdu->data_len % SPDK_NVME_TCP_DIGEST_ALIGNMENT != 0 ||
+			  pdu->data_len != req->payload_size)) {
+		return false;
+	}
+
+	if (tgroup->group.group->accel_fn_table.submit_accel_crc32c == NULL) {
+		return false;
+	}
+
+	treq->pdu->hdr = pdu->hdr;
+	treq->pdu->req = treq;
+	memcpy(treq->pdu->data_digest, pdu->data_digest, sizeof(pdu->data_digest));
+	memcpy(treq->pdu->data_iov, pdu->data_iov, sizeof(pdu->data_iov[0]) * pdu->data_iovcnt);
+	treq->pdu->data_iovcnt = pdu->data_iovcnt;
+	treq->pdu->data_len = pdu->data_len;
+
+	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
+	nvme_tcp_accel_submit_crc32c(tgroup, &treq->pdu->data_digest_crc32,
+				     treq->pdu->data_iov, treq->pdu->data_iovcnt, 0,
+				     nvme_tcp_accel_recv_compute_crc32_done, treq);
+
+	return true;
+}
+
 static void
 nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair,
 			    uint32_t *reaped)
@@ -1317,7 +1351,6 @@ nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair,
 	int rc = 0;
 	struct nvme_tcp_pdu *pdu = tqpair->recv_pdu;
 	uint32_t crc32c;
-	struct nvme_tcp_poll_group *tgroup;
 	struct nvme_tcp_req *tcp_req = pdu->req;
 
 	assert(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
@@ -1332,23 +1365,7 @@ nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair,
 	if (pdu->ddgst_enable) {
 		/* But if the data digest is enabled, tcp_req cannot be NULL */
 		assert(tcp_req != NULL);
-		tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
-		/* Only support this limitated case that the request has only one c2h pdu */
-		if ((nvme_qpair_get_state(&tqpair->qpair) >= NVME_QPAIR_CONNECTED) &&
-		    (tgroup != NULL && tgroup->group.group->accel_fn_table.submit_accel_crc32c) &&
-		    spdk_likely(!pdu->dif_ctx && (pdu->data_len % SPDK_NVME_TCP_DIGEST_ALIGNMENT == 0)
-				&& tcp_req->req->payload_size == pdu->data_len)) {
-			tcp_req->pdu->hdr = pdu->hdr;
-			tcp_req->pdu->req = tcp_req;
-			memcpy(tcp_req->pdu->data_digest, pdu->data_digest, sizeof(pdu->data_digest));
-			memcpy(tcp_req->pdu->data_iov, pdu->data_iov, sizeof(pdu->data_iov[0]) * pdu->data_iovcnt);
-			tcp_req->pdu->data_iovcnt = pdu->data_iovcnt;
-			tcp_req->pdu->data_len = pdu->data_len;
-
-			nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
-			nvme_tcp_accel_submit_crc32c(tgroup, &tcp_req->pdu->data_digest_crc32,
-						     tcp_req->pdu->data_iov, tcp_req->pdu->data_iovcnt, 0,
-						     tcp_data_recv_crc32_done, tcp_req);
+		if (nvme_tcp_accel_recv_compute_crc32(tcp_req, pdu)) {
 			return;
 		}
 
