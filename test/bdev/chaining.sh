@@ -16,7 +16,10 @@ source "$rootdir/test/nvmf/common.sh"
 nqn=nqn.2016-06.io.spdk:cnode0
 key0=(00112233445566778899001122334455 11223344556677889900112233445500)
 key1=(22334455667788990011223344550011 33445566778899001122334455001122)
+bperfsock=/var/tmp/bperf.sock
 declare -A stats
+
+rpc_bperf() { "$rootdir/scripts/rpc.py" -s "$bperfsock" "$@"; }
 
 spdk_dd() {
 	local config
@@ -31,16 +34,18 @@ spdk_dd() {
 }
 
 get_stat() {
-	local event opcode
+	local event opcode rpc
 
-	event="$1" opcode="$2"
+	event="$1" opcode="$2" rpc=${3:-rpc_cmd}
 	if [[ -z "$opcode" ]]; then
-		rpc_cmd accel_get_stats | jq -r ".$event"
+		"$rpc" accel_get_stats | jq -r ".$event"
 	else
-		rpc_cmd accel_get_stats \
+		"$rpc" accel_get_stats \
 			| jq -r ".operations[] | select(.opcode == \"$opcode\").$event"
 	fi
 }
+
+get_stat_bperf() { get_stat "$1" "$2" rpc_bperf; }
 
 update_stats() {
 	stats[sequence_executed]=$(get_stat sequence_executed)
@@ -165,3 +170,76 @@ killprocess $bperfpid
 trap - SIGINT SIGTERM EXIT
 killprocess $bperfpid
 wait $bperfpid
+
+# Check integration with the TCP transport in the NVMe driver by running I/O with data
+# digest enabled
+nvmftestinit
+nvmfappstart -m 0x2
+
+rpc_cmd <<- CONFIG
+	bdev_malloc_create 32 4096 -b malloc0
+	nvmf_create_transport -t tcp
+	nvmf_create_subsystem $nqn -a
+	nvmf_subsystem_add_listener $nqn -t tcp -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+	nvmf_subsystem_add_ns $nqn malloc0
+CONFIG
+
+trap 'bperfcleanup || :; nvmftestfini || :; exit 1' SIGINT SIGTERM EXIT
+"$rootdir/build/examples/bdevperf" -r "$bperfsock" -t 5 -w verify -o 4096 -q 256 \
+	--wait-for-rpc -z &
+bperfpid=$!
+
+waitforlisten $bperfpid "$bperfsock"
+rpc_bperf <<- CONFIG
+	bdev_set_options --disable-auto-examine
+	framework_start_init
+	bdev_nvme_attach_controller -t tcp -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -f ipv4 -n $nqn -b nvme0 --ddgst
+	accel_crypto_key_create -c AES_XTS -k "${key0[0]}" -e "${key0[1]}" -n key0
+	bdev_crypto_create nvme0n1 crypto0 -n key0
+CONFIG
+
+"$rootdir/examples/bdev/bdevperf/bdevperf.py" -s "$bperfsock" perform_tests
+
+# Check the stats and verify that sequence is executed once for the encrypt/decrypt operation and
+# once for the crc32 operation (chaining is disabled since the TCP transport doesn't report accel
+# sequence support)
+sequence=$(get_stat_bperf sequence_executed)
+encrypt=$(get_stat_bperf executed encrypt)
+decrypt=$(get_stat_bperf executed decrypt)
+crc32c=$(get_stat_bperf executed crc32c)
+
+((sequence > 0))
+((encrypt + decrypt + crc32c == sequence))
+((encrypt + decrypt == crc32c))
+
+killprocess $bperfpid
+
+# Check the same with a larger block size to verify the digest calculation without in-capsule data
+"$rootdir/build/examples/bdevperf" -r "$bperfsock" -t 5 -w verify -o $((64 * 1024)) -q 32 \
+	--wait-for-rpc -z &
+bperfpid=$!
+
+waitforlisten $bperfpid "$bperfsock"
+rpc_bperf <<- CONFIG
+	bdev_set_options --disable-auto-examine
+	framework_start_init
+	bdev_nvme_attach_controller -t tcp -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -f ipv4 -n $nqn -b nvme0 --ddgst
+	accel_crypto_key_create -c AES_XTS -k "${key0[0]}" -e "${key0[1]}" -n key0
+	bdev_crypto_create nvme0n1 crypto0 -n key0
+CONFIG
+
+"$rootdir/examples/bdev/bdevperf/bdevperf.py" -s "$bperfsock" perform_tests
+
+sequence=$(get_stat_bperf sequence_executed)
+encrypt=$(get_stat_bperf executed encrypt)
+decrypt=$(get_stat_bperf executed decrypt)
+crc32c=$(get_stat_bperf executed crc32c)
+
+((sequence > 0))
+((encrypt + decrypt + crc32c == sequence))
+((encrypt + decrypt == crc32c))
+
+killprocess $bperfpid
+nvmftestfini
+
+trap - SIGINT SIGTERM EXIT
