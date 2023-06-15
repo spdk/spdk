@@ -1720,6 +1720,11 @@ __read_done(void *ctx, int bserrno)
 	struct spdk_fs_cb_args *args = &req->args;
 	void *buf;
 
+	if (bserrno) {
+		__rw_done(req, bserrno);
+		return;
+	}
+
 	assert(req != NULL);
 	buf = (void *)((uintptr_t)args->op.rw.pin_buf + (args->op.rw.offset & (args->op.rw.blocklen - 1)));
 	if (args->op.rw.is_read) {
