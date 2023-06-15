@@ -189,7 +189,7 @@ SpdkRandomAccessFile::Read(uint64_t offset, size_t n, Slice *result, char *scrat
 	set_channel();
 	rc = spdk_file_read(mFile, g_sync_args.channel, scratch, offset, n);
 	if (rc >= 0) {
-		*result = Slice(scratch, n);
+		*result = Slice(scratch, rc);
 		return Status::OK();
 	} else {
 		errno = -rc;
