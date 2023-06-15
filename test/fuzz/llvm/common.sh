@@ -63,6 +63,9 @@ function start_llvm_fuzz_short() {
 	local fuzz_num=$1
 	local time=$2
 
+	export HUGEMEM=5120
+	setup
+
 	for ((i = 0; i < fuzz_num; i++)); do
 		start_llvm_fuzz $i $time 0x1
 	done

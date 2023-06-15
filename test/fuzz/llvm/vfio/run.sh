@@ -61,8 +61,7 @@ fuzz_num=$(($(grep -c "\.fn =" $fuzzfile) - 1))
 
 trap 'cleanup /tmp/vfio-user-*; exit 1' SIGINT SIGTERM EXIT
 
-# vfiouser transport is unable to connect if memory is restricted
-mem_size=0
+mem_size=2048
 if [[ $SPDK_TEST_FUZZER_SHORT -eq 1 ]]; then
 	start_llvm_fuzz_short $fuzz_num $TIME
 elif [[ $SPDK_TEST_FUZZER -eq 1 ]]; then
