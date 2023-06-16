@@ -269,6 +269,11 @@ int
 nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			 struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
 {
+	struct spdk_bdev_ext_io_opts opts = {
+		.size = SPDK_SIZEOF(&opts, accel_sequence),
+		.memory_domain = req->memory_domain,
+		.memory_domain_ctx = req->memory_domain_ctx
+	};
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
 	uint32_t block_size = spdk_bdev_get_block_size(bdev);
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -296,8 +301,8 @@ nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 
 	assert(!spdk_nvmf_request_using_zcopy(req));
 
-	rc = spdk_bdev_readv_blocks(desc, ch, req->iov, req->iovcnt, start_lba, num_blocks,
-				    nvmf_bdev_ctrlr_complete_cmd, req);
+	rc = spdk_bdev_readv_blocks_ext(desc, ch, req->iov, req->iovcnt, start_lba, num_blocks,
+					nvmf_bdev_ctrlr_complete_cmd, req, &opts);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
 			nvmf_bdev_ctrl_queue_io(req, bdev, ch, nvmf_ctrlr_process_io_cmd_resubmit, req);
@@ -315,6 +320,11 @@ int
 nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			  struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
 {
+	struct spdk_bdev_ext_io_opts opts = {
+		.size = SPDK_SIZEOF(&opts, accel_sequence),
+		.memory_domain = req->memory_domain,
+		.memory_domain_ctx = req->memory_domain_ctx
+	};
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
 	uint32_t block_size = spdk_bdev_get_block_size(bdev);
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -342,8 +352,8 @@ nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 
 	assert(!spdk_nvmf_request_using_zcopy(req));
 
-	rc = spdk_bdev_writev_blocks(desc, ch, req->iov, req->iovcnt, start_lba, num_blocks,
-				     nvmf_bdev_ctrlr_complete_cmd, req);
+	rc = spdk_bdev_writev_blocks_ext(desc, ch, req->iov, req->iovcnt, start_lba, num_blocks,
+					 nvmf_bdev_ctrlr_complete_cmd, req, &opts);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
 			nvmf_bdev_ctrl_queue_io(req, bdev, ch, nvmf_ctrlr_process_io_cmd_resubmit, req);

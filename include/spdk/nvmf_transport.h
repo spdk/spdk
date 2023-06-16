@@ -85,9 +85,15 @@ struct spdk_nvmf_request {
 
 	uint32_t			iovcnt;
 	struct iovec			iov[NVMF_REQ_MAX_BUFFERS];
-	struct spdk_nvmf_stripped_data  *stripped_data;
+	struct spdk_nvmf_stripped_data	*stripped_data;
 
 	struct spdk_nvmf_dif_info	dif;
+
+	/* Memory domain which describes payload in this request. If the bdev doesn't support memory
+	 * domains, bdev layer will do the necessary push or pull operation. */
+	struct spdk_memory_domain	*memory_domain;
+	/* Context to be passed to memory domain operations. */
+	void				*memory_domain_ctx;
 
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 	spdk_nvmf_nvme_passthru_cmd_cb	cmd_cb_fn;
