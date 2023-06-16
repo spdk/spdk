@@ -973,41 +973,7 @@ lvol_destroy_fail(void)
 }
 
 static void
-lvol_close_fail(void)
-{
-	struct lvol_ut_bs_dev dev;
-	struct spdk_lvs_opts opts;
-	int rc = 0;
-
-	init_dev(&dev);
-
-	spdk_lvs_opts_init(&opts);
-	snprintf(opts.name, sizeof(opts.name), "lvs");
-
-	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(g_lvserrno == 0);
-	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
-
-	spdk_lvol_create(g_lvol_store, "lvol", 10, false, LVOL_CLEAR_WITH_DEFAULT,
-			 lvol_op_with_handle_complete, NULL);
-	CU_ASSERT(g_lvserrno == 0);
-	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
-
-	spdk_lvol_close(g_lvol, op_complete, NULL);
-	CU_ASSERT(g_lvserrno == 0);
-
-	g_lvserrno = -1;
-	rc = spdk_lvs_unload(g_lvol_store, op_complete, NULL);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(g_lvserrno == 0);
-	g_lvol_store = NULL;
-
-	free_dev(&dev);
-}
-
-static void
-lvol_close_success(void)
+lvol_close(void)
 {
 	struct lvol_ut_bs_dev dev;
 	struct spdk_lvs_opts opts;
@@ -3316,8 +3282,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, lvol_create_destroy_success);
 	CU_ADD_TEST(suite, lvol_create_fail);
 	CU_ADD_TEST(suite, lvol_destroy_fail);
-	CU_ADD_TEST(suite, lvol_close_fail);
-	CU_ADD_TEST(suite, lvol_close_success);
+	CU_ADD_TEST(suite, lvol_close);
 	CU_ADD_TEST(suite, lvol_resize);
 	CU_ADD_TEST(suite, lvol_set_read_only);
 	CU_ADD_TEST(suite, test_lvs_load);
