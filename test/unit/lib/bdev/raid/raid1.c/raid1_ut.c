@@ -35,6 +35,13 @@ DEFINE_STUB(spdk_bdev_writev_blocks_ext, int, (struct spdk_bdev_desc *desc,
 		struct spdk_io_channel *ch,
 		struct iovec *iov, int iovcnt, uint64_t offset_blocks, uint64_t num_blocks,
 		spdk_bdev_io_completion_cb cb, void *cb_arg, struct spdk_bdev_ext_io_opts *opts), 0);
+DEFINE_STUB_V(raid_bdev_process_request_complete, (struct raid_bdev_process_request *process_req,
+		int status));
+DEFINE_STUB_V(raid_bdev_io_init, (struct raid_bdev_io *raid_io,
+				  struct raid_bdev_io_channel *raid_ch,
+				  enum spdk_bdev_io_type type, uint64_t offset_blocks,
+				  uint64_t num_blocks, struct iovec *iovs, int iovcnt, void *md_buf,
+				  struct spdk_memory_domain *memory_domain, void *memory_domain_ctx));
 
 static int
 test_setup(void)

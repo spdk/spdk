@@ -294,6 +294,84 @@ raid1_get_io_channel(struct raid_bdev *raid_bdev)
 	return spdk_get_io_channel(r1info);
 }
 
+static void
+raid1_process_write_completed(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct raid_bdev_process_request *process_req = cb_arg;
+
+	spdk_bdev_free_io(bdev_io);
+
+	raid_bdev_process_request_complete(process_req, success ? 0 : -EIO);
+}
+
+static void raid1_process_submit_write(struct raid_bdev_process_request *process_req);
+
+static void
+_raid1_process_submit_write(void *ctx)
+{
+	struct raid_bdev_process_request *process_req = ctx;
+
+	raid1_process_submit_write(process_req);
+}
+
+static void
+raid1_process_submit_write(struct raid_bdev_process_request *process_req)
+{
+	struct raid_bdev_io *raid_io = &process_req->raid_io;
+	struct spdk_bdev_ext_io_opts io_opts;
+	int ret;
+
+	raid1_init_ext_io_opts(&io_opts, raid_io);
+	ret = raid_bdev_writev_blocks_ext(process_req->target, process_req->target_ch,
+					  raid_io->iovs, raid_io->iovcnt,
+					  raid_io->offset_blocks, raid_io->num_blocks,
+					  raid1_process_write_completed, process_req, &io_opts);
+	if (spdk_unlikely(ret != 0)) {
+		if (ret == -ENOMEM) {
+			raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(process_req->target->desc),
+						process_req->target_ch, _raid1_process_submit_write);
+		} else {
+			raid_bdev_process_request_complete(process_req, ret);
+		}
+	}
+}
+
+static void
+raid1_process_read_completed(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status)
+{
+	struct raid_bdev_process_request *process_req = SPDK_CONTAINEROF(raid_io,
+			struct raid_bdev_process_request, raid_io);
+
+	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
+		raid_bdev_process_request_complete(process_req, -EIO);
+		return;
+	}
+
+	raid1_process_submit_write(process_req);
+}
+
+static int
+raid1_submit_process_request(struct raid_bdev_process_request *process_req,
+			     struct raid_bdev_io_channel *raid_ch)
+{
+	struct raid_bdev_io *raid_io = &process_req->raid_io;
+	int ret;
+
+	raid_bdev_io_init(raid_io, raid_ch, SPDK_BDEV_IO_TYPE_READ,
+			  process_req->offset_blocks, process_req->num_blocks,
+			  &process_req->iov, 1, process_req->md_buf, NULL, NULL);
+	raid_io->completion_cb = raid1_process_read_completed;
+
+	ret = raid1_submit_read_request(raid_io);
+	if (spdk_likely(ret == 0)) {
+		return process_req->num_blocks;
+	} else if (ret < 0) {
+		return ret;
+	} else {
+		return -EINVAL;
+	}
+}
+
 static struct raid_bdev_module g_raid1_module = {
 	.level = RAID1,
 	.base_bdevs_min = 2,
@@ -303,6 +381,7 @@ static struct raid_bdev_module g_raid1_module = {
 	.stop = raid1_stop,
 	.submit_rw_request = raid1_submit_rw_request,
 	.get_io_channel = raid1_get_io_channel,
+	.submit_process_request = raid1_submit_process_request,
 };
 RAID_MODULE_REGISTER(&g_raid1_module)
 
