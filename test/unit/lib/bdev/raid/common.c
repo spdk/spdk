@@ -202,7 +202,11 @@ static void raid_test_bdev_io_complete(struct raid_bdev_io *raid_io,
 void
 raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status)
 {
-	raid_test_bdev_io_complete(raid_io, status);
+	if (raid_io->completion_cb != NULL) {
+		raid_io->completion_cb(raid_io, status);
+	} else {
+		raid_test_bdev_io_complete(raid_io, status);
+	}
 }
 
 bool

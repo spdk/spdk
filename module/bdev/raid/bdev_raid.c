@@ -11,6 +11,7 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/json.h"
+#include "spdk/likely.h"
 
 static bool g_shutdown_started = false;
 
@@ -308,7 +309,11 @@ raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status sta
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
 
-	spdk_bdev_io_complete(bdev_io, status);
+	if (spdk_unlikely(raid_io->completion_cb != NULL)) {
+		raid_io->completion_cb(raid_io, status);
+	} else {
+		spdk_bdev_io_complete(bdev_io, status);
+	}
 }
 
 /*
@@ -488,6 +493,7 @@ raid_bdev_io_init(struct raid_bdev_io *raid_io, struct raid_bdev_io_channel *rai
 	raid_io->base_bdev_io_remaining = 0;
 	raid_io->base_bdev_io_submitted = 0;
 	raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	raid_io->completion_cb = NULL;
 }
 
 /*

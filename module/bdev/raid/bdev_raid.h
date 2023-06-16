@@ -95,6 +95,10 @@ struct raid_base_bdev_info {
 	bool			is_configured;
 };
 
+struct raid_bdev_io;
+typedef void (*raid_bdev_io_completion_cb)(struct raid_bdev_io *raid_io,
+		enum spdk_bdev_io_status status);
+
 /*
  * raid_bdev_io is the context part of bdev_io. It contains the information
  * related to bdev_io for a raid bdev
@@ -125,6 +129,9 @@ struct raid_bdev_io {
 
 	/* Private data for the raid module */
 	void				*module_private;
+
+	/* Custom completion callback. Overrides bdev_io completion if set. */
+	raid_bdev_io_completion_cb	completion_cb;
 };
 
 /*
