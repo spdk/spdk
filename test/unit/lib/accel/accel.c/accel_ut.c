@@ -919,7 +919,7 @@ test_sequence_append_error(void)
 	struct iovec src_iovs, dst_iovs;
 	char buf[4096];
 	TAILQ_HEAD(, spdk_accel_task) tasks = TAILQ_HEAD_INITIALIZER(tasks);
-	TAILQ_HEAD(, spdk_accel_sequence) seqs = TAILQ_HEAD_INITIALIZER(seqs);
+	SLIST_HEAD(, spdk_accel_sequence) seqs = SLIST_HEAD_INITIALIZER(seqs);
 	int rc;
 
 	ioch = spdk_accel_get_io_channel();
@@ -955,7 +955,7 @@ test_sequence_append_error(void)
 
 	/* Check that the same happens when the sequence queue is empty */
 	TAILQ_SWAP(&tasks, &accel_ch->task_pool, spdk_accel_task, link);
-	TAILQ_SWAP(&seqs, &accel_ch->seq_pool, spdk_accel_sequence, link);
+	SLIST_SWAP(&seqs, &accel_ch->seq_pool, spdk_accel_sequence);
 
 	rc = spdk_accel_append_fill(&seq, ioch, buf, sizeof(buf), NULL, NULL, 0xa5, 0,
 				    ut_sequence_step_cb, NULL);

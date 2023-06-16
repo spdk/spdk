@@ -144,7 +144,7 @@ struct accel_io_channel {
 	struct spdk_accel_sequence		*seq_pool_base;
 	struct accel_buffer			*buf_pool_base;
 	TAILQ_HEAD(, spdk_accel_task)		task_pool;
-	TAILQ_HEAD(, spdk_accel_sequence)	seq_pool;
+	SLIST_HEAD(, spdk_accel_sequence)	seq_pool;
 	SLIST_HEAD(, accel_buffer)		buf_pool;
 	struct spdk_iobuf_channel		iobuf;
 	struct accel_stats			stats;
@@ -163,7 +163,7 @@ struct spdk_accel_sequence {
 	bool					in_process_sequence;
 	spdk_accel_completion_cb		cb_fn;
 	void					*cb_arg;
-	TAILQ_ENTRY(spdk_accel_sequence)	link;
+	SLIST_ENTRY(spdk_accel_sequence)	link;
 };
 
 #define accel_update_stats(ch, event, v) \
@@ -813,13 +813,13 @@ accel_sequence_get(struct accel_io_channel *ch)
 {
 	struct spdk_accel_sequence *seq;
 
-	seq = TAILQ_FIRST(&ch->seq_pool);
+	seq = SLIST_FIRST(&ch->seq_pool);
 	if (spdk_unlikely(seq == NULL)) {
 		accel_update_stats(ch, retry.sequence, 1);
 		return NULL;
 	}
 
-	TAILQ_REMOVE(&ch->seq_pool, seq, link);
+	SLIST_REMOVE_HEAD(&ch->seq_pool, link);
 
 	TAILQ_INIT(&seq->tasks);
 	TAILQ_INIT(&seq->completed);
@@ -849,7 +849,7 @@ accel_sequence_put(struct spdk_accel_sequence *seq)
 	assert(TAILQ_EMPTY(&seq->completed));
 	seq->ch = NULL;
 
-	TAILQ_INSERT_HEAD(&ch->seq_pool, seq, link);
+	SLIST_INSERT_HEAD(&ch->seq_pool, seq, link);
 }
 
 static void accel_sequence_task_cb(void *cb_arg, int status);
@@ -2353,7 +2353,7 @@ accel_create_channel(void *io_device, void *ctx_buf)
 	}
 
 	TAILQ_INIT(&accel_ch->task_pool);
-	TAILQ_INIT(&accel_ch->seq_pool);
+	SLIST_INIT(&accel_ch->seq_pool);
 	SLIST_INIT(&accel_ch->buf_pool);
 
 	task_mem = accel_ch->task_pool_base;
@@ -2364,7 +2364,7 @@ accel_create_channel(void *io_device, void *ctx_buf)
 	}
 	for (i = 0; i < g_opts.sequence_count; i++) {
 		seq = &accel_ch->seq_pool_base[i];
-		TAILQ_INSERT_TAIL(&accel_ch->seq_pool, seq, link);
+		SLIST_INSERT_HEAD(&accel_ch->seq_pool, seq, link);
 	}
 	for (i = 0; i < g_opts.buf_count; i++) {
 		buf = &accel_ch->buf_pool_base[i];
