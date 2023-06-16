@@ -739,6 +739,29 @@ cuse_getid(fuse_req_t req, int cmd, void *arg,
 	fuse_reply_ioctl(req, cuse_device->nsid, NULL, 0);
 }
 
+struct cuse_transport {
+	char trstring[SPDK_NVMF_TRSTRING_MAX_LEN + 1];
+	char traddr[SPDK_NVMF_TRADDR_MAX_LEN + 1];
+};
+
+#define SPDK_CUSE_GET_TRANSPORT _IOWR('n', 0x1, struct cuse_transport)
+
+static void
+cuse_get_transport(fuse_req_t req, int cmd, void *arg,
+		   struct fuse_file_info *fi, unsigned flags,
+		   const void *in_buf, size_t in_bufsz, size_t out_bufsz)
+{
+	struct cuse_device *cuse_device = fuse_req_userdata(req);
+	struct cuse_transport tr = {};
+
+	FUSE_REPLY_CHECK_BUFFER(req, arg, out_bufsz, tr);
+
+	memcpy(tr.trstring, cuse_device->ctrlr->trid.trstring, SPDK_NVMF_TRSTRING_MAX_LEN + 1);
+	memcpy(tr.traddr, cuse_device->ctrlr->trid.traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1);
+
+	fuse_reply_ioctl(req, 0, &tr, sizeof(tr));
+}
+
 static void
 cuse_ctrlr_ioctl(fuse_req_t req, int cmd, void *arg,
 		 struct fuse_file_info *fi, unsigned flags,
@@ -763,6 +786,11 @@ cuse_ctrlr_ioctl(fuse_req_t req, int cmd, void *arg,
 	case NVME_IOCTL_RESCAN:
 		SPDK_DEBUGLOG(nvme_cuse, "NVME_IOCTL_RESCAN\n");
 		cuse_nvme_rescan(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
+		break;
+
+	case SPDK_CUSE_GET_TRANSPORT:
+		SPDK_DEBUGLOG(nvme_cuse, "SPDK_CUSE_GET_TRANSPORT\n");
+		cuse_get_transport(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
 		break;
 
 	default:
