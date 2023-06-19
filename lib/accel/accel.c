@@ -1620,7 +1620,7 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 			}
 			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_AWAIT_BOUNCEBUF);
 			rc = accel_sequence_check_bouncebuf(seq, task);
-			if (rc != 0) {
+			if (spdk_unlikely(rc != 0)) {
 				/* We couldn't allocate a buffer, wait until one is available */
 				if (rc == -EAGAIN) {
 					break;
