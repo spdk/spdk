@@ -1028,10 +1028,7 @@ spdk_accel_append_encrypt(struct spdk_accel_sequence **pseq, struct spdk_io_chan
 	struct spdk_accel_task *task;
 	struct spdk_accel_sequence *seq = *pseq;
 
-	if (spdk_unlikely(!dst_iovs || !dst_iovcnt || !src_iovs || !src_iovcnt || !key ||
-			  !block_size)) {
-		return -EINVAL;
-	}
+	assert(dst_iovs && dst_iovcnt && src_iovs && src_iovcnt && key && block_size);
 
 	if (seq == NULL) {
 		seq = accel_sequence_get(accel_ch);
@@ -1085,10 +1082,7 @@ spdk_accel_append_decrypt(struct spdk_accel_sequence **pseq, struct spdk_io_chan
 	struct spdk_accel_task *task;
 	struct spdk_accel_sequence *seq = *pseq;
 
-	if (spdk_unlikely(!dst_iovs || !dst_iovcnt || !src_iovs || !src_iovcnt || !key ||
-			  !block_size)) {
-		return -EINVAL;
-	}
+	assert(dst_iovs && dst_iovcnt && src_iovs && src_iovcnt && key && block_size);
 
 	if (seq == NULL) {
 		seq = accel_sequence_get(accel_ch);
