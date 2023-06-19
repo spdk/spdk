@@ -814,7 +814,7 @@ accel_sequence_get(struct accel_io_channel *ch)
 	struct spdk_accel_sequence *seq;
 
 	seq = TAILQ_FIRST(&ch->seq_pool);
-	if (seq == NULL) {
+	if (spdk_unlikely(seq == NULL)) {
 		return NULL;
 	}
 
