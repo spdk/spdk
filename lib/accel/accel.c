@@ -296,7 +296,7 @@ _get_task(struct accel_io_channel *accel_ch, spdk_accel_completion_cb cb_fn, voi
 	struct spdk_accel_task *accel_task;
 
 	accel_task = TAILQ_FIRST(&accel_ch->task_pool);
-	if (accel_task == NULL) {
+	if (spdk_unlikely(accel_task == NULL)) {
 		return NULL;
 	}
 
@@ -350,7 +350,7 @@ spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src,
 	struct spdk_accel_task *accel_task;
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
-	if (accel_task == NULL) {
+	if (spdk_unlikely(accel_task == NULL)) {
 		return -ENOMEM;
 	}
 
@@ -387,7 +387,7 @@ spdk_accel_submit_dualcast(struct spdk_io_channel *ch, void *dst1,
 	}
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
-	if (accel_task == NULL) {
+	if (spdk_unlikely(accel_task == NULL)) {
 		return -ENOMEM;
 	}
 
@@ -423,7 +423,7 @@ spdk_accel_submit_compare(struct spdk_io_channel *ch, void *src1,
 	struct spdk_accel_task *accel_task;
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
-	if (accel_task == NULL) {
+	if (spdk_unlikely(accel_task == NULL)) {
 		return -ENOMEM;
 	}
 
@@ -454,7 +454,7 @@ spdk_accel_submit_fill(struct spdk_io_channel *ch, void *dst,
 	struct spdk_accel_task *accel_task;
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
-	if (accel_task == NULL) {
+	if (spdk_unlikely(accel_task == NULL)) {
 		return -ENOMEM;
 	}
 
@@ -483,7 +483,7 @@ spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *crc_dst,
 	struct spdk_accel_task *accel_task;
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
-	if (accel_task == NULL) {
+	if (spdk_unlikely(accel_task == NULL)) {
 		return -ENOMEM;
 	}
 
@@ -522,7 +522,7 @@ spdk_accel_submit_crc32cv(struct spdk_io_channel *ch, uint32_t *crc_dst,
 	}
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
-	if (accel_task == NULL) {
+	if (spdk_unlikely(accel_task == NULL)) {
 		SPDK_ERRLOG("no memory\n");
 		assert(0);
 		return -ENOMEM;
@@ -551,7 +551,7 @@ spdk_accel_submit_copy_crc32c(struct spdk_io_channel *ch, void *dst,
 	struct spdk_accel_task *accel_task;
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
-	if (accel_task == NULL) {
+	if (spdk_unlikely(accel_task == NULL)) {
 		return -ENOMEM;
 	}
 
@@ -596,7 +596,7 @@ spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst,
 	}
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
-	if (accel_task == NULL) {
+	if (spdk_unlikely(accel_task == NULL)) {
 		SPDK_ERRLOG("no memory\n");
 		assert(0);
 		return -ENOMEM;
@@ -630,7 +630,7 @@ spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, uint64_t nbyte
 	struct spdk_accel_task *accel_task;
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
-	if (accel_task == NULL) {
+	if (spdk_unlikely(accel_task == NULL)) {
 		return -ENOMEM;
 	}
 
@@ -661,7 +661,7 @@ spdk_accel_submit_decompress(struct spdk_io_channel *ch, struct iovec *dst_iovs,
 	struct spdk_accel_task *accel_task;
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
-	if (accel_task == NULL) {
+	if (spdk_unlikely(accel_task == NULL)) {
 		return -ENOMEM;
 	}
 
@@ -695,7 +695,7 @@ spdk_accel_submit_encrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_k
 	}
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
-	if (accel_task == NULL) {
+	if (spdk_unlikely(accel_task == NULL)) {
 		return -ENOMEM;
 	}
 
@@ -731,7 +731,7 @@ spdk_accel_submit_decrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_k
 	}
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
-	if (accel_task == NULL) {
+	if (spdk_unlikely(accel_task == NULL)) {
 		return -ENOMEM;
 	}
 
@@ -760,7 +760,7 @@ spdk_accel_submit_xor(struct spdk_io_channel *ch, void *dst, void **sources, uin
 	struct spdk_accel_task *accel_task;
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
-	if (accel_task == NULL) {
+	if (spdk_unlikely(accel_task == NULL)) {
 		return -ENOMEM;
 	}
 
@@ -860,7 +860,7 @@ accel_sequence_get_task(struct accel_io_channel *ch, struct spdk_accel_sequence 
 	struct spdk_accel_task *task;
 
 	task = _get_task(ch, accel_sequence_task_cb, seq);
-	if (task == NULL) {
+	if (spdk_unlikely(task == NULL)) {
 		return task;
 	}
 
