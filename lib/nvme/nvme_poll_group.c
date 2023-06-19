@@ -125,6 +125,11 @@ spdk_nvme_poll_group_process_completions(struct spdk_nvme_poll_group *group,
 		return -EINVAL;
 	}
 
+	if (spdk_unlikely(group->in_process_completions)) {
+		return 0;
+	}
+	group->in_process_completions = true;
+
 	STAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		local_completions = nvme_transport_poll_group_process_completions(tgroup, completions_per_qpair,
 				    disconnected_qpair_cb);
@@ -136,6 +141,7 @@ spdk_nvme_poll_group_process_completions(struct spdk_nvme_poll_group *group,
 			assert(num_completions >= 0);
 		}
 	}
+	group->in_process_completions = false;
 
 	return error_reason ? error_reason : num_completions;
 }
