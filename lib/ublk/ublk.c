@@ -48,7 +48,8 @@ static struct spdk_cpuset g_core_mask;
 
 struct ublk_queue;
 struct ublk_poll_group;
-static void ublk_submit_bdev_io(struct ublk_queue *q, uint16_t tag);
+struct ublk_io;
+static void ublk_submit_bdev_io(struct ublk_queue *q, struct ublk_io *io);
 static void ublk_dev_queue_fini(struct ublk_queue *q);
 static int ublk_poll(void *arg);
 static int ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op);
@@ -67,7 +68,6 @@ __attribute__((unused)) = {
 	[UBLK_CMD_SET_PARAMS] =	"UBLK_CMD_SET_PARAMS",
 };
 
-struct ublk_io;
 typedef void (*ublk_get_buf_cb)(struct ublk_io *io);
 
 struct ublk_io {
@@ -969,9 +969,8 @@ static void
 ublk_resubmit_io(void *arg)
 {
 	struct ublk_io *io = (struct ublk_io *)arg;
-	uint16_t tag = (io - io->q->ios);
 
-	ublk_submit_bdev_io(io->q, tag);
+	ublk_submit_bdev_io(io->q, io);
 }
 
 static void
@@ -1053,10 +1052,9 @@ read_get_buffer_done(struct ublk_io *io)
 }
 
 static void
-ublk_submit_bdev_io(struct ublk_queue *q, uint16_t tag)
+ublk_submit_bdev_io(struct ublk_queue *q, struct ublk_io *io)
 {
 	struct spdk_ublk_dev *ublk = q->dev;
-	struct ublk_io *io = &q->ios[tag];
 	struct spdk_bdev_desc *desc = io->bdev_desc;
 	struct spdk_io_channel *ch = io->bdev_ch;
 	struct spdk_iobuf_channel *iobuf_ch = &q->poll_group->iobuf_ch;
@@ -1242,7 +1240,7 @@ ublk_io_recv(struct ublk_queue *q)
 
 		TAILQ_INSERT_TAIL(&q->inflight_io_list, io, tailq);
 		if (cqe->res == UBLK_IO_RES_OK) {
-			ublk_submit_bdev_io(q, tag);
+			ublk_submit_bdev_io(q, io);
 		} else if (cqe->res == UBLK_IO_RES_NEED_GET_DATA) {
 			ublk_io_get_buffer(io, iobuf_ch, write_get_buffer_done);
 		} else {
