@@ -1517,6 +1517,8 @@ class SPDKInitiator(Initiator):
 
         # Optional fields
         self.enable_data_digest = initiator_config.get('enable_data_digest', False)
+        self.small_pool_count = initiator_config.get('small_pool_count', 32768)
+        self.large_pool_count = initiator_config.get('large_pool_count', 16384)
 
         if "num_cores" in initiator_config:
             self.num_cores = initiator_config["num_cores"]
@@ -1590,8 +1592,8 @@ class SPDKInitiator(Initiator):
         iobuf = {
             "method": "iobuf_set_options",
             "params": {
-                "small_pool_count": 32768,
-                "large_pool_count": 16384
+                "small_pool_count": self.small_pool_count,
+                "large_pool_count": self.large_pool_count
             }
         }
         bdev_cfg_section["subsystems"][0]["config"].append(iobuf)
