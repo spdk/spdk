@@ -156,7 +156,7 @@ struct ublk_tgt {
 	uint32_t		num_ublk_devs;
 	uint64_t		features;
 	/* `ublk_drv` supports UBLK_F_CMD_IOCTL_ENCODE */
-	bool legacy_ioctl;
+	bool ioctl_encode;
 };
 
 static TAILQ_HEAD(, spdk_ublk_dev) g_ublk_devs = TAILQ_HEAD_INITIALIZER(g_ublk_devs);
@@ -192,7 +192,7 @@ ublk_set_sqe_cmd_op(struct io_uring_sqe *sqe, uint32_t cmd_op)
 {
 	uint32_t opc = cmd_op;
 
-	if (g_ublk_tgt.legacy_ioctl) {
+	if (g_ublk_tgt.ioctl_encode) {
 		switch (cmd_op) {
 		/* ctrl uring */
 		case UBLK_CMD_GET_DEV_INFO:
@@ -398,7 +398,7 @@ ublk_ctrl_cmd_get_features(void)
 	}
 
 	if (cqe->res == 0) {
-		g_ublk_tgt.legacy_ioctl = !!(g_ublk_tgt.features & (1ULL << 6));
+		g_ublk_tgt.ioctl_encode = !!(g_ublk_tgt.features & (1ULL << 6));
 	}
 	io_uring_cqe_seen(&g_ublk_tgt.ctrl_ring, cqe);
 
@@ -598,7 +598,7 @@ _ublk_fini_done(void *args)
 	g_ublk_tgt.is_destroying = false;
 	g_ublk_tgt.active = false;
 	g_ublk_tgt.features = 0;
-	g_ublk_tgt.legacy_ioctl = false;
+	g_ublk_tgt.ioctl_encode = false;
 
 	if (g_ublk_tgt.cb_fn) {
 		g_ublk_tgt.cb_fn(g_ublk_tgt.cb_arg);
