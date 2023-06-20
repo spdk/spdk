@@ -62,7 +62,7 @@ if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
 	if [[ $VERSION_ID == 9* ]]; then
 		repos+=("https://www.elrepo.org/elrepo-release-9.el9.elrepo.noarch.rpm")
 		repos+=("https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm")
-		enable+=("crb")
+		[[ $ID != rhel ]] && enable+=("crb")
 	fi
 
 	# Add PowerTools needed for install CUnit-devel
@@ -72,6 +72,9 @@ if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
 		repos+=("centos-release-ceph-pacific.noarch")
 		enable+=("centos-ceph-pacific")
 	fi
+
+	[[ $ID == rhel && $VERSION_ID == 8* ]] && repos+=("https://download.ceph.com/rpm-pacific/el8/noarch/ceph-release-1-1.el8.noarch.rpm")
+	[[ $ID == rhel && $VERSION_ID == 9* ]] && repos+=("https://download.ceph.com/rpm-reef/el9/noarch/ceph-release-1-1.el9.noarch.rpm")
 
 	if [[ $ID == rocky ]]; then
 		enable+=("devel")
@@ -91,6 +94,7 @@ if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
 	if [[ $ID == rhel ]]; then
 		[[ $VERSION_ID == 7* ]] && sub repos --enable "rhel-*-optional-rpms" --enable "rhel-*-extras-rpms"
 		[[ $VERSION_ID == 8* ]] && sub repos --enable codeready-builder-for-rhel-8-x86_64-rpms
+		[[ $VERSION_ID == 9* ]] && sub repos --enable codeready-builder-for-rhel-9-x86_64-rpms
 	fi
 fi
 

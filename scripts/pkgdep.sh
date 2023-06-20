@@ -117,6 +117,11 @@ if [[ $ID == *"suse"* ]]; then
 	ID="sles"
 fi
 
+# Some distros don't provide these paths in their default $PATH setups, nor
+# sudo's secure_path, so add it here. These are needed since gem is most likely
+# to put target bins at these locations.
+export PATH=$PATH:/usr/local/bin:/usr/local/sbin
+
 for id in $ID $ID_LIKE; do
 	if [[ -e $scriptsdir/pkgdep/$id.sh ]]; then
 		source "$scriptsdir/pkgdep/$id.sh"
