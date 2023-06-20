@@ -49,7 +49,7 @@ static struct spdk_cpuset g_core_mask;
 struct ublk_queue;
 struct ublk_poll_group;
 struct ublk_io;
-static void ublk_submit_bdev_io(struct ublk_queue *q, struct ublk_io *io);
+static void _ublk_submit_bdev_io(struct ublk_queue *q, struct ublk_io *io);
 static void ublk_dev_queue_fini(struct ublk_queue *q);
 static int ublk_poll(void *arg);
 static int ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op);
@@ -970,7 +970,7 @@ ublk_resubmit_io(void *arg)
 {
 	struct ublk_io *io = (struct ublk_io *)arg;
 
-	ublk_submit_bdev_io(io->q, io);
+	_ublk_submit_bdev_io(io->q, io);
 }
 
 static void
@@ -997,6 +997,7 @@ ublk_io_get_buffer_cb(struct spdk_iobuf_entry *iobuf, void *buf)
 	struct ublk_io *io = SPDK_CONTAINEROF(iobuf, struct ublk_io, iobuf);
 
 	io->mpool_entry = buf;
+	assert(io->payload == NULL);
 	io->payload = (void *)(uintptr_t)SPDK_ALIGN_CEIL((uintptr_t)buf, 4096ULL);
 	io->get_buf_cb(io);
 }
@@ -1030,34 +1031,11 @@ ublk_io_put_buffer(struct ublk_io *io, struct spdk_iobuf_channel *iobuf_ch)
 }
 
 static void
-read_get_buffer_done(struct ublk_io *io)
-{
-	struct spdk_bdev_desc *desc = io->bdev_desc;
-	struct spdk_io_channel *ch = io->bdev_ch;
-	uint64_t offset_blocks, num_blocks;
-	int rc = 0;
-	const struct ublksrv_io_desc *iod = io->iod;
-
-	offset_blocks = iod->start_sector >> io->sector_per_block_shift;
-	num_blocks = iod->nr_sectors >> io->sector_per_block_shift;
-
-	rc = spdk_bdev_read_blocks(desc, ch, io->payload, offset_blocks, num_blocks, ublk_io_done, io);
-	if (rc == -ENOMEM) {
-		SPDK_INFOLOG(ublk, "No memory, start to queue io.\n");
-		ublk_queue_io(io);
-	} else if (rc < 0) {
-		SPDK_ERRLOG("ublk io failed in ublk_queue_io, rc=%d.\n", rc);
-		ublk_io_done(NULL, false, io);
-	}
-}
-
-static void
-ublk_submit_bdev_io(struct ublk_queue *q, struct ublk_io *io)
+_ublk_submit_bdev_io(struct ublk_queue *q, struct ublk_io *io)
 {
 	struct spdk_ublk_dev *ublk = q->dev;
 	struct spdk_bdev_desc *desc = io->bdev_desc;
 	struct spdk_io_channel *ch = io->bdev_ch;
-	struct spdk_iobuf_channel *iobuf_ch = &q->poll_group->iobuf_ch;
 	uint64_t offset_blocks, num_blocks;
 	uint8_t ublk_op;
 	int rc = 0;
@@ -1070,8 +1048,8 @@ ublk_submit_bdev_io(struct ublk_queue *q, struct ublk_io *io)
 	io->result = num_blocks * spdk_bdev_get_data_block_size(ublk->bdev);
 	switch (ublk_op) {
 	case UBLK_IO_OP_READ:
-		ublk_io_get_buffer(io, iobuf_ch, read_get_buffer_done);
-		return;
+		rc = spdk_bdev_read_blocks(desc, ch, io->payload, offset_blocks, num_blocks, ublk_io_done, io);
+		break;
 	case UBLK_IO_OP_WRITE:
 		assert((void *)iod->addr == io->payload);
 		rc = spdk_bdev_write_blocks(desc, ch, io->payload, offset_blocks, num_blocks, ublk_io_done, io);
@@ -1097,6 +1075,30 @@ ublk_submit_bdev_io(struct ublk_queue *q, struct ublk_io *io)
 			SPDK_ERRLOG("ublk io failed in ublk_queue_io, rc=%d.\n", rc);
 			ublk_io_done(NULL, false, io);
 		}
+	}
+}
+
+static void
+read_get_buffer_done(struct ublk_io *io)
+{
+	_ublk_submit_bdev_io(io->q, io);
+}
+
+static void
+ublk_submit_bdev_io(struct ublk_queue *q, struct ublk_io *io)
+{
+	struct spdk_iobuf_channel *iobuf_ch = &q->poll_group->iobuf_ch;
+	const struct ublksrv_io_desc *iod = io->iod;
+	uint8_t ublk_op;
+
+	ublk_op = ublksrv_get_op(iod);
+	switch (ublk_op) {
+	case UBLK_IO_OP_READ:
+		ublk_io_get_buffer(io, iobuf_ch, read_get_buffer_done);
+		break;
+	default:
+		_ublk_submit_bdev_io(q, io);
+		break;
 	}
 }
 
