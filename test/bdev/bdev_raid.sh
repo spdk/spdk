@@ -576,9 +576,17 @@ function raid_rebuild_test() {
 		# Start user I/O
 		"$rootdir/examples/bdev/bdevperf/bdevperf.py" -s $rpc_server perform_tests &
 	else
+		local write_unit_size
+
 		# Write random data to the RAID bdev
 		nbd_start_disks $rpc_server $raid_bdev_name /dev/nbd0
-		dd if=/dev/urandom of=/dev/nbd0 bs=512 count=$raid_bdev_size oflag=direct
+		if [ $raid_level = "raid5f" ]; then
+			write_unit_size=$((strip_size * 2 * (num_base_bdevs - 1)))
+			echo $((512 * write_unit_size / 1024)) > /sys/block/nbd0/queue/max_sectors_kb
+		else
+			write_unit_size=1
+		fi
+		dd if=/dev/urandom of=/dev/nbd0 bs=$((512 * write_unit_size)) count=$((raid_bdev_size / write_unit_size)) oflag=direct
 		nbd_stop_disks $rpc_server /dev/nbd0
 	fi
 
@@ -680,6 +688,10 @@ if [ "$CONFIG_RAID5F" == y ]; then
 		run_test "raid5f_state_function_test" raid_state_function_test raid5f $n false
 		run_test "raid5f_state_function_test_sb" raid_state_function_test raid5f $n true
 		run_test "raid5f_superblock_test" raid_superblock_test raid5f $n
+		if [ "$has_nbd" = true ]; then
+			run_test "raid5f_rebuild_test" raid_rebuild_test raid5f $n false false
+			run_test "raid5f_rebuild_test_sb" raid_rebuild_test raid5f $n true false
+		fi
 	done
 fi
 

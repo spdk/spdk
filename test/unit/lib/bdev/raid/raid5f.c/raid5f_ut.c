@@ -21,6 +21,13 @@ DEFINE_STUB(spdk_bdev_get_buf_align, size_t, (const struct spdk_bdev *bdev), 0);
 DEFINE_STUB_V(raid_bdev_module_stop_done, (struct raid_bdev *raid_bdev));
 DEFINE_STUB(accel_channel_create, int, (void *io_device, void *ctx_buf), 0);
 DEFINE_STUB_V(accel_channel_destroy, (void *io_device, void *ctx_buf));
+DEFINE_STUB_V(raid_bdev_process_request_complete, (struct raid_bdev_process_request *process_req,
+		int status));
+DEFINE_STUB_V(raid_bdev_io_init, (struct raid_bdev_io *raid_io,
+				  struct raid_bdev_io_channel *raid_ch,
+				  enum spdk_bdev_io_type type, uint64_t offset_blocks,
+				  uint64_t num_blocks, struct iovec *iovs, int iovcnt, void *md_buf,
+				  struct spdk_memory_domain *memory_domain, void *memory_domain_ctx));
 
 struct spdk_io_channel *
 spdk_accel_get_io_channel(void)
