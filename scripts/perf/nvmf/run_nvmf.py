@@ -1648,8 +1648,10 @@ class SPDKInitiator(Initiator):
 
         # Remove two last characters to get controller name instead of subsystem name
         nvme_ctrl = bdev_name[:-2]
-        remote_nvme_ip = list(filter(lambda x: x["params"]["name"] == "%s" % nvme_ctrl, bdev_conf_json_obj))[0]["params"]["traddr"]
-        return self.get_route_nic_numa(remote_nvme_ip)
+        for bdev in bdev_conf_json_obj:
+            if bdev["method"] == "bdev_nvme_attach_controller" and bdev["params"]["name"] == nvme_ctrl:
+                return self.get_route_nic_numa(bdev["params"]["traddr"])
+        return None
 
 
 if __name__ == "__main__":
