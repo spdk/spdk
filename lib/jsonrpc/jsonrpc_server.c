@@ -276,6 +276,12 @@ jsonrpc_free_request(struct spdk_jsonrpc_request *request)
 	free(request);
 }
 
+void
+jsonrpc_complete_request(struct spdk_jsonrpc_request *request)
+{
+	jsonrpc_free_request(request);
+}
+
 struct spdk_json_write_ctx *
 spdk_jsonrpc_begin_result(struct spdk_jsonrpc_request *request)
 {

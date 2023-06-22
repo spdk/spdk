@@ -358,7 +358,7 @@ more:
 		 * Free it and set send_request to NULL to move on to the next queued response.
 		 */
 		conn->send_request = NULL;
-		jsonrpc_free_request(request);
+		jsonrpc_complete_request(request);
 		goto more;
 	}
 

@@ -123,6 +123,9 @@ int jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *jso
 /* Must be called only from server poll thread */
 void jsonrpc_free_request(struct spdk_jsonrpc_request *request);
 
+/* Must be called only from server poll thread */
+void jsonrpc_complete_request(struct spdk_jsonrpc_request *request);
+
 /*
  * Parse JSON data as RPC command response.
  *
