@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2021 Intel Corporation.  All rights reserved.
+ *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 /**
@@ -12,6 +13,8 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/queue.h"
+#include "spdk/log.h"
+#include "spdk/assert.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,14 +23,35 @@ extern "C" {
 #define SPDK_DEFAULT_RPC_ADDR "/var/tmp/spdk.sock"
 
 /**
+ * Structure with optional parameters for the JSON-RPC server initialization.
+ */
+struct spdk_rpc_opts {
+	/* Size of this structure in bytes. */
+	size_t size;
+	/*
+	 * A JSON-RPC log file pointer. The default value is NULL and used
+	 * when options are omitted.
+	 */
+	FILE *log_file;
+	/*
+	 * JSON-RPC log level. Default value is SPDK_LOG_DISABLED and used
+	 * when options are omitted.
+	 */
+	enum spdk_log_level log_level;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_rpc_opts) == 24, "Incorrect size");
+
+/**
  * Create the SPDK JSON-RPC server and listen at the provided address. The RPC server is optional and is
  * independent of subsystem initialization. The RPC server can be started and stopped at any time.
  *
  * \param listen_addr Path to a unix domain socket to listen on
+ * \param opts Options for JSON-RPC server initialization. If NULL, default values are used.
  *
  * \return Negated errno on failure. 0 on success.
  */
-int spdk_rpc_initialize(const char *listen_addr);
+int spdk_rpc_initialize(const char *listen_addr,
+			const struct spdk_rpc_opts *opts);
 
 /**
  * Shut down the SPDK JSON-RPC target

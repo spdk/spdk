@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2022, 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -618,7 +618,7 @@ spdk_subsystem_init_from_json_config(const char *json_config_file, const char *r
 		goto fail;
 	}
 
-	rc = spdk_rpc_initialize(ctx->rpc_socket_path_temp);
+	rc = spdk_rpc_initialize(ctx->rpc_socket_path_temp, NULL);
 	if (rc) {
 		goto fail;
 	}

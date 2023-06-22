@@ -27,6 +27,12 @@ buffers to be described there. spdk_nvmf_request_get_data() has been removed.
 New APIs, `spdk_jsonrpc_set_log_level` and `spdk_jsonrpc_set_log_file`, were added to enable
 logging JSON RPC calls history.
 
+### init
+
+Options for the JSON-RPC server initialization were added. The options are defined via the
+`spdk_rpc_opts` structure and is passed to the existing API `spdk_rpc_initialize()` as a new
+argument. The options include `log_file` and `log_level`.
+
 ## v23.05
 
 ### accel

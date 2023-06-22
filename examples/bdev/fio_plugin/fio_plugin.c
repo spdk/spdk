@@ -265,7 +265,7 @@ spdk_fio_bdev_init_done(int rc, void *cb_arg)
 {
 	*(bool *)cb_arg = true;
 
-	if (spdk_rpc_initialize(g_rpc_listen_addr) == 0) {
+	if (spdk_rpc_initialize(g_rpc_listen_addr, NULL) == 0) {
 		spdk_rpc_set_state(SPDK_RPC_RUNTIME);
 	}
 }

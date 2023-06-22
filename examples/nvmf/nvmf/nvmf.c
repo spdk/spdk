@@ -1,6 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
- *   Copyright (C) 2019 Intel Corporation.
- *   All rights reserved.
+ *   Copyright (C) 2019 Intel Corporation. All rights reserved.
+ *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -675,7 +675,7 @@ nvmf_subsystem_init_done(int rc, void *cb_arg)
 {
 	fprintf(stdout, "bdev subsystem init successfully\n");
 
-	rc = spdk_rpc_initialize(g_rpc_addr);
+	rc = spdk_rpc_initialize(g_rpc_addr, NULL);
 	if (rc) {
 		spdk_app_stop(rc);
 		return;

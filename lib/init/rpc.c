@@ -1,6 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
- *   Copyright (C) 2017 Intel Corporation.
- *   All rights reserved.
+ *   Copyright (C) 2017 Intel Corporation. All rights reserved.
+ *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -22,9 +22,52 @@ rpc_subsystem_poll(void *arg)
 	return SPDK_POLLER_BUSY;
 }
 
-int
-spdk_rpc_initialize(const char *listen_addr)
+static void
+rpc_opts_copy(struct spdk_rpc_opts *opts, const struct spdk_rpc_opts *opts_src,
+	      size_t size)
 {
+	assert(opts);
+	assert(opts_src);
+
+	opts->size = size;
+
+#define SET_FIELD(field) \
+	if (offsetof(struct spdk_rpc_opts, field) + sizeof(opts->field) <= size) { \
+		opts->field = opts_src->field; \
+	} \
+
+	SET_FIELD(log_file);
+	SET_FIELD(log_level);
+
+	/* Do not remove this statement, you should always update this statement when you adding a new field,
+	 * and do not forget to add the SET_FIELD statement for your added field. */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_rpc_opts) == 24, "Incorrect size");
+
+#undef SET_FIELD
+}
+
+static void
+rpc_opts_get_default(struct spdk_rpc_opts *opts, size_t size)
+{
+	assert(opts);
+
+	opts->size = size;
+
+#define SET_FIELD(field, value) \
+	if (offsetof(struct spdk_rpc_opts, field) + sizeof(opts->field) <= size) { \
+		opts->field = value; \
+	} \
+
+	SET_FIELD(log_file, NULL);
+	SET_FIELD(log_level, SPDK_LOG_DISABLED);
+
+#undef SET_FIELD
+}
+
+int
+spdk_rpc_initialize(const char *listen_addr, const struct spdk_rpc_opts *_opts)
+{
+	struct spdk_rpc_opts opts;
 	int rc;
 
 	if (listen_addr == NULL) {
@@ -33,6 +76,11 @@ spdk_rpc_initialize(const char *listen_addr)
 	}
 
 	if (!spdk_rpc_verify_methods()) {
+		return -EINVAL;
+	}
+
+	if (_opts != NULL && _opts->size == 0) {
+		SPDK_ERRLOG("size in the options structure should not be zero\n");
 		return -EINVAL;
 	}
 
@@ -46,6 +94,14 @@ spdk_rpc_initialize(const char *listen_addr)
 	}
 
 	spdk_rpc_set_state(SPDK_RPC_STARTUP);
+
+	rpc_opts_get_default(&opts, sizeof(opts));
+	if (_opts != NULL) {
+		rpc_opts_copy(&opts, _opts, _opts->size);
+	}
+
+	spdk_jsonrpc_set_log_file(opts.log_file);
+	spdk_jsonrpc_set_log_level(opts.log_level);
 
 	/* Register a poller to periodically check for RPCs */
 	g_rpc_poller = SPDK_POLLER_REGISTER(rpc_subsystem_poll, NULL, RPC_SELECT_INTERVAL);

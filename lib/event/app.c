@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021, 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -299,7 +299,7 @@ app_start_rpc(int rc, void *arg1)
 
 	spdk_rpc_set_allowlist(g_spdk_app.rpc_allowlist);
 
-	rc = spdk_rpc_initialize(g_spdk_app.rpc_addr);
+	rc = spdk_rpc_initialize(g_spdk_app.rpc_addr, NULL);
 	if (rc) {
 		spdk_app_stop(rc);
 		return;
@@ -499,7 +499,7 @@ bootstrap_fn(void *arg1)
 		} else {
 			spdk_rpc_set_allowlist(g_spdk_app.rpc_allowlist);
 
-			rc = spdk_rpc_initialize(g_spdk_app.rpc_addr);
+			rc = spdk_rpc_initialize(g_spdk_app.rpc_addr, NULL);
 			if (rc) {
 				spdk_app_stop(rc);
 				return;
