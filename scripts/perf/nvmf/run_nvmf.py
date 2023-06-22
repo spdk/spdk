@@ -1590,6 +1590,15 @@ class SPDKInitiator(Initiator):
 
             bdev_cfg_section["subsystems"][0]["config"].append(nvme_ctrl)
 
+        iobuf = {
+            "method": "iobuf_set_options",
+            "params": {
+                "small_pool_count": 32767,
+                "large_pool_count": 16383
+            }
+        }
+        bdev_cfg_section["subsystems"][0]["config"].append(iobuf)
+
         return json.dumps(bdev_cfg_section, indent=2)
 
     def gen_fio_filename_conf(self, subsystems, threads, io_depth, num_jobs=1, offset=False, offset_inc=0):
