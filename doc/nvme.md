@@ -408,6 +408,23 @@ with SPDK NVMe CUSE.
 SCSI to NVMe Translation Layer is not implemented. Tools that are using this layer to
 identify, manage or operate device might not work properly or their use may be limited.
 
+### SPDK_CUSE_GET_TRANSPORT ioctl command
+
+nvme-cli mostly uses IOCTLs to obtain information, but transport information is
+obtained through sysfs. Since SPDK does not populate sysfs, the SPDK plugin leverages
+an SPDK/CUSE specific ioctl to get the information.
+
+~~~{.c}
+#define SPDK_CUSE_GET_TRANSPORT _IOWR('n', 0x1, struct cuse_transport)
+~~~
+
+~~~{.c}
+struct cuse_transport {
+	char trstring[SPDK_NVMF_TRSTRING_MAX_LEN + 1];
+	char traddr[SPDK_NVMF_TRADDR_MAX_LEN + 1];
+} tr;
+~~~
+
 ## NVMe LED management {#nvme_led}
 
 It is possible to use the ledctl(8) utility to control the state of LEDs in systems supporting
