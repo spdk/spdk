@@ -190,22 +190,15 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 	for (listener = spdk_nvmf_subsystem_get_first_listener(subsystem); listener != NULL;
 	     listener = spdk_nvmf_subsystem_get_next_listener(subsystem, listener)) {
 		const struct spdk_nvme_transport_id *trid;
-		const char *adrfam;
 
 		trid = spdk_nvmf_subsystem_listener_get_trid(listener);
 
 		spdk_json_write_object_begin(w);
-		adrfam = spdk_nvme_transport_id_adrfam_str(trid->adrfam);
-		if (adrfam == NULL) {
-			adrfam = "unknown";
-		}
-		/* NOTE: "transport" is kept for compatibility and will be removed in SPDK v24.01
-		 * New code should use "trtype". */
+
+		/* NOTE: "transport" is kept for compatibility; new code should use "trtype". */
+		/* TODO: Remove after SPDK v23.09 release. */
 		spdk_json_write_named_string(w, "transport", trid->trstring);
-		spdk_json_write_named_string(w, "trtype", trid->trstring);
-		spdk_json_write_named_string(w, "adrfam", adrfam);
-		spdk_json_write_named_string(w, "traddr", trid->traddr);
-		spdk_json_write_named_string(w, "trsvcid", trid->trsvcid);
+		nvmf_transport_listen_dump_trid(trid, w);
 		spdk_json_write_object_end(w);
 	}
 	spdk_json_write_array_end(w);
@@ -2258,7 +2251,12 @@ dump_nvmf_qpair(struct spdk_json_write_ctx *w, struct spdk_nvmf_qpair *qpair)
 	spdk_json_write_named_string(w, "state", nvmf_qpair_state_str(qpair->state));
 
 	if (spdk_nvmf_qpair_get_listen_trid(qpair, &listen_trid) == 0) {
-		nvmf_transport_listen_dump_opts(qpair->transport, &listen_trid, w);
+		spdk_json_write_named_object_begin(w, "listen_address");
+		nvmf_transport_listen_dump_trid(&listen_trid, w);
+		spdk_json_write_object_end(w);
+		if (qpair->transport->ops->listen_dump_opts) {
+			qpair->transport->ops->listen_dump_opts(qpair->transport, &listen_trid, w);
+		}
 	}
 
 	spdk_json_write_object_end(w);
@@ -2288,20 +2286,12 @@ dump_nvmf_subsystem_listener(struct spdk_json_write_ctx *w,
 			     struct spdk_nvmf_subsystem_listener *listener)
 {
 	const struct spdk_nvme_transport_id *trid = listener->trid;
-	const char *adrfam;
 	uint32_t i;
 
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_named_object_begin(w, "address");
-	adrfam = spdk_nvme_transport_id_adrfam_str(trid->adrfam);
-	if (adrfam == NULL) {
-		adrfam = "unknown";
-	}
-	spdk_json_write_named_string(w, "trtype", trid->trstring);
-	spdk_json_write_named_string(w, "adrfam", adrfam);
-	spdk_json_write_named_string(w, "traddr", trid->traddr);
-	spdk_json_write_named_string(w, "trsvcid", trid->trsvcid);
+	nvmf_transport_listen_dump_trid(trid, w);
 	spdk_json_write_object_end(w);
 
 	if (nvmf_subsystem_get_ana_reporting(listener->subsystem)) {

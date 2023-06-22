@@ -569,6 +569,7 @@ nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 
 	for (listener = spdk_nvmf_subsystem_get_first_listener(subsystem); listener != NULL;
 	     listener = spdk_nvmf_subsystem_get_next_listener(subsystem, listener)) {
+		transport = listener->transport;
 		trid = spdk_nvmf_subsystem_listener_get_trid(listener);
 
 		spdk_json_write_object_begin(w);
@@ -578,7 +579,14 @@ nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 		spdk_json_write_named_object_begin(w, "params");
 
 		spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
-		nvmf_transport_listen_dump_opts(listener->transport, trid, w);
+
+		spdk_json_write_named_object_begin(w, "listen_address");
+		nvmf_transport_listen_dump_trid(trid, w);
+		spdk_json_write_object_end(w);
+		if (transport->ops->listen_dump_opts) {
+			transport->ops->listen_dump_opts(transport, trid, w);
+		}
+
 		spdk_json_write_named_bool(w, "secure_channel", listener->opts.secure_channel);
 
 		/*     } "params" */
