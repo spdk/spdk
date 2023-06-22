@@ -175,6 +175,37 @@ spdk_vlog(enum spdk_log_level level, const char *file, const int line, const cha
 	}
 }
 
+void
+spdk_vflog(FILE *fp, const char *file, const int line, const char *func,
+	   const char *format, va_list ap)
+{
+	char buf[MAX_TMPBUF];
+	char timestamp[64];
+
+	vsnprintf(buf, sizeof(buf), format, ap);
+
+	get_timestamp_prefix(timestamp, sizeof(timestamp));
+
+	if (file) {
+		fprintf(fp, "%s%s:%4d:%s: %s", timestamp, file, line, func, buf);
+	} else {
+		fprintf(fp, "%s%s", timestamp, buf);
+	}
+
+	fflush(fp);
+}
+
+void
+spdk_flog(FILE *fp, const char *file, const int line, const char *func,
+	  const char *format, ...)
+{
+	va_list ap;
+
+	va_start(ap, format);
+	spdk_vflog(fp, file, line, func, format, ap);
+	va_end(ap);
+}
+
 static void
 fdump(FILE *fp, const char *label, const uint8_t *buf, size_t len)
 {

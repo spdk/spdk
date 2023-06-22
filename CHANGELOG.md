@@ -12,6 +12,10 @@ The `phys_addr` parameter in spdk_*_malloc() functions is now invalid. Passing n
 will return NULL from the functions. The parameter was deprecated in SPDK 19.04.
 For retrieving physical addresses, spdk_vtophys() should be used instead.
 
+### log
+
+New APIs, `spdk_flog` and `spdk_vflog`, were added to write messages to the specified log file.
+
 ## v23.05
 
 ### accel

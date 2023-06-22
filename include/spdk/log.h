@@ -171,6 +171,33 @@ void spdk_vlog(enum spdk_log_level level, const char *file, const int line, cons
 	       const char *format, va_list ap);
 
 /**
+ * Write messages to the log file. If \c level is set to \c SPDK_LOG_DISABLED,
+ * this log message won't be written.
+ *
+ * \param fp File to hold the log.
+ * \param file Name of the current source file.
+ * \param line Current source line number.
+ * \param func Current source function name.
+ * \param format Format string to the message.
+ */
+void spdk_flog(FILE *fp, const char *file, const int line, const char *func,
+	       const char *format, ...) __attribute__((__format__(__printf__, 5, 6)));
+
+/**
+ * Same as spdk_flog except that instead of being called with variable number of
+ * arguments it is called with an argument list as defined in stdarg.h
+ *
+ * \param fp File to hold the log.
+ * \param file Name of the current source file.
+ * \param line Current source line number.
+ * \param func Current source function name.
+ * \param format Format string to the message.
+ * \param ap printf arguments
+ */
+void spdk_vflog(FILE *fp, const char *file, const int line, const char *func,
+		const char *format, va_list ap);
+
+/**
  * Log the contents of a raw buffer to a file.
  *
  * \param fp File to hold the log.
