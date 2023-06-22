@@ -98,7 +98,8 @@ jsonrpc_server_write_cb(void *cb_ctx, const void *data, size_t size)
 	if (new_size != request->send_buf_size) {
 		uint8_t *new_buf;
 
-		new_buf = realloc(request->send_buf, new_size);
+		/* Add extra byte for the null terminator. */
+		new_buf = realloc(request->send_buf, new_size + 1);
 		if (new_buf == NULL) {
 			SPDK_ERRLOG("Resizing send_buf failed (current size %zu, new size %zu)\n",
 				    request->send_buf_size, new_size);
@@ -165,7 +166,8 @@ jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *json, s
 	request->send_offset = 0;
 	request->send_len = 0;
 	request->send_buf_size = SPDK_JSONRPC_SEND_BUF_SIZE_INIT;
-	request->send_buf = malloc(request->send_buf_size);
+	/* Add extra byte for the null terminator. */
+	request->send_buf = malloc(request->send_buf_size + 1);
 	if (request->send_buf == NULL) {
 		SPDK_ERRLOG("Failed to allocate send_buf (%zu bytes)\n", request->send_buf_size);
 		jsonrpc_free_request(request);

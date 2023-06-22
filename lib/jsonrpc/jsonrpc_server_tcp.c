@@ -336,6 +336,11 @@ more:
 		return 0;
 	}
 
+	if (request->send_offset == 0) {
+		/* A byte for the null terminator is included in the send buffer. */
+		request->send_buf[request->send_len] = '\0';
+	}
+
 	if (request->send_len > 0) {
 		rc = send(conn->sockfd, request->send_buf + request->send_offset,
 			  request->send_len, 0);
