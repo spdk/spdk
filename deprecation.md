@@ -37,6 +37,11 @@ VTune integration is in now deprecated and will be removed in the 23.09 release.
 Parameters `cb_fn` and `ctx` of `spdk_nvmf_qpair_disconnect` API are deprecated. These parameters
 will be removed in 23.09 release.
 
+#### `nvmf_get_subsystems`
+
+`transport` field in `listen_addresses` of `nvmf_get_subsystems` RPC is deprecated.
+`trtype` field should be used instead. `transport` field will be removed in 24.01 release.
+
 ### gpt
 
 #### `old_gpt_guid`

@@ -22,6 +22,9 @@ The `spdk_nvmf_request::data` field has been removed: instead, clients should se
 `->iov` and `->iovcnt` appropriately, as nvmf request APIs now expect any data
 buffers to be described there. spdk_nvmf_request_get_data() has been removed.
 
+`transport` field in `listen_addresses` of `nvmf_get_subsystems` RPC is deprecated.
+`trtype` field should be used instead. `transport` field will be removed in 24.01 release.
+
 ### jsonrpc
 
 New APIs, `spdk_jsonrpc_set_log_level` and `spdk_jsonrpc_set_log_file`, were added to enable
