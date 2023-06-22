@@ -125,10 +125,12 @@ test_nvme_transport_poll_group_disconnect_qpair(void)
 	/* Connected qpairs */
 	qpair.poll_group_tailq_head = &tgroup.connected_qpairs;
 	STAILQ_INSERT_TAIL(&tgroup.connected_qpairs, &qpair, poll_group_stailq);
+	tgroup.num_connected_qpairs++;
 
 	rc = nvme_transport_poll_group_disconnect_qpair(&qpair);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(STAILQ_EMPTY(&tgroup.connected_qpairs));
+	CU_ASSERT(tgroup.num_connected_qpairs == 0);
 	CU_ASSERT(!STAILQ_EMPTY(&tgroup.disconnected_qpairs));
 	STAILQ_REMOVE(&tgroup.disconnected_qpairs, &qpair, spdk_nvme_qpair, poll_group_stailq);
 	CU_ASSERT(STAILQ_EMPTY(&tgroup.disconnected_qpairs));

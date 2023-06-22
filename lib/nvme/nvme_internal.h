@@ -500,6 +500,7 @@ struct spdk_nvme_transport_poll_group {
 	STAILQ_HEAD(, spdk_nvme_qpair)			connected_qpairs;
 	STAILQ_HEAD(, spdk_nvme_qpair)			disconnected_qpairs;
 	STAILQ_ENTRY(spdk_nvme_transport_poll_group)	link;
+	uint32_t					num_connected_qpairs;
 };
 
 struct spdk_nvme_ns {
