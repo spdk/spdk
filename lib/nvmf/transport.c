@@ -109,11 +109,11 @@ nvmf_transport_listen_dump_opts(struct spdk_nvmf_transport *transport,
 	spdk_json_write_named_string(w, "traddr", trid->traddr);
 	spdk_json_write_named_string(w, "trsvcid", trid->trsvcid);
 
+	spdk_json_write_object_end(w);
+
 	if (transport->ops->listen_dump_opts) {
 		transport->ops->listen_dump_opts(transport, trid, w);
 	}
-
-	spdk_json_write_object_end(w);
 }
 
 spdk_nvme_transport_type_t
