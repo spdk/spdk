@@ -797,12 +797,10 @@ test_nvme_rdma_req_put_and_get(void)
 	CU_ASSERT(rdma_req.req == NULL);
 
 	/* case 2: nvme_rdma_req_get */
-	TAILQ_INIT(&rqpair.outstanding_reqs);
 	rdma_req_get = nvme_rdma_req_get(&rqpair);
 	CU_ASSERT(rdma_req_get == &rdma_req);
 	CU_ASSERT(rdma_req_get->id == 10086);
 	CU_ASSERT(rqpair.free_reqs.tqh_first == NULL);
-	CU_ASSERT(rqpair.outstanding_reqs.tqh_first == rdma_req_get);
 }
 
 static void

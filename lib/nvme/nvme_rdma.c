@@ -417,7 +417,6 @@ nvme_rdma_req_get(struct nvme_rdma_qpair *rqpair)
 	rdma_req = TAILQ_FIRST(&rqpair->free_reqs);
 	if (rdma_req) {
 		TAILQ_REMOVE(&rqpair->free_reqs, rdma_req, link);
-		TAILQ_INSERT_TAIL(&rqpair->outstanding_reqs, rdma_req, link);
 	}
 
 	return rdma_req;
@@ -2316,10 +2315,11 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 
 	if (nvme_rdma_req_init(rqpair, req, rdma_req)) {
 		SPDK_ERRLOG("nvme_rdma_req_init() failed\n");
-		TAILQ_REMOVE(&rqpair->outstanding_reqs, rdma_req, link);
 		nvme_rdma_req_put(rqpair, rdma_req);
 		return -1;
 	}
+
+	TAILQ_INSERT_TAIL(&rqpair->outstanding_reqs, rdma_req, link);
 
 	assert(rqpair->current_num_sends < rqpair->num_entries);
 	rqpair->current_num_sends++;
