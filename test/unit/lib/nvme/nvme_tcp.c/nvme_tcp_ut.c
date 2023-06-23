@@ -1040,41 +1040,42 @@ spdk_sock_connect_ext(const char *ip, int port,
 static void
 test_nvme_tcp_qpair_connect_sock(void)
 {
-	struct spdk_nvme_ctrlr ctrlr = {};
+	struct nvme_tcp_ctrlr tctrlr = {};
+	struct spdk_nvme_ctrlr *ctrlr = &tctrlr.ctrlr;
 	struct nvme_tcp_qpair tqpair = {};
 	int rc;
 
 	tqpair.qpair.trtype = SPDK_NVME_TRANSPORT_TCP;
 	tqpair.qpair.id = 1;
 	tqpair.qpair.poll_group = (void *)0xDEADBEEF;
-	ctrlr.trid.priority = 1;
-	ctrlr.trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
-	memcpy(ctrlr.trid.traddr, "192.168.1.78", sizeof("192.168.1.78"));
-	memcpy(ctrlr.trid.trsvcid, "23", sizeof("23"));
-	memcpy(ctrlr.opts.src_addr, "192.168.1.77", sizeof("192.168.1.77"));
-	memcpy(ctrlr.opts.src_svcid, "23", sizeof("23"));
+	ctrlr->trid.priority = 1;
+	ctrlr->trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
+	memcpy(ctrlr->trid.traddr, "192.168.1.78", sizeof("192.168.1.78"));
+	memcpy(ctrlr->trid.trsvcid, "23", sizeof("23"));
+	memcpy(ctrlr->opts.src_addr, "192.168.1.77", sizeof("192.168.1.77"));
+	memcpy(ctrlr->opts.src_svcid, "23", sizeof("23"));
 
-	rc = nvme_tcp_qpair_connect_sock(&ctrlr, &tqpair.qpair);
+	rc = nvme_tcp_qpair_connect_sock(ctrlr, &tqpair.qpair);
 	CU_ASSERT(rc == 0);
 
 	/* Unsupported family of the transport address */
-	ctrlr.trid.adrfam = SPDK_NVMF_ADRFAM_IB;
+	ctrlr->trid.adrfam = SPDK_NVMF_ADRFAM_IB;
 
-	rc = nvme_tcp_qpair_connect_sock(&ctrlr, &tqpair.qpair);
+	rc = nvme_tcp_qpair_connect_sock(ctrlr, &tqpair.qpair);
 	SPDK_CU_ASSERT_FATAL(rc == -1);
 
 	/* Invalid dst_port, INT_MAX is 2147483647 */
-	ctrlr.trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
-	memcpy(ctrlr.trid.trsvcid, "2147483647", sizeof("2147483647"));
+	ctrlr->trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
+	memcpy(ctrlr->trid.trsvcid, "2147483647", sizeof("2147483647"));
 
-	rc = nvme_tcp_qpair_connect_sock(&ctrlr, &tqpair.qpair);
+	rc = nvme_tcp_qpair_connect_sock(ctrlr, &tqpair.qpair);
 	SPDK_CU_ASSERT_FATAL(rc == -1);
 
 	/* Parse invalid address */
-	memcpy(ctrlr.trid.trsvcid, "23", sizeof("23"));
-	memcpy(ctrlr.trid.traddr, "192.168.1.256", sizeof("192.168.1.256"));
+	memcpy(ctrlr->trid.trsvcid, "23", sizeof("23"));
+	memcpy(ctrlr->trid.traddr, "192.168.1.256", sizeof("192.168.1.256"));
 
-	rc = nvme_tcp_qpair_connect_sock(&ctrlr, &tqpair.qpair);
+	rc = nvme_tcp_qpair_connect_sock(ctrlr, &tqpair.qpair);
 	SPDK_CU_ASSERT_FATAL(rc != 0);
 }
 
@@ -1473,7 +1474,8 @@ static void
 test_nvme_tcp_ctrlr_create_io_qpair(void)
 {
 	struct spdk_nvme_qpair *qpair = NULL;
-	struct spdk_nvme_ctrlr ctrlr = {};
+	struct nvme_tcp_ctrlr tctrlr = {};
+	struct spdk_nvme_ctrlr *ctrlr = &tctrlr.ctrlr;
 	uint16_t qid = 1;
 	struct spdk_nvme_io_qpair_opts opts = {
 		.io_queue_size = 2,
@@ -1482,19 +1484,20 @@ test_nvme_tcp_ctrlr_create_io_qpair(void)
 	};
 	struct nvme_tcp_qpair *tqpair;
 
-	ctrlr.trid.priority = 1;
-	ctrlr.trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
-	memcpy(ctrlr.trid.traddr, "192.168.1.78", sizeof("192.168.1.78"));
-	memcpy(ctrlr.trid.trsvcid, "23", sizeof("23"));
-	memcpy(ctrlr.opts.src_addr, "192.168.1.77", sizeof("192.168.1.77"));
-	memcpy(ctrlr.opts.src_svcid, "23", sizeof("23"));
+	ctrlr->trid.priority = 1;
+	ctrlr->trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
+	memset(ctrlr->opts.psk, 0, sizeof(ctrlr->opts.psk));
+	memcpy(ctrlr->trid.traddr, "192.168.1.78", sizeof("192.168.1.78"));
+	memcpy(ctrlr->trid.trsvcid, "23", sizeof("23"));
+	memcpy(ctrlr->opts.src_addr, "192.168.1.77", sizeof("192.168.1.77"));
+	memcpy(ctrlr->opts.src_svcid, "23", sizeof("23"));
 
-	qpair = nvme_tcp_ctrlr_create_io_qpair(&ctrlr, qid, &opts);
+	qpair = nvme_tcp_ctrlr_create_io_qpair(ctrlr, qid, &opts);
 	tqpair = nvme_tcp_qpair(qpair);
 
 	CU_ASSERT(qpair != NULL);
 	CU_ASSERT(qpair->id == 1);
-	CU_ASSERT(qpair->ctrlr == &ctrlr);
+	CU_ASSERT(qpair->ctrlr == ctrlr);
 	CU_ASSERT(qpair->qprio == SPDK_NVME_QPRIO_URGENT);
 	CU_ASSERT(qpair->trtype == SPDK_NVME_TRANSPORT_TCP);
 	CU_ASSERT(qpair->poll_group == (void *)0xDEADBEEF);
@@ -1506,7 +1509,7 @@ test_nvme_tcp_ctrlr_create_io_qpair(void)
 
 	/* Max queue size shall pass */
 	opts.io_queue_size = 0xffff;
-	qpair = nvme_tcp_ctrlr_create_io_qpair(&ctrlr, qid, &opts);
+	qpair = nvme_tcp_ctrlr_create_io_qpair(ctrlr, qid, &opts);
 	tqpair = nvme_tcp_qpair(qpair);
 
 	CU_ASSERT(qpair != NULL);
@@ -1518,12 +1521,12 @@ test_nvme_tcp_ctrlr_create_io_qpair(void)
 
 	/* Queue size 0 shall fail */
 	opts.io_queue_size = 0;
-	qpair = nvme_tcp_ctrlr_create_io_qpair(&ctrlr, qid, &opts);
+	qpair = nvme_tcp_ctrlr_create_io_qpair(ctrlr, qid, &opts);
 	CU_ASSERT(qpair == NULL);
 
 	/* Queue size 1 shall fail */
 	opts.io_queue_size = 1;
-	qpair = nvme_tcp_ctrlr_create_io_qpair(&ctrlr, qid, &opts);
+	qpair = nvme_tcp_ctrlr_create_io_qpair(ctrlr, qid, &opts);
 	CU_ASSERT(qpair == NULL);
 }
 
