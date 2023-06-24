@@ -572,7 +572,8 @@ if __name__ == "__main__":
                                        nvme_error_stat=args.nvme_error_stat,
                                        rdma_srq_size=args.rdma_srq_size,
                                        io_path_stat=args.io_path_stat,
-                                       allow_accel_sequence=args.allow_accel_sequence)
+                                       allow_accel_sequence=args.allow_accel_sequence,
+                                       rdma_max_cq_size=args.rdma_max_cq_size)
 
     p = subparsers.add_parser('bdev_nvme_set_options',
                               help='Set options for the bdev nvme type. This is startup command.')
@@ -653,6 +654,8 @@ if __name__ == "__main__":
     p.add_argument('--allow-accel-sequence',
                    help='''Allow NVMe bdevs to advertise support for accel sequences if the
                    controller also supports them.''', action='store_true')
+    p.add_argument('--rdma-max-cq-size',
+                   help='The maximum size of a rdma completion queue. Default: 0 (unlimited)', type=int)
 
     p.set_defaults(func=bdev_nvme_set_options)
 
