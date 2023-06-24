@@ -209,6 +209,9 @@ CONFIG_HAVE_LIBBSD=n
 # Is DPDK using libarchive?
 CONFIG_HAVE_LIBARCHIVE=n
 
+# execinfo.h is available
+CONFIG_HAVE_EXECINFO_H=n
+
 # Path to IPSEC_MB used by DPDK
 CONFIG_IPSEC_MB_DIR=
 

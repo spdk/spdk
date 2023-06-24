@@ -1100,6 +1100,10 @@ if echo -e '#include <uuid/uuid.h>\nint main(void) { uuid_generate_sha1(NULL, NU
 	CONFIG[HAVE_UUID_GENERATE_SHA1]="y"
 fi
 
+if echo -e '#include <execinfo.h>' | "${BUILD_CMD[@]}" -c - 2> /dev/null; then
+	CONFIG[HAVE_EXECINFO_H]=y
+fi
+
 if [[ "${CONFIG[OCF]}" = "y" ]]; then
 	# If OCF_PATH is a file, assume it is a library and use it to compile with
 	if [ -f ${CONFIG[OCF_PATH]} ]; then

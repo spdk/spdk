@@ -4,7 +4,9 @@
  */
 
 #include <ocf/ocf.h>
+#ifdef SPDK_HAVE_EXECINFO_H
 #include <execinfo.h>
+#endif
 
 #include "spdk/env.h"
 #include "spdk/log.h"
