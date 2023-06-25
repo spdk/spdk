@@ -150,10 +150,13 @@ struct nvme_rdma_poller {
 	STAILQ_ENTRY(nvme_rdma_poller)	link;
 };
 
+struct nvme_rdma_qpair;
+
 struct nvme_rdma_poll_group {
 	struct spdk_nvme_transport_poll_group		group;
 	STAILQ_HEAD(, nvme_rdma_poller)			pollers;
 	uint32_t					num_pollers;
+	TAILQ_HEAD(, nvme_rdma_qpair)			connecting_qpairs;
 };
 
 enum nvme_rdma_qpair_state {
@@ -167,8 +170,6 @@ enum nvme_rdma_qpair_state {
 	NVME_RDMA_QPAIR_STATE_LINGERING,
 	NVME_RDMA_QPAIR_STATE_EXITED,
 };
-
-struct nvme_rdma_qpair;
 
 typedef int (*nvme_rdma_cm_event_cb)(struct nvme_rdma_qpair *rqpair, int ret);
 
@@ -245,6 +246,8 @@ struct nvme_rdma_qpair {
 
 	uint8_t					stale_conn_retry_count;
 	bool					need_destroy;
+
+	TAILQ_ENTRY(nvme_rdma_qpair)		link_connecting;
 };
 
 enum NVME_RDMA_COMPLETION_FLAGS {
@@ -1263,6 +1266,7 @@ nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 	int rc;
 	struct nvme_rdma_ctrlr *rctrlr;
 	struct nvme_rdma_qpair *rqpair;
+	struct nvme_rdma_poll_group *group;
 	int family;
 
 	rqpair = nvme_rdma_qpair(qpair);
@@ -1319,6 +1323,11 @@ nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 	}
 
 	rqpair->state = NVME_RDMA_QPAIR_STATE_INITIALIZING;
+
+	if (qpair->poll_group != NULL) {
+		group = nvme_rdma_poll_group(qpair->poll_group);
+		TAILQ_INSERT_TAIL(&group->connecting_qpairs, rqpair, link_connecting);
+	}
 
 	return 0;
 }
@@ -3038,6 +3047,7 @@ nvme_rdma_poll_group_create(void)
 	}
 
 	STAILQ_INIT(&group->pollers);
+	TAILQ_INIT(&group->connecting_qpairs);
 	return &group->group;
 }
 
@@ -3050,6 +3060,17 @@ nvme_rdma_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair)
 static int
 nvme_rdma_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 {
+	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
+	struct nvme_rdma_poll_group *group = nvme_rdma_poll_group(qpair->poll_group);;
+
+	if (rqpair->link_connecting.tqe_prev) {
+		TAILQ_REMOVE(&group->connecting_qpairs, rqpair, link_connecting);
+		/* We use prev pointer to check if qpair is in connecting list or not .
+		 * TAILQ_REMOVE doesn't do it. So, we do it manually.
+		 */
+		rqpair->link_connecting.tqe_prev = NULL;
+	}
+
 	return 0;
 }
 
@@ -3095,7 +3116,7 @@ nvme_rdma_poll_group_process_completions(struct spdk_nvme_transport_poll_group *
 		uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb)
 {
 	struct spdk_nvme_qpair			*qpair, *tmp_qpair;
-	struct nvme_rdma_qpair			*rqpair;
+	struct nvme_rdma_qpair			*rqpair, *tmp_rqpair;
 	struct nvme_rdma_poll_group		*group;
 	struct nvme_rdma_poller			*poller;
 	int					batch_size, rc, rc2 = 0;
@@ -3110,6 +3131,7 @@ nvme_rdma_poll_group_process_completions(struct spdk_nvme_transport_poll_group *
 	}
 
 	group = nvme_rdma_poll_group(tgroup);
+
 	STAILQ_FOREACH_SAFE(qpair, &tgroup->disconnected_qpairs, poll_group_stailq, tmp_qpair) {
 		rc = nvme_rdma_ctrlr_disconnect_qpair_poll(qpair->ctrlr, qpair);
 		if (rc == 0) {
@@ -3117,27 +3139,37 @@ nvme_rdma_poll_group_process_completions(struct spdk_nvme_transport_poll_group *
 		}
 	}
 
-	STAILQ_FOREACH_SAFE(qpair, &tgroup->connected_qpairs, poll_group_stailq, tmp_qpair) {
-		rqpair = nvme_rdma_qpair(qpair);
+	TAILQ_FOREACH_SAFE(rqpair, &group->connecting_qpairs, link_connecting, tmp_rqpair) {
+		qpair = &rqpair->qpair;
 
-		if (spdk_unlikely(nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTING)) {
-			rc = nvme_rdma_ctrlr_connect_qpair_poll(qpair->ctrlr, qpair);
+		rc = nvme_rdma_ctrlr_connect_qpair_poll(qpair->ctrlr, qpair);
+		if (rc == 0 || rc != -EAGAIN) {
+			TAILQ_REMOVE(&group->connecting_qpairs, rqpair, link_connecting);
+			/* We use prev pointer to check if qpair is in connecting list or not.
+			 * TAILQ_REMOVE does not do it. So, we do it manually.
+			 */
+			rqpair->link_connecting.tqe_prev = NULL;
+
 			if (rc == 0) {
 				/* Once the connection is completed, we can submit queued requests */
 				nvme_qpair_resubmit_requests(qpair, rqpair->num_entries);
 			} else if (rc != -EAGAIN) {
 				SPDK_ERRLOG("Failed to connect rqpair=%p\n", rqpair);
 				nvme_rdma_fail_qpair(qpair, 0);
-				continue;
 			}
-		} else {
+		}
+	}
+
+	STAILQ_FOREACH_SAFE(qpair, &tgroup->connected_qpairs, poll_group_stailq, tmp_qpair) {
+		rqpair = nvme_rdma_qpair(qpair);
+
+		if (spdk_likely(nvme_qpair_get_state(qpair) != NVME_QPAIR_CONNECTING)) {
 			nvme_rdma_qpair_process_cm_event(rqpair);
 		}
 
 		if (spdk_unlikely(qpair->transport_failure_reason != SPDK_NVME_QPAIR_FAILURE_NONE)) {
 			rc2 = -ENXIO;
 			nvme_rdma_fail_qpair(qpair, 0);
-			continue;
 		}
 	}
 
