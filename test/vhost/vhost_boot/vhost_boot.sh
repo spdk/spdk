@@ -105,25 +105,30 @@ vm_run $vm_no
 vm_wait_for_boot 300 $vm_no
 timing_exit setup_vm
 
-start_part_sector=0 drive_size=0
-while IFS=":" read -r id start end _; do
+start_part_sector=0 drive_size=0 part_id=0 pt_type=""
+while IFS=":" read -r id start end _ _ pt _; do
 	start=${start%s} end=${end%s}
-	[[ $id == /dev/sda ]] && drive_size=$start
-	[[ $id =~ ^[0-9]+$ ]] && start_part_sector=$((end + 1))
+	[[ $id == /dev/sda ]] && drive_size=$start && pt_type=$pt
+	[[ $id =~ ^[0-9]+$ ]] && start_part_sector=$((end + 1)) && part_id=$id
 done < <(vm_exec "$vm_no" "parted /dev/sda -ms unit s print")
+# Use $id to determine next available part id. Fail if it was not set.
+((part_id++))
 
 # If we didn't get a start sector for the partition then probably something is amiss. Also,
 # check if size of the drive matches size used for creating lvb and if not, fail.
 ((start_part_sector > 0)) && (((drive_size * 512) >> 20 == lvb_size))
+# Since we extend the disk image, we need to make sure that in case of GPT its data stays at
+# the end of the disk. Otherwise, the remaining space won't be available.
+[[ $pt_type == gpt ]] && vm_exec "$vm_no" "sgdisk -e /dev/sda"
 
 timing_enter run_vm_cmd
 vm_exec $vm_no "parted -s /dev/sda mkpart primary ${start_part_sector}s 100%; sleep 1; partprobe"
-vm_exec $vm_no "mkfs.ext4 -F /dev/sda2; mkdir -p /mnt/sda2test; mount /dev/sda2 /mnt/sda2test;"
+vm_exec $vm_no "mkfs.ext4 -F /dev/sda${part_id}; mkdir -p /mnt/sda${part_id}test; mount /dev/sda${part_id} /mnt/sda${part_id}test;"
 vm_exec $vm_no "fio --name=integrity --bsrange=4k-512k --iodepth=128 --numjobs=1 --direct=1 \
- --thread=1 --group_reporting=1 --rw=randrw --rwmixread=70 --filename=/mnt/sda2test/test_file \
+ --thread=1 --group_reporting=1 --rw=randrw --rwmixread=70 --filename=/mnt/sda${part_id}test/test_file \
  --verify=md5 --do_verify=1 --verify_backlog=1024 --fsync_on_close=1 --runtime=20 \
  --time_based=1 --size=1024m --verify_state_save=0"
-vm_exec $vm_no "umount /mnt/sda2test; rm -rf /mnt/sda2test"
+vm_exec $vm_no "umount /mnt/sda${part_id}test; rm -rf /mnt/sda${part_id}test"
 alignment_offset=$(vm_exec $vm_no "cat /sys/block/sda/sda1/alignment_offset")
 echo "alignment_offset: $alignment_offset"
 timing_exit run_vm_cmd
