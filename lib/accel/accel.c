@@ -138,6 +138,7 @@ struct accel_buffer {
 
 struct accel_io_channel {
 	struct spdk_io_channel			*module_ch[ACCEL_OPC_LAST];
+	struct spdk_io_channel			*driver_channel;
 	void					*task_pool_base;
 	struct spdk_accel_sequence		*seq_pool_base;
 	struct accel_buffer			*buf_pool_base;
@@ -1672,7 +1673,7 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 			assert(!TAILQ_EMPTY(&seq->tasks));
 
 			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_DRIVER_AWAIT_TASK);
-			rc = g_accel_driver->execute_sequence(seq);
+			rc = g_accel_driver->execute_sequence(accel_ch->driver_channel, seq);
 			if (spdk_unlikely(rc != 0)) {
 				SPDK_ERRLOG("Failed to execute sequence: %p using driver: %s\n",
 					    seq, g_accel_driver->name);
@@ -2362,6 +2363,14 @@ accel_create_channel(void *io_device, void *ctx_buf)
 		}
 	}
 
+	if (g_accel_driver != NULL) {
+		accel_ch->driver_channel = g_accel_driver->get_io_channel();
+		if (accel_ch->driver_channel == NULL) {
+			SPDK_ERRLOG("Failed to get driver's IO channel\n");
+			goto err;
+		}
+	}
+
 	rc = spdk_iobuf_channel_init(&accel_ch->iobuf, "accel", g_opts.small_cache_size,
 				     g_opts.large_cache_size);
 	if (rc != 0) {
@@ -2371,6 +2380,9 @@ accel_create_channel(void *io_device, void *ctx_buf)
 
 	return 0;
 err:
+	if (accel_ch->driver_channel != NULL) {
+		spdk_put_io_channel(accel_ch->driver_channel);
+	}
 	for (j = 0; j < i; j++) {
 		spdk_put_io_channel(accel_ch->module_ch[j]);
 	}
@@ -2403,6 +2415,10 @@ accel_destroy_channel(void *io_device, void *ctx_buf)
 	int i;
 
 	spdk_iobuf_channel_fini(&accel_ch->iobuf);
+
+	if (accel_ch->driver_channel != NULL) {
+		spdk_put_io_channel(accel_ch->driver_channel);
+	}
 
 	for (i = 0; i < ACCEL_OPC_LAST; i++) {
 		assert(accel_ch->module_ch[i] != NULL);

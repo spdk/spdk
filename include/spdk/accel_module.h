@@ -224,11 +224,16 @@ struct spdk_accel_driver {
 	 * to the driver.  `spdk_accel_sequence_continue()` should only be called if this function
 	 * succeeds (i.e. returns 0).
 	 *
-	 * \param Sequence of tasks to execute.
+	 * \param ch IO channel obtained by `get_io_channel()`.
+	 * \param seq Sequence of tasks to execute.
 	 *
 	 * \return 0 on success, negative errno on failure.
 	 */
-	int (*execute_sequence)(struct spdk_accel_sequence *seq);
+	int (*execute_sequence)(struct spdk_io_channel *ch, struct spdk_accel_sequence *seq);
+	/**
+	 * Returns IO channel that will be passed to `execute_sequence()`.
+	 */
+	struct spdk_io_channel *(*get_io_channel)(void);
 
 	TAILQ_ENTRY(spdk_accel_driver)	tailq;
 };

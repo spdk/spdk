@@ -3176,7 +3176,7 @@ struct ut_driver_operation {
 static struct ut_driver_operation g_drv_operations[ACCEL_OPC_LAST];
 
 static int
-ut_driver_execute_sequence(struct spdk_accel_sequence *seq)
+ut_driver_execute_sequence(struct spdk_io_channel *ch, struct spdk_accel_sequence *seq)
 {
 	struct spdk_accel_task *task;
 	struct ut_driver_operation *drv_ops;
@@ -3218,9 +3218,16 @@ ut_driver_execute_sequence(struct spdk_accel_sequence *seq)
 	return 0;
 }
 
+static struct spdk_io_channel *
+ut_driver_get_io_channel(void)
+{
+	return (void *)0xdeadbeef;
+}
+
 static struct spdk_accel_driver g_ut_driver = {
 	.name = "ut",
 	.execute_sequence = ut_driver_execute_sequence,
+	.get_io_channel = ut_driver_get_io_channel,
 };
 
 SPDK_ACCEL_DRIVER_REGISTER(ut, &g_ut_driver);
