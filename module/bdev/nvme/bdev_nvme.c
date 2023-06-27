@@ -3165,20 +3165,24 @@ nvme_qpair_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ctrlr_channel *ctrl
 	nvme_qpair->group->collect_spin_stat = false;
 #endif
 
-	rc = bdev_nvme_create_qpair(nvme_qpair);
-	if (rc != 0) {
-		/* nvme_ctrlr can't create IO qpair if connection is down.
-		 *
-		 * If reconnect_delay_sec is non-zero, creating IO qpair is retried
-		 * after reconnect_delay_sec seconds. If bdev_retry_count is non-zero,
-		 * submitted IO will be queued until IO qpair is successfully created.
-		 *
-		 * Hence, if both are satisfied, ignore the failure.
+	if (!nvme_ctrlr->disabled) {
+		/* If a nvme_ctrlr is disabled, don't try to create qpair for it. Qpair will
+		 * be created when it's enabled.
 		 */
-		if (nvme_ctrlr->opts.reconnect_delay_sec == 0 || g_opts.bdev_retry_count == 0) {
-			spdk_put_io_channel(pg_ch);
-			free(nvme_qpair);
-			return rc;
+		rc = bdev_nvme_create_qpair(nvme_qpair);
+		if (rc != 0) {
+			/* nvme_ctrlr can't create IO qpair if connection is down.
+			 * If reconnect_delay_sec is non-zero, creating IO qpair is retried
+			 * after reconnect_delay_sec seconds. If bdev_retry_count is non-zero,
+			 * submitted IO will be queued until IO qpair is successfully created.
+			 *
+			 * Hence, if both are satisfied, ignore the failure.
+			 */
+			if (nvme_ctrlr->opts.reconnect_delay_sec == 0 || g_opts.bdev_retry_count == 0) {
+				spdk_put_io_channel(pg_ch);
+				free(nvme_qpair);
+				return rc;
+			}
 		}
 	}
 
