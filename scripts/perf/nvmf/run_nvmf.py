@@ -1598,7 +1598,6 @@ class SPDKInitiator(Initiator):
         }
         bdev_cfg_section["subsystems"][0]["config"].append(iobuf)
 
-        self.log.info(json.dumps(bdev_cfg_section, ident=2))
         return json.dumps(bdev_cfg_section, indent=2)
 
     def gen_fio_filename_conf(self, subsystems, threads, io_depth, num_jobs=1, offset=False, offset_inc=0):
