@@ -2540,6 +2540,8 @@ nvme_rdma_process_recv_completion(struct nvme_rdma_poller *poller, struct ibv_wc
 		return 0;
 	}
 
+	rqpair->num_completions++;
+
 	nvme_rdma_request_ready(rqpair, rdma_req);
 
 	if (!rqpair->delay_cmd_submit) {
@@ -2550,7 +2552,6 @@ nvme_rdma_process_recv_completion(struct nvme_rdma_poller *poller, struct ibv_wc
 		}
 	}
 
-	rqpair->num_completions++;
 	return 1;
 
 err_wc:
@@ -2619,6 +2620,8 @@ nvme_rdma_process_send_completion(struct nvme_rdma_poller *poller,
 		return 0;
 	}
 
+	rqpair->num_completions++;
+
 	nvme_rdma_request_ready(rqpair, rdma_req);
 
 	if (!rqpair->delay_cmd_submit) {
@@ -2629,7 +2632,6 @@ nvme_rdma_process_send_completion(struct nvme_rdma_poller *poller,
 		}
 	}
 
-	rqpair->num_completions++;
 	return 1;
 }
 
