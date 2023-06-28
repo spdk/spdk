@@ -497,24 +497,33 @@ function check_bash_style() {
 			if ! SHFMT_NO_EDITORCONFIG=true "$shfmt" "${shfmt_cmdline[@]}" "${sh_files[@]}" > "$diff"; then
 				# In case shfmt detects an actual syntax error it will write out a proper message on
 				# its stderr, hence the diff file should remain empty.
-				if [[ -s $diff ]]; then
-					diff_out=$(< "$diff")
-				fi
-
-				cat <<- ERROR_SHFMT
-
-					* Errors in style formatting have been detected.
-					${diff_out:+* Please, review the generated patch at $diff
-
-					# _START_OF_THE_DIFF
-
-					${diff_out:-ERROR}
-
-					# _END_OF_THE_DIFF
-					}
-
-				ERROR_SHFMT
 				rc=1
+				if [[ -s $diff ]]; then
+					if patch --merge -p0 < "$diff"; then
+						diff_out=$(git diff)
+
+						if [[ -n $diff_out ]]; then
+							cat <<- ERROR_SHFMT
+
+								* Errors in style formatting have been detected.
+								  Please, review the generated patch at $diff
+
+								# _START_OF_THE_DIFF
+
+								$diff_out
+
+								# _END_OF_THE_DIFF
+
+							ERROR_SHFMT
+						else
+							# Empty diff? This likely means that we reverted to a clean state
+							printf '* Patch reverted, please review your changes and %s\n' "$diff"
+						fi
+					else
+						printf '* Failed to apply %s\n' "$diff"
+
+					fi
+				fi
 			else
 				rm -f "$diff"
 				printf ' OK\n'
@@ -522,6 +531,16 @@ function check_bash_style() {
 		fi
 	else
 		echo "Supported version of shfmt not detected, Bash style formatting check is skipped"
+	fi
+
+	# Cleanup potential .orig files that shfmt creates
+	local orig_f
+
+	mapfile -t orig_f < <(git diff --name-only)
+	orig_f=("${orig_f[@]/%/.orig}")
+
+	if ((${#orig_f[@]} > 0)); then
+		git clean -f "${orig_f[@]}"
 	fi
 
 	return $rc
