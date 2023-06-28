@@ -44,7 +44,6 @@ fi
 
 run_test "nvmf_host_management" test/nvmf/target/host_management.sh "${TEST_ARGS[@]}"
 run_test "nvmf_lvol" test/nvmf/target/nvmf_lvol.sh "${TEST_ARGS[@]}"
-run_test "nvmf_vhost" test/nvmf/target/nvmf_vhost.sh "${TEST_ARGS[@]}"
 run_test "nvmf_bdev_io_wait" test/nvmf/target/bdev_io_wait.sh "${TEST_ARGS[@]}"
 run_test "nvmf_queue_depth" test/nvmf/target/queue_depth.sh "${TEST_ARGS[@]}"
 run_test "nvmf_multipath" test/nvmf/target/multipath.sh "${TEST_ARGS[@]}"

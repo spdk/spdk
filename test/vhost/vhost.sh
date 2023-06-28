@@ -73,3 +73,4 @@ run_test "vhost_blk_packed_ring_integrity" $WORKDIR/fiotest/fio.sh -x --fio-bin=
 	--packed
 
 run_test "spdkcli_vhost" ./test/spdkcli/vhost.sh
+run_test "nvmf_vhost" "$WORKDIR/nvmf/nvmf_vhost.sh"
