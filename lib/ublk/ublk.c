@@ -921,13 +921,6 @@ ublk_stop_disk(uint32_t ublk_id, ublk_del_cb del_cb, void *cb_arg)
 }
 
 static inline void
-ublk_mark_io_get_data(struct ublk_io *io)
-{
-	io->cmd_op = UBLK_IO_NEED_GET_DATA;
-	io->result = 0;
-}
-
-static inline void
 ublk_mark_io_done(struct ublk_io *io, int res)
 {
 	/*
@@ -1204,7 +1197,9 @@ static void
 write_get_buffer_done(struct ublk_io *io)
 {
 	io->need_data = true;
-	ublk_mark_io_get_data(io);
+	io->cmd_op = UBLK_IO_NEED_GET_DATA;
+	io->result = 0;
+
 	TAILQ_REMOVE(&io->q->inflight_io_list, io, tailq);
 	TAILQ_INSERT_TAIL(&io->q->completed_io_list, io, tailq);
 }
