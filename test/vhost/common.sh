@@ -488,7 +488,7 @@ function vm_shutdown_all() {
 	done
 
 	notice "Waiting for VMs to shutdown..."
-	local timeo=30
+	local timeo=90
 	while [[ $timeo -gt 0 ]]; do
 		local all_vms_down=1
 		for vm in $vms; do
