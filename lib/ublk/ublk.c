@@ -74,6 +74,7 @@ struct ublk_io {
 	void			*payload;
 	void			*mpool_entry;
 	bool			need_data;
+	uint16_t		tag;
 	uint32_t		sector_per_block_shift;
 	uint32_t		payload_size;
 	uint32_t		cmd_op;
@@ -936,7 +937,7 @@ ublk_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct ublk_io	*io = cb_arg;
 	struct ublk_queue *q = io->q;
-	int res, tag;
+	int res;
 
 	if (success) {
 		res = io->result;
@@ -945,11 +946,10 @@ ublk_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 
 	ublk_mark_io_done(io, res);
-	tag = (int)(io - q->ios);
-	q->ios[tag].need_data = false;
+	io->need_data = false;
 
 	SPDK_DEBUGLOG(ublk_io, "(qid %d tag %d res %d)\n",
-		      q->q_id, tag, res);
+		      q->q_id, io->tag, res);
 	TAILQ_REMOVE(&q->inflight_io_list, io, tailq);
 	TAILQ_INSERT_TAIL(&q->completed_io_list, io, tailq);
 
@@ -1144,7 +1144,7 @@ ublk_io_xmit(struct ublk_queue *q)
 {
 	TAILQ_HEAD(, ublk_io) buffer_free_list;
 	struct spdk_iobuf_channel *iobuf_ch;
-	int rc = 0, count = 0, tag;
+	int rc = 0, count = 0;
 	struct ublk_io *io;
 
 	if (TAILQ_EMPTY(&q->completed_io_list)) {
@@ -1154,7 +1154,6 @@ ublk_io_xmit(struct ublk_queue *q)
 	TAILQ_INIT(&buffer_free_list);
 	while (!TAILQ_EMPTY(&q->completed_io_list)) {
 		io = TAILQ_FIRST(&q->completed_io_list);
-		tag = io - io->q->ios;
 		assert(io != NULL);
 		/*
 		 * Remove IO from list now assuming it will be completed. It will be inserted
@@ -1165,7 +1164,7 @@ ublk_io_xmit(struct ublk_queue *q)
 		if (!io->need_data) {
 			TAILQ_INSERT_TAIL(&buffer_free_list, io, tailq);
 		}
-		ublksrv_queue_io_cmd(q, io, tag);
+		ublksrv_queue_io_cmd(q, io, io->tag);
 		count++;
 	}
 
@@ -1400,6 +1399,7 @@ ublk_dev_queue_io_init(struct ublk_queue *q)
 	/* Initialize and submit all io commands to ublk driver */
 	for (i = 0; i < q->q_depth; i++) {
 		io = &q->ios[i];
+		io->tag = (uint16_t)i;
 		io->payload = buf;
 		io->bdev_ch = q->bdev_ch;
 		io->bdev_desc = q->dev->bdev_desc;
