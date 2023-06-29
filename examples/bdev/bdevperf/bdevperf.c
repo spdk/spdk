@@ -101,6 +101,9 @@ static const double g_latency_cutoffs[] = {
 	-1,
 };
 
+static const char *g_rpc_log_file_name = NULL;
+static FILE *g_rpc_log_file = NULL;
+
 struct latency_info {
 	uint64_t	min;
 	uint64_t	max;
@@ -2175,7 +2178,7 @@ read_job_config(void)
 	struct job_config global_default_config;
 	struct job_config global_config;
 	struct spdk_conf_section *s;
-	struct job_config *config;
+	struct job_config *config = NULL;
 	const char *cpumask;
 	const char *rw;
 	bool is_global;
@@ -2319,6 +2322,14 @@ read_job_config(void)
 		} else {
 			TAILQ_INSERT_TAIL(&job_config_list, config, link);
 			n++;
+		}
+	}
+
+	if (g_rpc_log_file_name != NULL) {
+		g_rpc_log_file = fopen(g_rpc_log_file_name, "a");
+		if (g_rpc_log_file == NULL) {
+			fprintf(stderr, "Failed to open %s\n", g_rpc_log_file_name);
+			goto error;
 		}
 	}
 
@@ -2466,6 +2477,8 @@ bdevperf_parse_arg(int ch, char *arg)
 		g_random_map = true;
 	} else if (ch == 'E') {
 		g_one_thread_per_lcore = true;
+	} else if (ch == 'J') {
+		g_rpc_log_file_name = optarg;
 	} else {
 		tmp = spdk_strtoll(optarg, 10);
 		if (tmp < 0) {
@@ -2532,12 +2545,18 @@ bdevperf_usage(void)
 	printf(" -l                        display latency histogram, default: disable. -l display summary, -ll display details\n");
 	printf(" -D                        use a random map for picking offsets not previously read or written (for all jobs)\n");
 	printf(" -E                        share per lcore thread among jobs. Available only if -j is not used.\n");
+	printf(" -J                        File name to open with append mode and log JSON RPC calls.\n");
 }
 
 static void
 bdevperf_fini(void)
 {
 	free_job_config();
+
+	if (g_rpc_log_file != NULL) {
+		fclose(g_rpc_log_file);
+		g_rpc_log_file = NULL;
+	}
 }
 
 static int
@@ -2548,6 +2567,10 @@ verify_test_params(struct spdk_app_opts *opts)
 	 * use the default address. */
 	if (g_wait_for_tests && opts->rpc_addr == NULL) {
 		opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
+	}
+
+	if (g_rpc_log_file != NULL) {
+		opts->rpc_log_file = g_rpc_log_file;
 	}
 
 	if (!g_bdevperf_conf_file && g_queue_depth <= 0) {
@@ -2664,7 +2687,7 @@ main(int argc, char **argv)
 	opts.rpc_addr = NULL;
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "Zzfq:o:t:w:k:CEF:M:P:S:T:Xlj:D", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "Zzfq:o:t:w:k:CEF:J:M:P:S:T:Xlj:D", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
