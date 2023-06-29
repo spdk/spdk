@@ -1745,7 +1745,9 @@ work_fn(void *arg)
 				/* Submit any I/O that is queued up */
 				TAILQ_INIT(&swap);
 				TAILQ_SWAP(&swap, &ns_ctx->queued_tasks, perf_task, link);
-				TAILQ_FOREACH(task, &swap, link) {
+				while (!TAILQ_EMPTY(&swap)) {
+					task = TAILQ_FIRST(&swap);
+					TAILQ_REMOVE(&swap, task, link);
 					submit_single_io(task);
 				}
 			}
