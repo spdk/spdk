@@ -48,20 +48,19 @@ get_stat() {
 get_stat_bperf() { get_stat "$1" "$2" rpc_bperf; }
 
 update_stats() {
-	stats[sequence_executed]=$(get_stat sequence_executed)
-	stats[encrypt_executed]=$(get_stat executed encrypt)
-	stats[decrypt_executed]=$(get_stat executed decrypt)
-	stats[copy_executed]=$(get_stat executed copy)
+	stats["sequence_executed"]=$(get_stat sequence_executed)
+	stats["encrypt_executed"]=$(get_stat executed encrypt)
+	stats["decrypt_executed"]=$(get_stat executed decrypt)
+	stats["copy_executed"]=$(get_stat executed copy)
 }
 
 tgtcleanup() {
-	[[ -v input ]] && rm -f "$input" || :
-	[[ -v output ]] && rm -f "$output" || :
+	rm -f "$input" "$output"
 	nvmftestfini
 }
 
 bperfcleanup() {
-	[[ -v bperfpid ]] && killprocess $bperfpid
+	[[ -n "$bperfpid" ]] && killprocess $bperfpid
 }
 
 nvmftestinit
@@ -88,39 +87,39 @@ update_stats
 # Write a single 64K request and check the stats
 dd if=/dev/urandom of="$input" bs=1K count=64
 spdk_dd --if "$input" --ob Nvme0n1 --bs $((64 * 1024)) --count 1
-(($(get_stat sequence_executed) == stats[sequence_executed] + 1))
-(($(get_stat executed encrypt) == stats[encrypt_executed] + 2))
-(($(get_stat executed decrypt) == stats[decrypt_executed]))
+(($(get_stat sequence_executed) == stats["sequence_executed"] + 1))
+(($(get_stat executed encrypt) == stats["encrypt_executed"] + 2))
+(($(get_stat executed decrypt) == stats["decrypt_executed"]))
 # No copies should be done - the copy from the malloc should translate to changing encrypt's
 # destination buffer
-(($(get_stat executed copy) == stats[copy_executed]))
+(($(get_stat executed copy) == stats["copy_executed"]))
 update_stats
 
 # Now read that 64K, verify the stats and check that it matches what was written
 spdk_dd --of "$output" --ib Nvme0n1 --bs $((64 * 1024)) --count 1
-(($(get_stat sequence_executed) == stats[sequence_executed] + 1))
-(($(get_stat executed encrypt) == stats[encrypt_executed]))
-(($(get_stat executed decrypt) == stats[decrypt_executed] + 2))
-(($(get_stat executed copy) == stats[copy_executed]))
+(($(get_stat sequence_executed) == stats["sequence_executed"] + 1))
+(($(get_stat executed encrypt) == stats["encrypt_executed"]))
+(($(get_stat executed decrypt) == stats["decrypt_executed"] + 2))
+(($(get_stat executed copy) == stats["copy_executed"]))
 cmp "$input" "$output"
 spdk_dd --if /dev/zero --ob Nvme0n1 --bs $((64 * 1024)) --count 1
 update_stats
 
 # Now do the same using 4K requests
 spdk_dd --if "$input" --ob Nvme0n1 --bs 4096 --count 16
-(($(get_stat sequence_executed) == stats[sequence_executed] + 16))
-(($(get_stat executed encrypt) == stats[encrypt_executed] + 32))
-(($(get_stat executed decrypt) == stats[decrypt_executed]))
-(($(get_stat executed copy) == stats[copy_executed]))
+(($(get_stat sequence_executed) == stats["sequence_executed"] + 16))
+(($(get_stat executed encrypt) == stats["encrypt_executed"] + 32))
+(($(get_stat executed decrypt) == stats["decrypt_executed"]))
+(($(get_stat executed copy) == stats["copy_executed"]))
 update_stats
 
 # Check the reads
 : > "$output"
 spdk_dd --of "$output" --ib Nvme0n1 --bs 4096 --count 16
-(($(get_stat sequence_executed) == stats[sequence_executed] + 16))
-(($(get_stat executed encrypt) == stats[encrypt_executed]))
-(($(get_stat executed decrypt) == stats[decrypt_executed] + 32))
-(($(get_stat executed copy) == stats[copy_executed]))
+(($(get_stat sequence_executed) == stats["sequence_executed"] + 16))
+(($(get_stat executed encrypt) == stats["encrypt_executed"]))
+(($(get_stat executed decrypt) == stats["decrypt_executed"] + 32))
+(($(get_stat executed copy) == stats["copy_executed"]))
 cmp "$input" "$output"
 
 trap - SIGINT SIGTERM EXIT
