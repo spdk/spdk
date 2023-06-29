@@ -1587,8 +1587,6 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 	seq->in_process_sequence = true;
 
 	task = TAILQ_FIRST(&seq->tasks);
-	assert(task != NULL);
-
 	do {
 		state = seq->state;
 		switch (state) {
@@ -1681,6 +1679,8 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 			}
 			break;
 		case ACCEL_SEQUENCE_STATE_DRIVER_COMPLETE:
+			/* Get the task again, as the driver might have completed some tasks
+			 * synchronously */
 			task = TAILQ_FIRST(&seq->tasks);
 			if (task == NULL) {
 				/* Immediately return here to make sure we don't touch the sequence

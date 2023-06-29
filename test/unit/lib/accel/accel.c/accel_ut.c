@@ -3174,6 +3174,15 @@ struct ut_driver_operation {
 };
 
 static struct ut_driver_operation g_drv_operations[ACCEL_OPC_LAST];
+static bool g_ut_driver_async_continue;
+
+static void
+ut_driver_async_continue(void *arg)
+{
+	struct spdk_accel_sequence *seq = arg;
+
+	spdk_accel_sequence_continue(seq);
+}
 
 static int
 ut_driver_execute_sequence(struct spdk_io_channel *ch, struct spdk_accel_sequence *seq)
@@ -3213,7 +3222,11 @@ ut_driver_execute_sequence(struct spdk_io_channel *ch, struct spdk_accel_sequenc
 		spdk_accel_task_complete(task, 0);
 	}
 
-	spdk_accel_sequence_continue(seq);
+	if (g_ut_driver_async_continue) {
+		spdk_thread_send_msg(spdk_get_thread(), ut_driver_async_continue, seq);
+	} else {
+		spdk_accel_sequence_continue(seq);
+	}
 
 	return 0;
 }
@@ -3599,6 +3612,48 @@ test_sequence_driver(void)
 	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECRYPT].count, 0);
 	CU_ASSERT_EQUAL(g_drv_operations[ACCEL_OPC_FILL].count, 1);
 	CU_ASSERT_EQUAL(memcmp(buf, expected, sizeof(buf)), 0);
+
+	g_drv_operations[ACCEL_OPC_FILL].complete_status = 0;
+	g_drv_operations[ACCEL_OPC_FILL].count = 0;
+	g_seq_operations[ACCEL_OPC_ENCRYPT].count = 0;
+
+	/* Check asynchronous spdk_accel_sequence_continue() */
+	g_ut_driver_async_continue = true;
+	seq = NULL;
+	completed = 0;
+	memset(buf, 0, sizeof(buf));
+	memset(tmp[0], 0, sizeof(tmp[0]));
+	memset(&expected[0], 0xfe, 4096);
+
+	rc = spdk_accel_append_fill(&seq, ioch, tmp[0], sizeof(tmp[0]), NULL, NULL, 0xfe, 0,
+				    ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	dst_iovs[0].iov_base = buf;
+	dst_iovs[0].iov_len = sizeof(buf);
+	src_iovs[0].iov_base = tmp[0];
+	src_iovs[0].iov_len = sizeof(tmp[0]);
+	rc = spdk_accel_append_decompress(&seq, ioch, &dst_iovs[0], 1, NULL, NULL,
+					  &src_iovs[0], 1, NULL, NULL, 0,
+					  ut_sequence_step_cb, &completed);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	ut_seq.complete = false;
+	spdk_accel_sequence_finish(seq, ut_sequence_complete_cb, &ut_seq);
+
+	poll_threads();
+
+	CU_ASSERT_EQUAL(completed, 2);
+	CU_ASSERT(ut_seq.complete);
+	CU_ASSERT_EQUAL(ut_seq.status, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_FILL].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECOMPRESS].count, 0);
+	CU_ASSERT_EQUAL(g_drv_operations[ACCEL_OPC_FILL].count, 1);
+	CU_ASSERT_EQUAL(g_drv_operations[ACCEL_OPC_DECOMPRESS].count, 1);
+	CU_ASSERT_EQUAL(memcmp(buf, expected, sizeof(buf)), 0);
+
+	g_drv_operations[ACCEL_OPC_FILL].count = 0;
+	g_drv_operations[ACCEL_OPC_DECOMPRESS].count = 0;
 
 	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
 		g_modules_opc[i] = modules[i];
