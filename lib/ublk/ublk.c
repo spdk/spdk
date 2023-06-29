@@ -930,6 +930,7 @@ ublk_mark_io_done(struct ublk_io *io, int res)
 	 */
 	io->cmd_op = UBLK_IO_COMMIT_AND_FETCH_REQ;
 	io->result = res;
+	io->need_data = false;
 }
 
 static void
@@ -946,7 +947,6 @@ ublk_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 
 	ublk_mark_io_done(io, res);
-	io->need_data = false;
 
 	SPDK_DEBUGLOG(ublk_io, "(qid %d tag %d res %d)\n",
 		      q->q_id, io->tag, res);
