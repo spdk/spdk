@@ -73,6 +73,7 @@ struct ublk_io {
 	void			*payload;
 	void			*mpool_entry;
 	bool			need_data;
+	bool			user_copy;
 	uint16_t		tag;
 	uint32_t		payload_size;
 	uint32_t		cmd_op;
@@ -155,7 +156,9 @@ struct ublk_tgt {
 	uint32_t		num_ublk_devs;
 	uint64_t		features;
 	/* `ublk_drv` supports UBLK_F_CMD_IOCTL_ENCODE */
-	bool ioctl_encode;
+	bool			ioctl_encode;
+	/* `ublk_drv` supports UBLK_F_USER_COPY */
+	bool			user_copy;
 };
 
 static TAILQ_HEAD(, spdk_ublk_dev) g_ublk_devs = TAILQ_HEAD_INITIALIZER(g_ublk_devs);
@@ -249,6 +252,13 @@ static inline uint8_t
 user_data_to_op(uint64_t user_data)
 {
 	return (user_data >> 16) & 0xff;
+}
+
+static inline uint64_t
+ublk_user_copy_pos(uint16_t q_id, uint16_t tag)
+{
+	return (uint64_t)UBLKSRV_IO_BUF_OFFSET + ((((uint64_t)q_id) << UBLK_QID_OFF) | (((
+				uint64_t)tag) << UBLK_TAG_OFF));
 }
 
 void
@@ -398,6 +408,7 @@ ublk_ctrl_cmd_get_features(void)
 
 	if (cqe->res == 0) {
 		g_ublk_tgt.ioctl_encode = !!(g_ublk_tgt.features & UBLK_F_CMD_IOCTL_ENCODE);
+		g_ublk_tgt.user_copy = !!(g_ublk_tgt.features & UBLK_F_USER_COPY);
 	}
 	io_uring_cqe_seen(&g_ublk_tgt.ctrl_ring, cqe);
 
@@ -598,6 +609,7 @@ _ublk_fini_done(void *args)
 	g_ublk_tgt.active = false;
 	g_ublk_tgt.features = 0;
 	g_ublk_tgt.ioctl_encode = false;
+	g_ublk_tgt.user_copy = false;
 
 	if (g_ublk_tgt.cb_fn) {
 		g_ublk_tgt.cb_fn(g_ublk_tgt.cb_arg);
@@ -862,7 +874,10 @@ ublk_try_close_dev(void *arg)
 	struct spdk_ublk_dev *ublk = arg;
 
 	assert(spdk_thread_is_app_thread(NULL));
+
 	ublk->queues_closed += 1;
+	SPDK_DEBUGLOG(ublk_io, "ublkb%u closed queues %u\n", ublk->ublk_id, ublk->queues_closed);
+
 	if (ublk->queues_closed < ublk->num_queues) {
 		return;
 	}
@@ -956,6 +971,61 @@ ublk_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 }
 
+static int
+ublk_user_copy_io_submit(struct ublk_io *io, bool is_write)
+{
+	struct ublk_queue *q = io->q;
+	const struct ublksrv_io_desc *iod = io->iod;
+	struct io_uring_sqe *sqe;
+	uint64_t pos;
+	int rc;
+	uint32_t nbytes;
+
+	nbytes = iod->nr_sectors * (1ULL << LINUX_SECTOR_SHIFT);
+	pos = ublk_user_copy_pos(q->q_id, io->tag);
+	sqe = io_uring_get_sqe(&q->ring);
+	assert(sqe);
+
+	if (is_write) {
+		io_uring_prep_read(sqe, 0, io->payload, nbytes, pos);
+	} else {
+		io_uring_prep_write(sqe, 0, io->payload, nbytes, pos);
+	}
+	io_uring_sqe_set_flags(sqe, IOSQE_FIXED_FILE);
+	io_uring_sqe_set_data64(sqe, build_user_data(io->tag, 0));
+
+	q->cmd_inflight += 1;
+	rc = io_uring_submit(&q->ring);
+	if (rc < 0) {
+		SPDK_ERRLOG("uring submit rc %d\n", rc);
+		return rc;
+	}
+	io->user_copy = true;
+
+	return 0;
+}
+
+static void
+ublk_user_copy_read_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct ublk_io	*io = cb_arg;
+
+	spdk_bdev_free_io(bdev_io);
+
+	if (success) {
+		int rc;
+
+		rc = ublk_user_copy_io_submit(io, false);
+		if (rc) {
+			goto out;
+		}
+		return;
+	}
+
+out:
+	ublk_io_done(NULL, false, cb_arg);
+}
+
 static void
 ublk_resubmit_io(void *arg)
 {
@@ -1028,6 +1098,7 @@ _ublk_submit_bdev_io(struct ublk_queue *q, struct ublk_io *io)
 	struct spdk_bdev_desc *desc = io->bdev_desc;
 	struct spdk_io_channel *ch = io->bdev_ch;
 	uint64_t offset_blocks, num_blocks;
+	spdk_bdev_io_completion_cb read_cb;
 	uint8_t ublk_op;
 	int rc = 0;
 	const struct ublksrv_io_desc *iod = io->iod;
@@ -1036,13 +1107,16 @@ _ublk_submit_bdev_io(struct ublk_queue *q, struct ublk_io *io)
 	offset_blocks = iod->start_sector >> ublk->sector_per_block_shift;
 	num_blocks = iod->nr_sectors >> ublk->sector_per_block_shift;
 
-	io->result = num_blocks * spdk_bdev_get_data_block_size(ublk->bdev);
 	switch (ublk_op) {
 	case UBLK_IO_OP_READ:
-		rc = spdk_bdev_read_blocks(desc, ch, io->payload, offset_blocks, num_blocks, ublk_io_done, io);
+		if (g_ublk_tgt.user_copy) {
+			read_cb = ublk_user_copy_read_done;
+		} else {
+			read_cb = ublk_io_done;
+		}
+		rc = spdk_bdev_read_blocks(desc, ch, io->payload, offset_blocks, num_blocks, read_cb, io);
 		break;
 	case UBLK_IO_OP_WRITE:
-		assert((void *)iod->addr == io->payload);
 		rc = spdk_bdev_write_blocks(desc, ch, io->payload, offset_blocks, num_blocks, ublk_io_done, io);
 		break;
 	case UBLK_IO_OP_FLUSH:
@@ -1076,16 +1150,35 @@ read_get_buffer_done(struct ublk_io *io)
 }
 
 static void
+user_copy_write_get_buffer_done(struct ublk_io *io)
+{
+	int rc;
+
+	rc = ublk_user_copy_io_submit(io, true);
+	if (rc) {
+		ublk_io_done(NULL, false, io);
+	}
+}
+
+static void
 ublk_submit_bdev_io(struct ublk_queue *q, struct ublk_io *io)
 {
 	struct spdk_iobuf_channel *iobuf_ch = &q->poll_group->iobuf_ch;
 	const struct ublksrv_io_desc *iod = io->iod;
 	uint8_t ublk_op;
 
+	io->result = iod->nr_sectors * (1ULL << LINUX_SECTOR_SHIFT);
 	ublk_op = ublksrv_get_op(iod);
 	switch (ublk_op) {
 	case UBLK_IO_OP_READ:
 		ublk_io_get_buffer(io, iobuf_ch, read_get_buffer_done);
+		break;
+	case UBLK_IO_OP_WRITE:
+		if (g_ublk_tgt.user_copy) {
+			ublk_io_get_buffer(io, iobuf_ch, user_copy_write_get_buffer_done);
+		} else {
+			_ublk_submit_bdev_io(q, io);
+		}
 		break;
 	default:
 		_ublk_submit_bdev_io(q, io);
@@ -1123,14 +1216,13 @@ ublksrv_queue_io_cmd(struct ublk_queue *q,
 	sqe->flags	= IOSQE_FIXED_FILE;
 	sqe->rw_flags	= 0;
 	cmd->tag	= tag;
-	cmd->addr	= (__u64)(uintptr_t)(io->payload);
+	cmd->addr	= g_ublk_tgt.user_copy ? 0 : (__u64)(uintptr_t)(io->payload);
 	cmd->q_id	= q->q_id;
 
 	user_data = build_user_data(tag, cmd_op);
 	io_uring_sqe_set_data64(sqe, user_data);
 
 	io->cmd_op = 0;
-	q->cmd_inflight += 1;
 
 	SPDK_DEBUGLOG(ublk_io, "(qid %d tag %u cmd_op %u) iof %x stopping %d\n",
 		      q->q_id, tag, cmd_op,
@@ -1166,6 +1258,7 @@ ublk_io_xmit(struct ublk_queue *q)
 		count++;
 	}
 
+	q->cmd_inflight += count;
 	rc = io_uring_submit(&q->ring);
 	if (rc != count) {
 		SPDK_ERRLOG("could not submit all commands\n");
@@ -1217,32 +1310,52 @@ ublk_io_recv(struct ublk_queue *q)
 	iobuf_ch = &q->poll_group->iobuf_ch;
 	io_uring_for_each_cqe(&q->ring, head, cqe) {
 		tag = user_data_to_tag(cqe->user_data);
-		fetch = (cqe->res != UBLK_IO_RES_ABORT) && !q->is_stopping;
-
-		SPDK_DEBUGLOG(ublk_io, "res %d qid %d tag %u cmd_op %u\n",
-			      cqe->res, q->q_id, tag, user_data_to_op(cqe->user_data));
-
-		q->cmd_inflight--;
 		io = &q->ios[tag];
 
-		if (!fetch) {
-			q->is_stopping = true;
-			if (io->cmd_op == UBLK_IO_FETCH_REQ) {
-				io->cmd_op = 0;
-			}
-		}
+		SPDK_DEBUGLOG(ublk_io, "res %d qid %d tag %u, user copy %u, cmd_op %u\n",
+			      cqe->res, q->q_id, tag, io->user_copy, user_data_to_op(cqe->user_data));
 
-		TAILQ_INSERT_TAIL(&q->inflight_io_list, io, tailq);
-		if (cqe->res == UBLK_IO_RES_OK) {
-			ublk_submit_bdev_io(q, io);
-		} else if (cqe->res == UBLK_IO_RES_NEED_GET_DATA) {
-			ublk_io_get_buffer(io, iobuf_ch, write_get_buffer_done);
-		} else {
-			if (cqe->res != UBLK_IO_RES_ABORT) {
-				SPDK_ERRLOG("ublk received error io: res %d qid %d tag %u cmd_op %u\n",
-					    cqe->res, q->q_id, tag, user_data_to_op(cqe->user_data));
+		q->cmd_inflight--;
+
+		if (!io->user_copy) {
+			fetch = (cqe->res != UBLK_IO_RES_ABORT) && !q->is_stopping;
+			if (!fetch) {
+				q->is_stopping = true;
+				if (io->cmd_op == UBLK_IO_FETCH_REQ) {
+					io->cmd_op = 0;
+				}
 			}
-			TAILQ_REMOVE(&q->inflight_io_list, io, tailq);
+
+			TAILQ_INSERT_TAIL(&q->inflight_io_list, io, tailq);
+			if (cqe->res == UBLK_IO_RES_OK) {
+				ublk_submit_bdev_io(q, io);
+			} else if (cqe->res == UBLK_IO_RES_NEED_GET_DATA) {
+				ublk_io_get_buffer(io, iobuf_ch, write_get_buffer_done);
+			} else {
+				if (cqe->res != UBLK_IO_RES_ABORT) {
+					SPDK_ERRLOG("ublk received error io: res %d qid %d tag %u cmd_op %u\n",
+						    cqe->res, q->q_id, tag, user_data_to_op(cqe->user_data));
+				}
+				TAILQ_REMOVE(&q->inflight_io_list, io, tailq);
+			}
+		} else {
+
+			/* clear `user_copy` for next use of this IO structure */
+			io->user_copy = false;
+
+			assert((ublksrv_get_op(io->iod) == UBLK_IO_OP_READ) ||
+			       (ublksrv_get_op(io->iod) == UBLK_IO_OP_WRITE));
+			if (cqe->res != io->result) {
+				/* EIO */
+				ublk_io_done(NULL, false, io);
+			} else {
+				if (ublksrv_get_op(io->iod) == UBLK_IO_OP_READ) {
+					/* bdev_io is already freed in first READ cycle */
+					ublk_io_done(NULL, true, io);
+				} else {
+					_ublk_submit_bdev_io(q, io);
+				}
+			}
 		}
 		count += 1;
 		if (count == UBLK_QUEUE_REQUEST) {
@@ -1358,7 +1471,6 @@ ublk_dev_queue_init(struct ublk_queue *q)
 
 	ublk_dev_init_io_cmds(&q->ring, q->q_depth);
 
-	return 0;
 err:
 	return rc;
 }
@@ -1404,6 +1516,7 @@ ublk_dev_queue_io_init(struct ublk_queue *q)
 		ublksrv_queue_io_cmd(q, io, i);
 	}
 
+	q->cmd_inflight += q->q_depth;
 	rc = io_uring_submit(&q->ring);
 	assert(rc == (int)q->q_depth);
 	for (i = 0; i < q->q_depth; i++) {
@@ -1449,7 +1562,7 @@ ublk_info_param_init(struct spdk_ublk_dev *ublk)
 		.dev_id = ublk->ublk_id,
 		.max_io_buf_bytes = UBLK_IO_MAX_BYTES,
 		.ublksrv_pid = getpid(),
-		.flags = UBLK_F_NEED_GET_DATA | UBLK_F_URING_CMD_COMP_IN_TASK,
+		.flags = UBLK_F_URING_CMD_COMP_IN_TASK,
 	};
 	struct ublk_params uparams = {
 		.types = UBLK_PARAM_TYPE_BASIC,
@@ -1472,6 +1585,12 @@ ublk_info_param_init(struct spdk_ublk_dev *ublk)
 		if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
 			uparams.discard.max_write_zeroes_sectors = num_blocks * sectors_per_block;
 		}
+	}
+
+	if (g_ublk_tgt.user_copy) {
+		uinfo.flags |= UBLK_F_USER_COPY;
+	} else {
+		uinfo.flags |= UBLK_F_NEED_GET_DATA;
 	}
 
 	ublk->dev_info = uinfo;
