@@ -2534,6 +2534,12 @@ bdevperf_usage(void)
 	printf(" -E                        share per lcore thread among jobs. Available only if -j is not used.\n");
 }
 
+static void
+bdevperf_fini(void)
+{
+	free_job_config();
+}
+
 static int
 verify_test_params(struct spdk_app_opts *opts)
 {
@@ -2665,18 +2671,18 @@ main(int argc, char **argv)
 	}
 
 	if (read_job_config()) {
-		free_job_config();
+		bdevperf_fini();
 		return 1;
 	}
 
 	if (verify_test_params(&opts) != 0) {
-		free_job_config();
+		bdevperf_fini();
 		exit(1);
 	}
 
 	rc = spdk_app_start(&opts, bdevperf_run, NULL);
 
 	spdk_app_fini();
-	free_job_config();
+	bdevperf_fini();
 	return rc;
 }
