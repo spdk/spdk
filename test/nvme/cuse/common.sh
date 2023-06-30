@@ -13,6 +13,7 @@ rpc_py=$rootdir/scripts/rpc.py
 declare -A ctrls=()
 declare -A nvmes=()
 declare -A bdfs=()
+declare -a ordered_ctrls=()
 nvme_name=""
 
 nvme_get() {
@@ -62,7 +63,9 @@ scan_nvme_ctrls() {
 		ctrls["$ctrl_dev"]=$ctrl_dev
 		nvmes["$ctrl_dev"]=${ctrl_dev}_ns
 		bdfs["$ctrl_dev"]=$pci
+		ordered_ctrls[${ctrl_dev/nvme/}]=$ctrl_dev
 	done
+	((${#ctrls[@]} > 0))
 }
 
 get_nvme_ctrl_feature() {
