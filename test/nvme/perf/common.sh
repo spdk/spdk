@@ -426,7 +426,7 @@ function run_bdevperf() {
 	echo "** Running bdevperf test, this can take a while, depending on the run-time setting."
 	$_examples_dir/bdevperf --json $testdir/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -m "[$CPUS_ALLOWED]" -r "$rpc_socket" $main_core_param -z &
 	bdevperf_pid=$!
-	waitforlisten $bdevperf_pid
+	waitforlisten $bdevperf_pid "$rpc_socket" 500
 
 	if [[ ${#BPFTRACES[@]} -gt 0 ]]; then
 		echo "INFO: Enabling BPF Traces ${BPFTRACES[*]}"
