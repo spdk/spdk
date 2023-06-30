@@ -77,6 +77,7 @@ enum spdk_accel_aux_iov_type {
 
 struct spdk_accel_task {
 	struct accel_io_channel		*accel_ch;
+	struct spdk_accel_sequence	*seq;
 	spdk_accel_completion_cb	cb_fn;
 	void				*cb_arg;
 	spdk_accel_step_cb		step_cb_fn;

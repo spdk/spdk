@@ -280,6 +280,7 @@ spdk_accel_task_complete(struct spdk_accel_task *accel_task, int status)
 	 * allocate accel_task in user's call back function (cb_fn)
 	 */
 	TAILQ_INSERT_HEAD(&accel_ch->task_pool, accel_task, link);
+	accel_task->seq = NULL;
 
 	accel_update_task_stats(accel_ch, accel_task, executed, 1);
 	accel_update_task_stats(accel_ch, accel_task, num_bytes, accel_task->nbytes);
@@ -866,6 +867,7 @@ accel_sequence_get_task(struct accel_io_channel *ch, struct spdk_accel_sequence 
 
 	task->step_cb_fn = cb_fn;
 	task->step_cb_arg = cb_arg;
+	task->seq = seq;
 
 	return task;
 }
