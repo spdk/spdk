@@ -245,6 +245,8 @@ _accel_get_opc_name(enum accel_opcode opcode, const char **opcode_name)
 int
 spdk_accel_assign_opc(enum accel_opcode opcode, const char *name)
 {
+	char *copy;
+
 	if (g_modules_started == true) {
 		/* we don't allow re-assignment once things have started */
 		return -EINVAL;
@@ -255,8 +257,13 @@ spdk_accel_assign_opc(enum accel_opcode opcode, const char *name)
 		return -EINVAL;
 	}
 
+	copy = strdup(name);
+	if (copy == NULL) {
+		return -ENOMEM;
+	}
+
 	/* module selection will be validated after the framework starts. */
-	g_modules_opc_override[opcode] = strdup(name);
+	g_modules_opc_override[opcode] = copy;
 
 	return 0;
 }
