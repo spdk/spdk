@@ -14,6 +14,7 @@
 #include "spdk/sock.h"
 #include "spdk/queue.h"
 #include "spdk/likely.h"
+#include "spdk/log.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -334,7 +335,11 @@ spdk_sock_get_placement_id(int fd, enum spdk_placement_mode mode, int *placement
 #if defined(SO_INCOMING_NAPI_ID)
 		socklen_t len = sizeof(int);
 
-		getsockopt(fd, SOL_SOCKET, SO_INCOMING_NAPI_ID, placement_id, &len);
+		int rc = getsockopt(fd, SOL_SOCKET, SO_INCOMING_NAPI_ID, placement_id, &len);
+		if (rc == -1) {
+			SPDK_ERRLOG("getsockopt() failed: %s\n", strerror(errno));
+			assert(false);
+		}
 #endif
 		break;
 	}
@@ -342,7 +347,11 @@ spdk_sock_get_placement_id(int fd, enum spdk_placement_mode mode, int *placement
 #if defined(SO_INCOMING_CPU)
 		socklen_t len = sizeof(int);
 
-		getsockopt(fd, SOL_SOCKET, SO_INCOMING_CPU, placement_id, &len);
+		int rc = getsockopt(fd, SOL_SOCKET, SO_INCOMING_CPU, placement_id, &len);
+		if (rc == -1) {
+			SPDK_ERRLOG("getsockopt() failed: %s\n", strerror(errno));
+			assert(false);
+		}
 #endif
 		break;
 	}
