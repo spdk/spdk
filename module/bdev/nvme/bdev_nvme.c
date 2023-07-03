@@ -7933,8 +7933,12 @@ nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 	spdk_json_write_named_uint32(w, "reconnect_delay_sec", nvme_ctrlr->opts.reconnect_delay_sec);
 	spdk_json_write_named_uint32(w, "fast_io_fail_timeout_sec",
 				     nvme_ctrlr->opts.fast_io_fail_timeout_sec);
+	if (nvme_ctrlr->opts.psk_path[0] != '\0') {
+		spdk_json_write_named_string(w, "psk", nvme_ctrlr->opts.psk_path);
+	}
 
 	opts = spdk_nvme_ctrlr_get_opts(nvme_ctrlr->ctrlr);
+	spdk_json_write_named_string(w, "hostnqn", opts->hostnqn);
 	spdk_json_write_named_bool(w, "hdgst", opts->header_digest);
 	spdk_json_write_named_bool(w, "ddgst", opts->data_digest);
 

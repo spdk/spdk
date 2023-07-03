@@ -480,6 +480,12 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 							     ctx->req.psk);
 			goto cleanup;
 		}
+		rc = snprintf(ctx->req.bdev_opts.psk_path, sizeof(ctx->req.bdev_opts.psk_path), "%s", ctx->req.psk);
+		if (rc < 0 || (size_t)rc >= sizeof(ctx->req.bdev_opts.psk_path)) {
+			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Could not store PSK path: %s",
+							     ctx->req.psk);
+			goto cleanup;
+		}
 	}
 
 	if (ctx->req.hostaddr) {

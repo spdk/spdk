@@ -189,13 +189,38 @@ NOT setup_nvmf_tgt $key_long_path
 killprocess $nvmfpid
 chmod 0600 $key_long_path
 
+# Run both applications just to get their JSON configs
 nvmfappstart -m 0x2
 setup_nvmf_tgt $key_long_path
+
+$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 &
+bdevperf_pid=$!
+
+trap 'cleanup; exit 1' SIGINT SIGTERM EXIT
+waitforlisten $bdevperf_pid $bdevperf_rpc_sock
+$rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b TLSTEST -t $TEST_TRANSPORT \
+	-a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 \
+	-q nqn.2016-06.io.spdk:host1 --psk $key_long_path
+
 tgtconf=$($rpc_py save_config)
+bdevperfconf=$($rpc_py -s $bdevperf_rpc_sock save_config)
+
+killprocess $bdevperf_pid
 killprocess $nvmfpid
 
+# Launch apps with configs
 nvmfappstart -m 0x2 -c <(echo "$tgtconf")
-run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 "$key_long_path"
+$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 \
+	-c <(echo "$bdevperfconf") &
+bdevperf_pid=$!
+waitforlisten $bdevperf_pid $bdevperf_rpc_sock
+
+# Run I/O
+$rootdir/examples/bdev/bdevperf/bdevperf.py -t 20 -s $bdevperf_rpc_sock perform_tests
+
+trap 'nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+killprocess $bdevperf_pid
+killprocess $nvmfpid
 
 trap - SIGINT SIGTERM EXIT
 cleanup
