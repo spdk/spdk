@@ -315,6 +315,8 @@ balance(struct spdk_scheduler_core_info *cores_info, uint32_t cores_count)
 	 * if they will be used after rebalancing */
 	SPDK_ENV_FOREACH_CORE(i) {
 		reactor = spdk_reactor_get(i);
+		assert(reactor != NULL);
+
 		core = &cores_info[i];
 		/* We can switch mode only if reactor already does not have any threads */
 		if (g_cores[i].thread_count == 0 && TAILQ_EMPTY(&reactor->threads)) {
