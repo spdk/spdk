@@ -281,19 +281,30 @@ hello_sock_connect(struct hello_context_t *ctx)
 	rc = spdk_sock_getaddr(ctx->sock, saddr, sizeof(saddr), &sport, caddr, sizeof(caddr), &cport);
 	if (rc < 0) {
 		SPDK_ERRLOG("Cannot get connection addresses\n");
-		spdk_sock_close(&ctx->sock);
-		return -1;
+		goto err;
 	}
 
 	SPDK_NOTICELOG("Connection accepted from (%s, %hu) to (%s, %hu)\n", caddr, cport, saddr, sport);
 
-	fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL) | O_NONBLOCK);
+	rc = fcntl(STDIN_FILENO, F_GETFL);
+	if (rc == -1) {
+		SPDK_ERRLOG("Getting file status flag failed: %s\n", strerror(errno));
+		goto err;
+	}
+
+	if (fcntl(STDIN_FILENO, F_SETFL, rc | O_NONBLOCK) == -1) {
+		SPDK_ERRLOG("Setting file status flag failed: %s\n", strerror(errno));
+		goto err;
+	}
 
 	g_is_running = true;
 	ctx->poller_in = SPDK_POLLER_REGISTER(hello_sock_recv_poll, ctx, 0);
 	ctx->poller_out = SPDK_POLLER_REGISTER(hello_sock_writev_poll, ctx, 0);
 
 	return 0;
+err:
+	spdk_sock_close(&ctx->sock);
+	return -1;
 }
 
 static void
