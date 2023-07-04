@@ -13,7 +13,7 @@ function get_release_branch() {
 
 if [ "$(uname -s)" = "FreeBSD" ]; then
 	echo "Not testing for shared object dependencies on FreeBSD."
-	exit 0
+	exit 1
 fi
 
 rootdir=$(readlink -f $(dirname $0)/../..)
