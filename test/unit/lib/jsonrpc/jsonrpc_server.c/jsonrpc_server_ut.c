@@ -173,6 +173,8 @@ test_parse_request(void)
 
 	conn = calloc(1, sizeof(*conn));
 	SPDK_CU_ASSERT_FATAL(conn != NULL);
+	pthread_spin_init(&conn->queue_lock, PTHREAD_PROCESS_PRIVATE);
+	STAILQ_INIT(&conn->outstanding_queue);
 
 	conn->server = server;
 
@@ -310,6 +312,8 @@ test_parse_request_streaming(void)
 
 	conn = calloc(1, sizeof(*conn));
 	SPDK_CU_ASSERT_FATAL(conn != NULL);
+	pthread_spin_init(&conn->queue_lock, PTHREAD_PROCESS_PRIVATE);
+	STAILQ_INIT(&conn->outstanding_queue);
 
 	conn->server = server;
 

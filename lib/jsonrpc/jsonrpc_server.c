@@ -186,7 +186,10 @@ jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *json, s
 		return -1;
 	}
 
+	pthread_spin_lock(&conn->queue_lock);
 	conn->outstanding_requests++;
+	STAILQ_INSERT_TAIL(&conn->outstanding_queue, request, link);
+	pthread_spin_unlock(&conn->queue_lock);
 
 	request->conn = conn;
 
@@ -315,6 +318,9 @@ end_response(struct spdk_jsonrpc_request *request)
 void
 jsonrpc_free_request(struct spdk_jsonrpc_request *request)
 {
+	struct spdk_jsonrpc_request *req;
+	struct spdk_jsonrpc_server_conn *conn;
+
 	if (!request) {
 		return;
 	}
@@ -322,7 +328,19 @@ jsonrpc_free_request(struct spdk_jsonrpc_request *request)
 	/* We must send or skip response explicitly */
 	assert(request->response == NULL);
 
-	request->conn->outstanding_requests--;
+	conn = request->conn;
+	if (conn != NULL) {
+		pthread_spin_lock(&conn->queue_lock);
+		conn->outstanding_requests--;
+		STAILQ_FOREACH(req, &conn->outstanding_queue, link) {
+			if (req == request) {
+				STAILQ_REMOVE(&conn->outstanding_queue,
+					      req, spdk_jsonrpc_request, link);
+				break;
+			}
+		}
+		pthread_spin_unlock(&conn->queue_lock);
+	}
 	free(request->recv_buffer);
 	free(request->values);
 	free(request->send_buf);

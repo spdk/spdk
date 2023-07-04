@@ -85,6 +85,15 @@ jsonrpc_server_free_conn_request(struct spdk_jsonrpc_server_conn *conn)
 
 	jsonrpc_free_request(conn->send_request);
 	conn->send_request = NULL ;
+
+	pthread_spin_lock(&conn->queue_lock);
+	/* There might still be some requests being processed.
+	 * We need to tell them that this connection is closed. */
+	STAILQ_FOREACH(request, &conn->outstanding_queue, link) {
+		request->conn = NULL;
+	}
+	pthread_spin_unlock(&conn->queue_lock);
+
 	while ((request = jsonrpc_server_dequeue_request(conn)) != NULL) {
 		jsonrpc_free_request(request);
 	}
@@ -186,6 +195,7 @@ jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
 		conn->recv_len = 0;
 		conn->outstanding_requests = 0;
 		STAILQ_INIT(&conn->send_queue);
+		STAILQ_INIT(&conn->outstanding_queue);
 		conn->send_request = NULL;
 
 		if (pthread_spin_init(&conn->queue_lock, PTHREAD_PROCESS_PRIVATE)) {
@@ -308,8 +318,16 @@ jsonrpc_server_send_response(struct spdk_jsonrpc_request *request)
 {
 	struct spdk_jsonrpc_server_conn *conn = request->conn;
 
+	if (conn == NULL) {
+		/* We cannot respond to the request, because the connection is closed. */
+		SPDK_WARNLOG("Unable to send response: connection closed.\n");
+		jsonrpc_free_request(request);
+		return;
+	}
+
 	/* Queue the response to be sent */
 	pthread_spin_lock(&conn->queue_lock);
+	STAILQ_REMOVE(&conn->outstanding_queue, request, spdk_jsonrpc_request, link);
 	STAILQ_INSERT_TAIL(&conn->send_queue, request, link);
 	pthread_spin_unlock(&conn->queue_lock);
 }
