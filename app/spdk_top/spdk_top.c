@@ -2413,9 +2413,7 @@ draw_core_win_content(WINDOW *core_win, struct rpc_core_info *core_info)
 		 core_info->lcore);
 	print_in_middle(core_win, 1, 0, CORE_WIN_WIDTH, core_win_title, COLOR_PAIR(3));
 
-	mvwaddch(core_win, -1, 0, ACS_LTEE);
 	mvwhline(core_win, 2, 1, ACS_HLINE, CORE_WIN_WIDTH - 2);
-	mvwaddch(core_win, 2, CORE_WIN_WIDTH, ACS_RTEE);
 	print_left(core_win, 3, 1, CORE_WIN_WIDTH - (CORE_WIN_WIDTH / 3),
 		   "Frequency:             Intr:", COLOR_PAIR(5));
 	if (core_info->core_freq) {
@@ -2428,9 +2426,7 @@ draw_core_win_content(WINDOW *core_win, struct rpc_core_info *core_info)
 	mvwprintw(core_win, 3, CORE_WIN_FIRST_COL + 15, "%s",
 		  core_info->in_interrupt ? "Yes" : "No");
 
-	mvwaddch(core_win, -1, 0, ACS_LTEE);
 	mvwhline(core_win, 4, 1, ACS_HLINE, CORE_WIN_WIDTH - 2);
-	mvwaddch(core_win, 4, CORE_WIN_WIDTH, ACS_RTEE);
 	print_left(core_win, 5, 1, CORE_WIN_WIDTH, "Thread count:          Idle time:", COLOR_PAIR(5));
 
 	mvwprintw(core_win, 5, CORE_WIN_FIRST_COL, "%" PRIu64,
