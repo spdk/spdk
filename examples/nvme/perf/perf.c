@@ -942,7 +942,10 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 static void
 perf_disconnect_cb(struct spdk_nvme_qpair *qpair, void *ctx)
 {
+	struct ns_worker_ctx *ns_ctx = ctx;
 
+	ns_ctx->is_draining = true;
+	ns_ctx->status = 1;
 }
 
 static int64_t
@@ -1015,7 +1018,7 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 	opts.create_only = true;
 	opts.async_mode = true;
 
-	ns_ctx->u.nvme.group = spdk_nvme_poll_group_create(NULL, NULL);
+	ns_ctx->u.nvme.group = spdk_nvme_poll_group_create(ns_ctx, NULL);
 	if (ns_ctx->u.nvme.group == NULL) {
 		goto poll_group_failed;
 	}
@@ -1566,11 +1569,14 @@ io_complete(void *ctx, const struct spdk_nvme_cpl *cpl)
 			RATELIMIT_LOG("Write completed with error (sct=%d, sc=%d)\n",
 				      cpl->status.sct, cpl->status.sc);
 		}
-		if (!g_continue_on_error &&
-		    cpl->status.sct == SPDK_NVME_SCT_GENERIC &&
-		    cpl->status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT) {
-			/* The namespace was hotplugged.  Stop trying to send I/O to it. */
-			task->ns_ctx->is_draining = true;
+		if (!g_continue_on_error) {
+			if (cpl->status.sct == SPDK_NVME_SCT_GENERIC &&
+			    cpl->status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT) {
+				/* The namespace was hotplugged.  Stop trying to send I/O to it. */
+				task->ns_ctx->is_draining = true;
+			}
+
+			task->ns_ctx->status = 1;
 		}
 	}
 
