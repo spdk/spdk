@@ -160,6 +160,7 @@ struct ns_worker_ctx {
 	TAILQ_HEAD(, perf_task)		queued_tasks;
 
 	struct spdk_histogram_data	*histogram;
+	int				status;
 };
 
 struct perf_task {
@@ -1706,6 +1707,7 @@ work_fn(void *arg)
 			printf("ERROR: init_ns_worker_ctx() failed\n");
 			/* Wait on barrier to avoid blocking of successful workers */
 			pthread_barrier_wait(&g_worker_sync_barrier);
+			ns_ctx->status = 1;
 			return 1;
 		}
 	}
@@ -1713,6 +1715,7 @@ work_fn(void *arg)
 	rc = pthread_barrier_wait(&g_worker_sync_barrier);
 	if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
 		printf("ERROR: failed to wait on thread sync barrier\n");
+		ns_ctx->status = 1;
 		return 1;
 	}
 
@@ -3157,6 +3160,7 @@ main(int argc, char **argv)
 {
 	int rc;
 	struct worker_thread *worker, *main_worker;
+	struct ns_worker_ctx *ns_ctx;
 	struct spdk_env_opts opts;
 	pthread_t thread_id = 0;
 
@@ -3258,7 +3262,7 @@ main(int argc, char **argv)
 	}
 
 	assert(main_worker != NULL);
-	rc = work_fn(main_worker);
+	work_fn(main_worker);
 
 	spdk_env_thread_wait_all();
 
@@ -3270,6 +3274,21 @@ cleanup:
 	if (thread_id && pthread_cancel(thread_id) == 0) {
 		pthread_join(thread_id, NULL);
 	}
+
+	/* Collect errors from all workers and namespaces */
+	TAILQ_FOREACH(worker, &g_workers, link) {
+		if (rc != 0) {
+			break;
+		}
+
+		TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
+			if (ns_ctx->status != 0) {
+				rc = ns_ctx->status;
+				break;
+			}
+		}
+	}
+
 	unregister_trids();
 	unregister_namespaces();
 	unregister_controllers();
