@@ -141,7 +141,9 @@ struct nvme_tcp_req {
 			 * Rare case, actual when dealing with target that can send several R2T requests.
 			 * SPDK TCP target sends 1 R2T for the whole data buffer */
 			uint8_t				r2t_waiting_h2c_complete : 1;
-			uint8_t				reserved : 4;
+			/* Accel operation is in progress */
+			uint8_t				in_progress_accel : 1;
+			uint8_t				reserved : 3;
 		} bits;
 	} ordering;
 	struct nvme_tcp_pdu			*pdu;
@@ -221,21 +223,23 @@ nvme_tcp_req_put(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *tcp_req)
 }
 
 static inline void
-nvme_tcp_accel_submit_crc32c(struct nvme_tcp_poll_group *tgroup, uint32_t *dst,
-			     struct iovec *iovs, uint32_t iovcnt, uint32_t seed,
+nvme_tcp_accel_submit_crc32c(struct nvme_tcp_poll_group *tgroup, struct nvme_tcp_req *treq,
+			     uint32_t *dst, struct iovec *iovs, uint32_t iovcnt, uint32_t seed,
 			     spdk_nvme_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct spdk_nvme_poll_group *pg = tgroup->group.group;
 
+	treq->ordering.bits.in_progress_accel = 1;
 	pg->accel_fn_table.submit_accel_crc32c(pg->ctx, dst, iovs, iovcnt, seed, cb_fn, cb_arg);
 }
 
 static inline void
-nvme_tcp_accel_finish_sequence(struct nvme_tcp_poll_group *tgroup, void *seq,
-			       spdk_nvme_accel_completion_cb cb_fn, void *cb_arg)
+nvme_tcp_accel_finish_sequence(struct nvme_tcp_poll_group *tgroup, struct nvme_tcp_req *treq,
+			       void *seq, spdk_nvme_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct spdk_nvme_poll_group *pg = tgroup->group.group;
 
+	treq->ordering.bits.in_progress_accel = 1;
 	pg->accel_fn_table.finish_sequence(seq, cb_fn, cb_arg);
 }
 
@@ -493,6 +497,9 @@ tcp_write_pdu_seq_cb(void *ctx, int status)
 	struct nvme_tcp_req *treq = pdu->req;
 	struct nvme_request *req = treq->req;
 
+	assert(treq->ordering.bits.in_progress_accel);
+	treq->ordering.bits.in_progress_accel = 0;
+
 	req->accel_sequence = NULL;
 	if (spdk_unlikely(status != 0)) {
 		SPDK_ERRLOG("Failed to execute accel sequence: %d\n", status);
@@ -518,7 +525,7 @@ tcp_write_pdu(struct nvme_tcp_pdu *pdu)
 		    pdu->data_len > 0) {
 			assert(tqpair->qpair.poll_group != NULL);
 			tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
-			nvme_tcp_accel_finish_sequence(tgroup, req->accel_sequence,
+			nvme_tcp_accel_finish_sequence(tgroup, treq, req->accel_sequence,
 						       tcp_write_pdu_seq_cb, pdu);
 			return;
 		}
@@ -531,6 +538,10 @@ static void
 pdu_accel_compute_crc32_done(void *cb_arg, int status)
 {
 	struct nvme_tcp_pdu *pdu = cb_arg;
+	struct nvme_tcp_req *req = pdu->req;
+
+	assert(req->ordering.bits.in_progress_accel);
+	req->ordering.bits.in_progress_accel = 0;
 
 	if (spdk_unlikely(status)) {
 		SPDK_ERRLOG("Failed to compute the data digest for pdu =%p\n", pdu);
@@ -550,7 +561,11 @@ pdu_accel_compute_crc32_seq_cb(void *cb_arg, int status)
 	struct nvme_tcp_pdu *pdu = cb_arg;
 	struct nvme_tcp_qpair *tqpair = pdu->qpair;
 	struct nvme_tcp_poll_group *tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
-	struct nvme_request *req = ((struct nvme_tcp_req *)pdu->req)->req;
+	struct nvme_tcp_req *treq = pdu->req;
+	struct nvme_request *req = treq->req;
+
+	assert(treq->ordering.bits.in_progress_accel);
+	treq->ordering.bits.in_progress_accel = 0;
 
 	req->accel_sequence = NULL;
 	if (spdk_unlikely(status != 0)) {
@@ -559,7 +574,7 @@ pdu_accel_compute_crc32_seq_cb(void *cb_arg, int status)
 		return;
 	}
 
-	nvme_tcp_accel_submit_crc32c(tgroup, &pdu->data_digest_crc32,
+	nvme_tcp_accel_submit_crc32c(tgroup, pdu->req, &pdu->data_digest_crc32,
 				     pdu->data_iov, pdu->data_iovcnt, 0,
 				     pdu_accel_compute_crc32_done, pdu);
 }
@@ -612,10 +627,10 @@ pdu_accel_compute_crc32(struct nvme_tcp_pdu *pdu)
 		return true;
 	} else if (tgroup->group.group->accel_fn_table.submit_accel_crc32c != NULL) {
 		if (req->accel_sequence != NULL) {
-			nvme_tcp_accel_finish_sequence(tgroup, req->accel_sequence,
+			nvme_tcp_accel_finish_sequence(tgroup, pdu->req, req->accel_sequence,
 						       pdu_accel_compute_crc32_seq_cb, pdu);
 		} else {
-			nvme_tcp_accel_submit_crc32c(tgroup, &pdu->data_digest_crc32,
+			nvme_tcp_accel_submit_crc32c(tgroup, pdu->req, &pdu->data_digest_crc32,
 						     pdu->data_iov, pdu->data_iovcnt, 0,
 						     pdu_accel_compute_crc32_done, pdu);
 		}
@@ -630,8 +645,12 @@ static void
 pdu_compute_crc32_seq_cb(void *cb_arg, int status)
 {
 	struct nvme_tcp_pdu *pdu = cb_arg;
-	struct nvme_request *req = ((struct nvme_tcp_req *)pdu->req)->req;
+	struct nvme_tcp_req *treq = pdu->req;
+	struct nvme_request *req = treq->req;
 	uint32_t crc32c;
+
+	assert(treq->ordering.bits.in_progress_accel);
+	treq->ordering.bits.in_progress_accel = 0;
 
 	req->accel_sequence = NULL;
 	if (spdk_unlikely(status != 0)) {
@@ -665,7 +684,7 @@ pdu_compute_crc32(struct nvme_tcp_pdu *pdu)
 		req = ((struct nvme_tcp_req *)pdu->req)->req;
 		if (req->accel_sequence != NULL) {
 			tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
-			nvme_tcp_accel_finish_sequence(tgroup, req->accel_sequence,
+			nvme_tcp_accel_finish_sequence(tgroup, pdu->req, req->accel_sequence,
 						       pdu_compute_crc32_seq_cb, pdu);
 			return;
 		}
@@ -1198,6 +1217,9 @@ nvme_tcp_recv_payload_seq_cb(void *cb_arg, int status)
 	struct nvme_tcp_qpair *tqpair = treq->tqpair;
 	struct nvme_tcp_poll_group *group;
 
+	assert(treq->ordering.bits.in_progress_accel);
+	treq->ordering.bits.in_progress_accel = 0;
+
 	/* We need to force poll the qpair to make sure any queued requests will be resubmitted, see
 	 * comment in pdu_write_done(). */
 	if (tqpair->qpair.poll_group && !tqpair->needs_poll && !STAILQ_EMPTY(&tqpair->qpair.queued_req)) {
@@ -1246,7 +1268,8 @@ nvme_tcp_c2h_data_payload_handle(struct nvme_tcp_qpair *tqpair,
 			if (tcp_req->req->accel_sequence != NULL) {
 				tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
 				nvme_tcp_accel_reverse_sequence(tgroup, tcp_req->req->accel_sequence);
-				nvme_tcp_accel_finish_sequence(tgroup, tcp_req->req->accel_sequence,
+				nvme_tcp_accel_finish_sequence(tgroup, tcp_req,
+							       tcp_req->req->accel_sequence,
 							       nvme_tcp_recv_payload_seq_cb,
 							       tcp_req);
 				return;
@@ -1329,6 +1352,9 @@ nvme_tcp_accel_recv_compute_crc32_done(void *cb_arg, int status)
 
 	tqpair = tcp_req->tqpair;
 	assert(tqpair != NULL);
+
+	assert(tcp_req->ordering.bits.in_progress_accel);
+	tcp_req->ordering.bits.in_progress_accel = 0;
 
 	/* We need to force poll the qpair to make sure any queued requests will be resubmitted, see
 	 * comment in pdu_write_done(). */
@@ -1420,7 +1446,7 @@ nvme_tcp_accel_recv_compute_crc32(struct nvme_tcp_req *treq, struct nvme_tcp_pdu
 	} else if (tgroup->group.group->accel_fn_table.submit_accel_crc32c != NULL) {
 		nvme_tcp_req_copy_pdu(treq, pdu);
 		nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
-		nvme_tcp_accel_submit_crc32c(tgroup, &treq->pdu->data_digest_crc32,
+		nvme_tcp_accel_submit_crc32c(tgroup, treq, &treq->pdu->data_digest_crc32,
 					     treq->pdu->data_iov, treq->pdu->data_iovcnt, 0,
 					     nvme_tcp_accel_recv_compute_crc32_done, treq);
 		return true;
@@ -1588,9 +1614,8 @@ nvme_tcp_capsule_resp_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_
 	if (tcp_req->req->accel_sequence != NULL) {
 		tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
 		nvme_tcp_accel_reverse_sequence(tgroup, tcp_req->req->accel_sequence);
-		nvme_tcp_accel_finish_sequence(tgroup, tcp_req->req->accel_sequence,
-					       nvme_tcp_recv_payload_seq_cb,
-					       tcp_req);
+		nvme_tcp_accel_finish_sequence(tgroup, tcp_req, tcp_req->req->accel_sequence,
+					       nvme_tcp_recv_payload_seq_cb, tcp_req);
 		return;
 	}
 
