@@ -31,9 +31,6 @@ struct chunk {
 
 	/* Pointer to buffer with I/O metadata */
 	void *md_buf;
-
-	/* Shallow copy of IO request parameters */
-	struct spdk_bdev_ext_io_opts ext_opts;
 };
 
 struct stripe_request;
@@ -452,10 +449,11 @@ raid5f_chunk_submit(struct chunk *chunk)
 	struct raid_base_bdev_info *base_info = &raid_bdev->base_bdev_info[chunk->index];
 	struct spdk_io_channel *base_ch = raid_io->raid_ch->base_channel[chunk->index];
 	uint64_t base_offset_blocks = (stripe_req->stripe_index << raid_bdev->strip_size_shift);
+	struct spdk_bdev_ext_io_opts io_opts;
 	int ret;
 
-	raid5f_init_ext_io_opts(bdev_io, &chunk->ext_opts);
-	chunk->ext_opts.metadata = chunk->md_buf;
+	raid5f_init_ext_io_opts(bdev_io, &io_opts);
+	io_opts.metadata = chunk->md_buf;
 
 	raid_io->base_bdev_io_submitted++;
 
@@ -468,8 +466,7 @@ raid5f_chunk_submit(struct chunk *chunk)
 
 		ret = raid_bdev_writev_blocks_ext(base_info, base_ch, chunk->iovs, chunk->iovcnt,
 						  base_offset_blocks, raid_bdev->strip_size,
-						  raid5f_chunk_complete_bdev_io, chunk,
-						  &chunk->ext_opts);
+						  raid5f_chunk_complete_bdev_io, chunk, &io_opts);
 		break;
 	case STRIPE_REQ_RECONSTRUCT:
 		if (chunk == stripe_req->reconstruct.chunk) {
@@ -481,8 +478,7 @@ raid5f_chunk_submit(struct chunk *chunk)
 
 		ret = raid_bdev_readv_blocks_ext(base_info, base_ch, chunk->iovs, chunk->iovcnt,
 						 base_offset_blocks, bdev_io->u.bdev.num_blocks,
-						 raid5f_chunk_complete_bdev_io, chunk,
-						 &chunk->ext_opts);
+						 raid5f_chunk_complete_bdev_io, chunk, &io_opts);
 		break;
 	default:
 		assert(false);
