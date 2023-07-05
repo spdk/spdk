@@ -343,6 +343,23 @@ fail:
 	return -ENOMEM;
 }
 
+static inline void
+nvme_tcp_qpair_set_recv_state(struct nvme_tcp_qpair *tqpair,
+			      enum nvme_tcp_pdu_recv_state state)
+{
+	if (tqpair->recv_state == state) {
+		SPDK_ERRLOG("The recv state of tqpair=%p is same with the state(%d) to be set\n",
+			    tqpair, state);
+		return;
+	}
+
+	if (state == NVME_TCP_PDU_RECV_STATE_ERROR) {
+		assert(TAILQ_EMPTY(&tqpair->outstanding_reqs));
+	}
+
+	tqpair->recv_state = state;
+}
+
 static void nvme_tcp_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
 
 static void
@@ -1031,23 +1048,6 @@ nvme_tcp_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->outstanding_reqs, link, tmp) {
 		nvme_tcp_req_complete(tcp_req, tqpair, &cpl, true);
 	}
-}
-
-static inline void
-nvme_tcp_qpair_set_recv_state(struct nvme_tcp_qpair *tqpair,
-			      enum nvme_tcp_pdu_recv_state state)
-{
-	if (tqpair->recv_state == state) {
-		SPDK_ERRLOG("The recv state of tqpair=%p is same with the state(%d) to be set\n",
-			    tqpair, state);
-		return;
-	}
-
-	if (state == NVME_TCP_PDU_RECV_STATE_ERROR) {
-		assert(TAILQ_EMPTY(&tqpair->outstanding_reqs));
-	}
-
-	tqpair->recv_state = state;
 }
 
 static void
