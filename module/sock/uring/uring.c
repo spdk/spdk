@@ -1341,10 +1341,10 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 				_sock_prep_read(&sock->base);
 			} else if (spdk_unlikely(status <= 0)) {
 				sock->connection_status = status < 0 ? status : -ECONNRESET;
-				spdk_sock_abort_requests(&sock->base);
+				ret = spdk_sock_abort_requests(&sock->base);
 
 				/* The user needs to be notified that this socket is dead. */
-				if (sock->base.cb_fn != NULL &&
+				if (ret == 0 && sock->base.cb_fn != NULL &&
 				    sock->pending_recv == false) {
 					sock->pending_recv = true;
 					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
@@ -1382,10 +1382,10 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 				continue;
 			} else if (spdk_unlikely(status) < 0) {
 				sock->connection_status = status;
-				spdk_sock_abort_requests(&sock->base);
+				ret = spdk_sock_abort_requests(&sock->base);
 
 				/* The user needs to be notified that this socket is dead. */
-				if (sock->base.cb_fn != NULL &&
+				if (ret == 0 && sock->base.cb_fn != NULL &&
 				    sock->pending_recv == false) {
 					sock->pending_recv = true;
 					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
@@ -1406,10 +1406,10 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 			} else if (status == -ECANCELED) {
 				continue;
 			} else if (spdk_unlikely(status < 0)) {
-				spdk_sock_abort_requests(&sock->base);
+				ret = spdk_sock_abort_requests(&sock->base);
 
 				/* The user needs to be notified that this socket is dead. */
-				if (sock->base.cb_fn != NULL &&
+				if (ret == 0 && sock->base.cb_fn != NULL &&
 				    sock->pending_recv == false) {
 					sock->pending_recv = true;
 					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
