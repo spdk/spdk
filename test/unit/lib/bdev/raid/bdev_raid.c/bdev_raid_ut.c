@@ -72,7 +72,7 @@ uint8_t g_test_multi_raids;
 struct raid_io_ranges g_io_ranges[MAX_TEST_IO_RANGE];
 uint32_t g_io_range_idx;
 uint64_t g_lba_offset;
-struct spdk_io_channel g_io_channel;
+uint64_t g_bdev_ch_io_device;
 
 DEFINE_STUB_V(spdk_bdev_module_examine_done, (struct spdk_bdev_module *module));
 DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
@@ -121,6 +121,7 @@ DEFINE_STUB(spdk_bdev_get_memory_domains, int, (struct spdk_bdev *bdev,
 DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "test_bdev");
 DEFINE_STUB(spdk_bdev_get_md_size, uint32_t, (const struct spdk_bdev *bdev), 0);
 DEFINE_STUB(spdk_bdev_is_md_interleaved, bool, (const struct spdk_bdev *bdev), false);
+DEFINE_STUB(spdk_bdev_is_md_separate, bool, (const struct spdk_bdev *bdev), false);
 DEFINE_STUB(spdk_bdev_get_dif_type, enum spdk_dif_type, (const struct spdk_bdev *bdev),
 	    SPDK_DIF_DISABLE);
 DEFINE_STUB(spdk_bdev_is_dif_head_of_md, bool, (const struct spdk_bdev *bdev), false);
@@ -151,9 +152,7 @@ spdk_bdev_get_uuid(const struct spdk_bdev *bdev)
 struct spdk_io_channel *
 spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
 {
-	g_io_channel.thread = spdk_get_thread();
-
-	return &g_io_channel;
+	return spdk_get_io_channel(&g_bdev_ch_io_device);
 }
 
 static void
@@ -636,6 +635,30 @@ spdk_bdev_quiesce(struct spdk_bdev *bdev, struct spdk_bdev_module *module,
 int
 spdk_bdev_unquiesce(struct spdk_bdev *bdev, struct spdk_bdev_module *module,
 		    spdk_bdev_quiesce_cb cb_fn, void *cb_arg)
+{
+	if (cb_fn) {
+		cb_fn(cb_arg, 0);
+	}
+
+	return 0;
+}
+
+int
+spdk_bdev_quiesce_range(struct spdk_bdev *bdev, struct spdk_bdev_module *module,
+			uint64_t offset, uint64_t length,
+			spdk_bdev_quiesce_cb cb_fn, void *cb_arg)
+{
+	if (cb_fn) {
+		cb_fn(cb_arg, 0);
+	}
+
+	return 0;
+}
+
+int
+spdk_bdev_unquiesce_range(struct spdk_bdev *bdev, struct spdk_bdev_module *module,
+			  uint64_t offset, uint64_t length,
+			  spdk_bdev_quiesce_cb cb_fn, void *cb_arg)
 {
 	if (cb_fn) {
 		cb_fn(cb_arg, 0);
@@ -1262,7 +1285,6 @@ test_io_channel(void)
 	struct raid_bdev *pbdev;
 	struct spdk_io_channel *ch;
 	struct raid_bdev_io_channel *ch_ctx;
-	uint8_t i;
 
 	set_globals();
 	CU_ASSERT(raid_bdev_init() == 0);
@@ -1286,9 +1308,6 @@ test_io_channel(void)
 	ch_ctx = spdk_io_channel_get_ctx(ch);
 	SPDK_CU_ASSERT_FATAL(ch_ctx != NULL);
 
-	for (i = 0; i < req.base_bdevs.num_base_bdevs; i++) {
-		CU_ASSERT(ch_ctx->base_channel && ch_ctx->base_channel[i] == &g_io_channel);
-	}
 	free_test_req(&req);
 
 	spdk_put_io_channel(ch);
@@ -1969,7 +1988,97 @@ test_create_raid_superblock(void)
 	raid_bdev_exit();
 	base_bdevs_cleanup();
 	reset_globals();
+}
 
+static void
+complete_process_request(void *ctx)
+{
+	struct raid_bdev_process_request *process_req = ctx;
+
+	raid_bdev_process_request_complete(process_req, 0);
+}
+
+static int
+submit_process_request(struct raid_bdev_process_request *process_req,
+		       struct raid_bdev_io_channel *raid_ch)
+{
+	struct raid_bdev *raid_bdev = spdk_io_channel_get_io_device(spdk_io_channel_from_ctx(raid_ch));
+
+	*(uint64_t *)raid_bdev->module_private += process_req->num_blocks;
+
+	spdk_thread_send_msg(spdk_get_thread(), complete_process_request, process_req);
+
+	return process_req->num_blocks;
+}
+
+static void
+test_raid_process(void)
+{
+	struct rpc_bdev_raid_create req;
+	struct rpc_bdev_raid_delete destroy_req;
+	struct raid_bdev *pbdev;
+	struct spdk_bdev *base_bdev;
+	struct spdk_thread *process_thread;
+	uint64_t num_blocks_processed = 0;
+
+	set_globals();
+	CU_ASSERT(raid_bdev_init() == 0);
+
+	create_raid_bdev_create_req(&req, "raid1", 0, true, 0, false);
+	verify_raid_bdev_present("raid1", false);
+	TAILQ_FOREACH(base_bdev, &g_bdev_list, internal.link) {
+		base_bdev->blockcnt = 128;
+	}
+	rpc_bdev_raid_create(NULL, NULL);
+	CU_ASSERT(g_rpc_err == 0);
+	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
+	free_test_req(&req);
+
+	TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
+		if (strcmp(pbdev->bdev.name, "raid1") == 0) {
+			break;
+		}
+	}
+	CU_ASSERT(pbdev != NULL);
+
+	pbdev->module->submit_process_request = submit_process_request;
+	pbdev->module_private = &num_blocks_processed;
+
+	CU_ASSERT(raid_bdev_start_rebuild(&pbdev->base_bdev_info[0]) == 0);
+	poll_threads();
+
+	SPDK_CU_ASSERT_FATAL(pbdev->process != NULL);
+
+	process_thread = spdk_thread_get_by_id(spdk_thread_get_id(spdk_get_thread()) + 1);
+
+	while (spdk_thread_poll(process_thread, 0, 0) > 0) {
+		poll_threads();
+	}
+
+	CU_ASSERT(pbdev->process == NULL);
+	CU_ASSERT(num_blocks_processed == pbdev->bdev.blockcnt);
+
+	poll_threads();
+
+	create_raid_bdev_delete_req(&destroy_req, "raid1", 0);
+	rpc_bdev_raid_delete(NULL, NULL);
+	CU_ASSERT(g_rpc_err == 0);
+	verify_raid_bdev_present("raid1", false);
+
+	raid_bdev_exit();
+	base_bdevs_cleanup();
+	reset_globals();
+}
+
+static int
+test_bdev_ioch_create(void *io_device, void *ctx_buf)
+{
+	return 0;
+}
+
+static void
+test_bdev_ioch_destroy(void *io_device, void *ctx_buf)
+{
 }
 
 int
@@ -1999,14 +2108,18 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_raid_json_dump_info);
 	CU_ADD_TEST(suite, test_context_size);
 	CU_ADD_TEST(suite, test_raid_level_conversions);
+	CU_ADD_TEST(suite, test_raid_process);
 
 	allocate_threads(1);
 	set_thread(0);
+	spdk_io_device_register(&g_bdev_ch_io_device, test_bdev_ioch_create, test_bdev_ioch_destroy, 0,
+				NULL);
 
 	set_test_opts();
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
 
+	spdk_io_device_unregister(&g_bdev_ch_io_device, NULL);
 	free_threads();
 
 	return num_failures;

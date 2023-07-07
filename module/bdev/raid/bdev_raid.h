@@ -43,6 +43,12 @@ enum raid_bdev_state {
 	RAID_BDEV_STATE_MAX
 };
 
+enum raid_process_type {
+	RAID_PROCESS_NONE,
+	RAID_PROCESS_REBUILD,
+	RAID_PROCESS_MAX
+};
+
 typedef void (*raid_bdev_remove_base_bdev_cb)(void *ctx, int status);
 
 /*
@@ -134,6 +140,21 @@ struct raid_bdev_io {
 	raid_bdev_io_completion_cb	completion_cb;
 };
 
+struct raid_bdev_process_request {
+	struct raid_bdev_process *process;
+	struct raid_base_bdev_info *target;
+	struct spdk_io_channel *target_ch;
+	uint64_t offset_blocks;
+	uint32_t num_blocks;
+	struct iovec iov;
+	void *md_buf;
+	/* bdev_io is raid_io's driver_ctx - don't reorder them!
+	 * These are needed for re-using raid module I/O functions for process I/O. */
+	struct spdk_bdev_io bdev_io;
+	struct raid_bdev_io raid_io;
+	TAILQ_ENTRY(raid_bdev_process_request) link;
+};
+
 /*
  * raid_bdev is the single entity structure which contains SPDK block device
  * and the information related to any raid bdev either configured or
@@ -196,6 +217,9 @@ struct raid_bdev {
 
 	/* Superblock */
 	struct raid_bdev_superblock	*sb;
+
+	/* Raid bdev background process, e.g. rebuild */
+	struct raid_bdev_process	*process;
 };
 
 #define RAID_FOR_EACH_BASE_BDEV(r, i) \
@@ -220,12 +244,10 @@ enum raid_level raid_bdev_str_to_level(const char *str);
 const char *raid_bdev_level_to_str(enum raid_level level);
 enum raid_bdev_state raid_bdev_str_to_state(const char *str);
 const char *raid_bdev_state_to_str(enum raid_bdev_state state);
+const char *raid_bdev_process_to_str(enum raid_process_type value);
 void raid_bdev_write_info_json(struct raid_bdev *raid_bdev, struct spdk_json_write_ctx *w);
 int raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev, raid_bdev_remove_base_bdev_cb cb_fn,
 			       void *cb_ctx);
-struct spdk_io_channel *raid_bdev_channel_get_base_channel(struct raid_bdev_io_channel *raid_ch,
-		uint8_t idx);
-void *raid_bdev_channel_get_module_ctx(struct raid_bdev_io_channel *raid_ch);
 
 /*
  * RAID module descriptor
@@ -290,6 +312,10 @@ struct raid_bdev_module {
 	 */
 	void (*resize)(struct raid_bdev *raid_bdev);
 
+	/* Handler for raid process requests. Required for raid modules with redundancy. */
+	int (*submit_process_request)(struct raid_bdev_process_request *process_req,
+				      struct raid_bdev_io_channel *raid_ch);
+
 	TAILQ_ENTRY(raid_bdev_module) link;
 };
 
@@ -311,6 +337,10 @@ void raid_bdev_queue_io_wait(struct raid_bdev_io *raid_io, struct spdk_bdev *bde
 			     struct spdk_io_channel *ch, spdk_bdev_io_wait_cb cb_fn);
 void raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status);
 void raid_bdev_module_stop_done(struct raid_bdev *raid_bdev);
+struct spdk_io_channel *raid_bdev_channel_get_base_channel(struct raid_bdev_io_channel *raid_ch,
+		uint8_t idx);
+void *raid_bdev_channel_get_module_ctx(struct raid_bdev_io_channel *raid_ch);
+void raid_bdev_process_request_complete(struct raid_bdev_process_request *process_req, int status);
 void raid_bdev_io_init(struct raid_bdev_io *raid_io, struct raid_bdev_io_channel *raid_ch,
 		       enum spdk_bdev_io_type type, uint64_t offset_blocks,
 		       uint64_t num_blocks, struct iovec *iovs, int iovcnt, void *md_buf,
