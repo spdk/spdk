@@ -156,8 +156,9 @@ struct spdk_accel_sequence {
 	struct accel_sequence_tasks		tasks;
 	struct accel_sequence_tasks		completed;
 	TAILQ_HEAD(, accel_buffer)		bounce_bufs;
-	enum accel_sequence_state		state;
 	int					status;
+	/* state uses enum accel_sequence_state */
+	uint8_t					state;
 	bool					in_process_sequence;
 	spdk_accel_completion_cb		cb_fn;
 	void					*cb_arg;
