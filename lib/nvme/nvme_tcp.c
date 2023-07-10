@@ -394,18 +394,30 @@ nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	}
 
 	nvme_tcp_qpair_abort_reqs(qpair, 0);
-	nvme_transport_ctrlr_disconnect_qpair_done(qpair);
+
+	/* If the qpair is marked as asynchronous, let it go through the process_completions() to
+	 * let any outstanding requests (e.g. those with outstanding accel operations) complete.
+	 * Otherwise, there's no way of waiting for them, so tqpair->outstanding_reqs has to be
+	 * empty.
+	 */
+	if (qpair->async) {
+		nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_QUIESCING);
+	} else {
+		assert(TAILQ_EMPTY(&tqpair->outstanding_reqs));
+		nvme_transport_ctrlr_disconnect_qpair_done(qpair);
+	}
 }
 
 static int
 nvme_tcp_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_tcp_qpair *tqpair;
+	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
 
 	assert(qpair != NULL);
 	nvme_tcp_qpair_abort_reqs(qpair, 0);
+	assert(TAILQ_EMPTY(&tqpair->outstanding_reqs));
+
 	nvme_qpair_deinit(qpair);
-	tqpair = nvme_tcp_qpair(qpair);
 	nvme_tcp_free_reqs(tqpair);
 	if (!tqpair->shared_stats) {
 		free(tqpair->stats);
@@ -1046,6 +1058,11 @@ nvme_tcp_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	cpl.status.dnr = dnr;
 
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->outstanding_reqs, link, tmp) {
+		/* We cannot abort requests with accel operations in progress */
+		if (tcp_req->ordering.bits.in_progress_accel) {
+			continue;
+		}
+
 		nvme_tcp_req_complete(tcp_req, tqpair, &cpl, true);
 	}
 }
@@ -2035,6 +2052,10 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped, uint32_t max_
 			break;
 		case NVME_TCP_PDU_RECV_STATE_QUIESCING:
 			if (TAILQ_EMPTY(&tqpair->outstanding_reqs)) {
+				if (nvme_qpair_get_state(&tqpair->qpair) == NVME_QPAIR_DISCONNECTING) {
+					nvme_transport_ctrlr_disconnect_qpair_done(&tqpair->qpair);
+				}
+
 				nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
 			}
 			break;
@@ -2107,6 +2128,16 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 			if (spdk_unlikely(tqpair->qpair.ctrlr->timeout_enabled)) {
 				nvme_tcp_qpair_check_timeout(qpair);
 			}
+
+			if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING) {
+				if (TAILQ_EMPTY(&tqpair->outstanding_reqs)) {
+					nvme_transport_ctrlr_disconnect_qpair_done(qpair);
+				}
+
+				/* Don't return errors until the qpair gets disconnected */
+				return 0;
+			}
+
 			goto fail;
 		}
 	}
@@ -2791,7 +2822,18 @@ nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group *t
 	num_events = spdk_sock_group_poll(group->sock_group);
 
 	STAILQ_FOREACH_SAFE(qpair, &tgroup->disconnected_qpairs, poll_group_stailq, tmp_qpair) {
-		disconnected_qpair_cb(qpair, tgroup->group->ctx);
+		tqpair = nvme_tcp_qpair(qpair);
+		if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING) {
+			if (TAILQ_EMPTY(&tqpair->outstanding_reqs)) {
+				nvme_transport_ctrlr_disconnect_qpair_done(qpair);
+			}
+		}
+		/* Wait until the qpair transitions to the DISCONNECTED state, otherwise user might
+		 * want to free it from disconnect_qpair_cb, while it's not fully disconnected (and
+		 * might still have outstanding requests) */
+		if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTED) {
+			disconnected_qpair_cb(qpair, tgroup->group->ctx);
+		}
 	}
 
 	/* If any qpairs were marked as needing to be polled due to an asynchronous write completion
