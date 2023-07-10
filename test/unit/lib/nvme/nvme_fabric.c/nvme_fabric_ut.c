@@ -325,7 +325,7 @@ test_nvme_fabric_discover_probe(void)
 	memset(&g_ut_trid, 0, sizeof(g_ut_trid));
 
 	/* Entry type unsupported */
-	entry.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
+	entry.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT;
 
 	nvme_fabric_discover_probe(&entry, &probe_ctx, 1);
 	CU_ASSERT(g_ut_ctrlr_is_probed == false);

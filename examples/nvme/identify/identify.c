@@ -2530,9 +2530,15 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 			       entry->adrfam, spdk_nvme_transport_id_adrfam_str(entry->adrfam));
 			printf("Subsystem Type:                        %u (%s)\n",
 			       entry->subtype,
-			       entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY ? "Discovery Service" :
+			       entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY ? "Referral to a Discovery Service" :
 			       entry->subtype == SPDK_NVMF_SUBTYPE_NVME ? "NVM Subsystem" :
+			       entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT ? "Current Discovery Subsystem" :
 			       "Unknown");
+			printf("Entry Flags:\n");
+			printf("  Duplicate Returned Information:			%u\n",
+			       !!(entry->eflags & SPDK_NVMF_DISCOVERY_LOG_EFLAGS_DUPRETINFO));
+			printf("  Explicit Persistent Connection Support for Discovery: %u\n",
+			       !!(entry->eflags & SPDK_NVMF_DISCOVERY_LOG_EFLAGS_EPCSD));
 			printf("Transport Requirements:\n");
 			printf("  Secure Channel:                      %s\n",
 			       entry->treq.secure_channel == SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_SPECIFIED ? "Not Specified" :

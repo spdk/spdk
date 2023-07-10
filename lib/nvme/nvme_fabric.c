@@ -290,8 +290,10 @@ nvme_fabric_discover_probe(struct spdk_nvmf_discovery_log_page_entry *entry,
 
 	memset(&trid, 0, sizeof(trid));
 
-	if (entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
-		SPDK_WARNLOG("Skipping unsupported discovery service referral\n");
+	if (entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT ||
+	    entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+		SPDK_WARNLOG("Skipping unsupported current discovery service or"
+			     " discovery service referral\n");
 		return;
 	} else if (entry->subtype != SPDK_NVMF_SUBTYPE_NVME) {
 		SPDK_WARNLOG("Skipping unknown subtype %u\n", entry->subtype);

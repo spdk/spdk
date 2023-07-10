@@ -130,12 +130,21 @@ enum spdk_nvmf_adrfam {
  * NVM subsystem types
  */
 enum spdk_nvmf_subtype {
-	/** Discovery type for NVM subsystem */
+	/** Referral to a Discovery Service */
 	SPDK_NVMF_SUBTYPE_DISCOVERY		= 0x1,
 
-	/** NVMe type for NVM subsystem */
-	SPDK_NVMF_SUBTYPE_NVME		= 0x2,
+	/** NVM Subsystem */
+	SPDK_NVMF_SUBTYPE_NVME			= 0x2,
+
+	/** Current Discovery Subsystem */
+	SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT	= 0x3
 };
+
+/* Discovery Log Entry Flags - Duplicate Returned Information */
+#define SPDK_NVMF_DISCOVERY_LOG_EFLAGS_DUPRETINFO (1u << 0u)
+
+/* Discovery Log Entry Flags - Explicit Persistent Connection Support for Discovery */
+#define SPDK_NVMF_DISCOVERY_LOG_EFLAGS_EPCSD (1u << 1u)
 
 /**
  * Connections shall be made over a fabric secure channel
@@ -395,7 +404,10 @@ struct spdk_nvmf_discovery_log_page_entry {
 	/** Admin max SQ size */
 	uint16_t	asqsz;
 
-	uint8_t		reserved0[22];
+	/** Entry Flags */
+	uint16_t	eflags;
+
+	uint8_t		reserved0[20];
 
 	/** Transport service identifier */
 	uint8_t		trsvcid[SPDK_NVMF_TRSVCID_MAX_LEN];
