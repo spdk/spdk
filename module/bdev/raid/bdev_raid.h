@@ -297,6 +297,12 @@ void raid_bdev_queue_io_wait(struct raid_bdev_io *raid_io, struct spdk_bdev *bde
 void raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status);
 void raid_bdev_module_stop_done(struct raid_bdev *raid_bdev);
 
+static inline uint8_t
+raid_bdev_base_bdev_slot(struct raid_base_bdev_info *base_info)
+{
+	return base_info - base_info->raid_bdev->base_bdev_info;
+}
+
 /**
  * Raid bdev I/O read/write wrapper for spdk_bdev_readv_blocks_ext function.
  */

@@ -66,7 +66,7 @@ raid_bdev_init_superblock(struct raid_bdev *raid_bdev)
 		sb_base_bdev->data_offset = base_info->data_offset;
 		sb_base_bdev->data_size = base_info->data_size;
 		sb_base_bdev->state = RAID_SB_BASE_BDEV_CONFIGURED;
-		sb_base_bdev->slot = base_info - raid_bdev->base_bdev_info;
+		sb_base_bdev->slot = raid_bdev_base_bdev_slot(base_info);
 		sb_base_bdev++;
 	}
 }

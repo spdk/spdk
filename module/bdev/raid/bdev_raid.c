@@ -1400,7 +1400,7 @@ raid_bdev_remove_base_bdev_on_unquiesced(void *ctx, int status)
 	if (raid_bdev->sb) {
 		struct raid_bdev_superblock *sb = raid_bdev->sb;
 		struct raid_bdev_sb_base_bdev *sb_base_bdev = NULL;
-		uint8_t slot = base_info - raid_bdev->base_bdev_info;
+		uint8_t slot = raid_bdev_base_bdev_slot(base_info);
 		uint8_t i;
 
 		for (i = 0; i < sb->base_bdevs_size; i++) {
@@ -1432,7 +1432,7 @@ raid_bdev_channel_remove_base_bdev(struct spdk_io_channel_iter *i)
 	struct raid_base_bdev_info *base_info = spdk_io_channel_iter_get_ctx(i);
 	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
 	struct raid_bdev_io_channel *raid_ch = spdk_io_channel_get_ctx(ch);
-	uint8_t idx = base_info - base_info->raid_bdev->base_bdev_info;
+	uint8_t idx = raid_bdev_base_bdev_slot(base_info);
 
 	SPDK_DEBUGLOG(bdev_raid, "slot: %u raid_ch: %p\n", idx, raid_ch);
 
