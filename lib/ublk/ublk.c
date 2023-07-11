@@ -75,7 +75,6 @@ struct ublk_io {
 	void			*mpool_entry;
 	bool			need_data;
 	uint16_t		tag;
-	uint32_t		sector_per_block_shift;
 	uint32_t		payload_size;
 	uint32_t		cmd_op;
 	int32_t			result;
@@ -1403,7 +1402,6 @@ ublk_dev_queue_io_init(struct ublk_queue *q)
 		io->payload = buf;
 		io->bdev_ch = q->bdev_ch;
 		io->bdev_desc = q->dev->bdev_desc;
-		io->sector_per_block_shift = q->dev->sector_per_block_shift;
 		ublksrv_queue_io_cmd(q, io, i);
 	}
 
