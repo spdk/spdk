@@ -510,7 +510,7 @@ _dif_verify(void *_dif, uint16_t guard, uint32_t offset_blocks,
 		 * passed Application Tag.
 		 */
 		_app_tag = from_be16(&dif->app_tag);
-		if ((_app_tag & ctx->apptag_mask) != ctx->app_tag) {
+		if ((_app_tag & ctx->apptag_mask) != (ctx->app_tag & ctx->apptag_mask)) {
 			_dif_error_set(err_blk, SPDK_DIF_APPTAG_ERROR, ctx->app_tag,
 				       (_app_tag & ctx->apptag_mask), offset_blocks);
 			SPDK_ERRLOG("Failed to compare App Tag: LBA=%" PRIu32 "," \
