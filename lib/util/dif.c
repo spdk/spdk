@@ -762,7 +762,7 @@ _dif_verify(void *_dif, uint32_t guard, uint32_t offset_blocks,
 		 * passed Application Tag.
 		 */
 		_app_tag = _dif_get_apptag(dif, ctx->dif_pi_format);
-		if ((_app_tag & ctx->apptag_mask) != ctx->app_tag) {
+		if ((_app_tag & ctx->apptag_mask) != (ctx->app_tag & ctx->apptag_mask)) {
 			_dif_error_set(err_blk, SPDK_DIF_APPTAG_ERROR, ctx->app_tag,
 				       (_app_tag & ctx->apptag_mask), offset_blocks);
 			SPDK_ERRLOG("Failed to compare App Tag: LBA=%" PRIu64 "," \

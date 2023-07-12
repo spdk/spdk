@@ -410,6 +410,60 @@ dif_generate_and_verify_different_pi_formats_test(void)
 }
 
 static void
+_dif_apptag_mask_test(enum spdk_dif_pi_format dif_pi_format)
+{
+	struct spdk_dif_ctx ctx = {};
+	int rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+	struct iovec iov;
+	struct spdk_dif_error err_blk = {};
+	uint32_t dif_flags;
+
+	dif_flags = SPDK_DIF_FLAGS_APPTAG_CHECK;
+
+	_iov_alloc_buf(&iov, 4096 + 128);
+
+	rc = ut_data_pattern_generate(&iov, 1, 4096 + 128, 128, 1);
+	CU_ASSERT(rc == 0);
+
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
+	dif_opts.dif_pi_format = dif_pi_format;
+	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, true, SPDK_DIF_TYPE1, dif_flags,
+			       0, 0xFFFF, 0x1234, 0, 0, &dif_opts);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate(&iov, 1, 1, &ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, true, SPDK_DIF_TYPE1, dif_flags,
+			       12, 0xFFFF, 0x1256, 0, 0, &dif_opts);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify(&iov, 1, 1, &ctx, &err_blk);
+	CU_ASSERT(rc != 0);
+	CU_ASSERT(err_blk.err_type == SPDK_DIF_APPTAG_ERROR);
+
+	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, true, SPDK_DIF_TYPE1, dif_flags,
+			       12, 0xFF00, 0x1256, 0, 0, &dif_opts);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify(&iov, 1, 1, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	rc = ut_data_pattern_verify(&iov, 1, 4096 + 128, 128, 1);
+	CU_ASSERT(rc == 0);
+
+	_iov_free_buf(&iov);
+}
+
+static void
+dif_apptag_mask_test(void)
+{
+	_dif_apptag_mask_test(SPDK_DIF_PI_FORMAT_16);
+	_dif_apptag_mask_test(SPDK_DIF_PI_FORMAT_32);
+}
+
+static void
 dif_sec_512_md_0_error_test(void)
 {
 	struct spdk_dif_ctx ctx = {};
@@ -3756,6 +3810,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, dif_generate_and_verify_test);
 	CU_ADD_TEST(suite, dif_disable_check_test);
 	CU_ADD_TEST(suite, dif_generate_and_verify_different_pi_formats_test);
+	CU_ADD_TEST(suite, dif_apptag_mask_test);
 	CU_ADD_TEST(suite, dif_sec_512_md_0_error_test);
 	CU_ADD_TEST(suite, dif_sec_4096_md_0_error_pi_32_test);
 	CU_ADD_TEST(suite, dif_sec_4100_md_128_error_pi_32_test);
