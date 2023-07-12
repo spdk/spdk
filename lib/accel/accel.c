@@ -156,8 +156,9 @@ struct spdk_accel_sequence {
 	struct accel_sequence_tasks		tasks;
 	struct accel_sequence_tasks		completed;
 	TAILQ_HEAD(, accel_buffer)		bounce_bufs;
-	enum accel_sequence_state		state;
 	int					status;
+	/* state uses enum accel_sequence_state */
+	uint8_t					state;
 	bool					in_process_sequence;
 	spdk_accel_completion_cb		cb_fn;
 	void					*cb_arg;
@@ -308,8 +309,8 @@ _get_task(struct accel_io_channel *accel_ch, spdk_accel_completion_cb cb_fn, voi
 	accel_task->cb_fn = cb_fn;
 	accel_task->cb_arg = cb_arg;
 	accel_task->accel_ch = accel_ch;
-	accel_task->bounce.s.orig_iovs = NULL;
-	accel_task->bounce.d.orig_iovs = NULL;
+	accel_task->s.iovs = NULL;
+	accel_task->d.iovs = NULL;
 
 	return accel_task;
 }
@@ -1624,7 +1625,8 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 				accel_sequence_set_fail(seq, rc);
 				break;
 			}
-			if (task->bounce.s.orig_iovs != NULL) {
+			if (task->s.iovs == &task->bounce.s.iov) {
+				assert(task->bounce.s.orig_iovs);
 				accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_PULL_DATA);
 				break;
 			}
@@ -1647,7 +1649,8 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 			accel_task_pull_data(seq, task);
 			break;
 		case ACCEL_SEQUENCE_STATE_COMPLETE_TASK:
-			if (task->bounce.d.orig_iovs != NULL) {
+			if (task->d.iovs == &task->bounce.d.iov) {
+				assert(task->bounce.d.orig_iovs);
 				accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_PUSH_DATA);
 				break;
 			}

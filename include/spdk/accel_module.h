@@ -1,6 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2020 Intel Corporation.
- *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES
+ *   Copyright (c) 2022, 2023 NVIDIA CORPORATION & AFFILIATES
  *   All rights reserved.
  */
 
@@ -121,17 +121,18 @@ struct spdk_accel_task {
 		uint32_t		*output_size;
 		uint32_t		block_size; /* for crypto op */
 	};
+	uint64_t			iv; /* Initialization vector (tweak) for crypto op */
+	/* Uses enum accel_opcode */
+	uint8_t				op_code;
+	int16_t				status;
+	int				flags;
+	TAILQ_ENTRY(spdk_accel_task)	link;
+	TAILQ_ENTRY(spdk_accel_task)	seq_link;
+	struct iovec			aux_iovs[SPDK_ACCEL_AUX_IOV_MAX];
 	struct {
 		struct spdk_accel_bounce_buffer s;
 		struct spdk_accel_bounce_buffer d;
 	} bounce;
-	enum accel_opcode		op_code;
-	uint64_t			iv; /* Initialization vector (tweak) for crypto op */
-	int				flags;
-	int				status;
-	struct iovec			aux_iovs[SPDK_ACCEL_AUX_IOV_MAX];
-	TAILQ_ENTRY(spdk_accel_task)	link;
-	TAILQ_ENTRY(spdk_accel_task)	seq_link;
 };
 
 struct spdk_accel_module_if {
