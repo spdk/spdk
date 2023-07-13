@@ -1298,9 +1298,26 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	SPDK_DEBUGLOG(rdma,
 		      "Host (Initiator) NIC Max Incoming RDMA R/W operations: %d Max Outgoing RDMA R/W operations: %d\n",
 		      rdma_param->initiator_depth, rdma_param->responder_resources);
-	if (rdma_param->initiator_depth > 0) {
-		max_read_depth = spdk_min(max_read_depth, rdma_param->initiator_depth);
+	/* from man3 rdma_get_cm_event
+	 * responder_resources - Specifies the number of responder resources that is requested by the recipient.
+	 * The responder_resources field must match the initiator depth specified by the remote node when running
+	 * the rdma_connect and rdma_accept functions. */
+	if (rdma_param->responder_resources != 0) {
+		SPDK_ERRLOG("Host (Initiator) is not allowed to use RDMA operations (responder_resources %u)\n",
+			    rdma_param->responder_resources);
+		nvmf_rdma_event_reject(event->id, SPDK_NVMF_RDMA_ERROR_INVALID_ORD);
+		return -1;
 	}
+	/* from man3 rdma_get_cm_event
+	 * initiator_depth - Specifies the maximum number of outstanding RDMA read operations that the recipient holds.
+	 * The initiator_depth field must match the responder resources specified by the remote node when running
+	 * the rdma_connect and rdma_accept functions. */
+	if (rdma_param->initiator_depth == 0) {
+		SPDK_ERRLOG("Host (Initiator) doesn't support RDMA_READ or atomic operations\n");
+		nvmf_rdma_event_reject(event->id, SPDK_NVMF_RDMA_ERROR_INVALID_IRD);
+		return -1;
+	}
+	max_read_depth = spdk_min(max_read_depth, rdma_param->initiator_depth);
 
 	/* Finally check for the host software requested values, which are
 	 * optional. */
