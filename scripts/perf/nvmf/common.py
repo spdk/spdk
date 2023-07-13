@@ -132,7 +132,22 @@ def parse_results(results_dir, csv_file):
         job_name = re.sub(r"_\d+CPU", "", job_name)
         job_result_files = [x for x in json_files if x.startswith(job_name)]
         sar_result_files = [x for x in sar_files if x.startswith(job_name)]
-        pm_result_files = [x for x in pm_files if x.startswith(job_name)]
+
+        # Collect all pm files for the current job
+        job_pm_files = [x for x in pm_files if x.startswith(job_name)]
+
+        # Filter out data from DCMI sensors and socket/dram sensors
+        dcmi_sensors = [x for x in job_pm_files if "DCMI" in x]
+        socket_dram_sensors = [x for x in job_pm_files if "DCMI" not in x and ("socket" in x or "dram" in x)]
+        sdr_sensors = list(set(job_pm_files) - set(dcmi_sensors) - set(socket_dram_sensors))
+
+        # Determine the final list of pm_result_files, if DCMI file is present, use it as a primary source
+        # of power consumption data. If not, use SDR sensors data if available. If SDR sensors are not available,
+        # use socket and dram sensors as a fallback.
+        pm_result_files = dcmi_sensors or sdr_sensors
+        if not pm_result_files and socket_dram_sensors:
+            logging.warning("No DCMI or SDR data found for %s, using socket and dram data sensors as a fallback" % job_name)
+            pm_result_files = socket_dram_sensors
 
         logging.info("Matching result files for current fio config %s:" % job_name)
         for j in job_result_files:
