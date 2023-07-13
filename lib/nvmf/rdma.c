@@ -1319,15 +1319,10 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	}
 	max_read_depth = spdk_min(max_read_depth, rdma_param->initiator_depth);
 
-	/* Finally check for the host software requested values, which are
-	 * optional. */
-	if (rdma_param->private_data != NULL &&
-	    rdma_param->private_data_len >= sizeof(struct spdk_nvmf_rdma_request_private_data)) {
-		SPDK_DEBUGLOG(rdma, "Host Receive Queue Size: %d\n", private_data->hrqsize);
-		SPDK_DEBUGLOG(rdma, "Host Send Queue Size: %d\n", private_data->hsqsize);
-		max_queue_depth = spdk_min(max_queue_depth, private_data->hrqsize);
-		max_queue_depth = spdk_min(max_queue_depth, private_data->hsqsize + 1);
-	}
+	SPDK_DEBUGLOG(rdma, "Host Receive Queue Size: %d\n", private_data->hrqsize);
+	SPDK_DEBUGLOG(rdma, "Host Send Queue Size: %d\n", private_data->hsqsize);
+	max_queue_depth = spdk_min(max_queue_depth, private_data->hrqsize);
+	max_queue_depth = spdk_min(max_queue_depth, private_data->hsqsize + 1);
 
 	SPDK_DEBUGLOG(rdma, "Final Negotiated Queue Depth: %d R/W Depth: %d\n",
 		      max_queue_depth, max_read_depth);
