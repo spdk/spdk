@@ -618,28 +618,39 @@ nvmf_rdma_update_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair) {
 	return new_state;
 }
 
+/*
+ * Return data_wrs to pool starting from \b data_wr
+ * Request's own response and data WR are excluded
+ */
 static void
-nvmf_rdma_request_free_data(struct spdk_nvmf_rdma_request *rdma_req,
-			    struct spdk_nvmf_rdma_transport *rtransport)
+_nvmf_rdma_request_free_data(struct spdk_nvmf_rdma_request *rdma_req,
+			     struct spdk_nvmf_rdma_request_data	*data_wr,
+			     struct spdk_mempool *pool)
 {
-	struct spdk_nvmf_rdma_request_data	*data_wr;
-	struct ibv_send_wr			*next_send_wr;
-	uint64_t				req_wrid;
+	struct ibv_send_wr	*next_send_wr;
+	uint64_t		req_wrid = data_wr->wr.wr_id;
 
-	rdma_req->num_outstanding_data_wr = 0;
-	data_wr = &rdma_req->data;
-	req_wrid = data_wr->wr.wr_id;
 	while (data_wr && data_wr->wr.wr_id == req_wrid) {
 		memset(data_wr->sgl, 0, sizeof(data_wr->wr.sg_list[0]) * data_wr->wr.num_sge);
 		data_wr->wr.num_sge = 0;
 		next_send_wr = data_wr->wr.next;
 		if (data_wr != &rdma_req->data) {
 			data_wr->wr.next = NULL;
-			spdk_mempool_put(rtransport->data_wr_pool, data_wr);
+			spdk_mempool_put(pool, data_wr);
 		}
 		data_wr = (!next_send_wr || next_send_wr == &rdma_req->rsp.wr) ? NULL :
 			  SPDK_CONTAINEROF(next_send_wr, struct spdk_nvmf_rdma_request_data, wr);
 	}
+}
+
+static void
+nvmf_rdma_request_free_data(struct spdk_nvmf_rdma_request *rdma_req,
+			    struct spdk_nvmf_rdma_transport *rtransport)
+{
+	rdma_req->num_outstanding_data_wr = 0;
+
+	_nvmf_rdma_request_free_data(rdma_req, &rdma_req->data, rtransport->data_wr_pool);
+
 	rdma_req->data.wr.next = NULL;
 	rdma_req->rsp.wr.next = NULL;
 }
