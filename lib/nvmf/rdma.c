@@ -30,9 +30,13 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma;
 /*
  RDMA Connection Resource Defaults
  */
+#define NVMF_DEFAULT_MSDBD		16
 #define NVMF_DEFAULT_TX_SGE		SPDK_NVMF_MAX_SGL_ENTRIES
 #define NVMF_DEFAULT_RSP_SGE		1
 #define NVMF_DEFAULT_RX_SGE		2
+
+SPDK_STATIC_ASSERT(NVMF_DEFAULT_MSDBD <= SPDK_NVMF_MAX_SGL_ENTRIES,
+		   "MSDBD must not exceed SPDK_NVMF_MAX_SGL_ENTRIES");
 
 /* The RDMA completion queue size */
 #define DEFAULT_NVMF_RDMA_CQ_SIZE	4096
@@ -3838,7 +3842,7 @@ static void
 nvmf_rdma_cdata_init(struct spdk_nvmf_transport *transport, struct spdk_nvmf_subsystem *subsystem,
 		     struct spdk_nvmf_ctrlr_data *cdata)
 {
-	cdata->nvmf_specific.msdbd = SPDK_NVMF_MAX_SGL_ENTRIES;
+	cdata->nvmf_specific.msdbd = NVMF_DEFAULT_MSDBD;
 
 	/* Disable in-capsule data transfer for RDMA controller when dif_insert_or_strip is enabled
 	since in-capsule data only works with NVME drives that support SGL memory layout */
