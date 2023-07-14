@@ -46,44 +46,64 @@ function aer_vfio_user() {
 
 rm -rf /var/run/vfio-user
 
-# Start the target
-"${NVMF_APP[@]}" -m '[0,1,2,3]' &
-nvmfpid=$!
-echo "Process pid: $nvmfpid"
+function setup_nvmf_vfio_user() {
 
-trap 'killprocess $nvmfpid; exit 1' SIGINT SIGTERM EXIT
-waitforlisten $nvmfpid
+	local nvmf_app_args=$1
+	local transport_args=$2
 
-sleep 1
+	"${NVMF_APP[@]}" -m '[0,1,2,3]' $nvmf_app_args &
+	nvmfpid=$!
 
-$rpc_py nvmf_create_transport -t $TEST_TRANSPORT
+	echo "Process pid: $nvmfpid"
 
-mkdir -p /var/run/vfio-user
+	trap 'killprocess $nvmfpid; exit 1' SIGINT SIGTERM EXIT
+	waitforlisten $nvmfpid
 
-for i in $(seq 1 $NUM_DEVICES); do
-	mkdir -p /var/run/vfio-user/domain/vfio-user$i/$i
+	sleep 1
 
-	$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i
-	$rpc_py nvmf_create_subsystem nqn.2019-07.io.spdk:cnode$i -a -s SPDK$i
-	$rpc_py nvmf_subsystem_add_ns nqn.2019-07.io.spdk:cnode$i Malloc$i
-	$rpc_py nvmf_subsystem_add_listener nqn.2019-07.io.spdk:cnode$i -t $TEST_TRANSPORT -a "/var/run/vfio-user/domain/vfio-user$i/$i" -s 0
-done
+	$rpc_py nvmf_create_transport -t $TEST_TRANSPORT $transport_args
 
-for i in $(seq 1 $NUM_DEVICES); do
-	test_traddr=/var/run/vfio-user/domain/vfio-user$i/$i
-	test_subnqn=nqn.2019-07.io.spdk:cnode$i
-	$SPDK_EXAMPLE_DIR/identify -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -g -L nvme -L nvme_vfio -L vfio_pci
-	$SPDK_EXAMPLE_DIR/perf -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w read -t 5 -c 0x2
-	$SPDK_EXAMPLE_DIR/perf -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w write -t 5 -c 0x2
-	$SPDK_EXAMPLE_DIR/reconnect -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -g -q 32 -o 4096 -w randrw -M 50 -t 5 -c 0xE
-	$SPDK_EXAMPLE_DIR/arbitration -t 3 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -d 256 -g
-	$SPDK_EXAMPLE_DIR/hello_world -d 256 -g -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
-	$nvmeappdir/overhead/overhead -o 4096 -t 1 -H -g -d 256 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
-	aer_vfio_user $test_traddr $test_subnqn $i
-done
+	mkdir -p /var/run/vfio-user
 
-killprocess $nvmfpid
+	for i in $(seq 1 $NUM_DEVICES); do
+		mkdir -p /var/run/vfio-user/domain/vfio-user$i/$i
 
-rm -rf /var/run/vfio-user
+		$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i
+		$rpc_py nvmf_create_subsystem nqn.2019-07.io.spdk:cnode$i -a -s SPDK$i
+		$rpc_py nvmf_subsystem_add_ns nqn.2019-07.io.spdk:cnode$i Malloc$i
+		$rpc_py nvmf_subsystem_add_listener nqn.2019-07.io.spdk:cnode$i -t $TEST_TRANSPORT -a "/var/run/vfio-user/domain/vfio-user$i/$i" -s 0
+	done
+}
 
-trap - SIGINT SIGTERM EXIT
+function run_nvmf_vfio_user() {
+
+	for i in $(seq 1 $NUM_DEVICES); do
+		test_traddr=/var/run/vfio-user/domain/vfio-user$i/$i
+		test_subnqn=nqn.2019-07.io.spdk:cnode$i
+		$SPDK_EXAMPLE_DIR/identify -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -g -L nvme -L nvme_vfio -L vfio_pci
+		$SPDK_EXAMPLE_DIR/perf -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w read -t 5 -c 0x2
+		$SPDK_EXAMPLE_DIR/perf -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w write -t 5 -c 0x2
+		$SPDK_EXAMPLE_DIR/reconnect -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -g -q 32 -o 4096 -w randrw -M 50 -t 5 -c 0xE
+		$SPDK_EXAMPLE_DIR/arbitration -t 3 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -d 256 -g
+		$SPDK_EXAMPLE_DIR/hello_world -d 256 -g -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
+		$nvmeappdir/overhead/overhead -o 4096 -t 1 -H -g -d 256 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
+		aer_vfio_user $test_traddr $test_subnqn $i
+	done
+}
+
+function stop_nvmf_vfio_user() {
+	killprocess $nvmfpid
+
+	rm -rf /var/run/vfio-user
+
+	trap - SIGINT SIGTERM EXIT
+}
+
+# Start the target and run cases in polling mode
+setup_nvmf_vfio_user '' ''
+run_nvmf_vfio_user
+stop_nvmf_vfio_user
+
+# Start the target in interrupt mode
+setup_nvmf_vfio_user '-J' '-M -I'
+stop_nvmf_vfio_user
