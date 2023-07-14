@@ -627,8 +627,10 @@ _nvmf_rdma_request_free_data(struct spdk_nvmf_rdma_request *rdma_req,
 			     struct spdk_nvmf_rdma_request_data	*data_wr,
 			     struct spdk_mempool *pool)
 {
-	struct ibv_send_wr	*next_send_wr;
-	uint64_t		req_wrid = data_wr->wr.wr_id;
+	struct spdk_nvmf_rdma_request_data	*work_requests[SPDK_NVMF_MAX_SGL_ENTRIES];
+	struct ibv_send_wr			*next_send_wr;
+	uint64_t				req_wrid = data_wr->wr.wr_id;
+	uint32_t				num_wrs = 0;
 
 	while (data_wr && data_wr->wr.wr_id == req_wrid) {
 		memset(data_wr->sgl, 0, sizeof(data_wr->wr.sg_list[0]) * data_wr->wr.num_sge);
@@ -636,10 +638,16 @@ _nvmf_rdma_request_free_data(struct spdk_nvmf_rdma_request *rdma_req,
 		next_send_wr = data_wr->wr.next;
 		if (data_wr != &rdma_req->data) {
 			data_wr->wr.next = NULL;
-			spdk_mempool_put(pool, data_wr);
+			assert(num_wrs < SPDK_NVMF_MAX_SGL_ENTRIES);
+			work_requests[num_wrs] = data_wr;
+			num_wrs++;
 		}
 		data_wr = (!next_send_wr || next_send_wr == &rdma_req->rsp.wr) ? NULL :
 			  SPDK_CONTAINEROF(next_send_wr, struct spdk_nvmf_rdma_request_data, wr);
+	}
+
+	if (num_wrs) {
+		spdk_mempool_put_bulk(pool, (void **) work_requests, num_wrs);
 	}
 }
 
