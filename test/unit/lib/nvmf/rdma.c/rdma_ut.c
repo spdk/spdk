@@ -1193,11 +1193,11 @@ test_nvmf_rdma_request_free_data(void)
 	next_request_data = spdk_mempool_get(rtransport.data_wr_pool);
 	SPDK_CU_ASSERT_FATAL(((struct test_mempool *)rtransport.data_wr_pool)->count ==
 			     SPDK_NVMF_MAX_SGL_ENTRIES - 1);
-	next_request_data->wr.wr_id = 1;
+	next_request_data->wr.wr_id = (uint64_t)&rdma_req.data_wr;
 	next_request_data->wr.num_sge = 2;
 	next_request_data->wr.next = NULL;
 	rdma_req.data.wr.next = &next_request_data->wr;
-	rdma_req.data.wr.wr_id = 1;
+	rdma_req.data.wr.wr_id = (uint64_t)&rdma_req.data_wr;
 	rdma_req.data.wr.num_sge = 2;
 	rdma_req.transfer_wr = &rdma_req.data.wr;
 
