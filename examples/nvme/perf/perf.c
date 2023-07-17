@@ -996,6 +996,7 @@ nvme_verify_io(struct perf_task *task, struct ns_entry *entry)
 static int
 nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 {
+	const struct spdk_nvme_ctrlr_opts *ctrlr_opts;
 	struct spdk_nvme_io_qpair_opts opts;
 	struct ns_entry *entry = ns_ctx->entry;
 	struct spdk_nvme_poll_group *group;
@@ -1016,7 +1017,11 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 	}
 	opts.delay_cmd_submit = true;
 	opts.create_only = true;
-	opts.async_mode = true;
+
+	ctrlr_opts = spdk_nvme_ctrlr_get_opts(entry->u.nvme.ctrlr);
+	opts.async_mode = !(spdk_nvme_ctrlr_get_transport_id(entry->u.nvme.ctrlr)->trtype ==
+			    SPDK_NVME_TRANSPORT_PCIE
+			    && ns_ctx->u.nvme.num_all_qpairs > ctrlr_opts->admin_queue_size);
 
 	ns_ctx->u.nvme.group = spdk_nvme_poll_group_create(ns_ctx, NULL);
 	if (ns_ctx->u.nvme.group == NULL) {
