@@ -1285,13 +1285,13 @@ if __name__ == "__main__":
                    help='R/W IOs per second limit (>=1000, example: 20000). 0 means unlimited.',
                    type=int)
     p.add_argument('--rw-mbytes-per-sec',
-                   help="R/W megabytes per second limit (>=10, example: 100). 0 means unlimited.",
+                   help="R/W megabytes per second limit (>=1, example: 100). 0 means unlimited.",
                    type=int)
     p.add_argument('--r-mbytes-per-sec',
-                   help="Read megabytes per second limit (>=10, example: 100). 0 means unlimited.",
+                   help="Read megabytes per second limit (>=1, example: 100). 0 means unlimited.",
                    type=int)
     p.add_argument('--w-mbytes-per-sec',
-                   help="Write megabytes per second limit (>=10, example: 100). 0 means unlimited.",
+                   help="Write megabytes per second limit (>=1, example: 100). 0 means unlimited.",
                    type=int)
     p.set_defaults(func=bdev_set_qos_limit)
 
