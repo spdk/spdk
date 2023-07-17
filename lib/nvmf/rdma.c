@@ -244,6 +244,7 @@ struct spdk_nvmf_rdma_request {
 	uint64_t				receive_tsc;
 	struct spdk_nvmf_rdma_request		*fused_pair;
 	STAILQ_ENTRY(spdk_nvmf_rdma_request)	state_link;
+	struct ibv_send_wr			*transfer_wr;
 	struct spdk_nvmf_rdma_request_data	data;
 };
 
@@ -628,26 +629,27 @@ nvmf_rdma_update_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair) {
  */
 static void
 _nvmf_rdma_request_free_data(struct spdk_nvmf_rdma_request *rdma_req,
-			     struct spdk_nvmf_rdma_request_data	*data_wr,
+			     struct ibv_send_wr *data_wr,
 			     struct spdk_mempool *pool)
 {
 	struct spdk_nvmf_rdma_request_data	*work_requests[SPDK_NVMF_MAX_SGL_ENTRIES];
+	struct spdk_nvmf_rdma_request_data	*nvmf_data;
 	struct ibv_send_wr			*next_send_wr;
-	uint64_t				req_wrid = data_wr->wr.wr_id;
+	uint64_t				req_wrid = data_wr->wr_id;
 	uint32_t				num_wrs = 0;
 
-	while (data_wr && data_wr->wr.wr_id == req_wrid) {
-		memset(data_wr->sgl, 0, sizeof(data_wr->wr.sg_list[0]) * data_wr->wr.num_sge);
-		data_wr->wr.num_sge = 0;
-		next_send_wr = data_wr->wr.next;
-		if (data_wr != &rdma_req->data) {
-			data_wr->wr.next = NULL;
+	while (data_wr && data_wr->wr_id == req_wrid) {
+		nvmf_data = SPDK_CONTAINEROF(data_wr, struct spdk_nvmf_rdma_request_data, wr);
+		memset(nvmf_data->sgl, 0, sizeof(data_wr->sg_list[0]) * data_wr->num_sge);
+		data_wr->num_sge = 0;
+		next_send_wr = data_wr->next;
+		if (data_wr != &rdma_req->data.wr) {
+			data_wr->next = NULL;
 			assert(num_wrs < SPDK_NVMF_MAX_SGL_ENTRIES);
-			work_requests[num_wrs] = data_wr;
+			work_requests[num_wrs] = nvmf_data;
 			num_wrs++;
 		}
-		data_wr = (!next_send_wr || next_send_wr == &rdma_req->rsp.wr) ? NULL :
-			  SPDK_CONTAINEROF(next_send_wr, struct spdk_nvmf_rdma_request_data, wr);
+		data_wr = (!next_send_wr || next_send_wr == &rdma_req->rsp.wr) ? NULL : next_send_wr;
 	}
 
 	if (num_wrs) {
@@ -661,7 +663,7 @@ nvmf_rdma_request_free_data(struct spdk_nvmf_rdma_request *rdma_req,
 {
 	rdma_req->num_outstanding_data_wr = 0;
 
-	_nvmf_rdma_request_free_data(rdma_req, &rdma_req->data, rtransport->data_wr_pool);
+	_nvmf_rdma_request_free_data(rdma_req, rdma_req->transfer_wr, rtransport->data_wr_pool);
 
 	rdma_req->data.wr.next = NULL;
 	rdma_req->rsp.wr.next = NULL;
@@ -1132,7 +1134,7 @@ request_transfer_in(struct spdk_nvmf_request *req)
 	assert(req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER);
 	assert(rdma_req != NULL);
 
-	if (spdk_rdma_qp_queue_send_wrs(rqpair->rdma_qp, &rdma_req->data.wr)) {
+	if (spdk_rdma_qp_queue_send_wrs(rqpair->rdma_qp, rdma_req->transfer_wr)) {
 		STAILQ_INSERT_TAIL(&rqpair->poller->qpairs_pending_send, rqpair, send_link);
 	}
 	if (rtransport->rdma_opts.no_wr_batching) {
@@ -1192,7 +1194,7 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 		 */
 		rdma_req->num_outstanding_data_wr = 0;
 	} else if (req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-		first = &rdma_req->data.wr;
+		first = rdma_req->transfer_wr;
 		*data_posted = 1;
 		num_outstanding_data_wr = rdma_req->num_outstanding_data_wr;
 	}
@@ -2091,6 +2093,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			/* The first element of the SGL is the NVMe command */
 			rdma_req->req.cmd = (union nvmf_h2c_msg *)rdma_recv->sgl[0].addr;
 			memset(rdma_req->req.rsp, 0, sizeof(*rdma_req->req.rsp));
+			rdma_req->transfer_wr = &rdma_req->data.wr;
 
 			if (rqpair->ibv_state == IBV_QPS_ERR  || rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
 				rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;

@@ -1201,6 +1201,7 @@ test_nvmf_rdma_request_free_data(void)
 	rdma_req.data.wr.next = &next_request_data->wr;
 	rdma_req.data.wr.wr_id = 1;
 	rdma_req.data.wr.num_sge = 2;
+	rdma_req.transfer_wr = &rdma_req.data.wr;
 
 	nvmf_rdma_request_free_data(&rdma_req, &rtransport);
 	/* Check if next_request_data put into memory pool */
