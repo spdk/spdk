@@ -36,6 +36,8 @@
 
 #define NSID_STR_LEN 10
 
+#define SPDK_CONTROLLER_NAME_MAX 512
+
 static int bdev_nvme_config_json(struct spdk_json_write_ctx *w);
 
 struct nvme_bdev_io {
@@ -5941,6 +5943,7 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	struct nvme_probe_skip_entry	*entry, *tmp;
 	struct nvme_async_probe_ctx	*ctx;
 	spdk_nvme_attach_cb attach_cb;
+	int len;
 
 	/* TODO expand this check to include both the host and target TRIDs.
 	 * Only if both are the same should we fail.
@@ -5948,6 +5951,13 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	if (nvme_ctrlr_get(trid) != NULL) {
 		SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n", trid->traddr);
 		return -EEXIST;
+	}
+
+	len = strnlen(base_name, SPDK_CONTROLLER_NAME_MAX);
+
+	if (len == 0 || len == SPDK_CONTROLLER_NAME_MAX) {
+		SPDK_ERRLOG("controller name must be between 1 and %d characters\n", SPDK_CONTROLLER_NAME_MAX - 1);
+		return -EINVAL;
 	}
 
 	if (bdev_opts != NULL &&
