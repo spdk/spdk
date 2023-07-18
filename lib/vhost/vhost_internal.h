@@ -177,7 +177,6 @@ struct spdk_vhost_dev {
 	uint64_t virtio_features;
 	uint64_t disabled_features;
 	uint64_t protocol_features;
-	bool packed_ring_recovery;
 
 	const struct spdk_vhost_dev_backend *backend;
 

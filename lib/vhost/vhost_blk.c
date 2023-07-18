@@ -1776,13 +1776,11 @@ vhost_user_blk_destroy(struct spdk_virtio_blk_transport *transport,
 struct rpc_vhost_blk {
 	bool readonly;
 	bool packed_ring;
-	bool packed_ring_recovery;
 };
 
 static const struct spdk_json_object_decoder rpc_construct_vhost_blk[] = {
 	{"readonly", offsetof(struct rpc_vhost_blk, readonly), spdk_json_decode_bool, true},
 	{"packed_ring", offsetof(struct rpc_vhost_blk, packed_ring), spdk_json_decode_bool, true},
-	{"packed_ring_recovery", offsetof(struct rpc_vhost_blk, packed_ring_recovery), spdk_json_decode_bool, true},
 };
 
 static int
@@ -1801,11 +1799,8 @@ vhost_user_blk_create_ctrlr(struct spdk_vhost_dev *vdev, struct spdk_cpuset *cpu
 		return -EINVAL;
 	}
 
-	vdev->packed_ring_recovery = false;
-
 	if (req.packed_ring) {
 		vdev->virtio_features |= (uint64_t)req.packed_ring << VIRTIO_F_RING_PACKED;
-		vdev->packed_ring_recovery = req.packed_ring_recovery;
 	}
 	if (req.readonly) {
 		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_RO);

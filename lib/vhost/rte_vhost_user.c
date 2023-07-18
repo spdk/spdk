@@ -1077,18 +1077,12 @@ enable_device_vq(struct spdk_vhost_session *vsession, uint16_t qid)
 	}
 
 	if (packed_ring) {
-		/* Use the inflight mem to restore the last_avail_idx and last_used_idx.
-		 * When the vring format is packed, there is no used_idx in the
-		 * used ring, so VM can't resend the used_idx to VHOST when reconnect.
-		 * QEMU version 5.2.0 supports the packed inflight before that it only
-		 * supports split ring inflight because it doesn't send negotiated features
-		 * before get inflight fd. Users can use RPC to enable this function.
+		/* Since packed ring flag is already negociated between SPDK and VM, VM doesn't
+		 * restore `last_avail_idx` and `last_used_idx` for packed ring, so use the
+		 * inflight mem to restore the `last_avail_idx` and `last_used_idx`.
 		 */
-		if (spdk_unlikely(vsession->vdev->packed_ring_recovery)) {
-			rte_vhost_get_vring_base_from_inflight(vsession->vid, qid,
-							       &q->last_avail_idx,
-							       &q->last_used_idx);
-		}
+		rte_vhost_get_vring_base_from_inflight(vsession->vid, qid, &q->last_avail_idx,
+						       &q->last_used_idx);
 
 		/* Packed virtqueues support up to 2^15 entries each
 		 * so left one bit can be used as wrap counter.

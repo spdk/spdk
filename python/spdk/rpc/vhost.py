@@ -99,7 +99,6 @@ def vhost_create_blk_controller(client, **params):
         transport: virtio blk transport name (default: vhost_user_blk)
         readonly: set controller as read-only
         packed_ring: support controller packed_ring
-        packed_ring_recovery: enable packed ring live recovery
     """
     strip_globals(params)
     remove_null(params)

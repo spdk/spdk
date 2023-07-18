@@ -309,7 +309,6 @@ int spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tg
  * readonly if set, all writes to the device will fail with
  * \c VIRTIO_BLK_S_IOERR error code.
  * packed_ring this controller supports packed ring if set.
- * packed_ring_recovery
  *
  * \return 0 on success, negative errno on error.
  */
