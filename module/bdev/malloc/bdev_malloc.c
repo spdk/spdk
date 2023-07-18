@@ -5,7 +5,7 @@
  */
 
 #include "spdk/stdinc.h"
-
+#include "spdk/tree.h"
 #include "bdev_malloc.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
@@ -373,15 +373,24 @@ bdev_malloc_copy(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 }
 
 static int
+insert_request_in_tree(struct spdk_bdev_io *request) {
+    SPDK_ERRLOG("Hello my friend!\n");
+    SPDK_ERRLOG("Total size of data to be transferred (num_blocks) - %ld\n", request->u.bdev.num_blocks);
+    SPDK_ERRLOG("Starting offset (in blocks) of the bdev for this I/O. (offset blocks) - %ld\n", request->u.bdev.offset_blocks);
+    return 0;
+}
+
+static int
 _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bdev_io)
 {
 	struct malloc_task *task = (struct malloc_task *)bdev_io->driver_ctx;
 	struct malloc_disk *disk = bdev_io->bdev->ctxt;
 	uint32_t block_size = bdev_io->bdev->blocklen;
 	int rc;
-
+    insert_request_in_tree(bdev_io);
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
+        SPDK_ERRLOG("A read request has been received\n");
 		if (bdev_io->u.bdev.iovs[0].iov_base == NULL) {
 			assert(bdev_io->u.bdev.iovcnt == 1);
 			assert(bdev_io->u.bdev.memory_domain == NULL);
@@ -396,6 +405,7 @@ _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bde
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
+        SPDK_ERRLOG("A write request has been received\n");
 		if (bdev_io->bdev->dif_type != SPDK_DIF_DISABLE) {
 			rc = malloc_verify_pi(bdev_io);
 			if (rc != 0) {
