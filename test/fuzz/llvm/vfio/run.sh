@@ -65,7 +65,7 @@ mem_size=2048
 if [[ $SPDK_TEST_FUZZER_SHORT -eq 1 ]]; then
 	start_llvm_fuzz_short $fuzz_num $TIME
 elif [[ $SPDK_TEST_FUZZER -eq 1 ]]; then
-	get_testn $fuzz_num 1024
+	get_testn $fuzz_num 2048
 	start_llvm_fuzz_all $TESTN $fuzz_num $TIME
 else
 	start_llvm_fuzz $1 $TIME 0x1
