@@ -49,5 +49,30 @@ $rpc_py bdev_get_bdevs -b ${nvme_bdev}n1
 # Finally, detach the controller to verify the detach path
 $rpc_py bdev_nvme_detach_controller $nvme_bdev
 
+# Add new listener with TLS using PSK
+key_path=$(mktemp)
+echo -n "NVMeTLSkey-1:01:MDAxMTIyMzM0NDU1NjY3Nzg4OTlhYWJiY2NkZGVlZmZwJEiQ:" > $key_path
+chmod 0600 $key_path
+$rpc_py nvmf_subsystem_allow_any_host nqn.2016-06.io.spdk:cnode0 --disable
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode0 -t $TEST_TRANSPORT \
+	-a $NVMF_FIRST_TARGET_IP -s $NVMF_SECOND_PORT --secure-channel
+$rpc_py nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode0 nqn.2016-06.io.spdk:host1 \
+	--psk $key_path
+
+# Then attach NVMe bdev by connecting back to itself, with the target app running on a single core.
+# This verifies that the initialization is completely asynchronous, as each blocking call would
+# stall the application.
+$rpc_py bdev_nvme_attach_controller -b $nvme_bdev -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
+	-f ipv4 -s $NVMF_SECOND_PORT -n nqn.2016-06.io.spdk:cnode0 -q nqn.2016-06.io.spdk:host1 --psk $key_path
+
+# Make sure the bdev was created successfully
+$rpc_py bdev_get_bdevs -b ${nvme_bdev}n1
+
+# Finally, detach the controller to verify the detach path
+$rpc_py bdev_nvme_detach_controller $nvme_bdev
+
+# cleanup
+rm -f $key_path
+
 trap - SIGINT SIGTERM EXIT
 nvmftestfini
