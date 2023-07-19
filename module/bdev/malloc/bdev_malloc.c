@@ -380,6 +380,24 @@ insert_request_in_tree(struct spdk_bdev_io *request) {
     return 0;
 }
 
+struct malloc_write_request {
+    int addr;
+    RB_ENTRY(malloc_write_request) link;
+    struct spdk_bdev_io *bdev_io;
+}
+
+static int
+addr_cmp(struct malloc_write_request *c1 , struct malloc_write_request *c2)
+{
+    return (c1->addr < c2->addr ? -1 : c1->addr > c2->addr)
+}
+
+static int
+bdev_malloc_catch_request(){
+    RB_HEAD(addr_tree, malloc_write_request);
+    RB_GENERATE_STATIC(addr_tree, malloc_write_request, link, addr_cmp);
+}
+
 static int
 _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bdev_io)
 {
@@ -390,9 +408,9 @@ _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bde
     insert_request_in_tree(bdev_io);
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-        SPDK_ERRLOG("A read request has been received\n");
 		if (bdev_io->u.bdev.iovs[0].iov_base == NULL) {
-			assert(bdev_io->u.bdev.iovcnt == 1);
+            SPDK_ERRLOG("A read request has been received\n");
+            assert(bdev_io->u.bdev.iovcnt == 1);
 			assert(bdev_io->u.bdev.memory_domain == NULL);
 			bdev_io->u.bdev.iovs[0].iov_base =
 				disk->malloc_buf + bdev_io->u.bdev.offset_blocks * block_size;
