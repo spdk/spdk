@@ -1140,7 +1140,8 @@ class SPDKTarget(Target):
             ConfigField(name='dsa_settings', default=False),
             ConfigField(name='iobuf_small_pool_count', default=32767),
             ConfigField(name='iobuf_large_pool_count', default=16383),
-            ConfigField(name='num_cqe', default=4096)
+            ConfigField(name='num_cqe', default=4096),
+            ConfigField(name='sock_impl', default='posix')
         ]
 
         self.read_config(config_fields, target_config)
@@ -1318,7 +1319,7 @@ class SPDKTarget(Target):
             time.sleep(1)
         self.client = rpc_client.JSONRPCClient("/var/tmp/spdk.sock")
 
-        rpc.sock.sock_set_default_impl(self.client, impl_name="posix")
+        rpc.sock.sock_set_default_impl(self.client, impl_name=self.sock_impl)
         rpc.iobuf.iobuf_set_options(self.client,
                                     small_pool_count=self.iobuf_small_pool_count,
                                     large_pool_count=self.iobuf_large_pool_count,
@@ -1326,13 +1327,13 @@ class SPDKTarget(Target):
                                     large_bufsize=None)
 
         if self.enable_zcopy:
-            rpc.sock.sock_impl_set_options(self.client, impl_name="posix",
+            rpc.sock.sock_impl_set_options(self.client, impl_name=self.sock_impl,
                                            enable_zerocopy_send_server=True)
             self.log.info("Target socket options:")
-            rpc_client.print_dict(rpc.sock.sock_impl_get_options(self.client, impl_name="posix"))
+            rpc_client.print_dict(rpc.sock.sock_impl_get_options(self.client, impl_name=self.sock_impl))
 
         if self.enable_adq:
-            rpc.sock.sock_impl_set_options(self.client, impl_name="posix", enable_placement_id=1)
+            rpc.sock.sock_impl_set_options(self.client, impl_name=self.sock_impl, enable_placement_id=1)
             rpc.bdev.bdev_nvme_set_options(self.client, timeout_us=0, action_on_timeout=None,
                                            nvme_adminq_poll_period_us=100000, retry_count=4)
 
@@ -1504,6 +1505,7 @@ class SPDKInitiator(Initiator):
         self.enable_data_digest = initiator_config.get('enable_data_digest', False)
         self.small_pool_count = initiator_config.get('small_pool_count', 32768)
         self.large_pool_count = initiator_config.get('large_pool_count', 16384)
+        self.sock_impl = initiator_config.get('sock_impl', 'posix')
 
         if "num_cores" in initiator_config:
             self.num_cores = initiator_config["num_cores"]
@@ -1557,6 +1559,17 @@ class SPDKInitiator(Initiator):
                             "params": {
                                 "small_pool_count": self.small_pool_count,
                                 "large_pool_count": self.large_pool_count
+                            }
+                        }
+                    ]
+                },
+                {
+                    "subsystem": "sock",
+                    "config": [
+                        {
+                            "method": "sock_set_default_impl",
+                            "params": {
+                                "impl_name": self.sock_impl
                             }
                         }
                     ]

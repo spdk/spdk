@@ -152,6 +152,9 @@ Optional, common:
     of both ("[0-1,10,20-22]")
   exclude_cpulist: reverse the effect of cpulist mode. Allow IRQ processing
     only on CPU cores which are not provided in cpulist parameter.
+- sock_impl - str. Specifies the socket implementation to be used. This could be 'posix' for
+  the POSIX socket interfaces, or 'uring' for the Linux io_uring interface.
+  Default: posix
 
 Optional, Kernel Target only:
 
