@@ -735,7 +735,7 @@ nvmf_bdev_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *
 {
 	int rc;
 
-	if (spdk_unlikely(req->iovcnt != 1)) {
+	if (spdk_unlikely(req->iovcnt > 1)) {
 		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		req->rsp->nvme_cpl.status.dnr = 1;
@@ -765,7 +765,7 @@ spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(struct spdk_bdev *bdev, struct spdk_bde
 {
 	int rc;
 
-	if (spdk_unlikely(req->iovcnt != 1)) {
+	if (spdk_unlikely(req->iovcnt > 1)) {
 		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		req->rsp->nvme_cpl.status.dnr = 1;
