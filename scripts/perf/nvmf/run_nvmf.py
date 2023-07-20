@@ -1558,11 +1558,23 @@ class SPDKInitiator(Initiator):
         return
 
     def gen_spdk_bdev_conf(self, remote_subsystem_list):
-        bdev_cfg_section = {
+        spdk_cfg_section = {
             "subsystems": [
                 {
                     "subsystem": "bdev",
                     "config": []
+                },
+                {
+                    "subsystem": "iobuf",
+                    "config": [
+                        {
+                            "method": "iobuf_set_options",
+                            "params": {
+                                "small_pool_count": self.small_pool_count,
+                                "large_pool_count": self.large_pool_count
+                            }
+                        }
+                    ]
                 }
             ]
         }
@@ -1587,18 +1599,9 @@ class SPDKInitiator(Initiator):
             if self.enable_data_digest:
                 nvme_ctrl["params"].update({"ddgst": self.enable_data_digest})
 
-            bdev_cfg_section["subsystems"][0]["config"].append(nvme_ctrl)
+            spdk_cfg_section["subsystems"][0]["config"].append(nvme_ctrl)
 
-        iobuf = {
-            "method": "iobuf_set_options",
-            "params": {
-                "small_pool_count": self.small_pool_count,
-                "large_pool_count": self.large_pool_count
-            }
-        }
-        bdev_cfg_section["subsystems"][0]["config"].append(iobuf)
-
-        return json.dumps(bdev_cfg_section, indent=2)
+        return json.dumps(spdk_cfg_section, indent=2)
 
     def gen_fio_filename_conf(self, subsystems, threads, io_depth, num_jobs=1, offset=False, offset_inc=0):
         self.available_cpus = self.get_numa_cpu_map()
