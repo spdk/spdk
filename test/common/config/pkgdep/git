@@ -173,6 +173,29 @@ function install_nvmecli() {
 	fi
 }
 
+# This function install version of nvme-cli, that support listing spdk nvme
+# devices, should be remove after changes present in nvme-cli upstream.
+function install_nvmecli_plugin() {
+	rm -rf "$GIT_REPOS/nvme-cli-plugin"
+
+	git clone $GIT_REPO_NVME_CLI "$GIT_REPOS/nvme-cli-plugin"
+	git -C "$GIT_REPOS/nvme-cli-plugin" fetch $GIT_REPO_NVME_CLI refs/changes/95/16795/12
+	git -C "$GIT_REPOS/nvme-cli-plugin" checkout FETCH_HEAD
+
+	meson setup --force-fallback-for=libnvme \
+		"$GIT_REPOS/nvme-cli-plugin/.build" \
+		"$GIT_REPOS/nvme-cli-plugin"
+	meson compile -C "$GIT_REPOS/nvme-cli-plugin/.build"
+
+	rm -rf /usr/local/src/nvme-cli-plugin
+	mv "$GIT_REPOS/nvme-cli-plugin" /usr/local/src/nvme-cli-plugin
+
+	# Make sure binary is available for the plugin tests
+	if [[ -e /usr/local/src/nvme-cli-plugin/.build/nvme ]]; then
+		sudo ln -s .build/nvme /usr/local/src/nvme-cli-plugin/
+	fi
+}
+
 function install_libiscsi() {
 	# We currently don't make any changes to the libiscsi repository for our tests, but it is possible that we will need
 	# to later. Cloning from git is just future proofing the machines.
@@ -439,6 +462,7 @@ function install_sources() {
 			install_irdma
 			install_libiscsi
 			install_nvmecli
+			install_nvmecli_plugin
 			install_qat
 			install_rocksdb
 			install_flamegraph
@@ -500,6 +524,8 @@ export GIT_REPO_LCOV
 export GIT_REPO_BCC
 : ${GIT_REPO_BPFTRACE=https://github.com/iovisor/bpftrace.git}
 export GIT_REPO_BPFTRACE
+: ${GIT_REPO_NVME_CLI=https://review.spdk.io/gerrit/spdk/nvme-cli}
+export GIT_REPO_NVME_CLI
 
 GIT_REPOS=${GIT_REPOS:-$HOME}
 
