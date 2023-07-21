@@ -747,7 +747,7 @@ submit_inflight_desc(struct spdk_vhost_scsi_session *svsession,
 	vsession = &svsession->vsession;
 
 	for (i = resubmit->resubmit_num - 1; i >= 0; --i) {
-		req_idx = resubmit_list[resubmit->resubmit_num].index;
+		req_idx = resubmit_list[i].index;
 		SPDK_DEBUGLOG(vhost_scsi, "====== Start processing resubmit request idx %"PRIu16"======\n",
 			      req_idx);
 
