@@ -814,8 +814,6 @@ admin_set_features_number_of_queues(void)
  * 09h Interrupt Vector Configuration.
  * 0Ah Write Atomicity Normal.
  * 0Bh Asynchronous Event Configuration.
- * 0Fh Keep Alive Timer.
- * 16h Host Behavior Support.
  */
 static void
 admin_get_features_mandatory_features(void)
@@ -823,7 +821,6 @@ admin_get_features_mandatory_features(void)
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_cmd cmd;
 	struct status s;
-	void *buf;
 	int rc;
 
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_transport_id_parse(&g_trid, g_trid_str) == 0);
@@ -940,7 +937,29 @@ admin_get_features_mandatory_features(void)
 	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
 
+	spdk_nvme_detach(ctrlr);
+}
+
+/* Test the optional features with Get Features command:
+ * 0Fh Keep Alive Timer.
+ * 16h Host Behavior Support.
+ */
+static void
+admin_get_features_optional_features(void)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_cmd cmd;
+	struct status s;
+	void *buf;
+	int rc;
+
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_transport_id_parse(&g_trid, g_trid_str) == 0);
+	ctrlr = spdk_nvme_connect(&g_trid, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(ctrlr);
+
 	/* Keep Alive Timer */
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
 	cmd.cdw10_bits.get_features.fid = SPDK_NVME_FEAT_KEEP_ALIVE_TIMER;
 
 	s.done = false;
@@ -1460,6 +1479,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, admin_identify_ctrlr_verify_fused);
 	CU_ADD_TEST(suite, admin_identify_ns);
 	CU_ADD_TEST(suite, admin_get_features_mandatory_features);
+	CU_ADD_TEST(suite, admin_get_features_optional_features);
 	CU_ADD_TEST(suite, admin_set_features_number_of_queues);
 	CU_ADD_TEST(suite, admin_get_log_page_mandatory_logs);
 	CU_ADD_TEST(suite, admin_get_log_page_with_lpo);
