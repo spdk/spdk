@@ -372,6 +372,8 @@ bdev_malloc_copy(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 	}
 }
 
+/*-----------------------our workspace-----------------------*/
+
 static int
 insert_request_in_tree(struct spdk_bdev_io *request) {
     SPDK_ERRLOG("Hello my friend!\n");
@@ -400,11 +402,17 @@ struct malloc_request_tree {
     uint64_t size;
 } addr_tree;
 
-
+#define MAX_BLOCKS_FOR_REQUEST 4
 
 static void
-malloc_merge_request(struct spdk_bdev_io *bdev_io) {
+malloc_merge_request(struct spdk_bdev_io *bdev_io)
+{
+	RB_FOREACH(current_request/*just like "i" in a default loop*/, malloc_addr_tree, _RB_ROOT(addr_tree.tree)) {
+		if (current_request == RB_MIN(malloc_addr_tree, _RB_ROOT(addr_tree.tree))) *bdev_io = current_request
+	}
 
+
+	SPDK_ERRLOG("Merged successfully\n");
 }
 
 static int
@@ -415,14 +423,18 @@ malloc_optimization_write_requests(struct spdk_bdev_io *bdev_io)
     write_request->addr = bdev_io -> u.bdev.offset_blocks * bdev_io->bdev->blocklen;
 
     RB_INSERT(malloc_addr_tree, &addr_tree.tree, write_request);
+	size += bdev_io -> u.bdev.num_blocks;
 
-//    if (size == max) {
-//        malloc_merge_request(*bdev_io);
-//        return 1;
-//    }
+    if (addr_tree.size == MAX_BLOCKS_FOR_REQUEST) {
+        malloc_merge_request(bdev_io);
+        return 1;
+    }
+
     SPDK_ERRLOG("Passed the optimization function, %d\n", write_request->addr);
     return 0;
 }
+
+/*-----------------------our workspace-----------------------*/
 
 static int
 _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bdev_io)
