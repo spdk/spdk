@@ -654,6 +654,11 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
+	if (num_devs == 0) {
+		fprintf(stderr, "No valid NVMe controllers found\n");
+		return 1;
+	}
+
 	rc = 0;
 	foreach_dev(iter) {
 #define TEST(x) write_read_e2e_dp_tests(iter, x, #x)
