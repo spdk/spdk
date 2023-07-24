@@ -357,7 +357,7 @@ check_format() {
 }
 
 check_so_deps() {
-	run_test "autobuild_check_so_deps" "$rootdir/test/make/check_so_deps.sh" "$spdk_conf" "$SPDK_ABI_DIR"
+	run_test "autobuild_check_so_deps" "$rootdir/test/make/check_so_deps.sh" -c "$spdk_conf" -a "$SPDK_ABI_DIR"
 }
 
 external_code() {

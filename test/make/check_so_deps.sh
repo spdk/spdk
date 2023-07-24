@@ -13,16 +13,51 @@ fi
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 
+function usage() {
+	script_name="$(basename $0)"
+	echo "Usage: $script_name"
+	echo "    -c, --config-file     Rebuilds SPDK according to config file from autotest"
+	echo "    -a, --spdk-abi-path   Use spdk-abi from specified path, otherwise"
+	echo "                          latest version is pulled and deleted after test"
+	echo "    -h, --help            Print this help"
+	echo "Example:"
+	echo "$script_name -c ./autotest.config -a /path/to/spdk-abi"
+}
+
+# Parse input arguments #
+while getopts 'hc:a:-:' optchar; do
+	case "$optchar" in
+		-)
+			case "$OPTARG" in
+				help)
+					usage
+					exit 0
+					;;
+				config-file=*)
+					config_file="$(readlink -f ${OPTARG#*=})"
+					;;
+				spdk-abi-path=*)
+					user_abi_dir="$(readlink -f ${OPTARG#*=})"
+					;;
+				*) exit 1 ;;
+			esac
+			;;
+		h)
+			usage
+			exit 0
+			;;
+		c) config_file="$(readlink -f ${OPTARG#*=})" ;;
+		a) user_abi_dir="$(readlink -f ${OPTARG#*=})" ;;
+		*) exit 1 ;;
+	esac
+done
+
 source "$rootdir/test/common/autotest_common.sh"
 
-config_file=$1
 if [[ -e $config_file ]]; then
 	source "$config_file"
 fi
 
-if [[ -d $2 ]]; then
-	user_abi_dir="$2"
-fi
 source_abi_dir="${user_abi_dir:-"$testdir/abi"}"
 libdir="$rootdir/build/lib"
 libdeps_file="$rootdir/mk/spdk.lib_deps.mk"
