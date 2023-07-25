@@ -31,6 +31,13 @@ function install_qat() {
 		patch --dir="$GIT_REPOS/QAT" -p1
 	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-iommu_map.patch"
 
+	if ge "$kernel_ver" 6.4.0; then
+		patch --dir="$GIT_REPOS/QAT" -p1 \
+			< "$rootdir/test/common/config/pkgdep/patches/qat/0001-driver-core+semaphore.patch"
+		patch --dir="$GIT_REPOS/QAT" -p1 \
+			< "$rootdir/test/common/config/pkgdep/patches/qat/0001-algapi.patch"
+	fi
+
 	(cd "$GIT_REPOS/QAT" && sudo ./configure --enable-icp-sriov=host && sudo make install)
 
 	if ! sudo service qat_service start; then
