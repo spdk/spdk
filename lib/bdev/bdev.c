@@ -1514,6 +1514,7 @@ static void
 _bdev_io_complete_push_bounce_done(void *ctx, int rc)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
+	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 
 	if (rc) {
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
@@ -1522,6 +1523,10 @@ _bdev_io_complete_push_bounce_done(void *ctx, int rc)
 	 * to waiting for the conditional free of internal.buf in spdk_bdev_free_io()).
 	 */
 	bdev_io_put_buf(bdev_io);
+
+	if (spdk_unlikely(!TAILQ_EMPTY(&ch->shared_resource->nomem_io))) {
+		bdev_ch_retry_io(ch);
+	}
 
 	/* Continue with IO completion flow */
 	bdev_io_complete(bdev_io);
