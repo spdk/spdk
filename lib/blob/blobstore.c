@@ -1725,10 +1725,10 @@ struct spdk_blob_persist_ctx {
 };
 
 static void
-bs_batch_clear_dev(struct spdk_blob_persist_ctx *ctx, spdk_bs_batch_t *batch, uint64_t lba,
+bs_batch_clear_dev(struct spdk_blob *blob, spdk_bs_batch_t *batch, uint64_t lba,
 		   uint64_t lba_count)
 {
-	switch (ctx->blob->clear_method) {
+	switch (blob->clear_method) {
 	case BLOB_CLEAR_WITH_DEFAULT:
 	case BLOB_CLEAR_WITH_UNMAP:
 		bs_batch_unmap_dev(batch, lba, lba_count);
@@ -1981,7 +1981,7 @@ blob_persist_clear_clusters(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ct
 
 		/* If a run of LBAs previously existing, clear them now */
 		if (lba_count > 0) {
-			bs_batch_clear_dev(ctx, batch, lba, lba_count);
+			bs_batch_clear_dev(ctx->blob, batch, lba, lba_count);
 		}
 
 		/* Start building the next batch */
@@ -1995,7 +1995,7 @@ blob_persist_clear_clusters(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ct
 
 	/* If we ended with a contiguous set of LBAs, clear them now */
 	if (lba_count > 0) {
-		bs_batch_clear_dev(ctx, batch, lba, lba_count);
+		bs_batch_clear_dev(ctx->blob, batch, lba, lba_count);
 	}
 
 	bs_batch_close(batch);
@@ -2604,6 +2604,49 @@ blob_insert_cluster_revert(struct spdk_blob_copy_cluster_ctx *ctx)
 }
 
 static void
+blob_insert_cluster_clear_cpl(void *cb_arg, int bserrno)
+{
+	struct spdk_blob_copy_cluster_ctx *ctx = cb_arg;
+
+	if (bserrno) {
+		SPDK_WARNLOG("Failed to clear cluster: %d\n", bserrno);
+	}
+
+	blob_insert_cluster_revert(ctx);
+	bs_sequence_finish(ctx->seq, bserrno);
+}
+
+static void
+blob_insert_cluster_clear(struct spdk_blob_copy_cluster_ctx *ctx)
+{
+	struct spdk_bs_cpl cpl;
+	spdk_bs_batch_t *batch;
+	struct spdk_io_channel *ch = spdk_io_channel_from_ctx(ctx->seq->channel);
+
+	/*
+	 * We allocated a cluster and we copied data to it. But now, we realized that we don't need
+	 * this cluster and we want to release it. We must ensure that we clear the data on this
+	 * cluster.
+	 * The cluster may later be re-allocated by a thick-provisioned blob for example. When
+	 * reading from this thick-provisioned blob before writing data, we should read zeroes.
+	 */
+
+	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
+	cpl.u.blob_basic.cb_fn = blob_insert_cluster_clear_cpl;
+	cpl.u.blob_basic.cb_arg = ctx;
+
+	batch = bs_batch_open(ch, &cpl, ctx->blob);
+	if (!batch) {
+		blob_insert_cluster_clear_cpl(ctx, -ENOMEM);
+		return;
+	}
+
+	bs_batch_clear_dev(ctx->blob, batch, bs_cluster_to_lba(ctx->blob->bs, ctx->new_cluster),
+			   bs_cluster_to_lba(ctx->blob->bs, 1));
+	bs_batch_close(batch);
+}
+
+static void
 blob_insert_cluster_cpl(void *cb_arg, int bserrno)
 {
 	struct spdk_blob_copy_cluster_ctx *ctx = cb_arg;
@@ -2611,10 +2654,12 @@ blob_insert_cluster_cpl(void *cb_arg, int bserrno)
 	if (bserrno) {
 		if (bserrno == -EEXIST) {
 			/* The metadata insert failed because another thread
-			 * allocated the cluster first. Free our cluster
+			 * allocated the cluster first. Clear and free our cluster
 			 * but continue without error. */
-			bserrno = 0;
+			blob_insert_cluster_clear(ctx);
+			return;
 		}
+
 		blob_insert_cluster_revert(ctx);
 	}
 
