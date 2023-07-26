@@ -284,7 +284,7 @@ class SpdkThread(SpdkObject):
         s += "IO Channels:\n"
         for io_channel in self.get_io_channels():
             channel_lines = str(io_channel).split('\n')
-            s += '\n'.join('\t%s' % line for line in channel_lines if line is not '')
+            s += '\n'.join('\t%s' % line for line in channel_lines if line != '')
             s += '\n'
             s += '\t---------------\n'
             s += '\n'
