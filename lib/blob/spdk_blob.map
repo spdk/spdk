@@ -39,6 +39,7 @@
 	spdk_bs_delete_blob;
 	spdk_bs_inflate_blob;
 	spdk_bs_blob_decouple_parent;
+	spdk_bs_blob_shallow_copy;
 	spdk_blob_open_opts_init;
 	spdk_bs_open_blob;
 	spdk_bs_open_blob_ext;
