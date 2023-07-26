@@ -150,6 +150,14 @@ typedef int (*spdk_bs_esnap_dev_create)(void *bs_ctx, void *blob_ctx, struct spd
 					const void *esnap_id, uint32_t id_size,
 					struct spdk_bs_dev **bs_dev);
 
+/**
+ * Blob shallow copy status callback.
+ *
+ * \param copied_clusters Actual number of copied clusters by the shallow copy operation
+ * \param cb_arg Callback argument.
+ */
+typedef void (*spdk_blob_shallow_copy_status)(uint64_t copied_clusters, void *cb_arg);
+
 struct spdk_bs_dev_cb_args {
 	spdk_bs_dev_cpl		cb_fn;
 	struct spdk_io_channel	*channel;
@@ -803,6 +811,8 @@ void spdk_bs_blob_decouple_parent(struct spdk_blob_store *bs, struct spdk_io_cha
  * \param channel IO channel used to copy the blob.
  * \param blobid The id of the blob.
  * \param ext_dev The device to copy on
+ * \param status_cb_fn Called repeatedly during operation with status updates
+ * \param status_cb_arg Argument passed to function status_cb_fn.
  * \param cb_fn Called when the operation is complete.
  * \param cb_arg Argument passed to function cb_fn.
  *
@@ -810,6 +820,7 @@ void spdk_bs_blob_decouple_parent(struct spdk_blob_store *bs, struct spdk_io_cha
  */
 int spdk_bs_blob_shallow_copy(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
 			      spdk_blob_id blobid, struct spdk_bs_dev *ext_dev,
+			      spdk_blob_shallow_copy_status status_cb_fn, void *status_cb_arg,
 			      spdk_blob_op_complete cb_fn, void *cb_arg);
 
 

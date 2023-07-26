@@ -30,6 +30,7 @@ char *g_xattr_names[] = {"first", "second", "third"};
 char *g_xattr_values[] = {"one", "two", "three"};
 uint64_t g_ctx = 1729;
 bool g_use_extent_table = false;
+uint64_t g_copied_clusters_count = 0;
 
 struct spdk_bs_super_block_ver1 {
 	uint8_t		signature[8];
@@ -200,6 +201,12 @@ blob_op_with_handle_complete2(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		g_blob2 = blob;
 		g_bserrno2 = bserrno;
 	}
+}
+
+static void
+blob_shallow_copy_status_cb(uint64_t copied_clusters, void *cb_arg)
+{
+	g_copied_clusters_count = copied_clusters;
 }
 
 static void
@@ -9369,6 +9376,7 @@ blob_shallow_copy(void)
 	/* Shallow copy with a not read only blob */
 	ext_dev = init_ext_dev(num_clusters * 1024 * 1024, DEV_BUFFER_BLOCKLEN);
 	rc = spdk_bs_blob_shallow_copy(bs, blob_ch, blobid, ext_dev,
+				       blob_shallow_copy_status_cb, NULL,
 				       blob_op_complete, NULL);
 	CU_ASSERT(rc == 0);
 	poll_threads();
@@ -9384,6 +9392,7 @@ blob_shallow_copy(void)
 	/* Shallow copy over a spdk_bs_dev with incorrect size */
 	ext_dev = init_ext_dev(1, DEV_BUFFER_BLOCKLEN);
 	rc = spdk_bs_blob_shallow_copy(bs, blob_ch, blobid, ext_dev,
+				       blob_shallow_copy_status_cb, NULL,
 				       blob_op_complete, NULL);
 	CU_ASSERT(rc == 0);
 	poll_threads();
@@ -9393,6 +9402,7 @@ blob_shallow_copy(void)
 	/* Shallow copy over a spdk_bs_dev with incorrect block len */
 	ext_dev = init_ext_dev(num_clusters * 1024 * 1024, DEV_BUFFER_BLOCKLEN * 2);
 	rc = spdk_bs_blob_shallow_copy(bs, blob_ch, blobid, ext_dev,
+				       blob_shallow_copy_status_cb, NULL,
 				       blob_op_complete, NULL);
 	CU_ASSERT(rc == 0);
 	poll_threads();
@@ -9413,10 +9423,14 @@ blob_shallow_copy(void)
 
 	/* Correct shallow copy of blob over bdev */
 	rc = spdk_bs_blob_shallow_copy(bs, blob_ch, blobid, ext_dev,
+				       blob_shallow_copy_status_cb, NULL,
 				       blob_op_complete, NULL);
 	CU_ASSERT(rc == 0);
-	poll_threads();
+	poll_thread_times(0, 1);
+	CU_ASSERT(g_copied_clusters_count == 1);
+	poll_thread_times(0, 2);
 	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_copied_clusters_count == 2);
 
 	/* Read from bdev */
 	/* Only cluster 1 and 3 must be filled */

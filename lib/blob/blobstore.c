@@ -7150,6 +7150,15 @@ struct shallow_copy_ctx {
 
 	/* Struct for external device writing */
 	struct spdk_bs_dev_cb_args ext_args;
+
+	/* Actual number of copied clusters */
+	uint64_t copied_clusters_count;
+
+	/* Status callback for updates about the ongoing operation */
+	spdk_blob_shallow_copy_status status_cb;
+
+	/* Argument passed to function status_cb */
+	void *status_cb_arg;
 };
 
 static void
@@ -7186,6 +7195,10 @@ bs_shallow_copy_bdev_write_cpl(struct spdk_io_channel *channel, void *cb_arg, in
 	}
 
 	ctx->cluster++;
+	if (ctx->status_cb) {
+		ctx->copied_clusters_count++;
+		ctx->status_cb(ctx->copied_clusters_count, ctx->status_cb_arg);
+	}
 
 	bs_shallow_copy_cluster_find_next(ctx);
 }
@@ -7299,6 +7312,7 @@ blobstore block size\n", _blob->id);
 int
 spdk_bs_blob_shallow_copy(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
 			  spdk_blob_id blobid, struct spdk_bs_dev *ext_dev,
+			  spdk_blob_shallow_copy_status status_cb_fn, void *status_cb_arg,
 			  spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	struct shallow_copy_ctx *ctx;
@@ -7316,6 +7330,8 @@ spdk_bs_blob_shallow_copy(struct spdk_blob_store *bs, struct spdk_io_channel *ch
 	ctx->cpl.u.bs_basic.cb_arg = cb_arg;
 	ctx->bserrno = 0;
 	ctx->blob_channel = channel;
+	ctx->status_cb = status_cb_fn;
+	ctx->status_cb_arg = status_cb_arg;
 	ctx->read_buff = spdk_malloc(bs->cluster_sz, bs->dev->blocklen, NULL,
 				     SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (!ctx->read_buff) {
