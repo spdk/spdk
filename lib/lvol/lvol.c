@@ -2242,3 +2242,72 @@ spdk_lvol_is_degraded(const struct spdk_lvol *lvol)
 	}
 	return spdk_blob_is_degraded(blob);
 }
+
+static void
+lvol_shallow_copy_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvol_copy_req *req = cb_arg;
+	struct spdk_lvol *lvol = req->lvol;
+
+	spdk_bs_free_io_channel(req->channel);
+
+	if (lvolerrno < 0) {
+		SPDK_ERRLOG("Could not make a shallow copy of lvol %s, error %d\n", lvol->unique_id, lvolerrno);
+	}
+
+	req->cb_fn(req->cb_arg, lvolerrno);
+	free(req);
+}
+
+int
+spdk_lvol_shallow_copy(struct spdk_lvol *lvol, struct spdk_bs_dev *ext_dev,
+		       spdk_blob_shallow_copy_status status_cb_fn, void *status_cb_arg,
+		       spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_copy_req *req;
+	spdk_blob_id blob_id;
+	int rc;
+
+	assert(cb_fn != NULL);
+
+	if (lvol == NULL) {
+		SPDK_ERRLOG("lvol must not be NULL\n");
+		return -EINVAL;
+	}
+
+	assert(lvol->lvol_store->thread == spdk_get_thread());
+
+	if (ext_dev == NULL) {
+		SPDK_ERRLOG("lvol %s shallow copy, ext_dev must not be NULL\n", lvol->unique_id);
+		return -EINVAL;
+	}
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("lvol %s shallow copy, cannot alloc memory for lvol request\n", lvol->unique_id);
+		return -ENOMEM;
+	}
+
+	req->lvol = lvol;
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+	req->channel = spdk_bs_alloc_io_channel(lvol->lvol_store->blobstore);
+	if (req->channel == NULL) {
+		SPDK_ERRLOG("lvol %s shallow copy, cannot alloc io channel for lvol request\n", lvol->unique_id);
+		free(req);
+		return -ENOMEM;
+	}
+
+	blob_id = spdk_blob_get_id(lvol->blob);
+
+	rc = spdk_bs_blob_shallow_copy(lvol->lvol_store->blobstore, req->channel, blob_id, ext_dev,
+				       status_cb_fn, status_cb_arg, lvol_shallow_copy_cb, req);
+
+	if (rc < 0) {
+		SPDK_ERRLOG("Could not make a shallow copy of lvol %s\n", lvol->unique_id);
+		spdk_bs_free_io_channel(req->channel);
+		free(req);
+	}
+
+	return rc;
+}

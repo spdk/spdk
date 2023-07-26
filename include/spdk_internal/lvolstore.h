@@ -46,6 +46,14 @@ struct spdk_lvol_req {
 	char			name[SPDK_LVOL_NAME_MAX];
 };
 
+struct spdk_lvol_copy_req {
+	spdk_lvol_op_complete	cb_fn;
+	void			*cb_arg;
+	struct spdk_lvol	*lvol;
+	struct spdk_io_channel	*channel;
+	struct spdk_bs_dev	*ext_dev;
+};
+
 struct spdk_lvs_with_handle_req {
 	spdk_lvs_op_with_handle_complete cb_fn;
 	void				*cb_arg;
