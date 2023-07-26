@@ -971,14 +971,13 @@ ublk_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 }
 
-static int
-ublk_user_copy_io_submit(struct ublk_io *io, bool is_write)
+static void
+ublk_queue_user_copy(struct ublk_io *io, bool is_write)
 {
 	struct ublk_queue *q = io->q;
 	const struct ublksrv_io_desc *iod = io->iod;
 	struct io_uring_sqe *sqe;
 	uint64_t pos;
-	int rc;
 	uint32_t nbytes;
 
 	nbytes = iod->nr_sectors * (1ULL << LINUX_SECTOR_SHIFT);
@@ -994,15 +993,9 @@ ublk_user_copy_io_submit(struct ublk_io *io, bool is_write)
 	io_uring_sqe_set_flags(sqe, IOSQE_FIXED_FILE);
 	io_uring_sqe_set_data64(sqe, build_user_data(io->tag, 0));
 
-	q->cmd_inflight += 1;
-	rc = io_uring_submit(&q->ring);
-	if (rc < 0) {
-		SPDK_ERRLOG("uring submit rc %d\n", rc);
-		return rc;
-	}
 	io->user_copy = true;
-
-	return 0;
+	TAILQ_REMOVE(&q->inflight_io_list, io, tailq);
+	TAILQ_INSERT_TAIL(&q->completed_io_list, io, tailq);
 }
 
 static void
@@ -1013,16 +1006,10 @@ ublk_user_copy_read_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 	spdk_bdev_free_io(bdev_io);
 
 	if (success) {
-		int rc;
-
-		rc = ublk_user_copy_io_submit(io, false);
-		if (rc) {
-			goto out;
-		}
+		ublk_queue_user_copy(io, false);
 		return;
 	}
-
-out:
+	/* READ IO Error */
 	ublk_io_done(NULL, false, cb_arg);
 }
 
@@ -1152,12 +1139,7 @@ read_get_buffer_done(struct ublk_io *io)
 static void
 user_copy_write_get_buffer_done(struct ublk_io *io)
 {
-	int rc;
-
-	rc = ublk_user_copy_io_submit(io, true);
-	if (rc) {
-		ublk_io_done(NULL, false, io);
-	}
+	ublk_queue_user_copy(io, true);
 }
 
 static void
@@ -1251,10 +1233,12 @@ ublk_io_xmit(struct ublk_queue *q)
 		 * taken to work around a scan-build use-after-free mischaracterization.
 		 */
 		TAILQ_REMOVE(&q->completed_io_list, io, tailq);
-		if (!io->need_data) {
-			TAILQ_INSERT_TAIL(&buffer_free_list, io, tailq);
+		if (!io->user_copy) {
+			if (!io->need_data) {
+				TAILQ_INSERT_TAIL(&buffer_free_list, io, tailq);
+			}
+			ublksrv_queue_io_cmd(q, io, io->tag);
 		}
-		ublksrv_queue_io_cmd(q, io, io->tag);
 		count++;
 	}
 
@@ -1316,6 +1300,7 @@ ublk_io_recv(struct ublk_queue *q)
 			      cqe->res, q->q_id, tag, io->user_copy, user_data_to_op(cqe->user_data));
 
 		q->cmd_inflight--;
+		TAILQ_INSERT_TAIL(&q->inflight_io_list, io, tailq);
 
 		if (!io->user_copy) {
 			fetch = (cqe->res != UBLK_IO_RES_ABORT) && !q->is_stopping;
@@ -1326,7 +1311,6 @@ ublk_io_recv(struct ublk_queue *q)
 				}
 			}
 
-			TAILQ_INSERT_TAIL(&q->inflight_io_list, io, tailq);
 			if (cqe->res == UBLK_IO_RES_OK) {
 				ublk_submit_bdev_io(q, io);
 			} else if (cqe->res == UBLK_IO_RES_NEED_GET_DATA) {
