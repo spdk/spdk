@@ -13,7 +13,7 @@
 #include "spdk/dma.h"
 #include "spdk/likely.h"
 #include "spdk/string.h"
-
+#include "spdk/bdev.h"
 #include "spdk/log.h"
 
 struct malloc_disk {
@@ -383,7 +383,7 @@ insert_request_in_tree(struct spdk_bdev_io *request) {
 }
 
 struct malloc_write_request {
-	int addr;
+	uint32_t addr;
 	RB_ENTRY(malloc_write_request) link;
 	struct spdk_bdev_io *bdev_io;
 };
@@ -405,13 +405,23 @@ struct malloc_request_tree {
 #define MAX_BLOCKS_FOR_REQUEST 4
 
 static void
-malloc_merge_request(struct spdk_bdev_io *bdev_io)
+ malloc_merge_request(struct spdk_bdev_io *bdev_io)
 {
-	RB_FOREACH(current_request/*just like "i" in a default loop*/, malloc_addr_tree, _RB_ROOT(addr_tree.tree)) {
-		if (current_request == RB_MIN(malloc_addr_tree, _RB_ROOT(addr_tree.tree))) *bdev_io = current_request
+	struct malloc_write_request *current_request;
+	size_t allocated = 0;
+	SPDK_ERRLOG("SIZE OF THE TREE %d\n", addr_tree.size);
+
+	RB_FOREACH(current_request, malloc_addr_tree, &addr_tree.tree) {
+		SPDK_ERRLOG("I'm in tree. My address %d\n", current_request->addr);
+		if (current_request == RB_MIN(malloc_addr_tree, &addr_tree.tree)) {
+			bdev_io = current_request->bdev_io;
+			bdev_io->iov.iov_len = MAX_BLOCKS_FOR_REQUEST * bdev_io->bdev->blocklen;
+			bdev_io->iov.iov_base = malloc(bdev_io->bdev->blocklen * MAX_BLOCKS_FOR_REQUEST);
+		}
+		memcpy(allocated + bdev_io->iov.iov_base, current_request->bdev_io->iov.iov_base,
+			   current_request->bdev_io->iov.iov_len);
+		allocated += current_request->bdev_io->iov.iov_len;
 	}
-
-
 	SPDK_ERRLOG("Merged successfully\n");
 }
 
@@ -423,15 +433,15 @@ malloc_optimization_write_requests(struct spdk_bdev_io *bdev_io)
     write_request->addr = bdev_io -> u.bdev.offset_blocks * bdev_io->bdev->blocklen;
 
     RB_INSERT(malloc_addr_tree, &addr_tree.tree, write_request);
-	size += bdev_io -> u.bdev.num_blocks;
+	addr_tree.size += bdev_io -> u.bdev.num_blocks;
 
     if (addr_tree.size == MAX_BLOCKS_FOR_REQUEST) {
         malloc_merge_request(bdev_io);
-        return 1;
+        return 0;
     }
 
     SPDK_ERRLOG("Passed the optimization function, %d\n", write_request->addr);
-    return 0;
+    return 1;
 }
 
 /*-----------------------our workspace-----------------------*/
@@ -525,12 +535,8 @@ bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 {
     struct malloc_channel *mch = spdk_io_channel_get_ctx(ch);
 
-    if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-        malloc_optimization_write_requests(bdev_io);
-    }
-
-//    if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE && !malloc_optimization_write_requests(bdev_io))
-//        return;
+    if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE && malloc_optimization_write_requests(bdev_io))
+        return;
 
     if (_bdev_malloc_submit_request(mch, bdev_io) != 0) {
         malloc_complete_task((struct malloc_task *)bdev_io->driver_ctx, mch,
