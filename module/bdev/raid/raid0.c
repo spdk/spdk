@@ -38,6 +38,75 @@ raid0_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 	}
 }
 
+struct raid_write_request {
+	uint32_t addr;
+	RB_ENTRY(raid_write_request) link;
+	struct raid_bdev_io *bdev_io;
+};
+
+static int
+addr_cmp(struct raid_write_request *c1 , struct riad_write_request *c2)
+{
+	return (c1->addr < c2->addr ? -1 : c1->addr > c2->addr);
+}
+
+RB_HEAD(raid_addr_tree, raid_write_request);
+RB_GENERATE_STATIC(raid_addr_tree, raid_write_request, link, addr_cmp);
+
+struct raid_request_tree {
+	struct raid_addr_tree tree;
+	uint64_t size;
+} addr_tree;
+
+#define MAX_BLOCKS_FOR_REQUEST 4
+
+static void
+raid_merge_request(struct raid_bdev_io *bdev_io)
+{
+	struct raid_write_request *current_request;
+
+	RB_FOREACH(current_request, raid_addr_tree, &addr_tree.tree) {
+		SPDK_ERRLOG("I'm in tree. My address %d\n", current_request->addr);
+//		if (current_request == RB_MIN(malloc_addr_tree, &addr_tree.tree)) bdev_io = current_request->bdev_io;
+//		else {
+//			if (bdev_io != current_request->bdev_io) SPDK_ERRLOG("--------BDEV ISN'T EQUAL---------\n");
+//			if (bdev_io->type != SPDK_BDEV_IO_TYPE_READ) SPDK_ERRLOG("--------TYPE ISN'T EQUAL---------\n");
+//			if (bdev_io->num_retries != current_request->bdev_io->num_retries) SPDK_ERRLOG("--------NUM RETRIES ISN'T EQUAL---------\n");
+//			if (bdev_io->child_iov != current_request->bdev_io->child_iov) SPDK_ERRLOG("--------CHILD IOV ISN'T EQUAL---------\n");
+//			if (bdev_io->iov.iov_base != current_request->bdev_io->iov.iov_base) SPDK_ERRLOG("--------IOV LEN ISN'T EQUAL---------\n");
+//			SPDK_ERRLOG("CHECK OF EQUALITY\n");
+//		}
+	}
+
+	RB_FOREACH(current_request, raid_addr_tree, &addr_tree.tree) {
+		RB_REMOVE(raid_addr_tree, &addr_tree.tree, current_request);
+	}
+
+
+	SPDK_ERRLOG("Merged successfully\n");
+}
+
+static int
+raid_optimization_write_requests(struct raid_bdev_io *raid_io)
+{
+	struct raid_write_request *write_request = malloc(sizeof *write_request);
+
+	write_request->bdev_io = raid_io;
+	struct spdk_bdev_io		*bdev_io = spdk_bdev_io_from_ctx(raid_io)
+	write_request->addr = bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen;
+
+	RB_INSERT(raid_addr_tree, &addr_tree.tree, write_request);
+	addr_tree.size += bdev_io -> u.bdev.num_blocks;
+
+	if (addr_tree.size == MAX_BLOCKS_FOR_REQUEST) {
+		raid_merge_request(raid_io);
+		return 0;
+	}
+
+	SPDK_ERRLOG("Passed the optimization function, %d\n", write_request->addr);
+	return 1;
+}
+
 static void raid0_submit_rw_request(struct raid_bdev_io *raid_io);
 
 static void
@@ -116,10 +185,12 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 						 pd_lba, pd_blocks, raid0_bdev_io_completion,
 						 raid_io, &io_opts);
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+		if (raid_optimization_write_requests(raid_io)) return;
 		ret = spdk_bdev_writev_blocks_ext(base_info->desc, base_ch,
 						  bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 						  pd_lba, pd_blocks, raid0_bdev_io_completion,
 						  raid_io, &io_opts);
+		if (ret != -ENOMEM) clear_tree();
 	} else {
 		SPDK_ERRLOG("Recvd not supported io type %u\n", bdev_io->type);
 		assert(0);
