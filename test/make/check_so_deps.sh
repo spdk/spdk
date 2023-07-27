@@ -5,12 +5,6 @@
 #
 shopt -s extglob
 
-function get_release_branch() {
-	tag=$(git describe --tags --abbrev=0 --exclude=LTS --exclude=*-pre $1)
-	branch="${tag:0:6}.x"
-	echo "$branch"
-}
-
 if [ "$(uname -s)" = "FreeBSD" ]; then
 	echo "Not testing for shared object dependencies on FreeBSD."
 	exit 1
@@ -37,8 +31,6 @@ libdeps_file="$rootdir/mk/spdk.lib_deps.mk"
 function check_header_filenames() {
 	local dups_found=0
 
-	xtrace_disable
-
 	include_headers=$(git ls-files -- $rootdir/include/spdk $rootdir/include/spdk_internal | xargs -n 1 basename)
 	dups=
 	for file in $include_headers; do
@@ -48,8 +40,6 @@ function check_header_filenames() {
 		fi
 	done
 
-	xtrace_restore
-
 	if ((dups_found == 1)); then
 		echo "Private header file(s) found with same name as public header file."
 		echo "This is not allowed since it can confuse abidiff when determining if"
@@ -57,6 +47,12 @@ function check_header_filenames() {
 		echo $dups
 		return 1
 	fi
+}
+
+function get_release_branch() {
+	tag=$(git describe --tags --abbrev=0 --exclude=LTS --exclude=*-pre $1)
+	branch="${tag:0:6}.x"
+	echo "$branch"
 }
 
 function confirm_abi_deps() {
@@ -216,11 +212,6 @@ EOF
 	fi
 }
 
-function get_lib_shortname() {
-	local lib=${1##*/}
-	echo "${lib//@(libspdk_|.so)/}"
-}
-
 function import_libs_deps_mk() {
 	local var_mk val_mk dep_mk fun_mk
 	while read -r var_mk _ val_mk; do
@@ -239,6 +230,11 @@ function import_libs_deps_mk() {
 			eval "$var_mk=\${$var_mk:+\$$var_mk }$dep_mk"
 		done
 	done < "$libdeps_file"
+}
+
+function get_lib_shortname() {
+	local lib=${1##*/}
+	echo "${lib//@(libspdk_|.so)/}"
 }
 
 function confirm_deps() {
@@ -294,8 +290,6 @@ function confirm_makefile_deps() {
 	)
 }
 
-run_test "check_header_filenames" check_header_filenames
-
 config_params=$(get_config_params)
 if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 	config_params="$config_params --with-ocf=$rootdir/ocf.a"
@@ -316,8 +310,8 @@ fail_file="$testdir/check_so_deps_fail"
 
 rm -f $fail_file
 
+run_test "check_header_filenames" check_header_filenames
 run_test "confirm_abi_deps" confirm_abi_deps
-
 run_test "confirm_makefile_deps" confirm_makefile_deps
 
 $MAKE $MAKEFLAGS clean
