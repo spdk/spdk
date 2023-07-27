@@ -13,13 +13,12 @@ fi
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 
-if [[ ! -f $1 ]]; then
-	echo "ERROR: SPDK test configuration not specified"
-	exit 1
-fi
-
-source $1
 source "$rootdir/test/common/autotest_common.sh"
+
+config_file=$1
+if [[ -e $config_file ]]; then
+	source "$config_file"
+fi
 
 if [[ -d $2 ]]; then
 	user_abi_dir="$2"
@@ -304,19 +303,21 @@ function confirm_makefile_deps() {
 	fi
 }
 
-config_params=$(get_config_params)
-if [ "$SPDK_TEST_OCF" -eq 1 ]; then
-	config_params="$config_params --with-ocf=$rootdir/ocf.a"
-fi
+if [[ -e $config_file ]]; then
+	config_params=$(get_config_params)
+	if [[ "$SPDK_TEST_OCF" -eq 1 ]]; then
+		config_params="$config_params --with-ocf=$rootdir/ocf.a"
+	fi
 
-if [[ -f $rootdir/mk/config.mk ]]; then
-	$MAKE $MAKEFLAGS clean
-fi
+	if [[ -f $rootdir/mk/config.mk ]]; then
+		$MAKE $MAKEFLAGS clean
+	fi
 
-$rootdir/configure $config_params --with-shared
-# By setting SPDK_NO_LIB_DEPS=1, we ensure that we won't create any link dependencies.
-# Then we can be sure we get a valid accounting of the symbol dependencies we have.
-SPDK_NO_LIB_DEPS=1 $MAKE $MAKEFLAGS
+	$rootdir/configure $config_params --with-shared
+	# By setting SPDK_NO_LIB_DEPS=1, we ensure that we won't create any link dependencies.
+	# Then we can be sure we get a valid accounting of the symbol dependencies we have.
+	SPDK_NO_LIB_DEPS=1 $MAKE $MAKEFLAGS
+fi
 
 xtrace_disable
 
@@ -324,6 +325,8 @@ run_test "check_header_filenames" check_header_filenames
 run_test "confirm_abi_deps" confirm_abi_deps
 run_test "confirm_makefile_deps" confirm_makefile_deps
 
-$MAKE $MAKEFLAGS clean
+if [[ -e $config_file ]]; then
+	$MAKE $MAKEFLAGS clean
+fi
 
 xtrace_restore
