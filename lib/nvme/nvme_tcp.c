@@ -1287,7 +1287,9 @@ nvme_tcp_accel_recv_compute_crc32_done(void *cb_arg, int status)
 	tqpair = tcp_req->tqpair;
 	assert(tqpair != NULL);
 
-	if (tqpair->qpair.poll_group && !tqpair->needs_poll) {
+	/* We need to force poll the qpair to make sure any queued requests will be resubmitted, see
+	 * comment in pdu_write_done(). */
+	if (tqpair->qpair.poll_group && !tqpair->needs_poll && !STAILQ_EMPTY(&tqpair->qpair.queued_req)) {
 		pgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
 		TAILQ_INSERT_TAIL(&pgroup->needs_poll, tqpair, link);
 		tqpair->needs_poll = true;
