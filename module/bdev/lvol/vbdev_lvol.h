@@ -116,4 +116,20 @@ int vbdev_lvol_esnap_dev_create(void *bs_ctx, void *blob_ctx, struct spdk_blob *
 				const void *esnap_id, uint32_t id_len,
 				struct spdk_bs_dev **_bs_dev);
 
+/**
+ * \brief Make a shallow copy of lvol over a bdev
+ *
+ * \param lvol Handle to lvol
+ * \param bdev_name Name of the bdev to copy on
+ * \param status_cb_fn Called repeatedly during operation with status updates
+ * \param status_cb_arg Argument passed to function status_cb_fn.
+ * \param cb_fn Completion callback
+ * \param cb_arg Completion callback custom arguments
+ *
+ * \return 0 if operation starts correctly, negative errno on failure.
+ */
+int vbdev_lvol_shallow_copy(struct spdk_lvol *lvol, const char *bdev_name,
+			    spdk_blob_shallow_copy_status status_cb_fn, void *status_cb_arg,
+			    spdk_lvol_op_complete cb_fn, void *cb_arg);
+
 #endif /* SPDK_VBDEV_LVOL_H */
