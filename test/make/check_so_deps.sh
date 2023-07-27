@@ -57,6 +57,7 @@ function get_release_branch() {
 
 function confirm_abi_deps() {
 	local processed_so=0
+	local abi_test_failed=false
 	local abidiff_output
 	local release
 	local suppression_file="$testdir/abigail_suppressions.ini"
@@ -140,7 +141,7 @@ EOF
 			if ((changed_leaf_types != 0)); then
 				if ((new_so_maj == old_so_maj)); then
 					abidiff_output=1
-					touch $fail_file
+					abi_test_failed=true
 					echo "Please update the major SO version for $so_file. A header accessible type has been modified since last release."
 				fi
 				found_abi_change=true
@@ -149,7 +150,7 @@ EOF
 			if ((removed_functions != 0)) || ((removed_vars != 0)); then
 				if ((new_so_maj == old_so_maj)); then
 					abidiff_output=1
-					touch $fail_file
+					abi_test_failed=true
 					echo "Please update the major SO version for $so_file. API functions or variables have been removed since last release."
 				fi
 				found_abi_change=true
@@ -158,7 +159,7 @@ EOF
 			if ((changed_functions != 0)) || ((changed_vars != 0)); then
 				if ((new_so_maj == old_so_maj)); then
 					abidiff_output=1
-					touch $fail_file
+					abi_test_failed=true
 					echo "Please update the major SO version for $so_file. API functions or variables have been changed since last release."
 				fi
 				found_abi_change=true
@@ -167,7 +168,7 @@ EOF
 			if ((added_functions != 0)) || ((added_vars != 0)); then
 				if ((new_so_min == old_so_min && new_so_maj == old_so_maj)) && ! $found_abi_change; then
 					abidiff_output=1
-					touch $fail_file
+					abi_test_failed=true
 					echo "Please update the minor SO version for $so_file. API functions or variables have been added since last release."
 				fi
 				found_abi_change=true
@@ -180,22 +181,22 @@ EOF
 				fi
 				if ! $found_abi_change; then
 					echo "SO name for $so_file changed without a change to abi. please revert that change."
-					touch $fail_file
+					abi_test_failed=true
 				fi
 
 				if ((new_so_maj != old_so_maj && new_so_min != 0)); then
 					echo "SO major version for $so_file was bumped. Please reset the minor version to 0."
-					touch $fail_file
+					abi_test_failed=true
 				fi
 
 				if ((new_so_min > old_so_min + 1)); then
 					echo "SO minor version for $so_file was incremented more than once. Please revert minor version to $((old_so_min + 1))."
-					touch $fail_file
+					abi_test_failed=true
 				fi
 
 				if ((new_so_maj > old_so_maj + 1)); then
 					echo "SO major version for $so_file was incremented more than once. Please revert major version to $((old_so_maj + 1))."
-					touch $fail_file
+					abi_test_failed=true
 				fi
 			fi
 
@@ -209,6 +210,10 @@ EOF
 	echo "Processed $processed_so objects."
 	if [[ -z $user_abi_dir ]]; then
 		rm -rf "$source_abi_dir"
+	fi
+	if $abi_test_failed; then
+		echo "ERROR: ABI test failed"
+		exit 1
 	fi
 }
 
@@ -277,6 +282,9 @@ function confirm_makefile_deps() {
 	# for dependencies to avoid printing out a bunch of confusing symbols under the missing
 	# symbols section.
 	SPDK_LIBS=("$libdir/"libspdk_!(env_dpdk).so)
+	fail_file="$testdir/check_so_deps_fail"
+
+	rm -f $fail_file
 
 	declare -A IGNORED_LIBS=()
 	if grep -q 'CONFIG_RDMA?=n' $rootdir/mk/config.mk; then
@@ -288,6 +296,12 @@ function confirm_makefile_deps() {
 		for lib in "${SPDK_LIBS[@]}"; do confirm_deps "$lib" & done
 		wait
 	)
+
+	if [ -f $fail_file ]; then
+		rm -f $fail_file
+		echo "ERROR: Makefile deps test failed"
+		exit 1
+	fi
 }
 
 config_params=$(get_config_params)
@@ -306,20 +320,10 @@ SPDK_NO_LIB_DEPS=1 $MAKE $MAKEFLAGS
 
 xtrace_disable
 
-fail_file="$testdir/check_so_deps_fail"
-
-rm -f $fail_file
-
 run_test "check_header_filenames" check_header_filenames
 run_test "confirm_abi_deps" confirm_abi_deps
 run_test "confirm_makefile_deps" confirm_makefile_deps
 
 $MAKE $MAKEFLAGS clean
-
-if [ -f $fail_file ]; then
-	rm -f $fail_file
-	echo "shared object test failed"
-	exit 1
-fi
 
 xtrace_restore
