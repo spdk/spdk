@@ -1367,7 +1367,7 @@ test_create_ctrlr(void)
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") != NULL);
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") != NULL);
@@ -1520,7 +1520,7 @@ test_reset_ctrlr(void)
 
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -1568,7 +1568,7 @@ test_race_between_reset_and_destruct_ctrlr(void)
 	/* Try destructing ctrlr while ctrlr is being reset, but it will be deferred. */
 	set_thread(0);
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == nvme_ctrlr);
 	CU_ASSERT(nvme_ctrlr->destruct == true);
@@ -1727,7 +1727,7 @@ test_failover_ctrlr(void)
 
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -1835,7 +1835,7 @@ test_race_between_failover_and_add_secondary_trid(void)
 
 	set_thread(0);
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -1975,7 +1975,7 @@ test_pending_reset(void)
 
 	set_thread(0);
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -2040,7 +2040,7 @@ test_attach_ctrlr(void)
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 	CU_ASSERT(nvme_ctrlr->ctrlr == ctrlr);
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -2075,7 +2075,7 @@ test_attach_ctrlr(void)
 	SPDK_CU_ASSERT_FATAL(nbdev != NULL);
 	CU_ASSERT(bdev_nvme_get_ctrlr(&nbdev->disk) == ctrlr);
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -2106,7 +2106,7 @@ test_attach_ctrlr(void)
 
 	CU_ASSERT(attached_names[0] == NULL);
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -2206,7 +2206,7 @@ test_aer_cb(void)
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 2)->ana_state == SPDK_NVME_ANA_INACCESSIBLE_STATE);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 4)->ana_state == SPDK_NVME_ANA_CHANGE_STATE);
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -2405,7 +2405,7 @@ test_submit_nvme_cmd(void)
 
 	set_thread(1);
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -2470,11 +2470,11 @@ test_add_remove_trid(void)
 	CU_ASSERT(ctrid != NULL);
 
 	/* trid3 is not in the registered list. */
-	rc = bdev_nvme_delete("nvme0", &path3);
+	rc = bdev_nvme_delete("nvme0", &path3, NULL, NULL);
 	CU_ASSERT(rc == -ENXIO);
 
 	/* trid2 is not used, and simply removed. */
-	rc = bdev_nvme_delete("nvme0", &path2);
+	rc = bdev_nvme_delete("nvme0", &path2, NULL, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == nvme_ctrlr);
 	TAILQ_FOREACH(ctrid, &nvme_ctrlr->trids, link) {
@@ -2525,7 +2525,7 @@ test_add_remove_trid(void)
 	SPDK_CU_ASSERT_FATAL(ctrid != NULL);
 	CU_ASSERT(spdk_nvme_transport_id_compare(&ctrid->trid, &path3.trid) == 0);
 
-	rc = bdev_nvme_delete("nvme0", &path2);
+	rc = bdev_nvme_delete("nvme0", &path2, NULL, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == nvme_ctrlr);
 	TAILQ_FOREACH(ctrid, &nvme_ctrlr->trids, link) {
@@ -2535,7 +2535,7 @@ test_add_remove_trid(void)
 	/* path1 is currently used and path3 is an alternative path.
 	 * If we remove path1, path is changed to path3.
 	 */
-	rc = bdev_nvme_delete("nvme0", &path1);
+	rc = bdev_nvme_delete("nvme0", &path1, NULL, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == nvme_ctrlr);
 	CU_ASSERT(nvme_ctrlr->resetting == true);
@@ -2553,7 +2553,7 @@ test_add_remove_trid(void)
 	/* path3 is the current and only path. If we remove path3, the corresponding
 	 * nvme_ctrlr is removed.
 	 */
-	rc = bdev_nvme_delete("nvme0", &path3);
+	rc = bdev_nvme_delete("nvme0", &path3, NULL, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == nvme_ctrlr);
 
@@ -2597,7 +2597,7 @@ test_add_remove_trid(void)
 	CU_ASSERT(ctrid != NULL);
 
 	/* If trid is not specified, nvme_ctrlr itself is removed. */
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == nvme_ctrlr);
 
@@ -2845,7 +2845,7 @@ test_abort(void)
 
 	set_thread(1);
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -2887,7 +2887,7 @@ test_get_io_qpair(void)
 
 	spdk_put_io_channel(ch);
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -3078,7 +3078,7 @@ test_init_ana_log_page(void)
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 4)->bdev != NULL);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 5)->bdev != NULL);
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -3312,7 +3312,7 @@ test_reconnect_qpair(void)
 
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -3395,7 +3395,7 @@ test_create_bdev_ctrlr(void)
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path2.trid) != NULL);
 
 	/* Delete two ctrlrs at once. */
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == nbdev_ctrlr);
@@ -3438,7 +3438,7 @@ test_create_bdev_ctrlr(void)
 	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
 
-	rc = bdev_nvme_delete("nvme0", &path1);
+	rc = bdev_nvme_delete("nvme0", &path1, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == nbdev_ctrlr);
@@ -3453,7 +3453,7 @@ test_create_bdev_ctrlr(void)
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path1.trid) == NULL);
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path2.trid) != NULL);
 
-	rc = bdev_nvme_delete("nvme0", &path2);
+	rc = bdev_nvme_delete("nvme0", &path2, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == nbdev_ctrlr);
@@ -3593,7 +3593,7 @@ test_add_multi_ns_to_bdev(void)
 	CU_ASSERT(bdev4->ref == 1);
 
 	/* Test if nvme_bdevs can be deleted by deleting ctrlr one by one. */
-	rc = bdev_nvme_delete("nvme0", &path1);
+	rc = bdev_nvme_delete("nvme0", &path1, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -3604,7 +3604,7 @@ test_add_multi_ns_to_bdev(void)
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path1.trid) == NULL);
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path2.trid) == nvme_ctrlr2);
 
-	rc = bdev_nvme_delete("nvme0", &path2);
+	rc = bdev_nvme_delete("nvme0", &path2, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -3810,7 +3810,7 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 	SPDK_CU_ASSERT_FATAL(io_path3 != NULL);
 
 	/* Check if I/O path is dynamically deleted from nvme_bdev_channel. */
-	rc = bdev_nvme_delete("nvme0", &path2);
+	rc = bdev_nvme_delete("nvme0", &path2, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -3833,7 +3833,7 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 
 	set_thread(1);
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -3943,7 +3943,7 @@ test_admin_path(void)
 
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -4211,7 +4211,7 @@ test_reset_bdev_ctrlr(void)
 
 	set_thread(0);
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -4403,7 +4403,7 @@ test_retry_io_if_ana_state_is_updating(void)
 
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -4609,7 +4609,7 @@ test_retry_io_for_io_path_error(void)
 
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -4803,7 +4803,7 @@ test_retry_io_count(void)
 
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -4894,7 +4894,7 @@ test_concurrent_read_ana_log_page(void)
 
 	set_thread(0);
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -5041,7 +5041,7 @@ test_retry_io_for_ana_error(void)
 
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -5236,7 +5236,7 @@ test_retry_io_if_ctrlr_is_resetting(void)
 
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -5523,7 +5523,7 @@ test_retry_failover_ctrlr(void)
 
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -5918,7 +5918,7 @@ test_set_preferred_path(void)
 
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -6187,7 +6187,7 @@ test_disable_auto_failback(void)
 
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -6314,7 +6314,7 @@ test_set_multipath_policy(void)
 
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -6529,7 +6529,7 @@ test_retry_io_to_same_path(void)
 	CU_ASSERT(bio->io_path == io_path2);
 
 	/* Detach ctrlr2 dynamically. */
-	rc = bdev_nvme_delete("nvme0", &path2);
+	rc = bdev_nvme_delete("nvme0", &path2, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
@@ -6562,7 +6562,7 @@ test_retry_io_to_same_path(void)
 	spdk_delay_us(1);
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -6706,7 +6706,7 @@ test_race_between_reset_and_disconnected(void)
 
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -6827,7 +6827,7 @@ test_ctrlr_op_rpc(void)
 
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -6989,7 +6989,7 @@ test_bdev_ctrlr_op_rpc(void)
 
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -7172,13 +7172,48 @@ test_disable_enable_ctrlr(void)
 
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
 	spdk_delay_us(1000);
 	poll_threads();
 
+	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
+}
+
+static void
+ut_delete_done(void *ctx, int rc)
+{
+	int *delete_done_rc = ctx;
+	*delete_done_rc = rc;
+}
+
+static void
+test_delete_ctrlr_done(void)
+{
+	struct spdk_nvme_transport_id trid = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	int delete_done_rc = 0xDEADBEEF;
+	int rc;
+
+	ut_init_trid(&trid);
+
+	nvme_ctrlr_create(&ctrlr, "nvme0", &trid, NULL);
+	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") != NULL);
+
+	rc = bdev_nvme_delete("nvme0", &g_any_path, ut_delete_done, &delete_done_rc);
+	CU_ASSERT(rc == 0);
+
+	for (int i = 0; i < 20; i++) {
+		poll_threads();
+		if (delete_done_rc == 0) {
+			break;
+		}
+		spdk_delay_us(1000);
+	}
+
+	CU_ASSERT(delete_done_rc == 0);
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 }
 
@@ -7238,6 +7273,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_ctrlr_op_rpc);
 	CU_ADD_TEST(suite, test_bdev_ctrlr_op_rpc);
 	CU_ADD_TEST(suite, test_disable_enable_ctrlr);
+	CU_ADD_TEST(suite, test_delete_ctrlr_done);
 
 	allocate_threads(3);
 	set_thread(0);

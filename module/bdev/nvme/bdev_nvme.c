@@ -5972,8 +5972,26 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	return 0;
 }
 
+struct bdev_nvme_delete_ctx {
+	char                        *name;
+	struct nvme_path_id         path_id;
+	bdev_nvme_delete_done_fn    delete_done;
+	void                        *delete_done_ctx;
+	uint64_t                    timeout_ticks;
+	struct spdk_poller          *poller;
+};
+
+static void
+free_bdev_nvme_delete_ctx(struct bdev_nvme_delete_ctx *ctx)
+{
+	if (ctx != NULL) {
+		free(ctx->name);
+		free(ctx);
+	}
+}
+
 static bool
-nvme_path_should_delete(struct nvme_path_id *p, const struct nvme_path_id *path_id)
+nvme_path_id_compare(struct nvme_path_id *p, const struct nvme_path_id *path_id)
 {
 	if (path_id->trid.trtype != 0) {
 		if (path_id->trid.trtype == SPDK_NVME_TRANSPORT_CUSTOM) {
@@ -6026,6 +6044,59 @@ nvme_path_should_delete(struct nvme_path_id *p, const struct nvme_path_id *path_
 	return true;
 }
 
+static bool
+nvme_path_id_exists(const char *name, const struct nvme_path_id *path_id)
+{
+	struct nvme_bdev_ctrlr  *nbdev_ctrlr;
+	struct nvme_ctrlr       *ctrlr;
+	struct nvme_path_id     *p;
+
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
+	if (!nbdev_ctrlr) {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		return false;
+	}
+
+	TAILQ_FOREACH(ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
+		pthread_mutex_lock(&ctrlr->mutex);
+		TAILQ_FOREACH(p, &ctrlr->trids, link) {
+			if (nvme_path_id_compare(p, path_id)) {
+				pthread_mutex_unlock(&ctrlr->mutex);
+				pthread_mutex_unlock(&g_bdev_nvme_mutex);
+				return true;
+			}
+		}
+		pthread_mutex_unlock(&ctrlr->mutex);
+	}
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+
+	return false;
+}
+
+static int
+bdev_nvme_delete_complete_poll(void *arg)
+{
+	struct bdev_nvme_delete_ctx     *ctx = arg;
+	int                             rc = 0;
+
+	if (nvme_path_id_exists(ctx->name, &ctx->path_id)) {
+		if (ctx->timeout_ticks > spdk_get_ticks()) {
+			return SPDK_POLLER_BUSY;
+		}
+
+		SPDK_ERRLOG("NVMe path '%s' still exists after delete\n", ctx->name);
+		rc = -ETIMEDOUT;
+	}
+
+	spdk_poller_unregister(&ctx->poller);
+
+	ctx->delete_done(ctx->delete_done_ctx, rc);
+	free_bdev_nvme_delete_ctx(ctx);
+
+	return SPDK_POLLER_BUSY;
+}
+
 static int
 _bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, const struct nvme_path_id *path_id)
 {
@@ -6040,7 +6111,7 @@ _bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, const struct nvme_path_id *path
 			break;
 		}
 
-		if (!nvme_path_should_delete(p, path_id)) {
+		if (!nvme_path_id_compare(p, path_id)) {
 			continue;
 		}
 
@@ -6050,7 +6121,7 @@ _bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, const struct nvme_path_id *path
 		rc = 0;
 	}
 
-	if (p == NULL || !nvme_path_should_delete(p, path_id)) {
+	if (p == NULL || !nvme_path_id_compare(p, path_id)) {
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		return rc;
 	}
@@ -6082,14 +6153,17 @@ _bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, const struct nvme_path_id *path
 }
 
 int
-bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
+bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id,
+		 bdev_nvme_delete_done_fn delete_done, void *delete_done_ctx)
 {
-	struct nvme_bdev_ctrlr	*nbdev_ctrlr;
-	struct nvme_ctrlr	*nvme_ctrlr, *tmp_nvme_ctrlr;
-	int			rc = -ENXIO, _rc;
+	struct nvme_bdev_ctrlr		*nbdev_ctrlr;
+	struct nvme_ctrlr		*nvme_ctrlr, *tmp_nvme_ctrlr;
+	struct bdev_nvme_delete_ctx     *ctx = NULL;
+	int				rc = -ENXIO, _rc;
 
 	if (name == NULL || path_id == NULL) {
-		return -EINVAL;
+		rc = -EINVAL;
+		goto exit;
 	}
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
@@ -6099,15 +6173,16 @@ bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 		SPDK_ERRLOG("Failed to find NVMe bdev controller\n");
-		return -ENODEV;
+		rc = -ENODEV;
+		goto exit;
 	}
 
 	TAILQ_FOREACH_SAFE(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq, tmp_nvme_ctrlr) {
 		_rc = _bdev_nvme_delete(nvme_ctrlr, path_id);
 		if (_rc < 0 && _rc != -ENXIO) {
 			pthread_mutex_unlock(&g_bdev_nvme_mutex);
-
-			return _rc;
+			rc = _rc;
+			goto exit;
 		} else if (_rc == 0) {
 			/* We traverse all remaining nvme_ctrlrs even if one nvme_ctrlr
 			 * was deleted successfully. To remember the successful deletion,
@@ -6119,7 +6194,40 @@ bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
-	/* All nvme_ctrlrs were deleted or no nvme_ctrlr which had the trid was found. */
+	if (rc != 0 || delete_done == NULL) {
+		goto exit;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate context for bdev_nvme_delete\n");
+		rc = -ENOMEM;
+		goto exit;
+	}
+
+	ctx->name = strdup(name);
+	if (ctx->name == NULL) {
+		SPDK_ERRLOG("Failed to copy controller name for deletion\n");
+		rc = -ENOMEM;
+		goto exit;
+	}
+
+	ctx->delete_done = delete_done;
+	ctx->delete_done_ctx = delete_done_ctx;
+	ctx->path_id = *path_id;
+	ctx->timeout_ticks = spdk_get_ticks() + 10 * spdk_get_ticks_hz();
+	ctx->poller = SPDK_POLLER_REGISTER(bdev_nvme_delete_complete_poll, ctx, 1000);
+	if (ctx->poller == NULL) {
+		SPDK_ERRLOG("Failed to register bdev_nvme_delete poller\n");
+		rc = -ENOMEM;
+		goto exit;
+	}
+
+exit:
+	if (rc != 0) {
+		free_bdev_nvme_delete_ctx(ctx);
+	}
+
 	return rc;
 }
 
@@ -6271,7 +6379,7 @@ _stop_discovery(void *_ctx)
 
 		entry_ctx = TAILQ_FIRST(&ctx->nvm_entry_ctxs);
 		path.trid = entry_ctx->trid;
-		bdev_nvme_delete(entry_ctx->name, &path);
+		bdev_nvme_delete(entry_ctx->name, &path, NULL, NULL);
 		TAILQ_REMOVE(&ctx->nvm_entry_ctxs, entry_ctx, tailq);
 		free(entry_ctx);
 	}
@@ -6361,7 +6469,7 @@ discovery_remove_controllers(struct discovery_ctx *ctx)
 					  old_trid.subnqn, old_trid.traddr, old_trid.trsvcid);
 
 			path.trid = entry_ctx->trid;
-			bdev_nvme_delete(entry_ctx->name, &path);
+			bdev_nvme_delete(entry_ctx->name, &path, NULL, NULL);
 			TAILQ_REMOVE(&ctx->nvm_entry_ctxs, entry_ctx, tailq);
 			free(entry_ctx);
 		}

@@ -710,6 +710,18 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_detach_controller_dec
 };
 
 static void
+rpc_bdev_nvme_detach_controller_done(void *arg, int rc)
+{
+	struct spdk_jsonrpc_request *request = arg;
+
+	if (rc == 0) {
+		spdk_jsonrpc_send_bool_response(request, true);
+	} else {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+	}
+}
+
+static void
 rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 				const struct spdk_json_val *params)
 {
@@ -810,14 +822,11 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 		snprintf(path.hostid.hostsvcid, maxlen, "%s", req.hostsvcid);
 	}
 
-	rc = bdev_nvme_delete(req.name, &path);
+	rc = bdev_nvme_delete(req.name, &path, rpc_bdev_nvme_detach_controller_done, request);
 
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
-		goto cleanup;
 	}
-
-	spdk_jsonrpc_send_bool_response(request, true);
 
 cleanup:
 	free_rpc_bdev_nvme_detach_controller(&req);

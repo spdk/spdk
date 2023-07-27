@@ -334,15 +334,23 @@ void bdev_nvme_mdns_discovery_config_json(struct spdk_json_write_ctx *w);
 
 struct spdk_nvme_ctrlr *bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
 
+typedef void (*bdev_nvme_delete_done_fn)(void *ctx, int rc);
+
 /**
  * Delete NVMe controller with all bdevs on top of it, or delete the specified path
  * if there is any alternative path. Requires to pass name of NVMe controller.
  *
  * \param name NVMe controller name
  * \param path_id The specified path to remove (optional)
- * \return zero on success, -EINVAL on wrong parameters or -ENODEV if controller is not found
+ * \param delete_done Callback function on delete complete (optional)
+ * \param delete_done_ctx Context passed to callback (optional)
+ * \return zero on success,
+ *		-EINVAL on wrong parameters or
+ *		-ENODEV if controller is not found or
+ *		-ENOMEM on no memory
  */
-int bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id);
+int bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id,
+		     bdev_nvme_delete_done_fn delete_done, void *delete_done_ctx);
 
 enum nvme_ctrlr_op {
 	NVME_CTRLR_OP_RESET = 1,
