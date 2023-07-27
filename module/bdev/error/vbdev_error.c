@@ -234,6 +234,10 @@ vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bde
 		error_disk->error_vector[bdev_io->type].error_num--;
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		break;
+	case VBDEV_IO_NOMEM:
+		error_disk->error_vector[bdev_io->type].error_num--;
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+		break;
 	case VBDEV_IO_PENDING:
 		TAILQ_INSERT_TAIL(&error_disk->pending_ios, bdev_io, module_link);
 		error_disk->error_vector[bdev_io->type].error_num--;

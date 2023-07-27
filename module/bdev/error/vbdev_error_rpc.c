@@ -47,6 +47,8 @@ rpc_error_bdev_decode_error_type(const struct spdk_json_val *val, void *out)
 		*error_type = VBDEV_IO_PENDING;
 	} else if (spdk_json_strequal(val, "corrupt_data") == true) {
 		*error_type = VBDEV_IO_CORRUPT_DATA;
+	} else if (spdk_json_strequal(val, "nomem") == true) {
+		*error_type = VBDEV_IO_NOMEM;
 	} else {
 		SPDK_NOTICELOG("Invalid parameter value: error_type\n");
 		return -EINVAL;

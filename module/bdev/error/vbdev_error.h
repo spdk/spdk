@@ -14,6 +14,7 @@ enum vbdev_error_type {
 	VBDEV_IO_FAILURE = 1,
 	VBDEV_IO_PENDING,
 	VBDEV_IO_CORRUPT_DATA,
+	VBDEV_IO_NOMEM,
 };
 
 typedef void (*spdk_delete_error_complete)(void *cb_arg, int bdeverrno);

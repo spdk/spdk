@@ -1664,7 +1664,7 @@ def bdev_error_inject_error(client, name, io_type, error_type, num,
     Args:
         name: name of error bdev
         io_type: one of "clear", "read", "write", "unmap", "flush", or "all"
-        error_type: one of "failure", "pending", or "corrupt_data"
+        error_type: one of "failure", "pending", "corrupt_data" or "nomem"
         num: number of commands to fail
         corrupt_offset: offset in bytes to xor with corrupt_value
         corrupt_value: value for xor (1-255, 0 is invalid)

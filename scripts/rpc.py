@@ -1269,7 +1269,7 @@ if __name__ == "__main__":
     p = subparsers.add_parser('bdev_error_inject_error', help='bdev inject error')
     p.add_argument('name', help="""the name of the error injection bdev""")
     p.add_argument('io_type', help="""io_type: 'clear' 'read' 'write' 'unmap' 'flush' 'all'""")
-    p.add_argument('error_type', help="""error_type: 'failure' 'pending' 'corrupt_data'""")
+    p.add_argument('error_type', help="""error_type: 'failure' 'pending' 'corrupt_data' 'nomem'""")
     p.add_argument(
         '-n', '--num', help='the number of commands you want to fail', type=int)
     p.add_argument(
