@@ -24,26 +24,11 @@
  * returns:
  * none
  */
-static void
-raid0_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
-{
-	struct raid_bdev_io *raid_io = cb_arg;
-
-	spdk_bdev_free_io(bdev_io);
-
-	if (addr_tree.merge_requests)
-		return;
-	else if (success) {
-		raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_SUCCESS);
-	} else {
-		raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
-	}
-}
 
 struct raid_write_request {
 	uint32_t addr;
 	RB_ENTRY(raid_write_request) link;
-	struct raid_bdev_io *bdev_io;
+	struct spdk_bdev_io *bdev_io;
 };
 
 static int
@@ -58,11 +43,12 @@ RB_GENERATE_STATIC(raid_addr_tree, raid_write_request, link, addr_cmp);
 struct raid_request_tree {
 	struct raid_addr_tree tree;
 	uint64_t size;
+	bool merge_requests;
 } addr_tree;
 
 #define MAX_BLOCKS_FOR_REQUEST 4
 
-static void
+static int
 raid_merge_request(struct raid_bdev_io *bdev_io)
 {
 	struct raid_write_request *current_request;
@@ -86,14 +72,15 @@ raid_merge_request(struct raid_bdev_io *bdev_io)
 
 
 	SPDK_ERRLOG("Merged successfully\n");
+	return 0;
 }
 
 static int
-raid_optimization_write_requests(struct raid_bdev_io *raid_io)
+raid_optimization_write_requests(struct spdk_bdev_io *bdev_io)
 {
 	struct raid_write_request *write_request = malloc(sizeof *write_request);
 
-	write_request->bdev_io = raid_io;
+	write_request->bdev_io = bdev_io;
 	struct spdk_bdev_io		*bdev_io = spdk_bdev_io_from_ctx(raid_io)
 	write_request->addr = bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen;
 
@@ -101,12 +88,48 @@ raid_optimization_write_requests(struct raid_bdev_io *raid_io)
 	addr_tree.size += bdev_io -> u.bdev.num_blocks;
 
 	if (addr_tree.size == MAX_BLOCKS_FOR_REQUEST) {
-		raid_merge_request(raid_io);
+		addr_tree.merge_requests = false;
+		if (raid_merge_request(raid_io) == 0)
+			addr_tree.merge_requests = true;
 		return 0;
 	}
 
 	SPDK_ERRLOG("Passed the optimization function, %d\n", write_request->addr);
 	return 1;
+}
+
+static void
+clear_tree(struct raid_bdev_io *raid_io, int status_submit_merged_request)
+{
+	if (status_submit_merged_request == -ENOMEM)
+		return;
+	struct raid_write_request *removed_node = malloc(sizeof *write_request);
+	RB_FOREACH(current_request, raid_addr_tree, &addr_tree.tree) {
+		removed_node = RB_REMOVE(raid_addr_tree, &addr_tree.tree, current_request);
+		if (status_submit_merged_request == 0)
+			spdk_bdev_io_complete(removed_node->bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		else
+			spdk_bdev_io_complete(removed_node->bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+	free(removed_node);
+	addr_tree.size = 0;
+	addr_tree.merge_requests = false;
+}
+
+static void
+raid0_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct raid_bdev_io *raid_io = cb_arg;
+
+	spdk_bdev_free_io(bdev_io);
+
+	if (addr_tree.merge_requests)
+		return;
+	else if (success) {
+		raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	} else {
+		raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
 }
 
 static void raid0_submit_rw_request(struct raid_bdev_io *raid_io);
@@ -187,7 +210,8 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 						 pd_lba, pd_blocks, raid0_bdev_io_completion,
 						 raid_io, &io_opts);
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-		if (raid_optimization_write_requests(raid_io)) return;
+
+		if (raid_optimization_write_requests(bdev_io)) return;
 		ret = spdk_bdev_writev_blocks_ext(base_info->desc, base_ch,
 						  bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 						  pd_lba, pd_blocks, raid0_bdev_io_completion,
