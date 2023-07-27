@@ -31,7 +31,9 @@ raid0_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 
 	spdk_bdev_free_io(bdev_io);
 
-	if (success) {
+	if (addr_tree.merge_requests)
+		return;
+	else if (success) {
 		raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 	} else {
 		raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -190,7 +192,8 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 						  bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 						  pd_lba, pd_blocks, raid0_bdev_io_completion,
 						  raid_io, &io_opts);
-		if (ret != -ENOMEM) clear_tree();
+		clear_tree(raid_io, ret);
+
 	} else {
 		SPDK_ERRLOG("Recvd not supported io type %u\n", bdev_io->type);
 		assert(0);
