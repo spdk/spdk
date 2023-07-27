@@ -4,21 +4,6 @@
 #  All rights reserved.
 #
 shopt -s extglob
-git_repo_abi="https://github.com/spdk/spdk-abi.git"
-
-function get_spdk_abi() {
-	local dest=$1
-	mkdir -p $dest
-	if [[ -d $SPDK_ABI_DIR ]]; then
-		echo "spdk-abi found at $SPDK_ABI_DIR"
-		cp -r "$SPDK_ABI_DIR"/* "$dest/"
-	else
-		# In case that someone run test manually and did not set existing
-		# spdk-abi directory via SPDK_ABI_DIR
-		echo "spdk-abi has not been found${SPDK_ABI_DIR:+ at $SPDK_ABI_DIR}, cloning"
-		git clone $git_repo_abi "$dest"
-	fi
-}
 
 function get_release_branch() {
 	tag=$(git describe --tags --abbrev=0 --exclude=LTS --exclude=*-pre $1)
@@ -41,6 +26,10 @@ fi
 source $1
 source "$rootdir/test/common/autotest_common.sh"
 
+if [[ -d $2 ]]; then
+	user_abi_dir="$2"
+fi
+source_abi_dir="${user_abi_dir:-"$rootdir/test/make/abi"}"
 libdir="$rootdir/build/lib"
 libdeps_file="$rootdir/mk/spdk.lib_deps.mk"
 suppression_file="$HOME/abigail_suppressions.ini"
@@ -74,11 +63,15 @@ function confirm_abi_deps() {
 	local processed_so=0
 	local abidiff_output
 	local release
-	local source_abi_dir="$rootdir/test/make/abi"
 
 	release=$(get_release_branch)
 
-	get_spdk_abi "$source_abi_dir"
+	if [[ ! -d $source_abi_dir ]]; then
+		mkdir -p $source_abi_dir
+		echo "spdk-abi has not been found at $source_abi_dir, cloning"
+		git clone "https://github.com/spdk/spdk-abi.git" "$source_abi_dir"
+	fi
+
 	echo "* Running ${FUNCNAME[0]} against the latest (${release%.*}) release" >&2
 
 	if ! hash abidiff; then
@@ -217,7 +210,9 @@ EOF
 	done
 	rm -f $suppression_file
 	echo "Processed $processed_so objects."
-	rm -rf "$source_abi_dir"
+	if [[ -z $user_abi_dir ]]; then
+		rm -rf "$source_abi_dir"
+	fi
 }
 
 function get_lib_shortname() {
