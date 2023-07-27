@@ -16,7 +16,8 @@ if [ "$(uname -s)" = "FreeBSD" ]; then
 	exit 1
 fi
 
-rootdir=$(readlink -f $(dirname $0)/../..)
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../..)
 
 if [[ ! -f $1 ]]; then
 	echo "ERROR: SPDK test configuration not specified"
@@ -29,10 +30,9 @@ source "$rootdir/test/common/autotest_common.sh"
 if [[ -d $2 ]]; then
 	user_abi_dir="$2"
 fi
-source_abi_dir="${user_abi_dir:-"$rootdir/test/make/abi"}"
+source_abi_dir="${user_abi_dir:-"$testdir/abi"}"
 libdir="$rootdir/build/lib"
 libdeps_file="$rootdir/mk/spdk.lib_deps.mk"
-suppression_file="$HOME/abigail_suppressions.ini"
 
 function check_header_filenames() {
 	local dups_found=0
@@ -63,6 +63,7 @@ function confirm_abi_deps() {
 	local processed_so=0
 	local abidiff_output
 	local release
+	local suppression_file="$testdir/abigail_suppressions.ini"
 
 	release=$(get_release_branch)
 
@@ -311,7 +312,7 @@ SPDK_NO_LIB_DEPS=1 $MAKE $MAKEFLAGS
 
 xtrace_disable
 
-fail_file=$output_dir/check_so_deps_fail
+fail_file="$testdir/check_so_deps_fail"
 
 rm -f $fail_file
 
