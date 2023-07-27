@@ -1436,3 +1436,85 @@ cleanup:
 
 SPDK_RPC_REGISTER("bdev_lvol_start_shallow_copy", rpc_bdev_lvol_start_shallow_copy,
 		  SPDK_RPC_RUNTIME)
+
+struct rpc_bdev_lvol_shallow_copy_status {
+	char		*src_lvol_name;
+	uint32_t	operation_id;
+};
+
+static void
+free_rpc_bdev_lvol_shallow_copy_status(struct rpc_bdev_lvol_shallow_copy_status *req)
+{
+	free(req->src_lvol_name);
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_lvol_shallow_copy_status_decoders[] = {
+	{"operation_id", offsetof(struct rpc_bdev_lvol_shallow_copy_status, operation_id), spdk_json_decode_uint32},
+};
+
+static void
+rpc_bdev_lvol_check_shallow_copy(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
+{
+	struct rpc_bdev_lvol_shallow_copy_status req = {};
+	struct rpc_shallow_copy_status *status;
+	struct spdk_json_write_ctx *w;
+	uint64_t copied_clusters, total_clusters;
+	int result;
+
+	SPDK_INFOLOG(lvol_rpc, "Shallow copy check\n");
+
+	if (spdk_json_decode_object(params, rpc_bdev_lvol_shallow_copy_status_decoders,
+				    SPDK_COUNTOF(rpc_bdev_lvol_shallow_copy_status_decoders),
+				    &req)) {
+		SPDK_INFOLOG(lvol_rpc, "spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	LIST_FOREACH(status, &g_shallow_copy_status_list, link) {
+		if (status->operation_id == req.operation_id) {
+			break;
+		}
+	}
+
+	if (!status) {
+		SPDK_ERRLOG("operation id '%d' does not exist\n", req.operation_id);
+		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+		goto cleanup;
+	}
+
+	copied_clusters = status->copied_clusters;
+	total_clusters = status->total_clusters;
+	result = status->result;
+
+	w = spdk_jsonrpc_begin_result(request);
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_uint64(w, "copied_clusters", copied_clusters);
+	spdk_json_write_named_uint64(w, "total_clusters", total_clusters);
+	if (copied_clusters < total_clusters && result == 0) {
+		spdk_json_write_named_string(w, "state", "in progress");
+	} else if (copied_clusters == total_clusters && result == 0) {
+		spdk_json_write_named_string(w, "state", "complete");
+		LIST_REMOVE(status, link);
+		free(status);
+	} else {
+		spdk_json_write_named_string(w, "state", "error");
+		spdk_json_write_named_string(w, "error", spdk_strerror(-result));
+		LIST_REMOVE(status, link);
+		free(status);
+	}
+
+	spdk_json_write_object_end(w);
+
+	spdk_jsonrpc_end_result(request, w);
+
+cleanup:
+	free_rpc_bdev_lvol_shallow_copy_status(&req);
+}
+
+SPDK_RPC_REGISTER("bdev_lvol_check_shallow_copy", rpc_bdev_lvol_check_shallow_copy,
+		  SPDK_RPC_RUNTIME)

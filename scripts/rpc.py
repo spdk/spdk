@@ -2138,10 +2138,20 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                                          src_lvol_name=args.src_lvol_name,
                                                          dst_bdev_name=args.dst_bdev_name))
 
-    p = subparsers.add_parser('bdev_lvol_start_shallow_copy', help='Start a shallow copy of an lvol over a given bdev')
+    p = subparsers.add_parser('bdev_lvol_start_shallow_copy',
+                              help="""Start a shallow copy of an lvol over a given bdev.  The status of the operation
+    can be obtained with bdev_lvol_check_shallow_copy""")
     p.add_argument('src_lvol_name', help='source lvol name')
     p.add_argument('dst_bdev_name', help='destination bdev name')
     p.set_defaults(func=bdev_lvol_start_shallow_copy)
+
+    def bdev_lvol_check_shallow_copy(args):
+        print_json(rpc.lvol.bdev_lvol_check_shallow_copy(args.client,
+                                                         operation_id=args.operation_id))
+
+    p = subparsers.add_parser('bdev_lvol_check_shallow_copy', help='Get shallow copy status')
+    p.add_argument('operation_id', help='operation identifier', type=int)
+    p.set_defaults(func=bdev_lvol_check_shallow_copy)
 
     def bdev_lvol_delete_lvstore(args):
         rpc.lvol.bdev_lvol_delete_lvstore(args.client,

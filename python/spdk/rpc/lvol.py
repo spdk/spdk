@@ -224,7 +224,8 @@ def bdev_lvol_decouple_parent(client, name):
 
 
 def bdev_lvol_start_shallow_copy(client, src_lvol_name, dst_bdev_name):
-    """Start a shallow copy of an lvol over a given bdev
+    """Start a shallow copy of an lvol over a given bdev. The status of the operation
+    can be obtained with bdev_lvol_check_shallow_copy
 
     Args:
         src_lvol_name: name of lvol to create a copy from
@@ -235,6 +236,18 @@ def bdev_lvol_start_shallow_copy(client, src_lvol_name, dst_bdev_name):
         'dst_bdev_name': dst_bdev_name
     }
     return client.call('bdev_lvol_start_shallow_copy', params)
+
+
+def bdev_lvol_check_shallow_copy(client, operation_id):
+    """Get shallow copy status
+
+    Args:
+        operation_id: operation identifier
+    """
+    params = {
+        'operation_id': operation_id
+    }
+    return client.call('bdev_lvol_check_shallow_copy', params)
 
 
 def bdev_lvol_delete_lvstore(client, uuid=None, lvs_name=None):

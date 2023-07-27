@@ -499,6 +499,7 @@ Example response:
     "bdev_lvol_rename_lvstore",
     "bdev_lvol_create_lvstore",
     "bdev_lvol_start_shallow_copy",
+    "bdev_lvol_check_shallow_copy",
     "bdev_daos_delete",
     "bdev_daos_create",
     "bdev_daos_resize"
@@ -10653,7 +10654,8 @@ Must have:
 
 #### Result
 
-This RPC starts the operation and return an identifier.
+This RPC starts the operation and return an identifier that can be used to query the status of the operation
+with the RPC @ref rpc_bdev_lvol_check_shallow_copy.
 
 #### Parameters
 
@@ -10686,6 +10688,55 @@ Example response:
   "id": 1,
   "result": {
     "operation_id": 7
+  }
+}
+~~~
+
+### bdev_lvol_check_shallow_copy {#rpc_bdev_lvol_check_shallow_copy}
+
+Get shallow copy status.
+
+#### Result
+
+Get info about the shallow copy operation identified by operation id.
+It reports operation's status, which can be `in progress`, `complete` or `error`,
+the actual number of copied clusters, the total number of clusters to copy and,
+in case of error, a description.
+Once the operation is ended and the result has been retrieved, the
+operation is removed from the internal list of ended operation, so its
+result cannot be accessed anymore.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+operation_id            | Required | number      | operation identifier
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_lvol_check_shallow_copy",
+  "id": 1,
+  "params": {
+    "operation_id": 7
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "state": "in progress",
+    "copied_clusters": 2,
+    "total_clusters": 4
   }
 }
 ~~~
