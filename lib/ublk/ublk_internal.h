@@ -8,7 +8,42 @@
 #ifndef SPDK_UBLK_INTERNAL_H
 #define SPDK_UBLK_INTERNAL_H
 
+#include <linux/ublk_cmd.h>
+
 #include "spdk/ublk.h"
+
+#ifndef UBLK_F_CMD_IOCTL_ENCODE
+#define UBLK_F_CMD_IOCTL_ENCODE	(1UL << 6)
+#endif
+
+#ifndef UBLK_F_USER_COPY
+#define UBLK_F_USER_COPY	(1UL << 7)
+#endif
+
+#ifndef UBLK_U_CMD_GET_FEATURES
+#define UBLK_U_CMD_GET_FEATURES	_IOR('u', 0x13, struct ublksrv_ctrl_cmd)
+#endif
+
+#ifndef UBLKSRV_IO_BUF_OFFSET
+#define UBLKSRV_IO_BUF_OFFSET	0x80000000
+#endif
+
+#ifndef UBLK_IO_BUF_BITS
+#define UBLK_IO_BUF_BITS	25
+#endif
+
+#ifndef UBLK_TAG_OFF
+#define UBLK_TAG_OFF		UBLK_IO_BUF_BITS
+#endif
+
+#ifndef UBLK_TAG_BITS
+#define UBLK_TAG_BITS		16
+#endif
+
+#ifndef UBLK_QID_OFF
+#define UBLK_QID_OFF		(UBLK_TAG_OFF + UBLK_TAG_BITS)
+#endif
+
 
 #define UBLK_DEV_QUEUE_DEPTH	128
 #define UBLK_DEV_NUM_QUEUE	1

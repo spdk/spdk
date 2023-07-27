@@ -3,7 +3,6 @@
  *   All rights reserved.
  */
 
-#include <linux/ublk_cmd.h>
 #include <liburing.h>
 
 #include "spdk/stdinc.h"
@@ -382,7 +381,7 @@ ublk_ctrl_cmd_get_features(void)
 	cmd->addr = (__u64)(uintptr_t)&g_ublk_tgt.features;
 	cmd->len = sizeof(g_ublk_tgt.features);
 
-	cmd_op = _IOR('u', 0x13, struct ublksrv_ctrl_cmd);
+	cmd_op = UBLK_U_CMD_GET_FEATURES;
 	ublk_set_sqe_cmd_op(sqe, cmd_op);
 
 	rc = io_uring_submit(&g_ublk_tgt.ctrl_ring);
@@ -398,7 +397,7 @@ ublk_ctrl_cmd_get_features(void)
 	}
 
 	if (cqe->res == 0) {
-		g_ublk_tgt.ioctl_encode = !!(g_ublk_tgt.features & (1ULL << 6));
+		g_ublk_tgt.ioctl_encode = !!(g_ublk_tgt.features & UBLK_F_CMD_IOCTL_ENCODE);
 	}
 	io_uring_cqe_seen(&g_ublk_tgt.ctrl_ring, cqe);
 
