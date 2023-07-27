@@ -223,6 +223,20 @@ def bdev_lvol_decouple_parent(client, name):
     return client.call('bdev_lvol_decouple_parent', params)
 
 
+def bdev_lvol_start_shallow_copy(client, src_lvol_name, dst_bdev_name):
+    """Start a shallow copy of an lvol over a given bdev
+
+    Args:
+        src_lvol_name: name of lvol to create a copy from
+        bdev_name: name of the bdev that acts as destination for the copy
+    """
+    params = {
+        'src_lvol_name': src_lvol_name,
+        'dst_bdev_name': dst_bdev_name
+    }
+    return client.call('bdev_lvol_start_shallow_copy', params)
+
+
 def bdev_lvol_delete_lvstore(client, uuid=None, lvs_name=None):
     """Destroy a logical volume store.
 

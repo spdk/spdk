@@ -13,6 +13,22 @@
 
 SPDK_LOG_REGISTER_COMPONENT(lvol_rpc)
 
+struct rpc_shallow_copy_status {
+	uint32_t				operation_id;
+	/*
+	 * 0 means ongoing or successfully completed operation
+	 * a negative value is the -errno of an aborted operation
+	 */
+	int					result;
+	uint64_t				copied_clusters;
+	uint64_t				total_clusters;
+	LIST_ENTRY(rpc_shallow_copy_status)	link;
+};
+
+static uint32_t g_shallow_copy_count = 0;
+static LIST_HEAD(, rpc_shallow_copy_status) g_shallow_copy_status_list = LIST_HEAD_INITIALIZER(
+			&g_shallow_copy_status_list);
+
 struct rpc_bdev_lvol_create_lvstore {
 	char *lvs_name;
 	char *bdev_name;
@@ -1295,3 +1311,128 @@ cleanup:
 	free_rpc_bdev_lvol_grow_lvstore(&req);
 }
 SPDK_RPC_REGISTER("bdev_lvol_grow_lvstore", rpc_bdev_lvol_grow_lvstore, SPDK_RPC_RUNTIME)
+
+struct rpc_bdev_lvol_shallow_copy {
+	char *src_lvol_name;
+	char *dst_bdev_name;
+};
+
+struct rpc_bdev_lvol_shallow_copy_ctx {
+	struct spdk_jsonrpc_request *request;
+	struct rpc_shallow_copy_status *status;
+};
+
+static void
+free_rpc_bdev_lvol_shallow_copy(struct rpc_bdev_lvol_shallow_copy *req)
+{
+	free(req->src_lvol_name);
+	free(req->dst_bdev_name);
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_lvol_shallow_copy_decoders[] = {
+	{"src_lvol_name", offsetof(struct rpc_bdev_lvol_shallow_copy, src_lvol_name), spdk_json_decode_string},
+	{"dst_bdev_name", offsetof(struct rpc_bdev_lvol_shallow_copy, dst_bdev_name), spdk_json_decode_string},
+};
+
+static void
+rpc_bdev_lvol_shallow_copy_cb(void *cb_arg, int lvolerrno)
+{
+	struct rpc_bdev_lvol_shallow_copy_ctx *ctx = cb_arg;
+
+	ctx->status->result = lvolerrno;
+
+	free(ctx);
+}
+
+static void
+rpc_bdev_lvol_shallow_copy_status_cb(uint64_t copied_clusters, void *cb_arg)
+{
+	struct rpc_shallow_copy_status *status = cb_arg;
+
+	status->copied_clusters = copied_clusters;
+}
+
+static void
+rpc_bdev_lvol_start_shallow_copy(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
+{
+	struct rpc_bdev_lvol_shallow_copy req = {};
+	struct rpc_bdev_lvol_shallow_copy_ctx *ctx;
+	struct spdk_lvol *src_lvol;
+	struct spdk_bdev *src_lvol_bdev;
+	struct rpc_shallow_copy_status *status;
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	SPDK_INFOLOG(lvol_rpc, "Shallow copying lvol\n");
+
+	if (spdk_json_decode_object(params, rpc_bdev_lvol_shallow_copy_decoders,
+				    SPDK_COUNTOF(rpc_bdev_lvol_shallow_copy_decoders),
+				    &req)) {
+		SPDK_INFOLOG(lvol_rpc, "spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	src_lvol_bdev = spdk_bdev_get_by_name(req.src_lvol_name);
+	if (src_lvol_bdev == NULL) {
+		SPDK_ERRLOG("lvol bdev '%s' does not exist\n", req.src_lvol_name);
+		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+		goto cleanup;
+	}
+
+	src_lvol = vbdev_lvol_get_from_bdev(src_lvol_bdev);
+	if (src_lvol == NULL) {
+		SPDK_ERRLOG("lvol does not exist\n");
+		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+		goto cleanup;
+	}
+
+	status = calloc(1, sizeof(*status));
+	if (status == NULL) {
+		SPDK_ERRLOG("Cannot allocate status entry for shallow copy of '%s'\n", req.src_lvol_name);
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
+		goto cleanup;
+	}
+
+	status->operation_id = ++g_shallow_copy_count;
+	status->total_clusters = spdk_blob_get_num_allocated_clusters(src_lvol->blob);
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Cannot allocate context for shallow copy of '%s'\n", req.src_lvol_name);
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
+		free(status);
+		goto cleanup;
+	}
+	ctx->request = request;
+	ctx->status = status;
+
+	LIST_INSERT_HEAD(&g_shallow_copy_status_list, status, link);
+	rc = vbdev_lvol_shallow_copy(src_lvol, req.dst_bdev_name,
+				     rpc_bdev_lvol_shallow_copy_status_cb, status,
+				     rpc_bdev_lvol_shallow_copy_cb, ctx);
+
+	if (rc < 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 spdk_strerror(-rc));
+		LIST_REMOVE(status, link);
+		free(ctx);
+		free(status);
+	} else {
+		w = spdk_jsonrpc_begin_result(request);
+
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_uint32(w, "operation_id", status->operation_id);
+		spdk_json_write_object_end(w);
+
+		spdk_jsonrpc_end_result(request, w);
+	}
+
+cleanup:
+	free_rpc_bdev_lvol_shallow_copy(&req);
+}
+
+SPDK_RPC_REGISTER("bdev_lvol_start_shallow_copy", rpc_bdev_lvol_start_shallow_copy,
+		  SPDK_RPC_RUNTIME)
