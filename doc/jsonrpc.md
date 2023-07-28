@@ -500,6 +500,7 @@ Example response:
     "bdev_lvol_create_lvstore",
     "bdev_lvol_start_shallow_copy",
     "bdev_lvol_check_shallow_copy",
+    "bdev_lvol_set_parent",
     "bdev_daos_delete",
     "bdev_daos_create",
     "bdev_daos_resize"
@@ -10642,6 +10643,46 @@ Example response:
     }
   }
 ]
+~~~
+
+### bdev_lvol_set_parent {#rpc_bdev_lvol_set_parent}
+
+Set a snapshot as the parent of a lvol, making the lvol a clone of this snapshot.
+The previous parent of the lvol, if any, can be another snapshot or an external snapshot; if the
+lvol is not a clone, it must be thin-provisioned.
+Lvol and parent snapshot must have the same size and must belong to the same lvol store.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+lvol_name               | Required | string      | UUID or alias of the lvol to set parent of
+snapshot_name           | Required | string      | UUID or alias of the snapshot to become parent of lvol
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_lvol_set_parent",
+  "id": 1,
+  "params": {
+    "lvol_name": "LVS1/LVOL0",
+    "snapshot_name": "LVS1/SNAP0"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
 ~~~
 
 ### bdev_lvol_start_shallow_copy {#rpc_bdev_lvol_start_shallow_copy}

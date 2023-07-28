@@ -599,6 +599,331 @@ function test_bdev_lvol_delete_ordering() {
 	check_leftover_devices
 }
 
+function test_lvol_set_parent_from_snapshot() {
+	local vol_size_mb=20
+	local vol_size=$((vol_size_mb * 1024 * 1024))
+	local vol_blocks_count=$((vol_size / MALLOC_BS))
+	local three_clusters_size=$((LVS_DEFAULT_CLUSTER_SIZE * 3))
+	local three_clusters_block_count=$((LVS_DEFAULT_CLUSTER_SIZE * 3 / MALLOC_BS))
+	local two_clusters_block_count=$((LVS_DEFAULT_CLUSTER_SIZE * 2 / MALLOC_BS))
+
+	# Create the lvstore on a malloc device.
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+
+	# Create volume: lvol1
+	# New state:
+	#    lvol1
+	lvol1_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol1 "$vol_size_mb")
+
+	# Perform write operation over lvol1
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol1_uuid" /dev/nbd1
+	run_fio_test /dev/nbd1 0 $vol_size "write" "0xaa"
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd1
+	sleep 1
+
+	# Create a temp volume: lvol2_temp
+	# New state:
+	#    lvol1
+	#    lvol2_temp
+	lvol2_temp_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol2_temp "$vol_size_mb")
+
+	# Perform write operation over lvol2_temp
+	# Calculate md5 of last 2 clusters of lvol2_temp
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol2_temp_uuid" /dev/nbd2
+	run_fio_test /dev/nbd2 0 $vol_size "write" "0xbb"
+	md5_2=$(dd if=/dev/nbd2 bs=$MALLOC_BS count=$two_clusters_block_count skip=$three_clusters_block_count | md5sum)
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd2
+
+	# Make a snapshot of lvol2_temp: snap2
+	# New state:
+	#    lvol1
+	#    snap2  <-- lvol2_temp
+	snap2_uuid=$(rpc_cmd bdev_lvol_snapshot "$lvol2_temp_uuid" snap2)
+
+	# Make a snapshot of lvol1: snap1
+	# New state:
+	#    snap1  <-- lvol1
+	#    snap2  <-- lvol2_temp
+	snap1_uuid=$(rpc_cmd bdev_lvol_snapshot "$lvol1_uuid" snap1)
+
+	# Create another clone of snap1: lvol2
+	# New state:
+	#    snap1  <-- lvol1
+	#          `<-- lvol2
+	#    snap2  <-- lvol2_temp
+	lvol2_uuid=$(rpc_cmd bdev_lvol_clone "$snap1_uuid" lvol2)
+
+	# Perform write operation over the first 3 clusters of lvol2
+	# Calculate md5sum of the first 3 clusters and of last 2 clusters of lvol2
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol2_uuid" /dev/nbd2
+	run_fio_test /dev/nbd2 0 $three_clusters_size "write" "0xcc"
+	md5_lvol2_1=$(dd if=/dev/nbd2 bs=$MALLOC_BS count=$three_clusters_block_count | md5sum)
+	md5_lvol2_2=$(dd if=/dev/nbd2 bs=$MALLOC_BS count=$two_clusters_block_count skip=$three_clusters_block_count | md5sum)
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd2
+
+	# Change parent of lvol2
+	# New state:
+	#    snap1  <-- lvol1
+	#    snap2  <-- lvol2_temp
+	#          `<-- lvol2
+	rpc_cmd bdev_lvol_set_parent "$lvol2_uuid" "$snap2_uuid"
+
+	# Check lvol2 consistency
+	clone_bdev=$(rpc_cmd bdev_get_bdevs -b "$lvol2_uuid")
+	[ "$(jq '.[].driver_specific.lvol.snapshot' <<< "$clone_bdev")" = "false" ]
+	[ "$(jq '.[].driver_specific.lvol.clone' <<< "$clone_bdev")" = "true" ]
+	[ "$(jq '.[].driver_specific.lvol.base_snapshot' <<< "$clone_bdev")" = '"snap2"' ]
+	[ "$(jq '.[].driver_specific.lvol.esnap_clone' <<< "$clone_bdev")" = "false" ]
+
+	# Try again with aliases instead uuid
+	rpc_cmd bdev_lvol_set_parent lvs_test/lvol2 lvs_test/snap2 | grep "File exists"
+
+	# Delete lvol2_temp
+	# New state:
+	#    snap1  <-- lvol1
+	#    snap2  <-- lvol2
+	rpc_cmd bdev_lvol_delete "$lvol2_temp_uuid"
+
+	# Calculate again md5 of the first 3 clusters and of last 2 clusters of lvol2
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol2_uuid" /dev/nbd2
+	md5_lvol2_1_new=$(dd if=/dev/nbd2 bs=$MALLOC_BS count=$three_clusters_block_count | md5sum)
+	md5_lvol2_2_new=$(dd if=/dev/nbd2 bs=$MALLOC_BS count=$two_clusters_block_count skip=$three_clusters_block_count | md5sum)
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd2
+
+	# Check that first three clusters of lvol2 didn't change anche that the last 2 clusters changed
+	[[ $md5_lvol2_1 == "$md5_lvol2_1_new" ]]
+	[[ $md5_lvol2_2 != "$md5_lvol2_2_new" ]]
+	[[ $md5_lvol2_2_new == "$md5_2" ]]
+
+	# Clean up
+	rpc_cmd bdev_lvol_delete "$lvol1_uuid"
+	rpc_cmd bdev_lvol_delete "$snap1_uuid"
+	rpc_cmd bdev_lvol_delete "$lvol2_uuid"
+	rpc_cmd bdev_lvol_delete "$snap2_uuid"
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+	rpc_cmd bdev_malloc_delete "$malloc_name"
+	check_leftover_devices
+}
+
+function test_lvol_set_parent_from_esnap() {
+	local vol_size_mb=20
+	local vol_size=$((vol_size_mb * 1024 * 1024))
+	local vol_blocks_count=$((vol_size / MALLOC_BS))
+	local three_clusters_size=$((LVS_DEFAULT_CLUSTER_SIZE * 3))
+	local three_clusters_block_count=$((LVS_DEFAULT_CLUSTER_SIZE * 3 / MALLOC_BS))
+	local two_clusters_block_count=$((LVS_DEFAULT_CLUSTER_SIZE * 2 / MALLOC_BS))
+
+	# Create the lvstore on a malloc device.
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+
+	# Create a bdev that will be the external snapshot
+	# State:
+	#    esnap1
+	rpc_cmd bdev_malloc_create -b esnap1 "$vol_size_mb" $MALLOC_BS
+
+	# Perform write operation over the external snapshot
+	nbd_start_disks "$DEFAULT_RPC_ADDR" esnap1 /dev/nbd1
+	run_fio_test /dev/nbd1 0 $vol_size "write" "0xaa"
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd1
+	sleep 1
+
+	# Create a temp volume: lvol2_temp
+	# New state:
+	#    esnap1
+	#    lvol2_temp
+	lvol2_temp_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol2_temp "$vol_size_mb")
+
+	# Perform write operation over lvol2_temp
+	# Calculate md5 of last 2 clusters of lvol2_temp
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol2_temp_uuid" /dev/nbd2
+	run_fio_test /dev/nbd2 0 $vol_size "write" "0xbb"
+	md5_2=$(dd if=/dev/nbd2 bs=$MALLOC_BS count=$two_clusters_block_count skip=$three_clusters_block_count | md5sum)
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd2
+
+	# Make a snapshot of lvol2_temp: snap2
+	# New state:
+	#    esnap1
+	#    snap2  <-- lvol2_temp
+	snap2_uuid=$(rpc_cmd bdev_lvol_snapshot "$lvol2_temp_uuid" snap2)
+
+	# Create an esnap clone: lvol2
+	# New state:
+	#    esnap1 <-- lvol2
+	#    snap2  <-- lvol2_temp
+	lvol2_uuid=$(rpc_cmd bdev_lvol_clone_bdev esnap1 lvs_test lvol2)
+
+	# Perform write operation over the first 3 clusters of lvol2
+	# Calculate md5sum of the first 3 clusters and of last 2 clusters of lvol2
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol2_uuid" /dev/nbd2
+	run_fio_test /dev/nbd2 0 $three_clusters_size "write" "0xcc"
+	md5_lvol2_1=$(dd if=/dev/nbd2 bs=$MALLOC_BS count=$three_clusters_block_count | md5sum)
+	md5_lvol2_2=$(dd if=/dev/nbd2 bs=$MALLOC_BS count=$two_clusters_block_count skip=$three_clusters_block_count | md5sum)
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd2
+
+	# Change parent of lvol2
+	# New state:
+	#    esnap1
+	#    snap2  <-- lvol2
+	#          `<-- lvol2_temp
+	rpc_cmd bdev_lvol_set_parent "$lvol2_uuid" "$snap2_uuid"
+
+	# Check lvol2 consistency
+	clone_bdev=$(rpc_cmd bdev_get_bdevs -b "$lvol2_uuid")
+	[ "$(jq '.[].driver_specific.lvol.snapshot' <<< "$clone_bdev")" = "false" ]
+	[ "$(jq '.[].driver_specific.lvol.clone' <<< "$clone_bdev")" = "true" ]
+	[ "$(jq '.[].driver_specific.lvol.base_snapshot' <<< "$clone_bdev")" = '"snap2"' ]
+	[ "$(jq '.[].driver_specific.lvol.esnap_clone' <<< "$clone_bdev")" = "false" ]
+
+	# Try again with aliases instead uuid
+	rpc_cmd bdev_lvol_set_parent lvs_test/lvol2 lvs_test/snap2 | grep "File exists"
+
+	# Delete lvol2_temp
+	# New state:
+	#    esnap1
+	#    snap2  <-- lvol2
+	rpc_cmd bdev_lvol_delete "$lvol2_temp_uuid"
+
+	# Calculate again md5 of the first 3 clusters and of last 2 clusters of lvol2
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol2_uuid" /dev/nbd2
+	md5_lvol2_1_new=$(dd if=/dev/nbd2 bs=$MALLOC_BS count=$three_clusters_block_count | md5sum)
+	md5_lvol2_2_new=$(dd if=/dev/nbd2 bs=$MALLOC_BS count=$two_clusters_block_count skip=$three_clusters_block_count | md5sum)
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd2
+
+	# Check that first three clusters of lvol2 didn't change anche that the last 2 clusters changed
+	[[ $md5_lvol2_1 == "$md5_lvol2_1_new" ]]
+	[[ $md5_lvol2_2 != "$md5_lvol2_2_new" ]]
+	[[ $md5_lvol2_2_new == "$md5_2" ]]
+
+	# Clean up
+	rpc_cmd bdev_lvol_delete "$lvol2_uuid"
+	rpc_cmd bdev_lvol_delete "$snap2_uuid"
+	rpc_cmd bdev_malloc_delete esnap1
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+	rpc_cmd bdev_malloc_delete "$malloc_name"
+	check_leftover_devices
+}
+
+function test_lvol_set_parent_from_none() {
+	local vol_size_mb=20
+	local vol_size=$((vol_size_mb * 1024 * 1024))
+	local three_clusters_size=$((LVS_DEFAULT_CLUSTER_SIZE * 3))
+	local three_clusters_block_count=$((LVS_DEFAULT_CLUSTER_SIZE * 3 / MALLOC_BS))
+	local two_clusters_block_count=$((LVS_DEFAULT_CLUSTER_SIZE * 2 / MALLOC_BS))
+
+	# Create the lvstore on a malloc device.
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+
+	# Create a temp volume: lvol2_temp
+	# New state:
+	#    lvol2_temp
+	lvol2_temp_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol2_temp "$vol_size_mb")
+
+	# Perform write operation over lvol2_temp
+	# Calculate md5 of last 2 clusters of lvol2_temp
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol2_temp_uuid" /dev/nbd2
+	run_fio_test /dev/nbd2 0 $vol_size "write" "0xbb"
+	md5_2=$(dd if=/dev/nbd2 bs=$MALLOC_BS count=$two_clusters_block_count skip=$three_clusters_block_count | md5sum)
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd2
+
+	# Make a snapshot of lvol2_temp: snap2
+	# New state:
+	#    snap2  <-- lvol2_temp
+	snap2_uuid=$(rpc_cmd bdev_lvol_snapshot "$lvol2_temp_uuid" snap2)
+
+	# Create another volume: lvol2
+	# New state:
+	#               lvol2
+	#    snap2  <-- lvol2_temp
+	lvol2_uuid=$(rpc_cmd bdev_lvol_create -t -u "$lvs_uuid" lvol2 "$vol_size_mb")
+
+	# Perform write operation over the first 3 clusters of lvol2
+	# Calculate md5sum of the first 3 clusters and of last 2 clusters of lvol2
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol2_uuid" /dev/nbd2
+	run_fio_test /dev/nbd2 0 $three_clusters_size "write" "0xcc"
+	md5_lvol2_1=$(dd if=/dev/nbd2 bs=$MALLOC_BS count=$three_clusters_block_count | md5sum)
+	md5_lvol2_2=$(dd if=/dev/nbd2 bs=$MALLOC_BS count=$two_clusters_block_count skip=$three_clusters_block_count | md5sum)
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd2
+
+	# Change parent of lvol2
+	# New state:
+	#    snap2  <-- lvol2_temp
+	#          `<-- lvol2
+	rpc_cmd bdev_lvol_set_parent "$lvol2_uuid" "$snap2_uuid"
+
+	# Check lvol2 consistency
+	clone_bdev=$(rpc_cmd bdev_get_bdevs -b "$lvol2_uuid")
+	[ "$(jq '.[].driver_specific.lvol.snapshot' <<< "$clone_bdev")" = "false" ]
+	[ "$(jq '.[].driver_specific.lvol.clone' <<< "$clone_bdev")" = "true" ]
+	[ "$(jq '.[].driver_specific.lvol.base_snapshot' <<< "$clone_bdev")" = '"snap2"' ]
+	[ "$(jq '.[].driver_specific.lvol.esnap_clone' <<< "$clone_bdev")" = "false" ]
+
+	# Try again with aliases instead uuid
+	rpc_cmd bdev_lvol_set_parent lvs_test/lvol2 lvs_test/snap2 | grep "File exists"
+
+	# Delete lvol2_temp
+	# New state:
+	#    snap2  <-- lvol2
+	rpc_cmd bdev_lvol_delete "$lvol2_temp_uuid"
+
+	# Calculate again md5 of the first 3 clusters and of last 2 clusters of lvol2
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol2_uuid" /dev/nbd2
+	md5_lvol2_1_new=$(dd if=/dev/nbd2 bs=$MALLOC_BS count=$three_clusters_block_count | md5sum)
+	md5_lvol2_2_new=$(dd if=/dev/nbd2 bs=$MALLOC_BS count=$two_clusters_block_count skip=$three_clusters_block_count | md5sum)
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd2
+
+	# Check that first three clusters of lvol2 didn't change anche that the last 2 clusters changed
+	[[ $md5_lvol2_1 == "$md5_lvol2_1_new" ]]
+	[[ $md5_lvol2_2 != "$md5_lvol2_2_new" ]]
+	[[ $md5_lvol2_2_new == "$md5_2" ]]
+
+	# Clean up
+	rpc_cmd bdev_lvol_delete "$lvol2_uuid"
+	rpc_cmd bdev_lvol_delete "$snap2_uuid"
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+	rpc_cmd bdev_malloc_delete "$malloc_name"
+	check_leftover_devices
+}
+
+function test_lvol_set_parent_failed() {
+	local vol_size_mb=20
+
+	# Create a lvstore on a malloc device.
+	malloc1_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs1_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc1_name" lvs1_test)
+
+	# Create another lvstore on another malloc device.
+	malloc2_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs2_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc2_name" lvs2_test)
+
+	# Create a volume on lvol store 1: lvol1
+	lvol1_uuid=$(rpc_cmd bdev_lvol_create -t -u "$lvs1_uuid" lvol1 "$vol_size_mb")
+
+	# Create a volume on lvol store 2: lvol2
+	lvol2_uuid=$(rpc_cmd bdev_lvol_create -t -u "$lvs2_uuid" lvol2 "$vol_size_mb")
+
+	# Make a snapshot of lvol2: snap2
+	snap2_uuid=$(rpc_cmd bdev_lvol_snapshot "$lvol2_uuid" snap2)
+
+	# The setting of snap2 as the parent of lvol2 must fail because they belong to different lvol stores
+	NOT rpc_cmd bdev_lvol_set_parent "$lvol1_uuid" "$snap2_uuid"
+
+	# Try to set parent with a parent that is not a lvol
+	NOT rpc_cmd bdev_lvol_set_parent "$lvol1_uuid" "$malloc2_name"
+
+	# Clean up
+	rpc_cmd bdev_lvol_delete "$lvol1_uuid"
+	rpc_cmd bdev_lvol_delete "$lvol2_uuid"
+	rpc_cmd bdev_lvol_delete "$snap2_uuid"
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs1_uuid"
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs2_uuid"
+	rpc_cmd bdev_malloc_delete "$malloc1_name"
+	rpc_cmd bdev_malloc_delete "$malloc2_name"
+	check_leftover_devices
+}
+
 $SPDK_BIN_DIR/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
@@ -615,6 +940,10 @@ run_test "test_lvol_bdev_readonly" test_lvol_bdev_readonly
 run_test "test_delete_snapshot_with_clone" test_delete_snapshot_with_clone
 run_test "test_delete_snapshot_with_snapshot" test_delete_snapshot_with_snapshot
 run_test "test_bdev_lvol_delete_ordering" test_bdev_lvol_delete_ordering
+run_test "test_lvol_set_parent_from_snapshot" test_lvol_set_parent_from_snapshot
+run_test "test_lvol_set_parent_from_esnap" test_lvol_set_parent_from_esnap
+run_test "test_lvol_set_parent_from_none" test_lvol_set_parent_from_none
+run_test "test_lvol_set_parent_failed" test_lvol_set_parent_failed
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid

@@ -2153,6 +2153,16 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('operation_id', help='operation identifier', type=int)
     p.set_defaults(func=bdev_lvol_check_shallow_copy)
 
+    def bdev_lvol_set_parent(args):
+        rpc.lvol.bdev_lvol_set_parent(args.client,
+                                      lvol_name=args.lvol_name,
+                                      snapshot_name=args.snapshot_name)
+
+    p = subparsers.add_parser('bdev_lvol_set_parent', help='Set the parent snapshot of a lvol')
+    p.add_argument('lvol_name', help='lvol name')
+    p.add_argument('snapshot_name', help='snapshot name')
+    p.set_defaults(func=bdev_lvol_set_parent)
+
     def bdev_lvol_delete_lvstore(args):
         rpc.lvol.bdev_lvol_delete_lvstore(args.client,
                                           uuid=args.uuid,
