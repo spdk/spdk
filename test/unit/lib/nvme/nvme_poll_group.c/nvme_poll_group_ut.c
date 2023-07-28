@@ -4,7 +4,7 @@
  *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
  */
 
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 
 #include "nvme/nvme_poll_group.c"
 #include "common/lib/test_env.c"

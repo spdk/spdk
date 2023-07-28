@@ -6,7 +6,7 @@
 #include "spdk/stdinc.h"
 
 #include "common/lib/ut_multithread.c"
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 #include "spdk/nvmf.h"
 #include "spdk_internal/mock.h"
 

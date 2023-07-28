@@ -7,7 +7,7 @@
 
 #include "spdk/scsi.h"
 
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 
 #include "../common.c"
 #include "iscsi/param.c"

@@ -4,7 +4,7 @@
  *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 #include "spdk_internal/mock.h"
 #include "spdk/accel_module.h"
 #include "thread/thread_internal.h"

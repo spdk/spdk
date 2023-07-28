@@ -7,7 +7,7 @@
 /* NVMF FC LS Command Processor Unit Test */
 
 #include "spdk/env.h"
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 #include "spdk/nvmf.h"
 #include "spdk/endian.h"
 #include "spdk/trace.h"

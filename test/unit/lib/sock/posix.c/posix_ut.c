@@ -8,7 +8,7 @@
 
 #include "spdk_internal/mock.h"
 
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 
 #include "common/lib/test_env.c"
 #include "sock/posix/posix.c"

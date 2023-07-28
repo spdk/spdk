@@ -3,7 +3,7 @@
  *   Copyright (c) 2016 FUJITSU LIMITED, All rights reserved.
  */
 
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 
 #include "bdev/scsi_nvme.c"
 

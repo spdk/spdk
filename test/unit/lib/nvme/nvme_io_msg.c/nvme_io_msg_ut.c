@@ -4,7 +4,7 @@
  */
 
 #include "spdk/stdinc.h"
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 #include "spdk/nvme.h"
 #include "nvme/nvme_io_msg.c"
 #include "common/lib/nvme/common_stubs.h"

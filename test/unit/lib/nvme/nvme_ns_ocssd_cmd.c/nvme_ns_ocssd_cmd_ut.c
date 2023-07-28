@@ -3,7 +3,7 @@
  *   All rights reserved.
  */
 
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 
 #include "nvme/nvme_ns_ocssd_cmd.c"
 #include "nvme/nvme_ns_cmd.c"

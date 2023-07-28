@@ -3,7 +3,7 @@
  *   All rights reserved.
  */
 
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 
 #include "spdk/histogram_data.h"
 #include "spdk/util.h"

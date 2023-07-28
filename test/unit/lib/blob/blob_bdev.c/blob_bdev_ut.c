@@ -4,7 +4,7 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 #include "common/lib/ut_multithread.c"
 
 static void ut_put_io_channel(struct spdk_io_channel *ch);

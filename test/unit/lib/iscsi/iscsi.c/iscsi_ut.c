@@ -7,7 +7,7 @@
 
 #include "spdk/endian.h"
 #include "spdk/scsi.h"
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 
 #include "CUnit/Basic.h"
 

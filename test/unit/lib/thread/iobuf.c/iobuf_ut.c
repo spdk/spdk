@@ -2,7 +2,7 @@
  *   Copyright (C) 2023 Intel Corporation. All rights reserved.
  */
 
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 
 #include "common/lib/ut_multithread.c"
 #include "unit/lib/json_mock.c"

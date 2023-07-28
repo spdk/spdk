@@ -11,7 +11,7 @@
 #include "spdk/barrier.h"
 #include "thread/thread_internal.h"
 
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 #include "unit/lib/blob/bs_dev_common.c"
 #include "common/lib/test_env.c"
 #include "blobfs/blobfs.c"

@@ -5,7 +5,7 @@
  */
 
 #include "spdk/stdinc.h"
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 #include "spdk/thread.h"
 #include "spdk/bdev_module.h"
 #include "spdk/bdev_module.h"

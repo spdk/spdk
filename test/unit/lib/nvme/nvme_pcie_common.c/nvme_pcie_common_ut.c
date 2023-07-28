@@ -5,7 +5,7 @@
  */
 
 #include "spdk/stdinc.h"
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 #include "nvme/nvme_pcie_common.c"
 #include "common/lib/test_env.c"
 

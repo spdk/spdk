@@ -7,7 +7,7 @@
 #include "spdk/stdinc.h"
 
 #include "CUnit/Basic.h"
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 #include "spdk/thread.h"
 #include "spdk_internal/mock.h"
 #include "common/lib/ut_multithread.c"

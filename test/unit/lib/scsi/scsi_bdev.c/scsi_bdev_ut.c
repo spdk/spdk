@@ -9,7 +9,7 @@
 #include "scsi/scsi_bdev.c"
 #include "common/lib/test_env.c"
 
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 
 #include "spdk_internal/mock.h"
 #include "spdk/bdev_module.h"

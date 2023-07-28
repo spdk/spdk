@@ -7,7 +7,7 @@
 
 #include "spdk/util.h"
 #include "spdk/queue.h"
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 
 #include <rte_config.h>
 #include <rte_version.h>

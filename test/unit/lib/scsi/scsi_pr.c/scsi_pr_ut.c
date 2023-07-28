@@ -8,7 +8,7 @@
 #include "scsi/port.c"
 #include "scsi/scsi_pr.c"
 
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 
 #include "spdk_internal/mock.h"
 

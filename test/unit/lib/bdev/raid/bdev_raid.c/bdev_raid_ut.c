@@ -5,7 +5,7 @@
  */
 
 #include "spdk/stdinc.h"
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 #include "spdk/env.h"
 #include "spdk_internal/mock.h"
 #include "thread/thread_internal.h"

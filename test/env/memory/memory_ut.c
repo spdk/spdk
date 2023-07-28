@@ -8,7 +8,7 @@
 #define UNIT_TEST_NO_VTOPHYS
 #define UNIT_TEST_NO_PCI_ADDR
 #include "common/lib/test_env.c"
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 
 #include "spdk/bit_array.h"
 

@@ -9,7 +9,7 @@
 
 #include "spdk/env.h"
 #include "spdk/sock.h"
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 
 #include "spdk/log.h"
 #include "spdk_internal/mock.h"

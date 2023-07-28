@@ -4,7 +4,7 @@
  *   Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 #include "spdk/string.h"
 
 #include "common/lib/ut_multithread.c"

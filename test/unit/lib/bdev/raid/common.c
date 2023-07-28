@@ -3,7 +3,7 @@
  *   All rights reserved.
  */
 
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 #include "spdk/stdinc.h"
 #include "bdev/raid/bdev_raid.h"
 

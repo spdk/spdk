@@ -4,7 +4,7 @@
  *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 /* We have our own mock for this */
 #define UNIT_TEST_NO_VTOPHYS
 #include "common/lib/test_env.c"

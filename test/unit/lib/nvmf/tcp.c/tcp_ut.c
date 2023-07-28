@@ -6,7 +6,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/nvmf_spec.h"
-#include "spdk_cunit.h"
+#include "spdk_internal/cunit.h"
 #include "spdk/bdev_zone.h"
 
 #include "common/lib/test_env.c"

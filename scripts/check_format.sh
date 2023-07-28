@@ -242,7 +242,7 @@ function check_cunit_style() {
 
 	echo -n "Checking for use of forbidden CUnit macros..."
 
-	git grep --line-number -w 'CU_ASSERT_FATAL' -- 'test/*' ':!test/spdk_cunit.h' > badcunit.log || true
+	git grep --line-number -w 'CU_ASSERT_FATAL' -- 'test/*' ':!include/spdk_internal/cunit.h' > badcunit.log || true
 	if [ -s badcunit.log ]; then
 		echo " Forbidden CU_ASSERT_FATAL usage detected - use SPDK_CU_ASSERT_FATAL instead"
 		cat badcunit.log
