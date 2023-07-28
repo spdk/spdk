@@ -25,7 +25,6 @@ Below is an example config file that uses all available parameters:
 [global]
 filename=Malloc0:Malloc1
 bs=1024
-iosize=256
 rw=randrw
 rwmixread=90
 
@@ -42,7 +41,6 @@ rw=write
 
 [C]
 bs=4096
-iosize=128
 offset=1000000
 length=1000000
 ~~~
