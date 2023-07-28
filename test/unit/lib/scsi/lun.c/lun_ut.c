@@ -724,7 +724,6 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	CU_set_error_action(CUEA_ABORT);
 	CU_initialize_registry();
 
 	suite = CU_add_suite("lun_suite", NULL, NULL);
@@ -747,12 +746,10 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, lun_check_pending_tasks_only_for_specific_initiator);
 	CU_ADD_TEST(suite, abort_pending_mgmt_tasks_when_lun_is_removed);
 
-	CU_basic_set_mode(CU_BRM_VERBOSE);
 	allocate_threads(1);
 	set_thread(0);
-	CU_basic_run_tests();
+	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	free_threads();
-	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
 	return num_failures;
 }

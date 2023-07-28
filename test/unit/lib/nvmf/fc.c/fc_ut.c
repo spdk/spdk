@@ -428,7 +428,6 @@ main(int argc, char **argv)
 	unsigned int num_failures = 0;
 	CU_pSuite suite = NULL;
 
-	CU_set_error_action(CUEA_ABORT);
 	CU_initialize_registry();
 
 	suite = CU_add_suite("NVMf-FC", nvmf_fc_tests_init, nvmf_fc_tests_fini);
@@ -441,9 +440,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, remove_hwqps_from_poll_groups_test);
 	CU_ADD_TEST(suite, destroy_transport_test);
 
-	CU_basic_set_mode(CU_BRM_VERBOSE);
-	CU_basic_run_tests();
-	num_failures = CU_get_number_of_failures();
+	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
 
 	return num_failures;

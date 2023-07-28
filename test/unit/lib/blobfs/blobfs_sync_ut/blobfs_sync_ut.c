@@ -600,7 +600,6 @@ main(int argc, char **argv)
 	pthread_t	spdk_tid;
 	unsigned int	num_failures;
 
-	CU_set_error_action(CUEA_ABORT);
 	CU_initialize_registry();
 
 	suite = CU_add_suite("blobfs_sync_ut", NULL, NULL);
@@ -625,9 +624,7 @@ main(int argc, char **argv)
 
 	g_dev_buffer = calloc(1, DEV_BUFFER_SIZE);
 
-	CU_basic_set_mode(CU_BRM_VERBOSE);
-	CU_basic_run_tests();
-	num_failures = CU_get_number_of_failures();
+	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
 
 	free(g_dev_buffer);

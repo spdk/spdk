@@ -107,16 +107,13 @@ main(int argc, char **argv)
 	CU_pSuite suite64 = NULL;
 	unsigned int num_failures;
 
-	CU_set_error_action(CUEA_ABORT);
 	CU_initialize_registry();
 
 	suite64 = CU_add_suite("ftl_addr64_suite", setup_l2p_64bit, cleanup);
 
 	CU_ADD_TEST(suite64, test_addr_cached);
 
-	CU_basic_set_mode(CU_BRM_VERBOSE);
-	CU_basic_run_tests();
-	num_failures = CU_get_number_of_failures();
+	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
 
 	return num_failures;

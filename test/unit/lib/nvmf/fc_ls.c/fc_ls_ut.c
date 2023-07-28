@@ -886,7 +886,6 @@ main(int argc, char **argv)
 		}
 	}
 
-	CU_set_error_action(CUEA_ABORT);
 	CU_initialize_registry();
 
 	suite = CU_add_suite("FC-NVMe LS", ls_tests_init, ls_tests_fini);
@@ -928,9 +927,7 @@ main(int argc, char **argv)
 		}
 	}
 
-	CU_basic_set_mode(CU_BRM_VERBOSE);
-	CU_basic_run_tests();
-	num_failures = CU_get_number_of_failures();
+	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
 
 	return num_failures;

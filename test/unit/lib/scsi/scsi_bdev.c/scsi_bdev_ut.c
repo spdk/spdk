@@ -991,7 +991,6 @@ main(int argc, char **argv)
 	TAILQ_INIT(&g_bdev_io_queue);
 	TAILQ_INIT(&g_io_wait_queue);
 
-	CU_set_error_action(CUEA_ABORT);
 	CU_initialize_registry();
 
 	suite = CU_add_suite("translation_suite", NULL, NULL);
@@ -1010,9 +1009,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, scsi_name_padding_test);
 	CU_ADD_TEST(suite, get_dif_ctx_test);
 
-	CU_basic_set_mode(CU_BRM_VERBOSE);
-	CU_basic_run_tests();
-	num_failures = CU_get_number_of_failures();
+	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
 	return num_failures;
 }

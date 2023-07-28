@@ -7175,12 +7175,11 @@ test_disable_enable_ctrlr(void)
 }
 
 int
-main(int argc, const char **argv)
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	CU_set_error_action(CUEA_ABORT);
 	CU_initialize_registry();
 
 	suite = CU_add_suite("nvme", NULL, NULL);
@@ -7232,21 +7231,18 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_bdev_ctrlr_op_rpc);
 	CU_ADD_TEST(suite, test_disable_enable_ctrlr);
 
-	CU_basic_set_mode(CU_BRM_VERBOSE);
-
 	allocate_threads(3);
 	set_thread(0);
 	bdev_nvme_library_init();
 	init_accel();
 
-	CU_basic_run_tests();
+	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 
 	set_thread(0);
 	bdev_nvme_library_fini();
 	fini_accel();
 	free_threads();
 
-	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
 
 	return num_failures;

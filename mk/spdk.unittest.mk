@@ -25,7 +25,7 @@ CFLAGS += -ffunction-sections
 CFLAGS += -DSPDK_UNIT_TEST=1
 LDFLAGS += -Wl,--gc-sections
 
-SPDK_LIB_LIST += thread trace util log
+SPDK_LIB_LIST += thread trace util log ut
 
 LIBS += -lcunit $(SPDK_STATIC_LIB_LINKER_ARGS)
 

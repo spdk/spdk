@@ -54,7 +54,6 @@ main(int argc, char **argv)
 	CU_pSuite	suite_math = NULL, suite_erase = NULL;
 	unsigned int	num_failures;
 
-	CU_set_error_action(CUEA_ABORT);
 	CU_initialize_registry();
 
 	suite_math = CU_add_suite("math", NULL, NULL);
@@ -63,11 +62,9 @@ main(int argc, char **argv)
 	suite_erase = CU_add_suite("erase", NULL, NULL);
 	CU_ADD_TEST(suite_erase, test_memset_s);
 
-	CU_basic_set_mode(CU_BRM_VERBOSE);
 
-	CU_basic_run_tests();
+	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 
-	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
 
 	return num_failures;
