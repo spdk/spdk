@@ -2311,3 +2311,55 @@ spdk_lvol_shallow_copy(struct spdk_lvol *lvol, struct spdk_bs_dev *ext_dev,
 
 	return rc;
 }
+
+static void
+lvol_set_parent_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvol_req *req = cb_arg;
+
+	if (lvolerrno < 0) {
+		SPDK_ERRLOG("could not set parent of lvol %s, error %d\n", req->lvol->name, lvolerrno);
+	}
+
+	req->cb_fn(req->cb_arg, lvolerrno);
+	free(req);
+}
+
+void
+spdk_lvol_set_parent(struct spdk_lvol *lvol, struct spdk_lvol *snapshot,
+		     spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_req *req;
+	spdk_blob_id blob_id, snapshot_id;
+
+	assert(cb_fn != NULL);
+
+	if (lvol == NULL) {
+		SPDK_ERRLOG("lvol must not be NULL\n");
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	if (snapshot == NULL) {
+		SPDK_ERRLOG("snapshot must not be NULL\n");
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("cannot alloc memory for lvol request pointer\n");
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	req->lvol = lvol;
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	blob_id = spdk_blob_get_id(lvol->blob);
+	snapshot_id = spdk_blob_get_id(snapshot->blob);
+
+	spdk_bs_blob_set_parent(lvol->lvol_store->blobstore, blob_id, snapshot_id,
+				lvol_set_parent_cb, req);
+}

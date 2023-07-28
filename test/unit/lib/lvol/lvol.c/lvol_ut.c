@@ -54,6 +54,7 @@ struct spdk_blob {
 	char			name[SPDK_LVS_NAME_MAX];
 	bool			thin_provisioned;
 	struct spdk_bs_dev	*back_bs_dev;
+	uint64_t		num_clusters;
 };
 
 int g_lvserrno;
@@ -63,6 +64,7 @@ int g_inflate_rc;
 int g_remove_rc;
 bool g_lvs_rename_blob_open_error = false;
 bool g_blob_read_only = false;
+bool g_blob_is_snapshot = false;
 struct spdk_lvol_store *g_lvol_store;
 struct spdk_lvol *g_lvol;
 spdk_blob_id g_blobid = 1;
@@ -140,7 +142,7 @@ spdk_bs_iter_first(struct spdk_blob_store *bs,
 uint64_t
 spdk_blob_get_num_clusters(struct spdk_blob *blob)
 {
-	return 1;
+	return blob->num_clusters;
 }
 
 void
@@ -259,6 +261,19 @@ spdk_bs_blob_shallow_copy(struct spdk_blob_store *bs, struct spdk_io_channel *ch
 {
 	cb_fn(cb_arg, 0);
 	return 0;
+}
+
+bool
+spdk_blob_is_snapshot(struct spdk_blob *blob)
+{
+	return g_blob_is_snapshot;
+}
+
+void
+spdk_bs_blob_set_parent(struct spdk_blob_store *bs, spdk_blob_id blob_id,
+			spdk_blob_id snapshot_id, spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	cb_fn(cb_arg, 0);
 }
 
 DEFINE_STUB(spdk_bs_get_page_size, uint64_t, (struct spdk_blob_store *bs), BS_PAGE_SIZE);
@@ -503,6 +518,12 @@ spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_opts 
 		b->thin_provisioned = true;
 	}
 	b->bs = bs;
+
+	if (opts != NULL) {
+		b->num_clusters = opts->num_clusters;
+	} else {
+		b->num_clusters = 1;
+	}
 
 	TAILQ_INSERT_TAIL(&bs->blobs, b, link);
 	cb_fn(cb_arg, b->id, 0);
@@ -3375,6 +3396,93 @@ lvol_shallow_copy(void)
 	CU_ASSERT(g_io_channel == NULL);
 }
 
+static void
+lvol_set_parent(void)
+{
+	struct lvol_ut_bs_dev bs1_dev;
+	struct spdk_lvol_store *lvol_store1;
+	struct spdk_lvol *lvol1, *lvol2, *snapshot1;
+	struct spdk_lvs_opts opts;
+	uint64_t cluster_sz = BS_CLUSTER_SIZE;
+	int rc = 0;
+
+	init_dev(&bs1_dev);
+
+	/* Create lvol store 1 */
+	spdk_lvs_opts_init(&opts);
+	snprintf(opts.name, sizeof(opts.name), "lvs1");
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_init(&bs1_dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+
+	lvol_store1 = g_lvol_store;
+
+	/* Create lvol1 */
+	spdk_lvol_create(lvol_store1, "lvol1", cluster_sz, true, LVOL_CLEAR_WITH_DEFAULT,
+			 lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+
+	lvol1 = g_lvol;
+
+	/* Create lvol2 with same size of lvol1 */
+	spdk_lvol_create(lvol_store1, "lvol2", cluster_sz, true, LVOL_CLEAR_WITH_DEFAULT,
+			 lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+
+	lvol2 = g_lvol;
+
+	/* Create a snapshot of lvol2 */
+	spdk_lvol_create_snapshot(lvol2, "snap1", lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+	CU_ASSERT_STRING_EQUAL(g_lvol->name, "snap1");
+
+	snapshot1 = g_lvol;
+
+	/* Set parent with a NULL lvol */
+	g_lvserrno = 0;
+	spdk_lvol_set_parent(NULL, snapshot1, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == -EINVAL);
+
+	/* Set parent with a NULL parent snapshot */
+	g_lvserrno = 0;
+	spdk_lvol_set_parent(lvol1, NULL, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == -EINVAL);
+
+	/* Set parent successful */
+	g_blob_is_snapshot = true;
+	g_lvserrno = -1;
+	spdk_lvol_set_parent(lvol1, snapshot1, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+
+	/* Clean up */
+	spdk_lvol_close(lvol1, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	spdk_lvol_destroy(lvol1, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+
+	spdk_lvol_close(lvol2, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	spdk_lvol_destroy(lvol2, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+
+	spdk_lvol_close(snapshot1, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	spdk_lvol_destroy(snapshot1, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_destroy(lvol_store1, op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	lvol_store1 = NULL;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -3420,6 +3528,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, lvol_esnap_hotplug);
 	CU_ADD_TEST(suite, lvol_get_by);
 	CU_ADD_TEST(suite, lvol_shallow_copy);
+	CU_ADD_TEST(suite, lvol_set_parent);
 
 	allocate_threads(1);
 	set_thread(0);

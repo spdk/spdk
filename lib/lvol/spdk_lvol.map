@@ -28,6 +28,7 @@
 	spdk_lvol_get_by_names;
 	spdk_lvol_is_degraded;
 	spdk_lvol_shallow_copy;
+	spdk_lvol_set_parent;
 
 	# internal functions
 	spdk_lvol_resize;
