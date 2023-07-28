@@ -8,6 +8,7 @@
 enum ut_action {
 	UT_ACTION_RUN_TESTS,
 	UT_ACTION_PRINT_HELP,
+	UT_ACTION_LIST_TESTS,
 };
 
 struct ut_config {
@@ -17,13 +18,15 @@ struct ut_config {
 	enum ut_action	action;
 };
 
-#define OPTION_STRING "hs:t:"
+#define OPTION_STRING "hls:t:"
 
 static const struct option g_ut_options[] = {
 #define OPTION_TEST_CASE 't'
 	{"test", required_argument, NULL, OPTION_TEST_CASE},
 #define OPTION_TEST_SUITE 's'
 	{"suite", required_argument, NULL, OPTION_TEST_SUITE},
+#define OPTION_LIST 'l'
+	{"list", no_argument, NULL, OPTION_LIST},
 #define OPTION_HELP 'h'
 	{"help", no_argument, NULL, OPTION_HELP},
 	{},
@@ -35,6 +38,7 @@ usage(struct ut_config *config)
 	printf("Usage: %s [OPTIONS]\n", config->app);
 	printf("  -t, --test                       run single test case\n");
 	printf("  -s, --suite                      run all tests in a given suite\n");
+	printf("  -l, --list                       list registered test suites and test cases\n");
 	printf("  -h, --help                       print this help\n");
 }
 
@@ -57,6 +61,9 @@ parse_args(int argc, char **argv, struct ut_config *config)
 			break;
 		case OPTION_HELP:
 			config->action = UT_ACTION_PRINT_HELP;
+			break;
+		case OPTION_LIST:
+			config->action = UT_ACTION_LIST_TESTS;
 			break;
 		default:
 			return -EINVAL;
@@ -120,6 +127,31 @@ run_tests(const struct ut_config *config)
 	return CU_get_number_of_failures();
 }
 
+static void
+list_tests(void)
+{
+	CU_pSuite suite;
+	CU_pTest test;
+	int sid, tid;
+
+	for (sid = 1;; ++sid) {
+		suite = CU_get_suite_at_pos(sid);
+		if (suite == NULL) {
+			break;
+		}
+
+		printf("%s:\n", suite->pName);
+		for (tid = 1;; ++tid) {
+			test = CU_get_test_at_pos(suite, tid);
+			if (test == NULL) {
+				break;
+			}
+
+			printf("  %s\n", test->pName);
+		}
+	}
+}
+
 int
 spdk_ut_run_tests(int argc, char **argv, const struct spdk_ut_opts *opts)
 {
@@ -138,6 +170,9 @@ spdk_ut_run_tests(int argc, char **argv, const struct spdk_ut_opts *opts)
 		break;
 	case UT_ACTION_RUN_TESTS:
 		rc = run_tests(&config);
+		break;
+	case UT_ACTION_LIST_TESTS:
+		list_tests();
 		break;
 	default:
 		assert(0);
