@@ -10,6 +10,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 C_SRCS := $(APP:%=%.c)
 
-SPDK_LIB_LIST = $(SOCK_MODULES_LIST) nvme vmd
+SPDK_LIB_LIST += $(SOCK_MODULES_LIST) nvme vmd
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
