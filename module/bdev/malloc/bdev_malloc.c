@@ -408,8 +408,6 @@ malloc_merge_request(struct spdk_bdev_io *bdev_io)
     SPDK_DEBUGLOG(bdev_malloc, "Merge start\n");
     SPDK_DEBUGLOG(bdev_malloc, "Size of tree in the start malloc_merge_request - %d\n", addr_tree.size);
 
-    struct spdk_bdev_io new_bdev_io;
-
 	RB_FOREACH(current_request, malloc_addr_tree, &addr_tree.tree) {
         SPDK_DEBUGLOG(bdev_malloc, "Address current request in a tree traversal loop %d\n", current_request->addr);
         /*
@@ -465,11 +463,8 @@ clear_tree(int status_submit_merged_request)
          * TODO: After implementing the requests merge, uncomment the code
          */
 
-//		if (status_submit_merged_request == 0)
-//			spdk_bdev_io_complete(removed_node->bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
-//		else
-//			spdk_bdev_io_complete(removed_node->bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-
+        /* if (status_submit_merged_request == 0) spdk_bdev_io_complete(removed_node->bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+        * else spdk_bdev_io_complete(removed_node->bdev_io, SPDK_BDEV_IO_STATUS_FAILED); */
         RB_REMOVE(malloc_addr_tree, &addr_tree.tree, current_request);
         free(current_request);
         SPDK_DEBUGLOG(bdev_malloc, "Deleting one malloc_write_request was successful\n");
@@ -573,8 +568,8 @@ bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
     /*
     * TODO: After implementing the requests merge, uncomment the code below and delete the code from above
     */
-//    if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE && interception_malloc_write_request(bdev_io))
-//        return;
+	/* if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE && interception_malloc_write_request(bdev_io))
+	*      return; */
 
     if (_bdev_malloc_submit_request(mch, bdev_io) != 0) {
         malloc_complete_task((struct malloc_task *)bdev_io->driver_ctx, mch,
