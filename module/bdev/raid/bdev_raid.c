@@ -763,6 +763,8 @@ static struct {
 	{ "0", RAID0 },
 	{ "raid1", RAID1 },
 	{ "1", RAID1 },
+	{ "raid5", RAID5 },
+	{ "5", RAID5 },
 	{ "raid5f", RAID5F },
 	{ "5f", RAID5F },
 	{ "concat", CONCAT },
