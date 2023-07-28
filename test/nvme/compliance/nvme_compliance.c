@@ -734,28 +734,6 @@ fabric_property_get(void)
 	spdk_nvme_detach(ctrlr);
 }
 
-static int
-parse_args(int argc, char **argv, struct spdk_env_opts *opts)
-{
-	int op;
-
-	while ((op = getopt(argc, argv, "gr:")) != -1) {
-		switch (op) {
-		case 'g':
-			opts->hugepage_single_segments = true;
-			break;
-		case 'r':
-			g_trid_str = optarg;
-			break;
-		default:
-			SPDK_ERRLOG("Unknown op '%c'\n", op);
-			return -1;
-		}
-	}
-
-	return 0;
-}
-
 static void
 admin_set_features_number_of_queues(void)
 {
@@ -1444,6 +1422,28 @@ admin_create_io_sq_shared_cq(void)
 
 	spdk_dma_free(buf);
 	spdk_nvme_detach(ctrlr);
+}
+
+static int
+parse_args(int argc, char **argv, struct spdk_env_opts *opts)
+{
+	int op;
+
+	while ((op = getopt(argc, argv, "gr:")) != -1) {
+		switch (op) {
+		case 'g':
+			opts->hugepage_single_segments = true;
+			break;
+		case 'r':
+			g_trid_str = optarg;
+			break;
+		default:
+			SPDK_ERRLOG("Unknown op '%c'\n", op);
+			return -1;
+		}
+	}
+
+	return 0;
 }
 
 int
