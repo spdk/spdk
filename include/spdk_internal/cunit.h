@@ -25,8 +25,30 @@
 		}				\
 	} while (0)
 
+/** Extra option callback */
+typedef int (*spdk_ut_option_cb)(int opt, const char *optarg, void *cb_arg);
+
+/** Extra usage callback, called when user asks for --help */
+typedef void (*spdk_ut_usage_cb)(void *cb_arg);
+
+/** Init callback, called before tests are executed after parsing arguments */
+typedef int (*spdk_ut_init_cb)(void *cb_arg);
+
 struct spdk_ut_opts {
-	/* Empty for now */
+	/** Extra optstring */
+	const char *optstring;
+	/** Extra options */
+	const struct option *opts;
+	/** Number of extra options */
+	size_t optlen;
+	/** Callback argument */
+	void *cb_arg;
+	/** Extra option callback */
+	spdk_ut_option_cb option_cb_fn;
+	/** Init callack */
+	spdk_ut_init_cb init_cb_fn;
+	/** Usage callback */
+	spdk_ut_usage_cb usage_cb_fn;
 };
 
 /**
