@@ -25,4 +25,19 @@
 		}				\
 	} while (0)
 
+struct spdk_ut_opts {
+	/* Empty for now */
+};
+
+/**
+ * Execute unit tests registered using CUnit.
+ *
+ * \param argc Size of the `argv` array.
+ * \param argv Arguments to the test app.
+ * \param opts Options.
+ *
+ * \return Number of test failures.
+ */
+int spdk_ut_run_tests(int argc, char **argv, const struct spdk_ut_opts *opts);
+
 #endif /* SPDK_CUNIT_H */

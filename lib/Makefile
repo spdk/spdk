@@ -17,6 +17,12 @@ DIRS-y += ublk
 endif
 endif
 
+# The ut library is used by unit tests and some functional tests, so build it only when either of
+# these configs is enabled
+ifeq ($(filter $(CONFIG_TESTS) $(CONFIG_UNIT_TESTS),y),y)
+DIRS-y += ut
+endif
+
 DIRS-$(CONFIG_OCF) += env_ocf
 DIRS-$(CONFIG_IDXD) += idxd
 DIRS-$(CONFIG_VHOST) += vhost
