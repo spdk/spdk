@@ -9,7 +9,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = vtophys
 C_SRCS := vtophys.c
-SPDK_LIB_LIST += thread util log
+SPDK_LIB_LIST += thread util log ut
 
 SYS_LIBS += -lcunit
 

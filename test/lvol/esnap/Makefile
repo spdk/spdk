@@ -6,7 +6,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 TEST_FILE = esnap.c
 
-SPDK_LIB_LIST = accel bdev blob blob_bdev dma init notify
+SPDK_LIB_LIST = accel bdev blob blob_bdev dma init notify ut
 
 ifeq ($(OS),Linux)
 SPDK_LIB_LIST += bdev_aio

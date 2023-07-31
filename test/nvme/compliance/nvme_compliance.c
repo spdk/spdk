@@ -1424,57 +1424,79 @@ admin_create_io_sq_shared_cq(void)
 	spdk_nvme_detach(ctrlr);
 }
 
-static int
-parse_args(int argc, char **argv, struct spdk_env_opts *opts)
-{
-	int op;
+static struct option g_options[] = {
+#define OPTION_TRID 'r'
+	{"trid", required_argument, NULL, OPTION_TRID},
+#define OPTION_SINGLE_FILE_SEGMENTS 'g'
+	{"single-file-segments", no_argument, NULL, OPTION_SINGLE_FILE_SEGMENTS},
+};
 
-	while ((op = getopt(argc, argv, "gr:")) != -1) {
-		switch (op) {
-		case 'g':
-			opts->hugepage_single_segments = true;
-			break;
-		case 'r':
-			g_trid_str = optarg;
-			break;
-		default:
-			SPDK_ERRLOG("Unknown op '%c'\n", op);
-			return -1;
-		}
+static int
+parse_arg(int op, const char *optarg, void *cb_arg)
+{
+	struct spdk_env_opts *opts = cb_arg;
+
+	switch (op) {
+	case 'g':
+		opts->hugepage_single_segments = true;
+		break;
+	case 'r':
+		g_trid_str = optarg;
+		break;
+	default:
+		SPDK_ERRLOG("Unknown op '%c'\n", op);
+		return -1;
 	}
 
 	return 0;
+}
+
+static int
+init(void *cb_arg)
+{
+	struct spdk_env_opts *opts = cb_arg;
+	int rc;
+
+	if (g_trid_str == NULL) {
+		fprintf(stderr, "-t <trid> not specified\n");
+		return -EINVAL;
+	}
+
+	rc = spdk_env_init(opts);
+	if (rc != 0) {
+		fprintf(stderr, "could not spdk_env_init\n");
+		return rc;
+	}
+
+	return 0;
+}
+
+static void
+usage(void *cb_arg)
+{
+	printf("  -r, --trid                       transport ID\n");
+	printf("  -g, --single-file-segments       force creating just one hugetlbfs file\n");
 }
 
 int
 main(int argc, char **argv)
 {
 	struct spdk_env_opts	opts;
+	struct spdk_ut_opts	ut_opts = {
+		.optstring = "gr:",
+		.opts = g_options,
+		.optlen = SPDK_COUNTOF(g_options),
+		.cb_arg = &opts,
+		.option_cb_fn = parse_arg,
+		.init_cb_fn = init,
+		.usage_cb_fn = usage,
+	};
 	CU_pSuite		suite = NULL;
 	unsigned int		num_failures;
 
-	CU_set_error_action(CUEA_ABORT);
 	CU_initialize_registry();
 
 	suite = CU_add_suite("nvme_compliance", NULL, NULL);
-
-	spdk_env_opts_init(&opts);
-	opts.name = "nvme_compliance";
-	if (parse_args(argc, argv, &opts)) {
-		fprintf(stderr, "could not parse_args\n");
-		return -1;
-	}
-
-	if (g_trid_str == NULL) {
-		fprintf(stderr, "-t <trid> not specified\n");
-		return -1;
-	}
-
-	if (spdk_env_init(&opts)) {
-		fprintf(stderr, "could not spdk_env_init\n");
-		return -1;
-	}
-
 	CU_ADD_TEST(suite, admin_identify_ctrlr_verify_dptr);
 	CU_ADD_TEST(suite, admin_identify_ctrlr_verify_fused);
 	CU_ADD_TEST(suite, admin_identify_ns);
@@ -1494,9 +1516,10 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, admin_create_io_qp_max_qps);
 	CU_ADD_TEST(suite, admin_create_io_sq_shared_cq);
 
-	CU_basic_set_mode(CU_BRM_VERBOSE);
-	CU_basic_run_tests();
-	num_failures = CU_get_number_of_failures();
+	spdk_env_opts_init(&opts);
+	opts.name = "nvme_compliance";
+
+	num_failures = spdk_ut_run_tests(argc, argv, &ut_opts);
 	CU_cleanup_registry();
 	return num_failures;
 }

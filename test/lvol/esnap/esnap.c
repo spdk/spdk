@@ -783,7 +783,6 @@ main(int argc, char **argv)
 
 	set_testdir(argv[0]);
 
-	CU_set_error_action(CUEA_ABORT);
 	CU_initialize_registry();
 
 	suite = CU_add_suite("esnap_io", NULL, NULL);
@@ -795,8 +794,6 @@ main(int argc, char **argv)
 
 	allocate_threads(2);
 	set_thread(0);
-
-	CU_basic_set_mode(CU_BRM_VERBOSE);
 
 	/*
 	 * This is a non-standard way of initializing libraries. It works for this test but
@@ -815,8 +812,7 @@ main(int argc, char **argv)
 	}
 	spdk_bdev_initialize(bdev_init_cb, NULL);
 
-	CU_basic_run_tests();
-	num_failures = CU_get_number_of_failures();
+	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
 
 	spdk_bdev_finish(bdev_fini_cb, NULL);

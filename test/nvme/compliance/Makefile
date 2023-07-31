@@ -9,4 +9,6 @@ APP = nvme_compliance
 
 LIBS += -lcunit
 
+SPDK_LIB_LIST = ut
+
 include $(SPDK_ROOT_DIR)/mk/nvme.libtest.mk
