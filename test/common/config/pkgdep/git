@@ -165,11 +165,13 @@ function install_nvmecli() {
 	if [[ ! -d $GIT_REPOS/nvme-cli-cuse ]]; then
 		git clone "https://github.com/linux-nvme/nvme-cli.git" "$GIT_REPOS/nvme-cli-cuse"
 	fi
-	git -C "$GIT_REPOS/nvme-cli-cuse" checkout v2.0
+	git -C "$GIT_REPOS/nvme-cli-cuse" checkout v2.5
 
-	cflags=("-Wno-error")
+	meson setup --force-fallback-for=libnvme \
+		"$GIT_REPOS/nvme-cli-cuse/.build" \
+		"$GIT_REPOS/nvme-cli-cuse"
+	meson compile -C "$GIT_REPOS/nvme-cli-cuse/.build"
 
-	make -C "$GIT_REPOS/nvme-cli-cuse" CFLAGS="${cflags[*]}"
 	if [ -d "/usr/local/src/nvme-cli" ]; then
 		sudo rm -rf /usr/local/src/nvme-cli
 	fi
