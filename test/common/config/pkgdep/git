@@ -162,9 +162,8 @@ function install_qemu() {
 
 function install_nvmecli() {
 	# nvme-cli >1.11.1 should be used.
-	if [[ ! -d $GIT_REPOS/nvme-cli-cuse ]]; then
-		git clone "https://github.com/linux-nvme/nvme-cli.git" "$GIT_REPOS/nvme-cli-cuse"
-	fi
+	rm -rf "$GIT_REPOS/nvme-cli-cuse"
+	git clone "https://github.com/linux-nvme/nvme-cli.git" "$GIT_REPOS/nvme-cli-cuse"
 	git -C "$GIT_REPOS/nvme-cli-cuse" checkout v2.5
 
 	meson setup --force-fallback-for=libnvme \
@@ -172,10 +171,9 @@ function install_nvmecli() {
 		"$GIT_REPOS/nvme-cli-cuse"
 	meson compile -C "$GIT_REPOS/nvme-cli-cuse/.build"
 
-	if [ -d "/usr/local/src/nvme-cli" ]; then
-		sudo rm -rf /usr/local/src/nvme-cli
-	fi
-	sudo mv "$GIT_REPOS/nvme-cli-cuse" /usr/local/src/nvme-cli
+	rm -rf /usr/local/src/nvme-cli
+	mv "$GIT_REPOS/nvme-cli-cuse" /usr/local/src/nvme-cli
+
 	# Make sure binary is available for the cuse tests
 	if [[ -e /usr/local/src/nvme-cli/.build/nvme ]]; then
 		sudo ln -s .build/nvme /usr/local/src/nvme-cli/
