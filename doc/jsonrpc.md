@@ -5514,6 +5514,7 @@ name                    | Required | string      | Name of the error injection b
 io_type                 | Required | string      | io type 'clear' 'read' 'write' 'unmap' 'flush' 'all'
 error_type              | Required | string      | error type 'failure' 'pending' 'corrupt_data' 'nomem'
 num                     | Optional | int         | the number of commands you want to fail.(default:1)
+queue_depth             | Optional | int         | the queue depth at which to trigger the error
 corrupt_offset          | Optional | int         | the offset in bytes to xor with corrupt_value
 corrupt_value           | Optional | int         | the value for xor (1-255, 0 is invalid)
 

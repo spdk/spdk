@@ -42,6 +42,7 @@ struct vbdev_error_inject_opts {
 	uint32_t io_type;
 	uint32_t error_type;
 	uint32_t error_num;
+	uint64_t error_qd;
 	uint64_t corrupt_offset;
 	uint8_t corrupt_value;
 };

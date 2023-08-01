@@ -1263,6 +1263,7 @@ if __name__ == "__main__":
                                          io_type=args.io_type,
                                          error_type=args.error_type,
                                          num=args.num,
+                                         queue_depth=args.queue_depth,
                                          corrupt_offset=args.corrupt_offset,
                                          corrupt_value=args.corrupt_value)
 
@@ -1272,6 +1273,8 @@ if __name__ == "__main__":
     p.add_argument('error_type', help="""error_type: 'failure' 'pending' 'corrupt_data' 'nomem'""")
     p.add_argument(
         '-n', '--num', help='the number of commands you want to fail', type=int)
+    p.add_argument(
+        '-q', '--queue-depth', help='the queue depth at which to trigger the error', type=int)
     p.add_argument(
         '-o', '--corrupt-offset', help='the offset in bytes to xor with corrupt_value', type=int)
     p.add_argument(

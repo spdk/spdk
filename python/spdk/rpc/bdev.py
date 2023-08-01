@@ -1658,7 +1658,7 @@ def bdev_get_histogram(client, name):
 
 
 def bdev_error_inject_error(client, name, io_type, error_type, num,
-                            corrupt_offset, corrupt_value):
+                            queue_depth, corrupt_offset, corrupt_value):
     """Inject an error via an error bdev.
 
     Args:
@@ -1666,6 +1666,7 @@ def bdev_error_inject_error(client, name, io_type, error_type, num,
         io_type: one of "clear", "read", "write", "unmap", "flush", or "all"
         error_type: one of "failure", "pending", "corrupt_data" or "nomem"
         num: number of commands to fail
+        queue_depth: the queue depth at which to trigger the error
         corrupt_offset: offset in bytes to xor with corrupt_value
         corrupt_value: value for xor (1-255, 0 is invalid)
     """
@@ -1677,6 +1678,8 @@ def bdev_error_inject_error(client, name, io_type, error_type, num,
 
     if num:
         params['num'] = num
+    if queue_depth:
+        params['queue_depth'] = queue_depth
     if corrupt_offset:
         params['corrupt_offset'] = corrupt_offset
     if corrupt_value:
