@@ -27,7 +27,7 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPOR
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_SECOND_PORT
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_THIRD_PORT
 
-$rootdir/build/examples/bdevperf -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 -f &> $testdir/try.txt &
+$rootdir/build/examples/bdevperf -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 15 -f &> $testdir/try.txt &
 bdevperf_pid=$!
 
 trap 'process_shm --id $NVMF_APP_SHM_ID; cat $testdir/try.txt; rm -f $testdir/try.txt; killprocess $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
