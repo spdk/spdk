@@ -67,7 +67,7 @@ if [[ "$mode" == "check" ]]; then
 
 		Differences in DPDK and internal SPDK headers found.
 		For changes that do not affect the API, please use 'fix' as \$1 to this script.
-		If API was changed, please create "$env_path/$dpdk_ver/" with appropriate headers.
+		If API was changed, please create "$env_path/${dpdk_ver%.*}/" with appropriate headers.
 
 	CHECK
 elif [[ "$mode" == "fix" ]]; then
