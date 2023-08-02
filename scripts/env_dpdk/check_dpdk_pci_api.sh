@@ -70,6 +70,7 @@ if [[ "$mode" == "check" ]]; then
 		If API was changed, please create "$env_path/${dpdk_ver%.*}/" with appropriate headers.
 
 	CHECK
+	exit 1
 elif [[ "$mode" == "fix" ]]; then
 	echo -e "$header_diff" | patch -d "$env_path/$target_ver/"
 	echo "Fixed differences between DPDK and internal SPDK headers."
