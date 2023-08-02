@@ -8686,133 +8686,175 @@ suite_blob_cleanup(void)
 	CU_ASSERT(g_bs == NULL);
 }
 
+static int
+ut_setup_config_nocopy_noextent(void)
+{
+	g_dev_copy_enabled = false;
+	g_use_extent_table = false;
+
+	return 0;
+}
+
+static int
+ut_setup_config_nocopy_extent(void)
+{
+	g_dev_copy_enabled = false;
+	g_use_extent_table = true;
+
+	return 0;
+}
+
+static int
+ut_setup_config_copy_noextent(void)
+{
+	g_dev_copy_enabled = true;
+	g_use_extent_table = false;
+
+	return 0;
+}
+
+static int
+ut_setup_config_copy_extent(void)
+{
+	g_dev_copy_enabled = true;
+	g_use_extent_table = true;
+
+	return 0;
+}
+
+struct ut_config {
+	const char *suffix;
+	CU_InitializeFunc setup_cb;
+};
+
 int
 main(int argc, char **argv)
 {
-	CU_pSuite	suite, suite_bs, suite_blob, suite_esnap_bs;
-	unsigned int	num_failures;
+	CU_pSuite		suite, suite_bs, suite_blob, suite_esnap_bs;
+	unsigned int		i, num_failures;
+	char			suite_name[4096];
+	struct ut_config	*config;
+	struct ut_config	configs[] = {
+		{"nocopy_noextent", ut_setup_config_nocopy_noextent},
+		{"nocopy_extent", ut_setup_config_nocopy_extent},
+		{"copy_noextent", ut_setup_config_copy_noextent},
+		{"copy_extent", ut_setup_config_copy_extent},
+	};
 
-	CU_set_error_action(CUEA_ABORT);
 	CU_initialize_registry();
 
-	suite = CU_add_suite("blob", NULL, NULL);
-	suite_bs = CU_add_suite_with_setup_and_teardown("blob_bs", NULL, NULL,
-			suite_bs_setup, suite_bs_cleanup);
-	suite_blob = CU_add_suite_with_setup_and_teardown("blob_blob", NULL, NULL,
-			suite_blob_setup, suite_blob_cleanup);
-	suite_esnap_bs = CU_add_suite_with_setup_and_teardown("blob_esnap_bs", NULL, NULL,
-			 suite_esnap_bs_setup,
-			 suite_bs_cleanup);
+	for (i = 0; i < SPDK_COUNTOF(configs); ++i) {
+		config = &configs[i];
 
-	CU_ADD_TEST(suite, blob_init);
-	CU_ADD_TEST(suite_bs, blob_open);
-	CU_ADD_TEST(suite_bs, blob_create);
-	CU_ADD_TEST(suite_bs, blob_create_loop);
-	CU_ADD_TEST(suite_bs, blob_create_fail);
-	CU_ADD_TEST(suite_bs, blob_create_internal);
-	CU_ADD_TEST(suite_bs, blob_create_zero_extent);
-	CU_ADD_TEST(suite, blob_thin_provision);
-	CU_ADD_TEST(suite_bs, blob_snapshot);
-	CU_ADD_TEST(suite_bs, blob_clone);
-	CU_ADD_TEST(suite_bs, blob_inflate);
-	CU_ADD_TEST(suite_bs, blob_delete);
-	CU_ADD_TEST(suite_bs, blob_resize_test);
-	CU_ADD_TEST(suite, blob_read_only);
-	CU_ADD_TEST(suite_bs, channel_ops);
-	CU_ADD_TEST(suite_bs, blob_super);
-	CU_ADD_TEST(suite_blob, blob_write);
-	CU_ADD_TEST(suite_blob, blob_read);
-	CU_ADD_TEST(suite_blob, blob_rw_verify);
-	CU_ADD_TEST(suite_bs, blob_rw_verify_iov);
-	CU_ADD_TEST(suite_blob, blob_rw_verify_iov_nomem);
-	CU_ADD_TEST(suite_blob, blob_rw_iov_read_only);
-	CU_ADD_TEST(suite_bs, blob_unmap);
-	CU_ADD_TEST(suite_bs, blob_iter);
-	CU_ADD_TEST(suite_blob, blob_xattr);
-	CU_ADD_TEST(suite_bs, blob_parse_md);
-	CU_ADD_TEST(suite, bs_load);
-	CU_ADD_TEST(suite_bs, bs_load_pending_removal);
-	CU_ADD_TEST(suite, bs_load_custom_cluster_size);
-	CU_ADD_TEST(suite, bs_load_after_failed_grow);
-	CU_ADD_TEST(suite_bs, bs_unload);
-	CU_ADD_TEST(suite, bs_cluster_sz);
-	CU_ADD_TEST(suite_bs, bs_usable_clusters);
-	CU_ADD_TEST(suite, bs_resize_md);
-	CU_ADD_TEST(suite, bs_destroy);
-	CU_ADD_TEST(suite, bs_type);
-	CU_ADD_TEST(suite, bs_super_block);
-	CU_ADD_TEST(suite, bs_test_recover_cluster_count);
-	CU_ADD_TEST(suite, bs_test_grow);
-	CU_ADD_TEST(suite, blob_serialize_test);
-	CU_ADD_TEST(suite_bs, blob_crc);
-	CU_ADD_TEST(suite, super_block_crc);
-	CU_ADD_TEST(suite_blob, blob_dirty_shutdown);
-	CU_ADD_TEST(suite_bs, blob_flags);
-	CU_ADD_TEST(suite_bs, bs_version);
-	CU_ADD_TEST(suite_bs, blob_set_xattrs_test);
-	CU_ADD_TEST(suite_bs, blob_thin_prov_alloc);
-	CU_ADD_TEST(suite_bs, blob_insert_cluster_msg_test);
-	CU_ADD_TEST(suite_bs, blob_thin_prov_rw);
-	CU_ADD_TEST(suite, blob_thin_prov_write_count_io);
-	CU_ADD_TEST(suite_bs, blob_thin_prov_rle);
-	CU_ADD_TEST(suite_bs, blob_thin_prov_rw_iov);
-	CU_ADD_TEST(suite, bs_load_iter_test);
-	CU_ADD_TEST(suite_bs, blob_snapshot_rw);
-	CU_ADD_TEST(suite_bs, blob_snapshot_rw_iov);
-	CU_ADD_TEST(suite, blob_relations);
-	CU_ADD_TEST(suite, blob_relations2);
-	CU_ADD_TEST(suite, blob_relations3);
-	CU_ADD_TEST(suite, blobstore_clean_power_failure);
-	CU_ADD_TEST(suite, blob_delete_snapshot_power_failure);
-	CU_ADD_TEST(suite, blob_create_snapshot_power_failure);
-	CU_ADD_TEST(suite_bs, blob_inflate_rw);
-	CU_ADD_TEST(suite_bs, blob_snapshot_freeze_io);
-	CU_ADD_TEST(suite_bs, blob_operation_split_rw);
-	CU_ADD_TEST(suite_bs, blob_operation_split_rw_iov);
-	CU_ADD_TEST(suite, blob_io_unit);
-	CU_ADD_TEST(suite, blob_io_unit_compatibility);
-	CU_ADD_TEST(suite_bs, blob_simultaneous_operations);
-	CU_ADD_TEST(suite_bs, blob_persist_test);
-	CU_ADD_TEST(suite_bs, blob_decouple_snapshot);
-	CU_ADD_TEST(suite_bs, blob_seek_io_unit);
-	CU_ADD_TEST(suite_esnap_bs, blob_esnap_create);
-	CU_ADD_TEST(suite_bs, blob_nested_freezes);
-	CU_ADD_TEST(suite, blob_ext_md_pages);
-	CU_ADD_TEST(suite, blob_esnap_io_4096_4096);
-	CU_ADD_TEST(suite, blob_esnap_io_512_512);
-	CU_ADD_TEST(suite, blob_esnap_io_4096_512);
-	CU_ADD_TEST(suite, blob_esnap_io_512_4096);
-	CU_ADD_TEST(suite_esnap_bs, blob_esnap_thread_add_remove);
-	CU_ADD_TEST(suite_esnap_bs, blob_esnap_clone_snapshot);
-	CU_ADD_TEST(suite_esnap_bs, blob_esnap_clone_inflate);
-	CU_ADD_TEST(suite_esnap_bs, blob_esnap_clone_decouple);
-	CU_ADD_TEST(suite_esnap_bs, blob_esnap_clone_reload);
-	CU_ADD_TEST(suite_esnap_bs, blob_esnap_hotplug);
-	CU_ADD_TEST(suite_blob, blob_is_degraded);
+		snprintf(suite_name, sizeof(suite_name), "blob_%s", config->suffix);
+		suite = CU_add_suite(suite_name, config->setup_cb, NULL);
+
+		snprintf(suite_name, sizeof(suite_name), "blob_bs_%s", config->suffix);
+		suite_bs = CU_add_suite_with_setup_and_teardown(suite_name, config->setup_cb, NULL,
+				suite_bs_setup, suite_bs_cleanup);
+
+		snprintf(suite_name, sizeof(suite_name), "blob_blob_%s", config->suffix);
+		suite_blob = CU_add_suite_with_setup_and_teardown(suite_name, config->setup_cb, NULL,
+				suite_blob_setup, suite_blob_cleanup);
+
+		snprintf(suite_name, sizeof(suite_name), "blob_esnap_bs_%s", config->suffix);
+		suite_esnap_bs = CU_add_suite_with_setup_and_teardown(suite_name, config->setup_cb, NULL,
+				 suite_esnap_bs_setup,
+				 suite_bs_cleanup);
+
+		CU_ADD_TEST(suite, blob_init);
+		CU_ADD_TEST(suite_bs, blob_open);
+		CU_ADD_TEST(suite_bs, blob_create);
+		CU_ADD_TEST(suite_bs, blob_create_loop);
+		CU_ADD_TEST(suite_bs, blob_create_fail);
+		CU_ADD_TEST(suite_bs, blob_create_internal);
+		CU_ADD_TEST(suite_bs, blob_create_zero_extent);
+		CU_ADD_TEST(suite, blob_thin_provision);
+		CU_ADD_TEST(suite_bs, blob_snapshot);
+		CU_ADD_TEST(suite_bs, blob_clone);
+		CU_ADD_TEST(suite_bs, blob_inflate);
+		CU_ADD_TEST(suite_bs, blob_delete);
+		CU_ADD_TEST(suite_bs, blob_resize_test);
+		CU_ADD_TEST(suite, blob_read_only);
+		CU_ADD_TEST(suite_bs, channel_ops);
+		CU_ADD_TEST(suite_bs, blob_super);
+		CU_ADD_TEST(suite_blob, blob_write);
+		CU_ADD_TEST(suite_blob, blob_read);
+		CU_ADD_TEST(suite_blob, blob_rw_verify);
+		CU_ADD_TEST(suite_bs, blob_rw_verify_iov);
+		CU_ADD_TEST(suite_blob, blob_rw_verify_iov_nomem);
+		CU_ADD_TEST(suite_blob, blob_rw_iov_read_only);
+		CU_ADD_TEST(suite_bs, blob_unmap);
+		CU_ADD_TEST(suite_bs, blob_iter);
+		CU_ADD_TEST(suite_blob, blob_xattr);
+		CU_ADD_TEST(suite_bs, blob_parse_md);
+		CU_ADD_TEST(suite, bs_load);
+		CU_ADD_TEST(suite_bs, bs_load_pending_removal);
+		CU_ADD_TEST(suite, bs_load_custom_cluster_size);
+		CU_ADD_TEST(suite, bs_load_after_failed_grow);
+		CU_ADD_TEST(suite_bs, bs_unload);
+		CU_ADD_TEST(suite, bs_cluster_sz);
+		CU_ADD_TEST(suite_bs, bs_usable_clusters);
+		CU_ADD_TEST(suite, bs_resize_md);
+		CU_ADD_TEST(suite, bs_destroy);
+		CU_ADD_TEST(suite, bs_type);
+		CU_ADD_TEST(suite, bs_super_block);
+		CU_ADD_TEST(suite, bs_test_recover_cluster_count);
+		CU_ADD_TEST(suite, bs_test_grow);
+		CU_ADD_TEST(suite, blob_serialize_test);
+		CU_ADD_TEST(suite_bs, blob_crc);
+		CU_ADD_TEST(suite, super_block_crc);
+		CU_ADD_TEST(suite_blob, blob_dirty_shutdown);
+		CU_ADD_TEST(suite_bs, blob_flags);
+		CU_ADD_TEST(suite_bs, bs_version);
+		CU_ADD_TEST(suite_bs, blob_set_xattrs_test);
+		CU_ADD_TEST(suite_bs, blob_thin_prov_alloc);
+		CU_ADD_TEST(suite_bs, blob_insert_cluster_msg_test);
+		CU_ADD_TEST(suite_bs, blob_thin_prov_rw);
+		CU_ADD_TEST(suite, blob_thin_prov_write_count_io);
+		CU_ADD_TEST(suite_bs, blob_thin_prov_rle);
+		CU_ADD_TEST(suite_bs, blob_thin_prov_rw_iov);
+		CU_ADD_TEST(suite, bs_load_iter_test);
+		CU_ADD_TEST(suite_bs, blob_snapshot_rw);
+		CU_ADD_TEST(suite_bs, blob_snapshot_rw_iov);
+		CU_ADD_TEST(suite, blob_relations);
+		CU_ADD_TEST(suite, blob_relations2);
+		CU_ADD_TEST(suite, blob_relations3);
+		CU_ADD_TEST(suite, blobstore_clean_power_failure);
+		CU_ADD_TEST(suite, blob_delete_snapshot_power_failure);
+		CU_ADD_TEST(suite, blob_create_snapshot_power_failure);
+		CU_ADD_TEST(suite_bs, blob_inflate_rw);
+		CU_ADD_TEST(suite_bs, blob_snapshot_freeze_io);
+		CU_ADD_TEST(suite_bs, blob_operation_split_rw);
+		CU_ADD_TEST(suite_bs, blob_operation_split_rw_iov);
+		CU_ADD_TEST(suite, blob_io_unit);
+		CU_ADD_TEST(suite, blob_io_unit_compatibility);
+		CU_ADD_TEST(suite_bs, blob_simultaneous_operations);
+		CU_ADD_TEST(suite_bs, blob_persist_test);
+		CU_ADD_TEST(suite_bs, blob_decouple_snapshot);
+		CU_ADD_TEST(suite_bs, blob_seek_io_unit);
+		CU_ADD_TEST(suite_esnap_bs, blob_esnap_create);
+		CU_ADD_TEST(suite_bs, blob_nested_freezes);
+		CU_ADD_TEST(suite, blob_ext_md_pages);
+		CU_ADD_TEST(suite, blob_esnap_io_4096_4096);
+		CU_ADD_TEST(suite, blob_esnap_io_512_512);
+		CU_ADD_TEST(suite, blob_esnap_io_4096_512);
+		CU_ADD_TEST(suite, blob_esnap_io_512_4096);
+		CU_ADD_TEST(suite_esnap_bs, blob_esnap_thread_add_remove);
+		CU_ADD_TEST(suite_esnap_bs, blob_esnap_clone_snapshot);
+		CU_ADD_TEST(suite_esnap_bs, blob_esnap_clone_inflate);
+		CU_ADD_TEST(suite_esnap_bs, blob_esnap_clone_decouple);
+		CU_ADD_TEST(suite_esnap_bs, blob_esnap_clone_reload);
+		CU_ADD_TEST(suite_esnap_bs, blob_esnap_hotplug);
+		CU_ADD_TEST(suite_blob, blob_is_degraded);
+	}
 
 	allocate_threads(2);
 	set_thread(0);
 
 	g_dev_buffer = calloc(1, DEV_BUFFER_SIZE);
 
-	g_dev_copy_enabled = false;
-	CU_basic_set_mode(CU_BRM_VERBOSE);
-	g_use_extent_table = false;
-	CU_basic_run_tests();
-	num_failures = CU_get_number_of_failures();
-	g_use_extent_table = true;
-	CU_basic_run_tests();
-	num_failures += CU_get_number_of_failures();
-
-	g_dev_copy_enabled = true;
-	CU_basic_set_mode(CU_BRM_VERBOSE);
-	g_use_extent_table = false;
-	CU_basic_run_tests();
-	num_failures = CU_get_number_of_failures();
-	g_use_extent_table = true;
-	CU_basic_run_tests();
-	num_failures += CU_get_number_of_failures();
-	CU_cleanup_registry();
+	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 
 	free(g_dev_buffer);
 
