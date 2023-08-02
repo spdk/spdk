@@ -571,6 +571,7 @@ ublk_create_target(const char *cpumask_str)
 	if (rc != 0) {
 		SPDK_ERRLOG("Fail to open UBLK, error=%s\n", spdk_strerror(-rc));
 		free(g_ublk_tgt.poll_groups);
+		g_ublk_tgt.poll_groups = NULL;
 		return rc;
 	}
 
