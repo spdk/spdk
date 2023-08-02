@@ -630,6 +630,40 @@ function bdev_gpt_uuid() {
 	killprocess "$spdk_tgt_pid"
 }
 
+function bdev_crypto_enomem() {
+	local base_dev="base0"
+	local test_dev="crypt0"
+	local err_dev="EE_$base_dev"
+	local qd=32
+
+	"$rootdir/build/examples/bdevperf" -z -m 0x2 -q $qd -o 4096 -w randwrite -t 5 -f "$env_ctx" &
+	ERR_PID=$!
+	trap 'cleanup; killprocess $ERR_PID; exit 1' SIGINT SIGTERM EXIT
+	waitforlisten $ERR_PID
+
+	$rpc_py <<- RPC
+		accel_crypto_key_create -c AES_XTS -k 00112233445566778899001122334455 -e 11223344556677889900112233445500 -n test_dek_sw
+		bdev_null_create $base_dev 1024 512
+		bdev_error_create $base_dev
+		bdev_crypto_create $err_dev $test_dev -n test_dek_sw
+	RPC
+
+	waitforbdev $test_dev
+
+	$rootdir/examples/bdev/bdevperf/bdevperf.py perform_tests &
+	rpcpid=$!
+
+	sleep 1
+	$rpc_py bdev_error_inject_error $err_dev -n 5 -q $((qd - 1)) write nomem
+
+	wait $rpcpid
+
+	$rpc_py bdev_crypto_delete $test_dev
+
+	killprocess $ERR_PID
+	trap - SIGINT SIGTERM EXIT
+}
+
 # Initial bdev creation and configuration
 #-----------------------------------------------------
 QOS_DEV_1="Malloc_0"
@@ -757,6 +791,10 @@ fi
 
 if [[ $test_type == gpt ]]; then
 	run_test "bdev_gpt_uuid" bdev_gpt_uuid
+fi
+
+if [[ $test_type == crypto_sw ]]; then
+	run_test "bdev_crypto_enomem" bdev_crypto_enomem
 fi
 
 # Temporarily disabled - infinite loop
