@@ -10,6 +10,7 @@ source "$rootdir/scripts/common.sh"
 
 set -e
 shopt -s extglob
+shopt -s nullglob
 
 mode=${1:-check} # check or fix
 
@@ -41,9 +42,19 @@ done
 
 for header in "${target_headers[@]}"; do
 	dpdk_file="$dpdk_dir/$(git -C "$dpdk_dir" ls-files "*/$header")"
+	patch_dir="$scriptdir/$target_ver"
+	patch_versions=("$patch_dir/"+([0-9]).+([0-9])-$header.patch)
+	patch_versions=("${patch_versions[@]#"$patch_dir/"}")
+	patch_versions=("${patch_versions[@]%-$header.patch*}")
+
+	# Patch file version matches to versions equal or greater than
+	# their creation.
+	while read -r ver; do
+		ge "$dpdk_ver" "$ver" && patch_version=$ver && break
+	done < <(printf "%s\n" "${patch_versions[@]}" | sort -Vru)
 
 	# Patch DPDK header with any workarounds necessary
-	patch_file="$scriptdir/$target_ver/$header.patch"
+	patch_file="$patch_dir/$patch_version-$header.patch"
 	if [[ -s $patch_file ]]; then
 		dpdk_header=$(patch -s "$dpdk_file" "$patch_file" -o - | sed "$use_local_includes")
 	else

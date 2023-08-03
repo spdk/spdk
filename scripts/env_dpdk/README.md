@@ -34,6 +34,8 @@ rather than system installed ones.
 In rare cases there might be a need to apply a specific workaround for
 particular DPDK PCI API version. Then a patch should be added in
 `spdk_root/scripts/env_dpdk/<ver>` where ver is the matching DPDK version.
+Filename for any patch within that directory should start with first DPDK version
+that it applies to, only latest patch is used.
 
 ## Flow for adding support for new DPDK PCI API version
 
