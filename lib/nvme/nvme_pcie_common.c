@@ -1021,7 +1021,8 @@ nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair)
 
 	nvme_qpair_deinit(qpair);
 
-	if (!pqpair->shared_stats && (qpair->active_proc == nvme_ctrlr_get_current_process(qpair->ctrlr))) {
+	if (!pqpair->shared_stats && (!qpair->active_proc ||
+				      qpair->active_proc == nvme_ctrlr_get_current_process(qpair->ctrlr))) {
 		if (qpair->id) {
 			free(pqpair->stat);
 		} else {
