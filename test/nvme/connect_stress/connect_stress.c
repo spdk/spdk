@@ -268,5 +268,5 @@ main(int argc, char **argv)
 		rc = test_controller();
 	}
 
-	return 0;
+	return rc == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
