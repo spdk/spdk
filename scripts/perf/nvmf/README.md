@@ -29,7 +29,7 @@ To run the scripts in your environment please follow steps below.
   option in Target and Initiator configuration sections.
 - `sysstat` package must be installed for SAR CPU utilization measurements.
 - `bwm-ng` package must be installed for NIC bandwidth utilization measurements.
-- `pcm` package must be installed for pcm, pcm-power and pcm-memory measurements.
+- `pcm` package must be installed for pcm CPU measurements.
 
 ### Optional
 
@@ -129,7 +129,7 @@ Optional, common:
   fio "run_time" duration. Default: enabled.
 - pcm_settings - bool
   Enable [PCM](https://github.com/opcm/pcm.git) measurements on Target side.
-  Measurements include CPU, memory and power consumption. Default: enabled.
+  Measurements include only CPU consumption. Default: enabled.
 - enable_bandwidth - bool. Measure bandwidth utilization on network
   interfaces. Default: enabled.
 - tuned_profile - tunedadm profile to apply on the system before starting

@@ -664,13 +664,6 @@ class Target(Server):
                       "-d", "%s" % results_dir, "-l", "-p", "%s" % prefix,
                        "-x", "-c", "%s" % run_time, "-t", "%s" % 1, "-r"])
 
-    def measure_pcm_memory(self, results_dir, pcm_file_name, ramp_time, run_time):
-        time.sleep(ramp_time)
-        cmd = ["pcm-memory", "1", "-csv=%s/%s" % (results_dir, pcm_file_name)]
-        pcm_memory = subprocess.Popen(cmd)
-        time.sleep(run_time)
-        pcm_memory.terminate()
-
     def measure_pcm(self, results_dir, pcm_file_name, ramp_time, run_time):
         time.sleep(ramp_time)
         cmd = ["pcm", "1", "-i=%s" % run_time,
@@ -681,14 +674,6 @@ class Target(Server):
         skt = df.loc[:, df.columns.get_level_values(1).isin({'UPI0', 'UPI1', 'UPI2'})]
         skt_pcm_file_name = "_".join(["skt", pcm_file_name])
         skt.to_csv(os.path.join(results_dir, skt_pcm_file_name), index=False)
-
-    def measure_pcm_power(self, results_dir, pcm_power_file_name, ramp_time, run_time):
-        time.sleep(ramp_time)
-        out = self.exec_cmd(["pcm-power", "1", "-i=%s" % run_time])
-        with open(os.path.join(results_dir, pcm_power_file_name), "w") as fh:
-            fh.write(out)
-        # TODO: Above command results in a .csv file containing measurements for all gathered samples.
-        #       Improve this so that additional file containing measurements average is generated too.
 
     def measure_network_bandwidth(self, results_dir, bandwidth_file_name, ramp_time, run_time):
         self.log.info("Waiting %d seconds for ramp-up to finish before measuring bandwidth stats" % ramp_time)
@@ -1780,18 +1765,10 @@ if __name__ == "__main__":
                     threads.append(t)
 
                 if target_obj.enable_pcm:
-                    pcm_fnames = ["%s_%s.csv" % (measurements_prefix, x) for x in ["pcm_cpu", "pcm_memory", "pcm_power"]]
-
+                    pcm_fnames = ["%s_%s.csv" % (measurements_prefix, x) for x in ["pcm_cpu"]]
                     pcm_cpu_t = threading.Thread(target=target_obj.measure_pcm,
                                                  args=(args.results, pcm_fnames[0], fio_ramp_time, fio_run_time))
-                    pcm_mem_t = threading.Thread(target=target_obj.measure_pcm_memory,
-                                                 args=(args.results, pcm_fnames[1], fio_ramp_time, fio_run_time))
-                    pcm_pow_t = threading.Thread(target=target_obj.measure_pcm_power,
-                                                 args=(args.results, pcm_fnames[2], fio_ramp_time, fio_run_time))
-
                     threads.append(pcm_cpu_t)
-                    threads.append(pcm_mem_t)
-                    threads.append(pcm_pow_t)
 
                 if target_obj.enable_bw:
                     bandwidth_file_name = measurements_prefix + "_bandwidth.csv"
