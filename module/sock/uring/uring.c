@@ -1286,6 +1286,23 @@ _sock_prep_cancel_task(struct spdk_sock *_sock, void *user_data)
 	task->status = SPDK_URING_SOCK_TASK_IN_PROCESS;
 }
 
+static void
+uring_sock_fail(struct spdk_uring_sock *sock, int status)
+{
+	struct spdk_uring_sock_group_impl *group = sock->group;
+	int rc;
+
+	sock->connection_status = status;
+	rc = spdk_sock_abort_requests(&sock->base);
+
+	/* The user needs to be notified that this socket is dead. */
+	if (rc == 0 && sock->base.cb_fn != NULL &&
+	    sock->pending_recv == false) {
+		sock->pending_recv = true;
+		TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
+	}
+}
+
 static int
 sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max_read_events,
 		      struct spdk_sock **socks)
@@ -1340,15 +1357,7 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 
 				_sock_prep_read(&sock->base);
 			} else if (spdk_unlikely(status <= 0)) {
-				sock->connection_status = status < 0 ? status : -ECONNRESET;
-				ret = spdk_sock_abort_requests(&sock->base);
-
-				/* The user needs to be notified that this socket is dead. */
-				if (ret == 0 && sock->base.cb_fn != NULL &&
-				    sock->pending_recv == false) {
-					sock->pending_recv = true;
-					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
-				}
+				uring_sock_fail(sock, status < 0 ? status : -ECONNRESET);
 			} else {
 				struct spdk_uring_buf_tracker *tracker;
 
@@ -1381,15 +1390,7 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 			    status == -ECANCELED) {
 				continue;
 			} else if (spdk_unlikely(status) < 0) {
-				sock->connection_status = status;
-				ret = spdk_sock_abort_requests(&sock->base);
-
-				/* The user needs to be notified that this socket is dead. */
-				if (ret == 0 && sock->base.cb_fn != NULL &&
-				    sock->pending_recv == false) {
-					sock->pending_recv = true;
-					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
-				}
+				uring_sock_fail(sock, status);
 			} else {
 				task->last_req = NULL;
 				task->iov_cnt = 0;
@@ -1406,15 +1407,7 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 			} else if (status == -ECANCELED) {
 				continue;
 			} else if (spdk_unlikely(status < 0)) {
-				ret = spdk_sock_abort_requests(&sock->base);
-
-				/* The user needs to be notified that this socket is dead. */
-				if (ret == 0 && sock->base.cb_fn != NULL &&
-				    sock->pending_recv == false) {
-					sock->pending_recv = true;
-					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
-				}
-				break;
+				uring_sock_fail(sock, status);
 			} else {
 				_sock_check_zcopy(&sock->base, status);
 				_sock_prep_errqueue(&sock->base);
