@@ -546,7 +546,7 @@ bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 				 * that the device server allows to be unmapped
 				 * or written in a single WRITE SAME command.
 				 */
-				to_be64(&data[36], 512);
+				to_be64(&data[36], blocks);
 
 				/* Reserved */
 				/* not specified */
