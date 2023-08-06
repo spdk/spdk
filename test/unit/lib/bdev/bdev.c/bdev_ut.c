@@ -4300,7 +4300,7 @@ bdev_close_while_hotremove(void)
 }
 
 static void
-bdev_open_ext(void)
+bdev_open_ext_test(void)
 {
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc1 = NULL;
@@ -7231,7 +7231,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_zcopy_read);
 	CU_ADD_TEST(suite, bdev_open_while_hotremove);
 	CU_ADD_TEST(suite, bdev_close_while_hotremove);
-	CU_ADD_TEST(suite, bdev_open_ext);
+	CU_ADD_TEST(suite, bdev_open_ext_test);
 	CU_ADD_TEST(suite, bdev_open_ext_unregister);
 	CU_ADD_TEST(suite, bdev_set_io_timeout);
 	CU_ADD_TEST(suite, bdev_set_qd_sampling);

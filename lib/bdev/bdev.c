@@ -7826,32 +7826,23 @@ bdev_desc_alloc(struct spdk_bdev *bdev, spdk_bdev_event_cb_t event_cb, void *eve
 	return 0;
 }
 
-int
-spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
-		   void *event_ctx, struct spdk_bdev_desc **_desc)
+static int
+bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
+	      void *event_ctx, struct spdk_bdev_desc **_desc)
 {
 	struct spdk_bdev_desc *desc;
 	struct spdk_bdev *bdev;
 	int rc;
 
-	if (event_cb == NULL) {
-		SPDK_ERRLOG("Missing event callback function\n");
-		return -EINVAL;
-	}
-
-	spdk_spin_lock(&g_bdev_mgr.spinlock);
-
 	bdev = bdev_get_by_name(bdev_name);
 
 	if (bdev == NULL) {
 		SPDK_NOTICELOG("Currently unable to find bdev with name: %s\n", bdev_name);
-		spdk_spin_unlock(&g_bdev_mgr.spinlock);
 		return -ENODEV;
 	}
 
 	rc = bdev_desc_alloc(bdev, event_cb, event_ctx, &desc);
 	if (rc != 0) {
-		spdk_spin_unlock(&g_bdev_mgr.spinlock);
 		return rc;
 	}
 
@@ -7863,6 +7854,22 @@ spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event
 
 	*_desc = desc;
 
+	return rc;
+}
+
+int
+spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
+		   void *event_ctx, struct spdk_bdev_desc **_desc)
+{
+	int rc;
+
+	if (event_cb == NULL) {
+		SPDK_ERRLOG("Missing event callback function\n");
+		return -EINVAL;
+	}
+
+	spdk_spin_lock(&g_bdev_mgr.spinlock);
+	rc = bdev_open_ext(bdev_name, write, event_cb, event_ctx, _desc);
 	spdk_spin_unlock(&g_bdev_mgr.spinlock);
 
 	return rc;
