@@ -823,6 +823,13 @@ spdk_app_fini(void)
 }
 
 static void
+subsystem_fini_done(void *arg1)
+{
+	spdk_rpc_finish();
+	spdk_reactors_stop(NULL);
+}
+
+static void
 _start_subsystem_fini(void *arg1)
 {
 	if (g_scheduling_in_progress) {
@@ -830,7 +837,7 @@ _start_subsystem_fini(void *arg1)
 		return;
 	}
 
-	spdk_subsystem_fini(spdk_reactors_stop, NULL);
+	spdk_subsystem_fini(subsystem_fini_done, NULL);
 }
 
 static int
@@ -860,7 +867,6 @@ app_stop(void *arg1)
 		return;
 	}
 
-	spdk_rpc_finish();
 	g_spdk_app.stopped = true;
 	spdk_log_for_each_deprecation(NULL, log_deprecation_hits);
 	_start_subsystem_fini(NULL);
