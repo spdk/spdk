@@ -536,7 +536,7 @@ iscsi_conn_open_lun(struct spdk_iscsi_conn *conn, struct spdk_scsi_lun *lun)
 	return 0;
 }
 
-static void
+static int
 iscsi_conn_open_luns(struct spdk_iscsi_conn *conn)
 {
 	int rc;
@@ -550,10 +550,11 @@ iscsi_conn_open_luns(struct spdk_iscsi_conn *conn)
 		}
 	}
 
-	return;
+	return 0;
 
 error:
 	iscsi_conn_close_luns(conn);
+	return -1;
 }
 
 /**
@@ -1491,6 +1492,7 @@ static void
 iscsi_conn_full_feature_migrate(void *arg)
 {
 	struct spdk_iscsi_conn *conn = arg;
+	int rc;
 
 	assert(conn->state != ISCSI_CONN_STATE_EXITED);
 
@@ -1501,7 +1503,13 @@ iscsi_conn_full_feature_migrate(void *arg)
 	 */
 
 	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
-		iscsi_conn_open_luns(conn);
+		rc = iscsi_conn_open_luns(conn);
+		if (rc != 0) {
+			/* If opening LUNs failed, it is a fatal error. At the first poll in the
+			 * assigned poll group, this connection will be destructed.
+			 */
+			conn->state = ISCSI_CONN_STATE_EXITING;
+		}
 	}
 
 	/* Add this connection to the assigned poll group. */
