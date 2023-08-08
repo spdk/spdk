@@ -803,6 +803,7 @@ INPUT                  += \
                          about.md \
                          accel_fw.md \
                          applications.md \
+                         backporting.md \
                          bdev.md \
                          bdevperf.md \
                          bdev_module.md \
