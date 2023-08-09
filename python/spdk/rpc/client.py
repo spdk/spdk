@@ -8,6 +8,7 @@ import time
 import os
 import logging
 import copy
+import ctypes
 
 
 def print_dict(d):
@@ -204,3 +205,75 @@ class JSONRPCClient(object):
             raise JSONRPCException(msg)
 
         return response['result']
+
+
+class JSONRPCGoClient(object):
+    INVALID_PARAMETER_ERROR = 1
+    CONNECTION_ERROR = 2
+    JSON_RPC_CALL_ERROR = 3
+    INVALID_RESPONSE_ERROR = 4
+
+    def __init__(self, addr, **kwargs):
+        self.addr = addr
+        ch = logging.StreamHandler()
+        ch.setFormatter(logging.Formatter('Go client - %(levelname)s: %(message)s'))
+        ch.setLevel(logging.DEBUG)
+        self._logger = logging.getLogger("JSONRPCGoClient(%s)" % addr)
+        self._logger.addHandler(ch)
+        self._logger.setLevel(kwargs.get('log_level', logging.ERROR))
+
+    def call(self, method, params=None):
+        self._logger.debug("call('%s')" % method)
+        params = {} if params is None else params
+
+        class GoClientResponse(ctypes.Structure):
+            _fields_ = [("response", ctypes.POINTER(ctypes.c_char)), ("error", ctypes.c_int)]
+
+        client_path = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                                    os.path.pardir))
+                                       + '/../../build/go/rpc/libspdk_gorpc.so')
+        try:
+            lib = ctypes.cdll.LoadLibrary(client_path)
+        except OSError:
+            raise JSONRPCException(f'Failed to load the Go RPC client at {client_path}')
+        lib.spdk_gorpc_free_response.argtypes = [ctypes.POINTER(ctypes.c_char)]
+        lib.spdk_gorpc_call.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+        lib.spdk_gorpc_call.restype = GoClientResponse
+
+        command_info = {
+            "method": method,
+            "params": params
+        }
+        resp = lib.spdk_gorpc_call(json.dumps(command_info).encode('utf-8'),
+                                   self.addr.encode('utf-8'))
+        if resp.error > 0:
+            rpc_error = "\n".join(["request:", "%s" % json.dumps(command_info, indent=2),
+                                   "Got JSON-RPC error response"])
+            if resp.error == self.INVALID_PARAMETER_ERROR:
+                rpc_error = "\n".join([rpc_error, "GoRPCClient: error when decoding "
+                                                  "function arguments"])
+            elif resp.error == self.CONNECTION_ERROR:
+                rpc_error = "\n".join([rpc_error, "GoRPCClient: Error while connecting to "
+                                                  f"{self.addr}. Is SPDK application running?"])
+            elif resp.error == self.JSON_RPC_CALL_ERROR:
+                rpc_error = "\n".join([rpc_error, "GoRPCClient: error on JSON-RPC call"])
+            elif resp.error == self.INVALID_RESPONSE_ERROR:
+                rpc_error = "\n".join([rpc_error, "GoRPCClient: error on creating json "
+                                                  "representation of response"])
+            raise JSONRPCException(rpc_error)
+
+        try:
+            json_resp = json.loads(ctypes.c_char_p.from_buffer(resp.response).value)
+        finally:
+            lib.spdk_gorpc_free_response(resp.response)
+
+        if 'error' in json_resp:
+            params["method"] = method
+            params["req_id"] = json_resp['id']
+            msg = "\n".join(["request:", "%s" % json.dumps(params, indent=2),
+                             "Got JSON-RPC error response",
+                             "response:",
+                             json.dumps(json_resp['error'], indent=2)])
+            raise JSONRPCException(msg)
+
+        return json_resp['result']

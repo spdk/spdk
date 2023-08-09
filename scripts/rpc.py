@@ -50,6 +50,8 @@ if __name__ == "__main__":
                         help="""Set verbose level. """)
     parser.add_argument('--dry-run', dest='dry_run', action='store_true', help="Display request and exit")
     parser.set_defaults(dry_run=False)
+    parser.add_argument('--go-client', dest='go_client', action='store_true', help="Use Go client")
+    parser.set_defaults(go_client=False)
     parser.add_argument('--server', dest='is_server', action='store_true',
                         help="Start listening on stdin, parse each line as a regular rpc.py execution and create \
                                 a separate connection for each command. Each command's output ends with either \
@@ -3552,6 +3554,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         print_dict = null_print
         print_json = null_print
         print_array = null_print
+    elif args.go_client:
+        try:
+            args.client = rpc.client.JSONRPCGoClient(args.server_addr,
+                                                     log_level=getattr(logging, args.verbose.upper()))
+        except JSONRPCException as ex:
+            print(ex.message)
+            exit(1)
     else:
         try:
             args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout,
