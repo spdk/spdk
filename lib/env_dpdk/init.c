@@ -361,6 +361,14 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
+	/* Disable DPDK telemetry information by default, can be modified with env_context.
+	 * Prevents creation of dpdk_telemetry socket and additional pthread for it.
+	 */
+	args = push_arg(args, &argcount, _sprintf_alloc("--no-telemetry"));
+	if (args == NULL) {
+		return -1;
+	}
+
 	/* Lower default EAL loglevel to RTE_LOG_NOTICE - normal, but significant messages.
 	 * This can be overridden by specifying the same option in opts->env_context
 	 */
