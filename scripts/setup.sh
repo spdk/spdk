@@ -292,7 +292,7 @@ function collect_devices() {
 	ids+="|PCI_DEVICE_ID_INTEL_VMD"
 	ids+="|SPDK_PCI_CLASS_NVME"
 
-	local -gA nvme_d ioat_d dsa_d iaa_d virtio_d vmd_d all_devices_d drivers_d types_d
+	local -gA nvme_d ioat_d dsa_d iaa_d virtio_d vmd_d all_devices_d drivers_d types_d all_devices_type_d
 
 	while read -r _ dev_type dev_id; do
 		bdfs=(${pci_bus_cache["0x8086:$dev_id"]})
@@ -332,6 +332,7 @@ function collect_devices() {
 			fi
 			eval "${dev_type}_d[$bdf]=$in_use"
 			all_devices_d["$bdf"]=$in_use
+			all_devices_type_d["$bdf"]=$dev_type
 			if [[ -e /sys/bus/pci/devices/$bdf/driver ]]; then
 				driver=$(readlink -f "/sys/bus/pci/devices/$bdf/driver")
 				drivers_d["$bdf"]=${driver##*/}
