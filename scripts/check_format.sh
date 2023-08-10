@@ -489,6 +489,28 @@ function check_python_style() {
 	return $rc
 }
 
+function check_golang_style() {
+	local rc=0 out
+
+	if hash golangci-lint 2> /dev/null; then
+		echo -n "Checking Golang style..."
+		out=$(find "$rootdir/go" -name go.mod -execdir go fmt \; -execdir golangci-lint run \; 2>&1)
+		if [[ -n "$out" ]]; then
+			cat <<- WARN
+				Golang formatting errors detected:
+				echo "$out"
+			WARN
+
+			return 1
+		else
+			echo "OK"
+		fi
+	else
+		echo "You do not have golangci-lint installed, so Golang style will not be checked!"
+	fi
+	return 0
+}
+
 function get_bash_files() {
 	local sh shebang
 
@@ -891,5 +913,6 @@ check_changelog || rc=1
 check_json_rpc || rc=1
 check_rpc_args || rc=1
 check_spdx_lic || rc=1
+check_golang_style || rc=1
 
 exit $rc
