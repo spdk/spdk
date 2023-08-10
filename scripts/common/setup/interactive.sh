@@ -66,6 +66,7 @@ main_menu() {
 			3) fdevices 0 ;;
 			4) fdevices 1 ;;
 			5) odevices ;;
+			5e) editor odevices ;;
 			6) bdevices ;;
 			q) yn "Are you sure you want to quit?" && return 1 ;;
 			c | commit | config)
@@ -99,14 +100,20 @@ gdevices() {
 pdevices() {
 	gdevices
 
+	local set_marker=$1
 	local use_map=()
+	local -A markers=()
+
 	use_map[0]="not used" use_map[1]="used"
+	markers["not used"]=pick markers["used"]=skip
 
 	if ((${#dev_ref[@]} == 0)); then
 		echo "No devices found"
 	else
 		for dev in "${!dev_ref[@]}"; do
-			echo "- $dev [${use_map[all_devices_d["$dev"]]}, ${drivers_d["$dev"]:-none}]"
+			printf '%s- %s [%s, %s]\n' \
+				"${set_marker:+${markers["${use_map[all_devices_d["$dev"]]}"]} }" \
+				"$dev" "${use_map[all_devices_d["$dev"]]}" "${drivers_d["$dev"]:-none}"
 		done
 	fi
 }
@@ -155,6 +162,51 @@ fdevices() {
 			eval "${am[action]}='${!action_ref[*]}'"
 		fi
 	done
+}
+
+editor() {
+	local devs_list=() devs_to_modify=()
+	local editor=${VISUAL:-${EDITOR:-vim}}
+	local tmp_file
+
+	type -P "$editor" > /dev/null || return
+
+	mapfile -t devs_list < <(pdevices markers)
+
+	tmp_file=$(mktemp -u)
+	cat <<- ODEVICES > "$tmp_file" || return
+		# Listing '$type' devices
+		#   Devices marked as "used" (i.e. contains any data) will be skipped by default
+		#   Devices marked as "not used" (i.e. does not contain data) will be picked by default
+
+		$(printf '%s\n' "${devs_list[@]}")
+
+		# p, pick devices
+		# s, skip devices
+
+		$([[ $editor == vi?(m) ]] && echo "# :cq[!] to not save any changes")
+	ODEVICES
+
+	"$editor" "$tmp_file" || return
+	[[ -s $tmp_file ]] || return
+
+	local action dev _type
+	while read -r action _ dev _type; do
+		case "${action,,}" in
+			s | skip)
+				[[ $_type != *"not used"* ]] && continue
+				devs_to_modify+=("$dev")
+				;;
+			p | pick)
+				[[ $_type == *"not used"* ]] && continue
+				devs_to_modify+=("$dev")
+				;;
+		esac
+	done < "$tmp_file"
+	rm "$tmp_file"
+
+	"$1" < <(printf '%s\n' "${devs_to_modify[@]}")
+
 }
 
 odevices() {
