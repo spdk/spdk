@@ -865,7 +865,7 @@ fi
 
 if [[ $mode == interactive ]]; then
 	source "$rootdir/scripts/common/setup/interactive.sh"
-	main_menu || exit 0
+	main_menu "$2" || exit 0
 fi
 
 if [[ $mode == reset && $PCI_BLOCK_SYNC_ON_RESET == yes ]]; then

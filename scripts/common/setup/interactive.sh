@@ -21,7 +21,7 @@ elevate() {
 	((UID != 0)) || return 0
 
 	if yn "You ($UID) need to be root to commit any changes. Elevate privileges?"; then
-		exec sudo -E "$rootdir/scripts/setup.sh" interactive
+		exec sudo -E "$rootdir/scripts/setup.sh" interactive "$@"
 	fi
 }
 
@@ -33,10 +33,17 @@ stdin() {
 }
 
 main_menu() {
-	local type=all answer
+	local type=all answer quick_mode=$1
 
 	stdin || return 1
-	elevate
+	elevate "$quick_mode"
+
+	case "${quick_mode,,}" in
+		config | reset)
+			editor odevices quick && mode=$quick_mode
+			return
+			;;
+	esac
 
 	while ((1)); do
 		cat <<- MENU
@@ -165,7 +172,7 @@ fdevices() {
 }
 
 editor() {
-	local devs_list=() devs_to_modify=()
+	local devs_list=() devs_picked=() devs_skipped=()
 	local editor=${VISUAL:-${EDITOR:-vim}}
 	local tmp_file
 
@@ -195,17 +202,23 @@ editor() {
 		case "${action,,}" in
 			s | skip)
 				[[ $_type != *"not used"* ]] && continue
-				devs_to_modify+=("$dev")
+				devs_skipped+=("$dev")
 				;;
 			p | pick)
 				[[ $_type == *"not used"* ]] && continue
-				devs_to_modify+=("$dev")
+				devs_picked+=("$dev")
 				;;
 		esac
 	done < "$tmp_file"
 	rm "$tmp_file"
 
-	"$1" < <(printf '%s\n' "${devs_to_modify[@]}")
+	if [[ $2 == quick ]] && ((${#devs_picked[@]} > 0)); then
+		if ! yn "Detected data on some of the devices (${devs_picked[*]}). Continue?"; then
+			return 1
+		fi
+	fi
+
+	"$1" < <(printf '%s\n' "${devs_skipped[@]}" "${devs_picked[@]}")
 
 }
 
