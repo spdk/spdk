@@ -207,6 +207,26 @@ install_golang() {
 	pkgdep_toolpath go "${godir}/bin"
 }
 
+install_golangci_lint() {
+	local golangcidir installed_lintversion lintversion=${GOLANGCLILINTVERSION:-1.54.2}
+	installed_lintversion=$(golangci-lint --version | awk '{print $4}')
+
+	if [[ -n "${installed_lintversion}" ]] && ge "${installed_lintversion}" "${lintversion}"; then
+		echo "golangci-lint already installed, skip installing"
+		return 0
+	fi
+
+	echo "installing golangci-lint"
+	golangcidir=/opt/golangci/$lintversion/bin
+	export PATH=${golangcidir}:$PATH
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/v${lintversion}/install.sh \
+		| sh -s -- -b "${golangcidir}" || {
+		echo "installing golangci-lint failed"
+		return 1
+	}
+	pkgdep_toolpath golangci_lint "${golangcidir}"
+}
+
 pkgdep_toolpath() {
 	# Usage: pkgdep_toolpath TOOL DIR
 	#
@@ -249,4 +269,5 @@ fi
 if [[ $INSTALL_GOLANG == true ]]; then
 	install_golang
 	install_protoc
+	install_golangci_lint
 fi
