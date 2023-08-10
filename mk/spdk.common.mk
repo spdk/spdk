@@ -264,7 +264,7 @@ SYS_LIBS += -lufc
 endif
 
 ifeq ($(CONFIG_DEBUG), y)
-COMMON_CFLAGS += -DDEBUG -O0 -fno-omit-frame-pointer
+COMMON_CFLAGS += -DDEBUG -g3 -O0 -fno-omit-frame-pointer
 else
 COMMON_CFLAGS += -DNDEBUG -O2
 # Enable _FORTIFY_SOURCE checks - these only work when optimizations are enabled.
