@@ -251,6 +251,8 @@ struct spdk_bdev_shared_resource {
 	/* I/O channel allocated by a bdev module */
 	struct spdk_io_channel	*shared_ch;
 
+	struct spdk_poller	*nomem_poller;
+
 	/* Refcount of bdev channels using this resource */
 	uint32_t		ref;
 
@@ -1419,20 +1421,19 @@ bdev_submit_request(struct spdk_bdev *bdev, struct spdk_io_channel *ioch,
 }
 
 static inline void
-bdev_ch_resubmit_io(struct spdk_bdev_channel *bdev_ch, struct spdk_bdev_io *bdev_io)
+bdev_ch_resubmit_io(struct spdk_bdev_shared_resource *shared_resource, struct spdk_bdev_io *bdev_io)
 {
-	struct spdk_bdev *bdev = bdev_ch->bdev;
+	struct spdk_bdev *bdev = bdev_io->bdev;
 
-	bdev_io_increment_outstanding(bdev_io->internal.ch, bdev_ch->shared_resource);
+	bdev_io_increment_outstanding(bdev_io->internal.ch, shared_resource);
 	bdev_io->internal.error.nvme.cdw0 = 0;
 	bdev_io->num_retries++;
 	bdev_submit_request(bdev, spdk_bdev_io_get_io_channel(bdev_io), bdev_io);
 }
 
 static void
-bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
+bdev_shared_ch_retry_io(struct spdk_bdev_shared_resource *shared_resource)
 {
-	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
 	struct spdk_bdev_io *bdev_io;
 
 	if (shared_resource->io_outstanding > shared_resource->nomem_threshold) {
@@ -1453,7 +1454,7 @@ bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 
 		switch (bdev_io->internal.retry_state) {
 		case BDEV_IO_RETRY_STATE_SUBMIT:
-			bdev_ch_resubmit_io(bdev_ch, bdev_io);
+			bdev_ch_resubmit_io(shared_resource, bdev_io);
 			break;
 		case BDEV_IO_RETRY_STATE_PULL:
 			bdev_io_pull_data(bdev_io);
@@ -1483,6 +1484,31 @@ bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 	}
 }
 
+static void
+bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
+{
+	bdev_shared_ch_retry_io(bdev_ch->shared_resource);
+}
+
+static int
+bdev_no_mem_poller(void *ctx)
+{
+	struct spdk_bdev_shared_resource *shared_resource = ctx;
+
+	spdk_poller_unregister(&shared_resource->nomem_poller);
+
+	if (!TAILQ_EMPTY(&shared_resource->nomem_io)) {
+		bdev_shared_ch_retry_io(shared_resource);
+	}
+	if (!TAILQ_EMPTY(&shared_resource->nomem_io) && shared_resource->io_outstanding == 0) {
+		/* No IOs were submitted, try again */
+		shared_resource->nomem_poller = SPDK_POLLER_REGISTER(bdev_no_mem_poller, shared_resource,
+						SPDK_BDEV_IO_POLL_INTERVAL_IN_MSEC * 10);
+	}
+
+	return SPDK_POLLER_BUSY;
+}
+
 static inline bool
 _bdev_io_handle_no_mem(struct spdk_bdev_io *bdev_io, enum bdev_io_retry_state state)
 {
@@ -1493,6 +1519,14 @@ _bdev_io_handle_no_mem(struct spdk_bdev_io *bdev_io, enum bdev_io_retry_state st
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
 		bdev_queue_nomem_io_head(shared_resource, bdev_io, state);
 
+		if (shared_resource->io_outstanding == 0 && !shared_resource->nomem_poller) {
+			/* Special case when we have nomem IOs and no outstanding IOs which completions
+			 * could trigger retry of queued IOs
+			 * Any IOs submitted may trigger retry of queued IOs. This poller handles a case when no
+			 * new IOs submitted, e.g. qd==1 */
+			shared_resource->nomem_poller = SPDK_POLLER_REGISTER(bdev_no_mem_poller, shared_resource,
+							SPDK_BDEV_IO_POLL_INTERVAL_IN_MSEC * 10);
+		}
 		/* If bdev module completed an I/O that has an accel sequence with NOMEM status, the
 		 * ownership of that sequence is transferred back to the bdev layer, so we need to
 		 * restore internal.accel_sequence to make sure that the sequence is handled
@@ -2646,6 +2680,11 @@ bdev_io_do_submit(struct spdk_bdev_channel *bdev_ch, struct spdk_bdev_io *bdev_i
 		bdev_io->internal.in_submit_request = false;
 	} else {
 		bdev_queue_nomem_io_tail(shared_resource, bdev_io, BDEV_IO_RETRY_STATE_SUBMIT);
+		if (shared_resource->nomem_threshold == 0 && shared_resource->io_outstanding == 0) {
+			/* Special case when we have nomem IOs and no outstanding IOs which completions
+			 * could trigger retry of queued IOs */
+			bdev_shared_ch_retry_io(shared_resource);
+		}
 	}
 }
 
@@ -3695,6 +3734,7 @@ bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 		assert(shared_resource->io_outstanding == 0);
 		TAILQ_REMOVE(&shared_resource->mgmt_ch->shared_resources, shared_resource, link);
 		spdk_put_io_channel(spdk_io_channel_from_ctx(shared_resource->mgmt_ch));
+		spdk_poller_unregister(&shared_resource->nomem_poller);
 		free(shared_resource);
 	}
 }
