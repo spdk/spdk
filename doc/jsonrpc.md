@@ -3606,7 +3606,7 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Optional | string      | Bdev name to use
 block_size              | Required | number      | Block size in bytes
-num_blocks              | Required | number      | Number of blocks
+total_size              | Required | number      | Size of null bdev in MB (int > 0). Includes only data blocks.
 uuid                    | Optional | string      | UUID of new bdev
 md_size                 | Optional | number      | Metadata size for this bdev. Default=0.
 dif_type                | Optional | number      | Protection information type. Parameter --md-size needs to be set along --dif-type. Default=0 - no protection.
