@@ -1059,8 +1059,15 @@ error:
 
 	/* The request is from queued_req list we should trigger the callback from caller */
 	if (spdk_unlikely(req->queued)) {
-		nvme_qpair_manual_complete_request(qpair, req, SPDK_NVME_SCT_GENERIC,
-						   SPDK_NVME_SC_INTERNAL_DEVICE_ERROR, true, true);
+		if (rc == -ENXIO) {
+			nvme_qpair_manual_complete_request(qpair, req, SPDK_NVME_SCT_GENERIC,
+							   SPDK_NVME_SC_ABORTED_SQ_DELETION,
+							   qpair->abort_dnr, true);
+		} else {
+			nvme_qpair_manual_complete_request(qpair, req, SPDK_NVME_SCT_GENERIC,
+							   SPDK_NVME_SC_INTERNAL_DEVICE_ERROR,
+							   true, true);
+		}
 		return rc;
 	}
 
