@@ -1328,8 +1328,9 @@ check_condition:
 struct spdk_bdev_scsi_unmap_ctx {
 	struct spdk_scsi_task		*task;
 	struct spdk_scsi_unmap_bdesc	desc[DEFAULT_MAX_UNMAP_BLOCK_DESCRIPTOR_COUNT];
-	uint32_t			desc_count;
-	uint32_t			count;
+	uint16_t			remaining_count;
+	uint16_t			current_count;
+	uint16_t			outstanding_count;
 };
 
 static int _bdev_scsi_unmap(struct spdk_bdev_scsi_unmap_ctx *ctx);
@@ -1340,21 +1341,34 @@ bdev_scsi_task_complete_unmap_cmd(struct spdk_bdev_io *bdev_io, bool success,
 {
 	struct spdk_bdev_scsi_unmap_ctx *ctx = cb_arg;
 	struct spdk_scsi_task *task = ctx->task;
-	int sc, sk, asc, ascq;
-
-	ctx->count--;
-
-	if (task->status == SPDK_SCSI_STATUS_GOOD) {
-		spdk_bdev_io_get_scsi_status(bdev_io, &sc, &sk, &asc, &ascq);
-		spdk_scsi_task_set_status(task, sc, sk, asc, ascq);
-	}
 
 	spdk_bdev_free_io(bdev_io);
 
-	if (ctx->count == 0) {
+	if (!success) {
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		/* If any child I/O failed, stop further splitting process. */
+		ctx->current_count += ctx->remaining_count;
+		ctx->remaining_count = 0;
+	}
+
+	ctx->outstanding_count--;
+	if (ctx->outstanding_count != 0) {
+		/* Any child I/O is still outstanding. */
+		return;
+	}
+
+	if (ctx->remaining_count == 0) {
+		/* SCSI task finishes when all descriptors are consumed. */
 		scsi_lun_complete_task(task->lun, task);
 		free(ctx);
+		return;
 	}
+
+	/* Continue with splitting process. */
+	_bdev_scsi_unmap(ctx);
 }
 
 static int
@@ -1404,51 +1418,63 @@ _bdev_scsi_unmap(struct spdk_bdev_scsi_unmap_ctx *ctx)
 {
 	struct spdk_scsi_task *task = ctx->task;
 	struct spdk_scsi_lun *lun = task->lun;
-	uint32_t i;
 	int rc;
 
-	for (i = ctx->count; i < ctx->desc_count; i++) {
+	while (ctx->remaining_count != 0) {
 		struct spdk_scsi_unmap_bdesc	*desc;
 		uint64_t offset_blocks;
 		uint64_t num_blocks;
 
-		desc = &ctx->desc[i];
+		desc = &ctx->desc[ctx->current_count];
 
 		offset_blocks = from_be64(&desc->lba);
 		num_blocks = from_be32(&desc->block_count);
 
 		if (num_blocks == 0) {
-			continue;
+			rc = 0;
+		} else {
+			ctx->outstanding_count++;
+			rc = spdk_bdev_unmap_blocks(lun->bdev_desc,
+						    lun->io_channel,
+						    offset_blocks,
+						    num_blocks,
+						    bdev_scsi_task_complete_unmap_cmd,
+						    ctx);
 		}
 
-		ctx->count++;
-		rc = spdk_bdev_unmap_blocks(lun->bdev_desc,
-					    lun->io_channel,
-					    offset_blocks,
-					    num_blocks,
-					    bdev_scsi_task_complete_unmap_cmd,
-					    ctx);
-
-		if (rc) {
+		if (rc == 0) {
+			ctx->current_count++;
+			ctx->remaining_count--;
+		} else {
+			ctx->outstanding_count--;
 			if (rc == -ENOMEM) {
-				bdev_scsi_queue_io(task, bdev_scsi_unmap_resubmit, ctx);
-				/* Unmap was not yet submitted to bdev */
-				ctx->count--;
+				if (ctx->outstanding_count == 0) {
+					/*
+					 * If there are outstanding child I/Os, the last
+					 * completion will call this function again to try
+					 * the next split. Hence, queue the parent task only
+					 * if there is no outstanding child I/O.
+					 */
+					bdev_scsi_queue_io(task, bdev_scsi_unmap_resubmit, ctx);
+				}
 				return SPDK_SCSI_TASK_PENDING;
+			} else {
+				SPDK_ERRLOG("SCSI Unmapping failed\n");
+				spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+							  SPDK_SCSI_SENSE_NO_SENSE,
+							  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+							  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+				/* If any child I/O failed, stop further splitting process. */
+				ctx->current_count += ctx->remaining_count;
+				ctx->remaining_count = 0;
+				/* We can't complete here - we may have to wait for previously
+				 * submitted child I/Os to complete */
+				break;
 			}
-			SPDK_ERRLOG("SCSI Unmapping failed\n");
-			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-						  SPDK_SCSI_SENSE_NO_SENSE,
-						  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
-						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-			ctx->count--;
-			/* We can't complete here - we may have to wait for previously
-			 * submitted unmaps to complete */
-			break;
 		}
 	}
 
-	if (ctx->count == 0) {
+	if (ctx->outstanding_count == 0) {
 		free(ctx);
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
@@ -1476,7 +1502,8 @@ bdev_scsi_unmap(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 	}
 
 	ctx->task = task;
-	ctx->count = 0;
+	ctx->current_count = 0;
+	ctx->outstanding_count = 0;
 
 	if (task->iovcnt == 1) {
 		data = (uint8_t *)task->iovs[0].iov_base;
@@ -1499,7 +1526,7 @@ bdev_scsi_unmap(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	ctx->desc_count = desc_count;
+	ctx->remaining_count = desc_count;
 
 	return _bdev_scsi_unmap(ctx);
 }
