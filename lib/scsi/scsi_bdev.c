@@ -1328,12 +1328,11 @@ check_condition:
 struct spdk_bdev_scsi_unmap_ctx {
 	struct spdk_scsi_task		*task;
 	struct spdk_scsi_unmap_bdesc	desc[DEFAULT_MAX_UNMAP_BLOCK_DESCRIPTOR_COUNT];
+	uint32_t			desc_count;
 	uint32_t			count;
 };
 
-static int bdev_scsi_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
-			   struct spdk_io_channel *bdev_ch, struct spdk_scsi_task *task,
-			   struct spdk_bdev_scsi_unmap_ctx *ctx);
+static int _bdev_scsi_unmap(struct spdk_bdev_scsi_unmap_ctx *ctx);
 
 static void
 bdev_scsi_task_complete_unmap_cmd(struct spdk_bdev_io *bdev_io, bool success,
@@ -1396,61 +1395,19 @@ static void
 bdev_scsi_unmap_resubmit(void *arg)
 {
 	struct spdk_bdev_scsi_unmap_ctx	*ctx = arg;
-	struct spdk_scsi_task *task = ctx->task;
-	struct spdk_scsi_lun *lun = task->lun;
 
-	bdev_scsi_unmap(lun->bdev, lun->bdev_desc, lun->io_channel, task, ctx);
+	_bdev_scsi_unmap(ctx);
 }
 
 static int
-bdev_scsi_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
-		struct spdk_io_channel *bdev_ch, struct spdk_scsi_task *task,
-		struct spdk_bdev_scsi_unmap_ctx *ctx)
+_bdev_scsi_unmap(struct spdk_bdev_scsi_unmap_ctx *ctx)
 {
-	uint8_t				*data;
-	int				i, desc_count = -1;
-	int				data_len;
-	int				rc;
+	struct spdk_scsi_task *task = ctx->task;
+	struct spdk_scsi_lun *lun = task->lun;
+	uint32_t i;
+	int rc;
 
-	assert(task->status == SPDK_SCSI_STATUS_GOOD);
-
-	if (ctx == NULL) {
-		ctx = calloc(1, sizeof(*ctx));
-		if (!ctx) {
-			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-						  SPDK_SCSI_SENSE_NO_SENSE,
-						  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
-						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-			return SPDK_SCSI_TASK_COMPLETE;
-		}
-
-		ctx->task = task;
-		ctx->count = 0;
-	}
-
-
-	if (task->iovcnt == 1) {
-		data = (uint8_t *)task->iovs[0].iov_base;
-		data_len = task->iovs[0].iov_len;
-		desc_count = __copy_desc(ctx, data, data_len);
-	} else {
-		data = spdk_scsi_task_gather_data(task, &data_len);
-		if (data) {
-			desc_count = __copy_desc(ctx, data, data_len);
-			free(data);
-		}
-	}
-
-	if (desc_count < 0) {
-		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
-					  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
-					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-		free(ctx);
-		return SPDK_SCSI_TASK_COMPLETE;
-	}
-
-	for (i = ctx->count; i < desc_count; i++) {
+	for (i = ctx->count; i < ctx->desc_count; i++) {
 		struct spdk_scsi_unmap_bdesc	*desc;
 		uint64_t offset_blocks;
 		uint64_t num_blocks;
@@ -1465,8 +1422,12 @@ bdev_scsi_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 		}
 
 		ctx->count++;
-		rc = spdk_bdev_unmap_blocks(bdev_desc, bdev_ch, offset_blocks, num_blocks,
-					    bdev_scsi_task_complete_unmap_cmd, ctx);
+		rc = spdk_bdev_unmap_blocks(lun->bdev_desc,
+					    lun->io_channel,
+					    offset_blocks,
+					    num_blocks,
+					    bdev_scsi_task_complete_unmap_cmd,
+					    ctx);
 
 		if (rc) {
 			if (rc == -ENOMEM) {
@@ -1493,6 +1454,54 @@ bdev_scsi_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 	}
 
 	return SPDK_SCSI_TASK_PENDING;
+}
+
+static int
+bdev_scsi_unmap(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
+{
+	struct spdk_bdev_scsi_unmap_ctx	*ctx;
+	uint8_t				*data;
+	int				desc_count = -1;
+	int				data_len;
+
+	assert(task->status == SPDK_SCSI_STATUS_GOOD);
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return SPDK_SCSI_TASK_COMPLETE;
+	}
+
+	ctx->task = task;
+	ctx->count = 0;
+
+	if (task->iovcnt == 1) {
+		data = (uint8_t *)task->iovs[0].iov_base;
+		data_len = task->iovs[0].iov_len;
+		desc_count = __copy_desc(ctx, data, data_len);
+	} else {
+		data = spdk_scsi_task_gather_data(task, &data_len);
+		if (data) {
+			desc_count = __copy_desc(ctx, data, data_len);
+			free(data);
+		}
+	}
+
+	if (desc_count < 0) {
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+					  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		free(ctx);
+		return SPDK_SCSI_TASK_COMPLETE;
+	}
+
+	ctx->desc_count = desc_count;
+
+	return _bdev_scsi_unmap(ctx);
 }
 
 static int
@@ -1621,7 +1630,7 @@ bdev_scsi_process_block(struct spdk_scsi_task *task)
 		break;
 
 	case SPDK_SBC_UNMAP:
-		return bdev_scsi_unmap(bdev, lun->bdev_desc, lun->io_channel, task, NULL);
+		return bdev_scsi_unmap(bdev, task);
 
 	default:
 		return SPDK_SCSI_TASK_UNKNOWN;
