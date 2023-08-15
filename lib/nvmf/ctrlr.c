@@ -909,8 +909,10 @@ retry_connect(void *arg)
 	int rc;
 
 	sgroup = nvmf_subsystem_pg_from_connect_cmd(req);
-	assert(sgroup != NULL);
-	sgroup->mgmt_io_outstanding++;
+	/* subsystem may be deleted during the retry interval, so we need to check sgroup */
+	if (sgroup != NULL) {
+		sgroup->mgmt_io_outstanding++;
+	}
 	spdk_poller_unregister(&req->poller);
 	rc = nvmf_ctrlr_cmd_connect(req);
 	if (rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
