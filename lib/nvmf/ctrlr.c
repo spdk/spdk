@@ -3528,6 +3528,13 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	int rc;
 
+	if (ctrlr == NULL) {
+		SPDK_ERRLOG("Admin command sent before CONNECT\n");
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
 	if (cmd->opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
 		/* We do not want to treat AERs as outstanding commands,
 		 * so decrement mgmt_io_outstanding here to offset
@@ -3536,13 +3543,6 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 		sgroup = &req->qpair->group->sgroups[ctrlr->subsys->id];
 		assert(sgroup != NULL);
 		sgroup->mgmt_io_outstanding--;
-	}
-
-	if (ctrlr == NULL) {
-		SPDK_ERRLOG("Admin command sent before CONNECT\n");
-		response->status.sct = SPDK_NVME_SCT_GENERIC;
-		response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
 	assert(spdk_get_thread() == ctrlr->thread);
