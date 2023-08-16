@@ -328,9 +328,8 @@ hello_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
 		}
 	}
 
-	iov.iov_len = rc;
-
-	if (iov.iov_len > 0) {
+	if (rc > 0) {
+		iov.iov_len = rc;
 		ctx->bytes_in += iov.iov_len;
 		n = spdk_sock_writev(sock, &iov, 1);
 		if (n > 0) {
