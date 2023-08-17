@@ -64,6 +64,13 @@ int spdk_bdev_create_bs_dev(const char *bdev_name, bool write,
 			    struct spdk_bs_dev **bs_dev);
 
 /**
+ * Updates number of blocks of a blobstore block device.
+ *
+ * \param bs_dev Blobstore block device.
+ */
+void spdk_bdev_update_bs_blockcnt(struct spdk_bs_dev *bs_dev);
+
+/**
  * Claim the bdev module for the given blobstore.
  *
  * If bs_dev was opened read-write using spdk_bdev_create_bs_dev_ext(), a read-write-once claim is

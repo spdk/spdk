@@ -482,6 +482,15 @@ blob_bdev_init(struct blob_bdev *b, struct spdk_bdev_desc *desc)
 	b->bs_dev.translate_lba = bdev_blob_translate_lba;
 }
 
+void
+spdk_bdev_update_bs_blockcnt(struct spdk_bs_dev *bs_dev)
+{
+	struct blob_bdev *blob_bdev = (struct blob_bdev *)bs_dev;
+
+	assert(bs_dev->blocklen == spdk_bdev_get_block_size(blob_bdev->bdev));
+	bs_dev->blockcnt = spdk_bdev_get_num_blocks(blob_bdev->bdev);
+}
+
 int
 spdk_bdev_create_bs_dev(const char *bdev_name, bool write,
 			struct spdk_bdev_bs_dev_opts *opts, size_t opts_size,
