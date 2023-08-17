@@ -53,10 +53,11 @@ static void ublk_dev_queue_fini(struct ublk_queue *q);
 static int ublk_poll(void *arg);
 static int ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op);
 
-typedef void (*ublk_next_state_fn)(struct spdk_ublk_dev *ublk);
 static void ublk_set_params(struct spdk_ublk_dev *ublk);
 static void ublk_finish_start(struct spdk_ublk_dev *ublk);
 static void ublk_free_dev(struct spdk_ublk_dev *ublk);
+static void ublk_delete_dev(void *arg);
+static int ublk_close_dev(struct spdk_ublk_dev *ublk);
 
 static const char *ublk_op_name[64]
 __attribute__((unused)) = {
@@ -128,7 +129,7 @@ struct spdk_ublk_dev {
 	ublk_start_cb		start_cb;
 	ublk_del_cb		del_cb;
 	void			*cb_arg;
-	ublk_next_state_fn	next_state_fn;
+	uint32_t		current_cmd_op;
 	uint32_t		ctrl_ops_in_progress;
 	bool			is_closing;
 
@@ -270,11 +271,85 @@ spdk_ublk_init(void)
 	g_ublk_tgt.ctrl_ring.ring_fd = -1;
 }
 
+static void
+ublk_ctrl_cmd_error(struct spdk_ublk_dev *ublk, int32_t res)
+{
+	assert(res != 0);
+
+	SPDK_ERRLOG("ctrlr cmd %s failed, %s\n", ublk_op_name[ublk->current_cmd_op], spdk_strerror(-res));
+	switch (ublk->current_cmd_op) {
+	case UBLK_CMD_ADD_DEV:
+	case UBLK_CMD_SET_PARAMS:
+		if (ublk->start_cb) {
+			ublk->start_cb(ublk->cb_arg, res);
+			ublk->start_cb = NULL;
+		}
+
+		ublk_delete_dev(ublk);
+		break;
+	case UBLK_CMD_START_DEV:
+		if (ublk->start_cb) {
+			ublk->start_cb(ublk->cb_arg, res);
+			ublk->start_cb = NULL;
+		}
+
+		ublk_close_dev(ublk);
+		break;
+	case UBLK_CMD_STOP_DEV:
+		/* TODO: process stop cmd failure */
+		break;
+	case UBLK_CMD_DEL_DEV:
+		/* TODO: process del cmd failure */
+		break;
+	default:
+		SPDK_ERRLOG("No match cmd operation,cmd_op = %d\n", ublk->current_cmd_op);
+		break;
+	}
+}
+
+static void
+ublk_ctrl_process_cqe(struct io_uring_cqe *cqe)
+{
+	struct spdk_ublk_dev *ublk;
+
+	ublk = (struct spdk_ublk_dev *)cqe->user_data;
+	UBLK_DEBUGLOG(ublk, "ctrl cmd completed\n");
+	ublk->ctrl_ops_in_progress--;
+
+	if (spdk_unlikely(cqe->res != 0)) {
+		SPDK_ERRLOG("ctrlr cmd failed\n");
+		ublk_ctrl_cmd_error(ublk, cqe->res);
+		return;
+	}
+
+	switch (ublk->current_cmd_op) {
+	case UBLK_CMD_ADD_DEV:
+		ublk_set_params(ublk);
+		break;
+	case UBLK_CMD_SET_PARAMS:
+		ublk_finish_start(ublk);
+		break;
+	case UBLK_CMD_START_DEV:
+		if (ublk->start_cb) {
+			ublk->start_cb(ublk->cb_arg, 0);
+			ublk->start_cb = NULL;
+		}
+		break;
+	case UBLK_CMD_STOP_DEV:
+		break;
+	case UBLK_CMD_DEL_DEV:
+		ublk_free_dev(ublk);
+		break;
+	default:
+		SPDK_ERRLOG("No match cmd operation,cmd_op = %d\n", ublk->current_cmd_op);
+		break;
+	}
+}
+
 static int
 ublk_ctrl_poller(void *arg)
 {
 	struct io_uring *ring = &g_ublk_tgt.ctrl_ring;
-	struct spdk_ublk_dev *ublk;
 	struct io_uring_cqe *cqe;
 	const int max = 8;
 	int i, count = 0, rc;
@@ -291,12 +366,9 @@ ublk_ctrl_poller(void *arg)
 
 		assert(cqe != NULL);
 		g_ublk_tgt.ctrl_ops_in_progress--;
-		ublk = (struct spdk_ublk_dev *)cqe->user_data;
-		UBLK_DEBUGLOG(ublk, "ctrl cmd completed\n");
-		ublk->ctrl_ops_in_progress--;
-		if (ublk->next_state_fn) {
-			ublk->next_state_fn(ublk);
-		}
+
+		ublk_ctrl_process_cqe(cqe);
+
 		io_uring_cqe_seen(ring, cqe);
 		count++;
 	}
@@ -327,16 +399,14 @@ ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op)
 	sqe->ioprio = 0;
 	cmd->dev_id = dev_id;
 	cmd->queue_id = -1;
-	ublk->next_state_fn = NULL;
+	ublk->current_cmd_op = cmd_op;
 
 	switch (cmd_op) {
 	case UBLK_CMD_ADD_DEV:
-		ublk->next_state_fn = ublk_set_params;
 		cmd->addr = (__u64)(uintptr_t)&ublk->dev_info;
 		cmd->len = sizeof(ublk->dev_info);
 		break;
 	case UBLK_CMD_SET_PARAMS:
-		ublk->next_state_fn = ublk_finish_start;
 		cmd->addr = (__u64)(uintptr_t)&ublk->dev_params;
 		cmd->len = sizeof(ublk->dev_params);
 		break;
@@ -346,7 +416,6 @@ ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op)
 	case UBLK_CMD_STOP_DEV:
 		break;
 	case UBLK_CMD_DEL_DEV:
-		ublk->next_state_fn = ublk_free_dev;
 		break;
 	default:
 		SPDK_ERRLOG("No match cmd operation,cmd_op = %d\n", cmd_op);
@@ -1835,7 +1904,7 @@ ublk_finish_start(struct spdk_ublk_dev *ublk)
 err:
 	ublk_delete_dev(ublk);
 out:
-	if (ublk->start_cb) {
+	if (rc < 0 && ublk->start_cb) {
 		ublk->start_cb(ublk->cb_arg, rc);
 		ublk->start_cb = NULL;
 	}
