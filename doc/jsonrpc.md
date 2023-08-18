@@ -3916,7 +3916,7 @@ and deleted on removal.
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
-enabled                 | Required | string      | True to enable, false to disable
+enable                  | Required | string      | True to enable, false to disable
 period_us               | Optional | number      | How often to poll for hot-insert and hot-remove events. Values: 0 - reset/use default or 1 to 10000000.
 
 #### Example
@@ -3927,7 +3927,7 @@ Example request:
 request:
 {
   "params": {
-    "enabled": true,
+    "enable": true,
     "period_us": 2000
   },
   "jsonrpc": "2.0",
