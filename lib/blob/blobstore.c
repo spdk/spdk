@@ -1740,6 +1740,47 @@ bs_batch_clear_dev(struct spdk_blob_persist_ctx *ctx, spdk_bs_batch_t *batch, ui
 	}
 }
 
+static int
+bs_super_validate(struct spdk_bs_super_block *super, struct spdk_blob_store *bs)
+{
+	uint32_t	crc;
+	static const char zeros[SPDK_BLOBSTORE_TYPE_LENGTH];
+
+	if (super->version > SPDK_BS_VERSION ||
+	    super->version < SPDK_BS_INITIAL_VERSION) {
+		return -EILSEQ;
+	}
+
+	if (memcmp(super->signature, SPDK_BS_SUPER_BLOCK_SIG,
+		   sizeof(super->signature)) != 0) {
+		return -EILSEQ;
+	}
+
+	crc = blob_md_page_calc_crc(super);
+	if (crc != super->crc) {
+		return -EILSEQ;
+	}
+
+	if (memcmp(&bs->bstype, &super->bstype, SPDK_BLOBSTORE_TYPE_LENGTH) == 0) {
+		SPDK_DEBUGLOG(blob, "Bstype matched - loading blobstore\n");
+	} else if (memcmp(&bs->bstype, zeros, SPDK_BLOBSTORE_TYPE_LENGTH) == 0) {
+		SPDK_DEBUGLOG(blob, "Bstype wildcard used - loading blobstore regardless bstype\n");
+	} else {
+		SPDK_DEBUGLOG(blob, "Unexpected bstype\n");
+		SPDK_LOGDUMP(blob, "Expected:", bs->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
+		SPDK_LOGDUMP(blob, "Found:", super->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
+		return -ENXIO;
+	}
+
+	if (super->size > bs->dev->blockcnt * bs->dev->blocklen) {
+		SPDK_NOTICELOG("Size mismatch, dev size: %" PRIu64 ", blobstore size: %" PRIu64 "\n",
+			       bs->dev->blockcnt * bs->dev->blocklen, super->size);
+		return -EILSEQ;
+	}
+
+	return 0;
+}
+
 static void bs_mark_dirty(spdk_bs_sequence_t *seq, struct spdk_blob_store *bs,
 			  spdk_bs_sequence_cpl cb_fn, void *cb_arg);
 
@@ -4664,44 +4705,11 @@ static void
 bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
-	uint32_t	crc;
-	int		rc;
-	static const char zeros[SPDK_BLOBSTORE_TYPE_LENGTH];
+	int rc;
 
-	if (ctx->super->version > SPDK_BS_VERSION ||
-	    ctx->super->version < SPDK_BS_INITIAL_VERSION) {
-		bs_load_ctx_fail(ctx, -EILSEQ);
-		return;
-	}
-
-	if (memcmp(ctx->super->signature, SPDK_BS_SUPER_BLOCK_SIG,
-		   sizeof(ctx->super->signature)) != 0) {
-		bs_load_ctx_fail(ctx, -EILSEQ);
-		return;
-	}
-
-	crc = blob_md_page_calc_crc(ctx->super);
-	if (crc != ctx->super->crc) {
-		bs_load_ctx_fail(ctx, -EILSEQ);
-		return;
-	}
-
-	if (memcmp(&ctx->bs->bstype, &ctx->super->bstype, SPDK_BLOBSTORE_TYPE_LENGTH) == 0) {
-		SPDK_DEBUGLOG(blob, "Bstype matched - loading blobstore\n");
-	} else if (memcmp(&ctx->bs->bstype, zeros, SPDK_BLOBSTORE_TYPE_LENGTH) == 0) {
-		SPDK_DEBUGLOG(blob, "Bstype wildcard used - loading blobstore regardless bstype\n");
-	} else {
-		SPDK_DEBUGLOG(blob, "Unexpected bstype\n");
-		SPDK_LOGDUMP(blob, "Expected:", ctx->bs->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
-		SPDK_LOGDUMP(blob, "Found:", ctx->super->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
-		bs_load_ctx_fail(ctx, -ENXIO);
-		return;
-	}
-
-	if (ctx->super->size > ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen) {
-		SPDK_NOTICELOG("Size mismatch, dev size: %" PRIu64 ", blobstore size: %" PRIu64 "\n",
-			       ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen, ctx->super->size);
-		bs_load_ctx_fail(ctx, -EILSEQ);
+	rc = bs_super_validate(ctx->super, ctx->bs);
+	if (rc != 0) {
+		bs_load_ctx_fail(ctx, rc);
 		return;
 	}
 
@@ -8712,48 +8720,15 @@ static void
 bs_grow_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
-	uint32_t	crc;
-	static const char zeros[SPDK_BLOBSTORE_TYPE_LENGTH];
+	int rc;
 
-	if (ctx->super->version > SPDK_BS_VERSION ||
-	    ctx->super->version < SPDK_BS_INITIAL_VERSION) {
-		bs_load_ctx_fail(ctx, -EILSEQ);
-		return;
-	}
-
-	if (memcmp(ctx->super->signature, SPDK_BS_SUPER_BLOCK_SIG,
-		   sizeof(ctx->super->signature)) != 0) {
-		bs_load_ctx_fail(ctx, -EILSEQ);
-		return;
-	}
-
-	crc = blob_md_page_calc_crc(ctx->super);
-	if (crc != ctx->super->crc) {
-		bs_load_ctx_fail(ctx, -EILSEQ);
-		return;
-	}
-
-	if (memcmp(&ctx->bs->bstype, &ctx->super->bstype, SPDK_BLOBSTORE_TYPE_LENGTH) == 0) {
-		SPDK_DEBUGLOG(blob, "Bstype matched - loading blobstore\n");
-	} else if (memcmp(&ctx->bs->bstype, zeros, SPDK_BLOBSTORE_TYPE_LENGTH) == 0) {
-		SPDK_DEBUGLOG(blob, "Bstype wildcard used - loading blobstore regardless bstype\n");
-	} else {
-		SPDK_DEBUGLOG(blob, "Unexpected bstype\n");
-		SPDK_LOGDUMP(blob, "Expected:", ctx->bs->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
-		SPDK_LOGDUMP(blob, "Found:", ctx->super->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
-		bs_load_ctx_fail(ctx, -ENXIO);
-		return;
-	}
-
-	if (ctx->super->size > ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen) {
-		SPDK_NOTICELOG("Size mismatch, dev size: %" PRIu64 ", blobstore size: %" PRIu64 "\n",
-			       ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen, ctx->super->size);
-		bs_load_ctx_fail(ctx, -EILSEQ);
+	rc = bs_super_validate(ctx->super, ctx->bs);
+	if (rc != 0) {
+		bs_load_ctx_fail(ctx, rc);
 		return;
 	}
 
 	bs_load_try_to_grow(ctx);
-
 }
 
 void
