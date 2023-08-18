@@ -59,7 +59,7 @@ ifeq ($(OS),Windows)
 EXEEXT = .exe
 endif
 
-COMMON_CFLAGS = -g $(C_OPT) -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -fno-strict-aliasing -I$(SPDK_ROOT_DIR)/include
+COMMON_CFLAGS = -g -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -fno-strict-aliasing -I$(SPDK_ROOT_DIR)/include
 
 ifneq ($(filter powerpc% ppc%,$(TARGET_MACHINE)),)
 COMMON_CFLAGS += -mcpu=$(TARGET_ARCHITECTURE)
