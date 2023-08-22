@@ -48,6 +48,77 @@ struct nvmf_qpair_disconnect_many_ctx {
 	void *cpl_ctx;
 };
 
+static struct spdk_nvmf_referral *
+nvmf_tgt_find_referral(struct spdk_nvmf_tgt *tgt,
+		       const struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvmf_referral *referral;
+
+	TAILQ_FOREACH(referral, &tgt->referrals, link) {
+		if (spdk_nvme_transport_id_compare(&referral->trid, trid) == 0) {
+			return referral;
+		}
+	}
+
+	return NULL;
+}
+
+int
+spdk_nvmf_tgt_add_referral(struct spdk_nvmf_tgt *tgt,
+			   struct spdk_nvme_transport_id *trid,
+			   bool secure_channel)
+{
+	struct spdk_nvmf_referral *referral;
+
+	/* If the entry already exists, just ignore it. */
+	if (nvmf_tgt_find_referral(tgt, trid)) {
+		return 0;
+	}
+
+	referral = calloc(1, sizeof(*referral));
+	if (!referral) {
+		SPDK_ERRLOG("Failed to allocate memory for a referral\n");
+		return -ENOMEM;
+	}
+
+	referral->entry.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
+	referral->entry.treq.secure_channel = secure_channel ?
+					      SPDK_NVMF_TREQ_SECURE_CHANNEL_REQUIRED
+					      : SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_REQUIRED;
+	referral->entry.cntlid =
+		0xffff; /* Discovery controller shall support the dynamic controller model */
+	referral->entry.trtype = trid->trtype;
+	referral->entry.adrfam = trid->adrfam;
+	snprintf(referral->entry.subnqn, sizeof(referral->entry.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+	memcpy(&referral->trid, trid, sizeof(struct spdk_nvme_transport_id));
+	spdk_strcpy_pad(referral->entry.trsvcid, trid->trsvcid, sizeof(referral->entry.trsvcid), ' ');
+	spdk_strcpy_pad(referral->entry.traddr, trid->traddr, sizeof(referral->entry.traddr), ' ');
+
+	TAILQ_INSERT_HEAD(&tgt->referrals, referral, link);
+	nvmf_update_discovery_log(tgt, NULL);
+
+	return 0;
+}
+
+int
+spdk_nvmf_tgt_remove_referral(struct spdk_nvmf_tgt *tgt,
+			      struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvmf_referral *referral;
+
+	referral = nvmf_tgt_find_referral(tgt, trid);
+	if (referral == NULL) {
+		return -ENOENT;
+	}
+
+	TAILQ_REMOVE(&tgt->referrals, referral, link);
+	nvmf_update_discovery_log(tgt, NULL);
+
+	free(referral);
+
+	return 0;
+}
+
 static void
 nvmf_qpair_set_state(struct spdk_nvmf_qpair *qpair,
 		     enum spdk_nvmf_qpair_state state)
@@ -310,6 +381,7 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *opts)
 	tgt->discovery_genctr = 0;
 	TAILQ_INIT(&tgt->transports);
 	TAILQ_INIT(&tgt->poll_groups);
+	TAILQ_INIT(&tgt->referrals);
 	tgt->num_poll_groups = 0;
 
 	tgt->subsystem_ids = spdk_bit_array_create(tgt->max_subsystems);
@@ -364,6 +436,12 @@ nvmf_tgt_destroy_cb(void *io_device)
 	struct spdk_nvmf_tgt *tgt = io_device;
 	struct spdk_nvmf_subsystem *subsystem, *subsystem_next;
 	int rc;
+	struct spdk_nvmf_referral *referral;
+
+	while ((referral = TAILQ_FIRST(&tgt->referrals))) {
+		TAILQ_REMOVE(&tgt->referrals, referral, link);
+		free(referral);
+	}
 
 	/* We will be freeing subsystems in this loop, so we always need to get the next one
 	 * ahead of time, since we can't call get_next() on a subsystem that's been freed.

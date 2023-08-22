@@ -410,8 +410,9 @@ test_discovery_log_with_filters(void)
 	struct spdk_nvmf_discovery_log_page *disc_log;
 	struct spdk_nvmf_listener rdma_listener_1 = {}, rdma_listener_2 = {}, rdma_listener_3 = {},
 	tcp_listener_1 = {}, tcp_listener_2 = {}, tcp_listener_3 = {};
-	struct spdk_nvme_transport_id rdma_trid_1 = {}, rdma_trid_2 = {}, rdma_trid_3 = {}, tcp_trid_1 = {},
-	tcp_trid_2 = {}, tcp_trid_3 = {};
+	struct spdk_nvme_transport_id rdma_trid_1 = {}, rdma_trid_2 = {}, rdma_trid_3 = {}, rdma_trid_4 = {},
+	tcp_trid_1 = {}, tcp_trid_2 = {}, tcp_trid_3 = {}, tcp_trid_4 = {};
+	struct spdk_nvmf_referral ref1 = {}, ref2 = {};
 
 	iov.iov_base = buffer;
 	iov.iov_len = 8192;
@@ -425,12 +426,16 @@ test_discovery_log_with_filters(void)
 	subsystem->flags.allow_any_host = true;
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 
+	TAILQ_INIT(&tgt.referrals);
+
 	test_gen_trid(&rdma_trid_1, SPDK_NVME_TRANSPORT_RDMA, SPDK_NVMF_ADRFAM_IPV4, "10.10.10.10", "4420");
 	test_gen_trid(&rdma_trid_2, SPDK_NVME_TRANSPORT_RDMA, SPDK_NVMF_ADRFAM_IPV4, "11.11.11.11", "4420");
 	test_gen_trid(&rdma_trid_3, SPDK_NVME_TRANSPORT_RDMA, SPDK_NVMF_ADRFAM_IPV4, "10.10.10.10", "4421");
+	test_gen_trid(&rdma_trid_4, SPDK_NVME_TRANSPORT_RDMA, SPDK_NVMF_ADRFAM_IPV4, "10.10.10.10", "4430");
 	test_gen_trid(&tcp_trid_1, SPDK_NVME_TRANSPORT_TCP, SPDK_NVMF_ADRFAM_IPV4, "11.11.11.11", "4421");
 	test_gen_trid(&tcp_trid_2, SPDK_NVME_TRANSPORT_TCP, SPDK_NVMF_ADRFAM_IPV4, "10.10.10.10", "4422");
 	test_gen_trid(&tcp_trid_3, SPDK_NVME_TRANSPORT_TCP, SPDK_NVMF_ADRFAM_IPV4, "11.11.11.11", "4422");
+	test_gen_trid(&tcp_trid_4, SPDK_NVME_TRANSPORT_TCP, SPDK_NVMF_ADRFAM_IPV4, "11.11.11.11", "4430");
 
 	rdma_listener_1.trid = rdma_trid_1;
 	rdma_listener_2.trid = rdma_trid_2;
@@ -460,181 +465,318 @@ test_discovery_log_with_filters(void)
 
 	subsystem->state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 
+	ref1.trid = rdma_trid_4;
+
+	ref1.entry.trtype = rdma_trid_4.trtype;
+	ref1.entry.adrfam = rdma_trid_4.adrfam;
+	ref1.entry.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
+	ref1.entry.treq.secure_channel = SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_REQUIRED;
+	ref1.entry.cntlid = 0xffff;
+	memcpy(ref1.entry.trsvcid, rdma_trid_4.trsvcid, sizeof(ref1.entry.trsvcid));
+	memcpy(ref1.entry.traddr, rdma_trid_4.traddr, sizeof(ref1.entry.traddr));
+	snprintf(ref1.entry.subnqn, sizeof(ref1.entry.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+
+	ref2.trid = tcp_trid_4;
+
+	ref2.entry.trtype = tcp_trid_4.trtype;
+	ref2.entry.adrfam = tcp_trid_4.adrfam;
+	ref2.entry.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
+	ref2.entry.treq.secure_channel = SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_REQUIRED;
+	ref2.entry.cntlid = 0xffff;
+	memcpy(ref2.entry.trsvcid, tcp_trid_4.trsvcid, sizeof(ref2.entry.trsvcid));
+	memcpy(ref2.entry.traddr, tcp_trid_4.traddr, sizeof(ref2.entry.traddr));
+	snprintf(ref2.entry.subnqn, sizeof(ref2.entry.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+
+	TAILQ_INSERT_HEAD(&tgt.referrals, &ref1, link);
+	TAILQ_INSERT_HEAD(&tgt.referrals, &ref2, link);
+
+	nvmf_update_discovery_log(&tgt, NULL);
+
 	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
 	memset(buffer, 0, sizeof(buffer));
 
 	/* Test case 1 - check that all trids are reported */
 	tgt.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY;
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_1);
-	CU_ASSERT(disc_log->numrec == 6);
+	CU_ASSERT(disc_log->numrec == 8);
 
 	/* Test case 2 - check that only entries of the same transport type are returned */
 	tgt.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE;
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_1);
-	CU_ASSERT(disc_log->numrec == 3);
+	CU_ASSERT(disc_log->numrec == 5);
 	CU_ASSERT(disc_log->entries[0].trtype == rdma_trid_1.trtype);
 	CU_ASSERT(disc_log->entries[1].trtype == rdma_trid_1.trtype);
 	CU_ASSERT(disc_log->entries[2].trtype == rdma_trid_1.trtype);
+	CU_ASSERT(disc_log->entries[3].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[4].trtype == rdma_trid_4.trtype);
 
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &tcp_trid_1);
-	CU_ASSERT(disc_log->numrec == 3);
+	CU_ASSERT(disc_log->numrec == 5);
 	CU_ASSERT(disc_log->entries[0].trtype == tcp_trid_1.trtype);
 	CU_ASSERT(disc_log->entries[1].trtype == tcp_trid_1.trtype);
 	CU_ASSERT(disc_log->entries[2].trtype == tcp_trid_1.trtype);
+	CU_ASSERT(disc_log->entries[3].trtype == tcp_trid_1.trtype);
+	CU_ASSERT(disc_log->entries[4].trtype == rdma_trid_4.trtype);
 
 	/* Test case 3 - check that only entries of the same transport address are returned */
 	tgt.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS;
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_1);
-	CU_ASSERT(disc_log->numrec == 3);
-	/* one tcp and 2 rdma  */
-	CU_ASSERT((disc_log->entries[0].trtype ^ disc_log->entries[1].trtype ^ disc_log->entries[2].trtype)
-		  != 0);
+	CU_ASSERT(disc_log->numrec == 5);
+	/* 1 tcp and 3 rdma  */
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, rdma_trid_1.traddr) == 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[1].traddr, rdma_trid_1.traddr) == 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[2].traddr, rdma_trid_1.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[3].traddr, tcp_trid_4.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[4].traddr, rdma_trid_4.traddr) == 0);
 
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &tcp_trid_1);
-	CU_ASSERT(disc_log->numrec == 3);
-	/* one rdma and two tcp */
+	CU_ASSERT(disc_log->numrec == 5);
+	/* 1 rdma and 3 tcp */
 	CU_ASSERT((disc_log->entries[0].trtype ^ disc_log->entries[1].trtype ^ disc_log->entries[2].trtype)
 		  != 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, tcp_trid_1.traddr) == 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[1].traddr, tcp_trid_1.traddr) == 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[2].traddr, tcp_trid_1.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[3].traddr, tcp_trid_1.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[4].traddr, rdma_trid_4.traddr) == 0);
 
 	/* Test case 4 - check that only entries of the same transport address and type returned */
 	tgt.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE |
 			       SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS;
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_1);
-	CU_ASSERT(disc_log->numrec == 2);
+	CU_ASSERT(disc_log->numrec == 4);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, rdma_trid_1.traddr) == 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[1].traddr, rdma_trid_1.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].traddr, tcp_trid_4.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[3].traddr, rdma_trid_4.traddr) == 0);
 	CU_ASSERT(disc_log->entries[0].trtype == rdma_trid_1.trtype);
 	CU_ASSERT(disc_log->entries[1].trtype == rdma_trid_1.trtype);
+	CU_ASSERT(disc_log->entries[2].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[3].trtype == rdma_trid_4.trtype);
 
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_2);
-	CU_ASSERT(disc_log->numrec == 1);
+	CU_ASSERT(disc_log->numrec == 3);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, rdma_trid_2.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].traddr, tcp_trid_4.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].traddr, rdma_trid_4.traddr) == 0);
 	CU_ASSERT(disc_log->entries[0].trtype == rdma_trid_2.trtype);
+	CU_ASSERT(disc_log->entries[1].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[2].trtype == rdma_trid_4.trtype);
 
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &tcp_trid_1);
-	CU_ASSERT(disc_log->numrec == 2);
+	CU_ASSERT(disc_log->numrec == 4);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, tcp_trid_1.traddr) == 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[1].traddr, tcp_trid_1.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].traddr, tcp_trid_4.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[3].traddr, rdma_trid_4.traddr) == 0);
 	CU_ASSERT(disc_log->entries[0].trtype == tcp_trid_1.trtype);
 	CU_ASSERT(disc_log->entries[1].trtype == tcp_trid_1.trtype);
+	CU_ASSERT(disc_log->entries[2].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[3].trtype == rdma_trid_4.trtype);
 
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_2);
-	CU_ASSERT(disc_log->numrec == 1);
+	CU_ASSERT(disc_log->numrec == 3);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, rdma_trid_2.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].traddr, tcp_trid_4.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].traddr, rdma_trid_4.traddr) == 0);
 	CU_ASSERT(disc_log->entries[0].trtype == rdma_trid_2.trtype);
+	CU_ASSERT(disc_log->entries[1].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[2].trtype == rdma_trid_4.trtype);
 
 	/* Test case 5 - check that only entries of the same transport address and type returned */
 	tgt.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE |
 			       SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID;
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_1);
-	CU_ASSERT(disc_log->numrec == 2);
+	CU_ASSERT(disc_log->numrec == 4);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].trsvcid, rdma_trid_1.trsvcid) == 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[1].trsvcid, rdma_trid_2.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].trsvcid, tcp_trid_4.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[3].trsvcid, rdma_trid_4.trsvcid) == 0);
 	CU_ASSERT(disc_log->entries[0].trtype == rdma_trid_1.trtype);
 	CU_ASSERT(disc_log->entries[1].trtype == rdma_trid_2.trtype);
+	CU_ASSERT(disc_log->entries[2].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[3].trtype == rdma_trid_4.trtype);
 
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_3);
-	CU_ASSERT(disc_log->numrec == 1);
+	CU_ASSERT(disc_log->numrec == 3);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].trsvcid, rdma_trid_3.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].trsvcid, tcp_trid_4.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].trsvcid, rdma_trid_4.trsvcid) == 0);
 	CU_ASSERT(disc_log->entries[0].trtype == rdma_trid_3.trtype);
+	CU_ASSERT(disc_log->entries[1].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[2].trtype == rdma_trid_4.trtype);
 
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &tcp_trid_1);
-	CU_ASSERT(disc_log->numrec == 1);
+	CU_ASSERT(disc_log->numrec == 3);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].trsvcid, tcp_trid_1.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].trsvcid, tcp_trid_4.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].trsvcid, rdma_trid_4.trsvcid) == 0);
 	CU_ASSERT(disc_log->entries[0].trtype == tcp_trid_1.trtype);
+	CU_ASSERT(disc_log->entries[1].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[2].trtype == rdma_trid_4.trtype);
 
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &tcp_trid_2);
-	CU_ASSERT(disc_log->numrec == 2);
+	CU_ASSERT(disc_log->numrec == 4);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].trsvcid, tcp_trid_2.trsvcid) == 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[1].trsvcid, tcp_trid_2.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].trsvcid, tcp_trid_4.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[3].trsvcid, rdma_trid_4.trsvcid) == 0);
 	CU_ASSERT(disc_log->entries[0].trtype == tcp_trid_2.trtype);
 	CU_ASSERT(disc_log->entries[1].trtype == tcp_trid_2.trtype);
+	CU_ASSERT(disc_log->entries[2].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[3].trtype == rdma_trid_4.trtype);
 
 	/* Test case 6 - check that only entries of the same transport address and type returned.
 	 * That also implies trtype since RDMA and TCP listeners can't occupy the same socket */
 	tgt.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS |
 			       SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID;
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_1);
-	CU_ASSERT(disc_log->numrec == 1);
+	CU_ASSERT(disc_log->numrec == 3);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, rdma_trid_1.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].traddr, tcp_trid_4.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].traddr, rdma_trid_4.traddr) == 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].trsvcid, rdma_trid_1.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].trsvcid, tcp_trid_4.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].trsvcid, rdma_trid_4.trsvcid) == 0);
 	CU_ASSERT(disc_log->entries[0].trtype == rdma_trid_1.trtype);
+	CU_ASSERT(disc_log->entries[1].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[2].trtype == rdma_trid_4.trtype);
 
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_2);
-	CU_ASSERT(disc_log->numrec == 1);
+	CU_ASSERT(disc_log->numrec == 3);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, rdma_trid_2.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].traddr, tcp_trid_4.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].traddr, rdma_trid_4.traddr) == 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].trsvcid, rdma_trid_2.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].trsvcid, tcp_trid_4.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].trsvcid, rdma_trid_4.trsvcid) == 0);
 	CU_ASSERT(disc_log->entries[0].trtype == rdma_trid_2.trtype);
+	CU_ASSERT(disc_log->entries[1].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[2].trtype == rdma_trid_4.trtype);
 
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_3);
-	CU_ASSERT(disc_log->numrec == 1);
+	CU_ASSERT(disc_log->numrec == 3);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, rdma_trid_3.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].traddr, tcp_trid_4.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].traddr, rdma_trid_4.traddr) == 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].trsvcid, rdma_trid_3.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].trsvcid, tcp_trid_4.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].trsvcid, rdma_trid_4.trsvcid) == 0);
 	CU_ASSERT(disc_log->entries[0].trtype == rdma_trid_3.trtype);
+	CU_ASSERT(disc_log->entries[1].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[2].trtype == rdma_trid_4.trtype);
 
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &tcp_trid_1);
-	CU_ASSERT(disc_log->numrec == 1);
+	CU_ASSERT(disc_log->numrec == 3);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, tcp_trid_1.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].traddr, tcp_trid_4.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].traddr, rdma_trid_4.traddr) == 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].trsvcid, tcp_trid_1.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].trsvcid, tcp_trid_4.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].trsvcid, rdma_trid_4.trsvcid) == 0);
 	CU_ASSERT(disc_log->entries[0].trtype == tcp_trid_1.trtype);
+	CU_ASSERT(disc_log->entries[1].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[2].trtype == rdma_trid_4.trtype);
 
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &tcp_trid_2);
-	CU_ASSERT(disc_log->numrec == 1);
+	CU_ASSERT(disc_log->numrec == 3);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, tcp_trid_2.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].traddr, tcp_trid_4.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].traddr, rdma_trid_4.traddr) == 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].trsvcid, tcp_trid_2.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].trsvcid, tcp_trid_4.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].trsvcid, rdma_trid_4.trsvcid) == 0);
 	CU_ASSERT(disc_log->entries[0].trtype == tcp_trid_2.trtype);
+	CU_ASSERT(disc_log->entries[1].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[2].trtype == rdma_trid_4.trtype);
 
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &tcp_trid_3);
-	CU_ASSERT(disc_log->numrec == 1);
+	CU_ASSERT(disc_log->numrec == 3);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, tcp_trid_3.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].traddr, tcp_trid_4.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].traddr, rdma_trid_4.traddr) == 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].trsvcid, tcp_trid_3.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].trsvcid, tcp_trid_4.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].trsvcid, rdma_trid_4.trsvcid) == 0);
 	CU_ASSERT(disc_log->entries[0].trtype == tcp_trid_3.trtype);
+	CU_ASSERT(disc_log->entries[1].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[2].trtype == rdma_trid_4.trtype);
 
 	/* Test case 7 - check that only entries of the same transport address, svcid and type returned */
 	tgt.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE |
 			       SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS |
 			       SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID;
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_1);
-	CU_ASSERT(disc_log->numrec == 1);
+	CU_ASSERT(disc_log->numrec == 3);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, rdma_trid_1.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].traddr, tcp_trid_4.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].traddr, rdma_trid_4.traddr) == 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].trsvcid, rdma_trid_1.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].trsvcid, tcp_trid_4.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].trsvcid, rdma_trid_4.trsvcid) == 0);
 	CU_ASSERT(disc_log->entries[0].trtype == rdma_trid_1.trtype);
+	CU_ASSERT(disc_log->entries[1].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[2].trtype == rdma_trid_4.trtype);
 
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_2);
-	CU_ASSERT(disc_log->numrec == 1);
+	CU_ASSERT(disc_log->numrec == 3);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, rdma_trid_2.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].traddr, tcp_trid_4.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].traddr, rdma_trid_4.traddr) == 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].trsvcid, rdma_trid_2.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].trsvcid, tcp_trid_4.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].trsvcid, rdma_trid_4.trsvcid) == 0);
 	CU_ASSERT(disc_log->entries[0].trtype == rdma_trid_2.trtype);
+	CU_ASSERT(disc_log->entries[1].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[2].trtype == rdma_trid_4.trtype);
 
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &rdma_trid_3);
-	CU_ASSERT(disc_log->numrec == 1);
+	CU_ASSERT(disc_log->numrec == 3);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, rdma_trid_3.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].traddr, tcp_trid_4.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].traddr, rdma_trid_4.traddr) == 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].trsvcid, rdma_trid_3.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].trsvcid, tcp_trid_4.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].trsvcid, rdma_trid_4.trsvcid) == 0);
 	CU_ASSERT(disc_log->entries[0].trtype == rdma_trid_3.trtype);
+	CU_ASSERT(disc_log->entries[1].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[2].trtype == rdma_trid_4.trtype);
 
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &tcp_trid_1);
-	CU_ASSERT(disc_log->numrec == 1);
+	CU_ASSERT(disc_log->numrec == 3);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, tcp_trid_1.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].traddr, tcp_trid_4.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].traddr, rdma_trid_4.traddr) == 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].trsvcid, tcp_trid_1.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].trsvcid, tcp_trid_4.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].trsvcid, rdma_trid_4.trsvcid) == 0);
 	CU_ASSERT(disc_log->entries[0].trtype == tcp_trid_1.trtype);
+	CU_ASSERT(disc_log->entries[1].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[2].trtype == rdma_trid_4.trtype);
 
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &tcp_trid_2);
-	CU_ASSERT(disc_log->numrec == 1);
+	CU_ASSERT(disc_log->numrec == 3);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, tcp_trid_2.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].traddr, tcp_trid_4.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].traddr, rdma_trid_4.traddr) == 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].trsvcid, tcp_trid_2.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].trsvcid, tcp_trid_4.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].trsvcid, rdma_trid_4.trsvcid) == 0);
 	CU_ASSERT(disc_log->entries[0].trtype == tcp_trid_2.trtype);
+	CU_ASSERT(disc_log->entries[1].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[2].trtype == rdma_trid_4.trtype);
 
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, 8192, &tcp_trid_3);
-	CU_ASSERT(disc_log->numrec == 1);
+	CU_ASSERT(disc_log->numrec == 3);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].traddr, tcp_trid_3.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].traddr, tcp_trid_4.traddr) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].traddr, rdma_trid_4.traddr) == 0);
 	CU_ASSERT(strcasecmp(disc_log->entries[0].trsvcid, tcp_trid_3.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[1].trsvcid, tcp_trid_4.trsvcid) == 0);
+	CU_ASSERT(strcasecmp(disc_log->entries[2].trsvcid, rdma_trid_4.trsvcid) == 0);
 	CU_ASSERT(disc_log->entries[0].trtype == tcp_trid_3.trtype);
+	CU_ASSERT(disc_log->entries[1].trtype == tcp_trid_4.trtype);
+	CU_ASSERT(disc_log->entries[2].trtype == rdma_trid_4.trtype);
 
 	subsystem->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
 	spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);

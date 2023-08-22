@@ -103,6 +103,7 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 	struct spdk_nvmf_discovery_log_page_entry *entry;
 	struct spdk_nvmf_discovery_log_page *disc_log;
 	size_t cur_size;
+	struct spdk_nvmf_referral *referral;
 
 	SPDK_DEBUGLOG(nvmf, "Generating log page for genctr %" PRIu64 "\n",
 		      tgt->discovery_genctr);
@@ -171,6 +172,28 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 			numrec++;
 		}
 	}
+
+	TAILQ_FOREACH(referral, &tgt->referrals, link) {
+		SPDK_DEBUGLOG(nvmf, "referral %s:%s trtype %s\n", referral->trid.traddr, referral->trid.trsvcid,
+			      referral->trid.trstring);
+
+		size_t new_size = cur_size + sizeof(*entry);
+		void *new_log_page = realloc(disc_log, new_size);
+
+		if (new_log_page == NULL) {
+			SPDK_ERRLOG("Discovery log page memory allocation error\n");
+			break;
+		}
+
+		disc_log = new_log_page;
+		cur_size = new_size;
+
+		entry = &disc_log->entries[numrec];
+		memcpy(entry, &referral->entry, sizeof(*entry));
+
+		numrec++;
+	}
+
 
 	disc_log->numrec = numrec;
 	disc_log->genctr = tgt->discovery_genctr;

@@ -52,7 +52,7 @@ print_discovery_log(struct spdk_nvmf_discovery_log_page *log_page)
 		       entry->adrfam, spdk_nvme_transport_id_adrfam_str(entry->adrfam));
 		printf("Subsystem Type:                        %u (%s)\n",
 		       entry->subtype,
-		       entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY ? "Referral to a Discovery Service" :
+		       entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY ? "Referral to a discovery service" :
 		       entry->subtype == SPDK_NVMF_SUBTYPE_NVME ? "NVM Subsystem" :
 		       entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT ? "Current Discovery Subsystem" :
 		       "Unknown");

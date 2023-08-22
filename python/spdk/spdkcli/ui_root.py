@@ -20,6 +20,7 @@ class UIRoot(UINode):
         self.current_vhost_ctrls = []
         self.current_nvmf_transports = []
         self.current_nvmf_subsystems = []
+        self.current_nvmf_referrals = []
         self.set_rpc_target(client)
         self.verbose = False
         self.is_init = self.check_init()
@@ -316,6 +317,26 @@ class UIRoot(UINode):
             for subsystem in self.current_nvmf_subsystems:
                 yield NvmfSubsystem(subsystem)
 
+    def list_nvmf_referrals(self):
+        if self.is_init:
+            self.current_nvmf_referrals = rpc.nvmf.nvmf_discovery_get_referrals(self.client)
+
+    @verbose
+    @is_method_available
+    def nvmf_discovery_get_referrals(self):
+        if self.is_init:
+            self.list_nvmf_referrals()
+            for referral in self.current_nvmf_referrals:
+                yield NvmfReferral(referral)
+
+    @verbose
+    def nvmf_discovery_add_referral(self, **kwargs):
+        rpc.nvmf.nvmf_discovery_add_referral(self.client, **kwargs)
+
+    @verbose
+    def nvmf_discovery_remove_referral(self, **kwargs):
+        rpc.nvmf.nvmf_discovery_remove_referral(self.client, **kwargs)
+
     @verbose
     def create_nvmf_subsystem(self, **kwargs):
         rpc.nvmf.nvmf_create_subsystem(self.client, **kwargs)
@@ -534,6 +555,16 @@ class NvmfSubsystem(object):
         """
         for i in subsystem_info.keys():
             setattr(self, i, subsystem_info[i])
+
+
+class NvmfReferral(object):
+    def __init__(self, referral_info):
+        """
+        All class attributes are set based on what information is received
+        from get_nvmf_referrals RPC call.
+        """
+        for i in referral_info.keys():
+            setattr(self, i, referral_info[i])
 
 
 class ScsiObj(object):

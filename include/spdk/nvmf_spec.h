@@ -130,7 +130,7 @@ enum spdk_nvmf_adrfam {
  * NVM subsystem types
  */
 enum spdk_nvmf_subtype {
-	/** Referral to a Discovery Service */
+	/** Referral to a discovery service */
 	SPDK_NVMF_SUBTYPE_DISCOVERY		= 0x1,
 
 	/** NVM Subsystem */

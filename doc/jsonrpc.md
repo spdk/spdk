@@ -7992,6 +7992,9 @@ secure_channel          | Optional | bool        | Whether all connections immed
 
 #### listen_address {#rpc_nvmf_listen_address}
 
+The listen_address is used for adding the listeners to the NVMe-oF target
+and for referring to discovery services on other targets.
+
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 trtype                  | Required | string      | Transport type ("RDMA")
@@ -8502,6 +8505,129 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": true
+}
+~~~
+
+### nvmf_discovery_add_referral  method {#rpc_nvmf_discovery_add_referral}
+
+Add a discovery service referral to an NVMe-oF target. If a referral with the given
+parameters already exists, no action will be taken.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+tgt_name                | Optional | string      | Parent NVMe-oF target name.
+address                 | Required | object      | @ref rpc_nvmf_listen_address object
+secure_channel          | Optional | bool        | The connection to that discovery subsystem requires a secure channel
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "nvmf_discovery_add_referral",
+  "params": {
+    "address": {
+      "trtype": "RDMA",
+      "adrfam": "IPv4",
+      "traddr": "192.168.0.123",
+      "trsvcid": "4420"
+    }
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### nvmf_discovery_remove_referral  method {#rpc_nvmf_discovery_remove_referral}
+
+Remove a discovery service referral from an NVMe-oF target.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+tgt_name                | Optional | string      | Parent NVMe-oF target name.
+address                 | Required | object      | @ref rpc_nvmf_listen_address object
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "nvmf_discovery_remove_referral",
+  "params": {
+    "address": {
+      "trtype": "RDMA",
+      "adrfam": "IPv4",
+      "traddr": "192.168.0.123",
+      "trsvcid": "4420"
+    }
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### nvmf_discovery_get_referrals {#rpc_nvmf_discovery_get_referrals}
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+tgt_name                | Optional | string      | Parent NVMe-oF target name.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "nvmf_discovery_get_referrals"
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "address": {
+        "trtype": "RDMA",
+        "adrfam": "IPv4",
+        "traddr": "192.168.0.123",
+        "trsvcid": "4420"
+      }
+    }
+  ]
 }
 ~~~
 

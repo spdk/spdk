@@ -15,6 +15,7 @@ class UINVMf(UINode):
         self._children = set([])
         UINVMfSubsystems(self)
         UINVMfTransports(self)
+        UINVMfReferrals(self)
 
 
 class UINVMfTransports(UINode):
@@ -365,3 +366,67 @@ class UINVMfSubsystemNamespace(UINode):
     def summary(self):
         info = ", ".join([self.namespace['name'], str(self.namespace['nsid'])])
         return info, None
+
+
+class UINVMfReferral(UINode):
+    def __init__(self, address, secure_channel, parent):
+        UINode.__init__(self, "%s:%s" % (address['traddr'], address['trsvcid']),
+                        parent)
+        self.address = address
+        self.secure_channel = secure_channel
+        self.refresh()
+
+    def refresh(self):
+        self._children = set([])
+
+    def refresh_node(self):
+        self.refresh()
+
+    def summary(self):
+        info = ", ".join([self.address['trtype'], "Secure channel"]) if self.secure_channel \
+            else self.address['trtype']
+        return info, None
+
+
+class UINVMfReferrals(UINode):
+    def __init__(self, parent):
+        UINode.__init__(self, "referral", parent)
+        self.refresh()
+
+    def refresh(self):
+        self._children = set([])
+        for referral in self.get_root().nvmf_discovery_get_referrals():
+            UINVMfReferral(referral.address, referral.secure_channel, self)
+
+    def delete(self, trtype, traddr, trsvcid, adrfam=None):
+        self.get_root().nvmf_discovery_remove_referral(
+            trtype=trtype, traddr=traddr, trsvcid=trsvcid, adrfam=adrfam)
+
+    def ui_command_create(self, trtype, traddr, trsvcid, adrfam, secure_channel=False):
+        """Create a referral to a discovery subsystem.
+
+        Arguments:
+            trtype - NVMe-oF transport type: e.g., rdma.
+            traddr - NVMe-oF transport address: e.g., an ip address.
+            trsvcid - NVMe-oF transport service id: e.g., a port number.
+            adrfam - NVMe-oF transport adrfam: e.g., ipv4, ipv6, ib, fc.
+            secure_channel - The connection to that discovery subsystem requires a secure channel
+            Default: False
+        """
+        self.get_root().nvmf_discovery_add_referral(
+            trtype=trtype, traddr=traddr,
+            trsvcid=trsvcid, adrfam=adrfam, secure_channel=bool(secure_channel))
+
+    def ui_command_delete(self, trtype, traddr, trsvcid, adrfam=None):
+        """Remove a referral to a discovery subsystem.
+
+        Arguments:
+            trtype - NVMe-oF transport type: e.g., rdma.
+            traddr - NVMe-oF transport address: e.g., an ip address.
+            trsvcid - NVMe-oF transport service id: e.g., a port number.
+            adrfam - Optional argument. NVMe-oF transport adrfam: e.g., ipv4, ipv6, ib, fc.
+        """
+        self.delete(trtype, traddr, trsvcid, adrfam)
+
+    def summary(self):
+        return "Referrals: %s" % len(self.children), None

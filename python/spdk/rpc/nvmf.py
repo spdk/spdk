@@ -349,6 +349,85 @@ def nvmf_subsystem_listener_set_ana_state(
     return client.call('nvmf_subsystem_listener_set_ana_state', params)
 
 
+def nvmf_discovery_add_referral(client, **params):
+
+    """Add a discovery service referral
+
+    Args:
+        tgt_name: name of the parent NVMe-oF target (optional).
+        trtype: Transport type ("RDMA").
+        traddr: Transport address.
+        trsvcid: Transport service ID (required for RDMA or TCP).
+        adrfam: Address family ("IPv4", "IPv6", "IB", or "FC").
+        secure_channel: The connection to that discovery
+            subsystem requires a secure channel (optional).
+
+    Returns:
+        True or False
+    """
+
+    strip_globals(params)
+    apply_defaults(params, tgt_name=None)
+    group_as(params, 'address', ['trtype', 'traddr', 'trsvcid', 'adrfam'])
+    remove_null(params)
+
+    return client.call('nvmf_discovery_add_referral', params)
+
+
+def nvmf_discovery_remove_referral(
+        client,
+        trtype,
+        traddr,
+        trsvcid,
+        adrfam,
+        tgt_name=None):
+    """Remove a discovery service referral
+
+    Args:
+        nqn: Subsystem NQN.
+        trtype: Transport type ("RDMA").
+        traddr: Transport address.
+        trsvcid: Transport service ID.
+        tgt_name: name of the parent NVMe-oF target (optional).
+        adrfam: Address family ("IPv4", "IPv6", "IB", or "FC").
+
+    Returns:
+            True or False
+    """
+    address = {'trtype': trtype,
+               'traddr': traddr}
+
+    if trsvcid:
+        address['trsvcid'] = trsvcid
+
+    if adrfam:
+        address['adrfam'] = adrfam
+
+    params = {'address': address}
+
+    if tgt_name:
+        params['tgt_name'] = tgt_name
+
+    return client.call('nvmf_discovery_remove_referral', params)
+
+
+def nvmf_discovery_get_referrals(client, tgt_name=None):
+    """Get list of referrals of an NVMe-oF target.
+
+    Args:
+        tgt_name: name of the parent NVMe-oF target (optional).
+
+    Returns:
+        List of referral objects of an NVMe-oF target.
+    """
+    params = {}
+
+    if tgt_name:
+        params['tgt_name'] = tgt_name
+
+    return client.call('nvmf_discovery_get_referrals', params)
+
+
 def nvmf_subsystem_add_ns(client,
                           nqn,
                           bdev_name,

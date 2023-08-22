@@ -61,6 +61,7 @@ $spdkcli_job "'/bdevs/malloc create 32 512 Malloc1' 'Malloc1' True
 '/nvmf/subsystem/nqn.2014-08.org.spdk:cnode1/hosts create nqn.2014-08.org.spdk:cnode2' 'nqn.2014-08.org.spdk:cnode2' True
 '/nvmf/subsystem/nqn.2014-08.org.spdk:cnode1/namespaces create Malloc5' 'Malloc5' True
 '/nvmf/subsystem/nqn.2014-08.org.spdk:cnode1/namespaces create Malloc6' 'Malloc6' True
+'/nvmf/referral create tcp 127.0.0.2 4030 IPv4'
 "
 timing_exit spdkcli_create_nvmf_config
 

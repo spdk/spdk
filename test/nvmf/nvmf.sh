@@ -23,6 +23,7 @@ if [[ $SPDK_TEST_URING -eq 0 ]]; then
 	run_test "nvmf_example" $rootdir/test/nvmf/target/nvmf_example.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_filesystem" $rootdir/test/nvmf/target/filesystem.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_discovery" $rootdir/test/nvmf/target/discovery.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_referrals" $rootdir/test/nvmf/target/referrals.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_connect_disconnect" $rootdir/test/nvmf/target/connect_disconnect.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_multitarget" $rootdir/test/nvmf/target/multitarget.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_rpc" $rootdir/test/nvmf/target/rpc.sh "${TEST_ARGS[@]}"

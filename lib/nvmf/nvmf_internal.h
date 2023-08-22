@@ -65,6 +65,7 @@ struct spdk_nvmf_tgt {
 
 	TAILQ_HEAD(, spdk_nvmf_transport)	transports;
 	TAILQ_HEAD(, spdk_nvmf_poll_group)	poll_groups;
+	TAILQ_HEAD(, spdk_nvmf_referral)	referrals;
 
 	/* Used for round-robin assignment of connections to poll groups */
 	struct spdk_nvmf_poll_group		*next_poll_group;
@@ -94,6 +95,14 @@ struct spdk_nvmf_subsystem_listener {
 	uint16_t					id;
 	struct spdk_nvmf_listener_opts			opts;
 	TAILQ_ENTRY(spdk_nvmf_subsystem_listener)	link;
+};
+
+struct spdk_nvmf_referral {
+	/* Discovery Log Page Entry for this referral */
+	struct spdk_nvmf_discovery_log_page_entry entry;
+	/* Transport ID */
+	struct spdk_nvme_transport_id trid;
+	TAILQ_ENTRY(spdk_nvmf_referral) link;
 };
 
 /* Maximum number of registrants supported per namespace */

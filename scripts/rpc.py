@@ -2532,6 +2532,44 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-g', '--anagrpid', help='ANA group ID (optional)', type=int)
     p.set_defaults(func=nvmf_subsystem_listener_set_ana_state)
 
+    def nvmf_discovery_add_referral(args):
+        rpc.nvmf.nvmf_discovery_add_referral(**vars(args))
+
+    p = subparsers.add_parser('nvmf_discovery_add_referral', help='Add a discovery service referral to an NVMe-oF target')
+    p.add_argument('-t', '--trtype', help='NVMe-oF transport type: e.g., rdma', required=True)
+    p.add_argument('-a', '--traddr', help='NVMe-oF transport address: e.g., an ip address', required=True)
+    p.add_argument('-p', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-f', '--adrfam', help='NVMe-oF transport adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
+    p.add_argument('-s', '--trsvcid', help='NVMe-oF transport service id: e.g., a port number (required for RDMA or TCP)')
+    p.add_argument('-k', '--secure-channel', help='The connection to that discovery subsystem requires a secure channel',
+                   action="store_true")
+    p.set_defaults(func=nvmf_discovery_add_referral)
+
+    def nvmf_discovery_remove_referral(args):
+        rpc.nvmf.nvmf_discovery_remove_referral(args.client,
+                                                trtype=args.trtype,
+                                                traddr=args.traddr,
+                                                tgt_name=args.tgt_name,
+                                                adrfam=args.adrfam,
+                                                trsvcid=args.trsvcid)
+
+    p = subparsers.add_parser('nvmf_discovery_remove_referral', help='Remove a discovery service referral from an NVMe-oF target')
+    p.add_argument('-t', '--trtype', help='NVMe-oF transport type: e.g., rdma', required=True)
+    p.add_argument('-a', '--traddr', help='NVMe-oF transport address: e.g., an ip address', required=True)
+    p.add_argument('-p', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-f', '--adrfam', help='NVMe-oF transport adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
+    p.add_argument('-s', '--trsvcid', help='NVMe-oF transport service id: e.g., a port number (required for TCP and RDMA transport types)')
+    p.set_defaults(func=nvmf_discovery_remove_referral)
+
+    def nvmf_discovery_get_referrals(args):
+        print_dict(rpc.nvmf.nvmf_discovery_get_referrals(args.client,
+                                                         tgt_name=args.tgt_name))
+
+    p = subparsers.add_parser('nvmf_discovery_get_referrals',
+                              help='Display discovery subsystem referrals of an NVMe-oF target')
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.set_defaults(func=nvmf_discovery_get_referrals)
+
     def nvmf_subsystem_add_ns(args):
         rpc.nvmf.nvmf_subsystem_add_ns(args.client,
                                        nqn=args.nqn,
