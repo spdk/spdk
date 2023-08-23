@@ -966,6 +966,7 @@ new_connection(int vid)
 		return -1;
 	}
 	vsession->started = false;
+	vsession->starting = false;
 	vsession->next_stats_check_time = 0;
 	vsession->stats_check_interval = SPDK_VHOST_STATS_CHECK_INTERVAL_MS *
 					 spdk_get_ticks_hz() / 1000UL;
@@ -985,7 +986,9 @@ vhost_user_session_start(void *arg1)
 	const struct spdk_vhost_user_dev_backend *backend;
 	int rc;
 
+	SPDK_INFOLOG(vhost, "Starting new session for device %s with vid %d\n", vdev->name, vsession->vid);
 	pthread_mutex_lock(&user_dev->lock);
+	vsession->starting = false;
 	backend = user_dev->user_backend;
 	rc = backend->start_session(vdev, vsession, NULL);
 	if (rc == 0) {
@@ -1147,6 +1150,8 @@ start_device(int vid)
 		goto out;
 	}
 
+	vsession->starting = true;
+	SPDK_INFOLOG(vhost, "Session %s is scheduled to start\n", vsession->name);
 	vhost_user_session_set_coalescing(vdev, vsession, NULL);
 	spdk_thread_send_msg(vdev->thread, vhost_user_session_start, vsession);
 
@@ -1169,7 +1174,7 @@ stop_device(int vid)
 	user_dev = to_user_dev(vsession->vdev);
 
 	pthread_mutex_lock(&user_dev->lock);
-	if (!vsession->started) {
+	if (!vsession->started && !vsession->starting) {
 		pthread_mutex_unlock(&user_dev->lock);
 		/* already stopped, nothing to do */
 		return;
@@ -1193,7 +1198,7 @@ destroy_connection(int vid)
 	user_dev = to_user_dev(vsession->vdev);
 
 	pthread_mutex_lock(&user_dev->lock);
-	if (vsession->started) {
+	if (vsession->started || vsession->starting) {
 		if (_stop_session(vsession) != 0) {
 			pthread_mutex_unlock(&user_dev->lock);
 			return;
@@ -1907,7 +1912,7 @@ vhost_user_session_shutdown(void *vhost_cb)
 		user_dev = to_user_dev(vdev);
 		pthread_mutex_lock(&user_dev->lock);
 		TAILQ_FOREACH(vsession, &user_dev->vsessions, tailq) {
-			if (vsession->started) {
+			if (vsession->started || vsession->starting) {
 				_stop_session(vsession);
 			}
 		}

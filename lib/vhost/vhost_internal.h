@@ -114,6 +114,7 @@ struct spdk_vhost_session {
 	char *name;
 
 	bool started;
+	bool starting;
 	bool interrupt_mode;
 
 	struct rte_vhost_memory *mem;
