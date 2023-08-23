@@ -313,7 +313,7 @@ case "${1:-status}" in
 		status | grep -E "${match:-.}"
 		;;
 	rxe-net)
-		printf '%s\n' "${rxe_to_net[@]}"
+		((${#rxe_to_net[@]} > 0)) && printf '%s\n' "${rxe_to_net[@]}"
 		;;
 	*)
 		printf 'Invalid argument (%s)\n' "$1"
