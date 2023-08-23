@@ -39,9 +39,9 @@ function migration_tc2_cleanup_vhost_config() {
 function migration_tc2_configure_vhost() {
 	timing_enter migration_tc2_configure_vhost
 
-	# HACK: Make sure we stop detecting rdma-capable NICs on mlx
-	modprobe mlx5_ib || :
-	TEST_TRANSPORT=rdma TEST_MODE=iso nvmftestinit
+	TEST_TRANSPORT=${TEST_TRANSPORT:-tcp}
+	NET_TYPE=${NET_TYPE:-phy-fallback} \
+		TEST_MODE=iso nvmftestinit
 
 	# Those are global intentionally - they will be unset in cleanup handler
 
@@ -72,10 +72,7 @@ function migration_tc2_configure_vhost() {
 	vhost_run -n 0 -a "-m 0x1 -s 512 -u"
 	vhost_run -n 1 -a "-m 0x2 -s 512 -u"
 
-	local rdma_ip_list
-	local nvmf_target_ip
-	rdma_ip_list=$(get_available_rdma_ips)
-	nvmf_target_ip=$(echo "$rdma_ip_list" | head -n 1)
+	local nvmf_target_ip=$NVMF_FIRST_TARGET_IP
 
 	if [[ -z "$nvmf_target_ip" ]]; then
 		fail "no NIC for nvmf target"
@@ -86,13 +83,13 @@ function migration_tc2_configure_vhost() {
 	# Construct shared bdevs and controllers
 	rpc_cmd nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 	rpc_cmd nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Nvme0n1
-	rpc_cmd nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $nvmf_target_ip -s 4420
+	rpc_cmd nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t "$TEST_TRANSPORT" -a $nvmf_target_ip -s 4420
 
-	$rpc_0 bdev_nvme_attach_controller -b Nvme0 -t rdma -f ipv4 -a $nvmf_target_ip -s 4420 -n "nqn.2016-06.io.spdk:cnode1"
+	$rpc_0 bdev_nvme_attach_controller -b Nvme0 -t "$TEST_TRANSPORT" -f ipv4 -a $nvmf_target_ip -s 4420 -n "nqn.2016-06.io.spdk:cnode1"
 	$rpc_0 vhost_create_scsi_controller $incoming_vm_ctrlr
 	$rpc_0 vhost_scsi_controller_add_target $incoming_vm_ctrlr 0 Nvme0n1
 
-	$rpc_1 bdev_nvme_attach_controller -b Nvme0 -t rdma -f ipv4 -a $nvmf_target_ip -s 4420 -n "nqn.2016-06.io.spdk:cnode1"
+	$rpc_1 bdev_nvme_attach_controller -b Nvme0 -t "$TEST_TRANSPORT" -f ipv4 -a $nvmf_target_ip -s 4420 -n "nqn.2016-06.io.spdk:cnode1"
 	$rpc_1 vhost_create_scsi_controller $target_vm_ctrlr
 	$rpc_1 vhost_scsi_controller_add_target $target_vm_ctrlr 0 Nvme0n1
 
