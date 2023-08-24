@@ -506,7 +506,8 @@ tcp_write_pdu(struct nvme_tcp_pdu *pdu)
 	if (spdk_likely(treq != NULL)) {
 		req = treq->req;
 		if (req->accel_sequence != NULL &&
-		    spdk_nvme_opc_get_data_transfer(req->cmd.opc) == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+		    spdk_nvme_opc_get_data_transfer(req->cmd.opc) == SPDK_NVME_DATA_HOST_TO_CONTROLLER &&
+		    pdu->data_len > 0) {
 			assert(tqpair->qpair.poll_group != NULL);
 			tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
 			nvme_tcp_accel_finish_sequence(tgroup, req->accel_sequence,
