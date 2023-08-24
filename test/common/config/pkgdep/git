@@ -101,6 +101,7 @@ function _install_qemu() {
 	local repo=$1
 	local branch=$2
 	local prefix=${3:-}
+	local name=${4:-}
 
 	mkdir -p "$GIT_REPOS/qemu"
 
@@ -145,6 +146,12 @@ function _install_qemu() {
 
 	make -C "$repo_dir" -j${jobs}
 	sudo make -C "$repo_dir" install
+
+	# Add a symlink to point at a latest build - this is useful to easily track QEMU flavors for which
+	# branches change quite often (e.g. vfio-user's).
+	[[ -n $name ]] || return 0
+	[[ -L /usr/local/qemu/$name-latest ]] && sudo rm "/usr/local/qemu/$name-latest"
+	sudo ln -s "/usr/local/qemu/${repo_dir##*/}" "/usr/local/qemu/$name-latest"
 }
 
 function install_qemu() {
@@ -156,8 +163,8 @@ function install_qemu() {
 	#  - vfio-user QEMU: A special fork to test libvfio-user components.
 	#  - Vanilla QEMU: Used by the CI to boot the testing VMs.
 
-	_install_qemu $GIT_REPO_QEMU_VFIO $VFIO_QEMU_BRANCH
-	_install_qemu "$GIT_REPO_QEMU" "$VANILLA_QEMU_BRANCH" vanilla
+	_install_qemu $GIT_REPO_QEMU_VFIO $VFIO_QEMU_BRANCH "" vfio-user
+	_install_qemu "$GIT_REPO_QEMU" "$VANILLA_QEMU_BRANCH" vanilla vanilla
 }
 
 function install_nvmecli() {
