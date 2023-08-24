@@ -18,10 +18,6 @@ declare -A vms_ctrlrs_disks
 
 # By default use Guest fio
 fio_bin=""
-MGMT_TARGET_IP=""
-MGMT_INITIATOR_IP=""
-RDMA_TARGET_IP=""
-RDMA_INITIATOR_IP=""
 function usage() {
 	[[ -n $2 ]] && (
 		echo "$2"
@@ -32,10 +28,6 @@ function usage() {
 	echo
 	echo "    --os ARGS             VM configuration. This parameter might be used more than once:"
 	echo "    --fio-bin=FIO         Use specific fio binary (will be uploaded to VM)"
-	echo "    --mgmt-tgt-ip=IP      IP address of target."
-	echo "    --mgmt-init-ip=IP     IP address of initiator."
-	echo "    --rdma-tgt-ip=IP      IP address of targets rdma capable NIC."
-	echo "    --rdma-init-ip=IP     IP address of initiators rdma capable NIC."
 	echo "-x                        set -x for script debug"
 }
 
@@ -47,10 +39,6 @@ for param in "$@"; do
 			;;
 		--os=*) os_image="${param#*=}" ;;
 		--fio-bin=*) fio_bin="${param}" ;;
-		--mgmt-tgt-ip=*) MGMT_TARGET_IP="${param#*=}" ;;
-		--mgmt-init-ip=*) MGMT_INITIATOR_IP="${param#*=}" ;;
-		--rdma-tgt-ip=*) RDMA_TARGET_IP="${param#*=}" ;;
-		--rdma-init-ip=*) RDMA_INITIATOR_IP="${param#*=}" ;;
 		-x) set -x ;;
 		-v) SPDK_VHOST_VERBOSE=true ;;
 		*)
