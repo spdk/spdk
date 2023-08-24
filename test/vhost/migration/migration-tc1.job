@@ -7,15 +7,15 @@ group_reporting
 thread
 numjobs=1
 direct=1
-do_verify=1
-verify=md5
-verify_fatal=1
-verify_dump=1
 size=100%
-verify_state_save=0
 
 [write]
 rw=write
+verify=md5
+do_verify=1
+verify_fatal=1
+verify_dump=1
+verify_state_save=0
 stonewall
 
 [randread]
