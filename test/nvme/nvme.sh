@@ -9,8 +9,10 @@ source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
 
 function nvme_identify() {
+	local bdfs=() bdf
+	bdfs=($(get_nvme_bdfs))
 	$SPDK_EXAMPLE_DIR/identify -i 0
-	for bdf in $(get_nvme_bdfs); do
+	for bdf in "${bdfs[@]}"; do
 		$SPDK_EXAMPLE_DIR/identify -r "trtype:PCIe traddr:${bdf}" -i 0
 	done
 }
@@ -28,7 +30,8 @@ function nvme_perf() {
 function nvme_fio_test() {
 	PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 	ran_fio=false
-	for bdf in $(get_nvme_bdfs); do
+	local bdfs=($(get_nvme_bdfs)) bdf
+	for bdf in "${bdfs[@]}"; do
 		if ! "$SPDK_EXAMPLE_DIR/identify" -r "trtype:PCIe traddr:${bdf}" | grep -qE "^Namespace ID:[0-9]+"; then
 			continue
 		fi
@@ -64,7 +67,9 @@ function nvme_multi_secondary() {
 }
 
 function nvme_doorbell_aers() {
-	for bdf in $(get_nvme_bdfs); do
+	local bdfs=() bdf
+	bdfs=($(get_nvme_bdfs))
+	for bdf in "${bdfs[@]}"; do
 		timeout --preserve-status 10 $testdir/doorbell_aers/doorbell_aers -r "trtype:PCIe traddr:${bdf}"
 	done
 }

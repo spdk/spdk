@@ -67,7 +67,7 @@ notice "==============="
 notice ""
 notice "running SPDK"
 notice ""
-vhost_run -n 0 -a "-m 0xf"
+vhost_run -n 0 -- -m 0xf
 notice ""
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 $rpc_py bdev_malloc_create -b Malloc0 128 4096

@@ -20,7 +20,7 @@ timing_enter vhost_fio
 
 trap "at_app_exit; process_shm --id 0; exit 1" SIGINT SIGTERM EXIT
 
-vhost_run -n vhost0 -a "-m 0x1"
+vhost_run -n vhost0 -- -m 0x1
 
 # Create vhost scsi controller
 vhost_rpc vhost0 bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0

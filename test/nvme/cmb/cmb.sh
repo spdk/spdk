@@ -8,8 +8,6 @@ testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir/../../../")
 source "$rootdir/test/common/autotest_common.sh"
 
-shopt -s extglob nullglob
-
 decode_cmb_regs() {
 	local cmb=$1
 	local cmbs

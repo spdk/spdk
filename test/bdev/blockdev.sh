@@ -9,12 +9,6 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $testdir/nbd_common.sh
 
-# nullglob will remove unmatched words containing '*', '?', '[' characters during word splitting.
-# This means that empty alias arrays will be removed instead of printing "[]", which breaks
-# consecutive "jq" calls, as the "aliases" key will have no value and the whole JSON will be
-# invalid. Hence do not enable this option for the duration of the tests in this script.
-shopt -s extglob
-
 rpc_py=rpc_cmd
 conf_file="$testdir/bdev.json"
 nonenclosed_conf_file="$testdir/nonenclosed.json"
@@ -342,7 +336,7 @@ function fio_test_suite() {
 	# Generate the fio config file given the list of all unclaimed bdevs
 	env_context=$(echo "$env_ctx" | sed 's/--env-context=//')
 	fio_config_gen $testdir/bdev.fio verify AIO "$env_context"
-	for b in $(echo $bdevs | jq -r '.name'); do
+	for b in "${bdevs_name[@]}"; do
 		echo "[job_$b]" >> $testdir/bdev.fio
 		echo "filename=$b" >> $testdir/bdev.fio
 	done
@@ -356,8 +350,8 @@ function fio_test_suite() {
 
 	# Generate the fio config file given the list of all unclaimed bdevs that support unmap
 	fio_config_gen $testdir/bdev.fio trim "" "$env_context"
-	if [ "$(echo $bdevs | jq -r 'select(.supported_io_types.unmap == true) | .name')" != "" ]; then
-		for b in $(echo $bdevs | jq -r 'select(.supported_io_types.unmap == true) | .name'); do
+	if [[ -n $(printf '%s\n' "${bdevs[@]}" | jq -r 'select(.supported_io_types.unmap == true) | .name') ]]; then
+		for b in $(printf '%s\n' "${bdevs[@]}" | jq -r 'select(.supported_io_types.unmap == true) | .name'); do
 			echo "[job_$b]" >> $testdir/bdev.fio
 			echo "filename=$b" >> $testdir/bdev.fio
 		done
@@ -749,9 +743,9 @@ cat <<- CONF > "$conf_file"
 	        ]}
 CONF
 
-bdevs=$("$rpc_py" bdev_get_bdevs | jq -r '.[] | select(.claimed == false)')
-bdevs_name=$(echo $bdevs | jq -r '.name')
-bdev_list=($bdevs_name)
+mapfile -t bdevs < <("$rpc_py" bdev_get_bdevs | jq -r '.[] | select(.claimed == false)')
+mapfile -t bdevs_name < <(printf '%s\n' "${bdevs[@]}" | jq -r '.name')
+bdev_list=("${bdevs_name[@]}")
 
 hello_world_bdev=${bdev_list[0]}
 trap - SIGINT SIGTERM EXIT
@@ -763,7 +757,7 @@ trap "cleanup" SIGINT SIGTERM EXIT
 
 run_test "bdev_hello_world" $SPDK_EXAMPLE_DIR/hello_bdev --json "$conf_file" -b "$hello_world_bdev" "$env_ctx"
 run_test "bdev_bounds" bdev_bounds "$env_ctx"
-run_test "bdev_nbd" nbd_function_test $conf_file "$bdevs_name" "$env_ctx"
+run_test "bdev_nbd" nbd_function_test "$conf_file" "${bdevs_name[*]}" "$env_ctx"
 if [[ $CONFIG_FIO_PLUGIN == y ]]; then
 	if [ "$test_type" = "nvme" ] || [ "$test_type" = "gpt" ]; then
 		# TODO: once we get real multi-ns drives, re-enable this test for NVMe.

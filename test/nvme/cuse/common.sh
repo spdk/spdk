@@ -6,8 +6,6 @@
 
 source "$rootdir/test/common/autotest_common.sh"
 
-shopt -s extglob
-
 NVME_CMD="/usr/local/src/nvme-cli/nvme"
 
 rpc_py=$rootdir/scripts/rpc.py

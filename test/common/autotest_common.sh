@@ -32,6 +32,8 @@ function xtrace_fd() {
 }
 
 set -e
+shopt -s nullglob
+shopt -s extglob
 
 if [[ -e $rootdir/test/common/build_config.sh ]]; then
 	source "$rootdir/test/common/build_config.sh"
@@ -747,9 +749,7 @@ function process_core() {
 
 	local coredumps core
 
-	shopt -s nullglob
 	coredumps=("$output_dir/coredumps/"*.bt.txt)
-	shopt -u nullglob
 
 	((${#coredumps[@]} > 0)) || return 0
 	chmod -R a+r "$output_dir/coredumps"
@@ -1366,9 +1366,7 @@ function autotest_cleanup() {
 		kill "$udevadm_pid" || :
 	fi
 
-	shopt -s nullglob
 	local storage_fallback_purge=("${TMPDIR:-/tmp}/spdk."??????)
-	shopt -u nullglob
 
 	if ((${#storage_fallback_purge[@]} > 0)); then
 		rm -rf "${storage_fallback_purge[@]}"
@@ -1456,29 +1454,32 @@ function get_nvme_ctrlr_from_bdf() {
 # Get BDF addresses of all NVMe drives currently attached to
 # uio-pci-generic or vfio-pci
 function get_nvme_bdfs() {
-	xtrace_disable
-	bdfs=$(jq -r .config[].params.traddr <<< $($rootdir/scripts/gen_nvme.sh))
-	if [[ -z ${bdfs:-} ]]; then
-		echo "No devices to test on!"
-		exit 1
+	local bdfs=()
+	bdfs=($("$rootdir/scripts/gen_nvme.sh" | jq -r '.config[].params.traddr'))
+	if ((${#bdfs[@]} == 0)); then
+		echo "No bdevs found" >&2
+		return 1
 	fi
-	echo "$bdfs"
-	xtrace_restore
+	printf '%s\n' "${bdfs[@]}"
 }
 
 # Same as function above, but just get the first disks BDF address
 function get_first_nvme_bdf() {
-	head -1 <<< "$(get_nvme_bdfs)"
+	local bdfs=()
+	bdfs=($(get_nvme_bdfs))
+
+	echo "${bdfs[0]}"
 }
 
 function nvme_namespace_revert() {
 	$rootdir/scripts/setup.sh
 	sleep 1
-	bdfs=$(get_nvme_bdfs)
+	local bdfs=()
+	bdfs=($(get_nvme_bdfs))
 
 	$rootdir/scripts/setup.sh reset
 
-	for bdf in $bdfs; do
+	for bdf in "${bdfs[@]}"; do
 		nvme_ctrlr=/dev/$(get_nvme_ctrlr_from_bdf ${bdf})
 		if [[ -z "${nvme_ctrlr:-}" ]]; then
 			continue

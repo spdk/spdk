@@ -7,8 +7,6 @@ testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir/../../")
 source "$testdir/common.sh"
 
-shopt -s extglob nullglob
-
 declare -a nodes_sys=()
 
 declare -i default_hugepages=0

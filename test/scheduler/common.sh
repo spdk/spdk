@@ -3,8 +3,6 @@
 #  All rights reserved.
 #
 
-shopt -s nullglob extglob
-
 declare -r sysfs_system=/sys/devices/system
 declare -r sysfs_cpu=$sysfs_system/cpu
 declare -r sysfs_node=$sysfs_system/node

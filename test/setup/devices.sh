@@ -7,9 +7,6 @@ testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir/../../")
 source "$testdir/common.sh"
 
-shopt -s nullglob
-shopt -s extglob
-
 cleanup() {
 	cleanup_nvme
 	cleanup_dm

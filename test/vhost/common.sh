@@ -116,11 +116,12 @@ function vhost_run() {
 	local vhost_name
 	local run_gen_nvme=true
 	local vhost_bin="vhost"
+	local vhost_args=()
+	local cmd=()
 
-	while getopts "n:a:b:g" optchar; do
+	while getopts "n:b:g" optchar; do
 		case "$optchar" in
 			n) vhost_name="$OPTARG" ;;
-			a) vhost_args="$OPTARG" ;;
 			b) vhost_bin="$OPTARG" ;;
 			g)
 				run_gen_nvme=false
@@ -132,6 +133,9 @@ function vhost_run() {
 				;;
 		esac
 	done
+	shift $((OPTIND - 1))
+
+	vhost_args=("$@")
 
 	if [[ -z "$vhost_name" ]]; then
 		error "vhost name must be provided to vhost_run"
@@ -154,9 +158,9 @@ function vhost_run() {
 		return 1
 	fi
 
-	local cmd="$vhost_app -r $vhost_dir/rpc.sock $vhost_args"
+	cmd=("$vhost_app" "-r" "$vhost_dir/rpc.sock" "${vhost_args[@]}")
 	if [[ "$vhost_bin" =~ vhost ]]; then
-		cmd+=" -S $vhost_dir"
+		cmd+=(-S "$vhost_dir")
 	fi
 
 	notice "Loging to:   $vhost_log_file"
@@ -168,7 +172,7 @@ function vhost_run() {
 	iobuf_small_count=${iobuf_small_count:-16383}
 	iobuf_large_count=${iobuf_large_count:-2047}
 
-	$cmd --wait-for-rpc &
+	"${cmd[@]}" --wait-for-rpc &
 	vhost_pid=$!
 	echo $vhost_pid > $vhost_pid_file
 
@@ -451,13 +455,10 @@ function vm_kill() {
 # List all VM numbers in VM_DIR
 #
 function vm_list_all() {
-	local vms
-	vms="$(
-		shopt -s nullglob
-		echo $VM_DIR/[0-9]*
-	)"
-	if [[ -n "$vms" ]]; then
-		basename --multiple $vms
+	local vms=()
+	vms=("$VM_DIR"/+([0-9]))
+	if ((${#vms[@]} > 0)); then
+		basename --multiple "${vms[@]}"
 	fi
 }
 

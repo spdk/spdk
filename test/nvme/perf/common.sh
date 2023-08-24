@@ -454,7 +454,6 @@ function run_nvmeperf() {
 function wait_for_nvme_reload() {
 	local nvmes=$1
 
-	shopt -s extglob
 	for disk in $nvmes; do
 		cmd="ls /sys/block/$disk/queue/*@(iostats|rq_affinity|nomerges|io_poll_delay)*"
 		until $cmd 2> /dev/null; do
@@ -462,7 +461,6 @@ function wait_for_nvme_reload() {
 			sleep 0.5
 		done
 	done
-	shopt -q extglob
 }
 
 function verify_disk_number() {

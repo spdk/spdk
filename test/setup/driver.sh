@@ -8,8 +8,6 @@ testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir/../../")
 source "$testdir/common.sh"
 
-shopt -s nullglob extglob
-
 dep() { modprobe --show-depends "$1"; }
 mod() { [[ $(dep "$1") == *".ko"* ]]; }
 bui() { [[ $(dep "$1") == "builtin $1" ]]; }

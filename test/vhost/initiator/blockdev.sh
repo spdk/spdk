@@ -76,7 +76,7 @@ killprocess $dummy_spdk_pid
 
 # run FIO with previously acquired spdk config files
 timing_enter run_spdk_fio
-run_spdk_fio $testdir/bdev.fio --filename=* --section=job_randwrite --spdk_json_conf=$testdir/bdev.json
+run_spdk_fio $testdir/bdev.fio --filename='*' --section=job_randwrite --spdk_json_conf=$testdir/bdev.json
 timing_exit run_spdk_fio
 
 timing_enter run_spdk_fio_unmap

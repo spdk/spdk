@@ -3,7 +3,6 @@
 #  Copyright (C) 2019 Intel Corporation
 #  All rights reserved.
 #
-shopt -s nullglob
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)

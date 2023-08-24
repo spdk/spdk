@@ -7,7 +7,6 @@
 testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir/../../../")
 source "$rootdir/test/common/autotest_common.sh"
-shopt -s extglob
 
 builddir=$SPDK_TEST_STORAGE/test-rpm
 

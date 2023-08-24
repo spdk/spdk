@@ -13,8 +13,6 @@ set -- "--transport=tcp" "--iso" "$@"
 source "$rootdir/test/common/autotest_common.sh"
 source "$rootdir/test/nvmf/common.sh"
 
-shopt -s nullglob
-
 rabort() {
 	local trtype=$1
 	local adrfam=$2

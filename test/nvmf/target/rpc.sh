@@ -25,22 +25,22 @@ nvmfappstart -m 0xF
 
 stats=$($rpc_py nvmf_get_stats)
 # Expect 4 poll groups (from CPU mask) and no transports yet
-[ "4" -eq $(jcount .poll_groups[].name <<< "$stats") ]
-[ "null" == $(jq .poll_groups[0].transports[0] <<< "$stats") ]
+(($(jcount '.poll_groups[].name' <<< "$stats") == 4))
+[[ $(jq '.poll_groups[0].transports[0]' <<< "$stats") == null ]]
 
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 
 stats=$($rpc_py nvmf_get_stats)
 # Expect no QPs
-[ "0" -eq $(jsum .poll_groups[].admin_qpairs <<< "$stats") ]
-[ "0" -eq $(jsum .poll_groups[].io_qpairs <<< "$stats") ]
+(($(jsum '.poll_groups[].admin_qpairs' <<< "$stats") == 0))
+(($(jsum '.poll_groups[].io_qpairs' <<< "$stats") == 0))
 # Transport statistics is currently implemented for RDMA only
 if [ 'rdma' == $TEST_TRANSPORT ]; then
 	# Expect RDMA transport and some devices
-	[ "1" -eq $(jcount .poll_groups[0].transports[].trtype <<< "$stats") ]
-	transport_type=$(jq -r .poll_groups[0].transports[0].trtype <<< "$stats")
-	[ "${transport_type,,}" == "${TEST_TRANSPORT,,}" ]
-	[ "0" -lt $(jcount .poll_groups[0].transports[0].devices[].name <<< "$stats") ]
+	(($(jcount '.poll_groups[0].transports[].trtype' <<< "$stats") == 1))
+	transport_type=$(jq -r '.poll_groups[0].transports[0].trtype' <<< "$stats")
+	[[ "${transport_type,,}" == "${TEST_TRANSPORT,,}" ]]
+	(($(jcount '.poll_groups[0].transports[0].devices[].name' <<< "$stats") > 0))
 fi
 
 MALLOC_BDEV_SIZE=64
@@ -109,13 +109,13 @@ done
 
 stats=$($rpc_py nvmf_get_stats)
 # Expect some admin and IO qpairs
-[ "0" -lt $(jsum .poll_groups[].admin_qpairs <<< "$stats") ]
-[ "0" -lt $(jsum .poll_groups[].io_qpairs <<< "$stats") ]
+(($(jsum '.poll_groups[].admin_qpairs' <<< "$stats") > 0))
+(($(jsum '.poll_groups[].io_qpairs' <<< "$stats") > 0))
 # Transport statistics is currently implemented for RDMA only
 if [ 'rdma' == $TEST_TRANSPORT ]; then
 	# Expect non-zero completions and request latencies accumulated
-	[ "0" -lt $(jsum .poll_groups[].transports[].devices[].completions <<< "$stats") ]
-	[ "0" -lt $(jsum .poll_groups[].transports[].devices[].request_latency <<< "$stats") ]
+	(($(jsum '.poll_groups[].transports[].devices[].completions' <<< "$stats") > 0))
+	(($(jsum '.poll_groups[].transports[].devices[].request_latency' <<< "$stats") > 0))
 fi
 
 trap - SIGINT SIGTERM EXIT

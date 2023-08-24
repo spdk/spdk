@@ -69,8 +69,8 @@ function migration_tc2_configure_vhost() {
 	rpc_cmd load_subsystem_config -j "'${json[*]}'"
 	timing_exit start_nvmf_tgt
 
-	vhost_run -n 0 -a "-m 0x1 -s 512 -u"
-	vhost_run -n 1 -a "-m 0x2 -s 512 -u"
+	vhost_run -n 0 -- -m 0x1 -s 512 -u
+	vhost_run -n 1 -- -m 0x2 -s 512 -u
 
 	local nvmf_target_ip=$NVMF_FIRST_TARGET_IP
 

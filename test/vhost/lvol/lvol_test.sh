@@ -97,7 +97,7 @@ trap 'error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
 vm_kill_all
 
 notice "running SPDK vhost"
-vhost_run -n "0" -a "--cpumask $spdk_mask"
+vhost_run -n "0" -- --cpumask "$spdk_mask"
 notice "..."
 
 trap 'clean_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
@@ -136,10 +136,10 @@ for ((i = 0; i < vm_count; i++)); do
 	setup_cmd+=" --os=$VM_IMAGE"
 
 	# Create single SCSI controller or multiple BLK controllers for this VM
-	mask_arg="--cpumask $spdk_mask"
+	mask_arg=("--cpumask" "$spdk_mask")
 
 	if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
-		$rpc_py vhost_create_scsi_controller naa.0.$i $mask_arg
+		$rpc_py vhost_create_scsi_controller naa.0.$i "${mask_arg[@]}"
 		for ((j = 0; j < ${#bdevs[@]}; j++)); do
 			$rpc_py vhost_scsi_controller_add_target naa.0.$i $j ${bdevs[$j]}
 		done
@@ -147,7 +147,7 @@ for ((i = 0; i < vm_count; i++)); do
 	elif [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
 		disk=""
 		for ((j = 0; j < ${#bdevs[@]}; j++)); do
-			$rpc_py vhost_create_blk_controller naa.$j.$i ${bdevs[$j]} $mask_arg
+			$rpc_py vhost_create_blk_controller naa.$j.$i ${bdevs[$j]} "${mask_arg[@]}"
 			disk+="${j}:"
 		done
 		disk="${disk::-1}"
