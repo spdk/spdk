@@ -6,6 +6,21 @@
 #
 rpc_py=rpc_cmd
 
+function xtrace_disable() {
+	set +x
+	X_STACK+=("${FUNCNAME[*]}") # push
+}
+
+function xtrace_restore() {
+	# unset'ing foo[-1] under older Bash (4.2 -> Centos7) won't work, hence the dance
+	unset -v "X_STACK[${#X_STACK[@]} - 1 < 0 ? 0 : ${#X_STACK[@]} - 1]" # pop
+	if ((${#X_STACK[@]} == 0)); then
+		set -x
+	fi
+}
+
+function xtrace_disable_per_cmd() { eval "$* ${BASH_XTRACEFD}> /dev/null"; }
+
 function xtrace_fd() {
 	if [[ -n ${BASH_XTRACEFD:-} && -e /proc/self/fd/$BASH_XTRACEFD ]]; then
 		# Close it first to make sure it's sane
@@ -13,28 +28,10 @@ function xtrace_fd() {
 	fi
 	exec {BASH_XTRACEFD}>&2
 
-	set -x
+	xtrace_restore
 }
 
-function xtrace_disable() {
-	if [ "${XTRACE_DISABLED:-}" != "yes" ]; then
-		PREV_BASH_OPTS="$-"
-		if [[ "${PREV_BASH_OPTS:-}" == *"x"* ]]; then
-			XTRACE_DISABLED="yes"
-		fi
-		set +x
-	elif [ -z ${XTRACE_NESTING_LEVEL:-} ]; then
-		XTRACE_NESTING_LEVEL=1
-	else
-		XTRACE_NESTING_LEVEL=$((++XTRACE_NESTING_LEVEL))
-	fi
-}
-
-function xtrace_disable_per_cmd() { eval "$* ${BASH_XTRACEFD}> /dev/null"; }
-
-xtrace_disable
 set -e
-shopt -s expand_aliases
 
 if [[ -e $rootdir/test/common/build_config.sh ]]; then
 	source "$rootdir/test/common/build_config.sh"
@@ -48,28 +45,6 @@ fi
 # Source scripts after the config so that the definitions are available.
 source "$rootdir/test/common/applications.sh"
 source "$rootdir/scripts/common.sh"
-
-# Dummy function to be called after restoring xtrace just so that it appears in the
-# xtrace log. This way we can consistently track when xtrace is enabled/disabled.
-function xtrace_enable() {
-	# We have to do something inside a function in bash, and calling any command
-	# (even `:`) will produce an xtrace entry, so we just define another function.
-	function xtrace_dummy() { :; }
-}
-
-# Keep it as alias to avoid xtrace_enable backtrace always pointing to xtrace_restore.
-# xtrace_enable will appear as called directly from the user script, from the same line
-# that "called" xtrace_restore.
-alias xtrace_restore='if [ -z ${XTRACE_NESTING_LEVEL:-} ]; then
-        if [[ "${PREV_BASH_OPTS:-}" == *"x"* ]]; then
-		XTRACE_DISABLED="no"; PREV_BASH_OPTS=""; set -x; xtrace_enable;
-	fi
-else
-	XTRACE_NESTING_LEVEL=$((--XTRACE_NESTING_LEVEL));
-	if [ $XTRACE_NESTING_LEVEL -eq "0" ]; then
-		unset XTRACE_NESTING_LEVEL
-	fi
-fi'
 
 : ${RUN_NIGHTLY:=0}
 export RUN_NIGHTLY
@@ -1654,10 +1629,7 @@ trap "trap - ERR; print_backtrace >&2" ERR
 PS4=' \t	-- ${BASH_SOURCE#${BASH_SOURCE%/*/*}/}@${LINENO} -- \$ '
 if $SPDK_AUTOTEST_X; then
 	# explicitly enable xtraces, overriding any tracking information.
-	unset XTRACE_DISABLED
-	unset XTRACE_NESTING_LEVEL
 	xtrace_fd
-	xtrace_enable
 else
-	xtrace_restore
+	xtrace_disable
 fi
