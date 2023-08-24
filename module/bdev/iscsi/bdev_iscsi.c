@@ -472,7 +472,7 @@ bdev_iscsi_unmap(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io,
 		entry++;
 	} while (remaining > 0);
 
-	task = iscsi_unmap_task(lun->context, 0, 0, 0, list, num_unmap_list,
+	task = iscsi_unmap_task(lun->context, lun->lun_id, 0, 0, list, num_unmap_list,
 				bdev_iscsi_command_cb, iscsi_io);
 	if (task != NULL) {
 		return;
