@@ -371,16 +371,18 @@ function gather_supported_nvmf_pci_devs() {
 
 	# All devices detected, kernel modules loaded. Now look under net class to see if there
 	# are any net devices bound to the controllers.
+	shopt -s nullglob
 	for pci in "${pci_devs[@]}"; do
-		if [[ ! -e /sys/bus/pci/devices/$pci/net ]]; then
+		pci_net_devs=("/sys/bus/pci/devices/$pci/net/"*)
+		if ((${#pci_net_devs[@]} == 0)); then
 			echo "No net devices associated with $pci"
 			continue
 		fi
-		pci_net_devs=("/sys/bus/pci/devices/$pci/net/"*)
 		pci_net_devs=("${pci_net_devs[@]##*/}")
 		echo "Found net devices under $pci: ${pci_net_devs[*]}"
 		net_devs+=("${pci_net_devs[@]}")
 	done
+	shopt -u nullglob
 
 	if ((${#net_devs[@]} == 0)); then
 		return 1
