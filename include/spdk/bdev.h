@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021, 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 /** \file
@@ -379,6 +379,53 @@ struct spdk_bdev *spdk_bdev_next_leaf(struct spdk_bdev *prev);
  */
 int spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
 		       void *event_ctx, struct spdk_bdev_desc **desc);
+
+/**
+ * Block device asynchronous open callback.
+ *
+ * \param desc Output parameter for the descriptor when operation is successful.
+ * \param rc 0 if block device is opened successfully or negated errno if failed.
+ * \param cb_arg Callback argument.
+ */
+typedef void (*spdk_bdev_open_async_cb_t)(struct spdk_bdev_desc *desc, int rc, void *cb_arg);
+
+/**
+ * Structure with optional asynchronous bdev open parameters.
+ */
+struct spdk_bdev_open_async_opts {
+	/* Size of this structure in bytes. */
+	size_t size;
+	/*
+	 * Time in milliseconds to wait for the block device to appear.
+	 *
+	 * When the block device does exist, wait until the block device appears or the timeout
+	 * is expired if nonzero, or return immediately otherwise.
+	 *
+	 * Default value is zero and is used when options are omitted.
+	 */
+	uint64_t timeout_ms;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_open_async_opts) == 16, "Incorrect size");
+
+/**
+ * Open a block device for I/O operations asynchronously with options.
+ *
+ * \param bdev_name Block device name to open.
+ * \param write true is read/write access requested, false if read-only
+ * \param event_cb Notification callback to be called when the bdev triggers
+ * asynchronous event such as bdev removal. This will always be called on the
+ * same thread that spdk_bdev_open_async() was called on. In case of removal event
+ * the descriptor will have to be manually closed to make the bdev unregister
+ * proceed.
+ * \param event_ctx param for event_cb.
+ * \param opts Options for asynchronous block device open. If NULL, default values are used.
+ * \param open_cb Open callback.
+ * \param open_cb_arg Parameter for open_cb.
+ * \return 0 if operation started successfully, suitable errno value otherwise
+ */
+int spdk_bdev_open_async(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
+			 void *event_ctx, struct spdk_bdev_open_async_opts *opts,
+			 spdk_bdev_open_async_cb_t open_cb, void *open_cb_arg);
 
 /**
  * Close a previously opened block device.

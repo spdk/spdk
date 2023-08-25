@@ -108,6 +108,8 @@ struct spdk_bdev_mgr {
 
 	struct spdk_spinlock spinlock;
 
+	TAILQ_HEAD(, spdk_bdev_open_async_ctx) async_bdev_opens;
+
 #ifdef SPDK_CONFIG_VTUNE
 	__itt_domain	*domain;
 #endif
@@ -119,6 +121,7 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 	.bdev_names = RB_INITIALIZER(g_bdev_mgr.bdev_names),
 	.init_complete = false,
 	.module_init_complete = false,
+	.async_bdev_opens = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.async_bdev_opens),
 };
 
 static void
@@ -2338,6 +2341,8 @@ bdev_finish_wait_for_examine_done(void *cb_arg)
 	bdev_module_fini_start_iter(NULL);
 }
 
+static void bdev_open_async_fini(void);
+
 void
 spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg)
 {
@@ -2349,6 +2354,8 @@ spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg)
 
 	g_fini_cb_fn = cb_fn;
 	g_fini_cb_arg = cb_arg;
+
+	bdev_open_async_fini();
 
 	rc = spdk_bdev_wait_for_examine(bdev_finish_wait_for_examine_done, NULL);
 	if (rc != 0) {
@@ -7873,6 +7880,223 @@ spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event
 	spdk_spin_unlock(&g_bdev_mgr.spinlock);
 
 	return rc;
+}
+
+struct spdk_bdev_open_async_ctx {
+	char					*bdev_name;
+	spdk_bdev_event_cb_t			event_cb;
+	void					*event_ctx;
+	bool					write;
+	int					rc;
+	spdk_bdev_open_async_cb_t		cb_fn;
+	void					*cb_arg;
+	struct spdk_bdev_desc			*desc;
+	struct spdk_bdev_open_async_opts	opts;
+	uint64_t				start_ticks;
+	struct spdk_thread			*orig_thread;
+	struct spdk_poller			*poller;
+	TAILQ_ENTRY(spdk_bdev_open_async_ctx)	tailq;
+};
+
+static void
+bdev_open_async_done(void *arg)
+{
+	struct spdk_bdev_open_async_ctx *ctx = arg;
+
+	ctx->cb_fn(ctx->desc, ctx->rc, ctx->cb_arg);
+
+	free(ctx->bdev_name);
+	free(ctx);
+}
+
+static void
+bdev_open_async_cancel(void *arg)
+{
+	struct spdk_bdev_open_async_ctx *ctx = arg;
+
+	assert(ctx->rc == -ESHUTDOWN);
+
+	spdk_poller_unregister(&ctx->poller);
+
+	bdev_open_async_done(ctx);
+}
+
+/* This is called when the bdev library finishes at shutdown. */
+static void
+bdev_open_async_fini(void)
+{
+	struct spdk_bdev_open_async_ctx *ctx, *tmp_ctx;
+
+	spdk_spin_lock(&g_bdev_mgr.spinlock);
+	TAILQ_FOREACH_SAFE(ctx, &g_bdev_mgr.async_bdev_opens, tailq, tmp_ctx) {
+		TAILQ_REMOVE(&g_bdev_mgr.async_bdev_opens, ctx, tailq);
+		/*
+		 * We have to move to ctx->orig_thread to unregister ctx->poller.
+		 * However, there is a chance that ctx->poller is executed before
+		 * message is executed, which could result in bdev_open_async_done()
+		 * being called twice. To avoid such race condition, set ctx->rc to
+		 * -ESHUTDOWN.
+		 */
+		ctx->rc = -ESHUTDOWN;
+		spdk_thread_send_msg(ctx->orig_thread, bdev_open_async_cancel, ctx);
+	}
+	spdk_spin_unlock(&g_bdev_mgr.spinlock);
+}
+
+static int bdev_open_async(void *arg);
+
+static void
+_bdev_open_async(struct spdk_bdev_open_async_ctx *ctx)
+{
+	uint64_t timeout_ticks;
+
+	if (ctx->rc == -ESHUTDOWN) {
+		/* This context is being canceled. Do nothing. */
+		return;
+	}
+
+	ctx->rc = bdev_open_ext(ctx->bdev_name, ctx->write, ctx->event_cb, ctx->event_ctx,
+				&ctx->desc);
+	if (ctx->rc == 0 || ctx->opts.timeout_ms == 0) {
+		goto exit;
+	}
+
+	timeout_ticks = ctx->start_ticks + ctx->opts.timeout_ms * spdk_get_ticks_hz() / 1000ull;
+	if (spdk_get_ticks() >= timeout_ticks) {
+		SPDK_ERRLOG("Timed out while waiting for bdev '%s' to appear\n", ctx->bdev_name);
+		ctx->rc = -ETIMEDOUT;
+		goto exit;
+	}
+
+	return;
+
+exit:
+	spdk_poller_unregister(&ctx->poller);
+	TAILQ_REMOVE(&g_bdev_mgr.async_bdev_opens, ctx, tailq);
+
+	/* Completion callback is processed after stack unwinding. */
+	spdk_thread_send_msg(ctx->orig_thread, bdev_open_async_done, ctx);
+}
+
+static int
+bdev_open_async(void *arg)
+{
+	struct spdk_bdev_open_async_ctx *ctx = arg;
+
+	spdk_spin_lock(&g_bdev_mgr.spinlock);
+
+	_bdev_open_async(ctx);
+
+	spdk_spin_unlock(&g_bdev_mgr.spinlock);
+
+	return SPDK_POLLER_BUSY;
+}
+
+static void
+bdev_open_async_opts_copy(struct spdk_bdev_open_async_opts *opts,
+			  struct spdk_bdev_open_async_opts *opts_src,
+			  size_t size)
+{
+	assert(opts);
+	assert(opts_src);
+
+	opts->size = size;
+
+#define SET_FIELD(field) \
+	if (offsetof(struct spdk_bdev_open_async_opts, field) + sizeof(opts->field) <= size) { \
+		opts->field = opts_src->field; \
+	} \
+
+	SET_FIELD(timeout_ms);
+
+	/* Do not remove this statement, you should always update this statement when you adding a new field,
+	 * and do not forget to add the SET_FIELD statement for your added field. */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_open_async_opts) == 16, "Incorrect size");
+
+#undef SET_FIELD
+}
+
+static void
+bdev_open_async_opts_get_default(struct spdk_bdev_open_async_opts *opts, size_t size)
+{
+	assert(opts);
+
+	opts->size = size;
+
+#define SET_FIELD(field, value) \
+	if (offsetof(struct spdk_bdev_open_async_opts, field) + sizeof(opts->field) <= size) { \
+		opts->field = value; \
+	} \
+
+	SET_FIELD(timeout_ms, 0);
+
+#undef SET_FIELD
+}
+
+int
+spdk_bdev_open_async(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
+		     void *event_ctx, struct spdk_bdev_open_async_opts *opts,
+		     spdk_bdev_open_async_cb_t open_cb, void *open_cb_arg)
+{
+	struct spdk_bdev_open_async_ctx *ctx;
+
+	if (event_cb == NULL) {
+		SPDK_ERRLOG("Missing event callback function\n");
+		return -EINVAL;
+	}
+
+	if (open_cb == NULL) {
+		SPDK_ERRLOG("Missing open callback function\n");
+		return -EINVAL;
+	}
+
+	if (opts != NULL && opts->size == 0) {
+		SPDK_ERRLOG("size in the options structure should not be zero\n");
+		return -EINVAL;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate open context\n");
+		return -ENOMEM;
+	}
+
+	ctx->bdev_name = strdup(bdev_name);
+	if (ctx->bdev_name == NULL) {
+		SPDK_ERRLOG("Failed to duplicate bdev_name\n");
+		free(ctx);
+		return -ENOMEM;
+	}
+
+	ctx->poller = SPDK_POLLER_REGISTER(bdev_open_async, ctx, 100 * 1000);
+	if (ctx->poller == NULL) {
+		SPDK_ERRLOG("Failed to register bdev_open_async poller\n");
+		free(ctx->bdev_name);
+		free(ctx);
+		return -ENOMEM;
+	}
+
+	ctx->cb_fn = open_cb;
+	ctx->cb_arg = open_cb_arg;
+	ctx->write = write;
+	ctx->event_cb = event_cb;
+	ctx->event_ctx = event_ctx;
+	ctx->orig_thread = spdk_get_thread();
+	ctx->start_ticks = spdk_get_ticks();
+
+	bdev_open_async_opts_get_default(&ctx->opts, sizeof(ctx->opts));
+	if (opts != NULL) {
+		bdev_open_async_opts_copy(&ctx->opts, opts, opts->size);
+	}
+
+	spdk_spin_lock(&g_bdev_mgr.spinlock);
+
+	TAILQ_INSERT_TAIL(&g_bdev_mgr.async_bdev_opens, ctx, tailq);
+	_bdev_open_async(ctx);
+
+	spdk_spin_unlock(&g_bdev_mgr.spinlock);
+
+	return 0;
 }
 
 static void
