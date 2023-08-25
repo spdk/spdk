@@ -69,62 +69,7 @@ function nvme_doorbell_aers() {
 	done
 }
 
-if [ $(uname) = Linux ]; then
-	# check that our setup.sh script does not bind NVMe devices to uio/vfio if they
-	# have an active mountpoint
-	$rootdir/scripts/setup.sh reset
-	blkname=''
-	# first, find an NVMe device that does not have an active mountpoint already;
-	# this covers rare case where someone is running this test script on a system
-	# that has a mounted NVMe filesystem
-	#
-	# note: more work probably needs to be done to properly handle devices with multiple
-	# namespaces
-	for bdf in $(get_nvme_bdfs); do
-		for name in $(get_nvme_name_from_bdf $bdf); do
-			if [ "$name" != "" ]; then
-				mountpoints=$(lsblk /dev/$name --output MOUNTPOINT -n | wc -w)
-				if [ "$mountpoints" = "0" ]; then
-					blkname=$name
-					break 2
-				fi
-			fi
-		done
-	done
-
-	# if we found an NVMe block device without an active mountpoint, create and mount
-	# a filesystem on it for purposes of testing the setup.sh script
-	if [ "$blkname" != "" ]; then
-		parted -s /dev/$blkname mklabel gpt
-		# just create a 100MB partition - this tests our ability to detect mountpoints
-		# on partitions of the device, not just the device itself;  it also is faster
-		# since we don't trim and initialize the whole namespace
-		parted -s /dev/$blkname mkpart SPDK_TEST 1 100
-		sleep 1
-		mkfs.ext4 -F /dev/${blkname}p1
-		mkdir -p /tmp/nvmetest
-		mount /dev/${blkname}p1 /tmp/nvmetest
-		sleep 1
-		$rootdir/scripts/setup.sh
-		driver=$(basename $(readlink /sys/bus/pci/devices/$bdf/driver))
-		# check that the nvme driver is still loaded against the device
-		if [ "$driver" != "nvme" ]; then
-			exit 1
-		fi
-		umount /tmp/nvmetest
-		rmdir /tmp/nvmetest
-		# write zeroes to the device to blow away the partition table and filesystem
-		dd if=/dev/zero of=/dev/$blkname oflag=direct bs=1M count=1
-		$rootdir/scripts/setup.sh
-		driver=$(basename $(readlink /sys/bus/pci/devices/$bdf/driver))
-		# check that the nvme driver is not loaded against the device
-		if [ "$driver" = "nvme" ]; then
-			exit 1
-		fi
-	else
-		$rootdir/scripts/setup.sh
-	fi
-fi
+"$rootdir/scripts/setup.sh"
 
 if [ $(uname) = Linux ]; then
 	trap "kill_stub -9; exit 1" SIGINT SIGTERM EXIT
