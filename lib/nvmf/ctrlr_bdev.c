@@ -473,11 +473,19 @@ nvmf_bdev_ctrlr_write_zeroes_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	uint64_t max_write_zeroes_size = req->qpair->ctrlr->subsys->max_write_zeroes_size_kib;
 	uint64_t start_lba;
 	uint64_t num_blocks;
 	int rc;
 
 	nvmf_bdev_ctrlr_get_rw_params(cmd, &start_lba, &num_blocks);
+	if (spdk_unlikely(max_write_zeroes_size > 0 &&
+			  num_blocks > (max_write_zeroes_size << 10) / spdk_bdev_get_block_size(bdev))) {
+		SPDK_ERRLOG("invalid write zeroes size, should not exceed %" PRIu64 "Kib\n", max_write_zeroes_size);
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
 
 	if (spdk_unlikely(!nvmf_bdev_ctrlr_lba_in_range(bdev_num_blocks, start_lba, num_blocks))) {
 		SPDK_ERRLOG("end of media\n");
@@ -590,6 +598,8 @@ nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	uint16_t nr, i;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	uint64_t max_discard_size = req->qpair->ctrlr->subsys->max_discard_size_kib;
+	uint32_t block_size = spdk_bdev_get_block_size(bdev);
 	struct spdk_iov_xfer ix;
 	uint64_t lba;
 	uint32_t lba_count;
@@ -629,6 +639,12 @@ nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 
 		lba = dsm_range.starting_lba;
 		lba_count = dsm_range.length;
+		if (max_discard_size > 0 && lba_count > (max_discard_size << 10) / block_size) {
+			SPDK_ERRLOG("invalid unmap size, should not exceed %" PRIu64 "Kib\n", max_discard_size);
+			response->status.sct = SPDK_NVME_SCT_GENERIC;
+			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		}
 
 		unmap_ctx->count++;
 

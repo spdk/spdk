@@ -1712,6 +1712,7 @@ test_identify_ctrlr_iocs_specific(void)
 	struct spdk_nvme_cmd cmd = {};
 	struct spdk_nvme_cpl rsp = {};
 	struct spdk_nvme_zns_ctrlr_data ctrlr_data = {};
+	struct spdk_nvme_nvm_ctrlr_data cdata_nvm = {};
 
 	cmd.cdw11_bits.identify.csi = SPDK_NVME_CSI_ZNS;
 
@@ -1764,14 +1765,21 @@ test_identify_ctrlr_iocs_specific(void)
 
 	cmd.cdw11_bits.identify.csi = SPDK_NVME_CSI_NVM;
 
-	/* NVM */
-	memset(&ctrlr_data, 0xFF, sizeof(ctrlr_data));
+	/* NVM max_discard_size_kib = 1024;
+	 * max_write_zeroes_size_kib = 1024;
+	 * mpsmin = 0;
+	 */
+	memset(&cdata_nvm, 0xFF, sizeof(cdata_nvm));
 	memset(&rsp, 0, sizeof(rsp));
+	subsystem.max_discard_size_kib = (uint64_t)1024;
+	subsystem.max_write_zeroes_size_kib = (uint64_t)1024;
 	CU_ASSERT(spdk_nvmf_ctrlr_identify_iocs_specific(&ctrlr, &cmd, &rsp,
-			&ctrlr_data, sizeof(ctrlr_data)) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+			&cdata_nvm, sizeof(cdata_nvm)) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.status.sc == SPDK_NVME_SC_SUCCESS);
-	CU_ASSERT(spdk_mem_all_zero(&ctrlr_data, sizeof(ctrlr_data)));
+	CU_ASSERT(cdata_nvm.wzsl == 8);
+	CU_ASSERT(cdata_nvm.dmrsl == 2048);
+	CU_ASSERT(cdata_nvm.dmrl == 1);
 }
 
 static int

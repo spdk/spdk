@@ -2905,6 +2905,31 @@ spdk_nvmf_ns_identify_iocs_specific(struct spdk_nvmf_ctrlr *ctrlr,
 }
 
 static int
+nvmf_ctrlr_identify_iocs_nvm(struct spdk_nvmf_ctrlr *ctrlr,
+			     struct spdk_nvme_cmd *cmd,
+			     struct spdk_nvme_cpl *rsp,
+			     struct spdk_nvme_nvm_ctrlr_data *cdata_nvm)
+{
+	/* The unit of max_write_zeroes_size_kib is KiB.
+	 * The unit of wzsl is the minimum memory page size(2 ^ (12 + CAP.MPSMIN) bytes)
+	 * and is reported as a power of two (2^n).
+	 */
+	cdata_nvm->wzsl = spdk_u64log2(ctrlr->subsys->max_write_zeroes_size_kib >>
+				       (2 + ctrlr->vcprop.cap.bits.mpsmin));
+
+	/* The unit of max_discard_size_kib is KiB.
+	 * The dmrsl indicates the maximum number of logical blocks for
+	 * dataset management command.
+	 */
+	cdata_nvm->dmrsl = ctrlr->subsys->max_discard_size_kib << 1;
+	cdata_nvm->dmrl = 1;
+
+	rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
 nvmf_ctrlr_identify_iocs_zns(struct spdk_nvmf_ctrlr *ctrlr,
 			     struct spdk_nvme_cmd *cmd,
 			     struct spdk_nvme_cpl *rsp,
@@ -2934,6 +2959,8 @@ spdk_nvmf_ctrlr_identify_iocs_specific(struct spdk_nvmf_ctrlr *ctrlr,
 	memset(cdata, 0, cdata_size);
 
 	switch (csi) {
+	case SPDK_NVME_CSI_NVM:
+		return nvmf_ctrlr_identify_iocs_nvm(ctrlr, cmd, rsp, cdata);
 	case SPDK_NVME_CSI_ZNS:
 		return nvmf_ctrlr_identify_iocs_zns(ctrlr, cmd, rsp, cdata);
 	default:

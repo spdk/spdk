@@ -186,7 +186,9 @@ def nvmf_create_subsystem(client,
                           max_namespaces=0,
                           ana_reporting=False,
                           min_cntlid=1,
-                          max_cntlid=0xffef):
+                          max_cntlid=0xffef,
+                          max_discard_size_kib=0,
+                          max_write_zeroes_size_kib=0):
     """Construct an NVMe over Fabrics target subsystem.
 
     Args:
@@ -199,6 +201,8 @@ def nvmf_create_subsystem(client,
         ana_reporting: Enable ANA reporting feature. Default: False.
         min_cntlid: Minimum controller ID. Default: 1
         max_cntlid: Maximum controller ID. Default: 0xffef
+        max_discard_size: Maximum discard size (Kib). Default: 0
+        max_write_zeroes_size: Maximum write_zeroes size (Kib). Default: 0
 
 
     Returns:
@@ -231,6 +235,12 @@ def nvmf_create_subsystem(client,
 
     if max_cntlid is not None:
         params['max_cntlid'] = max_cntlid
+
+    if max_discard_size_kib is not None:
+        params['max_discard_size_kib'] = max_discard_size_kib
+
+    if max_write_zeroes_size_kib is not None:
+        params['max_write_zeroes_size_kib'] = max_write_zeroes_size_kib
 
     return client.call('nvmf_create_subsystem', params)
 

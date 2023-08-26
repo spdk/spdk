@@ -303,6 +303,9 @@ struct spdk_nvmf_subsystem {
 	uint16_t					min_cntlid;
 	uint16_t					max_cntlid;
 
+	uint64_t					max_discard_size_kib;
+	uint64_t					max_write_zeroes_size_kib;
+
 	TAILQ_HEAD(, spdk_nvmf_ctrlr)			ctrlrs;
 
 	/* A mutex used to protect the hosts list and allow_any_host flag. Unlike the namespace

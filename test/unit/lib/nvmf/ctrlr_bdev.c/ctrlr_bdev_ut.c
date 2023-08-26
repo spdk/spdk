@@ -714,10 +714,21 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	MOCK_CLEAR(spdk_bdev_flush_blocks);
 
 	/* Write zeroes blocks status asynchronous */
+	struct spdk_nvmf_subsystem subsystem = { };
+	struct spdk_nvmf_ctrlr ctrlr = { .subsys = &subsystem };
+	qpair.ctrlr = &ctrlr;
+
 	rc = nvmf_bdev_ctrlr_write_zeroes_cmd(&bdev, NULL, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 
+	cmd.nvme_cmd.cdw12 = 3;
+	subsystem.max_write_zeroes_size_kib = 1;
+	rc = nvmf_bdev_ctrlr_write_zeroes_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+
 	/* SLBA out of range */
+	subsystem.max_write_zeroes_size_kib = 0;
+	cmd.nvme_cmd.cdw12 = 2;
 	cmd.nvme_cmd.cdw10 = 3;
 	memset(&rsp, 0, sizeof(rsp));
 

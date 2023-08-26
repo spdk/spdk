@@ -31,6 +31,11 @@ A new transport option `rdma_max_cq_size` was added to limit indefinite growth o
 
 Added SPDK commandline parameter --no-huge, which enables SPDK to run without hugepages.
 
+### nvmf
+
+Added `max_discard_size_kib` and `max_write_zeroes_size_kib` to `nvmf_create_subsystem` to set the
+maximum discard size and maximum write_zeroes size.
+
 ## v23.09
 
 ### accel
