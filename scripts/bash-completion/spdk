@@ -238,6 +238,15 @@ _spdk_app() {
 	fi
 }
 
+_setup() {
+	local cur prev
+
+	_init_completion || return
+	_is_app "$1" || return
+
+	COMPREPLY=($(compgen -W 'cleanup config help interactive reset status' -- "$cur"))
+}
+
 # Build simple completion for some common spdk apps|tools
 _spdk_apps() {
 	local apps
@@ -258,6 +267,7 @@ _spdk_apps() {
 
 	complete -o default -F _spdk_app "${apps[@]}"
 	complete -o default -F _rpc rpc.py
+	complete -o default -F _setup setup.sh
 }
 
 _spdk_apps
