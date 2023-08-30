@@ -521,46 +521,29 @@ class Target(Server):
         super().__init__(name, general_config, target_config)
 
         # Defaults
-        self.enable_zcopy = False
-        self.scheduler_name = "static"
-        self.null_block = 0
         self._nics_json_obj = json.loads(self.exec_cmd(["ip", "-j", "address", "show"]))
         self.subsystem_info_list = []
         self.initiator_info = []
-        self.nvme_allowlist = []
-        self.nvme_blocklist = []
 
-        # Target-side measurement options
-        self.enable_pm = True
-        self.enable_sar = True
-        self.enable_pcm = True
-        self.enable_bw = True
-        self.enable_dpdk_memory = True
+        config_fields = [
+            ConfigField(name='mode', required=True),
+            ConfigField(name='results_dir', required=True),
+            ConfigField(name='enable_pm', default=True),
+            ConfigField(name='enable_sar', default=True),
+            ConfigField(name='enable_pcm', default=True),
+            ConfigField(name='enable_dpdk_memory', default=True)
+        ]
+        self.read_config(config_fields, target_config)
 
-        if "null_block_devices" in target_config:
-            self.null_block = target_config["null_block_devices"]
-        if "scheduler_settings" in target_config:
-            self.scheduler_name = target_config["scheduler_settings"]
-        if "zcopy_settings" in target_config:
-            self.enable_zcopy = target_config["zcopy_settings"]
-        if "results_dir" in target_config:
-            self.results_dir = target_config["results_dir"]
-        if "blocklist" in target_config:
-            self.nvme_blocklist = target_config["blocklist"]
-        if "allowlist" in target_config:
-            self.nvme_allowlist = target_config["allowlist"]
-            # Blocklist takes precedence, remove common elements from allowlist
-            self.nvme_allowlist = list(set(self.nvme_allowlist) - set(self.nvme_blocklist))
-        if "enable_pm" in target_config:
-            self.enable_pm = target_config["enable_pm"]
-        if "enable_sar" in target_config:
-            self.enable_sar = target_config["enable_sar"]
-        if "enable_pcm" in target_config:
-            self.enable_pcm = target_config["enable_pcm"]
-        if "enable_bandwidth" in target_config:
-            self.enable_bw = target_config["enable_bandwidth"]
-        if "enable_dpdk_memory" in target_config:
-            self.enable_dpdk_memory = target_config["enable_dpdk_memory"]
+        self.null_block = target_config.get('null_block_devices', 0)
+        self.scheduler_name = target_config.get('scheduler_settings', 'static')
+        self.enable_zcopy = target_config.get('zcopy_settings', False)
+        self.enable_bw = target_config.get('enable_bandwidth', True)
+        self.nvme_blocklist = target_config.get('blocklist', [])
+        self.nvme_allowlist = target_config.get('allowlist', [])
+
+        # Blocklist takes precedence, remove common elements from allowlist
+        self.nvme_allowlist = list(set(self.nvme_allowlist) - set(self.nvme_blocklist))
 
         self.log.info("Items now on allowlist: %s" % self.nvme_allowlist)
         self.log.info("Items now on blocklist: %s" % self.nvme_blocklist)
@@ -715,8 +698,9 @@ class Initiator(Server):
     def __init__(self, name, general_config, initiator_config):
         super().__init__(name, general_config, initiator_config)
 
-        # Required fields, Defaults
+        # required fields and defaults
         config_fields = [
+            ConfigField(name='mode', required=True),
             ConfigField(name='ip', required=True),
             ConfigField(name='target_nic_ips', required=True),
             ConfigField(name='cpus_allowed', default=None),
