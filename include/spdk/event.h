@@ -129,7 +129,10 @@ struct spdk_app_opts {
 	 * The size of spdk_app_opts according to the caller of this library is used for ABI
 	 * compatibility. The library uses this field to know how many fields in this
 	 * structure are valid. And the library will populate any remaining fields with default values.
-	 * After that, new added fields should be put after opts_size.
+	 *
+	 * New fields should usually be added at the end of this structure. The only exception is
+	 * if using bytes from a reserved byte array after opts_size. In that case it is OK to use
+	 * some of those bytes, as long as the default value is specified as 0.
 	 */
 	size_t opts_size;
 
