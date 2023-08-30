@@ -2759,12 +2759,22 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def vhost_create_scsi_controller(args):
         rpc.vhost.vhost_create_scsi_controller(args.client,
                                                ctrlr=args.ctrlr,
-                                               cpumask=args.cpumask)
+                                               cpumask=args.cpumask,
+                                               delay=args.delay)
 
     p = subparsers.add_parser('vhost_create_scsi_controller', help='Add new vhost controller')
     p.add_argument('ctrlr', help='controller name')
     p.add_argument('--cpumask', help='cpu mask for this controller')
+    p.add_argument("--delay", action='store_true', help='whether delay starting controller or not')
     p.set_defaults(func=vhost_create_scsi_controller)
+
+    def vhost_start_scsi_controller(args):
+        rpc.vhost.vhost_start_scsi_controller(args.client,
+                                              ctrlr=args.ctrlr)
+
+    p = subparsers.add_parser('vhost_start_scsi_controller', help='Start vhost scsi controller')
+    p.add_argument('ctrlr', help='controller name')
+    p.set_defaults(func=vhost_start_scsi_controller)
 
     def vhost_scsi_controller_add_target(args):
         print_json(rpc.vhost.vhost_scsi_controller_add_target(args.client,

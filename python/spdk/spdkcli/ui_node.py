@@ -50,7 +50,7 @@ class UINode(ConfigNode):
             return result
         finally:
             if self.shell.interactive and\
-                command in ["create", "delete", "delete_all", "add_initiator",
+                command in ["create", "start", "delete", "delete_all", "add_initiator",
                             "allow_any_host", "bdev_split_create", "add_lun",
                             "iscsi_target_node_add_pg_ig_maps", "remove_target", "add_secret",
                             "bdev_split_delete", "delete_secret_all",
@@ -675,16 +675,20 @@ class UIVhostScsi(UIVhost):
         for ctrlr in self.get_root().vhost_get_controllers(ctrlr_type=self.name):
             UIVhostScsiCtrlObj(ctrlr, self)
 
-    def ui_command_create(self, name, cpumask=None):
+    def ui_command_create(self, name, delay=None, cpumask=None):
         """
         Create a Vhost SCSI controller.
 
         Arguments:
         name - Controller name.
+        delay - Optional. whether delay starting controller or not.
+                Default: False.
         cpumask - Optional. Integer to specify mask of CPUs to use.
                   Default: 1.
         """
+        delay = self.ui_eval_param(delay, "bool", False)
         self.get_root().vhost_create_scsi_controller(ctrlr=name,
+                                                     delay=delay,
                                                      cpumask=cpumask)
 
 
@@ -712,6 +716,15 @@ class UIVhostScsiCtrlObj(UIVhostCtrl):
         self._children = set([])
         for lun in self.ctrlr.backend_specific["scsi"]:
             UIVhostTargetObj(lun, self)
+
+    def ui_command_start(self, name):
+        """
+        Start a Vhost SCSI controller.
+
+        Arguments:
+        name - Controller name.
+        """
+        self.get_root().vhost_start_scsi_controller(ctrlr=name)
 
     def ui_command_remove_target(self, target_num):
         """

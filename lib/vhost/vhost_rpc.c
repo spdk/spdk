@@ -19,6 +19,7 @@
 struct rpc_vhost_scsi_ctrlr {
 	char *ctrlr;
 	char *cpumask;
+	bool delay;
 };
 
 static void
@@ -31,6 +32,7 @@ free_rpc_vhost_scsi_ctrlr(struct rpc_vhost_scsi_ctrlr *req)
 static const struct spdk_json_object_decoder rpc_vhost_create_scsi_ctrlr[] = {
 	{"ctrlr", offsetof(struct rpc_vhost_scsi_ctrlr, ctrlr), spdk_json_decode_string },
 	{"cpumask", offsetof(struct rpc_vhost_scsi_ctrlr, cpumask), spdk_json_decode_string, true},
+	{"delay", offsetof(struct rpc_vhost_scsi_ctrlr, delay), spdk_json_decode_bool, true},
 };
 
 static void
@@ -48,7 +50,11 @@ rpc_vhost_create_scsi_controller(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = spdk_vhost_scsi_dev_construct(req.ctrlr, req.cpumask);
+	if (req.delay) {
+		rc = spdk_vhost_scsi_dev_construct_no_start(req.ctrlr, req.cpumask);
+	} else {
+		rc = spdk_vhost_scsi_dev_construct(req.ctrlr, req.cpumask);
+	}
 	if (rc < 0) {
 		goto invalid;
 	}
@@ -64,6 +70,53 @@ invalid:
 					 spdk_strerror(-rc));
 }
 SPDK_RPC_REGISTER("vhost_create_scsi_controller", rpc_vhost_create_scsi_controller,
+		  SPDK_RPC_RUNTIME)
+
+struct rpc_start_vhost_scsi_ctrlr {
+	char *ctrlr;
+};
+
+static void
+free_rpc_start_vhost_scsi_ctrlr(struct rpc_start_vhost_scsi_ctrlr *req)
+{
+	free(req->ctrlr);
+}
+
+static const struct spdk_json_object_decoder rpc_start_vhost_scsi_ctrlr_decoder[] = {
+	{"ctrlr", offsetof(struct rpc_start_vhost_scsi_ctrlr, ctrlr), spdk_json_decode_string },
+};
+
+static void
+rpc_vhost_start_scsi_controller(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
+{
+	struct rpc_start_vhost_scsi_ctrlr req = {0};
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_start_vhost_scsi_ctrlr_decoder,
+				    SPDK_COUNTOF(rpc_start_vhost_scsi_ctrlr_decoder),
+				    &req)) {
+		SPDK_DEBUGLOG(vhost_rpc, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = vhost_scsi_controller_start(req.ctrlr);
+	if (rc < 0) {
+		goto invalid;
+	}
+
+	free_rpc_start_vhost_scsi_ctrlr(&req);
+
+	spdk_jsonrpc_send_bool_response(request, true);
+	return;
+
+invalid:
+	free_rpc_start_vhost_scsi_ctrlr(&req);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-rc));
+}
+SPDK_RPC_REGISTER("vhost_start_scsi_controller", rpc_vhost_start_scsi_controller,
 		  SPDK_RPC_RUNTIME)
 
 struct rpc_vhost_scsi_ctrlr_add_target {

@@ -32,7 +32,7 @@ pci_scsi=$(lspci -nn -D | grep '1af4:1004' | head -1 | awk '{print $1;}')
 if [ -n "$pci_scsi" ] && grep -Eq "DRIVER=(uio|vfio)" "/sys/bus/pci/devices/$pci_scsi/uevent"; then
 	$spdkcli_job "'/bdevs/virtioscsi_disk create virtioscsi_pci pci $pci_scsi' 'virtioscsi_pci' True"
 fi
-$spdkcli_job "'/vhost/scsi create sample_scsi' 'sample_scsi' True
+$spdkcli_job "'/vhost/scsi create sample_scsi False' 'sample_scsi' True
 '/vhost/scsi/sample_scsi add_lun 0 Malloc0' 'Malloc0' True
 '/vhost/block create sample_block Malloc1' 'Malloc1' True
 "

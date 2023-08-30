@@ -858,7 +858,41 @@ to_scsi_session(struct spdk_vhost_session *vsession)
 }
 
 int
-spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask)
+vhost_scsi_controller_start(const char *name)
+{
+	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_scsi_dev *svdev;
+	int rc;
+
+	spdk_vhost_lock();
+	vdev = spdk_vhost_dev_find(name);
+	if (vdev == NULL) {
+		spdk_vhost_unlock();
+		return -ENODEV;
+	}
+
+	svdev = to_scsi_dev(vdev);
+	assert(svdev != NULL);
+
+	if (svdev->registered == true) {
+		/* already started, nothing to do */
+		spdk_vhost_unlock();
+		return 0;
+	}
+
+	rc = vhost_user_dev_start(vdev);
+	if (rc != 0) {
+		spdk_vhost_unlock();
+		return rc;
+	}
+	svdev->registered = true;
+
+	spdk_vhost_unlock();
+	return 0;
+}
+
+static int
+vhost_scsi_dev_construct(const char *name, const char *cpumask, bool delay)
 {
 	struct spdk_vhost_scsi_dev *svdev = calloc(1, sizeof(*svdev));
 	int rc;
@@ -873,15 +907,29 @@ spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask)
 
 	rc = vhost_dev_register(&svdev->vdev, name, cpumask, NULL,
 				&spdk_vhost_scsi_device_backend,
-				&spdk_vhost_scsi_user_device_backend);
+				&spdk_vhost_scsi_user_device_backend, delay);
 	if (rc) {
 		free(svdev);
 		return rc;
 	}
 
-	svdev->registered = true;
+	if (delay == false) {
+		svdev->registered = true;
+	}
 
 	return rc;
+}
+
+int
+spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask)
+{
+	return vhost_scsi_dev_construct(name, cpumask, false);
+}
+
+int
+spdk_vhost_scsi_dev_construct_no_start(const char *name, const char *cpumask)
+{
+	return vhost_scsi_dev_construct(name, cpumask, true);
 }
 
 static int
@@ -1117,9 +1165,15 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, int scsi_tgt_num,
 	SPDK_INFOLOG(vhost, "%s: added SCSI target %u using bdev '%s'\n",
 		     vdev->name, scsi_tgt_num, bdev_name);
 
-	vhost_user_dev_foreach_session(vdev, vhost_scsi_session_add_tgt,
-				       vhost_scsi_dev_add_tgt_cpl_cb,
-				       (void *)(uintptr_t)scsi_tgt_num);
+	if (svdev->registered) {
+		vhost_user_dev_foreach_session(vdev, vhost_scsi_session_add_tgt,
+					       vhost_scsi_dev_add_tgt_cpl_cb,
+					       (void *)(uintptr_t)scsi_tgt_num);
+	} else {
+		state->status = VHOST_SCSI_DEV_PRESENT;
+		svdev->ref++;
+	}
+
 	return scsi_tgt_num;
 }
 
@@ -1568,6 +1622,7 @@ vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write
 	spdk_json_write_named_string(w, "ctrlr", vdev->name);
 	spdk_json_write_named_string(w, "cpumask",
 				     spdk_cpuset_fmt(spdk_thread_get_cpumask(vdev->thread)));
+	spdk_json_write_named_bool(w, "delay", true);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
@@ -1593,6 +1648,15 @@ vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write
 
 		spdk_json_write_object_end(w);
 	}
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "vhost_start_scsi_controller");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "ctrlr", vdev->name);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
 }
 
 SPDK_LOG_REGISTER_COMPONENT(vhost_scsi)

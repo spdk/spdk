@@ -9209,6 +9209,7 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 ctrlr                   | Required | string      | Controller name
 cpumask                 | Optional | string      | @ref cpu_mask for this controller
+delay                   | Optional | boolean     | If true, delay the controller startup.
 
 #### Example
 
@@ -9218,7 +9219,8 @@ Example request:
 {
   "params": {
     "cpumask": "0x2",
-    "ctrlr": "VhostScsi0"
+    "ctrlr": "VhostScsi0",
+    "delay": true
   },
   "jsonrpc": "2.0",
   "method": "vhost_create_scsi_controller",
@@ -9229,6 +9231,42 @@ Example request:
 Example response:
 
 ~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### vhost_start_scsi_controller {#rpc_vhost_start_scsi_controller}
+
+Start vhost SCSI controller, if controller is already started, do nothing.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+ctrlr                   | Required | string      | Controller name
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "ctrlr": "VhostScsi0",
+  },
+  "jsonrpc": "2.0",
+  "method": "vhost_start_scsi_controller",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+response:
 {
   "jsonrpc": "2.0",
   "id": 1,

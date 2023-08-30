@@ -401,10 +401,12 @@ vhost_dev_has_feature(struct spdk_vhost_session *vsession, unsigned feature_id)
 	return vsession->negotiated_features & (1ULL << feature_id);
 }
 
+int vhost_scsi_controller_start(const char *name);
+
 int vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
-		       const struct spdk_json_val *params,
-		       const struct spdk_vhost_dev_backend *backend,
-		       const struct spdk_vhost_user_dev_backend *user_backend);
+		       const struct spdk_json_val *params, const struct spdk_vhost_dev_backend *backend,
+		       const struct spdk_vhost_user_dev_backend *user_backend, bool delay);
+
 int vhost_dev_unregister(struct spdk_vhost_dev *vdev);
 
 void vhost_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);

@@ -1660,7 +1660,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	bvdev->bdev = bdev;
 	bvdev->readonly = false;
 	ret = vhost_dev_register(vdev, name, cpumask, params, &vhost_blk_device_backend,
-				 &vhost_blk_user_device_backend);
+				 &vhost_blk_user_device_backend, false);
 	if (ret != 0) {
 		spdk_bdev_close(bvdev->bdev_desc);
 		goto out;

@@ -48,18 +48,29 @@ def virtio_blk_create_transport(client, **params):
     return client.call('virtio_blk_create_transport', params)
 
 
-def vhost_create_scsi_controller(client, ctrlr, cpumask=None):
+def vhost_create_scsi_controller(client, ctrlr, delay=False, cpumask=None):
     """Create a vhost scsi controller.
     Args:
         ctrlr: controller name
+        delay: whether delay starting controller or not.
         cpumask: cpu mask for this controller
     """
-    params = {'ctrlr': ctrlr}
+    params = {'ctrlr': ctrlr, 'delay': delay}
 
     if cpumask:
         params['cpumask'] = cpumask
 
     return client.call('vhost_create_scsi_controller', params)
+
+
+def vhost_start_scsi_controller(client, ctrlr):
+    """Start a vhost scsi controller.
+    Args:
+        ctrlr: controller name
+    """
+    params = {'ctrlr': ctrlr}
+
+    return client.call('vhost_start_scsi_controller', params)
 
 
 def vhost_scsi_controller_add_target(client, ctrlr, scsi_target_num, bdev_name):

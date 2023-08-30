@@ -228,6 +228,22 @@ void spdk_vhost_get_coalescing(struct spdk_vhost_dev *vdev, uint32_t *delay_base
 int spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask);
 
 /**
+ * Create an empty vhost SCSI device like \c spdk_vhost_scsi_dev_construct
+ * but do not start the controller.
+ *
+ * This function is thread-safe.
+ *
+ * \param name name of the vhost device. The name will also be used
+ * for socket name, which is exactly \c socket_base_dir/name
+ * \param cpumask string containing cpumask in hex. The leading *0x*
+ * is allowed but not required. The mask itself can be constructed as:
+ * ((1 << cpu0) | (1 << cpu1) | ... | (1 << cpuN)).
+ *
+ * \return 0 on success, negative errno on error.
+ */
+int spdk_vhost_scsi_dev_construct_no_start(const char *name, const char *cpumask);
+
+/**
  * Construct and attach new SCSI target to the vhost SCSI device
  * on given (unoccupied) slot.  The device will be created with a single
  * LUN0 associated with given SPDK bdev. Currently only one LUN per

@@ -6,6 +6,12 @@
 
 Added `caw_iov` field to struct `spdk_scsi_task` to support SBC-3 compare_and_write IO.
 
+Added parameter `delay` to `vhost_create_scsi_controller` RPC which allows user to defer starting
+the vhost-scsi controller until adding the scsi target is completed.
+
+Added `vhost_start_scsi_controller` RPC to start vhost-scsi controller, it could be used to support
+live recovery feature of vhost-scsi target.
+
 ## v23.09
 
 ### accel
