@@ -231,7 +231,7 @@ function get_block_dev_from_bdf() {
 
 	for block in /sys/block/*; do
 		if [[ $block == *nvme* ]]; then
-			ctrl=${block##*/} ctrl=${ctrl%n*}
+			ctrl=$(readlink -f "$block/device") ctrl=${ctrl##*/}
 			if [[ -e /sys/class/nvme/$ctrl && $(< "/sys/class/nvme/$ctrl/address") == "$bdf" ]]; then
 				blocks+=("${block##*/}")
 			fi
