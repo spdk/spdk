@@ -158,6 +158,8 @@ idxd_group_config(struct spdk_user_idxd_device *user_idxd)
 	/* Build one group with all of the engines and a single work queue. */
 	grpcfg.wqs[0] = 1;
 	grpcfg.flags.read_buffers_allowed = groupcap.read_bufs;
+	grpcfg.flags.tc_a = 1;
+	grpcfg.flags.tc_b = 1;
 	for (i = 0; i < enginecap.num_engines; i++) {
 		grpcfg.engines |= (1 << i);
 	}
