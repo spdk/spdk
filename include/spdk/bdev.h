@@ -398,7 +398,7 @@ struct spdk_bdev_open_async_opts {
 	/*
 	 * Time in milliseconds to wait for the block device to appear.
 	 *
-	 * When the block device does exist, wait until the block device appears or the timeout
+	 * When the block device does not exist, wait until the block device appears or the timeout
 	 * is expired if nonzero, or return immediately otherwise.
 	 *
 	 * Default value is zero and is used when options are omitted.
