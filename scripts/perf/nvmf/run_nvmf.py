@@ -965,7 +965,7 @@ registerfiles=1
                 self.log.info(self.exec_cmd(["sudo", "cpupower", "frequency-info"]))
             except Exception:
                 self.log.error("ERROR: cpu_frequency will not work when intel_pstate is enabled!")
-                sys.exit()
+                sys.exit(1)
         else:
             self.log.warning("WARNING: you have disabled intel_pstate and using default cpu governance.")
 
@@ -1655,6 +1655,8 @@ class SPDKInitiator(Initiator):
 
 
 if __name__ == "__main__":
+    exit_code = 0
+
     script_full_dir = os.path.dirname(os.path.realpath(__file__))
     default_config_file_path = os.path.relpath(os.path.join(script_full_dir, "config.json"))
 
@@ -1811,6 +1813,7 @@ if __name__ == "__main__":
         try:
             parse_results(args.results, args.csv_filename)
         except Exception as err:
+            exit_code = 1
             logging.error("There was an error with parsing the results")
             logging.error(err)
     finally:
@@ -1820,3 +1823,4 @@ if __name__ == "__main__":
             except Exception as err:
                 pass
         target_obj.stop()
+        sys.exit(exit_code)
