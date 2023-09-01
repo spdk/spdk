@@ -814,6 +814,8 @@ class Initiator(Server):
 
     def match_subsystems(self, target_subsystems):
         subsystems = [subsystem for subsystem in target_subsystems if subsystem[2] in self.target_nic_ips]
+        if not subsystems:
+            raise Exception("No matching subsystems found on target side!")
         subsystems.sort(key=lambda x: x[1])
         self.log.info("Found matching subsystems on target side:")
         for s in subsystems:
