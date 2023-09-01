@@ -812,8 +812,8 @@ class Initiator(Server):
                           os.path.join(dest_dir, file))
         self.log.info("Done copying results")
 
-    def match_subsystems(self, target_subsytems):
-        subsystems = [subsystem for subsystem in target_subsytems if subsystem[2] in self.target_nic_ips]
+    def match_subsystems(self, target_subsystems):
+        subsystems = [subsystem for subsystem in target_subsystems if subsystem[2] in self.target_nic_ips]
         subsystems.sort(key=lambda x: x[1])
         self.log.info("Found matching subsystems on target side:")
         for s in subsystems:
