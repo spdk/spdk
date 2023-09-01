@@ -407,6 +407,7 @@ blob_create(void)
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 10);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	poll_threads();
@@ -429,6 +430,7 @@ blob_create(void)
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 0);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	poll_threads();
@@ -448,6 +450,7 @@ blob_create(void)
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 0);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	poll_threads();
@@ -700,6 +703,7 @@ blob_thin_provision(void)
 	blob = ut_blob_create_and_open(bs, &opts);
 	blobid = spdk_blob_get_id(blob);
 	CU_ASSERT(blob->invalid_flags & SPDK_BLOB_THIN_PROV);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
 	/* In thin provisioning with num_clusters is set, if not using the
 	 * extent table, there is no allocation. If extent table is used,
 	 * there is related allocation happened. */
@@ -726,6 +730,7 @@ blob_thin_provision(void)
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
 	CU_ASSERT(blob->invalid_flags & SPDK_BLOB_THIN_PROV);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
 
 	ut_blob_close_and_delete(bs, blob);
 
@@ -778,8 +783,10 @@ blob_snapshot(void)
 	CU_ASSERT(snapshot->data_ro == true);
 	CU_ASSERT(snapshot->md_ro == true);
 	CU_ASSERT(spdk_blob_get_num_clusters(snapshot) == 10);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(snapshot) == 10);
 
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
 	CU_ASSERT(blob->invalid_flags & SPDK_BLOB_THIN_PROV);
 	CU_ASSERT(spdk_mem_all_zero(blob->active.clusters,
 				    blob->active.num_clusters * sizeof(blob->active.clusters[0])));
@@ -803,6 +810,7 @@ blob_snapshot(void)
 	CU_ASSERT(snapshot2->data_ro == true);
 	CU_ASSERT(snapshot2->md_ro == true);
 	CU_ASSERT(spdk_blob_get_num_clusters(snapshot2) == 10);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(snapshot2) == 0);
 
 	/* Confirm that blob is backed by snapshot2 and snapshot2 is backed by snapshot */
 	CU_ASSERT(snapshot->back_bs_dev == NULL);
@@ -1002,6 +1010,7 @@ blob_clone(void)
 	CU_ASSERT(clone->data_ro == false);
 	CU_ASSERT(clone->md_ro == false);
 	CU_ASSERT(spdk_blob_get_num_clusters(clone) == 10);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(clone) == 0);
 
 	rc = spdk_blob_get_xattr_value(clone, g_xattr_names[0], &value, &value_len);
 	CU_ASSERT(rc == 0);
@@ -1081,6 +1090,7 @@ _blob_inflate(bool decouple_parent)
 	blobid = spdk_blob_get_id(blob);
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
 	CU_ASSERT(spdk_blob_is_thin_provisioned(blob) == true);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
 
 	/* 1) Blob with no parent */
 	if (decouple_parent) {
@@ -1094,6 +1104,7 @@ _blob_inflate(bool decouple_parent)
 		poll_threads();
 		CU_ASSERT(g_bserrno == 0);
 		CU_ASSERT(spdk_blob_is_thin_provisioned(blob) == false);
+		CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 10);
 	}
 
 	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
@@ -1128,6 +1139,7 @@ _blob_inflate(bool decouple_parent)
 		CU_ASSERT(g_bserrno == 0);
 		/* all 10 clusters should be allocated */
 		CU_ASSERT(spdk_bs_free_cluster_count(bs) == free_clusters - 10);
+		CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 10);
 	} else {
 		/* Decouple parent of blob */
 		spdk_bs_blob_decouple_parent(bs, channel, blobid, blob_op_complete, NULL);
@@ -1135,6 +1147,7 @@ _blob_inflate(bool decouple_parent)
 		CU_ASSERT(g_bserrno == 0);
 		/* when only parent is removed, none of the clusters should be allocated */
 		CU_ASSERT(spdk_bs_free_cluster_count(bs) == free_clusters);
+		CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
 	}
 
 	/* Now, it should be possible to delete snapshot */
@@ -1194,6 +1207,7 @@ blob_resize_test(void)
 
 	blob = ut_blob_create_and_open(bs, NULL);
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
 
 	/* Confirm that resize fails if blob is marked read-only. */
 	blob->md_ro = true;
@@ -1207,6 +1221,7 @@ blob_resize_test(void)
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT((free_clusters - 5) == spdk_bs_free_cluster_count(bs));
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 5);
 
 	/* Shrink the blob to 3 clusters. This will not actually release
 	 * the old clusters until the blob is synced.
@@ -1216,6 +1231,7 @@ blob_resize_test(void)
 	CU_ASSERT(g_bserrno == 0);
 	/* Verify there are still 5 clusters in use */
 	CU_ASSERT((free_clusters - 5) == spdk_bs_free_cluster_count(bs));
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 3);
 
 	spdk_blob_sync_md(blob, blob_op_complete, NULL);
 	poll_threads();
@@ -1228,12 +1244,95 @@ blob_resize_test(void)
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT((free_clusters - 10) == spdk_bs_free_cluster_count(bs));
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 10);
 
 	/* Try to resize the blob to size larger than blobstore. */
 	spdk_blob_resize(blob, bs->total_clusters + 1, blob_op_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == -ENOSPC);
 
+	ut_blob_close_and_delete(bs, blob);
+}
+
+static void
+blob_resize_thin_test(void)
+{
+	struct spdk_blob_store *bs = g_bs;
+	struct spdk_blob *blob;
+	struct spdk_blob_opts opts;
+	struct spdk_io_channel *blob_ch;
+	uint64_t free_clusters;
+	uint64_t io_units_per_cluster;
+	uint64_t offset;
+	uint8_t buf1[DEV_BUFFER_BLOCKLEN];
+
+	free_clusters = spdk_bs_free_cluster_count(bs);
+
+	blob_ch = spdk_bs_alloc_io_channel(bs);
+	SPDK_CU_ASSERT_FATAL(blob_ch != NULL);
+
+	/* Create blob with thin provisioning enabled */
+	ut_spdk_blob_opts_init(&opts);
+	opts.thin_provision = true;
+	opts.num_clusters = 0;
+
+	blob = ut_blob_create_and_open(bs, &opts);
+	CU_ASSERT((free_clusters) == spdk_bs_free_cluster_count(bs));
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
+	io_units_per_cluster = bs_io_units_per_cluster(blob);
+
+	/* The blob started at 0 clusters. Resize it to be 6. */
+	spdk_blob_resize(blob, 6, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT((free_clusters) == spdk_bs_free_cluster_count(bs));
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
+
+	/* Write on cluster 0,2,4 and 5 of blob */
+	for (offset = 0; offset < io_units_per_cluster; offset++) {
+		spdk_blob_io_write(blob, blob_ch, buf1, offset, 1, blob_op_complete, NULL);
+		poll_threads();
+		CU_ASSERT(g_bserrno == 0);
+	}
+	for (offset = 2 * io_units_per_cluster; offset < 3 * io_units_per_cluster; offset++) {
+		spdk_blob_io_write(blob, blob_ch, buf1, offset, 1, blob_op_complete, NULL);
+		poll_threads();
+		CU_ASSERT(g_bserrno == 0);
+	}
+	for (offset = 4 * io_units_per_cluster; offset < 5 * io_units_per_cluster; offset++) {
+		spdk_blob_io_write(blob, blob_ch, buf1, offset, 1, blob_op_complete, NULL);
+		poll_threads();
+		CU_ASSERT(g_bserrno == 0);
+	}
+	for (offset = 5 * io_units_per_cluster; offset < 6 * io_units_per_cluster; offset++) {
+		spdk_blob_io_write(blob, blob_ch, buf1, offset, 1, blob_op_complete, NULL);
+		poll_threads();
+		CU_ASSERT(g_bserrno == 0);
+	}
+
+	/* Check allocated clusters after write */
+	CU_ASSERT((free_clusters - 4) == spdk_bs_free_cluster_count(bs));
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 4);
+
+	/* Shrink the blob to 2 clusters. This will not actually release
+	 * the old clusters until the blob is synced.
+	 */
+	spdk_blob_resize(blob, 2, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 2);
+	CU_ASSERT((free_clusters - 4) == spdk_bs_free_cluster_count(bs));
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 1);
+
+	/* Sync blob: 4 clusters were truncated but only 3 of them was allocated */
+	spdk_blob_sync_md(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT((free_clusters - 1) == spdk_bs_free_cluster_count(bs));
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 2);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 1);
+
+	spdk_bs_free_io_channel(blob_ch);
 	ut_blob_close_and_delete(bs, blob);
 }
 
@@ -1991,6 +2090,7 @@ blob_unmap(void)
 	spdk_blob_resize(blob, 10, blob_op_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 10);
 
 	memset(payload, 0, sizeof(payload));
 	payload[0] = 0xFF;
@@ -2019,6 +2119,7 @@ blob_unmap(void)
 	blob->active.clusters[3] = 0;
 	blob->active.clusters[6] = 0;
 	blob->active.clusters[8] = 0;
+	blob->active.num_allocated_clusters -= 5;
 
 	/* Unmap clusters by resizing to 0 */
 	spdk_blob_resize(blob, 0, blob_op_complete, NULL);
@@ -2028,6 +2129,7 @@ blob_unmap(void)
 	spdk_blob_sync_md(blob, blob_op_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
 
 	/* Confirm that only 'allocated' clusters were unmapped */
 	for (i = 1; i < 11; i++) {
@@ -2359,6 +2461,7 @@ bs_load(void)
 	CU_ASSERT(rc == -ENOENT);
 
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 10);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	poll_threads();
@@ -4170,6 +4273,7 @@ blob_thin_prov_alloc(void)
 
 	CU_ASSERT(blob->active.num_clusters == 0);
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 0);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
 
 	/* The blob started at 0 clusters. Resize it to be 5, but still unallocated. */
 	spdk_blob_resize(blob, 5, blob_op_complete, NULL);
@@ -4178,6 +4282,7 @@ blob_thin_prov_alloc(void)
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
 	CU_ASSERT(blob->active.num_clusters == 5);
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 5);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
 
 	/* Grow it to 1TB - still unallocated */
 	spdk_blob_resize(blob, 262144, blob_op_complete, NULL);
@@ -4186,6 +4291,7 @@ blob_thin_prov_alloc(void)
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
 	CU_ASSERT(blob->active.num_clusters == 262144);
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 262144);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
 
 	spdk_blob_sync_md(blob, blob_op_complete, NULL);
 	poll_threads();
@@ -4194,6 +4300,7 @@ blob_thin_prov_alloc(void)
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
 	CU_ASSERT(blob->active.num_clusters == 262144);
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 262144);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
 	/* Since clusters are not allocated,
 	 * number of metadata pages is expected to be minimal.
 	 */
@@ -4206,6 +4313,7 @@ blob_thin_prov_alloc(void)
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
 	CU_ASSERT(blob->active.num_clusters == 3);
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 3);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
 
 	spdk_blob_sync_md(blob, blob_op_complete, NULL);
 	poll_threads();
@@ -4214,6 +4322,7 @@ blob_thin_prov_alloc(void)
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
 	CU_ASSERT(blob->active.num_clusters == 3);
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 3);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	poll_threads();
@@ -4325,6 +4434,7 @@ blob_thin_prov_rw(void)
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
 
 	CU_ASSERT(blob->active.num_clusters == 0);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
 
 	/* The blob started at 0 clusters. Resize it to be 5, but still unallocated. */
 	spdk_blob_resize(blob, 5, blob_op_complete, NULL);
@@ -4332,6 +4442,7 @@ blob_thin_prov_rw(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
 	CU_ASSERT(blob->active.num_clusters == 5);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
 
 	spdk_blob_sync_md(blob, blob_op_complete, NULL);
 	poll_threads();
@@ -4339,6 +4450,7 @@ blob_thin_prov_rw(void)
 	/* Sync must not change anything */
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
 	CU_ASSERT(blob->active.num_clusters == 5);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
 
 	/* Payload should be all zeros from unallocated clusters */
 	memset(payload_read, 0xFF, sizeof(payload_read));
@@ -4366,6 +4478,7 @@ blob_thin_prov_rw(void)
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(free_clusters - 1 == spdk_bs_free_cluster_count(bs));
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 1);
 	/* For thin-provisioned blob we need to write 20 pages plus one page metadata and
 	 * read 0 bytes */
 	if (g_use_extent_table) {
@@ -4492,6 +4605,7 @@ blob_thin_prov_write_count_io(void)
 		poll_threads();
 		CU_ASSERT(g_bserrno == 0);
 		CU_ASSERT(free_clusters - (2 * i + 1) == spdk_bs_free_cluster_count(bs));
+		CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 2 * i + 1);
 
 		CU_ASSERT(g_dev_read_bytes == read_bytes);
 		CU_ASSERT(g_dev_write_bytes == write_bytes);
@@ -4503,6 +4617,7 @@ blob_thin_prov_write_count_io(void)
 		poll_threads();
 		CU_ASSERT(g_bserrno == 0);
 		CU_ASSERT(free_clusters - (2 * i + 2) == spdk_bs_free_cluster_count(bs));
+		CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 2 * i + 2);
 
 		CU_ASSERT(g_dev_read_bytes == read_bytes);
 		/*
@@ -6061,11 +6176,18 @@ blob_relations2(void)
 
 	/* 10. Remove snapshot 1 */
 
+	/* Check snapshot 1 and snapshot 2 allocated clusters */
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(snapshot1) == 10);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(snapshot2) == 0);
+
 	ut_blob_close_and_delete(bs, snapshot1);
 
 	/* Check if relations are back to state from before creating snapshot 4 (before step 6) */
 	CU_ASSERT(snapshot2->parent_id == SPDK_BLOBID_INVALID);
 	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, snapshotid2) == SPDK_BLOBID_INVALID);
+
+	/* Check that snapshot 2 has the clusters that were allocated to snapshot 1 */
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(snapshot2) == 10);
 
 	count = SPDK_COUNTOF(ids);
 	rc = spdk_blob_get_clones(bs, snapshotid2, ids, &count);
@@ -6454,12 +6576,15 @@ blob_delete_snapshot_power_failure(void)
 			rc = spdk_blob_get_xattr_value(snapshot, SNAPSHOT_PENDING_REMOVAL, &value, &value_len);
 			CU_ASSERT(rc != 0);
 			SPDK_CU_ASSERT_FATAL(spdk_blob_is_thin_provisioned(snapshot) == false);
+			CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
+			CU_ASSERT(spdk_blob_get_num_allocated_clusters(snapshot) == 10);
 
 			spdk_blob_close(snapshot, blob_op_complete, NULL);
 			poll_threads();
 			CU_ASSERT(g_bserrno == 0);
 		} else {
 			CU_ASSERT(spdk_blob_get_parent_snapshot(bs, blobid) == SPDK_BLOBID_INVALID);
+			CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 10);
 			/* Snapshot might have been left in unrecoverable state, so it does not open.
 			 * Yet delete might perform further changes to the clone after that.
 			 * This UT should test until snapshot is deleted and delete call succeeds. */
@@ -6553,6 +6678,8 @@ blob_create_snapshot_power_failure(void)
 			snapshot = g_blob;
 			SPDK_CU_ASSERT_FATAL(spdk_blob_is_thin_provisioned(blob) == true);
 			SPDK_CU_ASSERT_FATAL(spdk_blob_is_thin_provisioned(snapshot) == false);
+			CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
+			CU_ASSERT(spdk_blob_get_num_allocated_clusters(snapshot) == 10);
 			CU_ASSERT(spdk_blob_get_parent_snapshot(bs, blobid) == snapshotid);
 			count = SPDK_COUNTOF(ids);
 			rc = spdk_blob_get_clones(bs, snapshotid, ids, &count);
@@ -6571,6 +6698,7 @@ blob_create_snapshot_power_failure(void)
 		} else {
 			CU_ASSERT(spdk_blob_get_parent_snapshot(bs, blobid) == SPDK_BLOBID_INVALID);
 			SPDK_CU_ASSERT_FATAL(spdk_blob_is_thin_provisioned(blob) == false);
+			CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 10);
 		}
 
 		spdk_blob_close(blob, blob_op_complete, NULL);
@@ -9215,11 +9343,13 @@ blob_shallow_copy(void)
 		poll_threads();
 		CU_ASSERT(g_bserrno == 0);
 	}
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 2);
 
 	/* Make a snapshot over blob */
 	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 0);
 
 	/* Write on cluster 1 and 3 of blob */
 	for (offset = 0; offset < io_units_per_cluster; offset++) {
@@ -9234,6 +9364,7 @@ blob_shallow_copy(void)
 		poll_threads();
 		CU_ASSERT(g_bserrno == 0);
 	}
+	CU_ASSERT(spdk_blob_get_num_allocated_clusters(blob) == 2);
 
 	/* Shallow copy with a not read only blob */
 	ext_dev = init_ext_dev(num_clusters * 1024 * 1024, DEV_BUFFER_BLOCKLEN);
@@ -9525,6 +9656,7 @@ main(int argc, char **argv)
 		CU_ADD_TEST(suite_bs, blob_inflate);
 		CU_ADD_TEST(suite_bs, blob_delete);
 		CU_ADD_TEST(suite_bs, blob_resize_test);
+		CU_ADD_TEST(suite_bs, blob_resize_thin_test);
 		CU_ADD_TEST(suite, blob_read_only);
 		CU_ADD_TEST(suite_bs, channel_ops);
 		CU_ADD_TEST(suite_bs, blob_super);

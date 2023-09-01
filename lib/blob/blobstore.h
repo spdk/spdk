@@ -52,6 +52,9 @@ struct spdk_blob_mut_data {
 	 */
 	size_t		cluster_array_size;
 
+	/* The number of allocated clusters in the clusters array */
+	uint64_t	num_allocated_clusters;
+
 	/* Number of extent pages */
 	uint64_t	num_extent_pages;
 

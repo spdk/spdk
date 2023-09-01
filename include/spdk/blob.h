@@ -495,13 +495,27 @@ uint64_t spdk_blob_get_num_pages(struct spdk_blob *blob);
 uint64_t spdk_blob_get_num_io_units(struct spdk_blob *blob);
 
 /**
- * Get the number of clusters allocated to the blob.
+ * Get the number of clusters in the blob.
+ *
+ * This value represents the size of the blob in number of clusters.
  *
  * \param blob Blob struct to query.
  *
  * \return the number of clusters.
  */
 uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob);
+
+/**
+ * Get the number of allocated clusters to the blob.
+ *
+ * In case of a thin-provisioned blob, this value is less than or equal
+ * to the number of clusters in the blob, otherwise they are equal.
+ *
+ * \param blob Blob struct to query.
+ *
+ * \return the number of clusters actually allocated to the blob.
+ */
+uint64_t spdk_blob_get_num_allocated_clusters(struct spdk_blob *blob);
 
 /**
  * Get next allocated io_unit
