@@ -1167,8 +1167,14 @@ init_vbdev_config(struct vbdev_ocf *vbdev)
 	ocf_mngt_cache_config_set_default(&cfg->cache);
 	ocf_mngt_core_config_set_default(&cfg->core);
 
-	snprintf(cfg->cache.name, sizeof(cfg->cache.name), "%s", vbdev->name);
-	snprintf(cfg->core.name, sizeof(cfg->core.name), "%s", vbdev->core.name);
+	ret = snprintf(cfg->cache.name, sizeof(cfg->cache.name), "%s", vbdev->name);
+	if (ret < 0 || (size_t) ret >= sizeof(cfg->cache.name)) {
+		return -EINVAL;
+	}
+	ret = snprintf(cfg->core.name, sizeof(cfg->core.name), "%s", vbdev->core.name);
+	if (ret < 0 || (size_t) ret >= sizeof(cfg->core.name)) {
+		return -EINVAL;
+	}
 
 	cfg->attach.open_cores = false;
 	cfg->attach.device.perform_test = false;
