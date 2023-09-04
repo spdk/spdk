@@ -109,14 +109,6 @@ install_markdownlint() {
 	fi
 }
 
-version-at-least() {
-	local atleastver="$1"
-	local askver="$2"
-	local smallest
-	smallest=$(echo -e "${atleastver}\n${askver}" | sort -V | head -n 1)
-	[[ "${smallest}" == "${atleastver}" ]]
-}
-
 install_protoc() {
 	local PROTOCVERSION=${PROTOCVERSION:-21.7}
 	local PROTOCGENGOVERSION=${PROTOCGENGOVERSION:-1.28}
@@ -186,11 +178,10 @@ install_protoc() {
 install_golang() {
 	local GOVERSION=${GOVERSION:-1.19}
 	local godir gopkg gover arch
-	gover=$(go version 2> /dev/null | {
-		read -r _ _ v _
-		echo ${v#go}
-	})
-	if [[ -n "${gover}" ]] && version-at-least "${GOVERSION}" "${gover}"; then
+
+	read -r _ _ gover _ < <(go version)
+	gover=${gover#go}
+	if [[ -n "${gover}" ]] && ge "${gover}" "${GOVERSION}"; then
 		echo "found go version ${gover} >= required ${GOVERSION}, skip installing"
 		return 0
 	fi
@@ -207,10 +198,10 @@ install_golang() {
 	gopkg=go${GOVERSION}.linux-${arch}.tar.gz
 	echo "installing go v${GOVERSION} to ${godir}/bin"
 	curl -s https://dl.google.com/go/${gopkg} | tar -C "${godir}" -xzf - --strip 1
-	${godir}/bin/go version || {
+	if ! "${godir}/bin/go" version; then
 		echo "go install failed"
 		return 1
-	}
+	fi
 	export PATH=${godir}/bin:$PATH
 	export GOBIN=${godir}/bin
 	pkgdep_toolpath go "${godir}/bin"
