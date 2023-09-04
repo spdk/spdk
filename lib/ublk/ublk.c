@@ -75,7 +75,7 @@ struct ublk_io {
 	bool			need_data;
 	bool			user_copy;
 	uint16_t		tag;
-	uint32_t		payload_size;
+	uint64_t		payload_size;
 	uint32_t		cmd_op;
 	int32_t			result;
 	struct spdk_bdev_desc	*bdev_desc;
@@ -1055,12 +1055,12 @@ static void
 ublk_io_get_buffer(struct ublk_io *io, struct spdk_iobuf_channel *iobuf_ch,
 		   ublk_get_buf_cb get_buf_cb)
 {
-	uint64_t io_size;
 	void *buf;
 
-	io_size = io->iod->nr_sectors * (1ULL << LINUX_SECTOR_SHIFT);
+	io->payload_size = io->iod->nr_sectors * (1ULL << LINUX_SECTOR_SHIFT);
 	io->get_buf_cb = get_buf_cb;
-	buf = spdk_iobuf_get(iobuf_ch, io_size, &io->iobuf, ublk_io_get_buffer_cb);
+	buf = spdk_iobuf_get(iobuf_ch, io->payload_size, &io->iobuf, ublk_io_get_buffer_cb);
+
 	if (buf != NULL) {
 		ublk_io_get_buffer_cb(&io->iobuf, buf);
 	}
@@ -1069,11 +1069,8 @@ ublk_io_get_buffer(struct ublk_io *io, struct spdk_iobuf_channel *iobuf_ch,
 static void
 ublk_io_put_buffer(struct ublk_io *io, struct spdk_iobuf_channel *iobuf_ch)
 {
-	uint64_t io_size;
-
 	if (io->payload) {
-		io_size = io->iod->nr_sectors * (1ULL << LINUX_SECTOR_SHIFT);
-		spdk_iobuf_put(iobuf_ch, io->mpool_entry, io_size);
+		spdk_iobuf_put(iobuf_ch, io->mpool_entry, io->payload_size);
 		io->mpool_entry = NULL;
 		io->payload = NULL;
 	}
