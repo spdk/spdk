@@ -47,6 +47,7 @@ def filter_methods(do_remove_global_rpcs):
         'dpdk_cryptodev_scan_accel_module',
         'dpdk_cryptodev_set_driver',
         'virtio_blk_create_transport',
+        'iobuf_set_options',
     ]
 
     data = json.loads(sys.stdin.read())

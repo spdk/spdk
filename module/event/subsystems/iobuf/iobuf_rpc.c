@@ -9,8 +9,6 @@
 #include "spdk/string.h"
 #include "spdk_internal/init.h"
 
-int iobuf_set_opts(struct spdk_iobuf_opts *opts);
-
 static const struct spdk_json_object_decoder rpc_iobuf_set_options_decoders[] = {
 	{"small_pool_count", offsetof(struct spdk_iobuf_opts, small_pool_count), spdk_json_decode_uint64, true},
 	{"large_pool_count", offsetof(struct spdk_iobuf_opts, large_pool_count), spdk_json_decode_uint64, true},
@@ -33,7 +31,7 @@ rpc_iobuf_set_options(struct spdk_jsonrpc_request *request, const struct spdk_js
 		return;
 	}
 
-	rc = iobuf_set_opts(&opts);
+	rc = spdk_iobuf_set_opts(&opts);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		return;
