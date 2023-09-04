@@ -136,33 +136,41 @@ struct spdk_accel_task {
 };
 
 struct spdk_accel_module_if {
-	/** Initialization function for the module.  Called by the spdk
-	 *   application during startup.
+	/** Name of the module. */
+	const char *name;
+
+	/**
+	 * Initialization function for the module.  Called by the application during startup.
 	 *
-	 *  Modules are required to define this function.
+	 * Modules are required to define this function.
 	 */
 	int	(*module_init)(void);
 
-	/** Finish function for the module.  Called by the spdk application
-	 *   before the spdk application exits to perform any necessary cleanup.
+	/**
+	 * Finish function for the module.  Called by the application before the application exits
+	 * to perform any necessary cleanup.
 	 *
-	 *  Modules are not required to define this function.
+	 * Modules are not required to define this function.
 	 */
 	void	(*module_fini)(void *ctx);
 
-	/**
-	 * Write Acceleration module configuration into provided JSON context.
-	 */
+	/** Write Acceleration module configuration into provided JSON context. */
 	void	(*write_config_json)(struct spdk_json_write_ctx *w);
 
-	/**
-	 * Returns the allocation size required for the modules to use for context.
-	 */
+	/** Returns the allocation size required for the modules to use for context. */
 	size_t	(*get_ctx_size)(void);
 
-	const char *name;
+	/** Reports whether the module supports a given operation. */
 	bool (*supports_opcode)(enum spdk_accel_opcode);
+
+	/** Returns module's IO channel on the calling thread. */
 	struct spdk_io_channel *(*get_io_channel)(void);
+
+	/**
+	 * Submit tasks to be executed by the module.  Once a task execution is done, the module is
+	 * required to complete it using `spdk_accel_task_complete()`.  `ch` is the IO channel
+	 * obtained by `get_io_channel()`.
+	 */
 	int (*submit_tasks)(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task);
 
 	/**
@@ -170,6 +178,8 @@ struct spdk_accel_module_if {
 	 * \b spdk_accel_crypto_key structure
 	 */
 	int (*crypto_key_init)(struct spdk_accel_crypto_key *key);
+
+	/** Free any resources associated with `key` allocated during `crypto_key_init()`. */
 	void (*crypto_key_deinit)(struct spdk_accel_crypto_key *key);
 
 	/**
@@ -215,8 +225,9 @@ void spdk_accel_module_finish(void);
  * are submitted to accel modules.  All drivers are required to be aware of memory domains.
  */
 struct spdk_accel_driver {
-	/** Name of the driver */
+	/** Name of the driver. */
 	const char *name;
+
 	/**
 	 * Executes a sequence of accel operations.  The driver should notify accel about each
 	 * completed task using `spdk_accel_task_complete()`.  Once all tasks are completed or the
@@ -232,9 +243,8 @@ struct spdk_accel_driver {
 	 * \return 0 on success, negative errno on failure.
 	 */
 	int (*execute_sequence)(struct spdk_io_channel *ch, struct spdk_accel_sequence *seq);
-	/**
-	 * Returns IO channel that will be passed to `execute_sequence()`.
-	 */
+
+	/** Returns IO channel that will be passed to `execute_sequence()`. */
 	struct spdk_io_channel *(*get_io_channel)(void);
 
 	TAILQ_ENTRY(spdk_accel_driver)	tailq;
