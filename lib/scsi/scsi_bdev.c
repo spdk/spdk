@@ -615,7 +615,7 @@ bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			if (pc >= 0xc0 && pc <= 0xff) {
 				SPDK_DEBUGLOG(scsi, "Vendor specific INQUIRY VPD page 0x%x\n", pc);
 			} else {
-				SPDK_ERRLOG("unsupported INQUIRY VPD page 0x%x\n", pc);
+				SPDK_NOTICELOG("unsupported INQUIRY VPD page 0x%x\n", pc);
 			}
 			goto inq_error;
 		}
