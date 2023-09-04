@@ -60,6 +60,7 @@ struct hello_context_t {
 	struct spdk_poller *time_out;
 
 	int rc;
+	ssize_t n;
 };
 
 /*
@@ -185,6 +186,7 @@ hello_sock_recv_poll(void *arg)
 			return SPDK_POLLER_IDLE;
 		}
 
+		hello_sock_quit(ctx, -1);
 		SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
 			    errno, spdk_strerror(errno));
 		return SPDK_POLLER_BUSY;
@@ -204,11 +206,28 @@ hello_sock_writev_poll(void *arg)
 {
 	struct hello_context_t *ctx = arg;
 	int rc = 0;
-	char buf_out[BUFFER_SIZE];
 	struct iovec iov;
 	ssize_t n;
 
-	n = read(STDIN_FILENO, buf_out, sizeof(buf_out));
+	/* If previously we could not send any bytes, we should try again with the same buffer. */
+	if (ctx->n != 0) {
+		iov.iov_base = ctx->buf;
+		iov.iov_len = ctx->n;
+		errno = 0;
+		rc = spdk_sock_writev(ctx->sock, &iov, 1);
+		if (rc < 0) {
+			if (errno == EAGAIN) {
+				return SPDK_POLLER_BUSY;
+			}
+			SPDK_ERRLOG("Write to socket failed. Closing connection...\n");
+			hello_sock_quit(ctx, -1);
+			return SPDK_POLLER_IDLE;
+		}
+		ctx->bytes_out += rc;
+		ctx->n = 0;
+	}
+
+	n = read(STDIN_FILENO, ctx->buf, BUFFER_SIZE);
 	if (n == 0 || !g_is_running) {
 		/* EOF */
 		SPDK_NOTICELOG("Closing connection...\n");
@@ -219,13 +238,24 @@ hello_sock_writev_poll(void *arg)
 		/*
 		 * Send message to the server
 		 */
-		iov.iov_base = buf_out;
+		iov.iov_base = ctx->buf;
 		iov.iov_len = n;
+		errno = 0;
 		rc = spdk_sock_writev(ctx->sock, &iov, 1);
+		if (rc < 0) {
+			if (errno == EAGAIN) {
+				ctx->n = n;
+			} else {
+				SPDK_ERRLOG("Write to socket failed. Closing connection...\n");
+				hello_sock_quit(ctx, -1);
+				return SPDK_POLLER_IDLE;
+			}
+		}
 		if (rc > 0) {
 			ctx->bytes_out += rc;
 		}
 	}
+
 	return rc > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
@@ -466,16 +496,6 @@ hello_sock_listen(struct hello_context_t *ctx)
 		return -1;
 	}
 
-	/*
-	 * Provide a buffer to the group to be used with receive.
-	 */
-	ctx->buf = calloc(1, BUFFER_SIZE);
-	if (ctx->buf == NULL) {
-		SPDK_ERRLOG("Cannot allocate memory for sock group\n");
-		spdk_sock_close(&ctx->sock);
-		return -1;
-	}
-
 	spdk_sock_group_provide_buf(ctx->group, ctx->buf, BUFFER_SIZE, NULL);
 
 	g_is_running = true;
@@ -554,6 +574,13 @@ main(int argc, char **argv)
 			exit(-1);
 		}
 	}
+
+	hello_context.buf = calloc(1, BUFFER_SIZE);
+	if (hello_context.buf == NULL) {
+		SPDK_ERRLOG("Cannot allocate memory for hello_context buffer\n");
+		exit(-1);
+	}
+	hello_context.n = 0;
 
 	if (hello_context.is_server) {
 		struct spdk_sock_impl_opts impl_opts = {};
