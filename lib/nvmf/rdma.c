@@ -2945,6 +2945,7 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_t
 			    port->id->verbs);
 		rdma_destroy_id(port->id);
 		free(port);
+		nvmf_rdma_rescan_devices(rtransport);
 		return -EINVAL;
 	}
 
@@ -3351,7 +3352,7 @@ nvmf_rdma_destroy_drained_qpair(struct spdk_nvmf_rdma_qpair *rqpair)
 }
 
 static int
-nvmf_rdma_disconnect(struct rdma_cm_event *evt)
+nvmf_rdma_disconnect(struct rdma_cm_event *evt, bool *event_acked)
 {
 	struct spdk_nvmf_qpair		*qpair;
 	struct spdk_nvmf_rdma_qpair	*rqpair;
@@ -3366,6 +3367,9 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 		SPDK_ERRLOG("disconnect request: no active connection\n");
 		return -1;
 	}
+
+	rdma_ack_cm_event(evt);
+	*event_acked = true;
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
@@ -3562,7 +3566,7 @@ nvmf_process_cm_event(struct spdk_nvmf_transport *transport)
 			/* TODO: Should we be waiting for this event anywhere? */
 			break;
 		case RDMA_CM_EVENT_DISCONNECTED:
-			rc = nvmf_rdma_disconnect(event);
+			rc = nvmf_rdma_disconnect(event, &event_acked);
 			if (rc < 0) {
 				SPDK_ERRLOG("Unable to process disconnect event. rc: %d\n", rc);
 				break;
@@ -3578,7 +3582,7 @@ nvmf_process_cm_event(struct spdk_nvmf_transport *transport)
 			if (event->id->qp) {
 				/* If rdma_cm event has a valid `qp` pointer then the event refers to the
 				 * corresponding qpair. Otherwise the event refers to a listening device. */
-				rc = nvmf_rdma_disconnect(event);
+				rc = nvmf_rdma_disconnect(event, &event_acked);
 				if (rc < 0) {
 					SPDK_ERRLOG("Unable to process disconnect event. rc: %d\n", rc);
 					break;
