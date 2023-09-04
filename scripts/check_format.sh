@@ -292,7 +292,7 @@ function check_posix_includes() {
 	return $rc
 }
 
-function check_naming_conventions() {
+check_function_conventions() {
 	local rc=0
 
 	echo -n "Checking for proper function naming conventions..."
@@ -363,6 +363,45 @@ function check_naming_conventions() {
 	fi
 
 	return $rc
+}
+
+check_conventions_generic() {
+	local out decltype=$1 excludes=(${@:2})
+
+	# We only care about the types defined at the beginning of a line to allow stuff like nested
+	# structs.  Also, we need to drop any __attribute__ declarations.
+	out=$(git grep -E "^$decltype\s+\w+.*\{$" -- "include/spdk" "${excludes[@]}" \
+		| sed 's/__attribute__\s*(([[:alnum:]_, ()]*))\s*//g' \
+		| awk "!/$decltype\s+spdk_/ { \$(NF--)=\"\"; print }")
+
+	if [[ -n "$out" ]]; then
+		cat <<- WARN
+			Found $decltype declarations without the spdk_ prefix:
+
+			$out
+		WARN
+		return 1
+	fi
+}
+
+check_naming_conventions() {
+	check_function_conventions
+	# There are still some enums without the spdk_ prefix.  Once they're renamed, we can remove
+	# these excludes
+	check_conventions_generic 'enum' \
+		':!include/spdk/blob.h' \
+		':!include/spdk/ftl.h' \
+		':!include/spdk/idxd_spec.h' \
+		':!include/spdk/iscsi_spec.h' \
+		':!include/spdk/lvol.h' \
+		':!include/spdk/nvmf_fc_spec.h' \
+		':!include/spdk/vfio_user_spec.h'
+	# Same with structs
+	check_conventions_generic 'struct' \
+		':!include/spdk/ftl.h' \
+		':!include/spdk/idxd_spec.h' \
+		':!include/spdk/iscsi_spec.h' \
+		':!include/spdk/vfio_user_spec.h'
 }
 
 function check_include_style() {
