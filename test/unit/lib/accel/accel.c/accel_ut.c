@@ -101,13 +101,13 @@ struct spdk_io_channel *g_module_ch = NULL;
 static uint64_t g_opc_mask = 0;
 
 static uint64_t
-_accel_op_to_bit(enum accel_opcode opc)
+_accel_op_to_bit(enum spdk_accel_opcode opc)
 {
 	return (1 << opc);
 }
 
 static bool
-_supports_opcode(enum accel_opcode opc)
+_supports_opcode(enum spdk_accel_opcode opc)
 {
 	if (_accel_op_to_bit(opc) & g_opc_mask) {
 		return true;
@@ -135,7 +135,7 @@ test_setup(void)
 
 	g_module_if.submit_tasks = sw_accel_submit_tasks;
 	g_module_if.name = "software";
-	for (i = 0; i < ACCEL_OPC_LAST; i++) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; i++) {
 		g_accel_ch->module_ch[i] = g_module_ch;
 		g_modules_opc[i] = g_module;
 	}
@@ -238,7 +238,7 @@ test_spdk_accel_submit_copy(void)
 	/* submission OK. */
 	rc = spdk_accel_submit_copy(g_ch, dst, src, nbytes, flags, NULL, cb_arg);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(task.op_code == ACCEL_OPC_COPY);
+	CU_ASSERT(task.op_code == SPDK_ACCEL_OPC_COPY);
 	CU_ASSERT(task.flags == 0);
 	CU_ASSERT(memcmp(dst, src, TEST_SUBMIT_SIZE) == 0);
 	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
@@ -299,7 +299,7 @@ test_spdk_accel_submit_dualcast(void)
 	/* SW module does the dualcast. */
 	rc = spdk_accel_submit_dualcast(g_ch, dst1, dst2, src, nbytes, flags, NULL, cb_arg);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(task.op_code == ACCEL_OPC_DUALCAST);
+	CU_ASSERT(task.op_code == SPDK_ACCEL_OPC_DUALCAST);
 	CU_ASSERT(task.flags == 0);
 	CU_ASSERT(memcmp(dst1, src, TEST_SUBMIT_SIZE) == 0);
 	CU_ASSERT(memcmp(dst2, src, TEST_SUBMIT_SIZE) == 0);
@@ -339,7 +339,7 @@ test_spdk_accel_submit_compare(void)
 	/* accel submission OK. */
 	rc = spdk_accel_submit_compare(g_ch, src1, src2, nbytes, NULL, cb_arg);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(task.op_code == ACCEL_OPC_COMPARE);
+	CU_ASSERT(task.op_code == SPDK_ACCEL_OPC_COMPARE);
 	CU_ASSERT(memcmp(src1, src2, TEST_SUBMIT_SIZE) == 0);
 	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
 	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
@@ -382,7 +382,7 @@ test_spdk_accel_submit_fill(void)
 	rc = spdk_accel_submit_fill(g_ch, dst, fill, nbytes, flags, NULL, cb_arg);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(task.fill_pattern == fill64);
-	CU_ASSERT(task.op_code == ACCEL_OPC_FILL);
+	CU_ASSERT(task.op_code == SPDK_ACCEL_OPC_FILL);
 	CU_ASSERT(task.flags == 0);
 
 	CU_ASSERT(memcmp(dst, src, TEST_SUBMIT_SIZE) == 0);
@@ -419,7 +419,7 @@ test_spdk_accel_submit_crc32c(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(task.crc_dst == &crc_dst);
 	CU_ASSERT(task.seed == seed);
-	CU_ASSERT(task.op_code == ACCEL_OPC_CRC32C);
+	CU_ASSERT(task.op_code == SPDK_ACCEL_OPC_CRC32C);
 	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
 	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
 	CU_ASSERT(expected_accel_task == &task);
@@ -455,7 +455,7 @@ test_spdk_accel_submit_crc32cv(void)
 	CU_ASSERT(task.s.iovcnt == iov_cnt);
 	CU_ASSERT(task.crc_dst == &crc_dst);
 	CU_ASSERT(task.seed == seed);
-	CU_ASSERT(task.op_code == ACCEL_OPC_CRC32C);
+	CU_ASSERT(task.op_code == SPDK_ACCEL_OPC_CRC32C);
 	CU_ASSERT(task.cb_arg == cb_arg);
 	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
 	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
@@ -496,7 +496,7 @@ test_spdk_accel_submit_copy_crc32c(void)
 	CU_ASSERT(task.crc_dst == &crc_dst);
 	CU_ASSERT(task.seed == seed);
 	CU_ASSERT(task.flags == 0);
-	CU_ASSERT(task.op_code == ACCEL_OPC_COPY_CRC32C);
+	CU_ASSERT(task.op_code == SPDK_ACCEL_OPC_COPY_CRC32C);
 	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
 	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
 	CU_ASSERT(expected_accel_task == &task);
@@ -531,7 +531,7 @@ test_spdk_accel_submit_xor(void)
 	CU_ASSERT(task.d.iovcnt == 1);
 	CU_ASSERT(task.d.iovs[0].iov_base == dst);
 	CU_ASSERT(task.d.iovs[0].iov_len == nbytes);
-	CU_ASSERT(task.op_code == ACCEL_OPC_XOR);
+	CU_ASSERT(task.op_code == SPDK_ACCEL_OPC_XOR);
 	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
 	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
 	CU_ASSERT(expected_accel_task == &task);
@@ -984,7 +984,7 @@ struct ut_sequence_operation {
 	int (*submit)(struct spdk_io_channel *ch, struct spdk_accel_task *t);
 };
 
-static struct ut_sequence_operation g_seq_operations[ACCEL_OPC_LAST];
+static struct ut_sequence_operation g_seq_operations[SPDK_ACCEL_OPC_LAST];
 
 static int
 ut_sequnce_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *task)
@@ -1038,7 +1038,7 @@ test_sequence_completion_error(void)
 	struct ut_sequence ut_seq;
 	struct iovec src_iovs, dst_iovs;
 	char buf[4096], tmp[4096];
-	struct accel_module modules[ACCEL_OPC_LAST];
+	struct accel_module modules[SPDK_ACCEL_OPC_LAST];
 	int i, rc, completed;
 
 	ioch = spdk_accel_get_io_channel();
@@ -1046,7 +1046,7 @@ test_sequence_completion_error(void)
 
 	/* Override the submit_tasks function */
 	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
-	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		modules[i] = g_modules_opc[i];
 		g_modules_opc[i] = g_module;
 	}
@@ -1057,7 +1057,7 @@ test_sequence_completion_error(void)
 	/* Check that if the first operation completes with an error, the whole sequence is
 	 * completed with that error and that all operations' completion callbacks are executed
 	 */
-	g_seq_operations[ACCEL_OPC_FILL].complete_status = -E2BIG;
+	g_seq_operations[SPDK_ACCEL_OPC_FILL].complete_status = -E2BIG;
 	completed = 0;
 	seq = NULL;
 	rc = spdk_accel_append_fill(&seq, ioch, tmp, sizeof(tmp), NULL, NULL, 0xa5, 0,
@@ -1082,8 +1082,8 @@ test_sequence_completion_error(void)
 	CU_ASSERT_EQUAL(ut_seq.status, -E2BIG);
 
 	/* Check the same with a second operation in the sequence */
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].complete_status = -EACCES;
-	g_seq_operations[ACCEL_OPC_FILL].complete_status = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].complete_status = -EACCES;
+	g_seq_operations[SPDK_ACCEL_OPC_FILL].complete_status = 0;
 	completed = 0;
 	seq = NULL;
 	rc = spdk_accel_append_fill(&seq, ioch, tmp, sizeof(tmp), NULL, NULL, 0xa5, 0,
@@ -1107,11 +1107,11 @@ test_sequence_completion_error(void)
 	CU_ASSERT_EQUAL(completed, 2);
 	CU_ASSERT_EQUAL(ut_seq.status, -EACCES);
 
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].complete_status = 0;
-	g_seq_operations[ACCEL_OPC_FILL].complete_status = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].complete_status = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_FILL].complete_status = 0;
 
 	/* Check submission failure of the first operation */
-	g_seq_operations[ACCEL_OPC_FILL].submit_status = -EADDRINUSE;
+	g_seq_operations[SPDK_ACCEL_OPC_FILL].submit_status = -EADDRINUSE;
 	completed = 0;
 	seq = NULL;
 	rc = spdk_accel_append_fill(&seq, ioch, tmp, sizeof(tmp), NULL, NULL, 0xa5, 0,
@@ -1136,8 +1136,8 @@ test_sequence_completion_error(void)
 	CU_ASSERT_EQUAL(ut_seq.status, -EADDRINUSE);
 
 	/* Check the same with a second operation */
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].submit_status = -EADDRNOTAVAIL;
-	g_seq_operations[ACCEL_OPC_FILL].submit_status = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].submit_status = -EADDRNOTAVAIL;
+	g_seq_operations[SPDK_ACCEL_OPC_FILL].submit_status = 0;
 	completed = 0;
 	seq = NULL;
 	rc = spdk_accel_append_fill(&seq, ioch, tmp, sizeof(tmp), NULL, NULL, 0xa5, 0,
@@ -1162,7 +1162,7 @@ test_sequence_completion_error(void)
 	CU_ASSERT_EQUAL(ut_seq.status, -EADDRNOTAVAIL);
 
 	/* Cleanup module pointers to make subsequent tests work correctly */
-	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		g_modules_opc[i] = modules[i];
 	}
 
@@ -1495,7 +1495,7 @@ test_sequence_copy_elision(void)
 	struct ut_sequence ut_seq;
 	struct iovec src_iovs[4], dst_iovs[4], exp_iovs[2];
 	char buf[4096], tmp[4][4096];
-	struct accel_module modules[ACCEL_OPC_LAST];
+	struct accel_module modules[SPDK_ACCEL_OPC_LAST];
 	struct spdk_accel_crypto_key key = {};
 	int i, rc, completed;
 
@@ -1505,7 +1505,7 @@ test_sequence_copy_elision(void)
 	/* Override the submit_tasks function */
 	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
 	g_module.supports_memory_domains = true;
-	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		g_seq_operations[i].complete_status = 0;
 		g_seq_operations[i].submit_status = 0;
 		g_seq_operations[i].count = 0;
@@ -1517,10 +1517,10 @@ test_sequence_copy_elision(void)
 	/* Check that a copy operation at the beginning is removed */
 	seq = NULL;
 	completed = 0;
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].dst_iovcnt = 1;
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].src_iovcnt = 1;
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].src_iovs = &exp_iovs[0];
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].dst_iovs = &exp_iovs[1];
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].dst_iovcnt = 1;
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].src_iovcnt = 1;
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].src_iovs = &exp_iovs[0];
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].dst_iovs = &exp_iovs[1];
 	exp_iovs[0].iov_base = tmp[0];
 	exp_iovs[0].iov_len = sizeof(tmp[0]);
 	exp_iovs[1].iov_base = buf;
@@ -1552,16 +1552,16 @@ test_sequence_copy_elision(void)
 	CU_ASSERT_EQUAL(completed, 2);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECOMPRESS].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_COPY].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].count, 1);
 
 	/* Check that a copy operation at the end is removed too */
 	seq = NULL;
 	completed = 0;
-	g_seq_operations[ACCEL_OPC_COPY].count = 0;
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].count = 0;
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].src_iovs = &exp_iovs[0];
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].dst_iovs = &exp_iovs[1];
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].src_iovs = &exp_iovs[0];
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].dst_iovs = &exp_iovs[1];
 	exp_iovs[0].iov_base = tmp[0];
 	exp_iovs[0].iov_len = sizeof(tmp[0]);
 	exp_iovs[1].iov_base = buf;
@@ -1593,16 +1593,16 @@ test_sequence_copy_elision(void)
 	CU_ASSERT_EQUAL(completed, 2);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECOMPRESS].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_COPY].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].count, 1);
 
 	/* Check a copy operation both at the beginning and the end */
 	seq = NULL;
 	completed = 0;
-	g_seq_operations[ACCEL_OPC_COPY].count = 0;
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].count = 0;
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].src_iovs = &exp_iovs[0];
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].dst_iovs = &exp_iovs[1];
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].src_iovs = &exp_iovs[0];
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].dst_iovs = &exp_iovs[1];
 	exp_iovs[0].iov_base = tmp[0];
 	exp_iovs[0].iov_len = sizeof(tmp[0]);
 	exp_iovs[1].iov_base = buf;
@@ -1643,16 +1643,16 @@ test_sequence_copy_elision(void)
 	CU_ASSERT_EQUAL(completed, 3);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECOMPRESS].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_COPY].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].count, 1);
 
 	/* Check decompress + copy + decompress + copy */
 	seq = NULL;
 	completed = 0;
-	g_seq_operations[ACCEL_OPC_COPY].count = 0;
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].count = 0;
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].src_iovs = NULL;
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].dst_iovs = NULL;
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].src_iovs = NULL;
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].dst_iovs = NULL;
 
 	dst_iovs[0].iov_base = tmp[1];
 	dst_iovs[0].iov_len = sizeof(tmp[1]);
@@ -1698,18 +1698,18 @@ test_sequence_copy_elision(void)
 	CU_ASSERT_EQUAL(completed, 4);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECOMPRESS].count, 2);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_COPY].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].count, 2);
 
 	/* Check two copy operations - one of them should be removed, while the other should be
 	 * executed normally */
 	seq = NULL;
 	completed = 0;
-	g_seq_operations[ACCEL_OPC_COPY].count = 0;
-	g_seq_operations[ACCEL_OPC_COPY].dst_iovcnt = 1;
-	g_seq_operations[ACCEL_OPC_COPY].src_iovcnt = 1;
-	g_seq_operations[ACCEL_OPC_COPY].src_iovs = &exp_iovs[0];
-	g_seq_operations[ACCEL_OPC_COPY].dst_iovs = &exp_iovs[1];
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].dst_iovcnt = 1;
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].src_iovcnt = 1;
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].src_iovs = &exp_iovs[0];
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].dst_iovs = &exp_iovs[1];
 	exp_iovs[0].iov_base = tmp[0];
 	exp_iovs[0].iov_len = sizeof(tmp[0]);
 	exp_iovs[1].iov_base = buf;
@@ -1741,17 +1741,17 @@ test_sequence_copy_elision(void)
 	CU_ASSERT_EQUAL(completed, 2);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_COPY].count, 1);
 
 	/* Check fill + copy */
 	seq = NULL;
 	completed = 0;
-	g_seq_operations[ACCEL_OPC_COPY].count = 0;
-	g_seq_operations[ACCEL_OPC_FILL].count = 0;
-	g_seq_operations[ACCEL_OPC_COPY].src_iovs = NULL;
-	g_seq_operations[ACCEL_OPC_COPY].dst_iovs = NULL;
-	g_seq_operations[ACCEL_OPC_FILL].dst_iovcnt = 1;
-	g_seq_operations[ACCEL_OPC_FILL].dst_iovs = &exp_iovs[0];
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_FILL].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].src_iovs = NULL;
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].dst_iovs = NULL;
+	g_seq_operations[SPDK_ACCEL_OPC_FILL].dst_iovcnt = 1;
+	g_seq_operations[SPDK_ACCEL_OPC_FILL].dst_iovs = &exp_iovs[0];
 	exp_iovs[0].iov_base = buf;
 	exp_iovs[0].iov_len = sizeof(buf);
 
@@ -1776,18 +1776,18 @@ test_sequence_copy_elision(void)
 	CU_ASSERT_EQUAL(completed, 2);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_FILL].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_COPY].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_FILL].count, 1);
 
 	/* Check copy + encrypt + copy */
 	seq = NULL;
 	completed = 0;
-	g_seq_operations[ACCEL_OPC_COPY].count = 0;
-	g_seq_operations[ACCEL_OPC_ENCRYPT].count = 0;
-	g_seq_operations[ACCEL_OPC_ENCRYPT].dst_iovcnt = 1;
-	g_seq_operations[ACCEL_OPC_ENCRYPT].src_iovcnt = 1;
-	g_seq_operations[ACCEL_OPC_ENCRYPT].src_iovs = &exp_iovs[0];
-	g_seq_operations[ACCEL_OPC_ENCRYPT].dst_iovs = &exp_iovs[1];
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].dst_iovcnt = 1;
+	g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].src_iovcnt = 1;
+	g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].src_iovs = &exp_iovs[0];
+	g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].dst_iovs = &exp_iovs[1];
 	exp_iovs[0].iov_base = tmp[0];
 	exp_iovs[0].iov_len = sizeof(tmp[0]);
 	exp_iovs[1].iov_base = buf;
@@ -1828,18 +1828,18 @@ test_sequence_copy_elision(void)
 	CU_ASSERT_EQUAL(completed, 3);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_ENCRYPT].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_COPY].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].count, 1);
 
 	/* Check copy + decrypt + copy */
 	seq = NULL;
 	completed = 0;
-	g_seq_operations[ACCEL_OPC_COPY].count = 0;
-	g_seq_operations[ACCEL_OPC_DECRYPT].count = 0;
-	g_seq_operations[ACCEL_OPC_DECRYPT].dst_iovcnt = 1;
-	g_seq_operations[ACCEL_OPC_DECRYPT].src_iovcnt = 1;
-	g_seq_operations[ACCEL_OPC_DECRYPT].src_iovs = &exp_iovs[0];
-	g_seq_operations[ACCEL_OPC_DECRYPT].dst_iovs = &exp_iovs[1];
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].dst_iovcnt = 1;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].src_iovcnt = 1;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].src_iovs = &exp_iovs[0];
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].dst_iovs = &exp_iovs[1];
 	exp_iovs[0].iov_base = tmp[0];
 	exp_iovs[0].iov_len = sizeof(tmp[0]);
 	exp_iovs[1].iov_base = buf;
@@ -1880,23 +1880,23 @@ test_sequence_copy_elision(void)
 	CU_ASSERT_EQUAL(completed, 3);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECRYPT].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_COPY].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].count, 1);
 
 	/* Check a sequence with memory domains and verify their pointers (and their contexts) are
 	 * correctly set on the next/prev task when a copy is removed */
 	seq = NULL;
 	completed = 0;
-	g_seq_operations[ACCEL_OPC_COPY].count = 0;
-	g_seq_operations[ACCEL_OPC_DECRYPT].count = 0;
-	g_seq_operations[ACCEL_OPC_DECRYPT].dst_iovcnt = 1;
-	g_seq_operations[ACCEL_OPC_DECRYPT].src_iovcnt = 1;
-	g_seq_operations[ACCEL_OPC_DECRYPT].src_iovs = &exp_iovs[0];
-	g_seq_operations[ACCEL_OPC_DECRYPT].dst_iovs = &exp_iovs[1];
-	g_seq_operations[ACCEL_OPC_DECRYPT].dst_domain = (void *)0x1;
-	g_seq_operations[ACCEL_OPC_DECRYPT].dst_domain_ctx = (void *)0x2;
-	g_seq_operations[ACCEL_OPC_DECRYPT].src_domain = (void *)0x3;
-	g_seq_operations[ACCEL_OPC_DECRYPT].src_domain_ctx = (void *)0x4;
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].dst_iovcnt = 1;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].src_iovcnt = 1;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].src_iovs = &exp_iovs[0];
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].dst_iovs = &exp_iovs[1];
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].dst_domain = (void *)0x1;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].dst_domain_ctx = (void *)0x2;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].src_domain = (void *)0x3;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].src_domain_ctx = (void *)0x4;
 	exp_iovs[0].iov_base = tmp[0];
 	exp_iovs[0].iov_len = sizeof(tmp[0]);
 	exp_iovs[1].iov_base = buf;
@@ -1937,11 +1937,11 @@ test_sequence_copy_elision(void)
 	CU_ASSERT_EQUAL(completed, 3);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECRYPT].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_COPY].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].count, 1);
 
 	/* Cleanup module pointers to make subsequent tests work correctly */
-	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		g_modules_opc[i] = modules[i];
 	}
 
@@ -1970,7 +1970,7 @@ test_sequence_accel_buffers(void)
 	struct ut_sequence ut_seq;
 	struct iovec src_iovs[3], dst_iovs[3];
 	char srcbuf[4096], dstbuf[4096], expected[4096];
-	struct accel_module modules[ACCEL_OPC_LAST];
+	struct accel_module modules[SPDK_ACCEL_OPC_LAST];
 	void *buf[2], *domain_ctx[2], *iobuf_buf;
 	struct spdk_memory_domain *domain[2];
 	struct spdk_iobuf_buffer *cache_entry;
@@ -1993,16 +1993,16 @@ test_sequence_accel_buffers(void)
 
 	/* Override the submit_tasks function */
 	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
-	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		modules[i] = g_modules_opc[i];
 		g_modules_opc[i] = g_module;
 	}
 	/* Intercept decompress to make it simply copy the data, so that we can chain multiple
 	 * decompress operations together in one sequence.
 	 */
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].submit = ut_submit_decompress;
-	g_seq_operations[ACCEL_OPC_COPY].submit = sw_accel_submit_tasks;
-	g_seq_operations[ACCEL_OPC_FILL].submit = sw_accel_submit_tasks;
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].submit = ut_submit_decompress;
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].submit = sw_accel_submit_tasks;
+	g_seq_operations[SPDK_ACCEL_OPC_FILL].submit = sw_accel_submit_tasks;
 
 	/* Check the simplest case: one operation using accel buffer as destination + copy operation
 	 * specifying the actual destination buffer
@@ -2418,7 +2418,7 @@ test_sequence_accel_buffers(void)
 	STAILQ_SWAP(&accel_ch->iobuf.small.cache, &small_cache, spdk_iobuf_buffer);
 	accel_ch->iobuf.small.cache_count = small_cache_count;
 
-	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		g_modules_opc[i] = modules[i];
 	}
 
@@ -2448,7 +2448,7 @@ test_sequence_memory_domain(void)
 	struct ut_sequence ut_seq;
 	struct ut_domain_ctx domctx[4];
 	struct spdk_iobuf_buffer *cache_entry;
-	struct accel_module modules[ACCEL_OPC_LAST];
+	struct accel_module modules[SPDK_ACCEL_OPC_LAST];
 	struct spdk_memory_domain *accel_domain;
 	spdk_iobuf_buffer_stailq_t small_cache;
 	char srcbuf[4096], dstbuf[4096], expected[4096], tmp[4096];
@@ -2463,16 +2463,16 @@ test_sequence_memory_domain(void)
 	/* Override the submit_tasks function */
 	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
 	g_module.supports_memory_domains = false;
-	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		modules[i] = g_modules_opc[i];
 		g_modules_opc[i] = g_module;
 	}
 	/* Intercept decompress to make it simply copy the data, so that we can chain multiple
 	 * decompress operations together in one sequence.
 	 */
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].submit = ut_submit_decompress;
-	g_seq_operations[ACCEL_OPC_COPY].submit = sw_accel_submit_tasks;
-	g_seq_operations[ACCEL_OPC_FILL].submit = sw_accel_submit_tasks;
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].submit = ut_submit_decompress;
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].submit = sw_accel_submit_tasks;
+	g_seq_operations[SPDK_ACCEL_OPC_FILL].submit = sw_accel_submit_tasks;
 
 	/* First check the simplest case - single fill operation with dstbuf in domain */
 	memset(expected, 0xa5, sizeof(expected));
@@ -2777,7 +2777,7 @@ test_sequence_memory_domain(void)
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, -EADDRNOTAVAIL);
 
-	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		g_modules_opc[i] = modules[i];
 	}
 
@@ -2823,7 +2823,7 @@ test_sequence_module_memory_domain(void)
 {
 	struct spdk_accel_sequence *seq = NULL;
 	struct spdk_io_channel *ioch;
-	struct accel_module modules[ACCEL_OPC_LAST];
+	struct accel_module modules[SPDK_ACCEL_OPC_LAST];
 	struct spdk_memory_domain *accel_domain;
 	struct ut_sequence ut_seq;
 	struct ut_domain_ctx domctx[2];
@@ -2838,12 +2838,12 @@ test_sequence_module_memory_domain(void)
 	/* Override the submit_tasks function */
 	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
 	g_module.supports_memory_domains = true;
-	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		modules[i] = g_modules_opc[i];
 		g_modules_opc[i] = g_module;
 	}
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].submit = ut_submit_decompress_memory_domain;
-	g_seq_operations[ACCEL_OPC_FILL].submit = sw_accel_submit_tasks;
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].submit = ut_submit_decompress_memory_domain;
+	g_seq_operations[SPDK_ACCEL_OPC_FILL].submit = sw_accel_submit_tasks;
 
 	/* Check a sequence with both buffers in memory domains */
 	memset(srcbuf, 0xa5, sizeof(srcbuf));
@@ -2952,7 +2952,7 @@ test_sequence_module_memory_domain(void)
 	spdk_accel_put_buf(ioch, buf, accel_domain, accel_domain_ctx);
 
 	g_module.supports_memory_domains = false;
-	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		g_modules_opc[i] = modules[i];
 	}
 
@@ -3173,7 +3173,7 @@ struct ut_driver_operation {
 	bool supported;
 };
 
-static struct ut_driver_operation g_drv_operations[ACCEL_OPC_LAST];
+static struct ut_driver_operation g_drv_operations[SPDK_ACCEL_OPC_LAST];
 static bool g_ut_driver_async_continue;
 
 static void
@@ -3207,10 +3207,10 @@ ut_driver_execute_sequence(struct spdk_io_channel *ch, struct spdk_accel_sequenc
 		}
 
 		switch (task->op_code) {
-		case ACCEL_OPC_DECOMPRESS:
+		case SPDK_ACCEL_OPC_DECOMPRESS:
 			spdk_iovmove(task->s.iovs, task->s.iovcnt, task->d.iovs, task->d.iovcnt);
 			break;
-		case ACCEL_OPC_FILL:
+		case SPDK_ACCEL_OPC_FILL:
 			spdk_iov_memset(task->d.iovs, task->d.iovcnt,
 					(int)(task->fill_pattern & 0xff));
 			break;
@@ -3252,7 +3252,7 @@ test_sequence_driver(void)
 	struct spdk_io_channel *ioch;
 	struct spdk_accel_crypto_key key = {};
 	struct ut_sequence ut_seq;
-	struct accel_module modules[ACCEL_OPC_LAST];
+	struct accel_module modules[SPDK_ACCEL_OPC_LAST];
 	char buf[4096], tmp[3][4096], expected[4096];
 	struct iovec src_iovs[3], dst_iovs[3];
 	int i, rc, completed = 0;
@@ -3264,20 +3264,20 @@ test_sequence_driver(void)
 
 	/* Override the submit_tasks function */
 	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
-	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		modules[i] = g_modules_opc[i];
 		g_modules_opc[i] = g_module;
 	}
 	/* Intercept crypto operations, as they should be executed by an accel module */
-	g_seq_operations[ACCEL_OPC_ENCRYPT].submit = ut_submit_crypto;
-	g_seq_operations[ACCEL_OPC_DECRYPT].submit = ut_submit_crypto;
-	g_seq_operations[ACCEL_OPC_ENCRYPT].count = 0;
-	g_seq_operations[ACCEL_OPC_DECRYPT].count = 0;
-	g_seq_operations[ACCEL_OPC_FILL].count = 0;
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].submit = ut_submit_crypto;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].submit = ut_submit_crypto;
+	g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_FILL].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].count = 0;
 
-	g_drv_operations[ACCEL_OPC_FILL].supported = true;
-	g_drv_operations[ACCEL_OPC_DECOMPRESS].supported = true;
+	g_drv_operations[SPDK_ACCEL_OPC_FILL].supported = true;
+	g_drv_operations[SPDK_ACCEL_OPC_DECOMPRESS].supported = true;
 
 	/* First check a sequence that is fully executed using a driver, with the copy at the end
 	 * being removed */
@@ -3322,15 +3322,15 @@ test_sequence_driver(void)
 	CU_ASSERT_EQUAL(completed, 4);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_FILL].count, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECOMPRESS].count, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 0);
-	CU_ASSERT_EQUAL(g_drv_operations[ACCEL_OPC_FILL].count, 2);
-	CU_ASSERT_EQUAL(g_drv_operations[ACCEL_OPC_DECOMPRESS].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_FILL].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_COPY].count, 0);
+	CU_ASSERT_EQUAL(g_drv_operations[SPDK_ACCEL_OPC_FILL].count, 2);
+	CU_ASSERT_EQUAL(g_drv_operations[SPDK_ACCEL_OPC_DECOMPRESS].count, 1);
 	CU_ASSERT_EQUAL(memcmp(buf, expected, sizeof(buf)), 0);
 
-	g_drv_operations[ACCEL_OPC_FILL].count = 0;
-	g_drv_operations[ACCEL_OPC_DECOMPRESS].count = 0;
+	g_drv_operations[SPDK_ACCEL_OPC_FILL].count = 0;
+	g_drv_operations[SPDK_ACCEL_OPC_DECOMPRESS].count = 0;
 
 	/* Check a sequence when the first two operations are executed by a driver, while the rest
 	 * is executed via modules */
@@ -3381,18 +3381,18 @@ test_sequence_driver(void)
 	CU_ASSERT_EQUAL(completed, 4);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_FILL].count, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECOMPRESS].count, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_ENCRYPT].count, 1);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECRYPT].count, 1);
-	CU_ASSERT_EQUAL(g_drv_operations[ACCEL_OPC_FILL].count, 1);
-	CU_ASSERT_EQUAL(g_drv_operations[ACCEL_OPC_DECOMPRESS].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_FILL].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].count, 1);
+	CU_ASSERT_EQUAL(g_drv_operations[SPDK_ACCEL_OPC_FILL].count, 1);
+	CU_ASSERT_EQUAL(g_drv_operations[SPDK_ACCEL_OPC_DECOMPRESS].count, 1);
 	CU_ASSERT_EQUAL(memcmp(buf, expected, sizeof(buf)), 0);
 
-	g_seq_operations[ACCEL_OPC_ENCRYPT].count = 0;
-	g_seq_operations[ACCEL_OPC_DECRYPT].count = 0;
-	g_drv_operations[ACCEL_OPC_FILL].count = 0;
-	g_drv_operations[ACCEL_OPC_DECOMPRESS].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].count = 0;
+	g_drv_operations[SPDK_ACCEL_OPC_FILL].count = 0;
+	g_drv_operations[SPDK_ACCEL_OPC_DECOMPRESS].count = 0;
 
 	/* Check sequence when the first and last operations are executed through modules, while the
 	 * ones in the middle are executed by the driver */
@@ -3444,18 +3444,18 @@ test_sequence_driver(void)
 	CU_ASSERT_EQUAL(completed, 4);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_FILL].count, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECOMPRESS].count, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_ENCRYPT].count, 1);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECRYPT].count, 1);
-	CU_ASSERT_EQUAL(g_drv_operations[ACCEL_OPC_FILL].count, 1);
-	CU_ASSERT_EQUAL(g_drv_operations[ACCEL_OPC_DECOMPRESS].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_FILL].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].count, 1);
+	CU_ASSERT_EQUAL(g_drv_operations[SPDK_ACCEL_OPC_FILL].count, 1);
+	CU_ASSERT_EQUAL(g_drv_operations[SPDK_ACCEL_OPC_DECOMPRESS].count, 1);
 	CU_ASSERT_EQUAL(memcmp(buf, expected, sizeof(buf)), 0);
 
-	g_seq_operations[ACCEL_OPC_ENCRYPT].count = 0;
-	g_seq_operations[ACCEL_OPC_DECRYPT].count = 0;
-	g_drv_operations[ACCEL_OPC_FILL].count = 0;
-	g_drv_operations[ACCEL_OPC_DECOMPRESS].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].count = 0;
+	g_drv_operations[SPDK_ACCEL_OPC_FILL].count = 0;
+	g_drv_operations[SPDK_ACCEL_OPC_DECOMPRESS].count = 0;
 
 	/* Check a sequence with operations executed by: module, driver, module, driver */
 	seq = NULL;
@@ -3506,18 +3506,18 @@ test_sequence_driver(void)
 	CU_ASSERT_EQUAL(completed, 4);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_FILL].count, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECOMPRESS].count, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_ENCRYPT].count, 1);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECRYPT].count, 1);
-	CU_ASSERT_EQUAL(g_drv_operations[ACCEL_OPC_FILL].count, 1);
-	CU_ASSERT_EQUAL(g_drv_operations[ACCEL_OPC_DECOMPRESS].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_FILL].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].count, 1);
+	CU_ASSERT_EQUAL(g_drv_operations[SPDK_ACCEL_OPC_FILL].count, 1);
+	CU_ASSERT_EQUAL(g_drv_operations[SPDK_ACCEL_OPC_DECOMPRESS].count, 1);
 	CU_ASSERT_EQUAL(memcmp(buf, expected, sizeof(buf)), 0);
 
-	g_seq_operations[ACCEL_OPC_ENCRYPT].count = 0;
-	g_seq_operations[ACCEL_OPC_DECRYPT].count = 0;
-	g_drv_operations[ACCEL_OPC_FILL].count = 0;
-	g_drv_operations[ACCEL_OPC_DECOMPRESS].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].count = 0;
+	g_drv_operations[SPDK_ACCEL_OPC_FILL].count = 0;
+	g_drv_operations[SPDK_ACCEL_OPC_DECOMPRESS].count = 0;
 
 	/* Check that an error returned from driver's execute_sequence() will fail the whole
 	 * sequence and any subsequent operations won't be processed */
@@ -3526,7 +3526,7 @@ test_sequence_driver(void)
 	memset(buf, 0, sizeof(buf));
 	memset(expected, 0, sizeof(expected));
 	memset(tmp[0], 0xa5, sizeof(tmp[0]));
-	g_drv_operations[ACCEL_OPC_FILL].submit_status = -EPERM;
+	g_drv_operations[SPDK_ACCEL_OPC_FILL].submit_status = -EPERM;
 
 	dst_iovs[0].iov_base = tmp[1];
 	dst_iovs[0].iov_len = sizeof(tmp[1]);
@@ -3558,15 +3558,15 @@ test_sequence_driver(void)
 	CU_ASSERT_EQUAL(completed, 3);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, -EPERM);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_FILL].count, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_ENCRYPT].count, 1);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECRYPT].count, 0);
-	CU_ASSERT_EQUAL(g_drv_operations[ACCEL_OPC_FILL].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_FILL].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].count, 0);
+	CU_ASSERT_EQUAL(g_drv_operations[SPDK_ACCEL_OPC_FILL].count, 1);
 	CU_ASSERT_EQUAL(memcmp(buf, expected, 4096), 0);
 
-	g_seq_operations[ACCEL_OPC_ENCRYPT].count = 0;
-	g_drv_operations[ACCEL_OPC_FILL].count = 0;
-	g_drv_operations[ACCEL_OPC_FILL].submit_status = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].count = 0;
+	g_drv_operations[SPDK_ACCEL_OPC_FILL].count = 0;
+	g_drv_operations[SPDK_ACCEL_OPC_FILL].submit_status = 0;
 
 	/* Check that a failed task completed by a driver will cause the whole sequence to be failed
 	 * and any subsequent operations won't be processed */
@@ -3575,7 +3575,7 @@ test_sequence_driver(void)
 	memset(buf, 0, sizeof(buf));
 	memset(expected, 0, sizeof(expected));
 	memset(tmp[0], 0xa5, sizeof(tmp[0]));
-	g_drv_operations[ACCEL_OPC_FILL].complete_status = -ENOENT;
+	g_drv_operations[SPDK_ACCEL_OPC_FILL].complete_status = -ENOENT;
 
 	dst_iovs[0].iov_base = tmp[1];
 	dst_iovs[0].iov_len = sizeof(tmp[1]);
@@ -3607,15 +3607,15 @@ test_sequence_driver(void)
 	CU_ASSERT_EQUAL(completed, 3);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, -ENOENT);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_FILL].count, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_ENCRYPT].count, 1);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECRYPT].count, 0);
-	CU_ASSERT_EQUAL(g_drv_operations[ACCEL_OPC_FILL].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_FILL].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].count, 0);
+	CU_ASSERT_EQUAL(g_drv_operations[SPDK_ACCEL_OPC_FILL].count, 1);
 	CU_ASSERT_EQUAL(memcmp(buf, expected, sizeof(buf)), 0);
 
-	g_drv_operations[ACCEL_OPC_FILL].complete_status = 0;
-	g_drv_operations[ACCEL_OPC_FILL].count = 0;
-	g_seq_operations[ACCEL_OPC_ENCRYPT].count = 0;
+	g_drv_operations[SPDK_ACCEL_OPC_FILL].complete_status = 0;
+	g_drv_operations[SPDK_ACCEL_OPC_FILL].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].count = 0;
 
 	/* Check asynchronous spdk_accel_sequence_continue() */
 	g_ut_driver_async_continue = true;
@@ -3646,16 +3646,16 @@ test_sequence_driver(void)
 	CU_ASSERT_EQUAL(completed, 2);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_FILL].count, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECOMPRESS].count, 0);
-	CU_ASSERT_EQUAL(g_drv_operations[ACCEL_OPC_FILL].count, 1);
-	CU_ASSERT_EQUAL(g_drv_operations[ACCEL_OPC_DECOMPRESS].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_FILL].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].count, 0);
+	CU_ASSERT_EQUAL(g_drv_operations[SPDK_ACCEL_OPC_FILL].count, 1);
+	CU_ASSERT_EQUAL(g_drv_operations[SPDK_ACCEL_OPC_DECOMPRESS].count, 1);
 	CU_ASSERT_EQUAL(memcmp(buf, expected, sizeof(buf)), 0);
 
-	g_drv_operations[ACCEL_OPC_FILL].count = 0;
-	g_drv_operations[ACCEL_OPC_DECOMPRESS].count = 0;
+	g_drv_operations[SPDK_ACCEL_OPC_FILL].count = 0;
+	g_drv_operations[SPDK_ACCEL_OPC_DECOMPRESS].count = 0;
 
-	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		g_modules_opc[i] = modules[i];
 	}
 
@@ -3673,7 +3673,7 @@ struct ut_saved_iovs {
 	struct iovec dst;
 };
 
-static struct ut_saved_iovs g_seq_saved_iovs[ACCEL_OPC_LAST];
+static struct ut_saved_iovs g_seq_saved_iovs[SPDK_ACCEL_OPC_LAST];
 
 static int
 ut_submit_save_iovs(struct spdk_io_channel *ch, struct spdk_accel_task *task)
@@ -3698,7 +3698,7 @@ test_sequence_same_iovs(void)
 	struct spdk_io_channel *ioch;
 	struct spdk_accel_crypto_key key = {};
 	struct ut_sequence ut_seq;
-	struct accel_module modules[ACCEL_OPC_LAST];
+	struct accel_module modules[SPDK_ACCEL_OPC_LAST];
 	char buf[4096], tmp[4096], expected[4096];
 	struct iovec iovs[3], expected_siov, expected_diov;
 	struct spdk_memory_domain *domain;
@@ -3710,15 +3710,15 @@ test_sequence_same_iovs(void)
 
 	/* Override the submit_tasks function */
 	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
-	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		modules[i] = g_modules_opc[i];
 		g_modules_opc[i] = g_module;
 	}
 	/* Intercept crypto operations, as they should be executed by an accel module */
-	g_seq_operations[ACCEL_OPC_ENCRYPT].submit = ut_submit_save_iovs;
-	g_seq_operations[ACCEL_OPC_DECRYPT].submit = ut_submit_save_iovs;
-	g_seq_operations[ACCEL_OPC_ENCRYPT].count = 0;
-	g_seq_operations[ACCEL_OPC_DECRYPT].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].submit = ut_submit_save_iovs;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].submit = ut_submit_save_iovs;
+	g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].count = 0;
 
 	/* Check that it's possible to use the same iovec ptr for different operations */
 	seq = NULL;
@@ -3750,27 +3750,27 @@ test_sequence_same_iovs(void)
 	CU_ASSERT_EQUAL(completed, 2);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_ENCRYPT].count, 1);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECRYPT].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].count, 1);
 	CU_ASSERT_EQUAL(memcmp(buf, expected, sizeof(buf)), 0);
 	expected_siov.iov_base = expected;
 	expected_siov.iov_len = sizeof(expected);
 	expected_diov.iov_base = tmp;
 	expected_diov.iov_len = sizeof(tmp);
-	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[ACCEL_OPC_ENCRYPT].src,
+	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[SPDK_ACCEL_OPC_ENCRYPT].src,
 			       &expected_siov, sizeof(expected_siov)), 0);
-	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[ACCEL_OPC_ENCRYPT].dst,
+	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[SPDK_ACCEL_OPC_ENCRYPT].dst,
 			       &expected_diov, sizeof(expected_diov)), 0);
 	expected_siov.iov_base = tmp;
 	expected_siov.iov_len = sizeof(tmp);
 	expected_diov.iov_base = buf;
 	expected_diov.iov_len = sizeof(buf);
-	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[ACCEL_OPC_DECRYPT].src,
+	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[SPDK_ACCEL_OPC_DECRYPT].src,
 			       &expected_siov, sizeof(expected_siov)), 0);
-	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[ACCEL_OPC_DECRYPT].dst,
+	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[SPDK_ACCEL_OPC_DECRYPT].dst,
 			       &expected_diov, sizeof(expected_diov)), 0);
-	g_seq_operations[ACCEL_OPC_ENCRYPT].count = 0;
-	g_seq_operations[ACCEL_OPC_DECRYPT].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].count = 0;
 
 	/* Check the same with an accel buffer */
 	seq = NULL;
@@ -3805,23 +3805,23 @@ test_sequence_same_iovs(void)
 	CU_ASSERT_EQUAL(completed, 2);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_ENCRYPT].count, 1);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECRYPT].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_ENCRYPT].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECRYPT].count, 1);
 	CU_ASSERT_EQUAL(memcmp(buf, expected, sizeof(buf)), 0);
 	expected_siov.iov_base = expected;
 	expected_siov.iov_len = sizeof(expected);
 	expected_diov.iov_base = buf;
 	expected_diov.iov_len = sizeof(buf);
-	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[ACCEL_OPC_ENCRYPT].src,
+	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[SPDK_ACCEL_OPC_ENCRYPT].src,
 			       &expected_siov, sizeof(expected_siov)), 0);
-	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[ACCEL_OPC_DECRYPT].dst,
+	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[SPDK_ACCEL_OPC_DECRYPT].dst,
 			       &expected_diov, sizeof(expected_diov)), 0);
-	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[ACCEL_OPC_ENCRYPT].dst,
-			       &g_seq_saved_iovs[ACCEL_OPC_DECRYPT].src,
+	CU_ASSERT_EQUAL(memcmp(&g_seq_saved_iovs[SPDK_ACCEL_OPC_ENCRYPT].dst,
+			       &g_seq_saved_iovs[SPDK_ACCEL_OPC_DECRYPT].src,
 			       sizeof(struct iovec)), 0);
 	spdk_accel_put_buf(ioch, accel_buf, domain, domain_ctx);
 
-	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		g_modules_opc[i] = modules[i];
 	}
 
@@ -3836,7 +3836,7 @@ test_sequence_crc32(void)
 	struct spdk_accel_sequence *seq = NULL;
 	struct spdk_io_channel *ioch;
 	struct ut_sequence ut_seq;
-	struct accel_module modules[ACCEL_OPC_LAST];
+	struct accel_module modules[SPDK_ACCEL_OPC_LAST];
 	char buf[4096], tmp[3][4096];
 	struct iovec src_iovs[4], dst_iovs[4];
 	uint32_t crc, crc2;
@@ -3847,12 +3847,12 @@ test_sequence_crc32(void)
 
 	/* Override the submit_tasks function */
 	g_module_if.submit_tasks = ut_sequnce_submit_tasks;
-	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		g_seq_operations[i].submit = sw_accel_submit_tasks;
 		modules[i] = g_modules_opc[i];
 		g_modules_opc[i] = g_module;
 	}
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].submit = ut_submit_decompress;
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].submit = ut_submit_decompress;
 
 	/* First check the simplest case - single crc32c operation */
 	seq = NULL;
@@ -3873,9 +3873,9 @@ test_sequence_crc32(void)
 	CU_ASSERT_EQUAL(completed, 1);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_CRC32C].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_CRC32C].count, 1);
 	CU_ASSERT_EQUAL(crc, spdk_crc32c_update(buf, sizeof(buf), ~0u));
-	g_seq_operations[ACCEL_OPC_CRC32C].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_CRC32C].count = 0;
 
 	/* Now check copy+crc - this should remove the copy operation and change the buffer for the
 	 * crc operation */
@@ -3907,10 +3907,10 @@ test_sequence_crc32(void)
 	CU_ASSERT_EQUAL(completed, 2);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_CRC32C].count, 1);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_CRC32C].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_COPY].count, 0);
 	CU_ASSERT_EQUAL(crc, spdk_crc32c_update(buf, sizeof(buf), ~0u));
-	g_seq_operations[ACCEL_OPC_CRC32C].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_CRC32C].count = 0;
 
 	/* Check crc+copy - this time the copy cannot be removed, because there's no operation
 	 * before crc to change the buffer */
@@ -3942,12 +3942,12 @@ test_sequence_crc32(void)
 	CU_ASSERT_EQUAL(completed, 2);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_CRC32C].count, 1);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_CRC32C].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_COPY].count, 1);
 	CU_ASSERT_EQUAL(crc, spdk_crc32c_update(tmp[0], sizeof(tmp[0]), ~0u));
 	CU_ASSERT_EQUAL(memcmp(buf, tmp[0], sizeof(buf)), 0);
-	g_seq_operations[ACCEL_OPC_CRC32C].count = 0;
-	g_seq_operations[ACCEL_OPC_COPY].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_CRC32C].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].count = 0;
 
 	/* Check a sequence with an operation at the beginning that can have its buffer changed, two
 	 * crc operations and a copy at the end.  The copy should be removed and the dst buffer of
@@ -3995,14 +3995,14 @@ test_sequence_crc32(void)
 	CU_ASSERT_EQUAL(completed, 4);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECOMPRESS].count, 1);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_CRC32C].count, 2);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_CRC32C].count, 2);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_COPY].count, 0);
 	CU_ASSERT_EQUAL(crc, spdk_crc32c_update(tmp[0], sizeof(tmp[0]), ~0u));
 	CU_ASSERT_EQUAL(crc, crc2);
 	CU_ASSERT_EQUAL(memcmp(buf, tmp[0], sizeof(buf)), 0);
-	g_seq_operations[ACCEL_OPC_CRC32C].count = 0;
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_CRC32C].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].count = 0;
 
 	/* Check that a copy won't be removed if the buffers don't match */
 	seq = NULL;
@@ -4043,17 +4043,17 @@ test_sequence_crc32(void)
 	CU_ASSERT_EQUAL(completed, 3);
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_DECOMPRESS].count, 1);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_CRC32C].count, 1);
-	CU_ASSERT_EQUAL(g_seq_operations[ACCEL_OPC_COPY].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_CRC32C].count, 1);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_COPY].count, 1);
 	CU_ASSERT_EQUAL(crc, spdk_crc32c_update(tmp[0], 2048, ~0u));
 	CU_ASSERT_EQUAL(memcmp(buf, tmp[2], 2048), 0);
 	CU_ASSERT_EQUAL(memcmp(&buf[2048], tmp[0], 2048), 0);
-	g_seq_operations[ACCEL_OPC_CRC32C].count = 0;
-	g_seq_operations[ACCEL_OPC_DECOMPRESS].count = 0;
-	g_seq_operations[ACCEL_OPC_COPY].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_CRC32C].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_DECOMPRESS].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].count = 0;
 
-	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		g_modules_opc[i] = modules[i];
 	}
 

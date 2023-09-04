@@ -377,7 +377,7 @@ test_error_paths(void)
 	struct spdk_accel_crypto_key key = {};
 	int rc;
 
-	task.base.op_code = ACCEL_OPC_ENCRYPT;
+	task.base.op_code = SPDK_ACCEL_OPC_ENCRYPT;
 	task.base.s.iovcnt = 1;
 	task.base.s.iovs = &src_iov;
 	task.base.d.iovcnt = 1;
@@ -410,10 +410,10 @@ test_error_paths(void)
 	task.base.crypto_key = &g_key;
 
 	/* case 4 - invalid op */
-	task.base.op_code = ACCEL_OPC_COMPARE;
+	task.base.op_code = SPDK_ACCEL_OPC_COMPARE;
 	rc = accel_dpdk_cryptodev_submit_tasks(g_io_ch, &task.base);
 	CU_ASSERT(rc == -EINVAL);
-	task.base.op_code = ACCEL_OPC_ENCRYPT;
+	task.base.op_code = SPDK_ACCEL_OPC_ENCRYPT;
 
 	/* case 5 - no entries in g_mbuf_mp */
 	MOCK_SET(spdk_mempool_get, NULL);
@@ -441,7 +441,7 @@ test_simple_encrypt(void)
 	struct rte_mbuf *mbuf, *next;
 	int rc, i;
 
-	task.base.op_code = ACCEL_OPC_ENCRYPT;
+	task.base.op_code = SPDK_ACCEL_OPC_ENCRYPT;
 	task.base.s.iovcnt = 1;
 	task.base.s.iovs = src_iov;
 	task.base.d.iovcnt = 1;
@@ -562,7 +562,7 @@ test_simple_decrypt(void)
 	struct rte_mbuf *mbuf, *next;
 	int rc, i;
 
-	task.base.op_code = ACCEL_OPC_DECRYPT;
+	task.base.op_code = SPDK_ACCEL_OPC_DECRYPT;
 	task.base.s.iovcnt = 1;
 	task.base.s.iovs = src_iov;
 	task.base.d.iovcnt = 1;
@@ -696,7 +696,7 @@ test_large_enc_dec(void)
 		dst_iov[i].iov_len = iov_len;
 	}
 
-	task.base.op_code = ACCEL_OPC_DECRYPT;
+	task.base.op_code = SPDK_ACCEL_OPC_DECRYPT;
 	task.base.s.iovcnt = 16;
 	task.base.s.iovs = src_iov;
 	task.base.d.iovcnt = 16;
@@ -815,7 +815,7 @@ test_large_enc_dec(void)
 
 	/* Test 3. Multi block size encryption, multi-element, inplace */
 	g_aesni_qp.num_enqueued_ops = 0;
-	task.base.op_code = ACCEL_OPC_ENCRYPT;
+	task.base.op_code = SPDK_ACCEL_OPC_ENCRYPT;
 	task.cryop_submitted = 0;
 	/* Modify dst to make payload iplace */
 	dst_iov[0].iov_base += 1;
@@ -935,7 +935,7 @@ test_dev_full(void)
 	struct iovec dst_iov = src_iov;
 	int rc;
 
-	task.base.op_code = ACCEL_OPC_DECRYPT;
+	task.base.op_code = SPDK_ACCEL_OPC_DECRYPT;
 	task.base.s.iovcnt = 1;
 	task.base.s.iovs = &src_iov;
 	task.base.d.iovcnt = 1;
@@ -1068,7 +1068,7 @@ test_crazy_rw(void)
 	uint32_t block_len = 512, num_blocks = 4, i;
 	int rc;
 
-	task.base.op_code = ACCEL_OPC_DECRYPT;
+	task.base.op_code = SPDK_ACCEL_OPC_DECRYPT;
 	task.base.s.iovcnt = 3;
 	task.base.s.iovs = src_iov;
 	task.base.d.iovcnt = 3;
@@ -1099,7 +1099,7 @@ test_crazy_rw(void)
 
 	/* Multi block size write, single element strange IOV makeup */
 	num_blocks = 8;
-	task.base.op_code = ACCEL_OPC_ENCRYPT;
+	task.base.op_code = SPDK_ACCEL_OPC_ENCRYPT;
 	task.cryop_submitted = 0;
 	task.base.s.iovcnt = 4;
 	task.base.d.iovcnt = 4;
@@ -1312,13 +1312,13 @@ static void
 test_supported_opcodes(void)
 {
 	bool rc = true;
-	enum accel_opcode opc;
+	enum spdk_accel_opcode opc;
 
-	for (opc = 0; opc < ACCEL_OPC_LAST; opc++) {
+	for (opc = 0; opc < SPDK_ACCEL_OPC_LAST; opc++) {
 		rc = accel_dpdk_cryptodev_supports_opcode(opc);
 		switch (opc) {
-		case ACCEL_OPC_ENCRYPT:
-		case ACCEL_OPC_DECRYPT:
+		case SPDK_ACCEL_OPC_ENCRYPT:
+		case SPDK_ACCEL_OPC_DECRYPT:
 			CU_ASSERT(rc == true);
 			break;
 		default:
@@ -1336,7 +1336,7 @@ test_poller(void)
 	struct rte_mbuf *src_mbufs[2];
 	int rc;
 
-	task.base.op_code = ACCEL_OPC_DECRYPT;
+	task.base.op_code = SPDK_ACCEL_OPC_DECRYPT;
 	task.base.s.iovcnt = 1;
 	task.base.s.iovs = &src_iov;
 	task.base.d.iovcnt = 1;
@@ -1357,7 +1357,7 @@ test_poller(void)
 	task.cryop_submitted = 1;
 	task.cryop_total = 1;
 	task.cryop_completed = 0;
-	task.base.op_code = ACCEL_OPC_DECRYPT;
+	task.base.op_code = SPDK_ACCEL_OPC_DECRYPT;
 	rc = accel_dpdk_cryptodev_poller(g_crypto_ch);
 	CU_ASSERT(rc == 1);
 	CU_ASSERT(task.cryop_completed == task.cryop_submitted);

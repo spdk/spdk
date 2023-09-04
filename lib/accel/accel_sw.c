@@ -63,20 +63,20 @@ _add_to_comp_list(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *acc
 }
 
 static bool
-sw_accel_supports_opcode(enum accel_opcode opc)
+sw_accel_supports_opcode(enum spdk_accel_opcode opc)
 {
 	switch (opc) {
-	case ACCEL_OPC_COPY:
-	case ACCEL_OPC_FILL:
-	case ACCEL_OPC_DUALCAST:
-	case ACCEL_OPC_COMPARE:
-	case ACCEL_OPC_CRC32C:
-	case ACCEL_OPC_COPY_CRC32C:
-	case ACCEL_OPC_COMPRESS:
-	case ACCEL_OPC_DECOMPRESS:
-	case ACCEL_OPC_ENCRYPT:
-	case ACCEL_OPC_DECRYPT:
-	case ACCEL_OPC_XOR:
+	case SPDK_ACCEL_OPC_COPY:
+	case SPDK_ACCEL_OPC_FILL:
+	case SPDK_ACCEL_OPC_DUALCAST:
+	case SPDK_ACCEL_OPC_COMPARE:
+	case SPDK_ACCEL_OPC_CRC32C:
+	case SPDK_ACCEL_OPC_COPY_CRC32C:
+	case SPDK_ACCEL_OPC_COMPRESS:
+	case SPDK_ACCEL_OPC_DECOMPRESS:
+	case SPDK_ACCEL_OPC_ENCRYPT:
+	case SPDK_ACCEL_OPC_DECRYPT:
+	case SPDK_ACCEL_OPC_XOR:
 		return true;
 	default:
 		return false;
@@ -450,45 +450,45 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 
 	do {
 		switch (accel_task->op_code) {
-		case ACCEL_OPC_COPY:
+		case SPDK_ACCEL_OPC_COPY:
 			_sw_accel_copy_iovs(accel_task->d.iovs, accel_task->d.iovcnt,
 					    accel_task->s.iovs, accel_task->s.iovcnt);
 			break;
-		case ACCEL_OPC_FILL:
+		case SPDK_ACCEL_OPC_FILL:
 			rc = _sw_accel_fill(accel_task->d.iovs, accel_task->d.iovcnt,
 					    accel_task->fill_pattern);
 			break;
-		case ACCEL_OPC_DUALCAST:
+		case SPDK_ACCEL_OPC_DUALCAST:
 			rc = _sw_accel_dualcast_iovs(accel_task->d.iovs, accel_task->d.iovcnt,
 						     accel_task->d2.iovs, accel_task->d2.iovcnt,
 						     accel_task->s.iovs, accel_task->s.iovcnt);
 			break;
-		case ACCEL_OPC_COMPARE:
+		case SPDK_ACCEL_OPC_COMPARE:
 			rc = _sw_accel_compare(accel_task->s.iovs, accel_task->s.iovcnt,
 					       accel_task->s2.iovs, accel_task->s2.iovcnt);
 			break;
-		case ACCEL_OPC_CRC32C:
+		case SPDK_ACCEL_OPC_CRC32C:
 			_sw_accel_crc32cv(accel_task->crc_dst, accel_task->s.iovs, accel_task->s.iovcnt, accel_task->seed);
 			break;
-		case ACCEL_OPC_COPY_CRC32C:
+		case SPDK_ACCEL_OPC_COPY_CRC32C:
 			_sw_accel_copy_iovs(accel_task->d.iovs, accel_task->d.iovcnt,
 					    accel_task->s.iovs, accel_task->s.iovcnt);
 			_sw_accel_crc32cv(accel_task->crc_dst, accel_task->s.iovs,
 					  accel_task->s.iovcnt, accel_task->seed);
 			break;
-		case ACCEL_OPC_COMPRESS:
+		case SPDK_ACCEL_OPC_COMPRESS:
 			rc = _sw_accel_compress(sw_ch, accel_task);
 			break;
-		case ACCEL_OPC_DECOMPRESS:
+		case SPDK_ACCEL_OPC_DECOMPRESS:
 			rc = _sw_accel_decompress(sw_ch, accel_task);
 			break;
-		case ACCEL_OPC_XOR:
+		case SPDK_ACCEL_OPC_XOR:
 			rc = _sw_accel_xor(sw_ch, accel_task);
 			break;
-		case ACCEL_OPC_ENCRYPT:
+		case SPDK_ACCEL_OPC_ENCRYPT:
 			rc = _sw_accel_encrypt(sw_ch, accel_task);
 			break;
-		case ACCEL_OPC_DECRYPT:
+		case SPDK_ACCEL_OPC_DECRYPT:
 			rc = _sw_accel_decrypt(sw_ch, accel_task);
 			break;
 		default:

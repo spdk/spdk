@@ -60,8 +60,8 @@ static TAILQ_HEAD(, spdk_accel_crypto_key) g_keyring = TAILQ_HEAD_INITIALIZER(g_
 static struct spdk_spinlock g_keyring_spin;
 
 /* Global array mapping capabilities to modules */
-static struct accel_module g_modules_opc[ACCEL_OPC_LAST] = {};
-static char *g_modules_opc_override[ACCEL_OPC_LAST] = {};
+static struct accel_module g_modules_opc[SPDK_ACCEL_OPC_LAST] = {};
+static char *g_modules_opc_override[SPDK_ACCEL_OPC_LAST] = {};
 TAILQ_HEAD(, spdk_accel_driver) g_accel_drivers = TAILQ_HEAD_INITIALIZER(g_accel_drivers);
 static struct spdk_accel_driver *g_accel_driver;
 static struct spdk_accel_opts g_opts = {
@@ -74,7 +74,7 @@ static struct spdk_accel_opts g_opts = {
 static struct accel_stats g_stats;
 static struct spdk_spinlock g_stats_lock;
 
-static const char *g_opcode_strings[ACCEL_OPC_LAST] = {
+static const char *g_opcode_strings[SPDK_ACCEL_OPC_LAST] = {
 	"copy", "fill", "dualcast", "compare", "crc32c", "copy_crc32c",
 	"compress", "decompress", "encrypt", "decrypt", "xor"
 };
@@ -137,7 +137,7 @@ struct accel_buffer {
 };
 
 struct accel_io_channel {
-	struct spdk_io_channel			*module_ch[ACCEL_OPC_LAST];
+	struct spdk_io_channel			*module_ch[SPDK_ACCEL_OPC_LAST];
 	struct spdk_io_channel			*driver_channel;
 	void					*task_pool_base;
 	struct spdk_accel_sequence		*seq_pool_base;
@@ -191,9 +191,9 @@ accel_sequence_set_fail(struct spdk_accel_sequence *seq, int status)
 }
 
 int
-spdk_accel_get_opc_module_name(enum accel_opcode opcode, const char **module_name)
+spdk_accel_get_opc_module_name(enum spdk_accel_opcode opcode, const char **module_name)
 {
-	if (opcode >= ACCEL_OPC_LAST) {
+	if (opcode >= SPDK_ACCEL_OPC_LAST) {
 		/* invalid opcode */
 		return -EINVAL;
 	}
@@ -211,11 +211,11 @@ void
 _accel_for_each_module(struct module_info *info, _accel_for_each_module_fn fn)
 {
 	struct spdk_accel_module_if *accel_module;
-	enum accel_opcode opcode;
+	enum spdk_accel_opcode opcode;
 	int j = 0;
 
 	TAILQ_FOREACH(accel_module, &spdk_accel_module_list, tailq) {
-		for (opcode = 0; opcode < ACCEL_OPC_LAST; opcode++) {
+		for (opcode = 0; opcode < SPDK_ACCEL_OPC_LAST; opcode++) {
 			if (accel_module->supports_opcode(opcode)) {
 				info->ops[j] = opcode;
 				j++;
@@ -229,11 +229,11 @@ _accel_for_each_module(struct module_info *info, _accel_for_each_module_fn fn)
 }
 
 int
-_accel_get_opc_name(enum accel_opcode opcode, const char **opcode_name)
+_accel_get_opc_name(enum spdk_accel_opcode opcode, const char **opcode_name)
 {
 	int rc = 0;
 
-	if (opcode < ACCEL_OPC_LAST) {
+	if (opcode < SPDK_ACCEL_OPC_LAST) {
 		*opcode_name = g_opcode_strings[opcode];
 	} else {
 		/* invalid opcode */
@@ -244,7 +244,7 @@ _accel_get_opc_name(enum accel_opcode opcode, const char **opcode_name)
 }
 
 int
-spdk_accel_assign_opc(enum accel_opcode opcode, const char *name)
+spdk_accel_assign_opc(enum spdk_accel_opcode opcode, const char *name)
 {
 	char *copy;
 
@@ -253,7 +253,7 @@ spdk_accel_assign_opc(enum accel_opcode opcode, const char *name)
 		return -EINVAL;
 	}
 
-	if (opcode >= ACCEL_OPC_LAST) {
+	if (opcode >= SPDK_ACCEL_OPC_LAST) {
 		/* invalid opcode */
 		return -EINVAL;
 	}
@@ -365,7 +365,7 @@ spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src,
 	accel_task->s.iovs[0].iov_len = nbytes;
 	accel_task->s.iovcnt = 1;
 	accel_task->nbytes = nbytes;
-	accel_task->op_code = ACCEL_OPC_COPY;
+	accel_task->op_code = SPDK_ACCEL_OPC_COPY;
 	accel_task->flags = flags;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
@@ -407,7 +407,7 @@ spdk_accel_submit_dualcast(struct spdk_io_channel *ch, void *dst1,
 	accel_task->s.iovcnt = 1;
 	accel_task->nbytes = nbytes;
 	accel_task->flags = flags;
-	accel_task->op_code = ACCEL_OPC_DUALCAST;
+	accel_task->op_code = SPDK_ACCEL_OPC_DUALCAST;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
 	accel_task->step_cb_fn = NULL;
@@ -438,7 +438,7 @@ spdk_accel_submit_compare(struct spdk_io_channel *ch, void *src1,
 	accel_task->s2.iovs[0].iov_len = nbytes;
 	accel_task->s2.iovcnt = 1;
 	accel_task->nbytes = nbytes;
-	accel_task->op_code = ACCEL_OPC_COMPARE;
+	accel_task->op_code = SPDK_ACCEL_OPC_COMPARE;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
 	accel_task->step_cb_fn = NULL;
@@ -467,7 +467,7 @@ spdk_accel_submit_fill(struct spdk_io_channel *ch, void *dst,
 	accel_task->nbytes = nbytes;
 	memset(&accel_task->fill_pattern, fill, sizeof(uint64_t));
 	accel_task->flags = flags;
-	accel_task->op_code = ACCEL_OPC_FILL;
+	accel_task->op_code = SPDK_ACCEL_OPC_FILL;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
 	accel_task->step_cb_fn = NULL;
@@ -496,7 +496,7 @@ spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *crc_dst,
 	accel_task->nbytes = nbytes;
 	accel_task->crc_dst = crc_dst;
 	accel_task->seed = seed;
-	accel_task->op_code = ACCEL_OPC_CRC32C;
+	accel_task->op_code = SPDK_ACCEL_OPC_CRC32C;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
 	accel_task->step_cb_fn = NULL;
@@ -535,7 +535,7 @@ spdk_accel_submit_crc32cv(struct spdk_io_channel *ch, uint32_t *crc_dst,
 	accel_task->nbytes = accel_get_iovlen(iov, iov_cnt);
 	accel_task->crc_dst = crc_dst;
 	accel_task->seed = seed;
-	accel_task->op_code = ACCEL_OPC_CRC32C;
+	accel_task->op_code = SPDK_ACCEL_OPC_CRC32C;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
 	accel_task->step_cb_fn = NULL;
@@ -569,7 +569,7 @@ spdk_accel_submit_copy_crc32c(struct spdk_io_channel *ch, void *dst,
 	accel_task->crc_dst = crc_dst;
 	accel_task->seed = seed;
 	accel_task->flags = flags;
-	accel_task->op_code = ACCEL_OPC_COPY_CRC32C;
+	accel_task->op_code = SPDK_ACCEL_OPC_COPY_CRC32C;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
 	accel_task->step_cb_fn = NULL;
@@ -615,7 +615,7 @@ spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst,
 	accel_task->crc_dst = crc_dst;
 	accel_task->seed = seed;
 	accel_task->flags = flags;
-	accel_task->op_code = ACCEL_OPC_COPY_CRC32C;
+	accel_task->op_code = SPDK_ACCEL_OPC_COPY_CRC32C;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
 	accel_task->step_cb_fn = NULL;
@@ -645,7 +645,7 @@ spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, uint64_t nbyte
 	accel_task->s.iovcnt = src_iovcnt;
 	accel_task->nbytes = nbytes;
 	accel_task->flags = flags;
-	accel_task->op_code = ACCEL_OPC_COMPRESS;
+	accel_task->op_code = SPDK_ACCEL_OPC_COMPRESS;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
 	accel_task->step_cb_fn = NULL;
@@ -674,7 +674,7 @@ spdk_accel_submit_decompress(struct spdk_io_channel *ch, struct iovec *dst_iovs,
 	accel_task->d.iovcnt = dst_iovcnt;
 	accel_task->nbytes = accel_get_iovlen(src_iovs, src_iovcnt);
 	accel_task->flags = flags;
-	accel_task->op_code = ACCEL_OPC_DECOMPRESS;
+	accel_task->op_code = SPDK_ACCEL_OPC_DECOMPRESS;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
 	accel_task->step_cb_fn = NULL;
@@ -710,7 +710,7 @@ spdk_accel_submit_encrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_k
 	accel_task->iv = iv;
 	accel_task->block_size = block_size;
 	accel_task->flags = flags;
-	accel_task->op_code = ACCEL_OPC_ENCRYPT;
+	accel_task->op_code = SPDK_ACCEL_OPC_ENCRYPT;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
 	accel_task->step_cb_fn = NULL;
@@ -746,7 +746,7 @@ spdk_accel_submit_decrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_k
 	accel_task->iv = iv;
 	accel_task->block_size = block_size;
 	accel_task->flags = flags;
-	accel_task->op_code = ACCEL_OPC_DECRYPT;
+	accel_task->op_code = SPDK_ACCEL_OPC_DECRYPT;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
 	accel_task->step_cb_fn = NULL;
@@ -773,7 +773,7 @@ spdk_accel_submit_xor(struct spdk_io_channel *ch, void *dst, void **sources, uin
 	accel_task->d.iovs[0].iov_len = nbytes;
 	accel_task->d.iovcnt = 1;
 	accel_task->nbytes = nbytes;
-	accel_task->op_code = ACCEL_OPC_XOR;
+	accel_task->op_code = SPDK_ACCEL_OPC_XOR;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
 	accel_task->step_cb_fn = NULL;
@@ -912,7 +912,7 @@ spdk_accel_append_copy(struct spdk_accel_sequence **pseq, struct spdk_io_channel
 	task->s.iovcnt = src_iovcnt;
 	task->nbytes = accel_get_iovlen(src_iovs, src_iovcnt);
 	task->flags = flags;
-	task->op_code = ACCEL_OPC_COPY;
+	task->op_code = SPDK_ACCEL_OPC_COPY;
 
 	TAILQ_INSERT_TAIL(&seq->tasks, task, seq_link);
 	*pseq = seq;
@@ -958,7 +958,7 @@ spdk_accel_append_fill(struct spdk_accel_sequence **pseq, struct spdk_io_channel
 	task->dst_domain = domain;
 	task->dst_domain_ctx = domain_ctx;
 	task->flags = flags;
-	task->op_code = ACCEL_OPC_FILL;
+	task->op_code = SPDK_ACCEL_OPC_FILL;
 
 	TAILQ_INSERT_TAIL(&seq->tasks, task, seq_link);
 	*pseq = seq;
@@ -1007,7 +1007,7 @@ spdk_accel_append_decompress(struct spdk_accel_sequence **pseq, struct spdk_io_c
 	task->s.iovcnt = src_iovcnt;
 	task->nbytes = accel_get_iovlen(src_iovs, src_iovcnt);
 	task->flags = flags;
-	task->op_code = ACCEL_OPC_DECOMPRESS;
+	task->op_code = SPDK_ACCEL_OPC_DECOMPRESS;
 
 	TAILQ_INSERT_TAIL(&seq->tasks, task, seq_link);
 	*pseq = seq;
@@ -1061,7 +1061,7 @@ spdk_accel_append_encrypt(struct spdk_accel_sequence **pseq, struct spdk_io_chan
 	task->iv = iv;
 	task->block_size = block_size;
 	task->flags = flags;
-	task->op_code = ACCEL_OPC_ENCRYPT;
+	task->op_code = SPDK_ACCEL_OPC_ENCRYPT;
 
 	TAILQ_INSERT_TAIL(&seq->tasks, task, seq_link);
 	*pseq = seq;
@@ -1115,7 +1115,7 @@ spdk_accel_append_decrypt(struct spdk_accel_sequence **pseq, struct spdk_io_chan
 	task->iv = iv;
 	task->block_size = block_size;
 	task->flags = flags;
-	task->op_code = ACCEL_OPC_DECRYPT;
+	task->op_code = SPDK_ACCEL_OPC_DECRYPT;
 
 	TAILQ_INSERT_TAIL(&seq->tasks, task, seq_link);
 	*pseq = seq;
@@ -1157,7 +1157,7 @@ spdk_accel_append_crc32c(struct spdk_accel_sequence **pseq, struct spdk_io_chann
 	task->nbytes = accel_get_iovlen(iovs, iovcnt);
 	task->crc_dst = dst;
 	task->seed = seed;
-	task->op_code = ACCEL_OPC_CRC32C;
+	task->op_code = SPDK_ACCEL_OPC_CRC32C;
 	task->dst_domain = NULL;
 
 	TAILQ_INSERT_TAIL(&seq->tasks, task, seq_link);
@@ -1799,10 +1799,10 @@ accel_task_set_dstbuf(struct spdk_accel_task *task, struct spdk_accel_task *next
 	struct spdk_accel_task *prev;
 
 	switch (task->op_code) {
-	case ACCEL_OPC_DECOMPRESS:
-	case ACCEL_OPC_FILL:
-	case ACCEL_OPC_ENCRYPT:
-	case ACCEL_OPC_DECRYPT:
+	case SPDK_ACCEL_OPC_DECOMPRESS:
+	case SPDK_ACCEL_OPC_FILL:
+	case SPDK_ACCEL_OPC_ENCRYPT:
+	case SPDK_ACCEL_OPC_DECRYPT:
 		if (task->dst_domain != next->src_domain) {
 			return false;
 		}
@@ -1815,7 +1815,7 @@ accel_task_set_dstbuf(struct spdk_accel_task *task, struct spdk_accel_task *next
 		task->dst_domain = next->dst_domain;
 		task->dst_domain_ctx = next->dst_domain_ctx;
 		break;
-	case ACCEL_OPC_CRC32C:
+	case SPDK_ACCEL_OPC_CRC32C:
 		/* crc32 is special, because it doesn't have a dst buffer */
 		if (task->src_domain != next->src_domain) {
 			return false;
@@ -1851,17 +1851,17 @@ accel_sequence_merge_tasks(struct spdk_accel_sequence *seq, struct spdk_accel_ta
 	struct spdk_accel_task *next = *next_task;
 
 	switch (task->op_code) {
-	case ACCEL_OPC_COPY:
+	case SPDK_ACCEL_OPC_COPY:
 		/* We only allow changing src of operations that actually have a src, e.g. we never
 		 * do it for fill.  Theoretically, it is possible, but we'd have to be careful to
 		 * change the src of the operation after fill (which in turn could also be a fill).
 		 * So, for the sake of simplicity, skip this type of operations for now.
 		 */
-		if (next->op_code != ACCEL_OPC_DECOMPRESS &&
-		    next->op_code != ACCEL_OPC_COPY &&
-		    next->op_code != ACCEL_OPC_ENCRYPT &&
-		    next->op_code != ACCEL_OPC_DECRYPT &&
-		    next->op_code != ACCEL_OPC_CRC32C) {
+		if (next->op_code != SPDK_ACCEL_OPC_DECOMPRESS &&
+		    next->op_code != SPDK_ACCEL_OPC_COPY &&
+		    next->op_code != SPDK_ACCEL_OPC_ENCRYPT &&
+		    next->op_code != SPDK_ACCEL_OPC_DECRYPT &&
+		    next->op_code != SPDK_ACCEL_OPC_CRC32C) {
 			break;
 		}
 		if (task->dst_domain != next->src_domain) {
@@ -1878,13 +1878,13 @@ accel_sequence_merge_tasks(struct spdk_accel_sequence *seq, struct spdk_accel_ta
 		TAILQ_REMOVE(&seq->tasks, task, seq_link);
 		TAILQ_INSERT_TAIL(&seq->completed, task, seq_link);
 		break;
-	case ACCEL_OPC_DECOMPRESS:
-	case ACCEL_OPC_FILL:
-	case ACCEL_OPC_ENCRYPT:
-	case ACCEL_OPC_DECRYPT:
-	case ACCEL_OPC_CRC32C:
+	case SPDK_ACCEL_OPC_DECOMPRESS:
+	case SPDK_ACCEL_OPC_FILL:
+	case SPDK_ACCEL_OPC_ENCRYPT:
+	case SPDK_ACCEL_OPC_DECRYPT:
+	case SPDK_ACCEL_OPC_CRC32C:
 		/* We can only merge tasks when one of them is a copy */
-		if (next->op_code != ACCEL_OPC_COPY) {
+		if (next->op_code != SPDK_ACCEL_OPC_COPY) {
 			break;
 		}
 		if (!accel_task_set_dstbuf(task, next)) {
@@ -2065,11 +2065,11 @@ spdk_accel_crypto_key_create(const struct spdk_accel_crypto_key_create_param *pa
 		return -EINVAL;
 	}
 
-	if (g_modules_opc[ACCEL_OPC_ENCRYPT].module != g_modules_opc[ACCEL_OPC_DECRYPT].module) {
+	if (g_modules_opc[SPDK_ACCEL_OPC_ENCRYPT].module != g_modules_opc[SPDK_ACCEL_OPC_DECRYPT].module) {
 		/* hardly ever possible, but let's check and warn the user */
 		SPDK_ERRLOG("Different accel modules are used for encryption and decryption\n");
 	}
-	module = g_modules_opc[ACCEL_OPC_ENCRYPT].module;
+	module = g_modules_opc[SPDK_ACCEL_OPC_ENCRYPT].module;
 
 	if (!module) {
 		SPDK_ERRLOG("No accel module found assigned for crypto operation\n");
@@ -2372,7 +2372,7 @@ accel_create_channel(void *io_device, void *ctx_buf)
 	}
 
 	/* Assign modules and get IO channels for each */
-	for (i = 0; i < ACCEL_OPC_LAST; i++) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; i++) {
 		accel_ch->module_ch[i] = g_modules_opc[i].module->get_io_channel();
 		/* This can happen if idxd runs out of channels. */
 		if (accel_ch->module_ch[i] == NULL) {
@@ -2418,7 +2418,7 @@ accel_add_stats(struct accel_stats *total, struct accel_stats *stats)
 
 	total->sequence_executed += stats->sequence_executed;
 	total->sequence_failed += stats->sequence_failed;
-	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		total->operations[i].executed += stats->operations[i].executed;
 		total->operations[i].failed += stats->operations[i].failed;
 		total->operations[i].num_bytes += stats->operations[i].num_bytes;
@@ -2438,7 +2438,7 @@ accel_destroy_channel(void *io_device, void *ctx_buf)
 		spdk_put_io_channel(accel_ch->driver_channel);
 	}
 
-	for (i = 0; i < ACCEL_OPC_LAST; i++) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; i++) {
 		assert(accel_ch->module_ch[i] != NULL);
 		spdk_put_io_channel(accel_ch->module_ch[i]);
 		accel_ch->module_ch[i] = NULL;
@@ -2483,7 +2483,7 @@ accel_module_initialize(void)
 }
 
 static void
-accel_module_init_opcode(enum accel_opcode opcode)
+accel_module_init_opcode(enum spdk_accel_opcode opcode)
 {
 	struct accel_module *module = &g_modules_opc[opcode];
 	struct spdk_accel_module_if *module_if = module->module;
@@ -2496,7 +2496,7 @@ accel_module_init_opcode(enum accel_opcode opcode)
 int
 spdk_accel_initialize(void)
 {
-	enum accel_opcode op;
+	enum spdk_accel_opcode op;
 	struct spdk_accel_module_if *accel_module = NULL;
 	int rc;
 
@@ -2530,7 +2530,7 @@ spdk_accel_initialize(void)
 	 * modules are initialized to support the operation.
 	 */
 	TAILQ_FOREACH(accel_module, &spdk_accel_module_list, tailq) {
-		for (op = 0; op < ACCEL_OPC_LAST; op++) {
+		for (op = 0; op < SPDK_ACCEL_OPC_LAST; op++) {
 			if (accel_module->supports_opcode(op)) {
 				g_modules_opc[op].module = accel_module;
 				SPDK_DEBUGLOG(accel, "OPC 0x%x now assigned to %s\n", op, accel_module->name);
@@ -2539,7 +2539,7 @@ spdk_accel_initialize(void)
 	}
 
 	/* Now lets check for overrides and apply all that exist */
-	for (op = 0; op < ACCEL_OPC_LAST; op++) {
+	for (op = 0; op < SPDK_ACCEL_OPC_LAST; op++) {
 		if (g_modules_opc_override[op] != NULL) {
 			accel_module = _module_find_by_name(g_modules_opc_override[op]);
 			if (accel_module == NULL) {
@@ -2554,12 +2554,12 @@ spdk_accel_initialize(void)
 		}
 	}
 
-	if (g_modules_opc[ACCEL_OPC_ENCRYPT].module != g_modules_opc[ACCEL_OPC_DECRYPT].module) {
+	if (g_modules_opc[SPDK_ACCEL_OPC_ENCRYPT].module != g_modules_opc[SPDK_ACCEL_OPC_DECRYPT].module) {
 		SPDK_ERRLOG("Different accel modules are assigned to encrypt and decrypt operations");
 		return -EINVAL;
 	}
 
-	for (op = 0; op < ACCEL_OPC_LAST; op++) {
+	for (op = 0; op < SPDK_ACCEL_OPC_LAST; op++) {
 		assert(g_modules_opc[op].module != NULL);
 		accel_module_init_opcode(op);
 	}
@@ -2682,7 +2682,7 @@ spdk_accel_write_config_json(struct spdk_json_write_ctx *w)
 			accel_module->write_config_json(w);
 		}
 	}
-	for (i = 0; i < ACCEL_OPC_LAST; i++) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; i++) {
 		if (g_modules_opc_override[i]) {
 			accel_write_overridden_opc(w, g_opcode_strings[i], g_modules_opc_override[i]);
 		}
@@ -2724,7 +2724,7 @@ static void
 accel_io_device_unregister_cb(void *io_device)
 {
 	struct spdk_accel_crypto_key *key, *key_tmp;
-	enum accel_opcode op;
+	enum spdk_accel_opcode op;
 
 	spdk_spin_lock(&g_keyring_spin);
 	TAILQ_FOREACH_SAFE(key, &g_keyring, link, key_tmp) {
@@ -2732,7 +2732,7 @@ accel_io_device_unregister_cb(void *io_device)
 	}
 	spdk_spin_unlock(&g_keyring_spin);
 
-	for (op = 0; op < ACCEL_OPC_LAST; op++) {
+	for (op = 0; op < SPDK_ACCEL_OPC_LAST; op++) {
 		if (g_modules_opc_override[op] != NULL) {
 			free(g_modules_opc_override[op]);
 			g_modules_opc_override[op] = NULL;
@@ -2869,7 +2869,7 @@ accel_get_stats(accel_get_stats_cb cb_fn, void *cb_arg)
 }
 
 void
-spdk_accel_get_opcode_stats(struct spdk_io_channel *ch, enum accel_opcode opcode,
+spdk_accel_get_opcode_stats(struct spdk_io_channel *ch, enum spdk_accel_opcode opcode,
 			    struct spdk_accel_opcode_stats *stats, size_t size)
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);

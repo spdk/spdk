@@ -50,7 +50,7 @@ spdk_reduce_vol_readv(struct spdk_reduce_vol *vol, struct iovec *iov, int iovcnt
 #include "bdev/compress/vbdev_compress.c"
 
 /* SPDK stubs */
-DEFINE_STUB(spdk_accel_get_opc_module_name, int, (enum accel_opcode opcode,
+DEFINE_STUB(spdk_accel_get_opc_module_name, int, (enum spdk_accel_opcode opcode,
 		const char **module_name), 0);
 DEFINE_STUB(spdk_accel_get_io_channel, struct spdk_io_channel *, (void), (void *)0xfeedbeef);
 DEFINE_STUB(spdk_bdev_get_aliases, const struct spdk_bdev_aliases_list *,

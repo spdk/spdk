@@ -20,7 +20,7 @@ rpc_accel_get_opc_assignments(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
-	enum accel_opcode opcode;
+	enum spdk_accel_opcode opcode;
 	const char *name, *module_name = NULL;
 	int rc;
 
@@ -33,7 +33,7 @@ rpc_accel_get_opc_assignments(struct spdk_jsonrpc_request *request,
 	w = spdk_jsonrpc_begin_result(request);
 
 	spdk_json_write_object_begin(w);
-	for (opcode = 0; opcode < ACCEL_OPC_LAST; opcode++) {
+	for (opcode = 0; opcode < SPDK_ACCEL_OPC_LAST; opcode++) {
 		rc = _accel_get_opc_name(opcode, &name);
 		if (rc == 0) {
 			rc = spdk_accel_get_opc_module_name(opcode, &module_name);
@@ -130,7 +130,7 @@ rpc_accel_assign_opc(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_accel_assign_opc req = {};
 	const char *opcode_str;
-	enum accel_opcode opcode;
+	enum spdk_accel_opcode opcode;
 	bool found = false;
 	int rc;
 
@@ -143,7 +143,7 @@ rpc_accel_assign_opc(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	for (opcode = 0; opcode < ACCEL_OPC_LAST; opcode++) {
+	for (opcode = 0; opcode < SPDK_ACCEL_OPC_LAST; opcode++) {
 		rc = _accel_get_opc_name(opcode, &opcode_str);
 		assert(!rc);
 		if (strcmp(opcode_str, req.opname) == 0) {
@@ -426,7 +426,7 @@ rpc_accel_get_stats_done(struct accel_stats *stats, void *cb_arg)
 	spdk_json_write_named_uint64(w, "sequence_executed", stats->sequence_executed);
 	spdk_json_write_named_uint64(w, "sequence_failed", stats->sequence_failed);
 	spdk_json_write_named_array_begin(w, "operations");
-	for (i = 0; i < ACCEL_OPC_LAST; ++i) {
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		if (stats->operations[i].executed + stats->operations[i].failed == 0) {
 			continue;
 		}

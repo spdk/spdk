@@ -508,7 +508,7 @@ vbdev_compress_config_json(struct spdk_json_write_ctx *w)
 	const char *module_name = NULL;
 	int rc;
 
-	rc = spdk_accel_get_opc_module_name(ACCEL_OPC_COMPRESS, &module_name);
+	rc = spdk_accel_get_opc_module_name(SPDK_ACCEL_OPC_COMPRESS, &module_name);
 	if (rc) {
 		SPDK_ERRLOG("error getting module name (%d)\n", rc);
 	}

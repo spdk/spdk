@@ -122,7 +122,7 @@ struct spdk_accel_task {
 		uint32_t		block_size; /* for crypto op */
 	};
 	uint64_t			iv; /* Initialization vector (tweak) for crypto op */
-	/* Uses enum accel_opcode */
+	/* Uses enum spdk_accel_opcode */
 	uint8_t				op_code;
 	int16_t				status;
 	int				flags;
@@ -161,7 +161,7 @@ struct spdk_accel_module_if {
 	size_t	(*get_ctx_size)(void);
 
 	const char *name;
-	bool (*supports_opcode)(enum accel_opcode);
+	bool (*supports_opcode)(enum spdk_accel_opcode);
 	struct spdk_io_channel *(*get_io_channel)(void);
 	int (*submit_tasks)(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task);
 

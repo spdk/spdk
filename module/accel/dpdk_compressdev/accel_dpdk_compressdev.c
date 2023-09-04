@@ -433,7 +433,7 @@ _compress_operation(struct compress_io_channel *chan,  struct spdk_accel_task *t
 	int src_mbuf_total = 0;
 	int dst_mbuf_total = 0;
 	bool device_error = false;
-	bool compress = (task->op_code == ACCEL_OPC_COMPRESS);
+	bool compress = (task->op_code == SPDK_ACCEL_OPC_COMPRESS);
 
 	assert(chan->device_qp->device != NULL);
 	cdev_id = chan->device_qp->device->cdev_id;
@@ -814,12 +814,12 @@ accel_compress_get_ctx_size(void)
 }
 
 static bool
-compress_supports_opcode(enum accel_opcode opc)
+compress_supports_opcode(enum spdk_accel_opcode opc)
 {
 	if (g_mlx5_pci_available || g_qat_available) {
 		switch (opc) {
-		case ACCEL_OPC_COMPRESS:
-		case ACCEL_OPC_DECOMPRESS:
+		case SPDK_ACCEL_OPC_COMPRESS:
+		case SPDK_ACCEL_OPC_DECOMPRESS:
 			return true;
 		default:
 			break;

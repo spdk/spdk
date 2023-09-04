@@ -150,27 +150,27 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 	idxd_task->chan = chan;
 
 	switch (task->op_code) {
-	case ACCEL_OPC_COPY:
+	case SPDK_ACCEL_OPC_COPY:
 		rc = spdk_idxd_submit_copy(chan->chan, task->d.iovs, task->d.iovcnt,
 					   task->s.iovs, task->s.iovcnt, flags, dsa_done, idxd_task);
 		break;
-	case ACCEL_OPC_DUALCAST:
+	case SPDK_ACCEL_OPC_DUALCAST:
 		rc = idxd_submit_dualcast(chan, idxd_task, flags);
 		break;
-	case ACCEL_OPC_COMPARE:
+	case SPDK_ACCEL_OPC_COMPARE:
 		rc = spdk_idxd_submit_compare(chan->chan, task->s.iovs, task->s.iovcnt,
 					      task->s2.iovs, task->s2.iovcnt, flags,
 					      dsa_done, idxd_task);
 		break;
-	case ACCEL_OPC_FILL:
+	case SPDK_ACCEL_OPC_FILL:
 		rc = spdk_idxd_submit_fill(chan->chan, task->d.iovs, task->d.iovcnt,
 					   task->fill_pattern, flags, dsa_done, idxd_task);
 		break;
-	case ACCEL_OPC_CRC32C:
+	case SPDK_ACCEL_OPC_CRC32C:
 		rc = spdk_idxd_submit_crc32c(chan->chan, task->s.iovs, task->s.iovcnt, task->seed,
 					     task->crc_dst, flags, dsa_done, idxd_task);
 		break;
-	case ACCEL_OPC_COPY_CRC32C:
+	case SPDK_ACCEL_OPC_COPY_CRC32C:
 		rc = spdk_idxd_submit_copy_crc32c(chan->chan, task->d.iovs, task->d.iovcnt,
 						  task->s.iovs, task->s.iovcnt,
 						  task->seed, task->crc_dst, flags,
@@ -274,7 +274,7 @@ accel_dsa_get_ctx_size(void)
 }
 
 static bool
-dsa_supports_opcode(enum accel_opcode opc)
+dsa_supports_opcode(enum spdk_accel_opcode opc)
 {
 	if (!g_dsa_initialized) {
 		assert(0);
@@ -282,12 +282,12 @@ dsa_supports_opcode(enum accel_opcode opc)
 	}
 
 	switch (opc) {
-	case ACCEL_OPC_COPY:
-	case ACCEL_OPC_FILL:
-	case ACCEL_OPC_DUALCAST:
-	case ACCEL_OPC_COMPARE:
-	case ACCEL_OPC_CRC32C:
-	case ACCEL_OPC_COPY_CRC32C:
+	case SPDK_ACCEL_OPC_COPY:
+	case SPDK_ACCEL_OPC_FILL:
+	case SPDK_ACCEL_OPC_DUALCAST:
+	case SPDK_ACCEL_OPC_COMPARE:
+	case SPDK_ACCEL_OPC_CRC32C:
+	case SPDK_ACCEL_OPC_COPY_CRC32C:
 		return true;
 	default:
 		return false;

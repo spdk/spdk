@@ -651,9 +651,9 @@ accel_dpdk_cryptodev_process_task(struct accel_dpdk_cryptodev_io_channel *crypto
 	/* mlx5_pci binds keys to a specific device, we can't use a key with any device */
 	assert(dev == key_handle->device || priv->driver != ACCEL_DPDK_CRYPTODEV_DRIVER_MLX5_PCI);
 
-	if (task->base.op_code == ACCEL_OPC_ENCRYPT) {
+	if (task->base.op_code == SPDK_ACCEL_OPC_ENCRYPT) {
 		session = key_handle->session_encrypt;
-	} else if (task->base.op_code == ACCEL_OPC_DECRYPT) {
+	} else if (task->base.op_code == SPDK_ACCEL_OPC_DECRYPT) {
 		session = key_handle->session_decrypt;
 	} else {
 		return -EINVAL;
@@ -917,11 +917,11 @@ accel_dpdk_cryptodev_ctx_size(void)
 }
 
 static bool
-accel_dpdk_cryptodev_supports_opcode(enum accel_opcode opc)
+accel_dpdk_cryptodev_supports_opcode(enum spdk_accel_opcode opc)
 {
 	switch (opc) {
-	case ACCEL_OPC_ENCRYPT:
-	case ACCEL_OPC_DECRYPT:
+	case SPDK_ACCEL_OPC_ENCRYPT:
+	case SPDK_ACCEL_OPC_DECRYPT:
 		return true;
 	default:
 		return false;

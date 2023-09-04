@@ -32,19 +32,19 @@ struct spdk_accel_crypto_key_create_param {
 	char *key_name;	/**< Key name */
 };
 
-enum accel_opcode {
-	ACCEL_OPC_COPY			= 0,
-	ACCEL_OPC_FILL			= 1,
-	ACCEL_OPC_DUALCAST		= 2,
-	ACCEL_OPC_COMPARE		= 3,
-	ACCEL_OPC_CRC32C		= 4,
-	ACCEL_OPC_COPY_CRC32C		= 5,
-	ACCEL_OPC_COMPRESS		= 6,
-	ACCEL_OPC_DECOMPRESS		= 7,
-	ACCEL_OPC_ENCRYPT		= 8,
-	ACCEL_OPC_DECRYPT		= 9,
-	ACCEL_OPC_XOR			= 10,
-	ACCEL_OPC_LAST			= 11,
+enum spdk_accel_opcode {
+	SPDK_ACCEL_OPC_COPY		= 0,
+	SPDK_ACCEL_OPC_FILL		= 1,
+	SPDK_ACCEL_OPC_DUALCAST		= 2,
+	SPDK_ACCEL_OPC_COMPARE		= 3,
+	SPDK_ACCEL_OPC_CRC32C		= 4,
+	SPDK_ACCEL_OPC_COPY_CRC32C	= 5,
+	SPDK_ACCEL_OPC_COMPRESS		= 6,
+	SPDK_ACCEL_OPC_DECOMPRESS	= 7,
+	SPDK_ACCEL_OPC_ENCRYPT		= 8,
+	SPDK_ACCEL_OPC_DECRYPT		= 9,
+	SPDK_ACCEL_OPC_XOR		= 10,
+	SPDK_ACCEL_OPC_LAST		= 11,
 };
 
 enum spdk_accel_cipher {
@@ -629,7 +629,7 @@ int spdk_accel_submit_decrypt(struct spdk_io_channel *ch, struct spdk_accel_cryp
  * \return 0 if a valid module name was provided. -EINVAL for invalid opcode
  *  or -ENOENT no module was found at this time for the provided opcode.
  */
-int spdk_accel_get_opc_module_name(enum accel_opcode opcode, const char **module_name);
+int spdk_accel_get_opc_module_name(enum spdk_accel_opcode opcode, const char **module_name);
 
 /**
  * Override the assignment of an opcode to an module.
@@ -642,7 +642,7 @@ int spdk_accel_get_opc_module_name(enum accel_opcode opcode, const char **module
  * \return 0 if a valid opcode name was provided. -EINVAL for invalid opcode
  *  or if the framework has started (cannot change modules after startup)
  */
-int spdk_accel_assign_opc(enum accel_opcode opcode, const char *name);
+int spdk_accel_assign_opc(enum spdk_accel_opcode opcode, const char *name);
 
 struct spdk_json_write_ctx;
 
@@ -717,7 +717,7 @@ struct spdk_accel_opcode_stats {
  * \param stats Per-channel statistics.
  * \param size Size of the `stats` structure.
  */
-void spdk_accel_get_opcode_stats(struct spdk_io_channel *ch, enum accel_opcode opcode,
+void spdk_accel_get_opcode_stats(struct spdk_io_channel *ch, enum spdk_accel_opcode opcode,
 				 struct spdk_accel_opcode_stats *stats, size_t size);
 
 #ifdef __cplusplus

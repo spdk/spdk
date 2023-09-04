@@ -71,7 +71,7 @@ ioat_free_device(struct ioat_device *dev)
 
 static int accel_ioat_init(void);
 static void accel_ioat_exit(void *ctx);
-static bool ioat_supports_opcode(enum accel_opcode opc);
+static bool ioat_supports_opcode(enum spdk_accel_opcode opc);
 static struct spdk_io_channel *ioat_get_io_channel(void);
 static int ioat_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task);
 
@@ -112,7 +112,7 @@ ioat_poll(void *arg)
 static struct spdk_io_channel *ioat_get_io_channel(void);
 
 static bool
-ioat_supports_opcode(enum accel_opcode opc)
+ioat_supports_opcode(enum spdk_accel_opcode opc)
 {
 	if (!g_ioat_initialized) {
 		assert(0);
@@ -120,8 +120,8 @@ ioat_supports_opcode(enum accel_opcode opc)
 	}
 
 	switch (opc) {
-	case ACCEL_OPC_COPY:
-	case ACCEL_OPC_FILL:
+	case SPDK_ACCEL_OPC_COPY:
+	case SPDK_ACCEL_OPC_FILL:
 		return true;
 	default:
 		return false;
@@ -165,10 +165,10 @@ ioat_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task
 
 	do {
 		switch (accel_task->op_code) {
-		case ACCEL_OPC_FILL:
+		case SPDK_ACCEL_OPC_FILL:
 			rc = ioat_submit_fill(ioat_ch,  accel_task);
 			break;
-		case ACCEL_OPC_COPY:
+		case SPDK_ACCEL_OPC_COPY:
 			rc = ioat_submit_copy(ioat_ch, accel_task);
 			break;
 		default:

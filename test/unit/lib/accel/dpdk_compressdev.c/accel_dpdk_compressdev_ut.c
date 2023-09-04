@@ -515,7 +515,7 @@ test_compress_operation(void)
 	}
 
 	task.cb_fn = _compress_done;
-	task.op_code = ACCEL_OPC_COMPRESS;
+	task.op_code = SPDK_ACCEL_OPC_COMPRESS;
 	task.output_size = &output_size;
 	task.d.iovs = dst_iovs;
 	task.d.iovcnt = dst_iovcnt;
@@ -699,7 +699,7 @@ test_compress_operation_cross_boundary(void)
 	exp_src_mbuf[3]->pkt_len = exp_src_mbuf[3]->buf_len = 0x1000;
 
 	task.cb_fn = _compress_done;
-	task.op_code = ACCEL_OPC_COMPRESS;
+	task.op_code = SPDK_ACCEL_OPC_COMPRESS;
 	task.output_size = &output_size;
 	task.d.iovs = dst_iovs;
 	task.d.iovcnt = dst_iovcnt;
@@ -932,7 +932,7 @@ test_poller(void)
 	task_to_resubmit->s.iovcnt = 3;
 	task_to_resubmit->d.iovs = &dst_iovs[0];
 	task_to_resubmit->d.iovcnt = 3;
-	task_to_resubmit->op_code = ACCEL_OPC_COMPRESS;
+	task_to_resubmit->op_code = SPDK_ACCEL_OPC_COMPRESS;
 	task_to_resubmit->cb_arg = args;
 	ut_enqueue_value = FAKE_ENQUEUE_SUCCESS;
 	ut_expected_op.private_xform = &g_decomp_xform;
