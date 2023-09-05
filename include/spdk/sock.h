@@ -48,9 +48,14 @@ struct spdk_sock_request {
 	 */
 	struct __sock_request_internal {
 		TAILQ_ENTRY(spdk_sock_request)	link;
-#ifdef DEBUG
+
+		/**
+		 * curr_list is only used in DEBUG mode, but we include it in
+		 * release builds too to ensure ABI compatibility between debug
+		 * and release builds.
+		 */
 		void				*curr_list;
-#endif
+
 		uint32_t			offset;
 
 		/* Indicate if the whole req or part of it is sent with zerocopy */
