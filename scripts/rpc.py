@@ -3524,6 +3524,11 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     args = parser.parse_args()
 
+    try:
+        use_go_client = int(os.getenv('SPDK_JSONRPC_GO_CLIENT', 0)) == 1
+    except ValueError:
+        use_go_client = False
+
     if sys.stdin.isatty() and not hasattr(args, 'func'):
         # No arguments and no data piped through stdin
         parser.print_help()
@@ -3540,9 +3545,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                 continue
 
             try:
-                tmp_args.client = rpc.client.JSONRPCClient(
-                    tmp_args.server_addr, tmp_args.port, tmp_args.timeout,
-                    log_level=getattr(logging, tmp_args.verbose.upper()), conn_retries=tmp_args.conn_retries)
+                if use_go_client:
+                    tmp_args.client = rpc.client.JSONRPCGoClient(tmp_args.server_addr,
+                                                                 log_level=getattr(logging, tmp_args.verbose.upper()))
+                else:
+                    tmp_args.client = rpc.client.JSONRPCClient(
+                        tmp_args.server_addr, tmp_args.port, tmp_args.timeout,
+                        log_level=getattr(logging, tmp_args.verbose.upper()), conn_retries=tmp_args.conn_retries)
                 call_rpc_func(tmp_args)
                 print("**STATUS=0", flush=True)
             except JSONRPCException as ex:
@@ -3554,7 +3563,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         print_dict = null_print
         print_json = null_print
         print_array = null_print
-    elif args.go_client:
+    elif args.go_client or use_go_client:
         try:
             args.client = rpc.client.JSONRPCGoClient(args.server_addr,
                                                      log_level=getattr(logging, args.verbose.upper()))
