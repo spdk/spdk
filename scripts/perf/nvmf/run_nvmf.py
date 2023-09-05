@@ -1662,6 +1662,105 @@ def initiators_match_subsystems(initiators, target_obj):
             i.adq_configure_tc()
 
 
+def run_single_fio_test(args,
+                        initiators,
+                        configs,
+                        target_obj,
+                        block_size,
+                        io_depth,
+                        rw,
+                        fio_rw_mix_read,
+                        fio_run_num,
+                        fio_ramp_time,
+                        fio_run_time):
+
+    for run_no in range(1, fio_run_num+1):
+        threads = []
+        power_daemon = None
+        measurements_prefix = "%s_%s_%s_m_%s_run_%s" % (block_size, io_depth, rw, fio_rw_mix_read, run_no)
+
+        for i, cfg in zip(initiators, configs):
+            t = threading.Thread(target=i.run_fio, args=(cfg, run_no))
+            threads.append(t)
+        if target_obj.enable_sar:
+            sar_file_prefix = measurements_prefix + "_sar"
+            t = threading.Thread(target=target_obj.measure_sar, args=(args.results, sar_file_prefix, fio_ramp_time, fio_run_time))
+            threads.append(t)
+
+        if target_obj.enable_pcm:
+            pcm_fnames = ["%s_%s.csv" % (measurements_prefix, x) for x in ["pcm_cpu"]]
+            pcm_cpu_t = threading.Thread(target=target_obj.measure_pcm,
+                                         args=(args.results, pcm_fnames[0], fio_ramp_time, fio_run_time))
+            threads.append(pcm_cpu_t)
+
+        if target_obj.enable_bw:
+            bandwidth_file_name = measurements_prefix + "_bandwidth.csv"
+            t = threading.Thread(target=target_obj.measure_network_bandwidth,
+                                 args=(args.results, bandwidth_file_name, fio_ramp_time, fio_run_time))
+            threads.append(t)
+
+        if target_obj.enable_dpdk_memory:
+            dpdk_mem_file_name = measurements_prefix + "_dpdk_mem.txt"
+            t = threading.Thread(target=target_obj.measure_dpdk_memory, args=(args.results, dpdk_mem_file_name, fio_ramp_time))
+            threads.append(t)
+
+        if target_obj.enable_pm:
+            power_daemon = threading.Thread(target=target_obj.measure_power,
+                                            args=(args.results, measurements_prefix, script_full_dir,
+                                                  fio_ramp_time, fio_run_time))
+            threads.append(power_daemon)
+
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+
+def run_fio_tests(args, initiators, target_obj,
+                  fio_workloads, fio_rw_mix_read,
+                  fio_run_num, fio_ramp_time, fio_run_time,
+                  fio_rate_iops, fio_offset, fio_offset_inc):
+
+    for block_size, io_depth, rw in fio_workloads:
+        configs = []
+        for i in initiators:
+            i.init_connect()
+            cfg = i.gen_fio_config(rw,
+                                   block_size,
+                                   io_depth,
+                                   target_obj.subsys_no,
+                                   fio_rw_mix_read,
+                                   fio_num_jobs,
+                                   fio_ramp_time,
+                                   fio_run_time,
+                                   fio_rate_iops,
+                                   fio_offset,
+                                   fio_offset_inc)
+            configs.append(cfg)
+
+        run_single_fio_test(args,
+                            initiators,
+                            configs,
+                            target_obj,
+                            block_size,
+                            io_depth,
+                            rw,
+                            fio_rw_mix_read,
+                            fio_run_num,
+                            fio_ramp_time,
+                            fio_run_time)
+
+        for i in initiators:
+            i.init_disconnect()
+            i.copy_result_files(args.results)
+
+    try:
+        parse_results(args.results, args.csv_filename)
+    except Exception as err:
+        logging.error("There was an error with parsing the results")
+        logging.error(err)
+
+
 if __name__ == "__main__":
     exit_code = 0
 
@@ -1751,73 +1850,21 @@ if __name__ == "__main__":
             {"name": i.name, "target_nic_ips": i.target_nic_ips, "initiator_nic_ips": i.nic_ips}
         )
 
-    # TODO: This try block is definietly too large. Need to break this up into separate
-    # logical blocks to reduce size.
     try:
         target_obj.tgt_start()
         initiators_match_subsystems(initiators, target_obj)
 
         # Poor mans threading
         # Run FIO tests
-        for block_size, io_depth, rw in fio_workloads:
-            configs = []
-            for i in initiators:
-                i.init_connect()
-                cfg = i.gen_fio_config(rw, fio_rw_mix_read, block_size, io_depth, target_obj.subsys_no,
-                                       fio_num_jobs, fio_ramp_time, fio_run_time, fio_rate_iops,
-                                       fio_offset, fio_offset_inc)
-                configs.append(cfg)
+        run_fio_tests(args, initiators, target_obj, fio_workloads, fio_rw_mix_read,
+                      fio_run_num, fio_ramp_time, fio_run_time, fio_rate_iops,
+                      fio_offset, fio_offset_inc)
 
-            for run_no in range(1, fio_run_num+1):
-                threads = []
-                power_daemon = None
-                measurements_prefix = "%s_%s_%s_m_%s_run_%s" % (block_size, io_depth, rw, fio_rw_mix_read, run_no)
+    except Exception as e:
+        logging.error("Exception occurred while running FIO tests")
+        logging.error(e)
+        exit_code = 1
 
-                for i, cfg in zip(initiators, configs):
-                    t = threading.Thread(target=i.run_fio, args=(cfg, run_no))
-                    threads.append(t)
-                if target_obj.enable_sar:
-                    sar_file_prefix = measurements_prefix + "_sar"
-                    t = threading.Thread(target=target_obj.measure_sar, args=(args.results, sar_file_prefix, fio_ramp_time, fio_run_time))
-                    threads.append(t)
-
-                if target_obj.enable_pcm:
-                    pcm_fnames = ["%s_%s.csv" % (measurements_prefix, x) for x in ["pcm_cpu"]]
-                    pcm_cpu_t = threading.Thread(target=target_obj.measure_pcm,
-                                                 args=(args.results, pcm_fnames[0], fio_ramp_time, fio_run_time))
-                    threads.append(pcm_cpu_t)
-
-                if target_obj.enable_bw:
-                    bandwidth_file_name = measurements_prefix + "_bandwidth.csv"
-                    t = threading.Thread(target=target_obj.measure_network_bandwidth,
-                                         args=(args.results, bandwidth_file_name, fio_ramp_time, fio_run_time))
-                    threads.append(t)
-
-                if target_obj.enable_dpdk_memory:
-                    dpdk_mem_file_name = measurements_prefix + "_dpdk_mem.txt"
-                    t = threading.Thread(target=target_obj.measure_dpdk_memory, args=(args.results, dpdk_mem_file_name, fio_ramp_time))
-                    threads.append(t)
-
-                if target_obj.enable_pm:
-                    power_daemon = threading.Thread(target=target_obj.measure_power,
-                                                    args=(args.results, measurements_prefix, script_full_dir,
-                                                          fio_ramp_time, fio_run_time))
-                    threads.append(power_daemon)
-
-                for t in threads:
-                    t.start()
-                for t in threads:
-                    t.join()
-
-            for i in initiators:
-                i.init_disconnect()
-                i.copy_result_files(args.results)
-        try:
-            parse_results(args.results, args.csv_filename)
-        except Exception as err:
-            exit_code = 1
-            logging.error("There was an error with parsing the results")
-            logging.error(err)
     finally:
         for i in initiators:
             try:
