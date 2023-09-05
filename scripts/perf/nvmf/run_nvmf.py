@@ -924,9 +924,7 @@ class Initiator(Server):
         return "\n".join(["cpus_allowed=%s" % ",".join(allowed_cpus),
                           "numa_mem_policy=prefer:%s" % section_local_numa])
 
-    def gen_fio_config(self, rw, rwmixread, block_size, io_depth, subsys_no,
-                       num_jobs=None, ramp_time=0, run_time=10, rate_iops=0,
-                       offset=False, offset_inc=0, numa_align=True):
+    def gen_fio_config(self, rw, block_size, io_depth, subsys_no, fio_settings):
         fio_conf_template = """
 [global]
 ioengine={ioengine}
@@ -967,12 +965,13 @@ rate_iops={rate_iops}
             self.num_cores = len(self.subsystem_info_list)
             threads = range(0, len(self.subsystem_info_list))
 
-        filename_section = self.gen_fio_filename_conf(self.subsystem_info_list, threads, io_depth, num_jobs,
-                                                      offset, offset_inc, numa_align)
+        filename_section = self.gen_fio_filename_conf(self.subsystem_info_list, threads, io_depth, fio_settings["num_jobs"],
+                                                      fio_settings["offset"], fio_settings["offset_inc"], fio_settings["numa_align"])
 
         fio_config = fio_conf_template.format(ioengine=self.ioengine, spdk_conf=self.spdk_conf,
-                                              rw=rw, rwmixread=rwmixread, block_size=block_size,
-                                              ramp_time=ramp_time, run_time=run_time, rate_iops=rate_iops)
+                                              rw=rw, rwmixread=fio_settings["rw_mix_read"], block_size=block_size,
+                                              ramp_time=fio_settings["ramp_time"], run_time=fio_settings["run_time"],
+                                              rate_iops=fio_settings["rate_iops"])
 
         # TODO: hipri disabled for now, as it causes fio errors:
         # io_u error on file /dev/nvme2n1: Operation not supported
@@ -982,15 +981,15 @@ rate_iops={rate_iops}
 fixedbufs=1
 registerfiles=1
 #hipri=1
-"""
-        if num_jobs:
-            fio_config = fio_config + "numjobs=%s \n" % num_jobs
+        """
+        if fio_settings["num_jobs"]:
+            fio_config = fio_config + "numjobs=%s \n" % fio_settings["num_jobs"]
         if self.cpus_allowed is not None:
             fio_config = fio_config + "cpus_allowed=%s \n" % self.cpus_allowed
             fio_config = fio_config + "cpus_allowed_policy=%s \n" % self.cpus_allowed_policy
         fio_config = fio_config + filename_section
 
-        fio_config_filename = "%s_%s_%s_m_%s" % (block_size, io_depth, rw, rwmixread)
+        fio_config_filename = "%s_%s_%s_m_%s" % (block_size, io_depth, rw, fio_settings["rw_mix_read"])
         if hasattr(self, "num_cores"):
             fio_config_filename += "_%sCPU" % self.num_cores
         fio_config_filename += ".fio"
@@ -1712,52 +1711,43 @@ def initiators_match_subsystems(initiators, target_obj):
             i.adq_configure_tc()
 
 
-def run_single_fio_test(args,
-                        initiators,
-                        configs,
-                        target_obj,
-                        block_size,
-                        io_depth,
-                        rw,
-                        fio_rw_mix_read,
-                        fio_run_num,
-                        fio_ramp_time,
-                        fio_run_time):
+def run_single_fio_test(args, initiators, configs, target_obj, block_size, io_depth, rw, fio_settings):
 
-    for run_no in range(1, fio_run_num+1):
+    for run_no in range(1, fio_settings["run_num"]+1):
         threads = []
         power_daemon = None
-        measurements_prefix = "%s_%s_%s_m_%s_run_%s" % (block_size, io_depth, rw, fio_rw_mix_read, run_no)
+        measurements_prefix = "%s_%s_%s_m_%s_run_%s" % (block_size, io_depth, rw, fio_settings["rw_mix_read"], run_no)
 
         for i, cfg in zip(initiators, configs):
             t = threading.Thread(target=i.run_fio, args=(cfg, run_no))
             threads.append(t)
         if target_obj.enable_sar:
             sar_file_prefix = measurements_prefix + "_sar"
-            t = threading.Thread(target=target_obj.measure_sar, args=(args.results, sar_file_prefix, fio_ramp_time, fio_run_time))
+            t = threading.Thread(target=target_obj.measure_sar,
+                                 args=(args.results, sar_file_prefix, fio_settings["ramp_time"], fio_settings["run_time"]))
             threads.append(t)
 
         if target_obj.enable_pcm:
             pcm_fnames = ["%s_%s.csv" % (measurements_prefix, x) for x in ["pcm_cpu"]]
             pcm_cpu_t = threading.Thread(target=target_obj.measure_pcm,
-                                         args=(args.results, pcm_fnames[0], fio_ramp_time, fio_run_time))
+                                         args=(args.results, pcm_fnames[0], fio_settings["ramp_time"], fio_settings["run_time"]))
             threads.append(pcm_cpu_t)
 
         if target_obj.enable_bw:
             bandwidth_file_name = measurements_prefix + "_bandwidth.csv"
             t = threading.Thread(target=target_obj.measure_network_bandwidth,
-                                 args=(args.results, bandwidth_file_name, fio_ramp_time, fio_run_time))
+                                 args=(args.results, bandwidth_file_name, fio_settings["ramp_time"], fio_settings["run_time"]))
             threads.append(t)
 
         if target_obj.enable_dpdk_memory:
             dpdk_mem_file_name = measurements_prefix + "_dpdk_mem.txt"
-            t = threading.Thread(target=target_obj.measure_dpdk_memory, args=(args.results, dpdk_mem_file_name, fio_ramp_time))
+            t = threading.Thread(target=target_obj.measure_dpdk_memory, args=(args.results, dpdk_mem_file_name, fio_settings["ramp_time"]))
             threads.append(t)
 
         if target_obj.enable_pm:
             power_daemon = threading.Thread(target=target_obj.measure_power,
                                             args=(args.results, measurements_prefix, script_full_dir,
-                                                  fio_ramp_time, fio_run_time))
+                                                  fio_settings["ramp_time"], fio_settings["run_time"]))
             threads.append(power_daemon)
 
         for t in threads:
@@ -1766,41 +1756,16 @@ def run_single_fio_test(args,
             t.join()
 
 
-def run_fio_tests(args, initiators, target_obj,
-                  fio_workloads, fio_rw_mix_read,
-                  fio_run_num, fio_ramp_time, fio_run_time,
-                  fio_rate_iops, fio_offset, fio_offset_inc,
-                  fio_numa_align):
+def run_fio_tests(args, initiators, target_obj, fio_settings):
 
-    for block_size, io_depth, rw in fio_workloads:
+    for block_size, io_depth, rw in fio_settings["workloads"]:
         configs = []
         for i in initiators:
             i.init_connect()
-            cfg = i.gen_fio_config(rw,
-                                   fio_rw_mix_read,
-                                   block_size,
-                                   io_depth,
-                                   target_obj.subsys_no,
-                                   fio_num_jobs,
-                                   fio_ramp_time,
-                                   fio_run_time,
-                                   fio_rate_iops,
-                                   fio_offset,
-                                   fio_offset_inc,
-                                   fio_numa_align)
+            cfg = i.gen_fio_config(rw, block_size, io_depth, target_obj.subsys_no, fio_settings)
             configs.append(cfg)
 
-        run_single_fio_test(args,
-                            initiators,
-                            configs,
-                            target_obj,
-                            block_size,
-                            io_depth,
-                            rw,
-                            fio_rw_mix_read,
-                            fio_run_num,
-                            fio_ramp_time,
-                            fio_run_time)
+        run_single_fio_test(args, initiators, configs, target_obj, block_size, io_depth, rw, fio_settings)
 
         for i in initiators:
             i.init_disconnect()
@@ -1874,29 +1839,18 @@ if __name__ == "__main__":
                 init_obj = KernelInitiator(k, data["general"], v)
             initiators.append(init_obj)
         elif "fio" in k:
-            fio_workloads = itertools.product(data[k]["bs"],
-                                              data[k]["qd"],
-                                              data[k]["rw"])
-
-            fio_run_time = data[k]["run_time"]
-            fio_ramp_time = data[k]["ramp_time"]
-            fio_rw_mix_read = data[k]["rwmixread"]
-            fio_run_num = data[k]["run_num"] if "run_num" in data[k].keys() else None
-            fio_num_jobs = data[k]["num_jobs"] if "num_jobs" in data[k].keys() else None
-
-            fio_rate_iops = 0
-            if "rate_iops" in data[k]:
-                fio_rate_iops = data[k]["rate_iops"]
-
-            fio_offset = False
-            if "offset" in data[k]:
-                fio_offset = data[k]["offset"]
-            fio_offset_inc = 0
-            if "offset_inc" in data[k]:
-                fio_offset_inc = data[k]["offset_inc"]
-            fio_numa_align = True
-            if "numa_align" in data[k]:
-                fio_numa_align = data[k]["numa_align"]
+            fio_settings = {
+                "workloads": itertools.product(data[k]["bs"], data[k]["qd"],  data[k]["rw"]),
+                "run_time": data[k].get("run_time", 10),
+                "ramp_time": data[k].get("ramp_time", 0),
+                "rw_mix_read": data[k].get("rwmixread", 70),
+                "run_num": data[k].get("run_num", None),
+                "num_jobs": data[k].get("num_jobs", None),
+                "rate_iops": data[k].get("rate_iops", 0),
+                "offset": data[k].get("offset", False),
+                "offset_inc": data[k].get("offset_inc", 0),
+                "numa_align": data[k].get("numa_align", 1)
+            }
         else:
             continue
 
@@ -1916,9 +1870,7 @@ if __name__ == "__main__":
 
         # Poor mans threading
         # Run FIO tests
-        run_fio_tests(args, initiators, target_obj, fio_workloads, fio_rw_mix_read,
-                      fio_run_num, fio_ramp_time, fio_run_time, fio_rate_iops,
-                      fio_offset, fio_offset_inc, fio_numa_align)
+        run_fio_tests(args, initiators, target_obj, fio_settings)
 
     except Exception as e:
         logging.error("Exception occurred while running FIO tests")
