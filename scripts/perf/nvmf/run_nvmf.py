@@ -1778,6 +1778,25 @@ def run_fio_tests(args, initiators, target_obj, fio_settings):
         raise err
 
 
+def validate_allowlist_settings(data, is_forced_used):
+    if data["target"].get("null_block_devices"):
+        logging.info("Null block devices used for testing. Allow and block lists will not be checked.")
+        return True
+
+    if is_forced_used:
+        logging.warning("""Force mode used. All available NVMe drives on your system will be used,
+                     which may potentially lead to data loss""")
+        return True
+
+    if not (data["target"].get("allowlist") or data["target"].get("blocklist")):
+        logging.error("""This script requires allowlist or blocklist to be defined.
+                      You can choose to use all available NVMe drives on your system (-f option),
+                      which may potentially lead to data loss.""")
+        return False
+
+    return True
+
+
 class CpuThrottlingError(Exception):
     def __init__(self, message):
         super().__init__(message)
@@ -1815,14 +1834,7 @@ if __name__ == "__main__":
     target_config = data["target"]
     initiator_configs = [data[x] for x in data.keys() if "initiator" in x]
 
-    if "null_block_devices" not in data["target"] and \
-        (args.force is False and
-            "allowlist" not in data["target"] and
-            "blocklist" not in data["target"]):
-        # TODO: Also check if allowlist or blocklist are not empty.
-        logging.warning("""WARNING: This script requires allowlist and blocklist to be defined.
-        You can choose to use all available NVMe drives on your system, which may potentially
-        lead to data loss. If you wish to proceed with all attached NVMes, use "-f" option.""")
+    if not validate_allowlist_settings(data, args.force):
         exit(1)
 
     for k, v in data.items():
