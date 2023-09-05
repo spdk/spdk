@@ -1329,10 +1329,15 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	 * The responder_resources field must match the initiator depth specified by the remote node when running
 	 * the rdma_connect and rdma_accept functions. */
 	if (rdma_param->responder_resources != 0) {
-		SPDK_ERRLOG("Host (Initiator) is not allowed to use RDMA operations (responder_resources %u)\n",
-			    rdma_param->responder_resources);
-		nvmf_rdma_event_reject(event->id, SPDK_NVMF_RDMA_ERROR_INVALID_ORD);
-		return -1;
+		if (private_data->qid) {
+			SPDK_DEBUGLOG(rdma, "Host (Initiator) is not allowed to use RDMA operations,"
+				      " responder_resources must be 0 but set to %u\n",
+				      rdma_param->responder_resources);
+		} else {
+			SPDK_WARNLOG("Host (Initiator) is not allowed to use RDMA operations,"
+				     " responder_resources must be 0 but set to %u\n",
+				     rdma_param->responder_resources);
+		}
 	}
 	/* from man3 rdma_get_cm_event
 	 * initiator_depth - Specifies the maximum number of outstanding RDMA read operations that the recipient holds.
