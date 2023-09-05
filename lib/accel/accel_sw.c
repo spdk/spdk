@@ -659,6 +659,16 @@ sw_accel_crypto_supports_cipher(enum spdk_accel_cipher cipher, size_t key_size)
 	}
 }
 
+static int
+sw_accel_get_operation_info(enum spdk_accel_opcode opcode,
+			    const struct spdk_accel_operation_exec_ctx *ctx,
+			    struct spdk_accel_opcode_info *info)
+{
+	info->required_alignment = 0;
+
+	return 0;
+}
+
 static struct spdk_accel_module_if g_sw_module = {
 	.module_init			= sw_accel_module_init,
 	.module_fini			= sw_accel_module_fini,
@@ -672,6 +682,7 @@ static struct spdk_accel_module_if g_sw_module = {
 	.crypto_key_deinit		= sw_accel_crypto_key_deinit,
 	.crypto_supports_tweak_mode	= sw_accel_crypto_supports_tweak_mode,
 	.crypto_supports_cipher		= sw_accel_crypto_supports_cipher,
+	.get_operation_info		= sw_accel_get_operation_info,
 };
 
 SPDK_ACCEL_MODULE_REGISTER(sw, &g_sw_module)

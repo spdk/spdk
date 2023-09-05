@@ -135,6 +135,14 @@ struct spdk_accel_task {
 	} bounce;
 };
 
+struct spdk_accel_opcode_info {
+	/**
+	 * Minimum buffer alignment required to execute the operation, expressed as power of 2.  The
+	 * value of 0 means that the buffers don't need to be aligned.
+	 */
+	uint8_t required_alignment;
+};
+
 struct spdk_accel_module_if {
 	/** Name of the module. */
 	const char *name;
@@ -204,6 +212,14 @@ struct spdk_accel_module_if {
 	 */
 	int (*get_memory_domains)(struct spdk_memory_domain **domains, int num_domains);
 
+	/**
+	 * Returns information/constraints for a given operation.  If unimplemented, it is assumed
+	 * that the module doens't have any constraints to execute any operation.
+	 */
+	int (*get_operation_info)(enum spdk_accel_opcode opcode,
+				  const struct spdk_accel_operation_exec_ctx *ctx,
+				  struct spdk_accel_opcode_info *info);
+
 	TAILQ_ENTRY(spdk_accel_module_if)	tailq;
 };
 
@@ -246,6 +262,14 @@ struct spdk_accel_driver {
 
 	/** Returns IO channel that will be passed to `execute_sequence()`. */
 	struct spdk_io_channel *(*get_io_channel)(void);
+
+	/**
+	 * Returns information/constraints for a given operation.  If unimplemented, it is assumed
+	 * that the driver doesn't have any constraints to execute any operation.
+	 */
+	int (*get_operation_info)(enum spdk_accel_opcode opcode,
+				  const struct spdk_accel_operation_exec_ctx *ctx,
+				  struct spdk_accel_opcode_info *info);
 
 	TAILQ_ENTRY(spdk_accel_driver)	tailq;
 };

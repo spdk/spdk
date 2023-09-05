@@ -720,6 +720,30 @@ struct spdk_accel_opcode_stats {
 void spdk_accel_get_opcode_stats(struct spdk_io_channel *ch, enum spdk_accel_opcode opcode,
 				 struct spdk_accel_opcode_stats *stats, size_t size);
 
+/**
+ * Context for the `spdk_accel_get_buf_align()` function.  Depending on the operation, some of the
+ * fields might be unused.
+ */
+struct spdk_accel_operation_exec_ctx {
+	/** Size of this structure in bytes */
+	size_t size;
+	/** Block size in bytes, required for encrypt and decrypt */
+	uint32_t block_size;
+};
+
+/**
+ * Get minimum buffer alignment to execute a given operation.  It accounts for constraints of a
+ * module assigned to execute a given operation and the driver (if set). The alignment is returned
+ * as a power of 2.  The value of 0 means that the buffers don't need to be aligned.
+ *
+ * \param opcode Opcode.
+ * \param ctx Context in which the operation will be executed.
+ *
+ * \return Minimum alignment.
+ */
+uint8_t spdk_accel_get_buf_align(enum spdk_accel_opcode opcode,
+				 const struct spdk_accel_operation_exec_ctx *ctx);
+
 #ifdef __cplusplus
 }
 #endif

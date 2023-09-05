@@ -2890,4 +2890,26 @@ spdk_accel_get_opcode_stats(struct spdk_io_channel *ch, enum spdk_accel_opcode o
 #undef SET_FIELD
 }
 
+uint8_t
+spdk_accel_get_buf_align(enum spdk_accel_opcode opcode,
+			 const struct spdk_accel_operation_exec_ctx *ctx)
+{
+	struct spdk_accel_module_if *module = g_modules_opc[opcode].module;
+	struct spdk_accel_opcode_info modinfo = {}, drvinfo = {};
+
+	if (g_accel_driver != NULL && g_accel_driver->get_operation_info != NULL) {
+		g_accel_driver->get_operation_info(opcode, ctx, &drvinfo);
+	}
+
+	if (module->get_operation_info != NULL) {
+		module->get_operation_info(opcode, ctx, &modinfo);
+	}
+
+	/* If a driver is set, it'll execute most of the operations, while the rest will usually
+	 * fall back to accel_sw, which doesn't have any alignment requiremenets.  However, to be
+	 * extra safe, return the max(driver, module) if a driver delegates some operations to a
+	 * hardware module. */
+	return spdk_max(modinfo.required_alignment, drvinfo.required_alignment);
+}
+
 SPDK_LOG_REGISTER_COMPONENT(accel)
