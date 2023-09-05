@@ -263,6 +263,7 @@ _spdk_apps() {
 		pkgdep.sh
 		run-autorun.sh
 		vm_setup.sh
+		autotest_setup.sh
 	) # TODO: Add more?
 
 	complete -o default -F _spdk_app "${apps[@]}"
