@@ -1655,6 +1655,13 @@ class SPDKInitiator(Initiator):
         return None
 
 
+def initiators_match_subsystems(initiators, target_obj):
+    for i in initiators:
+        i.match_subsystems(target_obj.subsystem_info_list)
+        if i.enable_adq:
+            i.adq_configure_tc()
+
+
 if __name__ == "__main__":
     exit_code = 0
 
@@ -1748,11 +1755,7 @@ if __name__ == "__main__":
     # logical blocks to reduce size.
     try:
         target_obj.tgt_start()
-
-        for i in initiators:
-            i.match_subsystems(target_obj.subsystem_info_list)
-            if i.enable_adq:
-                i.adq_configure_tc()
+        initiators_match_subsystems(initiators, target_obj)
 
         # Poor mans threading
         # Run FIO tests
