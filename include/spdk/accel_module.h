@@ -134,6 +134,11 @@ struct spdk_accel_task {
 		uint32_t			seed;
 		uint64_t			fill_pattern;
 		struct spdk_accel_crypto_key	*crypto_key;
+		struct {
+			const struct spdk_dif_ctx	*ctx;
+			struct spdk_dif_error		*err;
+			uint32_t	num_blocks;
+		} dif;
 	};
 	union {
 		uint32_t		*crc_dst;

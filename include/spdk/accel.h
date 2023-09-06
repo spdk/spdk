@@ -13,6 +13,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/dma.h"
+#include "spdk/dif.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,7 +45,8 @@ enum spdk_accel_opcode {
 	SPDK_ACCEL_OPC_ENCRYPT		= 8,
 	SPDK_ACCEL_OPC_DECRYPT		= 9,
 	SPDK_ACCEL_OPC_XOR		= 10,
-	SPDK_ACCEL_OPC_LAST		= 11,
+	SPDK_ACCEL_OPC_DIF_VERIFY	= 11,
+	SPDK_ACCEL_OPC_LAST		= 12,
 };
 
 enum spdk_accel_cipher {
@@ -383,6 +385,34 @@ int spdk_accel_submit_decrypt(struct spdk_io_channel *ch, struct spdk_accel_cryp
 			      struct iovec *src_iovs, uint32_t src_iovcnt,
 			      uint64_t iv, uint32_t block_size, int flags,
 			      spdk_accel_completion_cb cb_fn, void *cb_arg);
+
+/**
+ * Submit a Data Integrity Field (DIF) verify request.
+ *
+ * This operation computes the DIF on the data and compares it against the DIF contained
+ * in the metadata.
+ *
+ * \param ch I/O channel associated with this call.
+ * \param iovs The io vector array. The total allocated memory size needs to be at least:
+ *             num_blocks * block_size (including metadata)
+ * \param iovcnt The size of the io vectors array.
+ * \param num_blocks Number of data blocks to check.
+ * \param ctx DIF context. Contains the DIF configuration values, including the reference
+ *            Application Tag value and initial value of the Reference Tag to check
+ *            Note: the user must ensure the validity of this pointer throughout the entire operation
+ *            because it is not validated along the processing path.
+ * \param err DIF error detailed information.
+ *            Note: the user must ensure the validity of this pointer throughout the entire operation
+ *            because it is not validated along the processing path.
+ * \param cb_fn Called when this operation completes.
+ * \param cb_arg Callback argument.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_submit_dif_verify(struct spdk_io_channel *ch,
+				 struct iovec *iovs, size_t iovcnt, uint32_t num_blocks,
+				 const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err,
+				 spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /** Object grouping multiple accel operations to be executed at the same point in time */
 struct spdk_accel_sequence;
