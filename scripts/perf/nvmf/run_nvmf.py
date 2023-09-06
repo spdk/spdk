@@ -87,7 +87,7 @@ class Server(ABC):
     def read_config(self, config_fields, config):
         for config_field in config_fields:
             value = config.get(config_field.name, config_field.default)
-            if config_field.required is True and value is None:
+            if config_field.required and value is None:
                 raise ValueError('%s config key is required' % config_field.name)
 
             setattr(self, config_field.name, value)
@@ -606,7 +606,7 @@ class Target(Server):
         self.spdk_dir = os.path.abspath(os.path.join(self.script_dir, "../../../"))
         self.set_local_nic_info(self.set_local_nic_info_helper())
 
-        if self.skip_spdk_install is False:
+        if not self.skip_spdk_install:
             self.zip_spdk_sources(self.spdk_dir, "/tmp/spdk.zip")
 
         self.configure_system()
@@ -780,7 +780,7 @@ class Initiator(Server):
         self.exec_cmd(["mkdir", "-p", "%s" % self.spdk_dir])
         self._nics_json_obj = json.loads(self.exec_cmd(["ip", "-j", "address", "show"]))
 
-        if self.skip_spdk_install is False:
+        if not self.skip_spdk_install:
             self.copy_spdk("/tmp/spdk.zip")
 
         self.set_local_nic_info(self.set_local_nic_info_helper())
@@ -1546,7 +1546,7 @@ class SPDKInitiator(Initiator):
     def __init__(self, name, general_config, initiator_config):
         super().__init__(name, general_config, initiator_config)
 
-        if self.skip_spdk_install is False:
+        if not self.skip_spdk_install:
             self.install_spdk()
 
         # Optional fields
