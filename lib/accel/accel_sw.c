@@ -506,26 +506,6 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 	return 0;
 }
 
-static struct spdk_io_channel *sw_accel_get_io_channel(void);
-static int sw_accel_module_init(void);
-static void sw_accel_module_fini(void *ctxt);
-static size_t sw_accel_module_get_ctx_size(void);
-
-static struct spdk_accel_module_if g_sw_module = {
-	.module_init		= sw_accel_module_init,
-	.module_fini		= sw_accel_module_fini,
-	.write_config_json	= NULL,
-	.get_ctx_size		= sw_accel_module_get_ctx_size,
-	.name			= "software",
-	.supports_opcode	= sw_accel_supports_opcode,
-	.get_io_channel		= sw_accel_get_io_channel,
-	.submit_tasks		= sw_accel_submit_tasks,
-	.crypto_key_init	= sw_accel_crypto_key_init,
-	.crypto_key_deinit	= sw_accel_crypto_key_deinit,
-	.crypto_supports_tweak_mode	= sw_accel_crypto_supports_tweak_mode,
-	.crypto_supports_cipher	= sw_accel_crypto_supports_cipher,
-};
-
 static int
 accel_comp_poll(void *arg)
 {
@@ -678,5 +658,20 @@ sw_accel_crypto_supports_cipher(enum spdk_accel_cipher cipher, size_t key_size)
 		return false;
 	}
 }
+
+static struct spdk_accel_module_if g_sw_module = {
+	.module_init			= sw_accel_module_init,
+	.module_fini			= sw_accel_module_fini,
+	.write_config_json		= NULL,
+	.get_ctx_size			= sw_accel_module_get_ctx_size,
+	.name				= "software",
+	.supports_opcode		= sw_accel_supports_opcode,
+	.get_io_channel			= sw_accel_get_io_channel,
+	.submit_tasks			= sw_accel_submit_tasks,
+	.crypto_key_init		= sw_accel_crypto_key_init,
+	.crypto_key_deinit		= sw_accel_crypto_key_deinit,
+	.crypto_supports_tweak_mode	= sw_accel_crypto_supports_tweak_mode,
+	.crypto_supports_cipher		= sw_accel_crypto_supports_cipher,
+};
 
 SPDK_ACCEL_MODULE_REGISTER(sw, &g_sw_module)
