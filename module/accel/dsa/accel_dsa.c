@@ -110,8 +110,26 @@ dsa_done(void *cb_arg, int status)
 {
 	struct idxd_task *idxd_task = cb_arg;
 	struct idxd_io_channel *chan;
+	int rc;
 
 	chan = idxd_task->chan;
+
+	/* If the DSA DIF Check operation detects an error, detailed info about
+	 * this error (like actual/expected values) needs to be obtained by
+	 * calling the software DIF Verify operation.
+	 */
+	if (spdk_unlikely(status == -EIO)) {
+		if (idxd_task->task.op_code == SPDK_ACCEL_OPC_DIF_VERIFY) {
+			rc = spdk_dif_verify(idxd_task->task.s.iovs, idxd_task->task.s.iovcnt,
+					     idxd_task->task.dif.num_blocks,
+					     idxd_task->task.dif.ctx, idxd_task->task.dif.err);
+			if (rc != 0) {
+				SPDK_ERRLOG("DIF error detected. type=%d, offset=%" PRIu32 "\n",
+					    idxd_task->task.dif.err->err_type,
+					    idxd_task->task.dif.err->err_offset);
+			}
+		}
+	}
 
 	assert(chan->num_outstanding > 0);
 	spdk_trace_record(TRACE_ACCEL_DSA_OP_COMPLETE, 0, 0, 0, chan->num_outstanding - 1);
@@ -175,6 +193,12 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 						  task->s.iovs, task->s.iovcnt,
 						  task->seed, task->crc_dst, flags,
 						  dsa_done, idxd_task);
+		break;
+	case SPDK_ACCEL_OPC_DIF_VERIFY:
+		rc = spdk_idxd_submit_dif_check(chan->chan,
+						task->s.iovs, task->s.iovcnt,
+						task->dif.num_blocks, task->dif.ctx, flags,
+						dsa_done, idxd_task);
 		break;
 	default:
 		assert(false);
@@ -286,6 +310,9 @@ dsa_supports_opcode(enum spdk_accel_opcode opc)
 	case SPDK_ACCEL_OPC_CRC32C:
 	case SPDK_ACCEL_OPC_COPY_CRC32C:
 		return true;
+	case SPDK_ACCEL_OPC_DIF_VERIFY:
+		/* Supported only if the IOMMU is enabled */
+		return spdk_iommu_is_enabled();
 	default:
 		return false;
 	}
