@@ -55,6 +55,7 @@ DEFINE_STUB(spdk_lvs_esnap_missing_add, int,
 	     uint32_t id_len), -ENOTSUP);
 DEFINE_STUB(spdk_blob_get_esnap_bs_dev, struct spdk_bs_dev *, (const struct spdk_blob *blob), NULL);
 DEFINE_STUB(spdk_lvol_is_degraded, bool, (const struct spdk_lvol *lvol), false);
+DEFINE_STUB(spdk_blob_get_num_allocated_clusters, uint64_t, (struct spdk_blob *blob), 0);
 
 struct spdk_blob {
 	uint64_t	id;

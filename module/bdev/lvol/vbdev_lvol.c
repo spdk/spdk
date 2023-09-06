@@ -732,6 +732,9 @@ vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 
 	spdk_json_write_named_bool(w, "thin_provision", spdk_blob_is_thin_provisioned(blob));
 
+	spdk_json_write_named_uint64(w, "num_allocated_clusters",
+				     spdk_blob_get_num_allocated_clusters(blob));
+
 	spdk_json_write_named_bool(w, "snapshot", spdk_blob_is_snapshot(blob));
 
 	spdk_json_write_named_bool(w, "clone", spdk_blob_is_clone(blob));
