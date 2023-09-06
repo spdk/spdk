@@ -23,6 +23,7 @@ DIRS-$(CONFIG_ISAL_CRYPTO) += isalcryptobuild
 DIRS-$(CONFIG_VFIO_USER) += vfiouserbuild
 DIRS-$(CONFIG_SMA) += proto
 DIRS-$(CONFIG_XNVME) += xnvmebuild
+DIRS-$(CONFIG_GOLANG) += go/rpc
 DIRS-y += python
 
 .PHONY: all clean $(DIRS-y) include/spdk/config.h mk/config.mk \

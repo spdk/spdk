@@ -235,11 +235,6 @@ export AR_TOOL=$rootdir/scripts/ar-xnvme-fixer
 # For testing nvmes which are attached to some sort of a fanout switch in the CI pool
 export UNBIND_ENTIRE_IOMMU_GROUP=${UNBIND_ENTIRE_IOMMU_GROUP:-no}
 
-# Make sure we have access to proper go-related binaries
-if [[ -e /etc/opt/spdk-pkgdep/paths/export.sh ]]; then
-	source /etc/opt/spdk-pkgdep/paths/export.sh
-fi > /dev/null
-
 # pass our valgrind desire on to unittest.sh
 if [ $SPDK_RUN_VALGRIND -eq 0 ]; then
 	export valgrind=''
@@ -505,6 +500,10 @@ function get_config_params() {
 
 	if [[ $SPDK_TEST_NVMF_MDNS -eq 1 ]]; then
 		config_params+=' --with-avahi'
+	fi
+
+	if [[ $SPDK_JSONRPC_GO_CLIENT -eq 1 ]]; then
+		config_params+=' --with-golang'
 	fi
 
 	echo "$config_params"

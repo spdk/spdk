@@ -226,3 +226,6 @@ CONFIG_AVAHI=n
 
 # Setup DPDK's RTE_MAX_LCORES
 CONFIG_MAX_LCORES=
+
+# Build all Go components
+CONFIG_GOLANG=n

@@ -128,6 +128,8 @@ function usage() {
 	echo " --without-sma             No path required."
 	echo " --with-avahi              Build with Avahi mDNS discovery client service enabled in bdev-nvme module."
 	echo " --without-avahi           No path required."
+	echo " --with-golang             Build with components written in Go"
+	echo " --without-golang          No path required."
 	echo ""
 	echo "Environment variables:"
 	echo ""
@@ -657,6 +659,12 @@ for i in "$@"; do
 			;;
 		--without-avahi)
 			CONFIG[AVAHI]=n
+			;;
+		--with-golang)
+			CONFIG[GOLANG]=y
+			;;
+		--without-golang)
+			CONFIG[GOLANG]=n
 			;;
 		--max-lcores='')
 			echo "Must specify max number of lcores for --max-lcores"
@@ -1265,6 +1273,14 @@ if [[ "${CONFIG[AVAHI]}" = "y" ]]; then
 		'int main(void) { return 0; }\n' \
 		| "${BUILD_CMD[@]}" -lavahi-client -lavahi-common - 2> /dev/null; then
 		echo "--with-avahi requires libavahi-client and libavahi-common."
+		echo "Please install then re-run this script."
+		exit 1
+	fi
+fi
+
+if [[ "${CONFIG[GOLANG]}" = "y" ]]; then
+	if ! go version 2> /dev/null; then
+		echo "--with-golang requires Go installation."
 		echo "Please install then re-run this script."
 		exit 1
 	fi

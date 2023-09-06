@@ -395,3 +395,8 @@ if [[ -e "$CONFIG_WPDK_DIR/bin/wpdk_common.sh" ]]; then
 	# handler before causing a hard stop with TerminateProcess.
 	source "$CONFIG_WPDK_DIR/bin/wpdk_common.sh"
 fi
+
+# Make sure we have access to proper binaries installed in pkgdep/common.sh
+if [[ -e /etc/opt/spdk-pkgdep/paths/export.sh ]]; then
+	source /etc/opt/spdk-pkgdep/paths/export.sh
+fi > /dev/null
