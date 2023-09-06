@@ -745,6 +745,7 @@ vbdev_crypto_claim(const char *bdev_name)
 	struct vbdev_crypto *vbdev;
 	struct spdk_bdev *bdev;
 	struct spdk_iobuf_opts iobuf_opts;
+	struct spdk_accel_operation_exec_ctx opctx = {};
 	struct spdk_uuid ns_uuid;
 	int rc = 0;
 
@@ -797,14 +798,14 @@ vbdev_crypto_claim(const char *bdev_name)
 			vbdev->crypto_bdev.optimal_io_boundary = (iobuf_opts.large_bufsize / bdev->blocklen);
 		}
 		vbdev->crypto_bdev.split_on_optimal_io_boundary = true;
-		if (bdev->required_alignment > 0) {
-			vbdev->crypto_bdev.required_alignment = bdev->required_alignment;
-		} else {
-			/* Some accel modules may not support SGL input or output, if this module works with physical
-			 * addresses, unaligned buffer may cross huge page boundary which leads to scattered payload.
-			 * To avoid such cases, set required_alignment to the block size */
-			vbdev->crypto_bdev.required_alignment = spdk_u32log2(bdev->blocklen);
-		}
+
+		opctx.size = SPDK_SIZEOF(&opctx, block_size);
+		opctx.block_size = bdev->blocklen;
+		vbdev->crypto_bdev.required_alignment =
+			spdk_max(bdev->required_alignment,
+				 spdk_max(spdk_accel_get_buf_align(SPDK_ACCEL_OPC_ENCRYPT, &opctx),
+					  spdk_accel_get_buf_align(SPDK_ACCEL_OPC_DECRYPT, &opctx)));
+
 		vbdev->crypto_bdev.blocklen = bdev->blocklen;
 		vbdev->crypto_bdev.blockcnt = bdev->blockcnt;
 
