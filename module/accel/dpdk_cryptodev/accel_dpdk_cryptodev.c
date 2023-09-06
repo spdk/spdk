@@ -1501,6 +1501,29 @@ accel_dpdk_cryptodev_write_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_object_end(w);
 }
 
+static int
+accel_dpdk_cryptodev_get_operation_info(enum spdk_accel_opcode opcode,
+					const struct spdk_accel_operation_exec_ctx *ctx,
+					struct spdk_accel_opcode_info *info)
+{
+	if (!accel_dpdk_cryptodev_supports_opcode(opcode)) {
+		SPDK_ERRLOG("Received unexpected opcode: %d", opcode);
+		assert(false);
+		return -EINVAL;
+	}
+
+	switch (g_dpdk_cryptodev_driver) {
+	case ACCEL_DPDK_CRYPTODEV_DRIVER_QAT:
+		info->required_alignment = spdk_u32log2(ctx->block_size);
+		break;
+	default:
+		info->required_alignment = 0;
+		break;
+	}
+
+	return 0;
+}
+
 static struct spdk_accel_module_if g_accel_dpdk_cryptodev_module = {
 	.module_init		= accel_dpdk_cryptodev_init,
 	.module_fini		= accel_dpdk_cryptodev_fini,
@@ -1513,4 +1536,5 @@ static struct spdk_accel_module_if g_accel_dpdk_cryptodev_module = {
 	.crypto_key_init	= accel_dpdk_cryptodev_key_init,
 	.crypto_key_deinit	= accel_dpdk_cryptodev_key_deinit,
 	.crypto_supports_cipher	= accel_dpdk_cryptodev_supports_cipher,
+	.get_operation_info	= accel_dpdk_cryptodev_get_operation_info,
 };

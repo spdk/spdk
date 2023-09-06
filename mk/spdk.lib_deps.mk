@@ -103,7 +103,7 @@ endif
 DEPDIRS-accel_ioat := log ioat thread jsonrpc rpc accel
 DEPDIRS-accel_dsa := log idxd thread $(JSON_LIBS) accel trace
 DEPDIRS-accel_iaa := log idxd thread $(JSON_LIBS) accel trace
-DEPDIRS-accel_dpdk_cryptodev := log thread $(JSON_LIBS) accel
+DEPDIRS-accel_dpdk_cryptodev := log thread $(JSON_LIBS) accel util
 DEPDIRS-accel_dpdk_compressdev := log thread $(JSON_LIBS) accel util
 
 ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
