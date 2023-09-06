@@ -8,7 +8,7 @@ declare -r sysfs_cpu=$sysfs_system/cpu
 declare -r sysfs_node=$sysfs_system/node
 
 declare -r scheduler=$rootdir/test/event/scheduler/scheduler
-declare -r plugin=scheduler_plugin
+declare plugin=scheduler_plugin
 
 source "$rootdir/test/scheduler/cgroups.sh"
 
