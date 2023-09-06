@@ -2098,6 +2098,10 @@ nvme_tcp_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 
 	t02 = spdk_get_ticks();
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->outstanding_reqs, link, tmp) {
+		if (ctrlr->is_failed) {
+			/* The controller state may be changed to failed in one of the nvme_request_check_timeout callbacks. */
+			return;
+		}
 		assert(tcp_req->req != NULL);
 
 		if (nvme_request_check_timeout(tcp_req->req, tcp_req->cid, active_proc, t02)) {
