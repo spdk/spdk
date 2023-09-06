@@ -1013,8 +1013,13 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 	if (app_getopt_str != NULL) {
 		ch = app_opts_validate(app_getopt_str);
 		if (ch) {
-			SPDK_ERRLOG("Duplicated option '%c' between the generic and application specific spdk opts.\n",
+			SPDK_ERRLOG("Duplicated option '%c' between app-specific command line parameter and generic spdk opts.\n",
 				    ch);
+			goto out;
+		}
+
+		if (!app_parse) {
+			SPDK_ERRLOG("Parse function is required when app-specific command line parameters are provided.\n");
 			goto out;
 		}
 	}
@@ -1255,9 +1260,14 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			usage(app_usage);
 			goto out;
 		default:
+			if (!app_parse) {
+				SPDK_ERRLOG("Unsupported app-specific command line parameter '%c'.\n", ch);
+				goto out;
+			}
+
 			rc = app_parse(ch, optarg);
 			if (rc) {
-				SPDK_ERRLOG("Parsing application specific arguments failed: %d\n", rc);
+				SPDK_ERRLOG("Parsing app-specific command line parameter '%c' failed: %d\n", ch, rc);
 				goto out;
 			}
 		}
