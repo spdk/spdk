@@ -1590,6 +1590,7 @@ vhost_register_unix_socket(const char *path, const char *ctrl_name,
 {
 	struct stat file_stat;
 	uint64_t features = 0;
+	uint64_t flags = 0;
 
 	/* Register vhost driver to handle vhost messages. */
 	if (stat(path, &file_stat) != -1) {
@@ -1607,9 +1608,10 @@ vhost_register_unix_socket(const char *path, const char *ctrl_name,
 	}
 
 #if RTE_VERSION < RTE_VERSION_NUM(20, 8, 0, 0)
-	if (rte_vhost_driver_register(path, 0) != 0) {
+	if (rte_vhost_driver_register(path, flags) != 0) {
 #else
-	if (rte_vhost_driver_register(path, RTE_VHOST_USER_ASYNC_COPY) != 0) {
+	flags = spdk_iommu_is_enabled() ? 0 : RTE_VHOST_USER_ASYNC_COPY;
+	if (rte_vhost_driver_register(path, flags) != 0) {
 #endif
 		SPDK_ERRLOG("Could not register controller %s with vhost library\n", ctrl_name);
 		SPDK_ERRLOG("Check if domain socket %s already exists\n", path);

@@ -67,6 +67,7 @@ DEFINE_STUB(rte_vhost_get_vring_base_from_inflight, int,
 	    (int vid, uint16_t queue_id, uint16_t *last_avail_idx, uint16_t *last_used_idx), 0);
 DEFINE_STUB(rte_vhost_extern_callback_register, int,
 	    (int vid, struct rte_vhost_user_extern_ops const *const ops, void *ctx), 0);
+DEFINE_STUB(spdk_iommu_is_enabled, bool, (void), 0);
 
 /* rte_vhost_user.c shutdowns vhost_user sessions in a separate pthread */
 DECLARE_WRAPPER(pthread_create, int, (pthread_t *thread, const pthread_attr_t *attr,
