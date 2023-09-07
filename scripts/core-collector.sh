@@ -18,6 +18,7 @@ core_meta() {
 		    "PID": $core_pid,
 		    "signal": "$core_sig ($core_sig_name)",
 		    "path": "$exe_path",
+		    "cwd": "$cwd_path",
 		    "statm": "$statm",
 		    "filter": "$(coredump_filter)"
 		  }
@@ -63,6 +64,7 @@ args+=(core_ts)
 read -r "${args[@]}" <<< "$*"
 
 exe_path=$(readlink -f "/proc/$core_pid/exe")
+cwd_path=$(readlink -f "/proc/$core_pid/cwd")
 exe_comm=$(< "/proc/$core_pid/comm")
 statm=$(< "/proc/$core_pid/statm")
 core_time=$(date -d@"$core_ts")
@@ -70,6 +72,9 @@ core_sig_name=$(kill -l "$core_sig")
 
 core=$(< "${0%/*}/../.coredump_path")/${exe_path##*/}_$core_pid.core
 stderr
+
+# Filter out processes that were not executed from within our repo
+[[ $cwd_path == "${0%/*/*}"* ]] || exit 0
 
 # RLIMIT_CORE is not enforced when core is piped to us. To make
 # sure we won't attempt to overload underlying storage, copy
