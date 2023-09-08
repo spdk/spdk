@@ -157,6 +157,8 @@ export SPDK_TEST_XNVME
 export SPDK_TEST_FUZZER_TARGET
 : ${SPDK_TEST_NVMF_MDNS=0}
 export SPDK_TEST_NVMF_MDNS
+: ${SPDK_JSONRPC_GO_CLIENT=0}
+export SPDK_JSONRPC_GO_CLIENT
 
 # always test with SPDK shared objects.
 export SPDK_LIB_DIR="$rootdir/build/lib"

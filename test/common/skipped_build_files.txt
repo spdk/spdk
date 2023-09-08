@@ -68,3 +68,6 @@ lib/mlx5/mlx5_crypto
 lib/ublk/ublk
 lib/ublk/ublk_rpc
 module/event/subsystems/ublk/ublk
+
+# Not configured to build hello_gorpc example
+examples/go/hello_gorpc/hello_gorpc.go

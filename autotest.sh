@@ -164,7 +164,11 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	run_test "json_config" $rootdir/test/json_config/json_config.sh
 	run_test "json_config_extra_key" $rootdir/test/json_config/json_config_extra_key.sh
 	run_test "alias_rpc" $rootdir/test/json_config/alias_rpc/alias_rpc.sh
-	run_test "spdkcli_tcp" $rootdir/test/spdkcli/tcp.sh
+
+	if [[ $SPDK_JSONRPC_GO_CLIENT -eq 0 ]]; then
+		run_test "spdkcli_tcp" $rootdir/test/spdkcli/tcp.sh
+	fi
+
 	run_test "dpdk_mem_utility" $rootdir/test/dpdk_memory_utility/test_dpdk_mem_info.sh
 	run_test "event" $rootdir/test/event/event.sh
 	run_test "thread" $rootdir/test/thread/thread.sh

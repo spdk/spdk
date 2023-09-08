@@ -47,6 +47,20 @@ function rpc_trace_cmd_test() {
 	[ "$(jq -r .bdev.tpoint_mask <<< "$info")" != "0x0" ]
 }
 
+function go_rpc() {
+	bdevs=$($rootdir/build/examples/hello_gorpc)
+	[ "$(jq length <<< "$bdevs")" == "0" ]
+
+	malloc=$($rpc bdev_malloc_create 8 512)
+
+	bdevs=$($rootdir/build/examples/hello_gorpc)
+	[ "$(jq length <<< "$bdevs")" == "1" ]
+
+	$rpc bdev_malloc_delete $malloc
+	bdevs=$($rootdir/build/examples/hello_gorpc)
+	[ "$(jq length <<< "$bdevs")" == "0" ]
+}
+
 $SPDK_BIN_DIR/spdk_tgt -e bdev &
 spdk_pid=$!
 trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
@@ -59,6 +73,9 @@ rpc=rpc_cmd
 run_test "rpc_integrity" rpc_integrity
 run_test "rpc_plugins" rpc_plugins
 run_test "rpc_trace_cmd_test" rpc_trace_cmd_test
+if [[ $SPDK_JSONRPC_GO_CLIENT -eq 1 ]]; then
+	run_test "go_rpc" go_rpc
+fi
 # same integrity test, but with rpc_cmd() instead
 rpc="rpc_cmd"
 run_test "rpc_daemon_integrity" rpc_integrity

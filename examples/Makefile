@@ -8,6 +8,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y += accel bdev blob ioat nvme sock vmd nvmf util thread
 DIRS-$(CONFIG_IDXD) += idxd
+DIRS-$(CONFIG_GOLANG) += go
 
 ifeq ($(OS),Linux)
 DIRS-$(CONFIG_VHOST) += interrupt_tgt
