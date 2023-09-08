@@ -8759,13 +8759,21 @@ struct spdk_bs_grow_ctx {
 	struct spdk_blob_store		*bs;
 	struct spdk_bs_super_block	*super;
 
+	struct spdk_bit_pool		*new_used_clusters;
+	struct spdk_bs_md_mask		*new_used_clusters_mask;
+
 	spdk_bs_sequence_t		*seq;
 };
 
 static void
 bs_grow_live_done(struct spdk_bs_grow_ctx *ctx, int bserrno)
 {
+	if (bserrno != 0) {
+		spdk_bit_pool_free(&ctx->new_used_clusters);
+	}
+
 	bs_sequence_finish(ctx->seq, bserrno);
+	free(ctx->new_used_clusters_mask);
 	spdk_free(ctx->super);
 	free(ctx);
 }
@@ -8776,7 +8784,6 @@ bs_grow_live_super_write_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	struct spdk_bs_grow_ctx	*ctx = cb_arg;
 	struct spdk_blob_store *bs = ctx->bs;
 	uint64_t total_clusters;
-	int rc;
 
 	if (bserrno != 0) {
 		bs_grow_live_done(ctx, bserrno);
@@ -8793,19 +8800,20 @@ bs_grow_live_super_write_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	 */
 	bs->clean = 0;
 
+	/* Reverting the super->size past this point is complex, avoid any error paths
+	 * that require to do so. */
 	spdk_spin_lock(&bs->used_lock);
 
 	total_clusters = ctx->super->size / ctx->super->cluster_size;
 
-	rc = spdk_bit_pool_resize(&bs->used_clusters, total_clusters);
-	if (rc < 0) {
-		/* When this fails, super block contains new size that will only
-		 * be accesible after blobstore reload. Error reported up is correct now,
-		 * but does not apply after reload. */
-		spdk_spin_unlock(&bs->used_lock);
-		bs_grow_live_done(ctx, rc);
-		return;
-	}
+	assert(total_clusters >= spdk_bit_pool_capacity(bs->used_clusters));
+	spdk_bit_pool_store_mask(bs->used_clusters, ctx->new_used_clusters_mask);
+
+	assert(total_clusters == spdk_bit_pool_capacity(ctx->new_used_clusters));
+	spdk_bit_pool_load_mask(ctx->new_used_clusters, ctx->new_used_clusters_mask);
+
+	spdk_bit_pool_free(&bs->used_clusters);
+	bs->used_clusters = ctx->new_used_clusters;
 
 	bs->total_clusters = total_clusters;
 	bs->total_data_clusters = bs->total_clusters - spdk_divide_round_up(
@@ -8862,6 +8870,17 @@ bs_grow_live_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	}
 
 	SPDK_DEBUGLOG(blob, "Resizing blobstore\n");
+
+	ctx->new_used_clusters_mask = calloc(1, total_clusters);
+	if (!ctx->new_used_clusters_mask) {
+		bs_grow_live_done(ctx, -ENOMEM);
+		return;
+	}
+	ctx->new_used_clusters = spdk_bit_pool_create(total_clusters);
+	if (!ctx->new_used_clusters) {
+		bs_grow_live_done(ctx, -ENOMEM);
+		return;
+	}
 
 	ctx->super->clean = 0;
 	ctx->super->size = dev_size;
