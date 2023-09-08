@@ -2445,9 +2445,16 @@ static void
 bs_mark_dirty_write(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_mark_dirty *ctx = cb_arg;
+	int rc;
 
 	if (bserrno != 0) {
 		bs_mark_dirty_write_cpl(seq, ctx, bserrno);
+		return;
+	}
+
+	rc = bs_super_validate(ctx->super, ctx->bs);
+	if (rc != 0) {
+		bs_mark_dirty_write_cpl(seq, ctx, rc);
 		return;
 	}
 
@@ -5596,9 +5603,16 @@ static void
 bs_unload_read_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx	*ctx = cb_arg;
+	int rc;
 
 	if (bserrno != 0) {
 		bs_unload_finish(ctx, bserrno);
+		return;
+	}
+
+	rc = bs_super_validate(ctx->super, ctx->bs);
+	if (rc != 0) {
+		bs_unload_finish(ctx, rc);
 		return;
 	}
 
@@ -5706,11 +5720,21 @@ static void
 bs_set_super_read_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_set_super_ctx	*ctx = cb_arg;
+	int rc;
 
 	if (bserrno != 0) {
 		SPDK_ERRLOG("Unable to read super block of blobstore\n");
 		spdk_free(ctx->super);
 		bs_sequence_finish(seq, bserrno);
+		free(ctx);
+		return;
+	}
+
+	rc = bs_super_validate(ctx->super, ctx->bs);
+	if (rc != 0) {
+		SPDK_ERRLOG("Not a valid super block\n");
+		spdk_free(ctx->super);
+		bs_sequence_finish(seq, rc);
 		free(ctx);
 		return;
 	}
