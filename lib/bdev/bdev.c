@@ -2608,11 +2608,8 @@ _bdev_io_complete_in_submit(struct spdk_bdev_channel *bdev_ch,
 			    struct spdk_bdev_io *bdev_io,
 			    enum spdk_bdev_io_status status)
 {
-	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
-
 	bdev_io->internal.in_submit_request = true;
-	bdev_ch->io_outstanding++;
-	shared_resource->io_outstanding++;
+	bdev_io_increment_outstanding(bdev_ch, bdev_ch->shared_resource);
 	spdk_bdev_io_complete(bdev_io, status);
 	bdev_io->internal.in_submit_request = false;
 }
@@ -2646,8 +2643,7 @@ bdev_io_do_submit(struct spdk_bdev_channel *bdev_ch, struct spdk_bdev_io *bdev_i
 	}
 
 	if (spdk_likely(TAILQ_EMPTY(&shared_resource->nomem_io))) {
-		bdev_ch->io_outstanding++;
-		shared_resource->io_outstanding++;
+		bdev_io_increment_outstanding(bdev_ch, shared_resource);
 		bdev_io->internal.in_submit_request = true;
 		bdev_submit_request(bdev, ch, bdev_io);
 		bdev_io->internal.in_submit_request = false;
@@ -4070,8 +4066,7 @@ bdev_abort_all_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
 			 *  that spdk_bdev_io_complete() will do.
 			 */
 			if (bdev_io->type != SPDK_BDEV_IO_TYPE_RESET) {
-				ch->io_outstanding++;
-				ch->shared_resource->io_outstanding++;
+				bdev_io_increment_outstanding(ch, ch->shared_resource);
 			}
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_ABORTED);
 		}
