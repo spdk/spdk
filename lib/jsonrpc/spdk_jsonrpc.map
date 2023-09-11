@@ -23,6 +23,8 @@
 	spdk_jsonrpc_client_poll;
 	spdk_jsonrpc_client_get_response;
 	spdk_jsonrpc_client_free_response;
+	spdk_jsonrpc_set_log_level;
+	spdk_jsonrpc_set_log_file;
 
 	local: *;
 };

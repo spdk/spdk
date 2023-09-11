@@ -1,11 +1,14 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
- *   Copyright (C) 2016 Intel Corporation.
- *   All rights reserved.
+ *   Copyright (C) 2016 Intel Corporation. All rights reserved.
+ *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "jsonrpc_internal.h"
 
 #include "spdk/util.h"
+
+static enum spdk_log_level g_rpc_log_level = SPDK_LOG_DISABLED;
+static FILE *g_rpc_log_file = NULL;
 
 struct jsonrpc_request {
 	const struct spdk_json_val *version;
@@ -13,6 +16,52 @@ struct jsonrpc_request {
 	const struct spdk_json_val *params;
 	const struct spdk_json_val *id;
 };
+
+void
+spdk_jsonrpc_set_log_level(enum spdk_log_level level)
+{
+	assert(level >= SPDK_LOG_DISABLED);
+	assert(level <= SPDK_LOG_DEBUG);
+	g_rpc_log_level = level;
+}
+
+void
+spdk_jsonrpc_set_log_file(FILE *file)
+{
+	g_rpc_log_file = file;
+}
+
+static void
+remove_newlines(char *text)
+{
+	int i = 0, j = 0;
+
+	while (text[i] != '\0') {
+		if (text[i] != '\n') {
+			text[j++] = text[i];
+		}
+		i++;
+	}
+	text[j] = '\0';
+}
+
+static void
+jsonrpc_log(char *buf, const char *prefix)
+{
+	/* Remove newlines to print in a single line.
+	 * Newlines does not affect the functionality of JSON RPC objects.
+	 * Hence for simplicity, remove newlines by default.
+	 */
+	remove_newlines(buf);
+
+	if (g_rpc_log_level != SPDK_LOG_DISABLED) {
+		spdk_log(g_rpc_log_level, NULL, 0, NULL, "%s%s\n", prefix, buf);
+	}
+
+	if (g_rpc_log_file != NULL) {
+		spdk_flog(g_rpc_log_file, NULL, 0, NULL, "%s%s\n", prefix, buf);
+	}
+}
 
 static int
 capture_val(const struct spdk_json_val *val, void *out)
@@ -152,6 +201,8 @@ jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *json, s
 	memcpy(request->recv_buffer, json, len);
 	request->recv_buffer[len] = '\0';
 
+	jsonrpc_log(request->recv_buffer, "request: ");
+
 	if (rc > 0 && rc <= SPDK_JSONRPC_MAX_VALUES) {
 		request->values_cnt = rc;
 		request->values = malloc(request->values_cnt * sizeof(request->values[0]));
@@ -281,6 +332,8 @@ jsonrpc_free_request(struct spdk_jsonrpc_request *request)
 void
 jsonrpc_complete_request(struct spdk_jsonrpc_request *request)
 {
+	jsonrpc_log(request->send_buf, "response: ");
+
 	jsonrpc_free_request(request);
 }
 

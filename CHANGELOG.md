@@ -22,6 +22,11 @@ The `spdk_nvmf_request::data` field has been removed: instead, clients should se
 `->iov` and `->iovcnt` appropriately, as nvmf request APIs now expect any data
 buffers to be described there. spdk_nvmf_request_get_data() has been removed.
 
+### jsonrpc
+
+New APIs, `spdk_jsonrpc_set_log_level` and `spdk_jsonrpc_set_log_file`, were added to enable
+logging JSON RPC calls history.
+
 ## v23.05
 
 ### accel

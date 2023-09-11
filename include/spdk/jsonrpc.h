@@ -1,6 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
- *   Copyright (C) 2016 Intel Corporation.
- *   All rights reserved.
+ *   Copyright (C) 2016 Intel Corporation. All rights reserved.
+ *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 /**
@@ -14,6 +14,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/json.h"
+#include "spdk/log.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -324,6 +325,25 @@ struct spdk_jsonrpc_client_response *spdk_jsonrpc_client_get_response(struct spd
  */
 void spdk_jsonrpc_client_free_response(struct spdk_jsonrpc_client_response *resp);
 
+/**
+ * Set the log level used by the JSON-RPC server to log RPC request and response objects.
+ *
+ * NOTE: This function should be called only before starting the JSON-RPC server.
+ * Users should set the level set by this function higher than the level set by
+ * spdk_log_set_print_level() or spdk_log_set_level().
+ *
+ * \param level Log level used to log RPC objects.
+ */
+void spdk_jsonrpc_set_log_level(enum spdk_log_level level);
+
+/**
+ * Set the log file used by the JSON-RPC server to log RPC request and response objects.
+ *
+ * NOTE: This function should be called only before starting the JSON-RPC server.
+ *
+ * \param file Log file pointer used to log RPC objects.
+ */
+void spdk_jsonrpc_set_log_file(FILE *file);
 
 #ifdef __cplusplus
 }
