@@ -42,6 +42,9 @@ DEFINE_STUB(spdk_bdev_get_name, const char *,
 DEFINE_STUB(spdk_bdev_get_block_size, uint32_t,
 	    (const struct spdk_bdev *bdev), 512);
 
+DEFINE_STUB(spdk_bdev_get_acwu, uint16_t,
+	    (const struct spdk_bdev *bdev), 1);
+
 DEFINE_STUB(spdk_bdev_get_md_size, uint32_t,
 	    (const struct spdk_bdev *bdev), 8);
 
@@ -135,6 +138,12 @@ spdk_bdev_io_get_scsi_status(const struct spdk_bdev_io *bdev_io,
 		*sk = SPDK_SCSI_SENSE_NO_SENSE;
 		*asc = SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE;
 		*ascq = SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE;
+		break;
+	case SPDK_BDEV_IO_STATUS_MISCOMPARE:
+		*sc = SPDK_SCSI_STATUS_CHECK_CONDITION;
+		*sk = SPDK_SCSI_SENSE_MISCOMPARE;
+		*asc = SPDK_SCSI_ASC_MISCOMPARE_DURING_VERIFY_OPERATION;
+		*ascq = bdev_io->internal.error.scsi.ascq;
 		break;
 	case SPDK_BDEV_IO_STATUS_SCSI_ERROR:
 		*sc = bdev_io->internal.error.scsi.sc;
@@ -237,6 +246,16 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			struct iovec *iov, int iovcnt,
 			uint64_t offset_blocks, uint64_t num_blocks,
 			spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return _spdk_bdev_io_op(cb, cb_arg);
+}
+
+int
+spdk_bdev_comparev_and_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				     struct iovec *compare_iov, int compare_iovcnt,
+				     struct iovec *write_iov, int write_iovcnt,
+				     uint64_t offset_blocks, uint64_t num_blocks,
+				     spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	return _spdk_bdev_io_op(cb, cb_arg);
 }

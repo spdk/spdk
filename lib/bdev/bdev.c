@@ -7209,6 +7209,12 @@ spdk_bdev_io_get_scsi_status(const struct spdk_bdev_io *bdev_io,
 	case SPDK_BDEV_IO_STATUS_NVME_ERROR:
 		spdk_scsi_nvme_translate(bdev_io, sc, sk, asc, ascq);
 		break;
+	case SPDK_BDEV_IO_STATUS_MISCOMPARE:
+		*sc = SPDK_SCSI_STATUS_CHECK_CONDITION;
+		*sk = SPDK_SCSI_SENSE_MISCOMPARE;
+		*asc = SPDK_SCSI_ASC_MISCOMPARE_DURING_VERIFY_OPERATION;
+		*ascq = bdev_io->internal.error.scsi.ascq;
+		break;
 	case SPDK_BDEV_IO_STATUS_SCSI_ERROR:
 		*sc = bdev_io->internal.error.scsi.sc;
 		*sk = bdev_io->internal.error.scsi.sk;

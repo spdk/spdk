@@ -98,6 +98,7 @@ struct spdk_scsi_task {
 	 * iov is internal buffer. Use iovs to access elements of IO.
 	 */
 	struct iovec iov;
+	struct iovec caw_iov; /* used for compare and write */
 	struct iovec *iovs;
 	uint16_t iovcnt;
 

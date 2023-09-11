@@ -1234,7 +1234,7 @@ _bytes_to_blocks(uint32_t block_size, uint64_t offset_bytes, uint64_t *offset_bl
 static int
 bdev_scsi_readwrite(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 		    struct spdk_io_channel *bdev_ch, struct spdk_scsi_task *task,
-		    uint64_t lba, uint32_t xfer_len, bool is_read)
+		    uint64_t lba, uint32_t xfer_len, bool is_read, bool is_compare)
 {
 	uint64_t bdev_num_blocks, offset_blocks, num_blocks;
 	uint32_t max_xfer_len, block_size;
@@ -1299,6 +1299,30 @@ bdev_scsi_readwrite(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 		rc = spdk_bdev_readv_blocks(bdev_desc, bdev_ch, task->iovs, task->iovcnt,
 					    offset_blocks, num_blocks,
 					    bdev_scsi_read_task_complete_cmd, task);
+	} else if (is_compare) {
+		struct iovec *iov;
+		size_t len;
+
+		if (task->iovcnt != 1 || task->iovs[0].iov_len != (block_size * 2)) {
+			if (task->iovcnt != 1) {
+				SPDK_ERRLOG("task's iovcnt %" PRIu32 " is not 1.\n", task->iovcnt);
+			} else {
+				SPDK_ERRLOG("task's iov len %" PRIu64 " is not 2 * BLOCK_SIZE.\n",
+					    task->iovs[0].iov_len);
+			}
+			sk = SPDK_SCSI_SENSE_ILLEGAL_REQUEST;
+			asc = SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB;
+			goto check_condition;
+		}
+
+		iov = &task->iovs[0];
+		len = iov->iov_len >> 1;
+		task->caw_iov.iov_len = len;
+		task->caw_iov.iov_base = (uint8_t *)(iov->iov_base) + len;
+		iov->iov_len = len;
+
+		rc = spdk_bdev_comparev_and_writev_blocks(bdev_desc, bdev_ch, &task->iov, 1,
+				&task->caw_iov, 1, offset_blocks, 1, bdev_scsi_task_complete_cmd, task);
 	} else {
 		rc = spdk_bdev_writev_blocks(bdev_desc, bdev_ch, task->iovs, task->iovcnt,
 					     offset_blocks, num_blocks,
@@ -1310,7 +1334,8 @@ bdev_scsi_readwrite(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 			bdev_scsi_queue_io(task, bdev_scsi_process_block_resubmit, task);
 			return SPDK_SCSI_TASK_PENDING;
 		}
-		SPDK_ERRLOG("spdk_bdev_%s_blocks() failed\n", is_read ? "readv" : "writev");
+		SPDK_ERRLOG("spdk_bdev_%s_blocks() failed: %d\n",
+			    is_read ? "readv" : (is_compare ? "comparev_and_writev" : "writev"), rc);
 		goto check_condition;
 	}
 
@@ -1660,7 +1685,7 @@ bdev_scsi_process_block(struct spdk_scsi_task *task)
 		}
 		return bdev_scsi_readwrite(bdev, lun->bdev_desc, lun->io_channel,
 					   task, lba, xfer_len,
-					   cdb[0] == SPDK_SBC_READ_6);
+					   cdb[0] == SPDK_SBC_READ_6, false);
 
 	case SPDK_SBC_READ_10:
 	case SPDK_SBC_WRITE_10:
@@ -1668,7 +1693,7 @@ bdev_scsi_process_block(struct spdk_scsi_task *task)
 		xfer_len = from_be16(&cdb[7]);
 		return bdev_scsi_readwrite(bdev, lun->bdev_desc, lun->io_channel,
 					   task, lba, xfer_len,
-					   cdb[0] == SPDK_SBC_READ_10);
+					   cdb[0] == SPDK_SBC_READ_10, false);
 
 	case SPDK_SBC_READ_12:
 	case SPDK_SBC_WRITE_12:
@@ -1676,14 +1701,45 @@ bdev_scsi_process_block(struct spdk_scsi_task *task)
 		xfer_len = from_be32(&cdb[6]);
 		return bdev_scsi_readwrite(bdev, lun->bdev_desc, lun->io_channel,
 					   task, lba, xfer_len,
-					   cdb[0] == SPDK_SBC_READ_12);
+					   cdb[0] == SPDK_SBC_READ_12, false);
 	case SPDK_SBC_READ_16:
 	case SPDK_SBC_WRITE_16:
 		lba = from_be64(&cdb[2]);
 		xfer_len = from_be32(&cdb[10]);
 		return bdev_scsi_readwrite(bdev, lun->bdev_desc, lun->io_channel,
 					   task, lba, xfer_len,
-					   cdb[0] == SPDK_SBC_READ_16);
+					   cdb[0] == SPDK_SBC_READ_16, false);
+
+	case SPDK_SBC_COMPARE_AND_WRITE: {
+		uint32_t num_blocks = cdb[13];
+		uint8_t wrprotect = (cdb[1] >> 5) & 0x07;
+		bool dpo = cdb[1] & 0x10;
+		bool fua = cdb[1] & 0x08;
+
+		lba = from_be64(&cdb[2]);
+
+		if (dpo || fua || wrprotect) {
+			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+						  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+						  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+			SPDK_ERRLOG("Invalid Task\n");
+			return SPDK_SCSI_TASK_COMPLETE;
+		}
+
+		if (num_blocks != 1)  {
+			SPDK_ERRLOG("Invalid CAW block count, request block count is %u, limit is : 1\n",
+				    num_blocks);
+			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+						  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+						  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+			return SPDK_SCSI_TASK_COMPLETE;
+		}
+
+		return bdev_scsi_readwrite(bdev, lun->bdev_desc, lun->io_channel,
+					   task, lba, num_blocks, false, true);
+	}
 
 	case SPDK_SBC_READ_CAPACITY_10: {
 		uint64_t num_blocks = spdk_bdev_get_num_blocks(bdev);

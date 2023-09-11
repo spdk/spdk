@@ -2,6 +2,10 @@
 
 ## v24.01: (Upcoming Release)
 
+### vhost
+
+Added `caw_iov` field to struct `spdk_scsi_task` to support SBC-3 compare_and_write IO.
+
 ## v23.09
 
 ### accel
