@@ -121,6 +121,10 @@ DPDK_LIB_LIST += rte_rcu
 endif
 endif
 
+ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_log.*))
+# Since DPDK 23.11.0-rc0 logging functions are in a separate library
+DPDK_LIB_LIST += rte_log
+endif
 
 DPDK_LIB_LIST_SORTED = $(sort $(DPDK_LIB_LIST))
 
