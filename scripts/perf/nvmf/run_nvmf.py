@@ -208,7 +208,7 @@ class Server(ABC):
         nic_names = [self.get_nic_name_by_ip(n) for n in self.nic_ips]
         for nic_name in nic_names:
             self.exec_cmd(["sudo", "ethtool", "-K", nic_name, "ntuple", "on"])
-            self.log.info(f"Setting rps_flow_cnt for {nic_name}")
+            self.log.info(f"Setting rps_flow_cnt={rps_flow_cnt} for {nic_name}")
             queue_files = self.exec_cmd(["ls", f"/sys/class/net/{nic_name}/queues/"]).strip().split("\n")
             queue_files = filter(lambda x: x.startswith("rx-"), queue_files)
 
