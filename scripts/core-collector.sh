@@ -9,6 +9,22 @@
 # the remaining pieces we want to gather:
 # |$rootdir/scripts/core-collector.sh %P %s %t $output_dir
 
+rootdir=$(readlink -f "$(dirname "$0")/../")
+
+maps_to_json() {
+	local _maps=("${maps[@]}")
+	local mem_regions=() mem
+
+	mem_regions=("/proc/$core_pid/map_files/"*)
+
+	for mem in "${!mem_regions[@]}"; do
+		_maps[mem]=\"${_maps[mem]}@${mem_regions[mem]##*/}\"
+	done
+
+	local IFS=","
+	echo "${_maps[*]}"
+}
+
 core_meta() {
 	jq . <<- CORE
 		{
@@ -20,7 +36,8 @@ core_meta() {
 		    "path": "$exe_path",
 		    "cwd": "$cwd_path",
 		    "statm": "$statm",
-		    "filter": "$(coredump_filter)"
+		    "filter": "$(coredump_filter)",
+		    "mapped": [ $(maps_to_json) ]
 		  }
 		}
 	CORE
@@ -57,6 +74,30 @@ coredump_filter() {
 	echo "$filter"
 }
 
+filter_process() {
+	# Did the process sit in our repo?
+	[[ $cwd_path == "$rootdir"* ]] && return 0
+
+	# Did we load our fio plugins?
+	[[ ${maps[*]} == *"$rootdir/build/fio/spdk_nvme"* ]] && return 0
+	[[ ${maps[*]} == *"$rootdir/build/fio/spdk_bdev"* ]] && return 0
+
+	# Do we depend on it?
+	local crit_binaries=() bin
+
+	crit_binaries+=("nvme")
+	crit_binaries+=("qemu-system*")
+	# Add more if needed
+
+	for bin in "${crit_binaries[@]}"; do
+		# The below SC is intentional
+		# shellcheck disable=SC2053
+		[[ ${exe_path##*/} == $bin ]] && return 0
+	done
+
+	return 1
+}
+
 args+=(core_pid)
 args+=(core_sig)
 args+=(core_ts)
@@ -69,12 +110,13 @@ exe_comm=$(< "/proc/$core_pid/comm")
 statm=$(< "/proc/$core_pid/statm")
 core_time=$(date -d@"$core_ts")
 core_sig_name=$(kill -l "$core_sig")
+mapfile -t maps < <(readlink -f "/proc/$core_pid/map_files/"*)
 
-core=$(< "${0%/*}/../.coredump_path")/${exe_path##*/}_$core_pid.core
+# Filter out processes that we don't care about
+filter_process || exit 0
+
+core=$(< "$rootdir/.coredump_path")/${exe_path##*/}_$core_pid.core
 stderr
-
-# Filter out processes that were not executed from within our repo
-[[ $cwd_path == "${0%/*/*}"* ]] || exit 0
 
 # RLIMIT_CORE is not enforced when core is piped to us. To make
 # sure we won't attempt to overload underlying storage, copy
