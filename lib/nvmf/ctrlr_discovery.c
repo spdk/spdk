@@ -99,23 +99,6 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 
 		for (listener = spdk_nvmf_subsystem_get_first_listener(subsystem); listener != NULL;
 		     listener = spdk_nvmf_subsystem_get_next_listener(subsystem, listener)) {
-			if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
-				struct spdk_nvme_transport_id source_trid = *cmd_source_trid;
-				struct spdk_nvme_transport_id listener_trid = *listener->trid;
-
-				/* Do not generate an entry for the transport ID for the listener
-				 * entry associated with the discovery controller that generated
-				 * this command.  We compare a copy of the trids, since the trids
-				 * here don't contain the subnqn, and the transport_id_compare()
-				 * function will compare the subnqns.
-				 */
-				source_trid.subnqn[0] = '\0';
-				listener_trid.subnqn[0] = '\0';
-				if (!spdk_nvme_transport_id_compare(&listener_trid, &source_trid)) {
-					continue;
-				}
-			}
-
 			if ((tgt->discovery_filter & SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE) != 0 &&
 			    !nvmf_discovery_compare_trtype(listener->trid, cmd_source_trid)) {
 				SPDK_DEBUGLOG(nvmf, "ignore listener type %d (%s) due to type mismatch\n",
@@ -156,6 +139,17 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 			entry->asqsz = listener->transport->opts.max_aq_depth;
 			entry->subtype = subsystem->subtype;
 			snprintf(entry->subnqn, sizeof(entry->subnqn), "%s", subsystem->subnqn);
+
+			if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT) {
+				/* Each listener in the Current Discovery Subsystem provides access
+				 * to the same Discovery Log Pages, so set the Duplicate Returned
+				 * Information flag. */
+				entry->eflags |= SPDK_NVMF_DISCOVERY_LOG_EFLAGS_DUPRETINFO;
+				/* Since the SPDK NVMeoF target supports Asynchronous Event Request
+				 * and Keep Alive commands, set the Explicit Persistent Connection
+				 * Support for Discovery flag. */
+				entry->eflags |= SPDK_NVMF_DISCOVERY_LOG_EFLAGS_EPCSD;
+			}
 
 			nvmf_transport_listener_discover(listener->transport, listener->trid, entry);
 

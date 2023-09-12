@@ -87,6 +87,7 @@
 	spdk_nvmf_poll_group_dump_stat;
 	spdk_nvmf_rdma_init_hooks;
 	spdk_nvmf_subsystem_set_ana_reporting;
+	spdk_nvmf_subsystem_is_discovery;
 
 	# public functions in nvmf_cmd.h
 	spdk_nvmf_ctrlr_identify_ctrlr;

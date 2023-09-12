@@ -1036,6 +1036,17 @@ enum spdk_nvmf_subtype spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *
 uint32_t spdk_nvmf_subsystem_get_max_nsid(struct spdk_nvmf_subsystem *subsystem);
 
 /**
+ * Checks whether a given subsystem is a discovery subsystem
+ *
+ * \param subsystem Subsystem to check.
+ *
+ * \return true if a given subsystem is a discovery subsystem, false
+ *	   if the subsystem is an nvm subsystem
+ */
+bool spdk_nvmf_subsystem_is_discovery(struct spdk_nvmf_subsystem *subsystem);
+
+
+/**
  * Initialize transport options
  *
  * \param transport_name The transport type to create

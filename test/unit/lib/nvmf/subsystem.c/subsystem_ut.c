@@ -1726,7 +1726,7 @@ test_nvmf_subsystem_state_change(void)
 	RB_INIT(&tgt.subsystems);
 
 	discovery_subsystem = spdk_nvmf_subsystem_create(&tgt, SPDK_NVMF_DISCOVERY_NQN,
-			      SPDK_NVMF_SUBTYPE_DISCOVERY, 0);
+			      SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT, 0);
 	SPDK_CU_ASSERT_FATAL(discovery_subsystem != NULL);
 	subsystem = spdk_nvmf_subsystem_create(&tgt, "nqn.2016-06.io.spdk:subsystem1",
 					       SPDK_NVMF_SUBTYPE_NVME, 0);

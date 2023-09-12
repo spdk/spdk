@@ -409,7 +409,7 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	/* Coalescing Disable */
 	ctrlr->feat.interrupt_vector_configuration.bits.cd = 1;
 
-	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+	if (spdk_nvmf_subsystem_is_discovery(ctrlr->subsys)) {
 		/*
 		 * If keep-alive timeout is not set, discovery controllers use some
 		 * arbitrary high value in order to cleanup stale discovery sessions
@@ -582,7 +582,7 @@ nvmf_ctrlr_add_io_qpair(void *ctx)
 		goto end;
 	}
 
-	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+	if (spdk_nvmf_subsystem_is_discovery(ctrlr->subsys)) {
 		SPDK_ERRLOG("I/O connect not allowed on discovery controller\n");
 		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
 		goto end;
@@ -2557,7 +2557,7 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	SPDK_DEBUGLOG(nvmf, "Get log page: LID=0x%02X offset=0x%" PRIx64 " len=0x%" PRIx64 " rae=%u\n",
 		      lid, offset, len, rae);
 
-	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+	if (spdk_nvmf_subsystem_is_discovery(subsystem)) {
 		switch (lid) {
 		case SPDK_NVME_LOG_DISCOVERY:
 			if (spdk_nvmf_qpair_get_listen_trid(req->qpair, &cmd_source_trid)) {
@@ -2757,7 +2757,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	SPDK_DEBUGLOG(nvmf, "sgls data: 0x%x\n", from_le32(&cdata->sgls));
 
 
-	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+	if (spdk_nvmf_subsystem_is_discovery(subsystem)) {
 		/*
 		 * NVM Discovery subsystem fields
 		 */
@@ -3071,7 +3071,7 @@ nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 
 	cns = cmd->cdw10_bits.identify.cns;
 
-	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY &&
+	if (spdk_nvmf_subsystem_is_discovery(subsystem) &&
 	    cns != SPDK_NVME_IDENTIFY_CTRLR) {
 		/* Discovery controllers only support Identify Controller */
 		goto invalid_cns;
@@ -3316,7 +3316,7 @@ nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 
 	feature = cmd->cdw10_bits.get_features.fid;
 
-	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+	if (spdk_nvmf_subsystem_is_discovery(ctrlr->subsys)) {
 		/*
 		 * Features supported by Discovery controller
 		 */
@@ -3414,7 +3414,7 @@ nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 
 	feature = cmd->cdw10_bits.set_features.fid;
 
-	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+	if (spdk_nvmf_subsystem_is_discovery(ctrlr->subsys)) {
 		/*
 		 * Features supported by Discovery controller
 		 */
@@ -3565,7 +3565,7 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 		spdk_iov_memset(req->iov, req->iovcnt, 0);
 	}
 
-	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+	if (spdk_nvmf_subsystem_is_discovery(ctrlr->subsys)) {
 		/* Discovery controllers only support these admin OPS. */
 		switch (cmd->opc) {
 		case SPDK_NVME_OPC_IDENTIFY:

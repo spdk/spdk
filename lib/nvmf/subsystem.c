@@ -233,7 +233,8 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 		return NULL;
 	}
 
-	if (type == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+	if (type == SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT ||
+	    type == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 		if (num_ns != 0) {
 			SPDK_ERRLOG("Discovery subsystem cannot have namespaces.\n");
 			return NULL;
@@ -3391,4 +3392,11 @@ nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
 			      subsystem_listener_update_on_pg,
 			      ctx,
 			      subsystem_listener_update_done);
+}
+
+bool
+spdk_nvmf_subsystem_is_discovery(struct spdk_nvmf_subsystem *subsystem)
+{
+	return subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT ||
+	       subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY;
 }

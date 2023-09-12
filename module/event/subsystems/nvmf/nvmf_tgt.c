@@ -285,7 +285,7 @@ nvmf_add_discovery_subsystem(void)
 	struct spdk_nvmf_subsystem *subsystem;
 
 	subsystem = spdk_nvmf_subsystem_create(g_spdk_nvmf_tgt, SPDK_NVMF_DISCOVERY_NQN,
-					       SPDK_NVMF_SUBTYPE_DISCOVERY, 0);
+					       SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT, 0);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Failed creating discovery nvmf library subsystem\n");
 		return -1;

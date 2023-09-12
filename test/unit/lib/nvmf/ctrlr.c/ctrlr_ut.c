@@ -213,6 +213,8 @@ DEFINE_STUB(spdk_bdev_is_zoned, bool, (const struct spdk_bdev *bdev), false);
 DEFINE_STUB(spdk_nvme_ns_get_format_index, uint32_t,
 	    (const struct spdk_nvme_ns_data *nsdata), 0);
 
+DEFINE_STUB(spdk_nvmf_subsystem_is_discovery, bool, (struct spdk_nvmf_subsystem *subsystem), false);
+
 int
 spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_cb cb_fn, void *ctx)
 {
@@ -681,7 +683,8 @@ test_connect(void)
 
 	/* I/O connect to discovery controller */
 	memset(&rsp, 0, sizeof(rsp));
-	subsystem.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
+	subsystem.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT;
+	MOCK_SET(spdk_nvmf_subsystem_is_discovery, true);
 	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	sgroups[subsystem.id].mgmt_io_outstanding++;
 	TAILQ_INSERT_TAIL(&qpair.outstanding, &req, link);
@@ -699,7 +702,8 @@ test_connect(void)
 	cmd.connect_cmd.qid = 0;
 	cmd.connect_cmd.kato = 120000;
 	memset(&rsp, 0, sizeof(rsp));
-	subsystem.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
+	subsystem.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT;
+	MOCK_SET(spdk_nvmf_subsystem_is_discovery, true);
 	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	sgroups[subsystem.id].mgmt_io_outstanding++;
 	TAILQ_INSERT_TAIL(&qpair.outstanding, &req, link);
@@ -720,7 +724,8 @@ test_connect(void)
 	 */
 	cmd.connect_cmd.kato = 0;
 	memset(&rsp, 0, sizeof(rsp));
-	subsystem.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
+	subsystem.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT;
+	MOCK_SET(spdk_nvmf_subsystem_is_discovery, true);
 	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	sgroups[subsystem.id].mgmt_io_outstanding++;
 	TAILQ_INSERT_TAIL(&qpair.outstanding, &req, link);
@@ -738,6 +743,7 @@ test_connect(void)
 	cmd.connect_cmd.qid = 1;
 	cmd.connect_cmd.kato = 120000;
 	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
+	MOCK_SET(spdk_nvmf_subsystem_is_discovery, false);
 
 	/* I/O connect to disabled controller */
 	memset(&rsp, 0, sizeof(rsp));

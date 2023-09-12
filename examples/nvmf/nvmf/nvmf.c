@@ -429,7 +429,7 @@ nvmf_create_nvmf_tgt(void)
 	 *	3,The ability to discover controllers that are statically configured.
 	 */
 	subsystem = spdk_nvmf_subsystem_create(g_nvmf_tgt.tgt, SPDK_NVMF_DISCOVERY_NQN,
-					       SPDK_NVMF_SUBTYPE_DISCOVERY, 0);
+					       SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT, 0);
 	if (subsystem == NULL) {
 		fprintf(stderr, "failed to create discovery nvmf library subsystem\n");
 		goto error;
