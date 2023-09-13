@@ -752,12 +752,26 @@ void spdk_nvmf_subsystem_allow_any_listener(
 /**
  * Check whether a subsystem allows any listen address or only addresses in the allowed list.
  *
+ * Deprecated - will be removed in 24.01. Please use
+ * \ref spdk_nvmf_subsystem_any_listener_allowed.
+ *
  * \param subsystem Subsystem to query.
  *
  * \return true if this subsystem allows dynamic management of listen address list,
  *  or false if only allows addresses in the list configured during subsystem setup.
  */
 bool spdk_nvmf_subsytem_any_listener_allowed(
+	struct spdk_nvmf_subsystem *subsystem);
+
+/**
+ * Check whether a subsystem allows any listen address or only addresses in the allowed list.
+ *
+ * \param subsystem Subsystem to query.
+ *
+ * \return true if this subsystem allows dynamic management of listen address list,
+ *  or false if only allows addresses in the list configured during subsystem setup.
+ */
+bool spdk_nvmf_subsystem_any_listener_allowed(
 	struct spdk_nvmf_subsystem *subsystem);
 
 /**

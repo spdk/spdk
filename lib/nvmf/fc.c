@@ -3128,7 +3128,7 @@ nvmf_fc_adm_add_rem_nport_listener(struct spdk_nvmf_fc_nport *nport, bool add)
 	while (subsystem) {
 		struct nvmf_fc_add_rem_listener_ctx *ctx;
 
-		if (spdk_nvmf_subsytem_any_listener_allowed(subsystem) == true) {
+		if (spdk_nvmf_subsystem_any_listener_allowed(subsystem) == true) {
 			ctx = calloc(1, sizeof(struct nvmf_fc_add_rem_listener_ctx));
 			if (ctx) {
 				ctx->add_listener = add;

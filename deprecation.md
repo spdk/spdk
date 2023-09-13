@@ -42,6 +42,11 @@ will be removed in 23.09 release.
 `transport` field in `listen_addresses` of `nvmf_get_subsystems` RPC is deprecated.
 `trtype` field should be used instead. `transport` field will be removed in 24.01 release.
 
+#### 'spdk_nvmf_subsytem_any_listener_allowed'
+
+The function is deprecated and will be removed in 24.01 release. Please use
+'spdk_nvmf_subsystem_any_listener_allowed' instead.
+
 ### gpt
 
 #### `old_gpt_guid`
