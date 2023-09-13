@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation.  All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 /**
@@ -168,8 +169,17 @@ struct spdk_app_opts {
 	 */
 	const char *lcore_map; /* lcore mapping */
 
+	/**
+	 * Log level for JSON RPC.
+	 */
+	enum spdk_log_level rpc_log_level;
+
+	/**
+	 * If non-NULL, a pointer to JSON RPC log file.
+	 */
+	FILE *rpc_log_file;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 224, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 236, "Incorrect size");
 
 /**
  * Initialize the default value of opts
