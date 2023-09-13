@@ -1582,7 +1582,6 @@ ublk_set_params(struct spdk_ublk_dev *ublk)
 {
 	int rc;
 
-	ublk->dev_params.len = sizeof(struct ublk_params);
 	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_SET_PARAMS);
 	if (rc < 0) {
 		SPDK_ERRLOG("UBLK can't set params for dev %d, rc %s\n", ublk->ublk_id, spdk_strerror(-rc));
@@ -1592,6 +1591,27 @@ ublk_set_params(struct spdk_ublk_dev *ublk)
 			ublk->start_cb = NULL;
 		}
 	}
+}
+
+static void
+ublk_dev_info_init(struct spdk_ublk_dev *ublk)
+{
+	struct ublksrv_ctrl_dev_info uinfo = {
+		.queue_depth = ublk->queue_depth,
+		.nr_hw_queues = ublk->num_queues,
+		.dev_id = ublk->ublk_id,
+		.max_io_buf_bytes = UBLK_IO_MAX_BYTES,
+		.ublksrv_pid = getpid(),
+		.flags = UBLK_F_URING_CMD_COMP_IN_TASK,
+	};
+
+	if (g_ublk_tgt.user_copy) {
+		uinfo.flags |= UBLK_F_USER_COPY;
+	} else {
+		uinfo.flags |= UBLK_F_NEED_GET_DATA;
+	}
+
+	ublk->dev_info = uinfo;
 }
 
 /* Set ublk device parameters based on bdev */
@@ -1607,16 +1627,9 @@ ublk_info_param_init(struct spdk_ublk_dev *ublk)
 	uint32_t io_min_size = blk_size;
 	uint32_t io_opt_size = spdk_max(io_opt_blocks * blk_size, io_min_size);
 
-	struct ublksrv_ctrl_dev_info uinfo = {
-		.queue_depth = ublk->queue_depth,
-		.nr_hw_queues = ublk->num_queues,
-		.dev_id = ublk->ublk_id,
-		.max_io_buf_bytes = UBLK_IO_MAX_BYTES,
-		.ublksrv_pid = getpid(),
-		.flags = UBLK_F_URING_CMD_COMP_IN_TASK,
-	};
 	struct ublk_params uparams = {
 		.types = UBLK_PARAM_TYPE_BASIC,
+		.len = sizeof(struct ublk_params),
 		.basic = {
 			.logical_bs_shift = spdk_u32log2(blk_size),
 			.physical_bs_shift = spdk_u32log2(pblk_size),
@@ -1638,13 +1651,6 @@ ublk_info_param_init(struct spdk_ublk_dev *ublk)
 		}
 	}
 
-	if (g_ublk_tgt.user_copy) {
-		uinfo.flags |= UBLK_F_USER_COPY;
-	} else {
-		uinfo.flags |= UBLK_F_NEED_GET_DATA;
-	}
-
-	ublk->dev_info = uinfo;
 	ublk->dev_params = uparams;
 }
 
@@ -1836,6 +1842,7 @@ ublk_start_disk(const char *bdev_name, uint32_t ublk_id,
 		ublk->queues[i].ring.ring_fd = -1;
 	}
 
+	ublk_dev_info_init(ublk);
 	ublk_info_param_init(ublk);
 	rc = ublk_ios_init(ublk);
 	if (rc != 0) {
