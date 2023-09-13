@@ -41,6 +41,7 @@ static int blob_remove_xattr(struct spdk_blob *blob, const char *name, bool inte
 
 static void blob_write_extent_page(struct spdk_blob *blob, uint32_t extent, uint64_t cluster_num,
 				   struct spdk_blob_md_page *page, spdk_blob_op_complete cb_fn, void *cb_arg);
+static void blob_freeze_io(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg);
 
 static void bs_shallow_copy_cluster_find_next(void *cb_arg);
 
@@ -60,6 +61,7 @@ static int blob_esnap_channel_compare(struct blob_esnap_channel *c1, struct blob
 static void blob_esnap_destroy_bs_dev_channels(struct spdk_blob *blob, bool abort_io,
 		spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
 static void blob_esnap_destroy_bs_channel(struct spdk_bs_channel *ch);
+static void blob_set_back_bs_dev_frozen(void *_ctx, int bserrno);
 RB_GENERATE_STATIC(blob_esnap_channel_tree, blob_esnap_channel, node, blob_esnap_channel_compare)
 
 static inline bool
@@ -406,6 +408,37 @@ blob_back_bs_destroy(struct spdk_blob *blob)
 	blob_esnap_destroy_bs_dev_channels(blob, false, blob_back_bs_destroy_esnap_done,
 					   blob->back_bs_dev);
 	blob->back_bs_dev = NULL;
+}
+
+struct set_bs_dev_ctx {
+	struct spdk_blob	*blob;
+	struct spdk_bs_dev	*back_bs_dev;
+
+	spdk_blob_op_complete	cb_fn;
+	void			*cb_arg;
+	int			bserrno;
+};
+
+static void
+blob_set_back_bs_dev(struct spdk_blob *blob, struct spdk_bs_dev *back_bs_dev,
+		     spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	struct set_bs_dev_ctx	*ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("blob 0x%" PRIx64 ": out of memory while setting back_bs_dev\n",
+			    blob->id);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+	ctx->back_bs_dev = back_bs_dev;
+	ctx->blob = blob;
+
+	blob_freeze_io(blob, blob_set_back_bs_dev_frozen, ctx);
 }
 
 struct freeze_io_ctx {
@@ -9719,14 +9752,6 @@ blob_esnap_destroy_bs_channel(struct spdk_bs_channel *ch)
 		      spdk_thread_get_name(spdk_get_thread()));
 }
 
-struct set_bs_dev_ctx {
-	struct spdk_blob	*blob;
-	struct spdk_bs_dev	*back_bs_dev;
-	spdk_blob_op_complete	cb_fn;
-	void			*cb_arg;
-	int			bserrno;
-};
-
 static void
 blob_set_back_bs_dev_done(void *_ctx, int bserrno)
 {
@@ -9756,6 +9781,7 @@ blob_frozen_set_back_bs_dev(void *_ctx, struct spdk_blob *blob, int bserrno)
 
 	if (blob->back_bs_dev != NULL) {
 		blob->back_bs_dev->destroy(blob->back_bs_dev);
+		blob->back_bs_dev = NULL;
 	}
 
 	SPDK_NOTICELOG("blob 0x%" PRIx64 ": hotplugged back_bs_dev\n", blob->id);
@@ -9766,7 +9792,7 @@ blob_frozen_set_back_bs_dev(void *_ctx, struct spdk_blob *blob, int bserrno)
 }
 
 static void
-blob_frozen_destroy_esnap_channels(void *_ctx, int bserrno)
+blob_set_back_bs_dev_frozen(void *_ctx, int bserrno)
 {
 	struct set_bs_dev_ctx	*ctx = _ctx;
 	struct spdk_blob	*blob = ctx->blob;
@@ -9790,26 +9816,13 @@ void
 spdk_blob_set_esnap_bs_dev(struct spdk_blob *blob, struct spdk_bs_dev *back_bs_dev,
 			   spdk_blob_op_complete cb_fn, void *cb_arg)
 {
-	struct set_bs_dev_ctx	*ctx;
-
 	if (!blob_is_esnap_clone(blob)) {
 		SPDK_ERRLOG("blob 0x%" PRIx64 ": not an esnap clone\n", blob->id);
 		cb_fn(cb_arg, -EINVAL);
 		return;
 	}
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (ctx == NULL) {
-		SPDK_ERRLOG("blob 0x%" PRIx64 ": out of memory while setting back_bs_dev\n",
-			    blob->id);
-		cb_fn(cb_arg, -ENOMEM);
-		return;
-	}
-	ctx->cb_fn = cb_fn;
-	ctx->cb_arg = cb_arg;
-	ctx->back_bs_dev = back_bs_dev;
-	ctx->blob = blob;
-	blob_freeze_io(blob, blob_frozen_destroy_esnap_channels, ctx);
+	blob_set_back_bs_dev(blob, back_bs_dev, cb_fn, cb_arg);
 }
 
 struct spdk_bs_dev *
