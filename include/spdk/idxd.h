@@ -328,6 +328,33 @@ int spdk_idxd_submit_dif_check(struct spdk_idxd_io_channel *chan,
 			       spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
+ * Build and submit a DIF insert request
+ *
+ * This function will build the DIF insert descriptor and then immediately submit
+ * by writing to the proper device portal.
+ *
+ * \param chan IDXD channel to submit request.
+ * \param diov Destination iovec
+ * \param diovcnt Number of elements in diov
+ * \param siov Source iovec
+ * \param siovcnt Number of elements in siov
+ * \param num_blocks Total number of blocks to process
+ * \param ctx DIF context. Contains the DIF configuration values, including the reference
+ *            Application Tag value and initial value of the Reference Tag to insert
+ * \param flags Flags, optional flags that can vary per operation.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the cb_arg parameter
+ * in the completion callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_idxd_submit_dif_insert(struct spdk_idxd_io_channel *chan,
+				struct iovec *diov, size_t diovcnt,
+				struct iovec *siov, size_t siovcnt,
+				uint32_t num_blocks, const struct spdk_dif_ctx *ctx, int flags,
+				spdk_idxd_req_cb cb_fn, void *cb_arg);
+
+/**
  * Build and submit an IDXD raw request.
  *
  * This function will process the supplied descriptor and then immediately submit
