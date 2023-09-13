@@ -9,7 +9,7 @@
 #include "spdk/log.h"
 
 struct spdk_deprecation {
-	const char tag[32];
+	const char tag[64];
 	const char desc[64];
 	const char remove[16];
 	TAILQ_ENTRY(spdk_deprecation) link;
