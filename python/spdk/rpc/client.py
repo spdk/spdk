@@ -180,8 +180,9 @@ class JSONRPCClient(object):
         self._logger.info("response:\n%s\n", json.dumps(response, indent=2))
         return response
 
-    def call(self, method, params={}):
+    def call(self, method, params=None):
         self._logger.debug("call('%s')" % method)
+        params = {} if params is None else params
         req_id = self.send(method, params)
         try:
             response = self.recv()
