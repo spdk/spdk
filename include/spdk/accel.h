@@ -34,19 +34,20 @@ struct spdk_accel_crypto_key_create_param {
 };
 
 enum spdk_accel_opcode {
-	SPDK_ACCEL_OPC_COPY		= 0,
-	SPDK_ACCEL_OPC_FILL		= 1,
-	SPDK_ACCEL_OPC_DUALCAST		= 2,
-	SPDK_ACCEL_OPC_COMPARE		= 3,
-	SPDK_ACCEL_OPC_CRC32C		= 4,
-	SPDK_ACCEL_OPC_COPY_CRC32C	= 5,
-	SPDK_ACCEL_OPC_COMPRESS		= 6,
-	SPDK_ACCEL_OPC_DECOMPRESS	= 7,
-	SPDK_ACCEL_OPC_ENCRYPT		= 8,
-	SPDK_ACCEL_OPC_DECRYPT		= 9,
-	SPDK_ACCEL_OPC_XOR		= 10,
-	SPDK_ACCEL_OPC_DIF_VERIFY	= 11,
-	SPDK_ACCEL_OPC_LAST		= 12,
+	SPDK_ACCEL_OPC_COPY			= 0,
+	SPDK_ACCEL_OPC_FILL			= 1,
+	SPDK_ACCEL_OPC_DUALCAST			= 2,
+	SPDK_ACCEL_OPC_COMPARE			= 3,
+	SPDK_ACCEL_OPC_CRC32C			= 4,
+	SPDK_ACCEL_OPC_COPY_CRC32C		= 5,
+	SPDK_ACCEL_OPC_COMPRESS			= 6,
+	SPDK_ACCEL_OPC_DECOMPRESS		= 7,
+	SPDK_ACCEL_OPC_ENCRYPT			= 8,
+	SPDK_ACCEL_OPC_DECRYPT			= 9,
+	SPDK_ACCEL_OPC_XOR			= 10,
+	SPDK_ACCEL_OPC_DIF_VERIFY		= 11,
+	SPDK_ACCEL_OPC_DIF_GENERATE_COPY	= 12,
+	SPDK_ACCEL_OPC_LAST			= 13,
 };
 
 enum spdk_accel_cipher {
@@ -413,6 +414,33 @@ int spdk_accel_submit_dif_verify(struct spdk_io_channel *ch,
 				 struct iovec *iovs, size_t iovcnt, uint32_t num_blocks,
 				 const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err,
 				 spdk_accel_completion_cb cb_fn, void *cb_arg);
+
+/**
+ * Submit a Data Integrity Field (DIF) copy and generate request.
+ *
+ * This operation copies memory from the source to the destination address,
+ * while computing the DIF on the source data and inserting the DIF into
+ * the output data.
+ *
+ * \param ch I/O channel associated with this call.
+ * \param dst_iovs The destination io vector array. The total allocated memory size needs
+ *		  to be at least: num_blocks * block_size (provided to spdk_dif_ctx_init())
+ * \param dst_iovcnt The size of the destination io vectors array.
+ * \param src_iovs The source io vector array. The total allocated memory size needs
+ *		  to be at least: num_blocks * block_size_no_md
+ * \param src_iovcnt The size of the source io vectors array.
+ * \param num_blocks Number of data blocks to process.
+ * \param ctx DIF context. Contains the DIF configuration values, including the reference
+ *            Application Tag value and initial value of the Reference Tag to insert
+ * \param cb_fn Called when this operation completes.
+ * \param cb_arg Callback argument.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_submit_dif_generate_copy(struct spdk_io_channel *ch, struct iovec *dst_iovs,
+					size_t dst_iovcnt, struct iovec *src_iovs, size_t src_iovcnt,
+					uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+					spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /** Object grouping multiple accel operations to be executed at the same point in time */
 struct spdk_accel_sequence;

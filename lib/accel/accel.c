@@ -77,7 +77,7 @@ static struct spdk_spinlock g_stats_lock;
 
 static const char *g_opcode_strings[SPDK_ACCEL_OPC_LAST] = {
 	"copy", "fill", "dualcast", "compare", "crc32c", "copy_crc32c",
-	"compress", "decompress", "encrypt", "decrypt", "xor", "dif_verify"
+	"compress", "decompress", "encrypt", "decrypt", "xor", "dif_verify", "dif_generate_copy"
 };
 
 enum accel_sequence_state {
@@ -855,6 +855,35 @@ spdk_accel_submit_dif_verify(struct spdk_io_channel *ch,
 	accel_task->dif.num_blocks = num_blocks;
 	accel_task->nbytes = num_blocks * ctx->block_size;
 	accel_task->op_code = SPDK_ACCEL_OPC_DIF_VERIFY;
+	accel_task->src_domain = NULL;
+	accel_task->dst_domain = NULL;
+	accel_task->step_cb_fn = NULL;
+
+	return accel_submit_task(accel_ch, accel_task);
+}
+
+int
+spdk_accel_submit_dif_generate_copy(struct spdk_io_channel *ch, struct iovec *dst_iovs,
+				    size_t dst_iovcnt, struct iovec *src_iovs, size_t src_iovcnt,
+				    uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+				    spdk_accel_completion_cb cb_fn, void *cb_arg)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_accel_task *accel_task;
+
+	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
+	if (accel_task == NULL) {
+		return -ENOMEM;
+	}
+
+	accel_task->s.iovs = src_iovs;
+	accel_task->s.iovcnt = src_iovcnt;
+	accel_task->d.iovs = dst_iovs;
+	accel_task->d.iovcnt = dst_iovcnt;
+	accel_task->dif.ctx = ctx;
+	accel_task->dif.num_blocks = num_blocks;
+	accel_task->nbytes = num_blocks * ctx->block_size;
+	accel_task->op_code = SPDK_ACCEL_OPC_DIF_GENERATE_COPY;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
 	accel_task->step_cb_fn = NULL;
