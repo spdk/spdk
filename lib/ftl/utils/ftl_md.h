@@ -151,6 +151,9 @@ enum ftl_md_create_flags {
 
 	/** FTL metadata will be created on heap */
 	FTL_MD_CREATE_HEAP =		0x4,
+
+	/** FTL metadata will be created using spdk_zmalloc */
+	FTL_MD_CREATE_SPDK_BUF =	0x8,
 };
 
 /**
@@ -189,6 +192,8 @@ int ftl_md_unlink(struct spdk_ftl_dev *dev, const char *name, int flags);
 enum ftl_md_destroy_flags {
 	/** FTL metadata data buf will be kept in SHM */
 	FTL_MD_DESTROY_SHM_KEEP = 0x1,
+	/** FTL metadata data buf, freeing buffer allocated with FTL_MD_CREATE_SPDK_BUF */
+	FTL_MD_DESTROY_SPDK_BUF = 0x2,
 };
 
 /**
