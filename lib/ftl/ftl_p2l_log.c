@@ -109,10 +109,10 @@ p2l_log_get_page(struct ftl_p2l_log *p2l)
 	ctrl->page.hdr.p2l_ckpt.seq_id = p2l->seq_id;
 	ctrl->page.hdr.p2l_ckpt.count = 0;
 	ctrl->page.hdr.p2l_ckpt.p2l_checksum = 0;
+	ctrl->page.hdr.p2l_ckpt.idx = ctrl->entry_idx = p2l->entry_idx;
 
 	/* Initialize the page control structure */
 	ctrl->p2l = p2l;
-	ctrl->entry_idx = p2l->entry_idx;
 	TAILQ_INIT(&ctrl->ios);
 
 	/* Increase P2L page index */
@@ -185,7 +185,9 @@ static void
 p2l_log_page_io(struct ftl_p2l_log *p2l, struct ftl_p2l_log_page_ctrl *ctrl)
 {
 	ctrl->page.hdr.p2l_ckpt.p2l_checksum = p2l_log_page_crc(&ctrl->page);
-	ftl_md_persist_entries(p2l->md, ctrl->entry_idx, 1, &ctrl->page, NULL, p2l_log_page_io_cb,
+
+	ftl_md_persist_entries(p2l->md, ctrl->page.hdr.p2l_ckpt.idx, 1, &ctrl->page, NULL,
+			       p2l_log_page_io_cb,
 			       ctrl, &ctrl->md_ctx);
 }
 
@@ -363,7 +365,7 @@ ftl_p2l_log_read_is_next(struct ftl_p2l_log *p2l)
 		return false;
 	}
 
-	return p2l->entry_idx < p2l->entry_max;
+	return p2l->read_ctx.idx < p2l->entry_max;
 }
 
 static bool
@@ -404,6 +406,20 @@ ftl_p2l_log_read_visit(struct ftl_p2l_log *p2l, struct ftl_p2l_log_page_ctrl *ct
 	uint64_t i, j;
 	int rc = 0;
 
+	ftl_bug(ctrl->entry_idx > p2l->entry_max);
+
+	if (p2l->read_ctx.seq_id != page->hdr.p2l_ckpt.seq_id) {
+		/* This page contains entires older than the owner's sequence ID */
+		return;
+	}
+
+	if (ctrl->entry_idx != page->hdr.p2l_ckpt.idx) {
+		FTL_ERRLOG(p2l->dev, "Read P2L IO Logs ERROR, invalid index, type %d\n",
+			   p2l->md->region->type);
+		p2l->read_ctx.result = -EINVAL;
+		return;
+	}
+
 	if (crc != page->hdr.p2l_ckpt.p2l_checksum) {
 		FTL_ERRLOG(p2l->dev, "Read P2L IO Log ERROR, CRC problem, type %d\n",
 			   p2l->md->region->type);
@@ -415,11 +431,6 @@ ftl_p2l_log_read_visit(struct ftl_p2l_log *p2l, struct ftl_p2l_log_page_ctrl *ct
 		FTL_ERRLOG(p2l->dev, "Read P2L IO Log ERROR, inconsistent format, type %d\n",
 			   p2l->md->region->type);
 		p2l->read_ctx.result = -EINVAL;
-		return;
-	}
-
-	if (p2l->read_ctx.seq_id != page->hdr.p2l_ckpt.seq_id) {
-		/* This page contains entires older than the owner's sequence ID */
 		return;
 	}
 
@@ -457,8 +468,6 @@ ftl_p2l_log_read_cb(int status, void *arg)
 
 	/* Release page control */
 	ftl_mempool_put(p2l->page_pool, ctrl);
-	ctrl = NULL;
-
 	ftl_p2l_log_read_process(p2l);
 }
 
@@ -477,7 +486,7 @@ ftl_p2l_log_read_process(struct ftl_p2l_log *p2l)
 		ctrl->entry_idx = p2l->read_ctx.idx++;
 
 		/* Check if the index exceeding the buffer size */
-		ftl_bug(p2l->entry_idx > p2l->entry_max);
+		ftl_bug(p2l->read_ctx.idx > p2l->entry_max);
 
 		p2l->read_ctx.qd++;
 		ftl_md_read_entry(p2l->md, ctrl->entry_idx, &ctrl->page, NULL,
@@ -508,6 +517,7 @@ ftl_p2l_log_read(struct spdk_ftl_dev *dev, enum ftl_layout_region_type type, uin
 	p2l_log->read_ctx.cb_fn = cb_fn;
 	p2l_log->read_ctx.cb_arg = cb_arg;
 	p2l_log->read_ctx.cb_rd = cb_rd;
+	p2l_log->read_ctx.seq_id = seq_id;
 
 	ftl_p2l_log_read_process(p2l_log);
 	if (ftl_p2l_log_read_is_qd(p2l_log)) {

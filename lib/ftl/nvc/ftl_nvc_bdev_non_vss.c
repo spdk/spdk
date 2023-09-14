@@ -138,6 +138,13 @@ static int
 recovery_chunk_recover_p2l_map_read_cb(struct spdk_ftl_dev *dev, void *cb_arg,
 				       uint64_t lba, ftl_addr addr, uint64_t seq_id)
 {
+	struct ftl_mngt_process *mngt = cb_arg;
+	struct recovery_chunk_ctx *ctx = ftl_mngt_get_process_ctx(mngt);
+	struct ftl_nv_cache_chunk *chunk = ctx->chunk;
+
+	ftl_nv_cache_chunk_set_addr(chunk, lba, addr);
+
+	/* TODO We could stop scanning when getting all LBA within the chunk */
 	return 0;
 }
 
