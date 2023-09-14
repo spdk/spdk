@@ -90,6 +90,13 @@ struct ftl_nv_cache_device_ops {
 	void (*write)(struct ftl_io *io);
 
 	/**
+	 * @brief Process NV Cache device
+	 *
+	 * @param dev ftl device
+	 */
+	void (*process)(struct spdk_ftl_dev *dev);
+
+	/**
 	 * @brief Recover open chunk
 	 *
 	 * @param dev ftl device

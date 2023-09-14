@@ -8,6 +8,9 @@
 #include "ftl_nv_cache.h"
 #include "ftl_nvc_bdev_common.h"
 
+static void write_io(struct ftl_io *io);
+static void p2l_log_cb(struct ftl_io *io);
+
 static int
 init(struct spdk_ftl_dev *dev)
 {
@@ -39,11 +42,6 @@ is_bdev_compatible(struct spdk_ftl_dev *dev, struct spdk_bdev *bdev)
 }
 
 static void
-p2l_log_cb(struct ftl_io *io)
-{
-}
-
-static void
 on_chunk_open(struct spdk_ftl_dev *dev, struct ftl_nv_cache_chunk *chunk)
 {
 	assert(NULL == chunk->p2l_log);
@@ -57,6 +55,66 @@ on_chunk_closed(struct spdk_ftl_dev *dev, struct ftl_nv_cache_chunk *chunk)
 	assert(chunk->p2l_log);
 	ftl_p2l_log_release(dev, chunk->p2l_log);
 	chunk->p2l_log = NULL;
+}
+
+static void
+p2l_log_cb(struct ftl_io *io)
+{
+	ftl_nv_cache_write_complete(io, true);
+}
+
+static void
+write_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *ctx)
+{
+	struct ftl_io *io = ctx;
+
+	ftl_stats_bdev_io_completed(io->dev, FTL_STATS_TYPE_USER, bdev_io);
+	spdk_bdev_free_io(bdev_io);
+
+	if (spdk_likely(success)) {
+		struct ftl_p2l_log *log = io->nv_cache_chunk->p2l_log;
+		ftl_p2l_log_io(log, io);
+	} else {
+		ftl_nv_cache_write_complete(io, false);
+	}
+}
+
+static void
+write_io_retry(void *ctx)
+{
+	struct ftl_io *io = ctx;
+
+	write_io(io);
+}
+
+static void
+write_io(struct ftl_io *io)
+{
+	struct spdk_ftl_dev *dev = io->dev;
+	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
+	int rc;
+
+	rc = spdk_bdev_writev_blocks(nv_cache->bdev_desc, nv_cache->cache_ioch,
+				     io->iov, io->iov_cnt,
+				     ftl_addr_to_nvc_offset(dev, io->addr), io->num_blocks,
+				     write_io_cb, io);
+	if (spdk_unlikely(rc)) {
+		if (rc == -ENOMEM) {
+			struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
+			io->bdev_io_wait.bdev = bdev;
+			io->bdev_io_wait.cb_fn = write_io_retry;
+			io->bdev_io_wait.cb_arg = io;
+			spdk_bdev_queue_io_wait(bdev, nv_cache->cache_ioch, &io->bdev_io_wait);
+		} else {
+			ftl_abort();
+		}
+	}
+}
+
+static void
+process(struct spdk_ftl_dev *dev)
+{
+	ftl_p2l_log_flush(dev);
 }
 
 static int
@@ -98,6 +156,8 @@ struct ftl_nv_cache_device_type nvc_bdev_non_vss = {
 		.md_layout_ops = {
 			.region_create = ftl_nvc_bdev_common_region_create,
 			.region_open = ftl_nvc_bdev_common_region_open,
-		}
+		},
+		.process = process,
+		.write = write_io,
 	}
 };
