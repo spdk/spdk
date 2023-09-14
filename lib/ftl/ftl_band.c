@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2018 Intel Corporation.
+ *   Copyright 2023 Solidigm All Rights Reserved
  *   All rights reserved.
  */
 
@@ -693,7 +694,7 @@ ftl_band_initialize_free_state(struct ftl_band *band)
 	_ftl_band_set_free(band);
 }
 
-void
+int
 ftl_bands_load_state(struct spdk_ftl_dev *dev)
 {
 	uint64_t i;
@@ -702,8 +703,16 @@ ftl_bands_load_state(struct spdk_ftl_dev *dev)
 	for (i = 0; i < dev->num_bands; i++) {
 		band = &dev->bands[i];
 
+		if (band->md->version != FTL_BAND_VERSION_CURRENT) {
+			FTL_ERRLOG(dev, "Invalid band version detected, %"PRIu64" (expected %d)\n",
+				   band->md->version, FTL_BAND_VERSION_CURRENT);
+			return -1;
+		}
+
 		if (band->md->state == FTL_BAND_STATE_FREE) {
 			ftl_band_initialize_free_state(band);
 		}
 	}
+
+	return 0;
 }

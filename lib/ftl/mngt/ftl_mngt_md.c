@@ -177,7 +177,7 @@ ftl_md_restore_region(struct spdk_ftl_dev *dev, int region_type)
 		ftl_valid_map_load_state(dev);
 		break;
 	case FTL_LAYOUT_REGION_TYPE_BAND_MD:
-		ftl_bands_load_state(dev);
+		status = ftl_bands_load_state(dev);
 		break;
 	default:
 		break;

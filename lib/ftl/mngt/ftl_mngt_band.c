@@ -32,6 +32,7 @@ ftl_band_init_md(struct ftl_band *band)
 	}
 
 	band->md = &band_md[band->id];
+	band->md->version = FTL_BAND_VERSION_CURRENT;
 	if (!ftl_fast_startup(dev)) {
 		band->md->df_p2l_map = FTL_DF_OBJ_ID_INVALID;
 	}

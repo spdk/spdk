@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2018 Intel Corporation.
+ *   Copyright 2023 Solidigm All Rights Reserved
  *   All rights reserved.
  */
 
@@ -21,8 +22,9 @@
 
 #define FTL_BAND_VERSION_0	0
 #define FTL_BAND_VERSION_1	1
+#define FTL_BAND_VERSION_2	2
 
-#define FTL_BAND_VERSION_CURRENT FTL_BAND_VERSION_1
+#define FTL_BAND_VERSION_CURRENT FTL_BAND_VERSION_2
 
 struct spdk_ftl_dev;
 struct ftl_band;
@@ -46,6 +48,9 @@ typedef void (*ftl_band_md_cb)(struct ftl_band *band, void *ctx, enum ftl_md_sta
 typedef void (*ftl_band_validate_md_cb)(struct ftl_band *band, bool valid);
 
 struct ftl_band_md {
+	/* Band metadata version */
+	uint64_t version;
+
 	/* Band iterator for writing */
 	struct {
 		/* Current physical address of the write pointer */
@@ -83,10 +88,12 @@ struct ftl_band_md {
 	uint32_t			p2l_map_checksum;
 
 	/* Reserved */
-	uint8_t				reserved2[4028];
+	uint8_t				reserved2[4020];
 } __attribute__((packed));
 
-SPDK_STATIC_ASSERT(sizeof(struct ftl_band_md) == FTL_BLOCK_SIZE, "Incorrect metadata size");
+SPDK_STATIC_ASSERT(sizeof(struct ftl_band_md) == FTL_BLOCK_SIZE, "Incorrect band metadata size");
+SPDK_STATIC_ASSERT(offsetof(struct ftl_band_md, version) == 0,
+		   "Incorrect band metadata version offset");
 
 struct ftl_band {
 	/* Device this band belongs to */
@@ -178,7 +185,7 @@ struct ftl_band *ftl_band_search_next_to_reloc(struct spdk_ftl_dev *dev);
 void ftl_band_init_gc_iter(struct spdk_ftl_dev *dev);
 ftl_addr ftl_band_p2l_map_addr(struct ftl_band *band);
 void ftl_valid_map_load_state(struct spdk_ftl_dev *dev);
-void ftl_bands_load_state(struct spdk_ftl_dev *dev);
+int ftl_bands_load_state(struct spdk_ftl_dev *dev);
 void ftl_band_open(struct ftl_band *band, enum ftl_band_type type);
 void ftl_band_close(struct ftl_band *band);
 void ftl_band_free(struct ftl_band *band);

@@ -74,7 +74,7 @@ DEFINE_STUB_V(ftl_mngt_next_step, (struct ftl_mngt_process *mngt));
 DEFINE_STUB_V(ftl_md_persist, (struct ftl_md *md));
 DEFINE_STUB(ftl_nv_cache_load_state, int, (struct ftl_nv_cache *nv_cache), 0);
 DEFINE_STUB_V(ftl_valid_map_load_state, (struct spdk_ftl_dev *dev));
-DEFINE_STUB_V(ftl_bands_load_state, (struct spdk_ftl_dev *dev));
+DEFINE_STUB(ftl_bands_load_state, int, (struct spdk_ftl_dev *dev), 0);
 DEFINE_STUB(ftl_md_get_region, const struct ftl_layout_region *, (struct ftl_md *md), 0);
 DEFINE_STUB_V(ftl_md_restore, (struct ftl_md *md));
 DEFINE_STUB(ftl_nv_cache_save_state, int, (struct ftl_nv_cache *nv_cache), 0);
