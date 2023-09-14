@@ -587,22 +587,19 @@ compaction_process_pin_lba_cb(struct spdk_ftl_dev *dev, int status, struct ftl_l
 static void
 compaction_process_pin_lba(struct ftl_nv_cache_compactor *comp)
 {
-	union ftl_md_vss *md;
-	struct ftl_nv_cache_chunk *chunk = comp->rd->owner.priv;
 	struct spdk_ftl_dev *dev = comp->rd->dev;
-	uint64_t i;
-	uint32_t count = comp->rd->iter.count;
+	struct ftl_rq *rq = comp->rd;
+	struct ftl_nv_cache_chunk *chunk = rq->owner.priv;
 	struct ftl_rq_entry *entry;
-	struct ftl_l2p_pin_ctx *pin_ctx;
 
-	assert(comp->rd->iter.idx == 0);
-	comp->rd->iter.remaining = count;
-	comp->rd->iter.status = 0;
+	assert(rq->iter.idx == 0);
+	rq->iter.remaining = rq->iter.count;
+	rq->iter.status = 0;
 
-	for (i = 0; i < count; i++) {
-		entry = &comp->rd->entries[i];
-		pin_ctx = &entry->l2p_pin_ctx;
-		md = entry->io_md;
+	FTL_RQ_ENTRY_LOOP(rq, entry, rq->iter.count) {
+		struct ftl_l2p_pin_ctx *pin_ctx = &entry->l2p_pin_ctx;
+		union ftl_md_vss *md = entry->io_md;
+
 		if (md->nv_cache.lba == FTL_LBA_INVALID || md->nv_cache.seq_id != chunk->md->seq_id) {
 			ftl_l2p_pin_skip(dev, compaction_process_pin_lba_cb, comp, pin_ctx);
 		} else {
@@ -742,21 +739,25 @@ compaction_submit_read(struct ftl_nv_cache_compactor *compactor, ftl_addr addr,
 }
 
 static void
+compaction_process_invalidate_entry(struct ftl_rq_entry *entry)
+{
+	entry->addr = FTL_ADDR_INVALID;
+	entry->lba = FTL_LBA_INVALID;
+	entry->seq_id = 0;
+	entry->owner.priv = NULL;
+}
+
+static void
 compaction_process_pad(struct ftl_nv_cache_compactor *compactor)
 {
-	struct ftl_rq *wr = compactor->wr;
-	const uint64_t num_entries = wr->num_blocks;
-	struct ftl_rq_entry *iter;
+	struct ftl_rq *rq =  compactor->wr;
+	struct ftl_rq_entry *entry;
+	uint64_t idx = rq->iter.idx;
 
-	iter = &wr->entries[wr->iter.idx];
-
-	while (wr->iter.idx < num_entries) {
-		iter->addr = FTL_ADDR_INVALID;
-		iter->owner.priv = NULL;
-		iter->lba = FTL_LBA_INVALID;
-		iter->seq_id = 0;
-		iter++;
-		wr->iter.idx++;
+	assert(idx < rq->num_blocks);
+	FTL_RQ_ENTRY_LOOP_FROM(rq, &rq->entries[idx], entry, rq->num_blocks) {
+		compaction_process_invalidate_entry(entry);
+		rq->iter.idx++;
 	}
 }
 
@@ -858,7 +859,6 @@ compaction_process_ftl_done(struct ftl_rq *rq)
 	struct ftl_band *band = rq->io.band;
 	struct ftl_rq_entry *entry;
 	ftl_addr addr;
-	uint64_t i;
 
 	if (spdk_unlikely(false == rq->success)) {
 		/* IO error retry writing */
@@ -872,19 +872,17 @@ compaction_process_ftl_done(struct ftl_rq *rq)
 
 	/* Update L2P table */
 	addr = rq->io.addr;
-	for (i = 0, entry = rq->entries; i < rq->num_blocks; i++, entry++) {
+	FTL_RQ_ENTRY_LOOP(rq, entry, rq->num_blocks) {
 		struct ftl_nv_cache_chunk *chunk = entry->owner.priv;
 
-		if (entry->lba == FTL_LBA_INVALID) {
+		if (entry->lba != FTL_LBA_INVALID) {
+			ftl_l2p_update_base(dev, entry->lba, addr, entry->addr);
+			ftl_l2p_unpin(dev, entry->lba, 1);
+			chunk_compaction_advance(chunk, 1);
+		} else {
 			assert(entry->addr == FTL_ADDR_INVALID);
-			addr = ftl_band_next_addr(band, addr, 1);
-			continue;
 		}
 
-		ftl_l2p_update_base(dev, entry->lba, addr, entry->addr);
-		ftl_l2p_unpin(dev, entry->lba, 1);
-
-		chunk_compaction_advance(chunk, 1);
 		addr = ftl_band_next_addr(band, addr, 1);
 	}
 
