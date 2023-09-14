@@ -10,8 +10,8 @@
 #include "ftl_layout.h"
 
 struct spdk_ftl_dev;
-struct ftl_mngt_process;
 struct ftl_nv_cache_chunk;
+struct ftl_io;
 
 /**
  * @brief NV Cache device features and capabilities
@@ -47,6 +47,14 @@ struct ftl_nv_cache_device_ops {
 	 * @retval false if chunk is not active
 	 */
 	bool (*is_chunk_active)(struct spdk_ftl_dev *dev, uint64_t chunk_offset);
+
+	/**
+	 * @brief Write user IO to the NV cache device
+	 *
+	 * @param io FTL IO
+	 *
+	 */
+	void (*write)(struct ftl_io *io);
 
 	struct ftl_md_layout_ops md_layout_ops;
 };

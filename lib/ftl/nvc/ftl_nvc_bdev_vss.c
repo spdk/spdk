@@ -117,6 +117,65 @@ md_region_open(struct spdk_ftl_dev *dev, enum ftl_layout_region_type reg_type, u
 	return 0;
 }
 
+static void
+write_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct ftl_io *io = cb_arg;
+	struct ftl_nv_cache *nv_cache = &io->dev->nv_cache;
+
+	ftl_stats_bdev_io_completed(io->dev, FTL_STATS_TYPE_USER, bdev_io);
+
+	spdk_bdev_free_io(bdev_io);
+
+	ftl_mempool_put(nv_cache->md_pool, io->md);
+
+	ftl_nv_cache_write_complete(io, success);
+}
+
+static void write_io(struct ftl_io *io);
+
+static void
+_nvc_vss_write(void *io)
+{
+	write_io(io);
+}
+
+static void
+write_io(struct ftl_io *io)
+{
+	struct spdk_ftl_dev *dev = io->dev;
+	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
+	int rc;
+
+	io->md = ftl_mempool_get(dev->nv_cache.md_pool);
+	if (spdk_unlikely(!io->md)) {
+		ftl_abort();
+	}
+
+	ftl_nv_cache_fill_md(io);
+
+	rc = spdk_bdev_writev_blocks_with_md(nv_cache->bdev_desc, nv_cache->cache_ioch,
+					     io->iov, io->iov_cnt, io->md,
+					     ftl_addr_to_nvc_offset(dev, io->addr), io->num_blocks,
+					     write_io_cb, io);
+	if (spdk_unlikely(rc)) {
+		if (rc == -ENOMEM) {
+			struct spdk_bdev *bdev;
+
+			ftl_mempool_put(nv_cache->md_pool, io->md);
+			io->md = NULL;
+
+			bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
+			io->bdev_io_wait.bdev = bdev;
+			io->bdev_io_wait.cb_fn = _nvc_vss_write;
+			io->bdev_io_wait.cb_arg = io;
+			spdk_bdev_queue_io_wait(bdev, nv_cache->cache_ioch, &io->bdev_io_wait);
+		} else {
+			ftl_abort();
+		}
+	}
+}
+
 struct ftl_nv_cache_device_type nvc_bdev_vss = {
 	.name = "bdev",
 	.features = {
@@ -128,6 +187,7 @@ struct ftl_nv_cache_device_type nvc_bdev_vss = {
 			.region_create = md_region_create,
 			.region_open = md_region_open,
 		},
+		.write = write_io,
 	}
 };
 FTL_NV_CACHE_DEVICE_TYPE_REGISTER(nvc_bdev_vss)

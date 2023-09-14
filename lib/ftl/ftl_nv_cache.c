@@ -1159,7 +1159,6 @@ ftl_nv_cache_submit_cb_done(struct ftl_io *io)
 	chunk_advance_blocks(nv_cache, io->nv_cache_chunk, io->num_blocks);
 	io->nv_cache_chunk = NULL;
 
-	ftl_mempool_put(nv_cache->md_pool, io->md);
 	ftl_io_complete(io);
 }
 
@@ -1176,51 +1175,6 @@ ftl_nv_cache_l2p_update(struct ftl_io *io)
 
 	ftl_l2p_unpin(dev, io->lba, io->num_blocks);
 	ftl_nv_cache_submit_cb_done(io);
-}
-
-static void
-ftl_nv_cache_submit_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
-{
-	struct ftl_io *io = cb_arg;
-
-	ftl_stats_bdev_io_completed(io->dev, FTL_STATS_TYPE_USER, bdev_io);
-
-	spdk_bdev_free_io(bdev_io);
-
-	if (spdk_unlikely(!success)) {
-		FTL_ERRLOG(io->dev, "Non-volatile cache write failed at %"PRIx64"\n",
-			   io->addr);
-		io->status = -EIO;
-		ftl_l2p_unpin(io->dev, io->lba, io->num_blocks);
-		ftl_nv_cache_submit_cb_done(io);
-	} else {
-		ftl_nv_cache_l2p_update(io);
-	}
-}
-
-static void
-nv_cache_write(void *_io)
-{
-	struct ftl_io *io = _io;
-	struct spdk_ftl_dev *dev = io->dev;
-	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
-	int rc;
-
-	rc = spdk_bdev_writev_blocks_with_md(nv_cache->bdev_desc, nv_cache->cache_ioch,
-					     io->iov, io->iov_cnt, io->md,
-					     ftl_addr_to_nvc_offset(dev, io->addr), io->num_blocks,
-					     ftl_nv_cache_submit_cb, io);
-	if (spdk_unlikely(rc)) {
-		if (rc == -ENOMEM) {
-			struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
-			io->bdev_io_wait.bdev = bdev;
-			io->bdev_io_wait.cb_fn = nv_cache_write;
-			io->bdev_io_wait.cb_arg = io;
-			spdk_bdev_queue_io_wait(bdev, nv_cache->cache_ioch, &io->bdev_io_wait);
-		} else {
-			ftl_abort();
-		}
-	}
 }
 
 static void
@@ -1247,7 +1201,22 @@ ftl_nv_cache_pin_cb(struct spdk_ftl_dev *dev, int status, struct ftl_l2p_pin_ctx
 
 	ftl_trace_submission(io->dev, io, io->addr, io->num_blocks);
 
-	nv_cache_write(io);
+	dev->nv_cache.nvc_type->ops.write(io);
+}
+
+void
+ftl_nv_cache_write_complete(struct ftl_io *io, bool success)
+{
+	if (spdk_unlikely(!success)) {
+		FTL_ERRLOG(io->dev, "Non-volatile cache write failed at %"PRIx64"\n",
+			   io->addr);
+		io->status = -EIO;
+		ftl_l2p_unpin(io->dev, io->lba, io->num_blocks);
+		ftl_nv_cache_submit_cb_done(io);
+		return;
+	}
+
+	ftl_nv_cache_l2p_update(io);
 }
 
 bool
@@ -1256,22 +1225,14 @@ ftl_nv_cache_write(struct ftl_io *io)
 	struct spdk_ftl_dev *dev = io->dev;
 	uint64_t cache_offset;
 
-	io->md = ftl_mempool_get(dev->nv_cache.md_pool);
-	if (spdk_unlikely(!io->md)) {
-		return false;
-	}
-
 	/* Reserve area on the write buffer cache */
 	cache_offset = ftl_nv_cache_get_wr_buffer(&dev->nv_cache, io);
 	if (cache_offset == FTL_LBA_INVALID) {
 		/* No free space in NV cache, resubmit request */
-		ftl_mempool_put(dev->nv_cache.md_pool, io->md);
 		return false;
 	}
 	io->addr = ftl_addr_from_nvc_offset(dev, cache_offset);
-	io->nv_cache_chunk = dev->nv_cache.chunk_current;
 
-	ftl_nv_cache_fill_md(io);
 	ftl_l2p_pin(io->dev, io->lba, io->num_blocks,
 		    ftl_nv_cache_pin_cb, io,
 		    &io->l2p_pin_ctx);
