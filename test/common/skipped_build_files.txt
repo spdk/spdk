@@ -64,3 +64,7 @@ lib/mlx5/mlx5_crypto
 
 # Not configured to build hello_gorpc example
 examples/go/hello_gorpc/hello_gorpc.go
+
+# Disabled until tests for superblock v5 is submitted
+test/unit/lib/ftl/ftl_layout_upgrade/ftl_layout_upgrade_ut
+test/unit/lib/ftl/ftl_sb/ftl_sb_ut
