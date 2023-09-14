@@ -55,9 +55,12 @@ $rpc_py bdev_ftl_get_properties -b ftl
 # Enable upgrade shutdown
 $rpc_py bdev_ftl_set_property -b ftl -p prep_upgrade_on_shutdown -v true
 
+function ftl_get_properties() {
+	$rpc_py bdev_ftl_get_properties -b $FTL_BDEV
+}
+
 # Validate there are utilized chunks
-used=$($rpc_py bdev_ftl_get_properties -b ftl \
-	| jq '[.properties[] | select(.name == "cache_device") | .chunks[] | select(.utilization != 0.0)] | length')
+used=$(ftl_get_properties | jq '[.properties[] | select(.name == "cache_device") | .chunks[] | select(.utilization != 0.0)] | length')
 if [[ "$used" -eq 0 ]]; then
 	echo "Shutdown upgrade ERROR, excepted utilized chunks"
 	exit 1
@@ -76,28 +79,41 @@ $rpc_py bdev_ftl_set_property -b ftl -p verbose_mode -v true
 $rpc_py bdev_ftl_get_properties -b ftl
 
 # Validate if all chunks utilization is 0.0
-used=$($rpc_py bdev_ftl_get_properties -b ftl \
-	| jq '[.properties[] | select(.name == "cache_device") | .chunks[] | select(.utilization != 0.0)] | length')
+used=$(ftl_get_properties | jq '[.properties[] | select(.name == "cache_device") | .chunks[] | select(.utilization != 0.0)] | length')
 if [[ "$used" -ne 0 ]]; then
 	echo "Shutdown upgrade ERROR, excepted only empty chunks"
 	exit 1
 fi
 
-# Validate MD5 checksum
-skip=0
-for ((i = 0; i < iterations; i++)); do
-	echo "Validate MD5 checksum, iteration $((i + 1))"
-	tcp_dd --ib=ftln1 --of="${testdir}/file" --bs="$bs" --count="$count" --qd="$qd" --skip="$skip"
-	skip=$((skip + count))
+# Validate no opened bands
+opened=$(ftl_get_properties | jq '[.properties[] | select(.name == "bands") | .bands[] | select(.state == "OPENED")] | length')
+if [[ "$opened" -ne 0 ]]; then
+	echo "Shutdown upgrade ERROR, excepted no opened band"
+	exit 1
+fi
 
-	md5sum "${testdir}/file" > "${testdir}/file.md5"
-	sum=$(cut -f1 -d' ' < "${testdir}/file.md5")
+function test_validate_checksum() {
+	skip=0
+	for ((i = 0; i < iterations; i++)); do
+		echo "Validate MD5 checksum, iteration $((i + 1))"
+		tcp_dd --ib=ftln1 --of="${testdir}/file" --bs="$bs" --count="$count" --qd="${qd}" --skip="$skip"
+		skip=$((skip + count))
 
-	if [[ "${sums[$i]}" != "$sum" ]]; then
-		echo "Wow, wow, wow!!! What is going on? MD5 Checksum ERROR!!!"
-		exit 1
-	fi
-done
+		md5sum "${testdir}/file" > "${testdir}/file.md5"
+		sum=$(cut -f1 -d' ' < "${testdir}/file.md5")
+
+		if [[ "${sums[$i]}" != "$sum" ]]; then
+			echo "Wow, wow, wow!!! What is going on? MD5 Checksum ERROR!!!"
+			exit 1
+		fi
+	done
+}
+test_validate_checksum
+
+# Data integrity test after dirty shutdown after upgrade
+tcp_target_shutdown_dirty
+tcp_target_setup
+test_validate_checksum
 
 trap - SIGINT SIGTERM EXIT
 cleanup

@@ -81,7 +81,7 @@ function tcp_target_setup() {
 	local base_bdev=""
 	local cache_bdev=""
 
-	if [ -f "$spdk_tgt_cnfg" ]; then
+	if [[ -f "$spdk_tgt_cnfg" ]]; then
 		$spdk_tgt_bin "--cpumask=$spdk_tgt_cpumask" --config="$spdk_tgt_cnfg" &
 	else
 		$spdk_tgt_bin "--cpumask=$spdk_tgt_cpumask" &
@@ -129,6 +129,13 @@ function tcp_target_setup() {
 function tcp_target_shutdown() {
 	if [[ -n "$spdk_tgt_pid" ]]; then
 		killprocess "$spdk_tgt_pid"
+		unset spdk_tgt_pid
+	fi
+}
+
+function tcp_target_shutdown_dirty() {
+	if [[ -n "$spdk_tgt_pid" ]]; then
+		kill -9 "$spdk_tgt_pid"
 		unset spdk_tgt_pid
 	fi
 }
