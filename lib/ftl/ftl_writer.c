@@ -162,6 +162,43 @@ ftl_writer_run(struct ftl_writer *writer)
 	}
 }
 
+static void
+ftl_writer_pad_band_cb(struct ftl_rq *rq)
+{
+	assert(1 == rq->iter.qd);
+	rq->iter.qd = 0;
+}
+
+static void
+ftl_writer_pad_band(struct ftl_writer *writer)
+{
+	struct spdk_ftl_dev *dev = writer->dev;
+
+	assert(dev->conf.prep_upgrade_on_shutdown);
+	assert(writer->band);
+	assert(0 == writer->band->queue_depth);
+
+	/* First allocate the padding FTL request */
+	if (!writer->pad) {
+		writer->pad = ftl_rq_new(dev, dev->md_size);
+		if (!writer->pad) {
+			FTL_ERRLOG(dev, "Cannot allocate FTL request to pad the band");
+			return;
+		}
+		writer->pad->owner.cb = ftl_writer_pad_band_cb;
+	}
+
+	if (writer->pad->iter.qd) {
+		/* The band is handling the pad request already */
+		return;
+	}
+
+	if (writer->band->md->state == FTL_BAND_STATE_OPEN) {
+		ftl_band_rq_write(writer->band, writer->pad);
+		writer->pad->iter.qd++;
+	}
+}
+
 bool
 ftl_writer_is_halted(struct ftl_writer *writer)
 {
@@ -176,6 +213,18 @@ ftl_writer_is_halted(struct ftl_writer *writer)
 
 		if (writer->band->queue_depth) {
 			return false;
+		}
+	}
+
+	if (writer->dev->conf.prep_upgrade_on_shutdown) {
+		if (writer->band) {
+			ftl_writer_pad_band(writer);
+		} else if (writer->num_bands) {
+			return false;
+		} else {
+			/* All bands closed, free padding request */
+			ftl_rq_del(writer->pad);
+			writer->pad = NULL;
 		}
 	}
 

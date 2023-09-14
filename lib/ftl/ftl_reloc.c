@@ -173,6 +173,17 @@ ftl_reloc_free(struct ftl_reloc *reloc)
 void
 ftl_reloc_halt(struct ftl_reloc *reloc)
 {
+	struct spdk_ftl_dev *dev = reloc->dev;
+
+	if (dev->conf.prep_upgrade_on_shutdown && 0 == dev->num_free) {
+		/*
+		 * In shutdown upgrade procedure, it is required to have
+		 * at least one free band. Keep reloc running to reclaim
+		 * the band.
+		 */
+		return;
+	}
+
 	reloc->halt = true;
 }
 

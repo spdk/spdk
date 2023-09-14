@@ -373,6 +373,7 @@ ftl_mngt_set_dirty(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 	struct ftl_superblock *sb = dev->sb;
 
 	sb->clean = 0;
+	sb->upgrade_ready = false;
 	dev->sb_shm->shm_clean = false;
 	sb->header.crc = get_sb_crc(sb);
 	persist(dev, mngt, FTL_LAYOUT_REGION_TYPE_SB);
@@ -384,6 +385,7 @@ ftl_mngt_set_clean(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 	struct ftl_superblock *sb = dev->sb;
 
 	sb->clean = 1;
+	sb->upgrade_ready = dev->conf.prep_upgrade_on_shutdown;
 	dev->sb_shm->shm_clean = false;
 	sb->header.crc = get_sb_crc(sb);
 	persist(dev, mngt, FTL_LAYOUT_REGION_TYPE_SB);

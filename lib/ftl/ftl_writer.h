@@ -38,6 +38,9 @@ struct ftl_writer {
 	enum ftl_band_type writer_type;
 
 	uint64_t last_seq_id;
+
+	/* FTL request to pad the current band */
+	struct ftl_rq *pad;
 };
 
 bool ftl_writer_is_halted(struct ftl_writer *writer);
