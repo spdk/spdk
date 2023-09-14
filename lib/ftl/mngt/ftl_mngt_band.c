@@ -326,6 +326,24 @@ finalize_init_gc(struct spdk_ftl_dev *dev)
 	return 0;
 }
 
+static void
+ftl_property_dump_base_dev(struct spdk_ftl_dev *dev, const struct ftl_property *property,
+			   struct spdk_json_write_ctx *w)
+{
+	uint64_t i;
+	struct ftl_band *band;
+
+	spdk_json_write_named_array_begin(w, "bands");
+	for (i = 0, band = dev->bands; i < ftl_get_num_bands(dev); i++, band++) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_uint64(w, "id", i);
+		spdk_json_write_named_string(w, "state", ftl_band_get_state_name(band));
+		spdk_json_write_named_double(w, "validity", 1.0 - ftl_band_invalidity(band));
+		spdk_json_write_object_end(w);
+	}
+	spdk_json_write_array_end(w);
+}
+
 void
 ftl_mngt_finalize_init_bands(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
@@ -336,6 +354,8 @@ ftl_mngt_finalize_init_bands(struct spdk_ftl_dev *dev, struct ftl_mngt_process *
 	bool fast_startup = ftl_fast_startup(dev);
 
 	ftl_recover_max_seq(dev);
+	ftl_property_register(dev, "base_device", NULL, 0, NULL, NULL, ftl_property_dump_base_dev, NULL,
+			      NULL, true);
 
 	TAILQ_FOREACH_SAFE(band, &dev->free_bands, queue_entry, temp_band) {
 		band->md->df_p2l_map = FTL_DF_OBJ_ID_INVALID;

@@ -135,6 +135,23 @@ ftl_band_tail_md_addr(struct ftl_band *band)
 	return addr;
 }
 
+const char *
+ftl_band_get_state_name(struct ftl_band *band)
+{
+	static const char *names[] = {
+		"FREE", "PREPARING", "OPENING", "OPEN", "FULL", "CLOSING",
+		"CLOSED",
+	};
+
+	assert(band->md->state < SPDK_COUNTOF(names));
+	if (band->md->state < SPDK_COUNTOF(names)) {
+		return names[band->md->state];
+	} else {
+		assert(false);
+		return "?";
+	}
+}
+
 void
 ftl_band_set_state(struct ftl_band *band, enum ftl_band_state state)
 {
@@ -429,8 +446,8 @@ ftl_p2l_map_pool_elem_size(struct spdk_ftl_dev *dev)
 	return ftl_tail_md_num_blocks(dev) * FTL_BLOCK_SIZE;
 }
 
-static double
-_band_invalidity(struct ftl_band *band)
+double
+ftl_band_invalidity(struct ftl_band *band)
 {
 	double valid = band->p2l_map.num_valid;
 	double count = ftl_band_user_blocks(band);
@@ -449,7 +466,7 @@ dump_bands_under_relocation(struct spdk_ftl_dev *dev)
 
 		FTL_DEBUGLOG(dev, "Band, id %u, phys_is %u, wr cnt = %u, invalidity = %u%%\n",
 			     band->id, band->phys_id, (uint32_t)band->md->wr_cnt,
-			     (uint32_t)(_band_invalidity(band) * 100));
+			     (uint32_t)(ftl_band_invalidity(band) * 100));
 	}
 }
 
@@ -490,7 +507,7 @@ get_band_phys_info(struct spdk_ftl_dev *dev, uint64_t phys_id,
 			continue;
 		}
 
-		*invalidity += _band_invalidity(band);
+		*invalidity += ftl_band_invalidity(band);
 	}
 
 	*invalidity /= dev->num_logical_bands_in_physical;
