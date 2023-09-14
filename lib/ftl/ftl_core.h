@@ -25,6 +25,7 @@
 #include "ftl_l2p.h"
 #include "utils/ftl_bitmap.h"
 #include "utils/ftl_log.h"
+#include "utils/ftl_property.h"
 
 /*
  * We need to reserve at least 2 buffers for band close / open sequence
@@ -185,6 +186,9 @@ struct spdk_ftl_dev {
 		/* In use regions */
 		TAILQ_HEAD(, ftl_p2l_ckpt)	inuse;
 	} p2l_ckpt;
+
+	/* FTL properties which can be configured by user */
+	struct ftl_properties			*properties;
 };
 
 void ftl_apply_limits(struct spdk_ftl_dev *dev);

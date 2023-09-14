@@ -88,6 +88,7 @@ free_dev(struct spdk_ftl_dev *dev)
 
 	deinit_core_thread(dev);
 	spdk_ftl_conf_deinit(&dev->conf);
+	ftl_properties_deinit(dev);
 	free(dev);
 }
 
@@ -101,6 +102,12 @@ allocate_dev(const struct spdk_ftl_conf *conf, int *error)
 		FTL_ERRLOG(dev, "Cannot allocate FTL device\n");
 		*error = -ENOMEM;
 		return NULL;
+	}
+
+	rc = ftl_properties_init(dev);
+	if (rc) {
+		*error = rc;
+		goto error;
 	}
 
 	rc = ftl_conf_init_dev(dev, conf);
