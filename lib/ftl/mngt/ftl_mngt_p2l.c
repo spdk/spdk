@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2022 Intel Corporation.
+ *   Copyright 2023 Solidigm All Rights Reserved
  *   All rights reserved.
  */
 
@@ -11,6 +12,8 @@
 struct ftl_mngt_p2l_md_ctx {
 	struct ftl_mngt_process *mngt;
 	int md_region;
+	int md_region_min;
+	int md_region_max;
 	int status;
 };
 
@@ -43,7 +46,7 @@ ftl_p2l_wipe_md_region_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int statu
 		return;
 	}
 
-	if (ctx->md_region == FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MAX) {
+	if (ctx->md_region == ctx->md_region_max) {
 		ftl_mngt_next_step(ctx->mngt);
 		return;
 	}
@@ -58,8 +61,8 @@ ftl_p2l_wipe_md_region(struct spdk_ftl_dev *dev, struct ftl_mngt_p2l_md_ctx *ctx
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_md *md = layout->md[ctx->md_region];
 
-	assert(ctx->md_region >= FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MIN);
-	assert(ctx->md_region <= FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MAX);
+	assert(ctx->md_region >= ctx->md_region_min);
+	assert(ctx->md_region <= ctx->md_region_max);
 
 	if (!md) {
 		ftl_mngt_fail_step(ctx->mngt);
@@ -68,11 +71,11 @@ ftl_p2l_wipe_md_region(struct spdk_ftl_dev *dev, struct ftl_mngt_p2l_md_ctx *ctx
 
 	md->owner.cb_ctx = ctx;
 	md->cb = ftl_p2l_wipe_md_region_cb;
-	ftl_md_persist(md);
+	ftl_md_clear(md, 0, NULL);
 }
 
-void
-ftl_mngt_p2l_wipe(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+static void
+ftl_mngt_p2l_wipe_range(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt, int min, int max)
 {
 	struct ftl_mngt_p2l_md_ctx *ctx;
 
@@ -82,8 +85,42 @@ ftl_mngt_p2l_wipe(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 	}
 	ctx = ftl_mngt_get_step_ctx(mngt);
 	ctx->mngt = mngt;
-	ctx->md_region = FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MIN;
+	ctx->md_region_min = min;
+	ctx->md_region_max = max;
+	ctx->md_region = ctx->md_region_min;
 	ftl_p2l_wipe_md_region(dev, ctx);
+}
+
+void
+ftl_mngt_p2l_wipe(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	ftl_mngt_p2l_wipe_range(dev, mngt, FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MIN,
+				FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MAX);
+}
+
+void
+ftl_mngt_p2l_log_io_wipe(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	struct ftl_layout_region *region;
+	bool wipe = false;
+
+	/* Check if P2L IO logs are enabled and we have to clear this MD and region */
+	for (int i = FTL_LAYOUT_REGION_TYPE_P2L_LOG_IO_MIN; i <= FTL_LAYOUT_REGION_TYPE_P2L_LOG_IO_MAX;
+	     i++) {
+		region = &dev->layout.region[i];
+		if (region->current.blocks) {
+			wipe = true;
+			break;
+		}
+	}
+
+	if (!wipe) {
+		ftl_mngt_skip_step(mngt);
+		return;
+	}
+
+	ftl_mngt_p2l_wipe_range(dev, mngt, FTL_LAYOUT_REGION_TYPE_P2L_LOG_IO_MIN,
+				FTL_LAYOUT_REGION_TYPE_P2L_LOG_IO_MAX);
 }
 
 void

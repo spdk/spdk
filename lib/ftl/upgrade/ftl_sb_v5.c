@@ -597,6 +597,8 @@ layout_fixup_nvc(struct spdk_ftl_dev *dev)
 		{ .type = FTL_LAYOUT_REGION_TYPE_P2L_CKPT_GC_NEXT },
 		{ .type = FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP },
 		{ .type = FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP_NEXT },
+		{ .type = FTL_LAYOUT_REGION_TYPE_P2L_LOG_IO_MIN },
+		{ .type = FTL_LAYOUT_REGION_TYPE_P2L_LOG_IO_MAX },
 		{ .type = FTL_LAYOUT_REGION_TYPE_INVALID },
 	};
 

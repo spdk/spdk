@@ -16,6 +16,9 @@ struct ftl_layout_tracker_bdev;
 #define FTL_LAYOUT_REGION_TYPE_P2L_COUNT \
 	(FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MAX - FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MIN + 1)
 
+#define FTL_LAYOUT_REGION_TYPE_P2L_LOG_IO_COUNT \
+	(FTL_LAYOUT_REGION_TYPE_P2L_LOG_IO_MAX - FTL_LAYOUT_REGION_TYPE_P2L_LOG_IO_MIN + 1)
+
 enum ftl_layout_region_type {
 	/* Superblock describing the basic FTL information */
 	FTL_LAYOUT_REGION_TYPE_SB = 0,
@@ -64,8 +67,11 @@ enum ftl_layout_region_type {
 	FTL_LAYOUT_REGION_TYPE_TRIM_LOG = 16,
 	/* Mirror log for the transaction of trim */
 	FTL_LAYOUT_REGION_TYPE_TRIM_LOG_MIRROR = 17,
+	/* P2L IO logs for non-VSS cache */
+	FTL_LAYOUT_REGION_TYPE_P2L_LOG_IO_MIN = 18,
+	FTL_LAYOUT_REGION_TYPE_P2L_LOG_IO_MAX = 19,
 
-	FTL_LAYOUT_REGION_TYPE_MAX = 18
+	FTL_LAYOUT_REGION_TYPE_MAX = 20
 };
 
 /* last nvc/base region in terms of lba address space */

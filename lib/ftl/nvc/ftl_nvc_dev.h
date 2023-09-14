@@ -71,6 +71,19 @@ struct ftl_nv_cache_device_ops {
 	void (*recover_open_chunk)(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt,
 				   struct ftl_nv_cache_chunk *chunk);
 
+	/**
+	 * @brief Setup NV Cache device layout
+	 *
+	 * If the NV cache device requires to setup additional metadata regions,
+	 * it can be done here.
+	 *
+	 * @param dev ftl device
+	 *
+	 * @retval 0 on success
+	 * @retval non-zero on failure
+	 */
+	int (*setup_layout)(struct spdk_ftl_dev *dev);
+
 	struct ftl_md_layout_ops md_layout_ops;
 };
 

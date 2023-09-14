@@ -109,7 +109,6 @@ static struct ftl_layout_upgrade_desc_list layout_upgrade_desc[] = {
 	},
 	[FTL_LAYOUT_REGION_TYPE_TRIM_MD] = {},
 	[FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR] = {},
-
 	[FTL_LAYOUT_REGION_TYPE_TRIM_LOG] = {
 		.latest_ver = FTL_TRIM_LOG_VERSION_CURRENT,
 		.count = FTL_TRIM_LOG_VERSION_CURRENT,
@@ -120,6 +119,8 @@ static struct ftl_layout_upgrade_desc_list layout_upgrade_desc[] = {
 		.count = FTL_TRIM_LOG_VERSION_CURRENT,
 		.desc = trim_log_upgrade_desc,
 	},
+	[FTL_LAYOUT_REGION_TYPE_P2L_LOG_IO_MIN] = {},
+	[FTL_LAYOUT_REGION_TYPE_P2L_LOG_IO_MAX] = {},
 };
 
 SPDK_STATIC_ASSERT(sizeof(layout_upgrade_desc) / sizeof(*layout_upgrade_desc) ==

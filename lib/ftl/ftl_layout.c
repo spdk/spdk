@@ -100,7 +100,9 @@ ftl_md_region_name(enum ftl_layout_region_type reg_type)
 		[FTL_LAYOUT_REGION_TYPE_TRIM_MD] = "trim_md",
 		[FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR] = "trim_md_mirror",
 		[FTL_LAYOUT_REGION_TYPE_TRIM_LOG] = "trim_log",
-		[FTL_LAYOUT_REGION_TYPE_TRIM_LOG_MIRROR] = "trim_log_mirror"
+		[FTL_LAYOUT_REGION_TYPE_TRIM_LOG_MIRROR] = "trim_log_mirror",
+		[FTL_LAYOUT_REGION_TYPE_P2L_LOG_IO_MIN] = "p2l_log_io1",
+		[FTL_LAYOUT_REGION_TYPE_P2L_LOG_IO_MAX] = "p2l_log_io2",
 	};
 	const char *reg_name = md_region_name[reg_type];
 
@@ -109,9 +111,19 @@ ftl_md_region_name(enum ftl_layout_region_type reg_type)
 	return reg_name;
 }
 
+static bool
+is_region_disabled(struct ftl_layout_region *region)
+{
+	return region->current.blocks == 0 && region->current.offset == FTL_ADDR_INVALID;
+}
+
 static void
 dump_region(struct spdk_ftl_dev *dev, struct ftl_layout_region *region)
 {
+	if (is_region_disabled(region)) {
+		return;
+	}
+
 	assert(!(region->current.offset % superblock_region_blocks(dev)));
 	assert(!(region->current.blocks % superblock_region_blocks(dev)));
 
@@ -120,12 +132,6 @@ dump_region(struct spdk_ftl_dev *dev, struct ftl_layout_region *region)
 		      blocks2mib(region->current.offset));
 	FTL_NOTICELOG(dev, "	blocks:                      %.2f MiB\n",
 		      blocks2mib(region->current.blocks));
-}
-
-static bool
-is_region_disabled(struct ftl_layout_region *region)
-{
-	return region->current.blocks == 0 && region->current.offset == FTL_ADDR_INVALID;
 }
 
 int
@@ -512,6 +518,10 @@ layout_setup_default_nvc(struct spdk_ftl_dev *dev)
 		goto error;
 	}
 	layout->region[FTL_LAYOUT_REGION_TYPE_NVC_MD].mirror_type = FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR;
+
+	if (dev->nv_cache.nvc_type->ops.setup_layout) {
+		return dev->nv_cache.nvc_type->ops.setup_layout(dev);
+	}
 
 	return 0;
 

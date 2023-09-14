@@ -182,6 +182,10 @@ static const struct ftl_mngt_process_desc desc_first_start = {
 			.action = ftl_mngt_p2l_wipe,
 		},
 		{
+			.name = "Wipe P2L Log IO region",
+			.action = ftl_mngt_p2l_log_io_wipe,
+		},
+		{
 			.name = "Clear trim map",
 			.action = ftl_mngt_trim_metadata_clear,
 		},
