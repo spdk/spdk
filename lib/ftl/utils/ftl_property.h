@@ -79,12 +79,15 @@ typedef void (*ftl_property_set_fn)(struct spdk_ftl_dev *dev, struct ftl_mngt_pr
  * @param name the FTL property name
  * @param value Pointer to the value of property
  * @param size The value size of the property
+ * @param unit The unit of the property value
+ * @param desc The property description for user help
  * @param dump The function to dump the property to the JSON RPC request
  * @param decode The function to decode a new value of the property
  * @param set The function to execute the property setting procedure
  */
 void ftl_property_register(struct spdk_ftl_dev *dev,
 			   const char *name, void *value, size_t size,
+			   const char *unit, const char *desc,
 			   ftl_property_dump_fn dump,
 			   ftl_property_decode_fn decode,
 			   ftl_property_set_fn set);

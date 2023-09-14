@@ -27,6 +27,12 @@ struct ftl_property {
 	/* The value size of the property */
 	size_t size;
 
+	/** The unit of the property value */
+	const char *unit;
+
+	/** The property description for user help */
+	const char *desc;
+
 	/* The function to dump the value of property into the specified JSON RPC request */
 	ftl_property_dump_fn dump;
 
@@ -58,6 +64,7 @@ get_property(struct ftl_properties *properties, const char *name)
 void
 ftl_property_register(struct spdk_ftl_dev *dev,
 		      const char *name, void *value, size_t size,
+		      const char *unit, const char *desc,
 		      ftl_property_dump_fn dump,
 		      ftl_property_decode_fn decode,
 		      ftl_property_set_fn set)
@@ -77,6 +84,8 @@ ftl_property_register(struct spdk_ftl_dev *dev,
 		prop->name = name;
 		prop->value = value;
 		prop->size = size;
+		prop->unit = prop->unit;
+		prop->desc = desc;
 		prop->dump = dump;
 		prop->decode = decode;
 		prop->set = set;
@@ -115,6 +124,29 @@ ftl_properties_deinit(struct spdk_ftl_dev *dev)
 	free(dev->properties);
 }
 
+static void
+ftl_property_dump_common_begin(const struct ftl_property *property,
+			       struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_named_string(w, "name", property->name);
+}
+
+static void
+ftl_property_dump_common_end(const struct ftl_property *property,
+			     struct spdk_json_write_ctx *w)
+{
+	if (property->unit) {
+		spdk_json_write_named_string(w, "unit", property->unit);
+	}
+	if (property->desc) {
+		spdk_json_write_named_string(w, "desc", property->desc);
+	}
+
+	if (!property->decode || !property->set) {
+		spdk_json_write_named_bool(w, "read-only", true);
+	}
+}
+
 void
 ftl_property_dump(struct spdk_ftl_dev *dev, struct spdk_jsonrpc_request *request)
 {
@@ -123,14 +155,19 @@ ftl_property_dump(struct spdk_ftl_dev *dev, struct spdk_jsonrpc_request *request
 	struct spdk_json_write_ctx *w;
 
 	w = spdk_jsonrpc_begin_result(request);
+
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "name", dev->conf.name);
 
-	spdk_json_write_named_object_begin(w, "properties");
+	spdk_json_write_named_array_begin(w, "properties");
 	LIST_FOREACH(prop, &properties->list, entry) {
+		spdk_json_write_object_begin(w);
+		ftl_property_dump_common_begin(prop, w);
 		prop->dump(prop, w);
+		ftl_property_dump_common_end(prop, w);
+		spdk_json_write_object_end(w);
 	}
-	spdk_json_write_object_end(w);
+	spdk_json_write_array_end(w);
 
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(request, w);
@@ -143,7 +180,7 @@ ftl_property_dump_bool(const struct ftl_property *property,
 	bool *value = property->value;
 
 	assert(property->size == sizeof(*value));
-	spdk_json_write_named_bool(w, property->name, *value);
+	spdk_json_write_named_bool(w, "value", *value);
 }
 
 void
@@ -153,7 +190,7 @@ ftl_property_dump_uint64(const struct ftl_property *property,
 	uint64_t *value = property->value;
 
 	assert(property->size == sizeof(*value));
-	spdk_json_write_named_uint64(w, property->name, *value);
+	spdk_json_write_named_uint64(w, "value", *value);
 }
 
 void
@@ -163,7 +200,7 @@ ftl_property_dump_uint32(const struct ftl_property *property,
 	uint32_t *value = property->value;
 
 	assert(property->size == sizeof(*value));
-	spdk_json_write_named_uint32(w, property->name, *value);
+	spdk_json_write_named_uint32(w, "value", *value);
 }
 
 int

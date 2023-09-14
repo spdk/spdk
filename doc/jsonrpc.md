@@ -6153,10 +6153,22 @@ Example response:
   "id": 1,
   "result": {
     "name": "ftl0",
-    "properties": {
-      "flush_cache": "true",
-      "fast_shutdown": "true"
-    }
+    "properties": [
+      {
+        "name": "property1",
+        "value": "Property Value 1",
+        "unit": "MiB/s",
+        "desc": "This is an example of read-only property",
+        "read-only": true
+      },
+      {
+        "name": "property2",
+        "value": 17,
+        "unit": "s",
+        "desc": "This is an example of FTL modifiable property",
+        "read-only": false
+      }
+    ]
   }
 }
 ~~~
