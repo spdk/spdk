@@ -444,6 +444,10 @@ finish_msg(void *ctx)
 
 	mngt->caller.cb(mngt->dev, mngt->caller.cb_ctx, mngt->status);
 
+	if (mngt->desc->deinit_handler) {
+		mngt->desc->deinit_handler(mngt->dev, mngt);
+	}
+
 	if (!mngt->silent) {
 		/* TODO: refactor the logging macros to pass just the name instead of device */
 		struct spdk_ftl_dev tmpdev = {

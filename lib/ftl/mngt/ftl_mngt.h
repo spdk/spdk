@@ -118,6 +118,12 @@ struct ftl_mngt_process_desc {
 	ftl_mngt_init_fn init_handler;
 
 	/**
+	 * When the process wants to cleanup, for example free resources which
+	 * were allocated in init_handler, the deinit_handler can be provided
+	 */
+	ftl_mngt_fn deinit_handler;
+
+	/**
 	 * The FTL process steps
 	 *
 	 * The process context will be allocated before execution of the first

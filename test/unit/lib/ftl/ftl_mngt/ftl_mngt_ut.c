@@ -1098,6 +1098,13 @@ test_call_init_child_init_hndlr(struct spdk_ftl_dev *dev,
 }
 
 static void
+test_call_init_child_deinit_hndlr(struct spdk_ftl_dev *dev,
+				  struct ftl_mngt_process *mngt)
+{
+	add_elem_to_test_list(1000);
+}
+
+static void
 test_call_init_child_action(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	add_elem_to_test_list(100);
@@ -1107,6 +1114,7 @@ test_call_init_child_action(struct spdk_ftl_dev *dev, struct ftl_mngt_process *m
 static struct ftl_mngt_process_desc pdesc_test_call_init_child = {
 	.name = "Test call init, child",
 	.init_handler = test_call_init_child_init_hndlr,
+	.deinit_handler = test_call_init_child_deinit_hndlr,
 	.steps = {
 		{
 			.name = "Test call init, child step",
@@ -1148,6 +1156,9 @@ test_call_init_success(void)
 	check_elem_on_list_and_remove(1);
 	check_elem_on_list_and_remove(10);
 	check_elem_on_list_and_remove(100);
+
+	/* check if caller deinit handler ws invoked */
+	check_elem_on_list_and_remove(1000);
 
 	/* check if caller callback was invoked */
 	check_elem_on_list_and_remove(CALLER_CB_RET_VALUE);
