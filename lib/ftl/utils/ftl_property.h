@@ -140,4 +140,21 @@ void ftl_property_set_generic(struct spdk_ftl_dev *dev, struct ftl_mngt_process 
 			      const struct ftl_property *property,
 			      void *new_value, size_t new_value_size);
 
+/**
+ * @brief The wrapper function to register mutable boolean property
+ *
+ * @param dev FTL device
+ * @param name The property name
+ * @param value The pointer to the boolean value of the property
+ * @param unit The property unit
+ * @param desc The property description
+ */
+static inline void
+ftl_property_register_bool_rw(struct spdk_ftl_dev *dev, const char *name, bool *value,
+			      const char *unit, const char *desc)
+{
+	ftl_property_register(dev, name, value, sizeof(*value), unit, desc, ftl_property_dump_bool,
+			      ftl_property_decode_bool, ftl_property_set_generic);
+}
+
 #endif

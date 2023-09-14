@@ -536,10 +536,24 @@ chunk_compaction_advance(struct ftl_nv_cache_chunk *chunk, uint64_t num_blocks)
 }
 
 static bool
+is_compaction_required_for_upgrade(struct ftl_nv_cache *nv_cache)
+{
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
+
+	if (dev->conf.prep_upgrade_on_shutdown) {
+		if (nv_cache->chunk_full_count || nv_cache->chunk_open_count) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static bool
 is_compaction_required(struct ftl_nv_cache *nv_cache)
 {
 	if (spdk_unlikely(nv_cache->halt)) {
-		return false;
+		return is_compaction_required_for_upgrade(nv_cache);
 	}
 
 	if (nv_cache->chunk_full_count >= nv_cache->chunk_compaction_threshold) {
@@ -1165,6 +1179,10 @@ ftl_nv_cache_is_halted(struct ftl_nv_cache *nv_cache)
 	}
 
 	if (nv_cache->chunk_open_count > 0) {
+		return false;
+	}
+
+	if (is_compaction_required_for_upgrade(nv_cache)) {
 		return false;
 	}
 

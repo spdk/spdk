@@ -7,6 +7,7 @@
 
 #include "ftl_conf.h"
 #include "ftl_core.h"
+#include "ftl_utils.h"
 
 static const struct spdk_ftl_conf g_default_conf = {
 	/* 2 free bands - compaction is blocked, gc only */
@@ -140,6 +141,11 @@ ftl_conf_init_dev(struct spdk_ftl_dev *dev, const struct spdk_ftl_conf *conf)
 	}
 
 	dev->limit = SPDK_FTL_LIMIT_MAX;
+
+	ftl_property_register_bool_rw(dev, "prep_upgrade_on_shutdown", &dev->conf.prep_upgrade_on_shutdown,
+				      "", "During shutdown, FTL executes all actions which "
+				      "are needed for upgrade to a new version");
+
 	return 0;
 }
 

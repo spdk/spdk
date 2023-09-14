@@ -70,6 +70,18 @@ DEFINE_STUB(ftl_p2l_ckpt_acquire, struct ftl_p2l_ckpt *, (struct spdk_ftl_dev *d
 DEFINE_STUB_V(ftl_p2l_ckpt_release, (struct spdk_ftl_dev *dev, struct ftl_p2l_ckpt *ckpt));
 DEFINE_STUB(ftl_l2p_get, ftl_addr, (struct spdk_ftl_dev *dev, uint64_t lba), 0);
 DEFINE_STUB_V(ftl_mempool_put, (struct ftl_mempool *mpool, void *element));
+DEFINE_STUB_V(ftl_property_dump_bool, (const struct ftl_property *property,
+				       struct spdk_json_write_ctx *w))
+DEFINE_STUB(ftl_property_decode_bool, int, (struct spdk_ftl_dev *dev, struct ftl_property *property,
+		const char *value, size_t value_size, void *output, size_t output_size), 0);
+DEFINE_STUB_V(ftl_property_set_generic, (struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt,
+		const struct ftl_property *property, void *new_value, size_t new_value_size));
+DEFINE_STUB_V(ftl_property_register, (struct spdk_ftl_dev *dev,
+				      const char *name, void *value, size_t size,
+				      const char *unit, const char *desc,
+				      ftl_property_dump_fn dump,
+				      ftl_property_decode_fn decode,
+				      ftl_property_set_fn set));
 
 #if defined(DEBUG)
 DEFINE_STUB_V(ftl_trace_submission, (struct spdk_ftl_dev *dev, const struct ftl_io *io,

@@ -112,8 +112,14 @@ struct spdk_ftl_conf {
 		uint32_t			chunk_free_target;
 	} nv_cache;
 
-	/* Hole at bytes 0x60 - 0x67. */
-	uint8_t					reserved[4];
+	/*
+	 * This flags indicates that FTL during shutdown should execute all
+	 * actions which are needed for upgrade to a new version
+	 */
+	bool					prep_upgrade_on_shutdown;
+
+	/* Hole at bytes 0x65 - 0x67. */
+	uint8_t					reserved[3];
 
 	/* Name of base block device (zoned or non-zoned) */
 	char					*base_bdev;
