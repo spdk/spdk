@@ -59,6 +59,8 @@ static struct ftl_layout_upgrade_desc_list layout_upgrade_desc[] = {
 	[FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP_NEXT] = {},
 	[FTL_LAYOUT_REGION_TYPE_TRIM_MD] = {},
 	[FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR] = {},
+	[FTL_LAYOUT_REGION_TYPE_TRIM_LOG] = {},
+	[FTL_LAYOUT_REGION_TYPE_TRIM_LOG_MIRROR] = {},
 };
 
 SPDK_STATIC_ASSERT(sizeof(layout_upgrade_desc) / sizeof(*layout_upgrade_desc) ==

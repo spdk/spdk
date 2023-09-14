@@ -57,8 +57,15 @@ enum ftl_layout_region_type {
 	/* Mirrored information about trim */
 	FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR = 15,
 
-	FTL_LAYOUT_REGION_TYPE_MAX = 16,
-	FTL_LAYOUT_REGION_TYPE_MAX_V3 = 16
+	/* Max layout region for metadata prior to the major upgrade improvements */
+	FTL_LAYOUT_REGION_TYPE_MAX_V3 = 16,
+
+	/* Log for the transaction of trim */
+	FTL_LAYOUT_REGION_TYPE_TRIM_LOG = 16,
+	/* Mirror log for the transaction of trim */
+	FTL_LAYOUT_REGION_TYPE_TRIM_LOG_MIRROR = 17,
+
+	FTL_LAYOUT_REGION_TYPE_MAX = 18
 };
 
 /* last nvc/base region in terms of lba address space */

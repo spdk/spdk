@@ -50,6 +50,7 @@ extern struct ftl_region_upgrade_desc sb_upgrade_desc[];
 extern struct ftl_region_upgrade_desc p2l_upgrade_desc[];
 extern struct ftl_region_upgrade_desc nvc_upgrade_desc[];
 extern struct ftl_region_upgrade_desc band_upgrade_desc[];
+extern struct ftl_region_upgrade_desc trim_log_upgrade_desc[];
 
 static struct ftl_layout_upgrade_desc_list layout_upgrade_desc[] = {
 	[FTL_LAYOUT_REGION_TYPE_SB] = {
@@ -108,6 +109,17 @@ static struct ftl_layout_upgrade_desc_list layout_upgrade_desc[] = {
 	},
 	[FTL_LAYOUT_REGION_TYPE_TRIM_MD] = {},
 	[FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR] = {},
+
+	[FTL_LAYOUT_REGION_TYPE_TRIM_LOG] = {
+		.latest_ver = FTL_TRIM_LOG_VERSION_CURRENT,
+		.count = FTL_TRIM_LOG_VERSION_CURRENT,
+		.desc = trim_log_upgrade_desc,
+	},
+	[FTL_LAYOUT_REGION_TYPE_TRIM_LOG_MIRROR] = {
+		.latest_ver = FTL_TRIM_LOG_VERSION_CURRENT,
+		.count = FTL_TRIM_LOG_VERSION_CURRENT,
+		.desc = trim_log_upgrade_desc,
+	},
 };
 
 SPDK_STATIC_ASSERT(sizeof(layout_upgrade_desc) / sizeof(*layout_upgrade_desc) ==

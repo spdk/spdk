@@ -99,6 +99,8 @@ ftl_md_region_name(enum ftl_layout_region_type reg_type)
 		[FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP_NEXT] = "p2l3",
 		[FTL_LAYOUT_REGION_TYPE_TRIM_MD] = "trim_md",
 		[FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR] = "trim_md_mirror",
+		[FTL_LAYOUT_REGION_TYPE_TRIM_LOG] = "trim_log",
+		[FTL_LAYOUT_REGION_TYPE_TRIM_LOG_MIRROR] = "trim_log_mirror"
 	};
 	const char *reg_name = md_region_name[reg_type];
 
@@ -120,6 +122,12 @@ dump_region(struct spdk_ftl_dev *dev, struct ftl_layout_region *region)
 		      blocks2mib(region->current.blocks));
 }
 
+static bool
+is_region_disabled(struct ftl_layout_region *region)
+{
+	return region->current.blocks == 0 && region->current.offset == FTL_ADDR_INVALID;
+}
+
 int
 ftl_validate_regions(struct spdk_ftl_dev *dev, struct ftl_layout *layout)
 {
@@ -129,14 +137,14 @@ ftl_validate_regions(struct spdk_ftl_dev *dev, struct ftl_layout *layout)
 	for (i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; i++) {
 		struct ftl_layout_region *r1 = ftl_layout_region_get(dev, i);
 
-		if (!r1) {
+		if (!r1 || is_region_disabled(r1)) {
 			continue;
 		}
 
 		for (j = 0; j < FTL_LAYOUT_REGION_TYPE_MAX; j++) {
 			struct ftl_layout_region *r2 = ftl_layout_region_get(dev, j);
 
-			if (!r2) {
+			if (!r2 || is_region_disabled(r2)) {
 				continue;
 			}
 
@@ -369,6 +377,10 @@ layout_setup_legacy_default_nvc(struct spdk_ftl_dev *dev)
 	}
 
 	/* Here is the place to add necessary region placeholders for the creation of new regions */
+	ftl_layout_upgrade_add_region_placeholder(dev, dev->nvc_layout_tracker,
+			FTL_LAYOUT_REGION_TYPE_TRIM_LOG);
+	ftl_layout_upgrade_add_region_placeholder(dev, dev->nvc_layout_tracker,
+			FTL_LAYOUT_REGION_TYPE_TRIM_LOG_MIRROR);
 
 	return 0;
 
@@ -414,12 +426,12 @@ static int
 layout_setup_default_nvc(struct spdk_ftl_dev *dev)
 {
 	int region_type;
-	uint64_t l2p_blocks;
+	uint64_t blocks;
 	struct ftl_layout *layout = &dev->layout;
 
 	/* Initialize L2P region */
-	l2p_blocks = ftl_md_region_blocks(dev, layout->l2p.addr_size * dev->num_lbas);
-	if (layout_region_create_nvc(dev, FTL_LAYOUT_REGION_TYPE_L2P, 0, FTL_BLOCK_SIZE, l2p_blocks)) {
+	blocks = ftl_md_region_blocks(dev, layout->l2p.addr_size * dev->num_lbas);
+	if (layout_region_create_nvc(dev, FTL_LAYOUT_REGION_TYPE_L2P, 0, FTL_BLOCK_SIZE, blocks)) {
 		goto error;
 	}
 
@@ -451,18 +463,35 @@ layout_setup_default_nvc(struct spdk_ftl_dev *dev)
 	/*
 	 * Initialize trim metadata region
 	 */
-	l2p_blocks = layout->region[FTL_LAYOUT_REGION_TYPE_L2P].current.blocks;
-	if (layout_region_create_nvc(dev, FTL_LAYOUT_REGION_TYPE_TRIM_MD, 0, sizeof(uint64_t),
-				     l2p_blocks)) {
+	blocks = layout->region[FTL_LAYOUT_REGION_TYPE_L2P].current.blocks;
+	blocks = spdk_divide_round_up(blocks * sizeof(uint64_t), FTL_BLOCK_SIZE);
+	if (layout_region_create_nvc(dev, FTL_LAYOUT_REGION_TYPE_TRIM_MD, 0, FTL_BLOCK_SIZE, blocks)) {
 		goto error;
 	}
 
 	/* Initialize trim metadata mirror region */
-	if (layout_region_create_nvc(dev, FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR, 0, sizeof(uint64_t),
-				     l2p_blocks)) {
+	if (layout_region_create_nvc(dev, FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR, 0, FTL_BLOCK_SIZE,
+				     blocks)) {
 		goto error;
 	}
 	layout->region[FTL_LAYOUT_REGION_TYPE_TRIM_MD].mirror_type = FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR;
+
+	/*
+	 * Initialize trim log region
+	 */
+	if (layout_region_create_nvc(dev, FTL_LAYOUT_REGION_TYPE_TRIM_LOG, FTL_TRIM_LOG_VERSION_CURRENT,
+				     sizeof(struct ftl_trim_log), 1)) {
+		goto error;
+	}
+
+	/* Initialize trim log mirror region */
+	if (layout_region_create_nvc(dev, FTL_LAYOUT_REGION_TYPE_TRIM_LOG_MIRROR,
+				     FTL_TRIM_LOG_VERSION_CURRENT,
+				     sizeof(struct ftl_trim_log), 1)) {
+		goto error;
+	}
+	layout->region[FTL_LAYOUT_REGION_TYPE_TRIM_LOG].mirror_type =
+		FTL_LAYOUT_REGION_TYPE_TRIM_LOG_MIRROR;
 
 	/*
 	 * Initialize NV Cache metadata

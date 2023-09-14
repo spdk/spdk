@@ -156,6 +156,10 @@ DEFINE_STUB(ftl_superblock_md_layout_apply, int, (struct spdk_ftl_dev *dev), 0);
 DEFINE_STUB(ftl_layout_tracker_bdev_rm_region, int, (struct ftl_layout_tracker_bdev *tracker,
 		enum ftl_layout_region_type reg_type, uint32_t reg_ver), 0);
 DEFINE_STUB(ftl_layout_upgrade_drop_regions, int, (struct spdk_ftl_dev *dev), 0);
+DEFINE_STUB_V(ftl_md_persist_entries, (struct ftl_md *md, uint64_t start_entry,
+				       uint64_t num_entries,
+				       void *buffer, void *vss_buffer, ftl_md_io_entry_cb cb, void *cb_arg,
+				       struct ftl_md_io_entry_ctx *ctx));
 
 static void
 adjust_bitmap(struct ftl_bitmap **bitmap, uint64_t *bit)

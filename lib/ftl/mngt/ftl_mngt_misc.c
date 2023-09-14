@@ -297,7 +297,6 @@ trim_clear_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
 	struct ftl_mngt_process *mngt = md->owner.cb_ctx;
 
 	if (status) {
-		FTL_ERRLOG(dev, "ERROR of clearing trim metadata\n");
 		ftl_mngt_fail_step(mngt);
 	} else {
 		ftl_mngt_next_step(mngt);
@@ -311,7 +310,16 @@ ftl_mngt_trim_metadata_clear(struct spdk_ftl_dev *dev, struct ftl_mngt_process *
 
 	md->cb = trim_clear_cb;
 	md->owner.cb_ctx = mngt;
+	ftl_md_clear(md, 0, NULL);
+}
 
+void
+ftl_mngt_trim_log_clear(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_TRIM_LOG];
+
+	md->cb = trim_clear_cb;
+	md->owner.cb_ctx = mngt;
 	ftl_md_clear(md, 0, NULL);
 }
 

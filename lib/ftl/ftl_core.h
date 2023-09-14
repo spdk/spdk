@@ -173,6 +173,7 @@ struct spdk_ftl_dev {
 	struct ftl_md			*trim_map_md;
 	size_t				trim_qd;
 	bool				trim_in_progress;
+	struct ftl_md_io_entry_ctx	trim_md_io_entry_ctx;
 
 	/* Writer for user IOs */
 	struct ftl_writer		writer_user;

@@ -64,6 +64,8 @@ static struct ftl_layout_upgrade_desc_list layout_upgrade_desc[] = {
 	},
 	[FTL_LAYOUT_REGION_TYPE_TRIM_MD] = {},
 	[FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR] = {},
+	[FTL_LAYOUT_REGION_TYPE_TRIM_LOG] = {},
+	[FTL_LAYOUT_REGION_TYPE_TRIM_LOG_MIRROR] = {},
 };
 
 #include "ftl/upgrade/ftl_layout_upgrade.c"

@@ -588,6 +588,8 @@ layout_fixup_nvc(struct spdk_ftl_dev *dev)
 		{ .type = FTL_LAYOUT_REGION_TYPE_BAND_MD_MIRROR },
 		{ .type = FTL_LAYOUT_REGION_TYPE_TRIM_MD, .mirror_type = FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR },
 		{ .type = FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR },
+		{ .type = FTL_LAYOUT_REGION_TYPE_TRIM_LOG, .mirror_type = FTL_LAYOUT_REGION_TYPE_TRIM_LOG_MIRROR },
+		{ .type = FTL_LAYOUT_REGION_TYPE_TRIM_LOG_MIRROR },
 		{ .type = FTL_LAYOUT_REGION_TYPE_NVC_MD, .mirror_type = FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR },
 		{ .type = FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR },
 		{ .type = FTL_LAYOUT_REGION_TYPE_DATA_NVC, .deprecated = true },
@@ -630,10 +632,6 @@ layout_fixup_nvc(struct spdk_ftl_dev *dev)
 		region->bdev_desc = dev->nv_cache.bdev_desc;
 		region->ioch = dev->nv_cache.cache_ioch;
 		region->vss_blksz = dev->nv_cache.md_size;
-
-		if (reg_descr->mirror_type) {
-			dev->layout.region[reg_descr->type].mirror_type = reg_descr->mirror_type;
-		}
 	}
 
 	return 0;

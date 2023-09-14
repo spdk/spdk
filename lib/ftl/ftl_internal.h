@@ -124,6 +124,15 @@ SPDK_STATIC_ASSERT(sizeof(struct ftl_p2l_ckpt_page_no_vss) == FTL_BLOCK_SIZE,
 
 #define FTL_NUM_P2L_ENTRIES_NO_VSS (SPDK_COUNTOF_MEMBER(struct ftl_p2l_ckpt_page_no_vss, map))
 
+#define FTL_TRIM_LOG_VERSION_0		0
+#define FTL_TRIM_LOG_VERSION_1		1
+#define FTL_TRIM_LOG_VERSION_CURRENT	FTL_TRIM_LOG_VERSION_1
+
+struct ftl_trim_log {
+	union ftl_md_vss hdr;
+	char reserved[FTL_BLOCK_SIZE - sizeof(union ftl_md_vss)];
+};
+SPDK_STATIC_ASSERT(sizeof(struct ftl_trim_log) == FTL_BLOCK_SIZE, "Invalid trim log page size");
 
 struct ftl_p2l_ckpt;
 struct ftl_band;

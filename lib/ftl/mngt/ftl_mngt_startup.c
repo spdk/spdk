@@ -186,6 +186,10 @@ static const struct ftl_mngt_process_desc desc_first_start = {
 			.action = ftl_mngt_trim_metadata_clear,
 		},
 		{
+			.name = "Clear trim log",
+			.action = ftl_mngt_trim_log_clear,
+		},
+		{
 			.name = "Set FTL dirty state",
 			.action = ftl_mngt_set_dirty,
 		},

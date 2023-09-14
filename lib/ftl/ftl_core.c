@@ -551,14 +551,21 @@ ftl_process_io_channel(struct spdk_ftl_dev *dev, struct ftl_io_channel *ioch)
 }
 
 static void
-ftl_process_trim_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
+ftl_trim_log_clear(struct spdk_ftl_dev *dev)
 {
-	struct ftl_io *io = md->owner.cb_ctx;
+	struct ftl_trim_log *log = ftl_md_get_buffer(dev->layout.md[FTL_LAYOUT_REGION_TYPE_TRIM_LOG]);
 
+	memset(&log->hdr, 0, sizeof(log->hdr));
+}
+
+static void
+ftl_trim_finish(struct ftl_io *io, int status)
+{
 	io->dev->trim_qd--;
 
 	if (spdk_unlikely(status)) {
 #ifdef SPDK_FTL_RETRY_ON_ERROR
+		ftl_io_clear(io);
 		TAILQ_INSERT_HEAD(&io->dev->trim_sq, io, queue_entry);
 		return;
 #else
@@ -569,41 +576,97 @@ ftl_process_trim_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
 	ftl_io_complete(io);
 }
 
+static void
+ftl_trim_log_close_cb(int status, void *cb_arg)
+{
+	struct ftl_io *io = cb_arg;
+
+	ftl_trim_finish(io, status);
+}
+
+static void
+ftl_trim_log_persist(struct ftl_io *io, ftl_md_io_entry_cb cb)
+{
+	struct spdk_ftl_dev *dev = io->dev;
+	struct ftl_md *trim_log = dev->layout.md[FTL_LAYOUT_REGION_TYPE_TRIM_LOG];
+
+	ftl_md_persist_entries(trim_log, 0, 1, ftl_md_get_buffer(trim_log), NULL,
+			       cb, io, &dev->trim_md_io_entry_ctx);
+}
+
+static void
+ftl_trim_md_cb(int status, void *cb_arg)
+{
+	struct ftl_io *io = cb_arg;
+	struct spdk_ftl_dev *dev = io->dev;
+
+	if (status) {
+		io->status = status;
+	}
+	ftl_trim_log_clear(dev);
+	ftl_trim_log_persist(io, ftl_trim_log_close_cb);
+}
+
+static void
+ftl_trim_log_open_cb(int status, void *cb_arg)
+{
+	struct ftl_io *io = cb_arg;
+	struct spdk_ftl_dev *dev = io->dev;
+	struct ftl_md *trim_md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_TRIM_MD];
+	uint64_t first, entires;
+	const uint64_t entires_in_block = FTL_BLOCK_SIZE / sizeof(uint64_t);
+	char *buffer;
+
+	if (status) {
+		ftl_trim_finish(io, status);
+		return;
+	}
+
+	/* Map trim space into L2P pages */
+	first = io->lba / dev->layout.l2p.lbas_in_page;
+	entires = io->num_blocks / dev->layout.l2p.lbas_in_page;
+	/* Map pages into trim metadata location */
+	first = first / entires_in_block;
+	entires = spdk_divide_round_up(entires, entires_in_block);
+
+	/* Get trim metadata buffer */
+	buffer = (char *)ftl_md_get_buffer(trim_md) + (FTL_BLOCK_SIZE * first);
+
+	/* Persist the trim metadata snippet which corresponds to the trim IO */
+	ftl_md_persist_entries(trim_md, first, entires, buffer, NULL,
+			       ftl_trim_md_cb, io, &dev->trim_md_io_entry_ctx);
+}
+
 void
 ftl_set_trim_map(struct spdk_ftl_dev *dev, uint64_t lba, uint64_t num_blocks, uint64_t seq_id)
 {
 	uint64_t first_page, num_pages;
-	uint64_t first_md_block, num_md_blocks, num_pages_in_block;
-	uint32_t lbas_in_page = dev->layout.l2p.lbas_in_page;
+	uint64_t lbas_in_page = dev->layout.l2p.lbas_in_page;
 	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_TRIM_MD];
 	uint64_t *page = ftl_md_get_buffer(md);
-	union ftl_md_vss *page_vss;
+	struct ftl_trim_log *log;
 	size_t i;
 
 	first_page = lba / lbas_in_page;
 	num_pages = num_blocks / lbas_in_page;
 
+	/* Fill trim metadata */
 	for (i = first_page; i < first_page + num_pages; ++i) {
 		ftl_bitmap_set(dev->trim_map, i);
 		page[i] = seq_id;
 	}
 
-	num_pages_in_block = FTL_BLOCK_SIZE / sizeof(*page);
-	first_md_block = first_page / num_pages_in_block;
-	num_md_blocks = spdk_divide_round_up(num_pages, num_pages_in_block);
-	page_vss = ftl_md_get_vss_buffer(md) + first_md_block;
-	for (i = first_md_block; i < num_md_blocks; ++i, page_vss++) {
-		page_vss->trim.start_lba = lba;
-		page_vss->trim.num_blocks = num_blocks;
-		page_vss->trim.seq_id = seq_id;
-	}
+	/* Fill trim log */
+	log = ftl_md_get_buffer(dev->layout.md[FTL_LAYOUT_REGION_TYPE_TRIM_LOG]);
+	log->hdr.trim.seq_id = seq_id;
+	log->hdr.trim.num_blocks = num_blocks;
+	log->hdr.trim.start_lba = lba;
 }
 
 static bool
 ftl_process_trim(struct ftl_io *io)
 {
 	struct spdk_ftl_dev *dev = io->dev;
-	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_TRIM_MD];
 	uint64_t seq_id;
 
 	seq_id = ftl_nv_cache_acquire_trim_seq_id(&dev->nv_cache);
@@ -622,11 +685,7 @@ ftl_process_trim(struct ftl_io *io)
 	ftl_debug_inject_trim_error();
 	dev->sb_shm->trim.in_progress = false;
 
-	md->owner.cb_ctx = io;
-	md->cb = ftl_process_trim_cb;
-
-	ftl_md_persist(md);
-
+	ftl_trim_log_persist(io, ftl_trim_log_open_cb);
 	return true;
 }
 
