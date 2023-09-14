@@ -3,6 +3,8 @@
  */
 
 #include "spdk/queue.h"
+#include "spdk/json.h"
+#include "spdk/jsonrpc.h"
 
 #include "ftl_core.h"
 #include "ftl_property.h"
@@ -86,4 +88,26 @@ ftl_properties_deinit(struct spdk_ftl_dev *dev)
 	}
 
 	free(dev->properties);
+}
+
+void
+ftl_property_dump(struct spdk_ftl_dev *dev, struct spdk_jsonrpc_request *request)
+{
+	struct ftl_properties *properties = dev->properties;
+	struct ftl_property *prop;
+	struct spdk_json_write_ctx *w;
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "name", dev->conf.name);
+
+	spdk_json_write_named_object_begin(w, "properties");
+	LIST_FOREACH(prop, &properties->list, entry) {
+		/* TODO dump the value as well */
+		spdk_json_write_named_string(w, prop->name, "");
+	}
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+	spdk_jsonrpc_end_result(request, w);
 }

@@ -1593,6 +1593,17 @@ def bdev_ftl_get_stats(client, name):
     return client.call('bdev_ftl_get_stats', params)
 
 
+def bdev_ftl_get_properties(client, name):
+    """Get FTL properties
+
+    Args:
+        name: name of the bdev
+    """
+    params = {'name': name}
+
+    return client.call('bdev_ftl_get_properties', params)
+
+
 def bdev_get_bdevs(client, name=None, timeout=None):
     """Get information about block devices.
 

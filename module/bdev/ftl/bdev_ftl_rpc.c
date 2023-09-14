@@ -295,3 +295,32 @@ rpc_bdev_ftl_get_stats(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("bdev_ftl_get_stats", rpc_bdev_ftl_get_stats, SPDK_RPC_RUNTIME)
+
+static void
+rpc_bdev_ftl_get_properties_cb(void *ctx, int rc)
+{
+	struct spdk_jsonrpc_request *request = ctx;
+
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+	}
+}
+
+static void
+rpc_bdev_ftl_get_properties(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct rpc_ftl_basic_param attrs = {};
+
+	if (spdk_json_decode_object(params, rpc_ftl_basic_decoders, SPDK_COUNTOF(rpc_ftl_basic_decoders),
+				    &attrs)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		free(attrs.name);
+		return;
+	}
+
+	bdev_ftl_get_properties(attrs.name, rpc_bdev_ftl_get_properties_cb, request);
+	free(attrs.name);
+}
+
+SPDK_RPC_REGISTER("bdev_ftl_get_properties", rpc_bdev_ftl_get_properties, SPDK_RPC_RUNTIME)

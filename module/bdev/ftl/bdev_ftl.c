@@ -543,6 +543,23 @@ bdev_ftl_get_stats(const char *name, spdk_ftl_fn cb, struct rpc_ftl_stats_ctx *f
 	}
 }
 
+void
+bdev_ftl_get_properties(const char *name, spdk_ftl_fn cb_fn, struct spdk_jsonrpc_request *request)
+{
+	struct bdev_ftl_action *action;
+
+	action = bdev_ftl_action_start(name, 0, cb_fn, request);
+	if (!action) {
+		return;
+	}
+
+	action->rc = spdk_ftl_get_properties(action->ftl_bdev_dev->dev, request,
+					     bdev_ftl_action_finish_cb, action);
+	if (action->rc) {
+		bdev_ftl_action_finish(action);
+	}
+}
+
 static void
 bdev_ftl_finish(void)
 {

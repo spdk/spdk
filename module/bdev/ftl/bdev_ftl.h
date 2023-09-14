@@ -37,12 +37,24 @@ void bdev_ftl_unmap(const char *name, uint64_t lba, uint64_t num_blocks, spdk_ft
  * @brief Get FTL bdev device statistics
  *
  * @param name The name of the FTL bdev device
- * @param cb Collback function when the stats are ready
+ * @param cb Callback function when the stats are ready
  * @param ftl_stats_ctx The context for getting the statistics
  *
- * @note In callback function will return the context of struct rpc_ftl_stats_ctx
+ * @note In callback function will return the context of rpc_ftl_stats_ctx
  * and it contains struct ftl_stats
  */
 void bdev_ftl_get_stats(const char *name, spdk_ftl_fn cb, struct rpc_ftl_stats_ctx *ftl_stats_ctx);
+
+/**
+ * @brief Get FTL bdev device properties
+ *
+ * @param name The name of FTL bdev device
+ * @param cb_fn Callback function when the stats are ready
+ * @param request The JSON request will be filled with the FTL properties
+ *
+ * @note The JSON request will be returned as the context in the callback function
+ */
+void bdev_ftl_get_properties(const char *name, spdk_ftl_fn cb_fn,
+			     struct spdk_jsonrpc_request *request);
 
 #endif /* SPDK_BDEV_FTL_H */

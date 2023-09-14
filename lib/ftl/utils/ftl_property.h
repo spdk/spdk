@@ -30,4 +30,12 @@ void ftl_properties_deinit(struct spdk_ftl_dev *dev);
  */
 void ftl_property_register(struct spdk_ftl_dev *dev, const char *name);
 
+/**
+ * @brief Dump FTL properties to the JSON request
+ *
+ * @param dev FTL device
+ * @param request The JSON request where to store the FTL properties
+ */
+void ftl_property_dump(struct spdk_ftl_dev *dev, struct spdk_jsonrpc_request *request);
+
 #endif

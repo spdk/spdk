@@ -482,6 +482,7 @@ Example response:
     "bdev_ftl_load",
     "bdev_ftl_unmap",
     "bdev_ftl_get_stats",
+    "bdev_ftl_get_properties",
     "bdev_lvol_get_lvstores",
     "bdev_lvol_delete",
     "bdev_lvol_resize",
@@ -6062,6 +6063,52 @@ Example response:
         }
       }
     }
+}
+~~~
+
+### bdev_ftl_get_properties {#rpc_bdev_ftl_get_properties}
+
+Get FTL properties
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+#### Response
+
+The response contains FTL bdev properties. Some of them can be modified, other
+reported as read only.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "ftl0"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_ftl_get_properties",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "name": "ftl0",
+    "properties": {
+      "flush_cache": "true",
+      "fast_shutdown": "true"
+    }
+  }
 }
 ~~~
 

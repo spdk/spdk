@@ -17,6 +17,7 @@ extern "C" {
 
 struct spdk_ftl_dev;
 struct ftl_io;
+struct spdk_jsonrpc_request;
 
 /* Limit thresholds */
 enum {
@@ -325,6 +326,19 @@ void spdk_ftl_dev_set_fast_shutdown(struct spdk_ftl_dev *dev, bool fast_shutdown
  */
 int spdk_ftl_get_stats(struct spdk_ftl_dev *dev, struct ftl_stats *stats, spdk_ftl_stats_fn cb_fn,
 		       void *cb_arg);
+
+/**
+ * Gets properties of the specified device.
+ *
+ * \param dev FTL device
+ * \param request JSON RPC request where the properties will be stored
+ * \param cb_fn Callback function to invoke when the operation is completed
+ * \param cb_arg Argument to pass to the callback function
+ *
+ * \return 0 if successfully submitted, negative errno otherwise.
+ */
+int spdk_ftl_get_properties(struct spdk_ftl_dev *dev, struct spdk_jsonrpc_request *request,
+			    spdk_ftl_fn cb_fn, void *cb_arg);
 
 #ifdef __cplusplus
 }
