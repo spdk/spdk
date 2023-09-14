@@ -1933,6 +1933,10 @@ ftl_chunk_open(struct ftl_nv_cache_chunk *chunk)
 	assert(chunk->md->write_pointer == 0);
 	assert(chunk->md->blocks_written == 0);
 
+	if (dev->nv_cache.nvc_type->ops.on_chunk_open) {
+		dev->nv_cache.nvc_type->ops.on_chunk_open(dev, chunk);
+	}
+
 	memcpy(p2l_map->chunk_dma_md, chunk->md, region->entry_size * FTL_BLOCK_SIZE);
 	p2l_map->chunk_dma_md->state = FTL_CHUNK_STATE_OPEN;
 	p2l_map->chunk_dma_md->p2l_map_checksum = 0;
@@ -1946,6 +1950,8 @@ static void
 chunk_close_cb(int status, void *ctx)
 {
 	struct ftl_nv_cache_chunk *chunk = (struct ftl_nv_cache_chunk *)ctx;
+	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
 
 	assert(chunk->md->write_pointer == chunk->nv_cache->chunk_blocks);
 
@@ -1963,6 +1969,9 @@ chunk_close_cb(int status, void *ctx)
 		chunk->nv_cache->last_seq_id = chunk->md->close_seq_id;
 
 		chunk->md->state = FTL_CHUNK_STATE_CLOSED;
+		if (nv_cache->nvc_type->ops.on_chunk_closed) {
+			nv_cache->nvc_type->ops.on_chunk_closed(dev, chunk);
+		}
 	} else {
 #ifdef SPDK_FTL_RETRY_ON_ERROR
 		ftl_md_persist_entry_retry(&chunk->md_persist_entry_ctx);

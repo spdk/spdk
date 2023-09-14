@@ -44,6 +44,22 @@ struct ftl_nv_cache_device_ops {
 	void (*deinit)(struct spdk_ftl_dev *dev);
 
 	/**
+	 * @brief Inform NV cache device that chunk is being opened
+	 *
+	 * @param dev ftl device
+	 * @param chunk chunk is being opened
+	 */
+	void (*on_chunk_open)(struct spdk_ftl_dev *dev, struct ftl_nv_cache_chunk *chunk);
+
+	/**
+	 * @brief Inform NV cache device that chunk has been closed
+	 *
+	 * @param dev ftl device
+	 * @param chunk chunk which has been closed
+	 */
+	void (*on_chunk_closed)(struct spdk_ftl_dev *dev, struct ftl_nv_cache_chunk *chunk);
+
+	/**
 	 * @brief Check if block device is valid for NV Cache device
 	 *
 	 * @param dev ftl device
