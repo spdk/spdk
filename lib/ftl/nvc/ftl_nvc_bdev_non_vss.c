@@ -7,6 +7,25 @@
 #include "ftl_layout.h"
 #include "ftl_nvc_bdev_common.h"
 
+static int
+init(struct spdk_ftl_dev *dev)
+{
+	int rc;
+
+	rc = ftl_p2l_log_init(dev);
+	if (rc) {
+		return 0;
+	}
+
+	return 0;
+}
+
+static void
+deinit(struct spdk_ftl_dev *dev)
+{
+	ftl_p2l_log_deinit(dev);
+}
+
 static bool
 is_bdev_compatible(struct spdk_ftl_dev *dev, struct spdk_bdev *bdev)
 {
@@ -47,6 +66,8 @@ struct ftl_nv_cache_device_type nvc_bdev_non_vss = {
 	.features = {
 	},
 	.ops = {
+		.init = init,
+		.deinit = deinit,
 		.is_bdev_compatible = is_bdev_compatible,
 		.is_chunk_active = ftl_nvc_bdev_common_is_chunk_active,
 		.setup_layout = setup_layout,

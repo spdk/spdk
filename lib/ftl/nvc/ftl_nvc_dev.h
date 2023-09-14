@@ -28,6 +28,22 @@ struct ftl_nv_cache_device_features {
  */
 struct ftl_nv_cache_device_ops {
 	/**
+	 * @brief Initialize NV Cache device
+	 *
+	 * @param dev ftl device
+	 *
+	 * @return Initialization result
+	 */
+	int (*init)(struct spdk_ftl_dev *dev);
+
+	/**
+	 * @brief Deinitialize NV Cache device
+	 *
+	 * @param dev ftl device
+	 */
+	void (*deinit)(struct spdk_ftl_dev *dev);
+
+	/**
 	 * @brief Check if block device is valid for NV Cache device
 	 *
 	 * @param dev ftl device

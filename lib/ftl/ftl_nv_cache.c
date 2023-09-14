@@ -4,7 +4,6 @@
  *   All rights reserved.
  */
 
-
 #include "spdk/bdev.h"
 #include "spdk/bdev_module.h"
 #include "spdk/ftl.h"
@@ -335,7 +334,18 @@ ftl_nv_cache_init(struct spdk_ftl_dev *dev)
 	ftl_nv_cache_init_update_limits(dev);
 	ftl_property_register(dev, "cache_device", NULL, 0, NULL, NULL, ftl_property_dump_cache_dev, NULL,
 			      NULL, true);
-	return 0;
+
+	nv_cache->throttle.interval_tsc = FTL_NV_CACHE_THROTTLE_INTERVAL_MS *
+					  (spdk_get_ticks_hz() / 1000);
+	nv_cache->chunk_free_target = spdk_divide_round_up(nv_cache->chunk_count *
+				      dev->conf.nv_cache.chunk_free_target,
+				      100);
+
+	if (nv_cache->nvc_type->ops.init) {
+		return nv_cache->nvc_type->ops.init(dev);
+	} else {
+		return 0;
+	}
 }
 
 void
@@ -343,6 +353,10 @@ ftl_nv_cache_deinit(struct spdk_ftl_dev *dev)
 {
 	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
 	struct ftl_nv_cache_compactor *compactor;
+
+	if (nv_cache->nvc_type->ops.deinit) {
+		nv_cache->nvc_type->ops.deinit(dev);
+	}
 
 	while (!TAILQ_EMPTY(&nv_cache->compactor_list)) {
 		compactor = TAILQ_FIRST(&nv_cache->compactor_list);
