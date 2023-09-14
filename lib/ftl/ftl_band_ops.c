@@ -19,12 +19,21 @@ write_rq_end(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 
 	ftl_stats_bdev_io_completed(dev, rq->owner.compaction ? FTL_STATS_TYPE_CMP : FTL_STATS_TYPE_GC,
 				    bdev_io);
+	spdk_bdev_free_io(bdev_io);
 
 	rq->success = success;
+	if (spdk_likely(rq->success)) {
+		ftl_p2l_ckpt_issue(rq);
+	} else {
+#ifdef SPDK_FTL_RETRY_ON_ERROR
+		assert(rq->io.band->queue_depth > 0);
+		rq->io.band->queue_depth--;
+		rq->owner.cb(rq);
 
-	ftl_p2l_ckpt_issue(rq);
-
-	spdk_bdev_free_io(bdev_io);
+#else
+		ftl_abort();
+#endif
+	}
 }
 
 static void
