@@ -185,7 +185,7 @@ ftl_mngt_finalize_startup(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mng
 
 	ftl_property_register(dev, "superblock_version", &dev->sb->header.version,
 			      sizeof(dev->sb->header.version), NULL, NULL,
-			      ftl_property_dump_uint64, NULL, NULL);
+			      ftl_property_dump_uint64, NULL, NULL, false);
 
 	/* Clear the limit applications as they're incremented incorrectly by
 	 * the initialization code.

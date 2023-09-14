@@ -118,8 +118,16 @@ struct spdk_ftl_conf {
 	 */
 	bool					prep_upgrade_on_shutdown;
 
-	/* Hole at bytes 0x65 - 0x67. */
-	uint8_t					reserved[3];
+	/* In verbose mode, user is able to get access to additional advanced FTL properties.
+	 *
+	 * Advanced properties currently include entries, which will result in printing large amount of data
+	 * (e.g. state of all bands, or chunks); or allow for receiving internal state of FTL (e.g. bands currently
+	 * used for garbage collection) - live data which may be useful for profling, or debugging.
+	 */
+	bool					verbose_mode;
+
+	/* Hole at bytes 0x66 - 0x67. */
+	uint8_t					reserved[2];
 
 	/* Name of base block device (zoned or non-zoned) */
 	char					*base_bdev;

@@ -42,6 +42,9 @@ struct ftl_property {
 	/* Set the FTL property */
 	ftl_property_set_fn set;
 
+	/* It indicates the property is available in verbose mode only */
+	bool verbose_mode;
+
 	/** Link to put the property to the list */
 	LIST_ENTRY(ftl_property) entry;
 };
@@ -67,7 +70,8 @@ ftl_property_register(struct spdk_ftl_dev *dev,
 		      const char *unit, const char *desc,
 		      ftl_property_dump_fn dump,
 		      ftl_property_decode_fn decode,
-		      ftl_property_set_fn set)
+		      ftl_property_set_fn set,
+		      bool verbose_mode)
 {
 	struct ftl_properties *properties = dev->properties;
 
@@ -89,6 +93,7 @@ ftl_property_register(struct spdk_ftl_dev *dev,
 		prop->dump = dump;
 		prop->decode = decode;
 		prop->set = set;
+		prop->verbose_mode = verbose_mode;
 		LIST_INSERT_HEAD(&properties->list, prop, entry);
 	}
 }
@@ -122,6 +127,16 @@ ftl_properties_deinit(struct spdk_ftl_dev *dev)
 	}
 
 	free(dev->properties);
+}
+
+static bool
+is_property_visible(struct spdk_ftl_dev *dev, struct ftl_property *prop)
+{
+	if (prop->verbose_mode && !dev->conf.verbose_mode) {
+		return false;
+	}
+
+	return true;
 }
 
 static void
@@ -161,6 +176,10 @@ ftl_property_dump(struct spdk_ftl_dev *dev, struct spdk_jsonrpc_request *request
 
 	spdk_json_write_named_array_begin(w, "properties");
 	LIST_FOREACH(prop, &properties->list, entry) {
+		if (!is_property_visible(dev, prop)) {
+			continue;
+		}
+
 		spdk_json_write_object_begin(w);
 		ftl_property_dump_common_begin(prop, w);
 		prop->dump(dev, prop, w);
@@ -221,6 +240,11 @@ ftl_property_decode(struct spdk_ftl_dev *dev, const char *name, const char *valu
 		return -EACCES;
 	}
 
+	if (!is_property_visible(dev, prop)) {
+		FTL_ERRLOG(dev, "Property is inactive, enable verbose mode to access it, name %s.\n", name);
+		return -EACCES;
+	}
+
 	assert(prop->size);
 	assert(NULL == *output);
 
@@ -257,6 +281,11 @@ ftl_property_set(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt,
 
 	if (!prop->set) {
 		FTL_ERRLOG(dev, "Property is read only, name %s\n", name);
+		return -EACCES;
+	}
+
+	if (!is_property_visible(dev, prop)) {
+		FTL_ERRLOG(dev, "Property is inactive, enable verbose mode to access it, name %s\n", name);
 		return -EACCES;
 	}
 

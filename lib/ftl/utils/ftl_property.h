@@ -88,13 +88,15 @@ typedef void (*ftl_property_set_fn)(struct spdk_ftl_dev *dev, struct ftl_mngt_pr
  * @param dump The function to dump the property to the JSON RPC request
  * @param decode The function to decode a new value of the property
  * @param set The function to execute the property setting procedure
+ * @param verbose_mode The property is available in verbose mode only
  */
 void ftl_property_register(struct spdk_ftl_dev *dev,
 			   const char *name, void *value, size_t size,
 			   const char *unit, const char *desc,
 			   ftl_property_dump_fn dump,
 			   ftl_property_decode_fn decode,
-			   ftl_property_set_fn set);
+			   ftl_property_set_fn set,
+			   bool verbose_mode);
 
 /**
  * @brief Dump FTL properties to the JSON request
@@ -152,13 +154,14 @@ void ftl_property_set_generic(struct spdk_ftl_dev *dev, struct ftl_mngt_process 
  * @param value The pointer to the boolean value of the property
  * @param unit The property unit
  * @param desc The property description
+ * @param verbose_mode The verbose mode flag
  */
 static inline void
 ftl_property_register_bool_rw(struct spdk_ftl_dev *dev, const char *name, bool *value,
-			      const char *unit, const char *desc)
+			      const char *unit, const char *desc, bool verbose_mode)
 {
 	ftl_property_register(dev, name, value, sizeof(*value), unit, desc, ftl_property_dump_bool,
-			      ftl_property_decode_bool, ftl_property_set_generic);
+			      ftl_property_decode_bool, ftl_property_set_generic, verbose_mode);
 }
 
 #endif

@@ -144,7 +144,11 @@ ftl_conf_init_dev(struct spdk_ftl_dev *dev, const struct spdk_ftl_conf *conf)
 
 	ftl_property_register_bool_rw(dev, "prep_upgrade_on_shutdown", &dev->conf.prep_upgrade_on_shutdown,
 				      "", "During shutdown, FTL executes all actions which "
-				      "are needed for upgrade to a new version");
+				      "are needed for upgrade to a new version", false);
+
+	ftl_property_register_bool_rw(dev, "verbose_mode", &dev->conf.verbose_mode,
+				      "", "In verbose mode, user is able to get access to additional "
+				      "advanced FTL properties", false);
 
 	return 0;
 }
