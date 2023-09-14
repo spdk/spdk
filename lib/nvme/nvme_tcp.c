@@ -1443,7 +1443,6 @@ nvme_tcp_accel_recv_compute_crc32(struct nvme_tcp_req *treq, struct nvme_tcp_pdu
 
 	if (tgroup->group.group->accel_fn_table.append_crc32c != NULL) {
 		nvme_tcp_req_copy_pdu(treq, pdu);
-		nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 		rc = nvme_tcp_accel_append_crc32c(tgroup, &req->accel_sequence,
 						  &treq->pdu->data_digest_crc32,
 						  treq->pdu->data_iov, treq->pdu->data_iovcnt, 0,
@@ -1458,6 +1457,7 @@ nvme_tcp_accel_recv_compute_crc32(struct nvme_tcp_req *treq, struct nvme_tcp_pdu
 			treq->rsp.status.sc = SPDK_NVME_SC_COMMAND_TRANSIENT_TRANSPORT_ERROR;
 		}
 
+		nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 		nvme_tcp_c2h_data_payload_handle(tqpair, treq->pdu, &dummy);
 		return true;
 	} else if (tgroup->group.group->accel_fn_table.submit_accel_crc32c != NULL) {
