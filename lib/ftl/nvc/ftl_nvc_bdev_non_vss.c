@@ -240,3 +240,4 @@ struct ftl_nv_cache_device_type nvc_bdev_non_vss = {
 		.recover_open_chunk = recover_open_chunk
 	}
 };
+FTL_NV_CACHE_DEVICE_TYPE_REGISTER(nvc_bdev_non_vss)
