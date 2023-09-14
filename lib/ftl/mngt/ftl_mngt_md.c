@@ -334,11 +334,11 @@ static const struct ftl_mngt_process_desc desc_persist = {
 			.ctx_size = sizeof(struct ftl_p2l_sync_ctx),
 		},
 		{
-			.name = "persist band info metadata",
+			.name = "Persist band info metadata",
 			.action = ftl_mngt_persist_band_info_metadata,
 		},
 		{
-			.name = "persist trim metadata",
+			.name = "Persist trim metadata",
 			.action = ftl_mngt_persist_trim_metadata,
 		},
 		{
