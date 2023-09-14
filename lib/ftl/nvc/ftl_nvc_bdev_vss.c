@@ -34,6 +34,12 @@ is_bdev_compatible(struct spdk_ftl_dev *dev, struct spdk_bdev *bdev)
 	return true;
 }
 
+static bool
+is_chunk_active(struct spdk_ftl_dev *dev, struct ftl_nv_cache_chunk *chunk)
+{
+	return true;
+}
+
 static void
 md_region_setup(struct spdk_ftl_dev *dev, enum ftl_layout_region_type reg_type,
 		struct ftl_layout_region *region)
@@ -112,7 +118,7 @@ struct ftl_nv_cache_device_type nvc_bdev_vss = {
 	},
 	.ops = {
 		.is_bdev_compatible = is_bdev_compatible,
-
+		.is_chunk_active = is_chunk_active,
 		.md_layout_ops = {
 			.region_create = md_region_create,
 			.region_open = md_region_open,
