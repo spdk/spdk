@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2020 Intel Corporation.
  *   All rights reserved.
+ *   Copyright 2023 Solidigm All Rights Reserved
  */
 
 #ifndef SPDK_BDEV_FTL_H
@@ -17,13 +18,10 @@ struct ftl_bdev_info {
 	struct spdk_uuid	uuid;
 };
 
-typedef void (*ftl_bdev_thread_fn)(void *);
-
 struct rpc_ftl_stats_ctx {
 	struct spdk_bdev_desc		*ftl_bdev_desc;
-	ftl_bdev_thread_fn		cb;
 	struct spdk_jsonrpc_request	*request;
-	struct ftl_stats		*ftl_stats;
+	struct ftl_stats		ftl_stats;
 };
 
 typedef void (*ftl_bdev_init_fn)(const struct ftl_bdev_info *, void *, int);
@@ -34,7 +32,17 @@ void bdev_ftl_delete_bdev(const char *name, bool fast_shutdown, spdk_bdev_unregi
 int bdev_ftl_defer_init(const struct spdk_ftl_conf *conf);
 void bdev_ftl_unmap(const char *name, uint64_t lba, uint64_t num_blocks, spdk_ftl_fn cb_fn,
 		    void *cb_arg);
-int bdev_ftl_get_stats(const char *name, ftl_bdev_thread_fn cb,
-		       struct spdk_jsonrpc_request *request, struct ftl_stats *stats);
+
+/**
+ * @brief Get FTL bdev device statistics
+ *
+ * @param name The name of the FTL bdev device
+ * @param cb Collback function when the stats are ready
+ * @param ftl_stats_ctx The context for getting the statistics
+ *
+ * @note In callback function will return the context of struct rpc_ftl_stats_ctx
+ * and it contains struct ftl_stats
+ */
+void bdev_ftl_get_stats(const char *name, spdk_ftl_fn cb, struct rpc_ftl_stats_ctx *ftl_stats_ctx);
 
 #endif /* SPDK_BDEV_FTL_H */

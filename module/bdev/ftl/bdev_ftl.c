@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2020 Intel Corporation.
  *   All rights reserved.
+ *   Copyright 2023 Solidigm All Rights Reserved
  */
 
 #include "spdk/stdinc.h"
@@ -27,6 +28,16 @@ struct ftl_bdev {
 	struct spdk_bdev_desc	*cache_bdev_desc;
 };
 
+struct bdev_ftl_action {
+	struct spdk_bdev_desc	*ftl_bdev_desc;
+	struct ftl_bdev		*ftl_bdev_dev;
+	spdk_ftl_fn		cb_fn;
+	void			*cb_arg;
+	int			rc;
+	size_t			ctx_size;
+	char			ctx[0];
+};
+
 struct ftl_deferred_init {
 	struct spdk_ftl_conf		conf;
 
@@ -38,6 +49,11 @@ static LIST_HEAD(, ftl_deferred_init)	g_deferred_init = LIST_HEAD_INITIALIZER(g_
 static int bdev_ftl_initialize(void);
 static void bdev_ftl_finish(void);
 static void bdev_ftl_examine(struct spdk_bdev *bdev);
+
+static void bdev_ftl_action_finish_cb(void *cb_arg, int status);
+static struct bdev_ftl_action *bdev_ftl_action_start(const char *bdev_name,
+		size_t ctx_size, spdk_ftl_fn cb_fn, void *cb_arg);
+static void bdev_ftl_action_finish(struct bdev_ftl_action *action);
 
 static int
 bdev_ftl_get_ctx_size(void)
@@ -483,130 +499,48 @@ not_found:
 	cb_fn(cb_arg, -ENODEV);
 }
 
-struct ftl_unmap_ctx {
-	struct spdk_bdev_desc *bdev;
-	spdk_ftl_fn cb_fn;
-	void *cb_arg;
-};
+void
+bdev_ftl_unmap(const char *name, uint64_t lba, uint64_t num_blocks, spdk_ftl_fn cb_fn,
+	       void *cb_arg)
+{
+	struct bdev_ftl_action *action;
+
+	action = bdev_ftl_action_start(name, 0, cb_fn, cb_arg);
+	if (!action) {
+		return;
+	}
+
+	/* It's ok to pass NULL as IO channel - FTL will detect this and use it's internal IO channel for management operations */
+	action->rc = spdk_ftl_unmap(action->ftl_bdev_dev->dev, NULL, NULL, lba, num_blocks,
+				    bdev_ftl_action_finish_cb, action);
+	if (action->rc) {
+		bdev_ftl_action_finish(action);
+	}
+}
 
 static void
-bdev_ftl_unmap_cb(void *cb_arg, int status)
+bdev_ftl_get_stats_cb(struct ftl_stats *stats, void *cb_arg)
 {
-	struct ftl_unmap_ctx *ctx = cb_arg;
+	struct bdev_ftl_action *action = cb_arg;
 
-	spdk_bdev_close(ctx->bdev);
-	ctx->cb_fn(ctx->cb_arg, status);
-	free(ctx);
+	bdev_ftl_action_finish(action);
 }
 
 void
-bdev_ftl_unmap(const char *name, uint64_t lba, uint64_t num_blocks, spdk_ftl_fn cb_fn, void *cb_arg)
+bdev_ftl_get_stats(const char *name, spdk_ftl_fn cb, struct rpc_ftl_stats_ctx *ftl_stats_ctx)
 {
-	struct spdk_bdev_desc *ftl_bdev_desc;
-	struct spdk_bdev *bdev;
-	struct ftl_bdev *ftl;
-	struct ftl_unmap_ctx *ctx;
-	int rc;
+	struct bdev_ftl_action *action;
 
-	rc = spdk_bdev_open_ext(name, false, bdev_ftl_event_cb, NULL, &ftl_bdev_desc);
-
-	if (rc) {
-		goto not_found;
+	action = bdev_ftl_action_start(name, 0, cb, ftl_stats_ctx);
+	if (!action) {
+		return;
 	}
-
-	bdev = spdk_bdev_desc_get_bdev(ftl_bdev_desc);
-
-	if (bdev->module != &g_ftl_if) {
-		rc = -ENODEV;
-		goto bdev_opened;
+	ftl_stats_ctx->ftl_bdev_desc = action->ftl_bdev_desc;
+	action->rc = spdk_ftl_get_stats(action->ftl_bdev_dev->dev, &ftl_stats_ctx->ftl_stats,
+					bdev_ftl_get_stats_cb, action);
+	if (action->rc) {
+		bdev_ftl_action_finish(action);
 	}
-
-	ctx = calloc(1, sizeof(struct ftl_unmap_ctx));
-	if (!ctx) {
-		rc = -ENOMEM;
-		goto bdev_opened;
-	}
-
-	ctx->bdev = ftl_bdev_desc;
-	ctx->cb_arg = cb_arg;
-	ctx->cb_fn = cb_fn;
-
-	ftl = bdev->ctxt;
-	assert(ftl);
-	/* It's ok to pass NULL as IO channel - FTL will detect this and use it's internal IO channel for management operations */
-	rc = spdk_ftl_unmap(ftl->dev, NULL, NULL, lba, num_blocks, bdev_ftl_unmap_cb, ctx);
-
-	if (rc) {
-		goto ctx_allocated;
-	}
-
-	return;
-ctx_allocated:
-	free(ctx);
-bdev_opened:
-	spdk_bdev_close(ftl_bdev_desc);
-not_found:
-	cb_fn(cb_arg, rc);
-}
-
-static void
-bdev_ftl_get_stats_cb(struct ftl_stats *stats, void *ctx)
-{
-	struct rpc_ftl_stats_ctx *ftl_stats_ctx = ctx;
-
-	ftl_stats_ctx->cb(ftl_stats_ctx);
-
-	spdk_bdev_close(ftl_stats_ctx->ftl_bdev_desc);
-	free(ftl_stats_ctx);
-}
-
-
-int
-bdev_ftl_get_stats(const char *name, ftl_bdev_thread_fn cb, struct spdk_jsonrpc_request *request,
-		   struct ftl_stats *stats)
-{
-	struct spdk_bdev_desc *ftl_bdev_desc;
-	struct spdk_bdev *bdev;
-	struct ftl_bdev *ftl;
-	struct rpc_ftl_stats_ctx *ftl_stats_ctx;
-	int rc;
-
-	rc = spdk_bdev_open_ext(name, false, bdev_ftl_event_cb, NULL, &ftl_bdev_desc);
-	if (rc) {
-		goto not_found;
-	}
-
-	bdev = spdk_bdev_desc_get_bdev(ftl_bdev_desc);
-	if (bdev->module != &g_ftl_if) {
-		rc = -ENODEV;
-		goto bdev_opened;
-	}
-
-	ftl_stats_ctx = calloc(1, sizeof(*ftl_stats_ctx));
-	if (!ftl_stats_ctx) {
-		SPDK_ERRLOG("Could not allocate ftl_stats_ctx\n");
-		rc = -ENOMEM;
-		goto bdev_opened;
-	}
-
-	ftl = bdev->ctxt;
-	ftl_stats_ctx->request = request;
-	ftl_stats_ctx->ftl_bdev_desc = ftl_bdev_desc;
-	ftl_stats_ctx->cb = cb;
-	ftl_stats_ctx->ftl_stats = stats;
-
-	rc = spdk_ftl_get_stats(ftl->dev, stats, bdev_ftl_get_stats_cb, ftl_stats_ctx);
-	if (rc) {
-		goto stats_allocated;
-	}
-
-	return 0;
-stats_allocated:
-	free(ftl_stats_ctx);
-bdev_opened:
-	spdk_bdev_close(ftl_bdev_desc);
-not_found:
-	return rc;
 }
 
 static void
@@ -654,3 +588,58 @@ bdev_ftl_examine(struct spdk_bdev *bdev)
 }
 
 SPDK_LOG_REGISTER_COMPONENT(bdev_ftl)
+
+/*
+ * Generic function to execute an action on the FTL bdev
+ */
+static void
+bdev_ftl_action_finish(struct bdev_ftl_action *action)
+{
+	action->cb_fn(action->cb_arg, action->rc);
+	if (action->ftl_bdev_desc) {
+		spdk_bdev_close(action->ftl_bdev_desc);
+	}
+	free(action);
+}
+
+static struct bdev_ftl_action *
+bdev_ftl_action_start(const char *bdev_name, size_t ctx_size, spdk_ftl_fn cb_fn, void *cb_arg)
+{
+	struct spdk_bdev *bdev;
+	struct bdev_ftl_action *action = calloc(1, sizeof(*action) + ctx_size);
+
+	if (NULL == action) {
+		cb_fn(cb_arg, -ENOMEM);
+		return NULL;
+	}
+	action->cb_arg = cb_arg;
+	action->cb_fn = cb_fn;
+
+	action->rc = spdk_bdev_open_ext(bdev_name, false, bdev_ftl_event_cb, NULL, &action->ftl_bdev_desc);
+	if (action->rc) {
+		goto error;
+	}
+
+	bdev = spdk_bdev_desc_get_bdev(action->ftl_bdev_desc);
+	if (bdev->module != &g_ftl_if) {
+		action->rc = -ENODEV;
+		goto error;
+	}
+
+	action->ftl_bdev_dev = bdev->ctxt;
+	assert(action->ftl_bdev_dev);
+
+	return action;
+error:
+	bdev_ftl_action_finish(action);
+	return NULL;
+}
+
+static void
+bdev_ftl_action_finish_cb(void *cb_arg, int status)
+{
+	struct bdev_ftl_action *action = cb_arg;
+
+	action->rc = status;
+	bdev_ftl_action_finish(action);
+}
