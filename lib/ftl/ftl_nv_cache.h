@@ -251,6 +251,8 @@ uint64_t ftl_chunk_map_get_lba(struct ftl_nv_cache_chunk *chunk, uint64_t offset
 
 void ftl_nv_cache_set_addr(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr addr);
 
+void ftl_nv_cache_chunk_set_addr(struct ftl_nv_cache_chunk *chunk, uint64_t lba, ftl_addr addr);
+
 int ftl_nv_cache_save_state(struct ftl_nv_cache *nv_cache);
 
 int ftl_nv_cache_load_state(struct ftl_nv_cache *nv_cache);
