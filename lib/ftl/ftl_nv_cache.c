@@ -1882,9 +1882,9 @@ read_open_chunk_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		rq->iter.idx = 0;
 		rq->iter.count = len;
 
-		rc = ftl_nv_cache_bdev_readv_blocks_with_md(dev, nv_cache->bdev_desc,
+		rc = ftl_nv_cache_bdev_read_blocks_with_md(dev, nv_cache->bdev_desc,
 				nv_cache->cache_ioch,
-				rq->io_vec, len,
+				rq->io_payload,
 				rq->io_md,
 				cache_offset, len,
 				read_open_chunk_cb,
@@ -1934,9 +1934,9 @@ restore_open_chunk(struct ftl_nv_cache_chunk *chunk, struct ftl_basic_rq *parent
 
 	len = spdk_min(dev->xfer_size, chunk->offset + chunk_tail_md_offset(nv_cache) - addr);
 
-	rc = ftl_nv_cache_bdev_readv_blocks_with_md(dev, nv_cache->bdev_desc,
+	rc = ftl_nv_cache_bdev_read_blocks_with_md(dev, nv_cache->bdev_desc,
 			nv_cache->cache_ioch,
-			rq->io_vec, len,
+			rq->io_payload,
 			rq->io_md,
 			addr, len,
 			read_open_chunk_cb,

@@ -35,10 +35,9 @@ ftl_band_rq_bdev_write(void *_rq)
 	struct spdk_ftl_dev *dev = band->dev;
 	int rc;
 
-	rc = spdk_bdev_writev_blocks(dev->base_bdev_desc, dev->base_ioch,
-				     rq->io_vec, rq->io_vec_size,
-				     rq->io.addr, rq->num_blocks,
-				     write_rq_end, rq);
+	rc = spdk_bdev_write_blocks(dev->base_bdev_desc, dev->base_ioch,
+				    rq->io_payload, rq->io.addr, rq->num_blocks,
+				    write_rq_end, rq);
 
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {

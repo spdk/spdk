@@ -193,12 +193,6 @@ struct ftl_rq {
 	/* Size of extended metadata size for one entry */
 	uint64_t io_md_size;
 
-	/* Size of IO vector array */
-	uint64_t io_vec_size;
-
-	/* Array of IO vectors, its size equals to num_blocks */
-	struct iovec *io_vec;
-
 	/* Payload for IO */
 	void *io_payload;
 
@@ -342,23 +336,6 @@ ftl_basic_rq_set_owner(struct ftl_basic_rq *brq, void (*cb)(struct ftl_basic_rq 
 {
 	brq->owner.cb = cb;
 	brq->owner.priv = priv;
-}
-
-static inline void
-ftl_rq_swap_payload(struct ftl_rq *a, uint32_t aidx,
-		    struct ftl_rq *b, uint32_t bidx)
-{
-	assert(aidx < a->num_blocks);
-	assert(bidx < b->num_blocks);
-
-	void *a_payload = a->io_vec[aidx].iov_base;
-	void *b_payload = b->io_vec[bidx].iov_base;
-
-	a->io_vec[aidx].iov_base = b_payload;
-	a->entries[aidx].io_payload = b_payload;
-
-	b->io_vec[bidx].iov_base = a_payload;
-	b->entries[bidx].io_payload = a_payload;
 }
 
 static inline struct ftl_rq *

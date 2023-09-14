@@ -14,7 +14,6 @@ ftl_rq_new(struct spdk_ftl_dev *dev, uint32_t io_md_size)
 {
 	struct ftl_rq *rq;
 	struct ftl_rq_entry *entry;
-	struct iovec *io_vec;
 	void *io_payload, *io_md = NULL;
 	uint64_t i;
 	size_t size;
@@ -35,11 +34,6 @@ ftl_rq_new(struct spdk_ftl_dev *dev, uint32_t io_md_size)
 	if (!io_payload) {
 		goto error;
 	}
-	rq->io_vec = calloc(num_blocks, sizeof(rq->io_vec[0]));
-	if (!rq->io_vec) {
-		goto error;
-	}
-	rq->io_vec_size = num_blocks;
 
 	/* Allocate extended metadata for IO */
 	if (io_md_size) {
@@ -54,7 +48,6 @@ ftl_rq_new(struct spdk_ftl_dev *dev, uint32_t io_md_size)
 	}
 
 	entry = rq->entries;
-	io_vec = rq->io_vec;
 	for (i = 0; i < num_blocks; ++i) {
 		uint64_t *index = (uint64_t *)&entry->index;
 		*index = i;
@@ -68,11 +61,7 @@ ftl_rq_new(struct spdk_ftl_dev *dev, uint32_t io_md_size)
 			entry->io_md = io_md;
 		}
 
-		io_vec->iov_base = io_payload;
-		io_vec->iov_len = FTL_BLOCK_SIZE;
-
 		entry++;
-		io_vec++;
 		io_payload += FTL_BLOCK_SIZE;
 		io_md += io_md_size;
 	}
@@ -92,7 +81,6 @@ ftl_rq_del(struct ftl_rq *rq)
 
 	spdk_free(rq->io_payload);
 	spdk_free(rq->io_md);
-	free(rq->io_vec);
 
 	free(rq);
 }
