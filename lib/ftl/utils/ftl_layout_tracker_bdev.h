@@ -113,7 +113,7 @@ int ftl_layout_tracker_bdev_blob_load(struct ftl_layout_tracker_bdev *tracker, v
  * @brief Insert a new FTL layout region into a specific location
  *
  * @param tracker pointer to the tracker instance
- * @param reg_type FTL layout region type
+ * @param reg_type FTL layout region type, FTL_LAYOUT_REGION_TYPE_INVALID to return a matching free entry (dry-run)
  * @param reg_ver FTL layout region version
  * @param blk_offs offset in blocks of the FTL layout region
  * @param blk_sz size in blocks of the FTL layout region

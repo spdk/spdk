@@ -260,10 +260,12 @@ ftl_layout_tracker_bdev_insert_region(struct ftl_layout_tracker_bdev *tracker,
 		return NULL;
 	}
 
-	entry_new = layout_region_find_first(tracker, reg_type, reg_ver);
-	if (entry_new) {
-		/* Region already exists */
-		return NULL;
+	if (reg_type != FTL_LAYOUT_REGION_TYPE_INVALID) {
+		entry_new = layout_region_find_first(tracker, reg_type, reg_ver);
+		if (entry_new) {
+			/* Region already exists */
+			return NULL;
+		}
 	}
 
 	/* Look up for the free region corresponding to the blk_offs */
@@ -281,6 +283,11 @@ ftl_layout_tracker_bdev_insert_region(struct ftl_layout_tracker_bdev *tracker,
 	if (!entry_free) {
 		/* Did not found the corresponding free region */
 		return NULL;
+	}
+
+	if (reg_type == FTL_LAYOUT_REGION_TYPE_INVALID) {
+		/* Dry run */
+		return &entry_free->reg;
 	}
 
 	entry_free_blks_left = blk_offs - entry_free->reg.blk_offs;

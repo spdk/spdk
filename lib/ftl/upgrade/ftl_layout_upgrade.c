@@ -12,6 +12,22 @@
 #include "ftl_sb_prev.h"
 #include "ftl_core.h"
 #include "ftl_band.h"
+#include "utils/ftl_layout_tracker_bdev.h"
+
+int
+ftl_region_major_upgrade_enabled(struct spdk_ftl_dev *dev, struct ftl_layout_region *region)
+{
+	if (ftl_region_upgrade_enabled(dev, region)) {
+		return -1;
+	}
+
+	if (dev->sb->upgrade_ready) {
+		return 0;
+	} else {
+		FTL_ERRLOG(dev, "FTL major upgrade ERROR, required upgrade shutdown in the previous version\n");
+		return -1;
+	}
+}
 
 int
 ftl_region_upgrade_disabled(struct spdk_ftl_dev *dev, struct ftl_layout_region *region)
@@ -297,4 +313,32 @@ ftl_layout_upgrade_region_get_latest_version(enum ftl_layout_region_type reg_typ
 {
 	assert(reg_type < FTL_LAYOUT_REGION_TYPE_MAX);
 	return layout_upgrade_desc[reg_type].latest_ver;
+}
+
+static int
+layout_upgrade_drop_region(struct spdk_ftl_dev *dev, struct ftl_layout_tracker_bdev *layout_tracker,
+			   enum ftl_layout_region_type reg_type, uint32_t reg_ver)
+{
+	const struct ftl_layout_tracker_bdev_region_props *reg_search_ctx = NULL;
+	int rc = ftl_layout_tracker_bdev_rm_region(layout_tracker, reg_type, reg_ver);
+
+	ftl_layout_tracker_bdev_find_next_region(layout_tracker, reg_type, &reg_search_ctx);
+	if (reg_search_ctx) {
+		FTL_ERRLOG(dev,
+			   "Error when dropping region type %"PRId32", ver %"PRIu32": rc:%"PRId32" but found reg ver %"PRIu32"\n",
+			   reg_type, reg_ver, rc, reg_search_ctx->ver);
+		return -1;
+	}
+	dev->layout.region[reg_type].type = FTL_LAYOUT_REGION_TYPE_INVALID;
+	return 0;
+}
+
+int
+ftl_layout_upgrade_drop_regions(struct spdk_ftl_dev *dev)
+{
+	if (layout_upgrade_drop_region(dev, dev->nvc_layout_tracker, FTL_LAYOUT_REGION_TYPE_DATA_NVC, 0)) {
+		return -1;
+	}
+
+	return 0;
 }

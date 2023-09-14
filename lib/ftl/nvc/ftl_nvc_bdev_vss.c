@@ -35,35 +35,14 @@ is_bdev_compatible(struct spdk_ftl_dev *dev, struct spdk_bdev *bdev)
 }
 
 static bool
-is_chunk_active(struct spdk_ftl_dev *dev, struct ftl_nv_cache_chunk *chunk)
+is_chunk_active(struct spdk_ftl_dev *dev, uint64_t chunk_offset)
 {
-	struct ftl_layout_region *region;
-	uint64_t chunk_begin = chunk->offset;
-	uint64_t chunk_end = chunk_begin + dev->layout.nvc.chunk_data_blocks - 1;
-	uint64_t region_begin, region_end;
+	const struct ftl_layout_tracker_bdev_region_props *reg_free = ftl_layout_tracker_bdev_insert_region(
+				dev->nvc_layout_tracker, FTL_LAYOUT_REGION_TYPE_INVALID, 0, chunk_offset,
+				dev->layout.nvc.chunk_data_blocks);
 
-	for (uint64_t i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; i++) {
-		if (i == FTL_LAYOUT_REGION_TYPE_DATA_BASE ||
-		    i == FTL_LAYOUT_REGION_TYPE_SB_BASE ||
-		    i == FTL_LAYOUT_REGION_TYPE_VALID_MAP ||
-		    i == FTL_LAYOUT_REGION_TYPE_DATA_NVC) {
-			continue;
-		}
-
-		region = ftl_layout_region_get(dev, i);
-		if (!region) {
-			continue;
-		}
-
-		region_begin = region->current.offset;
-		region_end = region_begin + region->current.blocks - 1;
-
-		if (spdk_max(chunk_begin, region_begin) <= spdk_min(chunk_end, region_end)) {
-			return false;
-		}
-	}
-
-	return true;
+	assert(!reg_free || reg_free->type == FTL_LAYOUT_REGION_TYPE_FREE);
+	return reg_free != NULL;
 }
 
 static void

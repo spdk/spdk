@@ -25,8 +25,9 @@
 
 #define FTL_NVC_VERSION_0	0
 #define FTL_NVC_VERSION_1	1
+#define FTL_NVC_VERSION_2	2
 
-#define FTL_NVC_VERSION_CURRENT FTL_NVC_VERSION_1
+#define FTL_NVC_VERSION_CURRENT FTL_NVC_VERSION_2
 
 #define FTL_NV_CACHE_NUM_COMPACTORS 8
 
@@ -60,6 +61,9 @@ enum ftl_chunk_state {
 };
 
 struct ftl_nv_cache_chunk_md {
+	/* Chunk metadata version */
+	uint64_t version;
+
 	/* Sequence id of writing */
 	uint64_t seq_id;
 
@@ -88,11 +92,10 @@ struct ftl_nv_cache_chunk_md {
 	uint32_t p2l_map_checksum;
 
 	/* Reserved */
-	uint8_t reserved[4052];
+	uint8_t reserved[4044];
 } __attribute__((packed));
 
-#define FTL_NV_CACHE_CHUNK_MD_SIZE sizeof(struct ftl_nv_cache_chunk_md)
-SPDK_STATIC_ASSERT(FTL_NV_CACHE_CHUNK_MD_SIZE == FTL_BLOCK_SIZE,
+SPDK_STATIC_ASSERT(sizeof(struct ftl_nv_cache_chunk_md) == FTL_BLOCK_SIZE,
 		   "FTL NV Chunk metadata size is invalid");
 
 struct ftl_nv_cache_chunk {
@@ -228,6 +231,10 @@ struct ftl_nv_cache {
 	} throttle;
 };
 
+typedef void (*nvc_scrub_cb)(struct spdk_ftl_dev *dev, void *cb_ctx, int status);
+
+void ftl_nv_cache_scrub(struct spdk_ftl_dev *dev, nvc_scrub_cb cb, void *cb_ctx);
+
 int ftl_nv_cache_init(struct spdk_ftl_dev *dev);
 void ftl_nv_cache_deinit(struct spdk_ftl_dev *dev);
 bool ftl_nv_cache_write(struct ftl_io *io);
@@ -285,5 +292,7 @@ struct ftl_nv_cache_chunk *ftl_nv_cache_get_chunk_from_addr(struct spdk_ftl_dev 
 		ftl_addr addr);
 
 uint64_t ftl_nv_cache_acquire_trim_seq_id(struct ftl_nv_cache *nv_cache);
+
+void ftl_nv_cache_chunk_md_initialize(struct ftl_nv_cache_chunk_md *md);
 
 #endif  /* FTL_NV_CACHE_H */

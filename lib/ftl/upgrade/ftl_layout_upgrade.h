@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2022 Intel Corporation.
+ *   Copyright 2023 Solidigm All Rights Reserved
  *   All rights reserved.
  */
 
@@ -105,6 +106,17 @@ int ftl_region_upgrade_disabled(struct spdk_ftl_dev *dev, struct ftl_layout_regi
 int ftl_region_upgrade_enabled(struct spdk_ftl_dev *dev, struct ftl_layout_region *region);
 
 /**
+ * @brief Enable major upgrade for particular region.
+ *
+ * @param dev FTL device
+ * @param region the region to be upgraded in major mode
+ *
+ * @retval 0 Upgrade enabled and possible
+ * @retval -1 Upgrade not possible
+ */
+int ftl_region_major_upgrade_enabled(struct spdk_ftl_dev *dev, struct ftl_layout_region *region);
+
+/**
  * @brief Upgrade the superblock.
  *
  * This call is sychronous.
@@ -188,5 +200,13 @@ int ftl_layout_upgrade_init_ctx(struct spdk_ftl_dev *dev, struct ftl_layout_upgr
  * @return region's version
  */
 uint64_t ftl_layout_upgrade_region_get_latest_version(enum ftl_layout_region_type reg_type);
+
+/**
+ * @brief Removes all metadata regions from the layout that are no longer utilized in FTL
+ *
+ * @param dev FTL device
+ * @return int 0: drop regions successful, -1 otherwise
+ */
+int ftl_layout_upgrade_drop_regions(struct spdk_ftl_dev *dev);
 
 #endif /* FTL_LAYOUT_UPGRADE_H */

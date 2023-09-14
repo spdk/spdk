@@ -142,9 +142,9 @@ ftl_mngt_deinit_nv_cache(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 }
 
 static void
-user_clear_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
+user_clear_cb(struct spdk_ftl_dev *dev, void *cb_ctx, int status)
 {
-	struct ftl_mngt_process *mngt = md->owner.cb_ctx;
+	struct ftl_mngt_process *mngt = cb_ctx;
 
 	if (status) {
 		FTL_ERRLOG(ftl_mngt_get_dev(mngt), "FTL NV Cache: ERROR of clearing user cache data\n");
@@ -157,23 +157,22 @@ user_clear_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
 void
 ftl_mngt_scrub_nv_cache(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
-	struct ftl_layout_region *region = ftl_layout_region_get(dev, FTL_LAYOUT_REGION_TYPE_DATA_NVC);
-	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_DATA_NVC];
-	union ftl_md_vss vss;
+	bool is_first_start = (dev->conf.mode & SPDK_FTL_MODE_CREATE) != 0;
+	bool is_major_upgrade = dev->sb->clean == 1 && dev->sb_shm->shm_clean == 0 &&
+				dev->sb->upgrade_ready == 1;
 
-	FTL_NOTICELOG(dev, "First startup needs to scrub nv cache data region, this may take some time.\n");
-	FTL_NOTICELOG(dev, "Scrubbing %lluGiB\n", region->current.blocks * FTL_BLOCK_SIZE / GiB);
+	if (is_first_start || is_major_upgrade) {
+		FTL_NOTICELOG(dev, "NV cache data region needs scrubbing, this may take a while.\n");
+		FTL_NOTICELOG(dev, "Scrubbing %"PRIu64" chunks\n", dev->layout.nvc.chunk_count);
 
-	/* Need to scrub user data, so in case of dirty shutdown the recovery won't
-	 * pull in data during open chunks recovery from any previous instance (since during short
-	 * tests it's very likely that chunks seq_id will be in line between new head md and old VSS)
-	 */
-	md->cb = user_clear_cb;
-	md->owner.cb_ctx = mngt;
-
-	vss.version.md_version = region->current.version;
-	vss.nv_cache.lba = FTL_ADDR_INVALID;
-	ftl_md_clear(md, 0, &vss);
+		/* Need to scrub user data, so in case of dirty shutdown the recovery won't
+		 * pull in data during open chunks recovery from any previous instance (since during short
+		 * tests it's very likely that chunks seq_id will be in line between new head md and old VSS)
+		 */
+		ftl_nv_cache_scrub(dev, user_clear_cb, mngt);
+	} else {
+		ftl_mngt_skip_step(mngt);
+	}
 }
 
 void

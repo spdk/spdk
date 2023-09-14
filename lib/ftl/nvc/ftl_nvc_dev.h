@@ -41,12 +41,12 @@ struct ftl_nv_cache_device_ops {
 	 * @brief Check if chunk is active and can be used for NV Cache
 	 *
 	 * @param dev FTL device
-	 * @param chunk chunk to be checked
+	 * @param chunk_offset chunk start offset to be checked
 	 *
 	 * @retval true if chunk is active
 	 * @retval false if chunk is not active
 	 */
-	bool (*is_chunk_active)(struct spdk_ftl_dev *dev, struct ftl_nv_cache_chunk *chunk);
+	bool (*is_chunk_active)(struct spdk_ftl_dev *dev, uint64_t chunk_offset);
 
 	struct ftl_md_layout_ops md_layout_ops;
 };

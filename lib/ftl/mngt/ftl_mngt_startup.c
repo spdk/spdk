@@ -98,6 +98,10 @@ static const struct ftl_mngt_process_desc desc_startup = {
 			.action = ftl_mngt_layout_upgrade,
 		},
 		{
+			.name = "Scrub NV cache",
+			.action = ftl_mngt_scrub_nv_cache,
+		},
+		{
 			.name = "Initialize metadata",
 			.action = ftl_mngt_init_md,
 			.cleanup = ftl_mngt_deinit_md
@@ -155,10 +159,6 @@ static const struct ftl_mngt_process_desc desc_first_start = {
 		{
 			.name = "Clear L2P",
 			.action = ftl_mngt_clear_l2p,
-		},
-		{
-			.name = "Scrub NV cache",
-			.action = ftl_mngt_scrub_nv_cache,
 		},
 		{
 			.name = "Finalize band initialization",

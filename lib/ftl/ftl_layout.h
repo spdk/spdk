@@ -12,10 +12,6 @@
 struct spdk_ftl_dev;
 struct ftl_md;
 
-#define FTL_NV_CACHE_CHUNK_DATA_SIZE(blocks) ((uint64_t)blocks * FTL_BLOCK_SIZE)
-#define FTL_NV_CACHE_CHUNK_SIZE(blocks) \
-	(FTL_NV_CACHE_CHUNK_DATA_SIZE(blocks) + (2 * FTL_NV_CACHE_CHUNK_MD_SIZE))
-
 #define FTL_LAYOUT_REGION_TYPE_P2L_COUNT \
 	(FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MAX - FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MIN + 1)
 
@@ -132,7 +128,6 @@ struct ftl_layout {
 	struct {
 		uint64_t total_blocks;
 		uint64_t chunk_data_blocks;
-		uint64_t chunk_meta_size;
 		uint64_t chunk_count;
 		uint64_t chunk_tail_md_num_blocks;
 	} nvc;

@@ -26,15 +26,6 @@ static void ftl_property_dump_cache_dev(struct spdk_ftl_dev *dev,
 					const struct ftl_property *property,
 					struct spdk_json_write_ctx *w);
 
-static inline const struct ftl_layout_region *
-nvc_data_region(struct ftl_nv_cache *nv_cache)
-{
-	struct spdk_ftl_dev *dev;
-
-	dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
-	return ftl_layout_region_get(dev, FTL_LAYOUT_REGION_TYPE_DATA_NVC);
-}
-
 static inline void
 nvc_validate_md(struct ftl_nv_cache *nv_cache,
 		struct ftl_nv_cache_chunk_md *chunk_md)
@@ -57,13 +48,13 @@ nvc_validate_md(struct ftl_nv_cache *nv_cache,
 static inline uint64_t
 nvc_data_offset(struct ftl_nv_cache *nv_cache)
 {
-	return nvc_data_region(nv_cache)->current.offset;
+	return 0;
 }
 
 static inline uint64_t
 nvc_data_blocks(struct ftl_nv_cache *nv_cache)
 {
-	return nvc_data_region(nv_cache)->current.blocks;
+	return nv_cache->chunk_blocks * nv_cache->chunk_count;
 }
 
 size_t
@@ -107,6 +98,118 @@ ftl_nv_cache_init_update_limits(struct spdk_ftl_dev *dev)
 	nvc->chunk_free_target = spdk_divide_round_up(usable_chunks *
 				 dev->conf.nv_cache.chunk_free_target,
 				 100);
+}
+
+struct nvc_scrub_ctx {
+	uint64_t chunk_no;
+	nvc_scrub_cb cb;
+	void *cb_ctx;
+
+	struct ftl_layout_region reg_chunk;
+	struct ftl_md *md_chunk;
+};
+
+static int
+nvc_scrub_find_next_chunk(struct spdk_ftl_dev *dev, struct nvc_scrub_ctx *scrub_ctx)
+{
+	while (scrub_ctx->chunk_no < dev->layout.nvc.chunk_count) {
+		if (dev->nv_cache.nvc_type->ops.is_chunk_active(dev, scrub_ctx->reg_chunk.current.offset)) {
+			return 0;
+		}
+
+		/* Move the dummy region along with the active chunk */
+		scrub_ctx->reg_chunk.current.offset += dev->layout.nvc.chunk_data_blocks;
+		scrub_ctx->chunk_no++;
+	}
+	return -ENOENT;
+}
+
+static void
+nvc_scrub_clear_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
+{
+	struct nvc_scrub_ctx *scrub_ctx = md->owner.cb_ctx;
+	union ftl_md_vss vss;
+
+	/* Move to the next chunk */
+	scrub_ctx->chunk_no++;
+	scrub_ctx->reg_chunk.current.offset += dev->layout.nvc.chunk_data_blocks;
+
+	FTL_DEBUGLOG(dev, "Scrub progress: %"PRIu64"/%"PRIu64" chunks\n",
+		     scrub_ctx->chunk_no, dev->layout.nvc.chunk_count);
+
+	if (status || nvc_scrub_find_next_chunk(dev, scrub_ctx)) {
+		/* IO error or no more active chunks found. Scrubbing finished. */
+		scrub_ctx->cb(dev, scrub_ctx->cb_ctx, status);
+		ftl_md_destroy(scrub_ctx->md_chunk, 0);
+		free(scrub_ctx);
+		return;
+	}
+
+	/* Scrub the next chunk */
+	vss.version.md_version = 0;
+	vss.nv_cache.lba = FTL_ADDR_INVALID;
+
+	scrub_ctx->md_chunk->cb = nvc_scrub_clear_cb;
+	scrub_ctx->md_chunk->owner.cb_ctx = scrub_ctx;
+
+	ftl_md_clear(scrub_ctx->md_chunk, 0, &vss);
+}
+
+void
+ftl_nv_cache_scrub(struct spdk_ftl_dev *dev, nvc_scrub_cb cb, void *cb_ctx)
+{
+	struct nvc_scrub_ctx *scrub_ctx = calloc(1, sizeof(*scrub_ctx));
+	union ftl_md_vss vss;
+
+	if (!scrub_ctx) {
+		cb(dev, cb_ctx, -ENOMEM);
+		return;
+	}
+
+	scrub_ctx->cb = cb;
+	scrub_ctx->cb_ctx = cb_ctx;
+
+	/* Setup a dummy region for the first chunk */
+	scrub_ctx->reg_chunk.name = ftl_md_region_name(FTL_LAYOUT_REGION_TYPE_DATA_NVC);
+	scrub_ctx->reg_chunk.type = FTL_LAYOUT_REGION_TYPE_DATA_NVC;
+	scrub_ctx->reg_chunk.mirror_type = FTL_LAYOUT_REGION_TYPE_INVALID;
+	scrub_ctx->reg_chunk.current.version = 0;
+	scrub_ctx->reg_chunk.current.offset = 0;
+	scrub_ctx->reg_chunk.current.blocks = dev->layout.nvc.chunk_data_blocks;
+	scrub_ctx->reg_chunk.entry_size = FTL_BLOCK_SIZE;
+	scrub_ctx->reg_chunk.num_entries = dev->layout.nvc.chunk_data_blocks;
+	scrub_ctx->reg_chunk.vss_blksz = dev->nv_cache.md_size;
+	scrub_ctx->reg_chunk.bdev_desc = dev->nv_cache.bdev_desc;
+	scrub_ctx->reg_chunk.ioch = dev->nv_cache.cache_ioch;
+
+	/* Setup an MD object for the region */
+	scrub_ctx->md_chunk = ftl_md_create(dev, scrub_ctx->reg_chunk.current.blocks,
+					    scrub_ctx->reg_chunk.vss_blksz, scrub_ctx->reg_chunk.name, FTL_MD_CREATE_NO_MEM,
+					    &scrub_ctx->reg_chunk);
+
+	if (!scrub_ctx->md_chunk) {
+		free(scrub_ctx);
+		cb(dev, cb_ctx, -ENOMEM);
+		return;
+	}
+
+	if (nvc_scrub_find_next_chunk(dev, scrub_ctx)) {
+		/* No active chunks found */
+		ftl_md_destroy(scrub_ctx->md_chunk, 0);
+		free(scrub_ctx);
+		cb(dev, cb_ctx, -ENOENT);
+		return;
+	}
+
+	/* Scrub the first chunk */
+	vss.version.md_version = 0;
+	vss.nv_cache.lba = FTL_ADDR_INVALID;
+
+	scrub_ctx->md_chunk->cb = nvc_scrub_clear_cb;
+	scrub_ctx->md_chunk->owner.cb_ctx = scrub_ctx;
+
+	ftl_md_clear(scrub_ctx->md_chunk, 0, &vss);
+	return;
 }
 
 int
@@ -168,11 +271,12 @@ ftl_nv_cache_init(struct spdk_ftl_dev *dev)
 	for (i = 0; i < nv_cache->chunk_count; i++, chunk++, md++) {
 		chunk->nv_cache = nv_cache;
 		chunk->md = md;
+		chunk->md->version = FTL_NVC_VERSION_CURRENT;
 		nvc_validate_md(nv_cache, md);
 		chunk->offset = offset;
 		offset += nv_cache->chunk_blocks;
 
-		if (nv_cache->nvc_type->ops.is_chunk_active(dev, chunk)) {
+		if (nv_cache->nvc_type->ops.is_chunk_active(dev, chunk->offset)) {
 			nv_cache->chunk_free_count++;
 			TAILQ_INSERT_TAIL(&nv_cache->chunk_free_list, chunk, entry);
 		} else {
@@ -392,9 +496,7 @@ static int
 ftl_chunk_alloc_md_entry(struct ftl_nv_cache_chunk *chunk)
 {
 	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
-	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
 	struct ftl_p2l_map *p2l_map = &chunk->p2l_map;
-	struct ftl_layout_region *region = ftl_layout_region_get(dev, FTL_LAYOUT_REGION_TYPE_NVC_MD);
 
 	p2l_map->chunk_dma_md = ftl_mempool_get(nv_cache->chunk_md_pool);
 
@@ -402,7 +504,7 @@ ftl_chunk_alloc_md_entry(struct ftl_nv_cache_chunk *chunk)
 		return -ENOMEM;
 	}
 
-	memset(p2l_map->chunk_dma_md, 0, region->entry_size * FTL_BLOCK_SIZE);
+	ftl_nv_cache_chunk_md_initialize(p2l_map->chunk_dma_md);
 	return 0;
 }
 
@@ -421,7 +523,7 @@ ftl_chunk_free(struct ftl_nv_cache_chunk *chunk)
 	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
 
 	/* Reset chunk */
-	memset(chunk->md, 0, sizeof(*chunk->md));
+	ftl_nv_cache_chunk_md_initialize(chunk->md);
 
 	TAILQ_INSERT_TAIL(&nv_cache->needs_free_persist_list, chunk, entry);
 	nv_cache->chunk_free_persist_count++;
@@ -431,17 +533,14 @@ static int
 ftl_chunk_alloc_chunk_free_entry(struct ftl_nv_cache_chunk *chunk)
 {
 	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
-	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
 	struct ftl_p2l_map *p2l_map = &chunk->p2l_map;
-	struct ftl_layout_region *region = ftl_layout_region_get(dev, FTL_LAYOUT_REGION_TYPE_NVC_MD);
 
 	p2l_map->chunk_dma_md = ftl_mempool_get(nv_cache->free_chunk_md_pool);
-
 	if (!p2l_map->chunk_dma_md) {
 		return -ENOMEM;
 	}
 
-	memset(p2l_map->chunk_dma_md, 0, region->entry_size * FTL_BLOCK_SIZE);
+	ftl_nv_cache_chunk_md_initialize(p2l_map->chunk_dma_md);
 	return 0;
 }
 
@@ -1525,14 +1624,14 @@ ftl_nv_cache_load_state(struct ftl_nv_cache *nv_cache)
 
 	if (dev->sb->upgrade_ready) {
 		/*
-		 * During upgrade some transition are allowed:
+		 * During upgrade some transitions are allowed:
 		 *
 		 * 1. FREE -> INACTIVE
 		 * 2. INACTIVE -> FREE
 		 */
 		chunk = nv_cache->chunks;
 		for (i = 0; i < nv_cache->chunk_count; i++, chunk++) {
-			active = nv_cache->nvc_type->ops.is_chunk_active(dev, chunk);
+			active = nv_cache->nvc_type->ops.is_chunk_active(dev, chunk->offset);
 
 			if (chunk->md->state == FTL_CHUNK_STATE_FREE) {
 				if (!active) {
@@ -1556,7 +1655,12 @@ ftl_nv_cache_load_state(struct ftl_nv_cache *nv_cache)
 			goto error;
 		}
 
-		active = nv_cache->nvc_type->ops.is_chunk_active(dev, chunk);
+		if (chunk->md->version != FTL_NVC_VERSION_CURRENT) {
+			status = -EINVAL;
+			goto error;
+		}
+
+		active = nv_cache->nvc_type->ops.is_chunk_active(dev, chunk->offset);
 		if (false == active) {
 			if (chunk->md->state != FTL_CHUNK_STATE_INACTIVE) {
 				status = -EINVAL;
@@ -2226,8 +2330,13 @@ restore_chunk_state_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
 	for (i = 0; i < nvc->chunk_count; i++) {
 		chunk = &nvc->chunks[i];
 
-		if (false == nvc->nvc_type->ops.is_chunk_active(dev, chunk) &&
+		if (false == nvc->nvc_type->ops.is_chunk_active(dev, chunk->offset) &&
 		    chunk->md->state != FTL_CHUNK_STATE_INACTIVE) {
+			status = -EINVAL;
+			break;
+		}
+
+		if (chunk->md->version != FTL_NVC_VERSION_CURRENT) {
 			status = -EINVAL;
 			break;
 		}
@@ -2395,7 +2504,7 @@ ftl_nv_cache_halt(struct ftl_nv_cache *nv_cache)
 
 		TAILQ_REMOVE(&nv_cache->chunk_open_list, chunk, entry);
 		chunk_free_p2l_map(chunk);
-		memset(chunk->md, 0, sizeof(*chunk->md));
+		ftl_nv_cache_chunk_md_initialize(chunk->md);
 		assert(nv_cache->chunk_open_count > 0);
 		nv_cache->chunk_open_count--;
 	}
@@ -2494,4 +2603,11 @@ ftl_property_dump_cache_dev(struct spdk_ftl_dev *dev, const struct ftl_property 
 		spdk_json_write_object_end(w);
 	}
 	spdk_json_write_array_end(w);
+}
+
+void
+ftl_nv_cache_chunk_md_initialize(struct ftl_nv_cache_chunk_md *md)
+{
+	memset(md, 0, sizeof(*md));
+	md->version = FTL_NVC_VERSION_CURRENT;
 }

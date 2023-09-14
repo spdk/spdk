@@ -14,6 +14,7 @@
 #include "ftl_sb.h"
 #include "nvc/ftl_nvc_dev.h"
 #include "utils/ftl_layout_tracker_bdev.h"
+#include "upgrade/ftl_layout_upgrade.h"
 
 enum ftl_layout_setup_mode {
 	FTL_LAYOUT_SETUP_MODE_LOAD_CURRENT = 0,
@@ -172,23 +173,6 @@ get_num_user_lbas(struct spdk_ftl_dev *dev)
 	blocks = (blocks * (100 - dev->conf.overprovisioning)) / 100;
 
 	return blocks;
-}
-
-static uint64_t
-layout_blocks_left(struct spdk_ftl_dev *dev, struct ftl_layout_tracker_bdev *layout_tracker)
-{
-	uint64_t max_reg_size = 0;
-	const struct ftl_layout_tracker_bdev_region_props *reg_search_ctx = NULL;
-
-	while (true) {
-		ftl_layout_tracker_bdev_find_next_region(layout_tracker, FTL_LAYOUT_REGION_TYPE_FREE,
-				&reg_search_ctx);
-		if (!reg_search_ctx) {
-			break;
-		}
-		max_reg_size = spdk_max(max_reg_size, reg_search_ctx->blk_sz);
-	}
-	return max_reg_size;
 }
 
 struct ftl_layout_region *
@@ -362,8 +346,6 @@ layout_setup_legacy_default_nvc(struct spdk_ftl_dev *dev)
 	/*
 	 * Initialize NV Cache metadata
 	 */
-	layout->nvc.chunk_count = chunk_count;
-
 	if (legacy_layout_region_open_nvc(dev, FTL_LAYOUT_REGION_TYPE_NVC_MD, FTL_NVC_VERSION_1,
 					  sizeof(struct ftl_nv_cache_chunk_md), chunk_count)) {
 		goto error;
@@ -430,7 +412,7 @@ static int
 layout_setup_default_nvc(struct spdk_ftl_dev *dev)
 {
 	int region_type;
-	uint64_t left, l2p_blocks;
+	uint64_t l2p_blocks;
 	struct ftl_layout *layout = &dev->layout;
 
 	/* Initialize L2P region */
@@ -483,9 +465,6 @@ layout_setup_default_nvc(struct spdk_ftl_dev *dev)
 	/*
 	 * Initialize NV Cache metadata
 	 */
-	left = layout_blocks_left(dev, dev->nvc_layout_tracker);
-	layout->nvc.chunk_count = (left * FTL_BLOCK_SIZE) /
-				  FTL_NV_CACHE_CHUNK_SIZE(ftl_get_num_blocks_in_band(dev));
 	if (0 == layout->nvc.chunk_count) {
 		goto error;
 	}
@@ -502,14 +481,6 @@ layout_setup_default_nvc(struct spdk_ftl_dev *dev)
 		goto error;
 	}
 	layout->region[FTL_LAYOUT_REGION_TYPE_NVC_MD].mirror_type = FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR;
-
-	/*
-	 * Initialize data region on NV cache
-	 */
-	if (layout_region_create_nvc(dev, FTL_LAYOUT_REGION_TYPE_DATA_NVC, 0,
-				     layout->nvc.chunk_data_blocks * FTL_BLOCK_SIZE, layout->nvc.chunk_count)) {
-		goto error;
-	}
 
 	return 0;
 
@@ -558,7 +529,6 @@ layout_load(struct spdk_ftl_dev *dev)
 	if (ftl_superblock_load_blob_area(dev)) {
 		return -1;
 	}
-	dev->layout.nvc.chunk_count = dev->layout.region[FTL_LAYOUT_REGION_TYPE_DATA_NVC].num_entries;
 	if (ftl_superblock_md_layout_apply(dev)) {
 		return -1;
 	}
@@ -632,9 +602,8 @@ ftl_layout_setup(struct spdk_ftl_dev *dev)
 	/* Setup P2L ckpt */
 	layout->p2l.ckpt_pages = spdk_divide_round_up(ftl_get_num_blocks_in_band(dev), dev->xfer_size);
 
-	layout->nvc.chunk_data_blocks =
-		FTL_NV_CACHE_CHUNK_DATA_SIZE(ftl_get_num_blocks_in_band(dev)) / FTL_BLOCK_SIZE;
-	layout->nvc.chunk_meta_size = FTL_NV_CACHE_CHUNK_MD_SIZE;
+	layout->nvc.chunk_data_blocks = ftl_get_num_blocks_in_band(dev);
+	layout->nvc.chunk_count = layout->nvc.total_blocks / ftl_get_num_blocks_in_band(dev);
 	layout->nvc.chunk_tail_md_num_blocks = ftl_nv_cache_chunk_tail_md_num_blocks(&dev->nv_cache);
 
 	layout->base.num_usable_blocks = ftl_get_num_blocks_in_band(dev);
@@ -665,6 +634,11 @@ ftl_layout_setup(struct spdk_ftl_dev *dev)
 	}
 
 	if (ftl_validate_regions(dev, layout)) {
+		return -EINVAL;
+	}
+
+	/* Now drop the unused regions in preparation for the layout upgrade */
+	if (ftl_layout_upgrade_drop_regions(dev)) {
 		return -EINVAL;
 	}
 
