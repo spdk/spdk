@@ -70,8 +70,9 @@ DEFINE_STUB(ftl_p2l_ckpt_acquire, struct ftl_p2l_ckpt *, (struct spdk_ftl_dev *d
 DEFINE_STUB_V(ftl_p2l_ckpt_release, (struct spdk_ftl_dev *dev, struct ftl_p2l_ckpt *ckpt));
 DEFINE_STUB(ftl_l2p_get, ftl_addr, (struct spdk_ftl_dev *dev, uint64_t lba), 0);
 DEFINE_STUB_V(ftl_mempool_put, (struct ftl_mempool *mpool, void *element));
-DEFINE_STUB_V(ftl_property_dump_bool, (const struct ftl_property *property,
-				       struct spdk_json_write_ctx *w))
+DEFINE_STUB_V(ftl_property_dump_bool, (struct spdk_ftl_dev *dev,
+				       const struct ftl_property *property,
+				       struct spdk_json_write_ctx *w));
 DEFINE_STUB(ftl_property_decode_bool, int, (struct spdk_ftl_dev *dev, struct ftl_property *property,
 		const char *value, size_t value_size, void *output, size_t output_size), 0);
 DEFINE_STUB_V(ftl_property_set_generic, (struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt,

@@ -26,25 +26,29 @@ void ftl_properties_deinit(struct spdk_ftl_dev *dev);
 /**
  * @brief A function to dump the FTL property which type is bool
  */
-void ftl_property_dump_bool(const struct ftl_property *property, struct spdk_json_write_ctx *w);
+void ftl_property_dump_bool(struct spdk_ftl_dev *dev, const struct ftl_property *property,
+			    struct spdk_json_write_ctx *w);
 
 /**
  * @brief A function to dump the FTL property which type is uint64
  */
-void ftl_property_dump_uint64(const struct ftl_property *property, struct spdk_json_write_ctx *w);
+void ftl_property_dump_uint64(struct spdk_ftl_dev *dev, const struct ftl_property *property,
+			      struct spdk_json_write_ctx *w);
 
 /**
  * @brief A function to dump the FTL property which type is uint32
  */
-void ftl_property_dump_uint32(const struct ftl_property *property, struct spdk_json_write_ctx *w);
+void ftl_property_dump_uint32(struct spdk_ftl_dev *dev, const struct ftl_property *property,
+			      struct spdk_json_write_ctx *w);
 
 /**
  * @brief Dump the value of property into the specified JSON RPC request
  *
+ * @param dev FTL device
  * @param property The property to dump to the JSON RPC request
  * @param[out] w JSON RPC request
  */
-typedef void (*ftl_property_dump_fn)(const struct ftl_property *property,
+typedef void (*ftl_property_dump_fn)(struct spdk_ftl_dev *dev, const struct ftl_property *property,
 				     struct spdk_json_write_ctx *w);
 
 /**
