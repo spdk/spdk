@@ -600,7 +600,9 @@ ftl_layout_setup(struct spdk_ftl_dev *dev)
 	layout->l2p.lbas_in_page = FTL_BLOCK_SIZE / layout->l2p.addr_size;
 
 	/* Setup P2L ckpt */
-	layout->p2l.ckpt_pages = spdk_divide_round_up(ftl_get_num_blocks_in_band(dev), dev->xfer_size);
+	layout->p2l.pages_per_xfer = spdk_divide_round_up(dev->xfer_size, FTL_NUM_P2L_ENTRIES_NO_VSS);
+	layout->p2l.ckpt_pages = spdk_divide_round_up(ftl_get_num_blocks_in_band(dev),
+				 dev->xfer_size) * layout->p2l.pages_per_xfer;
 
 	layout->nvc.chunk_data_blocks = ftl_get_num_blocks_in_band(dev);
 	layout->nvc.chunk_count = layout->nvc.total_blocks / ftl_get_num_blocks_in_band(dev);

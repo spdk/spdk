@@ -1144,6 +1144,11 @@ ftl_md_create_region_flags(struct spdk_ftl_dev *dev, int region_type)
 			flags |= FTL_MD_CREATE_SHM_NEW;
 		}
 		break;
+	case FTL_LAYOUT_REGION_TYPE_P2L_CKPT_GC:
+	case FTL_LAYOUT_REGION_TYPE_P2L_CKPT_GC_NEXT:
+	case FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP:
+	case FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP_NEXT:
+		return FTL_MD_CREATE_SPDK_BUF;
 	default:
 		return FTL_MD_CREATE_HEAP;
 	}
@@ -1164,7 +1169,11 @@ ftl_md_destroy_region_flags(struct spdk_ftl_dev *dev, int region_type)
 			return FTL_MD_DESTROY_SHM_KEEP;
 		}
 		break;
-
+	case FTL_LAYOUT_REGION_TYPE_P2L_CKPT_GC:
+	case FTL_LAYOUT_REGION_TYPE_P2L_CKPT_GC_NEXT:
+	case FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP:
+	case FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP_NEXT:
+		return FTL_MD_DESTROY_SPDK_BUF;
 	default:
 		break;
 	}

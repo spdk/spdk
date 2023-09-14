@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2022 Intel Corporation.
+ *   Copyright 2023 Solidigm All Rights Reserved
  *   All rights reserved.
  */
 
@@ -12,6 +13,7 @@
 #include "spdk/uuid.h"
 
 #include "utils/ftl_bitmap.h"
+#include "utils/ftl_md.h"
 
 /* Marks address as invalid */
 #define FTL_ADDR_INVALID	((ftl_addr)-1)
@@ -22,8 +24,9 @@
 
 #define FTL_P2L_VERSION_0	0
 #define FTL_P2L_VERSION_1	1
+#define FTL_P2L_VERSION_2	2
 
-#define FTL_P2L_VERSION_CURRENT FTL_P2L_VERSION_1
+#define FTL_P2L_VERSION_CURRENT FTL_P2L_VERSION_2
 
 /*
  * This type represents address in the ftl address space. Values from 0 to based bdev size are
@@ -62,7 +65,7 @@ struct ftl_p2l_map_entry {
 	uint64_t seq_id;
 };
 
-/* Number of LBAs that could be stored in a single block */
+/* Number of p2l entries that could be stored in a single block for bands */
 #define FTL_NUM_LBA_IN_BLOCK	(FTL_BLOCK_SIZE / sizeof(struct ftl_p2l_map_entry))
 
 /*
@@ -102,14 +105,25 @@ struct ftl_p2l_map {
 
 struct ftl_p2l_sync_ctx {
 	struct ftl_band *band;
-	uint64_t	page_start;
-	uint64_t	page_end;
+	uint64_t	xfer_start;
+	uint64_t	xfer_end;
 	int		md_region;
 };
 
 struct ftl_p2l_ckpt_page {
 	struct ftl_p2l_map_entry map[FTL_NUM_LBA_IN_BLOCK];
 };
+
+struct ftl_p2l_ckpt_page_no_vss {
+	union ftl_md_vss metadata;
+	struct ftl_p2l_map_entry map[FTL_NUM_LBA_IN_BLOCK - sizeof(union ftl_md_vss) / sizeof(
+								  struct ftl_p2l_map_entry)];
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct ftl_p2l_ckpt_page_no_vss) == FTL_BLOCK_SIZE,
+		   "ftl_p2l_ckpt_page_no_vss incorrect size");
+
+#define FTL_NUM_P2L_ENTRIES_NO_VSS (SPDK_COUNTOF_MEMBER(struct ftl_p2l_ckpt_page_no_vss, map))
+
 
 struct ftl_p2l_ckpt;
 struct ftl_band;

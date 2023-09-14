@@ -186,10 +186,6 @@ static const struct ftl_mngt_process_desc desc_first_start = {
 			.action = ftl_mngt_unmap_clear,
 		},
 		{
-			.name = "Free P2L region bufs",
-			.action = ftl_mngt_p2l_free_bufs,
-		},
-		{
 			.name = "Set FTL dirty state",
 			.action = ftl_mngt_set_dirty,
 		},
@@ -251,10 +247,6 @@ static const struct ftl_mngt_process_desc desc_clean_start = {
 		{
 			.name = "Finalize band initialization",
 			.action = ftl_mngt_finalize_init_bands,
-		},
-		{
-			.name = "Free P2L region bufs",
-			.action = ftl_mngt_p2l_free_bufs,
 		},
 		{
 			.name = "Start core poller",

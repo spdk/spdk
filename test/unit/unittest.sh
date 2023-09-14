@@ -61,6 +61,7 @@ function unittest_ftl() {
 	$valgrind $testdir/lib/ftl/ftl_l2p/ftl_l2p_ut
 	$valgrind $testdir/lib/ftl/ftl_sb/ftl_sb_ut
 	$valgrind $testdir/lib/ftl/ftl_layout_upgrade/ftl_layout_upgrade_ut
+	$valgrind $testdir/lib/ftl/ftl_p2l.c/ftl_p2l_ut
 }
 
 function unittest_iscsi() {

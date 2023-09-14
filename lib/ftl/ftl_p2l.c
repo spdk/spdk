@@ -21,6 +21,7 @@ struct ftl_p2l_ckpt {
 	struct ftl_md			*md;
 	struct ftl_layout_region	*layout_region;
 	uint64_t			num_pages;
+	uint64_t			pages_per_xfer;
 
 #if defined(DEBUG)
 	uint64_t			dbg_bmp_sz;
@@ -40,14 +41,16 @@ ftl_p2l_ckpt_new(struct spdk_ftl_dev *dev, int region_type)
 		return NULL;
 	}
 
-	ckpt->vss_md_page = ftl_md_vss_buf_alloc(region, region->num_entries);
 	ckpt->layout_region = region;
 	ckpt->md = dev->layout.md[region_type];
-	ckpt->num_pages = spdk_divide_round_up(ftl_get_num_blocks_in_band(dev), FTL_NUM_LBA_IN_BLOCK);
-
-	if (!ckpt->vss_md_page) {
-		free(ckpt);
-		return NULL;
+	ckpt->pages_per_xfer = dev->layout.p2l.pages_per_xfer;
+	ckpt->num_pages = dev->layout.p2l.ckpt_pages;
+	if (dev->nv_cache.md_size) {
+		ckpt->vss_md_page = ftl_md_vss_buf_alloc(region, region->num_entries);
+		if (!ckpt->vss_md_page) {
+			free(ckpt);
+			return NULL;
+		}
 	}
 
 #if defined(DEBUG)
@@ -159,54 +162,58 @@ void
 ftl_p2l_ckpt_issue(struct ftl_rq *rq)
 {
 	struct ftl_rq_entry *iter = rq->entries;
+	struct spdk_ftl_dev *dev = rq->dev;
 	ftl_addr addr = rq->io.addr;
 	struct ftl_p2l_ckpt *ckpt = NULL;
-	struct ftl_p2l_ckpt_page *map_page;
-	union ftl_md_vss *md_page;
+	struct ftl_p2l_ckpt_page_no_vss *map_page;
 	struct ftl_band *band;
-	uint64_t band_offs, p2l_map_page_no, i;
+	uint64_t band_offs, p2l_map_page_no, cur_page, i, j;
 
 	assert(rq);
 	band = rq->io.band;
 	ckpt = band->p2l_map.p2l_ckpt;
 	assert(ckpt);
+	assert(rq->num_blocks == dev->xfer_size);
 
 	/* Derive the P2L map page no */
-	band_offs =  ftl_band_block_offset_from_addr(band, rq->io.addr);
-	p2l_map_page_no = band_offs / FTL_NUM_LBA_IN_BLOCK;
-	assert((band_offs + rq->num_blocks - 1) / FTL_NUM_LBA_IN_BLOCK == p2l_map_page_no);
+	band_offs = ftl_band_block_offset_from_addr(band, rq->io.addr);
+	p2l_map_page_no = band_offs / dev->xfer_size * ckpt->pages_per_xfer;
 	assert(p2l_map_page_no < ckpt->num_pages);
 
-	/* Get the corresponding P2L map page - the underlying stored data is the same as in the end metadata of band P2L (ftl_p2l_map_entry),
-	 * however we're interested in a whole page (4KiB) worth of content
+	/* Get the corresponding P2L map page - the underlying stored data has the same entries as in the end metadata of band P2L (ftl_p2l_map_entry),
+	 * however we're interested in a whole page (4KiB) worth of content and submit it in two requests with additional metadata
 	 */
-	map_page = ((struct ftl_p2l_ckpt_page *)band->p2l_map.band_map) + p2l_map_page_no;
+	map_page = ftl_md_get_buffer(ckpt->md);
 	assert(map_page);
-
-	/* Set up the md */
-	md_page = &ckpt->vss_md_page[p2l_map_page_no];
-	md_page->p2l_ckpt.seq_id = band->md->seq;
-	assert(rq->num_blocks == FTL_NUM_LBA_IN_BLOCK);
-
-	/* Update the band P2L map */
-	for (i = 0; i < rq->num_blocks; i++, iter++) {
-		if (iter->lba != FTL_LBA_INVALID) {
-			/* This is compaction or reloc */
-			assert(!ftl_addr_in_nvc(rq->dev, addr));
-			ftl_band_set_p2l(band, iter->lba, addr, iter->seq_id);
+	map_page += p2l_map_page_no;
+	i = 0;
+	for (cur_page = 0; cur_page < ckpt->pages_per_xfer; cur_page++) {
+		struct ftl_p2l_ckpt_page_no_vss *page = map_page + cur_page;
+		/* Update the band P2L map */
+		for (j = 0; i < rq->num_blocks && j < FTL_NUM_P2L_ENTRIES_NO_VSS; i++, iter++, j++) {
+			if (iter->lba != FTL_LBA_INVALID) {
+				/* This is compaction or reloc */
+				assert(!ftl_addr_in_nvc(rq->dev, addr));
+				ftl_band_set_p2l(band, iter->lba, addr, iter->seq_id);
+			}
+			page->map[j].lba = iter->lba;
+			page->map[j].seq_id = iter->seq_id;
+			addr = ftl_band_next_addr(band, addr, 1);
 		}
-		addr = ftl_band_next_addr(band, addr, 1);
-	}
+
+		/* Set up the md */
+		page->metadata.p2l_ckpt.seq_id = band->md->seq;
+		page->metadata.p2l_ckpt.count = j;
 
 #if defined(DEBUG)
-	ftl_bitmap_set(ckpt->bmp, p2l_map_page_no);
+		ftl_bitmap_set(ckpt->bmp, p2l_map_page_no + cur_page);
 #endif
-
-	md_page->p2l_ckpt.p2l_checksum = spdk_crc32c_update(map_page,
-					 rq->num_blocks * sizeof(struct ftl_p2l_map_entry), 0);
+		page->metadata.p2l_ckpt.p2l_checksum = spdk_crc32c_update(page->map,
+						       FTL_NUM_P2L_ENTRIES_NO_VSS * sizeof(struct ftl_p2l_map_entry), 0);
+	}
 	/* Save the P2L map entry */
-	ftl_md_persist_entries(ckpt->md, p2l_map_page_no, 1, map_page, md_page, ftl_p2l_ckpt_issue_end,
-			       rq, &rq->md_persist_entry_ctx);
+	ftl_md_persist_entries(ckpt->md, p2l_map_page_no, ckpt->pages_per_xfer, map_page, NULL,
+			       ftl_p2l_ckpt_issue_end, rq, &rq->md_persist_entry_ctx);
 }
 
 #if defined(DEBUG)
@@ -226,13 +233,13 @@ ftl_p2l_validate_ckpt(struct ftl_band *band)
 {
 	struct ftl_p2l_ckpt *ckpt = band->p2l_map.p2l_ckpt;
 	uint64_t num_blks_tail_md = ftl_tail_md_num_blocks(band->dev);
-	uint64_t num_pages_tail_md = num_blks_tail_md / FTL_NUM_LBA_IN_BLOCK;
+	uint64_t num_pages_tail_md = num_blks_tail_md / band->dev->xfer_size * ckpt->pages_per_xfer;
 
 	if (!ckpt) {
 		return;
 	}
 
-	assert(num_blks_tail_md % FTL_NUM_LBA_IN_BLOCK == 0);
+	assert(num_blks_tail_md % band->dev->xfer_size == 0);
 
 	/* all data pages written */
 	ftl_p2l_validate_pages(band, ckpt,
@@ -281,9 +288,9 @@ ftl_p2l_ckpt_persist_end(int status, void *arg)
 	}
 
 	ctx = ftl_mngt_get_step_ctx(mngt);
-	ctx->page_start++;
+	ctx->xfer_start++;
 
-	if (ctx->page_start == ctx->page_end) {
+	if (ctx->xfer_start == ctx->xfer_end) {
 		ctx->md_region++;
 		ftl_mngt_continue_step(mngt);
 	} else {
@@ -295,21 +302,38 @@ static void
 ftl_mngt_persist_band_p2l(struct ftl_mngt_process *mngt, struct ftl_p2l_sync_ctx *ctx)
 {
 	struct ftl_band *band = ctx->band;
-	union ftl_md_vss *md_page;
-	struct ftl_p2l_ckpt_page *map_page;
+	struct ftl_p2l_ckpt_page_no_vss *map_page;
+	struct ftl_p2l_map_entry *band_entries;
 	struct ftl_p2l_ckpt *ckpt;
+	struct spdk_ftl_dev *dev = band->dev;
+	uint64_t cur_page;
+	uint64_t lbas_synced = 0;
 
 	ckpt = band->p2l_map.p2l_ckpt;
 
-	map_page = ((struct ftl_p2l_ckpt_page *)band->p2l_map.band_map) + ctx->page_start;
+	map_page = ftl_md_get_buffer(ckpt->md);
+	assert(map_page);
 
-	md_page = &ckpt->vss_md_page[ctx->page_start];
-	md_page->p2l_ckpt.seq_id = band->md->seq;
-	md_page->p2l_ckpt.p2l_checksum = spdk_crc32c_update(map_page,
-					 FTL_NUM_LBA_IN_BLOCK * sizeof(struct ftl_p2l_map_entry), 0);
+	map_page += ctx->xfer_start * ckpt->pages_per_xfer;
 
+	for (cur_page = 0; cur_page < ckpt->pages_per_xfer; cur_page++) {
+		struct ftl_p2l_ckpt_page_no_vss *page = map_page + cur_page;
+		uint64_t lbas_to_copy = spdk_min(FTL_NUM_P2L_ENTRIES_NO_VSS, dev->xfer_size - lbas_synced);
+
+		band_entries = band->p2l_map.band_map + ctx->xfer_start * dev->xfer_size + lbas_synced;
+		memcpy(page->map, band_entries, lbas_to_copy * sizeof(struct ftl_p2l_map_entry));
+
+		page->metadata.p2l_ckpt.seq_id = band->md->seq;
+		page->metadata.p2l_ckpt.p2l_checksum = spdk_crc32c_update(page->map,
+						       FTL_NUM_P2L_ENTRIES_NO_VSS * sizeof(struct ftl_p2l_map_entry), 0);
+		page->metadata.p2l_ckpt.count = lbas_to_copy;
+		lbas_synced += lbas_to_copy;
+	}
+
+	assert(lbas_synced == dev->xfer_size);
 	/* Save the P2L map entry */
-	ftl_md_persist_entries(ckpt->md, ctx->page_start, 1, map_page, md_page,
+	ftl_md_persist_entries(ckpt->md, ctx->xfer_start * ckpt->pages_per_xfer, ckpt->pages_per_xfer,
+			       map_page, NULL,
 			       ftl_p2l_ckpt_persist_end, mngt, &band->md_persist_entry_ctx);
 }
 
@@ -318,7 +342,7 @@ ftl_mngt_persist_bands_p2l(struct ftl_mngt_process *mngt)
 {
 	struct ftl_p2l_sync_ctx *ctx = ftl_mngt_get_step_ctx(mngt);
 	struct ftl_band *band;
-	uint64_t band_offs, p2l_map_page_no;
+	uint64_t band_offs, num_xfers;
 
 	if (ctx->md_region > FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MAX) {
 		ftl_mngt_next_step(mngt);
@@ -329,22 +353,22 @@ ftl_mngt_persist_bands_p2l(struct ftl_mngt_process *mngt)
 
 	/* No band has the md region assigned (shutdown happened before next_band was assigned) */
 	if (!band) {
-		ctx->page_start = 0;
-		ctx->page_end = 0;
+		ctx->xfer_start = 0;
+		ctx->xfer_end = 0;
 		ctx->md_region++;
 		ftl_mngt_continue_step(mngt);
 		return;
 	}
 
 	band_offs = ftl_band_block_offset_from_addr(band, band->md->iter.addr);
-	p2l_map_page_no = band_offs / FTL_NUM_LBA_IN_BLOCK;
+	num_xfers = band_offs / band->dev->xfer_size;
 
-	ctx->page_start = 0;
-	ctx->page_end = p2l_map_page_no;
+	ctx->xfer_start = 0;
+	ctx->xfer_end = num_xfers;
 	ctx->band = band;
 
 	/* Band wasn't written to - no need to sync its P2L */
-	if (ctx->page_end == 0) {
+	if (ctx->xfer_end == 0) {
 		ctx->md_region++;
 		ftl_mngt_continue_step(mngt);
 		return;
@@ -358,12 +382,12 @@ ftl_mngt_p2l_ckpt_get_seq_id(struct spdk_ftl_dev *dev, int md_region)
 {
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_md *md = layout->md[md_region];
-	union ftl_md_vss *page_md_buf = ftl_md_get_vss_buffer(md);
+	struct ftl_p2l_ckpt_page_no_vss *page = ftl_md_get_buffer(md);
 	uint64_t page_no, seq_id = 0;
 
-	for (page_no = 0; page_no < layout->p2l.ckpt_pages; page_no++, page_md_buf++) {
-		if (seq_id < page_md_buf->p2l_ckpt.seq_id) {
-			seq_id = page_md_buf->p2l_ckpt.seq_id;
+	for (page_no = 0; page_no < layout->p2l.ckpt_pages; page_no++, page++) {
+		if (seq_id < page->metadata.p2l_ckpt.seq_id) {
+			seq_id = page->metadata.p2l_ckpt.seq_id;
 		}
 	}
 	return seq_id;
@@ -374,10 +398,11 @@ ftl_mngt_p2l_ckpt_restore(struct ftl_band *band, uint32_t md_region, uint64_t se
 {
 	struct ftl_layout *layout = &band->dev->layout;
 	struct ftl_md *md = layout->md[md_region];
-	union ftl_md_vss *page_md_buf = ftl_md_get_vss_buffer(md);
-	struct ftl_p2l_ckpt_page *page = ftl_md_get_buffer(md);
-	struct ftl_p2l_ckpt_page *map_page;
-	uint64_t page_no, page_max = 0;
+	struct ftl_p2l_ckpt_page_no_vss *page = ftl_md_get_buffer(md);
+	struct ftl_p2l_map_entry *band_entries;
+	struct spdk_ftl_dev *dev = band->dev;
+	uint64_t page_no, page_max = 0, xfer_count, lbas_synced;
+	uint64_t pages_per_xfer = spdk_divide_round_up(dev->xfer_size, FTL_NUM_P2L_ENTRIES_NO_VSS);
 	bool page_found = false;
 
 	assert(band->md->p2l_md_region == md_region);
@@ -390,28 +415,28 @@ ftl_mngt_p2l_ckpt_restore(struct ftl_band *band, uint32_t md_region, uint64_t se
 		return -EINVAL;
 	}
 
-	for (page_no = 0; page_no < layout->p2l.ckpt_pages; page_no++, page++, page_md_buf++) {
-		if (page_md_buf->p2l_ckpt.seq_id != seq_id) {
+	for (page_no = 0; page_no < layout->p2l.ckpt_pages; page_no++, page++) {
+		if (page->metadata.p2l_ckpt.seq_id != seq_id) {
 			continue;
 		}
 
 		page_max = page_no;
 		page_found = true;
 
-		/* Get the corresponding P2L map page - the underlying stored data is the same as in the end metadata of band P2L (ftl_p2l_map_entry),
-		 * however we're interested in a whole page (4KiB) worth of content
-		 */
-		map_page = ((struct ftl_p2l_ckpt_page *)band->p2l_map.band_map) + page_no;
-
-		if (page_md_buf->p2l_ckpt.p2l_checksum &&
-		    page_md_buf->p2l_ckpt.p2l_checksum != spdk_crc32c_update(page,
-				    FTL_NUM_LBA_IN_BLOCK * sizeof(struct ftl_p2l_map_entry), 0)) {
+		if (page->metadata.p2l_ckpt.p2l_checksum &&
+		    page->metadata.p2l_ckpt.p2l_checksum != spdk_crc32c_update(page->map,
+				    FTL_NUM_P2L_ENTRIES_NO_VSS * sizeof(struct ftl_p2l_map_entry), 0)) {
 			ftl_stats_crc_error(band->dev, FTL_STATS_TYPE_MD_NV_CACHE);
 			return -EINVAL;
 		}
 
+		xfer_count = page_no / pages_per_xfer;
+		lbas_synced = (page_no % pages_per_xfer) * FTL_NUM_P2L_ENTRIES_NO_VSS;
+
 		/* Restore the page from P2L checkpoint */
-		*map_page = *page;
+		band_entries = band->p2l_map.band_map + xfer_count * dev->xfer_size + lbas_synced;
+
+		memcpy(band_entries, page->map, page->metadata.p2l_ckpt.count * sizeof(struct ftl_p2l_map_entry));
 	}
 
 	assert(page_found);
@@ -423,16 +448,21 @@ ftl_mngt_p2l_ckpt_restore(struct ftl_band *band, uint32_t md_region, uint64_t se
 	band->p2l_map.p2l_ckpt = ftl_p2l_ckpt_acquire_region_type(
 					 band->dev, md_region);
 
+	/* Align page_max to xfer_size aligned pages */
+	if ((page_max + 1) % pages_per_xfer != 0) {
+		page_max += (pages_per_xfer - page_max % pages_per_xfer - 1);
+	}
 #ifdef DEBUG
 	/* Set check point valid map for validation */
-	struct ftl_p2l_ckpt *ckpt = band->p2l_map.p2l_ckpt ;
+	struct ftl_p2l_ckpt *ckpt = band->p2l_map.p2l_ckpt;
 	for (uint64_t i = 0; i <= page_max; i++) {
 		ftl_bitmap_set(ckpt->bmp, i);
 	}
 #endif
 
 	ftl_band_iter_init(band);
-	ftl_band_iter_set(band, (page_max + 1) * FTL_NUM_LBA_IN_BLOCK);
+	/* Align page max to xfer size and set iter */
+	ftl_band_iter_set(band, (page_max / band->p2l_map.p2l_ckpt->pages_per_xfer + 1) * dev->xfer_size);
 
 	return 0;
 }
@@ -466,19 +496,18 @@ ftl_mngt_p2l_ckpt_restore_clean(struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_layout *layout = &dev->layout;
-	struct ftl_p2l_ckpt_page *page, *map_page;
+	struct ftl_p2l_ckpt_page_no_vss *page;
 	enum ftl_layout_region_type md_region = band->md->p2l_md_region;
+	struct ftl_p2l_ckpt *ckpt;
 	uint64_t page_no;
-	uint64_t num_written_pages;
-	union ftl_md_vss *page_md_buf;
+	uint64_t num_written_pages, lbas_synced;
 
 	if (md_region < FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MIN ||
 	    md_region > FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MAX) {
 		return -EINVAL;
 	}
 
-	assert(band->md->iter.offset % FTL_NUM_LBA_IN_BLOCK == 0);
-	num_written_pages = band->md->iter.offset / FTL_NUM_LBA_IN_BLOCK;
+	assert(band->md->iter.offset % dev->xfer_size == 0);
 
 	/* Associate band with md region before shutdown */
 	if (!band->p2l_map.p2l_ckpt) {
@@ -490,22 +519,23 @@ ftl_mngt_p2l_ckpt_restore_clean(struct ftl_band *band)
 		return 0;
 	}
 
+	ckpt = band->p2l_map.p2l_ckpt;
+	num_written_pages = band->md->iter.offset / dev->xfer_size * ckpt->pages_per_xfer;
+
 	page_no = 0;
+	lbas_synced = 0;
 
 	/* Restore P2L map up to last written page */
-	page_md_buf = ftl_md_get_vss_buffer(layout->md[md_region]);
 	page = ftl_md_get_buffer(layout->md[md_region]);
 
-	for (; page_no < num_written_pages; page_no++, page++, page_md_buf++) {
-		if (page_md_buf->p2l_ckpt.seq_id != band->md->seq) {
-			assert(page_md_buf->p2l_ckpt.seq_id == band->md->seq);
-		}
 
-		/* Get the corresponding P2L map page */
-		map_page = ((struct ftl_p2l_ckpt_page *)band->p2l_map.band_map) + page_no;
-
+	for (; page_no < num_written_pages; page_no++, page++) {
+		assert(page->metadata.p2l_ckpt.seq_id == band->md->seq);
 		/* Restore the page from P2L checkpoint */
-		*map_page = *page;
+		memcpy(band->p2l_map.band_map + lbas_synced, page->map,
+		       page->metadata.p2l_ckpt.count * sizeof(struct ftl_p2l_map_entry));
+
+		lbas_synced += page->metadata.p2l_ckpt.count;
 
 #if defined(DEBUG)
 		assert(ftl_bitmap_get(band->p2l_map.p2l_ckpt->bmp, page_no) == false);
@@ -513,7 +543,9 @@ ftl_mngt_p2l_ckpt_restore_clean(struct ftl_band *band)
 #endif
 	}
 
-	assert(page_md_buf->p2l_ckpt.seq_id < band->md->seq);
+	assert(lbas_synced % dev->xfer_size == 0);
+
+	assert(page->metadata.p2l_ckpt.seq_id < band->md->seq);
 
 	return 0;
 }
@@ -533,8 +565,8 @@ ftl_mngt_p2l_ckpt_restore_shm_clean(struct ftl_band *band)
 	uint64_t page_no;
 	uint64_t num_written_pages;
 
-	assert(band->md->iter.offset % FTL_NUM_LBA_IN_BLOCK == 0);
-	num_written_pages = band->md->iter.offset / FTL_NUM_LBA_IN_BLOCK;
+	assert(band->md->iter.offset % dev->xfer_size == 0);
+	num_written_pages = band->md->iter.offset / dev->xfer_size * band->p2l_map.p2l_ckpt->pages_per_xfer;
 
 	/* Band was opened but no data was written */
 	if (band->md->iter.offset == 0) {

@@ -146,6 +146,8 @@ struct ftl_layout {
 	struct {
 		/* Number of P2L checkpoint pages */
 		uint64_t ckpt_pages;
+		/* Number of P2L checkpoint pages to be written per write unit size */
+		uint64_t pages_per_xfer;
 	} p2l;
 
 	struct ftl_layout_region region[FTL_LAYOUT_REGION_TYPE_MAX];

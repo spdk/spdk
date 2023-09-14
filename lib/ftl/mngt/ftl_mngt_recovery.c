@@ -925,10 +925,6 @@ static const struct ftl_mngt_process_desc g_desc_recovery = {
 			.action = ftl_mngt_finalize_init_bands,
 		},
 		{
-			.name = "Free P2L region bufs",
-			.action = ftl_mngt_p2l_free_bufs,
-		},
-		{
 			.name = "Start core poller",
 			.action = ftl_mngt_start_core_poller,
 			.cleanup = ftl_mngt_stop_core_poller

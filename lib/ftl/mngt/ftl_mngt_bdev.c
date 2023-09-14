@@ -90,8 +90,10 @@ ftl_mngt_open_base_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 	}
 
 	dev->xfer_size = ftl_get_write_unit_size(bdev);
-	if (dev->xfer_size != FTL_NUM_LBA_IN_BLOCK) {
-		FTL_ERRLOG(dev, "Unsupported xfer_size (%"PRIu64")\n", dev->xfer_size);
+	if (!spdk_u32_is_pow2(dev->xfer_size)) {
+		FTL_ERRLOG(dev,
+			   "Unsupported xfer_size (%"PRIu64") - only power of 2 blocks xfer_size is supported\n",
+			   dev->xfer_size);
 		goto error;
 	}
 
