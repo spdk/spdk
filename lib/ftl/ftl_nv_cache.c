@@ -762,7 +762,7 @@ compaction_process_pad(struct ftl_nv_cache_compactor *compactor)
 }
 
 static void
-compaction_process(struct ftl_nv_cache_compactor *compactor)
+compaction_process_start(struct ftl_nv_cache_compactor *compactor)
 {
 	struct ftl_nv_cache *nv_cache = compactor->nv_cache;
 	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache,
@@ -844,10 +844,24 @@ compaction_process(struct ftl_nv_cache_compactor *compactor)
 }
 
 static void
-compaction_process_start(struct ftl_nv_cache_compactor *compactor)
+compaction_process(struct ftl_nv_cache *nv_cache)
 {
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
+	struct ftl_nv_cache_compactor *compactor;
+
+	if (!is_compaction_required(nv_cache)) {
+		return;
+	}
+
+	compactor = TAILQ_FIRST(&nv_cache->compactor_list);
+	if (!compactor) {
+		return;
+	}
+
+	TAILQ_REMOVE(&nv_cache->compactor_list, compactor, entry);
 	compactor->nv_cache->compaction_active_count++;
-	compaction_process(compactor);
+	compaction_process_start(compactor);
+	ftl_add_io_activity(dev);
 }
 
 static void
@@ -889,7 +903,7 @@ compaction_process_ftl_done(struct ftl_rq *rq)
 	compactor->wr->iter.idx = 0;
 
 	if (is_compaction_required(nv_cache)) {
-		compaction_process(compactor);
+		compaction_process_start(compactor);
 	} else {
 		compactor_deactivate(compactor);
 	}
@@ -967,7 +981,7 @@ compaction_process_finish_read(struct ftl_nv_cache_compactor *compactor)
 		ftl_writer_queue_rq(&dev->writer_user, wr);
 	} else {
 		if (is_compaction_required(compactor->nv_cache)) {
-			compaction_process(compactor);
+			compaction_process_start(compactor);
 		} else {
 			compactor_deactivate(compactor);
 		}
@@ -1330,16 +1344,7 @@ ftl_nv_cache_process(struct spdk_ftl_dev *dev)
 		ftl_add_io_activity(dev);
 	}
 
-	if (is_compaction_required(nv_cache) && !TAILQ_EMPTY(&nv_cache->compactor_list)) {
-		struct ftl_nv_cache_compactor *comp =
-			TAILQ_FIRST(&nv_cache->compactor_list);
-
-		TAILQ_REMOVE(&nv_cache->compactor_list, comp, entry);
-
-		compaction_process_start(comp);
-		ftl_add_io_activity(dev);
-	}
-
+	compaction_process(nv_cache);
 	ftl_chunk_persist_free_state(nv_cache);
 
 	if (spdk_unlikely(nv_cache->halt)) {
