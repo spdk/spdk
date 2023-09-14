@@ -1,4 +1,5 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright 2023 Solidigm All Rights Reserved
  *   Copyright (C) 2022 Intel Corporation.
  *   All rights reserved.
  */
@@ -30,9 +31,6 @@ static bool
 is_buffer_needed(enum ftl_layout_region_type type)
 {
 	switch (type) {
-#ifdef SPDK_FTL_VSS_EMU
-	case FTL_LAYOUT_REGION_TYPE_VSS:
-#endif
 	case FTL_LAYOUT_REGION_TYPE_SB:
 	case FTL_LAYOUT_REGION_TYPE_SB_BASE:
 	case FTL_LAYOUT_REGION_TYPE_DATA_NVC:
@@ -278,14 +276,6 @@ ftl_mngt_persist_super_block(struct spdk_ftl_dev *dev, struct ftl_mngt_process *
 	persist(dev, mngt, FTL_LAYOUT_REGION_TYPE_SB);
 }
 
-#ifdef SPDK_FTL_VSS_EMU
-static void
-ftl_mngt_persist_vss(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
-{
-	persist(dev, mngt, FTL_LAYOUT_REGION_TYPE_VSS);
-}
-#endif
-
 /*
  * Persists all necessary metadata (band state, P2L, etc) during FTL's clean shutdown.
  */
@@ -317,12 +307,6 @@ static const struct ftl_mngt_process_desc desc_persist = {
 			.name = "Persist superblock",
 			.action = ftl_mngt_persist_super_block,
 		},
-#ifdef SPDK_FTL_VSS_EMU
-		{
-			.name = "Persist VSS metadata",
-			.action = ftl_mngt_persist_vss,
-		},
-#endif
 		{}
 	}
 };
@@ -344,12 +328,6 @@ static const struct ftl_mngt_process_desc desc_fast_persist = {
 			.name = "Fast persist NV cache metadata",
 			.action = ftl_mngt_fast_persist_nv_cache_metadata,
 		},
-#ifdef SPDK_FTL_VSS_EMU
-		{
-			.name = "Persist VSS metadata",
-			.action = ftl_mngt_persist_vss,
-		},
-#endif
 		{}
 	}
 };
@@ -522,40 +500,6 @@ static const struct ftl_mngt_process_desc desc_init_sb = {
 	}
 };
 
-#ifdef SPDK_FTL_VSS_EMU
-void
-ftl_mngt_md_init_vss_emu(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
-{
-	struct ftl_layout *layout = &dev->layout;
-	struct ftl_layout_region *region = &layout->region[FTL_LAYOUT_REGION_TYPE_VSS];
-
-	/* Initialize VSS layout */
-	ftl_layout_setup_vss_emu(dev);
-
-	/* Allocate md buf */
-	layout->md[FTL_LAYOUT_REGION_TYPE_VSS] = ftl_md_create(dev, region->current.blocks,
-			region->vss_blksz, NULL, FTL_MD_CREATE_HEAP, region);
-	if (NULL == layout->md[FTL_LAYOUT_REGION_TYPE_VSS]) {
-		ftl_mngt_fail_step(mngt);
-		return;
-	}
-	ftl_mngt_next_step(mngt);
-}
-
-void
-ftl_mngt_md_deinit_vss_emu(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
-{
-	struct ftl_layout *layout = &dev->layout;
-
-	if (layout->md[FTL_LAYOUT_REGION_TYPE_VSS]) {
-		ftl_md_destroy(layout->md[FTL_LAYOUT_REGION_TYPE_VSS], 0);
-		layout->md[FTL_LAYOUT_REGION_TYPE_VSS] = NULL;
-	}
-
-	ftl_mngt_next_step(mngt);
-}
-#endif
-
 void
 ftl_mngt_superblock_init(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
@@ -716,28 +660,12 @@ ftl_mngt_restore_trim_metadata(struct spdk_ftl_dev *dev, struct ftl_mngt_process
 	restore(dev, mngt, FTL_LAYOUT_REGION_TYPE_TRIM_MD);
 }
 
-
-
-#ifdef SPDK_FTL_VSS_EMU
-static void
-ftl_mngt_restore_vss_metadata(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
-{
-	restore(dev, mngt, FTL_LAYOUT_REGION_TYPE_VSS);
-}
-#endif
-
 /*
  * Loads metadata after a clean shutdown.
  */
 static const struct ftl_mngt_process_desc desc_restore = {
 	.name = "Restore metadata",
 	.steps = {
-#ifdef SPDK_FTL_VSS_EMU
-		{
-			.name = "Restore VSS metadata",
-			.action = ftl_mngt_restore_vss_metadata,
-		},
-#endif
 		{
 			.name = "Restore NV cache metadata",
 			.action = ftl_mngt_restore_nv_cache_metadata,

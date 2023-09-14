@@ -1,4 +1,5 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright 2023 Solidigm All Rights Reserved
  *   Copyright (C) 2022 Intel Corporation.
  *   All rights reserved.
  */
@@ -55,13 +56,7 @@ enum ftl_layout_region_type {
 	/* Mirrored information about trim */
 	FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR = 15,
 
-#ifndef SPDK_FTL_VSS_EMU
 	FTL_LAYOUT_REGION_TYPE_MAX = 16
-#else
-	/* VSS region for NV cache VSS emulation */
-	FTL_LAYOUT_REGION_TYPE_VSS = 16,
-	FTL_LAYOUT_REGION_TYPE_MAX = 17,
-#endif
 };
 
 /* last nvc/base region in terms of lba address space */
@@ -172,13 +167,6 @@ int ftl_layout_setup(struct spdk_ftl_dev *dev);
  * @brief Setup FTL layout of a superblock
  */
 int ftl_layout_setup_superblock(struct spdk_ftl_dev *dev);
-
-#ifdef SPDK_FTL_VSS_EMU
-/**
- * @brief Setup FTL layout of VSS emu
- */
-void ftl_layout_setup_vss_emu(struct spdk_ftl_dev *dev);
-#endif
 
 void ftl_layout_dump(struct spdk_ftl_dev *dev);
 int ftl_validate_regions(struct spdk_ftl_dev *dev, struct ftl_layout *layout);

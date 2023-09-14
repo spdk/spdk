@@ -1,4 +1,5 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright 2023 Solidigm All Rights Reserved
  *   Copyright (C) 2022 Intel Corporation.
  *   All rights reserved.
  */
@@ -27,9 +28,6 @@ struct ftl_region_upgrade_desc l2p_upgrade_desc[] = {
 };
 
 static struct ftl_layout_upgrade_desc_list layout_upgrade_desc[] = {
-#ifdef SPDK_FTL_VSS_EMU
-	[FTL_LAYOUT_REGION_TYPE_VSS] = {},
-#endif
 	[FTL_LAYOUT_REGION_TYPE_SB] = {
 		.count = FTL_SB_VERSION_CURRENT,
 		.desc = sb_upgrade_desc,

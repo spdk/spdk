@@ -1,4 +1,5 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright 2023 Solidigm All Rights Reserved
  *   Copyright (C) 2022 Intel Corporation.
  *   All rights reserved.
  */
@@ -79,9 +80,6 @@ static struct ftl_layout_upgrade_desc_list layout_upgrade_desc[] = {
 	},
 	[FTL_LAYOUT_REGION_TYPE_TRIM_MD] = {},
 	[FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR] = {},
-#ifdef SPDK_FTL_VSS_EMU
-	[FTL_LAYOUT_REGION_TYPE_VSS] = {},
-#endif
 };
 
 SPDK_STATIC_ASSERT(sizeof(layout_upgrade_desc) / sizeof(*layout_upgrade_desc) ==

@@ -1066,11 +1066,10 @@ nv_cache_write(void *_io)
 	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
 	int rc;
 
-	rc = ftl_nv_cache_bdev_writev_blocks_with_md(dev,
-			nv_cache->bdev_desc, nv_cache->cache_ioch,
-			io->iov, io->iov_cnt, io->md,
-			ftl_addr_to_nvc_offset(dev, io->addr), io->num_blocks,
-			ftl_nv_cache_submit_cb, io);
+	rc = spdk_bdev_writev_blocks_with_md(nv_cache->bdev_desc, nv_cache->cache_ioch,
+					     io->iov, io->iov_cnt, io->md,
+					     ftl_addr_to_nvc_offset(dev, io->addr), io->num_blocks,
+					     ftl_nv_cache_submit_cb, io);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
 			struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);

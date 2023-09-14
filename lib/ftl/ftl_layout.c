@@ -1,4 +1,5 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright 2023 Solidigm All Rights Reserved
  *   Copyright (C) 2022 Intel Corporation.
  *   All rights reserved.
  */
@@ -151,16 +152,6 @@ setup_layout_nvc(struct spdk_ftl_dev *dev)
 		"p2l2",
 		"p2l3"
 	};
-
-#ifdef SPDK_FTL_VSS_EMU
-	/* Skip the already init`d VSS region */
-	region = &layout->region[FTL_LAYOUT_REGION_TYPE_VSS];
-	offset += region->current.blocks;
-
-	if (offset >= layout->nvc.total_blocks) {
-		goto error;
-	}
-#endif
 
 	/* Skip the superblock region. Already init`d in ftl_layout_setup_superblock */
 	region = &layout->region[FTL_LAYOUT_REGION_TYPE_SB];
@@ -478,35 +469,6 @@ ftl_layout_setup(struct spdk_ftl_dev *dev)
 	return 0;
 }
 
-#ifdef SPDK_FTL_VSS_EMU
-void
-ftl_layout_setup_vss_emu(struct spdk_ftl_dev *dev)
-{
-	const struct spdk_bdev *bdev;
-	struct ftl_layout *layout = &dev->layout;
-	struct ftl_layout_region *region = &layout->region[FTL_LAYOUT_REGION_TYPE_VSS];
-
-	assert(layout->md[FTL_LAYOUT_REGION_TYPE_VSS] == NULL);
-
-	region = &layout->region[FTL_LAYOUT_REGION_TYPE_VSS];
-	region->type = FTL_LAYOUT_REGION_TYPE_VSS;
-	region->name = "vss";
-	region->current.version = region->prev.version = 0;
-	region->current.offset = 0;
-
-	bdev = spdk_bdev_desc_get_bdev(dev->nv_cache.bdev_desc);
-	layout->nvc.total_blocks = spdk_bdev_get_num_blocks(bdev);
-	region->current.blocks = blocks_region(dev, dev->nv_cache.md_size * layout->nvc.total_blocks);
-
-	region->vss_blksz = 0;
-	region->bdev_desc = dev->nv_cache.bdev_desc;
-	region->ioch = dev->nv_cache.cache_ioch;
-
-	assert(region->bdev_desc != NULL);
-	assert(region->ioch != NULL);
-}
-#endif
-
 int
 ftl_layout_setup_superblock(struct spdk_ftl_dev *dev)
 {
@@ -523,14 +485,6 @@ ftl_layout_setup_superblock(struct spdk_ftl_dev *dev)
 	region->current.version = FTL_SB_VERSION_CURRENT;
 	region->prev.version = FTL_SB_VERSION_CURRENT;
 	region->current.offset = 0;
-
-	/*
-	 * VSS region must go first in case SB to make calculating its relative size easier
-	 */
-#ifdef SPDK_FTL_VSS_EMU
-	region->current.offset = layout->region[FTL_LAYOUT_REGION_TYPE_VSS].current.offset +
-				 layout->region[FTL_LAYOUT_REGION_TYPE_VSS].current.blocks;
-#endif
 
 	region->current.blocks = superblock_region_blocks(dev);
 	region->vss_blksz = 0;

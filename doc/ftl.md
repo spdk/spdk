@@ -179,8 +179,7 @@ Both interfaces require the same arguments which are described by the `--help` o
 
 - bdev's name
 - base bdev's name
-- cache bdev's name (cache bdev must support VSS DIX mode - could be emulated by providing SPDK_FTL_VSS_EMU=1 flag to make;
- emulating VSS should be done for testing purposes only, it is not power-fail safe)
+- cache bdev's name (cache bdev must support VSS DIX mode)
 - UUID of the FTL device (if the FTL is to be restored from the SSD)
 
 ## FTL bdev stack {#ftl_bdev_stack}

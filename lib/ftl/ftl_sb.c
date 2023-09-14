@@ -1,4 +1,5 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright 2023 Solidigm All Rights Reserved
  *   Copyright (C) 2022 Intel Corporation.
  *   All rights reserved.
  */
@@ -27,9 +28,6 @@ static bool
 md_region_is_fixed(int reg_type)
 {
 	switch (reg_type) {
-#ifdef SPDK_FTL_VSS_EMU
-	case FTL_LAYOUT_REGION_TYPE_VSS:
-#endif
 	case FTL_LAYOUT_REGION_TYPE_SB:
 	case FTL_LAYOUT_REGION_TYPE_SB_BASE:
 	case FTL_LAYOUT_REGION_TYPE_DATA_BASE:

@@ -9,10 +9,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 SO_VER := 7
 SO_MINOR := 0
 
-ifdef SPDK_FTL_VSS_EMU
-CFLAGS += -DSPDK_FTL_VSS_EMU
-endif
-
 ifdef SPDK_FTL_RETRY_ON_ERROR
 CFLAGS += -DSPDK_FTL_RETRY_ON_ERROR
 endif

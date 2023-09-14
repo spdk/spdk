@@ -11,10 +11,6 @@ SO_MINOR := 0
 
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/ftl/
 
-ifdef SPDK_FTL_VSS_EMU
-CFLAGS += -DSPDK_FTL_VSS_EMU
-endif
-
 C_SRCS += bdev_ftl.c bdev_ftl_rpc.c
 LIBNAME = bdev_ftl
 
