@@ -11,6 +11,12 @@ source $rootdir/test/vhost/common.sh
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 vhost_name="0"
 
+cleanup() {
+	[[ -n $run_fio_pid ]] && killprocess "$run_fio_pid"
+	vhost_kill 0
+	vhosttestfini
+}
+
 bdev_conf=$(
 	cat <<- JSON
 		{
@@ -48,7 +54,7 @@ function run_spdk_fio() {
 
 vhosttestinit "--no_vm"
 
-trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR SIGTERM SIGABRT
+trap 'cleanup' EXIT
 
 vhost_run -n "$vhost_name"
 
@@ -60,6 +66,3 @@ run_fio_pid=$!
 sleep 1
 run_spdk_fio --size=50% --offset=50% --filename=VirtioBlk0
 wait $run_fio_pid
-vhost_kill 0
-
-vhosttestfini
