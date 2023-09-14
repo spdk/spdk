@@ -1,4 +1,5 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright 2023 Solidigm All Rights Reserved
  *   Copyright (C) 2022 Intel Corporation.
  *   All rights reserved.
  */
@@ -11,6 +12,7 @@
 
 #include "ftl_io.h"
 #include "ftl_utils.h"
+#include "nvc/ftl_nvc_dev.h"
 
 /*
  * FTL non volatile cache is divided into groups of blocks called chunks.
@@ -131,6 +133,9 @@ struct ftl_nv_cache_compactor {
 struct ftl_nv_cache {
 	/* Flag indicating halt request */
 	bool halt;
+
+	/* NV cache device descriptor */
+	const struct ftl_nv_cache_device_desc *nvc_desc;
 
 	/* Write buffer cache bdev */
 	struct spdk_bdev_desc *bdev_desc;

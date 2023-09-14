@@ -1,4 +1,5 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
+ *   Copyright 2023 Solidigm All Rights Reserved
  *   Copyright (C) 2022 Intel Corporation.
  *   All rights reserved.
  */
@@ -182,47 +183,22 @@ ftl_mngt_open_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 		goto error;
 	}
 
-#ifndef SPDK_FTL_VSS_EMU
-	if (!spdk_bdev_is_md_separate(bdev)) {
-		FTL_ERRLOG(dev, "Bdev %s doesn't support separate metadata buffer IO\n",
-			   spdk_bdev_get_name(bdev));
-		goto error;
-	}
-
-	nv_cache->md_size = spdk_bdev_get_md_size(bdev);
-	if (nv_cache->md_size != sizeof(union ftl_md_vss)) {
-		FTL_ERRLOG(dev, "Bdev's %s metadata is invalid size (%"PRIu32")\n",
-			   spdk_bdev_get_name(bdev), spdk_bdev_get_md_size(bdev));
-		goto error;
-	}
-
-	if (spdk_bdev_get_dif_type(bdev) != SPDK_DIF_DISABLE) {
-		FTL_ERRLOG(dev, "Unsupported DIF type used by bdev %s\n",
-			   spdk_bdev_get_name(bdev));
-		goto error;
-	}
-
 	if (bdev->blockcnt * bdev->blocklen < MINIMUM_CACHE_SIZE_GIB * GiB) {
 		FTL_ERRLOG(dev, "Bdev %s is too small, requires, at least %uGiB capacity\n",
 			   spdk_bdev_get_name(bdev), MINIMUM_CACHE_SIZE_GIB);
 		goto error;
 	}
+	nv_cache->md_size = spdk_bdev_get_md_size(bdev);
 
-	if (ftl_md_xfer_blocks(dev) * nv_cache->md_size > FTL_ZERO_BUFFER_SIZE) {
-		FTL_ERRLOG(dev, "Zero buffer too small for bdev %s metadata transfer\n",
-			   spdk_bdev_get_name(bdev));
+	/* Get FTL NVC bdev descriptor */
+	nv_cache->nvc_desc = ftl_nv_cache_device_get_desc_by_bdev(dev, bdev);
+	if (!nv_cache->nvc_desc) {
+		FTL_ERRLOG(dev, "Failed to get NV Cache device descriptor\n");
 		goto error;
 	}
-#else
-	if (spdk_bdev_is_md_separate(bdev)) {
-		FTL_ERRLOG(dev, "FTL VSS emulation but NV cache supports VSS\n");
-		goto error;
-	}
+	nv_cache->md_size = sizeof(union ftl_md_vss);
 
-	nv_cache->md_size = 64;
-	FTL_NOTICELOG(dev, "FTL uses VSS emulation\n");
-#endif
-
+	FTL_NOTICELOG(dev, "Using %s as NV Cache device\n", nv_cache->nvc_desc->name);
 	ftl_mngt_next_step(mngt);
 	return;
 error:

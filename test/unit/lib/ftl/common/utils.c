@@ -25,6 +25,9 @@ uint64_t test_offset_from_addr(ftl_addr addr, struct ftl_band *band);
 
 DEFINE_STUB(spdk_bdev_desc_get_bdev, struct spdk_bdev *, (struct spdk_bdev_desc *desc), NULL);
 
+DEFINE_STUB(ftl_nv_cache_device_get_desc_by_bdev, const struct ftl_nv_cache_device_desc *,
+	    (struct spdk_ftl_dev *dev, struct spdk_bdev *bdev), NULL);
+
 uint64_t
 spdk_bdev_get_zone_size(const struct spdk_bdev *bdev)
 {
