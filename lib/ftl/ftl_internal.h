@@ -247,6 +247,15 @@ void ftl_p2l_log_flush(struct spdk_ftl_dev *dev);
 typedef void (*ftl_p2l_log_cb)(struct ftl_io *io);
 
 /**
+ * @brief Get layout region type corresponding to the specific P2L log
+ *
+ * @param p2l P2L log
+ *
+ * @return Layout region type
+ */
+enum ftl_layout_region_type ftl_p2l_log_type(struct ftl_p2l_log *p2l);
+
+/**
  * @brief Acquire P2L IO log
  *
  * @param dev FTL device

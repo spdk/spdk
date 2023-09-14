@@ -281,7 +281,10 @@ ftl_p2l_log_deinit(struct spdk_ftl_dev *dev)
 	}
 }
 
-
+enum ftl_layout_region_type
+ftl_p2l_log_type(struct ftl_p2l_log *p2l) {
+	return p2l->md->region->type;
+}
 
 struct ftl_p2l_log *
 ftl_p2l_log_acquire(struct spdk_ftl_dev *dev, uint64_t seq_id, ftl_p2l_log_cb cb)
