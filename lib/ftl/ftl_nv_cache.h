@@ -123,8 +123,7 @@ struct ftl_nv_cache_chunk {
 
 struct ftl_nv_cache_compactor {
 	struct ftl_nv_cache *nv_cache;
-	struct ftl_rq *wr;
-	struct ftl_rq *rd;
+	struct ftl_rq *rq;
 	TAILQ_ENTRY(ftl_nv_cache_compactor) entry;
 	struct spdk_bdev_io_wait_entry bdev_io_wait;
 };
