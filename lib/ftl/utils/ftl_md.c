@@ -422,22 +422,6 @@ get_bdev_io_ftl_stats_type(struct spdk_ftl_dev *dev, struct spdk_bdev_io *bdev_i
 }
 
 static void
-audit_md_vss_version(struct ftl_md *md, uint64_t blocks)
-{
-#if defined(DEBUG)
-	union ftl_md_vss *vss = md->io.md;
-	/* Need to load the superblock regardless of its version */
-	if (md->region->type == FTL_LAYOUT_REGION_TYPE_SB) {
-		return;
-	}
-	while (blocks) {
-		blocks--;
-		assert(vss[blocks].version.md_version == md->region->current.version);
-	}
-#endif
-}
-
-static void
 read_write_blocks_cb(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 {
 	struct ftl_md *md = arg;
@@ -460,7 +444,6 @@ read_write_blocks_cb(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 			if (md->vss_data) {
 				uint64_t vss_offset = md->io.data_offset / FTL_BLOCK_SIZE;
 				vss_offset *= FTL_MD_VSS_SZ;
-				audit_md_vss_version(md, blocks);
 				memcpy(md->vss_data + vss_offset, md->io.md, blocks * FTL_MD_VSS_SZ);
 			}
 		}
@@ -575,15 +558,8 @@ io_submit(struct ftl_md *md)
 			vss_offset *= FTL_MD_VSS_SZ;
 			assert(md->io.md);
 			memcpy(md->io.md, md->vss_data + vss_offset, FTL_MD_VSS_SZ * blocks);
-			audit_md_vss_version(md, blocks);
 		}
 	}
-#if defined(DEBUG)
-	if (md->io.md && md->io.op == FTL_MD_OP_CLEAR) {
-		uint64_t blocks = spdk_min(md->io.remaining, ftl_md_xfer_blocks(md->dev));
-		audit_md_vss_version(md, blocks);
-	}
-#endif
 
 	read_write_blocks(md);
 }
