@@ -833,7 +833,7 @@ read_chunk_p2l_map_cb(struct ftl_basic_rq *brq)
 #endif
 	}
 
-	TAILQ_INSERT_HEAD(&nv_cache->chunk_comp_list, chunk, entry);
+	TAILQ_INSERT_TAIL(&nv_cache->chunk_comp_list, chunk, entry);
 }
 
 static int chunk_alloc_p2l_map(struct ftl_nv_cache_chunk *chunk);
