@@ -1,6 +1,8 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (c) croit GmbH.
  *   All rights reserved.
+ *   Copyright (c) 2023 Enakta Labs
+ *   All rights reserved.
  */
 
 #include <sys/queue.h>
@@ -26,8 +28,6 @@
 
 #include "bdev_daos.h"
 
-#define BDEV_DAOS_IOVECS_MAX 32
-
 struct bdev_daos_task {
 	daos_event_t ev;
 	struct spdk_thread *submit_td;
@@ -38,7 +38,7 @@ struct bdev_daos_task {
 
 	/* DAOS version of iovec and scatter/gather */
 	daos_size_t read_size;
-	d_iov_t diovs[BDEV_DAOS_IOVECS_MAX];
+	d_iov_t diovs[SPDK_BDEV_IO_NUM_CHILD_IOV];
 	d_sg_list_t sgl;
 };
 
@@ -243,9 +243,9 @@ bdev_daos_writev(struct bdev_daos *daos, struct bdev_daos_io_channel *ch,
 	assert(task != NULL);
 	assert(iov != NULL);
 
-	if (iovcnt > BDEV_DAOS_IOVECS_MAX) {
+	if (iovcnt > SPDK_BDEV_IO_NUM_CHILD_IOV) {
 		SPDK_ERRLOG("iovs number [%d] exceeds max allowed limit [%d]\n", iovcnt,
-			    BDEV_DAOS_IOVECS_MAX);
+			    SPDK_BDEV_IO_NUM_CHILD_IOV);
 		return -E2BIG;
 	}
 
@@ -289,9 +289,9 @@ bdev_daos_readv(struct bdev_daos *daos, struct bdev_daos_io_channel *ch,
 	assert(task != NULL);
 	assert(iov != NULL);
 
-	if (iovcnt > BDEV_DAOS_IOVECS_MAX) {
+	if (iovcnt > SPDK_BDEV_IO_NUM_CHILD_IOV) {
 		SPDK_ERRLOG("iovs number [%d] exceeds max allowed limit [%d]\n", iovcnt,
-			    BDEV_DAOS_IOVECS_MAX);
+			    SPDK_BDEV_IO_NUM_CHILD_IOV);
 		return -E2BIG;
 	}
 
@@ -775,6 +775,8 @@ create_bdev_daos(struct spdk_bdev **bdev,
 	daos->disk.blocklen = block_size;
 	daos->disk.blockcnt = num_blocks;
 	daos->disk.uuid = *uuid;
+	daos->disk.max_num_segments = SPDK_BDEV_IO_NUM_CHILD_IOV;
+
 	daos->disk.ctxt = daos;
 	daos->disk.fn_table = &daos_fn_table;
 	daos->disk.module = &daos_if;
