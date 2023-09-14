@@ -20,6 +20,15 @@ struct ftl_property {
 	/** Name of the property */
 	const char *name;
 
+	/* Pointer to the value of property */
+	void *value;
+
+	/* The value size of the property */
+	size_t size;
+
+	/* The function to dump the value of property into the specified JSON RPC request */
+	ftl_property_dump_fn dump;
+
 	/** Link to put the property to the list */
 	LIST_ENTRY(ftl_property) entry;
 };
@@ -40,7 +49,8 @@ get_property_item(struct ftl_properties *properties, const char *name)
 }
 
 void
-ftl_property_register(struct spdk_ftl_dev *dev, const char *name)
+ftl_property_register(struct spdk_ftl_dev *dev, const char *name, void *value, size_t size,
+		      ftl_property_dump_fn dump)
 {
 	struct ftl_properties *properties = dev->properties;
 
@@ -55,6 +65,9 @@ ftl_property_register(struct spdk_ftl_dev *dev, const char *name)
 		}
 
 		prop->name = name;
+		prop->value = value;
+		prop->size = size;
+		prop->dump = dump;
 		LIST_INSERT_HEAD(&properties->list, prop, entry);
 	}
 }
@@ -103,11 +116,40 @@ ftl_property_dump(struct spdk_ftl_dev *dev, struct spdk_jsonrpc_request *request
 
 	spdk_json_write_named_object_begin(w, "properties");
 	LIST_FOREACH(prop, &properties->list, entry) {
-		/* TODO dump the value as well */
-		spdk_json_write_named_string(w, prop->name, "");
+		prop->dump(prop, w);
 	}
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(request, w);
+}
+
+void
+ftl_property_dump_bool(const struct ftl_property *property,
+		       struct spdk_json_write_ctx *w)
+{
+	bool *value = property->value;
+
+	assert(property->size == sizeof(*value));
+	spdk_json_write_named_bool(w, property->name, *value);
+}
+
+void
+ftl_property_dump_uint64(const struct ftl_property *property,
+			 struct spdk_json_write_ctx *w)
+{
+	uint64_t *value = property->value;
+
+	assert(property->size == sizeof(*value));
+	spdk_json_write_named_uint64(w, property->name, *value);
+}
+
+void
+ftl_property_dump_uint32(const struct ftl_property *property,
+			 struct spdk_json_write_ctx *w)
+{
+	uint32_t *value = property->value;
+
+	assert(property->size == sizeof(*value));
+	spdk_json_write_named_uint32(w, property->name, *value);
 }

@@ -11,6 +11,7 @@
 #include "ftl_internal.h"
 #include "ftl_nv_cache.h"
 #include "ftl_debug.h"
+#include "ftl_utils.h"
 
 void
 ftl_mngt_check_conf(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
@@ -181,6 +182,9 @@ ftl_mngt_finalize_startup(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mng
 	if (ftl_bitmap_find_first_set(dev->unmap_map, 0, UINT64_MAX) != UINT64_MAX) {
 		dev->unmap_in_progress = true;
 	}
+
+	ftl_property_register(dev, "superblock_version", &dev->sb->header.version,
+			      sizeof(dev->sb->header.version), ftl_property_dump_uint64);
 
 	/* Clear the limit applications as they're incremented incorrectly by
 	 * the initialization code.
