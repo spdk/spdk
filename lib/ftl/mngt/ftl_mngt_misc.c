@@ -184,7 +184,8 @@ ftl_mngt_finalize_startup(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mng
 	}
 
 	ftl_property_register(dev, "superblock_version", &dev->sb->header.version,
-			      sizeof(dev->sb->header.version), ftl_property_dump_uint64);
+			      sizeof(dev->sb->header.version), ftl_property_dump_uint64,
+			      NULL, NULL);
 
 	/* Clear the limit applications as they're incremented incorrectly by
 	 * the initialization code.
@@ -327,31 +328,34 @@ ftl_mngt_deinit_unmap_map(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mng
 	ftl_mngt_next_step(mngt);
 }
 
-struct ftl_get_properties_ctx {
+struct ftl_mngt_property_caller_ctx {
 	struct spdk_ftl_dev *dev;
 	struct spdk_jsonrpc_request *request;
 	spdk_ftl_fn cb_fn;
 	void *cb_arg;
 	struct spdk_thread *cb_thread;
+	const char *property;
+	const char *value;
+	size_t value_size;
 };
 
 static void
 ftl_get_properties_cb(void *arg)
 {
-	struct ftl_get_properties_ctx *ctx = arg;
+	struct ftl_mngt_property_caller_ctx *cctx = arg;
 
-	ctx->cb_fn(ctx->cb_arg, 0);
-	free(ctx);
+	cctx->cb_fn(cctx->cb_arg, 0);
+	free(cctx);
 }
 
 static void
 ftl_get_properties_msg(void *arg)
 {
-	struct ftl_get_properties_ctx *ctx = arg;
+	struct ftl_mngt_property_caller_ctx *cctx = arg;
 	int rc;
 
-	ftl_property_dump(ctx->dev, ctx->request);
-	rc = spdk_thread_send_msg(ctx->cb_thread, ftl_get_properties_cb, ctx);
+	ftl_property_dump(cctx->dev, cctx->request);
+	rc = spdk_thread_send_msg(cctx->cb_thread, ftl_get_properties_cb, cctx);
 	ftl_bug(rc);
 }
 
@@ -360,7 +364,7 @@ spdk_ftl_get_properties(struct spdk_ftl_dev *dev, struct spdk_jsonrpc_request *r
 			spdk_ftl_fn cb_fn, void *cb_arg)
 {
 	int rc;
-	struct ftl_get_properties_ctx *ctx = calloc(1, sizeof(*ctx));
+	struct ftl_mngt_property_caller_ctx *ctx = calloc(1, sizeof(*ctx));
 
 	if (ctx == NULL) {
 		return -ENOMEM;
@@ -375,6 +379,102 @@ spdk_ftl_get_properties(struct spdk_ftl_dev *dev, struct spdk_jsonrpc_request *r
 	if (rc) {
 		free(ctx);
 		return rc;
+	}
+
+	return 0;
+}
+
+struct ftl_set_property_process_ctx {
+	void *value;
+	size_t value_size;
+};
+
+static void
+ftl_mngt_set_property_decode(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	struct ftl_set_property_process_ctx *pctx = ftl_mngt_get_process_ctx(mngt);
+	struct ftl_mngt_property_caller_ctx *cctx = ftl_mngt_get_caller_ctx(mngt);
+
+	if (ftl_property_decode(dev, cctx->property, cctx->value, cctx->value_size,
+				&pctx->value, &pctx->value_size)) {
+		ftl_mngt_fail_step(mngt);
+	} else {
+		ftl_mngt_next_step(mngt);
+	}
+}
+
+static void
+ftl_mngt_set_property(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	struct ftl_set_property_process_ctx *pctx = ftl_mngt_get_process_ctx(mngt);
+	struct ftl_mngt_property_caller_ctx *cctx = ftl_mngt_get_caller_ctx(mngt);
+
+	if (ftl_property_set(dev, mngt, cctx->property, pctx->value, pctx->value_size)) {
+		ftl_mngt_fail_step(mngt);
+	}
+}
+
+static void
+ftl_mngt_set_property_cleanup(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	struct ftl_set_property_process_ctx *pctx = ftl_mngt_get_process_ctx(mngt);
+	free(pctx->value);
+	pctx->value = NULL;
+	pctx->value_size = 0;
+	ftl_mngt_next_step(mngt);
+}
+
+static const struct ftl_mngt_process_desc desc_set_property = {
+	.name = "Set FTL property",
+	.ctx_size = sizeof(struct ftl_set_property_process_ctx),
+	.steps = {
+		{
+			.name = "Decode property",
+			.action = ftl_mngt_set_property_decode,
+			.cleanup = ftl_mngt_set_property_cleanup
+		},
+		{
+			.name = "Set property",
+			.action = ftl_mngt_set_property,
+			.cleanup = ftl_mngt_set_property_cleanup
+		},
+		{
+			.name = "Property setting cleanup",
+			.action = ftl_mngt_set_property_cleanup,
+		},
+		{}
+	}
+};
+
+static void
+ftl_mngt_property_caller_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
+{
+	struct ftl_mngt_property_caller_ctx *cctx = ctx;
+
+	cctx->cb_fn(cctx->cb_arg, status);
+	free(cctx);
+}
+
+int
+spdk_ftl_set_property(struct spdk_ftl_dev *dev,
+		      const char *property, const char *value, size_t value_size,
+		      spdk_ftl_fn cb_fn, void *cb_arg)
+{
+	int rc;
+	struct ftl_mngt_property_caller_ctx *cctx = calloc(1, sizeof(*cctx));
+
+	if (cctx == NULL) {
+		return -EAGAIN;
+	}
+	cctx->cb_fn = cb_fn;
+	cctx->cb_arg = cb_arg;
+	cctx->property = property;
+	cctx->value = value;
+	cctx->value_size = value_size;
+
+	rc = ftl_mngt_process_execute(dev, &desc_set_property, ftl_mngt_property_caller_cb, cctx);
+	if (rc) {
+		free(cctx);
 	}
 
 	return rc;

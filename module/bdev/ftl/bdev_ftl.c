@@ -54,6 +54,7 @@ static void bdev_ftl_action_finish_cb(void *cb_arg, int status);
 static struct bdev_ftl_action *bdev_ftl_action_start(const char *bdev_name,
 		size_t ctx_size, spdk_ftl_fn cb_fn, void *cb_arg);
 static void bdev_ftl_action_finish(struct bdev_ftl_action *action);
+static void *bdev_ftl_action_ctx(struct bdev_ftl_action *action, size_t size);
 
 static int
 bdev_ftl_get_ctx_size(void)
@@ -558,6 +559,56 @@ bdev_ftl_get_properties(const char *name, spdk_ftl_fn cb_fn, struct spdk_jsonrpc
 	}
 }
 
+struct bdev_ftl_set_property_args {
+	char *property;
+	char *value;
+};
+
+static void
+bdev_ftl_set_property_cb(void *cb_arg, int status)
+{
+	struct bdev_ftl_action *action = cb_arg;
+	struct bdev_ftl_set_property_args *args = bdev_ftl_action_ctx(action, sizeof(*args));
+
+	free(args->property);
+	free(args->value);
+	args->property = NULL;
+	args->value = NULL;
+	bdev_ftl_action_finish_cb(cb_arg, status);
+}
+
+void
+bdev_ftl_set_property(const char *name, const char *property, const char *value,
+		      spdk_ftl_fn cb_fn, void *cb_arg)
+{
+	struct bdev_ftl_action *action;
+	struct bdev_ftl_set_property_args *args;
+
+	action = bdev_ftl_action_start(name, sizeof(*args), cb_fn, cb_arg);
+	if (!action) {
+		return;
+	}
+
+	args = bdev_ftl_action_ctx(action, sizeof(*args));
+	args->property = strdup(property);
+	args->value = strdup(value);
+
+	if (!args->property || !args->value) {
+		free(args->property);
+		free(args->value);
+		action->rc = -ENOMEM;
+		bdev_ftl_action_finish(action);
+		return;
+	}
+
+	action->rc = spdk_ftl_set_property(action->ftl_bdev_dev->dev,
+					   args->property, args->value, strlen(args->value) + 1,
+					   bdev_ftl_set_property_cb, action);
+	if (action->rc) {
+		bdev_ftl_action_finish(action);
+	}
+}
+
 static void
 bdev_ftl_finish(void)
 {
@@ -629,6 +680,7 @@ bdev_ftl_action_start(const char *bdev_name, size_t ctx_size, spdk_ftl_fn cb_fn,
 	}
 	action->cb_arg = cb_arg;
 	action->cb_fn = cb_fn;
+	action->ctx_size = ctx_size;
 
 	action->rc = spdk_bdev_open_ext(bdev_name, false, bdev_ftl_event_cb, NULL, &action->ftl_bdev_desc);
 	if (action->rc) {
@@ -657,4 +709,12 @@ bdev_ftl_action_finish_cb(void *cb_arg, int status)
 
 	action->rc = status;
 	bdev_ftl_action_finish(action);
+}
+
+static void *
+bdev_ftl_action_ctx(struct bdev_ftl_action *action, size_t size)
+{
+	assert(action->ctx_size);
+	assert(size == action->ctx_size);
+	return action->ctx;
 }

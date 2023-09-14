@@ -2277,6 +2277,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
     p.set_defaults(func=bdev_ftl_get_properties)
 
+    def bdev_ftl_set_property(args):
+        print_dict(rpc.bdev.bdev_ftl_set_property(args.client, name=args.name,
+                   ftl_property=args.property,
+                   value=args.value))
+
+    p = subparsers.add_parser('bdev_ftl_set_property', help='Set FTL property')
+    p.add_argument('-b', '--name', help="Name of the bdev", required=True)
+    p.add_argument('-p', '--property', help="Name of the property to be set", required=True)
+    p.add_argument('-v', '--value', help="Value of the property", required=True)
+    p.set_defaults(func=bdev_ftl_set_property)
+
     # vmd
     def vmd_enable(args):
         print_dict(rpc.vmd.vmd_enable(args.client))

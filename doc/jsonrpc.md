@@ -484,6 +484,7 @@ Example response:
     "bdev_ftl_unmap",
     "bdev_ftl_get_stats",
     "bdev_ftl_get_properties",
+    "bdev_ftl_set_property",
     "bdev_lvol_get_lvstores",
     "bdev_lvol_delete",
     "bdev_lvol_resize",
@@ -6157,6 +6158,45 @@ Example response:
       "fast_shutdown": "true"
     }
   }
+}
+~~~
+
+### bdev_ftl_set_property {#rpc_bdev_ftl_set_property}
+
+Set FTL property. Trying to set a read-only property will result in an error.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+property                | Required | string      | Name of the property to modify
+value                   | Required | string      | New value of the property to be set
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "ftl0"
+    "property": "nv_cache.flush"
+    "value": "true"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_ftl_set_property",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
 }
 ~~~
 

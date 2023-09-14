@@ -19,6 +19,7 @@
 	spdk_ftl_dev_set_fast_shutdown;
 	spdk_ftl_get_stats;
 	spdk_ftl_get_properties;
+	spdk_ftl_set_property;
 
 	local: *;
 };

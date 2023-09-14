@@ -1613,6 +1613,19 @@ def bdev_ftl_get_properties(client, name):
     return client.call('bdev_ftl_get_properties', params)
 
 
+def bdev_ftl_set_property(client, name, ftl_property, value):
+    """Set FTL property
+
+    Args:
+        name: name of the bdev
+        property: name of the property to be set
+        value: The new value of the updated property
+    """
+    params = {'name': name, 'ftl_property': ftl_property, 'value': value}
+
+    return client.call('bdev_ftl_set_property', params)
+
+
 def bdev_get_bdevs(client, name=None, timeout=None):
     """Get information about block devices.
 

@@ -340,6 +340,21 @@ int spdk_ftl_get_stats(struct spdk_ftl_dev *dev, struct ftl_stats *stats, spdk_f
 int spdk_ftl_get_properties(struct spdk_ftl_dev *dev, struct spdk_jsonrpc_request *request,
 			    spdk_ftl_fn cb_fn, void *cb_arg);
 
+/**
+ * Sets the property of the specified device.
+ *
+ * \param dev FTL device
+ * \param property The property name to be modified
+ * \param value The new value to property
+ * \param value_size The size of the value buffer
+ * \param cb_fn Callback function to invoke when the operation is completed
+ * \param cb_arg Argument to pass to the callback function
+ *
+ * \return 0 if successfully submitted, negative errno otherwise.
+ */
+int spdk_ftl_set_property(struct spdk_ftl_dev *dev, const char *property, const char *value,
+			  size_t value_size, spdk_ftl_fn cb_fn, void *cb_arg);
+
 #ifdef __cplusplus
 }
 #endif

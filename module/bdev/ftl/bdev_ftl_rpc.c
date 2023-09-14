@@ -324,3 +324,40 @@ rpc_bdev_ftl_get_properties(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("bdev_ftl_get_properties", rpc_bdev_ftl_get_properties, SPDK_RPC_RUNTIME)
+
+struct rpc_ftl_set_property_param {
+	char *name;
+	char *ftl_property;
+	char *value;
+};
+
+static const struct spdk_json_object_decoder rpc_ftl_set_property_decoders[] = {
+	{"name", offsetof(struct rpc_ftl_set_property_param, name), spdk_json_decode_string},
+	{"ftl_property", offsetof(struct rpc_ftl_set_property_param, ftl_property), spdk_json_decode_string},
+	{"value", offsetof(struct rpc_ftl_set_property_param, value), spdk_json_decode_string},
+};
+
+static void
+rpc_bdev_ftl_set_property(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct rpc_ftl_set_property_param attrs = {};
+
+	if (spdk_json_decode_object(params, rpc_ftl_set_property_decoders,
+				    SPDK_COUNTOF(rpc_ftl_set_property_decoders),
+				    &attrs)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		free(attrs.name);
+		free(attrs.ftl_property);
+		free(attrs.value);
+		return;
+	}
+
+	bdev_ftl_set_property(attrs.name, attrs.ftl_property, attrs.value,
+			      rpc_bdev_ftl_basic_cb, request);
+	free(attrs.name);
+	free(attrs.ftl_property);
+	free(attrs.value);
+}
+
+SPDK_RPC_REGISTER("bdev_ftl_set_property", rpc_bdev_ftl_set_property, SPDK_RPC_RUNTIME)

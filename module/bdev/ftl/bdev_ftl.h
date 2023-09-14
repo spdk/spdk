@@ -49,12 +49,24 @@ void bdev_ftl_get_stats(const char *name, spdk_ftl_fn cb, struct rpc_ftl_stats_c
  * @brief Get FTL bdev device properties
  *
  * @param name The name of FTL bdev device
- * @param cb_fn Callback function when the stats are ready
+ * @param cb_fn Callback function called when the stats are ready
  * @param request The JSON request will be filled with the FTL properties
  *
  * @note The JSON request will be returned as the context in the callback function
  */
 void bdev_ftl_get_properties(const char *name, spdk_ftl_fn cb_fn,
 			     struct spdk_jsonrpc_request *request);
+
+/**
+ * @brief Set FTL bdev device property
+ *
+ * @param name The name of FTL bdev device
+ * @param property The property name to be set
+ * @param value New value of the property
+ * @param cb_fn Collback function invoked when the operation finished
+ * @param cb_arg Collback function argument
+ */
+void bdev_ftl_set_property(const char *name, const char *property, const char *value,
+			   spdk_ftl_fn cb_fn, void *cb_arg);
 
 #endif /* SPDK_BDEV_FTL_H */
