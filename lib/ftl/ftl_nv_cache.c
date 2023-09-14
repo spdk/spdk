@@ -727,6 +727,8 @@ compaction_process_pin_lba_cb(struct spdk_ftl_dev *dev, int status, struct ftl_l
 	}
 }
 
+static uint64_t ftl_chunk_map_get_lba_from_addr(struct ftl_nv_cache_chunk *chunk, ftl_addr addr);
+
 static void
 compaction_process_pin_lba(struct ftl_nv_cache_compactor *comp)
 {
@@ -741,12 +743,13 @@ compaction_process_pin_lba(struct ftl_nv_cache_compactor *comp)
 	FTL_RQ_ENTRY_LOOP(rq, entry, rq->iter.count) {
 		struct ftl_nv_cache_chunk *chunk = entry->owner.priv;
 		struct ftl_l2p_pin_ctx *pin_ctx = &entry->l2p_pin_ctx;
-		union ftl_md_vss *md = entry->io_md;
 
-		if (md->nv_cache.lba == FTL_LBA_INVALID || md->nv_cache.seq_id != chunk->md->seq_id) {
+		entry->lba = ftl_chunk_map_get_lba_from_addr(chunk, entry->addr);
+
+		if (entry->lba == FTL_LBA_INVALID) {
 			ftl_l2p_pin_skip(dev, compaction_process_pin_lba_cb, comp, pin_ctx);
 		} else {
-			ftl_l2p_pin(dev, md->nv_cache.lba, 1, compaction_process_pin_lba_cb, comp, pin_ctx);
+			ftl_l2p_pin(dev, entry->lba, 1, compaction_process_pin_lba_cb, comp, pin_ctx);
 		}
 	}
 }
@@ -783,11 +786,11 @@ compaction_process_read_entry(void *arg)
 	struct ftl_rq_entry *entry = arg;
 	struct ftl_rq *rq = ftl_rq_from_entry(entry);
 	struct spdk_ftl_dev *dev = rq->dev;
+	int rc;
 
-	int rc = ftl_nv_cache_bdev_read_blocks_with_md(dev, dev->nv_cache.bdev_desc,
-			dev->nv_cache.cache_ioch, entry->io_payload, entry->io_md,
-			entry->bdev_io.offset_blocks, entry->bdev_io.num_blocks,
-			compaction_process_read_entry_cb, entry);
+	rc = spdk_bdev_read_blocks(dev->nv_cache.bdev_desc, dev->nv_cache.cache_ioch,
+				   entry->io_payload, entry->bdev_io.offset_blocks, entry->bdev_io.num_blocks,
+				   compaction_process_read_entry_cb, entry);
 
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
@@ -1141,23 +1144,22 @@ compaction_process_finish_read(struct ftl_nv_cache_compactor *compactor)
 
 	FTL_RQ_ENTRY_LOOP(rq, entry, rq->iter.count) {
 		struct ftl_nv_cache_chunk *chunk = entry->owner.priv;
-		union ftl_md_vss *md = entry->io_md;
+		uint64_t lba = entry->lba;
 
-		if (md->nv_cache.lba == FTL_LBA_INVALID || md->nv_cache.seq_id != chunk->md->seq_id) {
+		if (lba == FTL_LBA_INVALID) {
 			skip++;
 			compaction_process_invalidate_entry(entry);
 			chunk_compaction_advance(chunk, 1);
 			continue;
 		}
 
-		current_addr = ftl_l2p_get(dev, md->nv_cache.lba);
+		current_addr = ftl_l2p_get(dev, lba);
 		if (current_addr == entry->addr) {
-			entry->lba = md->nv_cache.lba;
 			entry->seq_id = chunk->md->seq_id;
 		} else {
 			/* This address already invalidated, just omit this block */
 			chunk_compaction_advance(chunk, 1);
-			ftl_l2p_unpin(dev, md->nv_cache.lba, 1);
+			ftl_l2p_unpin(dev, lba, 1);
 			compaction_process_invalidate_entry(entry);
 			skip++;
 		}
@@ -1370,6 +1372,17 @@ ftl_chunk_set_addr(struct ftl_nv_cache_chunk *chunk, uint64_t lba, ftl_addr addr
 
 	offset = (cache_offset - chunk->offset) % chunk->nv_cache->chunk_blocks;
 	ftl_chunk_map_set_lba(chunk, offset, lba);
+}
+
+static uint64_t
+ftl_chunk_map_get_lba_from_addr(struct ftl_nv_cache_chunk *chunk, ftl_addr addr)
+{
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(chunk->nv_cache, struct spdk_ftl_dev, nv_cache);
+	uint64_t cache_offset = ftl_addr_to_nvc_offset(dev, addr);
+	uint64_t offset;
+
+	offset = (cache_offset - chunk->offset) % chunk->nv_cache->chunk_blocks;
+	return ftl_chunk_map_get_lba(chunk, offset);
 }
 
 struct ftl_nv_cache_chunk *
