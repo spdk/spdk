@@ -3,7 +3,8 @@
 The Flash Translation Layer library provides efficient 4K block device access on top of devices
 with >4K write unit size (eg. raid5f bdev) or devices with large indirection units (some
 capacity-focused NAND drives), which don't handle 4K writes well. It handles the logical to
-physical address mapping and manages the garbage collection process.
+physical address mapping and manages the garbage collection process. It is the core component of
+[CSAL](https://www.solidigm.com/products/technology/cloud-storage-acceleration-layer-write-shaping-csal.html) - Cloud Storage Acceleration Layer.
 
 ## Terminology {#ftl_terminology}
 
@@ -14,8 +15,7 @@ physical address mapping and manages the garbage collection process.
 Contains the mapping of the logical addresses (LBA) to their on-disk physical location. The LBAs
 are contiguous and in range from 0 to the number of surfaced blocks (the number of spare blocks
 are calculated during device formation and are subtracted from the available address space). The
-spare blocks account for zones going offline throughout the lifespan of the device as well as
-provide necessary buffer for data [garbage collection](#ftl_reloc).
+spare blocks provide the necessary buffer for data during [garbage collection](#ftl_reloc).
 
 Since the L2P would occupy a significant amount of DRAM (4B/LBA for drives smaller than 16TiB,
 8B/LBA for bigger drives), FTL will, by default, store only the 2GiB of most recently used L2P
@@ -24,47 +24,32 @@ as necessary.
 
 ### Band {#ftl_band}
 
-A band describes a collection of zones, each belonging to a different parallel unit. All writes to
-a band follow the same pattern - a batch of logical blocks is written to one zone, another batch
-to the next one and so on. This ensures the parallelism of the write operations, as they can be
-executed independently on different zones. Each band keeps track of the LBAs it consists of, as
-well as their validity, as some of the data will be invalidated by subsequent writes to the same
-logical address. The L2P mapping can be restored from the SSD by reading this information in order
-from the oldest band to the youngest.
+A band is a logical division of the underlying base device, by default 1GiB. All writes to
+a band follow the same pattern - a batch of logical blocks (by default 1MiB, the write unit size)
+is written to the base device, another batch to the next offset and so on. This ensures the
+parallelism of the write operations, increasing the overall bandwidth.
 
-```text
-             +--------------+        +--------------+                        +--------------+
-    band 1   |   zone 1     +--------+    zone 1    +---- --- --- --- --- ---+     zone 1   |
-             +--------------+        +--------------+                        +--------------+
-    band 2   |   zone 2     +--------+     zone 2   +---- --- --- --- --- ---+     zone 2   |
-             +--------------+        +--------------+                        +--------------+
-    band 3   |   zone 3     +--------+     zone 3   +---- --- --- --- --- ---+     zone 3   |
-             +--------------+        +--------------+                        +--------------+
-             |     ...      |        |     ...      |                        |     ...      |
-             +--------------+        +--------------+                        +--------------+
-    band m   |   zone m     +--------+     zone m   +---- --- --- --- --- ---+     zone m   |
-             +--------------+        +--------------+                        +--------------+
-             |     ...      |        |     ...      |                        |     ...      |
-             +--------------+        +--------------+                        +--------------+
-
-              parallel unit 1              pu 2                                    pu n
-```
+Each band keeps track of the LBAs it consists of, its sequence ID (to detect the relative age
+of the data), as well as their validity - as some of the data will be invalidated by subsequent
+writes to the same logical address. The L2P mapping can be restored from the SSD by reading this
+information in order from all bands based on the sequence IDs.
 
 The address map (`P2L`) is saved as a part of the band's metadata, at the end of each band:
 
 ```text
                         band's data                        tail metadata
-    +-------------------+-------------------------------+------------------------+
-    |zone 1 |...|zone n |...|...|zone 1 |...|           | ... |zone  m-1 |zone  m|
-    |block 1|   |block 1|   |   |block x|   |           |     |block y   |block y|
-    +-------------------+-------------+-----------------+------------------------+
+    +----------------+------------------------------------------------------------+
+    |       ||       |...|...|       |...|         | ... |seq 1 |seq 2 |...|seq x |
+    |block 1||block 2|   |   |block x|   |         |     |LBA 1 |LBA 2 |   |LBA x |
+    +----------------+------------------------------------------------------------+
 ```
 
 Bands are written sequentially (in a way that was described earlier). Before a band can be written
-to, all of its zones need to be erased. During that time, the band is considered to be in a `PREP`
-state. Then the band moves to the `OPEN` state and actual user data can be written to the
-band. Once the whole available space is filled, tail metadata is written and the band transitions to
-`CLOSING` state. When that finishes the band becomes `CLOSED`.
+to it needs to be in a `FREE` state, i.e. without user data. This happends either with a fresh FTL
+(no data has been written to the BDEV), or after [garbage collection](#ftl_reloc).
+The band moves to the `OPEN` state when FTL requires space for writing data. After the state transition actual user data
+can be written to the band. Once the whole available space is filled, tail metadata is written and the band transitions
+to `CLOSING` state. When that finishes the band becomes `CLOSED`.
 
 ### Non volatile cache {#ftl_nvcache}
 
@@ -97,10 +82,10 @@ is moved to base_bdev. This process is called chunk compaction.
 - Shorthand: gc, reloc
 
 Since a write to the same LBA invalidates its previous physical location, some of the blocks on a
-band might contain old data that basically wastes space. As there is no way to overwrite an already
-written block for a ZNS drive, this data will stay there until the whole zone is reset. This might create a
-situation in which all of the bands contain some valid data and no band can be erased, so no writes
-can be executed anymore. Therefore a mechanism is needed to move valid data and invalidate whole
+band might contain old data that basically wastes space. Since writing to random locations on the base device
+may incure additional Write Amplification Factor, FTL strives to issue sequential workload in large blocks within
+each band. This might create a situation in which all of the bands contain some valid data and no band can be
+freed, so no writes can be executed anymore. Therefore a mechanism is needed to move valid data and invalidate whole
 bands, so that they can be reused.
 
 ```text
@@ -150,8 +135,9 @@ the mapping itself, but also a sequence id (`seq_id`), which describes the relat
 (multiple writes to the same logical block would produce the same amount of P2L entries, only the last one having the current data).
 
 FTL will therefore rebuild the whole L2P by reading the P2L of all closed bands and chunks. For open bands, the P2L is stored on
-the cache device, in a separate metadata region (see [the P2L section](#ftl_metadata)). Open chunks can be restored thanks to storing
-the mapping in the VSS DIX metadata, which the cache device must be formatted with.
+the cache device, in a separate metadata region (see [the P2L section](#ftl_metadata)). In case of a cache device formatted
+with VSS DIX metadata, open chunks can be restored thanks to storing the mapping in the metadata. For cache devices without
+DIX, an additional log structure is maintained to maintain data consistency after power failure.
 
 ### Shared memory recovery {#ftl_shm_recovery}
 
@@ -169,7 +155,9 @@ currently only allows for trims (unmaps) aligned to 4MiB (alignment concerns bot
 
 ### Prerequisites {#ftl_prereq}
 
-In order to use the FTL module, a cache device formatted with VSS DIX metadata is required.
+In order to use the FTL module, a cache device with at least 5GiB capacity is required. The base device requires at
+least 20GiB capacity. Currently the base device write unit size (LBA alignment and number of blocks that must be
+issued during a write) must be a power of 2 (1 block, i.e. no write unit size requirements is a power of 2).
 
 ### FTL bdev creation {#ftl_create}
 
@@ -179,7 +167,7 @@ Both interfaces require the same arguments which are described by the `--help` o
 
 - bdev's name
 - base bdev's name
-- cache bdev's name (cache bdev must support VSS DIX mode)
+- cache bdev's name
 - UUID of the FTL device (if the FTL is to be restored from the SSD)
 
 ## FTL bdev stack {#ftl_bdev_stack}
