@@ -11,6 +11,7 @@
 #include "spdk/crc32.h"
 #include "spdk/util.h"
 #include "spdk/uuid.h"
+#include "spdk/ftl.h"
 
 #include "utils/ftl_bitmap.h"
 #include "utils/ftl_md.h"
@@ -275,5 +276,38 @@ struct ftl_p2l_log *ftl_p2l_log_acquire(struct spdk_ftl_dev *dev,
  * @param p2l P2L IO log to be released
  */
 void ftl_p2l_log_release(struct spdk_ftl_dev *dev, struct ftl_p2l_log *p2l);
+
+/**
+ * @brief P2L Log read callback
+ *
+ * @param dev FTL device
+ * @param cb_arg The callback argument
+ * @param lba LBA value of P2L log entry
+ * @param addr Physical address of P2L log entry
+ * @param seq_id Sequence ID of P2L log entry
+ *
+ * @retval 0 Continue reading
+ * @retval Non-zero Stop reading
+ */
+typedef int (*ftl_p2l_log_rd_cb)(struct spdk_ftl_dev *dev, void *cb_arg,
+				 uint64_t lba, ftl_addr addr, uint64_t seq_id);
+
+/**
+ * @brief Read P2L IO log
+ *
+ * @param dev FTL device
+ * @param type The P2L IO log layout region type
+ * @param seq_id The sequence number of the log
+ * @param cb_fn The callback function which will be invoked when reading process finished
+ * @param cb_arg The callback argument
+ * @param cb_rd The callback function to report items found in the P2L log
+ *
+ * @return Operation result
+ * @retval 0 - The reading procedure started successfully
+ * @retval non-zero - An error occurred and the reading did not started
+ */
+int ftl_p2l_log_read(struct spdk_ftl_dev *dev, enum ftl_layout_region_type type, uint64_t seq_id,
+		     spdk_ftl_fn cb_fn, void *cb_arg, ftl_p2l_log_rd_cb cb_rd);
+
 
 #endif /* FTL_INTERNAL_H */

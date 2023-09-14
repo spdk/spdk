@@ -6,6 +6,7 @@
 #include "ftl_core.h"
 #include "ftl_layout.h"
 #include "ftl_nv_cache.h"
+#include "mngt/ftl_mngt.h"
 #include "ftl_nvc_bdev_common.h"
 
 static void write_io(struct ftl_io *io);
@@ -117,6 +118,76 @@ process(struct spdk_ftl_dev *dev)
 	ftl_p2l_log_flush(dev);
 }
 
+struct recovery_chunk_ctx {
+	struct ftl_nv_cache_chunk *chunk;
+};
+
+static void
+recovery_chunk_recover_p2l_map_cb(void *cb_arg, int status)
+{
+	struct ftl_mngt_process *mngt = cb_arg;
+
+	if (status) {
+		ftl_mngt_fail_step(mngt);
+	} else {
+		ftl_mngt_next_step(mngt);
+	}
+}
+
+static int
+recovery_chunk_recover_p2l_map_read_cb(struct spdk_ftl_dev *dev, void *cb_arg,
+				       uint64_t lba, ftl_addr addr, uint64_t seq_id)
+{
+	return 0;
+}
+
+
+static void
+recovery_chunk_recover_p2l_map(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	struct recovery_chunk_ctx *ctx = ftl_mngt_get_process_ctx(mngt);
+	struct ftl_nv_cache_chunk *chunk = ctx->chunk;
+	int rc;
+
+	rc = ftl_p2l_log_read(dev, chunk->md->p2l_log_type, chunk->md->seq_id,
+			      recovery_chunk_recover_p2l_map_cb, mngt,
+			      recovery_chunk_recover_p2l_map_read_cb);
+
+	if (rc) {
+		ftl_mngt_fail_step(mngt);
+	}
+}
+
+static int
+recovery_chunk_init(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt,
+		    void *init_ctx)
+{
+	struct recovery_chunk_ctx *ctx = ftl_mngt_get_process_ctx(mngt);
+
+	ctx->chunk = init_ctx;
+	return 0;
+}
+
+static const struct ftl_mngt_process_desc desc_chunk_recovery = {
+	.name = "Recover open chunk",
+	.ctx_size = sizeof(struct recovery_chunk_ctx),
+	.init_handler = recovery_chunk_init,
+	.steps = {
+		{
+			.name = "Recover chunk P2L map",
+			.action = recovery_chunk_recover_p2l_map,
+		},
+		{}
+	}
+};
+
+static void
+recover_open_chunk(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt,
+		   struct ftl_nv_cache_chunk *chunk)
+{
+	ftl_mngt_call_process(mngt, &desc_chunk_recovery, chunk);
+}
+
 static int
 setup_layout(struct spdk_ftl_dev *dev)
 {
@@ -159,5 +230,6 @@ struct ftl_nv_cache_device_type nvc_bdev_non_vss = {
 		},
 		.process = process,
 		.write = write_io,
+		.recover_open_chunk = recover_open_chunk
 	}
 };

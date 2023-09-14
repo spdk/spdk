@@ -4,13 +4,14 @@
 
 #include "ftl_core.h"
 #include "ftl_io.h"
+#include "ftl_layout.h"
 #include "utils/ftl_defs.h"
 
 struct ftl_pl2_log_item {
 	uint64_t lba;
 	uint64_t num_blocks;
 	uint64_t seq_id;
-	uint64_t addr;
+	ftl_addr addr;
 };
 #define FTL_P2L_LOG_ITEMS_IN_PAGE ((FTL_BLOCK_SIZE - sizeof(union ftl_md_vss)) / sizeof(struct ftl_pl2_log_item))
 #define FTL_P2L_LOG_PAGE_COUNT_DEFAULT 128
@@ -37,10 +38,24 @@ struct ftl_p2l_log {
 	uint64_t			seq_id;
 	struct ftl_mempool		*page_pool;
 	uint64_t			entry_idx;
+	uint64_t			entry_max;
 	ftl_p2l_log_cb			cb_fn;
+	uint32_t			ref_cnt;
+	bool				in_use;
+
+	struct {
+		spdk_ftl_fn cb_fn;
+		void *cb_arg;
+		ftl_p2l_log_rd_cb cb_rd;
+		uint64_t qd;
+		uint64_t idx;
+		uint64_t seq_id;
+		int result;
+	} read_ctx;
 };
 
 static void p2l_log_page_io(struct ftl_p2l_log *p2l, struct ftl_p2l_log_page_ctrl *ctrl);
+static void ftl_p2l_log_read_process(struct ftl_p2l_log *p2l);
 
 static struct ftl_p2l_log *
 p2l_log_create(struct spdk_ftl_dev *dev, uint32_t region_type)
@@ -55,6 +70,7 @@ p2l_log_create(struct spdk_ftl_dev *dev, uint32_t region_type)
 	TAILQ_INIT(&p2l->ios);
 	p2l->dev = dev;
 	p2l->md = dev->layout.md[region_type];
+	p2l->entry_max = ftl_md_get_buffer_size(p2l->md) / FTL_BLOCK_SIZE;
 	p2l->page_pool = ftl_mempool_create(FTL_P2L_LOG_PAGE_COUNT_DEFAULT,
 					    sizeof(struct ftl_p2l_log_page_ctrl),
 					    FTL_BLOCK_SIZE, SPDK_ENV_SOCKET_ID_ANY);
@@ -101,10 +117,9 @@ p2l_log_get_page(struct ftl_p2l_log *p2l)
 
 	/* Increase P2L page index */
 	p2l->entry_idx++;
-	if (p2l->entry_idx > (ftl_md_get_buffer_size(p2l->md) / FTL_BLOCK_SIZE)) {
-		/* The index exceeding the buffer size */
-		ftl_abort();
-	}
+
+	/* Check if the index exceeding the buffer size */
+	ftl_bug(p2l->entry_idx > p2l->entry_max);
 
 	return ctrl;
 }
@@ -313,4 +328,193 @@ ftl_p2l_log_release(struct spdk_ftl_dev *dev, struct ftl_p2l_log *p2l)
 
 	TAILQ_REMOVE(&dev->p2l_ckpt.log.inuse, p2l, link);
 	TAILQ_INSERT_TAIL(&dev->p2l_ckpt.log.free, p2l, link);
+}
+
+static struct ftl_p2l_log *
+p2l_log_get(struct spdk_ftl_dev *dev, enum ftl_layout_region_type type)
+{
+	struct ftl_p2l_log *p2l_Log;
+
+	TAILQ_FOREACH(p2l_Log, &dev->p2l_ckpt.log.free, link) {
+		if (type == p2l_Log->md->region->type) {
+			return p2l_Log;
+		}
+	}
+
+	TAILQ_FOREACH(p2l_Log, &dev->p2l_ckpt.log.inuse, link) {
+		if (type == p2l_Log->md->region->type) {
+			return p2l_Log;
+		}
+	}
+
+	return NULL;
+}
+
+static bool
+p2l_log_read_in_progress(struct ftl_p2l_log *p2l)
+{
+	return p2l->read_ctx.cb_fn ? true : false;
+}
+
+static bool
+ftl_p2l_log_read_is_next(struct ftl_p2l_log *p2l)
+{
+	if (p2l->read_ctx.result) {
+		return false;
+	}
+
+	return p2l->entry_idx < p2l->entry_max;
+}
+
+static bool
+ftl_p2l_log_read_is_qd(struct ftl_p2l_log *p2l)
+{
+	return p2l->read_ctx.qd > 0;
+}
+
+static bool
+ftl_p2l_log_read_is_finished(struct ftl_p2l_log *p2l)
+{
+	if (ftl_p2l_log_read_is_next(p2l) || ftl_p2l_log_read_is_qd(p2l)) {
+		return false;
+	}
+
+	return true;
+}
+
+static void
+ftl_p2l_log_read_finish(struct ftl_p2l_log *p2l)
+{
+	spdk_ftl_fn cb_fn = p2l->read_ctx.cb_fn;
+	void *cb_arg = p2l->read_ctx.cb_arg;
+	int result = p2l->read_ctx.result;
+
+	memset(&p2l->read_ctx, 0, sizeof(p2l->read_ctx));
+	cb_fn(cb_arg, result);
+}
+
+static void
+ftl_p2l_log_read_visit(struct ftl_p2l_log *p2l, struct ftl_p2l_log_page_ctrl *ctrl)
+{
+	struct ftl_p2l_log_page *page = &ctrl->page;
+	struct spdk_ftl_dev *dev = p2l->dev;
+	ftl_p2l_log_rd_cb cb_rd = p2l->read_ctx.cb_rd;
+	void *cb_arg = p2l->read_ctx.cb_arg;
+	uint64_t crc = p2l_log_page_crc(&ctrl->page);
+	uint64_t i, j;
+	int rc = 0;
+
+	if (crc != page->hdr.p2l_ckpt.p2l_checksum) {
+		FTL_ERRLOG(p2l->dev, "Read P2L IO Log ERROR, CRC problem, type %d\n",
+			   p2l->md->region->type);
+		p2l->read_ctx.result = -EINVAL;
+		return;
+	}
+
+	if (page->hdr.p2l_ckpt.count > SPDK_COUNTOF(page->items)) {
+		FTL_ERRLOG(p2l->dev, "Read P2L IO Log ERROR, inconsistent format, type %d\n",
+			   p2l->md->region->type);
+		p2l->read_ctx.result = -EINVAL;
+		return;
+	}
+
+	if (p2l->read_ctx.seq_id != page->hdr.p2l_ckpt.seq_id) {
+		/* This page contains entires older than the owner's sequence ID */
+		return;
+	}
+
+	for (i = 0; i < page->hdr.p2l_ckpt.count; i++) {
+		struct ftl_pl2_log_item *item = &page->items[i];
+
+		for (j = 0; j < item->num_blocks; j++) {
+			rc = cb_rd(dev, cb_arg, item->lba + j, item->addr + j, item->seq_id);
+			if (rc) {
+				p2l->read_ctx.result = rc;
+				break;
+			}
+		}
+
+		if (rc) {
+			break;
+		}
+	}
+}
+
+static void
+ftl_p2l_log_read_cb(int status, void *arg)
+{
+	struct ftl_p2l_log_page_ctrl *ctrl = arg;
+	struct ftl_p2l_log *p2l = ctrl->p2l;
+
+	assert(p2l->read_ctx.qd > 0);
+	p2l->read_ctx.qd--;
+
+	if (status) {
+		p2l->read_ctx.result = status;
+	} else {
+		ftl_p2l_log_read_visit(p2l, ctrl);
+	}
+
+	/* Release page control */
+	ftl_mempool_put(p2l->page_pool, ctrl);
+	ctrl = NULL;
+
+	ftl_p2l_log_read_process(p2l);
+}
+
+static void
+ftl_p2l_log_read_process(struct ftl_p2l_log *p2l)
+{
+	struct ftl_p2l_log_page_ctrl *ctrl;
+
+	while (ftl_p2l_log_read_is_next(p2l)) {
+		ctrl = ftl_mempool_get(p2l->page_pool);
+		if (!ctrl) {
+			break;
+		}
+
+		ctrl->p2l = p2l;
+		ctrl->entry_idx = p2l->read_ctx.idx++;
+
+		/* Check if the index exceeding the buffer size */
+		ftl_bug(p2l->entry_idx > p2l->entry_max);
+
+		p2l->read_ctx.qd++;
+		ftl_md_read_entry(p2l->md, ctrl->entry_idx, &ctrl->page, NULL,
+				  ftl_p2l_log_read_cb, ctrl, &ctrl->md_ctx);
+	}
+
+	if (ftl_p2l_log_read_is_finished(p2l)) {
+		ftl_p2l_log_read_finish(p2l);
+	}
+}
+
+int
+ftl_p2l_log_read(struct spdk_ftl_dev *dev, enum ftl_layout_region_type type, uint64_t seq_id,
+		 spdk_ftl_fn cb_fn, void *cb_arg, ftl_p2l_log_rd_cb cb_rd)
+{
+	struct ftl_p2l_log *p2l_log = p2l_log_get(dev, type);
+
+	if (!p2l_log) {
+		FTL_ERRLOG(dev, "Read P2L IO Log ERROR, no such log, type %d\n", type);
+		return -ENODEV;
+	}
+	if (p2l_log_read_in_progress(p2l_log)) {
+		FTL_ERRLOG(dev, "Read P2L IO Log ERROR, read busy, type %d\n", type);
+		return -EBUSY;
+	}
+
+	memset(&p2l_log->read_ctx, 0, sizeof(p2l_log->read_ctx));
+	p2l_log->read_ctx.cb_fn = cb_fn;
+	p2l_log->read_ctx.cb_arg = cb_arg;
+	p2l_log->read_ctx.cb_rd = cb_rd;
+
+	ftl_p2l_log_read_process(p2l_log);
+	if (ftl_p2l_log_read_is_qd(p2l_log)) {
+		/* Read in progress */
+		return 0;
+	} else {
+		FTL_ERRLOG(dev, "Read P2L IO Log ERROR, operation not started, type %d\n", type);
+		return -EINVAL;
+	}
 }
