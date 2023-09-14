@@ -37,7 +37,7 @@ C_SRCS += utils/ftl_layout_tracker_bdev.c
 C_SRCS += upgrade/ftl_layout_upgrade.c upgrade/ftl_sb_upgrade.c upgrade/ftl_p2l_upgrade.c
 C_SRCS += upgrade/ftl_band_upgrade.c upgrade/ftl_chunk_upgrade.c upgrade/ftl_trim_upgrade.c
 C_SRCS += upgrade/ftl_sb_v3.c upgrade/ftl_sb_v5.c
-C_SRCS += nvc/ftl_nvc_dev.c nvc/ftl_nvc_bdev_vss.c
+C_SRCS += nvc/ftl_nvc_dev.c nvc/ftl_nvc_bdev_vss.c nvc/ftl_nvc_bdev_non_vss.c
 C_SRCS += base/ftl_base_dev.c base/ftl_base_bdev.c
 ifeq ($(CONFIG_DEBUG),y)
 C_SRCS += ftl_trace.c
