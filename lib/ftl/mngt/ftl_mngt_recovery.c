@@ -810,7 +810,7 @@ static void
 ftl_mngt_recovery_shm_l2p(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	if (ftl_fast_recovery(dev)) {
-		ftl_mngt_call_process(mngt, &g_desc_recovery_shm);
+		ftl_mngt_call_process(mngt, &g_desc_recovery_shm, NULL);
 	} else {
 		ftl_mngt_skip_step(mngt);
 	}
@@ -968,5 +968,5 @@ static const struct ftl_mngt_process_desc g_desc_recovery_shm = {
 void
 ftl_mngt_recover(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
-	ftl_mngt_call_process(mngt, &g_desc_recovery);
+	ftl_mngt_call_process(mngt, &g_desc_recovery, NULL);
 }

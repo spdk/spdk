@@ -885,7 +885,7 @@ static void
 fn_5_2_action(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	add_elem_to_test_list(2);
-	ftl_mngt_call_process(mngt, &pdesc_test_5_2);
+	ftl_mngt_call_process(mngt, &pdesc_test_5_2, NULL);
 }
 
 static void
@@ -906,7 +906,7 @@ static void
 fn_5_3_cleanup(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	add_elem_to_test_list(-3);
-	ftl_mngt_call_process(mngt, &pdesc_test_5_3);
+	ftl_mngt_call_process(mngt, &pdesc_test_5_3, NULL);
 }
 
 static struct ftl_mngt_process_desc pdesc_test_5 = {
@@ -1028,7 +1028,7 @@ static void
 fn_6_2_action(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	add_elem_to_test_list(2);
-	ftl_mngt_call_process(mngt, &pdesc_test_6_2);
+	ftl_mngt_call_process(mngt, &pdesc_test_6_2, NULL);
 }
 
 static void
@@ -1083,6 +1083,96 @@ test_nested_process_failure(void)
 	check_list_empty();
 }
 
+struct test_call_init_ctx {
+	int init_handler_result;
+};
+
+static int
+test_call_init_child_init_hndlr(struct spdk_ftl_dev *dev,
+				struct ftl_mngt_process *mngt, void *_init_ctx)
+{
+	struct test_call_init_ctx *init_ctx = _init_ctx;
+
+	add_elem_to_test_list(10);
+	return init_ctx->init_handler_result;
+}
+
+static void
+test_call_init_child_action(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	add_elem_to_test_list(100);
+	ftl_mngt_next_step(mngt);
+}
+
+static struct ftl_mngt_process_desc pdesc_test_call_init_child = {
+	.name = "Test call init, child",
+	.init_handler = test_call_init_child_init_hndlr,
+	.steps = {
+		{
+			.name = "Test call init, child step",
+			.action = test_call_init_child_action
+		},
+		{}
+	}
+};
+
+static void
+test_call_init_parent_action(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	struct test_call_init_ctx *init_ctx = ftl_mngt_get_caller_ctx(mngt);
+
+	add_elem_to_test_list(1);
+	ftl_mngt_call_process(mngt, &pdesc_test_call_init_child, init_ctx);
+}
+
+static struct ftl_mngt_process_desc pdesc_test_call_init_parent = {
+	.name = "Test call init, parent",
+	.steps = {
+		{
+			.name = "Test call init, parent step",
+			.action = test_call_init_parent_action
+		},
+		{}
+	}
+};
+
+static void
+test_call_init_success(void)
+{
+	struct test_call_init_ctx init_ctx = {
+		.init_handler_result = 0
+	};
+
+	run_ftl_mngt_with_cb_cntx(ftl_mngt_process_execute, &pdesc_test_call_init_parent, &init_ctx);
+
+	check_elem_on_list_and_remove(1);
+	check_elem_on_list_and_remove(10);
+	check_elem_on_list_and_remove(100);
+
+	/* check if caller callback was invoked */
+	check_elem_on_list_and_remove(CALLER_CB_RET_VALUE);
+
+	check_list_empty();
+}
+
+static void
+test_call_init_failure(void)
+{
+	struct test_call_init_ctx init_ctx = {
+		.init_handler_result = -1
+	};
+
+	run_ftl_mngt_with_cb_cntx(ftl_mngt_process_execute, &pdesc_test_call_init_parent, &init_ctx);
+
+	check_elem_on_list_and_remove(1);
+	check_elem_on_list_and_remove(10);
+
+	/* check if caller callback was invoked */
+	check_elem_on_list_and_remove(CALLER_CB_RET_VALUE);
+
+	check_list_empty();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1099,6 +1189,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_fail_step);
 	CU_ADD_TEST(suite, test_mngt_call_and_call_rollback);
 	CU_ADD_TEST(suite, test_nested_process_failure);
+	CU_ADD_TEST(suite, test_call_init_success);
+	CU_ADD_TEST(suite, test_call_init_failure);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();

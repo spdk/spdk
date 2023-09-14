@@ -158,8 +158,23 @@ error:
 }
 
 static int
+invoke_init_handler(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt,
+		    const struct ftl_mngt_process_desc *pdesc, void *init_ctx)
+{
+	int rc = 0;
+
+	if (init_ctx || pdesc->init_handler) {
+		ftl_bug(!init_ctx);
+		ftl_bug(!pdesc->init_handler);
+		rc = pdesc->init_handler(dev, mngt, init_ctx);
+	}
+
+	return rc;
+}
+
+static int
 _ftl_mngt_process_execute(struct spdk_ftl_dev *dev, const struct ftl_mngt_process_desc *pdesc,
-			  ftl_mngt_completion cb, void *cb_ctx, bool silent)
+			  ftl_mngt_completion cb, void *cb_ctx, bool silent, void *init_ctx)
 {
 	const struct ftl_mngt_step_desc *sdesc;
 	struct ftl_mngt_process *mngt;
@@ -192,6 +207,11 @@ _ftl_mngt_process_execute(struct spdk_ftl_dev *dev, const struct ftl_mngt_proces
 		sdesc++;
 	}
 
+	rc = invoke_init_handler(dev, mngt, pdesc, init_ctx);
+	if (rc) {
+		goto error;
+	}
+
 	action_execute(mngt);
 	return 0;
 error:
@@ -203,7 +223,7 @@ int
 ftl_mngt_process_execute(struct spdk_ftl_dev *dev, const struct ftl_mngt_process_desc *pdesc,
 			 ftl_mngt_completion cb, void *cb_ctx)
 {
-	return _ftl_mngt_process_execute(dev, pdesc, cb, cb_ctx, false);
+	return _ftl_mngt_process_execute(dev, pdesc, cb, cb_ctx, false, NULL);
 }
 
 int
@@ -340,9 +360,10 @@ child_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 
 void
 ftl_mngt_call_process(struct ftl_mngt_process *mngt,
-		      const struct ftl_mngt_process_desc *pdesc)
+		      const struct ftl_mngt_process_desc *pdesc,
+		      void *init_ctx)
 {
-	if (_ftl_mngt_process_execute(mngt->dev, pdesc, child_cb, mngt, true)) {
+	if (_ftl_mngt_process_execute(mngt->dev, pdesc, child_cb, mngt, true, init_ctx)) {
 		ftl_mngt_fail_step(mngt);
 	} else {
 		if (mngt->rollback) {

@@ -203,7 +203,7 @@ void
 ftl_mngt_self_test(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	if (getenv("FTL_SELF_TEST")) {
-		ftl_mngt_call_process(mngt, &desc_self_test);
+		ftl_mngt_call_process(mngt, &desc_self_test, NULL);
 	} else {
 		FTL_NOTICELOG(dev, "Self test skipped\n");
 		ftl_mngt_next_step(mngt);

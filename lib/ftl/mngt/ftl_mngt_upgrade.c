@@ -151,5 +151,5 @@ ftl_mngt_layout_verify(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 void
 ftl_mngt_layout_upgrade(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
-	ftl_mngt_call_process(mngt, &desc_layout_upgrade);
+	ftl_mngt_call_process(mngt, &desc_layout_upgrade, NULL);
 }

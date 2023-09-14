@@ -18,9 +18,9 @@ ftl_mngt_select_startup_mode(struct spdk_ftl_dev *dev,
 			     struct ftl_mngt_process *mngt)
 {
 	if (dev->conf.mode & SPDK_FTL_MODE_CREATE) {
-		ftl_mngt_call_process(mngt, &desc_first_start);
+		ftl_mngt_call_process(mngt, &desc_first_start, NULL);
 	} else {
-		ftl_mngt_call_process(mngt, &desc_restore);
+		ftl_mngt_call_process(mngt, &desc_restore, NULL);
 	}
 }
 
@@ -29,7 +29,7 @@ ftl_mngt_select_restore_mode(struct spdk_ftl_dev *dev,
 			     struct ftl_mngt_process *mngt)
 {
 	if (dev->sb->clean) {
-		ftl_mngt_call_process(mngt, &desc_clean_start);
+		ftl_mngt_call_process(mngt, &desc_clean_start, NULL);
 	} else {
 		ftl_mngt_recover(dev, mngt);
 	}
