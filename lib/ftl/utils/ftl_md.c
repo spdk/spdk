@@ -701,7 +701,7 @@ ftl_md_persist_entry_write_blocks(struct ftl_md_io_entry_ctx *ctx, struct ftl_md
 
 	rc = write_blocks(md->dev, md->region->bdev_desc, md->region->ioch,
 			  ctx->buffer, ctx->vss_buffer,
-			  persist_entry_lba(md, ctx->start_entry), md->region->entry_size,
+			  persist_entry_lba(md, ctx->start_entry), md->region->entry_size * ctx->num_entries,
 			  persist_entry_cb, ctx);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
@@ -756,12 +756,16 @@ _ftl_md_persist_entry(struct ftl_md_io_entry_ctx *ctx)
 }
 
 void
-ftl_md_persist_entry(struct ftl_md *md, uint64_t start_entry, void *buffer, void *vss_buffer,
-		     ftl_md_io_entry_cb cb, void *cb_arg,
-		     struct ftl_md_io_entry_ctx *ctx)
+ftl_md_persist_entries(struct ftl_md *md, uint64_t start_entry, uint64_t num_entries, void *buffer,
+		       void *vss_buffer, ftl_md_io_entry_cb cb, void *cb_arg,
+		       struct ftl_md_io_entry_ctx *ctx)
 {
 	if (spdk_unlikely(0 == md->region->entry_size)) {
 		/* This MD has not been configured to support persist entry call */
+		ftl_abort();
+	}
+	if (spdk_unlikely(start_entry + num_entries > md->region->num_entries)) {
+		/* Exceeding number of available entires */
 		ftl_abort();
 	}
 
@@ -771,6 +775,7 @@ ftl_md_persist_entry(struct ftl_md *md, uint64_t start_entry, void *buffer, void
 	ctx->md = md;
 	ctx->start_entry = start_entry;
 	ctx->buffer = buffer;
+	ctx->num_entries = num_entries;
 	ctx->vss_buffer = vss_buffer ? : md->entry_vss_dma_buf;
 
 	_ftl_md_persist_entry(ctx);

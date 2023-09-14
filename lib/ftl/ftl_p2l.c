@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2022 Intel Corporation.
+ *   Copyright 2023 Solidigm All Rights Reserved
  *   All rights reserved.
  */
 
@@ -204,8 +205,8 @@ ftl_p2l_ckpt_issue(struct ftl_rq *rq)
 	md_page->p2l_ckpt.p2l_checksum = spdk_crc32c_update(map_page,
 					 rq->num_blocks * sizeof(struct ftl_p2l_map_entry), 0);
 	/* Save the P2L map entry */
-	ftl_md_persist_entry(ckpt->md, p2l_map_page_no, map_page, md_page, ftl_p2l_ckpt_issue_end,
-			     rq, &rq->md_persist_entry_ctx);
+	ftl_md_persist_entries(ckpt->md, p2l_map_page_no, 1, map_page, md_page, ftl_p2l_ckpt_issue_end,
+			       rq, &rq->md_persist_entry_ctx);
 }
 
 #if defined(DEBUG)
@@ -308,8 +309,8 @@ ftl_mngt_persist_band_p2l(struct ftl_mngt_process *mngt, struct ftl_p2l_sync_ctx
 					 FTL_NUM_LBA_IN_BLOCK * sizeof(struct ftl_p2l_map_entry), 0);
 
 	/* Save the P2L map entry */
-	ftl_md_persist_entry(ckpt->md, ctx->page_start, map_page, md_page,
-			     ftl_p2l_ckpt_persist_end, mngt, &band->md_persist_entry_ctx);
+	ftl_md_persist_entries(ckpt->md, ctx->page_start, 1, map_page, md_page,
+			       ftl_p2l_ckpt_persist_end, mngt, &band->md_persist_entry_ctx);
 }
 
 void

@@ -601,8 +601,8 @@ ftl_chunk_persist_free_state(struct ftl_nv_cache *nv_cache)
 		p2l_map->chunk_dma_md->close_seq_id = 0;
 		p2l_map->chunk_dma_md->p2l_map_checksum = 0;
 
-		ftl_md_persist_entry(md, get_chunk_idx(chunk), p2l_map->chunk_dma_md, NULL,
-				     chunk_free_cb, chunk, &chunk->md_persist_entry_ctx);
+		ftl_md_persist_entries(md, get_chunk_idx(chunk), 1, p2l_map->chunk_dma_md, NULL,
+				       chunk_free_cb, chunk, &chunk->md_persist_entry_ctx);
 	}
 }
 
@@ -1892,9 +1892,9 @@ ftl_chunk_open(struct ftl_nv_cache_chunk *chunk)
 	p2l_map->chunk_dma_md->state = FTL_CHUNK_STATE_OPEN;
 	p2l_map->chunk_dma_md->p2l_map_checksum = 0;
 
-	ftl_md_persist_entry(md, get_chunk_idx(chunk), p2l_map->chunk_dma_md,
-			     NULL, chunk_open_cb, chunk,
-			     &chunk->md_persist_entry_ctx);
+	ftl_md_persist_entries(md, get_chunk_idx(chunk), 1, p2l_map->chunk_dma_md,
+			       NULL, chunk_open_cb, chunk,
+			       &chunk->md_persist_entry_ctx);
 }
 
 static void
@@ -1943,9 +1943,9 @@ chunk_map_write_cb(struct ftl_basic_rq *brq)
 		memcpy(p2l_map->chunk_dma_md, chunk->md, region->entry_size * FTL_BLOCK_SIZE);
 		p2l_map->chunk_dma_md->state = FTL_CHUNK_STATE_CLOSED;
 		p2l_map->chunk_dma_md->p2l_map_checksum = chunk_map_crc;
-		ftl_md_persist_entry(md, get_chunk_idx(chunk), chunk->p2l_map.chunk_dma_md,
-				     NULL, chunk_close_cb, chunk,
-				     &chunk->md_persist_entry_ctx);
+		ftl_md_persist_entries(md, get_chunk_idx(chunk), 1, chunk->p2l_map.chunk_dma_md,
+				       NULL, chunk_close_cb, chunk,
+				       &chunk->md_persist_entry_ctx);
 	} else {
 #ifdef SPDK_FTL_RETRY_ON_ERROR
 		/* retry */
@@ -2022,8 +2022,8 @@ restore_fill_p2l_map_cb(struct ftl_basic_rq *parent)
 	p2l_map->chunk_dma_md->blocks_written = chunk->nv_cache->chunk_blocks;
 	p2l_map->chunk_dma_md->p2l_map_checksum = chunk_map_crc;
 
-	ftl_md_persist_entry(md, get_chunk_idx(chunk), p2l_map->chunk_dma_md, NULL,
-			     restore_chunk_close_cb, parent, &chunk->md_persist_entry_ctx);
+	ftl_md_persist_entries(md, get_chunk_idx(chunk), 1, p2l_map->chunk_dma_md, NULL,
+			       restore_chunk_close_cb, parent, &chunk->md_persist_entry_ctx);
 }
 
 static void

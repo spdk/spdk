@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2022 Intel Corporation.
+ *   Copyright 2023 Solidigm All Rights Reserved
  *   All rights reserved.
  */
 
@@ -105,6 +106,7 @@ struct ftl_md_io_entry_ctx {
 	void *cb_arg;
 	struct ftl_md *md;
 	uint64_t start_entry;
+	uint64_t num_entries;
 	void *buffer;
 	void *vss_buffer;
 	struct spdk_bdev_io_wait_entry bdev_io_wait;
@@ -291,15 +293,17 @@ void ftl_md_persist(struct ftl_md *md);
  *
  * @param md Metadata to be persisted
  * @param start_entry Starting index of entry to be persisted
+ * @param num_entries Number of entries to be persisted
  * @param buffer DMA buffer for writing the entry to the device
  * @param vss_buffer DMA buffer for writing the entry VSS to the device
  * @param cb Completion called on persist entry end
  * @param cb_arg Context returned on completion
  * @param ctx Operation context structure
  */
-void ftl_md_persist_entry(struct ftl_md *md, uint64_t start_entry, void *buffer, void *vss_buffer,
-			  ftl_md_io_entry_cb cb, void *cb_arg,
-			  struct ftl_md_io_entry_ctx *ctx);
+void ftl_md_persist_entries(struct ftl_md *md, uint64_t start_entry, uint64_t num_entries,
+			    void *buffer,
+			    void *vss_buffer, ftl_md_io_entry_cb cb, void *cb_arg,
+			    struct ftl_md_io_entry_ctx *ctx);
 
 /**
  * Retries a persist operation performed by ftl_md_persist_entry.

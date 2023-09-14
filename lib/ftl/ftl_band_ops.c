@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2022 Intel Corporation.
+ *   Copyright 2023 Solidigm All Rights Reserved
  *   All rights reserved.
  */
 
@@ -307,8 +308,8 @@ ftl_band_open(struct ftl_band *band, enum ftl_band_type type)
 		ftl_abort();
 	}
 
-	ftl_md_persist_entry(md, band->id, p2l_map->band_dma_md, NULL,
-			     band_open_cb, band, &band->md_persist_entry_ctx);
+	ftl_md_persist_entries(md, band->id, 1, p2l_map->band_dma_md, NULL,
+			       band_open_cb, band, &band->md_persist_entry_ctx);
 }
 
 static void
@@ -347,8 +348,8 @@ band_map_write_cb(struct ftl_basic_rq *brq)
 		p2l_map->band_dma_md->state = FTL_BAND_STATE_CLOSED;
 		p2l_map->band_dma_md->p2l_map_checksum = band_map_crc;
 
-		ftl_md_persist_entry(md, band->id, p2l_map->band_dma_md, NULL,
-				     band_close_cb, band, &band->md_persist_entry_ctx);
+		ftl_md_persist_entries(md, band->id, 1, p2l_map->band_dma_md, NULL,
+				       band_close_cb, band, &band->md_persist_entry_ctx);
 	} else {
 #ifdef SPDK_FTL_RETRY_ON_ERROR
 		/* Try to retry in case of failure */
@@ -409,8 +410,8 @@ ftl_band_free(struct ftl_band *band)
 	p2l_map->band_dma_md->close_seq_id = 0;
 	p2l_map->band_dma_md->p2l_map_checksum = 0;
 
-	ftl_md_persist_entry(md, band->id, p2l_map->band_dma_md, NULL,
-			     band_free_cb, band, &band->md_persist_entry_ctx);
+	ftl_md_persist_entries(md, band->id, 1, p2l_map->band_dma_md, NULL,
+			       band_free_cb, band, &band->md_persist_entry_ctx);
 
 	/* TODO: The whole band erase code should probably be done here instead */
 }
