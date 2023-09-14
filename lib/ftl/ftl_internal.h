@@ -139,9 +139,11 @@ struct ftl_trim_log {
 SPDK_STATIC_ASSERT(sizeof(struct ftl_trim_log) == FTL_BLOCK_SIZE, "Invalid trim log page size");
 
 struct ftl_p2l_ckpt;
+struct ftl_p2l_log;
 struct ftl_band;
 struct spdk_ftl_dev;
 struct ftl_mngt_process;
+struct ftl_io;
 struct ftl_rq;
 
 int ftl_p2l_ckpt_init(struct spdk_ftl_dev *dev);
@@ -189,5 +191,80 @@ void ftl_reloc_halt(struct ftl_reloc *reloc);
 void ftl_reloc_resume(struct ftl_reloc *reloc);
 
 bool ftl_reloc_is_halted(const struct ftl_reloc *reloc);
+
+/**
+ * P2L IO log
+ */
+/*
+ * @brief Initialize P2L IO log
+ *
+ * @param dev FTL device
+ *
+ * @return Initialization result
+ */
+int ftl_p2l_log_init(struct spdk_ftl_dev *dev);
+
+/**
+ * @brief Deinitialize P2L IO log
+ *
+ * @param dev FTL device
+ */
+void ftl_p2l_log_deinit(struct spdk_ftl_dev *dev);
+
+/**
+ * @brief Get number of blocks required in FTL MD object to store P2L IO log
+ *
+ * @param dev FTL device
+ * @param write_unit_blocks number of blocks in a write unit
+ * @param max_user_data_blocks maximum number of user data blocks within a chunk/band
+ *
+ * @return Number of blocks required
+ */
+uint64_t ftl_p2l_log_get_md_blocks_required(struct spdk_ftl_dev *dev,
+		uint64_t write_unit_blocks,
+		uint64_t max_user_data_blocks);
+
+/**
+ * @brief Add an IO to the P2L IO log
+ *
+ * @param p2l P2L IO log
+ * @param io The IO to be logged
+ */
+void ftl_p2l_log_io(struct ftl_p2l_log *p2l, struct ftl_io *io);
+
+/**
+ * @brief Flush the P2L IO logs
+ *
+ * @param dev FTL device
+ */
+void ftl_p2l_log_flush(struct spdk_ftl_dev *dev);
+
+/**
+ * @brief Callback function invoked when IO is logged
+ *
+ * @param io IO that P2L logging was finished
+ */
+typedef void (*ftl_p2l_log_cb)(struct ftl_io *io);
+
+/**
+ * @brief Acquire P2L IO log
+ *
+ * @param dev FTL device
+ * @param seq_id Sequence ID of the P2L IO log
+ * @param cb Callback function invoked when IO logging is finished
+ *
+ * @return The P2L IO log
+ */
+struct ftl_p2l_log *ftl_p2l_log_acquire(struct spdk_ftl_dev *dev,
+					uint64_t seq_id,
+					ftl_p2l_log_cb cb);
+
+/**
+ * @brief Release P2L IO log
+ *
+ * @param dev FTL device
+ * @param p2l P2L IO log to be released
+ */
+void ftl_p2l_log_release(struct spdk_ftl_dev *dev, struct ftl_p2l_log *p2l);
 
 #endif /* FTL_INTERNAL_H */

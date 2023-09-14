@@ -22,7 +22,7 @@ static int
 setup_layout(struct spdk_ftl_dev *dev)
 {
 	const struct ftl_md_layout_ops *md_ops = &dev->nv_cache.nvc_type->ops.md_layout_ops;
-	const uint64_t blocks = ftl_get_num_blocks_in_band(dev);
+	const uint64_t blocks = ftl_p2l_log_get_md_blocks_required(dev, 1, ftl_get_num_blocks_in_band(dev));
 	enum ftl_layout_region_type region_type;
 
 	for (region_type = FTL_LAYOUT_REGION_TYPE_P2L_LOG_IO_MIN;

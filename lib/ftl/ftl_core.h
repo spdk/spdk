@@ -192,6 +192,13 @@ struct spdk_ftl_dev {
 		TAILQ_HEAD(, ftl_p2l_ckpt)	free;
 		/* In use regions */
 		TAILQ_HEAD(, ftl_p2l_ckpt)	inuse;
+
+		struct {
+			/* Free logs */
+			TAILQ_HEAD(, ftl_p2l_log)	free;
+			/* In use logs */
+			TAILQ_HEAD(, ftl_p2l_log)	inuse;
+		} log;
 	} p2l_ckpt;
 
 	/* MD layout region tracker for nvc device */
