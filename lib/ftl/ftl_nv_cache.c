@@ -1477,6 +1477,10 @@ ftl_nv_cache_process(struct spdk_ftl_dev *dev)
 	compaction_process(nv_cache);
 	ftl_chunk_persist_free_state(nv_cache);
 	ftl_nv_cache_process_throttle(nv_cache);
+
+	if (nv_cache->nvc_type->ops.process) {
+		nv_cache->nvc_type->ops.process(dev);
+	}
 }
 
 static bool
