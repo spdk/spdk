@@ -21,6 +21,9 @@ static struct ftl_nv_cache_compactor *compactor_alloc(struct spdk_ftl_dev *dev);
 static void compactor_free(struct spdk_ftl_dev *dev, struct ftl_nv_cache_compactor *compactor);
 static void compaction_process_ftl_done(struct ftl_rq *rq);
 static void compaction_process_read_entry(void *arg);
+static void ftl_property_dump_cache_dev(struct spdk_ftl_dev *dev,
+					const struct ftl_property *property,
+					struct spdk_json_write_ctx *w);
 
 static inline const struct ftl_layout_region *
 nvc_data_region(struct ftl_nv_cache *nv_cache)
@@ -203,6 +206,9 @@ ftl_nv_cache_init(struct spdk_ftl_dev *dev)
 	nv_cache->chunk_free_target = spdk_divide_round_up(nv_cache->chunk_count *
 				      dev->conf.nv_cache.chunk_free_target,
 				      100);
+
+	ftl_property_register(dev, "cache_device", NULL, 0, NULL, NULL, ftl_property_dump_cache_dev, NULL,
+			      NULL, true);
 	return 0;
 }
 
@@ -2353,4 +2359,50 @@ ftl_nv_cache_acquire_trim_seq_id(struct ftl_nv_cache *nv_cache)
 
 	seq_id++;
 	return seq_id;
+}
+
+static double
+ftl_nv_cache_get_chunk_utilization(struct ftl_nv_cache *nv_cache,
+				   struct ftl_nv_cache_chunk *chunk)
+{
+	double capacity = nv_cache->chunk_blocks;
+	double used = chunk->md->blocks_written + chunk->md->blocks_skipped;
+
+	return used / capacity;
+}
+
+static const char *
+ftl_nv_cache_get_chunk_state_name(struct ftl_nv_cache_chunk *chunk)
+{
+	static const char *names[] = {
+		"FREE", "OPEN", "CLOSED",
+	};
+
+	assert(chunk->md->state < SPDK_COUNTOF(names));
+	if (chunk->md->state < SPDK_COUNTOF(names)) {
+		return names[chunk->md->state];
+	} else {
+		assert(false);
+		return "?";
+	}
+}
+
+static void
+ftl_property_dump_cache_dev(struct spdk_ftl_dev *dev, const struct ftl_property *property,
+			    struct spdk_json_write_ctx *w)
+{
+	uint64_t i;
+	struct ftl_nv_cache_chunk *chunk;
+
+	spdk_json_write_named_string(w, "type", dev->nv_cache.nvc_desc->name);
+	spdk_json_write_named_array_begin(w, "chunks");
+	for (i = 0, chunk = dev->nv_cache.chunks; i < dev->nv_cache.chunk_count; i++, chunk++) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_uint64(w, "id", i);
+		spdk_json_write_named_string(w, "state", ftl_nv_cache_get_chunk_state_name(chunk));
+		spdk_json_write_named_double(w, "utilization",
+					     ftl_nv_cache_get_chunk_utilization(&dev->nv_cache, chunk));
+		spdk_json_write_object_end(w);
+	}
+	spdk_json_write_array_end(w);
 }
