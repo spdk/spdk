@@ -53,10 +53,12 @@ ftl_mngt_init_md(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_layout_region *region = layout->region;
+	struct ftl_md *md, *md_mirror;
 	uint64_t i;
 	int md_flags;
 
 	for (i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; i++, region++) {
+		assert(i == region->type);
 		if (layout->md[i]) {
 			/*
 			 * Some metadata objects are initialized by other FTL
@@ -73,6 +75,26 @@ ftl_mngt_init_md(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 		if (NULL == layout->md[i]) {
 			ftl_mngt_fail_step(mngt);
 			return;
+		}
+	}
+
+	/* Initialize mirror regions */
+	region = layout->region;
+	for (i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; i++, region++) {
+		assert(i == region->type);
+		if (region->mirror_type != FTL_LAYOUT_REGION_TYPE_INVALID &&
+		    !is_buffer_needed(region->mirror_type)) {
+			md = layout->md[i];
+			md_mirror = layout->md[region->mirror_type];
+
+			md_mirror->dev = md->dev;
+			md_mirror->data_blocks = md->data_blocks;
+			md_mirror->data = md->data;
+			if (md_mirror->region->vss_blksz == md->region->vss_blksz) {
+				md_mirror->vss_data = md->vss_data;
+			}
+			md_mirror->region = &layout->region[region->mirror_type];
+			md_mirror->is_mirror = true;
 		}
 	}
 
@@ -505,6 +527,8 @@ static const struct ftl_mngt_process_desc desc_init_sb = {
 void
 ftl_mngt_superblock_init(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
+	struct ftl_md *md;
+	struct ftl_md *md_mirror;
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_layout_region *region = &layout->region[FTL_LAYOUT_REGION_TYPE_SB];
 	char uuid[SPDK_UUID_STRING_LEN];
@@ -565,11 +589,20 @@ shm_retry:
 	/* Setup superblock mirror to QLC */
 	region = &layout->region[FTL_LAYOUT_REGION_TYPE_SB_BASE];
 	layout->md[FTL_LAYOUT_REGION_TYPE_SB_BASE] = ftl_md_create(dev, region->current.blocks,
-			region->vss_blksz, NULL, FTL_MD_CREATE_HEAP, region);
+			region->vss_blksz, NULL, FTL_MD_CREATE_NO_MEM, region);
 	if (NULL == layout->md[FTL_LAYOUT_REGION_TYPE_SB_BASE]) {
 		ftl_mngt_fail_step(mngt);
 		return;
 	}
+
+	/* Initialize mirror region buffer */
+	md = layout->md[FTL_LAYOUT_REGION_TYPE_SB];
+	md_mirror = layout->md[FTL_LAYOUT_REGION_TYPE_SB_BASE];
+
+	md_mirror->dev = md->dev;
+	md_mirror->data_blocks = md->data_blocks;
+	md_mirror->data = md->data;
+	md_mirror->is_mirror = true;
 
 	/* Initialize the superblock */
 	if (dev->conf.mode & SPDK_FTL_MODE_CREATE) {

@@ -374,10 +374,7 @@ ftl_mngt_recovery_iteration_load_l2p(struct spdk_ftl_dev *dev, struct ftl_mngt_p
 		      region->current.offset, region->current.offset + region->current.blocks,
 		      ctx->iter.lba_first, ctx->iter.lba_last);
 
-	if (ftl_md_set_region(md, &ctx->l2p_snippet.region)) {
-		ftl_mngt_fail_step(mngt);
-		return;
-	}
+	ftl_md_set_region(md, &ctx->l2p_snippet.region);
 
 	md->owner.cb_ctx = mngt;
 	md->cb = l2p_cb;

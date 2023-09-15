@@ -48,9 +48,11 @@ md_region_create(struct spdk_ftl_dev *dev, enum ftl_layout_region_type reg_type,
 	/* As new MD regions are added one after another, find where all existing regions end on the device */
 	region = layout->region;
 	for (int reg_idx = 0; reg_idx < FTL_LAYOUT_REGION_TYPE_MAX; reg_idx++, region++) {
-		reg_current_end = region->current.offset + region->current.blocks;
-		if (reg_free_offs < reg_current_end) {
-			reg_free_offs = reg_current_end;
+		if (region->bdev_desc == dev->nv_cache.bdev_desc) {
+			reg_current_end = region->current.offset + region->current.blocks;
+			if (reg_free_offs < reg_current_end) {
+				reg_free_offs = reg_current_end;
+			}
 		}
 	}
 

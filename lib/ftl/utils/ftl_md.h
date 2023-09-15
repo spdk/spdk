@@ -89,11 +89,11 @@ struct ftl_md {
 	/* Memory was registered to SPDK */
 	bool mem_reg;
 
-	/* Metadata primary object */
-	struct ftl_md *mirror;
-
 	/* This flag is used by the primary to disable mirror temporarily */
 	bool mirror_enabled;
+
+	/* This MD descriptor is used for a mirror region */
+	bool is_mirror;
 };
 
 typedef void (*ftl_md_io_entry_cb)(int status, void *cb_arg);
@@ -213,11 +213,9 @@ void ftl_md_free_buf(struct ftl_md *md, int flags);
  *
  * @param md The FTL metadata
  * @param region The device region to be set
- *
- * @return Operation status
  */
-int ftl_md_set_region(struct ftl_md *md,
-		      const struct ftl_layout_region *region);
+void ftl_md_set_region(struct ftl_md *md,
+		       const struct ftl_layout_region *region);
 
 /**
  * @brief Gets layout region on which ongoing an IO procedure is executed

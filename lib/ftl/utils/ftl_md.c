@@ -27,27 +27,14 @@ has_mirror(struct ftl_md *md)
 	return false;
 }
 
-static int
-setup_mirror(struct ftl_md *md)
+static struct ftl_md *
+ftl_md_get_mirror(struct ftl_md *md)
 {
-	if (!md->mirror) {
-		md->mirror = calloc(1, sizeof(*md->mirror));
-		if (!md->mirror) {
-			return -ENOMEM;
-		}
-		md->mirror_enabled = true;
+	if (has_mirror(md)) {
+		return md->dev->layout.md[md->region->mirror_type];
 	}
 
-	md->mirror->dev = md->dev;
-	md->mirror->data_blocks = md->data_blocks;
-	md->mirror->data = md->data;
-	md->mirror->vss_data = md->vss_data;
-
-	/* Set proper region in secondary object */
-	assert(md->region->mirror_type != FTL_LAYOUT_REGION_TYPE_INVALID);
-	md->mirror->region = &md->dev->layout.region[md->region->mirror_type];
-
-	return 0;
+	return NULL;
 }
 
 uint64_t
@@ -305,9 +292,7 @@ struct ftl_md *ftl_md_create(struct spdk_ftl_dev *dev, uint64_t blocks,
 			}
 		}
 
-		if (ftl_md_set_region(md, region)) {
-			goto err;
-		}
+		ftl_md_set_region(md, region);
 	}
 
 	return md;
@@ -339,11 +324,10 @@ ftl_md_destroy(struct ftl_md *md, int flags)
 		return;
 	}
 
-	ftl_md_free_buf(md, flags);
-
-	spdk_free(md->entry_vss_dma_buf);
-
-	free(md->mirror);
+	if (!md->is_mirror) {
+		ftl_md_free_buf(md, flags);
+		spdk_free(md->entry_vss_dma_buf);
+	}
 	free(md);
 }
 
@@ -729,8 +713,9 @@ static void
 ftl_md_persist_entry_mirror(void *_ctx)
 {
 	struct ftl_md_io_entry_ctx *ctx = _ctx;
+	struct ftl_md *md_mirror = ftl_md_get_mirror(ctx->md);
 
-	ftl_md_persist_entry_write_blocks(ctx, ctx->md->mirror, ftl_md_persist_entry_mirror);
+	ftl_md_persist_entry_write_blocks(ctx, md_mirror, ftl_md_persist_entry_mirror);
 }
 
 static void
@@ -743,7 +728,7 @@ ftl_md_persist_entry_primary(void *_ctx)
 	rc = ftl_md_persist_entry_write_blocks(ctx, md, ftl_md_persist_entry_primary);
 
 	if (!rc && has_mirror(md)) {
-		assert(md->region->entry_size == md->mirror->region->entry_size);
+		assert(md->region->entry_size == (ftl_md_get_mirror(md))->region->entry_size);
 
 		/* The MD object has mirror so execute persist on it too */
 		ftl_md_persist_entry_mirror(ctx);
@@ -794,14 +779,11 @@ read_entry_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 	if (!success) {
 		if (has_mirror(md)) {
-			if (setup_mirror(md)) {
-				/* An error when setup the mirror */
-				ctx->status = -EIO;
-				goto finish_io;
-			}
+			md->mirror_enabled = true;
 
 			/* First read from the mirror */
-			ftl_md_read_entry(md->mirror, ctx->start_entry, ctx->buffer, ctx->vss_buffer,
+			ftl_md_read_entry(ftl_md_get_mirror(md), ctx->start_entry, ctx->buffer,
+					  ctx->vss_buffer,
 					  ctx->cb, ctx->cb_arg,
 					  ctx);
 			return;
@@ -896,18 +878,16 @@ void
 ftl_md_persist(struct ftl_md *md)
 {
 	if (has_mirror(md)) {
-		if (setup_mirror(md)) {
-			/* An error when setup the mirror */
-			spdk_thread_send_msg(spdk_get_thread(), exception, md);
-			return;
-		}
+		struct ftl_md *md_mirror = ftl_md_get_mirror(md);
+
+		md->mirror_enabled = true;
 
 		/* Set callback and context in mirror */
-		md->mirror->cb = persist_mirror_cb;
-		md->mirror->owner.private = md;
+		md_mirror->cb = persist_mirror_cb;
+		md_mirror->owner.private = md;
 
 		/* First persist the mirror */
-		ftl_md_persist(md->mirror);
+		ftl_md_persist(md_mirror);
 		return;
 	}
 
@@ -967,31 +947,31 @@ restore_done(struct ftl_md *md)
 		 */
 
 		if (has_mirror(md)) {
-			if (setup_mirror(md)) {
-				/* An error when setup the mirror */
-				return -EIO;
-			}
+			struct ftl_md *md_mirror = ftl_md_get_mirror(md);
+
+			md->mirror_enabled = true;
 
 			/* Set callback and context in mirror */
-			md->mirror->cb = restore_mirror_cb;
-			md->mirror->owner.private = md;
+			md_mirror->cb = restore_mirror_cb;
+			md_mirror->owner.private = md;
 
 			/* First persist the mirror */
-			ftl_md_restore(md->mirror);
+			ftl_md_restore(md_mirror);
 			return -EAGAIN;
 		} else {
 			return -EIO;
 		}
 	} else if (0 == md->io.status && false == md->dev->sb->clean) {
 		if (has_mirror(md)) {
+			struct ftl_md *md_mirror = ftl_md_get_mirror(md);
 			/* There was a dirty shutdown, synchronize primary to mirror */
 
 			/* Set callback and context in the mirror */
-			md->mirror->cb = restore_sync_cb;
-			md->mirror->owner.private = md;
+			md_mirror->cb = restore_sync_cb;
+			md_mirror->owner.private = md;
 
 			/* First persist the mirror */
-			ftl_md_persist(md->mirror);
+			ftl_md_persist(md_mirror);
 			return -EAGAIN;
 		}
 	}
@@ -1076,18 +1056,16 @@ void
 ftl_md_clear(struct ftl_md *md, int data_pattern, union ftl_md_vss *vss_pattern)
 {
 	if (has_mirror(md)) {
-		if (setup_mirror(md)) {
-			/* An error when setup the mirror */
-			spdk_thread_send_msg(spdk_get_thread(), exception, md);
-			return;
-		}
+		struct ftl_md *md_mirror = ftl_md_get_mirror(md);
+
+		md->mirror_enabled = true;
 
 		/* Set callback and context in mirror */
-		md->mirror->cb = clear_mirror_cb;
-		md->mirror->owner.private = md;
+		md_mirror->cb = clear_mirror_cb;
+		md_mirror->owner.private = md;
 
 		/* First persist the mirror */
-		ftl_md_clear(md->mirror, data_pattern, vss_pattern);
+		ftl_md_clear(md_mirror, data_pattern, vss_pattern);
 		return;
 	}
 
@@ -1104,7 +1082,7 @@ ftl_md_get_region(struct ftl_md *md)
 	return md->region;
 }
 
-int
+void
 ftl_md_set_region(struct ftl_md *md,
 		  const struct ftl_layout_region *region)
 {
@@ -1122,10 +1100,8 @@ ftl_md_set_region(struct ftl_md *md,
 	}
 
 	if (has_mirror(md)) {
-		return setup_mirror(md);
+		md->mirror_enabled = true;
 	}
-
-	return 0;
 }
 
 int
