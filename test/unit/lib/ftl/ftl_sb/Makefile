@@ -9,4 +9,4 @@ TEST_FILE = ftl_sb_ut.c
 
 include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
 
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib/ftl
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/ftl -DUTEST
