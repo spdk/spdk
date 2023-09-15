@@ -23,6 +23,7 @@
 #define FTL_SB_VERSION_1	1
 #define FTL_SB_VERSION_2	2
 #define FTL_SB_VERSION_3	3
+#define FTL_SB_VERSION_4	4
 
 struct ftl_superblock_v2 {
 	struct ftl_superblock_header	header;
@@ -63,6 +64,43 @@ SPDK_STATIC_ASSERT(offsetof(struct ftl_superblock_v2, header) == 0,
 		   "Invalid placement of header");
 
 SPDK_STATIC_ASSERT(FTL_SUPERBLOCK_SIZE >= sizeof(struct ftl_superblock_v2),
+		   "FTL SB metadata size is invalid");
+
+struct ftl_superblock_v3 {
+	struct ftl_superblock_header	header;
+
+	struct spdk_uuid		uuid;
+
+	/* Current sequence number */
+	uint64_t			seq_id;
+
+	/* Flag describing clean shutdown */
+	uint64_t			clean;
+
+	/* Number of surfaced LBAs */
+	uint64_t			lba_cnt;
+
+	/* Percentage of base device blocks not exposed to the user */
+	uint64_t			overprovisioning;
+
+	/* Maximum IO depth per band relocate */
+	uint64_t			max_reloc_qdepth;
+
+	/* Reserved field */
+	uint8_t				reserved3[16];
+
+	/* Last L2P checkpoint +1 (i.e. min_seq_id, 0:no ckpt) */
+	uint64_t			ckpt_seq_id;
+
+	struct ftl_superblock_gc_info	gc_info;
+
+	struct ftl_superblock_v3_md_region	md_layout_head;
+} __attribute__((packed));
+
+SPDK_STATIC_ASSERT(offsetof(struct ftl_superblock_v3, header) == 0,
+		   "Invalid placement of header");
+
+SPDK_STATIC_ASSERT(FTL_SUPERBLOCK_SIZE >= sizeof(struct ftl_superblock_v3),
 		   "FTL SB metadata size is invalid");
 
 #endif /* FTL_SB_PREV_H */

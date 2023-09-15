@@ -17,7 +17,8 @@ struct ftl_layout_region;
 union ftl_superblock_ver {
 	struct ftl_superblock_header header;
 	struct ftl_superblock_v2 v2;
-	struct ftl_superblock v3;
-};
+	struct ftl_superblock_v3 v3;
+	struct ftl_superblock current;
+} __attribute__((packed));
 
 #endif /* FTL_SB_UPGRADE_H */

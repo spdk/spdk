@@ -76,7 +76,7 @@ struct ftl_layout_region_descriptor {
 	/* Number of blocks in FTL_BLOCK_SIZE unit */
 	uint64_t blocks;
 
-	struct ftl_superblock_md_region *sb_md_reg;
+	struct ftl_superblock_v3_md_region *sb_md_reg;
 };
 
 /* Data or metadata region on devices */

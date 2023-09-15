@@ -10,6 +10,7 @@
 #include "spdk_internal/cunit.h"
 #include "common/lib/test_env.c"
 
+#include "ftl/upgrade/ftl_sb_v3.c"
 #include "ftl/ftl_sb.c"
 #include "ftl/upgrade/ftl_sb_upgrade.c"
 #include "ftl/upgrade/ftl_layout_upgrade.c"
@@ -96,7 +97,7 @@ test_setup_sb_ver(uint64_t ver, uint64_t clean)
 	sb->v2.clean = clean;
 	sb->v3.md_layout_head.type = 0;
 	sb->v3.md_layout_head.df_next = 0;
-	sb->header.crc = get_sb_crc(&sb->v3);
+	sb->header.crc = get_sb_crc(&sb->current);
 }
 
 static void
@@ -127,15 +128,15 @@ test_sb_crc_v2(void)
 	crc = sb->header.crc;
 
 	sb->header.crc++;
-	sb->header.crc = get_sb_crc(&sb->v3);
+	sb->header.crc = get_sb_crc(&sb->current);
 	CU_ASSERT_EQUAL(crc, sb->header.crc);
 
 	g_sb_buf[sizeof(struct ftl_superblock_v2)]++;
-	sb->header.crc = get_sb_crc(&sb->v3);
+	sb->header.crc = get_sb_crc(&sb->current);
 	CU_ASSERT_EQUAL(crc, sb->header.crc);
 
 	g_sb_buf[sizeof(g_sb_buf) - 1]++;
-	sb->header.crc = get_sb_crc(&sb->v3);
+	sb->header.crc = get_sb_crc(&sb->current);
 	CU_ASSERT_EQUAL(crc, sb->header.crc);
 
 	sb->header.version += 0x19840514;
@@ -154,17 +155,17 @@ test_sb_crc_v3(void)
 	crc = sb->header.crc;
 
 	sb->header.crc++;
-	sb->header.crc = get_sb_crc(&sb->v3);
+	sb->header.crc = get_sb_crc(&sb->current);
 	CU_ASSERT_EQUAL(crc, sb->header.crc);
 	crc = sb->header.crc;
 
 	g_sb_buf[sizeof(struct ftl_superblock_v2)]++;
-	sb->header.crc = get_sb_crc(&sb->v3);
+	sb->header.crc = get_sb_crc(&sb->current);
 	CU_ASSERT_NOT_EQUAL(crc, sb->header.crc);
 	crc = sb->header.crc;
 
 	g_sb_buf[sizeof(g_sb_buf) - 1]++;
-	sb->header.crc = get_sb_crc(&sb->v3);
+	sb->header.crc = get_sb_crc(&sb->current);
 	CU_ASSERT_NOT_EQUAL(crc, sb->header.crc);
 	crc = sb->header.crc;
 
@@ -177,7 +178,7 @@ test_sb_crc_v3(void)
 static void
 test_sb_v3_md_layout(void)
 {
-	struct ftl_superblock_md_region *sb_reg, *sb_reg2;
+	struct ftl_superblock_v3_md_region *sb_reg, *sb_reg2;
 	struct ftl_layout_region *reg;
 	union ftl_superblock_ver *sb = (void *)g_sb_buf;
 	ftl_df_obj_id df_next;
@@ -185,35 +186,35 @@ test_sb_v3_md_layout(void)
 	int rc;
 
 	test_setup_sb_v3(false);
-	CU_ASSERT_EQUAL(ftl_superblock_md_layout_is_empty(&sb->v3), true);
+	CU_ASSERT_EQUAL(ftl_superblock_md_layout_is_empty(&sb->current), true);
 
 	/* load failed: empty md list: */
-	rc = ftl_superblock_md_layout_load_all(&g_dev);
+	rc = ftl_superblock_v3_md_layout_load_all(&g_dev);
 	CU_ASSERT_NOT_EQUAL(rc, 0);
 
 	/* create md layout: */
 	ftl_superblock_md_layout_build(&g_dev);
-	CU_ASSERT_EQUAL(ftl_superblock_md_layout_is_empty(&sb->v3), false);
+	CU_ASSERT_EQUAL(ftl_superblock_md_layout_is_empty(&sb->current), false);
 
 	/* buf overflow, sb_reg = 1 byte overflow: */
 	df_next = sb->v3.md_layout_head.df_next;
 	sb->v3.md_layout_head.df_next = FTL_SUPERBLOCK_SIZE - sizeof(sb->v3.md_layout_head) + 1;
-	rc = ftl_superblock_md_layout_load_all(&g_dev);
+	rc = ftl_superblock_v3_md_layout_load_all(&g_dev);
 	CU_ASSERT_EQUAL(rc, -EOVERFLOW);
 
 	/* buf underflow, sb_reg = -1: */
 	sb->v3.md_layout_head.df_next = UINTPTR_MAX - (uintptr_t)sb;
-	rc = ftl_superblock_md_layout_load_all(&g_dev);
+	rc = ftl_superblock_v3_md_layout_load_all(&g_dev);
 	CU_ASSERT_EQUAL(rc, -EOVERFLOW);
 
 	/* buf underflow, sb_reg = 2 bytes underflow */
 	sb->v3.md_layout_head.df_next = UINTPTR_MAX - 1;
-	rc = ftl_superblock_md_layout_load_all(&g_dev);
+	rc = ftl_superblock_v3_md_layout_load_all(&g_dev);
 	CU_ASSERT_EQUAL(rc, -EOVERFLOW);
 
 	/* looping md layout list: */
 	sb->v3.md_layout_head.df_next = ftl_df_get_obj_id(sb, &sb->v3.md_layout_head);
-	rc = ftl_superblock_md_layout_load_all(&g_dev);
+	rc = ftl_superblock_v3_md_layout_load_all(&g_dev);
 	CU_ASSERT_NOT_EQUAL(rc, 0);
 
 	sb->v3.md_layout_head.df_next = df_next;
@@ -221,12 +222,12 @@ test_sb_v3_md_layout(void)
 	/* unsupported/fixed md region: */
 	md_type = sb->v3.md_layout_head.type;
 	sb->v3.md_layout_head.type = FTL_LAYOUT_REGION_TYPE_SB;
-	rc = ftl_superblock_md_layout_load_all(&g_dev);
+	rc = ftl_superblock_v3_md_layout_load_all(&g_dev);
 	CU_ASSERT_NOT_EQUAL(rc, 0);
 
 	/* unsupported/invalid md region: */
 	sb->v3.md_layout_head.type = FTL_LAYOUT_REGION_TYPE_MAX;
-	rc = ftl_superblock_md_layout_load_all(&g_dev);
+	rc = ftl_superblock_v3_md_layout_load_all(&g_dev);
 	CU_ASSERT_NOT_EQUAL(rc, 0);
 
 	/* restore the sb: */
@@ -234,7 +235,7 @@ test_sb_v3_md_layout(void)
 
 	/* load succeeded, no prev version found: */
 	reg = &g_dev.layout.region[md_type];
-	rc = ftl_superblock_md_layout_load_all(&g_dev);
+	rc = ftl_superblock_v3_md_layout_load_all(&g_dev);
 	CU_ASSERT_EQUAL(rc, 0);
 	CU_ASSERT_EQUAL(reg->current.version, reg->prev.version);
 	CU_ASSERT_NOT_EQUAL(reg->current.sb_md_reg, NULL);
@@ -243,7 +244,7 @@ test_sb_v3_md_layout(void)
 	/* load succeeded, prev (upgrade, i.e. no current) version discovery: */
 	reg = &g_dev.layout.region[md_type];
 	sb->v3.md_layout_head.version--;
-	rc = ftl_superblock_md_layout_load_all(&g_dev);
+	rc = ftl_superblock_v3_md_layout_load_all(&g_dev);
 	sb->v3.md_layout_head.version++;
 	CU_ASSERT_EQUAL(rc, 0);
 	CU_ASSERT_NOT_EQUAL(reg->current.version, reg->prev.version);
@@ -253,16 +254,16 @@ test_sb_v3_md_layout(void)
 	/* load failed, unknown (newer) version found: */
 	sb->v3.md_layout_head.df_next = FTL_SUPERBLOCK_SIZE - sizeof(sb->v3.md_layout_head);
 	sb_reg = ftl_df_get_obj_ptr(sb, sb->v3.md_layout_head.df_next);
-	rc = superblock_md_layout_add(&g_dev, sb_reg, md_type, FTL_SB_VERSION_CURRENT + 1,
-				      sb->v3.md_layout_head.blk_offs, sb->v3.md_layout_head.blk_sz);
+	rc = superblock_v3_md_layout_add(&g_dev, sb_reg, md_type, FTL_SB_VERSION_CURRENT + 1,
+					 sb->v3.md_layout_head.blk_offs, sb->v3.md_layout_head.blk_sz);
 	CU_ASSERT_EQUAL(rc, 0);
 	sb_reg->df_next = df_next;
-	rc = ftl_superblock_md_layout_load_all(&g_dev);
+	rc = ftl_superblock_v3_md_layout_load_all(&g_dev);
 	CU_ASSERT_NOT_EQUAL(rc, 0);
 
 	/* load succeeded, prev version discovery: */
 	sb_reg->version = FTL_SB_VERSION_2;
-	rc = ftl_superblock_md_layout_load_all(&g_dev);
+	rc = ftl_superblock_v3_md_layout_load_all(&g_dev);
 	CU_ASSERT_EQUAL(rc, 0);
 	CU_ASSERT_NOT_EQUAL(reg->current.version, reg->prev.version);
 	CU_ASSERT_EQUAL(reg->current.version, FTL_SB_VERSION_CURRENT);
@@ -271,27 +272,27 @@ test_sb_v3_md_layout(void)
 	/* looping/multiple (same ver) prev regions found: */
 	sb_reg->df_next = FTL_SUPERBLOCK_SIZE - 2 * sizeof(sb->v3.md_layout_head);
 	sb_reg2 = ftl_df_get_obj_ptr(sb, sb_reg->df_next);
-	rc = superblock_md_layout_add(&g_dev, sb_reg2, md_type, FTL_SB_VERSION_2,
-				      sb->v3.md_layout_head.blk_offs, sb->v3.md_layout_head.blk_sz);
+	rc = superblock_v3_md_layout_add(&g_dev, sb_reg2, md_type, FTL_SB_VERSION_2,
+					 sb->v3.md_layout_head.blk_offs, sb->v3.md_layout_head.blk_sz);
 	CU_ASSERT_EQUAL(rc, 0);
 	sb_reg2->df_next = df_next;
-	rc = ftl_superblock_md_layout_load_all(&g_dev);
+	rc = ftl_superblock_v3_md_layout_load_all(&g_dev);
 	CU_ASSERT_NOT_EQUAL(rc, 0);
 
 	/* multiple (different ver) prev regions found: */
 	sb_reg->df_next = FTL_SUPERBLOCK_SIZE - 2 * sizeof(sb->v3.md_layout_head);
 	sb_reg2 = ftl_df_get_obj_ptr(sb, sb_reg->df_next);
-	rc = superblock_md_layout_add(&g_dev, sb_reg2, md_type, FTL_SB_VERSION_1,
-				      sb->v3.md_layout_head.blk_offs, sb->v3.md_layout_head.blk_sz);
+	rc = superblock_v3_md_layout_add(&g_dev, sb_reg2, md_type, FTL_SB_VERSION_1,
+					 sb->v3.md_layout_head.blk_offs, sb->v3.md_layout_head.blk_sz);
 	CU_ASSERT_EQUAL(rc, 0);
 	sb_reg2->df_next = df_next;
-	rc = ftl_superblock_md_layout_load_all(&g_dev);
+	rc = ftl_superblock_v3_md_layout_load_all(&g_dev);
 	CU_ASSERT_EQUAL(rc, 0);
 
 	/* multiple current regions found: */
 	sb->v3.md_layout_head.df_next = FTL_SUPERBLOCK_SIZE - sizeof(sb->v3.md_layout_head);
 	sb_reg2->version = FTL_SB_VERSION_CURRENT;
-	rc = ftl_superblock_md_layout_load_all(&g_dev);
+	rc = ftl_superblock_v3_md_layout_load_all(&g_dev);
 	CU_ASSERT_NOT_EQUAL(rc, 0);
 
 	/* restore the sb: */

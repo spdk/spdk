@@ -13,6 +13,7 @@
 
 #include "ftl/ftl_layout.h"
 #include "ftl/upgrade/ftl_layout_upgrade.h"
+#include "ftl/upgrade/ftl_sb_v3.c"
 #include "ftl/ftl_sb.c"
 
 extern struct ftl_region_upgrade_desc sb_upgrade_desc[];
@@ -143,7 +144,7 @@ static void
 test_l2p_upgrade(void)
 {
 	union ftl_superblock_ver *sb = (void *)g_sb_buf;
-	struct ftl_superblock_md_region *sb_reg;
+	struct ftl_superblock_v3_md_region *sb_reg;
 	struct ftl_layout_region *reg;
 	struct ftl_layout_upgrade_ctx ctx = {0};
 	ftl_df_obj_id df_next;
@@ -152,15 +153,15 @@ test_l2p_upgrade(void)
 	int rc;
 
 	test_setup_sb_v3(true);
-	CU_ASSERT_EQUAL(ftl_superblock_md_layout_is_empty(&sb->v3), true);
+	CU_ASSERT_EQUAL(ftl_superblock_md_layout_is_empty(&sb->current), true);
 
 	/* load failed: empty md list: */
-	rc = ftl_superblock_md_layout_load_all(&g_dev);
+	rc = ftl_superblock_v3_md_layout_load_all(&g_dev);
 	CU_ASSERT_NOT_EQUAL(rc, 0);
 
 	/* create md layout: */
 	ftl_superblock_md_layout_build(&g_dev);
-	CU_ASSERT_EQUAL(ftl_superblock_md_layout_is_empty(&sb->v3), false);
+	CU_ASSERT_EQUAL(ftl_superblock_md_layout_is_empty(&sb->current), false);
 
 	df_next = sb->v3.md_layout_head.df_next;
 
@@ -171,13 +172,13 @@ test_l2p_upgrade(void)
 	sb->v3.md_layout_head.df_next = FTL_SUPERBLOCK_SIZE - sizeof(sb->v3.md_layout_head);
 	sb->v3.md_layout_head.version = 0;
 	sb_reg = ftl_df_get_obj_ptr(sb, sb->v3.md_layout_head.df_next);
-	rc = superblock_md_layout_add(&g_dev, sb_reg, md_type, 2, sb->v3.md_layout_head.blk_offs,
-				      sb->v3.md_layout_head.blk_sz);
+	rc = superblock_v3_md_layout_add(&g_dev, sb_reg, md_type, 2, sb->v3.md_layout_head.blk_offs,
+					 sb->v3.md_layout_head.blk_sz);
 	CU_ASSERT_EQUAL(rc, 0);
 	sb_reg->df_next = df_next;
 	sb_reg->blk_offs = 0x1984;
 	sb_reg->blk_sz = 0x0514;
-	rc = ftl_superblock_md_layout_load_all(&g_dev);
+	rc = ftl_superblock_v3_md_layout_load_all(&g_dev);
 	CU_ASSERT_EQUAL(rc, 0);
 	CU_ASSERT_EQUAL(reg->current.version, 3);
 	CU_ASSERT_EQUAL(reg->prev.version, 0);

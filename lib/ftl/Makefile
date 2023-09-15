@@ -35,6 +35,7 @@ C_SRCS += mngt/ftl_mngt_recovery.c mngt/ftl_mngt_upgrade.c
 C_SRCS += utils/ftl_conf.c utils/ftl_md.c utils/ftl_mempool.c utils/ftl_bitmap.c utils/ftl_property.c
 C_SRCS += upgrade/ftl_layout_upgrade.c upgrade/ftl_sb_upgrade.c upgrade/ftl_p2l_upgrade.c
 C_SRCS += upgrade/ftl_band_upgrade.c upgrade/ftl_chunk_upgrade.c
+C_SRCS += upgrade/ftl_sb_v3.c
 C_SRCS += nvc/ftl_nvc_dev.c nvc/ftl_nvc_bdev_vss.c
 C_SRCS += base/ftl_base_dev.c base/ftl_base_bdev.c
 

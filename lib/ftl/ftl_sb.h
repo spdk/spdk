@@ -11,6 +11,7 @@
 #include "ftl_sb_current.h"
 
 struct spdk_ftl_dev;
+struct ftl_layout_region;
 
 bool ftl_superblock_check_magic(struct ftl_superblock *sb);
 
@@ -21,7 +22,7 @@ int ftl_superblock_md_layout_build(struct spdk_ftl_dev *dev);
 int ftl_superblock_md_layout_load_all(struct spdk_ftl_dev *dev);
 
 int ftl_superblock_md_layout_upgrade_region(struct spdk_ftl_dev *dev,
-		struct ftl_superblock_md_region *sb_reg, uint32_t new_version);
+		struct ftl_layout_region *reg, uint32_t new_version);
 
 void ftl_superblock_md_layout_dump(struct spdk_ftl_dev *dev);
 

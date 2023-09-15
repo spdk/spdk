@@ -43,7 +43,7 @@ struct ftl_superblock {
 
 	struct ftl_superblock_gc_info	gc_info;
 
-	struct ftl_superblock_md_region	md_layout_head;
+	struct ftl_superblock_v3_md_region	md_layout_head;
 } __attribute__((packed));
 
 SPDK_STATIC_ASSERT(offsetof(struct ftl_superblock, header) == 0,

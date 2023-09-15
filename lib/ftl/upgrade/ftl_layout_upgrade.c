@@ -138,7 +138,7 @@ ftl_region_upgrade_completed(struct spdk_ftl_dev *dev, struct ftl_layout_upgrade
 	/* SB MD isn't tracked in SB MD region list */
 	if (!status) {
 		if (ctx->reg->prev.sb_md_reg) {
-			int rc = ftl_superblock_md_layout_upgrade_region(dev, ctx->reg->prev.sb_md_reg, ctx->next_reg_ver);
+			int rc = ftl_superblock_md_layout_upgrade_region(dev, ctx->reg, ctx->next_reg_ver);
 			ftl_bug(rc != 0);
 		}
 
