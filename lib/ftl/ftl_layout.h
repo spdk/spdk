@@ -11,6 +11,7 @@
 
 struct spdk_ftl_dev;
 struct ftl_md;
+struct ftl_layout_tracker_bdev;
 
 #define FTL_LAYOUT_REGION_TYPE_P2L_COUNT \
 	(FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MAX - FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MIN + 1)
@@ -179,6 +180,8 @@ struct ftl_md_layout_ops {
 			   uint32_t reg_version, size_t entry_size, size_t entry_count, struct ftl_layout_region *region);
 };
 
+uint64_t ftl_layout_upgrade_get_latest_version(enum ftl_layout_region_type reg_type);
+
 /**
  * @brief Get number of blocks required to store an MD region
  *
@@ -265,5 +268,34 @@ size_t ftl_layout_blob_store(struct spdk_ftl_dev *dev, void *blob_buf, size_t bl
 int ftl_layout_blob_load(struct spdk_ftl_dev *dev, void *blob_buf, size_t blob_sz);
 
 uint64_t ftl_layout_base_offset(struct spdk_ftl_dev *dev);
+
+/**
+ * @brief Adds a new region entry to the layout
+ *
+ * Any offset and length are not explicitly assigned yet, used to define any new metadata in the layout,
+ * before the exact sizes are calculated.
+ *
+ * @param dev FTL device
+ * @param layout_tracker Tracker of the base/nvc bdev
+ * @param reg_type type of the layout region
+ * @return int 0: add region successful, -1 otherwise
+ */
+void ftl_layout_upgrade_add_region_placeholder(struct spdk_ftl_dev *dev,
+		struct ftl_layout_tracker_bdev *layout_tracker, enum ftl_layout_region_type reg_type);
+
+/**
+ * @brief Removes the given metadata region from the layout
+ *
+ * Used to remove regions that are no longer utilized in FTL
+ *
+ * @param dev FTL device
+ * @param layout_tracker Tracker of the base/nvc bdev
+ * @param reg_type type of the layout region
+ * @param reg_ver region version to be dropped
+ * @return int 0: drop region successful, -1 otherwise
+ */
+int ftl_layout_upgrade_drop_region(struct spdk_ftl_dev *dev,
+				   struct ftl_layout_tracker_bdev *layout_tracker, enum ftl_layout_region_type reg_type,
+				   uint32_t reg_ver);
 
 #endif /* FTL_LAYOUT_H */

@@ -201,12 +201,4 @@ int ftl_layout_upgrade_init_ctx(struct spdk_ftl_dev *dev, struct ftl_layout_upgr
  */
 uint64_t ftl_layout_upgrade_region_get_latest_version(enum ftl_layout_region_type reg_type);
 
-/**
- * @brief Removes all metadata regions from the layout that are no longer utilized in FTL
- *
- * @param dev FTL device
- * @return int 0: drop regions successful, -1 otherwise
- */
-int ftl_layout_upgrade_drop_regions(struct spdk_ftl_dev *dev);
-
 #endif /* FTL_LAYOUT_UPGRADE_H */

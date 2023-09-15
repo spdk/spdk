@@ -312,7 +312,8 @@ sb_md_layout_delete_prev_region(struct spdk_ftl_dev *dev, struct ftl_layout_regi
 	struct ftl_layout_tracker_bdev *layout_tracker = sb_get_md_layout_tracker(dev, reg);
 
 	rc = ftl_layout_tracker_bdev_rm_region(layout_tracker, reg->type, reg->current.version);
-	ftl_bug(rc != 0);
+	/* Version 0 indicates a placeholder for creation of a new region */
+	ftl_bug(reg->current.version != 0 && rc != 0);
 }
 
 static void
@@ -489,21 +490,18 @@ layout_apply_from_sb_blob(struct spdk_ftl_dev *dev, struct ftl_layout_tracker_bd
 }
 
 static int
-layout_region_verify(struct spdk_ftl_dev *dev, enum ftl_layout_region_type reg_type,
-		     uint32_t reg_ver)
+layout_region_verify(struct spdk_ftl_dev *dev, enum ftl_layout_region_type reg_type)
 {
 	struct ftl_layout_region *reg = ftl_layout_region_get(dev, reg_type);
-
 	if (!reg) {
-		FTL_ERRLOG(dev, "Region not found in nvc layout blob: reg type 0x%"PRIx32"\n", reg_type);
-		return -1;
+		return -ENOENT;
 	}
 
 	/* Unknown version found in the blob */
-	if (reg->current.version > reg_ver) {
+	if (reg->current.version > ftl_layout_upgrade_get_latest_version(reg_type)) {
 		FTL_ERRLOG(dev, "Unknown region version found in layout blob: reg type 0x%"PRIx32"\n",
 			   reg_type);
-		return -1;
+		return -EINVAL;
 	}
 
 	return 0;
@@ -555,7 +553,7 @@ layout_fixup_base(struct spdk_ftl_dev *dev)
 	for (reg_descr = nvc_regs; reg_descr->type != FTL_LAYOUT_REGION_TYPE_INVALID; reg_descr++) {
 		struct ftl_layout_region *region;
 
-		if (layout_region_verify(dev, reg_descr->type, reg_descr->ver) &&
+		if (layout_region_verify(dev, reg_descr->type) &&
 		    reg_descr->on_reg_miss && reg_descr->on_reg_miss(dev)) {
 			return -1;
 		}
@@ -576,38 +574,57 @@ layout_fixup_base(struct spdk_ftl_dev *dev)
 static int
 layout_fixup_nvc(struct spdk_ftl_dev *dev)
 {
+	int rc;
 	struct ftl_layout_region_descr {
 		enum ftl_layout_region_type type;
-		uint32_t ver;
+		bool deprecated;
 		enum ftl_layout_region_type mirror_type;
 	};
 	struct ftl_layout_region_descr *reg_descr;
 	static struct ftl_layout_region_descr nvc_regs[] = {
-		{ .type = FTL_LAYOUT_REGION_TYPE_SB, .ver = FTL_SB_VERSION_CURRENT, .mirror_type = FTL_LAYOUT_REGION_TYPE_SB_BASE },
-		{ .type = FTL_LAYOUT_REGION_TYPE_L2P, .ver = 0 },
-		{ .type = FTL_LAYOUT_REGION_TYPE_BAND_MD, .ver = FTL_BAND_VERSION_CURRENT, .mirror_type = FTL_LAYOUT_REGION_TYPE_BAND_MD_MIRROR },
-		{ .type = FTL_LAYOUT_REGION_TYPE_BAND_MD_MIRROR, .ver = FTL_BAND_VERSION_CURRENT },
-		{ .type = FTL_LAYOUT_REGION_TYPE_TRIM_MD, .ver = 0, .mirror_type = FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR },
-		{ .type = FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR, .ver = 0 },
-		{ .type = FTL_LAYOUT_REGION_TYPE_NVC_MD, .ver = FTL_NVC_VERSION_CURRENT, .mirror_type = FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR },
-		{ .type = FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR, .ver = FTL_NVC_VERSION_CURRENT },
-		{ .type = FTL_LAYOUT_REGION_TYPE_P2L_CKPT_GC, .ver = FTL_P2L_VERSION_CURRENT },
-		{ .type = FTL_LAYOUT_REGION_TYPE_P2L_CKPT_GC_NEXT, .ver = FTL_P2L_VERSION_CURRENT },
-		{ .type = FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP, .ver = FTL_P2L_VERSION_CURRENT },
-		{ .type = FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP_NEXT, .ver = FTL_P2L_VERSION_CURRENT },
-		{ .type = FTL_LAYOUT_REGION_TYPE_INVALID, .ver = 0 },
+		{ .type = FTL_LAYOUT_REGION_TYPE_SB, .mirror_type = FTL_LAYOUT_REGION_TYPE_SB_BASE },
+		{ .type = FTL_LAYOUT_REGION_TYPE_L2P },
+		{ .type = FTL_LAYOUT_REGION_TYPE_BAND_MD, .mirror_type = FTL_LAYOUT_REGION_TYPE_BAND_MD_MIRROR },
+		{ .type = FTL_LAYOUT_REGION_TYPE_BAND_MD_MIRROR },
+		{ .type = FTL_LAYOUT_REGION_TYPE_TRIM_MD, .mirror_type = FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR },
+		{ .type = FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR },
+		{ .type = FTL_LAYOUT_REGION_TYPE_NVC_MD, .mirror_type = FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR },
+		{ .type = FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR },
+		{ .type = FTL_LAYOUT_REGION_TYPE_DATA_NVC, .deprecated = true },
+		{ .type = FTL_LAYOUT_REGION_TYPE_P2L_CKPT_GC },
+		{ .type = FTL_LAYOUT_REGION_TYPE_P2L_CKPT_GC_NEXT },
+		{ .type = FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP },
+		{ .type = FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP_NEXT },
+		{ .type = FTL_LAYOUT_REGION_TYPE_INVALID },
 	};
 
 	for (reg_descr = nvc_regs; reg_descr->type != FTL_LAYOUT_REGION_TYPE_INVALID; reg_descr++) {
 		struct ftl_layout_region *region;
 
-		if (layout_region_verify(dev, reg_descr->type, reg_descr->ver)) {
+		rc = layout_region_verify(dev, reg_descr->type);
+		if (rc == -ENOENT) {
+			if (reg_descr->deprecated) {
+				continue;
+			}
+
+			ftl_layout_upgrade_add_region_placeholder(dev, dev->nvc_layout_tracker, reg_descr->type);
+		} else if (rc) {
 			return -1;
+		}
+
+		if (reg_descr->deprecated) {
+			rc = ftl_layout_upgrade_drop_region(dev, dev->nvc_layout_tracker, reg_descr->type,
+							    dev->layout.region[reg_descr->type].current.version);
+			if (rc) {
+				return rc;
+			}
+			continue;
 		}
 
 		region = &dev->layout.region[reg_descr->type];
 		region->type = reg_descr->type;
-		region->mirror_type = FTL_LAYOUT_REGION_TYPE_INVALID;
+		region->mirror_type = (reg_descr->mirror_type) ? reg_descr->mirror_type :
+				      FTL_LAYOUT_REGION_TYPE_INVALID;
 		region->name = ftl_md_region_name(reg_descr->type);
 
 		region->bdev_desc = dev->nv_cache.bdev_desc;

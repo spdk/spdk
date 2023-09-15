@@ -368,6 +368,8 @@ layout_setup_legacy_default_nvc(struct spdk_ftl_dev *dev)
 		goto error;
 	}
 
+	/* Here is the place to add necessary region placeholders for the creation of new regions */
+
 	return 0;
 
 error:
@@ -639,11 +641,6 @@ ftl_layout_setup(struct spdk_ftl_dev *dev)
 		return -EINVAL;
 	}
 
-	/* Now drop the unused regions in preparation for the layout upgrade */
-	if (ftl_layout_upgrade_drop_regions(dev)) {
-		return -EINVAL;
-	}
-
 	rc = ftl_superblock_store_blob_area(dev);
 
 	FTL_NOTICELOG(dev, "Base device capacity:         %.2f MiB\n",
@@ -822,4 +819,21 @@ ftl_layout_blob_load(struct spdk_ftl_dev *dev, void *blob_buf, size_t blob_sz)
 	}
 
 	return 0;
+}
+
+void
+ftl_layout_upgrade_add_region_placeholder(struct spdk_ftl_dev *dev,
+		struct ftl_layout_tracker_bdev *layout_tracker, enum ftl_layout_region_type reg_type)
+{
+	const struct ftl_layout_tracker_bdev_region_props *reg_search_ctx = NULL;
+
+	ftl_layout_tracker_bdev_find_next_region(layout_tracker, reg_type, &reg_search_ctx);
+	if (reg_search_ctx) {
+		return;
+	}
+
+	dev->layout.region[reg_type].type = reg_type;
+	dev->layout.region[reg_type].current.version = 0;
+	dev->layout.region[reg_type].current.offset = UINT64_MAX;
+	dev->layout.region[reg_type].current.blocks = 0;
 }

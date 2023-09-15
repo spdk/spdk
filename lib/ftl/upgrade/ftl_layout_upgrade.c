@@ -115,6 +115,13 @@ SPDK_STATIC_ASSERT(sizeof(layout_upgrade_desc) / sizeof(*layout_upgrade_desc) ==
 		   "Missing layout upgrade descriptors");
 #endif
 
+uint64_t
+ftl_layout_upgrade_get_latest_version(enum ftl_layout_region_type reg_type)
+{
+	assert(reg_type < FTL_LAYOUT_REGION_TYPE_MAX);
+	return layout_upgrade_desc[reg_type].latest_ver;
+}
+
 static int
 region_verify(struct spdk_ftl_dev *dev, struct ftl_layout_upgrade_ctx *ctx)
 {
@@ -315,9 +322,10 @@ ftl_layout_upgrade_region_get_latest_version(enum ftl_layout_region_type reg_typ
 	return layout_upgrade_desc[reg_type].latest_ver;
 }
 
-static int
-layout_upgrade_drop_region(struct spdk_ftl_dev *dev, struct ftl_layout_tracker_bdev *layout_tracker,
-			   enum ftl_layout_region_type reg_type, uint32_t reg_ver)
+int
+ftl_layout_upgrade_drop_region(struct spdk_ftl_dev *dev,
+			       struct ftl_layout_tracker_bdev *layout_tracker,
+			       enum ftl_layout_region_type reg_type, uint32_t reg_ver)
 {
 	const struct ftl_layout_tracker_bdev_region_props *reg_search_ctx = NULL;
 	int rc = ftl_layout_tracker_bdev_rm_region(layout_tracker, reg_type, reg_ver);
@@ -330,15 +338,5 @@ layout_upgrade_drop_region(struct spdk_ftl_dev *dev, struct ftl_layout_tracker_b
 		return -1;
 	}
 	dev->layout.region[reg_type].type = FTL_LAYOUT_REGION_TYPE_INVALID;
-	return 0;
-}
-
-int
-ftl_layout_upgrade_drop_regions(struct spdk_ftl_dev *dev)
-{
-	if (layout_upgrade_drop_region(dev, dev->nvc_layout_tracker, FTL_LAYOUT_REGION_TYPE_DATA_NVC, 0)) {
-		return -1;
-	}
-
 	return 0;
 }
