@@ -140,6 +140,9 @@ DEFINE_STUB_V(spdk_bdev_io_get_nvme_status, (const struct spdk_bdev_io *bdev_io,
 DEFINE_STUB(ftl_nv_cache_throttle, bool, (struct spdk_ftl_dev *dev), true);
 DEFINE_STUB(ftl_base_device_get_type_by_bdev, const struct ftl_base_device_type *,
 	    (struct spdk_ftl_dev *dev, struct spdk_bdev *bdev), NULL);
+DEFINE_STUB(ftl_layout_tracker_bdev_init, struct ftl_layout_tracker_bdev *,
+	    (uint64_t bdev_blks), NULL);
+DEFINE_STUB_V(ftl_layout_tracker_bdev_fini, (struct ftl_layout_tracker_bdev *tracker));
 
 static void
 adjust_bitmap(struct ftl_bitmap **bitmap, uint64_t *bit)

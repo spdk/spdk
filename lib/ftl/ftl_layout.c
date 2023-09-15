@@ -13,6 +13,7 @@
 #include "ftl_nv_cache.h"
 #include "ftl_sb.h"
 #include "nvc/ftl_nvc_dev.h"
+#include "utils/ftl_layout_tracker_bdev.h"
 
 #define FTL_NV_CACHE_CHUNK_DATA_SIZE(blocks) ((uint64_t)blocks * FTL_BLOCK_SIZE)
 #define FTL_NV_CACHE_CHUNK_SIZE(blocks) \
@@ -152,17 +153,34 @@ get_num_user_lbas(struct spdk_ftl_dev *dev)
 	return blocks;
 }
 
+static uint64_t
+layout_blocks_left(struct spdk_ftl_dev *dev, struct ftl_layout_tracker_bdev *layout_tracker)
+{
+	uint64_t max_reg_size = 0;
+	const struct ftl_layout_tracker_bdev_region_props *reg_search_ctx = NULL;
+
+	while (true) {
+		ftl_layout_tracker_bdev_find_next_region(layout_tracker, FTL_LAYOUT_REGION_TYPE_FREE,
+				&reg_search_ctx);
+		if (!reg_search_ctx) {
+			break;
+		}
+		max_reg_size = spdk_max(max_reg_size, reg_search_ctx->blk_sz);
+	}
+	return max_reg_size;
+}
+
 static int
 setup_layout_nvc(struct spdk_ftl_dev *dev)
 {
 	int region_type;
-	uint64_t left, offset = 0, l2p_blocks;
+	uint64_t left, l2p_blocks;
 	struct ftl_layout *layout = &dev->layout;
 	const struct ftl_md_layout_ops *md_ops = &dev->nv_cache.nvc_desc->ops.md_layout_ops;
 
 	/* Initialize L2P region */
-	if (!md_ops->region_create(dev, FTL_LAYOUT_REGION_TYPE_L2P, 0, layout->l2p.addr_size,
-				   dev->num_lbas)) {
+	l2p_blocks = ftl_md_region_blocks(dev, layout->l2p.addr_size * dev->num_lbas);
+	if (!md_ops->region_create(dev, FTL_LAYOUT_REGION_TYPE_L2P, 0, FTL_BLOCK_SIZE, l2p_blocks)) {
 		goto error;
 	}
 
@@ -209,9 +227,8 @@ setup_layout_nvc(struct spdk_ftl_dev *dev)
 	/*
 	 * Initialize NV Cache metadata
 	 */
-	offset = layout->region[FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR].current.offset +
-		 layout->region[FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR].current.blocks;
-	left = layout->nvc.total_blocks - offset;
+	left = layout_blocks_left(dev, dev->nvc_layout_tracker);
+
 	layout->nvc.chunk_data_blocks =
 		FTL_NV_CACHE_CHUNK_DATA_SIZE(ftl_get_num_blocks_in_band(dev)) / FTL_BLOCK_SIZE;
 	layout->nvc.chunk_meta_size = FTL_NV_CACHE_CHUNK_MD_SIZE;

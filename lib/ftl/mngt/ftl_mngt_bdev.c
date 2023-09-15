@@ -13,6 +13,7 @@
 #include "ftl_internal.h"
 #include "ftl_core.h"
 #include "utils/ftl_defs.h"
+#include "utils/ftl_layout_tracker_bdev.h"
 
 #define MINIMUM_CACHE_SIZE_GIB 5
 #define MINIMUM_BASE_SIZE_GIB 20
@@ -118,6 +119,12 @@ ftl_mngt_open_base_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 		goto error;
 	}
 
+	dev->base_layout_tracker = ftl_layout_tracker_bdev_init(spdk_bdev_get_num_blocks(bdev));
+	if (!dev->base_layout_tracker) {
+		FTL_ERRLOG(dev, "Failed to instantiate layout tracker for base device\n");
+		goto error;
+	}
+
 	ftl_mngt_next_step(mngt);
 	return;
 error:
@@ -139,6 +146,11 @@ ftl_mngt_close_base_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 		spdk_bdev_close(dev->base_bdev_desc);
 
 		dev->base_bdev_desc = NULL;
+	}
+
+	if (dev->base_layout_tracker) {
+		ftl_layout_tracker_bdev_fini(dev->base_layout_tracker);
+		dev->base_layout_tracker = NULL;
 	}
 
 	ftl_mngt_next_step(mngt);
@@ -215,6 +227,12 @@ ftl_mngt_open_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 		goto error;
 	}
 
+	dev->nvc_layout_tracker = ftl_layout_tracker_bdev_init(spdk_bdev_get_num_blocks(bdev));
+	if (!dev->nvc_layout_tracker) {
+		FTL_ERRLOG(dev, "Failed to instantiate layout tracker for nvc device\n");
+		goto error;
+	}
+
 	FTL_NOTICELOG(dev, "Using %s as NV Cache device\n", nv_cache->nvc_desc->name);
 	ftl_mngt_next_step(mngt);
 	return;
@@ -237,6 +255,11 @@ ftl_mngt_close_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mng
 		spdk_bdev_close(dev->nv_cache.bdev_desc);
 
 		dev->nv_cache.bdev_desc = NULL;
+	}
+
+	if (dev->nvc_layout_tracker) {
+		ftl_layout_tracker_bdev_fini(dev->nvc_layout_tracker);
+		dev->nvc_layout_tracker = NULL;
 	}
 
 	ftl_mngt_next_step(mngt);

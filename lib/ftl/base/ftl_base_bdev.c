@@ -5,6 +5,7 @@
 #include "ftl_base_dev.h"
 #include "ftl_core.h"
 #include "ftl_layout.h"
+#include "utils/ftl_layout_tracker_bdev.h"
 
 static bool
 is_bdev_compatible(struct spdk_ftl_dev *dev, struct spdk_bdev *bdev)
@@ -18,47 +19,42 @@ md_region_create(struct spdk_ftl_dev *dev, enum ftl_layout_region_type reg_type,
 {
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_layout_region *region;
-	uint64_t reg_free_offs = 0, reg_current_end, reg_offs, data_base_alignment;
 	const char *md_region_name;
+	uint64_t data_base_alignment, reg_blks;
+	const struct ftl_layout_tracker_bdev_region_props *reg_props;
 
 	assert(reg_type < FTL_LAYOUT_REGION_TYPE_MAX);
 	md_region_name = ftl_md_region_name(reg_type);
 
-	/* As new MD regions are added one after another, find where all existing regions end on the device */
-	region = layout->region;
-	for (int reg_idx = 0; reg_idx < FTL_LAYOUT_REGION_TYPE_MAX; reg_idx++, region++) {
-		if (region->bdev_desc == dev->base_bdev_desc) {
-			reg_current_end = region->current.offset + region->current.blocks;
-			reg_free_offs = spdk_max(reg_free_offs, reg_current_end);
-		}
-	}
-
-
-	data_base_alignment = 8 * ftl_bitmap_buffer_alignment;
 	/* Allocating a ftl_bitmap requires a 8B input buffer alignment, since we're reusing the global valid map md buffer
 	 * this means that each band starting address needs to be aligned too - each device sector takes 1b in the valid map,
 	 * so 64 sectors (8*8) is the needed alignment
 	 */
-	reg_offs = SPDK_ALIGN_CEIL(reg_free_offs, data_base_alignment);
+	data_base_alignment = 8 * ftl_bitmap_buffer_alignment;
+	reg_blks = ftl_md_region_blocks(dev, entry_count * entry_size);
+	reg_props = ftl_layout_tracker_bdev_add_region(dev->base_layout_tracker, reg_type, reg_version,
+			reg_blks, data_base_alignment);
+	if (!reg_props) {
+		return NULL;
+	}
+	assert(reg_props->type == reg_type);
+	assert(reg_props->ver == reg_version);
+	assert(reg_props->blk_sz == reg_blks);
+	assert(reg_props->blk_offs + reg_blks <= dev->layout.base.total_blocks);
 
 	region = &layout->region[reg_type];
 	region->type = reg_type;
 	region->mirror_type = FTL_LAYOUT_REGION_TYPE_INVALID;
 	region->name = md_region_name;
 	region->current.version = region->prev.version = reg_version;
-	region->current.offset = reg_offs;
-	region->current.blocks = ftl_md_region_blocks(dev, entry_count * entry_size);
+	region->current.offset = reg_props->blk_offs;
+	region->current.blocks = reg_blks;
 	region->entry_size = entry_size / FTL_BLOCK_SIZE;
 	region->num_entries = entry_count;
 
 	region->bdev_desc = dev->base_bdev_desc;
 	region->ioch = dev->base_ioch;
 	region->vss_blksz = 0;
-
-	reg_offs += region->current.blocks;
-	if (reg_offs > layout->base.total_blocks) {
-		return NULL;
-	}
 
 	return region;
 }

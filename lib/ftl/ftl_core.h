@@ -41,6 +41,8 @@
 extern void *g_ftl_write_buf;
 extern void *g_ftl_read_buf;
 
+struct ftl_layout_tracker_bdev;
+
 struct spdk_ftl_dev {
 	/* Configuration */
 	struct spdk_ftl_conf		conf;
@@ -190,6 +192,12 @@ struct spdk_ftl_dev {
 		/* In use regions */
 		TAILQ_HEAD(, ftl_p2l_ckpt)	inuse;
 	} p2l_ckpt;
+
+	/* MD layout region tracker for nvc device */
+	struct ftl_layout_tracker_bdev *nvc_layout_tracker;
+
+	/* MD layout region tracker for a base devics */
+	struct ftl_layout_tracker_bdev *base_layout_tracker;
 
 	/* FTL properties which can be configured by user */
 	struct ftl_properties			*properties;

@@ -5,6 +5,7 @@
 #include "ftl_nvc_dev.h"
 #include "ftl_core.h"
 #include "ftl_layout.h"
+#include "utils/ftl_layout_tracker_bdev.h"
 
 static bool
 is_bdev_compatible(struct spdk_ftl_dev *dev, struct spdk_bdev *bdev)
@@ -39,41 +40,37 @@ md_region_create(struct spdk_ftl_dev *dev, enum ftl_layout_region_type reg_type,
 {
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_layout_region *region;
-	uint64_t reg_free_offs = 0, reg_current_end;
 	const char *md_region_name;
+	uint64_t reg_blks;
+	const struct ftl_layout_tracker_bdev_region_props *reg_props;
 
 	assert(reg_type < FTL_LAYOUT_REGION_TYPE_MAX);
 	md_region_name = ftl_md_region_name(reg_type);
 
-	/* As new MD regions are added one after another, find where all existing regions end on the device */
-	region = layout->region;
-	for (int reg_idx = 0; reg_idx < FTL_LAYOUT_REGION_TYPE_MAX; reg_idx++, region++) {
-		if (region->bdev_desc == dev->nv_cache.bdev_desc) {
-			reg_current_end = region->current.offset + region->current.blocks;
-			if (reg_free_offs < reg_current_end) {
-				reg_free_offs = reg_current_end;
-			}
-		}
+	reg_blks = ftl_md_region_blocks(dev, entry_count * entry_size);
+	reg_props = ftl_layout_tracker_bdev_add_region(dev->nvc_layout_tracker, reg_type, reg_version,
+			reg_blks, 0);
+	if (!reg_props) {
+		return NULL;
 	}
+	assert(reg_props->type == reg_type);
+	assert(reg_props->ver == reg_version);
+	assert(reg_props->blk_sz == reg_blks);
+	assert(reg_props->blk_offs + reg_blks <= dev->layout.nvc.total_blocks);
 
 	region = &layout->region[reg_type];
 	region->type = reg_type;
 	region->mirror_type = FTL_LAYOUT_REGION_TYPE_INVALID;
 	region->name = md_region_name;
 	region->current.version = region->prev.version = reg_version;
-	region->current.offset = reg_free_offs;
-	region->current.blocks = ftl_md_region_blocks(dev, entry_count * entry_size);
+	region->current.offset = reg_props->blk_offs;
+	region->current.blocks = reg_blks;
 	region->entry_size = entry_size / FTL_BLOCK_SIZE;
 	region->num_entries = entry_count;
 
 	region->bdev_desc = dev->nv_cache.bdev_desc;
 	region->ioch = dev->nv_cache.cache_ioch;
 	region->vss_blksz = dev->nv_cache.md_size;
-
-	reg_free_offs += region->current.blocks;
-	if (reg_free_offs > layout->nvc.total_blocks) {
-		return NULL;
-	}
 
 	return region;
 }
