@@ -191,7 +191,7 @@ while read -r line; do
 	# Removing new commit to cherry-pick from the list
 	tail -n +2 "$CHERRY_PICK_TEMP" > "$CHERRY_PICK_TEMP.tmp" && mv "$CHERRY_PICK_TEMP.tmp" "$CHERRY_PICK_TEMP"
 
-	REMAINING=$(cat $CHERRY_PICK_TEMP | wc -l)
+	REMAINING=$(wc -l < "$CHERRY_PICK_TEMP")
 	NR=$((TOTAL - REMAINING))
 	echo "Currently at $NR, remaining $REMAINING"
 
