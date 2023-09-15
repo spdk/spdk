@@ -24,6 +24,7 @@ clean:
 
 install:
 	$(Q)$(setup_cmd)
+	$(Q)rm -r spdk.egg-info
 
 uninstall:
 	$(Q)rm -r $(DESTDIR)/$(purelibdir)/spdk*
