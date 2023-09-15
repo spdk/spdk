@@ -15,9 +15,10 @@
 #include "nvc/ftl_nvc_dev.h"
 #include "utils/ftl_layout_tracker_bdev.h"
 
-#define FTL_NV_CACHE_CHUNK_DATA_SIZE(blocks) ((uint64_t)blocks * FTL_BLOCK_SIZE)
-#define FTL_NV_CACHE_CHUNK_SIZE(blocks) \
-	(FTL_NV_CACHE_CHUNK_DATA_SIZE(blocks) + (2 * FTL_NV_CACHE_CHUNK_MD_SIZE))
+enum ftl_layout_setup_mode {
+	FTL_LAYOUT_SETUP_MODE_LOAD_CURRENT = 0,
+	FTL_LAYOUT_SETUP_MODE_NO_RESTRICT,
+};
 
 static inline float
 blocks2mib(uint64_t blocks)
@@ -202,8 +203,13 @@ layout_region_create_nvc(struct spdk_ftl_dev *dev, enum ftl_layout_region_type r
 			 uint32_t reg_version, size_t entry_size, size_t entry_count)
 {
 	const struct ftl_md_layout_ops *md_ops = &dev->nv_cache.nvc_desc->ops.md_layout_ops;
+	size_t reg_blks = ftl_md_region_blocks(dev, entry_count * entry_size);
 
-	if (md_ops->region_create(dev, reg_type, reg_version, entry_size, entry_count)) {
+	if (md_ops->region_create(dev, reg_type, reg_version, reg_blks)) {
+		return -1;
+	}
+	if (md_ops->region_open(dev, reg_type, reg_version, entry_size, entry_count,
+				&dev->layout.region[reg_type])) {
 		return -1;
 	}
 	return 0;
@@ -214,15 +220,20 @@ layout_region_create_base(struct spdk_ftl_dev *dev, enum ftl_layout_region_type 
 			  uint32_t reg_version, size_t entry_size, size_t entry_count)
 {
 	const struct ftl_md_layout_ops *md_ops = &dev->base_type->ops.md_layout_ops;
+	size_t reg_blks = ftl_md_region_blocks(dev, entry_count * entry_size);
 
-	if (md_ops->region_create(dev, reg_type, reg_version, entry_size, entry_count)) {
+	if (md_ops->region_create(dev, reg_type, reg_version, reg_blks)) {
+		return -1;
+	}
+	if (md_ops->region_open(dev, reg_type, reg_version, entry_size, entry_count,
+				&dev->layout.region[reg_type])) {
 		return -1;
 	}
 	return 0;
 }
 
 static int
-setup_layout_nvc(struct spdk_ftl_dev *dev)
+layout_setup_default_nvc(struct spdk_ftl_dev *dev)
 {
 	int region_type;
 	uint64_t left, l2p_blocks;
@@ -279,14 +290,8 @@ setup_layout_nvc(struct spdk_ftl_dev *dev)
 	 * Initialize NV Cache metadata
 	 */
 	left = layout_blocks_left(dev, dev->nvc_layout_tracker);
-
-	layout->nvc.chunk_data_blocks =
-		FTL_NV_CACHE_CHUNK_DATA_SIZE(ftl_get_num_blocks_in_band(dev)) / FTL_BLOCK_SIZE;
-	layout->nvc.chunk_meta_size = FTL_NV_CACHE_CHUNK_MD_SIZE;
 	layout->nvc.chunk_count = (left * FTL_BLOCK_SIZE) /
 				  FTL_NV_CACHE_CHUNK_SIZE(ftl_get_num_blocks_in_band(dev));
-	layout->nvc.chunk_tail_md_num_blocks = ftl_nv_cache_chunk_tail_md_num_blocks(&dev->nv_cache);
-
 	if (0 == layout->nvc.chunk_count) {
 		goto error;
 	}
@@ -320,13 +325,10 @@ error:
 }
 
 static int
-setup_layout_base(struct spdk_ftl_dev *dev)
+layout_setup_default_base(struct spdk_ftl_dev *dev)
 {
 	struct ftl_layout *layout = &dev->layout;
 	uint64_t valid_map_size;
-
-	layout->base.num_usable_blocks = ftl_get_num_blocks_in_band(dev);
-	layout->base.user_blocks = ftl_band_user_blocks(dev->bands);
 
 	/* Base device layout is as follows:
 	 * - superblock
@@ -347,21 +349,72 @@ setup_layout_base(struct spdk_ftl_dev *dev)
 	return 0;
 }
 
+static int
+layout_setup_default(struct spdk_ftl_dev *dev)
+{
+	if (layout_setup_default_nvc(dev) || layout_setup_default_base(dev)) {
+		return -1;
+	}
+	return 0;
+}
+
+static int
+layout_load(struct spdk_ftl_dev *dev)
+{
+	if (ftl_superblock_load_blob_area(dev)) {
+		return -1;
+	}
+	dev->layout.nvc.chunk_count = dev->layout.region[FTL_LAYOUT_REGION_TYPE_DATA_NVC].num_entries;
+	if (ftl_superblock_md_layout_apply(dev)) {
+		return -1;
+	}
+	return 0;
+}
+
 int
 ftl_layout_setup(struct spdk_ftl_dev *dev)
 {
 	struct ftl_layout *layout = &dev->layout;
 	uint64_t i;
 	uint64_t num_lbas;
+	enum ftl_layout_setup_mode setup_mode;
+	int rc;
 
-	/* Initialize mirrors types */
+	/*
+	 * SB v5 adds the ability to create MD regions dynamically, i.e. depending on the underlying device type.
+	 * For compatibility reasons:
+	 * 1. When upgrading from pre-v5 SB, only the legacy default layout is created.
+	 *    Pre-v5: some regions were static and not stored in the SB layout. These must be created to match
+	 *            the legacy default layout.
+	 *    v5: all regions are stored in the SB layout. Upon the SB upgrade, the legacy default layout
+	 *        is updated with pre-v5 layout stored in the SB. The whole layout is then stored in v5 SB.
+	 *
+	 * 2. When SB v5 or later was loaded, the layout is instantiated from the nvc and base layout blobs.
+	 *    No default layout is created.
+	 *
+	 * 3. When the FTL layout is being created for the first time, there are no restrictions.
+	 *
+	 * Any new regions to be created in cases (1) and (2) can only be placed in the unallocated area
+	 * of the underlying device.
+	 */
+
+	if (dev->conf.mode & SPDK_FTL_MODE_CREATE) {
+		setup_mode = FTL_LAYOUT_SETUP_MODE_NO_RESTRICT;
+	} else {
+		setup_mode = FTL_LAYOUT_SETUP_MODE_LOAD_CURRENT;
+	}
+	FTL_NOTICELOG(dev, "FTL layout setup mode %d\n", (int)setup_mode);
+
+	/* Invalidate all regions */
 	for (i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; ++i) {
-		if (i == FTL_LAYOUT_REGION_TYPE_SB) {
+		if (i == FTL_LAYOUT_REGION_TYPE_SB || i == FTL_LAYOUT_REGION_TYPE_SB_BASE) {
 			/* Super block has been already initialized */
 			continue;
 		}
 
 		layout->region[i].mirror_type = FTL_LAYOUT_REGION_TYPE_INVALID;
+		/* Mark the region inactive */
+		layout->region[i].type = FTL_LAYOUT_REGION_TYPE_INVALID;
 	}
 
 	/*
@@ -383,17 +436,37 @@ ftl_layout_setup(struct spdk_ftl_dev *dev)
 	/* Setup P2L ckpt */
 	layout->p2l.ckpt_pages = spdk_divide_round_up(ftl_get_num_blocks_in_band(dev), dev->xfer_size);
 
-	if (setup_layout_nvc(dev)) {
-		return -EINVAL;
-	}
+	layout->nvc.chunk_data_blocks =
+		FTL_NV_CACHE_CHUNK_DATA_SIZE(ftl_get_num_blocks_in_band(dev)) / FTL_BLOCK_SIZE;
+	layout->nvc.chunk_meta_size = FTL_NV_CACHE_CHUNK_MD_SIZE;
+	layout->nvc.chunk_tail_md_num_blocks = ftl_nv_cache_chunk_tail_md_num_blocks(&dev->nv_cache);
 
-	if (setup_layout_base(dev)) {
-		return -EINVAL;
+	layout->base.num_usable_blocks = ftl_get_num_blocks_in_band(dev);
+	layout->base.user_blocks = ftl_band_user_blocks(dev->bands);
+
+	switch (setup_mode) {
+	case FTL_LAYOUT_SETUP_MODE_LOAD_CURRENT:
+		if (layout_load(dev)) {
+			return -EINVAL;
+		}
+		break;
+
+	case FTL_LAYOUT_SETUP_MODE_NO_RESTRICT:
+		if (layout_setup_default(dev)) {
+			return -EINVAL;
+		}
+		break;
+
+	default:
+		ftl_abort();
+		break;
 	}
 
 	if (ftl_validate_regions(dev, layout)) {
 		return -EINVAL;
 	}
+
+	rc = ftl_superblock_store_blob_area(dev);
 
 	FTL_NOTICELOG(dev, "Base device capacity:         %.2f MiB\n",
 		      blocks2mib(layout->base.total_blocks));
@@ -402,8 +475,9 @@ ftl_layout_setup(struct spdk_ftl_dev *dev)
 	FTL_NOTICELOG(dev, "L2P entries:                    %"PRIu64"\n", dev->num_lbas);
 	FTL_NOTICELOG(dev, "L2P address size:               %"PRIu64"\n", layout->l2p.addr_size);
 	FTL_NOTICELOG(dev, "P2L checkpoint pages:           %"PRIu64"\n", layout->p2l.ckpt_pages);
+	FTL_NOTICELOG(dev, "NV cache chunk count            %"PRIu64"\n", dev->layout.nvc.chunk_count);
 
-	return 0;
+	return rc;
 }
 
 int
@@ -413,8 +487,6 @@ ftl_layout_setup_superblock(struct spdk_ftl_dev *dev)
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_layout_region *region = &layout->region[FTL_LAYOUT_REGION_TYPE_SB];
 	uint64_t total_blocks, offset, left;
-	const struct ftl_md_layout_ops *md_ops = &dev->nv_cache.nvc_desc->ops.md_layout_ops;
-	const struct ftl_md_layout_ops *base_md_ops = &dev->base_type->ops.md_layout_ops;
 
 	assert(layout->md[FTL_LAYOUT_REGION_TYPE_SB] == NULL);
 
@@ -425,8 +497,8 @@ ftl_layout_setup_superblock(struct spdk_ftl_dev *dev)
 	layout->nvc.total_blocks = spdk_bdev_get_num_blocks(bdev);
 
 	/* Initialize superblock region */
-	if (!md_ops->region_create(dev, FTL_LAYOUT_REGION_TYPE_SB, FTL_SB_VERSION_CURRENT,
-				   superblock_region_size(dev), 1)) {
+	if (layout_region_create_nvc(dev, FTL_LAYOUT_REGION_TYPE_SB, FTL_SB_VERSION_CURRENT,
+				     superblock_region_size(dev), 1)) {
 		FTL_ERRLOG(dev, "Error when setting up primary super block\n");
 		return -1;
 	}
@@ -435,8 +507,8 @@ ftl_layout_setup_superblock(struct spdk_ftl_dev *dev)
 	assert(region->ioch != NULL);
 	assert(region->current.offset == 0);
 
-	if (!base_md_ops->region_create(dev, FTL_LAYOUT_REGION_TYPE_SB_BASE, FTL_SB_VERSION_CURRENT,
-					superblock_region_size(dev), 1)) {
+	if (layout_region_create_base(dev, FTL_LAYOUT_REGION_TYPE_SB_BASE, FTL_SB_VERSION_CURRENT,
+				      superblock_region_size(dev), 1)) {
 		FTL_ERRLOG(dev, "Error when setting up secondary super block\n");
 		return -1;
 	}
@@ -456,6 +528,21 @@ ftl_layout_setup_superblock(struct spdk_ftl_dev *dev)
 	}
 
 	return 0;
+}
+
+int
+ftl_layout_clear_superblock(struct spdk_ftl_dev *dev)
+{
+	int rc;
+
+	rc = ftl_layout_tracker_bdev_rm_region(dev->nvc_layout_tracker, FTL_LAYOUT_REGION_TYPE_SB,
+					       FTL_SB_VERSION_CURRENT);
+	if (rc) {
+		return rc;
+	}
+
+	return ftl_layout_tracker_bdev_rm_region(dev->base_layout_tracker, FTL_LAYOUT_REGION_TYPE_SB_BASE,
+			FTL_SB_VERSION_CURRENT);
 }
 
 void

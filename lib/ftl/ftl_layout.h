@@ -12,6 +12,10 @@
 struct spdk_ftl_dev;
 struct ftl_md;
 
+#define FTL_NV_CACHE_CHUNK_DATA_SIZE(blocks) ((uint64_t)blocks * FTL_BLOCK_SIZE)
+#define FTL_NV_CACHE_CHUNK_SIZE(blocks) \
+	(FTL_NV_CACHE_CHUNK_DATA_SIZE(blocks) + (2 * FTL_NV_CACHE_CHUNK_MD_SIZE))
+
 #define FTL_LAYOUT_REGION_TYPE_P2L_COUNT \
 	(FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MAX - FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MIN + 1)
 
@@ -56,7 +60,8 @@ enum ftl_layout_region_type {
 	/* Mirrored information about trim */
 	FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR = 15,
 
-	FTL_LAYOUT_REGION_TYPE_MAX = 16
+	FTL_LAYOUT_REGION_TYPE_MAX = 16,
+	FTL_LAYOUT_REGION_TYPE_MAX_V3 = 16
 };
 
 /* last nvc/base region in terms of lba address space */
@@ -172,10 +177,14 @@ struct ftl_md_layout_ops {
 	 * @param entry_size MD entry size in bytes
 	 * @param entry_count number of MD entries
 	 *
-	 * @return pointer to FTL MD region descriptor or NULL if failed
+	 * @retval 0 on success
+	 * @retval -1 on fault
 	 */
-	struct ftl_layout_region *(*region_create)(struct spdk_ftl_dev *dev,
-			enum ftl_layout_region_type reg_type, uint32_t reg_version, size_t entry_size, size_t entry_count);
+	int (*region_create)(struct spdk_ftl_dev *dev, enum ftl_layout_region_type reg_type,
+			     uint32_t reg_version, size_t reg_blks);
+
+	int (*region_open)(struct spdk_ftl_dev *dev, enum ftl_layout_region_type reg_type,
+			   uint32_t reg_version, size_t entry_size, size_t entry_count, struct ftl_layout_region *region);
 };
 
 /**
@@ -216,6 +225,11 @@ int ftl_layout_setup(struct spdk_ftl_dev *dev);
  * @brief Setup FTL layout of a superblock
  */
 int ftl_layout_setup_superblock(struct spdk_ftl_dev *dev);
+
+/**
+ * @brief Clear the superblock from the layout. Used after failure of shared memory files verification causes a retry.
+ */
+int ftl_layout_clear_superblock(struct spdk_ftl_dev *dev);
 
 void ftl_layout_dump(struct spdk_ftl_dev *dev);
 int ftl_validate_regions(struct spdk_ftl_dev *dev, struct ftl_layout *layout);

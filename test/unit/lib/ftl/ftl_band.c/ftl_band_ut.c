@@ -149,6 +149,12 @@ DEFINE_STUB(ftl_nv_cache_chunk_tail_md_num_blocks, size_t, (const struct ftl_nv_
 DEFINE_STUB_V(ftl_layout_tracker_bdev_find_next_region, (struct ftl_layout_tracker_bdev *tracker,
 		enum ftl_layout_region_type reg_type,
 		const struct ftl_layout_tracker_bdev_region_props **search_ctx));
+DEFINE_STUB(ftl_superblock_is_blob_area_empty, bool, (struct ftl_superblock *sb), true);
+DEFINE_STUB(ftl_superblock_store_blob_area, int, (struct spdk_ftl_dev *dev), 0);
+DEFINE_STUB(ftl_superblock_load_blob_area, int, (struct spdk_ftl_dev *dev), 0);
+DEFINE_STUB(ftl_superblock_md_layout_apply, int, (struct spdk_ftl_dev *dev), 0);
+DEFINE_STUB(ftl_layout_tracker_bdev_rm_region, int, (struct ftl_layout_tracker_bdev *tracker,
+		enum ftl_layout_region_type reg_type, uint32_t reg_ver), 0);
 
 static void
 adjust_bitmap(struct ftl_bitmap **bitmap, uint64_t *bit)

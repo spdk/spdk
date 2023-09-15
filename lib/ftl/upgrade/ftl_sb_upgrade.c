@@ -13,6 +13,7 @@ struct ftl_region_upgrade_desc sb_upgrade_desc[] = {
 	[FTL_SB_VERSION_1] = {.verify = ftl_region_upgrade_disabled},
 	[FTL_SB_VERSION_2] = {.verify = ftl_region_upgrade_disabled},
 	[FTL_SB_VERSION_3] = {.verify = ftl_region_upgrade_disabled},
+	[FTL_SB_VERSION_4] = {.verify = ftl_region_upgrade_disabled},
 };
 
 SPDK_STATIC_ASSERT(SPDK_COUNTOF(sb_upgrade_desc) == FTL_SB_VERSION_CURRENT,

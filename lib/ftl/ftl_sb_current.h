@@ -9,8 +9,8 @@
 #include "spdk/uuid.h"
 #include "ftl_sb_common.h"
 
-#define FTL_SB_VERSION_4			4
-#define FTL_SB_VERSION_CURRENT			FTL_SB_VERSION_4
+#define FTL_SB_VERSION_5			5
+#define FTL_SB_VERSION_CURRENT			FTL_SB_VERSION_5
 
 struct ftl_superblock {
 	struct ftl_superblock_header	header;
@@ -43,7 +43,26 @@ struct ftl_superblock {
 
 	struct ftl_superblock_gc_info	gc_info;
 
-	struct ftl_superblock_v3_md_region	md_layout_head;
+	/* Points to the end of blob area */
+	ftl_df_obj_id			blob_area_end;
+
+	/* NVC device name */
+	char				nvc_dev_name[16];
+
+	/* NVC-stored MD layout tracking info */
+	struct ftl_superblock_v5_md_blob_hdr	md_layout_nvc;
+
+	/* Base device name */
+	char					base_dev_name[16];
+
+	/* Base dev-stored MD layout tracking info */
+	struct ftl_superblock_v5_md_blob_hdr	md_layout_base;
+
+	/* FTL layout params */
+	struct ftl_superblock_v5_md_blob_hdr	layout_params;
+
+	/* Start of the blob area */
+	char blob_area[0];
 } __attribute__((packed));
 
 SPDK_STATIC_ASSERT(offsetof(struct ftl_superblock, header) == 0,

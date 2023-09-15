@@ -6,6 +6,7 @@
 
 #include "spdk/thread.h"
 #include "spdk/crc32.h"
+#include "spdk/string.h"
 
 #include "ftl_core.h"
 #include "ftl_mngt.h"
@@ -14,6 +15,8 @@
 #include "ftl_band.h"
 #include "ftl_internal.h"
 #include "ftl_sb.h"
+#include "base/ftl_base_dev.h"
+#include "nvc/ftl_nvc_dev.h"
 #include "upgrade/ftl_layout_upgrade.h"
 #include "upgrade/ftl_sb_upgrade.h"
 
@@ -52,12 +55,16 @@ void
 ftl_mngt_init_md(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	struct ftl_layout *layout = &dev->layout;
-	struct ftl_layout_region *region = layout->region;
+	struct ftl_layout_region *region;
 	struct ftl_md *md, *md_mirror;
-	uint64_t i;
+	enum ftl_layout_region_type i;
 	int md_flags;
 
-	for (i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; i++, region++) {
+	for (i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; i++) {
+		region = ftl_layout_region_get(dev, i);
+		if (!region) {
+			continue;
+		}
 		assert(i == region->type);
 		if (layout->md[i]) {
 			/*
@@ -79,8 +86,11 @@ ftl_mngt_init_md(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 	}
 
 	/* Initialize mirror regions */
-	region = layout->region;
-	for (i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; i++, region++) {
+	for (i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; i++) {
+		region = ftl_layout_region_get(dev, i);
+		if (!region) {
+			continue;
+		}
 		assert(i == region->type);
 		if (region->mirror_type != FTL_LAYOUT_REGION_TYPE_INVALID &&
 		    !is_buffer_needed(region->mirror_type)) {
@@ -93,7 +103,8 @@ ftl_mngt_init_md(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 			if (md_mirror->region->vss_blksz == md->region->vss_blksz) {
 				md_mirror->vss_data = md->vss_data;
 			}
-			md_mirror->region = &layout->region[region->mirror_type];
+			md_mirror->region = ftl_layout_region_get(dev, region->mirror_type);
+			ftl_bug(md_mirror->region == NULL);
 			md_mirror->is_mirror = true;
 		}
 	}
@@ -105,12 +116,16 @@ void
 ftl_mngt_deinit_md(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	struct ftl_layout *layout = &dev->layout;
-	struct ftl_layout_region *region = layout->region;
-	uint64_t i;
+	struct ftl_layout_region *region;
+	enum ftl_layout_region_type i;
 
-	for (i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; i++, region++) {
+	for (i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; i++) {
+		region = ftl_layout_region_get(dev, i);
+		if (!region) {
+			continue;
+		}
 		if (layout->md[i]) {
-			ftl_md_destroy(layout->md[i], ftl_md_destroy_region_flags(dev, layout->region[i].type));
+			ftl_md_destroy(layout->md[i], ftl_md_destroy_region_flags(dev, region->type));
 			layout->md[i] = NULL;
 		}
 	}
@@ -381,8 +396,13 @@ ftl_mngt_init_default_sb(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 
 	/* md layout isn't initialized yet.
 	 * empty region list => all regions in the default location */
-	sb->md_layout_head.type = FTL_LAYOUT_REGION_TYPE_INVALID;
-	sb->md_layout_head.df_next = FTL_DF_OBJ_ID_INVALID;
+	spdk_strcpy_pad(sb->base_dev_name, dev->base_type->name,
+			SPDK_COUNTOF(sb->base_dev_name), '\0');
+	sb->md_layout_base.df_id = FTL_DF_OBJ_ID_INVALID;
+
+	spdk_strcpy_pad(sb->nvc_dev_name, dev->nv_cache.nvc_desc->name,
+			SPDK_COUNTOF(sb->nvc_dev_name), '\0');
+	sb->md_layout_nvc.df_id = FTL_DF_OBJ_ID_INVALID;
 
 	sb->header.crc = get_sb_crc(sb);
 
@@ -488,6 +508,12 @@ ftl_mngt_validate_sb(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 	}
 	dev->conf.overprovisioning = sb->overprovisioning;
 
+	if (!ftl_superblock_validate_blob_area(dev)) {
+		FTL_ERRLOG(dev, "Corrupted FTL superblock blob area\n");
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
 	ftl_mngt_next_step(mngt);
 }
 
@@ -577,6 +603,10 @@ shm_retry:
 			md_create_flags |= FTL_MD_CREATE_SHM_NEW;
 			ftl_md_destroy(dev->sb_shm_md, 0);
 			dev->sb_shm_md = NULL;
+			if (ftl_layout_clear_superblock(dev)) {
+				ftl_mngt_fail_step(mngt);
+				return;
+			}
 			goto shm_retry;
 		}
 		ftl_mngt_fail_step(mngt);

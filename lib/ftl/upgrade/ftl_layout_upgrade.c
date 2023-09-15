@@ -157,12 +157,12 @@ ftl_layout_verify(struct spdk_ftl_dev *dev)
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_layout_upgrade_ctx ctx = {0};
 
-	if (ftl_superblock_md_layout_is_empty(dev->sb)) {
-		rc = ftl_superblock_md_layout_build(dev);
+	if (ftl_superblock_is_blob_area_empty(dev->sb)) {
+		rc = ftl_superblock_store_blob_area(dev);
 		goto exit;
 	}
 
-	if (ftl_superblock_md_layout_load_all(dev)) {
+	if (ftl_superblock_load_blob_area(dev)) {
 		return -1;
 	}
 

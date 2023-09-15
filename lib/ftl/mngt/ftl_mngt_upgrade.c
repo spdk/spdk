@@ -6,6 +6,7 @@
 #include "ftl_core.h"
 #include "ftl_mngt.h"
 #include "ftl_mngt_steps.h"
+#include "ftl_sb.h"
 #include "upgrade/ftl_layout_upgrade.h"
 
 struct ftl_mngt_upgrade_ctx {
@@ -26,6 +27,7 @@ region_upgrade_cb(struct spdk_ftl_dev *dev, void *_ctx, int status)
 		FTL_ERRLOG(dev, "Upgrade failed for region %d (rc=%d)\n", ctx->upgrade_ctx.reg->type, status);
 		ftl_mngt_fail_step(ctx->mngt);
 	} else {
+		ftl_superblock_store_blob_area(dev);
 		ftl_mngt_next_step(ctx->mngt);
 	}
 }
@@ -35,7 +37,7 @@ region_upgrade(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	struct ftl_mngt_upgrade_ctx *ctx = ftl_mngt_get_caller_ctx(mngt);
 	struct ftl_layout_upgrade_ctx *upgrade_ctx = &ctx->upgrade_ctx;
-	size_t ctx_size = upgrade_ctx->upgrade->desc[upgrade_ctx->reg->prev.version].ctx_size;
+	size_t ctx_size = upgrade_ctx->upgrade->desc[upgrade_ctx->reg->current.version].ctx_size;
 	int rc = -1;
 
 	assert(upgrade_ctx->ctx == NULL);

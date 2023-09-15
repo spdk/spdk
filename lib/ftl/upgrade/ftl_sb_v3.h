@@ -18,12 +18,10 @@ bool ftl_superblock_v3_check_magic(union ftl_superblock_ver *sb_ver);
 
 bool ftl_superblock_v3_md_layout_is_empty(union ftl_superblock_ver *sb_ver);
 
-int ftl_superblock_v3_md_layout_build(struct spdk_ftl_dev *dev);
+bool ftl_superblock_v3_md_region_overflow(struct spdk_ftl_dev *dev,
+		struct ftl_superblock_v3_md_region *sb_reg);
 
 int ftl_superblock_v3_md_layout_load_all(struct spdk_ftl_dev *dev);
-
-int ftl_superblock_v3_md_layout_upgrade_region(struct spdk_ftl_dev *dev,
-		struct ftl_layout_region *reg, uint32_t new_version);
 
 void ftl_superblock_v3_md_layout_dump(struct spdk_ftl_dev *dev);
 

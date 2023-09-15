@@ -23,9 +23,6 @@ int ftl_superblock_v5_store_blob_area(struct spdk_ftl_dev *dev);
 
 int ftl_superblock_v5_load_blob_area(struct spdk_ftl_dev *dev);
 
-int ftl_superblock_v5_md_layout_upgrade_region(struct spdk_ftl_dev *dev,
-		struct ftl_layout_region *reg, uint32_t new_version);
-
 int ftl_superblock_v5_md_layout_apply(struct spdk_ftl_dev *dev);
 
 void ftl_superblock_v5_md_layout_dump(struct spdk_ftl_dev *dev);

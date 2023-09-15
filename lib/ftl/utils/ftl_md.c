@@ -426,6 +426,10 @@ audit_md_vss_version(struct ftl_md *md, uint64_t blocks)
 {
 #if defined(DEBUG)
 	union ftl_md_vss *vss = md->io.md;
+	/* Need to load the superblock regardless of its version */
+	if (md->region->type == FTL_LAYOUT_REGION_TYPE_SB) {
+		return;
+	}
 	while (blocks) {
 		blocks--;
 		assert(vss[blocks].version.md_version == md->region->current.version);
@@ -991,8 +995,10 @@ io_done(struct ftl_md *md)
 	}
 
 	if (status != -EAGAIN) {
-		md->cb(md->dev, md, status);
+		/* The MD instance may be destroyed in ctx of md->cb(), e.g. upon region upgrade. */
+		/* Need to cleanup DMA bufs first. */
 		io_cleanup(md);
+		md->cb(md->dev, md, status);
 	}
 }
 
