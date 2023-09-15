@@ -166,7 +166,7 @@ function vhost_run() {
 
 	notice "Loging to:   $vhost_log_file"
 	notice "Socket:      $vhost_socket"
-	notice "Command:     $cmd"
+	notice "Command:     ${cmd[*]}"
 
 	timing_enter vhost_start
 
@@ -189,7 +189,7 @@ function vhost_run() {
 		framework_start_init
 
 	#do not generate nvmes if pci access is disabled
-	if [[ "$cmd" != *"--no-pci"* ]] && [[ "$cmd" != *"-u"* ]] && $run_gen_nvme; then
+	if [[ "${cmd[*]}" != *"--no-pci"* ]] && [[ "${cmd[*]}" != *"-u"* ]] && $run_gen_nvme; then
 		$rootdir/scripts/gen_nvme.sh | $rootdir/scripts/rpc.py -s $vhost_dir/rpc.sock load_subsystem_config
 	fi
 
