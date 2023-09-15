@@ -152,6 +152,7 @@ ftl_mngt_open_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 	struct spdk_bdev *bdev;
 	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
 	const char *bdev_name = dev->conf.cache_bdev;
+	const struct ftl_md_layout_ops *md_ops;
 
 	if (spdk_bdev_open_ext(bdev_name, true, nv_cache_bdev_event_cb, dev,
 			       &nv_cache->bdev_desc)) {
@@ -197,6 +198,12 @@ ftl_mngt_open_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 		goto error;
 	}
 	nv_cache->md_size = sizeof(union ftl_md_vss);
+
+	md_ops = &nv_cache->nvc_desc->ops.md_layout_ops;
+	if (!md_ops->region_create) {
+		FTL_ERRLOG(dev, "NV Cache device doesn't implement md_layout_ops\n");
+		goto error;
+	}
 
 	FTL_NOTICELOG(dev, "Using %s as NV Cache device\n", nv_cache->nvc_desc->name);
 	ftl_mngt_next_step(mngt);

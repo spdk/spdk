@@ -159,6 +159,44 @@ struct ftl_layout {
 };
 
 /**
+ * @brief FTL MD layout operations interface
+ */
+struct ftl_md_layout_ops {
+	/**
+	 * @brief Create a new MD region
+	 *
+	 * @param dev ftl device
+	 * @param reg_type region type
+	 * @param reg_version region version
+	 * @param entry_size MD entry size in bytes
+	 * @param entry_count number of MD entries
+	 *
+	 * @return pointer to FTL MD region descriptor or NULL if failed
+	 */
+	struct ftl_layout_region *(*region_create)(struct spdk_ftl_dev *dev,
+			enum ftl_layout_region_type reg_type, uint32_t reg_version, size_t entry_size, size_t entry_count);
+};
+
+/**
+ * @brief Get number of blocks required to store an MD region
+ *
+ * @param dev ftl device
+ * @param bytes size of the MD region in bytes
+ *
+ * @retval Number of blocks required to store an MD region
+ */
+uint64_t ftl_md_region_blocks(struct spdk_ftl_dev *dev, uint64_t bytes);
+
+/**
+ * @brief Get name of an MD region
+ *
+ * @param reg_type MD region type
+ *
+ * @return Name of the MD region specified
+ */
+const char *ftl_md_region_name(enum ftl_layout_region_type reg_type);
+
+/**
  * @brief Setup FTL layout
  */
 int ftl_layout_setup(struct spdk_ftl_dev *dev);

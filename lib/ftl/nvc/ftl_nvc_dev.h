@@ -7,6 +7,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/bdev_module.h"
+#include "ftl_layout.h"
 
 struct spdk_ftl_dev;
 struct ftl_mngt_process;
@@ -34,6 +35,8 @@ struct ftl_nv_cache_device_ops {
 	 * @retval false if bdev is not valid for NV Cache device
 	 */
 	bool (*is_bdev_compatible)(struct spdk_ftl_dev *dev, struct spdk_bdev *bdev);
+
+	struct ftl_md_layout_ops md_layout_ops;
 };
 
 /**
