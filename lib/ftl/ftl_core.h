@@ -23,6 +23,7 @@
 #include "ftl_layout.h"
 #include "ftl_sb.h"
 #include "ftl_l2p.h"
+#include "base/ftl_base_dev.h"
 #include "utils/ftl_bitmap.h"
 #include "utils/ftl_log.h"
 #include "utils/ftl_property.h"
@@ -59,6 +60,9 @@ struct spdk_ftl_dev {
 
 	/* Underlying device */
 	struct spdk_bdev_desc		*base_bdev_desc;
+
+	/* Base device type */
+	const struct ftl_base_device_type *base_type;
 
 	/* Cached properties of the underlying device */
 	uint64_t			num_blocks_in_band;

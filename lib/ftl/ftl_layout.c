@@ -152,14 +152,6 @@ get_num_user_lbas(struct spdk_ftl_dev *dev)
 	return blocks;
 }
 
-static void
-set_region_bdev_btm(struct ftl_layout_region *reg, struct spdk_ftl_dev *dev)
-{
-	reg->bdev_desc = dev->base_bdev_desc;
-	reg->ioch = dev->base_ioch;
-	reg->vss_blksz = 0;
-}
-
 static int
 setup_layout_nvc(struct spdk_ftl_dev *dev)
 {
@@ -271,57 +263,26 @@ layout_base_offset(struct spdk_ftl_dev *dev)
 static int
 setup_layout_base(struct spdk_ftl_dev *dev)
 {
-	uint64_t left, offset;
 	struct ftl_layout *layout = &dev->layout;
-	struct ftl_layout_region *region;
-	uint64_t data_base_alignment = 8 * ftl_bitmap_buffer_alignment;
-	/* Allocating a ftl_bitmap requires a 8B input buffer alignment, since we're reusing the global valid map md buffer
-	 * this means that each band starting address needs to be aligned too - each device sector takes 1b in the valid map,
-	 * so 64 sectors (8*8) is the needed alignment
-	 */
+	const struct ftl_md_layout_ops *md_ops = &dev->base_type->ops.md_layout_ops;
+	uint64_t valid_map_size;
 
 	layout->base.num_usable_blocks = ftl_get_num_blocks_in_band(dev);
 	layout->base.user_blocks = ftl_band_user_blocks(dev->bands);
 
-	/* Base device layout is following:
+	/* Base device layout is as follows:
 	 * - superblock
 	 * - data
 	 * - valid map
 	 */
-	offset = layout->region[FTL_LAYOUT_REGION_TYPE_SB_BASE].current.blocks;
-	offset = SPDK_ALIGN_CEIL(offset, data_base_alignment);
-
-	/* Setup data region on base device */
-	region = &layout->region[FTL_LAYOUT_REGION_TYPE_DATA_BASE];
-	region->type = FTL_LAYOUT_REGION_TYPE_DATA_BASE;
-	region->name = "data_btm";
-	region->current.version = region->prev.version = 0;
-	region->current.offset = offset;
-	region->current.blocks = layout_base_offset(dev);
-	set_region_bdev_btm(region, dev);
-
-	offset += region->current.blocks;
-
-	/* Setup validity map */
-	region = &layout->region[FTL_LAYOUT_REGION_TYPE_VALID_MAP];
-	region->type = FTL_LAYOUT_REGION_TYPE_VALID_MAP;
-	region->name = "vmap";
-	region->current.version = region->prev.version = 0;
-	region->current.offset = offset;
-	region->current.blocks = ftl_md_region_blocks(dev, spdk_divide_round_up(
-					 layout->base.total_blocks + layout->nvc.total_blocks, 8));
-	set_region_bdev_btm(region, dev);
-	offset += region->current.blocks;
-
-	/* Checking for underflow */
-	left = layout->base.total_blocks - offset;
-	if (left > layout->base.total_blocks) {
-		FTL_ERRLOG(dev, "Error when setup base device layout\n");
+	if (!md_ops->region_create(dev, FTL_LAYOUT_REGION_TYPE_DATA_BASE, 0, FTL_BLOCK_SIZE,
+				   layout_base_offset(dev))) {
 		return -1;
 	}
 
-	if (offset > layout->base.total_blocks) {
-		FTL_ERRLOG(dev, "Error when setup base device layout\n");
+	valid_map_size = spdk_divide_round_up(layout->base.total_blocks + layout->nvc.total_blocks, 8);
+	if (!md_ops->region_create(dev, FTL_LAYOUT_REGION_TYPE_VALID_MAP, 0, FTL_BLOCK_SIZE,
+				   ftl_md_region_blocks(dev, valid_map_size))) {
 		return -1;
 	}
 
@@ -395,6 +356,7 @@ ftl_layout_setup_superblock(struct spdk_ftl_dev *dev)
 	struct ftl_layout_region *region = &layout->region[FTL_LAYOUT_REGION_TYPE_SB];
 	uint64_t total_blocks, offset, left;
 	const struct ftl_md_layout_ops *md_ops = &dev->nv_cache.nvc_desc->ops.md_layout_ops;
+	const struct ftl_md_layout_ops *base_md_ops = &dev->base_type->ops.md_layout_ops;
 
 	assert(layout->md[FTL_LAYOUT_REGION_TYPE_SB] == NULL);
 
@@ -413,18 +375,17 @@ ftl_layout_setup_superblock(struct spdk_ftl_dev *dev)
 
 	assert(region->bdev_desc != NULL);
 	assert(region->ioch != NULL);
+	assert(region->current.offset == 0);
 
+	if (!base_md_ops->region_create(dev, FTL_LAYOUT_REGION_TYPE_SB_BASE, FTL_SB_VERSION_CURRENT,
+					superblock_region_size(dev), 1)) {
+		FTL_ERRLOG(dev, "Error when setting up secondary super block\n");
+		return -1;
+	}
 	layout->region[FTL_LAYOUT_REGION_TYPE_SB].mirror_type = FTL_LAYOUT_REGION_TYPE_SB_BASE;
 
 	region = &layout->region[FTL_LAYOUT_REGION_TYPE_SB_BASE];
-	region->type = FTL_LAYOUT_REGION_TYPE_SB_BASE;
-	region->mirror_type = FTL_LAYOUT_REGION_TYPE_INVALID;
-	region->name = "sb_mirror";
-	region->current.version = FTL_SB_VERSION_CURRENT;
-	region->prev.version = FTL_SB_VERSION_CURRENT;
-	region->current.offset = 0;
-	region->current.blocks = superblock_region_blocks(dev);
-	set_region_bdev_btm(region, dev);
+	assert(region->current.offset == 0);
 
 	/* Check if SB can be stored at the end of base device */
 	total_blocks = spdk_bdev_get_num_blocks(

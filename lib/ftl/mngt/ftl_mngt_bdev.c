@@ -95,8 +95,18 @@ ftl_mngt_open_base_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 		goto error;
 	}
 
+	dev->base_type = ftl_base_device_get_type_by_bdev(dev, bdev);
+	if (!dev->base_type) {
+		FTL_ERRLOG(dev, "Failed to get base device type\n");
+		goto error;
+	}
 	/* TODO: validate size when base device VSS usage gets added */
 	dev->md_size = spdk_bdev_get_md_size(bdev);
+
+	if (!dev->base_type->ops.md_layout_ops.region_create) {
+		FTL_ERRLOG(dev, "Base device doesn't implement md_layout_ops\n");
+		goto error;
+	}
 
 	/* Cache frequently used values */
 	dev->num_blocks_in_band = ftl_calculate_num_blocks_in_band(dev->base_bdev_desc);
