@@ -5,6 +5,9 @@ into docker container images. The example containers consist of SPDK NVMe-oF
 target sharing devices to another SPDK NVMe-oF application. Which serves
 as both initiator and target. Finally a traffic generator based on FIO
 issues I/O to the connected devices.
+Please note that some simplifications have been made to the configuration files
+for the purpose of the example, please do not use the files directly in
+the production environment.
 
 ## Prerequisites
 
