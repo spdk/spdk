@@ -32,7 +32,7 @@ typedef struct {
 ht *
 ht_create(void) 
 {
-    ht *table = malloc(sizeof(ht));
+    ht *table = (ht *)malloc(sizeof(ht));
 
     if (table == NULL) {
         return NULL;
@@ -40,7 +40,7 @@ ht_create(void)
 
     table->length = 0;
     table->capacity = INITIAL_CAPACITY;
-    table->entries = calloc(table->capacity, sizeof(ht_entry));
+    table->entries = (ht_entry *)calloc(table->capacity, sizeof(ht_entry));
 
     if (table->entries == NULL) {
         free(table);
@@ -132,7 +132,7 @@ ht_expand(ht *table)
         return false;
     }
 
-    ht_entry *new_entries = calloc(new_capacity, sizeof(ht_entry));
+    ht_entry *new_entries = (ht_entry *)calloc(new_capacity, sizeof(ht_entry));
     if (new_entries == NULL) {
         return false;
     }
