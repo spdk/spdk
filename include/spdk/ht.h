@@ -1,3 +1,6 @@
+#ifndef SPDK_HT_H
+#define SPDK_HT_H
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -219,3 +222,5 @@ ht_next(hti *it)
     }
     return false;
 }
+
+#endif

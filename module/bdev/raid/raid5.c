@@ -11,6 +11,8 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "lib/thread/thread_internal.h"
+#include "spdk/ht.h"
+#include "spdk/tree.h"
 
 #include "spdk/log.h"
 
@@ -774,6 +776,42 @@ raid5_submit_write_request_writing(struct raid5_io_buffer *io_buffer)
 	}
 }
 
+//-----------------------------our workspace-----------------------------
+
+#define MAX_HT_STRING_LEN 25
+
+struct raid5_write_request {
+    uint32_t addr;
+    RB_ENTRY(raid5_write_request) link;
+	struct raid5_io_buffer *io_buffer;
+};
+
+RB_HEAD(raid5_addr_tree, raid5_write_request);
+RB_GENERATE_STATIC(raid5_addr_tree, raid5_write_request, link, addr_cmp);
+
+ht* raid5_request_table = ht_create();
+
+void
+raid5_catching_requests(struct raid5_io_buffer *io_buffer)
+{
+	struct raid5_write_request *write_request = malloc(sizeof *write_request);
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(io_buffer);
+	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
+	char* stripe_key[MAX_HT_STRING_LEN];
+	uint64_t stripe_index;
+	uint64_t start_strip_idx;
+
+	start_strip_idx = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
+	write_request->addr = bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen;
+	write_request->io_buffer = io_buffer;
+	stripe_index = start_strip_idx / (raid_bdev->num_base_bdevs - 1);
+	
+	snprintf(stripe_key, sizeof stripe_key, "%llu", stripe_index);
+	
+}
+
+//-----------------------------our workspace-----------------------------
+
 static void
 raid5_submit_write_request(struct raid_bdev_io *raid_io)
 {
@@ -871,7 +909,9 @@ raid5_submit_write_request(struct raid_bdev_io *raid_io)
 					base_ch, _raid5_submit_rw_request);
 			return;
 		}
-		
+		//We're catching requests here
+		raid5_catching_requests(io_buffer)
+
 		raid5_submit_write_request_reading(io_buffer);
 	}
 }
