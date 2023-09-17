@@ -18,11 +18,11 @@ typedef struct {
     void *value;
 } ht_entry;
 
-struct ht {
+typedef struct {
     ht_entry *entries;
     size_t capacity;
     size_t length;
-};
+} ht;
 
 typedef struct {
     const char *key;
