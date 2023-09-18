@@ -111,7 +111,7 @@ DEPDIRS-accel_mlx5 := accel thread log mlx5 rdma util
 endif
 
 # module/env_dpdk
-DEPDIRS-env_dpdk_rpc := log $(JSON_LIBS)
+DEPDIRS-env_dpdk_rpc := $(JSON_LIBS)
 
 # module/sock
 DEPDIRS-sock_posix := log sock util
