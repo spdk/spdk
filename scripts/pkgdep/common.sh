@@ -176,7 +176,7 @@ install_protoc() {
 }
 
 install_golang() {
-	local GOVERSION=${GOVERSION:-1.21}
+	local GOVERSION=${GOVERSION:-1.21.1}
 	local godir gopkg gover arch
 
 	read -r _ _ gover _ < <(go version)
