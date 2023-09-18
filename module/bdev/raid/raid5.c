@@ -778,7 +778,7 @@ raid5_submit_write_request_writing(struct raid5_io_buffer *io_buffer)
 
 //-----------------------------our workspace-----------------------------
 
-#define MAX_HT_STRING_LEN 25
+#define MAX_HT_STRING_LEN 35
 
 struct raid5_write_request {
     uint32_t addr;
@@ -791,13 +791,12 @@ addr_cmp(struct raid5_write_request *c1, struct raid5_write_request *c2) {
     return (c1->addr < c2->addr ? -1 : c1->addr > c2->addr);
 }
 
-RB_HEAD(raid5_addr_tree, raid5_write_request);
-RB_GENERATE_STATIC(raid5_addr_tree, raid5_write_request, link, addr_cmp);
-
 struct raid5_request_tree {
-    struct raid5_addr_tree* tree;
+    RB_HEAD(raid5_addr_tree, raid5_write_request) tree;
     uint64_t size;
 };
+
+RB_GENERATE_STATIC(raid5_addr_tree, raid5_write_request, link, addr_cmp);
 
 struct raid5_requests_ht {
 	ht* raid5_request_table;
@@ -808,9 +807,9 @@ clear_tree(struct raid5_request_tree* tree)
 {
 	struct raid5_write_request *current_request;
 
-    RB_FOREACH(current_request, raid5_addr_tree, tree->tree)
+    RB_FOREACH(current_request, raid5_addr_tree, &tree->tree)
     {
-        RB_REMOVE(raid5_addr_tree, tree->tree, current_request);
+        RB_REMOVE(raid5_addr_tree, &tree->tree, current_request);
         free(current_request);
         SPDK_DEBUGLOG(bdev_malloc, "Deleting one malloc_write_request was successful\n");
     }
@@ -833,18 +832,27 @@ raid5_catching_requests(struct raid5_io_buffer *io_buffer)
 	write_request->addr = bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen;
 	write_request->io_buffer = io_buffer;
 	stripe_index = start_strip_idx / (raid_bdev->num_base_bdevs - 1);
+	snprintf(stripe_key, sizeof stripe_key, "%lu", stripe_index);
 	stripe_tree = ht_get(raid5_ht.raid5_request_table, stripe_key);
 	
-	snprintf(stripe_key, sizeof stripe_key, "%llu", stripe_index);
+	SPDK_ERRLOG("max_tree_size test %d\n", max_tree_size);
+	SPDK_ERRLOG("STRIPE_INDEX TEST %lu\n", stripe_index);
+	SPDK_ERRLOG("SNPRINTF TEST. STRIPE KEY IS %s\n", stripe_key);
+
 	if (stripe_tree == NULL) {
 		stripe_tree = malloc(sizeof *stripe_tree);
+		RB_INIT(&stripe_tree->tree);
 		ht_set(raid5_ht.raid5_request_table, stripe_key, stripe_tree);
+		SPDK_ERRLOG("ADDED TO HASHTABLE 1\n");
 	}
 
-	RB_INSERT(raid5_addr_tree, stripe_tree->tree, write_request);
+	SPDK_ERRLOG("ADDED TO HASHTABLE 2\n");
+	SPDK_ERRLOG("POINTER OF STRIPE TREE %p. THE SIZE IS %lu\n", stripe_tree, sizeof(*stripe_tree));
+	RB_INSERT(raid5_addr_tree, &stripe_tree->tree, write_request);
+	SPDK_ERRLOG("ADDED TO TREE\n");
 	stripe_tree->size++;
-	if (stripe_tree->size == max_tree_size) clear_tree(stripe_tree);
-	
+	//if (stripe_tree->size == max_tree_size) clear_tree(stripe_tree);
+	//SPDK_ERRLOG("TREE %lu IS CLEARED\n");
 }
 
 //-----------------------------our workspace-----------------------------
