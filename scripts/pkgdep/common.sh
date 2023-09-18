@@ -179,7 +179,7 @@ install_golang() {
 	local GOVERSION=${GOVERSION:-1.21.1}
 	local godir gopkg gover arch
 
-	read -r _ _ gover _ < <(go version)
+	read -r _ _ gover _ < <(go version) || true
 	gover=${gover#go}
 	if [[ -n "${gover}" ]] && ge "${gover}" "${GOVERSION}"; then
 		echo "found go version ${gover} >= required ${GOVERSION}, skip installing"
