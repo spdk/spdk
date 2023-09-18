@@ -25,7 +25,7 @@ function usage() {
 	echo "  -u --uring                  Additional dependencies for io_uring"
 	echo "  -D --daos                   Additional dependencies for DAOS"
 	echo "  -A --avahi                  Additional dependencies for Avahi mDNS Discovery"
-	echo "  -G --golang                 Additional dependencies for go API generation (excluded from --all)"
+	echo "  -G --golang                 Additional dependencies for go API generation"
 	echo ""
 	exit 0
 }
@@ -40,6 +40,7 @@ function install_all_dependencies() {
 	INSTALL_LIBURING=true
 	INSTALL_DAOS=true
 	INSTALL_AVAHI=true
+	INSTALL_GOLANG=true
 }
 
 INSTALL_CRYPTO=false
