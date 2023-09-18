@@ -197,7 +197,7 @@ install_golang() {
 	fi
 	gopkg=go${GOVERSION}.linux-${arch}.tar.gz
 	echo "installing go v${GOVERSION} to ${godir}/bin"
-	curl -s https://dl.google.com/go/${gopkg} | tar -C "${godir}" -xzf - --strip 1
+	curl -sL https://go.dev/dl/${gopkg} | tar -C "${godir}" -xzf - --strip 1
 	if ! "${godir}/bin/go" version; then
 		echo "go install failed"
 		return 1
