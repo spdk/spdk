@@ -802,6 +802,7 @@ function vm_setup() {
 	notice "Saving to $vm_dir/run.sh"
 	cat <<- RUN > "$vm_dir/run.sh"
 		#!/bin/bash
+		shopt -s nullglob extglob
 		rootdir=$rootdir
 		source "\$rootdir/test/scheduler/common.sh"
 		qemu_log () {
