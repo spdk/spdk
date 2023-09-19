@@ -53,6 +53,7 @@ DPDKMEM=false
 BPFTRACES=()
 LVOL_BDEVS=()
 DATE="$(date +'%m_%d_%Y_%H%M%S')"
+OUTPUT_DIR=$testdir/results
 
 function usage() {
 	set +x
@@ -117,6 +118,7 @@ function usage() {
 	echo "    --main-core             main (primary) core for DPDK (for bdevperf only)."
 	echo
 	echo "Other options:"
+	echo "    --output-dir=PATH       Path to directory where results will be stored. [default=$OUTPUT_DIR]"
 	echo "    --perftop           Run perftop measurements on the same CPU cores as specified in --cpu-allowed option."
 	echo "    --dpdk-mem-stats    Dump DPDK memory stats during the test."
 	echo "    --bpf-traces=LIST       Comma delimited list of .bt scripts for enabling BPF traces."
@@ -177,6 +179,7 @@ while getopts 'h-:' optchar; do
 				bpf-traces=*) IFS="," read -r -a BPFTRACES <<< "${OPTARG#*=}" ;;
 				latency-log) LATENCY_LOG=true ;;
 				main-core=*) MAIN_CORE="${OPTARG#*=}" ;;
+				output-dir=*) OUTPUT_DIR="${OPTARG#*=}" ;;
 				*)
 					usage $0 echo "Invalid argument '$OPTARG'"
 					exit 1
@@ -194,7 +197,7 @@ while getopts 'h-:' optchar; do
 	esac
 done
 
-result_dir=$testdir/results/perf_results_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}
+result_dir=$OUTPUT_DIR/perf_results_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}
 result_file=$result_dir/perf_results_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}.csv
 mkdir -p $result_dir
 
