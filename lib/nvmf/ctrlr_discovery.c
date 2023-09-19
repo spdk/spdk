@@ -64,6 +64,35 @@ nvmf_discovery_compare_tr_svcid(const struct spdk_nvme_transport_id *trid1,
 	return strcasecmp(trid1->trsvcid, trid2->trsvcid) == 0;
 }
 
+static bool
+nvmf_discovery_compare_trid(const enum spdk_nvmf_tgt_discovery_filter filter,
+			    const struct spdk_nvme_transport_id *trid1,
+			    const struct spdk_nvme_transport_id *trid2)
+{
+	if ((filter & SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE) != 0 &&
+	    !nvmf_discovery_compare_trtype(trid1, trid2)) {
+		SPDK_DEBUGLOG(nvmf, "transport type mismatch between %d (%s) and %d (%s)\n",
+			      trid1->trtype, trid1->trstring, trid2->trtype, trid2->trstring);
+		return false;
+	}
+
+	if ((filter & SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS) != 0 &&
+	    !nvmf_discovery_compare_tr_addr(trid1, trid2)) {
+		SPDK_DEBUGLOG(nvmf, "transport addr mismatch between %s and %s\n",
+			      trid1->traddr, trid2->traddr);
+		return false;
+	}
+
+	if ((filter & SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID) != 0 &&
+	    !nvmf_discovery_compare_tr_svcid(trid1, trid2)) {
+		SPDK_DEBUGLOG(nvmf, "transport svcid mismatch between %s and %s\n",
+			      trid1->trsvcid, trid2->trsvcid);
+		return false;
+	}
+
+	return true;
+}
+
 static struct spdk_nvmf_discovery_log_page *
 nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size_t *log_page_size,
 			    struct spdk_nvme_transport_id *cmd_source_trid)
@@ -99,22 +128,8 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 
 		for (listener = spdk_nvmf_subsystem_get_first_listener(subsystem); listener != NULL;
 		     listener = spdk_nvmf_subsystem_get_next_listener(subsystem, listener)) {
-			if ((tgt->discovery_filter & SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE) != 0 &&
-			    !nvmf_discovery_compare_trtype(listener->trid, cmd_source_trid)) {
-				SPDK_DEBUGLOG(nvmf, "ignore listener type %d (%s) due to type mismatch\n",
-					      listener->trid->trtype, listener->trid->trstring);
-				continue;
-			}
-			if ((tgt->discovery_filter & SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS) != 0 &&
-			    !nvmf_discovery_compare_tr_addr(listener->trid, cmd_source_trid)) {
-				SPDK_DEBUGLOG(nvmf, "ignore listener addr %s due to addr mismatch\n",
-					      listener->trid->traddr);
-				continue;
-			}
-			if ((tgt->discovery_filter & SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID) != 0 &&
-			    !nvmf_discovery_compare_tr_svcid(listener->trid, cmd_source_trid)) {
-				SPDK_DEBUGLOG(nvmf, "ignore listener svcid %s due to svcid mismatch\n",
-					      listener->trid->trsvcid);
+
+			if (!nvmf_discovery_compare_trid(tgt->discovery_filter, listener->trid, cmd_source_trid)) {
 				continue;
 			}
 
