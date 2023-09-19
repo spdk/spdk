@@ -63,7 +63,7 @@ function usage() {
 	)
 	echo "Run NVMe PMD/BDEV performance test. Change options for easier debug and setup configuration"
 	echo "Usage: $(basename $1) [options]"
-	echo "-h, --help                Print help and exit"
+	echo "-h, --help                   Print help and exit"
 	echo
 	echo "Workload parameters:"
 	echo "    --rw=STR                 Type of I/O pattern. Accepted values are randrw,rw. [default=$RW]"
@@ -119,8 +119,8 @@ function usage() {
 	echo
 	echo "Other options:"
 	echo "    --output-dir=PATH       Path to directory where results will be stored. [default=$OUTPUT_DIR]"
-	echo "    --perftop           Run perftop measurements on the same CPU cores as specified in --cpu-allowed option."
-	echo "    --dpdk-mem-stats    Dump DPDK memory stats during the test."
+	echo "    --perftop               Run perftop measurements on the same CPU cores as specified in --cpu-allowed option."
+	echo "    --dpdk-mem-stats        Dump DPDK memory stats during the test."
 	echo "    --bpf-traces=LIST       Comma delimited list of .bt scripts for enabling BPF traces."
 	echo "                            List of .bt scripts available in spdk/scripts/bpf."
 	echo "                            Only for spdk-perf-bdev"
