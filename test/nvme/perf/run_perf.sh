@@ -197,10 +197,6 @@ done
 result_dir=$testdir/results/perf_results_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}
 result_file=$result_dir/perf_results_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}.csv
 mkdir -p $result_dir
-unset iops_disks bw mean_lat_disks_usec p90_lat_disks_usec p99_lat_disks_usec p99_99_lat_disks_usec stdev_disks_usec
-echo "run-time,ramp-time,fio-plugin,QD,block-size,num-cpu-cores,workload,workload-mix" > $result_file
-printf "%s,%s,%s,%s,%s,%s,%s,%s\n" $RUNTIME $RAMP_TIME $PLUGIN $IODEPTH $BLK_SIZE $NO_CORES $RW $MIX >> $result_file
-echo "num_of_disks,iops,avg_lat[usec],p90[usec],p99[usec],p99.99[usec],stdev[usec],avg_slat[usec],avg_clat[usec],bw[Kib/s]" >> $result_file
 
 trap 'rm -f *.state $testdir/bdev.conf; kill $perf_pid; wait $dpdk_mem_pid; print_backtrace' ERR SIGTERM SIGABRT
 
@@ -234,6 +230,11 @@ fi
 CORES=$(get_cores "$CPUS_ALLOWED")
 NO_CORES_ARRAY=($CORES)
 NO_CORES=${#NO_CORES_ARRAY[@]}
+
+unset iops_disks bw mean_lat_disks_usec p90_lat_disks_usec p99_lat_disks_usec p99_99_lat_disks_usec stdev_disks_usec
+echo "run-time,ramp-time,fio-plugin,QD,block-size,num-cpu-cores,workload,workload-mix" > $result_file
+printf "%s,%s,%s,%s,%s,%s,%s,%s\n" $RUNTIME $RAMP_TIME $PLUGIN $IODEPTH $BLK_SIZE $NO_CORES $RW $MIX >> $result_file
+echo "num_of_disks,iops,avg_lat[usec],p90[usec],p99[usec],p99.99[usec],stdev[usec],avg_slat[usec],avg_clat[usec],bw[Kib/s]" >> $result_file
 
 if [[ "$PLUGIN" =~ "kernel" || "$PLUGIN" =~ "xnvme" ]]; then
 	$rootdir/scripts/setup.sh reset
