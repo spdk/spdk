@@ -4112,14 +4112,14 @@ nvmf_rdma_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 		min_value = nvmf_poll_group_get_io_qpair_count(pg_current->group.group);
 
 		while ((count = nvmf_poll_group_get_io_qpair_count(pg_current->group.group)) > 0) {
-			pg_current = TAILQ_NEXT(pg_current, link);
-			if (pg_current == NULL) {
-				pg_current = TAILQ_FIRST(&rtransport->poll_groups);
-			}
-
 			if (count < min_value) {
 				min_value = count;
 				pg_min = pg_current;
+			}
+
+			pg_current = TAILQ_NEXT(pg_current, link);
+			if (pg_current == NULL) {
+				pg_current = TAILQ_FIRST(&rtransport->poll_groups);
 			}
 
 			if (pg_current == pg_start) {
