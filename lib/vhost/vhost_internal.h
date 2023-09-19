@@ -116,12 +116,15 @@ struct spdk_vhost_session {
 	bool started;
 	bool starting;
 	bool interrupt_mode;
+	bool needs_restart;
 
 	struct rte_vhost_memory *mem;
 
 	int task_cnt;
 
 	uint16_t max_queues;
+	/* Maximum number of queues before restart, used with 'needs_restart' flag */
+	uint16_t original_max_queues;
 
 	uint64_t negotiated_features;
 

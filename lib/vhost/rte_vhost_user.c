@@ -358,7 +358,11 @@ vhost_vq_used_signal(struct spdk_vhost_session *vsession,
 		      "Queue %td - USED RING: sending IRQ: last used %"PRIu16"\n",
 		      virtqueue - vsession->virtqueue, virtqueue->last_used_idx);
 
+#if RTE_VERSION < RTE_VERSION_NUM(22, 11, 0, 0)
 	if (rte_vhost_vring_call(vsession->vid, virtqueue->vring_idx) == 0) {
+#else
+	if (rte_vhost_vring_call_nonblock(vsession->vid, virtqueue->vring_idx) == 0) {
+#endif
 		/* interrupt signalled */
 		virtqueue->req_cnt += virtqueue->used_req_cnt;
 		virtqueue->used_req_cnt = 0;
@@ -1468,6 +1472,17 @@ extern_vhost_pre_msg_handler(int vid, void *_msg)
 		}
 		pthread_mutex_unlock(&user_dev->lock);
 		break;
+	case VHOST_USER_SET_MEM_TABLE:
+		pthread_mutex_lock(&user_dev->lock);
+		if (vsession->started) {
+			vsession->original_max_queues = vsession->max_queues;
+			pthread_mutex_unlock(&user_dev->lock);
+			g_spdk_vhost_ops.destroy_device(vid);
+			vsession->needs_restart = true;
+			break;
+		}
+		pthread_mutex_unlock(&user_dev->lock);
+		break;
 	case VHOST_USER_GET_CONFIG: {
 		int rc = 0;
 
@@ -1520,10 +1535,6 @@ extern_vhost_post_msg_handler(int vid, void *_msg)
 	}
 	user_dev = to_user_dev(vsession->vdev);
 
-	if (msg->request == VHOST_USER_SET_MEM_TABLE) {
-		vhost_register_memtable_if_required(vsession, vid);
-	}
-
 	switch (msg->request) {
 	case VHOST_USER_SET_FEATURES:
 		rc = vhost_get_negotiated_features(vid, &vsession->negotiated_features);
@@ -1554,6 +1565,21 @@ extern_vhost_post_msg_handler(int vid, void *_msg)
 			pthread_mutex_unlock(&user_dev->lock);
 			g_spdk_vhost_ops.new_device(vid);
 			return RTE_VHOST_MSG_RESULT_NOT_HANDLED;
+		}
+		pthread_mutex_unlock(&user_dev->lock);
+		break;
+	case VHOST_USER_SET_MEM_TABLE:
+		vhost_register_memtable_if_required(vsession, vid);
+		pthread_mutex_lock(&user_dev->lock);
+		if (vsession->needs_restart) {
+			vsession->needs_restart = false;
+			pthread_mutex_unlock(&user_dev->lock);
+			for (qid = 0; qid < vsession->original_max_queues; qid++) {
+				enable_device_vq(vsession, qid);
+			}
+			vsession->original_max_queues = 0;
+			g_spdk_vhost_ops.new_device(vid);
+			break;
 		}
 		pthread_mutex_unlock(&user_dev->lock);
 		break;

@@ -24,7 +24,11 @@ DEFINE_STUB(rte_vhost_get_vring_base, int, (int vid, uint16_t queue_id,
 		uint16_t *last_avail_idx, uint16_t *last_used_idx), 0);
 DEFINE_STUB(spdk_mem_register, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
+#if RTE_VERSION < RTE_VERSION_NUM(22, 11, 0, 0)
 DEFINE_STUB(rte_vhost_vring_call, int, (int vid, uint16_t vring_idx), 0);
+#else
+DEFINE_STUB(rte_vhost_vring_call_nonblock, int, (int vid, uint16_t vring_idx), 0);
+#endif
 DEFINE_STUB_V(rte_vhost_log_used_vring, (int vid, uint16_t vring_idx,
 		uint64_t offset, uint64_t len));
 
