@@ -2422,6 +2422,10 @@ accel_add_stats(struct accel_stats *total, struct accel_stats *stats)
 
 	total->sequence_executed += stats->sequence_executed;
 	total->sequence_failed += stats->sequence_failed;
+	total->retry.task += stats->retry.task;
+	total->retry.sequence += stats->retry.sequence;
+	total->retry.iobuf += stats->retry.iobuf;
+	total->retry.bufdesc += stats->retry.bufdesc;
 	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
 		total->operations[i].executed += stats->operations[i].executed;
 		total->operations[i].failed += stats->operations[i].failed;
