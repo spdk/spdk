@@ -62,6 +62,12 @@ static void	raid_bdev_deconfigure(struct raid_bdev *raid_bdev,
  * 0 - success
  * non zero - failure
  */
+
+static void
+timeout_of_tree_completion_poller(void *ctx) {
+	SPDK_ERRLOG("poller is working now!\n");
+}
+
 static int
 raid_bdev_create_cb(void *io_device, void *ctx_buf)
 {
@@ -84,6 +90,8 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 		return -ENOMEM;
 	}
 
+	raid_ch->timeout_of_tree_poller = SPDK_POLLER_REGISTER(timeout_of_tree_completion_poller, NULL, 2000000);
+
 	spdk_spin_lock(&raid_bdev->base_bdev_lock);
 	for (i = 0; i < raid_ch->num_channels; i++) {
 		/*
@@ -102,6 +110,8 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 			break;
 		}
 	}
+
+
 	spdk_spin_unlock(&raid_bdev->base_bdev_lock);
 
 	if (!ret && raid_bdev->module->get_io_channel) {
@@ -155,6 +165,7 @@ raid_bdev_destroy_cb(void *io_device, void *ctx_buf)
 			spdk_put_io_channel(raid_ch->base_channel[i]);
 		}
 	}
+    spdk_poller_unregister(raid_ch->timeout_of_tree_poller);
 	free(raid_ch->base_channel);
 	raid_ch->base_channel = NULL;
 }
@@ -763,6 +774,8 @@ static struct {
 	{ "0", RAID0 },
 	{ "raid1", RAID1 },
 	{ "1", RAID1 },
+	{ "raid5", RAID5 },
+	{ "5", RAID5 },
 	{ "raid5f", RAID5F },
 	{ "5f", RAID5F },
 	{ "concat", CONCAT },

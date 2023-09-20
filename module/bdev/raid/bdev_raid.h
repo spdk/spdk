@@ -8,11 +8,13 @@
 
 #include "spdk/bdev_module.h"
 #include "spdk/uuid.h"
+#include "spdk/thread.h"
 
 enum raid_level {
 	INVALID_RAID_LEVEL	= -1,
 	RAID0			= 0,
 	RAID1			= 1,
+	RAID5			= 5,
 	RAID5F			= 95, /* 0x5f */
 	CONCAT			= 99,
 };
@@ -166,6 +168,9 @@ struct raid_bdev_io_channel {
 
 	/* Number of IO channels */
 	uint8_t			num_channels;
+
+	/* My custom poller for merging */
+	struct spdk_poller *timeout_of_tree_poller;
 
 	/* Private raid module IO channel */
 	struct spdk_io_channel	*module_channel;
