@@ -171,7 +171,7 @@ static const struct spdk_json_object_decoder rpc_ublk_stop_disk_decoders[] = {
 };
 
 static void
-rpc_ublk_stop_disk_done(void *cb_arg)
+rpc_ublk_stop_disk_done(void *cb_arg, int rc)
 {
 	struct rpc_ublk_stop_disk *req = cb_arg;
 

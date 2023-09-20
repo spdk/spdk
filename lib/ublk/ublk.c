@@ -126,8 +126,7 @@ struct spdk_ublk_dev {
 	struct spdk_poller	*retry_poller;
 	int			retry_count;
 	uint32_t		queues_closed;
-	ublk_start_cb		start_cb;
-	ublk_del_cb		del_cb;
+	ublk_ctrl_cb		ctrl_cb;
 	void			*cb_arg;
 	uint32_t		current_cmd_op;
 	uint32_t		ctrl_ops_in_progress;
@@ -277,14 +276,9 @@ ublk_ctrl_cmd_error(struct spdk_ublk_dev *ublk, int32_t res)
 	assert(res != 0);
 
 	SPDK_ERRLOG("ctrlr cmd %s failed, %s\n", ublk_op_name[ublk->current_cmd_op], spdk_strerror(-res));
-	if (ublk->start_cb) {
-		ublk->start_cb(ublk->cb_arg, res);
-		ublk->start_cb = NULL;
-	}
-
-	if (ublk->del_cb) {
-		ublk->del_cb(ublk->cb_arg);
-		ublk->del_cb = NULL;
+	if (ublk->ctrl_cb) {
+		ublk->ctrl_cb(ublk->cb_arg, res);
+		ublk->ctrl_cb = NULL;
 	}
 
 	switch (ublk->current_cmd_op) {
@@ -341,9 +335,9 @@ ublk_ctrl_process_cqe(struct io_uring_cqe *cqe)
 	case UBLK_CMD_STOP_DEV:
 		break;
 	case UBLK_CMD_DEL_DEV:
-		if (ublk->del_cb) {
-			ublk->del_cb(ublk->cb_arg);
-			ublk->del_cb = NULL;
+		if (ublk->ctrl_cb) {
+			ublk->ctrl_cb(ublk->cb_arg, 0);
+			ublk->ctrl_cb = NULL;
 		}
 		ublk_free_dev(ublk);
 		break;
@@ -355,9 +349,9 @@ ublk_ctrl_process_cqe(struct io_uring_cqe *cqe)
 	return;
 
 start_done:
-	if (ublk->start_cb) {
-		ublk->start_cb(ublk->cb_arg, rc);
-		ublk->start_cb = NULL;
+	if (ublk->ctrl_cb) {
+		ublk->ctrl_cb(ublk->cb_arg, rc);
+		ublk->ctrl_cb = NULL;
 	}
 }
 
@@ -999,7 +993,7 @@ ublk_try_close_queue(struct ublk_queue *q)
 }
 
 int
-ublk_stop_disk(uint32_t ublk_id, ublk_del_cb del_cb, void *cb_arg)
+ublk_stop_disk(uint32_t ublk_id, ublk_ctrl_cb ctrl_cb, void *cb_arg)
 {
 	struct spdk_ublk_dev *ublk;
 
@@ -1014,8 +1008,12 @@ ublk_stop_disk(uint32_t ublk_id, ublk_del_cb del_cb, void *cb_arg)
 		SPDK_WARNLOG("ublk %d is closing\n", ublk->ublk_id);
 		return -EBUSY;
 	}
+	if (ublk->ctrl_cb) {
+		SPDK_WARNLOG("ublk %d is busy with RPC call\n", ublk->ublk_id);
+		return -EBUSY;
+	}
 
-	ublk->del_cb = del_cb;
+	ublk->ctrl_cb = ctrl_cb;
 	ublk->cb_arg = cb_arg;
 	return ublk_close_dev(ublk);
 }
@@ -1785,7 +1783,7 @@ ublk_queue_run(void *arg1)
 int
 ublk_start_disk(const char *bdev_name, uint32_t ublk_id,
 		uint32_t num_queues, uint32_t queue_depth,
-		ublk_start_cb start_cb, void *cb_arg)
+		ublk_ctrl_cb ctrl_cb, void *cb_arg)
 {
 	int			rc;
 	uint32_t		i;
@@ -1815,7 +1813,7 @@ ublk_start_disk(const char *bdev_name, uint32_t ublk_id,
 	if (ublk == NULL) {
 		return -ENOMEM;
 	}
-	ublk->start_cb = start_cb;
+	ublk->ctrl_cb = ctrl_cb;
 	ublk->cb_arg = cb_arg;
 	ublk->cdev_fd = -1;
 	ublk->ublk_id = ublk_id;
