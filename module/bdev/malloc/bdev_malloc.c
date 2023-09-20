@@ -39,6 +39,7 @@ struct malloc_channel {
 };
 
 #define MAX_BLOCKS_FOR_REQUEST 4
+#define MAX_TIMEOUT_WITH_NO_REQUEST_IN_SEC 1
 
 /**
  * Clearing the tree after merging the request
@@ -438,7 +439,7 @@ _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bde
 
     switch (bdev_io->type) {
         case SPDK_BDEV_IO_TYPE_READ:
-            SPDK_ERRLOG("A read request has been received\n");
+            SPDK_DEBUGLOG(bdev_malloc, "A read request has been received\n");
             if (bdev_io->u.bdev.iovs[0].iov_base == NULL) {
                 assert(bdev_io->u.bdev.iovcnt == 1);
                 assert(bdev_io->u.bdev.memory_domain == NULL);
@@ -453,7 +454,7 @@ _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bde
             return 0;
 
         case SPDK_BDEV_IO_TYPE_WRITE:
-            SPDK_ERRLOG("A write request has been received\n");
+            SPDK_DEBUGLOG(bdev_malloc, "A write request has been received\n");
             if (bdev_io->bdev->dif_type != SPDK_DIF_DISABLE) {
                 rc = malloc_verify_pi(bdev_io);
                 if (rc != 0) {
@@ -461,7 +462,6 @@ _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bde
                     return 0;
                 }
             }
-            SPDK_ERRLOG("Enter to writev function now\n");
             bdev_malloc_writev(disk, mch->accel_channel, task, bdev_io);
             return 0;
 
@@ -518,10 +518,6 @@ addr_cmp(struct malloc_write_request *c1, struct malloc_write_request *c2) {
 }
 
 /**
- * the prototype of the function that merge requests
- */
-
-/**
  * The function of intercepting requests and adding them to the tree.
  * It also checks the size of the tree and calls the malloc_merge_request
  * if the size of the tree is equal to MAX_BLOCKS_FOR_REQUEST.
@@ -530,15 +526,6 @@ addr_cmp(struct malloc_write_request *c1, struct malloc_write_request *c2) {
  */
 static int
 interception_malloc_write_request(struct spdk_bdev_io *bdev_io, struct malloc_channel *mch) {
-
-//    struct malloc_task *task = (struct malloc_task *) bdev_io -> driver_ctx;
-//    SPDK_ERRLOG("status task before malloc_complete task - %d", task->status);
-//
-//    malloc_complete_task((struct malloc_task *) bdev_io->driver_ctx, mch,
-//                         SPDK_BDEV_IO_STATUS_SUCCESS);
-//
-//    SPDK_ERRLOG("status task before malloc_complete task - %d", task->status);
-//    sleep(5);
     struct malloc_write_request *write_request = malloc(sizeof *write_request);
     write_request->bdev_io = bdev_io;
     write_request->addr = bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen;
@@ -553,14 +540,10 @@ interception_malloc_write_request(struct spdk_bdev_io *bdev_io, struct malloc_ch
 
     SPDK_DEBUGLOG(bdev_malloc, "One node with address - %ld, insert into the tree with size - %ld\n",
                   write_request->addr, addr_tree.size);
-    SPDK_ERRLOG("size tree now - %ud\n", addr_tree.size);
+    SPDK_DEBUGLOG(bdev_malloc, "size tree now - %ud\n", addr_tree.size);
     if (addr_tree.size == MAX_BLOCKS_FOR_REQUEST) {
-        /*
-          * TODO: Some parity chunk calculation function
-        */
-        SPDK_ERRLOG("Clear of tree function is starting now\n");
-        sleep(2);
         clear_tree();
+        SPDK_DEGUBLOG(bdev_malloc, "Tree is clear!\n");
         return 0;
     }
     return 1;
@@ -576,14 +559,12 @@ clear_tree() {
     struct malloc_write_request *current_request;
     RB_FOREACH(current_request, malloc_addr_tree, &addr_tree.tree)
     {
-        SPDK_ERRLOG("Before in clear_tree submit request\n");
         _bdev_malloc_submit_request(current_request->mch, current_request->bdev_io);
-        SPDK_ERRLOG("After in clear_tree submit request\n");
         RB_REMOVE(malloc_addr_tree, &addr_tree.tree, current_request);
-        SPDK_ERRLOG("Deleting one malloc_write_request was successful\n");
         free(current_request);
     }
     addr_tree.size = 0;
+    addr_tree.time_in_sec = spdk_get_ticks() / spdk_get_ticks_hz();
 }
 
 static void
@@ -591,7 +572,6 @@ bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
     struct malloc_channel *mch = spdk_io_channel_get_ctx(ch);
 
     if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-        SPDK_ERRLOG("A write request was intercepted\n");
         interception_malloc_write_request(bdev_io, mch);
     }
 
@@ -907,7 +887,7 @@ delete_malloc_disk(const char *name, spdk_delete_malloc_complete cb_fn, void *cb
 static int
 poller_of_tree(struct malloc_channel *ch) {
     uint64_t now_in_sec = spdk_get_ticks() / spdk_get_ticks_hz();
-    if (now_in_sec - addr_tree.time_in_sec > 2) {
+    if (now_in_sec - addr_tree.time_in_sec > MAX_TIMEOUT_WITH_NO_REQUEST_IN_SEC) {
         clear_tree();
     }
     return 0;
@@ -927,7 +907,6 @@ malloc_completion_poller(void *ctx) {
 
     TAILQ_SWAP(&completed_tasks, &ch->completed_tasks, malloc_task, tailq);
     while (!TAILQ_EMPTY(&completed_tasks)) {
-        SPDK_ERRLOG("Completed task not empty now in cycle while\n");
         task = TAILQ_FIRST(&completed_tasks);
         TAILQ_REMOVE(&completed_tasks, task, tailq);
         spdk_bdev_io_complete(spdk_bdev_io_from_ctx(task), task->status);
@@ -946,7 +925,7 @@ malloc_create_channel_cb(void *io_device, void *ctx) {
         SPDK_ERRLOG("Failed to get accel framework's IO channel\n");
         return -ENOMEM;
     }
-    ch->completion_poller = SPDK_POLLER_REGISTER(malloc_completion_poller, ch, 1000000);
+    ch->completion_poller = SPDK_POLLER_REGISTER(malloc_completion_poller, ch, 0);
     if (!ch->completion_poller) {
         SPDK_ERRLOG("Failed to register malloc completion poller\n");
         spdk_put_io_channel(ch->accel_channel);
@@ -963,7 +942,6 @@ malloc_destroy_channel_cb(void *io_device, void *ctx) {
     struct malloc_channel *ch = ctx;
 
     assert(TAILQ_EMPTY(&ch->completed_tasks));
-    SPDK_ERRLOG("destroy channel here\n");
     spdk_put_io_channel(ch->accel_channel);
     spdk_poller_unregister(&ch->completion_poller);
 }

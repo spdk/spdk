@@ -1,0 +1,14 @@
+[global]
+ioengine=spdk_bdev
+spdk_json_conf=/home/despair/fio-json/malloc_create.json
+thread=1
+group_reporting=1
+verify=md5
+size=4M
+iodepth=8
+rw=write
+bs=4k
+
+[test]
+filename=Malloc0
+numjobs=1
