@@ -543,7 +543,7 @@ interception_malloc_write_request(struct spdk_bdev_io *bdev_io, struct malloc_ch
     SPDK_DEBUGLOG(bdev_malloc, "size tree now - %ud\n", addr_tree.size);
     if (addr_tree.size == MAX_BLOCKS_FOR_REQUEST) {
         clear_tree();
-        SPDK_DEGUBLOG(bdev_malloc, "Tree is clear!\n");
+        SPDK_DEBUGLOG(bdev_malloc, "Tree is clear!\n");
         return 0;
     }
     return 1;

@@ -1,12 +1,11 @@
+/*   SPDX-License-Identifier: BSD-3-Clause
+ *   All rights reserved.
+ */
+
 #ifndef SPDK_HT_H
 #define SPDK_HT_H
 
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <assert.h>
-
+#include "spdk/stdinc.h"
 #include "string.h"
 
 #define INITIAL_CAPACITY 16
@@ -33,7 +32,7 @@ typedef struct {
 } hti;
 
 ht *
-ht_create(void) 
+ht_create(void)
 {
     ht *table = (ht *)malloc(sizeof(ht));
 
@@ -53,7 +52,7 @@ ht_create(void)
     return table;
 }
 
-void 
+void
 ht_destroy(ht *table)
 {
     for (size_t i = 0; i < table->capacity; i++) {
@@ -64,7 +63,7 @@ ht_destroy(ht *table)
     free(table);
 }
 
-static uint64_t 
+static uint64_t
 hash_key(const char *key)
 {
     uint64_t hash = FNV_OFFSET;
@@ -127,7 +126,7 @@ ht_set_entry(ht_entry *entries, size_t capacity, const char *key, void *value, s
     return key;
 }
 
-static bool 
+static bool
 ht_expand(ht *table)
 {
     size_t new_capacity = table->capacity * 2;
@@ -188,13 +187,13 @@ ht_remove(ht *table, const char *key)
     return NULL;
 }
 
-size_t 
+size_t
 ht_length(ht *table)
 {
     return table->length;
 }
 
-hti 
+hti
 ht_iterator(ht *table)
 {
     hti it;
@@ -203,7 +202,7 @@ ht_iterator(ht *table)
     return it;
 }
 
-bool 
+bool
 ht_next(hti *it)
 {
     ht *table = it->_table;
