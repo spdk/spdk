@@ -1132,7 +1132,6 @@ iscsi_conn_login_pdu_success_complete(void *arg)
 			return;
 		}
 	}
-	conn->state = ISCSI_CONN_STATE_RUNNING;
 	if (conn->full_feature != 0) {
 		iscsi_conn_schedule(conn);
 	}
@@ -2224,6 +2223,7 @@ iscsi_pdu_payload_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *
 		return 0;
 	}
 
+	conn->state = ISCSI_CONN_STATE_RUNNING;
 	iscsi_op_login_response(conn, rsp_pdu, params, iscsi_conn_login_pdu_success_complete);
 	return 0;
 }
