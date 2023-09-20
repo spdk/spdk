@@ -521,7 +521,10 @@ test_spdk_nvmf_rdma_request_process(void)
 	struct spdk_nvmf_rdma_qpair rqpair = {};
 	struct spdk_nvmf_rdma_recv *rdma_recv;
 	struct spdk_nvmf_rdma_request *rdma_req;
+	struct spdk_iobuf_channel ch = {};
 	bool progress;
+
+	group.group.buf_cache = &ch;
 
 	STAILQ_INIT(&group.group.pending_buf_queue);
 	poller_reset(&poller, &group);
