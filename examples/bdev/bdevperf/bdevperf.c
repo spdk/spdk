@@ -2319,6 +2319,7 @@ read_job_config(void)
 			config_set_cli_args(config);
 			global_config = *config;
 			free(config);
+			config = NULL;
 		} else {
 			TAILQ_INSERT_TAIL(&job_config_list, config, link);
 			n++;
