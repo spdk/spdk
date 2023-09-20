@@ -13,18 +13,30 @@ is_bdev_compatible(struct spdk_ftl_dev *dev, struct spdk_bdev *bdev)
 	return spdk_bdev_get_block_size(bdev) == FTL_BLOCK_SIZE;
 }
 
+static void
+md_region_setup(struct spdk_ftl_dev *dev, enum ftl_layout_region_type reg_type,
+		struct ftl_layout_region *region)
+{
+	assert(region);
+	region->type = reg_type;
+	region->mirror_type = FTL_LAYOUT_REGION_TYPE_INVALID;
+	region->name = ftl_md_region_name(reg_type);
+
+	region->bdev_desc = dev->base_bdev_desc;
+	region->ioch = dev->base_ioch;
+	region->vss_blksz = 0;
+}
+
 static struct ftl_layout_region *
 md_region_create(struct spdk_ftl_dev *dev, enum ftl_layout_region_type reg_type,
 		 uint32_t reg_version, size_t entry_size, size_t entry_count)
 {
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_layout_region *region;
-	const char *md_region_name;
 	uint64_t data_base_alignment, reg_blks;
 	const struct ftl_layout_tracker_bdev_region_props *reg_props;
 
 	assert(reg_type < FTL_LAYOUT_REGION_TYPE_MAX);
-	md_region_name = ftl_md_region_name(reg_type);
 
 	/* Allocating a ftl_bitmap requires a 8B input buffer alignment, since we're reusing the global valid map md buffer
 	 * this means that each band starting address needs to be aligned too - each device sector takes 1b in the valid map,
@@ -43,18 +55,13 @@ md_region_create(struct spdk_ftl_dev *dev, enum ftl_layout_region_type reg_type,
 	assert(reg_props->blk_offs + reg_blks <= dev->layout.base.total_blocks);
 
 	region = &layout->region[reg_type];
-	region->type = reg_type;
-	region->mirror_type = FTL_LAYOUT_REGION_TYPE_INVALID;
-	region->name = md_region_name;
+	md_region_setup(dev, reg_type, region);
+
 	region->current.version = region->prev.version = reg_version;
 	region->current.offset = reg_props->blk_offs;
 	region->current.blocks = reg_blks;
 	region->entry_size = entry_size / FTL_BLOCK_SIZE;
 	region->num_entries = entry_count;
-
-	region->bdev_desc = dev->base_bdev_desc;
-	region->ioch = dev->base_ioch;
-	region->vss_blksz = 0;
 
 	return region;
 }
