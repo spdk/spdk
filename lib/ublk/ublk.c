@@ -51,7 +51,6 @@ struct ublk_io;
 static void _ublk_submit_bdev_io(struct ublk_queue *q, struct ublk_io *io);
 static void ublk_dev_queue_fini(struct ublk_queue *q);
 static int ublk_poll(void *arg);
-static int ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op);
 
 static int ublk_set_params(struct spdk_ublk_dev *ublk);
 static int ublk_finish_start(struct spdk_ublk_dev *ublk);
@@ -386,7 +385,7 @@ ublk_ctrl_poller(void *arg)
 }
 
 static int
-ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op)
+ublk_ctrl_cmd_submit(struct spdk_ublk_dev *ublk, uint32_t cmd_op)
 {
 	uint32_t dev_id = ublk->ublk_id;
 	int rc = -EINVAL;
@@ -731,7 +730,7 @@ ublk_close_dev(struct spdk_ublk_dev *ublk)
 	}
 	ublk->is_closing = true;
 
-	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_STOP_DEV);
+	rc = ublk_ctrl_cmd_submit(ublk, UBLK_CMD_STOP_DEV);
 	if (rc < 0) {
 		SPDK_ERRLOG("stop dev %d failed\n", ublk->ublk_id);
 	}
@@ -926,7 +925,7 @@ ublk_delete_dev(void *arg)
 		close(ublk->cdev_fd);
 	}
 
-	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_DEL_DEV);
+	rc = ublk_ctrl_cmd_submit(ublk, UBLK_CMD_DEL_DEV);
 	if (rc < 0) {
 		SPDK_ERRLOG("delete dev %d failed\n", ublk->ublk_id);
 	}
@@ -1595,7 +1594,7 @@ ublk_set_params(struct spdk_ublk_dev *ublk)
 {
 	int rc;
 
-	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_SET_PARAMS);
+	rc = ublk_ctrl_cmd_submit(ublk, UBLK_CMD_SET_PARAMS);
 	if (rc < 0) {
 		SPDK_ERRLOG("UBLK can't set params for dev %d, rc %s\n", ublk->ublk_id, spdk_strerror(-rc));
 	}
@@ -1863,7 +1862,7 @@ ublk_start_disk(const char *bdev_name, uint32_t ublk_id,
 
 	/* Add ublk_dev to the end of disk list */
 	ublk_dev_list_register(ublk);
-	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_ADD_DEV);
+	rc = ublk_ctrl_cmd_submit(ublk, UBLK_CMD_ADD_DEV);
 	if (rc < 0) {
 		SPDK_ERRLOG("UBLK can't add dev %d, rc %s\n", ublk->ublk_id, spdk_strerror(-rc));
 		ublk_free_dev(ublk);
@@ -1895,7 +1894,7 @@ ublk_finish_start(struct spdk_ublk_dev *ublk)
 		}
 	}
 
-	rc = ublk_ctrl_cmd(ublk, UBLK_CMD_START_DEV);
+	rc = ublk_ctrl_cmd_submit(ublk, UBLK_CMD_START_DEV);
 	if (rc < 0) {
 		SPDK_ERRLOG("start dev %d failed, rc %s\n", ublk->ublk_id,
 			    spdk_strerror(-rc));
