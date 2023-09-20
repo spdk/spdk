@@ -157,7 +157,7 @@ user_clear_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
 void
 ftl_mngt_scrub_nv_cache(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
-	struct ftl_layout_region *region = &dev->layout.region[FTL_LAYOUT_REGION_TYPE_DATA_NVC];
+	struct ftl_layout_region *region = ftl_layout_region_get(dev, FTL_LAYOUT_REGION_TYPE_DATA_NVC);
 	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_DATA_NVC];
 	union ftl_md_vss vss;
 

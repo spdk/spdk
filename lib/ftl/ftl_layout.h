@@ -215,4 +215,15 @@ int ftl_validate_regions(struct spdk_ftl_dev *dev, struct ftl_layout *layout);
  */
 uint64_t ftl_layout_base_md_blocks(struct spdk_ftl_dev *dev);
 
+/**
+ * @brief Get the FTL layout region
+ *
+ * @param dev FTL device
+ * @param reg_type type of the layout region
+ *
+ * @return pointer to the layout region if region was created or NULL, if not created
+ */
+struct ftl_layout_region *ftl_layout_region_get(struct spdk_ftl_dev *dev,
+		enum ftl_layout_region_type reg_type);
+
 #endif /* FTL_LAYOUT_H */

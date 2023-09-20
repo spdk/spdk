@@ -31,7 +31,7 @@ nvc_data_region(struct ftl_nv_cache *nv_cache)
 	struct spdk_ftl_dev *dev;
 
 	dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
-	return &dev->layout.region[FTL_LAYOUT_REGION_TYPE_DATA_NVC];
+	return ftl_layout_region_get(dev, FTL_LAYOUT_REGION_TYPE_DATA_NVC);
 }
 
 static inline void
@@ -374,7 +374,7 @@ ftl_chunk_alloc_md_entry(struct ftl_nv_cache_chunk *chunk)
 	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
 	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
 	struct ftl_p2l_map *p2l_map = &chunk->p2l_map;
-	struct ftl_layout_region *region = &dev->layout.region[FTL_LAYOUT_REGION_TYPE_NVC_MD];
+	struct ftl_layout_region *region = ftl_layout_region_get(dev, FTL_LAYOUT_REGION_TYPE_NVC_MD);
 
 	p2l_map->chunk_dma_md = ftl_mempool_get(nv_cache->chunk_md_pool);
 
@@ -413,7 +413,7 @@ ftl_chunk_alloc_chunk_free_entry(struct ftl_nv_cache_chunk *chunk)
 	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
 	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
 	struct ftl_p2l_map *p2l_map = &chunk->p2l_map;
-	struct ftl_layout_region *region = &dev->layout.region[FTL_LAYOUT_REGION_TYPE_NVC_MD];
+	struct ftl_layout_region *region = ftl_layout_region_get(dev, FTL_LAYOUT_REGION_TYPE_NVC_MD);
 
 	p2l_map->chunk_dma_md = ftl_mempool_get(nv_cache->free_chunk_md_pool);
 
@@ -465,7 +465,7 @@ ftl_chunk_persist_free_state(struct ftl_nv_cache *nv_cache)
 	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
 	struct ftl_p2l_map *p2l_map;
 	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_NVC_MD];
-	struct ftl_layout_region *region = &dev->layout.region[FTL_LAYOUT_REGION_TYPE_NVC_MD];
+	struct ftl_layout_region *region = ftl_layout_region_get(dev, FTL_LAYOUT_REGION_TYPE_NVC_MD);
 	struct ftl_nv_cache_chunk *tchunk, *chunk = NULL;
 
 	TAILQ_FOREACH_SAFE(chunk, &nv_cache->needs_free_persist_list, entry, tchunk) {
@@ -1686,7 +1686,7 @@ ftl_chunk_open(struct ftl_nv_cache_chunk *chunk)
 {
 	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(chunk->nv_cache, struct spdk_ftl_dev, nv_cache);
 	struct ftl_p2l_map *p2l_map = &chunk->p2l_map;
-	struct ftl_layout_region *region = &dev->layout.region[FTL_LAYOUT_REGION_TYPE_NVC_MD];
+	struct ftl_layout_region *region = ftl_layout_region_get(dev, FTL_LAYOUT_REGION_TYPE_NVC_MD);
 	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_NVC_MD];
 
 	if (chunk_alloc_p2l_map(chunk)) {
@@ -1749,7 +1749,7 @@ chunk_map_write_cb(struct ftl_basic_rq *brq)
 	struct ftl_nv_cache_chunk *chunk = brq->io.chunk;
 	struct ftl_p2l_map *p2l_map = &chunk->p2l_map;
 	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(chunk->nv_cache, struct spdk_ftl_dev, nv_cache);
-	struct ftl_layout_region *region = &dev->layout.region[FTL_LAYOUT_REGION_TYPE_NVC_MD];
+	struct ftl_layout_region *region = ftl_layout_region_get(dev, FTL_LAYOUT_REGION_TYPE_NVC_MD);
 	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_NVC_MD];
 	uint32_t chunk_map_crc;
 
@@ -1819,7 +1819,7 @@ restore_fill_p2l_map_cb(struct ftl_basic_rq *parent)
 	struct ftl_p2l_map *p2l_map = &chunk->p2l_map;
 	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(chunk->nv_cache, struct spdk_ftl_dev, nv_cache);
 	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_NVC_MD];
-	struct ftl_layout_region *region = &dev->layout.region[FTL_LAYOUT_REGION_TYPE_NVC_MD];
+	struct ftl_layout_region *region = ftl_layout_region_get(dev, FTL_LAYOUT_REGION_TYPE_NVC_MD);
 	uint32_t chunk_map_crc;
 
 	/* Set original callback */

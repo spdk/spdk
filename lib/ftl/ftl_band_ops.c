@@ -288,7 +288,7 @@ ftl_band_open(struct ftl_band *band, enum ftl_band_type type)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_BAND_MD];
-	struct ftl_layout_region *region = &dev->layout.region[FTL_LAYOUT_REGION_TYPE_BAND_MD];
+	struct ftl_layout_region *region = ftl_layout_region_get(dev, FTL_LAYOUT_REGION_TYPE_BAND_MD);
 	struct ftl_p2l_map *p2l_map = &band->p2l_map;
 
 	ftl_band_set_type(band, type);
@@ -335,7 +335,7 @@ band_map_write_cb(struct ftl_basic_rq *brq)
 	struct ftl_band *band = brq->io.band;
 	struct ftl_p2l_map *p2l_map = &band->p2l_map;
 	struct spdk_ftl_dev *dev = band->dev;
-	struct ftl_layout_region *region = &dev->layout.region[FTL_LAYOUT_REGION_TYPE_BAND_MD];
+	struct ftl_layout_region *region = ftl_layout_region_get(dev, FTL_LAYOUT_REGION_TYPE_BAND_MD);
 	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_BAND_MD];
 	uint32_t band_map_crc;
 
@@ -402,7 +402,7 @@ ftl_band_free(struct ftl_band *band)
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_p2l_map *p2l_map = &band->p2l_map;
 	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_BAND_MD];
-	struct ftl_layout_region *region = &dev->layout.region[FTL_LAYOUT_REGION_TYPE_BAND_MD];
+	struct ftl_layout_region *region = ftl_layout_region_get(dev, FTL_LAYOUT_REGION_TYPE_BAND_MD);
 
 	memcpy(p2l_map->band_dma_md, band->md, region->entry_size * FTL_BLOCK_SIZE);
 	p2l_map->band_dma_md->state = FTL_BAND_STATE_FREE;

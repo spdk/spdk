@@ -206,7 +206,7 @@ int
 ftl_superblock_upgrade(struct spdk_ftl_dev *dev)
 {
 	struct ftl_layout_upgrade_ctx ctx = {0};
-	struct ftl_layout_region *reg = &dev->layout.region[FTL_LAYOUT_REGION_TYPE_SB];
+	struct ftl_layout_region *reg = ftl_layout_region_get(dev, FTL_LAYOUT_REGION_TYPE_SB);
 	int rc;
 
 	ctx.reg = reg;
@@ -271,8 +271,9 @@ int
 ftl_layout_upgrade_init_ctx(struct spdk_ftl_dev *dev, struct ftl_layout_upgrade_ctx *ctx)
 {
 	if (!ctx->reg) {
-		ctx->reg = &dev->layout.region[0];
+		ctx->reg = ftl_layout_region_get(dev, 0);
 		ctx->upgrade = &layout_upgrade_desc[0];
+		static_assert(FTL_LAYOUT_REGION_TYPE_SB == 0, "Invalid SB region type");
 	}
 
 	return layout_upgrade_select_next_region(dev, ctx);

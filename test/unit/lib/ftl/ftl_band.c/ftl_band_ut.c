@@ -10,6 +10,7 @@
 
 #include "ftl/ftl_core.c"
 #include "ftl/ftl_band.c"
+#include "ftl/ftl_layout.c"
 #include "../common/utils.c"
 
 #define TEST_BAND_IDX		42
@@ -143,6 +144,11 @@ DEFINE_STUB(ftl_base_device_get_type_by_bdev, const struct ftl_base_device_type 
 DEFINE_STUB(ftl_layout_tracker_bdev_init, struct ftl_layout_tracker_bdev *,
 	    (uint64_t bdev_blks), NULL);
 DEFINE_STUB_V(ftl_layout_tracker_bdev_fini, (struct ftl_layout_tracker_bdev *tracker));
+DEFINE_STUB(ftl_nv_cache_chunk_tail_md_num_blocks, size_t, (const struct ftl_nv_cache *nv_cache),
+	    0);
+DEFINE_STUB_V(ftl_layout_tracker_bdev_find_next_region, (struct ftl_layout_tracker_bdev *tracker,
+		enum ftl_layout_region_type reg_type,
+		const struct ftl_layout_tracker_bdev_region_props **search_ctx));
 
 static void
 adjust_bitmap(struct ftl_bitmap **bitmap, uint64_t *bit)

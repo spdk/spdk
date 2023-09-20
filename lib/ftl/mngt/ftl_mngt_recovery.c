@@ -54,7 +54,7 @@ recovery_iter_advance(struct spdk_ftl_dev *dev, struct ftl_mngt_recovery_ctx *ct
 	uint64_t first_block, last_blocks;
 
 	ctx->iter.i++;
-	region = &dev->layout.region[FTL_LAYOUT_REGION_TYPE_L2P];
+	region = ftl_layout_region_get(dev, FTL_LAYOUT_REGION_TYPE_L2P);
 	snippet = &ctx->l2p_snippet.region;
 
 	/* Advance processed blocks */
@@ -121,7 +121,7 @@ ftl_mngt_recovery_init(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 	dev->sb->ckpt_seq_id = 0;
 
 	/* Initialize region */
-	ctx->l2p_snippet.region = dev->layout.region[FTL_LAYOUT_REGION_TYPE_L2P];
+	ctx->l2p_snippet.region = *ftl_layout_region_get(dev, FTL_LAYOUT_REGION_TYPE_L2P);
 	/* Limit blocks in region, it will be needed for ftl_md_set_region */
 	ctx->l2p_snippet.region.current.blocks = ctx->iter.block_limit;
 
@@ -338,7 +338,7 @@ ftl_mngt_recovery_iteration_init_seq_ids(struct spdk_ftl_dev *dev, struct ftl_mn
 		page_id = lba / lbas_in_page;
 
 		assert(page_id < ftl_md_get_buffer_size(md) / sizeof(*trim_map));
-		assert(page_id < dev->layout.region[FTL_LAYOUT_REGION_TYPE_L2P].current.blocks);
+		assert(page_id < ftl_layout_region_get(dev, FTL_LAYOUT_REGION_TYPE_L2P)->current.blocks);
 		assert(lba_off < ctx->l2p_snippet.count);
 
 		trim_seq_id = trim_map[page_id];

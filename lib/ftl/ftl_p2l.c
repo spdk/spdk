@@ -32,15 +32,15 @@ static struct ftl_p2l_ckpt *
 ftl_p2l_ckpt_new(struct spdk_ftl_dev *dev, int region_type)
 {
 	struct ftl_p2l_ckpt *ckpt;
+	struct ftl_layout_region *region = ftl_layout_region_get(dev, region_type);
 
 	ckpt = calloc(1, sizeof(struct ftl_p2l_ckpt));
 	if (!ckpt) {
 		return NULL;
 	}
 
-	ckpt->vss_md_page = ftl_md_vss_buf_alloc(&dev->layout.region[region_type],
-			    dev->layout.region[region_type].num_entries);
-	ckpt->layout_region = &dev->layout.region[region_type];
+	ckpt->vss_md_page = ftl_md_vss_buf_alloc(region, region->num_entries);
+	ckpt->layout_region = region;
 	ckpt->md = dev->layout.md[region_type];
 	ckpt->num_pages = spdk_divide_round_up(ftl_get_num_blocks_in_band(dev), FTL_NUM_LBA_IN_BLOCK);
 

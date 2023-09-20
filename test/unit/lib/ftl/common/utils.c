@@ -88,6 +88,10 @@ test_init_ftl_dev(const struct base_bdev_geometry *geo)
 		dev->bands[i].md = md;
 	}
 
+	for (int i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; i++) {
+		dev->layout.region[i].type = i;
+	}
+
 	dev->p2l_pool = (struct ftl_mempool *)spdk_mempool_create("ftl_ut", 2, 0x210200,
 			SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 			SPDK_ENV_SOCKET_ID_ANY);

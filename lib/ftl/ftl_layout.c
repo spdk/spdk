@@ -108,15 +108,15 @@ dump_region(struct spdk_ftl_dev *dev, struct ftl_layout_region *region)
 int
 ftl_validate_regions(struct spdk_ftl_dev *dev, struct ftl_layout *layout)
 {
-	uint64_t i, j;
+	enum ftl_layout_region_type i, j;
 
 	/* Validate if regions doesn't overlap each other  */
 	/* TODO: major upgrades: keep track of and validate free_nvc/free_btm regions */
 	for (i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; i++) {
-		struct ftl_layout_region *r1 = &layout->region[i];
+		struct ftl_layout_region *r1 = ftl_layout_region_get(dev, i);
 
 		for (j = 0; j < FTL_LAYOUT_REGION_TYPE_MAX; j++) {
-			struct ftl_layout_region *r2 = &layout->region[j];
+			struct ftl_layout_region *r2 = ftl_layout_region_get(dev, j);
 
 			if (r1->bdev_desc != r2->bdev_desc) {
 				continue;
@@ -168,6 +168,15 @@ layout_blocks_left(struct spdk_ftl_dev *dev, struct ftl_layout_tracker_bdev *lay
 		max_reg_size = spdk_max(max_reg_size, reg_search_ctx->blk_sz);
 	}
 	return max_reg_size;
+}
+
+struct ftl_layout_region *
+ftl_layout_region_get(struct spdk_ftl_dev *dev, enum ftl_layout_region_type reg_type)
+{
+	struct ftl_layout_region *reg = &dev->layout.region[reg_type];
+
+	assert(reg_type < FTL_LAYOUT_REGION_TYPE_MAX);
+	return reg->type == reg_type ? reg : NULL;
 }
 
 static int
@@ -420,19 +429,21 @@ ftl_layout_setup_superblock(struct spdk_ftl_dev *dev)
 void
 ftl_layout_dump(struct spdk_ftl_dev *dev)
 {
-	struct ftl_layout *layout = &dev->layout;
-	int i;
+	struct ftl_layout_region *reg;
+	enum ftl_layout_region_type i;
 
 	FTL_NOTICELOG(dev, "NV cache layout:\n");
 	for (i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; ++i) {
-		if (layout->region[i].bdev_desc == dev->nv_cache.bdev_desc) {
-			dump_region(dev, &layout->region[i]);
+		reg = ftl_layout_region_get(dev, i);
+		if (reg && reg->bdev_desc == dev->nv_cache.bdev_desc) {
+			dump_region(dev, reg);
 		}
 	}
 	FTL_NOTICELOG(dev, "Base device layout:\n");
 	for (i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; ++i) {
-		if (layout->region[i].bdev_desc == dev->base_bdev_desc) {
-			dump_region(dev, &layout->region[i]);
+		reg = ftl_layout_region_get(dev, i);
+		if (reg && reg->bdev_desc == dev->base_bdev_desc) {
+			dump_region(dev, reg);
 		}
 	}
 }

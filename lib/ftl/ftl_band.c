@@ -332,7 +332,7 @@ ftl_band_alloc_md_entry(struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_p2l_map *p2l_map = &band->p2l_map;
-	struct ftl_layout_region *region = &dev->layout.region[FTL_LAYOUT_REGION_TYPE_BAND_MD];
+	struct ftl_layout_region *region = ftl_layout_region_get(dev, FTL_LAYOUT_REGION_TYPE_BAND_MD);
 
 	p2l_map->band_dma_md = ftl_mempool_get(dev->band_md_pool);
 
