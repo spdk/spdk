@@ -1,6 +1,8 @@
 # Changelog
 
-## v23.09: (Upcoming Release)
+## v24.01: (Upcoming Release)
+
+## v23.09
 
 ### dpdk
 
