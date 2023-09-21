@@ -128,6 +128,7 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.transport_tos = 0,
 	.nvme_error_stat = false,
 	.io_path_stat = false,
+	.allow_accel_sequence = false,
 };
 
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
@@ -3810,6 +3811,10 @@ bdev_nvme_accel_sequence_supported(void *ctx, enum spdk_bdev_io_type type)
 {
 	struct nvme_bdev *nbdev = ctx;
 	struct spdk_nvme_ctrlr *ctrlr;
+
+	if (!g_opts.allow_accel_sequence) {
+		return false;
+	}
 
 	switch (type) {
 	case SPDK_BDEV_IO_TYPE_WRITE:
@@ -7870,6 +7875,7 @@ bdev_nvme_opts_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_bool(w, "generate_uuids", g_opts.generate_uuids);
 	spdk_json_write_named_uint8(w, "transport_tos", g_opts.transport_tos);
 	spdk_json_write_named_bool(w, "io_path_stat", g_opts.io_path_stat);
+	spdk_json_write_named_bool(w, "allow_accel_sequence", g_opts.allow_accel_sequence);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);

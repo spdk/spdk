@@ -70,6 +70,7 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_options_decoders[] = 
 	{"nvme_error_stat", offsetof(struct spdk_bdev_nvme_opts, nvme_error_stat), spdk_json_decode_bool, true},
 	{"rdma_srq_size", offsetof(struct spdk_bdev_nvme_opts, rdma_srq_size), spdk_json_decode_uint32, true},
 	{"io_path_stat", offsetof(struct spdk_bdev_nvme_opts, io_path_stat), spdk_json_decode_bool, true},
+	{"allow_accel_sequence", offsetof(struct spdk_bdev_nvme_opts, allow_accel_sequence), spdk_json_decode_bool, true},
 };
 
 static void

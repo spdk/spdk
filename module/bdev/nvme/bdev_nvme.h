@@ -296,6 +296,7 @@ struct spdk_bdev_nvme_opts {
 	bool nvme_error_stat;
 	uint32_t rdma_srq_size;
 	bool io_path_stat;
+	bool allow_accel_sequence;
 };
 
 struct spdk_nvme_qpair *bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);

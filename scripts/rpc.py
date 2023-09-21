@@ -566,7 +566,8 @@ if __name__ == "__main__":
                                        transport_tos=args.transport_tos,
                                        nvme_error_stat=args.nvme_error_stat,
                                        rdma_srq_size=args.rdma_srq_size,
-                                       io_path_stat=args.io_path_stat)
+                                       io_path_stat=args.io_path_stat,
+                                       allow_accel_sequence=args.allow_accel_sequence)
 
     p = subparsers.add_parser('bdev_nvme_set_options',
                               help='Set options for the bdev nvme type. This is startup command.')
@@ -644,6 +645,9 @@ if __name__ == "__main__":
     p.add_argument('--io-path-stat',
                    help="""Enable collecting I/O path stat of each io path.""",
                    action='store_true')
+    p.add_argument('--allow-accel-sequence',
+                   help='''Allow NVMe bdevs to advertise support for accel sequences if the
+                   controller also supports them.''', action='store_true')
 
     p.set_defaults(func=bdev_nvme_set_options)
 

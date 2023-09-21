@@ -191,6 +191,7 @@ bperfpid=$!
 waitforlisten $bperfpid "$bperfsock"
 rpc_bperf <<- CONFIG
 	bdev_set_options --disable-auto-examine
+	bdev_nvme_set_options --allow-accel-sequence
 	framework_start_init
 	bdev_nvme_attach_controller -t tcp -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -f ipv4 -n $nqn -b nvme0 --ddgst
 	accel_crypto_key_create -c AES_XTS -k "${key0[0]}" -e "${key0[1]}" -n key0
@@ -220,6 +221,7 @@ bperfpid=$!
 waitforlisten $bperfpid "$bperfsock"
 rpc_bperf <<- CONFIG
 	bdev_set_options --disable-auto-examine
+	bdev_nvme_set_options --allow-accel-sequence
 	framework_start_init
 	bdev_nvme_attach_controller -t tcp -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -f ipv4 -n $nqn -b nvme0 --ddgst
 	accel_crypto_key_create -c AES_XTS -k "${key0[0]}" -e "${key0[1]}" -n key0
