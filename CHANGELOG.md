@@ -16,6 +16,19 @@ For retrieving physical addresses, spdk_vtophys() should be used instead.
 
 New APIs, `spdk_flog` and `spdk_vflog`, were added to write messages to the specified log file.
 
+### nvme
+
+The `spdk_nvme_accel_fn_table` interface has been extended with callbacks allowing users to chain
+multiple accel operations.  Users can now send requests with an existing accel sequence by setting
+the `accel_sequence` field in `spdk_nvme_ns_cmd_ext_io_opts` if the controller supports it (i.e.
+sets the `SPDK_NVME_CTRLR_ACCEL_SEQUENCE_SUPPORTED` flag) and the user implements the necessary
+`spdk_nvme_accel_fn_table` callbacks.
+
+The NVMe bdev will now advertise support for accel sequences if the `allow_accel_sequence` flag is
+set in `bdev_nvme_set_options` and the underlying controller also supports them.
+
+The TCP transport will now calculate data digest using the accel sequence APIs if they're available.
+
 ### nvmf
 
 The `spdk_nvmf_request::data` field has been removed: instead, clients should set
