@@ -165,6 +165,12 @@ struct nvmf_transport_create_ctx {
 	spdk_nvmf_transport_create_done_cb cb_fn;
 };
 
+static bool
+nvmf_transport_use_iobuf(struct spdk_nvmf_transport *transport)
+{
+	return transport->opts.num_shared_buffers || transport->opts.buf_cache_size;
+}
+
 static void
 nvmf_transport_create_async_done(void *cb_arg, struct spdk_nvmf_transport *transport)
 {
@@ -187,7 +193,7 @@ nvmf_transport_create_async_done(void *cb_arg, struct spdk_nvmf_transport *trans
 		goto err;
 	}
 
-	if (ctx->opts.num_shared_buffers) {
+	if (nvmf_transport_use_iobuf(transport)) {
 		spdk_iobuf_register_module(transport->iobuf_name);
 	}
 
@@ -358,7 +364,7 @@ spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport,
 		free(listener);
 	}
 
-	if (transport->opts.num_shared_buffers) {
+	if (nvmf_transport_use_iobuf(transport)) {
 		spdk_iobuf_unregister_module(transport->iobuf_name);
 	}
 
@@ -569,8 +575,8 @@ nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport,
 
 	STAILQ_INIT(&tgroup->pending_buf_queue);
 
-	if (transport->opts.buf_cache_size == 0) {
-		/* We aren't going to allocate any buffers for the cache, so just return now. */
+	if (!nvmf_transport_use_iobuf(transport)) {
+		/* We aren't going to allocate any shared buffers or cache, so just return now. */
 		return tgroup;
 	}
 
@@ -648,7 +654,7 @@ nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 		SPDK_ERRLOG("Pending I/O list wasn't empty on poll group destruction\n");
 	}
 
-	if (transport->opts.buf_cache_size) {
+	if (nvmf_transport_use_iobuf(transport)) {
 		/* The call to poll_group_destroy both frees the group memory,
 		 * but also releases any remaining buffers. Make a copy of
 		 * the channel onto the stack so we can still release the
@@ -660,7 +666,7 @@ nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	transport->ops->poll_group_destroy(group);
 	pthread_mutex_unlock(&transport->mutex);
 
-	if (transport->opts.buf_cache_size) {
+	if (nvmf_transport_use_iobuf(transport)) {
 		spdk_iobuf_channel_fini(&ch);
 	}
 }
@@ -861,6 +867,8 @@ spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 			      uint32_t length)
 {
 	int rc;
+
+	assert(nvmf_transport_use_iobuf(transport));
 
 	req->iovcnt = 0;
 	rc = nvmf_request_get_buffers(req, group, transport, length,
