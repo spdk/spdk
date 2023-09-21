@@ -31,6 +31,14 @@ def ublk_stop_disk(client, ublk_id=1):
     return client.call('ublk_stop_disk', params)
 
 
+def ublk_recover_disk(client, bdev_name, ublk_id):
+    params = {
+        'bdev_name': bdev_name,
+        'ublk_id': ublk_id
+    }
+    return client.call('ublk_recover_disk', params)
+
+
 def ublk_get_disks(client, ublk_id=1):
     params = {}
     if ublk_id:

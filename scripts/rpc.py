@@ -2336,6 +2336,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('ublk_id', help='ublk device id to be deleted. Example: 1.', type=int)
     p.set_defaults(func=ublk_stop_disk)
 
+    def ublk_recover_disk(args):
+        print(rpc.ublk.ublk_recover_disk(args.client,
+                                         bdev_name=args.bdev_name,
+                                         ublk_id=args.ublk_id))
+
+    p = subparsers.add_parser('ublk_recover_disk',
+                              help='Recover ublk device')
+    p.add_argument('bdev_name', help='Blockdev name to be recovered. Example: Malloc0.')
+    p.add_argument('ublk_id', help='ublk device id to be recovered. Example: 1.', type=int)
+    p.set_defaults(func=ublk_recover_disk)
+
     def ublk_get_disks(args):
         print_dict(rpc.ublk.ublk_get_disks(args.client,
                                            ublk_id=args.ublk_id))

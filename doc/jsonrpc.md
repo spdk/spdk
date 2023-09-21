@@ -11211,6 +11211,46 @@ Example response:
 }
 ~~~
 
+### ublk_recover_disk {#rpc_ublk_recover_disk}
+
+Recover original UBLK device with ID and block device
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+bdev_name               | Required | string      | Bdev name to export
+ublk_id                 | Required | int         | Device id
+
+#### Response
+
+UBLK device ID
+
+#### Example
+
+Example request:
+
+~~~json
+{
+ "params": {
+    "ublk_id": "1",
+    "bdev_name": "Malloc1"
+  },
+  "jsonrpc": "2.0",
+  "method": "ublk_recover_disk",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": 1
+}
+
 ### ublk_stop_disk {#rpc_ublk_stop_disk}
 
 Delete a UBLK device

@@ -287,3 +287,69 @@ rpc_ublk_get_disks(struct spdk_jsonrpc_request *request,
 	return;
 }
 SPDK_RPC_REGISTER("ublk_get_disks", rpc_ublk_get_disks, SPDK_RPC_RUNTIME)
+
+struct rpc_ublk_recover_disk {
+	char		*bdev_name;
+	uint32_t	ublk_id;
+	struct spdk_jsonrpc_request *request;
+};
+
+static const struct spdk_json_object_decoder rpc_ublk_recover_disk_decoders[] = {
+	{"bdev_name", offsetof(struct rpc_ublk_recover_disk, bdev_name), spdk_json_decode_string},
+	{"ublk_id", offsetof(struct rpc_ublk_recover_disk, ublk_id), spdk_json_decode_uint32},
+};
+
+static void
+free_rpc_ublk_recover_disk(struct rpc_ublk_recover_disk *req)
+{
+	free(req->bdev_name);
+	free(req);
+}
+
+static void
+rpc_ublk_recover_disk_done(void *cb_arg, int rc)
+{
+	struct rpc_ublk_recover_disk *req = cb_arg;
+	struct spdk_json_write_ctx *w;
+
+	if (rc == 0) {
+		w = spdk_jsonrpc_begin_result(req->request);
+		spdk_json_write_uint32(w, req->ublk_id);
+		spdk_jsonrpc_end_result(req->request, w);
+	} else {
+		spdk_jsonrpc_send_error_response(req->request, rc, spdk_strerror(-rc));
+	}
+
+	free_rpc_ublk_recover_disk(req);
+}
+
+static void
+rpc_ublk_recover_disk(struct spdk_jsonrpc_request *request,
+		      const struct spdk_json_val *params)
+{
+	struct rpc_ublk_recover_disk *req;
+	int rc;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		SPDK_ERRLOG("could not allocate request.\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
+		return;
+	}
+	req->request = request;
+
+	if (spdk_json_decode_object(params, rpc_ublk_recover_disk_decoders,
+				    SPDK_COUNTOF(rpc_ublk_recover_disk_decoders),
+				    req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		free(req);
+		return;
+	}
+
+	rc = ublk_start_disk_recovery(req->bdev_name, req->ublk_id, NULL, NULL);
+	rpc_ublk_recover_disk_done(req, rc);
+}
+
+SPDK_RPC_REGISTER("ublk_recover_disk", rpc_ublk_recover_disk, SPDK_RPC_RUNTIME)
