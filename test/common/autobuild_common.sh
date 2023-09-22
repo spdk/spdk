@@ -375,6 +375,8 @@ build_files() {
 	run_test "autobuild_header_dependency_check" header_dependency_check
 	run_test "autobuild_make_install" test_make_install
 	run_test "autobuild_make_uninstall" test_make_uninstall
+	$MAKE clean
+	run_test "autobuild_generated_files_check_post_clean" porcelain_check
 }
 
 build_doc() {

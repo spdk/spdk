@@ -10,18 +10,6 @@ source "$rootdir/test/common/autobuild_common.sh"
 MAKEFLAGS=${MAKEFLAGS:--j16}
 cd $rootdir
 
-timing_enter porcelain_check
-if [[ -e $rootdir/mk/config.mk ]]; then
-	$MAKE clean
-fi
-
-if [ $(git status --porcelain --ignore-submodules | wc -l) -ne 0 ]; then
-	echo make clean left the following files:
-	git status --porcelain --ignore-submodules
-	exit 1
-fi
-timing_exit porcelain_check
-
 if [[ $SPDK_TEST_RELEASE_BUILD -eq 1 ]]; then
 	build_packaging
 	$MAKE clean
