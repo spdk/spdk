@@ -74,7 +74,6 @@ unregister_workers(void)
 {
 	struct worker_thread *worker, *tmp_worker;
 
-	/* Free namespace context and worker thread */
 	TAILQ_FOREACH_SAFE(worker, &g_workers, link, tmp_worker) {
 		TAILQ_REMOVE(&g_workers, worker, link);
 		free(worker);
@@ -106,7 +105,6 @@ init_workers(void)
 		goto error;
 	}
 
-	/* Free namespace context and worker thread */
 	TAILQ_FOREACH(worker, &g_workers, link) {
 		worker->qpair = spdk_nvme_ctrlr_alloc_io_qpair(g_ctrlr, NULL, 0);
 		if (worker->qpair == NULL) {
