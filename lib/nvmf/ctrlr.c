@@ -54,6 +54,7 @@ struct spdk_nvmf_custom_admin_cmd {
 static struct spdk_nvmf_custom_admin_cmd g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_MAX_OPC + 1];
 
 static void _nvmf_request_complete(void *ctx);
+int nvmf_passthru_admin_cmd_for_ctrlr(struct spdk_nvmf_request *req, struct spdk_nvmf_ctrlr *ctrlr);
 
 static inline void
 nvmf_invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp,
@@ -4679,21 +4680,13 @@ spdk_nvmf_set_custom_admin_cmd_hdlr(uint8_t opc, spdk_nvmf_custom_cmd_hdlr hdlr)
 }
 
 static int
-nvmf_passthru_admin_cmd(struct spdk_nvmf_request *req)
+nvmf_passthru_admin_cmd_for_bdev_nsid(struct spdk_nvmf_request *req, uint32_t bdev_nsid)
 {
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
 	struct spdk_io_channel *ch;
-	struct spdk_nvme_cmd *cmd = spdk_nvmf_request_get_cmd(req);
 	struct spdk_nvme_cpl *response = spdk_nvmf_request_get_response(req);
-	uint32_t bdev_nsid;
 	int rc;
-
-	if (g_nvmf_custom_admin_cmd_hdlrs[cmd->opc].nsid == 0) {
-		bdev_nsid = cmd->nsid;
-	} else {
-		bdev_nsid = g_nvmf_custom_admin_cmd_hdlrs[cmd->opc].nsid;
-	}
 
 	rc = spdk_nvmf_request_get_bdev(bdev_nsid, req, &bdev, &desc, &ch);
 	if (rc) {
@@ -4702,6 +4695,38 @@ nvmf_passthru_admin_cmd(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 	return spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(bdev, desc, ch, req, NULL);
+}
+
+static int
+nvmf_passthru_admin_cmd(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cmd *cmd = spdk_nvmf_request_get_cmd(req);
+	uint32_t bdev_nsid;
+
+	if (g_nvmf_custom_admin_cmd_hdlrs[cmd->opc].nsid != 0) {
+		bdev_nsid = g_nvmf_custom_admin_cmd_hdlrs[cmd->opc].nsid;
+	} else {
+		bdev_nsid = cmd->nsid;
+	}
+
+	return nvmf_passthru_admin_cmd_for_bdev_nsid(req, bdev_nsid);
+}
+
+int
+nvmf_passthru_admin_cmd_for_ctrlr(struct spdk_nvmf_request *req, struct spdk_nvmf_ctrlr *ctrlr)
+{
+	struct spdk_nvme_cpl *response = spdk_nvmf_request_get_response(req);
+	struct spdk_nvmf_ns *ns;
+
+	ns = spdk_nvmf_subsystem_get_first_ns(ctrlr->subsys);
+	if (ns == NULL) {
+		/* Is there a better sc to use here? */
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	return nvmf_passthru_admin_cmd_for_bdev_nsid(req, ns->nsid);
 }
 
 void
