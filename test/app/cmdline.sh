@@ -18,9 +18,13 @@ spdk_tgt_pid=$!
 waitforlisten $spdk_tgt_pid
 
 $rootdir/scripts/rpc.py spdk_get_version
-declare -a methods=($(rpc_cmd rpc_get_methods | jq -rc ".[]"))
-[[ "${methods[0]}" = "spdk_get_version" ]]
-[[ "${methods[1]}" = "rpc_get_methods" ]]
-[[ "${#methods[@]}" = 2 ]]
+
+expected_methods=()
+expected_methods+=("rpc_get_methods")
+expected_methods+=("spdk_get_version")
+
+methods=($(rpc_cmd rpc_get_methods | jq -r ".[]" | sort))
+((${#methods[@]} == 2))
+[[ ${methods[*]} == "${expected_methods[*]}" ]]
 
 NOT $rootdir/scripts/rpc.py env_dpdk_get_mem_stats
