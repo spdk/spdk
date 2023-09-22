@@ -11,7 +11,7 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 
-trap 'killprocess $spdk_tgt_pid; exit 1' ERR
+trap 'killprocess $spdk_tgt_pid' EXIT
 
 $SPDK_BIN_DIR/spdk_tgt --rpcs-allowed spdk_get_version,rpc_get_methods &
 spdk_tgt_pid=$!
@@ -24,5 +24,3 @@ declare -a methods=($(rpc_cmd rpc_get_methods | jq -rc ".[]"))
 [[ "${#methods[@]}" = 2 ]]
 
 NOT $rootdir/scripts/rpc.py env_dpdk_get_mem_stats
-
-killprocess $spdk_tgt_pid
