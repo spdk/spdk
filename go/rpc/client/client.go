@@ -52,6 +52,11 @@ func (c *Client) Call(method string, params any) (*Response, error) {
 			method, decErr)
 	}
 
+	if request.ID != uint64(response.ID) {
+		return nil, fmt.Errorf("error mismatch request and response IDs for %s method",
+			method)
+	}
+
 	return response, nil
 }
 
