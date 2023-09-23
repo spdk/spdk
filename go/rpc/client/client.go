@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2023 Intel Corporation.
+ *   Copyright (c) 2023 Dell Inc, or its subsidiaries.
  *   All rights reserved.
  */
 
@@ -18,6 +19,8 @@ const (
 	jsonRPCVersion = "2.0"
 	// Unix specifies network type for socket connection.
 	Unix = "unix"
+	// TCP specifies network type for tcp connection.
+	TCP = "tcp"
 )
 
 // Client represents JSON-RPC 2.0 client.
@@ -105,6 +108,21 @@ func createConnectionToSocket(socketAddress string) (net.Conn, error) {
 	return conn, nil
 }
 
+func createConnectionToTcp(tcpAddress string) (net.Conn, error) {
+	address, err := net.ResolveTCPAddr(TCP, tcpAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	conn, err := net.DialTCP(TCP, nil, address)
+	if err != nil {
+		return nil, fmt.Errorf("could not connect to a TCP socket on address %s, err: %w",
+			address.String(), err)
+	}
+
+	return conn, nil
+}
+
 func verifyRequestParamsType(params any) error {
 	// Nil is allowed value for params field.
 	if params == nil {
@@ -132,6 +150,14 @@ func CreateClientWithJsonCodec(network, address string) (*Client, error) {
 		conn, err := createConnectionToSocket(address)
 		if err != nil {
 			return nil, fmt.Errorf("error during client creation for Unix socket, " +
+				"err: %w", err)
+		}
+
+		return &Client{codec: createJsonCodec(conn), requestId: atomic.Uint64{}}, nil
+	case "tcp", "tcp4", "tcp6":
+		conn, err := createConnectionToTcp(address)
+		if err != nil {
+			return nil, fmt.Errorf("error during client creation for TCP socket, " +
 				"err: %w", err)
 		}
 
