@@ -1,6 +1,7 @@
 # Storage Performance Development Kit
 
 [![Build Status](https://travis-ci.org/spdk/spdk.svg?branch=master)](https://travis-ci.org/spdk/spdk)
+[![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg)](http://godoc.org/github.com/spdk/spdk/go/rpc)
 
 NOTE: The SPDK mailing list has moved to a new location. Please visit
 [this URL](https://lists.linuxfoundation.org/mailman/listinfo/spdk) to subscribe
