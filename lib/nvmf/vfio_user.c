@@ -138,6 +138,7 @@ struct nvme_migr_cq_state {
 };
 SPDK_STATIC_ASSERT(sizeof(struct nvme_migr_cq_state) == 0x20, "Incorrect size");
 
+#define VFIO_USER_MIGR_CALLBACK_VERS	1
 #define VFIO_USER_NVME_MIGR_MAGIC	0xAFEDBC23
 
 /* The device state is in VFIO MIGRATION BAR(9) region, keep the device state page aligned.
@@ -4108,7 +4109,7 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 	};
 
 	const vfu_migration_callbacks_t migr_callbacks = {
-		.version = VFU_MIGR_CALLBACKS_VERS,
+		.version = VFIO_USER_MIGR_CALLBACK_VERS,
 		.transition = &vfio_user_migration_device_state_transition,
 		.get_pending_bytes = &vfio_user_migration_get_pending_bytes,
 		.prepare_data = &vfio_user_migration_prepare_data,
