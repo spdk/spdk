@@ -7908,6 +7908,31 @@ bdev_nvme_discovery_config_json(struct spdk_json_write_ctx *w, struct discovery_
 	spdk_json_write_object_end(w);
 }
 
+#ifdef SPDK_CONFIG_NVME_CUSE
+static void
+nvme_ctrlr_cuse_config_json(struct spdk_json_write_ctx *w,
+			    struct nvme_ctrlr *nvme_ctrlr)
+{
+	size_t cuse_name_size = 128;
+	char cuse_name[cuse_name_size];
+
+	if (spdk_nvme_cuse_get_ctrlr_name(nvme_ctrlr->ctrlr,
+					  cuse_name, &cuse_name_size) != 0) {
+		return;
+	}
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "bdev_nvme_cuse_register");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "name", nvme_ctrlr->nbdev_ctrlr->name);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+#endif
+
 static void
 nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 		       struct nvme_ctrlr *nvme_ctrlr)
@@ -7982,6 +8007,10 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	TAILQ_FOREACH(nbdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
 		TAILQ_FOREACH(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
 			nvme_ctrlr_config_json(w, nvme_ctrlr);
+
+#ifdef SPDK_CONFIG_NVME_CUSE
+			nvme_ctrlr_cuse_config_json(w, nvme_ctrlr);
+#endif
 		}
 	}
 
