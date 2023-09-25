@@ -1726,10 +1726,10 @@ def run_fio_tests(args, initiators, target_obj,
         for i in initiators:
             i.init_connect()
             cfg = i.gen_fio_config(rw,
+                                   fio_rw_mix_read,
                                    block_size,
                                    io_depth,
                                    target_obj.subsys_no,
-                                   fio_rw_mix_read,
                                    fio_num_jobs,
                                    fio_ramp_time,
                                    fio_run_time,
@@ -1758,7 +1758,7 @@ def run_fio_tests(args, initiators, target_obj,
         parse_results(args.results, args.csv_filename)
     except Exception as err:
         logging.error("There was an error with parsing the results")
-        logging.error(err)
+        raise err
 
 
 if __name__ == "__main__":
