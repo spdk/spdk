@@ -1463,10 +1463,8 @@ extern_vhost_pre_msg_handler(int vid, void *_msg)
 		pthread_mutex_lock(&user_dev->lock);
 		if (vsession->started) {
 			pthread_mutex_unlock(&user_dev->lock);
-			/* `stop_device` is running in synchronous, it
-			 * will hold this lock again before exiting.
-			 */
 			g_spdk_vhost_ops.destroy_device(vid);
+			break;
 		}
 		pthread_mutex_unlock(&user_dev->lock);
 		break;
