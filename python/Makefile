@@ -15,7 +15,7 @@ ifneq ($(CONFIG_PYDIR),)
 setup_cmd += --install-purelib $(CONFIG_PYDIR)
 purelibdir := $(CONFIG_PYDIR)
 else
-purelibdir := $(shell python -c "import sysconfig; print(sysconfig.get_paths()['purelib'])")
+purelibdir := $(shell python3 -c "import sysconfig; print(sysconfig.get_paths()['purelib'])")
 endif
 
 all:
