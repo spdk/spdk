@@ -321,6 +321,69 @@ int spdk_accel_submit_decompress(struct spdk_io_channel *ch, struct iovec *dst_i
 int spdk_accel_submit_xor(struct spdk_io_channel *ch, void *dst, void **sources, uint32_t nsrcs,
 			  uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg);
 
+/**
+ * Build and submit a data encryption request.
+ *
+ * This function will build the encryption request and submit it. \b nbytes must be multiple of \b
+ * block_size.  \b iv is used to encrypt the first logical block of size \b block_size. If \b
+ * src_iovs describes more than one logical block then \b iv will be incremented for each next
+ * logical block.  Data Encryption Key identifier should be created before calling this function
+ * using methods specific to the accel module being used.
+ *
+ * \param ch I/O channel associated with this call
+ * \param key Data Encryption Key identifier
+ * \param dst_iovs The io vector array which stores the dst data and len.
+ * \param dst_iovcnt The size of the destination io vectors.
+ * \param src_iovs The io vector array which stores the src data and len.
+ * \param src_iovcnt The size of the source io vectors.
+ * \param iv Initialization vector (tweak) used for encryption
+ * \param block_size Logical block size, if src contains more than 1 logical block, subsequent
+ *        logical blocks will be encrypted with incremented \b iv
+ * \param flags Accel framework flags for operations.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in the completion
+ *        callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_submit_encrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_key *key,
+			      struct iovec *dst_iovs, uint32_t dst_iovcnt,
+			      struct iovec *src_iovs, uint32_t src_iovcnt,
+			      uint64_t iv, uint32_t block_size, int flags,
+			      spdk_accel_completion_cb cb_fn, void *cb_arg);
+
+/**
+ * Build and submit a data decryption request.
+ *
+ * This function will build the decryption request and submit it. \b nbytes must be multiple of \b
+ * block_size.  \b iv is used to decrypt the first logical block of size \b block_size. If \b
+ * src_iovs describes more than one logical block then \b iv will be incremented for each next
+ * logical block.  Data Encryption Key identifier should be created before calling this function
+ * using methods specific to the accel module being used.
+ *
+ * \param ch I/O channel associated with this call
+ * \param key Data Encryption Key identifier
+ * \param dst_iovs The io vector array which stores the dst data and len.
+ * \param dst_iovcnt The size of the destination io vectors.
+ * \param src_iovs The io vector array which stores the src data and len.
+ * \param src_iovcnt The size of the source io vectors.
+ * \param iv Initialization vector (tweak) used for decryption. Should be the same as \b iv used for
+ *        encryption of a data block
+ * \param block_size Logical block size, if src contains more than 1 logical block, subsequent
+ *        logical blocks will be decrypted with incremented \b iv
+ * \param flags Accel framework flags for operations.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in the completion
+ *        callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_submit_decrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_key *key,
+			      struct iovec *dst_iovs, uint32_t dst_iovcnt,
+			      struct iovec *src_iovs, uint32_t src_iovcnt,
+			      uint64_t iv, uint32_t block_size, int flags,
+			      spdk_accel_completion_cb cb_fn, void *cb_arg);
+
 /** Object grouping multiple accel operations to be executed at the same point in time */
 struct spdk_accel_sequence;
 
@@ -557,67 +620,6 @@ int spdk_accel_get_buf(struct spdk_io_channel *ch, uint64_t len, void **buf,
  */
 void spdk_accel_put_buf(struct spdk_io_channel *ch, void *buf,
 			struct spdk_memory_domain *domain, void *domain_ctx);
-
-/**
- * Build and submit a data encryption request.
- *
- * This function will build the encryption request and submit it. \b nbytes must be multiple of \b block_size.
- * \b iv is used to encrypt the first logical block of size \b block_size. If \b src_iovs describes more than
- * one logical block then \b iv will be incremented for each next logical block.
- * Data Encryption Key identifier should be created before calling this function using methods specific to the accel
- * module being used.
- *
- * \param ch I/O channel associated with this call
- * \param key Data Encryption Key identifier
- * \param dst_iovs The io vector array which stores the dst data and len.
- * \param dst_iovcnt The size of the destination io vectors.
- * \param src_iovs The io vector array which stores the src data and len.
- * \param src_iovcnt The size of the source io vectors.
- * \param iv Initialization vector (tweak) used for encryption
- * \param block_size Logical block size, if src contains more than 1 logical block, subsequent logical blocks will be
- * encrypted with incremented \b iv
- * \param flags Accel framework flags for operations.
- * \param cb_fn Callback function which will be called when the request is complete.
- * \param cb_arg Opaque value which will be passed back as the arg parameter in the completion callback.
- *
- * \return 0 on success, negative errno on failure.
- */
-int spdk_accel_submit_encrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_key *key,
-			      struct iovec *dst_iovs, uint32_t dst_iovcnt,
-			      struct iovec *src_iovs, uint32_t src_iovcnt,
-			      uint64_t iv, uint32_t block_size, int flags,
-			      spdk_accel_completion_cb cb_fn, void *cb_arg);
-
-/**
- * Build and submit a data decryption request.
- *
- * This function will build the decryption request and submit it. \b nbytes must be multiple of \b block_size.
- * \b iv is used to decrypt the first logical block of size \b block_size. If \b src_iovs describes more than
- * one logical block then \b iv will be incremented for each next logical block.
- * Data Encryption Key identifier should be created before calling this function using methods specific to the accel
- * module being used.
- *
- * \param ch I/O channel associated with this call
- * \param key Data Encryption Key identifier
- * \param dst_iovs The io vector array which stores the dst data and len.
- * \param dst_iovcnt The size of the destination io vectors.
- * \param src_iovs The io vector array which stores the src data and len.
- * \param src_iovcnt The size of the source io vectors.
- * \param iv Initialization vector (tweak) used for decryption. Should be the same as \b iv used for encryption of a
- * data block
- * \param block_size Logical block size, if src contains more than 1 logical block, subsequent logical blocks will be
- * decrypted with incremented \b iv
- * \param flags Accel framework flags for operations.
- * \param cb_fn Callback function which will be called when the request is complete.
- * \param cb_arg Opaque value which will be passed back as the arg parameter in the completion callback.
- *
- * \return 0 on success, negative errno on failure.
- */
-int spdk_accel_submit_decrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_key *key,
-			      struct iovec *dst_iovs, uint32_t dst_iovcnt,
-			      struct iovec *src_iovs, uint32_t src_iovcnt,
-			      uint64_t iv, uint32_t block_size, int flags,
-			      spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
  * Return the name of the module assigned to a specific opcode.
