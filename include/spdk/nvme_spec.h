@@ -3019,6 +3019,18 @@ struct spdk_nvme_zns_ns_data {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_zns_ns_data) == 4096, "Incorrect size");
 
 /**
+ * IO command set vector for IDENTIFY_IOCS
+ */
+struct spdk_nvme_iocs_vector {
+	uint8_t	nvm  : 1;
+	uint8_t	kv   : 1;
+	uint8_t	zns  : 1;
+	uint8_t	rsvd : 5;
+	uint8_t	rsvd2[7];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_iocs_vector) == 8, "Incorrect size");
+
+/**
  * Deallocated logical block features - read value
  */
 enum spdk_nvme_dealloc_logical_block_read_value {
