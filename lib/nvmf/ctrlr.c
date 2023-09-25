@@ -3051,6 +3051,49 @@ nvmf_ctrlr_identify_ns_id_descriptor_list(
 }
 
 static int
+nvmf_ctrlr_identify_iocs(struct spdk_nvmf_ctrlr *ctrlr,
+			 struct spdk_nvme_cmd *cmd,
+			 struct spdk_nvme_cpl *rsp,
+			 void *cdata, size_t cdata_size)
+{
+	struct spdk_nvme_iocs_vector *vector;
+	struct spdk_nvmf_ns *ns;
+
+	if (cdata_size < sizeof(struct spdk_nvme_iocs_vector)) {
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	/* For now we only support this command sent to the current
+	 * controller.
+	 */
+	if (cmd->cdw10_bits.identify.cntid != 0xFFFF &&
+	    cmd->cdw10_bits.identify.cntid != ctrlr->cntlid) {
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+	memset(cdata, 0, cdata_size);
+
+	vector = cdata;
+	vector->nvm = 1;
+	for (ns = spdk_nvmf_subsystem_get_first_ns(ctrlr->subsys); ns != NULL;
+	     ns = spdk_nvmf_subsystem_get_next_ns(ctrlr->subsys, ns)) {
+		if (ns->bdev == NULL) {
+			continue;
+		}
+		if (spdk_bdev_is_zoned(ns->bdev)) {
+			vector->zns = 1;
+		}
+	}
+
+	rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
 nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 {
 	uint8_t cns;
@@ -3104,6 +3147,9 @@ nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 		break;
 	case SPDK_NVME_IDENTIFY_CTRLR_IOCS:
 		ret = spdk_nvmf_ctrlr_identify_iocs_specific(ctrlr, cmd, rsp, (void *)&tmpbuf, req->length);
+		break;
+	case SPDK_NVME_IDENTIFY_IOCS:
+		ret = nvmf_ctrlr_identify_iocs(ctrlr, cmd, rsp, (void *)&tmpbuf, req->length);
 		break;
 	default:
 		goto invalid_cns;
