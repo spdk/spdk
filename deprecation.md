@@ -19,23 +19,12 @@ The tags can be matched with the level 4 headers below.
 
 ## Deprecation Notices
 
-### PMDK
-
-PMDK is no longer supported and integrations with it in SPDK are now deprecated, and will be removed in SPDK 23.05.
-Please see: [UPDATE ON PMDK AND OUR LONG TERM SUPPORT STRATEGY](https://pmem.io/blog/2022/11/update-on-pmdk-and-our-long-term-support-strategy/).
-
-### VTune
-
-#### `vtune_support`
-
-VTune integration is in now deprecated and will be removed in the 23.09 release.
-
 ### nvmf
 
 #### `spdk_nvmf_qpair_disconnect`
 
 Parameters `cb_fn` and `ctx` of `spdk_nvmf_qpair_disconnect` API are deprecated. These parameters
-will be removed in 23.09 release.
+will be removed in 24.01 release.
 
 #### `nvmf_get_subsystems`
 
