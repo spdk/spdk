@@ -1400,8 +1400,7 @@ bdev_rbd_resize(const char *name, const uint64_t new_size_in_mb)
 {
 	struct spdk_bdev_desc *desc;
 	struct spdk_bdev *bdev;
-	struct spdk_io_channel *ch;
-	struct bdev_rbd_io_channel *rbd_io_ch;
+	struct bdev_rbd *rbd;
 	int rc = 0;
 	uint64_t new_size_in_byte;
 	uint64_t current_size_in_mb;
@@ -1425,12 +1424,9 @@ bdev_rbd_resize(const char *name, const uint64_t new_size_in_mb)
 		goto exit;
 	}
 
-	ch = bdev_rbd_get_io_channel(bdev);
-	rbd_io_ch = spdk_io_channel_get_ctx(ch);
+	rbd = SPDK_CONTAINEROF(bdev, struct bdev_rbd, disk);
 	new_size_in_byte = new_size_in_mb * 1024 * 1024;
-
-	rc = rbd_resize(rbd_io_ch->disk->image, new_size_in_byte);
-	spdk_put_io_channel(ch);
+	rc = rbd_resize(rbd->image, new_size_in_byte);
 	if (rc != 0) {
 		SPDK_ERRLOG("failed to resize the ceph bdev.\n");
 		goto exit;
