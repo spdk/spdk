@@ -24,6 +24,7 @@
 #define BDEVPERF_CONFIG_MAX_FILENAME 1024
 #define BDEVPERF_CONFIG_UNDEFINED -1
 #define BDEVPERF_CONFIG_ERROR -2
+#define PATTERN_TYPES_STR "(read, write, randread, randwrite, rw, randrw, verify, reset, unmap, flush, write_zeroes)"
 
 struct bdevperf_task {
 	struct iovec			iov;
@@ -1850,7 +1851,7 @@ parse_rw(const char *str, enum job_config_rw ret)
 		ret = JOB_CONFIG_RW_RANDRW;
 	} else {
 		fprintf(stderr, "rw must be one of\n"
-			"(read, write, randread, randwrite, rw, randrw, verify, reset, unmap, flush)\n");
+			PATTERN_TYPES_STR "\n");
 		ret = BDEVPERF_CONFIG_ERROR;
 	}
 
@@ -2526,7 +2527,7 @@ bdevperf_usage(void)
 {
 	printf(" -q <depth>                io depth\n");
 	printf(" -o <size>                 io size in bytes\n");
-	printf(" -w <type>                 io pattern type, must be one of (read, write, randread, randwrite, rw, randrw, verify, reset, unmap, flush)\n");
+	printf(" -w <type>                 io pattern type, must be one of " PATTERN_TYPES_STR "\n");
 	printf(" -t <time>                 time in seconds\n");
 	printf(" -k <timeout>              timeout in seconds to detect starved I/O (default is 0 and disabled)\n");
 	printf(" -M <percent>              rwmixread (100 for reads, 0 for writes)\n");
