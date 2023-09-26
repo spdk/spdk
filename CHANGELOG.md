@@ -10,9 +10,20 @@ Updated DPDK submodule to DPDK 23.03.
 
 ### env
 
-The `phys_addr` parameter in spdk_*_malloc() functions is now invalid. Passing non-NULL value
+The `phys_addr` parameter in `spdk_*_malloc()` functions is now invalid. Passing non-NULL value
 will return NULL from the functions. The parameter was deprecated in SPDK 19.04.
-For retrieving physical addresses, spdk_vtophys() should be used instead.
+For retrieving physical addresses, `spdk_vtophys()` should be used instead.
+
+### init
+
+Options for the JSON-RPC server initialization were added. The options are defined via the
+`spdk_rpc_opts` structure and is passed to the existing API `spdk_rpc_initialize()` as a new
+argument. The options include `log_file` and `log_level`.
+
+### jsonrpc
+
+New APIs, `spdk_jsonrpc_set_log_level` and `spdk_jsonrpc_set_log_file`, were added to enable
+logging JSON RPC calls history.
 
 ### log
 
@@ -35,21 +46,10 @@ The TCP transport will now calculate data digest using the accel sequence APIs i
 
 The `spdk_nvmf_request::data` field has been removed: instead, clients should set
 `->iov` and `->iovcnt` appropriately, as nvmf request APIs now expect any data
-buffers to be described there. spdk_nvmf_request_get_data() has been removed.
+buffers to be described there. `spdk_nvmf_request_get_data()` has been removed.
 
 `transport` field in `listen_addresses` of `nvmf_get_subsystems` RPC is deprecated.
 `trtype` field should be used instead. `transport` field will be removed in 24.01 release.
-
-### jsonrpc
-
-New APIs, `spdk_jsonrpc_set_log_level` and `spdk_jsonrpc_set_log_file`, were added to enable
-logging JSON RPC calls history.
-
-### init
-
-Options for the JSON-RPC server initialization were added. The options are defined via the
-`spdk_rpc_opts` structure and is passed to the existing API `spdk_rpc_initialize()` as a new
-argument. The options include `log_file` and `log_level`.
 
 ## v23.05
 
