@@ -4,9 +4,32 @@
 
 ## v23.09
 
+### accel
+
+Added `spdk_accel_get_buf_align()` API to get minimum buffer alignment to execute a given operation.
+
+Added `get_operation_info()` callback for accel_modules to return constraints for a given operation.
+
+### bdev
+
+Added `spdk_bdev_open_async()` API to allow asynchronous bdev open that waits for specified time
+until the block device appears.
+
+### bdev_nvme
+
+Added `bdev_nvme_enable_controller` and `bdev_nvme_disable_controller` RPC to enable and disable
+NVMe controller. For NVMe multipath `cntlid` is used to select only one NVMe-oF controller.
+
+Added `cntlid` field to `bdev_nvme_reset_controller` RPC to support resetting only one NVMe-oF
+controller in multipath configuration.
+
+### bdev_raid
+
+Added `bdev_raid_remove_base_bdev` RPC to remove a base bdev from existing raid bdev.
+
 ### dpdk
 
-Updated DPDK submodule to DPDK 23.03.
+Updated DPDK submodule to DPDK 23.07.
 
 ### env
 
@@ -14,11 +37,20 @@ The `phys_addr` parameter in `spdk_*_malloc()` functions is now invalid. Passing
 will return NULL from the functions. The parameter was deprecated in SPDK 19.04.
 For retrieving physical addresses, `spdk_vtophys()` should be used instead.
 
+### go
+
+Added JSON-RPC 2.0 client written in Go to ease communication with SPDK.
+Please see the documentation at `go/rpc/` and example at `examples/go/`.
+
 ### init
 
 Options for the JSON-RPC server initialization were added. The options are defined via the
 `spdk_rpc_opts` structure and is passed to the existing API `spdk_rpc_initialize()` as a new
 argument. The options include `log_file` and `log_level`.
+
+### intel-ipsec-mb
+
+Updated intel-ipsec-mb submodule to v1.4.
 
 ### jsonrpc
 
@@ -42,6 +74,8 @@ set in `bdev_nvme_set_options` and the underlying controller also supports them.
 
 The TCP transport will now calculate data digest using the accel sequence APIs if they're available.
 
+Added `spdk_nvme_qpair_is_connected()` API to check the connection status.
+
 ### nvmf
 
 The `spdk_nvmf_request::data` field has been removed: instead, clients should set
@@ -50,6 +84,32 @@ buffers to be described there. `spdk_nvmf_request_get_data()` has been removed.
 
 `transport` field in `listen_addresses` of `nvmf_get_subsystems` RPC is deprecated.
 `trtype` field should be used instead. `transport` field will be removed in 24.01 release.
+
+Added `spdk_nvmf_subsystem_add_listener_ext()` API for accepting new connections on the provided
+address, now allowing to specify additional options for the listener.
+
+Deprecated `spdk_nvmf_subsytem_any_listener_allowed()` API (to be removed in 24.01) and replaced with
+spdk_nvmf_subsystem_any_listener_allowed()` API fixing the typo.
+
+Added `spdk_nvmf_subsystem_is_discovery()` API to check whether a given susbystem is discovery subsystem.
+
+### scripts
+
+`setup.sh` now supports interactive mode for device selection and hugepage reservation.
+
+Added `backport.sh` script that formalizes process of backporting commits from latest SPDK,
+to specific release branches. Please see [documentation](https://spdk.io/doc/backporting.html).
+
+### thread
+
+Added `spdk_thread_is_app_thread()` API to check if specified spdk_thread is the app thread.
+
+### util
+
+Extended DIF support to CRC-32 and CRC-64 format of the Protection Information.
+
+Added `spdk_crc64_nvme()` and `spdk_crc32c_nvme()`, CRC-64 and CRC-32C checksums compatible with
+NVMe Protection Information.
 
 ## v23.05
 
