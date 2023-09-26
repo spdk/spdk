@@ -84,7 +84,7 @@ function check_header_filenames() {
 }
 
 function get_release_branch() {
-	tag=$(git describe --tags --abbrev=0 --exclude=LTS --exclude=*-pre $1)
+	tag=$(git describe --tags --abbrev=0 --exclude=LTS --exclude="*-pre" $1)
 	branch="${tag:0:6}.x"
 	echo "$branch"
 }
@@ -102,6 +102,11 @@ function confirm_abi_deps() {
 		mkdir -p $source_abi_dir
 		echo "spdk-abi has not been found at $source_abi_dir, cloning"
 		git clone "https://github.com/spdk/spdk-abi.git" "$source_abi_dir"
+	fi
+
+	if [[ ! -d "$source_abi_dir/$release" ]]; then
+		echo "Release (${release%.*}) does not exist in spdk-abi repository"
+		return 1
 	fi
 
 	echo "* Running ${FUNCNAME[0]} against the latest (${release%.*}) release" >&2
@@ -241,6 +246,10 @@ EOF
 		processed_so=$((processed_so + 1))
 	done
 	rm -f $suppression_file
+	if [[ "$processed_so" -eq 0 ]]; then
+		echo "No shared objects were processed."
+		return 1
+	fi
 	echo "Processed $processed_so objects."
 	if [[ -z $user_abi_dir ]]; then
 		rm -rf "$source_abi_dir"
