@@ -75,8 +75,6 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 static void log_already_claimed(enum spdk_log_level level, const int line, const char *func,
 				const char *detail, struct spdk_bdev *bdev);
 
-SPDK_LOG_DEPRECATION_REGISTER(vtune_support, "Intel(R) VTune integration", "v23.09", 0);
-
 static const char *qos_rpc_type[] = {"rw_ios_per_sec",
 				     "rw_mbytes_per_sec", "r_mbytes_per_sec", "w_mbytes_per_sec"
 				    };
@@ -2119,7 +2117,6 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 	}
 
 #ifdef SPDK_CONFIG_VTUNE
-	SPDK_LOG_DEPRECATED(vtune_support);
 	g_bdev_mgr.domain = __itt_domain_create("spdk_bdev");
 #endif
 
