@@ -32,6 +32,7 @@ function app_repeat_test() {
 		# terminate the app, it just causes it go through another
 		# spdk_app_stop/spdk_app_start cycle
 		$rootdir/scripts/rpc.py -s $rpc_server spdk_kill_instance SIGTERM
+		sleep 3
 	done
 
 	waitforlisten $repeat_pid $rpc_server
