@@ -10,7 +10,6 @@
 #include "spdk/env.h"
 #include "spdk/string.h"
 #include "spdk/nvme_intel.h"
-#include "spdk/string.h"
 
 struct ctrlr_entry {
 	struct spdk_nvme_ctrlr			*ctrlr;

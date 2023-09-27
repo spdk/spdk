@@ -12,7 +12,6 @@
 #include "spdk/string.h"
 #include "spdk/likely.h"
 #include "spdk/util.h"
-#include "spdk/string.h"
 #include "spdk/ftl.h"
 #include "spdk/log.h"
 

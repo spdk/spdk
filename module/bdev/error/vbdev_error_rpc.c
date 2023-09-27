@@ -7,7 +7,6 @@
 #include "spdk/string.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
-#include "spdk/string.h"
 #include "spdk/log.h"
 #include "vbdev_error.h"
 

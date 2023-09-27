@@ -10,7 +10,6 @@
 #include "ftl_nv_cache.h"
 #include "ftl_internal.h"
 #include "ftl_mngt_steps.h"
-#include "ftl_internal.h"
 #include "ftl_core.h"
 #include "utils/ftl_defs.h"
 #include "utils/ftl_layout_tracker_bdev.h"

@@ -10,7 +10,6 @@
 #include "spdk/util.h"
 #include "spdk/string.h"
 #include "spdk/env.h"
-#include "spdk/log.h"
 #include "spdk/scsi.h"
 #include "spdk/vhost.h"
 #include "vhost_internal.h"

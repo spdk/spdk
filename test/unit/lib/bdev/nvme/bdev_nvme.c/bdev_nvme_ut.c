@@ -8,7 +8,6 @@
 #include "spdk_internal/cunit.h"
 #include "spdk/thread.h"
 #include "spdk/bdev_module.h"
-#include "spdk/bdev_module.h"
 
 #include "common/lib/ut_multithread.c"
 

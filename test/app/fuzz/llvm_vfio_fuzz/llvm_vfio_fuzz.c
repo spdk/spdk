@@ -11,7 +11,6 @@
 #include "spdk/nvme.h"
 #include "spdk/likely.h"
 #include "spdk/file.h"
-#include "spdk/util.h"
 
 #include "spdk/vfio_user_pci.h"
 #include <linux/vfio.h>

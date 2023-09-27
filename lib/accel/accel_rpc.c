@@ -13,7 +13,6 @@
 #include "spdk/stdinc.h"
 #include "spdk/string.h"
 #include "spdk/env.h"
-#include "spdk/util.h"
 
 static void
 rpc_accel_get_opc_assignments(struct spdk_jsonrpc_request *request,

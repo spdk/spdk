@@ -10,7 +10,6 @@
 #include "iscsi/iscsi.h"
 #include "iscsi/param.h"
 #include "iscsi/conn.h"
-#include "spdk/string.h"
 
 #include "spdk/log.h"
 

@@ -9,8 +9,6 @@
 #include "spdk/string.h"
 #include "spdk/likely.h"
 #include "spdk/ftl.h"
-#include "spdk/likely.h"
-#include "spdk/string.h"
 #include "spdk/bdev_module.h"
 #include "spdk/config.h"
 

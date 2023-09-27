@@ -10,7 +10,6 @@
 #include "spdk/thread.h"
 
 #include "spdk_internal/init.h"
-#include "spdk/env.h"
 
 static void
 bdev_initialize_complete(void *cb_arg, int rc)

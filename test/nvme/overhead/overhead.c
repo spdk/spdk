@@ -12,7 +12,6 @@
 #include "spdk/string.h"
 #include "spdk/nvme_intel.h"
 #include "spdk/histogram_data.h"
-#include "spdk/string.h"
 #include "spdk/log.h"
 
 #if HAVE_LIBAIO
