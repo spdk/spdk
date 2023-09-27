@@ -177,7 +177,7 @@ install_protoc() {
 
 install_golang() {
 	local GOVERSION=${GOVERSION:-1.21.1}
-	local godir gopkg gover arch
+	local godir gopkg gover arch os
 
 	read -r _ _ gover _ < <(go version) || true
 	gover=${gover#go}
@@ -192,10 +192,11 @@ install_golang() {
 	fi
 	mkdir -p "${godir}"
 	arch=amd64
+	os=$(uname -s)
 	if [[ "$(uname -m)" == "aarch64" ]]; then
 		arch=arm64
 	fi
-	gopkg=go${GOVERSION}.linux-${arch}.tar.gz
+	gopkg=go${GOVERSION}.${os,,}-${arch}.tar.gz
 	echo "installing go v${GOVERSION} to ${godir}/bin"
 	curl -sL https://go.dev/dl/${gopkg} | tar -C "${godir}" -xzf - --strip 1
 	if ! "${godir}/bin/go" version; then
@@ -268,6 +269,6 @@ fi
 
 if [[ $INSTALL_GOLANG == true ]]; then
 	install_golang
-	install_protoc
+	[[ $(uname -s) == Linux ]] && install_protoc
 	install_golangci_lint
 fi
