@@ -136,7 +136,7 @@ install_protoc() {
 		echo "installing protoc v${PROTOCVERSION} to ${protocdir}"
 		mkdir -p "${protocdir}"
 		arch=x86_64
-		if [[ "$(arch)" == "aarch64" ]]; then
+		if [[ "$(uname -m)" == "aarch64" ]]; then
 			arch=aarch_64
 		fi
 		protocpkg=protoc-${PROTOCVERSION}-linux-${arch}.zip
@@ -192,7 +192,7 @@ install_golang() {
 	fi
 	mkdir -p "${godir}"
 	arch=amd64
-	if [[ "$(arch)" == "aarch64" ]]; then
+	if [[ "$(uname -m)" == "aarch64" ]]; then
 		arch=arm64
 	fi
 	gopkg=go${GOVERSION}.linux-${arch}.tar.gz
