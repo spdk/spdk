@@ -104,6 +104,8 @@ static bool g_ocssd_verbose = false;
 
 static struct spdk_nvme_detach_ctx *g_detach_ctx = NULL;
 
+static const char *g_iova_mode;
+
 static void
 hex_dump(const void *data, size_t size)
 {
@@ -2611,6 +2613,7 @@ usage(const char *program_name)
 	printf(" -p         core number in decimal to run this application which started from 0\n");
 	printf(" -d         DPDK huge memory size in MB\n");
 	printf(" -g         use single file descriptor for DPDK memory segments\n");
+	printf(" -v         IOVA mode ('pa' or 'va')\n");
 	printf(" -x         print hex dump of raw data\n");
 	printf(" -z         For NVMe Zoned Namespaces, dump the full zone report (-z) or the first N entries (-z N)\n");
 	printf(" -V         enumerate VMD\n");
@@ -2626,7 +2629,7 @@ parse_args(int argc, char **argv)
 	spdk_nvme_trid_populate_transport(&g_trid, SPDK_NVME_TRANSPORT_PCIE);
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "d:gi:op:r:xz::HL:V")) != -1) {
+	while ((op = getopt(argc, argv, "d:gi:op:r:v:xz::HL:V")) != -1) {
 		switch (op) {
 		case 'd':
 			g_dpdk_mem = spdk_strtol(optarg, 10);
@@ -2678,6 +2681,9 @@ parse_args(int argc, char **argv)
 				memcpy(g_hostnqn, hostnqn, len);
 				g_hostnqn[len] = '\0';
 			}
+			break;
+		case 'v':
+			g_iova_mode = optarg;
 			break;
 		case 'x':
 			g_hex_dump = true;
@@ -2759,6 +2765,7 @@ main(int argc, char **argv)
 	opts.main_core = g_main_core;
 	opts.core_mask = g_core_mask;
 	opts.hugepage_single_segments = g_dpdk_mem_single_seg;
+	opts.iova_mode = g_iova_mode;
 	if (g_trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
 		opts.no_pci = true;
 	}
