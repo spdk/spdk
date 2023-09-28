@@ -1078,20 +1078,22 @@ raid_bdev_configure_md(struct raid_bdev *raid_bdev)
 	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		base_bdev = spdk_bdev_desc_get_bdev(raid_bdev->base_bdev_info[i].desc);
 
+		/* Currently, RAID bdevs do not support DIF or DIX, so a RAID bdev cannot
+		 * be created on top of any bdev which supports it */
+		if (spdk_bdev_get_dif_type(base_bdev) != SPDK_DIF_DISABLE) {
+			SPDK_ERRLOG("at least one base bdev has DIF or DIX enabled "
+				    "- unsupported RAID configuration\n");
+			return -EPERM;
+		}
+
 		if (i == 0) {
 			raid_bdev->bdev.md_len = spdk_bdev_get_md_size(base_bdev);
 			raid_bdev->bdev.md_interleave = spdk_bdev_is_md_interleaved(base_bdev);
-			raid_bdev->bdev.dif_type = spdk_bdev_get_dif_type(base_bdev);
-			raid_bdev->bdev.dif_is_head_of_md = spdk_bdev_is_dif_head_of_md(base_bdev);
-			raid_bdev->bdev.dif_check_flags = base_bdev->dif_check_flags;
 			continue;
 		}
 
 		if (raid_bdev->bdev.md_len != spdk_bdev_get_md_size(base_bdev) ||
-		    raid_bdev->bdev.md_interleave != spdk_bdev_is_md_interleaved(base_bdev) ||
-		    raid_bdev->bdev.dif_type != spdk_bdev_get_dif_type(base_bdev) ||
-		    raid_bdev->bdev.dif_is_head_of_md != spdk_bdev_is_dif_head_of_md(base_bdev) ||
-		    raid_bdev->bdev.dif_check_flags != base_bdev->dif_check_flags) {
+		    raid_bdev->bdev.md_interleave != spdk_bdev_is_md_interleaved(base_bdev)) {
 			SPDK_ERRLOG("base bdevs are configured with different metadata formats\n");
 			return -EPERM;
 		}
