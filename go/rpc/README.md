@@ -1,7 +1,7 @@
 # JSON-RPC 2.0 client in Go
 
 This directory contains JSON-RPC client written in Go. The main goal is to ease communication with
-SPDK over Unix socket in Go. In addition, this repository provides integration of a client
+SPDK over Unix and TCP socket in Go. In addition, this repository provides integration of a client
 with `rpc.py` - Go client replaces Python client.
 
 ## Client integration with rpc.py
@@ -92,11 +92,11 @@ Struct represents JSON-RPC 2.0 Error object. For more information please visit
 
 #### CreateClientWithJsonCodec
 
-This method creates a new JSON-RPC 2.0 client. Currently only Unix sockets are supported.
+This method creates a new JSON-RPC 2.0 client. Both Unix and TCP sockets are supported.
 
 Input:
 
-- `network`: Type of network. Currently only `unix` is supported.
+- `network`: Type of network. Both `unix` and `tcp` are supported.
 - `address`: Address to given network.
 
 Output:

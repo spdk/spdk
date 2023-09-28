@@ -148,7 +148,7 @@ func verifyRequestParamsType(params any) error {
 }
 
 // CreateClientWithJsonCodec creates a new JSON-RPC client.
-// Currently only Unix sockets are supported.
+// Both Unix and TCP sockets are supported
 func CreateClientWithJsonCodec(network, address string) (*Client, error) {
 	switch network {
 	case "unix", "unixgram", "unixpacket":
