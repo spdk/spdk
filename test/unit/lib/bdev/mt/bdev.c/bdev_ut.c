@@ -73,8 +73,12 @@ struct ut_bdev {
 	void			*io_target;
 };
 
+struct ut_bdev_io {
+	TAILQ_ENTRY(ut_bdev_io)		link;
+};
+
 struct ut_bdev_channel {
-	TAILQ_HEAD(, spdk_bdev_io)	outstanding_io;
+	TAILQ_HEAD(, ut_bdev_io)	outstanding_io;
 	uint32_t			outstanding_cnt;
 	uint32_t			avail_cnt;
 	struct spdk_thread		*thread;
@@ -160,13 +164,13 @@ static void
 stub_reset_channel(void *ctx)
 {
 	struct ut_bdev_channel *ch = ctx;
-	struct spdk_bdev_io *io;
+	struct ut_bdev_io *bio;
 
 	while (!TAILQ_EMPTY(&ch->outstanding_io)) {
-		io = TAILQ_FIRST(&ch->outstanding_io);
-		TAILQ_REMOVE(&ch->outstanding_io, io, module_link);
+		bio = TAILQ_FIRST(&ch->outstanding_io);
+		TAILQ_REMOVE(&ch->outstanding_io, bio, link);
 		ch->outstanding_cnt--;
-		spdk_bdev_io_complete(io, SPDK_BDEV_IO_STATUS_ABORTED);
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), SPDK_BDEV_IO_STATUS_ABORTED);
 		ch->avail_cnt++;
 	}
 }
@@ -176,6 +180,7 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
 	struct ut_bdev_channel *ch = spdk_io_channel_get_ctx(_ch), *tmp_ch;
 	struct spdk_bdev_io *io;
+	struct ut_bdev_io *bio;
 
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
 		TAILQ_FOREACH(tmp_ch, &g_ut_channels, link) {
@@ -186,9 +191,10 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 			}
 		}
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_ABORT) {
-		TAILQ_FOREACH(io, &ch->outstanding_io, module_link) {
+		TAILQ_FOREACH(bio, &ch->outstanding_io, link) {
+			io = spdk_bdev_io_from_ctx(bio);
 			if (io == bdev_io->u.abort.bio_to_abort) {
-				TAILQ_REMOVE(&ch->outstanding_io, io, module_link);
+				TAILQ_REMOVE(&ch->outstanding_io, bio, link);
 				ch->outstanding_cnt--;
 				spdk_bdev_io_complete(io, SPDK_BDEV_IO_STATUS_ABORTED);
 				ch->avail_cnt++;
@@ -203,7 +209,7 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 	}
 
 	if (ch->avail_cnt > 0) {
-		TAILQ_INSERT_TAIL(&ch->outstanding_io, bdev_io, module_link);
+		TAILQ_INSERT_TAIL(&ch->outstanding_io, (struct ut_bdev_io *)bdev_io->driver_ctx, link);
 		ch->outstanding_cnt++;
 		ch->avail_cnt--;
 	} else {
@@ -216,6 +222,7 @@ stub_complete_io(void *io_target, uint32_t num_to_complete)
 {
 	struct spdk_io_channel *_ch = spdk_get_io_channel(io_target);
 	struct ut_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct ut_bdev_io *bio;
 	struct spdk_bdev_io *io;
 	bool complete_all = (num_to_complete == 0);
 	uint32_t num_completed = 0;
@@ -224,8 +231,9 @@ stub_complete_io(void *io_target, uint32_t num_to_complete)
 		if (TAILQ_EMPTY(&ch->outstanding_io)) {
 			break;
 		}
-		io = TAILQ_FIRST(&ch->outstanding_io);
-		TAILQ_REMOVE(&ch->outstanding_io, io, module_link);
+		bio = TAILQ_FIRST(&ch->outstanding_io);
+		TAILQ_REMOVE(&ch->outstanding_io, bio, link);
+		io = spdk_bdev_io_from_ctx(bio);
 		ch->outstanding_cnt--;
 		spdk_bdev_io_complete(io, SPDK_BDEV_IO_STATUS_SUCCESS);
 		ch->avail_cnt++;
@@ -274,6 +282,12 @@ fini_start(void)
 	g_fini_start_called = true;
 }
 
+static int
+get_ctx_size(void)
+{
+	return sizeof(struct ut_bdev_io);
+}
+
 struct spdk_bdev_module bdev_ut_if = {
 	.name = "bdev_ut",
 	.module_init = module_init,
@@ -281,6 +295,7 @@ struct spdk_bdev_module bdev_ut_if = {
 	.async_init = true,
 	.init_complete = init_complete,
 	.fini_start = fini_start,
+	.get_ctx_size = get_ctx_size,
 };
 
 SPDK_BDEV_MODULE_REGISTER(bdev_ut, &bdev_ut_if)
@@ -834,10 +849,12 @@ count_queued_resets(void *io_target)
 {
 	struct spdk_io_channel *_ch = spdk_get_io_channel(io_target);
 	struct ut_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct ut_bdev_io *bio;
 	struct spdk_bdev_io *io;
 	uint32_t submitted_resets = 0;
 
-	TAILQ_FOREACH(io, &ch->outstanding_io, module_link) {
+	TAILQ_FOREACH(bio, &ch->outstanding_io, link) {
+		io = spdk_bdev_io_from_ctx(bio);
 		if (io->type == SPDK_BDEV_IO_TYPE_RESET) {
 			submitted_resets++;
 		}
