@@ -36,11 +36,15 @@ struct vbdev_error_info {
 	uint8_t				corrupt_value;
 };
 
+struct error_io {
+	TAILQ_ENTRY(error_io) link;
+};
+
 /* Context for each error bdev */
 struct error_disk {
 	struct spdk_bdev_part		part;
 	struct vbdev_error_info		error_vector[SPDK_BDEV_IO_TYPE_RESET];
-	TAILQ_HEAD(, spdk_bdev_io)	pending_ios;
+	TAILQ_HEAD(, error_io)	pending_ios;
 };
 
 struct error_channel {
@@ -60,12 +64,19 @@ static int vbdev_error_config_json(struct spdk_json_write_ctx *w);
 static int vbdev_error_config_add(const char *base_bdev_name, const struct spdk_uuid *uuid);
 static int vbdev_error_config_remove(const char *base_bdev_name);
 
+static int
+vbdev_error_get_ctx_size(void)
+{
+	return sizeof(struct error_io);
+}
+
 static struct spdk_bdev_module error_if = {
 	.name = "error",
 	.module_init = vbdev_error_init,
 	.module_fini = vbdev_error_fini,
 	.examine_config = vbdev_error_examine,
 	.config_json = vbdev_error_config_json,
+	.get_ctx_size = vbdev_error_get_ctx_size,
 
 };
 
@@ -147,11 +158,11 @@ exit:
 static void
 vbdev_error_reset(struct error_disk *error_disk, struct spdk_bdev_io *bdev_io)
 {
-	struct spdk_bdev_io *pending_io, *tmp;
+	struct error_io *pending_io, *tmp;
 
-	TAILQ_FOREACH_SAFE(pending_io, &error_disk->pending_ios, module_link, tmp) {
-		TAILQ_REMOVE(&error_disk->pending_ios, pending_io, module_link);
-		spdk_bdev_io_complete(pending_io, SPDK_BDEV_IO_STATUS_FAILED);
+	TAILQ_FOREACH_SAFE(pending_io, &error_disk->pending_ios, link, tmp) {
+		TAILQ_REMOVE(&error_disk->pending_ios, pending_io, link);
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(pending_io), SPDK_BDEV_IO_STATUS_FAILED);
 	}
 	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 }
@@ -226,6 +237,7 @@ vbdev_error_complete_request(struct spdk_bdev_io *bdev_io, bool success, void *c
 static void
 vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
+	struct error_io *error_io = (struct error_io *)bdev_io->driver_ctx;
 	struct error_channel *ch = spdk_io_channel_get_ctx(_ch);
 	struct error_disk *error_disk = bdev_io->bdev->ctxt;
 	uint32_t error_type;
@@ -252,7 +264,7 @@ vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bde
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
 		break;
 	case VBDEV_IO_PENDING:
-		TAILQ_INSERT_TAIL(&error_disk->pending_ios, bdev_io, module_link);
+		TAILQ_INSERT_TAIL(&error_disk->pending_ios, error_io, link);
 		error_disk->error_vector[bdev_io->type].error_num--;
 		break;
 	case VBDEV_IO_CORRUPT_DATA:
