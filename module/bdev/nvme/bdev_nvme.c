@@ -97,6 +97,9 @@ struct nvme_bdev_io {
 
 	/* Current tsc at submit time. */
 	uint64_t submit_tsc;
+
+	/* Used to put nvme_bdev_io into the list */
+	TAILQ_ENTRY(nvme_bdev_io) retry_link;
 };
 
 struct nvme_probe_skip_entry {
@@ -697,11 +700,9 @@ static void
 bdev_nvme_clear_retry_io_path(struct nvme_bdev_channel *nbdev_ch,
 			      struct nvme_io_path *io_path)
 {
-	struct spdk_bdev_io *bdev_io;
 	struct nvme_bdev_io *bio;
 
-	TAILQ_FOREACH(bdev_io, &nbdev_ch->retry_io_list, module_link) {
-		bio = (struct nvme_bdev_io *)bdev_io->driver_ctx;
+	TAILQ_FOREACH(bio, &nbdev_ch->retry_io_list, retry_link) {
 		if (bio->io_path == io_path) {
 			bio->io_path = NULL;
 		}
@@ -1119,29 +1120,25 @@ static int
 bdev_nvme_retry_ios(void *arg)
 {
 	struct nvme_bdev_channel *nbdev_ch = arg;
-	struct spdk_bdev_io *bdev_io, *tmp_bdev_io;
-	struct nvme_bdev_io *bio;
+	struct nvme_bdev_io *bio, *tmp_bio;
 	uint64_t now, delay_us;
 
 	now = spdk_get_ticks();
 
-	TAILQ_FOREACH_SAFE(bdev_io, &nbdev_ch->retry_io_list, module_link, tmp_bdev_io) {
-		bio = (struct nvme_bdev_io *)bdev_io->driver_ctx;
+	TAILQ_FOREACH_SAFE(bio, &nbdev_ch->retry_io_list, retry_link, tmp_bio) {
 		if (bio->retry_ticks > now) {
 			break;
 		}
 
-		TAILQ_REMOVE(&nbdev_ch->retry_io_list, bdev_io, module_link);
+		TAILQ_REMOVE(&nbdev_ch->retry_io_list, bio, retry_link);
 
-		bdev_nvme_retry_io(nbdev_ch, bdev_io);
+		bdev_nvme_retry_io(nbdev_ch, spdk_bdev_io_from_ctx(bio));
 	}
 
 	spdk_poller_unregister(&nbdev_ch->retry_io_poller);
 
-	bdev_io = TAILQ_FIRST(&nbdev_ch->retry_io_list);
-	if (bdev_io != NULL) {
-		bio = (struct nvme_bdev_io *)bdev_io->driver_ctx;
-
+	bio = TAILQ_FIRST(&nbdev_ch->retry_io_list);
+	if (bio != NULL) {
 		delay_us = (bio->retry_ticks - now) * SPDK_SEC_TO_USEC / spdk_get_ticks_hz();
 
 		nbdev_ch->retry_io_poller = SPDK_POLLER_REGISTER(bdev_nvme_retry_ios, nbdev_ch,
@@ -1155,24 +1152,20 @@ static void
 bdev_nvme_queue_retry_io(struct nvme_bdev_channel *nbdev_ch,
 			 struct nvme_bdev_io *bio, uint64_t delay_ms)
 {
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
-	struct spdk_bdev_io *tmp_bdev_io;
 	struct nvme_bdev_io *tmp_bio;
 
 	bio->retry_ticks = spdk_get_ticks() + delay_ms * spdk_get_ticks_hz() / 1000ULL;
 
-	TAILQ_FOREACH_REVERSE(tmp_bdev_io, &nbdev_ch->retry_io_list, retry_io_head, module_link) {
-		tmp_bio = (struct nvme_bdev_io *)tmp_bdev_io->driver_ctx;
-
+	TAILQ_FOREACH_REVERSE(tmp_bio, &nbdev_ch->retry_io_list, retry_io_head, retry_link) {
 		if (tmp_bio->retry_ticks <= bio->retry_ticks) {
-			TAILQ_INSERT_AFTER(&nbdev_ch->retry_io_list, tmp_bdev_io, bdev_io,
-					   module_link);
+			TAILQ_INSERT_AFTER(&nbdev_ch->retry_io_list, tmp_bio, bio,
+					   retry_link);
 			return;
 		}
 	}
 
 	/* No earlier I/Os were found. This I/O must be the new head. */
-	TAILQ_INSERT_HEAD(&nbdev_ch->retry_io_list, bdev_io, module_link);
+	TAILQ_INSERT_HEAD(&nbdev_ch->retry_io_list, bio, retry_link);
 
 	spdk_poller_unregister(&nbdev_ch->retry_io_poller);
 
@@ -1183,11 +1176,11 @@ bdev_nvme_queue_retry_io(struct nvme_bdev_channel *nbdev_ch,
 static void
 bdev_nvme_abort_retry_ios(struct nvme_bdev_channel *nbdev_ch)
 {
-	struct spdk_bdev_io *bdev_io, *tmp_io;
+	struct nvme_bdev_io *bio, *tmp_bio;
 
-	TAILQ_FOREACH_SAFE(bdev_io, &nbdev_ch->retry_io_list, module_link, tmp_io) {
-		TAILQ_REMOVE(&nbdev_ch->retry_io_list, bdev_io, module_link);
-		__bdev_nvme_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_ABORTED, NULL);
+	TAILQ_FOREACH_SAFE(bio, &nbdev_ch->retry_io_list, retry_link, tmp_bio) {
+		TAILQ_REMOVE(&nbdev_ch->retry_io_list, bio, retry_link);
+		__bdev_nvme_io_complete(spdk_bdev_io_from_ctx(bio), SPDK_BDEV_IO_STATUS_ABORTED, NULL);
 	}
 
 	spdk_poller_unregister(&nbdev_ch->retry_io_poller);
@@ -1197,12 +1190,12 @@ static int
 bdev_nvme_abort_retry_io(struct nvme_bdev_channel *nbdev_ch,
 			 struct nvme_bdev_io *bio_to_abort)
 {
-	struct spdk_bdev_io *bdev_io_to_abort;
+	struct nvme_bdev_io *bio;
 
-	TAILQ_FOREACH(bdev_io_to_abort, &nbdev_ch->retry_io_list, module_link) {
-		if ((struct nvme_bdev_io *)bdev_io_to_abort->driver_ctx == bio_to_abort) {
-			TAILQ_REMOVE(&nbdev_ch->retry_io_list, bdev_io_to_abort, module_link);
-			__bdev_nvme_io_complete(bdev_io_to_abort, SPDK_BDEV_IO_STATUS_ABORTED, NULL);
+	TAILQ_FOREACH(bio, &nbdev_ch->retry_io_list, retry_link) {
+		if (bio == bio_to_abort) {
+			TAILQ_REMOVE(&nbdev_ch->retry_io_list, bio, retry_link);
+			__bdev_nvme_io_complete(spdk_bdev_io_from_ctx(bio), SPDK_BDEV_IO_STATUS_ABORTED, NULL);
 			return 0;
 		}
 	}
@@ -1813,7 +1806,6 @@ bdev_nvme_complete_pending_resets(struct spdk_io_channel_iter *i)
 	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
 	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(_ch);
 	int rc = 0;
-	struct spdk_bdev_io *bdev_io;
 	struct nvme_bdev_io *bio;
 
 	if (spdk_io_channel_iter_get_ctx(i) != NULL) {
@@ -1821,10 +1813,9 @@ bdev_nvme_complete_pending_resets(struct spdk_io_channel_iter *i)
 	}
 
 	while (!TAILQ_EMPTY(&ctrlr_ch->pending_resets)) {
-		bdev_io = TAILQ_FIRST(&ctrlr_ch->pending_resets);
-		TAILQ_REMOVE(&ctrlr_ch->pending_resets, bdev_io, module_link);
+		bio = TAILQ_FIRST(&ctrlr_ch->pending_resets);
+		TAILQ_REMOVE(&ctrlr_ch->pending_resets, bio, retry_link);
 
-		bio = (struct nvme_bdev_io *)bdev_io->driver_ctx;
 		bdev_nvme_reset_io_continue(bio, rc);
 	}
 
@@ -2832,7 +2823,6 @@ static int
 _bdev_nvme_reset_io(struct nvme_io_path *io_path, struct nvme_bdev_io *bio)
 {
 	struct nvme_ctrlr_channel *ctrlr_ch;
-	struct spdk_bdev_io *bdev_io;
 	int rc;
 
 	rc = nvme_ctrlr_op(io_path->qpair->ctrlr, NVME_CTRLR_OP_RESET,
@@ -2852,8 +2842,7 @@ _bdev_nvme_reset_io(struct nvme_io_path *io_path, struct nvme_bdev_io *bio)
 		 * we don't interfere with the app framework reset strategy. i.e. we are deferring to the
 		 * upper level. If they are in the middle of a reset, we won't try to schedule another one.
 		 */
-		bdev_io = spdk_bdev_io_from_ctx(bio);
-		TAILQ_INSERT_TAIL(&ctrlr_ch->pending_resets, bdev_io, module_link);
+		TAILQ_INSERT_TAIL(&ctrlr_ch->pending_resets, bio, retry_link);
 	}
 
 	return 0;
