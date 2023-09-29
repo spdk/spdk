@@ -17,6 +17,10 @@
 
 #include "bdev_null.h"
 
+struct null_bdev_io {
+	TAILQ_ENTRY(null_bdev_io) link;
+};
+
 struct null_bdev {
 	struct spdk_bdev	bdev;
 	TAILQ_ENTRY(null_bdev)	tailq;
@@ -24,7 +28,7 @@ struct null_bdev {
 
 struct null_io_channel {
 	struct spdk_poller		*poller;
-	TAILQ_HEAD(, spdk_bdev_io)	io;
+	TAILQ_HEAD(, null_bdev_io)	io;
 };
 
 static TAILQ_HEAD(, null_bdev) g_null_bdev_head = TAILQ_HEAD_INITIALIZER(g_null_bdev_head);
@@ -33,11 +37,18 @@ static void *g_null_read_buf;
 static int bdev_null_initialize(void);
 static void bdev_null_finish(void);
 
+static int
+bdev_null_get_ctx_size(void)
+{
+	return sizeof(struct null_bdev_io);
+}
+
 static struct spdk_bdev_module null_if = {
 	.name = "null",
 	.module_init = bdev_null_initialize,
 	.module_fini = bdev_null_finish,
 	.async_fini = true,
+	.get_ctx_size = bdev_null_get_ctx_size,
 };
 
 SPDK_BDEV_MODULE_REGISTER(null, &null_if)
@@ -57,11 +68,14 @@ bdev_null_destruct(void *ctx)
 static bool
 bdev_null_abort_io(struct null_io_channel *ch, struct spdk_bdev_io *bio_to_abort)
 {
+	struct null_bdev_io *null_io;
 	struct spdk_bdev_io *bdev_io;
 
-	TAILQ_FOREACH(bdev_io, &ch->io, module_link) {
+	TAILQ_FOREACH(null_io, &ch->io, link) {
+		bdev_io = spdk_bdev_io_from_ctx(null_io);
+
 		if (bdev_io == bio_to_abort) {
-			TAILQ_REMOVE(&ch->io, bio_to_abort, module_link);
+			TAILQ_REMOVE(&ch->io, null_io, link);
 			spdk_bdev_io_complete(bio_to_abort, SPDK_BDEV_IO_STATUS_ABORTED);
 			return true;
 		}
@@ -73,6 +87,7 @@ bdev_null_abort_io(struct null_io_channel *ch, struct spdk_bdev_io *bio_to_abort
 static void
 bdev_null_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
+	struct null_bdev_io *null_io = (struct null_bdev_io *)bdev_io->driver_ctx;
 	struct null_io_channel *ch = spdk_io_channel_get_ctx(_ch);
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_dif_ctx dif_ctx;
@@ -128,7 +143,7 @@ bdev_null_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_
 				return;
 			}
 		}
-		TAILQ_INSERT_TAIL(&ch->io, bdev_io, module_link);
+		TAILQ_INSERT_TAIL(&ch->io, null_io, link);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		if (SPDK_DIF_DISABLE != bdev->dif_type) {
@@ -147,11 +162,11 @@ bdev_null_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_
 				return;
 			}
 		}
-		TAILQ_INSERT_TAIL(&ch->io, bdev_io, module_link);
+		TAILQ_INSERT_TAIL(&ch->io, null_io, link);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	case SPDK_BDEV_IO_TYPE_RESET:
-		TAILQ_INSERT_TAIL(&ch->io, bdev_io, module_link);
+		TAILQ_INSERT_TAIL(&ch->io, null_io, link);
 		break;
 	case SPDK_BDEV_IO_TYPE_ABORT:
 		if (bdev_null_abort_io(ch, bdev_io->u.abort.bio_to_abort)) {
@@ -341,20 +356,20 @@ static int
 null_io_poll(void *arg)
 {
 	struct null_io_channel		*ch = arg;
-	TAILQ_HEAD(, spdk_bdev_io)	io;
-	struct spdk_bdev_io		*bdev_io;
+	TAILQ_HEAD(, null_bdev_io)	io;
+	struct null_bdev_io		*null_io;
 
 	TAILQ_INIT(&io);
-	TAILQ_SWAP(&ch->io, &io, spdk_bdev_io, module_link);
+	TAILQ_SWAP(&ch->io, &io, null_bdev_io, link);
 
 	if (TAILQ_EMPTY(&io)) {
 		return SPDK_POLLER_IDLE;
 	}
 
 	while (!TAILQ_EMPTY(&io)) {
-		bdev_io = TAILQ_FIRST(&io);
-		TAILQ_REMOVE(&io, bdev_io, module_link);
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		null_io = TAILQ_FIRST(&io);
+		TAILQ_REMOVE(&io, null_io, link);
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(null_io), SPDK_BDEV_IO_STATUS_SUCCESS);
 	}
 
 	return SPDK_POLLER_BUSY;
