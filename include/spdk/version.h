@@ -26,12 +26,12 @@
  * Patch level is incremented on maintenance branch releases and reset to 0 for each
  * new major.minor release.
  */
-#define SPDK_VERSION_PATCH	0
+#define SPDK_VERSION_PATCH	1
 
 /**
  * Version string suffix.
  */
-#define SPDK_VERSION_SUFFIX	""
+#define SPDK_VERSION_SUFFIX	"-pre"
 
 /**
  * Single numeric value representing a version number for compile-time comparisons.
