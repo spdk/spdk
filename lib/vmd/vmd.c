@@ -1163,18 +1163,18 @@ vmd_scan_pcibus(struct vmd_pci_bus *bus)
 }
 
 static int
-vmd_map_bars(struct vmd_adapter *vmd, struct spdk_pci_device *dev)
+vmd_domain_map_bars(struct vmd_adapter *vmd)
 {
 	int rc;
 
-	rc = spdk_pci_device_map_bar(dev, 0, (void **)&vmd->cfg_vaddr,
+	rc = spdk_pci_device_map_bar(vmd->pci, 0, (void **)&vmd->cfg_vaddr,
 				     &vmd->cfgbar, &vmd->cfgbar_size);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to map config bar: %s\n", spdk_strerror(-rc));
 		return rc;
 	}
 
-	rc = spdk_pci_device_map_bar(dev, 2, (void **)&vmd->mem_vaddr,
+	rc = spdk_pci_device_map_bar(vmd->pci, 2, (void **)&vmd->mem_vaddr,
 				     &vmd->membar, &vmd->membar_size);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to map memory bar: %s\n", spdk_strerror(-rc));
@@ -1281,7 +1281,7 @@ vmd_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		(pci_dev->addr.bus << 16) | (pci_dev->addr.dev << 8) | pci_dev->addr.func;
 	TAILQ_INIT(&vmd_c->vmd[i].bus_list);
 
-	if (vmd_map_bars(&vmd_c->vmd[i], pci_dev) != 0) {
+	if (vmd_domain_map_bars(&vmd_c->vmd[i]) != 0) {
 		return -1;
 	}
 
