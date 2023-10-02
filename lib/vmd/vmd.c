@@ -1169,21 +1169,29 @@ vmd_map_bars(struct vmd_adapter *vmd, struct spdk_pci_device *dev)
 
 	rc = spdk_pci_device_map_bar(dev, 0, (void **)&vmd->cfg_vaddr,
 				     &vmd->cfgbar, &vmd->cfgbar_size);
-	if (rc == 0) {
-		rc = spdk_pci_device_map_bar(dev, 2, (void **)&vmd->mem_vaddr,
-					     &vmd->membar, &vmd->membar_size);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to map config bar: %s\n", spdk_strerror(-rc));
+		return rc;
 	}
 
-	if (rc == 0) {
-		rc = spdk_pci_device_map_bar(dev, 4, (void **)&vmd->msix_vaddr,
-					     &vmd->msixbar, &vmd->msixbar_size);
+	rc = spdk_pci_device_map_bar(dev, 2, (void **)&vmd->mem_vaddr,
+				     &vmd->membar, &vmd->membar_size);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to map memory bar: %s\n", spdk_strerror(-rc));
+		return rc;
 	}
 
-	if (rc == 0) {
-		vmd->physical_addr = vmd->membar;
-		vmd->current_addr_size = vmd->membar_size;
+	rc = spdk_pci_device_map_bar(dev, 4, (void **)&vmd->msix_vaddr,
+				     &vmd->msixbar, &vmd->msixbar_size);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to map MSI-X bar: %s\n", spdk_strerror(-rc));
+		return rc;
 	}
-	return rc;
+
+	vmd->physical_addr = vmd->membar;
+	vmd->current_addr_size = vmd->membar_size;
+
+	return 0;
 }
 
 static void
@@ -1280,7 +1288,7 @@ vmd_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		(pci_dev->addr.bus << 16) | (pci_dev->addr.dev << 8) | pci_dev->addr.func;
 	TAILQ_INIT(&vmd_c->vmd[i].bus_list);
 
-	if (vmd_map_bars(&vmd_c->vmd[i], pci_dev) == -1) {
+	if (vmd_map_bars(&vmd_c->vmd[i], pci_dev) != 0) {
 		return -1;
 	}
 
