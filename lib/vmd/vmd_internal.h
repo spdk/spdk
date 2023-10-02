@@ -117,10 +117,8 @@ struct vmd_adapter {
 	/* physical and virtual VMD bars */
 	uint64_t cfgbar, cfgbar_size;
 	uint64_t membar, membar_size;
-	uint64_t msixbar, msixbar_size;
 	volatile uint8_t *cfg_vaddr;
 	volatile uint8_t *mem_vaddr;
-	volatile uint8_t *msix_vaddr;
 	volatile struct pci_msix_table_entry *msix_table;
 	uint32_t bar_sizes[6];
 

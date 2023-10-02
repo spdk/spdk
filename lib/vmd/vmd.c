@@ -1181,13 +1181,6 @@ vmd_map_bars(struct vmd_adapter *vmd, struct spdk_pci_device *dev)
 		return rc;
 	}
 
-	rc = spdk_pci_device_map_bar(dev, 4, (void **)&vmd->msix_vaddr,
-				     &vmd->msixbar, &vmd->msixbar_size);
-	if (rc != 0) {
-		SPDK_ERRLOG("Failed to map MSI-X bar: %s\n", spdk_strerror(-rc));
-		return rc;
-	}
-
 	vmd->physical_addr = vmd->membar;
 	vmd->current_addr_size = vmd->membar_size;
 
@@ -1298,9 +1291,6 @@ vmd_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	SPDK_INFOLOG(vmd, "vmd mem bar(%p) vaddr(%p) size(%x)\n",
 		     (void *)vmd_c->vmd[i].membar, (void *)vmd_c->vmd[i].mem_vaddr,
 		     (uint32_t)vmd_c->vmd[i].membar_size);
-	SPDK_INFOLOG(vmd, "vmd msix bar(%p) vaddr(%p) size(%x)\n\n",
-		     (void *)vmd_c->vmd[i].msixbar, (void *)vmd_c->vmd[i].msix_vaddr,
-		     (uint32_t)vmd_c->vmd[i].msixbar_size);
 
 	vmd_c->count = i + 1;
 
