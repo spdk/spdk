@@ -1108,10 +1108,10 @@ vmd_reset_root_ports(struct vmd_pci_bus *bus)
 
 	/*
 	 * The root ports might have been configured by some other driver (e.g.  Linux kernel) prior
-	 * to loading the SPDK one, so we need to clear it.  We need to before the scanning process,
-	 * as it's depth-first, so when scanning the initial root ports, the latter ones might still
-	 * be using stale configuration.  This can lead to two bridges having the same
-	 * secondary/subordinate bus configuration, which, of course, isn't correct.
+	 * to loading the SPDK one, so we need to clear it.  We need to do it before starting the
+	 * scanning process, as it's depth-first, so when initial root ports are scanned, the
+	 * latter ones might still be using stale configuration.  This can lead to two bridges
+	 * having the same secondary/subordinate bus configuration, which, of course, isn't correct.
 	 * (Note: this fixed issue #2413.)
 	 */
 	for (devfn = 0; devfn < 32; ++devfn) {
