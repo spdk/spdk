@@ -1163,19 +1163,47 @@ vmd_scan_pcibus(struct vmd_pci_bus *bus)
 }
 
 static int
+vmd_domain_map_bar(struct vmd_adapter *vmd, uint32_t bar,
+		   void **vaddr, uint64_t *paddr, uint64_t *size)
+{
+	uint64_t unused;
+	int rc;
+
+	rc = spdk_pci_device_map_bar(vmd->pci, bar, vaddr, &unused, size);
+	if (rc != 0) {
+		return rc;
+	}
+
+	/* Depending on the IOVA configuration, the physical address of the BAR returned by
+	 * spdk_pci_device_map_bar() can be either an actual physical address or a virtual one (if
+	 * IOMMU is enabled).  Since we do need an actual physical address to fill out the
+	 * base/limit registers and the BARs of the devices behind the VMD, read the config space to
+	 * get the correct address, regardless of IOVA configuration. */
+	rc = spdk_pci_device_cfg_read(vmd->pci, paddr, sizeof(*paddr),
+				      PCI_BAR0_OFFSET + bar * PCI_BAR_SIZE);
+	if (rc != 0) {
+		return rc;
+	}
+
+	*paddr &= PCI_BAR_MEMORY_ADDR_OFFSET;
+
+	return 0;
+}
+
+static int
 vmd_domain_map_bars(struct vmd_adapter *vmd)
 {
 	int rc;
 
-	rc = spdk_pci_device_map_bar(vmd->pci, 0, (void **)&vmd->cfg_vaddr,
-				     &vmd->cfgbar, &vmd->cfgbar_size);
+	rc = vmd_domain_map_bar(vmd, 0, (void **)&vmd->cfg_vaddr,
+				&vmd->cfgbar, &vmd->cfgbar_size);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to map config bar: %s\n", spdk_strerror(-rc));
 		return rc;
 	}
 
-	rc = spdk_pci_device_map_bar(vmd->pci, 2, (void **)&vmd->mem_vaddr,
-				     &vmd->membar, &vmd->membar_size);
+	rc = vmd_domain_map_bar(vmd, 2, (void **)&vmd->mem_vaddr,
+				&vmd->membar, &vmd->membar_size);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to map memory bar: %s\n", spdk_strerror(-rc));
 		return rc;

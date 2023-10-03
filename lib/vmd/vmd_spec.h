@@ -38,6 +38,10 @@
 #define  PCI_BRIDGE_MEMORY_SHIFT    16
 #define  PCI_CONFIG_ACCESS_DELAY    500
 
+#define PCI_BAR0_OFFSET			0x10
+#define PCI_BAR_SIZE			4
+#define PCI_BAR_MEMORY_ADDR_OFFSET	(~0xfull)
+
 #define PCI_MAX_CFG_SIZE            0x1000
 
 #define PCI_HEADER_TYPE             0x0e
