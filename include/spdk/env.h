@@ -55,6 +55,7 @@ struct spdk_env_opts {
 	bool			no_pci;
 	bool			hugepage_single_segments;
 	bool			unlink_hugepage;
+	bool			no_huge;
 	size_t			num_pci_addr;
 	const char		*hugedir;
 	struct spdk_pci_addr	*pci_blocked;

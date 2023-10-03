@@ -135,11 +135,12 @@ function confirm_abi_deps() {
 	#	soname_regexp = ^libspdk_event\\.so\\.12\\.*$
 	cat << EOF > ${suppression_file}
 [suppress_type]
-	label = Added interrupt_mode field
+	label = Added interrupt_mode, no_huge fields
 	name = spdk_app_opts
 	soname_regexp = ^libspdk_event\\.so\\.12\\.*$
+	has_data_member_regexp = ^reserved83$
 	has_data_member_regexp = ^reserved185$
-	has_data_member_inserted_between = {1480, 1488}
+	has_data_members_inserted_between = {{664, 672}, {1480, 1488}}
 [suppress_type]
 	label = Added cmbs field
 	name = spdk_nvme_cap_register

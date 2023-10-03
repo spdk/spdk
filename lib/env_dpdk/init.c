@@ -202,8 +202,10 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 {
 	int argcount = 0;
 	char **args;
+	bool no_huge;
 
 	args = NULL;
+	no_huge = opts->no_huge || (opts->env_context && strstr(opts->env_context, "--no-huge") != NULL);
 
 	/* set the program name */
 	args = push_arg(args, &argcount, _sprintf_alloc("%s", opts->name));
@@ -283,6 +285,11 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
+	/* set no huge pages */
+	if (opts->no_huge) {
+		mem_disable_huge_pages();
+	}
+
 	/* set the main core */
 	if (opts->main_core > 0) {
 		args = push_arg(args, &argcount, _sprintf_alloc("%s=%d",
@@ -300,12 +307,33 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
-	if (opts->env_context && strstr(opts->env_context, "--no-huge") != NULL) {
+	if (no_huge) {
 		if (opts->hugepage_single_segments || opts->unlink_hugepage || opts->hugedir) {
 			fprintf(stderr, "--no-huge invalid with other hugepage options\n");
 			free_args(args, argcount);
 			return -1;
 		}
+
+		if (opts->mem_size < 0) {
+			fprintf(stderr,
+				"Disabling hugepages requires specifying how much memory "
+				"will be allocated using -s parameter\n");
+			free_args(args, argcount);
+			return -1;
+		}
+
+		/* iova-mode=pa is incompatible with no_huge */
+		if (opts->iova_mode &&
+		    (strcmp(opts->iova_mode, "pa") == 0)) {
+			fprintf(stderr, "iova-mode=pa is incompatible with specified "
+				"no-huge parameter\n");
+			free_args(args, argcount);
+			return -1;
+		}
+
+		args = push_arg(args, &argcount, _sprintf_alloc("--no-huge"));
+		args = push_arg(args, &argcount, _sprintf_alloc("--iova-mode=va"));
+
 	} else {
 		/* create just one hugetlbfs file */
 		if (opts->hugepage_single_segments) {
@@ -408,6 +436,7 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 #ifdef __linux__
 
 	if (opts->iova_mode) {
+		/* iova-mode=pa is incompatible with no_huge */
 		args = push_arg(args, &argcount, _sprintf_alloc("--iova-mode=%s", opts->iova_mode));
 		if (args == NULL) {
 			return -1;
@@ -416,7 +445,7 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 		/* When using vfio with enable_unsafe_noiommu_mode=Y, we need iova-mode=pa,
 		 * but DPDK guesses it should be iova-mode=va. Add a check and force
 		 * iova-mode=pa here. */
-		if (rte_vfio_noiommu_is_enabled()) {
+		if (!no_huge && rte_vfio_noiommu_is_enabled()) {
 			args = push_arg(args, &argcount, _sprintf_alloc("--iova-mode=pa"));
 			if (args == NULL) {
 				return -1;
@@ -429,7 +458,7 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 		 * virtual machines) don't have an IOMMU capable of handling the full virtual
 		 * address space and DPDK doesn't currently catch that. Add a check in SPDK
 		 * and force iova-mode=pa here. */
-		if (get_iommu_width() < SPDK_IOMMU_VA_REQUIRED_WIDTH) {
+		if (!no_huge && get_iommu_width() < SPDK_IOMMU_VA_REQUIRED_WIDTH) {
 			args = push_arg(args, &argcount, _sprintf_alloc("--iova-mode=pa"));
 			if (args == NULL) {
 				return -1;
@@ -462,7 +491,12 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 	 * physically or IOVA contiguous memory regions, then when we go to allocate a buffer pool, it can split
 	 * the memory for a buffer over two allocations meaning the buffer will be split over a memory region.
 	 */
-	if (!opts->env_context || strstr(opts->env_context, "--legacy-mem") == NULL) {
+
+	/* --no-huge is incompatible with --match-allocations
+	 * Ref:  https://doc.dpdk.org/guides/prog_guide/env_abstraction_layer.html#hugepage-allocation-matching
+	 */
+	if (!no_huge &&
+	    (!opts->env_context || strstr(opts->env_context, "--legacy-mem") == NULL)) {
 		args = push_arg(args, &argcount, _sprintf_alloc("%s", "--match-allocations"));
 		if (args == NULL) {
 			return -1;

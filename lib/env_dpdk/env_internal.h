@@ -52,4 +52,9 @@ void vtophys_pci_device_added(struct rte_pci_device *pci_device);
  */
 void vtophys_pci_device_removed(struct rte_pci_device *pci_device);
 
+/**
+ * Disable huge page usage based on SPDK command line option --no-huge.
+ */
+void mem_disable_huge_pages(void);
+
 #endif

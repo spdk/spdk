@@ -89,9 +89,10 @@ struct spdk_app_opts {
 	bool			no_pci;
 	bool			hugepage_single_segments;
 	bool			unlink_hugepage;
+	bool			no_huge;
 
-	/* Hole at bytes 83-85. */
-	uint8_t			reserved83[5];
+	/* Hole at bytes 84-87. */
+	uint8_t			reserved84[4];
 
 	const char		*hugedir;
 	enum spdk_log_level	print_level;

@@ -143,6 +143,8 @@ static const struct option g_cmdline_options[] = {
 	{"msg-mempool-size",		required_argument,	NULL, MSG_MEMPOOL_SIZE_OPT_IDX},
 #define LCORES_OPT_IDX	271
 	{"lcores",			required_argument,	NULL, LCORES_OPT_IDX},
+#define NO_HUGE_OPT_IDX	272
+	{"no-huge",			no_argument,		NULL, NO_HUGE_OPT_IDX},
 };
 
 static void
@@ -381,6 +383,7 @@ app_setup_env(struct spdk_app_opts *opts)
 	env_opts.env_context = opts->env_context;
 	env_opts.iova_mode = opts->iova_mode;
 	env_opts.vf_token = opts->vf_token;
+	env_opts.no_huge = opts->no_huge;
 
 	rc = spdk_env_init(&env_opts);
 	free(env_opts.pci_blocked);
@@ -553,6 +556,7 @@ app_copy_opts(struct spdk_app_opts *opts, struct spdk_app_opts *opts_user, size_
 	SET_FIELD(no_pci);
 	SET_FIELD(hugepage_single_segments);
 	SET_FIELD(unlink_hugepage);
+	SET_FIELD(no_huge);
 	SET_FIELD(hugedir);
 	SET_FIELD(print_level);
 	SET_FIELD(num_pci_addr);
@@ -969,6 +973,7 @@ usage(void (*app_usage)(void))
 	printf("     --rpcs-allowed	   comma-separated list of permitted RPCS\n");
 	printf("     --env-context         Opaque context for use of the env implementation\n");
 	printf("     --vfio-vf-token       VF token (UUID) shared between SR-IOV PF and VFs for vfio_pci driver\n");
+	printf("     --no-huge             run without using hugepages\n");
 	spdk_log_usage(stdout, "-L");
 	spdk_trace_mask_usage(stdout, "-e");
 	printf("     --interrupt-mode      set app to interrupt mode (Warning: CPU usage will be reduced only if all pollers in the app support interrupt mode)\n");
@@ -1177,6 +1182,11 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				goto out;
 			}
 			break;
+
+		case NO_HUGE_OPT_IDX:
+			opts->no_huge = true;
+			break;
+
 		case LOGFLAG_OPT_IDX:
 			rc = spdk_log_set_flag(optarg);
 			if (rc < 0) {

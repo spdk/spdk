@@ -20,6 +20,10 @@ Added support for `SBC WRITE SAME 10` and `SBC WRITE SAME 16`.
 
 A new transport option `rdma_max_cq_size` was added to limit indefinite growth of CQ size.
 
+### env
+
+Added SPDK commandline parameter --no-huge, which enables SPDK to run without hugepages.
+
 ## v23.09
 
 ### accel
