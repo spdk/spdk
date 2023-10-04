@@ -911,6 +911,137 @@ struct spdk_bdev_io_zone_mgmt_params {
 	void *buf;
 };
 
+/**
+ *  Fields that are used internally by the bdev subsystem.  Bdev modules
+ *  must not read or write to these fields.
+ */
+struct spdk_bdev_io_internal_fields {
+	/** The bdev I/O channel that this was handled on. */
+	struct spdk_bdev_channel *ch;
+
+	uint8_t	reserved[8];
+
+	/** The bdev descriptor that was used when submitting this I/O. */
+	struct spdk_bdev_desc *desc;
+
+	/** User function that will be called when this completes */
+	spdk_bdev_io_completion_cb cb;
+
+	/** Context that will be passed to the completion callback */
+	void *caller_ctx;
+
+	/** Current tsc at submit time. Used to calculate latency at completion. */
+	uint64_t submit_tsc;
+
+	/** Error information from a device */
+	union {
+		struct {
+			/** NVMe completion queue entry DW0 */
+			uint32_t cdw0;
+			/** NVMe status code type */
+			uint8_t sct;
+			/** NVMe status code */
+			uint8_t sc;
+		} nvme;
+		/** Only valid when status is SPDK_BDEV_IO_STATUS_SCSI_ERROR */
+		struct {
+			/** SCSI status code */
+			uint8_t sc;
+			/** SCSI sense key */
+			uint8_t sk;
+			/** SCSI additional sense code */
+			uint8_t asc;
+			/** SCSI additional sense code qualifier */
+			uint8_t ascq;
+		} scsi;
+		/** Only valid when status is SPDK_BDEV_IO_STATUS_AIO_ERROR */
+		int aio_result;
+	} error;
+
+	/**
+	 * Set to true while the bdev module submit_request function is in progress.
+	 *
+	 * This is used to decide whether spdk_bdev_io_complete() can complete the I/O directly
+	 * or if completion must be deferred via an event.
+	 */
+	bool in_submit_request;
+
+	/** Status for the IO */
+	int8_t status;
+
+	/** Indicates whether the IO is split */
+	bool split;
+
+	/** Retry state (resubmit, re-pull, re-push, etc.) */
+	uint8_t retry_state;
+
+	/** Indicates that the IO is associated with an accel sequence */
+	bool has_accel_sequence;
+
+	/** stored user callback in case we split the I/O and use a temporary callback */
+	spdk_bdev_io_completion_cb stored_user_cb;
+
+	/** number of blocks remaining in a split i/o */
+	uint64_t split_remaining_num_blocks;
+
+	/** current offset of the split I/O in the bdev */
+	uint64_t split_current_offset_blocks;
+
+	/** count of outstanding batched split I/Os */
+	uint32_t split_outstanding;
+
+	/** bdev allocated memory associated with this request */
+	void *buf;
+
+	/** requested size of the buffer associated with this I/O */
+	uint64_t buf_len;
+
+	/** if the request is double buffered, store original request iovs here */
+	struct iovec  bounce_iov;
+	struct iovec  bounce_md_iov;
+	struct iovec  orig_md_iov;
+	struct iovec *orig_iovs;
+	int           orig_iovcnt;
+
+	/** Callback for when the aux buf is allocated */
+	spdk_bdev_io_get_aux_buf_cb get_aux_buf_cb;
+
+	/** Callback for when buf is allocated */
+	spdk_bdev_io_get_buf_cb get_buf_cb;
+
+	/**
+	 * Queue entry used in several cases:
+	 *  1. IOs awaiting retry due to NOMEM status,
+	 *  2. IOs awaiting submission due to QoS,
+	 *  3. IOs with an accel sequence being executed,
+	 *  4. IOs awaiting memory domain pull/push,
+	 *  5. queued reset requests.
+	 */
+	TAILQ_ENTRY(spdk_bdev_io) link;
+
+	/** Entry to the list need_buf of struct spdk_bdev. */
+	STAILQ_ENTRY(spdk_bdev_io) buf_link;
+
+	/** Entry to the list io_submitted of struct spdk_bdev_channel */
+	TAILQ_ENTRY(spdk_bdev_io) ch_link;
+
+	/** iobuf queue entry */
+	struct spdk_iobuf_entry iobuf;
+
+	/** Enables queuing parent I/O when no bdev_ios available for split children. */
+	struct spdk_bdev_io_wait_entry waitq_entry;
+
+	/** Memory domain and its context passed by the user in ext API */
+	struct spdk_memory_domain *memory_domain;
+	void *memory_domain_ctx;
+
+	/* Sequence of accel operations passed by the user */
+	struct spdk_accel_sequence *accel_sequence;
+
+	/** Data transfer completion callback */
+	void (*data_transfer_cpl)(void *ctx, int rc);
+};
+
 struct spdk_bdev_io {
 	/** The block device that this I/O belongs to. */
 	struct spdk_bdev *bdev;
@@ -940,132 +1071,7 @@ struct spdk_bdev_io {
 	 *  Fields that are used internally by the bdev subsystem.  Bdev modules
 	 *  must not read or write to these fields.
 	 */
-	struct __bdev_io_internal_fields {
-		/** The bdev I/O channel that this was handled on. */
-		struct spdk_bdev_channel *ch;
-
-		uint8_t	reserved[8];
-
-		/** The bdev descriptor that was used when submitting this I/O. */
-		struct spdk_bdev_desc *desc;
-
-		/** User function that will be called when this completes */
-		spdk_bdev_io_completion_cb cb;
-
-		/** Context that will be passed to the completion callback */
-		void *caller_ctx;
-
-		/** Current tsc at submit time. Used to calculate latency at completion. */
-		uint64_t submit_tsc;
-
-		/** Error information from a device */
-		union {
-			struct {
-				/** NVMe completion queue entry DW0 */
-				uint32_t cdw0;
-				/** NVMe status code type */
-				uint8_t sct;
-				/** NVMe status code */
-				uint8_t sc;
-			} nvme;
-			/** Only valid when status is SPDK_BDEV_IO_STATUS_SCSI_ERROR */
-			struct {
-				/** SCSI status code */
-				uint8_t sc;
-				/** SCSI sense key */
-				uint8_t sk;
-				/** SCSI additional sense code */
-				uint8_t asc;
-				/** SCSI additional sense code qualifier */
-				uint8_t ascq;
-			} scsi;
-			/** Only valid when status is SPDK_BDEV_IO_STATUS_AIO_ERROR */
-			int aio_result;
-		} error;
-
-		/**
-		 * Set to true while the bdev module submit_request function is in progress.
-		 *
-		 * This is used to decide whether spdk_bdev_io_complete() can complete the I/O directly
-		 * or if completion must be deferred via an event.
-		 */
-		bool in_submit_request;
-
-		/** Status for the IO */
-		int8_t status;
-
-		/** Indicates whether the IO is split */
-		bool split;
-
-		/** Retry state (resubmit, re-pull, re-push, etc.) */
-		uint8_t retry_state;
-
-		/** Indicates that the IO is associated with an accel sequence */
-		bool has_accel_sequence;
-
-		/** stored user callback in case we split the I/O and use a temporary callback */
-		spdk_bdev_io_completion_cb stored_user_cb;
-
-		/** number of blocks remaining in a split i/o */
-		uint64_t split_remaining_num_blocks;
-
-		/** current offset of the split I/O in the bdev */
-		uint64_t split_current_offset_blocks;
-
-		/** count of outstanding batched split I/Os */
-		uint32_t split_outstanding;
-
-		/** bdev allocated memory associated with this request */
-		void *buf;
-
-		/** requested size of the buffer associated with this I/O */
-		uint64_t buf_len;
-
-		/** if the request is double buffered, store original request iovs here */
-		struct iovec  bounce_iov;
-		struct iovec  bounce_md_iov;
-		struct iovec  orig_md_iov;
-		struct iovec *orig_iovs;
-		int           orig_iovcnt;
-
-		/** Callback for when the aux buf is allocated */
-		spdk_bdev_io_get_aux_buf_cb get_aux_buf_cb;
-
-		/** Callback for when buf is allocated */
-		spdk_bdev_io_get_buf_cb get_buf_cb;
-
-		/**
-		 * Queue entry used in several cases:
-		 *  1. IOs awaiting retry due to NOMEM status,
-		 *  2. IOs awaiting submission due to QoS,
-		 *  3. IOs with an accel sequence being executed,
-		 *  4. IOs awaiting memory domain pull/push,
-		 *  5. queued reset requests.
-		 */
-		TAILQ_ENTRY(spdk_bdev_io) link;
-
-		/** Entry to the list need_buf of struct spdk_bdev. */
-		STAILQ_ENTRY(spdk_bdev_io) buf_link;
-
-		/** Entry to the list io_submitted of struct spdk_bdev_channel */
-		TAILQ_ENTRY(spdk_bdev_io) ch_link;
-
-		/** iobuf queue entry */
-		struct spdk_iobuf_entry iobuf;
-
-		/** Enables queuing parent I/O when no bdev_ios available for split children. */
-		struct spdk_bdev_io_wait_entry waitq_entry;
-
-		/** Memory domain and its context passed by the user in ext API */
-		struct spdk_memory_domain *memory_domain;
-		void *memory_domain_ctx;
-
-		/* Sequence of accel operations passed by the user */
-		struct spdk_accel_sequence *accel_sequence;
-
-		/** Data transfer completion callback */
-		void (*data_transfer_cpl)(void *ctx, int rc);
-	} internal;
+	struct spdk_bdev_io_internal_fields internal;
 
 	/**
 	 * Per I/O context for use by the bdev module.
