@@ -228,19 +228,14 @@ _accel_for_each_module(struct module_info *info, _accel_for_each_module_fn fn)
 	}
 }
 
-int
-_accel_get_opc_name(enum spdk_accel_opcode opcode, const char **opcode_name)
+const char *
+spdk_accel_get_opcode_name(enum spdk_accel_opcode opcode)
 {
-	int rc = 0;
-
 	if (opcode < SPDK_ACCEL_OPC_LAST) {
-		*opcode_name = g_opcode_strings[opcode];
-	} else {
-		/* invalid opcode */
-		rc = -EINVAL;
+		return g_opcode_strings[opcode];
 	}
 
-	return rc;
+	return NULL;
 }
 
 int

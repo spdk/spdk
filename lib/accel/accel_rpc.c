@@ -34,8 +34,8 @@ rpc_accel_get_opc_assignments(struct spdk_jsonrpc_request *request,
 
 	spdk_json_write_object_begin(w);
 	for (opcode = 0; opcode < SPDK_ACCEL_OPC_LAST; opcode++) {
-		rc = _accel_get_opc_name(opcode, &name);
-		if (rc == 0) {
+		name = spdk_accel_get_opcode_name(opcode);
+		if (name != NULL) {
 			rc = spdk_accel_get_opc_module_name(opcode, &module_name);
 			if (rc == 0) {
 				spdk_json_write_named_string(w, name, module_name);
@@ -62,7 +62,6 @@ rpc_dump_module_info(struct module_info *info)
 	struct spdk_json_write_ctx *w = info->w;
 	const char *name;
 	uint32_t i;
-	int rc;
 
 	spdk_json_write_object_begin(w);
 
@@ -70,8 +69,8 @@ rpc_dump_module_info(struct module_info *info)
 	spdk_json_write_named_array_begin(w, "supported ops");
 
 	for (i = 0; i < info->num_ops; i++) {
-		rc = _accel_get_opc_name(info->ops[i], &name);
-		if (rc == 0) {
+		name = spdk_accel_get_opcode_name(info->ops[i]);
+		if (name != NULL) {
 			spdk_json_write_string(w, name);
 		} else {
 			/* this should never happen */
@@ -144,8 +143,8 @@ rpc_accel_assign_opc(struct spdk_jsonrpc_request *request,
 	}
 
 	for (opcode = 0; opcode < SPDK_ACCEL_OPC_LAST; opcode++) {
-		rc = _accel_get_opc_name(opcode, &opcode_str);
-		assert(!rc);
+		opcode_str = spdk_accel_get_opcode_name(opcode);
+		assert(opcode_str != NULL);
 		if (strcmp(opcode_str, req.opname) == 0) {
 			found = true;
 			break;
@@ -417,7 +416,7 @@ rpc_accel_get_stats_done(struct accel_stats *stats, void *cb_arg)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w;
-	const char *name, *module_name;
+	const char *module_name;
 	int i, rc;
 
 	w = spdk_jsonrpc_begin_result(request);
@@ -430,13 +429,12 @@ rpc_accel_get_stats_done(struct accel_stats *stats, void *cb_arg)
 		if (stats->operations[i].executed + stats->operations[i].failed == 0) {
 			continue;
 		}
-		_accel_get_opc_name(i, &name);
 		rc = spdk_accel_get_opc_module_name(i, &module_name);
 		if (rc) {
 			continue;
 		}
 		spdk_json_write_object_begin(w);
-		spdk_json_write_named_string(w, "opcode", name);
+		spdk_json_write_named_string(w, "opcode", spdk_accel_get_opcode_name(i));
 		spdk_json_write_named_string(w, "module_name", module_name);
 		spdk_json_write_named_uint64(w, "executed", stats->operations[i].executed);
 		spdk_json_write_named_uint64(w, "failed", stats->operations[i].failed);

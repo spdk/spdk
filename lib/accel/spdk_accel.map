@@ -41,6 +41,7 @@
 	spdk_accel_get_opts;
 	spdk_accel_get_opcode_stats;
 	spdk_accel_get_buf_align;
+	spdk_accel_get_opcode_name;
 
 	# functions needed by modules
 	spdk_accel_module_list_add;
