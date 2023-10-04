@@ -269,7 +269,7 @@ bdev_part_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 
 
-	cb = part_io->u.bdev.stored_user_cb;
+	cb = part_io->internal.stored_user_cb;
 	if (cb != NULL) {
 		cb(part_io, success, NULL);
 	} else {
@@ -300,7 +300,7 @@ spdk_bdev_part_submit_request_ext(struct spdk_bdev_part_channel *ch, struct spdk
 	uint64_t offset, remapped_offset, remapped_src_offset;
 	int rc = 0;
 
-	bdev_io->u.bdev.stored_user_cb = cb;
+	bdev_io->internal.stored_user_cb = cb;
 
 	offset = bdev_io->u.bdev.offset_blocks;
 	remapped_offset = offset + part->internal.offset_blocks;

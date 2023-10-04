@@ -820,18 +820,6 @@ struct spdk_bdev_io_block_params {
 	/** Number of iovecs in fused_iovs. */
 	int fused_iovcnt;
 
-	/** stored user callback in case we split the I/O and use a temporary callback */
-	spdk_bdev_io_completion_cb stored_user_cb;
-
-	/** number of blocks remaining in a split i/o */
-	uint64_t split_remaining_num_blocks;
-
-	/** current offset of the split I/O in the bdev */
-	uint64_t split_current_offset_blocks;
-
-	/** count of outstanding batched split I/Os */
-	uint32_t split_outstanding;
-
 	/** Specify whether each DIF check type is enabled. */
 	uint32_t dif_check_flags;
 
@@ -1014,6 +1002,18 @@ struct spdk_bdev_io {
 
 		/** Indicates that the IO is associated with an accel sequence */
 		bool has_accel_sequence;
+
+		/** stored user callback in case we split the I/O and use a temporary callback */
+		spdk_bdev_io_completion_cb stored_user_cb;
+
+		/** number of blocks remaining in a split i/o */
+		uint64_t split_remaining_num_blocks;
+
+		/** current offset of the split I/O in the bdev */
+		uint64_t split_current_offset_blocks;
+
+		/** count of outstanding batched split I/Os */
+		uint32_t split_outstanding;
 
 		/** bdev allocated memory associated with this request */
 		void *buf;
