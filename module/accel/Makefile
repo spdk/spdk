@@ -7,7 +7,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = ioat
+DIRS-y = error ioat
 DIRS-$(CONFIG_DPDK_COMPRESSDEV) += dpdk_compressdev
 DIRS-$(CONFIG_IDXD) += dsa
 DIRS-$(CONFIG_IDXD) += iaa
