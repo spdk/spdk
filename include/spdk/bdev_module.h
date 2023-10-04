@@ -796,17 +796,6 @@ struct spdk_bdev_io_block_params {
 	/** For SG buffer cases, number of iovecs in iovec array. */
 	int iovcnt;
 
-	/** For fused operations such as COMPARE_AND_WRITE, array of iovecs
-	 *  for the second operation.
-	 */
-	struct iovec *fused_iovs;
-
-	/** Number of iovecs in fused_iovs. */
-	int fused_iovcnt;
-
-	/* Metadata buffer */
-	void *md_buf;
-
 	/** Total size of data to be transferred. */
 	uint64_t num_blocks;
 
@@ -819,6 +808,17 @@ struct spdk_bdev_io_block_params {
 
 	/* Sequence of accel operations */
 	struct spdk_accel_sequence *accel_sequence;
+
+	/* Metadata buffer */
+	void *md_buf;
+
+	/** For fused operations such as COMPARE_AND_WRITE, array of iovecs
+	 *  for the second operation.
+	 */
+	struct iovec *fused_iovs;
+
+	/** Number of iovecs in fused_iovs. */
+	int fused_iovcnt;
 
 	/** stored user callback in case we split the I/O and use a temporary callback */
 	spdk_bdev_io_completion_cb stored_user_cb;
