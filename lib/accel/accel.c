@@ -2327,10 +2327,6 @@ spdk_accel_module_list_add(struct spdk_accel_module_if *accel_module)
 	} else {
 		TAILQ_INSERT_TAIL(&spdk_accel_module_list, accel_module, tailq);
 	}
-
-	if (accel_module->get_ctx_size && accel_module->get_ctx_size() > g_max_accel_module_size) {
-		g_max_accel_module_size = accel_module->get_ctx_size();
-	}
 }
 
 /* Framework level channel create callback. */
@@ -2547,6 +2543,11 @@ spdk_accel_initialize(void)
 				g_modules_opc[op].module = accel_module;
 				SPDK_DEBUGLOG(accel, "OPC 0x%x now assigned to %s\n", op, accel_module->name);
 			}
+		}
+
+		if (accel_module->get_ctx_size != NULL) {
+			g_max_accel_module_size = spdk_max(g_max_accel_module_size,
+							   accel_module->get_ctx_size());
 		}
 	}
 
