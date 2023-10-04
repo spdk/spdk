@@ -933,6 +933,14 @@ struct spdk_bdev_io_internal_fields {
 	/** Current tsc at submit time. Used to calculate latency at completion. */
 	uint64_t submit_tsc;
 
+	union {
+		struct {
+			uint8_t has_accel_sequence		: 1;
+			uint8_t reserved			: 7;
+		};
+		uint8_t raw;
+	} f;
+
 	/** Entry to the list io_submitted of struct spdk_bdev_channel */
 	TAILQ_ENTRY(spdk_bdev_io) ch_link;
 
@@ -980,9 +988,6 @@ struct spdk_bdev_io_internal_fields {
 
 	/** Retry state (resubmit, re-pull, re-push, etc.) */
 	uint8_t retry_state;
-
-	/** Indicates that the IO is associated with an accel sequence */
-	bool has_accel_sequence;
 
 	/** stored user callback in case we split the I/O and use a temporary callback */
 	spdk_bdev_io_completion_cb stored_user_cb;
