@@ -675,6 +675,7 @@ static struct spdk_accel_module_if g_sw_module = {
 	.write_config_json		= NULL,
 	.get_ctx_size			= sw_accel_module_get_ctx_size,
 	.name				= "software",
+	.priority			= SPDK_ACCEL_SW_PRIORITY,
 	.supports_opcode		= sw_accel_supports_opcode,
 	.get_io_channel			= sw_accel_get_io_channel,
 	.submit_tasks			= sw_accel_submit_tasks,

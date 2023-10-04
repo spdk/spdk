@@ -2308,18 +2308,22 @@ spdk_accel_crypto_key_get(const char *name)
 void
 spdk_accel_module_list_add(struct spdk_accel_module_if *accel_module)
 {
+	struct spdk_accel_module_if *tmp;
+
 	if (_module_find_by_name(accel_module->name)) {
 		SPDK_NOTICELOG("Module %s already registered\n", accel_module->name);
 		assert(false);
 		return;
 	}
 
-	/* Make sure that the software module is at the head of the list, this
-	 * will assure that all opcodes are later assigned to software first and
-	 * then updated to HW modules as they are registered.
-	 */
-	if (strcmp(accel_module->name, "software") == 0) {
-		TAILQ_INSERT_HEAD(&spdk_accel_module_list, accel_module, tailq);
+	TAILQ_FOREACH(tmp, &spdk_accel_module_list, tailq) {
+		if (accel_module->priority < tmp->priority) {
+			break;
+		}
+	}
+
+	if (tmp != NULL) {
+		TAILQ_INSERT_BEFORE(tmp, accel_module, tailq);
 	} else {
 		TAILQ_INSERT_TAIL(&spdk_accel_module_list, accel_module, tailq);
 	}
@@ -2531,11 +2535,11 @@ spdk_accel_initialize(void)
 		return rc;
 	}
 
-	/* Create our priority global map of opcodes to modules, we populate starting
-	 * with the software module (guaranteed to be first on the list) and then
-	 * updating opcodes with HW modules that have been initialized.
-	 * NOTE: all opcodes must be supported by software in the event that no HW
-	 * modules are initialized to support the operation.
+	/* The module list is order by priority, with the highest priority modules being at the end
+	 * of the list.  The software module should be somewhere at the beginning of the list,
+	 * before all HW modules.
+	 * NOTE: all opcodes must be supported by software in the event that no HW modules are
+	 * initialized to support the operation.
 	 */
 	TAILQ_FOREACH(accel_module, &spdk_accel_module_list, tailq) {
 		for (op = 0; op < SPDK_ACCEL_OPC_LAST; op++) {

@@ -148,6 +148,15 @@ struct spdk_accel_module_if {
 	const char *name;
 
 	/**
+	 * Priority of the module.  It's used to select a module to execute an operation when
+	 * multiple modules support it.  Higher value means higher priority.  Software module has a
+	 * priority of `SPDK_ACCEL_SW_PRIORITY`.  Of course, this value is only relevant when none
+	 * of the modules have been explicitly assigned to execute a given operation via
+	 * `spdk_accel_assign_opc()`.
+	 */
+	int priority;
+
+	/**
 	 * Initialization function for the module.  Called by the application during startup.
 	 *
 	 * Modules are required to define this function.
@@ -230,6 +239,9 @@ static void __attribute__((constructor)) _spdk_accel_module_register_##name(void
 { \
 	spdk_accel_module_list_add(module); \
 }
+
+/* Priority of the accel_sw module */
+#define SPDK_ACCEL_SW_PRIORITY (-1)
 
 /**
  * Called by an accel module when cleanup initiated during .module_fini has completed

@@ -563,49 +563,66 @@ test_spdk_accel_module_find_by_name(void)
 	CU_ASSERT(accel_module == NULL);
 }
 
+static int
+ut_module_init_nop(void)
+{
+	return 0;
+}
+
+static bool
+ut_supports_opcode_all(enum spdk_accel_opcode opcode)
+{
+	return true;
+}
+
+static void
+ut_accel_module_priority_finish_done(void *done)
+{
+	*(int *)done = 1;
+}
+
 static void
 test_spdk_accel_module_register(void)
 {
-	struct spdk_accel_module_if mod1 = {};
-	struct spdk_accel_module_if mod2 = {};
-	struct spdk_accel_module_if mod3 = {};
-	struct spdk_accel_module_if mod4 = {};
-	struct spdk_accel_module_if *accel_module = NULL;
-	int i = 0;
+	struct spdk_accel_module_if mods[] = {
+		{ .name = "mod1", .priority = 1, },
+		{ .name = "mod3", .priority = 3, },
+		{ .name = "mod0", .priority = 0, },
+		{ .name = "mod2", .priority = 2, },
+	};
+	int rc, done = 0;
+	const char *modname = NULL;
+	size_t i;
 
-	mod1.name = "ioat";
-	mod2.name = "idxd";
-	mod3.name = "software";
-	mod4.name = "nothing";
+	allocate_cores(1);
+	allocate_threads(1);
+	set_thread(0);
 
 	TAILQ_INIT(&spdk_accel_module_list);
-
-	spdk_accel_module_list_add(&mod1);
-	spdk_accel_module_list_add(&mod2);
-	spdk_accel_module_list_add(&mod3);
-	spdk_accel_module_list_add(&mod4);
-
-	/* Now confirm they're in the right order. */
-	TAILQ_FOREACH(accel_module, &spdk_accel_module_list, tailq) {
-		switch (i++) {
-		case 0:
-			CU_ASSERT(strcmp(accel_module->name, "software") == 0);
-			break;
-		case 1:
-			CU_ASSERT(strcmp(accel_module->name, "ioat") == 0);
-			break;
-		case 2:
-			CU_ASSERT(strcmp(accel_module->name, "idxd") == 0);
-			break;
-		case 3:
-			CU_ASSERT(strcmp(accel_module->name, "nothing") == 0);
-			break;
-		default:
-			CU_ASSERT(false);
-			break;
-		}
+	for (i = 0; i < SPDK_COUNTOF(mods); ++i) {
+		mods[i].module_init = ut_module_init_nop;
+		mods[i].supports_opcode = ut_supports_opcode_all;
+		spdk_accel_module_list_add(&mods[i]);
 	}
-	CU_ASSERT(i == 4);
+
+	rc = spdk_accel_initialize();
+	CU_ASSERT_EQUAL(rc, 0);
+
+	/* All opcodes should be assigned to the module with highest prio - mod3 */
+	for (i = 0; i < SPDK_ACCEL_OPC_LAST; ++i) {
+		rc = spdk_accel_get_opc_module_name((enum spdk_accel_opcode)i, &modname);
+		CU_ASSERT_EQUAL(rc, 0);
+		CU_ASSERT_STRING_EQUAL(modname, "mod3");
+	}
+
+	spdk_accel_finish(ut_accel_module_priority_finish_done, &done);
+	while (!done) {
+		poll_threads();
+	}
+
+	TAILQ_INIT(&spdk_accel_module_list);
+	free_threads();
+	free_cores();
 }
 
 struct ut_sequence {
