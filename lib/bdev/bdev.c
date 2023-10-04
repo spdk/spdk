@@ -925,7 +925,7 @@ spdk_bdev_next_leaf(struct spdk_bdev *prev)
 static inline bool
 bdev_io_use_memory_domain(struct spdk_bdev_io *bdev_io)
 {
-	return bdev_io->internal.memory_domain;
+	return bdev_io->internal.f.has_memory_domain;
 }
 
 static inline bool
@@ -1285,8 +1285,8 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 						    NULL, NULL,
 						    bdev_io->internal.orig_iovs,
 						    bdev_io->internal.orig_iovcnt,
-						    bdev_io->internal.memory_domain,
-						    bdev_io->internal.memory_domain_ctx,
+						    bdev_io_use_memory_domain(bdev_io) ? bdev_io->internal.memory_domain : NULL,
+						    bdev_io_use_memory_domain(bdev_io) ? bdev_io->internal.memory_domain_ctx : NULL,
 						    NULL, NULL);
 		} else {
 			/* We need to reverse the src/dst for reads */
@@ -1295,8 +1295,8 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 			rc = spdk_accel_append_copy(&bdev_io->internal.accel_sequence, ch->accel_channel,
 						    bdev_io->internal.orig_iovs,
 						    bdev_io->internal.orig_iovcnt,
-						    bdev_io->internal.memory_domain,
-						    bdev_io->internal.memory_domain_ctx,
+						    bdev_io_use_memory_domain(bdev_io) ? bdev_io->internal.memory_domain : NULL,
+						    bdev_io_use_memory_domain(bdev_io) ? bdev_io->internal.memory_domain_ctx : NULL,
 						    bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 						    NULL, NULL, NULL, NULL);
 		}
@@ -3030,8 +3030,10 @@ bdev_io_split_submit(struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt
 		rc = bdev_readv_blocks_with_md(bdev_io->internal.desc,
 					       spdk_io_channel_from_ctx(bdev_io->internal.ch),
 					       iov, iovcnt, md_buf, current_offset,
-					       num_blocks, bdev_io->internal.memory_domain,
-					       bdev_io->internal.memory_domain_ctx, NULL,
+					       num_blocks,
+					       bdev_io_use_memory_domain(bdev_io) ? bdev_io->internal.memory_domain : NULL,
+					       bdev_io_use_memory_domain(bdev_io) ? bdev_io->internal.memory_domain_ctx : NULL,
+					       NULL,
 					       bdev_io->u.bdev.dif_check_flags,
 					       bdev_io_split_done, bdev_io);
 		break;
@@ -3040,8 +3042,10 @@ bdev_io_split_submit(struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt
 		rc = bdev_writev_blocks_with_md(bdev_io->internal.desc,
 						spdk_io_channel_from_ctx(bdev_io->internal.ch),
 						iov, iovcnt, md_buf, current_offset,
-						num_blocks, bdev_io->internal.memory_domain,
-						bdev_io->internal.memory_domain_ctx, NULL,
+						num_blocks,
+						bdev_io_use_memory_domain(bdev_io) ? bdev_io->internal.memory_domain : NULL,
+						bdev_io_use_memory_domain(bdev_io) ? bdev_io->internal.memory_domain_ctx : NULL,
+						NULL,
 						bdev_io->u.bdev.dif_check_flags,
 						bdev_io->u.bdev.nvme_cdw12.raw,
 						bdev_io->u.bdev.nvme_cdw13.raw,
@@ -3620,6 +3624,7 @@ _bdev_io_ext_use_bounce_buffer(struct spdk_bdev_io *bdev_io)
 	 * Once read operation completes, we need to use memory_domain push functionality to
 	 * update data in original memory domain IO buffer
 	 * This IO request will go through a regular IO flow, so clear memory domains pointers */
+	assert(bdev_io->internal.f.has_memory_domain);
 	bdev_io->u.bdev.memory_domain = NULL;
 	bdev_io->u.bdev.memory_domain_ctx = NULL;
 	_bdev_memory_domain_io_get_buf(bdev_io, _bdev_memory_domain_get_io_cb,
@@ -3642,10 +3647,12 @@ _bdev_io_submit_ext(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bdev_io)
 	 * support them, but we need to execute an accel sequence and the data buffer is from accel
 	 * memory domain (to avoid doing a push/pull from that domain).
 	 */
-	if ((bdev_io->internal.memory_domain && !desc->memory_domains_supported) ||
-	    (needs_exec && bdev_io->internal.memory_domain == spdk_accel_get_memory_domain())) {
-		_bdev_io_ext_use_bounce_buffer(bdev_io);
-		return;
+	if (bdev_io_use_memory_domain(bdev_io)) {
+		if (!desc->memory_domains_supported ||
+		    (needs_exec && bdev_io->internal.memory_domain == spdk_accel_get_memory_domain())) {
+			_bdev_io_ext_use_bounce_buffer(bdev_io);
+			return;
+		}
 	}
 
 	if (needs_exec) {
@@ -3695,8 +3702,6 @@ bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->num_retries = 0;
 	bdev_io->internal.get_buf_cb = NULL;
 	bdev_io->internal.get_aux_buf_cb = NULL;
-	bdev_io->internal.memory_domain = NULL;
-	bdev_io->internal.memory_domain_ctx = NULL;
 	bdev_io->internal.data_transfer_cpl = NULL;
 	bdev_io->internal.f.split = bdev_io_should_split(bdev_io);
 }
@@ -5477,12 +5482,16 @@ bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
 	bdev_io->u.bdev.num_blocks = num_blocks;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
 	bdev_io_init(bdev_io, bdev, cb_arg, cb);
-	bdev_io->internal.memory_domain = domain;
-	bdev_io->internal.memory_domain_ctx = domain_ctx;
 
 	if (seq != NULL) {
 		bdev_io->internal.f.has_accel_sequence = true;
 		bdev_io->internal.accel_sequence = seq;
+	}
+
+	if (domain != NULL) {
+		bdev_io->internal.f.has_memory_domain = true;
+		bdev_io->internal.memory_domain = domain;
+		bdev_io->internal.memory_domain_ctx = domain_ctx;
 	}
 
 	bdev_io->u.bdev.memory_domain = domain;
@@ -5708,12 +5717,15 @@ bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 	bdev_io->u.bdev.num_blocks = num_blocks;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
 	bdev_io_init(bdev_io, bdev, cb_arg, cb);
-	bdev_io->internal.memory_domain = domain;
-	bdev_io->internal.memory_domain_ctx = domain_ctx;
-
 	if (seq != NULL) {
 		bdev_io->internal.f.has_accel_sequence = true;
 		bdev_io->internal.accel_sequence = seq;
+	}
+
+	if (domain != NULL) {
+		bdev_io->internal.f.has_memory_domain = true;
+		bdev_io->internal.memory_domain = domain;
+		bdev_io->internal.memory_domain_ctx = domain_ctx;
 	}
 
 	bdev_io->u.bdev.memory_domain = domain;

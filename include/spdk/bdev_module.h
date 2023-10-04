@@ -939,9 +939,12 @@ struct spdk_bdev_io_internal_fields {
 			/** Whether the accel_sequence member is valid */
 			uint8_t has_accel_sequence		: 1;
 
+			/** Whether memory_domain member is valid */
+			uint8_t has_memory_domain		: 1;
+
 			/** Whether the split data structure is valid */
 			uint8_t split				: 1;
-			uint8_t reserved			: 6;
+			uint8_t reserved			: 5;
 		};
 		uint8_t raw;
 	} f;
