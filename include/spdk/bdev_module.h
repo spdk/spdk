@@ -935,8 +935,13 @@ struct spdk_bdev_io_internal_fields {
 
 	union {
 		struct {
+
+			/** Whether the accel_sequence member is valid */
 			uint8_t has_accel_sequence		: 1;
-			uint8_t reserved			: 7;
+
+			/** Whether the split data structure is valid */
+			uint8_t split				: 1;
+			uint8_t reserved			: 6;
 		};
 		uint8_t raw;
 	} f;
@@ -983,23 +988,22 @@ struct spdk_bdev_io_internal_fields {
 	/** Status for the IO */
 	int8_t status;
 
-	/** Indicates whether the IO is split */
-	bool split;
-
 	/** Retry state (resubmit, re-pull, re-push, etc.) */
 	uint8_t retry_state;
 
-	/** stored user callback in case we split the I/O and use a temporary callback */
-	spdk_bdev_io_completion_cb stored_user_cb;
+	struct {
+		/** stored user callback in case we split the I/O and use a temporary callback */
+		spdk_bdev_io_completion_cb stored_user_cb;
 
-	/** number of blocks remaining in a split i/o */
-	uint64_t split_remaining_num_blocks;
+		/** number of blocks remaining in a split i/o */
+		uint64_t remaining_num_blocks;
 
-	/** current offset of the split I/O in the bdev */
-	uint64_t split_current_offset_blocks;
+		/** current offset of the split I/O in the bdev */
+		uint64_t current_offset_blocks;
 
-	/** count of outstanding batched split I/Os */
-	uint32_t split_outstanding;
+		/** count of outstanding batched split I/Os */
+		uint32_t outstanding;
+	} split;
 
 	/** bdev allocated memory associated with this request */
 	void *buf;
