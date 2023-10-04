@@ -789,6 +789,140 @@ typedef void (*spdk_bdev_io_get_aux_buf_cb)(struct spdk_io_channel *ch,
 /* Maximum number of IOVs used for I/O splitting */
 #define SPDK_BDEV_IO_NUM_CHILD_IOV 32
 
+struct spdk_bdev_io_block_params {
+	/** For SG buffer cases, array of iovecs to transfer. */
+	struct iovec *iovs;
+
+	/** For SG buffer cases, number of iovecs in iovec array. */
+	int iovcnt;
+
+	/** For fused operations such as COMPARE_AND_WRITE, array of iovecs
+	 *  for the second operation.
+	 */
+	struct iovec *fused_iovs;
+
+	/** Number of iovecs in fused_iovs. */
+	int fused_iovcnt;
+
+	/* Metadata buffer */
+	void *md_buf;
+
+	/** Total size of data to be transferred. */
+	uint64_t num_blocks;
+
+	/** Starting offset (in blocks) of the bdev for this I/O. */
+	uint64_t offset_blocks;
+
+	/** Memory domain and its context to be used by bdev modules */
+	struct spdk_memory_domain *memory_domain;
+	void *memory_domain_ctx;
+
+	/* Sequence of accel operations */
+	struct spdk_accel_sequence *accel_sequence;
+
+	/** stored user callback in case we split the I/O and use a temporary callback */
+	spdk_bdev_io_completion_cb stored_user_cb;
+
+	/** number of blocks remaining in a split i/o */
+	uint64_t split_remaining_num_blocks;
+
+	/** current offset of the split I/O in the bdev */
+	uint64_t split_current_offset_blocks;
+
+	/** count of outstanding batched split I/Os */
+	uint32_t split_outstanding;
+
+	/** Specify whether each DIF check type is enabled. */
+	uint32_t dif_check_flags;
+
+	/** defined by \ref spdk_bdev_nvme_cdw12 */
+	union spdk_bdev_nvme_cdw12 nvme_cdw12;
+
+	/** defined by \ref spdk_bdev_nvme_cdw13 */
+	union spdk_bdev_nvme_cdw13 nvme_cdw13;
+
+	struct {
+		/** Whether the buffer should be populated with the real data */
+		uint8_t populate : 1;
+
+		/** Whether the buffer should be committed back to disk */
+		uint8_t commit : 1;
+
+		/** True if this request is in the 'start' phase of zcopy. False if in 'end'. */
+		uint8_t start : 1;
+	} zcopy;
+
+	struct {
+		/** The callback argument for the outstanding request which this abort
+		 *  attempts to cancel.
+		 */
+		void *bio_cb_arg;
+	} abort;
+
+	struct {
+		/** The offset of next data/hole.  */
+		uint64_t offset;
+	} seek;
+
+	struct {
+		/** Starting source offset (in blocks) of the bdev for copy I/O. */
+		uint64_t src_offset_blocks;
+	} copy;
+};
+
+struct spdk_bdev_io_reset_params {
+	/** Channel reference held while messages for this reset are in progress. */
+	struct spdk_io_channel *ch_ref;
+	struct {
+		/* Handle to timed poller that checks each channel for outstanding IO. */
+		struct spdk_poller *poller;
+		/* Store calculated time value, when a poller should stop its work. */
+		uint64_t  stop_time_tsc;
+	} wait_poller;
+};
+
+struct spdk_bdev_io_abort_params {
+	/** The outstanding request matching bio_cb_arg which this abort attempts to cancel. */
+	struct spdk_bdev_io *bio_to_abort;
+};
+
+struct spdk_bdev_io_nvme_passthru_params {
+	/* The NVMe command to execute */
+	struct spdk_nvme_cmd cmd;
+
+	/* For SG buffer cases, array of iovecs to transfer. */
+	struct iovec *iovs;
+
+	/* For SG buffer cases, number of iovecs in iovec array. */
+	int iovcnt;
+
+	/* The data buffer to transfer */
+	void *buf;
+
+	/* The number of bytes to transfer */
+	size_t nbytes;
+
+	/* The meta data buffer to transfer */
+	void *md_buf;
+
+	/* meta data buffer size to transfer */
+	size_t md_len;
+};
+
+struct spdk_bdev_io_zone_mgmt_params {
+	/* First logical block of a zone */
+	uint64_t zone_id;
+
+	/* Number of zones */
+	uint32_t num_zones;
+
+	/* Used to change zoned device zone state */
+	enum spdk_bdev_zone_action zone_action;
+
+	/* The data buffer */
+	void *buf;
+};
+
 struct spdk_bdev_io {
 	/** The block device that this I/O belongs to. */
 	struct spdk_bdev *bdev;
@@ -805,136 +939,13 @@ struct spdk_bdev_io {
 	/** Array of iovecs used for I/O splitting. */
 	struct iovec child_iov[SPDK_BDEV_IO_NUM_CHILD_IOV];
 
+	/** Parameters filled in by the user */
 	union {
-		struct {
-			/** For SG buffer cases, array of iovecs to transfer. */
-			struct iovec *iovs;
-
-			/** For SG buffer cases, number of iovecs in iovec array. */
-			int iovcnt;
-
-			/** For fused operations such as COMPARE_AND_WRITE, array of iovecs
-			 *  for the second operation.
-			 */
-			struct iovec *fused_iovs;
-
-			/** Number of iovecs in fused_iovs. */
-			int fused_iovcnt;
-
-			/* Metadata buffer */
-			void *md_buf;
-
-			/** Total size of data to be transferred. */
-			uint64_t num_blocks;
-
-			/** Starting offset (in blocks) of the bdev for this I/O. */
-			uint64_t offset_blocks;
-
-			/** Memory domain and its context to be used by bdev modules */
-			struct spdk_memory_domain *memory_domain;
-			void *memory_domain_ctx;
-
-			/* Sequence of accel operations */
-			struct spdk_accel_sequence *accel_sequence;
-
-			/** stored user callback in case we split the I/O and use a temporary callback */
-			spdk_bdev_io_completion_cb stored_user_cb;
-
-			/** number of blocks remaining in a split i/o */
-			uint64_t split_remaining_num_blocks;
-
-			/** current offset of the split I/O in the bdev */
-			uint64_t split_current_offset_blocks;
-
-			/** count of outstanding batched split I/Os */
-			uint32_t split_outstanding;
-
-			/** Specify whether each DIF check type is enabled. */
-			uint32_t dif_check_flags;
-
-			/** defined by \ref spdk_bdev_nvme_cdw12 */
-			union spdk_bdev_nvme_cdw12 nvme_cdw12;
-
-			/** defined by \ref spdk_bdev_nvme_cdw13 */
-			union spdk_bdev_nvme_cdw13 nvme_cdw13;
-
-			struct {
-				/** Whether the buffer should be populated with the real data */
-				uint8_t populate : 1;
-
-				/** Whether the buffer should be committed back to disk */
-				uint8_t commit : 1;
-
-				/** True if this request is in the 'start' phase of zcopy. False if in 'end'. */
-				uint8_t start : 1;
-			} zcopy;
-
-			struct {
-				/** The callback argument for the outstanding request which this abort
-				 *  attempts to cancel.
-				 */
-				void *bio_cb_arg;
-			} abort;
-
-			struct {
-				/** The offset of next data/hole.  */
-				uint64_t offset;
-			} seek;
-
-			struct {
-				/** Starting source offset (in blocks) of the bdev for copy I/O. */
-				uint64_t src_offset_blocks;
-			} copy;
-		} bdev;
-		struct {
-			/** Channel reference held while messages for this reset are in progress. */
-			struct spdk_io_channel *ch_ref;
-			struct {
-				/* Handle to timed poller that checks each channel for outstanding IO. */
-				struct spdk_poller *poller;
-				/* Store calculated time value, when a poller should stop its work. */
-				uint64_t  stop_time_tsc;
-			} wait_poller;
-		} reset;
-		struct {
-			/** The outstanding request matching bio_cb_arg which this abort attempts to cancel. */
-			struct spdk_bdev_io *bio_to_abort;
-		} abort;
-		struct {
-			/* The NVMe command to execute */
-			struct spdk_nvme_cmd cmd;
-
-			/* For SG buffer cases, array of iovecs to transfer. */
-			struct iovec *iovs;
-
-			/* For SG buffer cases, number of iovecs in iovec array. */
-			int iovcnt;
-
-			/* The data buffer to transfer */
-			void *buf;
-
-			/* The number of bytes to transfer */
-			size_t nbytes;
-
-			/* The meta data buffer to transfer */
-			void *md_buf;
-
-			/* meta data buffer size to transfer */
-			size_t md_len;
-		} nvme_passthru;
-		struct {
-			/* First logical block of a zone */
-			uint64_t zone_id;
-
-			/* Number of zones */
-			uint32_t num_zones;
-
-			/* Used to change zoned device zone state */
-			enum spdk_bdev_zone_action zone_action;
-
-			/* The data buffer */
-			void *buf;
-		} zone_mgmt;
+		struct spdk_bdev_io_block_params bdev;
+		struct spdk_bdev_io_reset_params reset;
+		struct spdk_bdev_io_abort_params abort;
+		struct spdk_bdev_io_nvme_passthru_params nvme_passthru;
+		struct spdk_bdev_io_zone_mgmt_params zone_mgmt;
 	} u;
 
 	/**
