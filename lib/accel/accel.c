@@ -2920,4 +2920,18 @@ spdk_accel_get_buf_align(enum spdk_accel_opcode opcode,
 	return spdk_max(modinfo.required_alignment, drvinfo.required_alignment);
 }
 
+struct spdk_accel_module_if *
+spdk_accel_get_module(const char *name)
+{
+	struct spdk_accel_module_if *module;
+
+	TAILQ_FOREACH(module, &spdk_accel_module_list, tailq) {
+		if (strcmp(module->name, name) == 0) {
+			return module;
+		}
+	}
+
+	return NULL;
+}
+
 SPDK_LOG_REGISTER_COMPONENT(accel)
