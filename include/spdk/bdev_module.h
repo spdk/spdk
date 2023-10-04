@@ -933,6 +933,12 @@ struct spdk_bdev_io_internal_fields {
 	/** Current tsc at submit time. Used to calculate latency at completion. */
 	uint64_t submit_tsc;
 
+	/** Entry to the list io_submitted of struct spdk_bdev_channel */
+	TAILQ_ENTRY(spdk_bdev_io) ch_link;
+
+	/** bdev_io pool entry */
+	STAILQ_ENTRY(spdk_bdev_io) buf_link;
+
 	/** Error information from a device */
 	union {
 		struct {
@@ -1018,12 +1024,6 @@ struct spdk_bdev_io_internal_fields {
 	 *  5. queued reset requests.
 	 */
 	TAILQ_ENTRY(spdk_bdev_io) link;
-
-	/** Entry to the list need_buf of struct spdk_bdev. */
-	STAILQ_ENTRY(spdk_bdev_io) buf_link;
-
-	/** Entry to the list io_submitted of struct spdk_bdev_channel */
-	TAILQ_ENTRY(spdk_bdev_io) ch_link;
 
 	/** iobuf queue entry */
 	struct spdk_iobuf_entry iobuf;
