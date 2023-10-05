@@ -12,6 +12,8 @@
 #include "spdk/string.h"
 #include "spdk/log.h"
 
+#define DATA_BUFFER_STRING "Hello world!"
+
 struct ctrlr_entry {
 	struct spdk_nvme_ctrlr		*ctrlr;
 	TAILQ_ENTRY(ctrlr_entry)	link;
@@ -80,13 +82,18 @@ read_complete(void *arg, const struct spdk_nvme_cpl *completion)
 		exit(1);
 	}
 
+	if (strcmp(sequence->buf, DATA_BUFFER_STRING)) {
+		fprintf(stderr, "Read data doesn't match write data\n");
+		exit(1);
+	}
+
 	/*
 	 * The read I/O has completed.  Print the contents of the
 	 *  buffer, free the buffer, then mark the sequence as
 	 *  completed.  This will trigger the hello_world() function
 	 *  to exit its polling loop.
 	 */
-	printf("%s", sequence->buf);
+	printf("%s\n", sequence->buf);
 	spdk_free(sequence->buf);
 }
 
@@ -227,11 +234,11 @@ hello_world(void)
 		}
 
 		/*
-		 * Print "Hello world!" to sequence.buf.  We will write this data to LBA
+		 * Print DATA_BUFFER_STRING to sequence.buf. We will write this data to LBA
 		 *  0 on the namespace, and then later read it back into a separate buffer
 		 *  to demonstrate the full I/O path.
 		 */
-		snprintf(sequence.buf, 0x1000, "%s", "Hello world!\n");
+		snprintf(sequence.buf, 0x1000, "%s", DATA_BUFFER_STRING);
 
 		/*
 		 * Write the data buffer to LBA 0 of this namespace.  "write_complete" and
