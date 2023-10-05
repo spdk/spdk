@@ -186,8 +186,8 @@ nvmf_transport_create_async_done(void *cb_arg, struct spdk_nvmf_transport *trans
 	TAILQ_INIT(&transport->listeners);
 	transport->ops = ctx->ops;
 	transport->opts = ctx->opts;
-	chars_written = snprintf(transport->iobuf_name, MAX_MEMPOOL_NAME_LENGTH, "%s_%s_%s", "spdk_nvmf",
-				 transport->ops->name, "data");
+	chars_written = snprintf(transport->iobuf_name, MAX_MEMPOOL_NAME_LENGTH, "%s_%s", "nvmf",
+				 transport->ops->name);
 	if (chars_written < 0) {
 		SPDK_ERRLOG("Unable to generate transport data buffer pool name.\n");
 		goto err;

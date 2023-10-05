@@ -12038,7 +12038,7 @@ Example response:
       }
     },
     {
-      "module": "spdk_nvmf_TCP_data",
+      "module": "nvmf_TCP",
       "small_pool": {
         "cache": 7,
         "main": 0,
