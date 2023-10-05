@@ -57,6 +57,11 @@ func (c *Client) Call(method string, params any) (*Response, error) {
 			method)
 	}
 
+	if response.Error != nil {
+		return nil, fmt.Errorf("error received for %s method, err: %w",
+			method, response.Error)
+	}
+
 	return response, nil
 }
 
@@ -216,4 +221,9 @@ type Error struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 	Data    any    `json:"data,omitempty"`
+}
+
+// Error returns formatted string of JSON-RPC error.
+func (err *Error) Error() string {
+	return fmt.Sprintf("Code=%d Msg=%s", err.Code, err.Message)
 }
