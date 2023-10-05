@@ -8,7 +8,7 @@ SO_VER := 1
 SO_MINOR := 0
 
 LIBNAME = accel_error
-C_SRCS = accel_error.c
+C_SRCS = accel_error.c accel_error_rpc.c
 
 SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
 

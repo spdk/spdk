@@ -2,12 +2,21 @@
  * Copyright (C) 2023 Intel Corporation. All rights reserved.
  */
 
+#include "accel_error.h"
 #include "spdk/accel.h"
 #include "spdk/accel_module.h"
 #include "spdk/thread.h"
 
+struct accel_error_inject_info {
+	/* Error injection options */
+	struct accel_error_inject_opts	opts;
+	/* Number of errors already injected on this channel */
+	uint64_t			count;
+};
+
 struct accel_error_channel {
-	struct spdk_io_channel *swch;
+	struct spdk_io_channel		*swch;
+	struct accel_error_inject_info	injects[SPDK_ACCEL_OPC_LAST];
 };
 
 struct accel_error_task {
@@ -16,6 +25,7 @@ struct accel_error_task {
 };
 
 static struct spdk_accel_module_if *g_sw_module;
+static struct accel_error_inject_opts g_injects[SPDK_ACCEL_OPC_LAST];
 static size_t g_task_offset;
 
 static struct accel_error_task *
@@ -49,14 +59,58 @@ accel_error_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *tas
 	return g_sw_module->submit_tasks(errch->swch, task);
 }
 
+static void
+accel_error_inject_channel(struct spdk_io_channel_iter *iter)
+{
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(iter);
+	struct accel_error_channel *errch = spdk_io_channel_get_ctx(ch);
+	struct accel_error_inject_opts *opts = spdk_io_channel_iter_get_ctx(iter);
+	struct accel_error_inject_info *info = &errch->injects[opts->opcode];
+
+	info->count = 0;
+	memcpy(&info->opts, opts, sizeof(info->opts));
+
+	spdk_for_each_channel_continue(iter, 0);
+}
+
+static bool accel_error_supports_opcode(enum spdk_accel_opcode opcode);
+
+int
+accel_error_inject_error(struct accel_error_inject_opts *opts)
+{
+	struct accel_error_inject_opts *curr = &g_injects[opts->opcode];
+
+	if (!accel_error_supports_opcode(opts->opcode)) {
+		return -EINVAL;
+	}
+
+	memcpy(curr, opts, sizeof(*opts));
+	if (curr->type == ACCEL_ERROR_INJECT_DISABLE) {
+		curr->count = 0;
+	}
+	if (curr->count == 0) {
+		curr->type = ACCEL_ERROR_INJECT_DISABLE;
+	}
+
+	spdk_for_each_channel(&g_sw_module, accel_error_inject_channel, curr, NULL);
+
+	return 0;
+}
+
 static int
 accel_error_channel_create_cb(void *io_device, void *ctx)
 {
 	struct accel_error_channel *errch = ctx;
+	size_t i;
 
 	errch->swch = g_sw_module->get_io_channel();
 	if (errch->swch == NULL) {
 		return -ENOMEM;
+	}
+
+	for (i = 0; i < SPDK_COUNTOF(errch->injects); ++i) {
+		memcpy(&errch->injects[i].opts, &g_injects[i], sizeof(g_injects[i]));
+		errch->injects[i].count = 0;
 	}
 
 	return 0;
@@ -116,6 +170,22 @@ static size_t
 accel_error_get_ctx_size(void)
 {
 	return g_task_offset + sizeof(struct accel_error_task);
+}
+
+const char *
+accel_error_get_type_name(enum accel_error_inject_type type)
+{
+	const char *typenames[] = {
+		[ACCEL_ERROR_INJECT_DISABLE] = "disable",
+		[ACCEL_ERROR_INJECT_CORRUPT] = "corrupt",
+		[ACCEL_ERROR_INJECT_MAX] = NULL
+	};
+
+	if ((int)type >= ACCEL_ERROR_INJECT_MAX) {
+		return NULL;
+	}
+
+	return typenames[type];
 }
 
 static struct spdk_accel_module_if g_accel_error_module = {

@@ -116,3 +116,13 @@ def accel_get_stats(client):
     """Get accel framework's statistics"""
 
     return client.call('accel_get_stats')
+
+
+def accel_error_inject_error(client, opcode, type, count=None):
+    """Inject an error to processing accel operation"""
+    params = {}
+    if count is not None:
+        params['count'] = count
+
+    return client.call('accel_error_inject_error',
+                       {'opcode': opcode, 'type': type, **params})

@@ -449,6 +449,7 @@ Example response:
     "accel_assign_opc",
     "accel_get_module_info",
     "accel_get_opc_assignments",
+    "accel_error_inject_error",
     "ioat_scan_accel_module",
     "dsa_scan_accel_module",
     "dpdk_cryptodev_scan_accel_module",
@@ -2033,6 +2034,44 @@ Example response:
       }
     ]
   }
+}
+~~~
+
+### accel_error_inject_error {#rpc_accel_error_inject_error}
+
+Inject an error to execution of a given operation.  Note, that in order for the errors to be
+actually injected, the error module must be assigned to that operation via `accel_assign_opc`.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- |----------| ----------- | -----------------
+opcode                  | Required | string      | Operation to inject errors.
+type                    | Required | string      | Type of errors to inject ("corrupt": corrupt the data, "disable": disable error injection).
+count                   | Optional | number      | Numbers of errors to inject on each IO channel (`UINT64_MAX` by default).
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "method": "accel_error_inject_error",
+  "params": {
+    "opcode": "crc32c",
+    "type": "corrupt",
+    "count": 10000
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
 }
 ~~~
 

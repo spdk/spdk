@@ -3081,6 +3081,20 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-r', '--num-requests', type=int, help='Size of the shared requests pool')
     p.set_defaults(func=mlx5_scan_accel_module)
 
+    # accel_error
+    def accel_error_inject_error(args):
+        rpc.accel.accel_error_inject_error(args.client, opcode=args.opcode,
+                                           type=args.type, count=args.count)
+
+    p = subparsers.add_parser('accel_error_inject_error',
+                              help='Inject an error to processing accel operation')
+    p.add_argument('-o', '--opcode', help='Opcode')
+    p.add_argument('-t', '--type',
+                   help='Error type ("corrupt": corrupt the data, "disable": disable error injection)')
+    p.add_argument('-c', '--count', type=int,
+                   help='Number of errors to inject on each IO channel (0 to disable error injection)')
+    p.set_defaults(func=accel_error_inject_error)
+
     # opal
     def bdev_nvme_opal_init(args):
         rpc.nvme.bdev_nvme_opal_init(args.client,

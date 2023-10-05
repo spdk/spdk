@@ -105,7 +105,7 @@ DEPDIRS-accel_dsa := log idxd thread $(JSON_LIBS) accel trace
 DEPDIRS-accel_iaa := log idxd thread $(JSON_LIBS) accel trace
 DEPDIRS-accel_dpdk_cryptodev := log thread $(JSON_LIBS) accel util
 DEPDIRS-accel_dpdk_compressdev := log thread $(JSON_LIBS) accel util
-DEPDIRS-accel_error := accel thread
+DEPDIRS-accel_error := accel $(JSON_LIBS) thread util
 
 ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
 DEPDIRS-accel_mlx5 := accel thread log mlx5 rdma util
