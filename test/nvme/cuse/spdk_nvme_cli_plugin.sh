@@ -21,6 +21,7 @@ nvme() {
 			-e 's#-subsys##g' \
 			-e 's#PCIE#pcie#g' \
 			-e 's#(null)#live#g'
+	((PIPESTATUS[0] == 0))
 }
 
 kernel_out=()
