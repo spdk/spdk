@@ -5,6 +5,7 @@
 #include "accel_error.h"
 #include "spdk/accel.h"
 #include "spdk/accel_module.h"
+#include "spdk/json.h"
 #include "spdk/thread.h"
 
 struct accel_error_inject_info {
@@ -188,6 +189,28 @@ accel_error_get_type_name(enum accel_error_inject_type type)
 	return typenames[type];
 }
 
+static void
+accel_error_write_config_json(struct spdk_json_write_ctx *w)
+{
+	struct accel_error_inject_opts *opts;
+	int opcode;
+
+	for (opcode = 0; opcode < SPDK_ACCEL_OPC_LAST; ++opcode) {
+		opts = &g_injects[opcode];
+		if (opts->type == ACCEL_ERROR_INJECT_DISABLE) {
+			continue;
+		}
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "method", "accel_error_inject_error");
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "opcode", spdk_accel_get_opcode_name(opcode));
+		spdk_json_write_named_string(w, "type", accel_error_get_type_name(opts->type));
+		spdk_json_write_named_uint64(w, "count", opts->count);
+		spdk_json_write_object_end(w);
+		spdk_json_write_object_end(w);
+	}
+}
+
 static struct spdk_accel_module_if g_accel_error_module = {
 	.name			= "error",
 	.priority		= INT_MIN,
@@ -197,5 +220,6 @@ static struct spdk_accel_module_if g_accel_error_module = {
 	.get_ctx_size		= accel_error_get_ctx_size,
 	.get_io_channel		= accel_error_get_io_channel,
 	.submit_tasks		= accel_error_submit_tasks,
+	.write_config_json	= accel_error_write_config_json,
 };
 SPDK_ACCEL_MODULE_REGISTER(error, &g_accel_error_module)
