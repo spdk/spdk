@@ -21,6 +21,7 @@ struct accel_error_channel {
 };
 
 struct accel_error_task {
+	struct accel_error_channel	*ch;
 	spdk_accel_completion_cb	cb_fn;
 	void				*cb_arg;
 };
@@ -36,12 +37,39 @@ accel_error_get_task_ctx(struct spdk_accel_task *task)
 }
 
 static void
+accel_error_corrupt_task(struct spdk_accel_task *task)
+{
+	switch (task->op_code) {
+	case SPDK_ACCEL_OPC_CRC32C:
+		*task->crc_dst += 1;
+		break;
+	default:
+		break;
+	}
+}
+
+static void
 accel_error_task_complete_cb(void *arg, int status)
 {
 	struct spdk_accel_task *task = arg;
 	struct accel_error_task *errtask = accel_error_get_task_ctx(task);
+	struct accel_error_channel *ch = errtask->ch;
+	struct accel_error_inject_info *info = &ch->injects[task->op_code];
 	spdk_accel_completion_cb cb_fn = errtask->cb_fn;
 	void *cb_arg = errtask->cb_arg;
+
+	info->count++;
+	if (info->count <= info->opts.count) {
+		switch (info->opts.type) {
+		case ACCEL_ERROR_INJECT_CORRUPT:
+			accel_error_corrupt_task(task);
+			break;
+		default:
+			break;
+		}
+	} else {
+		info->opts.type = ACCEL_ERROR_INJECT_DISABLE;
+	}
 
 	cb_fn(cb_arg, status);
 }
@@ -52,6 +80,7 @@ accel_error_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *tas
 	struct accel_error_channel *errch = spdk_io_channel_get_ctx(ch);
 	struct accel_error_task *errtask = accel_error_get_task_ctx(task);
 
+	errtask->ch = errch;
 	errtask->cb_fn = task->cb_fn;
 	errtask->cb_arg = task->cb_arg;
 	task->cb_fn = accel_error_task_complete_cb;
@@ -158,7 +187,12 @@ accel_error_module_fini(void *unused)
 static bool
 accel_error_supports_opcode(enum spdk_accel_opcode opcode)
 {
-	return false;
+	switch (opcode) {
+	case SPDK_ACCEL_OPC_CRC32C:
+		return true;
+	default:
+		return false;
+	}
 }
 
 static struct spdk_io_channel *
