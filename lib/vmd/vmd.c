@@ -1264,7 +1264,7 @@ vmd_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	uint32_t cmd_reg = 0;
 	char bdf[32] = {0};
 	struct vmd_container *vmd_c = ctx;
-	size_t i;
+	struct vmd_adapter *vmd = &vmd_c->vmd[vmd_c->count];
 
 	spdk_pci_device_cfg_read32(pci_dev, &cmd_reg, 4);
 	cmd_reg |= 0x6;                      /* PCI bus master/memory enable. */
@@ -1274,27 +1274,24 @@ vmd_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	SPDK_INFOLOG(vmd, "Found a VMD[ %d ] at %s\n", vmd_c->count, bdf);
 
 	/* map vmd bars */
-	i = vmd_c->count;
-	vmd_c->vmd[i].pci = pci_dev;
-	vmd_c->vmd[i].vmd_index = i;
-	vmd_c->vmd[i].domain =
-		(pci_dev->addr.bus << 16) | (pci_dev->addr.dev << 8) | pci_dev->addr.func;
-	TAILQ_INIT(&vmd_c->vmd[i].bus_list);
+	vmd->pci = pci_dev;
+	vmd->vmd_index = vmd_c->count;
+	vmd->domain = (pci_dev->addr.bus << 16) | (pci_dev->addr.dev << 8) | pci_dev->addr.func;
+	TAILQ_INIT(&vmd->bus_list);
 
-	if (vmd_domain_map_bars(&vmd_c->vmd[i]) != 0) {
+	if (vmd_domain_map_bars(vmd) != 0) {
 		return -1;
 	}
 
 	SPDK_INFOLOG(vmd, "vmd config bar(%p) vaddr(%p) size(%x)\n",
-		     (void *)vmd_c->vmd[i].cfgbar, (void *)vmd_c->vmd[i].cfg_vaddr,
-		     (uint32_t)vmd_c->vmd[i].cfgbar_size);
+		     (void *)vmd->cfgbar, (void *)vmd->cfg_vaddr,
+		     (uint32_t)vmd->cfgbar_size);
 	SPDK_INFOLOG(vmd, "vmd mem bar(%p) vaddr(%p) size(%x)\n",
-		     (void *)vmd_c->vmd[i].membar, (void *)vmd_c->vmd[i].mem_vaddr,
-		     (uint32_t)vmd_c->vmd[i].membar_size);
+		     (void *)vmd->membar, (void *)vmd->mem_vaddr,
+		     (uint32_t)vmd->membar_size);
 
-	vmd_c->count = i + 1;
-
-	vmd_enumerate_devices(&vmd_c->vmd[i]);
+	vmd_c->count++;
+	vmd_enumerate_devices(vmd);
 
 	return 0;
 }
