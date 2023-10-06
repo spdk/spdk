@@ -1131,11 +1131,17 @@ shutdown_cb(void)
 	struct worker_thread *worker;
 
 	pthread_mutex_lock(&g_workers_lock);
+	if (!g_workers) {
+		spdk_app_stop(1);
+		goto unlock;
+	}
+
 	worker = g_workers;
 	while (worker) {
 		spdk_thread_send_msg(worker->thread, worker_shutdown, worker);
 		worker = worker->next;
 	}
+unlock:
 	pthread_mutex_unlock(&g_workers_lock);
 }
 
