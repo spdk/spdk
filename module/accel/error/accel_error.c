@@ -64,6 +64,9 @@ accel_error_task_complete_cb(void *arg, int status)
 		case ACCEL_ERROR_INJECT_CORRUPT:
 			accel_error_corrupt_task(task);
 			break;
+		case ACCEL_ERROR_INJECT_FAILURE:
+			status = info->opts.errcode;
+			break;
 		default:
 			break;
 		}
@@ -213,6 +216,7 @@ accel_error_get_type_name(enum accel_error_inject_type type)
 	const char *typenames[] = {
 		[ACCEL_ERROR_INJECT_DISABLE] = "disable",
 		[ACCEL_ERROR_INJECT_CORRUPT] = "corrupt",
+		[ACCEL_ERROR_INJECT_FAILURE] = "failure",
 		[ACCEL_ERROR_INJECT_MAX] = NULL
 	};
 

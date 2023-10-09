@@ -10,6 +10,7 @@
 enum accel_error_inject_type {
 	ACCEL_ERROR_INJECT_DISABLE,
 	ACCEL_ERROR_INJECT_CORRUPT,
+	ACCEL_ERROR_INJECT_FAILURE,
 	ACCEL_ERROR_INJECT_MAX,
 };
 
@@ -17,6 +18,7 @@ struct accel_error_inject_opts {
 	enum spdk_accel_opcode		opcode;
 	enum accel_error_inject_type	type;
 	uint64_t			count;
+	int				errcode;
 };
 
 int accel_error_inject_error(struct accel_error_inject_opts *opts);

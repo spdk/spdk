@@ -2047,8 +2047,9 @@ actually injected, the error module must be assigned to that operation via `acce
 Name                    | Optional | Type        | Description
 ----------------------- |----------| ----------- | -----------------
 opcode                  | Required | string      | Operation to inject errors.
-type                    | Required | string      | Type of errors to inject ("corrupt": corrupt the data, "disable": disable error injection).
+type                    | Required | string      | Type of errors to inject ("corrupt": corrupt the data, "failure": fail the operation, "disable": disable error injection).
 count                   | Optional | number      | Numbers of errors to inject on each IO channel (`UINT64_MAX` by default).
+errcode                 | Optional | number      | Error code to inject (only relevant for type=failure).
 
 #### Example
 
