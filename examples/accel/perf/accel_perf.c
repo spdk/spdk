@@ -693,9 +693,11 @@ dump_result(void)
 	uint64_t total_miscompared = 0;
 	uint64_t total_xfer_per_sec, total_bw_in_MiBps;
 	struct worker_thread *worker = g_workers;
+	char tmp[64];
 
-	printf("\nCore,Thread   Transfers     Bandwidth     Failed     Miscompares\n");
-	printf("------------------------------------------------------------------------\n");
+	printf("\n%-12s %20s %16s %16s %16s\n",
+	       "Core,Thread", "Transfers", "Bandwidth", "Failed", "Miscompares");
+	printf("------------------------------------------------------------------------------------\n");
 	while (worker != NULL) {
 
 		uint64_t xfer_per_sec = worker->stats.executed / g_time_in_sec;
@@ -706,10 +708,11 @@ dump_result(void)
 		total_failed += worker->xfer_failed;
 		total_miscompared += worker->injected_miscompares;
 
+		snprintf(tmp, sizeof(tmp), "%u,%u", worker->display.core, worker->display.thread);
 		if (xfer_per_sec) {
-			printf("%u,%u%17" PRIu64 "/s%9" PRIu64 " MiB/s%7" PRIu64 " %11" PRIu64 "\n",
-			       worker->display.core, worker->display.thread, xfer_per_sec,
-			       bw_in_MiBps, worker->xfer_failed, worker->injected_miscompares);
+			printf("%-12s %18" PRIu64 "/s %10" PRIu64 " MiB/s %16"PRIu64 " %16" PRIu64 "\n",
+			       tmp, xfer_per_sec, bw_in_MiBps, worker->xfer_failed,
+			       worker->injected_miscompares);
 		}
 
 		worker = worker->next;
@@ -719,9 +722,9 @@ dump_result(void)
 	total_bw_in_MiBps = (total_completed * g_xfer_size_bytes) /
 			    (g_time_in_sec * 1024 * 1024);
 
-	printf("=========================================================================\n");
-	printf("Total:%15" PRIu64 "/s%9" PRIu64 " MiB/s%6" PRIu64 " %11" PRIu64"\n\n",
-	       total_xfer_per_sec, total_bw_in_MiBps, total_failed, total_miscompared);
+	printf("====================================================================================\n");
+	printf("%-12s %18" PRIu64 "/s %10" PRIu64 " MiB/s %16"PRIu64 " %16" PRIu64 "\n",
+	       "Total", total_xfer_per_sec, total_bw_in_MiBps, total_failed, total_miscompared);
 
 	return total_failed ? 1 : 0;
 }
