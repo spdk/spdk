@@ -2049,6 +2049,7 @@ Name                    | Optional | Type        | Description
 opcode                  | Required | string      | Operation to inject errors.
 type                    | Required | string      | Type of errors to inject ("corrupt": corrupt the data, "failure": fail the operation, "disable": disable error injection).
 count                   | Optional | number      | Numbers of errors to inject on each IO channel (`UINT64_MAX` by default).
+interval                | Optional | number      | Interval between injections.
 errcode                 | Optional | number      | Error code to inject (only relevant for type=failure).
 
 #### Example
@@ -2061,7 +2062,8 @@ Example request:
   "params": {
     "opcode": "crc32c",
     "type": "corrupt",
-    "count": 10000
+    "count": 10000,
+    "interval": 8
   }
 }
 ~~~

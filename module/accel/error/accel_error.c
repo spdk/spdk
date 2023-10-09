@@ -13,6 +13,8 @@ struct accel_error_inject_info {
 	struct accel_error_inject_opts	opts;
 	/* Number of errors already injected on this channel */
 	uint64_t			count;
+	/* Number of operations executed since last error injection */
+	uint64_t			interval;
 };
 
 struct accel_error_channel {
@@ -58,20 +60,25 @@ accel_error_task_complete_cb(void *arg, int status)
 	spdk_accel_completion_cb cb_fn = errtask->cb_fn;
 	void *cb_arg = errtask->cb_arg;
 
-	info->count++;
-	if (info->count <= info->opts.count) {
-		switch (info->opts.type) {
-		case ACCEL_ERROR_INJECT_CORRUPT:
-			accel_error_corrupt_task(task);
-			break;
-		case ACCEL_ERROR_INJECT_FAILURE:
-			status = info->opts.errcode;
-			break;
-		default:
-			break;
+	info->interval++;
+	if (info->interval >= info->opts.interval) {
+		info->interval = 0;
+		info->count++;
+
+		if (info->count <= info->opts.count) {
+			switch (info->opts.type) {
+			case ACCEL_ERROR_INJECT_CORRUPT:
+				accel_error_corrupt_task(task);
+				break;
+			case ACCEL_ERROR_INJECT_FAILURE:
+				status = info->opts.errcode;
+				break;
+			default:
+				break;
+			}
+		} else {
+			info->opts.type = ACCEL_ERROR_INJECT_DISABLE;
 		}
-	} else {
-		info->opts.type = ACCEL_ERROR_INJECT_DISABLE;
 	}
 
 	cb_fn(cb_arg, status);
@@ -244,6 +251,7 @@ accel_error_write_config_json(struct spdk_json_write_ctx *w)
 		spdk_json_write_named_string(w, "opcode", spdk_accel_get_opcode_name(opcode));
 		spdk_json_write_named_string(w, "type", accel_error_get_type_name(opts->type));
 		spdk_json_write_named_uint64(w, "count", opts->count);
+		spdk_json_write_named_uint64(w, "interval", opts->interval);
 		spdk_json_write_object_end(w);
 		spdk_json_write_object_end(w);
 	}

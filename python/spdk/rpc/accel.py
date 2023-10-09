@@ -118,11 +118,13 @@ def accel_get_stats(client):
     return client.call('accel_get_stats')
 
 
-def accel_error_inject_error(client, opcode, type, count=None, errcode=None):
+def accel_error_inject_error(client, opcode, type, count=None, interval=None, errcode=None):
     """Inject an error to processing accel operation"""
     params = {}
     if count is not None:
         params['count'] = count
+    if interval is not None:
+        params['interval'] = interval
     if errcode is not None:
         params['errcode'] = errcode
 

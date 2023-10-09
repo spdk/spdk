@@ -18,6 +18,7 @@ struct accel_error_inject_opts {
 	enum spdk_accel_opcode		opcode;
 	enum accel_error_inject_type	type;
 	uint64_t			count;
+	uint64_t			interval;
 	int				errcode;
 };
 

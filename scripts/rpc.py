@@ -3085,7 +3085,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def accel_error_inject_error(args):
         rpc.accel.accel_error_inject_error(args.client, opcode=args.opcode,
                                            type=args.type, count=args.count,
-                                           errcode=args.errcode)
+                                           interval=args.interval, errcode=args.errcode)
 
     p = subparsers.add_parser('accel_error_inject_error',
                               help='Inject an error to processing accel operation')
@@ -3094,6 +3094,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    help='Error type ("corrupt": corrupt the data, "failure": fail the operation, "disable": disable error injection)')
     p.add_argument('-c', '--count', type=int,
                    help='Number of errors to inject on each IO channel (0 to disable error injection)')
+    p.add_argument('-i', '--interval', type=int, help='Interval between injections')
     p.add_argument('--errcode', type=int, help='Error code to inject (only relevant for type=failure)')
     p.set_defaults(func=accel_error_inject_error)
 

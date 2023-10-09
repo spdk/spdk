@@ -64,6 +64,7 @@ static const struct spdk_json_object_decoder rpc_accel_error_inject_error_decode
 	{"opcode", offsetof(struct accel_error_inject_opts, opcode), rpc_accel_error_decode_opcode},
 	{"type", offsetof(struct accel_error_inject_opts, type), rpc_accel_error_decode_type},
 	{"count", offsetof(struct accel_error_inject_opts, count), spdk_json_decode_uint64, true},
+	{"interval", offsetof(struct accel_error_inject_opts, interval), spdk_json_decode_uint64, true},
 	{"errcode", offsetof(struct accel_error_inject_opts, errcode), spdk_json_decode_int32, true},
 };
 
