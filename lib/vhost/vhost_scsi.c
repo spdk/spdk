@@ -1454,10 +1454,12 @@ destroy_session_poller_cb(void *arg)
 
 		if (prev_status == VHOST_SCSI_DEV_REMOVING) {
 			/* try to detach it globally */
+			pthread_mutex_unlock(&user_dev->lock);
 			vhost_user_dev_foreach_session(vsession->vdev,
 						       vhost_scsi_session_process_removed,
 						       vhost_scsi_dev_process_removed_cpl_cb,
 						       (void *)(uintptr_t)i);
+			pthread_mutex_lock(&user_dev->lock);
 		}
 	}
 
