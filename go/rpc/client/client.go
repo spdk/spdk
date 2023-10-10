@@ -23,11 +23,19 @@ const (
 	TCP = "tcp"
 )
 
+// Client interface mostly for mockery auto-generation
+type IClient interface {
+	Call(method string, params any) (*Response, error)
+}
+
 // Client represents JSON-RPC 2.0 client.
 type Client struct {
 	codec     *jsonCodec
 	requestId atomic.Uint64
 }
+
+// build time check that struct implements interface
+var _ IClient = (*Client)(nil)
 
 // Call method sends a JSON-RPC 2.0 request to a specified address (provided during client creation).
 func (c *Client) Call(method string, params any) (*Response, error) {
