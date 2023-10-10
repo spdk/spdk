@@ -1083,6 +1083,17 @@ enable_device_vq(struct spdk_vhost_session *vsession, uint16_t qid)
 		return rc;
 	}
 
+	/*
+	 * This shouldn't harm guest since spurious interrupts should be ignored by
+	 * guest virtio driver.
+	 *
+	 * Make sure a successful call of `rte_vhost_vring_call` will happen after
+	 * restarting the device.
+	 */
+	if (vsession->needs_restart) {
+		q->used_req_cnt += 1;
+	}
+
 	if (packed_ring) {
 		/* Since packed ring flag is already negociated between SPDK and VM, VM doesn't
 		 * restore `last_avail_idx` and `last_used_idx` for packed ring, so use the
@@ -1572,12 +1583,12 @@ extern_vhost_post_msg_handler(int vid, void *_msg)
 		vhost_register_memtable_if_required(vsession, vid);
 		pthread_mutex_lock(&user_dev->lock);
 		if (vsession->needs_restart) {
-			vsession->needs_restart = false;
 			pthread_mutex_unlock(&user_dev->lock);
 			for (qid = 0; qid < vsession->original_max_queues; qid++) {
 				enable_device_vq(vsession, qid);
 			}
 			vsession->original_max_queues = 0;
+			vsession->needs_restart = false;
 			g_spdk_vhost_ops.new_device(vid);
 			break;
 		}
