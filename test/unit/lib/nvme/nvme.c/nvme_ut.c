@@ -591,7 +591,8 @@ test_nvme_user_copy_cmd_complete(void)
 	struct nvme_request req;
 	int test_data = 0xdeadbeef;
 	int buff_size = sizeof(int);
-	void *buff;
+	void *user_buffer, *buff;
+	int user_cb_arg = 0x123;
 	static struct spdk_nvme_cpl cpl;
 
 	memset(&req, 0, sizeof(req));
@@ -599,11 +600,18 @@ test_nvme_user_copy_cmd_complete(void)
 
 	/* test without a user buffer provided */
 	req.user_cb_fn = (void *)dummy_cb;
+	req.user_cb_arg = (void *)&user_cb_arg;
 	nvme_user_copy_cmd_complete(&req, &cpl);
 	CU_ASSERT(memcmp(&ut_spdk_nvme_cpl, &cpl, sizeof(cpl)) == 0);
+	CU_ASSERT(req.user_cb_fn == NULL);
+	CU_ASSERT(req.user_cb_arg == NULL);
+	CU_ASSERT(req.user_buffer == NULL);
 
 	/* test with a user buffer provided */
-	req.user_buffer = malloc(buff_size);
+	user_buffer = malloc(buff_size);
+	req.user_cb_fn = (void *)dummy_cb;
+	req.user_cb_arg = (void *)&user_cb_arg;
+	req.user_buffer = user_buffer;
 	SPDK_CU_ASSERT_FATAL(req.user_buffer != NULL);
 	memset(req.user_buffer, 0, buff_size);
 	req.payload_size = buff_size;
@@ -618,14 +626,20 @@ test_nvme_user_copy_cmd_complete(void)
 	memset(&ut_spdk_nvme_cpl, 0, sizeof(ut_spdk_nvme_cpl));
 
 	nvme_user_copy_cmd_complete(&req, &cpl);
-	CU_ASSERT(memcmp(req.user_buffer, &test_data, buff_size) == 0);
+	CU_ASSERT(memcmp(user_buffer, &test_data, buff_size) == 0);
 	CU_ASSERT(memcmp(&ut_spdk_nvme_cpl, &cpl, sizeof(cpl)) == 0);
+	CU_ASSERT(req.user_cb_fn == NULL);
+	CU_ASSERT(req.user_cb_arg == NULL);
+	CU_ASSERT(req.user_buffer == NULL);
 
 	/*
 	 * Now test the same path as above but this time choose an opc
 	 * that results in a different data transfer type.
 	 */
 	memset(&ut_spdk_nvme_cpl, 0, sizeof(ut_spdk_nvme_cpl));
+	req.user_cb_fn = (void *)dummy_cb;
+	req.user_cb_arg = (void *)&user_cb_arg;
+	req.user_buffer = user_buffer;
 	memset(req.user_buffer, 0, buff_size);
 	buff = spdk_zmalloc(buff_size, 0x100, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	SPDK_CU_ASSERT_FATAL(buff != NULL);
@@ -633,11 +647,14 @@ test_nvme_user_copy_cmd_complete(void)
 	memcpy(buff, &test_data, buff_size);
 	req.cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
 	nvme_user_copy_cmd_complete(&req, &cpl);
-	CU_ASSERT(memcmp(req.user_buffer, &test_data, buff_size) != 0);
+	CU_ASSERT(memcmp(user_buffer, &test_data, buff_size) != 0);
 	CU_ASSERT(memcmp(&ut_spdk_nvme_cpl, &cpl, sizeof(cpl)) == 0);
+	CU_ASSERT(req.user_cb_fn == NULL);
+	CU_ASSERT(req.user_cb_arg == NULL);
+	CU_ASSERT(req.user_buffer == NULL);
 
 	/* clean up */
-	free(req.user_buffer);
+	free(user_buffer);
 }
 
 static void

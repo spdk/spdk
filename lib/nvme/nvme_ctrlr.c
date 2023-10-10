@@ -3378,9 +3378,7 @@ nvme_ctrlr_cleanup_process(struct spdk_nvme_ctrlr_process *proc)
 		STAILQ_REMOVE(&proc->active_reqs, req, nvme_request, stailq);
 
 		assert(req->pid == proc->pid);
-		if (req->user_buffer && req->payload_size) {
-			spdk_free(req->payload.contig_or_cb_arg);
-		}
+		nvme_cleanup_user_req(req);
 		nvme_free_request(req);
 	}
 

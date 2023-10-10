@@ -393,10 +393,12 @@ static void
 nvme_user_copy_cmd_complete(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_request *req = arg;
+	spdk_nvme_cmd_cb user_cb_fn;
+	void *user_cb_arg;
 	enum spdk_nvme_data_transfer xfer;
 
 	if (req->user_buffer && req->payload_size) {
-		/* Copy back to the user buffer and free the contig buffer */
+		/* Copy back to the user buffer */
 		assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
 		xfer = spdk_nvme_opc_get_data_transfer(req->cmd.opc);
 		if (xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST ||
@@ -404,12 +406,15 @@ nvme_user_copy_cmd_complete(void *arg, const struct spdk_nvme_cpl *cpl)
 			assert(req->pid == getpid());
 			memcpy(req->user_buffer, req->payload.contig_or_cb_arg, req->payload_size);
 		}
-
-		spdk_free(req->payload.contig_or_cb_arg);
 	}
 
+	user_cb_fn = req->user_cb_fn;
+	user_cb_arg = req->user_cb_arg;
+	nvme_cleanup_user_req(req);
+
 	/* Call the user's original callback now that the buffer has been copied */
-	req->user_cb_fn(req->user_cb_arg, cpl);
+	user_cb_fn(user_cb_arg, cpl);
+
 }
 
 /**

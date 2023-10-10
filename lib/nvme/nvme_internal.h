@@ -1410,6 +1410,18 @@ nvme_complete_request(spdk_nvme_cmd_cb cb_fn, void *cb_arg, struct spdk_nvme_qpa
 }
 
 static inline void
+nvme_cleanup_user_req(struct nvme_request *req)
+{
+	if (req->user_buffer && req->payload_size) {
+		spdk_free(req->payload.contig_or_cb_arg);
+		req->user_buffer = NULL;
+	}
+
+	req->user_cb_arg = NULL;
+	req->user_cb_fn = NULL;
+}
+
+static inline void
 nvme_qpair_set_state(struct spdk_nvme_qpair *qpair, enum nvme_qpair_state state)
 {
 	qpair->state = state;
