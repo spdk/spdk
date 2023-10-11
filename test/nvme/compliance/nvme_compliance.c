@@ -1458,7 +1458,7 @@ init(void *cb_arg)
 	int rc;
 
 	if (g_trid_str == NULL) {
-		fprintf(stderr, "-t <trid> not specified\n");
+		fprintf(stderr, "-r <trid> not specified\n");
 		return -EINVAL;
 	}
 
