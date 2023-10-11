@@ -13,6 +13,7 @@
 #include "spdk/crc32.h"
 #include "spdk/util.h"
 #include "spdk/xor.h"
+#include "spdk/dif.h"
 
 #define DATA_PATTERN 0x5a
 #define ALIGN_4K 0x1000
@@ -22,6 +23,8 @@ static uint64_t	g_tsc_rate;
 static uint64_t g_tsc_end;
 static int g_rc;
 static int g_xfer_size_bytes = 4096;
+static int g_block_size_bytes = 512;
+static int g_md_size_bytes = 8;
 static int g_queue_depth = 32;
 /* g_allocate_depth indicates how many tasks we allocate per worker. It will
  * be at least as much as the queue depth.
@@ -83,6 +86,9 @@ struct ap_task {
 	struct ap_compress_seg *cur_seg;
 	struct worker_thread	*worker;
 	int			expected_status; /* used for the compare operation */
+	uint32_t		num_blocks; /* used for the DIF related operations */
+	struct spdk_dif_ctx	dif_ctx;
+	struct spdk_dif_error	dif_err;
 	TAILQ_ENTRY(ap_task)	link;
 };
 
@@ -129,13 +135,18 @@ dump_user_config(void)
 	} else if (g_workload_selection == SPDK_ACCEL_OPC_XOR) {
 		printf("Source buffers: %u\n", g_xor_src_count);
 	}
-	if (g_workload_selection == SPDK_ACCEL_OPC_COPY_CRC32C) {
+	if (g_workload_selection == SPDK_ACCEL_OPC_COPY_CRC32C ||
+	    g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY) {
 		printf("Vector size:    %u bytes\n", g_xfer_size_bytes);
 		printf("Transfer size:  %u bytes\n", g_xfer_size_bytes * g_chained_count);
 	} else {
 		printf("Transfer size:  %u bytes\n", g_xfer_size_bytes);
 	}
-	printf("vector count    %u\n", g_chained_count);
+	if (g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY) {
+		printf("Block size:     %u bytes\n", g_block_size_bytes);
+		printf("Metadata size:  %u bytes\n", g_md_size_bytes);
+	}
+	printf("Vector count    %u\n", g_chained_count);
 	printf("Module:         %s\n", module_name);
 	if (g_workload_selection == SPDK_ACCEL_OPC_COMPRESS ||
 	    g_workload_selection == SPDK_ACCEL_OPC_DECOMPRESS) {
@@ -158,7 +169,7 @@ usage(void)
 	printf("\t[-T number of threads per core\n");
 	printf("\t[-o transfer size in bytes (default: 4KiB. For compress/decompress, 0 means the input file size)]\n");
 	printf("\t[-t time in seconds]\n");
-	printf("\t[-w workload type must be one of these: copy, fill, crc32c, copy_crc32c, compare, compress, decompress, dualcast, xor\n");
+	printf("\t[-w workload type must be one of these: copy, fill, crc32c, copy_crc32c, compare, compress, decompress, dualcast, xor, dif_verify\n");
 	printf("\t[-M assign module to the operation, not compatible with accel_assign_opc RPC\n");
 	printf("\t[-l for compress/decompress workloads, name of uncompressed input file\n");
 	printf("\t[-S for crc32c workload, use this seed value (default 0)\n");
@@ -254,6 +265,8 @@ parse_args(int ch, char *arg)
 			g_workload_selection = SPDK_ACCEL_OPC_DECOMPRESS;
 		} else if (!strcmp(g_workload_type, "xor")) {
 			g_workload_selection = SPDK_ACCEL_OPC_XOR;
+		} else if (!strcmp(g_workload_type, "dif_verify")) {
+			g_workload_selection = SPDK_ACCEL_OPC_DIF_VERIFY;
 		} else {
 			fprintf(stderr, "Unsupported workload type: %s\n", optarg);
 			usage();
@@ -328,7 +341,10 @@ _get_task_data_bufs(struct ap_task *task)
 {
 	uint32_t align = 0;
 	uint32_t i = 0;
+	int src_buff_len = g_xfer_size_bytes;
 	int dst_buff_len = g_xfer_size_bytes;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+	int rc;
 
 	/* For dualcast, the DSA HW requires 4K alignment on destination addresses but
 	 * we do this for all modules to keep it simple.
@@ -363,7 +379,8 @@ _get_task_data_bufs(struct ap_task *task)
 	}
 
 	if (g_workload_selection == SPDK_ACCEL_OPC_CRC32C ||
-	    g_workload_selection == SPDK_ACCEL_OPC_COPY_CRC32C) {
+	    g_workload_selection == SPDK_ACCEL_OPC_COPY_CRC32C ||
+	    g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY) {
 		assert(g_chained_count > 0);
 		task->src_iovcnt = g_chained_count;
 		task->src_iovs = calloc(task->src_iovcnt, sizeof(struct iovec));
@@ -376,13 +393,17 @@ _get_task_data_bufs(struct ap_task *task)
 			dst_buff_len = g_xfer_size_bytes * g_chained_count;
 		}
 
+		if (g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY) {
+			src_buff_len += (g_xfer_size_bytes / g_block_size_bytes) * g_md_size_bytes;
+		}
+
 		for (i = 0; i < task->src_iovcnt; i++) {
-			task->src_iovs[i].iov_base = spdk_dma_zmalloc(g_xfer_size_bytes, 0, NULL);
+			task->src_iovs[i].iov_base = spdk_dma_zmalloc(src_buff_len, 0, NULL);
 			if (task->src_iovs[i].iov_base == NULL) {
 				return -ENOMEM;
 			}
-			memset(task->src_iovs[i].iov_base, DATA_PATTERN, g_xfer_size_bytes);
-			task->src_iovs[i].iov_len = g_xfer_size_bytes;
+			memset(task->src_iovs[i].iov_base, DATA_PATTERN, src_buff_len);
+			task->src_iovs[i].iov_len = src_buff_len;
 		}
 	} else if (g_workload_selection == SPDK_ACCEL_OPC_XOR) {
 		assert(g_xor_src_count > 1);
@@ -413,7 +434,8 @@ _get_task_data_bufs(struct ap_task *task)
 		}
 	}
 
-	if (g_workload_selection != SPDK_ACCEL_OPC_CRC32C) {
+	if (g_workload_selection != SPDK_ACCEL_OPC_CRC32C &&
+	    g_workload_selection != SPDK_ACCEL_OPC_DIF_VERIFY) {
 		task->dst = spdk_dma_zmalloc(dst_buff_len, align, NULL);
 		if (task->dst == NULL) {
 			fprintf(stderr, "Unable to alloc dst buffer\n");
@@ -437,6 +459,30 @@ _get_task_data_bufs(struct ap_task *task)
 			return -ENOMEM;
 		}
 		memset(task->dst2, ~DATA_PATTERN, g_xfer_size_bytes);
+	}
+
+	if (g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY) {
+		dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
+		dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+
+		task->num_blocks = (g_xfer_size_bytes * g_chained_count) / g_block_size_bytes;
+
+		rc = spdk_dif_ctx_init(&task->dif_ctx,
+				       g_block_size_bytes + g_md_size_bytes,
+				       g_md_size_bytes, true, true,
+				       SPDK_DIF_TYPE1,
+				       SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK | SPDK_DIF_FLAGS_REFTAG_CHECK,
+				       16, 0xFFFF, 10, 0, 0, &dif_opts);
+		if (rc != 0) {
+			fprintf(stderr, "Initialization of DIF context failed, error (%d)\n", rc);
+			return rc;
+		}
+
+		rc = spdk_dif_generate(task->src_iovs, task->src_iovcnt, task->num_blocks, &task->dif_ctx);
+		if (rc != 0) {
+			fprintf(stderr, "Generation of DIF failed, error (%d)\n", rc);
+			return rc;
+		}
 	}
 
 	return 0;
@@ -520,6 +566,10 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 		rc = spdk_accel_submit_xor(worker->ch, task->dst, task->sources, g_xor_src_count,
 					   g_xfer_size_bytes, accel_done, task);
 		break;
+	case SPDK_ACCEL_OPC_DIF_VERIFY:
+		rc = spdk_accel_submit_dif_verify(worker->ch, task->src_iovs, task->src_iovcnt, task->num_blocks,
+						  &task->dif_ctx, &task->dif_err, accel_done, task);
+		break;
 	default:
 		assert(false);
 		break;
@@ -541,7 +591,8 @@ _free_task_buffers(struct ap_task *task)
 	    g_workload_selection == SPDK_ACCEL_OPC_COMPRESS) {
 		free(task->dst_iovs);
 	} else if (g_workload_selection == SPDK_ACCEL_OPC_CRC32C ||
-		   g_workload_selection == SPDK_ACCEL_OPC_COPY_CRC32C) {
+		   g_workload_selection == SPDK_ACCEL_OPC_COPY_CRC32C ||
+		   g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY) {
 		if (task->src_iovs) {
 			for (i = 0; i < task->src_iovcnt; i++) {
 				if (task->src_iovs[i].iov_base) {
@@ -661,6 +712,8 @@ accel_done(void *arg1, int status)
 				SPDK_NOTICELOG("Data miscompare\n");
 				worker->xfer_failed++;
 			}
+			break;
+		case SPDK_ACCEL_OPC_DIF_VERIFY:
 			break;
 		default:
 			assert(false);
@@ -1212,7 +1265,8 @@ main(int argc, char **argv)
 	}
 
 	if ((g_workload_selection == SPDK_ACCEL_OPC_CRC32C ||
-	     g_workload_selection == SPDK_ACCEL_OPC_COPY_CRC32C) &&
+	     g_workload_selection == SPDK_ACCEL_OPC_COPY_CRC32C ||
+	     g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY) &&
 	    g_chained_count == 0) {
 		usage();
 		return -1;
