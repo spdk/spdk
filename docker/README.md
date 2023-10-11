@@ -94,6 +94,27 @@ docker-compose exec storage-target rpc.py bdev_get_bdevs
 docker-compose exec proxy-container rpc.py nvmf_get_subsystems
 ~~~
 
+## Monitoring
+
+`docker-compose.monitoring.yaml` shows an example deployment of the storage containers based on SPDK.
+
+Running `docker-compose -f docker-compose.monitoring.yaml up` creates 3 docker containers:
+
+-- storage-target: Contains SPDK NVMe-oF target exposing single subsystem based on malloc bdev.
+-- [telegraf](https://www.influxdata.com/time-series-platform/telegraf/) is a very minimal memory footprint agent for collecting and sending metrics and events.
+-- [prometheus](https://prometheus.io/) is leading open-source monitoring solution.
+
+`telegaf` connects to `spdk` via `rpc_http_proxy.py` and uses `bdev_get_iostat` commands to fetch bdev statistics.
+
+In order to see data change, once all of the 3 containers are brought up, use `docker-compose run traffic-generator-nvme`` to generate some traffic.
+
+Open Prometheus UI or query via cmdline. E.g.:
+
+~~~{.sh}
+curl --fail http://127.0.0.1:9090/api/v1/query?query=spdk_bytes_read
+curl --fail http://127.0.0.1:9090/api/v1/query?query=spdk_bytes_written
+~~~
+
 ## Caveats
 
 - If you run docker < 20.10 under distro which switched fully to cgroups2

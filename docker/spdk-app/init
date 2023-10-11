@@ -33,4 +33,8 @@ fi
 # Wait a bit to make sure ip is in place
 sleep 2s
 
+if [[ -n $SPDK_HTTP_PROXY ]]; then
+	rpc_http_proxy.py $SPDK_HTTP_PROXY &
+fi
+
 exec "$app" "${args[@]}"
