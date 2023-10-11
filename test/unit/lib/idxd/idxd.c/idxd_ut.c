@@ -224,6 +224,71 @@ test_idxd_validate_dif_check_params(void)
 }
 
 static void
+test_idxd_validate_dif_insert_params(void)
+{
+	struct spdk_dif_ctx dif_ctx;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+	int rc;
+
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+
+	/* Check for required DIF flags */
+	/* ## supported: Guard, ApplicationTag, ReferenceTag check flags set */
+	rc = spdk_dif_ctx_init(&dif_ctx,
+			       512 + 8,
+			       8,
+			       true,
+			       false,
+			       SPDK_DIF_TYPE1,
+			       SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+			       SPDK_DIF_FLAGS_REFTAG_CHECK,
+			       0, 0, 0, 0, 0, &dif_opts);
+	CU_ASSERT(rc == 0);
+	rc = idxd_validate_dif_insert_params(&dif_ctx);
+	CU_ASSERT(rc == 0);
+
+	/* ## not-supported: Guard check flag not set */
+	rc = spdk_dif_ctx_init(&dif_ctx,
+			       512 + 8,
+			       8,
+			       true,
+			       false,
+			       SPDK_DIF_TYPE1,
+			       SPDK_DIF_FLAGS_APPTAG_CHECK | SPDK_DIF_FLAGS_REFTAG_CHECK,
+			       0, 0, 0, 0, 0, &dif_opts);
+	CU_ASSERT(rc == 0);
+	rc = idxd_validate_dif_insert_params(&dif_ctx);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* ## not-supported: Application Tag check flag not set */
+	rc = spdk_dif_ctx_init(&dif_ctx,
+			       512 + 8,
+			       8,
+			       true,
+			       false,
+			       SPDK_DIF_TYPE1,
+			       SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_REFTAG_CHECK,
+			       0, 0, 0, 0, 0, &dif_opts);
+	CU_ASSERT(rc == 0);
+	rc = idxd_validate_dif_insert_params(&dif_ctx);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* ## not-supported: Reference Tag check flag not set */
+	rc = spdk_dif_ctx_init(&dif_ctx,
+			       512 + 8,
+			       8,
+			       true,
+			       false,
+			       SPDK_DIF_TYPE1,
+			       SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK,
+			       0, 0, 0, 0, 0, &dif_opts);
+	CU_ASSERT(rc == 0);
+	rc = idxd_validate_dif_insert_params(&dif_ctx);
+	CU_ASSERT(rc == -EINVAL);
+}
+
+static void
 test_idxd_validate_dif_check_buf_align(void)
 {
 	struct spdk_dif_ctx dif_ctx;
@@ -249,6 +314,44 @@ test_idxd_validate_dif_check_buf_align(void)
 
 	/* The memory buffer length is not a multiple of block size with metadata */
 	rc = idxd_validate_dif_check_buf_align(&dif_ctx, 4 * (512 + 8) + 10);
+	CU_ASSERT(rc == -EINVAL);
+}
+
+static void
+test_idxd_validate_dif_insert_buf_align(void)
+{
+	struct spdk_dif_ctx dif_ctx;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+	int rc;
+
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+
+	rc = spdk_dif_ctx_init(&dif_ctx,
+			       512 + 8,
+			       8,
+			       true,
+			       false,
+			       SPDK_DIF_TYPE1,
+			       SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+			       SPDK_DIF_FLAGS_REFTAG_CHECK,
+			       0, 0, 0, 0, 0, &dif_opts);
+	CU_ASSERT(rc == 0);
+
+	/* The memory source and destination buffer length set correctly */
+	rc = idxd_validate_dif_insert_buf_align(&dif_ctx, 4 * 512, 4 * 520);
+	CU_ASSERT(rc == 0);
+
+	/* The memory source buffer length is not a multiple of block size without metadata */
+	rc = idxd_validate_dif_insert_buf_align(&dif_ctx, 4 * 512 + 10, 4 * 520);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* The memory destination buffer length is not a multiple of block size with metadata */
+	rc = idxd_validate_dif_insert_buf_align(&dif_ctx, 4 * 512, 4 * 520 + 10);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* The memory source and destiantion must hold the same number of blocks */
+	rc = idxd_validate_dif_insert_buf_align(&dif_ctx, 4 * 512, 5 * 520);
 	CU_ASSERT(rc == -EINVAL);
 }
 
@@ -443,6 +546,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_idxd_validate_dif_common_params);
 	CU_ADD_TEST(suite, test_idxd_validate_dif_check_params);
 	CU_ADD_TEST(suite, test_idxd_validate_dif_check_buf_align);
+	CU_ADD_TEST(suite, test_idxd_validate_dif_insert_params);
+	CU_ADD_TEST(suite, test_idxd_validate_dif_insert_buf_align);
 	CU_ADD_TEST(suite, test_idxd_get_dif_flags);
 	CU_ADD_TEST(suite, test_idxd_get_source_dif_flags);
 	CU_ADD_TEST(suite, test_idxd_get_app_tag_mask);
