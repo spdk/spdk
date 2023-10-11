@@ -166,12 +166,14 @@ vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 {
 	int rc;
 
+	spdk_vhost_lock();
 	if (vdev->backend->type == VHOST_BACKEND_SCSI) {
 		rc = vhost_user_dev_unregister(vdev);
 	} else {
 		rc = virtio_blk_destroy_ctrlr(vdev);
 	}
 	if (rc != 0) {
+		spdk_vhost_unlock();
 		return rc;
 	}
 
@@ -179,7 +181,6 @@ vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 
 	free(vdev->name);
 
-	spdk_vhost_lock();
 	TAILQ_REMOVE(&g_vhost_devices, vdev, tailq);
 	if (TAILQ_EMPTY(&g_vhost_devices) && g_fini_cb != NULL) {
 		g_fini_cb();
