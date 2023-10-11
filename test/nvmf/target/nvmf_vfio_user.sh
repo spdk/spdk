@@ -105,5 +105,5 @@ run_nvmf_vfio_user
 stop_nvmf_vfio_user
 
 # Start the target in interrupt mode
-setup_nvmf_vfio_user '-J' '-M -I'
+setup_nvmf_vfio_user '--interrupt-mode' '-M -I'
 stop_nvmf_vfio_user

@@ -111,7 +111,7 @@ static const struct option g_cmdline_options[] = {
 	{"pci-allowed",			required_argument,	NULL, PCI_ALLOWED_OPT_IDX},
 #define PCI_WHITELIST_OPT_IDX	'W'
 	{"pci-whitelist",		required_argument,	NULL, PCI_WHITELIST_OPT_IDX}, /* deprecated */
-#define INTERRUPT_MODE_OPT_IDX	'J'
+#define INTERRUPT_MODE_OPT_IDX 256
 	{"interrupt-mode",		no_argument,		NULL, INTERRUPT_MODE_OPT_IDX},
 #define SILENCE_NOTICELOG_OPT_IDX 257
 	{"silence-noticelog",		no_argument,		NULL, SILENCE_NOTICELOG_OPT_IDX},
@@ -971,7 +971,7 @@ usage(void (*app_usage)(void))
 	printf("     --vfio-vf-token       VF token (UUID) shared between SR-IOV PF and VFs for vfio_pci driver\n");
 	spdk_log_usage(stdout, "-L");
 	spdk_trace_mask_usage(stdout, "-e");
-	printf(" -J, --interrupt-mode      set app to interrupt mode (Warning: CPU usage will be reduced only if all pollers in the app support interrupt mode)\n");
+	printf("     --interrupt-mode      set app to interrupt mode (Warning: CPU usage will be reduced only if all pollers in the app support interrupt mode)\n");
 	if (app_usage) {
 		app_usage();
 	}
