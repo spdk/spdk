@@ -1904,6 +1904,27 @@ get_lcore_thread(uint32_t lcore)
 }
 
 static void
+create_lcore_thread(uint32_t lcore)
+{
+	struct lcore_thread *lthread;
+	struct spdk_cpuset cpumask = {};
+	char name[32];
+
+	lthread = calloc(1, sizeof(*lthread));
+	assert(lthread != NULL);
+
+	lthread->lcore = lcore;
+
+	snprintf(name, sizeof(name), "lcore_%u", lcore);
+	spdk_cpuset_set_cpu(&cpumask, lcore, true);
+
+	lthread->thread = spdk_thread_create(name, &cpumask);
+	assert(lthread->thread != NULL);
+
+	TAILQ_INSERT_TAIL(&g_lcore_thread_list, lthread, link);
+}
+
+static void
 bdevperf_construct_jobs(void)
 {
 	char filename[BDEVPERF_CONFIG_MAX_FILENAME];
@@ -1911,7 +1932,14 @@ bdevperf_construct_jobs(void)
 	struct job_config *config;
 	struct spdk_bdev *bdev;
 	const char *filenames;
+	uint32_t i;
 	int rc;
+
+	if (g_one_thread_per_lcore) {
+		SPDK_ENV_FOREACH_CORE(i) {
+			create_lcore_thread(i);
+		}
+	}
 
 	TAILQ_FOREACH(config, &job_config_list, link) {
 		filenames = config->filename;
@@ -2037,31 +2065,9 @@ bdevperf_construct_job_config(void *ctx, struct spdk_bdev *bdev)
 }
 
 static void
-create_lcore_thread(uint32_t lcore)
-{
-	struct lcore_thread *lthread;
-	struct spdk_cpuset cpumask = {};
-	char name[32];
-
-	lthread = calloc(1, sizeof(*lthread));
-	assert(lthread != NULL);
-
-	lthread->lcore = lcore;
-
-	snprintf(name, sizeof(name), "lcore_%u", lcore);
-	spdk_cpuset_set_cpu(&cpumask, lcore, true);
-
-	lthread->thread = spdk_thread_create(name, &cpumask);
-	assert(lthread->thread != NULL);
-
-	TAILQ_INSERT_TAIL(&g_lcore_thread_list, lthread, link);
-}
-
-static void
 bdevperf_construct_job_configs(void)
 {
 	struct spdk_bdev *bdev;
-	uint32_t i;
 
 	/* There are three different modes for allocating jobs. Standard mode
 	 * (the default) creates one spdk_thread per bdev and runs the I/O job there.
@@ -2082,12 +2088,6 @@ bdevperf_construct_job_configs(void)
 
 	if (g_bdevperf_conf) {
 		goto end;
-	}
-
-	if (g_one_thread_per_lcore) {
-		SPDK_ENV_FOREACH_CORE(i) {
-			create_lcore_thread(i);
-		}
 	}
 
 	if (g_multithread_mode) {
