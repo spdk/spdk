@@ -2304,7 +2304,11 @@ nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 		SPDK_DEBUGLOG(nvmf_tcp, "tqpair(%p) recv pdu entering state %d\n", tqpair, prev_state);
 
 		pdu = tqpair->pdu_in_progress;
-		assert(pdu || tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
+		assert(pdu != NULL ||
+		       tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY ||
+		       tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_QUIESCING ||
+		       tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+
 		switch (tqpair->recv_state) {
 		/* Wait for the common header  */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY:
