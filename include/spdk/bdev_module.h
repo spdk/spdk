@@ -944,7 +944,11 @@ struct spdk_bdev_io_internal_fields {
 
 			/** Whether the split data structure is valid */
 			uint8_t split				: 1;
-			uint8_t reserved			: 5;
+
+			/** Whether ptr in the buf data structure is valid */
+			uint8_t has_buf				: 1;
+
+			uint8_t reserved			: 4;
 		};
 		uint8_t raw;
 	} f;
@@ -1008,11 +1012,13 @@ struct spdk_bdev_io_internal_fields {
 		uint32_t outstanding;
 	} split;
 
-	/** bdev allocated memory associated with this request */
-	void *buf;
+	struct {
+		/** bdev allocated memory associated with this request */
+		void *ptr;
 
-	/** requested size of the buffer associated with this I/O */
-	uint64_t buf_len;
+		/** requested size of the buffer associated with this I/O */
+		uint64_t len;
+	} buf;
 
 	/** if the request is double buffered, store original request iovs here */
 	struct iovec  bounce_iov;

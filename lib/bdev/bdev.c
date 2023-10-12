@@ -1117,8 +1117,9 @@ bdev_io_get_buf_complete(struct spdk_bdev_io *bdev_io, bool status)
 	void *buf;
 
 	if (spdk_unlikely(bdev_io->internal.get_aux_buf_cb != NULL)) {
-		buf = bdev_io->internal.buf;
-		bdev_io->internal.buf = NULL;
+		buf = bdev_io->internal.buf.ptr;
+		bdev_io->internal.buf.ptr = NULL;
+		bdev_io->internal.f.has_buf = false;
 		bdev_io->internal.get_aux_buf_cb(ch, bdev_io, buf);
 		bdev_io->internal.get_aux_buf_cb = NULL;
 	} else {
@@ -1376,7 +1377,8 @@ _bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, uint64_t len)
 	uint64_t alignment;
 	void *aligned_buf;
 
-	bdev_io->internal.buf = buf;
+	bdev_io->internal.buf.ptr = buf;
+	bdev_io->internal.f.has_buf = true;
 
 	if (spdk_unlikely(bdev_io->internal.get_aux_buf_cb != NULL)) {
 		bdev_io_get_buf_complete(bdev_io, true);
@@ -1424,9 +1426,10 @@ _bdev_io_put_buf(struct spdk_bdev_io *bdev_io, void *buf, uint64_t buf_len)
 static void
 bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 {
-	assert(bdev_io->internal.buf != NULL);
-	_bdev_io_put_buf(bdev_io, bdev_io->internal.buf, bdev_io->internal.buf_len);
-	bdev_io->internal.buf = NULL;
+	assert(bdev_io->internal.f.has_buf);
+	_bdev_io_put_buf(bdev_io, bdev_io->internal.buf.ptr, bdev_io->internal.buf.len);
+	bdev_io->internal.buf.ptr = NULL;
+	bdev_io->internal.f.has_buf = false;
 }
 
 void
@@ -1594,7 +1597,7 @@ _bdev_io_complete_push_bounce_done(void *ctx, int rc)
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
 	}
 	/* We want to free the bounce buffer here since we know we're done with it (as opposed
-	 * to waiting for the conditional free of internal.buf in spdk_bdev_free_io()).
+	 * to waiting for the conditional free of internal.buf.ptr in spdk_bdev_free_io()).
 	 */
 	bdev_io_put_buf(bdev_io);
 
@@ -1768,7 +1771,7 @@ bdev_io_get_iobuf_cb(struct spdk_iobuf_entry *iobuf, void *buf)
 	struct spdk_bdev_io *bdev_io;
 
 	bdev_io = SPDK_CONTAINEROF(iobuf, struct spdk_bdev_io, internal.iobuf);
-	_bdev_io_set_buf(bdev_io, buf, bdev_io->internal.buf_len);
+	_bdev_io_set_buf(bdev_io, buf, bdev_io->internal.buf.len);
 }
 
 static void
@@ -1788,7 +1791,7 @@ bdev_io_get_buf(struct spdk_bdev_io *bdev_io, uint64_t len)
 		return;
 	}
 
-	bdev_io->internal.buf_len = len;
+	bdev_io->internal.buf.len = len;
 	buf = spdk_iobuf_get(&mgmt_ch->iobuf, max_len, &bdev_io->internal.iobuf,
 			     bdev_io_get_iobuf_cb);
 	if (buf != NULL) {
@@ -2495,7 +2498,7 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 
 	ch = bdev_io->internal.ch->shared_resource->mgmt_ch;
 
-	if (bdev_io->internal.buf != NULL) {
+	if (bdev_io->internal.f.has_buf) {
 		bdev_io_put_buf(bdev_io);
 	}
 
@@ -3694,7 +3697,6 @@ bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->internal.cb = cb;
 	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
 	bdev_io->internal.in_submit_request = false;
-	bdev_io->internal.buf = NULL;
 	bdev_io->internal.orig_iovs = NULL;
 	bdev_io->internal.orig_iovcnt = 0;
 	bdev_io->internal.orig_md_iov.iov_base = NULL;
@@ -4263,7 +4265,7 @@ bdev_abort_all_buf_io_cb(struct spdk_iobuf_channel *ch, struct spdk_iobuf_entry 
 
 	bdev_io = SPDK_CONTAINEROF(entry, struct spdk_bdev_io, internal.iobuf);
 	if (bdev_io->internal.ch == bdev_ch) {
-		buf_len = bdev_io_get_max_buf_len(bdev_io, bdev_io->internal.buf_len);
+		buf_len = bdev_io_get_max_buf_len(bdev_io, bdev_io->internal.buf.len);
 		spdk_iobuf_entry_abort(ch, entry, buf_len);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_ABORTED);
 	}
@@ -4333,7 +4335,7 @@ bdev_abort_buf_io_cb(struct spdk_iobuf_channel *ch, struct spdk_iobuf_entry *ent
 
 	bdev_io = SPDK_CONTAINEROF(entry, struct spdk_bdev_io, internal.iobuf);
 	if (bdev_io == bio_to_abort) {
-		buf_len = bdev_io_get_max_buf_len(bdev_io, bdev_io->internal.buf_len);
+		buf_len = bdev_io_get_max_buf_len(bdev_io, bdev_io->internal.buf.len);
 		spdk_iobuf_entry_abort(ch, entry, buf_len);
 		spdk_bdev_io_complete(bio_to_abort, SPDK_BDEV_IO_STATUS_ABORTED);
 		return 1;
