@@ -628,6 +628,10 @@ clean:
 		}
 	}
 
+	if (g_bdevperf_conf == NULL) {
+		free_job_config();
+	}
+
 	rc = g_run_rc;
 	if (g_request && !g_shutdown) {
 		rpc_perform_tests_cb();
