@@ -1174,13 +1174,14 @@ bdev_io_pull_md_buf(struct spdk_bdev_io *bdev_io)
 	int rc = 0;
 
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+		assert(bdev_io->internal.f.has_bounce_buf);
 		if (bdev_io_use_memory_domain(bdev_io)) {
 			TAILQ_INSERT_TAIL(&ch->io_memory_domain, bdev_io, internal.link);
 			bdev_io_increment_outstanding(ch, ch->shared_resource);
 			rc = spdk_memory_domain_pull_data(bdev_io->internal.memory_domain,
 							  bdev_io->internal.memory_domain_ctx,
-							  &bdev_io->internal.orig_md_iov, 1,
-							  &bdev_io->internal.bounce_md_iov, 1,
+							  &bdev_io->internal.bounce_buf.orig_md_iov, 1,
+							  &bdev_io->internal.bounce_buf.md_iov, 1,
 							  bdev_io_pull_md_buf_done, bdev_io);
 			if (rc == 0) {
 				/* Continue to submit IO in completion callback */
@@ -1194,9 +1195,9 @@ bdev_io_pull_md_buf(struct spdk_bdev_io *bdev_io)
 						    bdev_io->internal.memory_domain), rc);
 			}
 		} else {
-			memcpy(bdev_io->internal.bounce_md_iov.iov_base,
-			       bdev_io->internal.orig_md_iov.iov_base,
-			       bdev_io->internal.orig_md_iov.iov_len);
+			memcpy(bdev_io->internal.bounce_buf.md_iov.iov_base,
+			       bdev_io->internal.bounce_buf.orig_md_iov.iov_base,
+			       bdev_io->internal.bounce_buf.orig_md_iov.iov_len);
 		}
 	}
 
@@ -1211,11 +1212,13 @@ bdev_io_pull_md_buf(struct spdk_bdev_io *bdev_io)
 static void
 _bdev_io_pull_bounce_md_buf(struct spdk_bdev_io *bdev_io, void *md_buf, size_t len)
 {
+	assert(bdev_io->internal.f.has_bounce_buf);
+
 	/* save original md_buf */
-	bdev_io->internal.orig_md_iov.iov_base = bdev_io->u.bdev.md_buf;
-	bdev_io->internal.orig_md_iov.iov_len = len;
-	bdev_io->internal.bounce_md_iov.iov_base = md_buf;
-	bdev_io->internal.bounce_md_iov.iov_len = len;
+	bdev_io->internal.bounce_buf.orig_md_iov.iov_base = bdev_io->u.bdev.md_buf;
+	bdev_io->internal.bounce_buf.orig_md_iov.iov_len = len;
+	bdev_io->internal.bounce_buf.md_iov.iov_base = md_buf;
+	bdev_io->internal.bounce_buf.md_iov.iov_len = len;
 	/* set bounce md_buf */
 	bdev_io->u.bdev.md_buf = md_buf;
 
@@ -1290,11 +1293,12 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 	    (bdev_io_use_accel_sequence(bdev_io) && bdev_io_use_memory_domain(bdev_io))) {
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 			assert(bdev_io_use_accel_sequence(bdev_io));
+			assert(bdev_io->internal.f.has_bounce_buf);
 			rc = spdk_accel_append_copy(&bdev_io->internal.accel_sequence, ch->accel_channel,
 						    bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 						    NULL, NULL,
-						    bdev_io->internal.orig_iovs,
-						    bdev_io->internal.orig_iovcnt,
+						    bdev_io->internal.bounce_buf.orig_iovs,
+						    bdev_io->internal.bounce_buf.orig_iovcnt,
 						    bdev_io_use_memory_domain(bdev_io) ? bdev_io->internal.memory_domain : NULL,
 						    bdev_io_use_memory_domain(bdev_io) ? bdev_io->internal.memory_domain_ctx : NULL,
 						    NULL, NULL);
@@ -1302,9 +1306,10 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 			/* We need to reverse the src/dst for reads */
 			assert(bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
 			assert(bdev_io_use_accel_sequence(bdev_io));
+			assert(bdev_io->internal.f.has_bounce_buf);
 			rc = spdk_accel_append_copy(&bdev_io->internal.accel_sequence, ch->accel_channel,
-						    bdev_io->internal.orig_iovs,
-						    bdev_io->internal.orig_iovcnt,
+						    bdev_io->internal.bounce_buf.orig_iovs,
+						    bdev_io->internal.bounce_buf.orig_iovcnt,
 						    bdev_io_use_memory_domain(bdev_io) ? bdev_io->internal.memory_domain : NULL,
 						    bdev_io_use_memory_domain(bdev_io) ? bdev_io->internal.memory_domain_ctx : NULL,
 						    bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
@@ -1318,12 +1323,13 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 		/* if this is write path, copy data from original buffer to bounce buffer */
 		if (bdev_io_use_memory_domain(bdev_io)) {
+			assert(bdev_io->internal.f.has_bounce_buf);
 			TAILQ_INSERT_TAIL(&ch->io_memory_domain, bdev_io, internal.link);
 			bdev_io_increment_outstanding(ch, ch->shared_resource);
 			rc = spdk_memory_domain_pull_data(bdev_io->internal.memory_domain,
 							  bdev_io->internal.memory_domain_ctx,
-							  bdev_io->internal.orig_iovs,
-							  (uint32_t) bdev_io->internal.orig_iovcnt,
+							  bdev_io->internal.bounce_buf.orig_iovs,
+							  (uint32_t)bdev_io->internal.bounce_buf.orig_iovcnt,
 							  bdev_io->u.bdev.iovs, 1,
 							  bdev_io_pull_data_done_and_track,
 							  bdev_io);
@@ -1340,10 +1346,11 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 			}
 		} else {
 			assert(bdev_io->u.bdev.iovcnt == 1);
+			assert(bdev_io->internal.f.has_bounce_buf);
 			spdk_copy_iovs_to_buf(bdev_io->u.bdev.iovs[0].iov_base,
 					      bdev_io->u.bdev.iovs[0].iov_len,
-					      bdev_io->internal.orig_iovs,
-					      bdev_io->internal.orig_iovcnt);
+					      bdev_io->internal.bounce_buf.orig_iovs,
+					      bdev_io->internal.bounce_buf.orig_iovcnt);
 		}
 	}
 
@@ -1360,12 +1367,19 @@ _bdev_io_pull_bounce_data_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t le
 {
 	struct spdk_bdev_shared_resource *shared_resource = bdev_io->internal.ch->shared_resource;
 
+	assert(bdev_io->internal.f.has_bounce_buf == false);
+
 	bdev_io->internal.data_transfer_cpl = cpl_cb;
+	bdev_io->internal.f.has_bounce_buf = true;
 	/* save original iovec */
-	bdev_io->internal.orig_iovs = bdev_io->u.bdev.iovs;
-	bdev_io->internal.orig_iovcnt = bdev_io->u.bdev.iovcnt;
+	bdev_io->internal.bounce_buf.orig_iovs = bdev_io->u.bdev.iovs;
+	bdev_io->internal.bounce_buf.orig_iovcnt = bdev_io->u.bdev.iovcnt;
+	/* zero the other data members */
+	bdev_io->internal.bounce_buf.iov.iov_base = NULL;
+	bdev_io->internal.bounce_buf.md_iov.iov_base = NULL;
+	bdev_io->internal.bounce_buf.orig_md_iov.iov_base = NULL;
 	/* set bounce iov */
-	bdev_io->u.bdev.iovs = &bdev_io->internal.bounce_iov;
+	bdev_io->u.bdev.iovs = &bdev_io->internal.bounce_buf.iov;
 	bdev_io->u.bdev.iovcnt = 1;
 	/* set bounce buffer for this operation */
 	bdev_io->u.bdev.iovs[0].iov_base = buf;
@@ -1633,6 +1647,7 @@ bdev_io_push_bounce_md_buf_done(void *ctx, int rc)
 
 	TAILQ_REMOVE(&ch->io_memory_domain, bdev_io, internal.link);
 	bdev_io_decrement_outstanding(ch, ch->shared_resource);
+	bdev_io->internal.f.has_bounce_buf = false;
 
 	if (spdk_unlikely(!TAILQ_EMPTY(&ch->shared_resource->nomem_io))) {
 		bdev_ch_retry_io(ch);
@@ -1648,8 +1663,10 @@ bdev_io_push_bounce_md_buf(struct spdk_bdev_io *bdev_io)
 	int rc = 0;
 
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	assert(bdev_io->internal.f.has_bounce_buf);
+
 	/* do the same for metadata buffer */
-	if (spdk_unlikely(bdev_io->internal.orig_md_iov.iov_base != NULL)) {
+	if (spdk_unlikely(bdev_io->internal.bounce_buf.orig_md_iov.iov_base != NULL)) {
 		assert(spdk_bdev_is_md_separate(bdev_io->bdev));
 
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
@@ -1659,9 +1676,9 @@ bdev_io_push_bounce_md_buf(struct spdk_bdev_io *bdev_io)
 				/* If memory domain is used then we need to call async push function */
 				rc = spdk_memory_domain_push_data(bdev_io->internal.memory_domain,
 								  bdev_io->internal.memory_domain_ctx,
-								  &bdev_io->internal.orig_md_iov,
-								  (uint32_t)bdev_io->internal.orig_iovcnt,
-								  &bdev_io->internal.bounce_md_iov, 1,
+								  &bdev_io->internal.bounce_buf.orig_md_iov,
+								  (uint32_t)bdev_io->internal.bounce_buf.orig_iovcnt,
+								  &bdev_io->internal.bounce_buf.md_iov, 1,
 								  bdev_io_push_bounce_md_buf_done,
 								  bdev_io);
 				if (rc == 0) {
@@ -1676,8 +1693,8 @@ bdev_io_push_bounce_md_buf(struct spdk_bdev_io *bdev_io)
 							    bdev_io->internal.memory_domain));
 				}
 			} else {
-				memcpy(bdev_io->internal.orig_md_iov.iov_base, bdev_io->u.bdev.md_buf,
-				       bdev_io->internal.orig_md_iov.iov_len);
+				memcpy(bdev_io->internal.bounce_buf.orig_md_iov.iov_base, bdev_io->u.bdev.md_buf,
+				       bdev_io->internal.bounce_buf.orig_md_iov.iov_len);
 			}
 		}
 	}
@@ -1686,6 +1703,7 @@ bdev_io_push_bounce_md_buf(struct spdk_bdev_io *bdev_io)
 		bdev_queue_nomem_io_head(ch->shared_resource, bdev_io, BDEV_IO_RETRY_STATE_PUSH_MD);
 	} else {
 		assert(bdev_io->internal.data_transfer_cpl);
+		bdev_io->internal.f.has_bounce_buf = false;
 		bdev_io->internal.data_transfer_cpl(bdev_io, rc);
 	}
 }
@@ -1700,11 +1718,11 @@ bdev_io_push_bounce_data_done(struct spdk_bdev_io *bdev_io, int rc)
 	}
 
 	/* set original buffer for this io */
-	bdev_io->u.bdev.iovcnt = bdev_io->internal.orig_iovcnt;
-	bdev_io->u.bdev.iovs = bdev_io->internal.orig_iovs;
-	/* disable bouncing buffer for this io */
-	bdev_io->internal.orig_iovcnt = 0;
-	bdev_io->internal.orig_iovs = NULL;
+	bdev_io->u.bdev.iovcnt = bdev_io->internal.bounce_buf.orig_iovcnt;
+	bdev_io->u.bdev.iovs = bdev_io->internal.bounce_buf.orig_iovs;
+
+	/* We don't set bdev_io->internal.f.has_bounce_buf to false here because
+	 * we still need to clear the md buf */
 
 	bdev_io_push_bounce_md_buf(bdev_io);
 }
@@ -1733,6 +1751,7 @@ bdev_io_push_bounce_data(struct spdk_bdev_io *bdev_io)
 
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	assert(!bdev_io_use_accel_sequence(bdev_io));
+	assert(bdev_io->internal.f.has_bounce_buf);
 
 	/* if this is read path, copy data from bounce buffer to original buffer */
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
@@ -1742,9 +1761,9 @@ bdev_io_push_bounce_data(struct spdk_bdev_io *bdev_io)
 			/* If memory domain is used then we need to call async push function */
 			rc = spdk_memory_domain_push_data(bdev_io->internal.memory_domain,
 							  bdev_io->internal.memory_domain_ctx,
-							  bdev_io->internal.orig_iovs,
-							  (uint32_t)bdev_io->internal.orig_iovcnt,
-							  &bdev_io->internal.bounce_iov, 1,
+							  bdev_io->internal.bounce_buf.orig_iovs,
+							  (uint32_t)bdev_io->internal.bounce_buf.orig_iovcnt,
+							  &bdev_io->internal.bounce_buf.iov, 1,
 							  bdev_io_push_bounce_data_done_and_track,
 							  bdev_io);
 			if (rc == 0) {
@@ -1760,10 +1779,10 @@ bdev_io_push_bounce_data(struct spdk_bdev_io *bdev_io)
 						    bdev_io->internal.memory_domain));
 			}
 		} else {
-			spdk_copy_buf_to_iovs(bdev_io->internal.orig_iovs,
-					      bdev_io->internal.orig_iovcnt,
-					      bdev_io->internal.bounce_iov.iov_base,
-					      bdev_io->internal.bounce_iov.iov_len);
+			spdk_copy_buf_to_iovs(bdev_io->internal.bounce_buf.orig_iovs,
+					      bdev_io->internal.bounce_buf.orig_iovcnt,
+					      bdev_io->internal.bounce_buf.iov.iov_base,
+					      bdev_io->internal.bounce_buf.iov.iov_len);
 		}
 	}
 
@@ -3426,7 +3445,7 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 			if (bdev_io_needs_sequence_exec(parent_io->internal.desc, parent_io)) {
 				bdev_io_exec_sequence(parent_io, bdev_io_complete_parent_sequence_cb);
 				return;
-			} else if (parent_io->internal.orig_iovcnt != 0 &&
+			} else if (parent_io->internal.f.has_bounce_buf &&
 				   !bdev_io_use_accel_sequence(bdev_io)) {
 				/* bdev IO will be completed in the callback */
 				_bdev_io_push_bounce_data_buffer(parent_io, parent_bdev_io_complete);
@@ -3719,9 +3738,6 @@ bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->internal.cb = cb;
 	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
 	bdev_io->internal.in_submit_request = false;
-	bdev_io->internal.orig_iovs = NULL;
-	bdev_io->internal.orig_iovcnt = 0;
-	bdev_io->internal.orig_md_iov.iov_base = NULL;
 	bdev_io->internal.error.nvme.cdw0 = 0;
 	bdev_io->num_retries = 0;
 	bdev_io->internal.get_buf_cb = NULL;
@@ -7507,7 +7523,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 			if (bdev_io_needs_sequence_exec(bdev_io->internal.desc, bdev_io)) {
 				bdev_io_exec_sequence(bdev_io, bdev_io_complete_sequence_cb);
 				return;
-			} else if (spdk_unlikely(bdev_io->internal.orig_iovcnt != 0 &&
+			} else if (spdk_unlikely(bdev_io->internal.f.has_bounce_buf &&
 						 !bdev_io_use_accel_sequence(bdev_io))) {
 				_bdev_io_push_bounce_data_buffer(bdev_io,
 								 _bdev_io_complete_push_bounce_done);

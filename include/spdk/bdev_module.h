@@ -959,7 +959,10 @@ struct spdk_bdev_io_internal_fields {
 			/** Whether ptr in the buf data structure is valid */
 			uint8_t has_buf				: 1;
 
-			uint8_t reserved			: 4;
+			/** Whether the bounce_buf data structure is valid */
+			uint8_t has_bounce_buf			: 1;
+
+			uint8_t reserved			: 3;
 		};
 		uint8_t raw;
 	} f;
@@ -1032,11 +1035,13 @@ struct spdk_bdev_io_internal_fields {
 	} buf;
 
 	/** if the request is double buffered, store original request iovs here */
-	struct iovec  bounce_iov;
-	struct iovec  bounce_md_iov;
-	struct iovec  orig_md_iov;
-	struct iovec *orig_iovs;
-	int           orig_iovcnt;
+	struct {
+		struct iovec  iov;
+		struct iovec  md_iov;
+		struct iovec  orig_md_iov;
+		struct iovec *orig_iovs;
+		int           orig_iovcnt;
+	} bounce_buf;
 
 	/** Callback for when the aux buf is allocated */
 	spdk_bdev_io_get_aux_buf_cb get_aux_buf_cb;
