@@ -175,8 +175,9 @@ vhost_scsi_dev_unregister(void *arg1)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg1;
 
-	vhost_dev_unregister(&svdev->vdev);
-	free(svdev);
+	if (vhost_dev_unregister(&svdev->vdev) == 0) {
+		free(svdev);
+	}
 }
 
 static void
@@ -904,6 +905,9 @@ vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 
 	if (svdev->ref == 0) {
 		rc = vhost_dev_unregister(vdev);
+		if (rc != 0) {
+			return rc;
+		}
 		free(svdev);
 	}
 
