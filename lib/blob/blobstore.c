@@ -8755,6 +8755,164 @@ bs_grow_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	bs_load_try_to_grow(ctx);
 }
 
+struct spdk_bs_grow_ctx {
+	struct spdk_blob_store		*bs;
+	struct spdk_bs_super_block	*super;
+
+	spdk_bs_sequence_t		*seq;
+};
+
+static void
+bs_grow_live_done(struct spdk_bs_grow_ctx *ctx, int bserrno)
+{
+	bs_sequence_finish(ctx->seq, bserrno);
+	spdk_free(ctx->super);
+	free(ctx);
+}
+
+static void
+bs_grow_live_super_write_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_grow_ctx	*ctx = cb_arg;
+	struct spdk_blob_store *bs = ctx->bs;
+	uint64_t total_clusters;
+	int rc;
+
+	if (bserrno != 0) {
+		bs_grow_live_done(ctx, bserrno);
+		return;
+	}
+
+	/*
+	 * Blobstore is not clean until unload, for now only the super block is up to date.
+	 * This is similar to state right after blobstore init, when bs_write_used_md() didn't
+	 * yet execute.
+	 * When cleanly unloaded, the used md pages will be written out.
+	 * In case of unclean shutdown, loading blobstore will go through recovery path correctly
+	 * filling out the used_clusters with new size and writing it out.
+	 */
+	bs->clean = 0;
+
+	spdk_spin_lock(&bs->used_lock);
+
+	total_clusters = ctx->super->size / ctx->super->cluster_size;
+
+	rc = spdk_bit_pool_resize(&bs->used_clusters, total_clusters);
+	if (rc < 0) {
+		/* When this fails, super block contains new size that will only
+		 * be accesible after blobstore reload. Error reported up is correct now,
+		 * but does not apply after reload. */
+		spdk_spin_unlock(&bs->used_lock);
+		bs_grow_live_done(ctx, rc);
+		return;
+	}
+
+	bs->total_clusters = total_clusters;
+	bs->total_data_clusters = bs->total_clusters - spdk_divide_round_up(
+					  bs->md_start + bs->md_len, bs->pages_per_cluster);
+
+	bs->num_free_clusters = spdk_bit_pool_count_free(bs->used_clusters);
+	assert(ctx->bs->num_free_clusters <= ctx->bs->total_clusters);
+	spdk_spin_unlock(&bs->used_lock);
+
+	bs_grow_live_done(ctx, 0);
+}
+
+static void
+bs_grow_live_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_grow_ctx *ctx = cb_arg;
+	uint64_t dev_size, total_clusters, used_cluster_mask_len, max_used_cluster_mask;
+	int rc;
+
+	if (bserrno != 0) {
+		bs_grow_live_done(ctx, bserrno);
+		return;
+	}
+
+	rc = bs_super_validate(ctx->super, ctx->bs);
+	if (rc != 0) {
+		bs_grow_live_done(ctx, rc);
+		return;
+	}
+
+	dev_size = ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen;
+	total_clusters = dev_size / ctx->super->cluster_size;
+	used_cluster_mask_len = spdk_divide_round_up(sizeof(struct spdk_bs_md_mask) +
+				spdk_divide_round_up(total_clusters, 8),
+				SPDK_BS_PAGE_SIZE);
+	max_used_cluster_mask = ctx->super->used_blobid_mask_start - ctx->super->used_cluster_mask_start;
+	if (ctx->super->size == dev_size) {
+		SPDK_DEBUGLOG(blob, "No need to grow blobstore\n");
+		bs_grow_live_done(ctx, 0);
+		return;
+	}
+	/*
+	 * Blobstore cannot be shrunk, so check before that:
+	 * - size in super_block is not larger than the current size of the device
+	 * - total number of clusters is not larger than used_clusters bit_pool
+	 * - there is enough space for used_cluster_mask to be written out
+	 */
+	if (ctx->super->size > dev_size ||
+	    total_clusters <= spdk_bit_pool_capacity(ctx->bs->used_clusters) ||
+	    used_cluster_mask_len > max_used_cluster_mask) {
+		SPDK_DEBUGLOG(blob, "No space to grow blobstore\n");
+		bs_grow_live_done(ctx, -ENOSPC);
+		return;
+	}
+
+	SPDK_DEBUGLOG(blob, "Resizing blobstore\n");
+
+	ctx->super->clean = 0;
+	ctx->super->size = dev_size;
+	ctx->super->used_cluster_mask_len = used_cluster_mask_len;
+	bs_write_super(seq, ctx->bs, ctx->super, bs_grow_live_super_write_cpl, ctx);
+}
+
+void
+spdk_bs_grow_live(struct spdk_blob_store *bs,
+		  spdk_bs_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_bs_cpl	cpl;
+	struct spdk_bs_grow_ctx *ctx;
+
+	assert(spdk_get_thread() == bs->md_thread);
+
+	SPDK_DEBUGLOG(blob, "Growing blobstore on dev %p\n", bs->dev);
+
+	cpl.type = SPDK_BS_CPL_TYPE_BS_BASIC;
+	cpl.u.bs_basic.cb_fn = cb_fn;
+	cpl.u.bs_basic.cb_arg = cb_arg;
+
+	ctx = calloc(1, sizeof(struct spdk_bs_grow_ctx));
+	if (!ctx) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+	ctx->bs = bs;
+
+	ctx->super = spdk_zmalloc(sizeof(*ctx->super), 0x1000, NULL,
+				  SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+	if (!ctx->super) {
+		free(ctx);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->seq = bs_sequence_start_bs(bs->md_channel, &cpl);
+	if (!ctx->seq) {
+		spdk_free(ctx->super);
+		free(ctx);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	/* Read the super block */
+	bs_sequence_read_dev(ctx->seq, ctx->super, bs_page_to_lba(bs, 0),
+			     bs_byte_to_lba(bs, sizeof(*ctx->super)),
+			     bs_grow_live_load_super_cpl, ctx);
+}
+
 void
 spdk_bs_grow(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	     spdk_bs_op_with_handle_complete cb_fn, void *cb_arg)
