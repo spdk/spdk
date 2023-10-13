@@ -420,6 +420,10 @@ ftl_nv_cache_get_wr_buffer(struct ftl_nv_cache *nv_cache, struct ftl_io *io)
 
 			/* Move write pointer */
 			chunk->md->write_pointer += num_blocks;
+
+			if (free_space == num_blocks) {
+				nv_cache->chunk_current = NULL;
+			}
 			break;
 		}
 
