@@ -28,7 +28,7 @@ endif
 export
 .PHONY: all
 
-all: hello_world_bdev_shared_combo nvme_shared
+all: hello_world_bdev_shared_combo nvme_shared accel_shared
 
 static: hello_world_bdev_static nvme_static
 
@@ -50,6 +50,12 @@ hello_world_bdev_static: passthru_static
 hello_world_no_bdev_static:
 	$(MAKE) --directory=hello_world alone_static
 
+accel_shared:
+	$(MAKE) --directory=accel shared
+
+accel_static:
+	$(MAKE) --directory=accel static
+
 passthru_shared:
 	$(MAKE) --directory=passthru shared
 
@@ -66,3 +72,4 @@ clean:
 	rm -f ./hello_world/hello_bdev
 	rm -f ./passthru/libpassthru_external.*
 	rm -f ./nvme/*.{so,o} ./nvme/identify
+	rm -f ./accel/accel_module

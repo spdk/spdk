@@ -28,7 +28,14 @@ make -C $SPDK_DIR -j$(nproc)
 
 export SPDK_HEADER_DIR="$SPDK_DIR/include"
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$test_root/passthru"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$test_root/accel"
 _sudo="sudo -E --preserve-env=PATH LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+
+# Make just the application linked against individual SPDK shared libraries.
+run_test "external_make_accel_shared" make -C $test_root accel_shared
+run_test "external_run_accel_shared" $_sudo $test_root/accel/accel_module
+
+make -C $test_root clean
 
 # The default target is to make both the app and bdev and link them against the combined SPDK shared library libspdk.so.
 run_test "external_make_hello_bdev_shared_combo" make -C $test_root hello_world_bdev_shared_combo
@@ -65,6 +72,12 @@ make -C $test_root clean
 make -C $SPDK_DIR clean
 $SPDK_DIR/configure --without-shared --without-ocf --disable-asan $WITH_DPDK
 make -C $SPDK_DIR -j$(nproc)
+
+# Make just the application linked against individual SPDK archives.
+run_test "external_make_accel_static" make -C $test_root accel_static
+run_test "external_run_accel_static" $_sudo $test_root/accel/accel_module
+
+make -C $test_root clean
 
 # Make both the application and bdev against individual SPDK archives.
 run_test "external_make_hello_bdev_static" make -C $test_root hello_world_bdev_static
