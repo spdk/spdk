@@ -1510,6 +1510,7 @@ submit_single_io(struct perf_task *task)
 			spdk_dma_free(task->iovs[0].iov_base);
 			free(task->iovs);
 			spdk_dma_free(task->md_iov.iov_base);
+			task->ns_ctx->status = 1;
 			free(task);
 		}
 	} else {
