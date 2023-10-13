@@ -24,7 +24,7 @@ function run_bdevperf() {
 
 	bdevperf_rpc_sock=/var/tmp/bdevperf.sock
 	# use bdevperf to test "bdev_nvme_attach_controller"
-	$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 &
+	$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 "${NO_HUGE[@]}" &
 	bdevperf_pid=$!
 
 	trap 'cleanup; exit 1' SIGINT SIGTERM EXIT
@@ -146,7 +146,7 @@ setup_nvmf_tgt $key_path
 "${NVMF_TARGET_NS_CMD[@]}" $SPDK_EXAMPLE_DIR/perf -S ssl -q 64 -o 4096 -w randrw -M 30 -t 10 \
 	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \
 subnqn:nqn.2016-06.io.spdk:cnode1 hostnqn:nqn.2016-06.io.spdk:host1" \
-	--psk-path $key_path
+	--psk-path $key_path "${NO_HUGE[@]}"
 
 # Check connectivity with bdevperf with 32 bytes long key
 run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 "$key_path"
@@ -193,7 +193,7 @@ chmod 0600 $key_long_path
 nvmfappstart -m 0x2
 setup_nvmf_tgt $key_long_path
 
-$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 &
+$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 "${NO_HUGE[@]}" &
 bdevperf_pid=$!
 
 trap 'cleanup; exit 1' SIGINT SIGTERM EXIT
@@ -211,7 +211,8 @@ killprocess $nvmfpid
 # Launch apps with configs
 nvmfappstart -m 0x2 -c <(echo "$tgtconf")
 $rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 \
-	-c <(echo "$bdevperfconf") &
+	-c <(echo "$bdevperfconf") "${NO_HUGE[@]}" &
+
 bdevperf_pid=$!
 waitforlisten $bdevperf_pid $bdevperf_rpc_sock
 

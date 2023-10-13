@@ -29,7 +29,7 @@ $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 NULL1
 # Note: use -Q option to rate limit the error messages that perf will spew due to the
 # namespace hotplugs
 $SPDK_EXAMPLE_DIR/perf -c 0x1 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" \
-	-t 30 -q 128 -w randread -o 512 -Q 1000 &
+	-t 30 -q 128 -w randread -o 512 -Q 1000 "${NO_HUGE[@]}" &
 PERF_PID=$!
 
 while kill -0 $PERF_PID; do

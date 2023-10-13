@@ -1919,6 +1919,7 @@ usage(char *program_name)
 	printf("\t-R, --enable-uring enable using liburing to drive kernel devices (Default: libaio)\n");
 #endif
 	printf("\t--iova-mode <mode> specify DPDK IOVA mode: va|pa\n");
+	printf("\t--no-huge, SPDK is run without hugepages\n");
 	printf("\n");
 
 	printf("==== PCIe OPTIONS ====\n\n");
@@ -2479,6 +2480,8 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"rdma-srq-size", required_argument, NULL, PERF_RDMA_SRQ_SIZE},
 #define PERF_USE_EVERY_CORE	269
 	{"use-every-core", no_argument, NULL, PERF_USE_EVERY_CORE},
+#define PERF_NO_HUGE		270
+	{"no-huge", no_argument, NULL, PERF_NO_HUGE},
 	/* Should be the last element */
 	{0, 0, 0, 0}
 };
@@ -2741,6 +2744,9 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 				return 1;
 			}
 			g_transport_tos = val;
+			break;
+		case PERF_NO_HUGE:
+			env_opts->no_huge = true;
 			break;
 		default:
 			usage(argv[0]);

@@ -69,7 +69,7 @@ function nvmf_host_management() {
 	starttarget
 
 	# Run bdevperf
-	$rootdir/build/examples/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "0") -q 64 -o 65536 -w verify -t 10 &
+	$rootdir/build/examples/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "0") -q 64 -o 65536 -w verify -t 10 "${NO_HUGE[@]}" &
 	perfpid=$!
 	waitforlisten $perfpid /var/tmp/bdevperf.sock
 	$rpc_py -s /var/tmp/bdevperf.sock framework_wait_init
@@ -97,8 +97,7 @@ function nvmf_host_management() {
 	rm -f /var/tmp/spdk_cpu_lock*
 
 	# Run bdevperf
-	$rootdir/build/examples/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "0") -q 64 -o 65536 -w verify -t 1
-
+	$rootdir/build/examples/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "0") -q 64 -o 65536 -w verify -t 1 "${NO_HUGE[@]}"
 	stoptarget
 }
 

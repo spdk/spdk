@@ -19,8 +19,7 @@ $rpc_py bdev_null_create NULL1 1000 512
 $rpc_py bdev_wait_for_examine
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 NULL1
 
-$rootdir/test/nvme/fused_ordering/fused_ordering -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT subnqn:nqn.2016-06.io.spdk:cnode1"
-
+$rootdir/test/nvme/fused_ordering/fused_ordering -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT subnqn:nqn.2016-06.io.spdk:cnode1" "${NO_HUGE[@]}"
 trap - SIGINT SIGTERM EXIT
 
 nvmftestfini

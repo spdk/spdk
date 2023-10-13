@@ -27,6 +27,8 @@ function build_nvmf_app_args() {
 	fi
 	NVMF_APP+=(-i "$NVMF_APP_SHM_ID" -e 0xFFFF)
 
+	NVMF_APP+=("${NO_HUGE[@]}")
+
 	if [ -n "$SPDK_HUGE_DIR" ]; then
 		NVMF_APP+=(--huge-dir "$SPDK_HUGE_DIR")
 	elif [ $SPDK_RUN_NON_ROOT -eq 1 ]; then

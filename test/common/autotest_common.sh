@@ -285,6 +285,7 @@ if [ -z "${output_dir:-}" ]; then
 	export output_dir="$rootdir/../output"
 fi
 
+NO_HUGE=()
 TEST_MODE=
 for i in "$@"; do
 	case "$i" in
@@ -296,6 +297,9 @@ for i in "$@"; do
 			;;
 		--sock=*)
 			TEST_SOCK="${i#*=}"
+			;;
+		--no-hugepages)
+			NO_HUGE=(--no-huge -s 1024)
 			;;
 	esac
 done

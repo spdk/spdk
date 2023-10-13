@@ -26,7 +26,7 @@ $rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK0000000000000
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
-$rootdir/build/examples/bdevperf -z -r $bdevperf_rpc_sock -q 1024 -o 4096 -w verify -t 10 &
+$rootdir/build/examples/bdevperf -z -r $bdevperf_rpc_sock -q 1024 -o 4096 -w verify -t 10 "${NO_HUGE[@]}" &
 bdevperf_pid=$!
 
 trap 'process_shm --id $NVMF_APP_SHM_ID; killprocess $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT

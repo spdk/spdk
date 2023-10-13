@@ -18,6 +18,7 @@ function build_nvmf_example_args() {
 		NVMF_EXAMPLE=(sudo -u "$USER" "${NVMF_EXAMPLE[@]}")
 	fi
 	NVMF_EXAMPLE+=(-i "$NVMF_APP_SHM_ID" -g 10000)
+	NVMF_EXAMPLE+=("${NO_HUGE[@]}")
 }
 
 build_nvmf_example_args
@@ -59,7 +60,7 @@ perf="$SPDK_EXAMPLE_DIR/perf"
 
 $perf -q 64 -o 4096 -w randrw -M 30 -t 10 \
 	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \
-subnqn:nqn.2016-06.io.spdk:cnode1"
+subnqn:nqn.2016-06.io.spdk:cnode1" "${NO_HUGE[@]}"
 
 trap - SIGINT SIGTERM EXIT
 nvmftestfini

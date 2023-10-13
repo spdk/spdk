@@ -54,6 +54,10 @@ run_test "nvmf_nmic" $rootdir/test/nvmf/target/nmic.sh "${TEST_ARGS[@]}"
 run_test "nvmf_fio_target" $rootdir/test/nvmf/target/fio.sh "${TEST_ARGS[@]}"
 run_test "nvmf_bdevio" $rootdir/test/nvmf/target/bdevio.sh "${TEST_ARGS[@]}"
 
+if [ "$SPDK_TEST_NVMF_TRANSPORT" = "tcp" ]; then
+	run_test "nvmf_bdevio_no_huge" $rootdir/test/nvmf/target/bdevio.sh "${TEST_ARGS[@]}" --no-hugepages
+fi
+
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test "nvmf_fuzz" $rootdir/test/nvmf/target/fabrics_fuzz.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_multiconnection" $rootdir/test/nvmf/target/multiconnection.sh "${TEST_ARGS[@]}"

@@ -38,7 +38,7 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode0 -t $TEST_TRANSPOR
 $rpc_py nvmf_subsystem_add_listener discovery -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 # Start random writes in the background
-$SPDK_EXAMPLE_DIR/perf -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -o 4096 -q 128 -s 512 -w randwrite -t 10 -c 0x18 &
+$SPDK_EXAMPLE_DIR/perf -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -o 4096 -q 128 -s 512 -w randwrite -t 10 -c 0x18 "${NO_HUGE[@]}" &
 perf_pid=$!
 
 sleep 1

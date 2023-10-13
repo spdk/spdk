@@ -18,6 +18,7 @@
 #include "spdk_internal/event.h"
 
 #define NVMF_DEFAULT_SUBSYSTEMS		32
+#define NVMF_GETOPT_STRING "g:i:m:n:p:r:s:u:h"
 
 static const char *g_rpc_addr = SPDK_DEFAULT_RPC_ADDR;
 
@@ -95,15 +96,22 @@ usage(char *program_name)
 	printf("\t[-r RPC listen address (default /var/tmp/spdk.sock)]\n");
 	printf("\t[-s memory size in MB for DPDK (default: 0MB)]\n");
 	printf("\t[-u disable PCI access]\n");
+	printf("\t[--no-huge SPDK is run without hugepages]\n");
 }
+
+static const struct option g_nvmf_cmdline_opts[] = {
+#define NVMF_NO_HUGE        257
+	{"no-huge",			no_argument,	NULL, NVMF_NO_HUGE},
+	{0, 0, 0, 0}
+};
 
 static int
 parse_args(int argc, char **argv, struct spdk_env_opts *opts)
 {
-	int op;
+	int op, opt_index;
 	long int value;
 
-	while ((op = getopt(argc, argv, "g:i:m:n:p:r:s:u:h")) != -1) {
+	while ((op = getopt_long(argc, argv, NVMF_GETOPT_STRING, g_nvmf_cmdline_opts, &opt_index)) != -1) {
 		switch (op) {
 		case 'g':
 			value = spdk_strtol(optarg, 10);
@@ -148,6 +156,9 @@ parse_args(int argc, char **argv, struct spdk_env_opts *opts)
 		case 'h':
 			usage(argv[0]);
 			exit(EXIT_SUCCESS);
+		case NVMF_NO_HUGE:
+			opts->no_huge = true;
+			break;
 		default:
 			usage(argv[0]);
 			return 1;

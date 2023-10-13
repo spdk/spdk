@@ -13,6 +13,7 @@
 #include "spdk/util.h"
 #include "spdk/likely.h"
 
+#define ABORT_GETOPT_STRING "a:c:i:l:o:q:r:s:t:w:GM:T:"
 struct ctrlr_entry {
 	struct spdk_nvme_ctrlr		*ctrlr;
 	enum spdk_nvme_transport_type	trtype;
@@ -96,8 +97,15 @@ static int g_shm_id = -1;
 static bool g_no_pci;
 static bool g_warn;
 static bool g_mix_specified;
+static bool g_no_hugepages;
 
 static const char *g_core_mask;
+
+static const struct option g_abort_cmdline_opts[] = {
+#define ABORT_NO_HUGE        257
+	{"no-huge",			no_argument,	NULL, ABORT_NO_HUGE},
+	{0, 0, 0, 0}
+};
 
 struct trid_entry {
 	struct spdk_nvme_transport_id	trid;
@@ -557,6 +565,7 @@ usage(char *program_name)
 	printf("\t[-s DPDK huge memory size in MB.]\n");
 	printf("\t[-i shared memory group ID]\n");
 	printf("\t[-a abort interval.]\n");
+	printf("\t[--no-huge SPDK is run without hugepages\n");
 	printf("\t");
 	spdk_log_usage(stdout, "-T");
 #ifdef DEBUG
@@ -640,11 +649,12 @@ add_trid(const char *trid_str)
 static int
 parse_args(int argc, char **argv)
 {
-	int op;
+	int op, opt_index;
 	long int val;
 	int rc;
 
-	while ((op = getopt(argc, argv, "a:c:i:l:o:q:r:s:t:w:GM:T:")) != -1) {
+	while ((op = getopt_long(argc, argv, ABORT_GETOPT_STRING, g_abort_cmdline_opts,
+				 &opt_index)) != -1) {
 		switch (op) {
 		case 'a':
 		case 'i':
@@ -734,6 +744,9 @@ parse_args(int argc, char **argv)
 				fprintf(stderr, "Unrecognized log level: %s\n", optarg);
 				return 1;
 			}
+			break;
+		case ABORT_NO_HUGE:
+			g_no_hugepages = true;
 			break;
 		default:
 			usage(argv[0]);
@@ -1074,6 +1087,9 @@ main(int argc, char **argv)
 	}
 	if (g_no_pci) {
 		opts.no_pci = g_no_pci;
+	}
+	if (g_no_hugepages) {
+		opts.no_huge = true;
 	}
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");

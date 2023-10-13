@@ -227,14 +227,25 @@ usage(const char *program_name)
 	printf("\t[-L enable debug logging (flag disabled, must reconfigure with --enable-debug)]\n");
 	printf("\t[-c core mask]\n");
 #endif
+	printf("\t[-s memory size in MB for DPDK (default: 0MB)]\n");
+	printf("\t[--no-huge SPDK is run without hugepages]\n");
 }
+
+#define FUSED_GETOPT_STRING "r:L:q:c:s:"
+static const struct option g_fused_cmdline_opts[] = {
+#define FUSED_NO_HUGE        257
+	{"no-huge", no_argument, NULL, FUSED_NO_HUGE},
+	{0, 0, 0, 0}
+};
 
 static int
 parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 {
-	int op, rc;
+	int op, rc, opt_index;
+	long int value;
 
-	while ((op = getopt(argc, argv, "r:L:q:c:")) != -1) {
+	while ((op = getopt_long(argc, argv, FUSED_GETOPT_STRING, g_fused_cmdline_opts,
+				 &opt_index)) != -1) {
 		switch (op) {
 		case 'r':
 			if (spdk_nvme_transport_id_parse(&g_trid, optarg) != 0) {
@@ -256,7 +267,17 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		case 'c':
 			env_opts->core_mask = optarg;
 			break;
-
+		case 's':
+			value = spdk_strtol(optarg, 10);
+			if (value < 0) {
+				fprintf(stderr, "converting a string to integer failed\n");
+				return -EINVAL;
+			}
+			env_opts->mem_size = value;
+			break;
+		case FUSED_NO_HUGE:
+			env_opts->no_huge = true;
+			break;
 		default:
 			usage(argv[0]);
 			return 1;
