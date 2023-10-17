@@ -118,6 +118,14 @@ static void
 _scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun)
 {
 	struct spdk_scsi_task *task;
+	static const char *spdk_scsi_task_names[] = {
+		"abort task",
+		"abort task set",
+		"clear task set",
+		"lun reset",
+		"target reset"
+	};
+	const char *scsi_tn = "unknown task";
 
 	if (!TAILQ_EMPTY(&lun->mgmt_tasks)) {
 		return;
@@ -139,33 +147,29 @@ _scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun)
 		return;
 	}
 
+	if (task->function <= SPDK_COUNTOF(spdk_scsi_task_names)) {
+		scsi_tn = spdk_scsi_task_names[task->function];
+	}
+
 	switch (task->function) {
-	case SPDK_SCSI_TASK_FUNC_ABORT_TASK:
-		task->response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
-		SPDK_ERRLOG("ABORT_TASK failed\n");
-		break;
-
-	case SPDK_SCSI_TASK_FUNC_ABORT_TASK_SET:
-		task->response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
-		SPDK_ERRLOG("ABORT_TASK_SET failed\n");
-		break;
-
 	case SPDK_SCSI_TASK_FUNC_LUN_RESET:
+	case SPDK_SCSI_TASK_FUNC_TARGET_RESET:
 		bdev_scsi_reset(task);
 		return;
 
+	case SPDK_SCSI_TASK_FUNC_ABORT_TASK:
+	case SPDK_SCSI_TASK_FUNC_ABORT_TASK_SET:
 	default:
-		SPDK_ERRLOG("Unknown Task Management Function!\n");
 		/*
 		 * Task management functions other than those above should never
 		 * reach this point having been filtered by the frontend. Reject
 		 * the task as being unsupported.
 		 */
+		SPDK_ERRLOG("%s not supported\n", scsi_tn);
 		task->response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
+		scsi_lun_complete_mgmt_task(lun, task);
 		break;
 	}
-
-	scsi_lun_complete_mgmt_task(lun, task);
 }
 
 void
