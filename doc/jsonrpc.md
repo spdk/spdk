@@ -10352,6 +10352,7 @@ Example response:
   "result": [
     {
       "name": "RaidBdev0",
+      "uuid": "7d352e83-fe27-40f2-8fef-64563355e076",
       "strip_size_kb": 128,
       "state": "online",
       "raid_level": "raid0",
@@ -10364,6 +10365,7 @@ Example response:
     },
     {
       "name": "RaidBdev1",
+      "uuid": "f7cb71ed-2d0e-4240-979e-27b0b7735f36",
       "strip_size_kb": 128,
       "state": "configuring",
       "raid_level": "raid0",
@@ -10390,6 +10392,7 @@ name                    | Required | string      | RAID bdev name
 strip_size_kb           | Required | number      | Strip size in KB
 raid_level              | Required | string      | RAID level
 base_bdevs              | Required | string      | Base bdevs name, whitespace separated list in quotes
+uuid                    | Optional | string      | UUID for this RAID bdev
 
 #### Example
 
