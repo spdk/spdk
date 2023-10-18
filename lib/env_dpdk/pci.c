@@ -16,13 +16,6 @@
 
 #define SYSFS_PCI_DRIVERS	"/sys/bus/pci/drivers"
 
-/* Compatibility for versions < 20.11 */
-#if RTE_VERSION < RTE_VERSION_NUM(20, 11, 0, 0)
-#define RTE_DEV_ALLOWED RTE_DEV_WHITELISTED
-#define RTE_DEV_BLOCKED RTE_DEV_BLACKLISTED
-#define RTE_BUS_SCAN_ALLOWLIST RTE_BUS_SCAN_WHITELIST
-#endif
-
 #define PCI_CFG_SIZE		256
 #define PCI_EXT_CAP_ID_SN	0x03
 

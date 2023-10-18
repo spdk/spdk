@@ -147,31 +147,19 @@ pci_driver_register_2207(struct spdk_pci_driver *driver,
 static int
 pci_device_enable_interrupt_2207(struct rte_pci_device *rte_dev)
 {
-#if RTE_VERSION < RTE_VERSION_NUM(21, 11, 0, 0)
-	return rte_intr_enable(&rte_dev->intr_handle);
-#else
 	return rte_intr_enable(rte_dev->intr_handle);
-#endif
 }
 
 static int
 pci_device_disable_interrupt_2207(struct rte_pci_device *rte_dev)
 {
-#if RTE_VERSION < RTE_VERSION_NUM(21, 11, 0, 0)
-	return rte_intr_disable(&rte_dev->intr_handle);
-#else
 	return rte_intr_disable(rte_dev->intr_handle);
-#endif
 }
 
 static int
 pci_device_get_interrupt_efd_2207(struct rte_pci_device *rte_dev)
 {
-#if RTE_VERSION < RTE_VERSION_NUM(21, 11, 0, 0)
-	return rte_dev->intr_handle.fd;
-#else
 	return rte_intr_fd_get(rte_dev->intr_handle);
-#endif
 }
 
 static int

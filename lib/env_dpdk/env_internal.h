@@ -14,8 +14,8 @@
 #include <rte_version.h>
 #include <rte_eal.h>
 
-#if RTE_VERSION < RTE_VERSION_NUM(19, 11, 0, 0)
-#error RTE_VERSION is too old! Minimum 19.11 is required.
+#if RTE_VERSION < RTE_VERSION_NUM(21, 11, 0, 0)
+#error RTE_VERSION is too old! Minimum 21.11 is required.
 #endif
 
 /* x86-64 and ARM userspace virtual addresses use only the low 48 bits [0..47],

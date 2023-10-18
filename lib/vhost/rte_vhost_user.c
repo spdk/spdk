@@ -1231,11 +1231,7 @@ destroy_connection(int vid)
 	pthread_mutex_unlock(&user_dev->lock);
 }
 
-#if RTE_VERSION >= RTE_VERSION_NUM(21, 11, 0, 0)
 static const struct rte_vhost_device_ops g_spdk_vhost_ops = {
-#else
-static const struct vhost_device_ops g_spdk_vhost_ops = {
-#endif
 	.new_device =  start_device,
 	.destroy_device = stop_device,
 	.new_connection = new_connection,
@@ -1642,12 +1638,8 @@ vhost_register_unix_socket(const char *path, const char *ctrl_name,
 		}
 	}
 
-#if RTE_VERSION < RTE_VERSION_NUM(20, 8, 0, 0)
-	if (rte_vhost_driver_register(path, flags) != 0) {
-#else
 	flags = spdk_iommu_is_enabled() ? 0 : RTE_VHOST_USER_ASYNC_COPY;
 	if (rte_vhost_driver_register(path, flags) != 0) {
-#endif
 		SPDK_ERRLOG("Could not register controller %s with vhost library\n", ctrl_name);
 		SPDK_ERRLOG("Check if domain socket %s already exists\n", path);
 		return -EIO;

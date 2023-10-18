@@ -67,6 +67,9 @@ dpdk_pci_init(void)
 		}
 		/* There were no changes between 22.11 and 23.07, so use the 22.11 implementation */
 		g_dpdk_fn_table = &fn_table_2211;
+	} else if (year < 21 || (year == 21 && month < 11)) {
+		SPDK_ERRLOG("DPDK version %02d.%02d.%d is not supported.\n", year, month, minor);
+		return -EINVAL;
 	} else {
 		/* Everything else we use the 22.07 implementation. */
 		g_dpdk_fn_table = &fn_table_2207;
