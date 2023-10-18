@@ -1446,6 +1446,7 @@ get_health_log_page_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 	spdk_str_trim(buf);
 	spdk_json_write_named_string(w, "firmware_revision", buf);
 	spdk_json_write_named_string(w, "traddr", trid->traddr);
+	spdk_json_write_named_uint64(w, "critical_warning", health_page->critical_warning.raw);
 	spdk_json_write_named_uint64(w, "temperature_celsius", health_page->temperature - 273);
 	spdk_json_write_named_uint64(w, "available_spare_percentage", health_page->available_spare);
 	spdk_json_write_named_uint64(w, "available_spare_threshold_percentage",
