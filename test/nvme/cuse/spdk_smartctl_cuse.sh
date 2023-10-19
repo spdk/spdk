@@ -11,6 +11,8 @@ source $rootdir/test/common/autotest_common.sh
 SMARTCTL_CMD='smartctl -d nvme'
 rpc_py=$rootdir/scripts/rpc.py
 
+"$rootdir/scripts/setup.sh"
+
 bdf=$(get_first_nvme_bdf)
 
 PCI_ALLOWED="${bdf}" $rootdir/scripts/setup.sh reset

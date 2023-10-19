@@ -7,7 +7,8 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source "$testdir/common.sh"
 
-trap 'killprocess $spdk_tgt_pid' EXIT
+# Give the devices back to the kernel at the end
+trap 'killprocess $spdk_tgt_pid; "$rootdir/scripts/setup.sh" reset' EXIT
 
 nvme() {
 	# Apply some custom filters to align output between the plugin's listing and base nvme-cli's
@@ -28,6 +29,11 @@ kernel_out=()
 cuse_out=()
 
 rpc_py=$rootdir/scripts/rpc.py
+
+# We need to make sure these tests don't discriminate against the PCI_BLOCKED devices
+# since nvme-cli doesn't really care - to make sure all outputs are aligned, we need to
+# include all the devices that we can find.
+export PCI_BLOCKED=""
 
 "$rootdir/scripts/setup.sh" reset
 scan_nvme_ctrls
