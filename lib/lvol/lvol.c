@@ -1734,6 +1734,39 @@ spdk_lvol_decouple_parent(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, v
 				     lvol_inflate_cb, req);
 }
 
+static void
+lvs_grow_live_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvs_req *req = (struct spdk_lvs_req *)cb_arg;
+
+	if (req->cb_fn) {
+		req->cb_fn(req->cb_arg, lvolerrno);
+	}
+	free(req);
+	return;
+}
+
+void
+spdk_lvs_grow_live(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvs_req *req;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		SPDK_ERRLOG("Cannot alloc memory for request structure\n");
+		if (cb_fn) {
+			cb_fn(cb_arg, -ENOMEM);
+		}
+		return;
+	}
+
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+	req->lvol_store = lvs;
+
+	spdk_bs_grow_live(lvs->blobstore, lvs_grow_live_cb, req);
+}
+
 void
 spdk_lvs_grow(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {

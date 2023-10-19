@@ -337,7 +337,8 @@ void spdk_lvs_load_ext(struct spdk_bs_dev *bs_dev, const struct spdk_lvs_opts *l
 		       spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg);
 
 /**
- * Grow a lvstore to fill the underlying device
+ * Grow a lvstore to fill the underlying device.
+ * Cannot be used on loaded lvstore.
  *
  * \param bs_dev Pointer to the blobstore device.
  * \param cb_fn Completion callback.
@@ -345,6 +346,15 @@ void spdk_lvs_load_ext(struct spdk_bs_dev *bs_dev, const struct spdk_lvs_opts *l
  */
 void spdk_lvs_grow(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn,
 		   void *cb_arg);
+
+/**
+ * Grow a loaded lvstore to fill the underlying device.
+ *
+ * \param lvs Pointer to lvolstore.
+ * \param cb_fn Completion callback.
+ * \param cb_arg Completion callback custom arguments.
+ */
+void spdk_lvs_grow_live(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *cb_arg);
 
 /**
  * Open a lvol.

@@ -39,6 +39,9 @@ bool g_ext_api_called;
 bool g_bdev_is_missing = false;
 
 DEFINE_STUB_V(spdk_bdev_module_fini_start_done, (void));
+DEFINE_STUB_V(spdk_bdev_update_bs_blockcnt, (struct spdk_bs_dev *bs_dev));
+DEFINE_STUB_V(spdk_lvs_grow_live, (struct spdk_lvol_store *lvs,
+				   spdk_lvs_op_complete cb_fn, void *cb_arg));
 DEFINE_STUB(spdk_bdev_get_memory_domains, int, (struct spdk_bdev *bdev,
 		struct spdk_memory_domain **domains, int array_size), 0);
 DEFINE_STUB(spdk_blob_get_esnap_id, int,

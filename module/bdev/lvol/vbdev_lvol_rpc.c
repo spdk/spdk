@@ -1322,7 +1322,8 @@ rpc_bdev_lvol_grow_lvstore(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
 	}
-	vbdev_lvs_grow(lvs, rpc_bdev_lvol_grow_lvstore_cb, request);
+	spdk_bdev_update_bs_blockcnt(lvs->bs_dev);
+	spdk_lvs_grow_live(lvs, rpc_bdev_lvol_grow_lvstore_cb, request);
 
 cleanup:
 	free_rpc_bdev_lvol_grow_lvstore(&req);

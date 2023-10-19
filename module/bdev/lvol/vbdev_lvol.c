@@ -4,7 +4,6 @@
  *   Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
-#include "spdk/blob_bdev.h"
 #include "spdk/rpc.h"
 #include "spdk/bdev_module.h"
 #include "spdk/log.h"

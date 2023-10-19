@@ -36,6 +36,9 @@ DEFINE_STUB(spdk_bdev_create_bs_dev_ro, int,
 	     struct spdk_bs_dev **bs_dev), -ENOTSUP);
 DEFINE_STUB(spdk_blob_is_esnap_clone, bool, (const struct spdk_blob *blob), false);
 DEFINE_STUB(spdk_blob_is_degraded, bool, (const struct spdk_blob *blob), false);
+DEFINE_STUB_V(spdk_bs_grow_live,
+	      (struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_arg));
+
 
 const char *uuid = "828d9766-ae50-11e7-bd8d-001e67edf350";
 
