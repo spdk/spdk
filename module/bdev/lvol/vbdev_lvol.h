@@ -112,16 +112,6 @@ struct lvol_store_bdev *vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs);
 
 struct spdk_lvol *vbdev_lvol_get_from_bdev(struct spdk_bdev *bdev);
 
-/**
- * \brief Grow given lvolstore.
- *
- * \param lvs Pointer to lvolstore
- * \param cb_fn Completion callback
- * \param cb_arg Completion callback custom arguments
- */
-void vbdev_lvs_grow(struct spdk_lvol_store *lvs,
-		    spdk_lvs_op_complete cb_fn, void *cb_arg);
-
 int vbdev_lvol_esnap_dev_create(void *bs_ctx, void *blob_ctx, struct spdk_blob *blob,
 				const void *esnap_id, uint32_t id_len,
 				struct spdk_bs_dev **_bs_dev);
