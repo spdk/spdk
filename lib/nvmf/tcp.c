@@ -2018,8 +2018,6 @@ data_crc32_calc_done(void *cb_arg, int status)
 {
 	struct nvme_tcp_pdu *pdu = cb_arg;
 	struct spdk_nvmf_tcp_qpair *tqpair = pdu->qpair;
-	struct spdk_nvmf_tcp_req *tcp_req;
-	struct spdk_nvme_cpl *rsp;
 
 	/* async crc32 calculation is failed and use direct calculation to check */
 	if (spdk_unlikely(status)) {
@@ -2030,10 +2028,9 @@ data_crc32_calc_done(void *cb_arg, int status)
 	pdu->data_digest_crc32 ^= SPDK_CRC32C_XOR;
 	if (!MATCH_DIGEST_WORD(pdu->data_digest, pdu->data_digest_crc32)) {
 		SPDK_ERRLOG("Data digest error on tqpair=(%p) with pdu=%p\n", tqpair, pdu);
-		tcp_req = pdu->req;
-		assert(tcp_req != NULL);
-		rsp = &tcp_req->req.rsp->nvme_cpl;
-		rsp->status.sc = SPDK_NVME_SC_COMMAND_TRANSIENT_TRANSPORT_ERROR;
+		assert(pdu->req != NULL);
+		nvmf_tcp_req_set_cpl(pdu->req, SPDK_NVME_SCT_GENERIC,
+				     SPDK_NVME_SC_COMMAND_TRANSIENT_TRANSPORT_ERROR);
 	}
 	_nvmf_tcp_pdu_payload_handle(tqpair, pdu);
 }
