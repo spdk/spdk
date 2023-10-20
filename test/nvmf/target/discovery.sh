@@ -34,7 +34,7 @@ $rpc_py nvmf_subsystem_add_listener discovery -t $TEST_TRANSPORT -a $NVMF_FIRST_
 # Add a referral to another discovery service
 $rpc_py nvmf_discovery_add_referral -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT_REFERRAL
 
-nvme discover -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+nvme discover "${NVME_HOST[@]}" -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 echo "Perform nvmf subsystem discovery via RPC"
 $rpc_py nvmf_get_subsystems

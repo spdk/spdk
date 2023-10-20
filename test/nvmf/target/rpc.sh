@@ -55,22 +55,22 @@ $rpc_py nvmf_subsystem_allow_any_host -d nqn.2016-06.io.spdk:cnode1
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 # This connect should fail - the host NQN is not allowed
-NOT $NVME_CONNECT -t $TEST_TRANSPORT -n nqn.2016-06.io.spdk:cnode1 -q nqn.2016-06.io.spdk:host1 -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+NOT $NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n nqn.2016-06.io.spdk:cnode1 -q "$NVME_HOSTNQN" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 # Add the host NQN and verify that the connect succeeds
-$rpc_py nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1
-$NVME_CONNECT -t $TEST_TRANSPORT -n nqn.2016-06.io.spdk:cnode1 -q nqn.2016-06.io.spdk:host1 -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+$rpc_py nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode1 "$NVME_HOSTNQN"
+$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n nqn.2016-06.io.spdk:cnode1 -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 waitforserial "$NVMF_SERIAL"
 nvme disconnect -n nqn.2016-06.io.spdk:cnode1
 waitforserial_disconnect "$NVMF_SERIAL"
 
 # Remove the host and verify that the connect fails
-$rpc_py nvmf_subsystem_remove_host nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1
-NOT $NVME_CONNECT -t $TEST_TRANSPORT -n nqn.2016-06.io.spdk:cnode1 -q nqn.2016-06.io.spdk:host1 -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+$rpc_py nvmf_subsystem_remove_host nqn.2016-06.io.spdk:cnode1 "$NVME_HOSTNQN"
+NOT $NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n nqn.2016-06.io.spdk:cnode1 -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 # Allow any host and verify that the connect succeeds
 $rpc_py nvmf_subsystem_allow_any_host -e nqn.2016-06.io.spdk:cnode1
-$NVME_CONNECT -t $TEST_TRANSPORT -n nqn.2016-06.io.spdk:cnode1 -q nqn.2016-06.io.spdk:host1 -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n nqn.2016-06.io.spdk:cnode1 -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 waitforserial "$NVMF_SERIAL"
 nvme disconnect -n nqn.2016-06.io.spdk:cnode1
 waitforserial_disconnect "$NVMF_SERIAL"
@@ -83,7 +83,7 @@ for i in $(seq 1 $loops); do
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1 -n 5
 	$rpc_py nvmf_subsystem_allow_any_host nqn.2016-06.io.spdk:cnode1
-	$NVME_CONNECT -t $TEST_TRANSPORT -n nqn.2016-06.io.spdk:cnode1 -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+	$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n nqn.2016-06.io.spdk:cnode1 -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 	waitforserial "$NVMF_SERIAL"
 
