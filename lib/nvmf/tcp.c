@@ -2005,6 +2005,14 @@ _nvmf_tcp_pdu_payload_handle(struct spdk_nvmf_tcp_qpair *tqpair, struct nvme_tcp
 	tqpair->tcp_pdu_working_count--;
 }
 
+static inline void
+nvmf_tcp_req_set_cpl(struct spdk_nvmf_tcp_req *treq, int sct, int sc)
+{
+	treq->req.rsp->nvme_cpl.status.sct = sct;
+	treq->req.rsp->nvme_cpl.status.sc = sc;
+	treq->req.rsp->nvme_cpl.cid = treq->req.cmd->nvme_cmd.cid;
+}
+
 static void
 data_crc32_calc_done(void *cb_arg, int status)
 {
@@ -2876,9 +2884,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			tcp_req->req.xfer = spdk_nvmf_req_get_xfer(&tcp_req->req);
 
 			if (spdk_unlikely(tcp_req->req.xfer == SPDK_NVME_DATA_BIDIRECTIONAL)) {
-				tcp_req->req.rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-				tcp_req->req.rsp->nvme_cpl.status.sc  = SPDK_NVME_SC_INVALID_OPCODE;
-				tcp_req->req.rsp->nvme_cpl.cid = tcp_req->req.cmd->nvme_cmd.cid;
+				nvmf_tcp_req_set_cpl(tcp_req, SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_INVALID_OPCODE);
 				nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 				nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_COMPLETE);
 				SPDK_DEBUGLOG(nvmf_tcp, "Request %p: invalid xfer type (BIDIRECTIONAL)\n", tcp_req);
@@ -3020,9 +3026,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 					/* This request failed FUSED semantics.  Fail it immediately, without
 					 * even sending it to the target layer.
 					 */
-					tcp_req->req.rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-					tcp_req->req.rsp->nvme_cpl.status.sc = SPDK_NVME_SC_ABORTED_MISSING_FUSED;
-					tcp_req->req.rsp->nvme_cpl.cid = tcp_req->req.cmd->nvme_cmd.cid;
+					nvmf_tcp_req_set_cpl(tcp_req, SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_ABORTED_MISSING_FUSED);
 					nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_COMPLETE);
 					break;
 				}
@@ -3415,10 +3419,7 @@ static void
 nvmf_tcp_req_set_abort_status(struct spdk_nvmf_request *req,
 			      struct spdk_nvmf_tcp_req *tcp_req_to_abort)
 {
-	tcp_req_to_abort->req.rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-	tcp_req_to_abort->req.rsp->nvme_cpl.status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
-	tcp_req_to_abort->req.rsp->nvme_cpl.cid = tcp_req_to_abort->req.cmd->nvme_cmd.cid;
-
+	nvmf_tcp_req_set_cpl(tcp_req_to_abort, SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_ABORTED_BY_REQUEST);
 	nvmf_tcp_req_set_state(tcp_req_to_abort, TCP_REQUEST_STATE_READY_TO_COMPLETE);
 
 	req->rsp->nvme_cpl.cdw0 &= ~1U; /* Command was successfully aborted. */
