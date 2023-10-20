@@ -29,6 +29,7 @@ if [[ $INSTALL_LIBURING == "true" ]]; then
 fi
 
 if [[ $INSTALL_RBD == "true" ]]; then
-	# Additional dependencies for RBD bdev in NVMe over Fabrics
-	pkg install -y ceph || pkg install -y ceph14
+	printf 'RBD is not supported on %s, disabling\n' \
+		"$(freebsd-version)"
+	INSTALL_RBD=false
 fi
