@@ -336,7 +336,7 @@ create_xnvme_bdev(const char *name, const char *filename, const char *io_mechani
 		} else if (!strcmp(xnvme->io_mechanism, "io_uring")) {
 			opts.poll_io = 1;
 		} else if (!strcmp(xnvme->io_mechanism, "io_uring_cmd")) {
-			opts.poll_sq = 1;
+			opts.poll_io = 1;
 		}
 	}
 
