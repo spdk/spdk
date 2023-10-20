@@ -30,7 +30,7 @@ for i in $(seq 1 4); do
 done
 $rpc_py nvmf_subsystem_add_listener discovery -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
-nvme discover -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+nvme discover "${NVME_HOST[@]}" -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 echo "Perform nvmf subsystem discovery via RPC"
 $rpc_py nvmf_get_subsystems
