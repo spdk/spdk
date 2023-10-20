@@ -199,7 +199,7 @@ function install_nvmecli_plugin() {
 	git -C "$GIT_REPOS/nvme-cli-plugin" fetch $GIT_REPO_NVME_CLI refs/changes/95/16795/12
 	git -C "$GIT_REPOS/nvme-cli-plugin" checkout FETCH_HEAD
 
-	meson setup --force-fallback-for=libnvme \
+	meson setup --force-fallback-for=libnvme,json-c \
 		"$GIT_REPOS/nvme-cli-plugin/.build" \
 		"$GIT_REPOS/nvme-cli-plugin"
 	meson compile -C "$GIT_REPOS/nvme-cli-plugin/.build"
