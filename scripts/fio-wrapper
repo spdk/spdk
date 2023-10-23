@@ -122,7 +122,9 @@ configure_devices() {
 		else
 			printf 'Could not set queue depth (%s)\n' "$dev" >&2
 		fi
-		echo none > "/sys/block/$dev/queue/scheduler"
+		if [[ -e /sys/block/$dev/queue/scheduler ]]; then
+			echo none > "/sys/block/$dev/queue/scheduler"
+		fi
 	done
 }
 
