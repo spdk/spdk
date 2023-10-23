@@ -300,6 +300,9 @@ struct spdk_nvmf_tcp_qpair {
 	uint16_t				initiator_port;
 	uint16_t				target_port;
 
+	/* Wait until the host terminates the connection (e.g. after sending C2HTermReq) */
+	bool					wait_terminate;
+
 	/* Timer used to destroy qpair after detecting transport error issue if initiator does
 	 *  not close the connection.
 	 */
@@ -1654,6 +1657,7 @@ nvmf_tcp_send_c2h_term_req(struct spdk_nvmf_tcp_qpair *tqpair, struct nvme_tcp_p
 
 	/* Contain the header of the wrong received pdu */
 	c2h_term_req->common.plen = c2h_term_req->common.hlen + copy_len;
+	tqpair->wait_terminate = true;
 	nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_QUIESCING);
 	nvmf_tcp_qpair_write_mgmt_pdu(tqpair, nvmf_tcp_send_c2h_term_req_complete, tqpair);
 }
@@ -2416,10 +2420,10 @@ nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
 			break;
 		case NVME_TCP_PDU_RECV_STATE_ERROR:
-			if (!spdk_sock_is_connected(tqpair->sock)) {
-				return NVME_TCP_PDU_FATAL;
+			if (spdk_sock_is_connected(tqpair->sock) && tqpair->wait_terminate) {
+				return NVME_TCP_PDU_IN_PROGRESS;
 			}
-			return NVME_TCP_PDU_IN_PROGRESS;
+			return NVME_TCP_PDU_FATAL;
 		default:
 			SPDK_ERRLOG("The state(%d) is invalid\n", tqpair->recv_state);
 			abort();
