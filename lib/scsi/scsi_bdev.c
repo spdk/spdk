@@ -512,8 +512,6 @@ bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 
 			/* MAXIMUM PREFETCH XDREAD XDWRITE TRANSFER LENGTH */
 
-			len = 20 - hlen;
-
 			if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 				/*
 				 * MAXIMUM UNMAP LBA COUNT: indicates the
@@ -539,19 +537,19 @@ bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 				 * OPTIMAL UNMAP GRANULARITY nor the UNMAP GRANULARITY
 				 * ALIGNMENT fields are valid.
 				 */
-
-				/*
-				 * MAXIMUM WRITE SAME LENGTH: indicates the
-				 * maximum number of contiguous logical blocks
-				 * that the device server allows to be unmapped
-				 * or written in a single WRITE SAME command.
-				 */
-				to_be64(&data[36], blocks);
-
-				/* Reserved */
-				/* not specified */
-				len = 64 - hlen;
 			}
+
+			/*
+			 * MAXIMUM WRITE SAME LENGTH: indicates the
+			 * maximum number of contiguous logical blocks
+			 * that the device server allows to be unmapped
+			 * or written in a single WRITE SAME command.
+			 */
+			to_be64(&data[36], blocks);
+
+			/* Reserved */
+			/* not specified */
+			len = 64 - hlen;
 
 			to_be16(vpage->alloc_len, len);
 			break;
