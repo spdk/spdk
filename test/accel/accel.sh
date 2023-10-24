@@ -8,36 +8,67 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 
+accel_perf() {
+	"$SPDK_EXAMPLE_DIR/accel_perf" -c <(build_accel_config) "$@"
+}
+
+build_accel_config() {
+	accel_json_cfg=()
+	[[ $SPDK_TEST_ACCEL_DSA -gt 0 ]] && accel_json_cfg+=('{"method": "dsa_scan_accel_module"}')
+	[[ $SPDK_TEST_ACCEL_IAA -gt 0 ]] && accel_json_cfg+=('{"method": "iaa_scan_accel_module"}')
+	[[ $SPDK_TEST_ACCEL_IOAT -gt 0 ]] && accel_json_cfg+=('{"method": "ioat_scan_accel_module"}')
+
+	if [[ $COMPRESSDEV ]]; then
+		accel_json_cfg+=('{"method": "compressdev_scan_accel_module", "params":{"pmd": 0}}')
+	fi
+
+	local IFS=","
+	jq -r '.' <<- JSON
+		{
+		 "subsystems": [
+		  {
+		   "subsystem": "accel",
+		   "config": [
+		   ${accel_json_cfg[*]}
+		   ]
+		  }
+		 ]
+		}
+	JSON
+}
+
 #Run through all SW ops with defaults for a quick sanity check
 #To save time, only use verification case
-run_test "accel_crc32c" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w crc32c -y
-run_test "accel_crc32c_C2" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w crc32c -y -C 2
-run_test "accel_copy" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w copy -y
-run_test "accel_fill" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w fill -y
-run_test "accel_copy_crc32c" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w copy_crc32c -y
-run_test "accel_copy_crc32c_C2" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w copy_crc32c -y -C 2
-run_test "accel_dualcast" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w dualcast -y
-run_test "accel_compare" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w compare -y
-run_test "accel_xor" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w xor -y
-run_test "accel_xor" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w xor -y -x 3
+run_test "accel_crc32c" accel_perf -t 1 -w crc32c -y
+run_test "accel_crc32c_C2" accel_perf -t 1 -w crc32c -y -C 2
+run_test "accel_copy" accel_perf -t 1 -w copy -y
+run_test "accel_fill" accel_perf -t 1 -w fill -y
+run_test "accel_copy_crc32c" accel_perf -t 1 -w copy_crc32c -y
+run_test "accel_copy_crc32c_C2" accel_perf -t 1 -w copy_crc32c -y -C 2
+run_test "accel_dualcast" accel_perf -t 1 -w dualcast -y
+run_test "accel_compare" accel_perf -t 1 -w compare -y
+run_test "accel_xor" accel_perf -t 1 -w xor -y
+run_test "accel_xor" accel_perf -t 1 -w xor -y -x 3
 # do not run compress/decompress unless ISAL is installed
 if [[ $CONFIG_ISAL == y ]]; then
-	run_test "accel_comp" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w compress -l $testdir/bib
-	run_test "accel_decomp" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w decompress -l $testdir/bib -y
-	run_test "accel_decmop_full" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w decompress -l $testdir/bib -y -o 0
-	run_test "accel_decomp_mcore" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w decompress -l $testdir/bib -y -m 0xf
-	run_test "accel_decomp_full_mcore" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w decompress -l $testdir/bib -y -o 0 -m 0xf
-	run_test "accel_decomp_mthread" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w decompress -l $testdir/bib -y -T 2
-	run_test "accel_deomp_full_mthread" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w decompress -l $testdir/bib -y -o 0 -T 2
+	run_test "accel_comp" accel_perf -t 1 -w compress -l $testdir/bib
+	run_test "accel_decomp" accel_perf -t 1 -w decompress -l $testdir/bib -y
+	run_test "accel_decmop_full" accel_perf -t 1 -w decompress -l $testdir/bib -y -o 0
+	run_test "accel_decomp_mcore" accel_perf -t 1 -w decompress -l $testdir/bib -y -m 0xf
+	run_test "accel_decomp_full_mcore" accel_perf -t 1 -w decompress -l $testdir/bib -y -o 0 -m 0xf
+	run_test "accel_decomp_mthread" accel_perf -t 1 -w decompress -l $testdir/bib -y -T 2
+	run_test "accel_deomp_full_mthread" accel_perf -t 1 -w decompress -l $testdir/bib -y -o 0 -T 2
 fi
 if [[ $CONFIG_DPDK_COMPRESSDEV == y ]]; then
-	run_test "accel_cdev_comp" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w compress -l $testdir/bib -c $testdir/dpdk.json
-	run_test "accel_cdev_decomp" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w decompress -l $testdir/bib -y -c $testdir/dpdk.json
-	run_test "accel_cdev_decmop_full" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w decompress -l $testdir/bib -y -o 0 -c $testdir/dpdk.json
-	run_test "accel_cdev_decomp_mcore" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w decompress -l $testdir/bib -y -m 0xf -c $testdir/dpdk.json
-	run_test "accel_cdev_decomp_full_mcore" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w decompress -l $testdir/bib -y -o 0 -m 0xf -c $testdir/dpdk.json
-	run_test "accel_cdev_decomp_mthread" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w decompress -l $testdir/bib -y -T 2 -c $testdir/dpdk.json
-	run_test "accel_cdev_deomp_full_mthread" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w decompress -l $testdir/bib -y -o 0 -T 2 -c $testdir/dpdk.json
+	COMPRESSDEV=1
+	run_test "accel_cdev_comp" accel_perf -t 1 -w compress -l $testdir/bib
+	run_test "accel_cdev_decomp" accel_perf -t 1 -w decompress -l $testdir/bib -y
+	run_test "accel_cdev_decmop_full" accel_perf -t 1 -w decompress -l $testdir/bib -y -o 0
+	run_test "accel_cdev_decomp_mcore" accel_perf -t 1 -w decompress -l $testdir/bib -y -m 0xf
+	run_test "accel_cdev_decomp_full_mcore" accel_perf -t 1 -w decompress -l $testdir/bib -y -o 0 -m 0xf
+	run_test "accel_cdev_decomp_mthread" accel_perf -t 1 -w decompress -l $testdir/bib -y -T 2
+	run_test "accel_cdev_deomp_full_mthread" accel_perf -t 1 -w decompress -l $testdir/bib -y -o 0 -T 2
+	unset COMPRESSDEV
 fi
 
 trap 'killprocess $spdk_tgt_pid; exit 1' ERR

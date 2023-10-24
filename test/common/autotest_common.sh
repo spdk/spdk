@@ -152,6 +152,12 @@ export SPDK_TEST_SMA
 export SPDK_TEST_DAOS
 : ${SPDK_TEST_XNVME:=0}
 export SPDK_TEST_XNVME
+: ${SPDK_TEST_ACCEL_DSA=0}
+export SPDK_TEST_ACCEL_DSA
+: ${SPDK_TEST_ACCEL_IAA=0}
+export SPDK_TEST_ACCEL_IAA
+: ${SPDK_TEST_ACCEL_IOAT=0}
+export SPDK_TEST_ACCEL_IOAT
 # Comma-separated list of fuzzer targets matching test/fuzz/llvm/$target
 : ${SPDK_TEST_FUZZER_TARGET:=}
 export SPDK_TEST_FUZZER_TARGET
