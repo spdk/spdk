@@ -1187,7 +1187,7 @@ _ublk_submit_bdev_io(struct ublk_queue *q, struct ublk_io *io)
 		rc = spdk_bdev_write_blocks(desc, ch, io->payload, offset_blocks, num_blocks, ublk_io_done, io);
 		break;
 	case UBLK_IO_OP_FLUSH:
-		rc = spdk_bdev_flush_blocks(desc, ch, offset_blocks, num_blocks, ublk_io_done, io);
+		rc = spdk_bdev_flush_blocks(desc, ch, 0, spdk_bdev_get_num_blocks(ublk->bdev), ublk_io_done, io);
 		break;
 	case UBLK_IO_OP_DISCARD:
 		rc = spdk_bdev_unmap_blocks(desc, ch, offset_blocks, num_blocks, ublk_io_done, io);
@@ -1204,7 +1204,7 @@ _ublk_submit_bdev_io(struct ublk_queue *q, struct ublk_io *io)
 			SPDK_INFOLOG(ublk, "No memory, start to queue io.\n");
 			ublk_queue_io(io);
 		} else {
-			SPDK_ERRLOG("ublk io failed in ublk_queue_io, rc=%d.\n", rc);
+			SPDK_ERRLOG("ublk io failed in ublk_queue_io, rc=%d, ublk_op=%u\n", rc, ublk_op);
 			ublk_io_done(NULL, false, io);
 		}
 	}
@@ -1648,6 +1648,10 @@ ublk_info_param_init(struct spdk_ublk_dev *ublk)
 			.max_sectors = UBLK_IO_MAX_BYTES >> LINUX_SECTOR_SHIFT,
 		}
 	};
+
+	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH)) {
+		uparams.basic.attrs = UBLK_ATTR_VOLATILE_CACHE;
+	}
 
 	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 		uparams.types |= UBLK_PARAM_TYPE_DISCARD;
