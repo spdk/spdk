@@ -1149,16 +1149,18 @@ int
 main(int argc, char **argv)
 {
 	struct worker_thread *worker, *tmp;
+	int rc;
 
 	pthread_mutex_init(&g_workers_lock, NULL);
 	spdk_app_opts_init(&g_opts, sizeof(g_opts));
 	g_opts.name = "accel_perf";
 	g_opts.reactor_mask = "0x1";
 	g_opts.shutdown_cb = shutdown_cb;
-	if (spdk_app_parse_args(argc, argv, &g_opts, "a:C:o:q:t:yw:P:f:T:l:x:", NULL, parse_args,
-				usage) != SPDK_APP_PARSE_ARGS_SUCCESS) {
-		g_rc = -1;
-		goto cleanup;
+
+	rc = spdk_app_parse_args(argc, argv, &g_opts, "a:C:o:q:t:yw:P:f:T:l:x:", NULL,
+				 parse_args, usage);
+	if (rc != SPDK_APP_PARSE_ARGS_SUCCESS) {
+		return rc == SPDK_APP_PARSE_ARGS_HELP ? 0 : 1;
 	}
 
 	if ((g_workload_selection != SPDK_ACCEL_OPC_COPY) &&
