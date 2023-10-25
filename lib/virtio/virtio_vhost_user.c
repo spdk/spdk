@@ -902,7 +902,7 @@ virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 	vq->vq_ring_virt_mem = queue_mem;
 
 	state.index = vq->vq_queue_index;
-	state.num = vq->vq_nentries;
+	state.num = 1;
 
 	if (virtio_dev_has_feature(vdev, VHOST_USER_F_PROTOCOL_FEATURES)) {
 		rc = vhost_user_sock(dev, VHOST_USER_SET_VRING_ENABLE, &state);
