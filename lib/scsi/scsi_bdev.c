@@ -1327,7 +1327,10 @@ check_condition:
 
 struct spdk_bdev_scsi_split_ctx {
 	struct spdk_scsi_task		*task;
-	struct spdk_scsi_unmap_bdesc	desc[DEFAULT_MAX_UNMAP_BLOCK_DESCRIPTOR_COUNT];
+	union {
+		struct spdk_scsi_unmap_bdesc	desc[DEFAULT_MAX_UNMAP_BLOCK_DESCRIPTOR_COUNT];
+		uint64_t			start_offset_blocks;	/* used by writesame */
+	};
 	uint16_t			remaining_count;
 	uint16_t			current_count;
 	uint16_t			outstanding_count;
@@ -1542,6 +1545,101 @@ bdev_scsi_unmap(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 }
 
 static int
+_bdev_scsi_write_same(struct spdk_bdev_scsi_split_ctx *ctx)
+{
+	struct spdk_scsi_task *task = ctx->task;
+	struct spdk_scsi_lun *lun = task->lun;
+	uint64_t offset_blocks;
+
+	ctx->outstanding_count++;
+	offset_blocks = ctx->start_offset_blocks + ctx->current_count;
+	return spdk_bdev_writev_blocks(lun->bdev_desc, lun->io_channel, task->iovs, task->iovcnt,
+				       offset_blocks, 1, bdev_scsi_task_complete_split_cmd, ctx);
+}
+
+static int
+bdev_scsi_write_same(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
+		     struct spdk_io_channel *bdev_ch, struct spdk_scsi_task *task,
+		     uint64_t lba, uint32_t xfer_len, uint8_t flags)
+{
+	struct spdk_bdev_scsi_split_ctx *ctx;
+	uint64_t bdev_num_blocks, offset_blocks, num_blocks;
+	uint32_t max_xfer_len, block_size;
+	int sk = SPDK_SCSI_SENSE_NO_SENSE, asc = SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE;
+
+	task->data_transferred = 0;
+
+	if (spdk_unlikely(task->dxfer_dir != SPDK_SCSI_DIR_TO_DEV)) {
+		SPDK_ERRLOG("Incorrect data direction\n");
+		goto check_condition;
+	}
+
+	block_size = spdk_bdev_get_data_block_size(bdev);
+	if (spdk_unlikely(task->transfer_len != block_size)) {
+		SPDK_ERRLOG("Incorrect data length(%d), a single logical block(%d) is required\n",
+			    task->transfer_len, block_size);
+		goto check_condition;
+	}
+
+	if (spdk_unlikely(xfer_len == 0)) {
+		task->status = SPDK_SCSI_STATUS_GOOD;
+		return SPDK_SCSI_TASK_COMPLETE;
+	}
+
+	bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
+	if (spdk_unlikely(bdev_num_blocks <= lba || bdev_num_blocks - lba < xfer_len)) {
+		SPDK_DEBUGLOG(scsi, "end of media\n");
+		sk = SPDK_SCSI_SENSE_ILLEGAL_REQUEST;
+		asc = SPDK_SCSI_ASC_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE;
+		goto check_condition;
+	}
+
+	/* see MAXIMUM WRITE SAME LENGTH of SPDK_SPC_VPD_BLOCK_LIMITS */
+	max_xfer_len = SPDK_WORK_BLOCK_SIZE / block_size;
+	if (spdk_unlikely(xfer_len > max_xfer_len)) {
+		SPDK_ERRLOG("xfer_len %"PRIu32 " > maximum transfer length %" PRIu32 "\n",
+			    xfer_len, max_xfer_len);
+		sk = SPDK_SCSI_SENSE_ILLEGAL_REQUEST;
+		asc = SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB;
+		goto check_condition;
+	}
+
+	if (_bytes_to_blocks(block_size, task->offset, &offset_blocks, task->length * xfer_len,
+			     &num_blocks) != 0) {
+		SPDK_ERRLOG("task's offset %" PRIu64 " or length %" PRIu32 " is not block multiple\n",
+			    task->offset, task->length);
+		goto check_condition;
+	}
+
+	offset_blocks += lba;
+	SPDK_DEBUGLOG(scsi, "Writesame: lba=%"PRIu64", len=%"PRIu64"\n",
+		      offset_blocks, num_blocks);
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		SPDK_ERRLOG("No enough memory on SCSI WRITE SAME\n");
+		goto check_condition;
+	}
+
+	ctx->task = task;
+	ctx->start_offset_blocks = offset_blocks;
+	ctx->current_count = 0;
+	ctx->outstanding_count = 0;
+	ctx->remaining_count = xfer_len;
+	ctx->fn = _bdev_scsi_write_same;
+	snprintf(ctx->name, sizeof(ctx->name), "WRITE SAME");
+
+	task->data_transferred = task->length;
+
+	return bdev_scsi_split(ctx);
+
+check_condition:
+	spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+				  sk, asc, SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+	return SPDK_SCSI_TASK_COMPLETE;
+}
+
+static int
 bdev_scsi_process_block(struct spdk_scsi_task *task)
 {
 	struct spdk_scsi_lun *lun = task->lun;
@@ -1668,6 +1766,19 @@ bdev_scsi_process_block(struct spdk_scsi_task *task)
 
 	case SPDK_SBC_UNMAP:
 		return bdev_scsi_unmap(bdev, task);
+
+	case SPDK_SBC_WRITE_SAME_10:
+		lba = from_be32(&cdb[2]);
+		xfer_len = from_be16(&cdb[7]);
+		return bdev_scsi_write_same(bdev, lun->bdev_desc, lun->io_channel,
+					    task, lba, xfer_len, cdb[1]);
+
+	case SPDK_SBC_WRITE_SAME_16:
+		lba = from_be64(&cdb[2]);
+		xfer_len = from_be32(&cdb[10]);
+		return bdev_scsi_write_same(bdev, lun->bdev_desc, lun->io_channel,
+					    task, lba, xfer_len, cdb[1]);
+
 
 	default:
 		return SPDK_SCSI_TASK_UNKNOWN;
