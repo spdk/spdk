@@ -841,6 +841,26 @@ int spdk_bs_blob_shallow_copy(struct spdk_blob_store *bs, struct spdk_io_channel
 void spdk_bs_blob_set_parent(struct spdk_blob_store *bs, spdk_blob_id blob_id,
 			     spdk_blob_id snapshot_id, spdk_blob_op_complete cb_fn, void *cb_arg);
 
+/**
+ * Set an external snapshot as the parent of a blob
+ *
+ * This call set an external snapshot as the parent of a blob, making the blob a clone of this
+ * external snapshot.
+ * The previous parent of the blob, if any, can be another external snapshot or a snapshot; if
+ * the blob is not a clone, it must be thin-provisioned.
+ *
+ * \param bs blobstore.
+ * \param blob_id The id of the blob.
+ * \param esnap_bs_dev The new blobstore device to use as an external snapshot.
+ * \param esnap_id The identifier of the external snapshot.
+ * \param esnap_id_len The length of esnap_id, in bytes.
+ * \param cb_fn Called when the operation is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ */
+void spdk_bs_blob_set_external_parent(struct spdk_blob_store *bs, spdk_blob_id blob_id,
+				      struct spdk_bs_dev *esnap_bs_dev, const void *esnap_id,
+				      uint32_t esnap_id_len, spdk_blob_op_complete cb_fn, void *cb_arg);
+
 
 struct spdk_blob_open_opts {
 	enum blob_clear_method  clear_method;

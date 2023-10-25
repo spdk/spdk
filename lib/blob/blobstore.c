@@ -416,6 +416,12 @@ struct blob_parent {
 			spdk_blob_id id;
 			struct spdk_blob *blob;
 		} snapshot;
+
+		struct {
+			void *id;
+			uint32_t id_len;
+			struct spdk_bs_dev *back_bs_dev;
+		} esnap;
 	} u;
 };
 
@@ -7636,6 +7642,186 @@ spdk_bs_blob_set_parent(struct spdk_blob_store *bs, spdk_blob_id blob_id,
 	spdk_bs_open_blob(bs, blob_id, bs_set_parent_blob_open_cpl, ctx);
 }
 /* END spdk_bs_blob_set_parent */
+
+/* START spdk_bs_blob_set_external_parent */
+
+static void
+bs_set_external_parent_cleanup_finish(void *cb_arg, int bserrno)
+{
+	struct set_parent_ctx *ctx = cb_arg;
+
+	if (bserrno != 0) {
+		SPDK_ERRLOG("blob set external parent finish error %d\n", bserrno);
+		if (ctx->bserrno == 0) {
+			ctx->bserrno = bserrno;
+		}
+	}
+
+	ctx->cb_fn(ctx->cb_arg, ctx->bserrno);
+
+	free(ctx->parent.u.esnap.id);
+	free(ctx);
+}
+
+static void
+bs_set_external_parent_close_blob(void *cb_arg, int bserrno)
+{
+	struct set_parent_ctx *ctx = cb_arg;
+	struct spdk_blob *blob = ctx->blob;
+
+	if (bserrno != 0 && ctx->bserrno == 0) {
+		SPDK_ERRLOG("error %d in metadata sync\n", bserrno);
+		ctx->bserrno = bserrno;
+	}
+
+	/* Revert md_ro to original state */
+	blob->md_ro = ctx->blob_md_ro;
+
+	blob->locked_operation_in_progress = false;
+
+	spdk_blob_close(blob, bs_set_external_parent_cleanup_finish, ctx);
+}
+
+static void
+bs_set_external_parent_unfrozen(void *cb_arg, int bserrno)
+{
+	struct set_parent_ctx *ctx = cb_arg;
+	struct spdk_blob *blob = ctx->blob;
+
+	if (bserrno != 0) {
+		SPDK_ERRLOG("error %d setting back_bs_dev\n", bserrno);
+		ctx->bserrno = bserrno;
+		bs_set_external_parent_close_blob(ctx, bserrno);
+		return;
+	}
+
+	spdk_blob_sync_md(blob, bs_set_external_parent_close_blob, ctx);
+}
+
+static int
+bs_set_external_parent_refs(struct spdk_blob *blob, struct blob_parent *parent)
+{
+	int rc;
+
+	bs_blob_list_remove(blob);
+
+	if (spdk_blob_is_clone(blob)) {
+		/* Remove the xattr that references the snapshot */
+		blob->parent_id = SPDK_BLOBID_INVALID;
+		blob_remove_xattr(blob, BLOB_SNAPSHOT, true);
+	}
+
+	rc = blob_set_xattr(blob, BLOB_EXTERNAL_SNAPSHOT_ID, parent->u.esnap.id,
+			    parent->u.esnap.id_len, true);
+	if (rc != 0) {
+		SPDK_ERRLOG("error %d setting external snapshot xattr\n", rc);
+		return rc;
+	}
+	blob->invalid_flags |= SPDK_BLOB_EXTERNAL_SNAPSHOT;
+
+	bs_blob_list_add(blob);
+
+	return 0;
+}
+
+static void
+bs_set_external_parent_blob_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
+{
+	struct set_parent_ctx *ctx = cb_arg;
+	const void *esnap_id;
+	size_t esnap_id_len;
+	int rc;
+
+	if (bserrno != 0) {
+		SPDK_ERRLOG("blob open error %d\n", bserrno);
+		ctx->bserrno = bserrno;
+		bs_set_parent_cleanup_finish(ctx, 0);
+		return;
+	}
+
+	ctx->blob = blob;
+	ctx->blob_md_ro = blob->md_ro;
+
+	rc = spdk_blob_get_esnap_id(blob, &esnap_id, &esnap_id_len);
+	if (rc == 0 && esnap_id != NULL && esnap_id_len == ctx->parent.u.esnap.id_len &&
+	    memcmp(esnap_id, ctx->parent.u.esnap.id, esnap_id_len) == 0) {
+		SPDK_ERRLOG("external snapshot is already the parent of blob\n");
+		ctx->bserrno = -EEXIST;
+		goto error;
+	}
+
+	if (!spdk_blob_is_thin_provisioned(blob)) {
+		SPDK_ERRLOG("blob is not thin-provisioned\n");
+		ctx->bserrno = -EINVAL;
+		goto error;
+	}
+
+	if (blob->locked_operation_in_progress) {
+		SPDK_ERRLOG("cannot set external parent of blob, another operation in progress\n");
+		ctx->bserrno = -EBUSY;
+		goto error;
+	}
+
+	blob->locked_operation_in_progress = true;
+
+	/* Temporarily override md_ro flag for MD modification */
+	blob->md_ro = false;
+
+	blob_set_back_bs_dev(blob, ctx->parent.u.esnap.back_bs_dev, bs_set_external_parent_refs,
+			     &ctx->parent, bs_set_external_parent_unfrozen, ctx);
+	return;
+
+error:
+	spdk_blob_close(blob, bs_set_external_parent_cleanup_finish, ctx);
+}
+
+void
+spdk_bs_blob_set_external_parent(struct spdk_blob_store *bs, spdk_blob_id blob_id,
+				 struct spdk_bs_dev *esnap_bs_dev, const void *esnap_id,
+				 uint32_t esnap_id_len, spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	struct set_parent_ctx *ctx;
+	uint64_t esnap_dev_size, cluster_sz;
+
+	if (sizeof(blob_id) == esnap_id_len && memcmp(&blob_id, esnap_id, sizeof(blob_id)) == 0) {
+		SPDK_ERRLOG("blob id and external snapshot id cannot be the same\n");
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	esnap_dev_size = esnap_bs_dev->blockcnt * esnap_bs_dev->blocklen;
+	cluster_sz = spdk_bs_get_cluster_size(bs);
+	if ((esnap_dev_size % cluster_sz) != 0) {
+		SPDK_ERRLOG("Esnap device size %" PRIu64 " is not an integer multiple of "
+			    "cluster size %" PRIu64 "\n", esnap_dev_size, cluster_sz);
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->parent.u.esnap.id = calloc(1, esnap_id_len);
+	if (!ctx->parent.u.esnap.id) {
+		free(ctx);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->bs = bs;
+	ctx->parent.u.esnap.back_bs_dev = esnap_bs_dev;
+	memcpy(ctx->parent.u.esnap.id, esnap_id, esnap_id_len);
+	ctx->parent.u.esnap.id_len = esnap_id_len;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+	ctx->bserrno = 0;
+
+	spdk_bs_open_blob(bs, blob_id, bs_set_external_parent_blob_open_cpl, ctx);
+}
+/* END spdk_bs_blob_set_external_parent */
 
 /* START spdk_blob_resize */
 struct spdk_bs_resize_ctx {

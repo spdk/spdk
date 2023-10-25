@@ -9688,6 +9688,132 @@ blob_set_parent(void)
 }
 
 static void
+blob_set_external_parent(void)
+{
+	struct spdk_blob_store *bs = g_bs;
+	struct spdk_blob_opts opts;
+	struct ut_esnap_opts esnap_opts, esnap_opts2;
+	struct spdk_blob *blob1, *blob2, *blob3, *blob4;
+	spdk_blob_id blobid1, blobid2, blobid3, blobid4, snapshotid;
+	uint32_t cluster_sz, block_sz;
+	const uint32_t esnap_num_clusters = 4;
+	uint64_t esnap_num_blocks;
+	struct spdk_bs_dev *esnap_dev1, *esnap_dev2, *esnap_dev3;
+	const void *esnap_id;
+	size_t esnap_id_len;
+	int rc;
+
+	cluster_sz = spdk_bs_get_cluster_size(bs);
+	block_sz = spdk_bs_get_io_unit_size(bs);
+	esnap_num_blocks = cluster_sz * esnap_num_clusters / block_sz;
+	esnap_dev1 = init_dev();
+	esnap_dev2 = init_dev();
+	esnap_dev3 = init_dev();
+
+	/* Create an esnap clone blob */
+	ut_spdk_blob_opts_init(&opts);
+	ut_esnap_opts_init(block_sz, esnap_num_blocks, __func__, NULL, &esnap_opts);
+	opts.esnap_id = &esnap_opts;
+	opts.esnap_id_len = sizeof(esnap_opts);
+	opts.num_clusters = esnap_num_clusters;
+	blob1 = ut_blob_create_and_open(bs, &opts);
+	SPDK_CU_ASSERT_FATAL(blob1 != NULL);
+	blobid1 = spdk_blob_get_id(blob1);
+	CU_ASSERT(spdk_blob_is_esnap_clone(blob1));
+
+	/* Call set_esternal_parent with blobid and esnapid the same */
+	spdk_bs_blob_set_external_parent(bs, blobid1, esnap_dev1, &blobid1, sizeof(blobid1),
+					 blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == -EINVAL);
+
+	/* Call set_external_parent with esnap of incompatible size */
+	esnap_dev1->blockcnt = esnap_num_blocks - 1;
+	spdk_bs_blob_set_external_parent(bs, blobid1, esnap_dev1, opts.esnap_id, opts.esnap_id_len,
+					 blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == -EINVAL);
+
+	/* Call set_external_parent with a blob and its parent esnap */
+	esnap_dev1->blocklen = block_sz;
+	esnap_dev1->blockcnt = esnap_num_blocks;
+	spdk_bs_blob_set_external_parent(bs, blobid1, esnap_dev1, opts.esnap_id, opts.esnap_id_len,
+					 blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == -EEXIST);
+
+	/* Create a blob that is a clone of a snapshots */
+	ut_spdk_blob_opts_init(&opts);
+	blob2 = ut_blob_create_and_open(bs, &opts);
+	SPDK_CU_ASSERT_FATAL(blob2 != NULL);
+	blobid2 = spdk_blob_get_id(blob2);
+	spdk_bs_create_snapshot(bs, blobid2, NULL, blob_op_with_id_complete, NULL);
+	poll_threads();
+	SPDK_CU_ASSERT_FATAL(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blobid != SPDK_BLOBID_INVALID);
+	snapshotid = g_blobid;
+
+	/* Call set_parent correctly with a snapshot's clone blob */
+	esnap_dev2->blocklen = block_sz;
+	esnap_dev2->blockcnt = esnap_num_blocks;
+	ut_esnap_opts_init(block_sz, esnap_num_blocks, __func__, NULL, &esnap_opts2);
+	spdk_bs_blob_set_external_parent(bs, blobid2, esnap_dev2, &esnap_opts2, sizeof(esnap_opts2),
+					 blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Check relations */
+	rc = spdk_blob_get_esnap_id(blob2, &esnap_id, &esnap_id_len);
+	CU_ASSERT(spdk_blob_is_esnap_clone(blob2));
+	CU_ASSERT(!spdk_blob_is_clone(blob2));
+	CU_ASSERT(rc == 0 && esnap_id_len == sizeof(esnap_opts2) &&
+		  memcmp(esnap_id, &esnap_opts2, esnap_id_len) == 0);
+
+	/* Create a not thin-provisioned blob that is not a clone */
+	ut_spdk_blob_opts_init(&opts);
+	opts.thin_provision = false;
+	blob3 = ut_blob_create_and_open(bs, &opts);
+	SPDK_CU_ASSERT_FATAL(blob3 != NULL);
+	blobid3 = spdk_blob_get_id(blob3);
+
+	/* Call set_external_parent with a blob that isn't a clone and that isn't thin-provisioned */
+	spdk_bs_blob_set_external_parent(bs, blobid3, esnap_dev1, &esnap_opts, sizeof(esnap_opts),
+					 blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == -EINVAL);
+
+	/* Create a thin-provisioned blob that is not a clone */
+	ut_spdk_blob_opts_init(&opts);
+	opts.thin_provision = true;
+	blob4 = ut_blob_create_and_open(bs, &opts);
+	SPDK_CU_ASSERT_FATAL(blob4 != NULL);
+	blobid4 = spdk_blob_get_id(blob4);
+
+	/* Call set_external_parent correctly with a blob that isn't a clone */
+	esnap_dev3->blocklen = block_sz;
+	esnap_dev3->blockcnt = esnap_num_blocks;
+	ut_esnap_opts_init(block_sz, esnap_num_blocks, __func__, NULL, &esnap_opts);
+	spdk_bs_blob_set_external_parent(bs, blobid4, esnap_dev3, &esnap_opts, sizeof(esnap_opts),
+					 blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Check relations */
+	rc = spdk_blob_get_esnap_id(blob4, &esnap_id, &esnap_id_len);
+	CU_ASSERT(spdk_blob_is_esnap_clone(blob4));
+	CU_ASSERT(!spdk_blob_is_clone(blob4));
+	CU_ASSERT(rc == 0 && esnap_id_len == sizeof(esnap_opts) &&
+		  memcmp(esnap_id, &esnap_opts, esnap_id_len) == 0);
+
+	ut_blob_close_and_delete(bs, blob4);
+	ut_blob_close_and_delete(bs, blob3);
+	ut_blob_close_and_delete(bs, blob2);
+	ut_blob_close_and_delete(bs, blob1);
+	spdk_bs_delete_blob(bs, snapshotid, blob_op_complete, NULL);
+	dev_destroy(esnap_dev1);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+}
+
+static void
 suite_bs_setup(void)
 {
 	struct spdk_bs_dev *dev;
@@ -9965,6 +10091,7 @@ main(int argc, char **argv)
 		CU_ADD_TEST(suite, blob_esnap_clone_resize);
 		CU_ADD_TEST(suite_bs, blob_shallow_copy);
 		CU_ADD_TEST(suite_esnap_bs, blob_set_parent);
+		CU_ADD_TEST(suite_esnap_bs, blob_set_external_parent);
 	}
 
 	allocate_threads(2);
