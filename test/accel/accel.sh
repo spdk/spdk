@@ -37,6 +37,21 @@ build_accel_config() {
 	JSON
 }
 
+# Run some additional simple tests; mostly focused
+# around accel_perf example app itself, not necessarily
+# testing actual accel modules.
+# Cover the help message. Not really a test, but
+# it doesn't fit anywhere else.
+run_test "accel_help" accel_perf -h &> /dev/null
+# Filename required for compress operations
+run_test "accel_missing_filename" NOT accel_perf -t 1 -w compress
+# Compression does not support verify option
+run_test "accel_compress_verify" NOT accel_perf -t 1 -w compress -l $testdir/bib -y
+# Trigger error by specifying wrong workload type
+run_test "accel_wrong_workload" NOT accel_perf -t 1 -w foobar
+# Use negative number for source buffers parameters
+run_test "accel_negative_buffers" NOT accel_perf -t 1 -w xor -y -x -1
+
 #Run through all SW ops with defaults for a quick sanity check
 #To save time, only use verification case
 run_test "accel_crc32c" accel_perf -t 1 -w crc32c -y
