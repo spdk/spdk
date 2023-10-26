@@ -84,7 +84,7 @@ SPDK_RPC_REGISTER("bdev_delay_update_latency", rpc_bdev_delay_update_latency, SP
 struct rpc_construct_delay {
 	char *base_bdev_name;
 	char *name;
-	char *uuid;
+	struct spdk_uuid uuid;
 	uint64_t avg_read_latency;
 	uint64_t p99_read_latency;
 	uint64_t avg_write_latency;
@@ -96,13 +96,12 @@ free_rpc_construct_delay(struct rpc_construct_delay *r)
 {
 	free(r->base_bdev_name);
 	free(r->name);
-	free(r->uuid);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_delay_decoders[] = {
 	{"base_bdev_name", offsetof(struct rpc_construct_delay, base_bdev_name), spdk_json_decode_string},
 	{"name", offsetof(struct rpc_construct_delay, name), spdk_json_decode_string},
-	{"uuid", offsetof(struct rpc_construct_delay, uuid), spdk_json_decode_string, true},
+	{"uuid", offsetof(struct rpc_construct_delay, uuid), spdk_json_decode_uuid, true},
 	{"avg_read_latency", offsetof(struct rpc_construct_delay, avg_read_latency), spdk_json_decode_uint64},
 	{"p99_read_latency", offsetof(struct rpc_construct_delay, p99_read_latency), spdk_json_decode_uint64},
 	{"avg_write_latency", offsetof(struct rpc_construct_delay, avg_write_latency), spdk_json_decode_uint64},
@@ -115,8 +114,6 @@ rpc_bdev_delay_create(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_construct_delay req = {NULL};
 	struct spdk_json_write_ctx *w;
-	struct spdk_uuid *uuid = NULL;
-	struct spdk_uuid decoded_uuid;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_construct_delay_decoders,
@@ -128,16 +125,7 @@ rpc_bdev_delay_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	if (req.uuid) {
-		if (spdk_uuid_parse(&decoded_uuid, req.uuid)) {
-			spdk_jsonrpc_send_error_response(request, -EINVAL,
-							 "Failed to parse bdev UUID");
-			goto cleanup;
-		}
-		uuid = &decoded_uuid;
-	}
-
-	rc = create_delay_disk(req.base_bdev_name, req.name, uuid, req.avg_read_latency,
+	rc = create_delay_disk(req.base_bdev_name, req.name, &req.uuid, req.avg_read_latency,
 			       req.p99_read_latency,
 			       req.avg_write_latency, req.p99_write_latency);
 	if (rc != 0) {

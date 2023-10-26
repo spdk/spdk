@@ -491,10 +491,7 @@ vbdev_passthru_insert_name(const char *bdev_name, const char *vbdev_name,
 		return -ENOMEM;
 	}
 
-	if (uuid) {
-		spdk_uuid_copy(&name->uuid, uuid);
-	}
-
+	spdk_uuid_copy(&name->uuid, uuid);
 	TAILQ_INSERT_TAIL(&g_bdev_names, name, link);
 
 	return 0;

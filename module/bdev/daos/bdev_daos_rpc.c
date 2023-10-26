@@ -13,7 +13,7 @@
 
 struct rpc_construct_daos {
 	char *name;
-	char *uuid;
+	struct spdk_uuid uuid;
 	char *pool;
 	char *cont;
 	char *oclass;
@@ -25,7 +25,6 @@ static void
 free_rpc_construct_daos(struct rpc_construct_daos *r)
 {
 	free(r->name);
-	free(r->uuid);
 	free(r->pool);
 	free(r->cont);
 	free(r->oclass);
@@ -33,7 +32,7 @@ free_rpc_construct_daos(struct rpc_construct_daos *r)
 
 static const struct spdk_json_object_decoder rpc_construct_daos_decoders[] = {
 	{"name", offsetof(struct rpc_construct_daos, name), spdk_json_decode_string},
-	{"uuid", offsetof(struct rpc_construct_daos, uuid), spdk_json_decode_string, true},
+	{"uuid", offsetof(struct rpc_construct_daos, uuid), spdk_json_decode_uuid, true},
 	{"pool", offsetof(struct rpc_construct_daos, pool), spdk_json_decode_string},
 	{"cont", offsetof(struct rpc_construct_daos, cont), spdk_json_decode_string},
 	{"oclass", offsetof(struct rpc_construct_daos, oclass), spdk_json_decode_string, true},
@@ -47,8 +46,6 @@ rpc_bdev_daos_create(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_construct_daos req = {NULL};
 	struct spdk_json_write_ctx *w;
-	struct spdk_uuid *uuid = NULL;
-	struct spdk_uuid decoded_uuid;
 	struct spdk_bdev *bdev;
 	int rc = 0;
 
@@ -61,16 +58,7 @@ rpc_bdev_daos_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	if (req.uuid) {
-		if (spdk_uuid_parse(&decoded_uuid, req.uuid)) {
-			spdk_jsonrpc_send_error_response(request, -EINVAL,
-							 "Failed to parse bdev UUID");
-			goto cleanup;
-		}
-		uuid = &decoded_uuid;
-	}
-
-	rc = create_bdev_daos(&bdev, req.name, uuid, req.pool, req.cont, req.oclass,
+	rc = create_bdev_daos(&bdev, req.name, &req.uuid, req.pool, req.cont, req.oclass,
 			      req.num_blocks, req.block_size);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));

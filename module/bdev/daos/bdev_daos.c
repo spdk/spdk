@@ -774,11 +774,7 @@ create_bdev_daos(struct spdk_bdev **bdev,
 	daos->disk.write_cache = 0;
 	daos->disk.blocklen = block_size;
 	daos->disk.blockcnt = num_blocks;
-
-	if (uuid) {
-		daos->disk.uuid = *uuid;
-	}
-
+	daos->disk.uuid = *uuid;
 	daos->disk.ctxt = daos;
 	daos->disk.fn_table = &daos_fn_table;
 	daos->disk.module = &daos_if;

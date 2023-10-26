@@ -633,10 +633,7 @@ vbdev_delay_insert_association(const char *bdev_name, const char *vbdev_name,
 	assoc->p99_read_latency = p99_read_latency;
 	assoc->avg_write_latency = avg_write_latency;
 	assoc->p99_write_latency = p99_write_latency;
-
-	if (uuid) {
-		spdk_uuid_copy(&assoc->uuid, uuid);
-	}
+	spdk_uuid_copy(&assoc->uuid, uuid);
 
 	TAILQ_INSERT_TAIL(&g_bdev_associations, assoc, link);
 

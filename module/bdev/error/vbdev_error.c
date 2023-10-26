@@ -370,7 +370,7 @@ _vbdev_error_create(const char *base_bdev_name, const struct spdk_uuid *uuid)
 		return -ENOMEM;
 	}
 
-	if (uuid) {
+	if (!spdk_uuid_is_null(uuid)) {
 		bdev = spdk_bdev_part_get_bdev(&disk->part);
 		spdk_uuid_copy(&bdev->uuid, uuid);
 	}
@@ -477,10 +477,7 @@ vbdev_error_config_add(const char *base_bdev_name, const struct spdk_uuid *uuid)
 		return -ENOMEM;
 	}
 
-	if (uuid) {
-		spdk_uuid_copy(&cfg->uuid, uuid);
-	}
-
+	spdk_uuid_copy(&cfg->uuid, uuid);
 	TAILQ_INSERT_TAIL(&g_error_config, cfg, tailq);
 
 	return 0;

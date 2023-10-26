@@ -144,21 +144,6 @@ decode_ns_eui64(const struct spdk_json_val *val, void *out)
 	return rc;
 }
 
-static int
-decode_ns_uuid(const struct spdk_json_val *val, void *out)
-{
-	char *str = NULL;
-	int rc;
-
-	rc = spdk_json_decode_string(val, &str);
-	if (rc == 0) {
-		rc = spdk_uuid_parse(out, str);
-	}
-
-	free(str);
-	return rc;
-}
-
 struct rpc_get_subsystem {
 	char *nqn;
 	char *tgt_name;
@@ -1358,7 +1343,7 @@ static const struct spdk_json_object_decoder rpc_ns_params_decoders[] = {
 	{"ptpl_file", offsetof(struct spdk_nvmf_ns_params, ptpl_file), spdk_json_decode_string, true},
 	{"nguid", offsetof(struct spdk_nvmf_ns_params, nguid), decode_ns_nguid, true},
 	{"eui64", offsetof(struct spdk_nvmf_ns_params, eui64), decode_ns_eui64, true},
-	{"uuid", offsetof(struct spdk_nvmf_ns_params, uuid), decode_ns_uuid, true},
+	{"uuid", offsetof(struct spdk_nvmf_ns_params, uuid), spdk_json_decode_uuid, true},
 	{"anagrpid", offsetof(struct spdk_nvmf_ns_params, anagrpid), spdk_json_decode_uint32, true},
 };
 

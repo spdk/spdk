@@ -1338,10 +1338,7 @@ bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
 		return ret;
 	}
 
-	if (uuid) {
-		rbd->disk.uuid = *uuid;
-	}
-
+	rbd->disk.uuid = *uuid;
 	if (name) {
 		rbd->disk.name = strdup(name);
 	} else {

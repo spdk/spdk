@@ -12,27 +12,10 @@
 
 #include "bdev_ftl.h"
 
-static int
-rpc_bdev_ftl_decode_uuid(const struct spdk_json_val *val, void *out)
-{
-	char *uuid_str;
-	int ret;
-
-	uuid_str = spdk_json_strdup(val);
-	if (!uuid_str) {
-		return -ENOMEM;
-	}
-
-	ret = spdk_uuid_parse(out, uuid_str);
-
-	free(uuid_str);
-	return ret;
-}
-
 static const struct spdk_json_object_decoder rpc_bdev_ftl_create_decoders[] = {
 	{"name", offsetof(struct spdk_ftl_conf, name), spdk_json_decode_string},
 	{"base_bdev", offsetof(struct spdk_ftl_conf, base_bdev), spdk_json_decode_string},
-	{"uuid", offsetof(struct spdk_ftl_conf, uuid), rpc_bdev_ftl_decode_uuid, true},
+	{"uuid", offsetof(struct spdk_ftl_conf, uuid), spdk_json_decode_uuid, true},
 	{"cache", offsetof(struct spdk_ftl_conf, cache_bdev), spdk_json_decode_string},
 	{
 		"overprovisioning", offsetof(struct spdk_ftl_conf, overprovisioning),

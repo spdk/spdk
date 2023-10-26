@@ -296,10 +296,8 @@ bdev_null_create(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts
 	case SPDK_DIF_DISABLE:
 		break;
 	}
-	if (opts->uuid) {
-		null_disk->bdev.uuid = *opts->uuid;
-	}
 
+	null_disk->bdev.uuid = *opts->uuid;
 	null_disk->bdev.ctxt = null_disk;
 	null_disk->bdev.fn_table = &null_fn_table;
 	null_disk->bdev.module = &null_if;

@@ -13,7 +13,7 @@
 
 struct rpc_construct_null {
 	char *name;
-	char *uuid;
+	struct spdk_uuid uuid;
 	uint64_t num_blocks;
 	uint32_t block_size;
 	uint32_t physical_block_size;
@@ -26,12 +26,11 @@ static void
 free_rpc_construct_null(struct rpc_construct_null *req)
 {
 	free(req->name);
-	free(req->uuid);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_null_decoders[] = {
 	{"name", offsetof(struct rpc_construct_null, name), spdk_json_decode_string},
-	{"uuid", offsetof(struct rpc_construct_null, uuid), spdk_json_decode_string, true},
+	{"uuid", offsetof(struct rpc_construct_null, uuid), spdk_json_decode_uuid, true},
 	{"num_blocks", offsetof(struct rpc_construct_null, num_blocks), spdk_json_decode_uint64},
 	{"block_size", offsetof(struct rpc_construct_null, block_size), spdk_json_decode_uint32},
 	{"physical_block_size", offsetof(struct rpc_construct_null, physical_block_size), spdk_json_decode_uint32, true},
@@ -46,8 +45,6 @@ rpc_bdev_null_create(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_construct_null req = {};
 	struct spdk_json_write_ctx *w;
-	struct spdk_uuid *uuid = NULL;
-	struct spdk_uuid decoded_uuid;
 	struct spdk_bdev *bdev;
 	struct spdk_null_bdev_opts opts = {};
 	uint32_t data_block_size;
@@ -85,15 +82,6 @@ rpc_bdev_null_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	if (req.uuid) {
-		if (spdk_uuid_parse(&decoded_uuid, req.uuid)) {
-			spdk_jsonrpc_send_error_response(request, -EINVAL,
-							 "Failed to parse bdev UUID");
-			goto cleanup;
-		}
-		uuid = &decoded_uuid;
-	}
-
 	if (req.dif_type < SPDK_DIF_DISABLE || req.dif_type > SPDK_DIF_TYPE3) {
 		spdk_jsonrpc_send_error_response(request, -EINVAL, "Invalid protection information type");
 		goto cleanup;
@@ -106,7 +94,7 @@ rpc_bdev_null_create(struct spdk_jsonrpc_request *request,
 	}
 
 	opts.name = req.name;
-	opts.uuid = uuid;
+	opts.uuid = &req.uuid;
 	opts.num_blocks = req.num_blocks;
 	opts.block_size = req.block_size;
 	opts.physical_block_size = req.physical_block_size;
