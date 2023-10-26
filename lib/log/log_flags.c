@@ -66,6 +66,7 @@ static int
 log_set_flag(const char *name, bool value)
 {
 	struct spdk_log_flag *flag;
+	int rc = -EINVAL;
 
 	if (strcasecmp(name, "all") == 0) {
 		TAILQ_FOREACH(flag, &g_log_flags, tailq) {
@@ -74,14 +75,14 @@ log_set_flag(const char *name, bool value)
 		return 0;
 	}
 
-	flag = get_log_flag(name);
-	if (flag == NULL) {
-		return -1;
+	TAILQ_FOREACH(flag, &g_log_flags, tailq) {
+		if (fnmatch(name, flag->name, FNM_CASEFOLD) == 0) {
+			flag->enabled = value;
+			rc = 0;
+		}
 	}
 
-	flag->enabled = value;
-
-	return 0;
+	return rc;
 }
 
 int

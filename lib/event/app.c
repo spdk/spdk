@@ -1180,7 +1180,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		case LOGFLAG_OPT_IDX:
 			rc = spdk_log_set_flag(optarg);
 			if (rc < 0) {
-				SPDK_ERRLOG("unknown flag\n");
+				SPDK_ERRLOG("unknown flag: %s\n", optarg);
 				usage(app_usage);
 				goto out;
 			}

@@ -255,20 +255,22 @@ struct spdk_log_flag *spdk_log_get_next_flag(struct spdk_log_flag *flag);
 bool spdk_log_get_flag(const char *flag);
 
 /**
- * Enable the log flag.
+ * Enable the log flag.  The name of the flag can be a glob pattern (as expanded by fnmatch(3)), in
+ * which case all matching flags will be set.
  *
  * \param flag Log flag to be enabled.
  *
- * \return 0 on success, -1 on failure.
+ * \return 0 on success, negative errno on failure.
  */
 int spdk_log_set_flag(const char *flag);
 
 /**
- * Clear a log flag.
+ * Clear a log flag.  The name of the flag can be a glob pattern (as expanded by fnmatch(3)), in
+ * which case all matching flags will be cleared.
  *
  * \param flag Log flag to clear.
  *
- * \return 0 on success, -1 on failure.
+ * \return 0 on success, negative errno on failure.
  */
 int spdk_log_clear_flag(const char *flag);
 

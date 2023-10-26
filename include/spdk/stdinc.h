@@ -38,6 +38,7 @@ extern "C" {
 #include <arpa/inet.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <fnmatch.h>
 #include <glob.h>
 #include <ifaddrs.h>
 #include <libgen.h>
