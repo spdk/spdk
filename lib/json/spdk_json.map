@@ -13,6 +13,7 @@
 	spdk_json_decode_uint32;
 	spdk_json_decode_uint64;
 	spdk_json_decode_string;
+	spdk_json_decode_uuid;
 
 	spdk_json_free_object;
 

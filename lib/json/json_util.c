@@ -498,6 +498,24 @@ spdk_json_decode_string(const struct spdk_json_val *val, void *out)
 	}
 }
 
+int
+spdk_json_decode_uuid(const struct spdk_json_val *val, void *out)
+{
+	struct spdk_uuid *uuid = out;
+	char *str = NULL;
+	int rc;
+
+	rc = spdk_json_decode_string(val, &str);
+	if (rc != 0) {
+		return rc;
+	}
+
+	rc = spdk_uuid_parse(uuid, str);
+	free(str);
+
+	return rc;
+}
+
 static struct spdk_json_val *
 json_first(struct spdk_json_val *object, enum spdk_json_val_type type)
 {
