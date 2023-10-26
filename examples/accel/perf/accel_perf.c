@@ -160,7 +160,7 @@ usage(void)
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-w workload type must be one of these: copy, fill, crc32c, copy_crc32c, compare, compress, decompress, dualcast, xor\n");
 	printf("\t[-l for compress/decompress workloads, name of uncompressed input file\n");
-	printf("\t[-s for crc32c workload, use this seed value (default 0)\n");
+	printf("\t[-S for crc32c workload, use this seed value (default 0)\n");
 	printf("\t[-P for compare workload, percentage of operations that should miscompare (percent, default 0)\n");
 	printf("\t[-f for fill workload, use this BYTE value (default 255)\n");
 	printf("\t[-x for xor workload, use this number of source buffers (default, minimum: 2)]\n");
@@ -170,11 +170,11 @@ usage(void)
 }
 
 static int
-parse_args(int argc, char *argv)
+parse_args(int ch, char *arg)
 {
 	int argval = 0;
 
-	switch (argc) {
+	switch (ch) {
 	case 'a':
 	case 'C':
 	case 'f':
@@ -182,12 +182,12 @@ parse_args(int argc, char *argv)
 	case 'o':
 	case 'P':
 	case 'q':
-	case 's':
+	case 'S':
 	case 't':
 	case 'x':
 		argval = spdk_strtol(optarg, 10);
 		if (argval < 0) {
-			fprintf(stderr, "-%c option must be non-negative.\n", argc);
+			fprintf(stderr, "-%c option must be non-negative.\n", ch);
 			usage();
 			return 1;
 		}
@@ -196,7 +196,7 @@ parse_args(int argc, char *argv)
 		break;
 	};
 
-	switch (argc) {
+	switch (ch) {
 	case 'a':
 		g_allocate_depth = argval;
 		break;
@@ -221,7 +221,7 @@ parse_args(int argc, char *argv)
 	case 'q':
 		g_queue_depth = argval;
 		break;
-	case 's':
+	case 'S':
 		g_crc32c_seed = argval;
 		break;
 	case 't':
@@ -1157,7 +1157,7 @@ main(int argc, char **argv)
 	g_opts.reactor_mask = "0x1";
 	g_opts.shutdown_cb = shutdown_cb;
 
-	rc = spdk_app_parse_args(argc, argv, &g_opts, "a:C:o:q:t:yw:P:f:T:l:x:", NULL,
+	rc = spdk_app_parse_args(argc, argv, &g_opts, "a:C:o:q:t:yw:P:f:T:l:S:x:", NULL,
 				 parse_args, usage);
 	if (rc != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc == SPDK_APP_PARSE_ARGS_HELP ? 0 : 1;
