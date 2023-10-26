@@ -542,6 +542,16 @@ spdk_json_write_bytearray(struct spdk_json_write_ctx *w, const void *val, size_t
 }
 
 int
+spdk_json_write_uuid(struct spdk_json_write_ctx *w, const struct spdk_uuid *uuid)
+{
+	char str[SPDK_UUID_STRING_LEN];
+
+	spdk_uuid_fmt_lower(str, sizeof(str), uuid);
+
+	return spdk_json_write_string(w, str);
+}
+
+int
 spdk_json_write_array_begin(struct spdk_json_write_ctx *w)
 {
 	if (begin_value(w)) { return fail(w); }
@@ -812,4 +822,13 @@ spdk_json_write_named_object_begin(struct spdk_json_write_ctx *w, const char *na
 	int rc = spdk_json_write_name(w, name);
 
 	return rc ? rc : spdk_json_write_object_begin(w);
+}
+
+int
+spdk_json_write_named_uuid(struct spdk_json_write_ctx *w, const char *name,
+			   const struct spdk_uuid *uuid)
+{
+	int rc = spdk_json_write_name(w, name);
+
+	return rc ? rc : spdk_json_write_uuid(w, uuid);
 }
