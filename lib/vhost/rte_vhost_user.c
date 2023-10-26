@@ -1935,18 +1935,22 @@ vhost_user_session_shutdown(void *vhost_cb)
 	struct spdk_vhost_dev *vdev = NULL;
 	struct spdk_vhost_session *vsession;
 	struct spdk_vhost_user_dev *user_dev;
+	int ret;
 
 	for (vdev = spdk_vhost_dev_next(NULL); vdev != NULL;
 	     vdev = spdk_vhost_dev_next(vdev)) {
 		user_dev = to_user_dev(vdev);
+		ret = 0;
 		pthread_mutex_lock(&user_dev->lock);
 		TAILQ_FOREACH(vsession, &user_dev->vsessions, tailq) {
 			if (vsession->started || vsession->starting) {
-				_stop_session(vsession);
+				ret += _stop_session(vsession);
 			}
 		}
 		pthread_mutex_unlock(&user_dev->lock);
-		vhost_driver_unregister(vdev->path);
+		if (ret == 0) {
+			vhost_driver_unregister(vdev->path);
+		}
 	}
 
 	SPDK_INFOLOG(vhost, "Exiting\n");
