@@ -256,10 +256,7 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 			}
 
 			if (!spdk_uuid_is_null(&ns_opts.uuid)) {
-				char uuid_str[SPDK_UUID_STRING_LEN];
-
-				spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &ns_opts.uuid);
-				spdk_json_write_named_string(w, "uuid", uuid_str);
+				spdk_json_write_named_uuid(w, "uuid", &ns_opts.uuid);
 			}
 
 			if (nvmf_subsystem_get_ana_reporting(subsystem)) {
@@ -2439,17 +2436,13 @@ SPDK_RPC_REGISTER("nvmf_get_stats", rpc_nvmf_get_stats, SPDK_RPC_RUNTIME)
 static void
 dump_nvmf_ctrlr(struct spdk_json_write_ctx *w, struct spdk_nvmf_ctrlr *ctrlr)
 {
-	char uuid_str[SPDK_UUID_STRING_LEN] = {};
 	uint32_t count;
 
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_named_uint32(w, "cntlid", ctrlr->cntlid);
-
 	spdk_json_write_named_string(w, "hostnqn", ctrlr->hostnqn);
-
-	spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &ctrlr->hostid);
-	spdk_json_write_named_string(w, "hostid", uuid_str);
+	spdk_json_write_named_uuid(w, "hostid", &ctrlr->hostid);
 
 	count = spdk_bit_array_count_set(ctrlr->qpair_mask);
 	spdk_json_write_named_uint32(w, "num_io_qpairs", count);

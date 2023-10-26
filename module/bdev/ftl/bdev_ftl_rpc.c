@@ -56,7 +56,6 @@ static void
 rpc_bdev_ftl_create_cb(const struct ftl_bdev_info *bdev_info, void *ctx, int status)
 {
 	struct spdk_jsonrpc_request *request = ctx;
-	char bdev_uuid[SPDK_UUID_STRING_LEN];
 	struct spdk_json_write_ctx *w;
 
 	if (status) {
@@ -67,10 +66,9 @@ rpc_bdev_ftl_create_cb(const struct ftl_bdev_info *bdev_info, void *ctx, int sta
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	spdk_uuid_fmt_lower(bdev_uuid, sizeof(bdev_uuid), &bdev_info->uuid);
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "name", bdev_info->name);
-	spdk_json_write_named_string(w, "uuid", bdev_uuid);
+	spdk_json_write_named_uuid(w, "uuid", &bdev_info->uuid);
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(request, w);
 }

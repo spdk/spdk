@@ -71,17 +71,14 @@ static void
 rpc_lvol_store_construct_cb(void *cb_arg, struct spdk_lvol_store *lvol_store, int lvserrno)
 {
 	struct spdk_json_write_ctx *w;
-	char lvol_store_uuid[SPDK_UUID_STRING_LEN];
 	struct spdk_jsonrpc_request *request = cb_arg;
 
 	if (lvserrno != 0) {
 		goto invalid;
 	}
 
-	spdk_uuid_fmt_lower(lvol_store_uuid, sizeof(lvol_store_uuid), &lvol_store->uuid);
-
 	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_string(w, lvol_store_uuid);
+	spdk_json_write_uuid(w, &lvol_store->uuid);
 	spdk_jsonrpc_end_result(request, w);
 	return;
 
@@ -1092,26 +1089,18 @@ rpc_dump_lvol_store_info(struct spdk_json_write_ctx *w, struct lvol_store_bdev *
 {
 	struct spdk_blob_store *bs;
 	uint64_t cluster_size;
-	char uuid[SPDK_UUID_STRING_LEN];
 
 	bs = lvs_bdev->lvs->blobstore;
 	cluster_size = spdk_bs_get_cluster_size(bs);
 
 	spdk_json_write_object_begin(w);
 
-	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &lvs_bdev->lvs->uuid);
-	spdk_json_write_named_string(w, "uuid", uuid);
-
+	spdk_json_write_named_uuid(w, "uuid", &lvs_bdev->lvs->uuid);
 	spdk_json_write_named_string(w, "name", lvs_bdev->lvs->name);
-
 	spdk_json_write_named_string(w, "base_bdev", spdk_bdev_get_name(lvs_bdev->bdev));
-
 	spdk_json_write_named_uint64(w, "total_data_clusters", spdk_bs_total_data_cluster_count(bs));
-
 	spdk_json_write_named_uint64(w, "free_clusters", spdk_bs_free_cluster_count(bs));
-
 	spdk_json_write_named_uint64(w, "block_size", spdk_bs_get_io_unit_size(bs));
-
 	spdk_json_write_named_uint64(w, "cluster_size", cluster_size);
 
 	spdk_json_write_object_end(w);
@@ -1193,7 +1182,6 @@ static void
 rpc_dump_lvol(struct spdk_json_write_ctx *w, struct spdk_lvol *lvol)
 {
 	struct spdk_lvol_store *lvs = lvol->lvol_store;
-	char uuid[SPDK_UUID_STRING_LEN];
 
 	spdk_json_write_object_begin(w);
 
@@ -1208,8 +1196,7 @@ rpc_dump_lvol(struct spdk_json_write_ctx *w, struct spdk_lvol *lvol)
 
 	spdk_json_write_named_object_begin(w, "lvs");
 	spdk_json_write_named_string(w, "name", lvs->name);
-	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &lvs->uuid);
-	spdk_json_write_named_string(w, "uuid", uuid);
+	spdk_json_write_named_uuid(w, "uuid", &lvs->uuid);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
