@@ -169,17 +169,25 @@ start_accel(void *_ctx)
 }
 
 int
-main(void)
+main(int argc, char **argv)
 {
 	int rc;
-	struct spdk_app_opts g_opts = {};
+	struct spdk_app_opts opts = {};
 	struct test_ctx ctx = {.state = TEST_STATE_FILL, .status = 0};
 
-	spdk_app_opts_init(&g_opts, sizeof(g_opts));
-	g_opts.name = "accel_external_opts";
-	g_opts.reactor_mask = "0x1";
+	spdk_app_opts_init(&opts, sizeof(opts));
+	opts.name = "accel_external_module";
 
-	rc = spdk_app_start(&g_opts, start_accel, &ctx);
+	/*
+	 * Parse built-in SPDK command line parameters as well
+	 * as our custom one(s).
+	 */
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, NULL, NULL, NULL,
+				      NULL)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
+		exit(rc);
+	}
+
+	rc = spdk_app_start(&opts, start_accel, &ctx);
 
 	spdk_app_fini();
 	return rc;

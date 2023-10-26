@@ -32,8 +32,16 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$test_root/accel"
 _sudo="sudo -E --preserve-env=PATH LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 
 # Make just the application linked against individual SPDK shared libraries.
-run_test "external_make_accel_shared" make -C $test_root accel_shared
-run_test "external_run_accel_shared" $_sudo $test_root/accel/accel_module
+run_test "external_make_accel_module_shared" make -C $test_root accel_module_shared
+run_test "external_run_accel_module_shared" $_sudo $test_root/accel/module \
+	--json $test_root/accel/module.json
+
+make -C $test_root clean
+
+# Make just the application linked against individual SPDK shared libraries.
+run_test "external_make_accel_driver_shared" make -C $test_root accel_driver_shared
+run_test "external_run_accel_driver_shared" $_sudo $test_root/accel/driver \
+	--json $test_root/accel/driver.json
 
 make -C $test_root clean
 
@@ -74,8 +82,16 @@ $SPDK_DIR/configure --without-shared --without-ocf --disable-asan $WITH_DPDK
 make -C $SPDK_DIR -j$(nproc)
 
 # Make just the application linked against individual SPDK archives.
-run_test "external_make_accel_static" make -C $test_root accel_static
-run_test "external_run_accel_static" $_sudo $test_root/accel/accel_module
+run_test "external_make_accel_module_static" make -C $test_root accel_module_static
+run_test "external_run_accel_module_static" $_sudo $test_root/accel/module \
+	--json $test_root/accel/module.json
+
+make -C $test_root clean
+
+# Make just the application linked against individual SPDK archives.
+run_test "external_make_accel_driver_static" make -C $test_root accel_driver_static
+run_test "external_run_accel_driver_static" $_sudo $test_root/accel/driver \
+	--json $test_root/accel/driver.json
 
 make -C $test_root clean
 

@@ -50,11 +50,17 @@ hello_world_bdev_static: passthru_static
 hello_world_no_bdev_static:
 	$(MAKE) --directory=hello_world alone_static
 
-accel_shared:
-	$(MAKE) --directory=accel shared
+accel_module_shared:
+	$(MAKE) --directory=accel shared_module
 
-accel_static:
-	$(MAKE) --directory=accel static
+accel_driver_shared:
+	$(MAKE) --directory=accel shared_driver
+
+accel_module_static:
+	$(MAKE) --directory=accel static_module
+
+accel_driver_static:
+	$(MAKE) --directory=accel static_driver
 
 passthru_shared:
 	$(MAKE) --directory=passthru shared
@@ -72,4 +78,4 @@ clean:
 	rm -f ./hello_world/hello_bdev
 	rm -f ./passthru/libpassthru_external.*
 	rm -f ./nvme/*.{so,o} ./nvme/identify
-	rm -f ./accel/accel_module
+	rm -f ./accel/*.{so,o} ./accel/module ./accel/driver

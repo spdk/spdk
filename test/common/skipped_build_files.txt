@@ -37,8 +37,10 @@ test/unit/lib/iscsi/common
 test/unit/lib/json_mock
 
 # These files are in the external_code directory which doesn't get compiled with SPDK.
-test/external_code/accel/accel_module
-test/external_code/accel/accel_run
+test/external_code/accel/module
+test/external_code/accel/driver
+test/external_code/accel/app_module
+test/external_code/accel/app_driver
 test/external_code/hello_world/hello_bdev
 test/external_code/passthru/vbdev_passthru
 test/external_code/passthru/vbdev_passthru_rpc
