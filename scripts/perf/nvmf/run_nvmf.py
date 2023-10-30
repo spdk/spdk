@@ -218,6 +218,12 @@ class Server(ABC):
 
             for qf in queue_files:
                 self.exec_cmd(["sudo", "bash", "-c", f"echo {rps_flow_cnt} > /sys/class/net/{nic_name}/queues/{qf}/rps_flow_cnt"])
+                set_value = self.exec_cmd(["cat", f"/sys/class/net/{nic_name}/queues/{qf}/rps_flow_cnt"]).strip()
+                self.log.info(f"Confirmed rps_flow_cnt set to {set_value} in /sys/class/net/{nic_name}/queues/{qf}")
+
+            self.log.info(f"Configuration of {nic_name} completed with confirmed rps_flow_cnt settings.")
+
+        self.log.info("ARFS configuration completed.")
 
     def configure_adq(self):
         self.adq_load_modules()
