@@ -54,8 +54,9 @@ class Server(ABC):
             ConfigField(name='transport', required=True),
             ConfigField(name='skip_spdk_install', default=False),
             ConfigField(name='irdma_roce_enable', default=False),
-            ConfigField(name='pause_frames', default=False)
+            ConfigField(name='pause_frames', default=None)
         ]
+
         self.read_config(config_fields, general_config)
         self.transport = self.transport.lower()
 
@@ -193,12 +194,15 @@ class Server(ABC):
             self.exec_cmd(["sudo", "ethtool", "-A", nic_name, "rx", rx_state, "tx", tx_state])
 
     def configure_pause_frames(self):
-        if not self.pause_frames:
+        if self.pause_frames is None:
+            self.log.info("Keeping NIC's default pause frames setting")
+            return
+        elif not self.pause_frames:
             self.log.info("Turning off pause frames")
             self.set_pause_frames("off", "off")
-            return
-        self.log.info("Configuring pause frames")
-        self.set_pause_frames("on", "on")
+        else:
+            self.log.info("Turning on pause frames")
+            self.set_pause_frames("on", "on")
 
     def configure_arfs(self):
         rps_flow_cnt = 512
