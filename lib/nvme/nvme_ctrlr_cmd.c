@@ -84,6 +84,44 @@ spdk_nvme_ctrlr_cmd_io_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
 }
 
 int
+spdk_nvme_ctrlr_cmd_iov_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
+				    struct spdk_nvme_qpair *qpair,
+				    struct spdk_nvme_cmd *cmd,
+				    uint32_t len, void *md_buf,
+				    spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+				    spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+				    spdk_nvme_req_next_sge_cb next_sge_fn)
+{
+	struct nvme_request *req;
+	struct nvme_payload payload;
+	uint32_t md_len = 0;
+
+	if (reset_sgl_fn == NULL || next_sge_fn == NULL) {
+		return -EINVAL;
+	}
+
+	payload = NVME_PAYLOAD_SGL(reset_sgl_fn, next_sge_fn, cb_arg, md_buf);
+
+	/* Calculate metadata length */
+	if (md_buf) {
+		struct spdk_nvme_ns *ns = spdk_nvme_ctrlr_get_ns(ctrlr, cmd->nsid);
+
+		assert(ns != NULL);
+		assert(ns->sector_size != 0);
+		md_len = len / ns->sector_size * ns->md_size;
+	}
+
+	req = nvme_allocate_request(qpair, &payload, len, md_len, cb_fn, cb_arg);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	memcpy(&req->cmd, cmd, sizeof(req->cmd));
+
+	return nvme_qpair_submit_request(qpair, req);
+}
+
+int
 spdk_nvme_ctrlr_cmd_admin_raw(struct spdk_nvme_ctrlr *ctrlr,
 			      struct spdk_nvme_cmd *cmd,
 			      void *buf, uint32_t len,

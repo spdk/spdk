@@ -132,6 +132,13 @@ DEFINE_STUB(spdk_nvme_ctrlr_cmd_io_raw_with_md, int, (struct spdk_nvme_ctrlr *ct
 		struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd, void *buf,
 		uint32_t len, void *md_buf, spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
 
+DEFINE_STUB(spdk_nvme_ctrlr_cmd_iov_raw_with_md, int, (
+		    struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
+		    struct spdk_nvme_cmd *cmd, uint32_t len, void *md_buf,
+		    spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+		    spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+		    spdk_nvme_req_next_sge_cb next_sge_fn), 0);
+
 DEFINE_STUB(spdk_nvme_cuse_get_ctrlr_name, int, (struct spdk_nvme_ctrlr *ctrlr, char *name,
 		size_t *size), 0);
 

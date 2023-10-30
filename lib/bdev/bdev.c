@@ -6690,6 +6690,54 @@ spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	return 0;
 }
 
+int
+spdk_bdev_nvme_iov_passthru_md(struct spdk_bdev_desc *desc,
+			       struct spdk_io_channel *ch,
+			       const struct spdk_nvme_cmd *cmd,
+			       struct iovec *iov, int iovcnt, size_t nbytes,
+			       void *md_buf, size_t md_len,
+			       spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
+
+	if (!desc->write) {
+		/*
+		 * Do not try to parse the NVMe command - we could maybe use bits in the opcode
+		 * to easily determine if the command is a read or write, but for now just
+		 * do not allow io_passthru with a read-only descriptor.
+		 */
+		return -EBADF;
+	}
+
+	if (md_buf && spdk_unlikely(!bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_IO_MD))) {
+		return -ENOTSUP;
+	} else if (spdk_unlikely(!bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_IO))) {
+		return -ENOTSUP;
+	}
+
+	bdev_io = bdev_channel_get_io(channel);
+	if (!bdev_io) {
+		return -ENOMEM;
+	}
+
+	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_NVME_IOV_MD;
+	bdev_io->u.nvme_passthru.cmd = *cmd;
+	bdev_io->u.nvme_passthru.iovs = iov;
+	bdev_io->u.nvme_passthru.iovcnt = iovcnt;
+	bdev_io->u.nvme_passthru.nbytes = nbytes;
+	bdev_io->u.nvme_passthru.md_buf = md_buf;
+	bdev_io->u.nvme_passthru.md_len = md_len;
+
+	bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	bdev_io_submit(bdev_io);
+	return 0;
+}
+
 static void bdev_abort_retry(void *ctx);
 static void bdev_abort(struct spdk_bdev_io *parent_io);
 

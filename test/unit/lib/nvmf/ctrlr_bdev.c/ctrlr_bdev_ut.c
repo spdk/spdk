@@ -192,10 +192,11 @@ DEFINE_STUB(spdk_bdev_write_zeroes_blocks, int,
 	     spdk_bdev_io_completion_cb cb, void *cb_arg),
 	    0);
 
-DEFINE_STUB(spdk_bdev_nvme_io_passthru, int,
-	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-	     const struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes,
-	     spdk_bdev_io_completion_cb cb, void *cb_arg),
+DEFINE_STUB(spdk_bdev_nvme_iov_passthru_md, int, (
+		    struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		    const struct spdk_nvme_cmd *cmd, struct iovec *iov, int iovcnt,
+		    size_t nbytes, void *md_buf, size_t md_len,
+		    spdk_bdev_io_completion_cb cb, void *cb_arg),
 	    0);
 
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
@@ -878,7 +879,7 @@ test_nvmf_bdev_ctrlr_nvme_passthru(void)
 
 	/* NVME_IO not supported */
 	memset(&rsp, 0, sizeof(rsp));
-	MOCK_SET(spdk_bdev_nvme_io_passthru, -ENOTSUP);
+	MOCK_SET(spdk_bdev_nvme_iov_passthru_md, -ENOTSUP);
 	rc = nvmf_bdev_ctrlr_nvme_passthru_io(&bdev, desc, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
@@ -887,12 +888,12 @@ test_nvmf_bdev_ctrlr_nvme_passthru(void)
 
 	/* NVME_IO no channel - queue IO */
 	memset(&rsp, 0, sizeof(rsp));
-	MOCK_SET(spdk_bdev_nvme_io_passthru, -ENOMEM);
+	MOCK_SET(spdk_bdev_nvme_iov_passthru_md, -ENOMEM);
 	rc = nvmf_bdev_ctrlr_nvme_passthru_io(&bdev, desc, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 	CU_ASSERT(group.stat.pending_bdev_io == 1);
 
-	MOCK_SET(spdk_bdev_nvme_io_passthru, 0);
+	MOCK_SET(spdk_bdev_nvme_iov_passthru_md, 0);
 
 	/* NVME_ADMIN success */
 	memset(&rsp, 0, sizeof(rsp));

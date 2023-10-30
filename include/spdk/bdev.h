@@ -121,6 +121,7 @@ enum spdk_bdev_io_type {
 	SPDK_BDEV_IO_TYPE_SEEK_HOLE,
 	SPDK_BDEV_IO_TYPE_SEEK_DATA,
 	SPDK_BDEV_IO_TYPE_COPY,
+	SPDK_BDEV_IO_TYPE_NVME_IOV_MD,
 	SPDK_BDEV_NUM_IO_TYPES /* Keep last */
 };
 
@@ -1790,6 +1791,39 @@ int spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *bdev_desc,
 				  const struct spdk_nvme_cmd *cmd,
 				  void *buf, size_t nbytes, void *md_buf, size_t md_len,
 				  spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit an NVMe I/O command to the bdev. This passes directly through
+ * the block layer to the device. Support for NVMe passthru is optional,
+ * indicated by calling spdk_bdev_io_type_supported().
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * The namespace id (nsid) will be populated automatically.
+ *
+ * \param desc Block device descriptor
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param cmd The raw NVMe command. Must be in the NVM command set.
+ * \param iov A scatter gather list of buffers for the command to use.
+ * \param iovcnt The number of elements in iov.
+ * \param nbytes The number of bytes to transfer. The total size of the buffers in iov must be greater than or equal to this size.
+ * \param md_buf Meta data buffer to written from.
+ * \param md_len md_buf size to transfer. md_buf must be greater than or equal to this size.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ *   * -EBADF - desc not open for writing
+ */
+int spdk_bdev_nvme_iov_passthru_md(struct spdk_bdev_desc *desc,
+				   struct spdk_io_channel *ch,
+				   const struct spdk_nvme_cmd *cmd,
+				   struct iovec *iov, int iovcnt,
+				   size_t nbytes, void *md_buf, size_t md_len,
+				   spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Submit a copy request to the block device.

@@ -1852,6 +1852,63 @@ int spdk_nvme_ctrlr_cmd_io_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
 				       spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
+ * Restart the SGL walk to the specified offset when the command has scattered
+ * payloads.
+ *
+ * \param cb_arg Argument passed to readv/writev.
+ * \param offset Offset for SGL.
+ */
+typedef void (*spdk_nvme_req_reset_sgl_cb)(void *cb_arg, uint32_t offset);
+
+/**
+ * Fill out *address and *length with the current SGL entry and advance to the
+ * next entry for the next time the callback is invoked.
+ *
+ * The described segment must be physically contiguous.
+ *
+ * \param cb_arg Argument passed to readv/writev.
+ * \param address Virtual address of this segment, a value of UINT64_MAX
+ * means the segment should be described via Bit Bucket SGL.
+ * \param length Length of this physical segment.
+ */
+typedef int (*spdk_nvme_req_next_sge_cb)(void *cb_arg, void **address,
+		uint32_t *length);
+
+/**
+ * Send the given NVM I/O command with metadata to the NVMe controller.
+ *
+ * This is a low level interface for submitting I/O commands directly. Prefer
+ * the spdk_nvme_ns_cmd_* functions instead. The validity of the command will
+ * not be checked!
+ *
+ * The command is submitted to a qpair allocated by  spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any
+ * given time.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ * \param qpair I/O qpair to submit command.
+ * \param cmd NVM I/O command to submit.
+ * \param len Size of buffer.
+ * \param md_buf Virtual memory address of a single physically contiguous metadata buffer.
+ * \param cb_fn Callback function invoked when the I/O command completes.
+ * \param cb_arg Argument passed to callback function.
+ * \param reset_sgl_fn Callback function to reset scattered payload.
+ * \param next_sge_fn Callback function to iterate each scattered payload memory segment.
+ *
+ * \return 0 if successfully submitted, negated errnos on the following error
+ conditions:
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
+ */
+int spdk_nvme_ctrlr_cmd_iov_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
+					struct spdk_nvme_qpair *qpair,
+					struct spdk_nvme_cmd *cmd, uint32_t len,
+					void *md_buf, spdk_nvme_cmd_cb cb_fn,
+					void *cb_arg,
+					spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+					spdk_nvme_req_next_sge_cb next_sge_fn);
+
+/**
  * Process any outstanding completions for I/O submitted on a queue pair.
  *
  * This call is non-blocking, i.e. it only processes completions that are ready
@@ -3053,27 +3110,6 @@ uint32_t spdk_nvme_ns_get_ana_group_id(const struct spdk_nvme_ns *ns);
  * \return the ANA state for the given namespace.
  */
 enum spdk_nvme_ana_state spdk_nvme_ns_get_ana_state(const struct spdk_nvme_ns *ns);
-
-/**
- * Restart the SGL walk to the specified offset when the command has scattered payloads.
- *
- * \param cb_arg Argument passed to readv/writev.
- * \param offset Offset for SGL.
- */
-typedef void (*spdk_nvme_req_reset_sgl_cb)(void *cb_arg, uint32_t offset);
-
-/**
- * Fill out *address and *length with the current SGL entry and advance to the next
- * entry for the next time the callback is invoked.
- *
- * The described segment must be physically contiguous.
- *
- * \param cb_arg Argument passed to readv/writev.
- * \param address Virtual address of this segment, a value of UINT64_MAX
- * means the segment should be described via Bit Bucket SGL.
- * \param length Length of this physical segment.
- */
-typedef int (*spdk_nvme_req_next_sge_cb)(void *cb_arg, void **address, uint32_t *length);
 
 /**
  * Submit a write I/O to the specified NVMe namespace.

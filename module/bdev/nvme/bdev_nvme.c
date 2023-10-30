@@ -183,6 +183,9 @@ static int bdev_nvme_io_passthru(struct nvme_bdev_io *bio, struct spdk_nvme_cmd 
 				 void *buf, size_t nbytes);
 static int bdev_nvme_io_passthru_md(struct nvme_bdev_io *bio, struct spdk_nvme_cmd *cmd,
 				    void *buf, size_t nbytes, void *md_buf, size_t md_len);
+static int bdev_nvme_iov_passthru_md(struct nvme_bdev_io *bio, struct spdk_nvme_cmd *cmd,
+				     struct iovec *iov, int iovcnt, size_t nbytes,
+				     void *md_buf, size_t md_len);
 static void bdev_nvme_abort(struct nvme_bdev_channel *nbdev_ch,
 			    struct nvme_bdev_io *bio, struct nvme_bdev_io *bio_to_abort);
 static void bdev_nvme_reset_io(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio);
@@ -3030,6 +3033,15 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 					      bdev_io->u.nvme_passthru.nbytes,
 					      bdev_io->u.nvme_passthru.md_buf,
 					      bdev_io->u.nvme_passthru.md_len);
+		break;
+	case SPDK_BDEV_IO_TYPE_NVME_IOV_MD:
+		rc = bdev_nvme_iov_passthru_md(nbdev_io,
+					       &bdev_io->u.nvme_passthru.cmd,
+					       bdev_io->u.nvme_passthru.iovs,
+					       bdev_io->u.nvme_passthru.iovcnt,
+					       bdev_io->u.nvme_passthru.nbytes,
+					       bdev_io->u.nvme_passthru.md_buf,
+					       bdev_io->u.nvme_passthru.md_len);
 		break;
 	case SPDK_BDEV_IO_TYPE_ABORT:
 		nbdev_io->io_path = NULL;
@@ -7887,6 +7899,43 @@ bdev_nvme_io_passthru_md(struct nvme_bdev_io *bio, struct spdk_nvme_cmd *cmd,
 
 	return spdk_nvme_ctrlr_cmd_io_raw_with_md(ctrlr, qpair, cmd, buf,
 			(uint32_t)nbytes, md_buf, bdev_nvme_queued_done, bio);
+}
+
+static int
+bdev_nvme_iov_passthru_md(struct nvme_bdev_io *bio,
+			  struct spdk_nvme_cmd *cmd, struct iovec *iov, int iovcnt,
+			  size_t nbytes, void *md_buf, size_t md_len)
+{
+	struct spdk_nvme_ns *ns = bio->io_path->nvme_ns->ns;
+	struct spdk_nvme_qpair *qpair = bio->io_path->qpair->qpair;
+	size_t nr_sectors = nbytes / spdk_nvme_ns_get_extended_sector_size(ns);
+	uint32_t max_xfer_size = spdk_nvme_ns_get_max_io_xfer_size(ns);
+	struct spdk_nvme_ctrlr *ctrlr = spdk_nvme_ns_get_ctrlr(ns);
+
+	bio->iovs = iov;
+	bio->iovcnt = iovcnt;
+	bio->iovpos = 0;
+	bio->iov_offset = 0;
+
+	if (nbytes > max_xfer_size) {
+		SPDK_ERRLOG("nbytes is greater than MDTS %" PRIu32 ".\n", max_xfer_size);
+		return -EINVAL;
+	}
+
+	if (md_len != nr_sectors * spdk_nvme_ns_get_md_size(ns)) {
+		SPDK_ERRLOG("invalid meta data buffer size\n");
+		return -EINVAL;
+	}
+
+	/*
+	 * Each NVMe bdev is a specific namespace, and all NVMe I/O commands
+	 * require a nsid, so fill it out automatically.
+	 */
+	cmd->nsid = spdk_nvme_ns_get_id(ns);
+
+	return spdk_nvme_ctrlr_cmd_iov_raw_with_md(
+		       ctrlr, qpair, cmd, (uint32_t)nbytes, md_buf, bdev_nvme_queued_done, bio,
+		       bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge);
 }
 
 static void

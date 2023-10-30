@@ -76,6 +76,7 @@
 	spdk_nvme_ctrlr_io_cmd_raw_no_payload_build;
 	spdk_nvme_ctrlr_cmd_io_raw;
 	spdk_nvme_ctrlr_cmd_io_raw_with_md;
+	spdk_nvme_ctrlr_cmd_iov_raw_with_md;
 	spdk_nvme_ctrlr_cmd_admin_raw;
 	spdk_nvme_ctrlr_process_admin_completions;
 	spdk_nvme_ctrlr_get_ns;

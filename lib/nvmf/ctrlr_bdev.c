@@ -745,15 +745,9 @@ nvmf_bdev_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *
 {
 	int rc;
 
-	if (spdk_unlikely(req->iovcnt > 1)) {
-		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-		req->rsp->nvme_cpl.status.dnr = 1;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
+	rc = spdk_bdev_nvme_iov_passthru_md(desc, ch, &req->cmd->nvme_cmd, req->iov, req->iovcnt,
+					    req->length, NULL, 0, nvmf_bdev_ctrlr_complete_cmd, req);
 
-	rc = spdk_bdev_nvme_io_passthru(desc, ch, &req->cmd->nvme_cmd, req->iov[0].iov_base, req->length,
-					nvmf_bdev_ctrlr_complete_cmd, req);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
 			nvmf_bdev_ctrl_queue_io(req, bdev, ch, nvmf_ctrlr_process_io_cmd_resubmit, req);

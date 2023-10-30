@@ -873,6 +873,12 @@ struct spdk_bdev_io {
 			/* The NVMe command to execute */
 			struct spdk_nvme_cmd cmd;
 
+			/* For SG buffer cases, array of iovecs to transfer. */
+			struct iovec *iovs;
+
+			/* For SG buffer cases, number of iovecs in iovec array. */
+			int iovcnt;
+
 			/* The data buffer to transfer */
 			void *buf;
 
