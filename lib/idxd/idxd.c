@@ -1295,6 +1295,8 @@ spdk_idxd_submit_decompress(struct spdk_idxd_io_channel *chan,
 static inline int
 idxd_get_dif_flags(const struct spdk_dif_ctx *ctx, uint8_t *flags)
 {
+	uint32_t data_block_size = ctx->block_size - ctx->md_size;
+
 	if (flags == NULL) {
 		SPDK_ERRLOG("Flag should be non-null");
 		return -EINVAL;
@@ -1314,7 +1316,7 @@ idxd_get_dif_flags(const struct spdk_dif_ctx *ctx, uint8_t *flags)
 		*flags = IDXD_DIF_FLAG_DIF_BLOCK_SIZE_4104;
 		break;
 	default:
-		SPDK_ERRLOG("Invalid DIF block size %d\n", ctx->block_size - ctx->md_size);
+		SPDK_ERRLOG("Invalid DIF block size %d\n", data_block_size);
 		return -EINVAL;
 	}
 
@@ -1379,6 +1381,8 @@ idxd_get_app_tag_mask(const struct spdk_dif_ctx *ctx, uint16_t *app_tag_mask)
 static inline int
 idxd_validate_dif_common_params(const struct spdk_dif_ctx *ctx)
 {
+	uint32_t data_block_size = ctx->block_size - ctx->md_size;
+
 	/* Check byte offset from the start of the whole data buffer */
 	if (ctx->data_offset != 0) {
 		SPDK_ERRLOG("Byte offset from the start of the whole data buffer must be set to 0.");
@@ -1418,9 +1422,9 @@ idxd_validate_dif_common_params(const struct spdk_dif_ctx *ctx)
 	}
 
 	/* Check for supported DIF block sizes */
-	if ((ctx->block_size - ctx->md_size) != DATA_BLOCK_SIZE_512 &&
-	    (ctx->block_size - ctx->md_size) != DATA_BLOCK_SIZE_4096) {
-		SPDK_ERRLOG("DIF block size %d is not supported.\n", ctx->block_size - ctx->md_size);
+	if (data_block_size != DATA_BLOCK_SIZE_512 &&
+	    data_block_size != DATA_BLOCK_SIZE_4096) {
+		SPDK_ERRLOG("DIF block size %d is not supported.\n", data_block_size);
 		return -EINVAL;
 	}
 
@@ -1584,6 +1588,7 @@ idxd_validate_dif_insert_iovecs(const struct spdk_dif_ctx *ctx,
 				const struct iovec *diov, const size_t diovcnt,
 				const struct iovec *siov, const size_t siovcnt)
 {
+	uint32_t data_block_size = ctx->block_size - ctx->md_size;
 	size_t src_len, dst_len;
 	uint32_t num_blocks;
 	size_t i;
@@ -1597,7 +1602,7 @@ idxd_validate_dif_insert_iovecs(const struct spdk_dif_ctx *ctx,
 	for (i = 0; i < siovcnt; i++) {
 		src_len = siov[i].iov_len;
 		dst_len = diov[i].iov_len;
-		num_blocks = src_len / (ctx->block_size - ctx->md_size);
+		num_blocks = src_len / data_block_size;
 		if (src_len != dst_len - num_blocks * ctx->md_size) {
 			SPDK_ERRLOG("Invalid length of data in src (%ld) and dst (%ld) in iovecs[%ld].\n",
 				    src_len, dst_len, i);
@@ -1612,10 +1617,12 @@ static inline int
 idxd_validate_dif_insert_buf_align(const struct spdk_dif_ctx *ctx,
 				   const uint64_t src_len, const uint64_t dst_len)
 {
+	uint32_t data_block_size = ctx->block_size - ctx->md_size;
+
 	/* DSA can only process contiguous memory buffers, multiple of the block size */
-	if (src_len % (ctx->block_size - ctx->md_size) != 0) {
+	if (src_len % data_block_size != 0) {
 		SPDK_ERRLOG("The memory source buffer length (%ld) is not a multiple of block size without metadata (%d).\n",
-			    src_len, ctx->block_size - ctx->md_size);
+			    src_len, data_block_size);
 		return -EINVAL;
 	}
 
@@ -1626,9 +1633,9 @@ idxd_validate_dif_insert_buf_align(const struct spdk_dif_ctx *ctx,
 	}
 
 	/* The memory source and destiantion must hold the same number of blocks. */
-	if (src_len / (ctx->block_size - ctx->md_size) != (dst_len / ctx->block_size)) {
+	if (src_len / data_block_size != (dst_len / ctx->block_size)) {
 		SPDK_ERRLOG("The memory source (%ld) and destiantion (%ld) must hold the same number of blocks.\n",
-			    src_len / (ctx->block_size - ctx->md_size), (dst_len / ctx->block_size));
+			    src_len / data_block_size, dst_len / ctx->block_size);
 		return -EINVAL;
 	}
 
@@ -1644,6 +1651,7 @@ spdk_idxd_submit_dif_insert(struct spdk_idxd_io_channel *chan,
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *first_op = NULL, *op = NULL;
+	uint32_t data_block_size = ctx->block_size - ctx->md_size;
 	uint64_t src_seg_addr, src_seg_len;
 	uint64_t dst_seg_addr, dst_seg_len;
 	uint32_t num_blocks_done = 0;
@@ -1722,7 +1730,132 @@ spdk_idxd_submit_dif_insert(struct spdk_idxd_io_channel *chan,
 		desc->dif_ins.app_tag_mask = ~ctx->apptag_mask;
 		desc->dif_ins.ref_tag_seed = (uint32_t)ctx->init_ref_tag + num_blocks_done;
 
-		num_blocks_done += src_seg_len / (ctx->block_size - ctx->md_size);
+		num_blocks_done += src_seg_len / data_block_size;
+	}
+
+	return _idxd_flush_batch(chan);
+
+error:
+	chan->batch->index -= count;
+	return rc;
+}
+
+static inline int
+idxd_validate_dif_strip_buf_align(const struct spdk_dif_ctx *ctx,
+				  const uint64_t src_len, const uint64_t dst_len)
+{
+	uint32_t data_block_size = ctx->block_size - ctx->md_size;
+
+	/* DSA can only process contiguous memory buffers, multiple of the block size. */
+	if (src_len % ctx->block_size != 0) {
+		SPDK_ERRLOG("The src buffer length (%ld) is not a multiple of block size (%d).\n",
+			    src_len, ctx->block_size);
+		return -EINVAL;
+	}
+	if (dst_len % data_block_size != 0) {
+		SPDK_ERRLOG("The dst buffer length (%ld) is not a multiple of block size without metadata (%d).\n",
+			    dst_len, data_block_size);
+		return -EINVAL;
+	}
+	/* The memory source and destiantion must hold the same number of blocks. */
+	if (src_len / ctx->block_size != dst_len / data_block_size) {
+		SPDK_ERRLOG("The memory source (%ld) and destiantion (%ld) must hold the same number of blocks.\n",
+			    src_len / data_block_size, dst_len / ctx->block_size);
+		return -EINVAL;
+	}
+	return 0;
+}
+
+int
+spdk_idxd_submit_dif_strip(struct spdk_idxd_io_channel *chan,
+			   struct iovec *diov, size_t diovcnt,
+			   struct iovec *siov, size_t siovcnt,
+			   uint32_t num_blocks, const struct spdk_dif_ctx *ctx, int flags,
+			   spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+	struct idxd_ops *first_op = NULL, *op = NULL;
+	uint64_t src_seg_addr, src_seg_len;
+	uint64_t dst_seg_addr, dst_seg_len;
+	uint8_t dif_flags = 0, src_dif_flags = 0;
+	uint16_t app_tag_mask = 0;
+	int rc, count = 0;
+	size_t i;
+
+	rc = idxd_validate_dif_common_params(ctx);
+	if (rc) {
+		return rc;
+	}
+
+	rc = idxd_get_dif_flags(ctx, &dif_flags);
+	if (rc) {
+		return rc;
+	}
+
+	rc = idxd_get_source_dif_flags(ctx, &src_dif_flags);
+	if (rc) {
+		return rc;
+	}
+
+	rc = idxd_get_app_tag_mask(ctx, &app_tag_mask);
+	if (rc) {
+		return rc;
+	}
+
+	rc = _idxd_setup_batch(chan);
+	if (rc) {
+		return rc;
+	}
+
+	if (diovcnt != siovcnt) {
+		SPDK_ERRLOG("Mismatched iovcnts: src=%ld, dst=%ld\n",
+			    siovcnt, diovcnt);
+		return -EINVAL;
+	}
+
+	for (i = 0; i < siovcnt; i++) {
+		src_seg_addr = (uint64_t)siov[i].iov_base;
+		src_seg_len = siov[i].iov_len;
+		dst_seg_addr = (uint64_t)diov[i].iov_base;
+		dst_seg_len = diov[i].iov_len;
+
+		/* DSA processes the iovec buffers independently, so the buffers cannot
+		 * be split (must be multiple of the block size). The source memory
+		 * size needs to be same as the destination memory size + metadata size */
+
+		rc = idxd_validate_dif_strip_buf_align(ctx, src_seg_len, dst_seg_len);
+		if (rc) {
+			goto error;
+		}
+
+		if (first_op == NULL) {
+			rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, flags, &desc, &op);
+			if (rc) {
+				goto error;
+			}
+
+			first_op = op;
+		} else {
+			rc = _idxd_prep_batch_cmd(chan, NULL, NULL, flags, &desc, &op);
+			if (rc) {
+				goto error;
+			}
+
+			first_op->count++;
+			op->parent = first_op;
+		}
+
+		count++;
+
+		desc->opcode = IDXD_OPCODE_DIF_STRP;
+		desc->src_addr = src_seg_addr;
+		desc->dst_addr = dst_seg_addr;
+		desc->xfer_size = src_seg_len;
+		desc->dif_strip.flags = dif_flags;
+		desc->dif_strip.src_flags = src_dif_flags;
+		desc->dif_strip.app_tag_seed = ctx->app_tag;
+		desc->dif_strip.app_tag_mask = app_tag_mask;
+		desc->dif_strip.ref_tag_seed = (uint32_t)ctx->init_ref_tag;
 	}
 
 	return _idxd_flush_batch(chan);
@@ -1830,6 +1963,7 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 			}
 			break;
 		case IDXD_OPCODE_DIF_CHECK:
+		case IDXD_OPCODE_DIF_STRP:
 			if (spdk_unlikely(op->hw.status == IDXD_DSA_STATUS_DIF_ERROR)) {
 				status = -EIO;
 			}
