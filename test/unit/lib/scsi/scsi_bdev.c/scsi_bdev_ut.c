@@ -104,6 +104,9 @@ DEFINE_STUB(spdk_scsi_dev_get_first_lun, struct spdk_scsi_lun *,
 DEFINE_STUB(spdk_scsi_dev_get_next_lun, struct spdk_scsi_lun *,
 	    (struct spdk_scsi_lun *prev_lun), NULL);
 
+DEFINE_STUB(spdk_scsi_sbc_opcode_string, const char *,
+	    (uint8_t opcode, uint16_t sa), "UNKNOWN");
+
 static void
 ut_put_task(struct spdk_scsi_task *task)
 {

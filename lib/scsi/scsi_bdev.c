@@ -1358,7 +1358,6 @@ struct spdk_bdev_scsi_split_ctx {
 	uint16_t			current_count;
 	uint16_t			outstanding_count;
 	int	(*fn)(struct spdk_bdev_scsi_split_ctx *ctx);
-	char				name[16];
 };
 
 static int bdev_scsi_split(struct spdk_bdev_scsi_split_ctx *ctx);
@@ -1375,6 +1374,7 @@ static int
 bdev_scsi_split(struct spdk_bdev_scsi_split_ctx *ctx)
 {
 	struct spdk_scsi_task *task = ctx->task;
+	uint8_t opcode = task->cdb[0];
 	int rc;
 
 	while (ctx->remaining_count != 0) {
@@ -1396,7 +1396,7 @@ bdev_scsi_split(struct spdk_bdev_scsi_split_ctx *ctx)
 				}
 				return SPDK_SCSI_TASK_PENDING;
 			} else {
-				SPDK_ERRLOG("SCSI %s failed\n", ctx->name);
+				SPDK_ERRLOG("SCSI %s failed\n", spdk_scsi_sbc_opcode_string(opcode, 0));
 				spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 							  SPDK_SCSI_SENSE_NO_SENSE,
 							  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
@@ -1539,7 +1539,6 @@ bdev_scsi_unmap(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 	ctx->current_count = 0;
 	ctx->outstanding_count = 0;
 	ctx->fn = _bdev_scsi_unmap;
-	snprintf(ctx->name, sizeof(ctx->name), "UNMAP");
 
 	if (task->iovcnt == 1) {
 		data = (uint8_t *)task->iovs[0].iov_base;
@@ -1652,7 +1651,6 @@ bdev_scsi_write_same(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 	ctx->outstanding_count = 0;
 	ctx->remaining_count = xfer_len;
 	ctx->fn = _bdev_scsi_write_same;
-	snprintf(ctx->name, sizeof(ctx->name), "WRITE SAME");
 
 	task->data_transferred = task->length;
 
