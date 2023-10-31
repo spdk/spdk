@@ -129,8 +129,13 @@ function check_c_style() {
 
 	if hash astyle; then
 		echo -n "Checking coding style..."
-		if [ "$(astyle -V)" \< "Artistic Style Version 3" ]; then
-			echo -n " Your astyle version is too old so skipping coding style checks. Please update astyle to at least 3.0.1 version..."
+		version=$(astyle --version | awk '{print $NF}')
+		if lt "$version" 3.0.1; then
+			echo " Your astyle version is too old so skipping coding style checks. Please update astyle to at least 3.0.1 version..."
+			rc=1
+		elif ge "$version" 3.4; then
+			echo " Your astyle version is too new so skipping coding style checks. Please use astyle version < 3.4"
+			rc=1
 		else
 			rm -f astyle.log
 			touch astyle.log
