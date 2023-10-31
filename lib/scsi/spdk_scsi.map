@@ -48,6 +48,7 @@
 	spdk_scsi_lun_id_fmt_to_int;
 	spdk_scsi_dev_construct_ext;
 	spdk_scsi_dev_add_lun_ext;
+	spdk_scsi_sbc_opcode_string;
 
 	local: *;
 };

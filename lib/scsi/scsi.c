@@ -5,6 +5,7 @@
  */
 
 #include "scsi_internal.h"
+#include "spdk/util.h"
 
 int
 spdk_scsi_init(void)
@@ -68,6 +69,68 @@ spdk_scsi_lun_id_fmt_to_int(uint64_t fmt_lun)
 		lun_i = 0xffffU;
 	}
 	return lun_i;
+}
+
+struct scsi_sbc_opcode_string {
+	enum spdk_sbc_opcode opc;
+	const char *str;
+};
+
+static const struct scsi_sbc_opcode_string scsi_sbc_opcode_strings[] = {
+	{ SPDK_SBC_COMPARE_AND_WRITE, "COMPARE AND WRITE" },
+	{ SPDK_SBC_FORMAT_UNIT, "FORMAT UNIT" },
+	{ SPDK_SBC_GET_LBA_STATUS, "GET LBA STATUS" },
+	{ SPDK_SBC_ORWRITE_16, "ORWRITE 16" },
+	{ SPDK_SBC_PRE_FETCH_10, "PRE FETCH 10" },
+	{ SPDK_SBC_PRE_FETCH_16, "PRE FETCH 16" },
+	{ SPDK_SBC_READ_6, "READ 6" },
+	{ SPDK_SBC_READ_10, "READ 10" },
+	{ SPDK_SBC_READ_12, "READ 12" },
+	{ SPDK_SBC_READ_16, "READ 16" },
+	{ SPDK_SBC_READ_ATTRIBUTE, "READ ATTRIBUTE" },
+	{ SPDK_SBC_READ_BUFFER, "READ BUFFER" },
+	{ SPDK_SBC_READ_CAPACITY_10, "READ CAPACITY 10" },
+	{ SPDK_SBC_READ_DEFECT_DATA_10, "READ DEFECT DATA 10" },
+	{ SPDK_SBC_READ_DEFECT_DATA_12, "READ DEFECT DATA 12" },
+	{ SPDK_SBC_READ_LONG_10, "READ LONG 10" },
+	{ SPDK_SBC_REASSIGN_BLOCKS, "REASSIGN BLOCKS" },
+	{ SPDK_SBC_SANITIZE, "SANITIZE" },
+	{ SPDK_SBC_START_STOP_UNIT, "START STOP UNIT" },
+	{ SPDK_SBC_SYNCHRONIZE_CACHE_10, "SYNCHRONIZE CACHE 10" },
+	{ SPDK_SBC_SYNCHRONIZE_CACHE_16, "SYNCHRONIZE CACHE 16" },
+	{ SPDK_SBC_UNMAP, "UNMAP" },
+	{ SPDK_SBC_VERIFY_10, "VERIFY 10" },
+	{ SPDK_SBC_VERIFY_12, "VERIFY 12" },
+	{ SPDK_SBC_VERIFY_16, "VERIFY 16" },
+	{ SPDK_SBC_WRITE_6, "WRITE 6" },
+	{ SPDK_SBC_WRITE_10, "WRITE 10" },
+	{ SPDK_SBC_WRITE_12, "WRITE 12" },
+	{ SPDK_SBC_WRITE_16, "WRITE 16" },
+	{ SPDK_SBC_WRITE_AND_VERIFY_10, "WRITE AND VERIFY 10" },
+	{ SPDK_SBC_WRITE_AND_VERIFY_12, "WRITE AND VERIFY 12" },
+	{ SPDK_SBC_WRITE_AND_VERIFY_16, "WRITE AND VERIFY 16" },
+	{ SPDK_SBC_WRITE_LONG_10, "WRITE LONG 10" },
+	{ SPDK_SBC_WRITE_SAME_10, "WRITE SAME 10" },
+	{ SPDK_SBC_WRITE_SAME_16, "WRITE SAME 16" },
+	{ SPDK_SBC_XDREAD_10, "XDREAD 10" },
+	{ SPDK_SBC_XDWRITE_10, "XDWRITE 10" },
+	{ SPDK_SBC_XDWRITEREAD_10, "XDWRITEREAD 10" },
+	{ SPDK_SBC_XPWRITE_10, "XPWRITE 10" }
+};
+
+const char *
+spdk_scsi_sbc_opcode_string(uint8_t opcode, uint16_t sa)
+{
+	uint8_t i;
+
+	/* FIXME: sa is unsupported currently, support variable length CDBs if necessary */
+	for (i = 0; i < SPDK_COUNTOF(scsi_sbc_opcode_strings); i++) {
+		if (scsi_sbc_opcode_strings[i].opc == opcode) {
+			return scsi_sbc_opcode_strings[i].str;
+		}
+	}
+
+	return "UNKNOWN";
 }
 
 SPDK_LOG_REGISTER_COMPONENT(scsi)
