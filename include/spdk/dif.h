@@ -8,6 +8,18 @@
 #include "spdk/stdinc.h"
 #include "spdk/assert.h"
 
+/**
+ * Use `SPDK_DIF_APPTAG_IGNORE` and `SPDK_DIF_REFTAG_IGNORE`
+ * as the special values when creating DIF context, when the two
+ * values are used for Application Tag and Initialization Reference Tag,
+ * DIF library will fill the protection information fields with above
+ * values, based on the specification, when doing verify with
+ * above values in protection information field, the checking
+ * will be ignored.
+ */
+#define SPDK_DIF_REFTAG_IGNORE		0xFFFFFFFF
+#define SPDK_DIF_APPTAG_IGNORE		0xFFFF
+
 #define SPDK_DIF_FLAGS_REFTAG_CHECK	(1U << 26)
 #define SPDK_DIF_FLAGS_APPTAG_CHECK	(1U << 27)
 #define SPDK_DIF_FLAGS_GUARD_CHECK	(1U << 28)

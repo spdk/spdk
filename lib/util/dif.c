@@ -11,7 +11,6 @@
 #include "spdk/log.h"
 #include "spdk/util.h"
 
-#define APPTAG_IGNORE 0xFFFF
 #define REFTAG_MASK_16 0x00000000FFFFFFFF
 #define REFTAG_MASK_32 0xFFFFFFFFFFFFFFFF
 #define REFTAG_MASK_64 0x0000FFFFFFFFFFFF
@@ -183,28 +182,6 @@ static void
 _dif_sgl_copy(struct _dif_sgl *to, struct _dif_sgl *from)
 {
 	memcpy(to, from, sizeof(struct _dif_sgl));
-}
-
-static bool
-_dif_type_is_valid(enum spdk_dif_type dif_type, uint32_t dif_flags)
-{
-	switch (dif_type) {
-	case SPDK_DIF_TYPE1:
-	case SPDK_DIF_TYPE2:
-	case SPDK_DIF_DISABLE:
-		break;
-	case SPDK_DIF_TYPE3:
-		if (dif_flags & SPDK_DIF_FLAGS_REFTAG_CHECK) {
-			SPDK_ERRLOG("Reference Tag should not be checked for Type 3\n");
-			return false;
-		}
-		break;
-	default:
-		SPDK_ERRLOG("Unknown DIF Type: %d\n", dif_type);
-		return false;
-	}
-
-	return true;
 }
 
 static bool
@@ -384,7 +361,7 @@ _dif_get_apptag(struct spdk_dif *dif, enum spdk_dif_pi_format dif_pi_format)
 static inline bool
 _dif_apptag_ignore(struct spdk_dif *dif, enum spdk_dif_pi_format dif_pi_format)
 {
-	return _dif_get_apptag(dif, dif_pi_format) == APPTAG_IGNORE;
+	return _dif_get_apptag(dif, dif_pi_format) == SPDK_DIF_APPTAG_IGNORE;
 }
 
 static inline uint8_t
@@ -525,11 +502,6 @@ spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_siz
 		data_block_size = block_size;
 	}
 
-	if (!_dif_type_is_valid(dif_type, dif_flags)) {
-		SPDK_ERRLOG("DIF type is invalid.\n");
-		return -EINVAL;
-	}
-
 	ctx->block_size = block_size;
 	ctx->md_size = md_size;
 	ctx->md_interleave = md_interleave;
@@ -596,6 +568,17 @@ _dif_generate(void *_dif, uint64_t guard, uint32_t offset_blocks,
 			ref_tag = ctx->init_ref_tag + ctx->ref_tag_offset + offset_blocks;
 		} else {
 			ref_tag = ctx->init_ref_tag + ctx->ref_tag_offset;
+		}
+
+		/* Overwrite reference tag if initialization reference tag is SPDK_DIF_REFTAG_IGNORE */
+		if (ctx->init_ref_tag == SPDK_DIF_REFTAG_IGNORE) {
+			if (ctx->dif_pi_format == SPDK_DIF_PI_FORMAT_16) {
+				ref_tag = REFTAG_MASK_16;
+			} else if (ctx->dif_pi_format == SPDK_DIF_PI_FORMAT_32) {
+				ref_tag = REFTAG_MASK_32;
+			} else {
+				ref_tag = REFTAG_MASK_64;
+			}
 		}
 
 		_dif_set_reftag(dif, ref_tag, ctx->dif_pi_format);

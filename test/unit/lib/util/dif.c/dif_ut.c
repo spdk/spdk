@@ -4032,6 +4032,58 @@ dix_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_remap_test(void)
 	_iov_free_buf(&md_iov);
 }
 
+static void
+dif_generate_and_verify_unmap_test(void)
+{
+	struct iovec iov;
+	struct spdk_dif_ctx ctx = {};
+	int rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+	uint32_t dif_flags;
+	struct spdk_dif *dif;
+
+	_iov_alloc_buf(&iov, 4096 + 128);
+
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	dif = (struct spdk_dif *)(iov.iov_base + 4096);
+
+	/* Case 1 for TYPE1 */
+	memset(iov.iov_base, 0, 4096 + 128);
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK | SPDK_DIF_FLAGS_REFTAG_CHECK;
+	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, true, SPDK_DIF_TYPE1, dif_flags,
+			       0x100, 0xFFFF, SPDK_DIF_APPTAG_IGNORE, 0, 0, &dif_opts);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate(&iov, 1, 1, &ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify(&iov, 1, 1, &ctx, NULL);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(_dif_get_apptag(dif, ctx.dif_pi_format) == SPDK_DIF_APPTAG_IGNORE);
+	CU_ASSERT(_dif_get_reftag(dif, ctx.dif_pi_format) == 0x100);
+
+	/* Case 2 for TYPE3 */
+	memset(iov.iov_base, 0, 4096 + 128);
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK | SPDK_DIF_FLAGS_REFTAG_CHECK;
+	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, true, SPDK_DIF_TYPE3, dif_flags,
+			       SPDK_DIF_REFTAG_IGNORE, 0xFFFF, SPDK_DIF_APPTAG_IGNORE, 0, 0, &dif_opts);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate(&iov, 1, 1, &ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify(&iov, 1, 1, &ctx, NULL);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(_dif_get_apptag(dif, ctx.dif_pi_format) == SPDK_DIF_APPTAG_IGNORE);
+	CU_ASSERT(_dif_get_reftag(dif, ctx.dif_pi_format) == REFTAG_MASK_16);
+
+	_iov_free_buf(&iov);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -4120,6 +4172,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, dix_sec_4096_md_128_prchk_7_multi_iovs_remap);
 	CU_ADD_TEST(suite, dix_sec_512_md_8_prchk_7_multi_iovs_complex_splits_remap_pi_16_test);
 	CU_ADD_TEST(suite, dix_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_remap_test);
+	CU_ADD_TEST(suite, dif_generate_and_verify_unmap_test);
 
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
