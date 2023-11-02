@@ -18,6 +18,7 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/uuid.h"
+#include "spdk/sock.h"
 
 #define MAX_DISCOVERY_LOG_ENTRIES	((uint64_t)1000)
 
@@ -2617,6 +2618,7 @@ usage(const char *program_name)
 	printf(" -x         print hex dump of raw data\n");
 	printf(" -z         For NVMe Zoned Namespaces, dump the full zone report (-z) or the first N entries (-z N)\n");
 	printf(" -V         enumerate VMD\n");
+	printf(" -S         socket implementation, e.g. -S uring (default is posix)\n");
 	printf(" -H         show this usage\n");
 }
 
@@ -2629,7 +2631,7 @@ parse_args(int argc, char **argv)
 	spdk_nvme_trid_populate_transport(&g_trid, SPDK_NVME_TRANSPORT_PCIE);
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "d:gi:op:r:v:xz::HL:V")) != -1) {
+	while ((op = getopt(argc, argv, "d:gi:op:r:v:xz::HL:S:V")) != -1) {
 		switch (op) {
 		case 'd':
 			g_dpdk_mem = spdk_strtol(optarg, 10);
@@ -2718,6 +2720,13 @@ parse_args(int argc, char **argv)
 			exit(EXIT_SUCCESS);
 		case 'V':
 			g_vmd = true;
+			break;
+		case 'S':
+			rc = spdk_sock_set_default_impl(optarg);
+			if (rc < 0) {
+				fprintf(stderr, "Invalid socket implementation\n");
+				exit(EXIT_FAILURE);
+			}
 			break;
 		default:
 			usage(argv[0]);
