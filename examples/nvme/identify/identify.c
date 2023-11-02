@@ -1594,8 +1594,6 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	union spdk_nvme_cap_register		cap;
 	union spdk_nvme_vs_register		vs;
-	union spdk_nvme_cmbsz_register		cmbsz;
-	union spdk_nvme_pmrcap_register		pmrcap;
 	uint8_t					str[512];
 	uint32_t				i, j;
 	struct spdk_nvme_error_information_entry *error_entry;
@@ -1603,7 +1601,6 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	struct spdk_pci_device			*pci_dev;
 	struct spdk_pci_id			pci_id;
 	uint32_t				nsid;
-	uint64_t				pmrsz;
 	uint8_t					*orig_desc;
 	struct spdk_nvme_ana_group_descriptor	*copied_desc;
 	uint32_t				desc_size, copy_len;
@@ -1611,9 +1608,6 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 
 	cap = spdk_nvme_ctrlr_get_regs_cap(ctrlr);
 	vs = spdk_nvme_ctrlr_get_regs_vs(ctrlr);
-	cmbsz = spdk_nvme_ctrlr_get_regs_cmbsz(ctrlr);
-	pmrcap = spdk_nvme_ctrlr_get_regs_pmrcap(ctrlr);
-	pmrsz = spdk_nvme_ctrlr_get_pmrsz(ctrlr);
 
 	if (!spdk_nvme_ctrlr_is_discovery(ctrlr)) {
 		/*
@@ -1780,8 +1774,12 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 
 	printf("Controller Memory Buffer Support\n");
 	printf("================================\n");
-	if (cmbsz.raw != 0) {
-		uint64_t size = cmbsz.bits.sz;
+	if (cap.bits.cmbs != 0) {
+		union spdk_nvme_cmbsz_register		cmbsz;
+		uint64_t size;
+
+		cmbsz = spdk_nvme_ctrlr_get_regs_cmbsz(ctrlr);
+		size = cmbsz.bits.sz;
 
 		/* Convert the size to bytes by multiplying by the granularity.
 		   By spec, szu is at most 6 and sz is 20 bits, so size requires
@@ -1806,6 +1804,12 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	printf("Persistent Memory Region Support\n");
 	printf("================================\n");
 	if (cap.bits.pmrs != 0) {
+		union spdk_nvme_pmrcap_register		pmrcap;
+		uint64_t				pmrsz;
+
+		pmrcap = spdk_nvme_ctrlr_get_regs_pmrcap(ctrlr);
+		pmrsz = spdk_nvme_ctrlr_get_pmrsz(ctrlr);
+
 		printf("Supported:                             Yes\n");
 		printf("Total Size:                            %" PRIu64 " bytes\n", pmrsz);
 		printf("Read data and metadata in PMR          %s\n",

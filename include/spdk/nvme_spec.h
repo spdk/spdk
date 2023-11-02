@@ -98,7 +98,10 @@ union spdk_nvme_cap_register {
 		/** persistent memory region supported */
 		uint32_t pmrs		: 1;
 
-		uint32_t reserved3	: 7;
+		/** controller memory buffer supported */
+		uint32_t cmbs		: 1;
+
+		uint32_t reserved3	: 6;
 	} bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cap_register) == 8, "Incorrect size");

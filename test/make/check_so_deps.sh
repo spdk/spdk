@@ -128,6 +128,8 @@ function confirm_abi_deps() {
 [suppress_type]
 	name = spdk_nvme_cmd
 [suppress_type]
+	name = spdk_nvme_cap_register
+[suppress_type]
 	name = spdk_bs_opts
 [suppress_type]
 	name = spdk_app_opts

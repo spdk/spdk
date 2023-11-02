@@ -149,7 +149,7 @@ nvme_fabric_prop_get_cmd_sync(struct spdk_nvme_ctrlr *ctrlr,
 		if (!status->timed_out) {
 			free(status);
 		}
-		SPDK_ERRLOG("Property Get failed\n");
+		SPDK_ERRLOG("Property Get failed, offset %x, size %u\n", offset, size);
 		return -1;
 	}
 
