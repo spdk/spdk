@@ -1842,6 +1842,25 @@ bdev_module_get_max_ctx_size(void)
 }
 
 static void
+bdev_enable_histogram_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	if (!bdev->internal.histogram_enabled) {
+		return;
+	}
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "bdev_enable_histogram");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "name", bdev->name);
+
+	spdk_json_write_named_bool(w, "enable", bdev->internal.histogram_enabled);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
+static void
 bdev_qos_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 {
 	int i;
@@ -1904,6 +1923,7 @@ spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w)
 		}
 
 		bdev_qos_config_json(bdev, w);
+		bdev_enable_histogram_config_json(bdev, w);
 	}
 
 	spdk_spin_unlock(&g_bdev_mgr.spinlock);
