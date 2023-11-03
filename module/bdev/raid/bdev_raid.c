@@ -617,6 +617,8 @@ raid_bdev_write_info_json(struct raid_bdev *raid_bdev, struct spdk_json_write_ct
 	spdk_json_write_named_bool(w, "superblock", raid_bdev->sb != NULL);
 	spdk_json_write_named_uint32(w, "num_base_bdevs", raid_bdev->num_base_bdevs);
 	spdk_json_write_named_uint32(w, "num_base_bdevs_discovered", raid_bdev->num_base_bdevs_discovered);
+	spdk_json_write_named_uint32(w, "num_base_bdevs_operational",
+				     raid_bdev->num_base_bdevs_operational);
 	spdk_json_write_name(w, "base_bdevs_list");
 	spdk_json_write_array_begin(w);
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
@@ -1123,6 +1125,8 @@ raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 		spdk_uuid_generate(&raid_bdev->bdev.uuid);
 	}
 
+	raid_bdev->num_base_bdevs_operational = num_base_bdevs;
+
 	*raid_bdev_out = raid_bdev;
 
 	return 0;
@@ -1145,6 +1149,9 @@ raid_bdev_configure_md(struct raid_bdev *raid_bdev)
 	uint8_t i;
 
 	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
+		if (raid_bdev->base_bdev_info[i].desc == NULL) {
+			continue;
+		}
 		base_bdev = spdk_bdev_desc_get_bdev(raid_bdev->base_bdev_info[i].desc);
 
 		/* Currently, RAID bdevs do not support DIF or DIX, so a RAID bdev cannot
@@ -1233,11 +1240,14 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	int rc = 0;
 
 	assert(raid_bdev->state == RAID_BDEV_STATE_CONFIGURING);
-	assert(raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs);
+	assert(raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs_operational);
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		assert(base_info->desc != NULL);
+		if (base_info->desc == NULL) {
+			continue;
+		}
 		base_bdev = spdk_bdev_desc_get_bdev(base_info->desc);
+
 		/* Check blocklen for all base bdevs that it should be same */
 		if (blocklen == 0) {
 			blocklen = base_bdev->blocklen;
@@ -1519,13 +1529,16 @@ raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev, raid_bdev_remove_base_bd
 		/*
 		 * As raid bdev is not registered yet or already unregistered,
 		 * so cleanup should be done here itself.
+		 *
+		 * Removing a base bdev at this stage does not change the number of operational
+		 * base bdevs, only the number of discovered base bdevs.
 		 */
 		raid_bdev_free_base_bdev_resource(base_info);
 		if (raid_bdev->num_base_bdevs_discovered == 0) {
 			/* There is no base bdev for this raid, so free the raid device. */
 			raid_bdev_cleanup_and_free(raid_bdev);
 		}
-	} else if (raid_bdev->num_base_bdevs_discovered == raid_bdev->min_base_bdevs_operational) {
+	} else if (raid_bdev->num_base_bdevs_operational-- == raid_bdev->min_base_bdevs_operational) {
 		/*
 		 * After this base bdev is removed there will not be enough base bdevs
 		 * to keep the raid bdev operational.
@@ -1674,8 +1687,16 @@ raid_bdev_configure_base_bdev_cont(struct raid_base_bdev_info *base_info)
 
 	raid_bdev->num_base_bdevs_discovered++;
 	assert(raid_bdev->num_base_bdevs_discovered <= raid_bdev->num_base_bdevs);
+	assert(raid_bdev->num_base_bdevs_operational <= raid_bdev->num_base_bdevs);
+	assert(raid_bdev->num_base_bdevs_operational >= raid_bdev->min_base_bdevs_operational);
 
-	if (raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs) {
+	/*
+	 * Configure the raid bdev when the number of discovered base bdevs reaches the number
+	 * of base bdevs we know to be operational members of the array. Usually this is equal
+	 * to the total number of base bdevs (num_base_bdevs) but can be less - when the array is
+	 * degraded.
+	 */
+	if (raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs_operational) {
 		rc = raid_bdev_configure(raid_bdev);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to configure raid bdev: %s\n", spdk_strerror(-rc));
@@ -1913,8 +1934,8 @@ raid_bdev_create_from_sb(const struct raid_bdev_superblock *sb, struct raid_bdev
 	uint8_t i;
 	int rc;
 
-	rc = raid_bdev_create(sb->name, (sb->strip_size * sb->block_size) / 1024, sb->num_base_bdevs,
-			      sb->level, true, &sb->uuid, &raid_bdev);
+	rc = _raid_bdev_create(sb->name, (sb->strip_size * sb->block_size) / 1024, sb->num_base_bdevs,
+			       sb->level, true, &sb->uuid, &raid_bdev);
 	if (rc != 0) {
 		return rc;
 	}
@@ -1928,6 +1949,7 @@ raid_bdev_create_from_sb(const struct raid_bdev_superblock *sb, struct raid_bdev
 
 		if (sb_base_bdev->state == RAID_SB_BASE_BDEV_CONFIGURED) {
 			spdk_uuid_copy(&base_info->uuid, &sb_base_bdev->uuid);
+			raid_bdev->num_base_bdevs_operational++;
 		}
 
 		base_info->data_offset = sb_base_bdev->data_offset;

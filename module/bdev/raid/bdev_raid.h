@@ -60,7 +60,10 @@ struct raid_base_bdev_info {
 	/* uuid of the bdev */
 	struct spdk_uuid	uuid;
 
-	/* pointer to base bdev descriptor opened by raid bdev */
+	/*
+	 * Pointer to base bdev descriptor opened by raid bdev. This is NULL when the bdev for
+	 * this slot is missing.
+	 */
 	struct spdk_bdev_desc	*desc;
 
 	/* offset in blocks from the start of the base bdev to the start of the data region */
@@ -153,6 +156,12 @@ struct raid_bdev {
 
 	/* number of base bdevs discovered */
 	uint8_t				num_base_bdevs_discovered;
+
+	/*
+	 * Number of operational base bdevs, i.e. how many we know/expect to be working. This
+	 * will be less than num_base_bdevs when starting a degraded array.
+	 */
+	uint8_t				num_base_bdevs_operational;
 
 	/* minimum number of viable base bdevs that are required by array to operate */
 	uint8_t				min_base_bdevs_operational;

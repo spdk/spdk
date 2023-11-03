@@ -1066,6 +1066,7 @@ raid5f_start(struct raid_bdev *raid_bdev)
 	uint64_t min_blockcnt = UINT64_MAX;
 	uint64_t base_bdev_data_size;
 	struct raid_base_bdev_info *base_info;
+	struct spdk_bdev *base_bdev;
 	struct raid5f_info *r5f_info;
 	size_t alignment = 0;
 
@@ -1077,10 +1078,11 @@ raid5f_start(struct raid_bdev *raid_bdev)
 	r5f_info->raid_bdev = raid_bdev;
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		struct spdk_bdev *base_bdev = spdk_bdev_desc_get_bdev(base_info->desc);
-
 		min_blockcnt = spdk_min(min_blockcnt, base_info->data_size);
-		alignment = spdk_max(alignment, spdk_bdev_get_buf_align(base_bdev));
+		if (base_info->desc) {
+			base_bdev = spdk_bdev_desc_get_bdev(base_info->desc);
+			alignment = spdk_max(alignment, spdk_bdev_get_buf_align(base_bdev));
+		}
 	}
 
 	base_bdev_data_size = (min_blockcnt / raid_bdev->strip_size) * raid_bdev->strip_size;
