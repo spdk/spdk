@@ -2363,3 +2363,71 @@ spdk_lvol_set_parent(struct spdk_lvol *lvol, struct spdk_lvol *snapshot,
 	spdk_bs_blob_set_parent(lvol->lvol_store->blobstore, blob_id, snapshot_id,
 				lvol_set_parent_cb, req);
 }
+
+static void
+lvol_set_external_parent_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvol_bs_dev_req *req = cb_arg;
+
+	if (lvolerrno < 0) {
+		SPDK_ERRLOG("could not set external parent of lvol %s, error %d\n", req->lvol->name, lvolerrno);
+		req->bs_dev->destroy(req->bs_dev);
+	}
+
+	req->cb_fn(req->cb_arg, lvolerrno);
+	free(req);
+}
+
+void
+spdk_lvol_set_external_parent(struct spdk_lvol *lvol, const void *esnap_id, uint32_t esnap_id_len,
+			      spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_bs_dev_req *req;
+	struct spdk_bs_dev *bs_dev;
+	spdk_blob_id blob_id;
+	int rc;
+
+	assert(cb_fn != NULL);
+
+	if (lvol == NULL) {
+		SPDK_ERRLOG("lvol must not be NULL\n");
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	if (esnap_id == NULL) {
+		SPDK_ERRLOG("snapshot must not be NULL\n");
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	if (esnap_id_len == sizeof(lvol->uuid_str) &&
+	    memcmp(esnap_id, lvol->uuid_str, esnap_id_len) == 0) {
+		SPDK_ERRLOG("lvol %s and esnap have the same UUID\n", lvol->name);
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	rc = lvs_esnap_bs_dev_create(lvol->lvol_store, lvol, lvol->blob, esnap_id, esnap_id_len, &bs_dev);
+	if (rc < 0) {
+		cb_fn(cb_arg, rc);
+		return;
+	}
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("cannot alloc memory for lvol request pointer\n");
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	req->lvol = lvol;
+	req->bs_dev = bs_dev;
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	blob_id = spdk_blob_get_id(lvol->blob);
+
+	spdk_bs_blob_set_external_parent(lvol->lvol_store->blobstore, blob_id, bs_dev, esnap_id,
+					 esnap_id_len, lvol_set_external_parent_cb, req);
+}

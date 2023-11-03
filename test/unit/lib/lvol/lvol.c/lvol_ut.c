@@ -276,6 +276,14 @@ spdk_bs_blob_set_parent(struct spdk_blob_store *bs, spdk_blob_id blob_id,
 	cb_fn(cb_arg, 0);
 }
 
+void
+spdk_bs_blob_set_external_parent(struct spdk_blob_store *bs, spdk_blob_id blob_id,
+				 struct spdk_bs_dev *back_bs_dev, const void *esnap_id,
+				 uint32_t id_len, spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	cb_fn(cb_arg, 0);
+}
+
 DEFINE_STUB(spdk_bs_get_page_size, uint64_t, (struct spdk_blob_store *bs), BS_PAGE_SIZE);
 
 int
@@ -3483,6 +3491,71 @@ lvol_set_parent(void)
 	lvol_store1 = NULL;
 }
 
+static void
+lvol_set_external_parent(void)
+{
+	struct lvol_ut_bs_dev dev;
+	struct spdk_lvol *lvol;
+	struct spdk_lvs_opts opts;
+	uint64_t cluster_sz;
+	int rc;
+
+	g_spdk_blob_get_esnap_id = (void *)uuid;
+	g_spdk_blob_get_esnap_id_len = SPDK_UUID_STRING_LEN;
+	init_dev(&dev);
+
+	/* Create lvol store */
+	spdk_lvs_opts_init(&opts);
+	cluster_sz = opts.cluster_sz;
+	snprintf(opts.name, sizeof(opts.name), "lvs");
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+
+	/* Create lvol */
+	spdk_lvol_create(g_lvol_store, "lvol", cluster_sz, false, LVOL_CLEAR_WITH_DEFAULT,
+			 lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+
+	lvol = g_lvol;
+
+	/* Set external parent with NULL lvol */
+	spdk_lvol_set_external_parent(NULL, uuid, SPDK_UUID_STRING_LEN, op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_lvserrno == -EINVAL);
+
+	/* Set external parent with NULL esnap id */
+	spdk_lvol_set_external_parent(lvol, NULL, SPDK_UUID_STRING_LEN, op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_lvserrno == -EINVAL);
+
+	/* Set external parent with equal lvol and esnap */
+	spdk_lvol_set_external_parent(lvol, lvol->uuid_str, SPDK_UUID_STRING_LEN, op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_lvserrno == -EINVAL);
+
+	/* Set external parent successful */
+	spdk_lvol_set_external_parent(lvol, uuid, SPDK_UUID_STRING_LEN, op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_lvserrno == 0);
+
+	/* Clean up */
+	spdk_lvol_close(lvol, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	spdk_lvol_destroy(lvol, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_destroy(g_lvol_store, op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol_store = NULL;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -3529,6 +3602,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, lvol_get_by);
 	CU_ADD_TEST(suite, lvol_shallow_copy);
 	CU_ADD_TEST(suite, lvol_set_parent);
+	CU_ADD_TEST(suite, lvol_set_external_parent);
 
 	allocate_threads(1);
 	set_thread(0);

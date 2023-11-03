@@ -426,6 +426,26 @@ int spdk_lvol_shallow_copy(struct spdk_lvol *lvol, struct spdk_bs_dev *ext_dev,
 void spdk_lvol_set_parent(struct spdk_lvol *lvol, struct spdk_lvol *snapshot,
 			  spdk_lvol_op_complete cb_fn, void *cb_arg);
 
+/**
+ * Set an external snapshot as the parent of a lvol
+ *
+ * This call set an external snapshot as the parent of a lvol, making the lvol a clone of this
+ * external snapshot.
+ * The previous parent of the lvol, if any, can be another external snapshot or a snapshot; if
+ * the lvol is not a clone, it must be thin-provisioned.
+ * The size of the external snapshot device must be an integer multiple of cluster size of
+ * lvol's lvolstore.
+ *
+ * \param lvol Handle to lvol
+ * \param esnap_id The identifier of the external snapshot.
+ * \param esnap_id_len The length of esnap_id, in bytes.
+ * \param cb_fn Completion callback
+ * \param cb_arg Completion callback custom arguments
+ */
+void spdk_lvol_set_external_parent(struct spdk_lvol *lvol, const void *esnap_id,
+				   uint32_t esnap_id_len,
+				   spdk_lvol_op_complete cb_fn, void *cb_arg);
+
 #ifdef __cplusplus
 }
 #endif
