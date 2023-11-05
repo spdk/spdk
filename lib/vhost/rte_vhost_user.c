@@ -409,6 +409,8 @@ check_session_vq_io_stats(struct spdk_vhost_session *vsession,
 static inline bool
 vhost_vq_event_is_suppressed(struct spdk_vhost_virtqueue *vq)
 {
+	spdk_smp_mb();
+
 	if (spdk_unlikely(vq->packed.packed_ring)) {
 		if (vq->vring.driver_event->flags & VRING_PACKED_EVENT_FLAG_DISABLE) {
 			return true;
