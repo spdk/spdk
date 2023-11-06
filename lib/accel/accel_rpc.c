@@ -70,12 +70,12 @@ rpc_dump_module_info(struct module_info *info)
 	spdk_json_write_named_array_begin(w, "supported ops");
 
 	for (i = 0; i < info->num_ops; i++) {
-		rc = _accel_get_opc_name(i, &name);
+		rc = _accel_get_opc_name(info->ops[i], &name);
 		if (rc == 0) {
 			spdk_json_write_string(w, name);
 		} else {
 			/* this should never happen */
-			SPDK_ERRLOG("Invalid opcode (%d)).\n", i);
+			SPDK_ERRLOG("Invalid opcode (%d)).\n", info->ops[i]);
 			assert(0);
 		}
 	}
