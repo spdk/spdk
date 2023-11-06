@@ -3096,14 +3096,17 @@ raid_bdev_attach_base_bdev(struct raid_bdev *raid_bdev, struct spdk_bdev *base_b
  * raid_bdev - pointer to raid bdev
  * name - name of the base bdev
  * slot - position to add base bdev
+ * cb_fn - callback function
+ * cb_ctx - argument to callback function
  * returns:
  * 0 - success
  * non zero - failure
  */
 int
-raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name, uint8_t slot)
+raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name, uint8_t slot,
+			  raid_base_bdev_cb cb_fn, void *cb_ctx)
 {
-	return _raid_bdev_add_base_device(raid_bdev, name, slot, 0, 0, NULL, NULL);
+	return _raid_bdev_add_base_device(raid_bdev, name, slot, 0, 0, cb_fn, cb_ctx);
 }
 
 static int
