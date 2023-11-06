@@ -48,11 +48,13 @@ remove_newlines(char *text)
 static void
 jsonrpc_log(char *buf, const char *prefix)
 {
-	/* Remove newlines to print in a single line.
-	 * Newlines does not affect the functionality of JSON RPC objects.
-	 * Hence for simplicity, remove newlines by default.
+	/* Some custom applications have enabled SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS
+	 * to allow comments in JSON RPC objects. To keep backward compatibility of
+	 * these applications, remove newlines only if JSON RPC logging is enabled.
 	 */
-	remove_newlines(buf);
+	if (g_rpc_log_level != SPDK_LOG_DISABLED || g_rpc_log_file != NULL) {
+		remove_newlines(buf);
+	}
 
 	if (g_rpc_log_level != SPDK_LOG_DISABLED) {
 		spdk_log(g_rpc_log_level, NULL, 0, NULL, "%s%s\n", prefix, buf);
