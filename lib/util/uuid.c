@@ -75,6 +75,15 @@ spdk_uuid_parse(struct spdk_uuid *uuid, const char *uuid_str)
 {
 	uint32_t status;
 
+	/* uuid_from_string() differs from uuid_parse() in the way it handles empty strings: the
+	 * former succeeds and returns a NULL UUID, while the latter treats is an error and returns
+	 * non-zero exit code.  So, to keep the behavior consistent between Linux and FreeBSD, we
+	 * explicitly check for an empty string here.
+	 */
+	if (strlen(uuid_str) == 0) {
+		return -EINVAL;
+	}
+
 	uuid_from_string(uuid_str, (uuid_t *)uuid, &status);
 
 	return status == 0 ? 0 : -EINVAL;
