@@ -1553,18 +1553,20 @@ bdev_scsi_unmap(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 		}
 	}
 
+	if (desc_count > 0) {
+		ctx->remaining_count = desc_count;
+		return bdev_scsi_split(ctx);
+	}
+
 	if (desc_count < 0) {
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
 					  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
 					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-		free(ctx);
-		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	ctx->remaining_count = desc_count;
-
-	return bdev_scsi_split(ctx);
+	free(ctx);
+	return SPDK_SCSI_TASK_COMPLETE;
 }
 
 static int
