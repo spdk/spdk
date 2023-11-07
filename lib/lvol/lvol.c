@@ -993,16 +993,15 @@ lvol_close_blob_cb(void *cb_arg, int lvolerrno)
 
 	if (lvolerrno < 0) {
 		SPDK_ERRLOG("Could not close blob on lvol\n");
-		lvol_free(lvol);
 		goto end;
 	}
 
 	lvol->ref_count--;
-	lvol->action_in_progress = false;
 	lvol->blob = NULL;
 	SPDK_INFOLOG(lvol, "Lvol %s closed\n", lvol->unique_id);
 
 end:
+	lvol->action_in_progress = false;
 	req->cb_fn(req->cb_arg, lvolerrno);
 	free(req);
 }
@@ -1575,8 +1574,6 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 		return;
 	}
 
-	lvol->action_in_progress = true;
-
 	req = calloc(1, sizeof(*req));
 	if (!req) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
@@ -1600,6 +1597,8 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 		cb_fn(cb_arg, -EBUSY);
 		return;
 	}
+
+	lvol->action_in_progress = true;
 
 	spdk_bs_delete_blob(bs, lvol->blob_id, lvol_delete_blob_cb, req);
 }
@@ -1626,8 +1625,6 @@ spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_ar
 		return;
 	}
 
-	lvol->action_in_progress = true;
-
 	req = calloc(1, sizeof(*req));
 	if (!req) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
@@ -1638,6 +1635,8 @@ spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_ar
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 	req->lvol = lvol;
+
+	lvol->action_in_progress = true;
 
 	spdk_blob_close(lvol->blob, lvol_close_blob_cb, req);
 }
