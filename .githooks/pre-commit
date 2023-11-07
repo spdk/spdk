@@ -16,7 +16,7 @@ exec 1>&2
 # If there are formatting errors, print the offending file names and fail.
 if [ -x "./scripts/check_format.sh" ]; then
 	echo "Running check_format.sh ..."
-	"./scripts/check_format.sh" > check_format.log 2>&1
+	CHECK_FORMAT_ONLY_DIFF=1 "./scripts/check_format.sh" > check_format.log 2>&1
 	rc=$?
 	if [ $rc -ne 0 ]; then
 		cat check_format.log
