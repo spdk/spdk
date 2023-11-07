@@ -513,7 +513,7 @@ spdk_json_decode_uuid(const struct spdk_json_val *val, void *out)
 	rc = spdk_uuid_parse(uuid, str);
 	free(str);
 
-	return rc;
+	return rc == 0 ? 0 : -1;
 }
 
 static struct spdk_json_val *
