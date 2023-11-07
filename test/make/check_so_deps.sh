@@ -116,23 +116,14 @@ function confirm_abi_deps() {
 		return 1
 	fi
 
+	# suppressed types should go here, in the format:
+	# [suppress_type]
+	#	name = spdk_app_opts
 	cat << EOF > ${suppression_file}
 [suppress_type]
-	name = spdk_nvme_power_state
-[suppress_type]
-	name = spdk_nvme_ctrlr_data
-[suppress_type]
-	name = spdk_nvme_cdata_oacs
-[suppress_type]
-	name = spdk_nvme_cdata_nvmf_specific
-[suppress_type]
-	name = spdk_nvme_cmd
+	name = spdk_app_opts
 [suppress_type]
 	name = spdk_nvme_cap_register
-[suppress_type]
-	name = spdk_bs_opts
-[suppress_type]
-	name = spdk_app_opts
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
