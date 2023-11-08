@@ -40,7 +40,7 @@ static inline void *
 ftl_df_get_obj_ptr(void *base, ftl_df_obj_id df_obj_id)
 {
 	assert(df_obj_id != FTL_DF_OBJ_ID_INVALID);
-	return ((char *)base + df_obj_id);
+	return (void *)((uintptr_t)base + df_obj_id);
 }
 
 #endif /* FTL_DF_H */
