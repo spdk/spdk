@@ -763,8 +763,8 @@ nvmf_tcp_trsvcid_to_int(const char *trsvcid)
 		return -1;
 	}
 
-	/* Valid TCP/IP port numbers are in [0, 65535] */
-	if (ull > 65535) {
+	/* Valid TCP/IP port numbers are in [1, 65535] */
+	if (ull == 0 || ull > 65535) {
 		return -1;
 	}
 
