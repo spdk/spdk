@@ -64,6 +64,18 @@ ftl_md_region_blocks(struct spdk_ftl_dev *dev, uint64_t bytes)
 	return result;
 }
 
+uint64_t
+ftl_md_region_align_blocks(struct spdk_ftl_dev *dev, uint64_t blocks)
+{
+	const uint64_t alignment = superblock_region_blocks(dev);
+	uint64_t result;
+
+	result = spdk_divide_round_up(blocks, alignment);
+	result *= alignment;
+
+	return result;
+}
+
 const char *
 ftl_md_region_name(enum ftl_layout_region_type reg_type)
 {
@@ -177,6 +189,12 @@ ftl_layout_region_get(struct spdk_ftl_dev *dev, enum ftl_layout_region_type reg_
 
 	assert(reg_type < FTL_LAYOUT_REGION_TYPE_MAX);
 	return reg->type == reg_type ? reg : NULL;
+}
+
+uint64_t
+ftl_layout_base_offset(struct spdk_ftl_dev *dev)
+{
+	return dev->num_bands * ftl_get_num_blocks_in_band(dev);
 }
 
 static int

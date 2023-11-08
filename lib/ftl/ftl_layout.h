@@ -189,6 +189,16 @@ struct ftl_md_layout_ops {
 uint64_t ftl_md_region_blocks(struct spdk_ftl_dev *dev, uint64_t bytes);
 
 /**
+ * @brief Get number of blocks for md_region aligned to a common value
+ *
+ * @param dev ftl device
+ * @param blocks size of the MD region in blocks
+ *
+ * @retval Aligned number of blocks required to store an MD region
+ */
+uint64_t ftl_md_region_align_blocks(struct spdk_ftl_dev *dev, uint64_t blocks);
+
+/**
  * @brief Get name of an MD region
  *
  * @param reg_type MD region type
@@ -225,5 +235,7 @@ uint64_t ftl_layout_base_md_blocks(struct spdk_ftl_dev *dev);
  */
 struct ftl_layout_region *ftl_layout_region_get(struct spdk_ftl_dev *dev,
 		enum ftl_layout_region_type reg_type);
+
+uint64_t ftl_layout_base_offset(struct spdk_ftl_dev *dev);
 
 #endif /* FTL_LAYOUT_H */
