@@ -76,7 +76,7 @@ timing_exit start_vm
 
 vm_scp "$vm_num" $testdir/windows_scsi_compliance.ps1 127.0.0.1:/cygdrive/c/SCSI/
 vm_sshpass "$vm_num" "$ssh_pass" "cd /cygdrive/c/SCSI; powershell.exe -file windows_scsi_compliance.ps1"
-vm_scp "$vm_num" 127.0.0.1:/cygdrive/c/SCSI/WIN_SCSI_* $testdir/results/
+vm_scp "$vm_num" "127.0.0.1:/cygdrive/c/SCSI/WIN_SCSI_*" $testdir/results/
 dos2unix $testdir/results/WIN_SCSI_*.log
 
 notice "Kill vm 1"
