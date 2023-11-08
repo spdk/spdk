@@ -60,6 +60,7 @@ display_help() {
 	echo "  -v verbose"
 	echo "  -f                              Force use of given distro, regardless if it's supported by the script or not."
 	echo "  --box-version                   Version of the vagrant box to select for given distro."
+	echo "  --nic-model                     NIC model supported by QEMU. 'virtio' is the default."
 	echo
 	echo " Examples:"
 	echo
@@ -70,6 +71,25 @@ display_help() {
 	echo "  $0 -b /var/lib/libvirt/images/nvme1.img,nvme,/var/lib/libvirt/images/nvme1n1.img fedora37"
 	echo "  $0 -b none fedora37"
 	echo
+}
+
+is_valid_nic_model() {
+	local models model
+
+	[[ $SPDK_VAGRANT_PROVIDER == libvirt ]] || return 0
+
+	mapfile -t models < <(
+		"${SPDK_QEMU_EMULATOR:-qemu-system-x86_64}" -nic model=? | grep -v "NIC models:"
+	)
+	models+=("virtio")
+
+	for model in "${models[@]}"; do
+		[[ $model == "$NIC_MODEL" ]] && return 0
+	done
+
+	echo "NIC model '$NIC_MODEL' is invalid. List of supported models:" >&2
+	printf '  %s\n' "${models[@]}" >&2
+	return 1
 }
 
 # Set up vagrant proxy. Assumes git-bash on Windows
@@ -102,6 +122,7 @@ FORCE_DISTRO=false
 NFS4_BACKEND=0
 VAGRANT_BOX_VERSION=""
 EXTRA_VAGRANTFILES=""
+NIC_MODEL=virtio
 
 while getopts ":b:n:s:x:p:uvcraldoHNhf-:" opt; do
 	case "${opt}" in
@@ -113,6 +134,7 @@ while getopts ":b:n:s:x:p:uvcraldoHNhf-:" opt; do
 				vagrantfile=*) [[ -n ${OPTARG#*=} ]] && VAGRANTFILE="${OPTARG#*=}" ;;
 				box-version=*) [[ -n ${OPTARG#*=} ]] && VAGRANT_BOX_VERSION="${OPTARG#*=}" ;;
 				extra-vagrantfiles=*) [[ -n ${OPTARG#*=} ]] && EXTRA_VAGRANTFILES="${OPTARG#*=}" ;;
+				nic-model=*) [[ -n ${OPTARG#*=} ]] && NIC_MODEL="${OPTARG#*=}" ;;
 				*) echo "Invalid argument '$OPTARG'" ;;
 			esac
 			;;
@@ -177,6 +199,8 @@ while getopts ":b:n:s:x:p:uvcraldoHNhf-:" opt; do
 			;;
 	esac
 done
+
+is_valid_nic_model
 
 shift "$((OPTIND - 1))" # Discard the options and sentinel --
 
@@ -253,6 +277,7 @@ if [ ${VERBOSE} = 1 ]; then
 	echo FORCE_DISTRO=$FORCE_DISTRO
 	echo VAGRANT_BOX_VERSION=$VAGRANT_BOX_VERSION
 	echo EXTRA_VAGRANTFILES=$EXTRA_VAGRANTFILES
+	echo NIC_MODEL=$NIC_MODEL
 	echo
 fi
 
@@ -277,6 +302,7 @@ export VAGRANT_HUGE_MEM
 export FORCE_DISTRO
 export VAGRANT_BOX_VERSION
 export EXTRA_VAGRANTFILES
+export NIC_MODEL
 
 if [ -n "$SPDK_VAGRANT_PROVIDER" ]; then
 	provider="--provider=${SPDK_VAGRANT_PROVIDER}"
@@ -308,6 +334,7 @@ if [ ${DRY_RUN} = 1 ]; then
 	printenv FORCE_DISTRO
 	printenv VAGRANT_BOX_VERSION
 	printenv EXTRA_VAGRANTFILES
+	printenv NIC_MODEL
 fi
 if [ -z "$VAGRANTFILE_DIR" ]; then
 	VAGRANTFILE_DIR="${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}"

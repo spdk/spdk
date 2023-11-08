@@ -292,6 +292,7 @@ def setup_libvirt(config, vmcpu, vmram, distro)
     libvirt.memory = vmram
     libvirt.cpus = vmcpu
     libvirt.video_type = "cirrus"
+    libvirt.nic_model_type = (ENV['NIC_MODEL'] || "virtio")
 
     if (distro.include?("freebsd"))
       # generic/freebsd boxes need to be explicitly run with SCSI bus,
