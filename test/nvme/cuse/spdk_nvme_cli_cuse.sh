@@ -96,10 +96,10 @@ done
 rm -Rf $testdir/match_files
 
 # Verify read/write path
-tr < /dev/urandom -dc "a-zA-Z0-9" | fold -w 512 | head -n 1 > $testdir/write_file
+head -c512 /dev/urandom > "$testdir/write_file"
 ${NVME_CMD} write $ns --data-size=512 --data=$testdir/write_file
 ${NVME_CMD} read $ns --data-size=512 --data=$testdir/read_file
-diff --ignore-trailing-space $testdir/write_file $testdir/read_file
+cmp "$testdir/write_file" "$testdir/read_file"
 rm -f $testdir/write_file $testdir/read_file
 
 # Verify admin cmd when no data is transferred,
