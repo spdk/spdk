@@ -2906,6 +2906,7 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_t
 	struct addrinfo			hints;
 	int				family;
 	int				rc;
+	long int			port_val;
 	bool				is_retry = false;
 
 	if (!strlen(trid->trsvcid)) {
@@ -2942,6 +2943,18 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_t
 	hints.ai_flags = AI_NUMERICSERV;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = 0;
+
+	/* Range check the trsvcid. Fail in 3 cases:
+	 * < 0: means that spdk_strtol hit an error
+	 * 0: this results in ephemeral port which we don't want
+	 * > 65535: port too high
+	 */
+	port_val = spdk_strtol(trid->trsvcid, 10);
+	if (port_val <= 0 || port_val > 65535) {
+		SPDK_ERRLOG("invalid trsvcid %s\n", trid->trsvcid);
+		free(port);
+		return -EINVAL;
+	}
 
 	rc = getaddrinfo(trid->traddr, trid->trsvcid, &hints, &res);
 	if (rc) {
