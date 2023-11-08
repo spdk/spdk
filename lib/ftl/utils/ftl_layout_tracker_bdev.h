@@ -85,4 +85,43 @@ void ftl_layout_tracker_bdev_find_next_region(struct ftl_layout_tracker_bdev *tr
 		enum ftl_layout_region_type reg_type,
 		const struct ftl_layout_tracker_bdev_region_props **search_ctx);
 
+/**
+ * @brief Store the layout tracker state into a blob
+ *
+ * @param tracker pointer to the tracker instance
+ * @param blob_buf pointer to the blob buffer
+ * @param blob_buf_sz blob buffer size in bytes
+ *
+ * @return bytes stored, 0 when stored amount would exceed the capacity
+ */
+size_t ftl_layout_tracker_bdev_blob_store(struct ftl_layout_tracker_bdev *tracker, void *blob_buf,
+		size_t blob_buf_sz);
+
+/**
+ * @brief Load the layout tracker state from a blob
+ *
+ * @param tracker pointer to the tracker instance
+ * @param blob_buf pointer to the blob buffer
+ * @param blob_sz blob size in bytes
+ *
+ * @return 0 on success : -1 on fault
+ */
+int ftl_layout_tracker_bdev_blob_load(struct ftl_layout_tracker_bdev *tracker, void *blob_buf,
+				      size_t blob_sz);
+
+/**
+ * @brief Insert a new FTL layout region into a specific location
+ *
+ * @param tracker pointer to the tracker instance
+ * @param reg_type FTL layout region type
+ * @param reg_ver FTL layout region version
+ * @param blk_offs offset in blocks of the FTL layout region
+ * @param blk_sz size in blocks of the FTL layout region
+ *
+ * @return pointer to the ftl_layout_tracker_bdev_region_props, describing the region added or NULL upon fault
+ */
+const struct ftl_layout_tracker_bdev_region_props *ftl_layout_tracker_bdev_insert_region(
+	struct ftl_layout_tracker_bdev *tracker, enum ftl_layout_region_type reg_type, uint32_t reg_ver,
+	uint64_t blk_offs, uint64_t blk_sz);
+
 #endif /* FTL_LAYOUT_TRACKER_BDEV_H */
