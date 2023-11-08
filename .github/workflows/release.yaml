@@ -1,0 +1,53 @@
+name: Ubicloud SPDK release
+on: [create,push]
+env:
+  INSTALL_PREFIX: ~/install/spdk
+  TARBALL_NAME: ubicloud-spdk-ubuntu-22.04-x64.tar.gz
+  TARBALL_PATH: ~/install/$TARBALL_NAME
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: 'recursive'
+      - name: Install dependencies
+        run: sudo apt-get update && sudo scripts/pkgdep.sh --all
+      - name: Configure
+        run: ./configure --with-crypto --with-vhost --with-uring --target-arch=corei7 --prefix=$INSTALL_PREFIX
+      - name: Build
+        run: make -j16
+      - name: Install
+        run: |
+          make install
+          cp -R python $INSTALL_PREFIX/python
+          mkdir $INSTALL_PREFIX/scripts
+          cp scripts/rpc.py $INSTALL_PREFIX/scripts
+      - name: Package
+        run: |
+          cd $INSTALL_PREFIX
+          tar --create --gzip --file=$TARBALL_PATH *
+      - name: Create release
+        if: github.event_name == 'create' && github.event.ref_type == 'tag'
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: true
+      - name: Upload artifacts
+        if: github.event_name == 'create' && github.event.ref_type == 'tag'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: $TARBALL_PATH
+          asset_name: $TARBALL_NAME
+          asset_content_type: application/octet-stream
