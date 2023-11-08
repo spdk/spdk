@@ -153,6 +153,11 @@ iscsi_portal_open(struct spdk_iscsi_portal *p)
 	}
 
 	port = (int)strtol(p->port, NULL, 0);
+	if (port <= 0 || port > 65535) {
+		SPDK_ERRLOG("invalid port %s\n", p->port);
+		return -1;
+	}
+
 	sock = spdk_sock_listen(p->host, port, NULL);
 	if (sock == NULL) {
 		SPDK_ERRLOG("listen error %.64s.%d\n", p->host, port);
