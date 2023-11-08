@@ -485,3 +485,62 @@ ftl_layout_base_md_blocks(struct spdk_ftl_dev *dev)
 	md_blocks += superblock_region_blocks(dev);
 	return md_blocks;
 }
+
+struct layout_blob_entry {
+	uint32_t type;
+	uint64_t entry_size;
+	uint64_t num_entries;
+} __attribute__((packed));
+
+size_t
+ftl_layout_blob_store(struct spdk_ftl_dev *dev, void *blob_buf, size_t blob_buf_sz)
+{
+	struct layout_blob_entry *blob_entry = blob_buf;
+	struct ftl_layout_region *reg;
+	enum ftl_layout_region_type reg_type;
+	size_t blob_sz = 0;
+
+	for (reg_type = 0; reg_type < FTL_LAYOUT_REGION_TYPE_MAX; reg_type++) {
+		if (blob_sz + sizeof(*blob_entry) > blob_buf_sz) {
+			return 0;
+		}
+
+		reg = &dev->layout.region[reg_type];
+		blob_entry->type = reg_type;
+		blob_entry->entry_size = reg->entry_size;
+		blob_entry->num_entries = reg->num_entries;
+
+		blob_entry++;
+		blob_sz += sizeof(*blob_entry);
+	}
+
+	return blob_sz;
+}
+
+int
+ftl_layout_blob_load(struct spdk_ftl_dev *dev, void *blob_buf, size_t blob_sz)
+{
+	struct layout_blob_entry *blob_entry = blob_buf;
+	size_t blob_entry_num = blob_sz / sizeof(*blob_entry);
+	struct layout_blob_entry *blob_entry_end = blob_entry + blob_entry_num;
+	struct ftl_layout_region *reg;
+
+	if (blob_sz % sizeof(*blob_entry) != 0) {
+		/* Invalid blob size */
+		return -1;
+	}
+
+	for (; blob_entry < blob_entry_end; blob_entry++) {
+		/* Verify the type */
+		if (blob_entry->type >= FTL_LAYOUT_REGION_TYPE_MAX) {
+			return -1;
+		}
+
+		/* Load the entry */
+		reg = &dev->layout.region[blob_entry->type];
+		reg->entry_size = blob_entry->entry_size;
+		reg->num_entries = blob_entry->num_entries;
+	}
+
+	return 0;
+}

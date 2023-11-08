@@ -236,6 +236,28 @@ uint64_t ftl_layout_base_md_blocks(struct spdk_ftl_dev *dev);
 struct ftl_layout_region *ftl_layout_region_get(struct spdk_ftl_dev *dev,
 		enum ftl_layout_region_type reg_type);
 
+/**
+ * @brief Store the layout data in the blob
+ *
+ * @param dev FTL device
+ * @param blob_buf Blob buffer where the layout will be stored
+ * @param blob_buf_sz Size of the blob buffer in bytes
+ *
+ * @return Number of bytes the stored blob entries take up. 0 if calculated value would exceed blob_buf_sz.
+ */
+size_t ftl_layout_blob_store(struct spdk_ftl_dev *dev, void *blob_buf, size_t blob_buf_sz);
+
+/**
+ * @brief Load the layout data from the blob
+ *
+ * @param dev FTL device
+ * @param blob_buf Blob buffer from which the layout will be loaded
+ * @param blob_sz Size of the blob buffer in bytes
+ *
+ * @return 0 on success, -1 on failure
+ */
+int ftl_layout_blob_load(struct spdk_ftl_dev *dev, void *blob_buf, size_t blob_sz);
+
 uint64_t ftl_layout_base_offset(struct spdk_ftl_dev *dev);
 
 #endif /* FTL_LAYOUT_H */
