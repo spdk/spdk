@@ -125,12 +125,19 @@ ftl_validate_regions(struct spdk_ftl_dev *dev, struct ftl_layout *layout)
 	enum ftl_layout_region_type i, j;
 
 	/* Validate if regions doesn't overlap each other  */
-	/* TODO: major upgrades: keep track of and validate free_nvc/free_btm regions */
 	for (i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; i++) {
 		struct ftl_layout_region *r1 = ftl_layout_region_get(dev, i);
 
+		if (!r1) {
+			continue;
+		}
+
 		for (j = 0; j < FTL_LAYOUT_REGION_TYPE_MAX; j++) {
 			struct ftl_layout_region *r2 = ftl_layout_region_get(dev, j);
+
+			if (!r2) {
+				continue;
+			}
 
 			if (r1->bdev_desc != r2->bdev_desc) {
 				continue;

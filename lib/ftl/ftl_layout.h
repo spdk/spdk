@@ -81,8 +81,6 @@ struct ftl_layout_region_descriptor {
 
 	/* Number of blocks in FTL_BLOCK_SIZE unit */
 	uint64_t blocks;
-
-	struct ftl_superblock_v3_md_region *sb_md_reg;
 };
 
 /* Data or metadata region on devices */
@@ -96,11 +94,8 @@ struct ftl_layout_region {
 	/* Mirror region type - a region may be mirrored for higher durability */
 	enum ftl_layout_region_type mirror_type;
 
-	/* Latest region version */
+	/* Current region version */
 	struct ftl_layout_region_descriptor current;
-
-	/* Previous region version, if found */
-	struct ftl_layout_region_descriptor prev;
 
 	/* Number of blocks in FTL_BLOCK_SIZE unit of a single entry.
 	 * A metadata region may be subdivided into multiple smaller entries.

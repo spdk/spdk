@@ -35,46 +35,56 @@ extern struct ftl_region_upgrade_desc band_upgrade_desc[];
 
 static struct ftl_layout_upgrade_desc_list layout_upgrade_desc[] = {
 	[FTL_LAYOUT_REGION_TYPE_SB] = {
+		.latest_ver = FTL_SB_VERSION_CURRENT,
 		.count = FTL_SB_VERSION_CURRENT,
 		.desc = sb_upgrade_desc,
 	},
 	[FTL_LAYOUT_REGION_TYPE_SB_BASE] = {
+		.latest_ver = FTL_SB_VERSION_CURRENT,
 		.count = FTL_SB_VERSION_CURRENT,
 		.desc = sb_upgrade_desc,
 	},
 	[FTL_LAYOUT_REGION_TYPE_L2P] = {},
 	[FTL_LAYOUT_REGION_TYPE_BAND_MD] = {
+		.latest_ver = FTL_BAND_VERSION_CURRENT,
 		.count = FTL_BAND_VERSION_CURRENT,
 		.desc = band_upgrade_desc,
 	},
 	[FTL_LAYOUT_REGION_TYPE_BAND_MD_MIRROR] = {
+		.latest_ver = FTL_BAND_VERSION_CURRENT,
 		.count = FTL_BAND_VERSION_CURRENT,
 		.desc = band_upgrade_desc,
 	},
 	[FTL_LAYOUT_REGION_TYPE_VALID_MAP] = {},
 	[FTL_LAYOUT_REGION_TYPE_NVC_MD] = {
+		.latest_ver = FTL_NVC_VERSION_CURRENT,
 		.count = FTL_NVC_VERSION_CURRENT,
 		.desc = nvc_upgrade_desc,
 	},
 	[FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR] = {
+		.latest_ver = FTL_NVC_VERSION_CURRENT,
 		.count = FTL_NVC_VERSION_CURRENT,
 		.desc = nvc_upgrade_desc,
 	},
 	[FTL_LAYOUT_REGION_TYPE_DATA_NVC] = {},
 	[FTL_LAYOUT_REGION_TYPE_DATA_BASE] = {},
 	[FTL_LAYOUT_REGION_TYPE_P2L_CKPT_GC] = {
+		.latest_ver = FTL_P2L_VERSION_CURRENT,
 		.count = FTL_P2L_VERSION_CURRENT,
 		.desc = p2l_upgrade_desc,
 	},
 	[FTL_LAYOUT_REGION_TYPE_P2L_CKPT_GC_NEXT] = {
+		.latest_ver = FTL_P2L_VERSION_CURRENT,
 		.count = FTL_P2L_VERSION_CURRENT,
 		.desc = p2l_upgrade_desc,
 	},
 	[FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP] = {
+		.latest_ver = FTL_P2L_VERSION_CURRENT,
 		.count = FTL_P2L_VERSION_CURRENT,
 		.desc = p2l_upgrade_desc,
 	},
 	[FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP_NEXT] = {
+		.latest_ver = FTL_P2L_VERSION_CURRENT,
 		.count = FTL_P2L_VERSION_CURRENT,
 		.desc = p2l_upgrade_desc,
 	},
@@ -93,18 +103,19 @@ region_verify(struct spdk_ftl_dev *dev, struct ftl_layout_upgrade_ctx *ctx)
 	uint64_t ver;
 
 	assert(ctx->reg);
-	assert(ctx->reg->current.version == ctx->upgrade->count);
-	ver = ctx->reg->prev.version;
-	if (ver > ctx->upgrade->count) {
+	ver = ctx->reg->current.version;
+	if (ver > ctx->upgrade->latest_ver) {
 		FTL_ERRLOG(dev, "Unknown region version\n");
 		return -1;
 	}
 
-	while (ver < ctx->reg->current.version) {
+	while (ver < ctx->upgrade->latest_ver) {
 		int rc = ctx->upgrade->desc[ver].verify(dev, ctx->reg);
 		if (rc) {
 			return rc;
 		}
+		ftl_bug(ver > ctx->upgrade->desc[ver].new_version);
+		ftl_bug(ctx->upgrade->desc[ver].new_version > ctx->upgrade->latest_ver);
 		ver = ctx->upgrade->desc[ver].new_version;
 	}
 	return 0;
@@ -117,10 +128,9 @@ ftl_region_upgrade(struct spdk_ftl_dev *dev, struct ftl_layout_upgrade_ctx *ctx)
 	uint64_t ver;
 
 	assert(ctx->reg);
-	assert(ctx->reg->prev.version <= ctx->reg->current.version);
-	assert(ctx->reg->current.version == ctx->upgrade->count);
-	ver = ctx->reg->prev.version;
-	if (ver < ctx->upgrade->count) {
+	assert(ctx->reg->current.version <= ctx->upgrade->latest_ver);
+	ver = ctx->reg->current.version;
+	if (ver < ctx->upgrade->latest_ver) {
 		ctx->next_reg_ver = ctx->upgrade->desc[ver].new_version;
 		rc = ctx->upgrade->desc[ver].upgrade(dev, ctx);
 	}
@@ -129,20 +139,27 @@ ftl_region_upgrade(struct spdk_ftl_dev *dev, struct ftl_layout_upgrade_ctx *ctx)
 
 void
 ftl_region_upgrade_completed(struct spdk_ftl_dev *dev, struct ftl_layout_upgrade_ctx *ctx,
-			     int status)
+			     uint64_t entry_size, uint64_t num_entries, int status)
 {
-	assert(ctx->reg);
-	assert(ctx->reg->prev.version < ctx->next_reg_ver);
-	assert(ctx->next_reg_ver <= ctx->reg->current.version);
+	int rc;
 
-	/* SB MD isn't tracked in SB MD region list */
+	assert(ctx->reg);
+	assert(ctx->reg->current.version < ctx->next_reg_ver);
+	assert(ctx->next_reg_ver <= ctx->upgrade->latest_ver);
+
 	if (!status) {
-		if (ctx->reg->prev.sb_md_reg) {
-			int rc = ftl_superblock_md_layout_upgrade_region(dev, ctx->reg, ctx->next_reg_ver);
+		if (ctx->reg->type != FTL_LAYOUT_REGION_TYPE_SB) {
+			/* Superblock region is always default-created in the latest version - see ftl_layout_setup_superblock() */
+			rc = ftl_superblock_md_layout_upgrade_region(dev, ctx->reg, ctx->next_reg_ver);
+			if (entry_size && num_entries) {
+				dev->layout.region[ctx->reg->type].entry_size = entry_size;
+				dev->layout.region[ctx->reg->type].num_entries = num_entries;
+			}
+
 			ftl_bug(rc != 0);
 		}
 
-		ctx->reg->prev.version = ctx->next_reg_ver;
+		ctx->reg->current.version = ctx->next_reg_ver;
 	}
 
 	if (ctx->cb) {
@@ -153,41 +170,33 @@ ftl_region_upgrade_completed(struct spdk_ftl_dev *dev, struct ftl_layout_upgrade
 int
 ftl_layout_verify(struct spdk_ftl_dev *dev)
 {
-	int rc = 0;
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_layout_upgrade_ctx ctx = {0};
+	enum ftl_layout_region_type reg_type;
 
-	if (ftl_superblock_is_blob_area_empty(dev->sb)) {
-		rc = ftl_superblock_store_blob_area(dev);
-		goto exit;
-	}
-
-	if (ftl_superblock_load_blob_area(dev)) {
-		return -1;
-	}
+	/**
+	 * Upon SB upgrade some MD regions may be missing in the MD layout blob - e.g. v3 to v5, FTL_LAYOUT_REGION_TYPE_DATA_BASE.
+	 * The regions couldn't have be added in the SB upgrade path, as the FTL layout wasn't initialized at that point.
+	 * Now that the FTL layout is initialized, add the missing regions and store the MD layout blob again.
+	 */
 
 	if (ftl_validate_regions(dev, layout)) {
 		return -1;
 	}
 
-	ctx.reg = &dev->layout.region[0];
-	ctx.upgrade = &layout_upgrade_desc[0];
+	for (reg_type = 0; reg_type < FTL_LAYOUT_REGION_TYPE_MAX; reg_type++) {
+		ctx.reg = ftl_layout_region_get(dev, reg_type);
+		ctx.upgrade = &layout_upgrade_desc[reg_type];
+		if (!ctx.reg) {
+			continue;
+		}
 
-	while (true) {
 		if (region_verify(dev, &ctx)) {
 			return -1;
 		}
-
-		if (ctx.reg->type == FTL_LAYOUT_REGION_TYPE_MAX - 1) {
-			break;
-		}
-
-		ctx.reg++;
-		ctx.upgrade++;
 	}
 
-exit:
-	return rc;
+	return 0;
 }
 
 int
@@ -211,23 +220,24 @@ ftl_superblock_upgrade(struct spdk_ftl_dev *dev)
 
 	ctx.reg = reg;
 	ctx.upgrade = &layout_upgrade_desc[FTL_LAYOUT_REGION_TYPE_SB];
-	reg->prev.version = dev->sb->header.version;
+	reg->current.version = dev->sb->header.version;
 
 	rc = region_verify(dev, &ctx);
 	if (rc) {
 		return rc;
 	}
 
-	while (reg->prev.version < reg->current.version) {
+	while (reg->current.version < ctx.upgrade->latest_ver) {
 		rc = ftl_region_upgrade(dev, &ctx);
 		if (rc) {
 			return rc;
 		}
 		/* SB upgrades are all synchronous */
-		ftl_region_upgrade_completed(dev, &ctx, rc);
+		ftl_region_upgrade_completed(dev, &ctx, 0, 0, rc);
 	}
 
-	dev->layout.region[FTL_LAYOUT_REGION_TYPE_SB_BASE].prev.version = reg->prev.version;
+	/* The mirror shares the same DMA buf, so it is automatically updated upon SB store */
+	dev->layout.region[FTL_LAYOUT_REGION_TYPE_SB_BASE].current.version = reg->current.version;
 	return 0;
 }
 
@@ -235,19 +245,17 @@ static int
 layout_upgrade_select_next_region(struct spdk_ftl_dev *dev, struct ftl_layout_upgrade_ctx *ctx)
 {
 	struct ftl_layout_region *reg;
-	uint64_t reg_ver;
+	uint64_t reg_ver, reg_latest_ver;
 	uint32_t reg_type = ctx->reg->type;
 
 	while (reg_type != FTL_LAYOUT_REGION_TYPE_MAX) {
 		assert(ctx->reg);
 		assert(ctx->upgrade);
 		reg = ctx->reg;
-		reg_ver = reg->prev.version;
+		reg_latest_ver = ctx->upgrade->latest_ver;
+		reg_ver = reg->current.version;
 
-		if (reg_ver < reg->current.version) {
-			/* qualify region version to upgrade */
-			return FTL_LAYOUT_UPGRADE_CONTINUE;
-		} else if (reg_ver == reg->current.version) {
+		if (reg_ver == reg_latest_ver || reg->type == FTL_LAYOUT_REGION_TYPE_INVALID) {
 			/* select the next region to upgrade */
 			reg_type++;
 			if (reg_type == FTL_LAYOUT_REGION_TYPE_MAX) {
@@ -255,11 +263,14 @@ layout_upgrade_select_next_region(struct spdk_ftl_dev *dev, struct ftl_layout_up
 			}
 			ctx->reg++;
 			ctx->upgrade++;
+		} else if (reg_ver < reg_latest_ver) {
+			/* qualify region version to upgrade */
+			return FTL_LAYOUT_UPGRADE_CONTINUE;
 		} else {
 			/* unknown version */
-			assert(reg_ver > reg->current.version);
+			assert(reg_ver <= reg_latest_ver);
 			FTL_ERRLOG(dev, "Region %d upgrade fault: version %"PRIu64"/%"PRIu64"\n", reg_type, reg_ver,
-				   reg->current.version);
+				   reg_latest_ver);
 			return FTL_LAYOUT_UPGRADE_FAULT;
 		}
 	}
@@ -277,4 +288,11 @@ ftl_layout_upgrade_init_ctx(struct spdk_ftl_dev *dev, struct ftl_layout_upgrade_
 	}
 
 	return layout_upgrade_select_next_region(dev, ctx);
+}
+
+uint64_t
+ftl_layout_upgrade_region_get_latest_version(enum ftl_layout_region_type reg_type)
+{
+	assert(reg_type < FTL_LAYOUT_REGION_TYPE_MAX);
+	return layout_upgrade_desc[reg_type].latest_ver;
 }

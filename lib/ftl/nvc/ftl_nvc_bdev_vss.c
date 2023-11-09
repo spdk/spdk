@@ -99,7 +99,7 @@ md_region_open(struct spdk_ftl_dev *dev, enum ftl_layout_region_type reg_type, u
 	region->entry_size = entry_size / FTL_BLOCK_SIZE;
 	region->num_entries = entry_count;
 
-	region->current.version = region->prev.version = reg_version;
+	region->current.version = reg_version;
 	region->current.offset = reg_search_ctx->blk_offs;
 	region->current.blocks = reg_search_ctx->blk_sz;
 

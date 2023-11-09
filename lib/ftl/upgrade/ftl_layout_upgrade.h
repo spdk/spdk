@@ -52,6 +52,9 @@ struct ftl_region_upgrade_desc {
  * and 1 -> 2).
  */
 struct ftl_layout_upgrade_desc_list {
+	/* Latest version of the region */
+	uint64_t latest_ver;
+
 	/* # of entries in the region upgrade descriptor */
 	size_t count;
 
@@ -159,10 +162,12 @@ int ftl_region_upgrade(struct spdk_ftl_dev *dev, struct ftl_layout_upgrade_ctx *
  *
  * @param dev FTL device
  * @param ctx Layout upgrade context
+ * @param entry_size Entry size in the upgraded region or 0 if no change
+ * @param num_entries Number of entries in the upgraded region or 0 if no change
  * @param status Region upgrade status: 0: success, error code otherwise
  */
 void ftl_region_upgrade_completed(struct spdk_ftl_dev *dev, struct ftl_layout_upgrade_ctx *ctx,
-				  int status);
+				  uint64_t entry_size, uint64_t num_entries, int status);
 
 /**
  * @brief Initialize the layout upgrade context.
@@ -174,5 +179,14 @@ void ftl_region_upgrade_completed(struct spdk_ftl_dev *dev, struct ftl_layout_up
  * @return int see enum ftl_layout_upgrade_result
  */
 int ftl_layout_upgrade_init_ctx(struct spdk_ftl_dev *dev, struct ftl_layout_upgrade_ctx *ctx);
+
+/**
+ * @brief Returns the highest defined version of the given region
+ *
+ * @param reg_type FTL layout region
+ *
+ * @return region's version
+ */
+uint64_t ftl_layout_upgrade_region_get_latest_version(enum ftl_layout_region_type reg_type);
 
 #endif /* FTL_LAYOUT_UPGRADE_H */

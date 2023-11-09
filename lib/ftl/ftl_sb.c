@@ -59,6 +59,7 @@ sb_get_ops(uint64_t version)
 			.blob_validate = ftl_superblock_v5_validate_blob_area,
 			.blob_store = ftl_superblock_v5_store_blob_area,
 			.blob_load = ftl_superblock_v5_load_blob_area,
+			.upgrade_region = ftl_superblock_v5_md_layout_upgrade_region,
 			.layout_apply = ftl_superblock_v5_md_layout_apply,
 			.layout_dump = ftl_superblock_v5_md_layout_dump,
 		},

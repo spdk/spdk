@@ -118,9 +118,113 @@ ftl_superblock_v5_store_blob_area(struct spdk_ftl_dev *dev)
 	return 0;
 }
 
+static const struct ftl_layout_tracker_bdev_region_props *
+sb_md_layout_find_oldest_region(struct spdk_ftl_dev *dev,
+				struct ftl_layout_tracker_bdev *layout_tracker,
+				enum ftl_layout_region_type reg_type, void *find_filter)
+{
+	const struct ftl_layout_tracker_bdev_region_props *reg_search_ctx = NULL;
+	const struct ftl_layout_tracker_bdev_region_props *reg_oldest = NULL;
+	uint32_t ver_oldest;
+
+	while (true) {
+		ftl_layout_tracker_bdev_find_next_region(layout_tracker, reg_type, &reg_search_ctx);
+		if (!reg_search_ctx) {
+			break;
+		}
+
+		if (!reg_oldest) {
+			reg_oldest = reg_search_ctx;
+			ver_oldest = reg_search_ctx->ver;
+			continue;
+		}
+
+		ftl_bug(ver_oldest == reg_search_ctx->ver);
+		if (ver_oldest > reg_search_ctx->ver) {
+			reg_oldest = reg_search_ctx;
+			ver_oldest = reg_search_ctx->ver;
+		}
+	}
+
+	return reg_oldest;
+}
+
+static const struct ftl_layout_tracker_bdev_region_props *
+sb_md_layout_find_latest_region(struct spdk_ftl_dev *dev,
+				struct ftl_layout_tracker_bdev *layout_tracker, enum ftl_layout_region_type reg_type,
+				void *find_filter)
+{
+	const struct ftl_layout_tracker_bdev_region_props *reg_search_ctx = NULL;
+	const struct ftl_layout_tracker_bdev_region_props *reg_latest = NULL;
+	uint32_t ver_latest;
+
+	while (true) {
+		ftl_layout_tracker_bdev_find_next_region(layout_tracker, reg_type, &reg_search_ctx);
+		if (!reg_search_ctx) {
+			break;
+		}
+
+		if (!reg_latest) {
+			reg_latest = reg_search_ctx;
+			ver_latest = reg_search_ctx->ver;
+			continue;
+		}
+
+		ftl_bug(ver_latest == reg_search_ctx->ver);
+		if (ver_latest < reg_search_ctx->ver) {
+			reg_latest = reg_search_ctx;
+			ver_latest = reg_search_ctx->ver;
+		}
+	}
+
+	return reg_latest;
+}
+
+static const struct ftl_layout_tracker_bdev_region_props *
+sb_md_layout_find_region_version(struct spdk_ftl_dev *dev,
+				 struct ftl_layout_tracker_bdev *layout_tracker, enum ftl_layout_region_type reg_type,
+				 void *find_filter)
+{
+	const struct ftl_layout_tracker_bdev_region_props *reg_search_ctx = NULL;
+	uint32_t *reg_ver = find_filter;
+
+	assert(reg_ver);
+
+	while (true) {
+		ftl_layout_tracker_bdev_find_next_region(layout_tracker, reg_type, &reg_search_ctx);
+		if (!reg_search_ctx) {
+			break;
+		}
+
+		if (reg_search_ctx->ver == *reg_ver) {
+			break;
+		}
+	}
+
+	return reg_search_ctx;
+}
+
 typedef const struct ftl_layout_tracker_bdev_region_props *(*sb_md_layout_find_fn)(
 	struct spdk_ftl_dev *dev, struct ftl_layout_tracker_bdev *layout_tracker,
 	enum ftl_layout_region_type reg_type, void *find_filter);
+
+static const struct ftl_layout_tracker_bdev_region_props *
+sb_md_layout_find_region(struct spdk_ftl_dev *dev, enum ftl_layout_region_type reg_type,
+			 sb_md_layout_find_fn find_fn, void *find_filter)
+{
+	const struct ftl_layout_tracker_bdev_region_props *reg_search_ctx;
+	struct ftl_layout_tracker_bdev *nvc_layout_tracker = dev->nvc_layout_tracker;
+	struct ftl_layout_tracker_bdev *base_layout_tracker = dev->base_layout_tracker;
+
+	reg_search_ctx = find_fn(dev, nvc_layout_tracker, reg_type, find_filter);
+	if (reg_search_ctx) {
+		assert(find_fn(dev, base_layout_tracker, reg_type, find_filter) == NULL);
+		return reg_search_ctx;
+	}
+
+	reg_search_ctx = find_fn(dev, base_layout_tracker, reg_type, find_filter);
+	return reg_search_ctx;
+}
 
 static int
 sb_blob_load(struct spdk_ftl_dev *dev, struct ftl_superblock_v5_md_blob_hdr *sb_blob_hdr,
@@ -195,6 +299,104 @@ ftl_superblock_v5_load_blob_area(struct spdk_ftl_dev *dev)
 	return 0;
 }
 
+static struct ftl_layout_tracker_bdev *
+sb_get_md_layout_tracker(struct spdk_ftl_dev *dev, struct ftl_layout_region *reg)
+{
+	return (reg->bdev_desc == dev->base_bdev_desc) ? dev->base_layout_tracker : dev->nvc_layout_tracker;
+}
+
+static void
+sb_md_layout_delete_prev_region(struct spdk_ftl_dev *dev, struct ftl_layout_region *reg)
+{
+	int rc;
+	struct ftl_layout_tracker_bdev *layout_tracker = sb_get_md_layout_tracker(dev, reg);
+
+	rc = ftl_layout_tracker_bdev_rm_region(layout_tracker, reg->type, reg->current.version);
+	ftl_bug(rc != 0);
+}
+
+static void
+sb_md_layout_update_prev_region(struct spdk_ftl_dev *dev, struct ftl_layout_region *reg,
+				uint32_t new_version)
+{
+	int rc;
+	const struct ftl_layout_tracker_bdev_region_props *reg_search_ctx = NULL;
+	struct ftl_layout_tracker_bdev *layout_tracker = sb_get_md_layout_tracker(dev, reg);
+	struct ftl_layout_tracker_bdev_region_props reg_props;
+
+	/* Get region properties */
+	ftl_layout_tracker_bdev_find_next_region(layout_tracker, reg->type, &reg_search_ctx);
+	ftl_bug(reg_search_ctx == NULL);
+	reg_props = *reg_search_ctx;
+
+	/* Delete the region */
+	rc = ftl_layout_tracker_bdev_rm_region(layout_tracker, reg_props.type, reg_props.ver);
+	ftl_bug(rc != 0);
+
+	/* Insert the same region with new version */
+	reg_search_ctx = ftl_layout_tracker_bdev_insert_region(layout_tracker, reg_props.type, new_version,
+			 reg_props.blk_offs, reg_props.blk_sz);
+	ftl_bug(reg_search_ctx == NULL);
+
+	/* Verify the oldest region version stored in the SB is the new_version */
+	reg_search_ctx = sb_md_layout_find_region(dev, reg_props.type, sb_md_layout_find_oldest_region,
+			 NULL);
+	ftl_bug(reg_search_ctx == NULL);
+	ftl_bug(reg_search_ctx->ver != new_version);
+}
+
+int
+ftl_superblock_v5_md_layout_upgrade_region(struct spdk_ftl_dev *dev, struct ftl_layout_region *reg,
+		uint32_t new_version)
+{
+	const struct ftl_layout_tracker_bdev_region_props *reg_next = NULL;
+	uint64_t latest_ver;
+
+	ftl_bug(reg->current.version >= new_version);
+
+	reg_next = sb_md_layout_find_region(dev, reg->type, sb_md_layout_find_region_version, &new_version);
+	if (reg_next) {
+		/**
+		 * Major upgrade.
+		 * Found a new MD region allocated for upgrade to the next version.
+		 * Destroy the previous version now that the upgrade is completed.
+		 */
+		ftl_bug(reg_next->ver != new_version);
+		ftl_bug(reg_next->type != reg->type);
+		sb_md_layout_delete_prev_region(dev, reg);
+		reg->current.offset = reg_next->blk_offs;
+		reg->current.blocks = reg_next->blk_sz;
+	} else {
+		/**
+		 * Minor upgrade.
+		 * Upgraded the MD region in place.
+		 * Update the version in place.
+		 */
+		sb_md_layout_update_prev_region(dev, reg, new_version);
+	}
+
+	reg->current.version = new_version;
+	latest_ver = ftl_layout_upgrade_region_get_latest_version(reg->type);
+	if (new_version == latest_ver) {
+		/* Audit the only region version stored in the SB */
+		reg_next = sb_md_layout_find_region(dev, reg->type, sb_md_layout_find_latest_region, NULL);
+		ftl_bug(reg_next == NULL);
+		ftl_bug(reg_next->ver != new_version);
+
+		reg_next = sb_md_layout_find_region(dev, reg->type, sb_md_layout_find_oldest_region, NULL);
+		ftl_bug(reg_next == NULL);
+		ftl_bug(reg_next->ver != new_version);
+
+		reg_next = sb_md_layout_find_region(dev, reg->type, sb_md_layout_find_region_version, &new_version);
+		ftl_bug(reg->type != reg_next->type);
+		ftl_bug(reg->current.version != reg_next->ver);
+		ftl_bug(reg->current.offset != reg_next->blk_offs);
+		ftl_bug(reg->current.blocks != reg_next->blk_sz);
+	}
+
+	return 0;
+}
+
 void
 ftl_superblock_v5_md_layout_dump(struct spdk_ftl_dev *dev)
 {
@@ -257,7 +459,6 @@ layout_apply_from_sb_blob(struct spdk_ftl_dev *dev, struct ftl_layout_tracker_bd
 		if (reg->type == FTL_LAYOUT_REGION_TYPE_INVALID) {
 			reg->type = reg_search_ctx->type;
 			reg->current.version = reg_search_ctx->ver;
-			reg->prev.version = reg_search_ctx->ver;
 			reg->current.offset = reg_search_ctx->blk_offs;
 			reg->current.blocks = reg_search_ctx->blk_sz;
 			continue;
@@ -266,7 +467,6 @@ layout_apply_from_sb_blob(struct spdk_ftl_dev *dev, struct ftl_layout_tracker_bd
 		/* Update to the oldest region version found */
 		if (reg_search_ctx->ver < reg->current.version) {
 			reg->current.version = reg_search_ctx->ver;
-			reg->prev.version = reg_search_ctx->ver;
 			reg->current.offset = reg_search_ctx->blk_offs;
 			reg->current.blocks = reg_search_ctx->blk_sz;
 			continue;
