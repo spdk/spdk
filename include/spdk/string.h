@@ -195,7 +195,7 @@ int spdk_parse_ip_addr(char *ip, char **host, char **port);
  * \param cap_str Null terminated string.
  * \param cap Pointer where the parsed capacity (in bytes) will be put.
  * \param has_prefix Pointer to a flag that will be set to describe whether given
- * string contains a binary prefix.
+ * string contains a binary prefix (optional).
  *
  * \return 0 on success, or negative errno on failure.
  */

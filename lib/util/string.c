@@ -339,7 +339,9 @@ spdk_parse_capacity(const char *cap_str, uint64_t *cap, bool *has_prefix)
 
 	rc = sscanf(cap_str, "%"SCNu64"%c", cap, &bin_prefix);
 	if (rc == 1) {
-		*has_prefix = false;
+		if (has_prefix != NULL) {
+			*has_prefix = false;
+		}
 		return 0;
 	} else if (rc == 0) {
 		if (errno == 0) {
@@ -351,7 +353,10 @@ spdk_parse_capacity(const char *cap_str, uint64_t *cap, bool *has_prefix)
 		}
 	}
 
-	*has_prefix = true;
+	if (has_prefix != NULL) {
+		*has_prefix = true;
+	}
+
 	switch (bin_prefix) {
 	case 'k':
 	case 'K':
