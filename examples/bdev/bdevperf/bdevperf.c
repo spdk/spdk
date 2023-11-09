@@ -2485,6 +2485,14 @@ bdevperf_parse_arg(int ch, char *arg)
 		g_one_thread_per_lcore = true;
 	} else if (ch == 'J') {
 		g_rpc_log_file_name = optarg;
+	} else if (ch == 'o') {
+		uint64_t size;
+
+		if (spdk_parse_capacity(optarg, &size, NULL) != 0) {
+			fprintf(stderr, "Invalid IO size: %s\n", optarg);
+			return -EINVAL;
+		}
+		g_io_size = (int)size;
 	} else {
 		tmp = spdk_strtoll(optarg, 10);
 		if (tmp < 0) {
@@ -2498,9 +2506,6 @@ bdevperf_parse_arg(int ch, char *arg)
 		switch (ch) {
 		case 'q':
 			g_queue_depth = tmp;
-			break;
-		case 'o':
-			g_io_size = tmp;
 			break;
 		case 't':
 			g_time_in_sec = tmp;
