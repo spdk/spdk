@@ -18,6 +18,7 @@
 enum ftl_layout_setup_mode {
 	FTL_LAYOUT_SETUP_MODE_LOAD_CURRENT = 0,
 	FTL_LAYOUT_SETUP_MODE_NO_RESTRICT,
+	FTL_LAYOUT_SETUP_MODE_LEGACY_DEFAULT,
 };
 
 static inline float
@@ -232,6 +233,195 @@ layout_region_create_base(struct spdk_ftl_dev *dev, enum ftl_layout_region_type 
 	return 0;
 }
 
+static void
+legacy_layout_verify_region(struct ftl_layout_tracker_bdev *layout_tracker,
+			    enum ftl_layout_region_type reg_type, uint32_t reg_version)
+{
+	const struct ftl_layout_tracker_bdev_region_props *reg_search_ctx = NULL;
+	const struct ftl_layout_tracker_bdev_region_props *reg_found = NULL;
+
+	while (true) {
+		ftl_layout_tracker_bdev_find_next_region(layout_tracker, reg_type, &reg_search_ctx);
+		if (!reg_search_ctx) {
+			break;
+		}
+
+		/* Only a single region version is present in upgrade from the legacy layout */
+		ftl_bug(reg_search_ctx->ver != reg_version);
+		ftl_bug(reg_found != NULL);
+
+		reg_found = reg_search_ctx;
+	}
+}
+
+static int
+legacy_layout_region_open_nvc(struct spdk_ftl_dev *dev, enum ftl_layout_region_type reg_type,
+			      uint32_t reg_version, size_t entry_size, size_t entry_count)
+{
+	struct ftl_layout_region *reg = &dev->layout.region[reg_type];
+	const struct ftl_md_layout_ops *md_ops = &dev->nv_cache.nvc_desc->ops.md_layout_ops;
+
+	legacy_layout_verify_region(dev->nvc_layout_tracker, reg_type, reg_version);
+	return md_ops->region_open(dev, reg_type, reg_version, entry_size, entry_count, reg);
+}
+
+static int
+legacy_layout_region_open_base(struct spdk_ftl_dev *dev, enum ftl_layout_region_type reg_type,
+			       uint32_t reg_version, size_t entry_size, size_t entry_count)
+{
+	struct ftl_layout_region *reg = &dev->layout.region[reg_type];
+	const struct ftl_md_layout_ops *md_ops = &dev->base_type->ops.md_layout_ops;
+
+	legacy_layout_verify_region(dev->nvc_layout_tracker, reg_type, reg_version);
+	return md_ops->region_open(dev, reg_type, reg_version, entry_size, entry_count, reg);
+}
+
+static int
+layout_setup_legacy_default_nvc(struct spdk_ftl_dev *dev)
+{
+	int region_type;
+	uint64_t blocks, chunk_count;
+	struct ftl_layout *layout = &dev->layout;
+	const struct ftl_layout_tracker_bdev_region_props *reg_search_ctx = NULL;
+
+	/* Initialize L2P region */
+	blocks = ftl_md_region_blocks(dev, layout->l2p.addr_size * dev->num_lbas);
+	if (legacy_layout_region_open_nvc(dev, FTL_LAYOUT_REGION_TYPE_L2P, 0, FTL_BLOCK_SIZE,
+					  blocks)) {
+		goto error;
+	}
+
+	/* Initialize band info metadata */
+	if (legacy_layout_region_open_nvc(dev, FTL_LAYOUT_REGION_TYPE_BAND_MD, FTL_BAND_VERSION_1,
+					  sizeof(struct ftl_band_md), ftl_get_num_bands(dev))) {
+		goto error;
+	}
+
+	/* Initialize band info metadata mirror */
+	if (legacy_layout_region_open_nvc(dev, FTL_LAYOUT_REGION_TYPE_BAND_MD_MIRROR, FTL_BAND_VERSION_1,
+					  sizeof(struct ftl_band_md), ftl_get_num_bands(dev))) {
+		goto error;
+	}
+	layout->region[FTL_LAYOUT_REGION_TYPE_BAND_MD].mirror_type = FTL_LAYOUT_REGION_TYPE_BAND_MD_MIRROR;
+
+	/*
+	 * Initialize P2L checkpointing regions
+	 */
+	for (region_type = FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MIN;
+	     region_type <= FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MAX;
+	     region_type++) {
+		const struct ftl_layout_tracker_bdev_region_props *reg_search_ctx = NULL;
+
+		/* Get legacy number of blocks */
+		ftl_layout_tracker_bdev_find_next_region(dev->nvc_layout_tracker, region_type, &reg_search_ctx);
+		if (!reg_search_ctx || reg_search_ctx->ver != FTL_P2L_VERSION_1) {
+			goto error;
+		}
+		blocks = reg_search_ctx->blk_sz;
+
+		if (legacy_layout_region_open_nvc(dev, region_type, FTL_P2L_VERSION_1, FTL_BLOCK_SIZE, blocks)) {
+			goto error;
+		}
+	}
+
+	/*
+	 * Initialize trim metadata region
+	 */
+	blocks = layout->region[FTL_LAYOUT_REGION_TYPE_L2P].current.blocks;
+	if (legacy_layout_region_open_nvc(dev, FTL_LAYOUT_REGION_TYPE_TRIM_MD, 0, sizeof(uint64_t),
+					  blocks)) {
+		goto error;
+	}
+
+	/* Initialize trim metadata mirror region */
+	if (legacy_layout_region_open_nvc(dev, FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR, 0, sizeof(uint64_t),
+					  blocks)) {
+		goto error;
+	}
+	layout->region[FTL_LAYOUT_REGION_TYPE_TRIM_MD].mirror_type = FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR;
+
+	/* Restore chunk count */
+	ftl_layout_tracker_bdev_find_next_region(dev->nvc_layout_tracker, FTL_LAYOUT_REGION_TYPE_DATA_NVC,
+			&reg_search_ctx);
+	if (!reg_search_ctx || reg_search_ctx->ver != 0) {
+		goto error;
+	}
+	blocks = reg_search_ctx->blk_sz;
+	chunk_count = blocks / ftl_get_num_blocks_in_band(dev);
+	if (0 == chunk_count) {
+		goto error;
+	}
+
+	/*
+	 * Initialize NV Cache metadata
+	 */
+	if (0 == chunk_count) {
+		goto error;
+	}
+	layout->nvc.chunk_count = chunk_count;
+
+	if (legacy_layout_region_open_nvc(dev, FTL_LAYOUT_REGION_TYPE_NVC_MD, FTL_NVC_VERSION_1,
+					  sizeof(struct ftl_nv_cache_chunk_md), chunk_count)) {
+		goto error;
+	}
+
+	/*
+	 * Initialize NV Cache metadata mirror
+	 */
+	if (legacy_layout_region_open_nvc(dev, FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR, FTL_NVC_VERSION_1,
+					  sizeof(struct ftl_nv_cache_chunk_md), chunk_count)) {
+		goto error;
+	}
+	layout->region[FTL_LAYOUT_REGION_TYPE_NVC_MD].mirror_type = FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR;
+
+	/*
+	 * Initialize data region on NV cache
+	 */
+	if (legacy_layout_region_open_nvc(dev, FTL_LAYOUT_REGION_TYPE_DATA_NVC, 0,
+					  layout->nvc.chunk_data_blocks * FTL_BLOCK_SIZE, chunk_count)) {
+		goto error;
+	}
+
+	return 0;
+
+error:
+	FTL_ERRLOG(dev, "Invalid legacy NV Cache metadata layout\n");
+	return -1;
+}
+
+static int
+layout_setup_legacy_default_base(struct spdk_ftl_dev *dev)
+{
+	struct ftl_layout *layout = &dev->layout;
+
+	/* Base device layout is as follows:
+	 * - superblock
+	 * - data
+	 * - valid map
+	 */
+	if (layout_region_create_base(dev, FTL_LAYOUT_REGION_TYPE_DATA_BASE, 0, FTL_BLOCK_SIZE,
+				      ftl_layout_base_offset(dev))) {
+		return -1;
+	}
+
+	if (legacy_layout_region_open_base(dev, FTL_LAYOUT_REGION_TYPE_VALID_MAP, 0, FTL_BLOCK_SIZE,
+					   ftl_md_region_blocks(dev, spdk_divide_round_up(layout->base.total_blocks + layout->nvc.total_blocks,
+							   8)))) {
+		return -1;
+	}
+
+	return 0;
+}
+
+static int
+layout_setup_legacy_default(struct spdk_ftl_dev *dev)
+{
+	if (layout_setup_legacy_default_nvc(dev) || layout_setup_legacy_default_base(dev)) {
+		return -1;
+	}
+	return 0;
+}
+
 static int
 layout_setup_default_nvc(struct spdk_ftl_dev *dev)
 {
@@ -400,6 +590,8 @@ ftl_layout_setup(struct spdk_ftl_dev *dev)
 
 	if (dev->conf.mode & SPDK_FTL_MODE_CREATE) {
 		setup_mode = FTL_LAYOUT_SETUP_MODE_NO_RESTRICT;
+	} else if (ftl_superblock_is_blob_area_empty(dev->sb)) {
+		setup_mode = FTL_LAYOUT_SETUP_MODE_LEGACY_DEFAULT;
 	} else {
 		setup_mode = FTL_LAYOUT_SETUP_MODE_LOAD_CURRENT;
 	}
@@ -445,6 +637,12 @@ ftl_layout_setup(struct spdk_ftl_dev *dev)
 	layout->base.user_blocks = ftl_band_user_blocks(dev->bands);
 
 	switch (setup_mode) {
+	case FTL_LAYOUT_SETUP_MODE_LEGACY_DEFAULT:
+		if (layout_setup_legacy_default(dev)) {
+			return -EINVAL;
+		}
+		break;
+
 	case FTL_LAYOUT_SETUP_MODE_LOAD_CURRENT:
 		if (layout_load(dev)) {
 			return -EINVAL;
