@@ -23,32 +23,22 @@ dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void
 {
 }
 
-struct spdk_rpc_set_bdev_opts {
-	uint32_t bdev_io_pool_size;
-	uint32_t bdev_io_cache_size;
-	bool bdev_auto_examine;
-};
-
 static const struct spdk_json_object_decoder rpc_set_bdev_opts_decoders[] = {
-	{"bdev_io_pool_size", offsetof(struct spdk_rpc_set_bdev_opts, bdev_io_pool_size), spdk_json_decode_uint32, true},
-	{"bdev_io_cache_size", offsetof(struct spdk_rpc_set_bdev_opts, bdev_io_cache_size), spdk_json_decode_uint32, true},
-	{"bdev_auto_examine", offsetof(struct spdk_rpc_set_bdev_opts, bdev_auto_examine), spdk_json_decode_bool, true},
+	{"bdev_io_pool_size", offsetof(struct spdk_bdev_opts, bdev_io_pool_size), spdk_json_decode_uint32, true},
+	{"bdev_io_cache_size", offsetof(struct spdk_bdev_opts, bdev_io_cache_size), spdk_json_decode_uint32, true},
+	{"bdev_auto_examine", offsetof(struct spdk_bdev_opts, bdev_auto_examine), spdk_json_decode_bool, true},
 };
 
 static void
 rpc_bdev_set_options(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
-	struct spdk_rpc_set_bdev_opts rpc_opts;
-	struct spdk_bdev_opts bdev_opts;
+	struct spdk_bdev_opts opts;
 	int rc;
 
-	rpc_opts.bdev_io_pool_size = UINT32_MAX;
-	rpc_opts.bdev_io_cache_size = UINT32_MAX;
-	rpc_opts.bdev_auto_examine = true;
-
+	spdk_bdev_get_opts(&opts, sizeof(opts));
 	if (params != NULL) {
 		if (spdk_json_decode_object(params, rpc_set_bdev_opts_decoders,
-					    SPDK_COUNTOF(rpc_set_bdev_opts_decoders), &rpc_opts)) {
+					    SPDK_COUNTOF(rpc_set_bdev_opts_decoders), &opts)) {
 			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");
@@ -56,21 +46,11 @@ rpc_bdev_set_options(struct spdk_jsonrpc_request *request, const struct spdk_jso
 		}
 	}
 
-	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
-	if (rpc_opts.bdev_io_pool_size != UINT32_MAX) {
-		bdev_opts.bdev_io_pool_size = rpc_opts.bdev_io_pool_size;
-	}
-	if (rpc_opts.bdev_io_cache_size != UINT32_MAX) {
-		bdev_opts.bdev_io_cache_size = rpc_opts.bdev_io_cache_size;
-	}
-	bdev_opts.bdev_auto_examine = rpc_opts.bdev_auto_examine;
-
-	rc = spdk_bdev_set_opts(&bdev_opts);
-
+	rc = spdk_bdev_set_opts(&opts);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						     "Pool size %" PRIu32 " too small for cache size %" PRIu32,
-						     bdev_opts.bdev_io_pool_size, bdev_opts.bdev_io_cache_size);
+						     opts.bdev_io_pool_size, opts.bdev_io_cache_size);
 		return;
 	}
 
