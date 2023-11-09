@@ -200,8 +200,9 @@ struct spdk_bdev_opts {
 	 */
 	size_t opts_size;
 
-	/* Hole at bytes 24-31. */
-	uint8_t reserved[8];
+	/* Size of the per-thread iobuf caches */
+	uint32_t iobuf_small_cache_size;
+	uint32_t iobuf_large_cache_size;
 } __attribute__((packed));
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_opts) == 32, "Incorrect size");
 

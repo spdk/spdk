@@ -120,14 +120,25 @@ class BdevSubsystem(Subsystem):
         super().__init__('bdev')
 
     def calc(self, config, mask):
+        bdev_conf = self.get_subsystem_config(config, 'bdev')
         cpucnt = mask.bit_count()
-        pool = PoolConfig(small=128 * cpucnt, large=16 * cpucnt)
+        small, large = 128, 16
+        opts = next(self.get_method(bdev_conf, 'bdev_set_options'), {}).get('params')
+        if opts is not None:
+            small, large = opts['iobuf_small_cache_size'], opts['iobuf_large_cache_size']
+        pool = PoolConfig(small=small * cpucnt, large=large * cpucnt)
         pool.add(self.get('accel').calc(config, mask))
         return pool
 
     def ask_config(self):
-        # There's nothing in bdev layer's config that we care about
-        pass
+        prov = input('Provide bdev config [y/N]: ')
+        if prov.lower() != 'y':
+            return None
+        print('bdev_set_options:')
+        return [{'method': 'bdev_set_options', 'params':
+                self._get_input([
+                    UserInput('iobuf_small_cache_size', '\t', lambda x: int(x, 0)),
+                    UserInput('iobuf_large_cache_size', '\t', lambda x: int(x, 0))])}]
 
 
 class NvmfSubsystem(Subsystem):

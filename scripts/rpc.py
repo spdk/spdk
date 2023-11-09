@@ -206,7 +206,9 @@ if __name__ == "__main__":
         rpc.bdev.bdev_set_options(args.client,
                                   bdev_io_pool_size=args.bdev_io_pool_size,
                                   bdev_io_cache_size=args.bdev_io_cache_size,
-                                  bdev_auto_examine=args.bdev_auto_examine)
+                                  bdev_auto_examine=args.bdev_auto_examine,
+                                  iobuf_small_cache_size=args.iobuf_small_cache_size,
+                                  iobuf_large_cache_size=args.iobuf_large_cache_size)
 
     p = subparsers.add_parser('bdev_set_options',
                               help="""Set options of bdev subsystem""")
@@ -215,6 +217,8 @@ if __name__ == "__main__":
     group = p.add_mutually_exclusive_group()
     group.add_argument('-e', '--enable-auto-examine', dest='bdev_auto_examine', help='Allow to auto examine', action='store_true')
     group.add_argument('-d', '--disable-auto-examine', dest='bdev_auto_examine', help='Not allow to auto examine', action='store_false')
+    p.add_argument('--iobuf-small-cache-size', help='Size of the small iobuf per thread cache', type=int)
+    p.add_argument('--iobuf-large-cache-size', help='Size of the large iobuf per thread cache', type=int)
     p.set_defaults(bdev_auto_examine=True)
     p.set_defaults(func=bdev_set_options)
 

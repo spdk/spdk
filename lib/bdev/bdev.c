@@ -148,6 +148,8 @@ static struct spdk_bdev_opts	g_bdev_opts = {
 	.bdev_io_pool_size = SPDK_BDEV_IO_POOL_SIZE,
 	.bdev_io_cache_size = SPDK_BDEV_IO_CACHE_SIZE,
 	.bdev_auto_examine = SPDK_BDEV_AUTO_EXAMINE,
+	.iobuf_small_cache_size = BUF_SMALL_CACHE_SIZE,
+	.iobuf_large_cache_size = BUF_LARGE_CACHE_SIZE,
 };
 
 static spdk_bdev_init_cb	g_init_cb_fn = NULL;
@@ -453,6 +455,8 @@ spdk_bdev_get_opts(struct spdk_bdev_opts *opts, size_t opts_size)
 	SET_FIELD(bdev_io_pool_size);
 	SET_FIELD(bdev_io_cache_size);
 	SET_FIELD(bdev_auto_examine);
+	SET_FIELD(iobuf_small_cache_size);
+	SET_FIELD(iobuf_large_cache_size);
 
 	/* Do not remove this statement, you should always update this statement when you adding a new field,
 	 * and do not forget to add the SET_FIELD statement for your added field. */
@@ -498,6 +502,8 @@ spdk_bdev_set_opts(struct spdk_bdev_opts *opts)
 	SET_FIELD(bdev_io_pool_size);
 	SET_FIELD(bdev_io_cache_size);
 	SET_FIELD(bdev_auto_examine);
+	SET_FIELD(iobuf_small_cache_size);
+	SET_FIELD(iobuf_large_cache_size);
 
 	g_bdev_opts.opts_size = opts->opts_size;
 
@@ -1904,6 +1910,8 @@ spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_uint32(w, "bdev_io_pool_size", g_bdev_opts.bdev_io_pool_size);
 	spdk_json_write_named_uint32(w, "bdev_io_cache_size", g_bdev_opts.bdev_io_cache_size);
 	spdk_json_write_named_bool(w, "bdev_auto_examine", g_bdev_opts.bdev_auto_examine);
+	spdk_json_write_named_uint32(w, "iobuf_small_cache_size", g_bdev_opts.iobuf_small_cache_size);
+	spdk_json_write_named_uint32(w, "iobuf_large_cache_size", g_bdev_opts.iobuf_large_cache_size);
 	spdk_json_write_object_end(w);
 	spdk_json_write_object_end(w);
 
@@ -1962,7 +1970,9 @@ bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
 	uint32_t i;
 	int rc;
 
-	rc = spdk_iobuf_channel_init(&ch->iobuf, "bdev", BUF_SMALL_CACHE_SIZE, BUF_LARGE_CACHE_SIZE);
+	rc = spdk_iobuf_channel_init(&ch->iobuf, "bdev",
+				     g_bdev_opts.iobuf_small_cache_size,
+				     g_bdev_opts.iobuf_large_cache_size);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to create iobuf channel: %s\n", spdk_strerror(-rc));
 		return -1;
