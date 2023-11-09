@@ -116,16 +116,40 @@ function confirm_abi_deps() {
 		return 1
 	fi
 
-	# suppressed types should go here, in the format:
+	# Type suppression should be used for deliberate change in the structure,
+	# that do not affect the ABI compatibility.
+	# One example is utilizing a previously reserved field in the structure.
+	# Suppression file should contain at the very least the name of type
+	# and point to major SO_VER of the library it applies to.
+	#
+	# To avoid ignoring an actual changes in ABI for a particular SO_VER,
+	# the suppression should be as specific as possible to the change.
+	# has_data_member_* conditions can be used to narrow down the
+	# name of previously existing field, or specify the offset.
+	# Please refer to libabigail for details.
+	#
+	# Example format:
 	# [suppress_type]
+	#	label = Added interrupt_mode field
 	#	name = spdk_app_opts
+	#	soname_regexp = ^libspdk_event\\.so\\.12\\.*$
 	cat << EOF > ${suppression_file}
 [suppress_type]
+	label = Added interrupt_mode field
 	name = spdk_app_opts
+	soname_regexp = ^libspdk_event\\.so\\.12\\.*$
+	has_data_member_regexp = ^reserved185$
+	has_data_member_inserted_between = {1480, 1488}
 [suppress_type]
+	label = Added cmbs field
 	name = spdk_nvme_cap_register
+	soname_regexp = ^libspdk_nvme\\.so\\.11\\.*$
 [suppress_type]
+	label = Added iobuf_small/large_cache_size fields
 	name = spdk_bdev_opts
+	soname_regexp = ^libspdk_bdev\\.so\\.13\\.*$
+	has_data_member_regexp = ^reserved$
+	has_data_member_inserted_between = {192, 224}
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
