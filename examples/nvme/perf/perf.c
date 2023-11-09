@@ -2488,7 +2488,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 {
 	int op, long_idx;
 	long int val;
-	long long int val2;
+	uint64_t val_u64;
 	int rc;
 	char *endptr;
 	bool ssl_used = false;
@@ -2497,21 +2497,16 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 	while ((op = getopt_long(argc, argv, PERF_GETOPT_SHORT, g_perf_cmdline_opts, &long_idx)) != -1) {
 		switch (op) {
 		case PERF_WARMUP_TIME:
-		case PERF_BUFFER_ALIGNMENT:
 		case PERF_SHMEM_GROUP_ID:
 		case PERF_MAX_COMPLETIONS_PER_POLL:
 		case PERF_IO_QUEUES_PER_NS:
-		case PERF_IO_SIZE:
-		case PERF_IO_UNIT_SIZE:
 		case PERF_IO_DEPTH:
 		case PERF_KEEPALIVE:
-		case PERF_HUGEMEM_SIZE:
 		case PERF_TIME:
 		case PERF_RW_MIXREAD:
 		case PERF_NUM_UNUSED_IO_QPAIRS:
 		case PERF_CONTINUE_ON_ERROR:
 		case PERF_IO_QUEUE_SIZE:
-		case PERF_ZEROCOPY_THRESHOLD:
 		case PERF_RDMA_SRQ_SIZE:
 			val = spdk_strtol(optarg, 10);
 			if (val < 0) {
@@ -2531,20 +2526,11 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			case PERF_IO_QUEUES_PER_NS:
 				g_nr_io_queues_per_ns = val;
 				break;
-			case PERF_IO_SIZE:
-				g_io_size_bytes = val;
-				break;
-			case PERF_IO_UNIT_SIZE:
-				g_io_unit_size = val;
-				break;
 			case PERF_IO_DEPTH:
 				g_queue_depth = val;
 				break;
 			case PERF_KEEPALIVE:
 				g_keep_alive_timeout_in_ms = val;
-				break;
-			case PERF_HUGEMEM_SIZE:
-				env_opts->mem_size = val;
 				break;
 			case PERF_TIME:
 				g_time_in_sec = val;
@@ -2560,8 +2546,37 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			case PERF_NUM_UNUSED_IO_QPAIRS:
 				g_nr_unused_io_queues = val;
 				break;
+			case PERF_IO_QUEUE_SIZE:
+				g_io_queue_size = val;
+				break;
+			case PERF_RDMA_SRQ_SIZE:
+				g_rdma_srq_size = val;
+				break;
+			}
+			break;
+		case PERF_IO_SIZE:
+		case PERF_IO_UNIT_SIZE:
+		case PERF_ZEROCOPY_THRESHOLD:
+		case PERF_BUFFER_ALIGNMENT:
+		case PERF_HUGEMEM_SIZE:
+		case PERF_NUMBER_IOS:
+			rc = spdk_parse_capacity(optarg, &val_u64, NULL);
+			if (rc != 0) {
+				fprintf(stderr, "Converting a string to integer failed\n");
+				return 1;
+			}
+			switch (op) {
+			case PERF_IO_SIZE:
+				g_io_size_bytes = (uint32_t)val_u64;
+				break;
+			case PERF_IO_UNIT_SIZE:
+				g_io_unit_size = (uint32_t)val_u64;
+				break;
+			case PERF_ZEROCOPY_THRESHOLD:
+				g_sock_zcopy_threshold = (uint32_t)val_u64;
+				break;
 			case PERF_BUFFER_ALIGNMENT:
-				g_io_align = val;
+				g_io_align = (uint32_t)val_u64;
 				if (!spdk_u32_is_pow2(g_io_align) || g_io_align < SPDK_CACHE_LINE_SIZE) {
 					fprintf(stderr, "Wrong alignment %u. Must be power of 2 and not less than cache lize (%u)\n",
 						g_io_align, SPDK_CACHE_LINE_SIZE);
@@ -2570,25 +2585,13 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 				}
 				g_io_align_specified = true;
 				break;
-			case PERF_IO_QUEUE_SIZE:
-				g_io_queue_size = val;
+			case PERF_HUGEMEM_SIZE:
+				env_opts->mem_size = (int)val_u64;
 				break;
-			case PERF_ZEROCOPY_THRESHOLD:
-				g_sock_zcopy_threshold = val;
-				break;
-			case PERF_RDMA_SRQ_SIZE:
-				g_rdma_srq_size = val;
+			case PERF_NUMBER_IOS:
+				g_number_ios = val_u64;
 				break;
 			}
-			break;
-		case PERF_NUMBER_IOS:
-			val2 = spdk_strtoll(optarg, 10);
-			if (val2 < 0) {
-				fprintf(stderr, "Converting a string to integer failed\n");
-				return val2;
-			}
-
-			g_number_ios = (uint64_t)val2;
 			break;
 		case PERF_ZIPF:
 			errno = 0;
