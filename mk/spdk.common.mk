@@ -537,3 +537,12 @@ endef
 define pkgconfig_filename
 $(SPDK_ROOT_DIR)/build/lib/pkgconfig/$(1).pc
 endef
+
+# _uniq returns the unique elements from the list specified. It does
+# not change the order of the elements. If the same element occurs
+# multiple times in the list, the last instance is kept and the others
+# removed.
+# Example: _uniq(conf log json log util util log util) = conf json log util
+define _uniq
+$(if $1,$(call _uniq,$(filter-out $(lastword $1),$1)) $(lastword $1))
+endef

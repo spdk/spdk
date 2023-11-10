@@ -5,15 +5,6 @@
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib_deps.mk
 
-# _uniq returns the unique elements from the list specified. It does
-# not change the order of the elements. If the same element occurs
-# multiple times in the list, the last instance is kept and the others
-# removed.
-# Example: _uniq(conf log json log util util log util) = conf json log util
-define _uniq
-$(if $1,$(call _uniq,$(filter-out $(lastword $1),$1)) $(lastword $1))
-endef
-
 define _deplibs
 $(if $1,$(foreach d,$1,$(d) $(call _deplibs,$(DEPDIRS-$(d)))))
 endef
