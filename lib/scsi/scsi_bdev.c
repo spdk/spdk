@@ -1357,6 +1357,7 @@ struct spdk_bdev_scsi_split_ctx {
 	uint16_t			remaining_count;
 	uint16_t			current_count;
 	uint16_t			outstanding_count;
+	/* Return 0 on successly submitting child IO, 1 on skipping child IO, negative number on failure */
 	int	(*fn)(struct spdk_bdev_scsi_split_ctx *ctx);
 };
 
@@ -1379,44 +1380,42 @@ bdev_scsi_split(struct spdk_bdev_scsi_split_ctx *ctx)
 
 	while (ctx->remaining_count != 0) {
 		rc = ctx->fn(ctx);
-		if (rc == 0) {
+		if (rc >= 0) {
 			ctx->current_count++;
 			ctx->remaining_count--;
-		} else {
-			ctx->outstanding_count--;
-			if (rc == -ENOMEM) {
-				if (ctx->outstanding_count == 0) {
-					/*
-					 * If there are outstanding child I/Os, the last
-					 * completion will call this function again to try
-					 * the next split. Hence, queue the parent task only
-					 * if there is no outstanding child I/O.
-					 */
-					bdev_scsi_queue_io(task, bdev_scsi_split_resubmit, ctx);
-				}
-				return SPDK_SCSI_TASK_PENDING;
-			} else {
-				SPDK_ERRLOG("SCSI %s failed\n", spdk_scsi_sbc_opcode_string(opcode, 0));
-				spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-							  SPDK_SCSI_SENSE_NO_SENSE,
-							  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
-							  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-				/* If any child I/O failed, stop further splitting process. */
-				ctx->current_count += ctx->remaining_count;
-				ctx->remaining_count = 0;
-				/* We can't complete here - we may have to wait for previously
-				 * submitted child I/Os to complete */
-				break;
-			}
+			/* 0 on success, 1 on skipping child IO. !rc is good enough */
+			ctx->outstanding_count += !rc;
+			continue;
+		} else if (rc == -ENOMEM) {
+			break;
 		}
+
+		SPDK_ERRLOG("SCSI %s failed\n", spdk_scsi_sbc_opcode_string(opcode, 0));
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		/* If any child I/O failed, stop further splitting process. */
+		ctx->current_count += ctx->remaining_count;
+		ctx->remaining_count = 0;
+		break;
 	}
 
-	if (ctx->outstanding_count == 0) {
-		free(ctx);
-		return SPDK_SCSI_TASK_COMPLETE;
+	if (ctx->outstanding_count != 0) {
+		/* We can't complete here - we may have to wait for previously
+		 * submitted child I/Os to complete */
+		return SPDK_SCSI_TASK_PENDING;
 	}
 
-	return SPDK_SCSI_TASK_PENDING;
+	if (rc == -ENOMEM) {
+		/* none outstanding child IO submitted, no callback would be involked.
+		   this is the last chance to resubmit on -ENOMEM */
+		bdev_scsi_queue_io(task, bdev_scsi_split_resubmit, ctx);
+		return SPDK_SCSI_TASK_PENDING;
+	}
+
+	free(ctx);
+	return SPDK_SCSI_TASK_COMPLETE;
 }
 
 static void
@@ -1504,10 +1503,9 @@ _bdev_scsi_unmap(struct spdk_bdev_scsi_split_ctx *ctx)
 	num_blocks = from_be32(&desc->block_count);
 
 	if (num_blocks == 0) {
-		return 0;
+		return 1;
 	}
 
-	ctx->outstanding_count++;
 	return spdk_bdev_unmap_blocks(lun->bdev_desc,
 				      lun->io_channel,
 				      offset_blocks,
@@ -1575,7 +1573,6 @@ _bdev_scsi_write_same(struct spdk_bdev_scsi_split_ctx *ctx)
 	struct spdk_scsi_lun *lun = task->lun;
 	uint64_t offset_blocks;
 
-	ctx->outstanding_count++;
 	offset_blocks = ctx->start_offset_blocks + ctx->current_count;
 	return spdk_bdev_writev_blocks(lun->bdev_desc, lun->io_channel, task->iovs, task->iovcnt,
 				       offset_blocks, 1, bdev_scsi_task_complete_split_cmd, ctx);

@@ -1045,28 +1045,30 @@ unmap_split_test(void)
 	/* Test block device size of 512 MiB */
 	g_test_bdev_num_blocks = 512 * 1024 * 1024;
 
-	/* Unmap 5 blocks using 5 descriptors. bdev_io pool size is 2.
+	/* Unmap 5 blocks using 6 descriptors(descriptor 2 has 0 blocks). bdev_io pool size is 2.
 	 * Hence, unmap should be done by 3 iterations.
-	 * 1st - 2 unmaps, 2nd - 2 unmaps, and 3rd - 1 unmap.
+	 * 1st - 2 unmaps(0, 1), 2nd - 3 unmaps(2, 3, 4), and 3rd - 1 unmap(5).
 	 */
 	ut_init_task(&task);
 	task.lun = &lun;
 	task.cdb = cdb;
 	memset(cdb, 0, sizeof(cdb));
 	cdb[0] = 0x42; /* UNMAP */
-	to_be16(&data[7], 5); /* 5 parameters in list */
+	to_be16(&data[7], 6); /* 6 parameters in list */
 	memset(data, 0, sizeof(data));
-	to_be16(&data[2], 80); /* 2 descriptors */
+	to_be16(&data[2], 16 * 6); /* 6 descriptors */
 	to_be64(&data[8], 1); /* LBA 1 */
 	to_be32(&data[16], 2); /* 2 blocks */
 	to_be64(&data[24], 5); /* LBA 5 */
 	to_be32(&data[32], 3); /* 3 blocks */
 	to_be64(&data[40], 10); /* LBA 10 */
-	to_be32(&data[48], 1); /* 1 block */
+	to_be32(&data[48], 0); /* 0 block */
 	to_be64(&data[56], 15); /* LBA 15 */
 	to_be32(&data[64], 4); /* 4 blocks */
 	to_be64(&data[72], 30); /* LBA 30 */
 	to_be32(&data[80], 1); /* 1 block */
+	to_be64(&data[88], 40); /* LBA 40 */
+	to_be32(&data[96], 1); /* 1 block */
 	spdk_scsi_task_set_data(&task, data, sizeof(data));
 	task.status = SPDK_SCSI_STATUS_GOOD;
 
@@ -1082,6 +1084,7 @@ unmap_split_test(void)
 	g_bdev_io_pool_count = 2;
 	ut_bdev_io_retry();
 
+	/* descriptor 0 and 1 */
 	CU_ASSERT(g_outstanding_bdev_io_count == 2);
 	CU_ASSERT(g_pending_bdev_io_count == 0);
 
@@ -1093,7 +1096,20 @@ unmap_split_test(void)
 
 	ut_bdev_io_retry();
 
+	/* descriptor 3 and 4. (descriptor 2 should be ignored) */
 	CU_ASSERT(g_outstanding_bdev_io_count == 2);
+	CU_ASSERT(g_pending_bdev_io_count == 0);
+
+	g_bdev_io_pool_full = true;
+	ut_bdev_io_complete();
+
+	CU_ASSERT(g_outstanding_bdev_io_count == 0);
+	CU_ASSERT(g_pending_bdev_io_count == 1);
+
+	ut_bdev_io_retry();
+
+	/* descriptor 5 */
+	CU_ASSERT(g_outstanding_bdev_io_count == 1);
 	CU_ASSERT(g_pending_bdev_io_count == 0);
 
 	ut_bdev_io_complete();
