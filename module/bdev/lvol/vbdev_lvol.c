@@ -709,7 +709,6 @@ vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	struct lvol_store_bdev *lvs_bdev;
 	struct spdk_bdev *bdev;
 	struct spdk_blob *blob;
-	char lvol_store_uuid[SPDK_UUID_STRING_LEN];
 	spdk_blob_id *ids = NULL;
 	size_t count, i;
 	char *name;
@@ -726,8 +725,7 @@ vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 
 	bdev = lvs_bdev->bdev;
 
-	spdk_uuid_fmt_lower(lvol_store_uuid, sizeof(lvol_store_uuid), &lvol->lvol_store->uuid);
-	spdk_json_write_named_string(w, "lvol_store_uuid", lvol_store_uuid);
+	spdk_json_write_named_uuid(w, "lvol_store_uuid", &lvol->lvol_store->uuid);
 
 	spdk_json_write_named_string(w, "base_bdev", spdk_bdev_get_name(bdev));
 

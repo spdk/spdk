@@ -557,7 +557,6 @@ bdev_daos_get_io_channel(void *ctx)
 static void
 bdev_daos_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 {
-	char uuid_str[SPDK_UUID_STRING_LEN];
 	struct bdev_daos *daos = bdev->ctxt;
 
 	spdk_json_write_object_begin(w);
@@ -570,8 +569,7 @@ bdev_daos_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 	spdk_json_write_named_string(w, "cont", daos->cont_name);
 	spdk_json_write_named_uint64(w, "num_blocks", bdev->blockcnt);
 	spdk_json_write_named_uint32(w, "block_size", bdev->blocklen);
-	spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &bdev->uuid);
-	spdk_json_write_named_string(w, "uuid", uuid_str);
+	spdk_json_write_named_uuid(w, "uuid", &bdev->uuid);
 
 	spdk_json_write_object_end(w);
 

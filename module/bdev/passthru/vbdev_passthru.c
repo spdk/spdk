@@ -415,10 +415,7 @@ vbdev_passthru_config_json(struct spdk_json_write_ctx *w)
 		spdk_json_write_named_string(w, "base_bdev_name", spdk_bdev_get_name(pt_node->base_bdev));
 		spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&pt_node->pt_bdev));
 		if (!spdk_uuid_is_null(uuid)) {
-			char uuid_str[SPDK_UUID_STRING_LEN];
-
-			spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), uuid);
-			spdk_json_write_named_string(w, "uuid", uuid_str);
+			spdk_json_write_named_uuid(w, "uuid", uuid);
 		}
 		spdk_json_write_object_end(w);
 		spdk_json_write_object_end(w);

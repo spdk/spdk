@@ -533,7 +533,6 @@ static int
 vbdev_error_config_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_vbdev_error_config *cfg;
-	char uuid_str[SPDK_UUID_STRING_LEN];
 
 	TAILQ_FOREACH(cfg, &g_error_config, tailq) {
 		spdk_json_write_object_begin(w);
@@ -542,8 +541,7 @@ vbdev_error_config_json(struct spdk_json_write_ctx *w)
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "base_name", cfg->base_bdev);
 		if (!spdk_uuid_is_null(&cfg->uuid)) {
-			spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &cfg->uuid);
-			spdk_json_write_named_string(w, "uuid", uuid_str);
+			spdk_json_write_named_uuid(w, "uuid", &cfg->uuid);
 		}
 		spdk_json_write_object_end(w);
 

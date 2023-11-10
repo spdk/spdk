@@ -213,7 +213,6 @@ bdev_ftl_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 {
 	struct ftl_bdev *ftl_bdev = bdev->ctxt;
 	struct spdk_ftl_conf conf;
-	char uuid[SPDK_UUID_STRING_LEN];
 
 	spdk_ftl_dev_get_conf(ftl_bdev->dev, &conf, sizeof(conf));
 
@@ -231,8 +230,7 @@ bdev_ftl_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 		spdk_json_write_named_string(w, "core_mask", conf.core_mask);
 	}
 
-	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &conf.uuid);
-	spdk_json_write_named_string(w, "uuid", uuid);
+	spdk_json_write_named_uuid(w, "uuid", &conf.uuid);
 
 	spdk_json_write_named_bool(w, "fast_shutdown", conf.fast_shutdown);
 

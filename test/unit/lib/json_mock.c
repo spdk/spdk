@@ -49,6 +49,8 @@ DEFINE_STUB(spdk_json_write_named_uint64, int, (struct spdk_json_write_ctx *w, c
 		uint64_t val), 0);
 DEFINE_STUB(spdk_json_write_named_int64, int, (struct spdk_json_write_ctx *w, const char *name,
 		int64_t val), 0);
+DEFINE_STUB(spdk_json_write_named_uuid, int, (struct spdk_json_write_ctx *w, const char *name,
+		const struct spdk_uuid *uuid), 0);
 DEFINE_STUB(spdk_json_write_named_string, int, (struct spdk_json_write_ctx *w, const char *name,
 		const char *val), 0);
 DEFINE_STUB(spdk_json_write_named_string_fmt, int, (struct spdk_json_write_ctx *w, const char *name,
