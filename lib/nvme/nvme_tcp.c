@@ -262,35 +262,6 @@ nvme_tcp_accel_append_crc32c(struct nvme_tcp_poll_group *tgroup, void **seq, uin
 						seed, cb_fn, cb_arg);
 }
 
-static int
-nvme_tcp_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, const char *service)
-{
-	struct addrinfo *res;
-	struct addrinfo hints;
-	int ret;
-
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = family;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = 0;
-
-	ret = getaddrinfo(addr, service, &hints, &res);
-	if (ret) {
-		SPDK_ERRLOG("getaddrinfo failed: %s (%d)\n", gai_strerror(ret), ret);
-		return -(abs(ret));
-	}
-
-	if (res->ai_addrlen > sizeof(*sa)) {
-		SPDK_ERRLOG("getaddrinfo() ai_addrlen %zu too large\n", (size_t)res->ai_addrlen);
-		ret = -EINVAL;
-	} else {
-		memcpy(sa, res->ai_addr, res->ai_addrlen);
-	}
-
-	freeaddrinfo(res);
-	return ret;
-}
-
 static void
 nvme_tcp_free_reqs(struct nvme_tcp_qpair *tqpair)
 {
@@ -2285,17 +2256,17 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 	}
 
 	SPDK_DEBUGLOG(nvme, "trsvcid is %s\n", ctrlr->trid.trsvcid);
-	rc = nvme_tcp_parse_addr(&dst_addr, family, ctrlr->trid.traddr, ctrlr->trid.trsvcid);
+	rc = nvme_parse_addr(&dst_addr, family, ctrlr->trid.traddr, ctrlr->trid.trsvcid);
 	if (rc != 0) {
-		SPDK_ERRLOG("dst_addr nvme_tcp_parse_addr() failed\n");
+		SPDK_ERRLOG("dst_addr nvme_parse_addr() failed\n");
 		return rc;
 	}
 
 	if (ctrlr->opts.src_addr[0] || ctrlr->opts.src_svcid[0]) {
 		memset(&src_addr, 0, sizeof(src_addr));
-		rc = nvme_tcp_parse_addr(&src_addr, family, ctrlr->opts.src_addr, ctrlr->opts.src_svcid);
+		rc = nvme_parse_addr(&src_addr, family, ctrlr->opts.src_addr, ctrlr->opts.src_svcid);
 		if (rc != 0) {
-			SPDK_ERRLOG("src_addr nvme_tcp_parse_addr() failed\n");
+			SPDK_ERRLOG("src_addr nvme_parse_addr() failed\n");
 			return rc;
 		}
 	}

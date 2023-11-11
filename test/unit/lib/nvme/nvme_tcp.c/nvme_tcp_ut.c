@@ -857,23 +857,6 @@ test_nvme_tcp_alloc_reqs(void)
 }
 
 static void
-test_nvme_tcp_parse_addr(void)
-{
-	struct sockaddr_storage dst_addr;
-	int rc = 0;
-
-	memset(&dst_addr, 0, sizeof(dst_addr));
-	/* case1: getaddrinfo failed */
-	rc = nvme_tcp_parse_addr(&dst_addr, AF_INET, NULL, NULL);
-	CU_ASSERT(rc != 0);
-
-	/* case2: res->ai_addrlen < sizeof(*sa). Expect: Pass. */
-	rc = nvme_tcp_parse_addr(&dst_addr, AF_INET, "12.34.56.78", "23");
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(dst_addr.ss_family == AF_INET);
-}
-
-static void
 test_nvme_tcp_qpair_send_h2c_term_req(void)
 {
 	struct nvme_tcp_qpair tqpair = {};
@@ -1946,7 +1929,6 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_tcp_qpair_write_pdu);
 	CU_ADD_TEST(suite, test_nvme_tcp_qpair_set_recv_state);
 	CU_ADD_TEST(suite, test_nvme_tcp_alloc_reqs);
-	CU_ADD_TEST(suite, test_nvme_tcp_parse_addr);
 	CU_ADD_TEST(suite, test_nvme_tcp_qpair_send_h2c_term_req);
 	CU_ADD_TEST(suite, test_nvme_tcp_pdu_ch_handle);
 	CU_ADD_TEST(suite, test_nvme_tcp_qpair_connect_sock);

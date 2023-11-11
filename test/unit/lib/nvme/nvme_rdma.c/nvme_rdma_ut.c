@@ -957,23 +957,6 @@ test_nvme_rdma_validate_cm_event(void)
 }
 
 static void
-test_nvme_rdma_parse_addr(void)
-{
-	struct sockaddr_storage dst_addr;
-	int rc = 0;
-
-	memset(&dst_addr, 0, sizeof(dst_addr));
-	/* case1: getaddrinfo failed */
-	rc = nvme_rdma_parse_addr(&dst_addr, AF_INET, NULL, NULL);
-	CU_ASSERT(rc != 0);
-
-	/* case2: res->ai_addrlen < sizeof(*sa). Expect: Pass. */
-	rc = nvme_rdma_parse_addr(&dst_addr, AF_INET, "12.34.56.78", "23");
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(dst_addr.ss_family == AF_INET);
-}
-
-static void
 test_nvme_rdma_qpair_init(void)
 {
 	struct nvme_rdma_qpair		rqpair = {};
@@ -1467,7 +1450,6 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_req_put_and_get);
 	CU_ADD_TEST(suite, test_nvme_rdma_req_init);
 	CU_ADD_TEST(suite, test_nvme_rdma_validate_cm_event);
-	CU_ADD_TEST(suite, test_nvme_rdma_parse_addr);
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_init);
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_submit_request);
 	CU_ADD_TEST(suite, test_nvme_rdma_memory_domain);

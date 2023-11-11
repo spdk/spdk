@@ -1593,6 +1593,9 @@ void	nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ctrlr_proc_put_ref(struct spdk_nvme_ctrlr *ctrlr);
 int	nvme_ctrlr_get_ref_count(struct spdk_nvme_ctrlr *ctrlr);
 
+int	nvme_parse_addr(struct sockaddr_storage *sa, int family,
+			const char *addr, const char *service);
+
 static inline bool
 _is_page_aligned(uint64_t address, uint64_t page_size)
 {

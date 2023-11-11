@@ -112,3 +112,21 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 
 	return 0;
 }
+
+int
+nvme_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, const char *service)
+{
+	struct addrinfo *res;
+	struct addrinfo hints;
+	int rc;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = family;
+	hints.ai_socktype = SOCK_STREAM;
+
+	rc = getaddrinfo(addr, service, &hints, &res);
+	if (rc == 0) {
+		freeaddrinfo(res);
+	}
+	return rc;
+}
