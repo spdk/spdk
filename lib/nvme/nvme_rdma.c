@@ -1247,6 +1247,7 @@ nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 	struct sockaddr_storage dst_addr;
 	struct sockaddr_storage src_addr;
 	bool src_addr_specified;
+	long int port, src_port;
 	int rc;
 	struct nvme_rdma_ctrlr *rctrlr;
 	struct nvme_rdma_qpair *rqpair;
@@ -1273,7 +1274,7 @@ nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 	memset(&dst_addr, 0, sizeof(dst_addr));
 
 	SPDK_DEBUGLOG(nvme, "trsvcid is %s\n", ctrlr->trid.trsvcid);
-	rc = nvme_parse_addr(&dst_addr, family, ctrlr->trid.traddr, ctrlr->trid.trsvcid);
+	rc = nvme_parse_addr(&dst_addr, family, ctrlr->trid.traddr, ctrlr->trid.trsvcid, &port);
 	if (rc != 0) {
 		SPDK_ERRLOG("dst_addr nvme_parse_addr() failed\n");
 		return -1;
@@ -1281,7 +1282,7 @@ nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 
 	if (ctrlr->opts.src_addr[0] || ctrlr->opts.src_svcid[0]) {
 		memset(&src_addr, 0, sizeof(src_addr));
-		rc = nvme_parse_addr(&src_addr, family, ctrlr->opts.src_addr, ctrlr->opts.src_svcid);
+		rc = nvme_parse_addr(&src_addr, family, ctrlr->opts.src_addr, ctrlr->opts.src_svcid, &src_port);
 		if (rc != 0) {
 			SPDK_ERRLOG("src_addr nvme_parse_addr() failed\n");
 			return -1;

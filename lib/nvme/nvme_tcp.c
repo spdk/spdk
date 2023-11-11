@@ -2222,7 +2222,7 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 	int rc;
 	struct nvme_tcp_qpair *tqpair;
 	int family;
-	long int port;
+	long int port, src_port;
 	char *sock_impl_name;
 	struct spdk_sock_impl_opts impl_opts = {};
 	size_t impl_opts_size = sizeof(impl_opts);
@@ -2248,15 +2248,8 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 
 	memset(&dst_addr, 0, sizeof(dst_addr));
 
-	port = spdk_strtol(ctrlr->trid.trsvcid, 10);
-	if (port <= 0 || port >= INT_MAX) {
-		SPDK_ERRLOG("Invalid port: %s\n", ctrlr->trid.trsvcid);
-		rc = -1;
-		return rc;
-	}
-
 	SPDK_DEBUGLOG(nvme, "trsvcid is %s\n", ctrlr->trid.trsvcid);
-	rc = nvme_parse_addr(&dst_addr, family, ctrlr->trid.traddr, ctrlr->trid.trsvcid);
+	rc = nvme_parse_addr(&dst_addr, family, ctrlr->trid.traddr, ctrlr->trid.trsvcid, &port);
 	if (rc != 0) {
 		SPDK_ERRLOG("dst_addr nvme_parse_addr() failed\n");
 		return rc;
@@ -2264,7 +2257,7 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 
 	if (ctrlr->opts.src_addr[0] || ctrlr->opts.src_svcid[0]) {
 		memset(&src_addr, 0, sizeof(src_addr));
-		rc = nvme_parse_addr(&src_addr, family, ctrlr->opts.src_addr, ctrlr->opts.src_svcid);
+		rc = nvme_parse_addr(&src_addr, family, ctrlr->opts.src_addr, ctrlr->opts.src_svcid, &src_port);
 		if (rc != 0) {
 			SPDK_ERRLOG("src_addr nvme_parse_addr() failed\n");
 			return rc;

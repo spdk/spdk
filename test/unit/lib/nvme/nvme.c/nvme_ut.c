@@ -1594,15 +1594,17 @@ test_nvme_parse_addr(void)
 {
 	struct sockaddr_storage dst_addr;
 	int rc = 0;
+	long int port;
 
 	memset(&dst_addr, 0, sizeof(dst_addr));
 	/* case1: getaddrinfo failed */
-	rc = nvme_parse_addr(&dst_addr, AF_INET, NULL, NULL);
+	rc = nvme_parse_addr(&dst_addr, AF_INET, NULL, NULL, &port);
 	CU_ASSERT(rc != 0);
 
 	/* case2: res->ai_addrlen < sizeof(*sa). Expect: Pass. */
-	rc = nvme_parse_addr(&dst_addr, AF_INET, "12.34.56.78", "23");
+	rc = nvme_parse_addr(&dst_addr, AF_INET, "12.34.56.78", "23", &port);
 	CU_ASSERT(rc == 0);
+	CU_ASSERT(port == 23);
 	CU_ASSERT(dst_addr.ss_family == AF_INET);
 }
 

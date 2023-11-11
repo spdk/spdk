@@ -11,6 +11,7 @@
 #include "spdk/env.h"
 #include "spdk/queue.h"
 #include "spdk/util.h"
+#include "spdk/string.h"
 
 static uint32_t g_ut_num_cores;
 static bool *g_ut_cores;

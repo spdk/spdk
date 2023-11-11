@@ -1555,7 +1555,8 @@ spdk_nvme_connect_async(const struct spdk_nvme_transport_id *trid,
 }
 
 int
-nvme_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, const char *service)
+nvme_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, const char *service,
+		long int *port)
 {
 	struct addrinfo *res;
 	struct addrinfo hints;
@@ -1565,6 +1566,17 @@ nvme_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, const
 	hints.ai_family = family;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = 0;
+
+	if (addr == NULL || service == NULL) {
+		SPDK_ERRLOG("addr and service must both be non-NULL\n");
+		return -EINVAL;
+	}
+
+	*port = spdk_strtol(service, 10);
+	if (*port <= 0 || *port >= 65536) {
+		SPDK_ERRLOG("Invalid port: %s\n", service);
+		return -EINVAL;
+	}
 
 	ret = getaddrinfo(addr, service, &hints, &res);
 	if (ret) {

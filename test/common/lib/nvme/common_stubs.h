@@ -114,11 +114,18 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 }
 
 int
-nvme_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, const char *service)
+nvme_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, const char *service,
+		long int *port)
 {
 	struct addrinfo *res;
 	struct addrinfo hints;
 	int rc;
+
+	SPDK_CU_ASSERT_FATAL(service != NULL);
+	*port = spdk_strtol(service, 10);
+	if (*port <= 0 || *port >= 65536) {
+		return -EINVAL;
+	}
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = family;
