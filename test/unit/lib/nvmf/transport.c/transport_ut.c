@@ -151,9 +151,25 @@ test_spdk_nvmf_transport_create(void)
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(transport == NULL);
 
-	/* Create transport successfully */
 	spdk_nvmf_transport_register(&ops);
 
+	/* Ensure io_unit_size cannot be set to 0 */
+	g_rdma_ut_transport_opts.io_unit_size = 0;
+	rc = spdk_nvmf_transport_create_async("new_ops", &g_rdma_ut_transport_opts,
+					      test_nvmf_create_transport_done, &transport);
+	CU_ASSERT(rc != 0);
+	CU_ASSERT(transport == NULL);
+
+	/* Ensure io_unit_size cannot be larger than large_bufsize */
+	g_rdma_ut_transport_opts.io_unit_size = opts_iobuf.large_bufsize * 2;
+	rc = spdk_nvmf_transport_create_async("new_ops", &g_rdma_ut_transport_opts,
+					      test_nvmf_create_transport_done, &transport);
+	CU_ASSERT(rc != 0);
+	CU_ASSERT(transport == NULL);
+
+	g_rdma_ut_transport_opts.io_unit_size = SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE;
+
+	/* Create transport successfully */
 	rc = spdk_nvmf_transport_create_async("new_ops", &g_rdma_ut_transport_opts,
 					      test_nvmf_create_transport_done, &transport);
 	CU_ASSERT(rc == 0);
