@@ -65,6 +65,7 @@ extern "C" {
 #include <sys/user.h>
 #include <sys/wait.h>
 #include <regex.h>
+#include <sys/statvfs.h>
 
 /* GNU extension */
 #include <getopt.h>

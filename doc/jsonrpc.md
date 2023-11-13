@@ -13436,4 +13436,74 @@ Example response:
   "id": 1,
   "result": true
 }
+
+### fsdev_get_opts {#fsdev_get_opts}
+
+Get fsdev module options.
+
+#### Parameters
+
+None
+
+#### Example
+
+Example request:
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "fsdev_get_opts",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "fsdev_io_pool_size": 65535,
+    "fsdev_io_cache_size": 256
+  }
+}
+~~~
+
+### fsdev_set_opts {#fsdev_set_opts}
+
+Set fsdev module options.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+fsdev_io_pool_size      | Required | int         | Size of fsdev IO objects pool.
+fsdev_io_cache_size     | Required | int         | Size of fsdev IO objects cache per thread.
+
+#### Example
+
+Example request:
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "fsdev_get_opts",
+  "id": 1,
+  "params": {
+    "fsdev_io_pool_size": 65535,
+    "fsdev_io_cache_size": 256
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "fsdev_io_pool_size": 65535,
+    "fsdev_io_cache_size": 256
+  }
+}
 ~~~

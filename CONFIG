@@ -238,3 +238,6 @@ CONFIG_MAX_LCORES=128
 
 # Build all Go components
 CONFIG_GOLANG=n
+
+# Build fsdev
+CONFIG_FSDEV=y
