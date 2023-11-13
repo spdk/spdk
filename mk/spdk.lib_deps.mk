@@ -190,6 +190,7 @@ DEPDIRS-event_sock := init sock log
 DEPDIRS-event_vfu_tgt := init vfu_tgt
 DEPDIRS-event_iobuf := init log thread util $(JSON_LIBS)
 DEPDIRS-event_keyring := init json keyring
+DEPDIRS-event_fsdev := init fsdev
 
 # module/vfu_device
 

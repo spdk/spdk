@@ -17,6 +17,7 @@ endif
 
 DIRS-$(CONFIG_VHOST) += vhost_blk vhost_scsi
 DIRS-$(CONFIG_VFIO_USER) += vfu_tgt
+DIRS-$(CONFIG_FSDEV) += fsdev
 
 # These dependencies are not based specifically on symbols, but rather
 # the subsystem dependency tree defined within the event subsystem C files
