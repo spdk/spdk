@@ -2023,4 +2023,42 @@ vbdev_lvol_shallow_copy(struct spdk_lvol *lvol, const char *bdev_name,
 	return rc;
 }
 
+void
+vbdev_lvol_set_external_parent(struct spdk_lvol *lvol, const char *esnap_name,
+			       spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_bdev_desc *desc;
+	struct spdk_bdev *bdev;
+	char bdev_uuid[SPDK_UUID_STRING_LEN];
+	int rc;
+
+	rc = spdk_bdev_open_ext(esnap_name, false, ignore_bdev_event_cb, NULL, &desc);
+	if (rc != 0) {
+		SPDK_ERRLOG("bdev '%s' could not be opened: error %d\n", esnap_name, rc);
+		cb_fn(cb_arg, -ENODEV);
+		return;
+	}
+	bdev = spdk_bdev_desc_get_bdev(desc);
+
+	rc = spdk_uuid_fmt_lower(bdev_uuid, sizeof(bdev_uuid), spdk_bdev_get_uuid(bdev));
+	if (rc != 0) {
+		spdk_bdev_close(desc);
+		SPDK_ERRLOG("bdev %s: unable to parse UUID\n", esnap_name);
+		assert(false);
+		cb_fn(cb_arg, -ENODEV);
+		return;
+	}
+
+	/*
+	 * If lvol store is not loaded from disk, and so vbdev_lvs_load is not called, these
+	 * assignments are necessary to let vbdev_lvol_esnap_dev_create be called.
+	 */
+	lvol->lvol_store->load_esnaps = true;
+	lvol->lvol_store->esnap_bs_dev_create = vbdev_lvol_esnap_dev_create;
+
+	spdk_lvol_set_external_parent(lvol, bdev_uuid, sizeof(bdev_uuid), cb_fn, cb_arg);
+
+	spdk_bdev_close(desc);
+}
+
 SPDK_LOG_REGISTER_COMPONENT(vbdev_lvol)

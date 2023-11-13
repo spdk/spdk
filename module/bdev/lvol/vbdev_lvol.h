@@ -132,4 +132,15 @@ int vbdev_lvol_shallow_copy(struct spdk_lvol *lvol, const char *bdev_name,
 			    spdk_blob_shallow_copy_status status_cb_fn, void *status_cb_arg,
 			    spdk_lvol_op_complete cb_fn, void *cb_arg);
 
+/**
+ * \brief Set an external snapshot as the parent of a lvol.
+ *
+ * \param lvol Handle to lvol
+ * \param esnap_name Name of the bdev that acts as external snapshot
+ * \param cb_fn Completion callback
+ * \param cb_arg Completion callback custom arguments
+ */
+void vbdev_lvol_set_external_parent(struct spdk_lvol *lvol, const char *esnap_name,
+				    spdk_lvol_op_complete cb_fn, void *cb_arg);
+
 #endif /* SPDK_VBDEV_LVOL_H */

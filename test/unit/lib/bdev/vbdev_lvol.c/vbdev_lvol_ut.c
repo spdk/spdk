@@ -924,6 +924,13 @@ spdk_lvol_shallow_copy(struct spdk_lvol *lvol, struct spdk_bs_dev *ext_dev,
 	return 0;
 }
 
+void
+spdk_lvol_set_external_parent(struct spdk_lvol *lvol, const void *esnap_id, uint32_t id_len,
+			      spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	cb_fn(cb_arg, 0);
+}
+
 static void
 lvol_store_op_complete(void *cb_arg, int lvserrno)
 {
@@ -966,6 +973,12 @@ vbdev_lvol_rename_complete(void *cb_arg, int lvolerrno)
 
 static void
 vbdev_lvol_shallow_copy_complete(void *cb_arg, int lvolerrno)
+{
+	g_lvolerrno = lvolerrno;
+}
+
+static void
+vbdev_lvol_op_complete(void *cb_arg, int lvolerrno)
 {
 	g_lvolerrno = lvolerrno;
 }
@@ -2029,6 +2042,48 @@ ut_lvol_shallow_copy(void)
 	CU_ASSERT(g_lvol_store == NULL);
 }
 
+static void
+ut_lvol_set_external_parent(void)
+{
+	struct spdk_lvol_store lvs = { 0 };
+	struct spdk_lvol lvol = { 0 };
+	struct spdk_bdev bdev = { 0 };
+	const char *esnap_uuid = "255f4236-9427-42d0-a9d1-aa17f37dd8db";
+	const char *esnap_name = "esnap1";
+	int rc;
+
+	lvol.lvol_store = &lvs;
+
+	rc = spdk_uuid_parse(&bdev.uuid, esnap_uuid);
+	CU_ASSERT(rc == 0);
+	bdev.name = strdup(esnap_name);
+	SPDK_CU_ASSERT_FATAL(bdev.name != NULL);
+	bdev.blocklen = 512;
+	bdev.blockcnt = 8192;
+
+	g_base_bdev = &bdev;
+
+	/* Error when the bdev does not exist */
+	g_base_bdev = NULL;
+	g_lvolerrno = 0xbad;
+	vbdev_lvol_set_external_parent(&lvol, esnap_uuid, vbdev_lvol_op_complete, NULL);
+	CU_ASSERT(g_lvolerrno == -ENODEV);
+
+	/* Success when setting parent by bdev UUID */
+	g_base_bdev = &bdev;
+	g_lvolerrno = 0xbad;
+	vbdev_lvol_set_external_parent(&lvol, esnap_uuid, vbdev_lvol_op_complete, NULL);
+	CU_ASSERT(g_lvolerrno == 0);
+
+	/* Success when setting parent by bdev name */
+	g_lvolerrno = 0xbad;
+	vbdev_lvol_set_external_parent(&lvol, esnap_name, vbdev_lvol_op_complete, NULL);
+	CU_ASSERT(g_lvolerrno == 0);
+
+	free(bdev.name);
+	g_base_bdev = NULL;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2061,6 +2116,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, ut_esnap_dev_create);
 	CU_ADD_TEST(suite, ut_lvol_esnap_clone_bad_args);
 	CU_ADD_TEST(suite, ut_lvol_shallow_copy);
+	CU_ADD_TEST(suite, ut_lvol_set_external_parent);
 
 	allocate_threads(1);
 	set_thread(0);
