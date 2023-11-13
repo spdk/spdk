@@ -132,6 +132,8 @@ function usage() {
 	echo " --without-avahi           No path required."
 	echo " --with-golang             Build with components written in Go"
 	echo " --without-golang          No path required."
+	echo " --with-aio-fsdev          Build aio FSDEV component."
+	echo " --without-aio-fsdev       No path required."
 	echo ""
 	echo "Environment variables:"
 	echo ""
@@ -690,6 +692,13 @@ for i in "$@"; do
 		--max-lcores=*)
 			CONFIG[MAX_LCORES]="${i#*=}"
 			CONFIG["MAX_LCORES"]=${CONFIG["MAX_LCORES"],,}
+			;;
+		--with-aio-fsdev)
+			CONFIG[AIO_FSDEV]=y
+			AIO_FSDEV_REQUIRED=y
+			;;
+		--without-aio-fsdev)
+			CONFIG[AIO_FSDEV]=n
 			;;
 		--)
 			break
@@ -1343,6 +1352,40 @@ if [[ -n ${CONFIG[MAX_LCORES]} ]]; then
 	if [[ ! ${CONFIG[MAX_LCORES]} =~ ^([1-9][0-9]*|detect)$ ]] || ((CONFIG[MAX_LCORES] > 1024)); then
 		echo "ERROR: Max number of lcores must be a decimal number in range [1..1024] or 'detect' (given: ${CONFIG[MAX_LCORES]})"
 		exit 1
+	fi
+fi
+
+if [[ "${CONFIG[FSDEV]}" = "n" ]]; then
+	if [[ "$AIO_FSDEV_REQUIRED" = "y" ]]; then
+		echo "ERROR: --with-aio-fsdev cannot be specified as fsdev is disabled."
+		exit 1
+	fi
+
+	# if AIO_FSDEV is not explicitly required by user, we just silently disable it
+	CONFIG[AIO_FSDEV]=n
+fi
+
+if [[ "${CONFIG[AIO_FSDEV]}" = "y" ]]; then
+	if echo -e '#define _GNU_SOURCE\n#include <unistd.h>\n' \
+		'int main(void) { return copy_file_range(0, 0, 0, 0, 0, 0); }\n' \
+		| "${BUILD_CMD[@]}" - 2> /dev/null; then
+		CONFIG[COPY_FILE_RANGE]=y
+	else
+		CONFIG[COPY_FILE_RANGE]=n
+	fi
+	if echo -e '#include <sys/stat.h>\n' \
+		'int main(void) { struct stat s; s.st_atime = s.st_atime; return 0 ;}\n' \
+		| "${BUILD_CMD[@]}" - 2> /dev/null; then
+		CONFIG[HAVE_STRUCT_STAT_ST_ATIM]=y
+		CONFIG[HAVE_STRUCT_STAT_ST_ATIMESPEC]=n
+	elif echo -e '#include <sys/stat.h>\n' \
+		'int main(void) { struct stat s; s.st_atimespec = s.st_atimespec; return 0; }\n' \
+		| "${BUILD_CMD[@]}" - 2> /dev/null; then
+		CONFIG[HAVE_STRUCT_STAT_ST_ATIM]=n
+		CONFIG[HAVE_STRUCT_STAT_ST_ATIMESPEC]=y
+	else
+		CONFIG[HAVE_STRUCT_STAT_ST_ATIM]=n
+		CONFIG[HAVE_STRUCT_STAT_ST_ATIMESPEC]=n
 	fi
 fi
 

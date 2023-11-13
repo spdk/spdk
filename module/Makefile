@@ -12,6 +12,8 @@ ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 DIRS-y += env_dpdk
 endif
 
+DIRS-$(CONFIG_FSDEV) += fsdev
+
 ifeq ($(CONFIG_VFIO_USER), y)
 DIRS-y += vfu_device
 endif

@@ -13507,3 +13507,79 @@ Example response:
   }
 }
 ~~~
+
+### fsdev_aio_create {#fsdev_aio_create}
+
+Create an AIO fsdev.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of the AIO fsdev to create.
+root_path               | Required | string      | Path on the system directory to be exposed as an SPDK filesystem
+enable_xattr            | Optional | bool        | true to enable the extended attributes, false otherwise
+enable_writeback_cache  | Optional | bool        | true to enable the writeback cache, false otherwise
+max_write               | Optional | int         | Max write size in bytes
+
+#### Example
+
+Example request:
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "fsdev_aio_create",
+  "id": 8,
+  "params": {
+    "name": "aio0",
+    "root_path": "/tmp/vfio-test",
+    "enable_xattr": false,
+    "enable_writeback_cache": true,
+    "max_write": 65535
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 8,
+  "result": "aio0"
+}
+~~~
+
+### fsdev_aio_delete {#fsdev_aio_delete}
+
+Delete an AIO fsdev.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of the AIO fsdev to delete.
+
+#### Example
+
+Example request:
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "fsdev_aio_delete",
+  "id": 1,
+  "params": {
+    "name": "aio0"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~

@@ -241,3 +241,15 @@ CONFIG_GOLANG=n
 
 # Build fsdev
 CONFIG_FSDEV=y
+
+# Build with aio fsdev
+CONFIG_AIO_FSDEV=y
+
+# struct stat has st_atime field
+CONFIG_HAVE_STRUCT_STAT_ST_ATIM=n
+
+# struct stat has st_atimespec field
+CONFIG_HAVE_STRUCT_STAT_ST_ATIMESPEC=n
+
+# libc contains the copy_file_range
+CONFIG_COPY_FILE_RANGE=n

@@ -66,18 +66,21 @@ extern "C" {
 #include <sys/wait.h>
 #include <regex.h>
 #include <sys/statvfs.h>
+#include <sys/syscall.h>
+#include <sys/file.h>
 
 /* GNU extension */
 #include <getopt.h>
 
 /* Linux */
 #ifdef __linux__
+#include <sys/xattr.h>
 #include <sys/eventfd.h>
 #include <sched.h>
 #endif
 
-/* FreeBSD */
-#ifdef __FreeBSD__
+/* FreeBSD or Linux */
+#if defined(__FreeBSD__) || defined(__linux__)
 #include <aio.h>
 #endif
 
