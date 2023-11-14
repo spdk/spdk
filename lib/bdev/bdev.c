@@ -7502,6 +7502,33 @@ spdk_bdev_io_get_nvme_fused_status(const struct spdk_bdev_io *bdev_io, uint32_t 
 	*cdw0 = bdev_io->internal.error.nvme.cdw0;
 }
 
+void
+spdk_bdev_io_complete_base_io_status(struct spdk_bdev_io *bdev_io,
+				     const struct spdk_bdev_io *base_io)
+{
+	switch (base_io->internal.status) {
+	case SPDK_BDEV_IO_STATUS_NVME_ERROR:
+		spdk_bdev_io_complete_nvme_status(bdev_io,
+						  base_io->internal.error.nvme.cdw0,
+						  base_io->internal.error.nvme.sct,
+						  base_io->internal.error.nvme.sc);
+		break;
+	case SPDK_BDEV_IO_STATUS_SCSI_ERROR:
+		spdk_bdev_io_complete_scsi_status(bdev_io,
+						  base_io->internal.error.scsi.sc,
+						  base_io->internal.error.scsi.sk,
+						  base_io->internal.error.scsi.asc,
+						  base_io->internal.error.scsi.ascq);
+		break;
+	case SPDK_BDEV_IO_STATUS_AIO_ERROR:
+		spdk_bdev_io_complete_aio_status(bdev_io, base_io->internal.error.aio_result);
+		break;
+	default:
+		spdk_bdev_io_complete(bdev_io, base_io->internal.status);
+		break;
+	}
+}
+
 struct spdk_thread *
 spdk_bdev_io_get_thread(struct spdk_bdev_io *bdev_io)
 {

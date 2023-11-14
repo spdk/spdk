@@ -246,7 +246,7 @@ bdev_part_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	struct spdk_bdev_io *part_io = cb_arg;
 	uint32_t offset, remapped_offset;
 	spdk_bdev_io_completion_cb cb;
-	int rc, status;
+	int rc;
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -273,9 +273,7 @@ bdev_part_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	if (cb != NULL) {
 		cb(part_io, success, NULL);
 	} else {
-		status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
-
-		spdk_bdev_io_complete(part_io, status);
+		spdk_bdev_io_complete_base_io_status(part_io, bdev_io);
 	}
 
 	spdk_bdev_free_io(bdev_io);

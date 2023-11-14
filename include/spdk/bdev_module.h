@@ -1284,6 +1284,15 @@ void spdk_bdev_io_complete_scsi_status(struct spdk_bdev_io *bdev_io, enum spdk_s
 void spdk_bdev_io_complete_aio_status(struct spdk_bdev_io *bdev_io, int aio_result);
 
 /**
+ * Complete a bdev_io copying a status from another bdev_io.
+ *
+ * \param bdev_io I/O to complete.
+ * \param base_io I/O from which to copy the status.
+ */
+void spdk_bdev_io_complete_base_io_status(struct spdk_bdev_io *bdev_io,
+		const struct spdk_bdev_io *base_io);
+
+/**
  * Get a thread that given bdev_io was submitted on.
  *
  * \param bdev_io I/O
