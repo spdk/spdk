@@ -6,6 +6,8 @@
 curdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$curdir/../../../")
 
+shopt -s nullglob extglob
+
 source "$rootdir/scripts/common.sh"
 source "$rootdir/test/scheduler/common.sh"
 
