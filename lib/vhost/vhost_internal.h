@@ -474,8 +474,12 @@ int vhost_user_session_set_coalescing(struct spdk_vhost_dev *dev,
 				      struct spdk_vhost_session *vsession, void *ctx);
 int vhost_user_dev_set_coalescing(struct spdk_vhost_user_dev *user_dev, uint32_t delay_base_us,
 				  uint32_t iops_threshold);
-int vhost_user_dev_register(struct spdk_vhost_dev *vdev, const char *name,
-			    struct spdk_cpuset *cpumask, const struct spdk_vhost_user_dev_backend *user_backend);
+int vhost_user_dev_create(struct spdk_vhost_dev *vdev, const char *name,
+			  struct spdk_cpuset *cpumask,
+			  const struct spdk_vhost_user_dev_backend *user_backend, bool dealy);
+int vhost_user_dev_init(struct spdk_vhost_dev *vdev, const char *name,
+			struct spdk_cpuset *cpumask, const struct spdk_vhost_user_dev_backend *user_backend);
+int vhost_user_dev_start(struct spdk_vhost_dev *vdev);
 int vhost_user_dev_unregister(struct spdk_vhost_dev *vdev);
 int vhost_user_init(void);
 void vhost_user_fini(spdk_vhost_fini_cb vhost_cb);

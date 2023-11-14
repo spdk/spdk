@@ -144,7 +144,7 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 
 	vdev->backend = backend;
 	if (vdev->backend->type == VHOST_BACKEND_SCSI) {
-		rc = vhost_user_dev_register(vdev, name, &cpumask, user_backend);
+		rc = vhost_user_dev_create(vdev, name, &cpumask, user_backend, false);
 	} else {
 		rc = virtio_blk_construct_ctrlr(vdev, name, &cpumask, params, user_backend);
 	}

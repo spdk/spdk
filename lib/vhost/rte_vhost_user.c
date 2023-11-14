@@ -1788,8 +1788,8 @@ vhost_dev_thread_exit(void *arg1)
 static bool g_vhost_user_started = false;
 
 int
-vhost_user_dev_register(struct spdk_vhost_dev *vdev, const char *name, struct spdk_cpuset *cpumask,
-			const struct spdk_vhost_user_dev_backend *user_backend)
+vhost_user_dev_init(struct spdk_vhost_dev *vdev, const char *name,
+		    struct spdk_cpuset *cpumask, const struct spdk_vhost_user_dev_backend *user_backend)
 {
 	char path[PATH_MAX];
 	struct spdk_vhost_user_dev *user_dev;
@@ -1829,16 +1829,41 @@ vhost_user_dev_register(struct spdk_vhost_dev *vdev, const char *name, struct sp
 	vhost_user_dev_set_coalescing(user_dev, SPDK_VHOST_COALESCING_DELAY_BASE_US,
 				      SPDK_VHOST_VQ_IOPS_COALESCING_THRESHOLD);
 
-	if (vhost_register_unix_socket(path, name, vdev->virtio_features, vdev->disabled_features,
-				       vdev->protocol_features)) {
-		spdk_thread_send_msg(vdev->thread, vhost_dev_thread_exit, NULL);
-		pthread_mutex_destroy(&user_dev->lock);
-		free(user_dev);
-		free(vdev->path);
-		return -EIO;
+	return 0;
+}
+
+int
+vhost_user_dev_start(struct spdk_vhost_dev *vdev)
+{
+	return vhost_register_unix_socket(vdev->path, vdev->name, vdev->virtio_features,
+					  vdev->disabled_features,
+					  vdev->protocol_features);
+}
+
+int
+vhost_user_dev_create(struct spdk_vhost_dev *vdev, const char *name, struct spdk_cpuset *cpumask,
+		      const struct spdk_vhost_user_dev_backend *user_backend, bool delay)
+{
+	int rc;
+	struct spdk_vhost_user_dev *user_dev;
+
+	rc = vhost_user_dev_init(vdev, name, cpumask, user_backend);
+	if (rc != 0) {
+		return rc;
 	}
 
-	return 0;
+	if (delay == false) {
+		rc = vhost_user_dev_start(vdev);
+		if (rc != 0) {
+			user_dev = to_user_dev(vdev);
+			spdk_thread_send_msg(vdev->thread, vhost_dev_thread_exit, NULL);
+			pthread_mutex_destroy(&user_dev->lock);
+			free(user_dev);
+			free(vdev->path);
+		}
+	}
+
+	return rc;
 }
 
 int

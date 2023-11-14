@@ -1786,7 +1786,7 @@ vhost_user_blk_create_ctrlr(struct spdk_vhost_dev *vdev, struct spdk_cpuset *cpu
 		bvdev->readonly = req.readonly;
 	}
 
-	return vhost_user_dev_register(vdev, address, cpumask, custom_opts);
+	return vhost_user_dev_create(vdev, address, cpumask, custom_opts, false);
 }
 
 static int
