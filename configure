@@ -38,8 +38,8 @@ function usage() {
 	echo " --enable-ubsan            Enable undefined behavior sanitizer"
 	echo " --enable-coverage         Enable code coverage tracking"
 	echo " --enable-lto              Enable link-time optimization"
-	echo " --enable-pgo-capture      Enable generation of profile guided optimization data"
-	echo " --enable-pgo-use          Use previously captured profile guided optimization data"
+	echo " --enable-pgo-capture[=PATH]      Enable generation of profile guided optimization data"
+	echo " --enable-pgo-use[=PATH]   Use previously captured profile guided optimization data"
 	echo " --enable-cet              Enable Intel Control-flow Enforcement Technology (CET)"
 	echo " --disable-tests           Disable building of functional tests"
 	echo " --disable-unit-tests      Disable building of unit tests"
@@ -336,11 +336,19 @@ for i in "$@"; do
 		--enable-pgo-capture)
 			CONFIG[PGO_CAPTURE]=y
 			;;
+		--enable-pgo-capture=*)
+			CONFIG[PGO_CAPTURE]=y
+			CONFIG[PGO_DIR]="${i#*=}"
+			;;
 		--disable-pgo-capture)
 			CONFIG[PGO_CAPTURE]=n
 			;;
 		--enable-pgo-use)
 			CONFIG[PGO_USE]=y
+			;;
+		--enable-pgo-use=*)
+			CONFIG[PGO_USE]=y
+			CONFIG[PGO_DIR]="${i#*=}"
 			;;
 		--disable-pgo-use)
 			CONFIG[PGO_USE]=n
@@ -1126,11 +1134,17 @@ fi
 if [[ "${CONFIG[PGO_CAPTURE]}" = "y" && "${CONFIG[PGO_USE]}" = "y" ]]; then
 	echo "ERROR: --enable-pgo-capture and --enable-pgo-use are mutually exclusive."
 	exit 1
-elif [[ "${CONFIG[PGO_USE]}" = "y" ]]; then
+elif [[ "${CONFIG[PGO_CAPTURE]}" = "y" || "${CONFI[PGO_USE]}" = "y" ]]; then
+	if [[ -z "${CONFIG[PGO_DIR]}" ]]; then
+		CONFIG[PGO_DIR]=$(realpath $rootdir/build/pgo)
+	fi
+fi
+
+if [[ "${CONFIG[PGO_USE]}" = "y" ]]; then
 	if [[ "$CC_TYPE" = "clang" ]]; then
 		# For clang we need to run an extra step on gathered profiling data.
 		echo "Generating suitable profile data"
-		llvm-profdata merge -output=build/pgo/default.profdata build/pgo
+		llvm-profdata merge -output=${CONFIG[PGO_DIR]}/default.profdata ${CONFIG[PGO_DIR]}
 	fi
 fi
 

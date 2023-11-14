@@ -34,6 +34,9 @@ CONFIG_PGO_CAPTURE=n
 # Use profile guided optimization data.
 CONFIG_PGO_USE=n
 
+# Place profile data in this directory
+CONFIG_PGO_DIR=
+
 # Build with code coverage instrumentation.
 CONFIG_COVERAGE=n
 

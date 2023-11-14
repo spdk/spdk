@@ -102,13 +102,13 @@ LDFLAGS += -flto=auto
 endif
 
 ifeq ($(CONFIG_PGO_CAPTURE),y)
-COMMON_CFLAGS += -fprofile-generate=$(SPDK_ROOT_DIR)/build/pgo
-LDFLAGS += -fprofile-generate=$(SPDK_ROOT_DIR)/build/pgo
+COMMON_CFLAGS += -fprofile-generate=$(CONFIG_PGO_DIR)
+LDFLAGS += -fprofile-generate=$(CONFIG_PGO_DIR)
 endif
 
 ifeq ($(CONFIG_PGO_USE),y)
-COMMON_CFLAGS += -fprofile-use=$(SPDK_ROOT_DIR)/build/pgo
-LDFLAGS += -fprofile-use=$(SPDK_ROOT_DIR)/build/pgo
+COMMON_CFLAGS += -fprofile-use=$(CONFIG_PGO_DIR)
+LDFLAGS += -fprofile-use=$(CONFIG_PGO_DIR)
 endif
 
 ifeq ($(CONFIG_CET),y)
