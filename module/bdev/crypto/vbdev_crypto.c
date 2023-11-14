@@ -180,14 +180,13 @@ _complete_internal_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	struct spdk_bdev_io *orig_io = cb_arg;
 	struct crypto_bdev_io *crypto_io = (struct crypto_bdev_io *)orig_io->driver_ctx;
 	struct crypto_io_channel *crypto_ch = crypto_io->crypto_ch;
-	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
 
 	if (crypto_io->aux_buf_raw) {
 		spdk_accel_put_buf(crypto_ch->accel_channel, crypto_io->aux_buf_raw,
 				   crypto_io->aux_domain, crypto_io->aux_domain_ctx);
 	}
 
-	spdk_bdev_io_complete(orig_io, status);
+	spdk_bdev_io_complete_base_io_status(orig_io, bdev_io);
 	spdk_bdev_free_io(bdev_io);
 }
 
