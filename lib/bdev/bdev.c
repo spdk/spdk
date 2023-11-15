@@ -2804,7 +2804,8 @@ bdev_rw_should_split(struct spdk_bdev_io *bdev_io)
 {
 	uint32_t io_boundary;
 	struct spdk_bdev *bdev = bdev_io->bdev;
-	uint32_t max_size = bdev->max_segment_size;
+	uint32_t max_segment_size = bdev->max_segment_size;
+	uint32_t max_size = bdev->max_rw_size;
 	int max_segs = bdev->max_num_segments;
 
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE && bdev->split_on_write_unit) {
@@ -2815,7 +2816,7 @@ bdev_rw_should_split(struct spdk_bdev_io *bdev_io)
 		io_boundary = 0;
 	}
 
-	if (spdk_likely(!io_boundary && !max_segs && !max_size)) {
+	if (spdk_likely(!io_boundary && !max_segs && !max_segment_size && !max_size)) {
 		return false;
 	}
 
@@ -2844,11 +2845,17 @@ bdev_rw_should_split(struct spdk_bdev_io *bdev_io)
 		}
 	}
 
-	if (max_size) {
+	if (max_segment_size) {
 		for (int i = 0; i < bdev_io->u.bdev.iovcnt; i++) {
-			if (bdev_io->u.bdev.iovs[i].iov_len > max_size) {
+			if (bdev_io->u.bdev.iovs[i].iov_len > max_segment_size) {
 				return true;
 			}
+		}
+	}
+
+	if (max_size) {
+		if (bdev_io->u.bdev.num_blocks > max_size) {
+			return true;
 		}
 	}
 
@@ -3051,9 +3058,11 @@ _bdev_rw_split(void *_bdev_io)
 	uint32_t io_boundary;
 	uint32_t max_segment_size = bdev->max_segment_size;
 	uint32_t max_child_iovcnt = bdev->max_num_segments;
+	uint32_t max_size = bdev->max_rw_size;
 	void *md_buf = NULL;
 	int rc;
 
+	max_size = max_size ? max_size : UINT32_MAX;
 	max_segment_size = max_segment_size ? max_segment_size : UINT32_MAX;
 	max_child_iovcnt = max_child_iovcnt ? spdk_min(max_child_iovcnt, SPDK_BDEV_IO_NUM_CHILD_IOV) :
 			   SPDK_BDEV_IO_NUM_CHILD_IOV;
@@ -3085,6 +3094,7 @@ _bdev_rw_split(void *_bdev_io)
 	       child_iovcnt < SPDK_BDEV_IO_NUM_CHILD_IOV) {
 		to_next_boundary = _to_next_boundary(current_offset, io_boundary);
 		to_next_boundary = spdk_min(remaining, to_next_boundary);
+		to_next_boundary = spdk_min(max_size, to_next_boundary);
 		to_next_boundary_bytes = to_next_boundary * blocklen;
 
 		iov = &bdev_io->child_iov[child_iovcnt];
@@ -7499,14 +7509,10 @@ bdev_register(struct spdk_bdev *bdev)
 		}
 	}
 
+	spdk_iobuf_get_opts(&iobuf_opts);
 	if (spdk_bdev_get_buf_align(bdev) > 1) {
-		if (bdev->split_on_optimal_io_boundary) {
-			bdev->optimal_io_boundary = spdk_min(bdev->optimal_io_boundary,
-							     SPDK_BDEV_LARGE_BUF_MAX_SIZE / bdev->blocklen);
-		} else {
-			bdev->split_on_optimal_io_boundary = true;
-			bdev->optimal_io_boundary = SPDK_BDEV_LARGE_BUF_MAX_SIZE / bdev->blocklen;
-		}
+		bdev->max_rw_size = spdk_min(bdev->max_rw_size ? bdev->max_rw_size : UINT32_MAX,
+					     iobuf_opts.large_bufsize / bdev->blocklen);
 	}
 
 	/* If the user didn't specify a write unit size, set it to one. */
@@ -7524,7 +7530,6 @@ bdev_register(struct spdk_bdev *bdev)
 	}
 
 	if (!bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_COPY)) {
-		spdk_iobuf_get_opts(&iobuf_opts);
 		bdev->max_copy = bdev_get_max_write(bdev, iobuf_opts.large_bufsize);
 	}
 
