@@ -74,3 +74,8 @@ vhost_scsi_cores_2ctrl
 busy
 balanced
 core_load
+
+# Temporarily disable due to https://github.com/spdk/spdk/issues/3116 (kept in nightly)
+nvmf_device_removal
+nvmf_device_removal_pci_remove
+nvmf_device_removal_pci_remove_no_srq
