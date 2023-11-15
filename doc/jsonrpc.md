@@ -1800,6 +1800,7 @@ Name       | Optional | Type        | Description
 cipher     | Required | string      | crypto cipher to use
 key        | Required | string      | Key in **hex** form
 key2       | Optional | string      | Optional 2nd part of the key or a tweak in **hex** form
+tweak_mode | Optional | string      | Tweak mode to use: SIMPLE_LBA, JOIN_NEG_LBA_WITH_LBA, INCR_512_FULL_LBA, INCR_512_UPPER_LBA. Default is SIMPLE_LBA
 name       | Required | string      | The key name
 
 #### Example
@@ -1815,6 +1816,7 @@ Example request:
     "cipher": "AES_XTS",
     "key": "00112233445566778899001122334455",
     "key2": "00112233445566778899001122334455",
+    "tweak_mode": "SIMPLE_LBA",
     "name": "super_key"
   }
 }
@@ -1898,13 +1900,15 @@ Example response:
       "name": "test_dek",
       "cipher": "AES_XTS",
       "key": "00112233445566778899001122334455",
-      "key2": "11223344556677889900112233445500"
+      "key2": "11223344556677889900112233445500",
+      "tweak_mode": "SIMPLE_LBA"
     },
     {
       "name": "test_dek2",
       "cipher": "AES_XTS",
       "key": "11223344556677889900112233445500",
-      "key2": "22334455667788990011223344550011"
+      "key2": "22334455667788990011223344550011",
+      "tweak_mode": "SIMPLE_LBA"
     }
   ]
 }
