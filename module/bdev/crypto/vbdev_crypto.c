@@ -791,13 +791,10 @@ vbdev_crypto_claim(const char *bdev_name)
 		vbdev->base_bdev = bdev;
 
 		vbdev->crypto_bdev.write_cache = bdev->write_cache;
-		if (bdev->optimal_io_boundary > 0) {
-			vbdev->crypto_bdev.optimal_io_boundary =
-				spdk_min((iobuf_opts.large_bufsize / bdev->blocklen), bdev->optimal_io_boundary);
-		} else {
-			vbdev->crypto_bdev.optimal_io_boundary = (iobuf_opts.large_bufsize / bdev->blocklen);
-		}
-		vbdev->crypto_bdev.split_on_optimal_io_boundary = true;
+		vbdev->crypto_bdev.optimal_io_boundary = bdev->optimal_io_boundary;
+		vbdev->crypto_bdev.max_rw_size = spdk_min(
+				bdev->max_rw_size ? bdev->max_rw_size : UINT32_MAX,
+				iobuf_opts.large_bufsize / bdev->blocklen);
 
 		opctx.size = SPDK_SIZEOF(&opctx, block_size);
 		opctx.block_size = bdev->blocklen;
