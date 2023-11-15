@@ -1321,7 +1321,7 @@ bdev_scsi_readwrite(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 		task->caw_iov.iov_base = (uint8_t *)(iov->iov_base) + len;
 		iov->iov_len = len;
 
-		rc = spdk_bdev_comparev_and_writev_blocks(bdev_desc, bdev_ch, &task->iov, 1,
+		rc = spdk_bdev_comparev_and_writev_blocks(bdev_desc, bdev_ch, iov, 1,
 				&task->caw_iov, 1, offset_blocks, 1, bdev_scsi_task_complete_cmd, task);
 	} else {
 		rc = spdk_bdev_writev_blocks(bdev_desc, bdev_ch, task->iovs, task->iovcnt,
