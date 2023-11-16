@@ -214,19 +214,6 @@ LDFLAGS += -L$(VFIO_USER_LIBRARY_DIR)
 SYS_LIBS += -lvfio-user -ljson-c
 endif
 
-ifeq ($(CONFIG_XNVME), y)
-XNVME_DIR=$(SPDK_ROOT_DIR)/xnvme
-XNVME_INSTALL_DIR=$(XNVME_DIR)/builddir/lib
-XNVME_INCLUDE_DIR=$(XNVME_DIR)/include
-
-CFLAGS += -I$(XNVME_INCLUDE_DIR)
-LDFLAGS += -L$(XNVME_INSTALL_DIR)
-SYS_LIBS += -lxnvme
-ifneq ($(CONFIG_URING), y)
-SYS_LIBS += -luring
-endif
-endif
-
 ifeq ($(CONFIG_DAOS),y)
 ifneq ($(CONFIG_DAOS_DIR),)
 CFLAGS += -I$(CONFIG_DAOS_DIR)/include

@@ -16,6 +16,13 @@ INTR_BLOCKDEV_MODULES_LIST += bdev_lvol blobfs blobfs_bdev blob_bdev blob lvol
 
 ifeq ($(CONFIG_XNVME),y)
 BLOCKDEV_MODULES_LIST += bdev_xnvme
+XNVME_LIB_DIR=$(SPDK_ROOT_DIR)/xnvme/builddir/lib
+
+ifeq ($(CONFIG_SHARED),y)
+BLOCKDEV_MODULES_PRIVATE_LIBS += $(XNVME_LIB_DIR)/libxnvme.so -Wl,-rpath=$(XNVME_LIB_DIR)
+else
+BLOCKDEV_MODULES_PRIVATE_LIBS +=  $(XNVME_LIB_DIR)/libxnvme.a -luring -laio -pthread -lrt
+endif
 endif
 
 ifeq ($(CONFIG_VFIO_USER),y)

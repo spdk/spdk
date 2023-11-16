@@ -12,10 +12,10 @@ all:
 	(cd $(SPDK_ROOT_DIR)/xnvme && \
 		export PKG_CONFIG_PATH=$$PKG_CONFIG_PATH:/usr/lib/pkgconfig:/usr/lib64/pkgconfig && \
 		meson setup builddir \
-		-Dwith-spdk=false \
-		-Dwith-fio=false \
-		-Dwith-libvfn=false \
-		-Dshared_library=false && \
+		-Dwith-libaio=enabled \
+		-Dwith-liburing=enabled \
+		-Dwith-libvfn=disabled \
+		-Dwith-spdk=false && \
 		meson compile -C builddir && \
 		cd -)
 

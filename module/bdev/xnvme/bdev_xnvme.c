@@ -5,7 +5,6 @@
  */
 
 #include "libxnvme.h"
-#include "libxnvme_pp.h"
 
 #include "bdev_xnvme.h"
 
