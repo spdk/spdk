@@ -1404,6 +1404,17 @@ raid_bdev_find_base_info_by_bdev(struct spdk_bdev *base_bdev)
 }
 
 static void
+raid_bdev_remove_base_bdev_done(struct raid_base_bdev_info *base_info, int status)
+{
+	assert(base_info->remove_scheduled);
+
+	base_info->remove_scheduled = false;
+	if (base_info->remove_cb != NULL) {
+		base_info->remove_cb(base_info->remove_cb_ctx, status);
+	}
+}
+
+static void
 raid_bdev_remove_base_bdev_write_sb_cb(int status, struct raid_bdev *raid_bdev, void *ctx)
 {
 	struct raid_base_bdev_info *base_info = ctx;
@@ -1413,9 +1424,7 @@ raid_bdev_remove_base_bdev_write_sb_cb(int status, struct raid_bdev *raid_bdev, 
 			    raid_bdev->bdev.name, spdk_strerror(-status));
 	}
 
-	if (base_info->remove_cb != NULL) {
-		base_info->remove_cb(base_info->remove_cb_ctx, status);
-	}
+	raid_bdev_remove_base_bdev_done(base_info, status);
 }
 
 static void
@@ -1423,8 +1432,6 @@ raid_bdev_remove_base_bdev_on_unquiesced(void *ctx, int status)
 {
 	struct raid_base_bdev_info *base_info = ctx;
 	struct raid_bdev *raid_bdev = base_info->raid_bdev;
-
-	base_info->remove_scheduled = false;
 
 	if (status != 0) {
 		SPDK_ERRLOG("Failed to unquiesce raid bdev %s: %s\n",
@@ -1460,9 +1467,7 @@ raid_bdev_remove_base_bdev_on_unquiesced(void *ctx, int status)
 		return;
 	}
 out:
-	if (base_info->remove_cb != NULL) {
-		base_info->remove_cb(base_info->remove_cb_ctx, status);
-	}
+	raid_bdev_remove_base_bdev_done(base_info, status);
 }
 
 static void
@@ -1502,10 +1507,7 @@ raid_bdev_remove_base_bdev_on_quiesced(void *ctx, int status)
 	if (status != 0) {
 		SPDK_ERRLOG("Failed to quiesce raid bdev %s: %s\n",
 			    raid_bdev->bdev.name, spdk_strerror(-status));
-		base_info->remove_scheduled = false;
-		if (base_info->remove_cb != NULL) {
-			base_info->remove_cb(base_info->remove_cb_ctx, status);
-		}
+		raid_bdev_remove_base_bdev_done(base_info, status);
 		return;
 	}
 
