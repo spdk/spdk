@@ -274,10 +274,7 @@ start_fuzzer(void *ctx)
 	char *_argv[] = {
 		"spdk",
 		"-len_control=0",
-		/* TODO: temporarily disable leak detection due to issues
-		 * with ASAN and DPDK, see #2455 and #2992.
-		 */
-		"-detect_leaks=0",
+		"-detect_leaks=1",
 		NULL,
 		NULL,
 		NULL,
