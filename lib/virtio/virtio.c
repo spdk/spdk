@@ -395,7 +395,8 @@ virtqueue_req_start(struct virtqueue *vq, void *cookie, int iovcnt)
 {
 	struct vq_desc_extra *dxp;
 
-	if (iovcnt > vq->vq_free_cnt) {
+	/* Reserve enough entries to handle iov split */
+	if (2 * iovcnt > vq->vq_free_cnt) {
 		return iovcnt > vq->vq_nentries ? -EINVAL : -ENOMEM;
 	}
 
@@ -470,6 +471,9 @@ virtqueue_req_add_iovs(struct virtqueue *vq, struct iovec *iovs, uint16_t iovcnt
 	struct vring_desc *desc;
 	struct vq_desc_extra *dxp;
 	uint16_t i, prev_head, new_head;
+	uint64_t processed_length, iovec_length, current_length;
+	void *current_base;
+	uint16_t used_desc_count = 0;
 
 	assert(vq->req_start != VQ_RING_DESC_CHAIN_END);
 	assert(iovcnt <= vq->vq_free_cnt);
@@ -481,30 +485,41 @@ virtqueue_req_add_iovs(struct virtqueue *vq, struct iovec *iovs, uint16_t iovcnt
 	prev_head = vq->req_end;
 	new_head = vq->vq_desc_head_idx;
 	for (i = 0; i < iovcnt; ++i) {
-		desc = &vq->vq_ring.desc[new_head];
+		processed_length = 0;
+		iovec_length = iovs[i].iov_len;
+		current_base = iovs[i].iov_base;
 
-		if (!vq->vdev->is_hw) {
-			desc->addr  = (uintptr_t)iovs[i].iov_base;
-		} else {
-			desc->addr = spdk_vtophys(iovs[i].iov_base, NULL);
+		while (processed_length < iovec_length) {
+			desc = &vq->vq_ring.desc[new_head];
+			current_length = iovec_length - processed_length;
+
+			if (!vq->vdev->is_hw) {
+				desc->addr  = (uintptr_t)current_base;
+			} else {
+				desc->addr = spdk_vtophys(current_base, &current_length);
+			}
+
+			desc->len = current_length;
+			/* always set NEXT flag. unset it on the last descriptor
+			 * in the request-ending function.
+			 */
+			desc->flags = desc_type | VRING_DESC_F_NEXT;
+
+			prev_head = new_head;
+			new_head = desc->next;
+			used_desc_count++;
+
+			processed_length += current_length;
+			current_base += current_length;
 		}
-
-		desc->len = iovs[i].iov_len;
-		/* always set NEXT flag. unset it on the last descriptor
-		 * in the request-ending function.
-		 */
-		desc->flags = desc_type | VRING_DESC_F_NEXT;
-
-		prev_head = new_head;
-		new_head = desc->next;
 	}
 
 	dxp = &vq->vq_descx[vq->req_start];
-	dxp->ndescs += iovcnt;
+	dxp->ndescs += used_desc_count;
 
 	vq->req_end = prev_head;
 	vq->vq_desc_head_idx = new_head;
-	vq->vq_free_cnt = (uint16_t)(vq->vq_free_cnt - iovcnt);
+	vq->vq_free_cnt = (uint16_t)(vq->vq_free_cnt - used_desc_count);
 	if (vq->vq_desc_head_idx == VQ_RING_DESC_CHAIN_END) {
 		assert(vq->vq_free_cnt == 0);
 		vq->vq_desc_tail_idx = VQ_RING_DESC_CHAIN_END;
