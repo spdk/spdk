@@ -410,8 +410,9 @@ function install_bpftrace() {
 
 	rm -rf $GIT_REPOS/bpftrace
 
-	git clone $GIT_REPO_BPFTRACE $GIT_REPOS/bpftrace --recurse-submodules
+	git clone "$GIT_REPO_BPFTRACE" "$GIT_REPOS/bpftrace"
 	git -C $GIT_REPOS/bpftrace checkout $BPFTRACE_VERSION
+	git -C "$GIT_REPOS/bpftrace" submodule update --init
 	mkdir -p $GIT_REPOS/bpftrace/build
 	mkdir -p "$GIT_REPOS/bpftrace/build/build-libs/bcc"
 
