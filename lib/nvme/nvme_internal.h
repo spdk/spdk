@@ -1333,21 +1333,27 @@ struct nvme_request *nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpa
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg, bool host_to_controller);
 
 static inline void
-nvme_free_request(struct nvme_request *req)
+_nvme_free_request(struct nvme_request *req, struct spdk_nvme_qpair *qpair)
 {
 	assert(req != NULL);
 	assert(req->num_children == 0);
-	assert(req->qpair != NULL);
+	assert(qpair != NULL);
 
 	/* The reserved_req does not go in the free_req STAILQ - it is
 	 * saved only for use with a FABRICS/CONNECT command.
 	 */
-	if (spdk_likely(req->qpair->reserved_req != req)) {
-		STAILQ_INSERT_HEAD(&req->qpair->free_req, req, stailq);
+	if (spdk_likely(qpair->reserved_req != req)) {
+		STAILQ_INSERT_HEAD(&qpair->free_req, req, stailq);
 
-		assert(req->qpair->num_outstanding_reqs > 0);
-		req->qpair->num_outstanding_reqs--;
+		assert(qpair->num_outstanding_reqs > 0);
+		qpair->num_outstanding_reqs--;
 	}
+}
+
+static inline void
+nvme_free_request(struct nvme_request *req)
+{
+	_nvme_free_request(req, req->qpair);
 }
 
 static inline void
@@ -1391,7 +1397,12 @@ nvme_complete_request(spdk_nvme_cmd_cb cb_fn, void *cb_arg, struct spdk_nvme_qpa
 		}
 	}
 
-	nvme_free_request(req);
+	/* For PCIe completions, we want to avoid touching the req itself to avoid
+	 * dependencies on loading those cachelines. So call the internal helper
+	 * function instead using the qpair that was passed by the caller, instead
+	 * of getting it from the req.
+	 */
+	_nvme_free_request(req, qpair);
 
 	if (cb_fn) {
 		cb_fn(cb_arg, cpl);
