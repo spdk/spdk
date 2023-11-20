@@ -1333,6 +1333,24 @@ struct nvme_request *nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpa
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg, bool host_to_controller);
 
 static inline void
+nvme_free_request(struct nvme_request *req)
+{
+	assert(req != NULL);
+	assert(req->num_children == 0);
+	assert(req->qpair != NULL);
+
+	/* The reserved_req does not go in the free_req STAILQ - it is
+	 * saved only for use with a FABRICS/CONNECT command.
+	 */
+	if (spdk_likely(req->qpair->reserved_req != req)) {
+		STAILQ_INSERT_HEAD(&req->qpair->free_req, req, stailq);
+
+		assert(req->qpair->num_outstanding_reqs > 0);
+		req->qpair->num_outstanding_reqs--;
+	}
+}
+
+static inline void
 nvme_complete_request(spdk_nvme_cmd_cb cb_fn, void *cb_arg, struct spdk_nvme_qpair *qpair,
 		      struct nvme_request *req, struct spdk_nvme_cpl *cpl)
 {
@@ -1375,24 +1393,6 @@ nvme_complete_request(spdk_nvme_cmd_cb cb_fn, void *cb_arg, struct spdk_nvme_qpa
 
 	if (cb_fn) {
 		cb_fn(cb_arg, cpl);
-	}
-}
-
-static inline void
-nvme_free_request(struct nvme_request *req)
-{
-	assert(req != NULL);
-	assert(req->num_children == 0);
-	assert(req->qpair != NULL);
-
-	/* The reserved_req does not go in the free_req STAILQ - it is
-	 * saved only for use with a FABRICS/CONNECT command.
-	 */
-	if (spdk_likely(req->qpair->reserved_req != req)) {
-		STAILQ_INSERT_HEAD(&req->qpair->free_req, req, stailq);
-
-		assert(req->qpair->num_outstanding_reqs > 0);
-		req->qpair->num_outstanding_reqs--;
 	}
 }
 
