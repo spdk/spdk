@@ -187,6 +187,7 @@ free_rpc_bdev_nvme_attach_controller(struct rpc_bdev_nvme_attach_controller *req
 	free(req->hostaddr);
 	free(req->hostsvcid);
 	free(req->psk);
+	spdk_memset_s(req->drv_opts.psk, sizeof(req->drv_opts.psk), 0, sizeof(req->drv_opts.psk));
 }
 
 static int
