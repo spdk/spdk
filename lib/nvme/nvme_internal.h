@@ -1391,6 +1391,8 @@ nvme_complete_request(spdk_nvme_cmd_cb cb_fn, void *cb_arg, struct spdk_nvme_qpa
 		}
 	}
 
+	nvme_free_request(req);
+
 	if (cb_fn) {
 		cb_fn(cb_arg, cpl);
 	}
@@ -1438,7 +1440,6 @@ nvme_cb_complete_child(void *child_arg, const struct spdk_nvme_cpl *cpl)
 	if (parent->num_children == 0) {
 		nvme_complete_request(parent->cb_fn, parent->cb_arg, parent->qpair,
 				      parent, &parent->parent_status);
-		nvme_free_request(parent);
 	}
 }
 

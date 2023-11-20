@@ -457,7 +457,6 @@ nvme_rdma_req_complete(struct spdk_nvme_rdma_req *rdma_req,
 	TAILQ_REMOVE(&rqpair->outstanding_reqs, rdma_req, link);
 
 	nvme_complete_request(req->cb_fn, req->cb_arg, qpair, req, rsp);
-	nvme_free_request(req);
 	nvme_rdma_req_put(rqpair, rdma_req);
 }
 

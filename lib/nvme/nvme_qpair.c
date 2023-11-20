@@ -561,7 +561,6 @@ nvme_qpair_manual_complete_request(struct spdk_nvme_qpair *qpair,
 	}
 
 	nvme_complete_request(req->cb_fn, req->cb_arg, qpair, req, &cpl);
-	nvme_free_request(req);
 }
 
 void

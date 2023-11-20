@@ -982,20 +982,16 @@ nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req,
 		      bool print_on_error)
 {
 	struct spdk_nvme_cpl	cpl;
-	spdk_nvme_cmd_cb	user_cb;
-	void			*user_cb_arg;
 	struct spdk_nvme_qpair	*qpair;
 	struct nvme_request	*req;
 	bool			error, print_error;
 
 	assert(tcp_req->req != NULL);
 	req = tcp_req->req;
+	qpair = req->qpair;
 
 	/* Cache arguments to be passed to nvme_complete_request since tcp_req can be zeroed when released */
 	memcpy(&cpl, rsp, sizeof(cpl));
-	user_cb		= req->cb_fn;
-	user_cb_arg	= req->cb_arg;
-	qpair		= req->qpair;
 
 	error = spdk_nvme_cpl_is_error(rsp);
 	print_error = error && print_on_error && !qpair->ctrlr->opts.disable_error_logging;
@@ -1012,8 +1008,7 @@ nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req,
 			  (uint32_t)req->cmd.cid, (uint32_t)cpl.status_raw);
 	TAILQ_REMOVE(&tcp_req->tqpair->outstanding_reqs, tcp_req, link);
 	nvme_tcp_req_put(tqpair, tcp_req);
-	nvme_free_request(req);
-	nvme_complete_request(user_cb, user_cb_arg, qpair, req, &cpl);
+	nvme_complete_request(req->cb_fn, req->cb_arg, req->qpair, req, &cpl);
 }
 
 static void

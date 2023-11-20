@@ -567,7 +567,6 @@ nvme_ctrlr_retry_queued_abort(struct spdk_nvme_ctrlr *ctrlr)
 			next->cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			next->cpl.status.dnr = 1;
 			nvme_complete_request(next->cb_fn, next->cb_arg, next->qpair, next, &next->cpl);
-			nvme_free_request(next);
 		} else {
 			/* If the first abort succeeds, stop iterating. */
 			break;
@@ -659,7 +658,6 @@ nvme_complete_abort_request(void *ctx, const struct spdk_nvme_cpl *cpl)
 	if (parent->num_children == 0) {
 		nvme_complete_request(parent->cb_fn, parent->cb_arg, parent->qpair,
 				      parent, &parent->parent_status);
-		nvme_free_request(parent);
 	}
 }
 
@@ -780,7 +778,6 @@ spdk_nvme_ctrlr_cmd_abort_ext(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 				 */
 				nvme_complete_request(parent->cb_fn, parent->cb_arg, parent->qpair,
 						      parent, &parent->parent_status);
-				nvme_free_request(parent);
 			} else {
 				/* There was no queued request to abort. */
 				rc = -ENOENT;
