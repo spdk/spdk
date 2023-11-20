@@ -1411,18 +1411,6 @@ nvme_qpair_get_state(struct spdk_nvme_qpair *qpair) {
 }
 
 static inline void
-nvme_qpair_free_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
-{
-	assert(req != NULL);
-	assert(req->num_children == 0);
-
-	STAILQ_INSERT_HEAD(&qpair->free_req, req, stailq);
-
-	assert(req->qpair->num_outstanding_reqs > 0);
-	req->qpair->num_outstanding_reqs--;
-}
-
-static inline void
 nvme_request_remove_child(struct nvme_request *parent, struct nvme_request *child)
 {
 	assert(parent != NULL);
