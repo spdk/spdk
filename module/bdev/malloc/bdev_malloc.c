@@ -74,6 +74,10 @@ malloc_verify_pi(struct spdk_bdev_io *bdev_io)
 			.iov_len	= bdev_io->u.bdev.num_blocks * bdev->md_len,
 		};
 
+		if (bdev_io->u.bdev.md_buf == NULL) {
+			return 0;
+		}
+
 		rc = spdk_dix_verify(bdev_io->u.bdev.iovs,
 				     bdev_io->u.bdev.iovcnt,
 				     &md_iov,
