@@ -14,7 +14,6 @@ builddir=$SPDK_TEST_STORAGE/test-rpm
 unset -v LD_LIBRARY_PATH
 
 # Export some common settings
-MAKEFLAGS="-j $(nproc)"
 BUILDDIR=$builddir
 DEPS=no
 
