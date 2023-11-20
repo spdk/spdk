@@ -1235,7 +1235,7 @@ class SPDKTarget(Target):
         self.log.info("Adding null block bdevices to config via RPC")
         for i in range(null_block_count):
             self.log.info("Setting bdev protection to :%s" % self.null_block_dif_type)
-            rpc.bdev.bdev_null_create(self.client, 102400, block_size + md_size, "Nvme{}n1".format(i),
+            rpc.bdev.bdev_null_create(self.client, 102400, block_size, "Nvme{}n1".format(i),
                                       dif_type=self.null_block_dif_type, md_size=md_size)
         self.log.info("SPDK Bdevs configuration:")
         rpc_client.print_dict(rpc.bdev.bdev_get_bdevs(self.client))

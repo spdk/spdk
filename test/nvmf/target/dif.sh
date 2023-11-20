@@ -12,7 +12,7 @@ set -- "--transport=tcp" "--iso" "$@"
 source "$rootdir/test/common/autotest_common.sh"
 source "$rootdir/test/nvmf/common.sh"
 
-NULL_META=16 NULL_BLOCK_SIZE=$((512 + NULL_META)) NULL_SIZE=64 NULL_DIF=1
+NULL_META=16 NULL_BLOCK_SIZE=512 NULL_SIZE=64 NULL_DIF=1
 
 create_subsystem() {
 	local sub_id=${1:-0}

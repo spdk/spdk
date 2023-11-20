@@ -444,8 +444,7 @@ if __name__ == "__main__":
     p.add_argument('name', help='Block device name')
     p.add_argument('-u', '--uuid', help='UUID of the bdev')
     p.add_argument('total_size', help='Size of null bdev in MB (int > 0). Includes only data blocks.', type=int)
-    p.add_argument('block_size', help='Block size for this bdev.'
-                                      'Should be a sum of block size and metadata size if --md-size is used.', type=int)
+    p.add_argument('block_size', help='Data block size for this bdev.', type=int)
     p.add_argument('-p', '--physical-block-size', help='Physical block size for this bdev.', type=int)
     p.add_argument('-m', '--md-size', type=int,
                    help='Metadata size for this bdev. Default=0.')

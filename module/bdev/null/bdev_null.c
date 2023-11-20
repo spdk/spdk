@@ -232,6 +232,19 @@ bdev_null_create(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts
 		return -EINVAL;
 	}
 
+	switch (opts->md_size) {
+	case 0:
+	case 8:
+	case 16:
+	case 32:
+	case 64:
+	case 128:
+		break;
+	default:
+		SPDK_ERRLOG("metadata size %u is not supported\n", opts->md_size);
+		return -EINVAL;
+	}
+
 	if (opts->md_interleave) {
 		if (opts->block_size < opts->md_size) {
 			SPDK_ERRLOG("Interleaved metadata size can not be greater than block size.\n");

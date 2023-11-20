@@ -47,7 +47,6 @@ rpc_bdev_null_create(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev;
 	struct spdk_null_bdev_opts opts = {};
-	uint32_t data_block_size;
 	int rc = 0;
 
 	if (spdk_json_decode_object(params, rpc_construct_null_decoders,
@@ -64,8 +63,8 @@ rpc_bdev_null_create(struct spdk_jsonrpc_request *request,
 						     "Interleaved metadata size can not be greater than block size");
 		goto cleanup;
 	}
-	data_block_size = req.block_size - req.md_size;
-	if (data_block_size % 512 != 0) {
+
+	if (req.block_size % 512 != 0) {
 		spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
 						     "Data block size %u is not a multiple of 512", req.block_size);
 		goto cleanup;
@@ -96,7 +95,7 @@ rpc_bdev_null_create(struct spdk_jsonrpc_request *request,
 	opts.name = req.name;
 	opts.uuid = &req.uuid;
 	opts.num_blocks = req.num_blocks;
-	opts.block_size = req.block_size;
+	opts.block_size = req.block_size + req.md_size;
 	opts.physical_block_size = req.physical_block_size;
 	opts.md_size = req.md_size;
 	opts.md_interleave = true;
