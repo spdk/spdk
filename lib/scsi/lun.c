@@ -154,6 +154,7 @@ _scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun)
 	switch (task->function) {
 	case SPDK_SCSI_TASK_FUNC_LUN_RESET:
 	case SPDK_SCSI_TASK_FUNC_TARGET_RESET:
+		SPDK_NOTICELOG("Bdev scsi reset on %s\n", scsi_tn);
 		bdev_scsi_reset(task);
 		return;
 
