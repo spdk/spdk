@@ -151,7 +151,12 @@ _xnvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 		ctx->cmd.nvm.nlb = bdev_io->u.bdev.num_blocks - 1;
 		ctx->cmd.nvm.slba = bdev_io->u.bdev.offset_blocks;
 		break;
-
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		ctx->cmd.common.opcode = XNVME_SPEC_NVM_OPC_WRITE_ZEROES;
+		ctx->cmd.common.nsid = xnvme->nsid;
+		ctx->cmd.nvm.nlb = bdev_io->u.bdev.num_blocks - 1;
+		ctx->cmd.nvm.slba = bdev_io->u.bdev.offset_blocks;
+		break;
 	default:
 		SPDK_ERRLOG("Wrong io type\n");
 
@@ -219,6 +224,9 @@ bdev_xnvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		spdk_bdev_io_get_buf(bdev_io, bdev_xnvme_get_buf_cb,
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		_xnvme_submit_request(ch, bdev_io);
 		break;
 
 	default:
@@ -373,6 +381,7 @@ create_xnvme_bdev(const char *name, const char *filename, const char *io_mechani
 	xnvme->bdev.module = &xnvme_if;
 
 	xnvme->bdev.write_cache = 0;
+	xnvme->bdev.max_write_zeroes = UINT16_MAX + 1;
 
 	if (block_size == 0) {
 		SPDK_ERRLOG("Block size could not be auto-detected\n");
