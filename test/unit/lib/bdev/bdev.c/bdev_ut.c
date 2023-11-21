@@ -5182,6 +5182,18 @@ bdev_unquiesce_done(void *ctx, int status)
 }
 
 static void
+bdev_quiesce_done_unquiesce(void *ctx, int status)
+{
+	struct spdk_bdev *bdev = ctx;
+	int rc;
+
+	g_lock_lba_range_done = true;
+
+	rc = spdk_bdev_unquiesce(bdev, &bdev_ut_if, bdev_unquiesce_done, NULL);
+	CU_ASSERT(rc == 0);
+}
+
+static void
 bdev_quiesce(void)
 {
 	struct spdk_bdev *bdev;
@@ -5261,6 +5273,16 @@ bdev_quiesce(void)
 	CU_ASSERT(g_unlock_lba_range_done == true);
 	CU_ASSERT(TAILQ_EMPTY(&channel->locked_ranges));
 	CU_ASSERT(TAILQ_EMPTY(&bdev_ut_if.internal.quiesced_ranges));
+
+	/* Test unquiesce from quiesce cb */
+	g_lock_lba_range_done = false;
+	g_unlock_lba_range_done = false;
+	rc = spdk_bdev_quiesce(bdev, &bdev_ut_if, bdev_quiesce_done_unquiesce, bdev);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	CU_ASSERT(g_lock_lba_range_done == true);
+	CU_ASSERT(g_unlock_lba_range_done == true);
 
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);

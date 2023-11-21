@@ -9894,9 +9894,13 @@ bdev_quiesce_range_locked(struct lba_range *range, void *ctx, int status)
 	spdk_spin_unlock(&module->internal.spinlock);
 
 	if (quiesce_ctx->cb_fn != NULL) {
-		quiesce_ctx->cb_fn(quiesce_ctx->cb_arg, status);
+		/* copy the context in case the range is unlocked by the callback */
+		struct bdev_quiesce_ctx tmp = *quiesce_ctx;
+
 		quiesce_ctx->cb_fn = NULL;
 		quiesce_ctx->cb_arg = NULL;
+
+		tmp.cb_fn(tmp.cb_arg, status);
 	}
 	/* quiesce_ctx will be freed on unquiesce */
 }
