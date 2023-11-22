@@ -1474,7 +1474,7 @@ extern_vhost_pre_msg_handler(int vid, void *_msg)
 	switch (msg->request) {
 	case VHOST_USER_GET_VRING_BASE:
 		pthread_mutex_lock(&user_dev->lock);
-		if (vsession->started) {
+		if (vsession->started || vsession->starting) {
 			pthread_mutex_unlock(&user_dev->lock);
 			g_spdk_vhost_ops.destroy_device(vid);
 			break;
@@ -1483,7 +1483,7 @@ extern_vhost_pre_msg_handler(int vid, void *_msg)
 		break;
 	case VHOST_USER_SET_MEM_TABLE:
 		pthread_mutex_lock(&user_dev->lock);
-		if (vsession->started) {
+		if (vsession->started || vsession->starting) {
 			vsession->original_max_queues = vsession->max_queues;
 			pthread_mutex_unlock(&user_dev->lock);
 			g_spdk_vhost_ops.destroy_device(vid);
@@ -1570,7 +1570,7 @@ extern_vhost_post_msg_handler(int vid, void *_msg)
 		 * its SET_VRING_KICK message. Let's do it!
 		 */
 		pthread_mutex_lock(&user_dev->lock);
-		if (!vsession->started) {
+		if (!vsession->started && !vsession->starting) {
 			pthread_mutex_unlock(&user_dev->lock);
 			g_spdk_vhost_ops.new_device(vid);
 			return RTE_VHOST_MSG_RESULT_NOT_HANDLED;
