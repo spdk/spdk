@@ -12,6 +12,10 @@ the vhost-scsi controller until adding the scsi target is completed.
 Added `vhost_start_scsi_controller` RPC to start vhost-scsi controller, it could be used to support
 live recovery feature of vhost-scsi target.
 
+### scsi
+
+Added support for `SBC WRITE SAME 10` and `SBC WRITE SAME 16`.
+
 ## v23.09
 
 ### accel
