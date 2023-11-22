@@ -35,8 +35,6 @@ test/unit/lib/blob/bs_scheduler
 test/unit/lib/ftl/common/utils
 test/unit/lib/iscsi/common
 test/unit/lib/json_mock
-test/unit/lib/sock/uring.c/uring_ut
-test/unit/lib/idxd/idxd_kernel.c/idxd_kernel_ut
 
 # These files are in the external_code directory which doesn't get compiled with SPDK.
 test/external_code/hello_world/hello_bdev
@@ -55,19 +53,10 @@ test/app/fuzz/llvm_vfio_fuzz/llvm_vfio_fuzz
 module/bdev/daos/bdev_daos
 module/bdev/daos/bdev_daos_rpc
 
-# Not configured to test xNVMe bdev
-module/bdev/xnvme/bdev_xnvme
-module/bdev/xnvme/bdev_xnvme_rpc
-
 # Not configured to test mlx5 accel module & crypto lib
 module/accel/mlx5/accel_mlx5
 module/accel/mlx5/accel_mlx5_rpc
 lib/mlx5/mlx5_crypto
-
-# Not configured to test ublk
-lib/ublk/ublk
-lib/ublk/ublk_rpc
-module/event/subsystems/ublk/ublk
 
 # Not configured to build hello_gorpc example
 examples/go/hello_gorpc/hello_gorpc.go
