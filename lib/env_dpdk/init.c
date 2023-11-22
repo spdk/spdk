@@ -10,6 +10,10 @@
 #include "spdk/version.h"
 #include "spdk/env_dpdk.h"
 #include "spdk/log.h"
+#include "spdk/config.h"
+
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 
 #include <rte_config.h>
 #include <rte_eal.h>
@@ -579,6 +583,7 @@ spdk_env_init(const struct spdk_env_opts *opts)
 {
 	char **dpdk_args = NULL;
 	char *args_print = NULL, *args_tmp = NULL;
+	OPENSSL_INIT_SETTINGS *settings;
 	int i, rc;
 	int orig_optind;
 	bool legacy_mem;
@@ -602,6 +607,22 @@ spdk_env_init(const struct spdk_env_opts *opts)
 		fprintf(stderr, "NULL arguments to initialize DPDK\n");
 		return -EINVAL;
 	}
+
+	settings = OPENSSL_INIT_new();
+	if (!settings) {
+		fprintf(stderr, "Failed to create openssl settings object\n");
+		ERR_print_errors_fp(stderr);
+		return -ENOMEM;
+	}
+
+	OPENSSL_INIT_set_config_file_flags(settings, 0);
+	rc = OPENSSL_init_ssl(OPENSSL_INIT_LOAD_CONFIG, settings);
+	if (rc != 1) {
+		fprintf(stderr, "Failed to initialize OpenSSL\n");
+		ERR_print_errors_fp(stderr);
+		return -EINVAL;
+	}
+	OPENSSL_INIT_free(settings);
 
 	rc = build_eal_cmdline(opts);
 	if (rc < 0) {

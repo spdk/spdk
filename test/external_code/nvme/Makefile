@@ -12,7 +12,7 @@ shared:
 	$(CC) $(COMMON_CFLAGS) -c -fPIC nvme.c -o nvme.o
 	$(CC) $(COMMON_CFLAGS) -shared nvme.o -o libnvme_external.so
 	$(CC) $(COMMON_CFLAGS) identify.c -o identify -L. -lnvme_external \
-		-Wl,-rpath=$(SPDK_LIB_DIR) $(DEPLIBS)
+		-Wl,-rpath=$(SPDK_LIB_DIR) $(DEPLIBS) $(SYS_LIB)
 
 static:
 	$(CC) $(COMMON_CFLAGS) nvme.c identify.c -o identify -Wl,--whole-archive \
