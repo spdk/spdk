@@ -1099,6 +1099,7 @@ spdk_nvmf_subsystem_listener_opts_init(struct spdk_nvmf_listener_opts *opts, siz
 	} \
 
 	SET_FIELD(secure_channel, false);
+	SET_FIELD(ana_state, SPDK_NVME_ANA_OPTIMIZED_STATE);
 
 #undef FIELD_OK
 #undef SET_FIELD
@@ -1125,10 +1126,10 @@ listener_opts_copy(struct spdk_nvmf_listener_opts *src, struct spdk_nvmf_listene
 	} \
 
 	SET_FIELD(secure_channel);
-
+	SET_FIELD(ana_state);
 	/* We should not remove this statement, but need to update the assert statement
 	 * if we add a new field, and also add a corresponding SET_FIELD statement. */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listener_opts) == 9, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listener_opts) == 16, "Incorrect size");
 
 #undef SET_FIELD
 #undef FIELD_OK
@@ -1221,7 +1222,7 @@ _nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	listener->id = id;
 
 	for (i = 0; i < subsystem->max_nsid; i++) {
-		listener->ana_state[i] = SPDK_NVME_ANA_OPTIMIZED_STATE;
+		listener->ana_state[i] = listener->opts.ana_state;
 	}
 
 	if (transport->ops->listen_associate != NULL) {

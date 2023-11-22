@@ -107,6 +107,8 @@ spdk_nvmf_subsystem_any_listener_allowed()` API fixing the typo.
 
 Added `spdk_nvmf_subsystem_is_discovery()` API to check whether a given susbystem is discovery subsystem.
 
+Added new optional `--ana-state` (or shortly `-n`) parameter to nvmf_subsystem_add_listener RPC call.
+
 ### scripts
 
 `setup.sh` now supports interactive mode for device selection and hugepage reservation.

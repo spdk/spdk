@@ -20,6 +20,8 @@
 
 static bool g_logged_deprecated_nvmf_get_subsystems = false;
 
+static int rpc_ana_state_parse(const char *str, enum spdk_nvme_ana_state *ana_state);
+
 static int
 json_write_hex_str(struct spdk_json_write_ctx *w, const void *data, size_t size)
 {
@@ -633,6 +635,7 @@ static const struct spdk_json_object_decoder nvmf_rpc_listener_decoder[] = {
 	{"listen_address", offsetof(struct nvmf_rpc_listener_ctx, address), decode_rpc_listen_address},
 	{"tgt_name", offsetof(struct nvmf_rpc_listener_ctx, tgt_name), spdk_json_decode_string, true},
 	{"secure_channel", offsetof(struct nvmf_rpc_listener_ctx, listener_opts.secure_channel), spdk_json_decode_bool, true},
+	{"ana_state", offsetof(struct nvmf_rpc_listener_ctx, ana_state_str), spdk_json_decode_string, true},
 };
 
 static void
@@ -895,6 +898,16 @@ rpc_nvmf_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 		return;
 	}
 	ctx->opts.secure_channel = ctx->listener_opts.secure_channel;
+
+	if (ctx->ana_state_str) {
+		if (rpc_ana_state_parse(ctx->ana_state_str, &ctx->ana_state)) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Invalid parameters");
+			nvmf_rpc_listener_ctx_free(ctx);
+			return;
+		}
+		ctx->listener_opts.ana_state = ctx->ana_state;
+	}
 
 	rc = spdk_nvmf_subsystem_pause(subsystem, 0, nvmf_rpc_listen_paused, ctx);
 	if (rc != 0) {

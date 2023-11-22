@@ -116,8 +116,19 @@ struct spdk_nvmf_listen_opts {
 	 */
 	bool secure_channel;
 
+	/* Hole at bytes 17-19. */
+	uint8_t reserved1[3];
+
+	/**
+	 * Asymmetric Namespace Access state
+	 * Optional parameter, which defines ANA_STATE that will be set for
+	 * all ANA groups in this listener, when the listener is added to the subsystem.
+	 * If not specified, SPDK_NVME_ANA_OPTIMIZED_STATE will be set by default.
+	 */
+	enum spdk_nvme_ana_state ana_state;
+
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listen_opts) == 17, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listen_opts) == 24, "Incorrect size");
 
 /**
  * Initialize listen options
@@ -676,8 +687,14 @@ struct spdk_nvmf_listener_opts {
 
 	/* Secure channel parameter used in TCP TLS. */
 	bool secure_channel;
+
+	/* Hole at bytes 9-11. */
+	uint8_t reserved1[3];
+
+	/* Asymmetric namespace access state */
+	enum spdk_nvme_ana_state ana_state;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listener_opts) == 9, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listener_opts) == 16, "Incorrect size");
 
 /**
  * Initialize options structure for listener creation.

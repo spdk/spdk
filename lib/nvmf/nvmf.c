@@ -735,11 +735,12 @@ nvmf_listen_opts_copy(struct spdk_nvmf_listen_opts *opts,
 
 	SET_FIELD(transport_specific);
 	SET_FIELD(secure_channel);
+	SET_FIELD(ana_state);
 #undef SET_FIELD
 
 	/* Do not remove this statement, you should always update this statement when you adding a new field,
 	 * and do not forget to add the SET_FIELD statement for your added field. */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listen_opts) == 17, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listen_opts) == 24, "Incorrect size");
 }
 
 void
@@ -748,7 +749,7 @@ spdk_nvmf_listen_opts_init(struct spdk_nvmf_listen_opts *opts, size_t opts_size)
 	struct spdk_nvmf_listen_opts opts_local = {};
 
 	/* local version of opts should have defaults set here */
-
+	opts_local.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
 	nvmf_listen_opts_copy(opts, &opts_local, opts_size);
 }
 
