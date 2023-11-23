@@ -304,7 +304,7 @@ function install_igb_uio() {
 }
 
 function install_irdma() {
-	local RDMA_CORE_VERSION=42.0
+	local RDMA_CORE_VERSION=44.0
 	local RDMA_CORE=https://github.com/linux-rdma/rdma-core/releases/download/v$RDMA_CORE_VERSION/rdma-core-$RDMA_CORE_VERSION.tar.gz
 
 	if [[ $ID != fedora ]]; then
@@ -321,6 +321,9 @@ function install_irdma() {
 	curl -L -o- "$IRDMA_DRIVER" | tar -C "$GIT_REPOS" -xzf -
 	[[ -e $GIT_REPOS/irdma-$IRDMA_VERSION/build.sh ]]
 
+	if ge "$kernel_ver" 6.5.1; then
+		patch --dir="$GIT_REPOS/irdma-$IRDMA_VERSION" -p1
+	fi < "$rootdir/test/common/config/pkgdep/patches/irdma/0001-irdma-avoid-fortify-string-warning.patch"
 	(
 		cd "$GIT_REPOS/irdma-$IRDMA_VERSION"
 		sed -i "s/IRDMA_FLUSH_DELAY_MS 1500/IRDMA_FLUSH_DELAY_MS 50/" \
@@ -496,7 +499,7 @@ function install_sources() {
 }
 
 GIT_VERSION=2.25.1
-IRDMA_VERSION=1.11.16.6
+IRDMA_VERSION=1.12.55
 ICE_VERSION=1.12.7
 
 BPFTRACE_VERSION=${BPFTRACE_VERSION:-42d55a0}
@@ -521,7 +524,7 @@ export DRIVER_LOCATION_QAT
 export GIT_REPO_GIT
 : ${GIT_REPO_DPDK_KMODS=http://dpdk.org/git/dpdk-kmods}
 export GIT_REPO_DPDK_KMODS
-: ${IRDMA_DRIVER=https://downloadmirror.intel.com/763932/irdma-$IRDMA_VERSION.tgz}
+: ${IRDMA_DRIVER=https://downloadmirror.intel.com/786088/irdma-$IRDMA_VERSION.tgz}
 export IRDMA_DRIVER
 : ${ICE_DRIVER="https://sourceforge.net/projects/e1000/files/ice%20stable/$ICE_VERSION/ice-$ICE_VERSION.tar.gz"}
 export ICE_DRIVER
