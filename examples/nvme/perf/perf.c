@@ -501,6 +501,7 @@ uring_check_io(struct ns_worker_ctx *ns_ctx)
 		 * It will automatically call spdk_io_uring_enter appropriately. */
 		ret = io_uring_submit(&ns_ctx->u.uring.ring);
 		if (ret < 0) {
+			ns_ctx->status = 1;
 			return -1;
 		}
 		ns_ctx->u.uring.io_pending = 0;
@@ -517,7 +518,8 @@ uring_check_io(struct ns_worker_ctx *ns_ctx)
 			if (ns_ctx->u.uring.cqes[i]->res != (int)task->iovs[0].iov_len) {
 				fprintf(stderr, "cqe->status=%d, iov_len=%d\n", ns_ctx->u.uring.cqes[i]->res,
 					(int)task->iovs[0].iov_len);
-				exit(1);
+				ns_ctx->status = 1;
+				return -1;
 			}
 			io_uring_cqe_seen(&ns_ctx->u.uring.ring, ns_ctx->u.uring.cqes[i]);
 			task_complete(task);
@@ -636,7 +638,8 @@ aio_check_io(struct ns_worker_ctx *ns_ctx)
 	count = io_getevents(ns_ctx->u.aio.ctx, 1, g_queue_depth, ns_ctx->u.aio.events, &timeout);
 	if (count < 0) {
 		fprintf(stderr, "io_getevents error\n");
-		exit(1);
+		ns_ctx->status = 1;
+		return -1;
 	}
 
 	for (i = 0; i < count; i++) {
@@ -644,7 +647,8 @@ aio_check_io(struct ns_worker_ctx *ns_ctx)
 		if (ns_ctx->u.aio.events[i].res != (uint64_t)task->iovs[0].iov_len) {
 			fprintf(stderr, "event->res=%lu, iov_len=%lu\n", ns_ctx->u.aio.events[i].res,
 				(uint64_t)task->iovs[0].iov_len);
-			exit(1);
+			ns_ctx->status = 1;
+			return -1;
 		}
 		task_complete(ns_ctx->u.aio.events[i].data);
 	}
@@ -957,7 +961,8 @@ nvme_check_io(struct ns_worker_ctx *ns_ctx)
 			perf_disconnect_cb);
 	if (rc < 0) {
 		fprintf(stderr, "NVMe io qpair process completion error\n");
-		exit(1);
+		ns_ctx->status = 1;
+		return -1;
 	}
 	return rc;
 }
