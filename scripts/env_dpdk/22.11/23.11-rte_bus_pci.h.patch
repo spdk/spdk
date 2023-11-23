@@ -68,16 +68,33 @@
  
  /**
   * Enables/Disables Bus Master for device's PCI command register.
-@@ -153,7 +99,7 @@ off_t rte_pci_find_ext_capability(const struct rte_pci_device *dev, uint32_t cap
+@@ -153,24 +99,7 @@ off_t rte_pci_find_ext_capability(const struct rte_pci_device *dev, uint32_t cap
   *  0 on success, -1 on error in PCI config space read/write.
   */
  __rte_experimental
 -int rte_pci_set_bus_master(const struct rte_pci_device *dev, bool enable);
+-
+-/**
+- * Enable/Disable PASID (Process Address Space ID).
+- *
+- * @param dev
+- *   A pointer to a rte_pci_device structure.
+- * @param offset
+- *   Offset of the PASID external capability structure.
+- * @param enable
+- *   Flag to enable or disable PASID.
+- *
+- * @return
+- *   0 on success, -1 on error in PCI config space read/write.
+- */
+-__rte_internal
+-int rte_pci_pasid_set_state(const struct rte_pci_device *dev,
+-		off_t offset, bool enable);
 +int rte_pci_set_bus_master(struct rte_pci_device *dev, bool enable);
  
  /**
   * Read PCI config space.
-@@ -189,54 +135,6 @@ int rte_pci_read_config(const struct rte_pci_device *device,
+@@ -206,54 +135,6 @@ int rte_pci_read_config(const struct rte_pci_device *device,
  int rte_pci_write_config(const struct rte_pci_device *device,
  		const void *buf, size_t len, off_t offset);
  
