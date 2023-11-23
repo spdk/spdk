@@ -79,7 +79,7 @@ DEFINE_STUB(spdk_accel_get_buf_align, uint8_t,
 	    (enum spdk_accel_opcode opcode, const struct spdk_accel_operation_exec_ctx *ctx), 0);
 
 /* global vars and setup/cleanup functions used for all test functions */
-struct spdk_bdev_io *g_bdev_io;
+struct spdk_bdev_io *g_base_io;
 struct crypto_bdev_io *g_io_ctx;
 struct crypto_io_channel *g_crypto_ch;
 struct spdk_io_channel *g_io_ch;
@@ -143,8 +143,8 @@ spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 			   struct spdk_bdev_ext_io_opts *opts)
 {
 	HANDLE_RETURN_MOCK(spdk_bdev_readv_blocks_ext);
-	ut_vbdev_crypto_bdev_cpl(cb, g_bdev_io,
-				 g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS, cb_arg);
+	ut_vbdev_crypto_bdev_cpl(cb, g_base_io,
+				 g_base_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS, cb_arg);
 	return 0;
 }
 
@@ -157,8 +157,8 @@ spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel 
 			    struct spdk_bdev_ext_io_opts *opts)
 {
 	HANDLE_RETURN_MOCK(spdk_bdev_writev_blocks_ext);
-	ut_vbdev_crypto_bdev_cpl(cb, g_bdev_io,
-				 g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS, cb_arg);
+	ut_vbdev_crypto_bdev_cpl(cb, g_base_io,
+				 g_base_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS, cb_arg);
 	return 0;
 }
 
@@ -169,8 +169,8 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	HANDLE_RETURN_MOCK(spdk_bdev_unmap_blocks);
-	ut_vbdev_crypto_bdev_cpl(cb, g_bdev_io,
-				 g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS, cb_arg);
+	ut_vbdev_crypto_bdev_cpl(cb, g_base_io,
+				 g_base_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS, cb_arg);
 
 	return 0;
 }
@@ -182,8 +182,8 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       void *cb_arg)
 {
 	HANDLE_RETURN_MOCK(spdk_bdev_flush_blocks);
-	ut_vbdev_crypto_bdev_cpl(cb, g_bdev_io,
-				 g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS, cb_arg);
+	ut_vbdev_crypto_bdev_cpl(cb, g_base_io,
+				 g_base_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS, cb_arg);
 	return 0;
 }
 
@@ -193,8 +193,8 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	HANDLE_RETURN_MOCK(spdk_bdev_reset);
-	ut_vbdev_crypto_bdev_cpl(cb, g_bdev_io,
-				 g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS, cb_arg);
+	ut_vbdev_crypto_bdev_cpl(cb, g_base_io,
+				 g_base_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS, cb_arg);
 	return 0;
 }
 
@@ -222,12 +222,12 @@ static int
 test_setup(void)
 {
 	/* Prepare essential variables for test routines */
-	g_bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct crypto_bdev_io));
-	g_bdev_io->u.bdev.iovs = calloc(1, sizeof(struct iovec) * 128);
-	g_bdev_io->bdev = &g_crypto_bdev.crypto_bdev;
+	g_base_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct crypto_bdev_io));
+	g_base_io->u.bdev.iovs = calloc(1, sizeof(struct iovec) * 128);
+	g_base_io->bdev = &g_crypto_bdev.crypto_bdev;
 	g_io_ch = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct crypto_io_channel));
 	g_crypto_ch = (struct crypto_io_channel *)spdk_io_channel_get_ctx(g_io_ch);
-	g_io_ctx = (struct crypto_bdev_io *)g_bdev_io->driver_ctx;
+	g_io_ctx = (struct crypto_bdev_io *)g_base_io->driver_ctx;
 	memset(&g_crypto_bdev, 0, sizeof(struct vbdev_crypto));
 	memset(&g_crypto_bdev_opts, 0, sizeof(struct vbdev_crypto_opts));
 	g_crypto_bdev.crypto_bdev.blocklen = 512;
@@ -242,8 +242,8 @@ test_setup(void)
 static int
 test_cleanup(void)
 {
-	free(g_bdev_io->u.bdev.iovs);
-	free(g_bdev_io);
+	free(g_base_io->u.bdev.iovs);
+	free(g_base_io);
 	free(g_io_ch);
 	return 0;
 }
@@ -312,12 +312,12 @@ test_error_paths(void)
 
 	/* Test error returned in bdev cpl */
 	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
-	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+	g_base_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
 	vbdev_crypto_submit_request(g_io_ch, bdev_io);
 	poll_threads();
 	poll_threads();
 	CU_ASSERT(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
-	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	g_base_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
 	/* the same for read path */
 	/* Test error returned from bdev */
@@ -342,11 +342,11 @@ test_error_paths(void)
 
 	/* Test error returned in bdev cpl */
 	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
-	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+	g_base_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
 	vbdev_crypto_submit_request(g_io_ch, bdev_io);
 	poll_threads();
 	CU_ASSERT(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
-	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	g_base_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
 	/* test error returned by accel fw */
 	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
@@ -461,16 +461,16 @@ test_crypto_op_complete(void)
 	struct spdk_bdev_io *bdev_io = &io.bdev_io;
 
 	/* Test read completion. */
-	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	g_base_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	bdev_io->internal.status  = SPDK_BDEV_IO_STATUS_PENDING;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
 	g_completion_called = false;
-	_complete_internal_io(g_bdev_io, true, bdev_io);
-	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	_complete_internal_io(g_base_io, true, bdev_io);
+	CU_ASSERT(g_base_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(g_completion_called == true);
 
 	/* Test write completion success. */
-	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	g_base_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	bdev_io->internal.status  = SPDK_BDEV_IO_STATUS_PENDING;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 	g_completion_called = false;
