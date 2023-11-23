@@ -56,6 +56,7 @@ run_test "nvmf_bdevio" $rootdir/test/nvmf/target/bdevio.sh "${TEST_ARGS[@]}"
 if [ "$SPDK_TEST_NVMF_TRANSPORT" = "tcp" ]; then
 	run_test "nvmf_bdevio_no_huge" $rootdir/test/nvmf/target/bdevio.sh "${TEST_ARGS[@]}" --no-hugepages
 	run_test "nvmf_tls" $rootdir/test/nvmf/target/tls.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_fips" $rootdir/test/nvmf/fips/fips.sh "${TEST_ARGS[@]}"
 fi
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
