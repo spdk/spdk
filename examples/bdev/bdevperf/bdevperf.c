@@ -71,6 +71,7 @@ static struct spdk_conf *g_bdevperf_conf = NULL;
 static const char *g_bdevperf_conf_file = NULL;
 static double g_zipf_theta;
 static bool g_random_map = false;
+static bool g_unique_writes = false;
 
 static struct spdk_cpuset g_all_cpuset;
 static struct spdk_poller *g_perf_timer = NULL;
@@ -156,6 +157,9 @@ struct bdevperf_job {
 	/* keep channel's histogram data before being destroyed */
 	struct spdk_histogram_data	*histogram;
 	struct spdk_bit_array		*random_map;
+
+	/* counter used for generating unique write data (-U option) */
+	uint32_t			write_io_count;
 };
 
 struct spdk_bdevperf {
@@ -352,10 +356,13 @@ performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job
 }
 
 static void
-generate_data(void *buf, int buf_len, int block_size, void *md_buf, int md_size,
-	      int num_blocks)
+generate_data(struct bdevperf_job *job, void *buf, void *md_buf, bool unique)
 {
 	int offset_blocks = 0, md_offset, data_block_size, inner_offset;
+	int buf_len = job->buf_size;
+	int block_size = spdk_bdev_get_block_size(job->bdev);
+	int md_size = spdk_bdev_get_md_size(job->bdev);
+	int num_blocks = job->io_size_blocks;
 
 	if (buf_len < num_blocks * block_size) {
 		return;
@@ -368,6 +375,28 @@ generate_data(void *buf, int buf_len, int block_size, void *md_buf, int md_size,
 	} else {
 		data_block_size = block_size;
 		md_offset = md_size;
+	}
+
+	if (unique) {
+		uint64_t io_count = job->write_io_count++;
+		unsigned int i;
+
+		assert(md_size == 0 || md_size >= (int)sizeof(uint64_t));
+
+		while (offset_blocks < num_blocks) {
+			inner_offset = 0;
+			while (inner_offset < data_block_size) {
+				*(uint64_t *)buf = (io_count << 32) | (offset_blocks + inner_offset);
+				inner_offset += sizeof(uint64_t);
+				buf += sizeof(uint64_t);
+			}
+			for (i = 0; i < md_size / sizeof(uint64_t); i++) {
+				((uint64_t *)md_buf)[i] = (io_count << 32) | offset_blocks;
+			}
+			md_buf += md_offset;
+			offset_blocks++;
+		}
+		return;
 	}
 
 	while (offset_blocks < num_blocks) {
@@ -1200,20 +1229,7 @@ bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 	 */
 	task->offset_blocks = (offset_in_ios + job->ios_base) * job->io_size_blocks;
 
-	if (job->verify || job->reset) {
-		generate_data(task->buf, job->buf_size,
-			      spdk_bdev_get_block_size(job->bdev),
-			      task->md_buf, spdk_bdev_get_md_size(job->bdev),
-			      job->io_size_blocks);
-		if (g_zcopy) {
-			bdevperf_prep_zcopy_write_task(task);
-			return;
-		} else {
-			task->iov.iov_base = task->buf;
-			task->iov.iov_len = job->buf_size;
-			task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
-		}
-	} else if (job->flush) {
+	if (job->flush) {
 		task->io_type = SPDK_BDEV_IO_TYPE_FLUSH;
 	} else if (job->unmap) {
 		task->io_type = SPDK_BDEV_IO_TYPE_UNMAP;
@@ -1223,6 +1239,9 @@ bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 		   (job->rw_percentage != 0 && ((rand_r(&job->seed) % 100) < job->rw_percentage))) {
 		task->io_type = SPDK_BDEV_IO_TYPE_READ;
 	} else {
+		if (job->verify || job->reset || g_unique_writes) {
+			generate_data(job, task->buf, task->md_buf, g_unique_writes);
+		}
 		if (g_zcopy) {
 			bdevperf_prep_zcopy_write_task(task);
 			return;
@@ -2493,6 +2512,8 @@ bdevperf_parse_arg(int ch, char *arg)
 			return -EINVAL;
 		}
 		g_io_size = (int)size;
+	} else if (ch == 'U') {
+		g_unique_writes = true;
 	} else {
 		tmp = spdk_strtoll(arg, 10);
 		if (tmp < 0) {
@@ -2558,6 +2579,7 @@ bdevperf_usage(void)
 	printf(" -D                        use a random map for picking offsets not previously read or written (for all jobs)\n");
 	printf(" -E                        share per lcore thread among jobs. Available only if -j is not used.\n");
 	printf(" -J                        File name to open with append mode and log JSON RPC calls.\n");
+	printf(" -U                        generate unique data for each write I/O, has no effect on non-write I/O\n");
 }
 
 static void
@@ -2699,7 +2721,7 @@ main(int argc, char **argv)
 	opts.rpc_addr = NULL;
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "Zzfq:o:t:w:k:CEF:J:M:P:S:T:Xlj:D", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "Zzfq:o:t:w:k:CEF:J:M:P:S:T:Xlj:DU", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
