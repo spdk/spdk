@@ -144,6 +144,12 @@ struct raid_bdev_io {
 
 	/* Custom completion callback. Overrides bdev_io completion if set. */
 	raid_bdev_io_completion_cb	completion_cb;
+
+	struct {
+		uint64_t		offset;
+		struct iovec		*iov;
+		struct iovec		iov_copy;
+	} split;
 };
 
 struct raid_bdev_process_request {

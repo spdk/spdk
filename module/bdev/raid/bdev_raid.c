@@ -39,6 +39,7 @@ struct raid_bdev_io_channel {
 	struct {
 		uint64_t offset;
 		struct spdk_io_channel *target_ch;
+		struct raid_bdev_io_channel *ch_processed;
 	} process;
 };
 
@@ -121,11 +122,21 @@ raid_bdev_ch_process_cleanup(struct raid_bdev_io_channel *raid_ch)
 		spdk_put_io_channel(raid_ch->process.target_ch);
 		raid_ch->process.target_ch = NULL;
 	}
+
+	if (raid_ch->process.ch_processed != NULL) {
+		free(raid_ch->process.ch_processed->base_channel);
+		free(raid_ch->process.ch_processed);
+		raid_ch->process.ch_processed = NULL;
+	}
 }
 
 static int
 raid_bdev_ch_process_setup(struct raid_bdev_io_channel *raid_ch, struct raid_bdev_process *process)
 {
+	struct raid_bdev *raid_bdev = process->raid_bdev;
+	struct raid_bdev_io_channel *raid_ch_processed;
+	struct raid_base_bdev_info *base_info;
+
 	raid_ch->process.offset = process->window_offset;
 
 	/* In the future we may have other types of processes which don't use a target bdev,
@@ -135,11 +146,38 @@ raid_bdev_ch_process_setup(struct raid_bdev_io_channel *raid_ch, struct raid_bde
 
 	raid_ch->process.target_ch = spdk_bdev_get_io_channel(process->target->desc);
 	if (raid_ch->process.target_ch == NULL) {
-		raid_bdev_ch_process_cleanup(raid_ch);
-		return -ENOMEM;
+		goto err;
 	}
 
+	raid_ch_processed = calloc(1, sizeof(*raid_ch_processed));
+	if (raid_ch_processed == NULL) {
+		goto err;
+	}
+	raid_ch->process.ch_processed = raid_ch_processed;
+
+	raid_ch_processed->base_channel = calloc(raid_bdev->num_base_bdevs,
+					  sizeof(*raid_ch_processed->base_channel));
+	if (raid_ch_processed->base_channel == NULL) {
+		goto err;
+	}
+
+	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
+		uint8_t slot = raid_bdev_base_bdev_slot(base_info);
+
+		if (base_info != process->target) {
+			raid_ch_processed->base_channel[slot] = raid_ch->base_channel[slot];
+		} else {
+			raid_ch_processed->base_channel[slot] = raid_ch->process.target_ch;
+		}
+	}
+
+	raid_ch_processed->module_channel = raid_ch->module_channel;
+	raid_ch_processed->process.offset = RAID_OFFSET_BLOCKS_INVALID;
+
 	return 0;
+err:
+	raid_bdev_ch_process_cleanup(raid_ch);
+	return -ENOMEM;
 }
 
 /*
@@ -416,6 +454,45 @@ raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status sta
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
 
+	if (raid_io->split.offset != RAID_OFFSET_BLOCKS_INVALID) {
+		struct iovec *split_iov = raid_io->split.iov;
+		const struct iovec *split_iov_orig = &raid_io->split.iov_copy;
+
+		/*
+		 * Non-zero offset here means that this is the completion of the first part of the
+		 * split I/O (the higher LBAs). Then, we submit the second part and set offset to 0.
+		 */
+		if (raid_io->split.offset != 0) {
+			raid_io->offset_blocks = bdev_io->u.bdev.offset_blocks;
+			raid_io->md_buf = bdev_io->u.bdev.md_buf;
+
+			if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+				raid_io->num_blocks = raid_io->split.offset;
+				raid_io->iovcnt = raid_io->iovs - bdev_io->u.bdev.iovs;
+				raid_io->iovs = bdev_io->u.bdev.iovs;
+				if (split_iov != NULL) {
+					raid_io->iovcnt++;
+					split_iov->iov_len = split_iov->iov_base - split_iov_orig->iov_base;
+					split_iov->iov_base = split_iov_orig->iov_base;
+				}
+
+				raid_io->split.offset = 0;
+				raid_io->base_bdev_io_submitted = 0;
+				raid_io->raid_ch = raid_io->raid_ch->process.ch_processed;
+
+				raid_io->raid_bdev->module->submit_rw_request(raid_io);
+				return;
+			}
+		}
+
+		raid_io->num_blocks = bdev_io->u.bdev.num_blocks;
+		raid_io->iovcnt = bdev_io->u.bdev.iovcnt;
+		raid_io->iovs = bdev_io->u.bdev.iovs;
+		if (split_iov != NULL) {
+			*split_iov = *split_iov_orig;
+		}
+	}
+
 	if (spdk_unlikely(raid_io->completion_cb != NULL)) {
 		raid_io->completion_cb(raid_io, status);
 	} else {
@@ -553,6 +630,77 @@ raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io)
 	}
 }
 
+static void
+raid_bdev_io_split(struct raid_bdev_io *raid_io, uint64_t split_offset)
+{
+	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
+	size_t iov_offset = (split_offset << raid_bdev->blocklen_shift);
+	int i;
+
+	assert(split_offset != 0);
+	assert(raid_io->split.offset == RAID_OFFSET_BLOCKS_INVALID);
+	raid_io->split.offset = split_offset;
+
+	raid_io->offset_blocks += split_offset;
+	raid_io->num_blocks -= split_offset;
+	if (raid_io->md_buf != NULL) {
+		raid_io->md_buf += (split_offset * raid_bdev->bdev.md_len);
+	}
+
+	for (i = 0; i < raid_io->iovcnt; i++) {
+		struct iovec *iov = &raid_io->iovs[i];
+
+		if (iov_offset < iov->iov_len) {
+			if (iov_offset == 0) {
+				raid_io->split.iov = NULL;
+			} else {
+				raid_io->split.iov = iov;
+				raid_io->split.iov_copy = *iov;
+				iov->iov_base += iov_offset;
+				iov->iov_len -= iov_offset;
+			}
+			raid_io->iovs += i;
+			raid_io->iovcnt -= i;
+			break;
+		}
+
+		iov_offset -= iov->iov_len;
+	}
+}
+
+static void
+raid_bdev_submit_rw_request(struct raid_bdev_io *raid_io)
+{
+	struct raid_bdev_io_channel *raid_ch = raid_io->raid_ch;
+
+	if (raid_ch->process.offset != RAID_OFFSET_BLOCKS_INVALID) {
+		uint64_t offset_begin = raid_io->offset_blocks;
+		uint64_t offset_end = offset_begin + raid_io->num_blocks;
+
+		if (offset_end > raid_ch->process.offset) {
+			if (offset_begin < raid_ch->process.offset) {
+				/*
+				 * If the I/O spans both the processed and unprocessed ranges,
+				 * split it and first handle the unprocessed part. After it
+				 * completes, the rest will be handled.
+				 * This situation occurs when the process thread is not active
+				 * or is waiting for the process window range to be locked
+				 * (quiesced). When a window is being processed, such I/Os will be
+				 * deferred by the bdev layer until the window is unlocked.
+				 */
+				SPDK_DEBUGLOG(bdev_raid, "split: process_offset: %lu offset_begin: %lu offset_end: %lu\n",
+					      raid_ch->process.offset, offset_begin, offset_end);
+				raid_bdev_io_split(raid_io, raid_ch->process.offset - offset_begin);
+			}
+		} else {
+			/* Use the child channel, which corresponds to the already processed range */
+			raid_io->raid_ch = raid_ch->process.ch_processed;
+		}
+	}
+
+	raid_io->raid_bdev->module->submit_rw_request(raid_io);
+}
+
 /*
  * brief:
  * Callback function to spdk_bdev_io_get_buf.
@@ -574,7 +722,7 @@ raid_bdev_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		return;
 	}
 
-	raid_io->raid_bdev->module->submit_rw_request(raid_io);
+	raid_bdev_submit_rw_request(raid_io);
 }
 
 void
@@ -601,6 +749,7 @@ raid_bdev_io_init(struct raid_bdev_io *raid_io, struct raid_bdev_io_channel *rai
 	raid_io->base_bdev_io_submitted = 0;
 	raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	raid_io->completion_cb = NULL;
+	raid_io->split.offset = RAID_OFFSET_BLOCKS_INVALID;
 }
 
 /*
@@ -630,7 +779,7 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		raid_io->raid_bdev->module->submit_rw_request(raid_io);
+		raid_bdev_submit_rw_request(raid_io);
 		break;
 
 	case SPDK_BDEV_IO_TYPE_RESET:
@@ -639,6 +788,11 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
+		if (raid_io->raid_bdev->process != NULL) {
+			/* TODO: rebuild support */
+			raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
+			return;
+		}
 		raid_io->raid_bdev->module->submit_null_payload_request(raid_io);
 		break;
 
@@ -1537,6 +1691,10 @@ raid_bdev_channel_remove_base_bdev(struct spdk_io_channel_iter *i)
 	if (raid_ch->base_channel[idx] != NULL) {
 		spdk_put_io_channel(raid_ch->base_channel[idx]);
 		raid_ch->base_channel[idx] = NULL;
+	}
+
+	if (raid_ch->process.ch_processed != NULL) {
+		raid_ch->process.ch_processed->base_channel[idx] = NULL;
 	}
 
 	spdk_for_each_channel_continue(i, 0);
