@@ -185,7 +185,7 @@ export PYTHONDONTWRITEBYTECODE=1
 
 # Export new_delete_type_mismatch to skip the known bug that exists in librados
 # https://tracker.ceph.com/issues/24078
-export ASAN_OPTIONS=new_delete_type_mismatch=0:disable_coredump=0:exitcode=134:use_sigaltstack=0
+export ASAN_OPTIONS=new_delete_type_mismatch=0:disable_coredump=0:abort_on_error=1:use_sigaltstack=0
 export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1:disable_coredump=0:exitcode=134'
 
 # Export LeakSanitizer option to use suppression file in order to prevent false positives
