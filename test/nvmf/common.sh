@@ -576,14 +576,42 @@ function gen_nvmf_target_json() {
 	JSON
 }
 
-function remove_spdk_ns() {
-	local ns
+function _remove_spdk_ns() {
+	local ns {ns,mn,an}_net_devs
 	while read -r ns _; do
 		[[ $ns == *_spdk ]] || continue
+		# Gather all devs from the target $ns namespace. We want to differentiate
+		# between veth and physical links and gather just the latter. To do so,
+		# we simply compare ifindex to iflink - as per kernel docs, these should
+		# be always equal for the physical links. For veth devices, since they are
+		# paired, iflink should point at an actual bridge, hence being different
+		# from its own ifindex.
+		ns_net_devs=($(
+			ip netns exec "$ns" bash <<- 'IN_NS'
+				shopt -s extglob
+				for dev in /sys/class/net/!(lo|bond*); do
+					(($(< "$dev/ifindex") == $(< "$dev/iflink"))) || continue
+					echo "${dev##*/}"
+				done
+			IN_NS
+		))
+		# Gather all the net devs from the main ns
+		mn_net_devs=($(basename -a /sys/class/net/!(lo|bond*)))
+		# Merge these two to have a list for comparison
+		an_net_devs=($(printf '%s\n' "${ns_net_devs[@]}" "${mn_net_devs[@]}" | sort))
+
 		ip netns delete "$ns"
+
+		# Check if our list matches against the main ns after $ns got deleted
+		while [[ ${an_net_devs[*]} != "${mn_net_devs[*]}" ]]; do
+			mn_net_devs=($(basename -a /sys/class/net/!(lo|bond*)))
+			sleep 1s
+		done
 	done < <(ip netns list)
-	# Let it settle
-	sleep 1
+}
+
+remove_spdk_ns() {
+	xtrace_disable_per_cmd _remove_spdk_ns
 }
 
 configure_kernel_target() {
