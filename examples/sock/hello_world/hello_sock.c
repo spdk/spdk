@@ -161,8 +161,6 @@ hello_sock_close_timeout_poll(void *arg)
 	struct hello_context_t *ctx = arg;
 	SPDK_NOTICELOG("Connection closed\n");
 
-	free(ctx->buf);
-
 	spdk_poller_unregister(&ctx->time_out);
 	spdk_poller_unregister(&ctx->poller_in);
 	spdk_sock_close(&ctx->sock);
@@ -572,6 +570,7 @@ main(int argc, char **argv)
 
 		rc = spdk_sock_impl_get_opts(hello_context.sock_impl_name, &impl_opts, &len);
 		if (rc < 0) {
+			free(hello_context.buf);
 			exit(rc);
 		}
 
@@ -595,5 +594,6 @@ main(int argc, char **argv)
 
 	/* Gracefully close out all of the SPDK subsystems. */
 	spdk_app_fini();
+	free(hello_context.buf);
 	return rc;
 }
