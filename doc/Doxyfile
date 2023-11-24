@@ -817,6 +817,7 @@ INPUT                  += \
                          deprecation.md \
                          distributions.md \
                          event.md \
+                         fips.md \
                          ftl.md \
                          gdb_macros.md \
                          getting_started.md \
