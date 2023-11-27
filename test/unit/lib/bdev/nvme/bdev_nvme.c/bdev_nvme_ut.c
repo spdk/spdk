@@ -5106,6 +5106,8 @@ test_retry_io_if_ctrlr_is_resetting(void)
 	struct nvme_qpair *nvme_qpair;
 	int rc;
 
+	g_opts.bdev_retry_count = 1;
+
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&path.trid);
 
@@ -5251,6 +5253,8 @@ test_retry_io_if_ctrlr_is_resetting(void)
 	poll_threads();
 
 	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
+
+	g_opts.bdev_retry_count = 0;
 }
 
 static void
@@ -5569,6 +5573,8 @@ test_fail_path(void)
 	 * - Then ctrlr_loss_timeout_sec comes and the ctrlr is deleted.
 	 */
 
+	g_opts.bdev_retry_count = 1;
+
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&path.trid);
 
@@ -5715,6 +5721,8 @@ test_fail_path(void)
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 
 	free(bdev_io);
+
+	g_opts.bdev_retry_count = 0;
 }
 
 static void
