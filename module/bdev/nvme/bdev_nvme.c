@@ -190,7 +190,7 @@ static void bdev_nvme_abort(struct nvme_bdev_channel *nbdev_ch,
 			    struct nvme_bdev_io *bio, struct nvme_bdev_io *bio_to_abort);
 static void bdev_nvme_reset_io(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio);
 static int bdev_nvme_reset_ctrlr(struct nvme_ctrlr *nvme_ctrlr);
-static int bdev_nvme_failover_ctrlr(struct nvme_ctrlr *nvme_ctrlr, bool remove);
+static int bdev_nvme_failover_ctrlr(struct nvme_ctrlr *nvme_ctrlr);
 static void remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
 static int nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr);
 
@@ -1577,7 +1577,7 @@ bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_
 		} else {
 			/* qpair was disconnected unexpectedly. Reset controller for recovery. */
 			SPDK_NOTICELOG("qpair %p was disconnected and freed. reset controller.\n", qpair);
-			bdev_nvme_failover_ctrlr(nvme_qpair->ctrlr, false);
+			bdev_nvme_failover_ctrlr(nvme_qpair->ctrlr);
 		}
 	} else {
 		/* In this case, ctrlr_channel is already deleted. */
@@ -1664,7 +1664,7 @@ bdev_nvme_poll_adminq(void *arg)
 							    g_opts.nvme_adminq_poll_period_us);
 			disconnected_cb(nvme_ctrlr);
 		} else {
-			bdev_nvme_failover_ctrlr(nvme_ctrlr, false);
+			bdev_nvme_failover_ctrlr(nvme_ctrlr);
 		}
 	} else if (spdk_nvme_ctrlr_get_admin_qp_failure_reason(nvme_ctrlr->ctrlr) !=
 		   SPDK_NVME_QPAIR_FAILURE_NONE) {
@@ -2053,7 +2053,7 @@ _bdev_nvme_reset_ctrlr_complete(struct spdk_io_channel_iter *i, int status)
 		nvme_ctrlr_disconnect(nvme_ctrlr, bdev_nvme_start_reconnect_delay_timer);
 		break;
 	case OP_FAILOVER:
-		bdev_nvme_failover_ctrlr(nvme_ctrlr, false);
+		bdev_nvme_failover_ctrlr(nvme_ctrlr);
 		break;
 	default:
 		break;
@@ -2851,12 +2851,12 @@ bdev_nvme_failover_ctrlr_unsafe(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 }
 
 static int
-bdev_nvme_failover_ctrlr(struct nvme_ctrlr *nvme_ctrlr, bool remove)
+bdev_nvme_failover_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 {
 	int rc;
 
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
-	rc = bdev_nvme_failover_ctrlr_unsafe(nvme_ctrlr, remove);
+	rc = bdev_nvme_failover_ctrlr_unsafe(nvme_ctrlr, false);
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	if (rc == 0) {

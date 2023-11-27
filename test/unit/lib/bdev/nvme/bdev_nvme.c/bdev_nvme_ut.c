@@ -1656,7 +1656,7 @@ test_failover_ctrlr(void)
 	/* Case 1: ctrlr is already being destructed. */
 	nvme_ctrlr->destruct = true;
 
-	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr, false);
+	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == -ENXIO);
 	CU_ASSERT(curr_trid->last_failed_tsc == 0);
 
@@ -1664,13 +1664,13 @@ test_failover_ctrlr(void)
 	nvme_ctrlr->destruct = false;
 	nvme_ctrlr->resetting = true;
 
-	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr, false);
+	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == -EINPROGRESS);
 
 	/* Case 3: reset completes successfully. */
 	nvme_ctrlr->resetting = false;
 
-	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr, false);
+	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == 0);
 
 	CU_ASSERT(nvme_ctrlr->resetting == true);
@@ -1703,13 +1703,13 @@ test_failover_ctrlr(void)
 	/* Case 4: reset is in progress. */
 	nvme_ctrlr->resetting = true;
 
-	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr, false);
+	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == -EINPROGRESS);
 
 	/* Case 5: failover completes successfully. */
 	nvme_ctrlr->resetting = false;
 
-	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr, false);
+	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == 0);
 
 	CU_ASSERT(nvme_ctrlr->resetting == true);
@@ -5498,8 +5498,8 @@ test_retry_failover_ctrlr(void)
 	/* If we remove trid1 while reconnect is scheduled, trid1 is removed and path_id is
 	 * switched to trid2 but reset is not started.
 	 */
-	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr, true);
-	CU_ASSERT(rc == 0);
+	rc = bdev_nvme_failover_ctrlr_unsafe(nvme_ctrlr, true);
+	CU_ASSERT(rc == -EALREADY);
 
 	CU_ASSERT(ut_get_path_id_by_trid(nvme_ctrlr, &trid1) == NULL);
 	CU_ASSERT(path_id2 == nvme_ctrlr->active_path_id);
@@ -6683,7 +6683,7 @@ test_race_between_reset_and_disconnected(void)
 	 *
 	 * Simulate fabric connect command timeout by calling bdev_nvme_failover_ctrlr().
 	 */
-	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr, false);
+	rc = bdev_nvme_failover_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == -EINPROGRESS);
 	CU_ASSERT(nvme_ctrlr->resetting == true);
 	CU_ASSERT(nvme_ctrlr->pending_failover == true);
