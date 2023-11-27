@@ -842,11 +842,6 @@ nvme_qpair_is_connected(struct nvme_qpair *nvme_qpair)
 		return false;
 	}
 
-	if (spdk_nvme_ctrlr_get_admin_qp_failure_reason(nvme_qpair->ctrlr->ctrlr) !=
-	    SPDK_NVME_QPAIR_FAILURE_NONE) {
-		return false;
-	}
-
 	return true;
 }
 
