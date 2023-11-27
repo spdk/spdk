@@ -2168,6 +2168,10 @@ bdev_nvme_reset_check_qpair_connected(void *ctx)
 	spdk_for_each_channel_continue(ctrlr_ch->reset_iter, 0);
 	ctrlr_ch->reset_iter = NULL;
 
+	if (!g_opts.disable_auto_failback) {
+		_bdev_nvme_clear_io_path_cache(ctrlr_ch->qpair);
+	}
+
 	return SPDK_POLLER_BUSY;
 }
 
