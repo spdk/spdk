@@ -137,13 +137,15 @@ dump_user_config(void)
 	}
 	if (g_workload_selection == SPDK_ACCEL_OPC_COPY_CRC32C ||
 	    g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY ||
+	    g_workload_selection == SPDK_ACCEL_OPC_DIF_GENERATE ||
 	    g_workload_selection == SPDK_ACCEL_OPC_DIF_GENERATE_COPY) {
 		printf("Vector size:    %u bytes\n", g_xfer_size_bytes);
 		printf("Transfer size:  %u bytes\n", g_xfer_size_bytes * g_chained_count);
 	} else {
 		printf("Transfer size:  %u bytes\n", g_xfer_size_bytes);
 	}
-	if (g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY) {
+	if (g_workload_selection == SPDK_ACCEL_OPC_DIF_GENERATE ||
+	    g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY) {
 		printf("Block size:     %u bytes\n", g_block_size_bytes);
 		printf("Metadata size:  %u bytes\n", g_md_size_bytes);
 	}
@@ -170,7 +172,8 @@ usage(void)
 	printf("\t[-T number of threads per core\n");
 	printf("\t[-o transfer size in bytes (default: 4KiB. For compress/decompress, 0 means the input file size)]\n");
 	printf("\t[-t time in seconds]\n");
-	printf("\t[-w workload type must be one of these: copy, fill, crc32c, copy_crc32c, compare, compress, decompress, dualcast, xor, dif_verify, dif_generate_copy\n");
+	printf("\t[-w workload type must be one of these: copy, fill, crc32c, copy_crc32c, compare, compress, decompress, dualcast, xor,\n");
+	printf("\t[                                       dif_verify, , dif_generate, dif_generate_copy\n");
 	printf("\t[-M assign module to the operation, not compatible with accel_assign_opc RPC\n");
 	printf("\t[-l for compress/decompress workloads, name of uncompressed input file\n");
 	printf("\t[-S for crc32c workload, use this seed value (default 0)\n");
@@ -268,6 +271,8 @@ parse_args(int ch, char *arg)
 			g_workload_selection = SPDK_ACCEL_OPC_XOR;
 		} else if (!strcmp(g_workload_type, "dif_verify")) {
 			g_workload_selection = SPDK_ACCEL_OPC_DIF_VERIFY;
+		} else if (!strcmp(g_workload_type, "dif_generate")) {
+			g_workload_selection = SPDK_ACCEL_OPC_DIF_GENERATE;
 		} else if (!strcmp(g_workload_type, "dif_generate_copy")) {
 			g_workload_selection = SPDK_ACCEL_OPC_DIF_GENERATE_COPY;
 		} else {
@@ -421,6 +426,7 @@ _get_task_data_bufs(struct ap_task *task)
 	if (g_workload_selection == SPDK_ACCEL_OPC_CRC32C ||
 	    g_workload_selection == SPDK_ACCEL_OPC_COPY_CRC32C ||
 	    g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY ||
+	    g_workload_selection == SPDK_ACCEL_OPC_DIF_GENERATE ||
 	    g_workload_selection == SPDK_ACCEL_OPC_DIF_GENERATE_COPY) {
 		assert(g_chained_count > 0);
 		task->src_iovcnt = g_chained_count;
@@ -434,7 +440,8 @@ _get_task_data_bufs(struct ap_task *task)
 			dst_buff_len = g_xfer_size_bytes * g_chained_count;
 		}
 
-		if (g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY) {
+		if (g_workload_selection == SPDK_ACCEL_OPC_DIF_GENERATE ||
+		    g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY) {
 			src_buff_len += (g_xfer_size_bytes / g_block_size_bytes) * g_md_size_bytes;
 		}
 
@@ -477,6 +484,7 @@ _get_task_data_bufs(struct ap_task *task)
 
 	if (g_workload_selection != SPDK_ACCEL_OPC_CRC32C &&
 	    g_workload_selection != SPDK_ACCEL_OPC_DIF_VERIFY &&
+	    g_workload_selection != SPDK_ACCEL_OPC_DIF_GENERATE &&
 	    g_workload_selection != SPDK_ACCEL_OPC_DIF_GENERATE_COPY) {
 		task->dst = spdk_dma_zmalloc(dst_buff_len, align, NULL);
 		if (task->dst == NULL) {
@@ -503,7 +511,8 @@ _get_task_data_bufs(struct ap_task *task)
 		memset(task->dst2, ~DATA_PATTERN, g_xfer_size_bytes);
 	}
 
-	if (g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY) {
+	if (g_workload_selection == SPDK_ACCEL_OPC_DIF_GENERATE ||
+	    g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY) {
 		dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 		dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 
@@ -520,10 +529,12 @@ _get_task_data_bufs(struct ap_task *task)
 			return rc;
 		}
 
-		rc = spdk_dif_generate(task->src_iovs, task->src_iovcnt, task->num_blocks, &task->dif_ctx);
-		if (rc != 0) {
-			fprintf(stderr, "Generation of DIF failed, error (%d)\n", rc);
-			return rc;
+		if (g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY) {
+			rc = spdk_dif_generate(task->src_iovs, task->src_iovcnt, task->num_blocks, &task->dif_ctx);
+			if (rc != 0) {
+				fprintf(stderr, "Generation of DIF failed, error (%d)\n", rc);
+				return rc;
+			}
 		}
 	}
 
@@ -612,6 +623,10 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 		rc = spdk_accel_submit_dif_verify(worker->ch, task->src_iovs, task->src_iovcnt, task->num_blocks,
 						  &task->dif_ctx, &task->dif_err, accel_done, task);
 		break;
+	case SPDK_ACCEL_OPC_DIF_GENERATE:
+		rc = spdk_accel_submit_dif_generate(worker->ch, task->src_iovs, task->src_iovcnt, task->num_blocks,
+						    &task->dif_ctx, accel_done, task);
+		break;
 	case SPDK_ACCEL_OPC_DIF_GENERATE_COPY:
 		rc = spdk_accel_submit_dif_generate_copy(worker->ch, task->dst_iovs, task->dst_iovcnt,
 				task->src_iovs, task->src_iovcnt,
@@ -640,6 +655,7 @@ _free_task_buffers(struct ap_task *task)
 	} else if (g_workload_selection == SPDK_ACCEL_OPC_CRC32C ||
 		   g_workload_selection == SPDK_ACCEL_OPC_COPY_CRC32C ||
 		   g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY ||
+		   g_workload_selection == SPDK_ACCEL_OPC_DIF_GENERATE ||
 		   g_workload_selection == SPDK_ACCEL_OPC_DIF_GENERATE_COPY) {
 		if (task->src_iovs) {
 			for (i = 0; i < task->src_iovcnt; i++) {
@@ -774,6 +790,16 @@ accel_done(void *arg1, int status)
 			}
 			break;
 		case SPDK_ACCEL_OPC_DIF_VERIFY:
+			break;
+		case SPDK_ACCEL_OPC_DIF_GENERATE:
+			if (spdk_dif_verify(task->src_iovs, task->src_iovcnt, task->num_blocks,
+					    &task->dif_ctx, &err_blk) != 0) {
+				SPDK_NOTICELOG("Data miscompare, "
+					       "err_type %u, expected %lu, actual %lu, err_offset %u\n",
+					       err_blk.err_type, err_blk.expected,
+					       err_blk.actual, err_blk.err_offset);
+				worker->xfer_failed++;
+			}
 			break;
 		case SPDK_ACCEL_OPC_DIF_GENERATE_COPY:
 			if (spdk_dif_verify(task->dst_iovs, task->dst_iovcnt, task->num_blocks,
@@ -1336,7 +1362,8 @@ main(int argc, char **argv)
 
 	if ((g_workload_selection == SPDK_ACCEL_OPC_CRC32C ||
 	     g_workload_selection == SPDK_ACCEL_OPC_COPY_CRC32C ||
-	     g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY) &&
+	     g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY ||
+	     g_workload_selection == SPDK_ACCEL_OPC_DIF_GENERATE) &&
 	    g_chained_count == 0) {
 		usage();
 		return -1;
