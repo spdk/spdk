@@ -49,13 +49,13 @@ run_test "nvmf_bdev_io_wait" $rootdir/test/nvmf/target/bdev_io_wait.sh "${TEST_A
 run_test "nvmf_queue_depth" $rootdir/test/nvmf/target/queue_depth.sh "${TEST_ARGS[@]}"
 run_test "nvmf_multipath" $rootdir/test/nvmf/target/multipath.sh "${TEST_ARGS[@]}"
 run_test "nvmf_zcopy" $rootdir/test/nvmf/target/zcopy.sh "${TEST_ARGS[@]}"
-run_test "nvmf_tls" $rootdir/test/nvmf/target/tls.sh "${TEST_ARGS[@]}"
 run_test "nvmf_nmic" $rootdir/test/nvmf/target/nmic.sh "${TEST_ARGS[@]}"
 run_test "nvmf_fio_target" $rootdir/test/nvmf/target/fio.sh "${TEST_ARGS[@]}"
 run_test "nvmf_bdevio" $rootdir/test/nvmf/target/bdevio.sh "${TEST_ARGS[@]}"
 
 if [ "$SPDK_TEST_NVMF_TRANSPORT" = "tcp" ]; then
 	run_test "nvmf_bdevio_no_huge" $rootdir/test/nvmf/target/bdevio.sh "${TEST_ARGS[@]}" --no-hugepages
+	run_test "nvmf_tls" $rootdir/test/nvmf/target/tls.sh "${TEST_ARGS[@]}"
 fi
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
