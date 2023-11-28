@@ -365,13 +365,25 @@ attach_cb(void *cb_ctx, struct spdk_idxd_device *idxd)
 	g_num_devices++;
 }
 
-void
+int
 accel_dsa_enable_probe(bool kernel_mode)
 {
+	int rc;
+
+	if (g_dsa_enable) {
+		return -EALREADY;
+	}
+
+	rc = spdk_idxd_set_config(kernel_mode);
+	if (rc != 0) {
+		return rc;
+	}
+
+	spdk_accel_module_list_add(&g_dsa_module);
 	g_kernel_mode = kernel_mode;
 	g_dsa_enable = true;
-	spdk_idxd_set_config(g_kernel_mode);
-	spdk_accel_module_list_add(&g_dsa_module);
+
+	return 0;
 }
 
 static bool

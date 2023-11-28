@@ -342,7 +342,7 @@ idxd_get_impl_by_name(const char *impl_name)
 	return NULL;
 }
 
-void
+int
 spdk_idxd_set_config(bool kernel_mode)
 {
 	struct spdk_idxd_impl *tmp;
@@ -356,15 +356,17 @@ spdk_idxd_set_config(bool kernel_mode)
 	if (g_idxd_impl != NULL && g_idxd_impl != tmp) {
 		SPDK_ERRLOG("Cannot change idxd implementation after devices are initialized\n");
 		assert(false);
-		return;
+		return -EALREADY;
 	}
 	g_idxd_impl = tmp;
 
 	if (g_idxd_impl == NULL) {
 		SPDK_ERRLOG("Cannot set the idxd implementation with %s mode\n",
 			    kernel_mode ? KERNEL_DRIVER_NAME : USERSPACE_DRIVER_NAME);
-		return;
+		return -EINVAL;
 	}
+
+	return 0;
 }
 
 static void

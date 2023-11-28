@@ -112,8 +112,10 @@ void spdk_idxd_detach(struct spdk_idxd_device *idxd);
  * Sets the IDXD configuration.
  *
  * \param kernel_mode true if using kernel driver.
-  */
-void spdk_idxd_set_config(bool kernel_mode);
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_idxd_set_config(bool kernel_mode);
 
 /**
  * Build and submit an idxd memory copy request.
