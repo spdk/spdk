@@ -3086,6 +3086,7 @@ nvme_rdma_qpair_process_submits(struct spdk_nvme_qpair *qpair)
 	}
 	if (rqpair->num_completions > 0) {
 		nvme_qpair_resubmit_requests(qpair, rqpair->num_completions);
+		rqpair->num_completions = 0;
 	}
 }
 
@@ -3118,7 +3119,6 @@ nvme_rdma_poll_group_process_completions(struct spdk_nvme_transport_poll_group *
 
 	STAILQ_FOREACH_SAFE(qpair, &tgroup->connected_qpairs, poll_group_stailq, tmp_qpair) {
 		rqpair = nvme_rdma_qpair(qpair);
-		rqpair->num_completions = 0;
 
 		if (spdk_unlikely(nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTING)) {
 			rc = nvme_rdma_ctrlr_connect_qpair_poll(qpair->ctrlr, qpair);
