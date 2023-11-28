@@ -127,19 +127,13 @@ bdev_xnvme_destruct(void *ctx)
 }
 
 static void
-bdev_xnvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, bool success)
+_xnvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct bdev_xnvme_task *xnvme_task = (struct bdev_xnvme_task *)bdev_io->driver_ctx;
 	struct bdev_xnvme *xnvme = (struct bdev_xnvme *)bdev_io->bdev->ctxt;
 	struct bdev_xnvme_io_channel *xnvme_ch = spdk_io_channel_get_ctx(ch);
 	struct xnvme_cmd_ctx *ctx = xnvme_queue_get_cmd_ctx(xnvme_ch->queue);
 	int err;
-
-	if (!success) {
-		xnvme_queue_put_cmd_ctx(xnvme_ch->queue, ctx);
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		return;
-	}
 
 	SPDK_DEBUGLOG(xnvme, "bdev_io : %p, iov_cnt : %d, bdev_xnvme_task : %p\n",
 		      bdev_io, bdev_io->u.bdev.iovcnt, (struct bdev_xnvme_task *)bdev_io->driver_ctx);
@@ -198,6 +192,20 @@ bdev_xnvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, 
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
+}
+
+static void
+bdev_xnvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, bool success)
+{
+	struct bdev_xnvme_io_channel *xnvme_ch = spdk_io_channel_get_ctx(ch);
+
+	if (!success) {
+		xnvme_queue_put_cmd_ctx(xnvme_ch->queue, xnvme_queue_get_cmd_ctx(xnvme_ch->queue));
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+
+	_xnvme_submit_request(ch, bdev_io);
 }
 
 static void
