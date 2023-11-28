@@ -1,0 +1,71 @@
+package_manager=tdnf
+
+upgrade() {
+	sudo "$package_manager" upgrade -y
+}
+
+install() {
+	(($#)) || return 0
+
+	sudo "$package_manager" install -y "$@"
+}
+
+packages=(
+	autoconf
+	automake
+	avahi
+	avahi-tools
+	alsa-lib-devel
+	bc
+	bison
+	btrfs-progs
+	bpftrace
+	cairo
+	cairo-devel
+	ceph
+	clang-analyzer
+	elfutils
+	elfutils-libelf-devel
+	fio
+	flex
+	gdb
+	gdisk
+	gflags-devel
+	iptables
+	iscsi-initiator-utils
+	isns-utils-devel
+	iproute
+	jq
+	kernel-devel
+	libaio-devel
+	libgcrypt-devel
+	librdmacm-utils
+	libtool
+	llvm
+	nbd
+	nvme-cli
+	openssl
+	pango
+	pango-devel
+	pciutils
+	perl-open
+	perl-Switch
+	pixman-devel
+	pmempool
+	python3
+	rpm-build
+	rpmdevtools
+	ruby-devel
+	smartmontools
+	socat
+	sshfs
+	sshpass
+	systemd-devel
+	tar
+	targetcli
+	valgrind
+	wget
+	xfsprogs
+)
+
+pre_install() { :; }
