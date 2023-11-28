@@ -1,0 +1,15 @@
+{
+	global:
+	spdk_keyring_init;
+	spdk_keyring_cleanup;
+	spdk_keyring_register_module;
+	spdk_keyring_add_key;
+	spdk_keyring_remove_key;
+	spdk_keyring_get_key;
+	spdk_keyring_put_key;
+	spdk_key_get_name;
+	spdk_key_get_key;
+	spdk_key_get_ctx;
+
+	local: *;
+};
