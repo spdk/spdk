@@ -330,13 +330,25 @@ attach_cb(void *cb_ctx, struct spdk_idxd_device *iaa)
 	g_num_devices++;
 }
 
-void
+int
 accel_iaa_enable_probe(void)
 {
-	g_iaa_enable = true;
+	int rc;
+
+	if (g_iaa_enable) {
+		return -EALREADY;
+	}
+
 	/* TODO initially only support user mode w/IAA */
-	spdk_idxd_set_config(false);
+	rc = spdk_idxd_set_config(false);
+	if (rc != 0) {
+		return rc;
+	}
+
 	spdk_accel_module_list_add(&g_iaa_module);
+	g_iaa_enable = true;
+
+	return 0;
 }
 
 static bool

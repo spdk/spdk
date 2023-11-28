@@ -8,6 +8,6 @@
 
 #include "spdk/stdinc.h"
 
-void accel_iaa_enable_probe(void);
+int accel_iaa_enable_probe(void);
 
 #endif /* SPDK_ACCEL_MODULE_IAA_H */
