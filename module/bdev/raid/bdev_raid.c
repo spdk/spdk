@@ -1541,35 +1541,13 @@ raid_bdev_remove_base_bdev_on_quiesced(void *ctx, int status)
 			      raid_bdev_channels_remove_base_bdev_done);
 }
 
-/*
- * brief:
- * raid_bdev_remove_base_bdev function is called by below layers when base_bdev
- * is removed. This function checks if this base bdev is part of any raid bdev
- * or not. If yes, it takes necessary action on that particular raid bdev.
- * params:
- * base_bdev - pointer to base bdev which got removed
- * cb_fn - callback function
- * cb_arg - argument to callback function
- * returns:
- * 0 - success
- * non zero - failure
- */
-int
-raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev, raid_bdev_remove_base_bdev_cb cb_fn,
-			   void *cb_ctx)
+static int
+_raid_bdev_remove_base_bdev(struct raid_base_bdev_info *base_info,
+			    raid_bdev_remove_base_bdev_cb cb_fn, void *cb_ctx)
 {
-	struct raid_bdev *raid_bdev;
-	struct raid_base_bdev_info *base_info;
+	struct raid_bdev *raid_bdev = base_info->raid_bdev;
 
-	SPDK_DEBUGLOG(bdev_raid, "%s\n", base_bdev->name);
-
-	/* Find the raid_bdev which has claimed this base_bdev */
-	base_info = raid_bdev_find_base_info_by_bdev(base_bdev);
-	if (!base_info) {
-		SPDK_ERRLOG("bdev to remove '%s' not found\n", base_bdev->name);
-		return -ENODEV;
-	}
-	raid_bdev = base_info->raid_bdev;
+	SPDK_DEBUGLOG(bdev_raid, "%s\n", base_info->name);
 
 	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
@@ -1612,6 +1590,35 @@ raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev, raid_bdev_remove_base_bd
 	}
 
 	return 0;
+}
+
+/*
+ * brief:
+ * raid_bdev_remove_base_bdev function is called by below layers when base_bdev
+ * is removed. This function checks if this base bdev is part of any raid bdev
+ * or not. If yes, it takes necessary action on that particular raid bdev.
+ * params:
+ * base_bdev - pointer to base bdev which got removed
+ * cb_fn - callback function
+ * cb_arg - argument to callback function
+ * returns:
+ * 0 - success
+ * non zero - failure
+ */
+int
+raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev, raid_bdev_remove_base_bdev_cb cb_fn,
+			   void *cb_ctx)
+{
+	struct raid_base_bdev_info *base_info;
+
+	/* Find the raid_bdev which has claimed this base_bdev */
+	base_info = raid_bdev_find_base_info_by_bdev(base_bdev);
+	if (!base_info) {
+		SPDK_ERRLOG("bdev to remove '%s' not found\n", base_bdev->name);
+		return -ENODEV;
+	}
+
+	return _raid_bdev_remove_base_bdev(base_info, cb_fn, cb_ctx);
 }
 
 /*
