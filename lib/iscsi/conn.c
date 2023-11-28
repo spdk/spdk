@@ -333,9 +333,16 @@ iscsi_conn_cleanup_backend(struct spdk_iscsi_conn *conn)
 	if (conn->sess->connections > 1) {
 		/* connection specific cleanup */
 	} else if (!g_iscsi.AllowDuplicateIsid) {
-		/* clean up all tasks to all LUNs for session */
+		/*
+		 * a> a target is connected by a single initiator, cleanup backend cancels inflight
+		 *    IOs and the resources (of this initiator) are reclaimed as soon as possible.
+		 * b> a target is connected by multiple initiators, one of these initiators
+		 *    disconnects with inflight IOs, resetting backend bdev leads all the inflight
+		 *    IOs (of multiple initiators) aborted. In this scenario, drain inflight IOs of
+		 *    the disconnected initiator instead.
+		 */
 		target = conn->sess->target;
-		if (target != NULL) {
+		if (target != NULL && iscsi_get_active_conns(target) == 1) {
 			rc = iscsi_tgt_node_cleanup_luns(conn, target);
 			if (rc < 0) {
 				SPDK_ERRLOG("target abort failed\n");
