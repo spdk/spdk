@@ -425,6 +425,7 @@ nvme_rdma_req_put(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req *rdm
 {
 	rdma_req->completion_flags = 0;
 	rdma_req->req = NULL;
+	rdma_req->rdma_rsp = NULL;
 	TAILQ_INSERT_HEAD(&rqpair->free_reqs, rdma_req, link);
 }
 
