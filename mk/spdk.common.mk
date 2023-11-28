@@ -388,15 +388,15 @@ ENV_LDFLAGS = $(if $(SPDK_NO_LINK_ENV),,$(ENV_LINKER_ARGS))
 # Link $(OBJS) and $(LIBS) into $@ (app)
 LINK_C=\
 	$(Q)echo "  LINK $(notdir $@)"; \
-	$(CC) -o $@ $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(ENV_LDFLAGS) $(SYS_LIBS)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(ENV_LDFLAGS) $(SYS_LIBS)
 
 LINK_CXX=\
 	$(Q)echo "  LINK $(notdir $@)"; \
-	$(CXX) -o $@ $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(ENV_LDFLAGS) $(SYS_LIBS)
+	$(CXX) -o $@ $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(ENV_LDFLAGS) $(SYS_LIBS)
 
 # Provide function to ease build of a shared lib
 define spdk_build_realname_shared_lib
-	$(1) -o $@ -shared $(CPPFLAGS) $(LDFLAGS) \
+	$(1) -o $@ -shared $(CFLAGS) $(LDFLAGS) \
 	    -Wl,-rpath=$(DESTDIR)/$(libdir) \
 	    -Wl,--soname,$(notdir $@) \
 	    -Wl,--whole-archive $(2) -Wl,--no-whole-archive \
