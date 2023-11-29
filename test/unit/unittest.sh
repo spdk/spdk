@@ -285,6 +285,7 @@ fi
 run_test "unittest_dma" $valgrind $testdir/lib/dma/dma.c/dma_ut
 
 run_test "unittest_init" unittest_init
+run_test "unittest_keyring" $valgrind "$testdir/lib/keyring/keyring.c/keyring_ut"
 
 if [ "$cov_avail" = "yes" ] && ! [[ "$CC_TYPE" == *"clang"* ]]; then
 	$LCOV -q -d . -c -t "$(hostname)" -o $UT_COVERAGE/ut_cov_test.info
