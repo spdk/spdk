@@ -133,6 +133,7 @@ struct spdk_thread {
 	uint64_t			next_poller_id;
 	enum spdk_thread_state		state;
 	int				pending_unregister_count;
+	uint32_t			for_each_count;
 
 	RB_HEAD(io_channel_tree, spdk_io_channel)	io_channels;
 	TAILQ_ENTRY(spdk_thread)			tailq;
@@ -632,6 +633,12 @@ thread_exit(struct spdk_thread *thread, uint64_t now)
 
 	if (spdk_ring_count(thread->messages) > 0) {
 		SPDK_INFOLOG(thread, "thread %s still has messages\n", thread->name);
+		return;
+	}
+
+	if (thread->for_each_count > 0) {
+		SPDK_INFOLOG(thread, "thread %s is still executing %u for_each_channels/threads\n",
+			     thread->name, thread->for_each_count);
 		return;
 	}
 
@@ -1969,6 +1976,18 @@ struct call_thread {
 };
 
 static void
+_back_to_orig_thread(void *ctx)
+{
+	struct call_thread *ct = ctx;
+
+	assert(ct->orig_thread->for_each_count > 0);
+	ct->orig_thread->for_each_count--;
+
+	ct->cpl(ct->ctx);
+	free(ctx);
+}
+
+static void
 _on_thread(void *ctx)
 {
 	struct call_thread *ct = ctx;
@@ -1988,8 +2007,7 @@ _on_thread(void *ctx)
 	if (!ct->cur_thread) {
 		SPDK_DEBUGLOG(thread, "Completed thread iteration\n");
 
-		rc = spdk_thread_send_msg(ct->orig_thread, ct->cpl, ct->ctx);
-		free(ctx);
+		rc = spdk_thread_send_msg(ct->orig_thread, _back_to_orig_thread, ctx);
 	} else {
 		SPDK_DEBUGLOG(thread, "Continuing thread iteration to %s\n",
 			      ct->cur_thread->name);
@@ -2025,6 +2043,8 @@ spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl)
 		return;
 	}
 	ct->orig_thread = thread;
+
+	ct->orig_thread->for_each_count++;
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	ct->cur_thread = TAILQ_FIRST(&g_threads);
@@ -2504,6 +2524,9 @@ _call_completion(void *ctx)
 {
 	struct spdk_io_channel_iter *i = ctx;
 
+	assert(i->orig_thread->for_each_count > 0);
+	i->orig_thread->for_each_count--;
+
 	if (i->cpl != NULL) {
 		i->cpl(i, i->status);
 	}
@@ -2553,6 +2576,8 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 	i->ctx = ctx;
 	i->cpl = cpl;
 	i->orig_thread = _get_thread();
+
+	i->orig_thread->for_each_count++;
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	i->dev = io_device_get(io_device);

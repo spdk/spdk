@@ -1913,6 +1913,108 @@ spdk_spin(void)
 	g_spin_abort_fn = __posix_abort;
 }
 
+static void
+for_each_channel_and_thread_exit_race(void)
+{
+	struct spdk_io_channel *ch1, *ch2;
+	struct spdk_thread *thread0;
+	int ch_count = 0;
+	int msg_count = 0;
+
+	allocate_threads(3);
+	set_thread(0);
+	spdk_io_device_register(&ch_count, channel_create, channel_destroy, sizeof(int), NULL);
+	set_thread(1);
+	ch1 = spdk_get_io_channel(&ch_count);
+	set_thread(2);
+	ch2 = spdk_get_io_channel(&ch_count);
+	CU_ASSERT(ch_count == 2);
+
+	/*
+	 * Test one race condition between spdk_thread_exit() and spdk_for_each_channel().
+	 *
+	 * thread 0 does not have io_channel and calls spdk_thread_exit() immediately
+	 * after spdk_for_each_channel(). In this case, thread 0 should exit after
+	 * spdk_for_each_channel() completes.
+	 */
+
+	set_thread(0);
+	thread0 = spdk_get_thread();
+
+	CU_ASSERT(thread0->for_each_count == 0);
+
+	spdk_for_each_channel(&ch_count, channel_msg, &msg_count, channel_cpl);
+	CU_ASSERT(msg_count == 0);
+	CU_ASSERT(thread0->for_each_count == 1);
+	CU_ASSERT(thread0->state == SPDK_THREAD_STATE_RUNNING);
+
+	spdk_thread_exit(thread0);
+	CU_ASSERT(thread0->state == SPDK_THREAD_STATE_EXITING);
+
+	poll_threads();
+	CU_ASSERT(msg_count == 3);
+	CU_ASSERT(thread0->for_each_count == 0);
+	CU_ASSERT(thread0->state == SPDK_THREAD_STATE_EXITED);
+
+	set_thread(1);
+	spdk_put_io_channel(ch1);
+	CU_ASSERT(ch_count == 2);
+	set_thread(2);
+	spdk_put_io_channel(ch2);
+	CU_ASSERT(ch_count == 2);
+	poll_threads();
+	CU_ASSERT(ch_count == 0);
+
+	spdk_io_device_unregister(&ch_count, NULL);
+	poll_threads();
+
+	free_threads();
+}
+
+static void
+for_each_thread_and_thread_exit_race(void)
+{
+	struct spdk_thread *thread0;
+	int count = 0;
+	int i;
+
+	allocate_threads(3);
+	set_thread(0);
+	thread0 = spdk_get_thread();
+
+	/* Even if thread 0 starts exiting, spdk_for_each_thread() should complete normally
+	 * and then thread 0 should be moved to EXITED.
+	 */
+
+	spdk_for_each_thread(for_each_cb, &count, for_each_cb);
+	CU_ASSERT(thread0->for_each_count == 1);
+	CU_ASSERT(thread0->state == SPDK_THREAD_STATE_RUNNING);
+
+	spdk_thread_exit(thread0);
+	CU_ASSERT(thread0->state == SPDK_THREAD_STATE_EXITING);
+
+	/* We have not polled thread 0 yet, so count should be 0 */
+	CU_ASSERT(count == 0);
+
+	/* Poll each thread to verify the message is passed to each */
+	for (i = 0; i < 3; i++) {
+		poll_thread(i);
+		CU_ASSERT(count == (i + 1));
+	}
+
+	/*
+	 * After each thread is called, the completion calls it
+	 * one more time.
+	 */
+	poll_thread(0);
+	CU_ASSERT(count == 4);
+
+	CU_ASSERT(thread0->for_each_count == 0);
+	CU_ASSERT(thread0->state == SPDK_THREAD_STATE_EXITED);
+
+	free_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1941,6 +2043,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, multi_timed_pollers_have_same_expiration);
 	CU_ADD_TEST(suite, io_device_lookup);
 	CU_ADD_TEST(suite, spdk_spin);
+	CU_ADD_TEST(suite, for_each_channel_and_thread_exit_race);
+	CU_ADD_TEST(suite, for_each_thread_and_thread_exit_race);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
