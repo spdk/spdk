@@ -43,6 +43,19 @@ DPDK_OPTS += -Db_lto=true
 endif
 endif
 
+ifeq ($(CONFIG_PGO_CAPTURE),y)
+DPDK_OPTS += -Db_pgo=generate
+endif
+
+ifeq ($(CONFIG_PGO_USE),y)
+DPDK_OPTS += -Db_pgo=use
+endif
+
+ifneq ($(CONFIG_PGO_DIR),)
+DPDK_CFLAGS += -fprofile-dir=$(CONFIG_PGO_DIR)
+DPDK_LDFLAGS += -fprofile-dir=$(CONFIG_PGO_DIR)
+endif
+
 # the drivers we use
 DPDK_DRIVERS = bus bus/pci bus/vdev mempool/ring
 
