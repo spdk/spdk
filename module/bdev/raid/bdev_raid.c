@@ -1571,7 +1571,7 @@ raid_bdev_remove_base_bdev_on_quiesced(void *ctx, int status)
 
 static int
 _raid_bdev_remove_base_bdev(struct raid_base_bdev_info *base_info,
-			    raid_bdev_remove_base_bdev_cb cb_fn, void *cb_ctx)
+			    raid_base_bdev_cb cb_fn, void *cb_ctx)
 {
 	struct raid_bdev *raid_bdev = base_info->raid_bdev;
 
@@ -1634,8 +1634,7 @@ _raid_bdev_remove_base_bdev(struct raid_base_bdev_info *base_info,
  * non zero - failure
  */
 int
-raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev, raid_bdev_remove_base_bdev_cb cb_fn,
-			   void *cb_ctx)
+raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev, raid_base_bdev_cb cb_fn, void *cb_ctx)
 {
 	struct raid_base_bdev_info *base_info;
 
@@ -2416,6 +2415,12 @@ raid_bdev_configure_base_bdev_cont(struct raid_base_bdev_info *base_info)
 			SPDK_ERRLOG("Failed to start rebuild: %s\n", spdk_strerror(-rc));
 			_raid_bdev_remove_base_bdev(base_info, NULL, NULL);
 		}
+	} else {
+		rc = 0;
+	}
+
+	if (base_info->configure_cb != NULL) {
+		base_info->configure_cb(base_info->configure_cb_ctx, rc);
 	}
 }
 
@@ -2429,21 +2434,27 @@ raid_bdev_configure_base_bdev_check_sb_cb(const struct raid_bdev_superblock *sb,
 	case 0:
 		/* valid superblock found */
 		SPDK_ERRLOG("Existing raid superblock found on bdev %s\n", base_info->name);
+		status = -EEXIST;
 		raid_bdev_free_base_bdev_resource(base_info);
 		break;
 	case -EINVAL:
 		/* no valid superblock */
 		raid_bdev_configure_base_bdev_cont(base_info);
-		break;
+		return;
 	default:
 		SPDK_ERRLOG("Failed to examine bdev %s: %s\n",
 			    base_info->name, spdk_strerror(-status));
 		break;
 	}
+
+	if (base_info->configure_cb != NULL) {
+		base_info->configure_cb(base_info->configure_cb_ctx, status);
+	}
 }
 
 static int
-raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existing)
+raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existing,
+			      raid_base_bdev_cb cb_fn, void *cb_ctx)
 {
 	struct raid_bdev *raid_bdev = base_info->raid_bdev;
 	struct spdk_bdev_desc *desc;
@@ -2515,8 +2526,6 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existi
 	}
 
 	SPDK_DEBUGLOG(bdev_raid, "bdev %s is claimed\n", bdev->name);
-
-	assert(raid_bdev->state != RAID_BDEV_STATE_ONLINE);
 
 	base_info->app_thread_ch = spdk_bdev_get_io_channel(desc);
 	if (base_info->app_thread_ch == NULL) {
@@ -2603,6 +2612,9 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existi
 		}
 	}
 
+	base_info->configure_cb = cb_fn;
+	base_info->configure_cb_ctx = cb_ctx;
+
 	if (existing) {
 		raid_bdev_configure_base_bdev_cont(base_info);
 	} else {
@@ -2621,24 +2633,14 @@ out:
 	return rc;
 }
 
-/*
- * brief:
- * raid_bdev_add_base_device function is the actual function which either adds
- * the nvme base device to existing raid bdev or create a new raid bdev. It also claims
- * the base device and keep the open descriptor.
- * params:
- * raid_bdev - pointer to raid bdev
- * name - name of the base bdev
- * slot - position to add base bdev
- * returns:
- * 0 - success
- * non zero - failure
- */
-int
-raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name, uint8_t slot)
+static int
+_raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name, uint8_t slot,
+			   uint64_t data_offset, uint64_t data_size,
+			   raid_base_bdev_cb cb_fn, void *cb_ctx)
 {
 	struct raid_base_bdev_info *base_info;
-	int rc;
+
+	assert(name != NULL);
 
 	if (slot >= raid_bdev->num_base_bdevs) {
 		return -EINVAL;
@@ -2666,15 +2668,78 @@ raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name, uint8_t
 		return -ENOMEM;
 	}
 
-	rc = raid_bdev_configure_base_bdev(base_info, false);
-	if (rc != 0) {
-		if (rc != -ENODEV) {
-			SPDK_ERRLOG("Failed to allocate resource for bdev '%s'\n", name);
-		}
-		return rc;
+	base_info->data_offset = data_offset;
+	base_info->data_size = data_size;
+
+	return raid_bdev_configure_base_bdev(base_info, false, cb_fn, cb_ctx);
+}
+
+int
+raid_bdev_attach_base_bdev(struct raid_bdev *raid_bdev, struct spdk_bdev *base_bdev,
+			   raid_base_bdev_cb cb_fn, void *cb_ctx)
+{
+	struct raid_base_bdev_info *base_info = NULL, *iter;
+	int rc;
+
+	SPDK_DEBUGLOG(bdev_raid, "attach_base_device: %s\n", base_bdev->name);
+
+	assert(spdk_get_thread() == spdk_thread_get_app_thread());
+
+	if (raid_bdev->state != RAID_BDEV_STATE_ONLINE) {
+		SPDK_ERRLOG("raid bdev '%s' must be in online state to attach base bdev\n",
+			    raid_bdev->bdev.name);
+		return -EINVAL;
 	}
 
-	return 0;
+	RAID_FOR_EACH_BASE_BDEV(raid_bdev, iter) {
+		if (iter->desc == NULL) {
+			base_info = iter;
+			break;
+		}
+	}
+
+	if (base_info == NULL) {
+		SPDK_ERRLOG("no empty slot found in raid bdev '%s' for new base bdev '%s'\n",
+			    raid_bdev->bdev.name, base_bdev->name);
+		return -EINVAL;
+	}
+
+	assert(base_info->is_configured == false);
+	assert(base_info->data_size != 0);
+
+	spdk_spin_lock(&raid_bdev->base_bdev_lock);
+
+	rc = _raid_bdev_add_base_device(raid_bdev, base_bdev->name,
+					raid_bdev_base_bdev_slot(base_info),
+					base_info->data_offset, base_info->data_size,
+					cb_fn, cb_ctx);
+	if (rc != 0) {
+		SPDK_ERRLOG("base bdev '%s' attach failed: %s\n", base_bdev->name, spdk_strerror(-rc));
+		raid_bdev_free_base_bdev_resource(base_info);
+	}
+
+	spdk_spin_unlock(&raid_bdev->base_bdev_lock);
+
+	return rc;
+}
+
+/*
+ * brief:
+ * raid_bdev_add_base_device function is the actual function which either adds
+ * the nvme base device to existing raid bdev or create a new raid bdev. It also claims
+ * the base device and keep the open descriptor.
+ * params:
+ * raid_bdev - pointer to raid bdev
+ * name - name of the base bdev
+ * slot - position to add base bdev
+ * returns:
+ * 0 - success
+ * non zero - failure
+ */
+int
+raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name, uint8_t slot)
+{
+	return _raid_bdev_add_base_device(raid_bdev, name, slot, 0, 0, NULL, NULL);
 }
 
 static int
@@ -2720,7 +2785,7 @@ raid_bdev_examine_no_sb(struct spdk_bdev *bdev)
 		RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
 			if (base_info->desc == NULL && base_info->name != NULL &&
 			    strcmp(bdev->name, base_info->name) == 0) {
-				raid_bdev_configure_base_bdev(base_info, true);
+				raid_bdev_configure_base_bdev(base_info, true, NULL, NULL);
 				break;
 			}
 		}
@@ -2821,7 +2886,7 @@ raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bd
 		return;
 	}
 
-	rc = raid_bdev_configure_base_bdev(base_info, true);
+	rc = raid_bdev_configure_base_bdev(base_info, true, NULL, NULL);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to configure bdev %s as base bdev of raid %s: %s\n",
 			    bdev->name, raid_bdev->bdev.name, spdk_strerror(-rc));

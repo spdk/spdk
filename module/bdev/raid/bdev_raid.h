@@ -49,7 +49,7 @@ enum raid_process_type {
 	RAID_PROCESS_MAX
 };
 
-typedef void (*raid_bdev_remove_base_bdev_cb)(void *ctx, int status);
+typedef void (*raid_base_bdev_cb)(void *ctx, int status);
 
 /*
  * raid_base_bdev_info contains information for the base bdevs which are part of some
@@ -86,7 +86,7 @@ struct raid_base_bdev_info {
 	bool			remove_scheduled;
 
 	/* callback for base bdev removal */
-	raid_bdev_remove_base_bdev_cb remove_cb;
+	raid_base_bdev_cb	remove_cb;
 
 	/* context of the callback */
 	void			*remove_cb_ctx;
@@ -99,6 +99,12 @@ struct raid_base_bdev_info {
 
 	/* Set to true when base bdev has completed the configuration process */
 	bool			is_configured;
+
+	/* callback for base bdev configuration */
+	raid_base_bdev_cb	configure_cb;
+
+	/* context of the callback */
+	void			*configure_cb_ctx;
 };
 
 struct raid_bdev_io;
@@ -246,8 +252,9 @@ enum raid_bdev_state raid_bdev_str_to_state(const char *str);
 const char *raid_bdev_state_to_str(enum raid_bdev_state state);
 const char *raid_bdev_process_to_str(enum raid_process_type value);
 void raid_bdev_write_info_json(struct raid_bdev *raid_bdev, struct spdk_json_write_ctx *w);
-int raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev, raid_bdev_remove_base_bdev_cb cb_fn,
-			       void *cb_ctx);
+int raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev, raid_base_bdev_cb cb_fn, void *cb_ctx);
+int raid_bdev_attach_base_bdev(struct raid_bdev *raid_bdev, struct spdk_bdev *base_bdev,
+			       raid_base_bdev_cb cb_fn, void *cb_ctx);
 
 /*
  * RAID module descriptor
