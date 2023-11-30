@@ -304,8 +304,11 @@ function get_lib_shortname() {
 	echo "${lib//@(libspdk_|.so)/}"
 }
 
+# shellcheck disable=SC2005
+sort_libs() { echo $(printf "%s\n" "$@" | sort); }
+
 function confirm_deps() {
-	local lib=$1 deplib lib_shortname
+	local lib=$1 deplib lib_shortname symbols dep_names lib_make_deps found_symbol_lib
 
 	lib_shortname=$(get_lib_shortname "$lib")
 	lib_make_deps=(${!lib_shortname})
@@ -330,10 +333,11 @@ function confirm_deps() {
 	diff=$(echo "${dep_names[@]}" "${lib_make_deps[@]}" | tr ' ' '\n' | sort | uniq -u)
 	if [ "$diff" != "" ]; then
 		touch $fail_file
-		echo "there was a dependency mismatch in the library $lib_shortname"
-		echo "The makefile (spdk.lib_deps.mk) lists: '${lib_make_deps[*]}'"
-		echo "readelf outputs   : '${dep_names[*]}'"
-		echo "---------------------------------------------------------------------"
+		cat <<- MSG
+			There was a dependency mismatch in the library $lib_shortname
+			The makefile (spdk.lib_deps.mk) lists: '$(sort_libs "${lib_make_deps[@]}")'
+			readelf outputs:                       '$(sort_libs "${dep_names[@]}")'
+		MSG
 	fi
 }
 
