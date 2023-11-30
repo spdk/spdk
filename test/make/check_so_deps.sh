@@ -310,7 +310,7 @@ function confirm_deps() {
 	lib_shortname=$(get_lib_shortname "$lib")
 	lib_make_deps=(${!lib_shortname})
 
-	symbols=($(readelf -s --wide "$lib" | grep -E "NOTYPE.*GLOBAL.*UND" | awk '{print $8}' | sort -u))
+	symbols=($(readelf -s --wide "$lib" | awk '$7 == "UND" {print $8}' | sort -u))
 	symbols_regx=$(
 		IFS="|"
 		echo "(${symbols[*]})"
@@ -378,9 +378,7 @@ if [[ -e $config_file ]]; then
 	fi
 
 	$rootdir/configure $config_params --with-shared
-	# By setting SPDK_NO_LIB_DEPS=1, we ensure that we won't create any link dependencies.
-	# Then we can be sure we get a valid accounting of the symbol dependencies we have.
-	SPDK_NO_LIB_DEPS=1 $MAKE $MAKEFLAGS
+	$MAKE $MAKEFLAGS
 fi
 
 xtrace_disable
