@@ -279,24 +279,21 @@ EOF
 	fi
 }
 
-function import_libs_deps_mk() {
-	local var_mk val_mk dep_mk fun_mk
-	while read -r var_mk _ val_mk; do
-		if [[ $var_mk == "#"* || ! $var_mk =~ (DEPDIRS-|_DEPS|_LIBS) ]]; then
-			continue
-		fi
-		var_mk=${var_mk#*-}
-		for dep_mk in $val_mk; do
-			fun_mk=${dep_mk//@('$('|')')/}
-			if [[ $fun_mk != "$dep_mk" ]]; then
-				eval "${fun_mk}() { echo \$$fun_mk ; }"
-			# Ignore any event_* dependencies. Those are based on the subsystem configuration and not readelf.
-			elif ((IGNORED_LIBS["$dep_mk"] == 1)) || [[ $dep_mk =~ event_ ]]; then
-				continue
-			fi
-			eval "$var_mk=\${$var_mk:+\$$var_mk }$dep_mk"
-		done
-	done < "$libdeps_file"
+list_deps_mk() {
+	local tab=$'\t'
+
+	make -f - <<- MAKE
+		SPDK_ROOT_DIR := $rootdir
+		include \$(SPDK_ROOT_DIR)/mk/spdk.common.mk
+		include \$(SPDK_ROOT_DIR)/mk/spdk.lib_deps.mk
+
+		all: \$(filter DEPDIRS-%,\$(.VARIABLES))
+
+		# Ignore any event_* dependencies. Those are based on the subsystem
+		# configuration and not readelf
+		DEPDIRS-%:
+			$tab@echo "\$(@:DEPDIRS-%=%)=\"\$(filter-out event_%,\$(\$@))\""
+	MAKE
 }
 
 function get_lib_shortname() {
@@ -358,7 +355,7 @@ function confirm_makefile_deps() {
 	fi
 
 	(
-		import_libs_deps_mk
+		source <(list_deps_mk)
 		for lib in "${SPDK_LIBS[@]}"; do confirm_deps "$lib" & done
 		wait
 	)
