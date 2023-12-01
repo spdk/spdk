@@ -276,6 +276,7 @@ mdns_resolve_callback(
 			     !!(flags & AVAHI_LOOKUP_RESULT_WIDE_AREA),
 			     !!(flags & AVAHI_LOOKUP_RESULT_MULTICAST),
 			     !!(flags & AVAHI_LOOKUP_RESULT_CACHED));
+		avahi_free(t);
 
 		ctx = get_mdns_discovery_ctx_by_svcname(type);
 		if (!ctx) {
