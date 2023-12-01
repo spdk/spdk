@@ -69,9 +69,17 @@ spdk_scsi_task_construct(struct spdk_scsi_task *task,
 static void *
 scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len)
 {
+	uint32_t zmalloc_len;
+
 	assert(task->alloc_len == 0);
 
-	task->iov.iov_base = spdk_dma_zmalloc(alloc_len, 0, NULL);
+	/* Some ULPs (such as iSCSI) need to round len up to nearest
+	 * 4 bytes. We can help those ULPs by allocating memory here
+	 * up to next 4 byte boundary, so they don't have to worry
+	 * about handling out-of-bounds errors.
+	 */
+	zmalloc_len = 4 * spdk_divide_round_up(alloc_len, 4);
+	task->iov.iov_base = spdk_dma_zmalloc(zmalloc_len, 0, NULL);
 	task->iov.iov_len = alloc_len;
 	task->alloc_len = alloc_len;
 
