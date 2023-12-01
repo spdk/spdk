@@ -3,6 +3,7 @@
  *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  */
 
+#include "spdk/config.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/string.h"
 #include "spdk/env.h"
@@ -1599,5 +1600,14 @@ nvme_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, const
 	freeaddrinfo(res);
 	return ret;
 }
+
+#ifndef SPDK_CONFIG_RDMA
+void
+spdk_nvme_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks)
+{
+	SPDK_ERRLOG("spdk_nvme_rdma_init_hooks() is unsupported: RDMA transport is not available\n");
+	abort();
+}
+#endif
 
 SPDK_LOG_REGISTER_COMPONENT(nvme)
