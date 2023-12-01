@@ -21,7 +21,7 @@ scan_nvme_ctrls
 
 if ! nvme_name=$(get_nvme_with_ns_management); then
 	echo "Failed to find suitable nvme for the test" >&2
-	return 1
+	exit 1
 fi
 
 ctrlr="/dev/${nvme_name}"
