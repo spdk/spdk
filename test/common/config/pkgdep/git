@@ -408,6 +408,8 @@ function install_bpftrace() {
 	deps+=(gmock-devel)
 	deps+=(gtest-devel)
 	deps+=(llvm-devel)
+	deps+=(bcc-devel)
+	deps+=(libbpf-devel)
 
 	install "${deps[@]}"
 
@@ -415,37 +417,11 @@ function install_bpftrace() {
 
 	git clone "$GIT_REPO_BPFTRACE" "$GIT_REPOS/bpftrace"
 	git -C $GIT_REPOS/bpftrace checkout $BPFTRACE_VERSION
-	git -C "$GIT_REPOS/bpftrace" submodule update --init
-	mkdir -p $GIT_REPOS/bpftrace/build
-	mkdir -p "$GIT_REPOS/bpftrace/build/build-libs/bcc"
 
-	if ge "$(clang -dumpversion)" 16.0.0; then
-		# Make sure LLVM-Config.cmake does not trip when it's touched through bcc's find_package()
-		# calls. Do so by manually "initializing" cmake's cache dedicated for the bcc build. The
-		# "UNDEFINED" is the type cmake would select via cmake_policy().
-		echo "CMAKE_POLICY_DEFAULT_CMP0057:UNDEFINED=NEW" > \
-			 "$GIT_REPOS/bpftrace/build/build-libs/bcc/CMakeCache.txt"
-
-		# Make sure bpftrace builds bcc at a revision which supports llvm >= 16.0.0
-		# https://github.com/iovisor/bcc/commit/daf35cdbeaeba649509d88cf1674302affa263e3
-		git -C "$GIT_REPOS/bpftrace/bcc" checkout daf35cdbeaeba649509d88cf1674302affa263e3
-
-		# As of now, the latest bpftrace revision does not support LLVM >= 16 as it hardcodes
-		# the MAJOR version inside its CMakeLists.txt. Override it.
-		sed -i -e 's/set(MAX_LLVM_MAJOR 15)/set(MAX_LLVM_MAJOR 16)/g' \
-			"$GIT_REPOS/bpftrace/CMakeLists.txt"
-	fi
-
-	bcc_rev=$(git -C "$GIT_REPOS/bpftrace/bcc" describe --tags --abbrev=0) bcc_rev=${bcc_rev#v}
-	echo "REVISION:STRING=$bcc_rev" >> "$GIT_REPOS/bpftrace/build/build-libs/bcc/CMakeCache.txt"
-
-
-	# Use build-libs.sh to build necessary libraries in the bpftrace tree
-	(cd $GIT_REPOS/bpftrace/build && ../build-libs.sh)
-
+	mkdir -p "$GIT_REPOS/bpftrace/build"
 	cmake \
-		-Wno-dev \
 		-DCMAKE_BUILD_TYPE=Release \
+		-DBUILD_TESTING=OFF \
 		-B "$GIT_REPOS/bpftrace/build" \
 		-S "$GIT_REPOS/bpftrace"
 
@@ -502,7 +478,7 @@ GIT_VERSION=2.25.1
 IRDMA_VERSION=1.12.55
 ICE_VERSION=1.12.7
 
-BPFTRACE_VERSION=${BPFTRACE_VERSION:-42d55a0}
+BPFTRACE_VERSION=${BPFTRACE_VERSION:-db63ddb}
 VFIO_QEMU_BRANCH=${VFIO_QEMU_BRANCH:-vfio-user-p3.0}
 VANILLA_QEMU_BRANCH=${VANILLA_QEMU_BRANCH:-v8.0.0}
 
