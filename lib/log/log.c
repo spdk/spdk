@@ -136,8 +136,9 @@ spdk_vlog(enum spdk_log_level level, const char *file, const int line, const cha
 	  const char *format, va_list ap)
 {
 	int severity = LOG_INFO;
-	char buf[MAX_TMPBUF];
+	char *buf, _buf[MAX_TMPBUF], *ext_buf = NULL;
 	char timestamp[64];
+	int rc;
 
 	if (g_log) {
 		g_log(level, file, line, func, format, ap);
@@ -153,7 +154,20 @@ spdk_vlog(enum spdk_log_level level, const char *file, const int line, const cha
 		return;
 	}
 
-	vsnprintf(buf, sizeof(buf), format, ap);
+	buf = _buf;
+
+	rc = vsnprintf(_buf, sizeof(_buf), format, ap);
+	if (rc > MAX_TMPBUF) {
+		/* The output including the terminating was more than MAX_TMPBUF bytes.
+		 * Try allocating memory large enough to hold the output.
+		 */
+		rc = vasprintf(&ext_buf, format, ap);
+		if (rc < 0) {
+			/* Failed to allocate memory. Allow output to be truncated. */
+		} else {
+			buf = ext_buf;
+		}
+	}
 
 	if (level <= g_spdk_log_print_level) {
 		get_timestamp_prefix(timestamp, sizeof(timestamp));
@@ -171,6 +185,8 @@ spdk_vlog(enum spdk_log_level level, const char *file, const int line, const cha
 			syslog(severity, "%s", buf);
 		}
 	}
+
+	free(ext_buf);
 }
 
 void
