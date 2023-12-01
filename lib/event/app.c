@@ -412,7 +412,7 @@ app_setup_trace(struct spdk_app_opts *opts)
 		snprintf(shm_name, sizeof(shm_name), "/%s_trace.pid%d", opts->name, (int)getpid());
 	}
 
-	if (spdk_trace_init(shm_name, opts->num_entries) != 0) {
+	if (spdk_trace_init(shm_name, opts->num_entries, 0) != 0) {
 		return -1;
 	}
 

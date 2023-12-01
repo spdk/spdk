@@ -2,6 +2,13 @@
 
 ## v24.01: (Upcoming Release)
 
+### trace
+
+Added `spdk_trace_register_user_thread` to initialize trace environment
+for an user created thread.
+
+Modified `spdk_trace_init` to take number of user created threads as a parameter.
+
 ### vhost
 
 Added `caw_iov` field to struct `spdk_scsi_task` to support SBC-3 compare_and_write IO.

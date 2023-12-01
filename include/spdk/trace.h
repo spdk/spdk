@@ -279,9 +279,17 @@ void spdk_trace_clear_tpoint_group_mask(uint64_t tpoint_group_mask);
  *
  * \param shm_name Name of shared memory.
  * \param num_entries Number of trace entries per lcore.
+ * \param num_threads Number of user created threads.
  * \return 0 on success, else non-zero indicates a failure.
  */
-int spdk_trace_init(const char *shm_name, uint64_t num_entries);
+int spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads);
+
+/**
+ * Initialize trace environment for an user created thread.
+ *
+ * \return 0 on success, else non-zero indicates a failure.
+ */
+int spdk_trace_register_user_thread(void);
 
 /**
  * Unmap global trace memory structs.

@@ -13,12 +13,18 @@
 #include "spdk/log.h"
 #include "spdk/cpuset.h"
 #include "spdk/likely.h"
+#include "spdk/bit_array.h"
 #include "trace_internal.h"
 
 static int g_trace_fd = -1;
 static char g_shm_name[64];
 
+static __thread struct spdk_trace_history *t_ut_lcore_history;
+
+uint32_t g_user_thread_index_start;
 struct spdk_trace_histories *g_trace_histories;
+struct spdk_bit_array *g_ut_array;
+pthread_mutex_t g_ut_array_mutex;
 
 static inline struct spdk_trace_entry *
 get_trace_entry(struct spdk_trace_history *history, uint64_t offset)
@@ -41,11 +47,13 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 	va_list vl;
 
 	lcore = spdk_env_get_current_core();
-	if (spdk_unlikely(lcore >= SPDK_TRACE_MAX_LCORE)) {
+	if (spdk_likely(lcore != SPDK_ENV_LCORE_ID_ANY)) {
+		lcore_history = spdk_get_per_lcore_history(g_trace_histories, lcore);
+	} else if (t_ut_lcore_history != NULL) {
+		lcore_history = t_ut_lcore_history;
+	} else {
 		return;
 	}
-
-	lcore_history = spdk_get_per_lcore_history(g_trace_histories, lcore);
 
 	if (tsc == 0) {
 		tsc = spdk_get_ticks();
@@ -144,9 +152,44 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 }
 
 int
-spdk_trace_init(const char *shm_name, uint64_t num_entries)
+spdk_trace_register_user_thread(void)
 {
-	uint32_t i = 0;
+	uint32_t ut_index;
+
+	if (!g_ut_array) {
+		SPDK_ERRLOG("user thread array not created\n");
+		return -ENOMEM;
+	}
+
+	if (spdk_env_get_current_core() != SPDK_ENV_LCORE_ID_ANY) {
+		SPDK_ERRLOG("cannot register an user thread from a dedicated cpu %d\n",
+			    spdk_env_get_current_core());
+		return -EINVAL;
+	}
+
+	pthread_mutex_lock(&g_ut_array_mutex);
+
+	ut_index = spdk_bit_array_find_first_clear(g_ut_array, 0);
+	if (ut_index == UINT32_MAX) {
+		SPDK_ERRLOG("could not find an entry in the user thread array\n");
+		pthread_mutex_unlock(&g_ut_array_mutex);
+		return -ENOENT;
+	}
+
+	t_ut_lcore_history = spdk_get_per_lcore_history(g_trace_histories,
+			     ut_index + g_user_thread_index_start);
+
+	spdk_bit_array_set(g_ut_array, ut_index);
+
+	pthread_mutex_unlock(&g_ut_array_mutex);
+
+	return 0;
+}
+
+int
+spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads)
+{
+	uint32_t i = 0, max_dedicated_cpu = 0;
 	int histories_size;
 	uint64_t lcore_offsets[SPDK_TRACE_MAX_LCORE + 1] = { 0 };
 	struct spdk_cpuset cpuset = {};
@@ -156,13 +199,39 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries)
 		return 0;
 	}
 
+	if (num_threads >= SPDK_TRACE_MAX_LCORE) {
+		SPDK_ERRLOG("cannot alloc trace entries for %d user threads\n", num_threads);
+		SPDK_ERRLOG("supported maximum %d threads\n", SPDK_TRACE_MAX_LCORE - 1);
+		return 1;
+	}
+
 	spdk_cpuset_zero(&cpuset);
 	histories_size = sizeof(struct spdk_trace_flags);
 	SPDK_ENV_FOREACH_CORE(i) {
 		spdk_cpuset_set_cpu(&cpuset, i, true);
 		lcore_offsets[i] = histories_size;
 		histories_size += spdk_get_trace_history_size(num_entries);
+		max_dedicated_cpu = i;
 	}
+
+	g_user_thread_index_start = max_dedicated_cpu + 1;
+
+	if (g_user_thread_index_start + num_threads > SPDK_TRACE_MAX_LCORE) {
+		SPDK_ERRLOG("user threads overlap with the threads on dedicated cpus\n");
+		return 1;
+	}
+
+	g_ut_array = spdk_bit_array_create(num_threads);
+	if (!g_ut_array) {
+		SPDK_ERRLOG("could not create bit array for threads\n");
+		return 1;
+	}
+
+	for (i = g_user_thread_index_start; i < g_user_thread_index_start + num_threads; i++) {
+		lcore_offsets[i] = histories_size;
+		histories_size += spdk_get_trace_history_size(num_entries);
+	}
+
 	lcore_offsets[SPDK_TRACE_MAX_LCORE] = histories_size;
 
 	snprintf(g_shm_name, sizeof(g_shm_name), "%s", shm_name);
@@ -171,6 +240,7 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries)
 	if (g_trace_fd == -1) {
 		SPDK_ERRLOG("could not shm_open spdk_trace\n");
 		SPDK_ERRLOG("errno=%d %s\n", errno, spdk_strerror(errno));
+		spdk_bit_array_free(&g_ut_array);
 		return 1;
 	}
 
@@ -213,7 +283,11 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries)
 		if (lcore_offsets[i] == 0) {
 			continue;
 		}
-		assert(spdk_cpuset_get_cpu(&cpuset, i));
+
+		if (i <= max_dedicated_cpu) {
+			assert(spdk_cpuset_get_cpu(&cpuset, i));
+		}
+
 		lcore_history = spdk_get_per_lcore_history(g_trace_histories, i);
 		lcore_history->lcore = i;
 		lcore_history->num_entries = num_entries;
@@ -231,6 +305,7 @@ trace_init_err:
 	close(g_trace_fd);
 	g_trace_fd = -1;
 	shm_unlink(shm_name);
+	spdk_bit_array_free(&g_ut_array);
 	g_trace_histories = NULL;
 
 	return 1;
@@ -267,6 +342,7 @@ spdk_trace_cleanup(void)
 	munmap(g_trace_histories, sizeof(struct spdk_trace_histories));
 	g_trace_histories = NULL;
 	close(g_trace_fd);
+	spdk_bit_array_free(&g_ut_array);
 
 	if (unlink) {
 		shm_unlink(g_shm_name);

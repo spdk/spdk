@@ -15,6 +15,7 @@
 #include "spdk/endian.h"
 #include "spdk/dif.h"
 #include "spdk/util.h"
+#include "spdk/trace.h"
 
 #include "config-host.h"
 #include "fio.h"
@@ -71,6 +72,7 @@ struct spdk_fio_options {
 	int	initial_zone_reset;
 	int	zone_append;
 	int	print_qid_mappings;
+	int	spdk_tracing;
 	char	*log_flags;
 };
 
@@ -503,6 +505,19 @@ fio_redirected_to_dev_null(void)
 	return true;
 }
 
+static int
+spdk_fio_init(struct thread_data *td)
+{
+	int ret = 0;
+	struct spdk_fio_options *fio_options = td->eo;
+
+	if (fio_options->spdk_tracing) {
+		ret = spdk_trace_register_user_thread();
+	}
+
+	return ret;
+}
+
 /* Called once at initialization. This is responsible for gathering the size of
  * each "file", which in our case are in the form
  * 'key=value [key=value] ... ns=value'
@@ -603,6 +618,12 @@ spdk_fio_setup(struct thread_data *td)
 
 		g_spdk_env_initialized = true;
 		spdk_unaffinitize_thread();
+
+		if (fio_options->spdk_tracing) {
+			spdk_trace_init("spdk_fio_tracepoints", 65536, td->o.numjobs);
+			spdk_trace_enable_tpoint_group("nvme_pcie");
+			spdk_trace_enable_tpoint_group("nvme_tcp");
+		}
 
 		/* Spawn a thread to continue polling the controllers */
 		rc = pthread_create(&g_ctrlr_thread_id, NULL, &spdk_fio_poll_ctrlrs, NULL);
@@ -1786,6 +1807,16 @@ static struct fio_option options[] = {
 		.group		= FIO_OPT_G_INVALID,
 	},
 	{
+		.name		= "spdk_tracing",
+		.lname		= "Enable SPDK Tracing",
+		.type		= FIO_OPT_INT,
+		.off1		= offsetof(struct spdk_fio_options, spdk_tracing),
+		.def		= "0",
+		.help		= "SPDK Tracing (0=disable, 1=enable)",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
 		.name		= NULL,
 	},
 };
@@ -1804,6 +1835,7 @@ struct ioengine_ops ioengine = {
 	.iomem_alloc		= spdk_fio_iomem_alloc,
 	.iomem_free		= spdk_fio_iomem_free,
 	.setup			= spdk_fio_setup,
+	.init			= spdk_fio_init,
 	.io_u_init		= spdk_fio_io_u_init,
 	.io_u_free		= spdk_fio_io_u_free,
 #if FIO_HAS_ZBD
