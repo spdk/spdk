@@ -86,11 +86,13 @@ move_cgroup_procs() {
 }
 
 move_proc() {
-	local proc=$1 new_cgroup=$2 old_cgroup=${3:-N/A} attr=$4 write_fail
+	local proc=$1 new_cgroup=$2 old_cgroup=${3:-N/A} attr=$4 write_fail out=/dev/stderr
 
-	echo "Moving $proc ($(id_proc "$proc" 2>&1)) to $new_cgroup from $old_cgroup" >&2
+	[[ -n $SILENT_CGROUP_DEBUG ]] && out=/dev/null
+
+	echo "Moving $proc ($(id_proc "$proc" 2>&1)) to $new_cgroup from $old_cgroup" > "$out"
 	if ! write_fail=$(set_cgroup_attr "$new_cgroup" "$attr" "$proc" 2>&1); then
-		echo "Moving $proc failed: ${write_fail##*: }" >&2
+		echo "Moving $proc failed: ${write_fail##*: }" > "$out"
 		return 1
 	fi
 }
