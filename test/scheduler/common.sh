@@ -406,6 +406,22 @@ exec_under_dynamic_scheduler() {
 	"$rootdir/scripts/rpc.py" framework_start_init
 }
 
+# Gather busy/idle stats since this function was last called
+get_thread_stats_current() {
+	xtrace_disable
+
+	local total_busy total_idle
+
+	_get_thread_stats total_busy total_idle
+
+	for thread in "${!thread_map[@]}"; do
+		: $((busy[thread] = total_busy[thread] - past_busy[thread], past_busy[thread] = total_busy[thread]))
+		: $((idle[thread] = total_idle[thread] - past_idle[thread], past_idle[thread] = total_idle[thread]))
+	done
+	xtrace_restore
+}
+
+# Gather busy/idle stats since application start
 get_thread_stats() {
 	xtrace_disable
 	_get_thread_stats busy idle

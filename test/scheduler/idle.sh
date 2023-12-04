@@ -13,17 +13,20 @@ source "$testdir/common.sh"
 trap 'killprocess "$spdk_pid"' EXIT
 
 thread_stats() {
-	local thread
+	local thread load
 	busy_threads=0
 
-	get_thread_stats
+	get_thread_stats_current
 
 	# Simply verify if threads stay idle
 	for thread in "${!thread_map[@]}"; do
+		printf '[load:%3u%%, idle:%10u, busy:%10u] ' \
+			$((busy[thread] * 100 / (busy[thread] + idle[thread]))) \
+			"${idle[thread]}" "${busy[thread]}"
 		if ((idle[thread] < busy[thread])); then
 			printf 'Waiting for %s to become idle\n' "${thread_map[thread]}"
 			((++busy_threads))
-		elif ((idle[thread] > busy[thread])); then
+		else
 			printf '%s is idle\n' "${thread_map[thread]}"
 		fi
 	done
@@ -41,6 +44,9 @@ idle() {
 	# - all threads are assigned to main lcore
 	# - threads are not being moved between lcores
 
+	# Get first set of stats, to exclude initialization from the busy/idle
+	get_thread_stats_current
+
 	xtrace_disable
 	while ((samples++ < 5)); do
 		cpumask=0
@@ -56,10 +62,7 @@ idle() {
 
 		thread_stats
 
-		# Allow app_thread is busy for the first sample. Because on some system the dpdk_governor
-		# initiation process on app_thread is time consuming. This may make the busy time greater
-		# than idle time which causes the test to fail.
-		((samples == 1 && busy_threads <= 1 || samples > 1 && busy_threads == 0))
+		((busy_threads == 0))
 	done
 
 	xtrace_restore
