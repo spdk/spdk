@@ -1015,6 +1015,7 @@ rpc_nvmf_add_referral(struct spdk_jsonrpc_request *request,
 	struct nvmf_rpc_referral_ctx ctx = {};
 	struct spdk_nvme_transport_id trid = {};
 	struct spdk_nvmf_tgt *tgt;
+	struct spdk_nvmf_referral_opts opts = {};
 	int rc;
 
 	if (spdk_json_decode_object_relaxed(params, nvmf_rpc_referral_decoder,
@@ -1052,7 +1053,11 @@ rpc_nvmf_add_referral(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	rc = spdk_nvmf_tgt_add_referral(tgt, &trid, ctx.secure_channel);
+	opts.size = SPDK_SIZEOF(&opts, secure_channel);
+	opts.trid = trid;
+	opts.secure_channel = ctx.secure_channel;
+
+	rc = spdk_nvmf_tgt_add_referral(tgt, &opts);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Internal error");
@@ -1074,6 +1079,7 @@ rpc_nvmf_remove_referral(struct spdk_jsonrpc_request *request,
 {
 	struct nvmf_rpc_referral_ctx ctx = {};
 	struct spdk_nvme_transport_id trid = {};
+	struct spdk_nvmf_referral_opts opts = {};
 	struct spdk_nvmf_tgt *tgt;
 
 	if (spdk_json_decode_object(params, nvmf_rpc_referral_decoder,
@@ -1101,7 +1107,10 @@ rpc_nvmf_remove_referral(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (spdk_nvmf_tgt_remove_referral(tgt, &trid)) {
+	opts.size = SPDK_SIZEOF(&opts, secure_channel);
+	opts.trid = trid;
+
+	if (spdk_nvmf_tgt_remove_referral(tgt, &opts)) {
 		SPDK_ERRLOG("Failed to remove referral.\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Unable to remove a referral.");

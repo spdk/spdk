@@ -151,30 +151,36 @@ struct spdk_nvmf_poll_group_stat {
  */
 typedef void (*spdk_nvmf_tgt_subsystem_listen_done_fn)(void *ctx, int status);
 
+struct spdk_nvmf_referral_opts {
+	/** Size of this structure */
+	size_t size;
+	/** Transport ID of the referral */
+	struct spdk_nvme_transport_id trid;
+	/** The referral describes a referral to a subsystem which requires a secure channel */
+	bool secure_channel;
+};
+
 /**
  * Add a discovery service referral to an NVMe-oF target
  *
  * \param tgt The target to which the referral will be added
- * \param trid Transport ID of the referral
- * \param secure_channel The referral describes a discovery service which
- * requires a secure channel
+ * \param opts Options describing the referral referral.
  *
  * \return 0 on success or a negated errno on failure
  */
 int spdk_nvmf_tgt_add_referral(struct spdk_nvmf_tgt *tgt,
-			       struct spdk_nvme_transport_id *trid,
-			       bool secure_channel);
+			       const struct spdk_nvmf_referral_opts *opts);
 
 /**
  * Remove a discovery service referral from an NVMeoF target
  *
  * \param tgt The target from which the referral will be removed
- * \param trid Transport ID of the referral to remove
+ * \param opts Options describing the referral referral.
  *
  * \return 0 on success or a negated errno on failure.
  */
 int spdk_nvmf_tgt_remove_referral(struct spdk_nvmf_tgt *tgt,
-				  struct spdk_nvme_transport_id *trid);
+				  const struct spdk_nvmf_referral_opts *opts);
 
 
 /**

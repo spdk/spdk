@@ -65,10 +65,13 @@ nvmf_tgt_find_referral(struct spdk_nvmf_tgt *tgt,
 
 int
 spdk_nvmf_tgt_add_referral(struct spdk_nvmf_tgt *tgt,
-			   struct spdk_nvme_transport_id *trid,
-			   bool secure_channel)
+			   const struct spdk_nvmf_referral_opts *uopts)
 {
 	struct spdk_nvmf_referral *referral;
+	struct spdk_nvmf_referral_opts opts = {};
+	struct spdk_nvme_transport_id *trid = &opts.trid;
+
+	memcpy(&opts, uopts, spdk_min(uopts->size, sizeof(opts)));
 
 	/* If the entry already exists, just ignore it. */
 	if (nvmf_tgt_find_referral(tgt, trid)) {
@@ -82,7 +85,7 @@ spdk_nvmf_tgt_add_referral(struct spdk_nvmf_tgt *tgt,
 	}
 
 	referral->entry.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
-	referral->entry.treq.secure_channel = secure_channel ?
+	referral->entry.treq.secure_channel = opts.secure_channel ?
 					      SPDK_NVMF_TREQ_SECURE_CHANNEL_REQUIRED
 					      : SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_REQUIRED;
 	referral->entry.cntlid =
@@ -102,11 +105,14 @@ spdk_nvmf_tgt_add_referral(struct spdk_nvmf_tgt *tgt,
 
 int
 spdk_nvmf_tgt_remove_referral(struct spdk_nvmf_tgt *tgt,
-			      struct spdk_nvme_transport_id *trid)
+			      const struct spdk_nvmf_referral_opts *uopts)
 {
 	struct spdk_nvmf_referral *referral;
+	struct spdk_nvmf_referral_opts opts = {};
 
-	referral = nvmf_tgt_find_referral(tgt, trid);
+	memcpy(&opts, uopts, spdk_min(uopts->size, sizeof(opts)));
+
+	referral = nvmf_tgt_find_referral(tgt, &opts.trid);
 	if (referral == NULL) {
 		return -ENOENT;
 	}
