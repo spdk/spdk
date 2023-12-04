@@ -3401,3 +3401,9 @@ spdk_nvmf_subsystem_is_discovery(struct spdk_nvmf_subsystem *subsystem)
 	return subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT ||
 	       subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY;
 }
+
+bool
+nvmf_nqn_is_discovery(const char *nqn)
+{
+	return strcmp(nqn, SPDK_NVMF_DISCOVERY_NQN) == 0;
+}

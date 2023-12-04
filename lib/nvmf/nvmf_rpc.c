@@ -1006,18 +1006,21 @@ struct nvmf_rpc_referral_ctx {
 	char				*tgt_name;
 	struct rpc_listen_address	address;
 	bool				secure_channel;
+	char				*subnqn;
 };
 
 static const struct spdk_json_object_decoder nvmf_rpc_referral_decoder[] = {
 	{"address", offsetof(struct nvmf_rpc_referral_ctx, address), decode_rpc_listen_address},
 	{"tgt_name", offsetof(struct nvmf_rpc_referral_ctx, tgt_name), spdk_json_decode_string, true},
 	{"secure_channel", offsetof(struct nvmf_rpc_referral_ctx, secure_channel), spdk_json_decode_bool, true},
+	{"subnqn", offsetof(struct nvmf_rpc_referral_ctx, subnqn), spdk_json_decode_string, true},
 };
 
 static void
 nvmf_rpc_referral_ctx_free(struct nvmf_rpc_referral_ctx *ctx)
 {
 	free(ctx->tgt_name);
+	free(ctx->subnqn);
 	free_rpc_listen_address(&ctx->address);
 }
 
@@ -1054,6 +1057,16 @@ rpc_nvmf_add_referral(struct spdk_jsonrpc_request *request,
 						 "Invalid parameters");
 		nvmf_rpc_referral_ctx_free(&ctx);
 		return;
+	}
+
+	if (ctx.subnqn != NULL) {
+		rc = snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", ctx.subnqn);
+		if (rc < 0 || (size_t)rc >= sizeof(trid.subnqn)) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Invalid subsystem NQN");
+			nvmf_rpc_referral_ctx_free(&ctx);
+			return;
+		}
 	}
 
 	if ((trid.trtype == SPDK_NVME_TRANSPORT_TCP ||
@@ -1094,6 +1107,7 @@ rpc_nvmf_remove_referral(struct spdk_jsonrpc_request *request,
 	struct spdk_nvme_transport_id trid = {};
 	struct spdk_nvmf_referral_opts opts = {};
 	struct spdk_nvmf_tgt *tgt;
+	int rc;
 
 	if (spdk_json_decode_object(params, nvmf_rpc_referral_decoder,
 				    SPDK_COUNTOF(nvmf_rpc_referral_decoder),
@@ -1118,6 +1132,16 @@ rpc_nvmf_remove_referral(struct spdk_jsonrpc_request *request,
 						 "Invalid parameters");
 		nvmf_rpc_referral_ctx_free(&ctx);
 		return;
+	}
+
+	if (ctx.subnqn != NULL) {
+		rc = snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", ctx.subnqn);
+		if (rc < 0 || (size_t)rc >= sizeof(trid.subnqn)) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Invalid subsystem NQN");
+			nvmf_rpc_referral_ctx_free(&ctx);
+			return;
+		}
 	}
 
 	opts.size = SPDK_SIZEOF(&opts, secure_channel);
@@ -1150,6 +1174,7 @@ dump_nvmf_referral(struct spdk_json_write_ctx *w,
 	spdk_json_write_object_end(w);
 	spdk_json_write_named_bool(w, "secure_channel",
 				   referral->entry.treq.secure_channel == SPDK_NVMF_TREQ_SECURE_CHANNEL_REQUIRED);
+	spdk_json_write_named_string(w, "subnqn", referral->trid.subnqn);
 
 	spdk_json_write_object_end(w);
 }

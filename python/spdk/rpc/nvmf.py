@@ -361,6 +361,7 @@ def nvmf_discovery_add_referral(client, **params):
         adrfam: Address family ("IPv4", "IPv6", "IB", or "FC").
         secure_channel: The connection to that discovery
             subsystem requires a secure channel (optional).
+        subnqn: Subsystem NQN.
 
     Returns:
         True or False
@@ -371,6 +372,9 @@ def nvmf_discovery_add_referral(client, **params):
     group_as(params, 'address', ['trtype', 'traddr', 'trsvcid', 'adrfam'])
     remove_null(params)
 
+    if params.get('subnqn') == 'discovery':
+        params['subnqn'] = 'nqn.2014-08.org.nvmexpress.discovery'
+
     return client.call('nvmf_discovery_add_referral', params)
 
 
@@ -380,16 +384,17 @@ def nvmf_discovery_remove_referral(
         traddr,
         trsvcid,
         adrfam,
-        tgt_name=None):
+        tgt_name=None,
+        subnqn=None):
     """Remove a discovery service referral
 
     Args:
-        nqn: Subsystem NQN.
         trtype: Transport type ("RDMA").
         traddr: Transport address.
         trsvcid: Transport service ID.
-        tgt_name: name of the parent NVMe-oF target (optional).
         adrfam: Address family ("IPv4", "IPv6", "IB", or "FC").
+        tgt_name: name of the parent NVMe-oF target (optional).
+        subnqn: Subsystem NQN.
 
     Returns:
             True or False
@@ -407,6 +412,10 @@ def nvmf_discovery_remove_referral(
 
     if tgt_name:
         params['tgt_name'] = tgt_name
+    if subnqn is not None:
+        if subnqn == 'discovery':
+            subnqn = 'nqn.2014-08.org.nvmexpress.discovery'
+        params['subnqn'] = subnqn
 
     return client.call('nvmf_discovery_remove_referral', params)
 

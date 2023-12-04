@@ -72,6 +72,14 @@ spdk_nvmf_tgt_add_referral(struct spdk_nvmf_tgt *tgt,
 	struct spdk_nvme_transport_id *trid = &opts.trid;
 
 	memcpy(&opts, uopts, spdk_min(uopts->size, sizeof(opts)));
+	if (trid->subnqn[0] == '\0') {
+		snprintf(trid->subnqn, sizeof(trid->subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+	}
+
+	if (!nvmf_nqn_is_valid(trid->subnqn)) {
+		SPDK_ERRLOG("Invalid subsystem NQN\n");
+		return -EINVAL;
+	}
 
 	/* If the entry already exists, just ignore it. */
 	if (nvmf_tgt_find_referral(tgt, trid)) {
@@ -84,16 +92,17 @@ spdk_nvmf_tgt_add_referral(struct spdk_nvmf_tgt *tgt,
 		return -ENOMEM;
 	}
 
-	referral->entry.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
+	referral->entry.subtype = nvmf_nqn_is_discovery(trid->subnqn) ?
+				  SPDK_NVMF_SUBTYPE_DISCOVERY :
+				  SPDK_NVMF_SUBTYPE_NVME;
 	referral->entry.treq.secure_channel = opts.secure_channel ?
-					      SPDK_NVMF_TREQ_SECURE_CHANNEL_REQUIRED
-					      : SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_REQUIRED;
-	referral->entry.cntlid =
-		0xffff; /* Discovery controller shall support the dynamic controller model */
+					      SPDK_NVMF_TREQ_SECURE_CHANNEL_REQUIRED :
+					      SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_REQUIRED;
+	referral->entry.cntlid = 0xffff;
 	referral->entry.trtype = trid->trtype;
 	referral->entry.adrfam = trid->adrfam;
-	snprintf(referral->entry.subnqn, sizeof(referral->entry.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 	memcpy(&referral->trid, trid, sizeof(struct spdk_nvme_transport_id));
+	spdk_strcpy_pad(referral->entry.subnqn, trid->subnqn, sizeof(trid->subnqn), '\0');
 	spdk_strcpy_pad(referral->entry.trsvcid, trid->trsvcid, sizeof(referral->entry.trsvcid), ' ');
 	spdk_strcpy_pad(referral->entry.traddr, trid->traddr, sizeof(referral->entry.traddr), ' ');
 
@@ -109,8 +118,12 @@ spdk_nvmf_tgt_remove_referral(struct spdk_nvmf_tgt *tgt,
 {
 	struct spdk_nvmf_referral *referral;
 	struct spdk_nvmf_referral_opts opts = {};
+	struct spdk_nvme_transport_id *trid = &opts.trid;
 
 	memcpy(&opts, uopts, spdk_min(uopts->size, sizeof(opts)));
+	if (trid->subnqn[0] == '\0') {
+		snprintf(trid->subnqn, sizeof(trid->subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+	}
 
 	referral = nvmf_tgt_find_referral(tgt, &opts.trid);
 	if (referral == NULL) {

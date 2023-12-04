@@ -482,6 +482,11 @@ nvmf_qpair_is_admin_queue(struct spdk_nvmf_qpair *qpair)
  */
 bool nvmf_nqn_is_valid(const char *nqn);
 
+/*
+ * Tests whether a given NQN describes a discovery subsystem.
+ */
+bool nvmf_nqn_is_discovery(const char *nqn);
+
 /**
  * Initiates a zcopy start operation
  *
