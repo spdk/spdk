@@ -1006,46 +1006,39 @@ nvmf_rpc_referral_ctx_free(struct nvmf_rpc_referral_ctx *ctx)
 {
 	free(ctx->tgt_name);
 	free_rpc_listen_address(&ctx->address);
-	free(ctx);
 }
 
 static void
 rpc_nvmf_add_referral(struct spdk_jsonrpc_request *request,
 		      const struct spdk_json_val *params)
 {
-	struct nvmf_rpc_referral_ctx *ctx;
+	struct nvmf_rpc_referral_ctx ctx = {};
 	struct spdk_nvme_transport_id trid = {};
 	struct spdk_nvmf_tgt *tgt;
 	int rc;
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
-		return;
-	}
-
 	if (spdk_json_decode_object_relaxed(params, nvmf_rpc_referral_decoder,
 					    SPDK_COUNTOF(nvmf_rpc_referral_decoder),
-					    ctx)) {
+					    &ctx)) {
 		SPDK_ERRLOG("spdk_json_decode_object_relaxed failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-		nvmf_rpc_referral_ctx_free(ctx);
+		nvmf_rpc_referral_ctx_free(&ctx);
 		return;
 	}
 
-	tgt = spdk_nvmf_get_tgt(ctx->tgt_name);
+	tgt = spdk_nvmf_get_tgt(ctx.tgt_name);
 	if (!tgt) {
 		SPDK_ERRLOG("Unable to find a target object.\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Unable to find a target.");
-		nvmf_rpc_referral_ctx_free(ctx);
+		nvmf_rpc_referral_ctx_free(&ctx);
 		return;
 	}
 
-	if (rpc_listen_address_to_trid(&ctx->address, &trid)) {
+	if (rpc_listen_address_to_trid(&ctx.address, &trid)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
-		nvmf_rpc_referral_ctx_free(ctx);
+		nvmf_rpc_referral_ctx_free(&ctx);
 		return;
 	}
 
@@ -1055,19 +1048,19 @@ rpc_nvmf_add_referral(struct spdk_jsonrpc_request *request,
 		SPDK_ERRLOG("Service ID is required.\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Service ID is required.");
-		nvmf_rpc_referral_ctx_free(ctx);
+		nvmf_rpc_referral_ctx_free(&ctx);
 		return;
 	}
 
-	rc = spdk_nvmf_tgt_add_referral(tgt, &trid, ctx->secure_channel);
+	rc = spdk_nvmf_tgt_add_referral(tgt, &trid, ctx.secure_channel);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Internal error");
-		nvmf_rpc_referral_ctx_free(ctx);
+		nvmf_rpc_referral_ctx_free(&ctx);
 		return;
 	}
 
-	nvmf_rpc_referral_ctx_free(ctx);
+	nvmf_rpc_referral_ctx_free(&ctx);
 
 	spdk_jsonrpc_send_bool_response(request, true);
 }
@@ -1079,38 +1072,32 @@ static void
 rpc_nvmf_remove_referral(struct spdk_jsonrpc_request *request,
 			 const struct spdk_json_val *params)
 {
-	struct nvmf_rpc_referral_ctx *ctx;
+	struct nvmf_rpc_referral_ctx ctx = {};
 	struct spdk_nvme_transport_id trid = {};
 	struct spdk_nvmf_tgt *tgt;
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
-		return;
-	}
-
 	if (spdk_json_decode_object(params, nvmf_rpc_referral_decoder,
 				    SPDK_COUNTOF(nvmf_rpc_referral_decoder),
-				    ctx)) {
+				    &ctx)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-		nvmf_rpc_referral_ctx_free(ctx);
+		nvmf_rpc_referral_ctx_free(&ctx);
 		return;
 	}
 
-	tgt = spdk_nvmf_get_tgt(ctx->tgt_name);
+	tgt = spdk_nvmf_get_tgt(ctx.tgt_name);
 	if (!tgt) {
 		SPDK_ERRLOG("Unable to find a target object.\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Unable to find a target.");
-		nvmf_rpc_referral_ctx_free(ctx);
+		nvmf_rpc_referral_ctx_free(&ctx);
 		return;
 	}
 
-	if (rpc_listen_address_to_trid(&ctx->address, &trid)) {
+	if (rpc_listen_address_to_trid(&ctx.address, &trid)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
-		nvmf_rpc_referral_ctx_free(ctx);
+		nvmf_rpc_referral_ctx_free(&ctx);
 		return;
 	}
 
@@ -1118,11 +1105,11 @@ rpc_nvmf_remove_referral(struct spdk_jsonrpc_request *request,
 		SPDK_ERRLOG("Failed to remove referral.\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Unable to remove a referral.");
-		nvmf_rpc_referral_ctx_free(ctx);
+		nvmf_rpc_referral_ctx_free(&ctx);
 		return;
 	}
 
-	nvmf_rpc_referral_ctx_free(ctx);
+	nvmf_rpc_referral_ctx_free(&ctx);
 
 	spdk_jsonrpc_send_bool_response(request, true);
 }
