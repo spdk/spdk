@@ -61,8 +61,8 @@ nvmf_valid_ascii_string(const void *buf, size_t size)
 	return true;
 }
 
-static bool
-nvmf_valid_nqn(const char *nqn)
+bool
+nvmf_nqn_is_valid(const char *nqn)
 {
 	size_t len;
 	struct spdk_uuid uuid_value;
@@ -229,7 +229,7 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 		return NULL;
 	}
 
-	if (!nvmf_valid_nqn(nqn)) {
+	if (!nvmf_nqn_is_valid(nqn)) {
 		return NULL;
 	}
 
@@ -804,7 +804,7 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 	struct spdk_nvmf_transport *transport;
 	int rc;
 
-	if (!nvmf_valid_nqn(hostnqn)) {
+	if (!nvmf_nqn_is_valid(hostnqn)) {
 		return -EINVAL;
 	}
 

@@ -477,6 +477,11 @@ nvmf_qpair_is_admin_queue(struct spdk_nvmf_qpair *qpair)
 	return qpair->qid == 0;
 }
 
+/*
+ * Tests whether a given string represents a valid NQN.
+ */
+bool nvmf_nqn_is_valid(const char *nqn);
+
 /**
  * Initiates a zcopy start operation
  *

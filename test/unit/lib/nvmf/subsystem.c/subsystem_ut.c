@@ -1598,7 +1598,7 @@ test_nvmf_ns_reservation_report(void)
 }
 
 static void
-test_nvmf_valid_nqn(void)
+test_nvmf_nqn_is_valid(void)
 {
 	bool rc;
 	char uuid[SPDK_NVMF_UUID_STRING_LEN + 1] = {};
@@ -1611,28 +1611,28 @@ test_nvmf_valid_nqn(void)
 	/* discovery nqn */
 	snprintf(nqn, sizeof(nqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	rc = nvmf_valid_nqn(nqn);
+	rc = nvmf_nqn_is_valid(nqn);
 	CU_ASSERT(rc == true);
 
 	/* nqn with uuid */
 	memset(nqn, 0xff, sizeof(nqn));
 	snprintf(nqn, sizeof(nqn), "%s%s", SPDK_NVMF_NQN_UUID_PRE, uuid);
 
-	rc = nvmf_valid_nqn(nqn);
+	rc = nvmf_nqn_is_valid(nqn);
 	CU_ASSERT(rc == true);
 
 	/* Check nqn valid reverse domain */
 	memset(nqn, 0xff, sizeof(nqn));
 	snprintf(nqn, sizeof(nqn), "%s", "nqn.2016-06.io.spdk:cnode1");
 
-	rc = nvmf_valid_nqn(nqn);
+	rc = nvmf_nqn_is_valid(nqn);
 	CU_ASSERT(rc == true);
 
 	/* Invalid nqn length */
 	memset(nqn, 0xff, sizeof(nqn));
 	snprintf(nqn, sizeof(nqn), "%s", "nqn.");
 
-	rc = nvmf_valid_nqn(nqn);
+	rc = nvmf_nqn_is_valid(nqn);
 	CU_ASSERT(rc == false);
 
 	/* Copy uuid to the nqn string, but omit the last character to make it invalid */
@@ -1640,14 +1640,14 @@ test_nvmf_valid_nqn(void)
 	snprintf(nqn, sizeof(nqn), "%s", SPDK_NVMF_NQN_UUID_PRE);
 	memcpy(&nqn[SPDK_NVMF_NQN_UUID_PRE_LEN], uuid, SPDK_NVMF_UUID_STRING_LEN - 1);
 
-	rc = nvmf_valid_nqn(nqn);
+	rc = nvmf_nqn_is_valid(nqn);
 	CU_ASSERT(rc == false);
 
 	/* Invalid domain */
 	memset(nqn, 0xff, SPDK_NVMF_NQN_MAX_LEN + 1);
 	snprintf(nqn, sizeof(nqn), "%s", "nqn.2016-06.io...spdk:cnode1");
 
-	rc = nvmf_valid_nqn(nqn);
+	rc = nvmf_nqn_is_valid(nqn);
 	CU_ASSERT(rc == false);
 }
 
@@ -1805,7 +1805,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_subsystem_add_ctrlr);
 	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_add_host);
 	CU_ADD_TEST(suite, test_nvmf_ns_reservation_report);
-	CU_ADD_TEST(suite, test_nvmf_valid_nqn);
+	CU_ADD_TEST(suite, test_nvmf_nqn_is_valid);
 	CU_ADD_TEST(suite, test_nvmf_ns_reservation_restore);
 	CU_ADD_TEST(suite, test_nvmf_subsystem_state_change);
 
