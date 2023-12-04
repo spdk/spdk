@@ -991,13 +991,7 @@ SPDK_RPC_REGISTER("nvmf_subsystem_remove_listener", rpc_nvmf_subsystem_remove_li
 
 struct nvmf_rpc_referral_ctx {
 	char				*tgt_name;
-	struct spdk_nvmf_tgt		*tgt;
-	struct spdk_nvmf_transport	*transport;
-	struct spdk_nvmf_subsystem	*subsystem;
 	struct rpc_listen_address	address;
-	struct spdk_jsonrpc_request	*request;
-	struct spdk_nvme_transport_id	trid;
-	bool				response_sent;
 	bool				secure_channel;
 };
 
@@ -1020,6 +1014,7 @@ rpc_nvmf_add_referral(struct spdk_jsonrpc_request *request,
 		      const struct spdk_json_val *params)
 {
 	struct nvmf_rpc_referral_ctx *ctx;
+	struct spdk_nvme_transport_id trid = {};
 	struct spdk_nvmf_tgt *tgt;
 	int rc;
 
@@ -1028,8 +1023,6 @@ rpc_nvmf_add_referral(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
 		return;
 	}
-
-	ctx->request = request;
 
 	if (spdk_json_decode_object_relaxed(params, nvmf_rpc_referral_decoder,
 					    SPDK_COUNTOF(nvmf_rpc_referral_decoder),
@@ -1048,18 +1041,17 @@ rpc_nvmf_add_referral(struct spdk_jsonrpc_request *request,
 		nvmf_rpc_referral_ctx_free(ctx);
 		return;
 	}
-	ctx->tgt = tgt;
 
-	if (rpc_listen_address_to_trid(&ctx->address, &ctx->trid)) {
-		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+	if (rpc_listen_address_to_trid(&ctx->address, &trid)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		nvmf_rpc_referral_ctx_free(ctx);
 		return;
 	}
 
-	if ((ctx->trid.trtype == SPDK_NVME_TRANSPORT_TCP ||
-	     ctx->trid.trtype == SPDK_NVME_TRANSPORT_RDMA) &&
-	    !strlen(ctx->trid.trsvcid)) {
+	if ((trid.trtype == SPDK_NVME_TRANSPORT_TCP ||
+	     trid.trtype == SPDK_NVME_TRANSPORT_RDMA) &&
+	    !strlen(trid.trsvcid)) {
 		SPDK_ERRLOG("Service ID is required.\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Service ID is required.");
@@ -1067,7 +1059,7 @@ rpc_nvmf_add_referral(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	rc = spdk_nvmf_tgt_add_referral(tgt, &ctx->trid, ctx->secure_channel);
+	rc = spdk_nvmf_tgt_add_referral(tgt, &trid, ctx->secure_channel);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Internal error");
@@ -1088,6 +1080,7 @@ rpc_nvmf_remove_referral(struct spdk_jsonrpc_request *request,
 			 const struct spdk_json_val *params)
 {
 	struct nvmf_rpc_referral_ctx *ctx;
+	struct spdk_nvme_transport_id trid = {};
 	struct spdk_nvmf_tgt *tgt;
 
 	ctx = calloc(1, sizeof(*ctx));
@@ -1095,8 +1088,6 @@ rpc_nvmf_remove_referral(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
 		return;
 	}
-
-	ctx->request = request;
 
 	if (spdk_json_decode_object(params, nvmf_rpc_referral_decoder,
 				    SPDK_COUNTOF(nvmf_rpc_referral_decoder),
@@ -1115,16 +1106,15 @@ rpc_nvmf_remove_referral(struct spdk_jsonrpc_request *request,
 		nvmf_rpc_referral_ctx_free(ctx);
 		return;
 	}
-	ctx->tgt = tgt;
 
-	if (rpc_listen_address_to_trid(&ctx->address, &ctx->trid)) {
-		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+	if (rpc_listen_address_to_trid(&ctx->address, &trid)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		nvmf_rpc_referral_ctx_free(ctx);
 		return;
 	}
 
-	if (spdk_nvmf_tgt_remove_referral(tgt, &ctx->trid)) {
+	if (spdk_nvmf_tgt_remove_referral(tgt, &trid)) {
 		SPDK_ERRLOG("Failed to remove referral.\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Unable to remove a referral.");
