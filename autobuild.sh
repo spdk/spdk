@@ -5,6 +5,7 @@
 #
 
 set -e
+shopt -s extglob
 
 # If the configuration of tests is not provided, no tests will be carried out.
 if [[ ! -f $1 ]]; then
@@ -69,7 +70,7 @@ function llvm_precompile() {
 	export CC=clang-$clang_num
 	export CXX=clang++-$clang_num
 
-	fuzzer_libs=(/usr/lib*/clang/"$clang_version"/lib/linux/libclang_rt.fuzzer_no_main-x86_64.a)
+	fuzzer_libs=(/usr/lib*/clang/@("$clang_version"|"$clang_num")/lib/linux/libclang_rt.fuzzer_no_main-x86_64.a)
 	fuzzer_lib=${fuzzer_libs[0]}
 	[[ -e $fuzzer_lib ]]
 
