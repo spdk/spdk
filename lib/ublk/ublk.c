@@ -293,7 +293,6 @@ ublk_ctrl_cmd(struct spdk_ublk_dev *ublk, uint32_t cmd_op)
 		break;
 	case UBLK_CMD_START_DEV:
 		cmd->data[0] = getpid();
-		cmd->data[1] = 0;
 		break;
 	case UBLK_CMD_STOP_DEV:
 		break;
