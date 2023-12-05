@@ -104,7 +104,7 @@ struct spdk_bdev_desc {
 struct spdk_ftl_dev g_dev;
 struct ftl_superblock_shm g_sb_shm = {0};
 struct ftl_base_device_type g_base_type = { .name = "base_dev" };
-struct ftl_nv_cache_device_desc g_nvc_desc = { .name = "nvc_dev" };
+struct ftl_nv_cache_device_type g_nvc_type = { .name = "nvc_dev" };
 struct spdk_bdev_desc g_base_bdev_desc = {0};
 struct spdk_bdev_desc g_nvc_bdev_desc = {0};
 static uint8_t g_sb_buf[FTL_SUPERBLOCK_SIZE] = {0};
@@ -130,7 +130,7 @@ test_setup(void)
 	g_dev.layout.nvc.total_blocks = TEST_NVC_BLKS;
 	g_dev.layout.base.total_blocks = TEST_BASE_BLKS;
 	g_dev.base_type = &g_base_type;
-	g_dev.nv_cache.nvc_desc = &g_nvc_desc;
+	g_dev.nv_cache.nvc_type = &g_nvc_type;
 	g_dev.base_layout_tracker = ftl_layout_tracker_bdev_init(UINT32_MAX);
 	g_dev.nvc_layout_tracker = ftl_layout_tracker_bdev_init(UINT32_MAX);
 	g_dev.base_bdev_desc = &g_base_bdev_desc;

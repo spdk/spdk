@@ -2394,7 +2394,7 @@ ftl_property_dump_cache_dev(struct spdk_ftl_dev *dev, const struct ftl_property 
 	uint64_t i;
 	struct ftl_nv_cache_chunk *chunk;
 
-	spdk_json_write_named_string(w, "type", dev->nv_cache.nvc_desc->name);
+	spdk_json_write_named_string(w, "type", dev->nv_cache.nvc_type->name);
 	spdk_json_write_named_array_begin(w, "chunks");
 	for (i = 0, chunk = dev->nv_cache.chunks; i < dev->nv_cache.chunk_count; i++, chunk++) {
 		spdk_json_write_object_begin(w);

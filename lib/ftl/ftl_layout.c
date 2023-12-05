@@ -210,7 +210,7 @@ static int
 layout_region_create_nvc(struct spdk_ftl_dev *dev, enum ftl_layout_region_type reg_type,
 			 uint32_t reg_version, size_t entry_size, size_t entry_count)
 {
-	const struct ftl_md_layout_ops *md_ops = &dev->nv_cache.nvc_desc->ops.md_layout_ops;
+	const struct ftl_md_layout_ops *md_ops = &dev->nv_cache.nvc_type->ops.md_layout_ops;
 	size_t reg_blks = ftl_md_region_blocks(dev, entry_count * entry_size);
 
 	if (md_ops->region_create(dev, reg_type, reg_version, reg_blks)) {
@@ -266,7 +266,7 @@ legacy_layout_region_open_nvc(struct spdk_ftl_dev *dev, enum ftl_layout_region_t
 			      uint32_t reg_version, size_t entry_size, size_t entry_count)
 {
 	struct ftl_layout_region *reg = &dev->layout.region[reg_type];
-	const struct ftl_md_layout_ops *md_ops = &dev->nv_cache.nvc_desc->ops.md_layout_ops;
+	const struct ftl_md_layout_ops *md_ops = &dev->nv_cache.nvc_type->ops.md_layout_ops;
 
 	legacy_layout_verify_region(dev->nvc_layout_tracker, reg_type, reg_version);
 	return md_ops->region_open(dev, reg_type, reg_version, entry_size, entry_count, reg);

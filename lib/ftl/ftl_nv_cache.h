@@ -134,8 +134,8 @@ struct ftl_nv_cache {
 	/* Flag indicating halt request */
 	bool halt;
 
-	/* NV cache device descriptor */
-	const struct ftl_nv_cache_device_desc *nvc_desc;
+	/* NV cache device type */
+	const struct ftl_nv_cache_device_type *nvc_type;
 
 	/* Write buffer cache bdev */
 	struct spdk_bdev_desc *bdev_desc;

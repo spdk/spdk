@@ -212,15 +212,14 @@ ftl_mngt_open_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 	}
 	nv_cache->md_size = spdk_bdev_get_md_size(bdev);
 
-	/* Get FTL NVC bdev descriptor */
-	nv_cache->nvc_desc = ftl_nv_cache_device_get_desc_by_bdev(dev, bdev);
-	if (!nv_cache->nvc_desc) {
-		FTL_ERRLOG(dev, "Failed to get NV Cache device descriptor\n");
+	nv_cache->nvc_type = ftl_nv_cache_device_get_type_by_bdev(dev, bdev);
+	if (!nv_cache->nvc_type) {
+		FTL_ERRLOG(dev, "Failed to get NV Cache device type\n");
 		goto error;
 	}
 	nv_cache->md_size = sizeof(union ftl_md_vss);
 
-	md_ops = &nv_cache->nvc_desc->ops.md_layout_ops;
+	md_ops = &nv_cache->nvc_type->ops.md_layout_ops;
 	if (!md_ops->region_create) {
 		FTL_ERRLOG(dev, "NV Cache device doesn't implement md_layout_ops\n");
 		goto error;
@@ -232,7 +231,7 @@ ftl_mngt_open_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 		goto error;
 	}
 
-	FTL_NOTICELOG(dev, "Using %s as NV Cache device\n", nv_cache->nvc_desc->name);
+	FTL_NOTICELOG(dev, "Using %s as NV Cache device\n", nv_cache->nvc_type->name);
 	ftl_mngt_next_step(mngt);
 	return;
 error:

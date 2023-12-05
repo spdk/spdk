@@ -86,7 +86,7 @@ ftl_superblock_v5_store_blob_area(struct spdk_ftl_dev *dev)
 
 	/* Store the NVC-backed FTL MD layout info */
 	sb_blob_area = ftl_df_get_obj_ptr(sb->blob_area, 0);
-	spdk_strcpy_pad(sb->nvc_dev_name, dev->nv_cache.nvc_desc->name,
+	spdk_strcpy_pad(sb->nvc_dev_name, dev->nv_cache.nvc_type->name,
 			SPDK_COUNTOF(sb->nvc_dev_name), '\0');
 	blob_sz = sb_blob_store(dev, &sb->md_layout_nvc, nvc_blob_store, sb_blob_area);
 	FTL_NOTICELOG(dev, "nvc layout blob store 0x%"PRIx64" bytes\n", blob_sz);
@@ -272,7 +272,7 @@ ftl_superblock_v5_load_blob_area(struct spdk_ftl_dev *dev)
 	struct ftl_superblock_v5 *sb = (struct ftl_superblock_v5 *)dev->sb;
 
 	/* Load the NVC-backed FTL MD layout info */
-	if (strncmp(sb->nvc_dev_name, dev->nv_cache.nvc_desc->name, SPDK_COUNTOF(sb->nvc_dev_name))) {
+	if (strncmp(sb->nvc_dev_name, dev->nv_cache.nvc_type->name, SPDK_COUNTOF(sb->nvc_dev_name))) {
 		return -1;
 	}
 	FTL_NOTICELOG(dev, "nvc layout blob load 0x%"PRIx64" bytes\n", (uint64_t)sb->md_layout_nvc.blob_sz);

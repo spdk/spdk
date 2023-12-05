@@ -106,7 +106,7 @@ md_region_open(struct spdk_ftl_dev *dev, enum ftl_layout_region_type reg_type, u
 	return 0;
 }
 
-struct ftl_nv_cache_device_desc nvc_bdev_vss = {
+struct ftl_nv_cache_device_type nvc_bdev_vss = {
 	.name = "bdev",
 	.features = {
 	},

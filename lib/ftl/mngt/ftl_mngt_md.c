@@ -400,7 +400,7 @@ ftl_mngt_init_default_sb(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 			SPDK_COUNTOF(sb->base_dev_name), '\0');
 	sb->md_layout_base.df_id = FTL_DF_OBJ_ID_INVALID;
 
-	spdk_strcpy_pad(sb->nvc_dev_name, dev->nv_cache.nvc_desc->name,
+	spdk_strcpy_pad(sb->nvc_dev_name, dev->nv_cache.nvc_type->name,
 			SPDK_COUNTOF(sb->nvc_dev_name), '\0');
 	sb->md_layout_nvc.df_id = FTL_DF_OBJ_ID_INVALID;
 

@@ -40,9 +40,9 @@ struct ftl_nv_cache_device_ops {
 };
 
 /**
- * @brief NV Cache device descriptor
+ * @brief NV Cache device type
  */
-struct ftl_nv_cache_device_desc {
+struct ftl_nv_cache_device_type {
 	/**
 	 * The name of the NV cache device type
 	 */
@@ -62,14 +62,14 @@ struct ftl_nv_cache_device_desc {
 	/** Internal fields */
 	struct {
 		/* The queue entry to put this description to a queue */
-		TAILQ_ENTRY(ftl_nv_cache_device_desc) entry;
+		TAILQ_ENTRY(ftl_nv_cache_device_type) entry;
 	} internal;
 };
 
 /**
  * @brief Macro to register NV Cache device type when the module is loaded
  *
- * @param desc NV Cache device type descriptor
+ * @param desc NV Cache device type
  */
 #define FTL_NV_CACHE_DEVICE_TYPE_REGISTER(desc) \
 static void __attribute__((constructor)) ftl_nv_cache_device_register_##desc(void) \
@@ -80,18 +80,18 @@ static void __attribute__((constructor)) ftl_nv_cache_device_register_##desc(voi
 /**
  * @brief Register NV Cache device type
  *
- * @param desc NV Cache device type descriptor
+ * @param type NV Cache device type
  */
-void ftl_nv_cache_device_register(struct ftl_nv_cache_device_desc *desc);
+void ftl_nv_cache_device_register(struct ftl_nv_cache_device_type *type);
 
 /**
- * @brief Get NV Cache device type descriptor by bdev
+ * @brief Get NV Cache device type by bdev
  *
- * @param bdev bdev for which NV Cache device type descriptor is requested
+ * @param bdev bdev for which NV Cache device type is requested
  *
- * @return NV Cache device type descriptor
+ * @return NV Cache device type
  */
-const struct ftl_nv_cache_device_desc *ftl_nv_cache_device_get_desc_by_bdev(
+const struct ftl_nv_cache_device_type *ftl_nv_cache_device_get_type_by_bdev(
 	struct spdk_ftl_dev *dev, struct spdk_bdev *bdev);
 
 #endif /* FTL_NV_CACHE_DEVICE_H */
