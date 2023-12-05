@@ -414,6 +414,8 @@ ftl_layout_setup_superblock(struct spdk_ftl_dev *dev)
 	assert(region->bdev_desc != NULL);
 	assert(region->ioch != NULL);
 
+	layout->region[FTL_LAYOUT_REGION_TYPE_SB].mirror_type = FTL_LAYOUT_REGION_TYPE_SB_BASE;
+
 	region = &layout->region[FTL_LAYOUT_REGION_TYPE_SB_BASE];
 	region->type = FTL_LAYOUT_REGION_TYPE_SB_BASE;
 	region->mirror_type = FTL_LAYOUT_REGION_TYPE_INVALID;
