@@ -147,7 +147,7 @@ _scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun)
 		return;
 	}
 
-	if (task->function <= SPDK_COUNTOF(spdk_scsi_task_names)) {
+	if (task->function < SPDK_COUNTOF(spdk_scsi_task_names)) {
 		scsi_tn = spdk_scsi_task_names[task->function];
 	}
 
