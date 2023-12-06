@@ -55,33 +55,37 @@ run_bperf() {
 	killprocess $bperfpid
 }
 
+run_digest_error() {
+	nvmftestinit
+	nvmfappstart --wait-for-rpc
+
+	rpc_cmd <<- CONFIG
+		accel_assign_opc -o crc32c -m error
+		framework_start_init
+		bdev_null_create null0 100 4096
+		nvmf_create_transport $NVMF_TRANSPORT_OPTS --in-capsule-data-size 4096
+		nvmf_create_subsystem "$nqn" -a
+		nvmf_subsystem_add_ns "$nqn" null0
+		nvmf_subsystem_add_listener -t tcp -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" "$nqn"
+	CONFIG
+
+	# Test the reads - the host should detect digest errors and retry the requests until successful.
+	run_bperf randread 4096 128
+	run_bperf randread $((128 * 1024)) 16
+
+	# Test the writes - the target should detect digest errors, complete the commands with a transient
+	# transport error and the host should retry them until successful.  Test both small writes fitting
+	# within a CapsuleCmd as well as large ones requiring H2CData PDUs.
+	run_bperf randwrite 4096 128
+	run_bperf randwrite $((128 * 1024)) 16
+	nvmftestfini
+}
+
 # This test only makes sense for the TCP transport
 [[ "$TEST_TRANSPORT" != "tcp" ]] && exit 1
 
-nvmftestinit
-nvmfappstart --wait-for-rpc
-
-rpc_cmd << CONFIG
-	accel_assign_opc -o crc32c -m error
-	framework_start_init
-	bdev_null_create null0 100 4096
-	nvmf_create_transport $NVMF_TRANSPORT_OPTS --in-capsule-data-size 4096
-	nvmf_create_subsystem "$nqn" -a
-	nvmf_subsystem_add_ns "$nqn" null0
-	nvmf_subsystem_add_listener -t tcp -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" "$nqn"
-CONFIG
-
 trap cleanup SIGINT SIGTERM EXIT
 
-# Test the reads - the host should detect digest errors and retry the requests until successful.
-run_bperf randread 4096 128
-run_bperf randread $((128 * 1024)) 16
-
-# Test the writes - the target should detect digest errors, complete the commands with a transient
-# transport error and the host should retry them until successful.  Test both small writes fitting
-# within a CapsuleCmd as well as large ones requiring H2CData PDUs.
-run_bperf randwrite 4096 128
-run_bperf randwrite $((128 * 1024)) 16
+run_test "nvmf_digest_error" run_digest_error
 
 trap - SIGINT SIGTERM EXIT
-nvmftestfini
