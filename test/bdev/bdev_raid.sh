@@ -603,6 +603,31 @@ function raid_rebuild_test() {
 	# Check if rebuild started
 	verify_raid_bdev_process $raid_bdev_name "rebuild" "spare"
 
+	if [ $superblock = true ] && [ $with_io = false ]; then
+		# Stop the RAID bdev
+		$rpc_py bdev_raid_delete $raid_bdev_name
+		[[ $($rpc_py bdev_raid_get_bdevs all | jq 'length') == 0 ]]
+
+		# Remove the passthru base bdevs, then re-add them to assemble the raid bdev again
+		for ((i = 0; i < num_base_bdevs; i++)); do
+			$rpc_py bdev_passthru_delete ${base_bdevs[$i]}
+		done
+		for ((i = 0; i < num_base_bdevs; i++)); do
+			$rpc_py bdev_passthru_create -b ${base_bdevs[$i]}_malloc -p ${base_bdevs[$i]}
+		done
+
+		# Check if the RAID bdev is in online state (degraded)
+		verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $((num_base_bdevs - 1))
+
+		# Check if rebuild is not started
+		verify_raid_bdev_process $raid_bdev_name "none" "none"
+
+		# Again, start the rebuild
+		$rpc_py bdev_raid_add_base_bdev $raid_bdev_name "spare"
+		sleep 1
+		verify_raid_bdev_process $raid_bdev_name "rebuild" "spare"
+	fi
+
 	# Wait for rebuild to finish
 	local timeout=$((SECONDS + 30))
 	while ((SECONDS < timeout)); do

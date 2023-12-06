@@ -78,7 +78,6 @@ TAILQ_HEAD(, spdk_bdev_io) g_deferred_ios = TAILQ_HEAD_INITIALIZER(g_deferred_io
 
 DEFINE_STUB_V(spdk_bdev_module_examine_done, (struct spdk_bdev_module *module));
 DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
-DEFINE_STUB(spdk_bdev_register, int, (struct spdk_bdev *bdev), 0);
 DEFINE_STUB(spdk_bdev_io_type_supported, bool, (struct spdk_bdev *bdev,
 		enum spdk_bdev_io_type io_type), true);
 DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
@@ -414,10 +413,20 @@ spdk_bdev_destruct_done(struct spdk_bdev *bdev, int bdeverrno)
 	bdev->internal.unregister_cb(bdev->internal.unregister_ctx, bdeverrno);
 }
 
+int
+spdk_bdev_register(struct spdk_bdev *bdev)
+{
+	TAILQ_INSERT_TAIL(&g_bdev_list, bdev, internal.link);
+	return 0;
+}
+
 void
 spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	int ret;
+
+	SPDK_CU_ASSERT_FATAL(spdk_bdev_get_by_name(bdev->name) == bdev);
+	TAILQ_REMOVE(&g_bdev_list, bdev, internal.link);
 
 	bdev->internal.unregister_cb = cb_fn;
 	bdev->internal.unregister_ctx = cb_arg;
@@ -2371,6 +2380,7 @@ test_raid_io_split(void)
 
 	spdk_put_io_channel(ch);
 	free_test_req(&req);
+	pbdev->process = NULL;
 
 	create_raid_bdev_delete_req(&destroy_req, "raid1", 0);
 	rpc_bdev_raid_delete(NULL, NULL);

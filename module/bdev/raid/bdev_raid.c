@@ -65,6 +65,13 @@ struct raid_bdev_process {
 	bool				window_range_locked;
 	struct raid_base_bdev_info	*target;
 	int				status;
+	TAILQ_HEAD(, raid_process_finish_action) finish_actions;
+};
+
+struct raid_process_finish_action {
+	spdk_msg_fn cb;
+	void *cb_ctx;
+	TAILQ_ENTRY(raid_process_finish_action) link;
 };
 
 static struct raid_bdev_module *
@@ -417,6 +424,8 @@ _raid_bdev_destruct(void *ctxt)
 	struct raid_base_bdev_info *base_info;
 
 	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_destruct\n");
+
+	assert(raid_bdev->process == NULL);
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
 		/*
@@ -1445,6 +1454,81 @@ raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 }
 
 static void
+_raid_bdev_unregistering_cont(void *ctx)
+{
+	struct raid_bdev *raid_bdev = ctx;
+
+	spdk_bdev_close(raid_bdev->self_desc);
+	raid_bdev->self_desc = NULL;
+}
+
+static void
+raid_bdev_unregistering_cont(void *ctx)
+{
+	spdk_thread_exec_msg(spdk_thread_get_app_thread(), _raid_bdev_unregistering_cont, ctx);
+}
+
+static int
+raid_bdev_process_add_finish_action(struct raid_bdev_process *process, spdk_msg_fn cb, void *cb_ctx)
+{
+	struct raid_process_finish_action *finish_action;
+
+	assert(spdk_get_thread() == process->thread);
+	assert(process->state < RAID_PROCESS_STATE_STOPPED);
+
+	finish_action = calloc(1, sizeof(*finish_action));
+	if (finish_action == NULL) {
+		return -ENOMEM;
+	}
+
+	finish_action->cb = cb;
+	finish_action->cb_ctx = cb_ctx;
+
+	TAILQ_INSERT_TAIL(&process->finish_actions, finish_action, link);
+
+	return 0;
+}
+
+static void
+raid_bdev_unregistering_stop_process(void *ctx)
+{
+	struct raid_bdev_process *process = ctx;
+	struct raid_bdev *raid_bdev = process->raid_bdev;
+	int rc;
+
+	process->state = RAID_PROCESS_STATE_STOPPING;
+	if (process->status == 0) {
+		process->status = -ECANCELED;
+	}
+
+	rc = raid_bdev_process_add_finish_action(process, raid_bdev_unregistering_cont, raid_bdev);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to add raid bdev '%s' process finish action: %s\n",
+			    raid_bdev->bdev.name, spdk_strerror(-rc));
+	}
+}
+
+static void
+raid_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
+{
+	struct raid_bdev *raid_bdev = event_ctx;
+
+	switch (type) {
+	case SPDK_BDEV_EVENT_REMOVE:
+		if (raid_bdev->process != NULL) {
+			spdk_thread_send_msg(raid_bdev->process->thread, raid_bdev_unregistering_stop_process,
+					     raid_bdev->process);
+		} else {
+			raid_bdev_unregistering_cont(raid_bdev);
+		}
+		break;
+	default:
+		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
+		break;
+	}
+}
+
+static void
 raid_bdev_configure_cont(struct raid_bdev *raid_bdev)
 {
 	struct spdk_bdev *raid_bdev_gen = &raid_bdev->bdev;
@@ -1459,17 +1543,38 @@ raid_bdev_configure_cont(struct raid_bdev *raid_bdev)
 				raid_bdev_gen->name);
 	rc = spdk_bdev_register(raid_bdev_gen);
 	if (rc != 0) {
-		SPDK_ERRLOG("Unable to register raid bdev and stay at configuring state\n");
-		if (raid_bdev->module->stop != NULL) {
-			raid_bdev->module->stop(raid_bdev);
-		}
-		spdk_io_device_unregister(raid_bdev, NULL);
-		raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
-		return;
+		SPDK_ERRLOG("Failed to register raid bdev '%s': %s\n",
+			    raid_bdev_gen->name, spdk_strerror(-rc));
+		goto err;
 	}
+
+	/*
+	 * Open the bdev internally to delay unregistering if we need to stop a background process
+	 * first. The process may still need to unquiesce a range but it will fail because the
+	 * bdev's internal.spinlock is destroyed by the time the destruct callback is reached.
+	 * During application shutdown, bdevs automatically get unregistered by the bdev layer
+	 * so this is the only way currently to do this correctly.
+	 * TODO: try to handle this correctly in bdev layer instead.
+	 */
+	rc = spdk_bdev_open_ext(raid_bdev_gen->name, false, raid_bdev_event_cb, raid_bdev,
+				&raid_bdev->self_desc);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to open raid bdev '%s': %s\n",
+			    raid_bdev_gen->name, spdk_strerror(-rc));
+		spdk_bdev_unregister(raid_bdev_gen, NULL, NULL);
+		goto err;
+	}
+
 	SPDK_DEBUGLOG(bdev_raid, "raid bdev generic %p\n", raid_bdev_gen);
 	SPDK_DEBUGLOG(bdev_raid, "raid bdev is created with name %s, raid_bdev %p\n",
 		      raid_bdev_gen->name, raid_bdev);
+	return;
+err:
+	if (raid_bdev->module->stop != NULL) {
+		raid_bdev->module->stop(raid_bdev);
+	}
+	spdk_io_device_unregister(raid_bdev, NULL);
+	raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
 }
 
 static void
@@ -1966,6 +2071,13 @@ static void
 _raid_bdev_process_finish_done(void *ctx)
 {
 	struct raid_bdev_process *process = ctx;
+	struct raid_process_finish_action *finish_action;
+
+	while ((finish_action = TAILQ_FIRST(&process->finish_actions)) != NULL) {
+		TAILQ_REMOVE(&process->finish_actions, finish_action, link);
+		finish_action->cb(finish_action->cb_ctx);
+		free(finish_action);
+	}
 
 	raid_bdev_process_free(process);
 
@@ -2507,6 +2619,7 @@ raid_bdev_process_alloc(struct raid_bdev *raid_bdev, enum raid_process_type type
 	process->max_window_size = spdk_max(RAID_BDEV_PROCESS_WINDOW_SIZE / raid_bdev->bdev.blocklen,
 					    raid_bdev->bdev.write_unit_size);
 	TAILQ_INIT(&process->requests);
+	TAILQ_INIT(&process->finish_actions);
 
 	for (i = 0; i < RAID_BDEV_PROCESS_MAX_QD; i++) {
 		process_req = raid_bdev_process_alloc_request(process);

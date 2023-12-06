@@ -176,6 +176,9 @@ struct raid_bdev {
 	/* raid bdev device, this will get registered in bdev layer */
 	struct spdk_bdev		bdev;
 
+	/* the raid bdev descriptor, opened for internal use */
+	struct spdk_bdev_desc		*self_desc;
+
 	/* link of raid bdev to link it to global raid bdev list */
 	TAILQ_ENTRY(raid_bdev)		global_link;
 
