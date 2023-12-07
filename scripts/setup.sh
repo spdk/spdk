@@ -280,10 +280,33 @@ function get_used_bdf_block_devs() {
 	fi
 }
 
+is_nvme_behind_vmd() {
+	local nvme_bdf=$1 dev_path
+
+	IFS="/" read -ra dev_path < <(readlink -f "/sys/bus/pci/devices/$nvme_bdf")
+
+	for dev in "${dev_path[@]}"; do
+		[[ -n $dev && -n ${vmd_d["$dev"]} ]] && echo $dev && return 0
+	done
+	return 1
+}
+
+is_nvme_iommu_shared_with_vmd() {
+	local nvme_bdf=$1 vmd
+
+	# This use-case is quite specific to vfio-pci|iommu setup
+	is_iommu_enabled || return 1
+
+	[[ -n ${nvme_vmd_d["$nvme_bdf"]} ]] || return 1
+	# nvme is behind VMD ...
+	((pci_iommu_groups["$nvme_bdf"] == pci_iommu_groups["${nvme_vmd_d["$nvme_bdf"]}"])) || return 1
+	# ... and it shares iommu_group with it
+}
+
 function collect_devices() {
 	# NVMe, IOAT, DSA, IAA, VIRTIO, VMD
 
-	local ids dev_type dev_id bdf bdfs in_use driver
+	local ids dev_type dev_id bdf bdfs in_use driver _vmd
 
 	ids+="PCI_DEVICE_ID_INTEL_IOAT"
 	ids+="|PCI_DEVICE_ID_INTEL_DSA"
@@ -292,7 +315,7 @@ function collect_devices() {
 	ids+="|PCI_DEVICE_ID_INTEL_VMD"
 	ids+="|SPDK_PCI_CLASS_NVME"
 
-	local -gA nvme_d ioat_d dsa_d iaa_d virtio_d vmd_d all_devices_d drivers_d types_d all_devices_type_d
+	local -gA nvme_d ioat_d dsa_d iaa_d virtio_d vmd_d all_devices_d drivers_d types_d all_devices_type_d nvme_vmd_d
 
 	while read -r _ dev_type dev_id; do
 		bdfs=(${pci_bus_cache["0x8086:$dev_id"]})
@@ -341,6 +364,24 @@ function collect_devices() {
 			fi
 		done
 	done < <(grep -E "$ids" "$rootdir/include/spdk/pci_ids.h")
+
+	for bdf in "${!nvme_d[@]}"; do
+		_vmd=$(is_nvme_behind_vmd "$bdf") && nvme_vmd_d["$bdf"]=$_vmd
+	done
+
+	# Check if we got any nvmes attached to VMDs sharing the same iommu_group - if there are
+	# any skip them since they won't be usable by SPDK without moving the entire VMD ctrl
+	# away from the kernel first. That said, allow to touch the nvmes in case user requested
+	# all devices to be unbound from any driver or if dedicated override flag was set.
+	[[ -z $ALLOW_NVME_BEHIND_VMD && $DRIVER_OVERRIDE != none ]] || return 0
+
+	for bdf in "${!nvme_d[@]}"; do
+		is_nvme_iommu_shared_with_vmd "$bdf" || continue
+		nvme_d["$bdf"]=1 all_devices_d["$bdf"]=1
+		pci_dev_echo "$bdf" "Skipping nvme behind VMD (${nvme_vmd_d["$bdf"]})"
+	done
+
+	return 0
 }
 
 function collect_driver() {
@@ -678,7 +719,7 @@ function status_linux() {
 		printf "%-6s %10s %8s / %6s\n" $node $huge_size $free_pages $all_pages
 	fi
 
-	printf '\n%-8s %-15s %-6s %-6s %-7s %-16s %-10s %s\n' \
+	printf '\n%-25s %-15s %-6s %-6s %-7s %-16s %-10s %s\n' \
 		"Type" "BDF" "Vendor" "Device" "NUMA" "Driver" "Device" "Block devices" >&2
 
 	sorted_bdfs=($(printf '%s\n' "${!all_devices_d[@]}" | sort))
@@ -706,14 +747,14 @@ function status_linux() {
 		fi
 
 		desc=""
-		desc=${desc:-${nvme_d["$bdf"]:+NVMe}}
+		desc=${desc:-${nvme_d["$bdf"]:+NVMe${nvme_vmd_d["$bdf"]:+@${nvme_vmd_d["$bdf"]}(VMD)}}}
 		desc=${desc:-${ioat_d["$bdf"]:+I/OAT}}
 		desc=${desc:-${dsa_d["$bdf"]:+DSA}}
 		desc=${desc:-${iaa_d["$bdf"]:+IAA}}
 		desc=${desc:-${virtio_d["$bdf"]:+virtio}}
 		desc=${desc:-${vmd_d["$bdf"]:+VMD}}
 
-		printf '%-8s %-15s %-6s %-6s %-7s %-16s %-10s %s\n' \
+		printf '%-25s %-15s %-6s %-6s %-7s %-16s %-10s %s\n' \
 			"$desc" "$bdf" "${pci_ids_vendor["$bdf"]#0x}" "${pci_ids_device["$bdf"]#0x}" \
 			"$node" "${driver:--}" "${name:-}" "${blknames[*]:--}"
 	done
