@@ -50,6 +50,8 @@ cache_pci_init() {
 	local -gA pci_bus_driver
 	local -gA pci_mod_driver
 	local -gA pci_mod_resolved
+	local -gA pci_iommu_groups
+	local -ga iommu_groups
 
 	[[ -z ${pci_bus_cache[*]} || $CMD == reset ]] || return 1
 
@@ -59,6 +61,8 @@ cache_pci_init() {
 	pci_bus_driver=()
 	pci_mod_driver=()
 	pci_mod_resolved=()
+	pci_iommu_groups=()
+	iommu_groups=()
 }
 
 cache_pci() {
@@ -82,6 +86,37 @@ cache_pci() {
 		pci_mod_driver["$pci"]=$mod
 		pci_mod_resolved["$pci"]=$(resolve_mod "$mod")
 	fi
+
+	cache_pci_iommu_group "$pci"
+}
+
+cache_iommu_group() {
+	local iommu_group=$1 pcis=() pci
+
+	[[ -e /sys/kernel/iommu_groups/$iommu_group/type ]] || return 0
+
+	local -n _iommu_group_ref=_iommu_group_$iommu_group
+
+	iommu_groups[iommu_group]="_iommu_group_${iommu_group}[@]"
+
+	for pci in "/sys/kernel/iommu_groups/$iommu_group/devices/"*; do
+		pci=${pci##*/}
+		[[ -n ${pci_iommu_groups["$pci"]} ]] && continue
+		pci_iommu_groups["$pci"]=$iommu_group
+		_iommu_group_ref+=("$pci")
+	done
+
+}
+
+cache_pci_iommu_group() {
+	local pci=$1 iommu_group
+
+	[[ -e /sys/bus/pci/devices/$pci/iommu_group ]] || return 0
+
+	iommu_group=$(readlink -f "/sys/bus/pci/devices/$pci/iommu_group")
+	iommu_group=${iommu_group##*/}
+
+	cache_iommu_group "$iommu_group"
 }
 
 cache_pci_bus_sysfs() {
