@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2022 Intel Corporation.
+ *   Copyright 2023 Solidigm All Rights Reserved
  *   All rights reserved.
  */
 
@@ -549,6 +550,13 @@ test_sb_v3_md_layout(void)
 	sb_reg_next2->df_next = df_next_reg;
 	rc = ftl_superblock_v3_md_layout_load_all(&g_dev);
 	CU_ASSERT_EQUAL(rc, -EAGAIN);
+	test_sb_v3_region_reinit();
+
+	/* multiple (different ver) prev regions found: */
+	sb_reg_next2->version = sb_reg_next->version - 1;
+	rc = ftl_superblock_v3_md_layout_load_all(&g_dev);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(reg->current.version, sb_reg_next2->version);
 	test_sb_v3_region_reinit();
 
 	/* multiple current regions found: */
