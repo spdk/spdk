@@ -22,13 +22,16 @@ try:
 except ImportError:
     from pipes import quote
 
+PATTERN_TYPES_STR = ("read", "write", "randread", "randwrite", "rw", "randrw", "verify", "reset",
+                     "unmap", "flush", "write_zeroes")
+
 
 def print_array(a):
     print(" ".join((quote(v) for v in a)))
 
 
-def perform_tests_func(client):
-    """Perform bdevperf tests according to command line arguments when application was started.
+def perform_tests_func(args):
+    """Perform bdevperf tests with command line arguments.
 
     Args:
         none
@@ -36,7 +39,9 @@ def perform_tests_func(client):
     Returns:
         On success, 0 is returned. On error, -1 is returned.
     """
-    params = {}
+    client = args.client
+    param_names = ['queue_depth', 'time_in_sec', 'workload_type', 'io_size', 'rw_percentage']
+    params = {name: getattr(args, name) for name in param_names if getattr(args, name, None)}
     return client.call('perform_tests', params)
 
 
@@ -58,9 +63,22 @@ if __name__ == "__main__":
     subparsers = parser.add_subparsers(help='RPC methods')
 
     def perform_tests(args):
-        print_dict(perform_tests_func(args.client))
+        print_dict(perform_tests_func(args))
 
-    p = subparsers.add_parser('perform_tests', help='Perform bdevperf tests')
+    perform_tests_help_string = '''
+    Perform bdevperf tests
+    All parameters are optional.
+    If any parameter provided it will overwrite ones from prior run or command line.
+    If job config file was used no parameter should be provided.
+    '''
+    p = subparsers.add_parser('perform_tests', help=perform_tests_help_string)
+    p.add_argument('-q', dest="queue_depth", help='io depth', type=int)
+    p.add_argument('-o', dest="io_size", help='Size in bytes', type=str)
+    p.add_argument('-t', dest="time_in_sec", help='Time in seconds', type=int)
+    p.add_argument('-M', dest="rw_percentage", help='rwmixread (100 for reads, 0 for writes)',
+                   type=int, choices=range(0, 101), metavar="[0-100]")
+    p.add_argument('-w', dest="workload_type", choices=PATTERN_TYPES_STR, type=str.lower,
+                   help=f'io pattern type, must be one of {PATTERN_TYPES_STR}',)
     p.set_defaults(func=perform_tests)
 
     def call_rpc_func(args):

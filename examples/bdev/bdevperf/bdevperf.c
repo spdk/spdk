@@ -78,6 +78,9 @@ static struct spdk_poller *g_perf_timer = NULL;
 
 static void bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task);
 static void rpc_perform_tests_cb(void);
+static int bdevperf_parse_arg(int ch, char *arg);
+static int verify_test_params(void);
+static void bdevperf_usage(void);
 
 static uint32_t g_bdev_count = 0;
 static uint32_t g_latency_display_level;
@@ -2462,20 +2465,96 @@ rpc_perform_tests_cb(void)
 	rpc_perform_tests_reset();
 }
 
+struct rpc_bdevperf_params {
+	int	time_in_sec;
+	char	*workload_type;
+	int	queue_depth;
+	char	*io_size;
+	int	rw_percentage;
+};
+
+static const struct spdk_json_object_decoder rpc_bdevperf_params_decoders[] = {
+	{"time_in_sec", offsetof(struct rpc_bdevperf_params, time_in_sec), spdk_json_decode_int32, true},
+	{"workload_type", offsetof(struct rpc_bdevperf_params, workload_type), spdk_json_decode_string, true},
+	{"queue_depth", offsetof(struct rpc_bdevperf_params, queue_depth), spdk_json_decode_int32, true},
+	{"io_size", offsetof(struct rpc_bdevperf_params, io_size), spdk_json_decode_string, true},
+	{"rw_percentage", offsetof(struct rpc_bdevperf_params, rw_percentage), spdk_json_decode_int32, true},
+};
+
+static void
+rpc_apply_bdevperf_params(struct rpc_bdevperf_params *params)
+{
+	if (params->workload_type) {
+		/* we need to clear previously settled parameter to avoid memory leak */
+		free(g_workload_type);
+		g_workload_type = strdup(params->workload_type);
+	}
+	if (params->queue_depth) {
+		g_queue_depth = params->queue_depth;
+	}
+	if (params->io_size) {
+		bdevperf_parse_arg('o', params->io_size);
+	}
+	if (params->time_in_sec) {
+		g_time_in_sec = params->time_in_sec;
+	}
+	if (params->rw_percentage) {
+		g_rw_percentage = params->rw_percentage;
+		g_mix_specified = true;
+	} else {
+		g_mix_specified = false;
+	}
+}
+
 static void
 rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
-	if (params != NULL) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "perform_tests method requires no parameters");
-		return;
-	}
+	struct rpc_bdevperf_params req = {}, backup = {};
+	int rc;
+
 	if (g_request != NULL) {
 		fprintf(stderr, "Another test is already in progress.\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 spdk_strerror(-EINPROGRESS));
 		return;
 	}
+
+	if (params) {
+		if (spdk_json_decode_object_relaxed(params, rpc_bdevperf_params_decoders,
+						    SPDK_COUNTOF(rpc_bdevperf_params_decoders),
+						    &req)) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
+							 "spdk_json_decode_object failed");
+			return;
+		}
+
+		if (g_workload_type) {
+			backup.workload_type = strdup(g_workload_type);
+		}
+		backup.queue_depth = g_queue_depth;
+		if (asprintf(&backup.io_size, "%d", g_io_size) < 0) {
+			fprintf(stderr, "Couldn't allocate memory for queue depth");
+			goto rpc_error;
+		}
+		backup.time_in_sec = g_time_in_sec;
+		backup.rw_percentage = g_rw_percentage;
+
+		rpc_apply_bdevperf_params(&req);
+
+		free(req.workload_type);
+		free(req.io_size);
+	}
+
+	rc = verify_test_params();
+
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
+						 "Invalid parameters provided");
+		/* restore old params on error */
+		rpc_apply_bdevperf_params(&backup);
+		goto rpc_error;
+	}
+
 	g_request = request;
 
 	/* Only construct job configs at the first test run.  */
@@ -2484,6 +2563,10 @@ rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_v
 	} else {
 		bdevperf_construct_jobs();
 	}
+
+rpc_error:
+	free(backup.io_size);
+	free(backup.workload_type);
 }
 SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME)
 
@@ -2774,7 +2857,7 @@ main(int argc, char **argv)
 		opts.rpc_log_file = g_rpc_log_file;
 	}
 
-	if (verify_test_params() != 0) {
+	if (verify_test_params() != 0 && !g_wait_for_tests) {
 		spdk_app_usage();
 		bdevperf_usage();
 		bdevperf_fini();
