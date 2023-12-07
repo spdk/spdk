@@ -103,6 +103,7 @@ _nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
 {
 	struct spdk_nvme_ctrlr *ctrlr, *tmp;
 	struct spdk_pci_event event;
+	int rc = 0;
 
 	if (g_spdk_nvme_driver->hotplug_fd >= 0) {
 		while (spdk_pci_get_event(g_spdk_nvme_driver->hotplug_fd, &event) > 0) {
@@ -124,6 +125,7 @@ _nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
 		pctrlr = nvme_pcie_ctrlr(ctrlr);
 		if (spdk_pci_device_is_removed(pctrlr->devhandle)) {
 			do_remove = true;
+			rc = 1;
 		}
 
 		if (do_remove) {
@@ -137,7 +139,7 @@ _nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
 			}
 		}
 	}
-	return 0;
+	return rc;
 }
 
 static volatile void *
@@ -867,7 +869,12 @@ nvme_pcie_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 
 	/* Only the primary process can monitor hotplug. */
 	if (spdk_process_is_primary()) {
-		_nvme_pcie_hotplug_monitor(probe_ctx);
+		if (_nvme_pcie_hotplug_monitor(probe_ctx) > 0) {
+			/* Some removal events were received. Return immediately, avoiding
+			 * an spdk_pci_enumerate() which could trigger issue #3205.
+			 */
+			return 0;
+		}
 	}
 
 	if (enum_ctx.has_pci_addr == false) {
