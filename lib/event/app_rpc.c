@@ -17,6 +17,7 @@
 #include "spdk/log.h"
 #include "spdk_internal/event.h"
 #include "spdk_internal/thread.h"
+#include "event_internal.h"
 
 struct rpc_spdk_kill_instance {
 	char *sig_name;
@@ -356,6 +357,7 @@ _rpc_framework_get_reactors(void *arg1, void *arg2)
 	struct rpc_get_stats_ctx *ctx = arg1;
 	uint32_t current_core;
 	uint32_t curr_core_freq;
+	uint64_t sys, usr, irq;
 	struct spdk_reactor *reactor;
 	struct spdk_lw_thread *lw_thread;
 	struct spdk_thread *thread;
@@ -372,6 +374,13 @@ _rpc_framework_get_reactors(void *arg1, void *arg2)
 	spdk_json_write_named_uint64(ctx->w, "busy", reactor->busy_tsc);
 	spdk_json_write_named_uint64(ctx->w, "idle", reactor->idle_tsc);
 	spdk_json_write_named_bool(ctx->w, "in_interrupt", reactor->in_interrupt);
+
+	if (app_get_proc_stat(current_core, &usr, &sys, &irq) != 0) {
+		irq = sys = usr = 0;
+	}
+	spdk_json_write_named_uint64(ctx->w, "irq", irq);
+	spdk_json_write_named_uint64(ctx->w, "sys", sys);
+	spdk_json_write_named_uint64(ctx->w, "usr", usr);
 
 	governor = spdk_governor_get();
 	if (governor != NULL) {

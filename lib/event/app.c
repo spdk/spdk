@@ -20,6 +20,7 @@
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 #include "spdk/file.h"
+#include "event_internal.h"
 
 #define SPDK_APP_DEFAULT_LOG_LEVEL		SPDK_LOG_NOTICE
 #define SPDK_APP_DEFAULT_LOG_PRINT_LEVEL	SPDK_LOG_INFO
@@ -66,6 +67,12 @@ static struct spdk_app_opts g_default_opts;
 static bool g_disable_cpumask_locks = false;
 
 static int g_core_locks[MAX_CPU_CORES];
+
+static struct {
+	uint64_t irq;
+	uint64_t usr;
+	uint64_t sys;
+} g_initial_stat[MAX_CPU_CORES];
 
 int
 spdk_app_get_shm_id(void)
@@ -144,6 +151,80 @@ static const struct option g_cmdline_options[] = {
 #define NO_RPC_SERVER_OPT_IDX	273
 	{"no-rpc-server",		no_argument,		NULL, NO_RPC_SERVER_OPT_IDX},
 };
+
+static int
+parse_proc_stat(unsigned int core, uint64_t *user, uint64_t *sys, uint64_t *irq)
+{
+	FILE *f;
+	uint64_t i, soft_irq, cpu = 0;
+	int rc, found = 0;
+
+	f = fopen("/proc/stat", "r");
+	if (!f) {
+		return -1;
+	}
+
+	for (i = 0; i <= core + 1; i++) {
+		/* scanf discards input with '*' in format,
+		 * cpu;user;nice;system;idle;iowait;irq;softirq;steal;guest;guest_nice */
+		rc = fscanf(f, "cpu%li %li %*i %li %*i %*i %li %li %*i %*i %*i\n",
+			    &cpu, user, sys, irq, &soft_irq);
+		if (rc != 5) {
+			continue;
+		}
+
+		/* some cores can be disabled, list may not be in order */
+		if (cpu == core) {
+			found = 1;
+			break;
+		}
+	}
+
+	*irq += soft_irq;
+
+	fclose(f);
+	return found ? 0 : -1;
+}
+
+static int
+init_proc_stat(unsigned int core)
+{
+	uint64_t usr, sys, irq;
+
+	if (core >= MAX_CPU_CORES) {
+		return -1;
+	}
+
+	if (parse_proc_stat(core, &usr, &sys, &irq) < 0) {
+		return -1;
+	}
+
+	g_initial_stat[core].irq = irq;
+	g_initial_stat[core].usr = usr;
+	g_initial_stat[core].sys = sys;
+
+	return 0;
+}
+
+int
+app_get_proc_stat(unsigned int core, uint64_t *usr, uint64_t *sys, uint64_t *irq)
+{
+	uint64_t _usr, _sys, _irq;
+
+	if (core >= MAX_CPU_CORES) {
+		return -1;
+	}
+
+	if (parse_proc_stat(core, &_usr, &_sys, &_irq) < 0) {
+		return -1;
+	}
+
+	*irq = _irq - g_initial_stat[core].irq;
+	*usr = _usr - g_initial_stat[core].usr;
+	*sys = _sys - g_initial_stat[core].sys;
+
+	return 0;
+}
 
 static void
 app_start_shutdown(void *ctx)
@@ -723,7 +804,7 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	static bool		g_env_was_setup = false;
 	struct spdk_app_opts opts_local = {};
 	struct spdk_app_opts *opts = &opts_local;
-	uint32_t i;
+	uint32_t i, core;
 
 	if (!opts_user) {
 		SPDK_ERRLOG("opts_user should not be NULL\n");
@@ -841,6 +922,12 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 		return 1;
 	}
 
+	SPDK_ENV_FOREACH_CORE(core) {
+		rc = init_proc_stat(core);
+		if (rc) {
+			SPDK_NOTICELOG("Unable to parse /proc/stat [core: %d].\n", core);
+		}
+	}
 	/*
 	 * Disable and ignore trace setup if setting num_entries
 	 * to be 0.
