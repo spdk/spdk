@@ -175,16 +175,16 @@ function linux_bind_driver() {
 
 	probe_driver "$bdf" "$driver_name"
 
-	iommu_group=$(basename $(readlink -f /sys/bus/pci/devices/$bdf/iommu_group))
+	local iommu_group=${pci_iommu_groups["$bdf"]}
 	if [ -e "/dev/vfio/$iommu_group" ]; then
 		if [ -n "$TARGET_USER" ]; then
 			chown "$TARGET_USER" "/dev/vfio/$iommu_group"
 		fi
 	fi
 
-	local iommug=("/sys/bus/pci/devices/$bdf/iommu_group/devices/"!($bdf))
+	local iommug=("${!iommu_groups[iommu_group]}")
 	local _bdf _driver
-	if ((${#iommug[@]} > 0)) && [[ $driver_name == vfio* ]]; then
+	if ((${#iommug[@]} > 1)) && [[ $driver_name == vfio* ]]; then
 		pci_dev_echo "$bdf" "WARNING: detected multiple devices (${#iommug[@]}) under the same IOMMU group!"
 		for _bdf in "${iommug[@]}"; do
 			_driver=$(readlink -f "$_bdf/driver")
