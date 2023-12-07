@@ -119,6 +119,12 @@ cache_pci_iommu_group() {
 	cache_iommu_group "$iommu_group"
 }
 
+is_iommu_enabled() {
+	[[ -e /sys/kernel/iommu_groups/0 ]] && return 0
+	[[ -e /sys/module/vfio/parameters/enable_unsafe_noiommu_mode ]] || return 1
+	[[ $(< /sys/module/vfio/parameters/enable_unsafe_noiommu_mode) == Y ]]
+}
+
 cache_pci_bus_sysfs() {
 	[[ -e /sys/bus/pci/devices ]] || return 1
 

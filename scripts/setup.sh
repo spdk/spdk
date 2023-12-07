@@ -399,9 +399,7 @@ function configure_linux_pci() {
 		if [[ "$driver_path" = "$driver_name" ]]; then
 			driver_path=""
 		fi
-	elif [[ -n "$(ls /sys/kernel/iommu_groups)" || (-e \
-	/sys/module/vfio/parameters/enable_unsafe_noiommu_mode && \
-	"$(cat /sys/module/vfio/parameters/enable_unsafe_noiommu_mode)" == "Y") ]]; then
+	elif is_iommu_enabled; then
 		driver_name=vfio-pci
 		# Just in case, attempt to load VFIO_IOMMU_TYPE1 module into the kernel - this
 		# should be done automatically by modprobe since this particular module should
