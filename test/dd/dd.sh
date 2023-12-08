@@ -25,3 +25,4 @@ if ((SPDK_TEST_URING == 1)); then
 	run_test "spdk_dd_uring" "$testdir/uring.sh"
 fi
 run_test "spdk_dd_sparse" "$testdir/sparse.sh"
+run_test "spdk_dd_negative" "$testdir/negative_dd.sh"
