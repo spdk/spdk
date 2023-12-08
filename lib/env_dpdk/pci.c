@@ -246,7 +246,7 @@ pci_device_rte_dev_event(const char *device_name,
 		}
 		pthread_mutex_unlock(&g_pci_mutex);
 
-		if (dev != NULL && can_detach) {
+		if (can_detach) {
 			/* if device is not attached we can remove it right away.
 			 * Otherwise it will be removed at detach.
 			 *
@@ -258,6 +258,7 @@ pci_device_rte_dev_event(const char *device_name,
 			 * moved into the eal in the future, the deferred removal could
 			 * be deleted.
 			 */
+			assert(dev != NULL);
 			rte_eal_alarm_set(1, detach_rte_cb, dev->dev_handle);
 		}
 		break;
