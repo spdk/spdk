@@ -1176,15 +1176,13 @@ main(int argc, char **argv)
 	    (g_workload_selection != SPDK_ACCEL_OPC_DUALCAST) &&
 	    (g_workload_selection != SPDK_ACCEL_OPC_XOR)) {
 		usage();
-		g_rc = -1;
-		goto cleanup;
+		return -1;
 	}
 
 	if (g_allocate_depth > 0 && g_queue_depth > g_allocate_depth) {
 		fprintf(stdout, "allocate depth must be at least as big as queue depth\n");
 		usage();
-		g_rc = -1;
-		goto cleanup;
+		return -1;
 	}
 
 	if (g_allocate_depth == 0) {
@@ -1195,14 +1193,12 @@ main(int argc, char **argv)
 	     g_workload_selection == SPDK_ACCEL_OPC_COPY_CRC32C) &&
 	    g_chained_count == 0) {
 		usage();
-		g_rc = -1;
-		goto cleanup;
+		return -1;
 	}
 
 	if (g_workload_selection == SPDK_ACCEL_OPC_XOR && g_xor_src_count < 2) {
 		usage();
-		g_rc = -1;
-		goto cleanup;
+		return -1;
 	}
 
 	g_rc = spdk_app_start(&g_opts, accel_perf_prep, NULL);
@@ -1218,7 +1214,6 @@ main(int argc, char **argv)
 		free(worker);
 		worker = tmp;
 	}
-cleanup:
 	accel_perf_free_compress_segs();
 	spdk_app_fini();
 	return g_rc;
