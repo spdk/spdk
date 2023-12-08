@@ -60,6 +60,18 @@ function install_rocksdb() {
 	fi
 }
 
+function install_ittapi() {
+	# Install Intel Instrumentation and Trace API
+	local ittapi_version=v3.24.5 ittapi_dir=/usr/src/ittapi
+
+	rm -rf "$ittapi_dir"
+	git clone "${GIT_REPO_ITTAPI}" --branch "$ittapi_version" "$GIT_REPOS/ittapi"
+	make -C "$GIT_REPOS/ittapi/src/ittnotify_refcol"
+
+	mv "$GIT_REPOS/ittapi" "$ittapi_dir"
+	ln -s . "$ittapi_dir/sdk"
+}
+
 function install_fio() {
 	# This version of fio is installed in /usr/src/fio to enable
 	# building the spdk fio plugin.
@@ -462,6 +474,7 @@ function install_sources() {
 	fi
 	sources+=(install_fio)
 	sources+=(install_vagrant)
+	sources+=(install_ittapi)
 
 	sudo mkdir -p /usr/{,local}/src
 	sudo mkdir -p "$GIT_REPOS"
@@ -512,6 +525,8 @@ export GIT_REPO_BCC
 export GIT_REPO_BPFTRACE
 : ${GIT_REPO_NVME_CLI=https://review.spdk.io/gerrit/spdk/nvme-cli}
 export GIT_REPO_NVME_CLI
+: ${GIT_REPO_ITTAPI=https://github.com/intel/ittapi.git}
+export GIT_REPO_ITTAPI
 
 GIT_REPOS=${GIT_REPOS:-$HOME}
 
