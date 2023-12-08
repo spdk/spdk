@@ -94,7 +94,7 @@ idxd_select_device(struct idxd_io_channel *chan)
 				      socket_id, spdk_idxd_get_socket(dev->dsa));
 			return dev;
 		}
-	} while (count++ < g_num_devices);
+	} while (++count < g_num_devices);
 
 	/* We are out of available channels and/or devices for the local socket. We fix the number
 	 * of channels that we allocate per device and only allocate devices on the same socket
