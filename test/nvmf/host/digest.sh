@@ -32,7 +32,25 @@ get_transient_errcount() {
 			| .command_transient_transport_error'
 }
 
-run_bperf() {
+get_accel_stats() {
+	bperf_rpc accel_get_stats \
+		| jq -rc '.operations[]
+			| select(.opcode=="crc32c")
+			| "\(.module_name) \(.executed)"'
+}
+
+common_target_config() {
+	rpc_cmd <<- CONFIG
+		framework_start_init
+		bdev_null_create null0 100 4096
+		nvmf_create_transport $NVMF_TRANSPORT_OPTS --in-capsule-data-size 4096
+		nvmf_create_subsystem $nqn -a
+		nvmf_subsystem_add_ns $nqn null0
+		nvmf_subsystem_add_listener -t tcp -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT $nqn
+	CONFIG
+}
+
+run_bperf_err() {
 	local rw bs qd
 
 	rw=$1 bs=$2 qd=$3
@@ -55,37 +73,67 @@ run_bperf() {
 	killprocess $bperfpid
 }
 
+run_bperf() {
+	local rw bs qd
+	local acc_module acc_executed exp_module
+
+	rw=$1 bs=$2 qd=$3
+	"$rootdir/build/examples/bdevperf" -m 2 -r "$bperfsock" -w $rw -o $bs -t $runtime -q $qd -z --wait-for-rpc &
+	bperfpid=$!
+	waitforlisten "$bperfpid" "$bperfsock"
+
+	[[ $SPDK_TEST_ACCEL_DSA -eq 1 ]] && bperf_rpc dsa_scan_accel_module
+	bperf_rpc framework_start_init
+
+	bperf_rpc bdev_nvme_attach_controller --ddgst -t tcp -a "$NVMF_FIRST_TARGET_IP" \
+		-s "$NVMF_PORT" -f ipv4 -n "$nqn" -b nvme0
+
+	bperf_py "perform_tests"
+	read -r acc_module acc_executed < <(get_accel_stats)
+	[[ $SPDK_TEST_ACCEL_DSA -eq 1 ]] && exp_module="dsa" || exp_module="software"
+	((acc_executed > 0))
+	[[ "$acc_module" == "$exp_module" ]]
+
+	killprocess $bperfpid
+}
+
 run_digest_error() {
-	nvmftestinit
 	nvmfappstart --wait-for-rpc
 
-	rpc_cmd <<- CONFIG
-		accel_assign_opc -o crc32c -m error
-		framework_start_init
-		bdev_null_create null0 100 4096
-		nvmf_create_transport $NVMF_TRANSPORT_OPTS --in-capsule-data-size 4096
-		nvmf_create_subsystem "$nqn" -a
-		nvmf_subsystem_add_ns "$nqn" null0
-		nvmf_subsystem_add_listener -t tcp -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" "$nqn"
-	CONFIG
+	rpc_cmd accel_assign_opc -o crc32c -m error
+	common_target_config
 
 	# Test the reads - the host should detect digest errors and retry the requests until successful.
-	run_bperf randread 4096 128
-	run_bperf randread $((128 * 1024)) 16
+	run_bperf_err randread 4096 128
+	run_bperf_err randread $((128 * 1024)) 16
 
 	# Test the writes - the target should detect digest errors, complete the commands with a transient
 	# transport error and the host should retry them until successful.  Test both small writes fitting
 	# within a CapsuleCmd as well as large ones requiring H2CData PDUs.
+	run_bperf_err randwrite 4096 128
+	run_bperf_err randwrite $((128 * 1024)) 16
+	killprocess $nvmfpid
+}
+
+run_digest() {
+	nvmfappstart --wait-for-rpc
+	common_target_config
+
+	run_bperf randread 4096 128
+	run_bperf randread $((128 * 1024)) 16
 	run_bperf randwrite 4096 128
 	run_bperf randwrite $((128 * 1024)) 16
-	nvmftestfini
+	killprocess $nvmfpid
 }
 
 # This test only makes sense for the TCP transport
 [[ "$TEST_TRANSPORT" != "tcp" ]] && exit 1
 
-trap cleanup SIGINT SIGTERM EXIT
+nvmftestinit
 
+trap cleanup SIGINT SIGTERM EXIT
+run_test "nvmf_digest_clean" run_digest
 run_test "nvmf_digest_error" run_digest_error
 
 trap - SIGINT SIGTERM EXIT
+nvmftestfini
