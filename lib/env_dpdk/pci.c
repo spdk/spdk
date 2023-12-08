@@ -226,6 +226,10 @@ pci_device_rte_dev_event(const char *device_name,
 		TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
 			struct rte_pci_device *rte_dev = dev->dev_handle;
 
+			if (strcmp(dpdk_pci_device_get_name(rte_dev), device_name)) {
+				continue;
+			}
+
 			/* Note: these ERRLOGs are useful for triaging issue #2983. */
 			if (dev->internal.pending_removal || dev->internal.removed) {
 				SPDK_ERRLOG("Received event for device SPDK already tried to remove\n");
@@ -233,8 +237,7 @@ pci_device_rte_dev_event(const char *device_name,
 					    dev->internal.removed);
 			}
 
-			if (strcmp(dpdk_pci_device_get_name(rte_dev), device_name) == 0 &&
-			    !dev->internal.pending_removal) {
+			if (!dev->internal.pending_removal) {
 				can_detach = !dev->internal.attached;
 				/* prevent any further attaches */
 				dev->internal.pending_removal = true;
