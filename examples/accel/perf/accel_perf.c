@@ -36,7 +36,7 @@ static uint8_t g_fill_pattern = 255;
 static uint32_t g_xor_src_count = 2;
 static bool g_verify = false;
 static const char *g_workload_type = NULL;
-static enum spdk_accel_opcode g_workload_selection;
+static enum spdk_accel_opcode g_workload_selection = SPDK_ACCEL_OPC_LAST;
 static struct worker_thread *g_workers = NULL;
 static int g_num_workers = 0;
 static char *g_cd_file_in_name = NULL;
@@ -254,6 +254,7 @@ parse_args(int ch, char *arg)
 		} else if (!strcmp(g_workload_type, "xor")) {
 			g_workload_selection = SPDK_ACCEL_OPC_XOR;
 		} else {
+			fprintf(stderr, "Unsupported workload type: %s\n", optarg);
 			usage();
 			return 1;
 		}
@@ -1166,15 +1167,8 @@ main(int argc, char **argv)
 		return rc == SPDK_APP_PARSE_ARGS_HELP ? 0 : 1;
 	}
 
-	if ((g_workload_selection != SPDK_ACCEL_OPC_COPY) &&
-	    (g_workload_selection != SPDK_ACCEL_OPC_FILL) &&
-	    (g_workload_selection != SPDK_ACCEL_OPC_CRC32C) &&
-	    (g_workload_selection != SPDK_ACCEL_OPC_COPY_CRC32C) &&
-	    (g_workload_selection != SPDK_ACCEL_OPC_COMPARE) &&
-	    (g_workload_selection != SPDK_ACCEL_OPC_COMPRESS) &&
-	    (g_workload_selection != SPDK_ACCEL_OPC_DECOMPRESS) &&
-	    (g_workload_selection != SPDK_ACCEL_OPC_DUALCAST) &&
-	    (g_workload_selection != SPDK_ACCEL_OPC_XOR)) {
+	if (g_workload_selection == SPDK_ACCEL_OPC_LAST) {
+		fprintf(stderr, "Must provide a workload type\n");
 		usage();
 		return -1;
 	}
