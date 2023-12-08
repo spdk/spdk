@@ -204,7 +204,7 @@ vfio_device_setup_sparse_mmaps(struct vfio_device *device, int index,
 	struct vfio_region_info_cap_sparse_mmap *sparse;
 	struct vfio_pci_region *region = &device->regions[index];
 	uint32_t i, j = 0;
-	int prot = 0;
+	int rc = 0, prot = 0;
 
 	hdr = vfio_device_get_info_cap(info, VFIO_REGION_INFO_CAP_SPARSE_MMAP);
 	if (!hdr) {
@@ -224,7 +224,8 @@ vfio_device_setup_sparse_mmaps(struct vfio_device *device, int index,
 							    fds[i], region->offset + region->mmaps[j].offset);
 				if (region->mmaps[j].mem == MAP_FAILED) {
 					SPDK_ERRLOG("Device SPARSE MMAP failed\n");
-					return -EIO;
+					rc = -EIO;
+					goto out;
 				}
 			} else {
 				SPDK_DEBUGLOG(vfio_pci, "No valid fd, skip mmap for bar %d region %u\n", index, i);
@@ -236,8 +237,12 @@ vfio_device_setup_sparse_mmaps(struct vfio_device *device, int index,
 		}
 	}
 	device->regions[index].nr_mmaps = j;
+out:
+	for (i = 0; i < sparse->nr_areas; i++) {
+		close(fds[i]);
+	}
 
-	return 0;
+	return rc;
 }
 
 static int
@@ -253,6 +258,7 @@ vfio_device_map_region(struct vfio_device *device, struct vfio_pci_region *regio
 
 	region->mmaps[0].mem = mmap(NULL, region->size, prot, MAP_SHARED,
 				    fd, region->offset);
+	close(fd);
 	if (region->mmaps[0].mem == MAP_FAILED) {
 		SPDK_ERRLOG("Device Region MMAP failed\n");
 		return -EFAULT;
