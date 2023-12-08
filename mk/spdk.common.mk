@@ -225,6 +225,11 @@ ifeq ($(CONFIG_UBLK),y)
 SYS_LIBS += -luring
 endif
 
+ifeq ($(CONFIG_VTUNE),y)
+SYS_LIBS += -ldl
+COMMON_CFLAGS += -I$(CONFIG_VTUNE_DIR)/include -I$(CONFIG_VTUNE_DIR)/sdk/src/ittnotify
+endif
+
 #Attach only if FreeBSD and RDMA is specified with configure
 ifeq ($(OS),FreeBSD)
 ifeq ($(CONFIG_RDMA),y)
