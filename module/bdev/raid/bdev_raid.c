@@ -1290,52 +1290,6 @@ raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 	return 0;
 }
 
-/*
- * brief:
- * Check underlying block devices against support for metadata. Do not configure
- * md support when parameters from block devices are inconsistent.
- * params:
- * raid_bdev - pointer to raid bdev
- * returns:
- * 0 - The raid bdev md parameters were successfully configured.
- * non zero - Failed to configure md.
- */
-static int
-raid_bdev_configure_md(struct raid_bdev *raid_bdev)
-{
-	struct spdk_bdev *base_bdev;
-	uint8_t i;
-
-	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
-		if (raid_bdev->base_bdev_info[i].desc == NULL) {
-			continue;
-		}
-		base_bdev = spdk_bdev_desc_get_bdev(raid_bdev->base_bdev_info[i].desc);
-
-		/* Currently, RAID bdevs do not support DIF or DIX, so a RAID bdev cannot
-		 * be created on top of any bdev which supports it */
-		if (spdk_bdev_get_dif_type(base_bdev) != SPDK_DIF_DISABLE) {
-			SPDK_ERRLOG("at least one base bdev has DIF or DIX enabled "
-				    "- unsupported RAID configuration\n");
-			return -EPERM;
-		}
-
-		if (i == 0) {
-			raid_bdev->bdev.md_len = spdk_bdev_get_md_size(base_bdev);
-			raid_bdev->bdev.md_interleave = spdk_bdev_is_md_interleaved(base_bdev);
-			continue;
-		}
-
-		if (raid_bdev->bdev.md_len != spdk_bdev_get_md_size(base_bdev) ||
-		    raid_bdev->bdev.md_interleave != spdk_bdev_is_md_interleaved(base_bdev)) {
-			SPDK_ERRLOG("base bdevs are configured with different metadata formats\n");
-			return -EPERM;
-		}
-	}
-
-	return 0;
-}
-
 static void
 raid_bdev_configure_cont(struct raid_bdev *raid_bdev)
 {
@@ -1392,51 +1346,22 @@ raid_bdev_configure_write_sb_cb(int status, struct raid_bdev *raid_bdev, void *c
 static int
 raid_bdev_configure(struct raid_bdev *raid_bdev)
 {
-	uint32_t blocklen = 0;
-	struct raid_base_bdev_info *base_info;
-	struct spdk_bdev *base_bdev;
-	int rc = 0;
+	int rc;
 
 	assert(raid_bdev->state == RAID_BDEV_STATE_CONFIGURING);
 	assert(raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs_operational);
-
-	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		if (base_info->desc == NULL) {
-			continue;
-		}
-		base_bdev = spdk_bdev_desc_get_bdev(base_info->desc);
-
-		/* Check blocklen for all base bdevs that it should be same */
-		if (blocklen == 0) {
-			blocklen = base_bdev->blocklen;
-		} else if (blocklen != base_bdev->blocklen) {
-			/*
-			 * Assumption is that all the base bdevs for any raid bdev should
-			 * have same blocklen
-			 */
-			SPDK_ERRLOG("Blocklen of various bdevs not matching\n");
-			return -EINVAL;
-		}
-	}
-	assert(blocklen > 0);
+	assert(raid_bdev->bdev.blocklen > 0);
 
 	/* The strip_size_kb is read in from user in KB. Convert to blocks here for
 	 * internal use.
 	 */
-	raid_bdev->strip_size = (raid_bdev->strip_size_kb * 1024) / blocklen;
+	raid_bdev->strip_size = (raid_bdev->strip_size_kb * 1024) / raid_bdev->bdev.blocklen;
 	if (raid_bdev->strip_size == 0 && raid_bdev->level != RAID1) {
 		SPDK_ERRLOG("Strip size cannot be smaller than the device block size\n");
 		return -EINVAL;
 	}
 	raid_bdev->strip_size_shift = spdk_u32log2(raid_bdev->strip_size);
-	raid_bdev->blocklen_shift = spdk_u32log2(blocklen);
-	raid_bdev->bdev.blocklen = blocklen;
-
-	rc = raid_bdev_configure_md(raid_bdev);
-	if (rc != 0) {
-		SPDK_ERRLOG("raid metadata configuration failed\n");
-		return rc;
-	}
+	raid_bdev->blocklen_shift = spdk_u32log2(raid_bdev->bdev.blocklen);
 
 	rc = raid_bdev->module->start(raid_bdev);
 	if (rc != 0) {
@@ -1452,7 +1377,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 			raid_bdev_init_superblock(raid_bdev);
 		} else {
 			assert(spdk_uuid_compare(&raid_bdev->sb->uuid, &raid_bdev->bdev.uuid) == 0);
-			if (raid_bdev->sb->block_size != blocklen) {
+			if (raid_bdev->sb->block_size != raid_bdev->bdev.blocklen) {
 				SPDK_ERRLOG("blocklen does not match value in superblock\n");
 				rc = -EINVAL;
 			}
@@ -2641,6 +2566,41 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existi
 			    bdev->blockcnt, base_info->name);
 		rc = -EINVAL;
 		goto out;
+	}
+
+	/* Currently, RAID bdevs do not support DIF or DIX, so a RAID bdev cannot
+	 * be created on top of any bdev which supports it */
+	if (spdk_bdev_get_dif_type(bdev) != SPDK_DIF_DISABLE) {
+		SPDK_ERRLOG("Base bdev '%s' has DIF or DIX enabled - unsupported RAID configuration\n",
+			    bdev->name);
+		rc = -EINVAL;
+		goto out;
+	}
+
+	/*
+	 * Set the raid bdev properties if this is the first base bdev configured,
+	 * otherwise - verify. Assumption is that all the base bdevs for any raid bdev should
+	 * have the same blocklen and metadata format.
+	 */
+	if (raid_bdev->num_base_bdevs_discovered == 0) {
+		raid_bdev->bdev.blocklen = bdev->blocklen;
+		raid_bdev->bdev.md_len = spdk_bdev_get_md_size(bdev);
+		raid_bdev->bdev.md_interleave = spdk_bdev_is_md_interleaved(bdev);
+	} else {
+		if (raid_bdev->bdev.blocklen != bdev->blocklen) {
+			SPDK_ERRLOG("Raid bdev '%s' blocklen %u differs from base bdev '%s' blocklen %u\n",
+				    raid_bdev->bdev.name, raid_bdev->bdev.blocklen, bdev->name, bdev->blocklen);
+			rc = -EINVAL;
+			goto out;
+		}
+
+		if (raid_bdev->bdev.md_len != spdk_bdev_get_md_size(bdev) ||
+		    raid_bdev->bdev.md_interleave != spdk_bdev_is_md_interleaved(bdev)) {
+			SPDK_ERRLOG("Raid bdev '%s' has different metadata format than base bdev '%s'\n",
+				    raid_bdev->bdev.name, bdev->name);
+			rc = -EINVAL;
+			goto out;
+		}
 	}
 
 	if (existing) {
