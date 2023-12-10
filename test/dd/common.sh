@@ -53,18 +53,12 @@ gen_conf() {
 	for ref_name in "${methods[@]}"; do
 		method=${ref_name#*method_} method=${method%_*} params=()
 
-		# FIXME: centos7's Bash got trapped in 2011:
-		# local -n ref=$ref_name -> local: -n: invalid option
-		# HACK: it with eval and partial refs instead.
-		eval "local refs=(\${!${ref_name}[@]})"
-		local param_ref
-
-		for param in "${refs[@]}"; do
-			param_ref="${ref_name}[$param]"
-			if [[ ${!param_ref} =~ ^([0-9]+|true|false|\{.*\})$ ]]; then
-				params+=("\"$param\": ${!param_ref}")
+		local -n refs=$ref_name
+		for param in "${!refs[@]}"; do
+			if [[ ${refs["$param"]} =~ ^([0-9]+|true|false|\{.*\})$ ]]; then
+				params+=("\"$param\": ${refs["$param"]}")
 			else
-				params+=("\"$param\": \"${!param_ref}\"")
+				params+=("\"$param\": \"${refs["$param"]}\"")
 			fi
 		done
 
