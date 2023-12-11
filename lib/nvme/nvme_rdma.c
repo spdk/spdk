@@ -679,11 +679,17 @@ static int
 nvme_rdma_resize_cq(struct nvme_rdma_qpair *rqpair, struct nvme_rdma_poller *poller)
 {
 	int	current_num_wc, required_num_wc;
+	int	max_cq_size;
 
 	required_num_wc = poller->required_num_wc + WC_PER_QPAIR(rqpair->num_entries);
 	current_num_wc = poller->current_num_wc;
 	if (current_num_wc < required_num_wc) {
 		current_num_wc = spdk_max(current_num_wc * 2, required_num_wc);
+	}
+
+	max_cq_size = g_spdk_nvme_transport_opts.rdma_max_cq_size;
+	if (max_cq_size != 0 && current_num_wc > max_cq_size) {
+		current_num_wc = max_cq_size;
 	}
 
 	if (poller->current_num_wc != current_num_wc) {
@@ -739,6 +745,7 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 	struct spdk_rdma_qp_init_attr	attr = {};
 	struct ibv_device_attr	dev_attr;
 	struct nvme_rdma_ctrlr	*rctrlr;
+	uint32_t num_cqe, max_num_cqe;
 
 	rc = ibv_query_device(rqpair->cm_id->verbs, &dev_attr);
 	if (rc != 0) {
@@ -755,7 +762,12 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 		}
 		assert(rqpair->cq);
 	} else {
-		rqpair->cq = ibv_create_cq(rqpair->cm_id->verbs, rqpair->num_entries * 2, rqpair, NULL, 0);
+		num_cqe = rqpair->num_entries * 2;
+		max_num_cqe = g_spdk_nvme_transport_opts.rdma_max_cq_size;
+		if (max_num_cqe != 0 && num_cqe > max_num_cqe) {
+			num_cqe = max_num_cqe;
+		}
+		rqpair->cq = ibv_create_cq(rqpair->cm_id->verbs, num_cqe, rqpair, NULL, 0);
 		if (!rqpair->cq) {
 			SPDK_ERRLOG("Unable to create completion queue: errno %d: %s\n", errno, spdk_strerror(errno));
 			return -1;
@@ -2868,7 +2880,7 @@ nvme_rdma_poller_create(struct nvme_rdma_poll_group *group, struct ibv_context *
 	struct ibv_device_attr dev_attr;
 	struct spdk_rdma_srq_init_attr srq_init_attr = {};
 	struct nvme_rdma_rsp_opts opts;
-	int num_cqe;
+	int num_cqe, max_num_cqe;
 	int rc;
 
 	poller = calloc(1, sizeof(*poller));
@@ -2938,6 +2950,11 @@ nvme_rdma_poller_create(struct nvme_rdma_poll_group *group, struct ibv_context *
 		num_cqe = g_spdk_nvme_transport_opts.rdma_srq_size * 2;
 	} else {
 		num_cqe = DEFAULT_NVME_RDMA_CQ_SIZE;
+	}
+
+	max_num_cqe = g_spdk_nvme_transport_opts.rdma_max_cq_size;
+	if (max_num_cqe != 0 && num_cqe > max_num_cqe) {
+		num_cqe = max_num_cqe;
 	}
 
 	poller->cq = ibv_create_cq(poller->device, num_cqe, group, NULL, 0);

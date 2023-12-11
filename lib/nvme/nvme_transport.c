@@ -27,6 +27,7 @@ int g_current_transport_index = 0;
 
 struct spdk_nvme_transport_opts g_spdk_nvme_transport_opts = {
 	.rdma_srq_size = 0,
+	.rdma_max_cq_size = 0,
 };
 
 const struct spdk_nvme_transport *
@@ -818,10 +819,11 @@ spdk_nvme_transport_get_opts(struct spdk_nvme_transport_opts *opts, size_t opts_
 	} \
 
 	SET_FIELD(rdma_srq_size);
+	SET_FIELD(rdma_max_cq_size);
 
 	/* Do not remove this statement, you should always update this statement when you adding a new field,
 	 * and do not forget to add the SET_FIELD statement for your added field. */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_transport_opts) == 16, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_transport_opts) == 24, "Incorrect size");
 
 #undef SET_FIELD
 }
@@ -845,6 +847,7 @@ spdk_nvme_transport_set_opts(const struct spdk_nvme_transport_opts *opts, size_t
 	} \
 
 	SET_FIELD(rdma_srq_size);
+	SET_FIELD(rdma_max_cq_size);
 
 	g_spdk_nvme_transport_opts.opts_size = opts->opts_size;
 

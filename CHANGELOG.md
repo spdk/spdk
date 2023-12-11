@@ -16,6 +16,10 @@ live recovery feature of vhost-scsi target.
 
 Added support for `SBC WRITE SAME 10` and `SBC WRITE SAME 16`.
 
+### nvme
+
+A new transport option `rdma_max_cq_size` was added to limit indefinite growth of CQ size.
+
 ## v23.09
 
 ### accel

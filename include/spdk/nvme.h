@@ -4270,8 +4270,16 @@ struct spdk_nvme_transport_opts {
 	 * structure are valid. And the library will populate any remaining fields with default values.
 	 */
 	size_t opts_size;
+
+	/**
+	 * It is used for RDMA transport.
+	 *
+	 * The maximum queue depth of a rdma completion queue.
+	 * It is zero, which means unlimited, by default.
+	 */
+	uint32_t rdma_max_cq_size;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_transport_opts) == 16, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_transport_opts) == 24, "Incorrect size");
 
 /**
  * Get the current NVMe transport options.
