@@ -14,6 +14,8 @@
 #include "spdk/util.h"
 #include "spdk/string.h"
 #include "spdk/log.h"
+#include "spdk/base64.h"
+#include "spdk/histogram_data.h"
 
 static void
 rpc_iscsi_get_initiator_groups(struct spdk_jsonrpc_request *request,
@@ -1915,3 +1917,86 @@ rpc_iscsi_enable_histogram(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("iscsi_enable_histogram", rpc_iscsi_enable_histogram, SPDK_RPC_RUNTIME)
+
+struct rpc_iscsi_get_histogram_request {
+	char *name;
+};
+
+static const struct spdk_json_object_decoder rpc_iscsi_get_histogram_request_decoders[] = {
+	{"name", offsetof(struct rpc_iscsi_get_histogram_request, name), spdk_json_decode_string}
+};
+
+static void
+free_rpc_iscsi_get_histogram_request(struct rpc_iscsi_get_histogram_request *r)
+{
+	free(r->name);
+}
+
+static void
+rpc_iscsi_get_histogram(struct spdk_jsonrpc_request *request,
+			const struct spdk_json_val *params)
+{
+	struct rpc_iscsi_get_histogram_request req = {NULL};
+	struct spdk_iscsi_tgt_node *target;
+	struct spdk_json_write_ctx *w;
+	char *encoded_histogram;
+	size_t src_len, dst_len;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_iscsi_get_histogram_request_decoders,
+				    SPDK_COUNTOF(rpc_iscsi_get_histogram_request_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto free_req;
+	}
+
+	target = iscsi_find_tgt_node(req.name);
+	if (target == NULL) {
+		SPDK_ERRLOG("target is not found\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "target not found");
+		goto free_req;
+	}
+
+	if (!target->histogram) {
+		SPDK_ERRLOG("target's histogram function is not enabled\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "target's histogram function is not enabled");
+		goto free_req;
+	}
+
+	src_len = SPDK_HISTOGRAM_NUM_BUCKETS(target->histogram) * sizeof(uint64_t);
+	dst_len = spdk_base64_get_encoded_strlen(src_len) + 1;
+	encoded_histogram = malloc(dst_len);
+	if (encoded_histogram == NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 spdk_strerror(ENOMEM));
+		goto free_req;
+	}
+
+	rc = spdk_base64_encode(encoded_histogram, target->histogram->bucket, src_len);
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 spdk_strerror(-rc));
+		goto free_encoded_histogram;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "histogram", encoded_histogram);
+	spdk_json_write_named_int64(w, "bucket_shift", target->histogram->bucket_shift);
+	spdk_json_write_named_int64(w, "tsc_rate", spdk_get_ticks_hz());
+
+	spdk_json_write_object_end(w);
+	spdk_jsonrpc_end_result(request, w);
+
+free_encoded_histogram:
+	free(encoded_histogram);
+free_req:
+	free_rpc_iscsi_get_histogram_request(&req);
+}
+
+SPDK_RPC_REGISTER("iscsi_get_histogram", rpc_iscsi_get_histogram, SPDK_RPC_RUNTIME)

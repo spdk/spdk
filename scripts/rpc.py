@@ -1506,6 +1506,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('name', help='iscsi target name')
     p.set_defaults(func=iscsi_enable_histogram)
 
+    def iscsi_get_histogram(args):
+        print_dict(rpc.iscsi.iscsi_get_histogram(args.client, name=args.name))
+
+    p = subparsers.add_parser('iscsi_get_histogram',
+                              help='Get histogram for specified iscsi target')
+    p.add_argument('name', help='target name')
+    p.set_defaults(func=iscsi_get_histogram)
+
     def iscsi_create_target_node(args):
         luns = []
         for u in args.bdev_name_id_pairs.strip().split(" "):

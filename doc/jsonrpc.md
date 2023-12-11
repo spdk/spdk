@@ -8015,6 +8015,54 @@ Example response:
 }
 ~~~
 
+### iscsi_get_histogram {#rpc_iscsi_get_histogram}
+
+Get latency histogram for specified iscsi target node.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Iscsi target node name
+
+#### Result
+
+Name                    | Description
+------------------------| -----------
+histogram               | Base64 encoded histogram
+bucket_shift            | Granularity of the histogram buckets
+tsc_rate                | Ticks per second
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "iscsi_get_histogram",
+  "params": {
+    "name": "iqn.2016-06.io.spdk:target1"
+  }
+}
+~~~
+
+Example response:
+Note that histogram field is trimmed, actual encoded histogram length is ~80kb.
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "histogram": "AAAAAAAAAAAAAA...AAAAAAAAA==",
+    "tsc_rate": 2300000000,
+    "bucket_shift": 7
+  }
+}
+~~~
+
 ## NVMe-oF Target {#jsonrpc_components_nvmf_tgt}
 
 ### nvmf_create_transport method {#rpc_nvmf_create_transport}
