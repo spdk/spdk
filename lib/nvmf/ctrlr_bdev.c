@@ -272,7 +272,8 @@ nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	struct spdk_bdev_ext_io_opts opts = {
 		.size = SPDK_SIZEOF(&opts, accel_sequence),
 		.memory_domain = req->memory_domain,
-		.memory_domain_ctx = req->memory_domain_ctx
+		.memory_domain_ctx = req->memory_domain_ctx,
+		.accel_sequence = req->accel_sequence,
 	};
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
 	uint32_t block_size = spdk_bdev_get_block_size(bdev);
@@ -323,7 +324,8 @@ nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	struct spdk_bdev_ext_io_opts opts = {
 		.size = SPDK_SIZEOF(&opts, accel_sequence),
 		.memory_domain = req->memory_domain,
-		.memory_domain_ctx = req->memory_domain_ctx
+		.memory_domain_ctx = req->memory_domain_ctx,
+		.accel_sequence = req->accel_sequence,
 	};
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
 	uint32_t block_size = spdk_bdev_get_block_size(bdev);

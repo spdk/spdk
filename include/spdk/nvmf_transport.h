@@ -94,6 +94,7 @@ struct spdk_nvmf_request {
 	struct spdk_memory_domain	*memory_domain;
 	/* Context to be passed to memory domain operations. */
 	void				*memory_domain_ctx;
+	struct spdk_accel_sequence	*accel_sequence;
 
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 	spdk_nvmf_nvme_passthru_cmd_cb	cmd_cb_fn;
