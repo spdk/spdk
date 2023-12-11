@@ -83,7 +83,12 @@ function nvmf_filesystem_part() {
 		run_test "filesystem_in_capsule_xfs" nvmf_filesystem_create "xfs" ${nvme_name}
 	fi
 
-	parted -s /dev/${nvme_name} rm 1
+	# Make sure the target block device is not hold by udev-worker when we attempt to
+	# remove the partition - the removal here forces parted to send BLKRRPART which may
+	# fail in case the device is already locked. By acquiring a lock of our own we make
+	# sure to either block until device is available or make the udev-worker to back off.
+	# See https://github.com/spdk/spdk/issues/2961 for details.
+	flock "/dev/$nvme_name" parted -s "/dev/${nvme_name}" rm 1
 
 	sync
 	nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
