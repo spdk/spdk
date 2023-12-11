@@ -102,10 +102,13 @@ run_test "nvmf_discovery_remove_ifc" $rootdir/test/nvmf/host/discovery_remove_if
 # TODO: disabled due to intermittent failures (RDMA_CM_EVENT_UNREACHABLE/ETIMEDOUT)
 #run_test $rootdir/test/nvmf/host/identify_kernel_nvmf.sh $TEST_ARGS
 
+if [[ "$SPDK_TEST_NVMF_TRANSPORT" == "tcp" ]]; then
+	run_test "nvmf_digest" "$rootdir/test/nvmf/host/digest.sh" "${TEST_ARGS[@]}"
+fi
+
 if [[ $SPDK_TEST_NVMF_MDNS -eq 1 && "$SPDK_TEST_NVMF_TRANSPORT" == "tcp" ]]; then
 	# Skipping tests on RDMA because the rdma stack fails to configure the same IP for host and target.
 	run_test "nvmf_mdns_discovery" $rootdir/test/nvmf/host/mdns_discovery.sh "${TEST_ARGS[@]}"
-	run_test "nvmf_digest" "$rootdir/test/nvmf/host/digest.sh" "${TEST_ARGS[@]}"
 fi
 
 if [[ $SPDK_TEST_USDT -eq 1 ]]; then
