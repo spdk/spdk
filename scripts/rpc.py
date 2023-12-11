@@ -1496,6 +1496,16 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('iscsi_get_target_nodes', help='Display target nodes')
     p.set_defaults(func=iscsi_get_target_nodes)
 
+    def iscsi_enable_histogram(args):
+        rpc.iscsi.iscsi_enable_histogram(args.client, name=args.name, enable=args.enable)
+
+    p = subparsers.add_parser('iscsi_enable_histogram',
+                              help='Enable or disable histogram for specified iscsi target')
+    p.add_argument('-e', '--enable', default=True, dest='enable', action='store_true', help='Enable histograms on specified iscsi target')
+    p.add_argument('-d', '--disable', dest='enable', action='store_false', help='Disable histograms on specified iscsi target')
+    p.add_argument('name', help='iscsi target name')
+    p.set_defaults(func=iscsi_enable_histogram)
+
     def iscsi_create_target_node(args):
         luns = []
         for u in args.bdev_name_id_pairs.strip().split(" "):

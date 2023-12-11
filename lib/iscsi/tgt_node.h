@@ -10,6 +10,7 @@
 #include "spdk/stdinc.h"
 
 #include "iscsi/iscsi.h"
+#include "spdk/histogram_data.h"
 
 struct spdk_iscsi_conn;
 struct spdk_iscsi_init_grp;
@@ -67,6 +68,8 @@ struct spdk_iscsi_tgt_node {
 	struct spdk_poller *destruct_poller;
 	iscsi_tgt_node_destruct_cb destruct_cb_fn;
 	void *destruct_cb_arg;
+
+	struct spdk_histogram_data *histogram;
 };
 
 void iscsi_shutdown_tgt_nodes(void);
@@ -119,4 +122,6 @@ int iscsi_tgt_node_set_chap_params(struct spdk_iscsi_tgt_node *target,
 				   bool mutual_chap, int32_t chap_group);
 void iscsi_tgt_nodes_info_json(struct spdk_json_write_ctx *w);
 void iscsi_tgt_nodes_config_json(struct spdk_json_write_ctx *w);
+
+int iscsi_tgt_node_enable_histogram(struct spdk_iscsi_tgt_node *target, bool enable);
 #endif /* SPDK_ISCSI_TGT_NODE_H_ */

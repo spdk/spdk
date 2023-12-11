@@ -17,6 +17,7 @@
 #include "iscsi/portal_grp.h"
 #include "iscsi/init_grp.h"
 #include "iscsi/task.h"
+#include "spdk/histogram_data.h"
 
 #define MAX_TMPBUF 4096
 #define MAX_MASKBUF 128
@@ -686,6 +687,9 @@ _iscsi_tgt_node_destruct(void *cb_arg, int rc)
 	pthread_mutex_unlock(&g_iscsi.mutex);
 
 	pthread_mutex_destroy(&target->mutex);
+
+	spdk_histogram_data_free(target->histogram);
+
 	free(target);
 
 	if (destruct_cb_fn) {
@@ -1372,4 +1376,25 @@ iscsi_tgt_nodes_config_json(struct spdk_json_write_ctx *w)
 	TAILQ_FOREACH(target, &g_iscsi.target_head, tailq) {
 		iscsi_tgt_node_config_json(target, w);
 	}
+}
+
+int
+iscsi_tgt_node_enable_histogram(struct spdk_iscsi_tgt_node *target, bool enable)
+{
+	if (enable) {
+		if (!target->histogram) {
+			target->histogram = spdk_histogram_data_alloc();
+			if (target->histogram == NULL) {
+				SPDK_ERRLOG("could not allocate histogram\n");
+				return -ENOMEM;
+			}
+		}
+	} else {
+		if (target->histogram) {
+			spdk_histogram_data_free(target->histogram);
+			target->histogram = NULL;
+		}
+	}
+
+	return 0;
 }

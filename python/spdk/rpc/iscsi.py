@@ -173,6 +173,16 @@ def iscsi_get_target_nodes(client):
     return client.call('iscsi_get_target_nodes')
 
 
+def iscsi_enable_histogram(client, name, enable):
+    """Enable/disable histogram dynamically for the specified iscsi target node.
+
+    Args:
+        name: name of iscsi target
+    """
+    params = {'name': name, "enable": enable}
+    return client.call('iscsi_enable_histogram', params)
+
+
 def iscsi_create_target_node(
         client,
         luns,

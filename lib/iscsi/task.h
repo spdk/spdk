@@ -19,6 +19,7 @@ struct spdk_iscsi_task {
 	struct spdk_iscsi_conn *conn;
 	struct spdk_iscsi_pdu *pdu;
 	struct spdk_mobj *mobj;
+	uint64_t start_tsc;
 	uint32_t outstanding_r2t;
 
 	uint32_t desired_data_transfer_length;

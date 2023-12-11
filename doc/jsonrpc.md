@@ -7978,6 +7978,43 @@ Example response:
 }
 ~~~
 
+### iscsi_enable_histogram {#rpc_iscsi_enable_histogram}
+
+Control whether collecting data for histogram is enabled for specified iscsi target node.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Iscsi target node name
+enable                  | Required | boolean     | Enable or disable histogram on specified target node
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "iscsi_enable_histogram",
+  "params": {
+    "name": "iqn.2016-06.io.spdk:target1"
+    "enable": true
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## NVMe-oF Target {#jsonrpc_components_nvmf_tgt}
 
 ### nvmf_create_transport method {#rpc_nvmf_create_transport}

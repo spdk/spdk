@@ -8,11 +8,18 @@
 #include "spdk/log.h"
 #include "iscsi/conn.h"
 #include "iscsi/task.h"
+#include "iscsi/tgt_node.h"
 
 static void
 iscsi_task_free(struct spdk_scsi_task *scsi_task)
 {
+	uint64_t tsc_diff;
 	struct spdk_iscsi_task *task = iscsi_task_from_scsi_task(scsi_task);
+
+	if (task->conn->target->histogram) {
+		tsc_diff = spdk_get_ticks() - task->start_tsc;
+		spdk_histogram_data_tally(task->conn->target->histogram, tsc_diff);
+	}
 
 	if (task->parent) {
 		if (task->scsi.dxfer_dir == SPDK_SCSI_DIR_FROM_DEV) {
@@ -48,6 +55,7 @@ iscsi_task_get(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *parent,
 
 	assert(conn != NULL);
 	memset(task, 0, sizeof(*task));
+	task->start_tsc = spdk_get_ticks();
 	task->conn = conn;
 	assert(conn->pending_task_cnt < UINT32_MAX);
 	conn->pending_task_cnt++;

@@ -27,6 +27,8 @@ Added `bdev_uring_rescan` RPC to allow rescaning the size of uring bdev.
 
 Added `iscsi_get_stats` RPC method to get stat information about all active connections.
 
+Added `iscsi_enable_histogram` RPC method to enable or disable histogram for specified iscsi target.
+
 ### trace
 
 Merged `struct spdk_trace_flags` and `struct spdk_trace_histories` into
