@@ -91,6 +91,11 @@ enum spdk_nvmf_rdma_request_state {
 	 */
 	RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING,
 
+	/* The request is waiting on RDMA queue depth availability
+	 * to send response to the host.
+	 */
+	RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING,
+
 	/* The request is ready to send a completion */
 	RDMA_REQUEST_STATE_READY_TO_COMPLETE,
 
@@ -140,6 +145,10 @@ SPDK_TRACE_REGISTER_FN(nvmf_trace, "nvmf_rdma", TRACE_GROUP_NVMF_RDMA)
 					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 	spdk_trace_register_description("RDMA_REQ_EXECUTED",
 					TRACE_RDMA_REQUEST_STATE_EXECUTED,
+					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0,
+					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+	spdk_trace_register_description("RDMA_REQ_RDY_TO_COMPL_PEND",
+					TRACE_RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0,
 					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 	spdk_trace_register_description("RDMA_REQ_RDY_TO_COMPL",
@@ -348,6 +357,8 @@ struct spdk_nvmf_rdma_qpair {
 
 	STAILQ_HEAD(, spdk_nvmf_rdma_request)	pending_rdma_write_queue;
 
+	STAILQ_HEAD(, spdk_nvmf_rdma_request)	pending_rdma_send_queue;
+
 	/* Number of requests not in the free state */
 	uint32_t				qd;
 
@@ -392,6 +403,7 @@ struct spdk_nvmf_rdma_poller_stat {
 	uint64_t				pending_free_request;
 	uint64_t				pending_rdma_read;
 	uint64_t				pending_rdma_write;
+	uint64_t				pending_rdma_send;
 	struct spdk_rdma_qp_stats		qp_stats;
 };
 
@@ -1089,6 +1101,7 @@ nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	rqpair->current_recv_depth = 0;
 	STAILQ_INIT(&rqpair->pending_rdma_read_queue);
 	STAILQ_INIT(&rqpair->pending_rdma_write_queue);
+	STAILQ_INIT(&rqpair->pending_rdma_send_queue);
 
 	return 0;
 
@@ -2106,12 +2119,21 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 	/* If the queue pair is in an error state, force the request to the completed state
 	 * to release resources. */
 	if (rqpair->ibv_state == IBV_QPS_ERR || rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
-		if (rdma_req->state == RDMA_REQUEST_STATE_NEED_BUFFER) {
+		switch (rdma_req->state) {
+		case RDMA_REQUEST_STATE_NEED_BUFFER:
 			STAILQ_REMOVE(&rgroup->group.pending_buf_queue, &rdma_req->req, spdk_nvmf_request, buf_link);
-		} else if (rdma_req->state == RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING) {
+			break;
+		case RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING:
 			STAILQ_REMOVE(&rqpair->pending_rdma_read_queue, rdma_req, spdk_nvmf_rdma_request, state_link);
-		} else if (rdma_req->state == RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING) {
+			break;
+		case RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING:
 			STAILQ_REMOVE(&rqpair->pending_rdma_write_queue, rdma_req, spdk_nvmf_rdma_request, state_link);
+			break;
+		case RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING:
+			STAILQ_REMOVE(&rqpair->pending_rdma_send_queue, rdma_req, spdk_nvmf_rdma_request, state_link);
+			break;
+		default:
+			break;
 		}
 		rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
 	}
@@ -2159,7 +2181,8 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			if (spdk_unlikely(rdma_req->req.xfer == SPDK_NVME_DATA_BIDIRECTIONAL)) {
 				rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 				rsp->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
-				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE;
+				STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, rdma_req, state_link);
+				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
 				SPDK_DEBUGLOG(rdma, "Request %p: invalid xfer type (BIDIRECTIONAL)\n", rdma_req);
 				break;
 			}
@@ -2188,7 +2211,8 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			rc = nvmf_rdma_request_parse_sgl(rtransport, device, rdma_req);
 			if (rc < 0) {
 				STAILQ_REMOVE_HEAD(&rgroup->group.pending_buf_queue, buf_link);
-				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE;
+				STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, rdma_req, state_link);
+				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
 				break;
 			}
 
@@ -2242,7 +2266,8 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 				rdma_req->state = RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER;
 			} else {
 				rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE;
+				STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, rdma_req, state_link);
+				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
 			}
 			break;
 		case RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER:
@@ -2283,7 +2308,8 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 					 */
 					rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 					rsp->status.sc = SPDK_NVME_SC_ABORTED_MISSING_FUSED;
-					rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE;
+					STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, rdma_req, state_link);
+					rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
 					break;
 				}
 
@@ -2339,7 +2365,8 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 				STAILQ_INSERT_TAIL(&rqpair->pending_rdma_write_queue, rdma_req, state_link);
 				rdma_req->state = RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING;
 			} else {
-				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE;
+				STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, rdma_req, state_link);
+				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
 			}
 			if (spdk_unlikely(rdma_req->req.dif_enabled)) {
 				/* restore the original length */
@@ -2365,8 +2392,9 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 							    error_blk.err_offset);
 						rsp->status.sct = SPDK_NVME_SCT_MEDIA_ERROR;
 						rsp->status.sc = nvmf_rdma_dif_error_to_compl_status(error_blk.err_type);
-						rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE;
 						STAILQ_REMOVE(&rqpair->pending_rdma_write_queue, rdma_req, spdk_nvmf_rdma_request, state_link);
+						STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, rdma_req, state_link);
+						rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
 					}
 				}
 			}
@@ -2391,6 +2419,30 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			STAILQ_REMOVE_HEAD(&rqpair->pending_rdma_write_queue, state_link);
 
 			/* The data transfer will be kicked off from
+			 * RDMA_REQUEST_STATE_READY_TO_COMPLETE state.
+			 * We verified that data + response fit into send queue, so we can go to the next state directly
+			 */
+			rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE;
+			break;
+		case RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING:
+			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING, 0, 0,
+					  (uintptr_t)rdma_req, (uintptr_t)rqpair);
+
+			if (rdma_req != STAILQ_FIRST(&rqpair->pending_rdma_send_queue)) {
+				/* This request needs to wait in line to send the completion */
+				break;
+			}
+
+			if (rqpair->current_send_depth == rqpair->max_send_depth) {
+				/* We can only have so many WRs outstanding. we have to wait until some finish */
+				rqpair->poller->stat.pending_rdma_send++;
+				break;
+			}
+
+			/* We have already verified that this request is the head of the queue. */
+			STAILQ_REMOVE_HEAD(&rqpair->pending_rdma_send_queue, state_link);
+
+			/* The response sending will be kicked off from
 			 * RDMA_REQUEST_STATE_READY_TO_COMPLETE state.
 			 */
 			rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE;
@@ -3328,7 +3380,14 @@ nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport,
 	struct spdk_nvmf_rdma_request	*rdma_req, *req_tmp;
 	struct spdk_nvmf_rdma_resources *resources;
 
-	/* We process I/O in the data transfer pending queue at the highest priority. RDMA reads first */
+	/* First process requests which are waiting for response to be sent */
+	STAILQ_FOREACH_SAFE(rdma_req, &rqpair->pending_rdma_send_queue, state_link, req_tmp) {
+		if (nvmf_rdma_request_process(rtransport, rdma_req) == false && drain == false) {
+			break;
+		}
+	}
+
+	/* We process I/O in the data transfer pending queue at the highest priority. */
 	STAILQ_FOREACH_SAFE(rdma_req, &rqpair->pending_rdma_read_queue, state_link, req_tmp) {
 		if (nvmf_rdma_request_process(rtransport, rdma_req) == false && drain == false) {
 			break;
@@ -4512,7 +4571,8 @@ _qp_reset_failed_sends(struct spdk_nvmf_rdma_transport *rtransport,
 		switch (cur_rdma_req->state) {
 		case RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER:
 			cur_rdma_req->req.rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-			cur_rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE;
+			STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, cur_rdma_req, state_link);
+			cur_rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
 			break;
 		case RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST:
 		case RDMA_REQUEST_STATE_COMPLETING:
@@ -4709,7 +4769,8 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 							STAILQ_INSERT_TAIL(&rqpair->pending_rdma_read_queue, rdma_req, state_link);
 							rdma_req->state = RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING;
 						} else {
-							rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE;
+							STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, rdma_req, state_link);
+							rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
 							rdma_req->req.rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 						}
 						nvmf_rdma_request_process(rtransport, rdma_req);
@@ -4936,12 +4997,14 @@ spdk_nvmf_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks)
 
 static void
 nvmf_rdma_request_set_abort_status(struct spdk_nvmf_request *req,
-				   struct spdk_nvmf_rdma_request *rdma_req_to_abort)
+				   struct spdk_nvmf_rdma_request *rdma_req_to_abort,
+				   struct spdk_nvmf_rdma_qpair *rqpair)
 {
 	rdma_req_to_abort->req.rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 	rdma_req_to_abort->req.rsp->nvme_cpl.status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
 
-	rdma_req_to_abort->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE;
+	STAILQ_INSERT_TAIL(&rqpair->pending_rdma_send_queue, rdma_req_to_abort, state_link);
+	rdma_req_to_abort->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING;
 
 	req->rsp->nvme_cpl.cdw0 &= ~1U;	/* Command was successfully aborted. */
 }
@@ -4970,21 +5033,29 @@ _nvmf_rdma_qpair_abort_request(void *ctx)
 		STAILQ_REMOVE(&rqpair->poller->group->group.pending_buf_queue,
 			      &rdma_req_to_abort->req, spdk_nvmf_request, buf_link);
 
-		nvmf_rdma_request_set_abort_status(req, rdma_req_to_abort);
+		nvmf_rdma_request_set_abort_status(req, rdma_req_to_abort, rqpair);
 		break;
 
 	case RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING:
 		STAILQ_REMOVE(&rqpair->pending_rdma_read_queue, rdma_req_to_abort,
 			      spdk_nvmf_rdma_request, state_link);
 
-		nvmf_rdma_request_set_abort_status(req, rdma_req_to_abort);
+		nvmf_rdma_request_set_abort_status(req, rdma_req_to_abort, rqpair);
 		break;
 
 	case RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING:
 		STAILQ_REMOVE(&rqpair->pending_rdma_write_queue, rdma_req_to_abort,
 			      spdk_nvmf_rdma_request, state_link);
 
-		nvmf_rdma_request_set_abort_status(req, rdma_req_to_abort);
+		nvmf_rdma_request_set_abort_status(req, rdma_req_to_abort, rqpair);
+		break;
+
+	case RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING:
+		/* Remove req from the list here to re-use common function */
+		STAILQ_REMOVE(&rqpair->pending_rdma_send_queue, rdma_req_to_abort,
+			      spdk_nvmf_rdma_request, state_link);
+
+		nvmf_rdma_request_set_abort_status(req, rdma_req_to_abort, rqpair);
 		break;
 
 	case RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER:
@@ -5080,6 +5151,8 @@ nvmf_rdma_poll_group_dump_stat(struct spdk_nvmf_transport_poll_group *group,
 					     rpoller->stat.pending_rdma_read);
 		spdk_json_write_named_uint64(w, "pending_rdma_write",
 					     rpoller->stat.pending_rdma_write);
+		spdk_json_write_named_uint64(w, "pending_rdma_send",
+					     rpoller->stat.pending_rdma_send);
 		spdk_json_write_named_uint64(w, "total_send_wrs",
 					     rpoller->stat.qp_stats.send.num_submitted_wrs);
 		spdk_json_write_named_uint64(w, "send_doorbell_updates",

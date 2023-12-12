@@ -488,6 +488,7 @@ qpair_reset(struct spdk_nvmf_rdma_qpair *rqpair,
 	memset(rqpair, 0, sizeof(*rqpair));
 	STAILQ_INIT(&rqpair->pending_rdma_write_queue);
 	STAILQ_INIT(&rqpair->pending_rdma_read_queue);
+	STAILQ_INIT(&rqpair->pending_rdma_send_queue);
 	rqpair->poller = poller;
 	rqpair->device = device;
 	rqpair->resources = resources;
@@ -684,6 +685,57 @@ test_spdk_nvmf_rdma_request_process(void)
 		free_req(rdma_req_inv);
 		poller_reset(&poller, &group);
 		qpair_reset(&rqpair, &poller, &device, &resources, &rtransport.transport);
+	}
+
+	/* Test 5: Write response waits in queue */
+	{
+		rdma_recv = create_recv(&rqpair, SPDK_NVME_OPC_WRITE);
+		rdma_req = create_req(&rqpair, rdma_recv);
+		rqpair.current_recv_depth = 1;
+		/* NEW -> TRANSFERRING_H2C */
+		progress = nvmf_rdma_request_process(&rtransport, rdma_req);
+		CU_ASSERT(progress == true);
+		CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
+		CU_ASSERT(rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER);
+		STAILQ_INIT(&poller.qpairs_pending_send);
+		/* READY_TO_EXECUTE -> EXECUTING */
+		rdma_req->state = RDMA_REQUEST_STATE_READY_TO_EXECUTE;
+		progress = nvmf_rdma_request_process(&rtransport, rdma_req);
+		CU_ASSERT(progress == true);
+		CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_EXECUTING);
+		/* EXECUTED -> COMPLETING */
+		rdma_req->state = RDMA_REQUEST_STATE_EXECUTED;
+		/* Send queue is full */
+		rqpair.current_send_depth = rqpair.max_send_depth;
+		progress = nvmf_rdma_request_process(&rtransport, rdma_req);
+		CU_ASSERT(progress == true);
+		CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING);
+		CU_ASSERT(rdma_req == STAILQ_FIRST(&rqpair.pending_rdma_send_queue));
+
+		/* Send queue is still full */
+		progress = nvmf_rdma_request_process(&rtransport, rdma_req);
+		CU_ASSERT(progress == false);
+		CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_READY_TO_COMPLETE_PENDING);
+		CU_ASSERT(rdma_req == STAILQ_FIRST(&rqpair.pending_rdma_send_queue));
+
+		/* Slot is available */
+		rqpair.current_send_depth = rqpair.max_send_depth - 1;
+		progress = nvmf_rdma_request_process(&rtransport, rdma_req);
+		CU_ASSERT(progress == true);
+		CU_ASSERT(STAILQ_EMPTY(&rqpair.pending_rdma_send_queue));
+		CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_COMPLETING);
+		CU_ASSERT(rdma_req->recv == NULL);
+		/* COMPLETED -> FREE */
+		rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
+		progress = nvmf_rdma_request_process(&rtransport, rdma_req);
+		CU_ASSERT(progress == true);
+		CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_FREE);
+
+		free_recv(rdma_recv);
+		free_req(rdma_req);
+		poller_reset(&poller, &group);
+		qpair_reset(&rqpair, &poller, &device, &resources, &rtransport.transport);
+
 	}
 
 	spdk_mempool_free(rtransport.data_wr_pool);
