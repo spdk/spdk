@@ -39,7 +39,7 @@ struct bdevperf_task {
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 };
 
-static const char *g_workload_type = NULL;
+static char *g_workload_type = NULL;
 static int g_io_size = 0;
 /* initialize to invalid value so we can detect if user overrides it. */
 static int g_rw_percentage = -1;
@@ -2472,7 +2472,7 @@ bdevperf_parse_arg(int ch, char *arg)
 	long long tmp;
 
 	if (ch == 'w') {
-		g_workload_type = arg;
+		g_workload_type = strdup(arg);
 	} else if (ch == 'T') {
 		g_job_bdev_name = arg;
 	} else if (ch == 'z') {
@@ -2586,6 +2586,7 @@ static void
 bdevperf_fini(void)
 {
 	free_job_config();
+	free(g_workload_type);
 
 	if (g_rpc_log_file != NULL) {
 		fclose(g_rpc_log_file);
@@ -2594,19 +2595,8 @@ bdevperf_fini(void)
 }
 
 static int
-verify_test_params(struct spdk_app_opts *opts)
+verify_test_params(void)
 {
-	/* When RPC is used for starting tests and
-	 * no rpc_addr was configured for the app,
-	 * use the default address. */
-	if (g_wait_for_tests && opts->rpc_addr == NULL) {
-		opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
-	}
-
-	if (g_rpc_log_file != NULL) {
-		opts->rpc_log_file = g_rpc_log_file;
-	}
-
 	if (!g_bdevperf_conf_file && g_queue_depth <= 0) {
 		goto out;
 	}
@@ -2702,8 +2692,6 @@ verify_test_params(struct spdk_app_opts *opts)
 
 	return 0;
 out:
-	spdk_app_usage();
-	bdevperf_usage();
 	return 1;
 }
 
@@ -2727,12 +2715,24 @@ main(int argc, char **argv)
 		return rc;
 	}
 
+	/* Set the default address if no rpc_addr was provided in args
+	 * and RPC is used for starting tests */
+	if (g_wait_for_tests && opts.rpc_addr == NULL) {
+		opts.rpc_addr = SPDK_DEFAULT_RPC_ADDR;
+	}
+
 	if (read_job_config()) {
 		bdevperf_fini();
 		return 1;
 	}
 
-	if (verify_test_params(&opts) != 0) {
+	if (g_rpc_log_file != NULL) {
+		opts.rpc_log_file = g_rpc_log_file;
+	}
+
+	if (verify_test_params() != 0) {
+		spdk_app_usage();
+		bdevperf_usage();
 		bdevperf_fini();
 		exit(1);
 	}
