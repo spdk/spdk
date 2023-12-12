@@ -6,6 +6,7 @@
 xtrace_disable
 
 source "$testdir/common.sh"
+export SILENT_CGROUP_DEBUG=yes
 
 restore_cgroups() {
 	xtrace_disable

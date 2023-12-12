@@ -8,7 +8,6 @@ rootdir=$(readlink -f "$testdir/../../")
 
 source "$rootdir/test/common/autotest_common.sh"
 source "$testdir/isolate_cores.sh"
-export SILENT_CGROUP_DEBUG=yes
 
 "$rootdir/scripts/setup.sh"
 
