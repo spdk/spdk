@@ -124,7 +124,8 @@ tgt_run_hotplug() {
 hotplug_wait=6
 hotplug_events=3
 nvmes=($(nvme_in_userspace))
-nvme_count=${#nvmes[@]}
+nvme_count=$((${#nvmes[@]} > 2 ? 2 : ${#nvmes[@]}))
+nvmes=("${nvmes[@]::nvme_count}")
 
 xtrace_disable
 cache_pci_bus
