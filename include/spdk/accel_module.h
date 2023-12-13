@@ -256,6 +256,12 @@ struct spdk_accel_driver {
 	/** Name of the driver. */
 	const char *name;
 
+	/** Initializes the driver, called when accel initializes.  Optional. */
+	int (*init)(void);
+
+	/** Performs cleanup on resources allocated by the driver.  Optional. */
+	void (*fini)(void);
+
 	/**
 	 * Executes a sequence of accel operations.  The driver should notify accel about each
 	 * completed task using `spdk_accel_task_complete()`.  Once all tasks are completed or the

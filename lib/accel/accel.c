@@ -19,6 +19,7 @@
 #include "spdk/crc32.h"
 #include "spdk/util.h"
 #include "spdk/hexlify.h"
+#include "spdk/string.h"
 
 /* Accelerator Framework: The following provides a top level
  * generic API for the accelerator functions defined here. Modules,
@@ -2526,6 +2527,15 @@ spdk_accel_initialize(void)
 		return rc;
 	}
 
+	if (g_accel_driver != NULL && g_accel_driver->init != NULL) {
+		rc = g_accel_driver->init();
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to initialize driver %s: %s\n", g_accel_driver->name,
+				    spdk_strerror(-rc));
+			return rc;
+		}
+	}
+
 	/* The module list is order by priority, with the highest priority modules being at the end
 	 * of the list.  The software module should be somewhere at the beginning of the list,
 	 * before all HW modules.
@@ -2711,6 +2721,10 @@ spdk_accel_module_finish(void)
 	}
 
 	if (!g_accel_module) {
+		if (g_accel_driver != NULL && g_accel_driver->fini != NULL) {
+			g_accel_driver->fini();
+		}
+
 		spdk_spin_destroy(&g_keyring_spin);
 		spdk_spin_destroy(&g_stats_lock);
 		if (g_accel_domain) {
