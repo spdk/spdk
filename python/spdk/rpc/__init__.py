@@ -18,6 +18,7 @@ from . import dsa
 from . import iaa
 from . import ioat
 from . import iscsi
+from . import keyring
 from . import log
 from . import lvol
 from . import nbd

@@ -192,3 +192,6 @@ DEPDIRS-event_keyring := init keyring
 ifeq ($(CONFIG_VFIO_USER),y)
 DEPDIRS-vfu_device := $(BDEV_DEPS_THREAD) scsi vfu_tgt
 endif
+
+# module/keyring
+DEPDIRS-keyring_file := log keyring util $(JSON_LIBS)

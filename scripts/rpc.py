@@ -3607,6 +3607,21 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('bdev_nvme_get_mdns_discovery_info', help='Get information about the automatic mdns discovery')
     p.set_defaults(func=bdev_nvme_get_mdns_discovery_info)
 
+    def keyring_file_add_key(args):
+        rpc.keyring.keyring_file_add_key(args.client, args.name, args.path)
+
+    p = subparsers.add_parser('keyring_file_add_key', help='Add a file-based key to the keyring')
+    p.add_argument('name', help='Name of the key to add')
+    p.add_argument('path', help='Path of the file containing the key')
+    p.set_defaults(func=keyring_file_add_key)
+
+    def keyring_file_remove_key(args):
+        rpc.keyring.keyring_file_remove_key(args.client, args.name)
+
+    p = subparsers.add_parser('keyring_file_remove_key', help='Remove a file-based key from the keyring')
+    p.add_argument('name', help='Name of the key to remove')
+    p.set_defaults(func=keyring_file_remove_key)
+
     def check_called_name(name):
         if name in deprecated_aliases:
             print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)
