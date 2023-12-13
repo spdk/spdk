@@ -74,15 +74,16 @@ run_bperf_err() {
 }
 
 run_bperf() {
-	local rw bs qd
+	local rw bs qd scan_dsa
 	local acc_module acc_executed exp_module
 
-	rw=$1 bs=$2 qd=$3
+	rw=$1 bs=$2 qd=$3 scan_dsa=$4
+
 	"$rootdir/build/examples/bdevperf" -m 2 -r "$bperfsock" -w $rw -o $bs -t $runtime -q $qd -z --wait-for-rpc &
 	bperfpid=$!
 	waitforlisten "$bperfpid" "$bperfsock"
 
-	[[ $SPDK_TEST_ACCEL_DSA -eq 1 ]] && bperf_rpc dsa_scan_accel_module
+	$scan_dsa && bperf_rpc dsa_scan_accel_module
 	bperf_rpc framework_start_init
 
 	bperf_rpc bdev_nvme_attach_controller --ddgst -t tcp -a "$NVMF_FIRST_TARGET_IP" \
@@ -90,7 +91,7 @@ run_bperf() {
 
 	bperf_py "perform_tests"
 	read -r acc_module acc_executed < <(get_accel_stats)
-	[[ $SPDK_TEST_ACCEL_DSA -eq 1 ]] && exp_module="dsa" || exp_module="software"
+	$scan_dsa && exp_module="dsa" || exp_module="software"
 	((acc_executed > 0))
 	[[ "$acc_module" == "$exp_module" ]]
 
@@ -116,13 +117,18 @@ run_digest_error() {
 }
 
 run_digest() {
-	nvmfappstart --wait-for-rpc
+	local dsa_initiator
+	[[ "$1" == "dsa_initiator" ]] && dsa_initiator=true || dsa_initiator=false
+
+	tgt_params=("--wait-for-rpc")
+	nvmfappstart "${tgt_params[@]}"
+	[[ "$1" == "dsa_target" ]] && rpc_cmd dsa_scan_accel_module
 	common_target_config
 
-	run_bperf randread 4096 128
-	run_bperf randread $((128 * 1024)) 16
-	run_bperf randwrite 4096 128
-	run_bperf randwrite $((128 * 1024)) 16
+	run_bperf randread 4096 128 $dsa_initiator
+	run_bperf randread $((128 * 1024)) 16 $dsa_initiator
+	run_bperf randwrite 4096 128 $dsa_initiator
+	run_bperf randwrite $((128 * 1024)) 16 $dsa_initiator
 	killprocess $nvmfpid
 }
 
@@ -132,7 +138,12 @@ run_digest() {
 nvmftestinit
 
 trap cleanup SIGINT SIGTERM EXIT
-run_test "nvmf_digest_clean" run_digest
+if [[ $SPDK_TEST_ACCEL_DSA -eq 1 ]]; then
+	run_test "nvmf_digest_dsa_initiator" run_digest dsa_initiator
+	run_test "nvmf_digest_dsa_target" run_digest dsa_target
+else
+	run_test "nvmf_digest_clean" run_digest
+fi
 run_test "nvmf_digest_error" run_digest_error
 
 trap - SIGINT SIGTERM EXIT

@@ -41,6 +41,8 @@ vmd_perf
 # Waiting for CI tests on the platform equipped DSA and IAA accelerators
 accel_scan_dsa_modules
 accel_scan_iaa_modules
+nvmf_digest_dsa_initiator
+nvmf_digest_dsa_target
 
 # nightly tests
 bdev_fio_rw_verify_ext
