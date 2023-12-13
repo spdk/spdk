@@ -15,6 +15,8 @@
 extern "C" {
 #endif
 
+struct spdk_rpc_server;
+
 /**
  * Verify correctness of registered RPC methods and aliases.
  *
