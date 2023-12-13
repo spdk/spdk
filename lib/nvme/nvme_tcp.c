@@ -2581,12 +2581,9 @@ nvme_tcp_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		return NULL;
 	}
 
-	/* Only advertise support for accel sequences if data digest is enabled, otherwise it
-	 * doesn't provide any benefits to finish the sequences here */
-	if (opts->data_digest) {
-		tctrlr->ctrlr.flags |= SPDK_NVME_CTRLR_ACCEL_SEQUENCE_SUPPORTED;
-	}
-
+	/* Sequence might be used not only for data digest offload purposes but
+	 * to handle a potential COPY operation appended as the result of translation. */
+	tctrlr->ctrlr.flags |= SPDK_NVME_CTRLR_ACCEL_SEQUENCE_SUPPORTED;
 	tctrlr->ctrlr.adminq = nvme_tcp_ctrlr_create_qpair(&tctrlr->ctrlr, 0,
 			       tctrlr->ctrlr.opts.admin_queue_size, 0,
 			       tctrlr->ctrlr.opts.admin_queue_size, true);
