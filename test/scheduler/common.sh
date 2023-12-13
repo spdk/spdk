@@ -58,7 +58,7 @@ map_cpus_node() {
 	local cpu_idx core_idx
 
 	for cpu_idx in $(parse_cpu_list "$sysfs_node/node$node_idx/cpulist"); do
-		if is_cpu_online "$cpu_idx"; then
+		if is_cpu_online_f "$cpu_idx"; then
 			core_idx=$(< "$sysfs_cpu/cpu$cpu_idx/topology/core_id")
 			local -n _cpu_core_map=node_${node_idx}_core_${core_idx}
 			_cpu_core_map+=("$cpu_idx") cpu_core_map[cpu_idx]=$core_idx
@@ -134,14 +134,32 @@ is_cpu_offline() {
 	! is_cpu_online "$1"
 }
 
+is_cpu_online_f() {
+	local cpu=$1
+
+	if ((cpu == 0)); then
+		# cpu0 is special as it requires proper support in the kernel to be hot pluggable.
+		# As such, it usually does not have its own online attribute so always check the
+		# online list instead.
+		is_cpu_online "$cpu"
+	else
+		[[ -e $sysfs_cpu/cpu$cpu/online ]] || return 1
+		(($(< "$sysfs_cpu/cpu$cpu/online") == 1))
+	fi
+}
+
+is_cpu_offline_f() {
+	! is_cpu_online_f "$1"
+}
+
 online_cpu() {
-	is_cpu_offline "$1" || return 0
-	[[ -e $sysfs_cpu/cpu$1/online ]] && echo 1 > "$sysfs_cpu/cpu$1/online"
+	is_cpu_offline_f "$1" || return 0
+	echo 1 > "$sysfs_cpu/cpu$1/online"
 }
 
 offline_cpu() {
-	is_cpu_online "$1" || return 0
-	[[ -e $sysfs_cpu/cpu$1/online ]] && echo 0 > "$sysfs_cpu/cpu$1/online"
+	is_cpu_online_f "$1" || return 0
+	echo 0 > "$sysfs_cpu/cpu$1/online"
 }
 
 mask_cpus() {
