@@ -5,4 +5,7 @@
 
 .PRECIOUS: $(OBJS)
 
+# workaround for GNU Make 4.4 bug
+.NOTINTERMEDIATE: $(OBJS:.o=.d)
+
 -include $(OBJS:.o=.d)
