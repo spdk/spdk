@@ -47,6 +47,8 @@ struct spdk_keyring_module {
 	int (*init)(void);
 	/** Clean up resources allocated by a module.  Called during keyring's cleanup  */
 	void (*cleanup)(void);
+	/** Write module configuration to JSON */
+	void (*write_config)(struct spdk_json_write_ctx *w);
 	/** Add a key to the keyring */
 	int (*add_key)(struct spdk_key *key, void *ctx);
 	/** Remove a key from the keyring */
@@ -85,5 +87,14 @@ static void __attribute__((constructor)) _spdk_keyring_register_##name(void) \
  * \return Key context.
  */
 void *spdk_key_get_ctx(struct spdk_key *key);
+
+/**
+ * Get keyring module owning the key.
+ *
+ * \param key Key.
+ *
+ * \return Key owner.
+ */
+struct spdk_keyring_module *spdk_key_get_module(struct spdk_key *key);
 
 #endif /* SPDK_KEYRING_H */

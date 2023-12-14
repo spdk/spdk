@@ -185,7 +185,7 @@ DEPDIRS-event_vhost_scsi := init vhost event_scheduler event_scsi
 DEPDIRS-event_sock := init sock
 DEPDIRS-event_vfu_tgt := init vfu_tgt
 DEPDIRS-event_iobuf := init log thread util $(JSON_LIBS)
-DEPDIRS-event_keyring := init keyring
+DEPDIRS-event_keyring := init json keyring
 
 # module/vfu_device
 

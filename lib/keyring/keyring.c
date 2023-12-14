@@ -217,6 +217,25 @@ spdk_key_get_ctx(struct spdk_key *key)
 	return key + 1;
 }
 
+
+struct spdk_keyring_module *
+spdk_key_get_module(struct spdk_key *key)
+{
+	return key->module;
+}
+
+void
+spdk_keyring_write_config(struct spdk_json_write_ctx *w)
+{
+	struct spdk_keyring_module *module;
+
+	TAILQ_FOREACH(module, &g_keyring.modules, tailq) {
+		if (module->write_config != NULL) {
+			module->write_config(w);
+		}
+	}
+}
+
 void
 spdk_keyring_for_each_key(struct spdk_keyring *keyring,
 			  void *ctx, void (*fn)(void *ctx, struct spdk_key *key), uint32_t flags)

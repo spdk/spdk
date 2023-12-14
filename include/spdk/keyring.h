@@ -6,6 +6,7 @@
 #define SPDK_KEYRING_H
 
 #include "spdk/stdinc.h"
+#include "spdk/json.h"
 
 struct spdk_key;
 
@@ -81,5 +82,12 @@ struct spdk_keyring;
  */
 void spdk_keyring_for_each_key(struct spdk_keyring *keyring, void *ctx,
 			       void (*fn)(void *ctx, struct spdk_key *key), uint32_t flags);
+
+/**
+ * Write keyring configuration to JSON.
+ *
+ * \param w JSON write context.
+ */
+void spdk_keyring_write_config(struct spdk_json_write_ctx *w);
 
 #endif /* SPDK_KEYRING_H */
