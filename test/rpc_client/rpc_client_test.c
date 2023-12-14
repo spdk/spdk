@@ -196,7 +196,8 @@ rpc_test_method_null_params(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_send_bool_response(request, true);
 }
-SPDK_RPC_REGISTER("test_null_params", rpc_test_method_null_params, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("test_null_params", rpc_test_method_null_params,
+		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
 static bool g_conn_close_detected;
 

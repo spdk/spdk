@@ -93,8 +93,6 @@ spdk_rpc_initialize(const char *listen_addr, const struct spdk_rpc_opts *_opts)
 		return 0;
 	}
 
-	spdk_rpc_set_state(SPDK_RPC_STARTUP);
-
 	rpc_opts_get_default(&opts, sizeof(opts));
 	if (_opts != NULL) {
 		rpc_opts_copy(&opts, _opts, _opts->size);

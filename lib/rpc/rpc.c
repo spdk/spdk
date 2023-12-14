@@ -21,7 +21,7 @@ static char g_rpc_lock_path[sizeof(g_rpc_listen_addr_unix.sun_path) + sizeof(".l
 static int g_rpc_lock_fd = -1;
 
 static struct spdk_jsonrpc_server *g_jsonrpc_server = NULL;
-static uint32_t g_rpc_state;
+static uint32_t g_rpc_state = SPDK_RPC_STARTUP;
 static bool g_rpcs_correct = true;
 static char **g_rpcs_allowlist = NULL;
 
