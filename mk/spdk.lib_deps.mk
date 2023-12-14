@@ -38,7 +38,7 @@ DEPDIRS-json := log util
 DEPDIRS-rdma := log util
 DEPDIRS-reduce := log util
 DEPDIRS-thread := log util trace
-DEPDIRS-keyring := log util
+DEPDIRS-keyring := log util $(JSON_LIBS)
 
 DEPDIRS-nvme := log sock util trace dma
 ifeq ($(OS),Linux)

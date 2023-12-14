@@ -7,6 +7,8 @@
 
 #include "keyring/keyring.c"
 
+#include "unit/lib/json_mock.c"
+
 struct ut_key {
 #define UT_KEY_SIZE 64
 	char buf[UT_KEY_SIZE];

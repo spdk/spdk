@@ -2,6 +2,7 @@
  * Copyright (c) 2024 Intel Corporation. All rights reserved.
  */
 
+#include "keyring_internal.h"
 #include "spdk/keyring.h"
 #include "spdk/keyring_module.h"
 #include "spdk/log.h"
@@ -217,9 +218,44 @@ spdk_key_get_ctx(struct spdk_key *key)
 }
 
 void
+spdk_keyring_for_each_key(struct spdk_keyring *keyring,
+			  void *ctx, void (*fn)(void *ctx, struct spdk_key *key), uint32_t flags)
+{
+	struct spdk_key *key, *tmp;
+
+	assert(keyring == NULL);
+	pthread_mutex_lock(&g_keyring.mutex);
+	TAILQ_FOREACH_SAFE(key, &g_keyring.keys, tailq, tmp) {
+		fn(ctx, key);
+	}
+
+	if (flags & SPDK_KEYRING_FOR_EACH_ALL) {
+		TAILQ_FOREACH_SAFE(key, &g_keyring.removed_keys, tailq, tmp) {
+			fn(ctx, key);
+		}
+	}
+	pthread_mutex_unlock(&g_keyring.mutex);
+}
+
+void
 spdk_keyring_register_module(struct spdk_keyring_module *module)
 {
 	TAILQ_INSERT_TAIL(&g_keyring.modules, module, tailq);
+}
+
+void
+keyring_dump_key_info(struct spdk_key *key, struct spdk_json_write_ctx *w)
+{
+	struct spdk_keyring_module *module = key->module;
+
+	spdk_json_write_named_string(w, "name", key->name);
+	spdk_json_write_named_string(w, "module", module->name);
+	spdk_json_write_named_bool(w, "removed", key->removed);
+	spdk_json_write_named_int32(w, "refcnt", key->refcnt);
+
+	if (!key->removed && module->dump_info != NULL) {
+		module->dump_info(key, w);
+	}
 }
 
 int

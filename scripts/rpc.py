@@ -3622,6 +3622,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('name', help='Name of the key to remove')
     p.set_defaults(func=keyring_file_remove_key)
 
+    def keyring_get_keys(args):
+        print_dict(rpc.keyring.keyring_get_keys(args.client))
+
+    p = subparsers.add_parser('keyring_get_keys', help='Get a list of registered keys')
+    p.set_defaults(func=keyring_get_keys)
+
     def check_called_name(name):
         if name in deprecated_aliases:
             print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)

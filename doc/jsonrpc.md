@@ -12809,3 +12809,43 @@ Example response:
   "result": true
 }
 ~~~
+
+### keyring_get_keys {#rpc_keyring_get_keys}
+
+Get a list of available keys.
+
+#### Example
+
+Example request:
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "keyring_get_keys",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "name": "key0",
+      "module": "keyring_file",
+      "removed": false,
+      "refcnt": 1,
+      "path": "/path/to/key0"
+    },
+    {
+      "name": "key1",
+      "module": "keyring_file",
+      "removed": false,
+      "refcnt": 1,
+      "path": "/path/to/key1"
+    }
+  ]
+}
+~~~
