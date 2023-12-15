@@ -214,5 +214,22 @@ trap 'nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 killprocess $bdevperf_pid
 killprocess $nvmfpid
 
+# Load the keys using keyring
+nvmfappstart
+setup_nvmf_tgt "$key_long_path"
+"$rootdir/build/examples/bdevperf" -m 2 -z -r "$bdevperf_rpc_sock" \
+	-q 128 -o 4k -w verify -t 1 "${NO_HUGE[@]}" &
+bdevperf_pid=$!
+
+trap 'cleanup; exit 1' SIGINT SIGTERM EXIT
+waitforlisten "$bdevperf_pid" "$bdevperf_rpc_sock"
+
+"$rpc_py" -s "$bdevperf_rpc_sock" keyring_file_add_key key0 "$key_long_path"
+"$rpc_py" -s "$bdevperf_rpc_sock" bdev_nvme_attach_controller -b nvme0 -t tcp \
+	-a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -f ipv4 --psk key0 \
+	-n "nqn.2016-06.io.spdk:cnode1" -q "nqn.2016-06.io.spdk:host1"
+
+"$rootdir/examples/bdev/bdevperf/bdevperf.py" -s "$bdevperf_rpc_sock" perform_tests
+
 trap - SIGINT SIGTERM EXIT
 cleanup

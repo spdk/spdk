@@ -759,7 +759,9 @@ if __name__ == "__main__":
                    less than ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1.""",
                    type=int)
     p.add_argument('-k', '--psk',
-                   help='Set PSK file path and enable TCP SSL socket implementation.')
+                   help="""Set PSK and enable TCP SSL socket implementation.  The PSK can either be a
+                   name of a key attached to the keyring or a path to a file containig the key.  The
+                   latter method is deprecated.""")
     p.add_argument('-m', '--max-bdevs', type=int,
                    help='The size of the name array for newly created bdevs. Default is 128',)
 

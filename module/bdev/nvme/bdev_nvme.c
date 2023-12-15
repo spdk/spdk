@@ -14,6 +14,7 @@
 #include "spdk/endian.h"
 #include "spdk/bdev.h"
 #include "spdk/json.h"
+#include "spdk/keyring.h"
 #include "spdk/likely.h"
 #include "spdk/nvme.h"
 #include "spdk/nvme_ocssd.h"
@@ -463,7 +464,7 @@ _nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr)
 	}
 
 	pthread_mutex_destroy(&nvme_ctrlr->mutex);
-
+	spdk_keyring_put_key(nvme_ctrlr->psk);
 	free(nvme_ctrlr);
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
@@ -5100,6 +5101,7 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 static void
 free_nvme_async_probe_ctx(struct nvme_async_probe_ctx *ctx)
 {
+	spdk_keyring_put_key(ctx->drv_opts.tls_psk);
 	free(ctx);
 }
 
@@ -5305,8 +5307,19 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	TAILQ_INIT(&nvme_ctrlr->trids);
-
 	RB_INIT(&nvme_ctrlr->namespaces);
+
+	/* Get another reference to the key, so the first one can be released from probe_ctx */
+	if (ctx != NULL && ctx->drv_opts.tls_psk != NULL) {
+		nvme_ctrlr->psk = spdk_keyring_get_key(spdk_key_get_name(ctx->drv_opts.tls_psk));
+		if (nvme_ctrlr->psk == NULL) {
+			/* Could only happen if the key was removed in the meantime */
+			SPDK_ERRLOG("Couldn't get a reference to the key '%s'\n",
+				    spdk_key_get_name(ctx->drv_opts.tls_psk));
+			rc = -ENOKEY;
+			goto err;
+		}
+	}
 
 	path_id = calloc(1, sizeof(*path_id));
 	if (path_id == NULL) {
@@ -6042,13 +6055,17 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	ctx->drv_opts.disable_read_ana_log_page = true;
 	ctx->drv_opts.transport_tos = g_opts.transport_tos;
 
-	if (ctx->bdev_opts.psk_path[0] != '\0') {
-		rc = bdev_nvme_load_psk(ctx->bdev_opts.psk_path,
-					ctx->drv_opts.psk, sizeof(ctx->drv_opts.psk));
-		if (rc != 0) {
-			SPDK_ERRLOG("Could not load PSK from %s\n", ctx->bdev_opts.psk_path);
-			free_nvme_async_probe_ctx(ctx);
-			return rc;
+	if (ctx->bdev_opts.psk[0] != '\0') {
+		/* Try to use the keyring first */
+		ctx->drv_opts.tls_psk = spdk_keyring_get_key(ctx->bdev_opts.psk);
+		if (ctx->drv_opts.tls_psk == NULL) {
+			rc = bdev_nvme_load_psk(ctx->bdev_opts.psk,
+						ctx->drv_opts.psk, sizeof(ctx->drv_opts.psk));
+			if (rc != 0) {
+				SPDK_ERRLOG("Could not load PSK from %s\n", ctx->bdev_opts.psk);
+				free_nvme_async_probe_ctx(ctx);
+				return rc;
+			}
 		}
 	}
 
@@ -8223,8 +8240,10 @@ nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 	spdk_json_write_named_uint32(w, "reconnect_delay_sec", nvme_ctrlr->opts.reconnect_delay_sec);
 	spdk_json_write_named_uint32(w, "fast_io_fail_timeout_sec",
 				     nvme_ctrlr->opts.fast_io_fail_timeout_sec);
-	if (nvme_ctrlr->opts.psk_path[0] != '\0') {
-		spdk_json_write_named_string(w, "psk", nvme_ctrlr->opts.psk_path);
+	if (nvme_ctrlr->psk != NULL) {
+		spdk_json_write_named_string(w, "psk", spdk_key_get_name(nvme_ctrlr->psk));
+	} else if (nvme_ctrlr->opts.psk[0] != '\0') {
+		spdk_json_write_named_string(w, "psk", nvme_ctrlr->opts.psk);
 	}
 
 	opts = spdk_nvme_ctrlr_get_opts(nvme_ctrlr->ctrlr);

@@ -146,7 +146,7 @@ DEPDIRS-bdev_delay := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_iscsi := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_malloc := $(BDEV_DEPS_THREAD) accel dma
 DEPDIRS-bdev_null := $(BDEV_DEPS_THREAD)
-DEPDIRS-bdev_nvme = $(BDEV_DEPS_THREAD) accel nvme trace
+DEPDIRS-bdev_nvme = $(BDEV_DEPS_THREAD) accel keyring nvme trace
 DEPDIRS-bdev_ocf := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_passthru := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_raid := $(BDEV_DEPS_THREAD)
@@ -168,7 +168,7 @@ DEPDIRS-bdev_xnvme := $(BDEV_DEPS_THREAD)
 DEPDIRS-event_accel := init accel event_iobuf
 DEPDIRS-event_vmd := init vmd $(JSON_LIBS) log thread util
 
-DEPDIRS-event_bdev := init bdev event_accel event_vmd event_sock event_iobuf
+DEPDIRS-event_bdev := init bdev event_accel event_vmd event_sock event_iobuf event_keyring
 
 DEPDIRS-event_scheduler := event init json log
 

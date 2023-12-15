@@ -4038,7 +4038,7 @@ num_io_queues              | Optional | number      | The number of IO queues to
 ctrlr_loss_timeout_sec     | Optional | number      | Time to wait until ctrlr is reconnected before deleting ctrlr.  -1 means infinite reconnects. 0 means no reconnect.
 reconnect_delay_sec        | Optional | number      | Time to delay a reconnect trial. 0 means no reconnect.
 fast_io_fail_timeout_sec   | Optional | number      | Time to wait until ctrlr is reconnected before failing I/O to ctrlr. 0 means no such timeout.
-psk                        | Optional | string      | Path to a file contatining PSK for TLS (Enables SSL socket implementation for TCP)
+psk                        | Optional | string      | Name of the pre-shared key to be used for TLS (Enables SSL socket implementation for TCP)
 max_bdevs                  | Optional | number      | The size of the name array for newly created bdevs. Default is 128.
 
 #### Example

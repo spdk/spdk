@@ -43,8 +43,8 @@ struct nvme_ctrlr_opts {
 	uint32_t reconnect_delay_sec;
 	uint32_t fast_io_fail_timeout_sec;
 	bool from_discovery_service;
-	/* Path to the file containing PSK, used for dumping configuration. */
-	char psk_path[PATH_MAX];
+	/* Name of the PSK or path to the file containing PSK. */
+	char psk[PATH_MAX];
 };
 
 struct nvme_async_probe_ctx {
@@ -154,6 +154,7 @@ struct nvme_ctrlr {
 	struct spdk_nvme_ana_group_descriptor	*copied_ana_desc;
 
 	struct nvme_async_probe_ctx		*probe_ctx;
+	struct spdk_key				*psk;
 
 	pthread_mutex_t				mutex;
 };
