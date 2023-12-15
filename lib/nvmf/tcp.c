@@ -3266,10 +3266,11 @@ nvmf_tcp_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 
 	SPDK_DEBUGLOG(nvmf_tcp, "remove tqpair=%p from the tgroup=%p\n", tqpair, tgroup);
 	if (tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_REQ) {
-		TAILQ_REMOVE(&tgroup->await_req, tqpair, link);
-	} else {
-		TAILQ_REMOVE(&tgroup->qpairs, tqpair, link);
+		/* Change the state to move the qpair from the await_req list to the main list
+		 * and prevent adding it again later by nvmf_tcp_qpair_set_recv_state() */
+		nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_QUIESCING);
 	}
+	TAILQ_REMOVE(&tgroup->qpairs, tqpair, link);
 
 	rc = spdk_sock_group_remove_sock(tgroup->sock_group, tqpair->sock);
 	if (rc != 0) {
