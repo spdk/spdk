@@ -3,7 +3,7 @@
 #  All rights reserved.
 
 args_global = ['server_addr', 'port', 'timeout', 'verbose', 'dry_run', 'conn_retries',
-               'is_server', 'rpc_plugin', 'called_rpc_name', 'func', 'client']
+               'is_server', 'rpc_plugin', 'called_rpc_name', 'func', 'client', 'go_client']
 
 
 def strip_globals(kwargs):
