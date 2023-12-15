@@ -2548,6 +2548,7 @@ typedef struct spdk_nvme_ctrlr spdk_nvme_ctrlr_t;
 static int
 nvme_tcp_generate_tls_credentials(struct nvme_tcp_ctrlr *tctrlr)
 {
+	struct spdk_nvme_ctrlr *ctrlr = &tctrlr->ctrlr;
 	int rc;
 	uint8_t psk_retained[SPDK_TLS_PSK_MAX_LEN] = {};
 	uint8_t psk_configured[SPDK_TLS_PSK_MAX_LEN] = {};
@@ -2555,9 +2556,7 @@ nvme_tcp_generate_tls_credentials(struct nvme_tcp_ctrlr *tctrlr)
 	uint8_t psk_retained_hash;
 	uint64_t psk_configured_size;
 
-	assert(tctrlr != NULL);
-
-	rc = nvme_tcp_parse_interchange_psk(tctrlr->ctrlr.opts.psk, psk_configured, sizeof(psk_configured),
+	rc = nvme_tcp_parse_interchange_psk(ctrlr->opts.psk, psk_configured, sizeof(psk_configured),
 					    &psk_configured_size, &psk_retained_hash);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to parse PSK interchange!\n");
@@ -2580,7 +2579,7 @@ nvme_tcp_generate_tls_credentials(struct nvme_tcp_ctrlr *tctrlr)
 	}
 
 	rc = nvme_tcp_generate_psk_identity(tctrlr->psk_identity, sizeof(tctrlr->psk_identity),
-					    tctrlr->ctrlr.opts.hostnqn, tctrlr->ctrlr.trid.subnqn,
+					    ctrlr->opts.hostnqn, ctrlr->trid.subnqn,
 					    tls_cipher_suite);
 	if (rc) {
 		SPDK_ERRLOG("could not generate PSK identity\n");
@@ -2594,7 +2593,7 @@ nvme_tcp_generate_tls_credentials(struct nvme_tcp_ctrlr *tctrlr)
 		rc = psk_configured_size;
 	} else {
 		/* Derive retained PSK. */
-		rc = nvme_tcp_derive_retained_psk(psk_configured, psk_configured_size, tctrlr->ctrlr.opts.hostnqn,
+		rc = nvme_tcp_derive_retained_psk(psk_configured, psk_configured_size, ctrlr->opts.hostnqn,
 						  psk_retained, sizeof(psk_retained), psk_retained_hash);
 		if (rc < 0) {
 			SPDK_ERRLOG("Unable to derive retained PSK!\n");
