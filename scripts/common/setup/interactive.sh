@@ -118,12 +118,13 @@ pdevices() {
 		echo "No devices found"
 	else
 		for dev in "${!dev_ref[@]}"; do
-			printf '%s- %s [%s, %s] (%s@%s:%s)\n' \
+			printf '%s- %s [%s, %s] (%s@%s:%s)%s\n' \
 				"${set_marker:+${markers["${use_map[all_devices_d["$dev"]]}"]} }" \
-				"$dev" "${use_map[all_devices_d["$dev"]]}" "${drivers_d["$dev"]:-none}" \
+				"$dev" "${use_map[all_devices_d["$dev"]]}" "${pci_bus_driver["$dev"]:-none}" \
 				"${all_devices_type_d["$dev"]}" \
 				"${pci_ids_vendor["$dev"]}" \
-				"${pci_ids_device["$dev"]}"
+				"${pci_ids_device["$dev"]}" \
+				"${nvme_vmd_d["$dev"]:+"@(VMD -> ${nvme_vmd_d["$dev"]})"}"
 		done
 	fi
 }

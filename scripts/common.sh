@@ -197,8 +197,6 @@ get_pci_driver_sysfs() {
 
 	if [[ -e $pci/driver ]]; then
 		driver=$(readlink -f "$pci/driver") driver=${driver##*/}
-	else
-		driver=unbound
 	fi
 	echo "$driver"
 }
@@ -428,6 +426,75 @@ get_spdk_gpt() {
 	spdk_guid=${spdk_guid//, /-} spdk_guid=${spdk_guid//0x/}
 
 	echo "$spdk_guid"
+}
+
+map_supported_devices() {
+	local ids dev_types dev_type dev_id bdf bdfs vmd _vmd
+
+	local -gA nvme_d
+	local -gA ioat_d dsa_d iaa_d
+	local -gA virtio_d
+	local -gA vmd_d nvme_vmd_d vmd_nvme_d vmd_nvme_count
+	local -gA all_devices_d types_d all_devices_type_d
+
+	ids+="PCI_DEVICE_ID_INTEL_IOAT" dev_types+="IOAT"
+	ids+="|PCI_DEVICE_ID_INTEL_DSA" dev_types+="|DSA"
+	ids+="|PCI_DEVICE_ID_INTEL_IAA" dev_types+="|IAA"
+	ids+="|PCI_DEVICE_ID_VIRTIO" dev_types+="|VIRTIO"
+	ids+="|PCI_DEVICE_ID_INTEL_VMD" dev_types+="|VMD"
+	ids+="|SPDK_PCI_CLASS_NVME" dev_types+="|NVME"
+
+	[[ -e $rootdir/include/spdk/pci_ids.h ]] || return 1
+
+	((${#pci_bus_cache[@]} == 0)) && cache_pci_bus
+
+	while read -r _ dev_type dev_id; do
+		bdfs=(${pci_bus_cache["0x8086:$dev_id"]})
+		[[ $dev_type == *NVME* ]] && bdfs=(${pci_bus_cache["$dev_id"]})
+		[[ $dev_type == *VIRT* ]] && bdfs=(${pci_bus_cache["0x1af4:$dev_id"]})
+		[[ $dev_type =~ ($dev_types) ]] && dev_type=${BASH_REMATCH[1],,}
+		types_d["$dev_type"]=1
+		for bdf in "${bdfs[@]}"; do
+			eval "${dev_type}_d[$bdf]=0"
+			all_devices_d["$bdf"]=0
+			all_devices_type_d["$bdf"]=$dev_type
+		done
+	done < <(grep -E "$ids" "$rootdir/include/spdk/pci_ids.h")
+
+	# Rebuild vmd refs from the very cratch to not have duplicates in case we were called
+	# multiple times.
+	unset -v "${!_vmd_@}"
+
+	for bdf in "${!nvme_d[@]}"; do
+		vmd=$(is_nvme_behind_vmd "$bdf") && _vmd=${vmd//[:.]/_} || continue
+		nvme_vmd_d["$bdf"]=$vmd
+		vmd_nvme_d["$vmd"]="_vmd_${_vmd}_nvmes[@]"
+		((++vmd_nvme_count["$vmd"]))
+		eval "_vmd_${_vmd}_nvmes+=($bdf)"
+	done
+}
+
+is_nvme_behind_vmd() {
+	local nvme_bdf=$1 dev_path
+
+	IFS="/" read -ra dev_path < <(readlink -f "/sys/bus/pci/devices/$nvme_bdf")
+
+	for dev in "${dev_path[@]}"; do
+		[[ -n $dev && -n ${vmd_d["$dev"]} ]] && echo $dev && return 0
+	done
+	return 1
+}
+
+is_nvme_iommu_shared_with_vmd() {
+	local nvme_bdf=$1 vmd
+
+	# This use-case is quite specific to vfio-pci|iommu setup
+	is_iommu_enabled || return 1
+
+	[[ -n ${nvme_vmd_d["$nvme_bdf"]} ]] || return 1
+	# nvme is behind VMD ...
+	((pci_iommu_groups["$nvme_bdf"] == pci_iommu_groups["${nvme_vmd_d["$nvme_bdf"]}"])) || return 1
+	# ... and it shares iommu_group with it
 }
 
 if [[ -e "$CONFIG_WPDK_DIR/bin/wpdk_common.sh" ]]; then

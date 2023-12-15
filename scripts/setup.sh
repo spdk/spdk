@@ -137,7 +137,7 @@ function pci_dev_echo() {
 function probe_driver() {
 	local bdf=$1
 	local driver_name=$2
-	old_driver_name=${drivers_d["$bdf"]:-no driver}
+	old_driver_name=${pci_bus_driver["$bdf"]:-no driver}
 
 	if [[ $driver_name == "$old_driver_name" ]]; then
 		pci_dev_echo "$bdf" "Already using the $old_driver_name driver"
@@ -197,7 +197,7 @@ function linux_bind_driver() {
 			pci_dev_echo "$bdf" "WARNING All devices in the IOMMU group must be bound to the same driver or unbound"
 			if [[ $UNBIND_ENTIRE_IOMMU_GROUP == yes ]]; then
 				pci_dev_echo "$bdf" "WARNING: Attempting to unbind ${_bdf##*/}"
-				drivers_d["${_bdf##*/}"]=${_driver##*/}
+				pci_bus_driver["${_bdf##*/}"]=${_driver##*/}
 				probe_driver "${_bdf##*/}" none
 			fi
 		done
@@ -207,7 +207,7 @@ function linux_bind_driver() {
 
 function linux_unbind_driver() {
 	local bdf="$1"
-	local old_driver_name=${drivers_d["$bdf"]:-no driver}
+	local old_driver_name=${pci_bus_driver["$bdf"]:-no driver}
 
 	if [[ $old_driver_name == "no driver" ]]; then
 		pci_dev_echo "$bdf" "Not bound to any driver"
@@ -281,93 +281,42 @@ function get_used_bdf_block_devs() {
 	fi
 }
 
-is_nvme_behind_vmd() {
-	local nvme_bdf=$1 dev_path
-
-	IFS="/" read -ra dev_path < <(readlink -f "/sys/bus/pci/devices/$nvme_bdf")
-
-	for dev in "${dev_path[@]}"; do
-		[[ -n $dev && -n ${vmd_d["$dev"]} ]] && echo $dev && return 0
-	done
-	return 1
-}
-
-is_nvme_iommu_shared_with_vmd() {
-	local nvme_bdf=$1 vmd
-
-	# This use-case is quite specific to vfio-pci|iommu setup
-	is_iommu_enabled || return 1
-
-	[[ -n ${nvme_vmd_d["$nvme_bdf"]} ]] || return 1
-	# nvme is behind VMD ...
-	((pci_iommu_groups["$nvme_bdf"] == pci_iommu_groups["${nvme_vmd_d["$nvme_bdf"]}"])) || return 1
-	# ... and it shares iommu_group with it
-}
-
 function collect_devices() {
-	# NVMe, IOAT, DSA, IAA, VIRTIO, VMD
+	local mode=$1 in_use
 
-	local ids dev_type dev_id bdf bdfs in_use driver _vmd
+	map_supported_devices
 
-	ids+="PCI_DEVICE_ID_INTEL_IOAT"
-	ids+="|PCI_DEVICE_ID_INTEL_DSA"
-	ids+="|PCI_DEVICE_ID_INTEL_IAA"
-	ids+="|PCI_DEVICE_ID_VIRTIO"
-	ids+="|PCI_DEVICE_ID_INTEL_VMD"
-	ids+="|SPDK_PCI_CLASS_NVME"
-
-	local -gA nvme_d ioat_d dsa_d iaa_d virtio_d vmd_d all_devices_d drivers_d types_d all_devices_type_d nvme_vmd_d
-
-	while read -r _ dev_type dev_id; do
-		bdfs=(${pci_bus_cache["0x8086:$dev_id"]})
-		[[ $dev_type == *NVME* ]] && bdfs=(${pci_bus_cache["$dev_id"]})
-		[[ $dev_type == *VIRT* ]] && bdfs=(${pci_bus_cache["0x1af4:$dev_id"]})
-		[[ $dev_type =~ (NVME|IOAT|DSA|IAA|VIRTIO|VMD) ]] && dev_type=${BASH_REMATCH[1],,}
-		types_d["$dev_type"]=1
-		for bdf in "${bdfs[@]}"; do
-			in_use=0
-			if [[ $1 != status ]]; then
-				if ! pci_can_use "$bdf"; then
-					pci_dev_echo "$bdf" "Skipping denied controller at $bdf"
-					in_use=1
-				fi
-				if [[ $dev_type == nvme || $dev_type == virtio ]]; then
-					if ! verify_bdf_block_devs "$bdf"; then
-						in_use=1
-					fi
-				fi
-				if [[ $dev_type == vmd ]]; then
-					if [[ $PCI_ALLOWED != *"$bdf"* ]]; then
-						pci_dev_echo "$bdf" "Skipping not allowed VMD controller at $bdf"
-						in_use=1
-					elif [[ " ${drivers_d[*]} " =~ "nvme" ]]; then
-						if [[ "${DRIVER_OVERRIDE}" != "none" ]]; then
-							if [ "$mode" == "config" ]; then
-								cat <<- MESSAGE
-									Binding new driver to VMD device. If there are NVMe SSDs behind the VMD endpoint
-									which are attached to the kernel NVMe driver,the binding process may go faster
-									if you first run this script with DRIVER_OVERRIDE="none" to unbind only the
-									NVMe SSDs, and then run again to unbind the VMD devices."
-								MESSAGE
-							fi
-						fi
-					fi
-				fi
+	for bdf in "${!all_devices_d[@]}"; do
+		in_use=0
+		if [[ $mode != status ]]; then
+			if ! pci_can_use "$bdf"; then
+				pci_dev_echo "$bdf" "Skipping denied controller at $bdf"
+				in_use=1
 			fi
-			eval "${dev_type}_d[$bdf]=$in_use"
-			all_devices_d["$bdf"]=$in_use
-			all_devices_type_d["$bdf"]=$dev_type
-			if [[ -e /sys/bus/pci/devices/$bdf/driver ]]; then
-				driver=$(readlink -f "/sys/bus/pci/devices/$bdf/driver")
-				drivers_d["$bdf"]=${driver##*/}
-			else
-				drivers_d["$bdf"]=""
+		fi
+		if [[ -n ${nvme_d["$bdf"]} || -n ${virtio_d["$bdf"]} ]]; then
+			if ! verify_bdf_block_devs "$bdf"; then
+				in_use=1
 			fi
-		done
-	done < <(grep -E "$ids" "$rootdir/include/spdk/pci_ids.h")
-
-	for bdf in "${!nvme_d[@]}"; do
-		_vmd=$(is_nvme_behind_vmd "$bdf") && nvme_vmd_d["$bdf"]=$_vmd
+		fi
+		if [[ -n ${vmd_d["$bdf"]} ]]; then
+			if [[ $PCI_ALLOWED != *"$bdf"* ]]; then
+				pci_dev_echo "$bdf" "Skipping not allowed VMD controller at $bdf"
+				in_use=1
+			elif ((vmd_nvme_count["$bdf"] > 0)) && [[ $DRIVER_OVERRLDE != none && $mode == config ]]; then
+				cat <<- MESSAGE
+					Binding new driver to VMD device with NVMe SSDs attached to the kernel:
+					  ${!vmd_nvme_d["$bdf"]}
+					The binding process may go faster if you first run this script with
+					DRIVER_OVERRIDE="none" to unbind only the NVMe SSDs, and then run
+					again to unbind the VMD devices.
+				MESSAGE
+			fi
+		fi
+		# Update in-use for each bdf. Default from the map_supported_devices() is 0 == "not used"
+		local -n type_ref=${all_devices_type_d["$bdf"]}_d
+		type_ref["$bdf"]=$in_use
+		all_devices_d["$bdf"]=$in_use
 	done
 
 	# Check if we got any nvmes attached to VMDs sharing the same iommu_group - if there are
@@ -726,7 +675,7 @@ function status_linux() {
 	sorted_bdfs=($(printf '%s\n' "${!all_devices_d[@]}" | sort))
 
 	for bdf in "${sorted_bdfs[@]}"; do
-		driver=${drivers_d["$bdf"]}
+		driver=${pci_bus_driver["$bdf"]}
 		if [ "$numa_nodes" = "0" ]; then
 			node="-"
 		else
@@ -920,7 +869,7 @@ if [[ $mode == reset && $PCI_BLOCK_SYNC_ON_RESET == yes ]]; then
 	for bdf in "${!all_devices_d[@]}"; do
 		((all_devices_d["$bdf"] == 0)) || continue
 		if [[ -n ${nvme_d["$bdf"]} || -n ${virtio_d["$bdf"]} ]]; then
-			[[ $(collect_driver "$bdf") != "${drivers_d["$bdf"]}" ]] || continue
+			[[ $(collect_driver "$bdf") != "${pci_bus_driver["$bdf"]}" ]] || continue
 			bdfs_to_wait_for+=("$bdf")
 		fi
 	done
