@@ -40,7 +40,7 @@ DEPDIRS-reduce := log util
 DEPDIRS-thread := log util trace
 DEPDIRS-keyring := log util $(JSON_LIBS)
 
-DEPDIRS-nvme := log sock util trace dma
+DEPDIRS-nvme := log keyring sock util trace dma
 ifeq ($(OS),Linux)
 DEPDIRS-nvme += vfio_user
 endif

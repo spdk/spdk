@@ -20,6 +20,7 @@ extern "C" {
 
 #include "spdk/dma.h"
 #include "spdk/env.h"
+#include "spdk/keyring.h"
 #include "spdk/nvme_spec.h"
 #include "spdk/nvmf_spec.h"
 
@@ -284,8 +285,13 @@ struct spdk_nvme_ctrlr_opts {
 	 * Set the IP protocol type of service value for RDMA transport. Default is 0, which means that the TOS will not be set.
 	 */
 	uint8_t transport_tos;
+
+	/**
+	 * Pre-shared key for NVMe/TCP's TLS connection.
+	 */
+	struct spdk_key *tls_psk;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_opts) == 824, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_opts) == 832, "Incorrect size");
 
 /**
  * NVMe acceleration operation callback.

@@ -233,6 +233,7 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 	SET_FIELD(fabrics_connect_timeout_us, NVME_FABRIC_CONNECT_COMMAND_TIMEOUT);
 	SET_FIELD(disable_read_ana_log_page, false);
 	SET_FIELD(disable_read_changed_ns_list_log_page, false);
+	SET_FIELD(tls_psk, NULL);
 
 	if (FIELD_OK(psk)) {
 		memset(opts->psk, 0, sizeof(opts->psk));

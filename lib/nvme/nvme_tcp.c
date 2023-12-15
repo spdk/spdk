@@ -2542,6 +2542,8 @@ nvme_tcp_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 					   opts->io_queue_requests, opts->async_mode);
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(nvme_ctrlr_psk, "spdk_nvme_ctrlr_opts.psk", "v24.09", 0);
+
 static int
 nvme_tcp_generate_tls_credentials(struct nvme_tcp_ctrlr *tctrlr)
 {
@@ -2549,11 +2551,27 @@ nvme_tcp_generate_tls_credentials(struct nvme_tcp_ctrlr *tctrlr)
 	int rc;
 	uint8_t psk_retained[SPDK_TLS_PSK_MAX_LEN] = {};
 	uint8_t psk_configured[SPDK_TLS_PSK_MAX_LEN] = {};
+	uint8_t pskbuf[SPDK_TLS_PSK_MAX_LEN + 1] = {};
 	uint8_t tls_cipher_suite;
 	uint8_t psk_retained_hash;
 	uint64_t psk_configured_size;
+	uint8_t *psk;
 
-	rc = nvme_tcp_parse_interchange_psk(ctrlr->opts.psk, psk_configured, sizeof(psk_configured),
+	if (ctrlr->opts.tls_psk != NULL) {
+		rc = spdk_key_get_key(ctrlr->opts.tls_psk, pskbuf, SPDK_TLS_PSK_MAX_LEN);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to obtain key '%s': %s\n",
+				    spdk_key_get_name(ctrlr->opts.tls_psk), spdk_strerror(-rc));
+			goto finish;
+		}
+
+		psk = pskbuf;
+	} else {
+		SPDK_LOG_DEPRECATED(nvme_ctrlr_psk);
+		psk = ctrlr->opts.psk;
+	}
+
+	rc = nvme_tcp_parse_interchange_psk(psk, psk_configured, sizeof(psk_configured),
 					    &psk_configured_size, &psk_retained_hash);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to parse PSK interchange!\n");
@@ -2609,6 +2627,7 @@ nvme_tcp_generate_tls_credentials(struct nvme_tcp_ctrlr *tctrlr)
 	rc = 0;
 finish:
 	spdk_memset_s(psk_configured, sizeof(psk_configured), 0, sizeof(psk_configured));
+	spdk_memset_s(pskbuf, sizeof(pskbuf), 0, sizeof(pskbuf));
 
 	return rc;
 }
@@ -2633,7 +2652,14 @@ nvme_tcp_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 	tctrlr->ctrlr.opts = *opts;
 	tctrlr->ctrlr.trid = *trid;
 
-	if (opts->psk[0] != '\0') {
+	if (opts->psk[0] != '\0' || opts->tls_psk != NULL) {
+		/* Only allow either one at a time */
+		if (opts->tls_psk != NULL && opts->psk[0] != '\0') {
+			SPDK_ERRLOG("Either spdk_nvme_ctrlr_opts.tls_psk or .psk can be set at "
+				    "the same time\n");
+			free(tctrlr);
+			return NULL;
+		}
 		rc = nvme_tcp_generate_tls_credentials(tctrlr);
 		spdk_memset_s(&tctrlr->ctrlr.opts.psk, sizeof(tctrlr->ctrlr.opts.psk), 0,
 			      sizeof(tctrlr->ctrlr.opts.psk));
