@@ -9,8 +9,6 @@ shopt -s nullglob extglob
 curdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$curdir/../../../")
 
-source "$rootdir/test/vhost/common.sh"
-
 # Allow for the fio_conf() to slurp extra config from the stdin.
 exec {fio_extra_conf}<&0
 
@@ -61,7 +59,7 @@ fio_conf() {
 
 (($#)) && eval "$*"
 
-perf_args+=("--vm-image=${vm_image:-$VM_IMAGE}")
+perf_args+=(${vm_image:+--vm-image="$vm_image"})
 perf_args+=("--ctrl-type=${ctrl_type:-spdk_vhost_scsi}")
 perf_args+=(${split:+--use-split})
 perf_args+=(${disk_map:+--disk-map="$disk_map"})
