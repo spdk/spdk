@@ -273,17 +273,23 @@ unregister_worker(void *arg1)
 {
 	struct worker_thread *worker = arg1;
 
-	spdk_accel_get_opcode_stats(worker->ch, worker->workload,
-				    &worker->stats, sizeof(worker->stats));
+	if (worker->ch) {
+		spdk_accel_get_opcode_stats(worker->ch, worker->workload,
+					    &worker->stats, sizeof(worker->stats));
+		spdk_put_io_channel(worker->ch);
+		worker->ch = NULL;
+	}
 	free(worker->task_base);
-	spdk_put_io_channel(worker->ch);
 	spdk_thread_exit(spdk_get_thread());
 	pthread_mutex_lock(&g_workers_lock);
 	assert(g_num_workers >= 1);
 	if (--g_num_workers == 0) {
 		pthread_mutex_unlock(&g_workers_lock);
-		g_rc = dump_result();
-		spdk_app_stop(0);
+		/* Only dump results on successful runs */
+		if (g_rc == 0) {
+			g_rc = dump_result();
+		}
+		spdk_app_stop(g_rc);
 	} else {
 		pthread_mutex_unlock(&g_workers_lock);
 	}
@@ -774,6 +780,8 @@ _worker_stop(void *arg)
 	return SPDK_POLLER_BUSY;
 }
 
+static void shutdown_cb(void);
+
 static void
 _init_thread(void *arg1)
 {
@@ -786,7 +794,8 @@ _init_thread(void *arg1)
 	if (worker == NULL) {
 		fprintf(stderr, "Unable to allocate worker\n");
 		free(display);
-		return;
+		spdk_thread_exit(spdk_get_thread());
+		goto no_worker;
 	}
 
 	worker->workload = g_workload_selection;
@@ -843,7 +852,9 @@ error:
 
 	_free_task_buffers_in_pool(worker);
 	free(worker->task_base);
-	spdk_app_stop(-1);
+no_worker:
+	shutdown_cb();
+	g_rc = -1;
 }
 
 static void
