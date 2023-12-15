@@ -21,8 +21,6 @@
 #include "spdk/log.h"
 #include "spdk/bdev_module.h"
 
-#define TCP_PSK_INVALID_PERMISSIONS 0177
-
 static bool g_tls_log = false;
 
 static int
@@ -321,44 +319,6 @@ rpc_bdev_nvme_attach_controller_done(void *cb_ctx, size_t bdev_count, int rc)
 	spdk_bdev_wait_for_examine(rpc_bdev_nvme_attach_controller_examined, ctx);
 }
 
-static int
-tcp_load_psk(const char *fname, char *buf, size_t bufsz)
-{
-	FILE *psk_file;
-	struct stat statbuf;
-	int rc;
-
-	if (stat(fname, &statbuf) != 0) {
-		SPDK_ERRLOG("Could not read permissions for PSK file\n");
-		return -EACCES;
-	}
-
-	if ((statbuf.st_mode & TCP_PSK_INVALID_PERMISSIONS) != 0) {
-		SPDK_ERRLOG("Incorrect permissions for PSK file\n");
-		return -EPERM;
-	}
-	if ((size_t)statbuf.st_size >= bufsz) {
-		SPDK_ERRLOG("Invalid PSK: too long\n");
-		return -EINVAL;
-	}
-	psk_file = fopen(fname, "r");
-	if (psk_file == NULL) {
-		SPDK_ERRLOG("Could not open PSK file\n");
-		return -EINVAL;
-	}
-
-	memset(buf, 0, bufsz);
-	rc = fread(buf, 1, statbuf.st_size, psk_file);
-	if (rc != statbuf.st_size) {
-		SPDK_ERRLOG("Failed to read PSK\n");
-		fclose(psk_file);
-		return -EINVAL;
-	}
-
-	fclose(psk_file);
-	return 0;
-}
-
 static void
 rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 				const struct spdk_json_val *params)
@@ -478,12 +438,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 			SPDK_NOTICELOG("TLS support is considered experimental\n");
 			g_tls_log = true;
 		}
-		rc = tcp_load_psk(ctx->req.psk, ctx->req.drv_opts.psk, sizeof(ctx->req.drv_opts.psk));
-		if (rc) {
-			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Could not retrieve PSK from file: %s",
-							     ctx->req.psk);
-			goto cleanup;
-		}
+
 		rc = snprintf(ctx->req.bdev_opts.psk_path, sizeof(ctx->req.bdev_opts.psk_path), "%s", ctx->req.psk);
 		if (rc < 0 || (size_t)rc >= sizeof(ctx->req.bdev_opts.psk_path)) {
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Could not store PSK path: %s",
