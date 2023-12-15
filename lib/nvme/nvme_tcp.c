@@ -2542,9 +2542,6 @@ nvme_tcp_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 					   opts->io_queue_requests, opts->async_mode);
 }
 
-/* We have to use the typedef in the function declaration to appease astyle. */
-typedef struct spdk_nvme_ctrlr spdk_nvme_ctrlr_t;
-
 static int
 nvme_tcp_generate_tls_credentials(struct nvme_tcp_ctrlr *tctrlr)
 {
@@ -2616,6 +2613,9 @@ finish:
 
 	return rc;
 }
+
+/* We have to use the typedef in the function declaration to appease astyle. */
+typedef struct spdk_nvme_ctrlr spdk_nvme_ctrlr_t;
 
 static spdk_nvme_ctrlr_t *
 nvme_tcp_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
