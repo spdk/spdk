@@ -2602,12 +2602,11 @@ nvme_tcp_generate_tls_credentials(struct nvme_tcp_ctrlr *tctrlr)
 				     sizeof(tctrlr->psk), tls_cipher_suite);
 	if (rc < 0) {
 		SPDK_ERRLOG("Could not generate TLS PSK!\n");
-		return rc;
+		goto finish;
 	}
 
 	tctrlr->psk_size = rc;
 	rc = 0;
-
 finish:
 	spdk_memset_s(psk_configured, sizeof(psk_configured), 0, sizeof(psk_configured));
 
