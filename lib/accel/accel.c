@@ -94,9 +94,9 @@ enum accel_sequence_state {
 	ACCEL_SEQUENCE_STATE_NEXT_TASK,
 	ACCEL_SEQUENCE_STATE_PUSH_DATA,
 	ACCEL_SEQUENCE_STATE_AWAIT_PUSH_DATA,
-	ACCEL_SEQUENCE_STATE_DRIVER_EXEC,
-	ACCEL_SEQUENCE_STATE_DRIVER_AWAIT_TASK,
-	ACCEL_SEQUENCE_STATE_DRIVER_COMPLETE,
+	ACCEL_SEQUENCE_STATE_DRIVER_EXEC_TASKS,
+	ACCEL_SEQUENCE_STATE_DRIVER_AWAIT_TASKS,
+	ACCEL_SEQUENCE_STATE_DRIVER_COMPLETE_TASKS,
 	ACCEL_SEQUENCE_STATE_ERROR,
 	ACCEL_SEQUENCE_STATE_MAX,
 };
@@ -116,9 +116,9 @@ __attribute__((unused)) = {
 	[ACCEL_SEQUENCE_STATE_NEXT_TASK] = "next-task",
 	[ACCEL_SEQUENCE_STATE_PUSH_DATA] = "push-data",
 	[ACCEL_SEQUENCE_STATE_AWAIT_PUSH_DATA] = "await-push-data",
-	[ACCEL_SEQUENCE_STATE_DRIVER_EXEC] = "driver-exec",
-	[ACCEL_SEQUENCE_STATE_DRIVER_AWAIT_TASK] = "driver-await-task",
-	[ACCEL_SEQUENCE_STATE_DRIVER_COMPLETE] = "driver-complete",
+	[ACCEL_SEQUENCE_STATE_DRIVER_EXEC_TASKS] = "driver-exec-tasks",
+	[ACCEL_SEQUENCE_STATE_DRIVER_AWAIT_TASKS] = "driver-await-tasks",
+	[ACCEL_SEQUENCE_STATE_DRIVER_COMPLETE_TASKS] = "driver-complete-tasks",
 	[ACCEL_SEQUENCE_STATE_ERROR] = "error",
 	[ACCEL_SEQUENCE_STATE_MAX] = "",
 };
@@ -1596,7 +1596,7 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 		switch (state) {
 		case ACCEL_SEQUENCE_STATE_INIT:
 			if (g_accel_driver != NULL) {
-				accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_DRIVER_EXEC);
+				accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_DRIVER_EXEC_TASKS);
 				break;
 			}
 		/* Fall through */
@@ -1673,10 +1673,10 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 			}
 			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_INIT);
 			break;
-		case ACCEL_SEQUENCE_STATE_DRIVER_EXEC:
+		case ACCEL_SEQUENCE_STATE_DRIVER_EXEC_TASKS:
 			assert(!TAILQ_EMPTY(&seq->tasks));
 
-			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_DRIVER_AWAIT_TASK);
+			accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_DRIVER_AWAIT_TASKS);
 			rc = g_accel_driver->execute_sequence(accel_ch->driver_channel, seq);
 			if (spdk_unlikely(rc != 0)) {
 				SPDK_ERRLOG("Failed to execute sequence: %p using driver: %s\n",
@@ -1684,7 +1684,7 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 				accel_sequence_set_fail(seq, rc);
 			}
 			break;
-		case ACCEL_SEQUENCE_STATE_DRIVER_COMPLETE:
+		case ACCEL_SEQUENCE_STATE_DRIVER_COMPLETE_TASKS:
 			/* Get the task again, as the driver might have completed some tasks
 			 * synchronously */
 			task = TAILQ_FIRST(&seq->tasks);
@@ -1709,7 +1709,7 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 		case ACCEL_SEQUENCE_STATE_AWAIT_PULL_DATA:
 		case ACCEL_SEQUENCE_STATE_AWAIT_TASK:
 		case ACCEL_SEQUENCE_STATE_AWAIT_PUSH_DATA:
-		case ACCEL_SEQUENCE_STATE_DRIVER_AWAIT_TASK:
+		case ACCEL_SEQUENCE_STATE_DRIVER_AWAIT_TASKS:
 			break;
 		default:
 			assert(0 && "bad state");
@@ -1745,7 +1745,7 @@ accel_sequence_task_cb(void *cb_arg, int status)
 
 		accel_process_sequence(seq);
 		break;
-	case ACCEL_SEQUENCE_STATE_DRIVER_AWAIT_TASK:
+	case ACCEL_SEQUENCE_STATE_DRIVER_AWAIT_TASKS:
 		assert(g_accel_driver != NULL);
 		/* Immediately remove the task from the outstanding list to make sure the next call
 		 * to spdk_accel_sequence_first_task() doesn't return it */
@@ -1771,10 +1771,10 @@ void
 spdk_accel_sequence_continue(struct spdk_accel_sequence *seq)
 {
 	assert(g_accel_driver != NULL);
-	assert(seq->state == ACCEL_SEQUENCE_STATE_DRIVER_AWAIT_TASK);
+	assert(seq->state == ACCEL_SEQUENCE_STATE_DRIVER_AWAIT_TASKS);
 
 	if (spdk_likely(seq->status == 0)) {
-		accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_DRIVER_COMPLETE);
+		accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_DRIVER_COMPLETE_TASKS);
 	} else {
 		accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_ERROR);
 	}
