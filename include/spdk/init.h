@@ -42,8 +42,10 @@ struct spdk_rpc_opts {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_rpc_opts) == 24, "Incorrect size");
 
 /**
- * Create the SPDK JSON-RPC server and listen at the provided address. The RPC server is optional and is
- * independent of subsystem initialization. The RPC server can be started and stopped at any time.
+ * Create SPDK JSON-RPC server listening at provided address and start polling it for connections.
+ *
+ * The RPC server is optional and is independent of subsystem initialization.
+ * The RPC server can be started and stopped at any time.
  *
  * \param listen_addr Path to a unix domain socket to listen on
  * \param opts Options for JSON-RPC server initialization. If NULL, default values are used.
@@ -54,9 +56,16 @@ int spdk_rpc_initialize(const char *listen_addr,
 			const struct spdk_rpc_opts *opts);
 
 /**
- * Shut down the SPDK JSON-RPC target
+ * Stop SPDK JSON-RPC servers and stop polling for new connections on all addresses.
  */
 void spdk_rpc_finish(void);
+
+/**
+ * Stop SPDK JSON-RPC server and stop polling for new connections on provided address.
+ *
+ * \param listen_addr Path to a unix domain socket.
+ */
+void spdk_rpc_server_finish(const char *listen_addr);
 
 typedef void (*spdk_subsystem_init_fn)(int rc, void *ctx);
 

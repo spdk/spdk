@@ -6,7 +6,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = subsystem.c
+DIRS-y = subsystem.c rpc.c
 
 .PHONY: all clean $(DIRS-y)
 

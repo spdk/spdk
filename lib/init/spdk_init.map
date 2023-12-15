@@ -12,6 +12,7 @@
 
 	spdk_rpc_initialize;
 	spdk_rpc_finish;
+	spdk_rpc_server_finish;
 
 	local: *;
 };
