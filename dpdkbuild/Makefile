@@ -35,7 +35,7 @@ DPDK_DRIVERS = bus bus/pci bus/vdev mempool/ring
 
 # Core DPDK libs
 DPDK_LIBS = eal ring mempool pci
-DPDK_LIBS += kvargs telemetry
+DPDK_LIBS += log kvargs telemetry
 # Governor required libs
 DPDK_LIBS += power timer ethdev net
 
