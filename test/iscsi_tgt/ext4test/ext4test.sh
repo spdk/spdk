@@ -108,9 +108,6 @@ for dev in $devs; do
 	df -h /dev/$dev
 
 	rm -rf /mnt/${dev}dir/spdk
-done
-
-for dev in $devs; do
 	umount /mnt/${dev}dir
 	rm -rf /mnt/${dev}dir
 
