@@ -95,7 +95,7 @@ mount -o sync "/dev/${dev}" "/mnt/${dev}dir"
 rsync -qav --exclude=".git" --exclude="*.o" "$rootdir/" "/mnt/${dev}dir/spdk"
 
 make -C "/mnt/${dev}dir/spdk" clean
-(cd "/mnt/${dev}dir/spdk" && ./configure $(get_config_params))
+(cd "/mnt/${dev}dir/spdk" && ./configure --disable-unit-tests --disable-tests)
 make -C "/mnt/${dev}dir/spdk" -j
 
 rm -rf "/mnt/${dev}dir/spdk"
