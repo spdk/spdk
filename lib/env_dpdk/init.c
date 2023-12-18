@@ -225,6 +225,13 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
+/*
+        args = push_arg(args, &argcount, strdup("--vdev=crypto_ionic0"));
+        if (args == NULL) {
+                return -1;
+        }
+*/
+
 	/*
 	 * Set the coremask:
 	 *
@@ -341,15 +348,20 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 	/* Lower default EAL loglevel to RTE_LOG_NOTICE - normal, but significant messages.
 	 * This can be overridden by specifying the same option in opts->env_context
 	 */
-	args = push_arg(args, &argcount, strdup("--log-level=lib.eal:6"));
+	args = push_arg(args, &argcount, strdup("--log-level=lib.eal:8"));
 	if (args == NULL) {
 		return -1;
 	}
 
+        args = push_arg(args, &argcount, strdup("--log-level=pmd.crypto.ionic:8"));
+        if (args == NULL) {
+                return -1;
+        }
+
 	/* Lower default CRYPTO loglevel to RTE_LOG_ERR to avoid a ton of init msgs.
 	 * This can be overridden by specifying the same option in opts->env_context
 	 */
-	args = push_arg(args, &argcount, strdup("--log-level=lib.cryptodev:5"));
+	args = push_arg(args, &argcount, strdup("--log-level=lib.cryptodev:8"));
 	if (args == NULL) {
 		return -1;
 	}

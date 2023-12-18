@@ -343,6 +343,9 @@ SYS_LIBS += -lssl
 SYS_LIBS += -lcrypto
 SYS_LIBS += -lm
 
+#SYS_LIBS += -ldpdk
+#LDFLAGS += -L${BLD_OUT_DIR}/dpdk_submake/install/lib
+
 PKGCONF ?= pkg-config
 ifneq ($(strip $(CONFIG_OPENSSL_PATH)),)
 CFLAGS += -I$(CONFIG_OPENSSL_PATH)/include

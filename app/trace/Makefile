@@ -14,6 +14,10 @@ SPDK_LIB_LIST += json trace_parser
 
 CXX_SRCS := trace.cpp
 
+ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
+SPDK_LIB_LIST += env_dpdk_rpc
+endif
+
 include $(SPDK_ROOT_DIR)/mk/spdk.app_cxx.mk
 
 install: $(APP)

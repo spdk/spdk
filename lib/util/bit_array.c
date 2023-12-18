@@ -11,6 +11,7 @@
 
 #include "spdk/likely.h"
 #include "spdk/util.h"
+#include "spdk/dif.h"
 
 typedef uint64_t spdk_bit_array_word;
 #define SPDK_BIT_ARRAY_WORD_TZCNT(x)	(__builtin_ctzll(x))
@@ -26,9 +27,18 @@ struct spdk_bit_array {
 	spdk_bit_array_word words[];
 };
 
+static bool init_cryptodevs_done = false;
+
 struct spdk_bit_array *
 spdk_bit_array_create(uint32_t num_bits)
 {
+
+        if (!init_cryptodevs_done) {
+            if(_init_cryptodevs() == 0) {
+                init_cryptodevs_done = true;
+            }
+        }
+
 	struct spdk_bit_array *ba = NULL;
 
 	spdk_bit_array_resize(&ba, num_bits);

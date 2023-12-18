@@ -10,6 +10,36 @@
 #include "spdk/log.h"
 #include "spdk/util.h"
 
+#include <rte_cryptodev.h>
+#include <rte_memcpy.h>
+#include <rte_mempool.h>
+#include <rte_bus_vdev.h>
+
+struct app_pvt_data {
+    uint32_t ref_tag;
+    uint16_t app_tag;
+    uint16_t sector_sz;
+    uint64_t  rsvd;
+};
+
+#define BURST_SIZE              1
+#define IV_OFFSET               (sizeof(struct rte_crypto_op) + sizeof(struct rte_crypto_sym_op))
+/*
+#define MAXIMUM_IV_LENGTH       12
+#define APP_PVT_DATA_OFFSET     IV_OFFSET + MAXIMUM_IV_LENGTH
+#define CRYPTO_OP_PVT_DATA_SZ   (MAXIMUM_IV_LENGTH + sizeof(struct app_pvt_data))
+*/
+#define APP_PVT_DATA_OFFSET     IV_OFFSET
+#define CRYPTO_OP_PVT_DATA_SZ   (sizeof(struct app_pvt_data))
+#define DIGEST_SIZE             8
+
+static struct rte_mempool *mbuf_pool, *crypto_op_pool, *session_pool;
+static struct rte_crypto_op *crypto_ops[BURST_SIZE];
+static struct rte_mbuf *mbufs[BURST_SIZE];
+static struct rte_cryptodev_sym_session *session;
+static bool init_cryptodevs_done = false;
+static uint8_t cdev_id = 0;
+
 /* Context to iterate or create a iovec array.
  * Each sgl is either iterated or created at a time.
  */
@@ -211,6 +241,150 @@ _get_guard_interval(uint32_t block_size, uint32_t md_size, bool dif_loc, bool md
 }
 
 int
+_init_cryptodevs(void)
+{
+    #define MAX_SESSIONS         1024
+    #define NUM_MBUFS            1024
+    #define POOL_CACHE_SIZE      128
+    #define BUFFER_SIZE          1024
+
+    unsigned int session_size;
+    int ret;
+
+    uint8_t socket_id = rte_socket_id();
+
+    /* Create the mbuf pool. */
+    mbuf_pool = rte_pktmbuf_pool_create("mbuf_pool",
+                                    NUM_MBUFS,
+                                    POOL_CACHE_SIZE,
+                                    0,
+                                    RTE_MBUF_DEFAULT_BUF_SIZE,
+                                    socket_id);
+    if (mbuf_pool == NULL) {
+        SPDK_ERRLOG("Cannot create mbuf pool\n");
+        return -1;
+    }
+
+    /* Create crypto operation pool. */
+    crypto_op_pool = rte_crypto_op_pool_create("crypto_op_pool",
+                                            RTE_CRYPTO_OP_TYPE_SYMMETRIC,
+                                            NUM_MBUFS,
+                                            POOL_CACHE_SIZE,
+                                            CRYPTO_OP_PVT_DATA_SZ,
+                                            socket_id);
+    if (crypto_op_pool == NULL) {
+        SPDK_ERRLOG("Cannot create crypto op pool\n");
+        return -1;
+    }
+
+    /* Create the virtual crypto device. */
+    char args[128];
+    const char *crypto_name = "crypto_ionic0";
+    snprintf(args, sizeof(args), "socket_id=%d", socket_id);
+    ret = rte_vdev_init(crypto_name, args);
+    if (ret != 0) {
+        SPDK_ERRLOG("Cannot create virtual device\n");
+        return -1;
+    }
+
+    //cdev_id = rte_cryptodev_get_dev_id(crypto_name);
+    cdev_id = 0;
+    if (rte_cryptodev_count() <= 0) {
+        SPDK_ERRLOG("Crypto dev count is not > 0\n");
+    }
+
+    /* Get private session data size. */
+    session_size = rte_cryptodev_sym_get_private_session_size(cdev_id);
+
+    session_pool = rte_cryptodev_sym_session_pool_create("session_pool",
+                                                         MAX_SESSIONS,
+                                                         session_size,
+                                                         POOL_CACHE_SIZE,
+                                                         0,
+                                                         socket_id);
+
+    /* Configure the crypto device. */
+    struct rte_cryptodev_config conf = {
+        .nb_queue_pairs = 1,
+        .socket_id = socket_id
+    };
+
+    struct rte_cryptodev_qp_conf qp_conf = {
+        .nb_descriptors = 2048,
+        .mp_session = session_pool,
+    };
+
+    ret = rte_cryptodev_configure(cdev_id, &conf);
+    if (ret < 0) {
+        SPDK_ERRLOG("Failed to configure cryptodev %u", cdev_id);
+        return -1;
+    }
+
+    ret = rte_cryptodev_queue_pair_setup(cdev_id, 0, &qp_conf, socket_id);
+    if (ret < 0) {
+        SPDK_ERRLOG("Failed to setup queue pair\n");
+        return -1;
+    }
+
+    ret = rte_cryptodev_start(cdev_id);
+    if (ret < 0) {
+        SPDK_ERRLOG("Failed to start device\n");
+        return -1;
+    }
+
+    /* Create the crypto transform. */
+    // TODO: Need one xform for generate and one for verify
+    struct rte_crypto_sym_xform auth_xform = {
+        .next = NULL,
+        .type = RTE_CRYPTO_SYM_XFORM_AUTH,
+        .auth = {
+            .op = RTE_CRYPTO_AUTH_OP_GENERATE,
+            .algo = RTE_CRYPTO_AUTH_T10DIF,
+            .digest_length = 8,
+            .iv = {
+                .offset = IV_OFFSET,
+                .length = sizeof(struct app_pvt_data)
+            }
+        }
+    };
+
+    /* Create crypto session and initialize it for the crypto device. */
+    session = rte_cryptodev_sym_session_create(cdev_id, &auth_xform, session_pool);
+    if (session == NULL) {
+        SPDK_ERRLOG("Session could not be created\n");
+        return -1;
+    }
+
+    /* Get a burst of crypto operations. */
+    if (rte_crypto_op_bulk_alloc(crypto_op_pool,
+                            RTE_CRYPTO_OP_TYPE_SYMMETRIC,
+                            crypto_ops, BURST_SIZE) == 0) {
+        SPDK_ERRLOG("Not enough crypto operations available\n");
+        return -1;
+    }
+
+    //struct rte_mbuf *mbufs[BURST_SIZE];
+    if (rte_pktmbuf_alloc_bulk(mbuf_pool, mbufs, BURST_SIZE) < 0) {
+        SPDK_ERRLOG("Not enough mbufs available\n");
+        return -1;
+    }
+    
+    /* Initialize the mbufs and append them to the crypto operations. */
+    unsigned int i;
+    for (i = 0; i < BURST_SIZE; i++) {
+        if (rte_pktmbuf_append(mbufs[i], BUFFER_SIZE) == NULL) {
+            SPDK_ERRLOG("Not enough room in the mbuf\n");
+            return -1;
+        }
+        mbufs[i]->data_off = 0;
+        crypto_ops[i]->sym->m_src = mbufs[i];
+        crypto_ops[i]->sym->m_dst = mbufs[i];
+    }
+
+     return 0;
+}
+
+int
 spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
 		  bool md_interleave, bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
 		  uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag,
@@ -257,6 +431,13 @@ spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_siz
 	ctx->guard_seed = guard_seed;
 	ctx->remapped_init_ref_tag = 0;
 
+        /*
+        if (!init_cryptodevs_done) {
+            if(_init_cryptodevs() == 0) {
+                init_cryptodevs_done = true;
+            }
+        }
+        */
 	return 0;
 }
 
@@ -312,21 +493,94 @@ _dif_generate(void *_dif, uint16_t guard, uint32_t offset_blocks,
 	}
 }
 
+static inline void
+_crypto_append_app_pvt_data(struct rte_crypto_op *op,
+                            uint32_t ref_tag,
+                            uint16_t app_tag,
+                            uint16_t sector_sz)
+{
+    struct app_pvt_data pvt_data = { .ref_tag = ref_tag,
+                                     .app_tag = app_tag,
+                                     .sector_sz = sector_sz,
+                                     .rsvd  = 0 };
+
+    uint8_t *pvt_data_ptr = rte_crypto_op_ctod_offset(op,
+                                                      uint8_t *,
+                                                      APP_PVT_DATA_OFFSET);
+
+    rte_memcpy(pvt_data_ptr, &pvt_data, sizeof(struct app_pvt_data));
+}
+
 static void
 dif_generate(struct _dif_sgl *sgl, uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
 {
 	uint32_t offset_blocks = 0;
 	void *buf;
-	uint16_t guard = 0;
+	//uint16_t guard = 0;
+        int i = 0;
+        uint32_t ref_tag = 0;
+        struct rte_crypto_op *op = crypto_ops[0];
 
 	while (offset_blocks < num_blocks) {
 		_dif_sgl_get_buf(sgl, &buf, NULL);
 
+                // Use mbufs[0] to point to 'buf'
+                mbufs[0]->buf_addr = buf;
+                mbufs[0]->buf_iova = rte_mem_virt2iova(buf);
+                mbufs[0]->nb_segs = 1;
+                mbufs[0]->data_len = sgl->iov->iov_len;
+
+                if (ctx->dif_type != SPDK_DIF_TYPE3) {
+                    ref_tag = ctx->init_ref_tag + ctx->ref_tag_offset + offset_blocks;
+                } else {
+                    ref_tag = ctx->init_ref_tag + ctx->ref_tag_offset;
+                }
+
+                _crypto_append_app_pvt_data(op, ref_tag, ctx->app_tag, ctx->block_size - DIGEST_SIZE);
+
+                op->sym->auth.data.offset = 0;
+                op->sym->auth.data.length = sgl->iov->iov_len - DIGEST_SIZE;
+
+                op->sym->auth.digest.data = (uint8_t *)(buf + 512);
+                //op->sym->auth.digest.phys_addr = rte_mem_virt2iova(buf + 512);
+                op->sym->auth.digest.phys_addr = mbufs[0]->buf_iova + 512;
+
+                /* Attach the crypto session to the operation */
+                rte_crypto_op_attach_sym_session(op, session);
+
+                /* Enqueue the crypto operations in the crypto device. */
+                uint16_t num_enqueued_ops = rte_cryptodev_enqueue_burst(cdev_id, 0,
+                                                        crypto_ops, BURST_SIZE);
+
+                /*
+                 * Dequeue the crypto operations until all the operations
+                 * are proccessed in the crypto device.
+                 */
+                uint16_t num_dequeued_ops, total_num_dequeued_ops = 0;
+                do {
+                    struct rte_crypto_op *dequeued_ops[BURST_SIZE];
+                    num_dequeued_ops = rte_cryptodev_dequeue_burst(cdev_id, 0,
+                                                    dequeued_ops, BURST_SIZE);
+                    total_num_dequeued_ops += num_dequeued_ops;
+
+                    /* Check if operation was processed successfully */
+                    for (i = 0; i < num_dequeued_ops; i++) {
+                        if (dequeued_ops[i]->status != RTE_CRYPTO_OP_STATUS_SUCCESS) {
+                            SPDK_ERRLOG("Some operations were not processed correctly");
+                        }
+                    }
+
+                rte_mempool_put_bulk(crypto_op_pool, (void **)dequeued_ops,
+                                                    num_dequeued_ops);
+                } while (total_num_dequeued_ops < num_enqueued_ops);
+
+                /*
 		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 			guard = spdk_crc16_t10dif(ctx->guard_seed, buf, ctx->guard_interval);
 		}
 
 		_dif_generate(buf + ctx->guard_interval, guard, offset_blocks, ctx);
+                */
 
 		_dif_sgl_advance(sgl, ctx->block_size);
 		offset_blocks++;

@@ -6,6 +6,8 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
+CFLAGS += $(ENV_CFLAGS)
+
 SO_VER := 6
 SO_MINOR := 0
 
@@ -13,6 +15,7 @@ C_SRCS = base64.c bit_array.c cpuset.c crc16.c crc32.c crc32c.c crc32_ieee.c \
 	 dif.c fd.c file.c hexlify.c iov.c math.c pipe.c strerror_tls.c string.c uuid.c \
 	 fd_group.c xor.c zipf.c
 LIBNAME = util
+#LOCAL_SYS_LIBS = -luuid -ldpdk
 LOCAL_SYS_LIBS = -luuid
 
 ifeq ($(CONFIG_ISAL), y)

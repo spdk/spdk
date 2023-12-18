@@ -9,11 +9,6 @@ APP = perf
 
 include $(SPDK_ROOT_DIR)/mk/nvme.libtest.mk
 
-ifeq ($(OS),Linux)
-SYS_LIBS += -laio
-CFLAGS += -DHAVE_LIBAIO
-endif
-
 install: $(APP)
 	$(INSTALL_EXAMPLE)
 

@@ -51,9 +51,6 @@ endif
 endif
 
 ifeq ($(OS),Linux)
-BLOCKDEV_MODULES_LIST += bdev_aio
-BLOCKDEV_MODULES_PRIVATE_LIBS += -laio
-INTR_BLOCKDEV_MODULES_LIST += bdev_aio
 BLOCKDEV_MODULES_LIST += bdev_ftl ftl
 ifeq ($(CONFIG_VIRTIO),y)
 BLOCKDEV_MODULES_LIST += bdev_virtio virtio

@@ -19,7 +19,7 @@ DIRS-$(CONFIG_VBDEV_COMPRESS) += compress
 DIRS-$(CONFIG_URING) += uring
 
 ifeq ($(OS),Linux)
-DIRS-y += aio ftl
+DIRS-y += ftl
 DIRS-$(CONFIG_ISCSI_INITIATOR) += iscsi
 DIRS-$(CONFIG_VIRTIO) += virtio
 DIRS-$(CONFIG_PMDK) += pmem

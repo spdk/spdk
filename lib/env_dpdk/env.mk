@@ -121,6 +121,10 @@ DPDK_LIB_LIST += rte_rcu
 endif
 endif
 
+DPDK_LIB_LIST += rte_cryptodev rte_bus_vdev
+DPDK_LIB_LIST += rte_rcu
+DPDK_LIB_LIST += rte_crypto_ionic_crypto
+DPDK_LIB_LIST += rte_common_ionic
 
 DPDK_LIB_LIST_SORTED = $(sort $(DPDK_LIB_LIST))
 

@@ -101,6 +101,8 @@ struct spdk_dif_error {
 	uint32_t	err_offset;
 };
 
+int _init_cryptodevs(void);
+
 /**
  * Initialize DIF context.
  *
