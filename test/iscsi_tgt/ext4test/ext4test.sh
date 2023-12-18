@@ -95,7 +95,7 @@ for dev in $devs; do
 
 	make -C /mnt/${dev}dir/spdk clean
 	(cd /mnt/${dev}dir/spdk && ./configure $(get_config_params))
-	make -C /mnt/${dev}dir/spdk -j16
+	make -C /mnt/${dev}dir/spdk -j
 
 	# Print out space consumed on target device to help decide
 	#  if/when we need to increase the size of the malloc LUN
