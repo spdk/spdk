@@ -100,7 +100,7 @@ CONFIG_RDMA_SET_TOS=n
 CONFIG_RDMA_PROV=verbs
 
 # Enable NVMe Character Devices.
-CONFIG_NVME_CUSE=n
+CONFIG_NVME_CUSE=y
 
 # Enable FC support for the NVMf target.
 # Requires FC low level driver (from FC vendor)

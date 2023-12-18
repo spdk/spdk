@@ -185,7 +185,9 @@ if [[ $sys_name != "Linux" ]]; then
 	# Vhost, rte_vhost library and virtio are only supported on Linux.
 	CONFIG[VHOST]="n"
 	CONFIG[VIRTIO]="n"
-	echo "Notice: Vhost, rte_vhost library and virtio are only supported on Linux. Turning off default feature."
+	CONFIG[NVME_CUSE]="n"
+	echo "Notice: Vhost, rte_vhost library, virtio, and fuse"
+	echo "are only supported on Linux. Turning off default feature."
 fi
 
 function check_dir() {

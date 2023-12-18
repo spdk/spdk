@@ -18,7 +18,6 @@ function usage() {
 	echo "  -a --all"
 	echo "  -d --developer-tools        Install tools for developers (code styling, code coverage, etc.)"
 	echo "  -p --pmem                   Additional dependencies for reduce"
-	echo "  -f --fuse                   Additional dependencies for FUSE and NVMe-CUSE"
 	echo "  -R --rbd                    Additional dependencies for RBD"
 	echo "  -r --rdma                   Additional dependencies for RDMA transport in NVMe over Fabrics"
 	echo "  -b --docs                   Additional dependencies for building docs"
@@ -33,7 +32,6 @@ function usage() {
 function install_all_dependencies() {
 	INSTALL_DEV_TOOLS=true
 	INSTALL_PMEM=true
-	INSTALL_FUSE=true
 	INSTALL_RBD=true
 	INSTALL_RDMA=true
 	INSTALL_DOCS=true
@@ -46,7 +44,6 @@ function install_all_dependencies() {
 INSTALL_CRYPTO=false
 INSTALL_DEV_TOOLS=false
 INSTALL_PMEM=false
-INSTALL_FUSE=false
 INSTALL_RBD=false
 INSTALL_RDMA=false
 INSTALL_DOCS=false
@@ -63,7 +60,6 @@ while getopts 'abdfhipruADGR-:' optchar; do
 				all) install_all_dependencies ;;
 				developer-tools) INSTALL_DEV_TOOLS=true ;;
 				pmem) INSTALL_PMEM=true ;;
-				fuse) INSTALL_FUSE=true ;;
 				rbd) INSTALL_RBD=true ;;
 				rdma) INSTALL_RDMA=true ;;
 				docs) INSTALL_DOCS=true ;;
@@ -81,7 +77,6 @@ while getopts 'abdfhipruADGR-:' optchar; do
 		a) install_all_dependencies ;;
 		d) INSTALL_DEV_TOOLS=true ;;
 		p) INSTALL_PMEM=true ;;
-		f) INSTALL_FUSE=true ;;
 		R) INSTALL_RBD=true ;;
 		r) INSTALL_RDMA=true ;;
 		b) INSTALL_DOCS=true ;;

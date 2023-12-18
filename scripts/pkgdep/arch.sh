@@ -5,7 +5,7 @@
 #
 # Install main dependencies
 pacman -Sy --needed --noconfirm gcc make cunit libaio openssl \
-	libutil-linux libiscsi python ncurses json-c cmocka ninja meson
+	libutil-linux libiscsi python ncurses json-c cmocka ninja meson fuse3
 # Additional dependencies for SPDK CLI
 pacman -Sy --needed --noconfirm python-pexpect python-pip libffi
 pip install configshell_fb
@@ -51,10 +51,6 @@ if [[ $INSTALL_PMEM == "true" ]]; then
 	echo "/usr/local/lib" > /etc/ld.so.conf.d/pmdk.conf
 	ldconfig
 	rm -rf /tmp/pmdk
-fi
-if [[ $INSTALL_FUSE == "true" ]]; then
-	# Additional dependencies for FUSE and NVMe-CUSE
-	pacman -Sy --needed --noconfirm fuse3
 fi
 if [[ $INSTALL_RBD == "true" ]]; then
 	echo "Arch Linux does not have librados-devel and librbd-devel in mainline repositories."

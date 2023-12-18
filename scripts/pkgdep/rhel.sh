@@ -100,7 +100,7 @@ fi
 
 yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
 	libuuid-devel libiscsi-devel ncurses-devel json-c-devel libcmocka-devel \
-	clang clang-devel python3-pip unzip
+	clang clang-devel python3-pip unzip fuse3-devel
 
 # Minimal install
 # workaround for arm: ninja fails with dep on skbuild python module
@@ -177,10 +177,6 @@ fi
 if [[ $INSTALL_PMEM == "true" ]]; then
 	# Additional dependencies for building pmem based backends
 	yum install -y libpmemobj-devel || true
-fi
-if [[ $INSTALL_FUSE == "true" ]]; then
-	# Additional dependencies for FUSE and NVMe-CUSE
-	yum install -y fuse3-devel
 fi
 if [[ $INSTALL_RBD == "true" ]]; then
 	# Additional dependencies for RBD bdev in NVMe over Fabrics
