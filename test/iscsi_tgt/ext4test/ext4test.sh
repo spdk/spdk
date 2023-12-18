@@ -70,15 +70,11 @@ $rpc_py bdev_error_inject_error EE_Malloc0 'clear' 'failure'
 $rpc_py iscsi_delete_target_node $node_base:Target0
 echo "Error injection test done"
 
-if [ -z "$NO_NVME" ]; then
-	bdev_size=$(get_bdev_size Nvme0n1)
-	split_size=$((bdev_size / 2))
-	if [ $split_size -gt 10000 ]; then
-		split_size=10000
-	fi
-	$rpc_py bdev_split_create Nvme0n1 2 -s $split_size
-	$rpc_py iscsi_create_target_node Target1 Target1_alias Nvme0n1p0:0 1:2 64 -d
-fi
+bdev_size=$(get_bdev_size Nvme0n1)
+split_size=$((bdev_size / 2))
+split_size=$((split_size > 10000 ? 10000 : split_size))
+$rpc_py bdev_split_create Nvme0n1 2 -s $split_size
+$rpc_py iscsi_create_target_node Target1 Target1_alias Nvme0n1p0:0 1:2 64 -d
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
@@ -126,9 +122,7 @@ iscsicleanup
 $rpc_py bdev_split_delete Nvme0n1
 $rpc_py bdev_error_delete EE_Malloc0
 
-if [ -z "$NO_NVME" ]; then
-	$rpc_py bdev_nvme_detach_controller Nvme0
-fi
+$rpc_py bdev_nvme_detach_controller Nvme0
 
 killprocess $pid
 iscsitestfini
