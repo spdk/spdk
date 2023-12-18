@@ -14,10 +14,8 @@ cleanup() {
 	"$rpc_py" bdev_nvme_detach_controller Nvme0
 	killprocess "$pid"
 
-	for dev in $devs; do
-		mountpoint -q "/mnt/${dev}dir" && umount "/mnt/${dev}dir"
-		rm -rf "/mnt/${dev}dir"
-	done
+	mountpoint -q "/mnt/${dev}dir" && umount "/mnt/${dev}dir"
+	rm -rf "/mnt/${dev}dir"
 
 	iscsicleanup
 	iscsitestfini
@@ -63,8 +61,7 @@ waitforiscsidevices 1
 echo "Test error injection"
 $rpc_py bdev_error_inject_error EE_Malloc0 'all' 'failure' -n 1000
 
-dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
-
+dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}' | head -n1)
 waitforfile /dev/${dev}
 if make_filesystem ext4 /dev/${dev}; then
 	echo "mkfs successful - expected failure"
@@ -88,31 +85,28 @@ iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 waitforiscsidevices 1
 
-devs=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
+dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}' | head -n1)
+waitforfile "/dev/${dev}"
 
-for dev in $devs; do
-	make_filesystem ext4 /dev/${dev}
-	mkdir -p /mnt/${dev}dir
-	mount -o sync /dev/${dev} /mnt/${dev}dir
+make_filesystem ext4 "/dev/${dev}"
+mkdir -p "/mnt/${dev}dir"
+mount -o sync "/dev/${dev}" "/mnt/${dev}dir"
 
-	rsync -qav --exclude=".git" --exclude="*.o" $rootdir/ /mnt/${dev}dir/spdk
+rsync -qav --exclude=".git" --exclude="*.o" "$rootdir/" "/mnt/${dev}dir/spdk"
 
-	make -C /mnt/${dev}dir/spdk clean
-	(cd /mnt/${dev}dir/spdk && ./configure $(get_config_params))
-	make -C /mnt/${dev}dir/spdk -j
+make -C "/mnt/${dev}dir/spdk" clean
+(cd "/mnt/${dev}dir/spdk" && ./configure $(get_config_params))
+make -C "/mnt/${dev}dir/spdk" -j
 
-	rm -rf /mnt/${dev}dir/spdk
-	umount /mnt/${dev}dir
-	rm -rf /mnt/${dev}dir
+rm -rf "/mnt/${dev}dir/spdk"
+umount "/mnt/${dev}dir"
+rm -rf "/mnt/${dev}dir"
 
-	stats=($(cat /sys/block/$dev/stat))
-	echo ""
-	echo "$dev stats"
-	printf "READ  IO cnt: % 8u merges: % 8u sectors: % 8u ticks: % 8u\n" \
-		${stats[0]} ${stats[1]} ${stats[2]} ${stats[3]}
-	printf "WRITE IO cnt: % 8u merges: % 8u sectors: % 8u ticks: % 8u\n" \
-		${stats[4]} ${stats[5]} ${stats[6]} ${stats[7]}
-	printf "in flight: % 8u io ticks: % 8u time in queue: % 8u\n" \
-		${stats[8]} ${stats[9]} ${stats[10]}
-	echo ""
-done
+stats=($(cat "/sys/block/$dev/stat"))
+
+printf "READ  IO cnt: % 8u merges: % 8u sectors: % 8u ticks: % 8u\n" \
+	"${stats[0]}" "${stats[1]}" "${stats[2]}" "${stats[3]}"
+printf "WRITE IO cnt: % 8u merges: % 8u sectors: % 8u ticks: % 8u\n" \
+	"${stats[4]}" "${stats[5]}" "${stats[6]}" "${stats[7]}"
+printf "in flight: % 8u io ticks: % 8u time in queue: % 8u\n" \
+	"${stats[8]}" "${stats[9]}" "${stats[10]}"
