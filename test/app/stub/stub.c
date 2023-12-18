@@ -30,6 +30,7 @@ cleanup(void)
 
 	TAILQ_FOREACH_SAFE(ctrlr_entry, &g_controllers, link, tmp) {
 		TAILQ_REMOVE(&g_controllers, ctrlr_entry, link);
+		spdk_nvme_cuse_unregister(ctrlr_entry->ctrlr);
 		spdk_nvme_detach_async(ctrlr_entry->ctrlr, &detach_ctx);
 		free(ctrlr_entry);
 	}
@@ -79,6 +80,9 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	entry->ctrlr = ctrlr;
 	TAILQ_INSERT_TAIL(&g_controllers, entry, link);
+	if (spdk_nvme_cuse_register(ctrlr) != 0) {
+		fprintf(stderr, "could not register ctrlr with cuse\n");
+	}
 }
 
 static int
