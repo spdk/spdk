@@ -101,10 +101,6 @@ for dev in $devs; do
 	(cd /mnt/${dev}dir/spdk && ./configure $(get_config_params))
 	make -C /mnt/${dev}dir/spdk -j
 
-	# Print out space consumed on target device to help decide
-	#  if/when we need to increase the size of the malloc LUN
-	df -h /dev/$dev
-
 	rm -rf /mnt/${dev}dir/spdk
 	umount /mnt/${dev}dir
 	rm -rf /mnt/${dev}dir
