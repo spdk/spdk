@@ -4053,7 +4053,7 @@ int spdk_nvme_cuse_get_ns_name(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 			       char *name, size_t *size);
 
 /**
- * Create a character device at the path specified (Experimental)
+ * Create a character device at the path specified
  *
  * The character device can handle ioctls and is compatible with a standard
  * Linux kernel NVMe device. Tools such as nvme-cli can be used to configure
@@ -4069,7 +4069,7 @@ int spdk_nvme_cuse_get_ns_name(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 int spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
- * Remove a previously created character device (Experimental)
+ * Remove a previously created character device
  *
  * \param ctrlr Opaque handle to the NVMe controller.
  *
