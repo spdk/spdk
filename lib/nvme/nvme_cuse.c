@@ -1117,6 +1117,22 @@ cuse_nvme_ctrlr_update_namespaces(struct cuse_device *ctrlr_device)
 	return 0;
 }
 
+#ifdef FUSE_LOG_H_
+static void
+nvme_fuse_log_func(enum fuse_log_level level, const char *fmt, va_list ap)
+{
+	/* fuse will unnecessarily print this log message when tearing down
+	 * sessions, once for every session after the first. So use this custom
+	 * log handler to silence that specific log message.
+	 */
+	if (strstr(fmt, "fuse_remove_signal_handlers: unknown session") != NULL) {
+		return;
+	}
+
+	vfprintf(stderr, fmt, ap);
+}
+#endif
+
 static int
 nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -1131,6 +1147,13 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 			SPDK_ERRLOG("Cannot create bit array\n");
 			return -ENOMEM;
 		}
+#ifdef FUSE_LOG_H_
+		/* Older versions of libfuse don't have fuse_set_log_func nor
+		 * fuse_log.h, so this is the easiest way to check for it
+		 * without adding a separate CONFIG flag.
+		 */
+		fuse_set_log_func(nvme_fuse_log_func);
+#endif
 	}
 
 	ctrlr_device = (struct cuse_device *)calloc(1, sizeof(struct cuse_device));
