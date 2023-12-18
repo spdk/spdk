@@ -8,6 +8,21 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
+cleanup() {
+	"$rpc_py" bdev_split_delete Nvme0n1 || true
+	"$rpc_py" bdev_error_delete EE_Malloc0 || true
+	"$rpc_py" bdev_nvme_detach_controller Nvme0
+	killprocess "$pid"
+
+	for dev in $devs; do
+		mountpoint -q "/mnt/${dev}dir" && umount "/mnt/${dev}dir"
+		rm -rf "/mnt/${dev}dir"
+	done
+
+	iscsicleanup
+	iscsitestfini
+}
+
 iscsitestinit
 
 # Declare rpc_py here, because its default value points to rpc_cmd function,
@@ -21,7 +36,7 @@ timing_enter start_iscsi_tgt
 pid=$!
 echo "Process pid: $pid"
 
-trap '$rpc_py bdev_split_delete Name0n1 || true; killprocess $pid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
+trap 'cleanup' SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 $rpc_py iscsi_set_options -o 30 -a 4 -b $node_base
@@ -45,9 +60,6 @@ iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 waitforiscsidevices 1
 
-trap 'for new_dir in $(dir -d /mnt/*dir); do umount $new_dir; rm -rf $new_dir; done;
-	iscsicleanup; killprocess $pid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
-
 echo "Test error injection"
 $rpc_py bdev_error_inject_error EE_Malloc0 'all' 'failure' -n 1000
 
@@ -57,8 +69,6 @@ set +e
 waitforfile /dev/${dev}
 if make_filesystem ext4 /dev/${dev}; then
 	echo "mkfs successful - expected failure"
-	iscsicleanup
-	killprocess $pid
 	exit 1
 else
 	echo "mkfs failed as expected"
@@ -115,14 +125,3 @@ for dev in $devs; do
 		${stats[8]} ${stats[9]} ${stats[10]}
 	echo ""
 done
-
-trap - SIGINT SIGTERM EXIT
-
-iscsicleanup
-$rpc_py bdev_split_delete Nvme0n1
-$rpc_py bdev_error_delete EE_Malloc0
-
-$rpc_py bdev_nvme_detach_controller Nvme0
-
-killprocess $pid
-iscsitestfini
