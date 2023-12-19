@@ -44,6 +44,7 @@ endif
 ifeq ($(CONFIG_NVME_CUSE),y)
 # fuse requires to set _FILE_OFFSET_BITS to 64 bits even for 64 bit machines
 CFLAGS += -D_FILE_OFFSET_BITS=64
+LOCAL_SYS_LIBS += -lfuse3
 endif
 
 CFLAGS += -Wpointer-arith
