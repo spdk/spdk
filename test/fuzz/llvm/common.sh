@@ -16,6 +16,8 @@ function cleanup() {
 function fuzzer_out_handler() {
 	if [[ -n $SEND_LLVM_FUZZER_TO_SYSLOG ]]; then
 		logger -p user.debug -t LLVM
+	elif [[ -n $COMPRESS_LLVM_FUZZER ]]; then
+		gzip -c > "$1.gz"
 	else
 		cat > "$1"
 	fi
