@@ -176,7 +176,7 @@ ioat_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task
 			break;
 		}
 
-		tmp = TAILQ_NEXT(accel_task, link);
+		tmp = STAILQ_NEXT(accel_task, link);
 
 		/* Report any build errors via the callback now. */
 		if (rc) {

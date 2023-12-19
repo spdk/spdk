@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "accel_dpdk_compressdev.h"
@@ -74,7 +74,7 @@ struct compress_io_channel {
 	struct spdk_poller		*poller;
 	struct rte_mbuf			**src_mbufs;
 	struct rte_mbuf			**dst_mbufs;
-	TAILQ_HEAD(, spdk_accel_task)	queued_tasks;
+	STAILQ_HEAD(, spdk_accel_task)	queued_tasks;
 };
 
 /* Shared mempools between all devices on this system */
@@ -543,7 +543,7 @@ error_get_op:
 		return rc;
 	}
 
-	TAILQ_INSERT_TAIL(&chan->queued_tasks, task, link);
+	STAILQ_INSERT_TAIL(&chan->queued_tasks, task, link);
 	return 0;
 }
 
@@ -598,11 +598,11 @@ comp_dev_poller(void *args)
 		/* Check if there are any pending comp ops to process, only pull one
 		 * at a time off as _compress_operation() may re-queue the op.
 		 */
-		if (!TAILQ_EMPTY(&chan->queued_tasks)) {
-			task_to_resubmit = TAILQ_FIRST(&chan->queued_tasks);
+		if (!STAILQ_EMPTY(&chan->queued_tasks)) {
+			task_to_resubmit = STAILQ_FIRST(&chan->queued_tasks);
 			rc = _compress_operation(chan, task_to_resubmit);
 			if (rc == 0) {
-				TAILQ_REMOVE(&chan->queued_tasks, task_to_resubmit, link);
+				STAILQ_REMOVE_HEAD(&chan->queued_tasks, link);
 			}
 		}
 	}
@@ -634,7 +634,7 @@ compress_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *first_
 
 	task = first_task;
 
-	if (!TAILQ_EMPTY(&chan->queued_tasks)) {
+	if (!STAILQ_EMPTY(&chan->queued_tasks)) {
 		goto queue_tasks;
 	}
 
@@ -645,7 +645,7 @@ compress_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *first_
 	 * passed in here.  Similar thing is done in the accel framework.
 	 */
 	while (task) {
-		tmp = TAILQ_NEXT(task, link);
+		tmp = STAILQ_NEXT(task, link);
 		rc = _process_single_task(ch, task);
 
 		if (rc == -EBUSY) {
@@ -660,8 +660,8 @@ compress_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *first_
 
 queue_tasks:
 	while (task != NULL) {
-		tmp = TAILQ_NEXT(task, link);
-		TAILQ_INSERT_TAIL(&chan->queued_tasks, task, link);
+		tmp = STAILQ_NEXT(task, link);
+		STAILQ_INSERT_TAIL(&chan->queued_tasks, task, link);
 		task = tmp;
 	}
 	return 0;
@@ -744,7 +744,7 @@ compress_create_cb(void *io_device, void *ctx_buf)
 	}
 
 	chan->poller = SPDK_POLLER_REGISTER(comp_dev_poller, chan, 0);
-	TAILQ_INIT(&chan->queued_tasks);
+	STAILQ_INIT(&chan->queued_tasks);
 
 	pthread_mutex_lock(&g_comp_device_qp_lock);
 	TAILQ_FOREACH(device_qp, &g_comp_device_qp, link) {

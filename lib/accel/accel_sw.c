@@ -1,6 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2022 Intel Corporation.
- *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES
+ *   Copyright (c) 2022, 2023 NVIDIA CORPORATION & AFFILIATES
  *   All rights reserved.
  */
 
@@ -35,7 +35,7 @@ struct sw_accel_io_channel {
 	struct inflate_state		state;
 #endif
 	struct spdk_poller		*completion_poller;
-	TAILQ_HEAD(, spdk_accel_task)	tasks_to_complete;
+	STAILQ_HEAD(, spdk_accel_task)	tasks_to_complete;
 };
 
 typedef void (*sw_accel_crypto_op)(uint8_t *k2, uint8_t *k1, uint8_t *tweak, uint64_t lba_size,
@@ -59,7 +59,7 @@ inline static void
 _add_to_comp_list(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *accel_task, int status)
 {
 	accel_task->status = status;
-	TAILQ_INSERT_TAIL(&sw_ch->tasks_to_complete, accel_task, link);
+	STAILQ_INSERT_TAIL(&sw_ch->tasks_to_complete, accel_task, link);
 }
 
 static bool
@@ -496,7 +496,7 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 			break;
 		}
 
-		tmp = TAILQ_NEXT(accel_task, link);
+		tmp = STAILQ_NEXT(accel_task, link);
 
 		_add_to_comp_list(sw_ch, accel_task, rc);
 
@@ -510,18 +510,18 @@ static int
 accel_comp_poll(void *arg)
 {
 	struct sw_accel_io_channel	*sw_ch = arg;
-	TAILQ_HEAD(, spdk_accel_task)	tasks_to_complete;
+	STAILQ_HEAD(, spdk_accel_task)	tasks_to_complete;
 	struct spdk_accel_task		*accel_task;
 
-	if (TAILQ_EMPTY(&sw_ch->tasks_to_complete)) {
+	if (STAILQ_EMPTY(&sw_ch->tasks_to_complete)) {
 		return SPDK_POLLER_IDLE;
 	}
 
-	TAILQ_INIT(&tasks_to_complete);
-	TAILQ_SWAP(&tasks_to_complete, &sw_ch->tasks_to_complete, spdk_accel_task, link);
+	STAILQ_INIT(&tasks_to_complete);
+	STAILQ_SWAP(&tasks_to_complete, &sw_ch->tasks_to_complete, spdk_accel_task);
 
-	while ((accel_task = TAILQ_FIRST(&tasks_to_complete))) {
-		TAILQ_REMOVE(&tasks_to_complete, accel_task, link);
+	while ((accel_task = STAILQ_FIRST(&tasks_to_complete))) {
+		STAILQ_REMOVE_HEAD(&tasks_to_complete, link);
 		spdk_accel_task_complete(accel_task, accel_task->status);
 	}
 
@@ -533,7 +533,7 @@ sw_accel_create_cb(void *io_device, void *ctx_buf)
 {
 	struct sw_accel_io_channel *sw_ch = ctx_buf;
 
-	TAILQ_INIT(&sw_ch->tasks_to_complete);
+	STAILQ_INIT(&sw_ch->tasks_to_complete);
 	sw_ch->completion_poller = SPDK_POLLER_REGISTER(accel_comp_poll, sw_ch, 0);
 
 #ifdef SPDK_CONFIG_ISAL

@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2023 Intel Corporation.
+ *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
  */
 
@@ -11,7 +12,7 @@ static struct spdk_accel_module_if g_ex_module;
 
 struct ex_accel_io_channel {
 	struct spdk_poller *completion_poller;
-	TAILQ_HEAD(, spdk_accel_task) tasks_to_complete;
+	STAILQ_HEAD(, spdk_accel_task) tasks_to_complete;
 };
 
 static int
@@ -70,18 +71,18 @@ static int
 ex_accel_comp_poll(void *arg)
 {
 	struct ex_accel_io_channel *ex_ch = arg;
-	TAILQ_HEAD(, spdk_accel_task) tasks_to_complete;
+	STAILQ_HEAD(, spdk_accel_task) tasks_to_complete;
 	struct spdk_accel_task *accel_task;
 
-	if (TAILQ_EMPTY(&ex_ch->tasks_to_complete)) {
+	if (STAILQ_EMPTY(&ex_ch->tasks_to_complete)) {
 		return SPDK_POLLER_IDLE;
 	}
 
-	TAILQ_INIT(&tasks_to_complete);
-	TAILQ_SWAP(&tasks_to_complete, &ex_ch->tasks_to_complete, spdk_accel_task, link);
+	STAILQ_INIT(&tasks_to_complete);
+	STAILQ_SWAP(&tasks_to_complete, &ex_ch->tasks_to_complete, spdk_accel_task);
 
-	while ((accel_task = TAILQ_FIRST(&tasks_to_complete))) {
-		TAILQ_REMOVE(&tasks_to_complete, accel_task, link);
+	while ((accel_task = STAILQ_FIRST(&tasks_to_complete))) {
+		STAILQ_REMOVE_HEAD(&tasks_to_complete, link);
 		spdk_accel_task_complete(accel_task, accel_task->status);
 	}
 
@@ -93,7 +94,7 @@ ex_accel_create_cb(void *io_device, void *ctx_buf)
 {
 	struct ex_accel_io_channel *ex_ch = ctx_buf;
 
-	TAILQ_INIT(&ex_ch->tasks_to_complete);
+	STAILQ_INIT(&ex_ch->tasks_to_complete);
 	ex_ch->completion_poller = SPDK_POLLER_REGISTER(ex_accel_comp_poll, ex_ch, 0);
 
 	return 0;
@@ -132,7 +133,7 @@ ex_accel_module_get_ctx_size(void)
 inline static void
 add_to_comp_list(struct ex_accel_io_channel *ex_ch, struct spdk_accel_task *accel_task)
 {
-	TAILQ_INSERT_TAIL(&ex_ch->tasks_to_complete, accel_task, link);
+	STAILQ_INSERT_TAIL(&ex_ch->tasks_to_complete, accel_task, link);
 }
 
 static bool

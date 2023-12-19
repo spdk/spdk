@@ -51,7 +51,7 @@ struct idxd_io_channel {
 	enum channel_state		state;
 	struct spdk_poller		*poller;
 	uint32_t			num_outstanding;
-	TAILQ_HEAD(, spdk_accel_task)	queued_tasks;
+	STAILQ_HEAD(, spdk_accel_task)	queued_tasks;
 };
 
 static struct spdk_io_channel *iaa_get_io_channel(void);
@@ -171,14 +171,14 @@ iaa_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *first_task)
 
 	if (chan->state == IDXD_CHANNEL_ERROR) {
 		while (task) {
-			tmp = TAILQ_NEXT(task, link);
+			tmp = STAILQ_NEXT(task, link);
 			spdk_accel_task_complete(task, -EINVAL);
 			task = tmp;
 		}
 		return 0;
 	}
 
-	if (!TAILQ_EMPTY(&chan->queued_tasks)) {
+	if (!STAILQ_EMPTY(&chan->queued_tasks)) {
 		goto queue_tasks;
 	}
 
@@ -189,7 +189,7 @@ iaa_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *first_task)
 	 * passed in here.  Similar thing is done in the accel framework.
 	 */
 	while (task) {
-		tmp = TAILQ_NEXT(task, link);
+		tmp = STAILQ_NEXT(task, link);
 		rc = _process_single_task(ch, task);
 
 		if (rc == -EBUSY) {
@@ -204,8 +204,8 @@ iaa_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *first_task)
 
 queue_tasks:
 	while (task != NULL) {
-		tmp = TAILQ_NEXT(task, link);
-		TAILQ_INSERT_TAIL(&chan->queued_tasks, task, link);
+		tmp = STAILQ_NEXT(task, link);
+		STAILQ_INSERT_TAIL(&chan->queued_tasks, task, link);
 		task = tmp;
 	}
 	return 0;
@@ -224,11 +224,11 @@ idxd_poll(void *arg)
 	/* Check if there are any pending ops to process if the channel is active */
 	if (chan->state == IDXD_CHANNEL_ACTIVE) {
 		/* Submit queued tasks */
-		if (!TAILQ_EMPTY(&chan->queued_tasks)) {
-			task = TAILQ_FIRST(&chan->queued_tasks);
+		if (!STAILQ_EMPTY(&chan->queued_tasks)) {
+			task = STAILQ_FIRST(&chan->queued_tasks);
 			idxd_task = SPDK_CONTAINEROF(task, struct idxd_task, task);
 
-			TAILQ_INIT(&chan->queued_tasks);
+			STAILQ_INIT(&chan->queued_tasks);
 
 			iaa_submit_tasks(spdk_io_channel_from_ctx(idxd_task->chan), task);
 		}
@@ -288,7 +288,7 @@ idxd_create_cb(void *io_device, void *ctx_buf)
 
 	chan->dev = iaa;
 	chan->poller = SPDK_POLLER_REGISTER(idxd_poll, chan, 0);
-	TAILQ_INIT(&chan->queued_tasks);
+	STAILQ_INIT(&chan->queued_tasks);
 	chan->num_outstanding = 0;
 	chan->state = IDXD_CHANNEL_ACTIVE;
 

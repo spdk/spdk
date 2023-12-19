@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2021 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2022, 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk_internal/cunit.h"
@@ -141,7 +141,7 @@ test_setup(void)
 	}
 	g_sw_ch = (struct sw_accel_io_channel *)((char *)g_module_ch + sizeof(
 				struct spdk_io_channel));
-	TAILQ_INIT(&g_sw_ch->tasks_to_complete);
+	STAILQ_INIT(&g_sw_ch->tasks_to_complete);
 	g_module_if.supports_opcode = _supports_opcode;
 	return 0;
 }
@@ -176,13 +176,13 @@ test_spdk_accel_task_complete(void)
 	accel_task.accel_ch = g_accel_ch;
 	accel_task.cb_fn = dummy_cb_fn;
 	accel_task.cb_arg = &cb_arg;
-	TAILQ_INIT(&g_accel_ch->task_pool);
+	STAILQ_INIT(&g_accel_ch->task_pool);
 
 	/* Confirm cb is called and task added to list. */
 	spdk_accel_task_complete(&accel_task, status);
 	CU_ASSERT(g_dummy_cb_called == true);
-	expected_accel_task = TAILQ_FIRST(&g_accel_ch->task_pool);
-	TAILQ_REMOVE(&g_accel_ch->task_pool, expected_accel_task, link);
+	expected_accel_task = STAILQ_FIRST(&g_accel_ch->task_pool);
+	STAILQ_REMOVE_HEAD(&g_accel_ch->task_pool, link);
 	CU_ASSERT(expected_accel_task == &accel_task);
 }
 
@@ -193,7 +193,7 @@ test_get_task(void)
 	struct spdk_accel_task _task;
 	void *cb_arg = NULL;
 
-	TAILQ_INIT(&g_accel_ch->task_pool);
+	STAILQ_INIT(&g_accel_ch->task_pool);
 
 	/* no tasks left, return NULL. */
 	task = _get_task(g_accel_ch, dummy_cb_fn, cb_arg);
@@ -202,7 +202,7 @@ test_get_task(void)
 	_task.cb_fn = dummy_cb_fn;
 	_task.cb_arg = cb_arg;
 	_task.accel_ch = g_accel_ch;
-	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &_task, link);
+	STAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &_task, link);
 
 	/* Get a valid task. */
 	task = _get_task(g_accel_ch, dummy_cb_fn, cb_arg);
@@ -225,7 +225,7 @@ test_spdk_accel_submit_copy(void)
 	struct spdk_accel_task *expected_accel_task = NULL;
 	int flags = 0;
 
-	TAILQ_INIT(&g_accel_ch->task_pool);
+	STAILQ_INIT(&g_accel_ch->task_pool);
 
 	/* Fail with no tasks on _get_task() */
 	rc = spdk_accel_submit_copy(g_ch, src, dst, nbytes, flags, NULL, cb_arg);
@@ -233,7 +233,7 @@ test_spdk_accel_submit_copy(void)
 
 	task.accel_ch = g_accel_ch;
 	task.flags = 1;
-	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+	STAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
 
 	/* submission OK. */
 	rc = spdk_accel_submit_copy(g_ch, dst, src, nbytes, flags, NULL, cb_arg);
@@ -241,8 +241,8 @@ test_spdk_accel_submit_copy(void)
 	CU_ASSERT(task.op_code == SPDK_ACCEL_OPC_COPY);
 	CU_ASSERT(task.flags == 0);
 	CU_ASSERT(memcmp(dst, src, TEST_SUBMIT_SIZE) == 0);
-	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
-	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
+	expected_accel_task = STAILQ_FIRST(&g_sw_ch->tasks_to_complete);
+	STAILQ_REMOVE_HEAD(&g_sw_ch->tasks_to_complete, link);
 	CU_ASSERT(expected_accel_task == &task);
 }
 
@@ -260,7 +260,7 @@ test_spdk_accel_submit_dualcast(void)
 	struct spdk_accel_task *expected_accel_task = NULL;
 	int flags = 0;
 
-	TAILQ_INIT(&g_accel_ch->task_pool);
+	STAILQ_INIT(&g_accel_ch->task_pool);
 
 	/* Dualcast requires 4K alignment on dst addresses,
 	 * hence using the hard coded address to test the buffer alignment
@@ -288,7 +288,7 @@ test_spdk_accel_submit_dualcast(void)
 	rc = spdk_accel_submit_dualcast(g_ch, dst1, dst2, src, nbytes, flags, NULL, cb_arg);
 	CU_ASSERT(rc == -ENOMEM);
 
-	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+	STAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
 
 	/* accel submission OK., since we test the SW path , need to use valid memory addresses
 	 * cannot hardcode them anymore */
@@ -303,8 +303,8 @@ test_spdk_accel_submit_dualcast(void)
 	CU_ASSERT(task.flags == 0);
 	CU_ASSERT(memcmp(dst1, src, TEST_SUBMIT_SIZE) == 0);
 	CU_ASSERT(memcmp(dst2, src, TEST_SUBMIT_SIZE) == 0);
-	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
-	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
+	expected_accel_task = STAILQ_FIRST(&g_sw_ch->tasks_to_complete);
+	STAILQ_REMOVE_HEAD(&g_sw_ch->tasks_to_complete, link);
 	CU_ASSERT(expected_accel_task == &task);
 
 	free(src);
@@ -323,7 +323,7 @@ test_spdk_accel_submit_compare(void)
 	struct spdk_accel_task task;
 	struct spdk_accel_task *expected_accel_task = NULL;
 
-	TAILQ_INIT(&g_accel_ch->task_pool);
+	STAILQ_INIT(&g_accel_ch->task_pool);
 
 	src1 = calloc(1, TEST_SUBMIT_SIZE);
 	SPDK_CU_ASSERT_FATAL(src1 != NULL);
@@ -334,15 +334,15 @@ test_spdk_accel_submit_compare(void)
 	rc = spdk_accel_submit_compare(g_ch, src1, src2, nbytes, NULL, cb_arg);
 	CU_ASSERT(rc == -ENOMEM);
 
-	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+	STAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
 
 	/* accel submission OK. */
 	rc = spdk_accel_submit_compare(g_ch, src1, src2, nbytes, NULL, cb_arg);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(task.op_code == SPDK_ACCEL_OPC_COMPARE);
 	CU_ASSERT(memcmp(src1, src2, TEST_SUBMIT_SIZE) == 0);
-	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
-	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
+	expected_accel_task = STAILQ_FIRST(&g_sw_ch->tasks_to_complete);
+	STAILQ_REMOVE_HEAD(&g_sw_ch->tasks_to_complete, link);
 	CU_ASSERT(expected_accel_task == &task);
 
 	free(src1);
@@ -363,7 +363,7 @@ test_spdk_accel_submit_fill(void)
 	struct spdk_accel_task *expected_accel_task = NULL;
 	int flags = 0;
 
-	TAILQ_INIT(&g_accel_ch->task_pool);
+	STAILQ_INIT(&g_accel_ch->task_pool);
 
 	dst = calloc(1, TEST_SUBMIT_SIZE);
 	SPDK_CU_ASSERT_FATAL(dst != NULL);
@@ -376,7 +376,7 @@ test_spdk_accel_submit_fill(void)
 	rc = spdk_accel_submit_fill(g_ch, dst, fill, nbytes, flags, NULL, cb_arg);
 	CU_ASSERT(rc == -ENOMEM);
 
-	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+	STAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
 
 	/* accel submission OK. */
 	rc = spdk_accel_submit_fill(g_ch, dst, fill, nbytes, flags, NULL, cb_arg);
@@ -386,8 +386,8 @@ test_spdk_accel_submit_fill(void)
 	CU_ASSERT(task.flags == 0);
 
 	CU_ASSERT(memcmp(dst, src, TEST_SUBMIT_SIZE) == 0);
-	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
-	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
+	expected_accel_task = STAILQ_FIRST(&g_sw_ch->tasks_to_complete);
+	STAILQ_REMOVE_HEAD(&g_sw_ch->tasks_to_complete, link);
 	CU_ASSERT(expected_accel_task == &task);
 
 	free(dst);
@@ -406,13 +406,13 @@ test_spdk_accel_submit_crc32c(void)
 	struct spdk_accel_task task;
 	struct spdk_accel_task *expected_accel_task = NULL;
 
-	TAILQ_INIT(&g_accel_ch->task_pool);
+	STAILQ_INIT(&g_accel_ch->task_pool);
 
 	/* Fail with no tasks on _get_task() */
 	rc = spdk_accel_submit_crc32c(g_ch, &crc_dst, src, seed, nbytes, NULL, cb_arg);
 	CU_ASSERT(rc == -ENOMEM);
 
-	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+	STAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
 
 	/* accel submission OK. */
 	rc = spdk_accel_submit_crc32c(g_ch, &crc_dst, src, seed, nbytes, NULL, cb_arg);
@@ -420,8 +420,8 @@ test_spdk_accel_submit_crc32c(void)
 	CU_ASSERT(task.crc_dst == &crc_dst);
 	CU_ASSERT(task.seed == seed);
 	CU_ASSERT(task.op_code == SPDK_ACCEL_OPC_CRC32C);
-	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
-	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
+	expected_accel_task = STAILQ_FIRST(&g_sw_ch->tasks_to_complete);
+	STAILQ_REMOVE_HEAD(&g_sw_ch->tasks_to_complete, link);
 	CU_ASSERT(expected_accel_task == &task);
 }
 
@@ -438,7 +438,7 @@ test_spdk_accel_submit_crc32cv(void)
 	struct iovec iov[32];
 	struct spdk_accel_task *expected_accel_task = NULL;
 
-	TAILQ_INIT(&g_accel_ch->task_pool);
+	STAILQ_INIT(&g_accel_ch->task_pool);
 
 	for (i = 0; i < iov_cnt; i++) {
 		iov[i].iov_base = calloc(1, TEST_SUBMIT_SIZE);
@@ -446,7 +446,7 @@ test_spdk_accel_submit_crc32cv(void)
 		iov[i].iov_len = TEST_SUBMIT_SIZE;
 	}
 
-	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+	STAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
 
 	/* accel submission OK. */
 	rc = spdk_accel_submit_crc32cv(g_ch, &crc_dst, iov, iov_cnt, seed, NULL, cb_arg);
@@ -457,8 +457,8 @@ test_spdk_accel_submit_crc32cv(void)
 	CU_ASSERT(task.seed == seed);
 	CU_ASSERT(task.op_code == SPDK_ACCEL_OPC_CRC32C);
 	CU_ASSERT(task.cb_arg == cb_arg);
-	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
-	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
+	expected_accel_task = STAILQ_FIRST(&g_sw_ch->tasks_to_complete);
+	STAILQ_REMOVE_HEAD(&g_sw_ch->tasks_to_complete, link);
 	CU_ASSERT(expected_accel_task == &task);
 
 	for (i = 0; i < iov_cnt; i++) {
@@ -480,14 +480,14 @@ test_spdk_accel_submit_copy_crc32c(void)
 	struct spdk_accel_task *expected_accel_task = NULL;
 	int flags = 0;
 
-	TAILQ_INIT(&g_accel_ch->task_pool);
+	STAILQ_INIT(&g_accel_ch->task_pool);
 
 	/* Fail with no tasks on _get_task() */
 	rc = spdk_accel_submit_copy_crc32c(g_ch, dst, src, &crc_dst, seed, nbytes, flags,
 					   NULL, cb_arg);
 	CU_ASSERT(rc == -ENOMEM);
 
-	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+	STAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
 
 	/* accel submission OK. */
 	rc = spdk_accel_submit_copy_crc32c(g_ch, dst, src, &crc_dst, seed, nbytes, flags,
@@ -497,8 +497,8 @@ test_spdk_accel_submit_copy_crc32c(void)
 	CU_ASSERT(task.seed == seed);
 	CU_ASSERT(task.flags == 0);
 	CU_ASSERT(task.op_code == SPDK_ACCEL_OPC_COPY_CRC32C);
-	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
-	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
+	expected_accel_task = STAILQ_FIRST(&g_sw_ch->tasks_to_complete);
+	STAILQ_REMOVE_HEAD(&g_sw_ch->tasks_to_complete, link);
 	CU_ASSERT(expected_accel_task == &task);
 }
 
@@ -515,13 +515,13 @@ test_spdk_accel_submit_xor(void)
 	struct spdk_accel_task task;
 	struct spdk_accel_task *expected_accel_task = NULL;
 
-	TAILQ_INIT(&g_accel_ch->task_pool);
+	STAILQ_INIT(&g_accel_ch->task_pool);
 
 	/* Fail with no tasks on _get_task() */
 	rc = spdk_accel_submit_xor(g_ch, dst, sources, nsrcs, nbytes, NULL, NULL);
 	CU_ASSERT(rc == -ENOMEM);
 
-	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+	STAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
 
 	/* submission OK. */
 	rc = spdk_accel_submit_xor(g_ch, dst, sources, nsrcs, nbytes, NULL, NULL);
@@ -532,8 +532,8 @@ test_spdk_accel_submit_xor(void)
 	CU_ASSERT(task.d.iovs[0].iov_base == dst);
 	CU_ASSERT(task.d.iovs[0].iov_len == nbytes);
 	CU_ASSERT(task.op_code == SPDK_ACCEL_OPC_XOR);
-	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
-	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
+	expected_accel_task = STAILQ_FIRST(&g_sw_ch->tasks_to_complete);
+	STAILQ_REMOVE_HEAD(&g_sw_ch->tasks_to_complete, link);
 	CU_ASSERT(expected_accel_task == &task);
 }
 
@@ -918,7 +918,7 @@ test_sequence_append_error(void)
 	struct accel_io_channel *accel_ch;
 	struct iovec src_iovs, dst_iovs;
 	char buf[4096];
-	TAILQ_HEAD(, spdk_accel_task) tasks = TAILQ_HEAD_INITIALIZER(tasks);
+	STAILQ_HEAD(, spdk_accel_task) tasks = STAILQ_HEAD_INITIALIZER(tasks);
 	SLIST_HEAD(, spdk_accel_sequence) seqs = SLIST_HEAD_INITIALIZER(seqs);
 	int rc;
 
@@ -928,7 +928,7 @@ test_sequence_append_error(void)
 
 	/* Check that append fails and no sequence object is allocated when there are no more free
 	 * tasks */
-	TAILQ_SWAP(&tasks, &accel_ch->task_pool, spdk_accel_task, link);
+	STAILQ_SWAP(&tasks, &accel_ch->task_pool, spdk_accel_task);
 
 	rc = spdk_accel_append_fill(&seq, ioch, buf, sizeof(buf), NULL, NULL, 0xa5, 0,
 				    ut_sequence_step_cb, NULL);
@@ -954,7 +954,7 @@ test_sequence_append_error(void)
 	CU_ASSERT_PTR_NULL(seq);
 
 	/* Check that the same happens when the sequence queue is empty */
-	TAILQ_SWAP(&tasks, &accel_ch->task_pool, spdk_accel_task, link);
+	STAILQ_SWAP(&tasks, &accel_ch->task_pool, spdk_accel_task);
 	SLIST_SWAP(&seqs, &accel_ch->seq_pool, spdk_accel_sequence);
 
 	rc = spdk_accel_append_fill(&seq, ioch, buf, sizeof(buf), NULL, NULL, 0xa5, 0,
@@ -980,7 +980,7 @@ test_sequence_append_error(void)
 	CU_ASSERT_EQUAL(rc, -ENOMEM);
 	CU_ASSERT_PTR_NULL(seq);
 
-	TAILQ_SWAP(&tasks, &accel_ch->task_pool, spdk_accel_task, link);
+	STAILQ_SWAP(&tasks, &accel_ch->task_pool, spdk_accel_task);
 
 	spdk_put_io_channel(ioch);
 	poll_threads();

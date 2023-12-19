@@ -52,7 +52,7 @@ struct idxd_io_channel {
 	enum channel_state		state;
 	struct spdk_poller		*poller;
 	uint32_t			num_outstanding;
-	TAILQ_HEAD(, spdk_accel_task)	queued_tasks;
+	STAILQ_HEAD(, spdk_accel_task)	queued_tasks;
 };
 
 static struct spdk_io_channel *dsa_get_io_channel(void);
@@ -196,21 +196,21 @@ dsa_submit_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 	struct idxd_io_channel *chan = spdk_io_channel_get_ctx(ch);
 	int rc = 0;
 
-	assert(TAILQ_NEXT(task, link) == NULL);
+	assert(STAILQ_NEXT(task, link) == NULL);
 
 	if (spdk_unlikely(chan->state == IDXD_CHANNEL_ERROR)) {
 		spdk_accel_task_complete(task, -EINVAL);
 		return 0;
 	}
 
-	if (!TAILQ_EMPTY(&chan->queued_tasks)) {
-		TAILQ_INSERT_TAIL(&chan->queued_tasks, task, link);
+	if (!STAILQ_EMPTY(&chan->queued_tasks)) {
+		STAILQ_INSERT_TAIL(&chan->queued_tasks, task, link);
 		return 0;
 	}
 
 	rc = _process_single_task(ch, task);
 	if (rc == -EBUSY) {
-		TAILQ_INSERT_TAIL(&chan->queued_tasks, task, link);
+		STAILQ_INSERT_TAIL(&chan->queued_tasks, task, link);
 	} else if (rc) {
 		spdk_accel_task_complete(task, rc);
 	}
@@ -227,19 +227,19 @@ dsa_submit_queued_tasks(struct idxd_io_channel *chan)
 
 	if (spdk_unlikely(chan->state == IDXD_CHANNEL_ERROR)) {
 		/* Complete queued tasks with error and clear the list */
-		while ((task = TAILQ_FIRST(&chan->queued_tasks))) {
-			TAILQ_REMOVE(&chan->queued_tasks, task, link);
+		while ((task = STAILQ_FIRST(&chan->queued_tasks))) {
+			STAILQ_REMOVE_HEAD(&chan->queued_tasks, link);
 			spdk_accel_task_complete(task, -EINVAL);
 		}
 		return 0;
 	}
 
-	TAILQ_FOREACH_SAFE(task, &chan->queued_tasks, link, tmp) {
+	STAILQ_FOREACH_SAFE(task, &chan->queued_tasks, link, tmp) {
 		rc = _process_single_task(ch, task);
 		if (rc == -EBUSY) {
 			return rc;
 		}
-		TAILQ_REMOVE(&chan->queued_tasks, task, link);
+		STAILQ_REMOVE_HEAD(&chan->queued_tasks, link);
 		if (rc) {
 			spdk_accel_task_complete(task, rc);
 		}
@@ -257,7 +257,7 @@ idxd_poll(void *arg)
 	count = spdk_idxd_process_events(chan->chan);
 
 	/* Check if there are any pending ops to process if the channel is active */
-	if (!TAILQ_EMPTY(&chan->queued_tasks)) {
+	if (!STAILQ_EMPTY(&chan->queued_tasks)) {
 		dsa_submit_queued_tasks(chan);
 	}
 
@@ -320,7 +320,7 @@ dsa_create_cb(void *io_device, void *ctx_buf)
 
 	chan->dev = dsa;
 	chan->poller = SPDK_POLLER_REGISTER(idxd_poll, chan, 0);
-	TAILQ_INIT(&chan->queued_tasks);
+	STAILQ_INIT(&chan->queued_tasks);
 	chan->num_outstanding = 0;
 	chan->state = IDXD_CHANNEL_ACTIVE;
 

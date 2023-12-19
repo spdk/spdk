@@ -126,7 +126,7 @@ struct spdk_accel_task {
 	uint8_t				op_code;
 	int16_t				status;
 	int				flags;
-	TAILQ_ENTRY(spdk_accel_task)	link;
+	STAILQ_ENTRY(spdk_accel_task)	link;
 	TAILQ_ENTRY(spdk_accel_task)	seq_link;
 	struct iovec			aux_iovs[SPDK_ACCEL_AUX_IOV_MAX];
 	struct {

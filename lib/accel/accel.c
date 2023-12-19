@@ -143,7 +143,7 @@ struct accel_io_channel {
 	void					*task_pool_base;
 	struct spdk_accel_sequence		*seq_pool_base;
 	struct accel_buffer			*buf_pool_base;
-	TAILQ_HEAD(, spdk_accel_task)		task_pool;
+	STAILQ_HEAD(, spdk_accel_task)		task_pool;
 	SLIST_HEAD(, spdk_accel_sequence)	seq_pool;
 	SLIST_HEAD(, accel_buffer)		buf_pool;
 	struct spdk_iobuf_channel		iobuf;
@@ -277,7 +277,7 @@ spdk_accel_task_complete(struct spdk_accel_task *accel_task, int status)
 	 * the accel task list is exhausted when there is recursive call to
 	 * allocate accel_task in user's call back function (cb_fn)
 	 */
-	TAILQ_INSERT_HEAD(&accel_ch->task_pool, accel_task, link);
+	STAILQ_INSERT_HEAD(&accel_ch->task_pool, accel_task, link);
 	accel_task->seq = NULL;
 
 	accel_update_task_stats(accel_ch, accel_task, executed, 1);
@@ -294,15 +294,14 @@ _get_task(struct accel_io_channel *accel_ch, spdk_accel_completion_cb cb_fn, voi
 {
 	struct spdk_accel_task *accel_task;
 
-	accel_task = TAILQ_FIRST(&accel_ch->task_pool);
+	accel_task = STAILQ_FIRST(&accel_ch->task_pool);
 	if (spdk_unlikely(accel_task == NULL)) {
 		accel_update_stats(accel_ch, retry.task, 1);
 		return NULL;
 	}
 
-	TAILQ_REMOVE(&accel_ch->task_pool, accel_task, link);
-	accel_task->link.tqe_next = NULL;
-	accel_task->link.tqe_prev = NULL;
+	STAILQ_REMOVE_HEAD(&accel_ch->task_pool, link);
+	accel_task->link.stqe_next = NULL;
 
 	accel_task->cb_fn = cb_fn;
 	accel_task->cb_arg = cb_arg;
@@ -1207,7 +1206,7 @@ accel_sequence_complete_task(struct spdk_accel_sequence *seq, struct spdk_accel_
 	TAILQ_REMOVE(&seq->tasks, task, seq_link);
 	cb_fn = task->step_cb_fn;
 	cb_arg = task->step_cb_arg;
-	TAILQ_INSERT_HEAD(&ch->task_pool, task, link);
+	STAILQ_INSERT_HEAD(&ch->task_pool, task, link);
 	if (cb_fn != NULL) {
 		cb_fn(cb_arg);
 	}
@@ -1726,7 +1725,7 @@ accel_sequence_task_cb(void *cb_arg, int status)
 	 * easiest way to prevent this, even though it is a bit hacky.
 	 */
 	assert(task != NULL);
-	TAILQ_REMOVE(&accel_ch->task_pool, task, link);
+	STAILQ_REMOVE_HEAD(&accel_ch->task_pool, link);
 
 	switch (seq->state) {
 	case ACCEL_SEQUENCE_STATE_AWAIT_TASK:
@@ -2343,14 +2342,14 @@ accel_create_channel(void *io_device, void *ctx_buf)
 		goto err;
 	}
 
-	TAILQ_INIT(&accel_ch->task_pool);
+	STAILQ_INIT(&accel_ch->task_pool);
 	SLIST_INIT(&accel_ch->seq_pool);
 	SLIST_INIT(&accel_ch->buf_pool);
 
 	task_mem = accel_ch->task_pool_base;
 	for (i = 0; i < g_opts.task_count; i++) {
 		accel_task = (struct spdk_accel_task *)task_mem;
-		TAILQ_INSERT_TAIL(&accel_ch->task_pool, accel_task, link);
+		STAILQ_INSERT_TAIL(&accel_ch->task_pool, accel_task, link);
 		task_mem += g_max_accel_module_size;
 	}
 	for (i = 0; i < g_opts.sequence_count; i++) {

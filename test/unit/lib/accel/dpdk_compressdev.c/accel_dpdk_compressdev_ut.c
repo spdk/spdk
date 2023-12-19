@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2018 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk_internal/cunit.h"
@@ -447,7 +447,7 @@ test_setup(void)
 	g_device_qp.device->sgl_out = true;
 	g_comp_ch->src_mbufs = calloc(UT_MBUFS_PER_OP_BOUND_TEST, sizeof(void *));
 	g_comp_ch->dst_mbufs = calloc(UT_MBUFS_PER_OP, sizeof(void *));
-	TAILQ_INIT(&g_comp_ch->queued_tasks);
+	STAILQ_INIT(&g_comp_ch->queued_tasks);
 
 	for (i = 0; i < UT_MBUFS_PER_OP_BOUND_TEST - 1; i++) {
 		g_expected_src_mbufs[i].next = &g_expected_src_mbufs[i + 1];
@@ -500,7 +500,7 @@ test_compress_operation(void)
 	int src_iovcnt;
 	struct iovec dst_iovs[3] = {};
 	int dst_iovcnt;
-	struct spdk_accel_task *task_p, task = {};
+	struct spdk_accel_task task = {};
 	int rc, i;
 	struct rte_mbuf *exp_src_mbuf[UT_MBUFS_PER_OP];
 	struct rte_mbuf *exp_dst_mbuf[UT_MBUFS_PER_OP];
@@ -521,52 +521,48 @@ test_compress_operation(void)
 	task.d.iovcnt = dst_iovcnt;
 	task.s.iovs = src_iovs;
 	task.s.iovcnt = src_iovcnt;
-	task_p = &task;
 
 	/* test rte_comp_op_alloc failure */
 	MOCK_SET(rte_comp_op_alloc, NULL);
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	rc = _compress_operation(g_comp_ch, &task);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == false);
-	while (!TAILQ_EMPTY(&g_comp_ch->queued_tasks)) {
-		task_p = TAILQ_FIRST(&g_comp_ch->queued_tasks);
-		TAILQ_REMOVE(&g_comp_ch->queued_tasks, task_p, link);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == false);
+	while (!STAILQ_EMPTY(&g_comp_ch->queued_tasks)) {
+		STAILQ_REMOVE_HEAD(&g_comp_ch->queued_tasks, link);
 	}
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 
 	/* test mempool get failure */
 	MOCK_SET(rte_comp_op_alloc, &g_comp_op[0]);
 	ut_rte_pktmbuf_alloc_bulk = -1;
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	rc = _compress_operation(g_comp_ch, &task);
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == false);
-	while (!TAILQ_EMPTY(&g_comp_ch->queued_tasks)) {
-		task_p = TAILQ_FIRST(&g_comp_ch->queued_tasks);
-		TAILQ_REMOVE(&g_comp_ch->queued_tasks, task_p, link);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == false);
+	while (!STAILQ_EMPTY(&g_comp_ch->queued_tasks)) {
+		STAILQ_REMOVE_HEAD(&g_comp_ch->queued_tasks, link);
 	}
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	CU_ASSERT(rc == 0);
 	ut_rte_pktmbuf_alloc_bulk = 0;
 
 	/* test enqueue failure busy */
 	ut_enqueue_value = FAKE_ENQUEUE_BUSY;
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	rc = _compress_operation(g_comp_ch, &task);
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == false);
-	while (!TAILQ_EMPTY(&g_comp_ch->queued_tasks)) {
-		task_p = TAILQ_FIRST(&g_comp_ch->queued_tasks);
-		TAILQ_REMOVE(&g_comp_ch->queued_tasks, task_p, link);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == false);
+	while (!STAILQ_EMPTY(&g_comp_ch->queued_tasks)) {
+		STAILQ_REMOVE_HEAD(&g_comp_ch->queued_tasks, link);
 	}
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	CU_ASSERT(rc == 0);
 	ut_enqueue_value = 1;
 
 	/* test enqueue failure error */
 	ut_enqueue_value = FAKE_ENQUEUE_ERROR;
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	rc = _compress_operation(g_comp_ch, &task);
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	CU_ASSERT(rc == -EINVAL);
 	ut_enqueue_value = FAKE_ENQUEUE_SUCCESS;
 
@@ -600,23 +596,23 @@ test_compress_operation(void)
 	}
 
 	rc = _compress_operation(g_comp_ch, &task);
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	CU_ASSERT(rc == 0);
 
 	/* test sgl out failure */
 	g_device.sgl_out = false;
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	rc = _compress_operation(g_comp_ch, &task);
 	CU_ASSERT(rc == -EINVAL);
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	g_device.sgl_out = true;
 
 	/* test sgl in failure */
 	g_device.sgl_in = false;
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	rc = _compress_operation(g_comp_ch, &task);
 	CU_ASSERT(rc == -EINVAL);
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	g_device.sgl_in = true;
 }
 
@@ -707,7 +703,7 @@ test_compress_operation_cross_boundary(void)
 	task.s.iovcnt = src_iovcnt;
 
 	rc = _compress_operation(g_comp_ch, &task);
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	CU_ASSERT(rc == 0);
 
 	/* Now force the 2nd IOV to get partial length from spdk_vtophys */
@@ -737,7 +733,7 @@ test_compress_operation_cross_boundary(void)
 	exp_src_mbuf[3]->pkt_len = exp_src_mbuf[3]->buf_len = 0x1000;
 
 	rc = _compress_operation(g_comp_ch, &task);
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	CU_ASSERT(rc == 0);
 
 	/* Finally force the 3rd IOV to get partial length from spdk_vtophys */
@@ -766,7 +762,7 @@ test_compress_operation_cross_boundary(void)
 	exp_src_mbuf[3]->pkt_len = exp_src_mbuf[3]->buf_len = 0x800;
 
 	rc = _compress_operation(g_comp_ch, &task);
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	CU_ASSERT(rc == 0);
 
 	/* Single input iov is split on page boundary, sgl_in is not supported */
@@ -896,9 +892,9 @@ test_poller(void)
 	g_comp_op[0].produced = 1;
 	g_done_count = 0;
 	g_comp_op[0].status = RTE_COMP_OP_STATUS_NOT_PROCESSED;
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	rc = comp_dev_poller((void *)g_comp_ch);
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	CU_ASSERT(rc == SPDK_POLLER_BUSY);
 	ut_expected_task_status = RTE_COMP_OP_STATUS_SUCCESS;
 
@@ -914,9 +910,9 @@ test_poller(void)
 	g_comp_op[1].status = RTE_COMP_OP_STATUS_SUCCESS;
 	g_done_count = 0;
 	ut_enqueue_value = FAKE_ENQUEUE_SUCCESS;
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	rc = comp_dev_poller((void *)g_comp_ch);
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	CU_ASSERT(rc == SPDK_POLLER_BUSY);
 
 	/* One to dequeue, one op to be resubmitted. */
@@ -963,12 +959,12 @@ test_poller(void)
 		exp_dst_mbuf[i]->pkt_len = dst_iovs[i].iov_len;
 	}
 	MOCK_SET(rte_comp_op_alloc, &g_comp_op[0]);
-	TAILQ_INSERT_TAIL(&g_comp_ch->queued_tasks,
-			  task_to_resubmit,
-			  link);
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == false);
+	STAILQ_INSERT_TAIL(&g_comp_ch->queued_tasks,
+			   task_to_resubmit,
+			   link);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == false);
 	rc = comp_dev_poller((void *)g_comp_ch);
-	CU_ASSERT(TAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
+	CU_ASSERT(STAILQ_EMPTY(&g_comp_ch->queued_tasks) == true);
 	CU_ASSERT(rc == SPDK_POLLER_BUSY);
 
 	free(task_to_resubmit);
