@@ -629,6 +629,10 @@ nvmf_write_nvme_subsystem_config(struct spdk_json_write_ctx *w,
 		spdk_json_write_named_uint32(w, "nsid", spdk_nvmf_ns_get_id(ns));
 		spdk_json_write_named_string(w, "bdev_name", spdk_bdev_get_name(spdk_nvmf_ns_get_bdev(ns)));
 
+		if (ns->ptpl_file != NULL) {
+			spdk_json_write_named_string(w, "ptpl_file", ns->ptpl_file);
+		}
+
 		if (!spdk_mem_all_zero(ns_opts.nguid, sizeof(ns_opts.nguid))) {
 			SPDK_STATIC_ASSERT(sizeof(ns_opts.nguid) == sizeof(uint64_t) * 2, "size mismatch");
 			spdk_json_write_named_string_fmt(w, "nguid", "%016"PRIX64"%016"PRIX64, from_be64(&ns_opts.nguid[0]),
