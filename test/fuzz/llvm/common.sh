@@ -13,6 +13,14 @@ function cleanup() {
 	kill -9 "${pids[@]}" || :
 }
 
+function fuzzer_out_handler() {
+	if [[ -n $SEND_LLVM_FUZZER_TO_SYSLOG ]]; then
+		logger -p user.debug -t LLVM
+	else
+		cat > "$1"
+	fi
+}
+
 function get_testn() {
 	local fuzz_num=$1
 	local mem_size=$2
@@ -44,7 +52,7 @@ function start_llvm_fuzz_all() {
 		# Run max up to $testn tests in parallel ...
 		while ((testn_idx = i + ++idx, testn_idx < fuzz_num && idx < testn)); do
 			core=$(printf "0x%x" $((0x1 << idx)))
-			start_llvm_fuzz $testn_idx $timen $core &> "$output_dir/llvm/llvm_${FUZZER}_${testn_idx}.txt" &
+			start_llvm_fuzz $testn_idx $timen $core &> >(fuzzer_out_handler "$output_dir/llvm/llvm_${FUZZER}_${testn_idx}.txt") &
 			pids+=($!)
 		done
 		# ... and now wait for them
