@@ -79,41 +79,36 @@ function configure_raid_bdev() {
 
 function raid_function_test() {
 	local raid_level=$1
-	if [ $(uname -s) = Linux ] && modprobe -n nbd; then
-		local nbd=/dev/nbd0
-		local raid_bdev
+	local nbd=/dev/nbd0
+	local raid_bdev
 
-		modprobe nbd
-		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -L bdev_raid &
-		raid_pid=$!
-		echo "Process raid pid: $raid_pid"
-		waitforlisten $raid_pid $rpc_server
+	$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -L bdev_raid &
+	raid_pid=$!
+	echo "Process raid pid: $raid_pid"
+	waitforlisten $raid_pid $rpc_server
 
-		configure_raid_bdev $raid_level
-		raid_bdev=$($rpc_py bdev_raid_get_bdevs online | jq -r '.[0]["name"] | select(.)')
-		if [ $raid_bdev = "" ]; then
-			echo "No raid0 device in SPDK app"
-			return 1
-		fi
-
-		nbd_start_disks $rpc_server $raid_bdev $nbd
-		count=$(nbd_get_count $rpc_server)
-		if [ $count -ne 1 ]; then
-			return 1
-		fi
-
-		raid_unmap_data_verify $nbd $rpc_server
-
-		nbd_stop_disks $rpc_server $nbd
-		count=$(nbd_get_count $rpc_server)
-		if [ $count -ne 0 ]; then
-			return 1
-		fi
-
-		killprocess $raid_pid
-	else
-		echo "skipping bdev raid tests."
+	configure_raid_bdev $raid_level
+	raid_bdev=$($rpc_py bdev_raid_get_bdevs online | jq -r '.[0]["name"] | select(.)')
+	if [ $raid_bdev = "" ]; then
+		echo "No raid0 device in SPDK app"
+		return 1
 	fi
+
+	nbd_start_disks $rpc_server $raid_bdev $nbd
+	count=$(nbd_get_count $rpc_server)
+	if [ $count -ne 1 ]; then
+		return 1
+	fi
+
+	raid_unmap_data_verify $nbd $rpc_server
+
+	nbd_stop_disks $rpc_server $nbd
+	count=$(nbd_get_count $rpc_server)
+	if [ $count -ne 0 ]; then
+		return 1
+	fi
+
+	killprocess $raid_pid
 
 	return 0
 }
@@ -511,23 +506,27 @@ function raid_superblock_test() {
 
 trap 'on_error_exit;' ERR
 
-raid_function_test raid0
-raid_function_test concat
-raid0_resize_test
+if [ $(uname -s) = Linux ] && modprobe -n nbd; then
+	modprobe nbd
+	run_test "raid_function_test_raid0" raid_function_test raid0
+	run_test "raid_function_test_concat" raid_function_test concat
+fi
+
+run_test "raid0_resize_test" raid0_resize_test
 
 for n in {2..4}; do
 	for level in raid0 concat raid1; do
-		raid_state_function_test $level $n false
-		raid_state_function_test $level $n true
-		raid_superblock_test $level $n
+		run_test "raid_state_function_test" raid_state_function_test $level $n false
+		run_test "raid_state_function_test_sb" raid_state_function_test $level $n true
+		run_test "raid_superblock_test" raid_superblock_test $level $n
 	done
 done
 
 if [ "$CONFIG_RAID5F" == y ]; then
 	for n in {3..4}; do
-		raid_state_function_test raid5f $n false
-		raid_state_function_test raid5f $n true
-		raid_superblock_test raid5f $n
+		run_test "raid5f_state_function_test" raid_state_function_test raid5f $n false
+		run_test "raid5f_state_function_test_sb" raid_state_function_test raid5f $n true
+		run_test "raid5f_superblock_test" raid_superblock_test raid5f $n
 	done
 fi
 
