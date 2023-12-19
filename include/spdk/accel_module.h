@@ -78,10 +78,13 @@ enum spdk_accel_aux_iov_type {
 struct spdk_accel_task {
 	struct accel_io_channel		*accel_ch;
 	struct spdk_accel_sequence	*seq;
-	spdk_accel_completion_cb	cb_fn;
+	union {
+		/* Used by spdk_accel_submit_* functions */
+		spdk_accel_completion_cb	cb_fn;
+		/* Used by spdk_accel_append_* functions */
+		spdk_accel_step_cb		step_cb_fn;
+	};
 	void				*cb_arg;
-	spdk_accel_step_cb		step_cb_fn;
-	void				*step_cb_arg;
 	struct spdk_memory_domain	*src_domain;
 	void				*src_domain_ctx;
 	struct spdk_memory_domain	*dst_domain;

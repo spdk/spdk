@@ -174,6 +174,8 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_accel_sequence) == 64, "invalid size");
 #define accel_update_task_stats(ch, task, event, v) \
 	accel_update_stats(ch, operations[(task)->op_code].event, v)
 
+static inline void accel_sequence_task_cb(void *cb_arg, int status);
+
 static inline void
 accel_sequence_set_state(struct spdk_accel_sequence *seq, enum accel_sequence_state state)
 {
@@ -269,22 +271,29 @@ spdk_accel_assign_opc(enum spdk_accel_opcode opcode, const char *name)
 void
 spdk_accel_task_complete(struct spdk_accel_task *accel_task, int status)
 {
-	struct accel_io_channel *accel_ch = accel_task->accel_ch;
-	spdk_accel_completion_cb	cb_fn = accel_task->cb_fn;
-	void				*cb_arg = accel_task->cb_arg;
-
-	/* We should put the accel_task into the list firstly in order to avoid
-	 * the accel task list is exhausted when there is recursive call to
-	 * allocate accel_task in user's call back function (cb_fn)
-	 */
-	STAILQ_INSERT_HEAD(&accel_ch->task_pool, accel_task, link);
-	accel_task->seq = NULL;
+	struct accel_io_channel		*accel_ch = accel_task->accel_ch;
+	spdk_accel_completion_cb	cb_fn;
+	void				*cb_arg;
 
 	accel_update_task_stats(accel_ch, accel_task, executed, 1);
 	accel_update_task_stats(accel_ch, accel_task, num_bytes, accel_task->nbytes);
 	if (spdk_unlikely(status != 0)) {
 		accel_update_task_stats(accel_ch, accel_task, failed, 1);
 	}
+
+	if (accel_task->seq) {
+		accel_sequence_task_cb(accel_task->seq, status);
+		return;
+	}
+
+	cb_fn = accel_task->cb_fn;
+	cb_arg = accel_task->cb_arg;
+
+	/* We should put the accel_task into the list firstly in order to avoid
+	 * the accel task list is exhausted when there is recursive call to
+	 * allocate accel_task in user's call back function (cb_fn)
+	 */
+	STAILQ_INSERT_HEAD(&accel_ch->task_pool, accel_task, link);
 
 	cb_fn(cb_arg, status);
 }
@@ -366,7 +375,6 @@ spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src,
 	accel_task->flags = flags;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
-	accel_task->step_cb_fn = NULL;
 
 	return accel_submit_task(accel_ch, accel_task);
 }
@@ -407,7 +415,6 @@ spdk_accel_submit_dualcast(struct spdk_io_channel *ch, void *dst1,
 	accel_task->op_code = SPDK_ACCEL_OPC_DUALCAST;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
-	accel_task->step_cb_fn = NULL;
 
 	return accel_submit_task(accel_ch, accel_task);
 }
@@ -438,7 +445,6 @@ spdk_accel_submit_compare(struct spdk_io_channel *ch, void *src1,
 	accel_task->op_code = SPDK_ACCEL_OPC_COMPARE;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
-	accel_task->step_cb_fn = NULL;
 
 	return accel_submit_task(accel_ch, accel_task);
 }
@@ -467,7 +473,6 @@ spdk_accel_submit_fill(struct spdk_io_channel *ch, void *dst,
 	accel_task->op_code = SPDK_ACCEL_OPC_FILL;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
-	accel_task->step_cb_fn = NULL;
 
 	return accel_submit_task(accel_ch, accel_task);
 }
@@ -496,7 +501,6 @@ spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *crc_dst,
 	accel_task->op_code = SPDK_ACCEL_OPC_CRC32C;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
-	accel_task->step_cb_fn = NULL;
 
 	return accel_submit_task(accel_ch, accel_task);
 }
@@ -535,7 +539,6 @@ spdk_accel_submit_crc32cv(struct spdk_io_channel *ch, uint32_t *crc_dst,
 	accel_task->op_code = SPDK_ACCEL_OPC_CRC32C;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
-	accel_task->step_cb_fn = NULL;
 
 	return accel_submit_task(accel_ch, accel_task);
 }
@@ -569,7 +572,6 @@ spdk_accel_submit_copy_crc32c(struct spdk_io_channel *ch, void *dst,
 	accel_task->op_code = SPDK_ACCEL_OPC_COPY_CRC32C;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
-	accel_task->step_cb_fn = NULL;
 
 	return accel_submit_task(accel_ch, accel_task);
 }
@@ -615,7 +617,6 @@ spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst,
 	accel_task->op_code = SPDK_ACCEL_OPC_COPY_CRC32C;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
-	accel_task->step_cb_fn = NULL;
 
 	return accel_submit_task(accel_ch, accel_task);
 }
@@ -645,7 +646,6 @@ spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, uint64_t nbyte
 	accel_task->op_code = SPDK_ACCEL_OPC_COMPRESS;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
-	accel_task->step_cb_fn = NULL;
 
 	return accel_submit_task(accel_ch, accel_task);
 }
@@ -674,7 +674,6 @@ spdk_accel_submit_decompress(struct spdk_io_channel *ch, struct iovec *dst_iovs,
 	accel_task->op_code = SPDK_ACCEL_OPC_DECOMPRESS;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
-	accel_task->step_cb_fn = NULL;
 
 	return accel_submit_task(accel_ch, accel_task);
 }
@@ -710,7 +709,6 @@ spdk_accel_submit_encrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_k
 	accel_task->op_code = SPDK_ACCEL_OPC_ENCRYPT;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
-	accel_task->step_cb_fn = NULL;
 
 	return accel_submit_task(accel_ch, accel_task);
 }
@@ -746,7 +744,6 @@ spdk_accel_submit_decrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_k
 	accel_task->op_code = SPDK_ACCEL_OPC_DECRYPT;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
-	accel_task->step_cb_fn = NULL;
 
 	return accel_submit_task(accel_ch, accel_task);
 }
@@ -773,7 +770,6 @@ spdk_accel_submit_xor(struct spdk_io_channel *ch, void *dst, void **sources, uin
 	accel_task->op_code = SPDK_ACCEL_OPC_XOR;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
-	accel_task->step_cb_fn = NULL;
 
 	return accel_submit_task(accel_ch, accel_task);
 }
@@ -858,13 +854,13 @@ accel_sequence_get_task(struct accel_io_channel *ch, struct spdk_accel_sequence 
 {
 	struct spdk_accel_task *task;
 
-	task = _get_task(ch, accel_sequence_task_cb, seq);
+	task = _get_task(ch, NULL, NULL);
 	if (spdk_unlikely(task == NULL)) {
 		return task;
 	}
 
 	task->step_cb_fn = cb_fn;
-	task->step_cb_arg = cb_arg;
+	task->cb_arg = cb_arg;
 	task->seq = seq;
 
 	return task;
@@ -1205,7 +1201,8 @@ accel_sequence_complete_task(struct spdk_accel_sequence *seq, struct spdk_accel_
 
 	TAILQ_REMOVE(&seq->tasks, task, seq_link);
 	cb_fn = task->step_cb_fn;
-	cb_arg = task->step_cb_arg;
+	cb_arg = task->cb_arg;
+	task->seq = NULL;
 	STAILQ_INSERT_HEAD(&ch->task_pool, task, link);
 	if (cb_fn != NULL) {
 		cb_fn(cb_arg);
@@ -1718,14 +1715,6 @@ accel_sequence_task_cb(void *cb_arg, int status)
 {
 	struct spdk_accel_sequence *seq = cb_arg;
 	struct spdk_accel_task *task = TAILQ_FIRST(&seq->tasks);
-	struct accel_io_channel *accel_ch = seq->ch;
-
-	/* spdk_accel_task_complete() puts the task back to the task pool, but we don't want to do
-	 * that if a task is part of a sequence.  Removing the task from that pool here is the
-	 * easiest way to prevent this, even though it is a bit hacky.
-	 */
-	assert(task != NULL);
-	STAILQ_REMOVE_HEAD(&accel_ch->task_pool, link);
 
 	switch (seq->state) {
 	case ACCEL_SEQUENCE_STATE_AWAIT_TASK:
