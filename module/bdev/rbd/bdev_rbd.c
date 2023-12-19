@@ -83,6 +83,7 @@ struct bdev_rbd_cluster {
 	char *key_file;
 	char *core_mask;
 	rados_t cluster;
+	char *nonce;
 	uint32_t ref;
 	STAILQ_ENTRY(bdev_rbd_cluster) link;
 };
@@ -129,6 +130,8 @@ bdev_rbd_cluster_free(struct bdev_rbd_cluster *entry)
 	free(entry->user_id);
 	free(entry->name);
 	free(entry->core_mask);
+	if (entry->nonce)
+           free(entry->nonce);
 	free(entry);
 }
 
@@ -535,6 +538,7 @@ bdev_rbd_finish_aiocb(rbd_completion_t cb, void *arg)
 	bdev_rbd_io_complete(bdev_io, bio_status);
 }
 
+
 static void
 _bdev_rbd_start_aio(struct bdev_rbd *disk, struct spdk_bdev_io *bdev_io,
 		    struct iovec *iov, int iovcnt, uint64_t offset, size_t len)
@@ -878,7 +882,9 @@ bdev_rbd_cluster_dump_entry(const char *cluster_name, struct spdk_json_write_ctx
 		if (entry->key_file) {
 			spdk_json_write_named_string(w, "key_file", entry->key_file);
 		}
-
+                if(entry->nonce){
+	           spdk_json_write_named_string(w, "nonce", entry->nonce);
+		}
 		pthread_mutex_unlock(&g_map_bdev_rbd_cluster_mutex);
 		return;
 	}
@@ -991,6 +997,9 @@ dump_single_cluster_entry(struct bdev_rbd_cluster *entry, struct spdk_json_write
 	if (entry->core_mask) {
 		spdk_json_write_named_string(w, "core_mask", entry->core_mask);
 	}
+        if (entry->nonce){
+               spdk_json_write_named_string(w, "nonce", entry->nonce);
+         }
 
 	spdk_json_write_object_end(w);
 }
@@ -1205,6 +1214,8 @@ rbd_register_cluster(const char *name, const char *user_id, const char *const *c
 		rados_shutdown(entry->cluster);
 		goto err_handle;
 	}
+        rc = rados_getaddrs(entry->cluster , &entry->nonce);
+        SPDK_NOTICELOG("rbd_register_cluster %s,  nonce %s,  rc %d \n", entry->name,  entry->nonce, rc);
 
 	STAILQ_INSERT_TAIL(&g_map_bdev_rbd_cluster, entry, link);
 	pthread_mutex_unlock(&g_map_bdev_rbd_cluster_mutex);
