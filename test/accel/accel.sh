@@ -125,3 +125,5 @@ if [[ $CONFIG_DPDK_COMPRESSDEV == y ]]; then
 	run_test "accel_cdev_deomp_full_mthread" accel_test -t 1 -w decompress -l $testdir/bib -y -o 0 -T 2
 	unset COMPRESSDEV
 fi
+
+run_test "accel_dif_functional_tests" "$testdir/dif/dif" -c <(build_accel_config)
