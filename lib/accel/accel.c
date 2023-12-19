@@ -143,7 +143,9 @@ struct accel_io_channel {
 	void					*task_pool_base;
 	struct spdk_accel_sequence		*seq_pool_base;
 	struct accel_buffer			*buf_pool_base;
+	struct spdk_accel_task_aux_data		*task_aux_data_base;
 	STAILQ_HEAD(, spdk_accel_task)		task_pool;
+	SLIST_HEAD(, spdk_accel_task_aux_data)	task_aux_data_pool;
 	SLIST_HEAD(, spdk_accel_sequence)	seq_pool;
 	SLIST_HEAD(, accel_buffer)		buf_pool;
 	struct spdk_iobuf_channel		iobuf;
@@ -289,6 +291,12 @@ spdk_accel_task_complete(struct spdk_accel_task *accel_task, int status)
 	cb_fn = accel_task->cb_fn;
 	cb_arg = accel_task->cb_arg;
 
+	if (accel_task->has_aux) {
+		SLIST_INSERT_HEAD(&accel_ch->task_aux_data_pool, accel_task->aux, link);
+		accel_task->aux = NULL;
+		accel_task->has_aux = false;
+	}
+
 	/* We should put the accel_task into the list firstly in order to avoid
 	 * the accel task list is exhausted when there is recursive call to
 	 * allocate accel_task in user's call back function (cb_fn)
@@ -349,6 +357,19 @@ accel_get_iovlen(struct iovec *iovs, uint32_t iovcnt)
 	return result;
 }
 
+#define ACCEL_TASK_ALLOC_AUX_BUF(task)						\
+do {										\
+        (task)->aux = SLIST_FIRST(&(task)->accel_ch->task_aux_data_pool);	\
+        if (spdk_unlikely(!(task)->aux)) {					\
+                SPDK_ERRLOG("Fatal problem, aux data was not allocated\n");	\
+                STAILQ_INSERT_HEAD(&(task)->accel_ch->task_pool, (task), link);	\
+                assert(0);							\
+                return -ENOMEM;							\
+        }									\
+        SLIST_REMOVE_HEAD(&(task)->accel_ch->task_aux_data_pool, link);		\
+        (task)->has_aux = true;							\
+} while (0)
+
 /* Accel framework public API for copy function */
 int
 spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src,
@@ -362,8 +383,10 @@ spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src,
 		return -ENOMEM;
 	}
 
-	accel_task->s.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_SRC];
-	accel_task->d.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_DST];
+	ACCEL_TASK_ALLOC_AUX_BUF(accel_task);
+
+	accel_task->s.iovs = &accel_task->aux->iovs[SPDK_ACCEL_AUX_IOV_SRC];
+	accel_task->d.iovs = &accel_task->aux->iovs[SPDK_ACCEL_AUX_IOV_DST];
 	accel_task->d.iovs[0].iov_base = dst;
 	accel_task->d.iovs[0].iov_len = nbytes;
 	accel_task->d.iovcnt = 1;
@@ -398,9 +421,11 @@ spdk_accel_submit_dualcast(struct spdk_io_channel *ch, void *dst1,
 		return -ENOMEM;
 	}
 
-	accel_task->s.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_SRC];
-	accel_task->d.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_DST];
-	accel_task->d2.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_DST2];
+	ACCEL_TASK_ALLOC_AUX_BUF(accel_task);
+
+	accel_task->s.iovs = &accel_task->aux->iovs[SPDK_ACCEL_AUX_IOV_SRC];
+	accel_task->d.iovs = &accel_task->aux->iovs[SPDK_ACCEL_AUX_IOV_DST];
+	accel_task->d2.iovs = &accel_task->aux->iovs[SPDK_ACCEL_AUX_IOV_DST2];
 	accel_task->d.iovs[0].iov_base = dst1;
 	accel_task->d.iovs[0].iov_len = nbytes;
 	accel_task->d.iovcnt = 1;
@@ -420,6 +445,7 @@ spdk_accel_submit_dualcast(struct spdk_io_channel *ch, void *dst1,
 }
 
 /* Accel framework public API for compare function */
+
 int
 spdk_accel_submit_compare(struct spdk_io_channel *ch, void *src1,
 			  void *src2, uint64_t nbytes, spdk_accel_completion_cb cb_fn,
@@ -433,8 +459,10 @@ spdk_accel_submit_compare(struct spdk_io_channel *ch, void *src1,
 		return -ENOMEM;
 	}
 
-	accel_task->s.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_SRC];
-	accel_task->s2.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_SRC2];
+	ACCEL_TASK_ALLOC_AUX_BUF(accel_task);
+
+	accel_task->s.iovs = &accel_task->aux->iovs[SPDK_ACCEL_AUX_IOV_SRC];
+	accel_task->s2.iovs = &accel_task->aux->iovs[SPDK_ACCEL_AUX_IOV_SRC2];
 	accel_task->s.iovs[0].iov_base = src1;
 	accel_task->s.iovs[0].iov_len = nbytes;
 	accel_task->s.iovcnt = 1;
@@ -463,7 +491,9 @@ spdk_accel_submit_fill(struct spdk_io_channel *ch, void *dst,
 		return -ENOMEM;
 	}
 
-	accel_task->d.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_DST];
+	ACCEL_TASK_ALLOC_AUX_BUF(accel_task);
+
+	accel_task->d.iovs = &accel_task->aux->iovs[SPDK_ACCEL_AUX_IOV_DST];
 	accel_task->d.iovs[0].iov_base = dst;
 	accel_task->d.iovs[0].iov_len = nbytes;
 	accel_task->d.iovcnt = 1;
@@ -491,7 +521,9 @@ spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *crc_dst,
 		return -ENOMEM;
 	}
 
-	accel_task->s.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_SRC];
+	ACCEL_TASK_ALLOC_AUX_BUF(accel_task);
+
+	accel_task->s.iovs = &accel_task->aux->iovs[SPDK_ACCEL_AUX_IOV_SRC];
 	accel_task->s.iovs[0].iov_base = src;
 	accel_task->s.iovs[0].iov_len = nbytes;
 	accel_task->s.iovcnt = 1;
@@ -557,8 +589,10 @@ spdk_accel_submit_copy_crc32c(struct spdk_io_channel *ch, void *dst,
 		return -ENOMEM;
 	}
 
-	accel_task->s.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_SRC];
-	accel_task->d.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_DST];
+	ACCEL_TASK_ALLOC_AUX_BUF(accel_task);
+
+	accel_task->s.iovs = &accel_task->aux->iovs[SPDK_ACCEL_AUX_IOV_SRC];
+	accel_task->d.iovs = &accel_task->aux->iovs[SPDK_ACCEL_AUX_IOV_DST];
 	accel_task->d.iovs[0].iov_base = dst;
 	accel_task->d.iovs[0].iov_len = nbytes;
 	accel_task->d.iovcnt = 1;
@@ -604,7 +638,10 @@ spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst,
 	}
 
 	nbytes = accel_get_iovlen(src_iovs, iov_cnt);
-	accel_task->d.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_DST];
+
+	ACCEL_TASK_ALLOC_AUX_BUF(accel_task);
+
+	accel_task->d.iovs = &accel_task->aux->iovs[SPDK_ACCEL_AUX_IOV_DST];
 	accel_task->d.iovs[0].iov_base = dst;
 	accel_task->d.iovs[0].iov_len = nbytes;
 	accel_task->d.iovcnt = 1;
@@ -634,7 +671,9 @@ spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, uint64_t nbyte
 		return -ENOMEM;
 	}
 
-	accel_task->d.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_DST];
+	ACCEL_TASK_ALLOC_AUX_BUF(accel_task);
+
+	accel_task->d.iovs = &accel_task->aux->iovs[SPDK_ACCEL_AUX_IOV_DST];
 	accel_task->d.iovs[0].iov_base = dst;
 	accel_task->d.iovs[0].iov_len = nbytes;
 	accel_task->d.iovcnt = 1;
@@ -760,9 +799,11 @@ spdk_accel_submit_xor(struct spdk_io_channel *ch, void *dst, void **sources, uin
 		return -ENOMEM;
 	}
 
+	ACCEL_TASK_ALLOC_AUX_BUF(accel_task);
+
+	accel_task->d.iovs = &accel_task->aux->iovs[SPDK_ACCEL_AUX_IOV_DST];
 	accel_task->nsrcs.srcs = sources;
 	accel_task->nsrcs.cnt = nsrcs;
-	accel_task->d.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_DST];
 	accel_task->d.iovs[0].iov_base = dst;
 	accel_task->d.iovs[0].iov_len = nbytes;
 	accel_task->d.iovcnt = 1;
@@ -942,7 +983,21 @@ spdk_accel_append_fill(struct spdk_accel_sequence **pseq, struct spdk_io_channel
 
 	memset(&task->fill_pattern, pattern, sizeof(uint64_t));
 
-	task->d.iovs = &task->aux_iovs[SPDK_ACCEL_AUX_IOV_DST];
+	task->aux = SLIST_FIRST(&task->accel_ch->task_aux_data_pool);
+	if (spdk_unlikely(!task->aux)) {
+		SPDK_ERRLOG("Fatal problem, aux data was not allocated\n");
+		if (*pseq == NULL) {
+			accel_sequence_put((seq));
+		}
+		STAILQ_INSERT_HEAD(&task->accel_ch->task_pool, task, link);
+		task->seq = NULL;
+		assert(0);
+		return -ENOMEM;
+	}
+	SLIST_REMOVE_HEAD(&task->accel_ch->task_aux_data_pool, link);
+	task->has_aux = true;
+
+	task->d.iovs = &task->aux->iovs[SPDK_ACCEL_AUX_IOV_DST];
 	task->d.iovs[0].iov_base = buf;
 	task->d.iovs[0].iov_len = len;
 	task->d.iovcnt = 1;
@@ -1203,6 +1258,11 @@ accel_sequence_complete_task(struct spdk_accel_sequence *seq, struct spdk_accel_
 	cb_fn = task->step_cb_fn;
 	cb_arg = task->cb_arg;
 	task->seq = NULL;
+	if (task->has_aux) {
+		SLIST_INSERT_HEAD(&ch->task_aux_data_pool, task->aux, link);
+		task->aux = NULL;
+		task->has_aux = false;
+	}
 	STAILQ_INSERT_HEAD(&ch->task_pool, task, link);
 	if (cb_fn != NULL) {
 		cb_fn(cb_arg);
@@ -1262,14 +1322,28 @@ accel_sequence_set_virtbuf(struct spdk_accel_sequence *seq, struct accel_buffer 
 	 */
 	TAILQ_FOREACH(task, &seq->tasks, seq_link) {
 		if (task->src_domain == g_accel_domain && task->src_domain_ctx == buf) {
-			iov = &task->aux_iovs[SPDK_ACCEL_AXU_IOV_VIRT_SRC];
+			if (!task->has_aux) {
+				task->aux = SLIST_FIRST(&task->accel_ch->task_aux_data_pool);
+				assert(task->aux && "Can't allocate aux data structure");
+				task->has_aux = true;
+				SLIST_REMOVE_HEAD(&task->accel_ch->task_aux_data_pool, link);
+			}
+
+			iov = &task->aux->iovs[SPDK_ACCEL_AXU_IOV_VIRT_SRC];
 			assert(task->s.iovcnt == 1);
 			accel_update_virt_iov(iov, &task->s.iovs[0], buf);
 			task->src_domain = NULL;
 			task->s.iovs = iov;
 		}
 		if (task->dst_domain == g_accel_domain && task->dst_domain_ctx == buf) {
-			iov = &task->aux_iovs[SPDK_ACCEL_AXU_IOV_VIRT_DST];
+			if (!task->has_aux) {
+				task->aux = SLIST_FIRST(&task->accel_ch->task_aux_data_pool);
+				assert(task->aux && "Can't allocate aux data structure");
+				task->has_aux = true;
+				SLIST_REMOVE_HEAD(&task->accel_ch->task_aux_data_pool, link);
+			}
+
+			iov = &task->aux->iovs[SPDK_ACCEL_AXU_IOV_VIRT_DST];
 			assert(task->d.iovcnt == 1);
 			accel_update_virt_iov(iov, &task->d.iovs[0], buf);
 			task->dst_domain = NULL;
@@ -1421,7 +1495,9 @@ accel_iobuf_get_src_bounce_cb(struct spdk_iobuf_entry *entry, void *buf)
 
 	assert(accel_buf->seq->state == ACCEL_SEQUENCE_STATE_AWAIT_BOUNCEBUF);
 	accel_sequence_set_state(accel_buf->seq, ACCEL_SEQUENCE_STATE_CHECK_BOUNCEBUF);
-	accel_set_bounce_buffer(&task->bounce.s, &task->s.iovs, &task->s.iovcnt, &task->src_domain,
+	assert(task->aux);
+	assert(task->has_aux);
+	accel_set_bounce_buffer(&task->aux->bounce.s, &task->s.iovs, &task->s.iovcnt, &task->src_domain,
 				&task->src_domain_ctx, accel_buf);
 	accel_process_sequence(accel_buf->seq);
 }
@@ -1441,7 +1517,9 @@ accel_iobuf_get_dst_bounce_cb(struct spdk_iobuf_entry *entry, void *buf)
 
 	assert(accel_buf->seq->state == ACCEL_SEQUENCE_STATE_AWAIT_BOUNCEBUF);
 	accel_sequence_set_state(accel_buf->seq, ACCEL_SEQUENCE_STATE_CHECK_BOUNCEBUF);
-	accel_set_bounce_buffer(&task->bounce.d, &task->d.iovs, &task->d.iovcnt, &task->dst_domain,
+	assert(task->aux);
+	assert(task->has_aux);
+	accel_set_bounce_buffer(&task->aux->bounce.d, &task->d.iovs, &task->d.iovcnt, &task->dst_domain,
 				&task->dst_domain_ctx, accel_buf);
 	accel_process_sequence(accel_buf->seq);
 }
@@ -1455,6 +1533,16 @@ accel_sequence_check_bouncebuf(struct spdk_accel_sequence *seq, struct spdk_acce
 		/* By the time we're here, accel buffers should have been allocated */
 		assert(task->src_domain != g_accel_domain);
 
+		if (!task->has_aux) {
+			task->aux = SLIST_FIRST(&task->accel_ch->task_aux_data_pool);
+			if (spdk_unlikely(!task->aux)) {
+				SPDK_ERRLOG("Can't allocate aux data structure\n");
+				assert(0);
+				return -EAGAIN;
+			}
+			task->has_aux = true;
+			SLIST_REMOVE_HEAD(&task->accel_ch->task_aux_data_pool, link);
+		}
 		buf = accel_get_buf(seq->ch, accel_get_iovlen(task->s.iovs, task->s.iovcnt));
 		if (buf == NULL) {
 			SPDK_ERRLOG("Couldn't allocate buffer descriptor\n");
@@ -1466,7 +1554,7 @@ accel_sequence_check_bouncebuf(struct spdk_accel_sequence *seq, struct spdk_acce
 			return -EAGAIN;
 		}
 
-		accel_set_bounce_buffer(&task->bounce.s, &task->s.iovs, &task->s.iovcnt,
+		accel_set_bounce_buffer(&task->aux->bounce.s, &task->s.iovs, &task->s.iovcnt,
 					&task->src_domain, &task->src_domain_ctx, buf);
 	}
 
@@ -1474,6 +1562,16 @@ accel_sequence_check_bouncebuf(struct spdk_accel_sequence *seq, struct spdk_acce
 		/* By the time we're here, accel buffers should have been allocated */
 		assert(task->dst_domain != g_accel_domain);
 
+		if (!task->has_aux) {
+			task->aux = SLIST_FIRST(&task->accel_ch->task_aux_data_pool);
+			if (spdk_unlikely(!task->aux)) {
+				SPDK_ERRLOG("Can't allocate aux data structure\n");
+				assert(0);
+				return -EAGAIN;
+			}
+			task->has_aux = true;
+			SLIST_REMOVE_HEAD(&task->accel_ch->task_aux_data_pool, link);
+		}
 		buf = accel_get_buf(seq->ch, accel_get_iovlen(task->d.iovs, task->d.iovcnt));
 		if (buf == NULL) {
 			/* The src buffer will be released when a sequence is completed */
@@ -1486,7 +1584,7 @@ accel_sequence_check_bouncebuf(struct spdk_accel_sequence *seq, struct spdk_acce
 			return -EAGAIN;
 		}
 
-		accel_set_bounce_buffer(&task->bounce.d, &task->d.iovs, &task->d.iovcnt,
+		accel_set_bounce_buffer(&task->aux->bounce.d, &task->d.iovs, &task->d.iovcnt,
 					&task->dst_domain, &task->dst_domain_ctx, buf);
 	}
 
@@ -1513,19 +1611,21 @@ accel_task_pull_data(struct spdk_accel_sequence *seq, struct spdk_accel_task *ta
 {
 	int rc;
 
-	assert(task->bounce.s.orig_iovs != NULL);
-	assert(task->bounce.s.orig_domain != NULL);
-	assert(task->bounce.s.orig_domain != g_accel_domain);
+	assert(task->has_aux);
+	assert(task->aux);
+	assert(task->aux->bounce.s.orig_iovs != NULL);
+	assert(task->aux->bounce.s.orig_domain != NULL);
+	assert(task->aux->bounce.s.orig_domain != g_accel_domain);
 	assert(!g_modules_opc[task->op_code].supports_memory_domains);
 
-	rc = spdk_memory_domain_pull_data(task->bounce.s.orig_domain,
-					  task->bounce.s.orig_domain_ctx,
-					  task->bounce.s.orig_iovs, task->bounce.s.orig_iovcnt,
+	rc = spdk_memory_domain_pull_data(task->aux->bounce.s.orig_domain,
+					  task->aux->bounce.s.orig_domain_ctx,
+					  task->aux->bounce.s.orig_iovs, task->aux->bounce.s.orig_iovcnt,
 					  task->s.iovs, task->s.iovcnt,
 					  accel_task_pull_data_cb, seq);
 	if (spdk_unlikely(rc != 0)) {
 		SPDK_ERRLOG("Failed to pull data from memory domain: %s, rc: %d\n",
-			    spdk_memory_domain_get_dma_device_id(task->bounce.s.orig_domain), rc);
+			    spdk_memory_domain_get_dma_device_id(task->aux->bounce.s.orig_domain), rc);
 		accel_sequence_set_fail(seq, rc);
 	}
 }
@@ -1550,19 +1650,21 @@ accel_task_push_data(struct spdk_accel_sequence *seq, struct spdk_accel_task *ta
 {
 	int rc;
 
-	assert(task->bounce.d.orig_iovs != NULL);
-	assert(task->bounce.d.orig_domain != NULL);
-	assert(task->bounce.d.orig_domain != g_accel_domain);
+	assert(task->has_aux);
+	assert(task->aux);
+	assert(task->aux->bounce.d.orig_iovs != NULL);
+	assert(task->aux->bounce.d.orig_domain != NULL);
+	assert(task->aux->bounce.d.orig_domain != g_accel_domain);
 	assert(!g_modules_opc[task->op_code].supports_memory_domains);
 
-	rc = spdk_memory_domain_push_data(task->bounce.d.orig_domain,
-					  task->bounce.d.orig_domain_ctx,
-					  task->bounce.d.orig_iovs, task->bounce.d.orig_iovcnt,
+	rc = spdk_memory_domain_push_data(task->aux->bounce.d.orig_domain,
+					  task->aux->bounce.d.orig_domain_ctx,
+					  task->aux->bounce.d.orig_iovs, task->aux->bounce.d.orig_iovcnt,
 					  task->d.iovs, task->d.iovcnt,
 					  accel_task_push_data_cb, seq);
 	if (spdk_unlikely(rc != 0)) {
 		SPDK_ERRLOG("Failed to push data to memory domain: %s, rc: %d\n",
-			    spdk_memory_domain_get_dma_device_id(task->bounce.s.orig_domain), rc);
+			    spdk_memory_domain_get_dma_device_id(task->aux->bounce.s.orig_domain), rc);
 		accel_sequence_set_fail(seq, rc);
 	}
 }
@@ -1616,8 +1718,8 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 				accel_sequence_set_fail(seq, rc);
 				break;
 			}
-			if (task->s.iovs == &task->bounce.s.iov) {
-				assert(task->bounce.s.orig_iovs);
+			if (task->has_aux && task->s.iovs == &task->aux->bounce.s.iov) {
+				assert(task->aux->bounce.s.orig_iovs);
 				accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_PULL_DATA);
 				break;
 			}
@@ -1640,8 +1742,8 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 			accel_task_pull_data(seq, task);
 			break;
 		case ACCEL_SEQUENCE_STATE_COMPLETE_TASK:
-			if (task->d.iovs == &task->bounce.d.iov) {
-				assert(task->bounce.d.orig_iovs);
+			if (task->has_aux && task->d.iovs == &task->aux->bounce.d.iov) {
+				assert(task->aux->bounce.d.orig_iovs);
 				accel_sequence_set_state(seq, ACCEL_SEQUENCE_STATE_PUSH_DATA);
 				break;
 			}
@@ -2308,6 +2410,7 @@ accel_create_channel(void *io_device, void *ctx_buf)
 {
 	struct accel_io_channel	*accel_ch = ctx_buf;
 	struct spdk_accel_task *accel_task;
+	struct spdk_accel_task_aux_data *accel_task_aux;
 	struct spdk_accel_sequence *seq;
 	struct accel_buffer *buf;
 	uint8_t *task_mem;
@@ -2326,20 +2429,29 @@ accel_create_channel(void *io_device, void *ctx_buf)
 	}
 	memset(accel_ch->seq_pool_base, 0, g_opts.sequence_count * sizeof(struct spdk_accel_sequence));
 
+	accel_ch->task_aux_data_base = calloc(g_opts.task_count, sizeof(struct spdk_accel_task_aux_data));
+	if (accel_ch->task_aux_data_base == NULL) {
+		goto err;
+	}
+
 	accel_ch->buf_pool_base = calloc(g_opts.buf_count, sizeof(struct accel_buffer));
 	if (accel_ch->buf_pool_base == NULL) {
 		goto err;
 	}
 
 	STAILQ_INIT(&accel_ch->task_pool);
+	SLIST_INIT(&accel_ch->task_aux_data_pool);
 	SLIST_INIT(&accel_ch->seq_pool);
 	SLIST_INIT(&accel_ch->buf_pool);
 
 	task_mem = accel_ch->task_pool_base;
 	for (i = 0; i < g_opts.task_count; i++) {
 		accel_task = (struct spdk_accel_task *)task_mem;
+		accel_task->aux = NULL;
 		STAILQ_INSERT_TAIL(&accel_ch->task_pool, accel_task, link);
 		task_mem += g_max_accel_module_size;
+		accel_task_aux = &accel_ch->task_aux_data_base[i];
+		SLIST_INSERT_HEAD(&accel_ch->task_aux_data_pool, accel_task_aux, link);
 	}
 	for (i = 0; i < g_opts.sequence_count; i++) {
 		seq = &accel_ch->seq_pool_base[i];
@@ -2384,6 +2496,7 @@ err:
 		spdk_put_io_channel(accel_ch->module_ch[j]);
 	}
 	free(accel_ch->task_pool_base);
+	free(accel_ch->task_aux_data_base);
 	free(accel_ch->seq_pool_base);
 	free(accel_ch->buf_pool_base);
 
@@ -2433,6 +2546,7 @@ accel_destroy_channel(void *io_device, void *ctx_buf)
 	spdk_spin_unlock(&g_stats_lock);
 
 	free(accel_ch->task_pool_base);
+	free(accel_ch->task_aux_data_base);
 	free(accel_ch->seq_pool_base);
 	free(accel_ch->buf_pool_base);
 }

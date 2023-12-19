@@ -222,10 +222,12 @@ test_spdk_accel_submit_copy(void)
 	void *cb_arg = NULL;
 	int rc;
 	struct spdk_accel_task task;
+	struct spdk_accel_task_aux_data task_aux;
 	struct spdk_accel_task *expected_accel_task = NULL;
 	int flags = 0;
 
 	STAILQ_INIT(&g_accel_ch->task_pool);
+	SLIST_INIT(&g_accel_ch->task_aux_data_pool);
 
 	/* Fail with no tasks on _get_task() */
 	rc = spdk_accel_submit_copy(g_ch, src, dst, nbytes, flags, NULL, cb_arg);
@@ -234,6 +236,7 @@ test_spdk_accel_submit_copy(void)
 	task.accel_ch = g_accel_ch;
 	task.flags = 1;
 	STAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+	SLIST_INSERT_HEAD(&g_accel_ch->task_aux_data_pool, &task_aux, link);
 
 	/* submission OK. */
 	rc = spdk_accel_submit_copy(g_ch, dst, src, nbytes, flags, NULL, cb_arg);
@@ -257,10 +260,12 @@ test_spdk_accel_submit_dualcast(void)
 	void *cb_arg = NULL;
 	int rc;
 	struct spdk_accel_task task;
+	struct spdk_accel_task_aux_data task_aux;
 	struct spdk_accel_task *expected_accel_task = NULL;
 	int flags = 0;
 
 	STAILQ_INIT(&g_accel_ch->task_pool);
+	SLIST_INIT(&g_accel_ch->task_aux_data_pool);
 
 	/* Dualcast requires 4K alignment on dst addresses,
 	 * hence using the hard coded address to test the buffer alignment
@@ -289,6 +294,7 @@ test_spdk_accel_submit_dualcast(void)
 	CU_ASSERT(rc == -ENOMEM);
 
 	STAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+	SLIST_INSERT_HEAD(&g_accel_ch->task_aux_data_pool, &task_aux, link);
 
 	/* accel submission OK., since we test the SW path , need to use valid memory addresses
 	 * cannot hardcode them anymore */
@@ -321,9 +327,11 @@ test_spdk_accel_submit_compare(void)
 	void *cb_arg = NULL;
 	int rc;
 	struct spdk_accel_task task;
+	struct spdk_accel_task_aux_data task_aux;
 	struct spdk_accel_task *expected_accel_task = NULL;
 
 	STAILQ_INIT(&g_accel_ch->task_pool);
+	SLIST_INIT(&g_accel_ch->task_aux_data_pool);
 
 	src1 = calloc(1, TEST_SUBMIT_SIZE);
 	SPDK_CU_ASSERT_FATAL(src1 != NULL);
@@ -335,6 +343,7 @@ test_spdk_accel_submit_compare(void)
 	CU_ASSERT(rc == -ENOMEM);
 
 	STAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+	SLIST_INSERT_HEAD(&g_accel_ch->task_aux_data_pool, &task_aux, link);
 
 	/* accel submission OK. */
 	rc = spdk_accel_submit_compare(g_ch, src1, src2, nbytes, NULL, cb_arg);
@@ -360,10 +369,12 @@ test_spdk_accel_submit_fill(void)
 	void *cb_arg = NULL;
 	int rc;
 	struct spdk_accel_task task;
+	struct spdk_accel_task_aux_data task_aux;
 	struct spdk_accel_task *expected_accel_task = NULL;
 	int flags = 0;
 
 	STAILQ_INIT(&g_accel_ch->task_pool);
+	SLIST_INIT(&g_accel_ch->task_aux_data_pool);
 
 	dst = calloc(1, TEST_SUBMIT_SIZE);
 	SPDK_CU_ASSERT_FATAL(dst != NULL);
@@ -377,6 +388,7 @@ test_spdk_accel_submit_fill(void)
 	CU_ASSERT(rc == -ENOMEM);
 
 	STAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+	SLIST_INSERT_HEAD(&g_accel_ch->task_aux_data_pool, &task_aux, link);
 
 	/* accel submission OK. */
 	rc = spdk_accel_submit_fill(g_ch, dst, fill, nbytes, flags, NULL, cb_arg);
@@ -404,15 +416,18 @@ test_spdk_accel_submit_crc32c(void)
 	void *cb_arg = NULL;
 	int rc;
 	struct spdk_accel_task task;
+	struct spdk_accel_task_aux_data task_aux;
 	struct spdk_accel_task *expected_accel_task = NULL;
 
 	STAILQ_INIT(&g_accel_ch->task_pool);
+	SLIST_INIT(&g_accel_ch->task_aux_data_pool);
 
 	/* Fail with no tasks on _get_task() */
 	rc = spdk_accel_submit_crc32c(g_ch, &crc_dst, src, seed, nbytes, NULL, cb_arg);
 	CU_ASSERT(rc == -ENOMEM);
 
 	STAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+	SLIST_INSERT_HEAD(&g_accel_ch->task_aux_data_pool, &task_aux, link);
 
 	/* accel submission OK. */
 	rc = spdk_accel_submit_crc32c(g_ch, &crc_dst, src, seed, nbytes, NULL, cb_arg);
@@ -435,10 +450,12 @@ test_spdk_accel_submit_crc32cv(void)
 	int rc;
 	uint32_t i = 0;
 	struct spdk_accel_task task;
+	struct spdk_accel_task_aux_data task_aux;
 	struct iovec iov[32];
 	struct spdk_accel_task *expected_accel_task = NULL;
 
 	STAILQ_INIT(&g_accel_ch->task_pool);
+	SLIST_INIT(&g_accel_ch->task_aux_data_pool);
 
 	for (i = 0; i < iov_cnt; i++) {
 		iov[i].iov_base = calloc(1, TEST_SUBMIT_SIZE);
@@ -447,6 +464,7 @@ test_spdk_accel_submit_crc32cv(void)
 	}
 
 	STAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+	SLIST_INSERT_HEAD(&g_accel_ch->task_aux_data_pool, &task_aux, link);
 
 	/* accel submission OK. */
 	rc = spdk_accel_submit_crc32cv(g_ch, &crc_dst, iov, iov_cnt, seed, NULL, cb_arg);
@@ -477,10 +495,12 @@ test_spdk_accel_submit_copy_crc32c(void)
 	void *cb_arg = NULL;
 	int rc;
 	struct spdk_accel_task task;
+	struct spdk_accel_task_aux_data task_aux;
 	struct spdk_accel_task *expected_accel_task = NULL;
 	int flags = 0;
 
 	STAILQ_INIT(&g_accel_ch->task_pool);
+	SLIST_INIT(&g_accel_ch->task_aux_data_pool);
 
 	/* Fail with no tasks on _get_task() */
 	rc = spdk_accel_submit_copy_crc32c(g_ch, dst, src, &crc_dst, seed, nbytes, flags,
@@ -488,6 +508,7 @@ test_spdk_accel_submit_copy_crc32c(void)
 	CU_ASSERT(rc == -ENOMEM);
 
 	STAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+	SLIST_INSERT_HEAD(&g_accel_ch->task_aux_data_pool, &task_aux, link);
 
 	/* accel submission OK. */
 	rc = spdk_accel_submit_copy_crc32c(g_ch, dst, src, &crc_dst, seed, nbytes, flags,
@@ -513,15 +534,18 @@ test_spdk_accel_submit_xor(void)
 	uint32_t nsrcs = SPDK_COUNTOF(sources);
 	int rc;
 	struct spdk_accel_task task;
+	struct spdk_accel_task_aux_data task_aux;
 	struct spdk_accel_task *expected_accel_task = NULL;
 
 	STAILQ_INIT(&g_accel_ch->task_pool);
+	SLIST_INIT(&g_accel_ch->task_aux_data_pool);
 
 	/* Fail with no tasks on _get_task() */
 	rc = spdk_accel_submit_xor(g_ch, dst, sources, nsrcs, nbytes, NULL, NULL);
 	CU_ASSERT(rc == -ENOMEM);
 
 	STAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+	SLIST_INSERT_HEAD(&g_accel_ch->task_aux_data_pool, &task_aux, link);
 
 	/* submission OK. */
 	rc = spdk_accel_submit_xor(g_ch, dst, sources, nsrcs, nbytes, NULL, NULL);
