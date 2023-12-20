@@ -1258,6 +1258,8 @@ nvme_cuse_stop(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct cuse_device *ctrlr_device;
 
+	assert(spdk_process_is_primary());
+
 	pthread_mutex_lock(&g_cuse_mtx);
 
 	ctrlr_device = nvme_cuse_get_cuse_ctrlr_device(ctrlr);
@@ -1276,6 +1278,8 @@ static void
 nvme_cuse_update(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct cuse_device *ctrlr_device;
+
+	assert(spdk_process_is_primary());
 
 	pthread_mutex_lock(&g_cuse_mtx);
 
@@ -1301,6 +1305,11 @@ spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc;
 
+	if (!spdk_process_is_primary()) {
+		SPDK_ERRLOG("only allowed from primary process\n");
+		return -EINVAL;
+	}
+
 	rc = nvme_io_msg_ctrlr_register(ctrlr, &cuse_nvme_io_msg_producer);
 	if (rc) {
 		return rc;
@@ -1322,6 +1331,11 @@ int
 spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct cuse_device *ctrlr_device;
+
+	if (!spdk_process_is_primary()) {
+		SPDK_ERRLOG("only allowed from primary process\n");
+		return -EINVAL;
+	}
 
 	pthread_mutex_lock(&g_cuse_mtx);
 

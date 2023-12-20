@@ -54,13 +54,18 @@ nvme_io_msg_process(struct spdk_nvme_ctrlr *ctrlr)
 	struct spdk_nvme_io_msg *io;
 	void *requests[SPDK_NVME_MSG_IO_PROCESS_SIZE];
 
+	if (!spdk_process_is_primary()) {
+		return 0;
+	}
+
 	if (!ctrlr->external_io_msgs || !ctrlr->external_io_msgs_qpair) {
 		/* Not ready or pending reset */
 		return 0;
 	}
 
-	if (!spdk_process_is_primary()) {
-		return 0;
+	if (ctrlr->needs_io_msg_update) {
+		ctrlr->needs_io_msg_update = false;
+		nvme_io_msg_ctrlr_update(ctrlr);
 	}
 
 	spdk_nvme_qpair_process_completions(ctrlr->external_io_msgs_qpair, 0);
@@ -145,6 +150,11 @@ nvme_io_msg_ctrlr_update(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_io_msg_producer *io_msg_producer;
 
+	if (!spdk_process_is_primary()) {
+		ctrlr->needs_io_msg_update = true;
+		return;
+	}
+
 	/* Update all producers */
 	STAILQ_FOREACH(io_msg_producer, &ctrlr->io_producers, link) {
 		io_msg_producer->update(ctrlr);
@@ -155,6 +165,10 @@ void
 nvme_io_msg_ctrlr_detach(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_io_msg_producer *io_msg_producer, *tmp;
+
+	if (!spdk_process_is_primary()) {
+		return;
+	}
 
 	/* Stop all producers */
 	STAILQ_FOREACH_SAFE(io_msg_producer, &ctrlr->io_producers, link, tmp) {

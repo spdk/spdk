@@ -901,6 +901,8 @@ struct spdk_nvme_ctrlr {
 
 	bool				is_disconnecting;
 
+	bool				needs_io_msg_update;
+
 	uint16_t			max_sges;
 
 	uint16_t			cntlid;
