@@ -2425,14 +2425,18 @@ accel_create_channel(void *io_device, void *ctx_buf)
 	struct spdk_accel_task_aux_data *accel_task_aux;
 	struct spdk_accel_sequence *seq;
 	struct accel_buffer *buf;
+	size_t task_size_aligned;
 	uint8_t *task_mem;
 	uint32_t i = 0, j;
 	int rc;
 
-	accel_ch->task_pool_base = calloc(g_opts.task_count, g_max_accel_module_size);
-	if (accel_ch->task_pool_base == NULL) {
+	task_size_aligned = SPDK_ALIGN_CEIL(g_max_accel_module_size, SPDK_CACHE_LINE_SIZE);
+	accel_ch->task_pool_base = aligned_alloc(SPDK_CACHE_LINE_SIZE,
+				   g_opts.task_count * task_size_aligned);
+	if (!accel_ch->task_pool_base) {
 		return -ENOMEM;
 	}
+	memset(accel_ch->task_pool_base, 0, g_opts.task_count * task_size_aligned);
 
 	accel_ch->seq_pool_base = aligned_alloc(SPDK_CACHE_LINE_SIZE,
 						g_opts.sequence_count * sizeof(struct spdk_accel_sequence));
@@ -2461,7 +2465,7 @@ accel_create_channel(void *io_device, void *ctx_buf)
 		accel_task = (struct spdk_accel_task *)task_mem;
 		accel_task->aux = NULL;
 		STAILQ_INSERT_TAIL(&accel_ch->task_pool, accel_task, link);
-		task_mem += g_max_accel_module_size;
+		task_mem += task_size_aligned;
 		accel_task_aux = &accel_ch->task_aux_data_base[i];
 		SLIST_INSERT_HEAD(&accel_ch->task_aux_data_pool, accel_task_aux, link);
 	}
