@@ -1715,6 +1715,27 @@ test_nvmf_ns_reservation_restore(void)
 
 	rc = nvmf_ns_reservation_restore(&ns, &info);
 	CU_ASSERT(rc == -EINVAL);
+
+	/* Check restore without reservation */
+	spdk_uuid_fmt_lower(info.bdev_uuid, sizeof(info.bdev_uuid), &bdev.uuid);
+	info.rtype = 0;
+	info.crkey = 0;
+	memset(info.holder_uuid, 0, SPDK_UUID_STRING_LEN);
+
+	rc = nvmf_ns_reservation_restore(&ns, &info);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ns.crkey == 0);
+	CU_ASSERT(ns.rtype == 0);
+	CU_ASSERT(ns.ptpl_activated == true);
+	CU_ASSERT(ns.holder == NULL);
+	reg0 = TAILQ_FIRST(&ns.registrants);
+	reg1 = TAILQ_NEXT(reg0, link);
+	CU_ASSERT(reg0->rkey = 0xb);
+	CU_ASSERT(reg1->rkey = 0xc);
+
+	rc = nvmf_ns_reservation_clear_all_registrants(&ns);
+	CU_ASSERT(rc == 2);
+	CU_ASSERT(TAILQ_EMPTY(&ns.registrants));
 }
 
 static void

@@ -2313,7 +2313,7 @@ nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservatio
 			rkey_flag = true;
 		}
 	}
-	if (!rkey_flag) {
+	if (!rkey_flag && info->crkey != 0) {
 		return -EINVAL;
 	}
 
@@ -2342,7 +2342,7 @@ nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservatio
 		spdk_uuid_parse(&reg->hostid, info->registrants[i].host_uuid);
 		reg->rkey = info->registrants[i].rkey;
 		TAILQ_INSERT_TAIL(&ns->registrants, reg, link);
-		if (!spdk_uuid_compare(&holder_uuid, &reg->hostid)) {
+		if (info->crkey != 0 && !spdk_uuid_compare(&holder_uuid, &reg->hostid)) {
 			holder = reg;
 		}
 		SPDK_DEBUGLOG(nvmf, "Registrant RKEY 0x%"PRIx64", Host UUID %s\n",
