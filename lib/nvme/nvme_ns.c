@@ -132,6 +132,7 @@ nvme_ctrlr_identify_ns_iocs_specific(struct spdk_nvme_ns *ns)
 {
 	struct nvme_completion_poll_status *status;
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
+	struct spdk_nvme_zns_ns_data *nsdata_zns;
 	int rc;
 
 	switch (ns->csi) {
@@ -146,38 +147,40 @@ nvme_ctrlr_identify_ns_iocs_specific(struct spdk_nvme_ns *ns)
 		assert(0);
 	}
 
-	assert(!ns->nsdata_zns);
-	ns->nsdata_zns = spdk_zmalloc(sizeof(*ns->nsdata_zns), 64, NULL, SPDK_ENV_SOCKET_ID_ANY,
-				      SPDK_MALLOC_SHARE);
-	if (!ns->nsdata_zns) {
+	nvme_ns_free_zns_specific_data(ns);
+
+	nsdata_zns = spdk_zmalloc(sizeof(*nsdata_zns), 64, NULL, SPDK_ENV_SOCKET_ID_ANY,
+				  SPDK_MALLOC_SHARE);
+	if (!nsdata_zns) {
 		return -ENOMEM;
 	}
 
 	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
-		nvme_ns_free_zns_specific_data(ns);
+		spdk_free(nsdata_zns);
 		return -ENOMEM;
 	}
 
 	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS_IOCS, 0, ns->id, ns->csi,
-				     ns->nsdata_zns, sizeof(*ns->nsdata_zns),
+				     nsdata_zns, sizeof(*nsdata_zns),
 				     nvme_completion_poll_cb, status);
 	if (rc != 0) {
-		nvme_ns_free_zns_specific_data(ns);
+		spdk_free(nsdata_zns);
 		free(status);
 		return rc;
 	}
 
 	if (nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
 		SPDK_ERRLOG("Failed to retrieve Identify IOCS Specific Namespace Data Structure\n");
-		nvme_ns_free_zns_specific_data(ns);
+		spdk_free(nsdata_zns);
 		if (!status->timed_out) {
 			free(status);
 		}
 		return -ENXIO;
 	}
 	free(status);
+	ns->nsdata_zns = nsdata_zns;
 
 	return 0;
 }
