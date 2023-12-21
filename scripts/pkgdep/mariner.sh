@@ -84,6 +84,7 @@ pips=(
 	pyyaml
 	grpcio
 	grpcio-tools
+	Jinja2
 )
 
 if ((EUID == 0)); then

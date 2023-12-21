@@ -11,3 +11,4 @@ grpcio-tools
 pyelftools
 python-magic
 pyyaml
+Jinja2
