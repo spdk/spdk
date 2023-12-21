@@ -396,8 +396,8 @@ function collect_driver() {
 	else
 		[[ -n ${nvme_d["$bdf"]} ]] && driver=nvme
 		[[ -n ${ioat_d["$bdf"]} ]] && driver=ioatdma
-		[[ -n ${dsa_d["$bdf"]} ]] && driver=dsa
-		[[ -n ${iaa_d["$bdf"]} ]] && driver=iaa
+		[[ -n ${dsa_d["$bdf"]} ]] && driver=idxd
+		[[ -n ${iaa_d["$bdf"]} ]] && driver=idxd
 		[[ -n ${virtio_d["$bdf"]} ]] && driver=virtio-pci
 		[[ -n ${vmd_d["$bdf"]} ]] && driver=vmd
 	fi 2> /dev/null
