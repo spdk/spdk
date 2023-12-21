@@ -107,11 +107,11 @@ struct raid_bdev_io {
 	/* The raid bdev associated with this IO */
 	struct raid_bdev *raid_bdev;
 
-	enum spdk_bdev_io_type type;
 	uint64_t offset_blocks;
 	uint64_t num_blocks;
 	struct iovec *iovs;
 	int iovcnt;
+	enum spdk_bdev_io_type type;
 	struct spdk_memory_domain *memory_domain;
 	void *memory_domain_ctx;
 	void *md_buf;
