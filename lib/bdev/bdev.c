@@ -137,6 +137,7 @@ struct lba_range {
 	struct spdk_bdev		*bdev;
 	uint64_t			offset;
 	uint64_t			length;
+	bool				quiesce;
 	void				*locked_ctx;
 	struct spdk_thread		*owner_thread;
 	struct spdk_bdev_channel	*owner_ch;
@@ -3492,6 +3493,11 @@ bdev_io_range_is_locked(struct spdk_bdev_io *bdev_io, struct lba_range *range)
 		 * it overlaps a locked range.
 		 */
 		return true;
+	case SPDK_BDEV_IO_TYPE_READ:
+		if (!range->quiesce) {
+			return false;
+		}
+	/* fallthrough */
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
@@ -9623,6 +9629,7 @@ bdev_lock_lba_range_get_channel(struct spdk_bdev_channel_iter *i, struct spdk_bd
 	range->length = ctx->range.length;
 	range->offset = ctx->range.offset;
 	range->locked_ctx = ctx->range.locked_ctx;
+	range->quiesce = ctx->range.quiesce;
 	ctx->current_range = range;
 	if (ctx->range.owner_ch == ch) {
 		/* This is the range object for the channel that will hold
@@ -9660,6 +9667,8 @@ bdev_lba_range_overlaps_tailq(struct lba_range *range, lba_range_tailq_t *tailq)
 	return false;
 }
 
+static void bdev_quiesce_range_locked(struct lba_range *range, void *ctx, int status);
+
 static int
 _bdev_lock_lba_range(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch,
 		     uint64_t offset, uint64_t length,
@@ -9678,6 +9687,7 @@ _bdev_lock_lba_range(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch,
 	ctx->range.owner_ch = ch;
 	ctx->range.locked_ctx = cb_arg;
 	ctx->range.bdev = bdev;
+	ctx->range.quiesce = (cb_fn == bdev_quiesce_range_locked);
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 

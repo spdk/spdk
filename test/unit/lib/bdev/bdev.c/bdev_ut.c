@@ -5201,6 +5201,7 @@ bdev_quiesce(void)
 	struct spdk_io_channel *io_ch;
 	struct spdk_bdev_channel *channel;
 	struct lba_range *range;
+	struct spdk_bdev_io *bdev_io;
 	int ctx1;
 	int rc;
 
@@ -5283,6 +5284,52 @@ bdev_quiesce(void)
 
 	CU_ASSERT(g_lock_lba_range_done == true);
 	CU_ASSERT(g_unlock_lba_range_done == true);
+
+	/* Test quiesce with read I/O */
+	g_lock_lba_range_done = false;
+	g_unlock_lba_range_done = false;
+	g_io_done = false;
+	rc = spdk_bdev_read_blocks(desc, io_ch, (void *)0xF000, 20, 1, io_done, &ctx1);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_bdev_quiesce(bdev, &bdev_ut_if, bdev_quiesce_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	CU_ASSERT(g_io_done == false);
+	CU_ASSERT(g_lock_lba_range_done == false);
+	range = TAILQ_FIRST(&channel->locked_ranges);
+	SPDK_CU_ASSERT_FATAL(range != NULL);
+
+	stub_complete_io(1);
+	spdk_delay_us(100);
+	poll_threads();
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_lock_lba_range_done == true);
+	CU_ASSERT(TAILQ_EMPTY(&channel->io_locked));
+
+	g_io_done = false;
+	rc = spdk_bdev_read_blocks(desc, io_ch, (void *)0xF000, 20, 1, io_done, &ctx1);
+	CU_ASSERT(rc == 0);
+
+	bdev_io = TAILQ_FIRST(&channel->io_locked);
+	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
+	CU_ASSERT(bdev_io->u.bdev.offset_blocks == 20);
+	CU_ASSERT(bdev_io->u.bdev.num_blocks == 1);
+
+	rc = spdk_bdev_unquiesce(bdev, &bdev_ut_if, bdev_unquiesce_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	spdk_delay_us(100);
+	poll_threads();
+
+	CU_ASSERT(g_unlock_lba_range_done == true);
+	CU_ASSERT(TAILQ_EMPTY(&channel->locked_ranges));
+	CU_ASSERT(TAILQ_EMPTY(&bdev_ut_if.internal.quiesced_ranges));
+
+	CU_ASSERT(TAILQ_EMPTY(&channel->io_locked));
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	poll_threads();
+	CU_ASSERT(g_io_done == true);
 
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
