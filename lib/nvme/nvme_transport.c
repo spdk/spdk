@@ -466,7 +466,7 @@ nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nv
 	int rc;
 
 	assert(transport != NULL);
-	if (!nvme_qpair_is_admin_queue(qpair)) {
+	if (!nvme_qpair_is_admin_queue(qpair) && qpair->transport == NULL) {
 		qpair->transport = transport;
 	}
 
