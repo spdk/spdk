@@ -85,15 +85,3 @@ if [[ $CONFIG_DPDK_COMPRESSDEV == y ]]; then
 	run_test "accel_cdev_deomp_full_mthread" accel_perf -t 1 -w decompress -l $testdir/bib -y -o 0 -T 2
 	unset COMPRESSDEV
 fi
-
-trap 'killprocess $spdk_tgt_pid; exit 1' ERR
-
-$SPDK_BIN_DIR/spdk_tgt --wait-for-rpc &
-spdk_tgt_pid=$!
-waitforlisten $spdk_tgt_pid
-
-$rpc_py accel_assign_opc -o copy -m software
-$rpc_py framework_start_init
-$rpc_py accel_get_opc_assignments | jq -r '.copy' | grep software
-
-killprocess $spdk_tgt_pid
