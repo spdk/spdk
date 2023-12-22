@@ -540,6 +540,35 @@ class Server(ABC):
         if self.enable_adq:
             self.reload_driver("ice")
 
+    def check_for_throttling(self):
+        patterns = [
+            r"CPU\d+: Core temperature is above threshold, cpu clock is throttled",
+            r"mlx5_core \S+: poll_health:\d+:\(pid \d+\): device's health compromised",
+            r"mlx5_core \S+: print_health_info:\d+:\(pid \d+\): Health issue observed, High temperature",
+            r"mlx5_core \S+: temp_warn:\d+:\(pid \d+\): High temperature on sensors"
+        ]
+
+        issue_found = False
+        try:
+            output = self.exec_cmd(["dmesg"])
+
+            for line in output.split("\n"):
+                for pattern in patterns:
+                    if re.search(pattern, line):
+                        self.log.warning("Throttling or temperature issue found")
+                        issue_found = True
+            return 1 if issue_found else 0
+        except Exception as e:
+            self.log.error("ERROR: failed to execute dmesg command")
+            self.log.error(f"Error {e}")
+            return 1
+
+    def stop(self):
+        if self.check_for_throttling():
+            err_message = (f"Throttling or temperature issue found on {self.name} system! "
+                           "Check system logs!")
+            raise CpuThrottlingError(err_message)
+
 
 class Target(Server):
     def __init__(self, name, general_config, target_config):
@@ -766,7 +795,12 @@ class Initiator(Server):
 
     def stop(self):
         self.restore_settings()
-        self.ssh_connection.close()
+        try:
+            super().stop()
+        except CpuThrottlingError as err:
+            raise err
+        finally:
+            self.ssh_connection.close()
 
     def exec_cmd(self, cmd, stderr_redirect=False, change_dir=None):
         if change_dir:
@@ -1033,6 +1067,7 @@ class KernelTarget(Target):
     def stop(self):
         self.nvmet_command(self.nvmet_bin, "clear")
         self.restore_settings()
+        super().stop()
 
     def get_nvme_device_bdf(self, nvme_dev_path):
         nvme_name = os.path.basename(nvme_dev_path)
@@ -1383,6 +1418,7 @@ class SPDKTarget(Target):
                 except FileNotFoundError:
                     pass
         self.restore_settings()
+        super().stop()
 
 
 class KernelInitiator(Initiator):
@@ -1771,6 +1807,11 @@ def run_fio_tests(args, initiators, target_obj,
         raise err
 
 
+class CpuThrottlingError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
 if __name__ == "__main__":
     exit_code = 0
 
@@ -1876,10 +1917,12 @@ if __name__ == "__main__":
         exit_code = 1
 
     finally:
-        for i in initiators:
+        for i in [*initiators, target_obj]:
             try:
                 i.stop()
+            except CpuThrottlingError as err:
+                logging.error(err)
+                exit_code = 1
             except Exception as err:
                 pass
-        target_obj.stop()
         sys.exit(exit_code)
