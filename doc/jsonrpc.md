@@ -12812,7 +12812,9 @@ Example response:
 
 ### keyring_get_keys {#rpc_keyring_get_keys}
 
-Get a list of available keys.
+Get a list of available keys.  This RPC will only list keys that are currently attached to a
+keyring.  Dynamically loaded keys (via the `probe_key()` callback) will only be included if they're
+currently in-use (i.e. with active references obtained via `spdk_keyring_get_key()`).
 
 #### Example
 
@@ -12836,6 +12838,7 @@ Example response:
       "name": "key0",
       "module": "keyring_file",
       "removed": false,
+      "probed": false,
       "refcnt": 1,
       "path": "/path/to/key0"
     },
@@ -12843,6 +12846,7 @@ Example response:
       "name": "key1",
       "module": "keyring_file",
       "removed": false,
+      "probed": false,
       "refcnt": 1,
       "path": "/path/to/key1"
     }
