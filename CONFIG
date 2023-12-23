@@ -215,6 +215,9 @@ CONFIG_HAVE_LIBARCHIVE=n
 # execinfo.h is available
 CONFIG_HAVE_EXECINFO_H=n
 
+# libkeytuils is available
+CONFIG_HAVE_KEYUTILS=n
+
 # Path to IPSEC_MB used by DPDK
 CONFIG_IPSEC_MB_DIR=
 

@@ -128,6 +128,9 @@ VFU_DEVICE_MODULES_LIST = vfu_device
 endif
 
 KEYRING_MODULES_LIST = event_keyring keyring_file
+ifeq ($(CONFIG_HAVE_KEYUTILS),y)
+KEYRING_MODULES_LIST += keyring_linux
+endif
 
 EVENT_BDEV_SUBSYSTEM = event_bdev event_accel event_vmd event_sock event_iobuf
 

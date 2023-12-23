@@ -365,6 +365,10 @@ ifeq ($(OS).$(CC_TYPE),Windows.gcc)
 SYS_LIBS += -l:libssp.a
 endif
 
+ifeq ($(CONFIG_HAVE_KEYUTILS),y)
+SYS_LIBS += -lkeyutils
+endif
+
 MAKEFLAGS += --no-print-directory
 
 C_SRCS += $(C_SRCS-y)

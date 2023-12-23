@@ -64,3 +64,6 @@ lib/mlx5/mlx5_crypto
 
 # Not configured to build hello_gorpc example
 examples/go/hello_gorpc/hello_gorpc.go
+
+# TODO: remove this once CI is updated with libkeyutils
+module/keyring/linux/keyring
