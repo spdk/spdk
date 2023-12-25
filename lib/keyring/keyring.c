@@ -353,12 +353,19 @@ spdk_keyring_init(void)
 	}
 
 	pthread_mutexattr_destroy(&attr);
-	TAILQ_FOREACH(module, &g_keyring.modules, tailq) {
+	TAILQ_FOREACH_SAFE(module, &g_keyring.modules, tailq, tmp) {
 		if (module->init != NULL) {
 			rc = module->init();
 			if (rc != 0) {
-				SPDK_ERRLOG("Failed to initialize module %s: %s\n", module->name,
-					    spdk_strerror(-rc));
+				if (rc == -ENODEV) {
+					SPDK_INFOLOG(keyring, "Skipping module %s\n", module->name);
+					TAILQ_REMOVE(&g_keyring.modules, module, tailq);
+					rc = 0;
+					continue;
+				}
+
+				SPDK_ERRLOG("Failed to initialize module %s: %s\n",
+					    module->name, spdk_strerror(-rc));
 				break;
 			}
 		}
