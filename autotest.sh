@@ -301,6 +301,9 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 			run_test "nvmf_abort_qd_sizes" $rootdir/test/nvmf/target/abort_qd_sizes.sh
 			# The keyring tests utilize NVMe/TLS
 			run_test "keyring_file" "$rootdir/test/keyring/file.sh"
+			if [[ "$CONFIG_HAVE_KEYUTILS" == y ]]; then
+				run_test "keyring_linux" "$rootdir/test/keyring/linux.sh"
+			fi
 		elif [ "$SPDK_TEST_NVMF_TRANSPORT" = "fc" ]; then
 			run_test "nvmf_fc" $rootdir/test/nvmf/nvmf.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
 			run_test "spdkcli_nvmf_fc" $rootdir/test/spdkcli/nvmf.sh
