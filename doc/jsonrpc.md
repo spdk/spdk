@@ -12853,3 +12853,37 @@ Example response:
   ]
 }
 ~~~
+
+### keyring_linux_set_options {#keyring_linux_set_options}
+
+Set options of the keyring_linux module.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+enable                  | Optional | boolean     | Enable the module.
+
+#### Example
+
+Example request:
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "keyring_linux_set_options",
+  "id": 1
+  "params": {
+    "enable": true
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~

@@ -13,3 +13,10 @@ def keyring_file_remove_key(client, name):
 
 def keyring_get_keys(client):
     return client.call('keyring_get_keys')
+
+
+def keyring_linux_set_options(client, enable=None):
+    params = {}
+    if enable is not None:
+        params['enable'] = enable
+    return client.call('keyring_linux_set_options', params)

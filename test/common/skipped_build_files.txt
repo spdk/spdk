@@ -67,3 +67,4 @@ examples/go/hello_gorpc/hello_gorpc.go
 
 # TODO: remove this once CI is updated with libkeyutils
 module/keyring/linux/keyring
+module/keyring/linux/keyring_rpc

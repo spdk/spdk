@@ -3630,6 +3630,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('keyring_get_keys', help='Get a list of registered keys')
     p.set_defaults(func=keyring_get_keys)
 
+    def keyring_linux_set_options(args):
+        rpc.keyring.keyring_linux_set_options(args.client, args.enable)
+
+    p = subparsers.add_parser('keyring_linux_set_options', help='Set options of the keyring_linux module')
+    p.add_argument('-e', '--enable', help='Enable keyring_linux module', action='store_true')
+    p.set_defaults(func=keyring_linux_set_options)
+
     def check_called_name(name):
         if name in deprecated_aliases:
             print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)
