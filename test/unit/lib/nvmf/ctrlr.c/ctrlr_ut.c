@@ -874,6 +874,19 @@ test_connect(void)
 	admin_qpair.group = &group;
 	admin_qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
 
+	/* I/O connect when admin qpair was destroyed */
+	ctrlr.admin_qpair = NULL;
+	memset(&rsp, 0, sizeof(rsp));
+	sgroups[subsystem.id].mgmt_io_outstanding++;
+	TAILQ_INSERT_TAIL(&qpair.outstanding, &req, link);
+	rc = nvmf_ctrlr_cmd_connect(&req);
+	poll_threads();
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVMF_FABRIC_SC_INVALID_PARAM);
+	CU_ASSERT(qpair.ctrlr == NULL);
+	CU_ASSERT(sgroups[subsystem.id].mgmt_io_outstanding == 0);
+	ctrlr.admin_qpair = &admin_qpair;
+
 	/* Clean up globals */
 	MOCK_CLEAR(spdk_nvmf_tgt_find_subsystem);
 	MOCK_CLEAR(spdk_nvmf_poll_group_create);

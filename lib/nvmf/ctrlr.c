@@ -225,6 +225,16 @@ ctrlr_add_qpair_and_send_rsp(struct spdk_nvmf_qpair *qpair,
 {
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
 
+	if (!ctrlr->admin_qpair) {
+		SPDK_ERRLOG("Inactive admin qpair\n");
+		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
+		qpair->connect_req = NULL;
+		qpair->ctrlr = NULL;
+		spdk_nvmf_request_complete(req);
+		return;
+	}
+
 	assert(ctrlr->admin_qpair->group->thread == spdk_get_thread());
 
 	if (spdk_bit_array_get(ctrlr->qpair_mask, qpair->qid)) {
@@ -567,6 +577,8 @@ nvmf_ctrlr_add_io_qpair(void *ctx)
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 	struct spdk_nvmf_qpair *admin_qpair = ctrlr->admin_qpair;
+	struct spdk_nvmf_poll_group *admin_qpair_group = NULL;
+	enum spdk_nvmf_qpair_state admin_qpair_state = SPDK_NVMF_QPAIR_UNINITIALIZED;
 
 	SPDK_DTRACE_PROBE4_TICKS(nvmf_ctrlr_add_io_qpair, ctrlr, req->qpair, req->qpair->qid,
 				 spdk_thread_get_id(ctrlr->thread));
@@ -609,11 +621,17 @@ nvmf_ctrlr_add_io_qpair(void *ctx)
 		goto end;
 	}
 
-	if (admin_qpair->state != SPDK_NVMF_QPAIR_ACTIVE || admin_qpair->group == NULL) {
-		/* There is a chance that admin qpair is being destroyed at this moment due to e.g.
+	/* There is a chance that admin qpair was destroyed. This is an issue that was observed only with ESX initiators */
+	if (admin_qpair) {
+		admin_qpair_group = admin_qpair->group;
+		admin_qpair_state = admin_qpair->state;
+	}
+
+	if (admin_qpair_state != SPDK_NVMF_QPAIR_ACTIVE || admin_qpair_group == NULL) {
+		/* There is a chance that admin qpair was destroyed or is being destroyed at this moment due to e.g.
 		 * expired keep alive timer. Part of the qpair destruction process is change of qpair's
 		 * state to DEACTIVATING and removing it from poll group */
-		SPDK_ERRLOG("Inactive admin qpair (state %d, group %p)\n", admin_qpair->state, admin_qpair->group);
+		SPDK_ERRLOG("Inactive admin qpair (state %d, group %p)\n", admin_qpair_state, admin_qpair_group);
 		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
 		goto end;
 	}
@@ -646,6 +664,8 @@ _nvmf_ctrlr_add_io_qpair(void *ctx)
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvme_transport_id listen_trid = {};
 	const struct spdk_nvmf_subsystem_listener *listener;
+	struct spdk_nvmf_poll_group *admin_qpair_group = NULL;
+	enum spdk_nvmf_qpair_state admin_qpair_state = SPDK_NVMF_QPAIR_UNINITIALIZED;
 
 	assert(req->iovcnt == 1);
 
@@ -692,17 +712,24 @@ _nvmf_ctrlr_add_io_qpair(void *ctx)
 	}
 
 	admin_qpair = ctrlr->admin_qpair;
-	if (admin_qpair->state != SPDK_NVMF_QPAIR_ACTIVE || admin_qpair->group == NULL) {
-		/* There is a chance that admin qpair is being destroyed at this moment due to e.g.
+
+	/* There is a chance that admin qpair was destroyed. This is an issue that was observed only with ESX initiators */
+	if (admin_qpair) {
+		admin_qpair_group = admin_qpair->group;
+		admin_qpair_state = admin_qpair->state;
+	}
+
+	if (admin_qpair_state != SPDK_NVMF_QPAIR_ACTIVE || admin_qpair_group == NULL) {
+		/* There is a chance that admin qpair was destroyed or is being destroyed at this moment due to e.g.
 		 * expired keep alive timer. Part of the qpair destruction process is change of qpair's
 		 * state to DEACTIVATING and removing it from poll group */
-		SPDK_ERRLOG("Inactive admin qpair (state %d, group %p)\n", admin_qpair->state, admin_qpair->group);
+		SPDK_ERRLOG("Inactive admin qpair (state %d, group %p)\n", admin_qpair_state, admin_qpair_group);
 		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
 		spdk_nvmf_request_complete(req);
 		return;
 	}
 	qpair->ctrlr = ctrlr;
-	spdk_thread_send_msg(admin_qpair->group->thread, nvmf_ctrlr_add_io_qpair, req);
+	spdk_thread_send_msg(admin_qpair_group->thread, nvmf_ctrlr_add_io_qpair, req);
 }
 
 static bool
@@ -1094,13 +1121,20 @@ static int
 nvmf_ctrlr_cc_timeout(void *ctx)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = ctx;
-	struct spdk_nvmf_poll_group *group = ctrlr->admin_qpair->group;
+	struct spdk_nvmf_poll_group *group;
 	struct spdk_nvmf_ns *ns;
 	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
 
-	assert(group != NULL && group->sgroups != NULL);
 	spdk_poller_unregister(&ctrlr->cc_timeout_timer);
 	SPDK_DEBUGLOG(nvmf, "Ctrlr %p reset or shutdown timeout\n", ctrlr);
+
+	if (!ctrlr->admin_qpair) {
+		SPDK_NOTICELOG("Ctrlr %p admin qpair disconnected\n", ctrlr);
+		return SPDK_POLLER_IDLE;
+	}
+
+	group = ctrlr->admin_qpair->group;
+	assert(group != NULL && group->sgroups != NULL);
 
 	for (ns = spdk_nvmf_subsystem_get_first_ns(ctrlr->subsys); ns != NULL;
 	     ns = spdk_nvmf_subsystem_get_next_ns(ctrlr->subsys, ns)) {
