@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2023 Intel Corporation
+#  All rights reserved.
+
+shopt -s nullglob extglob
+
+pmdir=$(readlink -f "$(dirname "$0")")
+rootdir=$(readlink -f "$pmdir/../../../")
+source "$rootdir/test/scheduler/common.sh"
+
+help() {
+	cat <<- HELP
+
+		Usage: $0 [-h] [-c count] [-d dir] [-p prefix] [cpu0 cpu1 ...]
+
+		-h - Print this message.
+		-c - Execute count times. 0 is the default and it means to run
+		     indefinitely.
+		-d - Directory where results should be saved. Default is /tmp.
+		-p - Add prefix to saved files.
+
+		cpu - Valid cpu id (e.g. 0) to monitor.
+
+		When started, ${0##*/} will enter loop to continuosly monitor cpu
+		load. Each iteration will be logged to stderr and a log file
+		(dir/${0##*/}.pm.log).
+
+	HELP
+}
+
+# get_cpu_time() uses these, so put some stubs in place
+xtrace_disable() { :; }
+xtrace_restore() { :; }
+
+_get_cpu_time() {
+	get_cpu_time "$@" > >(tee "$output_dir/$log_file")
+}
+
+count=0
+output_dir=/tmp
+prefix=""
+
+while getopts c:d:hp: opt; do
+	case "$opt" in
+		c) count=$OPTARG ;;
+		d) output_dir=$OPTARG ;;
+		h)
+			help
+			exit 0
+			;;
+		p) prefix=$OPTARG ;;
+		*) ;;
+	esac
+done
+shift $((OPTIND - 1))
+
+declare -r log_file=${prefix:+${prefix}_}${0##*/}.pm.log
+
+mkdir -p "$output_dir"
+
+cpus=("$@")
+((${#cpus[@]} > 0)) || cpus=($(get_online_cpus))
+
+_get_cpu_time "$count" "" 1 "${cpus[@]}"

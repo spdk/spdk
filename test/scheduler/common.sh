@@ -447,14 +447,16 @@ get_cpu_stat() {
 	local cpu_idx=$1
 	local stat=$2 stats astats
 
-	while read -r cpu stats; do
-		[[ $cpu == "cpu$cpu_idx" ]] && astats=($stats)
-	done < /proc/stat
+	# cpu0 0 0 0 0 0 0 0 0 0 -> _cpu0=(0 0 0 0 0 0 0 0 0)
+	source <(grep '^cpu[0-9]' /proc/stat | sed 's/\([^ ]*\) \(.*\)/_\1=(\2)/')
+
+	# If we were called with valid cpu id return requested time
+	[[ -v _cpu$cpu_idx ]] || return 0
+	local -n cpu_stat=_cpu$cpu_idx
 
 	case "$stat" in
-		idle) echo "${astats[3]}" ;;
-		all) printf '%u\n' "${astats[@]}" ;;
-		*) ;;
+		idle) echo "${cpu_stat[3]}" ;;
+		*) printf '%u\n' "${cpu_stat[@]}" ;;
 	esac
 }
 
@@ -473,11 +475,12 @@ active_thread() {
 get_cpu_time() {
 	xtrace_disable
 
-	local interval=$1 cpu_time=${2:-idle} interval_count
-	shift 2
+	local interval=$1 cpu_time=${2:-idle} print=${3:-0} interval_count
+	shift 3
 	local cpus=("$@") cpu
 	local stats stat old_stats avg_load
 	local total_sample
+	local keep_going=0
 
 	# Exposed for the caller
 	local -g cpu_times=()
@@ -515,18 +518,23 @@ get_cpu_time() {
 	unset -v ${!raw_samples@}
 
 	cpu_time=${cpu_time_map["$cpu_time"]}
-	interval=$((interval <= 0 ? 1 : interval))
-	# We skip first sample to have min 2 for stat comparison
-	interval=$((interval + 1)) interval_count=0
-	while ((interval_count++, --interval >= 0)); do
+	interval_count=0
+	if ((interval <= 0)); then
+		keep_going=1
+	else
+		# We skip first sample to have min 2 for stat comparison
+		interval=$((interval + 1))
+	fi
+	while ((interval_count++, keep_going ? 1 : --interval >= 0)); do
+		((interval_count > 1 && print == 1)) && print_cpu_time_header
+		get_cpu_stat all
 		for cpu in "${cpus[@]}"; do
 			local -n old_stats=old_stats_$cpu
 			local -n avg_load=avg_load_$cpu
 			local -n raw_samples=raw_samples_$cpu
-
+			local -n stats=_cpu$cpu
 			sample_stats=() total_sample=0
 
-			stats=($(get_cpu_stat "$cpu" all))
 			if ((interval_count == 1)); then
 				# Skip first sample
 				old_stats=("${stats[@]}")
@@ -545,6 +553,7 @@ get_cpu_time() {
 				avg_stat+=($((sample_stats[stat] * 100 / (total_sample == 0 ? 1 : total_sample))))
 			done
 			old_stats=("${stats[@]}")
+			((print == 1)) && print_cpu_time "$cpu"
 		done
 		sleep 1s
 	done
@@ -565,6 +574,47 @@ get_cpu_time() {
 	xtrace_restore
 }
 
+print_cpu_time_header() {
+	local ts
+	ts=$(date "+%r")
+
+	printf '(%s) %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s\n' \
+		"$ts" \
+		"CPU" "%usr" "%nice" "%sys" "%iowait" "%irq" "%soft" "%steal" \
+		"%guest" "%gnice" "%idle"
+}
+
+print_cpu_time() {
+	local cpu=$1
+
+	local -n _cpu_ref=avg_load_$cpu
+	((${#_cpu_ref[@]} > 0)) || return 0
+
+	usr=("${!_cpu_ref[0]}")
+	nice=("${!_cpu_ref[1]}")
+	system=("${!_cpu_ref[2]}")
+	idle=("${!_cpu_ref[3]}")
+	iowait=("${!_cpu_ref[4]}")
+	irq=("${!_cpu_ref[5]}")
+	soft=("${!_cpu_ref[6]}")
+	steal=("${!_cpu_ref[7]}")
+	guest=("${!_cpu_ref[8]}")
+	gnice=("${!_cpu_ref[9]}")
+
+	printf '%22u %8u %8u %8u %8u %8u %8u %8u %8u %8u %8u\n' \
+		"$cpu" \
+		"${usr[-1]}" \
+		"${nice[-1]}" \
+		"${system[-1]}" \
+		"${iowait[-1]}" \
+		"${irq[-1]}" \
+		"${soft[-1]}" \
+		"${steal[-1]}" \
+		"${guest[-1]}" \
+		"${gnice[-1]}" \
+		"${idle[-1]}"
+}
+
 collect_cpu_idle() {
 	((${#cpus_to_collect[@]} > 0)) || return 1
 
@@ -576,7 +626,7 @@ collect_cpu_idle() {
 	printf 'Collecting cpu idle stats (cpus: %s) for %u seconds...\n' \
 		"${cpus_to_collect[*]}" "$time"
 
-	get_cpu_time "$time" idle "${cpus_to_collect[@]}"
+	get_cpu_time "$time" idle 0 "${cpus_to_collect[@]}"
 
 	local user_load
 	for cpu in "${cpus_to_collect[@]}"; do
