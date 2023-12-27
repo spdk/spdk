@@ -7,7 +7,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y += hello_world reconnect nvme_manage arbitration \
-	hotplug cmb_copy abort pmr_persistence discovery_aer
+	hotplug cmb_copy abort pmr_persistence
 
 DIRS-$(CONFIG_FIO_PLUGIN) += fio_plugin
 
