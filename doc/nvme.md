@@ -48,7 +48,7 @@ for more details.
 
 ### Running Benchmarks with Perf Tool {#nvme_perf}
 
-NVMe perf utility in the [examples/nvme/perf](https://github.com/spdk/spdk/tree/master/examples/nvme/perf)
+NVMe perf utility in the [app/spdk_nvme_perf](https://github.com/spdk/spdk/tree/master/app/spdk_nvme_perf)
 is one of the examples which also can be used for performance tests. The fio
 tool is widely used because it is very flexible. However, that flexibility adds
 overhead and reduces the efficiency of SPDK. Therefore, SPDK provides a perf
@@ -262,12 +262,12 @@ ID will be considered the primary and all others secondary.
 
 Example: identical shm_id and non-overlapping core masks
 ~~~{.sh}
-./perf options [AIO device(s)]...
+spdk_nvme_perf options [AIO device(s)]...
 	[-c core mask for I/O submission/completion]
 	[-i shared memory group ID]
 
-./perf -q 1 -o 4096 -w randread -c 0x1 -t 60 -i 1
-./perf -q 8 -o 131072 -w write -c 0x10 -t 60 -i 1
+spdk_nvme_perf -q 1 -o 4096 -w randread -c 0x1 -t 60 -i 1
+spdk_nvme_perf -q 8 -o 131072 -w write -c 0x10 -t 60 -i 1
 ~~~
 
 ### Limitations {#nvme_multi_process_limitations}

@@ -12,6 +12,7 @@ DIRS-y += nvmf_tgt
 DIRS-y += iscsi_tgt
 DIRS-y += spdk_tgt
 DIRS-y += spdk_lspci
+DIRS-y += spdk_nvme_perf
 ifneq ($(OS),Windows)
 # TODO - currently disabled on Windows due to lack of support for curses
 DIRS-y += spdk_top

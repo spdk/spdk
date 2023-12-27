@@ -143,7 +143,7 @@ setup_nvmf_tgt $key_path
 
 # Test #1 - test connectivity with perf and bdevperf application
 # Check connectivity with nvmeperf"
-"${NVMF_TARGET_NS_CMD[@]}" $SPDK_EXAMPLE_DIR/perf -S ssl -q 64 -o 4096 -w randrw -M 30 -t 10 \
+"${NVMF_TARGET_NS_CMD[@]}" $SPDK_BIN_DIR/spdk_nvme_perf -S ssl -q 64 -o 4096 -w randrw -M 30 -t 10 \
 	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \
 subnqn:nqn.2016-06.io.spdk:cnode1 hostnqn:nqn.2016-06.io.spdk:host1" \
 	--psk-path $key_path "${NO_HUGE[@]}"

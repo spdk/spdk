@@ -56,7 +56,7 @@ done
 #add listener to subsystem
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
-perf="$SPDK_EXAMPLE_DIR/perf"
+perf="$SPDK_BIN_DIR/spdk_nvme_perf"
 
 $perf -q 64 -o 4096 -w randrw -M 30 -t 10 \
 	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \

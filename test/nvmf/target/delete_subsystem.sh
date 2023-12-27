@@ -23,7 +23,7 @@ $rpc_py bdev_null_create NULL1 1000 512
 $rpc_py bdev_delay_create -b NULL1 -d Delay0 -r 1000000 -t 1000000 -w 1000000 -n 1000000
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Delay0
 
-"$SPDK_EXAMPLE_DIR/perf" -c 0xC -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" \
+"$SPDK_BIN_DIR/spdk_nvme_perf" -c 0xC -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" \
 	-t 5 -q 128 -w randrw -M 70 -o 512 -P 4 "${NO_HUGE[@]}" &
 perf_pid=$!
 
@@ -49,7 +49,7 @@ $rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK0000000000000
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Delay0
 
-$SPDK_EXAMPLE_DIR/perf -c 0xC -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" \
+$SPDK_BIN_DIR/spdk_nvme_perf -c 0xC -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" \
 	-t 3 -q 128 -w randrw -M 70 -o 512 -P 4 "${NO_HUGE[@]}" &
 perf_pid=$!
 

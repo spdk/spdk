@@ -15,7 +15,7 @@ if ((${#TCP_INTERFACE_LIST[@]} == 0)); then
 	exit 1
 fi
 
-perf="$SPDK_EXAMPLE_DIR/perf"
+perf="$SPDK_BIN_DIR/spdk_nvme_perf"
 
 function adq_configure_driver() {
 	# Enable adding flows to hardware

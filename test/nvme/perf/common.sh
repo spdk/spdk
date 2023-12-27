@@ -447,7 +447,7 @@ function run_nvmeperf() {
 	echo "** Running nvme perf test, this can take a while, depending on the run-time setting."
 
 	# Run command in separate shell as this solves quoting issues related to r_opt var
-	$SHELL -c "$_examples_dir/perf $r_opt -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -c [$CPUS_ALLOWED]"
+	$SHELL -c "$_app_dir/spdk_nvme_perf $r_opt -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -c [$CPUS_ALLOWED]"
 	sleep 1
 }
 

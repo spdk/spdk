@@ -1277,7 +1277,7 @@ spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *st
 			/*
 			 * Special case.  The namespace id parameter may
 			 * optionally be passed in the transport id string
-			 * for an SPDK application (e.g. nvme/perf)
+			 * for an SPDK application (e.g. spdk_nvme_perf)
 			 * and additionally parsed therein to limit
 			 * targeting a specific namespace.  For this
 			 * scenario, just silently ignore this key

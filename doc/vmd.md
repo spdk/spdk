@@ -101,7 +101,7 @@ $ ./scripts/rpc.py framework_start_init
 ## Applications w/o application framework {#vmd_app}
 
 To enable VMD enumeration in SPDK application that are not using application framework
-e.g nvme/perf, nvme/identify -V flag is required - please refer to app help if it supports VMD.
+e.g spdk_nvme_perf, nvme/identify -V flag is required - please refer to app help if it supports VMD.
 
 Applications need to call spdk_vmd_init() to enumerate NVMe devices behind the VMD prior to calling
 spdk_nvme_(probe|connect).

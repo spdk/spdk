@@ -19,7 +19,7 @@ rpc_py="$rootdir/scripts/rpc.py"
 function error_cleanup() {
 	# force delete pmem file and wipe on-disk metadata
 	rm -rf /tmp/pmem
-	$SPDK_EXAMPLE_DIR/perf -q 1 -o 131072 -w write -t 2
+	$SPDK_BIN_DIR/spdk_nvme_perf -q 1 -o 131072 -w write -t 2
 }
 
 function destroy_vols() {
@@ -105,7 +105,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 	# Start random read writes in the background
-	$SPDK_EXAMPLE_DIR/perf -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -o 4096 -q 64 -s 512 -w randrw -t 30 -c 0x18 -M 50 &
+	$SPDK_BIN_DIR/spdk_nvme_perf -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -o 4096 -q 64 -s 512 -w randrw -t 30 -c 0x18 -M 50 &
 	perf_pid=$!
 
 	# Wait for I/O to complete

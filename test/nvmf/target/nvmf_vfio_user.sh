@@ -81,8 +81,8 @@ function run_nvmf_vfio_user() {
 		test_traddr=/var/run/vfio-user/domain/vfio-user$i/$i
 		test_subnqn=nqn.2019-07.io.spdk:cnode$i
 		$SPDK_EXAMPLE_DIR/identify -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -g -L nvme -L nvme_vfio -L vfio_pci
-		$SPDK_EXAMPLE_DIR/perf -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w read -t 5 -c 0x2
-		$SPDK_EXAMPLE_DIR/perf -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w write -t 5 -c 0x2
+		$SPDK_BIN_DIR/spdk_nvme_perf -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w read -t 5 -c 0x2
+		$SPDK_BIN_DIR/spdk_nvme_perf -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w write -t 5 -c 0x2
 		$SPDK_EXAMPLE_DIR/reconnect -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -g -q 32 -o 4096 -w randrw -M 50 -t 5 -c 0xE
 		$SPDK_EXAMPLE_DIR/arbitration -t 3 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -d 256 -g
 		$SPDK_EXAMPLE_DIR/hello_world -d 256 -g -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"

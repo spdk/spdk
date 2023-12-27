@@ -27,5 +27,8 @@ Next, You should use the RPC cmd to setup nvmf target.
 	./scripts/rpc.py nvmf_subsystem_add_listener -t rdma -f Ipv4 -a 192.168.0.10 -s 4420 -p nvmf_example nqn.2016-06.io.spdk:cnode1
 
 Last, start the initiator to connect the nvmf example target and test the IOs
-	$ROOT_SPDK/example/nvme/perf/perf -q 64 -o 4095 -w randrw -M 30 -l -t 60 \
-	-r "trtype:RDMA adrfam:IPv4 traddr:192.168.0.10 trsvcid:4420 subnqn:nqn.2016-06.io.spdk:cnode1"
+
+~~~{.sh}
+spdk_nvme_perf -q 64 -o 4095 -w randrw -M 30 -l -t 60 \
+-r "trtype:RDMA adrfam:IPv4 traddr:192.168.0.10 trsvcid:4420 subnqn:nqn.2016-06.io.spdk:cnode1"
+~~~

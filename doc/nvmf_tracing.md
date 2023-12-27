@@ -89,11 +89,11 @@ reboot will also free all of the /dev/shm files.
 ## Capturing a snapshot of events {#capture_tracepoints}
 
 Send I/Os to the SPDK target application to generate events. The following is
-an example usage of perf to send I/Os to the NVMe-oF target over an RDMA network
+an example usage of spdk_nvme_perf to send I/Os to the NVMe-oF target over an RDMA network
 interface for 10 minutes.
 
 ~~~bash
-./perf -q 128 -o 4096 -w randread -t 600 -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.2 trsvcid:4420'
+spdk_nvme_perf -q 128 -o 4096 -w randread -t 600 -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.2 trsvcid:4420'
 ~~~
 
 The spdk_trace program can be found in the app/trace directory.  To analyze the tracepoints on the same
@@ -185,7 +185,7 @@ build/bin/spdk_trace_record -q -s nvmf -p 24147 -f /tmp/spdk_nvmf_record.trace
 Also send I/Os to the SPDK target application to generate events by previous perf example for 10 minutes.
 
 ~~~bash
-./perf -q 128 -o 4096 -w randread -t 600 -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.2 trsvcid:4420'
+spdk_nvme_perf -q 128 -o 4096 -w randread -t 600 -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.2 trsvcid:4420'
 ~~~
 
 After the completion of perf example, shut down spdk_trace_record by signal SIGINT (Ctrl + C).

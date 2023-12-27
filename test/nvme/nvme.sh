@@ -19,11 +19,11 @@ function nvme_identify() {
 
 function nvme_perf() {
 	# enable no shutdown notification option
-	$SPDK_EXAMPLE_DIR/perf -q 128 -w read -o 12288 -t 1 -LL -i 0 -N
-	$SPDK_EXAMPLE_DIR/perf -q 128 -w write -o 12288 -t 1 -LL -i 0
+	$SPDK_BIN_DIR/spdk_nvme_perf -q 128 -w read -o 12288 -t 1 -LL -i 0 -N
+	$SPDK_BIN_DIR/spdk_nvme_perf -q 128 -w write -o 12288 -t 1 -LL -i 0
 	if [ -b /dev/ram0 ]; then
 		# Test perf with AIO device
-		$SPDK_EXAMPLE_DIR/perf /dev/ram0 -q 128 -w read -o 12288 -t 1 -LL -i 0
+		$SPDK_BIN_DIR/spdk_nvme_perf /dev/ram0 -q 128 -w read -o 12288 -t 1 -LL -i 0
 	fi
 }
 
@@ -48,20 +48,20 @@ function nvme_fio_test() {
 
 function nvme_multi_secondary() {
 	# Primary process exits last
-	$SPDK_EXAMPLE_DIR/perf -i 0 -q 16 -w read -o 4096 -t 5 -c 0x1 &
+	$SPDK_BIN_DIR/spdk_nvme_perf -i 0 -q 16 -w read -o 4096 -t 5 -c 0x1 &
 	pid0=$!
-	$SPDK_EXAMPLE_DIR/perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x2 &
+	$SPDK_BIN_DIR/spdk_nvme_perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x2 &
 	pid1=$!
-	$SPDK_EXAMPLE_DIR/perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x4
+	$SPDK_BIN_DIR/spdk_nvme_perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x4
 	wait $pid0
 	wait $pid1
 
 	# Secondary process exits last
-	$SPDK_EXAMPLE_DIR/perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x1 &
+	$SPDK_BIN_DIR/spdk_nvme_perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x1 &
 	pid0=$!
-	$SPDK_EXAMPLE_DIR/perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x2 &
+	$SPDK_BIN_DIR/spdk_nvme_perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x2 &
 	pid1=$!
-	$SPDK_EXAMPLE_DIR/perf -i 0 -q 16 -w read -o 4096 -t 5 -c 0x4
+	$SPDK_BIN_DIR/spdk_nvme_perf -i 0 -q 16 -w read -o 4096 -t 5 -c 0x4
 	wait $pid0
 	wait $pid1
 }
