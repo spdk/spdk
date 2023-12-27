@@ -47,6 +47,20 @@ if [ $(uname -s) = Linux ]; then
 		"$udevadm" monitor --property &> "$output_dir/udev.log" &
 		udevadm_pid=$!
 	fi
+
+	mkdir -p "$output_dir/power"
+
+	"$rootdir/scripts/perf/pm/collect-cpu-load" -d "$output_dir/power" > /dev/null &
+	echo $! > "$output_dir/collect-cpu-load.pid"
+	"$rootdir/scripts/perf/pm/collect-vmstat" -d "$output_dir/power" > /dev/null &
+	echo $! > "$output_dir/collect-vmstat.pid"
+
+	if [[ $(< /sys/class/dmi/id/chassis_vendor) != QEMU ]]; then
+		"$rootdir/scripts/perf/pm/collect-cpu-temp" -d "$output_dir/power" -l &
+		echo $! > "$output_dir/collect-cpu-temp.pid"
+		"$rootdir/scripts/perf/pm/collect-bmc-pm" -d "$output_dir/power" -l &
+		echo $! > "$output_dir/collect-bmc-pm.pid"
+	fi
 fi
 
 trap "autotest_cleanup || :; exit 1" SIGINT SIGTERM EXIT

@@ -1416,6 +1416,14 @@ function autotest_cleanup() {
 
 		fi > "$output_dir/proc_list.txt" 2>&1 || :
 	fi
+
+	local pid
+	for pid in "$output_dir/"*.pid; do
+		killprocess "$(< "$pid")"
+	done || :
+
+	rm -f "$output_dir/"*.pid
+
 	xtrace_restore
 	return $autotest_es
 }
