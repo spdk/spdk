@@ -11,9 +11,9 @@ source $rootdir/test/common/autotest_common.sh
 function nvme_identify() {
 	local bdfs=() bdf
 	bdfs=($(get_nvme_bdfs))
-	$SPDK_EXAMPLE_DIR/identify -i 0
+	$SPDK_BIN_DIR/spdk_nvme_identify -i 0
 	for bdf in "${bdfs[@]}"; do
-		$SPDK_EXAMPLE_DIR/identify -r "trtype:PCIe traddr:${bdf}" -i 0
+		$SPDK_BIN_DIR/spdk_nvme_identify -r "trtype:PCIe traddr:${bdf}" -i 0
 	done
 }
 
@@ -32,10 +32,10 @@ function nvme_fio_test() {
 	ran_fio=false
 	local bdfs=($(get_nvme_bdfs)) bdf
 	for bdf in "${bdfs[@]}"; do
-		if ! "$SPDK_EXAMPLE_DIR/identify" -r "trtype:PCIe traddr:${bdf}" | grep -qE "^Namespace ID:[0-9]+"; then
+		if ! "$SPDK_BIN_DIR/spdk_nvme_identify" -r "trtype:PCIe traddr:${bdf}" | grep -qE "^Namespace ID:[0-9]+"; then
 			continue
 		fi
-		if $SPDK_EXAMPLE_DIR/identify -r "trtype:PCIe traddr:${bdf}" | grep -q "Extended Data LBA"; then
+		if $SPDK_BIN_DIR/spdk_nvme_identify -r "trtype:PCIe traddr:${bdf}" | grep -q "Extended Data LBA"; then
 			bs=4160
 		else
 			bs=4096

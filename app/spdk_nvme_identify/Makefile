@@ -8,16 +8,11 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-APP = spdk_nvme_perf
+APP = spdk_nvme_identify
 
-C_SRCS := perf.c
+C_SRCS := identify.c
 
 SPDK_LIB_LIST += $(SOCK_MODULES_LIST) nvme vmd
-
-ifeq ($(OS),Linux)
-SYS_LIBS += -laio
-CFLAGS += -DHAVE_LIBAIO
-endif
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 

@@ -39,7 +39,7 @@ SPDK's identify example application displays whether a device has a controller
 memory buffer and which operations it supports. Run it as follows:
 
 ~~~{.sh}
-./build/examples/identify -r traddr:<pci id of ssd>
+spdk_nvme_identify -r traddr:<pci id of ssd>
 ~~~
 
 ## cmb_copy: An example P2P Application {#p2p_cmb_copy}

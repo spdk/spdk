@@ -123,7 +123,7 @@ get_native_nvme_bs() {
 	# between user space and the kernel back and forth.
 	local pci=$1 lbaf id
 
-	mapfile -t id < <("$rootdir/build/examples/identify" -r "trtype:pcie traddr:$pci")
+	mapfile -t id < <("$rootdir/build/bin/spdk_nvme_identify" -r "trtype:pcie traddr:$pci")
 
 	# Get size of the current LBAF
 	[[ ${id[*]} =~ "Current LBA Format:"\ *"LBA Format #"([0-9]+) ]]

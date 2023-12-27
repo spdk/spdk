@@ -43,13 +43,13 @@ ln -s /sys/kernel/config/nvmet/subsystems/$subsystemname /sys/kernel/config/nvme
 
 sleep 4
 
-$SPDK_EXAMPLE_DIR/identify -r "\
+$SPDK_BIN_DIR/spdk_nvme_identify -r "\
 	trtype:$TEST_TRANSPORT \
 	adrfam:IPv4 \
 	traddr:$NVMF_FIRST_TARGET_IP \
 	trsvcid:$NVMF_PORT \
 	subnqn:nqn.2014-08.org.nvmexpress.discovery" -t all
-$SPDK_EXAMPLE_DIR/identify -r "\
+$SPDK_BIN_DIR/spdk_nvme_identify -r "\
 	trtype:$TEST_TRANSPORT \
 	adrfam:IPv4 \
 	traddr:$NVMF_FIRST_TARGET_IP \

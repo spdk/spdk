@@ -13,7 +13,7 @@ VMD_ALLOWED=()
 
 function vmd_identify() {
 	for bdf in $pci_devs; do
-		$SPDK_EXAMPLE_DIR/identify -i 0 -V -r "trtype:PCIe traddr:$bdf"
+		$SPDK_BIN_DIR/spdk_nvme_identify -i 0 -V -r "trtype:PCIe traddr:$bdf"
 	done
 }
 

@@ -36,13 +36,13 @@ $rpc_py nvmf_subsystem_add_listener discovery -t $TEST_TRANSPORT -a $NVMF_FIRST_
 
 $rpc_py nvmf_get_subsystems
 
-$SPDK_EXAMPLE_DIR/identify -r "\
+$SPDK_BIN_DIR/spdk_nvme_identify -r "\
         trtype:$TEST_TRANSPORT \
         adrfam:IPv4 \
         traddr:$NVMF_FIRST_TARGET_IP \
         trsvcid:$NVMF_PORT \
         subnqn:nqn.2014-08.org.nvmexpress.discovery" -L all
-$SPDK_EXAMPLE_DIR/identify -r "\
+$SPDK_BIN_DIR/spdk_nvme_identify -r "\
         trtype:$TEST_TRANSPORT \
         adrfam:IPv4 \
         traddr:$NVMF_FIRST_TARGET_IP \
