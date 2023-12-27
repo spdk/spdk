@@ -95,6 +95,20 @@ void spdk_subsystem_init_from_json_config(const char *json_config_file, const ch
 		spdk_subsystem_init_fn cb_fn, void *cb_arg,
 		bool stop_on_error);
 
+/**
+ * Loads RPC configuration from provided JSON for current RPC state. The function will
+ * automatically start a JSON RPC server for configuration purposes and then stop it.
+ * JSON data will be copied, so parsing will not disturb the original memory.
+ *
+ * \param json Raw JSON data.
+ * \param json_size Size of JSON data.
+ * \param cb_fn Function called when the process is complete.
+ * \param cb_arg User context passed to cb_fn.
+ * \param stop_on_error Whether to stop initialization if one of the JSON RPCs fails.
+ */
+void spdk_subsystem_load_config(void *json, ssize_t json_size, spdk_subsystem_init_fn cb_fn,
+				void *cb_arg, bool stop_on_error);
+
 typedef void (*spdk_subsystem_fini_fn)(void *ctx);
 
 /**

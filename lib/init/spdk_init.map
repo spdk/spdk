@@ -15,6 +15,7 @@
 	spdk_rpc_server_finish;
 	spdk_rpc_server_pause;
 	spdk_rpc_server_resume;
+	spdk_subsystem_load_config;
 
 	local: *;
 };

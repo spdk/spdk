@@ -31,6 +31,8 @@ DEFINE_STUB_V(spdk_rpc_server_resume, (const char *listen_addr));
 DEFINE_STUB_V(spdk_subsystem_init_from_json_config, (const char *json_config_file,
 		const char *rpc_addr,
 		spdk_subsystem_init_fn cb_fn, void *cb_arg, bool stop_on_error));
+DEFINE_STUB_V(spdk_subsystem_load_config, (void *json, ssize_t json_size,
+		spdk_subsystem_init_fn cb_fn, void *cb_arg, bool stop_on_error));
 DEFINE_STUB_V(spdk_reactors_start, (void));
 DEFINE_STUB_V(spdk_reactors_stop, (void *arg1));
 DEFINE_STUB(spdk_reactors_init, int, (size_t msg_mempool_size), 0);

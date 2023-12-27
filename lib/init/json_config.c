@@ -93,6 +93,9 @@ struct load_json_config_ctx {
 
 	/* Timeout for current RPC client action. */
 	uint64_t timeout;
+
+	/* Signals that the code should follow deprecated path of execution. */
+	bool initalize_subsystems;
 };
 
 static void app_json_config_load_subsystem(void *_ctx);
@@ -105,7 +108,7 @@ app_json_config_load_done(struct load_json_config_ctx *ctx, int rc)
 		spdk_jsonrpc_client_close(ctx->client_conn);
 	}
 
-	spdk_rpc_finish();
+	spdk_rpc_server_finish(ctx->rpc_socket_path_temp);
 
 	SPDK_DEBUG_APP_CFG("Config load finished with rc %d\n", rc);
 	ctx->cb_fn(rc, ctx->cb_arg);
@@ -448,7 +451,10 @@ static struct spdk_json_object_decoder subsystem_decoders[] = {
  * beginning of the "subsystem" object in "subsystems" array or be NULL. If it is
  * NULL then no more subsystems to load.
  *
- * There are two iterations:
+ * If "initalize_subsystems" is unset, then the function performs one iteration
+ * and does not call subsystem initialization.
+ *
+ * There are two iterations, when "initalize_subsystems" context flag is set:
  *
  * In first iteration only STARTUP RPC methods are used, other methods are ignored. When
  * allsubsystems are walked the ctx->subsystems_it became NULL and "framework_start_init"
@@ -466,10 +472,11 @@ app_json_config_load_subsystem(void *_ctx)
 	struct load_json_config_ctx *ctx = _ctx;
 
 	if (ctx->subsystems_it == NULL) {
-		if (spdk_rpc_get_state() == SPDK_RPC_STARTUP) {
+		if (ctx->initalize_subsystems && spdk_rpc_get_state() == SPDK_RPC_STARTUP) {
 			SPDK_DEBUG_APP_CFG("No more entries for current state, calling 'framework_start_init'\n");
 			spdk_subsystem_init(subsystem_init_done, ctx);
 		} else {
+			SPDK_DEBUG_APP_CFG("No more entries for current state\n");
 			app_json_config_load_done(ctx, 0);
 		}
 
@@ -509,63 +516,58 @@ read_file(const char *filename, size_t *size)
 }
 
 static int
-app_json_config_read(const char *config_file, struct load_json_config_ctx *ctx)
+parse_json(void *json, ssize_t json_size, struct load_json_config_ctx *ctx)
 {
-	struct spdk_json_val *values = NULL;
-	void *json = NULL, *end;
-	ssize_t values_cnt, rc;
-	size_t json_size;
+	void *end;
+	ssize_t rc;
 
-	json = read_file(config_file, &json_size);
-	if (!json) {
-		SPDK_ERRLOG("Read JSON configuration file %s failed: %s\n",
-			    config_file, spdk_strerror(errno));
-		return -errno;
+	if (!json || json_size <= 0) {
+		SPDK_ERRLOG("JSON data cannot be empty\n");
+		goto err;
 	}
 
-	rc = spdk_json_parse(json, json_size, NULL, 0, &end,
+	ctx->json_data = calloc(1, json_size);
+	if (!ctx->json_data) {
+		goto err;
+	}
+	memcpy(ctx->json_data, json, json_size);
+	ctx->json_data_size = json_size;
+
+	rc = spdk_json_parse(ctx->json_data, ctx->json_data_size, NULL, 0, &end,
 			     SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
 	if (rc < 0) {
 		SPDK_ERRLOG("Parsing JSON configuration failed (%zd)\n", rc);
 		goto err;
 	}
 
-	values_cnt = rc;
-	values = calloc(values_cnt, sizeof(struct spdk_json_val));
-	if (values == NULL) {
+	ctx->values_cnt = rc;
+	ctx->values = calloc(ctx->values_cnt, sizeof(struct spdk_json_val));
+	if (ctx->values == NULL) {
 		SPDK_ERRLOG("Out of memory\n");
 		goto err;
 	}
 
-	rc = spdk_json_parse(json, json_size, values, values_cnt, &end,
+	rc = spdk_json_parse(ctx->json_data, ctx->json_data_size, ctx->values,
+			     ctx->values_cnt, &end,
 			     SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
-	if (rc != values_cnt) {
+	if ((size_t)rc != ctx->values_cnt) {
 		SPDK_ERRLOG("Parsing JSON configuration failed (%zd)\n", rc);
 		goto err;
 	}
 
-	ctx->json_data = json;
-	ctx->json_data_size = json_size;
-
-	ctx->values = values;
-	ctx->values_cnt = values_cnt;
-
 	return 0;
 err:
-	free(json);
-	free(values);
-	return rc;
+	free(ctx->values);
+	return -EINVAL;
 }
 
-void
-spdk_subsystem_init_from_json_config(const char *json_config_file, const char *rpc_addr,
-				     spdk_subsystem_init_fn cb_fn, void *cb_arg,
-				     bool stop_on_error)
+static void
+json_config_prepare_ctx(spdk_subsystem_init_fn cb_fn, void *cb_arg, bool stop_on_error, void *json,
+			ssize_t json_size, bool initalize_subsystems)
 {
 	struct load_json_config_ctx *ctx = calloc(1, sizeof(*ctx));
 	int rc;
 
-	assert(cb_fn);
 	if (!ctx) {
 		cb_fn(-ENOMEM, cb_arg);
 		return;
@@ -575,9 +577,10 @@ spdk_subsystem_init_from_json_config(const char *json_config_file, const char *r
 	ctx->cb_arg = cb_arg;
 	ctx->stop_on_error = stop_on_error;
 	ctx->thread = spdk_get_thread();
+	ctx->initalize_subsystems = initalize_subsystems;
 
-	rc = app_json_config_read(json_config_file, ctx);
-	if (rc) {
+	rc = parse_json(json, json_size, ctx);
+	if (rc < 0) {
 		goto fail;
 	}
 
@@ -605,14 +608,9 @@ spdk_subsystem_init_from_json_config(const char *json_config_file, const char *r
 		goto fail;
 	}
 
-	/* If rpc_addr is not an Unix socket use default address as prefix. */
-	if (rpc_addr == NULL || rpc_addr[0] != '/') {
-		rpc_addr = SPDK_DEFAULT_RPC_ADDR;
-	}
-
 	/* FIXME: rpc client should use socketpair() instead of this temporary socket nonsense */
-	rc = snprintf(ctx->rpc_socket_path_temp, sizeof(ctx->rpc_socket_path_temp), "%s.%d_config",
-		      rpc_addr, getpid());
+	rc = snprintf(ctx->rpc_socket_path_temp, sizeof(ctx->rpc_socket_path_temp),
+		      "%s.%d_%"PRIu64"_config", SPDK_DEFAULT_RPC_ADDR, getpid(), spdk_get_ticks());
 	if (rc >= (int)sizeof(ctx->rpc_socket_path_temp)) {
 		SPDK_ERRLOG("Socket name create failed\n");
 		goto fail;
@@ -635,6 +633,35 @@ spdk_subsystem_init_from_json_config(const char *json_config_file, const char *r
 
 fail:
 	app_json_config_load_done(ctx, -EINVAL);
+}
+
+void
+spdk_subsystem_init_from_json_config(const char *json_config_file, const char *rpc_addr,
+				     spdk_subsystem_init_fn cb_fn, void *cb_arg,
+				     bool stop_on_error)
+{
+	char *json = NULL;
+	ssize_t json_size = 0;
+
+	assert(cb_fn);
+
+	json = read_file(json_config_file, &json_size);
+	if (!json) {
+		SPDK_ERRLOG("Could not read JSON config file\n");
+		cb_fn(-EINVAL, cb_arg);
+		return;
+	}
+
+	json_config_prepare_ctx(cb_fn, cb_arg, stop_on_error, json, json_size, true);
+	free(json);
+}
+
+void
+spdk_subsystem_load_config(void *json, ssize_t json_size, spdk_subsystem_init_fn cb_fn,
+			   void *cb_arg, bool stop_on_error)
+{
+	assert(cb_fn);
+	json_config_prepare_ctx(cb_fn, cb_arg, stop_on_error, json, json_size, false);
 }
 
 SPDK_LOG_REGISTER_COMPONENT(app_config)
