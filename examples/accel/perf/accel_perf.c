@@ -37,6 +37,7 @@ static uint32_t g_xor_src_count = 2;
 static bool g_verify = false;
 static const char *g_workload_type = NULL;
 static enum spdk_accel_opcode g_workload_selection = SPDK_ACCEL_OPC_LAST;
+static const char *g_module_name = NULL;
 static struct worker_thread *g_workers = NULL;
 static int g_num_workers = 0;
 static char *g_cd_file_in_name = NULL;
@@ -158,6 +159,7 @@ usage(void)
 	printf("\t[-o transfer size in bytes (default: 4KiB. For compress/decompress, 0 means the input file size)]\n");
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-w workload type must be one of these: copy, fill, crc32c, copy_crc32c, compare, compress, decompress, dualcast, xor\n");
+	printf("\t[-M assign module to the operation, not compatible with accel_assign_opc RPC\n");
 	printf("\t[-l for compress/decompress workloads, name of uncompressed input file\n");
 	printf("\t[-S for crc32c workload, use this seed value (default 0)\n");
 	printf("\t[-P for compare workload, percentage of operations that should miscompare (percent, default 0)\n");
@@ -258,6 +260,10 @@ parse_args(int ch, char *arg)
 			return 1;
 		}
 		break;
+	case 'M':
+		g_module_name = optarg;
+		break;
+
 	default:
 		usage();
 		return 1;
@@ -1072,7 +1078,19 @@ static void
 accel_perf_prep(void *arg1)
 {
 	struct accel_perf_prep_ctx *ctx;
+	const char *module_name = NULL;
 	int rc = 0;
+
+	if (g_module_name) {
+		rc = spdk_accel_get_opc_module_name(g_workload_selection, &module_name);
+		if (rc != 0 || strcmp(g_module_name, module_name) != 0) {
+			fprintf(stderr, "Module '%s' was assigned via JSON config or RPC, instead of '%s'\n",
+				module_name, g_module_name);
+			fprintf(stderr, "-M option is not compatible with accel_assign_opc RPC\n");
+			rc = -EINVAL;
+			goto error_end;
+		}
+	}
 
 	if (g_workload_selection != SPDK_ACCEL_OPC_COMPRESS &&
 	    g_workload_selection != SPDK_ACCEL_OPC_DECOMPRESS) {
@@ -1171,7 +1189,7 @@ main(int argc, char **argv)
 	g_opts.reactor_mask = "0x1";
 	g_opts.shutdown_cb = shutdown_cb;
 
-	rc = spdk_app_parse_args(argc, argv, &g_opts, "a:C:o:q:t:yw:P:f:T:l:S:x:", NULL,
+	rc = spdk_app_parse_args(argc, argv, &g_opts, "a:C:o:q:t:yw:M:P:f:T:l:S:x:", NULL,
 				 parse_args, usage);
 	if (rc != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc == SPDK_APP_PARSE_ARGS_HELP ? 0 : 1;
@@ -1201,6 +1219,12 @@ main(int argc, char **argv)
 	}
 
 	if (g_workload_selection == SPDK_ACCEL_OPC_XOR && g_xor_src_count < 2) {
+		usage();
+		return -1;
+	}
+
+	if (g_module_name && spdk_accel_assign_opc(g_workload_selection, g_module_name)) {
+		fprintf(stderr, "Was not able to assign '%s' module to the workload\n", g_module_name);
 		usage();
 		return -1;
 	}
