@@ -433,7 +433,7 @@ collect_readings() {
 help() {
 	cat <<- HELP
 
-		Usage: $0 [-h] [-d dir] [-i sdr|dcmi] [-s SENSOR_NAME] [-t interval] [-l log_file] [-p prefix] [-c count] [-r]
+		Usage: $0 [-h] [-d dir] [-i sdr|dcmi] [-s SENSOR_NAME] [-t interval] [-l] [-p prefix] [-c count] [-r]
 
 		  -h - Print this message.
 		  -d - Directory where the results should be saved. Default is /tmp.
