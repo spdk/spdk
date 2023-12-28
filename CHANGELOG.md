@@ -2,6 +2,10 @@
 
 ## v24.05: (Upcoming Release)
 
+### event
+
+SPDK applications can now start with `--wait-for-rpc` and JSON configuration provided at the same time.
+
 ### init
 
 Function `spdk_subsystem_init_from_json_config` is deprecated and will be removed in 24.09 release.

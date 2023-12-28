@@ -1322,11 +1322,6 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		}
 	}
 
-	if (opts->json_config_file && opts->delay_subsystem_init) {
-		SPDK_ERRLOG("JSON configuration file can't be used together with --wait-for-rpc.\n");
-		goto out;
-	}
-
 	retval = SPDK_APP_PARSE_ARGS_SUCCESS;
 out:
 	if (retval != SPDK_APP_PARSE_ARGS_SUCCESS) {

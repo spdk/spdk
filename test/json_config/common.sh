@@ -53,6 +53,10 @@ function json_config_test_shutdown_app() {
 	echo "SPDK $app shutdown done"
 }
 
+function tgt_rpc() {
+	$rootdir/scripts/rpc.py -s "${app_socket[target]}" "$@"
+}
+
 on_error_exit() {
 	set -x
 	set +e
