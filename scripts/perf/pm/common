@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#  SPDX-License-Identifier: BSD-3-Clause
+#  Copyright (C) 2023 Intel Corporation
+#  All rights reserved.
+
+_pmdir=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")
+_pmrootdir=$(readlink -f "$_pmdir/../../../")
+
+retag() {
+	[[ -s $TEST_TAG_FILE ]] || return 0
+	# If we got signalled but the tag didn't change, just bail
+	[[ $(< "$TEST_TAG_FILE") == "$TEST_TAG" ]] && return 0
+	TEST_TAG=$(< "$TEST_TAG_FILE")
+}
+
+TEST_TAG=${TEST_TAG:-N/A}
+TEST_TAG_FILE=${TEST_TAG_FILE:-"$_pmrootdir/.run_test_name"}

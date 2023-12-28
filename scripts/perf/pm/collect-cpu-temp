@@ -13,6 +13,7 @@ shopt -s extglob nullglob
 pmdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$pmdir/../../../")
 source "$rootdir/test/scheduler/common.sh"
+source "$pmdir/common"
 
 to_celsius() { echo $(($1 / 1000)); }
 
@@ -52,10 +53,11 @@ report_hwmon_generic() {
 		label+=":${dev##*/}"
 	fi
 
-	printf '(%s) --- %s (%u C)\n' \
+	printf '(%s) --- %s (%u C) (test:%s)\n' \
 		"$ts" \
 		"$label" \
-		"$(to_celsius "$temp")"
+		"$(to_celsius "$temp")" \
+		"$TEST_TAG"
 	printf '%s\n' "---"
 }
 
@@ -91,10 +93,11 @@ report_hwmon_coretemp() {
 	# physical_package_id and/or numa assignment (cpu_node_map[@]).
 	[[ -n $node ]] || return 1
 
-	printf '(%s) --- Node%u (%u C)\n' \
+	printf '(%s) --- Node%u (%u C) (test:%s)\n' \
 		"$ts" \
 		"$node" \
-		"$(to_celsius "${package[node]}")"
+		"$(to_celsius "${package[node]}")" \
+		"$TEST_TAG"
 
 	for core in "${!cores_input[@]}"; do
 		threads=($(get_cpus "$node" "$core"))
@@ -262,6 +265,7 @@ if [[ $log_to_file == yes ]]; then
 fi
 
 trap 'cleanup' EXIT
+trap 'retag' USR1
 
 init_modules "$@"
 

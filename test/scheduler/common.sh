@@ -578,10 +578,10 @@ print_cpu_time_header() {
 	local ts
 	ts=$(date "+%r")
 
-	printf '(%s) %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s\n' \
+	printf '(%s) %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s (test:%s)\n' \
 		"$ts" \
 		"CPU" "%usr" "%nice" "%sys" "%iowait" "%irq" "%soft" "%steal" \
-		"%guest" "%gnice" "%idle"
+		"%guest" "%gnice" "%idle" "${TEST_TAG:-N/A}"
 }
 
 print_cpu_time() {

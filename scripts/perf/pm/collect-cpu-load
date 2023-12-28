@@ -8,6 +8,7 @@ shopt -s nullglob extglob
 pmdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$pmdir/../../../")
 source "$rootdir/test/scheduler/common.sh"
+source "$pmdir/common"
 
 help() {
 	cat <<- HELP
@@ -64,5 +65,7 @@ mkdir -p "$output_dir"
 
 cpus=("$@")
 ((${#cpus[@]} > 0)) || cpus=($(get_online_cpus))
+
+trap 'retag' USR1
 
 _get_cpu_time "$count" "" 1 "$interval" "${cpus[@]}"

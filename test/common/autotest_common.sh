@@ -47,6 +47,7 @@ fi
 # Source scripts after the config so that the definitions are available.
 source "$rootdir/test/common/applications.sh"
 source "$rootdir/scripts/common.sh"
+source "$rootdir/scripts/perf/pm/common"
 
 : ${RUN_NIGHTLY:=0}
 export RUN_NIGHTLY
@@ -1080,7 +1081,7 @@ function run_test() {
 	fi
 
 	xtrace_disable
-	local test_name="$1"
+	local test_name="$1" pid
 	shift
 
 	if [ -n "${test_domain:-}" ]; then
@@ -1088,6 +1089,12 @@ function run_test() {
 	else
 		export test_domain="$test_name"
 	fi
+
+	# Signal our daemons to update the test tag
+	echo "$test_domain" > "$TEST_TAG_FILE"
+	for pid in "$output_dir/collect-"@(cpu-load|cpu-temp|vmstat).pid; do
+		kill -USR1 "$(< "$pid")" || true
+	done
 
 	timing_enter $test_name
 	echo "************************************"
@@ -1423,6 +1430,7 @@ function autotest_cleanup() {
 	done || :
 
 	rm -f "$output_dir/"*.pid
+	rm -f "$TEST_TAG_FILE"
 
 	xtrace_restore
 	return $autotest_es

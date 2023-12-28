@@ -40,3 +40,4 @@ test_completions.txt
 timing.txt
 test/common/build_config.sh
 .coredump_path
+.run_test_name

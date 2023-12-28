@@ -7,6 +7,7 @@ shopt -s nullglob extglob
 
 pmdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$pmdir/../../../")
+source "$pmdir/common"
 
 help() {
 	cat <<- HELP
@@ -48,7 +49,7 @@ _vmstat() {
 	while ((stat_idx = stat_idx == reprint_header ? 1 : ++stat_idx, count <= 0 ? 1 : _count--)); do
 		mapfile -t vmstat < <(vmstat --timestamp)
 		# Enhance output to include stuff we are most interested in
-		vmstat[2]="${vmstat[2]} $(get_extra_meminfo)"
+		vmstat[2]="${vmstat[2]} $(get_extra_meminfo) (test:$TEST_TAG)"
 		if ((stat_idx == 1)); then
 			header=("${vmstat[@]::2}")
 			header[0]="${header[0]}     ----extra memory----"
@@ -87,5 +88,7 @@ done
 declare -r log_file=${prefix:+${prefix}_}${0##*/}.pm.log
 
 mkdir -p "$output_dir"
+
+trap 'retag' USR1
 
 _vmstat "$count" "$interval" "$reprint_header"
