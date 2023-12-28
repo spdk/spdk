@@ -155,7 +155,6 @@ usage(void)
 	printf("\t[-q queue depth per core]\n");
 	printf("\t[-C for supported workloads, use this value to configure the io vector size to test (default 1)\n");
 	printf("\t[-T number of threads per core\n");
-	printf("\t[-n number of channels]\n");
 	printf("\t[-o transfer size in bytes (default: 4KiB. For compress/decompress, 0 means the input file size)]\n");
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-w workload type must be one of these: copy, fill, crc32c, copy_crc32c, compare, compress, decompress, dualcast, xor\n");
