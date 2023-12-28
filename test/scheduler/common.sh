@@ -475,8 +475,8 @@ active_thread() {
 get_cpu_time() {
 	xtrace_disable
 
-	local interval=$1 cpu_time=${2:-idle} print=${3:-0} interval_count
-	shift 3
+	local interval=$1 cpu_time=${2:-idle} print=${3:-0} wait=${4:-1} interval_count
+	shift 4
 	local cpus=("$@") cpu
 	local stats stat old_stats avg_load
 	local total_sample
@@ -555,7 +555,7 @@ get_cpu_time() {
 			old_stats=("${stats[@]}")
 			((print == 1)) && print_cpu_time "$cpu"
 		done
-		sleep 1s
+		sleep "${wait}s"
 	done
 
 	# We collected % for each time. Now determine the avg % for requested time.
@@ -626,7 +626,7 @@ collect_cpu_idle() {
 	printf 'Collecting cpu idle stats (cpus: %s) for %u seconds...\n' \
 		"${cpus_to_collect[*]}" "$time"
 
-	get_cpu_time "$time" idle 0 "${cpus_to_collect[@]}"
+	get_cpu_time "$time" idle 0 1 "${cpus_to_collect[@]}"
 
 	local user_load
 	for cpu in "${cpus_to_collect[@]}"; do
