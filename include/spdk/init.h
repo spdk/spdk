@@ -105,6 +105,20 @@ typedef void (*spdk_subsystem_fini_fn)(void *ctx);
  */
 void spdk_subsystem_fini(spdk_subsystem_fini_fn cb_fn, void *cb_arg);
 
+/**
+ * Pause polling RPC server with given address.
+ *
+ * \param listen_addr Address, on which RPC server listens for connections.
+ */
+void spdk_rpc_server_pause(const char *listen_addr);
+
+/**
+ * Resume polling RPC server with given address.
+ *
+ * \param listen_addr Address, on which RPC server listens for connections.
+ */
+void spdk_rpc_server_resume(const char *listen_addr);
+
 #ifdef __cplusplus
 }
 #endif

@@ -18,6 +18,7 @@ static struct spdk_poller *g_rpc_poller = NULL;
 struct init_rpc_server {
 	struct spdk_rpc_server *server;
 	char listen_addr[sizeof(((struct sockaddr_un *)0)->sun_path)];
+	bool active;
 	STAILQ_ENTRY(init_rpc_server) link;
 };
 
@@ -30,7 +31,9 @@ rpc_subsystem_poll_servers(void *arg)
 	struct init_rpc_server *init_server;
 
 	STAILQ_FOREACH(init_server, &g_init_rpc_servers, link) {
-		spdk_rpc_server_accept(init_server->server);
+		if (init_server->active) {
+			spdk_rpc_server_accept(init_server->server);
+		}
 	}
 
 	return SPDK_POLLER_BUSY;
@@ -169,6 +172,7 @@ spdk_rpc_initialize(const char *listen_addr, const struct spdk_rpc_opts *opts)
 	}
 
 	rpc_set_spdk_log_opts(opts);
+	init_server->active = true;
 
 	STAILQ_INSERT_TAIL(&g_init_rpc_servers, init_server, link);
 	if (g_rpc_poller == NULL) {
@@ -207,4 +211,30 @@ spdk_rpc_finish(void)
 	STAILQ_FOREACH_SAFE(init_server, &g_init_rpc_servers, link, tmp) {
 		spdk_rpc_server_finish(init_server->listen_addr);
 	}
+}
+
+static void
+set_server_active_flag(const char *listen_addr, bool is_active)
+{
+	struct init_rpc_server *init_server;
+
+	init_server = get_server_by_addr(listen_addr);
+	if (!init_server) {
+		SPDK_ERRLOG("No server listening on provided address: %s\n", listen_addr);
+		return;
+	}
+
+	init_server->active = is_active;
+}
+
+void
+spdk_rpc_server_pause(const char *listen_addr)
+{
+	set_server_active_flag(listen_addr, false);
+}
+
+void
+spdk_rpc_server_resume(const char *listen_addr)
+{
+	set_server_active_flag(listen_addr, true);
 }

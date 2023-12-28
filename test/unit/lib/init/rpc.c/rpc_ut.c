@@ -63,6 +63,20 @@ server_exists(const char *addr)
 	return false;
 }
 
+static bool
+server_paused(const char *addr)
+{
+	struct init_rpc_server *server;
+
+	STAILQ_FOREACH(server, &g_init_rpc_servers, link) {
+		if (strcmp(addr, server->listen_addr) == 0 && !server->active) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 static void
 initialize_servers(void)
 {
@@ -73,10 +87,12 @@ initialize_servers(void)
 	rc = spdk_rpc_initialize(g_test_addr1, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(server_exists(g_test_addr1));
+	CU_ASSERT(server_paused(g_test_addr1) == false);
 
 	rc = spdk_rpc_initialize(g_test_addr2, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(server_exists(g_test_addr2));
+	CU_ASSERT(server_paused(g_test_addr2) == false);
 }
 
 static void
@@ -159,6 +175,45 @@ test_rpc_set_spdk_log_default_opts(void)
 	spdk_rpc_finish();
 }
 
+static void
+test_pause_resume_servers(void)
+{
+	initialize_servers();
+
+	spdk_rpc_server_pause(g_test_addr1);
+	CU_ASSERT(server_exists(g_test_addr1));
+	CU_ASSERT(server_paused(g_test_addr1));
+
+	spdk_rpc_server_pause(g_test_addr2);
+	CU_ASSERT(server_exists(g_test_addr2));
+	CU_ASSERT(server_paused(g_test_addr2));
+
+	spdk_rpc_server_resume(g_test_addr2);
+	CU_ASSERT(!server_paused(g_test_addr2));
+
+	spdk_rpc_server_resume(g_test_addr1);
+	CU_ASSERT(!server_paused(g_test_addr1));
+
+	spdk_rpc_finish();
+}
+
+static void
+test_remove_paused_servers(void)
+{
+	initialize_servers();
+
+	spdk_rpc_server_pause(g_test_addr1);
+	spdk_rpc_server_pause(g_test_addr2);
+
+	spdk_rpc_server_finish(g_test_addr2);
+	CU_ASSERT(!server_exists(g_test_addr2));
+
+	CU_ASSERT(server_exists(g_test_addr1));
+	CU_ASSERT(server_paused(g_test_addr1));
+
+	spdk_rpc_server_finish(g_test_addr1);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -177,6 +232,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_run_multiple_servers_stop_singles);
 	CU_ADD_TEST(suite, test_rpc_set_spdk_log_opts);
 	CU_ADD_TEST(suite, test_rpc_set_spdk_log_default_opts);
+	CU_ADD_TEST(suite, test_pause_resume_servers);
+	CU_ADD_TEST(suite, test_remove_paused_servers);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
