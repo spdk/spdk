@@ -26,6 +26,9 @@ function accel_scan_dsa_modules_test_suite() {
 # assignments to modules before starting the framework.
 # Should PASS - opcode assignments can be verified after starting the framework.
 function accel_assign_opcode_test_suite() {
+	# Assign opc twice, to test replacing the assignment
+	$rpc_py accel_assign_opc -o copy -m incorrect
+
 	$rpc_py accel_assign_opc -o copy -m software
 	$rpc_py framework_start_init
 	$rpc_py accel_get_opc_assignments | jq -r '.copy' | grep software

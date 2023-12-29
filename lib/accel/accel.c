@@ -260,6 +260,7 @@ spdk_accel_assign_opc(enum spdk_accel_opcode opcode, const char *name)
 	}
 
 	/* module selection will be validated after the framework starts. */
+	free(g_modules_opc_override[opcode]);
 	g_modules_opc_override[opcode] = copy;
 
 	return 0;
