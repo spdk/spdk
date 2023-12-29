@@ -193,7 +193,7 @@ collect_readings() {
 }
 
 dater() {
-	date "+%r"
+	date "+%R:%S %Z"
 }
 
 cleanup() {

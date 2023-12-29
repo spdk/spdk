@@ -576,7 +576,7 @@ get_cpu_time() {
 
 print_cpu_time_header() {
 	local ts
-	ts=$(date "+%r")
+	ts=$(date "+%R:%S %Z")
 
 	printf '(%s) %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s (test:%s)\n' \
 		"$ts" \
@@ -601,7 +601,7 @@ print_cpu_time() {
 	guest=("${!_cpu_ref[8]}")
 	gnice=("${!_cpu_ref[9]}")
 
-	printf '%22u %8u %8u %8u %8u %8u %8u %8u %8u %8u %8u\n' \
+	printf '%23u %8u %8u %8u %8u %8u %8u %8u %8u %8u %8u\n' \
 		"$cpu" \
 		"${usr[-1]}" \
 		"${nice[-1]}" \
