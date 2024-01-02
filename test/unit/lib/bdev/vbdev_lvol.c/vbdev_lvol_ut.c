@@ -17,6 +17,7 @@
 int g_lvolerrno;
 int g_lvserrno;
 int g_cluster_size;
+int g_num_clusters = 0;
 int g_registered_bdevs;
 int g_num_lvols = 0;
 int g_lvol_open_enomem = -1;
@@ -242,7 +243,7 @@ spdk_lvol_open(struct spdk_lvol *lvol, spdk_lvol_op_with_handle_complete cb_fn, 
 uint64_t
 spdk_blob_get_num_clusters(struct spdk_blob *b)
 {
-	return 0;
+	return g_num_clusters;
 }
 
 /* Simulation of a blob with:
@@ -449,7 +450,14 @@ spdk_bdev_create_bs_dev_ext(const char *bdev_name, spdk_bdev_event_cb_t event_cb
 	bs_dev = calloc(1, sizeof(*bs_dev));
 	SPDK_CU_ASSERT_FATAL(bs_dev != NULL);
 	bs_dev->blocklen = 4096;
+	SPDK_CU_ASSERT_FATAL(SPDK_BS_PAGE_SIZE % bs_dev->blocklen == 0);
+
+	g_cluster_size = SPDK_LVS_OPTS_CLUSTER_SZ;
+	SPDK_CU_ASSERT_FATAL(g_cluster_size % SPDK_BS_PAGE_SIZE == 0);
 	bs_dev->blockcnt = 128;
+
+	g_num_clusters = spdk_divide_round_up(bs_dev->blockcnt, g_cluster_size);
+
 	bs_dev->destroy = bdev_blob_destroy;
 	bs_dev->get_base_bdev = bdev_blob_get_base_bdev;
 
@@ -555,6 +563,7 @@ spdk_lvs_destroy(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 void
 spdk_lvol_resize(struct spdk_lvol *lvol, size_t sz,  spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
+	g_num_clusters = spdk_divide_round_up(sz, spdk_bs_get_cluster_size(lvol->lvol_store->blobstore));
 	cb_fn(cb_arg, 0);
 }
 
@@ -854,6 +863,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, size_t sz,
 
 	lvol = _lvol_create(lvs);
 	snprintf(lvol->name, sizeof(lvol->name), "%s", name);
+	g_num_clusters = spdk_divide_round_up(sz, spdk_bs_get_cluster_size(lvol->lvol_store->blobstore));
 	cb_fn(cb_arg, lvol, 0);
 
 	return 0;
@@ -971,6 +981,13 @@ ut_lvs_destroy(void)
 }
 
 static void
+assert_blockcnt(struct spdk_lvol *lvol, int sz)
+{
+	CU_ASSERT(lvol->bdev->blockcnt == spdk_divide_round_up(sz, g_cluster_size) *
+		  (g_cluster_size / lvol->bdev->blocklen));
+}
+
+static void
 ut_lvol_init(void)
 {
 	struct spdk_lvol_store *lvs;
@@ -992,7 +1009,9 @@ ut_lvol_init(void)
 			       NULL);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	CU_ASSERT(g_lvol != NULL);
+	CU_ASSERT(g_lvol->bdev != NULL);
 	CU_ASSERT(g_lvolerrno == 0);
+	assert_blockcnt(g_lvol, sz);
 
 	/* Successful lvol destroy */
 	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
@@ -1423,13 +1442,15 @@ ut_lvol_resize(void)
 
 	/* Successful lvol resize */
 	g_lvolerrno = -1;
-	vbdev_lvol_resize(lvol, 20, vbdev_lvol_resize_complete, NULL);
+	sz = 20 * g_cluster_size;
+	vbdev_lvol_resize(lvol, sz, vbdev_lvol_resize_complete, NULL);
 	CU_ASSERT(g_lvolerrno == 0);
-	CU_ASSERT(lvol->bdev->blockcnt == 20 * g_cluster_size / lvol->bdev->blocklen);
+	assert_blockcnt(g_lvol, sz);
 
 	/* Resize with NULL lvol */
-	vbdev_lvol_resize(NULL, 20, vbdev_lvol_resize_complete, NULL);
+	vbdev_lvol_resize(NULL, 34 * g_cluster_size, vbdev_lvol_resize_complete, NULL);
 	CU_ASSERT(g_lvolerrno != 0);
+	assert_blockcnt(g_lvol, sz);
 
 	/* Successful lvol destroy */
 	vbdev_lvol_destroy(lvol, lvol_store_op_complete, NULL);
@@ -1895,6 +1916,7 @@ ut_lvol_esnap_clone_bad_args(void)
 	bdev.name = strdup(esnap_name);
 	SPDK_CU_ASSERT_FATAL(bdev.name != NULL);
 	bdev.blocklen = 512;
+	SPDK_CU_ASSERT_FATAL(SPDK_BS_PAGE_SIZE % bdev.blocklen == 0);
 	bdev.blockcnt = 8192;
 
 	g_base_bdev = &bdev;
