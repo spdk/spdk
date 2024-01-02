@@ -1739,7 +1739,6 @@ spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr)
 			if (rc_tmp != 0) {
 				rc = rc_tmp;
 				qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
-				continue;
 			}
 		}
 	}
