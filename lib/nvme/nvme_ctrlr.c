@@ -1696,6 +1696,30 @@ spdk_nvme_ctrlr_reconnect_async(struct spdk_nvme_ctrlr *ctrlr)
 	 */
 }
 
+int
+nvme_ctrlr_reinitialize_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+{
+	bool async;
+	int rc;
+
+	if (spdk_nvme_ctrlr_is_fabrics(ctrlr) || nvme_qpair_is_admin_queue(qpair)) {
+		assert(false);
+		return -EINVAL;
+	}
+
+	/* Force a synchronous connect. */
+	async = qpair->async;
+	qpair->async = false;
+	rc = nvme_transport_ctrlr_connect_qpair(ctrlr, qpair);
+	qpair->async = async;
+
+	if (rc != 0) {
+		qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
+	}
+
+	return rc;
+}
+
 /**
  * This function will be called when the controller is being reinitialized.
  * Note: the ctrlr_lock must be held when calling this function.
@@ -1706,7 +1730,6 @@ spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr)
 	struct spdk_nvme_ns *ns, *tmp_ns;
 	struct spdk_nvme_qpair	*qpair;
 	int rc = 0, rc_tmp = 0;
-	bool async;
 
 	if (nvme_ctrlr_process_init(ctrlr) != 0) {
 		NVME_CTRLR_ERRLOG(ctrlr, "controller reinitialization failed\n");
@@ -1728,17 +1751,9 @@ spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr)
 		TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
 			assert(spdk_bit_array_get(ctrlr->free_io_qids, qpair->id));
 			spdk_bit_array_clear(ctrlr->free_io_qids, qpair->id);
-
-			/* Force a synchronous connect. We can't currently handle an asynchronous
-			 * operation here. */
-			async = qpair->async;
-			qpair->async = false;
-			rc_tmp = nvme_transport_ctrlr_connect_qpair(ctrlr, qpair);
-			qpair->async = async;
-
+			rc_tmp = nvme_ctrlr_reinitialize_io_qpair(ctrlr, qpair);
 			if (rc_tmp != 0) {
 				rc = rc_tmp;
-				qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
 			}
 		}
 	}
