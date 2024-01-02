@@ -415,20 +415,21 @@ struct spdk_nvme_qpair {
 
 	uint16_t				id;
 
-	uint8_t					qprio;
+	uint8_t					qprio: 2;
 
-	uint8_t					state : 3;
+	uint8_t					state: 3;
 
 	uint8_t					async: 1;
 
 	uint8_t					is_new_qpair: 1;
 
+	uint8_t					abort_dnr: 1;
 	/*
 	 * Members for handling IO qpair deletion inside of a completion context.
 	 * These are specifically defined as single bits, so that they do not
 	 *  push this data structure out to another cacheline.
 	 */
-	uint8_t					in_completion_context : 1;
+	uint8_t					in_completion_context: 1;
 	uint8_t					delete_after_completion_context: 1;
 
 	/*
@@ -439,10 +440,9 @@ struct spdk_nvme_qpair {
 
 	uint8_t					last_fuse: 2;
 
-	uint8_t					transport_failure_reason: 2;
-	uint8_t					last_transport_failure_reason: 2;
+	uint8_t					transport_failure_reason: 3;
+	uint8_t					last_transport_failure_reason: 3;
 
-	uint8_t					abort_dnr: 1;
 	/* The user is destroying qpair */
 	uint8_t					destroy_in_progress: 1;
 

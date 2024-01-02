@@ -1702,7 +1702,8 @@ nvme_ctrlr_reinitialize_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 	bool async;
 	int rc;
 
-	if (spdk_nvme_ctrlr_is_fabrics(ctrlr) || nvme_qpair_is_admin_queue(qpair)) {
+	if (nvme_ctrlr_get_current_process(ctrlr) != qpair->active_proc ||
+	    spdk_nvme_ctrlr_is_fabrics(ctrlr) || nvme_qpair_is_admin_queue(qpair)) {
 		assert(false);
 		return -EINVAL;
 	}
@@ -1749,8 +1750,21 @@ spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr)
 	if (rc == 0 && !spdk_nvme_ctrlr_is_fabrics(ctrlr)) {
 		/* Reinitialize qpairs */
 		TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
+			/* Always clear the qid bit here, even for a foreign qpair. We need
+			 * to make sure another process doesn't get the chance to grab that
+			 * qid.
+			 */
 			assert(spdk_bit_array_get(ctrlr->free_io_qids, qpair->id));
 			spdk_bit_array_clear(ctrlr->free_io_qids, qpair->id);
+			if (nvme_ctrlr_get_current_process(ctrlr) != qpair->active_proc) {
+				/*
+				 * We cannot reinitialize a foreign qpair. The qpair's owning
+				 * process will take care of it. Set failure reason to FAILURE_RESET
+				 * to ensure that happens.
+				 */
+				qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_RESET;
+				continue;
+			}
 			rc_tmp = nvme_ctrlr_reinitialize_io_qpair(ctrlr, qpair);
 			if (rc_tmp != 0) {
 				rc = rc_tmp;

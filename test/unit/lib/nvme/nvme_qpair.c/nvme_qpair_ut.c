@@ -33,6 +33,8 @@ DEFINE_STUB_V(nvme_ctrlr_disconnect_qpair, (struct spdk_nvme_qpair *qpair));
 
 DEFINE_STUB_V(nvme_ctrlr_complete_queued_async_events, (struct spdk_nvme_ctrlr *ctrlr));
 DEFINE_STUB_V(nvme_ctrlr_abort_queued_aborts, (struct spdk_nvme_ctrlr *ctrlr));
+DEFINE_STUB(nvme_ctrlr_reinitialize_io_qpair, int,
+	    (struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair), 0);
 
 void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)

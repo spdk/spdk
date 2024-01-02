@@ -681,6 +681,13 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 		if (qpair->ctrlr->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
 			nvme_ctrlr_disconnect_qpair(qpair);
 		}
+		if (qpair->transport_failure_reason == SPDK_NVME_QPAIR_FAILURE_RESET) {
+			/*
+			 * For multi-process, a synchronous reset may not reconnect
+			 * foreign IO qpairs. So we will reconnect them here instead.
+			 */
+			nvme_ctrlr_reinitialize_io_qpair(qpair->ctrlr, qpair);
+		}
 		return false;
 	}
 

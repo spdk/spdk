@@ -383,6 +383,7 @@ enum spdk_nvme_qp_failure_reason {
 	SPDK_NVME_QPAIR_FAILURE_LOCAL,
 	SPDK_NVME_QPAIR_FAILURE_REMOTE,
 	SPDK_NVME_QPAIR_FAILURE_UNKNOWN,
+	SPDK_NVME_QPAIR_FAILURE_RESET,
 };
 
 typedef enum spdk_nvme_qp_failure_reason spdk_nvme_qp_failure_reason;
