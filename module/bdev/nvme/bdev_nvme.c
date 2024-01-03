@@ -5107,6 +5107,12 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 }
 
 static void
+free_nvme_async_probe_ctx(struct nvme_async_probe_ctx *ctx)
+{
+	free(ctx);
+}
+
+static void
 populate_namespaces_cb(struct nvme_async_probe_ctx *ctx, int rc)
 {
 	if (ctx->cb_fn) {
@@ -5119,7 +5125,7 @@ populate_namespaces_cb(struct nvme_async_probe_ctx *ctx, int rc)
 		 * here.  This can happen for cases like OCSSD, where we need to
 		 * send additional commands to the SSD after attach.
 		 */
-		free(ctx);
+		free_nvme_async_probe_ctx(ctx);
 	}
 }
 
@@ -5881,7 +5887,7 @@ bdev_nvme_async_poll(void *arg)
 			 * populated and the response was already sent to the
 			 * caller (usually the RPC).  So free the context here.
 			 */
-			free(ctx);
+			free_nvme_async_probe_ctx(ctx);
 		}
 	}
 
@@ -6050,7 +6056,7 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 					ctx->drv_opts.psk, sizeof(ctx->drv_opts.psk));
 		if (rc != 0) {
 			SPDK_ERRLOG("Could not load PSK from %s\n", ctx->bdev_opts.psk_path);
-			free(ctx);
+			free_nvme_async_probe_ctx(ctx);
 			return rc;
 		}
 	}
@@ -6064,7 +6070,7 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	ctx->probe_ctx = spdk_nvme_connect_async(trid, &ctx->drv_opts, attach_cb);
 	if (ctx->probe_ctx == NULL) {
 		SPDK_ERRLOG("No controller was found with provided trid (traddr: %s)\n", trid->traddr);
-		free(ctx);
+		free_nvme_async_probe_ctx(ctx);
 		return -ENODEV;
 	}
 	ctx->poller = SPDK_POLLER_REGISTER(bdev_nvme_async_poll, ctx, 1000);
