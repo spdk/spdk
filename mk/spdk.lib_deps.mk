@@ -72,7 +72,7 @@ DEPDIRS-nbd := log util thread $(JSON_LIBS) bdev
 ifeq ($(CONFIG_UBLK),y)
 DEPDIRS-ublk := log util thread $(JSON_LIBS) bdev
 endif
-DEPDIRS-nvmf := accel log sock util nvme thread $(JSON_LIBS) trace bdev
+DEPDIRS-nvmf := accel log sock util nvme thread $(JSON_LIBS) trace bdev keyring
 ifeq ($(CONFIG_RDMA),y)
 DEPDIRS-nvmf += rdma
 endif
@@ -176,7 +176,8 @@ DEPDIRS-event_nbd := init nbd event_bdev
 ifeq ($(CONFIG_UBLK),y)
 DEPDIRS-event_ublk := init ublk event_bdev
 endif
-DEPDIRS-event_nvmf := init nvmf event_bdev event_scheduler event_sock thread log bdev util $(JSON_LIBS)
+DEPDIRS-event_nvmf := init nvmf event_bdev event_scheduler event_sock event_keyring \
+		      thread log bdev util $(JSON_LIBS)
 DEPDIRS-event_scsi := init scsi event_bdev
 
 DEPDIRS-event_iscsi := init iscsi event_scheduler event_scsi event_sock

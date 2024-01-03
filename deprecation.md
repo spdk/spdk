@@ -65,6 +65,12 @@ will be removed in 24.05 release.
 The function is deprecated and will be removed in 24.05 release. Please use
 `spdk_nvmf_subsystem_any_listener_allowed` instead.
 
+#### `nvmf_subsystem_add_host`
+
+The ability to specifying path to a PSK file via the `psk` parameter in `nvmf_subsystem_add_host` is
+deprecated and will be removed in the v24.09 release.  Instead, the name of a key attached to the
+keyring should be used.
+
 ### gpt
 
 #### `old_gpt_guid`

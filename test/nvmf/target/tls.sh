@@ -231,5 +231,49 @@ waitforlisten "$bdevperf_pid" "$bdevperf_rpc_sock"
 
 "$rootdir/examples/bdev/bdevperf/bdevperf.py" -s "$bdevperf_rpc_sock" perform_tests
 
+killprocess $bdevperf_pid
+killprocess $nvmfpid
+
+# Check the same, but this time, use keyring on the target side too
+nvmfappstart
+rpc_cmd << CONFIG
+	nvmf_create_transport $NVMF_TRANSPORT_OPTS
+	bdev_malloc_create 32 4096 -b malloc0
+	nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1
+	nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t tcp \
+		-a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -k
+	nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 malloc0
+	keyring_file_add_key key0 "$key_long_path"
+	nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 --psk key0
+CONFIG
+
+"$rootdir/build/examples/bdevperf" -m 2 -z -r "$bdevperf_rpc_sock" \
+	-q 128 -o 4k -w verify -t 1 "${NO_HUGE[@]}" &
+bdevperf_pid=$!
+
+waitforlisten "$bdevperf_pid" "$bdevperf_rpc_sock"
+"$rpc_py" -s "$bdevperf_rpc_sock" keyring_file_add_key key0 "$key_long_path"
+"$rpc_py" -s "$bdevperf_rpc_sock" bdev_nvme_attach_controller -b nvme0 -t tcp \
+	-a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -f ipv4 --psk key0 \
+	-n "nqn.2016-06.io.spdk:cnode1" -q "nqn.2016-06.io.spdk:host1"
+
+"$rootdir/examples/bdev/bdevperf/bdevperf.py" -s "$bdevperf_rpc_sock" perform_tests
+
+# Check save/load config
+tgtcfg=$(rpc_cmd save_config)
+bperfcfg=$("$rpc_py" -s "$bdevperf_rpc_sock" save_config)
+
+killprocess $bdevperf_pid
+killprocess $nvmfpid
+
+nvmfappstart -c <(echo "$tgtcfg")
+"$rootdir/build/examples/bdevperf" -m 2 -z -r "$bdevperf_rpc_sock" \
+	-q 128 -o 4k -w verify -t 1 "${NO_HUGE[@]}" -c <(echo "$bperfcfg") &
+bdevperf_pid=$!
+waitforlisten "$bdevperf_pid" "$bdevperf_rpc_sock"
+
+[[ $("$rpc_py" -s "$bdevperf_rpc_sock" bdev_nvme_get_controllers | jq -r '.[].name') == "nvme0" ]]
+"$rootdir/examples/bdev/bdevperf/bdevperf.py" -s "$bdevperf_rpc_sock" perform_tests
+
 trap - SIGINT SIGTERM EXIT
 cleanup
