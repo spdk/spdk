@@ -187,8 +187,9 @@ function linux_bind_driver() {
 	if ((${#iommug[@]} > 1)) && [[ $driver_name == vfio* ]]; then
 		pci_dev_echo "$bdf" "WARNING: detected multiple devices (${#iommug[@]}) under the same IOMMU group!"
 		for _bdf in "${iommug[@]}"; do
-			_driver=$(readlink -f "$_bdf/driver")
-			if [[ ! -e $_driver || ${_driver##*/} == "$driver_name" ]]; then
+			[[ $_bdf == "$bdf" ]] && continue
+			_driver=$(readlink -f "/sys/bus/pci/devices/$_bdf/driver") && _driver=${_driver##*/}
+			if [[ $_driver == "$driver_name" ]]; then
 				continue
 			fi
 			# See what DPDK considers to be a "viable" iommu group: dpdk/lib/eal/linux/eal_vfio.c -> rte_vfio_setup_device()
