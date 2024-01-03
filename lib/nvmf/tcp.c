@@ -600,6 +600,17 @@ nvmf_tcp_dump_opts(struct spdk_nvmf_transport *transport, struct spdk_json_write
 	spdk_json_write_named_uint32(w, "sock_priority", ttransport->tcp_opts.sock_priority);
 }
 
+static void
+nvmf_tcp_free_psk_entry(struct tcp_psk_entry *entry)
+{
+	if (entry == NULL) {
+		return;
+	}
+
+	spdk_memset_s(entry->psk, sizeof(entry->psk), 0, sizeof(entry->psk));
+	free(entry);
+}
+
 static int
 nvmf_tcp_destroy(struct spdk_nvmf_transport *transport,
 		 spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg)
@@ -612,7 +623,7 @@ nvmf_tcp_destroy(struct spdk_nvmf_transport *transport,
 
 	TAILQ_FOREACH_SAFE(entry, &ttransport->psks, link, tmp) {
 		TAILQ_REMOVE(&ttransport->psks, entry, link);
-		free(entry);
+		nvmf_tcp_free_psk_entry(entry);
 	}
 
 	spdk_poller_unregister(&ttransport->accept_poller);
@@ -3714,7 +3725,7 @@ end:
 
 	free(opts.psk);
 	if (rc != 0) {
-		free(entry);
+		nvmf_tcp_free_psk_entry(entry);
 	}
 
 	return rc;
@@ -3736,8 +3747,7 @@ nvmf_tcp_subsystem_remove_host(struct spdk_nvmf_transport *transport,
 		if ((strncmp(entry->hostnqn, hostnqn, SPDK_NVMF_NQN_MAX_LEN)) == 0 &&
 		    (strncmp(entry->subnqn, subsystem->subnqn, SPDK_NVMF_NQN_MAX_LEN)) == 0) {
 			TAILQ_REMOVE(&ttransport->psks, entry, link);
-			spdk_memset_s(entry->psk, sizeof(entry->psk), 0, sizeof(entry->psk));
-			free(entry);
+			nvmf_tcp_free_psk_entry(entry);
 			break;
 		}
 	}
