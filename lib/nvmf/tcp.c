@@ -351,7 +351,7 @@ struct tcp_transport_opts {
 struct tcp_psk_entry {
 	char				hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 	char				subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
-	char				psk_identity[NVMF_PSK_IDENTITY_LEN];
+	char				pskid[NVMF_PSK_IDENTITY_LEN];
 	uint8_t				psk[SPDK_TLS_PSK_MAX_LEN];
 
 	/* Original path saved to emit SPDK configuration via "save_config". */
@@ -832,7 +832,7 @@ nvmf_tcp_find_port(struct spdk_nvmf_tcp_transport *ttransport,
 }
 
 static int
-tcp_sock_get_key(uint8_t *out, int out_len, const char **cipher, const char *psk_identity,
+tcp_sock_get_key(uint8_t *out, int out_len, const char **cipher, const char *pskid,
 		 void *get_key_ctx)
 {
 	struct tcp_psk_entry *entry;
@@ -841,7 +841,7 @@ tcp_sock_get_key(uint8_t *out, int out_len, const char **cipher, const char *psk
 	int rc;
 
 	TAILQ_FOREACH(entry, &ttransport->psks, link) {
-		if (strcmp(psk_identity, entry->psk_identity) != 0) {
+		if (strcmp(pskid, entry->pskid) != 0) {
 			continue;
 		}
 
@@ -853,7 +853,7 @@ tcp_sock_get_key(uint8_t *out, int out_len, const char **cipher, const char *psk
 		}
 
 		/* Convert PSK to the TLS PSK format. */
-		rc = nvme_tcp_derive_tls_psk(entry->psk, psk_len, psk_identity, out, out_len,
+		rc = nvme_tcp_derive_tls_psk(entry->psk, psk_len, pskid, out, out_len,
 					     entry->tls_cipher_suite);
 		if (rc < 0) {
 			SPDK_ERRLOG("Could not generate TLS PSK\n");
@@ -874,7 +874,7 @@ tcp_sock_get_key(uint8_t *out, int out_len, const char **cipher, const char *psk
 		return rc;
 	}
 
-	SPDK_ERRLOG("Could not find PSK for identity: %s\n", psk_identity);
+	SPDK_ERRLOG("Could not find PSK for identity: %s\n", pskid);
 
 	return -EINVAL;
 }
@@ -3591,7 +3591,7 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 	struct tcp_subsystem_add_host_opts opts;
 	struct spdk_nvmf_tcp_transport *ttransport;
 	struct tcp_psk_entry *tmp, *entry = NULL;
-	char psk_identity[NVMF_PSK_IDENTITY_LEN];
+	char pskid[NVMF_PSK_IDENTITY_LEN];
 	uint8_t psk_configured[SPDK_TLS_PSK_MAX_LEN] = {};
 	char psk_interchange[SPDK_TLS_PSK_MAX_LEN] = {};
 	uint8_t tls_cipher_suite;
@@ -3655,7 +3655,7 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 	/* Generate PSK identity. */
-	rc = nvme_tcp_generate_psk_identity(psk_identity, NVMF_PSK_IDENTITY_LEN, hostnqn,
+	rc = nvme_tcp_generate_psk_identity(pskid, NVMF_PSK_IDENTITY_LEN, hostnqn,
 					    subsystem->subnqn, tls_cipher_suite);
 	if (rc) {
 		rc = -EINVAL;
@@ -3663,8 +3663,8 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 	}
 	/* Check if PSK identity entry already exists. */
 	TAILQ_FOREACH(tmp, &ttransport->psks, link) {
-		if (strncmp(tmp->psk_identity, psk_identity, NVMF_PSK_IDENTITY_LEN) == 0) {
-			SPDK_ERRLOG("Given PSK identity: %s entry already exists!\n", psk_identity);
+		if (strncmp(tmp->pskid, pskid, NVMF_PSK_IDENTITY_LEN) == 0) {
+			SPDK_ERRLOG("Given PSK identity: %s entry already exists!\n", pskid);
 			rc = -EEXIST;
 			goto end;
 		}
@@ -3686,7 +3686,7 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 		rc = -EINVAL;
 		goto end;
 	}
-	if (snprintf(entry->psk_identity, sizeof(entry->psk_identity), "%s", psk_identity) < 0) {
+	if (snprintf(entry->pskid, sizeof(entry->pskid), "%s", pskid) < 0) {
 		SPDK_ERRLOG("Could not write PSK identity string!\n");
 		rc = -EINVAL;
 		goto end;
