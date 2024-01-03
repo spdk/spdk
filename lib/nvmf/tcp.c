@@ -3579,7 +3579,7 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 {
 	struct tcp_subsystem_add_host_opts opts;
 	struct spdk_nvmf_tcp_transport *ttransport;
-	struct tcp_psk_entry *entry;
+	struct tcp_psk_entry *tmp, *entry = NULL;
 	char psk_identity[NVMF_PSK_IDENTITY_LEN];
 	uint8_t psk_configured[SPDK_TLS_PSK_MAX_LEN] = {};
 	char psk_interchange[SPDK_TLS_PSK_MAX_LEN] = {};
@@ -3651,8 +3651,8 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 		goto end;
 	}
 	/* Check if PSK identity entry already exists. */
-	TAILQ_FOREACH(entry, &ttransport->psks, link) {
-		if (strncmp(entry->psk_identity, psk_identity, NVMF_PSK_IDENTITY_LEN) == 0) {
+	TAILQ_FOREACH(tmp, &ttransport->psks, link) {
+		if (strncmp(tmp->psk_identity, psk_identity, NVMF_PSK_IDENTITY_LEN) == 0) {
 			SPDK_ERRLOG("Given PSK identity: %s entry already exists!\n", psk_identity);
 			rc = -EEXIST;
 			goto end;
@@ -3668,19 +3668,16 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 	if (snprintf(entry->hostnqn, sizeof(entry->hostnqn), "%s", hostnqn) < 0) {
 		SPDK_ERRLOG("Could not write hostnqn string!\n");
 		rc = -EINVAL;
-		free(entry);
 		goto end;
 	}
 	if (snprintf(entry->subnqn, sizeof(entry->subnqn), "%s", subsystem->subnqn) < 0) {
 		SPDK_ERRLOG("Could not write subnqn string!\n");
 		rc = -EINVAL;
-		free(entry);
 		goto end;
 	}
 	if (snprintf(entry->psk_identity, sizeof(entry->psk_identity), "%s", psk_identity) < 0) {
 		SPDK_ERRLOG("Could not write PSK identity string!\n");
 		rc = -EINVAL;
-		free(entry);
 		goto end;
 	}
 	entry->tls_cipher_suite = tls_cipher_suite;
@@ -3696,7 +3693,6 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 						  SPDK_TLS_PSK_MAX_LEN, psk_retained_hash);
 		if (rc < 0) {
 			SPDK_ERRLOG("Unable to derive retained PSK!\n");
-			free(entry);
 			goto end;
 		}
 		entry->psk_size = rc;
@@ -3706,7 +3702,6 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 	if (rc < 0 || (size_t)rc >= sizeof(entry->psk_path)) {
 		SPDK_ERRLOG("Could not save PSK path!\n");
 		rc = -ENAMETOOLONG;
-		free(entry);
 		goto end;
 	}
 
@@ -3718,6 +3713,9 @@ end:
 	spdk_memset_s(psk_interchange, sizeof(psk_interchange), 0, sizeof(psk_interchange));
 
 	free(opts.psk);
+	if (rc != 0) {
+		free(entry);
+	}
 
 	return rc;
 }
