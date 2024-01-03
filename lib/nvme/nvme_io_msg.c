@@ -58,7 +58,7 @@ nvme_io_msg_process(struct spdk_nvme_ctrlr *ctrlr)
 		return 0;
 	}
 
-	if (!ctrlr->external_io_msgs || !ctrlr->external_io_msgs_qpair) {
+	if (!ctrlr->external_io_msgs || !ctrlr->external_io_msgs_qpair || ctrlr->prepare_for_reset) {
 		/* Not ready or pending reset */
 		return 0;
 	}
