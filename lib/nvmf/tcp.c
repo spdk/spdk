@@ -3560,7 +3560,7 @@ tcp_load_psk(const char *fname, char *buf, size_t bufsz)
 		SPDK_ERRLOG("Incorrect permissions for PSK file\n");
 		return -EPERM;
 	}
-	if ((size_t)statbuf.st_size >= bufsz) {
+	if ((size_t)statbuf.st_size > bufsz) {
 		SPDK_ERRLOG("Invalid PSK: too long\n");
 		return -EINVAL;
 	}
@@ -3570,7 +3570,6 @@ tcp_load_psk(const char *fname, char *buf, size_t bufsz)
 		return -EINVAL;
 	}
 
-	memset(buf, 0, bufsz);
 	rc = fread(buf, 1, statbuf.st_size, psk_file);
 	if (rc != statbuf.st_size) {
 		SPDK_ERRLOG("Failed to read PSK\n");
@@ -3592,7 +3591,7 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 	struct spdk_nvmf_tcp_transport *ttransport;
 	struct tcp_psk_entry *tmp, *entry = NULL;
 	uint8_t psk_configured[SPDK_TLS_PSK_MAX_LEN] = {};
-	char psk_interchange[SPDK_TLS_PSK_MAX_LEN] = {};
+	char psk_interchange[SPDK_TLS_PSK_MAX_LEN + 1] = {};
 	uint8_t tls_cipher_suite;
 	int rc = 0;
 	uint8_t psk_retained_hash;
@@ -3631,7 +3630,7 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 		goto end;
 	}
 
-	rc = tcp_load_psk(opts.psk, psk_interchange, sizeof(psk_interchange));
+	rc = tcp_load_psk(opts.psk, psk_interchange, SPDK_TLS_PSK_MAX_LEN);
 	if (rc) {
 		SPDK_ERRLOG("Could not retrieve PSK from file\n");
 		goto end;
