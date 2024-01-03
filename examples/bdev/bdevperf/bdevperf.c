@@ -31,6 +31,7 @@ struct bdevperf_task {
 	struct bdevperf_job		*job;
 	struct spdk_bdev_io		*bdev_io;
 	void				*buf;
+	void				*verify_buf;
 	void				*md_buf;
 	uint64_t			offset_blocks;
 	struct bdevperf_task		*task_to_abort;
@@ -689,6 +690,7 @@ clean:
 		TAILQ_FOREACH_SAFE(task, &job->task_list, link, ttmp) {
 			TAILQ_REMOVE(&job->task_list, task, link);
 			spdk_free(task->buf);
+			spdk_free(task->verify_buf);
 			spdk_free(task->md_buf);
 			free(task);
 		}
@@ -971,7 +973,7 @@ bdevperf_verify_submit_read(void *cb_arg)
 	job = task->job;
 
 	/* Read the data back in */
-	rc = spdk_bdev_read_blocks_with_md(job->bdev_desc, job->ch, NULL, NULL,
+	rc = spdk_bdev_read_blocks_with_md(job->bdev_desc, job->ch, task->verify_buf, NULL,
 					   task->offset_blocks, job->io_size_blocks,
 					   bdevperf_complete, task);
 
@@ -1863,6 +1865,19 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 			return -ENOMEM;
 		}
 
+		if (job->verify && job->buf_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
+			task->verify_buf = spdk_zmalloc(job->buf_size, spdk_bdev_get_buf_align(job->bdev), NULL,
+							SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+			if (!task->verify_buf) {
+				fprintf(stderr, "Cannot allocate buf_verify for task=%p\n", task);
+				spdk_free(task->buf);
+				spdk_zipf_free(&job->zipf);
+				free(task);
+				return -ENOMEM;
+			}
+
+		}
+
 		if (spdk_bdev_is_md_separate(job->bdev)) {
 			task->md_buf = spdk_zmalloc(job->io_size_blocks *
 						    spdk_bdev_get_md_size(job->bdev), 0, NULL,
@@ -1870,6 +1885,7 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 			if (!task->md_buf) {
 				fprintf(stderr, "Cannot allocate md buf for task=%p\n", task);
 				spdk_zipf_free(&job->zipf);
+				spdk_free(task->verify_buf);
 				spdk_free(task->buf);
 				free(task);
 				return -ENOMEM;
@@ -2771,11 +2787,6 @@ verify_test_params(void)
 	if (!strcmp(g_workload_type, "verify") ||
 	    !strcmp(g_workload_type, "reset")) {
 		g_rw_percentage = 50;
-		if (g_io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
-			fprintf(stderr, "Unable to exceed max I/O size of %d for verify. (%d provided).\n",
-				SPDK_BDEV_LARGE_BUF_MAX_SIZE, g_io_size);
-			return 1;
-		}
 		g_verify = true;
 		if (!strcmp(g_workload_type, "reset")) {
 			g_reset = true;
