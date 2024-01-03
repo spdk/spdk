@@ -3591,7 +3591,6 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 	struct tcp_subsystem_add_host_opts opts;
 	struct spdk_nvmf_tcp_transport *ttransport;
 	struct tcp_psk_entry *tmp, *entry = NULL;
-	char pskid[NVMF_PSK_IDENTITY_LEN];
 	uint8_t psk_configured[SPDK_TLS_PSK_MAX_LEN] = {};
 	char psk_interchange[SPDK_TLS_PSK_MAX_LEN] = {};
 	uint8_t tls_cipher_suite;
@@ -3618,6 +3617,14 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 	if (opts.psk == NULL) {
 		return 0;
 	}
+
+	entry = calloc(1, sizeof(struct tcp_psk_entry));
+	if (entry == NULL) {
+		SPDK_ERRLOG("Unable to allocate memory for PSK entry!\n");
+		rc = -ENOMEM;
+		goto end;
+	}
+
 	if (strlen(opts.psk) >= sizeof(entry->psk)) {
 		SPDK_ERRLOG("PSK path too long\n");
 		rc = -EINVAL;
@@ -3655,7 +3662,7 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 	/* Generate PSK identity. */
-	rc = nvme_tcp_generate_psk_identity(pskid, NVMF_PSK_IDENTITY_LEN, hostnqn,
+	rc = nvme_tcp_generate_psk_identity(entry->pskid, sizeof(entry->pskid), hostnqn,
 					    subsystem->subnqn, tls_cipher_suite);
 	if (rc) {
 		rc = -EINVAL;
@@ -3663,17 +3670,11 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 	}
 	/* Check if PSK identity entry already exists. */
 	TAILQ_FOREACH(tmp, &ttransport->psks, link) {
-		if (strncmp(tmp->pskid, pskid, NVMF_PSK_IDENTITY_LEN) == 0) {
-			SPDK_ERRLOG("Given PSK identity: %s entry already exists!\n", pskid);
+		if (strncmp(tmp->pskid, entry->pskid, NVMF_PSK_IDENTITY_LEN) == 0) {
+			SPDK_ERRLOG("Given PSK identity: %s entry already exists!\n", entry->pskid);
 			rc = -EEXIST;
 			goto end;
 		}
-	}
-	entry = calloc(1, sizeof(struct tcp_psk_entry));
-	if (entry == NULL) {
-		SPDK_ERRLOG("Unable to allocate memory for PSK entry!\n");
-		rc = -ENOMEM;
-		goto end;
 	}
 
 	if (snprintf(entry->hostnqn, sizeof(entry->hostnqn), "%s", hostnqn) < 0) {
@@ -3686,11 +3687,7 @@ nvmf_tcp_subsystem_add_host(struct spdk_nvmf_transport *transport,
 		rc = -EINVAL;
 		goto end;
 	}
-	if (snprintf(entry->pskid, sizeof(entry->pskid), "%s", pskid) < 0) {
-		SPDK_ERRLOG("Could not write PSK identity string!\n");
-		rc = -EINVAL;
-		goto end;
-	}
+
 	entry->tls_cipher_suite = tls_cipher_suite;
 
 	/* No hash indicates that Configured PSK must be used as Retained PSK. */
