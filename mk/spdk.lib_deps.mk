@@ -200,6 +200,9 @@ DEPDIRS-event_fsdev := init fsdev
 
 ifeq ($(CONFIG_VFIO_USER),y)
 DEPDIRS-vfu_device := $(BDEV_DEPS_THREAD) scsi vfu_tgt
+ifeq ($(CONFIG_FSDEV),y)
+DEPDIRS-vfu_device += fuse_dispatcher
+endif
 endif
 
 # module/keyring

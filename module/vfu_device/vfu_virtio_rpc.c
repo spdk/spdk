@@ -285,3 +285,95 @@ invalid:
 }
 SPDK_RPC_REGISTER("vfu_virtio_create_scsi_endpoint", rpc_vfu_virtio_create_scsi_endpoint,
 		  SPDK_RPC_RUNTIME)
+
+#ifdef SPDK_CONFIG_FSDEV
+struct rpc_vfu_virtio_create_fs {
+	char		*name;
+	char		*fsdev_name;
+	char		*tag;
+	char		*cpumask;
+	uint16_t	num_queues;
+	uint16_t	qsize;
+	bool		packed_ring;
+	struct spdk_jsonrpc_request *request;
+};
+
+static const struct spdk_json_object_decoder rpc_construct_vfu_virtio_create_fs[] = {
+	{"name", offsetof(struct rpc_vfu_virtio_create_fs, name), spdk_json_decode_string },
+	{"fsdev_name", offsetof(struct rpc_vfu_virtio_create_fs, fsdev_name), spdk_json_decode_string },
+	{"tag", offsetof(struct rpc_vfu_virtio_create_fs, tag), spdk_json_decode_string },
+	{"cpumask", offsetof(struct rpc_vfu_virtio_create_fs, cpumask), spdk_json_decode_string, true},
+	{"num_queues", offsetof(struct rpc_vfu_virtio_create_fs, num_queues), spdk_json_decode_uint16, true },
+	{"qsize", offsetof(struct rpc_vfu_virtio_create_fs, qsize), spdk_json_decode_uint16, true },
+	{"packed_ring", offsetof(struct rpc_vfu_virtio_create_fs, packed_ring), spdk_json_decode_bool, true},
+};
+
+static void
+free_rpc_vfu_virtio_create_fs(struct rpc_vfu_virtio_create_fs *req)
+{
+	if (req) {
+		free(req->name);
+		free(req->fsdev_name);
+		free(req->tag);
+		free(req->cpumask);
+		free(req);
+	}
+}
+
+static void
+rpc_vfu_virtio_create_fs_endpoint_cpl(void *cb_arg, int status)
+{
+	struct rpc_vfu_virtio_create_fs *req = cb_arg;
+
+	spdk_jsonrpc_send_bool_response(req->request, true);
+
+	free_rpc_vfu_virtio_create_fs(req);
+}
+
+static void
+rpc_vfu_virtio_create_fs_endpoint(struct spdk_jsonrpc_request *request,
+				  const struct spdk_json_val *params)
+{
+	struct rpc_vfu_virtio_create_fs *req;
+	int rc;
+
+	req = calloc(1, sizeof(*req));
+	if (!req)  {
+		SPDK_ERRLOG("cannot allocate req\n");
+		rc = -ENOMEM;
+		goto invalid;
+	}
+
+	if (spdk_json_decode_object(params, rpc_construct_vfu_virtio_create_fs,
+				    SPDK_COUNTOF(rpc_construct_vfu_virtio_create_fs),
+				    req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = spdk_vfu_create_endpoint(req->name, req->cpumask, "virtio_fs");
+	if (rc) {
+		SPDK_ERRLOG("Failed to create virtio_blk endpoint\n");
+		goto invalid;
+	}
+
+	req->request = request;
+
+	rc = vfu_virtio_fs_add_fsdev(req->name, req->fsdev_name, req->tag, req->num_queues, req->qsize,
+				     req->packed_ring, rpc_vfu_virtio_create_fs_endpoint_cpl, req);
+	if (rc < 0) {
+		spdk_vfu_delete_endpoint(req->name);
+		goto invalid;
+	}
+
+	return;
+
+invalid:
+	free_rpc_vfu_virtio_create_fs(req);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-rc));
+}
+SPDK_RPC_REGISTER("vfu_virtio_create_fs_endpoint", rpc_vfu_virtio_create_fs_endpoint,
+		  SPDK_RPC_RUNTIME)
+#endif

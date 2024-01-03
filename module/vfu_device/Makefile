@@ -12,6 +12,10 @@ SO_MINOR := 0
 C_SRCS = vfu_virtio.c vfu_virtio_blk.c vfu_virtio_scsi.c vfu_virtio_rpc.c
 LIBNAME = vfu_device
 
+ifeq ($(CONFIG_FSDEV),y)
+C_SRCS += vfu_virtio_fs.c
+endif
+
 SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

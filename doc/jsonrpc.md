@@ -9512,6 +9512,52 @@ Example response:
 }
 ~~~
 
+### vfu_virtio_create_fs_endpoint {#vfu_virtio_create_fs_endpoint}
+
+Create vfio-user virtio-fs PCI endpoint.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Endpoint name
+fsdev_name              | Optional | string      | Name of an underlying fsdev
+tag                     | Optional | string      | Virtio FS tag according to the virtio specification
+cpumask                 | Optional | string      | CPU masks
+num_queues              | Optional | number      | Number of IO queues
+qsize                   | Optional | number      | Queue size
+packed_ring             | Optional | boolean     | Enable packed ring
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "vfu.0",
+    "fsdev_name": "aio0",
+    "tag": "virtiofs0",
+    "cpumask": "0x2",
+    "num_queues": 4,
+    "qsize": 256
+  },
+  "jsonrpc": "2.0",
+  "method": "vfu_virtio_create_fs_endpoint",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## Vhost Target {#jsonrpc_components_vhost_tgt}
 
 The following common preconditions need to be met in all target types.
