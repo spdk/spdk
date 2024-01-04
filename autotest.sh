@@ -242,6 +242,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 			run_test "blockdev_xnvme" $rootdir/test/bdev/blockdev.sh "xnvme"
 			# Run ublk with xnvme since they have similar kernel dependencies
 			run_test "ublk" $rootdir/test/ublk/ublk.sh
+			run_test "ublk_recovery" $rootdir/test/ublk/ublk_recovery.sh
 		fi
 	fi
 
