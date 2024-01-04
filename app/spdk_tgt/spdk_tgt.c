@@ -8,23 +8,28 @@
 #include "spdk/config.h"
 #include "spdk/env.h"
 #include "spdk/event.h"
+#if defined(SPDK_CONFIG_VHOST)
 #include "spdk/vhost.h"
+#endif
+#if defined(SPDK_CONFIG_VFIO_USER)
+#include "spdk/vfu_target.h"
+#endif
 
-#ifdef SPDK_CONFIG_VHOST
-#define SPDK_VHOST_OPTS "S:"
+#if defined(SPDK_CONFIG_VHOST) || defined(SPDK_CONFIG_VFIO_USER)
+#define SPDK_SOCK_PATH "S:"
 #else
-#define SPDK_VHOST_OPTS
+#define SPDK_SOCK_PATH
 #endif
 
 static const char *g_pid_path = NULL;
-static const char g_spdk_tgt_get_opts_string[] = "f:" SPDK_VHOST_OPTS;
+static const char g_spdk_tgt_get_opts_string[] = "f:" SPDK_SOCK_PATH;
 
 static void
 spdk_tgt_usage(void)
 {
 	printf(" -f <file>                 pidfile save pid to file under given path\n");
-#ifdef SPDK_CONFIG_VHOST
-	printf(" -S <path>                 directory where to create vhost sockets (default: pwd)\n");
+#if defined(SPDK_CONFIG_VHOST) || defined(SPDK_CONFIG_VFIO_USER)
+	printf(" -S <path>                 directory where to create vhost/vfio-user sockets (default: pwd)\n");
 #endif
 }
 
@@ -51,9 +56,14 @@ spdk_tgt_parse_arg(int ch, char *arg)
 	case 'f':
 		g_pid_path = arg;
 		break;
-#ifdef SPDK_CONFIG_VHOST
+#if defined(SPDK_CONFIG_VHOST) || defined(SPDK_CONFIG_VFIO_USER)
 	case 'S':
+#ifdef SPDK_CONFIG_VHOST
 		spdk_vhost_set_socket_path(arg);
+#endif
+#ifdef SPDK_CONFIG_VFIO_USER
+		spdk_vfu_set_socket_path(arg);
+#endif
 		break;
 #endif
 	default:
