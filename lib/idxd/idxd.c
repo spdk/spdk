@@ -514,7 +514,7 @@ idxd_batch_cancel(struct spdk_idxd_io_channel *chan, int status)
 	batch = chan->batch;
 	assert(batch != NULL);
 
-	if (batch->index == UINT8_MAX) {
+	if (batch->index == UINT16_MAX) {
 		SPDK_ERRLOG("Cannot cancel batch, already submitted to HW.\n");
 		return -EINVAL;
 	}
@@ -581,7 +581,7 @@ idxd_batch_submit(struct spdk_idxd_io_channel *chan,
 			STAILQ_INSERT_TAIL(&chan->ops_outstanding, (struct idxd_ops *)&batch->user_ops[i],
 					   link);
 		}
-		batch->index = UINT8_MAX;
+		batch->index = UINT16_MAX;
 	}
 
 	chan->batch = NULL;
