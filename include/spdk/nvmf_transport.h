@@ -78,16 +78,11 @@ struct spdk_nvmf_request {
 	uint8_t				xfer; /* type enum spdk_nvme_data_transfer */
 	bool				data_from_pool;
 	bool				dif_enabled;
+	uint8_t				iovcnt;
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
 	STAILQ_ENTRY(spdk_nvmf_request)	buf_link;
-	uint64_t			timeout_tsc;
-
-	uint32_t			iovcnt;
-	struct iovec			iov[NVMF_REQ_MAX_BUFFERS];
-	struct spdk_nvmf_stripped_data	*stripped_data;
-
-	struct spdk_nvmf_dif_info	dif;
+	TAILQ_ENTRY(spdk_nvmf_request)	link;
 
 	/* Memory domain which describes payload in this request. If the bdev doesn't support memory
 	 * domains, bdev layer will do the necessary push or pull operation. */
@@ -96,6 +91,11 @@ struct spdk_nvmf_request {
 	void				*memory_domain_ctx;
 	struct spdk_accel_sequence	*accel_sequence;
 
+	struct iovec			iov[NVMF_REQ_MAX_BUFFERS];
+	struct spdk_nvmf_stripped_data	*stripped_data;
+
+	struct spdk_nvmf_dif_info	dif;
+
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 	spdk_nvmf_nvme_passthru_cmd_cb	cmd_cb_fn;
 	struct spdk_nvmf_request	*first_fused_req;
@@ -103,9 +103,12 @@ struct spdk_nvmf_request {
 	struct spdk_poller		*poller;
 	struct spdk_bdev_io		*zcopy_bdev_io; /* Contains the bdev_io when using ZCOPY */
 	enum spdk_nvmf_zcopy_phase	zcopy_phase;
+	uint8_t				rsvd[4];
 
-	TAILQ_ENTRY(spdk_nvmf_request)	link;
+	/* Timeout tracked for connect and abort flows. */
+	uint64_t timeout_tsc;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_request) == 784, "Incorrect size");
 
 enum spdk_nvmf_qpair_state {
 	SPDK_NVMF_QPAIR_UNINITIALIZED = 0,
