@@ -5343,12 +5343,12 @@ bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
-	if (!bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
+	if (spdk_unlikely(!bdev_io_valid_blocks(bdev, offset_blocks, num_blocks))) {
 		return -EINVAL;
 	}
 
 	bdev_io = bdev_channel_get_io(channel);
-	if (!bdev_io) {
+	if (spdk_unlikely(!bdev_io)) {
 		return -ENOMEM;
 	}
 
@@ -5430,15 +5430,17 @@ spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 		if (spdk_unlikely(!_bdev_io_check_opts(opts, iov))) {
 			return -EINVAL;
 		}
+
 		md = opts->metadata;
-	}
+		if (md) {
+			if (spdk_unlikely(!spdk_bdev_is_md_separate(spdk_bdev_desc_get_bdev(desc)))) {
+				return -EINVAL;
+			}
 
-	if (md && !spdk_bdev_is_md_separate(spdk_bdev_desc_get_bdev(desc))) {
-		return -EINVAL;
-	}
-
-	if (md && !_is_buf_allocated(iov)) {
-		return -EINVAL;
+			if (spdk_unlikely(!_is_buf_allocated(iov))) {
+				return -EINVAL;
+			}
+		}
 	}
 
 	return bdev_readv_blocks_with_md(desc, ch, iov, iovcnt, md, offset_blocks,
@@ -5547,16 +5549,16 @@ bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = __io_ch_to_bdev_ch(ch);
 
-	if (!desc->write) {
+	if (spdk_unlikely(!desc->write)) {
 		return -EBADF;
 	}
 
-	if (!bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
+	if (spdk_unlikely(!bdev_io_valid_blocks(bdev, offset_blocks, num_blocks))) {
 		return -EINVAL;
 	}
 
 	bdev_io = bdev_channel_get_io(channel);
-	if (!bdev_io) {
+	if (spdk_unlikely(!bdev_io)) {
 		return -ENOMEM;
 	}
 
@@ -5639,15 +5641,17 @@ spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel 
 		if (spdk_unlikely(!_bdev_io_check_opts(opts, iov))) {
 			return -EINVAL;
 		}
+
 		md = opts->metadata;
-	}
+		if (md) {
+			if (spdk_unlikely(!spdk_bdev_is_md_separate(spdk_bdev_desc_get_bdev(desc)))) {
+				return -EINVAL;
+			}
 
-	if (md && !spdk_bdev_is_md_separate(spdk_bdev_desc_get_bdev(desc))) {
-		return -EINVAL;
-	}
-
-	if (md && !_is_buf_allocated(iov)) {
-		return -EINVAL;
+			if (spdk_unlikely(!_is_buf_allocated(iov))) {
+				return -EINVAL;
+			}
+		}
 	}
 
 	return bdev_writev_blocks_with_md(desc, ch, iov, iovcnt, md, offset_blocks, num_blocks,
@@ -7252,7 +7256,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
 	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
 
-	if (bdev_io->internal.status != SPDK_BDEV_IO_STATUS_PENDING) {
+	if (spdk_unlikely(bdev_io->internal.status != SPDK_BDEV_IO_STATUS_PENDING)) {
 		SPDK_ERRLOG("Unexpected completion on IO from %s module, status was %s\n",
 			    spdk_bdev_get_module_name(bdev),
 			    bdev_io_status_get_string(bdev_io->internal.status));
@@ -7395,7 +7399,7 @@ spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, uint32_t cdw0, i
 {
 	enum spdk_bdev_io_status status;
 
-	if (sct == SPDK_NVME_SCT_GENERIC && sc == SPDK_NVME_SC_SUCCESS) {
+	if (spdk_likely(sct == SPDK_NVME_SCT_GENERIC && sc == SPDK_NVME_SC_SUCCESS)) {
 		status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	} else if (sct == SPDK_NVME_SCT_GENERIC && sc == SPDK_NVME_SC_ABORTED_BY_REQUEST) {
 		status = SPDK_BDEV_IO_STATUS_ABORTED;
@@ -7428,12 +7432,12 @@ spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, uint32_t *cdw0,
 		return;
 	}
 
-	if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NVME_ERROR) {
-		*sct = bdev_io->internal.error.nvme.sct;
-		*sc = bdev_io->internal.error.nvme.sc;
-	} else if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+	if (spdk_likely(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS)) {
 		*sct = SPDK_NVME_SCT_GENERIC;
 		*sc = SPDK_NVME_SC_SUCCESS;
+	} else if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NVME_ERROR) {
+		*sct = bdev_io->internal.error.nvme.sct;
+		*sc = bdev_io->internal.error.nvme.sc;
 	} else if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_ABORTED) {
 		*sct = SPDK_NVME_SCT_GENERIC;
 		*sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
