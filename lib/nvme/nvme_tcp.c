@@ -19,6 +19,7 @@
 #include "spdk/trace.h"
 #include "spdk/util.h"
 #include "spdk/nvmf.h"
+#include "spdk/dma.h"
 
 #include "spdk_internal/nvme_tcp.h"
 #include "spdk_internal/trace_defs.h"
@@ -720,6 +721,33 @@ nvme_tcp_qpair_write_pdu(struct nvme_tcp_qpair *tqpair,
 	return 0;
 }
 
+static int
+nvme_tcp_try_memory_translation(struct nvme_tcp_req *tcp_req, void **addr, uint32_t length)
+{
+	struct nvme_request *req = tcp_req->req;
+	struct spdk_memory_domain_translation_result translation = {
+		.iov_count = 0,
+		.size = sizeof(translation)
+	};
+	int rc;
+
+	if (!(req->payload.opts && req->payload.opts->memory_domain)) {
+		return 0;
+	}
+
+	rc = spdk_memory_domain_translate_data(req->payload.opts->memory_domain,
+					       req->payload.opts->memory_domain_ctx, spdk_memory_domain_get_system_domain(), NULL, *addr, length,
+					       &translation);
+	if (spdk_unlikely(rc || translation.iov_count != 1)) {
+		SPDK_ERRLOG("DMA memory translation failed, rc %d, iov_count %u\n", rc, translation.iov_count);
+		return -EFAULT;
+	}
+
+	assert(length == translation.iov.iov_len);
+	*addr = translation.iov.iov_base;
+	return 0;
+}
+
 /*
  * Build SGL describing contiguous payload buffer.
  */
@@ -730,14 +758,21 @@ nvme_tcp_build_contig_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req
 
 	/* ubsan complains about applying zero offset to null pointer if contig_or_cb_arg is NULL,
 	 * so just double cast it to make it go away */
-	tcp_req->iov[0].iov_base = (void *)((uintptr_t)req->payload.contig_or_cb_arg + req->payload_offset);
-	tcp_req->iov[0].iov_len = req->payload_size;
-	tcp_req->iovcnt = 1;
+	void *addr = (void *)((uintptr_t)req->payload.contig_or_cb_arg + req->payload_offset);
+	size_t length = req->payload_size;
+	int rc;
 
 	SPDK_DEBUGLOG(nvme, "enter\n");
 
 	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
+	rc = nvme_tcp_try_memory_translation(tcp_req, &addr, length);
+	if (spdk_unlikely(rc)) {
+		return rc;
+	}
 
+	tcp_req->iov[0].iov_base = addr;
+	tcp_req->iov[0].iov_len = length;
+	tcp_req->iovcnt = 1;
 	return 0;
 }
 
@@ -763,13 +798,20 @@ nvme_tcp_build_sgl_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *t
 	remaining_size = req->payload_size;
 
 	do {
-		rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &tcp_req->iov[iovcnt].iov_base,
-					      &length);
+		void *addr;
+
+		rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &addr, &length);
 		if (rc) {
 			return -1;
 		}
 
+		rc = nvme_tcp_try_memory_translation(tcp_req, &addr, length);
+		if (spdk_unlikely(rc)) {
+			return rc;
+		}
+
 		length = spdk_min(length, remaining_size);
+		tcp_req->iov[iovcnt].iov_base = addr;
 		tcp_req->iov[iovcnt].iov_len = length;
 		remaining_size -= length;
 		iovcnt++;
@@ -883,6 +925,12 @@ nvme_tcp_qpair_cmd_send_complete(void *cb_arg)
 		SPDK_DEBUGLOG(nvme, "tcp req %p, send H2C data\n", tcp_req);
 		nvme_tcp_send_h2c_data(tcp_req);
 	} else {
+		if (tcp_req->in_capsule_data && tcp_req->req->payload.opts &&
+		    tcp_req->req->payload.opts->memory_domain) {
+			spdk_memory_domain_invalidate_data(tcp_req->req->payload.opts->memory_domain,
+							   tcp_req->req->payload.opts->memory_domain_ctx, tcp_req->iov, tcp_req->iovcnt);
+		}
+
 		nvme_tcp_req_complete_safe(tcp_req);
 	}
 }
@@ -1749,6 +1797,11 @@ nvme_tcp_qpair_h2c_data_send_complete(void *cb_arg)
 			tcp_req->state = NVME_TCP_REQ_ACTIVE_R2T;
 			nvme_tcp_send_h2c_data(tcp_req);
 			return;
+		}
+
+		if (tcp_req->req->payload.opts && tcp_req->req->payload.opts->memory_domain) {
+			spdk_memory_domain_invalidate_data(tcp_req->req->payload.opts->memory_domain,
+							   tcp_req->req->payload.opts->memory_domain_ctx, tcp_req->iov, tcp_req->iovcnt);
 		}
 
 		/* Need also call this function to free the resource */
@@ -2889,6 +2942,17 @@ nvme_tcp_poll_group_free_stats(struct spdk_nvme_transport_poll_group *tgroup,
 	free(stats);
 }
 
+static int
+nvme_tcp_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
+				  struct spdk_memory_domain **domains, int array_size)
+{
+	if (domains && array_size > 0) {
+		domains[0] = spdk_memory_domain_get_system_domain();
+	}
+
+	return 1;
+}
+
 const struct spdk_nvme_transport_ops tcp_ops = {
 	.name = "TCP",
 	.type = SPDK_NVME_TRANSPORT_TCP,
@@ -2913,6 +2977,8 @@ const struct spdk_nvme_transport_ops tcp_ops = {
 	.ctrlr_delete_io_qpair = nvme_tcp_ctrlr_delete_io_qpair,
 	.ctrlr_connect_qpair = nvme_tcp_ctrlr_connect_qpair,
 	.ctrlr_disconnect_qpair = nvme_tcp_ctrlr_disconnect_qpair,
+
+	.ctrlr_get_memory_domains = nvme_tcp_ctrlr_get_memory_domains,
 
 	.qpair_abort_reqs = nvme_tcp_qpair_abort_reqs,
 	.qpair_reset = nvme_tcp_qpair_reset,

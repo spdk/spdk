@@ -39,12 +39,12 @@ DEPDIRS-rdma := log util
 DEPDIRS-reduce := log util
 DEPDIRS-thread := log util trace
 
-DEPDIRS-nvme := log sock util trace
+DEPDIRS-nvme := log sock util trace dma
 ifeq ($(OS),Linux)
 DEPDIRS-nvme += vfio_user
 endif
 ifeq ($(CONFIG_RDMA),y)
-DEPDIRS-nvme += rdma dma
+DEPDIRS-nvme += rdma
 endif
 
 DEPDIRS-blob := log util thread dma

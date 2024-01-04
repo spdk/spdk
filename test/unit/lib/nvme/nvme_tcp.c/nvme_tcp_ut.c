@@ -49,6 +49,14 @@ DEFINE_STUB_V(spdk_nvme_qpair_print_command, (struct spdk_nvme_qpair *qpair,
 DEFINE_STUB_V(spdk_nvme_qpair_print_completion, (struct spdk_nvme_qpair *qpair,
 		struct spdk_nvme_cpl *cpl));
 
+DEFINE_STUB(spdk_memory_domain_get_system_domain, struct spdk_memory_domain *, (void), NULL);
+DEFINE_STUB(spdk_memory_domain_translate_data, int,
+	    (struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+	     struct spdk_memory_domain *dst_domain, struct spdk_memory_domain_translation_ctx *dst_domain_ctx,
+	     void *addr, size_t len, struct spdk_memory_domain_translation_result *result), 0);
+DEFINE_STUB_V(spdk_memory_domain_invalidate_data, (struct spdk_memory_domain *domain,
+		void *domain_ctx, struct iovec *iov, uint32_t iovcnt));
+
 static void
 nvme_transport_ctrlr_disconnect_qpair_done_mocked(struct spdk_nvme_qpair *qpair)
 {
