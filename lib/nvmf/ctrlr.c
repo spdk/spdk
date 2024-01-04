@@ -4276,7 +4276,7 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	}
 
 	ns = _nvmf_subsystem_get_ns(ctrlr->subsys, nsid);
-	if (ns == NULL || ns->bdev == NULL) {
+	if (spdk_unlikely(ns == NULL || ns->bdev == NULL)) {
 		SPDK_DEBUGLOG(nvmf, "Unsuccessful query for nsid %u\n", cmd->nsid);
 		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 		response->status.dnr = 1;
@@ -4360,7 +4360,7 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 static void
 nvmf_qpair_request_cleanup(struct spdk_nvmf_qpair *qpair)
 {
-	if (qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING) {
+	if (spdk_unlikely(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING)) {
 		assert(qpair->state_cb != NULL);
 
 		if (TAILQ_EMPTY(&qpair->outstanding)) {
@@ -4375,7 +4375,7 @@ spdk_nvmf_request_free(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 
 	TAILQ_REMOVE(&qpair->outstanding, req, link);
-	if (nvmf_transport_req_free(req)) {
+	if (spdk_unlikely(nvmf_transport_req_free(req))) {
 		SPDK_ERRLOG("Unable to free transport level request resources.\n");
 	}
 
@@ -4404,7 +4404,7 @@ _nvmf_request_complete(void *ctx)
 	opcode = req->cmd->nvmf_cmd.opcode;
 
 	qpair = req->qpair;
-	if (qpair->ctrlr) {
+	if (spdk_likely(qpair->ctrlr)) {
 		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
 		assert(sgroup != NULL);
 		is_aer = req->cmd->nvme_cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
@@ -4417,9 +4417,9 @@ _nvmf_request_complete(void *ctx)
 		 * If the the IO has any error, and dnr (DoNotRetry) is not 1,
 		 * and ACRE is enabled, we will set the crd to 1 to select the first CRDT.
 		 */
-		if (spdk_nvme_cpl_is_error(rsp) &&
-		    rsp->status.dnr == 0 &&
-		    qpair->ctrlr->acre_enabled) {
+		if (spdk_unlikely(spdk_nvme_cpl_is_error(rsp) &&
+				  rsp->status.dnr == 0 &&
+				  qpair->ctrlr->acre_enabled)) {
 			rsp->status.crd = 1;
 		}
 	} else if (spdk_unlikely(nvmf_request_is_fabric_connect(req))) {
@@ -4453,12 +4453,12 @@ _nvmf_request_complete(void *ctx)
 		break;
 	}
 
-	if (nvmf_transport_req_complete(req)) {
+	if (spdk_unlikely(nvmf_transport_req_complete(req))) {
 		SPDK_ERRLOG("Transport request completion error!\n");
 	}
 
 	/* AER cmd is an exception */
-	if (sgroup && !is_aer) {
+	if (spdk_likely(sgroup && !is_aer)) {
 		if (spdk_unlikely(opcode == SPDK_NVME_OPC_FABRIC ||
 				  nvmf_qpair_is_admin_queue(qpair))) {
 			assert(sgroup->mgmt_io_outstanding > 0);
@@ -4547,7 +4547,7 @@ nvmf_check_subsystem_active(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
 	uint32_t nsid;
 
-	if (qpair->ctrlr) {
+	if (spdk_likely(qpair->ctrlr)) {
 		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
 		assert(sgroup != NULL);
 	} else if (spdk_unlikely(nvmf_request_is_fabric_connect(req))) {
@@ -4555,7 +4555,7 @@ nvmf_check_subsystem_active(struct spdk_nvmf_request *req)
 	}
 
 	/* Check if the subsystem is paused (if there is a subsystem) */
-	if (sgroup != NULL) {
+	if (spdk_likely(sgroup != NULL)) {
 		if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC ||
 				  nvmf_qpair_is_admin_queue(qpair))) {
 			if (sgroup->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
@@ -4578,7 +4578,7 @@ nvmf_check_subsystem_active(struct spdk_nvmf_request *req)
 			}
 
 			ns_info = &sgroup->ns_info[nsid - 1];
-			if (ns_info->channel == NULL) {
+			if (spdk_unlikely(ns_info->channel == NULL)) {
 				/* This can can happen if host sends I/O to a namespace that is
 				 * in the process of being added, but before the full addition
 				 * process is complete.  Report invalid namespace in that case.
@@ -4592,7 +4592,7 @@ nvmf_check_subsystem_active(struct spdk_nvmf_request *req)
 				return false;
 			}
 
-			if (ns_info->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
+			if (spdk_unlikely(ns_info->state != SPDK_NVMF_SUBSYSTEM_ACTIVE)) {
 				/* The namespace is not currently active. Queue this request. */
 				TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
 				return false;
@@ -4601,7 +4601,7 @@ nvmf_check_subsystem_active(struct spdk_nvmf_request *req)
 			ns_info->io_outstanding++;
 		}
 
-		if (qpair->state != SPDK_NVMF_QPAIR_ACTIVE) {
+		if (spdk_unlikely(qpair->state != SPDK_NVMF_QPAIR_ACTIVE)) {
 			req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 			TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
@@ -4620,7 +4620,7 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_transport *transport = qpair->transport;
 	enum spdk_nvmf_request_exec_status status;
 
-	if (!nvmf_check_subsystem_active(req)) {
+	if (spdk_unlikely(!nvmf_check_subsystem_active(req))) {
 		return;
 	}
 
