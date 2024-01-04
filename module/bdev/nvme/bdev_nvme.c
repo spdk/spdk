@@ -7099,7 +7099,7 @@ bdev_nvme_writev_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_bdev_io *bio = ref;
 
-	if (spdk_nvme_cpl_is_pi_error(cpl)) {
+	if (spdk_unlikely(spdk_nvme_cpl_is_pi_error(cpl))) {
 		SPDK_ERRLOG("writev completed with PI error (sct=%d, sc=%d)\n",
 			    cpl->status.sct, cpl->status.sc);
 		/* Run PI verification for write data buffer if PI error is detected. */
@@ -7517,7 +7517,7 @@ bdev_nvme_readv(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 						    bdev_nvme_queued_next_sge, md, 0, 0);
 	}
 
-	if (rc != 0 && rc != -ENOMEM) {
+	if (spdk_unlikely(rc != 0 && rc != -ENOMEM)) {
 		SPDK_ERRLOG("readv failed: rc = %d\n", rc);
 	}
 	return rc;
@@ -7565,7 +7565,7 @@ bdev_nvme_writev(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 						     bdev_nvme_queued_next_sge, md, 0, 0);
 	}
 
-	if (rc != 0 && rc != -ENOMEM) {
+	if (spdk_unlikely(rc != 0 && rc != -ENOMEM)) {
 		SPDK_ERRLOG("writev failed: rc = %d\n", rc);
 	}
 	return rc;
