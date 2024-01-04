@@ -575,6 +575,7 @@ static int
 opal_response_status(const struct spdk_opal_resp_parsed *resp)
 {
 	const struct spdk_opal_resp_token *tok;
+	int startlist_idx = -1, endlist_idx = -1;
 
 	/* if we get an EOS token, just return 0 */
 	tok = opal_response_get_token(resp, 0);
@@ -582,24 +583,27 @@ opal_response_status(const struct spdk_opal_resp_parsed *resp)
 		return 0;
 	}
 
-	if (resp->num < 5) {
-		return SPDK_DTAERROR_NO_METHOD_STATUS;
+	/* Search for a StartList token in the response. Start from the end to ensure that we find
+	 * the StartList token after the EndOfData token and not any StartList token that is part
+	 * of the * actual response data. */
+	for (int i = resp->num - 1; i >= 0; i--) {
+		tok = opal_response_get_token(resp, i);
+		if (opal_response_token_matches(tok, SPDK_OPAL_STARTLIST) && startlist_idx == -1) {
+			startlist_idx = i;
+		}
+		if (opal_response_token_matches(tok, SPDK_OPAL_ENDLIST) && endlist_idx == -1) {
+			endlist_idx = i;
+		}
 	}
 
-	tok = opal_response_get_token(resp, resp->num - 5); /* the first token should be STARTLIST */
-	if (!opal_response_token_matches(tok, SPDK_OPAL_STARTLIST)) {
-		return SPDK_DTAERROR_NO_METHOD_STATUS;
-	}
-
-	tok = opal_response_get_token(resp, resp->num - 1); /* the last token should be ENDLIST */
-	if (!opal_response_token_matches(tok, SPDK_OPAL_ENDLIST)) {
+	if (startlist_idx == -1 || endlist_idx == -1 || startlist_idx >= endlist_idx) {
 		return SPDK_DTAERROR_NO_METHOD_STATUS;
 	}
 
 	/* The second and third values in the status list are reserved, and are
 	defined in core spec to be 0x00 and 0x00 and SHOULD be ignored by the host. */
 	return (int)opal_response_get_u64(resp,
-					  resp->num - 4); /* We only need the first value in the status list. */
+					  startlist_idx + 1); /* We only need the first value in the status list. */
 }
 
 static int
