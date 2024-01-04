@@ -689,6 +689,55 @@ spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 	}
 }
 
+static int
+nvme_ns_cmd_rw_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *buffer,
+		   uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+		   struct spdk_nvme_ns_cmd_ext_io_opts *opts, enum spdk_nvme_nvm_opcode opc)
+{
+	struct nvme_request *req;
+	struct nvme_payload payload;
+	void *seq;
+	int rc = 0;
+
+	assert(opc == SPDK_NVME_OPC_READ || opc == SPDK_NVME_OPC_WRITE);
+	assert(opts);
+
+	payload = NVME_PAYLOAD_CONTIG(buffer, opts->metadata);
+
+	if (spdk_unlikely(!_is_io_flags_valid(opts->io_flags))) {
+		return -EINVAL;
+	}
+
+	seq = nvme_ns_cmd_get_ext_io_opt(opts, accel_sequence, NULL);
+	if (spdk_unlikely(!_is_accel_sequence_valid(qpair, seq))) {
+		return -EINVAL;
+	}
+
+	payload.opts = opts;
+
+	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, opc, opts->io_flags,
+			      opts->apptag_mask, opts->apptag, 0, false, seq, &rc);
+	if (spdk_unlikely(req == NULL)) {
+		return nvme_ns_map_failure_rc(lba_count,
+					      ns->sectors_per_max_io,
+					      ns->sectors_per_stripe,
+					      qpair->ctrlr->opts.io_queue_requests,
+					      rc);
+	}
+
+	return nvme_qpair_submit_request(qpair, req);
+}
+
+int
+spdk_nvme_ns_cmd_read_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *buffer,
+			  uint64_t lba,
+			  uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+			  struct spdk_nvme_ns_cmd_ext_io_opts *opts)
+{
+	return nvme_ns_cmd_rw_ext(ns, qpair, buffer, lba, lba_count, cb_fn, cb_arg, opts,
+				  SPDK_NVME_OPC_READ);
+}
+
 int
 spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		       uint64_t lba, uint32_t lba_count,
@@ -1000,6 +1049,16 @@ spdk_nvme_ns_cmd_write_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 					      qpair->ctrlr->opts.io_queue_requests,
 					      rc);
 	}
+}
+
+int
+spdk_nvme_ns_cmd_write_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			   void *buffer, uint64_t lba,
+			   uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+			   struct spdk_nvme_ns_cmd_ext_io_opts *opts)
+{
+	return nvme_ns_cmd_rw_ext(ns, qpair, buffer, lba, lba_count, cb_fn, cb_arg, opts,
+				  SPDK_NVME_OPC_WRITE);
 }
 
 int

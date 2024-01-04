@@ -3252,6 +3252,34 @@ int spdk_nvme_ns_cmd_writev_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair 
  * The user must ensure that only one thread submits I/O on a given qpair at any
  * given time.
  *
+ * \param ns NVMe namespace to submit the write I/O
+ * \param qpair I/O queue pair to submit the request
+ * \param payload Virtual address pointer to the data payload.
+ * \param lba starting LBA to write the data
+ * \param lba_count length (in sectors) for the write operation
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ * \param opts Optional structure with extended IO request options. If provided, the caller must
+ * guarantee that this structure is accessible until IO completes
+ *
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -EINVAL: The request is malformed.
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
+ */
+int spdk_nvme_ns_cmd_write_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			       void *payload, uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+			       struct spdk_nvme_ns_cmd_ext_io_opts *opts);
+
+/**
+ * Submit a write I/O to the specified NVMe namespace.
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any
+ * given time.
+ *
  * \param ns NVMe namespace to submit the write I/O.
  * \param qpair I/O queue pair to submit the request.
  * \param payload Virtual address pointer to the data payload.
@@ -3469,6 +3497,33 @@ int spdk_nvme_ns_cmd_readv_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 			       void *cb_arg, spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
 			       spdk_nvme_req_next_sge_cb next_sge_fn,
 			       struct spdk_nvme_ns_cmd_ext_io_opts *opts);
+
+/**
+ * Submit a read I/O to the specified NVMe namespace.
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any given time.
+ *
+ * \param ns NVMe namespace to submit the read I/O
+ * \param qpair I/O queue pair to submit the request
+ * \param payload virtual address pointer to the data payload
+ * \param lba starting LBA to read the data
+ * \param lba_count length (in sectors) for the read operation
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ * \param opts Optional structure with extended IO request options. If provided, the caller must
+ * guarantee that this structure is accessible until IO completes
+ *
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -EINVAL: The request is malformed.
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
+ */
+int spdk_nvme_ns_cmd_read_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *payload,
+			      uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+			      struct spdk_nvme_ns_cmd_ext_io_opts *opts);
 
 /**
  * Submits a read I/O to the specified NVMe namespace.

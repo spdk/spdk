@@ -1062,6 +1062,16 @@ spdk_nvme_ns_cmd_readv_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpai
 	return ut_submit_nvme_request(ns, qpair, SPDK_NVME_OPC_READ, cb_fn, cb_arg);
 }
 
+static bool g_ut_read_ext_called;
+int
+spdk_nvme_ns_cmd_read_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *buffer,
+			  uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+			  struct spdk_nvme_ns_cmd_ext_io_opts *opts)
+{
+	g_ut_read_ext_called = true;
+	return ut_submit_nvme_request(ns, qpair, SPDK_NVME_OPC_READ, cb_fn, cb_arg);
+}
+
 static bool g_ut_writev_ext_called;
 int
 spdk_nvme_ns_cmd_writev_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
@@ -1072,6 +1082,16 @@ spdk_nvme_ns_cmd_writev_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpa
 			    struct spdk_nvme_ns_cmd_ext_io_opts *opts)
 {
 	g_ut_writev_ext_called = true;
+	return ut_submit_nvme_request(ns, qpair, SPDK_NVME_OPC_WRITE, cb_fn, cb_arg);
+}
+
+static bool g_ut_write_ext_called;
+int
+spdk_nvme_ns_cmd_write_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *buffer,
+			   uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+			   struct spdk_nvme_ns_cmd_ext_io_opts *opts)
+{
+	g_ut_write_ext_called = true;
 	return ut_submit_nvme_request(ns, qpair, SPDK_NVME_OPC_WRITE, cb_fn, cb_arg);
 }
 
@@ -2395,11 +2415,11 @@ test_submit_nvme_cmd(void)
 	ut_test_submit_fused_nvme_cmd(ch, bdev_io);
 
 	/* Verify that ext NVME API is called when data is described by memory domain  */
-	g_ut_readv_ext_called = false;
+	g_ut_read_ext_called = false;
 	bdev_io->u.bdev.memory_domain = (void *)0xdeadbeef;
 	ut_test_submit_nvme_cmd(ch, bdev_io, SPDK_BDEV_IO_TYPE_READ);
-	CU_ASSERT(g_ut_readv_ext_called == true);
-	g_ut_readv_ext_called = false;
+	CU_ASSERT(g_ut_read_ext_called == true);
+	g_ut_read_ext_called = false;
 	bdev_io->u.bdev.memory_domain = NULL;
 
 	ut_test_submit_admin_cmd(ch, bdev_io, ctrlr);
