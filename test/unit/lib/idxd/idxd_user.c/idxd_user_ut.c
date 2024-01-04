@@ -72,6 +72,7 @@ spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value,
 
 #define WQ_CFG_OFFSET (0x800 / IDXD_TABLE_OFFSET_MULT)
 #define TOTAL_WQE_SIZE 0x40
+#define LOG2_WQ_MAX_BATCH 5
 static int
 test_idxd_wq_config(void)
 {

@@ -22,6 +22,9 @@
 /* The max number of completions processed per poll */
 #define IDXD_MAX_COMPLETIONS      128
 
+/* The minimum number of entries in batch per flush */
+#define IDXD_MIN_BATCH_FLUSH      32
+
 static STAILQ_HEAD(, spdk_idxd_impl) g_idxd_impls = STAILQ_HEAD_INITIALIZER(g_idxd_impls);
 static struct spdk_idxd_impl *g_idxd_impl;
 
@@ -155,7 +158,8 @@ _dsa_alloc_batches(struct spdk_idxd_io_channel *chan, int num_descriptors)
 	}
 	batch = chan->batch_base;
 	for (i = 0 ; i < num_batches ; i++) {
-		batch->user_desc = desc = spdk_zmalloc(DESC_PER_BATCH * sizeof(struct idxd_hw_desc),
+		batch->size = chan->idxd->batch_size;
+		batch->user_desc = desc = spdk_zmalloc(batch->size * sizeof(struct idxd_hw_desc),
 						       0x40, NULL,
 						       SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 		if (batch->user_desc == NULL) {
@@ -164,13 +168,13 @@ _dsa_alloc_batches(struct spdk_idxd_io_channel *chan, int num_descriptors)
 		}
 
 		rc = _vtophys(chan, batch->user_desc, &batch->user_desc_addr,
-			      DESC_PER_BATCH * sizeof(struct idxd_hw_desc));
+			      batch->size * sizeof(struct idxd_hw_desc));
 		if (rc) {
 			SPDK_ERRLOG("Failed to translate batch descriptor memory\n");
 			goto error_user;
 		}
 
-		batch->user_ops = op = spdk_zmalloc(DESC_PER_BATCH * sizeof(struct idxd_ops),
+		batch->user_ops = op = spdk_zmalloc(batch->size * sizeof(struct idxd_ops),
 						    0x40, NULL,
 						    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 		if (batch->user_ops == NULL) {
@@ -178,7 +182,7 @@ _dsa_alloc_batches(struct spdk_idxd_io_channel *chan, int num_descriptors)
 			goto error_user;
 		}
 
-		for (j = 0; j < DESC_PER_BATCH; j++) {
+		for (j = 0; j < batch->size; j++) {
 			rc = _vtophys(chan, &op->hw, &desc->completion_addr, sizeof(struct dsa_hw_comp_record));
 			if (rc) {
 				SPDK_ERRLOG("Failed to translate batch entry completion memory\n");
@@ -442,7 +446,7 @@ _idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 	batch = chan->batch;
 
 	assert(batch != NULL);
-	if (batch->index == DESC_PER_BATCH) {
+	if (batch->index == batch->size) {
 		return -EBUSY;
 	}
 
@@ -573,7 +577,7 @@ idxd_batch_submit(struct spdk_idxd_io_channel *chan,
 		desc->opcode = IDXD_OPCODE_BATCH;
 		desc->desc_list_addr = batch->user_desc_addr;
 		desc->desc_count = batch->index;
-		assert(batch->index <= DESC_PER_BATCH);
+		assert(batch->index <= batch->size);
 
 		/* Add the batch elements completion contexts to the outstanding list to be polled. */
 		for (i = 0 ; i < batch->index; i++) {
@@ -611,9 +615,10 @@ _idxd_setup_batch(struct spdk_idxd_io_channel *chan)
 static int
 _idxd_flush_batch(struct spdk_idxd_io_channel *chan)
 {
+	struct idxd_batch *batch = chan->batch;
 	int rc;
 
-	if (chan->batch != NULL && chan->batch->index >= DESC_PER_BATCH) {
+	if (batch != NULL && batch->index >= IDXD_MIN_BATCH_FLUSH) {
 		/* Close out the full batch */
 		rc = idxd_batch_submit(chan, NULL, NULL);
 		if (rc) {

@@ -33,10 +33,6 @@ static inline void movdir64b(void *dst, const void *src)
 
 /* TODO: consider setting the max per batch limit via RPC. */
 
-/* The following sets up a max desc count per batch of 32 */
-#define LOG2_WQ_MAX_BATCH	5  /* 2^5 = 32 */
-#define DESC_PER_BATCH		(1 << LOG2_WQ_MAX_BATCH)
-
 #define LOG2_WQ_MAX_XFER	30 /* 2^30 = 1073741824 */
 #define WQ_PRIORITY_1		1
 #define IDXD_MAX_QUEUES		64
@@ -55,6 +51,7 @@ struct idxd_batch {
 	uint64_t			user_desc_addr;
 	uint16_t			index;
 	uint16_t			refcnt;
+	uint16_t			size;
 	struct spdk_idxd_io_channel	*chan;
 	TAILQ_ENTRY(idxd_batch)		link;
 };
@@ -139,6 +136,7 @@ struct spdk_idxd_device {
 	uint32_t			num_channels;
 	uint32_t			total_wq_size;
 	uint32_t			chan_per_device;
+	uint16_t			batch_size;
 	pthread_mutex_t			num_channels_lock;
 	bool				pasid_enabled;
 	enum idxd_dev			type;

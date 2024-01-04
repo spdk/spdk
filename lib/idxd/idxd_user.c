@@ -222,10 +222,12 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 
 	wqcfg->wq_size = wqcap.total_wq_size;
 	wqcfg->mode = WQ_MODE_DEDICATED;
-	wqcfg->max_batch_shift = LOG2_WQ_MAX_BATCH;
+	wqcfg->max_batch_shift = user_idxd->registers->gencap.max_batch_shift;
 	wqcfg->max_xfer_shift = LOG2_WQ_MAX_XFER;
 	wqcfg->wq_state = WQ_ENABLED;
 	wqcfg->priority = WQ_PRIORITY_1;
+
+	idxd->batch_size = (1 << wqcfg->max_batch_shift);
 
 	for (i = 0; i < SPDK_COUNTOF(wqcfg->raw); i++) {
 		spdk_mmio_write_4(&wqcfg->raw[i], wqcfg->raw[i]);
