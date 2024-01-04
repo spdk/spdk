@@ -47,15 +47,10 @@ See `build_base` folder for details on what's included in the final image.
 
 Running `docker-compose up` creates 3 docker containers:
 
--- storage-target: Contains SPDK NVMe-oF target exposing single subsystem to
-`proxy-container` based on malloc bdev.
--- proxy-container: Contains SPDK NVMe-oF target connecting to `storage-target`
-and then exposing the same devices to `traffic-generator-nvme` using NVMe-oF and
-to `traffic-generator-virtio` using Virtio.
--- traffic-generator-nvme: Contains FIO using SPDK plugin to connect to `proxy-container`
-and runs a sample workload.
--- traffic-generator-virtio: Contains FIO using SPDK plugin to connect to `proxy-container`
-and runs a sample workload.
+- storage-target: Contains SPDK NVMe-oF target exposing single subsystem to `proxy-container` based on malloc bdev.
+- proxy-container: Connecting to `storage-target` and then exposing the same devices to `traffic-generator-nvme` using NVMe-oF and to `traffic-generator-virtio` using Virtio.
+- traffic-generator-nvme: Contains FIO using SPDK plugin to connect to `proxy-container` and runs a sample workload.
+- traffic-generator-virtio: Contains FIO using SPDK plugin to connect to `proxy-container` and runs a sample workload.
 
 Each container is connected to a separate "spdk" network which is created before
 deploying the containers. See `docker-compose.yaml` for the network's detailed setup and ip assignment.
@@ -100,13 +95,13 @@ docker-compose exec proxy-container rpc.py nvmf_get_subsystems
 
 Running `docker-compose -f docker-compose.monitoring.yaml up` creates 3 docker containers:
 
--- storage-target: Contains SPDK NVMe-oF target exposing single subsystem based on malloc bdev.
--- [telegraf](https://www.influxdata.com/time-series-platform/telegraf/) is a very minimal memory footprint agent for collecting and sending metrics and events.
--- [prometheus](https://prometheus.io/) is leading open-source monitoring solution.
+- storage-target: Contains SPDK NVMe-oF target exposing single subsystem based on malloc bdev.
+- [telegraf](https://www.influxdata.com/time-series-platform/telegraf/) is a very minimal memory footprint agent for collecting and sending metrics and events.
+- [prometheus](https://prometheus.io/) is leading open-source monitoring solution.
 
-`telegaf` connects to `spdk` via `rpc_http_proxy.py` and uses `bdev_get_iostat` commands to fetch bdev statistics.
+`telegraf` connects to `spdk` via `rpc_http_proxy.py` and uses `bdev_get_iostat` commands to fetch bdev statistics.
 
-In order to see data change, once all of the 3 containers are brought up, use `docker-compose run traffic-generator-nvme`` to generate some traffic.
+In order to see data change, once all of the 3 containers are brought up, use `docker-compose run traffic-generator-nvme` to generate some traffic.
 
 Open Prometheus UI or query via cmdline. E.g.:
 
