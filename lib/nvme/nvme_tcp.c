@@ -818,7 +818,7 @@ nvme_tcp_req_init(struct nvme_tcp_qpair *tqpair, struct nvme_request *req,
 		return rc;
 	}
 
-	if (req->cmd.opc == SPDK_NVME_OPC_FABRIC) {
+	if (spdk_unlikely(req->cmd.opc == SPDK_NVME_OPC_FABRIC)) {
 		struct spdk_nvmf_capsule_cmd *nvmf_cmd = (struct spdk_nvmf_capsule_cmd *)&req->cmd;
 
 		xfer = spdk_nvme_opc_get_data_transfer(nvmf_cmd->fctype);
@@ -827,7 +827,8 @@ nvme_tcp_req_init(struct nvme_tcp_qpair *tqpair, struct nvme_request *req,
 	}
 	if (xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 		max_in_capsule_data_size = ctrlr->ioccsz_bytes;
-		if ((req->cmd.opc == SPDK_NVME_OPC_FABRIC) || nvme_qpair_is_admin_queue(&tqpair->qpair)) {
+		if (spdk_unlikely((req->cmd.opc == SPDK_NVME_OPC_FABRIC) ||
+				  nvme_qpair_is_admin_queue(&tqpair->qpair))) {
 			max_in_capsule_data_size = SPDK_NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE;
 		}
 
@@ -956,7 +957,7 @@ nvme_tcp_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 		return -EAGAIN;
 	}
 
-	if (nvme_tcp_req_init(tqpair, req, tcp_req)) {
+	if (spdk_unlikely(nvme_tcp_req_init(tqpair, req, tcp_req))) {
 		SPDK_ERRLOG("nvme_tcp_req_init() failed\n");
 		nvme_tcp_req_put(tqpair, tcp_req);
 		return -1;
@@ -984,7 +985,7 @@ nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req,
 	struct spdk_nvme_cpl	cpl;
 	struct spdk_nvme_qpair	*qpair;
 	struct nvme_request	*req;
-	bool			error, print_error;
+	bool			print_error;
 
 	assert(tcp_req->req != NULL);
 	req = tcp_req->req;
@@ -993,15 +994,16 @@ nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req,
 	/* Cache arguments to be passed to nvme_complete_request since tcp_req can be zeroed when released */
 	memcpy(&cpl, rsp, sizeof(cpl));
 
-	error = spdk_nvme_cpl_is_error(rsp);
-	print_error = error && print_on_error && !qpair->ctrlr->opts.disable_error_logging;
+	if (spdk_unlikely(spdk_nvme_cpl_is_error(rsp))) {
+		print_error = print_on_error && !qpair->ctrlr->opts.disable_error_logging;
 
-	if (print_error) {
-		spdk_nvme_qpair_print_command(qpair, &req->cmd);
-	}
+		if (print_error) {
+			spdk_nvme_qpair_print_command(qpair, &req->cmd);
+		}
 
-	if (print_error || SPDK_DEBUGLOG_FLAG_ENABLED("nvme")) {
-		spdk_nvme_qpair_print_completion(qpair, rsp);
+		if (print_error || SPDK_DEBUGLOG_FLAG_ENABLED("nvme")) {
+			spdk_nvme_qpair_print_completion(qpair, rsp);
+		}
 	}
 
 	spdk_trace_record(TRACE_NVME_TCP_COMPLETE, qpair->id, 0, (uintptr_t)req, req->cb_arg,

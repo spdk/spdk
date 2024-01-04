@@ -644,7 +644,8 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 	 * from the old transport connection and encourage the application to retry them. We also need
 	 * to submit any queued requests that built up while we were in the connected or enabling state.
 	 */
-	if (nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTED && !qpair->ctrlr->is_resetting) {
+	if (spdk_unlikely(nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTED &&
+			  !qpair->ctrlr->is_resetting)) {
 		nvme_qpair_set_state(qpair, NVME_QPAIR_ENABLING);
 		/*
 		 * PCIe is special, for fabrics transports, we can abort requests before disconnect during reset
@@ -674,8 +675,8 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 	 * controller thread and we can't disconnect I/O qpairs from the controller
 	 * thread.
 	 */
-	if (qpair->transport_failure_reason != SPDK_NVME_QPAIR_FAILURE_NONE &&
-	    nvme_qpair_get_state(qpair) == NVME_QPAIR_ENABLED) {
+	if (spdk_unlikely(qpair->transport_failure_reason != SPDK_NVME_QPAIR_FAILURE_NONE &&
+			  nvme_qpair_get_state(qpair) == NVME_QPAIR_ENABLED)) {
 		/* Don't disconnect PCIe qpairs. They are a special case for reset. */
 		if (qpair->ctrlr->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
 			nvme_ctrlr_disconnect_qpair(qpair);
