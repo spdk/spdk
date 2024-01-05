@@ -1389,14 +1389,24 @@ subsystem_update_ns_on_pg(struct spdk_io_channel_iter *i)
 }
 
 static int
-nvmf_subsystem_update_ns(struct spdk_nvmf_subsystem *subsystem, spdk_channel_for_each_cpl cpl,
-			 void *ctx)
+nvmf_subsystem_update_ns(struct spdk_nvmf_subsystem *subsystem,
+			 spdk_nvmf_subsystem_state_change_done cb_fn, void *cb_arg)
 {
+	struct subsystem_update_ns_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Can't alloc subsystem poll group update context\n");
+		return -ENOMEM;
+	}
+	ctx->subsystem = subsystem;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
 	spdk_for_each_channel(subsystem->tgt,
 			      subsystem_update_ns_on_pg,
 			      ctx,
-			      cpl);
-
+			      subsystem_update_ns_done);
 	return 0;
 }
 
@@ -3200,10 +3210,10 @@ nvmf_ns_reservation_request(void *ctx)
 	struct spdk_nvmf_request *req = (struct spdk_nvmf_request *)ctx;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
-	struct subsystem_update_ns_ctx *update_ctx;
 	uint32_t nsid;
 	struct spdk_nvmf_ns *ns;
 	bool update_sgroup = false;
+	int status = 0;
 
 	nsid = cmd->nsid;
 	ns = _nvmf_subsystem_get_ns(ctrlr->subsys, nsid);
@@ -3233,21 +3243,13 @@ nvmf_ns_reservation_request(void *ctx)
 				req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			}
 		}
-		update_ctx = calloc(1, sizeof(*update_ctx));
-		if (update_ctx == NULL) {
-			SPDK_ERRLOG("Can't alloc subsystem poll group update context\n");
-			goto update_done;
+		status = nvmf_subsystem_update_ns(ctrlr->subsys, _nvmf_ns_reservation_update_done, req);
+		if (status == 0) {
+			return;
 		}
-		update_ctx->subsystem = ctrlr->subsys;
-		update_ctx->cb_fn = _nvmf_ns_reservation_update_done;
-		update_ctx->cb_arg = req;
-
-		nvmf_subsystem_update_ns(ctrlr->subsys, subsystem_update_ns_done, update_ctx);
-		return;
 	}
 
-update_done:
-	_nvmf_ns_reservation_update_done(ctrlr->subsys, (void *)req, 0);
+	_nvmf_ns_reservation_update_done(ctrlr->subsys, req, status);
 }
 
 int
