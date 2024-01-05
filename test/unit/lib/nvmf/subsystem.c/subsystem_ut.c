@@ -816,6 +816,8 @@ test_reservation_register_with_ptpl(void)
 	SPDK_CU_ASSERT_FATAL(update_sgroup == true);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
 	SPDK_CU_ASSERT_FATAL(g_ns.ptpl_activated == true);
+	rc = nvmf_ns_update_reservation_info(&g_ns);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
 	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr1_A.hostid);
 	SPDK_CU_ASSERT_FATAL(reg != NULL);
 	SPDK_CU_ASSERT_FATAL(!spdk_uuid_compare(&g_ctrlr1_A.hostid, &reg->hostid));
@@ -833,6 +835,8 @@ test_reservation_register_with_ptpl(void)
 	SPDK_CU_ASSERT_FATAL(update_sgroup == true);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
 	SPDK_CU_ASSERT_FATAL(g_ns.ptpl_activated == false);
+	rc = nvmf_ns_update_reservation_info(&g_ns);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
 	rc = nvmf_ns_load_reservation(g_ns.ptpl_file, &info);
 	SPDK_CU_ASSERT_FATAL(rc < 0);
 	unlink(g_ns.ptpl_file);
@@ -937,6 +941,8 @@ test_reservation_acquire_release_with_ptpl(void)
 	SPDK_CU_ASSERT_FATAL(update_sgroup == true);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
 	SPDK_CU_ASSERT_FATAL(g_ns.ptpl_activated == true);
+	rc = nvmf_ns_update_reservation_info(&g_ns);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
 	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr1_A.hostid);
 	SPDK_CU_ASSERT_FATAL(reg != NULL);
 	SPDK_CU_ASSERT_FATAL(!spdk_uuid_compare(&g_ctrlr1_A.hostid, &reg->hostid));
@@ -953,6 +959,8 @@ test_reservation_acquire_release_with_ptpl(void)
 	update_sgroup = nvmf_ns_reservation_acquire(&g_ns, &g_ctrlr1_A, req);
 	SPDK_CU_ASSERT_FATAL(update_sgroup == true);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	rc = nvmf_ns_update_reservation_info(&g_ns);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
 	memset(&info, 0, sizeof(info));
 	rc = nvmf_ns_load_reservation(g_ns.ptpl_file, &info);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
@@ -969,6 +977,8 @@ test_reservation_acquire_release_with_ptpl(void)
 	update_sgroup = nvmf_ns_reservation_release(&g_ns, &g_ctrlr1_A, req);
 	SPDK_CU_ASSERT_FATAL(update_sgroup == true);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	rc = nvmf_ns_update_reservation_info(&g_ns);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
 	memset(&info, 0, sizeof(info));
 	rc = nvmf_ns_load_reservation(g_ns.ptpl_file, &info);
 	SPDK_CU_ASSERT_FATAL(rc == 0);

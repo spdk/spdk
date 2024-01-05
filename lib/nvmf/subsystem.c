@@ -2831,12 +2831,6 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 	}
 
 exit:
-	if (update_sgroup) {
-		rc = nvmf_ns_update_reservation_info(ns);
-		if (rc != 0) {
-			status = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-		}
-	}
 	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 	req->rsp->nvme_cpl.status.sc = status;
 	return update_sgroup;
@@ -3001,11 +2995,6 @@ exit:
 
 		}
 	}
-	if (update_sgroup && ns->ptpl_activated) {
-		if (nvmf_ns_update_reservation_info(ns)) {
-			status = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-		}
-	}
 	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 	req->rsp->nvme_cpl.status.sc = status;
 	return update_sgroup;
@@ -3108,11 +3097,6 @@ nvmf_ns_reservation_release(struct spdk_nvmf_ns *ns,
 	}
 
 exit:
-	if (update_sgroup && ns->ptpl_activated) {
-		if (nvmf_ns_update_reservation_info(ns)) {
-			status = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-		}
-	}
 	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 	req->rsp->nvme_cpl.status.sc = status;
 	return update_sgroup;
@@ -3244,6 +3228,11 @@ nvmf_ns_reservation_request(void *ctx)
 
 	/* update reservation information to subsystem's poll group */
 	if (update_sgroup) {
+		if (ns->ptpl_activated || cmd->opc == SPDK_NVME_OPC_RESERVATION_REGISTER) {
+			if (nvmf_ns_update_reservation_info(ns) != 0) {
+				req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+			}
+		}
 		update_ctx = calloc(1, sizeof(*update_ctx));
 		if (update_ctx == NULL) {
 			SPDK_ERRLOG("Can't alloc subsystem poll group update context\n");
