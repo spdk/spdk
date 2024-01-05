@@ -627,9 +627,22 @@ function rpc_cmd_simple_data_json() {
 	((${#jq_out[@]} > 0)) || return 1
 }
 
+function valid_exec_arg() {
+	local arg=$1
+	# First argument must be the executable so do some basic sanity checks first. For bash, this
+	# covers two basic cases where es == 126 || es == 127 so catch them early on and fail hard
+	# if needed.
+	case "$(type -t "$arg")" in
+		builtin | function) ;;
+		file) arg=$(type -P "$arg") && [[ -x $arg ]] ;;
+		*) return 1 ;;
+	esac
+}
+
 function NOT() {
 	local es=0
 
+	valid_exec_arg "$@" || return 1
 	"$@" || es=$?
 
 	# Logic looks like so:
