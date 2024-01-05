@@ -838,7 +838,7 @@ bdevperf_abort_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 }
 
 static int
-bdevperf_verify_dif(struct bdevperf_task *task, struct iovec *iovs, int iovcnt)
+bdevperf_verify_dif(struct bdevperf_task *task)
 {
 	struct bdevperf_job	*job = task->job;
 	struct spdk_bdev	*bdev = job->bdev;
@@ -863,14 +863,14 @@ bdevperf_verify_dif(struct bdevperf_task *task, struct iovec *iovs, int iovcnt)
 	}
 
 	if (spdk_bdev_is_md_interleaved(bdev)) {
-		rc = spdk_dif_verify(iovs, iovcnt, job->io_size_blocks, &dif_ctx, &err_blk);
+		rc = spdk_dif_verify(&task->iov, 1, job->io_size_blocks, &dif_ctx, &err_blk);
 	} else {
 		struct iovec md_iov = {
 			.iov_base	= task->md_buf,
 			.iov_len	= spdk_bdev_get_md_size(bdev) * job->io_size_blocks,
 		};
 
-		rc = spdk_dix_verify(iovs, iovcnt, &md_iov, job->io_size_blocks, &dif_ctx, &err_blk);
+		rc = spdk_dix_verify(&task->iov, 1, &md_iov, job->io_size_blocks, &dif_ctx, &err_blk);
 	}
 
 	if (rc != 0) {
@@ -886,8 +886,6 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct bdevperf_job	*job;
 	struct bdevperf_task	*task = cb_arg;
-	struct iovec		*iovs;
-	int			iovcnt;
 	bool			md_check;
 	uint64_t		offset_in_ios;
 	int			rc;
@@ -906,10 +904,8 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 			       task->offset_blocks, job->name);
 		}
 	} else if (job->verify || job->reset) {
-		spdk_bdev_io_get_iovec(bdev_io, &iovs, &iovcnt);
-		assert(iovcnt == 1);
-		assert(iovs != NULL);
-		if (!verify_data(task->buf, job->buf_size, iovs[0].iov_base, iovs[0].iov_len,
+		if (!verify_data(task->buf, job->buf_size,
+				 task->iov.iov_base, job->buf_size,
 				 spdk_bdev_get_block_size(job->bdev),
 				 task->md_buf, spdk_bdev_io_get_md_buf(bdev_io),
 				 spdk_bdev_get_md_size(job->bdev),
@@ -920,10 +916,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		}
 	} else if (job->dif_check_flags != 0) {
 		if (task->io_type == SPDK_BDEV_IO_TYPE_READ && spdk_bdev_get_md_size(job->bdev) != 0) {
-			spdk_bdev_io_get_iovec(bdev_io, &iovs, &iovcnt);
-			assert(iovcnt == 1);
-			assert(iovs != NULL);
-			rc = bdevperf_verify_dif(task, iovs, iovcnt);
+			rc = bdevperf_verify_dif(task);
 			if (rc != 0) {
 				printf("DIF error detected. task offset: %" PRIu64 " on job bdev=%s\n",
 				       task->offset_blocks, job->name);
@@ -978,10 +971,13 @@ bdevperf_verify_submit_read(void *cb_arg)
 
 	job = task->job;
 
+	task->iov.iov_base = task->verify_buf;
+	task->iov.iov_len = job->buf_size;
+
 	/* Read the data back in */
-	rc = spdk_bdev_read_blocks_with_md(job->bdev_desc, job->ch, task->verify_buf, NULL,
-					   task->offset_blocks, job->io_size_blocks,
-					   bdevperf_complete, task);
+	rc = spdk_bdev_readv_blocks_with_md(job->bdev_desc, job->ch, &task->iov, 1, NULL,
+					    task->offset_blocks, job->io_size_blocks,
+					    bdevperf_complete, task);
 
 	if (rc == -ENOMEM) {
 		bdevperf_queue_io_wait_with_cb(task, bdevperf_verify_submit_read);
@@ -1108,10 +1104,11 @@ bdevperf_submit_task(void *arg)
 			rc = spdk_bdev_zcopy_start(desc, ch, NULL, 0, task->offset_blocks, job->io_size_blocks,
 						   true, bdevperf_zcopy_populate_complete, task);
 		} else {
-			rc = spdk_bdev_read_blocks_with_md(desc, ch, task->buf, task->md_buf,
-							   task->offset_blocks,
-							   job->io_size_blocks,
-							   bdevperf_complete, task);
+			rc = spdk_bdev_readv_blocks_with_md(desc, ch, &task->iov, 1,
+							    task->md_buf,
+							    task->offset_blocks,
+							    job->io_size_blocks,
+							    bdevperf_complete, task);
 		}
 		break;
 	case SPDK_BDEV_IO_TYPE_ABORT:
@@ -1294,6 +1291,10 @@ bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 		   (job->rw_percentage != 0 && ((rand_r(&job->seed) % 100) < job->rw_percentage))) {
 		assert(!job->verify);
 		task->io_type = SPDK_BDEV_IO_TYPE_READ;
+		if (!g_zcopy) {
+			task->iov.iov_base = task->buf;
+			task->iov.iov_len = job->buf_size;
+		}
 	} else {
 		if (job->verify || job->reset || g_unique_writes) {
 			generate_data(job, task->buf, task->md_buf, g_unique_writes);
