@@ -242,6 +242,34 @@ test_spdk_rpc_listen_close(void)
 	MOCK_CLEAR(flock);
 }
 
+static void
+test_rpc_run_multiple_servers(void)
+{
+	const char listen_addr1[128] = "/var/tmp/spdk-rpc-ut.sock1";
+	const char listen_addr2[128] = "/var/tmp/spdk-rpc-ut.sock2";
+	const char listen_addr3[128] = "/var/tmp/spdk-rpc-ut.sock3";
+	struct spdk_rpc_server *rpc_server1, *rpc_server2, *rpc_server3;
+
+	MOCK_SET(open, 1);
+	MOCK_SET(close, 0);
+	MOCK_SET(flock, 0);
+
+	rpc_server1 = spdk_rpc_server_listen(listen_addr1);
+	CU_ASSERT(rpc_server1 != NULL);
+	rpc_server2 = spdk_rpc_server_listen(listen_addr2);
+	CU_ASSERT(rpc_server2 != NULL);
+	rpc_server3 = spdk_rpc_server_listen(listen_addr3);
+	CU_ASSERT(rpc_server3 != NULL);
+
+	spdk_rpc_server_close(rpc_server1);
+	spdk_rpc_server_close(rpc_server2);
+	spdk_rpc_server_close(rpc_server3);
+
+	MOCK_CLEAR(open);
+	MOCK_CLEAR(close);
+	MOCK_CLEAR(flock);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -257,6 +285,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_rpc_get_methods);
 	CU_ADD_TEST(suite, test_rpc_spdk_get_version);
 	CU_ADD_TEST(suite, test_spdk_rpc_listen_close);
+	CU_ADD_TEST(suite, test_rpc_run_multiple_servers);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();

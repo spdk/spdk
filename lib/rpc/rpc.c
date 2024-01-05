@@ -220,10 +220,38 @@ spdk_rpc_listen(const char *listen_addr)
 	return rc;
 }
 
+struct spdk_rpc_server *
+spdk_rpc_server_listen(const char *listen_addr)
+{
+	struct spdk_rpc_server *server;
+	int rc;
+
+	server = calloc(1, sizeof(struct spdk_rpc_server));
+	if (!server) {
+		SPDK_ERRLOG("Could not allocate new RPC server\n");
+		return NULL;
+	}
+
+	rc = _spdk_rpc_listen(listen_addr, server);
+	if (rc) {
+		free(server);
+		return NULL;
+	}
+
+	return server;
+}
+
 void
 spdk_rpc_accept(void)
 {
 	spdk_jsonrpc_server_poll(g_rpc_server.jsonrpc_server);
+}
+
+void
+spdk_rpc_server_accept(struct spdk_rpc_server *server)
+{
+	assert(server != NULL);
+	spdk_jsonrpc_server_poll(server->jsonrpc_server);
 }
 
 void
@@ -375,6 +403,16 @@ spdk_rpc_close(void)
 	if (g_rpc_server.jsonrpc_server) {
 		_spdk_rpc_close(&g_rpc_server);
 	}
+}
+
+void
+spdk_rpc_server_close(struct spdk_rpc_server *server)
+{
+	assert(server != NULL);
+
+	_spdk_rpc_close(server);
+
+	free(server);
 }
 
 struct rpc_get_methods {
