@@ -1831,7 +1831,7 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 		    (subsystem->zone_append_supported != zone_append_supported ||
 		     subsystem->max_zone_append_size_kib != max_zone_append_size_kib)) {
 			SPDK_ERRLOG("Namespaces with different zone append support or different zone append size are not allowed.\n");
-			goto err_ns_reservation_restore;
+			goto err;
 		}
 
 		subsystem->zone_append_supported = zone_append_supported;
@@ -1846,18 +1846,19 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 	subsystem->ana_group[ns->anagrpid - 1]++;
 	TAILQ_INIT(&ns->registrants);
 	if (ptpl_file) {
+		ns->ptpl_file = strdup(ptpl_file);
+		if (!ns->ptpl_file) {
+			SPDK_ERRLOG("Namespace ns->ptpl_file allocation failed\n");
+			goto err;
+		}
+
 		rc = nvmf_ns_load_reservation(ptpl_file, &info);
 		if (!rc) {
 			rc = nvmf_ns_reservation_restore(ns, &info);
 			if (rc) {
 				SPDK_ERRLOG("Subsystem restore reservation failed\n");
-				goto err_ns_reservation_restore;
+				goto err;
 			}
-		}
-		ns->ptpl_file = strdup(ptpl_file);
-		if (!ns->ptpl_file) {
-			SPDK_ERRLOG("Namespace ns->ptpl_file allocation failed\n");
-			goto err_strdup;
 		}
 	}
 
@@ -1867,7 +1868,8 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 			rc = transport->ops->subsystem_add_ns(transport, subsystem, ns);
 			if (rc) {
 				SPDK_ERRLOG("Namespace attachment is not allowed by %s transport\n", transport->ops->name);
-				goto err_subsystem_add_ns;
+				nvmf_ns_reservation_clear_all_registrants(ns);
+				goto err;
 			}
 		}
 	}
@@ -1882,15 +1884,11 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 	SPDK_DTRACE_PROBE2(nvmf_subsystem_add_ns, subsystem->subnqn, ns->nsid);
 
 	return opts.nsid;
-
-err_subsystem_add_ns:
-	free(ns->ptpl_file);
-err_strdup:
-	nvmf_ns_reservation_clear_all_registrants(ns);
-err_ns_reservation_restore:
+err:
 	subsystem->ns[opts.nsid - 1] = NULL;
 	spdk_bdev_module_release_bdev(ns->bdev);
 	spdk_bdev_close(ns->desc);
+	free(ns->ptpl_file);
 	free(ns);
 
 	return 0;
