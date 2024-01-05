@@ -166,7 +166,7 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 		nsdata->noiob = spdk_bdev_get_optimal_io_boundary(bdev);
 	}
 	nsdata->nmic.can_share = 1;
-	if (ns->ptpl_file != NULL) {
+	if (nvmf_ns_is_ptpl_capable(ns)) {
 		nsdata->nsrescap.rescap.persist = 1;
 	}
 	nsdata->nsrescap.rescap.write_exclusive = 1;

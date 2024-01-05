@@ -1833,12 +1833,12 @@ nvmf_ctrlr_set_features_reservation_persistence(struct spdk_nvmf_request *req)
 	ns = _nvmf_subsystem_get_ns(ctrlr->subsys, cmd->nsid);
 	ptpl = cmd->cdw11_bits.feat_rsv_persistence.bits.ptpl;
 
-	if (cmd->nsid != SPDK_NVME_GLOBAL_NS_TAG && ns && ns->ptpl_file) {
+	if (cmd->nsid != SPDK_NVME_GLOBAL_NS_TAG && ns && nvmf_ns_is_ptpl_capable(ns)) {
 		ns->ptpl_activated = ptpl;
 	} else if (cmd->nsid == SPDK_NVME_GLOBAL_NS_TAG) {
 		for (ns = spdk_nvmf_subsystem_get_first_ns(ctrlr->subsys); ns;
 		     ns = spdk_nvmf_subsystem_get_next_ns(ctrlr->subsys, ns)) {
-			if (ns->ptpl_file) {
+			if (nvmf_ns_is_ptpl_capable(ns)) {
 				ns->ptpl_activated = ptpl;
 			}
 		}

@@ -2423,7 +2423,7 @@ nvmf_ns_update_reservation_info(struct spdk_nvmf_ns *ns)
 
 	assert(ns != NULL);
 
-	if (!ns->bdev || !ns->ptpl_file) {
+	if (!ns->bdev || !nvmf_ns_is_ptpl_capable(ns)) {
 		return 0;
 	}
 
@@ -2730,7 +2730,7 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 			update_sgroup = true;
 		}
 	} else if (cptpl == SPDK_NVME_RESERVE_PTPL_PERSIST_POWER_LOSS) {
-		if (ns->ptpl_file == NULL) {
+		if (!nvmf_ns_is_ptpl_capable(ns)) {
 			status = SPDK_NVME_SC_INVALID_FIELD;
 			goto exit;
 		} else if (ns->ptpl_activated == 0) {
