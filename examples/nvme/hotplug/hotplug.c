@@ -606,6 +606,7 @@ main(int argc, char **argv)
 	}
 
 cleanup:
+	spdk_rpc_close();
 	spdk_env_fini();
 	return rc;
 }
