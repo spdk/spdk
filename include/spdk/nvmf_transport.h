@@ -76,8 +76,15 @@ struct spdk_nvmf_request {
 	struct spdk_nvmf_qpair		*qpair;
 	uint32_t			length;
 	uint8_t				xfer; /* type enum spdk_nvme_data_transfer */
-	bool				data_from_pool;
-	bool				dif_enabled;
+	union {
+		uint8_t raw;
+		struct {
+			uint8_t data_from_pool		: 1;
+			uint8_t dif_enabled		: 1;
+			uint8_t rsvd			: 6;
+		};
+	};
+	uint8_t				zcopy_phase; /* type enum spdk_nvmf_zcopy_phase */
 	uint8_t				iovcnt;
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
@@ -92,6 +99,7 @@ struct spdk_nvmf_request {
 	struct spdk_accel_sequence	*accel_sequence;
 
 	struct iovec			iov[NVMF_REQ_MAX_BUFFERS];
+
 	struct spdk_nvmf_stripped_data	*stripped_data;
 
 	struct spdk_nvmf_dif_info	dif;
@@ -102,13 +110,11 @@ struct spdk_nvmf_request {
 	struct spdk_nvmf_request	*req_to_abort;
 	struct spdk_poller		*poller;
 	struct spdk_bdev_io		*zcopy_bdev_io; /* Contains the bdev_io when using ZCOPY */
-	enum spdk_nvmf_zcopy_phase	zcopy_phase;
-	uint8_t				rsvd[4];
 
 	/* Timeout tracked for connect and abort flows. */
 	uint64_t timeout_tsc;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_request) == 784, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_request) == 776, "Incorrect size");
 
 enum spdk_nvmf_qpair_state {
 	SPDK_NVMF_QPAIR_UNINITIALIZED = 0,
