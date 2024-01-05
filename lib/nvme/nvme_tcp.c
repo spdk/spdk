@@ -142,7 +142,8 @@ struct nvme_tcp_req {
 			uint8_t				r2t_waiting_h2c_complete : 1;
 			/* Accel operation is in progress */
 			uint8_t				in_progress_accel : 1;
-			uint8_t				reserved : 3;
+			uint8_t				domain_in_use: 1;
+			uint8_t				reserved : 2;
 		} bits;
 	} ordering;
 	struct nvme_tcp_pdu			*pdu;
@@ -731,7 +732,7 @@ nvme_tcp_try_memory_translation(struct nvme_tcp_req *tcp_req, void **addr, uint3
 	};
 	int rc;
 
-	if (!(req->payload.opts && req->payload.opts->memory_domain)) {
+	if (!tcp_req->ordering.bits.domain_in_use) {
 		return 0;
 	}
 
@@ -840,6 +841,8 @@ nvme_tcp_req_init(struct nvme_tcp_qpair *tqpair, struct nvme_request *req,
 	uint32_t max_in_capsule_data_size;
 
 	tcp_req->req = req;
+	tcp_req->ordering.bits.domain_in_use = (req->payload.opts && req->payload.opts->memory_domain);
+
 	req->cmd.cid = tcp_req->cid;
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
 	req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK;
@@ -925,8 +928,7 @@ nvme_tcp_qpair_cmd_send_complete(void *cb_arg)
 		SPDK_DEBUGLOG(nvme, "tcp req %p, send H2C data\n", tcp_req);
 		nvme_tcp_send_h2c_data(tcp_req);
 	} else {
-		if (tcp_req->in_capsule_data && tcp_req->req->payload.opts &&
-		    tcp_req->req->payload.opts->memory_domain) {
+		if (tcp_req->in_capsule_data && tcp_req->ordering.bits.domain_in_use) {
 			spdk_memory_domain_invalidate_data(tcp_req->req->payload.opts->memory_domain,
 							   tcp_req->req->payload.opts->memory_domain_ctx, tcp_req->iov, tcp_req->iovcnt);
 		}
@@ -1799,7 +1801,7 @@ nvme_tcp_qpair_h2c_data_send_complete(void *cb_arg)
 			return;
 		}
 
-		if (tcp_req->req->payload.opts && tcp_req->req->payload.opts->memory_domain) {
+		if (tcp_req->ordering.bits.domain_in_use) {
 			spdk_memory_domain_invalidate_data(tcp_req->req->payload.opts->memory_domain,
 							   tcp_req->req->payload.opts->memory_domain_ctx, tcp_req->iov, tcp_req->iovcnt);
 		}
