@@ -677,6 +677,7 @@ static void
 bdev_uring_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 {
 	struct bdev_uring *uring = bdev->ctxt;
+	char uuid_str[SPDK_UUID_STRING_LEN];
 
 	spdk_json_write_object_begin(w);
 
@@ -686,6 +687,8 @@ bdev_uring_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx 
 	spdk_json_write_named_string(w, "name", bdev->name);
 	spdk_json_write_named_uint32(w, "block_size", bdev->blocklen);
 	spdk_json_write_named_string(w, "filename", uring->filename);
+	spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &bdev->uuid);
+	spdk_json_write_named_string(w, "uuid", uuid_str);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
@@ -738,12 +741,13 @@ bdev_uring_group_destroy_cb(void *io_device, void *ctx_buf)
 }
 
 struct spdk_bdev *
-create_uring_bdev(const char *name, const char *filename, uint32_t block_size)
+create_uring_bdev(const struct bdev_uring_opts *opts)
 {
 	struct bdev_uring *uring;
 	uint32_t detected_block_size;
 	uint64_t bdev_size;
 	int rc;
+	uint32_t block_size = opts->block_size;
 
 	uring = calloc(1, sizeof(*uring));
 	if (!uring) {
@@ -751,19 +755,19 @@ create_uring_bdev(const char *name, const char *filename, uint32_t block_size)
 		return NULL;
 	}
 
-	uring->filename = strdup(filename);
+	uring->filename = strdup(opts->filename);
 	if (!uring->filename) {
 		goto error_return;
 	}
 
 	if (bdev_uring_open(uring)) {
-		SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", filename, uring->fd, errno);
+		SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", opts->filename, uring->fd, errno);
 		goto error_return;
 	}
 
 	bdev_size = spdk_fd_get_size(uring->fd);
 
-	uring->bdev.name = strdup(name);
+	uring->bdev.name = strdup(opts->name);
 	if (!uring->bdev.name) {
 		goto error_return;
 	}
@@ -806,7 +810,7 @@ create_uring_bdev(const char *name, const char *filename, uint32_t block_size)
 	uring->bdev.blocklen = block_size;
 	uring->bdev.required_alignment = spdk_u32log2(block_size);
 
-	rc = bdev_uring_check_zoned_support(uring, name, filename);
+	rc = bdev_uring_check_zoned_support(uring, opts->name, opts->filename);
 	if (rc) {
 		goto error_return;
 	}
@@ -821,6 +825,10 @@ create_uring_bdev(const char *name, const char *filename, uint32_t block_size)
 	uring->bdev.ctxt = uring;
 
 	uring->bdev.fn_table = &uring_fn_table;
+
+	if (!spdk_mem_all_zero(&opts->uuid, sizeof(opts->uuid))) {
+		spdk_uuid_copy(&uring->bdev.uuid, &opts->uuid);
+	}
 
 	spdk_io_device_register(uring, bdev_uring_create_cb, bdev_uring_destroy_cb,
 				sizeof(struct bdev_uring_io_channel),

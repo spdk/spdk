@@ -41,6 +41,7 @@ rpc_bdev_uring_create(struct spdk_jsonrpc_request *request,
 	struct rpc_create_uring req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev;
+	struct bdev_uring_opts opts = {};
 
 	if (spdk_json_decode_object(params, rpc_create_uring_decoders,
 				    SPDK_COUNTOF(rpc_create_uring_decoders),
@@ -51,7 +52,11 @@ rpc_bdev_uring_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	bdev = create_uring_bdev(req.name, req.filename, req.block_size);
+	opts.block_size = req.block_size;
+	opts.filename = req.filename;
+	opts.name = req.name;
+
+	bdev = create_uring_bdev(&opts);
 	if (!bdev) {
 		SPDK_ERRLOG("Unable to create URING bdev from file %s\n", req.filename);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
