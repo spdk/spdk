@@ -49,6 +49,7 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define SPDK_BDEV_QOS_MIN_BYTE_PER_TIMESLICE	512
 #define SPDK_BDEV_QOS_MIN_IOS_PER_SEC		1000
 #define SPDK_BDEV_QOS_MIN_BYTES_PER_SEC		(1024 * 1024)
+#define SPDK_BDEV_QOS_MAX_MBYTES_PER_SEC	(UINT64_MAX / (1024 * 1024))
 #define SPDK_BDEV_QOS_LIMIT_NOT_DEFINED		UINT64_MAX
 #define SPDK_BDEV_IO_POLL_INTERVAL_IN_MSEC	1000
 
@@ -9165,6 +9166,11 @@ spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits,
 		if (bdev_qos_is_iops_rate_limit(i) == true) {
 			min_limit_per_sec = SPDK_BDEV_QOS_MIN_IOS_PER_SEC;
 		} else {
+			if (limits[i] > SPDK_BDEV_QOS_MAX_MBYTES_PER_SEC) {
+				SPDK_WARNLOG("Requested rate limit %" PRIu64 " will result in uint64_t overflow, "
+					     "reset to %" PRIu64 "\n", limits[i], SPDK_BDEV_QOS_MAX_MBYTES_PER_SEC);
+				limits[i] = SPDK_BDEV_QOS_MAX_MBYTES_PER_SEC;
+			}
 			/* Change from megabyte to byte rate limit */
 			limits[i] = limits[i] * 1024 * 1024;
 			min_limit_per_sec = SPDK_BDEV_QOS_MIN_BYTES_PER_SEC;
