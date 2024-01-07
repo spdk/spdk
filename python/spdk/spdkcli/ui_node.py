@@ -847,7 +847,7 @@ class UIUringBdev(UIBdev):
     def delete(self, name):
         self.get_root().bdev_uring_delete(name=name)
 
-    def ui_command_create(self, filename, name, block_size):
+    def ui_command_create(self, filename, name, block_size, uuid=None):
         """
         Construct a uring bdev.
 
@@ -855,12 +855,14 @@ class UIUringBdev(UIBdev):
         filename - Path to device or file.
         name - Name to use for bdev.
         block_size - Integer, block size to use when constructing bdev.
+        uuid: UUID of block device (optional)
         """
 
         block_size = self.ui_eval_param(block_size, "number", None)
         ret_name = self.get_root().bdev_uring_create(filename=filename,
                                                      name=name,
-                                                     block_size=int(block_size))
+                                                     block_size=int(block_size),
+                                                     uuid=uuid)
         self.shell.log.info(ret_name)
 
     def ui_command_delete(self, name):

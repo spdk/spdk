@@ -14,6 +14,7 @@ struct rpc_create_uring {
 	char *name;
 	char *filename;
 	uint32_t block_size;
+	struct spdk_uuid uuid;
 };
 
 /* Free the allocated memory resource after the RPC handling. */
@@ -29,6 +30,7 @@ static const struct spdk_json_object_decoder rpc_create_uring_decoders[] = {
 	{"name", offsetof(struct rpc_create_uring, name), spdk_json_decode_string},
 	{"filename", offsetof(struct rpc_create_uring, filename), spdk_json_decode_string},
 	{"block_size", offsetof(struct rpc_create_uring, block_size), spdk_json_decode_uint32, true},
+	{"uuid", offsetof(struct rpc_create_uring, uuid), spdk_json_decode_uuid, true},
 };
 
 /* Decode the parameters for this RPC method and properly create the uring
@@ -55,6 +57,7 @@ rpc_bdev_uring_create(struct spdk_jsonrpc_request *request,
 	opts.block_size = req.block_size;
 	opts.filename = req.filename;
 	opts.name = req.name;
+	opts.uuid = req.uuid;
 
 	bdev = create_uring_bdev(&opts);
 	if (!bdev) {

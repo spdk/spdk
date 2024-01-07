@@ -10789,6 +10789,7 @@ Name                    | Optional | Type        | Description
 filename                | Required | string      | path to device or file (ex: /dev/nvme0n1)
 name                    | Required | string      | name of bdev
 block_size              | Optional | number      | block size of device (If omitted, get the block size from the file)
+uuid                    | Optional | string      | UUID of new bdev
 
 #### Example
 

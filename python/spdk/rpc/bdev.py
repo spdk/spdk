@@ -535,13 +535,14 @@ def bdev_aio_delete(client, name):
     return client.call('bdev_aio_delete', params)
 
 
-def bdev_uring_create(client, filename, name, block_size=None):
+def bdev_uring_create(client, filename, name, block_size=None, uuid=None):
     """Create a bdev with Linux io_uring backend.
 
     Args:
         filename: path to device or file (ex: /dev/nvme0n1)
         name: name of bdev
         block_size: block size of device (optional; autodetected if omitted)
+        uuid: UUID of block device (optional)
 
     Returns:
         Name of created bdev.
@@ -551,6 +552,9 @@ def bdev_uring_create(client, filename, name, block_size=None):
 
     if block_size:
         params['block_size'] = block_size
+
+    if uuid:
+        params['uuid'] = uuid
 
     return client.call('bdev_uring_create', params)
 
