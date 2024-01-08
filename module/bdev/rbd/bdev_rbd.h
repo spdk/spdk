@@ -20,6 +20,7 @@ struct cluster_register_info {
 	char *core_mask;
 };
 
+void dump_cluster_nonce(struct spdk_json_write_ctx *w, const char *name);
 void bdev_rbd_free_config(char **config);
 char **bdev_rbd_dup_config(const char *const *config);
 
