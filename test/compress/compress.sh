@@ -34,7 +34,7 @@ function create_vols() {
 	$rootdir/scripts/gen_nvme.sh | $rpc_py load_subsystem_config
 	waitforbdev Nvme0n1
 
-	$rpc_py bdev_lvol_create_lvstore Nvme0n1 lvs0
+	$rpc_py bdev_lvol_create_lvstore --clear-method none Nvme0n1 lvs0
 	$rpc_py bdev_lvol_create -t -l lvs0 lv0 100
 	waitforbdev lvs0/lv0
 
