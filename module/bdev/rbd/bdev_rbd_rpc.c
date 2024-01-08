@@ -252,9 +252,8 @@ rpc_bdev_rbd_register_cluster(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
 	}
-
 	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_string(w, req.name);
+	dump_cluster_nonce(w, req.name);
 	spdk_jsonrpc_end_result(request, w);
 cleanup:
 	free_rpc_register_cluster(&req);
