@@ -116,19 +116,15 @@ enum spdk_nvmf_qpair_state {
 typedef void (*spdk_nvmf_state_change_done)(void *cb_arg, int status);
 
 struct spdk_nvmf_qpair {
-	enum spdk_nvmf_qpair_state		state;
-	spdk_nvmf_state_change_done		state_cb;
-	void					*state_cb_arg;
+	uint8_t					state; /* ref spdk_nvmf_qpair_state */
+	uint8_t					rsvd;
+	uint16_t				qid;
+	uint16_t				sq_head;
+	uint16_t				sq_head_max;
 
 	struct spdk_nvmf_transport		*transport;
 	struct spdk_nvmf_ctrlr			*ctrlr;
 	struct spdk_nvmf_poll_group		*group;
-
-	uint16_t				qid;
-	uint16_t				sq_head;
-	uint16_t				sq_head_max;
-	bool					connect_received;
-	bool					disconnect_started;
 
 	union {
 		struct spdk_nvmf_request	*first_fused_req;
@@ -137,6 +133,12 @@ struct spdk_nvmf_qpair {
 
 	TAILQ_HEAD(, spdk_nvmf_request)		outstanding;
 	TAILQ_ENTRY(spdk_nvmf_qpair)		link;
+
+	spdk_nvmf_state_change_done		state_cb;
+	void					*state_cb_arg;
+
+	bool					connect_received;
+	bool					disconnect_started;
 };
 
 struct spdk_nvmf_transport_poll_group {
