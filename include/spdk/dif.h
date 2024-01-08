@@ -61,23 +61,27 @@ struct spdk_dif_ctx {
 	/** Block size */
 	uint32_t		block_size;
 
+	/** Interval for guard computation for DIF */
+	uint32_t		guard_interval;
+
 	/** Metadata size */
 	uint32_t		md_size;
 
 	/** Metadata location */
 	bool			md_interleave;
 
-	/** Interval for guard computation for DIF */
-	uint32_t		guard_interval;
-
 	/** DIF type */
-	enum spdk_dif_type	dif_type;
+	uint8_t			dif_type; /* ref spdk_dif_ctx */
 
 	/** DIF Protection Information format */
-	enum spdk_dif_pi_format dif_pi_format;
+	uint8_t			dif_pi_format; /* ref spdk_dif_pi_format */
+
+	uint8_t			rsvd[1];
 
 	/* Flags to specify the DIF action */
 	uint32_t		dif_flags;
+
+	uint8_t			rsvd2[4];
 
 	/* Initial reference tag */
 	uint64_t		init_ref_tag;
@@ -94,6 +98,9 @@ struct spdk_dif_ctx {
 	/* Offset to initial reference tag */
 	uint32_t		ref_tag_offset;
 
+	/* Remapped initial reference tag. */
+	uint32_t		remapped_init_ref_tag;
+
 	/** Guard value of the last data block.
 	 *
 	 * Interim guard value is set if the last data block is partial, or
@@ -104,8 +111,6 @@ struct spdk_dif_ctx {
 	/* Seed value for guard computation */
 	uint64_t		guard_seed;
 
-	/* Remapped initial reference tag. */
-	uint32_t		remapped_init_ref_tag;
 };
 
 /** DIF error information */
