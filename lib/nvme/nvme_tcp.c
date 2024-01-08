@@ -155,7 +155,9 @@ struct nvme_tcp_req {
 	struct nvme_tcp_qpair			*tqpair;
 	TAILQ_ENTRY(nvme_tcp_req)		link;
 	struct spdk_nvme_cpl			rsp;
+	uint8_t					rsvd1[32];
 };
+SPDK_STATIC_ASSERT(sizeof(struct nvme_tcp_req) % SPDK_CACHE_LINE_SIZE == 0, "unaligned size");
 
 static struct spdk_nvme_tcp_stat g_dummy_stats = {};
 
@@ -276,9 +278,10 @@ static int
 nvme_tcp_alloc_reqs(struct nvme_tcp_qpair *tqpair)
 {
 	uint16_t i;
-	struct nvme_tcp_req	*tcp_req;
+	struct nvme_tcp_req *tcp_req;
 
-	tqpair->tcp_reqs = calloc(tqpair->num_entries, sizeof(struct nvme_tcp_req));
+	tqpair->tcp_reqs = aligned_alloc(SPDK_CACHE_LINE_SIZE,
+					 tqpair->num_entries * sizeof(*tcp_req));
 	if (tqpair->tcp_reqs == NULL) {
 		SPDK_ERRLOG("Failed to allocate tcp_reqs on tqpair=%p\n", tqpair);
 		goto fail;
@@ -294,6 +297,7 @@ nvme_tcp_alloc_reqs(struct nvme_tcp_qpair *tqpair)
 		goto fail;
 	}
 
+	memset(tqpair->tcp_reqs, 0, tqpair->num_entries * sizeof(*tcp_req));
 	TAILQ_INIT(&tqpair->send_queue);
 	TAILQ_INIT(&tqpair->free_reqs);
 	TAILQ_INIT(&tqpair->outstanding_reqs);
