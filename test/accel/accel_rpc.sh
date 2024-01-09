@@ -22,6 +22,14 @@ function accel_scan_dsa_modules_test_suite() {
 	NOT $rpc_py dsa_scan_accel_module
 }
 
+# The RPC iaa_scan_accel_module method may be performed to use the IAA Module
+# before starting the framework.
+# Should FAIL - double-calling of this function is not allowed.
+function accel_scan_iaa_modules_test_suite() {
+	$rpc_py iaa_scan_accel_module
+	NOT $rpc_py iaa_scan_accel_module
+}
+
 # The RPC accel_assign_opc method may be performed to override the operation code
 # assignments to modules before starting the framework.
 # Should PASS - opcode assignments can be verified after starting the framework.
@@ -36,6 +44,10 @@ function accel_assign_opcode_test_suite() {
 
 if [[ $CONFIG_IDXD == y && $SPDK_TEST_ACCEL_DSA -gt 0 ]]; then
 	run_test "accel_scan_dsa_modules" accel_scan_dsa_modules_test_suite
+fi
+
+if [[ $CONFIG_IDXD == y && $SPDK_TEST_ACCEL_IAA -gt 0 ]]; then
+	run_test "accel_scan_iaa_modules" accel_scan_iaa_modules_test_suite
 fi
 
 run_test "accel_assign_opcode" accel_assign_opcode_test_suite

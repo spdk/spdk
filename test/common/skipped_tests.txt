@@ -38,8 +38,9 @@ vmd_hello_world
 vmd_identify
 vmd_perf
 
-# Waiting for CI tests on the platform equipped with DSA
+# Waiting for CI tests on the platform equipped DSA and IAA accelerators
 accel_scan_dsa_modules
+accel_scan_iaa_modules
 
 # nightly tests
 bdev_fio_rw_verify_ext
