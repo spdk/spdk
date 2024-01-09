@@ -292,6 +292,13 @@ int spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_thr
 int spdk_trace_register_user_thread(void);
 
 /**
+ * De-initialize trace environment for an user created thread.
+ *
+ * \return 0 on success, else non-zero indicates a failure.
+ */
+int spdk_trace_unregister_user_thread(void);
+
+/**
  * Unmap global trace memory structs.
  */
 void spdk_trace_cleanup(void);

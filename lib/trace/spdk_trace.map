@@ -17,6 +17,7 @@
 	spdk_trace_register_description;
 	spdk_trace_register_description_ext;
 	spdk_trace_register_user_thread;
+	spdk_trace_unregister_user_thread;
 	spdk_trace_get_first_register_fn;
 	spdk_trace_get_next_register_fn;
 	spdk_trace_enable_tpoint_group;

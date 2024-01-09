@@ -19,6 +19,7 @@
 static int g_trace_fd = -1;
 static char g_shm_name[64];
 
+static __thread uint32_t t_ut_array_index;
 static __thread struct spdk_trace_history *t_ut_lcore_history;
 
 uint32_t g_user_thread_index_start;
@@ -154,8 +155,6 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 int
 spdk_trace_register_user_thread(void)
 {
-	uint32_t ut_index;
-
 	if (!g_ut_array) {
 		SPDK_ERRLOG("user thread array not created\n");
 		return -ENOMEM;
@@ -169,17 +168,40 @@ spdk_trace_register_user_thread(void)
 
 	pthread_mutex_lock(&g_ut_array_mutex);
 
-	ut_index = spdk_bit_array_find_first_clear(g_ut_array, 0);
-	if (ut_index == UINT32_MAX) {
+	t_ut_array_index = spdk_bit_array_find_first_clear(g_ut_array, 0);
+	if (t_ut_array_index == UINT32_MAX) {
 		SPDK_ERRLOG("could not find an entry in the user thread array\n");
 		pthread_mutex_unlock(&g_ut_array_mutex);
 		return -ENOENT;
 	}
 
 	t_ut_lcore_history = spdk_get_per_lcore_history(g_trace_histories,
-			     ut_index + g_user_thread_index_start);
+			     t_ut_array_index + g_user_thread_index_start);
 
-	spdk_bit_array_set(g_ut_array, ut_index);
+	spdk_bit_array_set(g_ut_array, t_ut_array_index);
+
+	pthread_mutex_unlock(&g_ut_array_mutex);
+
+	return 0;
+}
+
+int
+spdk_trace_unregister_user_thread(void)
+{
+	if (!g_ut_array) {
+		SPDK_ERRLOG("user thread array not created\n");
+		return -ENOMEM;
+	}
+
+	if (spdk_env_get_current_core() != SPDK_ENV_LCORE_ID_ANY) {
+		SPDK_ERRLOG("cannot unregister an user thread from a dedicated cpu %d\n",
+			    spdk_env_get_current_core());
+		return -EINVAL;
+	}
+
+	pthread_mutex_lock(&g_ut_array_mutex);
+
+	spdk_bit_array_clear(g_ut_array, t_ut_array_index);
 
 	pthread_mutex_unlock(&g_ut_array_mutex);
 

@@ -1538,6 +1538,10 @@ spdk_fio_cleanup(struct thread_data *td)
 	struct spdk_fio_qpair	*fio_qpair, *fio_qpair_tmp;
 	struct spdk_fio_options *fio_options = td->eo;
 
+	if (fio_options->spdk_tracing) {
+		spdk_trace_unregister_user_thread();
+	}
+
 	TAILQ_FOREACH_SAFE(fio_qpair, &fio_thread->fio_qpair, link, fio_qpair_tmp) {
 		TAILQ_REMOVE(&fio_thread->fio_qpair, fio_qpair, link);
 		free(fio_qpair);
@@ -1864,6 +1868,7 @@ static void fio_exit
 fio_spdk_unregister(void)
 {
 	if (g_spdk_env_initialized) {
+		spdk_trace_cleanup();
 		spdk_env_fini();
 	}
 

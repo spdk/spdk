@@ -4,7 +4,8 @@
 
 ### trace
 
-Added `spdk_trace_register_user_thread` to initialize trace environment
+Added `spdk_trace_register_user_thread` to initialize trace environment and
+`spdk_trace_unregister_user_thread` to de-initialize trace environment
 for an user created thread.
 
 Modified `spdk_trace_init` to take number of user created threads as a parameter.
