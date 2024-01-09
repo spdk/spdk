@@ -8851,18 +8851,18 @@ bs_grow_live_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 				SPDK_BS_PAGE_SIZE);
 	max_used_cluster_mask = ctx->super->used_blobid_mask_start - ctx->super->used_cluster_mask_start;
 	/* Only checking dev_size. Since it can change, but total_clusters remain the same. */
-	if (ctx->super->size == dev_size) {
+	if (dev_size == ctx->super->size) {
 		SPDK_DEBUGLOG(blob, "No need to grow blobstore\n");
 		bs_grow_live_done(ctx, 0);
 		return;
 	}
 	/*
-	 * Blobstore cannot be shrunk, so check before that:
-	 * - size in super_block is not larger than the current size of the device
-	 * - total number of clusters is not larger than used_clusters bit_pool
-	 * - there is enough space for used_cluster_mask to be written out
+	 * Blobstore cannot be shrunk, so check before if:
+	 * - new size of the device is smaller than size in super_block
+	 * - new total number of clusters is smaller than used_clusters bit_pool
+	 * - there is enough space in metadata for used_cluster_mask to be written out
 	 */
-	if (ctx->super->size > dev_size ||
+	if (dev_size < ctx->super->size ||
 	    total_clusters < spdk_bit_pool_capacity(ctx->bs->used_clusters) ||
 	    used_cluster_mask_len > max_used_cluster_mask) {
 		SPDK_DEBUGLOG(blob, "No space to grow blobstore\n");
