@@ -258,6 +258,12 @@ struct {								\
 		swap_tmp->field.le_prev = &LIST_FIRST((head2));		\
 } while (0)
 
+#define SLIST_SWAP(head1, head2, type) do {				\
+	struct type *swap_tmp = SLIST_FIRST((head1));			\
+	SLIST_FIRST((head1)) = SLIST_FIRST((head2));			\
+	SLIST_FIRST((head2)) = swap_tmp;				\
+} while (0)
+
 /*
  * Tail queue functions.
  */
