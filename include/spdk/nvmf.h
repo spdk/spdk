@@ -1378,6 +1378,24 @@ void spdk_nvmf_poll_group_dump_stat(struct spdk_nvmf_poll_group *group,
  */
 void spdk_nvmf_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks);
 
+/* Maximum number of registrants supported per namespace */
+#define SPDK_NVMF_MAX_NUM_REGISTRANTS		16
+
+struct spdk_nvmf_registrant_info {
+	uint64_t		rkey;
+	char			host_uuid[SPDK_UUID_STRING_LEN];
+};
+
+struct spdk_nvmf_reservation_info {
+	bool					ptpl_activated;
+	enum spdk_nvme_reservation_type		rtype;
+	uint64_t				crkey;
+	char					bdev_uuid[SPDK_UUID_STRING_LEN];
+	char					holder_uuid[SPDK_UUID_STRING_LEN];
+	uint32_t				num_regs;
+	struct spdk_nvmf_registrant_info	registrants[SPDK_NVMF_MAX_NUM_REGISTRANTS];
+};
+
 #ifdef __cplusplus
 }
 #endif
