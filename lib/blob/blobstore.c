@@ -8850,6 +8850,7 @@ bs_grow_live_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 				spdk_divide_round_up(total_clusters, 8),
 				SPDK_BS_PAGE_SIZE);
 	max_used_cluster_mask = ctx->super->used_blobid_mask_start - ctx->super->used_cluster_mask_start;
+	/* Only checking dev_size. Since it can change, but total_clusters remain the same. */
 	if (ctx->super->size == dev_size) {
 		SPDK_DEBUGLOG(blob, "No need to grow blobstore\n");
 		bs_grow_live_done(ctx, 0);
@@ -8862,7 +8863,7 @@ bs_grow_live_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	 * - there is enough space for used_cluster_mask to be written out
 	 */
 	if (ctx->super->size > dev_size ||
-	    total_clusters <= spdk_bit_pool_capacity(ctx->bs->used_clusters) ||
+	    total_clusters < spdk_bit_pool_capacity(ctx->bs->used_clusters) ||
 	    used_cluster_mask_len > max_used_cluster_mask) {
 		SPDK_DEBUGLOG(blob, "No space to grow blobstore\n");
 		bs_grow_live_done(ctx, -ENOSPC);

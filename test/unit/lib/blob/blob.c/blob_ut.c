@@ -3007,6 +3007,9 @@ bs_grow_live(void)
 	/* No change expected */
 	bs_grow_live_size(DEV_BUFFER_BLOCKCNT);
 
+	/* Size slightly increased, but not enough to increase cluster count */
+	bs_grow_live_size(DEV_BUFFER_BLOCKCNT + 1);
+
 	/* Size doubled, increasing the cluster count */
 	bs_grow_live_size(DEV_BUFFER_BLOCKCNT * 2);
 }
