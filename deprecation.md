@@ -73,3 +73,10 @@ Param `size` in rpc commands `rpc_bdev_lvol_create` and `rpc_bdev_lvol_resize` i
 replace by `size_in_mib`.
 
 See GitHub issue [2346](https://github.com/spdk/spdk/issues/2346) for additional details.
+
+### rpc
+
+#### `spdk_rpc_listen` `spdk_rpc_accept` `spdk_rpc_close`
+
+These functions are deprecated and will be removed in 24.09 release. Please use
+`spdk_rpc_server_listen`, `spdk_rpc_server_accept` and `spdk_rpc_server_close` instead.

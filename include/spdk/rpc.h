@@ -32,6 +32,8 @@ bool spdk_rpc_verify_methods(void);
 /**
  * Start listening for RPC connections.
  *
+ * Deprecated, will be removed in 24.09 release.
+ *
  * \param listen_addr Listening address.
  *
  * \return 0 on success, -1 on failure.
@@ -40,11 +42,15 @@ int spdk_rpc_listen(const char *listen_addr);
 
 /**
  * Poll the RPC server.
+ *
+ * Deprecated, will be removed in 24.09 release.
  */
 void spdk_rpc_accept(void);
 
 /**
  * Stop listening for RPC connections.
+ *
+ * Deprecated, will be removed in 24.09 release.
  */
 void spdk_rpc_close(void);
 

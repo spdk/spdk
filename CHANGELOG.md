@@ -128,6 +128,12 @@ the vhost-scsi controller until adding the scsi target is completed.
 Added `vhost_start_scsi_controller` RPC to start vhost-scsi controller, it could be used to support
 live recovery feature of vhost-scsi target.
 
+### rpc
+
+Functions `spdk_rpc_listen`, `spdk_rpc_accept` and `spdk_rpc_close` are deprecated and will be
+removed in 24.09 release. Please use `spdk_rpc_server_listen`, `spdk_rpc_server_accept` and
+`spdk_rpc_server_close` instead.
+
 ## v23.09
 
 ### accel

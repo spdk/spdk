@@ -202,11 +202,15 @@ _spdk_rpc_listen(const char *listen_addr, struct spdk_rpc_server *server)
 	return 0;
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_rpc_listen, "spdk_rpc_listen is deprecated", "v24.09", 0);
+
 int
 spdk_rpc_listen(const char *listen_addr)
 {
 	struct spdk_rpc_server *server;
 	int rc;
+
+	SPDK_LOG_DEPRECATED(spdk_rpc_listen);
 
 	memset(&g_rpc_server.listen_addr_unix, 0, sizeof(g_rpc_server.listen_addr_unix));
 	server = &g_rpc_server;
@@ -397,9 +401,13 @@ _spdk_rpc_close(struct spdk_rpc_server *server)
 	}
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_rpc_close, "spdk_rpc_close is deprecated", "v24.09", 0);
+
 void
 spdk_rpc_close(void)
 {
+	SPDK_LOG_DEPRECATED(spdk_rpc_close);
+
 	if (g_rpc_server.jsonrpc_server) {
 		_spdk_rpc_close(&g_rpc_server);
 	}
