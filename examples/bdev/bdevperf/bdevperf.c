@@ -2453,9 +2453,9 @@ bdevperf_parse_arg(int ch, char *arg)
 	long long tmp;
 
 	if (ch == 'w') {
-		g_workload_type = optarg;
+		g_workload_type = arg;
 	} else if (ch == 'T') {
-		g_job_bdev_name = optarg;
+		g_job_bdev_name = arg;
 	} else if (ch == 'z') {
 		g_wait_for_tests = true;
 	} else if (ch == 'Z') {
@@ -2467,14 +2467,14 @@ bdevperf_parse_arg(int ch, char *arg)
 	} else if (ch == 'f') {
 		g_continue_on_failure = true;
 	} else if (ch == 'j') {
-		g_bdevperf_conf_file = optarg;
+		g_bdevperf_conf_file = arg;
 	} else if (ch == 'F') {
 		char *endptr;
 
 		errno = 0;
-		g_zipf_theta = strtod(optarg, &endptr);
-		if (errno || optarg == endptr || g_zipf_theta < 0) {
-			fprintf(stderr, "Illegal zipf theta value %s\n", optarg);
+		g_zipf_theta = strtod(arg, &endptr);
+		if (errno || arg == endptr || g_zipf_theta < 0) {
+			fprintf(stderr, "Illegal zipf theta value %s\n", arg);
 			return -EINVAL;
 		}
 	} else if (ch == 'l') {
@@ -2484,17 +2484,17 @@ bdevperf_parse_arg(int ch, char *arg)
 	} else if (ch == 'E') {
 		g_one_thread_per_lcore = true;
 	} else if (ch == 'J') {
-		g_rpc_log_file_name = optarg;
+		g_rpc_log_file_name = arg;
 	} else if (ch == 'o') {
 		uint64_t size;
 
-		if (spdk_parse_capacity(optarg, &size, NULL) != 0) {
-			fprintf(stderr, "Invalid IO size: %s\n", optarg);
+		if (spdk_parse_capacity(arg, &size, NULL) != 0) {
+			fprintf(stderr, "Invalid IO size: %s\n", arg);
 			return -EINVAL;
 		}
 		g_io_size = (int)size;
 	} else {
-		tmp = spdk_strtoll(optarg, 10);
+		tmp = spdk_strtoll(arg, 10);
 		if (tmp < 0) {
 			fprintf(stderr, "Parse failed for the option %c.\n", ch);
 			return tmp;
