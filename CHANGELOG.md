@@ -2,6 +2,11 @@
 
 ## v24.05: (Upcoming Release)
 
+### init
+
+Function `spdk_subsystem_init_from_json_config` is deprecated and will be removed in 24.09 release.
+Please use `spdk_subsystem_load_config` instead.
+
 ## v24.01
 
 ### accel

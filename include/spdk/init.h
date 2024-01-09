@@ -85,6 +85,9 @@ void spdk_subsystem_init(spdk_subsystem_init_fn cb_fn, void *cb_arg);
  * Like spdk_subsystem_init, but additionally configure each subsystem using the provided JSON config
  * file. This will automatically start a JSON RPC server and then stop it.
  *
+ * Deprecated - will be removed in 24.09 SPDK release. Please use
+ * \ref spdk_subsystem_load_config.
+ *
  * \param json_config_file Path to a JSON config file.
  * \param rpc_addr Path to a unix domain socket to send configuration RPCs to.
  * \param cb_fn Function called when the process is complete.

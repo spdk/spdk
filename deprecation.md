@@ -33,6 +33,13 @@ in 24.05 release.
 The function is deprecated and will be removed in 24.05 release. Please use `SPDK_IOV_ONE`
 macro instead.
 
+### init
+
+#### `spdk_subsystem_init_from_json_config`
+
+The function is deprecated and will be removed in 24.09 release. Please use
+`spdk_subsystem_load_config` instead.
+
 ### nvmf
 
 #### `spdk_nvmf_qpair_disconnect`

@@ -635,6 +635,9 @@ fail:
 	app_json_config_load_done(ctx, -EINVAL);
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_subsystem_init_from_json_config,
+			      "spdk_subsystem_init_from_json_config is deprecated", "v24.09", 0);
+
 void
 spdk_subsystem_init_from_json_config(const char *json_config_file, const char *rpc_addr,
 				     spdk_subsystem_init_fn cb_fn, void *cb_arg,
@@ -642,6 +645,8 @@ spdk_subsystem_init_from_json_config(const char *json_config_file, const char *r
 {
 	char *json = NULL;
 	ssize_t json_size = 0;
+
+	SPDK_LOG_DEPRECATED(spdk_subsystem_init_from_json_config);
 
 	assert(cb_fn);
 
