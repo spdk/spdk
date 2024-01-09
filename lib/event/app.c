@@ -19,6 +19,7 @@
 #include "spdk/scheduler.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
+#include "spdk/file.h"
 
 #define SPDK_APP_DEFAULT_LOG_LEVEL		SPDK_LOG_NOTICE
 #define SPDK_APP_DEFAULT_LOG_PRINT_LEVEL	SPDK_LOG_INFO
@@ -42,7 +43,8 @@
 #define MAX_CPU_CORES				128
 
 struct spdk_app {
-	const char			*json_config_file;
+	void				*json_data;
+	size_t				json_data_size;
 	bool				json_config_ignore_errors;
 	bool				stopped;
 	const char			*rpc_addr;
@@ -291,11 +293,42 @@ app_setup_signal_handlers(struct spdk_app_opts *opts)
 }
 
 static void
-app_start_application(void)
+app_start_application(int rc, void *arg1)
 {
 	assert(spdk_thread_is_app_thread(NULL));
 
+	if (rc) {
+		SPDK_ERRLOG("Failed to load subsystems for RUNTIME state with code: %d\n", rc);
+		spdk_app_stop(rc);
+		return;
+	}
+
+	spdk_rpc_server_resume(g_spdk_app.rpc_addr);
+
 	g_start_fn(g_start_arg);
+}
+
+static void
+app_subsystem_init_done(int rc, void *arg1)
+{
+	if (rc) {
+		SPDK_ERRLOG("Subsystem initialization failed with code: %d\n", rc);
+		spdk_app_stop(rc);
+		return;
+	}
+
+	spdk_rpc_set_allowlist(g_spdk_app.rpc_allowlist);
+	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
+
+	if (g_spdk_app.json_data) {
+		/* Load SPDK_RPC_RUNTIME RPCs from config file */
+		assert(spdk_rpc_get_state() == SPDK_RPC_RUNTIME);
+		spdk_subsystem_load_config(g_spdk_app.json_data, g_spdk_app.json_data_size,
+					   app_start_application, NULL,
+					   !g_spdk_app.json_config_ignore_errors);
+	} else {
+		app_start_application(0, NULL);
+	}
 }
 
 static void
@@ -319,8 +352,8 @@ app_start_rpc(int rc, void *arg1)
 	}
 
 	if (!g_delay_subsystem_init) {
-		spdk_rpc_set_state(SPDK_RPC_RUNTIME);
-		app_start_application();
+		spdk_rpc_server_pause(g_spdk_app.rpc_addr);
+		spdk_subsystem_init(app_subsystem_init_done, NULL);
 	}
 }
 
@@ -500,30 +533,16 @@ app_setup_trace(struct spdk_app_opts *opts)
 static void
 bootstrap_fn(void *arg1)
 {
-	struct spdk_rpc_opts opts;
-	int rc;
-
 	spdk_rpc_set_allowlist(g_spdk_app.rpc_allowlist);
 
-	if (g_spdk_app.json_config_file) {
-		g_delay_subsystem_init = false;
-		spdk_subsystem_init_from_json_config(g_spdk_app.json_config_file, g_spdk_app.rpc_addr,
-						     app_start_rpc,
-						     NULL, !g_spdk_app.json_config_ignore_errors);
+	if (g_spdk_app.json_data) {
+		/* Load SPDK_RPC_STARTUP RPCs from config file */
+		assert(spdk_rpc_get_state() == SPDK_RPC_STARTUP);
+		spdk_subsystem_load_config(g_spdk_app.json_data, g_spdk_app.json_data_size,
+					   app_start_rpc, NULL,
+					   !g_spdk_app.json_config_ignore_errors);
 	} else {
-		if (!g_delay_subsystem_init) {
-			spdk_subsystem_init(app_start_rpc, NULL);
-		} else {
-			opts.size = SPDK_SIZEOF(&opts, log_level);
-			opts.log_file = g_spdk_app.rpc_log_file;
-			opts.log_level = g_spdk_app.rpc_log_level;
-
-			rc = spdk_rpc_initialize(g_spdk_app.rpc_addr, &opts);
-			if (rc) {
-				spdk_app_stop(rc);
-				return;
-			}
-		}
+		app_start_rpc(0, NULL);
 	}
 }
 
@@ -753,7 +772,7 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	}
 
 	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
-	g_spdk_app.json_config_file = opts->json_config_file;
+
 	g_spdk_app.json_config_ignore_errors = opts->json_config_ignore_errors;
 	g_spdk_app.rpc_addr = opts->rpc_addr;
 	g_spdk_app.rpc_allowlist = opts->rpc_allowlist;
@@ -831,6 +850,16 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	g_start_fn = start_fn;
 	g_start_arg = arg1;
 
+	if (opts->json_config_file != NULL) {
+		g_spdk_app.json_data = spdk_posix_file_load_from_name(opts->json_config_file,
+				       &g_spdk_app.json_data_size);
+		if (!g_spdk_app.json_data) {
+			SPDK_ERRLOG("Read JSON configuration file %s failed: %s\n",
+				    opts->json_config_file, spdk_strerror(errno));
+			return 1;
+		}
+	}
+
 	spdk_thread_send_msg(spdk_thread_get_app_thread(), bootstrap_fn, NULL);
 
 	/* This blocks until spdk_app_stop is called */
@@ -887,6 +916,8 @@ log_deprecation_hits(void *ctx, struct spdk_deprecation *dep)
 static void
 app_stop(void *arg1)
 {
+	free(g_spdk_app.json_data);
+
 	if (g_spdk_app.rc == 0) {
 		g_spdk_app.rc = (int)(intptr_t)arg1;
 	}
@@ -920,10 +951,8 @@ usage(void (*app_usage)(void))
 {
 	printf("%s [options]\n", g_executable_name);
 	printf("options:\n");
-	printf(" -c, --config <config>     JSON config file (default %s)\n",
-	       g_default_opts.json_config_file != NULL ? g_default_opts.json_config_file : "none");
-	printf("     --json <config>       JSON config file (default %s)\n",
-	       g_default_opts.json_config_file != NULL ? g_default_opts.json_config_file : "none");
+	printf(" -c, --config <config>     JSON config file\n");
+	printf("     --json <config>       JSON config file\n");
 	printf("     --json-ignore-init-errors\n");
 	printf("                           don't exit on invalid config entry\n");
 	printf(" -d, --limit-coredump      do not set max coredump size to RLIM_INFINITY\n");
@@ -1337,8 +1366,7 @@ rpc_framework_start_init_cpl(int rc, void *arg1)
 		return;
 	}
 
-	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
-	app_start_application();
+	app_subsystem_init_done(0, NULL);
 
 	spdk_jsonrpc_send_bool_response(request, true);
 }
@@ -1353,6 +1381,7 @@ rpc_framework_start_init(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
+	spdk_rpc_server_pause(g_spdk_app.rpc_addr);
 	spdk_subsystem_init(rpc_framework_start_init_cpl, request);
 }
 SPDK_RPC_REGISTER("framework_start_init", rpc_framework_start_init, SPDK_RPC_STARTUP)
