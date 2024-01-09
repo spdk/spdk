@@ -1844,12 +1844,6 @@ work_fn(void *arg)
 		g_elapsed_time_in_usec = (tsc_current - tsc_start) * SPDK_SEC_TO_USEC / g_tsc_rate;
 	}
 
-	if (g_dump_transport_stats) {
-		pthread_mutex_lock(&g_stats_mutex);
-		perf_dump_transport_statistics(worker);
-		pthread_mutex_unlock(&g_stats_mutex);
-	}
-
 	/* drain the io of each ns_ctx in round robin to make the fairness */
 	do {
 		unfinished_ns_ctx = 0;
@@ -1867,6 +1861,12 @@ work_fn(void *arg)
 			}
 		}
 	} while (unfinished_ns_ctx > 0);
+
+	if (g_dump_transport_stats) {
+		pthread_mutex_lock(&g_stats_mutex);
+		perf_dump_transport_statistics(worker);
+		pthread_mutex_unlock(&g_stats_mutex);
+	}
 
 	TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 		cleanup_ns_worker_ctx(ns_ctx);
