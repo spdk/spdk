@@ -64,10 +64,38 @@ rpc_opts_get_default(struct spdk_rpc_opts *opts, size_t size)
 #undef SET_FIELD
 }
 
-int
-spdk_rpc_initialize(const char *listen_addr, const struct spdk_rpc_opts *_opts)
+static int
+rpc_verify_opts_and_methods(const struct spdk_rpc_opts *opts)
+{
+	if (!spdk_rpc_verify_methods()) {
+		return -EINVAL;
+	}
+
+	if (opts != NULL && opts->size == 0) {
+		SPDK_ERRLOG("size in the options structure should not be zero\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static void
+rpc_set_spdk_log_opts(const struct spdk_rpc_opts *_opts)
 {
 	struct spdk_rpc_opts opts;
+
+	rpc_opts_get_default(&opts, sizeof(opts));
+	if (_opts != NULL) {
+		rpc_opts_copy(&opts, _opts, _opts->size);
+	}
+
+	spdk_jsonrpc_set_log_file(opts.log_file);
+	spdk_jsonrpc_set_log_level(opts.log_level);
+}
+
+int
+spdk_rpc_initialize(const char *listen_addr, const struct spdk_rpc_opts *opts)
+{
 	int rc;
 
 	if (listen_addr == NULL) {
@@ -75,13 +103,9 @@ spdk_rpc_initialize(const char *listen_addr, const struct spdk_rpc_opts *_opts)
 		return 0;
 	}
 
-	if (!spdk_rpc_verify_methods()) {
-		return -EINVAL;
-	}
-
-	if (_opts != NULL && _opts->size == 0) {
-		SPDK_ERRLOG("size in the options structure should not be zero\n");
-		return -EINVAL;
+	rc = rpc_verify_opts_and_methods(opts);
+	if (rc) {
+		return rc;
 	}
 
 	/* Listen on the requested address */
@@ -93,13 +117,7 @@ spdk_rpc_initialize(const char *listen_addr, const struct spdk_rpc_opts *_opts)
 		return 0;
 	}
 
-	rpc_opts_get_default(&opts, sizeof(opts));
-	if (_opts != NULL) {
-		rpc_opts_copy(&opts, _opts, _opts->size);
-	}
-
-	spdk_jsonrpc_set_log_file(opts.log_file);
-	spdk_jsonrpc_set_log_level(opts.log_level);
+	rpc_set_spdk_log_opts(opts);
 
 	/* Register a poller to periodically check for RPCs */
 	g_rpc_poller = SPDK_POLLER_REGISTER(rpc_subsystem_poll, NULL, RPC_SELECT_INTERVAL);
