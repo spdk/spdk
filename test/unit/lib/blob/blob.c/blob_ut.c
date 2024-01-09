@@ -2913,7 +2913,7 @@ bs_test_recover_cluster_count(void)
 }
 
 static void
-bs_grow_live(void)
+bs_grow_live_size(uint64_t new_blockcnt)
 {
 	struct spdk_blob_store *bs;
 	struct spdk_bs_dev *dev;
@@ -2939,16 +2939,17 @@ bs_grow_live(void)
 	CU_ASSERT(spdk_bs_total_data_cluster_count(bs) == 63);
 
 	/*
-	 * The default dev size is 64M, here we set the dev size to 128M,
+	 * Set the dev size according to the new_blockcnt,
 	 * then the blobstore will adjust the metadata according to the new size.
 	 */
-	dev->blockcnt = (128L * 1024L * 1024L) / dev->blocklen;
+	dev->blockcnt = new_blockcnt;
 	bdev_size = dev->blockcnt * dev->blocklen;
 	spdk_bs_grow_live(bs, bs_op_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	total_data_clusters = spdk_bs_total_data_cluster_count(bs);
-	CU_ASSERT(total_data_clusters == 127);
+	/* One cluster of 1MiB size is used for metadata */
+	CU_ASSERT(total_data_clusters == (bdev_size / (1 * 1024 * 1024)) - 1);
 
 	/* Make sure the super block is updated. */
 	memcpy(&super_block, g_dev_buffer, sizeof(struct spdk_bs_super_block));
@@ -2976,7 +2977,7 @@ bs_grow_live(void)
 
 	/* Load blobstore and check the cluster counts again. */
 	dev = init_dev();
-	dev->blockcnt = (128L * 1024L * 1024L) / dev->blocklen;
+	dev->blockcnt = new_blockcnt;
 	spdk_bs_load(dev, NULL, bs_op_with_handle_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -2998,6 +2999,16 @@ bs_grow_live(void)
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
+}
+
+static void
+bs_grow_live(void)
+{
+	/* No change expected */
+	bs_grow_live_size(DEV_BUFFER_BLOCKCNT);
+
+	/* Size doubled, increasing the cluster count */
+	bs_grow_live_size(DEV_BUFFER_BLOCKCNT * 2);
 }
 
 static void
