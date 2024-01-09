@@ -155,7 +155,6 @@ TAILQ_HEAD(accel_sequence_tasks, spdk_accel_task);
 struct spdk_accel_sequence {
 	struct accel_io_channel			*ch;
 	struct accel_sequence_tasks		tasks;
-	struct accel_sequence_tasks		completed;
 	SLIST_HEAD(, accel_buffer)		bounce_bufs;
 	int					status;
 	/* state uses enum accel_sequence_state */
@@ -165,6 +164,7 @@ struct spdk_accel_sequence {
 	void					*cb_arg;
 	SLIST_ENTRY(spdk_accel_sequence)	link;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_accel_sequence) == 64, "invalid size");
 
 #define accel_update_stats(ch, event, v) \
 	do { \
@@ -822,7 +822,6 @@ accel_sequence_get(struct accel_io_channel *ch)
 	SLIST_REMOVE_HEAD(&ch->seq_pool, link);
 
 	TAILQ_INIT(&seq->tasks);
-	TAILQ_INIT(&seq->completed);
 	SLIST_INIT(&seq->bounce_bufs);
 
 	seq->ch = ch;
@@ -846,7 +845,6 @@ accel_sequence_put(struct spdk_accel_sequence *seq)
 	}
 
 	assert(TAILQ_EMPTY(&seq->tasks));
-	assert(TAILQ_EMPTY(&seq->completed));
 	seq->ch = NULL;
 
 	SLIST_INSERT_HEAD(&ch->seq_pool, seq, link);
@@ -1199,33 +1197,29 @@ spdk_accel_put_buf(struct spdk_io_channel *ch, void *buf,
 }
 
 static void
-accel_sequence_complete_tasks(struct spdk_accel_sequence *seq)
+accel_sequence_complete_task(struct spdk_accel_sequence *seq, struct spdk_accel_task *task)
 {
-	struct spdk_accel_task *task;
 	struct accel_io_channel *ch = seq->ch;
 	spdk_accel_step_cb cb_fn;
 	void *cb_arg;
 
-	while (!TAILQ_EMPTY(&seq->completed)) {
-		task = TAILQ_FIRST(&seq->completed);
-		TAILQ_REMOVE(&seq->completed, task, seq_link);
-		cb_fn = task->step_cb_fn;
-		cb_arg = task->step_cb_arg;
-		TAILQ_INSERT_HEAD(&ch->task_pool, task, link);
-		if (cb_fn != NULL) {
-			cb_fn(cb_arg);
-		}
+	TAILQ_REMOVE(&seq->tasks, task, seq_link);
+	cb_fn = task->step_cb_fn;
+	cb_arg = task->step_cb_arg;
+	TAILQ_INSERT_HEAD(&ch->task_pool, task, link);
+	if (cb_fn != NULL) {
+		cb_fn(cb_arg);
 	}
+}
+
+static void
+accel_sequence_complete_tasks(struct spdk_accel_sequence *seq)
+{
+	struct spdk_accel_task *task;
 
 	while (!TAILQ_EMPTY(&seq->tasks)) {
 		task = TAILQ_FIRST(&seq->tasks);
-		TAILQ_REMOVE(&seq->tasks, task, seq_link);
-		cb_fn = task->step_cb_fn;
-		cb_arg = task->step_cb_arg;
-		TAILQ_INSERT_HEAD(&ch->task_pool, task, link);
-		if (cb_fn != NULL) {
-			cb_fn(cb_arg);
-		}
+		accel_sequence_complete_task(seq, task);
 	}
 }
 
@@ -1661,8 +1655,7 @@ accel_process_sequence(struct spdk_accel_sequence *seq)
 			accel_task_push_data(seq, task);
 			break;
 		case ACCEL_SEQUENCE_STATE_NEXT_TASK:
-			TAILQ_REMOVE(&seq->tasks, task, seq_link);
-			TAILQ_INSERT_TAIL(&seq->completed, task, seq_link);
+			accel_sequence_complete_task(seq, task);
 			/* Check if there are any remaining tasks */
 			task = TAILQ_FIRST(&seq->tasks);
 			if (task == NULL) {
@@ -1749,9 +1742,7 @@ accel_sequence_task_cb(void *cb_arg, int status)
 		assert(g_accel_driver != NULL);
 		/* Immediately remove the task from the outstanding list to make sure the next call
 		 * to spdk_accel_sequence_first_task() doesn't return it */
-		TAILQ_REMOVE(&seq->tasks, task, seq_link);
-		TAILQ_INSERT_TAIL(&seq->completed, task, seq_link);
-
+		accel_sequence_complete_task(seq, task);
 		if (spdk_unlikely(status != 0)) {
 			SPDK_ERRLOG("Failed to execute %s operation, sequence: %p through "
 				    "driver: %s\n", g_opcode_strings[task->op_code], seq,
@@ -1875,8 +1866,7 @@ accel_sequence_merge_tasks(struct spdk_accel_sequence *seq, struct spdk_accel_ta
 		next->s.iovcnt = task->s.iovcnt;
 		next->src_domain = task->src_domain;
 		next->src_domain_ctx = task->src_domain_ctx;
-		TAILQ_REMOVE(&seq->tasks, task, seq_link);
-		TAILQ_INSERT_TAIL(&seq->completed, task, seq_link);
+		accel_sequence_complete_task(seq, task);
 		break;
 	case SPDK_ACCEL_OPC_DECOMPRESS:
 	case SPDK_ACCEL_OPC_FILL:
@@ -1893,8 +1883,7 @@ accel_sequence_merge_tasks(struct spdk_accel_sequence *seq, struct spdk_accel_ta
 		/* We're removing next_task from the tasks queue, so we need to update its pointer,
 		 * so that the TAILQ_FOREACH_SAFE() loop below works correctly */
 		*next_task = TAILQ_NEXT(next, seq_link);
-		TAILQ_REMOVE(&seq->tasks, next, seq_link);
-		TAILQ_INSERT_TAIL(&seq->completed, next, seq_link);
+		accel_sequence_complete_task(seq, next);
 		break;
 	default:
 		assert(0 && "bad opcode");
@@ -1928,7 +1917,6 @@ spdk_accel_sequence_reverse(struct spdk_accel_sequence *seq)
 	struct accel_sequence_tasks tasks = TAILQ_HEAD_INITIALIZER(tasks);
 	struct spdk_accel_task *task;
 
-	assert(TAILQ_EMPTY(&seq->completed));
 	TAILQ_SWAP(&tasks, &seq->tasks, spdk_accel_task, seq_link);
 
 	while (!TAILQ_EMPTY(&tasks)) {
