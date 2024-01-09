@@ -2330,10 +2330,12 @@ accel_create_channel(void *io_device, void *ctx_buf)
 		return -ENOMEM;
 	}
 
-	accel_ch->seq_pool_base = calloc(g_opts.sequence_count, sizeof(struct spdk_accel_sequence));
+	accel_ch->seq_pool_base = aligned_alloc(SPDK_CACHE_LINE_SIZE,
+						g_opts.sequence_count * sizeof(struct spdk_accel_sequence));
 	if (accel_ch->seq_pool_base == NULL) {
 		goto err;
 	}
+	memset(accel_ch->seq_pool_base, 0, g_opts.sequence_count * sizeof(struct spdk_accel_sequence));
 
 	accel_ch->buf_pool_base = calloc(g_opts.buf_count, sizeof(struct accel_buffer));
 	if (accel_ch->buf_pool_base == NULL) {
