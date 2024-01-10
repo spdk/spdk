@@ -2212,6 +2212,12 @@ raid_bdev_examine(struct spdk_bdev *bdev)
 	struct raid_bdev_examine_ctx *ctx;
 	int rc;
 
+	if (spdk_bdev_get_dif_type(bdev) != SPDK_DIF_DISABLE) {
+		raid_bdev_examine_no_sb(bdev);
+		spdk_bdev_module_examine_done(&g_raid_if);
+		return;
+	}
+
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
 		SPDK_ERRLOG("Failed to examine bdev %s: %s\n",
