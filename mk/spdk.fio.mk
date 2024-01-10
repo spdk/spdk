@@ -37,13 +37,15 @@ CLEAN_FILES = $(FIO_PLUGIN)
 all : $(FIO_PLUGIN)
 	@:
 
-install: empty_rule
+install: all
+	$(Q)echo "  INSTALL $(DESTDIR)$(libdir)/fio/$(notdir $(FIO_PLUGIN))";
+	$(Q)install -d -m 755 "$(DESTDIR)$(libdir)/fio";
+	$(Q)install -m 755 "$(FIO_PLUGIN)" "$(DESTDIR)$(libdir)/fio"
 
-uninstall: empty_rule
-
-# To avoid overwriting warning
-empty_rule:
-	@:
+uninstall:
+	$(Q)echo "  UNINSTALL $(DESTDIR)$(libdir)/fio/$(notdir $(FIO_PLUGIN))";
+	$(Q)rm -f "$(DESTDIR)$(libdir)/fio/$(notdir $(FIO_PLUGIN))";
+	$(Q)if [ -d "$(DESTDIR)$(libdir)/fio" ] && [ $$(ls -A "$(DESTDIR)$(libdir)/fio" | wc -l) -eq 0 ]; then rm -rf "$(DESTDIR)$(libdir)/fio"; fi
 
 $(FIO_PLUGIN) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
 	$(LINK_C)
