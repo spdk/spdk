@@ -829,7 +829,7 @@ nbd_poll(void *arg)
 		_nbd_stop(nbd);
 		return SPDK_POLLER_IDLE;
 	}
-	if (nbd->is_closing) {
+	if (nbd->is_closing && nbd->io_count == 0) {
 		spdk_nbd_stop(nbd);
 	}
 
@@ -861,9 +861,6 @@ nbd_bdev_hot_remove(struct spdk_nbd_disk *nbd)
 
 	TAILQ_FOREACH_SAFE(io, &nbd->received_io_list, tailq, io_tmp) {
 		TAILQ_REMOVE(&nbd->received_io_list, io, tailq);
-		TAILQ_INSERT_TAIL(&nbd->processing_io_list, io, tailq);
-	}
-	TAILQ_FOREACH_SAFE(io, &nbd->processing_io_list, tailq, io_tmp) {
 		nbd_io_done(NULL, false, io);
 	}
 }
