@@ -22,9 +22,10 @@ all: $(ISAL_DIR)/isa-l
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/isa-l all CC="$(SUB_CC)" $(REDIRECT)
 
 install: all
+	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/isa-l install $(REDIRECT)
 
 uninstall:
-	@:
+	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/isa-l uninstall $(REDIRECT)
 
 clean:
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/isa-l clean $(REDIRECT)

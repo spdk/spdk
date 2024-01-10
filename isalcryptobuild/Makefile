@@ -23,9 +23,10 @@ all: $(ISAL_CRYPTO_DIR)/isa-l-crypto
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/isa-l-crypto all CC="$(SUB_CC)" $(REDIRECT)
 
 install: all
+	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/isa-l-crypto install $(REDIRECT)
 
 uninstall:
-	@:
+	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/isa-l-crypto uninstall $(REDIRECT)
 
 clean:
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/isa-l-crypto clean $(REDIRECT)
