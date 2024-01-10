@@ -8,31 +8,12 @@ rootdir=$(readlink -f "$testdir/../..")
 set -- "--transport=tcp" "$@"
 
 source "$rootdir/test/common/autotest_common.sh"
-source "$rootdir/test/nvmf/common.sh"
+source "$testdir/common.sh"
 
 subnqn="nqn.2016-06.io.spdk:cnode0"
 hostnqn="nqn.2016-06.io.spdk:host0"
 key0="00112233445566778899aabbccddeeff"
 key1="112233445566778899aabbccddeeff00"
-bperfsock="/var/tmp/bperf.sock"
-
-bperf_cmd() { "$rootdir/scripts/rpc.py" -s "$bperfsock" "$@"; }
-
-get_key() { bperf_cmd keyring_get_keys | jq ".[] | select(.name == \"$1\")"; }
-
-get_refcnt() { get_key "$1" | jq -r '.refcnt'; }
-
-prep_key() {
-	local name key path
-
-	name="$1" key="$2"
-	path="$(mktemp)"
-
-	format_interchange_psk "$key" > "$path"
-	chmod 0600 "$path"
-
-	echo "$path"
-}
 
 cleanup() {
 	rm -f "$key0path" "$key1path"
