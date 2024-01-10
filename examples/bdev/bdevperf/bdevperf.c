@@ -2549,7 +2549,8 @@ bdevperf_usage(void)
 	printf(" -f                        continue processing I/O even after failures\n");
 	printf(" -F <zipf theta>           use zipf distribution for random I/O\n");
 	printf(" -Z                        enable using zcopy bdev API for read or write I/O\n");
-	printf(" -z                        start bdevperf, but wait for RPC to start tests\n");
+	printf(" -z                        start bdevperf, but wait for perform_tests RPC to start tests\n");
+	printf("                           (See examples/bdev/bdevperf/bdevperf.py)\n");
 	printf(" -X                        abort timed out I/O\n");
 	printf(" -C                        enable every core to send I/Os to each bdev\n");
 	printf(" -j <filename>             use job config file\n");
