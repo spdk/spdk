@@ -2111,6 +2111,7 @@ raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bd
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to create raid bdev %s: %s\n",
 				    sb->name, spdk_strerror(-rc));
+			return;
 		}
 	}
 
