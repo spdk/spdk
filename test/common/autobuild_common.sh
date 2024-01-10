@@ -308,7 +308,7 @@ test_make_uninstall() {
 	# Create empty file to check if it is not deleted by target uninstall
 	touch "$SPDK_WORKSPACE/usr/lib/sample_xyz.a"
 	$MAKE $MAKEFLAGS uninstall DESTDIR="$SPDK_WORKSPACE" prefix=/usr
-	if [[ $(find "$SPDK_WORKSPACE/usr" -maxdepth 1 -mindepth 1 | wc -l) -ne 3 ]] || [[ $(find "$SPDK_WORKSPACE/usr/lib/" -maxdepth 1 -mindepth 1 | wc -l) -ne 1 ]]; then
+	if [[ $(find "$SPDK_WORKSPACE/usr" -type f -print | wc -l) -ne 1 ]]; then
 		ls -lR "$SPDK_WORKSPACE"
 		echo "Make uninstall failed"
 		exit 1
