@@ -1,5 +1,8 @@
 # JSON-RPC 2.0 client in Go
 
+[![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg)](http://godoc.org/github.com/spdk/spdk/go/rpc)
+[![Go Report Card](https://goreportcard.com/badge/github.com/spdk/spdk/go/rpc)](https://goreportcard.com/report/github.com/spdk/spdk/go/rpc)
+
 This directory contains JSON-RPC client written in Go. The main goal is to ease communication with
 SPDK over Unix and TCP socket in Go. In addition, this repository provides integration of a client
 with `rpc.py` - Go client replaces Python client.
