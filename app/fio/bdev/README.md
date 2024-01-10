@@ -63,7 +63,7 @@ LD_PRELOAD=<path to spdk repo>/build/fio/spdk_bdev fio
 The fio configuration file must contain parameter pointing to a JSON configuration file containing SPDK bdev configuration:
 
 ```bash
-spdk_json_conf=./examples/bdev/fio_plugin/bdev.json
+spdk_json_conf=./app/fio/bdev/bdev.json
 ```
 
 You can specify which block device to run against by setting the filename parameter

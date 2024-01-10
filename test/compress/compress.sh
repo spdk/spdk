@@ -7,7 +7,7 @@ set -e
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
-plugindir=$rootdir/examples/bdev/fio_plugin
+plugindir=$rootdir/app/fio/bdev
 source "$rootdir/scripts/common.sh"
 source "$rootdir/test/common/autotest_common.sh"
 source "$rootdir/test/nvmf/common.sh"
