@@ -196,7 +196,7 @@ MAKE_NUMJOBS := $(shell ps T | sed -nE 's/[[:space:]]*$(MAKE_PID)[[:space:]].* (
 
 all: $(SPDK_ROOT_DIR)/dpdk/build-tmp
 	$(Q)# DPDK doesn't handle nested make calls, so unset MAKEFLAGS
-	$(Q)env -u MAKEFLAGS ninja -C $(SPDK_ROOT_DIR)/dpdk/build-tmp $(MAKE_NUMJOBS)
+	$(Q)env -u MAKEFLAGS meson compile -C $(SPDK_ROOT_DIR)/dpdk/build-tmp $(MAKE_NUMJOBS)
 	$(Q) \
 	# Meson on FreeBSD sometimes appends --prefix value to the default DESTDIR (which is e.g. \
 	# /usr/local) instead of replacing it. --prefix needs to be an absolute path, so we set \
@@ -223,7 +223,28 @@ clean:
 	$(Q)rm -rf $(SPDK_ROOT_DIR)/dpdk/build $(SPDK_ROOT_DIR)/dpdk/build-tmp
 
 install:
-	@:
+	$(Q)cd "$(SPDK_ROOT_DIR)/dpdk"; CC="$(SUB_CC)" meson setup --prefix="$(CONFIG_PREFIX)" --reconfigure build-tmp
+	$(Q)env -u MAKEFLAGS meson install -C $(SPDK_ROOT_DIR)/dpdk/build-tmp --no-rebuild
+	$(Q)cd "$(SPDK_ROOT_DIR)/dpdk"; CC="$(SUB_CC)" meson setup --prefix="$(MESON_PREFIX)" --reconfigure build-tmp
 
+
+# meson has no uninstall target. We'll just do our best.
 uninstall:
-	@:
+	$(Q)rm -rf $(DESTDIR)$(CONFIG_PREFIX)/share/dpdk
+	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/bin/dpdk-*.py
+	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/rte_*.h
+	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/generic/rte_*.h
+	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/lib/librte_*
+	$(Q)rm -rf $(DESTDIR)$(CONFIG_PREFIX)/lib/dpdk
+	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/lib/pkgconfig/libdpdk*
+	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline_parse_portlist.h
+	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline_cirbuf.h
+	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline_socket.h
+	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline_vt100.h
+	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline_rdline.h
+	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline_parse_string.h
+	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline_parse_etheraddr.h
+	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline_parse_ipaddr.h
+	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline_parse_num.h
+	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline_parse.h
+	$(Q)rm -f $(DESTDIR)$(CONFIG_PREFIX)/include/cmdline.h
