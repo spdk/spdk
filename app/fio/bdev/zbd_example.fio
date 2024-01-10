@@ -1,6 +1,6 @@
 [global]
 ioengine=spdk_bdev
-spdk_json_conf=./examples/bdev/fio_plugin/bdev_zoned.json
+spdk_json_conf=./app/fio/bdev/bdev_zoned.json
 thread=1
 direct=1
 time_based
