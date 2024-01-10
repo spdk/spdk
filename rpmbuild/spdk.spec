@@ -3,6 +3,7 @@
 
 %{!?deps:%define deps 1}
 %{!?dpdk:%define dpdk 0}
+%{!?fio:%define fio 0}
 %{!?requirements:%define requirements 0}
 %{!?build_requirements:%define build_requirements 0}
 %{!?shared:%define shared 0}
@@ -111,8 +112,6 @@ rm -rf %{buildroot}/usr/local/share/man
 %if %{vfio_user} && %{shared}
 cl %{buildroot}/usr/local/lib/libvfio-user build/libvfio-user/
 %endif
-# Try to include extra binaries that were potentially built
-cfs %{buildroot}/usr/local/bin build/fio
 
 # And some useful setup scripts SPDK uses
 mkdir -p %{buildroot}/usr/libexec/spdk
@@ -173,6 +172,9 @@ SPDK static development libraries and header
 /usr/local/include/*
 %{libdir}/pkgconfig/*.pc
 %{libdir}/*.la
+%if %{fio}
+%{libdir}/fio
+%endif
 %if %{shared}
 %{libdir}/*.so*
 /etc/ld.so.conf.d/spdk.conf

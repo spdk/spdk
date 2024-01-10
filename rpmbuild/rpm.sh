@@ -109,6 +109,10 @@ build_macros() {
 		macros+=(-D "dpdk 1")
 	fi
 
+	if get_config with-fio; then
+		macros+=(-D "fio 1")
+	fi
+
 	if get_config with-rbd; then
 		macros+=(-D "rbd 1")
 		requirements=${requirements:+$requirements, }"librados2, librbd1"
