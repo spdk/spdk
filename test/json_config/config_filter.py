@@ -49,6 +49,7 @@ def filter_methods(do_remove_global_rpcs):
         'virtio_blk_create_transport',
         'iobuf_set_options',
         'bdev_raid_set_options',
+        'fsdev_set_opts',
     ]
 
     data = json.loads(sys.stdin.read())

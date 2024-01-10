@@ -32,6 +32,10 @@ SPDK_LIB_LIST += event_vfu_tgt
 endif
 endif
 
+ifeq ($(CONFIG_FSDEV),y)
+SPDK_LIB_LIST += event_fsdev
+endif
+
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
 install: $(APP)
