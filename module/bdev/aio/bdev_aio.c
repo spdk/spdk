@@ -67,6 +67,7 @@ struct file_disk {
 	TAILQ_ENTRY(file_disk)  link;
 	bool			block_size_override;
 	bool			readonly;
+	bool			fallocate;
 };
 
 /* For user space reaping of completions */
@@ -244,6 +245,38 @@ bdev_aio_flush(struct file_disk *fdisk, struct bdev_aio_task *aio_task)
 		spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), -errno);
 	}
 }
+
+#ifndef __FreeBSD__
+static void
+bdev_aio_fallocate(struct spdk_bdev_io *bdev_io, int mode)
+{
+	struct file_disk *fdisk = (struct file_disk *)bdev_io->bdev->ctxt;
+	struct bdev_aio_task *aio_task = (struct bdev_aio_task *)bdev_io->driver_ctx;
+	uint64_t offset_bytes = bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen;
+	uint64_t length_bytes = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+	int rc;
+
+	if (!fdisk->fallocate) {
+		spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), -ENOTSUP);
+		return;
+	}
+
+	rc = fallocate(fdisk->fd, mode, offset_bytes, length_bytes);
+	if (rc == 0) {
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+	} else {
+		spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), -errno);
+	}
+}
+
+static void
+bdev_aio_unmap(struct spdk_bdev_io *bdev_io)
+{
+	int mode = FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE;
+
+	bdev_aio_fallocate(bdev_io, mode);
+}
+#endif
 
 static void
 bdev_aio_destruct_cb(void *io_device)
@@ -577,6 +610,13 @@ _bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 		bdev_aio_reset((struct file_disk *)bdev_io->bdev->ctxt,
 			       (struct bdev_aio_task *)bdev_io->driver_ctx);
 		return 0;
+
+#ifndef __FreeBSD__
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		bdev_aio_unmap(bdev_io);
+		return 0;
+#endif
+
 	default:
 		return -1;
 	}
@@ -593,12 +633,17 @@ bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 static bool
 bdev_aio_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
+	struct file_disk *fdisk = ctx;
+
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_RESET:
 		return true;
+
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		return fdisk->fallocate;
 
 	default:
 		return false;
@@ -695,6 +740,8 @@ bdev_aio_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 
 	spdk_json_write_named_bool(w, "readonly", fdisk->readonly);
 
+	spdk_json_write_named_bool(w, "fallocate", fdisk->fallocate);
+
 	spdk_json_write_object_end(w);
 
 	return 0;
@@ -716,6 +763,7 @@ bdev_aio_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	}
 	spdk_json_write_named_string(w, "filename", fdisk->filename);
 	spdk_json_write_named_bool(w, "readonly", fdisk->readonly);
+	spdk_json_write_named_bool(w, "fallocate", fdisk->fallocate);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
@@ -814,12 +862,20 @@ bdev_aio_group_destroy_cb(void *io_device, void *ctx_buf)
 }
 
 int
-create_aio_bdev(const char *name, const char *filename, uint32_t block_size, bool readonly)
+create_aio_bdev(const char *name, const char *filename, uint32_t block_size, bool readonly,
+		bool fallocate)
 {
 	struct file_disk *fdisk;
 	uint32_t detected_block_size;
 	uint64_t disk_size;
 	int rc;
+
+#ifdef __FreeBSD__
+	if (fallocate) {
+		SPDK_ERRLOG("Unable to support fallocate on this platform\n");
+		return -ENOTSUP;
+	}
+#endif
 
 	fdisk = calloc(1, sizeof(*fdisk));
 	if (!fdisk) {
@@ -827,6 +883,7 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size, boo
 		return -ENOMEM;
 	}
 	fdisk->readonly = readonly;
+	fdisk->fallocate = fallocate;
 
 	fdisk->filename = strdup(filename);
 	if (!fdisk->filename) {
