@@ -10,25 +10,34 @@ source $rootdir/test/nvmf/common.sh
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
+nqn=nqn.2016-06.io.spdk:cnode1
 
 rpc_py="$rootdir/scripts/rpc.py"
 
 function check_ana_state() {
-	local subsys_id=$1
-	local ctrl_id=$2
-	local ana_state=$3
+	local path=$1 ana_state=$2
 	# Very rarely a connection is lost and Linux NVMe host tries reconnecting
 	# after 10 seconds delay. For this case, set a sufficiently long timeout.
 	# Linux NVMe host usually recognizes the new ANA state within 2 seconds.
 	local timeout=20
+	local ana_state_f=/sys/block/$path/ana_state
 
-	while [ $(cat /sys/block/nvme"$subsys_id"c"$ctrl_id"n1/ana_state) != "$ana_state" ]; do
-		sleep 1
+	while [[ ! -e $ana_state_f || $(< "$ana_state_f") != "$ana_state" ]] && sleep 1s; do
 		if ((timeout-- == 0)); then
-			echo "timeout before ANA state (nvme$subsys_id c$ctrl_id) becomes $ana_state"
+			echo "timeout before ANA state ($path) becomes $ana_state"
 			return 1
 		fi
 	done
+}
+
+get_subsystem() {
+	local nqn=$1 serial=$2 s
+
+	for s in /sys/class/nvme-subsystem/*; do
+		[[ $nqn == "$(< "$s/subsysnqn")" && "$(< "$s/serial")" == "$serial"* ]] || continue
+		echo "${s##*/}" && return 0
+	done
+	return 1
 }
 
 nvmftestinit
@@ -50,78 +59,82 @@ nvmfappstart -m 0xF
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 
 $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
-$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001 -r
-$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
-$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
-$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_SECOND_TARGET_IP -s $NVMF_PORT
+$rpc_py nvmf_create_subsystem "$nqn" -a -s "$NVMF_SERIAL" -r
+$rpc_py nvmf_subsystem_add_ns "$nqn" Malloc0
+$rpc_py nvmf_subsystem_add_listener "$nqn" -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+$rpc_py nvmf_subsystem_add_listener "$nqn" -t $TEST_TRANSPORT -a $NVMF_SECOND_TARGET_IP -s $NVMF_PORT
 
-$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -g -G
-$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_SECOND_TARGET_IP" -s "$NVMF_PORT" -g -G
-
+$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n "$nqn" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -g -G
+$NVME_CONNECT "${NVME_HOST[@]}" -t $TEST_TRANSPORT -n "$nqn" -a "$NVMF_SECOND_TARGET_IP" -s "$NVMF_PORT" -g -G
 waitforserial "$NVMF_SERIAL"
 
-# We assume only a single subsystem.
-subsys_id=$(nvme list-subsys | sed -n 's/nqn.2016-06.io.spdk:cnode1//p' | sed 's/[^0-9]*//g')
-ctrl1_id=$(nvme list-subsys | sed -n "s/traddr=$NVMF_FIRST_TARGET_IP trsvcid=$NVMF_PORT//p" | sed 's/[^0-9]*//g')
-ctrl2_id=$(nvme list-subsys | sed -n "s/traddr=$NVMF_SECOND_TARGET_IP trsvcid=$NVMF_PORT//p" | sed 's/[^0-9]*//g')
+# Make sure we work with proper subsystem
+subsystem=$(get_subsystem "$nqn" "$NVMF_SERIAL")
+paths=(/sys/class/nvme-subsystem/$subsystem/nvme*/nvme*c*)
+paths=("${paths[@]##*/}")
 
-check_ana_state "$subsys_id" "$ctrl1_id" "optimized"
-check_ana_state "$subsys_id" "$ctrl2_id" "optimized"
+((${#paths[@]} == 2))
+
+p0=${paths[0]}
+p1=${paths[1]}
+
+check_ana_state "$p0" "optimized"
+check_ana_state "$p1" "optimized"
 
 # Set IO policy to numa
-echo numa > /sys/class/nvme-subsystem/nvme-subsys$subsys_id/iopolicy
+echo numa > "/sys/class/nvme-subsystem/$subsystem/iopolicy"
 
 $rootdir/scripts/fio-wrapper -p nvmf -i 4096 -d 128 -t randrw -r 6 -v &
 fio_pid=$!
 
 sleep 1
 
-$rpc_py nvmf_subsystem_listener_set_ana_state nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -n inaccessible
-$rpc_py nvmf_subsystem_listener_set_ana_state nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a "$NVMF_SECOND_TARGET_IP" -s "$NVMF_PORT" -n non_optimized
+$rpc_py nvmf_subsystem_listener_set_ana_state "$nqn" -t $TEST_TRANSPORT -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -n inaccessible
+$rpc_py nvmf_subsystem_listener_set_ana_state "$nqn" -t $TEST_TRANSPORT -a "$NVMF_SECOND_TARGET_IP" -s "$NVMF_PORT" -n non_optimized
 
-check_ana_state "$subsys_id" "$ctrl1_id" "inaccessible"
-check_ana_state "$subsys_id" "$ctrl2_id" "non-optimized"
+check_ana_state "$p0" "inaccessible"
+check_ana_state "$p1" "non-optimized"
 
-$rpc_py nvmf_subsystem_listener_set_ana_state nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -n non_optimized
-$rpc_py nvmf_subsystem_listener_set_ana_state nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a "$NVMF_SECOND_TARGET_IP" -s "$NVMF_PORT" -n inaccessible
+$rpc_py nvmf_subsystem_listener_set_ana_state "$nqn" -t $TEST_TRANSPORT -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -n non_optimized
+$rpc_py nvmf_subsystem_listener_set_ana_state "$nqn" -t $TEST_TRANSPORT -a "$NVMF_SECOND_TARGET_IP" -s "$NVMF_PORT" -n inaccessible
 
-check_ana_state "$subsys_id" "$ctrl1_id" "non-optimized"
-check_ana_state "$subsys_id" "$ctrl2_id" "inaccessible"
+check_ana_state "$p0" "non-optimized"
+check_ana_state "$p1" "inaccessible"
 
 wait $fio_pid
 
-$rpc_py nvmf_subsystem_listener_set_ana_state nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -n optimized
-$rpc_py nvmf_subsystem_listener_set_ana_state nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a "$NVMF_SECOND_TARGET_IP" -s "$NVMF_PORT" -n optimized
+$rpc_py nvmf_subsystem_listener_set_ana_state "$nqn" -t $TEST_TRANSPORT -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -n optimized
+$rpc_py nvmf_subsystem_listener_set_ana_state "$nqn" -t $TEST_TRANSPORT -a "$NVMF_SECOND_TARGET_IP" -s "$NVMF_PORT" -n optimized
 
-check_ana_state "$subsys_id" "$ctrl1_id" "optimized"
-check_ana_state "$subsys_id" "$ctrl2_id" "optimized"
+check_ana_state "$p0" "optimized"
+check_ana_state "$p1" "optimized"
 
 # Set IO policy to round-robin
-echo round-robin > /sys/class/nvme-subsystem/nvme-subsys$subsys_id/iopolicy
+echo round-robin > "/sys/class/nvme-subsystem/$subsystem/iopolicy"
 
 $rootdir/scripts/fio-wrapper -p nvmf -i 4096 -d 128 -t randrw -r 6 -v &
 fio_pid=$!
 
 sleep 1
 
-$rpc_py nvmf_subsystem_listener_set_ana_state nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -n inaccessible
-$rpc_py nvmf_subsystem_listener_set_ana_state nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a "$NVMF_SECOND_TARGET_IP" -s "$NVMF_PORT" -n non_optimized
+$rpc_py nvmf_subsystem_listener_set_ana_state "$nqn" -t $TEST_TRANSPORT -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -n inaccessible
+$rpc_py nvmf_subsystem_listener_set_ana_state "$nqn" -t $TEST_TRANSPORT -a "$NVMF_SECOND_TARGET_IP" -s "$NVMF_PORT" -n non_optimized
 
-check_ana_state "$subsys_id" "$ctrl1_id" "inaccessible"
-check_ana_state "$subsys_id" "$ctrl2_id" "non-optimized"
+check_ana_state "$p0" "inaccessible"
+check_ana_state "$p1" "non-optimized"
 
-$rpc_py nvmf_subsystem_listener_set_ana_state nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -n non_optimized
-$rpc_py nvmf_subsystem_listener_set_ana_state nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a "$NVMF_SECOND_TARGET_IP" -s "$NVMF_PORT" -n inaccessible
+$rpc_py nvmf_subsystem_listener_set_ana_state "$nqn" -t $TEST_TRANSPORT -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -n non_optimized
+$rpc_py nvmf_subsystem_listener_set_ana_state "$nqn" -t $TEST_TRANSPORT -a "$NVMF_SECOND_TARGET_IP" -s "$NVMF_PORT" -n inaccessible
 
-check_ana_state "$subsys_id" "$ctrl1_id" "non-optimized"
-check_ana_state "$subsys_id" "$ctrl2_id" "inaccessible"
+check_ana_state "$p0" "non-optimized"
+check_ana_state "$p1" "inaccessible"
 
 wait $fio_pid
 
-nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
+nvme disconnect -n "$nqn"
 waitforserial_disconnect "$NVMF_SERIAL"
 
-$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
+$rpc_py nvmf_delete_subsystem "$nqn"
 
 rm -f ./local-job0-0-verify.state
 rm -f ./local-job1-1-verify.state
