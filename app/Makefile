@@ -1,5 +1,6 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2015 Intel Corporation.
+#  Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES
 #  All rights reserved.
 #
 
@@ -23,6 +24,7 @@ ifeq ($(OS),Linux)
 DIRS-$(CONFIG_VHOST) += vhost
 DIRS-y += spdk_dd
 endif
+DIRS-$(CONFIG_FIO_PLUGIN) += fio
 
 .PHONY: all clean $(DIRS-y)
 

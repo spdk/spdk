@@ -1,11 +1,12 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2020 Intel Corporation.
+#  Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES
 #  All rights reserved.
 #
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app_vars.mk
 
-# Plugins go into build/example/
+# Plugins go into build/fio/
 FIO_PLUGIN := $(SPDK_ROOT_DIR)/build/fio/$(notdir $(FIO_PLUGIN))
 
 LIBS += $(SPDK_LIB_LINKER_ARGS)

@@ -28,7 +28,7 @@ function nvme_perf() {
 }
 
 function nvme_fio_test() {
-	PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
+	PLUGIN_DIR=$rootdir/app/fio/nvme
 	ran_fio=false
 	local bdfs=($(get_nvme_bdfs)) bdf
 	for bdf in "${bdfs[@]}"; do

@@ -43,7 +43,7 @@ directory in the repository. The best place to start is
 
 SPDK provides a plugin to the very popular [fio](https://github.com/axboe/fio)
 tool for running some basic benchmarks. See the fio start up
-[guide](https://github.com/spdk/spdk/blob/master/examples/nvme/fio_plugin/)
+[guide](https://github.com/spdk/spdk/blob/master/app/fio/nvme/)
 for more details.
 
 ### Running Benchmarks with Perf Tool {#nvme_perf}
