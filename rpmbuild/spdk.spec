@@ -103,6 +103,10 @@ rm -f %{buildroot}/usr/local/bin/dpdk-*.py
 rm -rf %{buildroot}/usr/local/share/dpdk
 %endif
 
+# The ISA-L install may have installed some binaries that we do not want to package
+rm -f %{buildroot}/usr/local/bin/igzip
+rm -rf %{buildroot}/usr/local/share/man
+
 # Include libvfio-user libs in case --with-vfio-user is in use together with --with-shared
 %if %{vfio_user} && %{shared}
 cl %{buildroot}/usr/local/lib/libvfio-user build/libvfio-user/
@@ -168,6 +172,7 @@ SPDK static development libraries and header
 %files devel
 /usr/local/include/*
 %{libdir}/pkgconfig/*.pc
+%{libdir}/*.la
 %if %{shared}
 %{libdir}/*.so*
 /etc/ld.so.conf.d/spdk.conf
