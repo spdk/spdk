@@ -513,13 +513,21 @@ uring_check_io(struct ns_worker_ctx *ns_ctx)
 		count = io_uring_peek_batch_cqe(&ns_ctx->u.uring.ring, ns_ctx->u.uring.cqes, to_complete);
 		ns_ctx->u.uring.io_inflight -= count;
 		for (i = 0; i < count; i++) {
+			int res;
+
 			assert(ns_ctx->u.uring.cqes[i] != NULL);
 			task = (struct perf_task *)ns_ctx->u.uring.cqes[i]->user_data;
-			if (ns_ctx->u.uring.cqes[i]->res != (int)task->iovs[0].iov_len) {
-				fprintf(stderr, "cqe->status=%d, iov_len=%d\n", ns_ctx->u.uring.cqes[i]->res,
+			res = ns_ctx->u.uring.cqes[i]->res;
+			if (res != (int)task->iovs[0].iov_len) {
+				fprintf(stderr, "cqe->status=%d, iov_len=%d\n", res,
 					(int)task->iovs[0].iov_len);
 				ns_ctx->status = 1;
-				return -1;
+				if (res == -EIO) {
+					/* The block device has been removed.
+					 * Stop trying to send I/O to it.
+					 */
+					ns_ctx->is_draining = true;
+				}
 			}
 			io_uring_cqe_seen(&ns_ctx->u.uring.ring, ns_ctx->u.uring.cqes[i]);
 			task_complete(task);
@@ -643,12 +651,18 @@ aio_check_io(struct ns_worker_ctx *ns_ctx)
 	}
 
 	for (i = 0; i < count; i++) {
+		unsigned long res;
+
 		task = (struct perf_task *)ns_ctx->u.aio.events[i].data;
-		if (ns_ctx->u.aio.events[i].res != (uint64_t)task->iovs[0].iov_len) {
-			fprintf(stderr, "event->res=%lu, iov_len=%lu\n", ns_ctx->u.aio.events[i].res,
+		res = ns_ctx->u.aio.events[i].res;
+		if (res != (uint64_t)task->iovs[0].iov_len) {
+			fprintf(stderr, "event->res=%ld, iov_len=%lu\n", (long)res,
 				(uint64_t)task->iovs[0].iov_len);
 			ns_ctx->status = 1;
-			return -1;
+			if ((long)res == -EIO) {
+				/* The block device has been removed.  Stop trying to send I/O to it. */
+				ns_ctx->is_draining = true;
+			}
 		}
 		task_complete(ns_ctx->u.aio.events[i].data);
 	}
