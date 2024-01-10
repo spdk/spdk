@@ -494,7 +494,7 @@ def bdev_aio_create(client, filename, name, block_size=None, readonly=False, fal
         name: name of block device
         block_size: block size of device (optional; autodetected if omitted)
         readonly: set aio bdev as read-only
-        fallocate: enable fallocate for UNMAP support (note that fallocate syscall would block reactor)
+        fallocate: enable fallocate for UNMAP/WRITEZEROS support (note that fallocate syscall would block reactor)
 
     Returns:
         Name of created block device.

@@ -276,6 +276,15 @@ bdev_aio_unmap(struct spdk_bdev_io *bdev_io)
 
 	bdev_aio_fallocate(bdev_io, mode);
 }
+
+
+static void
+bdev_aio_write_zeros(struct spdk_bdev_io *bdev_io)
+{
+	int mode = FALLOC_FL_ZERO_RANGE;
+
+	bdev_aio_fallocate(bdev_io, mode);
+}
 #endif
 
 static void
@@ -615,6 +624,10 @@ _bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		bdev_aio_unmap(bdev_io);
 		return 0;
+
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		bdev_aio_write_zeros(bdev_io);
+		return 0;
 #endif
 
 	default:
@@ -643,6 +656,7 @@ bdev_aio_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 		return true;
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		return fdisk->fallocate;
 
 	default:

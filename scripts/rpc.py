@@ -487,7 +487,7 @@ if __name__ == "__main__":
     p.add_argument('name', help='Block device name')
     p.add_argument('block_size', help='Block size for this bdev', type=int, nargs='?')
     p.add_argument("-r", "--readonly", action='store_true', help='Set this bdev as read-only')
-    p.add_argument("--fallocate", action='store_true', help='Support unmap by fallocate')
+    p.add_argument("--fallocate", action='store_true', help='Support unmap/writezeros by fallocate')
     p.set_defaults(func=bdev_aio_create)
 
     def bdev_aio_rescan(args):
