@@ -540,17 +540,15 @@ nbd_io_exec(struct spdk_nbd_disk *nbd)
 	int io_count = 0;
 	int ret = 0;
 
-	if (!TAILQ_EMPTY(&nbd->received_io_list)) {
-		TAILQ_FOREACH_SAFE(io, &nbd->received_io_list, tailq, io_tmp) {
-			TAILQ_REMOVE(&nbd->received_io_list, io, tailq);
-			TAILQ_INSERT_TAIL(&nbd->processing_io_list, io, tailq);
-			ret = nbd_submit_bdev_io(nbd, io);
-			if (ret < 0) {
-				return ret;
-			}
-
-			io_count++;
+	TAILQ_FOREACH_SAFE(io, &nbd->received_io_list, tailq, io_tmp) {
+		TAILQ_REMOVE(&nbd->received_io_list, io, tailq);
+		TAILQ_INSERT_TAIL(&nbd->processing_io_list, io, tailq);
+		ret = nbd_submit_bdev_io(nbd, io);
+		if (ret < 0) {
+			return ret;
 		}
+
+		io_count++;
 	}
 
 	return io_count;
@@ -861,16 +859,12 @@ nbd_bdev_hot_remove(struct spdk_nbd_disk *nbd)
 	nbd->is_closing = true;
 	nbd_cleanup_io(nbd);
 
-	if (!TAILQ_EMPTY(&nbd->received_io_list)) {
-		TAILQ_FOREACH_SAFE(io, &nbd->received_io_list, tailq, io_tmp) {
-			TAILQ_REMOVE(&nbd->received_io_list, io, tailq);
-			TAILQ_INSERT_TAIL(&nbd->processing_io_list, io, tailq);
-		}
+	TAILQ_FOREACH_SAFE(io, &nbd->received_io_list, tailq, io_tmp) {
+		TAILQ_REMOVE(&nbd->received_io_list, io, tailq);
+		TAILQ_INSERT_TAIL(&nbd->processing_io_list, io, tailq);
 	}
-	if (!TAILQ_EMPTY(&nbd->processing_io_list)) {
-		TAILQ_FOREACH_SAFE(io, &nbd->processing_io_list, tailq, io_tmp) {
-			nbd_io_done(NULL, false, io);
-		}
+	TAILQ_FOREACH_SAFE(io, &nbd->processing_io_list, tailq, io_tmp) {
+		nbd_io_done(NULL, false, io);
 	}
 }
 
