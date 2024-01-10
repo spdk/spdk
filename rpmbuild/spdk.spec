@@ -140,7 +140,7 @@ ln -s /usr/local/include %{buildroot}/usr/libexec/spdk
 /etc/bash_completion.d/*
 /usr/libexec/spdk/*
 /usr/local/bin/*
-%{python3_sitelib}/spdk*/*
+/usr/local/lib/python%{python3_version}/site-packages/spdk*/*
 
 
 %package devel

@@ -28,7 +28,6 @@ function usage() {
 	echo " --cross-prefix=prefix     Prefix for cross compilation (default: none)"
 	echo "                           example: aarch64-linux-gnu"
 	echo " --libdir=path             Configure installation path for the libraries (default: \$prefix/lib)"
-	echo " --pydir=path              Configure installation path for the python libraries"
 	echo " --max-lcores=VAL          DPDK configuration. VAL defines maximum number of lcores supported"
 	echo "                           by EAL, or enables autodetection if set to 'detect'. When 'detect'"
 	echo "                           is specified, DPDK will detect number of cores in the system during"
@@ -303,9 +302,6 @@ for i in "$@"; do
 			;;
 		--libdir=*)
 			CONFIG[LIBDIR]="${i#*=}"
-			;;
-		--pydir=*)
-			CONFIG[PYDIR]="${i#*=}"
 			;;
 		--enable-debug)
 			CONFIG[DEBUG]=y
