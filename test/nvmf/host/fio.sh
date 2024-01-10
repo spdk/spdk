@@ -33,7 +33,7 @@ $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 $rpc_py nvmf_subsystem_add_listener discovery -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
-PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
+PLUGIN_DIR=$rootdir/app/fio/nvme
 
 # Test fio_plugin as host with malloc backend
 fio_nvme $PLUGIN_DIR/example_config.fio --filename="trtype=$TEST_TRANSPORT adrfam=IPv4 \
