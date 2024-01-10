@@ -127,8 +127,8 @@ fi
 key=$(format_interchange_psk 00112233445566778899aabbccddeeff)
 key_2=$(format_interchange_psk ffeeddccbbaa99887766554433221100)
 
-key_path="$testdir/key1.txt"
-key_2_path="$testdir/key2.txt"
+key_path=$(mktemp)
+key_2_path=$(mktemp)
 
 echo -n "$key" > $key_path
 echo -n "$key_2" > $key_2_path
@@ -166,7 +166,7 @@ NOT run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 ""
 # Test #6 - check connectivity with bdevperf, but with 48 bytes long key
 killprocess $nvmfpid
 key_long=$(format_interchange_psk 00112233445566778899aabbccddeeff0011223344556677 02)
-key_long_path="$testdir/key_long.txt"
+key_long_path=$(mktemp)
 echo -n "$key_long" > $key_long_path
 chmod 0600 $key_long_path
 nvmfappstart -m 0x2
