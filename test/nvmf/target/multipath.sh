@@ -34,7 +34,7 @@ get_subsystem() {
 	local nqn=$1 serial=$2 s
 
 	for s in /sys/class/nvme-subsystem/*; do
-		[[ $nqn == "$(< "$s/subsysnqn")" && "$(< "$s/serial")" == "$serial"* ]] || continue
+		[[ $nqn == "$(< "$s/subsysnqn")" && "$serial" == "$(< "$s/serial")" ]] || continue
 		echo "${s##*/}" && return 0
 	done
 	return 1
