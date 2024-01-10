@@ -8051,7 +8051,7 @@ nqn                        | Required | string      | Subsystem NQN
 tgt_name                   | Optional | string      | Parent NVMe-oF target name.
 serial_number              | Optional | string      | Serial number of virtual controller
 model_number               | Optional | string      | Model number of virtual controller
-max_namespaces             | Optional | number      | Maximum number of namespaces that can be attached to the subsystem. Default: 0 (Unlimited)
+max_namespaces             | Optional | number      | Maximum number of namespaces that can be attached to the subsystem. Default: 32 (also used if user specifies 0)
 allow_any_host             | Optional | boolean     | Allow any host (`true`) or enforce allowed host list (`false`). Default: `false`.
 ana_reporting              | Optional | boolean     | Enable ANA reporting feature (default: `false`).
 min_cntlid                 | Optional | number      | Minimum controller ID. Default: 1
