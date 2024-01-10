@@ -31,7 +31,7 @@
 
 #define NVMF_CTRLR_RESET_SHN_TIMEOUT_IN_MS	(NVMF_CC_RESET_SHN_TIMEOUT_IN_MS + 5000)
 
-#define DUPLICATE_QID_RETRY_US 100
+#define DUPLICATE_QID_RETRY_US 1000
 
 /*
  * Report the SPDK version as the firmware revision.
