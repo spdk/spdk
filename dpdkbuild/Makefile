@@ -30,6 +30,12 @@ ifeq ($(CONFIG_DEBUG),y)
 DPDK_OPTS += --buildtype=debug
 endif
 
+ifeq ($(CONFIG_SHARED),y)
+DPDK_OPTS += --default-library=shared
+else
+DPDK_OPTS += --default-library=static
+endif
+
 ifeq ($(CONFIG_LTO),y)
 # dpdk complains about compiler not supporting fat LTO objects when clang is in use so don't enable it in such a instance
 ifneq ($(CC_TYPE),clang)
