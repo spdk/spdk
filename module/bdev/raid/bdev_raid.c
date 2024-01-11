@@ -855,14 +855,11 @@ static struct {
 	{ }
 };
 
-static struct {
-	const char *name;
-	enum raid_bdev_state value;
-} g_raid_state_names[] = {
-	{ "online", RAID_BDEV_STATE_ONLINE },
-	{ "configuring", RAID_BDEV_STATE_CONFIGURING },
-	{ "offline", RAID_BDEV_STATE_OFFLINE },
-	{ }
+const char *g_raid_state_names[] = {
+	[RAID_BDEV_STATE_ONLINE]	= "online",
+	[RAID_BDEV_STATE_CONFIGURING]	= "configuring",
+	[RAID_BDEV_STATE_OFFLINE]	= "offline",
+	[RAID_BDEV_STATE_MAX]		= NULL
 };
 
 /* We have to use the typedef in the function declaration to appease astyle. */
@@ -906,28 +903,23 @@ raid_bdev_str_to_state(const char *str)
 
 	assert(str != NULL);
 
-	for (i = 0; g_raid_state_names[i].name != NULL; i++) {
-		if (strcasecmp(g_raid_state_names[i].name, str) == 0) {
-			return g_raid_state_names[i].value;
+	for (i = 0; i < RAID_BDEV_STATE_MAX; i++) {
+		if (strcasecmp(g_raid_state_names[i], str) == 0) {
+			break;
 		}
 	}
 
-	return RAID_BDEV_STATE_MAX;
+	return i;
 }
 
 const char *
 raid_bdev_state_to_str(enum raid_bdev_state state)
 {
-	unsigned int i;
-
-	for (i = 0; g_raid_state_names[i].name != NULL; i++) {
-		if (g_raid_state_names[i].value == state) {
-			return g_raid_state_names[i].name;
-		}
+	if (state >= RAID_BDEV_STATE_MAX) {
+		return "";
 	}
 
-	assert(false);
-	return "";
+	return g_raid_state_names[state];
 }
 
 /*
