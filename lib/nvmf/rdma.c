@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -1156,7 +1156,9 @@ request_transfer_in(struct spdk_nvmf_request *req)
 		_poller_submit_sends(rtransport, rqpair->poller);
 	}
 
+	assert(rqpair->current_read_depth + rdma_req->num_outstanding_data_wr <= rqpair->max_read_depth);
 	rqpair->current_read_depth += rdma_req->num_outstanding_data_wr;
+	assert(rqpair->current_send_depth + rdma_req->num_outstanding_data_wr <= rqpair->max_send_depth);
 	rqpair->current_send_depth += rdma_req->num_outstanding_data_wr;
 	return 0;
 }
@@ -1263,6 +1265,7 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 	}
 
 	/* +1 for the rsp wr */
+	assert(rqpair->current_send_depth + num_outstanding_data_wr + 1 <= rqpair->max_send_depth);
 	rqpair->current_send_depth += num_outstanding_data_wr + 1;
 
 	return 0;
@@ -2244,7 +2247,9 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 				/* This request needs to wait in line to perform RDMA */
 				break;
 			}
+			assert(rqpair->max_send_depth >= rqpair->current_send_depth);
 			qdepth = rqpair->max_send_depth - rqpair->current_send_depth;
+			assert(rqpair->max_read_depth >= rqpair->current_read_depth);
 			num_rdma_reads_available = rqpair->max_read_depth - rqpair->current_read_depth;
 			if (rdma_req->num_outstanding_data_wr > qdepth ||
 			    rdma_req->num_outstanding_data_wr > num_rdma_reads_available) {
@@ -2433,6 +2438,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 				break;
 			}
 
+			assert(rqpair->current_send_depth <= rqpair->max_send_depth);
 			if (rqpair->current_send_depth == rqpair->max_send_depth) {
 				/* We can only have so many WRs outstanding. we have to wait until some finish */
 				rqpair->poller->stat.pending_rdma_send++;
@@ -4706,6 +4712,7 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 			rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
 			/* RDMA_WRITE operation completed. +1 since it was chained with rsp WR */
+			assert(rqpair->current_send_depth >= (uint32_t)rdma_req->num_outstanding_data_wr + 1);
 			rqpair->current_send_depth -= rdma_req->num_outstanding_data_wr + 1;
 			rdma_req->num_outstanding_data_wr = 0;
 
