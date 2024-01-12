@@ -411,11 +411,6 @@ void nvmf_transport_dump_opts(struct spdk_nvmf_transport *transport, struct spdk
 			      bool named);
 void nvmf_transport_listen_dump_trid(const struct spdk_nvme_transport_id *trid,
 				     struct spdk_json_write_ctx *w);
-void nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
-				  const struct spdk_nvme_transport_id *trid,
-				  enum spdk_nvme_ana_state ana_state, uint32_t anagrpid,
-				  spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn, void *cb_arg);
-bool nvmf_subsystem_get_ana_reporting(struct spdk_nvmf_subsystem *subsystem);
 
 /**
  * Sets the controller ID range for a subsystem.

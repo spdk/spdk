@@ -129,6 +129,10 @@ Added `spdk_nvmf_subsystem_is_discovery()` API to check whether a given susbyste
 
 Added new optional `--ana-state` (or shortly `-n`) parameter to nvmf_subsystem_add_listener RPC call.
 
+Added public APIs 'spdk_nvmf_subsystem_get_ana_reporting' and 'spdk_nvmf_subsystem_set_ana_state',
+replacing the internal functions 'nvmf_subsystem_get_ana_reporting' and 'nvmf_subsystem_set_ana_state'
+respectively.
+
 ### scripts
 
 `setup.sh` now supports interactive mode for device selection and hugepage reservation.

@@ -3275,7 +3275,7 @@ spdk_nvmf_subsystem_set_ana_reporting(struct spdk_nvmf_subsystem *subsystem,
 }
 
 bool
-nvmf_subsystem_get_ana_reporting(struct spdk_nvmf_subsystem *subsystem)
+spdk_nvmf_subsystem_get_ana_reporting(struct spdk_nvmf_subsystem *subsystem)
 {
 	return subsystem->flags.ana_reporting;
 }
@@ -3323,10 +3323,10 @@ subsystem_listener_update_on_pg(struct spdk_io_channel_iter *i)
 }
 
 void
-nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
-			     const struct spdk_nvme_transport_id *trid,
-			     enum spdk_nvme_ana_state ana_state, uint32_t anagrpid,
-			     spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn, void *cb_arg)
+spdk_nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
+				  const struct spdk_nvme_transport_id *trid,
+				  enum spdk_nvme_ana_state ana_state, uint32_t anagrpid,
+				  spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_subsystem_listener *listener;
 	struct subsystem_listener_update_ctx *ctx;

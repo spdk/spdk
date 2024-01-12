@@ -246,7 +246,7 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 				spdk_json_write_named_uuid(w, "uuid", &ns_opts.uuid);
 			}
 
-			if (nvmf_subsystem_get_ana_reporting(subsystem)) {
+			if (spdk_nvmf_subsystem_get_ana_reporting(subsystem)) {
 				spdk_json_write_named_uint32(w, "anagrpid", ns_opts.anagrpid);
 			}
 
@@ -785,8 +785,8 @@ nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 						 "Invalid parameters");
 		ctx->response_sent = true;
 	} else if (ctx->op == NVMF_RPC_LISTEN_SET_ANA_STATE) {
-		nvmf_subsystem_set_ana_state(subsystem, &ctx->trid, ctx->ana_state, ctx->anagrpid,
-					     nvmf_rpc_set_ana_state_done, ctx);
+		spdk_nvmf_subsystem_set_ana_state(subsystem, &ctx->trid, ctx->ana_state, ctx->anagrpid,
+						  nvmf_rpc_set_ana_state_done, ctx);
 		return;
 	} else {
 		SPDK_UNREACHABLE();
@@ -2549,7 +2549,7 @@ dump_nvmf_subsystem_listener(struct spdk_json_write_ctx *w,
 	nvmf_transport_listen_dump_trid(trid, w);
 	spdk_json_write_object_end(w);
 
-	if (nvmf_subsystem_get_ana_reporting(listener->subsystem)) {
+	if (spdk_nvmf_subsystem_get_ana_reporting(listener->subsystem)) {
 		spdk_json_write_named_array_begin(w, "ana_states");
 		for (i = 0; i < listener->subsystem->max_nsid; i++) {
 			spdk_json_write_object_begin(w);
