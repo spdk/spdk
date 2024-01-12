@@ -391,6 +391,13 @@ function install_ice() {
 
 	curl -L -o- "$ICE_DRIVER" | tar -C "$GIT_REPOS" -xzf -
 
+	if ge "$kernel_ver" 6.7.0; then
+		patch --dir="$GIT_REPOS/ice-$ICE_VERSION/src" \
+			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-devlink_fmsg.patch"
+		patch --dir="$GIT_REPOS/ice-$ICE_VERSION/src" \
+			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-xdp_do_flush_map.patch"
+	fi
+
 	(
 		cd "$GIT_REPOS/ice-$ICE_VERSION/src"
 		sudo make -j"$(nproc)" install
@@ -484,7 +491,7 @@ function install_sources() {
 
 GIT_VERSION=2.25.1
 IRDMA_VERSION=1.12.55
-ICE_VERSION=1.12.7
+ICE_VERSION=1.13.7
 
 BPFTRACE_VERSION=${BPFTRACE_VERSION:-db63ddb}
 VFIO_QEMU_BRANCH=${VFIO_QEMU_BRANCH:-vfio-user-p3.0}

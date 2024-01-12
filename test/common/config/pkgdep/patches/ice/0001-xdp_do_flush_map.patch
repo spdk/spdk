@@ -1,0 +1,61 @@
+See: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=75cec20345
+---
+ src/ice_txrx_lib.c |  2 +-
+ src/kcompat.h      |  3 ---
+ src/kcompat_impl.h | 14 --------------
+ 3 files changed, 1 insertion(+), 18 deletions(-)
+
+diff --git a/src/ice_txrx_lib.c b/src/ice_txrx_lib.c
+index a392715..f7e26d9 100644
+--- a/src/ice_txrx_lib.c
++++ b/src/ice_txrx_lib.c
+@@ -382,7 +382,7 @@ int ice_xmit_xdp_buff(struct xdp_buff *xdp, struct ice_tx_ring *xdp_ring)
+ void ice_finalize_xdp_rx(struct ice_rx_ring *rx_ring, unsigned int xdp_res)
+ {
+ 	if (xdp_res & ICE_XDP_REDIR)
+-		xdp_do_flush_map();
++		xdp_do_flush();
+ 
+ 	if (xdp_res & ICE_XDP_TX) {
+ 		struct ice_tx_ring *xdp_ring =
+diff --git a/src/kcompat.h b/src/kcompat.h
+index ad47afb..b31745d 100644
+--- a/src/kcompat.h
++++ b/src/kcompat.h
+@@ -2657,9 +2657,6 @@ static inline bool uuid_equal(const uuid_t *u1, const uuid_t *u2)
+ #define from_timer(var, callback_timer, timer_fieldname) \
+ 	container_of(callback_timer, typeof(*var), timer_fieldname)
+ 
+-#ifndef xdp_do_flush_map
+-#define xdp_do_flush_map() do {} while (0)
+-#endif
+ struct _kc_xdp_buff {
+ 	void *data;
+ 	void *data_end;
+diff --git a/src/kcompat_impl.h b/src/kcompat_impl.h
+index 1af9f7f..0b98b7e 100644
+--- a/src/kcompat_impl.h
++++ b/src/kcompat_impl.h
+@@ -2150,20 +2150,6 @@ static inline void *__must_check krealloc_array(void *p,
+ }
+ #endif /* NEED_KREALLOC_ARRAY */
+ 
+-/* NEED_XDP_DO_FLUSH
+- *
+- * Upstream commit 1d233886dd90 ("xdp: Use bulking for non-map XDP_REDIRECT
+- * and consolidate code paths") replaced xdp_do_flush_map with xdp_do_flush
+- * and 7f04bd109d4c ("net: Tree wide: Replace xdp_do_flush_map() with 
+- * xdp_do_flush()") cleaned up related code.
+- */
+-#ifdef NEED_XDP_DO_FLUSH
+-static inline void xdp_do_flush(void)
+-{
+-	xdp_do_flush_map();
+-}
+-#endif /* NEED_XDP_DO_FLUSH */
+-
+ #ifdef NEED_XDP_FEATURES
+ enum netdev_xdp_act {
+ 	NETDEV_XDP_ACT_BASIC = 1,
+-- 
+
