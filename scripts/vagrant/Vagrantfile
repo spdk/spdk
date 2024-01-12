@@ -257,7 +257,7 @@ def deploy_test_vm(config, distro, plugins_sync_backend)
   make_spdk_local_copy_of_nfs(config,distro) if plugins_sync_backend[:type] == :nfs
 
   config.vm.provision "shell" do |setup|
-    setup.inline = "/home/vagrant/spdk_repo/spdk/test/common/config/vm_setup.sh"
+    setup.inline = "/home/vagrant/spdk_repo/spdk/test/common/config/autotest_setup.sh"
     setup.privileged = false
     setup.args = ["-u", "-i"]
   end

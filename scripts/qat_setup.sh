@@ -10,11 +10,11 @@ rootdir=$(readlink -f $(dirname $0))/..
 allowed_drivers=("igb_uio" "uio_pci_generic")
 
 reload_intel_qat() {
-	# We need to make sure the out-of-tree intel_qat driver, provided via vm_setup.sh, is in
-	# use. Otherwise, some dependency modules loaded by qat_service may fail causing some
-	# disturbance later on during the tests - in particular, it's been seen that the adf_ctl
-	# was returning inconsistent data (wrong pci addresses), confusing the service into
-	# believing SR-IOV is not enabled.
+	# We need to make sure the out-of-tree intel_qat driver, provided via autotest_setup.sh,
+	# is in use. Otherwise, some dependency modules loaded by qat_service may fail causing
+	# some disturbance later on during the tests - in particular, it's been seen that the
+	# adf_ctl was returning inconsistent data (wrong pci addresses), confusing the service
+	# into believing SR-IOV is not enabled.
 
 	# If this file doesn't exist, then either intel_qat is a kernel built-in or is not loaded.
 	# Nothing to do in such cases, qat_service will load the module for us.

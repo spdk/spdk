@@ -262,7 +262,6 @@ _spdk_apps() {
 		create_vbox.sh
 		pkgdep.sh
 		run-autorun.sh
-		vm_setup.sh
 		autotest_setup.sh
 	) # TODO: Add more?
 

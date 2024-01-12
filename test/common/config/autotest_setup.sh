@@ -83,15 +83,6 @@ vmsetupdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$vmsetupdir/../../../")
 source "$rootdir/scripts/common.sh"
 
-if [[ ${0##*/} == vm_setup.sh ]]; then
-	cat <<- DEPRECATED >&2
-		Running this script as ${0##*/} is deprecated and support for it will be removed in the future.
-
-		Please, use $vmsetupdir/autotest_setup.sh instead.
-
-	DEPRECATED
-fi
-
 set_os_id_version
 source "$vmsetupdir/pkgdep/git"
 detect_package_manager

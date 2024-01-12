@@ -1,1 +1,0 @@
-autotest_setup.sh

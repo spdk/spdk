@@ -94,7 +94,7 @@ else
 		yum check-update
 		yum update -y
 		"$SPDK_DIR"/scripts/pkgdep.sh --all
-		sudo -u vagrant "$SPDK_DIR"/test/common/config/vm_setup.sh -i
+		sudo -u vagrant "$SPDK_DIR"/test/common/config/autotest_setup.sh -i
 		yum clean all
 	fi
 	cat /dev/null > ~/.bash_history && history -c

@@ -136,7 +136,7 @@ This script will:
 4. rsync the `~/.gitconfig` file to `/home/vagrant/` in the newly provisioned virtual box
 5. rsync a copy of the source `spdk` repository to `/home/vagrant/spdk_repo/spdk` (optional)
 6. rsync a copy of the `~/vagrant_tools` directory to `/home/vagrant/tools` (optional)
-7. execute vm_setup.sh on the guest to install all spdk dependencies (optional)
+7. execute autotest_setup.sh on the guest to install all spdk dependencies (optional)
 
 This arrangement allows the provisioning of multiple, different VMs within that same directory hierarchy using the same
 spdk repository. Following the creation of the vm you'll need to ssh into your virtual box and finish the VM initialization.
@@ -199,7 +199,7 @@ Following VM initialization you must:
 
 ### Running autorun.sh with vagrant
 
-After running vm_setup.sh the `run-autorun.sh` can be used to run `spdk/autorun.sh` on a Fedora vagrant machine.
+After running autotest_setup.sh the `run-autorun.sh` can be used to run `spdk/autorun.sh` on a Fedora vagrant machine.
 Note that the `spdk/scripts/vagrant/autorun-spdk.conf` should be copied to `~/autorun-spdk.conf` before starting your tests.
 
 ```bash
