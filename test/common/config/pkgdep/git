@@ -3,6 +3,8 @@ function install_qat() {
 		install yasm
 	fi
 
+	install libnl3 libnl3-devel || install libnl-3-200 libnl-3-dev
+
 	in_syms() {
 		local syms
 		if [[ -e /proc/kallsyms ]]; then
@@ -27,16 +29,9 @@ function install_qat() {
 
 	tar -C "$GIT_REPOS/QAT" -xzof - < <(wget -O- "$DRIVER_LOCATION_QAT")
 
-	if ge "$kernel_ver" 6.3.0; then
+	if ge "$kernel_ver" 6.7.0; then
 		patch --dir="$GIT_REPOS/QAT" -p1
-	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-iommu_map.patch"
-
-	if ge "$kernel_ver" 6.4.0; then
-		patch --dir="$GIT_REPOS/QAT" -p1 \
-			< "$rootdir/test/common/config/pkgdep/patches/qat/0001-driver-core+semaphore.patch"
-		patch --dir="$GIT_REPOS/QAT" -p1 \
-			< "$rootdir/test/common/config/pkgdep/patches/qat/0001-algapi.patch"
-	fi
+	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-phys_proc_id.patch"
 
 	patch --dir="$GIT_REPOS/QAT" -p1 \
 		< "$rootdir/test/common/config/pkgdep/patches/qat/0001-no-vmlinux.patch"
@@ -507,7 +502,7 @@ export GIT_REPO_QEMU
 export GIT_REPO_QEMU_VFIO
 : ${GIT_REPO_LIBISCSI=https://github.com/sahlberg/libiscsi}
 export GIT_REPO_LIBISCSI
-: ${DRIVER_LOCATION_QAT=https://downloadmirror.intel.com/773821/QAT.L.4.21.0-00001.tar.gz}
+: ${DRIVER_LOCATION_QAT=https://downloadmirror.intel.com/795697/QAT.L.4.24.0-00005.tar.gz}
 export DRIVER_LOCATION_QAT
 : ${GIT_REPO_GIT=https://github.com/git/git/archive/v${GIT_VERSION}.tar.gz}
 export GIT_REPO_GIT
