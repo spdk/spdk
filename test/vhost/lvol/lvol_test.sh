@@ -77,8 +77,8 @@ done
 
 vhosttestinit
 
-# $vm_count VMs, 1CPU per VM, 4CPUs for SPDK, all pinned to node0
-source <(gen_cpu_vm_spdk_config "$vm_count" 1 4 "" 0)
+# $vm_count VMs, 2CPUs per VM, 4CPUs for SPDK, all pinned to node0
+source <(gen_cpu_vm_spdk_config "$vm_count" 2 4 "" 0)
 spdk_mask=$vhost_0_reactor_mask
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
@@ -160,6 +160,8 @@ for vm_num in $used_vms; do
 	qemu_mask_param="VM_${vm_num}_qemu_mask"
 
 	host_name="VM-$vm_num-${!qemu_mask_param}"
+	# In case VM uses > 1 cpus, make sure the hostname is valid
+	host_name=${host_name//,/-}
 	vm_exec $vm_num "hostname $host_name"
 	vm_start_fio_server $fio_bin $vm_num
 
