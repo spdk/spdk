@@ -85,6 +85,13 @@ struct spdk_accel_task_aux_data {
 };
 
 struct spdk_accel_task {
+	TAILQ_ENTRY(spdk_accel_task)	seq_link;
+	STAILQ_ENTRY(spdk_accel_task)	link;
+	/* Uses enum spdk_accel_opcode */
+	uint8_t				op_code;
+	uint8_t				flags;
+	bool				has_aux;
+	int16_t				status;
 	struct accel_io_channel		*accel_ch;
 	struct spdk_accel_sequence	*seq;
 	union {
@@ -134,13 +141,6 @@ struct spdk_accel_task {
 		uint32_t		block_size; /* for crypto op */
 	};
 	uint64_t			iv; /* Initialization vector (tweak) for crypto op */
-	/* Uses enum spdk_accel_opcode */
-	uint8_t				op_code;
-	bool				has_aux;
-	uint8_t				flags;
-	int16_t				status;
-	STAILQ_ENTRY(spdk_accel_task)	link;
-	TAILQ_ENTRY(spdk_accel_task)	seq_link;
 	struct spdk_accel_task_aux_data	*aux;
 };
 
