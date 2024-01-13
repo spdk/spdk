@@ -77,20 +77,9 @@ done
 
 vhosttestinit
 
+# $vm_count VMs, 1CPU per VM, 4CPUs for SPDK, all pinned to node0
+source <(gen_cpu_vm_spdk_config "$vm_count" 1 4 "" 0)
 spdk_mask=$vhost_0_reactor_mask
-if $distribute_cores; then
-	source $testdir/autotest.config
-	# Adjust the mask so vhost runs on separate cpus than qemu instances.
-	# We know that .config sets qemus to run on single cpu so simply take
-	# the next cpu and add some extra.
-	# FIXME: Rewrite this so the config is more aware of what cpu topology
-	# is actually available on the host system.
-	spdk_mask=$((1 << vm_count))
-	((spdk_mask |= 1 << (vm_count + 1)))
-	((spdk_mask |= 1 << (vm_count + 2)))
-	((spdk_mask |= 1 << (vm_count + 3)))
-	spdk_mask=$(printf '0x%x' "$spdk_mask")
-fi
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
 
