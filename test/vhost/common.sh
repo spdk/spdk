@@ -1447,3 +1447,28 @@ function limit_vhost_kernel_threads() {
 		move_proc "$pid" "$cgroup/vhost" "$cgroup" cgroup.threads
 	done
 }
+
+function gen_cpu_vm_spdk_config() (
+	local vm_count=$1 vm_cpu_num=$2 vm
+	local spdk_cpu_num=${3:-1} spdk_cpu_list=${4:-} spdk_cpus
+	local nodes=("${@:5}") node
+	local env
+
+	spdk_cpus=spdk_cpu_num
+	[[ -n $spdk_cpu_list ]] && spdk_cpus=spdk_cpu_list
+
+	if ((${#nodes[@]} > 0)); then
+		((${#nodes[@]} == 1)) && node=${nodes[0]}
+		for ((vm = 0; vm < vm_count; vm++)); do
+			env+=("VM${vm}_NODE=${nodes[vm]:-$node}")
+		done
+	fi
+
+	env+=("$spdk_cpus=${!spdk_cpus}")
+	env+=("vm_count=$vm_count")
+	env+=("vm_cpu_num=$vm_cpu_num")
+
+	export "${env[@]}"
+
+	"$rootdir/scripts/perf/vhost/conf-generator" -p cpu
+)

@@ -83,7 +83,7 @@ get_auto_cfg() {
 		# all available nodes. If no cpus are left, fail. We don't allow to mix
 		# cpus from different nodes for the sake of the performance.
 		node_idx=0 node_idx_perc=0
-		eval "vm_node=\$vm${vm}_node"
+		eval "vm_node=\${VM${vm}_NODE:-\$vm${vm}_node}"
 
 		local -n node_cpus=node_${vm_node}_cpu
 		local -n vm_nodes=node_${vm_node}_vm
@@ -333,7 +333,7 @@ help() {
 		vms_per_nvme  - Number of VMs to pin to a single nvme (default: 1)
 
 		Override parameters:
-		vmN_node      - overrides selected NUMA node for VM N - by default,
+		VM[N]_NODE    - overrides selected NUMA node for VM N - by default,
 		                this is allocated up to number of nvme drives
 		cpu_out       - with -s, points at location where to save cpu conf
 		disk_out      - with -s, points at location where to save disk conf
