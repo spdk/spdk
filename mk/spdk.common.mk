@@ -2,7 +2,7 @@
 #  Copyright (C) 2015 Intel Corporation.
 #  Copyright (c) 2017, IBM Corporation.
 #  Copyright (c) 2019, 2021 Mellanox Corporation.
-#  Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES
+#  Copyright (c) 2022, 2024 NVIDIA CORPORATION & AFFILIATES
 #  All rights reserved.
 #  Copyright (c) 2022 Dell Inc, or its subsidiaries.
 #
@@ -320,7 +320,7 @@ ifeq ($(CONFIG_IDXD_KERNEL),y)
 SYS_LIBS += -laccel-config
 endif
 
-CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -Wstrict-prototypes -Wold-style-definition -std=gnu99
+CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -Wstrict-prototypes -Wold-style-definition -std=gnu11
 CXXFLAGS += $(COMMON_CFLAGS) -std=c++11
 
 SYS_LIBS += -lrt
