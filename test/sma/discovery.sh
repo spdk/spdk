@@ -152,8 +152,9 @@ $rootdir/scripts/sma.py -c <(
 ) &
 smapid=$!
 
-waitforlisten $t1pid
-waitforlisten $t2pid
+waitforlisten $tgtpid
+waitforlisten $t1pid "$t1sock"
+waitforlisten $t2pid "$t2sock"
 
 # Prepare the targets.  The first one has a single subsystem with a single volume and a single
 # discovery listener.  The second one also has a single subsystem, but has two volumes attached to
