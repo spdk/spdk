@@ -115,8 +115,7 @@ function generate_io_traffic_with_bdevperf() {
 function stop_bdevperf() {
 	wait $bdevperf_rpc_pid
 
-	# NOTE: rdma-core <= v43.0 has memleak bug (fixed in commit 7720071f).
-	killprocess $bdevperf_pid || true
+	killprocess $bdevperf_pid
 	bdevperf_pid=
 
 	cat $testdir/try.txt
@@ -200,8 +199,7 @@ function test_remove_and_rescan() {
 
 	stop_bdevperf
 
-	# NOTE: rdma-core <= v43.0 has memleak bug (fixed in commit 7720071f).
-	killprocess $nvmfpid || true
+	killprocess $nvmfpid
 	nvmfpid=
 
 	return 0
@@ -296,8 +294,7 @@ function test_bonding_slaves_on_nics() {
 
 	stop_bdevperf
 
-	# NOTE: rdma-core <= v43.0 has memleak bug (fixed in commit 7720071f).
-	killprocess $nvmfpid || true
+	killprocess $nvmfpid
 	nvmfpid=
 	return 0
 }
