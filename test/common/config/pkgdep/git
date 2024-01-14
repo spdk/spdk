@@ -311,7 +311,7 @@ function install_igb_uio() {
 }
 
 function install_irdma() {
-	local RDMA_CORE_VERSION=44.0
+	local RDMA_CORE_VERSION=46.0
 	local RDMA_CORE=https://github.com/linux-rdma/rdma-core/releases/download/v$RDMA_CORE_VERSION/rdma-core-$RDMA_CORE_VERSION.tar.gz
 
 	if [[ $ID != fedora ]]; then
@@ -490,7 +490,7 @@ function install_sources() {
 }
 
 GIT_VERSION=2.25.1
-IRDMA_VERSION=1.12.55
+IRDMA_VERSION=1.13.43
 ICE_VERSION=1.13.7
 
 BPFTRACE_VERSION=${BPFTRACE_VERSION:-db63ddb}
@@ -515,7 +515,7 @@ export DRIVER_LOCATION_QAT
 export GIT_REPO_GIT
 : ${GIT_REPO_DPDK_KMODS=http://dpdk.org/git/dpdk-kmods}
 export GIT_REPO_DPDK_KMODS
-: ${IRDMA_DRIVER=https://downloadmirror.intel.com/786088/irdma-$IRDMA_VERSION.tgz}
+: ${IRDMA_DRIVER=https://downloadmirror.intel.com/812530/irdma-$IRDMA_VERSION.tgz}
 export IRDMA_DRIVER
 : ${ICE_DRIVER="https://sourceforge.net/projects/e1000/files/ice%20stable/$ICE_VERSION/ice-$ICE_VERSION.tar.gz"}
 export ICE_DRIVER
