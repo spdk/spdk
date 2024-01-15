@@ -57,7 +57,7 @@ partition_drive() {
 	for ((part = 1; part <= part_no; part++)); do
 		((part_start = part_start == 0 ? 2048 : part_end + 1))
 		((part_end = part_start + size - 1))
-		sgdisk "/dev/$disk" --new="$part:$part_start:$part_end"
+		flock "/dev/$disk" sgdisk "/dev/$disk" --new="$part:$part_start:$part_end"
 	done
 	wait "$!"
 }

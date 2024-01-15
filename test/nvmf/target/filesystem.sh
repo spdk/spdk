@@ -83,7 +83,7 @@ function nvmf_filesystem_part() {
 		run_test "filesystem_in_capsule_xfs" nvmf_filesystem_create "xfs" ${nvme_name}
 	fi
 
-	# Make sure the target block device is not hold by udev-worker when we attempt to
+	# Make sure the target block device is not held by udev-worker when we attempt to
 	# remove the partition - the removal here forces parted to send BLKRRPART which may
 	# fail in case the device is already locked. By acquiring a lock of our own we make
 	# sure to either block until device is available or make the udev-worker to back off.
