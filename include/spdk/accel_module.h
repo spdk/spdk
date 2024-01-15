@@ -137,8 +137,8 @@ struct spdk_accel_task {
 	/* Uses enum spdk_accel_opcode */
 	uint8_t				op_code;
 	bool				has_aux;
+	uint8_t				flags;
 	int16_t				status;
-	int				flags;
 	STAILQ_ENTRY(spdk_accel_task)	link;
 	TAILQ_ENTRY(spdk_accel_task)	seq_link;
 	struct spdk_accel_task_aux_data	*aux;
