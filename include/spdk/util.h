@@ -187,6 +187,12 @@ spdk_iov_memset(struct iovec *iovs, int iovcnt, int c);
 void
 spdk_iov_one(struct iovec *iov, int *iovcnt, void *buf, size_t buflen);
 
+#define SPDK_IOV_ONE(piov, piovcnt, buf, buflen) do {	\
+	(piov)->iov_base = (buf);			\
+	(piov)->iov_len = (buflen);			\
+	*(piovcnt) = 1;					\
+} while (0)
+
 /**
  * Copy the data described by the source iovec to the destination iovec.
  *

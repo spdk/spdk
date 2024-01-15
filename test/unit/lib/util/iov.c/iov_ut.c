@@ -274,7 +274,7 @@ test_iov_one(void)
 	int iovcnt;
 	char buf[4];
 
-	spdk_iov_one(&iov, &iovcnt, buf, sizeof(buf));
+	SPDK_IOV_ONE(&iov, &iovcnt, buf, sizeof(buf));
 
 	CU_ASSERT(iov.iov_base == buf);
 	CU_ASSERT(iov.iov_len == sizeof(buf));

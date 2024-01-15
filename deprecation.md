@@ -19,6 +19,13 @@ The tags can be matched with the level 4 headers below.
 
 ## Deprecation Notices
 
+### util
+
+#### `spdk_iov_one`
+
+The function is deprecated and will be removed in 24.05 release. Please use `SPDK_IOV_ONE`
+macro instead.
+
 ### nvmf
 
 #### `spdk_nvmf_qpair_disconnect`

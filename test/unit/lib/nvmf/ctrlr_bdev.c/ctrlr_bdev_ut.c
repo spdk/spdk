@@ -756,7 +756,7 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	range.slba = 512;
 	range.nlb = 511;
 	req.length = 32;
-	spdk_iov_one(req.iov, &req.iovcnt, &range, req.length);
+	SPDK_IOV_ONE(req.iov, &req.iovcnt, &range, req.length);
 	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, NULL, &ch, &req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 
@@ -862,7 +862,7 @@ test_nvmf_bdev_ctrlr_nvme_passthru(void)
 	req.qpair = &qpair;
 	req.cmd = (union nvmf_h2c_msg *)&cmd;
 	req.rsp = &rsp;
-	spdk_iov_one(req.iov, &req.iovcnt, NULL, 0);
+	SPDK_IOV_ONE(req.iov, &req.iovcnt, NULL, 0);
 
 	cmd.nsid = 1;
 	cmd.opc = 0xFF;

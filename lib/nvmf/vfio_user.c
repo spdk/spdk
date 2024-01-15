@@ -3014,7 +3014,7 @@ vfio_user_property_access(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
 		req->req.cmd->prop_get_cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET;
 	}
 	req->req.length = count;
-	spdk_iov_one(req->req.iov, &req->req.iovcnt, buf, req->req.length);
+	SPDK_IOV_ONE(req->req.iov, &req->req.iovcnt, buf, req->req.length);
 
 	spdk_nvmf_request_exec_fabrics(&req->req);
 
@@ -5235,7 +5235,7 @@ nvmf_vfio_user_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 		return -ENOMEM;
 	}
 
-	spdk_iov_one(req->iov, &req->iovcnt, data, req->length);
+	SPDK_IOV_ONE(req->iov, &req->iovcnt, data, req->length);
 
 	data->cntlid = ctrlr->cntlid;
 	snprintf(data->subnqn, sizeof(data->subnqn), "%s",
