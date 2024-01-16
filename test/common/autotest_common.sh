@@ -430,10 +430,6 @@ function get_config_params() {
 		config_params+=' --disable-unit-tests'
 	fi
 
-	if [ $SPDK_TEST_NVME_CUSE -eq 1 ]; then
-		config_params+=' --with-nvme-cuse'
-	fi
-
 	if [ -f /usr/include/libpmem.h ] && [ $SPDK_TEST_VBDEV_COMPRESS -eq 1 ]; then
 		if ge "$(nasm --version | awk '{print $3}')" 2.14 && [[ $SPDK_TEST_ISAL -eq 1 ]]; then
 			config_params+=' --with-vbdev-compress --with-dpdk-compressdev'
