@@ -191,53 +191,60 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 }
 
 static int
-dsa_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *first_task)
+dsa_submit_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 {
 	struct idxd_io_channel *chan = spdk_io_channel_get_ctx(ch);
-	struct spdk_accel_task *task, *tmp;
 	int rc = 0;
 
-	task = first_task;
+	assert(TAILQ_NEXT(task, link) == NULL);
 
-	if (chan->state == IDXD_CHANNEL_ERROR) {
-		while (task) {
-			tmp = TAILQ_NEXT(task, link);
-			spdk_accel_task_complete(task, -EINVAL);
-			task = tmp;
-		}
+	if (spdk_unlikely(chan->state == IDXD_CHANNEL_ERROR)) {
+		spdk_accel_task_complete(task, -EINVAL);
 		return 0;
 	}
 
 	if (!TAILQ_EMPTY(&chan->queued_tasks)) {
-		goto queue_tasks;
+		TAILQ_INSERT_TAIL(&chan->queued_tasks, task, link);
+		return 0;
 	}
 
-	/* The caller will either submit a single task or a group of tasks that are
-	 * linked together but they cannot be on a list. For example, see idxd_poll()
-	 * where a list of queued tasks is being resubmitted, the list they are on
-	 * is initialized after saving off the first task from the list which is then
-	 * passed in here.  Similar thing is done in the accel framework.
-	 */
-	while (task) {
-		tmp = TAILQ_NEXT(task, link);
-		rc = _process_single_task(ch, task);
-
-		if (rc == -EBUSY) {
-			goto queue_tasks;
-		} else if (rc) {
-			spdk_accel_task_complete(task, rc);
-		}
-		task = tmp;
+	rc = _process_single_task(ch, task);
+	if (rc == -EBUSY) {
+		TAILQ_INSERT_TAIL(&chan->queued_tasks, task, link);
+	} else if (rc) {
+		spdk_accel_task_complete(task, rc);
 	}
 
 	return 0;
+}
 
-queue_tasks:
-	while (task != NULL) {
-		tmp = TAILQ_NEXT(task, link);
-		TAILQ_INSERT_TAIL(&chan->queued_tasks, task, link);
-		task = tmp;
+static int
+dsa_submit_queued_tasks(struct idxd_io_channel *chan)
+{
+	struct spdk_accel_task *task, *tmp;
+	struct spdk_io_channel *ch = spdk_io_channel_from_ctx(chan);
+	int rc = 0;
+
+	if (spdk_unlikely(chan->state == IDXD_CHANNEL_ERROR)) {
+		/* Complete queued tasks with error and clear the list */
+		while ((task = TAILQ_FIRST(&chan->queued_tasks))) {
+			TAILQ_REMOVE(&chan->queued_tasks, task, link);
+			spdk_accel_task_complete(task, -EINVAL);
+		}
+		return 0;
 	}
+
+	TAILQ_FOREACH_SAFE(task, &chan->queued_tasks, link, tmp) {
+		rc = _process_single_task(ch, task);
+		if (rc == -EBUSY) {
+			return rc;
+		}
+		TAILQ_REMOVE(&chan->queued_tasks, task, link);
+		if (rc) {
+			spdk_accel_task_complete(task, rc);
+		}
+	}
+
 	return 0;
 }
 
@@ -245,23 +252,13 @@ static int
 idxd_poll(void *arg)
 {
 	struct idxd_io_channel *chan = arg;
-	struct spdk_accel_task *task = NULL;
-	struct idxd_task *idxd_task;
 	int count;
 
 	count = spdk_idxd_process_events(chan->chan);
 
 	/* Check if there are any pending ops to process if the channel is active */
-	if (chan->state == IDXD_CHANNEL_ACTIVE) {
-		/* Submit queued tasks */
-		if (!TAILQ_EMPTY(&chan->queued_tasks)) {
-			task = TAILQ_FIRST(&chan->queued_tasks);
-			idxd_task = SPDK_CONTAINEROF(task, struct idxd_task, task);
-
-			TAILQ_INIT(&chan->queued_tasks);
-
-			dsa_submit_tasks(spdk_io_channel_from_ctx(idxd_task->chan), task);
-		}
+	if (!TAILQ_EMPTY(&chan->queued_tasks)) {
+		dsa_submit_queued_tasks(chan);
 	}
 
 	return count > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
@@ -306,7 +303,7 @@ static struct spdk_accel_module_if g_dsa_module = {
 	.name			= "dsa",
 	.supports_opcode	= dsa_supports_opcode,
 	.get_io_channel		= dsa_get_io_channel,
-	.submit_tasks		= dsa_submit_tasks
+	.submit_tasks		= dsa_submit_task
 };
 
 static int
