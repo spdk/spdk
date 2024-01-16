@@ -442,9 +442,6 @@ The SPDK NVMe bdev driver provides the multipath feature. Please refer to
 
 ### NVMe bdev character device {#bdev_config_nvme_cuse}
 
-This feature is considered as experimental. You must configure with --with-nvme-cuse
-option to enable this RPC.
-
 Example commands
 
 `rpc.py bdev_nvme_cuse_register -n Nvme3`

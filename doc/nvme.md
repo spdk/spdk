@@ -329,12 +329,10 @@ This interface reserves one additional qpair for sending down the I/O for each c
 
 #### Enabling cuse support for NVMe
 
-Cuse support is disabled by default. To enable support for NVMe-CUSE devices first
-install required dependencies
+Cuse support is enabled by default on Linux. Make sure to install required dependencies:
 ~~~{.sh}
-sudo scripts/pkgdep.sh --fuse
+sudo scripts/pkgdep.sh
 ~~~
-Then compile SPDK with "./configure --with-nvme-cuse".
 
 #### Creating NVMe-CUSE device
 

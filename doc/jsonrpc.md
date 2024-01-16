@@ -4668,7 +4668,6 @@ Example response:
 ### bdev_nvme_cuse_register {#rpc_bdev_nvme_cuse_register}
 
 Register CUSE device on NVMe controller.
-This feature is considered as experimental.
 
 #### Parameters
 
@@ -4704,7 +4703,6 @@ Example response:
 ### bdev_nvme_cuse_unregister {#rpc_bdev_nvme_cuse_unregister}
 
 Unregister CUSE device on NVMe controller.
-This feature is considered as experimental.
 
 #### Parameters
 
