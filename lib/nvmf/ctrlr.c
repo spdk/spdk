@@ -4159,6 +4159,7 @@ nvmf_ctrlr_process_io_fused_cmd(struct spdk_nvmf_request *req, struct spdk_bdev 
 
 		/* save request of first command to generate response later */
 		req->first_fused_req = first_fused_req;
+		req->first_fused = true;
 		req->qpair->first_fused_req = NULL;
 	} else {
 		SPDK_ERRLOG("Invalid fused command fuse field.\n");
@@ -4179,6 +4180,7 @@ nvmf_ctrlr_process_io_fused_cmd(struct spdk_nvmf_request *req, struct spdk_bdev 
 			/* Complete first of fused commands. Second will be completed by upper layer */
 			_nvmf_request_complete(first_fused_req);
 			req->first_fused_req = NULL;
+			req->first_fused = false;
 		}
 	}
 

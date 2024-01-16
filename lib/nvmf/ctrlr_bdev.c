@@ -72,14 +72,15 @@ nvmf_bdev_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 {
 	struct spdk_nvmf_request	*req = cb_arg;
 	struct spdk_nvme_cpl		*response = &req->rsp->nvme_cpl;
-	int				first_sc = 0, first_sct = 0, sc = 0, sct = 0;
+	int				sc = 0, sct = 0;
 	uint32_t			cdw0 = 0;
-	struct spdk_nvmf_request	*first_req = req->first_fused_req;
 
-	if (spdk_unlikely(first_req != NULL)) {
-		/* fused commands - get status for both operations */
-		struct spdk_nvme_cpl *first_response = &first_req->rsp->nvme_cpl;
+	if (spdk_unlikely(req->first_fused)) {
+		struct spdk_nvmf_request	*first_req = req->first_fused_req;
+		struct spdk_nvme_cpl		*first_response = &first_req->rsp->nvme_cpl;
+		int				first_sc = 0, first_sct = 0;
 
+		/* get status for both operations */
 		spdk_bdev_io_get_nvme_fused_status(bdev_io, &cdw0, &first_sct, &first_sc, &sct, &sc);
 		first_response->cdw0 = cdw0;
 		first_response->status.sc = first_sc;
@@ -88,6 +89,7 @@ nvmf_bdev_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 		/* first request should be completed */
 		spdk_nvmf_request_complete(first_req);
 		req->first_fused_req = NULL;
+		req->first_fused = false;
 	} else {
 		spdk_bdev_io_get_nvme_status(bdev_io, &cdw0, &sct, &sc);
 	}
