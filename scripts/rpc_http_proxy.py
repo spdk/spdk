@@ -33,12 +33,6 @@ parser.add_argument('-s', dest='sock', help='RPC domain socket path', default='/
 parser.add_argument('-c', dest='cert', help='SSL certificate')
 
 
-def print_usage_and_exit(status):
-    print('Usage: rpc_http_proxy.py <server IP> <server port> <user name>' +
-          ' <password> <SPDK RPC socket (optional, default: /var/tmp/spdk.sock)>')
-    sys.exit(status)
-
-
 def rpc_call(req):
     global rpc_sock
 
