@@ -112,6 +112,21 @@ struct latency_info {
 	uint64_t	total;
 };
 
+
+enum job_config_rw {
+	JOB_CONFIG_RW_READ = 0,
+	JOB_CONFIG_RW_WRITE,
+	JOB_CONFIG_RW_RANDREAD,
+	JOB_CONFIG_RW_RANDWRITE,
+	JOB_CONFIG_RW_RW,
+	JOB_CONFIG_RW_RANDRW,
+	JOB_CONFIG_RW_VERIFY,
+	JOB_CONFIG_RW_RESET,
+	JOB_CONFIG_RW_UNMAP,
+	JOB_CONFIG_RW_FLUSH,
+	JOB_CONFIG_RW_WRITE_ZEROES,
+};
+
 struct bdevperf_job {
 	char				*name;
 	struct spdk_bdev		*bdev;
@@ -120,7 +135,7 @@ struct bdevperf_job {
 	TAILQ_ENTRY(bdevperf_job)	link;
 	struct spdk_thread		*thread;
 
-	const char			*workload_type;
+	enum job_config_rw		workload_type;
 	int				io_size;
 	int				rw_percentage;
 	bool				is_random;
@@ -172,20 +187,6 @@ static struct spdk_bdevperf g_bdevperf = {
 	.running_jobs = 0,
 };
 
-enum job_config_rw {
-	JOB_CONFIG_RW_READ = 0,
-	JOB_CONFIG_RW_WRITE,
-	JOB_CONFIG_RW_RANDREAD,
-	JOB_CONFIG_RW_RANDWRITE,
-	JOB_CONFIG_RW_RW,
-	JOB_CONFIG_RW_RANDRW,
-	JOB_CONFIG_RW_VERIFY,
-	JOB_CONFIG_RW_RESET,
-	JOB_CONFIG_RW_UNMAP,
-	JOB_CONFIG_RW_FLUSH,
-	JOB_CONFIG_RW_WRITE_ZEROES,
-};
-
 /* Storing values from a section of job config file */
 struct job_config {
 	const char			*name;
@@ -230,6 +231,40 @@ struct lcore_thread {
 
 TAILQ_HEAD(, lcore_thread) g_lcore_thread_list
 	= TAILQ_HEAD_INITIALIZER(g_lcore_thread_list);
+
+
+static char *
+parse_workload_type(enum job_config_rw ret)
+{
+	switch (ret) {
+	case JOB_CONFIG_RW_READ:
+		return "read";
+	case JOB_CONFIG_RW_RANDREAD:
+		return "randread";
+	case JOB_CONFIG_RW_WRITE:
+		return "write";
+	case JOB_CONFIG_RW_RANDWRITE:
+		return "randwrite";
+	case JOB_CONFIG_RW_VERIFY:
+		return "verify";
+	case JOB_CONFIG_RW_RESET:
+		return "reset";
+	case JOB_CONFIG_RW_UNMAP:
+		return "unmap";
+	case JOB_CONFIG_RW_WRITE_ZEROES:
+		return "write_zeroes";
+	case JOB_CONFIG_RW_FLUSH:
+		return "flush";
+	case JOB_CONFIG_RW_RW:
+		return "rw";
+	case JOB_CONFIG_RW_RANDRW:
+		return "randrw";
+	default:
+		fprintf(stderr, "wrong workload_type code\n");
+	}
+
+	return NULL;
+}
 
 /*
  * Cumulative Moving Average (CMA): average of all data up to current
@@ -290,8 +325,17 @@ performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job
 	uint64_t total_io;
 	struct latency_info latency_info = {};
 
-	printf("\r Job: %s (Core Mask 0x%s)\n", job->name,
-	       spdk_cpuset_fmt(spdk_thread_get_cpumask(job->thread)));
+	if (job->workload_type == JOB_CONFIG_RW_RW || job->workload_type == JOB_CONFIG_RW_RANDRW) {
+		printf("\r Job: %s (Core Mask 0x%s, workload: %s, percentage: %d, depth: %d, IO size: %d)\n",
+		       job->name, spdk_cpuset_fmt(spdk_thread_get_cpumask(job->thread)),
+		       parse_workload_type(job->workload_type), job->rw_percentage,
+		       job->queue_depth, job->io_size);
+	} else {
+		printf("\r Job: %s (Core Mask 0x%s, workload: %s, depth: %d, IO size: %d)\n",
+		       job->name, spdk_cpuset_fmt(spdk_thread_get_cpumask(job->thread)),
+		       parse_workload_type(job->workload_type), job->queue_depth, job->io_size);
+	}
+
 
 	if (job->io_failed > 0 && !job->reset && !job->continue_on_failure) {
 		printf("\r Job: %s ended in about %.2f seconds with error\n",
@@ -1696,7 +1740,7 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 		return -ENOMEM;
 	}
 
-	job->workload_type = g_workload_type;
+	job->workload_type = config->rw;
 	job->io_size = config->bs;
 	job->rw_percentage = config->rwmixread;
 	job->continue_on_failure = g_continue_on_failure;
