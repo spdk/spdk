@@ -4675,7 +4675,6 @@ This feature is considered as experimental.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Name of the NVMe controller
-dev_path                | Required | string      | Path to the CUSE controller device, e.g. spdk/nvme0
 
 #### Example
 
@@ -4683,13 +4682,12 @@ Example request:
 
 ~~~json
 {
-  "params": {
-    "dev_path": "spdk/nvme0",
-    "name": "Nvme0"
-  },
   "jsonrpc": "2.0",
   "method": "bdev_nvme_cuse_register",
-  "id": 1
+  "id": 1,
+  "params": {
+    "name": "Nvme0"
+  }
 }
 ~~~
 
