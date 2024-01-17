@@ -370,6 +370,10 @@ do {										\
         (task)->has_aux = true;							\
 } while (0)
 
+SPDK_LOG_DEPRECATION_REGISTER(accel_flags,
+			      "The flags parameter is unused and deprecated",
+			      "v24.05", 0);
+
 /* \b `flags` is int in API, since it is not used anywahere. we narrowed it down to uint8_t internally
  * To prevent possible problems in the future, add a macro which checks that the value of `flags` passed in the API
  * doesn't exceed 1 byte. */
@@ -377,6 +381,9 @@ do {										\
 do {											\
 	assert(((flags) & (~0xff)) == 0 && "task::flags needs to be extended");		\
 	(task)->flags = (uint8_t)(flags);						\
+	if ((task)->flags) {								\
+		SPDK_LOG_DEPRECATED(accel_flags);					\
+	}										\
 } while (0)										\
 
 /* Accel framework public API for copy function */
