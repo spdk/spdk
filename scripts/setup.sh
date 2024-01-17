@@ -228,19 +228,33 @@ function linux_hugetlbfs_mounts() {
 
 function get_block_dev_from_bdf() {
 	local bdf=$1
-	local block blocks=() ctrl
+	local block blocks=() ctrl sub
 
-	for block in /sys/block/*; do
-		if [[ $block == *nvme* ]]; then
-			ctrl=$(readlink -f "$block/device") ctrl=${ctrl##*/}
-			if [[ -e /sys/class/nvme/$ctrl && $(< "/sys/class/nvme/$ctrl/address") == "$bdf" ]]; then
-				blocks+=("${block##*/}")
-			fi
-		elif [[ $(readlink -f "$block/device") == *"/$bdf/"* ]]; then
+	for block in /sys/block/!(nvme*); do
+		if [[ $(readlink -f "$block/device") == *"/$bdf/"* ]]; then
 			blocks+=("${block##*/}")
 		fi
 	done
+
+	blocks+=($(get_block_dev_from_nvme "$bdf"))
+
 	printf '%s\n' "${blocks[@]}"
+}
+
+function get_block_dev_from_nvme() {
+	local bdf=$1 block ctrl sub
+
+	for ctrl in /sys/class/nvme/nvme*; do
+		[[ -e $ctrl/address && $(< "$ctrl/address") == "$bdf" ]] || continue
+		sub=$(< "$ctrl/subsysnqn") && break
+	done
+
+	[[ -n $sub ]] || return 0
+
+	for block in /sys/block/nvme*; do
+		[[ -e $block/hidden && $(< "$block/hidden") == 1 ]] && continue
+		[[ $(< "$block/device/subsysnqn") == "$sub" ]] && echo "${block##*/}"
+	done
 }
 
 function get_used_bdf_block_devs() {
