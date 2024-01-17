@@ -84,11 +84,9 @@ build_rpm_from_gen_spec() {
 	mkdir -p "$sourcedir" "$rpmdir" "$rpmbuilddir"
 
 	# Prepare the source at the default location - default %prep step requires
-	# extra dir inside the source package hence the dance with symlinking to
-	# the repo (after the extraction source should be under spdk-$version/) -
-	# make sure symlinking is done outside of the repo to avoid nasty loops.
-	ln -s "$rootdir" "/tmp/spdk-$version"
-	tar -czhf "$sourcedir/spdk-$version.tar.gz" -C /tmp "spdk-$version"
+	# extra dir inside the source package.
+	cp -r "$rootdir" "/tmp/spdk-$version"
+	tar -czf "$sourcedir/spdk-$version.tar.gz" -C /tmp "spdk-$version"
 
 	# See rpm.sh for details on the PYTHONPATH HACK
 	PYTHONPATH="$(python3 -c "import sys; print('%s' % ':'.join(sys.path)[1:])")" \
