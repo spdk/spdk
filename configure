@@ -1015,7 +1015,7 @@ fi
 if [[ "${CONFIG[NVME_CUSE]}" = "y" ]]; then
 	if ! echo -e '#define FUSE_USE_VERSION 31\n#include <fuse3/cuse_lowlevel.h>\n#include <fuse3/fuse_lowlevel.h>\n#include <fuse3/fuse_opt.h>\nint main(void) { return 0; }\n' \
 		| "${BUILD_CMD[@]}" -lfuse3 -D_FILE_OFFSET_BITS=64 - 2> /dev/null; then
-		echo "--with-cuse requires libfuse3."
+		echo "--with-nvme-cuse requires libfuse3."
 		echo "Please install then re-run this script."
 		exit 1
 	fi
