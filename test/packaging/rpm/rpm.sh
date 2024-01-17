@@ -19,6 +19,12 @@ DEPS=no
 
 export MAKEFLAGS BUILDDIR DEPS
 
+cleanup() {
+	rm -rf "$builddir"
+	rm -rf "$(rpm --eval "%{_topdir}")"
+	rm -rf /tmp/spdk-test_gen_spec
+}
+
 install_uninstall_rpms() {
 	local rpms
 
@@ -101,6 +107,8 @@ build_shared_native_dpdk_rpm() {
 	source /tmp/spdk-ld-path
 	build_rpm --with-shared --with-dpdk="$SPDK_RUN_EXTERNAL_DPDK"
 }
+
+trap 'cleanup' EXIT
 
 run_test "build_shared_rpm" build_shared_rpm
 run_test "build_rpm_from_gen_spec" build_rpm_from_gen_spec
