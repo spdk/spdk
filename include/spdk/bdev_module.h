@@ -832,6 +832,9 @@ struct spdk_bdev_io {
 			/** count of outstanding batched split I/Os */
 			uint32_t split_outstanding;
 
+			/** Specify whether each DIF check type is enabled. */
+			uint32_t dif_check_flags;
+
 			struct {
 				/** Whether the buffer should be populated with the real data */
 				uint8_t populate : 1;

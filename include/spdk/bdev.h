@@ -227,8 +227,14 @@ struct spdk_bdev_ext_io_opts {
 	 * request is submitted.
 	 */
 	struct spdk_accel_sequence *accel_sequence;
+	/**
+	 * Specify which DIF check flags to exclude on a per-IO basis. The default value is
+	 * all zeroes, which includes all of the flags set for this bdev. If any of the flags
+	 * is set, that flag will be excluded from any DIF operations for this IO.
+	 */
+	uint32_t dif_check_flags_exclude_mask;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_ext_io_opts) == 40, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_ext_io_opts) == 44, "Incorrect size");
 
 /**
  * Get the options for the bdev module.
