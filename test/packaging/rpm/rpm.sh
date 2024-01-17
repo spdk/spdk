@@ -24,6 +24,9 @@ install_uninstall_rpms() {
 
 	rpms=("${1:-$builddir/rpm/}/$(uname -m)/"*.rpm)
 
+	# Clean repo first to make sure linker won't follow $SPDK_APP's RUNPATH
+	make -C "$rootdir" clean $MAKEFLAGS
+
 	sudo rpm -i "${rpms[@]}"
 	# Check if we can find one of the apps in the PATH now and verify if it doesn't miss
 	# any libs.
@@ -66,7 +69,7 @@ build_rpm_with_rpmed_dpdk() {
 
 build_rpm_from_gen_spec() {
 	local version=test_gen_spec
-	local sourcedir rpmdir
+	local sourcedir rpmdir rpmbuilddir
 
 	GEN_SPEC=yes \
 		USE_DEFAULT_DIRS=yes \
@@ -74,8 +77,11 @@ build_rpm_from_gen_spec() {
 		"$rootdir/rpmbuild/rpm.sh" --with-shared > "$builddir/gen-spdk.spec"
 
 	# Default locations should be in use.
-	sourcedir=$(rpm --eval "%{_sourcedir}") rpmdir=$(rpm --eval "%{_rpmdir}")
-	mkdir -p "$sourcedir" "$rpmdir"
+	sourcedir=$(rpm --eval "%{_sourcedir}")
+	rpmdir=$(rpm --eval "%{_rpmdir}")
+	rpmbuilddir=$(rpm --eval "%{_builddir}")
+
+	mkdir -p "$sourcedir" "$rpmdir" "$rpmbuilddir"
 
 	# Prepare the source at the default location - default %prep step requires
 	# extra dir inside the source package hence the dance with symlinking to
@@ -87,6 +93,8 @@ build_rpm_from_gen_spec() {
 	# See rpm.sh for details on the PYTHONPATH HACK
 	PYTHONPATH="$(python3 -c "import sys; print('%s' % ':'.join(sys.path)[1:])")" \
 		rpmbuild -ba "$builddir/gen-spdk.spec"
+	# Clean builddir to make sure linker won't follow $SPDK_APP's RUNPATH
+	rm -rf "$rpmbuilddir"
 	install_uninstall_rpms "$rpmdir"
 }
 
