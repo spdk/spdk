@@ -511,4 +511,12 @@ void raid_bdev_write_superblock(struct raid_bdev *raid_bdev, raid_bdev_write_sb_
 int raid_bdev_load_base_bdev_superblock(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 					raid_bdev_load_sb_cb cb, void *cb_ctx);
 
+struct spdk_raid_bdev_opts {
+	/* Size of the background process window in KiB */
+	uint32_t process_window_size_kb;
+};
+
+void raid_bdev_get_opts(struct spdk_raid_bdev_opts *opts);
+int raid_bdev_set_opts(const struct spdk_raid_bdev_opts *opts);
+
 #endif /* SPDK_BDEV_RAID_INTERNAL_H */

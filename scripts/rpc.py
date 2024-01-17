@@ -2109,6 +2109,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-l', '--lvs-name', help='only lvols in lvol store name', required=False)
     p.set_defaults(func=bdev_lvol_get_lvols)
 
+    def bdev_raid_set_options(args):
+        rpc.bdev.bdev_raid_set_options(args.client,
+                                       process_window_size_kb=args.process_window_size_kb)
+
+    p = subparsers.add_parser('bdev_raid_set_options',
+                              help='Set options for bdev raid.')
+    p.add_argument('-w', '--process-window-size-kb', type=int,
+                   help="Background process (e.g. rebuild) window size in KiB")
+
+    p.set_defaults(func=bdev_raid_set_options)
+
     def bdev_raid_get_bdevs(args):
         print_json(rpc.bdev.bdev_raid_get_bdevs(args.client,
                                                 category=args.category))

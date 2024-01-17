@@ -10406,6 +10406,48 @@ Example response:
 
 ## RAID
 
+### bdev_raid_set_options {#rpc_bdev_raid_set_options}
+
+Set options for bdev raid.
+
+This RPC can be called at any time, but the new value will only take effect for new raid bdevs.
+
+The `process_window_size_kb` parameter defines the size of the "window" (LBA range of the raid bdev)
+in which a background process like rebuild performs its work. Any positive value is valid, but the value
+actually used by a raid bdev can be adjusted to the size of the raid bdev or the write unit size.
+
+#### Parameters
+
+Name                       | Optional | Type        | Description
+-------------------------- | -------- | ----------- | -----------
+process_window_size_kb     | Optional | number      | Background process (e.g. rebuild) window size in KiB
+
+#### Example
+
+Example request:
+
+~~~json
+request:
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_raid_set_options",
+  "id": 1,
+  "params": {
+    "process_window_size_kb": 512
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### bdev_raid_get_bdevs {#rpc_bdev_raid_get_bdevs}
 
 This is used to list all the raid bdev details based on the input category requested. Category should be one

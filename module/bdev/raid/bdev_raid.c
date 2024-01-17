@@ -14,8 +14,9 @@
 #include "spdk/likely.h"
 
 #define RAID_OFFSET_BLOCKS_INVALID	UINT64_MAX
-#define RAID_BDEV_PROCESS_WINDOW_SIZE	1024 * 1024
 #define RAID_BDEV_PROCESS_MAX_QD	16
+
+#define RAID_BDEV_PROCESS_WINDOW_SIZE_KB_DEFAULT 1024
 
 static bool g_shutdown_started = false;
 
@@ -73,6 +74,28 @@ struct raid_process_finish_action {
 	void *cb_ctx;
 	TAILQ_ENTRY(raid_process_finish_action) link;
 };
+
+static struct spdk_raid_bdev_opts g_opts = {
+	.process_window_size_kb = RAID_BDEV_PROCESS_WINDOW_SIZE_KB_DEFAULT,
+};
+
+void
+raid_bdev_get_opts(struct spdk_raid_bdev_opts *opts)
+{
+	*opts = g_opts;
+}
+
+int
+raid_bdev_set_opts(const struct spdk_raid_bdev_opts *opts)
+{
+	if (opts->process_window_size_kb == 0) {
+		return -EINVAL;
+	}
+
+	g_opts = *opts;
+
+	return 0;
+}
 
 static struct raid_bdev_module *
 raid_bdev_module_find(enum raid_level level)
@@ -1232,6 +1255,28 @@ raid_bdev_exit(void)
 	}
 }
 
+static void
+raid_bdev_opts_config_json(struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "bdev_raid_set_options");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_uint32(w, "process_window_size_kb", g_opts.process_window_size_kb);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
+static int
+raid_bdev_config_json(struct spdk_json_write_ctx *w)
+{
+	raid_bdev_opts_config_json(w);
+
+	return 0;
+}
+
 /*
  * brief:
  * raid_bdev_get_ctx_size is used to return the context size of bdev_io for raid
@@ -1253,6 +1298,7 @@ static struct spdk_bdev_module g_raid_if = {
 	.module_init = raid_bdev_init,
 	.fini_start = raid_bdev_fini_start,
 	.module_fini = raid_bdev_exit,
+	.config_json = raid_bdev_config_json,
 	.get_ctx_size = raid_bdev_get_ctx_size,
 	.examine_disk = raid_bdev_examine,
 	.async_init = false,
@@ -2709,7 +2755,8 @@ raid_bdev_process_alloc(struct raid_bdev *raid_bdev, enum raid_process_type type
 	process->raid_bdev = raid_bdev;
 	process->type = type;
 	process->target = target;
-	process->max_window_size = spdk_max(RAID_BDEV_PROCESS_WINDOW_SIZE / raid_bdev->bdev.blocklen,
+	process->max_window_size = spdk_max(spdk_divide_round_up(g_opts.process_window_size_kb * 1024UL,
+					    raid_bdev->bdev.blocklen),
 					    raid_bdev->bdev.write_unit_size);
 	TAILQ_INIT(&process->requests);
 	TAILQ_INIT(&process->finish_actions);

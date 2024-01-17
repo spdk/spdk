@@ -605,3 +605,34 @@ err:
 	rpc_bdev_raid_remove_base_bdev_done(request, rc);
 }
 SPDK_RPC_REGISTER("bdev_raid_remove_base_bdev", rpc_bdev_raid_remove_base_bdev, SPDK_RPC_RUNTIME)
+
+static const struct spdk_json_object_decoder rpc_bdev_raid_options_decoders[] = {
+	{"process_window_size_kb", offsetof(struct spdk_raid_bdev_opts, process_window_size_kb), spdk_json_decode_uint32, true},
+};
+
+static void
+rpc_bdev_raid_set_options(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	struct spdk_raid_bdev_opts opts;
+	int rc;
+
+	raid_bdev_get_opts(&opts);
+	if (params && spdk_json_decode_object(params, rpc_bdev_raid_options_decoders,
+					      SPDK_COUNTOF(rpc_bdev_raid_options_decoders),
+					      &opts)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
+						 "spdk_json_decode_object failed");
+		return;
+	}
+
+	rc = raid_bdev_set_opts(&opts);
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+	} else {
+		spdk_jsonrpc_send_bool_response(request, true);
+	}
+
+	return;
+}
+SPDK_RPC_REGISTER("bdev_raid_set_options", rpc_bdev_raid_set_options,
+		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)

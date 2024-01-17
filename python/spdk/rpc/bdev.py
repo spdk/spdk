@@ -389,6 +389,20 @@ def bdev_null_resize(client, name, new_size):
     return client.call('bdev_null_resize', params)
 
 
+def bdev_raid_set_options(client, process_window_size_kb=None):
+    """Set options for bdev raid.
+
+    Args:
+        process_window_size_kb: Background process (e.g. rebuild) window size in KiB
+    """
+    params = {}
+
+    if process_window_size_kb is not None:
+        params['process_window_size_kb'] = process_window_size_kb
+
+    return client.call('bdev_raid_set_options', params)
+
+
 def bdev_raid_get_bdevs(client, category):
     """Get list of raid bdevs based on category
 
