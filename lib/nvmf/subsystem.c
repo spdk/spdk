@@ -1700,7 +1700,8 @@ static struct spdk_bdev_module ns_bdev_module = {
 	.name	= "NVMe-oF Target",
 };
 
-static int nvmf_ns_load_reservation(const char *file, struct spdk_nvmf_reservation_info *info);
+static int nvmf_ns_load_reservation(const struct spdk_nvmf_ns *ns,
+				    struct spdk_nvmf_reservation_info *info);
 static int nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns,
 				       struct spdk_nvmf_reservation_info *info);
 
@@ -1852,7 +1853,7 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 			goto err;
 		}
 
-		rc = nvmf_ns_load_reservation(ptpl_file, &info);
+		rc = nvmf_ns_load_reservation(ns, &info);
 		if (!rc) {
 			rc = nvmf_ns_reservation_restore(ns, &info);
 			if (rc) {
@@ -2214,7 +2215,7 @@ static const struct spdk_json_object_decoder nvmf_ns_pr_decoders[] = {
 };
 
 static int
-nvmf_ns_load_reservation(const char *file, struct spdk_nvmf_reservation_info *info)
+nvmf_ns_load_reservation(const struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservation_info *info)
 {
 	FILE *fd;
 	size_t json_size;
@@ -2222,6 +2223,7 @@ nvmf_ns_load_reservation(const char *file, struct spdk_nvmf_reservation_info *in
 	void *json = NULL, *end;
 	struct spdk_json_val *values = NULL;
 	struct _nvmf_ns_reservation res = {};
+	const char *file = ns->ptpl_file;
 	uint32_t i;
 
 	fd = fopen(file, "r");
@@ -2385,8 +2387,10 @@ nvmf_ns_json_write_cb(void *cb_ctx, const void *data, size_t size)
 }
 
 static int
-nvmf_ns_reservation_update(const char *file, struct spdk_nvmf_reservation_info *info)
+nvmf_ns_reservation_update(const struct spdk_nvmf_ns *ns,
+			   const struct spdk_nvmf_reservation_info *info)
 {
+	const char *file = ns->ptpl_file;
 	struct spdk_json_write_ctx *w;
 	uint32_t i;
 	int rc = 0;
@@ -2456,7 +2460,7 @@ nvmf_ns_update_reservation_info(struct spdk_nvmf_ns *ns)
 	info.num_regs = i;
 	info.ptpl_activated = ns->ptpl_activated;
 
-	return nvmf_ns_reservation_update(ns->ptpl_file, &info);
+	return nvmf_ns_reservation_update(ns, &info);
 }
 
 static struct spdk_nvmf_registrant *
