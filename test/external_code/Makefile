@@ -8,6 +8,8 @@ rootdir = $(shell dirname $(shell realpath $(word 1,$(MAKEFILE_LIST))))/../..
 SPDK_HEADER_DIR	?= $(rootdir)/include
 SPDK_LIB_DIR	?= $(rootdir)/build/lib
 DPDK_LIB_DIR	?= $(rootdir)/dpdk/build/lib
+ISAL_LIB_DIR	?= $(rootdir)/isa-l/.libs
+ISAL_CRYPTO_LIB_DIR ?= $(rootdir)/isa-l-crypto/.libs
 VFIO_LIB_DIR	?= $(rootdir)/build/libvfio-user/usr/local/lib
 
 ifneq ($(SPDK_HEADER_DIR),)
@@ -20,6 +22,14 @@ endif
 
 ifneq ($(DPDK_LIB_DIR),)
 COMMON_CFLAGS+=-L$(DPDK_LIB_DIR)
+endif
+
+ifneq ($(ISAL_LIB_DIR),)
+COMMON_CFLAGS+=-L$(ISAL_LIB_DIR)
+endif
+
+ifneq ($(ISAL_CRYPTO_LIB_DIR),)
+COMMON_CFLAGS+=-L$(ISAL_CRYPTO_LIB_DIR)
 endif
 
 ifneq ($(VFIO_LIB_DIR),)

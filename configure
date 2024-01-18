@@ -1219,7 +1219,11 @@ if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 	else
 		ISAL_OPTS=()
 	fi
-	ISAL_CRYPTO_OPTS+=("--enable-shared=no")
+	if [[ -n "${CONFIG[SHARED]}" ]]; then
+		ISAL_OPTS+=("--enable-shared=yes")
+	else
+		ISAL_OPTS+=("--enable-shared=no")
+	fi
 	ISAL_OPTS+=("--prefix=${CONFIG[PREFIX]}")
 	echo -n "Configuring ISA-L (logfile: $ISAL_LOG)..."
 	./autogen.sh &> $ISAL_LOG
@@ -1248,7 +1252,11 @@ if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 	if [[ -n "${CONFIG[CROSS_PREFIX]}" ]]; then
 		ISAL_CRYPTO_OPTS+=("--host=${CONFIG[CROSS_PREFIX]}")
 	fi
-	ISAL_CRYPTO_OPTS+=("--enable-shared=no")
+	if [[ -n "${CONFIG[SHARED]}" ]]; then
+		ISAL_CRYPTO_OPTS+=("--enable-shared=yes")
+	else
+		ISAL_CRYPTO_OPTS+=("--enable-shared=no")
+	fi
 	ISAL_CRYPTO_OPTS+=("--prefix=${CONFIG[PREFIX]}")
 	echo -n "Configuring ISA-L-crypto (logfile: $ISAL_CRYPTO_LOG)..."
 	./autogen.sh &> $ISAL_CRYPTO_LOG
