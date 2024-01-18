@@ -5543,7 +5543,8 @@ bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 	}
 
 	if (opts->rdma_srq_size != 0 ||
-	    opts->rdma_max_cq_size != 0) {
+	    opts->rdma_max_cq_size != 0 ||
+	    opts->rdma_cm_event_timeout_ms != 0) {
 		struct spdk_nvme_transport_opts drv_opts;
 
 		spdk_nvme_transport_get_opts(&drv_opts, sizeof(drv_opts));
@@ -5552,6 +5553,9 @@ bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 		}
 		if (opts->rdma_max_cq_size != 0) {
 			drv_opts.rdma_max_cq_size = opts->rdma_max_cq_size;
+		}
+		if (opts->rdma_cm_event_timeout_ms != 0) {
+			drv_opts.rdma_cm_event_timeout_ms = opts->rdma_cm_event_timeout_ms;
 		}
 
 		ret = spdk_nvme_transport_set_opts(&drv_opts, sizeof(drv_opts));
@@ -8044,6 +8048,7 @@ bdev_nvme_opts_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_bool(w, "io_path_stat", g_opts.io_path_stat);
 	spdk_json_write_named_bool(w, "allow_accel_sequence", g_opts.allow_accel_sequence);
 	spdk_json_write_named_uint32(w, "rdma_max_cq_size", g_opts.rdma_max_cq_size);
+	spdk_json_write_named_uint16(w, "rdma_cm_event_timeout_ms", g_opts.rdma_cm_event_timeout_ms);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);

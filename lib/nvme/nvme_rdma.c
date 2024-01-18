@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 /*
@@ -39,9 +39,6 @@
 
 /* number of STAILQ entries for holding pending RDMA CM events. */
 #define NVME_RDMA_NUM_CM_EVENTS			256
-
-/* CM event processing timeout */
-#define NVME_RDMA_QPAIR_CM_EVENT_TIMEOUT_US	1000000
 
 /* The default size for a shared rdma completion queue. */
 #define DEFAULT_NVME_RDMA_CQ_SIZE		4096
@@ -639,8 +636,8 @@ nvme_rdma_process_event_start(struct nvme_rdma_qpair *rqpair,
 
 	rqpair->expected_evt_type = evt;
 	rqpair->evt_cb = evt_cb;
-	rqpair->evt_timeout_ticks = (NVME_RDMA_QPAIR_CM_EVENT_TIMEOUT_US * spdk_get_ticks_hz()) /
-				    SPDK_SEC_TO_USEC + spdk_get_ticks();
+	rqpair->evt_timeout_ticks = (g_spdk_nvme_transport_opts.rdma_cm_event_timeout_ms * 1000 *
+				     spdk_get_ticks_hz()) / SPDK_SEC_TO_USEC + spdk_get_ticks();
 
 	return 0;
 }

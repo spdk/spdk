@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2015 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *   Copyright (c) 2023 Samsung Electronics Co., Ltd. All rights reserved.
  */
 
@@ -4279,6 +4279,13 @@ struct spdk_nvme_transport_opts {
 	 * It is zero, which means unlimited, by default.
 	 */
 	uint32_t rdma_max_cq_size;
+
+	/**
+	 * It is used for RDMA transport.
+	 *
+	 * RDMA CM event timeout in milliseconds.
+	 */
+	uint16_t rdma_cm_event_timeout_ms;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_transport_opts) == 24, "Incorrect size");
 

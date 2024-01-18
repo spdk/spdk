@@ -3,7 +3,7 @@
 #  Copyright (C) 2016 Intel Corporation
 #  All rights reserved.
 #  Copyright (c) 2022 Dell Inc, or its subsidiaries.
-#  Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#  Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
 import logging
@@ -575,7 +575,8 @@ if __name__ == "__main__":
                                        rdma_srq_size=args.rdma_srq_size,
                                        io_path_stat=args.io_path_stat,
                                        allow_accel_sequence=args.allow_accel_sequence,
-                                       rdma_max_cq_size=args.rdma_max_cq_size)
+                                       rdma_max_cq_size=args.rdma_max_cq_size,
+                                       rdma_cm_event_timeout_ms=args.rdma_cm_event_timeout_ms)
 
     p = subparsers.add_parser('bdev_nvme_set_options',
                               help='Set options for the bdev nvme type. This is startup command.')
@@ -658,6 +659,8 @@ if __name__ == "__main__":
                    controller also supports them.''', action='store_true')
     p.add_argument('--rdma-max-cq-size',
                    help='The maximum size of a rdma completion queue. Default: 0 (unlimited)', type=int)
+    p.add_argument('--rdma-cm-event-timeout-ms',
+                   help='Time to wait for RDMA CM event. Only applicable for RDMA transports.', type=int)
 
     p.set_defaults(func=bdev_nvme_set_options)
 

@@ -2,6 +2,7 @@
 #  Copyright (C) 2017 Intel Corporation.
 #  All rights reserved.
 #  Copyright (c) 2022 Dell Inc, or its subsidiaries.
+#  Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 
 def bdev_set_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None,
@@ -605,7 +606,7 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
                           transport_ack_timeout=None, ctrlr_loss_timeout_sec=None, reconnect_delay_sec=None,
                           fast_io_fail_timeout_sec=None, disable_auto_failback=None, generate_uuids=None,
                           transport_tos=None, nvme_error_stat=None, rdma_srq_size=None, io_path_stat=None,
-                          allow_accel_sequence=None, rdma_max_cq_size=None):
+                          allow_accel_sequence=None, rdma_max_cq_size=None, rdma_cm_event_timeout_ms=None):
     """Set options for the bdev nvme. This is startup command.
 
     Args:
@@ -653,6 +654,7 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
         allow_accel_sequence: Allow NVMe bdevs to advertise support for accel sequences if the
         controller also supports them. (optional)
         rdma_max_cq_size: The maximum size of a rdma completion queue. Default: 0 (unlimited) (optional)
+        rdma_cm_event_timeout_ms: Time to wait for RDMA CM event. Only applicable for RDMA transports.
 
     """
     params = {}
@@ -738,6 +740,9 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
 
     if rdma_max_cq_size is not None:
         params['rdma_max_cq_size'] = rdma_max_cq_size
+
+    if rdma_cm_event_timeout_ms is not None:
+        params['rdma_cm_event_timeout_ms'] = rdma_cm_event_timeout_ms
 
     return client.call('bdev_nvme_set_options', params)
 
