@@ -146,9 +146,6 @@ ln -s /usr/libexec/spdk/scripts/bash-completion/spdk %{buildroot}/etc/bash_compl
 ln -s /usr/local/include %{buildroot}/usr/libexec/spdk
 
 %files
-/etc/profile.d/*
-/etc/bash_completion.d/*
-/usr/libexec/spdk/*
 /usr/local/bin/*
 /usr/local/lib/python%{python3_version}/site-packages/spdk*/*
 
@@ -190,6 +187,20 @@ SPDK static development libraries and header
 %endif
 
 %post devel
+ldconfig
+
+%package scripts
+Summary: SPDK scripts and utilities
+
+%description scripts
+SPDK scripts and utilities
+
+%files scripts
+/usr/libexec/spdk/*
+/etc/profile.d/*
+/etc/bash_completion.d/*
+
+%post scripts
 ldconfig
 
 %changelog
