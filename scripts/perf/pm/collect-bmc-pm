@@ -5,6 +5,10 @@
 
 set -e
 
+pmdir=$(readlink -f "$(dirname "$0")")
+rootdir=$(readlink -f "$pmdir/../../../")
+source "$pmdir/common"
+
 hex() { printf '0x%02x\n' "$@"; }
 
 calc() { bc <<< "scale=2; $*"; }
@@ -401,10 +405,10 @@ dump_readings() {
 
 		readings+=("Total: ${#readings[@]}")
 		sensor="${sensor//[[:space:]]/_}"
-		printf '%s\n' "$avg" > "$output_dir/${prefix:+${prefix}_}avg_${sensor}.bmc.pm.txt"
-		printf '%s\n' "${readings[@]}" > "$output_dir/${prefix:+${prefix}_}all_${sensor}.bmc.pm.txt"
-		printf 'Dumped avg to %s\n' "$output_dir/${prefix:+${prefix}_}avg_${sensor}.bmc.pm.txt" >&2
-		printf 'Dumped all to %s\n' "$output_dir/${prefix:+${prefix}_}all_${sensor}.bmc.pm.txt" >&2
+		printf '%s\n' "$avg" > "$PM_OUTPUTDIR/${prefix:+${prefix}_}avg_${sensor}.bmc.pm.txt"
+		printf '%s\n' "${readings[@]}" > "$PM_OUTPUTDIR/${prefix:+${prefix}_}all_${sensor}.bmc.pm.txt"
+		printf 'Dumped avg to %s\n' "$PM_OUTPUTDIR/${prefix:+${prefix}_}avg_${sensor}.bmc.pm.txt" >&2
+		printf 'Dumped all to %s\n' "$PM_OUTPUTDIR/${prefix:+${prefix}_}all_${sensor}.bmc.pm.txt" >&2
 	done
 }
 
@@ -413,6 +417,7 @@ utc() {
 }
 
 cleanup() {
+	rm_pm_pid
 	[[ -f $sdr_cache && $remove_sdr_cache == yes ]] && rm "$sdr_cache"
 	dump_readings
 }
@@ -462,7 +467,6 @@ help() {
 
 is_root
 
-output_dir=/tmp
 interval=1
 remove_sdr_cache=yes
 log_to_file=no
@@ -479,7 +483,7 @@ while getopts :hi:s:d:t:xlp:c:r arg; do
 			help
 			exit 0
 			;;
-		d) output_dir=$OPTARG ;;
+		d) PM_OUTPUTDIR=$OPTARG ;;
 		s) extra_power_sensors+=("$OPTARG") ;;
 		i) interface=${OPTARG,,} ;;
 		t) interval=$OPTARG ;;
@@ -492,16 +496,18 @@ while getopts :hi:s:d:t:xlp:c:r arg; do
 	esac
 done
 
-declare -r sdr_cache=$output_dir/sdr.cache
+declare -r sdr_cache=$PM_OUTPUTDIR/sdr.cache
 declare -r log_file=${prefix:+${prefix}_}${0##*/}.bmc.pm.log
 
-mkdir -p "$output_dir"
+mkdir -p "$PM_OUTPUTDIR"
 if [[ $log_to_file == yes ]]; then
-	printf 'Redirecting to %s\n' "$output_dir/$log_file" >&2
-	exec > "$output_dir/$log_file" 2>&1
+	printf 'Redirecting to %s\n' "$PM_OUTPUTDIR/$log_file" >&2
+	exec > "$PM_OUTPUTDIR/$log_file" 2>&1
 fi
 
+save_pm_pid
 trap 'cleanup' EXIT
+trap 'retag' USR1
 
 ipmi_supported
 power_support

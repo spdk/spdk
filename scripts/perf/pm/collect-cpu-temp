@@ -175,8 +175,6 @@ init_modules() {
 	done
 }
 
-run_module() { "$1" | tee -a /dev/stderr; }
-
 collect_readings() {
 	local _count=$count module data
 
@@ -185,7 +183,7 @@ collect_readings() {
 	while ((count <= 0 ? 1 : _count--)); do
 		for module in "${modules_to_run[@]}"; do
 			local -n ref=${modules_out_refs["$module"]}
-			data=$(run_module "$module")
+			data=$("$module")
 			[[ -n $data ]] && ref+=("$data")
 		done
 		sleep "${interval}s"
@@ -202,11 +200,13 @@ cleanup() {
 	for module in "${!modules_out_refs[@]}"; do
 		local -n _ref=${modules_out_refs["$module"]}
 		((${#_ref[@]} > 0)) || continue
-		printf '%s\n' "${_ref[@]}" > "$output_dir/${prefix:+${prefix}_}$module.pm.txt"
+		printf '%s\n' "${_ref[@]}" > "$PM_OUTPUTDIR/${prefix:+${prefix}_}$module.pm.txt"
 		printf 'Dumped %s module to %s\n' \
 			"$module" \
-			"$output_dir/${prefix:+${prefix}_}$module.pm.txt"
+			"$PM_OUTPUTDIR/${prefix:+${prefix}_}$module.pm.txt"
 	done
+
+	rm_pm_pid
 }
 
 help() {
@@ -236,13 +236,12 @@ count=0
 debug=0
 interval=1
 log_to_file=no
-output_dir=/tmp
 prefix=""
 
 while getopts c:d:hlp:t:v opt; do
 	case "$opt" in
 		c) count=$OPTARG ;;
-		d) output_dir=$OPTARG ;;
+		d) PM_OUTPUTDIR=$OPTARG ;;
 		h)
 			help
 			exit 0
@@ -258,12 +257,13 @@ shift $((OPTIND - 1))
 
 declare -r log_file=${prefix:+${prefix}_}${0##*/}.pm.log
 
-mkdir -p "$output_dir"
+mkdir -p "$PM_OUTPUTDIR"
 if [[ $log_to_file == yes ]]; then
-	printf 'Redirecting to %s\n' "$output_dir/$log_file" >&2
-	exec > "$output_dir/$log_file" 2>&1
+	printf 'Redirecting to %s\n' "$PM_OUTPUTDIR/$log_file" >&2
+	exec > "$PM_OUTPUTDIR/$log_file" 2>&1
 fi
 
+save_pm_pid
 trap 'cleanup' EXIT
 trap 'retag' USR1
 

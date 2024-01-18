@@ -12,12 +12,13 @@ source "$pmdir/common"
 help() {
 	cat <<- HELP
 
-		Usage: $0 [-h] [-c count] [-d dir] [-p prefix] [-r reprint_header_count]
+		Usage: $0 [-h] [-c count] [-d dir] [-l] [-p prefix] [-r reprint_header_count]
 
 		-h - Print this message.
 		-c - Execute count times. 0 is the default and it means to run
 		     indefinitely.
 		-d - Directory where results should be saved. Default is /tmp.
+		-l - Save output of the script to a log file (dir/${0##*/}.pm.log).
 		-p - Add prefix to saved files.
 		-r - Stat count after which header should be re-printed. Default is 20.
 		-t - How long to wait before each stat dump. Default is 1s.
@@ -61,23 +62,28 @@ _vmstat() {
 		fi
 		printf '%s\n' "${_vmstat[@]}"
 		sleep "${interval}s"
-	done > >(tee "$output_dir/$log_file")
+	done
+}
+
+cleanup() {
+	rm_pm_pid
 }
 
 count=0
 interval=1
-output_dir=/tmp
+log_to_file=no
 prefix=""
 reprint_header=20
 
-while getopts c:d:hp:r:t: opt; do
+while getopts c:d:hlp:r:t: opt; do
 	case "$opt" in
 		c) count=$OPTARG ;;
-		d) output_dir=$OPTARG ;;
+		d) PM_OUTPUTDIR=$OPTARG ;;
 		h)
 			help
 			exit 0
 			;;
+		l) log_to_file=yes ;;
 		p) prefix=$OPTARG ;;
 		r) reprint_header=$OPTARG ;;
 		t) interval=$OPTARG ;;
@@ -87,8 +93,14 @@ done
 
 declare -r log_file=${prefix:+${prefix}_}${0##*/}.pm.log
 
-mkdir -p "$output_dir"
+mkdir -p "$PM_OUTPUTDIR"
+if [[ $log_to_file == yes ]]; then
+	printf 'Redirecting to %s\n' "$PM_OUTPUTDIR/$log_file" >&2
+	exec > "$PM_OUTPUTDIR/$log_file" 2>&1
+fi
 
+save_pm_pid
+trap 'cleanup' EXIT
 trap 'retag' USR1
 
 _vmstat "$count" "$interval" "$reprint_header"

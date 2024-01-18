@@ -449,3 +449,6 @@ scanbuild_exclude+=" --exclude $rootdir/xnvme --exclude /tmp"
 
 scanbuild="scan-build -o $output_dir/scan-build-tmp $scanbuild_exclude --status-bugs"
 config_params=$(get_config_params)
+
+start_monitor_resources
+trap 'stop_monitor_resources' EXIT

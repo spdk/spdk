@@ -35,6 +35,11 @@ set -e
 shopt -s nullglob
 shopt -s extglob
 
+if [ -z "${output_dir:-}" ]; then
+	mkdir -p "$rootdir/../output"
+	export output_dir="$rootdir/../output"
+fi
+
 if [[ -e $rootdir/test/common/build_config.sh ]]; then
 	source "$rootdir/test/common/build_config.sh"
 elif [[ -e $rootdir/mk/config.mk ]]; then
@@ -278,11 +283,6 @@ else
 fi
 
 export HUGEMEM=$HUGEMEM
-
-if [ -z "${output_dir:-}" ]; then
-	mkdir -p "$rootdir/../output"
-	export output_dir="$rootdir/../output"
-fi
 
 NO_HUGE=()
 TEST_MODE=
@@ -1089,10 +1089,7 @@ function run_test() {
 	fi
 
 	# Signal our daemons to update the test tag
-	echo "$test_domain" > "$TEST_TAG_FILE"
-	for pid in "$output_dir/collect-"@(cpu-load|cpu-temp|vmstat).pid; do
-		kill -USR1 "$(< "$pid")" || true
-	done
+	update_tag_monitor_resources "$test_domain"
 
 	timing_enter $test_name
 	echo "************************************"
@@ -1422,13 +1419,7 @@ function autotest_cleanup() {
 		fi > "$output_dir/proc_list.txt" 2>&1 || :
 	fi
 
-	local pid
-	for pid in "$output_dir/"*.pid; do
-		killprocess "$(< "$pid")"
-	done || :
-
-	rm -f "$output_dir/"*.pid
-	rm -f "$TEST_TAG_FILE"
+	stop_monitor_resources
 
 	xtrace_restore
 	return $autotest_es
