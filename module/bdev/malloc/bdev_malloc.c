@@ -54,7 +54,7 @@ malloc_verify_pi(struct spdk_bdev_io *bdev_io)
 			       bdev->md_interleave,
 			       bdev->dif_is_head_of_md,
 			       bdev->dif_type,
-			       bdev->dif_check_flags,
+			       bdev_io->u.bdev.dif_check_flags,
 			       bdev_io->u.bdev.offset_blocks & 0xFFFFFFFF,
 			       0xFFFF, 0, 0, 0, &dif_opts);
 	if (rc != 0) {
