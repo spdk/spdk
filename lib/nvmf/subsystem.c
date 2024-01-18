@@ -1858,12 +1858,15 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 
 	if (nvmf_ns_is_ptpl_capable(ns)) {
 		rc = nvmf_ns_reservation_load(ns, &info);
-		if (!rc) {
-			rc = nvmf_ns_reservation_restore(ns, &info);
-			if (rc) {
-				SPDK_ERRLOG("Subsystem restore reservation failed\n");
-				goto err;
-			}
+		if (rc) {
+			SPDK_ERRLOG("Subsystem load reservation failed\n");
+			goto err;
+		}
+
+		rc = nvmf_ns_reservation_restore(ns, &info);
+		if (rc) {
+			SPDK_ERRLOG("Subsystem restore reservation failed\n");
+			goto err;
 		}
 	}
 
@@ -2235,7 +2238,7 @@ nvmf_ns_reservation_load_json(const struct spdk_nvmf_ns *ns,
 	/* It's not an error if the file does not exist */
 	if (!fd) {
 		SPDK_NOTICELOG("File %s does not exist\n", file);
-		return -ENOENT;
+		return 0;
 	}
 
 	/* Load all persist file contents into a local buffer */
