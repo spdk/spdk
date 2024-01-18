@@ -858,7 +858,6 @@ spdk_accel_submit_dif_verify(struct spdk_io_channel *ch,
 	accel_task->op_code = SPDK_ACCEL_OPC_DIF_VERIFY;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
-	accel_task->step_cb_fn = NULL;
 
 	return accel_submit_task(accel_ch, accel_task);
 }
@@ -885,7 +884,6 @@ spdk_accel_submit_dif_generate(struct spdk_io_channel *ch,
 	accel_task->op_code = SPDK_ACCEL_OPC_DIF_GENERATE;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
-	accel_task->step_cb_fn = NULL;
 
 	return accel_submit_task(accel_ch, accel_task);
 }
@@ -914,7 +912,6 @@ spdk_accel_submit_dif_generate_copy(struct spdk_io_channel *ch, struct iovec *ds
 	accel_task->op_code = SPDK_ACCEL_OPC_DIF_GENERATE_COPY;
 	accel_task->src_domain = NULL;
 	accel_task->dst_domain = NULL;
-	accel_task->step_cb_fn = NULL;
 
 	return accel_submit_task(accel_ch, accel_task);
 }
