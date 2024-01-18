@@ -1836,9 +1836,11 @@ nvmf_ctrlr_set_features_reservation_persistence(struct spdk_nvmf_request *req)
 	if (cmd->nsid != SPDK_NVME_GLOBAL_NS_TAG && ns && ns->ptpl_file) {
 		ns->ptpl_activated = ptpl;
 	} else if (cmd->nsid == SPDK_NVME_GLOBAL_NS_TAG) {
-		for (ns = spdk_nvmf_subsystem_get_first_ns(ctrlr->subsys); ns && ns->ptpl_file;
+		for (ns = spdk_nvmf_subsystem_get_first_ns(ctrlr->subsys); ns;
 		     ns = spdk_nvmf_subsystem_get_next_ns(ctrlr->subsys, ns)) {
-			ns->ptpl_activated = ptpl;
+			if (ns->ptpl_file) {
+				ns->ptpl_activated = ptpl;
+			}
 		}
 	} else {
 		SPDK_ERRLOG("Set Features - Invalid Namespace ID or Reservation Configuration\n");
