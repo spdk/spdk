@@ -1387,12 +1387,13 @@ struct spdk_nvmf_registrant_info {
 };
 
 struct spdk_nvmf_reservation_info {
-	bool					ptpl_activated;
-	enum spdk_nvme_reservation_type		rtype;
 	uint64_t				crkey;
+	uint8_t					rtype;
+	uint8_t					ptpl_activated;
 	char					bdev_uuid[SPDK_UUID_STRING_LEN];
 	char					holder_uuid[SPDK_UUID_STRING_LEN];
-	uint32_t				num_regs;
+	uint8_t					reserved[3];
+	uint8_t					num_regs;
 	struct spdk_nvmf_registrant_info	registrants[SPDK_NVMF_MAX_NUM_REGISTRANTS];
 };
 
