@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *   Copyright (c) 2022 Dell Inc, or its subsidiaries. All rights reserved.
  */
 
@@ -8022,7 +8022,6 @@ bdev_nvme_opts_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_uint64(w, "timeout_us", g_opts.timeout_us);
 	spdk_json_write_named_uint64(w, "timeout_admin_us", g_opts.timeout_admin_us);
 	spdk_json_write_named_uint32(w, "keep_alive_timeout_ms", g_opts.keep_alive_timeout_ms);
-	spdk_json_write_named_uint32(w, "transport_retry_count", g_opts.transport_retry_count);
 	spdk_json_write_named_uint32(w, "arbitration_burst", g_opts.arbitration_burst);
 	spdk_json_write_named_uint32(w, "low_priority_weight", g_opts.low_priority_weight);
 	spdk_json_write_named_uint32(w, "medium_priority_weight", g_opts.medium_priority_weight);
@@ -8031,15 +8030,20 @@ bdev_nvme_opts_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_uint64(w, "nvme_ioq_poll_period_us", g_opts.nvme_ioq_poll_period_us);
 	spdk_json_write_named_uint32(w, "io_queue_requests", g_opts.io_queue_requests);
 	spdk_json_write_named_bool(w, "delay_cmd_submit", g_opts.delay_cmd_submit);
+	spdk_json_write_named_uint32(w, "transport_retry_count", g_opts.transport_retry_count);
 	spdk_json_write_named_int32(w, "bdev_retry_count", g_opts.bdev_retry_count);
 	spdk_json_write_named_uint8(w, "transport_ack_timeout", g_opts.transport_ack_timeout);
 	spdk_json_write_named_int32(w, "ctrlr_loss_timeout_sec", g_opts.ctrlr_loss_timeout_sec);
 	spdk_json_write_named_uint32(w, "reconnect_delay_sec", g_opts.reconnect_delay_sec);
 	spdk_json_write_named_uint32(w, "fast_io_fail_timeout_sec", g_opts.fast_io_fail_timeout_sec);
+	spdk_json_write_named_bool(w, "disable_auto_failback", g_opts.disable_auto_failback);
 	spdk_json_write_named_bool(w, "generate_uuids", g_opts.generate_uuids);
 	spdk_json_write_named_uint8(w, "transport_tos", g_opts.transport_tos);
+	spdk_json_write_named_bool(w, "nvme_error_stat", g_opts.nvme_error_stat);
+	spdk_json_write_named_uint32(w, "rdma_srq_size", g_opts.rdma_srq_size);
 	spdk_json_write_named_bool(w, "io_path_stat", g_opts.io_path_stat);
 	spdk_json_write_named_bool(w, "allow_accel_sequence", g_opts.allow_accel_sequence);
+	spdk_json_write_named_uint32(w, "rdma_max_cq_size", g_opts.rdma_max_cq_size);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
