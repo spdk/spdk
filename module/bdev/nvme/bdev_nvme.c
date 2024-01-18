@@ -2884,7 +2884,6 @@ bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		     bool success)
 {
 	struct nvme_bdev_io *bio = (struct nvme_bdev_io *)bdev_io->driver_ctx;
-	struct spdk_bdev *bdev = bdev_io->bdev;
 	int ret;
 
 	if (!success) {
@@ -2903,7 +2902,7 @@ bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 			      bdev_io->u.bdev.md_buf,
 			      bdev_io->u.bdev.num_blocks,
 			      bdev_io->u.bdev.offset_blocks,
-			      bdev->dif_check_flags,
+			      bdev_io->u.bdev.dif_check_flags,
 			      bdev_io->u.bdev.memory_domain,
 			      bdev_io->u.bdev.memory_domain_ctx,
 			      bdev_io->u.bdev.accel_sequence);
@@ -2925,13 +2924,14 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		if (bdev_io->u.bdev.iovs && bdev_io->u.bdev.iovs[0].iov_base) {
+
 			rc = bdev_nvme_readv(nbdev_io,
 					     bdev_io->u.bdev.iovs,
 					     bdev_io->u.bdev.iovcnt,
 					     bdev_io->u.bdev.md_buf,
 					     bdev_io->u.bdev.num_blocks,
 					     bdev_io->u.bdev.offset_blocks,
-					     bdev->dif_check_flags,
+					     bdev_io->u.bdev.dif_check_flags,
 					     bdev_io->u.bdev.memory_domain,
 					     bdev_io->u.bdev.memory_domain_ctx,
 					     bdev_io->u.bdev.accel_sequence);
@@ -2948,7 +2948,7 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 				      bdev_io->u.bdev.md_buf,
 				      bdev_io->u.bdev.num_blocks,
 				      bdev_io->u.bdev.offset_blocks,
-				      bdev->dif_check_flags,
+				      bdev_io->u.bdev.dif_check_flags,
 				      bdev_io->u.bdev.memory_domain,
 				      bdev_io->u.bdev.memory_domain_ctx,
 				      bdev_io->u.bdev.accel_sequence);
@@ -2960,7 +2960,7 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 					bdev_io->u.bdev.md_buf,
 					bdev_io->u.bdev.num_blocks,
 					bdev_io->u.bdev.offset_blocks,
-					bdev->dif_check_flags);
+					bdev_io->u.bdev.dif_check_flags);
 		break;
 	case SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE:
 		rc = bdev_nvme_comparev_and_writev(nbdev_io,
@@ -2971,7 +2971,7 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 						   bdev_io->u.bdev.md_buf,
 						   bdev_io->u.bdev.num_blocks,
 						   bdev_io->u.bdev.offset_blocks,
-						   bdev->dif_check_flags);
+						   bdev_io->u.bdev.dif_check_flags);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		rc = bdev_nvme_unmap(nbdev_io,
@@ -2999,7 +2999,7 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 					    bdev_io->u.bdev.md_buf,
 					    bdev_io->u.bdev.num_blocks,
 					    bdev_io->u.bdev.offset_blocks,
-					    bdev->dif_check_flags);
+					    bdev_io->u.bdev.dif_check_flags);
 		break;
 	case SPDK_BDEV_IO_TYPE_GET_ZONE_INFO:
 		rc = bdev_nvme_get_zone_info(nbdev_io,
@@ -7026,7 +7026,8 @@ bdev_nvme_verify_pi_error(struct nvme_bdev_io *bio)
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       bdev->blocklen, bdev->md_len, bdev->md_interleave,
-			       bdev->dif_is_head_of_md, bdev->dif_type, bdev->dif_check_flags,
+			       bdev->dif_is_head_of_md, bdev->dif_type,
+			       bdev_io->u.bdev.dif_check_flags,
 			       bdev_io->u.bdev.offset_blocks, 0, 0, 0, 0, &dif_opts);
 	if (rc != 0) {
 		SPDK_ERRLOG("Initialization of DIF context failed\n");
