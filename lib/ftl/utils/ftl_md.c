@@ -1042,13 +1042,7 @@ clear_mirror_cb(struct spdk_ftl_dev *dev, struct ftl_md *secondary, int status)
 		io_done(primary);
 	} else {
 		/* Now continue the persist procedure on the primary MD object */
-		if (0 == io_init(primary, FTL_MD_OP_CLEAR) &&
-		    0 == pattern_prepare(primary, *(int *)secondary->io.data,
-					 secondary->io.md)) {
-			io_submit(primary);
-		} else {
-			spdk_thread_send_msg(spdk_get_thread(), exception, primary);
-		}
+		io_submit(primary);
 	}
 }
 
@@ -1064,8 +1058,14 @@ ftl_md_clear(struct ftl_md *md, int data_pattern, union ftl_md_vss *vss_pattern)
 		md_mirror->cb = clear_mirror_cb;
 		md_mirror->owner.private = md;
 
-		/* First persist the mirror */
-		ftl_md_clear(md_mirror, data_pattern, vss_pattern);
+		/* The pattern bufs will not be available outside of this fn context */
+		/* Configure the IO for the primary region now */
+		if (0 == io_init(md, FTL_MD_OP_CLEAR) && 0 == pattern_prepare(md, data_pattern, vss_pattern)) {
+			/* First persist the mirror */
+			ftl_md_clear(md_mirror, data_pattern, vss_pattern);
+		} else {
+			spdk_thread_send_msg(spdk_get_thread(), exception, md);
+		}
 		return;
 	}
 
