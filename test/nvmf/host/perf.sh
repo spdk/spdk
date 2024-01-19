@@ -55,7 +55,10 @@ fi
 
 $SPDK_BIN_DIR/spdk_nvme_perf -q 1 -o 4096 -w randrw -M 50 -t 1 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
 $SPDK_BIN_DIR/spdk_nvme_perf -q 32 -o 4096 -w randrw -M 50 -t 1 -HI -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
-$SPDK_BIN_DIR/spdk_nvme_perf -q 128 -o 262144 -O 16384 -w randrw -M 50 -t 2 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
+# Temporarily disable on e810 due to issue #3228
+if ! [[ "$SPDK_TEST_NVMF_NICS" == "e810" && "$TEST_TRANSPORT" == "rdma" ]]; then
+	$SPDK_BIN_DIR/spdk_nvme_perf -q 128 -o 262144 -O 16384 -w randrw -M 50 -t 2 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
+fi
 # this perf run aims to test handling of multi SGL payload in RDMA transport. Here we send 9 sge elements while
 # standard read_depth is 16. That triggers split of Write IO into several parts
 $SPDK_BIN_DIR/spdk_nvme_perf -q 128 -o 36964 -O 4096 -w randrw -M 50 -t 5 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -c 0xf -P 4
