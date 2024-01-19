@@ -237,6 +237,8 @@ DEFINE_STUB(spdk_sock_get_impl_name, const char *, (struct spdk_sock *sock), "")
 
 DEFINE_STUB(spdk_nvmf_subsystem_is_discovery, bool, (struct spdk_nvmf_subsystem *subsystem), false);
 
+DEFINE_STUB(nvmf_ns_is_ptpl_capable, bool, (const struct spdk_nvmf_ns *ns), false);
+
 struct spdk_io_channel *
 spdk_accel_get_io_channel(void)
 {

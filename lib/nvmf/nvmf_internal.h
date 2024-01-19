@@ -419,11 +419,7 @@ void nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
 				       struct spdk_nvmf_ns *ns,
 				       enum spdk_nvme_reservation_notification_log_page_type type);
 
-static inline bool
-nvmf_ns_is_ptpl_capable(struct spdk_nvmf_ns *ns)
-{
-	return ns->ptpl_file != NULL;
-}
+bool nvmf_ns_is_ptpl_capable(const struct spdk_nvmf_ns *ns);
 
 /*
  * Abort zero-copy requests that already got the buffer (received zcopy_start cb), but haven't

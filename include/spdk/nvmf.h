@@ -1397,6 +1397,31 @@ struct spdk_nvmf_reservation_info {
 	struct spdk_nvmf_registrant_info	registrants[SPDK_NVMF_MAX_NUM_REGISTRANTS];
 };
 
+struct spdk_nvmf_ns_reservation_ops {
+	/* Checks if the namespace supports the Persist Through Power Loss capability. */
+	bool (*is_ptpl_capable)(const struct spdk_nvmf_ns *ns);
+
+	/* Called when namespace reservation information needs to be updated.
+	 * The new reservation information is provided via the info parameter.
+	 * Returns 0 on success, negated errno on failure. */
+	int (*update)(const struct spdk_nvmf_ns *ns, const struct spdk_nvmf_reservation_info *info);
+
+	/* Called when restoring the namespace reservation information.
+	 * The new reservation information is returned via the info parameter.
+	 * Returns 0 on success, negated errno on failure. */
+	int (*load)(const struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservation_info *info);
+};
+
+/**
+ * Set custom handlers for namespace reservation operations.
+ *
+ * This call allows to override the default namespace reservation operations with custom handlers.
+ * This function may only be called before any namespace has been added.
+ *
+ * @param ops The reservation ops handers
+ */
+void spdk_nvmf_set_custom_ns_reservation_ops(const struct spdk_nvmf_ns_reservation_ops *ops);
+
 #ifdef __cplusplus
 }
 #endif

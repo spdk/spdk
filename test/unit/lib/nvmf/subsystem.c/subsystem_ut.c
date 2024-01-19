@@ -462,7 +462,6 @@ test_spdk_nvmf_subsystem_set_sn(void)
 static struct spdk_nvmf_subsystem g_subsystem;
 static struct spdk_nvmf_ctrlr g_ctrlr1_A, g_ctrlr2_A, g_ctrlr_B, g_ctrlr_C;
 static struct spdk_nvmf_ns g_ns;
-static struct spdk_bdev g_bdev;
 struct spdk_nvmf_subsystem_pg_ns_info g_ns_info;
 
 void
@@ -481,8 +480,8 @@ ut_reservation_init(void)
 	g_ns.subsystem = &g_subsystem;
 	g_ns.ptpl_file = NULL;
 	g_ns.ptpl_activated = false;
-	spdk_uuid_generate(&g_bdev.uuid);
-	g_ns.bdev = &g_bdev;
+	spdk_uuid_generate(&g_bdevs[0].uuid);
+	g_ns.bdev = &g_bdevs[0];
 
 	/* Host A has two controllers */
 	spdk_uuid_generate(&g_ctrlr1_A.hostid);
@@ -823,7 +822,7 @@ test_reservation_register_with_ptpl(void)
 	SPDK_CU_ASSERT_FATAL(!spdk_uuid_compare(&g_ctrlr1_A.hostid, &reg->hostid));
 	/* Load reservation information from configuration file */
 	memset(&info, 0, sizeof(info));
-	rc = nvmf_ns_load_reservation(&g_ns, &info);
+	rc = nvmf_ns_reservation_load(&g_ns, &info);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(info.ptpl_activated == true);
 
@@ -837,7 +836,7 @@ test_reservation_register_with_ptpl(void)
 	SPDK_CU_ASSERT_FATAL(g_ns.ptpl_activated == false);
 	rc = nvmf_ns_update_reservation_info(&g_ns);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
-	rc = nvmf_ns_load_reservation(&g_ns, &info);
+	rc = nvmf_ns_reservation_load(&g_ns, &info);
 	SPDK_CU_ASSERT_FATAL(rc < 0);
 	unlink(g_ns.ptpl_file);
 
@@ -948,7 +947,7 @@ test_reservation_acquire_release_with_ptpl(void)
 	SPDK_CU_ASSERT_FATAL(!spdk_uuid_compare(&g_ctrlr1_A.hostid, &reg->hostid));
 	/* Load reservation information from configuration file */
 	memset(&info, 0, sizeof(info));
-	rc = nvmf_ns_load_reservation(&g_ns, &info);
+	rc = nvmf_ns_reservation_load(&g_ns, &info);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(info.ptpl_activated == true);
 
@@ -962,7 +961,7 @@ test_reservation_acquire_release_with_ptpl(void)
 	rc = nvmf_ns_update_reservation_info(&g_ns);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	memset(&info, 0, sizeof(info));
-	rc = nvmf_ns_load_reservation(&g_ns, &info);
+	rc = nvmf_ns_reservation_load(&g_ns, &info);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(info.ptpl_activated == true);
 	SPDK_CU_ASSERT_FATAL(info.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY);
@@ -980,7 +979,7 @@ test_reservation_acquire_release_with_ptpl(void)
 	rc = nvmf_ns_update_reservation_info(&g_ns);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	memset(&info, 0, sizeof(info));
-	rc = nvmf_ns_load_reservation(&g_ns, &info);
+	rc = nvmf_ns_reservation_load(&g_ns, &info);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(info.rtype == 0);
 	SPDK_CU_ASSERT_FATAL(info.crkey == 0);
@@ -1808,6 +1807,109 @@ test_nvmf_subsystem_state_change(void)
 	spdk_bit_array_free(&tgt.subsystem_ids);
 }
 
+static bool
+ut_is_ptpl_capable(const struct spdk_nvmf_ns *ns)
+{
+	return true;
+}
+
+static struct spdk_nvmf_reservation_info g_resv_info;
+
+static int
+ut_update_reservation(const struct spdk_nvmf_ns *ns, const struct spdk_nvmf_reservation_info *info)
+{
+	g_resv_info = *info;
+
+	return 0;
+}
+
+static int
+ut_load_reservation(const struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservation_info *info)
+{
+	*info = g_resv_info;
+
+	return 0;
+}
+
+static void
+test_nvmf_reservation_custom_ops(void)
+{
+	struct spdk_nvmf_ns_reservation_ops ops = {
+		.is_ptpl_capable = ut_is_ptpl_capable,
+		.update = ut_update_reservation,
+		.load = ut_load_reservation,
+	};
+	struct spdk_nvmf_request *req;
+	struct spdk_nvme_cpl *rsp;
+	struct spdk_nvmf_registrant *reg;
+	bool update_sgroup = false;
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem subsystem = {
+		.max_nsid = 4,
+		.tgt = &tgt,
+	};
+	uint32_t nsid;
+	struct spdk_nvmf_ns *ns;
+	int rc;
+
+	subsystem.ns = calloc(subsystem.max_nsid, sizeof(struct spdk_nvmf_subsystem_ns *));
+	SPDK_CU_ASSERT_FATAL(subsystem.ns != NULL);
+	subsystem.ana_group = calloc(subsystem.max_nsid, sizeof(uint32_t));
+	SPDK_CU_ASSERT_FATAL(subsystem.ana_group != NULL);
+
+	spdk_nvmf_set_custom_ns_reservation_ops(&ops);
+
+	ut_reservation_init();
+
+	req = ut_reservation_build_req(16);
+	rsp = &req->rsp->nvme_cpl;
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+
+	/* Add a registrant and activate ptpl */
+	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_REGISTER_KEY, 0,
+					      SPDK_NVME_RESERVE_PTPL_PERSIST_POWER_LOSS, 0, 0xa1);
+	update_sgroup = nvmf_ns_reservation_register(&g_ns, &g_ctrlr1_A, req);
+	SPDK_CU_ASSERT_FATAL(update_sgroup == true);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	SPDK_CU_ASSERT_FATAL(g_ns.ptpl_activated == true);
+	rc = nvmf_ns_update_reservation_info(&g_ns);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	/* Acquire a reservation */
+	rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	ut_reservation_build_acquire_request(req, SPDK_NVME_RESERVE_ACQUIRE, 0,
+					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY, 0xa1, 0x0);
+	update_sgroup = nvmf_ns_reservation_acquire(&g_ns, &g_ctrlr1_A, req);
+	SPDK_CU_ASSERT_FATAL(update_sgroup == true);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	rc = nvmf_ns_update_reservation_info(&g_ns);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	/* Add the namespace using a different subsystem.
+	 * Reservation information should be restored. */
+	nsid = spdk_nvmf_subsystem_add_ns_ext(&subsystem, g_ns.bdev->name, NULL, 0, NULL);
+	CU_ASSERT(nsid == 1);
+
+	ns = _nvmf_subsystem_get_ns(&subsystem, nsid);
+	SPDK_CU_ASSERT_FATAL(ns != NULL);
+	CU_ASSERT(ns->crkey == 0xa1);
+	CU_ASSERT(ns->rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY);
+	CU_ASSERT(ns->ptpl_activated == true);
+
+	reg = nvmf_ns_reservation_get_registrant(ns, &g_ctrlr1_A.hostid);
+	SPDK_CU_ASSERT_FATAL(reg != NULL);
+	SPDK_CU_ASSERT_FATAL(!spdk_uuid_compare(&g_ctrlr1_A.hostid, &reg->hostid));
+	CU_ASSERT(reg == ns->holder);
+
+	rc = spdk_nvmf_subsystem_remove_ns(&subsystem, nsid);
+	CU_ASSERT(rc == 0);
+
+	free(subsystem.ns);
+	free(subsystem.ana_group);
+	ut_reservation_free_req(req);
+	ut_reservation_deinit();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1839,6 +1941,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_nqn_is_valid);
 	CU_ADD_TEST(suite, test_nvmf_ns_reservation_restore);
 	CU_ADD_TEST(suite, test_nvmf_subsystem_state_change);
+	CU_ADD_TEST(suite, test_nvmf_reservation_custom_ops);
 
 	allocate_threads(1);
 	set_thread(0);

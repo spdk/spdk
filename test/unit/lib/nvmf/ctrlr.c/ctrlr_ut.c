@@ -309,6 +309,12 @@ nvmf_bdev_ctrlr_zcopy_end(struct spdk_nvmf_request *req, bool commit)
 	spdk_nvmf_request_complete(req);
 }
 
+bool
+nvmf_ns_is_ptpl_capable(const struct spdk_nvmf_ns *ns)
+{
+	return ns->ptpl_file != NULL;
+}
+
 static void
 test_get_log_page(void)
 {

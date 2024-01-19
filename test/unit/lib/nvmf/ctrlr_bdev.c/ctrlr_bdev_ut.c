@@ -281,6 +281,12 @@ spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, uint32_t *cdw0,
 	*sc = g_bdev_nvme_status_sc;
 }
 
+bool
+nvmf_ns_is_ptpl_capable(const struct spdk_nvmf_ns *ns)
+{
+	return ns->ptpl_file != NULL;
+}
+
 static void
 test_get_rw_params(void)
 {
