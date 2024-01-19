@@ -6,6 +6,17 @@
 #include "crc_internal.h"
 #include "spdk/crc64.h"
 
+#ifdef SPDK_CONFIG_ISAL
+#include "isa-l/include/crc64.h"
+
+uint64_t
+spdk_crc64_nvme(const void *buf, size_t len, uint64_t crc)
+{
+	return crc64_rocksoft_refl(crc, (const uint8_t *)buf, len);
+}
+
+#else
+
 static const uint64_t crc64_rocksoft_refl_table[256] = {
 	0x0000000000000000ULL, 0x7f6ef0c830358979ULL,
 	0xfedde190606b12f2ULL, 0x81b31158505e9b8bULL,
@@ -155,3 +166,4 @@ spdk_crc64_nvme(const void *buf, size_t len, uint64_t crc)
 {
 	return crc64_rocksoft_refl_base(crc, (const uint8_t *)buf, len);
 }
+#endif
