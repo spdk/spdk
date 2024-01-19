@@ -1203,8 +1203,7 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 	if (cuse_nvme_ctrlr_update_namespaces(ctrlr_device) < 0) {
 		SPDK_ERRLOG("Cannot start CUSE namespace devices.");
 		cuse_nvme_ctrlr_stop(ctrlr_device);
-		rv = -1;
-		goto clear_and_free;
+		return -1;
 	}
 
 	return 0;
