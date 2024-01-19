@@ -926,7 +926,7 @@ class Initiator(Server):
 
     def gen_fio_config(self, rw, rwmixread, block_size, io_depth, subsys_no,
                        num_jobs=None, ramp_time=0, run_time=10, rate_iops=0,
-                       offset=False, offset_inc=0):
+                       offset=False, offset_inc=0, numa_align=True):
         fio_conf_template = """
 [global]
 ioengine={ioengine}
@@ -968,7 +968,7 @@ rate_iops={rate_iops}
             threads = range(0, len(self.subsystem_info_list))
 
         filename_section = self.gen_fio_filename_conf(self.subsystem_info_list, threads, io_depth, num_jobs,
-                                                      offset, offset_inc)
+                                                      offset, offset_inc, numa_align)
 
         fio_config = fio_conf_template.format(ioengine=self.ioengine, spdk_conf=self.spdk_conf,
                                               rw=rw, rwmixread=rwmixread, block_size=block_size,
@@ -1499,7 +1499,7 @@ class KernelInitiator(Initiator):
                                    self.exec_cmd(["cat", "/sys/class/nvme/%s/address" % nvme_ctrl]))
         return self.get_route_nic_numa(remote_nvme_ip.group(0))
 
-    def gen_fio_filename_conf(self, subsystems, threads, io_depth, num_jobs=1, offset=False, offset_inc=0):
+    def gen_fio_filename_conf(self, subsystems, threads, io_depth, num_jobs=1, offset=False, offset_inc=0, numa_align=True):
         self.available_cpus = self.get_numa_cpu_map()
         if len(threads) >= len(subsystems):
             threads = range(0, len(subsystems))
@@ -1534,7 +1534,9 @@ class KernelInitiator(Initiator):
             if offset:
                 offset_section = self.gen_fio_offset_section(offset_inc, num_jobs)
 
-            numa_opts = self.gen_fio_numa_section(r, num_jobs)
+            numa_opts = ""
+            if numa_align:
+                numa_opts = self.gen_fio_numa_section(r, num_jobs)
 
             filename_section = "\n".join([filename_section, header, disks, iodepth, numa_opts, offset_section, ""])
 
@@ -1648,7 +1650,7 @@ class SPDKInitiator(Initiator):
 
         return json.dumps(spdk_cfg_section, indent=2)
 
-    def gen_fio_filename_conf(self, subsystems, threads, io_depth, num_jobs=1, offset=False, offset_inc=0):
+    def gen_fio_filename_conf(self, subsystems, threads, io_depth, num_jobs=1, offset=False, offset_inc=0, numa_align=True):
         self.available_cpus = self.get_numa_cpu_map()
         filename_section = ""
         if len(threads) >= len(subsystems):
@@ -1683,7 +1685,9 @@ class SPDKInitiator(Initiator):
             if offset:
                 offset_section = self.gen_fio_offset_section(offset_inc, num_jobs)
 
-            numa_opts = self.gen_fio_numa_section(r, num_jobs)
+            numa_opts = ""
+            if numa_align:
+                numa_opts = self.gen_fio_numa_section(r, num_jobs)
 
             filename_section = "\n".join([filename_section, header, disks, iodepth, numa_opts, offset_section, ""])
 
@@ -1765,7 +1769,8 @@ def run_single_fio_test(args,
 def run_fio_tests(args, initiators, target_obj,
                   fio_workloads, fio_rw_mix_read,
                   fio_run_num, fio_ramp_time, fio_run_time,
-                  fio_rate_iops, fio_offset, fio_offset_inc):
+                  fio_rate_iops, fio_offset, fio_offset_inc,
+                  fio_numa_align):
 
     for block_size, io_depth, rw in fio_workloads:
         configs = []
@@ -1781,7 +1786,8 @@ def run_fio_tests(args, initiators, target_obj,
                                    fio_run_time,
                                    fio_rate_iops,
                                    fio_offset,
-                                   fio_offset_inc)
+                                   fio_offset_inc,
+                                   fio_numa_align)
             configs.append(cfg)
 
         run_single_fio_test(args,
@@ -1888,6 +1894,9 @@ if __name__ == "__main__":
             fio_offset_inc = 0
             if "offset_inc" in data[k]:
                 fio_offset_inc = data[k]["offset_inc"]
+            fio_numa_align = True
+            if "numa_align" in data[k]:
+                fio_numa_align = data[k]["numa_align"]
         else:
             continue
 
@@ -1909,7 +1918,7 @@ if __name__ == "__main__":
         # Run FIO tests
         run_fio_tests(args, initiators, target_obj, fio_workloads, fio_rw_mix_read,
                       fio_run_num, fio_ramp_time, fio_run_time, fio_rate_iops,
-                      fio_offset, fio_offset_inc)
+                      fio_offset, fio_offset_inc, fio_numa_align)
 
     except Exception as e:
         logging.error("Exception occurred while running FIO tests")
