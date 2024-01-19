@@ -465,18 +465,20 @@ UNINSTALL_SHARED_LIB=\
 INSTALL_APP=\
 	$(Q)echo "  INSTALL $(DESTDIR)$(bindir)/$(notdir $<)"; \
 	install -d -m 755 "$(DESTDIR)$(bindir)"; \
-	install -m 755 "$<" "$(DESTDIR)$(bindir)/"
+	install -m 755 "$<" "$(DESTDIR)$(bindir)/"; \
+	patchelf --remove-rpath "$(DESTDIR)$(bindir)/$(notdir $<)" || true
 
 # Uninstall an app binary
 UNINSTALL_APP=\
-        $(Q)echo "  UNINSTALL $(DESTDIR)$(bindir)/$(notdir $(APP))"; \
+	$(Q)echo "  UNINSTALL $(DESTDIR)$(bindir)/$(notdir $(APP))"; \
 	rm -f "$(DESTDIR)$(bindir)/$(notdir $(APP))"; \
 	if [ -d "$(DESTDIR)$(bindir)" ] && [ $$(ls -A "$(DESTDIR)$(bindir)" | wc -l) -eq 0 ]; then rm -rf "$(DESTDIR)$(bindir)"; fi
 
 INSTALL_EXAMPLE=\
 	$(Q)echo "  INSTALL $(DESTDIR)$(bindir)/spdk_$(strip $(subst /,_,$(subst $(SPDK_ROOT_DIR)/examples/, ,$(CURDIR))))"; \
 	install -d -m 755 "$(DESTDIR)$(bindir)"; \
-	install -m 755 "$<" "$(DESTDIR)$(bindir)/spdk_$(strip $(subst /,_,$(subst $(SPDK_ROOT_DIR)/examples/, ,$(CURDIR))))"
+	install -m 755 "$<" "$(DESTDIR)$(bindir)/spdk_$(strip $(subst /,_,$(subst $(SPDK_ROOT_DIR)/examples/, ,$(CURDIR))))"; \
+	patchelf --remove-rpath "$(DESTDIR)$(bindir)/spdk_$(strip $(subst /,_,$(subst $(SPDK_ROOT_DIR)/examples/, ,$(CURDIR))))/$(notdir $<)" || true
 
 # Uninstall an example binary
 UNINSTALL_EXAMPLE=\
