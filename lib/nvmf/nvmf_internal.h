@@ -452,6 +452,14 @@ _nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 	return subsystem->ns[nsid - 1];
 }
 
+static inline struct spdk_nvmf_ns *
+nvmf_ctrlr_get_ns(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
+{
+	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
+
+	return _nvmf_subsystem_get_ns(subsystem, nsid);
+}
+
 static inline bool
 nvmf_qpair_is_admin_queue(struct spdk_nvmf_qpair *qpair)
 {
