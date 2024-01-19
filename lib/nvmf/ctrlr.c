@@ -1754,7 +1754,7 @@ nvmf_ctrlr_get_features_reservation_notification_mask(struct spdk_nvmf_request *
 
 	ns = _nvmf_subsystem_get_ns(ctrlr->subsys, cmd->nsid);
 	if (ns == NULL) {
-		SPDK_ERRLOG("Set Features - Invalid Namespace ID\n");
+		SPDK_ERRLOG("get Features - Invalid Namespace ID\n");
 		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
