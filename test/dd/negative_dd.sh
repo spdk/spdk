@@ -91,11 +91,120 @@ unknown_flag() {
 }
 
 invalid_json() {
-	# Both files need to exist and be accessible
 	NOT "${DD_APP[@]}" \
 		--if="$test_file0" \
 		--of="$test_file1" \
 		--json <(:)
+}
+
+invalid_seek() {
+	# --seek value too big - only 512 blocks available in output
+	local mbdev0=malloc0 mbdev0_b=512 mbdev0_bs=512
+	local -A method_bdev_malloc_create_0=(
+		["name"]=$mbdev0
+		["num_blocks"]=$mbdev0_b
+		["block_size"]=$mbdev0_bs
+	)
+	local mbdev1=malloc1 mbdev1_b=512 mbdev1_bs=512
+	local -A method_bdev_malloc_create_1=(
+		["name"]=$mbdev1
+		["num_blocks"]=$mbdev1_b
+		["block_size"]=$mbdev1_bs
+	)
+
+	NOT "${DD_APP[@]}" \
+		--ib="$mbdev0" \
+		--ob="$mbdev1" \
+		--seek=513 \
+		--json <(gen_conf) \
+		--bs=512
+}
+
+invalid_skip() {
+	# --skip value too big - only 512 blocks available in input
+	local mbdev0=malloc0 mbdev0_b=512 mbdev0_bs=512
+	local -A method_bdev_malloc_create_0=(
+		["name"]=$mbdev0
+		["num_blocks"]=$mbdev0_b
+		["block_size"]=$mbdev0_bs
+	)
+	local mbdev1=malloc1 mbdev1_b=512 mbdev1_bs=512
+	local -A method_bdev_malloc_create_1=(
+		["name"]=$mbdev1
+		["num_blocks"]=$mbdev1_b
+		["block_size"]=$mbdev1_bs
+	)
+
+	NOT "${DD_APP[@]}" \
+		--ib="$mbdev0" \
+		--ob="$mbdev1" \
+		--skip=513 \
+		--json <(gen_conf) \
+		--bs=512
+}
+
+invalid_input_count() {
+	# --count value too big - only 512 blocks available from input
+
+	local mbdev0=malloc0 mbdev0_b=512 mbdev0_bs=512
+	local -A method_bdev_malloc_create_0=(
+		["name"]=$mbdev0
+		["num_blocks"]=$mbdev0_b
+		["block_size"]=$mbdev0_bs
+	)
+	local mbdev1=malloc1 mbdev1_b=512 mbdev1_bs=512
+	local -A method_bdev_malloc_create_1=(
+		["name"]=$mbdev1
+		["num_blocks"]=$mbdev1_b
+		["block_size"]=$mbdev1_bs
+	)
+
+	NOT "${DD_APP[@]}" \
+		--ib="$mbdev0" \
+		--ob="$mbdev1" \
+		--count=513 \
+		--json <(gen_conf) \
+		--bs=512
+}
+
+invalid_output_count() {
+	# --count value too big - only 512 blocks available in output
+
+	local mbdev0=malloc0 mbdev0_b=512 mbdev0_bs=512
+	local -A method_bdev_malloc_create_0=(
+		["name"]=$mbdev0
+		["num_blocks"]=$mbdev0_b
+		["block_size"]=$mbdev0_bs
+	)
+
+	NOT "${DD_APP[@]}" \
+		--if="$test_file0" \
+		--ob="$mbdev0" \
+		--count=513 \
+		--json <(gen_conf) \
+		--bs=512
+}
+
+bs_not_multiple() {
+	# --bs value must be a multiple of input native block size (512)
+	local mbdev0=malloc0 mbdev0_b=512 mbdev0_bs=512
+	local -A method_bdev_malloc_create_0=(
+		["name"]=$mbdev0
+		["num_blocks"]=$mbdev0_b
+		["block_size"]=$mbdev0_bs
+	)
+	local mbdev1=malloc1 mbdev1_b=512 mbdev1_bs=512
+	local -A method_bdev_malloc_create_1=(
+		["name"]=$mbdev1
+		["num_blocks"]=$mbdev1_b
+		["block_size"]=$mbdev1_bs
+	)
+
+	NOT "${DD_APP[@]}" \
+		--ib="$mbdev0" \
+		--ob="$mbdev1" \
+		--bs=513 \
+		--json <(gen_conf)
 }
 
 test_file0=$SPDK_TEST_STORAGE/dd.dump0
@@ -116,3 +225,8 @@ run_test "dd_invalid_oflag" invalid_oflag
 run_test "dd_invalid_iflag" invalid_iflag
 run_test "dd_unknown_flag" unknown_flag
 run_test "dd_invalid_json" invalid_json
+run_test "dd_invalid_seek" invalid_seek
+run_test "dd_invalid_skip" invalid_skip
+run_test "dd_invalid_input_count" invalid_input_count
+run_test "dd_invalid_output_count" invalid_output_count
+run_test "dd_bs_not_multiple" bs_not_multiple
