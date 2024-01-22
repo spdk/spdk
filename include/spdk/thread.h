@@ -1292,6 +1292,17 @@ typedef void (*spdk_iobuf_get_stats_cb)(struct spdk_iobuf_module_stats *modules,
  */
 int spdk_iobuf_get_stats(spdk_iobuf_get_stats_cb cb_fn, void *cb_arg);
 
+typedef void (*spdk_post_poller_fn)(void *fn_arg);
+
+/**
+ * Register a function to be called after the current SPDK poller has completed. Once called,
+ * this function is de-registered and won't called until the next registration call.
+ *
+ * \param fn Function to call
+ * \param fn_arg Function argument
+ */
+void spdk_thread_register_post_poller_handler(spdk_post_poller_fn fn, void *fn_arg);
+
 #ifdef __cplusplus
 }
 #endif

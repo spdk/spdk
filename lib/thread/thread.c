@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2022, 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -103,6 +103,13 @@ enum spdk_thread_state {
 	SPDK_THREAD_STATE_EXITED,
 };
 
+struct spdk_thread_post_poller_handler {
+	spdk_post_poller_fn fn;
+	void *fn_arg;
+};
+
+#define SPDK_THREAD_MAX_POST_POLLER_HANDLERS (4)
+
 struct spdk_thread {
 	uint64_t			tsc_last;
 	struct spdk_thread_stats	stats;
@@ -124,7 +131,9 @@ struct spdk_thread {
 	 * queues) or unregistered.
 	 */
 	TAILQ_HEAD(paused_pollers_head, spdk_poller)	paused_pollers;
+	struct spdk_thread_post_poller_handler		pp_handlers[SPDK_THREAD_MAX_POST_POLLER_HANDLERS];
 	struct spdk_ring		*messages;
+	uint8_t				num_pp_handlers;
 	int				msg_fd;
 	SLIST_HEAD(, spdk_msg)		msg_cache;
 	size_t				msg_cache_count;
@@ -1075,6 +1084,22 @@ thread_execute_timed_poller(struct spdk_thread *thread, struct spdk_poller *poll
 	return rc;
 }
 
+static inline void
+thread_run_pp_handlers(struct spdk_thread *thread)
+{
+	uint8_t i, count = thread->num_pp_handlers;
+
+	/* Set to max value to prevent new handlers registration within the callback */
+	thread->num_pp_handlers = SPDK_THREAD_MAX_POST_POLLER_HANDLERS;
+
+	for (i = 0; i < count; i++) {
+		thread->pp_handlers[i].fn(thread->pp_handlers[i].fn_arg);
+		thread->pp_handlers[i].fn = NULL;
+	}
+
+	thread->num_pp_handlers = 0;
+}
+
 static int
 thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 {
@@ -1104,6 +1129,9 @@ thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 		poller_rc = thread_execute_poller(thread, poller);
 		if (poller_rc > rc) {
 			rc = poller_rc;
+		}
+		if (thread->num_pp_handlers) {
+			thread_run_pp_handlers(thread);
 		}
 	}
 
@@ -3149,6 +3177,23 @@ spdk_spin_held(struct spdk_spinlock *sspin)
 	SPIN_ASSERT_RETURN(thread != NULL, SPIN_ERR_NOT_SPDK_THREAD, false);
 
 	return sspin->thread == thread;
+}
+
+void
+spdk_thread_register_post_poller_handler(spdk_post_poller_fn fn, void *fn_arg)
+{
+	struct spdk_thread *thr;
+
+	thr = _get_thread();
+	assert(thr);
+	if (spdk_unlikely(thr->num_pp_handlers == SPDK_THREAD_MAX_POST_POLLER_HANDLERS)) {
+		SPDK_ERRLOG("Too many handlers registered");
+		return;
+	}
+
+	thr->pp_handlers[thr->num_pp_handlers].fn = fn;
+	thr->pp_handlers[thr->num_pp_handlers].fn_arg = fn_arg;
+	thr->num_pp_handlers++;
 }
 
 SPDK_LOG_REGISTER_COMPONENT(thread)
