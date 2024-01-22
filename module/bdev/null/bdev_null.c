@@ -91,7 +91,7 @@ bdev_null_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_
 				       bdev->md_interleave,
 				       bdev->dif_is_head_of_md,
 				       bdev->dif_type,
-				       bdev->dif_check_flags,
+				       bdev_io->u.bdev.dif_check_flags,
 				       bdev_io->u.bdev.offset_blocks & 0xFFFFFFFF,
 				       0xFFFF, 0, 0, 0, &dif_opts);
 		if (0 != rc) {
