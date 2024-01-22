@@ -410,6 +410,25 @@ enum nvme_qpair_state {
 	NVME_QPAIR_DESTROYING,
 };
 
+enum nvme_qpair_auth_state {
+	NVME_QPAIR_AUTH_STATE_NEGOTIATE,
+	NVME_QPAIR_AUTH_STATE_AWAIT_NEGOTIATE,
+	NVME_QPAIR_AUTH_STATE_AWAIT_CHALLENGE,
+	NVME_QPAIR_AUTH_STATE_AWAIT_REPLY,
+	NVME_QPAIR_AUTH_STATE_AWAIT_SUCCESS1,
+	NVME_QPAIR_AUTH_STATE_AWAIT_FAILURE2,
+	NVME_QPAIR_AUTH_STATE_DONE,
+};
+
+struct nvme_auth {
+	/* State of the authentication */
+	enum nvme_qpair_auth_state	state;
+	/* Status of the authentication */
+	int				status;
+	/* Transaction ID */
+	uint16_t			tid;
+};
+
 struct spdk_nvme_qpair {
 	struct spdk_nvme_ctrlr			*ctrlr;
 
@@ -485,6 +504,9 @@ struct spdk_nvme_qpair {
 	STAILQ_HEAD(, nvme_request)		aborting_queued_req;
 
 	void					*req_buf;
+
+	/* In-band authentication state */
+	struct nvme_auth			auth;
 };
 
 struct spdk_nvme_poll_group {
@@ -1025,6 +1047,9 @@ struct spdk_nvme_ctrlr {
 	STAILQ_HEAD(, nvme_register_completion)	register_operations;
 
 	union spdk_nvme_cc_register		process_init_cc;
+
+	/* Authentication transaction ID */
+	uint16_t				auth_tid;
 };
 
 struct spdk_nvme_probe_ctx {
@@ -1262,6 +1287,8 @@ int	nvme_fabric_ctrlr_discover(struct spdk_nvme_ctrlr *ctrlr,
 int	nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries);
 int	nvme_fabric_qpair_connect_async(struct spdk_nvme_qpair *qpair, uint32_t num_entries);
 int	nvme_fabric_qpair_connect_poll(struct spdk_nvme_qpair *qpair);
+int	nvme_fabric_qpair_authenticate_async(struct spdk_nvme_qpair *qpair);
+int	nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair);
 
 typedef int (*spdk_nvme_parse_ana_log_page_cb)(
 	const struct spdk_nvme_ana_group_descriptor *desc, void *cb_arg);

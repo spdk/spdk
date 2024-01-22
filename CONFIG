@@ -218,6 +218,9 @@ CONFIG_HAVE_EXECINFO_H=n
 # libkeytuils is available
 CONFIG_HAVE_KEYUTILS=n
 
+# OpenSSL has EVP_MAC definitions
+CONFIG_HAVE_EVP_MAC=n
+
 # Path to IPSEC_MB used by DPDK
 CONFIG_IPSEC_MB_DIR=
 

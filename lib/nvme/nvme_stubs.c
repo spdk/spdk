@@ -52,3 +52,18 @@ spdk_nvme_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks)
 	abort();
 }
 #endif /* !SPDK_CONFIG_RDMA */
+
+#ifndef SPDK_CONFIG_HAVE_EVP_MAC
+int
+nvme_fabric_qpair_authenticate_async(struct spdk_nvme_qpair *qpair)
+{
+	SPDK_ERRLOG("NVMe in-band authentication is unsupported\n");
+	return -ENOTSUP;
+}
+
+int
+nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
+{
+	return -ENOTSUP;
+}
+#endif /* !SPDK_CONFIG_HAVE_EVP_MAC */

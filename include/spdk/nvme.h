@@ -290,8 +290,13 @@ struct spdk_nvme_ctrlr_opts {
 	 * Pre-shared key for NVMe/TCP's TLS connection.
 	 */
 	struct spdk_key *tls_psk;
+
+	/**
+	 * In-band authentication DH-HMAC-CHAP key.
+	 */
+	struct spdk_key *dhchap_key;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_opts) == 832, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_opts) == 840, "Incorrect size");
 
 /**
  * NVMe acceleration operation callback.

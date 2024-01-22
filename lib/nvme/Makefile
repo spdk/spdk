@@ -18,6 +18,7 @@ C_SRCS = nvme_ctrlr_cmd.c nvme_ctrlr.c nvme_fabric.c nvme_ns_cmd.c \
 C_SRCS-$(CONFIG_NVME_CUSE) += nvme_cuse.c
 C_SRCS-$(CONFIG_VFIO_USER) += nvme_vfio_user.c
 C_SRCS-$(CONFIG_RDMA) += nvme_rdma.c
+C_SRCS-$(CONFIG_HAVE_EVP_MAC) += nvme_auth.c
 
 LIBNAME = nvme
 LOCAL_SYS_LIBS =
