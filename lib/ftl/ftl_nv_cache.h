@@ -55,6 +55,7 @@ enum ftl_chunk_state {
 	FTL_CHUNK_STATE_FREE,
 	FTL_CHUNK_STATE_OPEN,
 	FTL_CHUNK_STATE_CLOSED,
+	FTL_CHUNK_STATE_INACTIVE,
 	FTL_CHUNK_STATE_MAX
 };
 
@@ -192,6 +193,10 @@ struct ftl_nv_cache {
 	/* Chunks being freed */
 	TAILQ_HEAD(, ftl_nv_cache_chunk) needs_free_persist_list;
 	uint64_t chunk_free_persist_count;
+
+	/* Chunks which are inactive */
+	TAILQ_HEAD(, ftl_nv_cache_chunk) chunk_inactive_list;
+	uint64_t chunk_inactive_count;
 
 	TAILQ_HEAD(, ftl_nv_cache_compactor) compactor_list;
 	uint64_t compaction_active_count;

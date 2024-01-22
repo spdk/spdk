@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2022 Intel Corporation.
+ *   Copyright 2023 Solidigm All Rights Reserved
  *   All rights reserved.
  */
 
@@ -93,7 +94,7 @@ static void
 ftl_nv_cache_init_update_limits(struct spdk_ftl_dev *dev)
 {
 	struct ftl_nv_cache *nvc = &dev->nv_cache;
-	uint64_t usable_chunks = nvc->chunk_count;
+	uint64_t usable_chunks = nvc->chunk_count - nvc->chunk_inactive_count;
 
 	/* Start compaction when full chunks exceed given % of entire active chunks */
 	nvc->chunk_compaction_threshold = usable_chunks *
@@ -152,6 +153,7 @@ ftl_nv_cache_init(struct spdk_ftl_dev *dev)
 	TAILQ_INIT(&nv_cache->chunk_open_list);
 	TAILQ_INIT(&nv_cache->chunk_full_list);
 	TAILQ_INIT(&nv_cache->chunk_comp_list);
+	TAILQ_INIT(&nv_cache->chunk_inactive_list);
 	TAILQ_INIT(&nv_cache->needs_free_persist_list);
 
 	/* First chunk metadata */
@@ -161,8 +163,6 @@ ftl_nv_cache_init(struct spdk_ftl_dev *dev)
 		return -1;
 	}
 
-	nv_cache->chunk_free_count = nv_cache->chunk_count;
-
 	chunk = nv_cache->chunks;
 	offset = nvc_data_offset(nv_cache);
 	for (i = 0; i < nv_cache->chunk_count; i++, chunk++, md++) {
@@ -171,8 +171,17 @@ ftl_nv_cache_init(struct spdk_ftl_dev *dev)
 		nvc_validate_md(nv_cache, md);
 		chunk->offset = offset;
 		offset += nv_cache->chunk_blocks;
-		TAILQ_INSERT_TAIL(&nv_cache->chunk_free_list, chunk, entry);
+
+		if (nv_cache->nvc_type->ops.is_chunk_active(dev, chunk)) {
+			nv_cache->chunk_free_count++;
+			TAILQ_INSERT_TAIL(&nv_cache->chunk_free_list, chunk, entry);
+		} else {
+			chunk->md->state = FTL_CHUNK_STATE_INACTIVE;
+			nv_cache->chunk_inactive_count++;
+			TAILQ_INSERT_TAIL(&nv_cache->chunk_inactive_list, chunk, entry);
+		}
 	}
+	assert(nv_cache->chunk_free_count + nv_cache->chunk_inactive_count == nv_cache->chunk_count);
 	assert(offset <= nvc_data_offset(nv_cache) + nvc_data_blocks(nv_cache));
 
 	TAILQ_INIT(&nv_cache->compactor_list);
@@ -1352,7 +1361,6 @@ ftl_nv_cache_throttle(struct spdk_ftl_dev *dev)
 static void
 chunk_free_p2l_map(struct ftl_nv_cache_chunk *chunk)
 {
-
 	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
 	struct ftl_p2l_map *p2l_map = &chunk->p2l_map;
 
@@ -1498,21 +1506,47 @@ ftl_nv_cache_load_state(struct ftl_nv_cache *nv_cache)
 	struct ftl_nv_cache_chunk *chunk;
 	uint64_t chunks_number, offset, i;
 	int status = 0;
+	bool active;
 
 	nv_cache->chunk_current = NULL;
 	TAILQ_INIT(&nv_cache->chunk_free_list);
 	TAILQ_INIT(&nv_cache->chunk_full_list);
+	TAILQ_INIT(&nv_cache->chunk_inactive_list);
 	nv_cache->chunk_full_count = 0;
 	nv_cache->chunk_free_count = 0;
+	nv_cache->chunk_inactive_count = 0;
 
 	assert(nv_cache->chunk_open_count == 0);
 	offset = nvc_data_offset(nv_cache);
-	chunk = nv_cache->chunks;
-	if (!chunk) {
+	if (!nv_cache->chunks) {
 		FTL_ERRLOG(dev, "No NV cache metadata\n");
 		return -1;
 	}
 
+	if (dev->sb->upgrade_ready) {
+		/*
+		 * During upgrade some transition are allowed:
+		 *
+		 * 1. FREE -> INACTIVE
+		 * 2. INACTIVE -> FREE
+		 */
+		chunk = nv_cache->chunks;
+		for (i = 0; i < nv_cache->chunk_count; i++, chunk++) {
+			active = nv_cache->nvc_type->ops.is_chunk_active(dev, chunk);
+
+			if (chunk->md->state == FTL_CHUNK_STATE_FREE) {
+				if (!active) {
+					chunk->md->state = FTL_CHUNK_STATE_INACTIVE;
+				}
+			} else if (chunk->md->state == FTL_CHUNK_STATE_INACTIVE) {
+				if (active) {
+					chunk->md->state = FTL_CHUNK_STATE_FREE;
+				}
+			}
+		}
+	}
+
+	chunk = nv_cache->chunks;
 	for (i = 0; i < nv_cache->chunk_count; i++, chunk++) {
 		chunk->nv_cache = nv_cache;
 		nvc_validate_md(nv_cache, chunk->md);
@@ -1520,6 +1554,14 @@ ftl_nv_cache_load_state(struct ftl_nv_cache *nv_cache)
 		if (offset != chunk->offset) {
 			status = -EINVAL;
 			goto error;
+		}
+
+		active = nv_cache->nvc_type->ops.is_chunk_active(dev, chunk);
+		if (false == active) {
+			if (chunk->md->state != FTL_CHUNK_STATE_INACTIVE) {
+				status = -EINVAL;
+				goto error;
+			}
 		}
 
 		switch (chunk->md->state) {
@@ -1546,6 +1588,10 @@ ftl_nv_cache_load_state(struct ftl_nv_cache *nv_cache)
 			TAILQ_INSERT_TAIL(&nv_cache->chunk_full_list, chunk, entry);
 			nv_cache->chunk_full_count++;
 			break;
+		case FTL_CHUNK_STATE_INACTIVE:
+			TAILQ_INSERT_TAIL(&nv_cache->chunk_inactive_list, chunk, entry);
+			nv_cache->chunk_inactive_count++;
+			break;
 		default:
 			status = -EINVAL;
 			FTL_ERRLOG(dev, "Invalid chunk state\n");
@@ -1555,7 +1601,8 @@ ftl_nv_cache_load_state(struct ftl_nv_cache *nv_cache)
 		offset += nv_cache->chunk_blocks;
 	}
 
-	chunks_number = nv_cache->chunk_free_count + nv_cache->chunk_full_count;
+	chunks_number = nv_cache->chunk_free_count + nv_cache->chunk_full_count +
+			nv_cache->chunk_inactive_count;
 	assert(nv_cache->chunk_current == NULL);
 
 	if (chunks_number != nv_cache->chunk_count) {
@@ -1578,6 +1625,10 @@ ftl_nv_cache_load_state(struct ftl_nv_cache *nv_cache)
 		FTL_ERRLOG(dev, "FTL NV Cache: loading state ERROR\n");
 	}
 
+	/* The number of active/inactive chunks calculated at initialization can change at this point due to metadata
+	 * upgrade. Recalculate the thresholds that depend on active chunk count.
+	 */
+	ftl_nv_cache_init_update_limits(dev);
 error:
 	return status;
 }
@@ -2042,6 +2093,7 @@ is_chunk_count_valid(struct ftl_nv_cache *nv_cache)
 	chunk_count += nv_cache->chunk_free_count;
 	chunk_count += nv_cache->chunk_full_count;
 	chunk_count += nv_cache->chunk_comp_count;
+	chunk_count += nv_cache->chunk_inactive_count;
 
 	return chunk_count == nv_cache->chunk_count;
 }
@@ -2112,7 +2164,7 @@ ftl_mngt_nv_cache_walk_tail_md(struct spdk_ftl_dev *dev, struct ftl_mngt_process
 		int rc;
 
 		if (!chunk->recovery) {
-			/* This chunk is empty and not used in recovery */
+			/* This chunk is inactive or empty and not used in recovery */
 			ctx->id++;
 			continue;
 		}
@@ -2174,6 +2226,12 @@ restore_chunk_state_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
 	for (i = 0; i < nvc->chunk_count; i++) {
 		chunk = &nvc->chunks[i];
 
+		if (false == nvc->nvc_type->ops.is_chunk_active(dev, chunk) &&
+		    chunk->md->state != FTL_CHUNK_STATE_INACTIVE) {
+			status = -EINVAL;
+			break;
+		}
+
 		switch (chunk->md->state) {
 		case FTL_CHUNK_STATE_FREE:
 			break;
@@ -2196,6 +2254,8 @@ restore_chunk_state_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
 
 			/* Chunk is not empty, mark it to be recovered */
 			chunk->recovery = true;
+			break;
+		case FTL_CHUNK_STATE_INACTIVE:
 			break;
 		default:
 			status = -EINVAL;
@@ -2404,7 +2464,7 @@ static const char *
 ftl_nv_cache_get_chunk_state_name(struct ftl_nv_cache_chunk *chunk)
 {
 	static const char *names[] = {
-		"FREE", "OPEN", "CLOSED",
+		"FREE", "OPEN", "CLOSED", "INACTIVE"
 	};
 
 	assert(chunk->md->state < SPDK_COUNTOF(names));
