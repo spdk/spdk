@@ -43,6 +43,11 @@ class ConfigField:
 
 
 class Server(ABC):
+
+    RDMA_PROTOCOL_IWARP = 0
+    RDMA_PROTOCOL_ROCE = 1
+    RDMA_PROTOCOL_UNKNOWN = -1
+
     def __init__(self, name, general_config, server_config):
         self.name = name
 
@@ -153,18 +158,10 @@ class Server(ABC):
         self.configure_irq_affinity(**self.irq_settings)
         self.configure_pause_frames()
 
-    RDMA_PROTOCOL_IWARP = 0
-    RDMA_PROTOCOL_ROCE = 1
-    RDMA_PROTOCOL_UNKNOWN = -1
-
     def check_rdma_protocol(self):
         try:
-            roce_ena = self.exec_cmd(["cat", "/sys/module/irdma/parameters/roce_ena"])
-            roce_ena = roce_ena.strip()
-            if roce_ena == "0":
-                return self.RDMA_PROTOCOL_IWARP
-            else:
-                return self.RDMA_PROTOCOL_ROCE
+            roce_ena = self.exec_cmd(["cat", "/sys/module/irdma/parameters/roce_ena"]).strip()
+            return self.RDMA_PROTOCOL_IWARP if roce_ena == "0" else self.RDMA_PROTOCOL_ROCE
         except CalledProcessError as e:
             self.log.error("ERROR: failed to check RDMA protocol!")
             self.log.error("%s resulted in error: %s" % (e.cmd, e.output))
@@ -172,18 +169,22 @@ class Server(ABC):
 
     def load_drivers(self):
         self.log.info("Loading drivers")
-        self.exec_cmd(["sudo", "modprobe", "-a",
-                       "nvme-%s" % self.transport,
-                       "nvmet-%s" % self.transport])
+        self.exec_cmd(["sudo", "modprobe", "-a", f"nvme-{self.transport}", f"nvmet-{self.transport}"])
+
+        if self.transport != "rdma":
+            return
+
         current_mode = self.check_rdma_protocol()
         if current_mode == self.RDMA_PROTOCOL_UNKNOWN:
             self.log.error("ERROR: failed to check RDMA protocol mode")
             return
-        if self.irdma_roce_enable and current_mode == self.RDMA_PROTOCOL_IWARP:
-            self.reload_driver("irdma", "roce_ena=1")
-            self.log.info("Loaded irdma driver with RoCE enabled")
-        elif self.irdma_roce_enable and current_mode == self.RDMA_PROTOCOL_ROCE:
-            self.log.info("Leaving irdma driver with RoCE enabled")
+
+        if self.irdma_roce_enable:
+            if current_mode == self.RDMA_PROTOCOL_IWARP:
+                self.reload_driver("irdma", "roce_ena=1")
+                self.log.info("Loaded irdma driver with RoCE enabled")
+            else:
+                self.log.info("Leaving irdma driver with RoCE enabled")
         else:
             self.reload_driver("irdma", "roce_ena=0")
             self.log.info("Loaded irdma driver with iWARP enabled")
