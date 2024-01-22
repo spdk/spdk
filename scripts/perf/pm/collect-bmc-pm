@@ -287,12 +287,13 @@ get_dcmi_now_reading() {
 
 		for print in min max avg reading; do
 			[[ -n ${!print} ]] || continue
-			printf '(%s) DCMI %s (mode: %s): %u Watts (interval: %ss)\n' \
+			printf '(%s) DCMI %s (mode: %s): %u Watts (interval: %ss, test: %s)\n' \
 				"$(utc "$ts")" \
 				"$print" \
 				"$mode" \
 				"${!print}" \
-				"$interval"
+				"$interval" \
+				"$TEST_TAG" >&2
 		done
 	fi >&2
 }
@@ -314,11 +315,12 @@ get_sdr_now_reading() {
 			power_readings["${power_sensors[sensor]}"]="_sensor${sensor}_readings[@]"
 			reading+=" $unit"
 		fi < <("$ipmitool" -c -S "$sdr_cache" sdr get "${power_sensors[sensor]}") 2> /dev/null
-		printf '(%s) Sensor %s reading: %s (interval %ss)\n' \
+		printf '(%s) Sensor %s reading: %s (interval: %ss, test: %s)\n' \
 			"$ts" \
 			"${power_sensors[sensor]}" \
 			"$reading" \
-			"$interval" >&2
+			"$interval" \
+			"$TEST_TAG" >&2
 	done
 }
 
@@ -357,23 +359,25 @@ get_cpu_socket_reading() {
 			# Somehow this may happen, probably when the counter wraps over. Consider
 			# this as a faulty reading and don't include it since it may impact overall
 			# avg.
-			printf '(%s) CPU %s %s reading: error(%s) (interval: %ss)\n' \
+			printf '(%s) CPU %s %s reading: error(%s) (interval: %ss, test: %s)\n' \
 				"$ts" \
 				"$socket_name" \
 				"$socket_idx" \
 				"$reading" \
-				"$interval" >&2
+				"$interval" \
+				"$TEST_TAG" >&2
 			return 0
 		fi
 		eval "_socket${_socket_idx}_readings+=($reading)"
 		power_readings["$socket_name-$socket_idx"]="_socket${_socket_idx}_readings[@]"
 
-		printf '(%s) CPU %s %s reading: %s Watts (interval: %ss)\n' \
+		printf '(%s) CPU %s %s reading: %s Watts (interval: %ss, test: %s)\n' \
 			"$ts" \
 			"$socket_name" \
 			"$socket_idx" \
 			"$reading" \
-			"$interval" >&2
+			"$interval" \
+			"$TEST_TAG" >&2
 	done
 }
 
