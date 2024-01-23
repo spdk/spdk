@@ -15,6 +15,22 @@
 	SPDK_ERRLOG("[%s:%s:%u] " fmt, (q)->ctrlr->trid.subnqn, (q)->ctrlr->opts.hostnqn, \
 		    (q)->id, ## __VA_ARGS__)
 
+static uint8_t
+nvme_auth_get_digest_len(uint8_t id)
+{
+	uint8_t hlen[] = {
+		[SPDK_NVMF_DHCHAP_HASH_SHA256] = 32,
+		[SPDK_NVMF_DHCHAP_HASH_SHA384] = 48,
+		[SPDK_NVMF_DHCHAP_HASH_SHA512] = 64,
+	};
+
+	if (id >= SPDK_COUNTOF(hlen)) {
+		return 0;
+	}
+
+	return hlen[id];
+}
+
 static void
 nvme_auth_set_state(struct spdk_nvme_qpair *qpair, enum nvme_qpair_auth_state state)
 {
@@ -98,6 +114,79 @@ nvme_auth_submit_request(struct spdk_nvme_qpair *qpair,
 }
 
 static int
+nvme_auth_recv_message(struct spdk_nvme_qpair *qpair)
+{
+	memset(qpair->poll_status->dma_data, 0, NVME_AUTH_DATA_SIZE);
+	return nvme_auth_submit_request(qpair, SPDK_NVMF_FABRIC_COMMAND_AUTHENTICATION_RECV,
+					NVME_AUTH_DATA_SIZE);
+}
+
+static bool
+nvme_auth_send_failure2(struct spdk_nvme_qpair *qpair, enum spdk_nvmf_auth_failure_reason reason)
+{
+	struct spdk_nvmf_auth_failure *msg = qpair->poll_status->dma_data;
+	struct nvme_auth *auth = &qpair->auth;
+
+	memset(qpair->poll_status->dma_data, 0, NVME_AUTH_DATA_SIZE);
+	msg->auth_type = SPDK_NVMF_AUTH_TYPE_COMMON_MESSAGE;
+	msg->auth_id = SPDK_NVMF_AUTH_ID_FAILURE2;
+	msg->t_id = auth->tid;
+	msg->rc = SPDK_NVMF_AUTH_FAILURE;
+	msg->rce = reason;
+
+	return nvme_auth_submit_request(qpair, SPDK_NVMF_FABRIC_COMMAND_AUTHENTICATION_SEND,
+					sizeof(*msg)) == 0;
+}
+
+static int
+nvme_auth_check_message(struct spdk_nvme_qpair *qpair, enum spdk_nvmf_auth_id auth_id)
+{
+	struct spdk_nvmf_auth_failure *msg = qpair->poll_status->dma_data;
+	const char *reason = NULL;
+	const char *reasons[] = {
+		[SPDK_NVMF_AUTH_FAILED] = "authentication failed",
+		[SPDK_NVMF_AUTH_PROTOCOL_UNUSABLE] = "protocol not usable",
+		[SPDK_NVMF_AUTH_SCC_MISMATCH] = "secure channel concatenation mismatch",
+		[SPDK_NVMF_AUTH_HASH_UNUSABLE] = "hash not usable",
+		[SPDK_NVMF_AUTH_DHGROUP_UNUSABLE] = "dhgroup not usable",
+		[SPDK_NVMF_AUTH_INCORRECT_PAYLOAD] = "incorrect payload",
+		[SPDK_NVMF_AUTH_INCORRECT_PROTOCOL_MESSAGE] = "incorrect protocol message",
+	};
+
+	switch (msg->auth_type) {
+	case SPDK_NVMF_AUTH_TYPE_DHCHAP:
+		if (msg->auth_id == auth_id) {
+			return 0;
+		}
+		AUTH_ERRLOG(qpair, "received unexpected DH-HMAC-CHAP message id: %u (expected: %u)\n",
+			    msg->auth_id, auth_id);
+		break;
+	case SPDK_NVMF_AUTH_TYPE_COMMON_MESSAGE:
+		/* The only common message that we can expect to receive is AUTH_failure1 */
+		if (msg->auth_id != SPDK_NVMF_AUTH_ID_FAILURE1) {
+			AUTH_ERRLOG(qpair, "received unexpected common message id: %u\n",
+				    msg->auth_id);
+			break;
+		}
+		if (msg->rc == SPDK_NVMF_AUTH_FAILURE && msg->rce < SPDK_COUNTOF(reasons)) {
+			reason = reasons[msg->rce];
+		}
+		AUTH_ERRLOG(qpair, "received AUTH_failure1: rc=%d, rce=%d (%s)\n",
+			    msg->rc, msg->rce, reason);
+		nvme_auth_set_failure(qpair, -EACCES, false);
+		return -EACCES;
+	default:
+		AUTH_ERRLOG(qpair, "received unknown message type: %u\n", msg->auth_type);
+		break;
+	}
+
+	nvme_auth_set_failure(qpair, -EACCES,
+			      nvme_auth_send_failure2(qpair,
+					      SPDK_NVMF_AUTH_INCORRECT_PROTOCOL_MESSAGE));
+	return -EACCES;
+}
+
+static int
 nvme_auth_send_negotiate(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_auth *auth = &qpair->auth;
@@ -132,6 +221,54 @@ nvme_auth_send_negotiate(struct spdk_nvme_qpair *qpair)
 					sizeof(*msg) + msg->napd * sizeof(*desc));
 }
 
+static int
+nvme_auth_check_challenge(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvmf_dhchap_challenge *challenge = qpair->poll_status->dma_data;
+	struct nvme_auth *auth = &qpair->auth;
+	uint8_t hl;
+	int rc;
+
+	rc = nvme_auth_check_message(qpair, SPDK_NVMF_AUTH_ID_DHCHAP_CHALLENGE);
+	if (rc != 0) {
+		return rc;
+	}
+
+	if (challenge->t_id != auth->tid) {
+		AUTH_ERRLOG(qpair, "unexpected tid: received=%u, expected=%u\n",
+			    challenge->t_id, auth->tid);
+		goto error;
+	}
+
+	if (challenge->seqnum == 0) {
+		AUTH_ERRLOG(qpair, "received challenge with seqnum=0\n");
+		goto error;
+	}
+
+	hl = nvme_auth_get_digest_len(challenge->hash_id);
+	if (hl == 0) {
+		AUTH_ERRLOG(qpair, "unsupported hash function: 0x%x\n", challenge->hash_id);
+		goto error;
+	}
+
+	if (challenge->hl != hl) {
+		AUTH_ERRLOG(qpair, "unexpected hash length: received=%u, expected=%u\n",
+			    challenge->hl, hl);
+		goto error;
+	}
+
+	if (challenge->dhg_id != SPDK_NVMF_DHCHAP_DHGROUP_NULL) {
+		AUTH_ERRLOG(qpair, "unsupported dhgroup: 0x%x\n", challenge->dhg_id);
+		goto error;
+	}
+
+	return 0;
+error:
+	nvme_auth_set_failure(qpair, -EACCES,
+			      nvme_auth_send_failure2(qpair, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD));
+	return -EACCES;
+}
+
 int
 nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 {
@@ -163,13 +300,41 @@ nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 				}
 				break;
 			}
+			/* Negotiate has been sent, try to receive the challenge */
+			rc = nvme_auth_recv_message(qpair);
+			if (rc != 0) {
+				nvme_auth_set_failure(qpair, rc, false);
+				AUTH_ERRLOG(qpair, "failed to recv DH-HMAC-CHAP_challenge: %s\n",
+					    spdk_strerror(-rc));
+				break;
+			}
 			nvme_auth_set_state(qpair, NVME_QPAIR_AUTH_STATE_AWAIT_CHALLENGE);
 			break;
 		case NVME_QPAIR_AUTH_STATE_AWAIT_CHALLENGE:
+			rc = nvme_wait_for_completion_robust_lock_timeout_poll(qpair, status, NULL);
+			if (rc != 0) {
+				if (rc != -EAGAIN) {
+					nvme_auth_print_cpl(qpair, "DH-HMAC-CHAP_challenge");
+					nvme_auth_set_failure(qpair, rc, false);
+				}
+				break;
+			}
+			rc = nvme_auth_check_challenge(qpair);
+			if (rc != 0) {
+				break;
+			}
+			nvme_auth_set_state(qpair, NVME_QPAIR_AUTH_STATE_AWAIT_REPLY);
+			break;
 		case NVME_QPAIR_AUTH_STATE_AWAIT_REPLY:
 		case NVME_QPAIR_AUTH_STATE_AWAIT_SUCCESS1:
-		case NVME_QPAIR_AUTH_STATE_AWAIT_FAILURE2:
 			nvme_auth_set_failure(qpair, -ENOTSUP, false);
+			break;
+		case NVME_QPAIR_AUTH_STATE_AWAIT_FAILURE2:
+			rc = nvme_wait_for_completion_robust_lock_timeout_poll(qpair, status, NULL);
+			if (rc == -EAGAIN) {
+				break;
+			}
+			nvme_auth_set_state(qpair, NVME_QPAIR_AUTH_STATE_DONE);
 			break;
 		case NVME_QPAIR_AUTH_STATE_DONE:
 			if (qpair->poll_status != NULL && !status->timed_out) {
