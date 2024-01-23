@@ -532,8 +532,10 @@ Example commands
 
 ## RAID {#bdev_ug_raid}
 
-RAID virtual bdev module provides functionality to combine any SPDK bdevs into
-one RAID bdev. Currently SPDK supports only RAID 0. RAID metadata may be stored
+RAID virtual bdev module provides functionality to combine any SPDK bdevs into one
+RAID bdev. Currently SPDK supports RAID0, Concat, RAID1 and RAID5F levels. To enable
+RAID5F, configure SPDK using the `--with-raid5f` option. For RAID levels with redundancy
+(1 and 5F) degraded operation and rebuild are supported. RAID metadata may be stored
 on member disks if enabled when creating the RAID bdev, so user does not have to
 recreate the RAID volume when restarting application. It is not enabled by
 default for backward compatibility. User may specify member disks to create
