@@ -66,8 +66,11 @@ failback to it is done automatically. The automatic failback can be disabled by 
 `disable_auto_failback`. In this case, the `bdev_nvme_set_preferred_path` RPC can be used
 to do manual failback.
 
-The active-active policy uses the round-robin algorithm and submits an I/O to each I/O path in
-circular order.
+The active-active policy uses the round-robin algorithm or the minimum queue depth algorithm.
+The round-robin algorithm submits an I/O to each I/O path in circular order. The minimum queue depth
+algorithm selects an I/O path and submits an I/Os to it according to the number of outstanding I/Os
+of each I/O qpair. For these path selection algorithms, the number of I/Os routed to the current I/O
+path before switching to another I/O path is configurable.
 
 ### I/O Retry
 
@@ -154,6 +157,15 @@ To monitor the current multipath state, a RPC `bdev_nvme_get_io_paths` are avail
 
 ```bash
 ./scripts/rpc.py bdev_nvme_get_io_paths -n Nvme0n1
+```
+
+To configure the path selection policy, a RPC `bdev_nvme_set_multipath_policy` is available.
+The following is an example for a single NVMe bdev `Nvme0n1` to set the path selection policy to
+active-active, set the path selector to round-robin, and set the number of I/Os routed to the
+current I/O path before switching to another I/O path to 10.
+
+```bash
+./scripts/rpc.py bdev_nvme_set_multipath_policy -b Nvme0n1 -p active_active -s round_robin -r 10
 ```
 
 ## Limitations
