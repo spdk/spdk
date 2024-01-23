@@ -575,12 +575,14 @@ nvme_fabric_qpair_connect_async(struct spdk_nvme_qpair *qpair, uint32_t num_entr
 				      spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
 	}
 
+	qpair->auth.flags = 0;
+	qpair->connect_state = NVME_QPAIR_CONNECT_STATE_CONNECTING;
 	qpair->poll_status = status;
 	return 0;
 }
 
-int
-nvme_fabric_qpair_connect_poll(struct spdk_nvme_qpair *qpair)
+static int
+_nvme_fabric_qpair_connect_poll(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_completion_poll_status *status;
 	struct spdk_nvmf_fabric_connect_rsp *rsp;
@@ -614,16 +616,65 @@ nvme_fabric_qpair_connect_poll(struct spdk_nvme_qpair *qpair)
 		goto finish;
 	}
 
+	rsp = (struct spdk_nvmf_fabric_connect_rsp *)&status->cpl;
 	if (nvme_qpair_is_admin_queue(qpair)) {
-		rsp = (struct spdk_nvmf_fabric_connect_rsp *)&status->cpl;
 		ctrlr->cntlid = rsp->status_code_specific.success.cntlid;
 		SPDK_DEBUGLOG(nvme, "CNTLID 0x%04" PRIx16 "\n", ctrlr->cntlid);
+	}
+	if (rsp->status_code_specific.success.authreq.atr) {
+		qpair->auth.flags |= NVME_QPAIR_AUTH_FLAG_ATR;
+	}
+	if (rsp->status_code_specific.success.authreq.ascr) {
+		qpair->auth.flags |= NVME_QPAIR_AUTH_FLAG_ASCR;
 	}
 finish:
 	qpair->poll_status = NULL;
 	if (!status->timed_out) {
 		spdk_free(status->dma_data);
 		free(status);
+	}
+
+	return rc;
+}
+
+int
+nvme_fabric_qpair_connect_poll(struct spdk_nvme_qpair *qpair)
+{
+	int rc;
+
+	switch (qpair->connect_state) {
+	case NVME_QPAIR_CONNECT_STATE_CONNECTING:
+		rc = _nvme_fabric_qpair_connect_poll(qpair);
+		if (rc != 0) {
+			break;
+		}
+		if (qpair->auth.flags & (NVME_QPAIR_AUTH_FLAG_ATR | NVME_QPAIR_AUTH_FLAG_ASCR)) {
+			rc = nvme_fabric_qpair_authenticate_async(qpair);
+			if (rc == 0) {
+				qpair->connect_state = NVME_QPAIR_CONNECT_STATE_AUTHENTICATING;
+				rc = -EAGAIN;
+			}
+			break;
+		}
+		qpair->connect_state = NVME_QPAIR_CONNECT_STATE_CONNECTED;
+		break;
+	case NVME_QPAIR_CONNECT_STATE_AUTHENTICATING:
+		rc = nvme_fabric_qpair_authenticate_poll(qpair);
+		if (rc == 0) {
+			qpair->connect_state = NVME_QPAIR_CONNECT_STATE_CONNECTED;
+		}
+		break;
+	/* Once qpair is connected or a failure occurs, users mustn't call this function anymore */
+	case NVME_QPAIR_CONNECT_STATE_CONNECTED:
+	case NVME_QPAIR_CONNECT_STATE_FAILED:
+	default:
+		assert(0 && "invalid state");
+		rc = -EINVAL;
+		break;
+	}
+
+	if (rc != 0 && rc != -EAGAIN) {
+		qpair->connect_state = NVME_QPAIR_CONNECT_STATE_FAILED;
 	}
 
 	return rc;

@@ -410,6 +410,13 @@ enum nvme_qpair_state {
 	NVME_QPAIR_DESTROYING,
 };
 
+enum nvme_qpair_connect_state {
+	NVME_QPAIR_CONNECT_STATE_CONNECTING,
+	NVME_QPAIR_CONNECT_STATE_AUTHENTICATING,
+	NVME_QPAIR_CONNECT_STATE_CONNECTED,
+	NVME_QPAIR_CONNECT_STATE_FAILED,
+};
+
 enum nvme_qpair_auth_state {
 	NVME_QPAIR_AUTH_STATE_NEGOTIATE,
 	NVME_QPAIR_AUTH_STATE_AWAIT_NEGOTIATE,
@@ -420,6 +427,11 @@ enum nvme_qpair_auth_state {
 	NVME_QPAIR_AUTH_STATE_DONE,
 };
 
+/* Authentication transaction required (authreq.atr) */
+#define NVME_QPAIR_AUTH_FLAG_ATR	(1 << 0)
+/* Authentication and secure channel required (authreq.ascr) */
+#define NVME_QPAIR_AUTH_FLAG_ASCR	(1 << 1)
+
 struct nvme_auth {
 	/* State of the authentication */
 	enum nvme_qpair_auth_state	state;
@@ -427,6 +439,8 @@ struct nvme_auth {
 	int				status;
 	/* Transaction ID */
 	uint16_t			tid;
+	/* Flags */
+	uint32_t			flags;
 };
 
 struct spdk_nvme_qpair {
@@ -494,6 +508,7 @@ struct spdk_nvme_qpair {
 	/* Entries below here are not touched in the main I/O path. */
 
 	struct nvme_completion_poll_status	*poll_status;
+	enum nvme_qpair_connect_state		connect_state;
 
 	/* List entry for spdk_nvme_ctrlr::active_io_qpairs */
 	TAILQ_ENTRY(spdk_nvme_qpair)		tailq;

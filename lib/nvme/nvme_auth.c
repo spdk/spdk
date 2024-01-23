@@ -90,6 +90,11 @@ nvme_fabric_qpair_authenticate_async(struct spdk_nvme_qpair *qpair)
 		return -ENOKEY;
 	}
 
+	if (qpair->auth.flags & NVME_QPAIR_AUTH_FLAG_ASCR) {
+		AUTH_ERRLOG(qpair, "secure channel concatentation is not supported\n");
+		return -EINVAL;
+	}
+
 	status = calloc(1, sizeof(*qpair->poll_status));
 	if (!status) {
 		AUTH_ERRLOG(qpair, "failed to allocate poll status\n");

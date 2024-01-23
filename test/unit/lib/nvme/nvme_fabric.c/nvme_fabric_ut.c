@@ -51,6 +51,8 @@ DEFINE_STUB(spdk_nvme_transport_id_adrfam_str, const char *,
 	    (enum spdk_nvmf_adrfam adrfam), NULL);
 
 DEFINE_STUB(nvme_ctrlr_process_init, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
+DEFINE_STUB(nvme_fabric_qpair_authenticate_async, int, (struct spdk_nvme_qpair *qpair), 0);
+DEFINE_STUB(nvme_fabric_qpair_authenticate_poll, int, (struct spdk_nvme_qpair *qpair), 0);
 
 static struct spdk_nvmf_fabric_connect_data g_nvmf_data;
 static struct nvme_request *g_request;
