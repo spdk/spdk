@@ -498,6 +498,31 @@ nvme_auth_send_reply(struct spdk_nvme_qpair *qpair)
 					sizeof(*reply) + 2 * reply->hl);
 }
 
+static int
+nvme_auth_check_success1(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvmf_dhchap_success1 *msg = qpair->poll_status->dma_data;
+	struct nvme_auth *auth = &qpair->auth;
+	int rc;
+
+	rc = nvme_auth_check_message(qpair, SPDK_NVMF_AUTH_ID_DHCHAP_SUCCESS1);
+	if (rc != 0) {
+		return rc;
+	}
+
+	if (msg->t_id != auth->tid) {
+		AUTH_ERRLOG(qpair, "unexpected tid: received=%u, expected=%u\n",
+			    msg->t_id, auth->tid);
+		goto error;
+	}
+
+	return 0;
+error:
+	nvme_auth_set_failure(qpair, -EACCES,
+			      nvme_auth_send_failure2(qpair, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD));
+	return -EACCES;
+}
+
 int
 nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 {
@@ -570,10 +595,31 @@ nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 				}
 				break;
 			}
+			/* Reply has been sent, try to receive response */
+			rc = nvme_auth_recv_message(qpair);
+			if (rc != 0) {
+				nvme_auth_set_failure(qpair, rc, false);
+				AUTH_ERRLOG(qpair, "failed to recv DH-HMAC-CHAP_success1: %s\n",
+					    spdk_strerror(-rc));
+				break;
+			}
 			nvme_auth_set_state(qpair, NVME_QPAIR_AUTH_STATE_AWAIT_SUCCESS1);
 			break;
 		case NVME_QPAIR_AUTH_STATE_AWAIT_SUCCESS1:
-			nvme_auth_set_failure(qpair, -ENOTSUP, false);
+			rc = nvme_wait_for_completion_robust_lock_timeout_poll(qpair, status, NULL);
+			if (rc != 0) {
+				if (rc != -EAGAIN) {
+					nvme_auth_print_cpl(qpair, "DH-HMAC-CHAP_success1");
+					nvme_auth_set_failure(qpair, rc, false);
+				}
+				break;
+			}
+			rc = nvme_auth_check_success1(qpair);
+			if (rc != 0) {
+				break;
+			}
+			AUTH_DEBUGLOG(qpair, "authentication completed successfully\n");
+			nvme_auth_set_state(qpair, NVME_QPAIR_AUTH_STATE_DONE);
 			break;
 		case NVME_QPAIR_AUTH_STATE_AWAIT_FAILURE2:
 			rc = nvme_wait_for_completion_robust_lock_timeout_poll(qpair, status, NULL);
