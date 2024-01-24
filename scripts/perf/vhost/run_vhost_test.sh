@@ -4,6 +4,8 @@
 #  All rights reserved.
 #
 
+shopt -s nullglob extglob
+
 curdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$curdir/../../../")
 
