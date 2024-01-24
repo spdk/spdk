@@ -544,6 +544,9 @@ nvme_fabric_qpair_connect_async(struct spdk_nvme_qpair *qpair, uint32_t num_entr
 
 	assert(qpair->reserved_req != NULL);
 	req = qpair->reserved_req;
+	NVME_INIT_REQUEST(req, nvme_completion_poll_cb, status, NVME_PAYLOAD_CONTIG(nvmf_data, NULL),
+			  sizeof(*nvmf_data), 0);
+
 	memcpy(&req->cmd, &cmd, sizeof(cmd));
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
@@ -557,9 +560,6 @@ nvme_fabric_qpair_connect_async(struct spdk_nvme_qpair *qpair, uint32_t num_entr
 	memcpy(nvmf_data->hostid, ctrlr->opts.extended_host_id, sizeof(nvmf_data->hostid));
 	snprintf(nvmf_data->hostnqn, sizeof(nvmf_data->hostnqn), "%s", ctrlr->opts.hostnqn);
 	snprintf(nvmf_data->subnqn, sizeof(nvmf_data->subnqn), "%s", ctrlr->trid.subnqn);
-
-	NVME_INIT_REQUEST(req, nvme_completion_poll_cb, status, NVME_PAYLOAD_CONTIG(nvmf_data, NULL),
-			  sizeof(*nvmf_data), 0);
 
 	rc = nvme_qpair_submit_request(qpair, req);
 	if (rc < 0) {

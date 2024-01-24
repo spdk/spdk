@@ -1310,8 +1310,26 @@ typedef int (*spdk_nvme_parse_ana_log_page_cb)(
 int	nvme_ctrlr_parse_ana_log_page(struct spdk_nvme_ctrlr *ctrlr,
 				      spdk_nvme_parse_ana_log_page_cb cb_fn, void *cb_arg);
 
+static inline void
+nvme_request_clear(struct nvme_request *req)
+{
+	/*
+	 * Only memset/zero fields that need it.  All other fields
+	 *  will be initialized appropriately either later in this
+	 *  function, or before they are needed later in the
+	 *  submission patch.  For example, the children
+	 *  TAILQ_ENTRY and following members are
+	 *  only used as part of I/O splitting so we avoid
+	 *  memsetting them until it is actually needed.
+	 *  They will be initialized in nvme_request_add_child()
+	 *  if the request is split.
+	 */
+	memset(req, 0, offsetof(struct nvme_request, payload_size));
+}
+
 #define NVME_INIT_REQUEST(req, _cb_fn, _cb_arg, _payload, _payload_size, _md_size)	\
 	do {						\
+		nvme_request_clear(req);		\
 		req->cb_fn = _cb_fn;			\
 		req->cb_arg = _cb_arg;			\
 		req->payload = _payload;		\
@@ -1336,19 +1354,6 @@ nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 
 	STAILQ_REMOVE_HEAD(&qpair->free_req, stailq);
 	qpair->num_outstanding_reqs++;
-
-	/*
-	 * Only memset/zero fields that need it.  All other fields
-	 *  will be initialized appropriately either later in this
-	 *  function, or before they are needed later in the
-	 *  submission patch.  For example, the children
-	 *  TAILQ_ENTRY and following members are
-	 *  only used as part of I/O splitting so we avoid
-	 *  memsetting them until it is actually needed.
-	 *  They will be initialized in nvme_request_add_child()
-	 *  if the request is split.
-	 */
-	memset(req, 0, offsetof(struct nvme_request, payload_size));
 
 	NVME_INIT_REQUEST(req, cb_fn, cb_arg, *payload, payload_size, md_size);
 
