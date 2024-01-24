@@ -164,7 +164,7 @@ get_auto_cfg() {
 		IFS=","
 		echo "${spdk[*]}"
 	)]")
-	auto_cpu_map+=("vhost_0_master_core=${spdk[0]}")
+	auto_cpu_map+=("vhost_0_main_core=${spdk[0]}")
 }
 
 get_nvme_numa_map() {
