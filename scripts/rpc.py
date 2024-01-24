@@ -707,7 +707,8 @@ if __name__ == "__main__":
                                                          reconnect_delay_sec=args.reconnect_delay_sec,
                                                          fast_io_fail_timeout_sec=args.fast_io_fail_timeout_sec,
                                                          psk=args.psk,
-                                                         max_bdevs=args.max_bdevs))
+                                                         max_bdevs=args.max_bdevs,
+                                                         dhchap_key=args.dhchap_key))
 
     p = subparsers.add_parser('bdev_nvme_attach_controller', help='Add bdevs with nvme backend')
     p.add_argument('-b', '--name', help="Name of the NVMe controller, prefix for each bdev name", required=True)
@@ -764,6 +765,7 @@ if __name__ == "__main__":
                    latter method is deprecated.""")
     p.add_argument('-m', '--max-bdevs', type=int,
                    help='The size of the name array for newly created bdevs. Default is 128',)
+    p.add_argument('--dhchap-key', help='DH-HMAC-CHAP key name')
 
     p.set_defaults(func=bdev_nvme_attach_controller)
 
