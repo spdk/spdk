@@ -68,11 +68,12 @@ TEST_TAG=${TEST_TAG:-N/A}
 TEST_TAG_FILE=${TEST_TAG_FILE:-"$_pmrootdir/.run_test_name"}
 # autotest's $output_dir has a prio
 PM_OUTPUTDIR=${output_dir:-/tmp}/power
+PM_OS=$(uname -s)
 
 MONITOR_RESOURCES=(collect-cpu-load collect-vmstat)
-if [[ $(uname -s) != Linux ]]; then
-	MONITOR_RESOURCES=()
-elif [[ $(< /sys/class/dmi/id/chassis_vendor) != QEMU && ! -e /.dockerenv ]]; then
+if [[ $PM_OS == FreeBSD ]]; then
+	MONITOR_RESOURCES=(collect-vmstat)
+elif [[ $PM_OS == Linux && $(< /sys/class/dmi/id/chassis_vendor) != QEMU && ! -e /.dockerenv ]]; then
 	# These are dedicated for the PHY platforms. Skip VMs and systems which identifies as
 	# a docker containers (latter is specific to our CI's use-case).
 	MONITOR_RESOURCES+=(collect-cpu-temp)

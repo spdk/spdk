@@ -48,8 +48,9 @@ if [ $(uname -s) = Linux ]; then
 		udevadm_pid=$!
 	fi
 
-	start_monitor_resources
 fi
+
+start_monitor_resources
 
 trap "autotest_cleanup || :; exit 1" SIGINT SIGTERM EXIT
 

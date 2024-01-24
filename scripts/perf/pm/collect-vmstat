@@ -30,38 +30,57 @@ help() {
 	HELP
 }
 
-get_extra_meminfo() {
+get_extra_info() {
 	local match="" data
 
-	match+="|MemAvailable"
-	match+="|Shmem"
-	match+="|HugePages_(Total|Free)"
-	match+="|Hugepagesize"
+	case "$PM_OS" in
+		Linux)
+			match+="|MemAvailable"
+			match+="|Shmem"
+			match+="|HugePages_(Total|Free)"
+			match+="|Hugepagesize"
 
-	data=($(grep -E "^($match):" /proc/meminfo | awk '{print $2}'))
+			data=($(grep -E "^($match):" /proc/meminfo | awk '{print $2}'))
+			;&
+		*) data+=("$TEST_TAG") ;;
+	esac
 	echo "${data[*]}"
+}
+
+set_extra_info_header() {
+	local -n header_ref=$1
+	local _header
+
+	# Keep the header ordered as in get_extra_info()
+	case "$PM_OS" in
+		Linux) _header="avail shmem hp_total hp_free hp_size test" ;;
+		FreeBSD) _header="test" ;;
+	esac
+
+	header_ref[0]="${header_ref[0]} ----extra info----"
+	header_ref[1]="${header_ref[1]} $_header"
 }
 
 _vmstat() {
 	local count=$1 interval=$2 reprint_header=${3:-20} _count
-	local vmstat _vmstat stat_idx header=()
+	local vmstat vmstat_cmdline=() _vmstat stat_idx header=()
+
+	[[ $PM_OS == Linux ]] && vmstat_cmdline+=(--timestamp)
 
 	_count=$count
 	while ((stat_idx = stat_idx == reprint_header ? 1 : ++stat_idx, count <= 0 ? 1 : _count--)); do
-		mapfile -t vmstat < <(vmstat --timestamp)
+		mapfile -t vmstat < <(vmstat "${vmstat_cmdline[@]}")
 		# Enhance output to include stuff we are most interested in
-		vmstat[2]="${vmstat[2]} $(get_extra_meminfo) (test:$TEST_TAG)"
+		vmstat[2]="${vmstat[2]} $(get_extra_info)"
 		if ((stat_idx == 1)); then
 			header=("${vmstat[@]::2}")
-			header[0]="${header[0]}     ----extra memory----"
-			# Keep the header ordered as in get_extra_meminfo()
-			header[1]="${header[1]}     avail shmem hp_total hp_free hp_size"
+			set_extra_info_header header
 			_vmstat=("${header[@]}" "${vmstat[2]}")
 		else
 			_vmstat=("${vmstat[2]}")
 		fi
 		printf '%s\n' "${_vmstat[@]}"
-		sleep "${interval}s"
+		sleep "${interval}"
 	done
 }
 
