@@ -129,6 +129,12 @@ DEFINE_STUB(spdk_bdev_is_dif_head_of_md, bool, (const struct spdk_bdev *bdev), f
 DEFINE_STUB(spdk_bdev_notify_blockcnt_change, int, (struct spdk_bdev *bdev, uint64_t size), 0);
 DEFINE_STUB_V(raid_bdev_init_superblock, (struct raid_bdev *raid_bdev));
 
+uint32_t
+spdk_bdev_get_data_block_size(const struct spdk_bdev *bdev)
+{
+	return g_block_len;
+}
+
 int
 raid_bdev_load_base_bdev_superblock(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 				    raid_bdev_load_sb_cb cb, void *cb_ctx)

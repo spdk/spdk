@@ -692,7 +692,7 @@ static void
 raid_bdev_io_split(struct raid_bdev_io *raid_io, uint64_t split_offset)
 {
 	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
-	size_t iov_offset = (split_offset << raid_bdev->blocklen_shift);
+	size_t iov_offset = split_offset * raid_bdev->bdev.blocklen;
 	int i;
 
 	assert(split_offset != 0);
@@ -1677,6 +1677,7 @@ raid_bdev_configure_write_sb_cb(int status, struct raid_bdev *raid_bdev, void *c
 static int
 raid_bdev_configure(struct raid_bdev *raid_bdev)
 {
+	uint32_t data_block_size = spdk_bdev_get_data_block_size(&raid_bdev->bdev);
 	int rc;
 
 	assert(raid_bdev->state == RAID_BDEV_STATE_CONFIGURING);
@@ -1686,13 +1687,13 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	/* The strip_size_kb is read in from user in KB. Convert to blocks here for
 	 * internal use.
 	 */
-	raid_bdev->strip_size = (raid_bdev->strip_size_kb * 1024) / raid_bdev->bdev.blocklen;
+	raid_bdev->strip_size = (raid_bdev->strip_size_kb * 1024) / data_block_size;
 	if (raid_bdev->strip_size == 0 && raid_bdev->level != RAID1) {
 		SPDK_ERRLOG("Strip size cannot be smaller than the device block size\n");
 		return -EINVAL;
 	}
 	raid_bdev->strip_size_shift = spdk_u32log2(raid_bdev->strip_size);
-	raid_bdev->blocklen_shift = spdk_u32log2(raid_bdev->bdev.blocklen);
+	raid_bdev->blocklen_shift = spdk_u32log2(data_block_size);
 
 	rc = raid_bdev->module->start(raid_bdev);
 	if (rc != 0) {
@@ -1708,7 +1709,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 			raid_bdev_init_superblock(raid_bdev);
 		} else {
 			assert(spdk_uuid_compare(&raid_bdev->sb->uuid, &raid_bdev->bdev.uuid) == 0);
-			if (raid_bdev->sb->block_size != raid_bdev->bdev.blocklen) {
+			if (raid_bdev->sb->block_size != data_block_size) {
 				SPDK_ERRLOG("blocklen does not match value in superblock\n");
 				rc = -EINVAL;
 			}
@@ -2782,7 +2783,7 @@ raid_bdev_process_alloc(struct raid_bdev *raid_bdev, enum raid_process_type type
 	process->type = type;
 	process->target = target;
 	process->max_window_size = spdk_max(spdk_divide_round_up(g_opts.process_window_size_kb * 1024UL,
-					    raid_bdev->bdev.blocklen),
+					    spdk_bdev_get_data_block_size(&raid_bdev->bdev)),
 					    raid_bdev->bdev.write_unit_size);
 	TAILQ_INIT(&process->requests);
 	TAILQ_INIT(&process->finish_actions);
@@ -2979,8 +2980,8 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existi
 		uint64_t data_offset;
 
 		if (base_info->data_offset == 0) {
-			assert((RAID_BDEV_MIN_DATA_OFFSET_SIZE % bdev->blocklen) == 0);
-			data_offset = RAID_BDEV_MIN_DATA_OFFSET_SIZE / bdev->blocklen;
+			assert((RAID_BDEV_MIN_DATA_OFFSET_SIZE % spdk_bdev_get_data_block_size(bdev)) == 0);
+			data_offset = RAID_BDEV_MIN_DATA_OFFSET_SIZE / spdk_bdev_get_data_block_size(bdev);
 		} else {
 			data_offset = base_info->data_offset;
 		}
@@ -3241,9 +3242,9 @@ raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bd
 	uint8_t i;
 	int rc;
 
-	if (sb->block_size != bdev->blocklen) {
+	if (sb->block_size != spdk_bdev_get_data_block_size(bdev)) {
 		SPDK_WARNLOG("Bdev %s block size (%u) does not match the value in superblock (%u)\n",
-			     bdev->name, sb->block_size, bdev->blocklen);
+			     bdev->name, sb->block_size, spdk_bdev_get_data_block_size(bdev));
 		return;
 	}
 
