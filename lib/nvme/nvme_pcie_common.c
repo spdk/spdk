@@ -1649,6 +1649,8 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	tr->cb_fn = req->cb_fn;
 	tr->cb_arg = req->cb_arg;
 	req->cmd.cid = tr->cid;
+	/* Use PRP by default. This bit will be overridden below if needed. */
+	req->cmd.psdt = SPDK_NVME_PSDT_PRP;
 
 	if (req->payload_size != 0) {
 		payload_type = nvme_payload_type(&req->payload);
