@@ -9,6 +9,8 @@ SPDK_HEADER_DIR	?= $(rootdir)/include
 SPDK_LIB_DIR	?= $(rootdir)/build/lib
 DPDK_LIB_DIR	?= $(rootdir)/dpdk/build/lib
 VFIO_LIB_DIR	?= $(rootdir)/build/libvfio-user/usr/local/lib
+ISAL_LIB_DIR	?= $(rootdir)/isa-l/.libs
+ISAL_CRYPTO_LIB_DIR ?= $(rootdir)/isa-l-crypto/.libs
 
 ifneq ($(SPDK_HEADER_DIR),)
 COMMON_CFLAGS+=-I$(SPDK_HEADER_DIR)
@@ -25,6 +27,15 @@ endif
 ifneq ($(VFIO_LIB_DIR),)
 COMMON_CFLAGS+=-L$(VFIO_LIB_DIR)
 endif
+
+ifneq ($(ISAL_LIB_DIR),)
+COMMON_CFLAGS+=-L$(ISAL_LIB_DIR)
+endif
+
+ifneq ($(ISAL_CRYPTO_LIB_DIR),)
+COMMON_CFLAGS+=-L$(ISAL_CRYPTO_LIB_DIR)
+endif
+
 export
 .PHONY: all
 

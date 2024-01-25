@@ -11,6 +11,9 @@ source "$rootdir/test/common/autotest_common.sh"
 set -e
 SPDK_DIR=$1
 
+INSTALL_DIR=$test_root/install
+mkdir -p $INSTALL_DIR
+
 if [ -z "$EXTERNAL_MAKE_HUGEMEM" ]; then
 	EXTERNAL_MAKE_HUGEMEM=$HUGEMEM
 fi
@@ -25,10 +28,14 @@ if [[ -e $SPDK_DIR/mk/config.mk ]]; then
 fi
 $SPDK_DIR/configure --with-shared --without-ocf --disable-asan $WITH_DPDK
 make -C $SPDK_DIR -j$(nproc)
+make -C $SPDK_DIR DESTDIR=$INSTALL_DIR install -j$(nproc)
 
-export SPDK_HEADER_DIR="$SPDK_DIR/include"
+export SPDK_HEADER_DIR="$INSTALL_DIR/usr/local/include"
+export SPDK_LIB_DIR="$INSTALL_DIR/usr/local/lib"
+export DPDK_LIB_DIR="$INSTALL_DIR/usr/local/lib"
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$test_root/passthru"
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$test_root/accel"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$SPDK_LIB_DIR"
 _sudo="sudo -E --preserve-env=PATH LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 
 # Make just the application linked against individual SPDK shared libraries.
@@ -78,8 +85,10 @@ run_test "external_run_nvme_shared" $_sudo $test_root/nvme/identify.sh
 make -C $test_root clean
 
 make -C $SPDK_DIR clean
+rm -rf $INSTALL_DIR
 $SPDK_DIR/configure --without-shared --without-ocf --disable-asan $WITH_DPDK
 make -C $SPDK_DIR -j$(nproc)
+make -C $SPDK_DIR DESTDIR=$INSTALL_DIR install -j$(nproc)
 
 # Make just the application linked against individual SPDK archives.
 run_test "external_make_accel_module_static" make -C $test_root accel_module_static
@@ -113,5 +122,6 @@ run_test "external_run_nvme_static" $_sudo $test_root/nvme/identify.sh
 
 make -C $test_root clean
 make -C $SPDK_DIR -j$(nproc) clean
+rm -rf $INSTALL_DIR
 
 sudo HUGEMEM="$HUGEMEM" $SPDK_DIR/scripts/setup.sh reset
