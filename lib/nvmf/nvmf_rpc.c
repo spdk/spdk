@@ -259,7 +259,7 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 
 SPDK_LOG_DEPRECATION_REGISTER(rpc_nvmf_get_subsystems,
 			      "listener.transport is deprecated in favor of trtype",
-			      "v24.01", 0);
+			      "v24.05", 0);
 
 static void
 rpc_nvmf_get_subsystems(struct spdk_jsonrpc_request *request,

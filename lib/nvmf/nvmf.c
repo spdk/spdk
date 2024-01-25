@@ -1374,7 +1374,7 @@ _nvmf_qpair_disconnect_msg(void *ctx)
 	free(ctx);
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_qpair_disconnect, "cb_fn and ctx are deprecated", "v24.01",
+SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_qpair_disconnect, "cb_fn and ctx are deprecated", "v24.05",
 			      0);
 
 int

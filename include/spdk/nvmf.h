@@ -343,8 +343,8 @@ typedef void (*nvmf_qpair_disconnect_cb)(void *ctx);
  * Disconnect an NVMe-oF qpair
  *
  * \param qpair The NVMe-oF qpair to disconnect.
- * \param cb_fn Deprecated, will be removed in v24.01. The function to call upon completion of the disconnect.
- * \param ctx Deprecated, will be removed in v24.01. The context to pass to the callback function.
+ * \param cb_fn Deprecated, will be removed in v24.05. The function to call upon completion of the disconnect.
+ * \param ctx Deprecated, will be removed in v24.05. The context to pass to the callback function.
  *
  * \return 0 upon success.
  * \return -ENOMEM if the function specific context could not be allocated.
@@ -801,7 +801,7 @@ void spdk_nvmf_subsystem_allow_any_listener(
 /**
  * Check whether a subsystem allows any listen address or only addresses in the allowed list.
  *
- * Deprecated - will be removed in 24.01. Please use
+ * Deprecated - will be removed in v24.05. Please use
  * \ref spdk_nvmf_subsystem_any_listener_allowed.
  *
  * \param subsystem Subsystem to query.
