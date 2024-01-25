@@ -1339,7 +1339,7 @@ spdk_nvmf_subsystem_allow_any_listener(struct spdk_nvmf_subsystem *subsystem,
 }
 
 SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsytem_any_listener_allowed,
-			      "spdk_nvmf_subsytem_any_listener_allowed is deprecated", "v24.01", 0);
+			      "spdk_nvmf_subsytem_any_listener_allowed is deprecated", "v24.05", 0);
 
 bool
 spdk_nvmf_subsytem_any_listener_allowed(struct spdk_nvmf_subsystem *subsystem)

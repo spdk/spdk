@@ -21,7 +21,7 @@ The tags can be matched with the level 4 headers below.
 
 ### accel
 
-#### `flags` parameter in *submit* and *append* functions
+#### `accel_flags`
 
 The `int flags` parameter in various *submit* and *append* accel FW API is not used and deprecated. It will be removed
 in 24.05 release.
@@ -38,17 +38,17 @@ macro instead.
 #### `spdk_nvmf_qpair_disconnect`
 
 Parameters `cb_fn` and `ctx` of `spdk_nvmf_qpair_disconnect` API are deprecated. These parameters
-will be removed in 24.01 release.
+will be removed in 24.05 release.
 
 #### `nvmf_get_subsystems`
 
 `transport` field in `listen_addresses` of `nvmf_get_subsystems` RPC is deprecated.
-`trtype` field should be used instead. `transport` field will be removed in 24.01 release.
+`trtype` field should be used instead. `transport` field will be removed in 24.05 release.
 
-#### 'spdk_nvmf_subsytem_any_listener_allowed'
+#### `spdk_nvmf_subsytem_any_listener_allowed`
 
-The function is deprecated and will be removed in 24.01 release. Please use
-'spdk_nvmf_subsystem_any_listener_allowed' instead.
+The function is deprecated and will be removed in 24.05 release. Please use
+`spdk_nvmf_subsystem_any_listener_allowed` instead.
 
 ### gpt
 
