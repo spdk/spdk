@@ -1,6 +1,108 @@
 # Changelog
 
-## v24.01: (Upcoming Release)
+## v24.01
+
+### accel
+
+Added support for new operations for computing Data Integrity Field (DIF),
+`spdk_accel_submit_dif_verify()`, `spdk_accel_submit_dif_generate()` and
+`spdk_accel_submit_dif_generate_copy()`.
+
+Added `spdk_accel_get_opcode_name()` API that returns name of an operation.
+
+Added `spdk_accel_get_module()` API that returns pointer to a module.
+
+Added optional `init()` and `fini()` callbacks to `spdk_accel_driver` in order to allow
+drivers to initialize and clean up resources by the driver.
+
+### accel_error
+
+Added new `error` accel module that allows user to inject error to selected accel operations.
+
+### bdev
+
+Added `spdk_bdev_nvme_iov_passthru_md()` API to allow sending larger passthru commands.
+
+Added `max_rw_size` field to `spdk_bdev` structure allowing bdev modules to specify maximum
+size of an I/O.
+
+Added `iobuf_small_cache_size` and `iobuf_large_cache_size` parameters to
+`bdev_set_options` RPC making iobuf use in bdev configurable.
+
+### bdev_raid
+
+Added support for rebuild in raid1 and raid5f levels.
+
+Added `superblock` argument to `bdev_raid_create` RPC to allow writing out raid metadata to
+a superblock. It can be then re-created from examined base bdevs, without the need
+to issue `bdev_raid_create`.
+
+Added `bdev_raid_add_base_bdev` RPC to add a base bdevs to an existing raid bdev.
+
+Added `bdev_raid_set_options` RPC that changes options for raid bdev module,
+currently allows setting `process_window_size_kb` affecting background operations
+like rebuild.
+
+### blobstore
+
+Added `spdk_bs_grow_live()` and `spdk_bdev_update_bs_blockcnt()` API that can be used to
+increase size of blobstore filling the underlying device without first closing the blobstore.
+
+### env
+
+Added SPDK command line parameter `--no-huge`, which enables SPDK to run without hugepages.
+
+### event
+
+Added SPDK command line parameter `--interrupt-mode`, which enables to run SPDK in interrupt
+mode. Effective only if all components used in the application, support interrupt mode.
+
+### ftl
+
+Added `rpc_bdev_ftl_get_properties` and `bdev_ftl_set_property` RPC with matching API calls,
+to allow modification of FTL device properties.
+
+### idxd
+
+Added `spdk_idxd_submit_dif_check()` and `spdk_idxd_submit_dif_insert()` API to support
+new operations for computing Data Integrity Field (DIF).
+
+### json
+
+Added `spdk_json_write_uuid()`, `spdk_json_write_named_uuid()` and `spdk_json_decode_uuid()`
+to help with writing and decoding UUID.
+
+### nvme
+
+A new transport option `rdma_max_cq_size` was added to limit indefinite growth of CQ size.
+
+Added `spdk_nvme_ctrlr_cmd_iov_raw_with_md()` API to allow sending larger passthru commands.
+
+### nvmf
+
+Added `max_discard_size_kib` and `max_write_zeroes_size_kib` to `nvmf_create_subsystem` RPC to set the
+maximum discard size and maximum write zeroes size.
+
+Added new optional `--ana-state` (or shortly `-n`) parameter to `nvmf_subsystem_add_listener` RPC.
+
+Added public APIs `spdk_nvmf_subsystem_get_ana_reporting()` and `spdk_nvmf_subsystem_set_ana_state()`,
+replacing the internal functions `nvmf_subsystem_get_ana_reporting()` and `nvmf_subsystem_set_ana_state()`
+respectively.
+
+Added support for NVMe-oF referrals in NVMe-oF target with addition of
+`spdk_nvmf_tgt_add_referral()` and `spdk_nvmf_tgt_remove_referral()` API and `nvmf_discovery_add_referral`,
+`nvmf_discovery_remove_referral` and `nvmf_discovery_get_referrals` RPC.
+
+Added `spdk_nvmf_set_custom_ns_reservation_ops()` API allowing to register custom handlers for reservation
+operations.
+
+### scsi
+
+Added support for `SPDK_SBC_WRITE_SAME_10` and `SPDK_SBC_WRITE_SAME_16`.
+
+### thread
+
+Added `iobuf_get_stats` RPC and `spdk_iobuf_get_stats()` API to track iobuf use across components.
 
 ### env
 
@@ -32,6 +134,10 @@ Added `spdk_trace_register_user_thread()` to initialize trace environment and
 for a user created thread.
 
 Modified `spdk_trace_init()` to take number of user created threads as a parameter.
+
+### ublk
+
+Added `ublk_recover_disk` RPC to support recovering after restarting ublk target.
 
 ### vhost
 
