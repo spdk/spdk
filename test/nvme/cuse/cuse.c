@@ -138,7 +138,7 @@ test_cuse_update(void)
 	int rc;
 	struct spdk_nvme_ctrlr	ctrlr = {};
 
-	rc = nvme_cuse_start(&ctrlr);
+	rc = spdk_nvme_cuse_register(&ctrlr);
 	CU_ASSERT(rc == 0);
 
 	g_active_num_ns = 4;
