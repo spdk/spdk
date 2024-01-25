@@ -5,6 +5,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/util.h"
 #include "spdk_internal/cunit.h"
 #include "spdk/env.h"
 #include "spdk_internal/mock.h"
@@ -1416,6 +1417,78 @@ test_raid_process(void)
 }
 
 static void
+test_raid_process_with_qos(void)
+{
+	struct rpc_bdev_raid_create req;
+	struct rpc_bdev_raid_delete destroy_req;
+	struct raid_bdev *pbdev;
+	struct spdk_bdev *base_bdev;
+	struct spdk_thread *process_thread;
+	uint64_t num_blocks_processed = 0;
+	struct spdk_raid_bdev_opts opts;
+	int i = 0;
+
+	set_globals();
+	CU_ASSERT(raid_bdev_init() == 0);
+
+	create_raid_bdev_create_req(&req, "raid1", 0, true, 0, false);
+	verify_raid_bdev_present("raid1", false);
+	TAILQ_FOREACH(base_bdev, &g_bdev_list, internal.link) {
+		base_bdev->blockcnt = 128;
+	}
+	rpc_bdev_raid_create(NULL, NULL);
+	CU_ASSERT(g_rpc_err == 0);
+	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
+	free_test_req(&req);
+
+	TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
+		if (strcmp(pbdev->bdev.name, "raid1") == 0) {
+			break;
+		}
+	}
+	CU_ASSERT(pbdev != NULL);
+
+	pbdev->module_private = &num_blocks_processed;
+	pbdev->min_base_bdevs_operational = 0;
+
+	opts.process_window_size_kb = 1024;
+	opts.process_max_bandwidth_mb_sec = 1;
+	CU_ASSERT(raid_bdev_set_opts(&opts) == 0);
+	CU_ASSERT(raid_bdev_start_rebuild(&pbdev->base_bdev_info[0]) == 0);
+	poll_app_thread();
+
+	SPDK_CU_ASSERT_FATAL(pbdev->process != NULL);
+
+	process_thread = g_latest_thread;
+
+	for (i = 0; i < 10; i++) {
+		spdk_thread_poll(process_thread, 0, 0);
+		poll_app_thread();
+	}
+	CU_ASSERT(pbdev->process->window_offset == 0);
+
+	spdk_delay_us(SPDK_SEC_TO_USEC);
+	while (spdk_thread_poll(process_thread, 0, 0) > 0) {
+		spdk_delay_us(SPDK_SEC_TO_USEC);
+		poll_app_thread();
+	}
+
+	CU_ASSERT(pbdev->process == NULL);
+	CU_ASSERT(num_blocks_processed == pbdev->bdev.blockcnt);
+
+	poll_app_thread();
+
+	create_raid_bdev_delete_req(&destroy_req, "raid1", 0);
+	rpc_bdev_raid_delete(NULL, NULL);
+	CU_ASSERT(g_rpc_err == 0);
+	verify_raid_bdev_present("raid1", false);
+
+	raid_bdev_exit();
+	base_bdevs_cleanup();
+	reset_globals();
+}
+
+static void
 test_raid_io_split(void)
 {
 	struct rpc_bdev_raid_create req;
@@ -1722,6 +1795,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_raid_level_conversions);
 	CU_ADD_TEST(suite, test_raid_io_split);
 	CU_ADD_TEST(suite, test_raid_process);
+	CU_ADD_TEST(suite, test_raid_process_with_qos);
 
 	spdk_thread_lib_init(test_new_thread_fn, 0);
 	g_app_thread = spdk_thread_create("app_thread", NULL);

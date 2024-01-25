@@ -553,6 +553,8 @@ int raid_bdev_load_base_bdev_superblock(struct spdk_bdev_desc *desc, struct spdk
 struct spdk_raid_bdev_opts {
 	/* Size of the background process window in KiB */
 	uint32_t process_window_size_kb;
+	/* Maximum bandwidth in MiB to process per second */
+	uint32_t process_max_bandwidth_mb_sec;
 };
 
 void raid_bdev_get_opts(struct spdk_raid_bdev_opts *opts);

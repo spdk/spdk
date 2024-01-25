@@ -41,6 +41,7 @@ extern "C" {
  */
 #define SPDK_COUNTOF_MEMBER(type, member) (SPDK_COUNTOF(((type *)0)->member))
 
+#define SPDK_SEC_TO_MSEC 1000ULL
 #define SPDK_SEC_TO_USEC 1000000ULL
 #define SPDK_SEC_TO_NSEC 1000000000ULL
 

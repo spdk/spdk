@@ -16,7 +16,8 @@
 #define RAID_OFFSET_BLOCKS_INVALID	UINT64_MAX
 #define RAID_BDEV_PROCESS_MAX_QD	16
 
-#define RAID_BDEV_PROCESS_WINDOW_SIZE_KB_DEFAULT 1024
+#define RAID_BDEV_PROCESS_WINDOW_SIZE_KB_DEFAULT	1024
+#define RAID_BDEV_PROCESS_MAX_BANDWIDTH_MB_SEC_DEFAULT	0
 
 static bool g_shutdown_started = false;
 
@@ -51,6 +52,15 @@ enum raid_bdev_process_state {
 	RAID_PROCESS_STATE_STOPPED,
 };
 
+struct raid_process_qos {
+	bool enable_qos;
+	uint64_t last_tsc;
+	double bytes_per_tsc;
+	double bytes_available;
+	double bytes_max;
+	struct spdk_poller *process_continue_poller;
+};
+
 struct raid_bdev_process {
 	struct raid_bdev		*raid_bdev;
 	enum raid_process_type		type;
@@ -67,6 +77,7 @@ struct raid_bdev_process {
 	struct raid_base_bdev_info	*target;
 	int				status;
 	TAILQ_HEAD(, raid_process_finish_action) finish_actions;
+	struct raid_process_qos		qos;
 };
 
 struct raid_process_finish_action {
@@ -77,6 +88,7 @@ struct raid_process_finish_action {
 
 static struct spdk_raid_bdev_opts g_opts = {
 	.process_window_size_kb = RAID_BDEV_PROCESS_WINDOW_SIZE_KB_DEFAULT,
+	.process_max_bandwidth_mb_sec = RAID_BDEV_PROCESS_MAX_BANDWIDTH_MB_SEC_DEFAULT,
 };
 
 void
@@ -1400,6 +1412,8 @@ raid_bdev_opts_config_json(struct spdk_json_write_ctx *w)
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_uint32(w, "process_window_size_kb", g_opts.process_window_size_kb);
+	spdk_json_write_named_uint32(w, "process_max_bandwidth_mb_sec",
+				     g_opts.process_max_bandwidth_mb_sec);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
@@ -2449,6 +2463,8 @@ _raid_bdev_process_finish_done(void *ctx)
 		free(finish_action);
 	}
 
+	spdk_poller_unregister(&process->qos.process_continue_poller);
+
 	raid_bdev_process_free(process);
 
 	spdk_thread_exit(spdk_get_thread());
@@ -2782,11 +2798,64 @@ raid_bdev_process_window_range_locked(void *ctx, int status)
 	_raid_bdev_process_thread_run(process);
 }
 
+static bool
+raid_bdev_process_consume_token(struct raid_bdev_process *process)
+{
+	struct raid_bdev *raid_bdev = process->raid_bdev;
+	uint64_t now = spdk_get_ticks();
+
+	process->qos.bytes_available = spdk_min(process->qos.bytes_max,
+						process->qos.bytes_available +
+						(now - process->qos.last_tsc) * process->qos.bytes_per_tsc);
+	process->qos.last_tsc = now;
+	if (process->qos.bytes_available > 0.0) {
+		process->qos.bytes_available -= process->window_size * raid_bdev->bdev.blocklen;
+		return true;
+	}
+	return false;
+}
+
+static bool
+raid_bdev_process_lock_window_range(struct raid_bdev_process *process)
+{
+	struct raid_bdev *raid_bdev = process->raid_bdev;
+	int rc;
+
+	assert(process->window_range_locked == false);
+
+	if (process->qos.enable_qos) {
+		if (raid_bdev_process_consume_token(process)) {
+			spdk_poller_pause(process->qos.process_continue_poller);
+		} else {
+			spdk_poller_resume(process->qos.process_continue_poller);
+			return false;
+		}
+	}
+
+	rc = spdk_bdev_quiesce_range(&raid_bdev->bdev, &g_raid_if,
+				     process->window_offset, process->max_window_size,
+				     raid_bdev_process_window_range_locked, process);
+	if (rc != 0) {
+		raid_bdev_process_window_range_locked(process, rc);
+	}
+	return true;
+}
+
+static int
+raid_bdev_process_continue_poll(void *arg)
+{
+	struct raid_bdev_process *process = arg;
+
+	if (raid_bdev_process_lock_window_range(process)) {
+		return SPDK_POLLER_BUSY;
+	}
+	return SPDK_POLLER_IDLE;
+}
+
 static void
 raid_bdev_process_thread_run(struct raid_bdev_process *process)
 {
 	struct raid_bdev *raid_bdev = process->raid_bdev;
-	int rc;
 
 	assert(spdk_get_thread() == process->thread);
 	assert(process->window_remaining == 0);
@@ -2805,13 +2874,7 @@ raid_bdev_process_thread_run(struct raid_bdev_process *process)
 
 	process->max_window_size = spdk_min(raid_bdev->bdev.blockcnt - process->window_offset,
 					    process->max_window_size);
-
-	rc = spdk_bdev_quiesce_range(&raid_bdev->bdev, &g_raid_if,
-				     process->window_offset, process->max_window_size,
-				     raid_bdev_process_window_range_locked, process);
-	if (rc != 0) {
-		raid_bdev_process_window_range_locked(process, rc);
-	}
+	raid_bdev_process_lock_window_range(process);
 }
 
 static void
@@ -2832,6 +2895,12 @@ raid_bdev_process_thread_init(void *ctx)
 
 	process->raid_ch = spdk_io_channel_get_ctx(ch);
 	process->state = RAID_PROCESS_STATE_RUNNING;
+
+	if (process->qos.enable_qos) {
+		process->qos.process_continue_poller = SPDK_POLLER_REGISTER(raid_bdev_process_continue_poll,
+						       process, 0);
+		spdk_poller_pause(process->qos.process_continue_poller);
+	}
 
 	SPDK_NOTICELOG("Started %s on raid bdev %s\n",
 		       raid_bdev_process_to_str(process->type), raid_bdev->bdev.name);
@@ -2998,6 +3067,15 @@ raid_bdev_process_alloc(struct raid_bdev *raid_bdev, enum raid_process_type type
 					    raid_bdev->bdev.write_unit_size);
 	TAILQ_INIT(&process->requests);
 	TAILQ_INIT(&process->finish_actions);
+
+	if (g_opts.process_max_bandwidth_mb_sec != 0) {
+		process->qos.enable_qos = true;
+		process->qos.last_tsc = spdk_get_ticks();
+		process->qos.bytes_per_tsc = g_opts.process_max_bandwidth_mb_sec * 1024 * 1024.0 /
+					     spdk_get_ticks_hz();
+		process->qos.bytes_max = g_opts.process_max_bandwidth_mb_sec * 1024 * 1024.0 / SPDK_SEC_TO_MSEC;
+		process->qos.bytes_available = 0.0;
+	}
 
 	for (i = 0; i < RAID_BDEV_PROCESS_MAX_QD; i++) {
 		process_req = raid_bdev_process_alloc_request(process);

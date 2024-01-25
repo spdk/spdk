@@ -351,14 +351,19 @@ def bdev_null_resize(client, name, new_size):
     return client.call('bdev_null_resize', params)
 
 
-def bdev_raid_set_options(client, process_window_size_kb=None):
+def bdev_raid_set_options(client, process_window_size_kb=None, process_max_bandwidth_mb_sec=None):
     """Set options for bdev raid.
     Args:
         process_window_size_kb: Background process (e.g. rebuild) window size in KiB
+        process_max_bandwidth_mb_sec: Background process (e.g. rebuild) maximum bandwidth in MiB/Sec
     """
     params = dict()
     if process_window_size_kb is not None:
         params['process_window_size_kb'] = process_window_size_kb
+
+    if process_max_bandwidth_mb_sec is not None:
+        params['process_max_bandwidth_mb_sec'] = process_max_bandwidth_mb_sec
+
     return client.call('bdev_raid_set_options', params)
 
 

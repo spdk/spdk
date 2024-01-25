@@ -10902,12 +10902,17 @@ This RPC can be called at any time, but the new value will only take effect for 
 The `process_window_size_kb` parameter defines the size of the "window" (LBA range of the raid bdev)
 in which a background process like rebuild performs its work. Any positive value is valid, but the value
 actually used by a raid bdev can be adjusted to the size of the raid bdev or the write unit size.
+`process_max_bandwidth_mb_sec` parameter defines the maximum bandwidth used by a background process like
+rebuild. Any positive value or zero is valid, zero means no bandwidth limitation for background process.
+It can only limit the process bandwidth but doesn't guarantee it can be reached. Changing this value will
+not affect existing processes, it will only take effect on new processes generated after the RPC is completed.
 
 #### Parameters
 
-Name                       | Optional | Type        | Description
--------------------------- | -------- | ----------- | -----------
-process_window_size_kb     | Optional | number      | Background process (e.g. rebuild) window size in KiB
+Name                          | Optional | Type        | Description
+----------------------------- | -------- | ----------- | -----------
+process_window_size_kb        | Optional | number      | Background process (e.g. rebuild) window size in KiB
+process_max_bandwidth_mb_sec  | Optional | number      | Background process (e.g. rebuild) maximum bandwidth in MiB/Sec
 
 #### Example
 
@@ -10920,7 +10925,8 @@ request:
   "method": "bdev_raid_set_options",
   "id": 1,
   "params": {
-    "process_window_size_kb": 512
+    "process_window_size_kb": 512,
+    "process_max_bandwidth_mb_sec": 100
   }
 }
 ~~~

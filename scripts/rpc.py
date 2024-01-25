@@ -2212,12 +2212,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     def bdev_raid_set_options(args):
         rpc.bdev.bdev_raid_set_options(args.client,
-                                       process_window_size_kb=args.process_window_size_kb)
+                                       process_window_size_kb=args.process_window_size_kb,
+                                       process_max_bandwidth_mb_sec=args.process_max_bandwidth_mb_sec)
 
     p = subparsers.add_parser('bdev_raid_set_options',
                               help='Set options for bdev raid.')
     p.add_argument('-w', '--process-window-size-kb', type=int,
                    help="Background process (e.g. rebuild) window size in KiB")
+    p.add_argument('-b', '--process-max-bandwidth-mb-sec', type=int,
+                   help="Background process (e.g. rebuild) maximum bandwidth in MiB/Sec")
 
     p.set_defaults(func=bdev_raid_set_options)
 
