@@ -3741,7 +3741,7 @@ dif_generate_remap_and_verify(struct iovec *iovs, int iovcnt,
 
 	spdk_dif_ctx_set_remapped_init_ref_tag(&ctx, remapped_init_ref_tag);
 
-	rc = spdk_dif_remap_ref_tag(iovs, iovcnt, num_blocks, &ctx, NULL);
+	rc = spdk_dif_remap_ref_tag(iovs, iovcnt, num_blocks, &ctx, NULL, true);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc, dif_type, dif_flags,
@@ -3901,7 +3901,7 @@ dix_generate_remap_and_verify(struct iovec *iovs, int iovcnt, struct iovec *md_i
 
 	spdk_dif_ctx_set_remapped_init_ref_tag(&ctx, remapped_init_ref_tag);
 
-	rc = spdk_dix_remap_ref_tag(md_iov, num_blocks, &ctx, NULL);
+	rc = spdk_dix_remap_ref_tag(md_iov, num_blocks, &ctx, NULL, true);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, false, dif_loc, dif_type, dif_flags,

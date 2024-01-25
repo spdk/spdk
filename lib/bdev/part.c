@@ -222,14 +222,14 @@ bdev_part_remap_dif(struct spdk_bdev_io *bdev_io, uint32_t offset,
 
 	if (bdev->md_interleave) {
 		rc = spdk_dif_remap_ref_tag(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-					    bdev_io->u.bdev.num_blocks, &dif_ctx, &err_blk);
+					    bdev_io->u.bdev.num_blocks, &dif_ctx, &err_blk, true);
 	} else {
 		struct iovec md_iov = {
 			.iov_base	= bdev_io->u.bdev.md_buf,
 			.iov_len	= bdev_io->u.bdev.num_blocks * bdev->md_len,
 		};
 
-		rc = spdk_dix_remap_ref_tag(&md_iov, bdev_io->u.bdev.num_blocks, &dif_ctx, &err_blk);
+		rc = spdk_dix_remap_ref_tag(&md_iov, bdev_io->u.bdev.num_blocks, &dif_ctx, &err_blk, true);
 	}
 
 	if (rc != 0) {

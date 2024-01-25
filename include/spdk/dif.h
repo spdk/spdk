@@ -433,12 +433,14 @@ uint32_t spdk_dif_get_length_with_md(uint32_t data_len, const struct spdk_dif_ct
  * \param num_blocks Number of blocks of the payload.
  * \param ctx DIF context.
  * \param err_blk Error information of the block in which DIF error is found.
+ * \param check_ref_tag If true, check the reference tag before updating.
  *
  * \return 0 on success and negated errno otherwise.
  */
 int spdk_dif_remap_ref_tag(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 			   const struct spdk_dif_ctx *dif_ctx,
-			   struct spdk_dif_error *err_blk);
+			   struct spdk_dif_error *err_blk,
+			   bool check_ref_tag);
 
 /**
  * Remap reference tag for separate metadata payload.
@@ -451,10 +453,12 @@ int spdk_dif_remap_ref_tag(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
  * \param num_blocks Number of blocks of the payload.
  * \param ctx DIF context.
  * \param err_blk Error information of the block in which DIF error is found.
+ * \param check_ref_tag If true, check the reference tag before updating.
  *
  * \return 0 on success and negated errno otherwise.
  */
 int spdk_dix_remap_ref_tag(struct iovec *md_iov, uint32_t num_blocks,
 			   const struct spdk_dif_ctx *dif_ctx,
-			   struct spdk_dif_error *err_blk);
+			   struct spdk_dif_error *err_blk,
+			   bool check_ref_tag);
 #endif /* SPDK_DIF_H */
