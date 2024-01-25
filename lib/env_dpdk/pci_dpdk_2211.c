@@ -21,6 +21,7 @@ SPDK_STATIC_ASSERT(offsetof(struct spdk_pci_driver, driver) >= sizeof(struct rte
  */
 #define rte_pci_mmio_read(...) SPDK_STATIC_ASSERT(false, "rte_pci_mmio_read requires new pci_dpdk_2307 compat layer")
 #define rte_pci_mmio_write(...) SPDK_STATIC_ASSERT(false, "rte_pci_mmio_write requires new pci_dpdk_2307 compat layer")
+#define rte_pci_pasid_set_state(...) SPDK_STATIC_ASSERT(false, "rte_pci_pasid_set_state requires new pci_dpdk_2307 compat layer")
 
 static struct rte_mem_resource *
 pci_device_get_mem_resource_2211(struct rte_pci_device *dev, uint32_t bar)
