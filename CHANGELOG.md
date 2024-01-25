@@ -4,13 +4,36 @@
 
 ## v24.01
 
+### env
+
+Added SPDK command line parameter `--no-huge`, which enables SPDK to run without hugepages.
+
+### nvme
+
+A new transport option `rdma_max_cq_size` was added to limit indefinite growth of CQ size.
+
+### nvmf
+
+Added `max_discard_size_kib` and `max_write_zeroes_size_kib` to `nvmf_create_subsystem` RPC to set the
+maximum discard size and maximum write zeroes size.
+
+Added new optional `--ana-state` (or shortly `-n`) parameter to `nvmf_subsystem_add_listener` RPC.
+
+Added public APIs `spdk_nvmf_subsystem_get_ana_reporting()` and `spdk_nvmf_subsystem_set_ana_state()`,
+replacing the internal functions `nvmf_subsystem_get_ana_reporting()` and `nvmf_subsystem_set_ana_state()`
+respectively.
+
+### scsi
+
+Added support for `SPDK_SBC_WRITE_SAME_10` and `SPDK_SBC_WRITE_SAME_16`.
+
 ### trace
 
-Added `spdk_trace_register_user_thread` to initialize trace environment and
-`spdk_trace_unregister_user_thread` to de-initialize trace environment
-for an user created thread.
+Added `spdk_trace_register_user_thread()` to initialize trace environment and
+`spdk_trace_unregister_user_thread()` to de-initialize trace environment
+for a user created thread.
 
-Modified `spdk_trace_init` to take number of user created threads as a parameter.
+Modified `spdk_trace_init()` to take number of user created threads as a parameter.
 
 ### vhost
 
@@ -21,23 +44,6 @@ the vhost-scsi controller until adding the scsi target is completed.
 
 Added `vhost_start_scsi_controller` RPC to start vhost-scsi controller, it could be used to support
 live recovery feature of vhost-scsi target.
-
-### scsi
-
-Added support for `SBC WRITE SAME 10` and `SBC WRITE SAME 16`.
-
-### nvme
-
-A new transport option `rdma_max_cq_size` was added to limit indefinite growth of CQ size.
-
-### env
-
-Added SPDK commandline parameter --no-huge, which enables SPDK to run without hugepages.
-
-### nvmf
-
-Added `max_discard_size_kib` and `max_write_zeroes_size_kib` to `nvmf_create_subsystem` to set the
-maximum discard size and maximum write_zeroes size.
 
 ## v23.09
 
@@ -129,12 +135,6 @@ Deprecated `spdk_nvmf_subsytem_any_listener_allowed()` API (to be removed in 24.
 spdk_nvmf_subsystem_any_listener_allowed()` API fixing the typo.
 
 Added `spdk_nvmf_subsystem_is_discovery()` API to check whether a given susbystem is discovery subsystem.
-
-Added new optional `--ana-state` (or shortly `-n`) parameter to nvmf_subsystem_add_listener RPC call.
-
-Added public APIs 'spdk_nvmf_subsystem_get_ana_reporting' and 'spdk_nvmf_subsystem_set_ana_state',
-replacing the internal functions 'nvmf_subsystem_get_ana_reporting' and 'nvmf_subsystem_set_ana_state'
-respectively.
 
 ### scripts
 
