@@ -293,6 +293,9 @@ struct raid_bdev_module {
 	/* Set to true if this module supports memory domains. */
 	bool memory_domains_supported;
 
+	/* Set to true if this module supports DIF/DIX */
+	bool dif_supported;
+
 	/*
 	 * Called when the raid is starting, right before changing the state to
 	 * online and registering the bdev. Parameters of the bdev like blockcnt
@@ -369,6 +372,9 @@ raid_bdev_base_bdev_slot(struct raid_base_bdev_info *base_info)
 {
 	return base_info - base_info->raid_bdev->base_bdev_info;
 }
+
+int raid_bdev_verify_dix_reftag(struct iovec *iovs, int iovcnt, void *md_buf,
+				uint64_t num_blocks, struct spdk_bdev *bdev, uint32_t offset_blocks);
 
 /**
  * Raid bdev I/O read/write wrapper for spdk_bdev_readv_blocks_ext function.

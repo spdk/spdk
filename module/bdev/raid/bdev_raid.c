@@ -481,6 +481,84 @@ raid_bdev_destruct(void *ctx)
 	return 1;
 }
 
+static int
+raid_bdev_remap_dix_reftag(void *md_buf, uint64_t num_blocks,
+			   struct spdk_bdev *bdev, uint32_t remapped_offset)
+{
+	struct spdk_dif_ctx dif_ctx;
+	struct spdk_dif_error err_blk = {};
+	int rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+	struct iovec md_iov = {
+		.iov_base	= md_buf,
+		.iov_len	= num_blocks * bdev->md_len,
+	};
+
+	if (md_buf == NULL) {
+		return 0;
+	}
+
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	rc = spdk_dif_ctx_init(&dif_ctx,
+			       bdev->blocklen, bdev->md_len, bdev->md_interleave,
+			       bdev->dif_is_head_of_md, bdev->dif_type,
+			       SPDK_DIF_FLAGS_REFTAG_CHECK,
+			       0, 0, 0, 0, 0, &dif_opts);
+	if (rc != 0) {
+		SPDK_ERRLOG("Initialization of DIF context failed\n");
+		return rc;
+	}
+
+	spdk_dif_ctx_set_remapped_init_ref_tag(&dif_ctx, remapped_offset);
+
+	rc = spdk_dix_remap_ref_tag(&md_iov, num_blocks, &dif_ctx, &err_blk, false);
+	if (rc != 0) {
+		SPDK_ERRLOG("Remapping reference tag failed. type=%d, offset=%d"
+			    PRIu32 "\n", err_blk.err_type, err_blk.err_offset);
+	}
+
+	return rc;
+}
+
+int
+raid_bdev_verify_dix_reftag(struct iovec *iovs, int iovcnt, void *md_buf,
+			    uint64_t num_blocks, struct spdk_bdev *bdev, uint32_t offset_blocks)
+{
+	struct spdk_dif_ctx dif_ctx;
+	struct spdk_dif_error err_blk = {};
+	int rc;
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+	struct iovec md_iov = {
+		.iov_base	= md_buf,
+		.iov_len	= num_blocks * bdev->md_len,
+	};
+
+	if (md_buf == NULL) {
+		return 0;
+	}
+
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+	rc = spdk_dif_ctx_init(&dif_ctx,
+			       bdev->blocklen, bdev->md_len, bdev->md_interleave,
+			       bdev->dif_is_head_of_md, bdev->dif_type,
+			       SPDK_DIF_FLAGS_REFTAG_CHECK,
+			       offset_blocks, 0, 0, 0, 0, &dif_opts);
+	if (rc != 0) {
+		SPDK_ERRLOG("Initialization of DIF context failed\n");
+		return rc;
+	}
+
+	rc = spdk_dix_verify(iovs, iovcnt, &md_iov, num_blocks, &dif_ctx, &err_blk);
+	if (rc != 0) {
+		SPDK_ERRLOG("Reference tag check failed. type=%d, offset=%d"
+			    PRIu32 "\n", err_blk.err_type, err_blk.err_offset);
+	}
+
+	return rc;
+}
+
 /**
  * Raid bdev I/O read/write wrapper for spdk_bdev_readv_blocks_ext function.
  */
@@ -503,14 +581,28 @@ raid_bdev_writev_blocks_ext(struct raid_base_bdev_info *base_info, struct spdk_i
 			    uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg,
 			    struct spdk_bdev_ext_io_opts *opts)
 {
+	int rc;
+	uint64_t remapped_offset_blocks = base_info->data_offset + offset_blocks;
+
+	if (spdk_unlikely(spdk_bdev_get_dif_type(&base_info->raid_bdev->bdev) != SPDK_DIF_DISABLE &&
+			  base_info->raid_bdev->bdev.dif_check_flags & SPDK_DIF_FLAGS_REFTAG_CHECK)) {
+
+		rc = raid_bdev_remap_dix_reftag(opts->metadata, num_blocks, &base_info->raid_bdev->bdev,
+						remapped_offset_blocks);
+		if (rc != 0) {
+			return rc;
+		}
+	}
+
 	return spdk_bdev_writev_blocks_ext(base_info->desc, ch, iov, iovcnt,
-					   base_info->data_offset + offset_blocks, num_blocks, cb, cb_arg, opts);
+					   remapped_offset_blocks, num_blocks, cb, cb_arg, opts);
 }
 
 void
 raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status)
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
+	int rc;
 
 	if (raid_io->split.offset != RAID_OFFSET_BLOCKS_INVALID) {
 		struct iovec *split_iov = raid_io->split.iov;
@@ -554,6 +646,18 @@ raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status sta
 	if (spdk_unlikely(raid_io->completion_cb != NULL)) {
 		raid_io->completion_cb(raid_io, status);
 	} else {
+		if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_READ &&
+				  spdk_bdev_get_dif_type(bdev_io->bdev) != SPDK_DIF_DISABLE &&
+				  bdev_io->bdev->dif_check_flags & SPDK_DIF_FLAGS_REFTAG_CHECK &&
+				  status == SPDK_BDEV_IO_STATUS_SUCCESS)) {
+
+			rc = raid_bdev_remap_dix_reftag(bdev_io->u.bdev.md_buf,
+							bdev_io->u.bdev.num_blocks, bdev_io->bdev,
+							bdev_io->u.bdev.offset_blocks);
+			if (rc != 0) {
+				status = SPDK_BDEV_IO_STATUS_FAILED;
+			}
+		}
 		spdk_bdev_io_complete(bdev_io, status);
 	}
 }
@@ -3008,9 +3112,7 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existi
 		goto out;
 	}
 
-	/* Currently, RAID bdevs do not support DIF or DIX, so a RAID bdev cannot
-	 * be created on top of any bdev which supports it */
-	if (spdk_bdev_get_dif_type(bdev) != SPDK_DIF_DISABLE) {
+	if (!raid_bdev->module->dif_supported && spdk_bdev_get_dif_type(bdev) != SPDK_DIF_DISABLE) {
 		SPDK_ERRLOG("Base bdev '%s' has DIF or DIX enabled - unsupported RAID configuration\n",
 			    bdev->name);
 		rc = -EINVAL;
@@ -3026,6 +3128,9 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existi
 		raid_bdev->bdev.blocklen = bdev->blocklen;
 		raid_bdev->bdev.md_len = spdk_bdev_get_md_size(bdev);
 		raid_bdev->bdev.md_interleave = spdk_bdev_is_md_interleaved(bdev);
+		raid_bdev->bdev.dif_type = spdk_bdev_get_dif_type(bdev);
+		raid_bdev->bdev.dif_check_flags = bdev->dif_check_flags;
+		raid_bdev->bdev.dif_is_head_of_md = spdk_bdev_is_dif_head_of_md(bdev);
 	} else {
 		if (raid_bdev->bdev.blocklen != bdev->blocklen) {
 			SPDK_ERRLOG("Raid bdev '%s' blocklen %u differs from base bdev '%s' blocklen %u\n",
@@ -3035,7 +3140,10 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existi
 		}
 
 		if (raid_bdev->bdev.md_len != spdk_bdev_get_md_size(bdev) ||
-		    raid_bdev->bdev.md_interleave != spdk_bdev_is_md_interleaved(bdev)) {
+		    raid_bdev->bdev.md_interleave != spdk_bdev_is_md_interleaved(bdev) ||
+		    raid_bdev->bdev.dif_type != spdk_bdev_get_dif_type(bdev) ||
+		    raid_bdev->bdev.dif_check_flags != bdev->dif_check_flags ||
+		    raid_bdev->bdev.dif_is_head_of_md != spdk_bdev_is_dif_head_of_md(bdev)) {
 			SPDK_ERRLOG("Raid bdev '%s' has different metadata format than base bdev '%s'\n",
 				    raid_bdev->bdev.name, bdev->name);
 			rc = -EINVAL;
