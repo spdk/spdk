@@ -1,6 +1,6 @@
 # Changelog
 
-## v24.01
+## v24.01: DIF in accel, RAID rebuild, Blobstore grow
 
 ### accel
 
