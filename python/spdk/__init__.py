@@ -2,4 +2,4 @@
 #  Copyright (C) 2021 Intel Corporation.
 #  All rights reserved.
 
-__version__ = "24.1"
+__version__ = "24.1.1rc0"
