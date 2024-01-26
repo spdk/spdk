@@ -102,6 +102,8 @@ make DESTDIR=%{buildroot} install %{make}
 rm -f %{buildroot}/usr/local/bin/dpdk-*.py
 # DPDK examples do not need to be packaged in our RPMs
 rm -rf %{buildroot}/usr/local/share/dpdk
+# In case sphinx-build is available, DPDK will leave some files we don't need
+rm -rf %{buildroot}/usr/local/share/doc/dpdk
 %endif
 
 # The ISA-L install may have installed some binaries that we do not want to package
