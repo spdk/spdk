@@ -16,6 +16,7 @@ unset -v LD_LIBRARY_PATH
 # Export some common settings
 BUILDDIR=$builddir
 DEPS=no
+arch=$(uname -m)
 
 export MAKEFLAGS BUILDDIR DEPS
 
@@ -23,12 +24,80 @@ cleanup() {
 	rm -rf "$builddir"
 	rm -rf "$(rpm --eval "%{_topdir}")"
 	rm -rf /tmp/spdk-test_gen_spec
+	sudo rpm -e $(rpm -qa | grep -E 'spdk|dpdk') || true
 }
+
+gen_dpdk_spec() (
+	cat <<- DPDK_SPEC
+		%define source_date_epoch_from_changelog %{nil}
+
+		Name:           dpdk-devel
+		Version:        $1
+		Release:        $2
+		Summary:        TESTME
+		Source:         dpdk.tar.gz
+		License:        TESTME
+
+		%description
+		TESTME
+
+		%files
+		/usr/local/lib/*
+	DPDK_SPEC
+)
+
+build_dpdk_rpm() (
+	local dpdkdir=$1 version=${2%.*} spec=$builddir/dpdk.spec
+	local dpdkbuildroot=$builddir/dpdk/usr/local/lib dep
+	local srcdir=$builddir/source
+	local rpmdir=$builddir/rpms
+	local release=1
+
+	mkdir -p "$srcdir" "$rpmdir"
+
+	# Dummy package to satisfy rpmbuild
+	: > "$srcdir/dpdk.tar.gz"
+
+	gen_dpdk_spec "$version" "$release" > "$spec"
+
+	# Prepare our buildroot to pack just the libraries without actually building
+	# anything. To do so, we need to copy what we need into a separate location
+	# to not fiddle with rpmbuild's view on what should be packed and what
+	# shouldn't.
+	mkdir -p "$dpdkbuildroot"
+
+	[[ -e $dpdkdir/lib ]]
+	cp -a "$dpdkdir/lib/"* "$dpdkbuildroot/"
+
+	# Check isa-l and IPSec dependencies - dedicated to the vs-dpdk test
+	for dep in isa-l/build/lib intel-ipsec-mb; do
+		[[ -e $dpdkdir/../$dep ]] || continue
+		find "$dpdkdir/../$dep" \
+			-name '*.so*' \
+			-exec cp -at "$dpdkbuildroot/" {} +
+	done
+
+	rpmbuild \
+		--buildroot="$builddir/dpdk" \
+		-D "_rpmdir $rpmdir" \
+		-D "_sourcedir $srcdir" \
+		--noclean \
+		--nodebuginfo \
+		-ba "$spec"
+
+	# Put our dummy package in place
+	sudo rpm -i "$rpmdir/$arch/dpdk-devel-$version-$release.$arch.rpm"
+
+	# Run actual test
+	MV_RUNPATH=$dpdkdir build_rpm --with-shared --with-dpdk="$dpdkdir"
+
+	sudo rpm -e dpdk-devel
+)
 
 install_uninstall_rpms() {
 	local rpms
 
-	rpms=("${1:-$builddir/rpm/}/$(uname -m)/"*.rpm)
+	rpms=("${1:-$builddir/rpm/}/$arch/"*.rpm)
 
 	# Clean repo first to make sure linker won't follow $SPDK_APP's RUNPATH
 	make -C "$rootdir" clean $MAKEFLAGS
@@ -47,7 +116,14 @@ build_rpm() {
 	GEN_SPEC=yes "$rootdir/rpmbuild/rpm.sh" "$@"
 	# Actual build
 	"$rootdir/rpmbuild/rpm.sh" "$@" || return $?
+	# FIXME: Remove the MV_RUNPATH HACK when the patchelf is available. See: 9cb9f24152f
+	if [[ -n $MV_RUNPATH ]]; then
+		mv "$MV_RUNPATH"{,.hidden}
+	fi
 	install_uninstall_rpms
+	if [[ -n $MV_RUNPATH ]]; then
+		mv "$MV_RUNPATH"{.hidden,}
+	fi
 }
 
 build_shared_rpm() {
@@ -70,6 +146,9 @@ build_rpm_with_rpmed_dpdk() {
 	if ((es == 11)); then
 		echo "ERROR: Failed to resolve required build dependencies. Please review the build log." >&2
 	fi
+
+	sudo rpm -e dpdk{,-devel} || true
+
 	return "$es"
 }
 
@@ -105,7 +184,10 @@ build_rpm_from_gen_spec() {
 build_shared_native_dpdk_rpm() {
 	[[ -e /tmp/spdk-ld-path ]] # autobuild dependency
 	source /tmp/spdk-ld-path
-	build_rpm --with-shared --with-dpdk="$SPDK_RUN_EXTERNAL_DPDK"
+
+	build_dpdk_rpm \
+		"$SPDK_RUN_EXTERNAL_DPDK" \
+		"$(< $SPDK_RUN_EXTERNAL_DPDK/../VERSION)"
 }
 
 trap 'cleanup' EXIT
@@ -120,5 +202,3 @@ fi
 if [[ -n $SPDK_TEST_NATIVE_DPDK ]]; then
 	run_test "build_shared_native_dpdk_rpm" build_shared_native_dpdk_rpm
 fi
-
-rm -rf "$builddir"
