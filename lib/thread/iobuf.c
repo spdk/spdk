@@ -27,6 +27,8 @@
 SPDK_STATIC_ASSERT(sizeof(struct spdk_iobuf_buffer) <= IOBUF_MIN_SMALL_BUFSIZE,
 		   "Invalid data offset");
 
+static bool g_iobuf_is_initialized = false;
+
 struct iobuf_channel {
 	spdk_iobuf_entry_stailq_t	small_queue;
 	spdk_iobuf_entry_stailq_t	large_queue;
@@ -146,6 +148,7 @@ spdk_iobuf_initialize(void)
 
 	spdk_io_device_register(&g_iobuf, iobuf_channel_create_cb, iobuf_channel_destroy_cb,
 				sizeof(struct iobuf_channel), "iobuf");
+	g_iobuf_is_initialized = true;
 
 	return 0;
 error:
@@ -197,6 +200,12 @@ iobuf_unregister_cb(void *io_device)
 void
 spdk_iobuf_finish(spdk_iobuf_finish_cb cb_fn, void *cb_arg)
 {
+	if (!g_iobuf_is_initialized) {
+		cb_fn(cb_arg);
+		return;
+	}
+
+	g_iobuf_is_initialized = false;
 	g_iobuf.finish_cb = cb_fn;
 	g_iobuf.finish_arg = cb_arg;
 
