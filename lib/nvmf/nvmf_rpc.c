@@ -2497,7 +2497,7 @@ nvmf_qpair_state_str(enum spdk_nvmf_qpair_state state)
 static void
 dump_nvmf_qpair(struct spdk_json_write_ctx *w, struct spdk_nvmf_qpair *qpair)
 {
-	struct spdk_nvme_transport_id listen_trid = {};
+	struct spdk_nvme_transport_id trid = {};
 
 	spdk_json_write_object_begin(w);
 
@@ -2505,13 +2505,20 @@ dump_nvmf_qpair(struct spdk_json_write_ctx *w, struct spdk_nvmf_qpair *qpair)
 	spdk_json_write_named_uint32(w, "qid", qpair->qid);
 	spdk_json_write_named_string(w, "state", nvmf_qpair_state_str(qpair->state));
 
-	if (spdk_nvmf_qpair_get_listen_trid(qpair, &listen_trid) == 0) {
+	if (spdk_nvmf_qpair_get_listen_trid(qpair, &trid) == 0) {
 		spdk_json_write_named_object_begin(w, "listen_address");
-		nvmf_transport_listen_dump_trid(&listen_trid, w);
+		nvmf_transport_listen_dump_trid(&trid, w);
 		spdk_json_write_object_end(w);
 		if (qpair->transport->ops->listen_dump_opts) {
-			qpair->transport->ops->listen_dump_opts(qpair->transport, &listen_trid, w);
+			qpair->transport->ops->listen_dump_opts(qpair->transport, &trid, w);
 		}
+	}
+
+	memset(&trid, 0, sizeof(trid));
+	if (spdk_nvmf_qpair_get_peer_trid(qpair, &trid) == 0) {
+		spdk_json_write_named_object_begin(w, "peer_address");
+		nvmf_transport_listen_dump_trid(&trid, w);
+		spdk_json_write_object_end(w);
 	}
 
 	spdk_json_write_object_end(w);
