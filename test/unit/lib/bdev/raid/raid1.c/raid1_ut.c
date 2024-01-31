@@ -52,7 +52,6 @@ test_setup(void)
 	uint8_t *num_base_bdevs;
 	uint64_t *base_bdev_blockcnt;
 	uint32_t *base_bdev_blocklen;
-	struct raid_params params;
 	uint64_t params_count;
 	int rc;
 
@@ -67,11 +66,11 @@ test_setup(void)
 	ARRAY_FOR_EACH(num_base_bdevs_values, num_base_bdevs) {
 		ARRAY_FOR_EACH(base_bdev_blockcnt_values, base_bdev_blockcnt) {
 			ARRAY_FOR_EACH(base_bdev_blocklen_values, base_bdev_blocklen) {
-				params.num_base_bdevs = *num_base_bdevs;
-				params.base_bdev_blockcnt = *base_bdev_blockcnt;
-				params.base_bdev_blocklen = *base_bdev_blocklen;
-				params.strip_size = 0;
-				params.md_len = 0;
+				struct raid_params params = {
+					.num_base_bdevs = *num_base_bdevs,
+					.base_bdev_blockcnt = *base_bdev_blockcnt,
+					.base_bdev_blocklen = *base_bdev_blocklen,
+				};
 				raid_test_params_add(&params);
 			}
 		}
