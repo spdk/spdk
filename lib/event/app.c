@@ -308,8 +308,6 @@ app_start_rpc(int rc, void *arg1)
 		return;
 	}
 
-	spdk_rpc_set_allowlist(g_spdk_app.rpc_allowlist);
-
 	opts.size = SPDK_SIZEOF(&opts, log_level);
 	opts.log_file = g_spdk_app.rpc_log_file;
 	opts.log_level = g_spdk_app.rpc_log_level;
@@ -505,6 +503,8 @@ bootstrap_fn(void *arg1)
 	struct spdk_rpc_opts opts;
 	int rc;
 
+	spdk_rpc_set_allowlist(g_spdk_app.rpc_allowlist);
+
 	if (g_spdk_app.json_config_file) {
 		g_delay_subsystem_init = false;
 		spdk_subsystem_init_from_json_config(g_spdk_app.json_config_file, g_spdk_app.rpc_addr,
@@ -514,8 +514,6 @@ bootstrap_fn(void *arg1)
 		if (!g_delay_subsystem_init) {
 			spdk_subsystem_init(app_start_rpc, NULL);
 		} else {
-			spdk_rpc_set_allowlist(g_spdk_app.rpc_allowlist);
-
 			opts.size = SPDK_SIZEOF(&opts, log_level);
 			opts.log_file = g_spdk_app.rpc_log_file;
 			opts.log_level = g_spdk_app.rpc_log_level;
