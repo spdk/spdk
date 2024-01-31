@@ -24,10 +24,13 @@ DEFINE_STUB(spdk_bdev_get_buf_align, size_t, (const struct spdk_bdev *bdev), TES
 void *g_buf;
 TAILQ_HEAD(, spdk_bdev_io) g_bdev_io_queue = TAILQ_HEAD_INITIALIZER(g_bdev_io_queue);
 int g_read_counter;
+struct spdk_bdev g_bdev;
 
 static int
 test_setup(void)
 {
+	g_bdev.blocklen = TEST_BLOCK_SIZE;
+
 	g_buf = spdk_dma_zmalloc(RAID_BDEV_SB_MAX_LENGTH, TEST_BUF_ALIGN, NULL);
 	if (!g_buf) {
 		return -ENOMEM;
@@ -128,6 +131,7 @@ test_raid_bdev_write_superblock(void)
 		.sb = g_buf,
 		.num_base_bdevs = SPDK_COUNTOF(base_info),
 		.base_bdev_info = base_info,
+		.bdev = g_bdev,
 	};
 	int status;
 	uint8_t i;

@@ -15,7 +15,6 @@
 struct raid_bdev_write_sb_ctx {
 	struct raid_bdev *raid_bdev;
 	int status;
-	uint64_t nbytes;
 	uint8_t submitted;
 	uint8_t remaining;
 	raid_bdev_write_sb_cb cb;
@@ -90,6 +89,17 @@ raid_bdev_init_superblock(struct raid_bdev *raid_bdev)
 		sb_base_bdev->slot = raid_bdev_base_bdev_slot(base_info);
 		sb_base_bdev++;
 	}
+}
+
+static int
+raid_bdev_alloc_sb_io_buf(struct raid_bdev *raid_bdev)
+{
+	struct raid_bdev_superblock *sb = raid_bdev->sb;
+
+	raid_bdev->sb_io_buf_size = SPDK_ALIGN_CEIL(sb->length, raid_bdev->bdev.blocklen);
+	raid_bdev->sb_io_buf = raid_bdev->sb;
+
+	return 0;
 }
 
 static void
@@ -309,7 +319,7 @@ _raid_bdev_write_superblock(void *_ctx)
 		}
 
 		rc = spdk_bdev_write(base_info->desc, base_info->app_thread_ch,
-				     (void *)raid_bdev->sb, 0, ctx->nbytes,
+				     raid_bdev->sb_io_buf, 0, raid_bdev->sb_io_buf_size,
 				     raid_bdev_write_superblock_cb, ctx);
 		if (rc != 0) {
 			struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(base_info->desc);
@@ -337,19 +347,26 @@ raid_bdev_write_superblock(struct raid_bdev *raid_bdev, raid_bdev_write_sb_cb cb
 {
 	struct raid_bdev_write_sb_ctx *ctx;
 	struct raid_bdev_superblock *sb = raid_bdev->sb;
+	int rc;
 
 	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 	assert(sb != NULL);
 	assert(cb != NULL);
 
+	if (raid_bdev->sb_io_buf == NULL) {
+		rc = raid_bdev_alloc_sb_io_buf(raid_bdev);
+		if (rc != 0) {
+			goto err;
+		}
+	}
+
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
-		cb(-ENOMEM, raid_bdev, cb_ctx);
-		return;
+		rc = -ENOMEM;
+		goto err;
 	}
 
 	ctx->raid_bdev = raid_bdev;
-	ctx->nbytes = align_ceil(sb->length, spdk_bdev_get_block_size(&raid_bdev->bdev));
 	ctx->remaining = raid_bdev->num_base_bdevs + 1;
 	ctx->cb = cb;
 	ctx->cb_ctx = cb_ctx;
@@ -358,6 +375,9 @@ raid_bdev_write_superblock(struct raid_bdev *raid_bdev, raid_bdev_write_sb_cb cb
 	raid_bdev_sb_update_crc(sb);
 
 	_raid_bdev_write_superblock(ctx);
+	return;
+err:
+	cb(rc, raid_bdev, cb_ctx);
 }
 
 SPDK_LOG_REGISTER_COMPONENT(bdev_raid_sb)

@@ -234,6 +234,10 @@ struct raid_bdev {
 	bool				superblock_enabled;
 	struct raid_bdev_superblock	*sb;
 
+	/* Superblock buffer used for I/O */
+	void				*sb_io_buf;
+	uint32_t			sb_io_buf_size;
+
 	/* Raid bdev background process, e.g. rebuild */
 	struct raid_bdev_process	*process;
 };
