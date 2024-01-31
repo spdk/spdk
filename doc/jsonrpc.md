@@ -7798,6 +7798,54 @@ Example response:
 }
 ~~~
 
+### iscsi_get_stats method {#iscsi_get_stats}
+
+Show stat information of iSCSI connections.
+
+#### Parameters
+
+This method has no parameters.
+
+#### Results
+
+Stat information of iSCSI connections.
+
+Name                        | Type    | Description
+--------------------------- | --------| -----------
+invalid                     | number  | The number of invalid connections
+running                     | number  | The number of running connections
+exiting                     | number  | The number of exiting connections
+exited                      | number  | The number of exited connections
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "iscsi_get_stats",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result":
+    {
+      "invalid": 0,
+      "running": 5,
+      "exiting": 0,
+      "exited": 0
+    }
+
+}
+~~~
+
 ### iscsi_target_node_add_lun method {#rpc_iscsi_target_node_add_lun}
 
 Add an LUN to an existing iSCSI target node.

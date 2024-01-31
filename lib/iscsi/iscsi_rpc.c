@@ -993,6 +993,100 @@ struct rpc_target_lun {
 	int32_t lun_id;
 };
 
+struct rpc_iscsi_get_stats_ctx {
+	struct spdk_jsonrpc_request *request;
+	uint32_t invalid;
+	uint32_t running;
+	uint32_t exiting;
+	uint32_t exited;
+};
+
+static void
+_rpc_iscsi_get_stats_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_json_write_ctx *w;
+	struct rpc_iscsi_get_stats_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	w = spdk_jsonrpc_begin_result(ctx->request);
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_uint32(w, "invalid", ctx->invalid);
+	spdk_json_write_named_uint32(w, "running", ctx->running);
+	spdk_json_write_named_uint32(w, "exiting", ctx->exiting);
+	spdk_json_write_named_uint32(w, "exited", ctx->exited);
+
+	spdk_json_write_object_end(w);
+	spdk_jsonrpc_end_result(ctx->request, w);
+
+	free(ctx);
+}
+
+static void
+_iscsi_get_stats(struct rpc_iscsi_get_stats_ctx *ctx,
+		 struct spdk_iscsi_conn *conn)
+{
+	switch (conn->state) {
+	case ISCSI_CONN_STATE_INVALID:
+		ctx->invalid += 1;
+		break;
+	case ISCSI_CONN_STATE_RUNNING:
+		ctx->running += 1;
+		break;
+	case ISCSI_CONN_STATE_EXITING:
+		ctx->exiting += 1;
+		break;
+	case ISCSI_CONN_STATE_EXITED:
+		ctx->exited += 1;
+		break;
+	}
+}
+
+static void
+_rpc_iscsi_get_stats(struct spdk_io_channel_iter *i)
+{
+	struct rpc_iscsi_get_stats_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_iscsi_poll_group *pg = spdk_io_channel_get_ctx(ch);
+	struct spdk_iscsi_conn *conn;
+
+	STAILQ_FOREACH(conn, &pg->connections, pg_link) {
+		_iscsi_get_stats(ctx, conn);
+	}
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+
+
+static void
+rpc_iscsi_get_stats(struct spdk_jsonrpc_request *request,
+		    const struct spdk_json_val *params)
+{
+	struct rpc_iscsi_get_stats_ctx *ctx;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "iscsi_get_stats requires no parameters");
+		return;
+	}
+
+	ctx = calloc(1, sizeof(struct rpc_iscsi_get_stats_ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate rpc_iscsi_get_stats_ctx struct\n");
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
+		return;
+	}
+
+	ctx->request = request;
+
+	spdk_for_each_channel(&g_iscsi,
+			      _rpc_iscsi_get_stats,
+			      ctx,
+			      _rpc_iscsi_get_stats_done);
+
+}
+SPDK_RPC_REGISTER("iscsi_get_stats", rpc_iscsi_get_stats, SPDK_RPC_RUNTIME)
+
 static void
 free_rpc_target_lun(struct rpc_target_lun *req)
 {

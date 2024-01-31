@@ -1827,6 +1827,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                               help='Display iSCSI connections')
     p.set_defaults(func=iscsi_get_connections)
 
+    def iscsi_get_stats(args):
+        print_dict(rpc.iscsi.iscsi_get_stats(args.client))
+
+    p = subparsers.add_parser('iscsi_get_stats',
+                              help='Display stat information of iSCSI connections.')
+    p.set_defaults(func=iscsi_get_stats)
+
     def iscsi_get_options(args):
         print_dict(rpc.iscsi.iscsi_get_options(args.client))
 

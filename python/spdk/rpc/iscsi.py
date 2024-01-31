@@ -600,6 +600,15 @@ def iscsi_get_connections(client):
     return client.call('iscsi_get_connections')
 
 
+def iscsi_get_stats(client):
+    """Display stat information of iSCSI connections.
+
+    Returns:
+        Stat information of iSCSI connections.
+    """
+    return client.call('iscsi_get_stats')
+
+
 def iscsi_get_options(client):
     """Display iSCSI global parameters.
 

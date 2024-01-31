@@ -15,6 +15,10 @@ Please use `spdk_subsystem_load_config` instead.
 
 Added `bdev_uring_rescan` RPC to allow rescaning the size of uring bdev.
 
+### iscsi
+
+Added `iscsi_get_stats` RPC method to get stat information about all active connections.
+
 ## v24.01
 
 ### accel
