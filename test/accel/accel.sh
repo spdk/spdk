@@ -32,7 +32,7 @@ build_accel_config() {
 	accel_json_cfg=()
 	[[ $SPDK_TEST_ACCEL_DSA -gt 0 ]] && accel_json_cfg+=('{"method": "dsa_scan_accel_module"}')
 	[[ $SPDK_TEST_ACCEL_IAA -gt 0 ]] && accel_json_cfg+=('{"method": "iaa_scan_accel_module"}')
-	[[ $SPDK_TEST_ACCEL_IOAT -gt 0 ]] && accel_json_cfg+=('{"method": "ioat_scan_accel_module"}')
+	[[ $SPDK_TEST_IOAT -gt 0 ]] && accel_json_cfg+=('{"method": "ioat_scan_accel_module"}')
 
 	if [[ $COMPRESSDEV ]]; then
 		accel_json_cfg+=('{"method": "compressdev_scan_accel_module", "params":{"pmd": 0}}')
