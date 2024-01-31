@@ -3028,7 +3028,7 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existi
 	 * otherwise - verify. Assumption is that all the base bdevs for any raid bdev should
 	 * have the same blocklen and metadata format.
 	 */
-	if (raid_bdev->num_base_bdevs_discovered == 0) {
+	if (raid_bdev->bdev.blocklen == 0) {
 		raid_bdev->bdev.blocklen = bdev->blocklen;
 		raid_bdev->bdev.md_len = spdk_bdev_get_md_size(bdev);
 		raid_bdev->bdev.md_interleave = spdk_bdev_is_md_interleaved(bdev);
