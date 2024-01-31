@@ -8137,6 +8137,12 @@ nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 	spdk_json_write_named_string(w, "hostnqn", opts->hostnqn);
 	spdk_json_write_named_bool(w, "hdgst", opts->header_digest);
 	spdk_json_write_named_bool(w, "ddgst", opts->data_digest);
+	if (opts->src_addr[0] != '\0') {
+		spdk_json_write_named_string(w, "hostaddr", opts->src_addr);
+	}
+	if (opts->src_svcid[0] != '\0') {
+		spdk_json_write_named_string(w, "hostsvcid", opts->src_svcid);
+	}
 
 	spdk_json_write_object_end(w);
 
