@@ -17,6 +17,11 @@ struct nvme_auth_digest {
 	uint8_t		len;
 };
 
+struct nvme_auth_dhgroup {
+	uint8_t		id;
+	const char	*name;
+};
+
 #define NVME_AUTH_DATA_SIZE		4096
 #define NVME_AUTH_CHAP_KEY_MAX_SIZE	256
 #define NVME_AUTH_DIGEST_MAX_SIZE	64
@@ -32,6 +37,15 @@ static const struct nvme_auth_digest g_digests[] = {
 	{ SPDK_NVMF_DHCHAP_HASH_SHA256, "sha256", 32 },
 	{ SPDK_NVMF_DHCHAP_HASH_SHA384, "sha384", 48 },
 	{ SPDK_NVMF_DHCHAP_HASH_SHA512, "sha512", 64 },
+};
+
+static const struct nvme_auth_dhgroup g_dhgroups[] = {
+	{ SPDK_NVMF_DHCHAP_DHGROUP_NULL, "null" },
+	{ SPDK_NVMF_DHCHAP_DHGROUP_2048, "ffdhe2048" },
+	{ SPDK_NVMF_DHCHAP_DHGROUP_3072, "ffdhe3072" },
+	{ SPDK_NVMF_DHCHAP_DHGROUP_4096, "ffdhe4096" },
+	{ SPDK_NVMF_DHCHAP_DHGROUP_6144, "ffdhe6144" },
+	{ SPDK_NVMF_DHCHAP_DHGROUP_8192, "ffdhe8192" },
 };
 
 static const struct nvme_auth_digest *
@@ -62,6 +76,20 @@ nvme_auth_get_digest_len(int id)
 	const struct nvme_auth_digest *digest = nvme_auth_get_digest(id);
 
 	return digest != NULL ? digest->len : 0;
+}
+
+static const char *
+nvme_auth_get_dhgroup_name(int id)
+{
+	size_t i;
+
+	for (i = 0; i < SPDK_COUNTOF(g_dhgroups); ++i) {
+		if (g_dhgroups[i].id == id) {
+			return g_dhgroups[i].name;
+		}
+	}
+
+	return NULL;
 }
 
 static void
@@ -331,6 +359,60 @@ out:
 	EVP_MAC_free(hmac);
 
 	return rc;
+}
+
+EVP_PKEY *nvme_auth_generate_dhkey(void *pub, size_t *len, enum spdk_nvmf_dhchap_dhgroup dhgroup);
+
+EVP_PKEY *
+nvme_auth_generate_dhkey(void *pub, size_t *len, enum spdk_nvmf_dhchap_dhgroup dhgroup)
+{
+	EVP_PKEY_CTX *ctx = NULL;
+	EVP_PKEY *result = NULL, *key = NULL;
+	BIGNUM *bn = NULL;
+	OSSL_PARAM params[2];
+	int rc;
+
+	ctx = EVP_PKEY_CTX_new_from_name(NULL, "DHX", NULL);
+	if (ctx == NULL) {
+		goto error;
+	}
+	if (EVP_PKEY_keygen_init(ctx) != 1) {
+		goto error;
+	}
+
+	params[0] = OSSL_PARAM_construct_utf8_string("group",
+			(char *)nvme_auth_get_dhgroup_name(dhgroup), 0);
+	params[1] = OSSL_PARAM_construct_end();
+	if (EVP_PKEY_CTX_set_params(ctx, params) != 1) {
+		SPDK_ERRLOG("Failed to set dhkey's dhgroup: %s\n",
+			    nvme_auth_get_dhgroup_name(dhgroup));
+		goto error;
+	}
+	if (EVP_PKEY_generate(ctx, &key) != 1) {
+		goto error;
+	}
+	if (EVP_PKEY_get_bn_param(key, "pub", &bn) != 1) {
+		goto error;
+	}
+
+	if ((size_t)BN_num_bytes(bn) > *len) {
+		SPDK_ERRLOG("Insufficient key buffer size=%zu (needed=%d)",
+			    *len, BN_num_bytes(bn));
+		goto error;
+	}
+	rc = BN_bn2bin(bn, pub);
+	if (rc <= 0) {
+		goto error;
+	}
+
+	*len = (size_t)BN_num_bytes(bn);
+	result = EVP_PKEY_dup(key);
+error:
+	EVP_PKEY_free(key);
+	EVP_PKEY_CTX_free(ctx);
+	BN_free(bn);
+
+	return result;
 }
 
 static int
