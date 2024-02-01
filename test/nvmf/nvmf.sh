@@ -75,10 +75,9 @@ if [[ $NET_TYPE == phy ]]; then
 		fi
 	elif [[ $SPDK_TEST_NVMF_TRANSPORT == "rdma" ]]; then
 		run_test "nvmf_device_removal" test/nvmf/target/device_removal.sh "${TEST_ARGS[@]}"
+		run_test "nvmf_srq_overwhelm" "$rootdir/test/nvmf/target/srq_overwhelm.sh" "${TEST_ARGS[@]}"
 	fi
 	run_test "nvmf_shutdown" $rootdir/test/nvmf/target/shutdown.sh "${TEST_ARGS[@]}"
-	# TODO: disabled due to intermittent failures. Need to triage.
-	# run_test "nvmf_srq_overwhelm" $rootdir/test/nvmf/target/srq_overwhelm.sh "${TEST_ARGS[@]}"
 fi
 
 timing_exit target
@@ -98,8 +97,7 @@ run_test "nvmf_fio_host" $rootdir/test/nvmf/host/fio.sh "${TEST_ARGS[@]}"
 run_test "nvmf_failover" $rootdir/test/nvmf/host/failover.sh "${TEST_ARGS[@]}"
 run_test "nvmf_discovery" $rootdir/test/nvmf/host/discovery.sh "${TEST_ARGS[@]}"
 run_test "nvmf_discovery_remove_ifc" $rootdir/test/nvmf/host/discovery_remove_ifc.sh "${TEST_ARGS[@]}"
-# TODO: disabled due to intermittent failures (RDMA_CM_EVENT_UNREACHABLE/ETIMEDOUT)
-#run_test $rootdir/test/nvmf/host/identify_kernel_nvmf.sh $TEST_ARGS
+run_test "nvmf_identify_kernel_target" "$rootdir/test/nvmf/host/identify_kernel_nvmf.sh" "${TEST_ARGS[@]}"
 
 if [[ "$SPDK_TEST_NVMF_TRANSPORT" == "tcp" ]]; then
 	run_test "nvmf_digest" "$rootdir/test/nvmf/host/digest.sh" "${TEST_ARGS[@]}"
@@ -116,9 +114,7 @@ if [[ $SPDK_TEST_USDT -eq 1 ]]; then
 fi
 
 if [[ $NET_TYPE == phy ]]; then
-	# GitHub issue #1165
 	run_test "nvmf_bdevperf" $rootdir/test/nvmf/host/bdevperf.sh "${TEST_ARGS[@]}"
-	# GitHub issue #1043
 	run_test "nvmf_target_disconnect" $rootdir/test/nvmf/host/target_disconnect.sh "${TEST_ARGS[@]}"
 fi
 
