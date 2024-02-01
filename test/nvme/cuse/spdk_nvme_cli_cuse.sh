@@ -87,7 +87,7 @@ if [ "$oacs_firmware" -ne "0" ]; then
 fi
 ${NVME_CMD} smart-log $ctrlr
 ${NVME_CMD} error-log $ctrlr > ${CUSE_OUT}.7
-${NVME_CMD} get-feature $ctrlr -f 1 "${set_cmd[@]}" -l 100 > ${CUSE_OUT}.8
+${NVME_CMD} get-feature $ctrlr -f 1 "${sel_cmd[@]}" -l 100 > ${CUSE_OUT}.8
 ${NVME_CMD} get-log $ctrlr -i 1 -l 100 > ${CUSE_OUT}.9
 ${NVME_CMD} reset $ctrlr > ${CUSE_OUT}.10
 ${NVME_CMD} set-feature $ctrlr -n 1 -f 2 -v 0 2> ${CUSE_OUT}.11 || true
