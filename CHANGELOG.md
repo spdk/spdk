@@ -106,29 +106,6 @@ Added support for `SPDK_SBC_WRITE_SAME_10` and `SPDK_SBC_WRITE_SAME_16`.
 
 Added `iobuf_get_stats` RPC and `spdk_iobuf_get_stats()` API to track iobuf use across components.
 
-### env
-
-Added SPDK command line parameter `--no-huge`, which enables SPDK to run without hugepages.
-
-### nvme
-
-A new transport option `rdma_max_cq_size` was added to limit indefinite growth of CQ size.
-
-### nvmf
-
-Added `max_discard_size_kib` and `max_write_zeroes_size_kib` to `nvmf_create_subsystem` RPC to set the
-maximum discard size and maximum write zeroes size.
-
-Added new optional `--ana-state` (or shortly `-n`) parameter to `nvmf_subsystem_add_listener` RPC.
-
-Added public APIs `spdk_nvmf_subsystem_get_ana_reporting()` and `spdk_nvmf_subsystem_set_ana_state()`,
-replacing the internal functions `nvmf_subsystem_get_ana_reporting()` and `nvmf_subsystem_set_ana_state()`
-respectively.
-
-### scsi
-
-Added support for `SPDK_SBC_WRITE_SAME_10` and `SPDK_SBC_WRITE_SAME_16`.
-
 ### trace
 
 Added `spdk_trace_register_user_thread()` to initialize trace environment and
