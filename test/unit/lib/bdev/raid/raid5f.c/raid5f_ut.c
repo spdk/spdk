@@ -93,12 +93,12 @@ test_suite_init(void)
 	uint64_t base_bdev_blockcnt_values[] = { 1, 1024, 1024 * 1024 };
 	uint32_t base_bdev_blocklen_values[] = { 512, 4096 };
 	uint32_t strip_size_kb_values[] = { 1, 4, 128 };
-	uint32_t md_len_values[] = { 0, 64 };
+	enum raid_params_md_type md_type_values[] = { RAID_PARAMS_MD_NONE, RAID_PARAMS_MD_SEPARATE };
 	uint8_t *num_base_bdevs;
 	uint64_t *base_bdev_blockcnt;
 	uint32_t *base_bdev_blocklen;
 	uint32_t *strip_size_kb;
-	uint32_t *md_len;
+	enum raid_params_md_type *md_type;
 	uint64_t params_count;
 	int rc;
 
@@ -106,7 +106,7 @@ test_suite_init(void)
 		       SPDK_COUNTOF(base_bdev_blockcnt_values) *
 		       SPDK_COUNTOF(base_bdev_blocklen_values) *
 		       SPDK_COUNTOF(strip_size_kb_values) *
-		       SPDK_COUNTOF(md_len_values);
+		       SPDK_COUNTOF(md_type_values);
 	rc = raid_test_params_alloc(params_count);
 	if (rc) {
 		return rc;
@@ -116,13 +116,13 @@ test_suite_init(void)
 		ARRAY_FOR_EACH(base_bdev_blockcnt_values, base_bdev_blockcnt) {
 			ARRAY_FOR_EACH(base_bdev_blocklen_values, base_bdev_blocklen) {
 				ARRAY_FOR_EACH(strip_size_kb_values, strip_size_kb) {
-					ARRAY_FOR_EACH(md_len_values, md_len) {
+					ARRAY_FOR_EACH(md_type_values, md_type) {
 						struct raid_params params = {
 							.num_base_bdevs = *num_base_bdevs,
 							.base_bdev_blockcnt = *base_bdev_blockcnt,
 							.base_bdev_blocklen = *base_bdev_blocklen,
 							.strip_size = *strip_size_kb * 1024 / *base_bdev_blocklen,
-							.md_len = *md_len,
+							.md_type = *md_type,
 						};
 						if (params.strip_size == 0 ||
 						    params.strip_size > params.base_bdev_blockcnt) {

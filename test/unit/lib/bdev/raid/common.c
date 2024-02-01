@@ -11,12 +11,18 @@ struct spdk_bdev_desc {
 	struct spdk_bdev *bdev;
 };
 
+enum raid_params_md_type {
+	RAID_PARAMS_MD_NONE,
+	RAID_PARAMS_MD_SEPARATE,
+	RAID_PARAMS_MD_INTERLEAVED,
+};
+
 struct raid_params {
 	uint8_t num_base_bdevs;
 	uint64_t base_bdev_blockcnt;
 	uint32_t base_bdev_blocklen;
 	uint32_t strip_size;
-	uint32_t md_len;
+	enum raid_params_md_type md_type;
 };
 
 struct raid_params *g_params;
@@ -70,6 +76,8 @@ raid_test_create_raid_bdev(struct raid_params *params, struct raid_bdev_module *
 	struct raid_bdev *raid_bdev;
 	struct raid_base_bdev_info *base_info;
 
+	SPDK_CU_ASSERT_FATAL(spdk_u32_is_pow2(params->base_bdev_blocklen));
+
 	raid_bdev = calloc(1, sizeof(*raid_bdev));
 	SPDK_CU_ASSERT_FATAL(raid_bdev != NULL);
 
@@ -92,6 +100,18 @@ raid_test_create_raid_bdev(struct raid_params *params, struct raid_bdev_module *
 		CU_FAIL_FATAL("unsupported raid constraint type");
 	};
 
+	raid_bdev->bdev.blocklen = params->base_bdev_blocklen;
+	raid_bdev->bdev.md_len = (params->md_type == RAID_PARAMS_MD_NONE ? 0 : 16);
+	raid_bdev->bdev.md_interleave = (params->md_type == RAID_PARAMS_MD_INTERLEAVED);
+	if (raid_bdev->bdev.md_interleave) {
+		raid_bdev->bdev.blocklen += raid_bdev->bdev.md_len;
+	}
+
+	raid_bdev->strip_size = params->strip_size;
+	raid_bdev->strip_size_kb = params->strip_size * params->base_bdev_blocklen / 1024;
+	raid_bdev->strip_size_shift = spdk_u32log2(raid_bdev->strip_size);
+	raid_bdev->blocklen_shift = spdk_u32log2(params->base_bdev_blocklen);
+
 	raid_bdev->base_bdev_info = calloc(raid_bdev->num_base_bdevs,
 					   sizeof(struct raid_base_bdev_info));
 	SPDK_CU_ASSERT_FATAL(raid_bdev->base_bdev_info != NULL);
@@ -103,7 +123,9 @@ raid_test_create_raid_bdev(struct raid_params *params, struct raid_bdev_module *
 		bdev = calloc(1, sizeof(*bdev));
 		SPDK_CU_ASSERT_FATAL(bdev != NULL);
 		bdev->blockcnt = params->base_bdev_blockcnt;
-		bdev->blocklen = params->base_bdev_blocklen;
+		bdev->blocklen = raid_bdev->bdev.blocklen;
+		bdev->md_len = raid_bdev->bdev.md_len;
+		bdev->md_interleave = raid_bdev->bdev.md_interleave;
 
 		desc = calloc(1, sizeof(*desc));
 		SPDK_CU_ASSERT_FATAL(desc != NULL);
@@ -113,13 +135,6 @@ raid_test_create_raid_bdev(struct raid_params *params, struct raid_bdev_module *
 		base_info->data_offset = 0;
 		base_info->data_size = bdev->blockcnt;
 	}
-
-	raid_bdev->strip_size = params->strip_size;
-	raid_bdev->strip_size_kb = params->strip_size * params->base_bdev_blocklen / 1024;
-	raid_bdev->strip_size_shift = spdk_u32log2(raid_bdev->strip_size);
-	raid_bdev->blocklen_shift = spdk_u32log2(params->base_bdev_blocklen);
-	raid_bdev->bdev.blocklen = params->base_bdev_blocklen;
-	raid_bdev->bdev.md_len = params->md_len;
 
 	return raid_bdev;
 }
