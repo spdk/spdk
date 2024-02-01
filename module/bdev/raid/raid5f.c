@@ -112,6 +112,9 @@ struct raid5f_info {
 
 	/* Alignment for buffer allocation */
 	size_t buf_alignment;
+
+	/* block length bit shift for optimized calculation, only valid when no interleaved md */
+	uint32_t blocklen_shift;
 };
 
 struct raid5f_io_channel {
@@ -519,6 +522,7 @@ raid5f_stripe_request_map_iovecs(struct stripe_request *stripe_req)
 {
 	struct raid_bdev_io *raid_io = stripe_req->raid_io;
 	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
+	struct raid5f_info *r5f_info = raid_bdev->module_private;
 	struct chunk *chunk;
 	int raid_io_iov_idx = 0;
 	size_t raid_io_offset = 0;
@@ -548,7 +552,7 @@ raid5f_stripe_request_map_iovecs(struct stripe_request *stripe_req)
 
 		if (raid_io->md_buf != NULL) {
 			chunk->md_buf = raid_io->md_buf +
-					(raid_io_offset >> raid_bdev->blocklen_shift) * raid_bdev->bdev.md_len;
+					(raid_io_offset >> r5f_info->blocklen_shift) * raid_bdev->bdev.md_len;
 		}
 
 		for (i = 0; i < chunk_iovcnt; i++) {
@@ -1089,6 +1093,9 @@ raid5f_start(struct raid_bdev *raid_bdev)
 	r5f_info->total_stripes = min_blockcnt / raid_bdev->strip_size;
 	r5f_info->stripe_blocks = raid_bdev->strip_size * raid5f_stripe_data_chunks_num(raid_bdev);
 	r5f_info->buf_alignment = alignment;
+	if (!raid_bdev->bdev.md_interleave) {
+		r5f_info->blocklen_shift = spdk_u32log2(raid_bdev->bdev.blocklen);
+	}
 
 	raid_bdev->bdev.blockcnt = r5f_info->stripe_blocks * r5f_info->total_stripes;
 	raid_bdev->bdev.optimal_io_boundary = raid_bdev->strip_size;

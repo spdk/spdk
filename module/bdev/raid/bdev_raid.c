@@ -1778,7 +1778,6 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 		return -EINVAL;
 	}
 	raid_bdev->strip_size_shift = spdk_u32log2(raid_bdev->strip_size);
-	raid_bdev->blocklen_shift = spdk_u32log2(data_block_size);
 
 	rc = raid_bdev->module->start(raid_bdev);
 	if (rc != 0) {

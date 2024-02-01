@@ -197,9 +197,6 @@ struct raid_bdev {
 	/* strip size bit shift for optimized calculation */
 	uint32_t			strip_size_shift;
 
-	/* block length bit shift for optimized calculation */
-	uint32_t			blocklen_shift;
-
 	/* state of raid bdev */
 	enum raid_bdev_state		state;
 

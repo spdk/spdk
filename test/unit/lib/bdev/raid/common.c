@@ -110,7 +110,6 @@ raid_test_create_raid_bdev(struct raid_params *params, struct raid_bdev_module *
 	raid_bdev->strip_size = params->strip_size;
 	raid_bdev->strip_size_kb = params->strip_size * params->base_bdev_blocklen / 1024;
 	raid_bdev->strip_size_shift = spdk_u32log2(raid_bdev->strip_size);
-	raid_bdev->blocklen_shift = spdk_u32log2(params->base_bdev_blocklen);
 
 	raid_bdev->base_bdev_info = calloc(raid_bdev->num_base_bdevs,
 					   sizeof(struct raid_base_bdev_info));

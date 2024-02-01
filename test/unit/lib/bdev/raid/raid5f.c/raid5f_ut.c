@@ -395,8 +395,6 @@ process_io_completions(struct raid_io_info *io_info)
 	}
 }
 
-#define DATA_OFFSET_TO_MD_OFFSET(raid_bdev, data_offset) ((data_offset >> raid_bdev->blocklen_shift) * raid_bdev->bdev.md_len)
-
 int
 spdk_bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 				struct iovec *iov, int iovcnt, void *md_buf,
@@ -407,6 +405,7 @@ spdk_bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_chan
 	struct stripe_request *stripe_req;
 	struct test_raid_bdev_io *test_raid_bdev_io;
 	struct raid_io_info *io_info;
+	struct raid5f_info *r5f_info;
 	struct raid_bdev *raid_bdev;
 	uint8_t data_chunk_idx;
 	uint64_t data_offset;
@@ -418,7 +417,8 @@ spdk_bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_chan
 	stripe_req = raid5f_chunk_stripe_req(chunk);
 	test_raid_bdev_io = SPDK_CONTAINEROF(stripe_req->raid_io, struct test_raid_bdev_io, raid_io);
 	io_info = test_raid_bdev_io->io_info;
-	raid_bdev = io_info->r5f_info->raid_bdev;
+	r5f_info = io_info->r5f_info;
+	raid_bdev = r5f_info->raid_bdev;
 
 	if (chunk == stripe_req->parity_chunk) {
 		if (io_info->parity_buf == NULL) {
@@ -433,7 +433,7 @@ spdk_bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_chan
 		data_offset = data_chunk_idx * raid_bdev->strip_size * raid_bdev->bdev.blocklen;
 		dest.iov_base = test_raid_bdev_io->buf + data_offset;
 		if (md_buf != NULL) {
-			data_offset = DATA_OFFSET_TO_MD_OFFSET(raid_bdev, data_offset);
+			data_offset = (data_offset >> r5f_info->blocklen_shift) * raid_bdev->bdev.md_len;
 			dest_md_buf = test_raid_bdev_io->buf_md + data_offset;
 		}
 	}

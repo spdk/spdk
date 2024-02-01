@@ -1187,7 +1187,6 @@ verify_raid_bdev(struct rpc_bdev_raid_create *r, bool presence, uint32_t raid_st
 			CU_ASSERT(pbdev->strip_size == ((r->strip_size_kb * 1024) / g_block_len));
 			CU_ASSERT(pbdev->strip_size_shift == spdk_u32log2(((r->strip_size_kb * 1024) /
 					g_block_len)));
-			CU_ASSERT(pbdev->blocklen_shift == spdk_u32log2(g_block_len));
 			CU_ASSERT((uint32_t)pbdev->state == raid_state);
 			CU_ASSERT(pbdev->num_base_bdevs == r->base_bdevs.num_base_bdevs);
 			CU_ASSERT(pbdev->num_base_bdevs_discovered == r->base_bdevs.num_base_bdevs);
