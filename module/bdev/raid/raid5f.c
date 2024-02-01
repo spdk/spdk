@@ -314,13 +314,13 @@ raid5f_xor_stripe(struct stripe_request *stripe_req, stripe_req_xor_cb cb)
 			      r5ch->chunk_xor_iovs,
 			      r5ch->chunk_xor_iovcnt,
 			      r5ch->chunk_xor_buffers);
-	stripe_req->xor.remaining = num_blocks << raid_bdev->blocklen_shift;
+	stripe_req->xor.remaining = num_blocks * raid_bdev->bdev.blocklen;
 	stripe_req->xor.status = 0;
 	stripe_req->xor.cb = cb;
 
 	if (raid_io->md_buf != NULL) {
 		uint8_t n_src = raid5f_stripe_data_chunks_num(raid_bdev);
-		uint64_t len = num_blocks * spdk_bdev_get_md_size(&raid_bdev->bdev);
+		uint64_t len = num_blocks * raid_bdev->bdev.md_len;
 		int ret;
 
 		stripe_req->xor.remaining_md = len;
@@ -519,8 +519,6 @@ raid5f_stripe_request_map_iovecs(struct stripe_request *stripe_req)
 {
 	struct raid_bdev_io *raid_io = stripe_req->raid_io;
 	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
-	void *raid_io_md = raid_io->md_buf;
-	uint32_t raid_io_md_size = spdk_bdev_get_md_size(&raid_bdev->bdev);
 	struct chunk *chunk;
 	int raid_io_iov_idx = 0;
 	size_t raid_io_offset = 0;
@@ -529,7 +527,7 @@ raid5f_stripe_request_map_iovecs(struct stripe_request *stripe_req)
 
 	FOR_EACH_DATA_CHUNK(stripe_req, chunk) {
 		int chunk_iovcnt = 0;
-		uint64_t len = raid_bdev->strip_size << raid_bdev->blocklen_shift;
+		uint64_t len = raid_bdev->strip_size * raid_bdev->bdev.blocklen;
 		size_t off = raid_io_iov_offset;
 		int ret;
 
@@ -548,9 +546,9 @@ raid5f_stripe_request_map_iovecs(struct stripe_request *stripe_req)
 			return ret;
 		}
 
-		if (raid_io_md) {
-			chunk->md_buf = raid_io_md +
-					(raid_io_offset >> raid_bdev->blocklen_shift) * raid_io_md_size;
+		if (raid_io->md_buf != NULL) {
+			chunk->md_buf = raid_io->md_buf +
+					(raid_io_offset >> raid_bdev->blocklen_shift) * raid_bdev->bdev.md_len;
 		}
 
 		for (i = 0; i < chunk_iovcnt; i++) {
@@ -575,7 +573,7 @@ raid5f_stripe_request_map_iovecs(struct stripe_request *stripe_req)
 	}
 
 	stripe_req->parity_chunk->iovs[0].iov_base = stripe_req->write.parity_buf;
-	stripe_req->parity_chunk->iovs[0].iov_len = raid_bdev->strip_size << raid_bdev->blocklen_shift;
+	stripe_req->parity_chunk->iovs[0].iov_len = raid_bdev->strip_size * raid_bdev->bdev.blocklen;
 	stripe_req->parity_chunk->iovcnt = 1;
 	stripe_req->parity_chunk->md_buf = stripe_req->write.parity_md_buf;
 
@@ -743,7 +741,7 @@ raid5f_submit_reconstruct_read(struct raid_bdev_io *raid_io, uint64_t stripe_ind
 			struct iovec *iov = &chunk->iovs[0];
 
 			iov->iov_base = stripe_req->reconstruct.chunk_buffers[buf_idx];
-			iov->iov_len = raid_io->num_blocks << raid_bdev->blocklen_shift;
+			iov->iov_len = raid_io->num_blocks * raid_bdev->bdev.blocklen;
 			chunk->iovcnt = 1;
 
 			if (raid_io_md) {
@@ -874,7 +872,7 @@ raid5f_stripe_request_alloc(struct raid5f_io_channel *r5ch, enum stripe_request_
 {
 	struct raid5f_info *r5f_info = raid5f_ch_to_r5f_info(r5ch);
 	struct raid_bdev *raid_bdev = r5f_info->raid_bdev;
-	uint32_t raid_io_md_size = spdk_bdev_get_md_size(&raid_bdev->bdev);
+	uint32_t raid_io_md_size = raid_bdev->bdev.md_interleave ? 0 : raid_bdev->bdev.md_len;
 	struct stripe_request *stripe_req;
 	struct chunk *chunk;
 	size_t chunk_len;
@@ -896,7 +894,7 @@ raid5f_stripe_request_alloc(struct raid5f_io_channel *r5ch, enum stripe_request_
 		}
 	}
 
-	chunk_len = raid_bdev->strip_size << raid_bdev->blocklen_shift;
+	chunk_len = raid_bdev->strip_size * raid_bdev->bdev.blocklen;
 
 	if (type == STRIPE_REQ_WRITE) {
 		stripe_req->write.parity_buf = spdk_dma_malloc(chunk_len, r5f_info->buf_alignment, NULL);

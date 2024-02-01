@@ -35,12 +35,6 @@ spdk_accel_get_io_channel(void)
 	return spdk_get_io_channel(g_accel_p);
 }
 
-uint32_t
-spdk_bdev_get_md_size(const struct spdk_bdev *bdev)
-{
-	return bdev->md_len;
-}
-
 struct xor_ctx {
 	spdk_accel_completion_cb cb_fn;
 	void *cb_arg;
@@ -93,7 +87,7 @@ test_suite_init(void)
 	uint64_t base_bdev_blockcnt_values[] = { 1, 1024, 1024 * 1024 };
 	uint32_t base_bdev_blocklen_values[] = { 512, 4096 };
 	uint32_t strip_size_kb_values[] = { 1, 4, 128 };
-	enum raid_params_md_type md_type_values[] = { RAID_PARAMS_MD_NONE, RAID_PARAMS_MD_SEPARATE };
+	enum raid_params_md_type md_type_values[] = { RAID_PARAMS_MD_NONE, RAID_PARAMS_MD_SEPARATE, RAID_PARAMS_MD_INTERLEAVED };
 	uint8_t *num_base_bdevs;
 	uint64_t *base_bdev_blockcnt;
 	uint32_t *base_bdev_blocklen;
@@ -625,7 +619,7 @@ test_raid5f_write_request(struct raid_io_info *io_info)
 			i--;
 		}
 
-		strip_len = raid_bdev->strip_size_kb * 1024;
+		strip_len = raid_bdev->strip_size * raid_bdev->bdev.blocklen;
 		offset = i * strip_len;
 
 		memcpy(io_info->dest_buf + offset, io_info->src_buf + offset, strip_len);
@@ -692,7 +686,7 @@ init_io_info(struct raid_io_info *io_info, struct raid5f_info *r5f_info,
 	void *src_buf, *dest_buf;
 	void *src_md_buf, *dest_md_buf;
 	size_t buf_size = num_blocks * blocklen;
-	size_t buf_md_size = num_blocks * raid_bdev->bdev.md_len;
+	size_t buf_md_size = raid_bdev->bdev.md_interleave ? 0 : num_blocks * raid_bdev->bdev.md_len;
 	uint64_t block;
 	uint64_t i;
 
@@ -775,6 +769,8 @@ io_info_setup_parity(struct raid_io_info *io_info, void *src, void *src_md)
 	if (src_md) {
 		size_t strip_md_len = raid_bdev->strip_size * raid_bdev->bdev.md_len;
 
+		SPDK_CU_ASSERT_FATAL(raid_bdev->bdev.md_interleave == 0);
+
 		io_info->parity_md_buf_size = strip_md_len;
 		io_info->parity_md_buf = calloc(1, io_info->parity_md_buf_size);
 		SPDK_CU_ASSERT_FATAL(io_info->parity_md_buf != NULL);
@@ -795,7 +791,7 @@ io_info_setup_degraded(struct raid_io_info *io_info)
 	struct raid5f_info *r5f_info = io_info->r5f_info;
 	struct raid_bdev *raid_bdev = r5f_info->raid_bdev;
 	uint32_t blocklen = raid_bdev->bdev.blocklen;
-	uint32_t md_len = raid_bdev->bdev.md_len;
+	uint32_t md_len = raid_bdev->bdev.md_interleave ? 0 : raid_bdev->bdev.md_len;
 	size_t stripe_len = r5f_info->stripe_blocks * blocklen;
 	size_t stripe_md_len = r5f_info->stripe_blocks * md_len;
 
