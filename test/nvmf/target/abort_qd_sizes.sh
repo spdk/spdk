@@ -41,18 +41,17 @@ rabort() {
 
 spdk_target() {
 	local name=spdk_target
-	local subnqn=nqn.2016-06.io.spdk:$name
 
 	rpc_cmd bdev_nvme_attach_controller -t pcie -a "$nvme" -b "$name"
 
 	rpc_cmd nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
-	rpc_cmd nvmf_create_subsystem "$subnqn" -a -s "$NVMF_SERIAL"
-	rpc_cmd nvmf_subsystem_add_ns "$subnqn" "${name}n1"
-	rpc_cmd nvmf_subsystem_add_listener "$subnqn" -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+	rpc_cmd nvmf_create_subsystem "$NVME_SUBNQN" -a -s "$NVMF_SERIAL"
+	rpc_cmd nvmf_subsystem_add_ns "$NVME_SUBNQN" "${name}n1"
+	rpc_cmd nvmf_subsystem_add_listener "$NVME_SUBNQN" -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
-	rabort "$TEST_TRANSPORT" IPv4 "$NVMF_FIRST_TARGET_IP" "$NVMF_PORT" "$subnqn"
+	rabort "$TEST_TRANSPORT" IPv4 "$NVMF_FIRST_TARGET_IP" "$NVMF_PORT" "$NVME_SUBNQN"
 
-	rpc_cmd nvmf_delete_subsystem "$subnqn"
+	rpc_cmd nvmf_delete_subsystem "$NVME_SUBNQN"
 	rpc_cmd bdev_nvme_detach_controller "$name"
 
 	# Make sure we fully detached from the ctrl as vfio-pci won't be able to release the
@@ -63,10 +62,8 @@ spdk_target() {
 }
 
 kernel_target() {
-	local name=kernel_target
-
-	configure_kernel_target "$name"
-	rabort "$TEST_TRANSPORT" IPv4 "$NVMF_INITIATOR_IP" "$NVMF_PORT" "$name"
+	configure_kernel_target "$NVME_SUBNQN" "$(get_main_ns_ip)"
+	rabort "$TEST_TRANSPORT" IPv4 "$NVMF_INITIATOR_IP" "$NVMF_PORT" "$NVME_SUBNQN"
 	clean_kernel_target
 }
 

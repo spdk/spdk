@@ -19,6 +19,7 @@ NVME_HOSTID=${NVME_HOSTNQN##*:}
 NVME_HOST=("--hostnqn=$NVME_HOSTNQN" "--hostid=$NVME_HOSTID")
 NVME_CONNECT="nvme connect"
 NET_TYPE=${NET_TYPE:-phy-fallback}
+NVME_SUBNQN=nqn.2016-06.io.spdk:testnqn
 
 function build_nvmf_app_args() {
 	if [ $SPDK_RUN_NON_ROOT -eq 1 ]; then
@@ -617,8 +618,8 @@ remove_spdk_ns() {
 }
 
 configure_kernel_target() {
+	local kernel_name=$1 kernel_target_ip=$2
 	# Keep it global in scope for easier cleanup
-	kernel_name=${1:-kernel_target}
 	nvmet=/sys/kernel/config/nvmet
 	kernel_subsystem=$nvmet/subsystems/$kernel_name
 	kernel_namespace=$kernel_subsystem/namespaces/1
@@ -655,11 +656,7 @@ configure_kernel_target() {
 	echo "$nvme" > "$kernel_namespace/device_path"
 	echo 1 > "$kernel_namespace/enable"
 
-	# By default use initiator ip which was set by nvmftestinit(). This is the
-	# interface which resides in the main net namespace and which is visible
-	# to nvmet.
-
-	echo "$NVMF_INITIATOR_IP" > "$kernel_port/addr_traddr"
+	echo "$kernel_target_ip" > "$kernel_port/addr_traddr"
 	echo "$TEST_TRANSPORT" > "$kernel_port/addr_trtype"
 	echo "$NVMF_PORT" > "$kernel_port/addr_trsvcid"
 	echo ipv4 > "$kernel_port/addr_adrfam"
@@ -668,7 +665,7 @@ configure_kernel_target() {
 	ln -s "$kernel_subsystem" "$kernel_port/subsystems/"
 
 	# Check if target is available
-	nvme discover "${NVME_HOST[@]}" -a "$NVMF_INITIATOR_IP" -t "$TEST_TRANSPORT" -s "$NVMF_PORT"
+	nvme discover "${NVME_HOST[@]}" -a "$kernel_target_ip" -t "$TEST_TRANSPORT" -s "$NVMF_PORT"
 }
 
 clean_kernel_target() {
@@ -676,7 +673,7 @@ clean_kernel_target() {
 
 	echo 0 > "$kernel_namespace/enable"
 
-	rm -f "$kernel_port/subsystems/$kernel_name"
+	rm -f "$kernel_port/subsystems/${kernel_subsystem##*/}"
 	rmdir "$kernel_namespace"
 	rmdir "$kernel_port"
 	rmdir "$kernel_subsystem"
@@ -684,6 +681,9 @@ clean_kernel_target() {
 	modules=(/sys/module/nvmet/holders/*)
 
 	modprobe -r "${modules[@]##*/}" nvmet
+
+	# Get back all nvmes to userspace
+	"$rootdir/scripts/setup.sh"
 }
 
 format_interchange_psk() {
@@ -693,4 +693,27 @@ format_interchange_psk() {
 	crc=$(echo -n $key | gzip -1 -c | tail -c8 | head -c 4)
 
 	echo -n "NVMeTLSkey-1:$hash:$(base64 <(echo -n ${key}${crc})):"
+}
+
+get_main_ns_ip() {
+	# Determine which ip to use based on nvmftestinit() setup. For tcp we pick
+	# interface which resides in the main net namespace and which is visible
+	# to nvmet under tcp setup. $NVMF_FIRST_TARGET_IP is solely for rdma use.
+	# FIXME: This requires proper unification of the networking setup across
+	# different transports.
+	local ip
+	local -A ip_candidates=()
+
+	ip_candidates["rdma"]=NVMF_FIRST_TARGET_IP
+	ip_candidates["tcp"]=NVMF_INITIATOR_IP
+
+	[[ -z $TEST_TRANSPORT || -z ${ip_candidates["$TEST_TRANSPORT"]} ]] && return 1
+	ip=${ip_candidates["$TEST_TRANSPORT"]}
+
+	if [[ -z ${!ip} ]]; then
+		echo "$ip not set, call nvmftestinit() first" >&2
+		return 1
+	fi
+
+	echo "${!ip}"
 }
