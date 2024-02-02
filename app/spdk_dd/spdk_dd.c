@@ -983,7 +983,8 @@ parse_flags(char *file_flags)
 
 		if (found == false) {
 			SPDK_ERRLOG("Unknown file flag: %s\n", input_flag);
-			return -EINVAL;
+			dd_exit(-EINVAL);
+			return 0;
 		}
 
 		found = false;
