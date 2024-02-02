@@ -812,6 +812,12 @@ vbdev_delay_register(const char *bdev_name)
 		delay_node->delay_bdev.blocklen = bdev->blocklen;
 		delay_node->delay_bdev.blockcnt = bdev->blockcnt;
 
+		delay_node->delay_bdev.md_interleave = bdev->md_interleave;
+		delay_node->delay_bdev.md_len = bdev->md_len;
+		delay_node->delay_bdev.dif_type = bdev->dif_type;
+		delay_node->delay_bdev.dif_is_head_of_md = bdev->dif_is_head_of_md;
+		delay_node->delay_bdev.dif_check_flags = bdev->dif_check_flags;
+
 		delay_node->delay_bdev.ctxt = delay_node;
 		delay_node->delay_bdev.fn_table = &vbdev_delay_fn_table;
 		delay_node->delay_bdev.module = &delay_if;
