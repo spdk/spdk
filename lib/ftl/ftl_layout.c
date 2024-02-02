@@ -22,10 +22,10 @@ enum ftl_layout_setup_mode {
 	FTL_LAYOUT_SETUP_MODE_LEGACY_DEFAULT,
 };
 
-static inline float
+static inline double
 blocks2mib(uint64_t blocks)
 {
-	float result;
+	double result;
 
 	result = blocks;
 	result *= FTL_BLOCK_SIZE;
