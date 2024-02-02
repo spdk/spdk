@@ -68,8 +68,8 @@ function configure_raid_bdev() {
 	rm -rf $testdir/rpcs.txt
 
 	cat <<- EOL >> $testdir/rpcs.txt
-		bdev_malloc_create 32 512 -b Base_1
-		bdev_malloc_create 32 512 -b Base_2
+		bdev_malloc_create 32 $base_blocklen -b Base_1
+		bdev_malloc_create 32 $base_blocklen -b Base_2
 		bdev_raid_create -z 64 -r $raid_level -b "Base_1 Base_2" -n raid
 	EOL
 	$rpc_py < $testdir/rpcs.txt
@@ -236,7 +236,7 @@ function raid_state_function_test() {
 	# Step2: create one base bdev and add to the RAID bdev
 	# Expect state: CONFIGURING
 	$rpc_py bdev_raid_create $strip_size_create_arg $superblock_create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
-	$rpc_py bdev_malloc_create 32 512 -b ${base_bdevs[0]}
+	$rpc_py bdev_malloc_create 32 $base_blocklen -b ${base_bdevs[0]}
 	waitforbdev ${base_bdevs[0]}
 	verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size $num_base_bdevs
 	$rpc_py bdev_raid_delete $raid_bdev_name
@@ -244,7 +244,7 @@ function raid_state_function_test() {
 	if [ $superblock = true ]; then
 		# recreate the bdev to remove superblock
 		$rpc_py bdev_malloc_delete ${base_bdevs[0]}
-		$rpc_py bdev_malloc_create 32 512 -b ${base_bdevs[0]}
+		$rpc_py bdev_malloc_create 32 $base_blocklen -b ${base_bdevs[0]}
 		waitforbdev ${base_bdevs[0]}
 	fi
 
@@ -253,7 +253,7 @@ function raid_state_function_test() {
 	$rpc_py bdev_raid_create $strip_size_create_arg $superblock_create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
 	for ((i = 1; i < num_base_bdevs; i++)); do
 		verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size $num_base_bdevs
-		$rpc_py bdev_malloc_create 32 512 -b ${base_bdevs[$i]}
+		$rpc_py bdev_malloc_create 32 $base_blocklen -b ${base_bdevs[$i]}
 		waitforbdev ${base_bdevs[$i]}
 	done
 	verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $num_base_bdevs
@@ -290,7 +290,7 @@ function raid_state_function_test() {
 }
 
 function raid0_resize_test() {
-	local blksize=512
+	local blksize=$base_blocklen
 	local bdev_size_mb=32
 	local new_bdev_size_mb=$((bdev_size_mb * 2))
 	local blkcnt
@@ -367,7 +367,7 @@ function raid_superblock_test() {
 		base_bdevs_pt+=($bdev_pt)
 		base_bdevs_pt_uuid+=($bdev_pt_uuid)
 
-		$rpc_py bdev_malloc_create 32 512 -b $bdev_malloc
+		$rpc_py bdev_malloc_create 32 $base_blocklen -b $bdev_malloc
 		$rpc_py bdev_passthru_create -b $bdev_malloc -p $bdev_pt -u $bdev_pt_uuid
 	done
 
@@ -547,15 +547,15 @@ function raid_rebuild_test() {
 	# Create base bdevs
 	for bdev in "${base_bdevs[@]}"; do
 		if [ $superblock = true ]; then
-			$rpc_py bdev_malloc_create 32 512 -b ${bdev}_malloc
+			$rpc_py bdev_malloc_create 32 $base_blocklen -b ${bdev}_malloc
 			$rpc_py bdev_passthru_create -b ${bdev}_malloc -p $bdev
 		else
-			$rpc_py bdev_malloc_create 32 512 -b $bdev
+			$rpc_py bdev_malloc_create 32 $base_blocklen -b $bdev
 		fi
 	done
 
 	# Create spare bdev
-	$rpc_py bdev_malloc_create 32 512 -b "spare_malloc"
+	$rpc_py bdev_malloc_create 32 $base_blocklen -b "spare_malloc"
 	$rpc_py bdev_delay_create -b "spare_malloc" -d "spare_delay" -r 0 -t 0 -w 100000 -n 100000
 	$rpc_py bdev_passthru_create -b "spare_delay" -p "spare"
 
@@ -579,11 +579,11 @@ function raid_rebuild_test() {
 		nbd_start_disks $rpc_server $raid_bdev_name /dev/nbd0
 		if [ $raid_level = "raid5f" ]; then
 			write_unit_size=$((strip_size * 2 * (num_base_bdevs - 1)))
-			echo $((512 * write_unit_size / 1024)) > /sys/block/nbd0/queue/max_sectors_kb
+			echo $((base_blocklen * write_unit_size / 1024)) > /sys/block/nbd0/queue/max_sectors_kb
 		else
 			write_unit_size=1
 		fi
-		dd if=/dev/urandom of=/dev/nbd0 bs=$((512 * write_unit_size)) count=$((raid_bdev_size / write_unit_size)) oflag=direct
+		dd if=/dev/urandom of=/dev/nbd0 bs=$((base_blocklen * write_unit_size)) count=$((raid_bdev_size / write_unit_size)) oflag=direct
 		nbd_stop_disks $rpc_server /dev/nbd0
 	fi
 
@@ -678,14 +678,14 @@ function raid_rebuild_test() {
 				continue
 			fi
 			nbd_start_disks $rpc_server $bdev "/dev/nbd1"
-			cmp -i $((data_offset * 512)) /dev/nbd0 /dev/nbd1
+			cmp -i $((data_offset * base_blocklen)) /dev/nbd0 /dev/nbd1
 			nbd_stop_disks $rpc_server "/dev/nbd1"
 		done
 		nbd_stop_disks $rpc_server "/dev/nbd0"
 	else
 		# Compare data on the removed and rebuilt base bdevs
 		nbd_start_disks $rpc_server "${base_bdevs[0]} spare" "/dev/nbd0 /dev/nbd1"
-		cmp -i $((data_offset * 512)) /dev/nbd0 /dev/nbd1
+		cmp -i $((data_offset * base_blocklen)) /dev/nbd0 /dev/nbd1
 		nbd_stop_disks $rpc_server "/dev/nbd0 /dev/nbd1"
 	fi
 
@@ -712,6 +712,8 @@ function raid_rebuild_test() {
 }
 
 trap 'on_error_exit;' ERR
+
+base_blocklen=512
 
 if [ $(uname -s) = Linux ] && modprobe -n nbd; then
 	has_nbd=true
@@ -749,6 +751,14 @@ if [ "$CONFIG_RAID5F" == y ]; then
 			run_test "raid5f_rebuild_test_sb" raid_rebuild_test raid5f $n true false
 		fi
 	done
+fi
+
+base_blocklen=4096
+
+run_test "raid_state_function_test_sb_4k" raid_state_function_test raid1 2 true
+run_test "raid_superblock_test_4k" raid_superblock_test raid1 2
+if [ "$has_nbd" = true ]; then
+	run_test "raid_rebuild_test_sb_4k" raid_rebuild_test raid1 2 true false
 fi
 
 rm -f $tmp_file
