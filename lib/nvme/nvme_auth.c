@@ -11,6 +11,12 @@
 #include "nvme_internal.h"
 #include <openssl/evp.h>
 
+struct nvme_auth_digest {
+	uint8_t		id;
+	const char	*name;
+	uint8_t		len;
+};
+
 #define NVME_AUTH_DATA_SIZE		4096
 #define NVME_AUTH_CHAP_KEY_MAX_SIZE	256
 #define NVME_AUTH_DIGEST_MAX_SIZE	64
@@ -22,36 +28,40 @@
 	SPDK_ERRLOG("[%s:%s:%u] " fmt, (q)->ctrlr->trid.subnqn, (q)->ctrlr->opts.hostnqn, \
 		    (q)->id, ## __VA_ARGS__)
 
-static const char *
-nvme_auth_get_digest_name(uint8_t id)
-{
-	const char *names[] = {
-		[SPDK_NVMF_DHCHAP_HASH_SHA256] = "sha256",
-		[SPDK_NVMF_DHCHAP_HASH_SHA384] = "sha384",
-		[SPDK_NVMF_DHCHAP_HASH_SHA512] = "sha512",
-	};
+static const struct nvme_auth_digest g_digests[] = {
+	{ SPDK_NVMF_DHCHAP_HASH_SHA256, "sha256", 32 },
+	{ SPDK_NVMF_DHCHAP_HASH_SHA384, "sha384", 48 },
+	{ SPDK_NVMF_DHCHAP_HASH_SHA512, "sha512", 64 },
+};
 
-	if (id >= SPDK_COUNTOF(names)) {
-		return NULL;
+static const struct nvme_auth_digest *
+nvme_auth_get_digest(int id)
+{
+	size_t i;
+
+	for (i = 0; i < SPDK_COUNTOF(g_digests); ++i) {
+		if (g_digests[i].id == id) {
+			return &g_digests[i];
+		}
 	}
 
-	return names[id];
+	return NULL;
+}
+
+static const char *
+nvme_auth_get_digest_name(int id)
+{
+	const struct nvme_auth_digest *digest = nvme_auth_get_digest(id);
+
+	return digest != NULL ? digest->name : NULL;
 }
 
 static uint8_t
-nvme_auth_get_digest_len(uint8_t id)
+nvme_auth_get_digest_len(int id)
 {
-	uint8_t hlen[] = {
-		[SPDK_NVMF_DHCHAP_HASH_SHA256] = 32,
-		[SPDK_NVMF_DHCHAP_HASH_SHA384] = 48,
-		[SPDK_NVMF_DHCHAP_HASH_SHA512] = 64,
-	};
+	const struct nvme_auth_digest *digest = nvme_auth_get_digest(id);
 
-	if (id >= SPDK_COUNTOF(hlen)) {
-		return 0;
-	}
-
-	return hlen[id];
+	return digest != NULL ? digest->len : 0;
 }
 
 static void
@@ -446,23 +456,21 @@ nvme_auth_send_negotiate(struct spdk_nvme_qpair *qpair)
 	struct nvme_auth *auth = &qpair->auth;
 	struct spdk_nvmf_auth_negotiate *msg = qpair->poll_status->dma_data;
 	struct spdk_nvmf_auth_descriptor *desc = msg->descriptors;
-	uint8_t hashids[] = {
-		SPDK_NVMF_DHCHAP_HASH_SHA256,
-		SPDK_NVMF_DHCHAP_HASH_SHA384,
-		SPDK_NVMF_DHCHAP_HASH_SHA512,
-	};
 	uint8_t dhgids[] = {
 		SPDK_NVMF_DHCHAP_DHGROUP_NULL,
 	};
+	size_t i;
 
 	memset(qpair->poll_status->dma_data, 0, NVME_AUTH_DATA_SIZE);
 	desc->auth_id = SPDK_NVMF_AUTH_TYPE_DHCHAP;
-	desc->halen = SPDK_COUNTOF(hashids);
+	desc->halen = SPDK_COUNTOF(g_digests);
 	desc->dhlen = SPDK_COUNTOF(dhgids);
 
 	assert(desc->halen <= sizeof(desc->hash_id_list));
 	assert(desc->dhlen <= sizeof(desc->dhg_id_list));
-	memcpy(desc->hash_id_list, hashids, desc->halen);
+	for (i = 0; i < desc->halen; ++i) {
+		desc->hash_id_list[i] = g_digests[i].id;
+	}
 	memcpy(desc->dhg_id_list, dhgids, desc->dhlen);
 
 	msg->auth_type = SPDK_NVMF_AUTH_TYPE_COMMON_MESSAGE;
