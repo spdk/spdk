@@ -501,6 +501,7 @@ Example response:
     "bdev_lvol_start_shallow_copy",
     "bdev_lvol_check_shallow_copy",
     "bdev_lvol_set_parent",
+    "bdev_lvol_set_parent_bdev",
     "bdev_daos_delete",
     "bdev_daos_create",
     "bdev_daos_resize"
@@ -10671,6 +10672,47 @@ Example request:
   "params": {
     "lvol_name": "LVS1/LVOL0",
     "snapshot_name": "LVS1/SNAP0"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_lvol_set_parent_bdev {#rpc_bdev_lvol_set_parent_bdev}
+
+Set an external snapshot as the parent of a lvol, making the lvol a clone of this external
+snapshot (see @ref rpc_bdev_lvol_clone_bdev).
+The previous parent of the lvol, if any, can be another external snapshot or a snapshot; if the
+lvol is not a clone, it must be thin-provisioned.
+The size of the external snapshot device must be an integer multiple of cluster size of lvol's lvolstore.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+lvol_name               | Required | string      | UUID or alias of the lvol to set external parent of
+esnap_name              | Required | string      | UUID or name of the external snapshot to become parent of lvol
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_lvol_set_parent_bdev",
+  "id": 1,
+  "params": {
+    "lvol_name": "LVS1/LVOL0",
+    "esnap_name": "e465527b-f412-4f70-a03e-c4a5d608f65e"
   }
 }
 ~~~

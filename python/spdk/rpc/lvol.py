@@ -264,6 +264,20 @@ def bdev_lvol_set_parent(client, lvol_name, snapshot_name):
     return client.call('bdev_lvol_set_parent', params)
 
 
+def bdev_lvol_set_parent_bdev(client, lvol_name, esnap_name):
+    """Set the parent external snapshot of a lvol
+
+    Args:
+        lvol_name: name of the lvol to set parent of
+        esnap_name: name of the external snapshot to become parent of lvol
+    """
+    params = {
+        'lvol_name': lvol_name,
+        'parent_name': esnap_name
+    }
+    return client.call('bdev_lvol_set_parent_bdev', params)
+
+
 def bdev_lvol_delete_lvstore(client, uuid=None, lvs_name=None):
     """Destroy a logical volume store.
 
