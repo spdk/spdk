@@ -68,8 +68,8 @@ function configure_raid_bdev() {
 	rm -rf $testdir/rpcs.txt
 
 	cat <<- EOL >> $testdir/rpcs.txt
-		bdev_malloc_create 32 $base_blocklen -b Base_1
-		bdev_malloc_create 32 $base_blocklen -b Base_2
+		bdev_malloc_create 32 $base_blocklen $base_malloc_params -b Base_1
+		bdev_malloc_create 32 $base_blocklen $base_malloc_params -b Base_2
 		bdev_raid_create -z 64 -r $raid_level -b "Base_1 Base_2" -n raid
 	EOL
 	$rpc_py < $testdir/rpcs.txt
@@ -191,6 +191,25 @@ function verify_raid_bdev_process() {
 	[[ $(jq -r '.process.target // "none"' <<< "$raid_bdev_info") == "$target" ]]
 }
 
+function verify_raid_bdev_properties() {
+	local raid_bdev_name=$1
+	local raid_bdev_info
+	local base_bdev_info
+	local base_bdev_names
+	local name
+
+	raid_bdev_info=$($rpc_py bdev_get_bdevs -b $raid_bdev_name | jq '.[]')
+	base_bdev_names=$(jq -r '.driver_specific.raid.base_bdevs_list[] | select(.is_configured == true).name' <<< "$raid_bdev_info")
+
+	for name in $base_bdev_names; do
+		base_bdev_info=$($rpc_py bdev_get_bdevs -b $name | jq '.[]')
+		[[ $(jq '.block_size' <<< "$raid_bdev_info") == $(jq '.block_size' <<< "$base_bdev_info") ]]
+		[[ $(jq '.md_size' <<< "$raid_bdev_info") == $(jq '.md_size' <<< "$base_bdev_info") ]]
+		[[ $(jq '.md_interleave' <<< "$raid_bdev_info") == $(jq '.md_interleave' <<< "$base_bdev_info") ]]
+		[[ $(jq '.dif_type' <<< "$raid_bdev_info") == $(jq '.dif_type' <<< "$base_bdev_info") ]]
+	done
+}
+
 function has_redundancy() {
 	case $1 in
 		"raid1" | "raid5f") return 0 ;;
@@ -236,7 +255,7 @@ function raid_state_function_test() {
 	# Step2: create one base bdev and add to the RAID bdev
 	# Expect state: CONFIGURING
 	$rpc_py bdev_raid_create $strip_size_create_arg $superblock_create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
-	$rpc_py bdev_malloc_create 32 $base_blocklen -b ${base_bdevs[0]}
+	$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b ${base_bdevs[0]}
 	waitforbdev ${base_bdevs[0]}
 	verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size $num_base_bdevs
 	$rpc_py bdev_raid_delete $raid_bdev_name
@@ -244,7 +263,7 @@ function raid_state_function_test() {
 	if [ $superblock = true ]; then
 		# recreate the bdev to remove superblock
 		$rpc_py bdev_malloc_delete ${base_bdevs[0]}
-		$rpc_py bdev_malloc_create 32 $base_blocklen -b ${base_bdevs[0]}
+		$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b ${base_bdevs[0]}
 		waitforbdev ${base_bdevs[0]}
 	fi
 
@@ -253,10 +272,11 @@ function raid_state_function_test() {
 	$rpc_py bdev_raid_create $strip_size_create_arg $superblock_create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
 	for ((i = 1; i < num_base_bdevs; i++)); do
 		verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size $num_base_bdevs
-		$rpc_py bdev_malloc_create 32 $base_blocklen -b ${base_bdevs[$i]}
+		$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b ${base_bdevs[$i]}
 		waitforbdev ${base_bdevs[$i]}
 	done
 	verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $num_base_bdevs
+	verify_raid_bdev_properties $raid_bdev_name
 
 	# Step4: delete one base bdev from the RAID bdev
 	$rpc_py bdev_malloc_delete ${base_bdevs[0]}
@@ -367,13 +387,14 @@ function raid_superblock_test() {
 		base_bdevs_pt+=($bdev_pt)
 		base_bdevs_pt_uuid+=($bdev_pt_uuid)
 
-		$rpc_py bdev_malloc_create 32 $base_blocklen -b $bdev_malloc
+		$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b $bdev_malloc
 		$rpc_py bdev_passthru_create -b $bdev_malloc -p $bdev_pt -u $bdev_pt_uuid
 	done
 
 	# Create RAID bdev with superblock
 	$rpc_py bdev_raid_create $strip_size_create_arg -r $raid_level -b "${base_bdevs_pt[*]}" -n $raid_bdev_name -s
 	verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $num_base_bdevs
+	verify_raid_bdev_properties $raid_bdev_name
 
 	# Get RAID bdev's UUID
 	raid_bdev_uuid=$($rpc_py bdev_get_bdevs -b $raid_bdev_name | jq -r '.[] | .uuid')
@@ -425,6 +446,7 @@ function raid_superblock_test() {
 
 	# Check if the RAID bdev is in online state
 	verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $num_base_bdevs
+	verify_raid_bdev_properties $raid_bdev_name
 
 	# Check if the RAID bdev has the same UUID as when first created
 	if [ "$($rpc_py bdev_get_bdevs -b $raid_bdev_name | jq -r '.[] | .uuid')" != "$raid_bdev_uuid" ]; then
@@ -518,6 +540,7 @@ function raid_rebuild_test() {
 	local num_base_bdevs=$2
 	local superblock=$3
 	local background_io=$4
+	local verify=$5
 	local base_bdevs=($(for ((i = 1; i <= num_base_bdevs; i++)); do echo BaseBdev$i; done))
 	local raid_bdev_name="raid_bdev1"
 	local strip_size
@@ -547,15 +570,15 @@ function raid_rebuild_test() {
 	# Create base bdevs
 	for bdev in "${base_bdevs[@]}"; do
 		if [ $superblock = true ]; then
-			$rpc_py bdev_malloc_create 32 $base_blocklen -b ${bdev}_malloc
+			$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b ${bdev}_malloc
 			$rpc_py bdev_passthru_create -b ${bdev}_malloc -p $bdev
 		else
-			$rpc_py bdev_malloc_create 32 $base_blocklen -b $bdev
+			$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b $bdev
 		fi
 	done
 
 	# Create spare bdev
-	$rpc_py bdev_malloc_create 32 $base_blocklen -b "spare_malloc"
+	$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b "spare_malloc"
 	$rpc_py bdev_delay_create -b "spare_malloc" -d "spare_delay" -r 0 -t 0 -w 100000 -n 100000
 	$rpc_py bdev_passthru_create -b "spare_delay" -p "spare"
 
@@ -572,7 +595,7 @@ function raid_rebuild_test() {
 	if [ $background_io = true ]; then
 		# Start user I/O
 		"$rootdir/examples/bdev/bdevperf/bdevperf.py" -s $rpc_server perform_tests &
-	else
+	elif [ $verify = true ]; then
 		local write_unit_size
 
 		# Write random data to the RAID bdev
@@ -670,23 +693,25 @@ function raid_rebuild_test() {
 	$rpc_py bdev_raid_delete $raid_bdev_name
 	[[ $($rpc_py bdev_raid_get_bdevs all | jq 'length') == 0 ]]
 
-	if [ $background_io = true ]; then
-		# Compare data on the rebuilt and other base bdevs
-		nbd_start_disks $rpc_server "spare" "/dev/nbd0"
-		for bdev in "${base_bdevs[@]:1}"; do
-			if [ -z "$bdev" ]; then
-				continue
-			fi
-			nbd_start_disks $rpc_server $bdev "/dev/nbd1"
+	if [ $verify = true ]; then
+		if [ $background_io = true ]; then
+			# Compare data on the rebuilt and other base bdevs
+			nbd_start_disks $rpc_server "spare" "/dev/nbd0"
+			for bdev in "${base_bdevs[@]:1}"; do
+				if [ -z "$bdev" ]; then
+					continue
+				fi
+				nbd_start_disks $rpc_server $bdev "/dev/nbd1"
+				cmp -i $((data_offset * base_blocklen)) /dev/nbd0 /dev/nbd1
+				nbd_stop_disks $rpc_server "/dev/nbd1"
+			done
+			nbd_stop_disks $rpc_server "/dev/nbd0"
+		else
+			# Compare data on the removed and rebuilt base bdevs
+			nbd_start_disks $rpc_server "${base_bdevs[0]} spare" "/dev/nbd0 /dev/nbd1"
 			cmp -i $((data_offset * base_blocklen)) /dev/nbd0 /dev/nbd1
-			nbd_stop_disks $rpc_server "/dev/nbd1"
-		done
-		nbd_stop_disks $rpc_server "/dev/nbd0"
-	else
-		# Compare data on the removed and rebuilt base bdevs
-		nbd_start_disks $rpc_server "${base_bdevs[0]} spare" "/dev/nbd0 /dev/nbd1"
-		cmp -i $((data_offset * base_blocklen)) /dev/nbd0 /dev/nbd1
-		nbd_stop_disks $rpc_server "/dev/nbd0 /dev/nbd1"
+			nbd_stop_disks $rpc_server "/dev/nbd0 /dev/nbd1"
+		fi
 	fi
 
 	if [ $superblock = true ]; then
@@ -734,10 +759,10 @@ done
 
 if [ "$has_nbd" = true ]; then
 	for n in 2 4; do
-		run_test "raid_rebuild_test" raid_rebuild_test raid1 $n false false
-		run_test "raid_rebuild_test_sb" raid_rebuild_test raid1 $n true false
-		run_test "raid_rebuild_test_io" raid_rebuild_test raid1 $n false true
-		run_test "raid_rebuild_test_sb_io" raid_rebuild_test raid1 $n true true
+		run_test "raid_rebuild_test" raid_rebuild_test raid1 $n false false true
+		run_test "raid_rebuild_test_sb" raid_rebuild_test raid1 $n true false true
+		run_test "raid_rebuild_test_io" raid_rebuild_test raid1 $n false true true
+		run_test "raid_rebuild_test_sb_io" raid_rebuild_test raid1 $n true true true
 	done
 fi
 
@@ -747,8 +772,8 @@ if [ "$CONFIG_RAID5F" == y ]; then
 		run_test "raid5f_state_function_test_sb" raid_state_function_test raid5f $n true
 		run_test "raid5f_superblock_test" raid_superblock_test raid5f $n
 		if [ "$has_nbd" = true ]; then
-			run_test "raid5f_rebuild_test" raid_rebuild_test raid5f $n false false
-			run_test "raid5f_rebuild_test_sb" raid_rebuild_test raid5f $n true false
+			run_test "raid5f_rebuild_test" raid_rebuild_test raid5f $n false false true
+			run_test "raid5f_rebuild_test_sb" raid_rebuild_test raid5f $n true false true
 		fi
 	done
 fi
@@ -758,7 +783,19 @@ base_blocklen=4096
 run_test "raid_state_function_test_sb_4k" raid_state_function_test raid1 2 true
 run_test "raid_superblock_test_4k" raid_superblock_test raid1 2
 if [ "$has_nbd" = true ]; then
-	run_test "raid_rebuild_test_sb_4k" raid_rebuild_test raid1 2 true false
+	run_test "raid_rebuild_test_sb_4k" raid_rebuild_test raid1 2 true false true
 fi
+
+base_malloc_params="-m 32"
+run_test "raid_state_function_test_sb_md_separate" raid_state_function_test raid1 2 true
+run_test "raid_superblock_test_md_separate" raid_superblock_test raid1 2
+if [ "$has_nbd" = true ]; then
+	run_test "raid_rebuild_test_sb_md_separate" raid_rebuild_test raid1 2 true false true
+fi
+
+base_malloc_params="-m 32 -i"
+run_test "raid_state_function_test_sb_md_interleaved" raid_state_function_test raid1 2 true
+run_test "raid_superblock_test_md_interleaved" raid_superblock_test raid1 2
+run_test "raid_rebuild_test_sb_md_interleaved" raid_rebuild_test raid1 2 true false false
 
 rm -f $tmp_file
