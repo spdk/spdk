@@ -53,11 +53,20 @@ build_accel_config() {
 	JSON
 }
 
+check_save_config() {
+	$rpc_py save_config | jq -r '.subsystems[] | select(.subsystem=="accel").config[]' | grep "$1"
+}
+
 function get_expected_opcs() {
 	trap 'killprocess $spdk_tgt_pid; exit 1' ERR
 	$SPDK_BIN_DIR/spdk_tgt -c <(build_accel_config) &
 	spdk_tgt_pid=$!
 	waitforlisten $spdk_tgt_pid
+
+	[[ $SPDK_TEST_ACCEL_DSA -gt 0 ]] && check_save_config "dsa_scan_accel_module"
+	[[ $SPDK_TEST_ACCEL_IAA -gt 0 ]] && check_save_config "iaa_scan_accel_module"
+	[[ $SPDK_TEST_IOAT -gt 0 ]] && check_save_config "ioat_scan_accel_module"
+	[[ $COMPRESSDEV ]] && check_save_config "compressdev_scan_accel_module"
 
 	exp_opcs=($($rpc_py accel_get_opc_assignments | jq -r ". | to_entries | map(\"\(.key)=\(.value)\") | .[]"))
 	for opc_opt in "${exp_opcs[@]}"; do
