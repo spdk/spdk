@@ -155,6 +155,10 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 int
 spdk_trace_register_user_thread(void)
 {
+	int ret;
+	uint32_t ut_index;
+	pthread_t tid;
+
 	if (!g_ut_array) {
 		SPDK_ERRLOG("user thread array not created\n");
 		return -ENOMEM;
@@ -175,8 +179,21 @@ spdk_trace_register_user_thread(void)
 		return -ENOENT;
 	}
 
-	t_ut_lcore_history = spdk_get_per_lcore_history(g_trace_histories,
-			     t_ut_array_index + g_user_thread_index_start);
+	ut_index = t_ut_array_index + g_user_thread_index_start;
+
+	t_ut_lcore_history = spdk_get_per_lcore_history(g_trace_histories, ut_index);
+
+	assert(t_ut_lcore_history != NULL);
+
+	memset(g_trace_flags->tname[ut_index], 0, SPDK_TRACE_THREAD_NAME_LEN);
+
+	tid = pthread_self();
+	ret = pthread_getname_np(tid, g_trace_flags->tname[ut_index], SPDK_TRACE_THREAD_NAME_LEN);
+	if (ret) {
+		SPDK_ERRLOG("cannot get thread name\n");
+		pthread_mutex_unlock(&g_ut_array_mutex);
+		return ret;
+	}
 
 	spdk_bit_array_set(g_ut_array, t_ut_array_index);
 

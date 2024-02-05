@@ -54,6 +54,7 @@ struct spdk_trace_object {
 	char	id_prefix;
 };
 
+#define	SPDK_TRACE_THREAD_NAME_LEN 16
 #define SPDK_TRACE_MAX_GROUP_ID  16
 #define SPDK_TRACE_MAX_TPOINT_ID (SPDK_TRACE_MAX_GROUP_ID * 64)
 #define SPDK_TPOINT_ID(group, tpoint)	((group * 64) + tpoint)
@@ -117,6 +118,7 @@ struct spdk_trace_history {
 struct spdk_trace_flags {
 	uint64_t			tsc_rate;
 	uint64_t			tpoint_mask[SPDK_TRACE_MAX_GROUP_ID];
+	char				tname[SPDK_TRACE_MAX_LCORE][SPDK_TRACE_THREAD_NAME_LEN];
 	struct spdk_trace_owner		owner[UCHAR_MAX + 1];
 	struct spdk_trace_object	object[UCHAR_MAX + 1];
 	struct spdk_trace_tpoint	tpoint[SPDK_TRACE_MAX_TPOINT_ID];

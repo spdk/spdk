@@ -135,6 +135,7 @@ print_event(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint64_t t
 	d = &g_flags->tpoint[e->tpoint_id];
 	us = get_us_from_tsc(e->tsc - tsc_offset, tsc_rate);
 
+	printf("%-*s ", (int)sizeof(g_flags->tname[entry->lcore]), g_flags->tname[entry->lcore]);
 	printf("%2d: %10.3f ", entry->lcore, us);
 	if (g_print_tsc) {
 		printf("(%9ju) ", e->tsc - tsc_offset);
