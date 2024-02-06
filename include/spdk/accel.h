@@ -46,9 +46,10 @@ enum spdk_accel_opcode {
 	SPDK_ACCEL_OPC_DECRYPT			= 9,
 	SPDK_ACCEL_OPC_XOR			= 10,
 	SPDK_ACCEL_OPC_DIF_VERIFY		= 11,
-	SPDK_ACCEL_OPC_DIF_GENERATE		= 12,
-	SPDK_ACCEL_OPC_DIF_GENERATE_COPY	= 13,
-	SPDK_ACCEL_OPC_LAST			= 14,
+	SPDK_ACCEL_OPC_DIF_VERIFY_COPY		= 12,
+	SPDK_ACCEL_OPC_DIF_GENERATE		= 13,
+	SPDK_ACCEL_OPC_DIF_GENERATE_COPY	= 14,
+	SPDK_ACCEL_OPC_LAST			= 15,
 };
 
 enum spdk_accel_cipher {
@@ -406,6 +407,36 @@ int spdk_accel_submit_dif_verify(struct spdk_io_channel *ch,
 				 struct iovec *iovs, size_t iovcnt, uint32_t num_blocks,
 				 const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err,
 				 spdk_accel_completion_cb cb_fn, void *cb_arg);
+
+/**
+ * Submit a Data Integrity Field (DIF) copy and verify request.
+ *
+ * This operation copies memory from the source to the destination address and removes
+ * the DIF data with its verification according to the flags provided in the context.
+ *
+ * \param ch I/O channel associated with this call.
+ * \param dst_iovs The destination I/O vector array. The total allocated memory size needs
+ *		  to be at least: num_blocks * block_size (provided to spdk_dif_ctx_init())
+ * \param dst_iovcnt The size of the destination I/O vectors array.
+ * \param src_iovs The source I/O vector array. The total allocated memory size needs
+ *		  to be at least: num_blocks * (block_size - md_size)
+ * \param src_iovcnt The size of the source I/O vectors array.
+ * \param num_blocks Number of data blocks to process.
+ * \param ctx DIF context. Contains the DIF configuration values, including the reference
+ *            Application Tag value and initial value of the Reference Tag to insert.
+ * \param err DIF error detailed information.
+ *            Note: the user must ensure the validity of this pointer throughout the entire operation
+ *            because it is not validated along the processing path.
+ * \param cb_fn Called when this operation completes.
+ * \param cb_arg Callback argument.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_submit_dif_verify_copy(struct spdk_io_channel *ch,
+				      struct iovec *dst_iovs, size_t dst_iovcnt,
+				      struct iovec *src_iovs, size_t src_iovcnt, uint32_t num_blocks,
+				      const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err,
+				      spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
  * Submit a Data Integrity Field (DIF) generate request.
