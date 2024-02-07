@@ -1015,8 +1015,8 @@ verify_raid_bdev(struct rpc_bdev_raid_create *r, bool presence, uint32_t raid_st
 				bdev = spdk_bdev_desc_get_bdev(base_info->desc);
 				CU_ASSERT(bdev != NULL);
 				CU_ASSERT(base_info->remove_scheduled == false);
-				CU_ASSERT((pbdev->sb != NULL && base_info->data_offset != 0) ||
-					  (pbdev->sb == NULL && base_info->data_offset == 0));
+				CU_ASSERT((pbdev->superblock_enabled && base_info->data_offset != 0) ||
+					  (!pbdev->superblock_enabled && base_info->data_offset == 0));
 				CU_ASSERT(base_info->data_offset + base_info->data_size == bdev->blockcnt);
 
 				if (bdev && base_info->data_size < min_blockcnt) {

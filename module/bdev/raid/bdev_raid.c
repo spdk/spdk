@@ -962,7 +962,7 @@ raid_bdev_write_info_json(struct raid_bdev *raid_bdev, struct spdk_json_write_ct
 	spdk_json_write_named_uint32(w, "strip_size_kb", raid_bdev->strip_size_kb);
 	spdk_json_write_named_string(w, "state", raid_bdev_state_to_str(raid_bdev->state));
 	spdk_json_write_named_string(w, "raid_level", raid_bdev_level_to_str(raid_bdev->level));
-	spdk_json_write_named_bool(w, "superblock", raid_bdev->sb != NULL);
+	spdk_json_write_named_bool(w, "superblock", raid_bdev->superblock_enabled);
 	spdk_json_write_named_uint32(w, "num_base_bdevs", raid_bdev->num_base_bdevs);
 	spdk_json_write_named_uint32(w, "num_base_bdevs_discovered", raid_bdev->num_base_bdevs_discovered);
 	spdk_json_write_named_uint32(w, "num_base_bdevs_operational",
@@ -1044,7 +1044,7 @@ raid_bdev_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 
 	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
-	if (raid_bdev->sb != NULL) {
+	if (raid_bdev->superblock_enabled) {
 		/* raid bdev configuration is stored in the superblock */
 		return;
 	}
@@ -1059,7 +1059,7 @@ raid_bdev_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 	spdk_json_write_named_string(w, "uuid", uuid_str);
 	spdk_json_write_named_uint32(w, "strip_size_kb", raid_bdev->strip_size_kb);
 	spdk_json_write_named_string(w, "raid_level", raid_bdev_level_to_str(raid_bdev->level));
-	spdk_json_write_named_bool(w, "superblock", raid_bdev->sb != NULL);
+	spdk_json_write_named_bool(w, "superblock", raid_bdev->superblock_enabled);
 
 	spdk_json_write_named_array_begin(w, "base_bdevs");
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
@@ -1449,6 +1449,7 @@ _raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 	raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
 	raid_bdev->level = level;
 	raid_bdev->min_base_bdevs_operational = min_operational;
+	raid_bdev->superblock_enabled = superblock_enabled;
 
 	if (superblock_enabled) {
 		raid_bdev->sb = spdk_dma_zmalloc(RAID_BDEV_SB_MAX_LENGTH, 0x1000, NULL);
@@ -1701,7 +1702,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 		return rc;
 	}
 
-	if (raid_bdev->sb != NULL) {
+	if (raid_bdev->superblock_enabled) {
 		if (spdk_uuid_is_null(&raid_bdev->sb->uuid)) {
 			/* NULL UUID is not valid in the sb so it means that we are creating a new
 			 * raid bdev and should initialize the superblock.
@@ -2312,7 +2313,7 @@ raid_bdev_process_finish_done(void *ctx)
 		SPDK_NOTICELOG("Finished %s on raid bdev %s\n",
 			       raid_bdev_process_to_str(process->type),
 			       raid_bdev->bdev.name);
-		if (raid_bdev->sb != NULL) {
+		if (raid_bdev->superblock_enabled) {
 			spdk_thread_send_msg(spdk_thread_get_app_thread(),
 					     raid_bdev_process_finish_write_sb,
 					     raid_bdev);
@@ -2976,7 +2977,7 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existi
 	base_info->desc = desc;
 	base_info->blockcnt = bdev->blockcnt;
 
-	if (raid_bdev->sb != NULL) {
+	if (raid_bdev->superblock_enabled) {
 		uint64_t data_offset;
 
 		if (base_info->data_offset == 0) {

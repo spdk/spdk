@@ -231,6 +231,7 @@ struct raid_bdev {
 	void				*module_private;
 
 	/* Superblock */
+	bool				superblock_enabled;
 	struct raid_bdev_superblock	*sb;
 
 	/* Raid bdev background process, e.g. rebuild */
