@@ -249,25 +249,6 @@ blobfs_cache_pool_need_reclaim(void)
 static void
 __start_cache_pool_mgmt(void *ctx)
 {
-	assert(g_cache_pool == NULL);
-
-	g_cache_pool = spdk_mempool_create("spdk_fs_cache",
-					   g_fs_cache_size / CACHE_BUFFER_SIZE,
-					   CACHE_BUFFER_SIZE,
-					   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-					   SPDK_ENV_SOCKET_ID_ANY);
-	if (!g_cache_pool) {
-		if (spdk_mempool_lookup("spdk_fs_cache") != NULL) {
-			SPDK_ERRLOG("Unable to allocate mempool: already exists\n");
-			SPDK_ERRLOG("Probably running in multiprocess environment, which is "
-				    "unsupported by the blobfs library\n");
-		} else {
-			SPDK_ERRLOG("Create mempool failed, you may "
-				    "increase the memory and try again\n");
-		}
-		assert(false);
-	}
-
 	assert(g_cache_pool_mgmt_poller == NULL);
 	g_cache_pool_mgmt_poller = SPDK_POLLER_REGISTER(_blobfs_cache_pool_reclaim, NULL,
 				   BLOBFS_CACHE_POOL_POLL_PERIOD_IN_US);
@@ -287,10 +268,33 @@ __stop_cache_pool_mgmt(void *ctx)
 }
 
 static void
+allocate_cache_pool(void)
+{
+	assert(g_cache_pool == NULL);
+	g_cache_pool = spdk_mempool_create("spdk_fs_cache",
+					   g_fs_cache_size / CACHE_BUFFER_SIZE,
+					   CACHE_BUFFER_SIZE,
+					   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+					   SPDK_ENV_SOCKET_ID_ANY);
+	if (!g_cache_pool) {
+		if (spdk_mempool_lookup("spdk_fs_cache") != NULL) {
+			SPDK_ERRLOG("Unable to allocate mempool: already exists\n");
+			SPDK_ERRLOG("Probably running in multiprocess environment, which is "
+				    "unsupported by the blobfs library\n");
+		} else {
+			SPDK_ERRLOG("Create mempool failed, you may "
+				    "increase the memory and try again\n");
+		}
+		assert(false);
+	}
+}
+
+static void
 initialize_global_cache(void)
 {
 	pthread_mutex_lock(&g_cache_init_lock);
 	if (g_fs_count == 0) {
+		allocate_cache_pool();
 		g_cache_pool_thread = spdk_thread_create("cache_pool_mgmt", NULL);
 		assert(g_cache_pool_thread != NULL);
 		spdk_thread_send_msg(g_cache_pool_thread, __start_cache_pool_mgmt, NULL);

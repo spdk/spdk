@@ -97,8 +97,6 @@ function blobfs_fuse_test() {
 	# So directly use default sock path.
 	waitforlisten $blobfs_pid /var/tmp/spdk.sock
 
-	sleep 1
-
 	# check mount status
 	mount | grep "$mount_dir"
 
