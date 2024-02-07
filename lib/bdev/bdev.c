@@ -6210,6 +6210,15 @@ spdk_bdev_unmap(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	return spdk_bdev_unmap_blocks(desc, ch, offset_blocks, num_blocks, cb, cb_arg);
 }
 
+static void
+bdev_unmap_complete_cb(void *ctx)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+
+	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	bdev_io->internal.cb(bdev_io, true, bdev_io->internal.caller_ctx);
+}
+
 int
 spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       uint64_t offset_blocks, uint64_t num_blocks,
@@ -6224,11 +6233,6 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	}
 
 	if (!bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
-		return -EINVAL;
-	}
-
-	if (num_blocks == 0) {
-		SPDK_ERRLOG("Can't unmap 0 bytes\n");
 		return -EINVAL;
 	}
 
@@ -6252,6 +6256,11 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.bdev.memory_domain = NULL;
 	bdev_io->u.bdev.memory_domain_ctx = NULL;
 	bdev_io->u.bdev.accel_sequence = NULL;
+
+	if (num_blocks == 0) {
+		spdk_thread_send_msg(spdk_get_thread(), bdev_unmap_complete_cb, bdev_io);
+		return 0;
+	}
 
 	bdev_io_submit(bdev_io);
 	return 0;
