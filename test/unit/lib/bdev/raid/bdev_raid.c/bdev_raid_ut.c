@@ -81,6 +81,7 @@ bool g_bdev_io_defer_completion;
 TAILQ_HEAD(, spdk_bdev_io) g_deferred_ios = TAILQ_HEAD_INITIALIZER(g_deferred_ios);
 bool g_enable_dif;
 struct spdk_thread *g_app_thread;
+struct spdk_thread *g_latest_thread;
 
 DEFINE_STUB_V(spdk_bdev_module_examine_done, (struct spdk_bdev_module *module));
 DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
@@ -2326,7 +2327,9 @@ test_raid_process(void)
 
 	SPDK_CU_ASSERT_FATAL(pbdev->process != NULL);
 
-	process_thread = spdk_thread_get_by_id(spdk_thread_get_id(spdk_get_thread()) + 1);
+	process_thread = g_latest_thread;
+	spdk_thread_poll(process_thread, 0, 0);
+	SPDK_CU_ASSERT_FATAL(pbdev->process->thread == process_thread);
 
 	while (spdk_thread_poll(process_thread, 0, 0) > 0) {
 		poll_app_thread();
@@ -2652,6 +2655,14 @@ test_raid_io_split(void)
 }
 
 static int
+test_new_thread_fn(struct spdk_thread *thread)
+{
+	g_latest_thread = thread;
+
+	return 0;
+}
+
+static int
 test_bdev_ioch_create(void *io_device, void *ctx_buf)
 {
 	return 0;
@@ -2686,25 +2697,19 @@ main(int argc, char **argv)
 		{ "test_context_size", test_context_size },
 		{ "test_raid_level_conversions", test_raid_level_conversions },
 		{ "test_raid_io_split", test_raid_io_split },
-		CU_TEST_INFO_NULL,
-	};
-	/* TODO The RAID process test can only be run once for now, until the fix for getting the
-	 * process thread is merged */
-	CU_TestInfo tests_single_run[] = {
 		{ "test_raid_process", test_raid_process },
 		CU_TEST_INFO_NULL,
 	};
 	CU_SuiteInfo suites[] = {
 		{ "raid", set_test_opts, NULL, NULL, NULL, tests },
 		{ "raid_dif", set_test_opts_dif, NULL, NULL, NULL, tests },
-		{ "raid_single_run", set_test_opts, NULL, NULL, NULL, tests_single_run },
 		CU_SUITE_INFO_NULL,
 	};
 
 	CU_initialize_registry();
 	CU_register_suites(suites);
 
-	spdk_thread_lib_init(NULL, 0);
+	spdk_thread_lib_init(test_new_thread_fn, 0);
 	g_app_thread = spdk_thread_create("app_thread", NULL);
 	spdk_set_thread(g_app_thread);
 	spdk_io_device_register(&g_bdev_ch_io_device, test_bdev_ioch_create, test_bdev_ioch_destroy, 0,
