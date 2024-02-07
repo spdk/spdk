@@ -14,6 +14,8 @@
 #include "log/log_flags.c"
 #include "log/log_deprecated.c"
 
+SPDK_LOG_REGISTER_COMPONENT(log)
+
 static void
 log_test(void)
 {

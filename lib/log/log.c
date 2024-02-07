@@ -23,8 +23,6 @@ static bool g_log_timestamps = true;
 enum spdk_log_level g_spdk_log_level;
 enum spdk_log_level g_spdk_log_print_level;
 
-SPDK_LOG_REGISTER_COMPONENT(log)
-
 void
 spdk_log_set_level(enum spdk_log_level level)
 {
