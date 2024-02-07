@@ -1096,7 +1096,7 @@ unmap_split_test(void)
 
 	ut_bdev_io_retry();
 
-	/* descriptor 3 and 4. (descriptor 2 should be ignored) */
+	/* descriptor 2 and 3 (descriptor 2 is valid even though it is 0 blocks) */
 	CU_ASSERT(g_outstanding_bdev_io_count == 2);
 	CU_ASSERT(g_pending_bdev_io_count == 0);
 
@@ -1108,8 +1108,8 @@ unmap_split_test(void)
 
 	ut_bdev_io_retry();
 
-	/* descriptor 5 */
-	CU_ASSERT(g_outstanding_bdev_io_count == 1);
+	/* descriptor 4 and 5 */
+	CU_ASSERT(g_outstanding_bdev_io_count == 2);
 	CU_ASSERT(g_pending_bdev_io_count == 0);
 
 	ut_bdev_io_complete();

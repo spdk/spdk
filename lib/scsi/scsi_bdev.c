@@ -1357,7 +1357,6 @@ struct spdk_bdev_scsi_split_ctx {
 	uint16_t			remaining_count;
 	uint16_t			current_count;
 	uint16_t			outstanding_count;
-	/* Return 0 on successly submitting child IO, 1 on skipping child IO, negative number on failure */
 	int	(*fn)(struct spdk_bdev_scsi_split_ctx *ctx);
 };
 
@@ -1380,11 +1379,10 @@ bdev_scsi_split(struct spdk_bdev_scsi_split_ctx *ctx)
 
 	while (ctx->remaining_count != 0) {
 		rc = ctx->fn(ctx);
-		if (rc >= 0) {
+		if (rc == 0) {
 			ctx->current_count++;
 			ctx->remaining_count--;
-			/* 0 on success, 1 on skipping child IO. !rc is good enough */
-			ctx->outstanding_count += !rc;
+			ctx->outstanding_count++;
 			continue;
 		} else if (rc == -ENOMEM) {
 			break;
@@ -1501,10 +1499,6 @@ _bdev_scsi_unmap(struct spdk_bdev_scsi_split_ctx *ctx)
 
 	offset_blocks = from_be64(&desc->lba);
 	num_blocks = from_be32(&desc->block_count);
-
-	if (num_blocks == 0) {
-		return 1;
-	}
 
 	return spdk_bdev_unmap_blocks(lun->bdev_desc,
 				      lun->io_channel,
