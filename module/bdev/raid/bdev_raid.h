@@ -496,6 +496,8 @@ SPDK_STATIC_ASSERT(RAID_BDEV_SB_MAX_LENGTH < RAID_BDEV_MIN_DATA_OFFSET_SIZE,
 typedef void (*raid_bdev_write_sb_cb)(int status, struct raid_bdev *raid_bdev, void *ctx);
 typedef void (*raid_bdev_load_sb_cb)(const struct raid_bdev_superblock *sb, int status, void *ctx);
 
+int raid_bdev_alloc_superblock(struct raid_bdev *raid_bdev, uint32_t block_size);
+void raid_bdev_free_superblock(struct raid_bdev *raid_bdev);
 void raid_bdev_init_superblock(struct raid_bdev *raid_bdev);
 void raid_bdev_write_superblock(struct raid_bdev *raid_bdev, raid_bdev_write_sb_cb cb,
 				void *cb_ctx);

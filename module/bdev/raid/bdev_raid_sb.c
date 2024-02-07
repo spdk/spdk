@@ -38,14 +38,35 @@ align_ceil(uint64_t val, uint64_t align)
 	return spdk_divide_round_up(val, align) * align;
 }
 
+int
+raid_bdev_alloc_superblock(struct raid_bdev *raid_bdev, uint32_t block_size)
+{
+	struct raid_bdev_superblock *sb;
+
+	sb = spdk_dma_zmalloc(SPDK_ALIGN_CEIL(RAID_BDEV_SB_MAX_LENGTH, block_size), 0x1000, NULL);
+	if (!sb) {
+		SPDK_ERRLOG("Failed to allocate raid bdev sb buffer\n");
+		return -ENOMEM;
+	}
+
+	raid_bdev->sb = sb;
+
+	return 0;
+}
+
+void
+raid_bdev_free_superblock(struct raid_bdev *raid_bdev)
+{
+	spdk_dma_free(raid_bdev->sb);
+	raid_bdev->sb = NULL;
+}
+
 void
 raid_bdev_init_superblock(struct raid_bdev *raid_bdev)
 {
 	struct raid_bdev_superblock *sb = raid_bdev->sb;
 	struct raid_base_bdev_info *base_info;
 	struct raid_bdev_sb_base_bdev *sb_base_bdev;
-
-	memset(sb, 0, RAID_BDEV_SB_MAX_LENGTH);
 
 	memcpy(&sb->signature, RAID_BDEV_SB_SIG, sizeof(sb->signature));
 	sb->version.major = RAID_BDEV_SB_VERSION_MAJOR;

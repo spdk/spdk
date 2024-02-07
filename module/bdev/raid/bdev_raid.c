@@ -364,7 +364,7 @@ raid_bdev_cleanup(struct raid_bdev *raid_bdev)
 static void
 raid_bdev_free(struct raid_bdev *raid_bdev)
 {
-	spdk_dma_free(raid_bdev->sb);
+	raid_bdev_free_superblock(raid_bdev);
 	spdk_spin_destroy(&raid_bdev->base_bdev_lock);
 	free(raid_bdev->base_bdev_info);
 	free(raid_bdev->bdev.name);
@@ -1451,15 +1451,6 @@ _raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 	raid_bdev->min_base_bdevs_operational = min_operational;
 	raid_bdev->superblock_enabled = superblock_enabled;
 
-	if (superblock_enabled) {
-		raid_bdev->sb = spdk_dma_zmalloc(RAID_BDEV_SB_MAX_LENGTH, 0x1000, NULL);
-		if (!raid_bdev->sb) {
-			SPDK_ERRLOG("Failed to allocate raid bdev sb buffer\n");
-			raid_bdev_free(raid_bdev);
-			return -ENOMEM;
-		}
-	}
-
 	raid_bdev_gen = &raid_bdev->bdev;
 
 	raid_bdev_gen->name = strdup(name);
@@ -1703,11 +1694,11 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	}
 
 	if (raid_bdev->superblock_enabled) {
-		if (spdk_uuid_is_null(&raid_bdev->sb->uuid)) {
-			/* NULL UUID is not valid in the sb so it means that we are creating a new
-			 * raid bdev and should initialize the superblock.
-			 */
-			raid_bdev_init_superblock(raid_bdev);
+		if (raid_bdev->sb == NULL) {
+			rc = raid_bdev_alloc_superblock(raid_bdev, data_block_size);
+			if (rc == 0) {
+				raid_bdev_init_superblock(raid_bdev);
+			}
 		} else {
 			assert(spdk_uuid_compare(&raid_bdev->sb->uuid, &raid_bdev->bdev.uuid) == 0);
 			if (raid_bdev->sb->block_size != data_block_size) {
@@ -1718,12 +1709,13 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 				SPDK_ERRLOG("blockcnt does not match value in superblock\n");
 				rc = -EINVAL;
 			}
-			if (rc != 0) {
-				if (raid_bdev->module->stop != NULL) {
-					raid_bdev->module->stop(raid_bdev);
-				}
-				return rc;
+		}
+
+		if (rc != 0) {
+			if (raid_bdev->module->stop != NULL) {
+				raid_bdev->module->stop(raid_bdev);
 			}
+			return rc;
 		}
 
 		raid_bdev_write_superblock(raid_bdev, raid_bdev_configure_write_sb_cb, NULL);
@@ -3194,6 +3186,12 @@ raid_bdev_create_from_sb(const struct raid_bdev_superblock *sb, struct raid_bdev
 	rc = _raid_bdev_create(sb->name, (sb->strip_size * sb->block_size) / 1024, sb->num_base_bdevs,
 			       sb->level, true, &sb->uuid, &raid_bdev);
 	if (rc != 0) {
+		return rc;
+	}
+
+	rc = raid_bdev_alloc_superblock(raid_bdev, sb->block_size);
+	if (rc != 0) {
+		raid_bdev_free(raid_bdev);
 		return rc;
 	}
 
