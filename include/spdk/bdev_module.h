@@ -304,7 +304,12 @@ typedef void (*spdk_bdev_unregister_cb)(void *cb_arg, int rc);
  * calls for I/O via submit_request.
  */
 struct spdk_bdev_fn_table {
-	/** Destroy the backend block device object */
+	/** Destroy the backend block device object. If the destruct process
+	 *  for the bdev is asynchronous, return 1 from this function, and
+	 *  then call spdk_bdev_destruct_done() once the async work is
+	 *  complete. If the destruct process is synchronous, return 0 if
+	 *  successful, or <0 if unsuccessful.
+	 */
 	int (*destruct)(void *ctx);
 
 	/** Process the IO. */
@@ -1087,7 +1092,7 @@ int spdk_bdev_unregister_by_name(const char *bdev_name, struct spdk_bdev_module 
 				 spdk_bdev_unregister_cb cb_fn, void *cb_arg);
 
 /**
- * Invokes the unregister callback of a bdev backing a virtual bdev.
+ * Notify the bdev layer that an asynchronous destruct operation is complete.
  *
  * A Bdev with an asynchronous destruct path should return 1 from its
  * destruct function and call this function at the conclusion of that path.
