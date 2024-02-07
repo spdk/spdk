@@ -487,8 +487,7 @@ struct raid_bdev_superblock {
 };
 SPDK_STATIC_ASSERT(sizeof(struct raid_bdev_superblock) == 256, "incorrect size");
 
-#define RAID_BDEV_SB_MAX_LENGTH \
-	SPDK_ALIGN_CEIL((sizeof(struct raid_bdev_superblock) + UINT8_MAX * sizeof(struct raid_bdev_sb_base_bdev)), 0x1000)
+#define RAID_BDEV_SB_MAX_LENGTH (sizeof(struct raid_bdev_superblock) + UINT8_MAX * sizeof(struct raid_bdev_sb_base_bdev))
 
 SPDK_STATIC_ASSERT(RAID_BDEV_SB_MAX_LENGTH < RAID_BDEV_MIN_DATA_OFFSET_SIZE,
 		   "Incorrect min data offset");
