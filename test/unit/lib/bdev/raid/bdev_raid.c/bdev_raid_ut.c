@@ -12,7 +12,7 @@
 #include "bdev/raid/bdev_raid.c"
 #include "bdev/raid/bdev_raid_rpc.c"
 #include "bdev/raid/raid0.c"
-#include "common/lib/ut_multithread.c"
+#include "common/lib/test_env.c"
 
 #define MAX_BASE_DRIVES 32
 #define MAX_RAIDS 2
@@ -80,6 +80,7 @@ uint64_t g_bdev_ch_io_device;
 bool g_bdev_io_defer_completion;
 TAILQ_HEAD(, spdk_bdev_io) g_deferred_ios = TAILQ_HEAD_INITIALIZER(g_deferred_ios);
 bool g_enable_dif;
+struct spdk_thread *g_app_thread;
 
 DEFINE_STUB_V(spdk_bdev_module_examine_done, (struct spdk_bdev_module *module));
 DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
@@ -589,6 +590,13 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 	return 0;
 }
 
+static void
+poll_app_thread(void)
+{
+	while (spdk_thread_poll(g_app_thread, 0, 0) > 0) {
+	}
+}
+
 void
 spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
@@ -603,7 +611,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	ret = bdev->fn_table->destruct(bdev->ctxt);
 	CU_ASSERT(ret == 1);
 
-	poll_threads();
+	poll_app_thread();
 }
 
 int
@@ -2314,20 +2322,20 @@ test_raid_process(void)
 	pbdev->module_private = &num_blocks_processed;
 
 	CU_ASSERT(raid_bdev_start_rebuild(&pbdev->base_bdev_info[0]) == 0);
-	poll_threads();
+	poll_app_thread();
 
 	SPDK_CU_ASSERT_FATAL(pbdev->process != NULL);
 
 	process_thread = spdk_thread_get_by_id(spdk_thread_get_id(spdk_get_thread()) + 1);
 
 	while (spdk_thread_poll(process_thread, 0, 0) > 0) {
-		poll_threads();
+		poll_app_thread();
 	}
 
 	CU_ASSERT(pbdev->process == NULL);
 	CU_ASSERT(num_blocks_processed == pbdev->bdev.blockcnt);
 
-	poll_threads();
+	poll_app_thread();
 
 	create_raid_bdev_delete_req(&destroy_req, "raid1", 0);
 	rpc_bdev_raid_delete(NULL, NULL);
@@ -2696,8 +2704,9 @@ main(int argc, char **argv)
 	CU_initialize_registry();
 	CU_register_suites(suites);
 
-	allocate_threads(1);
-	set_thread(0);
+	spdk_thread_lib_init(NULL, 0);
+	g_app_thread = spdk_thread_create("app_thread", NULL);
+	spdk_set_thread(g_app_thread);
 	spdk_io_device_register(&g_bdev_ch_io_device, test_bdev_ioch_create, test_bdev_ioch_destroy, 0,
 				NULL);
 
@@ -2705,7 +2714,10 @@ main(int argc, char **argv)
 	CU_cleanup_registry();
 
 	spdk_io_device_unregister(&g_bdev_ch_io_device, NULL);
-	free_threads();
+	spdk_thread_exit(g_app_thread);
+	spdk_thread_poll(g_app_thread, 0, 0);
+	spdk_thread_destroy(g_app_thread);
+	spdk_thread_lib_fini();
 
 	return num_failures;
 }
