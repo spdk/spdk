@@ -22,18 +22,19 @@ fi
 
 timing_enter build_release
 
-config_params="$(get_config_params | sed 's/--enable-debug//g')"
-if [ $(uname -s) = Linux ]; then
-	# LTO needs a special compiler to work under clang. See detect_cc.sh for details.
-	if [[ $CC == *clang* ]]; then
-		LD=$(type -P ld.gold)
-		export LD
-	fi
-	$rootdir/configure $config_params --enable-lto
-else
-	# LTO needs a special compiler to work on BSD.
-	$rootdir/configure $config_params
+# LTO needs a special compiler to work under clang. See detect_cc.sh for details.
+if [[ $CC == *clang* ]]; then
+	case "$(uname -s)" in
+		Linux) # Shipped by default with binutils under most of the Linux distros
+			export LD=ld.gold ;;
+		FreeBSD) # Default compiler which does support LTO, set it explicitly for visibility
+			export LD=ld.lld ;;
+	esac
 fi
+
+config_params="$(get_config_params | sed 's/--enable-debug//g')"
+"$rootdir/configure" $config_params --enable-lto
+
 $MAKE ${MAKEFLAGS}
 $MAKE ${MAKEFLAGS} clean
 
