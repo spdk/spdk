@@ -24,9 +24,10 @@ timing_enter build_release
 
 # LTO needs a special compiler to work under clang. See detect_cc.sh for details.
 if [[ $CC == *clang* ]]; then
+	jobs=$(($(nproc) / 2))
 	case "$(uname -s)" in
 		Linux) # Shipped by default with binutils under most of the Linux distros
-			export LD=ld.gold ;;
+			export LD=ld.gold LDFLAGS="-Wl,--threads,--thread-count=$jobs" MAKEFLAGS="-j$jobs" ;;
 		FreeBSD) # Default compiler which does support LTO, set it explicitly for visibility
 			export LD=ld.lld ;;
 	esac
