@@ -853,7 +853,7 @@ dd_aio_poll(void *ctx)
 	for (i = 0; i < rc; i++) {
 		io = events[i].data;
 		if (events[i].res != io->length) {
-			g_error = rc = -ENOSPC;
+			g_error = -ENOSPC;
 		}
 
 		dd_complete_poll(io);
