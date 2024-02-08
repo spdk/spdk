@@ -1219,7 +1219,7 @@ if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 	else
 		ISAL_OPTS=()
 	fi
-	if [[ -n "${CONFIG[SHARED]}" ]]; then
+	if [[ "${CONFIG[SHARED]}" = "y" ]]; then
 		ISAL_OPTS+=("--enable-shared=yes")
 	else
 		ISAL_OPTS+=("--enable-shared=no")
@@ -1252,7 +1252,7 @@ if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 	if [[ -n "${CONFIG[CROSS_PREFIX]}" ]]; then
 		ISAL_CRYPTO_OPTS+=("--host=${CONFIG[CROSS_PREFIX]}")
 	fi
-	if [[ -n "${CONFIG[SHARED]}" ]]; then
+	if [[ "${CONFIG[SHARED]}" = "y" ]]; then
 		ISAL_CRYPTO_OPTS+=("--enable-shared=yes")
 	else
 		ISAL_CRYPTO_OPTS+=("--enable-shared=no")
