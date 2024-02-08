@@ -301,8 +301,6 @@ nvme_vfio_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 
 	nvme_ctrlr_destruct_finish(ctrlr);
 
-	nvme_ctrlr_free_processes(ctrlr);
-
 	spdk_vfio_user_release(vctrlr->dev);
 	free(vctrlr);
 
