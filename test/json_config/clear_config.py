@@ -142,18 +142,6 @@ def clear_ublk_subsystem(args, ublk_config):
             args.client.call(destroy_method, {'ublk_device': ublk['params']['ublk_device']})
 
 
-def clear_net_framework_subsystem(args, net_framework_config):
-    pass
-
-
-def clear_accel_subsystem(args, accel_config):
-    pass
-
-
-def clear_interface_subsystem(args, interface_config):
-    pass
-
-
 def clear_vhost_scsi_subsystem(args, vhost_config):
     for vhost in reversed(vhost_config):
         if 'method' in vhost:
@@ -172,22 +160,6 @@ def clear_vhost_blk_subsystem(args, vhost_config):
             method = vhost['method']
             if method in ['vhost_create_blk_controller']:
                 args.client.call("vhost_delete_controller", {'ctrlr': vhost['params']['ctrlr']})
-
-
-def clear_vmd_subsystem(args, vmd_config):
-    pass
-
-
-def clear_sock_subsystem(args, sock_config):
-    pass
-
-
-def clear_scheduler_subsystem(args, scheduler_config):
-    pass
-
-
-def clear_iobuf_subsystem(args, config):
-    pass
 
 
 def call_test_cmd(func):
@@ -225,9 +197,11 @@ if __name__ == "__main__":
         config = args.client.call('framework_get_config', {"name": args.subsystem})
         if config is None:
             return
-        if args.verbose:
-            print("Calling clear_%s_subsystem" % args.subsystem)
-        globals()["clear_%s_subsystem" % args.subsystem](args, config)
+        method = globals().get(f'clear_{args.subsystem}_subsystem')
+        if method is not None:
+            if args.verbose:
+                print(f'Calling {method.__name__}')
+            method(args, config)
 
     p = subparsers.add_parser('clear_subsystem', help="""Clear configuration of SPDK subsystem using JSON RPC""")
     p.add_argument('--subsystem', help="""Subsystem name""")
