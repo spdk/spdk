@@ -4195,6 +4195,8 @@ void
 nvme_ctrlr_destruct_finish(struct spdk_nvme_ctrlr *ctrlr)
 {
 	pthread_mutex_destroy(&ctrlr->ctrlr_lock);
+
+	nvme_ctrlr_free_processes(ctrlr);
 }
 
 void

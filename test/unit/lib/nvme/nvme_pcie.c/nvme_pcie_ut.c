@@ -27,7 +27,7 @@ DEFINE_STUB_V(nvme_completion_poll_cb, (void *arg, const struct spdk_nvme_cpl *c
 
 DEFINE_STUB(nvme_ctrlr_submit_admin_request, int, (struct spdk_nvme_ctrlr *ctrlr,
 		struct nvme_request *req), 0);
-DEFINE_STUB_V(nvme_ctrlr_free_processes, (struct spdk_nvme_ctrlr *ctrlr));
+
 DEFINE_STUB(nvme_ctrlr_proc_get_devhandle, struct spdk_pci_device *,
 	    (struct spdk_nvme_ctrlr *ctrlr), NULL);
 DEFINE_STUB(spdk_pci_device_unmap_bar, int, (struct spdk_pci_device *dev, uint32_t bar, void *addr),
