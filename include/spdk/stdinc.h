@@ -79,6 +79,11 @@ extern "C" {
 #include <aio.h>
 #endif
 
+/* FreeBSD doesn't define ENOKEY */
+#ifndef ENOKEY
+#define ENOKEY 126
+#endif
+
 #ifdef __cplusplus
 }
 #endif
