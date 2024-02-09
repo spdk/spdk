@@ -466,6 +466,13 @@ nvmf_qpair_is_admin_queue(struct spdk_nvmf_qpair *qpair)
 	return qpair->qid == 0;
 }
 
+static inline bool
+nvmf_request_is_fabric_connect(struct spdk_nvmf_request *req)
+{
+	return req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC &&
+	       req->cmd->nvmf_cmd.fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT;
+}
+
 /*
  * Tests whether a given string represents a valid NQN.
  */
