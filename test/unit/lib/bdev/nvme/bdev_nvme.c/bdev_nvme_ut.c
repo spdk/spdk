@@ -61,6 +61,8 @@ DEFINE_STUB_V(spdk_nvme_transport_get_opts, (struct spdk_nvme_transport_opts *op
 
 DEFINE_STUB(spdk_nvme_transport_set_opts, int, (const struct spdk_nvme_transport_opts *opts,
 		size_t opts_size), 0);
+DEFINE_STUB(spdk_nvme_dhchap_get_digest_name, const char *, (int id), NULL);
+DEFINE_STUB(spdk_nvme_dhchap_get_dhgroup_name, const char *, (int id), NULL);
 
 DEFINE_STUB(spdk_bdev_io_get_submit_tsc, uint64_t, (struct spdk_bdev_io *bdev_io), 0);
 

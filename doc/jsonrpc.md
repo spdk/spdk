@@ -3922,6 +3922,8 @@ io_path_stat               | Optional | boolean     | Enable collecting I/O stat
 allow_accel_sequence       | Optional | boolean     | Allow NVMe bdevs to advertise support for accel sequences if the controller also supports them.  Default: `false`.
 rdma_max_cq_size           | Optional | number      | Set the maximum size of a rdma completion queue. Default: 0 (unlimited)
 rdma_cm_event_timeout_ms   | Optional | number      | Time to wait for RDMA CM events. Default: 0 (0 means using default value of driver).
+dhchap_digests             | Optional | list        | List of allowed DH-HMAC-CHAP digests.
+dhchap_dhgroups            | Optional | list        | List of allowed DH-HMAC-CHAP DH groups.
 
 #### Example
 
@@ -3943,6 +3945,14 @@ request:
     "action_on_timeout": "reset",
     "io_queue_requests" : 2048,
     "delay_cmd_submit": true
+    "dhchap_digests": [
+      "sha384",
+      "sha512"
+    ],
+    "dhchap_dhgroups": [
+      "ffdhe6144",
+      "ffdhe8192"
+    ]
   },
   "jsonrpc": "2.0",
   "method": "bdev_nvme_set_options",

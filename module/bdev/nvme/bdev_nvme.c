@@ -110,6 +110,17 @@ struct nvme_probe_skip_entry {
 static TAILQ_HEAD(, nvme_probe_skip_entry) g_skipped_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(
 			g_skipped_nvme_ctrlrs);
 
+#define BDEV_NVME_DEFAULT_DIGESTS (SPDK_BIT(SPDK_NVMF_DHCHAP_HASH_SHA256) | \
+				   SPDK_BIT(SPDK_NVMF_DHCHAP_HASH_SHA384) | \
+				   SPDK_BIT(SPDK_NVMF_DHCHAP_HASH_SHA512))
+
+#define BDEV_NVME_DEFAULT_DHGROUPS (SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_NULL) | \
+				    SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_2048) | \
+				    SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_3072) | \
+				    SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_4096) | \
+				    SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_6144) | \
+				    SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_8192))
+
 static struct spdk_bdev_nvme_opts g_opts = {
 	.action_on_timeout = SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE,
 	.timeout_us = 0,
@@ -135,6 +146,8 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.nvme_error_stat = false,
 	.io_path_stat = false,
 	.allow_accel_sequence = false,
+	.dhchap_digests = BDEV_NVME_DEFAULT_DIGESTS,
+	.dhchap_dhgroups = BDEV_NVME_DEFAULT_DHGROUPS,
 };
 
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
@@ -6093,6 +6106,9 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 			free_nvme_async_probe_ctx(ctx);
 			return -ENOKEY;
 		}
+
+		ctx->drv_opts.dhchap_digests = g_opts.dhchap_digests;
+		ctx->drv_opts.dhchap_dhgroups = g_opts.dhchap_dhgroups;
 	}
 
 	if (nvme_bdev_ctrlr_get_by_name(base_name) == NULL || multipath) {
@@ -8135,7 +8151,8 @@ bdev_nvme_copy(struct nvme_bdev_io *bio, uint64_t dst_offset_blocks, uint64_t sr
 static void
 bdev_nvme_opts_config_json(struct spdk_json_write_ctx *w)
 {
-	const char	*action;
+	const char *action;
+	uint32_t i;
 
 	if (g_opts.action_on_timeout == SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET) {
 		action = "reset";
@@ -8177,6 +8194,21 @@ bdev_nvme_opts_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_bool(w, "allow_accel_sequence", g_opts.allow_accel_sequence);
 	spdk_json_write_named_uint32(w, "rdma_max_cq_size", g_opts.rdma_max_cq_size);
 	spdk_json_write_named_uint16(w, "rdma_cm_event_timeout_ms", g_opts.rdma_cm_event_timeout_ms);
+	spdk_json_write_named_array_begin(w, "dhchap_digests");
+	for (i = 0; i < 32; ++i) {
+		if (g_opts.dhchap_digests & SPDK_BIT(i)) {
+			spdk_json_write_string(w, spdk_nvme_dhchap_get_digest_name(i));
+		}
+	}
+	spdk_json_write_array_end(w);
+	spdk_json_write_named_array_begin(w, "dhchap_dhgroups");
+	for (i = 0; i < 32; ++i) {
+		if (g_opts.dhchap_dhgroups & SPDK_BIT(i)) {
+			spdk_json_write_string(w, spdk_nvme_dhchap_get_dhgroup_name(i));
+		}
+	}
+
+	spdk_json_write_array_end(w);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);

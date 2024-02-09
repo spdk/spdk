@@ -42,6 +42,72 @@ rpc_decode_action_on_timeout(const struct spdk_json_val *val, void *out)
 	return 0;
 }
 
+static int
+rpc_decode_digest(const struct spdk_json_val *val, void *out)
+{
+	uint32_t *flags = out;
+	char *digest = NULL;
+	int rc;
+
+	rc = spdk_json_decode_string(val, &digest);
+	if (rc != 0) {
+		return rc;
+	}
+
+	rc = spdk_nvme_dhchap_get_digest_id(digest);
+	if (rc >= 0) {
+		*flags |= SPDK_BIT(rc);
+		rc = 0;
+	}
+	free(digest);
+
+	return rc;
+}
+
+static int
+rpc_decode_digest_array(const struct spdk_json_val *val, void *out)
+{
+	uint32_t *flags = out;
+	size_t count;
+
+	*flags = 0;
+
+	return spdk_json_decode_array(val, rpc_decode_digest, out, 32, &count, 0);
+}
+
+static int
+rpc_decode_dhgroup(const struct spdk_json_val *val, void *out)
+{
+	uint32_t *flags = out;
+	char *dhgroup = NULL;
+	int rc;
+
+	rc = spdk_json_decode_string(val, &dhgroup);
+	if (rc != 0) {
+		return rc;
+	}
+
+	rc = spdk_nvme_dhchap_get_dhgroup_id(dhgroup);
+	if (rc >= 0) {
+		*flags |= SPDK_BIT(rc);
+		rc = 0;
+	}
+	free(dhgroup);
+
+	return rc;
+}
+
+static int
+rpc_decode_dhgroup_array(const struct spdk_json_val *val, void *out)
+{
+	uint32_t *flags = out;
+	size_t count;
+
+	*flags = 0;
+
+	return spdk_json_decode_array(val, rpc_decode_dhgroup, out, 32, &count, 0);
+}
+
 static const struct spdk_json_object_decoder rpc_bdev_nvme_options_decoders[] = {
 	{"action_on_timeout", offsetof(struct spdk_bdev_nvme_opts, action_on_timeout), rpc_decode_action_on_timeout, true},
 	{"timeout_us", offsetof(struct spdk_bdev_nvme_opts, timeout_us), spdk_json_decode_uint64, true},
@@ -71,6 +137,8 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_options_decoders[] = 
 	{"allow_accel_sequence", offsetof(struct spdk_bdev_nvme_opts, allow_accel_sequence), spdk_json_decode_bool, true},
 	{"rdma_max_cq_size", offsetof(struct spdk_bdev_nvme_opts, rdma_max_cq_size), spdk_json_decode_uint32, true},
 	{"rdma_cm_event_timeout_ms", offsetof(struct spdk_bdev_nvme_opts, rdma_cm_event_timeout_ms), spdk_json_decode_uint16, true},
+	{"dhchap_digests", offsetof(struct spdk_bdev_nvme_opts, dhchap_digests), rpc_decode_digest_array, true},
+	{"dhchap_dhgroups", offsetof(struct spdk_bdev_nvme_opts, dhchap_dhgroups), rpc_decode_dhgroup_array, true},
 };
 
 static void
