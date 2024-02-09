@@ -9,7 +9,9 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "nvme_internal.h"
+#include <openssl/dh.h>
 #include <openssl/evp.h>
+#include <openssl/param_build.h>
 
 struct nvme_auth_digest {
 	uint8_t		id;
@@ -413,6 +415,105 @@ error:
 	BN_free(bn);
 
 	return result;
+}
+
+static EVP_PKEY *
+nvme_auth_get_peerkey(const void *peerkey, size_t len, enum spdk_nvmf_dhchap_dhgroup dhgroup)
+{
+	EVP_PKEY_CTX *ctx = NULL;
+	EVP_PKEY *result = NULL, *key = NULL;
+	OSSL_PARAM_BLD *bld = NULL;
+	OSSL_PARAM *params = NULL;
+	BIGNUM *bn = NULL;
+
+	ctx = EVP_PKEY_CTX_new_from_name(NULL, "DHX", NULL);
+	if (ctx == NULL) {
+		goto error;
+	}
+	if (EVP_PKEY_fromdata_init(ctx) != 1) {
+		goto error;
+	}
+
+	bn = BN_bin2bn(peerkey, len, NULL);
+	if (bn == NULL) {
+		goto error;
+	}
+
+	bld = OSSL_PARAM_BLD_new();
+	if (bld == NULL) {
+		goto error;
+	}
+	if (OSSL_PARAM_BLD_push_BN(bld, "pub", bn) != 1) {
+		goto error;
+	}
+	if (OSSL_PARAM_BLD_push_utf8_string(bld, "group",
+					    (char *)nvme_auth_get_dhgroup_name(dhgroup), 0) != 1) {
+		goto error;
+	}
+
+	params = OSSL_PARAM_BLD_to_param(bld);
+	if (params == NULL) {
+		goto error;
+	}
+	if (EVP_PKEY_fromdata(ctx, &key, EVP_PKEY_PUBLIC_KEY, params) != 1) {
+		SPDK_ERRLOG("Failed to create dhkey peer key\n");
+		goto error;
+	}
+
+	result = EVP_PKEY_dup(key);
+error:
+	EVP_PKEY_free(key);
+	EVP_PKEY_CTX_free(ctx);
+	OSSL_PARAM_BLD_free(bld);
+	OSSL_PARAM_free(params);
+	BN_free(bn);
+
+	return result;
+}
+
+int nvme_auth_derive_dhsecret(EVP_PKEY *key, const void *peer, size_t peerlen,
+			      void *secret, size_t *seclen, enum spdk_nvmf_dhchap_dhgroup dhgroup);
+
+int
+nvme_auth_derive_dhsecret(EVP_PKEY *key, const void *peer, size_t peerlen,
+			  void *secret, size_t *seclen, enum spdk_nvmf_dhchap_dhgroup dhgroup)
+{
+	EVP_PKEY_CTX *ctx = NULL;
+	EVP_PKEY *peerkey = NULL;
+	int rc = 0;
+
+	peerkey = nvme_auth_get_peerkey(peer, peerlen, dhgroup);
+	if (peerkey == NULL) {
+		return -EINVAL;
+	}
+	ctx = EVP_PKEY_CTX_new(key, NULL);
+	if (ctx == NULL) {
+		rc = -ENOMEM;
+		goto out;
+	}
+	if (EVP_PKEY_derive_init(ctx) != 1) {
+		rc = -EIO;
+		goto out;
+	}
+	if (EVP_PKEY_CTX_set_dh_pad(ctx, 1) <= 0) {
+		rc = -EIO;
+		goto out;
+	}
+	if (EVP_PKEY_derive_set_peer(ctx, peerkey) != 1) {
+		SPDK_ERRLOG("Failed to set dhsecret's peer key\n");
+		rc = -EINVAL;
+		goto out;
+	}
+	if (EVP_PKEY_derive(ctx, secret, seclen) != 1) {
+		SPDK_ERRLOG("Failed to derive dhsecret\n");
+		rc = -ENOBUFS;
+		goto out;
+	}
+out:
+	EVP_PKEY_free(peerkey);
+	EVP_PKEY_CTX_free(ctx);
+
+	return rc;
 }
 
 static int
