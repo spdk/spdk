@@ -10,6 +10,7 @@
 #include "spdk_internal/cunit.h"
 
 #include "scsi/scsi.c"
+#include "common/lib/test_env.c"
 
 static void
 scsi_init(void)
