@@ -1898,6 +1898,8 @@ nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 		TAILQ_REMOVE(&sgroup->queued, req, link);
 		if (spdk_nvmf_request_using_zcopy(req)) {
 			spdk_nvmf_request_zcopy_start(req);
+		} else if (nvmf_request_is_fabric_connect(req)) {
+			spdk_nvmf_request_exec_fabrics(req);
 		} else {
 			spdk_nvmf_request_exec(req);
 		}
