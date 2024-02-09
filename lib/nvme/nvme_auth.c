@@ -24,9 +24,10 @@ struct nvme_auth_dhgroup {
 	const char	*name;
 };
 
-#define NVME_AUTH_DATA_SIZE		4096
-#define NVME_AUTH_CHAP_KEY_MAX_SIZE	256
-#define NVME_AUTH_DIGEST_MAX_SIZE	64
+#define NVME_AUTH_DATA_SIZE			4096
+#define NVME_AUTH_DH_KEY_MAX_SIZE		1024
+#define NVME_AUTH_CHAP_KEY_MAX_SIZE		256
+#define NVME_AUTH_DIGEST_MAX_SIZE		64
 
 #define AUTH_DEBUGLOG(q, fmt, ...) \
 	SPDK_DEBUGLOG(nvme_auth, "[%s:%s:%u] " fmt, (q)->ctrlr->trid.subnqn, \
@@ -34,6 +35,8 @@ struct nvme_auth_dhgroup {
 #define AUTH_ERRLOG(q, fmt, ...) \
 	SPDK_ERRLOG("[%s:%s:%u] " fmt, (q)->ctrlr->trid.subnqn, (q)->ctrlr->opts.hostnqn, \
 		    (q)->id, ## __VA_ARGS__)
+#define AUTH_LOGDUMP(msg, buf, len) \
+	SPDK_LOGDUMP(nvme_auth, msg, buf, len)
 
 static const struct nvme_auth_digest g_digests[] = {
 	{ SPDK_NVMF_DHCHAP_HASH_SHA256, "sha256", 32 },
@@ -363,9 +366,7 @@ out:
 	return rc;
 }
 
-EVP_PKEY *nvme_auth_generate_dhkey(void *pub, size_t *len, enum spdk_nvmf_dhchap_dhgroup dhgroup);
-
-EVP_PKEY *
+static EVP_PKEY *
 nvme_auth_generate_dhkey(void *pub, size_t *len, enum spdk_nvmf_dhchap_dhgroup dhgroup)
 {
 	EVP_PKEY_CTX *ctx = NULL;
@@ -471,10 +472,7 @@ error:
 	return result;
 }
 
-int nvme_auth_derive_dhsecret(EVP_PKEY *key, const void *peer, size_t peerlen,
-			      void *secret, size_t *seclen, enum spdk_nvmf_dhchap_dhgroup dhgroup);
-
-int
+static int
 nvme_auth_derive_dhsecret(EVP_PKEY *key, const void *peer, size_t peerlen,
 			  void *secret, size_t *seclen, enum spdk_nvmf_dhchap_dhgroup dhgroup)
 {
@@ -639,22 +637,21 @@ nvme_auth_send_negotiate(struct spdk_nvme_qpair *qpair)
 	struct nvme_auth *auth = &qpair->auth;
 	struct spdk_nvmf_auth_negotiate *msg = qpair->poll_status->dma_data;
 	struct spdk_nvmf_auth_descriptor *desc = msg->descriptors;
-	uint8_t dhgids[] = {
-		SPDK_NVMF_DHCHAP_DHGROUP_NULL,
-	};
 	size_t i;
 
 	memset(qpair->poll_status->dma_data, 0, NVME_AUTH_DATA_SIZE);
 	desc->auth_id = SPDK_NVMF_AUTH_TYPE_DHCHAP;
 	desc->halen = SPDK_COUNTOF(g_digests);
-	desc->dhlen = SPDK_COUNTOF(dhgids);
+	desc->dhlen = SPDK_COUNTOF(g_dhgroups);
 
 	assert(desc->halen <= sizeof(desc->hash_id_list));
 	assert(desc->dhlen <= sizeof(desc->dhg_id_list));
 	for (i = 0; i < desc->halen; ++i) {
 		desc->hash_id_list[i] = g_digests[i].id;
 	}
-	memcpy(desc->dhg_id_list, dhgids, desc->dhlen);
+	for (i = 0; i < desc->dhlen; ++i) {
+		desc->dhg_id_list[i] = g_dhgroups[i].id;
+	}
 
 	msg->auth_type = SPDK_NVMF_AUTH_TYPE_COMMON_MESSAGE;
 	msg->auth_id = SPDK_NVMF_AUTH_ID_NEGOTIATE;
@@ -702,7 +699,27 @@ nvme_auth_check_challenge(struct spdk_nvme_qpair *qpair)
 		goto error;
 	}
 
-	if (challenge->dhg_id != SPDK_NVMF_DHCHAP_DHGROUP_NULL) {
+	switch (challenge->dhg_id) {
+	case SPDK_NVMF_DHCHAP_DHGROUP_NULL:
+		if (challenge->dhvlen != 0) {
+			AUTH_ERRLOG(qpair, "unexpected dhvlen=%u for dhgroup 0\n",
+				    challenge->dhvlen);
+			goto error;
+		}
+		break;
+	case SPDK_NVMF_DHCHAP_DHGROUP_2048:
+	case SPDK_NVMF_DHCHAP_DHGROUP_3072:
+	case SPDK_NVMF_DHCHAP_DHGROUP_4096:
+	case SPDK_NVMF_DHCHAP_DHGROUP_6144:
+	case SPDK_NVMF_DHCHAP_DHGROUP_8192:
+		if (sizeof(*challenge) + hl + challenge->dhvlen > NVME_AUTH_DATA_SIZE ||
+		    challenge->dhvlen == 0) {
+			AUTH_ERRLOG(qpair, "invalid dhvlen=%u for dhgroup %u\n",
+				    challenge->dhvlen, challenge->dhg_id);
+			goto error;
+		}
+		break;
+	default:
 		AUTH_ERRLOG(qpair, "unsupported dhgroup: 0x%x\n", challenge->dhg_id);
 		goto error;
 	}
@@ -723,9 +740,34 @@ nvme_auth_send_reply(struct spdk_nvme_qpair *qpair)
 	struct spdk_nvmf_dhchap_reply *reply = status->dma_data;
 	struct nvme_auth *auth = &qpair->auth;
 	uint8_t hl, response[NVME_AUTH_DATA_SIZE];
+	uint8_t pubkey[NVME_AUTH_DH_KEY_MAX_SIZE];
+	uint8_t dhsec[NVME_AUTH_DH_KEY_MAX_SIZE];
+	size_t dhseclen = 0, publen = 0;
+	EVP_PKEY *dhkey;
 	int rc;
 
 	hl = nvme_auth_get_digest_len(challenge->hash_id);
+	if (challenge->dhg_id != SPDK_NVMF_DHCHAP_DHGROUP_NULL) {
+		dhseclen = sizeof(dhsec);
+		publen = sizeof(pubkey);
+		AUTH_LOGDUMP("ctrlr pubkey:", &challenge->cval[hl], challenge->dhvlen);
+		dhkey = nvme_auth_generate_dhkey(pubkey, &publen,
+						 (enum spdk_nvmf_dhchap_dhgroup)challenge->dhg_id);
+		if (dhkey == NULL) {
+			return -EINVAL;
+		}
+		AUTH_LOGDUMP("host pubkey:", pubkey, publen);
+		rc = nvme_auth_derive_dhsecret(dhkey, &challenge->cval[hl], challenge->dhvlen,
+					       dhsec, &dhseclen,
+					       (enum spdk_nvmf_dhchap_dhgroup)challenge->dhg_id);
+		EVP_PKEY_free(dhkey);
+		if (rc != 0) {
+			return rc;
+		}
+
+		AUTH_LOGDUMP("dh secret:", dhsec, dhseclen);
+	}
+
 	AUTH_DEBUGLOG(qpair, "key=%s, hash=%u, dhgroup=%u, seq=%u, tid=%u, subnqn=%s, hostnqn=%s, "
 		      "len=%u\n", spdk_key_get_name(ctrlr->opts.dhchap_key),
 		      challenge->hash_id, challenge->dhg_id, challenge->seqnum, auth->tid,
@@ -733,7 +775,8 @@ nvme_auth_send_reply(struct spdk_nvme_qpair *qpair)
 	rc = nvme_auth_calc_response(ctrlr->opts.dhchap_key,
 				     (enum spdk_nvmf_dhchap_hash)challenge->hash_id,
 				     "HostHost", challenge->seqnum, auth->tid, 0,
-				     ctrlr->opts.hostnqn, ctrlr->trid.subnqn, NULL, 0,
+				     ctrlr->opts.hostnqn, ctrlr->trid.subnqn,
+				     dhseclen > 0 ? dhsec : NULL, dhseclen,
 				     challenge->cval, response);
 	if (rc != 0) {
 		AUTH_ERRLOG(qpair, "failed to calculate response: %s\n", spdk_strerror(-rc));
@@ -742,21 +785,23 @@ nvme_auth_send_reply(struct spdk_nvme_qpair *qpair)
 
 	/* Now that the response has been calculated, send the reply */
 	memset(qpair->poll_status->dma_data, 0, NVME_AUTH_DATA_SIZE);
+	assert(sizeof(*reply) + 2 * hl + publen <= NVME_AUTH_DATA_SIZE);
 	memcpy(reply->rval, response, hl);
+	memcpy(&reply->rval[2 * hl], pubkey, publen);
 
 	reply->auth_type = SPDK_NVMF_AUTH_TYPE_DHCHAP;
 	reply->auth_id = SPDK_NVMF_AUTH_ID_DHCHAP_REPLY;
 	reply->t_id = auth->tid;
 	reply->hl = hl;
 	reply->cvalid = 0;
-	reply->dhvlen = 0;
+	reply->dhvlen = publen;
 	reply->seqnum = 0;
 
 	/* The 2 * reply->hl below is because the spec says that both rval[hl] and cval[hl] must
 	 * always be part of the reply message, even cvalid is zero.
 	 */
 	return nvme_auth_submit_request(qpair, SPDK_NVMF_FABRIC_COMMAND_AUTHENTICATION_SEND,
-					sizeof(*reply) + 2 * reply->hl);
+					sizeof(*reply) + 2 * reply->hl + publen);
 }
 
 static int
