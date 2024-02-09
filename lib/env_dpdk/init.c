@@ -615,7 +615,9 @@ spdk_env_init(const struct spdk_env_opts *opts)
 		return -ENOMEM;
 	}
 
+#if OPENSSL_VERSION_NUMBER >= 0x30000000 /* OPENSSL 3.0.0 */
 	OPENSSL_INIT_set_config_file_flags(settings, 0);
+#endif
 	rc = OPENSSL_init_ssl(OPENSSL_INIT_LOAD_CONFIG, settings);
 	if (rc != 1) {
 		fprintf(stderr, "Failed to initialize OpenSSL\n");
