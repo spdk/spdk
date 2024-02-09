@@ -10,7 +10,6 @@
 #include "spdk/log.h"
 #include "spdk/util.h"
 
-struct spdk_trace_flags *g_trace_flags = NULL;
 static struct spdk_trace_register_fn *g_reg_fn_head = NULL;
 
 SPDK_LOG_REGISTER_COMPONENT(trace)
@@ -23,17 +22,17 @@ spdk_trace_get_tpoint_mask(uint32_t group_id)
 		return 0ULL;
 	}
 
-	if (g_trace_flags == NULL) {
+	if (g_trace_file == NULL) {
 		return 0ULL;
 	}
 
-	return g_trace_flags->tpoint_mask[group_id];
+	return g_trace_file->tpoint_mask[group_id];
 }
 
 void
 spdk_trace_set_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 {
-	if (g_trace_flags == NULL) {
+	if (g_trace_file == NULL) {
 		SPDK_ERRLOG("trace is not initialized\n");
 		return;
 	}
@@ -43,13 +42,13 @@ spdk_trace_set_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 		return;
 	}
 
-	g_trace_flags->tpoint_mask[group_id] |= tpoint_mask;
+	g_trace_file->tpoint_mask[group_id] |= tpoint_mask;
 }
 
 void
 spdk_trace_clear_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 {
-	if (g_trace_flags == NULL) {
+	if (g_trace_file == NULL) {
 		SPDK_ERRLOG("trace is not initialized\n");
 		return;
 	}
@@ -59,7 +58,7 @@ spdk_trace_clear_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 		return;
 	}
 
-	g_trace_flags->tpoint_mask[group_id] &= ~tpoint_mask;
+	g_trace_file->tpoint_mask[group_id] &= ~tpoint_mask;
 }
 
 uint64_t
@@ -82,7 +81,7 @@ spdk_trace_set_tpoint_group_mask(uint64_t tpoint_group_mask)
 {
 	int i;
 
-	if (g_trace_flags == NULL) {
+	if (g_trace_file == NULL) {
 		SPDK_ERRLOG("trace is not initialized\n");
 		return;
 	}
@@ -99,7 +98,7 @@ spdk_trace_clear_tpoint_group_mask(uint64_t tpoint_group_mask)
 {
 	int i;
 
-	if (g_trace_flags == NULL) {
+	if (g_trace_file == NULL) {
 		SPDK_ERRLOG("trace is not initialized\n");
 		return;
 	}
@@ -158,7 +157,7 @@ spdk_trace_enable_tpoint_group(const char *group_name)
 {
 	uint64_t tpoint_group_mask = 0;
 
-	if (g_trace_flags == NULL) {
+	if (g_trace_file == NULL) {
 		return -1;
 	}
 
@@ -176,7 +175,7 @@ spdk_trace_disable_tpoint_group(const char *group_name)
 {
 	uint64_t tpoint_group_mask = 0;
 
-	if (g_trace_flags == NULL) {
+	if (g_trace_file == NULL) {
 		return -1;
 	}
 
@@ -228,7 +227,7 @@ spdk_trace_register_owner(uint8_t type, char id_prefix)
 
 	assert(type != OWNER_NONE);
 
-	if (g_trace_flags == NULL) {
+	if (g_trace_file == NULL) {
 		SPDK_ERRLOG("trace is not initialized\n");
 		return;
 	}
@@ -236,7 +235,7 @@ spdk_trace_register_owner(uint8_t type, char id_prefix)
 	/* 'owner' has 256 entries and since 'type' is a uint8_t, it
 	 * can't overrun the array.
 	 */
-	owner = &g_trace_flags->owner[type];
+	owner = &g_trace_file->owner[type];
 	assert(owner->type == 0);
 
 	owner->type = type;
@@ -250,7 +249,7 @@ spdk_trace_register_object(uint8_t type, char id_prefix)
 
 	assert(type != OBJECT_NONE);
 
-	if (g_trace_flags == NULL) {
+	if (g_trace_file == NULL) {
 		SPDK_ERRLOG("trace is not initialized\n");
 		return;
 	}
@@ -258,7 +257,7 @@ spdk_trace_register_object(uint8_t type, char id_prefix)
 	/* 'object' has 256 entries and since 'type' is a uint8_t, it
 	 * can't overrun the array.
 	 */
-	object = &g_trace_flags->object[type];
+	object = &g_trace_file->object[type];
 	assert(object->type == 0);
 
 	object->type = type;
@@ -278,7 +277,7 @@ trace_register_description(const struct spdk_trace_tpoint_opts *opts)
 		SPDK_ERRLOG("name (%s) too long\n", opts->name);
 	}
 
-	tpoint = &g_trace_flags->tpoint[opts->tpoint_id];
+	tpoint = &g_trace_file->tpoint[opts->tpoint_id];
 	assert(tpoint->tpoint_id == 0);
 
 	snprintf(tpoint->name, sizeof(tpoint->name), "%s", opts->name);
@@ -326,7 +325,7 @@ spdk_trace_register_description_ext(const struct spdk_trace_tpoint_opts *opts, s
 {
 	size_t i;
 
-	if (g_trace_flags == NULL) {
+	if (g_trace_file == NULL) {
 		SPDK_ERRLOG("trace is not initialized\n");
 		return;
 	}
@@ -367,7 +366,7 @@ spdk_trace_tpoint_register_relation(uint16_t tpoint_id, uint8_t object_type, uin
 	assert(object_type != OBJECT_NONE);
 	assert(tpoint_id != OBJECT_NONE);
 
-	if (g_trace_flags == NULL) {
+	if (g_trace_file == NULL) {
 		SPDK_ERRLOG("trace is not initialized\n");
 		return;
 	}
@@ -376,7 +375,7 @@ spdk_trace_tpoint_register_relation(uint16_t tpoint_id, uint8_t object_type, uin
 	 * there is no order in which trace definitions are registered.
 	 * This way we can create relations between tpoint and objects
 	 * that will be declared later. */
-	tpoint = &g_trace_flags->tpoint[tpoint_id];
+	tpoint = &g_trace_file->tpoint[tpoint_id];
 	for (i = 0; i < SPDK_COUNTOF(tpoint->related_objects); ++i) {
 		if (tpoint->related_objects[i].object_type == OBJECT_NONE) {
 			tpoint->related_objects[i].object_type = object_type;

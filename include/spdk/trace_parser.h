@@ -56,13 +56,13 @@ struct spdk_trace_parser *spdk_trace_parser_init(const struct spdk_trace_parser_
 void spdk_trace_parser_cleanup(struct spdk_trace_parser *parser);
 
 /**
- * Return trace flags describing the traces.
+ * Return trace file describing the traces.
  *
  * \param parser Parser object to be used.
  *
- * \return Pointer to the trace flags.
+ * \return Pointer to the trace file.
  */
-const struct spdk_trace_flags *spdk_trace_parser_get_flags(const struct spdk_trace_parser *parser);
+const struct spdk_trace_file *spdk_trace_parser_get_file(const struct spdk_trace_parser *parser);
 
 /**
  * Return the highest tsc out of first entries across all specified cores.  This value can be used

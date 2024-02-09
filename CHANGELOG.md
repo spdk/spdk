@@ -23,6 +23,12 @@ Added `bdev_uring_rescan` RPC to allow rescaning the size of uring bdev.
 
 Added `iscsi_get_stats` RPC method to get stat information about all active connections.
 
+### trace
+
+Merged `struct spdk_trace_flags` and `struct spdk_trace_histories` into
+new `struct spdk_trace_file`. Also renamed `spdk_get_trace_histories_size()`
+to `spdk_get_trace_file_size()`.
+
 ## v24.01
 
 ### accel

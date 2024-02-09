@@ -62,7 +62,7 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 
 	lcore_history->tpoint_count[tpoint_id]++;
 
-	tpoint = &g_trace_flags->tpoint[tpoint_id];
+	tpoint = &g_trace_file->tpoint[tpoint_id];
 	/* Make sure that the number of arguments passed matches tracepoint definition */
 	if (spdk_unlikely(tpoint->num_args != num_args)) {
 		assert(0 && "Unexpected number of tracepoint arguments");
@@ -185,10 +185,10 @@ spdk_trace_register_user_thread(void)
 
 	assert(t_ut_lcore_history != NULL);
 
-	memset(g_trace_flags->tname[ut_index], 0, SPDK_TRACE_THREAD_NAME_LEN);
+	memset(g_trace_file->tname[ut_index], 0, SPDK_TRACE_THREAD_NAME_LEN);
 
 	tid = pthread_self();
-	ret = pthread_getname_np(tid, g_trace_flags->tname[ut_index], SPDK_TRACE_THREAD_NAME_LEN);
+	ret = pthread_getname_np(tid, g_trace_file->tname[ut_index], SPDK_TRACE_THREAD_NAME_LEN);
 	if (ret) {
 		SPDK_ERRLOG("cannot get thread name\n");
 		pthread_mutex_unlock(&g_ut_array_mutex);
@@ -245,7 +245,7 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	}
 
 	spdk_cpuset_zero(&cpuset);
-	file_size = sizeof(struct spdk_trace_flags);
+	file_size = sizeof(struct spdk_trace_file);
 	SPDK_ENV_FOREACH_CORE(i) {
 		spdk_cpuset_set_cpu(&cpuset, i, true);
 		lcore_offsets[i] = file_size;
@@ -311,14 +311,12 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 
 	memset(g_trace_file, 0, file_size);
 
-	g_trace_flags = &g_trace_file->flags;
-
-	g_trace_flags->tsc_rate = spdk_get_ticks_hz();
+	g_trace_file->tsc_rate = spdk_get_ticks_hz();
 
 	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 		struct spdk_trace_history *lcore_history;
 
-		g_trace_flags->lcore_history_offsets[i] = lcore_offsets[i];
+		g_trace_file->lcore_history_offsets[i] = lcore_offsets[i];
 		if (lcore_offsets[i] == 0) {
 			continue;
 		}
@@ -331,7 +329,7 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 		lcore_history->lcore = i;
 		lcore_history->num_entries = num_entries;
 	}
-	g_trace_flags->lcore_history_offsets[SPDK_TRACE_MAX_LCORE] = lcore_offsets[SPDK_TRACE_MAX_LCORE];
+	g_trace_file->lcore_history_offsets[SPDK_TRACE_MAX_LCORE] = lcore_offsets[SPDK_TRACE_MAX_LCORE];
 
 	spdk_trace_flags_init();
 

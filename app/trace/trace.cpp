@@ -18,7 +18,7 @@ extern "C" {
 }
 
 static struct spdk_trace_parser *g_parser;
-static const struct spdk_trace_flags *g_flags;
+static const struct spdk_trace_file *g_file;
 static struct spdk_json_write_ctx *g_json;
 static bool g_print_tsc = false;
 
@@ -109,11 +109,11 @@ print_object_id(const struct spdk_trace_tpoint *d, struct spdk_trace_parser_entr
 
 	if (entry->related_type != OBJECT_NONE) {
 		snprintf(related_id, sizeof(related_id), " (%c%jd)",
-			 g_flags->object[entry->related_type].id_prefix,
+			 g_file->object[entry->related_type].id_prefix,
 			 entry->related_index);
 	}
 
-	snprintf(ids, sizeof(ids), "%c%jd%s", g_flags->object[d->object_type].id_prefix,
+	snprintf(ids, sizeof(ids), "%c%jd%s", g_file->object[d->object_type].id_prefix,
 		 entry->object_index, related_id);
 	printf("id:    %-17s", ids);
 }
@@ -132,16 +132,16 @@ print_event(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint64_t t
 	float				us;
 	size_t				i;
 
-	d = &g_flags->tpoint[e->tpoint_id];
+	d = &g_file->tpoint[e->tpoint_id];
 	us = get_us_from_tsc(e->tsc - tsc_offset, tsc_rate);
 
-	printf("%-*s ", (int)sizeof(g_flags->tname[entry->lcore]), g_flags->tname[entry->lcore]);
+	printf("%-*s ", (int)sizeof(g_file->tname[entry->lcore]), g_file->tname[entry->lcore]);
 	printf("%2d: %10.3f ", entry->lcore, us);
 	if (g_print_tsc) {
 		printf("(%9ju) ", e->tsc - tsc_offset);
 	}
-	if (g_flags->owner[d->owner_type].id_prefix) {
-		printf("%c%02d ", g_flags->owner[d->owner_type].id_prefix, e->poller_id);
+	if (g_file->owner[d->owner_type].id_prefix) {
+		printf("%c%02d ", g_file->owner[d->owner_type].id_prefix, e->poller_id);
 	} else {
 		printf("%4s", " ");
 	}
@@ -186,16 +186,16 @@ print_event_json(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint6
 	const struct spdk_trace_tpoint *d;
 	size_t i;
 
-	d = &g_flags->tpoint[e->tpoint_id];
+	d = &g_file->tpoint[e->tpoint_id];
 
 	spdk_json_write_object_begin(g_json);
 	spdk_json_write_named_uint64(g_json, "lcore", entry->lcore);
 	spdk_json_write_named_uint64(g_json, "tpoint", e->tpoint_id);
 	spdk_json_write_named_uint64(g_json, "tsc", e->tsc);
 
-	if (g_flags->owner[d->owner_type].id_prefix) {
+	if (g_file->owner[d->owner_type].id_prefix) {
 		spdk_json_write_named_string_fmt(g_json, "poller", "%c%02d",
-						 g_flags->owner[d->owner_type].id_prefix,
+						 g_file->owner[d->owner_type].id_prefix,
 						 e->poller_id);
 	}
 	if (e->size != 0) {
@@ -206,11 +206,11 @@ print_event_json(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint6
 
 		spdk_json_write_named_object_begin(g_json, "object");
 		if (d->new_object) {
-			object_type =  g_flags->object[d->object_type].id_prefix;
+			object_type =  g_file->object[d->object_type].id_prefix;
 			spdk_json_write_named_string_fmt(g_json, "id", "%c%" PRIu64, object_type,
 							 entry->object_index);
 		} else if (d->object_type != OBJECT_NONE) {
-			object_type =  g_flags->object[d->object_type].id_prefix;
+			object_type =  g_file->object[d->object_type].id_prefix;
 			if (entry->object_index != UINT64_MAX) {
 				spdk_json_write_named_string_fmt(g_json, "id", "%c%" PRIu64,
 								 object_type,
@@ -226,7 +226,7 @@ print_event_json(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint6
 	/* Print related objects array */
 	if (entry->related_index != UINT64_MAX) {
 		spdk_json_write_named_string_fmt(g_json, "related", "%c%" PRIu64,
-						 g_flags->object[entry->related_type].id_prefix,
+						 g_file->object[entry->related_type].id_prefix,
 						 entry->related_index);
 	}
 
@@ -272,11 +272,11 @@ print_tpoint_definitions(void)
 		return;
 	}
 
-	spdk_json_write_named_uint64(g_json, "tsc_rate", g_flags->tsc_rate);
+	spdk_json_write_named_uint64(g_json, "tsc_rate", g_file->tsc_rate);
 	spdk_json_write_named_array_begin(g_json, "tpoints");
 
-	for (i = 0; i < SPDK_COUNTOF(g_flags->tpoint); ++i) {
-		tpoint = &g_flags->tpoint[i];
+	for (i = 0; i < SPDK_COUNTOF(g_file->tpoint); ++i) {
+		tpoint = &g_file->tpoint[i];
 		if (tpoint->tpoint_id == 0) {
 			continue;
 		}
@@ -425,9 +425,9 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	g_flags = spdk_trace_parser_get_flags(g_parser);
+	g_file = spdk_trace_parser_get_file(g_parser);
 	if (!g_json) {
-		printf("TSC Rate: %ju\n", g_flags->tsc_rate);
+		printf("TSC Rate: %ju\n", g_file->tsc_rate);
 	} else {
 		spdk_json_write_object_begin(g_json);
 		print_tpoint_definitions();
@@ -448,7 +448,7 @@ main(int argc, char **argv)
 		if (entry.entry->tsc < tsc_offset) {
 			continue;
 		}
-		process_event(&entry, g_flags->tsc_rate, tsc_offset);
+		process_event(&entry, g_file->tsc_rate, tsc_offset);
 	}
 
 	if (g_json != NULL) {

@@ -70,7 +70,7 @@ input_trace_file_mmap(struct aggr_trace_record_ctx *ctx, const char *shm_name)
 
 	ctx->trace_file = (struct spdk_trace_file *)history_ptr;
 
-	g_tsc_rate = ctx->trace_file->flags.tsc_rate;
+	g_tsc_rate = ctx->trace_file->tsc_rate;
 	g_utsc_rate = g_tsc_rate / 1000;
 	if (g_tsc_rate == 0) {
 		fprintf(stderr, "Invalid tsc_rate %ju\n", g_tsc_rate);
@@ -463,7 +463,7 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 	}
 
 	/* Update and append lcore offsets converged trace file */
-	current_offset = sizeof(struct spdk_trace_flags);
+	current_offset = sizeof(struct spdk_trace_file);
 	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 		lcore_port = &ctx->lcore_ports[i];
 		if (lcore_port->valid) {

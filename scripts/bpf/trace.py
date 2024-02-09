@@ -347,7 +347,7 @@ class NativeProvider(TraceProvider):
         self._lib = ct.CDLL('build/lib/libspdk_trace_parser.so')
         self._lib.spdk_trace_parser_init.restype = ct.c_void_p
         self._lib.spdk_trace_parser_init.errcheck = lambda r, *_: ct.c_void_p(r)
-        self._lib.spdk_trace_parser_get_flags.restype = ct.POINTER(CTraceFlags)
+        self._lib.spdk_trace_parser_get_file.restype = ct.POINTER(CTraceFile)
         opts = CParserOpts(filename=bytes(filename, 'ascii'), mode=0,
                            lcore=TRACE_MAX_LCORE)
         self._parser = self._lib.spdk_trace_parser_init(ct.byref(opts))
@@ -367,7 +367,7 @@ class NativeProvider(TraceProvider):
                       for a in tpoint.args[:tpoint.num_args]])
 
     def _parse_defs(self):
-        flags = self._lib.spdk_trace_parser_get_flags(self._parser)
+        flags = self._lib.spdk_trace_parser_get_file(self._parser)
         self._tsc_rate = flags.contents.tsc_rate
         self._parse_tpoints(flags.contents.tpoint)
 

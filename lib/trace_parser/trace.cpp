@@ -66,7 +66,7 @@ struct spdk_trace_parser {
 	~spdk_trace_parser();
 	spdk_trace_parser(const spdk_trace_parser &) = delete;
 	spdk_trace_parser &operator=(const spdk_trace_parser &) = delete;
-	const spdk_trace_flags *flags() const { return &_trace_file->flags; }
+	const spdk_trace_file *file() const { return _trace_file; }
 	uint64_t tsc_offset() const { return _tsc_offset; }
 	bool next_entry(spdk_trace_parser_entry *entry);
 	uint64_t entry_count(uint16_t lcore) const;
@@ -172,7 +172,7 @@ spdk_trace_parser::next_entry(spdk_trace_parser_entry *pe)
 	/* Set related index to the max value to indicate "empty" state */
 	pe->related_index = UINT64_MAX;
 	pe->related_type = OBJECT_NONE;
-	tpoint = &_trace_file->flags.tpoint[entry->tpoint_id];
+	tpoint = &_trace_file->tpoint[entry->tpoint_id];
 	stats = &_stats[tpoint->object_type];
 
 	if (tpoint->new_object) {
@@ -406,10 +406,10 @@ spdk_trace_parser_cleanup(struct spdk_trace_parser *parser)
 	delete parser;
 }
 
-const struct spdk_trace_flags *
-spdk_trace_parser_get_flags(const struct spdk_trace_parser *parser)
+const struct spdk_trace_file *
+spdk_trace_parser_get_file(const struct spdk_trace_parser *parser)
 {
-	return parser->flags();
+	return parser->file();
 }
 
 uint64_t
