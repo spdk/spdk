@@ -235,6 +235,17 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 	SET_FIELD(disable_read_changed_ns_list_log_page, false);
 	SET_FIELD(tls_psk, NULL);
 	SET_FIELD(dhchap_key, NULL);
+	SET_FIELD(dhchap_digests,
+		  SPDK_BIT(SPDK_NVMF_DHCHAP_HASH_SHA256) |
+		  SPDK_BIT(SPDK_NVMF_DHCHAP_HASH_SHA384) |
+		  SPDK_BIT(SPDK_NVMF_DHCHAP_HASH_SHA512));
+	SET_FIELD(dhchap_dhgroups,
+		  SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_NULL) |
+		  SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_2048) |
+		  SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_3072) |
+		  SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_4096) |
+		  SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_6144) |
+		  SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_8192));
 
 	if (FIELD_OK(psk)) {
 		memset(opts->psk, 0, sizeof(opts->psk));

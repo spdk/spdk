@@ -971,6 +971,8 @@ nvme_ctrlr_opts_init(struct spdk_nvme_ctrlr_opts *opts,
 	SET_FIELD_ARRAY(psk);
 	SET_FIELD(tls_psk);
 	SET_FIELD(dhchap_key);
+	SET_FIELD(dhchap_digests);
+	SET_FIELD(dhchap_dhgroups);
 
 #undef FIELD_OK
 #undef SET_FIELD

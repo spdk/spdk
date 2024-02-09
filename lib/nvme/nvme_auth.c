@@ -97,6 +97,22 @@ nvme_auth_get_dhgroup_name(int id)
 	return NULL;
 }
 
+static bool
+nvme_auth_digest_allowed(struct spdk_nvme_qpair *qpair, uint8_t digest)
+{
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
+
+	return ctrlr->opts.dhchap_digests & SPDK_BIT(digest);
+}
+
+static bool
+nvme_auth_dhgroup_allowed(struct spdk_nvme_qpair *qpair, uint8_t dhgroup)
+{
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
+
+	return ctrlr->opts.dhchap_dhgroups & SPDK_BIT(dhgroup);
+}
+
 static void
 nvme_auth_set_state(struct spdk_nvme_qpair *qpair, enum nvme_qpair_auth_state state)
 {
@@ -681,16 +697,24 @@ nvme_auth_send_negotiate(struct spdk_nvme_qpair *qpair)
 
 	memset(qpair->poll_status->dma_data, 0, NVME_AUTH_DATA_SIZE);
 	desc->auth_id = SPDK_NVMF_AUTH_TYPE_DHCHAP;
-	desc->halen = SPDK_COUNTOF(g_digests);
-	desc->dhlen = SPDK_COUNTOF(g_dhgroups);
+	assert(SPDK_COUNTOF(g_digests) <= sizeof(desc->hash_id_list));
+	assert(SPDK_COUNTOF(g_dhgroups) <= sizeof(desc->dhg_id_list));
 
-	assert(desc->halen <= sizeof(desc->hash_id_list));
-	assert(desc->dhlen <= sizeof(desc->dhg_id_list));
-	for (i = 0; i < desc->halen; ++i) {
-		desc->hash_id_list[i] = g_digests[i].id;
+	for (i = 0; i < SPDK_COUNTOF(g_digests); ++i) {
+		if (!nvme_auth_digest_allowed(qpair, g_digests[i].id)) {
+			continue;
+		}
+		AUTH_DEBUGLOG(qpair, "digest: %u (%s)\n", g_digests[i].id,
+			      nvme_auth_get_digest_name(g_digests[i].id));
+		desc->hash_id_list[desc->halen++] = g_digests[i].id;
 	}
-	for (i = 0; i < desc->dhlen; ++i) {
-		desc->dhg_id_list[i] = g_dhgroups[i].id;
+	for (i = 0; i < SPDK_COUNTOF(g_dhgroups); ++i) {
+		if (!nvme_auth_dhgroup_allowed(qpair, g_dhgroups[i].id)) {
+			continue;
+		}
+		AUTH_DEBUGLOG(qpair, "dhgroup: %u (%s)\n", g_dhgroups[i].id,
+			      nvme_auth_get_dhgroup_name(g_dhgroups[i].id));
+		desc->dhg_id_list[desc->dhlen++] = g_dhgroups[i].id;
 	}
 
 	msg->auth_type = SPDK_NVMF_AUTH_TYPE_COMMON_MESSAGE;
@@ -761,6 +785,18 @@ nvme_auth_check_challenge(struct spdk_nvme_qpair *qpair)
 		break;
 	default:
 		AUTH_ERRLOG(qpair, "unsupported dhgroup: 0x%x\n", challenge->dhg_id);
+		goto error;
+	}
+
+	if (!nvme_auth_digest_allowed(qpair, challenge->hash_id)) {
+		AUTH_ERRLOG(qpair, "received disallowed digest: %u (%s)\n", challenge->hash_id,
+			    nvme_auth_get_digest_name(challenge->hash_id));
+		goto error;
+	}
+
+	if (!nvme_auth_dhgroup_allowed(qpair, challenge->dhg_id)) {
+		AUTH_ERRLOG(qpair, "received disallowed dhgroup: %u (%s)\n", challenge->dhg_id,
+			    nvme_auth_get_dhgroup_name(challenge->dhg_id));
 		goto error;
 	}
 

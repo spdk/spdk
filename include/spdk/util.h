@@ -59,6 +59,8 @@ extern "C" {
 #define SPDK_ALIGN_CEIL(val, align) \
 	SPDK_ALIGN_FLOOR(((val) + ((__typeof__(val)) (align) - 1)), align)
 
+#define SPDK_BIT(n) (1ul << (n))
+
 uint32_t spdk_u32log2(uint32_t x);
 
 static inline uint32_t
