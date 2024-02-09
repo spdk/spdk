@@ -836,13 +836,6 @@ _nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	}
 }
 
-static inline bool
-nvmf_request_is_fabric_connect(struct spdk_nvmf_request *req)
-{
-	return req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC &&
-	       req->cmd->nvmf_cmd.fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT;
-}
-
 static struct spdk_nvmf_subsystem_poll_group *
 nvmf_subsystem_pg_from_connect_cmd(struct spdk_nvmf_request *req)
 {
