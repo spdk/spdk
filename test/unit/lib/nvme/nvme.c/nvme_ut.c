@@ -660,7 +660,7 @@ test_nvme_user_copy_cmd_complete(void)
 static void
 test_nvme_allocate_request_null(void)
 {
-	struct spdk_nvme_qpair qpair;
+	struct spdk_nvme_qpair qpair = {};
 	spdk_nvme_cmd_cb cb_fn = (spdk_nvme_cmd_cb)0x1234;
 	void *cb_arg = (void *)0x5678;
 	struct nvme_request *req = NULL;
