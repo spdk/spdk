@@ -712,7 +712,7 @@ nvme_tcp_qpair_write_pdu(struct nvme_tcp_qpair *tqpair,
 	/* Header Digest */
 	if (g_nvme_tcp_hdgst[pdu->hdr.common.pdu_type] && tqpair->flags.host_hdgst_enable) {
 		crc32c = nvme_tcp_pdu_calc_header_digest(pdu);
-		MAKE_DIGEST_WORD((uint8_t *)pdu->hdr.raw + hlen, crc32c);
+		MAKE_DIGEST_WORD((uint8_t *)&pdu->hdr.raw[hlen], crc32c);
 	}
 
 	pdu_compute_crc32(pdu);
