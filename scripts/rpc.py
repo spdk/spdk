@@ -1001,7 +1001,7 @@ if __name__ == "__main__":
                 config_param[parts[0]] = parts[1]
         print_json(rpc.bdev.bdev_rbd_register_cluster(args.client,
                                                       name=args.name,
-                                                      user=args.user,
+                                                      user_id=args.user,
                                                       config_param=config_param,
                                                       config_file=args.config_file,
                                                       key_file=args.key_file,
@@ -1045,7 +1045,7 @@ if __name__ == "__main__":
                 config[parts[0]] = parts[1]
         print_json(rpc.bdev.bdev_rbd_create(args.client,
                                             name=args.name,
-                                            user=args.user,
+                                            user_id=args.user,
                                             config=config,
                                             pool_name=args.pool_name,
                                             rbd_name=args.rbd_name,

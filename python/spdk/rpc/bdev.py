@@ -1173,12 +1173,12 @@ def bdev_zone_block_delete(client, name):
     return client.call('bdev_zone_block_delete', params)
 
 
-def bdev_rbd_register_cluster(client, name, user=None, config_param=None, config_file=None, key_file=None, core_mask=None):
+def bdev_rbd_register_cluster(client, name, user_id=None, config_param=None, config_file=None, key_file=None, core_mask=None):
     """Create a Rados Cluster object of the Ceph RBD backend.
 
     Args:
         name: name of Rados Cluster
-        user: Ceph user name (optional)
+        user_id: Ceph user name (optional)
         config_param: map of config keys to values (optional)
         config_file: file path of Ceph configuration file (optional)
         key_file: file path of Ceph key file (optional)
@@ -1189,8 +1189,8 @@ def bdev_rbd_register_cluster(client, name, user=None, config_param=None, config
     """
     params = {'name': name}
 
-    if user is not None:
-        params['user_id'] = user
+    if user_id is not None:
+        params['user_id'] = user_id
     if config_param is not None:
         params['config_param'] = config_param
     if config_file is not None:
@@ -1228,7 +1228,7 @@ def bdev_rbd_get_clusters_info(client, name):
     return client.call('bdev_rbd_get_clusters_info', params)
 
 
-def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user=None, config=None, cluster_name=None, uuid=None):
+def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user_id=None, config=None, cluster_name=None, uuid=None):
     """Create a Ceph RBD block device.
 
     Args:
@@ -1236,7 +1236,7 @@ def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user=Non
         rbd_name: Ceph RBD image name
         block_size: block size of RBD volume
         name: name of block device (optional)
-        user: Ceph user name (optional)
+        user_id: Ceph user name (optional)
         config: map of config keys to values (optional)
         cluster_name: Name to identify Rados cluster (optional)
         uuid: UUID of block device (optional)
@@ -1252,8 +1252,8 @@ def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user=Non
 
     if name:
         params['name'] = name
-    if user is not None:
-        params['user_id'] = user
+    if user_id is not None:
+        params['user_id'] = user_id
     if config is not None:
         params['config'] = config
     if cluster_name is not None:
