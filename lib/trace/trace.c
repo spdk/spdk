@@ -229,8 +229,8 @@ int
 spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads)
 {
 	uint32_t i = 0, max_dedicated_cpu = 0;
-	int file_size;
-	uint64_t lcore_offsets[SPDK_TRACE_MAX_LCORE + 1] = { 0 };
+	uint64_t file_size;
+	uint64_t lcore_offsets[SPDK_TRACE_MAX_LCORE] = { 0 };
 	struct spdk_cpuset cpuset = {};
 
 	/* 0 entries requested - skip trace initialization */
@@ -270,8 +270,6 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 		lcore_offsets[i] = file_size;
 		file_size += spdk_get_trace_history_size(num_entries);
 	}
-
-	lcore_offsets[SPDK_TRACE_MAX_LCORE] = file_size;
 
 	snprintf(g_shm_name, sizeof(g_shm_name), "%s", shm_name);
 
@@ -329,7 +327,7 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 		lcore_history->lcore = i;
 		lcore_history->num_entries = num_entries;
 	}
-	g_trace_file->lcore_history_offsets[SPDK_TRACE_MAX_LCORE] = lcore_offsets[SPDK_TRACE_MAX_LCORE];
+	g_trace_file->file_size = file_size;
 
 	spdk_trace_flags_init();
 

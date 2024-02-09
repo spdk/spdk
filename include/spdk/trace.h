@@ -116,6 +116,7 @@ struct spdk_trace_history {
 #define SPDK_TRACE_MAX_LCORE		128
 
 struct spdk_trace_file {
+	uint64_t			file_size;
 	uint64_t			tsc_rate;
 	uint64_t			tpoint_mask[SPDK_TRACE_MAX_GROUP_ID];
 	char				tname[SPDK_TRACE_MAX_LCORE][SPDK_TRACE_THREAD_NAME_LEN];
@@ -123,10 +124,8 @@ struct spdk_trace_file {
 	struct spdk_trace_object	object[UCHAR_MAX + 1];
 	struct spdk_trace_tpoint	tpoint[SPDK_TRACE_MAX_TPOINT_ID];
 
-	/** Offset of each trace_history from the beginning of this data structure.
-	 * The last one is the offset of the file end.
-	 */
-	uint64_t			lcore_history_offsets[SPDK_TRACE_MAX_LCORE + 1];
+	/** Offset of each trace_history from the beginning of this data structure. */
+	uint64_t			lcore_history_offsets[SPDK_TRACE_MAX_LCORE];
 
 	/**
 	 * struct spdk_trace_history has a dynamic size determined by num_entries
@@ -147,7 +146,7 @@ spdk_get_trace_history_size(uint64_t num_entries)
 static inline uint64_t
 spdk_get_trace_file_size(struct spdk_trace_file *trace_file)
 {
-	return trace_file->lcore_history_offsets[SPDK_TRACE_MAX_LCORE];
+	return trace_file->file_size;
 }
 
 static inline struct spdk_trace_history *

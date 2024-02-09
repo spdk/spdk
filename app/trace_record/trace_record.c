@@ -438,7 +438,7 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 	int flags = O_CREAT | O_EXCL | O_RDWR;
 	struct lcore_trace_record_ctx *lcore_port;
 	char copy_buff[TRACE_FILE_COPY_SIZE];
-	uint64_t lcore_offsets[SPDK_TRACE_MAX_LCORE + 1];
+	uint64_t lcore_offsets[SPDK_TRACE_MAX_LCORE];
 	int rc, i;
 	ssize_t len = 0;
 	uint64_t current_offset;
@@ -454,15 +454,7 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 		printf("Create trace file %s for output\n", ctx->out_file);
 	}
 
-	/* Write flags of histories into head of converged trace file, except num_entriess */
-	rc = cont_write(ctx->out_fd, ctx->trace_file,
-			sizeof(struct spdk_trace_file) - sizeof(lcore_offsets));
-	if (rc < 0) {
-		fprintf(stderr, "Failed to write trace header into trace file\n");
-		goto out;
-	}
-
-	/* Update and append lcore offsets converged trace file */
+	/* Calculate lcore offsets for converged trace file */
 	current_offset = sizeof(struct spdk_trace_file);
 	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 		lcore_port = &ctx->lcore_ports[i];
@@ -473,8 +465,24 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 			lcore_offsets[i] = 0;
 		}
 	}
-	lcore_offsets[SPDK_TRACE_MAX_LCORE] = current_offset;
 
+	/* Write size of converged trace file */
+	rc = cont_write(ctx->out_fd, &current_offset, sizeof(ctx->trace_file->file_size));
+	if (rc < 0) {
+		fprintf(stderr, "Failed to write file size into trace file\n");
+		goto out;
+	}
+
+	/* Write rest of metadata (spdk_trace_file) of converged trace file */
+	rc = cont_write(ctx->out_fd, &ctx->trace_file->tsc_rate,
+			sizeof(struct spdk_trace_file) - sizeof(lcore_offsets) -
+			sizeof(ctx->trace_file->file_size));
+	if (rc < 0) {
+		fprintf(stderr, "Failed to write metadata into trace file\n");
+		goto out;
+	}
+
+	/* Write lcore offsets of converged trace file */
 	rc = cont_write(ctx->out_fd, lcore_offsets, sizeof(lcore_offsets));
 	if (rc < 0) {
 		fprintf(stderr, "Failed to write lcore offsets into trace file\n");

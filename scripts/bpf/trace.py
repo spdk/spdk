@@ -301,8 +301,9 @@ class CTracepoint(ct.Structure):
                 ('related_objects', CTpointRelatedObject * TRACE_MAX_RELATIONS)]
 
 
-class CTraceFlags(ct.Structure):
-    _fields_ = [('tsc_rate', ct.c_uint64),
+class CTraceFile(ct.Structure):
+    _fields_ = [('file_size', ct.c_uint64),
+                ('tsc_rate', ct.c_uint64),
                 ('tpoint_mask', ct.c_uint64 * TRACE_MAX_GROUP_ID),
                 ('owner', CTraceOwner * (UCHAR_MAX + 1)),
                 ('object', CTraceObject * (UCHAR_MAX + 1)),
