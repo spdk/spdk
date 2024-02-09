@@ -122,6 +122,20 @@ int spdk_json_decode_object(const struct spdk_json_val *values,
 			    const struct spdk_json_object_decoder *decoders, size_t num_decoders, void *out);
 int spdk_json_decode_object_relaxed(const struct spdk_json_val *values,
 				    const struct spdk_json_object_decoder *decoders, size_t num_decoders, void *out);
+
+/**
+ * Decode a JSON array.
+ *
+ * \param values List of values to decode.
+ * \param decode_func Function to use to decode each individual value.
+ * \param out Buffer to store decoded value(s).  If `stride` != 0, this buffer is advanced `stride`
+ *            bytes for each decoded value.
+ * \param out_size Number of decoded values.
+ * \param max_size Maximum number of array elements to decode.
+ * \param stride Number of bytes to advance `out`.
+ *
+ * \return 0 on success, -1 on failure.
+ */
 int spdk_json_decode_array(const struct spdk_json_val *values, spdk_json_decode_fn decode_func,
 			   void *out, size_t max_size, size_t *out_size, size_t stride);
 
