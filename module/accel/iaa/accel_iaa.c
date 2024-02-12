@@ -412,7 +412,6 @@ accel_iaa_write_config_json(struct spdk_json_write_ctx *w)
 		spdk_json_write_object_begin(w);
 		spdk_json_write_named_string(w, "method", "iaa_scan_accel_module");
 		spdk_json_write_object_end(w);
-		spdk_json_write_object_end(w);
 	}
 }
 
