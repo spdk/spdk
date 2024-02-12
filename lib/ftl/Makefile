@@ -27,7 +27,7 @@ FTL_SUBDIRS := mngt utils upgrade
 
 C_SRCS = ftl_core.c ftl_init.c ftl_layout.c ftl_debug.c ftl_io.c ftl_sb.c ftl_l2p.c ftl_l2p_flat.c
 C_SRCS += ftl_nv_cache.c ftl_band.c ftl_band_ops.c ftl_writer.c ftl_rq.c ftl_reloc.c ftl_l2p_cache.c
-C_SRCS += ftl_p2l.c ftl_trace.c
+C_SRCS += ftl_p2l.c
 C_SRCS += mngt/ftl_mngt.c mngt/ftl_mngt_bdev.c mngt/ftl_mngt_shutdown.c mngt/ftl_mngt_startup.c
 C_SRCS += mngt/ftl_mngt_md.c mngt/ftl_mngt_misc.c mngt/ftl_mngt_ioch.c mngt/ftl_mngt_l2p.c
 C_SRCS += mngt/ftl_mngt_band.c mngt/ftl_mngt_self_test.c mngt/ftl_mngt_p2l.c
@@ -39,6 +39,9 @@ C_SRCS += upgrade/ftl_band_upgrade.c upgrade/ftl_chunk_upgrade.c
 C_SRCS += upgrade/ftl_sb_v3.c upgrade/ftl_sb_v5.c
 C_SRCS += nvc/ftl_nvc_dev.c nvc/ftl_nvc_bdev_vss.c
 C_SRCS += base/ftl_base_dev.c base/ftl_base_bdev.c
+ifeq ($(CONFIG_DEBUG),y)
+C_SRCS += ftl_trace.c
+endif
 
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_ftl.map)
 
