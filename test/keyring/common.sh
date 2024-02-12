@@ -12,12 +12,12 @@ get_key() { bperf_cmd keyring_get_keys | jq ".[] | select(.name == \"$1\")"; }
 get_refcnt() { get_key "$1" | jq -r '.refcnt'; }
 
 prep_key() {
-	local name key path
+	local name key digest path
 
-	name="$1" key="$2"
-	path="${3-$(mktemp)}"
+	name="$1" key="$2" digest="$3"
+	path="${4-$(mktemp)}"
 
-	format_interchange_psk "$key" > "$path"
+	format_interchange_psk "$key" "$digest" > "$path"
 	chmod 0600 "$path"
 
 	echo "$path"

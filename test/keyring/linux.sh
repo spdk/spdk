@@ -44,8 +44,8 @@ cleanup() {
 
 trap cleanup EXIT
 
-prep_key "key0" "$key0" "/tmp/:spdk-test:key0"
-prep_key "key1" "$key1" "/tmp/:spdk-test:key1"
+prep_key "key0" "$key0" 0 "/tmp/:spdk-test:key0"
+prep_key "key1" "$key1" 0 "/tmp/:spdk-test:key1"
 
 "$rootdir/build/bin/spdk_tgt" &
 tgtpid=$!

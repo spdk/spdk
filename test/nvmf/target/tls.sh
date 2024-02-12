@@ -115,8 +115,8 @@ if [[ "$ktls" != "false" ]]; then
 	exit 1
 fi
 
-key=$(format_interchange_psk 00112233445566778899aabbccddeeff)
-key_2=$(format_interchange_psk ffeeddccbbaa99887766554433221100)
+key=$(format_interchange_psk 00112233445566778899aabbccddeeff 1)
+key_2=$(format_interchange_psk ffeeddccbbaa99887766554433221100 1)
 
 key_path=$(mktemp)
 key_2_path=$(mktemp)
@@ -156,7 +156,7 @@ NOT run_bdevperf nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 ""
 
 # Test #6 - check connectivity with bdevperf, but with 48 bytes long key
 killprocess $nvmfpid
-key_long=$(format_interchange_psk 00112233445566778899aabbccddeeff0011223344556677 02)
+key_long=$(format_interchange_psk 00112233445566778899aabbccddeeff0011223344556677 2)
 key_long_path=$(mktemp)
 echo -n "$key_long" > $key_long_path
 chmod 0600 $key_long_path

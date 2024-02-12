@@ -23,8 +23,8 @@ cleanup() {
 
 trap cleanup EXIT
 
-key0path=$(prep_key "key0" "$key0")
-key1path=$(prep_key "key1" "$key1")
+key0path=$(prep_key "key0" "$key0" 0)
+key1path=$(prep_key "key1" "$key1" 0)
 
 "$rootdir/build/bin/spdk_tgt" &
 tgtpid=$!
@@ -89,7 +89,7 @@ NOT bperf_cmd bdev_nvme_attach_controller -b nvme0 -t tcp -a 127.0.0.1 -s 4420 -
 bperf_cmd keyring_file_remove_key key0
 
 # Remove the key while its in use
-key0path=$(prep_key "key0" "$key0")
+key0path=$(prep_key "key0" "$key0" 0)
 bperf_cmd keyring_file_add_key key0 "$key0path"
 bperf_cmd bdev_nvme_attach_controller -b nvme0 -t tcp -a 127.0.0.1 -s 4420 -f ipv4 \
 	-n $subnqn -q $hostnqn --psk key0

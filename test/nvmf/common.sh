@@ -690,7 +690,7 @@ clean_kernel_target() {
 format_interchange_psk() {
 	local key hash crc
 
-	key=$1 hash=${2:-01}
+	key=$1 hash=$(printf "%02x" $2)
 	crc=$(echo -n $key | gzip -1 -c | tail -c8 | head -c 4)
 
 	echo -n "NVMeTLSkey-1:$hash:$(base64 <(echo -n ${key}${crc})):"
