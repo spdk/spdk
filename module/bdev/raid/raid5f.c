@@ -281,8 +281,8 @@ raid5f_xor_stripe(struct stripe_request *stripe_req, stripe_req_xor_cb cb)
 	struct raid_bdev_io *raid_io = stripe_req->raid_io;
 	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
 	struct chunk *chunk;
-	struct chunk *dest_chunk;
-	uint64_t num_blocks;
+	struct chunk *dest_chunk = NULL;
+	uint64_t num_blocks = 0;
 	uint8_t c;
 
 	assert(cb != NULL);
