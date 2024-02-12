@@ -66,7 +66,7 @@ struct spdk_trace_parser {
 	~spdk_trace_parser();
 	spdk_trace_parser(const spdk_trace_parser &) = delete;
 	spdk_trace_parser &operator=(const spdk_trace_parser &) = delete;
-	const spdk_trace_flags *flags() const { return &_histories->flags; }
+	const spdk_trace_flags *flags() const { return &_trace_file->flags; }
 	uint64_t tsc_offset() const { return _tsc_offset; }
 	bool next_entry(spdk_trace_parser_entry *entry);
 	uint64_t entry_count(uint16_t lcore) const;
@@ -78,7 +78,7 @@ private:
 	bool init(const spdk_trace_parser_opts *opts);
 	void cleanup();
 
-	spdk_trace_histories	*_histories;
+	spdk_trace_file		*_trace_file;
 	size_t			_map_size;
 	int			_fd;
 	uint64_t		_tsc_offset;
@@ -96,7 +96,7 @@ spdk_trace_parser::entry_count(uint16_t lcore) const
 		return 0;
 	}
 
-	history = spdk_get_per_lcore_history(_histories, lcore);
+	history = spdk_get_per_lcore_history(_trace_file, lcore);
 
 	return history == NULL ? 0 : history->num_entries;
 }
@@ -106,7 +106,7 @@ spdk_trace_parser::get_next_buffer(spdk_trace_entry_buffer *buf, uint16_t lcore)
 {
 	spdk_trace_history *history;
 
-	history = spdk_get_per_lcore_history(_histories, lcore);
+	history = spdk_get_per_lcore_history(_trace_file, lcore);
 	assert(history);
 
 	if (spdk_unlikely(static_cast<void *>(buf) ==
@@ -172,7 +172,7 @@ spdk_trace_parser::next_entry(spdk_trace_parser_entry *pe)
 	/* Set related index to the max value to indicate "empty" state */
 	pe->related_index = UINT64_MAX;
 	pe->related_type = OBJECT_NONE;
-	tpoint = &_histories->flags.tpoint[entry->tpoint_id];
+	tpoint = &_trace_file->flags.tpoint[entry->tpoint_id];
 	stats = &_stats[tpoint->object_type];
 
 	if (tpoint->new_object) {
@@ -305,40 +305,40 @@ spdk_trace_parser::init(const spdk_trace_parser_opts *opts)
 		return false;
 	}
 
-	if ((size_t)st.st_size < sizeof(*_histories)) {
+	if ((size_t)st.st_size < sizeof(*_trace_file)) {
 		SPDK_ERRLOG("Invalid trace file: %s\n", opts->filename);
 		return false;
 	}
 
 	/* Map the header of trace file */
-	_map_size = sizeof(*_histories);
-	_histories = static_cast<spdk_trace_histories *>(mmap(NULL, _map_size, PROT_READ,
+	_map_size = sizeof(*_trace_file);
+	_trace_file = static_cast<spdk_trace_file *>(mmap(NULL, _map_size, PROT_READ,
 			MAP_SHARED, _fd, 0));
-	if (_histories == MAP_FAILED) {
+	if (_trace_file == MAP_FAILED) {
 		SPDK_ERRLOG("Could not mmap trace file: %s\n", opts->filename);
-		_histories = NULL;
+		_trace_file = NULL;
 		return false;
 	}
 
 	/* Remap the entire trace file */
-	_map_size = spdk_get_trace_histories_size(_histories);
-	munmap(_histories, sizeof(*_histories));
+	_map_size = spdk_get_trace_file_size(_trace_file);
+	munmap(_trace_file, sizeof(*_trace_file));
 	if ((size_t)st.st_size < _map_size) {
 		SPDK_ERRLOG("Trace file %s is not valid\n", opts->filename);
-		_histories = NULL;
+		_trace_file = NULL;
 		return false;
 	}
-	_histories = static_cast<spdk_trace_histories *>(mmap(NULL, _map_size, PROT_READ,
+	_trace_file = static_cast<spdk_trace_file *>(mmap(NULL, _map_size, PROT_READ,
 			MAP_SHARED, _fd, 0));
-	if (_histories == MAP_FAILED) {
+	if (_trace_file == MAP_FAILED) {
 		SPDK_ERRLOG("Could not mmap trace file: %s\n", opts->filename);
-		_histories = NULL;
+		_trace_file = NULL;
 		return false;
 	}
 
 	if (opts->lcore == SPDK_TRACE_MAX_LCORE) {
 		for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
-			history = spdk_get_per_lcore_history(_histories, i);
+			history = spdk_get_per_lcore_history(_trace_file, i);
 			if (history == NULL || history->num_entries == 0 || history->entries[0].tsc == 0) {
 				continue;
 			}
@@ -346,7 +346,7 @@ spdk_trace_parser::init(const spdk_trace_parser_opts *opts)
 			populate_events(history, history->num_entries);
 		}
 	} else {
-		history = spdk_get_per_lcore_history(_histories, opts->lcore);
+		history = spdk_get_per_lcore_history(_trace_file, opts->lcore);
 		if (history == NULL) {
 			SPDK_ERRLOG("Trace file %s has no trace history for lcore %d\n",
 				    opts->filename, opts->lcore);
@@ -364,8 +364,8 @@ spdk_trace_parser::init(const spdk_trace_parser_opts *opts)
 void
 spdk_trace_parser::cleanup()
 {
-	if (_histories != NULL) {
-		munmap(_histories, _map_size);
+	if (_trace_file != NULL) {
+		munmap(_trace_file, _map_size);
 	}
 
 	if (_fd > 0) {
@@ -374,7 +374,7 @@ spdk_trace_parser::cleanup()
 }
 
 spdk_trace_parser::spdk_trace_parser(const spdk_trace_parser_opts *opts) :
-	_histories(NULL),
+	_trace_file(NULL),
 	_map_size(0),
 	_fd(-1),
 	_tsc_offset(0)

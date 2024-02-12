@@ -23,7 +23,7 @@ static __thread uint32_t t_ut_array_index;
 static __thread struct spdk_trace_history *t_ut_lcore_history;
 
 uint32_t g_user_thread_index_start;
-struct spdk_trace_histories *g_trace_histories;
+struct spdk_trace_file *g_trace_file;
 struct spdk_bit_array *g_ut_array;
 pthread_mutex_t g_ut_array_mutex;
 
@@ -49,7 +49,7 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 
 	lcore = spdk_env_get_current_core();
 	if (spdk_likely(lcore != SPDK_ENV_LCORE_ID_ANY)) {
-		lcore_history = spdk_get_per_lcore_history(g_trace_histories, lcore);
+		lcore_history = spdk_get_per_lcore_history(g_trace_file, lcore);
 	} else if (t_ut_lcore_history != NULL) {
 		lcore_history = t_ut_lcore_history;
 	} else {
@@ -181,7 +181,7 @@ spdk_trace_register_user_thread(void)
 
 	ut_index = t_ut_array_index + g_user_thread_index_start;
 
-	t_ut_lcore_history = spdk_get_per_lcore_history(g_trace_histories, ut_index);
+	t_ut_lcore_history = spdk_get_per_lcore_history(g_trace_file, ut_index);
 
 	assert(t_ut_lcore_history != NULL);
 
@@ -229,7 +229,7 @@ int
 spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads)
 {
 	uint32_t i = 0, max_dedicated_cpu = 0;
-	int histories_size;
+	int file_size;
 	uint64_t lcore_offsets[SPDK_TRACE_MAX_LCORE + 1] = { 0 };
 	struct spdk_cpuset cpuset = {};
 
@@ -245,11 +245,11 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	}
 
 	spdk_cpuset_zero(&cpuset);
-	histories_size = sizeof(struct spdk_trace_flags);
+	file_size = sizeof(struct spdk_trace_flags);
 	SPDK_ENV_FOREACH_CORE(i) {
 		spdk_cpuset_set_cpu(&cpuset, i, true);
-		lcore_offsets[i] = histories_size;
-		histories_size += spdk_get_trace_history_size(num_entries);
+		lcore_offsets[i] = file_size;
+		file_size += spdk_get_trace_history_size(num_entries);
 		max_dedicated_cpu = i;
 	}
 
@@ -267,11 +267,11 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	}
 
 	for (i = g_user_thread_index_start; i < g_user_thread_index_start + num_threads; i++) {
-		lcore_offsets[i] = histories_size;
-		histories_size += spdk_get_trace_history_size(num_entries);
+		lcore_offsets[i] = file_size;
+		file_size += spdk_get_trace_history_size(num_entries);
 	}
 
-	lcore_offsets[SPDK_TRACE_MAX_LCORE] = histories_size;
+	lcore_offsets[SPDK_TRACE_MAX_LCORE] = file_size;
 
 	snprintf(g_shm_name, sizeof(g_shm_name), "%s", shm_name);
 
@@ -283,14 +283,14 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 		return 1;
 	}
 
-	if (ftruncate(g_trace_fd, histories_size) != 0) {
+	if (ftruncate(g_trace_fd, file_size) != 0) {
 		SPDK_ERRLOG("could not truncate shm\n");
 		goto trace_init_err;
 	}
 
-	g_trace_histories = mmap(NULL, histories_size, PROT_READ | PROT_WRITE,
-				 MAP_SHARED, g_trace_fd, 0);
-	if (g_trace_histories == MAP_FAILED) {
+	g_trace_file = mmap(NULL, file_size, PROT_READ | PROT_WRITE,
+			    MAP_SHARED, g_trace_fd, 0);
+	if (g_trace_file == MAP_FAILED) {
 		SPDK_ERRLOG("could not mmap shm\n");
 		goto trace_init_err;
 	}
@@ -300,7 +300,7 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	 * altogether.
 	 */
 #if defined(__linux__)
-	if (mlock(g_trace_histories, histories_size) != 0) {
+	if (mlock(g_trace_file, file_size) != 0) {
 		SPDK_ERRLOG("Could not mlock shm for tracing - %s.\n", spdk_strerror(errno));
 		if (errno == ENOMEM) {
 			SPDK_ERRLOG("Check /dev/shm for old tracing files that can be deleted.\n");
@@ -309,9 +309,9 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	}
 #endif
 
-	memset(g_trace_histories, 0, histories_size);
+	memset(g_trace_file, 0, file_size);
 
-	g_trace_flags = &g_trace_histories->flags;
+	g_trace_flags = &g_trace_file->flags;
 
 	g_trace_flags->tsc_rate = spdk_get_ticks_hz();
 
@@ -327,7 +327,7 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 			assert(spdk_cpuset_get_cpu(&cpuset, i));
 		}
 
-		lcore_history = spdk_get_per_lcore_history(g_trace_histories, i);
+		lcore_history = spdk_get_per_lcore_history(g_trace_file, i);
 		lcore_history->lcore = i;
 		lcore_history->num_entries = num_entries;
 	}
@@ -338,14 +338,14 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	return 0;
 
 trace_init_err:
-	if (g_trace_histories != MAP_FAILED) {
-		munmap(g_trace_histories, histories_size);
+	if (g_trace_file != MAP_FAILED) {
+		munmap(g_trace_file, file_size);
 	}
 	close(g_trace_fd);
 	g_trace_fd = -1;
 	shm_unlink(shm_name);
 	spdk_bit_array_free(&g_ut_array);
-	g_trace_histories = NULL;
+	g_trace_file = NULL;
 
 	return 1;
 
@@ -358,17 +358,17 @@ spdk_trace_cleanup(void)
 	int i;
 	struct spdk_trace_history *lcore_history;
 
-	if (g_trace_histories == NULL) {
+	if (g_trace_file == NULL) {
 		return;
 	}
 
 	/*
 	 * Only unlink the shm if there were no trace_entry recorded. This ensures the file
 	 * can be used after this process exits/crashes for debugging.
-	 * Note that we have to calculate this value before g_trace_histories gets unmapped.
+	 * Note that we have to calculate this value before g_trace_file gets unmapped.
 	 */
 	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
-		lcore_history = spdk_get_per_lcore_history(g_trace_histories, i);
+		lcore_history = spdk_get_per_lcore_history(g_trace_file, i);
 		if (lcore_history == NULL) {
 			continue;
 		}
@@ -378,8 +378,8 @@ spdk_trace_cleanup(void)
 		}
 	}
 
-	munmap(g_trace_histories, sizeof(struct spdk_trace_histories));
-	g_trace_histories = NULL;
+	munmap(g_trace_file, sizeof(struct spdk_trace_file));
+	g_trace_file = NULL;
 	close(g_trace_fd);
 	spdk_bit_array_free(&g_ut_array);
 

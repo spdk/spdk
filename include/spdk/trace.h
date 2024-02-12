@@ -129,10 +129,10 @@ struct spdk_trace_flags {
 	uint64_t			lcore_history_offsets[SPDK_TRACE_MAX_LCORE + 1];
 };
 extern struct spdk_trace_flags *g_trace_flags;
-extern struct spdk_trace_histories *g_trace_histories;
+extern struct spdk_trace_file *g_trace_file;
 
 
-struct spdk_trace_histories {
+struct spdk_trace_file {
 	struct spdk_trace_flags flags;
 
 	/**
@@ -151,13 +151,13 @@ spdk_get_trace_history_size(uint64_t num_entries)
 }
 
 static inline uint64_t
-spdk_get_trace_histories_size(struct spdk_trace_histories *trace_histories)
+spdk_get_trace_file_size(struct spdk_trace_file *trace_file)
 {
-	return trace_histories->flags.lcore_history_offsets[SPDK_TRACE_MAX_LCORE];
+	return trace_file->flags.lcore_history_offsets[SPDK_TRACE_MAX_LCORE];
 }
 
 static inline struct spdk_trace_history *
-spdk_get_per_lcore_history(struct spdk_trace_histories *trace_histories, unsigned lcore)
+spdk_get_per_lcore_history(struct spdk_trace_file *trace_file, unsigned lcore)
 {
 	uint64_t lcore_history_offset;
 
@@ -165,12 +165,12 @@ spdk_get_per_lcore_history(struct spdk_trace_histories *trace_histories, unsigne
 		return NULL;
 	}
 
-	lcore_history_offset = trace_histories->flags.lcore_history_offsets[lcore];
+	lcore_history_offset = trace_file->flags.lcore_history_offsets[lcore];
 	if (lcore_history_offset == 0) {
 		return NULL;
 	}
 
-	return (struct spdk_trace_history *)(((char *)trace_histories) + lcore_history_offset);
+	return (struct spdk_trace_history *)(((char *)trace_file) + lcore_history_offset);
 }
 
 void _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
@@ -179,9 +179,9 @@ void _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
 #define _spdk_trace_record_tsc(tsc, tpoint_id, poller_id, size, object_id, num_args, ...)	\
 	do {											\
 		assert(tpoint_id < SPDK_TRACE_MAX_TPOINT_ID);					\
-		if (g_trace_histories == NULL ||						\
+		if (g_trace_file == NULL ||						\
 		    !((1ULL << (tpoint_id & 0x3F)) &						\
-		      g_trace_histories->flags.tpoint_mask[tpoint_id >> 6])) {			\
+		      g_trace_file->flags.tpoint_mask[tpoint_id >> 6])) {			\
 			break;									\
 		}										\
 		_spdk_trace_record(tsc, tpoint_id, poller_id, size, object_id,			\

@@ -19,7 +19,7 @@ static int g_verbose = 1;
 static uint64_t g_tsc_rate;
 static uint64_t g_utsc_rate;
 static bool g_shutdown = false;
-static uint64_t g_histories_size;
+static uint64_t g_file_size;
 
 struct lcore_trace_record_ctx {
 	char lcore_file[TRACE_PATH_MAX];
@@ -44,7 +44,7 @@ struct aggr_trace_record_ctx {
 	int out_fd;
 	int shm_fd;
 	struct lcore_trace_record_ctx lcore_ports[SPDK_TRACE_MAX_LCORE];
-	struct spdk_trace_histories *trace_histories;
+	struct spdk_trace_file *trace_file;
 };
 
 static int
@@ -60,7 +60,7 @@ input_trace_file_mmap(struct aggr_trace_record_ctx *ctx, const char *shm_name)
 	}
 
 	/* Map the header of trace file */
-	history_ptr = mmap(NULL, sizeof(struct spdk_trace_histories), PROT_READ, MAP_SHARED, ctx->shm_fd,
+	history_ptr = mmap(NULL, sizeof(struct spdk_trace_file), PROT_READ, MAP_SHARED, ctx->shm_fd,
 			   0);
 	if (history_ptr == MAP_FAILED) {
 		fprintf(stderr, "Could not mmap shm %s.\n", shm_name);
@@ -68,13 +68,13 @@ input_trace_file_mmap(struct aggr_trace_record_ctx *ctx, const char *shm_name)
 		return -1;
 	}
 
-	ctx->trace_histories = (struct spdk_trace_histories *)history_ptr;
+	ctx->trace_file = (struct spdk_trace_file *)history_ptr;
 
-	g_tsc_rate = ctx->trace_histories->flags.tsc_rate;
+	g_tsc_rate = ctx->trace_file->flags.tsc_rate;
 	g_utsc_rate = g_tsc_rate / 1000;
 	if (g_tsc_rate == 0) {
 		fprintf(stderr, "Invalid tsc_rate %ju\n", g_tsc_rate);
-		munmap(history_ptr, sizeof(struct spdk_trace_histories));
+		munmap(history_ptr, sizeof(struct spdk_trace_file));
 		close(ctx->shm_fd);
 		return -1;
 	}
@@ -84,20 +84,20 @@ input_trace_file_mmap(struct aggr_trace_record_ctx *ctx, const char *shm_name)
 	}
 
 	/* Remap the entire trace file */
-	g_histories_size = spdk_get_trace_histories_size(ctx->trace_histories);
-	munmap(history_ptr, sizeof(struct spdk_trace_histories));
-	history_ptr = mmap(NULL, g_histories_size, PROT_READ, MAP_SHARED, ctx->shm_fd, 0);
+	g_file_size = spdk_get_trace_file_size(ctx->trace_file);
+	munmap(history_ptr, sizeof(struct spdk_trace_file));
+	history_ptr = mmap(NULL, g_file_size, PROT_READ, MAP_SHARED, ctx->shm_fd, 0);
 	if (history_ptr == MAP_FAILED) {
 		fprintf(stderr, "Could not remmap shm %s.\n", shm_name);
 		close(ctx->shm_fd);
 		return -1;
 	}
 
-	ctx->trace_histories = (struct spdk_trace_histories *)history_ptr;
+	ctx->trace_file = (struct spdk_trace_file *)history_ptr;
 	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 		struct spdk_trace_history *history;
 
-		history = spdk_get_per_lcore_history(ctx->trace_histories, i);
+		history = spdk_get_per_lcore_history(ctx->trace_file, i);
 		ctx->lcore_ports[i].in_history = history;
 		ctx->lcore_ports[i].valid = (history != NULL);
 
@@ -455,8 +455,8 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 	}
 
 	/* Write flags of histories into head of converged trace file, except num_entriess */
-	rc = cont_write(ctx->out_fd, ctx->trace_histories,
-			sizeof(struct spdk_trace_histories) - sizeof(lcore_offsets));
+	rc = cont_write(ctx->out_fd, ctx->trace_file,
+			sizeof(struct spdk_trace_file) - sizeof(lcore_offsets));
 	if (rc < 0) {
 		fprintf(stderr, "Failed to write trace header into trace file\n");
 		goto out;
@@ -697,7 +697,7 @@ main(int argc, char **argv)
 
 	}
 
-	munmap(ctx.trace_histories, g_histories_size);
+	munmap(ctx.trace_file, g_file_size);
 	close(ctx.shm_fd);
 
 	output_trace_files_finish(&ctx);
