@@ -189,8 +189,8 @@ fuzz_vfio_user_set_msix(const uint8_t *data, size_t size, struct vfio_device *de
 	/* Max value is VFIO_IRQ_SET_ACTION_TRIGGER, try different combination too */
 	irq_set.flags = data[0] & ((1 << 6) - 1);
 	irq_set.index = VFIO_PCI_MSIX_IRQ_INDEX;
-	memcpy(&irq_set.start, &data[2], 4);
-	memcpy(&irq_set.count, &data[6], 4);
+	memcpy(&irq_set.start, &data[1], 4);
+	memcpy(&irq_set.count, &data[5], 4);
 
 	spdk_vfio_user_dev_send_request(dev, VFIO_USER_DEVICE_SET_IRQS,
 					&irq_set, sizeof(irq_set), sizeof(irq_set), NULL, 0);
