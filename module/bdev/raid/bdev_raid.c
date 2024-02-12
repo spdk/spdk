@@ -3209,7 +3209,7 @@ raid_bdev_examine_no_sb(struct spdk_bdev *bdev)
 static void
 raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bdev)
 {
-	const struct raid_bdev_sb_base_bdev *sb_base_bdev;
+	const struct raid_bdev_sb_base_bdev *sb_base_bdev = NULL;
 	struct raid_bdev *raid_bdev;
 	struct raid_base_bdev_info *iter, *base_info;
 	uint8_t i;
