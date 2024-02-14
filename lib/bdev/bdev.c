@@ -5424,7 +5424,9 @@ spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 			   spdk_bdev_io_completion_cb cb, void *cb_arg,
 			   struct spdk_bdev_ext_io_opts *opts)
 {
-	void *md = NULL;
+	struct spdk_memory_domain *domain = NULL;
+	struct spdk_accel_sequence *seq = NULL;
+	void *domain_ctx = NULL, *md = NULL;
 
 	if (opts) {
 		if (spdk_unlikely(!_bdev_io_check_opts(opts, iov))) {
@@ -5432,6 +5434,9 @@ spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 		}
 
 		md = opts->metadata;
+		domain = bdev_get_ext_io_opt(opts, memory_domain, NULL);
+		domain_ctx = bdev_get_ext_io_opt(opts, memory_domain_ctx, NULL);
+		seq = bdev_get_ext_io_opt(opts, accel_sequence, NULL);
 		if (md) {
 			if (spdk_unlikely(!spdk_bdev_is_md_separate(spdk_bdev_desc_get_bdev(desc)))) {
 				return -EINVAL;
@@ -5440,15 +5445,15 @@ spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 			if (spdk_unlikely(!_is_buf_allocated(iov))) {
 				return -EINVAL;
 			}
+
+			if (spdk_unlikely(seq != NULL)) {
+				return -EINVAL;
+			}
 		}
 	}
 
 	return bdev_readv_blocks_with_md(desc, ch, iov, iovcnt, md, offset_blocks,
-					 num_blocks,
-					 bdev_get_ext_io_opt(opts, memory_domain, NULL),
-					 bdev_get_ext_io_opt(opts, memory_domain_ctx, NULL),
-					 bdev_get_ext_io_opt(opts, accel_sequence, NULL),
-					 cb, cb_arg);
+					 num_blocks, domain, domain_ctx, seq, cb, cb_arg);
 }
 
 static int
@@ -5635,7 +5640,9 @@ spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel 
 			    spdk_bdev_io_completion_cb cb, void *cb_arg,
 			    struct spdk_bdev_ext_io_opts *opts)
 {
-	void *md = NULL;
+	struct spdk_memory_domain *domain = NULL;
+	struct spdk_accel_sequence *seq = NULL;
+	void *domain_ctx = NULL, *md = NULL;
 
 	if (opts) {
 		if (spdk_unlikely(!_bdev_io_check_opts(opts, iov))) {
@@ -5643,6 +5650,9 @@ spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel 
 		}
 
 		md = opts->metadata;
+		domain = bdev_get_ext_io_opt(opts, memory_domain, NULL);
+		domain_ctx = bdev_get_ext_io_opt(opts, memory_domain_ctx, NULL);
+		seq = bdev_get_ext_io_opt(opts, accel_sequence, NULL);
 		if (md) {
 			if (spdk_unlikely(!spdk_bdev_is_md_separate(spdk_bdev_desc_get_bdev(desc)))) {
 				return -EINVAL;
@@ -5651,14 +5661,15 @@ spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel 
 			if (spdk_unlikely(!_is_buf_allocated(iov))) {
 				return -EINVAL;
 			}
+
+			if (spdk_unlikely(seq != NULL)) {
+				return -EINVAL;
+			}
 		}
 	}
 
 	return bdev_writev_blocks_with_md(desc, ch, iov, iovcnt, md, offset_blocks, num_blocks,
-					  bdev_get_ext_io_opt(opts, memory_domain, NULL),
-					  bdev_get_ext_io_opt(opts, memory_domain_ctx, NULL),
-					  bdev_get_ext_io_opt(opts, accel_sequence, NULL),
-					  cb, cb_arg);
+					  domain, domain_ctx, seq, cb, cb_arg);
 }
 
 static void
@@ -7547,7 +7558,7 @@ bdev_register(struct spdk_bdev *bdev)
 	char *bdev_name;
 	char uuid[SPDK_UUID_STRING_LEN];
 	struct spdk_iobuf_opts iobuf_opts;
-	int ret, i;
+	int ret;
 
 	assert(bdev->module != NULL);
 
@@ -7559,22 +7570,6 @@ bdev_register(struct spdk_bdev *bdev)
 	if (!strlen(bdev->name)) {
 		SPDK_ERRLOG("Bdev name must not be an empty string\n");
 		return -EINVAL;
-	}
-
-	for (i = 0; i < SPDK_BDEV_NUM_IO_TYPES; ++i) {
-		if (bdev->fn_table->accel_sequence_supported == NULL) {
-			continue;
-		}
-		if (!bdev->fn_table->accel_sequence_supported(bdev->ctxt,
-				(enum spdk_bdev_io_type)i)) {
-			continue;
-		}
-
-		if (spdk_bdev_is_md_separate(bdev)) {
-			SPDK_ERRLOG("Separate metadata is currently unsupported for bdevs with "
-				    "accel sequence support\n");
-			return -EINVAL;
-		}
 	}
 
 	/* Users often register their own I/O devices using the bdev name. In
