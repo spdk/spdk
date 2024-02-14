@@ -16,6 +16,7 @@
 #include "spdk/event.h"
 #include "spdk/thread.h"
 #include "spdk/ioat.h"
+#include "spdk/json.h"
 
 static bool g_ioat_enable = false;
 static bool g_ioat_initialized = false;
@@ -71,6 +72,7 @@ ioat_free_device(struct ioat_device *dev)
 
 static int accel_ioat_init(void);
 static void accel_ioat_exit(void *ctx);
+static void accel_ioat_write_config_json(struct spdk_json_write_ctx *w);
 static bool ioat_supports_opcode(enum spdk_accel_opcode opc);
 static struct spdk_io_channel *ioat_get_io_channel(void);
 static int ioat_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task);
@@ -84,7 +86,7 @@ accel_ioat_get_ctx_size(void)
 static struct spdk_accel_module_if g_ioat_module = {
 	.module_init = accel_ioat_init,
 	.module_fini = accel_ioat_exit,
-	.write_config_json = NULL,
+	.write_config_json = accel_ioat_write_config_json,
 	.get_ctx_size = accel_ioat_get_ctx_size,
 	.name			= "ioat",
 	.supports_opcode	= ioat_supports_opcode,
@@ -332,6 +334,16 @@ accel_ioat_exit(void *ctx)
 		spdk_io_device_unregister(&g_ioat_module, _device_unregister_cb);
 	} else {
 		spdk_accel_module_finish();
+	}
+}
+
+static void
+accel_ioat_write_config_json(struct spdk_json_write_ctx *w)
+{
+	if (g_ioat_enable) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "method", "ioat_scan_accel_module");
+		spdk_json_write_object_end(w);
 	}
 }
 

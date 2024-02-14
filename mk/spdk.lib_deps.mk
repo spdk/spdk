@@ -100,7 +100,7 @@ DEPDIRS-blobfs_bdev += event
 endif
 
 # module/accel
-DEPDIRS-accel_ioat := log ioat thread jsonrpc rpc accel
+DEPDIRS-accel_ioat := log ioat thread $(JSON_LIBS) accel
 DEPDIRS-accel_dsa := log util idxd thread $(JSON_LIBS) accel trace
 DEPDIRS-accel_iaa := log util idxd thread $(JSON_LIBS) accel trace
 DEPDIRS-accel_dpdk_cryptodev := log thread $(JSON_LIBS) accel util
