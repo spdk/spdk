@@ -471,6 +471,10 @@ _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bde
 			bdev_io->u.bdev.iovs[0].iov_base =
 				disk->malloc_buf + bdev_io->u.bdev.offset_blocks * block_size;
 			bdev_io->u.bdev.iovs[0].iov_len = bdev_io->u.bdev.num_blocks * block_size;
+			if (spdk_bdev_is_md_separate(bdev_io->bdev)) {
+				spdk_bdev_io_set_md_buf(bdev_io, malloc_get_md_buf(bdev_io),
+							malloc_get_md_len(bdev_io));
+			}
 			malloc_complete_task(task, mch, SPDK_BDEV_IO_STATUS_SUCCESS);
 			return 0;
 		}
@@ -517,7 +521,10 @@ _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bde
 			buf = disk->malloc_buf + bdev_io->u.bdev.offset_blocks * block_size;
 			len = bdev_io->u.bdev.num_blocks * block_size;
 			spdk_bdev_io_set_buf(bdev_io, buf, len);
-
+			if (spdk_bdev_is_md_separate(bdev_io->bdev)) {
+				spdk_bdev_io_set_md_buf(bdev_io, malloc_get_md_buf(bdev_io),
+							malloc_get_md_len(bdev_io));
+			}
 		}
 		malloc_complete_task(task, mch, SPDK_BDEV_IO_STATUS_SUCCESS);
 		return 0;
