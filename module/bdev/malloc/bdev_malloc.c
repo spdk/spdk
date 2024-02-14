@@ -269,6 +269,28 @@ bdev_malloc_check_iov_len(struct iovec *iovs, int iovcnt, size_t nbytes)
 	return nbytes != 0;
 }
 
+static size_t
+malloc_get_md_len(struct spdk_bdev_io *bdev_io)
+{
+	return bdev_io->u.bdev.num_blocks * bdev_io->bdev->md_len;
+}
+
+static uint64_t
+malloc_get_md_offset(struct spdk_bdev_io *bdev_io)
+{
+	return bdev_io->u.bdev.offset_blocks * bdev_io->bdev->md_len;
+}
+
+static void *
+malloc_get_md_buf(struct spdk_bdev_io *bdev_io)
+{
+	struct malloc_disk *mdisk = SPDK_CONTAINEROF(bdev_io->bdev, struct malloc_disk, disk);
+
+	assert(spdk_bdev_is_md_separate(bdev_io->bdev));
+
+	return (char *)mdisk->malloc_md_buf + malloc_get_md_offset(bdev_io);
+}
+
 static void
 malloc_sequence_fail(struct malloc_task *task, int status)
 {
@@ -298,9 +320,8 @@ static void
 bdev_malloc_readv(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		  struct malloc_task *task, struct spdk_bdev_io *bdev_io)
 {
-	uint64_t len, offset, md_offset;
+	uint64_t len, offset;
 	int res = 0;
-	size_t md_len;
 
 	len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
 	offset = bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen;
@@ -337,15 +358,12 @@ bdev_malloc_readv(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		return;
 	}
 
-	md_len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->md_len;
-	md_offset = bdev_io->u.bdev.offset_blocks * bdev_io->bdev->md_len;
-
 	SPDK_DEBUGLOG(bdev_malloc, "read metadata %zu bytes from offset%#" PRIx64 "\n",
-		      md_len, md_offset);
+		      malloc_get_md_len(bdev_io), malloc_get_md_offset(bdev_io));
 
 	task->num_outstanding++;
-	res = spdk_accel_submit_copy(ch, bdev_io->u.bdev.md_buf, mdisk->malloc_md_buf + md_offset,
-				     md_len, 0, malloc_done, task);
+	res = spdk_accel_submit_copy(ch, bdev_io->u.bdev.md_buf, malloc_get_md_buf(bdev_io),
+				     malloc_get_md_len(bdev_io), 0, malloc_done, task);
 	if (res != 0) {
 		malloc_done(task, res);
 	}
@@ -355,9 +373,8 @@ static void
 bdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		   struct malloc_task *task, struct spdk_bdev_io *bdev_io)
 {
-	uint64_t len, offset, md_offset;
+	uint64_t len, offset;
 	int res = 0;
-	size_t md_len;
 
 	len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
 	offset = bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen;
@@ -392,15 +409,12 @@ bdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		return;
 	}
 
-	md_len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->md_len;
-	md_offset = bdev_io->u.bdev.offset_blocks * bdev_io->bdev->md_len;
-
 	SPDK_DEBUGLOG(bdev_malloc, "wrote metadata %zu bytes to offset %#" PRIx64 "\n",
-		      md_len, md_offset);
+		      malloc_get_md_len(bdev_io), malloc_get_md_offset(bdev_io));
 
 	task->num_outstanding++;
-	res = spdk_accel_submit_copy(ch, mdisk->malloc_md_buf + md_offset, bdev_io->u.bdev.md_buf,
-				     md_len, 0, malloc_done, task);
+	res = spdk_accel_submit_copy(ch, malloc_get_md_buf(bdev_io), bdev_io->u.bdev.md_buf,
+				     malloc_get_md_len(bdev_io), 0, malloc_done, task);
 	if (res != 0) {
 		malloc_done(task, res);
 	}
