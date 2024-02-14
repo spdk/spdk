@@ -687,17 +687,25 @@ clean_kernel_target() {
 	"$rootdir/scripts/setup.sh"
 }
 
-format_interchange_psk() {
-	local key digest
+format_key() {
+	local prefix key digest
 
-	key="$1" digest="$2"
+	prefix="$1" key="$2" digest="$3"
 	python - <<- EOF
 		import base64, zlib
 
 		crc = zlib.crc32(b"$key").to_bytes(4, byteorder="little")
 		b64 = base64.b64encode(b"$key" + crc).decode("utf-8")
-		print("NVMeTLSkey-1:{:02x}:{}:".format($digest, b64), end="")
+		print("$prefix:{:02x}:{}:".format($digest, b64), end="")
 	EOF
+}
+
+format_interchange_psk() {
+	format_key "NVMeTLSkey-1" "$1" "$2"
+}
+
+format_dhchap_key() {
+	format_key "DHHC-1" "$1" "$2"
 }
 
 get_main_ns_ip() {
