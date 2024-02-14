@@ -499,22 +499,6 @@ app_json_config_load_subsystem(void *_ctx)
 	app_json_config_load_subsystem_config_entry(ctx);
 }
 
-static void *
-read_file(const char *filename, size_t *size)
-{
-	FILE *file = fopen(filename, "r");
-	void *data;
-
-	if (file == NULL) {
-		/* errno is set by fopen */
-		return NULL;
-	}
-
-	data = spdk_posix_file_load(file, size);
-	fclose(file);
-	return data;
-}
-
 static int
 parse_json(void *json, ssize_t json_size, struct load_json_config_ctx *ctx)
 {
@@ -650,7 +634,7 @@ spdk_subsystem_init_from_json_config(const char *json_config_file, const char *r
 
 	assert(cb_fn);
 
-	json = read_file(json_config_file, &json_size);
+	json = spdk_posix_file_load_from_name(json_config_file, &json_size);
 	if (!json) {
 		SPDK_ERRLOG("Could not read JSON config file\n");
 		cb_fn(-EINVAL, cb_arg);

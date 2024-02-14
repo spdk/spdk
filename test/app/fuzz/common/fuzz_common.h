@@ -102,22 +102,13 @@ fuzz_get_base_64_buffer_value(void *item, size_t len, char *buf, size_t buf_len)
 static ssize_t
 read_json_into_buffer(const char *filename, struct spdk_json_val **values, void **file_data)
 {
-	FILE *file = fopen(filename, "r");
 	size_t file_data_size;
 	ssize_t num_json_values = 0, rc;
 
-	if (file == NULL) {
-		/* errno is set by fopen */
-		return 0;
-	}
-
-	*file_data = spdk_posix_file_load(file, &file_data_size);
+	*file_data = spdk_posix_file_load_from_name(filename, &file_data_size);
 	if (*file_data == NULL) {
-		fclose(file);
 		return 0;
 	}
-
-	fclose(file);
 
 	num_json_values = spdk_json_parse(*file_data, file_data_size, NULL, 0, NULL,
 					  SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);

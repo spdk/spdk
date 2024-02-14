@@ -566,7 +566,6 @@ static int
 vfio_fuzz_parse(int ch, char *arg)
 {
 	long long tmp = 0;
-	FILE *repro_file = NULL;
 
 	switch (ch) {
 	case 'D':
@@ -584,12 +583,7 @@ vfio_fuzz_parse(int ch, char *arg)
 		}
 		break;
 	case 'N':
-		repro_file = fopen(optarg, "r");
-		if (repro_file == NULL) {
-			fprintf(stderr, "could not open %s: %s\n", optarg, spdk_strerror(errno));
-			return -1;
-		}
-		g_repro_data = spdk_posix_file_load(repro_file, &g_repro_size);
+		g_repro_data = spdk_posix_file_load_from_name(optarg, &g_repro_size);
 		if (g_repro_data == NULL) {
 			fprintf(stderr, "could not load data for file %s\n", optarg);
 			return -1;

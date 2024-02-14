@@ -2225,7 +2225,6 @@ static int
 nvmf_ns_reservation_load_json(const struct spdk_nvmf_ns *ns,
 			      struct spdk_nvmf_reservation_info *info)
 {
-	FILE *fd;
 	size_t json_size;
 	ssize_t values_cnt, rc;
 	void *json = NULL, *end;
@@ -2234,16 +2233,8 @@ nvmf_ns_reservation_load_json(const struct spdk_nvmf_ns *ns,
 	const char *file = ns->ptpl_file;
 	uint32_t i;
 
-	fd = fopen(file, "r");
-	/* It's not an error if the file does not exist */
-	if (!fd) {
-		SPDK_NOTICELOG("File %s does not exist\n", file);
-		return 0;
-	}
-
 	/* Load all persist file contents into a local buffer */
-	json = spdk_posix_file_load(fd, &json_size);
-	fclose(fd);
+	json = spdk_posix_file_load_from_name(file, &json_size);
 	if (!json) {
 		SPDK_ERRLOG("Load persit file %s failed\n", file);
 		return -ENOMEM;
