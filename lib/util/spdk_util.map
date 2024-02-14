@@ -95,6 +95,7 @@
 
 	# public functions in file.h
 	spdk_posix_file_load;
+	spdk_posix_file_load_from_name;
 
 	# public functions in hexlify.h
 	spdk_hexlify;

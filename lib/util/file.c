@@ -41,3 +41,19 @@ spdk_posix_file_load(FILE *file, size_t *size)
 	free(buf);
 	return NULL;
 }
+
+void *
+spdk_posix_file_load_from_name(const char *file_name, size_t *size)
+{
+	FILE *file = fopen(file_name, "r");
+	void *data;
+
+	if (file == NULL) {
+		return NULL;
+	}
+
+	data = spdk_posix_file_load(file, size);
+	fclose(file);
+
+	return data;
+}

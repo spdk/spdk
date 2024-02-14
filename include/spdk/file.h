@@ -26,6 +26,16 @@ extern "C" {
  */
 void *spdk_posix_file_load(FILE *file, size_t *size);
 
+/**
+ * Load content of a given file name into a data buffer.
+ *
+ * \param file_name File name.
+ * \param size Size of bytes read from the file.
+ *
+ * \return data containing the content on success, NULL on failure.
+ */
+void *spdk_posix_file_load_from_name(const char *file_name, size_t *size);
+
 #ifdef __cplusplus
 }
 #endif
