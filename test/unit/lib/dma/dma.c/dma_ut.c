@@ -65,12 +65,16 @@ test_dma(void)
 	void *test_ibv_pd = (void *)0xdeadbeaf;
 	struct iovec src_iov = {}, dst_iov = {};
 	struct spdk_memory_domain *domain = NULL, *domain_2 = NULL, *domain_3 = NULL;
+	struct spdk_memory_domain *system_domain;
 	struct spdk_memory_domain_rdma_ctx rdma_ctx = { .ibv_pd = test_ibv_pd };
 	struct spdk_memory_domain_ctx memory_domain_ctx = { .user_ctx = &rdma_ctx };
 	struct spdk_memory_domain_ctx *stored_memory_domain_ctx;
 	struct spdk_memory_domain_translation_result translation_result;
 	const char *id;
 	int rc;
+
+	system_domain = spdk_memory_domain_get_system_domain();
+	CU_ASSERT(system_domain != NULL);
 
 	/* Create memory domain. No device ptr, expect fail */
 	rc = spdk_memory_domain_create(NULL, SPDK_DMA_DEVICE_TYPE_RDMA, &memory_domain_ctx, "test");
@@ -201,30 +205,33 @@ test_dma(void)
 	CU_ASSERT(spdk_memory_domain_get_next(domain_2, "test_2") == domain_3);
 	CU_ASSERT(spdk_memory_domain_get_next(domain_3, "test_2") == NULL);
 
-	CU_ASSERT(spdk_memory_domain_get_first(NULL) == domain);
+	CU_ASSERT(spdk_memory_domain_get_first(NULL) == system_domain);
+	CU_ASSERT(spdk_memory_domain_get_next(system_domain, NULL) == domain);
 	CU_ASSERT(spdk_memory_domain_get_next(domain, NULL) == domain_2);
 	CU_ASSERT(spdk_memory_domain_get_next(domain_2, NULL) == domain_3);
 	CU_ASSERT(spdk_memory_domain_get_next(domain_3, NULL) == NULL);
 
 	/* Remove 2nd device, repeat iteration */
 	spdk_memory_domain_destroy(domain_2);
-	CU_ASSERT(spdk_memory_domain_get_first(NULL) == domain);
+	CU_ASSERT(spdk_memory_domain_get_first(NULL) == system_domain);
+	CU_ASSERT(spdk_memory_domain_get_next(system_domain, NULL) == domain);
 	CU_ASSERT(spdk_memory_domain_get_next(domain, NULL) == domain_3);
 	CU_ASSERT(spdk_memory_domain_get_next(domain_3, NULL) == NULL);
 
 	/* Remove 3rd device, repeat iteration */
 	spdk_memory_domain_destroy(domain_3);
-	CU_ASSERT(spdk_memory_domain_get_first(NULL) == domain);
+	CU_ASSERT(spdk_memory_domain_get_first(NULL) == system_domain);
+	CU_ASSERT(spdk_memory_domain_get_next(system_domain, NULL) == domain);
 	CU_ASSERT(spdk_memory_domain_get_next(domain, NULL) == NULL);
 	CU_ASSERT(spdk_memory_domain_get_first("test_2") == NULL);
 
 	/* Destroy memory domain, domain == NULL */
 	spdk_memory_domain_destroy(NULL);
-	CU_ASSERT(spdk_memory_domain_get_first(NULL) == domain);
+	CU_ASSERT(spdk_memory_domain_get_first(NULL) == system_domain);
 
 	/* Destroy memory domain */
 	spdk_memory_domain_destroy(domain);
-	CU_ASSERT(spdk_memory_domain_get_first(NULL) == NULL);
+	CU_ASSERT(spdk_memory_domain_get_first(NULL) == system_domain);
 }
 
 int

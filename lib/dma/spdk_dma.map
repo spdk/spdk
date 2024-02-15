@@ -17,6 +17,7 @@
 	spdk_memory_domain_memzero;
 	spdk_memory_domain_get_first;
 	spdk_memory_domain_get_next;
+	spdk_memory_domain_get_system_domain;
 
 	local: *;
 };

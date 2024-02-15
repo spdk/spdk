@@ -353,6 +353,12 @@ struct spdk_memory_domain *spdk_memory_domain_get_first(const char *id);
 struct spdk_memory_domain *spdk_memory_domain_get_next(struct spdk_memory_domain *prev,
 		const char *id);
 
+/**
+ * Get the System memory domain.
+ *
+ * \return Pointer to the System memory domain.
+ */
+struct spdk_memory_domain *spdk_memory_domain_get_system_domain(void);
 
 #ifdef __cplusplus
 }
