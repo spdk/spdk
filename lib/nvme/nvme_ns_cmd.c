@@ -139,7 +139,7 @@ _nvme_ns_cmd_split_request(struct spdk_nvme_ns *ns,
 static inline bool
 _is_io_flags_valid(uint32_t io_flags)
 {
-	if (io_flags & ~SPDK_NVME_IO_FLAGS_VALID_MASK) {
+	if (spdk_unlikely(io_flags & ~SPDK_NVME_IO_FLAGS_VALID_MASK)) {
 		/* Invalid io_flags */
 		SPDK_ERRLOG("Invalid io_flags 0x%x\n", io_flags);
 		return false;
@@ -153,8 +153,12 @@ _is_accel_sequence_valid(struct spdk_nvme_qpair *qpair, void *seq)
 {
 	/* An accel sequence can only be executed if the controller supports accel and a qpair is
 	 * part of a of a poll group */
-	return seq == NULL || ((qpair->ctrlr->flags & SPDK_NVME_CTRLR_ACCEL_SEQUENCE_SUPPORTED) &&
-			       qpair->poll_group != NULL);
+	if (spdk_likely(seq == NULL || ((qpair->ctrlr->flags & SPDK_NVME_CTRLR_ACCEL_SEQUENCE_SUPPORTED) &&
+					qpair->poll_group != NULL))) {
+		return true;
+	}
+
+	return false;
 }
 
 static void
