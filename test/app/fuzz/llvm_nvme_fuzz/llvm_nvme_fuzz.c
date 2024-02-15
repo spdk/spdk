@@ -789,6 +789,7 @@ TestOneInput(const uint8_t *data, size_t size)
 	if (g_ctrlr == NULL) {
 		fprintf(stderr, "spdk_nvme_connect() failed for transport address '%s'\n",
 			g_trid.traddr);
+		spdk_app_stop(-1);
 		return -1;
 	}
 
@@ -808,6 +809,9 @@ detach_ctrlr:
 
 	if (detach_ctx) {
 		spdk_nvme_detach_poll(detach_ctx);
+	}
+	if (ret < 0) {
+		spdk_app_stop(ret);
 	}
 
 	return ret;
