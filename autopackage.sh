@@ -10,12 +10,12 @@ source "$rootdir/test/common/autobuild_common.sh"
 MAKEFLAGS=${MAKEFLAGS:--j16}
 cd $rootdir
 
-if [[ $SPDK_TEST_RELEASE_BUILD -eq 1 ]]; then
+if [[ $SPDK_TEST_PACKAGING -eq 1 ]]; then
 	build_packaging
 	$MAKE clean
 fi
 
-if [[ $RUN_NIGHTLY -eq 0 || $SPDK_TEST_UNITTEST -eq 0 ]]; then
+if [[ $SPDK_TEST_RELEASE_BUILD -eq 0 ]]; then
 	timing_finish
 	exit 0
 fi
