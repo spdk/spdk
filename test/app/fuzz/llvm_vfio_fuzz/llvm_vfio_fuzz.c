@@ -15,7 +15,11 @@
 #include "spdk/vfio_user_pci.h"
 #include <linux/vfio.h>
 #include "spdk/vfio_user_spec.h"
+#include "spdk/config.h"
 
+#ifdef SPDK_CONFIG_ASAN
+#include <sanitizer/lsan_interface.h>
+#endif
 #define VFIO_MAXIMUM_SPARSE_MMAP_REGIONS	8
 #define VFIO_USER_GET_REGION_INFO_LEN		4096
 
@@ -472,7 +476,18 @@ init_io(void *ctx)
 		return NULL;
 	}
 
+	/* Even if ASan is enabled in DPDK, leak sanitizer has problems detecting
+	 * references allocated in DPDK-manage memory. This causes LSAN to report
+	 * a false memory leak when the 'pqpair->stat' variable is allocated on
+	 * the heap, but the only reference is stored on `qpair` that is DPDK-manage
+	 * making it not visible for LSAN. */
+#ifdef SPDK_CONFIG_ASAN
+	__lsan_disable();
+#endif
 	g_io_thread.io_qpair = spdk_nvme_ctrlr_alloc_io_qpair(g_io_thread.io_ctrlr, NULL, 0);
+#ifdef SPDK_CONFIG_ASAN
+	__lsan_enable();
+#endif
 	if (g_io_thread.io_qpair == NULL) {
 		spdk_nvme_detach(g_io_thread.io_ctrlr);
 		fprintf(stderr, "spdk_nvme_ctrlr_alloc_io_qpair failed\n");
