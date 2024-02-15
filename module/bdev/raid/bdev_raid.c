@@ -481,6 +481,32 @@ raid_bdev_destruct(void *ctx)
 	return 1;
 }
 
+/**
+ * Raid bdev I/O read/write wrapper for spdk_bdev_readv_blocks_ext function.
+ */
+int
+raid_bdev_readv_blocks_ext(struct raid_base_bdev_info *base_info, struct spdk_io_channel *ch,
+			   struct iovec *iov, int iovcnt, uint64_t offset_blocks,
+			   uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg,
+			   struct spdk_bdev_ext_io_opts *opts)
+{
+	return spdk_bdev_readv_blocks_ext(base_info->desc, ch, iov, iovcnt,
+					  base_info->data_offset + offset_blocks, num_blocks, cb, cb_arg, opts);
+}
+
+/**
+ * Raid bdev I/O read/write wrapper for spdk_bdev_writev_blocks_ext function.
+ */
+int
+raid_bdev_writev_blocks_ext(struct raid_base_bdev_info *base_info, struct spdk_io_channel *ch,
+			    struct iovec *iov, int iovcnt, uint64_t offset_blocks,
+			    uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg,
+			    struct spdk_bdev_ext_io_opts *opts)
+{
+	return spdk_bdev_writev_blocks_ext(base_info->desc, ch, iov, iovcnt,
+					   base_info->data_offset + offset_blocks, num_blocks, cb, cb_arg, opts);
+}
+
 void
 raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status)
 {
