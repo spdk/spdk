@@ -28,6 +28,10 @@ function start_llvm_fuzz() {
 	local vfiouser_io_dir=$fuzzer_dir/domain/2
 	local vfiouser_cfg=$fuzzer_dir/fuzz_vfio_json.conf
 
+	# set LSAN_OPTIONS to "report_objects=1" to let the LLVM fuzzer report an address
+	# of leaked memory object
+	local LSAN_OPTIONS=report_objects=1
+
 	mkdir -p $fuzzer_dir $vfiouser_dir $vfiouser_io_dir $corpus_dir
 
 	# Adjust paths to allow multiply instance of fuzzer

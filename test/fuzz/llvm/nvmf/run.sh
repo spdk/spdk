@@ -26,6 +26,10 @@ function start_llvm_fuzz() {
 	local corpus_dir=$rootdir/../corpus/llvm_nvmf_$fuzzer_type
 	local nvmf_cfg=/tmp/fuzz_json_$fuzzer_type.conf
 
+	# set LSAN_OPTIONS to "report_objects=1" to let the LLVM fuzzer report an address of
+	# leaked memory object
+	local LSAN_OPTIONS=report_objects=1
+
 	port="44$(printf "%02d" $fuzzer_type)"
 	mkdir -p $corpus_dir
 
