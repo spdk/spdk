@@ -193,11 +193,11 @@ function linux_bind_driver() {
 				continue
 			fi
 			# See what DPDK considers to be a "viable" iommu group: dpdk/lib/eal/linux/eal_vfio.c -> rte_vfio_setup_device()
-			pci_dev_echo "$bdf" "WARNING: ${_bdf##*/} not bound to $driver_name (${_driver##*/})"
+			pci_dev_echo "$bdf" "WARNING: ${_bdf##*/} not bound to $driver_name (${_driver:-no driver})"
 			pci_dev_echo "$bdf" "WARNING All devices in the IOMMU group must be bound to the same driver or unbound"
 			if [[ $UNBIND_ENTIRE_IOMMU_GROUP == yes ]]; then
 				pci_dev_echo "$bdf" "WARNING: Attempting to unbind ${_bdf##*/}"
-				pci_bus_driver["${_bdf##*/}"]=${_driver##*/}
+				pci_bus_driver["${_bdf##*/}"]=$_driver
 				probe_driver "${_bdf##*/}" none
 			fi
 		done
