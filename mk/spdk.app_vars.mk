@@ -13,6 +13,7 @@ define deplibs
 $(call _uniq,$(call _deplibs,$1))
 endef
 
+SPDK_LIB_LIST += $(ENV_DEPLIBS)
 SPDK_DEPLIB_LIST += $(call deplibs,$(SPDK_LIB_LIST))
 
 SPDK_LIB_FILES = $(call spdk_lib_list_to_static_libs,$(SPDK_DEPLIB_LIST))
