@@ -4071,6 +4071,15 @@ void spdk_nvme_print_completion(uint16_t qid, struct spdk_nvme_cpl *cpl);
 const char *spdk_nvme_dhchap_get_digest_name(int id);
 
 /**
+ * Return the id of a digest.
+ *
+ * \param name Name of a digest.
+ *
+ * \return Digest id (see `enum spdk_nvmf_dhchap_hash`) or negative errno on failure.
+ */
+int spdk_nvme_dhchap_get_digest_id(const char *name);
+
+/**
  * Return the name of a Diffie-Hellman group.
  *
  * \param id Diffie-Hellman group identifier (see `enum spdk_nvmf_dhchap_dhgroup`).
@@ -4078,6 +4087,16 @@ const char *spdk_nvme_dhchap_get_digest_name(int id);
  * \return Name of the Diffie-Hellman group.
  */
 const char *spdk_nvme_dhchap_get_dhgroup_name(int id);
+
+/**
+ * Return the id of a Diffie-Hellman group.
+ *
+ * \param name Name of a Diffie-Hellman group.
+ *
+ * \return Diffie-Hellman group id (see `enum spdk_nvmf_dhchap_dhgroup`) or negative errno
+ * on failure.
+ */
+int spdk_nvme_dhchap_get_dhgroup_id(const char *name);
 
 struct ibv_context;
 struct ibv_pd;

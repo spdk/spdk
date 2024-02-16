@@ -208,7 +208,9 @@
 	spdk_nvme_poll_group_free_stats;
 
 	spdk_nvme_dhchap_get_digest_name;
+	spdk_nvme_dhchap_get_digest_id;
 	spdk_nvme_dhchap_get_dhgroup_name;
+	spdk_nvme_dhchap_get_dhgroup_id;
 
 	# public functions from nvme_zns.h
 	spdk_nvme_zns_ns_get_data;
