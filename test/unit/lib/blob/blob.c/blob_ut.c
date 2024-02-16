@@ -4509,6 +4509,20 @@ blob_thin_prov_write_count_io(void)
 		 * For extent table metadata, we should have written the I/O and the extent metadata page.
 		 */
 		CU_ASSERT((g_dev_write_bytes - write_bytes) / page_size == 2);
+
+		/* Send unmap aligned to the whole cluster - should free it up */
+		g_bserrno = -1;
+		spdk_blob_io_unmap(blob, ch, pages_per_extent_page * i, pages_per_cluster, blob_op_complete, NULL);
+		poll_threads();
+		CU_ASSERT(g_bserrno == 0);
+		CU_ASSERT(free_clusters - (2 * i + 1) == spdk_bs_free_cluster_count(bs));
+
+		/* Write back to the freed cluster */
+		g_bserrno = -1;
+		spdk_blob_io_write(blob, ch, payload_write, pages_per_extent_page * i, 1, blob_op_complete, NULL);
+		poll_threads();
+		CU_ASSERT(g_bserrno == 0);
+		CU_ASSERT(free_clusters - (2 * i + 2) == spdk_bs_free_cluster_count(bs));
 	}
 
 	ut_blob_close_and_delete(bs, blob);

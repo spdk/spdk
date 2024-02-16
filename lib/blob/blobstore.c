@@ -30,6 +30,8 @@ static void blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno);
 static void blob_insert_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num,
 		uint64_t cluster, uint32_t extent, struct spdk_blob_md_page *page,
 		spdk_blob_op_complete cb_fn, void *cb_arg);
+static void blob_free_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num,
+		uint32_t extent_page, struct spdk_blob_md_page *page, spdk_blob_op_complete cb_fn, void *cb_arg);
 
 static int blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value,
 			  uint16_t value_len, bool internal);
@@ -2545,6 +2547,15 @@ struct spdk_blob_copy_cluster_ctx {
 	struct spdk_blob_md_page *new_cluster_page;
 };
 
+struct spdk_blob_free_cluster_ctx {
+	struct spdk_blob *blob;
+	uint64_t page;
+	struct spdk_blob_md_page *md_page;
+	uint64_t cluster_num;
+	uint32_t extent_page;
+	spdk_bs_sequence_t *seq;
+};
+
 static void
 blob_allocate_and_copy_cluster_cpl(void *cb_arg, int bserrno)
 {
@@ -2567,6 +2578,17 @@ blob_allocate_and_copy_cluster_cpl(void *cb_arg, int bserrno)
 	}
 
 	spdk_free(ctx->buf);
+	free(ctx);
+}
+
+static void
+blob_free_cluster_cpl(void *cb_arg, int bserrno)
+{
+	struct spdk_blob_free_cluster_ctx *ctx = cb_arg;
+	spdk_bs_sequence_t *seq = ctx->seq;
+
+	bs_sequence_finish(seq, bserrno);
+
 	free(ctx);
 }
 
@@ -2933,6 +2955,21 @@ blob_request_submit_op_split(struct spdk_io_channel *ch, struct spdk_blob *blob,
 }
 
 static void
+spdk_free_cluster_unmap_complete(void *cb_arg, int bserrno)
+{
+	struct spdk_blob_free_cluster_ctx *ctx = cb_arg;
+
+	if (bserrno) {
+		bs_sequence_finish(ctx->seq, bserrno);
+		free(ctx);
+		return;
+	}
+
+	blob_free_cluster_on_md_thread(ctx->blob, ctx->cluster_num,
+				       ctx->extent_page, ctx->md_page, blob_free_cluster_cpl, ctx);
+}
+
+static void
 blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blob *blob,
 			      void *payload, uint64_t offset, uint64_t length,
 			      spdk_blob_op_complete cb_fn, void *cb_arg, enum spdk_blob_op_type op_type)
@@ -3026,10 +3063,59 @@ blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blob *blo
 		break;
 	}
 	case SPDK_BLOB_UNMAP: {
+		struct spdk_blob_free_cluster_ctx *ctx = NULL;
 		spdk_bs_batch_t *batch;
+
+		/* if aligned with cluster release cluster */
+		if (spdk_blob_is_thin_provisioned(blob) && is_allocated &&
+		    bs_io_units_per_cluster(blob) == length) {
+			struct spdk_bs_channel *bs_channel = spdk_io_channel_get_ctx(_ch);
+			uint32_t cluster_start_page;
+			uint32_t cluster_number;
+
+			assert(offset % bs_io_units_per_cluster(blob) == 0);
+
+			/* Round the io_unit offset down to the first page in the cluster */
+			cluster_start_page = bs_io_unit_to_cluster_start(blob, offset);
+
+			/* Calculate which index in the metadata cluster array the corresponding
+			 * cluster is supposed to be at. */
+			cluster_number = bs_io_unit_to_cluster_number(blob, offset);
+
+			ctx = calloc(1, sizeof(*ctx));
+			if (!ctx) {
+				cb_fn(cb_arg, -ENOMEM);
+				return;
+			}
+			/* When freeing a cluster the flow should be (in order):
+			 * 1. Unmap the underlying area (so if the cluster is reclaimed in the future, it won't leak
+			 * old data)
+			 * 2. Once the unmap completes (to avoid any races with incoming writes that may claim the
+			 * cluster), update and sync metadata freeing the cluster
+			 * 3. Once metadata update is done, complete the user unmap request
+			 */
+			ctx->blob = blob;
+			ctx->page = cluster_start_page;
+			ctx->cluster_num = cluster_number;
+			ctx->md_page = bs_channel->new_cluster_page;
+			ctx->seq = bs_sequence_start_bs(_ch, &cpl);
+			if (!ctx->seq) {
+				free(ctx);
+				cb_fn(cb_arg, -ENOMEM);
+				return;
+			}
+
+			if (blob->use_extent_table) {
+				ctx->extent_page = *bs_cluster_to_extent_page(blob, cluster_number);
+			}
+
+			cpl.u.blob_basic.cb_fn = spdk_free_cluster_unmap_complete;
+			cpl.u.blob_basic.cb_arg = ctx;
+		}
 
 		batch = bs_batch_open(_ch, &cpl, blob);
 		if (!batch) {
+			free(ctx);
 			cb_fn(cb_arg, -ENOMEM);
 			return;
 		}
@@ -7884,6 +7970,46 @@ struct spdk_blob_write_extent_page_ctx {
 };
 
 static void
+blob_free_cluster_msg_cb(void *arg, int bserrno)
+{
+	struct spdk_blob_cluster_op_ctx *ctx = arg;
+
+	spdk_spin_lock(&ctx->blob->bs->used_lock);
+	bs_release_cluster(ctx->blob->bs, bs_lba_to_cluster(ctx->blob->bs, ctx->cluster));
+	spdk_spin_unlock(&ctx->blob->bs->used_lock);
+
+	ctx->rc = bserrno;
+	spdk_thread_send_msg(ctx->thread, blob_op_cluster_msg_cpl, ctx);
+}
+
+static void
+blob_free_cluster_update_ep_cb(void *arg, int bserrno)
+{
+	struct spdk_blob_cluster_op_ctx *ctx = arg;
+
+	if (bserrno != 0 || ctx->blob->bs->clean == 0) {
+		blob_free_cluster_msg_cb(ctx, bserrno);
+		return;
+	}
+
+	ctx->blob->state = SPDK_BLOB_STATE_DIRTY;
+	blob_sync_md(ctx->blob, blob_free_cluster_msg_cb, ctx);
+}
+
+static void
+blob_free_cluster_free_ep_cb(void *arg, int bserrno)
+{
+	struct spdk_blob_cluster_op_ctx *ctx = arg;
+
+	spdk_spin_lock(&ctx->blob->bs->used_lock);
+	assert(spdk_bit_array_get(ctx->blob->bs->used_md_pages, ctx->extent_page) == true);
+	bs_release_md_page(ctx->blob->bs, ctx->extent_page);
+	spdk_spin_unlock(&ctx->blob->bs->used_lock);
+	ctx->blob->state = SPDK_BLOB_STATE_DIRTY;
+	blob_sync_md(ctx->blob, blob_free_cluster_msg_cb, ctx);
+}
+
+static void
 blob_persist_extent_page_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_write_extent_page_ctx *ctx = cb_arg;
@@ -8016,6 +8142,77 @@ blob_insert_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num,
 	ctx->cb_arg = cb_arg;
 
 	spdk_thread_send_msg(blob->bs->md_thread, blob_insert_cluster_msg, ctx);
+}
+
+static void
+blob_free_cluster_msg(void *arg)
+{
+	struct spdk_blob_cluster_op_ctx *ctx = arg;
+	uint32_t *extent_page;
+	uint32_t start_cluster_idx;
+	bool free_extent_page = true;
+	size_t i;
+
+	ctx->cluster = ctx->blob->active.clusters[ctx->cluster_num];
+	ctx->blob->active.clusters[ctx->cluster_num] = 0;
+
+	if (ctx->blob->use_extent_table == false) {
+		/* Extent table is not used, proceed with sync of md that will only use extents_rle. */
+		spdk_spin_lock(&ctx->blob->bs->used_lock);
+		bs_release_cluster(ctx->blob->bs, bs_lba_to_cluster(ctx->blob->bs, ctx->cluster));
+		spdk_spin_unlock(&ctx->blob->bs->used_lock);
+		ctx->blob->state = SPDK_BLOB_STATE_DIRTY;
+		blob_sync_md(ctx->blob, blob_op_cluster_msg_cb, ctx);
+		return;
+	}
+
+	extent_page = bs_cluster_to_extent_page(ctx->blob, ctx->cluster_num);
+
+	/* There shouldn't be parallel release operations on same cluster */
+	assert(*extent_page == ctx->extent_page);
+
+	start_cluster_idx = (ctx->cluster_num / SPDK_EXTENTS_PER_EP) * SPDK_EXTENTS_PER_EP;
+	for (i = 0; i < SPDK_EXTENTS_PER_EP; ++i) {
+		if (ctx->blob->active.clusters[start_cluster_idx + i] != 0) {
+			free_extent_page = false;
+			break;
+		}
+	}
+
+	if (free_extent_page) {
+		assert(ctx->extent_page != 0);
+		assert(spdk_bit_array_get(ctx->blob->bs->used_md_pages, ctx->extent_page) == true);
+		ctx->blob->active.extent_pages[bs_cluster_to_extent_table_id(ctx->cluster_num)] = 0;
+		blob_write_extent_page(ctx->blob, ctx->extent_page, ctx->cluster_num, ctx->page,
+				       blob_free_cluster_free_ep_cb, ctx);
+	} else {
+		blob_write_extent_page(ctx->blob, *extent_page, ctx->cluster_num, ctx->page,
+				       blob_free_cluster_update_ep_cb, ctx);
+	}
+}
+
+
+static void
+blob_free_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num, uint32_t extent_page,
+			       struct spdk_blob_md_page *page, spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_blob_cluster_op_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->thread = spdk_get_thread();
+	ctx->blob = blob;
+	ctx->cluster_num = cluster_num;
+	ctx->extent_page = extent_page;
+	ctx->page = page;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	spdk_thread_send_msg(blob->bs->md_thread, blob_free_cluster_msg, ctx);
 }
 
 /* START spdk_blob_close */
