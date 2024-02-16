@@ -9,9 +9,12 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "nvme_internal.h"
+
+#ifdef SPDK_CONFIG_HAVE_EVP_MAC
 #include <openssl/dh.h>
 #include <openssl/evp.h>
 #include <openssl/param_build.h>
+#endif
 
 struct nvme_auth_digest {
 	uint8_t		id;
@@ -67,24 +70,16 @@ nvme_auth_get_digest(int id)
 	return NULL;
 }
 
-static const char *
-nvme_auth_get_digest_name(int id)
+const char *
+spdk_nvme_dhchap_get_digest_name(int id)
 {
 	const struct nvme_auth_digest *digest = nvme_auth_get_digest(id);
 
 	return digest != NULL ? digest->name : NULL;
 }
 
-static uint8_t
-nvme_auth_get_digest_len(int id)
-{
-	const struct nvme_auth_digest *digest = nvme_auth_get_digest(id);
-
-	return digest != NULL ? digest->len : 0;
-}
-
-static const char *
-nvme_auth_get_dhgroup_name(int id)
+const char *
+spdk_nvme_dhchap_get_dhgroup_name(int id)
 {
 	size_t i;
 
@@ -95,6 +90,15 @@ nvme_auth_get_dhgroup_name(int id)
 	}
 
 	return NULL;
+}
+
+#ifdef SPDK_CONFIG_HAVE_EVP_MAC
+static uint8_t
+nvme_auth_get_digest_len(int id)
+{
+	const struct nvme_auth_digest *digest = nvme_auth_get_digest(id);
+
+	return digest != NULL ? digest->len : 0;
 }
 
 static bool
@@ -188,7 +192,7 @@ nvme_auth_transform_key(struct spdk_key *key, int hash, const char *nqn,
 		goto out;
 	}
 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
-			(char *)nvme_auth_get_digest_name(hash), 0);
+			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
 	params[1] = OSSL_PARAM_construct_end();
 
 	if (EVP_MAC_init(ctx, keyin, keylen, params) != 1) {
@@ -297,7 +301,7 @@ nvme_auth_augment_challenge(const void *cval, size_t clen, const void *key, size
 		return 0;
 	}
 
-	md = EVP_MD_fetch(NULL, nvme_auth_get_digest_name(hash), NULL);
+	md = EVP_MD_fetch(NULL, spdk_nvme_dhchap_get_digest_name(hash), NULL);
 	if (!md) {
 		SPDK_ERRLOG("Failed to fetch digest function: %d\n", hash);
 		return -EINVAL;
@@ -318,7 +322,7 @@ nvme_auth_augment_challenge(const void *cval, size_t clen, const void *key, size
 		goto out;
 	}
 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
-			(char *)nvme_auth_get_digest_name(hash), 0);
+			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
 	params[1] = OSSL_PARAM_construct_end();
 
 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
@@ -379,7 +383,7 @@ nvme_auth_calc_response(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
 	}
 
 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
-			(char *)nvme_auth_get_digest_name(hash), 0);
+			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
 	params[1] = OSSL_PARAM_construct_end();
 
 	rc = -EIO;
@@ -440,11 +444,11 @@ nvme_auth_generate_dhkey(void *pub, size_t *len, enum spdk_nvmf_dhchap_dhgroup d
 	}
 
 	params[0] = OSSL_PARAM_construct_utf8_string("group",
-			(char *)nvme_auth_get_dhgroup_name(dhgroup), 0);
+			(char *)spdk_nvme_dhchap_get_dhgroup_name(dhgroup), 0);
 	params[1] = OSSL_PARAM_construct_end();
 	if (EVP_PKEY_CTX_set_params(ctx, params) != 1) {
 		SPDK_ERRLOG("Failed to set dhkey's dhgroup: %s\n",
-			    nvme_auth_get_dhgroup_name(dhgroup));
+			    spdk_nvme_dhchap_get_dhgroup_name(dhgroup));
 		goto error;
 	}
 	if (EVP_PKEY_generate(ctx, &key) != 1) {
@@ -504,7 +508,7 @@ nvme_auth_get_peerkey(const void *peerkey, size_t len, enum spdk_nvmf_dhchap_dhg
 		goto error;
 	}
 	if (OSSL_PARAM_BLD_push_utf8_string(bld, "group",
-					    (char *)nvme_auth_get_dhgroup_name(dhgroup), 0) != 1) {
+					    (char *)spdk_nvme_dhchap_get_dhgroup_name(dhgroup), 0) != 1) {
 		goto error;
 	}
 
@@ -705,7 +709,7 @@ nvme_auth_send_negotiate(struct spdk_nvme_qpair *qpair)
 			continue;
 		}
 		AUTH_DEBUGLOG(qpair, "digest: %u (%s)\n", g_digests[i].id,
-			      nvme_auth_get_digest_name(g_digests[i].id));
+			      spdk_nvme_dhchap_get_digest_name(g_digests[i].id));
 		desc->hash_id_list[desc->halen++] = g_digests[i].id;
 	}
 	for (i = 0; i < SPDK_COUNTOF(g_dhgroups); ++i) {
@@ -713,7 +717,7 @@ nvme_auth_send_negotiate(struct spdk_nvme_qpair *qpair)
 			continue;
 		}
 		AUTH_DEBUGLOG(qpair, "dhgroup: %u (%s)\n", g_dhgroups[i].id,
-			      nvme_auth_get_dhgroup_name(g_dhgroups[i].id));
+			      spdk_nvme_dhchap_get_dhgroup_name(g_dhgroups[i].id));
 		desc->dhg_id_list[desc->dhlen++] = g_dhgroups[i].id;
 	}
 
@@ -790,13 +794,13 @@ nvme_auth_check_challenge(struct spdk_nvme_qpair *qpair)
 
 	if (!nvme_auth_digest_allowed(qpair, challenge->hash_id)) {
 		AUTH_ERRLOG(qpair, "received disallowed digest: %u (%s)\n", challenge->hash_id,
-			    nvme_auth_get_digest_name(challenge->hash_id));
+			    spdk_nvme_dhchap_get_digest_name(challenge->hash_id));
 		goto error;
 	}
 
 	if (!nvme_auth_dhgroup_allowed(qpair, challenge->dhg_id)) {
 		AUTH_ERRLOG(qpair, "received disallowed dhgroup: %u (%s)\n", challenge->dhg_id,
-			    nvme_auth_get_dhgroup_name(challenge->dhg_id));
+			    spdk_nvme_dhchap_get_dhgroup_name(challenge->dhg_id));
 		goto error;
 	}
 
@@ -1071,4 +1075,6 @@ nvme_fabric_qpair_authenticate_async(struct spdk_nvme_qpair *qpair)
 	rc = nvme_fabric_qpair_authenticate_poll(qpair);
 	return rc != -EAGAIN ? rc : 0;
 }
+#endif /* SPDK_CONFIG_EVP_MAC */
+
 SPDK_LOG_REGISTER_COMPONENT(nvme_auth)

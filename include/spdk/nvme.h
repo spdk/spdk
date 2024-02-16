@@ -4061,6 +4061,24 @@ void spdk_nvme_print_command(uint16_t qid, struct spdk_nvme_cmd *cmd);
  */
 void spdk_nvme_print_completion(uint16_t qid, struct spdk_nvme_cpl *cpl);
 
+/**
+ * Return the name of a digest.
+ *
+ * \param id Digest identifier (see `enum spdk_nvmf_dhchap_hash`).
+ *
+ * \return Name of the digest.
+ */
+const char *spdk_nvme_dhchap_get_digest_name(int id);
+
+/**
+ * Return the name of a Diffie-Hellman group.
+ *
+ * \param id Diffie-Hellman group identifier (see `enum spdk_nvmf_dhchap_dhgroup`).
+ *
+ * \return Name of the Diffie-Hellman group.
+ */
+const char *spdk_nvme_dhchap_get_dhgroup_name(int id);
+
 struct ibv_context;
 struct ibv_pd;
 struct ibv_mr;
