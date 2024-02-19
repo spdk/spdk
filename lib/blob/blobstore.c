@@ -7834,7 +7834,7 @@ spdk_blob_sync_md(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_
 
 /* END spdk_blob_sync_md */
 
-struct spdk_blob_insert_cluster_ctx {
+struct spdk_blob_cluster_op_ctx {
 	struct spdk_thread	*thread;
 	struct spdk_blob	*blob;
 	uint32_t		cluster_num;	/* cluster index in blob */
@@ -7847,33 +7847,33 @@ struct spdk_blob_insert_cluster_ctx {
 };
 
 static void
-blob_insert_cluster_msg_cpl(void *arg)
+blob_op_cluster_msg_cpl(void *arg)
 {
-	struct spdk_blob_insert_cluster_ctx *ctx = arg;
+	struct spdk_blob_cluster_op_ctx *ctx = arg;
 
 	ctx->cb_fn(ctx->cb_arg, ctx->rc);
 	free(ctx);
 }
 
 static void
-blob_insert_cluster_msg_cb(void *arg, int bserrno)
+blob_op_cluster_msg_cb(void *arg, int bserrno)
 {
-	struct spdk_blob_insert_cluster_ctx *ctx = arg;
+	struct spdk_blob_cluster_op_ctx *ctx = arg;
 
 	ctx->rc = bserrno;
-	spdk_thread_send_msg(ctx->thread, blob_insert_cluster_msg_cpl, ctx);
+	spdk_thread_send_msg(ctx->thread, blob_op_cluster_msg_cpl, ctx);
 }
 
 static void
 blob_insert_new_ep_cb(void *arg, int bserrno)
 {
-	struct spdk_blob_insert_cluster_ctx *ctx = arg;
+	struct spdk_blob_cluster_op_ctx *ctx = arg;
 	uint32_t *extent_page;
 
 	extent_page = bs_cluster_to_extent_page(ctx->blob, ctx->cluster_num);
 	*extent_page = ctx->extent_page;
 	ctx->blob->state = SPDK_BLOB_STATE_DIRTY;
-	blob_sync_md(ctx->blob, blob_insert_cluster_msg_cb, ctx);
+	blob_sync_md(ctx->blob, blob_op_cluster_msg_cb, ctx);
 }
 
 struct spdk_blob_write_extent_page_ctx {
@@ -7951,19 +7951,19 @@ blob_write_extent_page(struct spdk_blob *blob, uint32_t extent, uint64_t cluster
 static void
 blob_insert_cluster_msg(void *arg)
 {
-	struct spdk_blob_insert_cluster_ctx *ctx = arg;
+	struct spdk_blob_cluster_op_ctx *ctx = arg;
 	uint32_t *extent_page;
 
 	ctx->rc = blob_insert_cluster(ctx->blob, ctx->cluster_num, ctx->cluster);
 	if (ctx->rc != 0) {
-		spdk_thread_send_msg(ctx->thread, blob_insert_cluster_msg_cpl, ctx);
+		spdk_thread_send_msg(ctx->thread, blob_op_cluster_msg_cpl, ctx);
 		return;
 	}
 
 	if (ctx->blob->use_extent_table == false) {
 		/* Extent table is not used, proceed with sync of md that will only use extents_rle. */
 		ctx->blob->state = SPDK_BLOB_STATE_DIRTY;
-		blob_sync_md(ctx->blob, blob_insert_cluster_msg_cb, ctx);
+		blob_sync_md(ctx->blob, blob_op_cluster_msg_cb, ctx);
 		return;
 	}
 
@@ -7989,7 +7989,7 @@ blob_insert_cluster_msg(void *arg)
 		/* Extent page already allocated.
 		 * Every cluster allocation, requires just an update of single extent page. */
 		blob_write_extent_page(ctx->blob, *extent_page, ctx->cluster_num, ctx->page,
-				       blob_insert_cluster_msg_cb, ctx);
+				       blob_op_cluster_msg_cb, ctx);
 	}
 }
 
@@ -7998,7 +7998,7 @@ blob_insert_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num,
 				 uint64_t cluster, uint32_t extent_page, struct spdk_blob_md_page *page,
 				 spdk_blob_op_complete cb_fn, void *cb_arg)
 {
-	struct spdk_blob_insert_cluster_ctx *ctx;
+	struct spdk_blob_cluster_op_ctx *ctx;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
