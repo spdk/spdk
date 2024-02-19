@@ -753,6 +753,45 @@ _dif_error_set(struct spdk_dif_error *err_blk, uint8_t err_type,
 	}
 }
 
+static bool
+_dif_reftag_check(struct spdk_dif *dif, const struct spdk_dif_ctx *ctx,
+		  uint64_t expected_reftag, uint32_t offset_blocks, struct spdk_dif_error *err_blk)
+{
+	uint64_t reftag;
+
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_REFTAG_CHECK) {
+		switch (ctx->dif_type) {
+		case SPDK_DIF_TYPE1:
+		case SPDK_DIF_TYPE2:
+			/* Compare the DIF Reference Tag field to the passed Reference Tag.
+			 * The passed Reference Tag will be the least significant 4 bytes
+			 * or 8 bytes (depending on the PI format)
+			 * of the LBA when Type 1 is used, and application specific value
+			 * if Type 2 is used.
+			 */
+			if (!_dif_reftag_match(dif, expected_reftag, ctx->dif_pi_format)) {
+				reftag = _dif_get_reftag(dif, ctx->dif_pi_format);
+				_dif_error_set(err_blk, SPDK_DIF_REFTAG_ERROR, expected_reftag,
+					       reftag, offset_blocks);
+				SPDK_ERRLOG("Failed to compare Ref Tag: LBA=%" PRIu64 "," \
+					    " Expected=%lx, Actual=%lx\n",
+					    expected_reftag, expected_reftag, reftag);
+				return false;
+			}
+			break;
+		case SPDK_DIF_TYPE3:
+			/* For Type 3, computed Reference Tag remains unchanged.
+			 * Hence ignore the Reference Tag field.
+			 */
+			break;
+		default:
+			break;
+		}
+	}
+
+	return true;
+}
+
 static int
 _dif_verify(void *_dif, uint64_t guard, uint32_t offset_blocks,
 	    const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err_blk)
@@ -760,7 +799,7 @@ _dif_verify(void *_dif, uint64_t guard, uint32_t offset_blocks,
 	struct spdk_dif *dif = _dif;
 	uint64_t _guard;
 	uint16_t _app_tag;
-	uint64_t ref_tag, _ref_tag;
+	uint64_t ref_tag;
 
 	if (_dif_ignore(dif, ctx)) {
 		return 0;
@@ -806,34 +845,8 @@ _dif_verify(void *_dif, uint64_t guard, uint32_t offset_blocks,
 		}
 	}
 
-	if (ctx->dif_flags & SPDK_DIF_FLAGS_REFTAG_CHECK) {
-		switch (ctx->dif_type) {
-		case SPDK_DIF_TYPE1:
-		case SPDK_DIF_TYPE2:
-			/* Compare the DIF Reference Tag field to the passed Reference Tag.
-			 * The passed Reference Tag will be the least significant 4 bytes
-			 * or 8 bytes (depending on the PI format)
-			 * of the LBA when Type 1 is used, and application specific value
-			 * if Type 2 is used.
-			 */
-			if (!_dif_reftag_match(dif, ref_tag, ctx->dif_pi_format)) {
-				_ref_tag = _dif_get_reftag(dif, ctx->dif_pi_format);
-				_dif_error_set(err_blk, SPDK_DIF_REFTAG_ERROR, ref_tag,
-					       _ref_tag, offset_blocks);
-				SPDK_ERRLOG("Failed to compare Ref Tag: LBA=%" PRIu64 "," \
-					    " Expected=%lx, Actual=%lx\n",
-					    ref_tag, ref_tag, _ref_tag);
-				return -1;
-			}
-			break;
-		case SPDK_DIF_TYPE3:
-			/* For Type 3, computed Reference Tag remains unchanged.
-			 * Hence ignore the Reference Tag field.
-			 */
-			break;
-		default:
-			break;
-		}
+	if (!_dif_reftag_check(dif, ctx, ref_tag, offset_blocks, err_blk)) {
+		return -1;
 	}
 
 	return 0;
@@ -2046,7 +2059,7 @@ _dif_remap_ref_tag(struct _dif_sgl *sgl, uint32_t offset_blocks,
 		   const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err_blk)
 {
 	uint32_t offset, buf_len;
-	uint64_t expected = 0, _actual, remapped;
+	uint64_t expected = 0, remapped;
 	uint8_t *buf;
 	struct _dif_sgl tmp_sgl;
 	struct spdk_dif dif;
@@ -2083,32 +2096,8 @@ _dif_remap_ref_tag(struct _dif_sgl *sgl, uint32_t offset_blocks,
 	}
 
 	/* Verify the stored Reference Tag. */
-	switch (ctx->dif_type) {
-	case SPDK_DIF_TYPE1:
-	case SPDK_DIF_TYPE2:
-		/* Compare the DIF Reference Tag field to the passed Reference Tag.
-		 * The passed Reference Tag will be the least significant 4 bytes
-		 * or 8 bytes (depending on the PI format)
-		 * of the LBA when Type 1 is used, and application specific value
-		 * if Type 2 is used.
-		 */
-		if (!_dif_reftag_match(&dif, expected, ctx->dif_pi_format)) {
-			_actual = _dif_get_reftag(&dif, ctx->dif_pi_format);
-			_dif_error_set(err_blk, SPDK_DIF_REFTAG_ERROR, expected,
-				       _actual, offset_blocks);
-			SPDK_ERRLOG("Failed to compare Ref Tag: LBA=%" PRIu64 "," \
-				    " Expected=%lx, Actual=%lx\n",
-				    expected, expected, _actual);
-			return -1;
-		}
-		break;
-	case SPDK_DIF_TYPE3:
-		/* For type 3, the computed Reference Tag remains unchanged.
-		 * Hence ignore the Reference Tag field.
-		 */
-		break;
-	default:
-		break;
+	if (!_dif_reftag_check(&dif, ctx, expected, offset_blocks, err_blk)) {
+		return -1;
 	}
 
 	/* Update the stored Reference Tag to the remapped one. */
@@ -2168,7 +2157,7 @@ static int
 _dix_remap_ref_tag(struct _dif_sgl *md_sgl, uint32_t offset_blocks,
 		   const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err_blk)
 {
-	uint64_t expected = 0, _actual, remapped;
+	uint64_t expected = 0, remapped;
 	uint8_t *md_buf;
 	struct spdk_dif *dif;
 
@@ -2192,32 +2181,8 @@ _dix_remap_ref_tag(struct _dif_sgl *md_sgl, uint32_t offset_blocks,
 	}
 
 	/* Verify the stored Reference Tag. */
-	switch (ctx->dif_type) {
-	case SPDK_DIF_TYPE1:
-	case SPDK_DIF_TYPE2:
-		/* Compare the DIF Reference Tag field to the passed Reference Tag.
-		 * The passed Reference Tag will be the least significant 4 bytes
-		 * or 8 bytes (depending on the PI format)
-		 * of the LBA when Type 1 is used, and application specific value
-		 * if Type 2 is used.
-		 */
-		if (!_dif_reftag_match(dif, expected, ctx->dif_pi_format)) {
-			_actual = _dif_get_reftag(dif, ctx->dif_pi_format);
-			_dif_error_set(err_blk, SPDK_DIF_REFTAG_ERROR, expected,
-				       _actual, offset_blocks);
-			SPDK_ERRLOG("Failed to compare Ref Tag: LBA=%" PRIu64 "," \
-				    " Expected=%lx, Actual=%lx\n",
-				    expected, expected, _actual);
-			return -1;
-		}
-		break;
-	case SPDK_DIF_TYPE3:
-		/* For type 3, the computed Reference Tag remains unchanged.
-		 * Hence ignore the Reference Tag field.
-		 */
-		break;
-	default:
-		break;
+	if (!_dif_reftag_check(dif, ctx, expected, offset_blocks, err_blk)) {
+		return -1;
 	}
 
 	/* Update the stored Reference Tag to the remapped one. */
