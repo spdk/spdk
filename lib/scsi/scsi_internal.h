@@ -121,15 +121,6 @@ struct spdk_scsi_lun {
 	/** Argument for resize_cb */
 	void *resize_ctx;
 
-	/** Registrant head for I_T nexus */
-	TAILQ_HEAD(, spdk_scsi_pr_registrant) reg_head;
-	/** Persistent Reservation Generation */
-	uint32_t pr_generation;
-	/** Reservation for the LUN */
-	struct spdk_scsi_pr_reservation reservation;
-	/** Reservation holder for SPC2 RESERVE(6) and RESERVE(10) */
-	struct spdk_scsi_pr_registrant scsi2_holder;
-
 	/** List of open descriptors for this LUN. */
 	TAILQ_HEAD(, spdk_scsi_lun_desc) open_descs;
 
@@ -153,6 +144,15 @@ struct spdk_scsi_lun {
 
 	/** The LUN is resizing */
 	bool resizing;
+
+	/** Persistent Reservation Generation */
+	uint32_t pr_generation;
+	/** Registrant head for I_T nexus */
+	TAILQ_HEAD(, spdk_scsi_pr_registrant) reg_head;
+	/** Reservation for the LUN */
+	struct spdk_scsi_pr_reservation reservation;
+	/** Reservation holder for SPC2 RESERVE(6) and RESERVE(10) */
+	struct spdk_scsi_pr_registrant scsi2_holder;
 };
 
 struct spdk_scsi_lun *scsi_lun_construct(const char *bdev_name,
