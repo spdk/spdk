@@ -390,7 +390,7 @@ bdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 	task->iov.iov_base = mdisk->malloc_buf + offset;
 	task->iov.iov_len = len;
 
-	SPDK_DEBUGLOG(bdev_malloc, "wrote %zu bytes to offset %#" PRIx64 ", iovcnt=%d\n",
+	SPDK_DEBUGLOG(bdev_malloc, "write %zu bytes to offset %#" PRIx64 ", iovcnt=%d\n",
 		      len, offset, bdev_io->u.bdev.iovcnt);
 
 	task->num_outstanding++;
@@ -409,7 +409,7 @@ bdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		return;
 	}
 
-	SPDK_DEBUGLOG(bdev_malloc, "wrote metadata %zu bytes to offset %#" PRIx64 "\n",
+	SPDK_DEBUGLOG(bdev_malloc, "write metadata %zu bytes to offset %#" PRIx64 "\n",
 		      malloc_get_md_len(bdev_io), malloc_get_md_offset(bdev_io));
 
 	task->num_outstanding++;
