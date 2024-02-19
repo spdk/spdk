@@ -455,6 +455,37 @@ _dif_reftag_ignore(struct spdk_dif *dif, enum spdk_dif_pi_format dif_pi_format)
 	return _dif_reftag_match(dif, REFTAG_MASK_32, dif_pi_format);
 }
 
+static bool
+_dif_ignore(struct spdk_dif *dif, const struct spdk_dif_ctx *ctx)
+{
+	switch (ctx->dif_type) {
+	case SPDK_DIF_TYPE1:
+	case SPDK_DIF_TYPE2:
+		/* If Type 1 or 2 is used, then all DIF checks are disabled when
+		 * the Application Tag is 0xFFFF.
+		 */
+		if (_dif_apptag_ignore(dif, ctx->dif_pi_format)) {
+			return true;
+		}
+		break;
+	case SPDK_DIF_TYPE3:
+		/* If Type 3 is used, then all DIF checks are disabled when the
+		 * Application Tag is 0xFFFF and the Reference Tag is 0xFFFFFFFF
+		 * or 0xFFFFFFFFFFFFFFFF depending on the PI format.
+		 */
+
+		if (_dif_apptag_ignore(dif, ctx->dif_pi_format) &&
+		    _dif_reftag_ignore(dif, ctx->dif_pi_format)) {
+			return true;
+		}
+		break;
+	default:
+		break;
+	}
+
+	return false;
+}
+
 int
 spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
 		  bool md_interleave, bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
@@ -731,29 +762,8 @@ _dif_verify(void *_dif, uint64_t guard, uint32_t offset_blocks,
 	uint16_t _app_tag;
 	uint64_t ref_tag, _ref_tag;
 
-	switch (ctx->dif_type) {
-	case SPDK_DIF_TYPE1:
-	case SPDK_DIF_TYPE2:
-		/* If Type 1 or 2 is used, then all DIF checks are disabled when
-		 * the Application Tag is 0xFFFF.
-		 */
-		if (_dif_apptag_ignore(dif, ctx->dif_pi_format)) {
-			return 0;
-		}
-		break;
-	case SPDK_DIF_TYPE3:
-		/* If Type 3 is used, then all DIF checks are disabled when the
-		 * Application Tag is 0xFFFF and the Reference Tag is 0xFFFFFFFF
-		 * or 0xFFFFFFFFFFFFFFFF depending on the PI format.
-		 */
-
-		if (_dif_apptag_ignore(dif, ctx->dif_pi_format) &&
-		    _dif_reftag_ignore(dif, ctx->dif_pi_format)) {
-			return 0;
-		}
-		break;
-	default:
-		break;
+	if (_dif_ignore(dif, ctx)) {
+		return 0;
 	}
 
 	/* For type 1 and 2, the reference tag is incremented for each
@@ -2057,28 +2067,8 @@ _dif_remap_ref_tag(struct _dif_sgl *sgl, uint32_t offset_blocks,
 		offset += buf_len;
 	}
 
-	switch (ctx->dif_type) {
-	case SPDK_DIF_TYPE1:
-	case SPDK_DIF_TYPE2:
-		/* If Type 1 or 2 is used, then all DIF checks are disabled when
-		 * the Application Tag is 0xFFFF.
-		 */
-		if (_dif_apptag_ignore(&dif, ctx->dif_pi_format)) {
-			goto end;
-		}
-		break;
-	case SPDK_DIF_TYPE3:
-		/* If Type 3 is used, then all DIF checks are disabled when the
-		 * Application Tag is 0xFFFF and the Reference Tag is 0xFFFFFFFF
-		 * or 0xFFFFFFFFFFFFFFFF depending on the PI format.
-		 */
-		if (_dif_apptag_ignore(&dif, ctx->dif_pi_format) &&
-		    _dif_reftag_ignore(&dif, ctx->dif_pi_format)) {
-			goto end;
-		}
-		break;
-	default:
-		break;
+	if (_dif_ignore(&dif, ctx)) {
+		goto end;
 	}
 
 	/* For type 1 and 2, the Reference Tag is incremented for each
@@ -2186,28 +2176,8 @@ _dix_remap_ref_tag(struct _dif_sgl *md_sgl, uint32_t offset_blocks,
 
 	dif = (struct spdk_dif *)(md_buf + ctx->guard_interval);
 
-	switch (ctx->dif_type) {
-	case SPDK_DIF_TYPE1:
-	case SPDK_DIF_TYPE2:
-		/* If Type 1 or 2 is used, then all DIF checks are disabled when
-		 * the Application Tag is 0xFFFF.
-		 */
-		if (_dif_apptag_ignore(dif, ctx->dif_pi_format)) {
-			goto end;
-		}
-		break;
-	case SPDK_DIF_TYPE3:
-		/* If Type 3 is used, then all DIF checks are disabled when the
-		 * Application Tag is 0xFFFF and the Reference Tag is 0xFFFFFFFF
-		 * or 0xFFFFFFFFFFFFFFFF depending on the PI format.
-		 */
-		if (_dif_apptag_ignore(dif, ctx->dif_pi_format) &&
-		    _dif_reftag_ignore(dif, ctx->dif_pi_format)) {
-			goto end;
-		}
-		break;
-	default:
-		break;
+	if (_dif_ignore(dif, ctx)) {
+		goto end;
 	}
 
 	/* For type 1 and 2, the Reference Tag is incremented for each
