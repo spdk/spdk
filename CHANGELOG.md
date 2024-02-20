@@ -6,6 +6,10 @@
 
 SPDK applications can now start with `--wait-for-rpc` and JSON configuration provided at the same time.
 
+Struct `spdk_app_opts` was extended by `json_data` and `json_data_size` fields
+allowing user to provide a buffer with JSON config as alternative to providing JSON config file path
+(these fields are mutually exclusive).
+
 ### init
 
 Function `spdk_subsystem_init_from_json_config` is deprecated and will be removed in 24.09 release.

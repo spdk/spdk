@@ -184,8 +184,15 @@ struct spdk_app_opts {
 	 * If non-NULL, a pointer to JSON RPC log file.
 	 */
 	FILE *rpc_log_file;
+
+	/**
+	 * Raw JSON configuration data and its size.
+	 * Cannot be used simultaneously with json_config_file option.
+	 */
+	void *json_data;
+	size_t json_data_size;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 236, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 252, "Incorrect size");
 
 /**
  * Initialize the default value of opts

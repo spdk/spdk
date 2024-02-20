@@ -596,10 +596,12 @@ app_copy_opts(struct spdk_app_opts *opts, struct spdk_app_opts *opts_user, size_
 	SET_FIELD(vf_token);
 	SET_FIELD(rpc_log_file);
 	SET_FIELD(rpc_log_level);
+	SET_FIELD(json_data);
+	SET_FIELD(json_data_size);
 
 	/* You should not remove this statement, but need to update the assert statement
 	 * if you add a new field, and also add a corresponding SET_FIELD statement */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 236, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 252, "Incorrect size");
 
 #undef SET_FIELD
 }
@@ -855,6 +857,11 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	g_start_arg = arg1;
 
 	if (opts->json_config_file != NULL) {
+		if (opts->json_data) {
+			SPDK_ERRLOG("App opts json_config_file and json_data are mutually exclusive\n");
+			return 1;
+		}
+
 		g_spdk_app.json_data = spdk_posix_file_load_from_name(opts->json_config_file,
 				       &g_spdk_app.json_data_size);
 		if (!g_spdk_app.json_data) {
@@ -862,6 +869,15 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 				    opts->json_config_file, spdk_strerror(errno));
 			return 1;
 		}
+	} else if (opts->json_data) {
+		g_spdk_app.json_data = calloc(1, opts->json_data_size);
+		if (!g_spdk_app.json_data) {
+			SPDK_ERRLOG("Failed to allocate JSON data buffer\n");
+			return 1;
+		}
+
+		memcpy(g_spdk_app.json_data, opts->json_data, opts->json_data_size);
+		g_spdk_app.json_data_size = opts->json_data_size;
 	}
 
 	spdk_thread_send_msg(spdk_thread_get_app_thread(), bootstrap_fn, NULL);
