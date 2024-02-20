@@ -851,7 +851,8 @@ nvme_tcp_req_init(struct nvme_tcp_qpair *tqpair, struct nvme_request *req,
 static inline bool
 nvme_tcp_req_complete_safe(struct nvme_tcp_req *tcp_req)
 {
-	if (!(tcp_req->ordering.bits.send_ack && tcp_req->ordering.bits.data_recv)) {
+	if (!(tcp_req->ordering.bits.send_ack && tcp_req->ordering.bits.data_recv &&
+	      !tcp_req->ordering.bits.in_progress_accel)) {
 		return false;
 	}
 
