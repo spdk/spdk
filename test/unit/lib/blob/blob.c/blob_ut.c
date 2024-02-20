@@ -4540,6 +4540,173 @@ blob_thin_prov_write_count_io(void)
 }
 
 static void
+blob_thin_prov_unmap_cluster(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_blob *blob;
+	struct spdk_io_channel *ch;
+	struct spdk_bs_dev *dev;
+	struct spdk_bs_opts bs_opts;
+	struct spdk_blob_opts opts;
+	uint64_t free_clusters;
+	uint64_t page_size;
+	uint8_t payload_write[4096];
+	uint8_t payload_read[4096];
+	const uint32_t CLUSTER_COUNT = 3;
+	uint32_t pages_per_cluster;
+	uint32_t i;
+
+	/* Use a very large cluster size for this test. Check how the unmap/release cluster code path behaves when
+	 * clusters are fully used.
+	 */
+	dev = init_dev();
+	spdk_bs_opts_init(&bs_opts, sizeof(bs_opts));
+	bs_opts.cluster_sz = dev->blocklen * dev->blockcnt / (CLUSTER_COUNT + 1);
+
+	spdk_bs_init(dev, &bs_opts, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	free_clusters = spdk_bs_free_cluster_count(bs);
+	page_size = spdk_bs_get_page_size(bs);
+	pages_per_cluster = bs_opts.cluster_sz / page_size;
+
+	ch = spdk_bs_alloc_io_channel(bs);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	ut_spdk_blob_opts_init(&opts);
+	opts.thin_provision = true;
+
+	blob = ut_blob_create_and_open(bs, &opts);
+	CU_ASSERT(free_clusters == CLUSTER_COUNT);
+	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
+
+	g_bserrno = -1;
+	spdk_blob_resize(blob, CLUSTER_COUNT, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	g_bserrno = -1;
+	spdk_blob_sync_md(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
+	CU_ASSERT(blob->active.num_clusters == CLUSTER_COUNT);
+
+	/* Fill all clusters */
+	for (i = 0; i < CLUSTER_COUNT; i++) {
+		memset(payload_write, i + 1, sizeof(payload_write));
+		g_bserrno = -1;
+		spdk_blob_io_write(blob, ch, payload_write, pages_per_cluster * i, 1, blob_op_complete, NULL);
+		poll_threads();
+		CU_ASSERT(g_bserrno == 0);
+		CU_ASSERT(free_clusters - (i + 1) == spdk_bs_free_cluster_count(bs));
+	}
+	CU_ASSERT(0 == spdk_bs_free_cluster_count(bs));
+
+	/* Unmap one whole cluster */
+	g_bserrno = -1;
+	spdk_blob_io_unmap(blob, ch, pages_per_cluster, pages_per_cluster, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(1 == spdk_bs_free_cluster_count(bs));
+
+	/* Verify the data read from the cluster is zeroed out */
+	memset(payload_write, 0, sizeof(payload_write));
+	spdk_blob_io_read(blob, ch, payload_read, pages_per_cluster, 1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(memcmp(payload_write, payload_read, 4096) == 0);
+
+	/* Fill the same cluster with data */
+	memset(payload_write, 3, sizeof(payload_write));
+	g_bserrno = -1;
+	spdk_blob_io_write(blob, ch, payload_write, pages_per_cluster, 1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(0 == spdk_bs_free_cluster_count(bs));
+
+	/* Verify the data read from the cluster has the expected data */
+	spdk_blob_io_read(blob, ch, payload_read, pages_per_cluster, 1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(memcmp(payload_write, payload_read, 4096) == 0);
+
+	/* Send an unaligned unmap that ecompasses one whole cluster */
+	g_bserrno = -1;
+	spdk_blob_io_unmap(blob, ch, pages_per_cluster - 1, pages_per_cluster + 2, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(1 == spdk_bs_free_cluster_count(bs));
+
+	/* Verify the data read from the cluster is zeroed out */
+	g_bserrno = -1;
+	memset(payload_write, 0, sizeof(payload_write));
+	spdk_blob_io_read(blob, ch, payload_read, pages_per_cluster, 1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(memcmp(payload_write, payload_read, 4096) == 0);
+
+	/* Send a simultaneous unmap with a write to an unallocated area -
+	 * check that writes don't claim the currently unmapped cluster */
+	g_bserrno = -1;
+	memset(payload_write, 7, sizeof(payload_write));
+	spdk_blob_io_unmap(blob, ch, 0, pages_per_cluster, blob_op_complete, NULL);
+	spdk_blob_io_write(blob, ch, payload_write, pages_per_cluster, 1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(1 == spdk_bs_free_cluster_count(bs));
+
+	/* Verify the contents of written sector */
+	g_bserrno = -1;
+	spdk_blob_io_read(blob, ch, payload_read, pages_per_cluster, 1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(memcmp(payload_write, payload_read, 4096) == 0);
+
+	/* Verify the contents of unmapped sector */
+	g_bserrno = -1;
+	memset(payload_write, 0, sizeof(payload_write));
+	spdk_blob_io_read(blob, ch, payload_read, 0, 1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(memcmp(payload_write, payload_read, 4096) == 0);
+
+	/* Make sure clusters are not freed until the unmap to the drive is done */
+	g_bserrno = -1;
+	memset(payload_write, 7, sizeof(payload_write));
+	spdk_blob_io_write(blob, ch, payload_write, 0, 1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(0 == spdk_bs_free_cluster_count(bs));
+
+	g_bserrno = -1;
+	spdk_blob_io_unmap(blob, ch, 0, pages_per_cluster, blob_op_complete, NULL);
+	while (memcmp(payload_write, &g_dev_buffer[4096 * pages_per_cluster], 4096) == 0) {
+		CU_ASSERT(0 == spdk_bs_free_cluster_count(bs));
+		poll_thread_times(0, 1);
+	}
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(1 == spdk_bs_free_cluster_count(bs));
+
+	ut_blob_close_and_delete(bs, blob);
+	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
+
+	spdk_bs_free_io_channel(ch);
+	poll_threads();
+	g_blob = NULL;
+	g_blobid = 0;
+
+	spdk_bs_unload(bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+
+static void
 blob_thin_prov_rle(void)
 {
 	static const uint8_t zero[10 * 4096] = { 0 };
@@ -9021,6 +9188,7 @@ main(int argc, char **argv)
 		CU_ADD_TEST(suite_bs, blob_insert_cluster_msg_test);
 		CU_ADD_TEST(suite_bs, blob_thin_prov_rw);
 		CU_ADD_TEST(suite, blob_thin_prov_write_count_io);
+		CU_ADD_TEST(suite, blob_thin_prov_unmap_cluster);
 		CU_ADD_TEST(suite_bs, blob_thin_prov_rle);
 		CU_ADD_TEST(suite_bs, blob_thin_prov_rw_iov);
 		CU_ADD_TEST(suite, bs_load_iter_test);
