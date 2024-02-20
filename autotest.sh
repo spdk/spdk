@@ -107,7 +107,7 @@ fi
 # Delete all leftover lvols and gpt partitions
 # Matches both /dev/nvmeXnY on Linux and /dev/nvmeXnsY on BSD
 # Filter out nvme with partitions - the "p*" suffix
-for dev in $(ls /dev/nvme*n* | grep -v p || true); do
+for dev in /dev/nvme*n!(*p*); do
 	# Skip zoned devices as non-sequential IO will always fail
 	[[ -z ${zoned_devs["${dev##*/}"]} ]] || continue
 	if ! block_in_use "$dev"; then
