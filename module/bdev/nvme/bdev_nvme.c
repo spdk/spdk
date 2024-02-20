@@ -4046,6 +4046,21 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 	if (opts && opts->io_queue_requests) {
 		disk->max_num_segments = opts->io_queue_requests / 2;
 	}
+	if (spdk_nvme_ctrlr_get_flags(ctrlr) & SPDK_NVME_CTRLR_SGL_SUPPORTED) {
+		/* The nvme driver will try to split I/O that have too many
+		 * SGEs, but it doesn't work if that last SGE doesn't end on
+		 * an aggregate total that is block aligned. The bdev layer has
+		 * a more robust splitting framework, so use that instead for
+		 * this case. (See issue #3269.)
+		 */
+		uint16_t max_sges = spdk_nvme_ctrlr_get_max_sges(ctrlr);
+
+		if (disk->max_num_segments == 0) {
+			disk->max_num_segments = max_sges;
+		} else {
+			disk->max_num_segments = spdk_min(disk->max_num_segments, max_sges);
+		}
+	}
 	disk->optimal_io_boundary = spdk_nvme_ns_get_optimal_io_boundary(ns);
 
 	nguid = spdk_nvme_ns_get_nguid(ns);
