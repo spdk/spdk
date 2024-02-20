@@ -141,6 +141,8 @@ static const struct option g_cmdline_options[] = {
 	{"lcores",			required_argument,	NULL, LCORES_OPT_IDX},
 #define NO_HUGE_OPT_IDX	272
 	{"no-huge",			no_argument,		NULL, NO_HUGE_OPT_IDX},
+#define NO_RPC_SERVER_OPT_IDX	273
+	{"no-rpc-server",		no_argument,		NULL, NO_RPC_SERVER_OPT_IDX},
 };
 
 static void
@@ -297,7 +299,9 @@ app_start_application(int rc, void *arg1)
 		return;
 	}
 
-	spdk_rpc_server_resume(g_spdk_app.rpc_addr);
+	if (g_spdk_app.rpc_addr) {
+		spdk_rpc_server_resume(g_spdk_app.rpc_addr);
+	}
 
 	g_start_fn(g_start_arg);
 }
@@ -326,7 +330,7 @@ app_subsystem_init_done(int rc, void *arg1)
 }
 
 static void
-app_start_rpc(int rc, void *arg1)
+app_do_spdk_subsystem_init(int rc, void *arg1)
 {
 	struct spdk_rpc_opts opts;
 
@@ -335,20 +339,24 @@ app_start_rpc(int rc, void *arg1)
 		return;
 	}
 
-	opts.size = SPDK_SIZEOF(&opts, log_level);
-	opts.log_file = g_spdk_app.rpc_log_file;
-	opts.log_level = g_spdk_app.rpc_log_level;
+	if (g_spdk_app.rpc_addr) {
+		opts.size = SPDK_SIZEOF(&opts, log_level);
+		opts.log_file = g_spdk_app.rpc_log_file;
+		opts.log_level = g_spdk_app.rpc_log_level;
 
-	rc = spdk_rpc_initialize(g_spdk_app.rpc_addr, &opts);
-	if (rc) {
-		spdk_app_stop(rc);
-		return;
-	}
-
-	if (!g_delay_subsystem_init) {
+		rc = spdk_rpc_initialize(g_spdk_app.rpc_addr, &opts);
+		if (rc) {
+			spdk_app_stop(rc);
+			return;
+		}
+		if (g_delay_subsystem_init) {
+			return;
+		}
 		spdk_rpc_server_pause(g_spdk_app.rpc_addr);
-		spdk_subsystem_init(app_subsystem_init_done, NULL);
+	} else {
+		SPDK_NOTICELOG("RPC server not started\n");
 	}
+	spdk_subsystem_init(app_subsystem_init_done, NULL);
 }
 
 static int
@@ -537,10 +545,10 @@ bootstrap_fn(void *arg1)
 		/* Load SPDK_RPC_STARTUP RPCs from config file */
 		assert(spdk_rpc_get_state() == SPDK_RPC_STARTUP);
 		spdk_subsystem_load_config(g_spdk_app.json_data, g_spdk_app.json_data_size,
-					   app_start_rpc, NULL,
+					   app_do_spdk_subsystem_init, NULL,
 					   !g_spdk_app.json_config_ignore_errors);
 	} else {
-		app_start_rpc(0, NULL);
+		app_do_spdk_subsystem_init(0, NULL);
 	}
 }
 
@@ -736,6 +744,11 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 
 	if (!start_fn) {
 		SPDK_ERRLOG("start_fn should not be NULL\n");
+		return 1;
+	}
+
+	if (!opts->rpc_addr && opts->delay_subsystem_init) {
+		SPDK_ERRLOG("Cannot use '--wait-for-rpc' if no RPC server is going to be started.\n");
 		return 1;
 	}
 
@@ -996,6 +1009,7 @@ usage(void (*app_usage)(void))
 	printf("\nConfiguration options:\n");
 	printf(" -c, --config, --json  <config>     JSON config file\n");
 	printf(" -r, --rpc-socket <path>   RPC listen address (default %s)\n", SPDK_DEFAULT_RPC_ADDR);
+	printf("     --no-rpc-server       skip RPC server initialization. This option ignores '--rpc-socket' value.\n");
 	printf("     --wait-for-rpc        wait for RPCs to initialize subsystems\n");
 	printf("     --rpcs-allowed	   comma-separated list of permitted RPCS\n");
 	printf("     --json-ignore-init-errors    don't exit on invalid config entry\n");
@@ -1183,6 +1197,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			break;
 		case RPC_SOCKET_OPT_IDX:
 			opts->rpc_addr = optarg;
+			break;
+		case NO_RPC_SERVER_OPT_IDX:
+			opts->rpc_addr = NULL;
 			break;
 		case MEM_SIZE_OPT_IDX: {
 			uint64_t mem_size_mb;
