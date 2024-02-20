@@ -1287,7 +1287,7 @@ bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
 	struct bdev_rbd *rbd;
 	int ret;
 
-	if ((pool_name == NULL) || (rbd_name == NULL)) {
+	if ((pool_name == NULL) || (rbd_name == NULL) || (block_size == 0)) {
 		return -EINVAL;
 	}
 
