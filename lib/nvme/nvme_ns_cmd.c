@@ -758,17 +758,18 @@ spdk_nvme_ns_cmd_readv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 	}
 }
 
-int
-spdk_nvme_ns_cmd_readv_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
-			   uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
-			   void *cb_arg, spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
-			   spdk_nvme_req_next_sge_cb next_sge_fn,
-			   struct spdk_nvme_ns_cmd_ext_io_opts *opts)
+static int
+nvme_ns_cmd_rwv_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, uint64_t lba,
+		    uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg, spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+		    spdk_nvme_req_next_sge_cb next_sge_fn, struct spdk_nvme_ns_cmd_ext_io_opts *opts,
+		    enum spdk_nvme_nvm_opcode opc)
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
 	void *seq;
 	int rc = 0;
+
+	assert(opc == SPDK_NVME_OPC_READ || opc == SPDK_NVME_OPC_WRITE);
 
 	if (reset_sgl_fn == NULL || next_sge_fn == NULL) {
 		return -EINVAL;
@@ -788,23 +789,34 @@ spdk_nvme_ns_cmd_readv_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpai
 
 		payload.opts = opts;
 		payload.md = opts->metadata;
-		req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_READ,
-				      opts->io_flags, opts->apptag_mask, opts->apptag, opts->cdw13, true, seq, &rc);
+		req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, opc, opts->io_flags,
+				      opts->apptag_mask, opts->apptag, opts->cdw13, true, seq, &rc);
 
 	} else {
-		req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_READ,
-				      0, 0, 0, 0, true, NULL, &rc);
+		req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, opc, 0, 0, 0, 0,
+				      true, NULL, &rc);
 	}
 
-	if (req != NULL) {
-		return nvme_qpair_submit_request(qpair, req);
-	} else {
+	if (req == NULL) {
 		return nvme_ns_map_failure_rc(lba_count,
 					      ns->sectors_per_max_io,
 					      ns->sectors_per_stripe,
 					      qpair->ctrlr->opts.io_queue_requests,
 					      rc);
 	}
+
+	return nvme_qpair_submit_request(qpair, req);
+}
+
+int
+spdk_nvme_ns_cmd_readv_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			   uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
+			   void *cb_arg, spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+			   spdk_nvme_req_next_sge_cb next_sge_fn,
+			   struct spdk_nvme_ns_cmd_ext_io_opts *opts)
+{
+	return nvme_ns_cmd_rwv_ext(ns, qpair, lba, lba_count, cb_fn, cb_arg, reset_sgl_fn, next_sge_fn,
+				   opts, SPDK_NVME_OPC_READ);
 }
 
 int
@@ -1066,46 +1078,8 @@ spdk_nvme_ns_cmd_writev_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpa
 			    spdk_nvme_req_next_sge_cb next_sge_fn,
 			    struct spdk_nvme_ns_cmd_ext_io_opts *opts)
 {
-	struct nvme_request *req;
-	struct nvme_payload payload;
-	void *seq;
-	int rc = 0;
-
-	if (reset_sgl_fn == NULL || next_sge_fn == NULL) {
-		return -EINVAL;
-	}
-
-	payload = NVME_PAYLOAD_SGL(reset_sgl_fn, next_sge_fn, cb_arg, NULL);
-
-	if (opts) {
-		if (spdk_unlikely(!_is_io_flags_valid(opts->io_flags))) {
-			return -EINVAL;
-		}
-
-		seq = nvme_ns_cmd_get_ext_io_opt(opts, accel_sequence, NULL);
-		if (spdk_unlikely(!_is_accel_sequence_valid(qpair, seq))) {
-			return -EINVAL;
-		}
-
-		payload.opts = opts;
-		payload.md = opts->metadata;
-		req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_WRITE,
-				      opts->io_flags, opts->apptag_mask, opts->apptag, opts->cdw13, true, seq, &rc);
-
-	} else {
-		req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_WRITE,
-				      0, 0, 0, 0, true, NULL, &rc);
-	}
-
-	if (req != NULL) {
-		return nvme_qpair_submit_request(qpair, req);
-	} else {
-		return nvme_ns_map_failure_rc(lba_count,
-					      ns->sectors_per_max_io,
-					      ns->sectors_per_stripe,
-					      qpair->ctrlr->opts.io_queue_requests,
-					      rc);
-	}
+	return nvme_ns_cmd_rwv_ext(ns, qpair, lba, lba_count, cb_fn, cb_arg, reset_sgl_fn, next_sge_fn,
+				   opts, SPDK_NVME_OPC_WRITE);
 }
 
 int
