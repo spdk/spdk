@@ -102,7 +102,6 @@ if ! warn=$(openssl fipsinstall -help 2>&1); then
 		# Rhel-based openssl >=3.0.9 builds no longer support fipsinstall command.
 		# Enforce proper patches.
 		export callback=build_openssl_config
-		export OPENSSL_FORCE_FIPS_MODE="$callback"
 	else
 		exit 1
 	fi
@@ -114,7 +113,7 @@ fi
 "$callback" > spdk_fips.conf
 export OPENSSL_CONF=spdk_fips.conf
 
-mapfile -t providers < <(OPENSSL_CONF=spdk_fips.conf openssl list -providers | grep "name")
+mapfile -t providers < <(openssl list -providers | grep "name")
 # We expect OpenSSL to present the providers we requested. If OpenSSL loaded other providers
 # (e.g. "default") or was unable to load "base" and "fips", the following line will fail,
 # indicating that OPENSSL_CONF is invalid or OpenSSL itself is malconfigured.
