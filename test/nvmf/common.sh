@@ -688,12 +688,16 @@ clean_kernel_target() {
 }
 
 format_interchange_psk() {
-	local key hash crc
+	local key digest
 
-	key=$1 hash=$(printf "%02x" $2)
-	crc=$(echo -n $key | gzip -1 -c | tail -c8 | head -c 4)
+	key="$1" digest="$2"
+	python - <<- EOF
+		import base64, zlib
 
-	echo -n "NVMeTLSkey-1:$hash:$(base64 <(echo -n ${key}${crc})):"
+		crc = zlib.crc32(b"$key").to_bytes(4, byteorder="little")
+		b64 = base64.b64encode(b"$key" + crc).decode("utf-8")
+		print("NVMeTLSkey-1:{:02x}:{}:".format($digest, b64), end="")
+	EOF
 }
 
 get_main_ns_ip() {
