@@ -11,6 +11,10 @@ SPDK applications can now start with `--wait-for-rpc` and JSON configuration pro
 Function `spdk_subsystem_init_from_json_config` is deprecated and will be removed in 24.09 release.
 Please use `spdk_subsystem_load_config` instead.
 
+### nvme
+
+Added `spdk_nvme_ctrlr_get_max_sges`.
+
 ### bdev_uring
 
 Added `bdev_uring_rescan` RPC to allow rescaning the size of uring bdev.

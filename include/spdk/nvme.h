@@ -1331,6 +1331,17 @@ struct spdk_pci_device *spdk_nvme_ctrlr_get_pci_device(struct spdk_nvme_ctrlr *c
 uint32_t spdk_nvme_ctrlr_get_max_xfer_size(const struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * Get the maximum number of SGEs per request for the given NVMe controller.
+ *
+ * Controllers that do not support SGL will return UINT16_MAX.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return Maximum number of SGEs per request
+ */
+uint16_t spdk_nvme_ctrlr_get_max_sges(const struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Check whether the nsid is an active nv for the given NVMe controller.
  *
  * This function is thread safe and can be called at any point while the controller
