@@ -8,6 +8,10 @@
 #include "spdk/stdinc.h"
 #include "spdk/assert.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Use `SPDK_DIF_APPTAG_IGNORE` and `SPDK_DIF_REFTAG_IGNORE`
  * as the special values when creating DIF context, when the two
@@ -461,4 +465,7 @@ int spdk_dix_remap_ref_tag(struct iovec *md_iov, uint32_t num_blocks,
 			   const struct spdk_dif_ctx *dif_ctx,
 			   struct spdk_dif_error *err_blk,
 			   bool check_ref_tag);
+#ifdef __cplusplus
+}
+#endif
 #endif /* SPDK_DIF_H */
