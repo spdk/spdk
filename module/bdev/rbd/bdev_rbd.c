@@ -260,7 +260,7 @@ bdev_rados_cluster_init(const char *user_id, const char *const *config,
 
 	ret = rados_create(cluster, user_id);
 	if (ret < 0) {
-		SPDK_ERRLOG("Failed to create rados_t struct\n");
+		SPDK_ERRLOG("Failed to create rados_t struct, errno=%d\n", ret);
 		return -1;
 	}
 
@@ -269,7 +269,7 @@ bdev_rados_cluster_init(const char *user_id, const char *const *config,
 		while (*entry) {
 			ret = rados_conf_set(*cluster, entry[0], entry[1]);
 			if (ret < 0) {
-				SPDK_ERRLOG("Failed to set %s = %s\n", entry[0], entry[1]);
+				SPDK_ERRLOG("Failed to set %s = %s, errno=%d\n", entry[0], entry[1], ret);
 				rados_shutdown(*cluster);
 				*cluster = NULL;
 				return -1;
@@ -279,7 +279,7 @@ bdev_rados_cluster_init(const char *user_id, const char *const *config,
 	} else {
 		ret = rados_conf_read_file(*cluster, NULL);
 		if (ret < 0) {
-			SPDK_ERRLOG("Failed to read conf file\n");
+			SPDK_ERRLOG("Failed to read conf file, errno=%d\n", ret);
 			rados_shutdown(*cluster);
 			*cluster = NULL;
 			return -1;
@@ -288,7 +288,7 @@ bdev_rados_cluster_init(const char *user_id, const char *const *config,
 
 	ret = rados_connect(*cluster);
 	if (ret < 0) {
-		SPDK_ERRLOG("Failed to connect to rbd_pool\n");
+		SPDK_ERRLOG("Failed to connect to rbd_pool, errno=%d\n", ret);
 		rados_shutdown(*cluster);
 		*cluster = NULL;
 		return -1;
@@ -384,7 +384,9 @@ bdev_rbd_get_pool_ctx(rados_t *cluster_p, const char *name,  struct bdev_rbd_poo
 		goto err_handle;
 	}
 
-	if (rados_ioctx_create(*cluster_p, name, &entry->io_ctx) < 0) {
+	int rc = rados_ioctx_create(*cluster_p, name, &entry->io_ctx);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to create ioctx for %s errno=%d\n", name, rc);
 		goto err_handle1;
 	}
 
@@ -418,8 +420,9 @@ bdev_rbd_init_context(void *arg)
 		}
 		io_ctx = &rbd->rados_ctx.ctx->io_ctx;
 	} else {
-		if (rados_ioctx_create(*(rbd->cluster_p), rbd->pool_name, &rbd->rados_ctx.io_ctx) < 0) {
-			SPDK_ERRLOG("Failed to create ioctx on rbd=%p\n", rbd);
+		rc = rados_ioctx_create(*(rbd->cluster_p), rbd->pool_name, &rbd->rados_ctx.io_ctx);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to create ioctx on rbd(%s %p) errno=%d\n", rbd->rbd_name, rbd, rc);
 			return NULL;
 		}
 		io_ctx = &rbd->rados_ctx.io_ctx;
@@ -428,7 +431,7 @@ bdev_rbd_init_context(void *arg)
 	assert(io_ctx != NULL);
 	rc = rbd_open(*io_ctx, rbd->rbd_name, &rbd->image, NULL);
 	if (rc < 0) {
-		SPDK_ERRLOG("Failed to open specified rbd device\n");
+		SPDK_ERRLOG("Failed to open specified rbd device(%s), errno=%d\n", rbd->rbd_name, rc);
 		return NULL;
 	}
 
@@ -439,7 +442,7 @@ bdev_rbd_init_context(void *arg)
 
 	rc = rbd_stat(rbd->image, &rbd->info, sizeof(rbd->info));
 	if (rc < 0) {
-		SPDK_ERRLOG("Failed to stat specified rbd device\n");
+		SPDK_ERRLOG("Failed to stat specified rbd device(%s), errno=%d\n", rbd->rbd_name, rc);
 		return NULL;
 	}
 
@@ -1356,8 +1359,6 @@ bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
 	rbd->disk.fn_table = &rbd_fn_table;
 	rbd->disk.module = &rbd_if;
 
-	SPDK_NOTICELOG("Add %s rbd disk to lun\n", rbd->disk.name);
-
 	spdk_io_device_register(rbd, bdev_rbd_create_cb,
 				bdev_rbd_destroy_cb,
 				sizeof(struct bdev_rbd_io_channel),
@@ -1368,6 +1369,8 @@ bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
 		bdev_rbd_free(rbd);
 		return ret;
 	}
+
+	SPDK_NOTICELOG("Create %s successfully.\n", rbd->disk.name);
 
 	*bdev = &(rbd->disk);
 
@@ -1383,6 +1386,7 @@ bdev_rbd_delete(const char *name, spdk_delete_rbd_complete cb_fn, void *cb_arg)
 	if (rc != 0) {
 		cb_fn(cb_arg, rc);
 	}
+	SPDK_NOTICELOG("Delete %s successfully.\n", name);
 }
 
 static void

@@ -7950,6 +7950,7 @@ bdev_open(struct spdk_bdev *bdev, bool write, struct spdk_bdev_desc *desc)
 	if (bdev->internal.status == SPDK_BDEV_STATUS_UNREGISTERING ||
 	    bdev->internal.status == SPDK_BDEV_STATUS_REMOVING) {
 		spdk_spin_unlock(&bdev->internal.spinlock);
+		SPDK_ERRLOG("%s is unregistering or removing, status=%d\n", bdev->name, bdev->internal.status);
 		return -ENODEV;
 	}
 
