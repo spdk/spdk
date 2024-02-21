@@ -101,9 +101,7 @@ void
 spdk_memory_domain_set_translation(struct spdk_memory_domain *domain,
 				   spdk_memory_domain_translate_memory_cb translate_cb)
 {
-	if (!domain) {
-		return;
-	}
+	assert(domain);
 
 	domain->translate_cb = translate_cb;
 }
@@ -121,9 +119,7 @@ void
 spdk_memory_domain_set_pull(struct spdk_memory_domain *domain,
 			    spdk_memory_domain_pull_data_cb pull_cb)
 {
-	if (!domain) {
-		return;
-	}
+	assert(domain);
 
 	domain->pull_cb = pull_cb;
 }
@@ -132,9 +128,7 @@ void
 spdk_memory_domain_set_push(struct spdk_memory_domain *domain,
 			    spdk_memory_domain_push_data_cb push_cb)
 {
-	if (!domain) {
-		return;
-	}
+	assert(domain);
 
 	domain->push_cb = push_cb;
 }
@@ -143,9 +137,7 @@ void
 spdk_memory_domain_set_memzero(struct spdk_memory_domain *domain,
 			       spdk_memory_domain_memzero_cb memzero_cb)
 {
-	if (!domain) {
-		return;
-	}
+	assert(domain);
 
 	domain->memzero_cb = memzero_cb;
 }
