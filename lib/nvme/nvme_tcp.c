@@ -812,14 +812,16 @@ nvme_tcp_req_init(struct nvme_tcp_qpair *tqpair, struct nvme_request *req,
 		xfer = spdk_nvme_opc_get_data_transfer(req->cmd.opc);
 	}
 
+	/* For c2h delay filling in the iov until the data arrives.
+	 * For h2c some delay is also possible if data doesn't fit into cmd capsule (not implemented). */
 	if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG) {
-		/* For c2h delay filling in the iov until the data arrives.
-		 * For h2c some delay is also possible if data doesn't fit into cmd capsule (not implemented). */
 		if (xfer != SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 			rc = nvme_tcp_build_contig_request(tqpair, tcp_req);
 		}
 	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL) {
-		rc = nvme_tcp_build_sgl_request(tqpair, tcp_req);
+		if (xfer != SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+			rc = nvme_tcp_build_sgl_request(tqpair, tcp_req);
+		}
 	} else {
 		rc = -1;
 	}
@@ -1649,6 +1651,7 @@ nvme_tcp_c2h_data_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu 
 	uint32_t error_offset = 0;
 	enum spdk_nvme_tcp_term_req_fes fes;
 	int flags = c2h_data->common.flags;
+	int rc;
 
 	SPDK_DEBUGLOG(nvme, "enter\n");
 	SPDK_DEBUGLOG(nvme, "c2h_data info on tqpair(%p): datao=%u, datal=%u, cccid=%d\n",
@@ -1698,14 +1701,16 @@ nvme_tcp_c2h_data_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu 
 	}
 
 	if (nvme_payload_type(&tcp_req->req->payload) == NVME_PAYLOAD_TYPE_CONTIG) {
-		int rc;
-
 		rc = nvme_tcp_build_contig_request(tqpair, tcp_req);
-		if (rc) {
-			/* Not the right error message but at least it handles the failure. */
-			fes = SPDK_NVME_TCP_TERM_REQ_FES_DATA_TRANSFER_LIMIT_EXCEEDED;
-			goto end;
-		}
+	} else {
+		assert(nvme_payload_type(&tcp_req->req->payload) == NVME_PAYLOAD_TYPE_SGL);
+		rc = nvme_tcp_build_sgl_request(tqpair, tcp_req);
+	}
+
+	if (rc) {
+		/* Not the right error message but at least it handles the failure. */
+		fes = SPDK_NVME_TCP_TERM_REQ_FES_DATA_TRANSFER_LIMIT_EXCEEDED;
+		goto end;
 	}
 
 	nvme_tcp_pdu_set_data_buf(pdu, tcp_req->iov, tcp_req->iovcnt,
