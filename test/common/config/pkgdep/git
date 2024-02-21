@@ -407,6 +407,8 @@ function install_ice() {
 function install_lcov() {
 	local lcov_version=v1.15
 
+	install perl-IO-Compress || install perl-modules
+
 	rm -rf /usr/src/lcov
 	sudo git clone "$GIT_REPO_LCOV" --branch "$lcov_version" /usr/src/lcov
 	(cd /usr/src/lcov; sudo make install)
