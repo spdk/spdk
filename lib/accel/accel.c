@@ -136,6 +136,7 @@ struct accel_buffer {
 	spdk_accel_sequence_get_buf_cb	cb_fn;
 	void				*cb_ctx;
 	SLIST_ENTRY(accel_buffer)	link;
+	struct accel_io_channel		*ch;
 };
 
 struct accel_io_channel {
@@ -1327,6 +1328,8 @@ spdk_accel_get_buf(struct spdk_io_channel *ch, uint64_t len, void **buf,
 		return -ENOMEM;
 	}
 
+	accel_buf->ch = accel_ch;
+
 	/* We always return the same pointer and identify the buffers through domain_ctx */
 	*buf = ACCEL_BUFFER_BASE;
 	*domain_ctx = accel_buf;
@@ -1478,12 +1481,17 @@ accel_sequence_alloc_buf(struct spdk_accel_sequence *seq, struct accel_buffer *b
 {
 	struct accel_io_channel *ch = seq->ch;
 
-	assert(buf->buf == NULL);
 	assert(buf->seq == NULL);
 
 	buf->seq = seq;
+
+	/* Buffer might be already allocated by memory domain translation. */
+	if (buf->buf) {
+		return true;
+	}
+
 	buf->buf = spdk_iobuf_get(&ch->iobuf, buf->len, &buf->iobuf, cb_fn);
-	if (buf->buf == NULL) {
+	if (spdk_unlikely(buf->buf == NULL)) {
 		accel_update_stats(ch, retry.iobuf, 1);
 		return false;
 	}
@@ -2695,6 +2703,51 @@ accel_module_init_opcode(enum spdk_accel_opcode opcode)
 	}
 }
 
+static int
+accel_memory_domain_translate(struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+			      struct spdk_memory_domain *dst_domain, struct spdk_memory_domain_translation_ctx *dst_domain_ctx,
+			      void *addr, size_t len, struct spdk_memory_domain_translation_result *result)
+{
+	struct accel_buffer *buf = src_domain_ctx;
+
+	SPDK_DEBUGLOG(accel, "translate addr %p, len %zu\n", addr, len);
+
+	assert(g_accel_domain == src_domain);
+	assert(spdk_memory_domain_get_system_domain() == dst_domain);
+	assert(buf->buf == NULL);
+	assert(addr == ACCEL_BUFFER_BASE);
+	assert(len == buf->len);
+
+	buf->buf = spdk_iobuf_get(&buf->ch->iobuf, buf->len, NULL, NULL);
+	if (spdk_unlikely(buf->buf == NULL)) {
+		return -ENOMEM;
+	}
+
+	result->iov_count = 1;
+	result->iov.iov_base = buf->buf;
+	result->iov.iov_len = buf->len;
+	SPDK_DEBUGLOG(accel, "translated addr %p\n", result->iov.iov_base);
+	return 0;
+}
+
+static void
+accel_memory_domain_invalidate(struct spdk_memory_domain *domain, void *domain_ctx,
+			       struct iovec *iov, uint32_t iovcnt)
+{
+	struct accel_buffer *buf = domain_ctx;
+
+	SPDK_DEBUGLOG(accel, "invalidate addr %p, len %zu\n", iov[0].iov_base, iov[0].iov_len);
+
+	assert(g_accel_domain == domain);
+	assert(iovcnt == 1);
+	assert(buf->buf != NULL);
+	assert(iov[0].iov_base == buf->buf);
+	assert(iov[0].iov_len == buf->len);
+
+	spdk_iobuf_put(&buf->ch->iobuf, buf->buf, buf->len);
+	buf->buf = NULL;
+}
+
 int
 spdk_accel_initialize(void)
 {
@@ -2718,6 +2771,9 @@ spdk_accel_initialize(void)
 		SPDK_ERRLOG("Failed to create accel memory domain\n");
 		return rc;
 	}
+
+	spdk_memory_domain_set_translation(g_accel_domain, accel_memory_domain_translate);
+	spdk_memory_domain_set_invalidate(g_accel_domain, accel_memory_domain_invalidate);
 
 	g_modules_started = true;
 	rc = accel_module_initialize();

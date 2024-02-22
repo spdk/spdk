@@ -17,6 +17,12 @@
 DEFINE_STUB_V(spdk_memory_domain_destroy, (struct spdk_memory_domain *domain));
 DEFINE_STUB(spdk_memory_domain_get_dma_device_id, const char *,
 	    (struct spdk_memory_domain *domain), "UT_DMA");
+DEFINE_STUB(spdk_memory_domain_get_system_domain, struct spdk_memory_domain *, (void),
+	    (void *)0xabc);
+DEFINE_STUB_V(spdk_memory_domain_set_invalidate, (struct spdk_memory_domain *domain,
+		spdk_memory_domain_invalidate_data_cb invalidate_cb));
+DEFINE_STUB_V(spdk_memory_domain_set_translation, (struct spdk_memory_domain *domain,
+		spdk_memory_domain_translate_memory_cb translate_cb));
 
 int
 spdk_memory_domain_create(struct spdk_memory_domain **domain, enum spdk_dma_device_type type,
