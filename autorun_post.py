@@ -25,7 +25,7 @@ def generateTestCompletionTableByTest(output_dir, data_table):
     executed_tests = len(data_table_with_agent.groupby('Test'))
     tests_executions = len(data_table_with_agent.groupby(columns_to_group))
 
-    pivot_by_test = pd.pivot_table(data_table, index=columns_to_group)
+    pivot_by_test = pd.pivot_table(data_table, index=columns_to_group, aggfunc=any)
 
     output_file = os.path.join(output_dir, 'post_process', 'completions_table_by_test.html')
     with open(output_file, 'w') as f:
@@ -43,7 +43,7 @@ def generateTestCompletionTables(output_dir, completion_table):
     data_table.to_html(os.path.join(output_dir, 'completions_table.html'))
     os.makedirs(os.path.join(output_dir, "post_process"), exist_ok=True)
 
-    pivot_by_agent = pd.pivot_table(data_table, index=["Agent", "Domain", "Test"])
+    pivot_by_agent = pd.pivot_table(data_table, index=["Agent", "Domain", "Test"], aggfunc=any)
     pivot_by_agent.to_html(os.path.join(output_dir, "post_process", 'completions_table_by_agent.html'))
 
     generateTestCompletionTableByTest(output_dir, data_table)
