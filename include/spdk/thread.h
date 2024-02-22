@@ -1156,15 +1156,15 @@ void spdk_iobuf_entry_abort(struct spdk_iobuf_channel *ch, struct spdk_iobuf_ent
 			    uint64_t len);
 
 /**
- * Get a buffer from the iobuf pool.  If no buffers are available, the request is queued until a
- * buffer is released.
+ * Get a buffer from the iobuf pool. If no buffers are available and entry with cb_fn provided
+ * then the request is queued until a buffer becomes available.
  *
  * \param ch iobuf channel.
- * \param len Length of the buffer to retrieve.  The user is responsible for making sure the length
+ * \param len Length of the buffer to retrieve. The user is responsible for making sure the length
  *            doesn't exceed large_bufsize.
- * \param entry Wait queue entry.
- * \param cb_fn Callback to be executed once a buffer becomes available.  If a buffer is available
- *              immediately, it is NOT be executed.
+ * \param entry Wait queue entry (optional).
+ * \param cb_fn Callback to be executed once a buffer becomes available. If a buffer is available
+ *              immediately, it is NOT executed. Mandatory only if entry provided.
  *
  * \return pointer to a buffer or NULL if no buffers are currently available.
  */
