@@ -962,7 +962,10 @@ struct spdk_bdev_io_internal_fields {
 			/** Whether the bounce_buf data structure is valid */
 			uint8_t has_bounce_buf			: 1;
 
-			uint8_t reserved			: 3;
+			/** Whether we are currently inside the submit request call */
+			uint8_t in_submit_request		: 1;
+
+			uint8_t reserved			: 2;
 		};
 		uint8_t raw;
 	} f;
@@ -997,14 +1000,6 @@ struct spdk_bdev_io_internal_fields {
 		/** Only valid when status is SPDK_BDEV_IO_STATUS_AIO_ERROR */
 		int aio_result;
 	} error;
-
-	/**
-	 * Set to true while the bdev module submit_request function is in progress.
-	 *
-	 * This is used to decide whether spdk_bdev_io_complete() can complete the I/O directly
-	 * or if completion must be deferred via an event.
-	 */
-	bool in_submit_request;
 
 	/** Status for the IO */
 	int8_t status;

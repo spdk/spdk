@@ -2784,10 +2784,10 @@ _bdev_io_complete_in_submit(struct spdk_bdev_channel *bdev_ch,
 			    struct spdk_bdev_io *bdev_io,
 			    enum spdk_bdev_io_status status)
 {
-	bdev_io->internal.in_submit_request = true;
+	bdev_io->internal.f.in_submit_request = true;
 	bdev_io_increment_outstanding(bdev_ch, bdev_ch->shared_resource);
 	spdk_bdev_io_complete(bdev_io, status);
-	bdev_io->internal.in_submit_request = false;
+	bdev_io->internal.f.in_submit_request = false;
 }
 
 static inline void
@@ -2820,9 +2820,9 @@ bdev_io_do_submit(struct spdk_bdev_channel *bdev_ch, struct spdk_bdev_io *bdev_i
 
 	if (spdk_likely(TAILQ_EMPTY(&shared_resource->nomem_io))) {
 		bdev_io_increment_outstanding(bdev_ch, shared_resource);
-		bdev_io->internal.in_submit_request = true;
+		bdev_io->internal.f.in_submit_request = true;
 		bdev_submit_request(bdev, ch, bdev_io);
-		bdev_io->internal.in_submit_request = false;
+		bdev_io->internal.f.in_submit_request = false;
 	} else {
 		bdev_queue_nomem_io_tail(shared_resource, bdev_io, BDEV_IO_RETRY_STATE_SUBMIT);
 		if (shared_resource->nomem_threshold == 0 && shared_resource->io_outstanding == 0) {
@@ -3722,9 +3722,9 @@ bdev_io_submit_reset(struct spdk_bdev_io *bdev_io)
 
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_PENDING);
 
-	bdev_io->internal.in_submit_request = true;
+	bdev_io->internal.f.in_submit_request = true;
 	bdev_submit_request(bdev, ch, bdev_io);
-	bdev_io->internal.in_submit_request = false;
+	bdev_io->internal.f.in_submit_request = false;
 }
 
 void
@@ -3737,7 +3737,7 @@ bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->internal.caller_ctx = cb_arg;
 	bdev_io->internal.cb = cb;
 	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
-	bdev_io->internal.in_submit_request = false;
+	bdev_io->internal.f.in_submit_request = false;
 	bdev_io->internal.error.nvme.cdw0 = 0;
 	bdev_io->num_retries = 0;
 	bdev_io->internal.get_buf_cb = NULL;
@@ -7381,7 +7381,7 @@ bdev_io_complete(void *ctx)
 	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
 	uint64_t tsc, tsc_diff;
 
-	if (spdk_unlikely(bdev_io->internal.in_submit_request)) {
+	if (spdk_unlikely(bdev_io->internal.f.in_submit_request)) {
 		/*
 		 * Defer completion to avoid potential infinite recursion if the
 		 * user's completion callback issues a new I/O.
