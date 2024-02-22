@@ -2229,7 +2229,14 @@ fail:
 	qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
+		enum nvme_qpair_state state_prev = nvme_qpair_get_state(qpair);
+
 		nvme_transport_ctrlr_disconnect_qpair(qpair->ctrlr, qpair);
+
+		if (state_prev == NVME_QPAIR_CONNECTING && qpair->poll_status != NULL) {
+			/* Needed to free the poll_status */
+			nvme_tcp_ctrlr_connect_qpair_poll(qpair->ctrlr, qpair);
+		}
 	} else {
 		nvme_ctrlr_disconnect_qpair(qpair);
 	}
