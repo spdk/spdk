@@ -93,7 +93,6 @@ static const struct option g_cmdline_options[] = {
 	{"mem-channels",		required_argument,	NULL, MEM_CHANNELS_OPT_IDX},
 #define MAIN_CORE_OPT_IDX	'p'
 	{"main-core",			required_argument,	NULL, MAIN_CORE_OPT_IDX},
-	{"master-core",			required_argument,	NULL, MAIN_CORE_OPT_IDX}, /* deprecated */
 #define RPC_SOCKET_OPT_IDX	'r'
 	{"rpc-socket",			required_argument,	NULL, RPC_SOCKET_OPT_IDX},
 #define MEM_SIZE_OPT_IDX	's'
@@ -104,15 +103,12 @@ static const struct option g_cmdline_options[] = {
 	{"version",			no_argument,		NULL, VERSION_OPT_IDX},
 #define PCI_BLOCKED_OPT_IDX	'B'
 	{"pci-blocked",			required_argument,	NULL, PCI_BLOCKED_OPT_IDX},
-	{"pci-blacklist",		required_argument,	NULL, PCI_BLOCKED_OPT_IDX}, /* deprecated */
 #define LOGFLAG_OPT_IDX		'L'
 	{"logflag",			required_argument,	NULL, LOGFLAG_OPT_IDX},
 #define HUGE_UNLINK_OPT_IDX	'R'
 	{"huge-unlink",			no_argument,		NULL, HUGE_UNLINK_OPT_IDX},
 #define PCI_ALLOWED_OPT_IDX	'A'
 	{"pci-allowed",			required_argument,	NULL, PCI_ALLOWED_OPT_IDX},
-#define PCI_WHITELIST_OPT_IDX	'W'
-	{"pci-whitelist",		required_argument,	NULL, PCI_WHITELIST_OPT_IDX}, /* deprecated */
 #define INTERRUPT_MODE_OPT_IDX 256
 	{"interrupt-mode",		no_argument,		NULL, INTERRUPT_MODE_OPT_IDX},
 #define SILENCE_NOTICELOG_OPT_IDX 257
@@ -1248,9 +1244,6 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		case HUGE_UNLINK_OPT_IDX:
 			opts->unlink_hugepage = true;
 			break;
-		case PCI_WHITELIST_OPT_IDX:
-			SPDK_WARNLOG("-W/--pci-whitelist is deprecated.  Use -A/--pci-allowed.\n");
-		/* fallthrough */
 		case PCI_ALLOWED_OPT_IDX:
 			if (opts->pci_blocked) {
 				free(opts->pci_blocked);

@@ -73,10 +73,10 @@ test_spdk_app_parse_args(void)
 				       "-B",
 				       "0000:81:00.0"
 				      };
-	char *invalid_argv_BW[test_argc] = {"app_ut",
+	char *invalid_argv_BA[test_argc] = {"app_ut",
 					    "-B",
 					    "0000:81:00.0",
-					    "-W",
+					    "-A",
 					    "0000:82:00.0",
 					    "-cspdk.conf"
 					   };
@@ -145,8 +145,8 @@ test_spdk_app_parse_args(void)
 	optind = 1;
 	clean_opts(&opts);
 
-	/* Specify -B and -W options at the same time. Expected result: FAIL */
-	rc = spdk_app_parse_args(test_argc, invalid_argv_BW, &opts, "", NULL, unittest_parse_args, NULL);
+	/* Specify -B and -A options at the same time. Expected result: FAIL */
+	rc = spdk_app_parse_args(test_argc, invalid_argv_BA, &opts, "", NULL, unittest_parse_args, NULL);
 	SPDK_CU_ASSERT_FATAL(rc == SPDK_APP_PARSE_ARGS_FAIL);
 	optind = 1;
 	clean_opts(&opts);
