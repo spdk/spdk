@@ -930,20 +930,6 @@ struct spdk_bdev_io_internal_fields {
 	/** The bdev I/O channel that this was handled on. */
 	struct spdk_bdev_channel *ch;
 
-	uint8_t	reserved[8];
-
-	/** The bdev descriptor that was used when submitting this I/O. */
-	struct spdk_bdev_desc *desc;
-
-	/** User function that will be called when this completes */
-	spdk_bdev_io_completion_cb cb;
-
-	/** Context that will be passed to the completion callback */
-	void *caller_ctx;
-
-	/** Current tsc at submit time. Used to calculate latency at completion. */
-	uint64_t submit_tsc;
-
 	union {
 		struct {
 
@@ -969,6 +955,26 @@ struct spdk_bdev_io_internal_fields {
 		};
 		uint8_t raw;
 	} f;
+
+	/** Status for the IO */
+	int8_t status;
+
+	/** Retry state (resubmit, re-pull, re-push, etc.) */
+	uint8_t retry_state;
+
+	uint8_t	reserved[5];
+
+	/** The bdev descriptor that was used when submitting this I/O. */
+	struct spdk_bdev_desc *desc;
+
+	/** User function that will be called when this completes */
+	spdk_bdev_io_completion_cb cb;
+
+	/** Context that will be passed to the completion callback */
+	void *caller_ctx;
+
+	/** Current tsc at submit time. Used to calculate latency at completion. */
+	uint64_t submit_tsc;
 
 	/** Entry to the list io_submitted of struct spdk_bdev_channel */
 	TAILQ_ENTRY(spdk_bdev_io) ch_link;
@@ -1000,12 +1006,6 @@ struct spdk_bdev_io_internal_fields {
 		/** Only valid when status is SPDK_BDEV_IO_STATUS_AIO_ERROR */
 		int aio_result;
 	} error;
-
-	/** Status for the IO */
-	int8_t status;
-
-	/** Retry state (resubmit, re-pull, re-push, etc.) */
-	uint8_t retry_state;
 
 	struct {
 		/** stored user callback in case we split the I/O and use a temporary callback */
