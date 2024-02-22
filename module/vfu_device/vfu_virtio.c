@@ -678,7 +678,7 @@ vfu_virtio_vq_flush_irq(struct vfu_virtio_dev *dev, struct vfu_virtio_vq *vq)
 }
 
 int
-vfu_virito_dev_process_split_ring(struct vfu_virtio_dev *dev, struct vfu_virtio_vq *vq)
+vfu_virtio_dev_process_split_ring(struct vfu_virtio_dev *dev, struct vfu_virtio_vq *vq)
 {
 	struct vfu_virtio_endpoint *virtio_endpoint = dev->virtio_endpoint;
 	struct vfu_virtio_req *req;
@@ -850,7 +850,7 @@ virtio_dev_packed_iovs_setup(struct vfu_virtio_dev *dev, struct vfu_virtio_vq *v
 }
 
 int
-vfu_virito_dev_process_packed_ring(struct vfu_virtio_dev *dev, struct vfu_virtio_vq *vq)
+vfu_virtio_dev_process_packed_ring(struct vfu_virtio_dev *dev, struct vfu_virtio_vq *vq)
 {
 	struct vfu_virtio_endpoint *virtio_endpoint = dev->virtio_endpoint;
 	struct vring_packed_desc *desc;

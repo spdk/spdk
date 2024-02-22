@@ -89,10 +89,10 @@ vfu_virtio_blk_vring_poll(void *ctx)
 
 		if (vq->packed.packed_ring) {
 			/* packed vring */
-			count += vfu_virito_dev_process_packed_ring(dev, vq);
+			count += vfu_virtio_dev_process_packed_ring(dev, vq);
 		} else {
 			/* split vring */
-			count += vfu_virito_dev_process_split_ring(dev, vq);
+			count += vfu_virtio_dev_process_split_ring(dev, vq);
 		}
 	}
 

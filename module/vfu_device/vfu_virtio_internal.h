@@ -379,8 +379,8 @@ int vfu_virtio_quiesce_cb(struct spdk_vfu_endpoint *endpoint);
 void vfu_virtio_dev_put_req(struct vfu_virtio_req *req);
 void vfu_virtio_finish_req(struct vfu_virtio_req *req);
 void vfu_virtio_vq_flush_irq(struct vfu_virtio_dev *dev, struct vfu_virtio_vq *vq);
-int vfu_virito_dev_process_packed_ring(struct vfu_virtio_dev *dev, struct vfu_virtio_vq *vq);
-int vfu_virito_dev_process_split_ring(struct vfu_virtio_dev *dev, struct vfu_virtio_vq *vq);
+int vfu_virtio_dev_process_packed_ring(struct vfu_virtio_dev *dev, struct vfu_virtio_vq *vq);
+int vfu_virtio_dev_process_split_ring(struct vfu_virtio_dev *dev, struct vfu_virtio_vq *vq);
 void vfu_virtio_notify_config(struct vfu_virtio_endpoint *virtio_endpoint);
 int vfu_virtio_endpoint_setup(struct vfu_virtio_endpoint *virtio_endpoint,
 			      struct spdk_vfu_endpoint *endpoint,
