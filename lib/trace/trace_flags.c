@@ -191,33 +191,52 @@ spdk_trace_disable_tpoint_group(const char *group_name)
 void
 spdk_trace_mask_usage(FILE *f, const char *tmask_arg)
 {
+#define LINE_PREFIX			"                           "
+#define ENTRY_SEPARATOR			", "
+#define MAX_LINE_LENGTH			100
+	uint64_t prefix_len = strlen(LINE_PREFIX);
+	uint64_t separator_len = strlen(ENTRY_SEPARATOR);
+	const char *first_entry = "group_name - tracepoint group name for spdk trace buffers (";
+	const char *last_entry = "all).";
+	uint64_t curr_line_len;
+	uint64_t curr_entry_len;
 	struct spdk_trace_register_fn *register_fn;
-	bool first_group_name = true;
 
 	fprintf(f, " %s, --tpoint-group <group-name>[:<tpoint_mask>]\n", tmask_arg);
-	fprintf(f, "                           group_name - tracepoint group name ");
-	fprintf(f, "for spdk trace buffers (");
+	fprintf(f, "%s%s", LINE_PREFIX, first_entry);
+	curr_line_len = prefix_len + strlen(first_entry);
 
 	register_fn = g_reg_fn_head;
 	while (register_fn) {
-		if (first_group_name) {
-			fprintf(f, "%s", register_fn->name);
-			first_group_name = false;
-		} else {
-			fprintf(f, ", %s", register_fn->name);
+		curr_entry_len = strlen(register_fn->name);
+		if ((curr_line_len + curr_entry_len + separator_len > MAX_LINE_LENGTH)) {
+			fprintf(f, "\n%s", LINE_PREFIX);
+			curr_line_len = prefix_len;
 		}
+
+		fprintf(f, "%s%s", register_fn->name, ENTRY_SEPARATOR);
+		curr_line_len += curr_entry_len + separator_len;
+
+		if (register_fn->next == NULL) {
+			if (curr_line_len + strlen(last_entry) > MAX_LINE_LENGTH) {
+				fprintf(f, " ");
+			}
+			fprintf(f, "%s\n", last_entry);
+			break;
+		}
+
 		register_fn = register_fn->next;
 	}
 
-	fprintf(f, ", all)\n");
-	fprintf(f, "                           tpoint_mask - tracepoint mask for enabling individual");
-	fprintf(f, " tpoints inside a tracepoint group.");
-	fprintf(f, " First tpoint inside a group can be");
-	fprintf(f, " enabled by setting tpoint_mask to 1 (e.g. bdev:0x1).\n");
-	fprintf(f, "                            Groups and masks can be combined (e.g.");
-	fprintf(f, " thread,bdev:0x1).\n");
-	fprintf(f, "                            All available tpoints can be found in");
-	fprintf(f, " /include/spdk_internal/trace_defs.h\n");
+	fprintf(f, "%stpoint_mask - tracepoint mask for enabling individual tpoints inside\n",
+		LINE_PREFIX);
+	fprintf(f, "%sa tracepoint group. First tpoint inside a group can be enabled by\n",
+		LINE_PREFIX);
+	fprintf(f, "%ssetting tpoint_mask to 1 (e.g. bdev:0x1). Groups and masks can be\n",
+		LINE_PREFIX);
+	fprintf(f, "%scombined (e.g. thread,bdev:0x1). All available tpoints can be found\n",
+		LINE_PREFIX);
+	fprintf(f, "%sin /include/spdk_internal/trace_defs.h\n", LINE_PREFIX);
 }
 
 void

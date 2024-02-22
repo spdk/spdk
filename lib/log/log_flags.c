@@ -7,7 +7,8 @@
 
 #include "spdk/log.h"
 
-static TAILQ_HEAD(, spdk_log_flag) g_log_flags = TAILQ_HEAD_INITIALIZER(g_log_flags);
+static TAILQ_HEAD(spdk_log_flag_head,
+		  spdk_log_flag) g_log_flags = TAILQ_HEAD_INITIALIZER(g_log_flags);
 
 static struct spdk_log_flag *
 get_log_flag(const char *name)
@@ -112,11 +113,37 @@ spdk_log_get_next_flag(struct spdk_log_flag *flag)
 void
 spdk_log_usage(FILE *f, const char *log_arg)
 {
+#define LINE_PREFIX			"                           "
+#define ENTRY_SEPARATOR			", "
+#define MAX_LINE_LENGTH			100
+	uint64_t prefix_len = strlen(LINE_PREFIX);
+	uint64_t separator_len = strlen(ENTRY_SEPARATOR);
+	const char *first_entry = "--logflag <flag>      enable log flag (all, ";
+	uint64_t curr_line_len;
+	uint64_t curr_entry_len;
 	struct spdk_log_flag *flag;
-	fprintf(f, " %s, --logflag <flag>    enable log flag (all", log_arg);
+	char first_line[MAX_LINE_LENGTH] = {};
+
+	snprintf(first_line, sizeof(first_line), " %s, %s", log_arg, first_entry);
+	fprintf(f, "%s", first_line);
+	curr_line_len = strlen(first_line);
 
 	TAILQ_FOREACH(flag, &g_log_flags, tailq) {
-		fprintf(f, ", %s", flag->name);
+		curr_entry_len = strlen(flag->name);
+		if ((curr_line_len + curr_entry_len + separator_len) > MAX_LINE_LENGTH) {
+			fprintf(f, "\n%s", LINE_PREFIX);
+			curr_line_len = prefix_len;
+		}
+
+		fprintf(f, "%s", flag->name);
+		curr_line_len += curr_entry_len;
+
+		if (TAILQ_LAST(&g_log_flags, spdk_log_flag_head) == flag) {
+			break;
+		}
+
+		fprintf(f, "%s", ENTRY_SEPARATOR);
+		curr_line_len += separator_len;
 	}
 
 	fprintf(f, ")\n");

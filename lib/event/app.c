@@ -979,7 +979,8 @@ usage(void (*app_usage)(void))
 	printf("%s [options]\n", g_executable_name);
 	/* Keep entries inside categories roughly sorted by frequency of use. */
 	printf("\nCPU options:\n");
-	printf(" -m, --cpumask <mask or list>    core mask (like 0xF) or core list of '[]' embraced (like [0,1,10]) for DPDK\n");
+	printf(" -m, --cpumask <mask or list>    core mask (like 0xF) or core list of '[]' embraced for DPDK\n");
+	printf("                                 (like [0,1,10])\n");
 	printf("     --lcores <list>       lcore to CPU mapping list. The list is in the format:\n");
 	printf("                           <lcores[@CPUs]>[<,lcores[@CPUs]>...]\n");
 	printf("                           lcores and cpus list are grouped by '(' and ')', e.g '--lcores \"(5-7)@(10-12)\"'\n");
@@ -988,7 +989,8 @@ usage(void (*app_usage)(void))
 	printf("                           '( )' can be omitted for single element group,\n");
 	printf("                           '@' can be omitted if cpus and lcores have the same value\n");
 	printf("     --disable-cpumask-locks    Disable CPU core lock files.\n");
-	printf("     --interrupt-mode      set app to interrupt mode (Warning: CPU usage will be reduced only if all pollers in the app support interrupt mode)\n");
+	printf("     --interrupt-mode      set app to interrupt mode (Warning: CPU usage will be reduced only if all\n");
+	printf("                           pollers in the app support interrupt mode)\n");
 	printf(" -p, --main-core <id>      main (primary) core for DPDK\n");
 
 	printf("\nConfiguration options:\n");
@@ -1010,8 +1012,7 @@ usage(void (*app_usage)(void))
 	       SPDK_DEFAULT_MSG_MEMPOOL_SIZE);
 	printf("     --no-huge             run without using hugepages\n");
 	printf(" -i, --shm-id <id>         shared memory ID (optional)\n");
-	printf(" -g, --single-file-segments\n");
-	printf("                           force creating just one hugetlbfs file\n");
+	printf(" -g, --single-file-segments   force creating just one hugetlbfs file\n");
 
 	printf("\nPCI options:\n");
 	printf(" -A, --pci-allowed <bdf>   pci addr to allow (-B and -A cannot be used at the same time)\n");
@@ -1024,7 +1025,8 @@ usage(void (*app_usage)(void))
 	printf("     --silence-noticelog   disable notice level logging to stderr\n");
 
 	printf("\nTrace options:\n");
-	printf("     --num-trace-entries <num>   number of trace entries for each core, must be power of 2, setting 0 to disable trace (default %d)\n",
+	printf("     --num-trace-entries <num>   number of trace entries for each core, must be power of 2,\n");
+	printf("                                 setting 0 to disable trace (default %d)\n",
 	       SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES);
 	printf("                                 Tracepoints vary in size and can use more than one trace entry.\n");
 	spdk_trace_mask_usage(stdout, "-e");
