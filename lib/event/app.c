@@ -979,16 +979,8 @@ static void
 usage(void (*app_usage)(void))
 {
 	printf("%s [options]\n", g_executable_name);
-	printf("options:\n");
-	printf(" -c, --config <config>     JSON config file\n");
-	printf("     --json <config>       JSON config file\n");
-	printf("     --json-ignore-init-errors\n");
-	printf("                           don't exit on invalid config entry\n");
-	printf(" -d, --limit-coredump      do not set max coredump size to RLIM_INFINITY\n");
-	printf(" -g, --single-file-segments\n");
-	printf("                           force creating just one hugetlbfs file\n");
-	printf(" -h, --help                show this usage\n");
-	printf(" -i, --shm-id <id>         shared memory ID (optional)\n");
+	/* Keep entries inside categories roughly sorted by frequency of use. */
+	printf("\nCPU options:\n");
 	printf(" -m, --cpumask <mask or list>    core mask (like 0xF) or core list of '[]' embraced (like [0,1,10]) for DPDK\n");
 	printf("     --lcores <list>       lcore to CPU mapping list. The list is in the format:\n");
 	printf("                           <lcores[@CPUs]>[<,lcores[@CPUs]>...]\n");
@@ -997,36 +989,57 @@ usage(void (*app_usage)(void))
 	printf("                           ',' is used for single number separator.\n");
 	printf("                           '( )' can be omitted for single element group,\n");
 	printf("                           '@' can be omitted if cpus and lcores have the same value\n");
-	printf(" -n, --mem-channels <num>  channel number of memory channels used for DPDK\n");
-	printf(" -p, --main-core <id>      main (primary) core for DPDK\n");
-	printf(" -r, --rpc-socket <path>   RPC listen address (default %s)\n", SPDK_DEFAULT_RPC_ADDR);
-	printf(" -s, --mem-size <size>     memory size in MB for DPDK (default: ");
-	usage_memory_size();
 	printf("     --disable-cpumask-locks    Disable CPU core lock files.\n");
-	printf("     --silence-noticelog   disable notice level logging to stderr\n");
-	printf("     --msg-mempool-size <size>  global message memory pool size in count (default: %d)\n",
-	       SPDK_DEFAULT_MSG_MEMPOOL_SIZE);
-	printf(" -u, --no-pci              disable PCI access\n");
-	printf("     --wait-for-rpc        wait for RPCs to initialize subsystems\n");
+	printf("     --interrupt-mode      set app to interrupt mode (Warning: CPU usage will be reduced only if all pollers in the app support interrupt mode)\n");
+	printf(" -p, --main-core <id>      main (primary) core for DPDK\n");
 	printf("     --max-delay <num>     maximum reactor delay (in microseconds)\n");
-	printf(" -B, --pci-blocked <bdf>   pci addr to block (can be used more than once)\n");
-	printf(" -A, --pci-allowed <bdf>   pci addr to allow (-B and -A cannot be used at the same time)\n");
-	printf(" -R, --huge-unlink         unlink huge files after initialization\n");
-	printf(" -v, --version             print SPDK version\n");
-	printf("     --huge-dir <path>     use a specific hugetlbfs mount to reserve memory from\n");
+
+	printf("\nConfiguration options:\n");
+	printf(" -c, --config, --json  <config>     JSON config file\n");
+	printf(" -r, --rpc-socket <path>   RPC listen address (default %s)\n", SPDK_DEFAULT_RPC_ADDR);
+	printf("     --wait-for-rpc        wait for RPCs to initialize subsystems\n");
+	printf("     --rpcs-allowed	   comma-separated list of permitted RPCS\n");
+	printf("     --json-ignore-init-errors    don't exit on invalid config entry\n");
+
+	printf("\nMemory options:\n");
 	printf("     --iova-mode <pa/va>   set IOVA mode ('pa' for IOVA_PA and 'va' for IOVA_VA)\n");
 	printf("     --base-virtaddr <addr>      the base virtual address for DPDK (default: 0x200000000000)\n");
+	printf("     --huge-dir <path>     use a specific hugetlbfs mount to reserve memory from\n");
+	printf(" -R, --huge-unlink         unlink huge files after initialization\n");
+	printf(" -n, --mem-channels <num>  number of memory channels used for DPDK\n");
+	printf(" -s, --mem-size <size>     memory size in MB for DPDK (default: ");
+	usage_memory_size();
+	printf("     --msg-mempool-size <size>  global message memory pool size in count (default: %d)\n",
+	       SPDK_DEFAULT_MSG_MEMPOOL_SIZE);
+	printf("     --no-huge             run without using hugepages\n");
+	printf(" -i, --shm-id <id>         shared memory ID (optional)\n");
+	printf(" -g, --single-file-segments\n");
+	printf("                           force creating just one hugetlbfs file\n");
+
+	printf("\nPCI options:\n");
+	printf(" -A, --pci-allowed <bdf>   pci addr to allow (-B and -A cannot be used at the same time)\n");
+	printf(" -B, --pci-blocked <bdf>   pci addr to block (can be used more than once)\n");
+	printf(" -u, --no-pci              disable PCI access\n");
+	printf("     --vfio-vf-token       VF token (UUID) shared between SR-IOV PF and VFs for vfio_pci driver\n");
+
+	printf("\nLog options:\n");
+	spdk_log_usage(stdout, "-L");
+	printf("     --silence-noticelog   disable notice level logging to stderr\n");
+
+	printf("\nTrace options:\n");
 	printf("     --num-trace-entries <num>   number of trace entries for each core, must be power of 2, setting 0 to disable trace (default %d)\n",
 	       SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES);
 	printf("                                 Tracepoints vary in size and can use more than one trace entry.\n");
-	printf("     --rpcs-allowed	   comma-separated list of permitted RPCS\n");
-	printf("     --env-context         Opaque context for use of the env implementation\n");
-	printf("     --vfio-vf-token       VF token (UUID) shared between SR-IOV PF and VFs for vfio_pci driver\n");
-	printf("     --no-huge             run without using hugepages\n");
-	spdk_log_usage(stdout, "-L");
 	spdk_trace_mask_usage(stdout, "-e");
-	printf("     --interrupt-mode      set app to interrupt mode (Warning: CPU usage will be reduced only if all pollers in the app support interrupt mode)\n");
+
+	printf("\nOther options:\n");
+	printf(" -h, --help                show this usage\n");
+	printf(" -v, --version             print SPDK version\n");
+	printf(" -d, --limit-coredump      do not set max coredump size to RLIM_INFINITY\n");
+	printf("     --env-context         Opaque context for use of the env implementation\n");
+
 	if (app_usage) {
+		printf("\nApplication specific:\n");
 		app_usage();
 	}
 }
