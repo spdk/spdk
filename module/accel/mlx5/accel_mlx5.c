@@ -1057,8 +1057,7 @@ accel_mlx5_init(void)
 
 	rdma_devs = spdk_mlx5_crypto_devs_get(&num_devs);
 	if (!rdma_devs || !num_devs) {
-		SPDK_NOTICELOG("No crypto devs found\n");
-		return -ENOTSUP;
+		return -ENODEV;
 	}
 
 	g_accel_mlx5.crypto_ctxs = calloc(num_devs, sizeof(*g_accel_mlx5.crypto_ctxs));

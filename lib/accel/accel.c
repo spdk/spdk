@@ -2679,11 +2679,14 @@ accel_module_initialize(void)
 	TAILQ_FOREACH_SAFE(accel_module, &spdk_accel_module_list, tailq, tmp_module) {
 		module_rc = accel_module->module_init();
 		if (module_rc) {
-			SPDK_ERRLOG("Module %s initialization failed with %d\n", accel_module->name, module_rc);
 			TAILQ_REMOVE(&spdk_accel_module_list, accel_module, tailq);
-			if (!rc) {
+			if (module_rc == -ENODEV) {
+				SPDK_NOTICELOG("No devices for module %s, skipping\n", accel_module->name);
+			} else if (!rc) {
+				SPDK_ERRLOG("Module %s initialization failed with %d\n", accel_module->name, module_rc);
 				rc = module_rc;
 			}
+			continue;
 		}
 
 		SPDK_DEBUGLOG(accel, "Module %s initialized.\n", accel_module->name);

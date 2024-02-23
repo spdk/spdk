@@ -170,7 +170,7 @@ accel_error_module_init(void)
 	g_sw_module = spdk_accel_get_module("software");
 	if (g_sw_module == NULL) {
 		/* Should never really happen */
-		return -ENODEV;
+		return -ENOTSUP;
 	}
 
 	g_task_offset = g_sw_module->get_ctx_size();

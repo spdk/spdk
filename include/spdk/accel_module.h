@@ -173,6 +173,10 @@ struct spdk_accel_module_if {
 	/**
 	 * Initialization function for the module.  Called by the application during startup.
 	 *
+	 * Return 0 on success or negative error code. If -ENODEV is returned - the module
+	 * will not be used to handle any operation, but the error will not stop framework
+	 * initialization.
+	 *
 	 * Modules are required to define this function.
 	 */
 	int	(*module_init)(void);

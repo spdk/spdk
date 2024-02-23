@@ -375,8 +375,7 @@ accel_iaa_init(void)
 	}
 
 	if (TAILQ_EMPTY(&g_iaa_devices)) {
-		SPDK_NOTICELOG("no available idxd devices\n");
-		return -EINVAL;
+		return -ENODEV;
 	}
 
 	g_iaa_initialized = true;

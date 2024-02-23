@@ -978,7 +978,7 @@ test_initdrivers(void)
 
 	/* compressdev count 0 */
 	rc = accel_init_compress_drivers();
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -ENODEV);
 
 	/* bogus count */
 	ut_rte_compressdev_count = RTE_COMPRESS_MAX_DEVS + 1;

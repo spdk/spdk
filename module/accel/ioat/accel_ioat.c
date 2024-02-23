@@ -292,8 +292,7 @@ accel_ioat_init(void)
 	}
 
 	if (TAILQ_EMPTY(&g_devices)) {
-		SPDK_NOTICELOG("No available ioat devices\n");
-		return -1;
+		return -ENODEV;
 	}
 
 	g_ioat_initialized = true;

@@ -1153,12 +1153,12 @@ accel_dpdk_cryptodev_init(void)
 			       "Keep going...\n", ACCEL_DPDK_CRYPTODEV_AESNI_MB, rc, ACCEL_DPDK_CRYPTODEV_AESNI_MB);
 	}
 
-	/* If we have no crypto devices, there's no reason to continue. */
+	/* If we have no crypto devices, report error to fallback on other modules. */
 	cdev_count = rte_cryptodev_count();
-	SPDK_NOTICELOG("Found crypto devices: %d\n", (int)cdev_count);
 	if (cdev_count == 0) {
-		return 0;
+		return -ENODEV;
 	}
+	SPDK_NOTICELOG("Found crypto devices: %d\n", (int)cdev_count);
 
 	g_mbuf_offset = rte_mbuf_dynfield_register(&rte_mbuf_dynfield_io_context);
 	if (g_mbuf_offset < 0) {

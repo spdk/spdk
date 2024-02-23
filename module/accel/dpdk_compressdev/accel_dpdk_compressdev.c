@@ -252,10 +252,10 @@ accel_init_compress_drivers(void)
 	struct compress_dev *device;
 	int rc;
 
-	/* If we have no compression devices, there's no reason to continue. */
+	/* If we have no compression devices, report error to fallback on other modules. */
 	cdev_count = rte_compressdev_count();
 	if (cdev_count == 0) {
-		return 0;
+		return -ENODEV;
 	}
 	if (cdev_count > RTE_COMPRESS_MAX_DEVS) {
 		SPDK_ERRLOG("invalid device count from rte_compressdev_count()\n");
@@ -706,8 +706,7 @@ accel_compress_init(void)
 	rc = accel_init_compress_drivers();
 	if (rc) {
 		assert(TAILQ_EMPTY(&g_compress_devs));
-		SPDK_NOTICELOG("no available compression devices\n");
-		return -EINVAL;
+		return rc;
 	}
 
 	g_compressdev_initialized = true;

@@ -1189,7 +1189,7 @@ test_initdrivers(void)
 	/* No drivers available, not an error though */
 	MOCK_SET(rte_cryptodev_count, 0);
 	rc = accel_dpdk_cryptodev_init();
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -ENODEV);
 	CU_ASSERT(g_mbuf_mp == NULL);
 	CU_ASSERT(g_session_mp == NULL);
 	CU_ASSERT(g_session_mp_priv == NULL);

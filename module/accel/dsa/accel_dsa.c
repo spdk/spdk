@@ -441,8 +441,7 @@ accel_dsa_init(void)
 	}
 
 	if (TAILQ_EMPTY(&g_dsa_devices)) {
-		SPDK_NOTICELOG("no available dsa devices\n");
-		return -EINVAL;
+		return -ENODEV;
 	}
 
 	g_dsa_initialized = true;
