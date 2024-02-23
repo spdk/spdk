@@ -580,7 +580,7 @@ test_nvme_completion_poll_cb(void)
 /* stub callback used by test_nvme_user_copy_cmd_complete() */
 static struct spdk_nvme_cpl ut_spdk_nvme_cpl = {0};
 static void
-dummy_cb(void *user_cb_arg, struct spdk_nvme_cpl *cpl)
+dummy_cb(void *user_cb_arg, const struct spdk_nvme_cpl *cpl)
 {
 	ut_spdk_nvme_cpl  = *cpl;
 }
