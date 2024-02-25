@@ -12,6 +12,7 @@ DIRS-$(CONFIG_IDXD) += idxd
 DIRS-$(CONFIG_VBDEV_COMPRESS) += reduce
 DIRS-$(CONFIG_VHOST) += vhost
 DIRS-$(CONFIG_RDMA) += rdma
+DIRS-$(CONFIG_FSDEV) += fsdev
 ifeq ($(OS),Linux)
 DIRS-y += ftl
 endif

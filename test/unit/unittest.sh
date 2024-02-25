@@ -146,6 +146,10 @@ function unittest_util() {
 	$valgrind $testdir/lib/util/xor.c/xor_ut
 }
 
+function unittest_fsdev() {
+	$valgrind $testdir/lib/fsdev/fsdev.c/fsdev_ut
+}
+
 function unittest_init() {
 	$valgrind $testdir/lib/init/subsystem.c/subsystem_ut
 }
@@ -273,10 +277,12 @@ if grep -q '#define SPDK_CONFIG_VFIO_USER 1' $rootdir/include/spdk/config.h; the
 fi
 
 run_test "unittest_scsi" unittest_scsi
-# There are several intermittent sock_ut failures on FreeBSD that need to be debugged.
-# So just disable running it on FreeBSD for now.  See issue #2943.
 if [ $(uname -s) = Linux ]; then
+	# There are several intermittent sock_ut failures on FreeBSD that need to be debugged.
+	# So just disable running it on FreeBSD for now.  See issue #2943.
 	run_test "unittest_sock" unittest_sock
+	# fsdev are only avaliable on Linux
+	run_test "unittest_fsdev" unittest_fsdev
 fi
 run_test "unittest_thread" $valgrind $testdir/lib/thread/thread.c/thread_ut
 run_test "unittest_iobuf" $valgrind $testdir/lib/thread/iobuf.c/iobuf_ut
