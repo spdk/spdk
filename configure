@@ -170,8 +170,9 @@ done
 # Detect the compiler toolchain
 $rootdir/scripts/detect_cc.sh --cc="$CC" --cxx="$CXX" --lto="${CONFIG[LTO]}" --ld="$LD" --cross-prefix="${CONFIG[CROSS_PREFIX]}" > $rootdir/mk/cc.mk
 
-CC=$(grep "DEFAULT_CC=" "$rootdir/mk/cc.mk" | sed s/DEFAULT_CC=//)
-CC_TYPE=$(grep "CC_TYPE=" "$rootdir/mk/cc.mk" | cut -d "=" -f 2)
+mapfile -t cc < <(grep "=" "$rootdir/mk/cc.mk")
+source <(printf '%q\n' "${cc[@]}")
+CC=$DEFAULT_CC
 
 arch=$($CC -dumpmachine)
 sys_name=$(uname -s)
