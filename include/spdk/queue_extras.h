@@ -258,11 +258,19 @@ struct {								\
 		swap_tmp->field.le_prev = &LIST_FIRST((head2));		\
 } while (0)
 
-#define SLIST_SWAP(head1, head2, type) do {				\
+/*
+ * Singly-linked List functions.
+ */
+#define	SLIST_SWAP(head1, head2, type) do {			\
 	struct type *swap_tmp = SLIST_FIRST((head1));			\
 	SLIST_FIRST((head1)) = SLIST_FIRST((head2));			\
 	SLIST_FIRST((head2)) = swap_tmp;				\
 } while (0)
+
+#define	SLIST_FOREACH_SAFE(var, head, field, tvar)		\
+	for ((var) = SLIST_FIRST((head));				\
+	    (var) && ((tvar) = SLIST_NEXT((var), field), 1);		\
+	    (var) = (tvar))
 
 /*
  * Tail queue functions.
