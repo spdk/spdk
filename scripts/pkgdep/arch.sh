@@ -16,6 +16,7 @@ pip install grpcio
 pip install grpcio-tools
 pip install pyyaml
 pip install Jinja2
+pip install tabulate
 # Additional dependencies for DPDK
 pacman -Sy --needed --noconfirm numactl nasm
 # Additional dependencies for ISA-L used in compression

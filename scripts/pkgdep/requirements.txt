@@ -1,6 +1,7 @@
 paramiko
 pexpect
 pandas
+tabulate
 configshell-fb
 pyparsing
 ninja

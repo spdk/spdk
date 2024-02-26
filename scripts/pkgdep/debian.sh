@@ -17,6 +17,7 @@ pip3 install grpcio
 pip3 install grpcio-tools
 pip3 install pyyaml
 pip3 install Jinja2
+pip3 install tabulate
 # Additional dependencies for SPDK CLI
 apt-get install -y python3-configshell-fb python3-pexpect
 

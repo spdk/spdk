@@ -142,6 +142,8 @@ pip3 install pyelftools
 pip3 install ijson
 pip3 install python-magic
 pip3 install Jinja2
+pip3 install pandas
+pip3 install tabulate
 if ! [[ $ID == centos && $VERSION_ID == 7 ]]; then
 	# Problem with modules compilation on Centos7
 	pip3 install grpcio

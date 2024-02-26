@@ -85,6 +85,7 @@ pips=(
 	grpcio
 	grpcio-tools
 	Jinja2
+	tabulate
 )
 
 if ((EUID == 0)); then
