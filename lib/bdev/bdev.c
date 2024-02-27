@@ -6211,7 +6211,7 @@ spdk_bdev_unmap(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 }
 
 static void
-bdev_unmap_complete_cb(void *ctx)
+bdev_io_complete_cb(void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
 
@@ -6258,7 +6258,7 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.bdev.accel_sequence = NULL;
 
 	if (num_blocks == 0) {
-		spdk_thread_send_msg(spdk_get_thread(), bdev_unmap_complete_cb, bdev_io);
+		spdk_thread_send_msg(spdk_get_thread(), bdev_io_complete_cb, bdev_io);
 		return 0;
 	}
 
@@ -10337,9 +10337,7 @@ spdk_bdev_copy_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	if (dst_offset_blocks == src_offset_blocks) {
-		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
-		bdev_io->internal.cb(bdev_io, true, bdev_io->internal.caller_ctx);
-
+		spdk_thread_send_msg(spdk_get_thread(), bdev_io_complete_cb, bdev_io);
 		return 0;
 	}
 
