@@ -10303,11 +10303,6 @@ spdk_bdev_copy_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return -EBADF;
 	}
 
-	if (num_blocks == 0) {
-		SPDK_ERRLOG("Can't copy 0 blocks\n");
-		return -EINVAL;
-	}
-
 	if (!bdev_io_valid_blocks(bdev, dst_offset_blocks, num_blocks) ||
 	    !bdev_io_valid_blocks(bdev, src_offset_blocks, num_blocks)) {
 		SPDK_DEBUGLOG(bdev,
@@ -10336,7 +10331,7 @@ spdk_bdev_copy_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.bdev.accel_sequence = NULL;
 	bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	if (dst_offset_blocks == src_offset_blocks) {
+	if (dst_offset_blocks == src_offset_blocks || num_blocks == 0) {
 		spdk_thread_send_msg(spdk_get_thread(), bdev_io_complete_cb, bdev_io);
 		return 0;
 	}
