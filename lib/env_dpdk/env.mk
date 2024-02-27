@@ -183,6 +183,26 @@ ifeq ($(OS),FreeBSD)
 DPDK_PRIVATE_LINKER_ARGS += -lexecinfo
 endif
 
+ifeq ($(CC_TYPE),gcc)
+GCC_MAJOR = $(shell echo __GNUC__ | $(CC) -E -x c - | tail -n 1)
+ifeq ($(shell test $(GCC_MAJOR) -ge 10 && echo 1), 1)
+#1. gcc 10 complains on operations with zero size arrays in rte_cryptodev.c, so
+#disable this warning
+#2. gcc 10 disables fcommon by default and complains on multiple definition of
+#aesni_mb_logtype_driver symbol which is defined in header file and presented in several
+#translation units
+DPDK_CFLAGS += -Wno-stringop-overflow -fcommon
+ifeq ($(shell test $(GCC_MAJOR) -ge 12 && echo 1), 1)
+# 3. gcc 12 reports reading incorect size from a region. Seems like false positive,
+# see issue #2460
+DPDK_CFLAGS += -Wno-stringop-overread
+# 4. gcc 12 reports array subscript * is outside array bounds. Seems like false positive,
+# see issue #2668
+DPDK_CFLAGS += -Wno-array-bounds
+endif
+endif
+endif
+
 ifeq ($(CONFIG_SHARED),y)
 ENV_DPDK_FILE = $(call spdk_lib_list_to_shared_libs,env_dpdk)
 ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_SHARED_LIB)
