@@ -385,6 +385,11 @@ COMPILE_CXX=\
 
 ENV_LDFLAGS = $(if $(SPDK_NO_LINK_ENV),,$(ENV_LINKER_ARGS))
 
+# LTO build results in lots of false positive maybe-uninitialized warnings during linking
+ifeq ($(CONFIG_LTO),y)
+LDFLAGS += -Wno-maybe-uninitialized
+endif
+
 # Link $(OBJS) and $(LIBS) into $@ (app)
 LINK_C=\
 	$(Q)echo "  LINK $(notdir $@)"; \
