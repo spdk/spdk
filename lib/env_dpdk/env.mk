@@ -192,6 +192,10 @@ ifeq ($(shell test $(GCC_MAJOR) -ge 10 && echo 1), 1)
 #aesni_mb_logtype_driver symbol which is defined in header file and presented in several
 #translation units
 DPDK_CFLAGS += -Wno-stringop-overflow -fcommon
+ifeq ($(CONFIG_LTO),y)
+DPDK_LDFLAGS += -Wno-stringop-overflow -fcommon
+endif
+
 ifeq ($(shell test $(GCC_MAJOR) -ge 12 && echo 1), 1)
 # 3. gcc 12 reports reading incorect size from a region. Seems like false positive,
 # see issue #2460
@@ -199,6 +203,10 @@ DPDK_CFLAGS += -Wno-stringop-overread
 # 4. gcc 12 reports array subscript * is outside array bounds. Seems like false positive,
 # see issue #2668
 DPDK_CFLAGS += -Wno-array-bounds
+ifeq ($(CONFIG_LTO),y)
+DPDK_LDFLAGS += -Wno-stringop-overread -Wno-array-bounds
+endif
+
 endif
 endif
 endif
@@ -206,12 +214,12 @@ endif
 ifeq ($(CONFIG_SHARED),y)
 ENV_DPDK_FILE = $(call spdk_lib_list_to_shared_libs,env_dpdk)
 ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_SHARED_LIB)
-DPDK_LINKER_ARGS = $(DPDK_SHARED_LIB_LINKER_ARGS)
+DPDK_LINKER_ARGS = $(DPDK_SHARED_LIB_LINKER_ARGS) $(DPDK_LDFLAGS)
 ENV_LINKER_ARGS = $(ENV_DPDK_FILE) $(DPDK_LINKER_ARGS)
 else
 ENV_DPDK_FILE = $(call spdk_lib_list_to_static_libs,env_dpdk)
 ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_STATIC_LIB)
-DPDK_LINKER_ARGS = $(DPDK_STATIC_LIB_LINKER_ARGS)
+DPDK_LINKER_ARGS = $(DPDK_STATIC_LIB_LINKER_ARGS) $(DPDK_LDFLAGS)
 ENV_LINKER_ARGS = $(ENV_DPDK_FILE) $(DPDK_LINKER_ARGS)
 ENV_LINKER_ARGS += $(DPDK_PRIVATE_LINKER_ARGS)
 endif
