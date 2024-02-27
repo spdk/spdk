@@ -34,7 +34,7 @@ if [[ $CC == *clang* ]]; then
 fi
 
 config_params="$(get_config_params | sed 's/--enable-debug//g')"
-"$rootdir/configure" $config_params --enable-lto
+"$rootdir/configure" $config_params --enable-lto --disable-unit-tests
 
 $MAKE ${MAKEFLAGS}
 $MAKE ${MAKEFLAGS} clean
