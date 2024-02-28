@@ -141,6 +141,17 @@ struct spdk_vhost_session {
 	/* Session's stop poller will only try limited times to destroy the session. */
 	uint32_t stop_retry_count;
 
+	/**
+	 * DPDK calls our callbacks synchronously but the work those callbacks
+	 * perform needs to be async. Luckily, all DPDK callbacks are called on
+	 * a DPDK-internal pthread and only related to the current session, so we'll
+	 * just wait on a semaphore of this session in there.
+	 */
+	sem_t dpdk_sem;
+
+	/** Return code for the current DPDK callback */
+	int dpdk_response;
+
 	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
 
 	TAILQ_ENTRY(spdk_vhost_session) tailq;

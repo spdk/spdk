@@ -23,16 +23,6 @@ static char g_vhost_user_dev_dirname[PATH_MAX] = "";
 
 static struct spdk_thread *g_vhost_user_init_thread;
 
-/**
- * DPDK calls our callbacks synchronously but the work those callbacks
- * perform needs to be async. Luckily, all DPDK callbacks are called on
- * a DPDK-internal pthread, so we'll just wait on a semaphore in there.
- */
-static sem_t g_dpdk_sem;
-
-/** Return code for the current DPDK callback */
-static int g_dpdk_response;
-
 struct vhost_session_fn_ctx {
 	/** Device pointer obtained before enqueueing the event */
 	struct spdk_vhost_dev *vdev;
@@ -55,23 +45,6 @@ struct vhost_session_fn_ctx {
 
 static int vhost_user_wait_for_session_stop(struct spdk_vhost_session *vsession,
 		unsigned timeout_sec, const char *errmsg);
-
-static void
-__attribute__((constructor))
-_vhost_user_sem_init(void)
-{
-	if (sem_init(&g_dpdk_sem, 0, 0) != 0) {
-		SPDK_ERRLOG("Failed to initialize semaphore for rte_vhost pthread.\n");
-		abort();
-	}
-}
-
-static void
-__attribute__((destructor))
-_vhost_user_sem_destroy(void)
-{
-	sem_destroy(&g_dpdk_sem);
-}
 
 void *
 vhost_gpa_to_vva(struct spdk_vhost_session *vsession, uint64_t addr, uint64_t len)
@@ -971,6 +944,15 @@ new_connection(int vid)
 		pthread_mutex_unlock(&user_dev->lock);
 		return -1;
 	}
+
+	if (sem_init(&vsession->dpdk_sem, 0, 0) != 0) {
+		SPDK_ERRLOG("Failed to initialize semaphore for rte_vhost pthread.\n");
+		free(vsession->name);
+		free(vsession);
+		pthread_mutex_unlock(&user_dev->lock);
+		return -1;
+	}
+
 	vsession->started = false;
 	vsession->starting = false;
 	vsession->next_stats_check_time = 0;
@@ -1228,6 +1210,7 @@ destroy_connection(int vid)
 	}
 
 	TAILQ_REMOVE(&to_user_dev(vsession->vdev)->vsessions, vsession, tailq);
+	sem_destroy(&vsession->dpdk_sem);
 	free(vsession->name);
 	free(vsession);
 	pthread_mutex_unlock(&user_dev->lock);
@@ -1282,17 +1265,18 @@ vhost_session_find_by_vid(int vid)
 }
 
 static void
-wait_for_semaphore(int timeout_sec, const char *errmsg)
+vhost_session_wait_for_semaphore(struct spdk_vhost_session *vsession, int timeout_sec,
+				 const char *errmsg)
 {
 	struct timespec timeout;
 	int rc;
 
 	clock_gettime(CLOCK_REALTIME, &timeout);
 	timeout.tv_sec += timeout_sec;
-	rc = sem_timedwait(&g_dpdk_sem, &timeout);
+	rc = sem_timedwait(&vsession->dpdk_sem, &timeout);
 	if (rc != 0) {
 		SPDK_ERRLOG("Timeout waiting for event: %s.\n", errmsg);
-		sem_wait(&g_dpdk_sem);
+		sem_wait(&vsession->dpdk_sem);
 	}
 }
 
@@ -1303,8 +1287,8 @@ vhost_user_session_stop_done(struct spdk_vhost_session *vsession, int response)
 		vsession->started = false;
 	}
 
-	g_dpdk_response = response;
-	sem_post(&g_dpdk_sem);
+	vsession->dpdk_response = response;
+	sem_post(&vsession->dpdk_sem);
 }
 
 static void
@@ -1339,10 +1323,10 @@ vhost_user_wait_for_session_stop(struct spdk_vhost_session *vsession,
 	spdk_thread_send_msg(vdev->thread, vhost_user_session_stop_event, &ev_ctx);
 
 	pthread_mutex_unlock(&user_dev->lock);
-	wait_for_semaphore(timeout_sec, errmsg);
+	vhost_session_wait_for_semaphore(vsession, timeout_sec, errmsg);
 	pthread_mutex_lock(&user_dev->lock);
 
-	return g_dpdk_response;
+	return vsession->dpdk_response;
 }
 
 static void
@@ -1896,6 +1880,7 @@ vhost_user_dev_unregister(struct spdk_vhost_dev *vdev)
 				vhost_session_mem_unregister(vsession->mem);
 				free(vsession->mem);
 			}
+			sem_destroy(&vsession->dpdk_sem);
 			free(vsession->name);
 			free(vsession);
 		}
