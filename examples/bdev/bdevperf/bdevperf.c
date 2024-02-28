@@ -503,6 +503,10 @@ verify_data(void *wr_buf, int wr_buf_len, void *rd_buf, int rd_buf_len, int bloc
 
 	while (offset_blocks < num_blocks) {
 		if (memcmp(wr_buf, rd_buf, data_block_size) != 0) {
+			printf("data_block_size %d, num_blocks %d, offset %d\n", data_block_size, num_blocks,
+			       offset_blocks);
+			spdk_log_dump(stdout, "rd_buf", rd_buf, data_block_size);
+			spdk_log_dump(stdout, "wr_buf", wr_buf, data_block_size);
 			return false;
 		}
 
@@ -511,6 +515,9 @@ verify_data(void *wr_buf, int wr_buf_len, void *rd_buf, int rd_buf_len, int bloc
 
 		if (md_check) {
 			if (memcmp(wr_md_buf, rd_md_buf, md_size) != 0) {
+				printf("md_size %d, num_blocks %d, offset %d\n", md_size, num_blocks, offset_blocks);
+				spdk_log_dump(stdout, "rd_md_buf", rd_md_buf, md_size);
+				spdk_log_dump(stdout, "wr_md_buf", wr_md_buf, md_size);
 				return false;
 			}
 
@@ -908,7 +915,6 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 				 spdk_bdev_get_md_size(job->bdev),
 				 job->io_size_blocks, md_check)) {
 			printf("Buffer mismatch! Target: %s Disk Offset: %" PRIu64 "\n", job->name, task->offset_blocks);
-			printf("   First dword expected 0x%x got 0x%x\n", *(int *)task->buf, *(int *)iovs[0].iov_base);
 			bdevperf_job_drain(job);
 			g_run_rc = -1;
 		}
