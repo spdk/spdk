@@ -39,7 +39,7 @@ iobuf_write_config_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_iobuf_opts opts;
 
-	spdk_iobuf_get_opts(&opts);
+	spdk_iobuf_get_opts(&opts, sizeof(opts));
 
 	spdk_json_write_array_begin(w);
 

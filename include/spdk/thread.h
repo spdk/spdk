@@ -991,6 +991,15 @@ struct spdk_iobuf_opts {
 	uint32_t small_bufsize;
 	/** Size of a single large buffer */
 	uint32_t large_bufsize;
+
+	/**
+	 * The size of spdk_iobuf_opts according to the caller of this library is used for ABI
+	 * compatibility.  The library uses this field to know how many fields in this
+	 * structure are valid. And the library will populate any remaining fields with default values.
+	 * New added fields should be put at the end of the struct.
+	 */
+	size_t opts_size;
+
 };
 
 struct spdk_iobuf_pool_stats {
@@ -1084,9 +1093,10 @@ int spdk_iobuf_set_opts(const struct spdk_iobuf_opts *opts);
 /**
  * Get iobuf options.
  *
- * \param opts Options to fill in.
+ * \param opts Output parameter for options.
+ * \param opts_size sizeof(*opts)
  */
-void spdk_iobuf_get_opts(struct spdk_iobuf_opts *opts);
+void spdk_iobuf_get_opts(struct spdk_iobuf_opts *opts, size_t opts_size);
 
 /**
  * Register a module as an iobuf pool user.  Only registered users can request buffers from the

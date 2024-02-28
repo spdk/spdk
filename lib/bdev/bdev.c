@@ -7677,7 +7677,7 @@ bdev_register(struct spdk_bdev *bdev)
 		}
 	}
 
-	spdk_iobuf_get_opts(&iobuf_opts);
+	spdk_iobuf_get_opts(&iobuf_opts, sizeof(iobuf_opts));
 	if (spdk_bdev_get_buf_align(bdev) > 1) {
 		bdev->max_rw_size = spdk_min(bdev->max_rw_size ? bdev->max_rw_size : UINT32_MAX,
 					     iobuf_opts.large_bufsize / bdev->blocklen);

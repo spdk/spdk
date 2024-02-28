@@ -752,7 +752,7 @@ vbdev_crypto_claim(const char *bdev_name)
 
 	/* Limit the max IO size by some reasonable value. Since in write operation we use aux buffer,
 	 * let's set the limit to the large_bufsize value */
-	spdk_iobuf_get_opts(&iobuf_opts);
+	spdk_iobuf_get_opts(&iobuf_opts, sizeof(iobuf_opts));
 
 	/* Check our list of names from config versus this bdev and if
 	 * there's a match, create the crypto_bdev & bdev accordingly.

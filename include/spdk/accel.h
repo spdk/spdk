@@ -740,8 +740,14 @@ int spdk_accel_set_driver(const char *name);
 struct spdk_memory_domain *spdk_accel_get_memory_domain(void);
 
 struct spdk_accel_opts {
-	/** Size of this structure */
-	size_t		size;
+	/**
+	 * The size of spdk_accel_opts according to the caller of this library is used for ABI
+	 * compatibility.  The library uses this field to know how many fields in this
+	 * structure are valid. And the library will populate any remaining fields with default values.
+	 * New added fields should be put at the end of the struct.
+	 */
+	size_t		opts_size;
+
 	/** Size of the small iobuf cache */
 	uint32_t	small_cache_size;
 	/** Size of the large iobuf cache */
@@ -752,6 +758,7 @@ struct spdk_accel_opts {
 	uint32_t	sequence_count;
 	/** Maximum number of accel buffers per IO channel */
 	uint32_t	buf_count;
+
 } __attribute__((packed));
 
 /**
@@ -766,9 +773,10 @@ int spdk_accel_set_opts(const struct spdk_accel_opts *opts);
 /**
  * Get the options for the accel framework.
  *
- * \param opts Accel options.
+ * \param opts Output parameter for options.
+ * \param opts_size sizeof(*opts)
  */
-void spdk_accel_get_opts(struct spdk_accel_opts *opts);
+void spdk_accel_get_opts(struct spdk_accel_opts *opts, size_t opts_size);
 
 struct spdk_accel_opcode_stats {
 	/** Number of executed operations */

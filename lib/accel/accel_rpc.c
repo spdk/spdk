@@ -374,13 +374,13 @@ static const struct spdk_json_object_decoder rpc_accel_set_options_decoders[] = 
 static void
 rpc_accel_set_options(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
-	struct spdk_accel_opts opts = { .size = sizeof(opts) };
 	struct rpc_accel_opts rpc_opts;
+	struct spdk_accel_opts opts;
 	int rc;
 
 	/* We can't pass spdk_accel_opts directly to spdk_json_decode_object(), because that
-	 * structure is packed, leading undefined behavior due to misaligned pointer access */
-	spdk_accel_get_opts(&opts);
+	 * structure is packed, leading to undefined behavior due to misaligned pointer access */
+	spdk_accel_get_opts(&opts, sizeof(opts));
 	rpc_opts.small_cache_size = opts.small_cache_size;
 	rpc_opts.large_cache_size = opts.large_cache_size;
 	rpc_opts.task_count = opts.task_count;

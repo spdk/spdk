@@ -39,7 +39,7 @@ spdk_iobuf_set_opts(const struct spdk_iobuf_opts *opts)
 }
 
 void
-spdk_iobuf_get_opts(struct spdk_iobuf_opts *opts)
+spdk_iobuf_get_opts(struct spdk_iobuf_opts *opts, size_t opts_size)
 {
 	*opts = g_iobuf.opts;
 }

@@ -3045,24 +3045,65 @@ spdk_accel_driver_register(struct spdk_accel_driver *driver)
 int
 spdk_accel_set_opts(const struct spdk_accel_opts *opts)
 {
-	if (opts->size > sizeof(*opts)) {
-		return -EINVAL;
+	if (!opts) {
+		SPDK_ERRLOG("opts cannot be NULL\n");
+		return -1;
 	}
 
-	memcpy(&g_opts, opts, opts->size);
+	if (!opts->opts_size) {
+		SPDK_ERRLOG("opts_size inside opts cannot be zero value\n");
+		return -1;
+	}
+
+#define SET_FIELD(field) \
+        if (offsetof(struct spdk_accel_opts, field) + sizeof(opts->field) <= opts->opts_size) { \
+                g_opts.field = opts->field; \
+        } \
+
+	SET_FIELD(small_cache_size);
+	SET_FIELD(large_cache_size);
+	SET_FIELD(task_count);
+	SET_FIELD(sequence_count);
+	SET_FIELD(buf_count);
+
+	g_opts.opts_size = opts->opts_size;
+
+#undef SET_FIELD
 
 	return 0;
 }
 
 void
-spdk_accel_get_opts(struct spdk_accel_opts *opts)
+spdk_accel_get_opts(struct spdk_accel_opts *opts, size_t opts_size)
 {
-	size_t size = opts->size;
+	if (!opts) {
+		SPDK_ERRLOG("opts should not be NULL\n");
+		return;
+	}
 
-	assert(size <= sizeof(*opts));
+	if (!opts_size) {
+		SPDK_ERRLOG("opts_size should not be zero value\n");
+		return;
+	}
 
-	memcpy(opts, &g_opts, spdk_min(sizeof(*opts), size));
-	opts->size = size;
+	opts->opts_size = opts_size;
+
+#define SET_FIELD(field) \
+	if (offsetof(struct spdk_accel_opts, field) + sizeof(opts->field) <= opts_size) { \
+		opts->field = g_opts.field; \
+	} \
+
+	SET_FIELD(small_cache_size);
+	SET_FIELD(large_cache_size);
+	SET_FIELD(task_count);
+	SET_FIELD(sequence_count);
+	SET_FIELD(buf_count);
+
+#undef SET_FIELD
+
+	/* Do not remove this statement, you should always update this statement when you adding a new field,
+	 * and do not forget to add the SET_FIELD statement for your added field. */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_accel_opts) == 28, "Incorrect size");
 }
 
 struct accel_get_stats_ctx {

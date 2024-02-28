@@ -215,6 +215,16 @@ spdk_iobuf_finish(spdk_iobuf_finish_cb cb_fn, void *cb_arg)
 int
 spdk_iobuf_set_opts(const struct spdk_iobuf_opts *opts)
 {
+	if (!opts) {
+		SPDK_ERRLOG("opts cannot be NULL\n");
+		return -1;
+	}
+
+	if (!opts->opts_size) {
+		SPDK_ERRLOG("opts_size inside opts cannot be zero value\n");
+		return -1;
+	}
+
 	if (opts->small_pool_count < IOBUF_MIN_SMALL_POOL_SIZE) {
 		SPDK_ERRLOG("small_pool_count must be at least %" PRIu32 "\n",
 			    IOBUF_MIN_SMALL_POOL_SIZE);
@@ -226,28 +236,67 @@ spdk_iobuf_set_opts(const struct spdk_iobuf_opts *opts)
 		return -EINVAL;
 	}
 
-	g_iobuf.opts = *opts;
-
 	if (opts->small_bufsize < IOBUF_MIN_SMALL_BUFSIZE) {
-		SPDK_ERRLOG("small_bufsize must be at least %" PRIu32 ". Automatically increasing.\n",
+		SPDK_ERRLOG("small_bufsize must be at least %" PRIu32 "\n",
 			    IOBUF_MIN_SMALL_BUFSIZE);
-		g_iobuf.opts.small_bufsize = IOBUF_MIN_SMALL_BUFSIZE;
+		return -EINVAL;
 	}
 
 	if (opts->large_bufsize < IOBUF_MIN_LARGE_BUFSIZE) {
-		SPDK_WARNLOG("large_bufsize must be at least %" PRIu32 ". Automatically increasing.\n",
-			     IOBUF_MIN_LARGE_BUFSIZE);
-		g_iobuf.opts.large_bufsize = IOBUF_MIN_LARGE_BUFSIZE;
+		SPDK_ERRLOG("large_bufsize must be at least %" PRIu32 "\n",
+			    IOBUF_MIN_LARGE_BUFSIZE);
+		return -EINVAL;
 	}
+
+#define SET_FIELD(field) \
+        if (offsetof(struct spdk_iobuf_opts, field) + sizeof(opts->field) <= opts->opts_size) { \
+                g_iobuf.opts.field = opts->field; \
+        } \
+
+	SET_FIELD(small_pool_count);
+	SET_FIELD(large_pool_count);
+	SET_FIELD(small_bufsize);
+	SET_FIELD(large_bufsize);
+
+	g_iobuf.opts.opts_size = opts->opts_size;
+
+#undef SET_FIELD
 
 	return 0;
 }
 
 void
-spdk_iobuf_get_opts(struct spdk_iobuf_opts *opts)
+spdk_iobuf_get_opts(struct spdk_iobuf_opts *opts, size_t opts_size)
 {
-	*opts = g_iobuf.opts;
+	if (!opts) {
+		SPDK_ERRLOG("opts should not be NULL\n");
+		return;
+	}
+
+	if (!opts_size) {
+		SPDK_ERRLOG("opts_size should not be zero value\n");
+		return;
+	}
+
+	opts->opts_size = opts_size;
+
+#define SET_FIELD(field) \
+	if (offsetof(struct spdk_iobuf_opts, field) + sizeof(opts->field) <= opts_size) { \
+		opts->field = g_iobuf.opts.field; \
+	} \
+
+	SET_FIELD(small_pool_count);
+	SET_FIELD(large_pool_count);
+	SET_FIELD(small_bufsize);
+	SET_FIELD(large_bufsize);
+
+#undef SET_FIELD
+
+	/* Do not remove this statement, you should always update this statement when you adding a new field,
+	 * and do not forget to add the SET_FIELD statement for your added field. */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_iobuf_opts) == 32, "Incorrect size");
 }
+
 
 int
 spdk_iobuf_channel_init(struct spdk_iobuf_channel *ch, const char *name,

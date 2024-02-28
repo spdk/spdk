@@ -266,7 +266,7 @@ nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transport_opt
 		ctx->opts.max_aq_depth = SPDK_NVMF_MIN_ADMIN_MAX_SQ_SIZE;
 	}
 
-	spdk_iobuf_get_opts(&opts_iobuf);
+	spdk_iobuf_get_opts(&opts_iobuf, sizeof(opts_iobuf));
 	if (ctx->opts.io_unit_size == 0) {
 		SPDK_ERRLOG("io_unit_size cannot be 0\n");
 		goto err;
@@ -609,7 +609,7 @@ nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport,
 		buf_cache_size = (num_shared_buffers * 3 / 4) / num_poll_groups;
 	}
 
-	spdk_iobuf_get_opts(&opts_iobuf);
+	spdk_iobuf_get_opts(&opts_iobuf, sizeof(opts_iobuf));
 	small_cache_size = buf_cache_size;
 	if (transport->opts.io_unit_size <= opts_iobuf.small_bufsize) {
 		large_cache_size = 0;

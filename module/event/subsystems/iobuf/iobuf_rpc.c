@@ -22,7 +22,7 @@ rpc_iobuf_set_options(struct spdk_jsonrpc_request *request, const struct spdk_js
 	struct spdk_iobuf_opts opts;
 	int rc;
 
-	spdk_iobuf_get_opts(&opts);
+	spdk_iobuf_get_opts(&opts, sizeof(opts));
 	rc = spdk_json_decode_object(params, rpc_iobuf_set_options_decoders,
 				     SPDK_COUNTOF(rpc_iobuf_set_options_decoders), &opts);
 	if (rc != 0) {

@@ -2,6 +2,10 @@
 
 ## v24.05: (Upcoming Release)
 
+### accel
+
+spdk_accel_get/set_opts() has changed to act more like spdk_bdev's variant.
+
 ### bdev
 
 Added `spdk_bdev_get_nvme_ctratt()` API to get controller attributes of bdev.
@@ -34,6 +38,10 @@ Added `iscsi_get_stats` RPC method to get stat information about all active conn
 Added `iscsi_enable_histogram` RPC method to enable or disable histogram for specified iscsi target.
 
 Added `iscsi_get_histogram` RPC method to get histogram for specified iscsi target.
+
+### thread
+
+spdk_iobuf_get/set_opts() has changed to act more like spdk_bdev's variant.
 
 ### trace
 
