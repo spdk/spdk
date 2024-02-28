@@ -308,9 +308,9 @@ spdk_iobuf_channel_init(struct spdk_iobuf_channel *ch, const char *name,
 
 	for (i = 0; i < small_cache_size; ++i) {
 		if (spdk_ring_dequeue(g_iobuf.small_pool, (void **)&buf, 1) == 0) {
-			SPDK_ERRLOG("Failed to populate iobuf small buffer cache. "
+			SPDK_ERRLOG("Failed to populate '%s' iobuf small buffer cache at %d/%d entries. "
 				    "You may need to increase spdk_iobuf_opts.small_pool_count (%"PRIu64")\n",
-				    g_iobuf.opts.small_pool_count);
+				    name, i, small_cache_size, g_iobuf.opts.small_pool_count);
 			SPDK_ERRLOG("See scripts/calc-iobuf.py for guidance on how to calculate "
 				    "this value.\n");
 			goto error;
@@ -320,9 +320,9 @@ spdk_iobuf_channel_init(struct spdk_iobuf_channel *ch, const char *name,
 	}
 	for (i = 0; i < large_cache_size; ++i) {
 		if (spdk_ring_dequeue(g_iobuf.large_pool, (void **)&buf, 1) == 0) {
-			SPDK_ERRLOG("Failed to populate iobuf large buffer cache. "
+			SPDK_ERRLOG("Failed to populate '%s' iobuf large buffer cache at %d/%d entries. "
 				    "You may need to increase spdk_iobuf_opts.large_pool_count (%"PRIu64")\n",
-				    g_iobuf.opts.large_pool_count);
+				    name, i, large_cache_size, g_iobuf.opts.large_pool_count);
 			SPDK_ERRLOG("See scripts/calc-iobuf.py for guidance on how to calculate "
 				    "this value.\n");
 			goto error;
