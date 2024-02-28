@@ -191,3 +191,31 @@ rpc_sock_set_default_impl(struct spdk_jsonrpc_request *request,
 	free(impl_name);
 }
 SPDK_RPC_REGISTER("sock_set_default_impl", rpc_sock_set_default_impl, SPDK_RPC_STARTUP)
+
+static void
+rpc_sock_get_default_impl(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	const char *impl_name = spdk_sock_get_default_impl();
+	struct spdk_json_write_ctx *w;
+
+	if (params) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "sock_get_default_impl requires no parameters");
+		return;
+	}
+
+	if (!impl_name) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "No registered socket implementations found");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "impl_name", impl_name);
+	spdk_json_write_object_end(w);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("sock_get_default_impl", rpc_sock_get_default_impl,
+		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)

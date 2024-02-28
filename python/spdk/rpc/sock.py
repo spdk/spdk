@@ -81,3 +81,9 @@ def sock_set_default_impl(client, impl_name=None):
     params['impl_name'] = impl_name
 
     return client.call('sock_set_default_impl', params)
+
+
+def sock_get_default_impl(client):
+    "Get the default socket implementation name."
+
+    return client.call('sock_get_default_impl')

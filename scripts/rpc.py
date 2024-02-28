@@ -3519,6 +3519,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-i', '--impl', help='Socket implementation name, e.g. posix', required=True)
     p.set_defaults(func=sock_set_default_impl)
 
+    def sock_get_default_impl(args):
+        print_json(rpc.sock.sock_get_default_impl(args.client))
+
+    p = subparsers.add_parser('sock_get_default_impl', help="Get the default sock implementation name")
+    p.set_defaults(func=sock_get_default_impl)
+
     def framework_get_pci_devices(args):
         def splitbuf(buf, step):
             return [buf[i:i+step] for i in range(0, len(buf), step)]

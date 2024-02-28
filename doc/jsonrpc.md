@@ -12196,6 +12196,42 @@ Example response:
 }
 ~~~
 
+### sock_get_default_impl {#rpc_sock_get_default_impl}
+
+Get the name of the default sock implementation.
+
+#### Parameters
+
+This function has no parameters.
+
+#### Response
+
+The name of the current default socket implementation.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "sock_get_default_impl",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "impl_name": "posix"
+  }
+}
+~~~
+
 ## Miscellaneous RPC commands
 
 ### bdev_nvme_send_cmd {#rpc_bdev_nvme_send_cmd}
