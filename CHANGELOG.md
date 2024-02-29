@@ -36,6 +36,12 @@ Added support for namespace masking using new C APIs `spdk_nvmf_ns_add_host` and
 Users must pass new `--no-auto-visible` parameter to `nvmf_subsystem_add_ns` RPC to allow
 namespace masking to be controlled by these new RPCs.
 
+### spdk_trace
+
+`spdk_trace` has learned how to use the most recent trace file in /dev/shm when
+the user has specified neither `-f` nor `-s` options. This is only available on
+Linux since FreeBSD does not mount have a /dev/shm mount.
+
 ## v24.01
 
 ### accel

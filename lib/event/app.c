@@ -524,6 +524,8 @@ app_setup_trace(struct spdk_app_opts *opts)
 			       opts->shm_id >= 0 ? "-i" : "-p",
 			       opts->shm_id >= 0 ? opts->shm_id : getpid());
 #if defined(__linux__)
+		SPDK_NOTICELOG("'spdk_trace' without parameters will also work if this is the only\n");
+		SPDK_NOTICELOG("SPDK application currently running.\n");
 		SPDK_NOTICELOG("Or copy /dev/shm%s for offline analysis/debug.\n", shm_name);
 #endif
 	}

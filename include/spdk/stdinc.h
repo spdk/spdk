@@ -39,6 +39,7 @@ extern "C" {
 #include <dirent.h>
 #include <fcntl.h>
 #include <fnmatch.h>
+#include <ftw.h>
 #include <glob.h>
 #include <ifaddrs.h>
 #include <libgen.h>

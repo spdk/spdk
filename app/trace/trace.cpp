@@ -340,8 +340,28 @@ usage(void)
 	fprintf(stderr, "                       -i or -p must be specified)\n");
 	fprintf(stderr, "                 '-f' to specify a tracepoint file name\n");
 	fprintf(stderr, "                      (-s and -f are mutually exclusive)\n");
+#if defined(__linux__)
+	fprintf(stderr, "                 Without -s or -f, %s will look for\n", g_exe_name);
+	fprintf(stderr, "                      newest trace file in /dev/shm\n");
+#endif
 	fprintf(stderr, "                 '-j' to use JSON to format the output\n");
 }
+
+#if defined(__linux__)
+static time_t g_mtime = 0;
+static char g_newest_file[PATH_MAX] = {};
+
+static int
+get_newest(const char *path, const struct stat *sb, int tflag, struct FTW *ftw)
+{
+	if (tflag == FTW_F && sb->st_mtime > g_mtime &&
+	    strstr(path, SPDK_TRACE_SHM_NAME_BASE) != NULL) {
+		g_mtime = sb->st_mtime;
+		strncpy(g_newest_file, path, PATH_MAX - 1);
+	}
+	return 0;
+}
+#endif
 
 int
 main(int argc, char **argv)
@@ -400,9 +420,21 @@ main(int argc, char **argv)
 	}
 
 	if (file_name == NULL && app_name == NULL) {
+#if defined(__linux__)
+		nftw("/dev/shm", get_newest, 1, 0);
+		if (strlen(g_newest_file) > 0) {
+			file_name = g_newest_file;
+			printf("Using newest trace file found: %s\n", file_name);
+		} else {
+			fprintf(stderr, "No shm file found and -f not specified\n");
+			usage();
+			exit(1);
+		}
+#else
 		fprintf(stderr, "One of -f and -s must be specified\n");
 		usage();
 		exit(1);
+#endif
 	}
 
 	if (json) {
