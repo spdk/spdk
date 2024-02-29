@@ -15,6 +15,8 @@
 #include "spdk/queue.h"
 #include "spdk/likely.h"
 #include "spdk/log.h"
+#include "spdk/trace.h"
+#include "spdk_internal/trace_defs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -129,6 +131,15 @@ static inline void
 spdk_sock_request_queue(struct spdk_sock *sock, struct spdk_sock_request *req)
 {
 	assert(req->internal.curr_list == NULL);
+	if (spdk_unlikely(spdk_trace_tpoint_enabled(TRACE_SOCK_REQ_QUEUE))) {
+		uint64_t len = 0;
+		int i;
+
+		for (i = 0; i < req->iovcnt; i++) {
+			len += SPDK_SOCK_REQUEST_IOV(req, i)->iov_len;
+		}
+		spdk_trace_record(TRACE_SOCK_REQ_QUEUE, 0, len, (uintptr_t)req, (uintptr_t)req->cb_arg);
+	}
 	TAILQ_INSERT_TAIL(&sock->queued_reqs, req, internal.link);
 #ifdef DEBUG
 	req->internal.curr_list = &sock->queued_reqs;
@@ -140,6 +151,7 @@ static inline void
 spdk_sock_request_pend(struct spdk_sock *sock, struct spdk_sock_request *req)
 {
 	assert(req->internal.curr_list == &sock->queued_reqs);
+	spdk_trace_record(TRACE_SOCK_REQ_PEND, 0, 0, (uintptr_t)req, (uintptr_t)req->cb_arg);
 	TAILQ_REMOVE(&sock->queued_reqs, req, internal.link);
 	assert(sock->queued_iovcnt >= req->iovcnt);
 	sock->queued_iovcnt -= req->iovcnt;
@@ -155,6 +167,7 @@ spdk_sock_request_complete(struct spdk_sock *sock, struct spdk_sock_request *req
 	bool closed;
 	int rc = 0;
 
+	spdk_trace_record(TRACE_SOCK_REQ_COMPLETE, 0, 0, (uintptr_t)req, (uintptr_t)req->cb_arg);
 	req->internal.offset = 0;
 	req->internal.is_zcopy = 0;
 

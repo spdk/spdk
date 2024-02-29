@@ -11,6 +11,8 @@
 #include "spdk/log.h"
 #include "spdk/env.h"
 #include "spdk/util.h"
+#include "spdk/trace.h"
+#include "spdk_internal/trace_defs.h"
 
 #define SPDK_SOCK_DEFAULT_PRIORITY 0
 #define SPDK_SOCK_DEFAULT_ZCOPY true
@@ -978,3 +980,34 @@ spdk_sock_get_default_impl(void)
 }
 
 SPDK_LOG_REGISTER_COMPONENT(sock)
+
+SPDK_TRACE_REGISTER_FN(sock_trace, "sock", TRACE_GROUP_SOCK)
+{
+	struct spdk_trace_tpoint_opts opts[] = {
+		{
+			"SOCK_REQ_QUEUE", TRACE_SOCK_REQ_QUEUE,
+			OWNER_SOCK, OBJECT_SOCK_REQ, 1,
+			{
+				{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 },
+			}
+		},
+		{
+			"SOCK_REQ_PEND", TRACE_SOCK_REQ_PEND,
+			OWNER_SOCK, OBJECT_SOCK_REQ, 0,
+			{
+				{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 },
+			}
+		},
+		{
+			"SOCK_REQ_COMPLETE", TRACE_SOCK_REQ_COMPLETE,
+			OWNER_SOCK, OBJECT_SOCK_REQ, 0,
+			{
+				{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 },
+			}
+		},
+	};
+
+	spdk_trace_register_owner(OWNER_SOCK, 's');
+	spdk_trace_register_object(OBJECT_SOCK_REQ, 's');
+	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
+}

@@ -21,7 +21,7 @@ DEPDIRS-env_dpdk := log util
 
 DEPDIRS-ioat := log
 DEPDIRS-idxd := log util
-DEPDIRS-sock := log $(JSON_LIBS)
+DEPDIRS-sock := log $(JSON_LIBS) trace
 DEPDIRS-util := log
 DEPDIRS-vmd := log util
 DEPDIRS-dma := log
@@ -118,8 +118,8 @@ endif
 DEPDIRS-env_dpdk_rpc := $(JSON_LIBS)
 
 # module/sock
-DEPDIRS-sock_posix := log sock util
-DEPDIRS-sock_uring := log sock util
+DEPDIRS-sock_posix := log sock util trace
+DEPDIRS-sock_uring := log sock util trace
 
 # module/scheduler
 DEPDIRS-scheduler_dynamic := event log thread util json
