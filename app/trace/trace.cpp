@@ -164,6 +164,12 @@ print_event(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint64_t t
 	}
 
 	for (i = 0; i < d->num_args; ++i) {
+		if (entry->args[i].is_related) {
+			/* This argument was already implicitly shown by its
+			 * associated related object ID.
+			 */
+			continue;
+		}
 		switch (d->args[i].type) {
 		case SPDK_TRACE_ARG_TYPE_PTR:
 			print_ptr(d->args[i].name, (uint64_t)entry->args[i].u.pointer);

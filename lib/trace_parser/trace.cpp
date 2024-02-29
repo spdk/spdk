@@ -126,6 +126,7 @@ spdk_trace_parser::build_arg(argument_context *argctx, const spdk_trace_argument
 	size_t curlen, argoff;
 
 	argoff = 0;
+	pe->args[argid].is_related = false;
 	/* Make sure that if we only copy a 4-byte integer, that the upper bytes have already been
 	 * zeroed.
 	 */
@@ -212,6 +213,7 @@ spdk_trace_parser::next_entry(spdk_trace_parser_entry *pe)
 		if (related_kv != stats->index.end()) {
 			pe->related_index = related_kv->second;
 			pe->related_type = tpoint->related_objects[i].object_type;
+			pe->args[tpoint->related_objects[i].arg_index].is_related = true;
 			break;
 		}
 	}

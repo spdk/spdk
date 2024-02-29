@@ -93,6 +93,7 @@ struct spdk_trace_parser_entry {
 	uint8_t			related_type;
 	/** Tracepoint arguments */
 	struct {
+		bool		is_related;
 		union {
 			uint64_t	integer;
 			void		*pointer;
