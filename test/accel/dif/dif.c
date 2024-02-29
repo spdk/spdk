@@ -94,6 +94,22 @@ accel_dif_oper_done(void *arg1, int status)
 	wake_ut_thread();
 }
 
+static bool
+accel_dif_error_validate(const uint32_t dif_flags,
+			 const struct spdk_dif_error *err)
+{
+	switch (dif_flags) {
+	case SPDK_DIF_FLAGS_GUARD_CHECK:
+		return err->err_type == SPDK_DIF_GUARD_ERROR;
+	case SPDK_DIF_FLAGS_APPTAG_CHECK:
+		return err->err_type == SPDK_DIF_APPTAG_ERROR;
+	case SPDK_DIF_FLAGS_REFTAG_CHECK:
+		return err->err_type == SPDK_DIF_REFTAG_ERROR;
+	default:
+		return false;
+	}
+}
+
 static int
 get_dif_verify_alloc_bufs(struct dif_task *task, uint32_t chained_count)
 {
@@ -133,6 +149,78 @@ get_dif_verify_free_bufs(struct dif_task *task)
 	free(task->src_iovs);
 
 	return 0;
+}
+
+static int
+alloc_dif_verify_copy_bufs(struct dif_task *task, uint32_t chained_count)
+{
+	int dst_buff_len = g_xfer_size_bytes;
+	uint32_t data_size_with_md;
+	uint32_t i = 0;
+
+	assert(chained_count > 0);
+	task->src_iovcnt = chained_count;
+	task->src_iovs = calloc(task->src_iovcnt, sizeof(struct iovec));
+	if (spdk_unlikely(task->src_iovs == NULL)) {
+		return -ENOMEM;
+	}
+
+	task->num_blocks = g_xfer_size_bytes / g_block_size_bytes;
+
+	/* Add bytes for each block for metadata */
+	data_size_with_md = g_xfer_size_bytes + (task->num_blocks * g_md_size_bytes);
+
+	for (i = 0; i < task->src_iovcnt; i++) {
+		task->src_iovs[i].iov_base = spdk_dma_zmalloc(data_size_with_md, 0, NULL);
+		if (spdk_unlikely(task->src_iovs[i].iov_base == NULL)) {
+			return -ENOMEM;
+		}
+
+		memset(task->src_iovs[i].iov_base, DATA_PATTERN, data_size_with_md);
+		task->src_iovs[i].iov_len = data_size_with_md;
+	}
+
+	task->dst_iovcnt = chained_count;
+	task->dst_iovs = calloc(task->dst_iovcnt, sizeof(struct iovec));
+	if (spdk_unlikely(task->dst_iovs == NULL)) {
+		return -ENOMEM;
+	}
+
+	for (i = 0; i < task->dst_iovcnt; i++) {
+		task->dst_iovs[i].iov_base = spdk_dma_zmalloc(dst_buff_len, 0, NULL);
+		if (spdk_unlikely(task->dst_iovs[i].iov_base == NULL)) {
+			return -ENOMEM;
+		}
+
+		memset(task->dst_iovs[i].iov_base, 0, dst_buff_len);
+		task->dst_iovs[i].iov_len = dst_buff_len;
+	}
+
+	return 0;
+}
+
+static void
+free_dif_verify_copy_bufs(struct dif_task *task)
+{
+	uint32_t i = 0;
+
+	if (task->dst_iovs != NULL) {
+		for (i = 0; i < task->dst_iovcnt; i++) {
+			if (task->dst_iovs[i].iov_base != NULL) {
+				spdk_dma_free(task->dst_iovs[i].iov_base);
+			}
+		}
+		free(task->dst_iovs);
+	}
+
+	if (task->src_iovs != NULL) {
+		for (i = 0; i < task->src_iovcnt; i++) {
+			if (task->src_iovs[i].iov_base != NULL) {
+				spdk_dma_free(task->src_iovs[i].iov_base);
+			}
+		}
+		free(task->src_iovs);
+	}
 }
 
 static int
@@ -207,6 +295,22 @@ accel_dif_verify_test(void *arg)
 	rc = spdk_accel_submit_dif_verify(req->channel, req->src_iovs, req->src_iovcnt,
 					  req->num_blocks, req->ctx, req->err,
 					  req->cb_fn, req->cb_arg);
+	if (rc) {
+		wake_ut_thread();
+	}
+}
+
+static void
+accel_dif_verify_copy_test(void *arg)
+{
+	int rc;
+	struct accel_dif_request *req = arg;
+
+	g_completion_success = false;
+	rc = spdk_accel_submit_dif_verify_copy(req->channel, req->dst_iovs, req->dst_iovcnt,
+					       req->src_iovs, req->src_iovcnt,
+					       req->num_blocks, req->ctx, req->err,
+					       req->cb_fn, req->cb_arg);
 	if (rc) {
 		wake_ut_thread();
 	}
@@ -598,6 +702,134 @@ accel_dif_verify_op_reftag_init_incorrect_reftag_check(void)
 }
 
 static void
+accel_dif_verify_copy_op_dif_generated_do_check(uint32_t dif_flags)
+{
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+	struct accel_dif_request req;
+	struct dif_task *task = &g_dif_task;
+	int rc;
+
+	rc = alloc_dif_verify_copy_bufs(task, 1);
+	CU_ASSERT(rc == 0);
+
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+
+	rc = spdk_dif_ctx_init(&task->dif_ctx,
+			       g_block_size_bytes + g_md_size_bytes,
+			       g_md_size_bytes, true, true,
+			       SPDK_DIF_TYPE1,
+			       SPDK_DIF_FLAGS_GUARD_CHECK |
+			       SPDK_DIF_FLAGS_APPTAG_CHECK |
+			       SPDK_DIF_FLAGS_REFTAG_CHECK,
+			       10, 0xFFFF, 20, 0, 0, &dif_opts);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate(task->src_iovs, task->src_iovcnt, task->num_blocks, &task->dif_ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_ctx_init(&task->dif_ctx,
+			       g_block_size_bytes + g_md_size_bytes,
+			       g_md_size_bytes, true, true,
+			       SPDK_DIF_TYPE1,
+			       dif_flags,
+			       10, 0xFFFF, 20, 0, 0, &dif_opts);
+	CU_ASSERT(rc == 0);
+
+	req.channel = g_channel;
+	req.dst_iovs = task->dst_iovs;
+	req.dst_iovcnt = task->dst_iovcnt;
+	req.src_iovs = task->src_iovs;
+	req.src_iovcnt = task->src_iovcnt;
+	req.num_blocks = task->num_blocks;
+	req.ctx = &task->dif_ctx;
+	req.err = &task->dif_err;
+	req.cb_fn = accel_dif_oper_done;
+	req.cb_arg = task;
+
+	execute_spdk_function(accel_dif_verify_copy_test, &req);
+	CU_ASSERT_EQUAL(g_completion_success, true);
+
+	free_dif_verify_copy_bufs(task);
+}
+
+static void
+accel_dif_verify_copy_op_dif_generated_guard_check(void)
+{
+	accel_dif_verify_copy_op_dif_generated_do_check(SPDK_DIF_FLAGS_GUARD_CHECK);
+}
+
+static void
+accel_dif_verify_copy_op_dif_generated_apptag_check(void)
+{
+	accel_dif_verify_copy_op_dif_generated_do_check(SPDK_DIF_FLAGS_APPTAG_CHECK);
+}
+
+static void
+accel_dif_verify_copy_op_dif_generated_reftag_check(void)
+{
+	accel_dif_verify_copy_op_dif_generated_do_check(SPDK_DIF_FLAGS_REFTAG_CHECK);
+}
+
+static void
+accel_dif_verify_copy_op_dif_not_generated_do_check(uint32_t dif_flags)
+{
+	struct spdk_dif_ctx_init_ext_opts dif_opts;
+	struct accel_dif_request req;
+	struct dif_task *task = &g_dif_task;
+	int rc;
+
+	rc = alloc_dif_verify_copy_bufs(task, 1);
+	CU_ASSERT(rc == 0);
+
+	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
+	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
+
+	rc = spdk_dif_ctx_init(&task->dif_ctx,
+			       g_block_size_bytes + g_md_size_bytes,
+			       g_md_size_bytes, true, true,
+			       SPDK_DIF_TYPE1,
+			       dif_flags,
+			       10, 0xFFFF, 20, 0, 0, &dif_opts);
+	CU_ASSERT(rc == 0);
+
+	req.channel = g_channel;
+	req.dst_iovs = task->dst_iovs;
+	req.dst_iovcnt = task->dst_iovcnt;
+	req.src_iovs = task->src_iovs;
+	req.src_iovcnt = task->src_iovcnt;
+	req.num_blocks = task->num_blocks;
+	req.ctx = &task->dif_ctx;
+	req.err = &task->dif_err;
+	req.cb_fn = accel_dif_oper_done;
+	req.cb_arg = task;
+
+	execute_spdk_function(accel_dif_verify_copy_test, &req);
+	CU_ASSERT_EQUAL(g_completion_success, false);
+	CU_ASSERT_EQUAL(accel_dif_error_validate(dif_flags, req.err), true);
+
+	free_dif_verify_copy_bufs(task);
+}
+
+static void
+accel_dif_verify_copy_op_dif_not_generated_guard_check(void)
+{
+	accel_dif_verify_copy_op_dif_not_generated_do_check(SPDK_DIF_FLAGS_GUARD_CHECK);
+}
+
+static void
+accel_dif_verify_copy_op_dif_not_generated_apptag_check(void)
+{
+	accel_dif_verify_copy_op_dif_not_generated_do_check(SPDK_DIF_FLAGS_APPTAG_CHECK);
+}
+
+static void
+accel_dif_verify_copy_op_dif_not_generated_reftag_check(void)
+{
+	accel_dif_verify_copy_op_dif_not_generated_do_check(SPDK_DIF_FLAGS_REFTAG_CHECK);
+}
+
+static void
 accel_dif_generate_copy_op_dif_generated_do_check(uint32_t dif_flags)
 {
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
@@ -970,6 +1202,20 @@ setup_accel_tests(void)
 			accel_dif_verify_op_reftag_init_correct_reftag_check) == NULL ||
 	    CU_add_test(suite, "verify: REFTAG_INIT incorrect, REFTAG check",
 			accel_dif_verify_op_reftag_init_incorrect_reftag_check) == NULL ||
+
+	    CU_add_test(suite, "verify copy: DIF generated, GUARD check",
+			accel_dif_verify_copy_op_dif_generated_guard_check) == NULL ||
+	    CU_add_test(suite, "verify copy: DIF generated, APPTAG check",
+			accel_dif_verify_copy_op_dif_generated_apptag_check) == NULL ||
+	    CU_add_test(suite, "verify copy: DIF generated, REFTAG check",
+			accel_dif_verify_copy_op_dif_generated_reftag_check) == NULL ||
+
+	    CU_add_test(suite, "verify copy: DIF not generated, GUARD check",
+			accel_dif_verify_copy_op_dif_not_generated_guard_check) == NULL ||
+	    CU_add_test(suite, "verify copy: DIF not generated, APPTAG check",
+			accel_dif_verify_copy_op_dif_not_generated_apptag_check) == NULL ||
+	    CU_add_test(suite, "verify copy: DIF not generated, REFTAG check",
+			accel_dif_verify_copy_op_dif_not_generated_reftag_check) == NULL ||
 
 	    CU_add_test(suite, "generate copy: DIF generated, GUARD check",
 			accel_dif_generate_copy_op_dif_generated_guard_check) == NULL ||
