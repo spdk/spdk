@@ -438,9 +438,11 @@ app_setup_trace(struct spdk_app_opts *opts)
 	uint64_t	group_id;
 
 	if (opts->shm_id >= 0) {
-		snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", opts->name, opts->shm_id);
+		snprintf(shm_name, sizeof(shm_name), "/%s%s%d", opts->name,
+			 SPDK_TRACE_SHM_NAME_BASE, opts->shm_id);
 	} else {
-		snprintf(shm_name, sizeof(shm_name), "/%s_trace.pid%d", opts->name, (int)getpid());
+		snprintf(shm_name, sizeof(shm_name), "/%s%spid%d", opts->name,
+			 SPDK_TRACE_SHM_NAME_BASE, (int)getpid());
 	}
 
 	if (spdk_trace_init(shm_name, opts->num_entries, 0) != 0) {

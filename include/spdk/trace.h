@@ -18,6 +18,7 @@
 extern "C" {
 #endif
 
+#define SPDK_TRACE_SHM_NAME_BASE "_trace."
 #define SPDK_DEFAULT_NUM_TRACE_ENTRIES	 (32 * 1024)
 
 struct spdk_trace_entry {
