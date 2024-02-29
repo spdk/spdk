@@ -166,13 +166,13 @@ print_event(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint64_t t
 	for (i = 0; i < d->num_args; ++i) {
 		switch (d->args[i].type) {
 		case SPDK_TRACE_ARG_TYPE_PTR:
-			print_ptr(d->args[i].name, (uint64_t)entry->args[i].pointer);
+			print_ptr(d->args[i].name, (uint64_t)entry->args[i].u.pointer);
 			break;
 		case SPDK_TRACE_ARG_TYPE_INT:
-			print_uint64(d->args[i].name, entry->args[i].integer);
+			print_uint64(d->args[i].name, entry->args[i].u.integer);
 			break;
 		case SPDK_TRACE_ARG_TYPE_STR:
-			print_string(d->args[i].name, entry->args[i].string);
+			print_string(d->args[i].name, entry->args[i].u.string);
 			break;
 		}
 	}
@@ -235,13 +235,13 @@ print_event_json(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint6
 		for (i = 0; i < d->num_args; ++i) {
 			switch (d->args[i].type) {
 			case SPDK_TRACE_ARG_TYPE_PTR:
-				spdk_json_write_uint64(g_json, (uint64_t)entry->args[i].pointer);
+				spdk_json_write_uint64(g_json, (uint64_t)entry->args[i].u.pointer);
 				break;
 			case SPDK_TRACE_ARG_TYPE_INT:
-				spdk_json_write_uint64(g_json, entry->args[i].integer);
+				spdk_json_write_uint64(g_json, entry->args[i].u.integer);
 				break;
 			case SPDK_TRACE_ARG_TYPE_STR:
-				spdk_json_write_string(g_json, entry->args[i].string);
+				spdk_json_write_string(g_json, entry->args[i].u.string);
 				break;
 			}
 		}

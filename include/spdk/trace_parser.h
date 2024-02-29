@@ -92,10 +92,12 @@ struct spdk_trace_parser_entry {
 	/** Related object type */
 	uint8_t			related_type;
 	/** Tracepoint arguments */
-	union {
-		uint64_t	integer;
-		void		*pointer;
-		char		string[UINT8_MAX + 1];
+	struct {
+		union {
+			uint64_t	integer;
+			void		*pointer;
+			char		string[UINT8_MAX + 1];
+		} u;
 	} args[SPDK_TRACE_MAX_ARGS_COUNT];
 };
 

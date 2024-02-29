@@ -129,7 +129,7 @@ spdk_trace_parser::build_arg(argument_context *argctx, const spdk_trace_argument
 	/* Make sure that if we only copy a 4-byte integer, that the upper bytes have already been
 	 * zeroed.
 	 */
-	pe->args[argid].integer = 0;
+	pe->args[argid].u.integer = 0;
 	while (argoff < arg->size) {
 		if (argctx->offset == sizeof(buffer->data)) {
 			buffer = get_next_buffer(buffer, argctx->lcore);
@@ -144,7 +144,7 @@ spdk_trace_parser::build_arg(argument_context *argctx, const spdk_trace_argument
 
 		curlen = spdk_min(sizeof(buffer->data) - argctx->offset, arg->size - argoff);
 		if (argoff < sizeof(pe->args[0])) {
-			memcpy(&pe->args[argid].string[argoff], &buffer->data[argctx->offset],
+			memcpy(&pe->args[argid].u.string[argoff], &buffer->data[argctx->offset],
 			       spdk_min(curlen, sizeof(pe->args[0]) - argoff));
 		}
 
@@ -206,7 +206,7 @@ spdk_trace_parser::next_entry(spdk_trace_parser_entry *pe)
 		}
 		stats = &_stats[tpoint->related_objects[i].object_type];
 		related_kv = stats->index.find(reinterpret_cast<uint64_t>
-					       (pe->args[tpoint->related_objects[i].arg_index].pointer));
+					       (pe->args[tpoint->related_objects[i].arg_index].u.pointer));
 		/* To avoid parsing the whole array, object index and type are stored
 		 * directly inside spdk_trace_parser_entry. */
 		if (related_kv != stats->index.end()) {
