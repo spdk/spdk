@@ -169,14 +169,6 @@ SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 					TRACE_TCP_REQUEST_STATE_COMPLETED,
 					OWNER_NVMF_TCP, OBJECT_NVMF_TCP_IO, 0,
 					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
-	spdk_trace_register_description("TCP_WRITE_START",
-					TRACE_TCP_FLUSH_WRITEBUF_START,
-					OWNER_NVMF_TCP, OBJECT_NONE, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
-	spdk_trace_register_description("TCP_WRITE_DONE",
-					TRACE_TCP_FLUSH_WRITEBUF_DONE,
-					OWNER_NVMF_TCP, OBJECT_NONE, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 	spdk_trace_register_description("TCP_READ_DONE",
 					TRACE_TCP_READ_FROM_SOCKET_DONE,
 					OWNER_NVMF_TCP, OBJECT_NONE, 0,
