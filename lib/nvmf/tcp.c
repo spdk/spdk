@@ -202,6 +202,9 @@ SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 
 	spdk_trace_tpoint_register_relation(TRACE_BDEV_IO_START, OBJECT_NVMF_TCP_IO, 1);
 	spdk_trace_tpoint_register_relation(TRACE_BDEV_IO_DONE, OBJECT_NVMF_TCP_IO, 0);
+	spdk_trace_tpoint_register_relation(TRACE_SOCK_REQ_QUEUE, OBJECT_NVMF_TCP_IO, 0);
+	spdk_trace_tpoint_register_relation(TRACE_SOCK_REQ_PEND, OBJECT_NVMF_TCP_IO, 0);
+	spdk_trace_tpoint_register_relation(TRACE_SOCK_REQ_COMPLETE, OBJECT_NVMF_TCP_IO, 0);
 }
 
 struct spdk_nvmf_tcp_req  {
