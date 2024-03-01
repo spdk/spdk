@@ -3,7 +3,7 @@ function install_qat() {
 		install yasm
 	fi
 
-	install libnl3 libnl3-devel || install libnl-3-200 libnl-3-dev
+	install libnl3 libnl3-devel || install libnl-3-200 libnl-3-dev libnl-genl-3-dev
 
 	in_syms() {
 		local syms
