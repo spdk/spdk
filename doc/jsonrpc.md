@@ -709,9 +709,11 @@ Example response:
   "id": 1,
   "result": {
     "tick_rate": 2400000000,
+    "pid": 5502,
     "reactors": [
       {
         "lcore": 0,
+        "tid": 5520,
         "busy": 41289723495,
         "idle": 3624832946,
         "lw_threads": [

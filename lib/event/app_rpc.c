@@ -371,6 +371,7 @@ _rpc_framework_get_reactors(void *arg1, void *arg2)
 
 	spdk_json_write_object_begin(ctx->w);
 	spdk_json_write_named_uint32(ctx->w, "lcore", current_core);
+	spdk_json_write_named_uint64(ctx->w, "tid", spdk_get_tid());
 	spdk_json_write_named_uint64(ctx->w, "busy", reactor->busy_tsc);
 	spdk_json_write_named_uint64(ctx->w, "idle", reactor->idle_tsc);
 	spdk_json_write_named_bool(ctx->w, "in_interrupt", reactor->in_interrupt);
@@ -433,6 +434,7 @@ rpc_framework_get_reactors(struct spdk_jsonrpc_request *request,
 
 	spdk_json_write_object_begin(ctx->w);
 	spdk_json_write_named_uint64(ctx->w, "tick_rate", spdk_get_ticks_hz());
+	spdk_json_write_named_uint64(ctx->w, "pid", getpid());
 	spdk_json_write_named_array_begin(ctx->w, "reactors");
 
 	spdk_for_each_reactor(_rpc_framework_get_reactors, ctx, NULL,
