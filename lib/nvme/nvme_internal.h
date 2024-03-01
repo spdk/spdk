@@ -423,6 +423,7 @@ enum nvme_qpair_auth_state {
 	NVME_QPAIR_AUTH_STATE_AWAIT_CHALLENGE,
 	NVME_QPAIR_AUTH_STATE_AWAIT_REPLY,
 	NVME_QPAIR_AUTH_STATE_AWAIT_SUCCESS1,
+	NVME_QPAIR_AUTH_STATE_AWAIT_SUCCESS2,
 	NVME_QPAIR_AUTH_STATE_AWAIT_FAILURE2,
 	NVME_QPAIR_AUTH_STATE_DONE,
 };
@@ -431,6 +432,9 @@ enum nvme_qpair_auth_state {
 #define NVME_QPAIR_AUTH_FLAG_ATR	(1 << 0)
 /* Authentication and secure channel required (authreq.ascr) */
 #define NVME_QPAIR_AUTH_FLAG_ASCR	(1 << 1)
+
+/* Maximum size of a digest */
+#define NVME_AUTH_DIGEST_MAX_SIZE	64
 
 struct nvme_auth {
 	/* State of the authentication */
@@ -441,6 +445,10 @@ struct nvme_auth {
 	uint16_t			tid;
 	/* Flags */
 	uint32_t			flags;
+	/* Selected hash function */
+	uint8_t				hash;
+	/* Buffer used for controller challenge */
+	uint8_t				challenge[NVME_AUTH_DIGEST_MAX_SIZE];
 };
 
 struct spdk_nvme_qpair {
@@ -1065,6 +1073,8 @@ struct spdk_nvme_ctrlr {
 
 	/* Authentication transaction ID */
 	uint16_t				auth_tid;
+	/* Authentication sequence number */
+	uint32_t				auth_seqnum;
 };
 
 struct spdk_nvme_probe_ctx {

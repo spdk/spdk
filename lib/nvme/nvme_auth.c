@@ -14,6 +14,7 @@
 #include <openssl/dh.h>
 #include <openssl/evp.h>
 #include <openssl/param_build.h>
+#include <openssl/rand.h>
 #endif
 
 struct nvme_auth_digest {
@@ -30,7 +31,6 @@ struct nvme_auth_dhgroup {
 #define NVME_AUTH_DATA_SIZE			4096
 #define NVME_AUTH_DH_KEY_MAX_SIZE		1024
 #define NVME_AUTH_CHAP_KEY_MAX_SIZE		256
-#define NVME_AUTH_DIGEST_MAX_SIZE		64
 
 #define AUTH_DEBUGLOG(q, fmt, ...) \
 	SPDK_DEBUGLOG(nvme_auth, "[%s:%s:%u] " fmt, (q)->ctrlr->trid.subnqn, \
@@ -154,6 +154,7 @@ nvme_auth_set_state(struct spdk_nvme_qpair *qpair, enum nvme_qpair_auth_state st
 		[NVME_QPAIR_AUTH_STATE_AWAIT_CHALLENGE] = "await-challenge",
 		[NVME_QPAIR_AUTH_STATE_AWAIT_REPLY] = "await-reply",
 		[NVME_QPAIR_AUTH_STATE_AWAIT_SUCCESS1] = "await-success1",
+		[NVME_QPAIR_AUTH_STATE_AWAIT_SUCCESS2] = "await-success2",
 		[NVME_QPAIR_AUTH_STATE_AWAIT_FAILURE2] = "await-failure2",
 		[NVME_QPAIR_AUTH_STATE_DONE] = "done",
 	};
@@ -181,6 +182,30 @@ nvme_auth_print_cpl(struct spdk_nvme_qpair *qpair, const char *msg)
 
 	AUTH_ERRLOG(qpair, "%s failed: sc=%d, sct=%d (timed out: %s)\n", msg, status->cpl.status.sc,
 		    status->cpl.status.sct, status->timed_out ? "true" : "false");
+}
+
+static uint32_t
+nvme_auth_get_seqnum(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
+	uint32_t seqnum;
+	int rc;
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	if (ctrlr->auth_seqnum == 0) {
+		rc = RAND_bytes((void *)&ctrlr->auth_seqnum, sizeof(ctrlr->auth_seqnum));
+		if (rc != 1) {
+			nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+			return 0;
+		}
+	}
+	if (++ctrlr->auth_seqnum == 0) {
+		ctrlr->auth_seqnum = 1;
+	}
+	seqnum = ctrlr->auth_seqnum;
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return seqnum;
 }
 
 static int
@@ -850,10 +875,13 @@ nvme_auth_send_reply(struct spdk_nvme_qpair *qpair)
 	uint8_t hl, response[NVME_AUTH_DATA_SIZE];
 	uint8_t pubkey[NVME_AUTH_DH_KEY_MAX_SIZE];
 	uint8_t dhsec[NVME_AUTH_DH_KEY_MAX_SIZE];
+	uint8_t ctrlr_challenge[NVME_AUTH_DIGEST_MAX_SIZE] = {};
 	size_t dhseclen = 0, publen = 0;
+	uint32_t seqnum = 0;
 	EVP_PKEY *dhkey;
 	int rc;
 
+	auth->hash = challenge->hash_id;
 	hl = nvme_auth_get_digest_len(challenge->hash_id);
 	if (challenge->dhg_id != SPDK_NVMF_DHCHAP_DHGROUP_NULL) {
 		dhseclen = sizeof(dhsec);
@@ -891,19 +919,45 @@ nvme_auth_send_reply(struct spdk_nvme_qpair *qpair)
 		return rc;
 	}
 
+	if (ctrlr->opts.dhchap_ctrlr_key != NULL) {
+		seqnum = nvme_auth_get_seqnum(qpair);
+		if (seqnum == 0) {
+			return -EIO;
+		}
+
+		assert(sizeof(ctrlr_challenge) >= hl);
+		rc = RAND_bytes(ctrlr_challenge, hl);
+		if (rc != 1) {
+			return -EIO;
+		}
+
+		rc = nvme_auth_calc_response(ctrlr->opts.dhchap_ctrlr_key,
+					     (enum spdk_nvmf_dhchap_hash)challenge->hash_id,
+					     "Controller", seqnum, auth->tid, 0,
+					     ctrlr->trid.subnqn, ctrlr->opts.hostnqn,
+					     dhseclen > 0 ? dhsec : NULL, dhseclen,
+					     ctrlr_challenge, auth->challenge);
+		if (rc != 0) {
+			AUTH_ERRLOG(qpair, "failed to calculate controller's response: %s\n",
+				    spdk_strerror(-rc));
+			return rc;
+		}
+	}
+
 	/* Now that the response has been calculated, send the reply */
 	memset(qpair->poll_status->dma_data, 0, NVME_AUTH_DATA_SIZE);
 	assert(sizeof(*reply) + 2 * hl + publen <= NVME_AUTH_DATA_SIZE);
 	memcpy(reply->rval, response, hl);
+	memcpy(&reply->rval[1 * hl], ctrlr_challenge, hl);
 	memcpy(&reply->rval[2 * hl], pubkey, publen);
 
 	reply->auth_type = SPDK_NVMF_AUTH_TYPE_DHCHAP;
 	reply->auth_id = SPDK_NVMF_AUTH_ID_DHCHAP_REPLY;
 	reply->t_id = auth->tid;
 	reply->hl = hl;
-	reply->cvalid = 0;
+	reply->cvalid = ctrlr->opts.dhchap_ctrlr_key != NULL;
 	reply->dhvlen = publen;
-	reply->seqnum = 0;
+	reply->seqnum = seqnum;
 
 	/* The 2 * reply->hl below is because the spec says that both rval[hl] and cval[hl] must
 	 * always be part of the reply message, even cvalid is zero.
@@ -916,8 +970,10 @@ static int
 nvme_auth_check_success1(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvmf_dhchap_success1 *msg = qpair->poll_status->dma_data;
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
 	struct nvme_auth *auth = &qpair->auth;
-	int rc;
+	uint8_t hl;
+	int rc, status;
 
 	rc = nvme_auth_check_message(qpair, SPDK_NVMF_AUTH_ID_DHCHAP_SUCCESS1);
 	if (rc != 0) {
@@ -927,19 +983,59 @@ nvme_auth_check_success1(struct spdk_nvme_qpair *qpair)
 	if (msg->t_id != auth->tid) {
 		AUTH_ERRLOG(qpair, "unexpected tid: received=%u, expected=%u\n",
 			    msg->t_id, auth->tid);
+		status = SPDK_NVMF_AUTH_INCORRECT_PAYLOAD;
 		goto error;
+	}
+
+	if (ctrlr->opts.dhchap_ctrlr_key != NULL) {
+		if (!msg->rvalid) {
+			AUTH_ERRLOG(qpair, "received rvalid=0, expected response\n");
+			status = SPDK_NVMF_AUTH_INCORRECT_PAYLOAD;
+			goto error;
+		}
+
+		hl = nvme_auth_get_digest_len(auth->hash);
+		if (msg->hl != hl) {
+			AUTH_ERRLOG(qpair, "received invalid hl=%u, expected=%u\n", msg->hl, hl);
+			status = SPDK_NVMF_AUTH_INCORRECT_PAYLOAD;
+			goto error;
+		}
+
+		if (memcmp(msg->rval, auth->challenge, hl) != 0) {
+			AUTH_ERRLOG(qpair, "controller challenge mismatch\n");
+			AUTH_LOGDUMP("received:", msg->rval, hl);
+			AUTH_LOGDUMP("expected:", auth->challenge, hl);
+			status = SPDK_NVMF_AUTH_FAILED;
+			goto error;
+		}
 	}
 
 	return 0;
 error:
-	nvme_auth_set_failure(qpair, -EACCES,
-			      nvme_auth_send_failure2(qpair, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD));
+	nvme_auth_set_failure(qpair, -EACCES, nvme_auth_send_failure2(qpair, status));
+
 	return -EACCES;
+}
+
+static int
+nvme_auth_send_success2(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvmf_dhchap_success2 *msg = qpair->poll_status->dma_data;
+	struct nvme_auth *auth = &qpair->auth;
+
+	memset(qpair->poll_status->dma_data, 0, NVME_AUTH_DATA_SIZE);
+	msg->auth_type = SPDK_NVMF_AUTH_TYPE_DHCHAP;
+	msg->auth_id = SPDK_NVMF_AUTH_ID_DHCHAP_SUCCESS2;
+	msg->t_id = auth->tid;
+
+	return nvme_auth_submit_request(qpair, SPDK_NVMF_FABRIC_COMMAND_AUTHENTICATION_SEND,
+					sizeof(*msg));
 }
 
 int
 nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 {
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
 	struct nvme_auth *auth = &qpair->auth;
 	struct nvme_completion_poll_status *status = qpair->poll_status;
 	enum nvme_qpair_auth_state prev_state;
@@ -1033,8 +1129,20 @@ nvme_fabric_qpair_authenticate_poll(struct spdk_nvme_qpair *qpair)
 				break;
 			}
 			AUTH_DEBUGLOG(qpair, "authentication completed successfully\n");
+			if (ctrlr->opts.dhchap_ctrlr_key != NULL) {
+				rc = nvme_auth_send_success2(qpair);
+				if (rc != 0) {
+					AUTH_ERRLOG(qpair, "failed to send DH-HMAC-CHAP_success2: "
+						    "%s\n", spdk_strerror(rc));
+					nvme_auth_set_failure(qpair, rc, false);
+					break;
+				}
+				nvme_auth_set_state(qpair, NVME_QPAIR_AUTH_STATE_AWAIT_SUCCESS2);
+				break;
+			}
 			nvme_auth_set_state(qpair, NVME_QPAIR_AUTH_STATE_DONE);
 			break;
+		case NVME_QPAIR_AUTH_STATE_AWAIT_SUCCESS2:
 		case NVME_QPAIR_AUTH_STATE_AWAIT_FAILURE2:
 			rc = nvme_wait_for_completion_robust_lock_timeout_poll(qpair, status, NULL);
 			if (rc == -EAGAIN) {
