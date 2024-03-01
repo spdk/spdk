@@ -362,9 +362,6 @@ layout_setup_legacy_default_nvc(struct spdk_ftl_dev *dev)
 	/*
 	 * Initialize NV Cache metadata
 	 */
-	if (0 == chunk_count) {
-		goto error;
-	}
 	layout->nvc.chunk_count = chunk_count;
 
 	if (legacy_layout_region_open_nvc(dev, FTL_LAYOUT_REGION_TYPE_NVC_MD, FTL_NVC_VERSION_1,
