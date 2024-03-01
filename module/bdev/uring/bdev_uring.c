@@ -571,8 +571,20 @@ bdev_uring_check_zoned_support(struct bdev_uring *uring, const char *name, const
 	long int val = 0;
 	uint32_t zinfo;
 	int retval = -1;
+	struct stat sb;
+	char resolved_path[PATH_MAX], *rp;
 
 	uring->bdev.zoned = false;
+
+	/* Follow symlink */
+	if ((rp = realpath(filename, resolved_path))) {
+		filename = rp;
+	}
+
+	/* Perform check on block devices only */
+	if (stat(filename, &sb) == 0 && S_ISBLK(sb.st_mode)) {
+		return 0;
+	}
 
 	/* Check if this is a zoned block device */
 	if (bdev_uring_read_sysfs_attr(filename, "queue/zoned", str, sizeof(str))) {
