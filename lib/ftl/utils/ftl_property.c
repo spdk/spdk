@@ -88,7 +88,7 @@ ftl_property_register(struct spdk_ftl_dev *dev,
 		prop->name = name;
 		prop->value = value;
 		prop->size = size;
-		prop->unit = prop->unit;
+		prop->unit = unit;
 		prop->desc = desc;
 		prop->dump = dump;
 		prop->decode = decode;
