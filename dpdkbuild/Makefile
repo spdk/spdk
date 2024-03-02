@@ -98,7 +98,7 @@ DPDK_DRIVERS += compress compress/isal
 ifeq ($(CONFIG_VBDEV_COMPRESS_MLX5),y)
 DPDK_DRIVERS += compress/mlx5
 endif
-DPDK_CFLAGS += -I$(ISAL_DIR)
+DPDK_CFLAGS += -I$(ISAL_DIR) -I$(ISAL_BUILD_DIR)
 DPDK_LDFLAGS += -L$(ISAL_DIR)/.libs -lisal
 endif
 

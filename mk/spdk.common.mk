@@ -178,8 +178,10 @@ IPSEC_MB_DIR=$(CONFIG_IPSEC_MB_DIR)
 
 ISAL_DIR=$(SPDK_ROOT_DIR)/isa-l
 ISAL_CRYPTO_DIR=$(SPDK_ROOT_DIR)/isa-l-crypto
+ISAL_BUILD_DIR=$(SPDK_ROOT_DIR)/isalbuild
+ISAL_CRYPTO_BUILD_DIR=$(SPDK_ROOT_DIR)/isalcryptobuild
 ifeq ($(CONFIG_ISAL), y)
-COMMON_CFLAGS += -I$(ISAL_DIR)/..
+COMMON_CFLAGS += -I$(ISAL_DIR)/.. -I$(ISAL_BUILD_DIR)
 ifeq ($(CONFIG_SHARED),y)
 SYS_LIBS += -L$(ISAL_DIR)/.libs -lisal
 LDFLAGS += -Wl,-rpath=$(ISAL_DIR)/.libs
@@ -187,7 +189,7 @@ else
 SYS_LIBS += $(ISAL_DIR)/.libs/libisal.a
 endif
 ifeq ($(CONFIG_ISAL_CRYPTO), y)
-COMMON_CFLAGS += -I$(ISAL_CRYPTO_DIR)/..
+COMMON_CFLAGS += -I$(ISAL_CRYPTO_DIR)/.. -I$(ISAL_CRYPTO_BUILD_DIR)
 ifeq ($(CONFIG_SHARED),y)
 SYS_LIBS += -L$(ISAL_CRYPTO_DIR)/.libs -lisal_crypto
 LDFLAGS += -Wl,-rpath=$(ISAL_CRYPTO_DIR)/.libs
