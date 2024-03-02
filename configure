@@ -1229,7 +1229,7 @@ fi
 # now either configure ISA-L or disable unavailable features
 if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 	cd $rootdir/isa-l
-	ISAL_LOG=$rootdir/isa-l/spdk-isal.log
+	ISAL_LOG=$rootdir/.spdk-isal.log
 	if [[ -n "${CONFIG[CROSS_PREFIX]}" ]]; then
 		ISAL_OPTS=("--host=${CONFIG[CROSS_PREFIX]}")
 	else
@@ -1264,7 +1264,7 @@ if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 	fi
 
 	cd $rootdir/isa-l-crypto
-	ISAL_CRYPTO_LOG=$rootdir/isa-l-crypto/spdk-isal-crypto.log
+	ISAL_CRYPTO_LOG=$rootdir/.spdk-isal-crypto.log
 	if [[ -n "${CONFIG[CROSS_PREFIX]}" ]]; then
 		ISAL_CRYPTO_OPTS+=("--host=${CONFIG[CROSS_PREFIX]}")
 	fi
