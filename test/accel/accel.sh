@@ -15,7 +15,6 @@ accel_perf() {
 accel_test() {
 	local accel_opc
 	local accel_module
-	out=$(accel_perf "$@")
 
 	while IFS=":" read -r var val; do
 		val=${val##+( )}
