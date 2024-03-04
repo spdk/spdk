@@ -480,6 +480,7 @@ _nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr)
 	pthread_mutex_destroy(&nvme_ctrlr->mutex);
 	spdk_keyring_put_key(nvme_ctrlr->psk);
 	spdk_keyring_put_key(nvme_ctrlr->dhchap_key);
+	spdk_keyring_put_key(nvme_ctrlr->dhchap_ctrlr_key);
 	free(nvme_ctrlr);
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
@@ -5223,6 +5224,7 @@ free_nvme_async_probe_ctx(struct nvme_async_probe_ctx *ctx)
 {
 	spdk_keyring_put_key(ctx->drv_opts.tls_psk);
 	spdk_keyring_put_key(ctx->drv_opts.dhchap_key);
+	spdk_keyring_put_key(ctx->drv_opts.dhchap_ctrlr_key);
 	free(ctx);
 }
 
@@ -5450,6 +5452,18 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 			if (nvme_ctrlr->dhchap_key == NULL) {
 				SPDK_ERRLOG("Couldn't get a reference to the key '%s'\n",
 					    spdk_key_get_name(ctx->drv_opts.dhchap_key));
+				rc = -ENOKEY;
+				goto err;
+			}
+		}
+
+		if (ctx->drv_opts.dhchap_ctrlr_key != NULL) {
+			nvme_ctrlr->dhchap_ctrlr_key =
+				spdk_keyring_get_key(
+					spdk_key_get_name(ctx->drv_opts.dhchap_ctrlr_key));
+			if (nvme_ctrlr->dhchap_ctrlr_key == NULL) {
+				SPDK_ERRLOG("Couldn't get a reference to the key '%s'\n",
+					    spdk_key_get_name(ctx->drv_opts.tls_psk));
 				rc = -ENOKEY;
 				goto err;
 			}
@@ -6215,6 +6229,16 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 
 		ctx->drv_opts.dhchap_digests = g_opts.dhchap_digests;
 		ctx->drv_opts.dhchap_dhgroups = g_opts.dhchap_dhgroups;
+	}
+	if (ctx->bdev_opts.dhchap_ctrlr_key != NULL) {
+		ctx->drv_opts.dhchap_ctrlr_key =
+			spdk_keyring_get_key(ctx->bdev_opts.dhchap_ctrlr_key);
+		if (ctx->drv_opts.dhchap_ctrlr_key == NULL) {
+			SPDK_ERRLOG("Could not load DH-HMAC-CHAP controller key: %s\n",
+				    ctx->bdev_opts.dhchap_ctrlr_key);
+			free_nvme_async_probe_ctx(ctx);
+			return -ENOKEY;
+		}
 	}
 
 	if (nvme_bdev_ctrlr_get_by_name(base_name) == NULL || multipath) {

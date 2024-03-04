@@ -236,6 +236,7 @@ struct rpc_bdev_nvme_attach_controller {
 	char *hostsvcid;
 	char *psk;
 	char *dhchap_key;
+	char *dhchap_ctrlr_key;
 	enum bdev_nvme_multipath_mode multipath;
 	struct nvme_ctrlr_opts bdev_opts;
 	struct spdk_nvme_ctrlr_opts drv_opts;
@@ -257,6 +258,7 @@ free_rpc_bdev_nvme_attach_controller(struct rpc_bdev_nvme_attach_controller *req
 	free(req->hostsvcid);
 	free(req->psk);
 	free(req->dhchap_key);
+	free(req->dhchap_ctrlr_key);
 	spdk_memset_s(req->drv_opts.psk, sizeof(req->drv_opts.psk), 0, sizeof(req->drv_opts.psk));
 }
 
@@ -336,6 +338,7 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_attach_controller_dec
 	{"psk", offsetof(struct rpc_bdev_nvme_attach_controller, psk), spdk_json_decode_string, true},
 	{"max_bdevs", offsetof(struct rpc_bdev_nvme_attach_controller, max_bdevs), spdk_json_decode_uint32, true},
 	{"dhchap_key", offsetof(struct rpc_bdev_nvme_attach_controller, dhchap_key), spdk_json_decode_string, true},
+	{"dhchap_ctrlr_key", offsetof(struct rpc_bdev_nvme_attach_controller, dhchap_ctrlr_key), spdk_json_decode_string, true},
 };
 
 #define DEFAULT_MAX_BDEVS_PER_RPC 128
@@ -619,6 +622,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	/* Should already be zero due to the calloc(), but set explicitly for clarity. */
 	ctx->req.bdev_opts.from_discovery_service = false;
 	ctx->req.bdev_opts.dhchap_key = ctx->req.dhchap_key;
+	ctx->req.bdev_opts.dhchap_ctrlr_key = ctx->req.dhchap_ctrlr_key;
 	rc = bdev_nvme_create(&trid, ctx->req.name, ctx->names, ctx->req.max_bdevs,
 			      rpc_bdev_nvme_attach_controller_done, ctx, &ctx->req.drv_opts,
 			      &ctx->req.bdev_opts, multipath);

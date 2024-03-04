@@ -46,6 +46,7 @@ struct nvme_ctrlr_opts {
 	/* Name of the PSK or path to the file containing PSK. */
 	char psk[PATH_MAX];
 	const char *dhchap_key;
+	const char *dhchap_ctrlr_key;
 };
 
 struct nvme_async_probe_ctx {
@@ -157,6 +158,7 @@ struct nvme_ctrlr {
 	struct nvme_async_probe_ctx		*probe_ctx;
 	struct spdk_key				*psk;
 	struct spdk_key				*dhchap_key;
+	struct spdk_key				*dhchap_ctrlr_key;
 
 	pthread_mutex_t				mutex;
 };

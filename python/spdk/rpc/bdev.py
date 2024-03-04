@@ -791,7 +791,7 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
                                 hdgst=None, ddgst=None, fabrics_timeout=None, multipath=None, num_io_queues=None,
                                 ctrlr_loss_timeout_sec=None, reconnect_delay_sec=None,
                                 fast_io_fail_timeout_sec=None, psk=None, max_bdevs=None,
-                                dhchap_key=None):
+                                dhchap_key=None, dhchap_ctrlr_key=None):
     """Construct block device for each NVMe namespace in the attached controller.
 
     Args:
@@ -829,6 +829,7 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
         psk: Set PSK file path and enable TCP SSL socket implementation (optional)
         max_bdevs: Size of the name array for newly created bdevs. Default is 128. (optional)
         dhchap_key: DH-HMAC-CHAP key name.
+        dhchap_ctrlr_key: DH-HMAC-CHAP controller key name.
 
     Returns:
         Names of created block devices.
@@ -896,6 +897,9 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
 
     if dhchap_key is not None:
         params['dhchap_key'] = dhchap_key
+
+    if dhchap_ctrlr_key is not None:
+        params['dhchap_ctrlr_key'] = dhchap_ctrlr_key
 
     return client.call('bdev_nvme_attach_controller', params)
 
