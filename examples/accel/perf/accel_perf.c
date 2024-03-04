@@ -81,7 +81,7 @@ struct ap_task {
 	uint32_t		dst_iovcnt;
 	void			*dst;
 	void			*dst2;
-	uint32_t		crc_dst;
+	uint32_t		*crc_dst;
 	uint32_t		compressed_sz;
 	struct ap_compress_seg *cur_seg;
 	struct worker_thread	*worker;
@@ -424,6 +424,11 @@ _get_task_data_bufs(struct ap_task *task)
 	}
 
 	if (g_workload_selection == SPDK_ACCEL_OPC_CRC32C ||
+	    g_workload_selection == SPDK_ACCEL_OPC_COPY_CRC32C) {
+		task->crc_dst = spdk_dma_zmalloc(sizeof(*task->crc_dst), 0, NULL);
+	}
+
+	if (g_workload_selection == SPDK_ACCEL_OPC_CRC32C ||
 	    g_workload_selection == SPDK_ACCEL_OPC_COPY_CRC32C ||
 	    g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY ||
 	    g_workload_selection == SPDK_ACCEL_OPC_DIF_GENERATE ||
@@ -578,13 +583,13 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 					    g_xfer_size_bytes, flags, accel_done, task);
 		break;
 	case SPDK_ACCEL_OPC_CRC32C:
-		rc = spdk_accel_submit_crc32cv(worker->ch, &task->crc_dst,
+		rc = spdk_accel_submit_crc32cv(worker->ch, task->crc_dst,
 					       task->src_iovs, task->src_iovcnt, g_crc32c_seed,
 					       accel_done, task);
 		break;
 	case SPDK_ACCEL_OPC_COPY_CRC32C:
 		rc = spdk_accel_submit_copy_crc32cv(worker->ch, task->dst, task->src_iovs, task->src_iovcnt,
-						    &task->crc_dst, g_crc32c_seed, flags, accel_done, task);
+						    task->crc_dst, g_crc32c_seed, flags, accel_done, task);
 		break;
 	case SPDK_ACCEL_OPC_COMPARE:
 		random_num = rand() % 100;
@@ -657,6 +662,9 @@ _free_task_buffers(struct ap_task *task)
 		   g_workload_selection == SPDK_ACCEL_OPC_DIF_VERIFY ||
 		   g_workload_selection == SPDK_ACCEL_OPC_DIF_GENERATE ||
 		   g_workload_selection == SPDK_ACCEL_OPC_DIF_GENERATE_COPY) {
+		if (task->crc_dst) {
+			spdk_dma_free(task->crc_dst);
+		}
 		if (task->src_iovs) {
 			for (i = 0; i < task->src_iovcnt; i++) {
 				if (task->src_iovs[i].iov_base) {
@@ -732,7 +740,7 @@ accel_done(void *arg1, int status)
 		switch (worker->workload) {
 		case SPDK_ACCEL_OPC_COPY_CRC32C:
 			sw_crc32c = spdk_crc32c_iov_update(task->src_iovs, task->src_iovcnt, ~g_crc32c_seed);
-			if (task->crc_dst != sw_crc32c) {
+			if (*task->crc_dst != sw_crc32c) {
 				SPDK_NOTICELOG("CRC-32C miscompare\n");
 				worker->xfer_failed++;
 			}
@@ -743,7 +751,7 @@ accel_done(void *arg1, int status)
 			break;
 		case SPDK_ACCEL_OPC_CRC32C:
 			sw_crc32c = spdk_crc32c_iov_update(task->src_iovs, task->src_iovcnt, ~g_crc32c_seed);
-			if (task->crc_dst != sw_crc32c) {
+			if (*task->crc_dst != sw_crc32c) {
 				SPDK_NOTICELOG("CRC-32C miscompare\n");
 				worker->xfer_failed++;
 			}
