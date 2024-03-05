@@ -135,7 +135,7 @@ spdk_nvmf_tgt_remove_referral(struct spdk_nvmf_tgt *tgt,
 	return 0;
 }
 
-static void
+void
 nvmf_qpair_set_state(struct spdk_nvmf_qpair *qpair,
 		     enum spdk_nvmf_qpair_state state)
 {
@@ -1213,7 +1213,7 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 	if (rc == 0) {
 		SPDK_DTRACE_PROBE2_TICKS(nvmf_poll_group_add_qpair, qpair, spdk_thread_get_id(group->thread));
 		TAILQ_INSERT_TAIL(&group->qpairs, qpair, link);
-		nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ENABLED);
+		nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_CONNECTING);
 	}
 
 	return rc;

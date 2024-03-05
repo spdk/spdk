@@ -509,6 +509,8 @@ nvmf_qpair_is_admin_queue(struct spdk_nvmf_qpair *qpair)
 	return qpair->qid == 0;
 }
 
+void nvmf_qpair_set_state(struct spdk_nvmf_qpair *qpair, enum spdk_nvmf_qpair_state state);
+
 static inline bool
 nvmf_request_is_fabric_connect(struct spdk_nvmf_request *req)
 {

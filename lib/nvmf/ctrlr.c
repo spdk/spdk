@@ -240,6 +240,13 @@ nvmf_ctrlr_send_connect_rsp(void *ctx)
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
 
+	/* The qpair might have been disconnected in the meantime */
+	assert(qpair->state == SPDK_NVMF_QPAIR_CONNECTING ||
+	       qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
+	if (qpair->state == SPDK_NVMF_QPAIR_CONNECTING) {
+		nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ENABLED);
+	}
+
 	SPDK_DEBUGLOG(nvmf, "connect capsule response: cntlid = 0x%04x\n", ctrlr->cntlid);
 
 	assert(spdk_get_thread() == qpair->group->thread);
