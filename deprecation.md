@@ -55,6 +55,12 @@ The function is deprecated and will be removed in 24.09 release. Please use
 Parameters `cb_fn` and `ctx` of `spdk_nvmf_qpair_disconnect` API are deprecated. These parameters
 will be removed in 24.05 release.
 
+#### `spdk_nvmf_request_exec_fabrics`
+
+This function is deprecated and will be removed in the 24.09 release.  Instead, users should use
+`spdk_nvmf_request_exec()`, which now allows all transports (both fabrics and non-fabrics) to
+execute fabrics commands.
+
 #### `nvmf_get_subsystems`
 
 `transport` field in `listen_addresses` of `nvmf_get_subsystems` RPC is deprecated.

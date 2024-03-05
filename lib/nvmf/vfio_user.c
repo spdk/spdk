@@ -2107,7 +2107,7 @@ handle_create_io_sq(struct nvmf_vfio_user_ctrlr *ctrlr,
 	/*
 	 * Create our new I/O qpair. This asynchronously invokes, on a suitable
 	 * poll group, the nvmf_vfio_user_poll_group_add() callback, which will
-	 * call spdk_nvmf_request_exec_fabrics() with a generated fabrics
+	 * call spdk_nvmf_request_exec() with a generated fabrics
 	 * connect command. This command is then eventually completed via
 	 * handle_queue_connect_rsp().
 	 */
@@ -3017,7 +3017,7 @@ vfio_user_property_access(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
 	req->req.length = count;
 	SPDK_IOV_ONE(req->req.iov, &req->req.iovcnt, buf, req->req.length);
 
-	spdk_nvmf_request_exec_fabrics(&req->req);
+	spdk_nvmf_request_exec(&req->req);
 
 	return count;
 }
@@ -5188,6 +5188,12 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 	return 0;
 }
 
+static void
+_nvmf_vfio_user_poll_group_add(void *req)
+{
+	spdk_nvmf_request_exec(req);
+}
+
 /*
  * Add the given qpair to the given poll group. New qpairs are added via
  * spdk_nvmf_tgt_new_qpair(), which picks a poll group via
@@ -5249,7 +5255,14 @@ nvmf_vfio_user_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 		      "%s: sending connect fabrics command for qid:%#x cntlid=%#x\n",
 		      ctrlr_id(ctrlr), qpair->qid, data->cntlid);
 
-	spdk_nvmf_request_exec_fabrics(req);
+	/*
+	 * By the time transport's poll_group_add() callback is executed, the
+	 * qpair isn't in the ACTIVE state yet, so spdk_nvmf_request_exec()
+	 * would fail.  The state changes to ACTIVE immediately after the
+	 * callback finishes, so delay spdk_nvmf_request_exec() by sending a
+	 * message.
+	 */
+	spdk_thread_send_msg(spdk_get_thread(), _nvmf_vfio_user_poll_group_add, req);
 	return 0;
 }
 

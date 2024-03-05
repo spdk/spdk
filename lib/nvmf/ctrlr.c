@@ -4513,31 +4513,14 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 	return 0;
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(nvmf_request_exec_fabrics, "spdk_nvmf_request_exec_fabrics()",
+			      "v24.09", 1);
 void
 spdk_nvmf_request_exec_fabrics(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_qpair *qpair = req->qpair;
-	struct spdk_nvmf_subsystem_poll_group *sgroup = NULL;
-	enum spdk_nvmf_request_exec_status status;
+	SPDK_LOG_DEPRECATED(nvmf_request_exec_fabrics);
 
-	if (qpair->ctrlr) {
-		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
-	} else if (spdk_unlikely(nvmf_request_is_fabric_connect(req))) {
-		sgroup = nvmf_subsystem_pg_from_connect_cmd(req);
-	}
-
-	assert(sgroup != NULL);
-	sgroup->mgmt_io_outstanding++;
-
-	/* Place the request on the outstanding list so we can keep track of it */
-	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
-
-	assert(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC);
-	status = nvmf_ctrlr_process_fabrics_cmd(req);
-
-	if (status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
-		_nvmf_request_complete(req);
-	}
+	return spdk_nvmf_request_exec(req);
 }
 
 static bool

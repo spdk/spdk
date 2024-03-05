@@ -13,7 +13,6 @@ DEFINE_STUB(spdk_nvmf_ctrlr_get_regs, const struct spdk_nvmf_registers *,
 DEFINE_STUB(spdk_mem_register, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB_V(spdk_nvmf_request_exec, (struct spdk_nvmf_request *req));
-DEFINE_STUB_V(spdk_nvmf_request_exec_fabrics, (struct spdk_nvmf_request *req));
 DEFINE_STUB(spdk_nvmf_request_complete, int, (struct spdk_nvmf_request *req), 0);
 DEFINE_STUB_V(spdk_nvmf_tgt_new_qpair, (struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *qpair));
 DEFINE_STUB(nvmf_ctrlr_abort_request, int, (struct spdk_nvmf_request *req), 0);
