@@ -1504,7 +1504,7 @@ nvmf_fc_hwqp_handle_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_
 		return -EACCES;
 	}
 
-	if (fc_conn->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
+	if (!spdk_nvmf_qpair_is_active(&fc_conn->qpair)) {
 		SPDK_ERRLOG("Connection %ld qpair state = %d not valid\n",
 			    rqst_conn_id, fc_conn->qpair.state);
 		return -EACCES;

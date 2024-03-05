@@ -471,6 +471,12 @@ int spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req);
  */
 void spdk_nvmf_tgt_new_qpair(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *qpair);
 
+static inline bool
+spdk_nvmf_qpair_is_active(struct spdk_nvmf_qpair *qpair)
+{
+	return qpair->state == SPDK_NVMF_QPAIR_ACTIVE;
+}
+
 /**
  * A subset of struct spdk_nvme_registers that are emulated by a fabrics device.
  */

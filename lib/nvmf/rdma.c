@@ -2052,7 +2052,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 
 	/* If the queue pair is in an error state, force the request to the completed state
 	 * to release resources. */
-	if (spdk_unlikely(rqpair->ibv_in_error_state || rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE)) {
+	if (spdk_unlikely(rqpair->ibv_in_error_state || !spdk_nvmf_qpair_is_active(&rqpair->qpair))) {
 		switch (rdma_req->state) {
 		case RDMA_REQUEST_STATE_NEED_BUFFER:
 			STAILQ_REMOVE(&rgroup->group.pending_buf_queue, &rdma_req->req, spdk_nvmf_request, buf_link);
@@ -2093,7 +2093,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			memset(rdma_req->req.rsp, 0, sizeof(*rdma_req->req.rsp));
 			rdma_req->transfer_wr = &rdma_req->data.wr;
 
-			if (spdk_unlikely(rqpair->ibv_in_error_state || rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE)) {
+			if (spdk_unlikely(rqpair->ibv_in_error_state || !spdk_nvmf_qpair_is_active(&rqpair->qpair))) {
 				rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
 				break;
 			}
@@ -4536,7 +4536,7 @@ _qp_reset_failed_sends(struct spdk_nvmf_rdma_transport *rtransport,
 		prev_rdma_req = cur_rdma_req;
 	}
 
-	if (rqpair->qpair.state == SPDK_NVMF_QPAIR_ACTIVE) {
+	if (spdk_nvmf_qpair_is_active(&rqpair->qpair)) {
 		/* Disconnect the connection. */
 		spdk_nvmf_qpair_disconnect(&rqpair->qpair);
 	}
@@ -4753,7 +4753,7 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 			error = true;
 
-			if (rqpair->qpair.state == SPDK_NVMF_QPAIR_ACTIVE) {
+			if (spdk_nvmf_qpair_is_active(&rqpair->qpair)) {
 				/* Disconnect the connection. */
 				spdk_nvmf_qpair_disconnect(&rqpair->qpair);
 			} else {
@@ -4764,7 +4764,7 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 		nvmf_rdma_qpair_process_pending(rtransport, rqpair, false);
 
-		if (spdk_unlikely(rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE)) {
+		if (spdk_unlikely(!spdk_nvmf_qpair_is_active(&rqpair->qpair))) {
 			nvmf_rdma_destroy_drained_qpair(rqpair);
 		}
 	}

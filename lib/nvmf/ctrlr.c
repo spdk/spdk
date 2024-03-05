@@ -617,6 +617,7 @@ nvmf_ctrlr_add_io_qpair(void *ctx)
 	struct spdk_nvmf_qpair *admin_qpair = ctrlr->admin_qpair;
 	struct spdk_nvmf_poll_group *admin_qpair_group = NULL;
 	enum spdk_nvmf_qpair_state admin_qpair_state = SPDK_NVMF_QPAIR_UNINITIALIZED;
+	bool admin_qpair_active = false;
 
 	SPDK_DTRACE_PROBE4_TICKS(nvmf_ctrlr_add_io_qpair, ctrlr, req->qpair, req->qpair->qid,
 				 spdk_thread_get_id(ctrlr->thread));
@@ -661,11 +662,12 @@ nvmf_ctrlr_add_io_qpair(void *ctx)
 
 	/* There is a chance that admin qpair was destroyed. This is an issue that was observed only with ESX initiators */
 	if (admin_qpair) {
+		admin_qpair_active = spdk_nvmf_qpair_is_active(admin_qpair);
 		admin_qpair_group = admin_qpair->group;
 		admin_qpair_state = admin_qpair->state;
 	}
 
-	if (admin_qpair_state != SPDK_NVMF_QPAIR_ACTIVE || admin_qpair_group == NULL) {
+	if (!admin_qpair_active || admin_qpair_group == NULL) {
 		/* There is a chance that admin qpair was destroyed or is being destroyed at this moment due to e.g.
 		 * expired keep alive timer. Part of the qpair destruction process is change of qpair's
 		 * state to DEACTIVATING and removing it from poll group */
@@ -704,6 +706,7 @@ _nvmf_ctrlr_add_io_qpair(void *ctx)
 	const struct spdk_nvmf_subsystem_listener *listener;
 	struct spdk_nvmf_poll_group *admin_qpair_group = NULL;
 	enum spdk_nvmf_qpair_state admin_qpair_state = SPDK_NVMF_QPAIR_UNINITIALIZED;
+	bool admin_qpair_active = false;
 
 	assert(req->iovcnt == 1);
 
@@ -753,11 +756,12 @@ _nvmf_ctrlr_add_io_qpair(void *ctx)
 
 	/* There is a chance that admin qpair was destroyed. This is an issue that was observed only with ESX initiators */
 	if (admin_qpair) {
+		admin_qpair_active = spdk_nvmf_qpair_is_active(admin_qpair);
 		admin_qpair_group = admin_qpair->group;
 		admin_qpair_state = admin_qpair->state;
 	}
 
-	if (admin_qpair_state != SPDK_NVMF_QPAIR_ACTIVE || admin_qpair_group == NULL) {
+	if (!admin_qpair_active || admin_qpair_group == NULL) {
 		/* There is a chance that admin qpair was destroyed or is being destroyed at this moment due to e.g.
 		 * expired keep alive timer. Part of the qpair destruction process is change of qpair's
 		 * state to DEACTIVATING and removing it from poll group */
@@ -4624,7 +4628,7 @@ nvmf_check_subsystem_active(struct spdk_nvmf_request *req)
 			ns_info->io_outstanding++;
 		}
 
-		if (spdk_unlikely(qpair->state != SPDK_NVMF_QPAIR_ACTIVE)) {
+		if (spdk_unlikely(!spdk_nvmf_qpair_is_active(qpair))) {
 			req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 			TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
@@ -4706,7 +4710,7 @@ spdk_nvmf_request_get_dif_ctx(struct spdk_nvmf_request *req, struct spdk_dif_ctx
 		return false;
 	}
 
-	if (spdk_unlikely(qpair->state != SPDK_NVMF_QPAIR_ACTIVE)) {
+	if (spdk_unlikely(!spdk_nvmf_qpair_is_active(qpair))) {
 		return false;
 	}
 

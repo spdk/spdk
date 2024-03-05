@@ -1396,7 +1396,7 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair)
 	}
 
 	SPDK_DTRACE_PROBE2_TICKS(nvmf_qpair_disconnect, qpair, spdk_thread_get_id(group->thread));
-	assert(qpair->state == SPDK_NVMF_QPAIR_ACTIVE);
+	assert(spdk_nvmf_qpair_is_active(qpair));
 	nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_DEACTIVATING);
 
 	qpair_ctx = calloc(1, sizeof(struct nvmf_qpair_disconnect_ctx));

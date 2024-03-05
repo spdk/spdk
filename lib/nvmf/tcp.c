@@ -2872,7 +2872,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 	assert(tcp_req->state != TCP_REQUEST_STATE_FREE);
 
 	/* If the qpair is not active, we need to abort the outstanding requests. */
-	if (tqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
+	if (!spdk_nvmf_qpair_is_active(&tqpair->qpair)) {
 		if (tcp_req->state == TCP_REQUEST_STATE_NEED_BUFFER) {
 			STAILQ_REMOVE(&group->pending_buf_queue, &tcp_req->req, spdk_nvmf_request, buf_link);
 		}
@@ -3151,7 +3151,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 					      "write on req=%p\n", tcp_req);
 				/* This can only happen for zcopy requests */
 				assert(spdk_nvmf_request_using_zcopy(&tcp_req->req));
-				assert(tqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE);
+				assert(!spdk_nvmf_qpair_is_active(&tqpair->qpair));
 				break;
 			}
 
@@ -3171,7 +3171,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 				assert(spdk_nvmf_request_using_zcopy(&tcp_req->req));
 				assert(tcp_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST ||
 				       spdk_nvme_cpl_is_error(&tcp_req->req.rsp->nvme_cpl) ||
-				       tqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE);
+				       !spdk_nvmf_qpair_is_active(&tqpair->qpair));
 				nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_AWAITING_ZCOPY_RELEASE);
 				spdk_nvmf_request_zcopy_end(&tcp_req->req, false);
 				break;
