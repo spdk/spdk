@@ -33,6 +33,10 @@ if [[ $CC == *clang* ]]; then
 	esac
 fi
 
+if [[ -n $SPDK_TEST_NATIVE_DPDK && -e /tmp/spdk-ld-path ]]; then
+	source /tmp/spdk-ld-path
+fi
+
 config_params="$(get_config_params | sed 's/--enable-debug//g')"
 "$rootdir/configure" $config_params --enable-lto
 
