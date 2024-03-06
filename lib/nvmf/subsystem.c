@@ -559,19 +559,8 @@ nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
 	return actual_old_state - expected_old_state;
 }
 
-struct subsystem_state_change_ctx {
-	struct spdk_nvmf_subsystem		*subsystem;
-	uint16_t				nsid;
-
-	enum spdk_nvmf_subsystem_state		original_state;
-	enum spdk_nvmf_subsystem_state		requested_state;
-
-	spdk_nvmf_subsystem_state_change_done	cb_fn;
-	void					*cb_arg;
-};
-
 static void
-nvmf_subsystem_state_change_complete(struct subsystem_state_change_ctx *ctx, int status)
+nvmf_subsystem_state_change_complete(struct nvmf_subsystem_state_change_ctx *ctx, int status)
 {
 	struct spdk_nvmf_subsystem *subsystem = ctx->subsystem;
 
@@ -586,7 +575,7 @@ nvmf_subsystem_state_change_complete(struct subsystem_state_change_ctx *ctx, int
 static void
 subsystem_state_change_revert_done(struct spdk_io_channel_iter *i, int status)
 {
-	struct subsystem_state_change_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct nvmf_subsystem_state_change_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
 
 	/* Nothing to be done here if the state setting fails, we are just screwed. */
 	if (nvmf_subsystem_set_state(ctx->subsystem, ctx->requested_state)) {
@@ -600,7 +589,7 @@ subsystem_state_change_revert_done(struct spdk_io_channel_iter *i, int status)
 static void
 subsystem_state_change_done(struct spdk_io_channel_iter *i, int status)
 {
-	struct subsystem_state_change_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct nvmf_subsystem_state_change_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
 	enum spdk_nvmf_subsystem_state intermediate_state;
 
 	SPDK_DTRACE_PROBE4(nvmf_subsystem_change_state_done, ctx->subsystem->subnqn,
@@ -637,7 +626,7 @@ static void
 subsystem_state_change_continue(void *ctx, int status)
 {
 	struct spdk_io_channel_iter *i = ctx;
-	struct subsystem_state_change_ctx *_ctx __attribute__((unused));
+	struct nvmf_subsystem_state_change_ctx *_ctx __attribute__((unused));
 
 	_ctx = spdk_io_channel_iter_get_ctx(i);
 	SPDK_DTRACE_PROBE3(nvmf_pg_change_state_done, _ctx->subsystem->subnqn,
@@ -649,7 +638,7 @@ subsystem_state_change_continue(void *ctx, int status)
 static void
 subsystem_state_change_on_pg(struct spdk_io_channel_iter *i)
 {
-	struct subsystem_state_change_ctx *ctx;
+	struct nvmf_subsystem_state_change_ctx *ctx;
 	struct spdk_io_channel *ch;
 	struct spdk_nvmf_poll_group *group;
 
@@ -687,7 +676,7 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 			    spdk_nvmf_subsystem_state_change_done cb_fn,
 			    void *cb_arg)
 {
-	struct subsystem_state_change_ctx *ctx;
+	struct nvmf_subsystem_state_change_ctx *ctx;
 	enum spdk_nvmf_subsystem_state intermediate_state;
 	int rc;
 
