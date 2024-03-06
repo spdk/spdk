@@ -4327,8 +4327,11 @@ _free_ctrlr(void *ctx)
 static void
 free_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 {
+	struct spdk_thread *thread;
 	int i;
+
 	assert(ctrlr != NULL);
+	thread = ctrlr->thread ? ctrlr->thread : spdk_get_thread();
 
 	SPDK_DEBUGLOG(nvmf_vfio, "free %s\n", ctrlr_id(ctrlr));
 
@@ -4336,7 +4339,7 @@ free_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 		free_qp(ctrlr, i);
 	}
 
-	spdk_thread_exec_msg(ctrlr->thread, _free_ctrlr, ctrlr);
+	spdk_thread_exec_msg(thread, _free_ctrlr, ctrlr);
 }
 
 static int
