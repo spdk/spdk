@@ -255,6 +255,17 @@ struct spdk_nvmf_ctrlr {
 
 #define NVMF_MAX_LISTENERS_PER_SUBSYSTEM	16
 
+struct nvmf_subsystem_state_change_ctx {
+	struct spdk_nvmf_subsystem		*subsystem;
+	uint16_t				nsid;
+
+	enum spdk_nvmf_subsystem_state		original_state;
+	enum spdk_nvmf_subsystem_state		requested_state;
+
+	spdk_nvmf_subsystem_state_change_done	cb_fn;
+	void					*cb_arg;
+};
+
 struct spdk_nvmf_subsystem {
 	struct spdk_thread				*thread;
 
