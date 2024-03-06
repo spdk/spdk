@@ -575,6 +575,19 @@ struct subsystem_state_change_ctx {
 };
 
 static void
+nvmf_subsystem_state_change_complete(struct subsystem_state_change_ctx *ctx, int status)
+{
+	struct spdk_nvmf_subsystem *subsystem = ctx->subsystem;
+
+	subsystem->changing_state = false;
+	if (ctx->cb_fn != NULL) {
+		ctx->cb_fn(subsystem, ctx->cb_arg, status);
+	}
+
+	free(ctx);
+}
+
+static void
 subsystem_state_change_revert_done(struct spdk_io_channel_iter *i, int status)
 {
 	struct subsystem_state_change_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
@@ -584,12 +597,8 @@ subsystem_state_change_revert_done(struct spdk_io_channel_iter *i, int status)
 		SPDK_ERRLOG("Unable to revert the subsystem state after operation failure.\n");
 	}
 
-	ctx->subsystem->changing_state = false;
-	if (ctx->cb_fn) {
-		/* return a failure here. This function only exists in an error path. */
-		ctx->cb_fn(ctx->subsystem, ctx->cb_arg, -1);
-	}
-	free(ctx);
+	/* return a failure here. This function only exists in an error path. */
+	nvmf_subsystem_state_change_complete(ctx, -1);
 }
 
 static void
@@ -625,11 +634,7 @@ subsystem_state_change_done(struct spdk_io_channel_iter *i, int status)
 	}
 
 out:
-	ctx->subsystem->changing_state = false;
-	if (ctx->cb_fn) {
-		ctx->cb_fn(ctx->subsystem, ctx->cb_arg, status);
-	}
-	free(ctx);
+	nvmf_subsystem_state_change_complete(ctx, status);
 }
 
 static void
@@ -710,11 +715,7 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 			   requested_state, subsystem->state);
 	/* If we are already in the requested state, just call the callback immediately. */
 	if (subsystem->state == requested_state) {
-		subsystem->changing_state = false;
-		if (cb_fn) {
-			cb_fn(subsystem, cb_arg, 0);
-		}
-		free(ctx);
+		nvmf_subsystem_state_change_complete(ctx, 0);
 		return 0;
 	}
 
@@ -724,8 +725,8 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 	ctx->original_state = subsystem->state;
 	rc = nvmf_subsystem_set_state(subsystem, intermediate_state);
 	if (rc) {
-		free(ctx);
-		subsystem->changing_state = false;
+		ctx->cb_fn = NULL;
+		nvmf_subsystem_state_change_complete(ctx, -1);
 		return rc;
 	}
 
