@@ -686,7 +686,19 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 	enum spdk_nvmf_subsystem_state intermediate_state;
 	int rc;
 
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		return -ENOMEM;
+	}
+
+	ctx->subsystem = subsystem;
+	ctx->nsid = nsid;
+	ctx->requested_state = requested_state;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
 	if (__sync_val_compare_and_swap(&subsystem->changing_state, false, true)) {
+		free(ctx);
 		return -EBUSY;
 	}
 
@@ -698,17 +710,12 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 		if (cb_fn) {
 			cb_fn(subsystem, cb_arg, 0);
 		}
+		free(ctx);
 		return 0;
 	}
 
 	intermediate_state = nvmf_subsystem_get_intermediate_state(subsystem->state, requested_state);
 	assert(intermediate_state != SPDK_NVMF_SUBSYSTEM_NUM_STATES);
-
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
-		subsystem->changing_state = false;
-		return -ENOMEM;
-	}
 
 	ctx->original_state = subsystem->state;
 	rc = nvmf_subsystem_set_state(subsystem, intermediate_state);
@@ -717,12 +724,6 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 		subsystem->changing_state = false;
 		return rc;
 	}
-
-	ctx->subsystem = subsystem;
-	ctx->nsid = nsid;
-	ctx->requested_state = requested_state;
-	ctx->cb_fn = cb_fn;
-	ctx->cb_arg = cb_arg;
 
 	spdk_for_each_channel(subsystem->tgt,
 			      subsystem_state_change_on_pg,
