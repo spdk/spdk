@@ -429,8 +429,14 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	}
 
 	if (ctx->req.hostnqn) {
-		snprintf(ctx->req.drv_opts.hostnqn, sizeof(ctx->req.drv_opts.hostnqn), "%s",
-			 ctx->req.hostnqn);
+		maxlen = sizeof(ctx->req.drv_opts.hostnqn);
+		len = strnlen(ctx->req.hostnqn, maxlen);
+		if (len == maxlen) {
+			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "hostnqn too long: %s",
+							     ctx->req.hostnqn);
+			goto cleanup;
+		}
+		memcpy(ctx->req.drv_opts.hostnqn, ctx->req.hostnqn, len + 1);
 	}
 
 	if (ctx->req.psk) {
