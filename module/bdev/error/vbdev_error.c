@@ -250,7 +250,7 @@ vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bde
 
 	error_type = vbdev_error_get_error_type(error_disk, bdev_io->type);
 
-	if (ch->io_inflight < error_disk->error_vector[bdev_io->type].error_qd) {
+	if (error_type != 0 && ch->io_inflight < error_disk->error_vector[bdev_io->type].error_qd) {
 		error_type = 0;
 	}
 
