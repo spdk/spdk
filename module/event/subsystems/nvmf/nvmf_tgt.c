@@ -19,6 +19,7 @@ enum nvmf_tgt_state {
 	NVMF_TGT_INIT_CREATE_POLL_GROUPS,
 	NVMF_TGT_INIT_START_SUBSYSTEMS,
 	NVMF_TGT_RUNNING,
+	NVMF_TGT_FINI_STOP_LISTEN,
 	NVMF_TGT_FINI_STOP_SUBSYSTEMS,
 	NVMF_TGT_FINI_DESTROY_SUBSYSTEMS,
 	NVMF_TGT_FINI_DESTROY_POLL_GROUPS,
@@ -68,7 +69,7 @@ nvmf_shutdown_cb(void *arg1)
 		/* Parse configuration error */
 		g_tgt_state = NVMF_TGT_FINI_DESTROY_TARGET;
 	} else {
-		g_tgt_state = NVMF_TGT_FINI_STOP_SUBSYSTEMS;
+		g_tgt_state = NVMF_TGT_FINI_STOP_LISTEN;
 	}
 	nvmf_tgt_advance_state();
 }
@@ -211,7 +212,7 @@ nvmf_tgt_subsystem_started(struct spdk_nvmf_subsystem *subsystem,
 	if (subsystem) {
 		rc = spdk_nvmf_subsystem_start(subsystem, nvmf_tgt_subsystem_started, NULL);
 		if (rc) {
-			g_tgt_state = NVMF_TGT_FINI_STOP_SUBSYSTEMS;
+			g_tgt_state = NVMF_TGT_FINI_STOP_LISTEN;
 			SPDK_ERRLOG("Unable to start NVMe-oF subsystem. Stopping app.\n");
 			nvmf_tgt_advance_state();
 		}
@@ -241,6 +242,35 @@ nvmf_tgt_subsystem_stopped(struct spdk_nvmf_subsystem *subsystem,
 
 	g_tgt_state = NVMF_TGT_FINI_DESTROY_SUBSYSTEMS;
 	nvmf_tgt_advance_state();
+}
+
+static void
+nvmf_tgt_stop_listen(void)
+{
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_subsystem_listener *listener;
+	const struct spdk_nvme_transport_id *trid;
+	struct spdk_nvmf_transport *transport;
+	int rc;
+
+	for (subsystem = spdk_nvmf_subsystem_get_first(g_spdk_nvmf_tgt);
+	     subsystem != NULL;
+	     subsystem = spdk_nvmf_subsystem_get_next(subsystem)) {
+		for (listener = spdk_nvmf_subsystem_get_first_listener(subsystem);
+		     listener != NULL;
+		     listener = spdk_nvmf_subsystem_get_next_listener(subsystem, listener)) {
+			trid = spdk_nvmf_subsystem_listener_get_trid(listener);
+			transport = spdk_nvmf_tgt_get_transport(g_spdk_nvmf_tgt, trid->trstring);
+			rc = spdk_nvmf_transport_stop_listen(transport, trid);
+			if (rc != 0) {
+				SPDK_ERRLOG("Unable to stop subsystem %s listener %s:%s, rc %d. Trying others.\n",
+					    spdk_nvmf_subsystem_get_nqn(subsystem), trid->traddr, trid->trsvcid, rc);
+				continue;
+			}
+		}
+	}
+
+	g_tgt_state = NVMF_TGT_FINI_STOP_SUBSYSTEMS;
 }
 
 static void
@@ -437,7 +467,7 @@ nvmf_tgt_advance_state(void)
 				ret = spdk_nvmf_subsystem_start(subsystem, nvmf_tgt_subsystem_started, NULL);
 				if (ret) {
 					SPDK_ERRLOG("Unable to start NVMe-oF subsystem. Stopping app.\n");
-					g_tgt_state = NVMF_TGT_FINI_STOP_SUBSYSTEMS;
+					g_tgt_state = NVMF_TGT_FINI_STOP_LISTEN;
 				}
 			} else {
 				g_tgt_state = NVMF_TGT_RUNNING;
@@ -446,6 +476,9 @@ nvmf_tgt_advance_state(void)
 		}
 		case NVMF_TGT_RUNNING:
 			spdk_subsystem_init_next(0);
+			break;
+		case NVMF_TGT_FINI_STOP_LISTEN:
+			nvmf_tgt_stop_listen();
 			break;
 		case NVMF_TGT_FINI_STOP_SUBSYSTEMS: {
 			struct spdk_nvmf_subsystem *subsystem;
