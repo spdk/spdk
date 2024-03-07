@@ -7,42 +7,6 @@
 rootdir=$(readlink -f $(dirname $0))
 source "$rootdir/test/common/autobuild_common.sh"
 
-MAKEFLAGS=${MAKEFLAGS:--j16}
-cd $rootdir
-
-if [[ $SPDK_TEST_PACKAGING -eq 1 ]]; then
-	build_packaging
-	$MAKE clean
+if [[ $SPDK_TEST_RELEASE_BUILD -eq 1 ]]; then
+	build_release
 fi
-
-if [[ $SPDK_TEST_RELEASE_BUILD -eq 0 ]]; then
-	timing_finish
-	exit 0
-fi
-
-timing_enter build_release
-
-# LTO needs a special compiler to work under clang. See detect_cc.sh for details.
-if [[ $CC == *clang* ]]; then
-	jobs=$(($(nproc) / 2))
-	case "$(uname -s)" in
-		Linux) # Shipped by default with binutils under most of the Linux distros
-			export LD=ld.gold LDFLAGS="-Wl,--threads,--thread-count=$jobs" MAKEFLAGS="-j$jobs" ;;
-		FreeBSD) # Default compiler which does support LTO, set it explicitly for visibility
-			export LD=ld.lld ;;
-	esac
-fi
-
-if [[ -n $SPDK_TEST_NATIVE_DPDK && -e /tmp/spdk-ld-path ]]; then
-	source /tmp/spdk-ld-path
-fi
-
-config_params="$(get_config_params | sed 's/--enable-debug//g')"
-"$rootdir/configure" $config_params --enable-lto --disable-unit-tests
-
-$MAKE ${MAKEFLAGS}
-$MAKE ${MAKEFLAGS} clean
-
-timing_exit build_release
-
-timing_finish

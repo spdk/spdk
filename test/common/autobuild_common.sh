@@ -443,6 +443,35 @@ build_packaging() {
 	run_test "packaging" "$rootdir/test/packaging/packaging.sh"
 }
 
+_build_release() (
+	local jobs LD
+
+	if [[ -n $SPDK_TEST_NATIVE_DPDK && -e /tmp/spdk-ld-path ]]; then
+		source /tmp/spdk-ld-path
+	fi
+
+	if [[ $CC == *clang* ]]; then
+		jobs=$(($(nproc) / 2))
+		case "$(uname -s)" in
+			Linux) # Shipped by default with binutils under most of the Linux distros
+				export LD=ld.gold LDFLAGS="-Wl,--threads,--thread-count=$jobs" MAKEFLAGS="-j$jobs" ;;
+			FreeBSD) # Default compiler which does support LTO, set it explicitly for visibility
+				export LD=ld.lld ;;
+		esac
+	fi
+
+	"$rootdir/configure" $config_params \
+		--disable-debug \
+		--disable-unit-tests \
+		--enable-lto
+
+	$MAKE -C "$rootdir" $MAKEFLAGS
+)
+
+build_release() {
+	run_test "build_release" _build_release
+}
+
 out=$output_dir
 SPDK_WORKSPACE=$(mktemp -dt "spdk_$(date +%s).XXXXXX")
 
