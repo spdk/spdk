@@ -4618,7 +4618,6 @@ void
 spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
-	struct spdk_nvmf_transport *transport = qpair->transport;
 	enum spdk_nvmf_request_exec_status status;
 
 	if (spdk_unlikely(!nvmf_check_subsystem_active(req))) {
@@ -4632,8 +4631,7 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 	/* Place the request on the outstanding list so we can keep track of it */
 	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
 
-	if (spdk_unlikely((req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC) &&
-			  spdk_nvme_trtype_is_fabrics(transport->ops->type))) {
+	if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC)) {
 		status = nvmf_ctrlr_process_fabrics_cmd(req);
 	} else if (spdk_unlikely(nvmf_qpair_is_admin_queue(qpair))) {
 		status = nvmf_ctrlr_process_admin_cmd(req);
