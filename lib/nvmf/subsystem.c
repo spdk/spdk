@@ -1654,6 +1654,7 @@ spdk_nvmf_ns_opts_get_defaults(struct spdk_nvmf_ns_opts *opts, size_t opts_size)
 		spdk_uuid_set_null(&opts->uuid);
 	}
 	SET_FIELD(anagrpid, 0);
+	SET_FIELD(transport_specific, NULL);
 
 #undef FIELD_OK
 #undef SET_FIELD
@@ -1683,13 +1684,14 @@ nvmf_ns_opts_copy(struct spdk_nvmf_ns_opts *opts,
 		spdk_uuid_copy(&opts->uuid, &user_opts->uuid);
 	}
 	SET_FIELD(anagrpid);
+	SET_FIELD(transport_specific);
 
 	opts->opts_size = user_opts->opts_size;
 
 	/* We should not remove this statement, but need to update the assert statement
 	 * if we add a new field, and also add a corresponding SET_FIELD statement.
 	 */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ns_opts) == 64, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ns_opts) == 72, "Incorrect size");
 
 #undef FIELD_OK
 #undef SET_FIELD
@@ -1881,6 +1883,9 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 			}
 		}
 	}
+
+	/* JSON value obj is freed before sending the response. Set NULL to prevent usage of dangling pointer. */
+	ns->opts.transport_specific = NULL;
 
 	SPDK_DEBUGLOG(nvmf, "Subsystem %s: bdev %s assigned nsid %" PRIu32 "\n",
 		      spdk_nvmf_subsystem_get_nqn(subsystem),

@@ -927,8 +927,17 @@ struct spdk_nvmf_ns_opts {
 
 	/* Hole at bytes 60-63. */
 	uint8_t reserved60[4];
+
+	/* Transport specific json values.
+	 *
+	 * If transport specific values provided then json object is valid only at the time
+	 * namespace is being added. It is transport layer responsibility to maintain
+	 * the copy of it or its decoding if required. When \ref spdk_nvmf_ns_get_opts used
+	 * after namespace has been added object becomes invalid.
+	 */
+	const struct spdk_json_val *transport_specific;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ns_opts) == 64, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ns_opts) == 72, "Incorrect size");
 
 /**
  * Get default namespace creation options.

@@ -1405,6 +1405,7 @@ struct nvmf_rpc_ns_ctx {
 	struct spdk_nvmf_ns_params ns_params;
 
 	struct spdk_jsonrpc_request *request;
+	const struct spdk_json_val *params;
 	bool response_sent;
 };
 
@@ -1493,6 +1494,7 @@ nvmf_rpc_ns_paused(struct spdk_nvmf_subsystem *subsystem,
 
 	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
 	ns_opts.nsid = ctx->ns_params.nsid;
+	ns_opts.transport_specific = ctx->params;
 
 	SPDK_STATIC_ASSERT(sizeof(ns_opts.nguid) == sizeof(ctx->ns_params.nguid), "size mismatch");
 	memcpy(ns_opts.nguid, ctx->ns_params.nguid, sizeof(ns_opts.nguid));
@@ -1539,9 +1541,8 @@ rpc_nvmf_subsystem_add_ns(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (spdk_json_decode_object(params, nvmf_rpc_subsystem_ns_decoder,
-				    SPDK_COUNTOF(nvmf_rpc_subsystem_ns_decoder),
-				    ctx)) {
+	if (spdk_json_decode_object_relaxed(params, nvmf_rpc_subsystem_ns_decoder,
+					    SPDK_COUNTOF(nvmf_rpc_subsystem_ns_decoder), ctx)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		nvmf_rpc_ns_ctx_free(ctx);
@@ -1549,6 +1550,7 @@ rpc_nvmf_subsystem_add_ns(struct spdk_jsonrpc_request *request,
 	}
 
 	ctx->request = request;
+	ctx->params = params;
 	ctx->response_sent = false;
 
 	tgt = spdk_nvmf_get_tgt(ctx->tgt_name);
