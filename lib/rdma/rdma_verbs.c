@@ -46,7 +46,7 @@ spdk_rdma_qp_create(struct rdma_cm_id *cm_id, struct spdk_rdma_qp_init_attr *qp_
 
 	rc = rdma_create_qp(cm_id, qp_attr->pd, &attr);
 	if (rc) {
-		SPDK_ERRLOG("Failed to create qp, errno %s (%d)\n", spdk_strerror(errno), errno);
+		SPDK_ERRLOG("Failed to create qp, rc %d, errno %s (%d)\n", rc, spdk_strerror(errno), errno);
 		free(spdk_rdma_qp);
 		return NULL;
 	}

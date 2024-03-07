@@ -42,23 +42,6 @@ SPDK_STATIC_ASSERT(NVMF_DEFAULT_MSDBD <= SPDK_NVMF_MAX_SGL_ENTRIES,
 #define DEFAULT_NVMF_RDMA_CQ_SIZE	4096
 #define MAX_WR_PER_QP(queue_depth)	(queue_depth * 3 + 2)
 
-static int g_spdk_nvmf_ibv_query_mask =
-	IBV_QP_STATE |
-	IBV_QP_PKEY_INDEX |
-	IBV_QP_PORT |
-	IBV_QP_ACCESS_FLAGS |
-	IBV_QP_AV |
-	IBV_QP_PATH_MTU |
-	IBV_QP_DEST_QPN |
-	IBV_QP_RQ_PSN |
-	IBV_QP_MAX_DEST_RD_ATOMIC |
-	IBV_QP_MIN_RNR_TIMER |
-	IBV_QP_SQ_PSN |
-	IBV_QP_TIMEOUT |
-	IBV_QP_RETRY_CNT |
-	IBV_QP_RNR_RETRY |
-	IBV_QP_MAX_QP_RD_ATOMIC;
-
 enum spdk_nvmf_rdma_request_state {
 	/* The request is not currently in use */
 	RDMA_REQUEST_STATE_FREE = 0,
@@ -177,9 +160,6 @@ SPDK_TRACE_REGISTER_FN(nvmf_trace, "nvmf_rdma", TRACE_GROUP_NVMF_RDMA)
 	spdk_trace_register_description("RDMA_CM_ASYNC_EVENT", TRACE_RDMA_CM_ASYNC_EVENT,
 					OWNER_TYPE_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "type");
-	spdk_trace_register_description("RDMA_QP_STATE_CHANGE", TRACE_RDMA_QP_STATE_CHANGE,
-					OWNER_TYPE_NONE, OBJECT_NONE, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "state");
 	spdk_trace_register_description("RDMA_QP_DISCONNECT", TRACE_RDMA_QP_DISCONNECT,
 					OWNER_TYPE_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
@@ -362,16 +342,13 @@ struct spdk_nvmf_rdma_qpair {
 	/* Number of requests not in the free state */
 	uint32_t				qd;
 
+	bool					ibv_in_error_state;
+
 	RB_ENTRY(spdk_nvmf_rdma_qpair)		node;
 
 	STAILQ_ENTRY(spdk_nvmf_rdma_qpair)	recv_link;
 
 	STAILQ_ENTRY(spdk_nvmf_rdma_qpair)	send_link;
-
-	/* IBV queue pair attributes: they are used to manage
-	 * qp state and recover from errors.
-	 */
-	enum ibv_qp_state			ibv_state;
 
 	/* Points to the a request that has fuse bits set to
 	 * SPDK_NVME_CMD_FUSE_FIRST, when the qpair is waiting
@@ -560,23 +537,6 @@ static void _poller_submit_recvs(struct spdk_nvmf_rdma_transport *rtransport,
 
 static void _nvmf_rdma_remove_destroyed_device(void *c);
 
-static inline int
-nvmf_rdma_check_ibv_state(enum ibv_qp_state state)
-{
-	switch (state) {
-	case IBV_QPS_RESET:
-	case IBV_QPS_INIT:
-	case IBV_QPS_RTR:
-	case IBV_QPS_RTS:
-	case IBV_QPS_SQD:
-	case IBV_QPS_SQE:
-	case IBV_QPS_ERR:
-		return 0;
-	default:
-		return -1;
-	}
-}
-
 static inline enum spdk_nvme_media_error_status_code
 nvmf_rdma_dif_error_to_compl_status(uint8_t err_type) {
 	enum spdk_nvme_media_error_status_code result;
@@ -596,45 +556,6 @@ nvmf_rdma_dif_error_to_compl_status(uint8_t err_type) {
 	}
 
 	return result;
-}
-
-static enum ibv_qp_state
-nvmf_rdma_update_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair) {
-	enum ibv_qp_state old_state, new_state;
-	struct ibv_qp_attr qp_attr;
-	struct ibv_qp_init_attr init_attr;
-	int rc;
-
-	old_state = rqpair->ibv_state;
-	rc = ibv_query_qp(rqpair->rdma_qp->qp, &qp_attr,
-			  g_spdk_nvmf_ibv_query_mask, &init_attr);
-
-	if (rc)
-	{
-		SPDK_ERRLOG("Failed to get updated RDMA queue pair state!\n");
-		return IBV_QPS_ERR + 1;
-	}
-
-	new_state = qp_attr.qp_state;
-	rqpair->ibv_state = new_state;
-	qp_attr.ah_attr.port_num = qp_attr.port_num;
-
-	rc = nvmf_rdma_check_ibv_state(new_state);
-	if (rc)
-	{
-		SPDK_ERRLOG("QP#%d: bad state updated: %u, maybe hardware issue\n", rqpair->qpair.qid, new_state);
-		/*
-		 * IBV_QPS_UNKNOWN undefined if lib version smaller than libibverbs-1.1.8
-		 * IBV_QPS_UNKNOWN is the enum element after IBV_QPS_ERR
-		 */
-		return IBV_QPS_ERR + 1;
-	}
-
-	if (old_state != new_state)
-	{
-		spdk_trace_record(TRACE_RDMA_QP_STATE_CHANGE, 0, 0, (uintptr_t)rqpair, new_state);
-	}
-	return new_state;
 }
 
 /*
@@ -2121,7 +2042,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 
 	/* If the queue pair is in an error state, force the request to the completed state
 	 * to release resources. */
-	if (rqpair->ibv_state == IBV_QPS_ERR || rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
+	if (rqpair->ibv_in_error_state || rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
 		switch (rdma_req->state) {
 		case RDMA_REQUEST_STATE_NEED_BUFFER:
 			STAILQ_REMOVE(&rgroup->group.pending_buf_queue, &rdma_req->req, spdk_nvmf_request, buf_link);
@@ -2162,7 +2083,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			memset(rdma_req->req.rsp, 0, sizeof(*rdma_req->req.rsp));
 			rdma_req->transfer_wr = &rdma_req->data.wr;
 
-			if (rqpair->ibv_state == IBV_QPS_ERR  || rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
+			if (rqpair->ibv_in_error_state || rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
 				rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
 				break;
 			}
@@ -3822,7 +3743,6 @@ nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 	switch (event.event_type) {
 	case IBV_EVENT_QP_FATAL:
 	case IBV_EVENT_QP_LAST_WQE_REACHED:
-	case IBV_EVENT_SQ_DRAINED:
 	case IBV_EVENT_QP_REQ_ERR:
 	case IBV_EVENT_QP_ACCESS_ERR:
 	case IBV_EVENT_COMM_EST:
@@ -3841,7 +3761,7 @@ nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 			SPDK_ERRLOG("Fatal event received for rqpair %p\n", rqpair);
 			spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
 					  (uintptr_t)rqpair, event.event_type);
-			nvmf_rdma_update_ibv_state(rqpair);
+			rqpair->ibv_in_error_state = true;
 			spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 			break;
 		case IBV_EVENT_QP_LAST_WQE_REACHED:
@@ -3853,16 +3773,6 @@ nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 				rqpair->last_wqe_reached = true;
 			}
 			break;
-		case IBV_EVENT_SQ_DRAINED:
-			/* This event occurs frequently in both error and non-error states.
-			 * Check if the qpair is in an error state before sending a message. */
-			SPDK_DEBUGLOG(rdma, "Last sq drained event received for rqpair %p\n", rqpair);
-			spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
-					  (uintptr_t)rqpair, event.event_type);
-			if (nvmf_rdma_update_ibv_state(rqpair) == IBV_QPS_ERR) {
-				spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
-			}
-			break;
 		case IBV_EVENT_QP_REQ_ERR:
 		case IBV_EVENT_QP_ACCESS_ERR:
 		case IBV_EVENT_COMM_EST:
@@ -3872,7 +3782,7 @@ nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 				       ibv_event_type_str(event.event_type));
 			spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
 					  (uintptr_t)rqpair, event.event_type);
-			nvmf_rdma_update_ibv_state(rqpair);
+			rqpair->ibv_in_error_state = true;
 			break;
 		default:
 			break;
@@ -3893,6 +3803,7 @@ nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 	case IBV_EVENT_SRQ_LIMIT_REACHED:
 	case IBV_EVENT_CLIENT_REREGISTER:
 	case IBV_EVENT_GID_CHANGE:
+	case IBV_EVENT_SQ_DRAINED:
 	default:
 		SPDK_NOTICELOG("Async event: %s\n",
 			       ibv_event_type_str(event.event_type));
@@ -4354,8 +4265,6 @@ nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 		return -1;
 	}
 
-	nvmf_rdma_update_ibv_state(rqpair);
-
 	return 0;
 }
 
@@ -4422,12 +4331,12 @@ nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_rdma_qpair     *rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair,
 			struct spdk_nvmf_rdma_qpair, qpair);
 
-	if (rqpair->ibv_state != IBV_QPS_ERR) {
-		/* The connection is alive, so process the request as normal */
-		rdma_req->state = RDMA_REQUEST_STATE_EXECUTED;
-	} else {
+	if (spdk_unlikely(rqpair->ibv_in_error_state)) {
 		/* The connection is dead. Move the request directly to the completed state. */
 		rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
+	} else {
+		/* The connection is alive, so process the request as normal */
+		rdma_req->state = RDMA_REQUEST_STATE_EXECUTED;
 	}
 
 	nvmf_rdma_request_process(rtransport, rdma_req);
@@ -4646,12 +4555,12 @@ nvmf_rdma_log_wc_status(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_wc *wc)
 		/* If qpair is in ERR state, we will receive completions for all posted and not completed
 		 * Work Requests with IBV_WC_WR_FLUSH_ERR status. Don't log an error in that case */
 		SPDK_DEBUGLOG(rdma,
-			      "Error on CQ %p, (qp state %d ibv_state %d) request 0x%lu, type %s, status: (%d): %s\n",
-			      rqpair->poller->cq, rqpair->qpair.state, rqpair->ibv_state, wc->wr_id,
+			      "Error on CQ %p, (qp state %d, in_error %d) request 0x%lu, type %s, status: (%d): %s\n",
+			      rqpair->poller->cq, rqpair->qpair.state, rqpair->ibv_in_error_state, wc->wr_id,
 			      nvmf_rdma_wr_type_str(wr_type), wc->status, ibv_wc_status_str(wc->status));
 	} else {
-		SPDK_ERRLOG("Error on CQ %p, (qp state %d ibv_state %d) request 0x%lu, type %s, status: (%d): %s\n",
-			    rqpair->poller->cq, rqpair->qpair.state, rqpair->ibv_state, wc->wr_id,
+		SPDK_ERRLOG("Error on CQ %p, (qp state %d, in_error %d) request 0x%lu, type %s, status: (%d): %s\n",
+			    rqpair->poller->cq, rqpair->qpair.state, rqpair->ibv_in_error_state, wc->wr_id,
 			    nvmf_rdma_wr_type_str(wr_type), wc->status, ibv_wc_status_str(wc->status));
 	}
 }
@@ -4806,7 +4715,7 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 		/* Handle error conditions */
 		if (wc[i].status) {
-			nvmf_rdma_update_ibv_state(rqpair);
+			rqpair->ibv_in_error_state = true;
 			nvmf_rdma_log_wc_status(rqpair, &wc[i]);
 
 			error = true;

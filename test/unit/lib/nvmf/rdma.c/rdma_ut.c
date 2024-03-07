@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2018 Intel Corporation. All rights reserved.
  *   Copyright (c) 2019, 2021 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2023, 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -493,7 +493,6 @@ qpair_reset(struct spdk_nvmf_rdma_qpair *rqpair,
 	rqpair->device = device;
 	rqpair->resources = resources;
 	rqpair->qpair.qid = 1;
-	rqpair->ibv_state = IBV_QPS_RTS;
 	rqpair->qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
 	rqpair->max_send_sge = SPDK_NVMF_MAX_SGL_ENTRIES;
 	rqpair->max_send_depth = 16;
@@ -1265,37 +1264,6 @@ test_nvmf_rdma_request_free_data(void)
 }
 
 static void
-test_nvmf_rdma_update_ibv_state(void)
-{
-	struct spdk_nvmf_rdma_qpair rqpair = {};
-	struct spdk_rdma_qp rdma_qp = {};
-	struct ibv_qp qp = {};
-	int rc = 0;
-
-	rqpair.rdma_qp = &rdma_qp;
-
-	/* Case 1: Failed to get updated RDMA queue pair state */
-	rqpair.ibv_state = IBV_QPS_INIT;
-	rqpair.rdma_qp->qp = NULL;
-
-	rc = nvmf_rdma_update_ibv_state(&rqpair);
-	CU_ASSERT(rc == IBV_QPS_ERR + 1);
-
-	/* Case 2: Bad state updated */
-	rqpair.rdma_qp->qp = &qp;
-	qp.state = IBV_QPS_ERR;
-	rc = nvmf_rdma_update_ibv_state(&rqpair);
-	CU_ASSERT(rqpair.ibv_state == 10);
-	CU_ASSERT(rc == IBV_QPS_ERR + 1);
-
-	/* Case 3: Pass */
-	qp.state = IBV_QPS_INIT;
-	rc = nvmf_rdma_update_ibv_state(&rqpair);
-	CU_ASSERT(rqpair.ibv_state == IBV_QPS_INIT);
-	CU_ASSERT(rc == IBV_QPS_INIT);
-}
-
-static void
 test_nvmf_rdma_resources_create(void)
 {
 	static struct spdk_nvmf_rdma_resources *rdma_resource;
@@ -1479,7 +1447,6 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_nvmf_rdma_request_parse_sgl_with_md);
 	CU_ADD_TEST(suite, test_nvmf_rdma_opts_init);
 	CU_ADD_TEST(suite, test_nvmf_rdma_request_free_data);
-	CU_ADD_TEST(suite, test_nvmf_rdma_update_ibv_state);
 	CU_ADD_TEST(suite, test_nvmf_rdma_resources_create);
 	CU_ADD_TEST(suite, test_nvmf_rdma_qpair_compare);
 	CU_ADD_TEST(suite, test_nvmf_rdma_resize_cq);
