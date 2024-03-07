@@ -5471,6 +5471,8 @@ map_admin_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *
 			return 0;
 		}
 		break;
+	case SPDK_NVME_OPC_FABRIC:
+		return -ENOTSUP;
 	default:
 		return 0;
 	}
@@ -5565,6 +5567,7 @@ handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 		case SPDK_NVME_OPC_RESERVATION_REPORT:
 		case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
 		case SPDK_NVME_OPC_RESERVATION_RELEASE:
+		case SPDK_NVME_OPC_FABRIC:
 			err = -ENOTSUP;
 			break;
 		default:
@@ -5576,8 +5579,10 @@ handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 	if (spdk_unlikely(err < 0)) {
 		SPDK_ERRLOG("%s: process NVMe command opc 0x%x failed\n",
 			    ctrlr_id(ctrlr), cmd->opc);
-		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+		req->rsp->nvme_cpl.status.sc = err == -ENOTSUP ?
+					       SPDK_NVME_SC_INVALID_OPCODE :
+					       SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		err = handle_cmd_rsp(vu_req, vu_req->cb_arg);
 		_nvmf_vfio_user_req_free(sq, vu_req);
 		return err;
