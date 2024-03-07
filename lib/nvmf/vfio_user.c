@@ -731,10 +731,10 @@ map_one(vfu_ctx_t *ctx, uint64_t addr, uint64_t len, dma_sg_t *sg,
 	ret = vfu_addr_to_sgl(ctx, (void *)(uintptr_t)addr, len, sg, 1, prot);
 	if (ret < 0) {
 		if (ret == -1) {
-			SPDK_ERRLOG("failed to translate IOVA [%lu, %lu) (prot=%d) to local VA: %m\n",
+			SPDK_ERRLOG("failed to translate IOVA [%#lx, %#lx) (prot=%d) to local VA: %m\n",
 				    addr, addr + len, prot);
 		} else {
-			SPDK_ERRLOG("failed to translate IOVA [%lu, %lu) (prot=%d) to local VA: %d segments needed\n",
+			SPDK_ERRLOG("failed to translate IOVA [%#lx, %#lx) (prot=%d) to local VA: %d segments needed\n",
 				    addr, addr + len, prot, -(ret + 1));
 		}
 		return NULL;
