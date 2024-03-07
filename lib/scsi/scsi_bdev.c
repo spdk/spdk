@@ -1619,7 +1619,8 @@ bdev_scsi_write_same(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 		goto check_condition;
 	}
 
-	if (_bytes_to_blocks(block_size, task->offset, &offset_blocks, task->length * xfer_len,
+	if (_bytes_to_blocks(block_size, task->offset, &offset_blocks,
+			     (uint64_t)task->length * xfer_len,
 			     &num_blocks) != 0) {
 		SPDK_ERRLOG("task's offset %" PRIu64 " or length %" PRIu32 " is not block multiple\n",
 			    task->offset, task->length);
