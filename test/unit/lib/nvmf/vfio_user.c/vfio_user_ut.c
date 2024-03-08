@@ -43,7 +43,7 @@ DEFINE_STUB(spdk_nvmf_ctrlr_restore_migr_data, int, (struct spdk_nvmf_ctrlr *ctr
 DEFINE_STUB(spdk_mempool_lookup, struct spdk_mempool *, (const char *name), NULL);
 
 static void *
-gpa_to_vva(void *prv, uint64_t addr, uint64_t len, int prot)
+gpa_to_vva(void *prv, uint64_t addr, uint64_t len, uint32_t flags)
 {
 	return (void *)(uintptr_t)addr;
 }
