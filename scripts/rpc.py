@@ -2661,16 +2661,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=nvmf_discovery_get_referrals)
 
     def nvmf_subsystem_add_ns(args):
-        rpc.nvmf.nvmf_subsystem_add_ns(args.client,
-                                       nqn=args.nqn,
-                                       bdev_name=args.bdev_name,
-                                       tgt_name=args.tgt_name,
-                                       ptpl_file=args.ptpl_file,
-                                       nsid=args.nsid,
-                                       nguid=args.nguid,
-                                       eui64=args.eui64,
-                                       uuid=args.uuid,
-                                       anagrpid=args.anagrpid)
+        rpc.nvmf.nvmf_subsystem_add_ns(**vars(args))
 
     p = subparsers.add_parser('nvmf_subsystem_add_ns', help='Add a namespace to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')

@@ -447,16 +447,8 @@ def nvmf_discovery_get_referrals(client, tgt_name=None):
     return client.call('nvmf_discovery_get_referrals', params)
 
 
-def nvmf_subsystem_add_ns(client,
-                          nqn,
-                          bdev_name,
-                          tgt_name=None,
-                          ptpl_file=None,
-                          nsid=None,
-                          nguid=None,
-                          eui64=None,
-                          uuid=None,
-                          anagrpid=None):
+def nvmf_subsystem_add_ns(client, **params):
+
     """Add a namespace to a subsystem.
 
     Args:
@@ -472,31 +464,11 @@ def nvmf_subsystem_add_ns(client,
     Returns:
         The namespace ID
     """
-    ns = {'bdev_name': bdev_name}
 
-    if ptpl_file:
-        ns['ptpl_file'] = ptpl_file
-
-    if nsid:
-        ns['nsid'] = nsid
-
-    if nguid:
-        ns['nguid'] = nguid
-
-    if eui64:
-        ns['eui64'] = eui64
-
-    if uuid:
-        ns['uuid'] = uuid
-
-    if anagrpid:
-        ns['anagrpid'] = anagrpid
-
-    params = {'nqn': nqn,
-              'namespace': ns}
-
-    if tgt_name:
-        params['tgt_name'] = tgt_name
+    strip_globals(params)
+    apply_defaults(params, tgt_name=None)
+    group_as(params, 'namespace', ['bdev_name', 'ptpl_file', 'nsid', 'nguid', 'eui64', 'uuid', 'anagrpid'])
+    remove_null(params)
 
     return client.call('nvmf_subsystem_add_ns', params)
 
