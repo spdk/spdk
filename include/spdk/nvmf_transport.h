@@ -124,7 +124,7 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_request) == 776, "Incorrect size");
 
 enum spdk_nvmf_qpair_state {
 	SPDK_NVMF_QPAIR_UNINITIALIZED = 0,
-	SPDK_NVMF_QPAIR_ACTIVE,
+	SPDK_NVMF_QPAIR_ENABLED,
 	SPDK_NVMF_QPAIR_DEACTIVATING,
 	SPDK_NVMF_QPAIR_ERROR,
 };
@@ -474,7 +474,7 @@ void spdk_nvmf_tgt_new_qpair(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *
 static inline bool
 spdk_nvmf_qpair_is_active(struct spdk_nvmf_qpair *qpair)
 {
-	return qpair->state == SPDK_NVMF_QPAIR_ACTIVE;
+	return qpair->state == SPDK_NVMF_QPAIR_ENABLED;
 }
 
 /**

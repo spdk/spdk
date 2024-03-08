@@ -700,7 +700,7 @@ test_nvmf_tcp_in_capsule_data_handle(void)
 	tqpair.qpair.transport = &ttransport.transport;
 	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH;
-	tqpair.qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
+	tqpair.qpair.state = SPDK_NVMF_QPAIR_ENABLED;
 
 	/* init a null tcp_req into tqpair TCP_REQUEST_STATE_FREE queue */
 	tcp_req2.req.qpair = &tqpair.qpair;
@@ -994,7 +994,7 @@ test_nvmf_tcp_check_xfer_type(void)
 	tqpair.qpair.transport = &ttransport.transport;
 	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH;
-	tqpair.qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
+	tqpair.qpair.state = SPDK_NVMF_QPAIR_ENABLED;
 
 	/* init tcp_req */
 	tcp_req.req.qpair = &tqpair.qpair;
@@ -1069,7 +1069,7 @@ test_nvmf_tcp_invalid_sgl(void)
 	tqpair.qpair.transport = &ttransport.transport;
 	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH;
-	tqpair.qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
+	tqpair.qpair.state = SPDK_NVMF_QPAIR_ENABLED;
 
 	/* init tcp_req */
 	tcp_req.req.qpair = &tqpair.qpair;

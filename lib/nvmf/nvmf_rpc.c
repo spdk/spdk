@@ -2645,8 +2645,8 @@ nvmf_qpair_state_str(enum spdk_nvmf_qpair_state state)
 	switch (state) {
 	case SPDK_NVMF_QPAIR_UNINITIALIZED:
 		return "uninitialized";
-	case SPDK_NVMF_QPAIR_ACTIVE:
-		return "active";
+	case SPDK_NVMF_QPAIR_ENABLED:
+		return "enabled";
 	case SPDK_NVMF_QPAIR_DEACTIVATING:
 		return "deactivating";
 	case SPDK_NVMF_QPAIR_ERROR:

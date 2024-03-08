@@ -77,7 +77,7 @@ int
 spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 			 struct spdk_nvmf_qpair *qpair)
 {
-	qpair->state = SPDK_NVMF_QPAIR_ACTIVE;
+	qpair->state = SPDK_NVMF_QPAIR_ENABLED;
 	return 0;
 }
 
