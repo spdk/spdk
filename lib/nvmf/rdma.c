@@ -35,6 +35,8 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma;
 #define NVMF_DEFAULT_RSP_SGE		1
 #define NVMF_DEFAULT_RX_SGE		2
 
+#define NVMF_RDMA_MAX_EVENTS_PER_POLL	32
+
 SPDK_STATIC_ASSERT(NVMF_DEFAULT_MSDBD <= SPDK_NVMF_MAX_SGL_ENTRIES,
 		   "MSDBD must not exceed SPDK_NVMF_MAX_SGL_ENTRIES");
 
@@ -3571,6 +3573,7 @@ nvmf_process_cm_event(struct spdk_nvmf_transport *transport)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct rdma_cm_event		*event;
+	uint32_t i;
 	int				rc;
 	bool				event_acked;
 
@@ -3580,7 +3583,7 @@ nvmf_process_cm_event(struct spdk_nvmf_transport *transport)
 		return;
 	}
 
-	while (1) {
+	for (i = 0; i < NVMF_RDMA_MAX_EVENTS_PER_POLL; i++) {
 		event_acked = false;
 		rc = rdma_get_cm_event(rtransport->event_channel, &event);
 		if (rc) {
@@ -3866,7 +3869,7 @@ nvmf_rdma_accept(void *ctx)
 		revents = rtransport->poll_fds[i++].revents;
 		if (revents & POLLIN) {
 			if (spdk_likely(!device->need_destroy)) {
-				nvmf_process_ib_events(device, 32);
+				nvmf_process_ib_events(device, NVMF_RDMA_MAX_EVENTS_PER_POLL);
 				if (spdk_unlikely(device->need_destroy)) {
 					nvmf_rdma_handle_device_removal(rtransport, device);
 				}
