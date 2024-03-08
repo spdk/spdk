@@ -3569,11 +3569,11 @@ nvmf_rdma_handle_cm_event_port_removal(struct spdk_nvmf_transport *transport,
 }
 
 static void
-nvmf_process_cm_event(struct spdk_nvmf_transport *transport)
+nvmf_process_cm_events(struct spdk_nvmf_transport *transport, uint32_t max_events)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct rdma_cm_event		*event;
-	uint32_t i;
+	uint32_t			i;
 	int				rc;
 	bool				event_acked;
 
@@ -3583,7 +3583,7 @@ nvmf_process_cm_event(struct spdk_nvmf_transport *transport)
 		return;
 	}
 
-	for (i = 0; i < NVMF_RDMA_MAX_EVENTS_PER_POLL; i++) {
+	for (i = 0; i < max_events; i++) {
 		event_acked = false;
 		rc = rdma_get_cm_event(rtransport->event_channel, &event);
 		if (rc) {
@@ -3856,7 +3856,7 @@ nvmf_rdma_accept(void *ctx)
 
 	/* The first poll descriptor is RDMA CM event */
 	if (rtransport->poll_fds[i++].revents & POLLIN) {
-		nvmf_process_cm_event(transport);
+		nvmf_process_cm_events(transport, NVMF_RDMA_MAX_EVENTS_PER_POLL);
 		nfds--;
 	}
 
@@ -4807,21 +4807,23 @@ nvmf_rdma_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_poll_group *rgroup;
 	struct spdk_nvmf_rdma_poller	*rpoller, *tmp;
-	int				count, rc;
+	int				count = 0, rc, rc2 = 0;
 
 	rtransport = SPDK_CONTAINEROF(group->transport, struct spdk_nvmf_rdma_transport, transport);
 	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
 
-	count = 0;
 	TAILQ_FOREACH_SAFE(rpoller, &rgroup->pollers, link, tmp) {
 		rc = nvmf_rdma_poller_poll(rtransport, rpoller);
 		if (rc < 0) {
-			return rc;
+			if (rc2 == 0) {
+				rc2 = rc;
+			}
+			continue;
 		}
 		count += rc;
 	}
 
-	return count;
+	return rc2 ? rc2 : count;
 }
 
 static int
