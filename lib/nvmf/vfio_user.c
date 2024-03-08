@@ -250,6 +250,8 @@ struct nvme_q_mapping {
 	dma_sg_t *sg;
 	/* Client PRP of queue. */
 	uint64_t prp1;
+	/* Total length in bytes. */
+	uint64_t len;
 };
 
 enum nvmf_vfio_user_sq_state {
@@ -1362,21 +1364,14 @@ memory_page_mask(const struct nvmf_vfio_user_ctrlr *ctrlr)
 
 static int
 map_q(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvme_q_mapping *mapping,
-      uint32_t q_size, bool is_cq, bool unmap)
+      bool is_cq, bool unmap)
 {
-	uint64_t len;
 	void *ret;
 
-	assert(q_size);
+	assert(mapping->len != 0);
 	assert(q_addr(mapping) == NULL);
 
-	if (is_cq) {
-		len = q_size * sizeof(struct spdk_nvme_cpl);
-	} else {
-		len = q_size * sizeof(struct spdk_nvme_cmd);
-	}
-
-	ret = map_one(vu_ctrlr->endpoint->vfu_ctx, mapping->prp1, len,
+	ret = map_one(vu_ctrlr->endpoint->vfu_ctx, mapping->prp1, mapping->len,
 		      mapping->sg, &mapping->iov,
 		      is_cq ? PROT_READ | PROT_WRITE : PROT_READ);
 	if (ret == NULL) {
@@ -1384,7 +1379,7 @@ map_q(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvme_q_mapping *mapping,
 	}
 
 	if (unmap) {
-		memset(q_addr(mapping), 0, len);
+		memset(q_addr(mapping), 0, mapping->len);
 	}
 
 	return 0;
@@ -1419,10 +1414,11 @@ asq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 	sq->qid = 0;
 	sq->size = regs->aqa.bits.asqs + 1;
 	sq->mapping.prp1 = regs->asq;
+	sq->mapping.len = sq->size * sizeof(struct spdk_nvme_cmd);
 	*sq_headp(sq) = 0;
 	sq->cqid = 0;
 
-	ret = map_q(ctrlr, &sq->mapping, sq->size, false, true);
+	ret = map_q(ctrlr, &sq->mapping, false, true);
 	if (ret) {
 		return ret;
 	}
@@ -1634,11 +1630,12 @@ acq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 	cq->qid = 0;
 	cq->size = regs->aqa.bits.acqs + 1;
 	cq->mapping.prp1 = regs->acq;
+	cq->mapping.len = cq->size * sizeof(struct spdk_nvme_cpl);
 	*cq_tailp(cq) = 0;
 	cq->ien = true;
 	cq->phase = true;
 
-	ret = map_q(ctrlr, &cq->mapping, cq->size, true, true);
+	ret = map_q(ctrlr, &cq->mapping, true, true);
 	if (ret) {
 		return ret;
 	}
@@ -2054,8 +2051,9 @@ handle_create_io_sq(struct nvmf_vfio_user_ctrlr *ctrlr,
 		      qid, cqid);
 
 	sq->mapping.prp1 = cmd->dptr.prp.prp1;
+	sq->mapping.len = sq->size * sizeof(struct spdk_nvme_cmd);
 
-	err = map_q(ctrlr, &sq->mapping, sq->size, false, true);
+	err = map_q(ctrlr, &sq->mapping, false, true);
 	if (err) {
 		SPDK_ERRLOG("%s: failed to map I/O queue: %m\n", ctrlr_id(ctrlr));
 		*sct = SPDK_NVME_SCT_GENERIC;
@@ -2157,10 +2155,11 @@ handle_create_io_cq(struct nvmf_vfio_user_ctrlr *ctrlr,
 	cq->size = qsize;
 
 	cq->mapping.prp1 = cmd->dptr.prp.prp1;
+	cq->mapping.len = cq->size * sizeof(struct spdk_nvme_cpl);
 
 	cq->dbl_headp = ctrlr_doorbell_ptr(ctrlr) + queue_index(qid, true);
 
-	err = map_q(ctrlr, &cq->mapping, cq->size, true, true);
+	err = map_q(ctrlr, &cq->mapping, true, true);
 	if (err) {
 		SPDK_ERRLOG("%s: failed to map I/O queue: %m\n", ctrlr_id(ctrlr));
 		*sct = SPDK_NVME_SCT_GENERIC;
@@ -2682,21 +2681,21 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 
 		/* For shared CQ case, we will use q_addr() to avoid mapping CQ multiple times */
 		if (cq->size && q_addr(&cq->mapping) == NULL) {
-			ret = map_q(ctrlr, &cq->mapping, cq->size, true, false);
+			ret = map_q(ctrlr, &cq->mapping, true, false);
 			if (ret) {
 				SPDK_DEBUGLOG(nvmf_vfio, "Memory isn't ready to remap cqid:%d %#lx-%#lx\n",
 					      cq->qid, cq->mapping.prp1,
-					      cq->mapping.prp1 + cq->size * sizeof(struct spdk_nvme_cpl));
+					      cq->mapping.prp1 + cq->mapping.len);
 				continue;
 			}
 		}
 
 		if (sq->size) {
-			ret = map_q(ctrlr, &sq->mapping, sq->size, false, false);
+			ret = map_q(ctrlr, &sq->mapping, false, false);
 			if (ret) {
 				SPDK_DEBUGLOG(nvmf_vfio, "Memory isn't ready to remap sqid:%d %#lx-%#lx\n",
 					      sq->qid, sq->mapping.prp1,
-					      sq->mapping.prp1 + sq->size * sizeof(struct spdk_nvme_cmd));
+					      sq->mapping.prp1 + sq->mapping.len);
 				continue;
 			}
 		}
@@ -3672,8 +3671,9 @@ vfio_user_migr_ctrlr_construct_qps(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
 			sq->cqid = migr_qp.sq.cqid;
 			*sq_headp(sq) = migr_qp.sq.head;
 			sq->mapping.prp1 = migr_qp.sq.dma_addr;
+			sq->mapping.len = sq->size * sizeof(struct spdk_nvme_cmd);
 			addr = map_one(vu_ctrlr->endpoint->vfu_ctx,
-				       sq->mapping.prp1, sq->size * 64,
+				       sq->mapping.prp1, sq->mapping.len,
 				       sq->mapping.sg, &sq->mapping.iov,
 				       PROT_READ);
 			if (addr == NULL) {
@@ -3714,11 +3714,12 @@ vfio_user_migr_ctrlr_construct_qps(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
 			cq->cq_ref = cqs_ref[cqid];
 			*cq_tailp(cq) = migr_qp.cq.tail;
 			cq->mapping.prp1 = migr_qp.cq.dma_addr;
+			cq->mapping.len = cq->size * sizeof(struct spdk_nvme_cpl);
 			cq->ien = migr_qp.cq.ien;
 			cq->iv = migr_qp.cq.iv;
 			cq->phase = migr_qp.cq.phase;
 			addr = map_one(vu_ctrlr->endpoint->vfu_ctx,
-				       cq->mapping.prp1, cq->size * 16,
+				       cq->mapping.prp1, cq->mapping.len,
 				       cq->mapping.sg, &cq->mapping.iov,
 				       PROT_READ | PROT_WRITE);
 			if (addr == NULL) {
