@@ -855,13 +855,13 @@ nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 	 *  Fail it.
 	 */
 	num_buffers = SPDK_CEIL_DIV(length, io_unit_size);
-	if (num_buffers > NVMF_REQ_MAX_BUFFERS) {
+	if (spdk_unlikely(num_buffers > NVMF_REQ_MAX_BUFFERS)) {
 		return -EINVAL;
 	}
 
 	while (i < num_buffers) {
 		buffer = spdk_iobuf_get(group->buf_cache, spdk_min(io_unit_size, length), NULL, NULL);
-		if (buffer == NULL) {
+		if (spdk_unlikely(buffer == NULL)) {
 			return -ENOMEM;
 		}
 		length = cb_func(req, buffer, length, io_unit_size);
@@ -887,11 +887,10 @@ spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 	rc = nvmf_request_get_buffers(req, group, transport, length,
 				      transport->opts.io_unit_size,
 				      nvmf_request_set_buffer);
-	if (!rc) {
+	if (spdk_likely(rc == 0)) {
 		req->data_from_pool = true;
 	} else if (rc == -ENOMEM) {
 		spdk_nvmf_request_free_buffers(req, group, transport);
-		return rc;
 	}
 
 	return rc;
