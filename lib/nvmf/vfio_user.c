@@ -240,6 +240,7 @@ struct nvmf_vfio_user_req  {
 #define MAP_R			(0)
 #define MAP_RW			(1 << 0)
 #define MAP_INITIALIZE		(1 << 1)
+#define MAP_QUIET		(1 << 2)
 
 /*
  * Mapping of an NVMe queue.
@@ -742,8 +743,10 @@ map_one(vfu_ctx_t *ctx, uint64_t addr, uint64_t len, dma_sg_t *sg,
 	ret = vfu_addr_to_sgl(ctx, (void *)(uintptr_t)addr, len, sg, 1, prot);
 	if (ret < 0) {
 		if (ret == -1) {
-			SPDK_ERRLOG("failed to translate IOVA [%#lx, %#lx) (prot=%d) to local VA: %m\n",
-				    addr, addr + len, prot);
+			if (!(flags & MAP_QUIET)) {
+				SPDK_ERRLOG("failed to translate IOVA [%#lx, %#lx) (prot=%d) to local VA: %m\n",
+					    addr, addr + len, prot);
+			}
 		} else {
 			SPDK_ERRLOG("failed to translate IOVA [%#lx, %#lx) (prot=%d) to local VA: %d segments needed\n",
 				    addr, addr + len, prot, -(ret + 1));
@@ -2687,7 +2690,7 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 
 		/* For shared CQ case, we will use q_addr() to avoid mapping CQ multiple times */
 		if (cq->size && q_addr(&cq->mapping) == NULL) {
-			ret = map_q(ctrlr, &cq->mapping, MAP_RW);
+			ret = map_q(ctrlr, &cq->mapping, MAP_RW | MAP_QUIET);
 			if (ret) {
 				SPDK_DEBUGLOG(nvmf_vfio, "Memory isn't ready to remap cqid:%d %#lx-%#lx\n",
 					      cq->qid, cq->mapping.prp1,
@@ -2697,7 +2700,7 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 		}
 
 		if (sq->size) {
-			ret = map_q(ctrlr, &sq->mapping, MAP_R);
+			ret = map_q(ctrlr, &sq->mapping, MAP_R | MAP_QUIET);
 			if (ret) {
 				SPDK_DEBUGLOG(nvmf_vfio, "Memory isn't ready to remap sqid:%d %#lx-%#lx\n",
 					      sq->qid, sq->mapping.prp1,
