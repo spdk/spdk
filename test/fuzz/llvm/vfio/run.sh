@@ -27,16 +27,21 @@ function start_llvm_fuzz() {
 	local vfiouser_dir=$fuzzer_dir/domain/1
 	local vfiouser_io_dir=$fuzzer_dir/domain/2
 	local vfiouser_cfg=$fuzzer_dir/fuzz_vfio_json.conf
+	local suppress_file="/var/tmp/suppress_vfio_fuzz"
 
 	# set LSAN_OPTIONS to "report_objects=1" to let the LLVM fuzzer report an address
 	# of leaked memory object
-	local LSAN_OPTIONS=report_objects=1
+	local LSAN_OPTIONS=report_objects=1:suppressions="$suppress_file":print_suppressions=0
 
 	mkdir -p $fuzzer_dir $vfiouser_dir $vfiouser_io_dir $corpus_dir
 
 	# Adjust paths to allow multiply instance of fuzzer
 	sed -e "s%/tmp/vfio-user/domain/1%$vfiouser_dir%;
 		s%/tmp/vfio-user/domain/2%$vfiouser_io_dir%" $testdir/fuzz_vfio_json.conf > $vfiouser_cfg
+
+	# Suppress false memory leaks reported by LSan
+	echo "leak:spdk_nvmf_qpair_disconnect" > "$suppress_file"
+	echo "leak:nvmf_ctrlr_create" >> "$suppress_file"
 
 	$rootdir/test/app/fuzz/llvm_vfio_fuzz/llvm_vfio_fuzz \
 		-m $core \
@@ -50,7 +55,7 @@ function start_llvm_fuzz() {
 		-r $fuzzer_dir/spdk$fuzzer_type.sock \
 		-Z $fuzzer_type
 
-	rm -rf $fuzzer_dir
+	rm -rf $fuzzer_dir $suppress_file
 }
 
 testdir=$(readlink -f $(dirname $0))
@@ -63,7 +68,7 @@ fuzzfile=$rootdir/test/app/fuzz/llvm_vfio_fuzz/llvm_vfio_fuzz.c
 fuzz_num=$(($(grep -c "\.fn =" $fuzzfile) - 1))
 ((fuzz_num != 0))
 
-trap 'cleanup /tmp/vfio-user-*; exit 1' SIGINT SIGTERM EXIT
+trap 'cleanup /tmp/vfio-user-* /var/tmp/suppress_vfio_fuzz; exit 1' SIGINT SIGTERM EXIT
 
 # vfiouser transport is unable to connect if memory is restricted
 mem_size=0
