@@ -81,6 +81,12 @@ struct spdk_nvmf_transport_opts {
 	/* ms */
 	uint32_t	association_timeout;
 
+	/* Transport specific json values.
+	 *
+	 * If transport specific values provided then json object is valid only at the time
+	 * transport is being created. It is transport layer responsibility to maintain
+	 * the copy of it or its decoding if required.
+	 */
 	const struct spdk_json_val *transport_specific;
 
 	/**
@@ -108,6 +114,12 @@ struct spdk_nvmf_listen_opts {
 	 */
 	size_t opts_size;
 
+	/* Transport specific json values.
+	 *
+	 * If transport specific values provided then json object is valid only at the time
+	 * listener is being added. It is transport layer responsibility to maintain
+	 * the copy of it or its decoding if required.
+	 */
 	const struct spdk_json_val *transport_specific;
 
 	/**
