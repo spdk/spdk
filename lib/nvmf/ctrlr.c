@@ -3662,13 +3662,7 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	int rc;
 
-	if (ctrlr == NULL) {
-		SPDK_ERRLOG("Admin command sent before CONNECT\n");
-		response->status.sct = SPDK_NVME_SCT_GENERIC;
-		response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
+	assert(ctrlr != NULL);
 	if (cmd->opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
 		/* We do not want to treat AERs as outstanding commands,
 		 * so decrement mgmt_io_outstanding here to offset
@@ -3767,15 +3761,8 @@ nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req)
 
 	if (qpair->ctrlr == NULL) {
 		/* No ctrlr established yet; the only valid command is Connect */
-		if (cap_hdr->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT) {
-			return nvmf_ctrlr_cmd_connect(req);
-		} else {
-			SPDK_DEBUGLOG(nvmf, "Got fctype 0x%x, expected Connect\n",
-				      cap_hdr->fctype);
-			req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		}
+		assert(cap_hdr->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT);
+		return nvmf_ctrlr_cmd_connect(req);
 	} else if (nvmf_qpair_is_admin_queue(qpair)) {
 		/*
 		 * Controller session is established, and this is an admin queue.
@@ -4323,13 +4310,7 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
 	nsid = cmd->nsid;
 
-	if (spdk_unlikely(ctrlr == NULL)) {
-		SPDK_ERRLOG("I/O command sent before CONNECT\n");
-		response->status.sct = SPDK_NVME_SCT_GENERIC;
-		response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
+	assert(ctrlr != NULL);
 	if (spdk_unlikely(ctrlr->vcprop.cc.bits.en != 1)) {
 		SPDK_ERRLOG("I/O command sent to disabled controller\n");
 		response->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -4645,17 +4626,45 @@ nvmf_check_subsystem_active(struct spdk_nvmf_request *req)
 
 			ns_info->io_outstanding++;
 		}
-
-		if (spdk_unlikely(!spdk_nvmf_qpair_is_active(qpair))) {
-			req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
-			TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
-			_nvmf_request_complete(req);
-			return false;
-		}
 	}
 
 	return true;
+}
+
+static bool
+nvmf_check_qpair_active(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+
+	if (spdk_likely(qpair->state == SPDK_NVMF_QPAIR_ENABLED)) {
+		return true;
+	}
+
+	switch (qpair->state) {
+	case SPDK_NVMF_QPAIR_CONNECTING:
+		if (req->cmd->nvmf_cmd.opcode != SPDK_NVME_OPC_FABRIC) {
+			SPDK_ERRLOG("Received command 0x%x on qid %u before CONNECT\n",
+				    req->cmd->nvmf_cmd.opcode, qpair->qid);
+			break;
+		}
+		if (req->cmd->nvmf_cmd.fctype != SPDK_NVMF_FABRIC_COMMAND_CONNECT) {
+			SPDK_ERRLOG("Received fctype 0x%x on qid %u before CONNECT\n",
+				    req->cmd->nvmf_cmd.fctype, qpair->qid);
+			break;
+		}
+		return true;
+	default:
+		SPDK_ERRLOG("Received command 0x%x on qid %u in state %d\n",
+			    req->cmd->nvmf_cmd.opcode, qpair->qid, qpair->state);
+		break;
+	}
+
+	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
+	_nvmf_request_complete(req);
+
+	return false;
 }
 
 void
@@ -4665,6 +4674,9 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 	enum spdk_nvmf_request_exec_status status;
 
 	if (spdk_unlikely(!nvmf_check_subsystem_active(req))) {
+		return;
+	}
+	if (spdk_unlikely(!nvmf_check_qpair_active(req))) {
 		return;
 	}
 

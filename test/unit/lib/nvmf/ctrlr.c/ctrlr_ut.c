@@ -393,11 +393,13 @@ static void
 test_process_fabrics_cmd(void)
 {
 	struct	spdk_nvmf_request req = {};
-	int	ret;
+	bool	ret;
 	struct	spdk_nvmf_qpair req_qpair = {};
 	union	nvmf_h2c_msg  req_cmd = {};
 	union	nvmf_c2h_msg   req_rsp = {};
 
+	TAILQ_INIT(&req_qpair.outstanding);
+	req_qpair.state = SPDK_NVMF_QPAIR_CONNECTING;
 	req.qpair = &req_qpair;
 	req.cmd  = &req_cmd;
 	req.rsp  = &req_rsp;
@@ -405,9 +407,10 @@ test_process_fabrics_cmd(void)
 
 	/* No ctrlr and invalid command check */
 	req.cmd->nvmf_cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET;
-	ret = nvmf_ctrlr_process_fabrics_cmd(&req);
+	ret = nvmf_check_qpair_active(&req);
+	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sct, SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR);
-	CU_ASSERT_EQUAL(ret, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(ret == false);
 }
 
 static bool
@@ -2747,11 +2750,13 @@ test_spdk_nvmf_request_zcopy_start(void)
 	/* Fail because no controller */
 	CU_ASSERT(nvmf_ctrlr_use_zcopy(&req));
 	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_INIT);
+	qpair.state = SPDK_NVMF_QPAIR_CONNECTING;
 	qpair.ctrlr = NULL;
 	spdk_nvmf_request_zcopy_start(&req);
 	CU_ASSERT_EQUAL(req.zcopy_phase, NVMF_ZCOPY_PHASE_INIT_FAILED);
 	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sct, SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sc, SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR);
+	qpair.state = SPDK_NVMF_QPAIR_ENABLED;
 	qpair.ctrlr = &ctrlr;
 	req.zcopy_phase = NVMF_ZCOPY_PHASE_NONE;
 
@@ -3291,6 +3296,49 @@ test_nvmf_ctrlr_ns_attachment(void)
 	free(subsystem.ns);
 }
 
+static void
+test_nvmf_check_qpair_active(void)
+{
+	union nvmf_c2h_msg rsp = {};
+	union nvmf_h2c_msg cmd = {};
+	struct spdk_nvmf_qpair qpair = { .outstanding = TAILQ_HEAD_INITIALIZER(qpair.outstanding) };
+	struct spdk_nvmf_request req = { .qpair = &qpair, .cmd = &cmd, .rsp = &rsp };
+	size_t i;
+
+	/* qpair is active */
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_READ;
+	qpair.state = SPDK_NVMF_QPAIR_ENABLED;
+	CU_ASSERT_EQUAL(nvmf_check_qpair_active(&req), true);
+
+	/* qpair is connecting - CONNECT is allowed */
+	cmd.nvmf_cmd.opcode = SPDK_NVME_OPC_FABRIC;
+	cmd.nvmf_cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_CONNECT;
+	qpair.state = SPDK_NVMF_QPAIR_CONNECTING;
+	CU_ASSERT_EQUAL(nvmf_check_qpair_active(&req), true);
+
+	/* qpair is connecting - other commands are disallowed */
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_READ;
+	qpair.state = SPDK_NVMF_QPAIR_CONNECTING;
+	CU_ASSERT_EQUAL(nvmf_check_qpair_active(&req), false);
+	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sct, SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sc, SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR);
+
+	/* qpair is in one of the other states - all commands are disallowed */
+	int disallowed_states[] = {
+		SPDK_NVMF_QPAIR_UNINITIALIZED,
+		SPDK_NVMF_QPAIR_DEACTIVATING,
+		SPDK_NVMF_QPAIR_ERROR,
+	};
+	qpair.state_cb = qpair_state_change_done;
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_READ;
+	for (i = 0; i < SPDK_COUNTOF(disallowed_states); ++i) {
+		qpair.state = disallowed_states[i];
+		CU_ASSERT_EQUAL(nvmf_check_qpair_active(&req), false);
+		CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sct, SPDK_NVME_SCT_GENERIC);
+		CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sc, SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -3331,6 +3379,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_ctrlr_get_features_host_behavior_support);
 	CU_ADD_TEST(suite, test_nvmf_ctrlr_set_features_host_behavior_support);
 	CU_ADD_TEST(suite, test_nvmf_ctrlr_ns_attachment);
+	CU_ADD_TEST(suite, test_nvmf_check_qpair_active);
 
 	allocate_threads(1);
 	set_thread(0);
