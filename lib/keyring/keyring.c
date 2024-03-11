@@ -240,6 +240,16 @@ spdk_keyring_put_key(struct spdk_key *key)
 	pthread_mutex_unlock(&g_keyring.mutex);
 }
 
+struct spdk_key *
+spdk_key_dup(struct spdk_key *key)
+{
+	pthread_mutex_lock(&g_keyring.mutex);
+	key->refcnt++;
+	pthread_mutex_unlock(&g_keyring.mutex);
+
+	return key;
+}
+
 const char *
 spdk_key_get_name(struct spdk_key *key)
 {

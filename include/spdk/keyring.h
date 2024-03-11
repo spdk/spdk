@@ -58,6 +58,16 @@ const char *spdk_key_get_name(struct spdk_key *key);
 int spdk_key_get_key(struct spdk_key *key, void *buf, int len);
 
 /**
+ * Duplicate a key.  The returned key reference might be a pointer to the same exact object.  After
+ * duplicating a key, the new reference should be released via `spdk_keyring_put_key()`.
+ *
+ * \param key Reference to a key.
+ *
+ * \return Pointer to the key reference.
+ */
+struct spdk_key *spdk_key_dup(struct spdk_key *key);
+
+/**
  * Initialize the keyring library.
  *
  * \return 0 on success, negative errno otherwise.

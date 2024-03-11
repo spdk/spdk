@@ -13,6 +13,7 @@
 	spdk_key_get_key;
 	spdk_key_get_ctx;
 	spdk_key_get_module;
+	spdk_key_dup;
 
 	local: *;
 };
