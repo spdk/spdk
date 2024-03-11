@@ -3900,7 +3900,7 @@ nvmf_qpair_free_aer(struct spdk_nvmf_qpair *qpair)
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 	int i;
 
-	if (!nvmf_qpair_is_admin_queue(qpair)) {
+	if (ctrlr == NULL || !nvmf_qpair_is_admin_queue(qpair)) {
 		return;
 	}
 
