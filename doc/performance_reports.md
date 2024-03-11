@@ -3,6 +3,7 @@
 ## Release 24.01
 
 - [SPDK 24.01 NVMe Bdev Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_nvme_bdev_perf_report_2401.pdf)
+- [SPDK 24.01 Vhost Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_vhost_perf_report_2401.pdf)
 - [SPDK 24.01 NVMe-oF TCP Performance Report (Mellanox ConnectX-5)](https://ci.spdk.io/download/performance-reports/SPDK_tcp_mlx_perf_report_2401.pdf)
 - [SPDK 24.01 NVMe-oF TCP Performance Report (Intel E810-CQDA2)](https://ci.spdk.io/download/performance-reports/SPDK_tcp_cvl_perf_report_2401.pdf)
 - [SPDK 24.01 NVMe-oF RDMA Performance Report (Mellanox ConnectX-5)](https://ci.spdk.io/download/performance-reports/SPDK_rdma_mlx_perf_report_2401.pdf)
