@@ -638,6 +638,7 @@ configure_kernel_target() {
 	# Find nvme with an active ns device
 	for block in /sys/block/nvme*; do
 		[[ -e $block ]] || continue
+		is_block_zoned "${block##*/}" && continue
 		block_in_use "${block##*/}" || nvme="/dev/${block##*/}"
 	done
 
