@@ -6375,28 +6375,35 @@ test_uuid_generation(void)
 	char sn3[21] = "                    ";
 	char uuid_str[SPDK_UUID_STRING_LEN] = {'\0'};
 	struct spdk_uuid uuid1, uuid2;
+	int rc;
 
 	/* Test case 1:
 	 * Serial numbers are the same, nsids are different.
 	 * Compare two generated UUID - they should be different. */
-	uuid1 = nvme_generate_uuid(sn1, nsid1);
-	uuid2 = nvme_generate_uuid(sn1, nsid2);
+	rc = nvme_generate_uuid(sn1, nsid1, &uuid1);
+	CU_ASSERT(rc == 0);
+	rc = nvme_generate_uuid(sn1, nsid2, &uuid2);
+	CU_ASSERT(rc == 0);
 
 	CU_ASSERT((spdk_uuid_compare(&uuid1, &uuid2)) != 0);
 
 	/* Test case 2:
 	 * Serial numbers differ only by one character, nsids are the same.
 	 * Compare two generated UUID - they should be different. */
-	uuid1 = nvme_generate_uuid(sn1, nsid1);
-	uuid2 = nvme_generate_uuid(sn2, nsid1);
+	rc = nvme_generate_uuid(sn1, nsid1, &uuid1);
+	CU_ASSERT(rc == 0);
+	rc = nvme_generate_uuid(sn2, nsid1, &uuid2);
+	CU_ASSERT(rc == 0);
 
 	CU_ASSERT((spdk_uuid_compare(&uuid1, &uuid2)) != 0);
 
 	/* Test case 3:
 	 * Serial number comprises only of space characters.
 	 * Validate the generated UUID. */
-	uuid1 = nvme_generate_uuid(sn3, nsid1);
+	rc = nvme_generate_uuid(sn3, nsid1, &uuid1);
+	CU_ASSERT(rc == 0);
 	CU_ASSERT((spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &uuid1)) == 0);
+
 }
 
 static void

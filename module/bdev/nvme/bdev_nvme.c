@@ -3969,9 +3969,10 @@ nvme_ns_set_ana_state(const struct spdk_nvme_ana_group_descriptor *desc, void *c
 	return 0;
 }
 
-static struct spdk_uuid
-nvme_generate_uuid(const char *sn, uint32_t nsid)
+static int
+nvme_generate_uuid(const char *sn, uint32_t nsid, struct spdk_uuid *uuid)
 {
+	int rc = 0;
 	struct spdk_uuid new_uuid, namespace_uuid;
 	char merged_str[SPDK_NVME_CTRLR_SN_LEN + NSID_STR_LEN + 1] = {'\0'};
 	/* This namespace UUID was generated using uuid_generate() method. */
@@ -3984,13 +3985,18 @@ nvme_generate_uuid(const char *sn, uint32_t nsid)
 	spdk_uuid_set_null(&namespace_uuid);
 
 	size = snprintf(merged_str, sizeof(merged_str), "%s%"PRIu32, sn, nsid);
-	assert(size > 0 && (unsigned long)size < sizeof(merged_str));
+	if (size <= 0 || (unsigned long)size >= sizeof(merged_str)) {
+		return -EINVAL;
+	}
 
 	spdk_uuid_parse(&namespace_uuid, namespace_str);
 
-	spdk_uuid_generate_sha1(&new_uuid, &namespace_uuid, merged_str, size);
+	rc = spdk_uuid_generate_sha1(&new_uuid, &namespace_uuid, merged_str, size);
+	if (rc == 0) {
+		memcpy(uuid, &new_uuid, sizeof(struct spdk_uuid));
+	}
 
-	return new_uuid;
+	return rc;
 }
 
 static int
@@ -4006,6 +4012,7 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 	enum spdk_nvme_csi		csi;
 	uint32_t atomic_bs, phys_bs, bs;
 	char sn_tmp[SPDK_NVME_CTRLR_SN_LEN + 1] = {'\0'};
+	int rc;
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 	csi = spdk_nvme_ns_get_csi(ns);
@@ -4036,7 +4043,11 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 			disk->uuid = *uuid;
 		} else if (g_opts.generate_uuids) {
 			spdk_strcpy_pad(sn_tmp, cdata->sn, SPDK_NVME_CTRLR_SN_LEN, '\0');
-			disk->uuid = nvme_generate_uuid(sn_tmp, spdk_nvme_ns_get_id(ns));
+			rc = nvme_generate_uuid(sn_tmp, spdk_nvme_ns_get_id(ns), &disk->uuid);
+			if (rc != 0) {
+				SPDK_ERRLOG("UUID generation failed (%s)\n", strerror(rc));
+				return rc;
+			}
 		}
 	} else {
 		memcpy(&disk->uuid, nguid, sizeof(disk->uuid));
