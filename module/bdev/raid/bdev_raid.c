@@ -3221,19 +3221,13 @@ out:
 }
 
 static int
-_raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name, uint8_t slot,
-			   uint64_t data_offset, uint64_t data_size,
+_raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name,
+			   struct raid_base_bdev_info *base_info,
 			   raid_base_bdev_cb cb_fn, void *cb_ctx)
 {
-	struct raid_base_bdev_info *base_info;
+	uint8_t slot = raid_bdev_base_bdev_slot(base_info);
 
 	assert(name != NULL);
-
-	if (slot >= raid_bdev->num_base_bdevs) {
-		return -EINVAL;
-	}
-
-	base_info = &raid_bdev->base_bdev_info[slot];
 
 	if (base_info->name != NULL) {
 		SPDK_ERRLOG("Slot %u on raid bdev '%s' already assigned to bdev '%s'\n",
@@ -3254,9 +3248,6 @@ _raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name, uint8_
 	if (base_info->name == NULL) {
 		return -ENOMEM;
 	}
-
-	base_info->data_offset = data_offset;
-	base_info->data_size = data_size;
 
 	return raid_bdev_configure_base_bdev(base_info, false, cb_fn, cb_ctx);
 }
@@ -3302,9 +3293,7 @@ raid_bdev_attach_base_bdev(struct raid_bdev *raid_bdev, struct spdk_bdev *base_b
 
 	spdk_spin_lock(&raid_bdev->base_bdev_lock);
 
-	rc = _raid_bdev_add_base_device(raid_bdev, base_bdev->name,
-					raid_bdev_base_bdev_slot(base_info),
-					base_info->data_offset, base_info->data_size,
+	rc = _raid_bdev_add_base_device(raid_bdev, base_bdev->name, base_info,
 					cb_fn, cb_ctx);
 	if (rc != 0) {
 		SPDK_ERRLOG("base bdev '%s' attach failed: %s\n", base_bdev->name, spdk_strerror(-rc));
@@ -3335,7 +3324,15 @@ int
 raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name, uint8_t slot,
 			  raid_base_bdev_cb cb_fn, void *cb_ctx)
 {
-	return _raid_bdev_add_base_device(raid_bdev, name, slot, 0, 0, cb_fn, cb_ctx);
+	struct raid_base_bdev_info *base_info;
+
+	if (slot >= raid_bdev->num_base_bdevs) {
+		return -EINVAL;
+	}
+
+	base_info = &raid_bdev->base_bdev_info[slot];
+
+	return _raid_bdev_add_base_device(raid_bdev, name, base_info, cb_fn, cb_ctx);
 }
 
 static int
