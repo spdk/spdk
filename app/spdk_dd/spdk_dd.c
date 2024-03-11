@@ -1006,6 +1006,20 @@ dd_is_blk(int fd)
 	return S_ISBLK(st.st_mode);
 }
 
+struct dd_uring_init_ctx {
+	unsigned int io_uring_flags;
+	int rc;
+};
+
+static void *
+dd_uring_init(void *arg)
+{
+	struct dd_uring_init_ctx *ctx = arg;
+
+	ctx->rc = io_uring_queue_init(g_opts.queue_depth * 2, &g_job.u.uring.ring, ctx->io_uring_flags);
+	return ctx;
+}
+
 static int
 dd_register_files(void)
 {
@@ -1176,20 +1190,23 @@ dd_run(void *arg1)
 	if (g_opts.input_file || g_opts.output_file) {
 #ifdef SPDK_CONFIG_URING
 		if (g_opts.aio == false) {
-			unsigned int io_uring_flags = IORING_SETUP_SQPOLL;
+			struct dd_uring_init_ctx ctx;
 			int flags = parse_flags(g_opts.input_file_flags) & parse_flags(g_opts.output_file_flags);
 
+			ctx.io_uring_flags = IORING_SETUP_SQPOLL;
 			if ((flags & O_DIRECT) != 0 &&
 			    dd_is_blk(g_job.input.u.uring.fd) &&
 			    dd_is_blk(g_job.output.u.uring.fd)) {
-				io_uring_flags = IORING_SETUP_IOPOLL;
+				ctx.io_uring_flags = IORING_SETUP_IOPOLL;
 			}
 
 			g_job.u.uring.poller = SPDK_POLLER_REGISTER(dd_uring_poll, NULL, 0);
-			rc = io_uring_queue_init(g_opts.queue_depth * 2, &g_job.u.uring.ring, io_uring_flags);
-			if (rc) {
-				SPDK_ERRLOG("Failed to create io_uring: %d (%s)\n", rc, spdk_strerror(-rc));
-				dd_exit(rc);
+
+			/* Initialized uring kernel threads inherit parent process CPU mask, to avoid conflicting
+			 * with SPDK cores initialize uring without any affinity. */
+			if (spdk_call_unaffinitized(dd_uring_init, &ctx) == NULL || ctx.rc) {
+				SPDK_ERRLOG("Failed to create io_uring: %d (%s)\n", ctx.rc, spdk_strerror(-ctx.rc));
+				dd_exit(ctx.rc);
 				return;
 			}
 			g_job.u.uring.active = true;
