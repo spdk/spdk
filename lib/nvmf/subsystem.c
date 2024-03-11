@@ -968,8 +968,8 @@ nvmf_subsystem_find_host(struct spdk_nvmf_subsystem *subsystem, const char *host
 }
 
 int
-spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn,
-			     const struct spdk_json_val *params)
+spdk_nvmf_subsystem_add_host_ext(struct spdk_nvmf_subsystem *subsystem,
+				 const char *hostnqn, struct spdk_nvmf_host_opts *opts)
 {
 	struct spdk_nvmf_host *host;
 	struct spdk_nvmf_transport *transport;
@@ -1006,7 +1006,8 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 	for (transport = spdk_nvmf_transport_get_first(subsystem->tgt); transport;
 	     transport = spdk_nvmf_transport_get_next(transport)) {
 		if (transport->ops->subsystem_add_host) {
-			rc = transport->ops->subsystem_add_host(transport, subsystem, hostnqn, params);
+			rc = transport->ops->subsystem_add_host(transport, subsystem, hostnqn,
+								SPDK_GET_FIELD(opts, params, NULL));
 			if (rc) {
 				SPDK_ERRLOG("Unable to add host to %s transport\n", transport->ops->name);
 				/* Remove this host from all transports we've managed to add it to. */
@@ -1020,6 +1021,18 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 	pthread_mutex_unlock(&subsystem->mutex);
 
 	return 0;
+}
+
+int
+spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn,
+			     const struct spdk_json_val *params)
+{
+	struct spdk_nvmf_host_opts opts = {};
+
+	opts.size = SPDK_SIZEOF(&opts, params);
+	opts.params = params;
+
+	return spdk_nvmf_subsystem_add_host_ext(subsystem, hostnqn, &opts);
 }
 
 int

@@ -610,6 +610,25 @@ int spdk_nvmf_ns_remove_host(struct spdk_nvmf_subsystem *subsystem,
 int spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
 				 const char *hostnqn, const struct spdk_json_val *params);
 
+struct spdk_nvmf_host_opts {
+	/** Size of this structure */
+	size_t				size;
+	/** Transport specific parameters */
+	const struct spdk_json_val	*params;
+};
+
+/**
+ * Allow the given host to connect to the given subsystem.
+ *
+ * \param subsystem Subsystem to add host to.
+ * \param hostnqn Host's NQN.
+ * \param opts Host's options.
+ *
+ * \return 0 on success, or negated errno value on failure.
+ */
+int spdk_nvmf_subsystem_add_host_ext(struct spdk_nvmf_subsystem *subsystem,
+				     const char *hostnqn, struct spdk_nvmf_host_opts *opts);
+
 /**
  * Remove the given host NQN from the list of allowed hosts.
  *
