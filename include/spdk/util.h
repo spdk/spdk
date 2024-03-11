@@ -61,6 +61,18 @@ extern "C" {
 
 #define SPDK_BIT(n) (1ul << (n))
 
+/**
+ * Get a field from a structure with size tracking.  The fourth parameter is
+ * optional and can be used to specify the size of the object.  If unset,
+ * (obj)->size will be used by default.
+ */
+#define SPDK_GET_FIELD(obj, field, defval, ...) \
+	_SPDK_GET_FIELD(obj, field, defval, ## __VA_ARGS__, (obj)->size)
+
+#define _SPDK_GET_FIELD(obj, field, defval, size, ...) \
+	((size) >= (offsetof(__typeof__(*(obj)), field) + sizeof((obj)->field)) ? \
+	 (obj)->field : (defval))
+
 uint32_t spdk_u32log2(uint32_t x);
 
 static inline uint32_t
