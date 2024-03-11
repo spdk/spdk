@@ -4581,51 +4581,53 @@ nvmf_check_subsystem_active(struct spdk_nvmf_request *req)
 	}
 
 	/* Check if the subsystem is paused (if there is a subsystem) */
-	if (spdk_likely(sgroup != NULL)) {
-		if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC ||
-				  nvmf_qpair_is_admin_queue(qpair))) {
-			if (sgroup->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
-				/* The subsystem is not currently active. Queue this request. */
-				TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
-				return false;
-			}
-			sgroup->mgmt_io_outstanding++;
-		} else {
-			nsid = req->cmd->nvme_cmd.nsid;
+	if (spdk_unlikely(sgroup == NULL)) {
+		return true;
+	}
 
-			/* NOTE: This implicitly also checks for 0, since 0 - 1 wraps around to UINT32_MAX. */
-			if (spdk_unlikely(nsid - 1 >= sgroup->num_ns)) {
-				req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-				req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
-				req->rsp->nvme_cpl.status.dnr = 1;
-				TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
-				_nvmf_request_complete(req);
-				return false;
-			}
-
-			ns_info = &sgroup->ns_info[nsid - 1];
-			if (spdk_unlikely(ns_info->channel == NULL)) {
-				/* This can can happen if host sends I/O to a namespace that is
-				 * in the process of being added, but before the full addition
-				 * process is complete.  Report invalid namespace in that case.
-				 */
-				req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-				req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
-				req->rsp->nvme_cpl.status.dnr = 1;
-				TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
-				ns_info->io_outstanding++;
-				_nvmf_request_complete(req);
-				return false;
-			}
-
-			if (spdk_unlikely(ns_info->state != SPDK_NVMF_SUBSYSTEM_ACTIVE)) {
-				/* The namespace is not currently active. Queue this request. */
-				TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
-				return false;
-			}
-
-			ns_info->io_outstanding++;
+	if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC ||
+			  nvmf_qpair_is_admin_queue(qpair))) {
+		if (sgroup->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
+			/* The subsystem is not currently active. Queue this request. */
+			TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
+			return false;
 		}
+		sgroup->mgmt_io_outstanding++;
+	} else {
+		nsid = req->cmd->nvme_cmd.nsid;
+
+		/* NOTE: This implicitly also checks for 0, since 0 - 1 wraps around to UINT32_MAX. */
+		if (spdk_unlikely(nsid - 1 >= sgroup->num_ns)) {
+			req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+			req->rsp->nvme_cpl.status.dnr = 1;
+			TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
+			_nvmf_request_complete(req);
+			return false;
+		}
+
+		ns_info = &sgroup->ns_info[nsid - 1];
+		if (spdk_unlikely(ns_info->channel == NULL)) {
+			/* This can can happen if host sends I/O to a namespace that is
+			 * in the process of being added, but before the full addition
+			 * process is complete.  Report invalid namespace in that case.
+			 */
+			req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+			req->rsp->nvme_cpl.status.dnr = 1;
+			TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
+			ns_info->io_outstanding++;
+			_nvmf_request_complete(req);
+			return false;
+		}
+
+		if (spdk_unlikely(ns_info->state != SPDK_NVMF_SUBSYSTEM_ACTIVE)) {
+			/* The namespace is not currently active. Queue this request. */
+			TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
+			return false;
+		}
+
+		ns_info->io_outstanding++;
 	}
 
 	return true;
