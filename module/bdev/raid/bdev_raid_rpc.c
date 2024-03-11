@@ -509,7 +509,6 @@ rpc_bdev_raid_add_base_bdev(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_bdev_raid_add_base_bdev req = {};
 	struct raid_bdev *raid_bdev;
-	struct spdk_bdev_desc *desc;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_bdev_raid_add_base_bdev_decoders,
@@ -527,16 +526,8 @@ rpc_bdev_raid_add_base_bdev(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = spdk_bdev_open_ext(req.base_bdev, false, rpc_bdev_raid_event_cb, NULL, &desc);
-	if (rc != 0) {
-		spdk_jsonrpc_send_error_response_fmt(request, rc, "Failed to open bdev %s: %s",
-						     req.base_bdev, spdk_strerror(-rc));
-		goto cleanup;
-	}
-
-	rc = raid_bdev_attach_base_bdev(raid_bdev, spdk_bdev_desc_get_bdev(desc),
+	rc = raid_bdev_attach_base_bdev(raid_bdev, req.base_bdev,
 					rpc_bdev_raid_add_base_bdev_done, request);
-	spdk_bdev_close(desc);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response_fmt(request, rc,
 						     "Failed to attach base bdev %s to RAID bdev %s: %s",

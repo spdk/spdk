@@ -265,7 +265,7 @@ const char *raid_bdev_state_to_str(enum raid_bdev_state state);
 const char *raid_bdev_process_to_str(enum raid_process_type value);
 void raid_bdev_write_info_json(struct raid_bdev *raid_bdev, struct spdk_json_write_ctx *w);
 int raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev, raid_base_bdev_cb cb_fn, void *cb_ctx);
-int raid_bdev_attach_base_bdev(struct raid_bdev *raid_bdev, struct spdk_bdev *base_bdev,
+int raid_bdev_attach_base_bdev(struct raid_bdev *raid_bdev, const char *name,
 			       raid_base_bdev_cb cb_fn, void *cb_ctx);
 
 /*

@@ -3253,13 +3253,13 @@ _raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name,
 }
 
 int
-raid_bdev_attach_base_bdev(struct raid_bdev *raid_bdev, struct spdk_bdev *base_bdev,
+raid_bdev_attach_base_bdev(struct raid_bdev *raid_bdev, const char *name,
 			   raid_base_bdev_cb cb_fn, void *cb_ctx)
 {
 	struct raid_base_bdev_info *base_info = NULL, *iter;
 	int rc;
 
-	SPDK_DEBUGLOG(bdev_raid, "attach_base_device: %s\n", base_bdev->name);
+	SPDK_DEBUGLOG(bdev_raid, "attach_base_device: %s\n", name);
 
 	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
@@ -3284,7 +3284,7 @@ raid_bdev_attach_base_bdev(struct raid_bdev *raid_bdev, struct spdk_bdev *base_b
 
 	if (base_info == NULL) {
 		SPDK_ERRLOG("no empty slot found in raid bdev '%s' for new base bdev '%s'\n",
-			    raid_bdev->bdev.name, base_bdev->name);
+			    raid_bdev->bdev.name, name);
 		return -EINVAL;
 	}
 
@@ -3293,10 +3293,10 @@ raid_bdev_attach_base_bdev(struct raid_bdev *raid_bdev, struct spdk_bdev *base_b
 
 	spdk_spin_lock(&raid_bdev->base_bdev_lock);
 
-	rc = _raid_bdev_add_base_device(raid_bdev, base_bdev->name, base_info,
+	rc = _raid_bdev_add_base_device(raid_bdev, name, base_info,
 					cb_fn, cb_ctx);
 	if (rc != 0) {
-		SPDK_ERRLOG("base bdev '%s' attach failed: %s\n", base_bdev->name, spdk_strerror(-rc));
+		SPDK_ERRLOG("base bdev '%s' attach failed: %s\n", name, spdk_strerror(-rc));
 		raid_bdev_free_base_bdev_resource(base_info);
 	}
 
