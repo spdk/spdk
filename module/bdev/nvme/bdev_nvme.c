@@ -4015,6 +4015,19 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 		return -ENOTSUP;
 	}
 
+	nguid = spdk_nvme_ns_get_nguid(ns);
+	if (!nguid) {
+		uuid = spdk_nvme_ns_get_uuid(ns);
+		if (uuid) {
+			disk->uuid = *uuid;
+		} else if (g_opts.generate_uuids) {
+			spdk_strcpy_pad(sn_tmp, cdata->sn, SPDK_NVME_CTRLR_SN_LEN, '\0');
+			disk->uuid = nvme_generate_uuid(sn_tmp, spdk_nvme_ns_get_id(ns));
+		}
+	} else {
+		memcpy(&disk->uuid, nguid, sizeof(disk->uuid));
+	}
+
 	disk->name = spdk_sprintf_alloc("%sn%d", base_name, spdk_nvme_ns_get_id(ns));
 	if (!disk->name) {
 		return -ENOMEM;
@@ -4056,19 +4069,6 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 		}
 	}
 	disk->optimal_io_boundary = spdk_nvme_ns_get_optimal_io_boundary(ns);
-
-	nguid = spdk_nvme_ns_get_nguid(ns);
-	if (!nguid) {
-		uuid = spdk_nvme_ns_get_uuid(ns);
-		if (uuid) {
-			disk->uuid = *uuid;
-		} else if (g_opts.generate_uuids) {
-			spdk_strcpy_pad(sn_tmp, cdata->sn, SPDK_NVME_CTRLR_SN_LEN, '\0');
-			disk->uuid = nvme_generate_uuid(sn_tmp, spdk_nvme_ns_get_id(ns));
-		}
-	} else {
-		memcpy(&disk->uuid, nguid, sizeof(disk->uuid));
-	}
 
 	nsdata = spdk_nvme_ns_get_data(ns);
 	bs = spdk_nvme_ns_get_sector_size(ns);
