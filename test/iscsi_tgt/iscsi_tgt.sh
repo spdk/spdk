@@ -54,11 +54,6 @@ fi
 
 trap 'cleanup_veth_interfaces; exit 1' SIGINT SIGTERM EXIT
 
-if [ $SPDK_TEST_NVMF -eq 1 ]; then
-	# Test configure remote NVMe device from rpc and conf file
-	run_test "iscsi_tgt_fio_remote_nvme" $rootdir/test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh
-fi
-
 if [ $SPDK_TEST_ISCSI_INITIATOR -eq 1 ]; then
 	run_test "iscsi_tgt_initiator" $rootdir/test/iscsi_tgt/initiator/initiator.sh
 	run_test "iscsi_tgt_bdev_io_wait" $rootdir/test/iscsi_tgt/bdev_io_wait/bdev_io_wait.sh

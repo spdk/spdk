@@ -6,9 +6,6 @@ ftl_write_after_write
 ftl_fio_extended
 ftl_fio_nightly
 
-# Waiting for test refactor
-iscsi_tgt_fio_remote_nvme
-
 # Waiting on Boot Partition support in CI
 nvme_bp
 nvme_boot_partition
