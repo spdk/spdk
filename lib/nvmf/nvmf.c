@@ -594,7 +594,10 @@ nvmf_write_nvme_subsystem_config(struct spdk_json_write_ctx *w,
 
 		spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
 		spdk_json_write_named_string(w, "host", spdk_nvmf_host_get_nqn(host));
-
+		if (host->dhchap_key != NULL) {
+			spdk_json_write_named_string(w, "dhchap_key",
+						     spdk_key_get_name(host->dhchap_key));
+		}
 		TAILQ_FOREACH(transport, &subsystem->tgt->transports, link) {
 			if (transport->ops->subsystem_dump_host != NULL) {
 				transport->ops->subsystem_dump_host(transport, subsystem, host->nqn, w);

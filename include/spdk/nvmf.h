@@ -615,6 +615,8 @@ struct spdk_nvmf_host_opts {
 	size_t				size;
 	/** Transport specific parameters */
 	const struct spdk_json_val	*params;
+	/** DH-HMAC-CHAP key */
+	struct spdk_key			*dhchap_key;
 };
 
 /**

@@ -68,6 +68,9 @@ DEFINE_STUB(spdk_nvme_transport_id_adrfam_str, const char *,
 DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid, int,
 	    (struct spdk_nvmf_qpair *qpair,
 	     struct spdk_nvme_transport_id *trid), 0);
+DEFINE_STUB(spdk_key_dup, struct spdk_key *, (struct spdk_key *k), NULL);
+DEFINE_STUB(spdk_key_get_name, const char *, (struct spdk_key *k), NULL);
+DEFINE_STUB_V(spdk_keyring_put_key, (struct spdk_key *k));
 
 static struct spdk_nvmf_transport g_transport = {};
 

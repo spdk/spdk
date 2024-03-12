@@ -9,6 +9,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/keyring.h"
 #include "spdk/likely.h"
 #include "spdk/nvmf.h"
 #include "spdk/nvmf_cmd.h"
@@ -82,6 +83,7 @@ struct spdk_nvmf_tgt {
 
 struct spdk_nvmf_host {
 	char				nqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+	struct spdk_key			*dhchap_key;
 	TAILQ_ENTRY(spdk_nvmf_host)	link;
 };
 
