@@ -54,8 +54,7 @@ static int sw_accel_crypto_key_init(struct spdk_accel_crypto_key *key);
 static bool sw_accel_crypto_supports_tweak_mode(enum spdk_accel_crypto_tweak_mode tweak_mode);
 static bool sw_accel_crypto_supports_cipher(enum spdk_accel_cipher cipher, size_t key_size);
 
-/* Post SW completions to a list and complete in a poller as we don't want to
- * complete them on the caller's stack as they'll likely submit another. */
+/* Post SW completions to a list; processed by ->completion_poller. */
 inline static void
 _add_to_comp_list(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *accel_task, int status)
 {
@@ -476,11 +475,41 @@ _sw_accel_dif_generate_copy(struct sw_accel_io_channel *sw_ch, struct spdk_accel
 }
 
 static int
+accel_comp_poll(void *arg)
+{
+	struct sw_accel_io_channel	*sw_ch = arg;
+	STAILQ_HEAD(, spdk_accel_task)	tasks_to_complete;
+	struct spdk_accel_task		*accel_task;
+
+	if (STAILQ_EMPTY(&sw_ch->tasks_to_complete)) {
+		return SPDK_POLLER_IDLE;
+	}
+
+	STAILQ_INIT(&tasks_to_complete);
+	STAILQ_SWAP(&tasks_to_complete, &sw_ch->tasks_to_complete, spdk_accel_task);
+
+	while ((accel_task = STAILQ_FIRST(&tasks_to_complete))) {
+		STAILQ_REMOVE_HEAD(&tasks_to_complete, link);
+		spdk_accel_task_complete(accel_task, accel_task->status);
+	}
+
+	return SPDK_POLLER_BUSY;
+}
+
+static int
 sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task)
 {
 	struct sw_accel_io_channel *sw_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *tmp;
 	int rc = 0;
+
+	/*
+	 * Lazily initialize our completion poller. We don't want to complete
+	 * them inline as they'll likely submit another.
+	 */
+	if (spdk_unlikely(sw_ch->completion_poller == NULL)) {
+		sw_ch->completion_poller = SPDK_POLLER_REGISTER(accel_comp_poll, sw_ch, 0);
+	}
 
 	do {
 		switch (accel_task->op_code) {
@@ -550,34 +579,12 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 }
 
 static int
-accel_comp_poll(void *arg)
-{
-	struct sw_accel_io_channel	*sw_ch = arg;
-	STAILQ_HEAD(, spdk_accel_task)	tasks_to_complete;
-	struct spdk_accel_task		*accel_task;
-
-	if (STAILQ_EMPTY(&sw_ch->tasks_to_complete)) {
-		return SPDK_POLLER_IDLE;
-	}
-
-	STAILQ_INIT(&tasks_to_complete);
-	STAILQ_SWAP(&tasks_to_complete, &sw_ch->tasks_to_complete, spdk_accel_task);
-
-	while ((accel_task = STAILQ_FIRST(&tasks_to_complete))) {
-		STAILQ_REMOVE_HEAD(&tasks_to_complete, link);
-		spdk_accel_task_complete(accel_task, accel_task->status);
-	}
-
-	return SPDK_POLLER_BUSY;
-}
-
-static int
 sw_accel_create_cb(void *io_device, void *ctx_buf)
 {
 	struct sw_accel_io_channel *sw_ch = ctx_buf;
 
 	STAILQ_INIT(&sw_ch->tasks_to_complete);
-	sw_ch->completion_poller = SPDK_POLLER_REGISTER(accel_comp_poll, sw_ch, 0);
+	sw_ch->completion_poller = NULL;
 
 #ifdef SPDK_CONFIG_ISAL
 	isal_deflate_init(&sw_ch->stream);

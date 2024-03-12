@@ -147,6 +147,8 @@ test_setup(void)
 	}
 	g_sw_ch = (struct sw_accel_io_channel *)((char *)g_module_ch + sizeof(
 				struct spdk_io_channel));
+	/* Prevent lazy initialization of poller. */
+	g_sw_ch->completion_poller = (void *)0xdeadbeef;
 	STAILQ_INIT(&g_sw_ch->tasks_to_complete);
 	g_module_if.supports_opcode = _supports_opcode;
 	return 0;
