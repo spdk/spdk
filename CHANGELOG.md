@@ -41,6 +41,11 @@ cores for a given core ID.
 Added public API 'spdk_nvmf_subsystem_set_cntlid_range' to set controller ID
 range for a subsystem.
 
+### bdev
+
+`spdk_bdev_io_get_aux_buf` and `spdk_bdev_io_put_aux_buf` are deprecated and
+will be removed in the 25.01 release. We do not believe these are in use currently.
+
 ### event
 
 The `framework_get_reactors` RPC method supports getting pid and tid.

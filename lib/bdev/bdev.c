@@ -1443,10 +1443,15 @@ bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 	bdev_io->internal.f.has_buf = false;
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_bdev_io_put_aux_buf,
+			      "spdk_bdev_io_put_aux_buf is deprecated", "v25.01", 0);
+
 void
 spdk_bdev_io_put_aux_buf(struct spdk_bdev_io *bdev_io, void *buf)
 {
 	uint64_t len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+
+	SPDK_LOG_DEPRECATED(spdk_bdev_io_put_aux_buf);
 
 	assert(buf != NULL);
 	_bdev_io_put_buf(bdev_io, buf, len);
@@ -1866,10 +1871,16 @@ _bdev_memory_domain_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_bu
 	bdev_io_get_buf(bdev_io, len);
 }
 
+
+SPDK_LOG_DEPRECATION_REGISTER(spdk_bdev_io_get_aux_buf,
+			      "spdk_bdev_io_get_aux_buf is deprecated", "v25.01", 0);
+
 void
 spdk_bdev_io_get_aux_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_aux_buf_cb cb)
 {
 	uint64_t len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+
+	SPDK_LOG_DEPRECATED(spdk_bdev_io_get_aux_buf);
 
 	assert(cb != NULL);
 	assert(bdev_io->internal.get_aux_buf_cb == NULL);
