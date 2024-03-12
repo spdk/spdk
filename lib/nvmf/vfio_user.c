@@ -2493,6 +2493,9 @@ consume_admin_cmd(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd)
 		return handle_del_io_q(ctrlr, cmd,
 				       cmd->opc == SPDK_NVME_OPC_DELETE_IO_CQ);
 	case SPDK_NVME_OPC_DOORBELL_BUFFER_CONFIG:
+		SPDK_NOTICELOG("%s: requested shadow doorbells (supported: %d)\n",
+			       ctrlr_id(ctrlr),
+			       !ctrlr->transport->transport_opts.disable_shadow_doorbells);
 		if (!ctrlr->transport->transport_opts.disable_shadow_doorbells) {
 			return handle_doorbell_buffer_config(ctrlr, cmd);
 		}
