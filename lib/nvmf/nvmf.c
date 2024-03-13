@@ -1354,6 +1354,7 @@ _nvmf_qpair_destroy(void *ctx, int status)
 		}
 	}
 
+	nvmf_qpair_auth_destroy(qpair);
 	qpair_ctx->ctrlr = ctrlr;
 	spdk_nvmf_poll_group_remove(qpair);
 	nvmf_transport_qpair_fini(qpair, _nvmf_transport_qpair_fini_complete, qpair_ctx);

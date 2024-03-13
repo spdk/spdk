@@ -1212,6 +1212,20 @@ spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const ch
 	return allowed;
 }
 
+bool
+nvmf_subsystem_host_auth_required(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
+{
+	struct spdk_nvmf_host *host;
+	bool status;
+
+	pthread_mutex_lock(&subsystem->mutex);
+	host = nvmf_subsystem_find_host(subsystem, hostnqn);
+	status = host != NULL && host->dhchap_key != NULL;
+	pthread_mutex_unlock(&subsystem->mutex);
+
+	return status;
+}
+
 struct spdk_nvmf_host *
 spdk_nvmf_subsystem_get_first_host(struct spdk_nvmf_subsystem *subsystem)
 {

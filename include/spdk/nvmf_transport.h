@@ -125,12 +125,15 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_request) == 776, "Incorrect size");
 enum spdk_nvmf_qpair_state {
 	SPDK_NVMF_QPAIR_UNINITIALIZED = 0,
 	SPDK_NVMF_QPAIR_CONNECTING,
+	SPDK_NVMF_QPAIR_AUTHENTICATING,
 	SPDK_NVMF_QPAIR_ENABLED,
 	SPDK_NVMF_QPAIR_DEACTIVATING,
 	SPDK_NVMF_QPAIR_ERROR,
 };
 
 typedef void (*spdk_nvmf_state_change_done)(void *cb_arg, int status);
+
+struct spdk_nvmf_qpair_auth;
 
 struct spdk_nvmf_qpair {
 	uint8_t					state; /* ref spdk_nvmf_qpair_state */
@@ -158,6 +161,7 @@ struct spdk_nvmf_qpair {
 	bool					disconnect_started;
 
 	uint16_t				trace_id;
+	struct spdk_nvmf_qpair_auth		*auth;
 };
 
 struct spdk_nvmf_transport_poll_group {
@@ -476,6 +480,7 @@ static inline bool
 spdk_nvmf_qpair_is_active(struct spdk_nvmf_qpair *qpair)
 {
 	return qpair->state == SPDK_NVMF_QPAIR_CONNECTING ||
+	       qpair->state == SPDK_NVMF_QPAIR_AUTHENTICATING ||
 	       qpair->state == SPDK_NVMF_QPAIR_ENABLED;
 }
 

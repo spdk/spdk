@@ -10,7 +10,8 @@ SO_VER := 18
 SO_MINOR := 0
 
 C_SRCS = ctrlr.c ctrlr_discovery.c ctrlr_bdev.c \
-	 subsystem.c nvmf.c nvmf_rpc.c transport.c tcp.c
+	 subsystem.c nvmf.c nvmf_rpc.c transport.c tcp.c \
+	 auth.c
 
 C_SRCS-$(CONFIG_RDMA) += rdma.c
 LIBNAME = nvmf

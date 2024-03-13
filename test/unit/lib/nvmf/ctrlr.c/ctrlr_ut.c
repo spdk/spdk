@@ -214,6 +214,11 @@ DEFINE_STUB(spdk_nvme_ns_get_format_index, uint32_t,
 	    (const struct spdk_nvme_ns_data *nsdata), 0);
 
 DEFINE_STUB(spdk_nvmf_subsystem_is_discovery, bool, (struct spdk_nvmf_subsystem *subsystem), false);
+DEFINE_STUB(nvmf_subsystem_host_auth_required, bool, (struct spdk_nvmf_subsystem *s, const char *n),
+	    false);
+DEFINE_STUB(nvmf_qpair_auth_init, int, (struct spdk_nvmf_qpair *q), 0);
+DEFINE_STUB(nvmf_auth_request_exec, int, (struct spdk_nvmf_request *r),
+	    SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 
 DEFINE_STUB(spdk_nvmf_subsystem_get_nqn, const char *,
 	    (const struct spdk_nvmf_subsystem *subsystem), NULL);
@@ -3322,6 +3327,25 @@ test_nvmf_check_qpair_active(void)
 	CU_ASSERT_EQUAL(nvmf_check_qpair_active(&req), false);
 	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sct, SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sc, SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR);
+
+	/* qpair is authenticating - AUTHENTICATION_SEND is allowed */
+	cmd.nvmf_cmd.opcode = SPDK_NVME_OPC_FABRIC;
+	cmd.nvmf_cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_AUTHENTICATION_SEND;
+	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
+	CU_ASSERT_EQUAL(nvmf_check_qpair_active(&req), true);
+
+	/* qpair is authenticating - AUTHENTICATION_RECV is allowed */
+	cmd.nvmf_cmd.opcode = SPDK_NVME_OPC_FABRIC;
+	cmd.nvmf_cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_AUTHENTICATION_RECV;
+	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
+	CU_ASSERT_EQUAL(nvmf_check_qpair_active(&req), true);
+
+	/* qpair is authenticating - other commands are disallowed */
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_READ;
+	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
+	CU_ASSERT_EQUAL(nvmf_check_qpair_active(&req), false);
+	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sct, SPDK_NVME_SCT_COMMAND_SPECIFIC);
+	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sc, SPDK_NVMF_FABRIC_SC_AUTH_REQUIRED);
 
 	/* qpair is in one of the other states - all commands are disallowed */
 	int disallowed_states[] = {
