@@ -77,7 +77,7 @@ run_test "ftl_restore" $testdir/restore.sh -c $nv_cache $device
 run_test "ftl_dirty_shutdown" $testdir/dirty_shutdown.sh -c $nv_cache $device
 run_test "ftl_upgrade_shutdown" $testdir/upgrade_shutdown.sh $device $nv_cache
 
-if [ $SPDK_TEST_FTL_EXTENDED -eq 1 ]; then
+if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	run_test "ftl_restore_fast" $testdir/restore.sh -f -c $nv_cache $device
 	run_test "ftl_dirty_shutdown" $testdir/dirty_shutdown.sh -c $nv_cache $device
 fi
