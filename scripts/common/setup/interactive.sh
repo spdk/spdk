@@ -74,24 +74,21 @@ main_menu() {
 			4) fdevices 1 ;;
 			5) odevices ;;
 			5e) editor odevices ;;
-			6) bdevices ;;
+			6) bdevices ;;&
 			q) yn "Are you sure you want to quit?" && return 1 ;;
 			c | commit | config)
 				yn "Are you sure you want jump to config mode?" || continue
 				mode=config
 				return
 				;;
+			hp) hugepages ;;
 			s | status) status ;;
 			r | reset)
 				yn "Are you sure you want jump to reset mode?" || continue
 				mode=reset
 				return
 				;;
-			u | update)
-				CMD=reset cache_pci_bus
-				collect_devices
-				;;
-			hp) hugepages ;;
+			6 | u | update) update_status ;;
 		esac
 	done
 }
@@ -300,4 +297,9 @@ hugepages() {
 			return
 		fi
 	done
+}
+
+update_status() {
+	CMD=reset cache_pci_bus
+	collect_devices
 }
