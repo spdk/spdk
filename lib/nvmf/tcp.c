@@ -3295,6 +3295,9 @@ nvmf_tcp_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 	}
 	TAILQ_REMOVE(&tgroup->qpairs, tqpair, link);
 
+	/* Try to force out any pending writes */
+	spdk_sock_flush(tqpair->sock);
+
 	rc = spdk_sock_group_remove_sock(tgroup->sock_group, tqpair->sock);
 	if (rc != 0) {
 		SPDK_ERRLOG("Could not remove sock from sock_group: %s (%d)\n",
