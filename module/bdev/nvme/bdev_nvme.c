@@ -180,7 +180,8 @@ static int bdev_nvme_no_pi_readv(struct nvme_bdev_io *bio, struct iovec *iov, in
 static int bdev_nvme_writev(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 			    void *md, uint64_t lba_count, uint64_t lba,
 			    uint32_t flags, struct spdk_memory_domain *domain, void *domain_ctx,
-			    struct spdk_accel_sequence *seq);
+			    struct spdk_accel_sequence *seq,
+			    union spdk_bdev_nvme_cdw12 cdw12, union spdk_bdev_nvme_cdw13 cdw13);
 static int bdev_nvme_zone_appendv(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 				  void *md, uint64_t lba_count,
 				  uint64_t zslba, uint32_t flags);
@@ -3004,7 +3005,9 @@ _bdev_nvme_submit_request(struct nvme_bdev_channel *nbdev_ch, struct spdk_bdev_i
 				      bdev_io->u.bdev.dif_check_flags,
 				      bdev_io->u.bdev.memory_domain,
 				      bdev_io->u.bdev.memory_domain_ctx,
-				      bdev_io->u.bdev.accel_sequence);
+				      bdev_io->u.bdev.accel_sequence,
+				      bdev_io->u.bdev.nvme_cdw12,
+				      bdev_io->u.bdev.nvme_cdw13);
 		break;
 	case SPDK_BDEV_IO_TYPE_COMPARE:
 		rc = bdev_nvme_comparev(nbdev_io,
@@ -7754,7 +7757,8 @@ static int
 bdev_nvme_writev(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 		 void *md, uint64_t lba_count, uint64_t lba, uint32_t flags,
 		 struct spdk_memory_domain *domain, void *domain_ctx,
-		 struct spdk_accel_sequence *seq)
+		 struct spdk_accel_sequence *seq,
+		 union spdk_bdev_nvme_cdw12 cdw12, union spdk_bdev_nvme_cdw13 cdw13)
 {
 	struct spdk_nvme_ns *ns = bio->io_path->nvme_ns->ns;
 	struct spdk_nvme_qpair *qpair = bio->io_path->qpair->qpair;
@@ -7772,7 +7776,8 @@ bdev_nvme_writev(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 		bio->ext_opts.size = SPDK_SIZEOF(&bio->ext_opts, accel_sequence);
 		bio->ext_opts.memory_domain = domain;
 		bio->ext_opts.memory_domain_ctx = domain_ctx;
-		bio->ext_opts.io_flags = flags;
+		bio->ext_opts.io_flags = flags | SPDK_NVME_IO_FLAGS_DIRECTIVE(cdw12.write.dtype);
+		bio->ext_opts.cdw13 = cdw13.raw;
 		bio->ext_opts.metadata = md;
 		bio->ext_opts.accel_sequence = seq;
 
