@@ -271,7 +271,7 @@ status() {
 
 	if [[ $(type -t "status_${_os}") == function ]]; then
 		"status_${_os}"
-	fi
+	fi 2> /dev/null
 }
 
 hugepages() {
