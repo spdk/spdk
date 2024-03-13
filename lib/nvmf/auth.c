@@ -4,8 +4,12 @@
 
 #include "spdk/log.h"
 #include "spdk/stdinc.h"
+#include "spdk/string.h"
+#include "spdk/thread.h"
 
 #include "nvmf_internal.h"
+
+#define NVMF_AUTH_DEFAULT_KATO_US (120ull * 1000 * 1000)
 
 #define AUTH_ERRLOG(q, fmt, ...) \
 	SPDK_ERRLOG("[%s:%s:%u] " fmt, (q)->ctrlr->subsys->subnqn, (q)->ctrlr->hostnqn, \
@@ -16,10 +20,12 @@
 
 enum nvmf_qpair_auth_state {
 	NVMF_QPAIR_AUTH_NEGOTIATE,
+	NVMF_QPAIR_AUTH_ERROR,
 };
 
 struct spdk_nvmf_qpair_auth {
-	enum nvmf_qpair_auth_state state;
+	enum nvmf_qpair_auth_state	state;
+	struct spdk_poller		*poller;
 };
 
 static void
@@ -39,6 +45,7 @@ nvmf_auth_get_state_name(enum nvmf_qpair_auth_state state)
 {
 	static const char *state_names[] = {
 		[NVMF_QPAIR_AUTH_NEGOTIATE] = "negotiate",
+		[NVMF_QPAIR_AUTH_ERROR] = "error",
 	};
 
 	return state_names[state];
@@ -55,6 +62,47 @@ nvmf_auth_set_state(struct spdk_nvmf_qpair *qpair, enum nvmf_qpair_auth_state st
 
 	AUTH_DEBUGLOG(qpair, "auth state: %s\n", nvmf_auth_get_state_name(state));
 	auth->state = state;
+}
+
+static void
+nvmf_auth_disconnect_qpair(struct spdk_nvmf_qpair *qpair)
+{
+	nvmf_auth_set_state(qpair, NVMF_QPAIR_AUTH_ERROR);
+	spdk_nvmf_qpair_disconnect(qpair);
+}
+
+static int
+nvmf_auth_timeout_poller(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair = ctx;
+	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
+
+	AUTH_ERRLOG(qpair, "authentication timed out\n");
+
+	spdk_poller_unregister(&auth->poller);
+	nvmf_auth_disconnect_qpair(qpair);
+
+	return SPDK_POLLER_BUSY;
+}
+
+static int
+nvmf_auth_rearm_poller(struct spdk_nvmf_qpair *qpair)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
+	uint64_t timeout;
+
+	timeout = ctrlr->feat.keep_alive_timer.bits.kato > 0 ?
+		  ctrlr->feat.keep_alive_timer.bits.kato * 1000 :
+		  NVMF_AUTH_DEFAULT_KATO_US;
+
+	spdk_poller_unregister(&auth->poller);
+	auth->poller = SPDK_POLLER_REGISTER(nvmf_auth_timeout_poller, qpair, timeout);
+	if (auth->poller == NULL) {
+		return -ENOMEM;
+	}
+
+	return 0;
 }
 
 static int
@@ -148,6 +196,7 @@ int
 nvmf_qpair_auth_init(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_qpair_auth *auth;
+	int rc;
 
 	assert(qpair->auth == NULL);
 	auth = calloc(1, sizeof(*qpair->auth));
@@ -158,14 +207,26 @@ nvmf_qpair_auth_init(struct spdk_nvmf_qpair *qpair)
 	qpair->auth = auth;
 	nvmf_auth_set_state(qpair, NVMF_QPAIR_AUTH_NEGOTIATE);
 
+	rc = nvmf_auth_rearm_poller(qpair);
+	if (rc != 0) {
+		AUTH_ERRLOG(qpair, "failed to arm timeout poller: %s\n", spdk_strerror(-rc));
+		nvmf_qpair_auth_destroy(qpair);
+		return rc;
+	}
+
 	return 0;
 }
 
 void
 nvmf_qpair_auth_destroy(struct spdk_nvmf_qpair *qpair)
 {
-	free(qpair->auth);
-	qpair->auth = NULL;
+	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
+
+	if (auth != NULL) {
+		spdk_poller_unregister(&auth->poller);
+		free(qpair->auth);
+		qpair->auth = NULL;
+	}
 }
 
 bool
