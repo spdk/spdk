@@ -1369,7 +1369,7 @@ rpc_nvmf_subsystem_listener_set_ana_state(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("nvmf_subsystem_listener_set_ana_state",
 		  rpc_nvmf_subsystem_listener_set_ana_state, SPDK_RPC_RUNTIME);
 
-struct spdk_nvmf_ns_params {
+struct nvmf_rpc_ns_params {
 	char *bdev_name;
 	char *ptpl_file;
 	uint32_t nsid;
@@ -1380,19 +1380,19 @@ struct spdk_nvmf_ns_params {
 };
 
 static const struct spdk_json_object_decoder rpc_ns_params_decoders[] = {
-	{"nsid", offsetof(struct spdk_nvmf_ns_params, nsid), spdk_json_decode_uint32, true},
-	{"bdev_name", offsetof(struct spdk_nvmf_ns_params, bdev_name), spdk_json_decode_string},
-	{"ptpl_file", offsetof(struct spdk_nvmf_ns_params, ptpl_file), spdk_json_decode_string, true},
-	{"nguid", offsetof(struct spdk_nvmf_ns_params, nguid), decode_ns_nguid, true},
-	{"eui64", offsetof(struct spdk_nvmf_ns_params, eui64), decode_ns_eui64, true},
-	{"uuid", offsetof(struct spdk_nvmf_ns_params, uuid), spdk_json_decode_uuid, true},
-	{"anagrpid", offsetof(struct spdk_nvmf_ns_params, anagrpid), spdk_json_decode_uint32, true},
+	{"nsid", offsetof(struct nvmf_rpc_ns_params, nsid), spdk_json_decode_uint32, true},
+	{"bdev_name", offsetof(struct nvmf_rpc_ns_params, bdev_name), spdk_json_decode_string},
+	{"ptpl_file", offsetof(struct nvmf_rpc_ns_params, ptpl_file), spdk_json_decode_string, true},
+	{"nguid", offsetof(struct nvmf_rpc_ns_params, nguid), decode_ns_nguid, true},
+	{"eui64", offsetof(struct nvmf_rpc_ns_params, eui64), decode_ns_eui64, true},
+	{"uuid", offsetof(struct nvmf_rpc_ns_params, uuid), spdk_json_decode_uuid, true},
+	{"anagrpid", offsetof(struct nvmf_rpc_ns_params, anagrpid), spdk_json_decode_uint32, true},
 };
 
 static int
 decode_rpc_ns_params(const struct spdk_json_val *val, void *out)
 {
-	struct spdk_nvmf_ns_params *ns_params = out;
+	struct nvmf_rpc_ns_params *ns_params = out;
 
 	return spdk_json_decode_object(val, rpc_ns_params_decoders,
 				       SPDK_COUNTOF(rpc_ns_params_decoders),
@@ -1402,7 +1402,7 @@ decode_rpc_ns_params(const struct spdk_json_val *val, void *out)
 struct nvmf_rpc_ns_ctx {
 	char *nqn;
 	char *tgt_name;
-	struct spdk_nvmf_ns_params ns_params;
+	struct nvmf_rpc_ns_params ns_params;
 
 	struct spdk_jsonrpc_request *request;
 	const struct spdk_json_val *params;
