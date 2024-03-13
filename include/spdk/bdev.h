@@ -224,6 +224,39 @@ union spdk_bdev_nvme_ctratt {
 SPDK_STATIC_ASSERT(sizeof(union spdk_bdev_nvme_ctratt) == 4, "Incorrect size");
 
 /**
+ * Union for command dword 12, which by convention matches the NVMe command dword 12 definition.
+ * This is used to pass NVMe specific fields to bdevs, that reports support for them as indicated
+ * by \ref spdk_bdev_get_nvme_ctratt
+ */
+union spdk_bdev_nvme_cdw12 {
+	uint32_t raw;
+
+	struct {
+		uint32_t reserved	: 20;
+		/* Directive type */
+		uint32_t dtype		: 4;
+		uint32_t reserved2	: 8;
+	} write;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_bdev_nvme_cdw12) == 4, "Incorrect size");
+
+/**
+ * Union for command dword 13, which by convention matches the NVMe command dword 13 definition.
+ * This is used to pass NVMe specific fields to bdevs, that reports support for them as indicated
+ * by \ref spdk_bdev_get_nvme_ctratt
+ */
+union spdk_bdev_nvme_cdw13 {
+	uint32_t raw;
+
+	struct {
+		uint32_t reserved	: 16;
+		/* Directive specific */
+		uint32_t dspec		: 16;
+	} write;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_bdev_nvme_cdw13) == 4, "Incorrect size");
+
+/**
  * Structure with optional IO request parameters
  */
 struct spdk_bdev_ext_io_opts {
@@ -249,8 +282,12 @@ struct spdk_bdev_ext_io_opts {
 	 * is set, that flag will be excluded from any DIF operations for this IO.
 	 */
 	uint32_t dif_check_flags_exclude_mask;
+	/** defined by \ref spdk_bdev_nvme_cdw12 */
+	union spdk_bdev_nvme_cdw12 nvme_cdw12;
+	/** defined by \ref spdk_bdev_nvme_cdw13 */
+	union spdk_bdev_nvme_cdw13 nvme_cdw13;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_ext_io_opts) == 44, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_ext_io_opts) == 52, "Incorrect size");
 
 /**
  * Get the options for the bdev module.

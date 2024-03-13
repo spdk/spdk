@@ -840,6 +840,12 @@ struct spdk_bdev_io {
 			/** Specify whether each DIF check type is enabled. */
 			uint32_t dif_check_flags;
 
+			/** defined by \ref spdk_bdev_nvme_cdw12 */
+			union spdk_bdev_nvme_cdw12 nvme_cdw12;
+
+			/** defined by \ref spdk_bdev_nvme_cdw13 */
+			union spdk_bdev_nvme_cdw13 nvme_cdw13;
+
 			struct {
 				/** Whether the buffer should be populated with the real data */
 				uint8_t populate : 1;

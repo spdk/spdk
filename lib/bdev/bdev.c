@@ -413,6 +413,7 @@ static int bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_i
 				      uint64_t offset_blocks, uint64_t num_blocks,
 				      struct spdk_memory_domain *domain, void *domain_ctx,
 				      struct spdk_accel_sequence *seq, uint32_t dif_check_flags,
+				      uint32_t nvme_cdw12_raw, uint32_t nvme_cdw13_raw,
 				      spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 static int bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
@@ -3010,6 +3011,8 @@ bdev_io_split_submit(struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt
 						num_blocks, bdev_io->internal.memory_domain,
 						bdev_io->internal.memory_domain_ctx, NULL,
 						bdev_io->u.bdev.dif_check_flags,
+						bdev_io->u.bdev.nvme_cdw12.raw,
+						bdev_io->u.bdev.nvme_cdw13.raw,
 						bdev_io_split_done, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
@@ -5565,6 +5568,7 @@ bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 			   uint64_t offset_blocks, uint64_t num_blocks,
 			   struct spdk_memory_domain *domain, void *domain_ctx,
 			   struct spdk_accel_sequence *seq, uint32_t dif_check_flags,
+			   uint32_t nvme_cdw12_raw, uint32_t nvme_cdw13_raw,
 			   spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
@@ -5601,6 +5605,8 @@ bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 	bdev_io->u.bdev.memory_domain_ctx = domain_ctx;
 	bdev_io->u.bdev.accel_sequence = seq;
 	bdev_io->u.bdev.dif_check_flags = dif_check_flags;
+	bdev_io->u.bdev.nvme_cdw12.raw = nvme_cdw12_raw;
+	bdev_io->u.bdev.nvme_cdw13.raw = nvme_cdw13_raw;
 
 	_bdev_io_submit_ext(desc, bdev_io);
 
@@ -5632,7 +5638,8 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 
 	return bdev_writev_blocks_with_md(desc, ch, iov, iovcnt, NULL, offset_blocks,
-					  num_blocks, NULL, NULL, NULL, bdev->dif_check_flags, cb, cb_arg);
+					  num_blocks, NULL, NULL, NULL, bdev->dif_check_flags, 0, 0,
+					  cb, cb_arg);
 }
 
 int
@@ -5652,7 +5659,8 @@ spdk_bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_chan
 	}
 
 	return bdev_writev_blocks_with_md(desc, ch, iov, iovcnt, md_buf, offset_blocks,
-					  num_blocks, NULL, NULL, NULL, bdev->dif_check_flags, cb, cb_arg);
+					  num_blocks, NULL, NULL, NULL, bdev->dif_check_flags, 0, 0,
+					  cb, cb_arg);
 }
 
 int
@@ -5667,16 +5675,19 @@ spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel 
 	void *domain_ctx = NULL, *md = NULL;
 	uint32_t dif_check_flags = 0;
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+	uint32_t nvme_cdw12_raw = 0;
+	uint32_t nvme_cdw13_raw = 0;
 
 	if (opts) {
 		if (spdk_unlikely(!_bdev_io_check_opts(opts, iov))) {
 			return -EINVAL;
 		}
-
 		md = opts->metadata;
 		domain = bdev_get_ext_io_opt(opts, memory_domain, NULL);
 		domain_ctx = bdev_get_ext_io_opt(opts, memory_domain_ctx, NULL);
 		seq = bdev_get_ext_io_opt(opts, accel_sequence, NULL);
+		nvme_cdw12_raw = bdev_get_ext_io_opt(opts, nvme_cdw12.raw, 0);
+		nvme_cdw13_raw = bdev_get_ext_io_opt(opts, nvme_cdw13.raw, 0);
 		if (md) {
 			if (spdk_unlikely(!spdk_bdev_is_md_separate(bdev))) {
 				return -EINVAL;
@@ -5696,7 +5707,8 @@ spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel 
 			  ~(bdev_get_ext_io_opt(opts, dif_check_flags_exclude_mask, 0));
 
 	return bdev_writev_blocks_with_md(desc, ch, iov, iovcnt, md, offset_blocks, num_blocks,
-					  domain, domain_ctx, seq, dif_check_flags, cb, cb_arg);
+					  domain, domain_ctx, seq, dif_check_flags,
+					  nvme_cdw12_raw, nvme_cdw13_raw, cb, cb_arg);
 }
 
 static void
