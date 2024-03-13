@@ -241,29 +241,52 @@ odevices() {
 bdevices() {
 	[[ $os == Linux ]] || return 0
 
-	local bdfd bdf driver
+	local bdf driver
 
 	gdevices
 
-	while read -rp "(BDF->driver)> " bdfd; do
-		bdfd=${bdfd,,}
-		if [[ -z $bdfd ]]; then
+	while read -rp "(BDF)> " bdf; do
+		bdf=${bdf,,}
+		if [[ -z $bdf ]]; then
 			return
 		fi
 
-		bdf=${bdfd/->*/} driver=${bdfd/*->/}
+		[[ -n ${dev_ref["$bdf"]} ]] || continue
 
-		if [[ $driver == "${drivers_d["$bdf"]}" ]]; then
-			echo "$bdf already bound to $driver"
-			continue
-		fi
+		pdriver "$bdf"
 
-		if [[ -n ${dev_ref["$bdf"]} && -n $driver ]]; then
-			if yn "$bdf currently bound to ${drivers_d["$bdf"]:-none}. Bind to $driver?"; then
-				linux_bind_driver "$bdf" "$driver"
+		while read -rp "Select driver ($bdf)> " driver; do
+			driver=${driver,,}
+			if [[ -z $driver ]]; then
+				continue 2
 			fi
+			if [[ $driver == "${pci_bus_driver["$bdf"]}" ]]; then
+				echo "$bdf already bound to $driver"
+				continue
+			fi
+			break
+		done
+
+		# Try to be nice and silently attempt to load the driver just in case
+		modprobe -q "$driver" || true
+
+		if yn "$bdf currently bound to ${pci_bus_driver["$bdf"]:-none}. Bind to $driver?"; then
+			linux_bind_driver "$bdf" "$driver"
+			return
 		fi
 	done
+}
+
+pdriver() {
+	local bdf=$1
+
+	cat <<- DRIVER
+
+		$bdf:
+		  main driver: $(collect_driver "$bdf")
+		  current driver: ${pci_bus_driver["$bdf"]:-none}
+
+	DRIVER
 }
 
 status() {
