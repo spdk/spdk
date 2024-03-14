@@ -1775,13 +1775,18 @@ work_fn(void *arg)
 		 * to replace each I/O that is completed.
 		 */
 		TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
-			if (g_continue_on_error) {
+			if (g_continue_on_error && !ns_ctx->is_draining) {
 				/* Submit any I/O that is queued up */
 				TAILQ_INIT(&swap);
 				TAILQ_SWAP(&swap, &ns_ctx->queued_tasks, perf_task, link);
 				while (!TAILQ_EMPTY(&swap)) {
 					task = TAILQ_FIRST(&swap);
 					TAILQ_REMOVE(&swap, task, link);
+					if (ns_ctx->is_draining) {
+						TAILQ_INSERT_TAIL(&ns_ctx->queued_tasks,
+								  task, link);
+						continue;
+					}
 					submit_single_io(task);
 				}
 			}
