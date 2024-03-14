@@ -2593,6 +2593,17 @@ blob_free_cluster_cpl(void *cb_arg, int bserrno)
 }
 
 static void
+blob_insert_cluster_revert(struct spdk_blob_copy_cluster_ctx *ctx)
+{
+	spdk_spin_lock(&ctx->blob->bs->used_lock);
+	bs_release_cluster(ctx->blob->bs, ctx->new_cluster);
+	if (ctx->new_extent_page != 0) {
+		bs_release_md_page(ctx->blob->bs, ctx->new_extent_page);
+	}
+	spdk_spin_unlock(&ctx->blob->bs->used_lock);
+}
+
+static void
 blob_insert_cluster_cpl(void *cb_arg, int bserrno)
 {
 	struct spdk_blob_copy_cluster_ctx *ctx = cb_arg;
@@ -2604,12 +2615,7 @@ blob_insert_cluster_cpl(void *cb_arg, int bserrno)
 			 * but continue without error. */
 			bserrno = 0;
 		}
-		spdk_spin_lock(&ctx->blob->bs->used_lock);
-		bs_release_cluster(ctx->blob->bs, ctx->new_cluster);
-		if (ctx->new_extent_page != 0) {
-			bs_release_md_page(ctx->blob->bs, ctx->new_extent_page);
-		}
-		spdk_spin_unlock(&ctx->blob->bs->used_lock);
+		blob_insert_cluster_revert(ctx);
 	}
 
 	bs_sequence_finish(ctx->seq, bserrno);
