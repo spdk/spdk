@@ -47,6 +47,8 @@ union nvmf_h2c_msg {
 	struct spdk_nvmf_fabric_prop_set_cmd		prop_set_cmd;
 	struct spdk_nvmf_fabric_prop_get_cmd		prop_get_cmd;
 	struct spdk_nvmf_fabric_connect_cmd		connect_cmd;
+	struct spdk_nvmf_fabric_auth_send_cmd		auth_send_cmd;
+	struct spdk_nvmf_fabric_auth_recv_cmd		auth_recv_cmd;
 };
 SPDK_STATIC_ASSERT(sizeof(union nvmf_h2c_msg) == 64, "Incorrect size");
 
