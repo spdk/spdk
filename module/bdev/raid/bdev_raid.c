@@ -3220,45 +3220,14 @@ out:
 	return rc;
 }
 
-static int
-_raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name,
-			   struct raid_base_bdev_info *base_info,
-			   raid_base_bdev_cb cb_fn, void *cb_ctx)
-{
-	uint8_t slot = raid_bdev_base_bdev_slot(base_info);
-
-	assert(name != NULL);
-
-	if (base_info->name != NULL) {
-		SPDK_ERRLOG("Slot %u on raid bdev '%s' already assigned to bdev '%s'\n",
-			    slot, raid_bdev->bdev.name, base_info->name);
-		return -EBUSY;
-	}
-
-	if (!spdk_uuid_is_null(&base_info->uuid)) {
-		char uuid_str[SPDK_UUID_STRING_LEN];
-
-		spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &base_info->uuid);
-		SPDK_ERRLOG("Slot %u on raid bdev '%s' already assigned to bdev with uuid %s\n",
-			    slot, raid_bdev->bdev.name, uuid_str);
-		return -EBUSY;
-	}
-
-	base_info->name = strdup(name);
-	if (base_info->name == NULL) {
-		return -ENOMEM;
-	}
-
-	return raid_bdev_configure_base_bdev(base_info, false, cb_fn, cb_ctx);
-}
-
 int
-raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name,
-			  raid_base_bdev_cb cb_fn, void *cb_ctx)
+raid_bdev_add_base_bdev(struct raid_bdev *raid_bdev, const char *name,
+			raid_base_bdev_cb cb_fn, void *cb_ctx)
 {
 	struct raid_base_bdev_info *base_info = NULL, *iter;
 	int rc;
 
+	assert(name != NULL);
 	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
 	if (raid_bdev->process != NULL) {
@@ -3287,12 +3256,27 @@ raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name,
 		assert(base_info->desc == NULL);
 	}
 
+	if (!spdk_uuid_is_null(&base_info->uuid)) {
+		char uuid_str[SPDK_UUID_STRING_LEN];
+
+		spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &base_info->uuid);
+		SPDK_ERRLOG("Slot %u on raid bdev '%s' already assigned to bdev with uuid %s\n",
+			    raid_bdev_base_bdev_slot(base_info), raid_bdev->bdev.name, uuid_str);
+		return -EBUSY;
+	}
+
+	base_info->name = strdup(name);
+	if (base_info->name == NULL) {
+		return -ENOMEM;
+	}
+
 	spdk_spin_lock(&raid_bdev->base_bdev_lock);
 
-	rc = _raid_bdev_add_base_device(raid_bdev, name, base_info, cb_fn, cb_ctx);
+	rc = raid_bdev_configure_base_bdev(base_info, false, cb_fn, cb_ctx);
 	if (rc != 0 && (rc != -ENODEV || raid_bdev->state != RAID_BDEV_STATE_CONFIGURING)) {
-		SPDK_ERRLOG("base bdev '%s' attach failed: %s\n", name, spdk_strerror(-rc));
-		raid_bdev_free_base_bdev_resource(base_info);
+		SPDK_ERRLOG("base bdev '%s' configure failed: %s\n", name, spdk_strerror(-rc));
+		free(base_info->name);
+		base_info->name = NULL;
 	}
 
 	spdk_spin_unlock(&raid_bdev->base_bdev_lock);

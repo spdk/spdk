@@ -255,8 +255,8 @@ int raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bde
 		     enum raid_level level, bool superblock, const struct spdk_uuid *uuid,
 		     struct raid_bdev **raid_bdev_out);
 void raid_bdev_delete(struct raid_bdev *raid_bdev, raid_bdev_destruct_cb cb_fn, void *cb_ctx);
-int raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name,
-			      raid_base_bdev_cb cb_fn, void *cb_ctx);
+int raid_bdev_add_base_bdev(struct raid_bdev *raid_bdev, const char *name,
+			    raid_base_bdev_cb cb_fn, void *cb_ctx);
 struct raid_bdev *raid_bdev_find_by_name(const char *name);
 enum raid_level raid_bdev_str_to_level(const char *str);
 const char *raid_bdev_level_to_str(enum raid_level level);
