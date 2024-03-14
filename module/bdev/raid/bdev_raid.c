@@ -3253,13 +3253,11 @@ _raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name,
 }
 
 int
-raid_bdev_attach_base_bdev(struct raid_bdev *raid_bdev, const char *name,
-			   raid_base_bdev_cb cb_fn, void *cb_ctx)
+raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name,
+			  raid_base_bdev_cb cb_fn, void *cb_ctx)
 {
 	struct raid_base_bdev_info *base_info = NULL, *iter;
 	int rc;
-
-	SPDK_DEBUGLOG(bdev_raid, "attach_base_device: %s\n", name);
 
 	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
@@ -3269,14 +3267,8 @@ raid_bdev_attach_base_bdev(struct raid_bdev *raid_bdev, const char *name,
 		return -EPERM;
 	}
 
-	if (raid_bdev->state != RAID_BDEV_STATE_ONLINE) {
-		SPDK_ERRLOG("raid bdev '%s' must be in online state to attach base bdev\n",
-			    raid_bdev->bdev.name);
-		return -EINVAL;
-	}
-
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, iter) {
-		if (iter->desc == NULL) {
+		if (iter->name == NULL) {
 			base_info = iter;
 			break;
 		}
@@ -3289,13 +3281,16 @@ raid_bdev_attach_base_bdev(struct raid_bdev *raid_bdev, const char *name,
 	}
 
 	assert(base_info->is_configured == false);
-	assert(base_info->data_size != 0);
+
+	if (raid_bdev->state == RAID_BDEV_STATE_ONLINE) {
+		assert(base_info->data_size != 0);
+		assert(base_info->desc == NULL);
+	}
 
 	spdk_spin_lock(&raid_bdev->base_bdev_lock);
 
-	rc = _raid_bdev_add_base_device(raid_bdev, name, base_info,
-					cb_fn, cb_ctx);
-	if (rc != 0) {
+	rc = _raid_bdev_add_base_device(raid_bdev, name, base_info, cb_fn, cb_ctx);
+	if (rc != 0 && (rc != -ENODEV || raid_bdev->state != RAID_BDEV_STATE_CONFIGURING)) {
 		SPDK_ERRLOG("base bdev '%s' attach failed: %s\n", name, spdk_strerror(-rc));
 		raid_bdev_free_base_bdev_resource(base_info);
 	}
@@ -3303,36 +3298,6 @@ raid_bdev_attach_base_bdev(struct raid_bdev *raid_bdev, const char *name,
 	spdk_spin_unlock(&raid_bdev->base_bdev_lock);
 
 	return rc;
-}
-
-/*
- * brief:
- * raid_bdev_add_base_device function is the actual function which either adds
- * the nvme base device to existing raid bdev or create a new raid bdev. It also claims
- * the base device and keep the open descriptor.
- * params:
- * raid_bdev - pointer to raid bdev
- * name - name of the base bdev
- * slot - position to add base bdev
- * cb_fn - callback function
- * cb_ctx - argument to callback function
- * returns:
- * 0 - success
- * non zero - failure
- */
-int
-raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name, uint8_t slot,
-			  raid_base_bdev_cb cb_fn, void *cb_ctx)
-{
-	struct raid_base_bdev_info *base_info;
-
-	if (slot >= raid_bdev->num_base_bdevs) {
-		return -EINVAL;
-	}
-
-	base_info = &raid_bdev->base_bdev_info[slot];
-
-	return _raid_bdev_add_base_device(raid_bdev, name, base_info, cb_fn, cb_ctx);
 }
 
 static int
