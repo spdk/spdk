@@ -1125,16 +1125,16 @@ get_and_print_zns_zone_report(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 
 	format_index = spdk_nvme_ns_get_format_index(nsdata);
 	zdes = nsdata_zns->lbafe[format_index].zdes * 64;
+	zones_to_print = g_zone_report_limit ? spdk_min(total_zones, (uint64_t)g_zone_report_limit) : \
+			 total_zones;
 
-	report_bufsize = spdk_nvme_ns_get_max_io_xfer_size(ns);
+	report_bufsize = spdk_min(zrs + zones_to_print * (zds + zdes),
+				  spdk_nvme_ns_get_max_io_xfer_size(ns));
 	report_buf = calloc(1, report_bufsize);
 	if (!report_buf) {
 		printf("Zone report allocation failed!\n");
 		exit(1);
 	}
-
-	zones_to_print = g_zone_report_limit ? spdk_min(total_zones, (uint64_t)g_zone_report_limit) : \
-			 total_zones;
 
 	print_uline('=', printf("NVMe ZNS Zone Report (first %zu of %zu)\n", zones_to_print, total_zones));
 
