@@ -760,6 +760,36 @@ function raid_rebuild_test() {
 		verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $num_base_bdevs_operational
 		verify_raid_bdev_process $raid_bdev_name "none" "none"
 		[[ $($rpc_py bdev_raid_get_bdevs all | jq -r '.[].base_bdevs_list[0].name') == "spare" ]]
+
+		# Remove and re-add a base bdev - rebuild should start automatically
+		$rpc_py bdev_raid_remove_base_bdev "spare"
+		verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $((num_base_bdevs_operational - 1))
+		$rpc_py bdev_raid_add_base_bdev $raid_bdev_name "spare"
+		sleep 1
+		verify_raid_bdev_process $raid_bdev_name "rebuild" "spare"
+
+		# Same as above but re-add through examine
+		$rpc_py bdev_passthru_delete "spare"
+		verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $((num_base_bdevs_operational - 1))
+		$rpc_py bdev_passthru_create -b "spare_delay" -p "spare"
+		sleep 1
+		verify_raid_bdev_process $raid_bdev_name "rebuild" "spare"
+
+		# Stop the rebuild
+		$rpc_py bdev_passthru_delete "spare"
+		verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $((num_base_bdevs_operational - 1))
+		verify_raid_bdev_process $raid_bdev_name "none" "none"
+
+		# Re-adding a base bdev that was replaced (no longer is a member of the array) should not be allowed
+		$rpc_py bdev_passthru_delete ${base_bdevs[0]}
+		$rpc_py bdev_passthru_create -b ${base_bdevs[0]}_malloc -p ${base_bdevs[0]}
+		sleep 1
+		verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $((num_base_bdevs_operational - 1))
+		verify_raid_bdev_process $raid_bdev_name "none" "none"
+		NOT $rpc_py bdev_raid_add_base_bdev $raid_bdev_name ${base_bdevs[0]}
+		sleep 1
+		verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $((num_base_bdevs_operational - 1))
+		verify_raid_bdev_process $raid_bdev_name "none" "none"
 	fi
 
 	killprocess $raid_pid

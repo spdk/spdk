@@ -3008,6 +3008,9 @@ raid_bdev_configure_base_bdev_cont(struct raid_base_bdev_info *base_info)
 	}
 }
 
+static void raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bdev,
+				 raid_base_bdev_cb cb_fn, void *cb_ctx);
+
 static void
 raid_bdev_configure_base_bdev_check_sb_cb(const struct raid_bdev_superblock *sb, int status,
 		void *ctx)
@@ -3017,7 +3020,14 @@ raid_bdev_configure_base_bdev_check_sb_cb(const struct raid_bdev_superblock *sb,
 	switch (status) {
 	case 0:
 		/* valid superblock found */
-		SPDK_ERRLOG("Existing raid superblock found on bdev %s\n", base_info->name);
+		if (spdk_uuid_compare(&base_info->raid_bdev->bdev.uuid, &sb->uuid) == 0) {
+			struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(base_info->desc);
+
+			raid_bdev_free_base_bdev_resource(base_info);
+			raid_bdev_examine_sb(sb, bdev, base_info->configure_cb, base_info->configure_cb_ctx);
+			return;
+		}
+		SPDK_ERRLOG("Superblock of a different raid bdev found on bdev %s\n", base_info->name);
 		status = -EEXIST;
 		raid_bdev_free_base_bdev_resource(base_info);
 		break;
@@ -3429,6 +3439,25 @@ raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bd
 				    sb->name, spdk_strerror(-rc));
 			goto out;
 		}
+	}
+
+	if (raid_bdev->state == RAID_BDEV_STATE_ONLINE) {
+		assert(sb_base_bdev->slot < raid_bdev->num_base_bdevs);
+		base_info = &raid_bdev->base_bdev_info[sb_base_bdev->slot];
+		assert(base_info->desc == NULL);
+		assert(sb_base_bdev->state == RAID_SB_BASE_BDEV_MISSING ||
+		       sb_base_bdev->state == RAID_SB_BASE_BDEV_FAILED);
+		assert(spdk_uuid_is_null(&base_info->uuid));
+		spdk_uuid_copy(&base_info->uuid, &sb_base_bdev->uuid);
+		SPDK_NOTICELOG("Re-adding bdev %s to raid bdev %s.\n", bdev->name, raid_bdev->bdev.name);
+		spdk_spin_lock(&raid_bdev->base_bdev_lock);
+		rc = raid_bdev_configure_base_bdev(base_info, true, cb_fn, cb_ctx);
+		spdk_spin_unlock(&raid_bdev->base_bdev_lock);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to configure bdev %s as base bdev of raid %s: %s\n",
+				    bdev->name, raid_bdev->bdev.name, spdk_strerror(-rc));
+		}
+		goto out;
 	}
 
 	if (sb_base_bdev->state != RAID_SB_BASE_BDEV_CONFIGURED) {
