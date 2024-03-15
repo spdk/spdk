@@ -1232,6 +1232,22 @@ nvmf_subsystem_host_auth_required(struct spdk_nvmf_subsystem *subsystem, const c
 	return status;
 }
 
+struct spdk_key *
+nvmf_subsystem_get_dhchap_key(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
+{
+	struct spdk_nvmf_host *host;
+	struct spdk_key *key = NULL;
+
+	pthread_mutex_lock(&subsystem->mutex);
+	host = nvmf_subsystem_find_host(subsystem, hostnqn);
+	if (host != NULL && host->dhchap_key != NULL) {
+		key = spdk_key_dup(host->dhchap_key);
+	}
+	pthread_mutex_unlock(&subsystem->mutex);
+
+	return key;
+}
+
 struct spdk_nvmf_host *
 spdk_nvmf_subsystem_get_first_host(struct spdk_nvmf_subsystem *subsystem)
 {
