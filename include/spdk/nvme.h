@@ -4085,6 +4085,15 @@ const char *spdk_nvme_dhchap_get_digest_name(int id);
 int spdk_nvme_dhchap_get_digest_id(const char *name);
 
 /**
+ * Return the length of a digest.
+ *
+ * \param id Digest identifier (see `enum spdk_nvmf_dhchap_hash`).
+ *
+ * \return Length of a digest or 0 if the id is unknown.
+ */
+uint8_t spdk_nvme_dhchap_get_digest_length(int id);
+
+/**
  * Return the name of a Diffie-Hellman group.
  *
  * \param id Diffie-Hellman group identifier (see `enum spdk_nvmf_dhchap_dhgroup`).

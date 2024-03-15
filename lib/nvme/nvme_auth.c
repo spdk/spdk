@@ -120,15 +120,15 @@ spdk_nvme_dhchap_get_dhgroup_name(int id)
 	return NULL;
 }
 
-#ifdef SPDK_CONFIG_HAVE_EVP_MAC
-static uint8_t
-nvme_auth_get_digest_len(int id)
+uint8_t
+spdk_nvme_dhchap_get_digest_length(int id)
 {
 	const struct nvme_auth_digest *digest = nvme_auth_get_digest(id);
 
 	return digest != NULL ? digest->len : 0;
 }
 
+#ifdef SPDK_CONFIG_HAVE_EVP_MAC
 static bool
 nvme_auth_digest_allowed(struct spdk_nvme_qpair *qpair, uint8_t digest)
 {
@@ -412,7 +412,7 @@ nvme_auth_calc_response(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
 	size_t hlen, calen = sizeof(caval);
 	int rc, keylen;
 
-	hlen = nvme_auth_get_digest_len(hash);
+	hlen = spdk_nvme_dhchap_get_digest_length(hash);
 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
 	if (rc != 0) {
 		return rc;
@@ -808,7 +808,7 @@ nvme_auth_check_challenge(struct spdk_nvme_qpair *qpair)
 		goto error;
 	}
 
-	hl = nvme_auth_get_digest_len(challenge->hash_id);
+	hl = spdk_nvme_dhchap_get_digest_length(challenge->hash_id);
 	if (hl == 0) {
 		AUTH_ERRLOG(qpair, "unsupported hash function: 0x%x\n", challenge->hash_id);
 		goto error;
@@ -882,7 +882,7 @@ nvme_auth_send_reply(struct spdk_nvme_qpair *qpair)
 	int rc;
 
 	auth->hash = challenge->hash_id;
-	hl = nvme_auth_get_digest_len(challenge->hash_id);
+	hl = spdk_nvme_dhchap_get_digest_length(challenge->hash_id);
 	if (challenge->dhg_id != SPDK_NVMF_DHCHAP_DHGROUP_NULL) {
 		dhseclen = sizeof(dhsec);
 		publen = sizeof(pubkey);
@@ -994,7 +994,7 @@ nvme_auth_check_success1(struct spdk_nvme_qpair *qpair)
 			goto error;
 		}
 
-		hl = nvme_auth_get_digest_len(auth->hash);
+		hl = spdk_nvme_dhchap_get_digest_length(auth->hash);
 		if (msg->hl != hl) {
 			AUTH_ERRLOG(qpair, "received invalid hl=%u, expected=%u\n", msg->hl, hl);
 			status = SPDK_NVMF_AUTH_INCORRECT_PAYLOAD;

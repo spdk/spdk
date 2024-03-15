@@ -209,6 +209,7 @@
 
 	spdk_nvme_dhchap_get_digest_name;
 	spdk_nvme_dhchap_get_digest_id;
+	spdk_nvme_dhchap_get_digest_length;
 	spdk_nvme_dhchap_get_dhgroup_name;
 	spdk_nvme_dhchap_get_dhgroup_id;
 
