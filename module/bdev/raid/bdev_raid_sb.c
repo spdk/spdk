@@ -137,6 +137,8 @@ raid_bdev_parse_superblock(struct raid_bdev_read_sb_ctx *ctx)
 {
 	struct raid_bdev_superblock *sb = ctx->buf;
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(ctx->desc);
+	struct raid_bdev_sb_base_bdev *sb_base_bdev;
+	uint8_t i;
 
 	if (memcmp(sb->signature, RAID_BDEV_SB_SIG, sizeof(sb->signature))) {
 		SPDK_DEBUGLOG(bdev_raid_sb, "invalid signature\n");
@@ -168,6 +170,15 @@ raid_bdev_parse_superblock(struct raid_bdev_read_sb_ctx *ctx)
 	if (sb->version.minor > RAID_BDEV_SB_VERSION_MINOR) {
 		SPDK_WARNLOG("Superblock minor version %d on bdev %s is higher than the currently supported: %d\n",
 			     sb->version.minor, spdk_bdev_get_name(bdev), RAID_BDEV_SB_VERSION_MINOR);
+	}
+
+	for (i = 0; i < sb->base_bdevs_size; i++) {
+		sb_base_bdev = &sb->base_bdevs[i];
+		if (sb_base_bdev->slot >= sb->num_base_bdevs) {
+			SPDK_WARNLOG("Invalid superblock base bdev slot number %u on bdev %s\n",
+				     sb_base_bdev->slot, spdk_bdev_get_name(bdev));
+			return -EINVAL;
+		}
 	}
 
 	return 0;

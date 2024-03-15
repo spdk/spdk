@@ -369,6 +369,12 @@ test_raid_bdev_parse_superblock(void)
 	CU_ASSERT(raid_bdev_parse_superblock(&ctx) == -EAGAIN);
 	ctx.buf_size = g_bdev.blocklen * 3;
 	CU_ASSERT(raid_bdev_parse_superblock(&ctx) == 0);
+
+	/* invalid base bdev slot number */
+	prepare_sb(sb);
+	sb->base_bdevs[0].slot = sb->num_base_bdevs = sb->base_bdevs_size = 2;
+	raid_bdev_sb_update_crc(sb);
+	CU_ASSERT(raid_bdev_parse_superblock(&ctx) == -EINVAL);
 }
 
 int
