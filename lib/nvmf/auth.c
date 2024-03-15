@@ -316,8 +316,44 @@ nvmf_auth_send_exec(struct spdk_nvmf_request *req)
 }
 
 static void
+nvmf_auth_recv_complete(struct spdk_nvmf_request *req, uint32_t length)
+{
+	assert(req->cmd->nvmf_cmd.fctype == SPDK_NVMF_FABRIC_COMMAND_AUTHENTICATION_RECV);
+	req->length = length;
+	nvmf_auth_request_complete(req, SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_SUCCESS, 0);
+}
+
+static void
+nvmf_auth_recv_failure1(struct spdk_nvmf_request *req, int fail_reason)
+{
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
+	struct spdk_nvmf_auth_failure *failure;
+
+	failure = nvmf_auth_get_message(req, sizeof(*failure));
+	if (failure == NULL) {
+		nvmf_auth_request_complete(req, SPDK_NVME_SCT_GENERIC,
+					   SPDK_NVME_SC_INVALID_FIELD, 1);
+		nvmf_auth_disconnect_qpair(qpair);
+		return;
+	}
+
+	failure->auth_type = SPDK_NVMF_AUTH_TYPE_COMMON_MESSAGE;
+	failure->auth_id = SPDK_NVMF_AUTH_ID_FAILURE1;
+	failure->t_id = auth->tid;
+	failure->rc = SPDK_NVMF_AUTH_FAILURE;
+	failure->rce = fail_reason;
+
+	nvmf_auth_set_state(qpair, NVMF_QPAIR_AUTH_FAILURE1);
+	nvmf_auth_recv_complete(req, sizeof(*failure));
+	nvmf_auth_disconnect_qpair(qpair);
+}
+
+static void
 nvmf_auth_recv_exec(struct spdk_nvmf_request *req)
 {
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
 	struct spdk_nvmf_fabric_auth_recv_cmd *cmd = &req->cmd->auth_recv_cmd;
 	int rc;
 
@@ -328,8 +364,15 @@ nvmf_auth_recv_exec(struct spdk_nvmf_request *req)
 		return;
 	}
 
-	nvmf_auth_request_complete(req, SPDK_NVME_SCT_GENERIC,
-				   SPDK_NVME_SC_INVALID_OPCODE, 1);
+	spdk_iov_memset(req->iov, req->iovcnt, 0);
+	switch (auth->state) {
+	case NVMF_QPAIR_AUTH_FAILURE1:
+		nvmf_auth_recv_failure1(req, auth->fail_reason);
+		break;
+	default:
+		nvmf_auth_recv_failure1(req, SPDK_NVMF_AUTH_INCORRECT_PROTOCOL_MESSAGE);
+		break;
+	}
 }
 
 int
