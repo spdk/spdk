@@ -435,6 +435,7 @@ struct spdk_bs_dev *bs_create_zeroes_dev(void);
 struct spdk_bs_dev *bs_create_blob_bs_dev(struct spdk_blob *blob);
 struct spdk_io_channel *blob_esnap_get_io_channel(struct spdk_io_channel *ch,
 		struct spdk_blob *blob);
+bool blob_backed_with_zeroes_dev(struct spdk_blob *blob);
 
 /* Unit Conversions
  *

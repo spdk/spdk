@@ -3205,6 +3205,7 @@ blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blob *blo
 
 		/* if aligned with cluster release cluster */
 		if (spdk_blob_is_thin_provisioned(blob) && is_allocated &&
+		    blob_backed_with_zeroes_dev(blob) &&
 		    bs_io_units_per_cluster(blob) == length) {
 			struct spdk_bs_channel *bs_channel = spdk_io_channel_get_ctx(_ch);
 			uint32_t cluster_start_page;

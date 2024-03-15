@@ -4666,7 +4666,7 @@ static void
 blob_thin_prov_unmap_cluster(void)
 {
 	struct spdk_blob_store *bs;
-	struct spdk_blob *blob;
+	struct spdk_blob *blob, *snapshot;
 	struct spdk_io_channel *ch;
 	struct spdk_bs_dev *dev;
 	struct spdk_bs_opts bs_opts;
@@ -4677,6 +4677,7 @@ blob_thin_prov_unmap_cluster(void)
 	uint8_t payload_read[4096];
 	const uint32_t CLUSTER_COUNT = 3;
 	uint32_t pages_per_cluster;
+	spdk_blob_id blobid, snapshotid;
 	uint32_t i;
 	int err;
 
@@ -4706,6 +4707,7 @@ blob_thin_prov_unmap_cluster(void)
 	blob = ut_blob_create_and_open(bs, &opts);
 	CU_ASSERT(free_clusters == CLUSTER_COUNT);
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
+	blobid = spdk_blob_get_id(blob);
 
 	g_bserrno = -1;
 	spdk_blob_resize(blob, CLUSTER_COUNT, blob_op_complete, NULL);
@@ -4836,7 +4838,62 @@ blob_thin_prov_unmap_cluster(void)
 	CU_ASSERT(err == 0);
 	CU_ASSERT(1 == spdk_bs_free_cluster_count(bs));
 
+	/* Test thin-provisioned blob that is backed */
+	spdk_blob_resize(blob, 1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	spdk_blob_sync_md(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
+
+	g_bserrno = -1;
+	memset(payload_write, 1, sizeof(payload_write));
+	spdk_blob_io_write(blob, ch, payload_write, 0, 1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(free_clusters - 1 == spdk_bs_free_cluster_count(bs));
+
+	/* Create a snapshot */
+	CU_ASSERT_EQUAL(_get_snapshots_count(bs), 0);
+	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	CU_ASSERT_EQUAL(_get_snapshots_count(bs), 1);
+	snapshotid = g_blobid;
+	CU_ASSERT(free_clusters - 1 == spdk_bs_free_cluster_count(bs));
+	spdk_bs_open_blob(bs, snapshotid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	snapshot = g_blob;
+
+	/* Write data to blob, it will alloc new cluster */
+	g_bserrno = -1;
+	memset(payload_write, 2, sizeof(payload_write));
+	spdk_blob_io_write(blob, ch, payload_write, 0, 1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(free_clusters - 2 == spdk_bs_free_cluster_count(bs));
+
+	/* Unmap one whole cluster, but do not release this cluster */
+	g_bserrno = -1;
+	spdk_blob_io_unmap(blob, ch, 0, pages_per_cluster, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(free_clusters - 2 == spdk_bs_free_cluster_count(bs));
+
+	/* Verify the data read from the cluster is zeroed out */
+	g_bserrno = -1;
+	memset(payload_write, 0, sizeof(payload_write));
+	spdk_blob_io_read(blob, ch, payload_read, 0, 1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(memcmp(payload_write, payload_read, 4096) == 0);
+
 	ut_blob_close_and_delete(bs, blob);
+	ut_blob_close_and_delete(bs, snapshot);
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
 
 	spdk_bs_free_io_channel(ch);
