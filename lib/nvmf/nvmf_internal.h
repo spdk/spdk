@@ -286,6 +286,7 @@ struct spdk_nvmf_subsystem {
 		uint8_t					reserved : 6;
 	} flags;
 
+	/* Protected against concurrent access by ->mutex */
 	bool						allow_any_host;
 
 	bool						destroying;
@@ -313,12 +314,13 @@ struct spdk_nvmf_subsystem {
 
 	TAILQ_HEAD(, spdk_nvmf_ctrlr)			ctrlrs;
 
-	/* A mutex used to protect the hosts list and allow_any_host flag. Unlike the namespace
-	 * array, this list is not used on the I/O path (it's needed for handling things like
-	 * the CONNECT command), so use a mutex to protect it instead of requiring the subsystem
-	 * state to be paused. This removes the requirement to pause the subsystem when hosts
-	 * are added or removed dynamically. */
+	/* This mutex is used to protect fields that aren't touched on the I/O path (e.g. it's
+	 * needed for handling things like the CONNECT command) instead of requiring the subsystem
+	 * to be paused.  It makes it possible to modify those fields (e.g. add/remove hosts)
+	 * without affecting outstanding I/O requests.
+	 */
 	pthread_mutex_t					mutex;
+	/* Protected against concurrent access by ->mutex */
 	TAILQ_HEAD(, spdk_nvmf_host)			hosts;
 	TAILQ_HEAD(, spdk_nvmf_subsystem_listener)	listeners;
 	struct spdk_bit_array				*used_listener_ids;
@@ -338,6 +340,8 @@ struct spdk_nvmf_subsystem {
 	uint32_t					*ana_group;
 	/* Queue of a state change requests */
 	TAILQ_HEAD(, nvmf_subsystem_state_change_ctx)	state_changes;
+	/* In-band authentication sequence number, protected by ->mutex */
+	uint32_t					auth_seqnum;
 };
 
 static int

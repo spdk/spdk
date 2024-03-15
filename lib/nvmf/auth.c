@@ -9,9 +9,12 @@
 #include "spdk/thread.h"
 #include "spdk/util.h"
 
+#include <openssl/rand.h>
+
 #include "nvmf_internal.h"
 
 #define NVMF_AUTH_DEFAULT_KATO_US (120ull * 1000 * 1000)
+#define NVMF_AUTH_DIGEST_MAX_SIZE 64
 
 #define AUTH_ERRLOG(q, fmt, ...) \
 	SPDK_ERRLOG("[%s:%s:%u] " fmt, (q)->ctrlr->subsys->subnqn, (q)->ctrlr->hostnqn, \
@@ -23,6 +26,7 @@
 enum nvmf_qpair_auth_state {
 	NVMF_QPAIR_AUTH_NEGOTIATE,
 	NVMF_QPAIR_AUTH_CHALLENGE,
+	NVMF_QPAIR_AUTH_REPLY,
 	NVMF_QPAIR_AUTH_FAILURE1,
 	NVMF_QPAIR_AUTH_ERROR,
 };
@@ -33,6 +37,8 @@ struct spdk_nvmf_qpair_auth {
 	int				fail_reason;
 	uint16_t			tid;
 	int				digest;
+	uint8_t				cval[NVMF_AUTH_DIGEST_MAX_SIZE];
+	uint32_t			seqnum;
 };
 
 struct nvmf_auth_common_header {
@@ -60,6 +66,7 @@ nvmf_auth_get_state_name(enum nvmf_qpair_auth_state state)
 	static const char *state_names[] = {
 		[NVMF_QPAIR_AUTH_NEGOTIATE] = "negotiate",
 		[NVMF_QPAIR_AUTH_CHALLENGE] = "challenge",
+		[NVMF_QPAIR_AUTH_REPLY] = "reply",
 		[NVMF_QPAIR_AUTH_FAILURE1] = "failure1",
 		[NVMF_QPAIR_AUTH_ERROR] = "error",
 	};
@@ -349,6 +356,79 @@ nvmf_auth_recv_failure1(struct spdk_nvmf_request *req, int fail_reason)
 	nvmf_auth_disconnect_qpair(qpair);
 }
 
+static int
+nvmf_auth_get_seqnum(struct spdk_nvmf_qpair *qpair)
+{
+	struct spdk_nvmf_subsystem *subsys = qpair->ctrlr->subsys;
+	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
+	int rc;
+
+	pthread_mutex_lock(&subsys->mutex);
+	if (subsys->auth_seqnum == 0) {
+		rc = RAND_bytes((void *)&subsys->auth_seqnum, sizeof(subsys->auth_seqnum));
+		if (rc != 1) {
+			pthread_mutex_unlock(&subsys->mutex);
+			return -EIO;
+		}
+	}
+	if (++subsys->auth_seqnum == 0) {
+		subsys->auth_seqnum = 1;
+
+	}
+	auth->seqnum = subsys->auth_seqnum;
+	pthread_mutex_unlock(&subsys->mutex);
+
+	return 0;
+}
+
+static int
+nvmf_auth_recv_challenge(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
+	struct spdk_nvmf_dhchap_challenge *challenge;
+	uint8_t hl;
+	int rc;
+
+	hl = spdk_nvme_dhchap_get_digest_length(auth->digest);
+	assert(hl > 0 && hl <= sizeof(auth->cval));
+
+	challenge = nvmf_auth_get_message(req, sizeof(*challenge) + hl);
+	if (challenge == NULL) {
+		AUTH_ERRLOG(qpair, "invalid message length: %"PRIu32"\n", req->length);
+		return SPDK_NVMF_AUTH_INCORRECT_PAYLOAD;
+	}
+	rc = nvmf_auth_get_seqnum(qpair);
+	if (rc != 0) {
+		return SPDK_NVMF_AUTH_FAILED;
+	}
+	rc = RAND_bytes(auth->cval, hl);
+	if (rc != 1) {
+		return SPDK_NVMF_AUTH_FAILED;
+	}
+	if (nvmf_auth_rearm_poller(qpair)) {
+		nvmf_auth_request_complete(req, SPDK_NVME_SCT_GENERIC,
+					   SPDK_NVME_SC_INTERNAL_DEVICE_ERROR, 1);
+		nvmf_auth_disconnect_qpair(qpair);
+		return 0;
+	}
+
+	memcpy(challenge->cval, auth->cval, hl);
+	challenge->auth_type = SPDK_NVMF_AUTH_TYPE_DHCHAP;
+	challenge->auth_id = SPDK_NVMF_AUTH_ID_DHCHAP_CHALLENGE;
+	challenge->t_id = auth->tid;
+	challenge->hl = hl;
+	challenge->hash_id = (uint8_t)auth->digest;
+	challenge->dhg_id = SPDK_NVMF_DHCHAP_DHGROUP_NULL;
+	challenge->dhvlen = 0;
+	challenge->seqnum = auth->seqnum;
+
+	nvmf_auth_set_state(qpair, NVMF_QPAIR_AUTH_REPLY);
+	nvmf_auth_recv_complete(req, sizeof(*challenge) + hl);
+
+	return 0;
+}
+
 static void
 nvmf_auth_recv_exec(struct spdk_nvmf_request *req)
 {
@@ -366,6 +446,12 @@ nvmf_auth_recv_exec(struct spdk_nvmf_request *req)
 
 	spdk_iov_memset(req->iov, req->iovcnt, 0);
 	switch (auth->state) {
+	case NVMF_QPAIR_AUTH_CHALLENGE:
+		rc = nvmf_auth_recv_challenge(req);
+		if (rc != 0) {
+			nvmf_auth_recv_failure1(req, rc);
+		}
+		break;
 	case NVMF_QPAIR_AUTH_FAILURE1:
 		nvmf_auth_recv_failure1(req, auth->fail_reason);
 		break;

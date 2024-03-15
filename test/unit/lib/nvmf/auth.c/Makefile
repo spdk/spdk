@@ -7,4 +7,6 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
 TEST_FILE = auth_ut.c
 
+SPDK_MOCK_SYMBOLS = RAND_bytes
+
 include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
