@@ -12,7 +12,7 @@
 #define VFIO_USER_MINOR_VER			1
 
 /* Maximum memory regions supported */
-#define VFIO_MAXIMUM_MEMORY_REGIONS		128
+#define VFIO_MAXIMUM_MEMORY_REGIONS		16
 /* Maximum sparse memory regions in one BAR region */
 #define VFIO_MAXIMUM_SPARSE_MMAP_REGIONS	8
 
