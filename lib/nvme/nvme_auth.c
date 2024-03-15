@@ -8,6 +8,7 @@
 #include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk_internal/nvme.h"
 #include "nvme_internal.h"
 
 #ifdef SPDK_CONFIG_HAVE_EVP_MAC
@@ -398,11 +399,11 @@ out:
 	return rc;
 }
 
-static int
-nvme_auth_calc_response(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
-			const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
-			const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
-			const void *cval, void *rval)
+int
+spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+			   const void *cval, void *rval)
 {
 	EVP_MAC *hmac;
 	EVP_MAC_CTX *ctx;
@@ -908,12 +909,12 @@ nvme_auth_send_reply(struct spdk_nvme_qpair *qpair)
 		      "len=%u\n", spdk_key_get_name(ctrlr->opts.dhchap_key),
 		      challenge->hash_id, challenge->dhg_id, challenge->seqnum, auth->tid,
 		      ctrlr->trid.subnqn, ctrlr->opts.hostnqn, hl);
-	rc = nvme_auth_calc_response(ctrlr->opts.dhchap_key,
-				     (enum spdk_nvmf_dhchap_hash)challenge->hash_id,
-				     "HostHost", challenge->seqnum, auth->tid, 0,
-				     ctrlr->opts.hostnqn, ctrlr->trid.subnqn,
-				     dhseclen > 0 ? dhsec : NULL, dhseclen,
-				     challenge->cval, response);
+	rc = spdk_nvme_dhchap_calculate(ctrlr->opts.dhchap_key,
+					(enum spdk_nvmf_dhchap_hash)challenge->hash_id,
+					"HostHost", challenge->seqnum, auth->tid, 0,
+					ctrlr->opts.hostnqn, ctrlr->trid.subnqn,
+					dhseclen > 0 ? dhsec : NULL, dhseclen,
+					challenge->cval, response);
 	if (rc != 0) {
 		AUTH_ERRLOG(qpair, "failed to calculate response: %s\n", spdk_strerror(-rc));
 		return rc;
@@ -931,12 +932,12 @@ nvme_auth_send_reply(struct spdk_nvme_qpair *qpair)
 			return -EIO;
 		}
 
-		rc = nvme_auth_calc_response(ctrlr->opts.dhchap_ctrlr_key,
-					     (enum spdk_nvmf_dhchap_hash)challenge->hash_id,
-					     "Controller", seqnum, auth->tid, 0,
-					     ctrlr->trid.subnqn, ctrlr->opts.hostnqn,
-					     dhseclen > 0 ? dhsec : NULL, dhseclen,
-					     ctrlr_challenge, auth->challenge);
+		rc = spdk_nvme_dhchap_calculate(ctrlr->opts.dhchap_ctrlr_key,
+						(enum spdk_nvmf_dhchap_hash)challenge->hash_id,
+						"Controller", seqnum, auth->tid, 0,
+						ctrlr->trid.subnqn, ctrlr->opts.hostnqn,
+						dhseclen > 0 ? dhsec : NULL, dhseclen,
+						ctrlr_challenge, auth->challenge);
 		if (rc != 0) {
 			AUTH_ERRLOG(qpair, "failed to calculate controller's response: %s\n",
 				    spdk_strerror(-rc));

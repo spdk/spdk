@@ -213,6 +213,9 @@
 	spdk_nvme_dhchap_get_dhgroup_name;
 	spdk_nvme_dhchap_get_dhgroup_id;
 
+	# functions from spdk_internal/nvme.h
+	spdk_nvme_dhchap_calculate;
+
 	# public functions from nvme_zns.h
 	spdk_nvme_zns_ns_get_data;
 	spdk_nvme_zns_ns_get_zone_size_sectors;
