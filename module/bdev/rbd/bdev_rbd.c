@@ -1025,7 +1025,19 @@ _bdev_rbd_wait_for_latest_osdmap(void *arg)
 
 	STAILQ_FOREACH(entry, &g_map_bdev_rbd_cluster, link) {
 		if (strcmp(name, entry->name) == 0) {
+			struct timeval start, end;
+			double elapsed_time;
+
+			// Get the start time
+			gettimeofday(&start, NULL);
 			int rc = rados_wait_for_latest_osdmap(entry->cluster);
+			// Get the end time
+			gettimeofday(&end, NULL);
+
+			// Calculate the elapsed time in seconds
+			elapsed_time = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1.0e6;
+			SPDK_ERRLOG("rados_wait_for_latest_osdmap cluster: %s elapsed time: %f seconds\n",
+					name, elapsed_time);
 			if (rc) {
 				SPDK_ERRLOG("Failed to wait for latest osd map, rados cluster=%s, rc=%d\n",
 			    name, rc);
