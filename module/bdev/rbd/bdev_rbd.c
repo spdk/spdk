@@ -1013,6 +1013,45 @@ dump_single_cluster_entry(struct bdev_rbd_cluster *entry, struct spdk_json_write
 	spdk_json_write_object_end(w);
 }
 
+static void *
+_bdev_rbd_wait_for_latest_osdmap(void *arg)
+{
+	struct bdev_rbd_cluster *entry;
+	const char *name = arg;
+	assert(name != NULL);
+	void *ret = NULL; // failure by default
+
+	pthread_mutex_lock(&g_map_bdev_rbd_cluster_mutex);
+
+	STAILQ_FOREACH(entry, &g_map_bdev_rbd_cluster, link) {
+		if (strcmp(name, entry->name) == 0) {
+			int rc = rados_wait_for_latest_osdmap(entry->cluster);
+			if (rc) {
+				SPDK_ERRLOG("Failed to wait for latest osd map, rados cluster=%s, rc=%d\n",
+			    name, rc);
+			} else {
+				ret = arg; // non-NULL is returned on success
+			}
+			break;
+		}
+	}
+
+	pthread_mutex_unlock(&g_map_bdev_rbd_cluster_mutex);
+	return ret;
+}
+
+int
+bdev_rbd_wait_for_latest_osdmap(const char *name)
+{
+	/* Wait for osd map on cluster name need to be performed in non SPDK-thread to avoid CPU
+	 * resource contention */
+	if (spdk_call_unaffinitized(_bdev_rbd_wait_for_latest_osdmap, (void *)name) == NULL) {
+		return -1;
+	}
+
+	return 0;
+}
+
 int
 bdev_rbd_get_clusters_info(struct spdk_jsonrpc_request *request, const char *name)
 {

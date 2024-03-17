@@ -71,4 +71,12 @@ int bdev_rbd_unregister_cluster(const char *name);
  */
 int bdev_rbd_get_clusters_info(struct spdk_jsonrpc_request *request, const char *name);
 
+/**
+ * Wait for latest osd map on cluster identified by name.
+ * Part of blocklist logic
+ *
+ * \param name the name of the cluster.
+ */
+int bdev_rbd_wait_for_latest_osdmap(const char *name);
+
 #endif /* SPDK_BDEV_RBD_H */
