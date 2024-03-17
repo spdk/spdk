@@ -343,3 +343,45 @@ cleanup:
 	free_rpc_bdev_rbd_get_cluster_info(&req);
 }
 SPDK_RPC_REGISTER("bdev_rbd_get_clusters_info", rpc_bdev_rbd_get_clusters_info, SPDK_RPC_RUNTIME)
+
+struct rpc_bdev_rbd_wait_for_latest_osdmap_cluster {
+	char *name;
+};
+
+static void
+free_rpc_bdev_rbd_wait_for_latest_osdmap_cluster(struct rpc_bdev_rbd_wait_for_latest_osdmap_cluster *req)
+{
+	free(req->name);
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_rbd_wait_for_latest_osdmap_cluster_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_rbd_wait_for_latest_osdmap_cluster, name), spdk_json_decode_string, true},
+};
+
+static void
+rpc_bdev_rbd_wait_for_latest_osdmap(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
+{
+	struct rpc_bdev_rbd_wait_for_latest_osdmap_cluster req = {NULL};
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_bdev_rbd_wait_for_latest_osdmap_cluster_decoders,
+				    SPDK_COUNTOF(rpc_bdev_rbd_wait_for_latest_osdmap_cluster_decoders),
+				    &req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	rc = bdev_rbd_wait_for_latest_osdmap(req.name);
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
+	}
+
+	spdk_jsonrpc_send_bool_response(request, true);
+
+cleanup:
+	free_rpc_bdev_rbd_wait_for_latest_osdmap_cluster(&req);
+}
+SPDK_RPC_REGISTER("bdev_rbd_wait_for_latest_osdmap", rpc_bdev_rbd_wait_for_latest_osdmap, SPDK_RPC_RUNTIME)
