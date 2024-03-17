@@ -1104,6 +1104,15 @@ def bdev_rbd_unregister_cluster(client, name):
     params['name'] = name
     return client.call('bdev_rbd_unregister_cluster', params)
 
+def bdev_rbd_wait_for_latest_osdmap(client, name):
+    """Wait for latest osd map on cluster identified by name.
+
+    Args:
+        name: name of Rados cluster
+    """
+    params = {'name': name}
+    return client.call('bdev_rbd_wait_for_latest_osdmap', params)
+
 
 def bdev_rbd_get_clusters_info(client, name=None):
     """Get the cluster(s) info
