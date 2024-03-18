@@ -2128,6 +2128,9 @@ _raid_bdev_remove_base_bdev(struct raid_base_bdev_info *base_info,
 			/* There is no base bdev for this raid, so free the raid device. */
 			raid_bdev_cleanup_and_free(raid_bdev);
 		}
+		if (cb_fn != NULL) {
+			cb_fn(cb_ctx, 0);
+		}
 	} else if (raid_bdev->num_base_bdevs_operational-- == raid_bdev->min_base_bdevs_operational) {
 		/*
 		 * After this base bdev is removed there will not be enough base bdevs
