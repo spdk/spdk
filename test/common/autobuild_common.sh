@@ -35,7 +35,7 @@ _llvm_precompile() {
 	export CC=clang-$clang_num
 	export CXX=clang++-$clang_num
 
-	fuzzer_libs=(/usr/lib*/clang/@("$clang_num"|"$clang_version")/lib/linux/libclang_rt.fuzzer_no_main-x86_64.a)
+	fuzzer_libs=(/usr/lib*/clang/@("$clang_num"|"$clang_version")/lib/*linux*/libclang_rt.fuzzer_no_main?(-x86_64).a)
 	fuzzer_lib=${fuzzer_libs[0]}
 	[[ -e $fuzzer_lib ]]
 
