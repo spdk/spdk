@@ -32,6 +32,7 @@ enum nvmf_qpair_auth_state {
 	NVMF_QPAIR_AUTH_REPLY,
 	NVMF_QPAIR_AUTH_SUCCESS1,
 	NVMF_QPAIR_AUTH_FAILURE1,
+	NVMF_QPAIR_AUTH_COMPLETED,
 	NVMF_QPAIR_AUTH_ERROR,
 };
 
@@ -73,6 +74,7 @@ nvmf_auth_get_state_name(enum nvmf_qpair_auth_state state)
 		[NVMF_QPAIR_AUTH_REPLY] = "reply",
 		[NVMF_QPAIR_AUTH_SUCCESS1] = "success1",
 		[NVMF_QPAIR_AUTH_FAILURE1] = "failure1",
+		[NVMF_QPAIR_AUTH_COMPLETED] = "completed",
 		[NVMF_QPAIR_AUTH_ERROR] = "error",
 	};
 
@@ -535,6 +537,35 @@ nvmf_auth_recv_challenge(struct spdk_nvmf_request *req)
 	return 0;
 }
 
+static int
+nvmf_auth_recv_success1(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
+	struct spdk_nvmf_dhchap_success1 *success;
+
+	success = nvmf_auth_get_message(req, sizeof(*success));
+	if (success == NULL) {
+		AUTH_ERRLOG(qpair, "invalid message length: %"PRIu32"\n", req->length);
+		return SPDK_NVMF_AUTH_INCORRECT_PAYLOAD;
+	}
+
+	success->auth_type = SPDK_NVMF_AUTH_TYPE_DHCHAP;
+	success->auth_id = SPDK_NVMF_AUTH_ID_DHCHAP_SUCCESS1;
+	success->t_id = auth->tid;
+	/* Kernel initiator always expects hl to be set, regardless of rvalid */
+	success->hl = spdk_nvme_dhchap_get_digest_length(auth->digest);
+	success->rvalid = 0;
+
+	AUTH_DEBUGLOG(qpair, "host authentication successful\n");
+	nvmf_auth_recv_complete(req, sizeof(*success));
+	nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ENABLED);
+	nvmf_auth_set_state(qpair, NVMF_QPAIR_AUTH_COMPLETED);
+	spdk_poller_unregister(&auth->poller);
+
+	return 0;
+}
+
 static void
 nvmf_auth_recv_exec(struct spdk_nvmf_request *req)
 {
@@ -554,6 +585,12 @@ nvmf_auth_recv_exec(struct spdk_nvmf_request *req)
 	switch (auth->state) {
 	case NVMF_QPAIR_AUTH_CHALLENGE:
 		rc = nvmf_auth_recv_challenge(req);
+		if (rc != 0) {
+			nvmf_auth_recv_failure1(req, rc);
+		}
+		break;
+	case NVMF_QPAIR_AUTH_SUCCESS1:
+		rc = nvmf_auth_recv_success1(req);
 		if (rc != 0) {
 			nvmf_auth_recv_failure1(req, rc);
 		}

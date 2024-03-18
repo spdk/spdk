@@ -27,10 +27,16 @@ __wrap_RAND_bytes(unsigned char *buf, int num)
 	return MOCK_GET(RAND_bytes);
 }
 
+void
+nvmf_qpair_set_state(struct spdk_nvmf_qpair *qpair, enum spdk_nvmf_qpair_state state)
+{
+	qpair->state = state;
+}
+
 int
 spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair)
 {
-	qpair->state = SPDK_NVMF_QPAIR_ERROR;
+	nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ERROR);
 	return 0;
 }
 
@@ -856,6 +862,68 @@ test_auth_reply(void)
 	nvmf_qpair_auth_destroy(&qpair);
 }
 
+static void
+test_auth_success1(void)
+{
+	union nvmf_c2h_msg rsp = {};
+	struct spdk_nvmf_subsystem subsys = {};
+	struct spdk_nvmf_ctrlr ctrlr = { .subsys = &subsys };
+	struct spdk_nvmf_qpair qpair = { .ctrlr = &ctrlr };
+	struct spdk_nvmf_request req = { .qpair = &qpair, .rsp = &rsp };
+	struct spdk_nvmf_fabric_auth_recv_cmd cmd = {
+		.fctype = SPDK_NVMF_FABRIC_COMMAND_AUTHENTICATION_RECV
+	};
+	struct spdk_nvmf_qpair_auth *auth;
+	struct spdk_nvmf_dhchap_success1 *msg;
+	struct spdk_nvmf_auth_failure *fail;
+	uint8_t msgbuf[sizeof(*msg)];
+	int rc;
+
+	msg = (void *)msgbuf;
+	fail = (void *)msgbuf;
+	rc = nvmf_qpair_auth_init(&qpair);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	auth = qpair.auth;
+	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
+	auth->tid = 8;
+
+	/* Successfully receive a success message */
+	ut_prep_recv_cmd(&req, &cmd, msgbuf, sizeof(*msg));
+	g_req_completed = false;
+	auth->state = NVMF_QPAIR_AUTH_SUCCESS1;
+
+	nvmf_auth_recv_exec(&req);
+	CU_ASSERT(g_req_completed);
+	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_COMPLETED);
+	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ENABLED);
+	CU_ASSERT_EQUAL(msg->auth_type, SPDK_NVMF_AUTH_TYPE_DHCHAP);
+	CU_ASSERT_EQUAL(msg->auth_id, SPDK_NVMF_AUTH_ID_DHCHAP_SUCCESS1);
+	CU_ASSERT_EQUAL(msg->t_id, 8);
+	CU_ASSERT_EQUAL(msg->hl, 48);
+	CU_ASSERT_EQUAL(msg->rvalid, 0);
+	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
+
+	/* Bad message length (smaller than success1 message) */
+	ut_prep_recv_cmd(&req, &cmd, msgbuf, sizeof(*msg));
+	g_req_completed = false;
+	auth->state = NVMF_QPAIR_AUTH_SUCCESS1;
+	cmd.al = req.iov[0].iov_len = req.length = sizeof(*msg) - 1;
+
+	nvmf_auth_recv_exec(&req);
+	CU_ASSERT(g_req_completed);
+	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_ERROR);
+	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
+	CU_ASSERT_EQUAL(fail->auth_type, SPDK_NVMF_AUTH_TYPE_COMMON_MESSAGE);
+	CU_ASSERT_EQUAL(fail->auth_id, SPDK_NVMF_AUTH_ID_FAILURE1);
+	CU_ASSERT_EQUAL(fail->t_id, 8);
+	CU_ASSERT_EQUAL(fail->rc, SPDK_NVMF_AUTH_FAILURE);
+	CU_ASSERT_EQUAL(fail->rce, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
+	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
+	cmd.al = req.iov[0].iov_len = req.length = sizeof(*msg);
+
+	nvmf_qpair_auth_destroy(&qpair);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -870,6 +938,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_auth_failure1);
 	CU_ADD_TEST(suite, test_auth_challenge);
 	CU_ADD_TEST(suite, test_auth_reply);
+	CU_ADD_TEST(suite, test_auth_success1);
 
 	allocate_threads(1);
 	set_thread(0);
