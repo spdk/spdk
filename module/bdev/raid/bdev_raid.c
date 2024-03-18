@@ -2140,6 +2140,7 @@ _raid_bdev_remove_base_bdev(struct raid_base_bdev_info *base_info,
 		 * base bdevs, only the number of discovered base bdevs.
 		 */
 		raid_bdev_free_base_bdev_resource(base_info);
+		base_info->remove_scheduled = false;
 		if (raid_bdev->num_base_bdevs_discovered == 0) {
 			/* There is no base bdev for this raid, so free the raid device. */
 			raid_bdev_cleanup_and_free(raid_bdev);
