@@ -304,6 +304,48 @@ function raid_state_function_test() {
 		return 1
 	fi
 
+	if [ $num_base_bdevs -gt 2 ]; then
+		# Test removing and re-adding base bdevs when in CONFIGURING state
+		for ((i = 1; i < num_base_bdevs; i++)); do
+			$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b ${base_bdevs[$i]}
+			waitforbdev ${base_bdevs[$i]}
+		done
+		$rpc_py bdev_raid_create $strip_size_create_arg $superblock_create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
+		verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size $num_base_bdevs
+
+		$rpc_py bdev_raid_remove_base_bdev ${base_bdevs[1]}
+		verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size $num_base_bdevs
+		[[ $($rpc_py bdev_raid_get_bdevs all | jq '.[0].base_bdevs_list[1].is_configured') == "false" ]]
+
+		$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b ${base_bdevs[0]}
+		waitforbdev ${base_bdevs[0]}
+		verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size $num_base_bdevs
+		[[ $($rpc_py bdev_raid_get_bdevs all | jq '.[0].base_bdevs_list[0].is_configured') == "true" ]]
+
+		$rpc_py bdev_raid_remove_base_bdev ${base_bdevs[2]}
+		verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size $num_base_bdevs
+		[[ $($rpc_py bdev_raid_get_bdevs all | jq '.[0].base_bdevs_list[2].is_configured') == "false" ]]
+
+		$rpc_py bdev_raid_add_base_bdev $raid_bdev_name ${base_bdevs[2]}
+		verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size $num_base_bdevs
+		[[ $($rpc_py bdev_raid_get_bdevs all | jq '.[0].base_bdevs_list[2].is_configured') == "true" ]]
+
+		$rpc_py bdev_malloc_delete ${base_bdevs[0]}
+		verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size $num_base_bdevs
+		[[ $($rpc_py bdev_raid_get_bdevs all | jq '.[0].base_bdevs_list[0].is_configured') == "false" ]]
+
+		$rpc_py bdev_raid_add_base_bdev $raid_bdev_name ${base_bdevs[1]}
+		verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size $num_base_bdevs
+		[[ $($rpc_py bdev_raid_get_bdevs all | jq '.[0].base_bdevs_list[1].is_configured') == "true" ]]
+
+		$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b NewBaseBdev -u "$($rpc_py bdev_raid_get_bdevs all | jq -r '.[0].base_bdevs_list[0].uuid')"
+		waitforbdev NewBaseBdev
+		verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $num_base_bdevs
+		verify_raid_bdev_properties $raid_bdev_name
+
+		$rpc_py bdev_raid_delete $raid_bdev_name
+	fi
+
 	killprocess $raid_pid
 
 	return 0

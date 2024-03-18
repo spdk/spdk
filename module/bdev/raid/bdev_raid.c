@@ -3236,10 +3236,26 @@ raid_bdev_add_base_bdev(struct raid_bdev *raid_bdev, const char *name,
 		return -EPERM;
 	}
 
-	RAID_FOR_EACH_BASE_BDEV(raid_bdev, iter) {
-		if (iter->name == NULL) {
-			base_info = iter;
-			break;
+	if (raid_bdev->state == RAID_BDEV_STATE_CONFIGURING) {
+		struct spdk_bdev *bdev = spdk_bdev_get_by_name(name);
+
+		if (bdev != NULL) {
+			RAID_FOR_EACH_BASE_BDEV(raid_bdev, iter) {
+				if (iter->name == NULL &&
+				    spdk_uuid_compare(&bdev->uuid, &iter->uuid) == 0) {
+					base_info = iter;
+					break;
+				}
+			}
+		}
+	}
+
+	if (base_info == NULL || raid_bdev->state == RAID_BDEV_STATE_ONLINE) {
+		RAID_FOR_EACH_BASE_BDEV(raid_bdev, iter) {
+			if (iter->name == NULL && spdk_uuid_is_null(&iter->uuid)) {
+				base_info = iter;
+				break;
+			}
 		}
 	}
 
@@ -3254,15 +3270,6 @@ raid_bdev_add_base_bdev(struct raid_bdev *raid_bdev, const char *name,
 	if (raid_bdev->state == RAID_BDEV_STATE_ONLINE) {
 		assert(base_info->data_size != 0);
 		assert(base_info->desc == NULL);
-	}
-
-	if (!spdk_uuid_is_null(&base_info->uuid)) {
-		char uuid_str[SPDK_UUID_STRING_LEN];
-
-		spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &base_info->uuid);
-		SPDK_ERRLOG("Slot %u on raid bdev '%s' already assigned to bdev with uuid %s\n",
-			    raid_bdev_base_bdev_slot(base_info), raid_bdev->bdev.name, uuid_str);
-		return -EBUSY;
 	}
 
 	base_info->name = strdup(name);
@@ -3334,8 +3341,9 @@ raid_bdev_examine_no_sb(struct spdk_bdev *bdev)
 			continue;
 		}
 		RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-			if (base_info->desc == NULL && base_info->name != NULL &&
-			    strcmp(bdev->name, base_info->name) == 0) {
+			if (base_info->desc == NULL &&
+			    ((base_info->name != NULL && strcmp(bdev->name, base_info->name) == 0) ||
+			     spdk_uuid_compare(&base_info->uuid, &bdev->uuid) == 0)) {
 				raid_bdev_configure_base_bdev(base_info, true, NULL, NULL);
 				break;
 			}
