@@ -13,6 +13,7 @@ TEST_TIMEOUT=1200
 # The term transport is used a bit loosely for vhost tests.
 allowed_nvme_transports=("rdma" "tcp")
 allowed_vhost_transports=("scsi" "blk" "all")
+allowed_iscsi_transports=("tcp")
 bad_transport=true
 config_params="--enable-asan --enable-ubsan --enable-debug"
 
@@ -37,6 +38,9 @@ if [ "$TEST_MODULE" == "nvmf" ]; then
 elif [ "$TEST_MODULE" == "vhost" ]; then
 	allowed_transports=("${allowed_vhost_transports[@]}")
 	config_params="$config_params --with-vhost --with-virtio"
+elif [ "$TEST_MODULE" == "iscsi" ]; then
+	allowed_transports=("${allowed_iscsi_transports[@]}")
+	config_params="$config_params --with-iscsi-initiator"
 else
 	echo "Invalid module specified. Please specify either nvmf or vhost."
 	exit 1
