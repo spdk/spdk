@@ -498,6 +498,13 @@ nvmf_bdev_ctrlr_write_zeroes_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
+	if (spdk_unlikely(cmd->cdw12_bits.write_zeroes.deac)) {
+		SPDK_ERRLOG("Write Zeroes Deallocate is not supported\n");
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
 	rc = spdk_bdev_write_zeroes_blocks(desc, ch, start_lba, num_blocks,
 					   nvmf_bdev_ctrlr_complete_cmd, req);
 	if (spdk_unlikely(rc)) {

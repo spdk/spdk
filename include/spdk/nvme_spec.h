@@ -1322,6 +1322,24 @@ union spdk_nvme_cmd_cdw12 {
 		uint32_t lr        : 1;
 	} copy;
 
+	struct {
+		/* Number of Logical Blocks */
+		uint32_t nlb       : 16;
+		uint32_t reserved  : 8;
+		/* Storage Tag Check */
+		uint32_t stc       : 1;
+		/* Deallocate */
+		uint32_t deac      : 1;
+		/* Protection Information Check */
+		uint32_t prchk     : 3;
+		/* Protection Information Action */
+		uint32_t pract     : 1;
+		/* Force Unit Access */
+		uint32_t fua       : 1;
+		/* Limited Retry */
+		uint32_t lr        : 1;
+	} write_zeroes;
+
 	union spdk_nvme_feat_fdp_cdw12 feat_fdp_cdw12;
 	union spdk_nvme_feat_fdp_events_cdw12 feat_fdp_events_cdw12;
 };
