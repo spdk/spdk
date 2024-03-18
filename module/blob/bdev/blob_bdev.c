@@ -445,6 +445,27 @@ bdev_blob_is_zeroes(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_count)
 }
 
 static bool
+bdev_blob_is_range_valid(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_count)
+{
+	struct spdk_bdev *bdev = __get_bdev(dev);
+
+	/* The lba requested should be within the bounds of this bs_dev. */
+	if (lba >= spdk_bdev_get_num_blocks(bdev)) {
+		return false;
+	} else if (lba + lba_count > spdk_bdev_get_num_blocks(bdev)) {
+		/* bdevs used for esnaps must currently be an exact multiple of the
+		 * blobstore cluster size (see spdk_lvol_create_esnap_clone()), but if that
+		 * ever changes this code here needs to be updated to account for it. */
+		SPDK_ERRLOG("Entire range must be within the bs_dev bounds for CoW.\n"
+			    "lba(lba_count): %lu(%lu), num_blks: %lu\n", lba, lba_count, spdk_bdev_get_num_blocks(bdev));
+		assert(false);
+		return false;
+	}
+
+	return true;
+}
+
+static bool
 bdev_blob_translate_lba(struct spdk_bs_dev *dev, uint64_t lba, uint64_t *base_lba)
 {
 	*base_lba = lba;
@@ -479,6 +500,7 @@ blob_bdev_init(struct blob_bdev *b, struct spdk_bdev_desc *desc)
 	}
 	b->bs_dev.get_base_bdev = bdev_blob_get_base_bdev;
 	b->bs_dev.is_zeroes = bdev_blob_is_zeroes;
+	b->bs_dev.is_range_valid = bdev_blob_is_range_valid;
 	b->bs_dev.translate_lba = bdev_blob_translate_lba;
 }
 

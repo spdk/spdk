@@ -1801,6 +1801,13 @@ bs_dev_degraded_is_zeroes(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_co
 	return false;
 }
 
+static bool
+bs_dev_degraded_is_range_valid(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_count)
+{
+	assert(false);
+	return false;
+}
+
 static struct spdk_io_channel *
 bs_dev_degraded_create_channel(struct spdk_bs_dev *bs_dev)
 {
@@ -1833,6 +1840,7 @@ static struct spdk_bs_dev bs_dev_degraded = {
 	.readv = bs_dev_degraded_readv,
 	.readv_ext = bs_dev_degraded_readv_ext,
 	.is_zeroes = bs_dev_degraded_is_zeroes,
+	.is_range_valid = bs_dev_degraded_is_range_valid,
 	.is_degraded = bs_dev_degraded_is_degraded,
 	/* Make the device as large as possible without risk of uint64 overflow. */
 	.blockcnt = UINT64_MAX / 512,

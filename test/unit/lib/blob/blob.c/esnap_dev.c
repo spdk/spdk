@@ -222,6 +222,26 @@ ut_esnap_is_zeroes(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_count)
 	return false;
 }
 
+static bool
+ut_esnap_is_range_valid(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_count)
+{
+	struct ut_esnap_dev	*ut_dev = (struct ut_esnap_dev *)dev;
+
+	if (lba >= ut_dev->ut_opts.num_blocks) {
+		return false;
+	} else if (lba + lba_count > ut_dev->ut_opts.num_blocks) {
+		/* bdevs used for esnaps must currently be an exact multiple of the
+		 * blobstore cluster size (see spdk_lvol_create_esnap_clone()), but if that
+		 * ever changes this code here needs to be updated to account for it. */
+		SPDK_ERRLOG("Entire range must be within the bs_dev bounds for CoW.\n"
+			    "lba(lba_count): %lu(%lu), num_blks: %lu\n", lba, lba_count, ut_dev->ut_opts.num_blocks);
+		assert(false);
+		return false;
+	}
+
+	return true;
+}
+
 static int
 ut_esnap_io_channel_create(void *io_device, void *ctx)
 {
@@ -305,6 +325,7 @@ ut_esnap_dev_alloc(const struct ut_esnap_opts *opts)
 	bs_dev->readv = ut_esnap_readv;
 	bs_dev->readv_ext = ut_esnap_readv_ext;
 	bs_dev->is_zeroes = ut_esnap_is_zeroes;
+	bs_dev->is_range_valid = ut_esnap_is_range_valid;
 	bs_dev->translate_lba = ut_esnap_translate_lba;
 
 	spdk_io_device_register(ut_dev, ut_esnap_io_channel_create, ut_esnap_io_channel_destroy,

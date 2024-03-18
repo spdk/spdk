@@ -2736,6 +2736,7 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 	uint32_t cluster_number;
 	bool is_zeroes;
 	bool can_copy;
+	bool is_valid_range;
 	uint64_t copy_src_lba;
 	int rc;
 
@@ -2768,9 +2769,18 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 	ctx->page = cluster_start_page;
 	ctx->new_cluster_page = ch->new_cluster_page;
 	memset(ctx->new_cluster_page, 0, SPDK_BS_PAGE_SIZE);
-	can_copy = blob_can_copy(blob, cluster_start_page, &copy_src_lba);
 
-	is_zeroes = blob->back_bs_dev->is_zeroes(blob->back_bs_dev,
+	/* Check if the cluster that we intend to do CoW for is valid for
+	 * the backing dev. For zeroes backing dev, it'll be always valid.
+	 * For other backing dev e.g. a snapshot, it could be invalid if
+	 * the blob has been resized after snapshot was taken. */
+	is_valid_range = blob->back_bs_dev->is_range_valid(blob->back_bs_dev,
+			 bs_dev_page_to_lba(blob->back_bs_dev, cluster_start_page),
+			 bs_dev_byte_to_lba(blob->back_bs_dev, blob->bs->cluster_sz));
+
+	can_copy = is_valid_range && blob_can_copy(blob, cluster_start_page, &copy_src_lba);
+
+	is_zeroes = is_valid_range && blob->back_bs_dev->is_zeroes(blob->back_bs_dev,
 			bs_dev_page_to_lba(blob->back_bs_dev, cluster_start_page),
 			bs_dev_byte_to_lba(blob->back_bs_dev, blob->bs->cluster_sz));
 	if (blob->parent_id != SPDK_BLOBID_INVALID && !is_zeroes && !can_copy) {

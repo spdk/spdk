@@ -230,6 +230,10 @@ struct spdk_bs_dev {
 	struct spdk_bdev *(*get_base_bdev)(struct spdk_bs_dev *dev);
 
 	bool (*is_zeroes)(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_count);
+	/* Is the lba range we are looking for valid or not for this bs_dev. Used to
+	 * check if we can safely reference the bs_dev during CoW or perhaps even
+	 * during read. */
+	bool (*is_range_valid)(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_count);
 
 	/* Translate blob lba to lba on the underlying bdev.
 	 * This operation recurses down the whole chain of bs_dev's.

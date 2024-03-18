@@ -125,6 +125,12 @@ zeroes_is_zeroes(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_count)
 }
 
 static bool
+zeroes_is_range_valid(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_count)
+{
+	return true;
+}
+
+static bool
 zeroes_translate_lba(struct spdk_bs_dev *dev, uint64_t lba, uint64_t *base_lba)
 {
 	return false;
@@ -145,6 +151,7 @@ static struct spdk_bs_dev g_zeroes_bs_dev = {
 	.write_zeroes = zeroes_write_zeroes,
 	.unmap = zeroes_unmap,
 	.is_zeroes = zeroes_is_zeroes,
+	.is_range_valid = zeroes_is_range_valid,
 	.translate_lba = zeroes_translate_lba,
 };
 
