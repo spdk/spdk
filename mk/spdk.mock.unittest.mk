@@ -3,7 +3,7 @@
 #  All rights reserved.
 #
 
-SPDK_MOCK_SYSCALLS += \
+SPDK_MOCK_SYMBOLS += \
 	calloc \
 	pthread_mutexattr_init \
 	pthread_mutex_init \
@@ -21,8 +21,8 @@ ifeq ($(OS),Windows)
 # is called. For other compilers, --wrap is not supported so the layer
 # implements an alternative mechanism to enable mocking.
 ifeq ($(CC_TYPE),gcc)
-LDFLAGS += $(call add_wrap_with_prefix,wpdk_,$(SPDK_MOCK_SYSCALLS))
+LDFLAGS += $(call add_wrap_with_prefix,wpdk_,$(SPDK_MOCK_SYMBOLS))
 endif
 else
-LDFLAGS += $(call add_wrap_with_prefix,,$(SPDK_MOCK_SYSCALLS))
+LDFLAGS += $(call add_wrap_with_prefix,,$(SPDK_MOCK_SYMBOLS))
 endif

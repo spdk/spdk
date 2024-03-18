@@ -8,7 +8,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 TEST_FILE = rpc_ut.c
 
-SPDK_MOCK_SYSCALLS = \
+SPDK_MOCK_SYMBOLS = \
 	open \
 	close \
 	flock \
