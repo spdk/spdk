@@ -4,6 +4,8 @@
  *   All rights reserved.
  */
 
+#include "spdk/assert.h"
+
 #include "ftl_layout_upgrade.h"
 #include "ftl_layout.h"
 #include "ftl_sb_current.h"
@@ -284,7 +286,7 @@ ftl_layout_upgrade_init_ctx(struct spdk_ftl_dev *dev, struct ftl_layout_upgrade_
 	if (!ctx->reg) {
 		ctx->reg = ftl_layout_region_get(dev, 0);
 		ctx->upgrade = &layout_upgrade_desc[0];
-		static_assert(FTL_LAYOUT_REGION_TYPE_SB == 0, "Invalid SB region type");
+		SPDK_STATIC_ASSERT(FTL_LAYOUT_REGION_TYPE_SB == 0, "Invalid SB region type");
 	}
 
 	return layout_upgrade_select_next_region(dev, ctx);
