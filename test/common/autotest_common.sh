@@ -896,6 +896,18 @@ function waitforbdev() {
 	return 1
 }
 
+function waitforcondition() {
+	local cond=$1
+	local max=${2:-10}
+	while ((max--)); do
+		if eval $cond; then
+			return 0
+		fi
+		sleep 1
+	done
+	return 1
+}
+
 function make_filesystem() {
 	local fstype=$1
 	local dev_name=$2
