@@ -2159,7 +2159,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     def bdev_raid_create(args):
         base_bdevs = []
-        for u in args.base_bdevs.strip().split(" "):
+        for u in args.base_bdevs.strip().split():
             base_bdevs.append(u)
 
         rpc.bdev.bdev_raid_create(args.client,

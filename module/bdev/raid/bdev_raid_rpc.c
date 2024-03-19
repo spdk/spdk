@@ -278,6 +278,15 @@ rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 	}
 	num_base_bdevs = req->base_bdevs.num_base_bdevs;
 
+	for (i = 0; i < num_base_bdevs; i++) {
+		if (strlen(req->base_bdevs.base_bdevs[i]) == 0) {
+			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
+							     "The base bdev name cannot be empty: %s",
+							     spdk_strerror(EINVAL));
+			goto cleanup;
+		}
+	}
+
 	rc = raid_bdev_create(req->name, req->strip_size_kb, num_base_bdevs,
 			      req->level, req->superblock_enabled, &req->uuid, &raid_bdev);
 	if (rc != 0) {
