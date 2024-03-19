@@ -1854,7 +1854,6 @@ raid_bdev_deconfigure(struct raid_bdev *raid_bdev, raid_bdev_destruct_cb cb_fn,
 	}
 
 	raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
-	assert(raid_bdev->num_base_bdevs_discovered);
 	SPDK_DEBUGLOG(bdev_raid, "raid bdev state changing from online to offline\n");
 
 	spdk_bdev_unregister(&raid_bdev->bdev, cb_fn, cb_arg);
@@ -1889,9 +1888,20 @@ raid_bdev_find_base_info_by_bdev(struct spdk_bdev *base_bdev)
 static void
 raid_bdev_remove_base_bdev_done(struct raid_base_bdev_info *base_info, int status)
 {
-	assert(base_info->remove_scheduled);
+	struct raid_bdev *raid_bdev = base_info->raid_bdev;
 
+	assert(base_info->remove_scheduled);
 	base_info->remove_scheduled = false;
+
+	if (status == 0) {
+		raid_bdev->num_base_bdevs_operational--;
+		if (raid_bdev->num_base_bdevs_operational < raid_bdev->min_base_bdevs_operational) {
+			/* There is not enough base bdevs to keep the raid bdev operational. */
+			raid_bdev_deconfigure(raid_bdev, base_info->remove_cb, base_info->remove_cb_ctx);
+			return;
+		}
+	}
+
 	if (base_info->remove_cb != NULL) {
 		base_info->remove_cb(base_info->remove_cb_ctx, status);
 	}
@@ -2088,7 +2098,15 @@ raid_bdev_process_base_bdev_remove(struct raid_bdev_process *process,
 	 */
 	ctx->base_info = base_info;
 	ctx->process = process;
-	ctx->num_base_bdevs_operational = process->raid_bdev->num_base_bdevs_operational;
+	/*
+	 * raid_bdev->num_base_bdevs_operational can't be used here because it is decremented
+	 * after the removal and more than one base bdev may be removed at the same time
+	 */
+	RAID_FOR_EACH_BASE_BDEV(process->raid_bdev, base_info) {
+		if (!base_info->remove_scheduled && base_info->desc != NULL) {
+			ctx->num_base_bdevs_operational++;
+		}
+	}
 
 	spdk_thread_send_msg(process->thread, _raid_bdev_process_base_bdev_remove, ctx);
 
@@ -2112,8 +2130,6 @@ _raid_bdev_remove_base_bdev(struct raid_base_bdev_info *base_info,
 
 	assert(base_info->desc);
 	base_info->remove_scheduled = true;
-	base_info->remove_cb = cb_fn;
-	base_info->remove_cb_ctx = cb_ctx;
 
 	if (raid_bdev->state != RAID_BDEV_STATE_ONLINE) {
 		/*
@@ -2131,21 +2147,25 @@ _raid_bdev_remove_base_bdev(struct raid_base_bdev_info *base_info,
 		if (cb_fn != NULL) {
 			cb_fn(cb_ctx, 0);
 		}
-	} else if (raid_bdev->num_base_bdevs_operational-- == raid_bdev->min_base_bdevs_operational) {
-		/*
-		 * After this base bdev is removed there will not be enough base bdevs
-		 * to keep the raid bdev operational.
-		 */
+	} else if (raid_bdev->min_base_bdevs_operational == raid_bdev->num_base_bdevs) {
+		/* This raid bdev does not tolerate removing a base bdev. */
+		raid_bdev->num_base_bdevs_operational--;
 		raid_bdev_deconfigure(raid_bdev, cb_fn, cb_ctx);
-	} else if (raid_bdev->process != NULL) {
-		ret = raid_bdev_process_base_bdev_remove(raid_bdev->process, base_info);
 	} else {
-		ret = raid_bdev_remove_base_bdev_quiesce(base_info);
+		base_info->remove_cb = cb_fn;
+		base_info->remove_cb_ctx = cb_ctx;
+
+		if (raid_bdev->process != NULL) {
+			ret = raid_bdev_process_base_bdev_remove(raid_bdev->process, base_info);
+		} else {
+			ret = raid_bdev_remove_base_bdev_quiesce(base_info);
+		}
+
+		if (ret != 0) {
+			base_info->remove_scheduled = false;
+		}
 	}
 
-	if (ret != 0) {
-		base_info->remove_scheduled = false;
-	}
 	return ret;
 }
 
