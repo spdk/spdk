@@ -3248,6 +3248,12 @@ raid_bdev_attach_base_bdev(struct raid_bdev *raid_bdev, struct spdk_bdev *base_b
 
 	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
+	if (raid_bdev->process != NULL) {
+		SPDK_ERRLOG("raid bdev '%s' is in process\n",
+			    raid_bdev->bdev.name);
+		return -EPERM;
+	}
+
 	if (raid_bdev->state != RAID_BDEV_STATE_ONLINE) {
 		SPDK_ERRLOG("raid bdev '%s' must be in online state to attach base bdev\n",
 			    raid_bdev->bdev.name);
