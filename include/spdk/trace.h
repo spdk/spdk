@@ -113,7 +113,7 @@ struct spdk_trace_history {
 	struct spdk_trace_entry		entries[0];
 };
 
-#define SPDK_TRACE_MAX_LCORE		128
+#define SPDK_TRACE_MAX_LCORE		1024
 
 struct spdk_trace_file {
 	uint64_t			file_size;
