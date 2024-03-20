@@ -554,7 +554,9 @@ test_nvme_cuse_stop(void)
 	nvme_cuse_stop(&ctrlr);
 	CU_ASSERT(g_ctrlr_started == NULL);
 	CU_ASSERT(TAILQ_EMPTY(&g_ctrlr_ctx_head));
-	while (g_device_fdgrp != NULL);
+	while (g_device_fdgrp != NULL) {
+		sched_yield();
+	}
 }
 
 static void
