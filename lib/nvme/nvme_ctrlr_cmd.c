@@ -152,11 +152,14 @@ nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cnt
 {
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
+	int		     rc;
 
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	req = nvme_allocate_request_user_copy(ctrlr->adminq,
 					      payload, payload_size,
 					      cb_fn, cb_arg, false);
 	if (req == NULL) {
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -ENOMEM;
 	}
 
@@ -167,7 +170,10 @@ nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cnt
 	cmd->cdw11_bits.identify.csi = csi;
 	cmd->nsid = nsid;
 
-	return nvme_ctrlr_submit_admin_request(ctrlr, req);
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
+
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+	return rc;
 }
 
 int
