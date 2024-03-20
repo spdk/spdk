@@ -253,8 +253,7 @@ if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
 fi
 
 if grep -q '#define SPDK_CONFIG_NVME_CUSE 1' $rootdir/include/spdk/config.h; then
-	# See https://github.com/spdk/spdk/issues/3307 for rationale behind use of --fair-sched in this ut
-	run_test "unittest_nvme_cuse" ${valgrind:+$valgrind --fair-sched=yes} "$testdir/lib/nvme/nvme_cuse.c/nvme_cuse_ut"
+	run_test "unittest_nvme_cuse" $valgrind $testdir/lib/nvme/nvme_cuse.c/nvme_cuse_ut
 fi
 
 run_test "unittest_nvmf" unittest_nvmf
