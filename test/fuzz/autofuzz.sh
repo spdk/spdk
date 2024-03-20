@@ -10,12 +10,49 @@ source "$rootdir/test/common/autotest_common.sh"
 
 TEST_TIMEOUT=1200
 
-# The term transport is used a bit loosely for vhost tests.
-allowed_nvme_transports=("rdma" "tcp")
-allowed_vhost_transports=("scsi" "blk" "all")
-allowed_iscsi_transports=("tcp")
-bad_transport=true
-config_params="--enable-asan --enable-ubsan --enable-debug"
+function prepare_config() {
+	local allowed_transports
+	local test_module=$1
+
+	config_params=("--enable-asan" "--enable-ubsan" "--enable-debug")
+
+	case "$test_module" in
+		nvmf)
+			allowed_transports=("rdma" "tcp")
+			;;
+		vhost)
+			allowed_transports=("scsi" "blk" "all")
+			config_params+=("--with-vhost")
+			config_params+=("--with-virtio")
+			;;
+		iscsi)
+			allowed_transports=("tcp")
+			config_params+=("--with-iscsi-initiator")
+			;;
+		*)
+			echo "Invalid module specified. Please specify either nvmf, vhost or iscsi." >&2
+			return 1
+			;;
+	esac
+
+	if ! grep -q "$TEST_TRANSPORT" <(printf '%s\n' "${allowed_transports[@]}"); then
+		echo "Invalid transport. Please supply one of the following for module: $test_module." >&2
+		echo "${allowed_transports[@]}" >&2
+		return 1
+	fi
+
+	if [[ "$TEST_TRANSPORT" == "rdma" ]]; then
+		config_params+=("--with-rdma")
+	fi
+
+	printf '%s\n' "${config_params[@]}"
+}
+
+function run_fuzzer() {
+	local test_module=$1
+	# supply --iso to each test module so that it can run setup.sh.
+	"$testdir/autofuzz_$test_module.sh" --iso "--transport=$TEST_TRANSPORT" "--timeout=$TEST_TIMEOUT"
+}
 
 # These arguments are used in addition to the test arguments in autotest_common.sh
 for i in "$@"; do
@@ -30,52 +67,17 @@ for i in "$@"; do
 done
 
 timing_enter autofuzz
-if [ "$TEST_MODULE" == "nvmf" ]; then
-	allowed_transports=("${allowed_nvme_transports[@]}")
-	if [ $TEST_TRANSPORT == "rdma" ]; then
-		config_params="$config_params --with-rdma"
-	fi
-elif [ "$TEST_MODULE" == "vhost" ]; then
-	allowed_transports=("${allowed_vhost_transports[@]}")
-	config_params="$config_params --with-vhost --with-virtio"
-elif [ "$TEST_MODULE" == "iscsi" ]; then
-	allowed_transports=("${allowed_iscsi_transports[@]}")
-	config_params="$config_params --with-iscsi-initiator"
-else
-	echo "Invalid module specified. Please specify either nvmf or vhost."
-	exit 1
-fi
 
-for transport in "${allowed_transports[@]}"; do
-	if [ $transport == "$TEST_TRANSPORT" ]; then
-		bad_transport=false
-	fi
-done
-
-if $bad_transport; then
-	echo "invalid transport. Please supply one of the following for module: $TEST_MODULE."
-	echo "${allowed_transports[@]}"
-	exit 1
-fi
+config_params=($(prepare_config "$TEST_MODULE"))
 
 timing_enter make
-cd $rootdir
-./configure $config_params
+cd "$rootdir"
+./configure "${config_params[@]}"
 $MAKE $MAKEFLAGS
 timing_exit make
 
-# supply --iso to each test module so that it can run setup.sh.
 timing_enter fuzz_module
-if [ "$TEST_MODULE" == "nvmf" ]; then
-	sudo $testdir/autofuzz_nvmf.sh --iso --transport=$TEST_TRANSPORT --timeout=$TEST_TIMEOUT
-fi
-
-if [ "$TEST_MODULE" == "vhost" ]; then
-	sudo $testdir/autofuzz_vhost.sh --iso --transport=$TEST_TRANSPORT --timeout=$TEST_TIMEOUT
-fi
-
-if [ "$TEST_MODULE" == "iscsi" ]; then
-	sudo $testdir/autofuzz_iscsi.sh --iso --transport=$TEST_TRANSPORT --timeout=$TEST_TIMEOUT
-fi
+run_fuzzer "$TEST_MODULE"
 timing_exit fuzz_module
+
 timing_exit autofuzz
