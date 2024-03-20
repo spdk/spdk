@@ -102,8 +102,10 @@ struct spdk_nvmf_transport_opts {
 
 	/* Hole at bytes 61-63. */
 	uint8_t reserved61[3];
+	/* ACK timeout in milliseconds */
+	uint32_t ack_timeout;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 64, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 68, "Incorrect size");
 
 struct spdk_nvmf_listen_opts {
 	/**

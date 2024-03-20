@@ -124,6 +124,7 @@ def nvmf_create_transport(client, **params):
         disable_adaptive_irq: Disable adaptive interrupt feature - VFIO-USER specific (optional)
         disable_shadow_doorbells: disable shadow doorbell support - VFIO-USER specific (optional)
         acceptor_poll_rate: Acceptor poll period in microseconds (optional)
+        ack_timeout: ACK timeout in milliseconds (optional)
     Returns:
         True or False
     """

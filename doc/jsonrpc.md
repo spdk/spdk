@@ -8001,6 +8001,7 @@ disable_mappable_bar0       | Optional | boolean | disable client mmap() of BAR0
 disable_adaptive_irq        | Optional | boolean | Disable adaptive interrupt feature (VFIO-USER only)
 disable_shadow_doorbells    | Optional | boolean | disable shadow doorbell support (VFIO-USER only)
 zcopy                       | Optional | boolean | Use zero-copy operations if the underlying bdev supports them
+ack_timeout                 | Optional | number  | ACK timeout in milliseconds
 
 #### Example
 

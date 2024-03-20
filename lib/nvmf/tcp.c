@@ -366,6 +366,7 @@ struct tcp_psk_entry {
 struct spdk_nvmf_tcp_transport {
 	struct spdk_nvmf_transport		transport;
 	struct tcp_transport_opts               tcp_opts;
+	uint32_t				ack_timeout;
 
 	struct spdk_nvmf_tcp_poll_group		*next_pg;
 
@@ -678,7 +679,8 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		     "  in_capsule_data_size=%d, max_aq_depth=%d\n"
 		     "  num_shared_buffers=%d, c2h_success=%d,\n"
 		     "  dif_insert_or_strip=%d, sock_priority=%d\n"
-		     "  abort_timeout_sec=%d, control_msg_num=%hu\n",
+		     "  abort_timeout_sec=%d, control_msg_num=%hu\n"
+		     "  ack_timeout=%d\n",
 		     opts->max_queue_depth,
 		     opts->max_io_size,
 		     opts->max_qpairs_per_ctrlr - 1,
@@ -690,7 +692,8 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		     opts->dif_insert_or_strip,
 		     ttransport->tcp_opts.sock_priority,
 		     opts->abort_timeout_sec,
-		     ttransport->tcp_opts.control_msg_num);
+		     ttransport->tcp_opts.control_msg_num,
+		     opts->ack_timeout);
 
 	if (ttransport->tcp_opts.sock_priority > SPDK_NVMF_TCP_DEFAULT_MAX_SOCK_PRIORITY) {
 		SPDK_ERRLOG("Unsupported socket_priority=%d, the current range is: 0 to %d\n"
@@ -921,6 +924,7 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
 	opts.priority = ttransport->tcp_opts.sock_priority;
+	opts.ack_timeout = transport->opts.ack_timeout;
 	if (listen_opts->secure_channel) {
 		if (!g_tls_log) {
 			SPDK_NOTICELOG("TLS support is considered experimental\n");

@@ -2169,6 +2169,10 @@ static const struct spdk_json_object_decoder nvmf_rpc_create_transport_decoder[]
 		"acceptor_poll_rate", offsetof(struct nvmf_rpc_create_transport_ctx, opts.acceptor_poll_rate),
 		spdk_json_decode_uint32, true
 	},
+	{
+		"ack_timeout", offsetof(struct nvmf_rpc_create_transport_ctx, opts.ack_timeout),
+		spdk_json_decode_uint32, true
+	}
 };
 
 static void
