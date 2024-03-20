@@ -500,6 +500,39 @@ raid1_submit_process_request(struct raid_bdev_process_request *process_req,
 	}
 }
 
+static bool
+raid1_resize(struct raid_bdev *raid_bdev)
+{
+	int rc;
+	uint64_t min_blockcnt = UINT64_MAX;
+	struct raid_base_bdev_info *base_info;
+
+	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
+		struct spdk_bdev *base_bdev;
+
+		if (base_info->desc == NULL) {
+			continue;
+		}
+		base_bdev = spdk_bdev_desc_get_bdev(base_info->desc);
+		min_blockcnt = spdk_min(min_blockcnt, base_bdev->blockcnt - base_info->data_offset);
+	}
+
+	if (min_blockcnt == raid_bdev->bdev.blockcnt) {
+		return false;
+	}
+
+	rc = spdk_bdev_notify_blockcnt_change(&raid_bdev->bdev, min_blockcnt);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to notify blockcount change\n");
+		return false;
+	}
+
+	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
+		base_info->data_size = min_blockcnt;
+	}
+	return true;
+}
+
 static struct raid_bdev_module g_raid1_module = {
 	.level = RAID1,
 	.base_bdevs_min = 2,
@@ -510,6 +543,7 @@ static struct raid_bdev_module g_raid1_module = {
 	.submit_rw_request = raid1_submit_rw_request,
 	.get_io_channel = raid1_get_io_channel,
 	.submit_process_request = raid1_submit_process_request,
+	.resize = raid1_resize,
 };
 RAID_MODULE_REGISTER(&g_raid1_module)
 

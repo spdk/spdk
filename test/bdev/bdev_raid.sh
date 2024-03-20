@@ -343,13 +343,15 @@ function raid_state_function_test() {
 	return 0
 }
 
-function raid0_resize_test() {
+function raid_resize_test() {
+	local raid_level=$1
 	local blksize=$base_blocklen
 	local bdev_size_mb=32
 	local new_bdev_size_mb=$((bdev_size_mb * 2))
 	local blkcnt
 	local raid_size_mb
 	local new_raid_size_mb
+	local expected_size
 
 	$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -L bdev_raid &
 	raid_pid=$!
@@ -359,7 +361,11 @@ function raid0_resize_test() {
 	$rpc_py bdev_null_create Base_1 $bdev_size_mb $blksize
 	$rpc_py bdev_null_create Base_2 $bdev_size_mb $blksize
 
-	$rpc_py bdev_raid_create -z 64 -r 0 -b "Base_1 Base_2" -n Raid
+	if [ $raid_level -eq 0 ]; then
+		$rpc_py bdev_raid_create -z 64 -r $raid_level -b "Base_1 Base_2" -n Raid
+	else
+		$rpc_py bdev_raid_create -r $raid_level -b "Base_1 Base_2" -n Raid
+	fi
 
 	# Resize Base_1 first.
 	$rpc_py bdev_null_resize Base_1 $new_bdev_size_mb
@@ -367,7 +373,12 @@ function raid0_resize_test() {
 	# The size of Raid should not be changed.
 	blkcnt=$($rpc_py bdev_get_bdevs -b Raid | jq '.[].num_blocks')
 	raid_size_mb=$((blkcnt * blksize / 1048576))
-	if [ $raid_size_mb != $((bdev_size_mb * 2)) ]; then
+	if [ $raid_level -eq 0 ]; then
+		expected_size=$((bdev_size_mb * 2))
+	else
+		expected_size=$bdev_size_mb
+	fi
+	if [ $raid_size_mb != $expected_size ]; then
 		echo "resize failed"
 		return 1
 	fi
@@ -378,7 +389,12 @@ function raid0_resize_test() {
 	# The size of Raid should be updated to the expected value.
 	blkcnt=$($rpc_py bdev_get_bdevs -b Raid | jq '.[].num_blocks')
 	raid_size_mb=$((blkcnt * blksize / 1048576))
-	if [ $raid_size_mb != $((new_bdev_size_mb * 2)) ]; then
+	if [ $raid_level -eq 0 ]; then
+		expected_size=$((new_bdev_size_mb * 2))
+	else
+		expected_size=$new_bdev_size_mb
+	fi
+	if [ $raid_size_mb != $expected_size ]; then
 		echo "resize failed"
 		return 1
 	fi
@@ -860,7 +876,8 @@ if [ $(uname -s) = Linux ] && modprobe -n nbd; then
 	run_test "raid_function_test_concat" raid_function_test concat
 fi
 
-run_test "raid0_resize_test" raid0_resize_test
+run_test "raid0_resize_test" raid_resize_test 0
+run_test "raid1_resize_test" raid_resize_test 1
 
 for n in {2..4}; do
 	for level in raid0 concat raid1; do

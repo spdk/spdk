@@ -30,6 +30,7 @@ DEFINE_STUB_V(raid_bdev_io_init, (struct raid_bdev_io *raid_io,
 				  struct spdk_memory_domain *memory_domain, void *memory_domain_ctx));
 DEFINE_STUB(raid_bdev_remap_dix_reftag, int, (void *md_buf, uint64_t num_blocks,
 		struct spdk_bdev *bdev, uint32_t remapped_offset), -1);
+DEFINE_STUB(spdk_bdev_notify_blockcnt_change, int, (struct spdk_bdev *bdev, uint64_t size), 0);
 
 int
 spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc,
