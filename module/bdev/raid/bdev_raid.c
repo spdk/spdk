@@ -1681,18 +1681,13 @@ raid_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void 
 {
 	struct raid_bdev *raid_bdev = event_ctx;
 
-	switch (type) {
-	case SPDK_BDEV_EVENT_REMOVE:
+	if (type == SPDK_BDEV_EVENT_REMOVE) {
 		if (raid_bdev->process != NULL) {
 			spdk_thread_send_msg(raid_bdev->process->thread, raid_bdev_unregistering_stop_process,
 					     raid_bdev->process);
 		} else {
 			raid_bdev_unregistering_cont(raid_bdev);
 		}
-		break;
-	default:
-		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
-		break;
 	}
 }
 
