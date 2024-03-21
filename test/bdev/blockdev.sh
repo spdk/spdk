@@ -14,6 +14,8 @@ conf_file="$testdir/bdev.json"
 nonenclosed_conf_file="$testdir/nonenclosed.json"
 nonarray_conf_file="$testdir/nonarray.json"
 
+export RPC_PIPE_TIMEOUT=30
+
 # Make sure the configuration is clean
 : > "$conf_file"
 
