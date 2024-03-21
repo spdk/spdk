@@ -2222,6 +2222,7 @@ raid_bdev_resize_base_bdev(struct spdk_bdev *base_bdev)
 {
 	struct raid_bdev *raid_bdev;
 	struct raid_base_bdev_info *base_info;
+	uint64_t blockcnt_old;
 
 	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_resize_base_bdev\n");
 
@@ -2243,9 +2244,13 @@ raid_bdev_resize_base_bdev(struct spdk_bdev *base_bdev)
 		return;
 	}
 
+	blockcnt_old = raid_bdev->bdev.blockcnt;
 	if (raid_bdev->module->resize(raid_bdev) == false) {
 		return;
 	}
+
+	SPDK_NOTICELOG("raid bdev '%s': block count was changed from %" PRIu64 " to %" PRIu64 "\n",
+		       raid_bdev->bdev.name, blockcnt_old, raid_bdev->bdev.blockcnt);
 
 	if (raid_bdev->superblock_enabled) {
 		struct raid_bdev_superblock *sb = raid_bdev->sb;

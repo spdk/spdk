@@ -427,11 +427,6 @@ raid0_resize(struct raid_bdev *raid_bdev)
 		return false;
 	}
 
-	SPDK_NOTICELOG("raid0 '%s': min blockcount was changed from %" PRIu64 " to %" PRIu64 "\n",
-		       raid_bdev->bdev.name,
-		       raid_bdev->bdev.blockcnt,
-		       blockcnt);
-
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
 		base_info->data_size = base_bdev_data_size;
 	}
