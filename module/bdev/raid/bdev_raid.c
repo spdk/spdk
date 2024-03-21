@@ -2198,6 +2198,15 @@ raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev, raid_base_bdev_cb cb_fn,
 	return _raid_bdev_remove_base_bdev(base_info, cb_fn, cb_ctx);
 }
 
+static void
+raid_bdev_resize_write_sb_cb(int status, struct raid_bdev *raid_bdev, void *ctx)
+{
+	if (status != 0) {
+		SPDK_ERRLOG("Failed to write raid bdev '%s' superblock after resizing the bdev: %s\n",
+			    raid_bdev->bdev.name, spdk_strerror(-status));
+	}
+}
+
 /*
  * brief:
  * raid_bdev_resize_base_bdev function is called by below layers when base_bdev
@@ -2230,8 +2239,28 @@ raid_bdev_resize_base_bdev(struct spdk_bdev *base_bdev)
 	SPDK_NOTICELOG("base_bdev '%s' was resized: old size %" PRIu64 ", new size %" PRIu64 "\n",
 		       base_bdev->name, base_info->blockcnt, base_bdev->blockcnt);
 
-	if (raid_bdev->module->resize) {
-		raid_bdev->module->resize(raid_bdev);
+	if (!raid_bdev->module->resize) {
+		return;
+	}
+
+	if (raid_bdev->module->resize(raid_bdev) == false) {
+		return;
+	}
+
+	if (raid_bdev->superblock_enabled) {
+		struct raid_bdev_superblock *sb = raid_bdev->sb;
+		uint8_t i;
+
+		for (i = 0; i < sb->base_bdevs_size; i++) {
+			struct raid_bdev_sb_base_bdev *sb_base_bdev = &sb->base_bdevs[i];
+
+			if (sb_base_bdev->state == RAID_SB_BASE_BDEV_CONFIGURED) {
+				base_info = &raid_bdev->base_bdev_info[sb_base_bdev->slot];
+				sb_base_bdev->data_size = base_info->data_size;
+			}
+		}
+		sb->raid_size = raid_bdev->bdev.blockcnt;
+		raid_bdev_write_superblock(raid_bdev, raid_bdev_resize_write_sb_cb, NULL);
 	}
 }
 

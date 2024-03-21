@@ -329,9 +329,11 @@ struct raid_bdev_module {
 
 	/*
 	 * Called when a base_bdev is resized to resize the raid if the condition
-	 * is satisfied.
+	 * is satisfied. Optional.
+	 *
+	 * Returns true if the resize was performed.
 	 */
-	void (*resize)(struct raid_bdev *raid_bdev);
+	bool (*resize)(struct raid_bdev *raid_bdev);
 
 	/* Handler for raid process requests. Required for raid modules with redundancy. */
 	int (*submit_process_request)(struct raid_bdev_process_request *process_req,
