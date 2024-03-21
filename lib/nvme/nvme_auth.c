@@ -20,6 +20,24 @@
 	SPDK_ERRLOG("[%s:%s:%u] " fmt, (q)->ctrlr->trid.subnqn, (q)->ctrlr->opts.hostnqn, \
 		    (q)->id, ## __VA_ARGS__)
 
+const char *nvme_auth_get_digest_name(uint8_t id);
+
+const char *
+nvme_auth_get_digest_name(uint8_t id)
+{
+	const char *names[] = {
+		[SPDK_NVMF_DHCHAP_HASH_SHA256] = "sha256",
+		[SPDK_NVMF_DHCHAP_HASH_SHA384] = "sha384",
+		[SPDK_NVMF_DHCHAP_HASH_SHA512] = "sha512",
+	};
+
+	if (id >= SPDK_COUNTOF(names)) {
+		return NULL;
+	}
+
+	return names[id];
+}
+
 static uint8_t
 nvme_auth_get_digest_len(uint8_t id)
 {
