@@ -2235,6 +2235,8 @@ raid_bdev_resize_base_bdev(struct spdk_bdev *base_bdev)
 	SPDK_NOTICELOG("base_bdev '%s' was resized: old size %" PRIu64 ", new size %" PRIu64 "\n",
 		       base_bdev->name, base_info->blockcnt, base_bdev->blockcnt);
 
+	base_info->blockcnt = base_bdev->blockcnt;
+
 	if (!raid_bdev->module->resize) {
 		return;
 	}
