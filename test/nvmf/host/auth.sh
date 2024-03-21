@@ -51,19 +51,6 @@ nvmet_auth_set_key() {
 	[[ -z "$ckey" ]] || echo "$ckey" > "$nvmet_host/dhchap_ctrl_key"
 }
 
-gen_key() {
-	local digest len file key
-	local -A digests=([null]=0 [sha256]=1 [sha384]=2 [sha512]=3)
-
-	digest="$1" len=$2
-	key=$(xxd -p -c0 -l $((len / 2)) /dev/urandom)
-	file=$(mktemp -t "spdk.key-$1.XXX")
-	format_dhchap_key "$key" "${digests[$1]}" > "$file"
-	chmod 0600 "$file"
-
-	echo "$file"
-}
-
 connect_authenticate() {
 	local digest dhgroup keyid ckey
 
@@ -83,11 +70,11 @@ nvmfappstart -L nvme_auth &> "$output_dir/nvme-auth.log"
 trap "cat "$output_dir/nvme-auth.log"; cleanup" SIGINT SIGTERM EXIT
 
 # Set host/ctrlr key pairs with one combination w/o bidirectional authentication
-keys[0]=$(gen_key "null" 32) ckeys[0]=$(gen_key "sha512" 64)
-keys[1]=$(gen_key "null" 48) ckeys[1]=$(gen_key "sha384" 48)
-keys[2]=$(gen_key "sha256" 32) ckeys[2]=$(gen_key "sha256" 32)
-keys[3]=$(gen_key "sha384" 48) ckeys[3]=$(gen_key "null" 32)
-keys[4]=$(gen_key "sha512" 64) ckeys[4]=""
+keys[0]=$(gen_dhchap_key "null" 32) ckeys[0]=$(gen_dhchap_key "sha512" 64)
+keys[1]=$(gen_dhchap_key "null" 48) ckeys[1]=$(gen_dhchap_key "sha384" 48)
+keys[2]=$(gen_dhchap_key "sha256" 32) ckeys[2]=$(gen_dhchap_key "sha256" 32)
+keys[3]=$(gen_dhchap_key "sha384" 48) ckeys[3]=$(gen_dhchap_key "null" 32)
+keys[4]=$(gen_dhchap_key "sha512" 64) ckeys[4]=""
 
 waitforlisten "$nvmfpid"
 for i in "${!keys[@]}"; do

@@ -719,6 +719,19 @@ format_dhchap_key() {
 	format_key "DHHC-1" "$1" "$2"
 }
 
+gen_dhchap_key() {
+	local digest len file key
+	local -A digests=([null]=0 [sha256]=1 [sha384]=2 [sha512]=3)
+
+	digest="$1" len=$2
+	key=$(xxd -p -c0 -l $((len / 2)) /dev/urandom)
+	file=$(mktemp -t "spdk.key-$1.XXX")
+	format_dhchap_key "$key" "${digests[$1]}" > "$file"
+	chmod 0600 "$file"
+
+	echo "$file"
+}
+
 get_main_ns_ip() {
 	# Determine which ip to use based on nvmftestinit() setup. For tcp we pick
 	# interface which resides in the main net namespace and which is visible
