@@ -561,7 +561,7 @@ function rpc_cmd() {
 		return 0
 	fi
 
-	while read -t 15 -ru $RPC_PIPE_OUTPUT rsp; do
+	while read -t "${RPC_PIPE_TIMEOUT:-15}" -ru $RPC_PIPE_OUTPUT rsp; do
 		if [[ $rsp == "**STATUS="* ]]; then
 			status[${rsp#*=}]=$rsp
 			if ((++status_number == cmds_number)); then
