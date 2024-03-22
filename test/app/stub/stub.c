@@ -138,6 +138,7 @@ main(int argc, char **argv)
 
 	opts.name = "stub";
 	opts.rpc_addr = NULL;
+	opts.env_context = "--proc-type=primary";
 
 	while ((ch = getopt(argc, argv, "i:m:n:p:q:s:t:H")) != -1) {
 		if (ch == 'm') {
