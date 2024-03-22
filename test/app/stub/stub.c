@@ -14,6 +14,7 @@ static char g_path[256];
 static struct spdk_poller *g_poller;
 /* default sleep time in ms */
 static uint32_t g_sleep_time = 1000;
+static uint32_t g_io_queue_size;
 
 struct ctrlr_entry {
 	struct spdk_nvme_ctrlr *ctrlr;
@@ -51,6 +52,7 @@ usage(char *executable_name)
 	printf(" -p core    main (primary) core for DPDK\n");
 	printf(" -s size    memory size in MB for DPDK\n");
 	printf(" -t msec    sleep time (ms) between checking for admin completions\n");
+	printf(" -q size    override default io_queue_size when attaching controllers\n");
 	printf(" -H         show this usage\n");
 }
 
@@ -58,11 +60,9 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
-	/*
-	 * Set the io_queue_size to UINT16_MAX to initialize
-	 * the controller with the possible largest queue size.
-	 */
-	opts->io_queue_size = UINT16_MAX;
+	if (g_io_queue_size > 0) {
+		opts->io_queue_size = g_io_queue_size;
+	}
 	return true;
 }
 
@@ -139,7 +139,7 @@ main(int argc, char **argv)
 	opts.name = "stub";
 	opts.rpc_addr = NULL;
 
-	while ((ch = getopt(argc, argv, "i:m:n:p:s:t:H")) != -1) {
+	while ((ch = getopt(argc, argv, "i:m:n:p:q:s:t:H")) != -1) {
 		if (ch == 'm') {
 			opts.reactor_mask = optarg;
 		} else if (ch == '?' || ch == 'H') {
@@ -166,6 +166,9 @@ main(int argc, char **argv)
 				break;
 			case 't':
 				g_sleep_time = val;
+				break;
+			case 'q':
+				g_io_queue_size = val;
 				break;
 			default:
 				usage(argv[0]);
