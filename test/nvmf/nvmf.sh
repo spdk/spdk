@@ -54,6 +54,7 @@ run_test "nvmf_zcopy" $rootdir/test/nvmf/target/zcopy.sh "${TEST_ARGS[@]}"
 run_test "nvmf_nmic" $rootdir/test/nvmf/target/nmic.sh "${TEST_ARGS[@]}"
 run_test "nvmf_fio_target" $rootdir/test/nvmf/target/fio.sh "${TEST_ARGS[@]}"
 run_test "nvmf_bdevio" $rootdir/test/nvmf/target/bdevio.sh "${TEST_ARGS[@]}"
+run_test "nvmf_auth_target" "$rootdir/test/nvmf/target/auth.sh" "${TEST_ARGS[@]}"
 
 if [ "$SPDK_TEST_NVMF_TRANSPORT" = "tcp" ]; then
 	run_test "nvmf_bdevio_no_huge" $rootdir/test/nvmf/target/bdevio.sh "${TEST_ARGS[@]}" --no-hugepages
@@ -100,7 +101,7 @@ run_test "nvmf_host_discovery" $rootdir/test/nvmf/host/discovery.sh "${TEST_ARGS
 run_test "nvmf_host_multipath_status" $rootdir/test/nvmf/host/multipath_status.sh "${TEST_ARGS[@]}"
 run_test "nvmf_discovery_remove_ifc" $rootdir/test/nvmf/host/discovery_remove_ifc.sh "${TEST_ARGS[@]}"
 run_test "nvmf_identify_kernel_target" "$rootdir/test/nvmf/host/identify_kernel_nvmf.sh" "${TEST_ARGS[@]}"
-run_test "nvmf_auth" "$rootdir/test/nvmf/host/auth.sh" "${TEST_ARGS[@]}"
+run_test "nvmf_auth_host" "$rootdir/test/nvmf/host/auth.sh" "${TEST_ARGS[@]}"
 
 if [[ "$SPDK_TEST_NVMF_TRANSPORT" == "tcp" ]]; then
 	run_test "nvmf_digest" "$rootdir/test/nvmf/host/digest.sh" "${TEST_ARGS[@]}"
