@@ -259,6 +259,7 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	struct spdk_nvmf_transport *transport;
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_thread *thread = spdk_get_thread();
+	uint32_t i;
 	int rc;
 
 	group->tgt = tgt;
@@ -284,6 +285,10 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	if (!group->sgroups) {
 		nvmf_tgt_cleanup_poll_group(group);
 		return -ENOMEM;
+	}
+
+	for (i = 0; i < tgt->max_subsystems; i++) {
+		TAILQ_INIT(&group->sgroups[i].queued);
 	}
 
 	for (subsystem = spdk_nvmf_subsystem_get_first(tgt);
@@ -1632,9 +1637,19 @@ nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 {
 	int rc = 0;
 	struct spdk_nvmf_subsystem_poll_group *sgroup = &group->sgroups[subsystem->id];
+	struct spdk_nvmf_request *req, *tmp;
 	uint32_t i;
 
-	TAILQ_INIT(&sgroup->queued);
+	if (!TAILQ_EMPTY(&sgroup->queued)) {
+		SPDK_ERRLOG("sgroup->queued not empty when adding subsystem\n");
+		TAILQ_FOREACH_SAFE(req, &sgroup->queued, link, tmp) {
+			TAILQ_REMOVE(&sgroup->queued, req, link);
+			if (nvmf_transport_req_free(req)) {
+				SPDK_ERRLOG("Transport request free error!\n");
+			}
+		}
+		assert(false);
+	}
 
 	rc = poll_group_update_subsystem(group, subsystem);
 	if (rc) {
