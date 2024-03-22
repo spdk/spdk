@@ -568,57 +568,69 @@ vq_desc_guest_handle_completed_desc(struct spdk_vhost_virtqueue *vq, int16_t *gu
 static void
 vq_packed_ring_test(void)
 {
-	struct spdk_vhost_session vs = {};
-	struct spdk_vhost_virtqueue vq = {};
+
+	struct spdk_vhost_session *vs;
+	struct spdk_vhost_virtqueue *vq;
 	struct vring_packed_desc descs[4];
 	uint16_t guest_last_avail_idx = 0, guest_last_used_idx = 0;
 	uint16_t guest_avail_phase = 1, guest_used_phase = 1;
 	int i;
+	int rc;
 	int16_t chain_num;
 
-	vq.vring.desc_packed = descs;
-	vq.vring.size = 4;
+	/* See SPDK issue #3004 and #3310 Seems like a bug with gcc + asan on
+	 * Fedora 38, so we need to explicitly align the variable here.
+	 */
+	rc = posix_memalign((void **)&vs, SPDK_CACHE_LINE_SIZE, sizeof(*vs));
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	rc = posix_memalign((void **)&vq, SPDK_CACHE_LINE_SIZE, sizeof(*vq));
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	memset(vs, 0, sizeof(*vs));
+	memset(vq, 0, sizeof(*vq));
+
+	vq->vring.desc_packed = descs;
+	vq->vring.size = 4;
 
 	/* avail and used wrap counter are initialized to 1 */
-	vq.packed.avail_phase = 1;
-	vq.packed.used_phase = 1;
-	vq.packed.packed_ring = true;
+	vq->packed.avail_phase = 1;
+	vq->packed.used_phase = 1;
+	vq->packed.packed_ring = true;
 	memset(descs, 0, sizeof(descs));
 
-	CU_ASSERT(vhost_vq_packed_ring_is_avail(&vq) == false);
+	CU_ASSERT(vhost_vq_packed_ring_is_avail(vq) == false);
 
 	/* Guest send requests */
-	for (i = 0; i < vq.vring.size; i++) {
+	for (i = 0; i < vq->vring.size; i++) {
 		descs[guest_last_avail_idx].id = i;
 		/* Set the desc available */
-		vq_desc_guest_set_avail(&vq, &guest_last_avail_idx, &guest_avail_phase);
+		vq_desc_guest_set_avail(vq, &guest_last_avail_idx, &guest_avail_phase);
 	}
 	CU_ASSERT(guest_last_avail_idx == 0);
 	CU_ASSERT(guest_avail_phase == 0);
 
 	/* Host handle available descs */
-	CU_ASSERT(vhost_vq_packed_ring_is_avail(&vq) == true);
+	CU_ASSERT(vhost_vq_packed_ring_is_avail(vq) == true);
 	i = 0;
-	while (vhost_vq_packed_ring_is_avail(&vq)) {
-		CU_ASSERT(vhost_vring_packed_desc_get_buffer_id(&vq, vq.last_avail_idx, &chain_num) == i++);
+	while (vhost_vq_packed_ring_is_avail(vq)) {
+		CU_ASSERT(vhost_vring_packed_desc_get_buffer_id(vq, vq->last_avail_idx, &chain_num) == i++);
 		CU_ASSERT(chain_num == 1);
 	}
 
 	/* Host complete them out of order: 1, 0, 2. */
-	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 1, 1, 0);
-	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 0, 1, 0);
-	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 2, 1, 0);
+	vhost_vq_packed_ring_enqueue(vs, vq, 1, 1, 1, 0);
+	vhost_vq_packed_ring_enqueue(vs, vq, 1, 0, 1, 0);
+	vhost_vq_packed_ring_enqueue(vs, vq, 1, 2, 1, 0);
 
 	/* Host has got all the available request but only complete three requests */
-	CU_ASSERT(vq.last_avail_idx == 0);
-	CU_ASSERT(vq.packed.avail_phase == 0);
-	CU_ASSERT(vq.last_used_idx == 3);
-	CU_ASSERT(vq.packed.used_phase == 1);
+	CU_ASSERT(vq->last_avail_idx == 0);
+	CU_ASSERT(vq->packed.avail_phase == 0);
+	CU_ASSERT(vq->last_used_idx == 3);
+	CU_ASSERT(vq->packed.used_phase == 1);
 
 	/* Guest handle completed requests */
-	CU_ASSERT(vq_desc_guest_handle_completed_desc(&vq, &guest_last_used_idx, &guest_used_phase) == 1);
-	CU_ASSERT(vq_desc_guest_handle_completed_desc(&vq, &guest_last_used_idx, &guest_used_phase) == 0);
-	CU_ASSERT(vq_desc_guest_handle_completed_desc(&vq, &guest_last_used_idx, &guest_used_phase) == 2);
+	CU_ASSERT(vq_desc_guest_handle_completed_desc(vq, &guest_last_used_idx, &guest_used_phase) == 1);
+	CU_ASSERT(vq_desc_guest_handle_completed_desc(vq, &guest_last_used_idx, &guest_used_phase) == 0);
+	CU_ASSERT(vq_desc_guest_handle_completed_desc(vq, &guest_last_used_idx, &guest_used_phase) == 2);
 	CU_ASSERT(guest_last_used_idx == 3);
 	CU_ASSERT(guest_used_phase == 1);
 
@@ -626,39 +638,41 @@ vq_packed_ring_test(void)
 	for (i = 0; i < 3; i++) {
 		descs[guest_last_avail_idx].id = 2 - i;
 		/* Set the desc available */
-		vq_desc_guest_set_avail(&vq, &guest_last_avail_idx, &guest_avail_phase);
+		vq_desc_guest_set_avail(vq, &guest_last_avail_idx, &guest_avail_phase);
 	}
 
 	/* Host handle available descs */
-	CU_ASSERT(vhost_vq_packed_ring_is_avail(&vq) == true);
+	CU_ASSERT(vhost_vq_packed_ring_is_avail(vq) == true);
 	i = 2;
-	while (vhost_vq_packed_ring_is_avail(&vq)) {
-		CU_ASSERT(vhost_vring_packed_desc_get_buffer_id(&vq, vq.last_avail_idx, &chain_num) == i--);
+	while (vhost_vq_packed_ring_is_avail(vq)) {
+		CU_ASSERT(vhost_vring_packed_desc_get_buffer_id(vq, vq->last_avail_idx, &chain_num) == i--);
 		CU_ASSERT(chain_num == 1);
 	}
 
 	/* There are four requests in Host, the new three ones and left one */
-	CU_ASSERT(vq.last_avail_idx == 3);
+	CU_ASSERT(vq->last_avail_idx == 3);
 	/* Available wrap conter should overturn */
-	CU_ASSERT(vq.packed.avail_phase == 0);
+	CU_ASSERT(vq->packed.avail_phase == 0);
 
 	/* Host complete all the requests */
-	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 1, 1, 0);
-	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 0, 1, 0);
-	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 3, 1, 0);
-	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 2, 1, 0);
+	vhost_vq_packed_ring_enqueue(vs, vq, 1, 1, 1, 0);
+	vhost_vq_packed_ring_enqueue(vs, vq, 1, 0, 1, 0);
+	vhost_vq_packed_ring_enqueue(vs, vq, 1, 3, 1, 0);
+	vhost_vq_packed_ring_enqueue(vs, vq, 1, 2, 1, 0);
 
-	CU_ASSERT(vq.last_used_idx == vq.last_avail_idx);
-	CU_ASSERT(vq.packed.used_phase == vq.packed.avail_phase);
+	CU_ASSERT(vq->last_used_idx == vq->last_avail_idx);
+	CU_ASSERT(vq->packed.used_phase == vq->packed.avail_phase);
 
 	/* Guest handle completed requests */
-	CU_ASSERT(vq_desc_guest_handle_completed_desc(&vq, &guest_last_used_idx, &guest_used_phase) == 1);
-	CU_ASSERT(vq_desc_guest_handle_completed_desc(&vq, &guest_last_used_idx, &guest_used_phase) == 0);
-	CU_ASSERT(vq_desc_guest_handle_completed_desc(&vq, &guest_last_used_idx, &guest_used_phase) == 3);
-	CU_ASSERT(vq_desc_guest_handle_completed_desc(&vq, &guest_last_used_idx, &guest_used_phase) == 2);
+	CU_ASSERT(vq_desc_guest_handle_completed_desc(vq, &guest_last_used_idx, &guest_used_phase) == 1);
+	CU_ASSERT(vq_desc_guest_handle_completed_desc(vq, &guest_last_used_idx, &guest_used_phase) == 0);
+	CU_ASSERT(vq_desc_guest_handle_completed_desc(vq, &guest_last_used_idx, &guest_used_phase) == 3);
+	CU_ASSERT(vq_desc_guest_handle_completed_desc(vq, &guest_last_used_idx, &guest_used_phase) == 2);
 
 	CU_ASSERT(guest_last_avail_idx == guest_last_used_idx);
 	CU_ASSERT(guest_avail_phase == guest_used_phase);
+	free(vq);
+	free(vs);
 }
 
 static void
