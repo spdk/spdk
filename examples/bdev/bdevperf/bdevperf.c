@@ -1292,6 +1292,7 @@ bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 		task->io_type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
 	} else if ((job->rw_percentage == 100) ||
 		   (job->rw_percentage != 0 && ((rand_r(&job->seed) % 100) < job->rw_percentage))) {
+		assert(!job->verify);
 		task->io_type = SPDK_BDEV_IO_TYPE_READ;
 	} else {
 		if (job->verify || job->reset || g_unique_writes) {
@@ -1706,7 +1707,9 @@ job_init_rw(struct bdevperf_job *job, enum job_config_rw rw)
 		break;
 	case JOB_CONFIG_RW_VERIFY:
 		job->verify = true;
-		job->rw_percentage = 50;
+		/* For verify flow read is done on write completion
+		 * callback only, rw_percentage shall not be used. */
+		job->rw_percentage = 0;
 		break;
 	case JOB_CONFIG_RW_RESET:
 		job->reset = true;
