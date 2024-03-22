@@ -102,6 +102,13 @@ stub_start(void *arg1)
 {
 	int shm_id = (intptr_t)arg1;
 
+	snprintf(g_path, sizeof(g_path), "/var/run/spdk_stub%d", shm_id);
+
+	/* If sentinel file already exists from earlier crashed stub, delete
+	 * it now to avoid mknod() failure after spdk_nvme_probe() completes.
+	 */
+	unlink(g_path);
+
 	spdk_unaffinitize_thread();
 
 	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
@@ -109,7 +116,6 @@ stub_start(void *arg1)
 		exit(1);
 	}
 
-	snprintf(g_path, sizeof(g_path), "/var/run/spdk_stub%d", shm_id);
 	if (mknod(g_path, S_IFREG, 0) != 0) {
 		fprintf(stderr, "could not create sentinel file %s\n", g_path);
 		exit(1);
