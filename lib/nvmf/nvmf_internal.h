@@ -518,6 +518,7 @@ int nvmf_qpair_auth_init(struct spdk_nvmf_qpair *qpair);
 void nvmf_qpair_auth_destroy(struct spdk_nvmf_qpair *qpair);
 
 int nvmf_auth_request_exec(struct spdk_nvmf_request *req);
+bool nvmf_auth_is_supported(void);
 
 static inline bool
 nvmf_request_is_fabric_connect(struct spdk_nvmf_request *req)

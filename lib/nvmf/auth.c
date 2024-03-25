@@ -89,4 +89,10 @@ nvmf_qpair_auth_destroy(struct spdk_nvmf_qpair *qpair)
 	free(qpair->auth);
 	qpair->auth = NULL;
 }
+
+bool
+nvmf_auth_is_supported(void)
+{
+	return true;
+}
 SPDK_LOG_REGISTER_COMPONENT(nvmf_auth)

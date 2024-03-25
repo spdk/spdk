@@ -71,6 +71,7 @@ DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid, int,
 DEFINE_STUB(spdk_key_dup, struct spdk_key *, (struct spdk_key *k), NULL);
 DEFINE_STUB(spdk_key_get_name, const char *, (struct spdk_key *k), NULL);
 DEFINE_STUB_V(spdk_keyring_put_key, (struct spdk_key *k));
+DEFINE_STUB(nvmf_auth_is_supported, bool, (void), false);
 
 static struct spdk_nvmf_transport g_transport = {};
 

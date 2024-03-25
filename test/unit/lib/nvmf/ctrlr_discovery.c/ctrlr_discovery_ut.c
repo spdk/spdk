@@ -83,6 +83,7 @@ DEFINE_STUB(spdk_bdev_get_max_zone_append_size, uint32_t,
 DEFINE_STUB(spdk_key_dup, struct spdk_key *, (struct spdk_key *k), NULL);
 DEFINE_STUB(spdk_key_get_name, const char *, (struct spdk_key *k), NULL);
 DEFINE_STUB_V(spdk_keyring_put_key, (struct spdk_key *k));
+DEFINE_STUB(nvmf_auth_is_supported, bool, (void), false);
 
 DEFINE_STUB(spdk_bdev_get_nvme_ctratt, union spdk_bdev_nvme_ctratt,
 	    (struct spdk_bdev *bdev), {});
