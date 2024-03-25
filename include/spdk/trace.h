@@ -171,8 +171,8 @@ void _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
 			uint32_t size, uint64_t object_id, int num_args, ...);
 
 #define spdk_trace_tpoint_enabled(tpoint_id)	\
-	(g_trace_file != NULL  && \
-	((1ULL << (tpoint_id & 0x3F)) &	g_trace_file->tpoint_mask[tpoint_id >> 6]))
+	spdk_unlikely((g_trace_file != NULL  && \
+	((1ULL << (tpoint_id & 0x3F)) &	g_trace_file->tpoint_mask[tpoint_id >> 6])))
 
 #define _spdk_trace_record_tsc(tsc, tpoint_id, poller_id, size, object_id, num_args, ...)	\
 	do {											\

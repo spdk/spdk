@@ -131,7 +131,7 @@ static inline void
 spdk_sock_request_queue(struct spdk_sock *sock, struct spdk_sock_request *req)
 {
 	assert(req->internal.curr_list == NULL);
-	if (spdk_unlikely(spdk_trace_tpoint_enabled(TRACE_SOCK_REQ_QUEUE))) {
+	if (spdk_trace_tpoint_enabled(TRACE_SOCK_REQ_QUEUE)) {
 		uint64_t len = 0;
 		int i;
 
