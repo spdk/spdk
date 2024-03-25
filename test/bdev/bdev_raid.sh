@@ -260,13 +260,6 @@ function raid_state_function_test() {
 	verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size $num_base_bdevs
 	$rpc_py bdev_raid_delete $raid_bdev_name
 
-	if [ $superblock = true ]; then
-		# recreate the bdev to remove superblock
-		$rpc_py bdev_malloc_delete ${base_bdevs[0]}
-		$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b ${base_bdevs[0]}
-		waitforbdev ${base_bdevs[0]}
-	fi
-
 	# Step3: create remaining base bdevs and add to the RAID bdev
 	# Expect state: ONLINE
 	$rpc_py bdev_raid_create $strip_size_create_arg $superblock_create_arg -r $raid_level -b "${base_bdevs[*]}" -n $raid_bdev_name
