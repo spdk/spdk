@@ -3330,6 +3330,9 @@ raid_bdev_examine_no_sb(struct spdk_bdev *bdev)
 	struct raid_base_bdev_info *base_info;
 
 	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
+		if (raid_bdev->state != RAID_BDEV_STATE_CONFIGURING || raid_bdev->sb != NULL) {
+			continue;
+		}
 		RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
 			if (base_info->desc == NULL && base_info->name != NULL &&
 			    strcmp(bdev->name, base_info->name) == 0) {
