@@ -3353,7 +3353,8 @@ raid_bdev_examine_no_sb(struct spdk_bdev *bdev)
 }
 
 static void
-raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bdev)
+raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bdev,
+		     raid_base_bdev_cb cb_fn, void *cb_ctx)
 {
 	const struct raid_bdev_sb_base_bdev *sb_base_bdev = NULL;
 	struct raid_bdev *raid_bdev;
@@ -3364,12 +3365,14 @@ raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bd
 	if (sb->block_size != spdk_bdev_get_data_block_size(bdev)) {
 		SPDK_WARNLOG("Bdev %s block size (%u) does not match the value in superblock (%u)\n",
 			     bdev->name, sb->block_size, spdk_bdev_get_data_block_size(bdev));
-		return;
+		rc = -EINVAL;
+		goto out;
 	}
 
 	if (spdk_uuid_is_null(&sb->uuid)) {
 		SPDK_WARNLOG("NULL raid bdev UUID in superblock on bdev %s\n", bdev->name);
-		return;
+		rc = -EINVAL;
+		goto out;
 	}
 
 	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
@@ -3387,7 +3390,8 @@ raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bd
 			if (raid_bdev->state != RAID_BDEV_STATE_CONFIGURING) {
 				SPDK_WARNLOG("Newer version of raid bdev %s superblock found on bdev %s but raid bdev is not in configuring state.\n",
 					     raid_bdev->bdev.name, bdev->name);
-				return;
+				rc = -EBUSY;
+				goto out;
 			}
 
 			/* remove and then recreate the raid bdev using the newer superblock */
@@ -3414,7 +3418,8 @@ raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bd
 
 	if (i == sb->base_bdevs_size) {
 		SPDK_DEBUGLOG(bdev_raid, "raid superblock does not contain this bdev's uuid\n");
-		return;
+		rc = -EINVAL;
+		goto out;
 	}
 
 	if (!raid_bdev) {
@@ -3422,14 +3427,15 @@ raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bd
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to create raid bdev %s: %s\n",
 				    sb->name, spdk_strerror(-rc));
-			return;
+			goto out;
 		}
 	}
 
 	if (sb_base_bdev->state != RAID_SB_BASE_BDEV_CONFIGURED) {
 		SPDK_NOTICELOG("Bdev %s is not an active member of raid bdev %s. Ignoring.\n",
 			       bdev->name, raid_bdev->bdev.name);
-		return;
+		rc = -EINVAL;
+		goto out;
 	}
 
 	base_info = NULL;
@@ -3443,13 +3449,18 @@ raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bd
 	if (base_info == NULL) {
 		SPDK_ERRLOG("Bdev %s is not a member of raid bdev %s\n",
 			    bdev->name, raid_bdev->bdev.name);
-		return;
+		rc = -EINVAL;
+		goto out;
 	}
 
-	rc = raid_bdev_configure_base_bdev(base_info, true, NULL, NULL);
+	rc = raid_bdev_configure_base_bdev(base_info, true, cb_fn, cb_ctx);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to configure bdev %s as base bdev of raid %s: %s\n",
 			    bdev->name, raid_bdev->bdev.name, spdk_strerror(-rc));
+	}
+out:
+	if (rc != 0 && cb_fn != 0) {
+		cb_fn(cb_ctx, rc);
 	}
 }
 
@@ -3486,7 +3497,7 @@ raid_bdev_examine_load_sb_cb(const struct raid_bdev_superblock *sb, int status, 
 	case 0:
 		/* valid superblock found */
 		SPDK_DEBUGLOG(bdev_raid, "raid superblock found on bdev %s\n", bdev->name);
-		raid_bdev_examine_sb(sb, bdev);
+		raid_bdev_examine_sb(sb, bdev, NULL, NULL);
 		break;
 	case -EINVAL:
 		/* no valid superblock, check if it can be claimed anyway */
