@@ -165,9 +165,7 @@ spdk_rpc_initialize(const char *listen_addr, const struct spdk_rpc_opts *opts)
 	if (init_server->server == NULL) {
 		SPDK_ERRLOG("Unable to start RPC service at %s\n", listen_addr);
 		free(init_server);
-		/* TODO: Eventually, treat this as an error. But it historically has not
-		 * been and many tests rely on this gracefully failing. */
-		return 0;
+		return -EINVAL;
 	}
 
 	rpc_set_spdk_log_opts(opts);

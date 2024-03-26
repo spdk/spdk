@@ -57,8 +57,25 @@ test_skip_rpc_with_delay() {
 	NOT $SPDK_BIN_DIR/spdk_tgt --no-rpc-server -m 0x1 --wait-for-rpc
 }
 
+test_exit_on_failed_rpc_init() {
+	$SPDK_BIN_DIR/spdk_tgt -m 0x1 &
+	local spdk_pid=$!
+	waitforlisten $spdk_pid
+
+	trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
+	# RPC listening sockets must be unique for each SPDK instance, so this will fail
+	NOT $SPDK_BIN_DIR/spdk_tgt -m 0x2
+
+	trap - SIGINT SIGTERM EXIT
+	killprocess $spdk_pid
+}
+
 run_test "skip_rpc" test_skip_rpc
 run_test "skip_rpc_with_json" test_skip_rpc_with_json
 run_test "skip_rpc_with_delay" test_skip_rpc_with_delay
+# Only one DPDK process can run under FreeBSD (see lib/eal/freebsd/eal_hugepage_info.c in DPDK)
+if [ $(uname) != "FreeBSD" ]; then
+	run_test "exit_on_failed_rpc_init" test_exit_on_failed_rpc_init
+fi
 
 rm $CONFIG_PATH
