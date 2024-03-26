@@ -604,12 +604,8 @@ function raid_rebuild_test() {
 
 	# Create base bdevs
 	for bdev in "${base_bdevs[@]}"; do
-		if [ $superblock = true ]; then
-			$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b ${bdev}_malloc
-			$rpc_py bdev_passthru_create -b ${bdev}_malloc -p $bdev
-		else
-			$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b $bdev
-		fi
+		$rpc_py bdev_malloc_create 32 $base_blocklen $base_malloc_params -b ${bdev}_malloc
+		$rpc_py bdev_passthru_create -b ${bdev}_malloc -p $bdev
 	done
 
 	# Create spare bdev
