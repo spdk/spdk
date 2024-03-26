@@ -1078,14 +1078,20 @@ struct spdk_bdev_io {
 	/** Enumerated value representing the I/O type. */
 	uint8_t type;
 
+	uint8_t reserved0;
+
 	/** Number of IO submission retries */
 	uint16_t num_retries;
+
+	uint32_t reserved1;
 
 	/** A single iovec element for use by this bdev_io. */
 	struct iovec iov;
 
 	/** Array of iovecs used for I/O splitting. */
 	struct iovec child_iov[SPDK_BDEV_IO_NUM_CHILD_IOV];
+
+	uint8_t reserved2[32];
 
 	/** Parameters filled in by the user */
 	union {
@@ -1095,6 +1101,8 @@ struct spdk_bdev_io {
 		struct spdk_bdev_io_nvme_passthru_params nvme_passthru;
 		struct spdk_bdev_io_zone_mgmt_params zone_mgmt;
 	} u;
+
+	uint64_t reserved3;
 
 	/**
 	 *  Fields that are used internally by the bdev subsystem.  Bdev modules
@@ -1109,6 +1117,8 @@ struct spdk_bdev_io {
 
 	/* No members may be added after driver_ctx! */
 };
+SPDK_STATIC_ASSERT(offsetof(struct spdk_bdev_io, driver_ctx) % SPDK_CACHE_LINE_SIZE == 0,
+		   "driver_ctx not cache line aligned");
 
 /**
  * Register a new bdev.
