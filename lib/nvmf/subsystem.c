@@ -781,6 +781,20 @@ spdk_nvmf_subsystem_get_next(struct spdk_nvmf_subsystem *subsystem)
 	return RB_NEXT(subsystem_tree, &tgt->subsystems, subsystem);
 }
 
+static int
+nvmf_ns_add_host(struct spdk_nvmf_ns *ns, const char *hostnqn)
+{
+	struct spdk_nvmf_host *host;
+
+	host = calloc(1, sizeof(*host));
+	if (!host) {
+		return -ENOMEM;
+	}
+	snprintf(host->nqn, sizeof(host->nqn), "%s", hostnqn);
+	TAILQ_INSERT_HEAD(&ns->hosts, host, link);
+	return 0;
+}
+
 static void
 nvmf_ns_remove_host(struct spdk_nvmf_ns *ns, struct spdk_nvmf_host *host)
 {
@@ -811,6 +825,7 @@ nvmf_ns_visible(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_nvmf_ns *ns;
 	struct spdk_nvmf_ctrlr *ctrlr;
 	struct spdk_nvmf_host *host;
+	int rc;
 
 	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
 	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
@@ -839,12 +854,10 @@ nvmf_ns_visible(struct spdk_nvmf_subsystem *subsystem,
 	/* Save host info to use for any future controllers. */
 	host = nvmf_ns_find_host(ns, hostnqn);
 	if (visible && host == NULL) {
-		host = calloc(1, sizeof(*host));
-		if (!host) {
-			return -ENOMEM;
+		rc = nvmf_ns_add_host(ns, hostnqn);
+		if (rc) {
+			return rc;
 		}
-		snprintf(host->nqn, sizeof(host->nqn), "%s", hostnqn);
-		TAILQ_INSERT_HEAD(&ns->hosts, host, link);
 	} else if (!visible && host != NULL) {
 		nvmf_ns_remove_host(ns, host);
 	}
