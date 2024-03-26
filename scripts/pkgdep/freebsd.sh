@@ -15,7 +15,7 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	pkg install -g -y "py*-pycodestyle"
 	# ruby and ruby-gems are not preinstalled on FreeBSD but are needed to
 	# build mdl - make sure they are in place.
-	pkg install -y ruby devel/ruby-gems
+	pkg install -y ruby devel/ruby-gems rubygem-{bundler,rake}
 fi
 if [[ $INSTALL_DOCS == "true" ]]; then
 	# Additional dependencies for building docs

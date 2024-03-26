@@ -30,7 +30,7 @@ apt-get install -y systemtap-sdt-dev
 if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
 	apt-get install -y git astyle lcov clang sg3-utils pciutils shellcheck \
-		abigail-tools bash-completion ruby-dev pycodestyle
+		abigail-tools bash-completion ruby-dev pycodestyle bundler rake
 	# Additional dependencies for nvmf performance test script
 	apt-get install -y python3-paramiko
 fi

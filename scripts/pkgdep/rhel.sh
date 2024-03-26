@@ -175,6 +175,10 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 		devtool_pkgs+=(python-pycodestyle astyle lcov ShellCheck)
 	fi
 
+	if [[ $ID == fedora ]]; then
+		devtool_pkgs+=(rubygem-{bundler,rake})
+	fi
+
 	yum install -y "${devtool_pkgs[@]}"
 fi
 if [[ $INSTALL_PMEM == "true" ]]; then
