@@ -38,11 +38,9 @@ sleep 1
 trap 'killprocess $pid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
 
 "$rootdir/build/examples/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w verify -t 5 -s 512
-if [ $RUN_NIGHTLY -eq 1 ]; then
-	"$rootdir/build/examples/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w unmap -t 5 -s 512
-	"$rootdir/build/examples/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w flush -t 5 -s 512
-	"$rootdir/build/examples/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w reset -t 10 -s 512
-fi
+"$rootdir/build/examples/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w unmap -t 5 -s 512
+"$rootdir/build/examples/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w flush -t 5 -s 512
+"$rootdir/build/examples/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w reset -t 10 -s 512
 
 trap - SIGINT SIGTERM EXIT
 
