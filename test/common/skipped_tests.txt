@@ -42,46 +42,30 @@ nvmf_digest_dsa_initiator
 nvmf_digest_dsa_target
 
 # nightly tests
-bdev_fio_rw_verify_ext
-bdev_fio_trim_ext
 bdev_reset
 build_native_dpdk
-build_rpm_from_gen_spec
 build_shared_native_dpdk_rpm
 build_shared_rpm_with_rpmed_dpdk
-iscsi_tgt_digest
 iscsi_tgt_data_digest
 iscsi_tgt_ext4test
-iscsi_tgt_digests
-iscsi_tgt_multiconnection
-iscsi_tgt_fuzz
 nvmf_fuzz
 nvmf_multiconnection
 nvmf_initiator_timeout
-nvmf_llvm_fuzz
 vhost_blk_cores_2ctrl
 vhost_blk_fs_integrity
 vhost_blk_integrity
-vhost_blk_nightly
-vhost_lvol_integrity_1core_1ctrl
 vhost_migration
 vhost_migration_tc1
 vhost_migration_tc2
 vhost_readonly
 vhost_scsi_fs_integrity
 vhost_scsi_integrity
-vhost_scsi_nightly
 vhost_scsi_cores_2ctrl
 
 # Temporarily disabled as part of dynamic scheduler patch set
 busy
 balanced
 core_load
-
-# Temporarily disable due to https://github.com/spdk/spdk/issues/3116 (kept in nightly)
-nvmf_device_removal
-nvmf_device_removal_pci_remove
-nvmf_device_removal_pci_remove_no_srq
 
 # TODO: remove this once CI is updated with libkeyutils
 keyring_linux
