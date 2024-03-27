@@ -38,8 +38,9 @@ done
 
 timing_enter start_iscsi_tgt
 
-"${ISCSI_APP[@]}" -m $ISCSI_TEST_CORE_MASK --wait-for-rpc &> $output_dir/iscsi_autofuzz_tgt_output.txt &
+"${ISCSI_APP[@]}" -m $ISCSI_TEST_CORE_MASK --disable-cpumask-locks --wait-for-rpc &> $output_dir/iscsi_autofuzz_tgt_output.txt &
 iscsipid=$!
+echo "Process iscsipid: $iscsipid"
 
 trap 'killprocess $iscsipid; exit 1' SIGINT SIGTERM EXIT
 

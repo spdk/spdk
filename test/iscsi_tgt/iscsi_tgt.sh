@@ -38,7 +38,7 @@ run_test "iscsi_tgt_ip_migration" $rootdir/test/iscsi_tgt/ip_migration/ip_migrat
 run_test "iscsi_tgt_trace_record" $rootdir/test/iscsi_tgt/trace_record/trace_record.sh
 run_test "iscsi_tgt_login_redirection" $rootdir/test/iscsi_tgt/login_redirection/login_redirection.sh
 run_test "iscsi_tgt_digests" $rootdir/test/iscsi_tgt/digests/digests.sh
-run_test "iscsi_tgt_fuzz" $rootdir/test/iscsi_tgt/fuzz/fuzz.sh
+run_test "iscsi_tgt_fuzz" $rootdir/test/fuzz/autofuzz_iscsi.sh --timeout=30
 run_test "iscsi_tgt_multiconnection" $rootdir/test/iscsi_tgt/multiconnection/multiconnection.sh
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
