@@ -199,9 +199,14 @@ hello_sock_recv_poll(void *arg)
 			return SPDK_POLLER_IDLE;
 		}
 
-		hello_sock_quit(ctx, -1);
-		SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
-			    errno, spdk_strerror(errno));
+		/* This poller drains recv buffer until hello_sock_close_timeout_poll()
+		 * runs out. Which starts when hello_sock_quit() is called.
+		 * Quit the application just once, then patiently await the unregister. */
+		if (ctx->rc == 0) {
+			hello_sock_quit(ctx, -1);
+		}
+		SPDK_ERRLOG_RATELIMIT("spdk_sock_recv() failed, errno %d: %s\n",
+				      errno, spdk_strerror(errno));
 		return SPDK_POLLER_BUSY;
 	}
 
