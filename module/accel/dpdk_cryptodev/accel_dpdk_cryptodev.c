@@ -1133,24 +1133,26 @@ accel_dpdk_cryptodev_init(void)
 	uint8_t cdev_count;
 	uint8_t cdev_id;
 	int i, rc;
+	const char *driver_name = g_driver_names[g_dpdk_cryptodev_driver];
 	struct accel_dpdk_cryptodev_device *device, *tmp_dev;
 	unsigned int max_sess_size = 0, sess_size;
 	uint16_t num_lcores = rte_lcore_count();
-	char aesni_args[32];
+	char init_args[32];
 
 	/* Only the first call via module init should init the crypto drivers. */
 	if (g_session_mp != NULL) {
 		return 0;
 	}
 
-	/* We always init ACCEL_DPDK_CRYPTODEV_AESNI_MB */
-	snprintf(aesni_args, sizeof(aesni_args), "max_nb_queue_pairs=%d",
-		 ACCEL_DPDK_CRYPTODEV_AESNI_MB_NUM_QP);
-	rc = rte_vdev_init(ACCEL_DPDK_CRYPTODEV_AESNI_MB, aesni_args);
-	if (rc) {
-		SPDK_NOTICELOG("Failed to create virtual PMD %s: error %d. "
-			       "Possibly %s is not supported by DPDK library. "
-			       "Keep going...\n", ACCEL_DPDK_CRYPTODEV_AESNI_MB, rc, ACCEL_DPDK_CRYPTODEV_AESNI_MB);
+	if (g_dpdk_cryptodev_driver == ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB) {
+		snprintf(init_args, sizeof(init_args), "max_nb_queue_pairs=%d",
+			 ACCEL_DPDK_CRYPTODEV_AESNI_MB_NUM_QP);
+		rc = rte_vdev_init(driver_name, init_args);
+		if (rc) {
+			SPDK_NOTICELOG("Failed to create virtual PMD %s: error %d. "
+				       "Possibly %s is not supported by DPDK library. "
+				       "Keep going...\n", driver_name, rc, driver_name);
+		}
 	}
 
 	/* If we have no crypto devices, report error to fallback on other modules. */
@@ -1267,7 +1269,10 @@ accel_dpdk_cryptodev_fini_cb(void *io_device)
 		TAILQ_REMOVE(&g_crypto_devices, device, link);
 		accel_dpdk_cryptodev_release(device);
 	}
-	rte_vdev_uninit(ACCEL_DPDK_CRYPTODEV_AESNI_MB);
+
+	if (g_dpdk_cryptodev_driver == ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB) {
+		rte_vdev_uninit(g_driver_names[g_dpdk_cryptodev_driver]);
+	}
 
 	rte_mempool_free(g_crypto_op_mp);
 	rte_mempool_free(g_mbuf_mp);
