@@ -4894,6 +4894,11 @@ spdk_bdev_get_io_time(const struct spdk_bdev *bdev)
 	return bdev->internal.io_time;
 }
 
+union spdk_bdev_nvme_ctratt spdk_bdev_get_nvme_ctratt(struct spdk_bdev *bdev)
+{
+	return bdev->ctratt;
+}
+
 static void bdev_update_qd_sampling_period(void *ctx);
 
 static void

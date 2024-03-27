@@ -2,6 +2,10 @@
 
 ## v24.05: (Upcoming Release)
 
+### bdev
+
+Added `spdk_bdev_get_nvme_ctratt()` API to get controller attributes of bdev.
+
 ### event
 
 SPDK applications can now start with `--wait-for-rpc` and JSON configuration provided at the same time.

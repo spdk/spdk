@@ -208,6 +208,22 @@ struct spdk_bdev_opts {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_opts) == 32, "Incorrect size");
 
 /**
+ * Union for controller attributes field, to list whether bdev supports fdp etc.
+ * By convention we match the NVMe definition, allowing other bdevs to use this feature
+ */
+union spdk_bdev_nvme_ctratt {
+	uint32_t raw;
+
+	struct {
+		uint32_t reserved	: 19;
+		/* Supports flexible data placement */
+		uint32_t fdps		: 1;
+		uint32_t reserved2	: 12;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_bdev_nvme_ctratt) == 4, "Incorrect size");
+
+/**
  * Structure with optional IO request parameters
  */
 struct spdk_bdev_ext_io_opts {
@@ -2146,6 +2162,14 @@ void spdk_bdev_for_each_channel_continue(struct spdk_bdev_channel_iter *i, int s
  */
 void spdk_bdev_for_each_channel(struct spdk_bdev *bdev, spdk_bdev_for_each_channel_msg fn,
 				void *ctx, spdk_bdev_for_each_channel_done cpl);
+
+/**
+ * Get controller attributes for the bdev.
+ *
+ * \param bdev Block device to query.
+ * \return controller attributes for the bdev.
+ */
+union spdk_bdev_nvme_ctratt spdk_bdev_get_nvme_ctratt(struct spdk_bdev *bdev);
 
 #ifdef __cplusplus
 }
