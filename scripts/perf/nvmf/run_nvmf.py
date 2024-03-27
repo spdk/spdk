@@ -1317,7 +1317,7 @@ class SPDKTarget(Target):
 
             rpc.nvmf.nvmf_create_subsystem(self.client, nqn, serial,
                                            allow_any_host=True, max_namespaces=8)
-            rpc.nvmf.nvmf_subsystem_add_ns(self.client, nqn, bdev_name)
+            rpc.nvmf.nvmf_subsystem_add_ns(client=self.client, nqn=nqn, bdev_name=bdev_name)
             for nqn_name in [nqn, "discovery"]:
                 rpc.nvmf.nvmf_subsystem_add_listener(self.client,
                                                      nqn=nqn_name,
