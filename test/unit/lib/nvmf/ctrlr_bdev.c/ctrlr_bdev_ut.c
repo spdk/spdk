@@ -304,6 +304,19 @@ test_get_rw_params(void)
 }
 
 static void
+test_get_rw_ext_params(void)
+{
+	struct spdk_nvme_cmd cmd = {0};
+	struct spdk_bdev_ext_io_opts opts = {0};
+
+	to_le32(&cmd.cdw12, 0x9875 | SPDK_NVME_IO_FLAGS_DATA_PLACEMENT_DIRECTIVE);
+	to_le32(&cmd.cdw13, 0x2 << 16);
+	nvmf_bdev_ctrlr_get_rw_ext_params(&cmd, &opts);
+	CU_ASSERT(opts.nvme_cdw12.raw == 0x209875);
+	CU_ASSERT(opts.nvme_cdw13.raw == 0x20000);
+}
+
+static void
 test_lba_in_range(void)
 {
 	/* Trivial cases (no overflow) */
@@ -960,6 +973,7 @@ main(int argc, char **argv)
 	suite = CU_add_suite("nvmf", NULL, NULL);
 
 	CU_ADD_TEST(suite, test_get_rw_params);
+	CU_ADD_TEST(suite, test_get_rw_ext_params);
 	CU_ADD_TEST(suite, test_lba_in_range);
 	CU_ADD_TEST(suite, test_get_dif_ctx);
 	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_identify_ns);
