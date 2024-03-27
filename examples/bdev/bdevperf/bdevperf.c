@@ -1705,16 +1705,15 @@ job_init_rw(struct bdevperf_job *job, enum job_config_rw rw)
 		job->is_random = true;
 		job->seed = rand();
 		break;
+	case JOB_CONFIG_RW_RESET:
+		/* Reset shares the flow with verify. */
+		job->reset = true;
+	/* fallthrough */
 	case JOB_CONFIG_RW_VERIFY:
 		job->verify = true;
 		/* For verify flow read is done on write completion
 		 * callback only, rw_percentage shall not be used. */
 		job->rw_percentage = 0;
-		break;
-	case JOB_CONFIG_RW_RESET:
-		job->reset = true;
-		job->verify = true;
-		job->rw_percentage = 50;
 		break;
 	case JOB_CONFIG_RW_UNMAP:
 		job->unmap = true;
