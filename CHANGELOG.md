@@ -16,10 +16,17 @@ Added `bdev_lvol_start_shallow_copy` RPC to start a shallow copy of an lvol over
 `bdev_lvol_check_shallow_copy` RPC to get the status of the operation.
 These RPCs use the new API `spdk_lvol_shallow_copy`.
 
+Added `bdev_lvol_set_parent` and `bdev_lvol_set_parent_bdev` RPC to change the parent of an existing lvol
+with the use of the new APIs `spdk_lvol_set_parent` and `spdk_lvol_set_external_parent`.
+
 ### blobstore
 
 Added new API `spdk_bs_blob_shallow_copy` to make a shallow copy from a blob to a blobstore device. Only clusters
 allocated to the blob will be written on the device.
+
+Added new APIs `spdk_bs_blob_set_parent` and `spdk_bs_blob_set_external_parent` to change the parent of an
+existing lvol. With these new API a thin provisioned blob can become a clone of an existing snapshot
+or of an existing external snapshot.
 
 ### event
 

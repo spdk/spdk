@@ -207,4 +207,12 @@ bdev_lvol_check_shallow_copy [-h] operation_id
     Get shallow copy status
     optional arguments:
     -h, --help  show help
+bdev_lvol_set_parent [-h] lvol_name snapshot_name
+    Set the parent snapshot of a lvol
+    optional arguments:
+    -h, --help  show help
+bdev_lvol_set_parent_bdev lvol_name esnap_name
+    Set the parent external snapshot of a lvol
+    optional arguments:
+    -h, --help  show help
 ```
