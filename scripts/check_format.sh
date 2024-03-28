@@ -886,6 +886,24 @@ function get_diffed_dups() {
 	fi
 }
 
+function check_extern_c() {
+	local files_missing_extern_c=()
+
+	printf 'Checking extern "C"... '
+
+	mapfile -t files_missing_extern_c < <(
+		grep -LE "extern \"C\"" $(git ls-files -- ./include/spdk/*.h)
+	)
+
+	if ((${#files_missing_extern_c[@]} > 0)); then
+		printf '\nFollowing header files are missing extern C:\n'
+		printf '  %s\n' "${files_missing_extern_c[@]}"
+		return 1
+	fi
+
+	printf 'OK\n'
+}
+
 rc=0
 
 check_permissions || rc=1
@@ -919,5 +937,6 @@ check_json_rpc || rc=1
 check_rpc_args || rc=1
 check_spdx_lic || rc=1
 check_golang_style || rc=1
+check_extern_c || rc=1
 
 exit $rc
