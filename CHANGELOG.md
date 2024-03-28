@@ -10,6 +10,17 @@ spdk_accel_get/set_opts() has changed to act more like spdk_bdev's variant.
 
 Added `spdk_bdev_get_nvme_ctratt()` API to get controller attributes of bdev.
 
+### lvol
+
+Added `bdev_lvol_start_shallow_copy` RPC to start a shallow copy of an lvol over a given bdev and
+`bdev_lvol_check_shallow_copy` RPC to get the status of the operation.
+These RPCs use the new API `spdk_lvol_shallow_copy`.
+
+### blobstore
+
+Added new API `spdk_bs_blob_shallow_copy` to make a shallow copy from a blob to a blobstore device. Only clusters
+allocated to the blob will be written on the device.
+
 ### event
 
 SPDK applications can now start with `--wait-for-rpc` and JSON configuration provided at the same time.

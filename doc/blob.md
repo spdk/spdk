@@ -438,6 +438,14 @@ An esnap clone can be recognized in various ways:
   is set to `SPDK_BLOBID_EXTERNAL_SNAPSHOT`, and `blob->back_bs_dev` references a blobstore device
   which is not a blob in the same blobstore nor a zeroes device.
 
+#### Shallow Copy {#blob_shallow_copy}
+
+A read only blob can be copied over a blob store device in a way that only clusters
+allocated to the blob will be written on the device. This device must have a size equal or greater
+than blob's size and blob store's block size must be an integer multiple of device's block size.
+This functionality can be used to recreate the entire snapshot stack of a blob into a different blob
+store.
+
 #### Copy-on-write {#blob_pg_copy_on_write}
 
 A copy-on-write operation is somewhat expensive, with the cost being proportional to the cluster
