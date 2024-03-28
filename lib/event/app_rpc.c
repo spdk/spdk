@@ -478,6 +478,11 @@ rpc_framework_set_scheduler(struct spdk_jsonrpc_request *request,
 
 	if (req.period != 0) {
 		spdk_scheduler_set_period(req.period);
+	} else if (spdk_scheduler_get_period() == 0) {
+		/* User didn't specify a period, and no period has been set
+		 * previously, so set it now to 1 second.
+		 */
+		spdk_scheduler_set_period(SPDK_SEC_TO_USEC);
 	}
 
 	ret = spdk_scheduler_set(req.name);
