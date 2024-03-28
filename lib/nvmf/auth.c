@@ -3,6 +3,7 @@
  */
 
 #include "spdk/nvme.h"
+#include "spdk/json.h"
 #include "spdk/log.h"
 #include "spdk/stdinc.h"
 #include "spdk/string.h"
@@ -671,6 +672,24 @@ nvmf_qpair_auth_destroy(struct spdk_nvmf_qpair *qpair)
 		free(qpair->auth);
 		qpair->auth = NULL;
 	}
+}
+
+void
+nvmf_qpair_auth_dump(struct spdk_nvmf_qpair *qpair, struct spdk_json_write_ctx *w)
+{
+	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
+	const char *digest;
+
+	if (auth == NULL) {
+		return;
+	}
+
+	spdk_json_write_named_object_begin(w, "auth");
+	spdk_json_write_named_string(w, "state", nvmf_auth_get_state_name(auth->state));
+	digest = spdk_nvme_dhchap_get_digest_name(auth->digest);
+	spdk_json_write_named_string(w, "digest", digest ? digest : "unknown");
+	spdk_json_write_named_string(w, "dhgroup", "null");
+	spdk_json_write_object_end(w);
 }
 
 bool

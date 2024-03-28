@@ -522,6 +522,7 @@ void nvmf_qpair_set_state(struct spdk_nvmf_qpair *qpair, enum spdk_nvmf_qpair_st
 
 int nvmf_qpair_auth_init(struct spdk_nvmf_qpair *qpair);
 void nvmf_qpair_auth_destroy(struct spdk_nvmf_qpair *qpair);
+void nvmf_qpair_auth_dump(struct spdk_nvmf_qpair *qpair, struct spdk_json_write_ctx *w);
 
 int nvmf_auth_request_exec(struct spdk_nvmf_request *req);
 bool nvmf_auth_is_supported(void);

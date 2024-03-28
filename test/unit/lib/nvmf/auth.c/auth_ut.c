@@ -7,6 +7,7 @@
 #include "spdk_internal/mock.h"
 
 #include "common/lib/ut_multithread.c"
+#include "unit/lib/json_mock.c"
 #include "nvmf/auth.c"
 
 DEFINE_STUB(spdk_nvme_dhchap_get_digest_name, const char *, (int d), NULL);

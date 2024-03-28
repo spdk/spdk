@@ -2710,6 +2710,7 @@ dump_nvmf_qpair(struct spdk_json_write_ctx *w, struct spdk_nvmf_qpair *qpair)
 		spdk_json_write_object_end(w);
 	}
 
+	nvmf_qpair_auth_dump(qpair, w);
 	spdk_json_write_object_end(w);
 }
 
