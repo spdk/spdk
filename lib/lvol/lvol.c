@@ -1828,7 +1828,7 @@ lvs_esnap_bs_dev_create(void *bs_ctx, void *blob_ctx, struct spdk_blob *blob,
 	spdk_blob_id		blob_id = spdk_blob_get_id(blob);
 
 	if (lvs == NULL) {
-		if (lvol == NULL) {
+		if (lvol == NULL || lvol->lvol_store == NULL) {
 			SPDK_ERRLOG("Blob 0x%" PRIx64 ": no lvs context nor lvol context\n",
 				    blob_id);
 			return -EINVAL;
