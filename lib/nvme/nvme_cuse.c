@@ -799,6 +799,13 @@ cuse_ctrlr_ioctl(fuse_req_t req, int cmd, void *arg,
 		cuse_nvme_rescan(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
 		break;
 
+	case NVME_IOCTL_ID:
+		/* Return error but don't ERRLOG - nvme-cli will frequently send this
+		 * IOCTL to controller devices.
+		 */
+		fuse_reply_err(req, ENOTTY);
+		break;
+
 	case SPDK_CUSE_GET_TRANSPORT:
 		SPDK_DEBUGLOG(nvme_cuse, "SPDK_CUSE_GET_TRANSPORT\n");
 		cuse_get_transport(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
