@@ -121,6 +121,24 @@ enum spdk_log_level spdk_log_get_print_level(void);
 		}										\
 	} while (0)
 
+#define SPDK_ERRLOG_RATELIMIT(...) \
+	do {							\
+		static uint64_t last_tsc = 0;			\
+		static uint64_t squashed = 0;			\
+		uint64_t tsc = spdk_get_ticks();		\
+		if (tsc > last_tsc + spdk_get_ticks_hz()) {	\
+			last_tsc = tsc;				\
+			SPDK_ERRLOG(__VA_ARGS__);		\
+			if (squashed > 0) {			\
+				SPDK_ERRLOG("(same message squashed %" PRIu64 " times)\n", \
+					    squashed);		\
+				squashed = 0;			\
+			}					\
+		} else {					\
+			squashed++;				\
+		}						\
+	} while (0)
+
 #ifdef DEBUG
 #define SPDK_DEBUGLOG(flag, ...)								\
 	do {											\
