@@ -760,35 +760,41 @@ nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 	struct nvmf_rpc_listener_ctx *ctx = cb_arg;
 	int rc;
 
-	if (ctx->op == NVMF_RPC_LISTEN_ADD) {
-		if (!nvmf_subsystem_find_listener(subsystem, &ctx->trid)) {
-			rc = spdk_nvmf_tgt_listen_ext(ctx->tgt, &ctx->trid, &ctx->opts);
-			if (rc == 0) {
-				spdk_nvmf_subsystem_add_listener_ext(ctx->subsystem, &ctx->trid, nvmf_rpc_subsystem_listen, ctx,
-								     &ctx->listener_opts);
-				return;
-			}
+	switch (ctx->op) {
+	case NVMF_RPC_LISTEN_ADD:
+		if (nvmf_subsystem_find_listener(subsystem, &ctx->trid)) {
+			break;
+		}
 
+		rc = spdk_nvmf_tgt_listen_ext(ctx->tgt, &ctx->trid, &ctx->opts);
+		if (rc) {
 			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");
 			ctx->response_sent = true;
+			break;
 		}
-	} else if (ctx->op == NVMF_RPC_LISTEN_REMOVE) {
+
+		spdk_nvmf_subsystem_add_listener_ext(ctx->subsystem, &ctx->trid, nvmf_rpc_subsystem_listen, ctx,
+						     &ctx->listener_opts);
+		return;
+	case NVMF_RPC_LISTEN_REMOVE:
 		rc = spdk_nvmf_subsystem_remove_listener(subsystem, &ctx->trid);
-		if (rc == 0) {
-			spdk_nvmf_transport_stop_listen_async(ctx->transport, &ctx->trid, subsystem,
-							      nvmf_rpc_stop_listen_async_done, ctx);
-			return;
+		if (rc) {
+			SPDK_ERRLOG("Unable to remove listener, rc %d\n", rc);
+			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Invalid parameters");
+			ctx->response_sent = true;
+			break;
 		}
-		SPDK_ERRLOG("Unable to remove listener, rc %d\n", rc);
-		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid parameters");
-		ctx->response_sent = true;
-	} else if (ctx->op == NVMF_RPC_LISTEN_SET_ANA_STATE) {
+
+		spdk_nvmf_transport_stop_listen_async(ctx->transport, &ctx->trid, subsystem,
+						      nvmf_rpc_stop_listen_async_done, ctx);
+		return;
+	case NVMF_RPC_LISTEN_SET_ANA_STATE:
 		spdk_nvmf_subsystem_set_ana_state(subsystem, &ctx->trid, ctx->ana_state, ctx->anagrpid,
 						  nvmf_rpc_set_ana_state_done, ctx);
 		return;
-	} else {
+	default:
 		SPDK_UNREACHABLE();
 	}
 
@@ -797,6 +803,7 @@ nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							 "Internal error");
 		}
+
 		nvmf_rpc_listener_ctx_free(ctx);
 		/* Can't really do anything to recover here - subsystem will remain paused. */
 	}
