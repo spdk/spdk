@@ -8274,6 +8274,8 @@ Example response:
 
 Add a new listen address to an NVMe-oF subsystem.
 
+This method will fail if listener with given address already exists.
+
 #### Parameters
 
 Name                    | Optional | Type        | Description
