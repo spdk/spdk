@@ -130,7 +130,7 @@ static void
 crypto_encrypt(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io)
 {
 	struct crypto_bdev_io *crypto_io = (struct crypto_bdev_io *)bdev_io->driver_ctx;
-	uint32_t crypto_len = crypto_io->crypto_bdev->crypto_bdev.blocklen;
+	uint32_t blocklen = crypto_io->crypto_bdev->crypto_bdev.blocklen;
 	uint64_t total_length;
 	uint64_t alignment;
 	void *aux_buf = crypto_io->aux_buf_raw;
@@ -141,7 +141,7 @@ crypto_encrypt(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io
 	 * This is done to avoiding encrypting the provided write buffer which may be
 	 * undesirable in some use cases.
 	 */
-	total_length = bdev_io->u.bdev.num_blocks * crypto_len;
+	total_length = bdev_io->u.bdev.num_blocks * blocklen;
 	alignment = spdk_bdev_get_buf_align(&crypto_io->crypto_bdev->crypto_bdev);
 	crypto_io->aux_buf_iov.iov_len = total_length;
 	crypto_io->aux_buf_iov.iov_base  = (void *)(((uintptr_t)aux_buf + (alignment - 1)) & ~
@@ -155,7 +155,7 @@ crypto_encrypt(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io
 				       bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 				       bdev_io->u.bdev.memory_domain,
 				       bdev_io->u.bdev.memory_domain_ctx,
-				       bdev_io->u.bdev.offset_blocks, crypto_len, 0,
+				       bdev_io->u.bdev.offset_blocks, blocklen, 0,
 				       NULL, NULL);
 	if (spdk_unlikely(rc != 0)) {
 		spdk_accel_put_buf(crypto_ch->accel_channel, crypto_io->aux_buf_raw,
