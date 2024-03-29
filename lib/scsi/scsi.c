@@ -20,13 +20,13 @@ spdk_scsi_fini(void)
 
 SPDK_TRACE_REGISTER_FN(scsi_trace, "scsi", TRACE_GROUP_SCSI)
 {
-	spdk_trace_register_owner(OWNER_SCSI_DEV, 'd');
+	spdk_trace_register_owner_type(OWNER_TYPE_SCSI_DEV, 'd');
 	spdk_trace_register_object(OBJECT_SCSI_TASK, 't');
 	spdk_trace_register_description("SCSI_TASK_DONE", TRACE_SCSI_TASK_DONE,
-					OWNER_SCSI_DEV, OBJECT_SCSI_TASK, 0,
+					OWNER_TYPE_SCSI_DEV, OBJECT_SCSI_TASK, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("SCSI_TASK_START", TRACE_SCSI_TASK_START,
-					OWNER_SCSI_DEV, OBJECT_SCSI_TASK, 0,
+					OWNER_TYPE_SCSI_DEV, OBJECT_SCSI_TASK, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
 }
 

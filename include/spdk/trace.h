@@ -40,9 +40,9 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_entry_buffer) == sizeof(struct spdk_
 		   "Invalid size of trace entry buffer");
 
 /* If type changes from a uint8_t, change this value. */
-#define SPDK_TRACE_MAX_OWNER (UCHAR_MAX + 1)
+#define SPDK_TRACE_MAX_OWNER_TYPE (UCHAR_MAX + 1)
 
-struct spdk_trace_owner {
+struct spdk_trace_owner_type {
 	uint8_t	type;
 	char	id_prefix;
 };
@@ -121,7 +121,7 @@ struct spdk_trace_file {
 	uint64_t			tsc_rate;
 	uint64_t			tpoint_mask[SPDK_TRACE_MAX_GROUP_ID];
 	char				tname[SPDK_TRACE_MAX_LCORE][SPDK_TRACE_THREAD_NAME_LEN];
-	struct spdk_trace_owner		owner[UCHAR_MAX + 1];
+	struct spdk_trace_owner_type	owner_type[SPDK_TRACE_MAX_OWNER_TYPE];
 	struct spdk_trace_object	object[UCHAR_MAX + 1];
 	struct spdk_trace_tpoint	tpoint[SPDK_TRACE_MAX_TPOINT_ID];
 
@@ -301,16 +301,16 @@ int spdk_trace_unregister_user_thread(void);
  */
 void spdk_trace_cleanup(void);
 
-#define OWNER_NONE 0
+#define OWNER_TYPE_NONE 0
 #define OBJECT_NONE 0
 
 /**
- * Register the trace owner.
+ * Register the trace owner type.
  *
  * \param type Type of the trace owner.
  * \param id_prefix Prefix of id for the trace owner.
  */
-void spdk_trace_register_owner(uint8_t type, char id_prefix);
+void spdk_trace_register_owner_type(uint8_t type, char id_prefix);
 
 /**
  * Register the trace object.

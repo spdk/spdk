@@ -140,8 +140,8 @@ print_event(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint64_t t
 	if (g_print_tsc) {
 		printf("(%9ju) ", e->tsc - tsc_offset);
 	}
-	if (g_file->owner[d->owner_type].id_prefix) {
-		printf("%c%02d ", g_file->owner[d->owner_type].id_prefix, e->poller_id);
+	if (g_file->owner_type[d->owner_type].id_prefix) {
+		printf("%c%02d ", g_file->owner_type[d->owner_type].id_prefix, e->poller_id);
 	} else {
 		printf("%4s", " ");
 	}
@@ -199,9 +199,9 @@ print_event_json(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint6
 	spdk_json_write_named_uint64(g_json, "tpoint", e->tpoint_id);
 	spdk_json_write_named_uint64(g_json, "tsc", e->tsc);
 
-	if (g_file->owner[d->owner_type].id_prefix) {
+	if (g_file->owner_type[d->owner_type].id_prefix) {
 		spdk_json_write_named_string_fmt(g_json, "poller", "%c%02d",
-						 g_file->owner[d->owner_type].id_prefix,
+						 g_file->owner_type[d->owner_type].id_prefix,
 						 e->poller_id);
 	}
 	if (e->size != 0) {

@@ -485,10 +485,10 @@ accel_dsa_write_config_json(struct spdk_json_write_ctx *w)
 
 SPDK_TRACE_REGISTER_FN(dsa_trace, "dsa", TRACE_GROUP_ACCEL_DSA)
 {
-	spdk_trace_register_description("DSA_OP_SUBMIT", TRACE_ACCEL_DSA_OP_SUBMIT, OWNER_NONE, OBJECT_NONE,
-					0,
+	spdk_trace_register_description("DSA_OP_SUBMIT", TRACE_ACCEL_DSA_OP_SUBMIT, OWNER_TYPE_NONE,
+					OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "count");
-	spdk_trace_register_description("DSA_OP_COMPLETE", TRACE_ACCEL_DSA_OP_COMPLETE, OWNER_NONE,
+	spdk_trace_register_description("DSA_OP_COMPLETE", TRACE_ACCEL_DSA_OP_COMPLETE, OWNER_TYPE_NONE,
 					OBJECT_NONE,
 					0, SPDK_TRACE_ARG_TYPE_INT, "count");
 }

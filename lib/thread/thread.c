@@ -290,11 +290,11 @@ SPDK_TRACE_REGISTER_FN(thread_trace, "thread", TRACE_GROUP_THREAD)
 {
 	spdk_trace_register_description("THREAD_IOCH_GET",
 					TRACE_THREAD_IOCH_GET,
-					OWNER_NONE, OBJECT_NONE, 0,
+					OWNER_TYPE_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "refcnt");
 	spdk_trace_register_description("THREAD_IOCH_PUT",
 					TRACE_THREAD_IOCH_PUT,
-					OWNER_NONE, OBJECT_NONE, 0,
+					OWNER_TYPE_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "refcnt");
 }
 

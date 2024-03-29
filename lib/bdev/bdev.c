@@ -10359,7 +10359,7 @@ SPDK_TRACE_REGISTER_FN(bdev_trace, "bdev", TRACE_GROUP_BDEV)
 	struct spdk_trace_tpoint_opts opts[] = {
 		{
 			"BDEV_IO_START", TRACE_BDEV_IO_START,
-			OWNER_BDEV, OBJECT_BDEV_IO, 1,
+			OWNER_TYPE_BDEV, OBJECT_BDEV_IO, 1,
 			{
 				{ "type", SPDK_TRACE_ARG_TYPE_INT, 8 },
 				{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 },
@@ -10370,12 +10370,12 @@ SPDK_TRACE_REGISTER_FN(bdev_trace, "bdev", TRACE_GROUP_BDEV)
 		},
 		{
 			"BDEV_IO_DONE", TRACE_BDEV_IO_DONE,
-			OWNER_BDEV, OBJECT_BDEV_IO, 0,
+			OWNER_TYPE_BDEV, OBJECT_BDEV_IO, 0,
 			{{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 }}
 		},
 		{
 			"BDEV_IOCH_CREATE", TRACE_BDEV_IOCH_CREATE,
-			OWNER_BDEV, OBJECT_NONE, 1,
+			OWNER_TYPE_BDEV, OBJECT_NONE, 1,
 			{
 				{ "name", SPDK_TRACE_ARG_TYPE_STR, 40 },
 				{ "thread_id", SPDK_TRACE_ARG_TYPE_INT, 8}
@@ -10383,7 +10383,7 @@ SPDK_TRACE_REGISTER_FN(bdev_trace, "bdev", TRACE_GROUP_BDEV)
 		},
 		{
 			"BDEV_IOCH_DESTROY", TRACE_BDEV_IOCH_DESTROY,
-			OWNER_BDEV, OBJECT_NONE, 0,
+			OWNER_TYPE_BDEV, OBJECT_NONE, 0,
 			{
 				{ "name", SPDK_TRACE_ARG_TYPE_STR, 40 },
 				{ "thread_id", SPDK_TRACE_ARG_TYPE_INT, 8}
@@ -10392,7 +10392,7 @@ SPDK_TRACE_REGISTER_FN(bdev_trace, "bdev", TRACE_GROUP_BDEV)
 	};
 
 
-	spdk_trace_register_owner(OWNER_BDEV, 'b');
+	spdk_trace_register_owner_type(OWNER_TYPE_BDEV, 'b');
 	spdk_trace_register_object(OBJECT_BDEV_IO, 'i');
 	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
 	spdk_trace_tpoint_register_relation(TRACE_BDEV_NVME_IO_START, OBJECT_BDEV_IO, 0);

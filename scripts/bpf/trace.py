@@ -27,7 +27,7 @@ TRACE_MAX_ARGS_COUNT = 8
 TRACE_MAX_RELATIONS = 16
 TRACE_INVALID_OBJECT = (1 << 64) - 1
 OBJECT_NONE = 0
-OWNER_NONE = 0
+OWNER_TYPE_NONE = 0
 
 
 @dataclass
@@ -213,7 +213,7 @@ class JsonProvider(TraceProvider):
             self._tpoints[tpoint_id] = Tracepoint(
                 name=tpoint['name'], id=tpoint_id,
                 new_object=tpoint['new_object'], object_type=OBJECT_NONE,
-                owner_type=OWNER_NONE,
+                owner_type=OWNER_TYPE_NONE,
                 args=[TracepointArgument(name=a['name'],
                                          argtype=a['type'])
                       for a in tpoint.get('args', [])])
@@ -406,7 +406,7 @@ class NativeProvider(TraceProvider):
             else:
                 object_id, ts = None, None
 
-            if tpoint.owner_type != OWNER_NONE:
+            if tpoint.owner_type != OWNER_TYPE_NONE:
                 poller_id = '{}{:02}'.format(self._owners[tpoint.owner_type], entry.poller_id)
             else:
                 poller_id = None

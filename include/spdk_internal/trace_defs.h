@@ -8,14 +8,14 @@
 #define SPDK_INTERNAL_TRACE_DEFS
 
 /* Owner definitions */
-#define OWNER_ISCSI_CONN	0x1
-#define OWNER_BDEV		0x2
-#define OWNER_NVME_PCIE_QP	0x3
-#define OWNER_NVME_TCP_QP	0x4
-#define OWNER_SOCK		0x5
-#define OWNER_SCSI_DEV		0x10
-#define OWNER_FTL		0x20
-#define OWNER_NVMF_TCP		0x30
+#define OWNER_TYPE_ISCSI_CONN	0x1
+#define OWNER_TYPE_BDEV		0x2
+#define OWNER_TYPE_NVME_PCIE_QP	0x3
+#define OWNER_TYPE_NVME_TCP_QP	0x4
+#define OWNER_TYPE_SOCK		0x5
+#define OWNER_TYPE_SCSI_DEV	0x10
+#define OWNER_TYPE_FTL		0x20
+#define OWNER_TYPE_NVMF_TCP	0x30
 
 /* Object definitions */
 #define OBJECT_ISCSI_PDU	0x1

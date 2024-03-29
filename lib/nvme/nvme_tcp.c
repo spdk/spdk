@@ -3039,7 +3039,7 @@ SPDK_TRACE_REGISTER_FN(nvme_tcp, "nvme_tcp", TRACE_GROUP_NVME_TCP)
 	struct spdk_trace_tpoint_opts opts[] = {
 		{
 			"NVME_TCP_SUBMIT", TRACE_NVME_TCP_SUBMIT,
-			OWNER_NVME_TCP_QP, OBJECT_NVME_TCP_REQ, 1,
+			OWNER_TYPE_NVME_TCP_QP, OBJECT_NVME_TCP_REQ, 1,
 			{	{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 },
 				{ "cid", SPDK_TRACE_ARG_TYPE_INT, 4 },
 				{ "opc", SPDK_TRACE_ARG_TYPE_INT, 4 },
@@ -3050,7 +3050,7 @@ SPDK_TRACE_REGISTER_FN(nvme_tcp, "nvme_tcp", TRACE_GROUP_NVME_TCP)
 		},
 		{
 			"NVME_TCP_COMPLETE", TRACE_NVME_TCP_COMPLETE,
-			OWNER_NVME_TCP_QP, OBJECT_NVME_TCP_REQ, 0,
+			OWNER_TYPE_NVME_TCP_QP, OBJECT_NVME_TCP_REQ, 0,
 			{	{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 },
 				{ "cid", SPDK_TRACE_ARG_TYPE_INT, 4 },
 				{ "cpl", SPDK_TRACE_ARG_TYPE_PTR, 4 }
@@ -3059,6 +3059,6 @@ SPDK_TRACE_REGISTER_FN(nvme_tcp, "nvme_tcp", TRACE_GROUP_NVME_TCP)
 	};
 
 	spdk_trace_register_object(OBJECT_NVME_TCP_REQ, 'p');
-	spdk_trace_register_owner(OWNER_NVME_TCP_QP, 'q');
+	spdk_trace_register_owner_type(OWNER_TYPE_NVME_TCP_QP, 'q');
 	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
 }

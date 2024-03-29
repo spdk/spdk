@@ -241,25 +241,25 @@ spdk_trace_mask_usage(FILE *f, const char *tmask_arg)
 }
 
 void
-spdk_trace_register_owner(uint8_t type, char id_prefix)
+spdk_trace_register_owner_type(uint8_t type, char id_prefix)
 {
-	struct spdk_trace_owner *owner;
+	struct spdk_trace_owner_type *owner_type;
 
-	assert(type != OWNER_NONE);
+	assert(type != OWNER_TYPE_NONE);
 
 	if (g_trace_file == NULL) {
 		SPDK_ERRLOG("trace is not initialized\n");
 		return;
 	}
 
-	/* 'owner' has 256 entries and since 'type' is a uint8_t, it
+	/* 'owner_type' has 256 entries and since 'type' is a uint8_t, it
 	 * can't overrun the array.
 	 */
-	owner = &g_trace_file->owner[type];
-	assert(owner->type == 0);
+	owner_type = &g_trace_file->owner_type[type];
+	assert(owner_type->type == 0);
 
-	owner->type = type;
-	owner->id_prefix = id_prefix;
+	owner_type->type = type;
+	owner_type->id_prefix = id_prefix;
 }
 
 void

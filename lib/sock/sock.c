@@ -986,28 +986,28 @@ SPDK_TRACE_REGISTER_FN(sock_trace, "sock", TRACE_GROUP_SOCK)
 	struct spdk_trace_tpoint_opts opts[] = {
 		{
 			"SOCK_REQ_QUEUE", TRACE_SOCK_REQ_QUEUE,
-			OWNER_SOCK, OBJECT_SOCK_REQ, 1,
+			OWNER_TYPE_SOCK, OBJECT_SOCK_REQ, 1,
 			{
 				{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 },
 			}
 		},
 		{
 			"SOCK_REQ_PEND", TRACE_SOCK_REQ_PEND,
-			OWNER_SOCK, OBJECT_SOCK_REQ, 0,
+			OWNER_TYPE_SOCK, OBJECT_SOCK_REQ, 0,
 			{
 				{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 },
 			}
 		},
 		{
 			"SOCK_REQ_COMPLETE", TRACE_SOCK_REQ_COMPLETE,
-			OWNER_SOCK, OBJECT_SOCK_REQ, 0,
+			OWNER_TYPE_SOCK, OBJECT_SOCK_REQ, 0,
 			{
 				{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 },
 			}
 		},
 	};
 
-	spdk_trace_register_owner(OWNER_SOCK, 's');
+	spdk_trace_register_owner_type(OWNER_TYPE_SOCK, 's');
 	spdk_trace_register_object(OBJECT_SOCK_REQ, 's');
 	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
 }

@@ -1618,25 +1618,25 @@ iscsi_conn_get_login_phase(struct spdk_iscsi_conn *conn)
 
 SPDK_TRACE_REGISTER_FN(iscsi_conn_trace, "iscsi_conn", TRACE_GROUP_ISCSI)
 {
-	spdk_trace_register_owner(OWNER_ISCSI_CONN, 'c');
+	spdk_trace_register_owner_type(OWNER_TYPE_ISCSI_CONN, 'c');
 	spdk_trace_register_object(OBJECT_ISCSI_PDU, 'p');
 	spdk_trace_register_description("ISCSI_READ_DONE", TRACE_ISCSI_READ_FROM_SOCKET_DONE,
-					OWNER_ISCSI_CONN, OBJECT_NONE, 0,
+					OWNER_TYPE_ISCSI_CONN, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("ISCSI_READ_PDU", TRACE_ISCSI_READ_PDU,
-					OWNER_ISCSI_CONN, OBJECT_ISCSI_PDU, 1,
+					OWNER_TYPE_ISCSI_CONN, OBJECT_ISCSI_PDU, 1,
 					SPDK_TRACE_ARG_TYPE_INT, "opc");
 	spdk_trace_register_description("ISCSI_TASK_DONE", TRACE_ISCSI_TASK_DONE,
-					OWNER_ISCSI_CONN, OBJECT_SCSI_TASK, 0,
+					OWNER_TYPE_ISCSI_CONN, OBJECT_SCSI_TASK, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("ISCSI_TASK_QUEUE", TRACE_ISCSI_TASK_QUEUE,
-					OWNER_ISCSI_CONN, OBJECT_SCSI_TASK, 1,
+					OWNER_TYPE_ISCSI_CONN, OBJECT_SCSI_TASK, 1,
 					SPDK_TRACE_ARG_TYPE_PTR, "pdu");
 	spdk_trace_register_description("ISCSI_TASK_EXECUTED", TRACE_ISCSI_TASK_EXECUTED,
-					OWNER_ISCSI_CONN, OBJECT_ISCSI_PDU, 0,
+					OWNER_TYPE_ISCSI_CONN, OBJECT_ISCSI_PDU, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("ISCSI_PDU_COMPLETED", TRACE_ISCSI_PDU_COMPLETED,
-					OWNER_ISCSI_CONN, OBJECT_ISCSI_PDU, 0,
+					OWNER_TYPE_ISCSI_CONN, OBJECT_ISCSI_PDU, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_tpoint_register_relation(TRACE_SOCK_REQ_QUEUE, OBJECT_ISCSI_PDU, 0);
 	spdk_trace_tpoint_register_relation(TRACE_SOCK_REQ_PEND, OBJECT_ISCSI_PDU, 0);
