@@ -175,9 +175,9 @@ if __name__ == "__main__":
         'framework_set_scheduler', help='Select thread scheduler that will be activated and its period (experimental)')
     p.add_argument('name', help="Name of a scheduler")
     p.add_argument('-p', '--period', help="Scheduler period in microseconds", type=int)
-    p.add_argument('--load-limit', help="Scheduler load limit. Reserved for dynamic scheduler", type=int, required=False)
-    p.add_argument('--core-limit', help="Scheduler core limit. Reserved for dynamic scheduler", type=int, required=False)
-    p.add_argument('--core-busy', help="Scheduler core busy limit. Reserved for dynamic schedler", type=int, required=False)
+    p.add_argument('--load-limit', help="Scheduler load limit. Reserved for dynamic scheduler", type=int)
+    p.add_argument('--core-limit', help="Scheduler core limit. Reserved for dynamic scheduler", type=int)
+    p.add_argument('--core-busy', help="Scheduler core busy limit. Reserved for dynamic schedler", type=int)
     p.set_defaults(func=framework_set_scheduler)
 
     def framework_get_scheduler(args):
@@ -263,7 +263,7 @@ if __name__ == "__main__":
                                                       name=args.name))
     p = subparsers.add_parser(
         'bdev_compress_get_orphans', help='Display list of orphaned compress bdevs.')
-    p.add_argument('-b', '--name', help="Name of a comp bdev. Example: COMP_Nvme0n1", required=False)
+    p.add_argument('-b', '--name', help="Name of a comp bdev. Example: COMP_Nvme0n1")
     p.set_defaults(func=bdev_compress_get_orphans)
 
     def bdev_crypto_create(args):
@@ -278,11 +278,11 @@ if __name__ == "__main__":
     p = subparsers.add_parser('bdev_crypto_create', help='Add a crypto vbdev')
     p.add_argument('base_bdev_name', help="Name of the base bdev")
     p.add_argument('name', help="Name of the crypto vbdev")
-    p.add_argument('-p', '--crypto-pmd', help="Name of the crypto device driver. Obsolete, see dpdk_cryptodev_set_driver", required=False)
-    p.add_argument('-k', '--key', help="Key. Obsolete, see accel_crypto_key_create", required=False)
-    p.add_argument('-c', '--cipher', help="cipher to use. Obsolete, see accel_crypto_key_create", required=False)
+    p.add_argument('-p', '--crypto-pmd', help="Name of the crypto device driver. Obsolete, see dpdk_cryptodev_set_driver")
+    p.add_argument('-k', '--key', help="Key. Obsolete, see accel_crypto_key_create")
+    p.add_argument('-c', '--cipher', help="cipher to use. Obsolete, see accel_crypto_key_create")
     p.add_argument('-k2', '--key2', help="2nd key for cipher AES_XTS. Obsolete, see accel_crypto_key_create", default=None)
-    p.add_argument('-n', '--key-name', help="Key name to use, see accel_crypto_key_create", required=False)
+    p.add_argument('-n', '--key-name', help="Key name to use, see accel_crypto_key_create")
     p.set_defaults(func=bdev_crypto_create)
 
     def bdev_crypto_delete(args):
@@ -307,8 +307,7 @@ if __name__ == "__main__":
         '--cache-line-size',
         help='OCF cache line size. The unit is KiB',
         type=int,
-        choices=[4, 8, 16, 32, 64],
-        required=False
+        choices=[4, 8, 16, 32, 64]
     )
     p.add_argument('cache_bdev_name', help='Name of underlying cache bdev')
     p.add_argument('core_bdev_name', help='Name of underlying core bdev')
@@ -781,7 +780,7 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser(
         'bdev_nvme_get_controllers', help='Display current NVMe controllers list or required NVMe controller')
-    p.add_argument('-n', '--name', help="Name of the NVMe controller. Example: Nvme0", required=False)
+    p.add_argument('-n', '--name', help="Name of the NVMe controller. Example: Nvme0")
     p.set_defaults(func=bdev_nvme_get_controllers)
 
     def bdev_nvme_detach_controller(args):
@@ -873,7 +872,7 @@ if __name__ == "__main__":
     p.add_argument('-q', '--hostnqn', help='NVMe-oF host subnqn')
     p.add_argument('-w', '--wait-for-attach', action='store_true',
                    help='Do not complete RPC until all discovered NVM subsystems are attached')
-    p.add_argument('-T', '--attach-timeout-ms', type=int, required=False,
+    p.add_argument('-T', '--attach-timeout-ms', type=int,
                    help="""Time to wait until the discovery and all discovered NVM subsystems
                         are attached (default: 0, meaning wait indefinitely).  Automatically
                         selects the --wait-for-attach option.""")
@@ -916,7 +915,7 @@ if __name__ == "__main__":
         print_dict(rpc.bdev.bdev_nvme_get_io_paths(args.client, name=args.name))
 
     p = subparsers.add_parser('bdev_nvme_get_io_paths', help='Display active I/O paths')
-    p.add_argument('-n', '--name', help="Name of the NVMe bdev", required=False)
+    p.add_argument('-n', '--name', help="Name of the NVMe bdev")
     p.set_defaults(func=bdev_nvme_get_io_paths)
 
     def bdev_nvme_set_preferred_path(args):
@@ -941,10 +940,10 @@ if __name__ == "__main__":
                               help="""Set multipath policy of the NVMe bdev""")
     p.add_argument('-b', '--name', help='Name of the NVMe bdev', required=True)
     p.add_argument('-p', '--policy', help='Multipath policy (active_passive or active_active)', required=True)
-    p.add_argument('-s', '--selector', help='Multipath selector (round_robin, queue_depth)', required=False)
+    p.add_argument('-s', '--selector', help='Multipath selector (round_robin, queue_depth)')
     p.add_argument('-r', '--rr-min-io',
                    help='Number of IO to route to a path before switching to another for round-robin',
-                   type=int, required=False)
+                   type=int)
     p.set_defaults(func=bdev_nvme_set_multipath_policy)
 
     def bdev_nvme_get_path_iostat(args):
@@ -1020,12 +1019,12 @@ if __name__ == "__main__":
     p = subparsers.add_parser('bdev_rbd_register_cluster',
                               help='Add a Rados cluster with ceph rbd backend')
     p.add_argument('name', help="Name of the Rados cluster only known to rbd bdev")
-    p.add_argument('--user', help="Ceph user name (i.e. admin, not client.admin)", required=False)
+    p.add_argument('--user', help="Ceph user name (i.e. admin, not client.admin)")
     p.add_argument('--config-param', action='append', metavar='key=value',
                    help="adds a key=value configuration option for rados_conf_set (default: rely on config file)")
-    p.add_argument('--config-file', help="The file path of the Rados configuration file", required=False)
-    p.add_argument('--key-file', help="The file path of the Rados keyring file", required=False)
-    p.add_argument('--core-mask', help="Set core mask for librbd IO context threads", required=False)
+    p.add_argument('--config-file', help="The file path of the Rados configuration file")
+    p.add_argument('--key-file', help="The file path of the Rados keyring file")
+    p.add_argument('--core-mask', help="Set core mask for librbd IO context threads")
     p.set_defaults(func=bdev_rbd_register_cluster)
 
     def bdev_rbd_unregister_cluster(args):
@@ -1041,7 +1040,7 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('bdev_rbd_get_clusters_info',
                               help='Display registered Rados Cluster names and related info')
-    p.add_argument('-b', '--name', help="Name of the registered Rados Cluster Name. Example: Cluster1", required=False)
+    p.add_argument('-b', '--name', help="Name of the registered Rados Cluster Name. Example: Cluster1")
     p.set_defaults(func=bdev_rbd_get_clusters_info)
 
     def bdev_rbd_create(args):
@@ -1064,14 +1063,14 @@ if __name__ == "__main__":
                                             uuid=args.uuid))
 
     p = subparsers.add_parser('bdev_rbd_create', help='Add a bdev with ceph rbd backend')
-    p.add_argument('-b', '--name', help="Name of the bdev", required=False)
-    p.add_argument('--user', help="Ceph user name (i.e. admin, not client.admin)", required=False)
+    p.add_argument('-b', '--name', help="Name of the bdev")
+    p.add_argument('--user', help="Ceph user name (i.e. admin, not client.admin)")
     p.add_argument('--config', action='append', metavar='key=value',
                    help="adds a key=value configuration option for rados_conf_set (default: rely on config file)")
     p.add_argument('pool_name', help='rbd pool name')
     p.add_argument('rbd_name', help='rbd image name')
     p.add_argument('block_size', help='rbd block size', type=int)
-    p.add_argument('-c', '--cluster-name', help="cluster name to identify the Rados cluster", required=False)
+    p.add_argument('-c', '--cluster-name', help="cluster name to identify the Rados cluster")
     p.add_argument('-u', '--uuid', help="UUID of the bdev")
     p.set_defaults(func=bdev_rbd_create)
 
@@ -1146,7 +1145,7 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('bdev_error_create', help='Add bdev with error injection backend')
     p.add_argument('base_name', help='base bdev name')
-    p.add_argument('--uuid', help='UUID for this bdev', required=False)
+    p.add_argument('--uuid', help='UUID for this bdev')
     p.set_defaults(func=bdev_error_create)
 
     def bdev_error_delete(args):
@@ -1212,11 +1211,11 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('bdev_get_bdevs',
                               help='Display current blockdev list or required blockdev')
-    p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
+    p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1")
     p.add_argument('-t', '--timeout-ms', help="""Time in ms to wait for the bdev to appear (only used
     with the -b|--name option). The default timeout is 0, meaning the RPC returns immediately
     whether the bdev exists or not.""",
-                   type=int, required=False)
+                   type=int)
     p.set_defaults(func=bdev_get_bdevs)
 
     def bdev_get_iostat(args):
@@ -1226,9 +1225,9 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('bdev_get_iostat',
                               help='Display current I/O statistics of all the blockdevs or specified blockdev.')
-    p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
+    p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1")
     p.add_argument('-c', '--per-channel', default=False, dest='per_channel', help='Display per channel IO stats for specified device',
-                   action='store_true', required=False)
+                   action='store_true')
     p.set_defaults(func=bdev_get_iostat)
 
     def bdev_reset_iostat(args):
@@ -1236,8 +1235,8 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('bdev_reset_iostat',
                               help='Reset I/O statistics of all the blockdevs or specified blockdev.')
-    p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
-    p.add_argument('-m', '--mode', help="Mode to reset I/O statistics", choices=['all', 'maxmin'], required=False)
+    p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1")
+    p.add_argument('-m', '--mode', help="Mode to reset I/O statistics", choices=['all', 'maxmin'])
     p.set_defaults(func=bdev_reset_iostat)
 
     def bdev_enable_histogram(args):
@@ -1284,16 +1283,16 @@ if __name__ == "__main__":
     p.add_argument('name', help='Blockdev name to set QoS. Example: Malloc0')
     p.add_argument('--rw-ios-per-sec',
                    help='R/W IOs per second limit (>=1000, example: 20000). 0 means unlimited.',
-                   type=int, required=False)
+                   type=int)
     p.add_argument('--rw-mbytes-per-sec',
                    help="R/W megabytes per second limit (>=10, example: 100). 0 means unlimited.",
-                   type=int, required=False)
+                   type=int)
     p.add_argument('--r-mbytes-per-sec',
                    help="Read megabytes per second limit (>=10, example: 100). 0 means unlimited.",
-                   type=int, required=False)
+                   type=int)
     p.add_argument('--w-mbytes-per-sec',
                    help="Write megabytes per second limit (>=10, example: 100). 0 means unlimited.",
-                   type=int, required=False)
+                   type=int)
     p.set_defaults(func=bdev_set_qos_limit)
 
     def bdev_error_inject_error(args):
@@ -1433,7 +1432,7 @@ if __name__ == "__main__":
     p.add_argument('tag', help='Authentication group tag (unique, integer > 0).', type=int)
     p.add_argument('-c', '--secrets', help="""Comma-separated list of CHAP secrets
 <user:user_name secret:chap_secret muser:mutual_user_name msecret:mutual_chap_secret> enclosed in quotes.
-Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 msecret:ms2'""", required=False)
+Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 msecret:ms2'""")
     p.set_defaults(func=iscsi_create_auth_group)
 
     def iscsi_delete_auth_group(args):
@@ -1564,7 +1563,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('bdev_name', help="""bdev name enclosed in quotes.
     *** bdev name cannot contain space or colon characters ***""")
     p.add_argument('-i', dest='lun_id', help="""LUN ID (integer >= 0)
-    *** If LUN ID is omitted or -1, the lowest free one is assigned ***""", type=int, required=False)
+    *** If LUN ID is omitted or -1, the lowest free one is assigned ***""", type=int)
     p.set_defaults(func=iscsi_target_node_add_lun)
 
     def iscsi_target_node_set_auth(args):
@@ -1640,8 +1639,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     Omit redirect host and port to clear previously set redirect settings.""")
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('pg_tag', help='Portal group tag (unique, integer > 0)', type=int)
-    p.add_argument('-a', '--redirect-host', help='Numeric IP address for redirect portal', required=False)
-    p.add_argument('-p', '--redirect-port', help='Numeric TCP port for redirect portal', required=False)
+    p.add_argument('-a', '--redirect-host', help='Numeric IP address for redirect portal')
+    p.add_argument('-p', '--redirect-port', help='Numeric TCP port for redirect portal')
     p.set_defaults(func=iscsi_target_node_set_redirect)
 
     def iscsi_target_node_request_logout(args):
@@ -1654,7 +1653,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                               help="""For the target node, request connections whose portal group tag
     match to logout, or request all connections if portal group tag is omitted.""")
     p.add_argument('name', help='Target node name (ASCII)')
-    p.add_argument('-t', '--pg-tag', help='Portal group tag (unique, integer > 0)', type=int, required=False)
+    p.add_argument('-t', '--pg-tag', help='Portal group tag (unique, integer > 0)', type=int)
     p.set_defaults(func=iscsi_target_node_request_logout)
 
     def iscsi_create_portal_group(args):
@@ -1747,9 +1746,9 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         'tag', help='Initiator group tag (unique, integer > 0)', type=int)
     p.add_argument('-n', dest='initiator_list', help="""Whitespace-separated list of initiator hostnames or IP addresses,
     enclosed in quotes.  This parameter can be omitted.  Example: 'ANY' or
-    'iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2'""", required=False)
+    'iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2'""")
     p.add_argument('-m', dest='netmask_list', help="""Whitespace-separated list of initiator netmasks enclosed in quotes.
-    This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""", required=False)
+    This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""")
     p.set_defaults(func=iscsi_initiator_group_add_initiators)
 
     def iscsi_initiator_group_remove_initiators(args):
@@ -1775,9 +1774,9 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         'tag', help='Initiator group tag (unique, integer > 0)', type=int)
     p.add_argument('-n', dest='initiator_list', help="""Whitespace-separated list of initiator hostnames or IP addresses,
     enclosed in quotes.  This parameter can be omitted.  Example: 'ANY' or
-    'iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2'""", required=False)
+    'iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2'""")
     p.add_argument('-m', dest='netmask_list', help="""Whitespace-separated list of initiator netmasks enclosed in quotes.
-    This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""", required=False)
+    This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""")
     p.set_defaults(func=iscsi_initiator_group_remove_initiators)
 
     def iscsi_delete_target_node(args):
@@ -1980,10 +1979,10 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('bdev_lvol_create_lvstore', help='Add logical volume store on base bdev')
     p.add_argument('bdev_name', help='base bdev name')
     p.add_argument('lvs_name', help='name for lvol store')
-    p.add_argument('-c', '--cluster-sz', help='size of cluster (in bytes)', type=int, required=False)
+    p.add_argument('-c', '--cluster-sz', help='size of cluster (in bytes)', type=int)
     p.add_argument('--clear-method', help="""Change clear method for data region.
-        Available: none, unmap, write_zeroes""", required=False)
-    p.add_argument('-m', '--md-pages-per-cluster-ratio', help='reserved metadata pages for each cluster', type=int, required=False)
+        Available: none, unmap, write_zeroes""")
+    p.add_argument('-m', '--md-pages-per-cluster-ratio', help='reserved metadata pages for each cluster', type=int)
     p.set_defaults(func=bdev_lvol_create_lvstore)
 
     def bdev_lvol_rename_lvstore(args):
@@ -2003,8 +2002,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('bdev_lvol_grow_lvstore',
                               help='Grow the lvstore size to the underlying bdev size')
-    p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
-    p.add_argument('-l', '--lvs-name', help='lvol store name', required=False)
+    p.add_argument('-u', '--uuid', help='lvol store UUID')
+    p.add_argument('-l', '--lvs-name', help='lvol store name')
     p.set_defaults(func=bdev_lvol_grow_lvstore)
 
     def bdev_lvol_create(args):
@@ -2017,11 +2016,11 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                              lvs_name=args.lvs_name))
 
     p = subparsers.add_parser('bdev_lvol_create', help='Add a bdev with an logical volume backend')
-    p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
-    p.add_argument('-l', '--lvs-name', help='lvol store name', required=False)
+    p.add_argument('-u', '--uuid', help='lvol store UUID')
+    p.add_argument('-l', '--lvs-name', help='lvol store name')
     p.add_argument('-t', '--thin-provision', action='store_true', help='create lvol bdev as thin provisioned')
     p.add_argument('-c', '--clear-method', help="""Change default data clusters clear method.
-        Available: none, unmap, write_zeroes""", required=False)
+        Available: none, unmap, write_zeroes""")
     p.add_argument('lvol_name', help='name for this lvol')
     p.add_argument('size_in_mib', help='size in MiB for this bdev', type=int)
     p.set_defaults(func=bdev_lvol_create)
@@ -2117,8 +2116,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                           lvs_name=args.lvs_name)
 
     p = subparsers.add_parser('bdev_lvol_delete_lvstore', help='Destroy an logical volume store')
-    p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
-    p.add_argument('-l', '--lvs-name', help='lvol store name', required=False)
+    p.add_argument('-u', '--uuid', help='lvol store UUID')
+    p.add_argument('-l', '--lvs-name', help='lvol store name')
     p.set_defaults(func=bdev_lvol_delete_lvstore)
 
     def bdev_lvol_get_lvstores(args):
@@ -2127,8 +2126,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                                    lvs_name=args.lvs_name))
 
     p = subparsers.add_parser('bdev_lvol_get_lvstores', help='Display current logical volume store list')
-    p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
-    p.add_argument('-l', '--lvs-name', help='lvol store name', required=False)
+    p.add_argument('-u', '--uuid', help='lvol store UUID')
+    p.add_argument('-l', '--lvs-name', help='lvol store name')
     p.set_defaults(func=bdev_lvol_get_lvstores)
 
     def bdev_lvol_get_lvols(args):
@@ -2137,8 +2136,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                                 lvs_name=args.lvs_name))
 
     p = subparsers.add_parser('bdev_lvol_get_lvols', help='Display current logical volume list')
-    p.add_argument('-u', '--lvs-uuid', help='only lvols in  lvol store UUID', required=False)
-    p.add_argument('-l', '--lvs-name', help='only lvols in lvol store name', required=False)
+    p.add_argument('-u', '--lvs-uuid', help='only lvols in  lvol store UUID')
+    p.add_argument('-l', '--lvs-name', help='only lvols in lvol store name')
     p.set_defaults(func=bdev_lvol_get_lvols)
 
     def bdev_raid_set_options(args):
@@ -2182,7 +2181,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-z', '--strip-size-kb', help='strip size in KB', type=int)
     p.add_argument('-r', '--raid-level', help='raid level, raid0, raid1 and a special level concat are supported', required=True)
     p.add_argument('-b', '--base-bdevs', help='base bdevs name, whitespace separated list in quotes', required=True)
-    p.add_argument('--uuid', help='UUID for this raid bdev', required=False)
+    p.add_argument('--uuid', help='UUID for this raid bdev')
     p.add_argument('-s', '--superblock', help='information about raid bdev will be stored in superblock on each base bdev, '
                                               'disabled by default due to backward compatibility', action='store_true')
     p.set_defaults(func=bdev_raid_create)
@@ -2389,8 +2388,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                               help='Export a bdev as a ublk device')
     p.add_argument('bdev_name', help='Blockdev name to be exported. Example: Malloc0.')
     p.add_argument('ublk_id', help='ublk device id to be assigned. Example: 1.', type=int)
-    p.add_argument('-q', '--num-queues', help="the total number of queues. Example: 1", type=int, required=False)
-    p.add_argument('-d', '--queue-depth', help="queue depth. Example: 128", type=int, required=False)
+    p.add_argument('-q', '--num-queues', help="the total number of queues. Example: 1", type=int)
+    p.add_argument('-d', '--queue-depth', help="queue depth. Example: 128", type=int)
     p.set_defaults(func=ublk_start_disk)
 
     def ublk_stop_disk(args):
@@ -2419,7 +2418,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('ublk_get_disks',
                               help='Display full or specified ublk device list')
-    p.add_argument('-n', '--ublk-id', help="ublk device id. Example: 1", type=int, required=False)
+    p.add_argument('-n', '--ublk-id', help="ublk device id. Example: 1", type=int)
     p.set_defaults(func=ublk_get_disks)
 
     # nbd
@@ -2449,7 +2448,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('nbd_get_disks',
                               help='Display full or specified nbd device list')
-    p.add_argument('-n', '--nbd-device', help="Path of the nbd device. Example: /dev/nbd0", required=False)
+    p.add_argument('-n', '--nbd-device', help="Path of the nbd device. Example: /dev/nbd0")
     p.set_defaults(func=nbd_get_disks)
 
     # NVMe-oF
@@ -2585,7 +2584,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-f', '--adrfam', help='NVMe-oF transport adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
     p.add_argument('-s', '--trsvcid', help='NVMe-oF transport service id: e.g., a port number (required for RDMA or TCP)')
     p.add_argument('-k', '--secure-channel', help='Immediately establish a secure channel', action="store_true")
-    p.add_argument('-n', '--ana-state', help='ANA state to set: optimized, non_optimized, or inaccessible', type=str, required=False)
+    p.add_argument('-n', '--ana-state', help='ANA state to set: optimized, non_optimized, or inaccessible', type=str)
     p.set_defaults(func=nvmf_subsystem_add_listener)
 
     def nvmf_subsystem_remove_listener(args):
@@ -2923,7 +2922,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         print_dict(rpc.vhost.vhost_get_controllers(args.client, args.name))
 
     p = subparsers.add_parser('vhost_get_controllers', help='List all or specific vhost controller(s)')
-    p.add_argument('-n', '--name', help="Name of vhost controller", required=False)
+    p.add_argument('-n', '--name', help="Name of vhost controller")
     p.set_defaults(func=vhost_get_controllers)
 
     def vhost_delete_controller(args):
@@ -3088,8 +3087,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('accel_crypto_key_create', help='Create encryption key')
     p.add_argument('-c', '--cipher', help='cipher', required=True)
     p.add_argument('-k', '--key', help='key', required=True)
-    p.add_argument('-e', '--key2', help='key2', required=False, default=None)
-    p.add_argument('-t', '--tweak-mode', help='tweak mode', required=False, default=None)
+    p.add_argument('-e', '--key2', help='key2', default=None)
+    p.add_argument('-t', '--tweak-mode', help='tweak mode', default=None)
     p.add_argument('-n', '--name', help='key name', required=True)
     p.set_defaults(func=accel_crypto_key_create)
 
