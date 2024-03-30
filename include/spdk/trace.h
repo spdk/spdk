@@ -47,6 +47,12 @@ struct spdk_trace_owner_type {
 	char	id_prefix;
 };
 
+struct spdk_trace_owner {
+	uint64_t	tsc;
+	uint8_t		type;
+	char		description[];
+} __attribute__((packed));
+
 /* If type changes from a uint8_t, change this value. */
 #define SPDK_TRACE_MAX_OBJECT (UCHAR_MAX + 1)
 
@@ -125,8 +131,15 @@ struct spdk_trace_file {
 	struct spdk_trace_object	object[UCHAR_MAX + 1];
 	struct spdk_trace_tpoint	tpoint[SPDK_TRACE_MAX_TPOINT_ID];
 
+	uint16_t			num_owners;
+	uint16_t			owner_description_size;
+	uint8_t				reserved[4];
+
 	/** Offset of each trace_history from the beginning of this data structure. */
 	uint64_t			lcore_history_offsets[SPDK_TRACE_MAX_LCORE];
+
+	/** Offset of beginning of struct spdk_trace_owner data. */
+	uint64_t			owner_offset;
 
 	/** Variable sized data sections are at the end of this data structure,
 	 *  referenced by offsets defined in this structure.
@@ -162,6 +175,20 @@ spdk_get_per_lcore_history(struct spdk_trace_file *trace_file, unsigned lcore)
 	}
 
 	return (struct spdk_trace_history *)(((char *)trace_file) + lcore_history_offset);
+}
+
+static inline struct spdk_trace_owner *
+spdk_get_trace_owner(const struct spdk_trace_file *trace_file, uint16_t owner_id)
+{
+	uint64_t owner_size;
+
+	if (owner_id >= trace_file->num_owners) {
+		return NULL;
+	}
+
+	owner_size = sizeof(struct spdk_trace_owner) + trace_file->owner_description_size;
+	return (struct spdk_trace_owner *)
+	       (((char *)trace_file) + trace_file->owner_offset + owner_id * owner_size);
 }
 
 void _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
@@ -308,6 +335,48 @@ void spdk_trace_cleanup(void);
  * \param id_prefix Prefix of id for the trace owner.
  */
 void spdk_trace_register_owner_type(uint8_t type, char id_prefix);
+
+/**
+ * Register the trace owner.
+ *
+ * \param owner_type Type of the owner being registered.
+ * \param description Textual string describing the trace owner.
+ * \return Allocated owner_id for the newly registered owner. Returns 0 if
+ *         no trace_id could be allocated.
+ */
+uint16_t spdk_trace_register_owner(uint8_t owner_type, const char *description);
+
+/**
+ * Change the description for a previously registered owner.
+ *
+ * \param owner_id ID of previously registered owner.
+ * \param description New description for the owner.
+ */
+void spdk_trace_owner_set_description(uint16_t owner_id, const char *description);
+
+/**
+ * Append to the description for a previously registered owner.
+ *
+ * A space will be inserted before the appended string.
+ *
+ * This may be useful for modules that are modifying an existing description
+ * with additional information.
+ *
+ * Callers may pass 0 safely, in this case the function will just be a nop.
+ *
+ * \param owner_id ID of previously registered owner.
+ * \param description Additional description for the owner
+ */
+void spdk_trace_owner_append_description(uint16_t owner_id, const char *description);
+
+/**
+ * Unregister a previously registered owner.
+ *
+ * Callers may pass 0 safely, in this case the function will just be a nop.
+ *
+ * \param owner_id ID of previously registered owner.
+ */
+void spdk_trace_unregister_owner(uint16_t owner_id);
 
 /**
  * Register the trace object.

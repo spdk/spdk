@@ -442,7 +442,9 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 	int rc, i;
 	ssize_t len = 0;
 	uint64_t current_offset;
+	uint64_t owner_offset, owner_size;
 	uint64_t len_sum;
+	uint8_t *owner_buf;
 
 	ctx->out_fd = open(ctx->out_file, flags, 0600);
 	if (ctx->out_fd < 0) {
@@ -465,6 +467,10 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 			lcore_offsets[i] = 0;
 		}
 	}
+	owner_size = (uint64_t)ctx->trace_file->num_owners *
+		     (sizeof(struct spdk_trace_owner) + ctx->trace_file->owner_description_size);
+	owner_offset = current_offset;
+	current_offset += owner_size;
 
 	/* Write size of converged trace file */
 	rc = cont_write(ctx->out_fd, &current_offset, sizeof(ctx->trace_file->file_size));
@@ -476,7 +482,7 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 	/* Write rest of metadata (spdk_trace_file) of converged trace file */
 	rc = cont_write(ctx->out_fd, &ctx->trace_file->tsc_rate,
 			sizeof(struct spdk_trace_file) - sizeof(lcore_offsets) -
-			sizeof(ctx->trace_file->file_size));
+			sizeof(owner_offset) - sizeof(ctx->trace_file->file_size));
 	if (rc < 0) {
 		fprintf(stderr, "Failed to write metadata into trace file\n");
 		goto out;
@@ -486,6 +492,13 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 	rc = cont_write(ctx->out_fd, lcore_offsets, sizeof(lcore_offsets));
 	if (rc < 0) {
 		fprintf(stderr, "Failed to write lcore offsets into trace file\n");
+		goto out;
+	}
+
+	/* Write owner_offset of converged trace file */
+	rc = cont_write(ctx->out_fd, &owner_offset, sizeof(owner_offset));
+	if (rc < 0) {
+		fprintf(stderr, "Failed to write owner_description_size into trace file\n");
 		goto out;
 	}
 
@@ -521,15 +534,21 @@ trace_files_aggregate(struct aggr_trace_record_ctx *ctx)
 			}
 		}
 
-		/* Clear rc so that the last cont_write() doesn't get interpreted as a failure. */
-		rc = 0;
-
 		if (len_sum != lcore_port->num_entries * sizeof(struct spdk_trace_entry)) {
 			fprintf(stderr, "Len of lcore trace file doesn't match number of entries for lcore\n");
 		}
 	}
 
+	/* Append owner data into converged trace file */
+	owner_buf = (uint8_t *)ctx->trace_file + ctx->trace_file->owner_offset;
+	rc = cont_write(ctx->out_fd, owner_buf, owner_size);
+	if (rc < 0) {
+		fprintf(stderr, "Failed to write owner_data into trace file\n");
+		goto out;
+	}
+
 	printf("All lcores trace entries are aggregated into trace file %s\n", ctx->out_file);
+	return 0;
 
 out:
 	close(ctx->out_fd);

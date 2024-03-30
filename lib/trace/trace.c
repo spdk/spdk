@@ -27,6 +27,12 @@ struct spdk_trace_file *g_trace_file;
 struct spdk_bit_array *g_ut_array;
 pthread_mutex_t g_ut_array_mutex;
 
+#define TRACE_NUM_OWNERS (16 * 1024)
+#define TRACE_OWNER_DESCRIPTION_SIZE (119)
+SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_owner) == 9, "incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_owner) + TRACE_OWNER_DESCRIPTION_SIZE == 128,
+		   "incorrect size");
+
 static inline struct spdk_trace_entry *
 get_trace_entry(struct spdk_trace_history *history, uint64_t offset)
 {
@@ -231,6 +237,7 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	uint32_t i = 0, max_dedicated_cpu = 0;
 	uint64_t file_size;
 	uint64_t lcore_offsets[SPDK_TRACE_MAX_LCORE] = { 0 };
+	uint64_t owner_offset;
 	struct spdk_cpuset cpuset = {};
 
 	/* 0 entries requested - skip trace initialization */
@@ -270,6 +277,9 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 		lcore_offsets[i] = file_size;
 		file_size += spdk_get_trace_history_size(num_entries);
 	}
+	owner_offset = file_size;
+	file_size += TRACE_NUM_OWNERS *
+		     (sizeof(struct spdk_trace_owner) + TRACE_OWNER_DESCRIPTION_SIZE);
 
 	snprintf(g_shm_name, sizeof(g_shm_name), "%s", shm_name);
 
@@ -328,6 +338,9 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 		lcore_history->num_entries = num_entries;
 	}
 	g_trace_file->file_size = file_size;
+	g_trace_file->num_owners = TRACE_NUM_OWNERS;
+	g_trace_file->owner_description_size = TRACE_OWNER_DESCRIPTION_SIZE;
+	g_trace_file->owner_offset = owner_offset;
 
 	if (trace_flags_init()) {
 		goto trace_init_err;

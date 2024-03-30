@@ -10,8 +10,16 @@
 #include "spdk/log.h"
 #include "spdk/util.h"
 #include "trace_internal.h"
+#include "spdk/bit_array.h"
 
 static struct spdk_trace_register_fn *g_reg_fn_head = NULL;
+static struct {
+	uint16_t *ring;
+	uint32_t head;
+	uint32_t tail;
+	uint32_t size;
+	pthread_spinlock_t lock;
+} g_owner_ids;
 
 SPDK_LOG_REGISTER_COMPONENT(trace)
 
@@ -262,6 +270,119 @@ spdk_trace_register_owner_type(uint8_t type, char id_prefix)
 	owner_type->id_prefix = id_prefix;
 }
 
+static void
+_owner_set_description(uint16_t owner_id, const char *description, bool append)
+{
+	struct spdk_trace_owner *owner;
+	char old[256] = {};
+
+	assert(sizeof(old) >= g_trace_file->owner_description_size);
+	owner = spdk_get_trace_owner(g_trace_file, owner_id);
+	assert(owner != NULL);
+	if (append) {
+		memcpy(old, owner->description, g_trace_file->owner_description_size);
+	}
+
+	snprintf(owner->description, g_trace_file->owner_description_size,
+		 "%s%s%s", old, append ? " " : "", description);
+}
+
+uint16_t
+spdk_trace_register_owner(uint8_t owner_type, const char *description)
+{
+	struct spdk_trace_owner *owner;
+	uint32_t owner_id;
+
+	if (g_owner_ids.ring == NULL) {
+		/* Help the unit test environment by simply returning instead
+		 * of requiring it to initialize the trace library.
+		 */
+		return 0;
+	}
+
+	pthread_spin_lock(&g_owner_ids.lock);
+
+	if (g_owner_ids.head == g_owner_ids.tail) {
+		/* No owner ids available. Return 0 which means no owner. */
+		pthread_spin_unlock(&g_owner_ids.lock);
+		return 0;
+	}
+
+	owner_id = g_owner_ids.ring[g_owner_ids.head];
+	if (++g_owner_ids.head == g_owner_ids.size) {
+		g_owner_ids.head = 0;
+	}
+
+	owner = spdk_get_trace_owner(g_trace_file, owner_id);
+	owner->tsc = spdk_get_ticks();
+	owner->type = owner_type;
+	_owner_set_description(owner_id, description, false);
+	pthread_spin_unlock(&g_owner_ids.lock);
+	return owner_id;
+}
+
+void
+spdk_trace_unregister_owner(uint16_t owner_id)
+{
+	if (g_owner_ids.ring == NULL) {
+		/* Help the unit test environment by simply returning instead
+		 * of requiring it to initialize the trace library.
+		 */
+		return;
+	}
+
+	if (owner_id == 0) {
+		/* owner_id 0 means no owner. Allow this to be passed here, it
+		 * avoids caller having to do extra checking.
+		 */
+		return;
+	}
+
+	pthread_spin_lock(&g_owner_ids.lock);
+	g_owner_ids.ring[g_owner_ids.tail] = owner_id;
+	if (++g_owner_ids.tail == g_owner_ids.size) {
+		g_owner_ids.tail = 0;
+	}
+	pthread_spin_unlock(&g_owner_ids.lock);
+}
+
+void
+spdk_trace_owner_set_description(uint16_t owner_id, const char *description)
+{
+	if (g_owner_ids.ring == NULL) {
+		/* Help the unit test environment by simply returning instead
+		 * of requiring it to initialize the trace library.
+		 */
+		return;
+	}
+
+	pthread_spin_lock(&g_owner_ids.lock);
+	_owner_set_description(owner_id, description, false);
+	pthread_spin_unlock(&g_owner_ids.lock);
+}
+
+void
+spdk_trace_owner_append_description(uint16_t owner_id, const char *description)
+{
+	if (g_owner_ids.ring == NULL) {
+		/* Help the unit test environment by simply returning instead
+		 * of requiring it to initialize the trace library.
+		 */
+		return;
+	}
+
+	if (owner_id == 0) {
+		/* owner_id 0 means no owner. Allow this to be passed here, it
+		 * avoids caller having to do extra checking.
+		 */
+		return;
+	}
+
+	pthread_spin_lock(&g_owner_ids.lock);
+	_owner_set_description(owner_id, description, true);
+	pthread_spin_unlock(&g_owner_ids.lock);
+}
+
 void
 spdk_trace_register_object(uint8_t type, char id_prefix)
 {
@@ -461,6 +582,9 @@ int
 trace_flags_init(void)
 {
 	struct spdk_trace_register_fn *reg_fn;
+	uint16_t i;
+	uint16_t owner_id_start;
+	int rc;
 
 	reg_fn = g_reg_fn_head;
 	while (reg_fn) {
@@ -468,10 +592,42 @@ trace_flags_init(void)
 		reg_fn = reg_fn->next;
 	}
 
-	return 0;
+	/* We will not use owner_id 0, it will be reserved to mean "no owner".
+	 * But for now, we will start with owner_id 256 instead of owner_id 1.
+	 * This will account for some libraries and modules which pass a
+	 * "poller_id" to spdk_trace_record() which is now an owner_id. Until
+	 * all of those libraries and modules are converted, we will start
+	 * owner_ids at 256 to avoid collisions.
+	 */
+	owner_id_start = 256;
+	g_owner_ids.ring = calloc(g_trace_file->num_owners, sizeof(uint16_t));
+	if (g_owner_ids.ring == NULL) {
+		SPDK_ERRLOG("could not allocate g_owner_ids.ring\n");
+		return -ENOMEM;
+	}
+	g_owner_ids.head = 0;
+	g_owner_ids.tail = g_trace_file->num_owners - owner_id_start;
+	g_owner_ids.size = g_trace_file->num_owners;
+	for (i = 0; i < g_owner_ids.tail; i++) {
+		g_owner_ids.ring[i] = i + owner_id_start;
+	}
+
+	rc = pthread_spin_init(&g_owner_ids.lock, PTHREAD_PROCESS_PRIVATE);
+	if (rc != 0) {
+		free(g_owner_ids.ring);
+		g_owner_ids.ring = NULL;
+	}
+
+	return rc;
 }
 
 void
 trace_flags_fini(void)
 {
+	if (g_owner_ids.ring == NULL) {
+		return;
+	}
+	pthread_spin_destroy(&g_owner_ids.lock);
+	free(g_owner_ids.ring);
+	g_owner_ids.ring = NULL;
 }
