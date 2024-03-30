@@ -11,7 +11,6 @@
 	spdk_trace_clear_tpoint_group_mask;
 	spdk_trace_init;
 	spdk_trace_cleanup;
-	spdk_trace_flags_init;
 	spdk_trace_register_owner;
 	spdk_trace_register_object;
 	spdk_trace_register_description;

@@ -301,11 +301,6 @@ int spdk_trace_unregister_user_thread(void);
  */
 void spdk_trace_cleanup(void);
 
-/**
- * Initialize trace flags.
- */
-void spdk_trace_flags_init(void);
-
 #define OWNER_NONE 0
 #define OBJECT_NONE 0
 

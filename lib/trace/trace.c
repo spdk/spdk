@@ -329,7 +329,7 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries, uint32_t num_threads
 	}
 	g_trace_file->file_size = file_size;
 
-	spdk_trace_flags_init();
+	trace_flags_init();
 
 	return 0;
 

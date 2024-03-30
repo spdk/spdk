@@ -9,6 +9,7 @@
 #include "spdk/trace.h"
 #include "spdk/log.h"
 #include "spdk/util.h"
+#include "trace_internal.h"
 
 static struct spdk_trace_register_fn *g_reg_fn_head = NULL;
 
@@ -457,7 +458,7 @@ spdk_trace_add_register_fn(struct spdk_trace_register_fn *reg_fn)
 }
 
 void
-spdk_trace_flags_init(void)
+trace_flags_init(void)
 {
 	struct spdk_trace_register_fn *reg_fn;
 
