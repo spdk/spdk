@@ -133,6 +133,7 @@ static void
 print_event(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint64_t tsc_offset)
 {
 	struct spdk_trace_entry		*e = entry->entry;
+	struct spdk_trace_owner		*owner;
 	const struct spdk_trace_tpoint	*d;
 	float				us;
 	size_t				i;
@@ -145,10 +146,12 @@ print_event(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint64_t t
 	if (g_print_tsc) {
 		printf("(%9ju) ", e->tsc - tsc_offset);
 	}
-	if (g_file->owner_type[d->owner_type].id_prefix) {
-		printf("%c%02d ", g_file->owner_type[d->owner_type].id_prefix, e->owner_id);
+	owner = spdk_get_trace_owner(g_file, e->owner_id);
+	/* For now, only try to print first 64 bytes of description. */
+	if (e->owner_id > 0 && owner->tsc < e->tsc) {
+		printf("%-*s ", 64, owner->description);
 	} else {
-		printf("%4s", " ");
+		printf("%-*s ", 64, "");
 	}
 
 	printf("%-*s ", (int)sizeof(d->name), d->name);
