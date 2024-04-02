@@ -226,6 +226,8 @@ nvmf_qpair_set_ctrlr(struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_ctrlr *ctrl
 	}
 
 	qpair->ctrlr = ctrlr;
+	spdk_trace_owner_append_description(qpair->trace_id,
+					    spdk_nvmf_subsystem_get_nqn(ctrlr->subsys));
 }
 
 static int _retry_qid_check(void *ctx);

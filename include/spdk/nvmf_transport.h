@@ -17,6 +17,7 @@
 #include "spdk/nvmf_cmd.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/memory.h"
+#include "spdk/trace.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -154,6 +155,8 @@ struct spdk_nvmf_qpair {
 
 	bool					connect_received;
 	bool					disconnect_started;
+
+	uint16_t				trace_id;
 };
 
 struct spdk_nvmf_transport_poll_group {

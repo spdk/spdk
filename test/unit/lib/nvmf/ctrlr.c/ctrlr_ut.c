@@ -215,6 +215,9 @@ DEFINE_STUB(spdk_nvme_ns_get_format_index, uint32_t,
 
 DEFINE_STUB(spdk_nvmf_subsystem_is_discovery, bool, (struct spdk_nvmf_subsystem *subsystem), false);
 
+DEFINE_STUB(spdk_nvmf_subsystem_get_nqn, const char *,
+	    (const struct spdk_nvmf_subsystem *subsystem), NULL);
+
 int
 spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair)
 {

@@ -120,63 +120,63 @@ SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 	spdk_trace_register_description("TCP_REQ_NEW",
 					TRACE_TCP_REQUEST_STATE_NEW,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NVMF_TCP_IO, 1,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("TCP_REQ_NEED_BUFFER",
 					TRACE_TCP_REQUEST_STATE_NEED_BUFFER,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NVMF_TCP_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("TCP_REQ_WAIT_ZCPY_START",
 					TRACE_TCP_REQUEST_STATE_AWAIT_ZCOPY_START,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NVMF_TCP_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("TCP_REQ_ZCPY_START_CPL",
 					TRACE_TCP_REQUEST_STATE_ZCOPY_START_COMPLETED,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NVMF_TCP_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("TCP_REQ_TX_H_TO_C",
 					TRACE_TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NVMF_TCP_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("TCP_REQ_RDY_TO_EXECUTE",
 					TRACE_TCP_REQUEST_STATE_READY_TO_EXECUTE,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NVMF_TCP_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("TCP_REQ_EXECUTING",
 					TRACE_TCP_REQUEST_STATE_EXECUTING,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NVMF_TCP_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("TCP_REQ_WAIT_ZCPY_CMT",
 					TRACE_TCP_REQUEST_STATE_AWAIT_ZCOPY_COMMIT,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NVMF_TCP_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("TCP_REQ_EXECUTED",
 					TRACE_TCP_REQUEST_STATE_EXECUTED,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NVMF_TCP_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("TCP_REQ_RDY_TO_COMPLETE",
 					TRACE_TCP_REQUEST_STATE_READY_TO_COMPLETE,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NVMF_TCP_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("TCP_REQ_TRANSFER_C2H",
 					TRACE_TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NVMF_TCP_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("TCP_REQ_AWAIT_ZCPY_RLS",
 					TRACE_TCP_REQUEST_STATE_AWAIT_ZCOPY_RELEASE,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NVMF_TCP_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("TCP_REQ_COMPLETED",
 					TRACE_TCP_REQUEST_STATE_COMPLETED,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NVMF_TCP_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("TCP_READ_DONE",
 					TRACE_TCP_READ_FROM_SOCKET_DONE,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NONE, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("TCP_REQ_AWAIT_R2T_ACK",
 					TRACE_TCP_REQUEST_STATE_AWAIT_R2T_ACK,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NVMF_TCP_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+					SPDK_TRACE_ARG_TYPE_INT, "");
 
 	spdk_trace_register_description("TCP_QP_CREATE", TRACE_TCP_QP_CREATE,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NONE, 0,
@@ -195,7 +195,7 @@ SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("TCP_QP_ABORT_REQ", TRACE_TCP_QP_ABORT_REQ,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NONE, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("TCP_QP_RCV_STATE_CHANGE", TRACE_TCP_QP_RCV_STATE_CHANGE,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "state");
@@ -542,7 +542,7 @@ _nvmf_tcp_qpair_destroy(void *_tqpair)
 	void *cb_arg = tqpair->fini_cb_arg;
 	int err = 0;
 
-	spdk_trace_record(TRACE_TCP_QP_DESTROY, 0, 0, (uintptr_t)tqpair);
+	spdk_trace_record(TRACE_TCP_QP_DESTROY, tqpair->qpair.trace_id, 0, 0);
 
 	SPDK_DEBUGLOG(nvmf_tcp, "enter\n");
 
@@ -568,6 +568,7 @@ _nvmf_tcp_qpair_destroy(void *_tqpair)
 	spdk_dma_free(tqpair->pdus);
 	free(tqpair->reqs);
 	spdk_free(tqpair->bufs);
+	spdk_trace_unregister_owner(tqpair->qpair.trace_id);
 	free(tqpair);
 
 	if (cb_fn != NULL) {
@@ -995,8 +996,7 @@ static void
 nvmf_tcp_qpair_set_state(struct spdk_nvmf_tcp_qpair *tqpair, enum nvme_tcp_qpair_state state)
 {
 	tqpair->state = state;
-	spdk_trace_record(TRACE_TCP_QP_STATE_CHANGE, tqpair->qpair.qid, 0, (uintptr_t)tqpair,
-			  tqpair->state);
+	spdk_trace_record(TRACE_TCP_QP_STATE_CHANGE, tqpair->qpair.trace_id, 0, 0, tqpair->state);
 }
 
 static void
@@ -1004,7 +1004,7 @@ nvmf_tcp_qpair_disconnect(struct spdk_nvmf_tcp_qpair *tqpair)
 {
 	SPDK_DEBUGLOG(nvmf_tcp, "Disconnecting qpair %p\n", tqpair);
 
-	spdk_trace_record(TRACE_TCP_QP_DISCONNECT, 0, 0, (uintptr_t)tqpair);
+	spdk_trace_record(TRACE_TCP_QP_DISCONNECT, tqpair->qpair.trace_id, 0, 0);
 
 	if (tqpair->state <= NVME_TCP_QPAIR_STATE_RUNNING) {
 		nvmf_tcp_qpair_set_state(tqpair, NVME_TCP_QPAIR_STATE_EXITING);
@@ -1282,7 +1282,7 @@ nvmf_tcp_qpair_init(struct spdk_nvmf_qpair *qpair)
 
 	SPDK_DEBUGLOG(nvmf_tcp, "New TCP Connection: %p\n", qpair);
 
-	spdk_trace_record(TRACE_TCP_QP_CREATE, 0, 0, (uintptr_t)tqpair);
+	spdk_trace_record(TRACE_TCP_QP_CREATE, tqpair->qpair.trace_id, 0, 0);
 
 	/* Initialise request state queues of the qpair */
 	TAILQ_INIT(&tqpair->tcp_req_free_queue);
@@ -1298,9 +1298,16 @@ nvmf_tcp_qpair_init(struct spdk_nvmf_qpair *qpair)
 static int
 nvmf_tcp_qpair_sock_init(struct spdk_nvmf_tcp_qpair *tqpair)
 {
+	char saddr[32], caddr[32];
+	uint16_t sport, cport;
+	char owner[256];
 	int rc;
 
-	spdk_trace_record(TRACE_TCP_QP_SOCK_INIT, 0, 0, (uintptr_t)tqpair);
+	spdk_sock_getaddr(tqpair->sock, saddr, sizeof(saddr), &sport,
+			  caddr, sizeof(caddr), &cport);
+	snprintf(owner, sizeof(owner), "%s:%d", caddr, cport);
+	tqpair->qpair.trace_id = spdk_trace_register_owner(OWNER_TYPE_NVMF_TCP, owner);
+	spdk_trace_record(TRACE_TCP_QP_SOCK_INIT, tqpair->qpair.trace_id, 0, 0);
 
 	/* set low water mark */
 	rc = spdk_sock_set_recvlowat(tqpair->sock, 1);
@@ -1612,8 +1619,7 @@ nvmf_tcp_qpair_set_recv_state(struct spdk_nvmf_tcp_qpair *tqpair,
 	SPDK_DEBUGLOG(nvmf_tcp, "tqpair(%p) recv state=%d\n", tqpair, state);
 	tqpair->recv_state = state;
 
-	spdk_trace_record(TRACE_TCP_QP_RCV_STATE_CHANGE, tqpair->qpair.qid, 0, (uintptr_t)tqpair,
-			  tqpair->recv_state);
+	spdk_trace_record(TRACE_TCP_QP_RCV_STATE_CHANGE, tqpair->qpair.trace_id, 0, 0, tqpair->recv_state);
 }
 
 static int
@@ -2355,7 +2361,7 @@ nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 				break;
 			} else if (rc > 0) {
 				pdu->ch_valid_bytes += rc;
-				spdk_trace_record(TRACE_TCP_READ_FROM_SOCKET_DONE, tqpair->qpair.qid, rc, 0, tqpair);
+				spdk_trace_record(TRACE_TCP_READ_FROM_SOCKET_DONE, tqpair->qpair.trace_id, rc, 0);
 			}
 
 			if (pdu->ch_valid_bytes < sizeof(struct spdk_nvme_tcp_common_pdu_hdr)) {
@@ -2374,7 +2380,7 @@ nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 				nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_QUIESCING);
 				break;
 			} else if (rc > 0) {
-				spdk_trace_record(TRACE_TCP_READ_FROM_SOCKET_DONE, tqpair->qpair.qid, rc, 0, tqpair);
+				spdk_trace_record(TRACE_TCP_READ_FROM_SOCKET_DONE, tqpair->qpair.trace_id, rc, 0);
 				pdu->psh_valid_bytes += rc;
 			}
 
@@ -2886,7 +2892,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			 * to escape this state. */
 			break;
 		case TCP_REQUEST_STATE_NEW:
-			spdk_trace_record(TRACE_TCP_REQUEST_STATE_NEW, tqpair->qpair.qid, 0, (uintptr_t)tcp_req, tqpair);
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_NEW, tqpair->qpair.trace_id, 0, (uintptr_t)tcp_req);
 
 			/* copy the cmd from the receive pdu */
 			tcp_req->cmd = tqpair->pdu_in_progress->hdr.capsule_cmd.ccsqe;
@@ -2933,8 +2939,8 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			STAILQ_INSERT_TAIL(&group->pending_buf_queue, &tcp_req->req, buf_link);
 			break;
 		case TCP_REQUEST_STATE_NEED_BUFFER:
-			spdk_trace_record(TRACE_TCP_REQUEST_STATE_NEED_BUFFER, tqpair->qpair.qid, 0, (uintptr_t)tcp_req,
-					  tqpair);
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_NEED_BUFFER, tqpair->qpair.trace_id, 0,
+					  (uintptr_t)tcp_req);
 
 			assert(tcp_req->req.xfer != SPDK_NVME_DATA_NONE);
 
@@ -2997,14 +3003,14 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_EXECUTE);
 			break;
 		case TCP_REQUEST_STATE_AWAITING_ZCOPY_START:
-			spdk_trace_record(TRACE_TCP_REQUEST_STATE_AWAIT_ZCOPY_START, tqpair->qpair.qid, 0,
-					  (uintptr_t)tcp_req, tqpair);
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_AWAIT_ZCOPY_START, tqpair->qpair.trace_id, 0,
+					  (uintptr_t)tcp_req);
 			/* Some external code must kick a request into  TCP_REQUEST_STATE_ZCOPY_START_COMPLETED
 			 * to escape this state. */
 			break;
 		case TCP_REQUEST_STATE_ZCOPY_START_COMPLETED:
-			spdk_trace_record(TRACE_TCP_REQUEST_STATE_ZCOPY_START_COMPLETED, tqpair->qpair.qid, 0,
-					  (uintptr_t)tcp_req, tqpair);
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_ZCOPY_START_COMPLETED, tqpair->qpair.trace_id, 0,
+					  (uintptr_t)tcp_req);
 			if (spdk_unlikely(spdk_nvme_cpl_is_error(&tcp_req->req.rsp->nvme_cpl))) {
 				SPDK_DEBUGLOG(nvmf_tcp, "Zero-copy start failed for tcp_req(%p) on tqpair=%p\n",
 					      tcp_req, tqpair);
@@ -3019,20 +3025,20 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			}
 			break;
 		case TCP_REQUEST_STATE_AWAITING_R2T_ACK:
-			spdk_trace_record(TRACE_TCP_REQUEST_STATE_AWAIT_R2T_ACK, tqpair->qpair.qid, 0, (uintptr_t)tcp_req,
-					  tqpair);
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_AWAIT_R2T_ACK, tqpair->qpair.trace_id, 0,
+					  (uintptr_t)tcp_req);
 			/* The R2T completion or the h2c data incoming will kick it out of this state. */
 			break;
 		case TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER:
 
-			spdk_trace_record(TRACE_TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER, tqpair->qpair.qid, 0,
-					  (uintptr_t)tcp_req, tqpair);
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER, tqpair->qpair.trace_id,
+					  0, (uintptr_t)tcp_req);
 			/* Some external code must kick a request into TCP_REQUEST_STATE_READY_TO_EXECUTE
 			 * to escape this state. */
 			break;
 		case TCP_REQUEST_STATE_READY_TO_EXECUTE:
-			spdk_trace_record(TRACE_TCP_REQUEST_STATE_READY_TO_EXECUTE, tqpair->qpair.qid, 0,
-					  (uintptr_t)tcp_req, tqpair);
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_READY_TO_EXECUTE, tqpair->qpair.trace_id, 0,
+					  (uintptr_t)tcp_req);
 
 			if (spdk_unlikely(tcp_req->req.dif_enabled)) {
 				assert(tcp_req->req.dif.elba_length >= tcp_req->req.length);
@@ -3097,20 +3103,18 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 
 			break;
 		case TCP_REQUEST_STATE_EXECUTING:
-			spdk_trace_record(TRACE_TCP_REQUEST_STATE_EXECUTING, tqpair->qpair.qid, 0, (uintptr_t)tcp_req,
-					  tqpair);
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_EXECUTING, tqpair->qpair.trace_id, 0, (uintptr_t)tcp_req);
 			/* Some external code must kick a request into TCP_REQUEST_STATE_EXECUTED
 			 * to escape this state. */
 			break;
 		case TCP_REQUEST_STATE_AWAITING_ZCOPY_COMMIT:
-			spdk_trace_record(TRACE_TCP_REQUEST_STATE_AWAIT_ZCOPY_COMMIT, tqpair->qpair.qid, 0,
-					  (uintptr_t)tcp_req, tqpair);
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_AWAIT_ZCOPY_COMMIT, tqpair->qpair.trace_id, 0,
+					  (uintptr_t)tcp_req);
 			/* Some external code must kick a request into TCP_REQUEST_STATE_EXECUTED
 			 * to escape this state. */
 			break;
 		case TCP_REQUEST_STATE_EXECUTED:
-			spdk_trace_record(TRACE_TCP_REQUEST_STATE_EXECUTED, tqpair->qpair.qid, 0, (uintptr_t)tcp_req,
-					  tqpair);
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_EXECUTED, tqpair->qpair.trace_id, 0, (uintptr_t)tcp_req);
 
 			if (spdk_unlikely(tcp_req->req.dif_enabled)) {
 				tcp_req->req.length = tcp_req->req.dif.orig_length;
@@ -3119,27 +3123,26 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_COMPLETE);
 			break;
 		case TCP_REQUEST_STATE_READY_TO_COMPLETE:
-			spdk_trace_record(TRACE_TCP_REQUEST_STATE_READY_TO_COMPLETE, tqpair->qpair.qid, 0,
-					  (uintptr_t)tcp_req, tqpair);
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_READY_TO_COMPLETE, tqpair->qpair.trace_id, 0,
+					  (uintptr_t)tcp_req);
 			if (request_transfer_out(&tcp_req->req) != 0) {
 				assert(0); /* No good way to handle this currently */
 			}
 			break;
 		case TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST:
-			spdk_trace_record(TRACE_TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST, tqpair->qpair.qid, 0,
-					  (uintptr_t)tcp_req, tqpair);
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST, tqpair->qpair.trace_id,
+					  0, (uintptr_t)tcp_req);
 			/* Some external code must kick a request into TCP_REQUEST_STATE_COMPLETED
 			 * to escape this state. */
 			break;
 		case TCP_REQUEST_STATE_AWAITING_ZCOPY_RELEASE:
-			spdk_trace_record(TRACE_TCP_REQUEST_STATE_AWAIT_ZCOPY_RELEASE, tqpair->qpair.qid, 0,
-					  (uintptr_t)tcp_req, tqpair);
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_AWAIT_ZCOPY_RELEASE, tqpair->qpair.trace_id, 0,
+					  (uintptr_t)tcp_req);
 			/* Some external code must kick a request into TCP_REQUEST_STATE_COMPLETED
 			 * to escape this state. */
 			break;
 		case TCP_REQUEST_STATE_COMPLETED:
-			spdk_trace_record(TRACE_TCP_REQUEST_STATE_COMPLETED, tqpair->qpair.qid, 0, (uintptr_t)tcp_req,
-					  tqpair);
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_COMPLETED, tqpair->qpair.trace_id, 0, (uintptr_t)tcp_req);
 			/* If there's an outstanding PDU sent to the host, the request is completed
 			 * due to the qpair being disconnected.  We must delay the completion until
 			 * that write is done to avoid freeing the request twice. */
@@ -3523,7 +3526,7 @@ nvmf_tcp_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 		}
 	}
 
-	spdk_trace_record(TRACE_TCP_QP_ABORT_REQ, qpair->qid, 0, (uintptr_t)req, tqpair);
+	spdk_trace_record(TRACE_TCP_QP_ABORT_REQ, tqpair->qpair.trace_id, 0, (uintptr_t)req);
 
 	if (tcp_req_to_abort == NULL) {
 		spdk_nvmf_request_complete(req);
