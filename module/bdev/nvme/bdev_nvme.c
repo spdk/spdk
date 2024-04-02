@@ -809,9 +809,19 @@ bdev_nvme_io_type_is_admin(enum spdk_bdev_io_type io_type)
 }
 
 static inline bool
-nvme_ns_is_accessible(struct nvme_ns *nvme_ns)
+nvme_ns_is_active(struct nvme_ns *nvme_ns)
 {
 	if (spdk_unlikely(nvme_ns->ana_state_updating)) {
+		return false;
+	}
+
+	return true;
+}
+
+static inline bool
+nvme_ns_is_accessible(struct nvme_ns *nvme_ns)
+{
+	if (spdk_unlikely(!nvme_ns_is_active(nvme_ns))) {
 		return false;
 	}
 
@@ -941,7 +951,7 @@ _bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 	io_path = start;
 	do {
 		if (spdk_likely(nvme_qpair_is_connected(io_path->qpair) &&
-				!io_path->nvme_ns->ana_state_updating)) {
+				nvme_ns_is_active(io_path->nvme_ns))) {
 			switch (io_path->nvme_ns->ana_state) {
 			case SPDK_NVME_ANA_OPTIMIZED_STATE:
 				nbdev_ch->current_io_path = io_path;
@@ -982,7 +992,7 @@ _bdev_nvme_find_io_path_min_qd(struct nvme_bdev_channel *nbdev_ch)
 			continue;
 		}
 
-		if (spdk_unlikely(io_path->nvme_ns->ana_state_updating)) {
+		if (spdk_unlikely(!nvme_ns_is_active(io_path->nvme_ns))) {
 			continue;
 		}
 
