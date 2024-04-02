@@ -457,7 +457,7 @@ spdk_trace_add_register_fn(struct spdk_trace_register_fn *reg_fn)
 	}
 }
 
-void
+int
 trace_flags_init(void)
 {
 	struct spdk_trace_register_fn *reg_fn;
@@ -467,4 +467,6 @@ trace_flags_init(void)
 		reg_fn->reg_fn();
 		reg_fn = reg_fn->next;
 	}
+
+	return 0;
 }

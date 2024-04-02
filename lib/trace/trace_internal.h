@@ -11,6 +11,6 @@
 /* Get shared memory file name. */
 const char *trace_get_shm_name(void);
 
-void trace_flags_init(void);
+int trace_flags_init(void);
 
 #endif
