@@ -175,7 +175,7 @@ class TraceEntry:
     lcore: int
     tpoint: Tracepoint
     tsc: int
-    poller: str
+    owner: str
     size: int
     object_id: str
     object_ptr: int
@@ -242,7 +242,7 @@ class JsonProvider(TraceProvider):
         return TraceEntry(tpoint=tpoint, lcore=entry['lcore'], tsc=entry['tsc'],
                           size=entry.get('size'), object_id=obj.get('id'),
                           object_ptr=obj.get('value'), related=entry.get('related'),
-                          time=obj.get('time'), poller=entry.get('poller'),
+                          time=obj.get('time'), owner=entry.get('owner'),
                           args={n.name: v for n, v in zip(tpoint.args, entry.get('args', []))})
 
     def tsc_rate(self):
@@ -313,7 +313,7 @@ class CTraceFile(ct.Structure):
 class CTraceEntry(ct.Structure):
     _fields_ = [('tsc', ct.c_uint64),
                 ('tpoint_id', ct.c_uint16),
-                ('poller_id', ct.c_uint16),
+                ('owner_id', ct.c_uint16),
                 ('size', ct.c_uint32),
                 ('object_id', ct.c_uint64)]
 
@@ -407,9 +407,9 @@ class NativeProvider(TraceProvider):
                 object_id, ts = None, None
 
             if tpoint.owner_type != OWNER_TYPE_NONE:
-                poller_id = '{}{:02}'.format(self._owners[tpoint.owner_type], entry.poller_id)
+                owner_id = '{}{:02}'.format(self._owners[tpoint.owner_type], entry.owner_id)
             else:
-                poller_id = None
+                owner_id = None
 
             if pe.related_type != OBJECT_NONE:
                 related = '{}{}'.format(self._objects[pe.related_type], pe.related_index)
@@ -418,7 +418,7 @@ class NativeProvider(TraceProvider):
 
             yield TraceEntry(tpoint=tpoint, lcore=lcore, tsc=entry.tsc,
                              size=entry.size, object_id=object_id,
-                             object_ptr=entry.object_id, poller=poller_id, time=ts,
+                             object_ptr=entry.object_id, owner=owner_id, time=ts,
                              args=args, related=related)
 
 
@@ -470,7 +470,7 @@ class Trace:
             related = ' (' + e.related + ')' if e.related is not None else ''
 
             print(('{:3} {:16.3f} {:3} {:24} {:12}'.format(
-                e.lcore, timestamp, e.poller if e.poller is not None else '',
+                e.lcore, timestamp, e.owner if e.owner is not None else '',
                 e.tpoint.name, f'size: {e.size}' if e.size else '') +
                 (f'id: {e.object_id + related:12} ' if e.object_id is not None else '') +
                 (f'time: {diff:<8.3f} ' if diff is not None else '') +

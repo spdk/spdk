@@ -40,7 +40,7 @@ get_trace_entry(struct spdk_trace_history *history, uint64_t offset)
 }
 
 void
-_spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
+_spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t owner_id, uint32_t size,
 		   uint64_t object_id, int num_args, ...)
 {
 	struct spdk_trace_history *lcore_history;
@@ -79,14 +79,14 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 	next_entry = get_trace_entry(lcore_history, lcore_history->next_entry);
 	next_entry->tsc = tsc;
 	next_entry->tpoint_id = tpoint_id;
-	next_entry->poller_id = poller_id;
+	next_entry->owner_id = owner_id;
 	next_entry->size = size;
 	next_entry->object_id = object_id;
 
 	num_entries = 1;
 	buffer = (struct spdk_trace_entry_buffer *)next_entry;
 	/* The initial offset needs to be adjusted by the fields present in the first entry
-	 * (poller_id, size, etc.).
+	 * (owner_id, size, etc.).
 	 */
 	offset = offsetof(struct spdk_trace_entry, args) -
 		 offsetof(struct spdk_trace_entry_buffer, data);

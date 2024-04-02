@@ -24,7 +24,7 @@ extern "C" {
 struct spdk_trace_entry {
 	uint64_t	tsc;
 	uint16_t	tpoint_id;
-	uint16_t	poller_id;
+	uint16_t	owner_id;
 	uint32_t	size;
 	uint64_t	object_id;
 	uint8_t		args[8];
@@ -191,20 +191,20 @@ spdk_get_trace_owner(const struct spdk_trace_file *trace_file, uint16_t owner_id
 	       (((char *)trace_file) + trace_file->owner_offset + owner_id * owner_size);
 }
 
-void _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
+void _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t owner_id,
 			uint32_t size, uint64_t object_id, int num_args, ...);
 
 #define spdk_trace_tpoint_enabled(tpoint_id)	\
 	spdk_unlikely((g_trace_file != NULL  && \
 	((1ULL << (tpoint_id & 0x3F)) &	g_trace_file->tpoint_mask[tpoint_id >> 6])))
 
-#define _spdk_trace_record_tsc(tsc, tpoint_id, poller_id, size, object_id, num_args, ...)	\
+#define _spdk_trace_record_tsc(tsc, tpoint_id, owner_id, size, object_id, num_args, ...)	\
 	do {											\
 		assert(tpoint_id < SPDK_TRACE_MAX_TPOINT_ID);					\
 		if (!spdk_trace_tpoint_enabled(tpoint_id)) {					\
 			break;									\
 		}										\
-		_spdk_trace_record(tsc, tpoint_id, poller_id, size, object_id,			\
+		_spdk_trace_record(tsc, tpoint_id, owner_id, size, object_id,			\
 				   num_args, ## __VA_ARGS__);					\
 	} while (0)
 
@@ -220,14 +220,14 @@ void _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
  *
  * \param tsc Current tsc.
  * \param tpoint_id Tracepoint id to record.
- * \param poller_id Poller id to record.
+ * \param owner_id Owner id to record.
  * \param size Size to record.
  * \param object_id Object id to record.
  * \param ... Extra tracepoint arguments. The number, types, and order of the arguments
  *	      must match the definition of the tracepoint.
  */
-#define spdk_trace_record_tsc(tsc, tpoint_id, poller_id, size, object_id, ...)	\
-	_spdk_trace_record_tsc(tsc, tpoint_id, poller_id, size, object_id,	\
+#define spdk_trace_record_tsc(tsc, tpoint_id, owner_id, size, object_id, ...)	\
+	_spdk_trace_record_tsc(tsc, tpoint_id, owner_id, size, object_id,	\
 			       spdk_trace_num_args(__VA_ARGS__), ## __VA_ARGS__)
 
 /**
@@ -237,14 +237,14 @@ void _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
  * the current tsc to save in the tracepoint.
  *
  * \param tpoint_id Tracepoint id to record.
- * \param poller_id Poller id to record.
+ * \param owner_id Owner id to record.
  * \param size Size to record.
  * \param object_id Object id to record.
  * \param ... Extra tracepoint arguments. The number, types, and order of the arguments
  *	      must match the definition of the tracepoint.
  */
-#define spdk_trace_record(tpoint_id, poller_id, size, object_id, ...) \
-	spdk_trace_record_tsc(0, tpoint_id, poller_id, size, object_id, ## __VA_ARGS__)
+#define spdk_trace_record(tpoint_id, owner_id, size, object_id, ...) \
+	spdk_trace_record_tsc(0, tpoint_id, owner_id, size, object_id, ## __VA_ARGS__)
 
 /**
  * Get the current tpoint mask of the given tpoint group.
