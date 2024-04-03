@@ -833,6 +833,10 @@ nvme_ns_is_active(struct nvme_ns *nvme_ns)
 		return false;
 	}
 
+	if (spdk_unlikely(nvme_ns->ns == NULL)) {
+		return false;
+	}
+
 	return true;
 }
 
@@ -2220,6 +2224,24 @@ bdev_nvme_reset_create_qpair(struct spdk_io_channel_iter *i)
 	}
 }
 
+static void
+nvme_ctrlr_check_namespaces(struct nvme_ctrlr *nvme_ctrlr)
+{
+	struct spdk_nvme_ctrlr *ctrlr = nvme_ctrlr->ctrlr;
+	struct nvme_ns *nvme_ns;
+
+	for (nvme_ns = nvme_ctrlr_get_first_active_ns(nvme_ctrlr);
+	     nvme_ns != NULL;
+	     nvme_ns = nvme_ctrlr_get_next_active_ns(nvme_ctrlr, nvme_ns)) {
+		if (!spdk_nvme_ctrlr_is_active_ns(ctrlr, nvme_ns->id)) {
+			SPDK_DEBUGLOG(bdev_nvme, "NSID %u was removed during reset.\n", nvme_ns->id);
+			/* NS can be added again. Just nullify nvme_ns->ns. */
+			nvme_ns->ns = NULL;
+		}
+	}
+}
+
+
 static int
 bdev_nvme_reconnect_ctrlr_poll(void *arg)
 {
@@ -2235,6 +2257,8 @@ bdev_nvme_reconnect_ctrlr_poll(void *arg)
 
 	spdk_poller_unregister(&nvme_ctrlr->reset_detach_poller);
 	if (rc == 0) {
+		nvme_ctrlr_check_namespaces(nvme_ctrlr);
+
 		/* Recreate all of the I/O queue pairs */
 		spdk_for_each_channel(nvme_ctrlr,
 				      bdev_nvme_reset_create_qpair,
@@ -3132,6 +3156,10 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	nvme_ns = TAILQ_FIRST(&nbdev->nvme_ns_list);
 	assert(nvme_ns != NULL);
 	ns = nvme_ns->ns;
+	if (ns == NULL) {
+		return false;
+	}
+
 	ctrlr = spdk_nvme_ns_get_ctrlr(ns);
 
 	switch (io_type) {
@@ -3599,6 +3627,10 @@ nvme_namespace_info_json(struct spdk_json_write_ctx *w,
 	char buf[128];
 
 	ns = nvme_ns->ns;
+	if (ns == NULL) {
+		return;
+	}
+
 	ctrlr = spdk_nvme_ns_get_ctrlr(ns);
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
@@ -3966,6 +3998,8 @@ nvme_ns_set_ana_state(const struct spdk_nvme_ana_group_descriptor *desc, void *c
 {
 	struct nvme_ns *nvme_ns = cb_arg;
 	uint32_t i;
+
+	assert(nvme_ns->ns != NULL);
 
 	for (i = 0; i < desc->num_of_nsid; i++) {
 		if (desc->nsid[i] != spdk_nvme_ns_get_id(nvme_ns->ns)) {
@@ -4481,7 +4515,7 @@ nvme_bdev_add_ns(struct nvme_bdev *bdev, struct nvme_ns *nvme_ns)
 	tmp_ns = TAILQ_FIRST(&bdev->nvme_ns_list);
 	assert(tmp_ns != NULL);
 
-	if (!bdev_nvme_compare_ns(nvme_ns->ns, tmp_ns->ns)) {
+	if (tmp_ns->ns != NULL && !bdev_nvme_compare_ns(nvme_ns->ns, tmp_ns->ns)) {
 		pthread_mutex_unlock(&bdev->mutex);
 		SPDK_ERRLOG("Namespaces are not identical.\n");
 		return -EINVAL;
@@ -4633,8 +4667,14 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 		next = nvme_ctrlr_get_next_active_ns(nvme_ctrlr, nvme_ns);
 
 		if (spdk_nvme_ctrlr_is_active_ns(ctrlr, nvme_ns->id)) {
-			/* NS is still there but attributes may have changed */
+			/* NS is still there or added again. Its attributes may have changed. */
 			ns = spdk_nvme_ctrlr_get_ns(ctrlr, nvme_ns->id);
+			if (nvme_ns->ns != ns) {
+				assert(nvme_ns->ns == NULL);
+				nvme_ns->ns = ns;
+				SPDK_DEBUGLOG(bdev_nvme, "NSID %u was added\n", nvme_ns->id);
+			}
+
 			num_sectors = spdk_nvme_ns_get_num_sectors(ns);
 			bdev = nvme_ns->bdev;
 			assert(bdev != NULL);

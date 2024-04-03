@@ -4265,11 +4265,12 @@ test_find_io_path(void)
 	};
 	struct spdk_nvme_qpair qpair1 = {}, qpair2 = {};
 	struct spdk_nvme_ctrlr ctrlr1 = {}, ctrlr2 = {};
+	struct spdk_nvme_ns ns1 = {}, ns2 = {};
 	struct nvme_ctrlr nvme_ctrlr1 = { .ctrlr = &ctrlr1, }, nvme_ctrlr2 = { .ctrlr = &ctrlr2, };
 	struct nvme_ctrlr_channel ctrlr_ch1 = {}, ctrlr_ch2 = {};
 	struct nvme_qpair nvme_qpair1 = { .ctrlr_ch = &ctrlr_ch1, .ctrlr = &nvme_ctrlr1, };
 	struct nvme_qpair nvme_qpair2 = { .ctrlr_ch = &ctrlr_ch2, .ctrlr = &nvme_ctrlr2, };
-	struct nvme_ns nvme_ns1 = {}, nvme_ns2 = {};
+	struct nvme_ns nvme_ns1 = { .ns = &ns1, }, nvme_ns2 = { .ns = &ns2, };
 	struct nvme_io_path io_path1 = { .qpair = &nvme_qpair1, .nvme_ns = &nvme_ns1, };
 	struct nvme_io_path io_path2 = { .qpair = &nvme_qpair2, .nvme_ns = &nvme_ns2, };
 
@@ -5981,6 +5982,7 @@ test_find_next_io_path(void)
 	};
 	struct spdk_nvme_qpair qpair1 = {}, qpair2 = {}, qpair3 = {};
 	struct spdk_nvme_ctrlr ctrlr1 = {}, ctrlr2 = {}, ctrlr3 = {};
+	struct spdk_nvme_ns ns1 = {}, ns2 = {}, ns3 = {};
 	struct nvme_ctrlr nvme_ctrlr1 = { .ctrlr = &ctrlr1, };
 	struct nvme_ctrlr nvme_ctrlr2 = { .ctrlr = &ctrlr2, };
 	struct nvme_ctrlr nvme_ctrlr3 = { .ctrlr = &ctrlr3, };
@@ -5990,7 +5992,7 @@ test_find_next_io_path(void)
 	struct nvme_qpair nvme_qpair1 = { .ctrlr_ch = &ctrlr_ch1, .ctrlr = &nvme_ctrlr1, .qpair = &qpair1, };
 	struct nvme_qpair nvme_qpair2 = { .ctrlr_ch = &ctrlr_ch2, .ctrlr = &nvme_ctrlr2, .qpair = &qpair2, };
 	struct nvme_qpair nvme_qpair3 = { .ctrlr_ch = &ctrlr_ch3, .ctrlr = &nvme_ctrlr3, .qpair = &qpair3, };
-	struct nvme_ns nvme_ns1 = {}, nvme_ns2 = {}, nvme_ns3 = {};
+	struct nvme_ns nvme_ns1 = { .ns = &ns1, }, nvme_ns2 = { .ns = &ns2, }, nvme_ns3 = { .ns = &ns3, };
 	struct nvme_io_path io_path1 = { .qpair = &nvme_qpair1, .nvme_ns = &nvme_ns1, };
 	struct nvme_io_path io_path2 = { .qpair = &nvme_qpair2, .nvme_ns = &nvme_ns2, };
 	struct nvme_io_path io_path3 = { .qpair = &nvme_qpair3, .nvme_ns = &nvme_ns3, };
@@ -6052,6 +6054,7 @@ test_find_io_path_min_qd(void)
 	};
 	struct spdk_nvme_qpair qpair1 = {}, qpair2 = {}, qpair3 = {};
 	struct spdk_nvme_ctrlr ctrlr1 = {}, ctrlr2 = {}, ctrlr3 = {};
+	struct spdk_nvme_ns ns1 = {}, ns2 = {}, ns3 = {};
 	struct nvme_ctrlr nvme_ctrlr1 = { .ctrlr = &ctrlr1, };
 	struct nvme_ctrlr nvme_ctrlr2 = { .ctrlr = &ctrlr2, };
 	struct nvme_ctrlr nvme_ctrlr3 = { .ctrlr = &ctrlr3, };
@@ -6061,7 +6064,7 @@ test_find_io_path_min_qd(void)
 	struct nvme_qpair nvme_qpair1 = { .ctrlr_ch = &ctrlr_ch1, .ctrlr = &nvme_ctrlr1, .qpair = &qpair1, };
 	struct nvme_qpair nvme_qpair2 = { .ctrlr_ch = &ctrlr_ch2, .ctrlr = &nvme_ctrlr2, .qpair = &qpair2, };
 	struct nvme_qpair nvme_qpair3 = { .ctrlr_ch = &ctrlr_ch3, .ctrlr = &nvme_ctrlr3, .qpair = &qpair3, };
-	struct nvme_ns nvme_ns1 = {}, nvme_ns2 = {}, nvme_ns3 = {};
+	struct nvme_ns nvme_ns1 = { .ns = &ns1, }, nvme_ns2 = { .ns = &ns2, }, nvme_ns3 = { .ns = &ns3, };
 	struct nvme_io_path io_path1 = { .qpair = &nvme_qpair1, .nvme_ns = &nvme_ns1, };
 	struct nvme_io_path io_path2 = { .qpair = &nvme_qpair2, .nvme_ns = &nvme_ns2, };
 	struct nvme_io_path io_path3 = { .qpair = &nvme_qpair3, .nvme_ns = &nvme_ns3, };
@@ -7267,6 +7270,99 @@ test_delete_ctrlr_done(void)
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 }
 
+static void
+test_ns_remove_during_reset(void)
+{
+	struct nvme_path_id path = {};
+	struct nvme_ctrlr_opts opts = {};
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct nvme_bdev_ctrlr *nbdev_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
+	const int STRING_SIZE = 32;
+	const char *attached_names[STRING_SIZE];
+	struct nvme_bdev *bdev;
+	struct nvme_ns *nvme_ns;
+	union spdk_nvme_async_event_completion event = {};
+	struct spdk_nvme_cpl cpl = {};
+	int rc;
+
+	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
+	ut_init_trid(&path.trid);
+
+	set_thread(0);
+
+	ctrlr = ut_attach_ctrlr(&path.trid, 1, false, false);
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+
+	g_ut_attach_ctrlr_status = 0;
+	g_ut_attach_bdev_count = 1;
+
+	rc = bdev_nvme_create(&path.trid, "nvme0", attached_names, STRING_SIZE,
+			      attach_ctrlr_done, NULL, NULL, &opts, false);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
+	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
+
+	nvme_ctrlr = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path.trid);
+	CU_ASSERT(nvme_ctrlr != NULL);
+
+	bdev = nvme_bdev_ctrlr_get_bdev(nbdev_ctrlr, 1);
+	CU_ASSERT(bdev != NULL);
+
+	nvme_ns = nvme_ctrlr_get_first_active_ns(nvme_ctrlr);
+	CU_ASSERT(nvme_ns != NULL);
+
+	/* If ns is removed during ctrlr reset, nvme_ns and bdev should still exist,
+	 * but nvme_ns->ns should be NULL.
+	 */
+
+	CU_ASSERT(ctrlr->ns[0].is_active == true);
+	ctrlr->ns[0].is_active = false;
+
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	CU_ASSERT(nvme_ctrlr->resetting == false);
+	CU_ASSERT(ctrlr->adminq.is_connected == true);
+
+	CU_ASSERT(nvme_ns == nvme_ctrlr_get_first_active_ns(nvme_ctrlr));
+	CU_ASSERT(bdev == nvme_bdev_ctrlr_get_bdev(nbdev_ctrlr, 1));
+	CU_ASSERT(nvme_ns->bdev == bdev);
+	CU_ASSERT(nvme_ns->ns == NULL);
+
+	/* Then, async event should fill nvme_ns->ns again. */
+
+	ctrlr->ns[0].is_active = true;
+
+	event.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE;
+	event.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED;
+	cpl.cdw0 = event.raw;
+
+	aer_cb(nvme_ctrlr, &cpl);
+
+	CU_ASSERT(nvme_ns == nvme_ctrlr_get_first_active_ns(nvme_ctrlr));
+	CU_ASSERT(bdev == nvme_bdev_ctrlr_get_bdev(nbdev_ctrlr, 1));
+	CU_ASSERT(nvme_ns->bdev == bdev);
+	CU_ASSERT(nvme_ns->ns == &ctrlr->ns[0]);
+
+	rc = bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
+
+	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -7324,6 +7420,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_bdev_ctrlr_op_rpc);
 	CU_ADD_TEST(suite, test_disable_enable_ctrlr);
 	CU_ADD_TEST(suite, test_delete_ctrlr_done);
+	CU_ADD_TEST(suite, test_ns_remove_during_reset);
 
 	allocate_threads(3);
 	set_thread(0);
