@@ -963,6 +963,19 @@ spdk_app_stop(int rc)
 }
 
 static void
+usage_memory_size(void)
+{
+#ifndef __linux__
+	if (g_default_opts.mem_size <= 0) {
+		printf("all hugepage memory)\n");
+	} else
+#endif
+	{
+		printf("%dMB)\n", g_default_opts.mem_size >= 0 ? g_default_opts.mem_size : 0);
+	}
+}
+
+static void
 usage(void (*app_usage)(void))
 {
 	printf("%s [options]\n", g_executable_name);
@@ -988,14 +1001,7 @@ usage(void (*app_usage)(void))
 	printf(" -p, --main-core <id>      main (primary) core for DPDK\n");
 	printf(" -r, --rpc-socket <path>   RPC listen address (default %s)\n", SPDK_DEFAULT_RPC_ADDR);
 	printf(" -s, --mem-size <size>     memory size in MB for DPDK (default: ");
-#ifndef __linux__
-	if (g_default_opts.mem_size <= 0) {
-		printf("all hugepage memory)\n");
-	} else
-#endif
-	{
-		printf("%dMB)\n", g_default_opts.mem_size >= 0 ? g_default_opts.mem_size : 0);
-	}
+	usage_memory_size();
 	printf("     --disable-cpumask-locks    Disable CPU core lock files.\n");
 	printf("     --silence-noticelog   disable notice level logging to stderr\n");
 	printf("     --msg-mempool-size <size>  global message memory pool size in count (default: %d)\n",
