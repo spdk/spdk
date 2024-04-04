@@ -216,6 +216,18 @@ nvmf_ctrlr_start_keep_alive_timer(struct spdk_nvmf_ctrlr *ctrlr)
 	}
 }
 
+static void
+nvmf_qpair_set_ctrlr(struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_ctrlr *ctrlr)
+{
+	if (qpair->ctrlr != NULL) {
+		/* Admin queues will call this function twice. */
+		assert(qpair->ctrlr == ctrlr);
+		return;
+	}
+
+	qpair->ctrlr = ctrlr;
+}
+
 static int _retry_qid_check(void *ctx);
 
 static void
@@ -250,14 +262,14 @@ ctrlr_add_qpair_and_send_rsp(struct spdk_nvmf_qpair *qpair,
 				     DUPLICATE_QID_RETRY_US);
 			qpair->connect_req = req;
 			/* Set qpair->ctrlr here so that we'll have it when the poller expires. */
-			qpair->ctrlr = ctrlr;
+			nvmf_qpair_set_ctrlr(qpair, ctrlr);
 			req->poller = SPDK_POLLER_REGISTER(_retry_qid_check, qpair,
 							   DUPLICATE_QID_RETRY_US);
 		}
 		return;
 	}
 
-	qpair->ctrlr = ctrlr;
+	nvmf_qpair_set_ctrlr(qpair, ctrlr);
 	spdk_bit_array_set(ctrlr->qpair_mask, qpair->qid);
 
 	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
@@ -536,7 +548,7 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		}
 	}
 
-	req->qpair->ctrlr = ctrlr;
+	nvmf_qpair_set_ctrlr(req->qpair, ctrlr);
 	spdk_thread_send_msg(subsystem->thread, _nvmf_subsystem_add_ctrlr, req);
 
 	return ctrlr;
