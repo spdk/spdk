@@ -88,7 +88,8 @@ function nvmf_shutdown_tc1() {
 	kill -0 $nvmfpid
 
 	# Connect with bdevperf and confirm it works
-	$rootdir/build/examples/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "${num_subsystems[@]}") -q 64 -o 65536 -w verify -t 1
+	$rootdir/build/examples/bdevperf --json <(gen_nvmf_target_json "${num_subsystems[@]}") \
+		-q 64 -o 65536 -w verify -t 1
 
 	stoptarget
 }

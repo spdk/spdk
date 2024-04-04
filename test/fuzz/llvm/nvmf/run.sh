@@ -44,8 +44,7 @@ function start_llvm_fuzz() {
 		-c $nvmf_cfg \
 		-t $timen \
 		-D $corpus_dir \
-		-Z $fuzzer_type \
-		-r /var/tmp/spdk$fuzzer_type.sock
+		-Z $fuzzer_type
 
 	rm -rf $nvmf_cfg
 }

@@ -40,7 +40,7 @@ $rpc_py nvmf_subsystem_add_listener $nqn -t $TEST_TRANSPORT -a $traddr -s 0
 
 trid="trtype:$TEST_TRANSPORT subnqn:$nqn traddr:$traddr"
 
-$rootdir/test/app/fuzz/nvme_fuzz/nvme_fuzz -m 0x2 -r "/var/tmp/vfio_user_fuzz" -t 30 -S 123456 -F "$trid" -N -a 2> $output_dir/vfio_user_fuzz_log.txt
+$rootdir/test/app/fuzz/nvme_fuzz/nvme_fuzz -m 0x2 -t 30 -S 123456 -F "$trid" -N -a 2> $output_dir/vfio_user_fuzz_log.txt
 $rpc_py nvmf_delete_subsystem $nqn
 
 killprocess $nvmfpid

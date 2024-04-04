@@ -27,9 +27,9 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPOR
 trid="trtype:$TEST_TRANSPORT adrfam:IPv4 subnqn:nqn.2016-06.io.spdk:cnode1 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
 
 # Note that we chose a consistent seed to ensure that this test is consistent in nightly builds.
-$rootdir/test/app/fuzz/nvme_fuzz/nvme_fuzz -m 0x2 -r "/var/tmp/nvme_fuzz" -t 30 -S 123456 -F "$trid" -N -a 2> $output_dir/nvmf_fuzz_logs1.txt
+$rootdir/test/app/fuzz/nvme_fuzz/nvme_fuzz -m 0x2 -t 30 -S 123456 -F "$trid" -N -a 2> $output_dir/nvmf_fuzz_logs1.txt
 # We don't specify a seed for this test. Instead we run a static list of commands from example.json.
-$rootdir/test/app/fuzz/nvme_fuzz/nvme_fuzz -m 0x2 -r "/var/tmp/nvme_fuzz" -F "$trid" -j $rootdir/test/app/fuzz/nvme_fuzz/example.json -a 2> $output_dir/nvmf_fuzz_logs2.txt
+$rootdir/test/app/fuzz/nvme_fuzz/nvme_fuzz -m 0x2 -F "$trid" -j $rootdir/test/app/fuzz/nvme_fuzz/example.json -a 2> $output_dir/nvmf_fuzz_logs2.txt
 
 $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
