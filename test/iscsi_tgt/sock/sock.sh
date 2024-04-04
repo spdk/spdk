@@ -105,7 +105,7 @@ echo "Testing SSL server path"
 $HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT -S $PSK -m 0x1 &
 server_pid=$!
 trap 'killprocess $server_pid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
-waitforlisten $server_pid
+waitfortcp $server_pid $TARGET_IP:$ISCSI_PORT
 
 # send message using hello_sock client
 message="**MESSAGE:This is a test message from the hello_sock client with ssl**"
@@ -175,7 +175,7 @@ timing_enter sock_server
 $HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT -S -N "posix" -m 0x1 &
 server_pid=$!
 trap 'killprocess $server_pid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
-waitforlisten $server_pid
+waitfortcp $server_pid $TARGET_IP:$ISCSI_PORT
 
 # send message to server using socat
 message="**MESSAGE:This is a test message to the server**"

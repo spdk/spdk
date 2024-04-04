@@ -1345,6 +1345,7 @@ main(int argc, char **argv)
 	g_opts.name = "accel_perf";
 	g_opts.reactor_mask = "0x1";
 	g_opts.shutdown_cb = shutdown_cb;
+	g_opts.rpc_addr = NULL;
 
 	rc = spdk_app_parse_args(argc, argv, &g_opts, "a:C:o:q:t:yw:M:P:f:T:l:S:x:", NULL,
 				 parse_args, usage);

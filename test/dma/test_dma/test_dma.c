@@ -958,6 +958,7 @@ main(int argc, char **argv)
 	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "test_dma";
 	opts.shutdown_cb = dma_test_shutdown_cb;
+	opts.rpc_addr = NULL;
 
 	rc = spdk_app_parse_args(argc, argv, &opts, "b:fq:o:t:x:w:M:", NULL, parse_arg, print_usage);
 	if (rc != SPDK_APP_PARSE_ARGS_SUCCESS) {

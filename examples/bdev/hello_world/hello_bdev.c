@@ -286,6 +286,7 @@ main(int argc, char **argv)
 	/* Set default values in opts structure. */
 	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "hello_bdev";
+	opts.rpc_addr = NULL;
 
 	/*
 	 * Parse built-in SPDK command line parameters as well

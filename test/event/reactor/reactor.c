@@ -89,6 +89,7 @@ main(int argc, char **argv)
 
 	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "reactor";
+	opts.rpc_addr = NULL;
 
 	g_time_in_sec = 0;
 

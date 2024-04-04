@@ -496,6 +496,7 @@ main(int argc, char **argv)
 	opts.name = "spdk_lock_test";
 	snprintf(mask, sizeof(mask), "0x%x", (1 << SPDK_COUNTOF(g_thread)) - 1);
 	opts.reactor_mask = mask;
+	opts.rpc_addr = NULL;
 
 	spdk_app_start(&opts, start_tests, NULL);
 

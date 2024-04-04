@@ -162,6 +162,7 @@ main(int argc, char **argv)
 	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "poller_perf";
 	opts.shutdown_cb = poller_perf_shutdown_cb;
+	opts.rpc_addr = NULL;
 
 	rc = spdk_app_parse_args(argc, argv, &opts, "b:l:t:", NULL,
 				 poller_perf_parse_arg, poller_perf_usage);

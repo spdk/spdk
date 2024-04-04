@@ -1049,6 +1049,7 @@ main(int argc, char **argv)
 
 	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "iscsi_fuzz";
+	opts.rpc_addr = NULL;
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "T:S:t:", NULL, iscsi_fuzz_parse,
 				      iscsi_fuzz_usage) != SPDK_APP_PARSE_ARGS_SUCCESS)) {

@@ -531,6 +531,7 @@ main(int argc, char **argv)
 	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "hello_sock";
 	opts.shutdown_cb = hello_sock_shutdown_cb;
+	opts.rpc_addr = NULL;
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "E:H:I:kKN:P:ST:VzZ", NULL, hello_sock_parse_arg,
 				      hello_sock_usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {

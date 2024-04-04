@@ -1474,6 +1474,7 @@ main(int argc, char **argv)
 	opts.name = "spdk_dd";
 	opts.reactor_mask = "0x1";
 	opts.shutdown_cb = dd_finish;
+	opts.rpc_addr = NULL;
 	rc = spdk_app_parse_args(argc, argv, &opts, "", g_cmdline_opts, parse_args, usage);
 	if (rc == SPDK_APP_PARSE_ARGS_FAIL) {
 		SPDK_ERRLOG("Invalid arguments\n");

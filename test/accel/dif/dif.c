@@ -1112,6 +1112,7 @@ main(int argc, char **argv)
 	snprintf(reactor_mask, sizeof(reactor_mask), "0x%x", (1 << (SPDK_COUNTOF(g_thread) + 1)) - 1);
 	opts.reactor_mask = reactor_mask;
 	opts.shutdown_cb = spdk_dif_shutdown_cb;
+	opts.rpc_addr = NULL;
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "", NULL,
 				      accel_dif_parse_arg, accel_dif_usage)) !=

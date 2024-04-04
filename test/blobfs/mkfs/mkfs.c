@@ -72,6 +72,7 @@ main(int argc, char **argv)
 	opts.json_config_file = argv[1];
 	opts.reactor_mask = "0x3";
 	opts.shutdown_cb = NULL;
+	opts.rpc_addr = NULL;
 
 	spdk_fs_set_cache_size(512);
 	g_bdev_name = argv[2];

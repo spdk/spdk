@@ -138,6 +138,7 @@ main(int argc, char **argv)
 
 	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "accel_external_driver";
+	opts.rpc_addr = NULL;
 
 	/*
 	 * Parse built-in SPDK command line parameters as well

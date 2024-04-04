@@ -997,6 +997,7 @@ main(int argc, char **argv)
 	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "nvme_fuzz";
 	opts.shutdown_cb = fuzz_shutdown;
+	opts.rpc_addr = NULL;
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "D:F:N:P:t:Z:", NULL, nvme_fuzz_parse,
 				      nvme_fuzz_usage) != SPDK_APP_PARSE_ARGS_SUCCESS)) {

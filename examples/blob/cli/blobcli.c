@@ -1598,6 +1598,7 @@ main(int argc, char **argv)
 	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "blobcli";
 	opts.json_config_file = cli_context->config_file;
+	opts.rpc_addr = NULL;
 
 	cli_context->app_started = true;
 	rc = spdk_app_start(&opts, cli_start, cli_context);

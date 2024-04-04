@@ -95,7 +95,7 @@ function blobfs_fuse_test() {
 
 	# Currently blobfs fuse APP doesn't support specific path of RPC sock.
 	# So directly use default sock path.
-	waitforlisten $blobfs_pid /var/tmp/spdk.sock
+	waitforlisten $blobfs_pid
 
 	# check mount status
 	mount | grep "$mount_dir"

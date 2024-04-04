@@ -1059,6 +1059,7 @@ main(int argc, char **argv)
 
 	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "vhost_fuzz";
+	opts.rpc_addr = NULL;
 	g_runtime = DEFAULT_RUNTIME;
 
 	rc = spdk_app_parse_args(argc, argv, &opts, "j:kS:t:V", NULL, fuzz_vhost_parse, fuzz_vhost_usage);

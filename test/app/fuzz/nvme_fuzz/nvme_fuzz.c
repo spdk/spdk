@@ -828,6 +828,7 @@ main(int argc, char **argv)
 
 	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "nvme_fuzz";
+	opts.rpc_addr = NULL;
 
 	g_runtime = DEFAULT_RUNTIME;
 	g_run = true;
