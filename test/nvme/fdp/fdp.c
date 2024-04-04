@@ -786,7 +786,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
-	if (cdata->ctratt.fdps) {
+	if (cdata->ctratt.bits.fdps) {
 		fprintf(stdout, "Controller supports FDP Attached to %s\n", trid->traddr);
 		num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 		if (num_ns < 1) {

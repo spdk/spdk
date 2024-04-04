@@ -235,7 +235,7 @@ get_features(struct spdk_nvme_ctrlr *ctrlr, uint8_t *features_to_get, size_t num
 			struct spdk_nvme_ns *ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 			const struct spdk_nvme_ns_data *nsdata = spdk_nvme_ns_get_data(ns);
 
-			if (!cdata->ctratt.fdps) {
+			if (!cdata->ctratt.bits.fdps) {
 				continue;
 			} else {
 				cdw11 = nsdata->endgid;
@@ -1417,11 +1417,11 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	printf("Namespace Write Protected:             %s\n",
 	       nsdata->nsattr.write_protected ? "Yes" : "No");
 
-	if (cdata->ctratt.nvm_sets) {
+	if (cdata->ctratt.bits.nvm_sets) {
 		printf("NVM set ID:                            %u\n", nsdata->nvmsetid);
 	}
 
-	if (cdata->ctratt.endurance_groups) {
+	if (cdata->ctratt.bits.endurance_groups) {
 		printf("Endurance group ID:                    %u\n", nsdata->endgid);
 	}
 
@@ -1439,7 +1439,7 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	}
 	printf("\n");
 
-	if (cdata->ctratt.fdps) {
+	if (cdata->ctratt.bits.fdps) {
 		union spdk_nvme_feat_fdp_cdw12 fdp_res;
 
 		if (features[SPDK_NVME_FEAT_FDP].valid) {
@@ -1737,39 +1737,39 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 
 	printf("Controller Attributes\n");
 	printf("  128-bit Host Identifier:             %s\n",
-	       cdata->ctratt.host_id_exhid_supported ? "Supported" : "Not Supported");
+	       cdata->ctratt.bits.host_id_exhid_supported ? "Supported" : "Not Supported");
 	printf("  Non-Operational Permissive Mode:     %s\n",
-	       cdata->ctratt.non_operational_power_state_permissive_mode ? "Supported" : "Not Supported");
+	       cdata->ctratt.bits.non_operational_power_state_permissive_mode ? "Supported" : "Not Supported");
 	printf("  NVM Sets:                            %s\n",
-	       cdata->ctratt.nvm_sets ? "Supported" : "Not Supported");
+	       cdata->ctratt.bits.nvm_sets ? "Supported" : "Not Supported");
 	printf("  Read Recovery Levels:                %s\n",
-	       cdata->ctratt.read_recovery_levels ? "Supported" : "Not Supported");
+	       cdata->ctratt.bits.read_recovery_levels ? "Supported" : "Not Supported");
 	printf("  Endurance Groups:                    %s\n",
-	       cdata->ctratt.endurance_groups ? "Supported" : "Not Supported");
+	       cdata->ctratt.bits.endurance_groups ? "Supported" : "Not Supported");
 	printf("  Predictable Latency Mode:            %s\n",
-	       cdata->ctratt.predictable_latency_mode ? "Supported" : "Not Supported");
+	       cdata->ctratt.bits.predictable_latency_mode ? "Supported" : "Not Supported");
 	printf("  Traffic Based Keep ALive:            %s\n",
-	       cdata->ctratt.tbkas ? "Supported" : "Not Supported");
+	       cdata->ctratt.bits.tbkas ? "Supported" : "Not Supported");
 	printf("  Namespace Granularity:               %s\n",
-	       cdata->ctratt.namespace_granularity ? "Supported" : "Not Supported");
+	       cdata->ctratt.bits.namespace_granularity ? "Supported" : "Not Supported");
 	printf("  SQ Associations:                     %s\n",
-	       cdata->ctratt.sq_associations ? "Supported" : "Not Supported");
+	       cdata->ctratt.bits.sq_associations ? "Supported" : "Not Supported");
 	printf("  UUID List:                           %s\n",
-	       cdata->ctratt.uuid_list ? "Supported" : "Not Supported");
+	       cdata->ctratt.bits.uuid_list ? "Supported" : "Not Supported");
 	printf("  Multi-Domain Subsystem:              %s\n",
-	       cdata->ctratt.mds ? "Supported" : "Not Supported");
+	       cdata->ctratt.bits.mds ? "Supported" : "Not Supported");
 	printf("  Fixed Capacity Management:           %s\n",
-	       cdata->ctratt.fixed_capacity_management ? "Supported" : "Not Supported");
+	       cdata->ctratt.bits.fixed_capacity_management ? "Supported" : "Not Supported");
 	printf("  Variable Capacity Management:        %s\n",
-	       cdata->ctratt.variable_capacity_management ? "Supported" : "Not Supported");
+	       cdata->ctratt.bits.variable_capacity_management ? "Supported" : "Not Supported");
 	printf("  Delete Endurance Group:              %s\n",
-	       cdata->ctratt.delete_endurance_group ? "Supported" : "Not Supported");
+	       cdata->ctratt.bits.delete_endurance_group ? "Supported" : "Not Supported");
 	printf("  Delete NVM Set:                      %s\n",
-	       cdata->ctratt.delete_nvm_set ? "Supported" : "Not Supported");
+	       cdata->ctratt.bits.delete_nvm_set ? "Supported" : "Not Supported");
 	printf("  Extended LBA Formats Supported:      %s\n",
-	       cdata->ctratt.elbas ? "Supported" : "Not Supported");
+	       cdata->ctratt.bits.elbas ? "Supported" : "Not Supported");
 	printf("  Flexible Data Placement Supported:   %s\n",
-	       cdata->ctratt.fdps ? "Supported" : "Not Supported");
+	       cdata->ctratt.bits.fdps ? "Supported" : "Not Supported");
 	printf("\n");
 
 	printf("Controller Memory Buffer Support\n");
@@ -2225,7 +2225,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 			}
 		}
 		printf("Non-Operational Permissive Mode: %s\n",
-		       cdata->ctratt.non_operational_power_state_permissive_mode ? "Supported" : "Not Supported");
+		       cdata->ctratt.bits.non_operational_power_state_permissive_mode ? "Supported" : "Not Supported");
 		printf("\n");
 	}
 
