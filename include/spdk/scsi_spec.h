@@ -15,6 +15,10 @@
 
 #include "spdk/assert.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum spdk_scsi_group_code {
 	SPDK_SCSI_6BYTE_CMD = 0x00,
 	SPDK_SCSI_10BYTE_CMD = 0x20,
@@ -712,5 +716,9 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_scsi_pr_out_reg_and_move_param_list) == 24
 #define SPDK_SCSI_UNMAP_FULL_PROVISIONING	0x00
 #define SPDK_SCSI_UNMAP_RESOURCE_PROVISIONING	0x01
 #define SPDK_SCSI_UNMAP_THIN_PROVISIONING	0x02
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_SCSI_SPEC_H */

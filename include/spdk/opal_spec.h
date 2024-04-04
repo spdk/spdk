@@ -9,6 +9,10 @@
 #include "spdk/stdinc.h"
 #include "spdk/assert.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * TCG Storage Architecture Core Spec v2.01 r1.00
  * 3.2.2.3 Tokens
@@ -347,5 +351,9 @@ struct __attribute__((packed)) spdk_opal_data_subpacket {
 	uint32_t length;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_opal_data_subpacket) == 12, "Incorrect size");
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

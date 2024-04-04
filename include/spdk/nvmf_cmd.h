@@ -10,6 +10,10 @@
 #include "spdk/nvmf.h"
 #include "spdk/bdev.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum spdk_nvmf_request_exec_status {
 	SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE,
 	SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS,
@@ -245,5 +249,9 @@ struct spdk_nvme_cpl *spdk_nvmf_request_get_response(struct spdk_nvmf_request *r
  * \return req_to_abort The NVMe-oF request that is in process of being aborted
  */
 struct spdk_nvmf_request *spdk_nvmf_request_get_req_to_abort(struct spdk_nvmf_request *req);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_NVMF_CMD_H_ */

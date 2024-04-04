@@ -10,6 +10,10 @@
 #include "spdk/env.h"
 #include "spdk/nvme.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * FC-NVMe Spec. Definitions
  */
@@ -397,5 +401,9 @@ struct spdk_nvmf_fc_wwn {
 		uint8_t octets[sizeof(uint64_t)];
 	} u;
 };
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

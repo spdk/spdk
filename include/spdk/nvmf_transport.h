@@ -18,6 +18,10 @@
 #include "spdk/nvmf_spec.h"
 #include "spdk/memory.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define SPDK_NVMF_MAX_SGL_ENTRIES	16
 
 /* The maximum number of buffers per request */
@@ -699,5 +703,9 @@ static void __attribute__((constructor)) _spdk_nvmf_transport_register_##name(vo
 { \
 	spdk_nvmf_transport_register(transport_ops); \
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

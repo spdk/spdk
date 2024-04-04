@@ -13,6 +13,10 @@
 #include "spdk/string.h"
 #include "spdk/opal_spec.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct spdk_opal_d0_features_info {
 	struct spdk_opal_d0_tper_feat tper;
 	struct spdk_opal_d0_locking_feat locking;
@@ -112,4 +116,9 @@ int spdk_opal_cmd_secure_erase_locking_range(struct spdk_opal_dev *dev, enum spd
 struct spdk_opal_locking_range_info *spdk_opal_get_locking_range_info(struct spdk_opal_dev *dev,
 		enum spdk_opal_locking_range id);
 void spdk_opal_free_locking_range_info(struct spdk_opal_dev *dev, enum spdk_opal_locking_range id);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

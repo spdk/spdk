@@ -17,6 +17,10 @@
 
 #include "spdk/stdinc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct spdk_pipe;
 struct spdk_pipe_group;
 
@@ -157,5 +161,9 @@ int spdk_pipe_group_add(struct spdk_pipe_group *group, struct spdk_pipe *pipe);
  * \return On error, a negated errno. On success, 0.
  */
 int spdk_pipe_group_remove(struct spdk_pipe_group *group, struct spdk_pipe *pipe);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

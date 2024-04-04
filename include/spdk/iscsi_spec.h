@@ -16,6 +16,10 @@
 
 #include "spdk/assert.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define ISCSI_BHS_LEN 48
 #define ISCSI_DIGEST_LEN 4
 #define ISCSI_ALIGNMENT 4
@@ -535,5 +539,9 @@ struct iscsi_ahs {
 #define ISCSI_LOGIN_STATUS_TARGET_ERROR		0x00
 #define ISCSI_LOGIN_STATUS_SERVICE_UNAVAILABLE	0x01
 #define ISCSI_LOGIN_STATUS_NO_RESOURCES		0x02
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_ISCSI_SPEC_H */

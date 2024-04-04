@@ -10,6 +10,10 @@
 #ifndef SPDK_VERSION_H
 #define SPDK_VERSION_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Major version number (year of original release minus 2000).
  */
@@ -87,5 +91,9 @@
 	SPDK_VERSION_PATCH_STRING \
 	SPDK_VERSION_SUFFIX \
 	SPDK_GIT_COMMIT_STRING_SHA1
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

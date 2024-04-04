@@ -8,6 +8,10 @@
 
 #include "spdk/stdinc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Convert a binary array to hexlified string terminated by zero.
  *
@@ -24,5 +28,9 @@ char *spdk_hexlify(const char *bin, size_t len);
  * \return Binary array pointer or NULL on failure.
  */
 char *spdk_unhexlify(const char *hex);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_HEXLIFY_H */

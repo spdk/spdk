@@ -13,6 +13,10 @@
 
 #include "spdk/uuid.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define REDUCE_MAX_IOVECS	33
 
 /**
@@ -226,4 +230,9 @@ const struct spdk_reduce_vol_params *spdk_reduce_vol_get_params(struct spdk_redu
  * \param vol Previously loaded or initialized compressed volume.
  */
 void spdk_reduce_vol_print_info(struct spdk_reduce_vol *vol);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* SPDK_REDUCE_H_ */

@@ -30,6 +30,10 @@
 
 #include <sys/cdefs.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * This file defines data structures for different types of trees:
  * splay trees and rank-balanced trees.
@@ -830,5 +834,9 @@ name##_RB_REINSERT(struct name *head, struct type *elm)			\
 	for ((x) = RB_MAX(name, head);					\
 	    ((x) != NULL) && ((y) = name##_RB_PREV(x), (x) != NULL);	\
 	     (x) = (y))
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif	/* SPDK_TREE_H */

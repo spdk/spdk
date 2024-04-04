@@ -34,6 +34,10 @@
 #ifndef SPDK_QUEUE_EXTRAS_H
 #define SPDK_QUEUE_EXTRAS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * This file defines four types of data structures: singly-linked lists,
  * singly-linked tail queues, lists and tail queues.
@@ -366,5 +370,9 @@ struct {								\
 		(head2)->tqh_last = &(head2)->tqh_first;		\
 	SPDK_QE_UNSUPPRESS_WARNINGS();					\
 } while (0)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

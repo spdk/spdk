@@ -8,6 +8,10 @@
 #include "spdk/stdinc.h"
 #include "spdk/json.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct spdk_key;
 
 /**
@@ -89,5 +93,9 @@ void spdk_keyring_for_each_key(struct spdk_keyring *keyring, void *ctx,
  * \param w JSON write context.
  */
 void spdk_keyring_write_config(struct spdk_json_write_ctx *w);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_KEYRING_H */

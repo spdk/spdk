@@ -15,6 +15,10 @@
 
 #include "spdk/assert.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #pragma pack(push, 1)
 
 #define SPDK_MBR_SIGNATURE 0xAA55
@@ -112,5 +116,9 @@ struct spdk_gpt_partition_entry {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_gpt_partition_entry) == 128, "size incorrect");
 
 #pragma pack(pop)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

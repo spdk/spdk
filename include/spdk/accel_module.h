@@ -13,6 +13,10 @@
 #include "spdk/queue.h"
 #include "spdk/config.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct spdk_accel_module_if;
 struct spdk_accel_task;
 
@@ -372,5 +376,9 @@ struct spdk_accel_task *spdk_accel_sequence_next_task(struct spdk_accel_task *ta
  * \return Pointer to a module or NULL if it couldn't be found.
  */
 struct spdk_accel_module_if *spdk_accel_get_module(const char *name);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

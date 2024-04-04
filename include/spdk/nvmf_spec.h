@@ -11,6 +11,10 @@
 #include "spdk/assert.h"
 #include "spdk/nvme_spec.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \file
  * NVMe over Fabrics specification definitions
@@ -867,5 +871,9 @@ SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_r2t_hdr, r2to) == 12, "Incorrec
 SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_r2t_hdr, r2tl) == 16, "Incorrect offset");
 
 #pragma pack(pop)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __NVMF_SPEC_H__ */

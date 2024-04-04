@@ -10,6 +10,10 @@
 #include "spdk/keyring.h"
 #include "spdk/queue.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct spdk_keyring_module;
 
 struct spdk_key_opts {
@@ -101,5 +105,9 @@ void *spdk_key_get_ctx(struct spdk_key *key);
  * \return Key owner.
  */
 struct spdk_keyring_module *spdk_key_get_module(struct spdk_key *key);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_KEYRING_H */
