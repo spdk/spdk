@@ -1552,11 +1552,16 @@ main(int argc, char **argv)
 	opts.name = "bdevio";
 	opts.reactor_mask = "0x7";
 	opts.shutdown_cb = spdk_bdevio_shutdown_cb;
+	opts.rpc_addr = NULL;
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "w", NULL,
 				      bdevio_parse_arg, bdevio_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
+	}
+
+	if (g_wait_for_tests && opts.rpc_addr == NULL) {
+		opts.rpc_addr = SPDK_DEFAULT_RPC_ADDR;
 	}
 
 	rc = spdk_app_start(&opts, test_main, NULL);
