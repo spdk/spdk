@@ -429,6 +429,7 @@ get_spdk_gpt() {
 }
 
 map_supported_devices() {
+	local type=${1^^}
 	local ids dev_types dev_type dev_id bdf bdfs vmd _vmd
 
 	local -gA nvme_d
@@ -449,6 +450,7 @@ map_supported_devices() {
 	((${#pci_bus_cache[@]} == 0)) && cache_pci_bus
 
 	while read -r _ dev_type dev_id; do
+		[[ $dev_type == *$type* ]] || continue
 		bdfs=(${pci_bus_cache["0x8086:$dev_id"]})
 		[[ $dev_type == *NVME* ]] && bdfs=(${pci_bus_cache["$dev_id"]})
 		[[ $dev_type == *VIRT* ]] && bdfs=(${pci_bus_cache["0x1af4:$dev_id"]})

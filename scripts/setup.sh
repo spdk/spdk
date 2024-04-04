@@ -89,6 +89,10 @@ function usage() {
 	echo "UNBIND_ENTIRE_IOMMU_GROUP"
 	echo "                  If set, all devices from nvme's iommu group will be unbound from their drivers."
 	echo "                  Use with caution."
+	echo "DEV_TYPE"
+	echo "                  Perform action only against selected type of devices. Supported:"
+	echo "                    IOAT|DSA|IAA|VIRTIO|VMD|NVME."
+	echo "                  Default is to select all types."
 	exit 0
 }
 
@@ -284,7 +288,7 @@ function get_used_bdf_block_devs() {
 function collect_devices() {
 	local mode=$1 in_use
 
-	map_supported_devices
+	map_supported_devices "$DEV_TYPE"
 
 	for bdf in "${!all_devices_d[@]}"; do
 		in_use=0
