@@ -119,8 +119,6 @@ static const struct option g_cmdline_options[] = {
 	{"huge-dir",			required_argument,	NULL, HUGE_DIR_OPT_IDX},
 #define NUM_TRACE_ENTRIES_OPT_IDX	260
 	{"num-trace-entries",		required_argument,	NULL, NUM_TRACE_ENTRIES_OPT_IDX},
-#define MAX_REACTOR_DELAY_OPT_IDX	261
-	{"max-delay",			required_argument,	NULL, MAX_REACTOR_DELAY_OPT_IDX},
 #define JSON_CONFIG_OPT_IDX		262
 	{"json",			required_argument,	NULL, JSON_CONFIG_OPT_IDX},
 #define JSON_CONFIG_IGNORE_INIT_ERRORS_IDX	263
@@ -992,7 +990,6 @@ usage(void (*app_usage)(void))
 	printf("     --disable-cpumask-locks    Disable CPU core lock files.\n");
 	printf("     --interrupt-mode      set app to interrupt mode (Warning: CPU usage will be reduced only if all pollers in the app support interrupt mode)\n");
 	printf(" -p, --main-core <id>      main (primary) core for DPDK\n");
-	printf("     --max-delay <num>     maximum reactor delay (in microseconds)\n");
 
 	printf("\nConfiguration options:\n");
 	printf(" -c, --config, --json  <config>     JSON config file\n");
@@ -1307,9 +1304,6 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				usage(app_usage);
 				goto out;
 			}
-			break;
-		case MAX_REACTOR_DELAY_OPT_IDX:
-			SPDK_ERRLOG("Deprecation warning: The maximum allowed latency parameter is no longer supported.\n");
 			break;
 		case ENV_CONTEXT_OPT_IDX:
 			opts->env_context = optarg;
