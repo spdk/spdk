@@ -3493,9 +3493,14 @@ out:
 	}
 }
 
+typedef void (*raid_bdev_examine_load_sb_cb)(struct spdk_bdev *bdev,
+		const struct raid_bdev_superblock *sb, int status, void *ctx);
+
 struct raid_bdev_examine_ctx {
 	struct spdk_bdev_desc *desc;
 	struct spdk_io_channel *ch;
+	raid_bdev_examine_load_sb_cb cb;
+	void *cb_ctx;
 };
 
 static void
@@ -3517,11 +3522,67 @@ raid_bdev_examine_ctx_free(struct raid_bdev_examine_ctx *ctx)
 }
 
 static void
-raid_bdev_examine_load_sb_cb(const struct raid_bdev_superblock *sb, int status, void *_ctx)
+raid_bdev_examine_load_sb_done(const struct raid_bdev_superblock *sb, int status, void *_ctx)
 {
 	struct raid_bdev_examine_ctx *ctx = _ctx;
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(ctx->desc);
 
+	ctx->cb(bdev, sb, status, ctx->cb_ctx);
+
+	raid_bdev_examine_ctx_free(ctx);
+}
+
+static void
+raid_bdev_examine_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
+{
+}
+
+static int
+raid_bdev_examine_load_sb(const char *bdev_name, raid_bdev_examine_load_sb_cb cb, void *cb_ctx)
+{
+	struct raid_bdev_examine_ctx *ctx;
+	int rc;
+
+	assert(cb != NULL);
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		return -ENOMEM;
+	}
+
+	rc = spdk_bdev_open_ext(bdev_name, false, raid_bdev_examine_event_cb, NULL, &ctx->desc);
+	if (rc) {
+		SPDK_ERRLOG("Failed to open bdev %s: %s\n", bdev_name, spdk_strerror(-rc));
+		goto err;
+	}
+
+	ctx->ch = spdk_bdev_get_io_channel(ctx->desc);
+	if (!ctx->ch) {
+		SPDK_ERRLOG("Failed to get io channel for bdev %s\n", bdev_name);
+		rc = -ENOMEM;
+		goto err;
+	}
+
+	ctx->cb = cb;
+	ctx->cb_ctx = cb_ctx;
+
+	rc = raid_bdev_load_base_bdev_superblock(ctx->desc, ctx->ch, raid_bdev_examine_load_sb_done, ctx);
+	if (rc) {
+		SPDK_ERRLOG("Failed to read bdev %s superblock: %s\n",
+			    bdev_name, spdk_strerror(-rc));
+		goto err;
+	}
+
+	return 0;
+err:
+	raid_bdev_examine_ctx_free(ctx);
+	return rc;
+}
+
+static void
+raid_bdev_examine_cont(struct spdk_bdev *bdev, const struct raid_bdev_superblock *sb, int status,
+		       void *ctx)
+{
 	switch (status) {
 	case 0:
 		/* valid superblock found */
@@ -3538,13 +3599,7 @@ raid_bdev_examine_load_sb_cb(const struct raid_bdev_superblock *sb, int status, 
 		break;
 	}
 
-	raid_bdev_examine_ctx_free(ctx);
 	spdk_bdev_module_examine_done(&g_raid_if);
-}
-
-static void
-raid_bdev_examine_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
-{
 }
 
 /*
@@ -3560,7 +3615,6 @@ raid_bdev_examine_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bde
 static void
 raid_bdev_examine(struct spdk_bdev *bdev)
 {
-	struct raid_bdev_examine_ctx *ctx;
 	int rc;
 
 	if (raid_bdev_find_base_info_by_bdev(bdev) != NULL) {
@@ -3572,37 +3626,14 @@ raid_bdev_examine(struct spdk_bdev *bdev)
 		goto done;
 	}
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
+	rc = raid_bdev_examine_load_sb(bdev->name, raid_bdev_examine_cont, NULL);
+	if (rc != 0) {
 		SPDK_ERRLOG("Failed to examine bdev %s: %s\n",
-			    bdev->name, spdk_strerror(ENOMEM));
-		goto err;
-	}
-
-	rc = spdk_bdev_open_ext(spdk_bdev_get_name(bdev), false, raid_bdev_examine_event_cb, NULL,
-				&ctx->desc);
-	if (rc) {
-		SPDK_ERRLOG("Failed to open bdev %s: %s\n",
 			    bdev->name, spdk_strerror(-rc));
-		goto err;
-	}
-
-	ctx->ch = spdk_bdev_get_io_channel(ctx->desc);
-	if (!ctx->ch) {
-		SPDK_ERRLOG("Failed to get io channel for bdev %s\n", bdev->name);
-		goto err;
-	}
-
-	rc = raid_bdev_load_base_bdev_superblock(ctx->desc, ctx->ch, raid_bdev_examine_load_sb_cb, ctx);
-	if (rc) {
-		SPDK_ERRLOG("Failed to read bdev %s superblock: %s\n",
-			    bdev->name, spdk_strerror(-rc));
-		goto err;
+		goto done;
 	}
 
 	return;
-err:
-	raid_bdev_examine_ctx_free(ctx);
 done:
 	spdk_bdev_module_examine_done(&g_raid_if);
 }
