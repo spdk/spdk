@@ -1246,6 +1246,20 @@ raid_bdev_find_by_name(const char *name)
 	return NULL;
 }
 
+static struct raid_bdev *
+raid_bdev_find_by_uuid(const struct spdk_uuid *uuid)
+{
+	struct raid_bdev *raid_bdev;
+
+	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
+		if (spdk_uuid_compare(&raid_bdev->bdev.uuid, uuid) == 0) {
+			return raid_bdev;
+		}
+	}
+
+	return NULL;
+}
+
 static struct {
 	const char *name;
 	enum raid_level value;
@@ -3385,11 +3399,7 @@ raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bd
 		goto out;
 	}
 
-	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
-		if (spdk_uuid_compare(&raid_bdev->bdev.uuid, &sb->uuid) == 0) {
-			break;
-		}
-	}
+	raid_bdev = raid_bdev_find_by_uuid(&sb->uuid);
 
 	if (raid_bdev) {
 		if (sb->seq_number > raid_bdev->sb->seq_number) {
