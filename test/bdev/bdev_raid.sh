@@ -522,42 +522,37 @@ function raid_superblock_test() {
 		# Check if the RAID bdev is in online state (degraded)
 		verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $((num_base_bdevs - 1))
 
+		# Stop the RAID bdev
+		$rpc_py bdev_raid_delete $raid_bdev_name
+		raid_bdev=$($rpc_py bdev_raid_get_bdevs all | jq -r '.[]')
+		if [ -n "$raid_bdev" ]; then
+			return 1
+		fi
+
 		if [ $num_base_bdevs -gt 2 ]; then
-			# Stop the RAID bdev
-			$rpc_py bdev_raid_delete $raid_bdev_name
-			raid_bdev=$($rpc_py bdev_raid_get_bdevs all | jq -r '.[]')
-			if [ -n "$raid_bdev" ]; then
-				return 1
-			fi
-
-			# Re-add first base bdev
-			# This is the "failed" device and contains the "old" version of the superblock
-			$rpc_py bdev_passthru_create -b ${base_bdevs_malloc[0]} -p ${base_bdevs_pt[0]} -u ${base_bdevs_pt_uuid[0]}
-
-			# Check if the RAID bdev is in configuring state
-			verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size $num_base_bdevs
-
-			# Delete remaining base bdevs
-			for ((i = 1; i < num_base_bdevs; i++)); do
-				$rpc_py bdev_passthru_delete ${base_bdevs_pt[$i]}
-			done
-
-			# Re-add the last base bdev
+			# Delete the last base bdev
 			i=$((num_base_bdevs - 1))
-			$rpc_py bdev_passthru_create -b ${base_bdevs_malloc[$i]} -p ${base_bdevs_pt[$i]} -u ${base_bdevs_pt_uuid[$i]}
+			$rpc_py bdev_passthru_delete ${base_bdevs_pt[$i]}
+		fi
 
+		# Re-add first base bdev
+		# This is the "failed" device and contains the "old" version of the superblock
+		$rpc_py bdev_passthru_create -b ${base_bdevs_malloc[0]} -p ${base_bdevs_pt[0]} -u ${base_bdevs_pt_uuid[0]}
+
+		if [ $num_base_bdevs -gt 2 ]; then
 			# Check if the RAID bdev is in configuring state
 			# This should use the newer superblock version and have n-1 online base bdevs
 			verify_raid_bdev_state $raid_bdev_name "configuring" $raid_level $strip_size $((num_base_bdevs - 1))
+			[[ $($rpc_py bdev_raid_get_bdevs configuring | jq -r '.[].base_bdevs_list[0].is_configured') == "false" ]]
 
-			# Re-add remaining base bdevs
-			for ((i = 1; i < num_base_bdevs - 1; i++)); do
-				$rpc_py bdev_passthru_create -b ${base_bdevs_malloc[$i]} -p ${base_bdevs_pt[$i]} -u ${base_bdevs_pt_uuid[$i]}
-			done
-
-			# Check if the RAID bdev is in online state (degraded)
-			verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $((num_base_bdevs - 1))
+			# Re-add the last base bdev
+			$rpc_py bdev_passthru_create -b ${base_bdevs_malloc[$i]} -p ${base_bdevs_pt[$i]} -u ${base_bdevs_pt_uuid[$i]}
 		fi
+
+		# Check if the RAID bdev is in online state (degraded)
+		# This should use the newer superblock version and have n-1 online base bdevs
+		verify_raid_bdev_state $raid_bdev_name "online" $raid_level $strip_size $((num_base_bdevs - 1))
+		[[ $($rpc_py bdev_raid_get_bdevs online | jq -r '.[].base_bdevs_list[0].is_configured') == "false" ]]
 
 		# Check if the RAID bdev has the same UUID as when first created
 		if [ "$($rpc_py bdev_get_bdevs -b $raid_bdev_name | jq -r '.[] | .uuid')" != "$raid_bdev_uuid" ]; then
@@ -746,14 +741,7 @@ function raid_rebuild_test() {
 	fi
 
 	if [ $superblock = true ]; then
-		# Remove the passthru base bdevs, then re-add them to assemble the raid bdev again
-		for bdev in "${base_bdevs[@]}"; do
-			if [ -z "$bdev" ]; then
-				continue
-			fi
-			$rpc_py bdev_passthru_delete $bdev
-			$rpc_py bdev_passthru_create -b ${bdev}_malloc -p $bdev
-		done
+		# Remove then re-add a base bdev to assemble the raid bdev again
 		$rpc_py bdev_passthru_delete "spare"
 		$rpc_py bdev_passthru_create -b "spare_delay" -p "spare"
 

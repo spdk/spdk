@@ -3376,6 +3376,89 @@ raid_bdev_examine_no_sb(struct spdk_bdev *bdev)
 	}
 }
 
+struct raid_bdev_examine_others_ctx {
+	struct spdk_uuid raid_bdev_uuid;
+	uint8_t current_base_bdev_idx;
+	raid_base_bdev_cb cb_fn;
+	void *cb_ctx;
+};
+
+static void
+raid_bdev_examine_others_done(void *_ctx, int status)
+{
+	struct raid_bdev_examine_others_ctx *ctx = _ctx;
+
+	if (ctx->cb_fn != NULL) {
+		ctx->cb_fn(ctx->cb_ctx, status);
+	}
+	free(ctx);
+}
+
+typedef void (*raid_bdev_examine_load_sb_cb)(struct spdk_bdev *bdev,
+		const struct raid_bdev_superblock *sb, int status, void *ctx);
+static int raid_bdev_examine_load_sb(const char *bdev_name, raid_bdev_examine_load_sb_cb cb,
+				     void *cb_ctx);
+static void raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bdev,
+				 raid_base_bdev_cb cb_fn, void *cb_ctx);
+static void raid_bdev_examine_others(void *_ctx, int status);
+
+static void
+raid_bdev_examine_others_load_cb(struct spdk_bdev *bdev, const struct raid_bdev_superblock *sb,
+				 int status, void *_ctx)
+{
+	struct raid_bdev_examine_others_ctx *ctx = _ctx;
+
+	if (status != 0) {
+		raid_bdev_examine_others_done(ctx, status);
+		return;
+	}
+
+	raid_bdev_examine_sb(sb, bdev, raid_bdev_examine_others, ctx);
+}
+
+static void
+raid_bdev_examine_others(void *_ctx, int status)
+{
+	struct raid_bdev_examine_others_ctx *ctx = _ctx;
+	struct raid_bdev *raid_bdev;
+	struct raid_base_bdev_info *base_info;
+	char uuid_str[SPDK_UUID_STRING_LEN];
+
+	if (status != 0) {
+		goto out;
+	}
+
+	raid_bdev = raid_bdev_find_by_uuid(&ctx->raid_bdev_uuid);
+	if (raid_bdev == NULL) {
+		status = -ENODEV;
+		goto out;
+	}
+
+	for (base_info = &raid_bdev->base_bdev_info[ctx->current_base_bdev_idx];
+	     base_info < &raid_bdev->base_bdev_info[raid_bdev->num_base_bdevs];
+	     base_info++) {
+		if (base_info->is_configured || spdk_uuid_is_null(&base_info->uuid)) {
+			continue;
+		}
+
+		spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &base_info->uuid);
+
+		if (spdk_bdev_get_by_name(uuid_str) == NULL) {
+			continue;
+		}
+
+		ctx->current_base_bdev_idx = raid_bdev_base_bdev_slot(base_info);
+
+		status = raid_bdev_examine_load_sb(uuid_str, raid_bdev_examine_others_load_cb, ctx);
+		if (status != 0) {
+			continue;
+		}
+		return;
+	}
+out:
+	raid_bdev_examine_others_done(ctx, status);
+}
+
 static void
 raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bdev,
 		     raid_base_bdev_cb cb_fn, void *cb_ctx)
@@ -3443,12 +3526,29 @@ raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bd
 	}
 
 	if (!raid_bdev) {
+		struct raid_bdev_examine_others_ctx *ctx;
+
+		ctx = calloc(1, sizeof(*ctx));
+		if (ctx == NULL) {
+			rc = -ENOMEM;
+			goto out;
+		}
+
 		rc = raid_bdev_create_from_sb(sb, &raid_bdev);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to create raid bdev %s: %s\n",
 				    sb->name, spdk_strerror(-rc));
+			free(ctx);
 			goto out;
 		}
+
+		/* after this base bdev is configured, examine other base bdevs that may be present */
+		spdk_uuid_copy(&ctx->raid_bdev_uuid, &sb->uuid);
+		ctx->cb_fn = cb_fn;
+		ctx->cb_ctx = cb_ctx;
+
+		cb_fn = raid_bdev_examine_others;
+		cb_ctx = ctx;
 	}
 
 	if (raid_bdev->state == RAID_BDEV_STATE_ONLINE) {
@@ -3502,9 +3602,6 @@ out:
 		cb_fn(cb_ctx, rc);
 	}
 }
-
-typedef void (*raid_bdev_examine_load_sb_cb)(struct spdk_bdev *bdev,
-		const struct raid_bdev_superblock *sb, int status, void *ctx);
 
 struct raid_bdev_examine_ctx {
 	struct spdk_bdev_desc *desc;
