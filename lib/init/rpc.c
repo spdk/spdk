@@ -133,8 +133,7 @@ spdk_rpc_initialize(const char *listen_addr, const struct spdk_rpc_opts *opts)
 	int rc;
 
 	if (listen_addr == NULL) {
-		/* Not treated as an error */
-		return 0;
+		return -EINVAL;
 	}
 
 	rc = rpc_verify_opts_and_methods(opts);
