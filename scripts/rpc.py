@@ -40,7 +40,7 @@ if __name__ == "__main__":
                         default=5260, type=int)
     parser.add_argument('-t', dest='timeout',
                         help='Timeout as a floating point number expressed in seconds waiting for response. Default: 60.0',
-                        default=60.0, type=float)
+                        default=None, type=float)
     parser.add_argument('-r', dest='conn_retries',
                         help='Retry connecting to the RPC server N times with 0.2s interval. Default: 0',
                         default=0, type=int)

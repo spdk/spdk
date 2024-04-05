@@ -41,7 +41,7 @@ class JSONRPCException(Exception):
 
 
 class JSONRPCClient(object):
-    def __init__(self, addr, port=None, timeout=60.0, **kwargs):
+    def __init__(self, addr, port=None, timeout=None, **kwargs):
         self.sock = None
         ch = logging.StreamHandler()
         ch.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
@@ -51,7 +51,7 @@ class JSONRPCClient(object):
         self.log_set_level(kwargs.get('log_level', logging.ERROR))
         connect_retries = kwargs.get('conn_retries', 0)
 
-        self.timeout = timeout
+        self.timeout = timeout if timeout is not None else 60.0
         self._request_id = 0
         self._recv_buf = ""
         self._reqs = []
