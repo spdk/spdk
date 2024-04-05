@@ -499,6 +499,12 @@ is_nvme_iommu_shared_with_vmd() {
 	# ... and it shares iommu_group with it
 }
 
+kmsg() {
+	((UID == 0)) || return 0
+	[[ -w /dev/kmsg && $(< /proc/sys/kernel/printk_devkmsg) == on ]] || return 0
+	echo "$*" > /dev/kmsg
+}
+
 if [[ -e "$CONFIG_WPDK_DIR/bin/wpdk_common.sh" ]]; then
 	# Adjust uname to report the operating system as WSL, Msys or Cygwin
 	# and the kernel name as Windows. Define kill() to invoke the SIGTERM

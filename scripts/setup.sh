@@ -838,6 +838,8 @@ function set_hp() {
 	NRHUGE=${NRHUGE:-$(((HUGEMEM + HUGEPGSZ_MB - 1) / HUGEPGSZ_MB))}
 }
 
+kmsg "spdk: $0 $* (start)"
+
 CMD=reset cache_pci_bus
 
 mode=$1
@@ -935,3 +937,5 @@ fi
 if [[ -e /proc/$sync_pid/status ]]; then
 	wait "$sync_pid"
 fi
+
+kmsg "spdk: $0 $* (done)"
