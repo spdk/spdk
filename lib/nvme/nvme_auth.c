@@ -541,7 +541,7 @@ error:
 }
 
 static EVP_PKEY *
-nvme_auth_get_peerkey(const void *peerkey, size_t len, enum spdk_nvmf_dhchap_dhgroup dhgroup)
+nvme_auth_get_peerkey(const void *peerkey, size_t len, const char *dhgroup)
 {
 	EVP_PKEY_CTX *ctx = NULL;
 	EVP_PKEY *result = NULL, *key = NULL;
@@ -569,8 +569,7 @@ nvme_auth_get_peerkey(const void *peerkey, size_t len, enum spdk_nvmf_dhchap_dhg
 	if (OSSL_PARAM_BLD_push_BN(bld, "pub", bn) != 1) {
 		goto error;
 	}
-	if (OSSL_PARAM_BLD_push_utf8_string(bld, "group",
-					    (char *)spdk_nvme_dhchap_get_dhgroup_name(dhgroup), 0) != 1) {
+	if (OSSL_PARAM_BLD_push_utf8_string(bld, "group", dhgroup, 0) != 1) {
 		goto error;
 	}
 
@@ -596,12 +595,17 @@ error:
 
 static int
 nvme_auth_derive_dhsecret(EVP_PKEY *key, const void *peer, size_t peerlen,
-			  void *secret, size_t *seclen, enum spdk_nvmf_dhchap_dhgroup dhgroup)
+			  void *secret, size_t *seclen)
 {
 	EVP_PKEY_CTX *ctx = NULL;
 	EVP_PKEY *peerkey = NULL;
+	char dhgroup[64] = {};
 	int rc = 0;
 
+	if (EVP_PKEY_get_utf8_string_param(key, "group", dhgroup,
+					   sizeof(dhgroup), NULL) != 1) {
+		return -EIO;
+	}
 	peerkey = nvme_auth_get_peerkey(peer, peerlen, dhgroup);
 	if (peerkey == NULL) {
 		return -EINVAL;
@@ -907,8 +911,7 @@ nvme_auth_send_reply(struct spdk_nvme_qpair *qpair)
 		}
 		AUTH_LOGDUMP("host pubkey:", pubkey, publen);
 		rc = nvme_auth_derive_dhsecret(dhkey, &challenge->cval[hl], challenge->dhvlen,
-					       dhsec, &dhseclen,
-					       (enum spdk_nvmf_dhchap_dhgroup)challenge->dhg_id);
+					       dhsec, &dhseclen);
 		EVP_PKEY_free(dhkey);
 		if (rc != 0) {
 			return rc;
