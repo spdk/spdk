@@ -481,13 +481,11 @@ out:
 }
 
 static EVP_PKEY *
-nvme_auth_generate_dhkey(void *pub, size_t *len, enum spdk_nvmf_dhchap_dhgroup dhgroup)
+nvme_auth_generate_dhkey(enum spdk_nvmf_dhchap_dhgroup dhgroup)
 {
 	EVP_PKEY_CTX *ctx = NULL;
-	EVP_PKEY *result = NULL, *key = NULL;
-	BIGNUM *bn = NULL;
+	EVP_PKEY *key = NULL;
 	OSSL_PARAM params[2];
-	int rc;
 
 	ctx = EVP_PKEY_CTX_new_from_name(NULL, "DHX", NULL);
 	if (ctx == NULL) {
@@ -508,28 +506,38 @@ nvme_auth_generate_dhkey(void *pub, size_t *len, enum spdk_nvmf_dhchap_dhgroup d
 	if (EVP_PKEY_generate(ctx, &key) != 1) {
 		goto error;
 	}
+error:
+	EVP_PKEY_CTX_free(ctx);
+	return key;
+}
+
+static int
+nvme_auth_dhkey_get_pubkey(EVP_PKEY *key, void *pub, size_t *len)
+{
+	BIGNUM *bn = NULL;
+	int rc;
+
 	if (EVP_PKEY_get_bn_param(key, "pub", &bn) != 1) {
+		rc = -EIO;
 		goto error;
 	}
-
 	if ((size_t)BN_num_bytes(bn) > *len) {
 		SPDK_ERRLOG("Insufficient key buffer size=%zu (needed=%d)",
 			    *len, BN_num_bytes(bn));
+		rc = -EINVAL;
 		goto error;
 	}
 	rc = BN_bn2bin(bn, pub);
 	if (rc <= 0) {
+		rc = -EIO;
 		goto error;
 	}
 
 	*len = (size_t)BN_num_bytes(bn);
-	result = EVP_PKEY_dup(key);
+	rc = 0;
 error:
-	EVP_PKEY_free(key);
-	EVP_PKEY_CTX_free(ctx);
 	BN_free(bn);
-
-	return result;
+	return rc;
 }
 
 static EVP_PKEY *
@@ -888,10 +896,14 @@ nvme_auth_send_reply(struct spdk_nvme_qpair *qpair)
 		dhseclen = sizeof(dhsec);
 		publen = sizeof(pubkey);
 		AUTH_LOGDUMP("ctrlr pubkey:", &challenge->cval[hl], challenge->dhvlen);
-		dhkey = nvme_auth_generate_dhkey(pubkey, &publen,
-						 (enum spdk_nvmf_dhchap_dhgroup)challenge->dhg_id);
+		dhkey = nvme_auth_generate_dhkey((enum spdk_nvmf_dhchap_dhgroup)challenge->dhg_id);
 		if (dhkey == NULL) {
 			return -EINVAL;
+		}
+		rc = nvme_auth_dhkey_get_pubkey(dhkey, pubkey, &publen);
+		if (rc != 0) {
+			EVP_PKEY_free(dhkey);
+			return rc;
 		}
 		AUTH_LOGDUMP("host pubkey:", pubkey, publen);
 		rc = nvme_auth_derive_dhsecret(dhkey, &challenge->cval[hl], challenge->dhvlen,
