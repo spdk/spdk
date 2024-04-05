@@ -304,6 +304,8 @@ struct spdk_bdev_channel {
 
 	uint32_t		flags;
 
+	uint16_t		trace_id;
+
 	struct spdk_histogram_data *histogram;
 
 #ifdef SPDK_CONFIG_VTUNE
@@ -3061,7 +3063,8 @@ bdev_io_split_submit(struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt
 		} else {
 			bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
 			if (bdev_io->u.bdev.split_outstanding == 0) {
-				spdk_trace_record(TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)bdev_io, bdev_io->internal.caller_ctx);
+				spdk_trace_record(TRACE_BDEV_IO_DONE, bdev_io->internal.ch->trace_id,
+						  0, (uintptr_t)bdev_io, bdev_io->internal.caller_ctx);
 				TAILQ_REMOVE(&bdev_io->internal.ch->io_submitted, bdev_io, internal.ch_link);
 				bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
 			}
@@ -3187,7 +3190,8 @@ _bdev_rw_split(void *_bdev_io)
 							if (bdev_io->u.bdev.split_outstanding == 0) {
 								SPDK_ERRLOG("The first child io was less than a block size\n");
 								bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-								spdk_trace_record(TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)bdev_io, bdev_io->internal.caller_ctx);
+								spdk_trace_record(TRACE_BDEV_IO_DONE, bdev_io->internal.ch->trace_id,
+										  0, (uintptr_t)bdev_io, bdev_io->internal.caller_ctx);
 								TAILQ_REMOVE(&bdev_io->internal.ch->io_submitted, bdev_io, internal.ch_link);
 								bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
 							}
@@ -3342,7 +3346,8 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	 */
 	if (parent_io->u.bdev.split_remaining_num_blocks == 0) {
 		assert(parent_io->internal.cb != bdev_io_split_done);
-		spdk_trace_record(TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)parent_io, bdev_io->internal.caller_ctx);
+		spdk_trace_record(TRACE_BDEV_IO_DONE, parent_io->internal.ch->trace_id,
+				  0, (uintptr_t)parent_io, bdev_io->internal.caller_ctx);
 		TAILQ_REMOVE(&parent_io->internal.ch->io_submitted, parent_io, internal.ch_link);
 
 		if (spdk_likely(parent_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS)) {
@@ -3531,7 +3536,6 @@ bdev_io_range_is_locked(struct spdk_bdev_io *bdev_io, struct lba_range *range)
 void
 bdev_io_submit(struct spdk_bdev_io *bdev_io)
 {
-	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_PENDING);
@@ -3550,10 +3554,9 @@ bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	TAILQ_INSERT_TAIL(&ch->io_submitted, bdev_io, internal.ch_link);
 
 	bdev_io->internal.submit_tsc = spdk_get_ticks();
-	spdk_trace_record_tsc(bdev_io->internal.submit_tsc, TRACE_BDEV_IO_START, 0, 0,
+	spdk_trace_record_tsc(bdev_io->internal.submit_tsc, TRACE_BDEV_IO_START, ch->trace_id, 0,
 			      (uintptr_t)bdev_io, (uint64_t)bdev_io->type, bdev_io->internal.caller_ctx,
-			      bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
-			      spdk_bdev_get_name(bdev));
+			      bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks);
 
 	if (bdev_io->internal.split) {
 		bdev_io_split(bdev_io);
@@ -4039,7 +4042,7 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	spdk_trace_record(TRACE_BDEV_IOCH_CREATE, 0, 0, 0, ch->bdev->name,
+	spdk_trace_record(TRACE_BDEV_IOCH_CREATE, bdev->internal.trace_id, 0, 0,
 			  spdk_thread_get_id(spdk_io_channel_get_thread(ch->channel)));
 
 	assert(ch->histogram == NULL);
@@ -4089,6 +4092,7 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 	TAILQ_INIT(&ch->locked_ranges);
 	TAILQ_INIT(&ch->qos_queued_io);
 	ch->flags = 0;
+	ch->trace_id = bdev->internal.trace_id;
 	ch->shared_resource = shared_resource;
 
 	TAILQ_INIT(&ch->io_submitted);
@@ -4507,7 +4511,7 @@ bdev_channel_destroy(void *io_device, void *ctx_buf)
 	SPDK_DEBUGLOG(bdev, "Destroying channel %p for bdev %s on thread %p\n", ch, ch->bdev->name,
 		      spdk_get_thread());
 
-	spdk_trace_record(TRACE_BDEV_IOCH_DESTROY, 0, 0, 0, ch->bdev->name,
+	spdk_trace_record(TRACE_BDEV_IOCH_DESTROY, ch->bdev->internal.trace_id, 0, 0,
 			  spdk_thread_get_id(spdk_io_channel_get_thread(ch->channel)));
 
 	/* This channel is going away, so add its statistics into the bdev so that they don't get lost. */
@@ -7223,7 +7227,7 @@ bdev_io_complete(void *ctx)
 
 	tsc = spdk_get_ticks();
 	tsc_diff = tsc - bdev_io->internal.submit_tsc;
-	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)bdev_io,
+	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_DONE, bdev_ch->trace_id, 0, (uintptr_t)bdev_io,
 			      bdev_io->internal.caller_ctx);
 
 	TAILQ_REMOVE(&bdev_ch->io_submitted, bdev_io, internal.ch_link);
@@ -7705,6 +7709,7 @@ bdev_register(struct spdk_bdev *bdev)
 	bdev->internal.qd_poll_in_progress = false;
 	bdev->internal.period = 0;
 	bdev->internal.new_period = 0;
+	bdev->internal.trace_id = spdk_trace_register_owner(OWNER_TYPE_BDEV, bdev_name);
 
 	spdk_io_device_register(__bdev_to_io_dev(bdev),
 				bdev_channel_create, bdev_channel_destroy,
@@ -7742,6 +7747,7 @@ bdev_destroy_cb(void *io_device)
 	spdk_spin_destroy(&bdev->internal.spinlock);
 	free(bdev->internal.qos);
 	bdev_free_io_stat(bdev->internal.stat);
+	spdk_trace_unregister_owner(bdev->internal.trace_id);
 
 	rc = bdev->fn_table->destruct(bdev->ctxt);
 	if (rc < 0) {
@@ -10381,8 +10387,7 @@ SPDK_TRACE_REGISTER_FN(bdev_trace, "bdev", TRACE_GROUP_BDEV)
 				{ "type", SPDK_TRACE_ARG_TYPE_INT, 8 },
 				{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 },
 				{ "offset", SPDK_TRACE_ARG_TYPE_INT, 8 },
-				{ "len", SPDK_TRACE_ARG_TYPE_INT, 8 },
-				{ "name", SPDK_TRACE_ARG_TYPE_STR, 40}
+				{ "len", SPDK_TRACE_ARG_TYPE_INT, 8 }
 			}
 		},
 		{
@@ -10394,7 +10399,6 @@ SPDK_TRACE_REGISTER_FN(bdev_trace, "bdev", TRACE_GROUP_BDEV)
 			"BDEV_IOCH_CREATE", TRACE_BDEV_IOCH_CREATE,
 			OWNER_TYPE_BDEV, OBJECT_NONE, 1,
 			{
-				{ "name", SPDK_TRACE_ARG_TYPE_STR, 40 },
 				{ "thread_id", SPDK_TRACE_ARG_TYPE_INT, 8}
 			}
 		},
@@ -10402,7 +10406,6 @@ SPDK_TRACE_REGISTER_FN(bdev_trace, "bdev", TRACE_GROUP_BDEV)
 			"BDEV_IOCH_DESTROY", TRACE_BDEV_IOCH_DESTROY,
 			OWNER_TYPE_BDEV, OBJECT_NONE, 0,
 			{
-				{ "name", SPDK_TRACE_ARG_TYPE_STR, 40 },
 				{ "thread_id", SPDK_TRACE_ARG_TYPE_INT, 8}
 			}
 		},

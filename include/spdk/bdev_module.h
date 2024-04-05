@@ -640,6 +640,9 @@ struct spdk_bdev {
 		/** True if the state of the QoS is being modified */
 		bool qos_mod_in_progress;
 
+		/** Trace ID for this bdev. */
+		uint16_t trace_id;
+
 		/**
 		 * SPDK spinlock protecting many of the internal fields of this structure. If
 		 * multiple locks need to be held, the following order must be used:
