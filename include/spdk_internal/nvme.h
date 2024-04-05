@@ -37,4 +37,50 @@ int spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash 
 			       const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
 			       const void *cval, void *rval);
 
+/** DH-HMAC-CHAP Diffie-Hellman key */
+struct spdk_nvme_dhchap_dhkey;
+
+/**
+ * Generate a Diffie-Hellman key.
+ *
+ * \param dhg Diffie-Hellman group.
+ *
+ * \return Diffie-Hellman key or NULL on failure.
+ */
+struct spdk_nvme_dhchap_dhkey *spdk_nvme_dhchap_generate_dhkey(enum spdk_nvmf_dhchap_dhgroup dhg);
+
+/**
+ * Free a DH key generated with `spdk_nvme_dhchap_generate_dhkey()`.
+ *
+ * \param key DH key.  If NULL, this function is a no-op.
+ */
+void spdk_nvme_dhchap_dhkey_free(struct spdk_nvme_dhchap_dhkey **key);
+
+/**
+ * Get the public part of a DH key.
+ *
+ * \param key DH key.
+ * \param pub Buffer to hold the public key.
+ * \param len Length of the `pub` buffer.  After a successful call to this function, this variable
+ * will hold the length of the public key.
+ *
+ * \return 0 on success or negative errno on failure.
+ */
+int spdk_nvme_dhchap_dhkey_get_pubkey(struct spdk_nvme_dhchap_dhkey *key, void *pub, size_t *len);
+
+/**
+ * Derive a secret from a DH key and peer's public key.
+ *
+ * \param key DH key.
+ * \param peer Peer's public key.
+ * \param peerlen Length of the peer's public key.
+ * \param secret Buffer to hold the secret value.
+ * \param seclen Length of the `secret` buffer.  After a successful call to this function, this
+ * variable will hold the length of the secret value.
+ *
+ * \return 0 on success or negative errno on failure.
+ */
+int spdk_nvme_dhchap_dhkey_derive_secret(struct spdk_nvme_dhchap_dhkey *key, const void *peer,
+		size_t peerlen, void *secret, size_t *seclen);
+
 #endif /* SPDK_INTERNAL_NVME_H */

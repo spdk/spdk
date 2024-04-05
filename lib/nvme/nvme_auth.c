@@ -480,8 +480,8 @@ out:
 	return rc;
 }
 
-static EVP_PKEY *
-nvme_auth_generate_dhkey(enum spdk_nvmf_dhchap_dhgroup dhgroup)
+struct spdk_nvme_dhchap_dhkey *
+spdk_nvme_dhchap_generate_dhkey(enum spdk_nvmf_dhchap_dhgroup dhgroup)
 {
 	EVP_PKEY_CTX *ctx = NULL;
 	EVP_PKEY *key = NULL;
@@ -508,12 +508,24 @@ nvme_auth_generate_dhkey(enum spdk_nvmf_dhchap_dhgroup dhgroup)
 	}
 error:
 	EVP_PKEY_CTX_free(ctx);
-	return key;
+	return (void *)key;
 }
 
-static int
-nvme_auth_dhkey_get_pubkey(EVP_PKEY *key, void *pub, size_t *len)
+void
+spdk_nvme_dhchap_dhkey_free(struct spdk_nvme_dhchap_dhkey **key)
 {
+	if (key == NULL) {
+		return;
+	}
+
+	EVP_PKEY_free(*(EVP_PKEY **)key);
+	*key = NULL;
+}
+
+int
+spdk_nvme_dhchap_dhkey_get_pubkey(struct spdk_nvme_dhchap_dhkey *dhkey, void *pub, size_t *len)
+{
+	EVP_PKEY *key = (EVP_PKEY *)dhkey;
 	BIGNUM *bn = NULL;
 	int rc;
 
@@ -593,10 +605,11 @@ error:
 	return result;
 }
 
-static int
-nvme_auth_derive_dhsecret(EVP_PKEY *key, const void *peer, size_t peerlen,
-			  void *secret, size_t *seclen)
+int
+spdk_nvme_dhchap_dhkey_derive_secret(struct spdk_nvme_dhchap_dhkey *dhkey,
+				     const void *peer, size_t peerlen, void *secret, size_t *seclen)
 {
+	EVP_PKEY *key = (EVP_PKEY *)dhkey;
 	EVP_PKEY_CTX *ctx = NULL;
 	EVP_PKEY *peerkey = NULL;
 	char dhgroup[64] = {};
@@ -885,13 +898,13 @@ nvme_auth_send_reply(struct spdk_nvme_qpair *qpair)
 	struct spdk_nvmf_dhchap_challenge *challenge = status->dma_data;
 	struct spdk_nvmf_dhchap_reply *reply = status->dma_data;
 	struct nvme_auth *auth = &qpair->auth;
+	struct spdk_nvme_dhchap_dhkey *dhkey;
 	uint8_t hl, response[NVME_AUTH_DATA_SIZE];
 	uint8_t pubkey[NVME_AUTH_DH_KEY_MAX_SIZE];
 	uint8_t dhsec[NVME_AUTH_DH_KEY_MAX_SIZE];
 	uint8_t ctrlr_challenge[NVME_AUTH_DIGEST_MAX_SIZE] = {};
 	size_t dhseclen = 0, publen = 0;
 	uint32_t seqnum = 0;
-	EVP_PKEY *dhkey;
 	int rc;
 
 	auth->hash = challenge->hash_id;
@@ -900,19 +913,20 @@ nvme_auth_send_reply(struct spdk_nvme_qpair *qpair)
 		dhseclen = sizeof(dhsec);
 		publen = sizeof(pubkey);
 		AUTH_LOGDUMP("ctrlr pubkey:", &challenge->cval[hl], challenge->dhvlen);
-		dhkey = nvme_auth_generate_dhkey((enum spdk_nvmf_dhchap_dhgroup)challenge->dhg_id);
+		dhkey = spdk_nvme_dhchap_generate_dhkey(
+				(enum spdk_nvmf_dhchap_dhgroup)challenge->dhg_id);
 		if (dhkey == NULL) {
 			return -EINVAL;
 		}
-		rc = nvme_auth_dhkey_get_pubkey(dhkey, pubkey, &publen);
+		rc = spdk_nvme_dhchap_dhkey_get_pubkey(dhkey, pubkey, &publen);
 		if (rc != 0) {
-			EVP_PKEY_free(dhkey);
+			spdk_nvme_dhchap_dhkey_free(&dhkey);
 			return rc;
 		}
 		AUTH_LOGDUMP("host pubkey:", pubkey, publen);
-		rc = nvme_auth_derive_dhsecret(dhkey, &challenge->cval[hl], challenge->dhvlen,
-					       dhsec, &dhseclen);
-		EVP_PKEY_free(dhkey);
+		rc = spdk_nvme_dhchap_dhkey_derive_secret(dhkey,
+				&challenge->cval[hl], challenge->dhvlen, dhsec, &dhseclen);
+		spdk_nvme_dhchap_dhkey_free(&dhkey);
 		if (rc != 0) {
 			return rc;
 		}

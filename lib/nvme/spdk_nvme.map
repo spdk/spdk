@@ -215,6 +215,10 @@
 
 	# functions from spdk_internal/nvme.h
 	spdk_nvme_dhchap_calculate;
+	spdk_nvme_dhchap_generate_dhkey;
+	spdk_nvme_dhchap_dhkey_free;
+	spdk_nvme_dhchap_dhkey_get_pubkey;
+	spdk_nvme_dhchap_dhkey_derive_secret;
 
 	# public functions from nvme_zns.h
 	spdk_nvme_zns_ns_get_data;
