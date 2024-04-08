@@ -16,6 +16,12 @@ DEFINE_STUB(spdk_nvme_dhchap_get_digest_length, uint8_t, (int d), 0);
 DEFINE_STUB_V(spdk_keyring_put_key, (struct spdk_key *k));
 DEFINE_STUB(nvmf_subsystem_get_dhchap_key, struct spdk_key *,
 	    (struct spdk_nvmf_subsystem *s, const char *h), NULL);
+DEFINE_STUB(spdk_nvme_dhchap_generate_dhkey, struct spdk_nvme_dhchap_dhkey *,
+	    (enum spdk_nvmf_dhchap_dhgroup dhgroup), NULL);
+DEFINE_STUB_V(spdk_nvme_dhchap_dhkey_free, (struct spdk_nvme_dhchap_dhkey **key));
+DEFINE_STUB(spdk_nvme_dhchap_dhkey_derive_secret, int,
+	    (struct spdk_nvme_dhchap_dhkey *key, const void *peer, size_t peerlen, void *secret,
+	     size_t *seclen), 0);
 DECLARE_WRAPPER(RAND_bytes, int, (unsigned char *buf, int num));
 
 static uint8_t g_rand_val;
@@ -61,6 +67,27 @@ spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash
 {
 	memset(rval, g_rval, spdk_nvme_dhchap_get_digest_length(hash));
 	return MOCK_GET(spdk_nvme_dhchap_calculate);
+}
+
+static uint8_t g_dhv;
+static size_t g_dhvlen;
+DEFINE_RETURN_MOCK(spdk_nvme_dhchap_dhkey_get_pubkey, int);
+
+int
+spdk_nvme_dhchap_dhkey_get_pubkey(struct spdk_nvme_dhchap_dhkey *dhkey, void *pub, size_t *len)
+{
+	int rc;
+
+	rc = MOCK_GET(spdk_nvme_dhchap_dhkey_get_pubkey);
+	if (rc != 0) {
+		return rc;
+	}
+
+	SPDK_CU_ASSERT_FATAL(*len >= g_dhvlen);
+	memset(pub, g_dhv, g_dhvlen);
+	*len = g_dhvlen;
+
+	return rc;
 }
 
 static void
@@ -271,6 +298,7 @@ test_auth_negotiate(void)
 	nvmf_auth_send_exec(&req);
 	CU_ASSERT(g_req_completed);
 	CU_ASSERT_EQUAL(auth->digest, SPDK_NVMF_DHCHAP_HASH_SHA512);
+	CU_ASSERT_EQUAL(auth->dhgroup, SPDK_NVMF_DHCHAP_DHGROUP_8192);
 	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_CHALLENGE);
 
 	/* Invalid auth state */
@@ -626,7 +654,7 @@ test_auth_challenge(void)
 	struct spdk_nvmf_qpair_auth *auth;
 	struct spdk_nvmf_dhchap_challenge *msg;
 	struct spdk_nvmf_auth_failure *fail;
-	uint8_t msgbuf[4096], cval[4096];
+	uint8_t msgbuf[4096], cval[4096], dhv[4096];
 	int rc;
 
 	msg = (void *)msgbuf;
@@ -640,6 +668,7 @@ test_auth_challenge(void)
 	ut_prep_recv_cmd(&req, &cmd, msgbuf, sizeof(msgbuf));
 	g_req_completed = false;
 	auth->state = NVMF_QPAIR_AUTH_CHALLENGE;
+	auth->dhgroup = SPDK_NVMF_DHCHAP_DHGROUP_NULL;
 	MOCK_SET(spdk_nvme_dhchap_get_digest_length, 48);
 	g_rand_val = 0xa5;
 	memset(cval, g_rand_val, sizeof(cval));
@@ -657,6 +686,35 @@ test_auth_challenge(void)
 	CU_ASSERT_EQUAL(msg->dhg_id, SPDK_NVMF_DHCHAP_DHGROUP_NULL);
 	CU_ASSERT_EQUAL(msg->dhvlen, 0);
 	CU_ASSERT_EQUAL(memcmp(msg->cval, cval, 48), 0);
+	CU_ASSERT(msg->seqnum != 0);
+
+	/* Successfully receive a challenge message w/ a non-NULL dhgroup */
+	ut_prep_recv_cmd(&req, &cmd, msgbuf, sizeof(msgbuf));
+	g_req_completed = false;
+	auth->state = NVMF_QPAIR_AUTH_CHALLENGE;
+	MOCK_SET(spdk_nvme_dhchap_get_digest_length, 48);
+	MOCK_SET(spdk_nvme_dhchap_generate_dhkey, (struct spdk_nvme_dhchap_dhkey *)0xdeadbeef);
+	g_rand_val = 0xa5;
+	g_dhv = 0xfe;
+	g_dhvlen = 256;
+	memset(cval, g_rand_val, sizeof(cval));
+	memset(dhv, g_dhv, sizeof(dhv));
+	auth->digest = SPDK_NVMF_DHCHAP_HASH_SHA384;
+	auth->dhgroup = SPDK_NVMF_DHCHAP_DHGROUP_2048;
+	auth->tid = 8;
+
+	nvmf_auth_recv_exec(&req);
+	CU_ASSERT(g_req_completed);
+	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_REPLY);
+	CU_ASSERT_EQUAL(msg->auth_type, SPDK_NVMF_AUTH_TYPE_DHCHAP);
+	CU_ASSERT_EQUAL(msg->auth_id, SPDK_NVMF_AUTH_ID_DHCHAP_CHALLENGE);
+	CU_ASSERT_EQUAL(msg->t_id, 8);
+	CU_ASSERT_EQUAL(msg->hl, 48);
+	CU_ASSERT_EQUAL(msg->hash_id, SPDK_NVMF_DHCHAP_HASH_SHA384);
+	CU_ASSERT_EQUAL(msg->dhg_id, SPDK_NVMF_DHCHAP_DHGROUP_2048);
+	CU_ASSERT_EQUAL(msg->dhvlen, g_dhvlen);
+	CU_ASSERT_EQUAL(memcmp(msg->cval, cval, 48), 0);
+	CU_ASSERT_EQUAL(memcmp(&msg->cval[48], dhv, g_dhvlen), 0);
 	CU_ASSERT(msg->seqnum != 0);
 
 	/* Check RAND_bytes failure */
@@ -678,6 +736,42 @@ test_auth_challenge(void)
 	CU_ASSERT_EQUAL(fail->rce, SPDK_NVMF_AUTH_FAILED);
 	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
 	MOCK_SET(RAND_bytes, 1);
+
+	/* Check spdk_nvme_dhchap_generate_dhkey failure */
+	ut_prep_recv_cmd(&req, &cmd, msgbuf, sizeof(msgbuf));
+	g_req_completed = false;
+	MOCK_SET(spdk_nvme_dhchap_generate_dhkey, NULL);
+	auth->state = NVMF_QPAIR_AUTH_CHALLENGE;
+	auth->tid = 8;
+
+	nvmf_auth_recv_exec(&req);
+	CU_ASSERT(g_req_completed);
+	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
+	CU_ASSERT_EQUAL(fail->auth_type, SPDK_NVMF_AUTH_TYPE_COMMON_MESSAGE);
+	CU_ASSERT_EQUAL(fail->auth_id, SPDK_NVMF_AUTH_ID_FAILURE1);
+	CU_ASSERT_EQUAL(fail->t_id, 8);
+	CU_ASSERT_EQUAL(fail->rc, SPDK_NVMF_AUTH_FAILURE);
+	CU_ASSERT_EQUAL(fail->rce, SPDK_NVMF_AUTH_FAILED);
+	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
+
+	/* Check spdk_nvme_dhchap_dhkey_get_pubkey failure */
+	ut_prep_recv_cmd(&req, &cmd, msgbuf, sizeof(msgbuf));
+	g_req_completed = false;
+	MOCK_SET(spdk_nvme_dhchap_generate_dhkey, (struct spdk_nvme_dhchap_dhkey *)0xdeadbeef);
+	MOCK_SET(spdk_nvme_dhchap_dhkey_get_pubkey, -EIO);
+	auth->state = NVMF_QPAIR_AUTH_CHALLENGE;
+	auth->tid = 8;
+
+	nvmf_auth_recv_exec(&req);
+	CU_ASSERT(g_req_completed);
+	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
+	CU_ASSERT_EQUAL(fail->auth_type, SPDK_NVMF_AUTH_TYPE_COMMON_MESSAGE);
+	CU_ASSERT_EQUAL(fail->auth_id, SPDK_NVMF_AUTH_ID_FAILURE1);
+	CU_ASSERT_EQUAL(fail->t_id, 8);
+	CU_ASSERT_EQUAL(fail->rc, SPDK_NVMF_AUTH_FAILURE);
+	CU_ASSERT_EQUAL(fail->rce, SPDK_NVMF_AUTH_FAILED);
+	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
+	MOCK_SET(spdk_nvme_dhchap_dhkey_get_pubkey, 0);
 
 	/* Check insufficient buffer size */
 	ut_prep_recv_cmd(&req, &cmd, msgbuf, sizeof(msgbuf));
@@ -859,6 +953,18 @@ test_auth_reply(void)
 	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_FAILURE1);
 	CU_ASSERT_EQUAL(auth->fail_reason, SPDK_NVMF_AUTH_FAILED);
 	g_rval = 0xa5;
+
+	/* DH secret derivation failure */
+	g_req_completed = false;
+	auth->state = NVMF_QPAIR_AUTH_REPLY;
+	auth->dhgroup = SPDK_NVMF_DHCHAP_DHGROUP_2048;
+	MOCK_SET(spdk_nvme_dhchap_dhkey_derive_secret, -EIO);
+
+	nvmf_auth_send_exec(&req);
+	CU_ASSERT(g_req_completed);
+	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_FAILURE1);
+	CU_ASSERT_EQUAL(auth->fail_reason, SPDK_NVMF_AUTH_FAILED);
+	MOCK_SET(spdk_nvme_dhchap_dhkey_derive_secret, 0);
 
 	nvmf_qpair_auth_destroy(&qpair);
 }

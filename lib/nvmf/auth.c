@@ -17,6 +17,7 @@
 
 #define NVMF_AUTH_DEFAULT_KATO_US (120ull * 1000 * 1000)
 #define NVMF_AUTH_DIGEST_MAX_SIZE 64
+#define NVMF_AUTH_DH_KEY_MAX_SIZE 1024
 
 #define AUTH_ERRLOG(q, fmt, ...) \
 	SPDK_ERRLOG("[%s:%s:%u] " fmt, (q)->ctrlr->subsys->subnqn, (q)->ctrlr->hostnqn, \
@@ -43,8 +44,10 @@ struct spdk_nvmf_qpair_auth {
 	int				fail_reason;
 	uint16_t			tid;
 	int				digest;
+	int				dhgroup;
 	uint8_t				cval[NVMF_AUTH_DIGEST_MAX_SIZE];
 	uint32_t			seqnum;
+	struct spdk_nvme_dhchap_dhkey	*dhkey;
 };
 
 struct nvmf_auth_common_header {
@@ -155,6 +158,7 @@ static void
 nvmf_auth_qpair_cleanup(struct spdk_nvmf_qpair_auth *auth)
 {
 	spdk_poller_unregister(&auth->poller);
+	spdk_nvme_dhchap_dhkey_free(&auth->dhkey);
 }
 
 static int
@@ -204,6 +208,11 @@ nvmf_auth_negotiate_exec(struct spdk_nvmf_request *req, struct spdk_nvmf_auth_ne
 		SPDK_NVMF_DHCHAP_HASH_SHA256
 	};
 	enum spdk_nvmf_dhchap_dhgroup dhgroups[] = {
+		SPDK_NVMF_DHCHAP_DHGROUP_8192,
+		SPDK_NVMF_DHCHAP_DHGROUP_6144,
+		SPDK_NVMF_DHCHAP_DHGROUP_4096,
+		SPDK_NVMF_DHCHAP_DHGROUP_3072,
+		SPDK_NVMF_DHCHAP_DHGROUP_2048,
 		SPDK_NVMF_DHCHAP_DHGROUP_NULL,
 	};
 	int digest = -1, dhgroup = -1;
@@ -292,6 +301,7 @@ nvmf_auth_negotiate_exec(struct spdk_nvmf_request *req, struct spdk_nvmf_auth_ne
 	}
 
 	auth->digest = digest;
+	auth->dhgroup = dhgroup;
 	nvmf_auth_set_state(qpair, NVMF_QPAIR_AUTH_CHALLENGE);
 	nvmf_auth_request_complete(req, SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_SUCCESS, 0);
 }
@@ -303,7 +313,9 @@ nvmf_auth_reply_exec(struct spdk_nvmf_request *req, struct spdk_nvmf_dhchap_repl
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
 	uint8_t response[NVMF_AUTH_DIGEST_MAX_SIZE];
+	uint8_t dhsec[NVMF_AUTH_DH_KEY_MAX_SIZE];
 	struct spdk_key *key = NULL;
+	size_t dhseclen = 0;
 	uint8_t hl;
 	int rc;
 
@@ -324,7 +336,7 @@ nvmf_auth_reply_exec(struct spdk_nvmf_request *req, struct spdk_nvmf_dhchap_repl
 		nvmf_auth_request_fail1(req, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
 		goto out;
 	}
-	if (req->length != sizeof(*msg) + 2 * hl) {
+	if (req->length != sizeof(*msg) + 2 * hl + msg->dhvlen) {
 		AUTH_ERRLOG(qpair, "invalid message length: %"PRIu32" != %zu\n",
 			    req->length, sizeof(*msg) + 2 * hl);
 		nvmf_auth_request_fail1(req, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
@@ -340,11 +352,6 @@ nvmf_auth_reply_exec(struct spdk_nvmf_request *req, struct spdk_nvmf_dhchap_repl
 		nvmf_auth_request_fail1(req, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
 		goto out;
 	}
-	if (msg->dhvlen != 0) {
-		AUTH_ERRLOG(qpair, "dhgroup length mismatch: %u != %u\n", msg->dhvlen, 0);
-		nvmf_auth_request_fail1(req, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
-		goto out;
-	}
 
 	key = nvmf_subsystem_get_dhchap_key(ctrlr->subsys, ctrlr->hostnqn);
 	if (key == NULL) {
@@ -353,10 +360,25 @@ nvmf_auth_reply_exec(struct spdk_nvmf_request *req, struct spdk_nvmf_dhchap_repl
 		goto out;
 	}
 
+	if (auth->dhgroup != SPDK_NVMF_DHCHAP_DHGROUP_NULL) {
+		AUTH_LOGDUMP("host pubkey:", &msg->rval[2 * hl], msg->dhvlen);
+		dhseclen = sizeof(dhsec);
+		rc = spdk_nvme_dhchap_dhkey_derive_secret(auth->dhkey, &msg->rval[2 * hl],
+				msg->dhvlen, dhsec, &dhseclen);
+		if (rc != 0) {
+			AUTH_ERRLOG(qpair, "couldn't derive DH secret\n");
+			nvmf_auth_request_fail1(req, SPDK_NVMF_AUTH_FAILED);
+			goto out;
+		}
+
+		AUTH_LOGDUMP("dh secret:", dhsec, dhseclen);
+	}
+
 	assert(hl <= sizeof(response) && hl <= sizeof(auth->cval));
 	rc = spdk_nvme_dhchap_calculate(key, (enum spdk_nvmf_dhchap_hash)auth->digest,
 					"HostHost", auth->seqnum, auth->tid, 0,
-					ctrlr->hostnqn, ctrlr->subsys->subnqn, NULL, 0,
+					ctrlr->hostnqn, ctrlr->subsys->subnqn,
+					dhseclen > 0 ? dhsec : NULL, dhseclen,
 					auth->cval, response);
 	if (rc != 0) {
 		AUTH_ERRLOG(qpair, "failed to calculate challenge response: %s\n",
@@ -502,13 +524,31 @@ nvmf_auth_recv_challenge(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
 	struct spdk_nvmf_dhchap_challenge *challenge;
-	uint8_t hl;
+	uint8_t hl, dhv[NVMF_AUTH_DH_KEY_MAX_SIZE];
+	size_t dhvlen = 0;
 	int rc;
 
 	hl = spdk_nvme_dhchap_get_digest_length(auth->digest);
 	assert(hl > 0 && hl <= sizeof(auth->cval));
 
-	challenge = nvmf_auth_get_message(req, sizeof(*challenge) + hl);
+	if (auth->dhgroup != SPDK_NVMF_DHCHAP_DHGROUP_NULL) {
+		auth->dhkey = spdk_nvme_dhchap_generate_dhkey(auth->dhgroup);
+		if (auth->dhkey == NULL) {
+			AUTH_ERRLOG(qpair, "failed to generate DH key\n");
+			return SPDK_NVMF_AUTH_FAILED;
+		}
+
+		dhvlen = sizeof(dhv);
+		rc = spdk_nvme_dhchap_dhkey_get_pubkey(auth->dhkey, dhv, &dhvlen);
+		if (rc != 0) {
+			AUTH_ERRLOG(qpair, "failed to get DH public key\n");
+			return SPDK_NVMF_AUTH_FAILED;
+		}
+
+		AUTH_LOGDUMP("ctrlr pubkey:", dhv, dhvlen);
+	}
+
+	challenge = nvmf_auth_get_message(req, sizeof(*challenge) + hl + dhvlen);
 	if (challenge == NULL) {
 		AUTH_ERRLOG(qpair, "invalid message length: %"PRIu32"\n", req->length);
 		return SPDK_NVMF_AUTH_INCORRECT_PAYLOAD;
@@ -529,17 +569,18 @@ nvmf_auth_recv_challenge(struct spdk_nvmf_request *req)
 	}
 
 	memcpy(challenge->cval, auth->cval, hl);
+	memcpy(&challenge->cval[hl], dhv, dhvlen);
 	challenge->auth_type = SPDK_NVMF_AUTH_TYPE_DHCHAP;
 	challenge->auth_id = SPDK_NVMF_AUTH_ID_DHCHAP_CHALLENGE;
 	challenge->t_id = auth->tid;
 	challenge->hl = hl;
 	challenge->hash_id = (uint8_t)auth->digest;
-	challenge->dhg_id = SPDK_NVMF_DHCHAP_DHGROUP_NULL;
-	challenge->dhvlen = 0;
+	challenge->dhg_id = (uint8_t)auth->dhgroup;
+	challenge->dhvlen = dhvlen;
 	challenge->seqnum = auth->seqnum;
 
 	nvmf_auth_set_state(qpair, NVMF_QPAIR_AUTH_REPLY);
-	nvmf_auth_recv_complete(req, sizeof(*challenge) + hl);
+	nvmf_auth_recv_complete(req, sizeof(*challenge) + hl + dhvlen);
 
 	return 0;
 }
@@ -684,7 +725,7 @@ void
 nvmf_qpair_auth_dump(struct spdk_nvmf_qpair *qpair, struct spdk_json_write_ctx *w)
 {
 	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
-	const char *digest;
+	const char *digest, *dhgroup;
 
 	if (auth == NULL) {
 		return;
@@ -694,7 +735,8 @@ nvmf_qpair_auth_dump(struct spdk_nvmf_qpair *qpair, struct spdk_json_write_ctx *
 	spdk_json_write_named_string(w, "state", nvmf_auth_get_state_name(auth->state));
 	digest = spdk_nvme_dhchap_get_digest_name(auth->digest);
 	spdk_json_write_named_string(w, "digest", digest ? digest : "unknown");
-	spdk_json_write_named_string(w, "dhgroup", "null");
+	dhgroup = spdk_nvme_dhchap_get_dhgroup_name(auth->dhgroup);
+	spdk_json_write_named_string(w, "dhgroup", dhgroup ? dhgroup : "unknown");
 	spdk_json_write_object_end(w);
 }
 
