@@ -233,9 +233,25 @@ nvmf_qpair_set_ctrlr(struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_ctrlr *ctrl
 static int _retry_qid_check(void *ctx);
 
 static void
-ctrlr_add_qpair_and_send_rsp(struct spdk_nvmf_qpair *qpair,
-			     struct spdk_nvmf_ctrlr *ctrlr,
-			     struct spdk_nvmf_request *req)
+nvmf_ctrlr_send_connect_rsp(void *ctx)
+{
+	struct spdk_nvmf_request *req = ctx;
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
+
+	SPDK_DEBUGLOG(nvmf, "connect capsule response: cntlid = 0x%04x\n", ctrlr->cntlid);
+
+	assert(spdk_get_thread() == qpair->group->thread);
+	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
+	rsp->status_code_specific.success.cntlid = ctrlr->cntlid;
+	spdk_nvmf_request_complete(req);
+}
+
+static void
+nvmf_ctrlr_add_qpair(struct spdk_nvmf_qpair *qpair,
+		     struct spdk_nvmf_ctrlr *ctrlr,
+		     struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
 
@@ -271,17 +287,12 @@ ctrlr_add_qpair_and_send_rsp(struct spdk_nvmf_qpair *qpair,
 		return;
 	}
 
+	SPDK_DTRACE_PROBE4_TICKS(nvmf_ctrlr_add_qpair, qpair, qpair->qid, ctrlr->subsys->subnqn,
+				 ctrlr->hostnqn);
 	nvmf_qpair_set_ctrlr(qpair, ctrlr);
 	spdk_bit_array_set(ctrlr->qpair_mask, qpair->qid);
 
-	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
-	rsp->status_code_specific.success.cntlid = ctrlr->cntlid;
-	SPDK_DEBUGLOG(nvmf, "connect capsule response: cntlid = 0x%04x\n",
-		      rsp->status_code_specific.success.cntlid);
-	spdk_nvmf_request_complete(req);
-
-	SPDK_DTRACE_PROBE4_TICKS(nvmf_ctrlr_add_qpair, qpair, qpair->qid, ctrlr->subsys->subnqn,
-				 ctrlr->hostnqn);
+	spdk_thread_send_msg(qpair->group->thread, nvmf_ctrlr_send_connect_rsp, req);
 }
 
 static int
@@ -292,7 +303,7 @@ _retry_qid_check(void *ctx)
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 
 	spdk_poller_unregister(&req->poller);
-	ctrlr_add_qpair_and_send_rsp(qpair, ctrlr, req);
+	nvmf_ctrlr_add_qpair(qpair, ctrlr, req);
 	return SPDK_POLLER_BUSY;
 }
 
@@ -306,7 +317,7 @@ _nvmf_ctrlr_add_admin_qpair(void *ctx)
 	ctrlr->admin_qpair = qpair;
 	ctrlr->association_timeout = qpair->transport->opts.association_timeout;
 	nvmf_ctrlr_start_keep_alive_timer(ctrlr);
-	ctrlr_add_qpair_and_send_rsp(qpair, ctrlr, req);
+	nvmf_ctrlr_add_qpair(qpair, ctrlr, req);
 }
 
 static void
@@ -685,7 +696,7 @@ nvmf_ctrlr_add_io_qpair(void *ctx)
 		goto end;
 	}
 
-	ctrlr_add_qpair_and_send_rsp(qpair, ctrlr, req);
+	nvmf_ctrlr_add_qpair(qpair, ctrlr, req);
 	return;
 end:
 	spdk_nvmf_request_complete(req);
