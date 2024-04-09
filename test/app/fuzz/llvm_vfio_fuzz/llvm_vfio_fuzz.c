@@ -229,7 +229,7 @@ TestOneInput(const uint8_t *data, size_t size)
 	ret = access(ctrlr_path, F_OK);
 	if (ret != 0) {
 		fprintf(stderr, "Access path %s failed\n", ctrlr_path);
-		spdk_app_stop(-1);
+		spdk_app_start_shutdown();
 		return -1;
 	}
 
@@ -237,7 +237,7 @@ TestOneInput(const uint8_t *data, size_t size)
 	if (dev == NULL) {
 		fprintf(stderr, "spdk_vfio_user_setup() failed for controller path '%s'\n",
 			ctrlr_path);
-		spdk_app_stop(-1);
+		spdk_app_start_shutdown();
 		return -1;
 	}
 
@@ -453,8 +453,7 @@ start_io_poller(void *ctx)
 	io->run_poller = SPDK_POLLER_REGISTER(io_poller, ctx, 0);
 	if (io->run_poller == NULL) {
 		fprintf(stderr, "Failed to register a poller for IO.\n");
-		spdk_app_stop(-1);
-		pthread_kill(g_fuzz_td, SIGSEGV);
+		spdk_app_start_shutdown();
 	}
 }
 
@@ -471,8 +470,7 @@ init_io(void *ctx)
 	if (g_io_thread.io_ctrlr == NULL) {
 		fprintf(stderr, "spdk_nvme_connect() failed for transport address '%s'\n",
 			trid.traddr);
-		spdk_app_stop(-1);
-		pthread_kill(g_fuzz_td, SIGSEGV);
+		spdk_app_start_shutdown();
 		return NULL;
 	}
 
@@ -491,15 +489,13 @@ init_io(void *ctx)
 	if (g_io_thread.io_qpair == NULL) {
 		spdk_nvme_detach(g_io_thread.io_ctrlr);
 		fprintf(stderr, "spdk_nvme_ctrlr_alloc_io_qpair failed\n");
-		spdk_app_stop(-1);
-		pthread_kill(g_fuzz_td, SIGSEGV);
+		spdk_app_start_shutdown();
 		return NULL;
 	}
 
 	if (spdk_nvme_ctrlr_get_num_ns(g_io_thread.io_ctrlr) == 0) {
 		fprintf(stderr, "no namespaces for IO\n");
-		spdk_app_stop(-1);
-		pthread_kill(g_fuzz_td, SIGSEGV);
+		spdk_app_start_shutdown();
 		return NULL;
 	}
 
@@ -507,8 +503,7 @@ init_io(void *ctx)
 	g_io_thread.io_ns = spdk_nvme_ctrlr_get_ns(g_io_thread.io_ctrlr, nsid);
 	if (!g_io_thread.io_ns) {
 		fprintf(stderr, "no io_ns for IO\n");
-		spdk_app_stop(-1);
-		pthread_kill(g_fuzz_td, SIGSEGV);
+		spdk_app_start_shutdown();
 		return NULL;
 	}
 
@@ -522,16 +517,14 @@ init_io(void *ctx)
 
 	if (!g_io_thread.write_buf || !g_io_thread.read_buf) {
 		fprintf(stderr, "cannot allocated memory for io buffers\n");
-		spdk_app_stop(-1);
-		pthread_kill(g_fuzz_td, SIGSEGV);
+		spdk_app_start_shutdown();
 		return NULL;
 	}
 
 	g_io_thread.thread = spdk_thread_create("io_thread", NULL);
 	if (g_io_thread.thread == NULL) {
 		fprintf(stderr, "cannot create io thread\n");
-		spdk_app_stop(-1);
-		pthread_kill(g_fuzz_td, SIGSEGV);
+		spdk_app_start_shutdown();
 		return NULL;
 	}
 
@@ -559,8 +552,7 @@ begin_fuzz(void *ctx)
 	if (g_io_thread.io_ctrlr_path) {
 		rc = pthread_create(&g_io_thread.io_td, NULL, init_io, NULL);
 		if (rc != 0) {
-			spdk_app_stop(-1);
-			pthread_kill(g_fuzz_td, SIGSEGV);
+			spdk_app_start_shutdown();
 		}
 	}
 }
@@ -658,7 +650,12 @@ fuzz_shutdown(void)
 	 * simpler than trying to differentiate between hung inputs and
 	 * an impatient user.
 	 */
-	pthread_kill(g_fuzz_td, SIGSEGV);
+	spdk_app_stop(-1);
+
+	if (g_fuzz_td) {
+		fprintf(stderr, "Terminate fuzzer driver with SIGSEGV.\n");
+		pthread_kill(g_fuzz_td, SIGSEGV);
+	}
 }
 
 int
