@@ -108,7 +108,7 @@ struct spdk_fio_oat_ctx {
 
 static bool g_spdk_env_initialized = false;
 static const char *g_json_config_file = NULL;
-static const char *g_rpc_listen_addr = SPDK_DEFAULT_RPC_ADDR;
+static const char *g_rpc_listen_addr = NULL;
 
 static int spdk_fio_init(struct thread_data *td);
 static void spdk_fio_cleanup(struct thread_data *td);
@@ -265,8 +265,10 @@ spdk_fio_bdev_init_done(int rc, void *cb_arg)
 {
 	*(bool *)cb_arg = true;
 
-	if (spdk_rpc_initialize(g_rpc_listen_addr, NULL) == 0) {
-		spdk_rpc_set_state(SPDK_RPC_RUNTIME);
+	if (g_rpc_listen_addr != NULL) {
+		if (spdk_rpc_initialize(g_rpc_listen_addr, NULL) == 0) {
+			spdk_rpc_set_state(SPDK_RPC_RUNTIME);
+		}
 	}
 }
 
