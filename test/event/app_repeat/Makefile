@@ -17,8 +17,14 @@ SPDK_LIB_LIST += event_nbd
 
 BLOCKDEV_LIST = bdev_malloc bdev_null
 BLOCKDEV_LIST += bdev_aio
+
+SOCK_LIST = sock_posix
+ifeq ($(CONFIG_URING),y)
+SOCK_LIST += sock_uring
+endif
+
 SYS_LIBS += -laio
 
-SPDK_LIB_LIST += $(BLOCKDEV_LIST) event
+SPDK_LIB_LIST += $(BLOCKDEV_LIST) $(SOCK_LIST) event
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

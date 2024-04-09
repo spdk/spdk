@@ -6,11 +6,28 @@
 #include "spdk/stdinc.h"
 #include "spdk/sock.h"
 #include "spdk_internal/init.h"
+#include "spdk_internal/sock.h"
+#include "spdk/log.h"
 
 static void
 sock_subsystem_init(void)
 {
-	spdk_subsystem_init_next(0);
+	const char *sock_impl_override = getenv("SPDK_SOCK_IMPL_DEFAULT");
+	int rc = 0;
+
+	if (sock_impl_override) {
+		rc = spdk_sock_set_default_impl(sock_impl_override);
+		if (rc) {
+			SPDK_ERRLOG("Could not override socket implementation with: %s,"
+				    " set by SPDK_SOCK_IMPL_DEFAULT environment variable\n",
+				    sock_impl_override);
+		} else {
+			SPDK_NOTICELOG("Default socket implementaion override: %s\n",
+				       sock_impl_override);
+		}
+	}
+
+	spdk_subsystem_init_next(rc);
 }
 
 static void
