@@ -174,7 +174,8 @@ fuzz_vfio_user_irq_set(const uint8_t *data, size_t size, struct vfio_device *dev
 
 	irq_set->argsz = sizeof(struct vfio_irq_set) ;
 	memcpy(&irq_set->flags, &data[0], 4);
-	irq_set->index = data[4]; /* VFIO_PCI_NUM_IRQS */
+	/* max index is up to VFIO_PCI_NUM_IRQS, no need to fuzz all uint */
+	irq_set->index = data[4];
 	memcpy(&irq_set->start, &data[5], 4);
 	memcpy(&irq_set->count, &data[9], 4);
 
@@ -207,7 +208,7 @@ static struct fuzz_type g_fuzzers[] = {
 	{ .fn = fuzz_vfio_user_get_region_info,		.bytes_per_cmd = 8},
 	{ .fn = fuzz_vfio_user_dma_map,			.bytes_per_cmd = 32},
 	{ .fn = fuzz_vfio_user_dma_unmap,		.bytes_per_cmd = 32},
-	{ .fn = fuzz_vfio_user_irq_set,			.bytes_per_cmd = 12},
+	{ .fn = fuzz_vfio_user_irq_set,			.bytes_per_cmd = 13},
 	{ .fn = fuzz_vfio_user_set_msix,		.bytes_per_cmd = 9},
 	{ .fn = NULL,					.bytes_per_cmd = 0}
 };
