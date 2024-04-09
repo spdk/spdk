@@ -1155,14 +1155,20 @@ raid_bdev_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "name", bdev->name);
 	spdk_json_write_named_uuid(w, "uuid", &raid_bdev->bdev.uuid);
-	spdk_json_write_named_uint32(w, "strip_size_kb", raid_bdev->strip_size_kb);
+	if (raid_bdev->strip_size_kb != 0) {
+		spdk_json_write_named_uint32(w, "strip_size_kb", raid_bdev->strip_size_kb);
+	}
 	spdk_json_write_named_string(w, "raid_level", raid_bdev_level_to_str(raid_bdev->level));
-	spdk_json_write_named_bool(w, "superblock", raid_bdev->superblock_enabled);
 
 	spdk_json_write_named_array_begin(w, "base_bdevs");
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		if (base_info->desc) {
-			spdk_json_write_string(w, spdk_bdev_desc_get_bdev(base_info->desc)->name);
+		if (base_info->name) {
+			spdk_json_write_string(w, base_info->name);
+		} else {
+			char str[32];
+
+			snprintf(str, sizeof(str), "removed_base_bdev_%u", raid_bdev_base_bdev_slot(base_info));
+			spdk_json_write_string(w, str);
 		}
 	}
 	spdk_json_write_array_end(w);
