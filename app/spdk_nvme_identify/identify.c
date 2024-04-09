@@ -49,20 +49,19 @@ static struct spdk_nvme_ana_group_descriptor *g_copied_ana_desc;
 
 static size_t g_ana_log_page_size;
 
-static uint8_t g_fdp_cfg_log_page_buf[FDP_LOG_PAGE_SIZE];
+static size_t g_fdp_cfg_log_page_size;
 
-static uint8_t g_fdp_ruhu_log_page_buf[FDP_LOG_PAGE_SIZE];
+static size_t g_fdp_ruhu_log_page_size;
 
-static uint8_t g_fdp_events_log_page_buf[FDP_LOG_PAGE_SIZE];
+static size_t g_fdp_events_log_page_size;
 
 static struct spdk_nvme_fdp_stats_log_page g_fdp_stats_log_page;
 
-static struct spdk_nvme_fdp_cfg_log_page *g_fdp_cfg_log_page = (void *)g_fdp_cfg_log_page_buf;
+static struct spdk_nvme_fdp_cfg_log_page *g_fdp_cfg_log_page;
 
-static struct spdk_nvme_fdp_ruhu_log_page *g_fdp_ruhu_log_page = (void *)g_fdp_ruhu_log_page_buf;
+static struct spdk_nvme_fdp_ruhu_log_page *g_fdp_ruhu_log_page;
 
-static struct spdk_nvme_fdp_events_log_page *g_fdp_events_log_page = (void *)
-		g_fdp_events_log_page_buf;
+static struct spdk_nvme_fdp_events_log_page *g_fdp_events_log_page;
 
 static struct spdk_nvme_cmds_and_effect_log_page cmd_effects_log_page;
 
@@ -524,13 +523,43 @@ get_fdp_cfg_log_page(struct spdk_nvme_ns *ns)
 
 	outstanding_commands = 0;
 
-	/* Fetch the FDP configurations log page for only 4096 bytes */
+	g_fdp_cfg_log_page_size = sizeof(struct spdk_nvme_fdp_cfg_log_page);
+	g_fdp_cfg_log_page = calloc(1, g_fdp_cfg_log_page_size);
+	if (!g_fdp_cfg_log_page) {
+		printf("FDP config log page allocation failed!\n");
+		return -1;
+	}
+
+	/* Fetch the FDP configurations log page header */
 	if (spdk_nvme_ctrlr_cmd_get_log_page_ext(ctrlr, SPDK_NVME_LOG_FDP_CONFIGURATIONS, 0,
-			g_fdp_cfg_log_page, FDP_LOG_PAGE_SIZE, 0, 0, (nsdata->endgid << 16),
+			g_fdp_cfg_log_page, g_fdp_cfg_log_page_size, 0, 0, (nsdata->endgid << 16),
 			0, get_log_page_completion, NULL) == 0) {
 		outstanding_commands++;
 	} else {
 		printf("spdk_nvme_ctrlr_cmd_get_log_page_ext(FDP config) failed\n");
+		free(g_fdp_cfg_log_page);
+		return -1;
+	}
+
+	while (outstanding_commands) {
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	}
+
+	g_fdp_cfg_log_page_size = g_fdp_cfg_log_page->size;
+	g_fdp_cfg_log_page = realloc(g_fdp_cfg_log_page, g_fdp_cfg_log_page_size);
+	if (!g_fdp_cfg_log_page) {
+		printf("FDP config log page reallocation failed!\n");
+		return -1;
+	}
+
+	/* Fetch the FDP configurations log page */
+	if (spdk_nvme_ctrlr_cmd_get_log_page_ext(ctrlr, SPDK_NVME_LOG_FDP_CONFIGURATIONS, 0,
+			g_fdp_cfg_log_page, g_fdp_cfg_log_page_size, 0, 0, (nsdata->endgid << 16),
+			0, get_log_page_completion, NULL) == 0) {
+		outstanding_commands++;
+	} else {
+		printf("spdk_nvme_ctrlr_cmd_get_log_page_ext(FDP config) failed\n");
+		free(g_fdp_cfg_log_page);
 		return -1;
 	}
 
@@ -549,13 +578,44 @@ get_fdp_ruhu_log_page(struct spdk_nvme_ns *ns)
 
 	outstanding_commands = 0;
 
-	/* Fetch the reclaim unit handle usage log page for only 4096 bytes */
+	g_fdp_ruhu_log_page_size = sizeof(struct spdk_nvme_fdp_ruhu_log_page);
+	g_fdp_ruhu_log_page = calloc(1, g_fdp_ruhu_log_page_size);
+	if (!g_fdp_ruhu_log_page) {
+		printf("FDP RUH usage log page allocation failed!\n");
+		return -1;
+	}
+
+	/* Fetch the reclaim unit handle usage log page header */
 	if (spdk_nvme_ctrlr_cmd_get_log_page_ext(ctrlr, SPDK_NVME_LOG_RECLAIM_UNIT_HANDLE_USAGE, 0,
-			g_fdp_ruhu_log_page, FDP_LOG_PAGE_SIZE, 0, 0, (nsdata->endgid << 16),
+			g_fdp_ruhu_log_page, g_fdp_ruhu_log_page_size, 0, 0, (nsdata->endgid << 16),
 			0, get_log_page_completion, NULL) == 0) {
 		outstanding_commands++;
 	} else {
 		printf("spdk_nvme_ctrlr_cmd_get_log_page_ext(RUH usage) failed\n");
+		free(g_fdp_ruhu_log_page);
+		return -1;
+	}
+
+	while (outstanding_commands) {
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	}
+
+	g_fdp_ruhu_log_page_size += g_fdp_ruhu_log_page->nruh *
+				    sizeof(struct spdk_nvme_fdp_ruhu_descriptor);
+	g_fdp_ruhu_log_page = realloc(g_fdp_ruhu_log_page, g_fdp_ruhu_log_page_size);
+	if (!g_fdp_ruhu_log_page) {
+		printf("FDP RUH usage log page reallocation failed!\n");
+		return -1;
+	}
+
+	/* Fetch the reclaim unit handle usage log page */
+	if (spdk_nvme_ctrlr_cmd_get_log_page_ext(ctrlr, SPDK_NVME_LOG_RECLAIM_UNIT_HANDLE_USAGE, 0,
+			g_fdp_ruhu_log_page, g_fdp_ruhu_log_page_size, 0, 0, (nsdata->endgid << 16),
+			0, get_log_page_completion, NULL) == 0) {
+		outstanding_commands++;
+	} else {
+		printf("spdk_nvme_ctrlr_cmd_get_log_page_ext(RUH usage) failed\n");
+		free(g_fdp_ruhu_log_page);
 		return -1;
 	}
 
@@ -598,14 +658,46 @@ get_fdp_events_log_page(struct spdk_nvme_ns *ns)
 
 	outstanding_commands = 0;
 
-	/* Only fetch FDP host events here */
+	g_fdp_events_log_page_size = sizeof(struct spdk_nvme_fdp_events_log_page);
+	g_fdp_events_log_page = calloc(1, g_fdp_events_log_page_size);
+	if (!g_fdp_events_log_page) {
+		printf("FDP events log page allocation failed!\n");
+		return -1;
+	}
+
+	/* Fetch the FDP events log page header */
 	if (spdk_nvme_ctrlr_cmd_get_log_page_ext(ctrlr, SPDK_NVME_LOG_FDP_EVENTS, 0,
-			g_fdp_events_log_page, FDP_LOG_PAGE_SIZE, 0,
+			g_fdp_events_log_page, g_fdp_events_log_page_size, 0,
 			(SPDK_NVME_FDP_REPORT_HOST_EVENTS << 8), (nsdata->endgid << 16),
 			0, get_log_page_completion, NULL) == 0) {
 		outstanding_commands++;
 	} else {
 		printf("spdk_nvme_ctrlr_cmd_get_log_page_ext(FDP events) failed\n");
+		free(g_fdp_events_log_page);
+		return -1;
+	}
+
+	while (outstanding_commands) {
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	}
+
+	g_fdp_events_log_page_size += g_fdp_events_log_page->nevents *
+				      sizeof(struct spdk_nvme_fdp_event);
+	g_fdp_events_log_page = realloc(g_fdp_events_log_page, g_fdp_events_log_page_size);
+	if (!g_fdp_events_log_page) {
+		printf("FDP events log page reallocation failed!\n");
+		return -1;
+	}
+
+	/* Only fetch FDP events log page for host events */
+	if (spdk_nvme_ctrlr_cmd_get_log_page_ext(ctrlr, SPDK_NVME_LOG_FDP_EVENTS, 0,
+			g_fdp_events_log_page, g_fdp_events_log_page_size, 0,
+			(SPDK_NVME_FDP_REPORT_HOST_EVENTS << 8), (nsdata->endgid << 16),
+			0, get_log_page_completion, NULL) == 0) {
+		outstanding_commands++;
+	} else {
+		printf("spdk_nvme_ctrlr_cmd_get_log_page_ext(FDP events) failed\n");
+		free(g_fdp_events_log_page);
 		return -1;
 	}
 
@@ -804,8 +896,8 @@ print_fdp_cfg_log_page(void)
 		log += cfg_desc->ds;
 	}
 
+	free(g_fdp_cfg_log_page);
 	printf("\n");
-
 }
 
 static void
@@ -833,6 +925,7 @@ print_fdp_ruhu_log_page(void)
 		       "Reserved");
 	}
 
+	free(g_fdp_ruhu_log_page);
 	printf("\n");
 }
 
@@ -928,8 +1021,8 @@ print_fdp_events_log_page(void)
 		}
 	}
 
+	free(g_fdp_events_log_page);
 	printf("\n");
-
 }
 
 static void
