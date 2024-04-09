@@ -222,6 +222,7 @@ TestOneInput(const uint8_t *data, size_t size)
 	char ctrlr_path[PATH_MAX];
 	int ret = 0;
 
+	/* Reject any input of insufficient length */
 	if (size < g_fuzzer->bytes_per_cmd) {
 		return -1;
 	}
@@ -289,13 +290,11 @@ start_fuzzer(void *ctx)
 	char len_str[128];
 	char **argv = _argv;
 	int argc = SPDK_COUNTOF(_argv);
-	uint32_t len = 0;
 
 	spdk_unaffinitize_thread();
 	snprintf(prefix, sizeof(prefix), "-artifact_prefix=%s", g_artifact_prefix);
 	argv[argc - 4] = prefix;
-	len = 10 * g_fuzzer->bytes_per_cmd;
-	snprintf(len_str, sizeof(len_str), "-max_len=%d", len);
+	snprintf(len_str, sizeof(len_str), "-max_len=%d", g_fuzzer->bytes_per_cmd);
 	argv[argc - 3] = len_str;
 	snprintf(time_str, sizeof(time_str), "-max_total_time=%d", g_time_in_sec);
 	argv[argc - 2] = time_str;
