@@ -2038,4 +2038,4 @@ static struct spdk_net_impl g_uring_net_impl = {
 	.set_opts		= uring_sock_impl_set_opts,
 };
 
-SPDK_NET_IMPL_REGISTER(uring, &g_uring_net_impl, DEFAULT_SOCK_PRIORITY + 2);
+SPDK_NET_IMPL_REGISTER(uring, &g_uring_net_impl);

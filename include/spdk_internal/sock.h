@@ -77,7 +77,6 @@ struct spdk_sock_map {
 
 struct spdk_net_impl {
 	const char *name;
-	int priority;
 
 	int (*getaddr)(struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport, char *caddr,
 		       int clen, uint16_t *cport);
@@ -117,12 +116,19 @@ struct spdk_net_impl {
 	STAILQ_ENTRY(spdk_net_impl) link;
 };
 
-void spdk_net_impl_register(struct spdk_net_impl *impl, int priority);
+void spdk_net_impl_register(struct spdk_net_impl *impl);
 
-#define SPDK_NET_IMPL_REGISTER(name, impl, priority) \
+#define SPDK_NET_IMPL_REGISTER(name, impl) \
 static void __attribute__((constructor)) net_impl_register_##name(void) \
 { \
-	spdk_net_impl_register(impl, priority); \
+	spdk_net_impl_register(impl); \
+}
+
+#define SPDK_NET_IMPL_REGISTER_DEFAULT(name, impl) \
+static void __attribute__((constructor)) net_impl_register_default_##name(void) \
+{ \
+	spdk_net_impl_register(impl); \
+	spdk_sock_set_default_impl(SPDK_STRINGIFY(name)); \
 }
 
 size_t spdk_sock_group_get_buf(struct spdk_sock_group *group, void **buf, void **ctx);

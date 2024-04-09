@@ -2219,7 +2219,7 @@ static struct spdk_net_impl g_posix_net_impl = {
 	.set_opts	= posix_sock_impl_set_opts,
 };
 
-SPDK_NET_IMPL_REGISTER(posix, &g_posix_net_impl, DEFAULT_SOCK_PRIORITY + 1);
+SPDK_NET_IMPL_REGISTER_DEFAULT(posix, &g_posix_net_impl);
 
 static struct spdk_sock *
 ssl_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
@@ -2268,5 +2268,5 @@ static struct spdk_net_impl g_ssl_net_impl = {
 	.set_opts	= ssl_sock_impl_set_opts,
 };
 
-SPDK_NET_IMPL_REGISTER(ssl, &g_ssl_net_impl, DEFAULT_SOCK_PRIORITY);
+SPDK_NET_IMPL_REGISTER(ssl, &g_ssl_net_impl);
 SPDK_LOG_REGISTER_COMPONENT(sock_posix)

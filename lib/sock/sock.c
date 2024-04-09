@@ -910,24 +910,9 @@ spdk_sock_write_config_json(struct spdk_json_write_ctx *w)
 }
 
 void
-spdk_net_impl_register(struct spdk_net_impl *impl, int priority)
+spdk_net_impl_register(struct spdk_net_impl *impl)
 {
-	struct spdk_net_impl *cur, *prev;
-
-	impl->priority = priority;
-	prev = NULL;
-	STAILQ_FOREACH(cur, &g_net_impls, link) {
-		if (impl->priority > cur->priority) {
-			break;
-		}
-		prev = cur;
-	}
-
-	if (prev) {
-		STAILQ_INSERT_AFTER(&g_net_impls, prev, impl, link);
-	} else {
-		STAILQ_INSERT_HEAD(&g_net_impls, impl, link);
-	}
+	STAILQ_INSERT_HEAD(&g_net_impls, impl, link);
 }
 
 int
@@ -965,15 +950,8 @@ spdk_sock_set_default_impl(const char *impl_name)
 const char *
 spdk_sock_get_default_impl(void)
 {
-	struct spdk_net_impl *impl = NULL;
-
 	if (g_default_impl) {
 		return g_default_impl->name;
-	}
-
-	impl = STAILQ_FIRST(&g_net_impls);
-	if (impl) {
-		return impl->name;
 	}
 
 	return NULL;
