@@ -161,6 +161,10 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 	timing_enter lib
 
+	if [[ $SPDK_TEST_URING -eq 1 ]]; then
+		export SPDK_SOCK_IMPL_DEFAULT="uring"
+	fi
+
 	run_test "env" $rootdir/test/env/env.sh
 	run_test "rpc" $rootdir/test/rpc/rpc.sh
 	run_test "skip_rpc" $rootdir/test/rpc/skip_rpc.sh
