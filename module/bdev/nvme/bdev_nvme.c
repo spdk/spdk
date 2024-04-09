@@ -5404,7 +5404,7 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 							 spdk_key_get_name(ctx->drv_opts.dhchap_key));
 			if (nvme_ctrlr->dhchap_key == NULL) {
 				SPDK_ERRLOG("Couldn't get a reference to the key '%s'\n",
-					    spdk_key_get_name(ctx->drv_opts.tls_psk));
+					    spdk_key_get_name(ctx->drv_opts.dhchap_key));
 				rc = -ENOKEY;
 				goto err;
 			}
