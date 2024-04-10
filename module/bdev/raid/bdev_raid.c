@@ -240,7 +240,6 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 		return -ENOMEM;
 	}
 
-	spdk_spin_lock(&raid_bdev->base_bdev_lock);
 	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		/*
 		 * Get the spdk_io_channel for all the base bdevs. This is used during
@@ -249,7 +248,7 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 		 * Skip missing base bdevs and the process target, which should also be treated as
 		 * missing until the process completes.
 		 */
-		if (raid_bdev->base_bdev_info[i].desc == NULL ||
+		if (raid_bdev->base_bdev_info[i].is_configured == false ||
 		    (raid_bdev->process != NULL && raid_bdev->process->target == &raid_bdev->base_bdev_info[i])) {
 			continue;
 		}
@@ -278,11 +277,9 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 	} else {
 		raid_ch->process.offset = RAID_OFFSET_BLOCKS_INVALID;
 	}
-	spdk_spin_unlock(&raid_bdev->base_bdev_lock);
 
 	return 0;
 err:
-	spdk_spin_unlock(&raid_bdev->base_bdev_lock);
 	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		if (raid_ch->base_channel[i] != NULL) {
 			spdk_put_io_channel(raid_ch->base_channel[i]);
@@ -364,7 +361,6 @@ static void
 raid_bdev_free(struct raid_bdev *raid_bdev)
 {
 	raid_bdev_free_superblock(raid_bdev);
-	spdk_spin_destroy(&raid_bdev->base_bdev_lock);
 	free(raid_bdev->base_bdev_info);
 	free(raid_bdev->bdev.name);
 	free(raid_bdev);
@@ -375,6 +371,17 @@ raid_bdev_cleanup_and_free(struct raid_bdev *raid_bdev)
 {
 	raid_bdev_cleanup(raid_bdev);
 	raid_bdev_free(raid_bdev);
+}
+
+static void
+raid_bdev_deconfigure_base_bdev(struct raid_base_bdev_info *base_info)
+{
+	struct raid_bdev *raid_bdev = base_info->raid_bdev;
+
+	assert(base_info->is_configured);
+	assert(raid_bdev->num_base_bdevs_discovered);
+	raid_bdev->num_base_bdevs_discovered--;
+	base_info->is_configured = false;
 }
 
 /*
@@ -409,9 +416,7 @@ raid_bdev_free_base_bdev_resource(struct raid_base_bdev_info *base_info)
 	base_info->app_thread_ch = NULL;
 
 	if (base_info->is_configured) {
-		assert(raid_bdev->num_base_bdevs_discovered);
-		raid_bdev->num_base_bdevs_discovered--;
-		base_info->is_configured = false;
+		raid_bdev_deconfigure_base_bdev(base_info);
 	}
 }
 
@@ -1188,40 +1193,32 @@ raid_bdev_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int
 		return 0;
 	}
 
-	spdk_spin_lock(&raid_bdev->base_bdev_lock);
-
 	/* First loop to get the number of memory domains */
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		if (base_info->desc == NULL) {
+		if (base_info->is_configured == false) {
 			continue;
 		}
 		rc = spdk_bdev_get_memory_domains(spdk_bdev_desc_get_bdev(base_info->desc), NULL, 0);
 		if (rc < 0) {
-			goto out;
+			return rc;
 		}
 		domains_count += rc;
 	}
 
 	if (!domains || array_size < domains_count) {
-		goto out;
+		return domains_count;
 	}
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		if (base_info->desc == NULL) {
+		if (base_info->is_configured == false) {
 			continue;
 		}
 		rc = spdk_bdev_get_memory_domains(spdk_bdev_desc_get_bdev(base_info->desc), domains, array_size);
 		if (rc < 0) {
-			goto out;
+			return rc;
 		}
 		domains += rc;
 		array_size -= rc;
-	}
-out:
-	spdk_spin_unlock(&raid_bdev->base_bdev_lock);
-
-	if (rc < 0) {
-		return rc;
 	}
 
 	return domains_count;
@@ -1544,7 +1541,6 @@ _raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 		return -ENOMEM;
 	}
 
-	spdk_spin_init(&raid_bdev->base_bdev_lock);
 	raid_bdev->module = module;
 	raid_bdev->num_base_bdevs = num_base_bdevs;
 	raid_bdev->base_bdev_info = calloc(raid_bdev->num_base_bdevs,
@@ -1940,9 +1936,7 @@ raid_bdev_remove_base_bdev_on_unquiesced(void *ctx, int status)
 		goto out;
 	}
 
-	spdk_spin_lock(&raid_bdev->base_bdev_lock);
 	raid_bdev_free_base_bdev_resource(base_info);
-	spdk_spin_unlock(&raid_bdev->base_bdev_lock);
 
 	if (raid_bdev->sb) {
 		struct raid_bdev_superblock *sb = raid_bdev->sb;
@@ -2010,6 +2004,8 @@ raid_bdev_remove_base_bdev_on_quiesced(void *ctx, int status)
 		raid_bdev_remove_base_bdev_done(base_info, status);
 		return;
 	}
+
+	raid_bdev_deconfigure_base_bdev(base_info);
 
 	spdk_for_each_channel(raid_bdev, raid_bdev_channel_remove_base_bdev, base_info,
 			      raid_bdev_channels_remove_base_bdev_done);
@@ -2111,7 +2107,7 @@ raid_bdev_process_base_bdev_remove(struct raid_bdev_process *process,
 	 * after the removal and more than one base bdev may be removed at the same time
 	 */
 	RAID_FOR_EACH_BASE_BDEV(process->raid_bdev, base_info) {
-		if (!base_info->remove_scheduled && base_info->desc != NULL) {
+		if (base_info->is_configured && !base_info->remove_scheduled) {
 			ctx->num_base_bdevs_operational++;
 		}
 	}
@@ -2440,7 +2436,7 @@ raid_bdev_process_finish_unquiesced(void *ctx, int status)
 	if (process->status != 0) {
 		struct raid_base_bdev_info *target = process->target;
 
-		if (target->desc != NULL && target->remove_scheduled == false) {
+		if (target->is_configured && !target->remove_scheduled) {
 			_raid_bdev_remove_base_bdev(target, raid_bdev_process_finish_target_removed, process);
 			return;
 		}
@@ -3308,16 +3304,12 @@ raid_bdev_add_base_bdev(struct raid_bdev *raid_bdev, const char *name,
 		return -ENOMEM;
 	}
 
-	spdk_spin_lock(&raid_bdev->base_bdev_lock);
-
 	rc = raid_bdev_configure_base_bdev(base_info, false, cb_fn, cb_ctx);
 	if (rc != 0 && (rc != -ENODEV || raid_bdev->state != RAID_BDEV_STATE_CONFIGURING)) {
 		SPDK_ERRLOG("base bdev '%s' configure failed: %s\n", name, spdk_strerror(-rc));
 		free(base_info->name);
 		base_info->name = NULL;
 	}
-
-	spdk_spin_unlock(&raid_bdev->base_bdev_lock);
 
 	return rc;
 }
@@ -3560,15 +3552,13 @@ raid_bdev_examine_sb(const struct raid_bdev_superblock *sb, struct spdk_bdev *bd
 	if (raid_bdev->state == RAID_BDEV_STATE_ONLINE) {
 		assert(sb_base_bdev->slot < raid_bdev->num_base_bdevs);
 		base_info = &raid_bdev->base_bdev_info[sb_base_bdev->slot];
-		assert(base_info->desc == NULL);
+		assert(base_info->is_configured == false);
 		assert(sb_base_bdev->state == RAID_SB_BASE_BDEV_MISSING ||
 		       sb_base_bdev->state == RAID_SB_BASE_BDEV_FAILED);
 		assert(spdk_uuid_is_null(&base_info->uuid));
 		spdk_uuid_copy(&base_info->uuid, &sb_base_bdev->uuid);
 		SPDK_NOTICELOG("Re-adding bdev %s to raid bdev %s.\n", bdev->name, raid_bdev->bdev.name);
-		spdk_spin_lock(&raid_bdev->base_bdev_lock);
 		rc = raid_bdev_configure_base_bdev(base_info, true, cb_fn, cb_ctx);
-		spdk_spin_unlock(&raid_bdev->base_bdev_lock);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to configure bdev %s as base bdev of raid %s: %s\n",
 				    bdev->name, raid_bdev->bdev.name, spdk_strerror(-rc));
