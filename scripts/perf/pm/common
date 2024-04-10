@@ -17,8 +17,8 @@ start_monitor_resources() {
 	local monitor
 
 	for monitor in "${MONITOR_RESOURCES[@]}"; do
-		# collect-bmc-pm requires root privileges
-		sudo -E "$_pmdir/$monitor" -d "$PM_OUTPUTDIR" \
+		${SUDO[MONITOR_RESOURCES_SUDO["$monitor"]]} \
+			"$_pmdir/$monitor" -d "$PM_OUTPUTDIR" \
 			-l -p "monitor.${0##*/}.$(date +%s)" &
 	done
 	# Give our monitors some time to setup their traps
@@ -46,7 +46,8 @@ signal_monitor_resources() {
 			continue
 		fi
 
-		if ! sudo kill "-$signal" "$pid"; then
+		if ! ${SUDO[MONITOR_RESOURCES_SUDO["$monitor"]]} \
+			kill "-$signal" "$pid"; then
 			rm -f "$PM_OUTPUTDIR/$monitor.pid"
 		fi 2> /dev/null
 	done
@@ -66,6 +67,14 @@ TEST_TAG_FILE=${TEST_TAG_FILE:-"$_pmrootdir/.run_test_name"}
 PM_OUTPUTDIR=${output_dir:-/tmp}/power
 PM_OS=$(uname -s)
 
+declare -A MONITOR_RESOURCES_SUDO=()
+MONITOR_RESOURCES_SUDO["collect-bmc-pm"]=1
+MONITOR_RESOURCES_SUDO["collect-cpu-load"]=0
+MONITOR_RESOURCES_SUDO["collect-cpu-temp"]=0
+MONITOR_RESOURCES_SUDO["collect-vmstat"]=0
+
+SUDO[0]="" SUDO[1]="sudo -E"
+
 MONITOR_RESOURCES=(collect-cpu-load collect-vmstat)
 if [[ $PM_OS == FreeBSD ]]; then
 	MONITOR_RESOURCES=(collect-vmstat)
@@ -76,4 +85,7 @@ elif [[ $PM_OS == Linux && $(< /sys/class/dmi/id/chassis_vendor) != QEMU && ! -e
 	MONITOR_RESOURCES+=(collect-bmc-pm)
 fi
 
-mkdir -p "$PM_OUTPUTDIR"
+if [[ ! -d $PM_OUTPUTDIR ]]; then
+	mkdir -p "$PM_OUTPUTDIR"
+	chmod 777 "$PM_OUTPUTDIR"
+fi
