@@ -249,7 +249,7 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 		 * missing until the process completes.
 		 */
 		if (raid_bdev->base_bdev_info[i].is_configured == false ||
-		    (raid_bdev->process != NULL && raid_bdev->process->target == &raid_bdev->base_bdev_info[i])) {
+		    raid_bdev->base_bdev_info[i].is_process_target == true) {
 			continue;
 		}
 		raid_ch->base_channel[i] = spdk_bdev_get_io_channel(
@@ -382,6 +382,7 @@ raid_bdev_deconfigure_base_bdev(struct raid_base_bdev_info *base_info)
 	assert(raid_bdev->num_base_bdevs_discovered);
 	raid_bdev->num_base_bdevs_discovered--;
 	base_info->is_configured = false;
+	base_info->is_process_target = false;
 }
 
 /*
@@ -2529,6 +2530,8 @@ raid_bdev_process_finish_quiesced(void *ctx, int status)
 	}
 
 	raid_bdev->process = NULL;
+	process->target->is_process_target = false;
+
 	spdk_for_each_channel(process->raid_bdev, raid_bdev_channel_process_finish, process,
 			      __raid_bdev_process_finish);
 }
@@ -2980,14 +2983,38 @@ raid_bdev_start_rebuild(struct raid_base_bdev_info *target)
 	return 0;
 }
 
+static void raid_bdev_configure_base_bdev_cont(struct raid_base_bdev_info *base_info);
+
+static void
+_raid_bdev_configure_base_bdev_cont(struct spdk_io_channel_iter *i, int status)
+{
+	struct raid_base_bdev_info *base_info = spdk_io_channel_iter_get_ctx(i);
+
+	raid_bdev_configure_base_bdev_cont(base_info);
+}
+
+static void
+raid_bdev_ch_sync(struct spdk_io_channel_iter *i)
+{
+	spdk_for_each_channel_continue(i, 0);
+}
+
 static void
 raid_bdev_configure_base_bdev_cont(struct raid_base_bdev_info *base_info)
 {
 	struct raid_bdev *raid_bdev = base_info->raid_bdev;
 	int rc;
 
-	/* TODO: defer if rebuild in progress on another base bdev */
-	assert(raid_bdev->process == NULL);
+	if (raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs_operational &&
+	    base_info->is_process_target == false) {
+		/* TODO: defer if rebuild in progress on another base bdev */
+		assert(raid_bdev->process == NULL);
+		assert(raid_bdev->state == RAID_BDEV_STATE_ONLINE);
+		base_info->is_process_target = true;
+		/* To assure is_process_target is set before is_configured when checked in raid_bdev_create_cb() */
+		spdk_for_each_channel(raid_bdev, raid_bdev_ch_sync, base_info, _raid_bdev_configure_base_bdev_cont);
+		return;
+	}
 
 	base_info->is_configured = true;
 
@@ -3007,8 +3034,7 @@ raid_bdev_configure_base_bdev_cont(struct raid_base_bdev_info *base_info)
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to configure raid bdev: %s\n", spdk_strerror(-rc));
 		}
-	} else if (raid_bdev->num_base_bdevs_discovered > raid_bdev->num_base_bdevs_operational) {
-		assert(raid_bdev->state == RAID_BDEV_STATE_ONLINE);
+	} else if (base_info->is_process_target) {
 		raid_bdev->num_base_bdevs_operational++;
 		rc = raid_bdev_start_rebuild(base_info);
 		if (rc != 0) {

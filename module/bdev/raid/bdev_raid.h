@@ -100,6 +100,9 @@ struct raid_base_bdev_info {
 	/* Set to true when base bdev has completed the configuration process */
 	bool			is_configured;
 
+	/* Set to true if this base bdev is the target of a background process */
+	bool			is_process_target;
+
 	/* callback for base bdev configuration */
 	raid_base_bdev_cb	configure_cb;
 
