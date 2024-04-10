@@ -487,7 +487,7 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 			1;
 
 	spdk_uuid_copy(&ctrlr->hostid, (struct spdk_uuid *)connect_data->hostid);
-	memcpy(ctrlr->hostnqn, connect_data->hostnqn, sizeof(ctrlr->hostnqn));
+	memcpy(ctrlr->hostnqn, connect_data->hostnqn, SPDK_NVMF_NQN_MAX_LEN);
 
 	ctrlr->visible_ns = spdk_bit_array_create(subsystem->max_nsid);
 	if (!ctrlr->visible_ns) {
