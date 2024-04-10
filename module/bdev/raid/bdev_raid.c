@@ -2129,7 +2129,7 @@ _raid_bdev_remove_base_bdev(struct raid_base_bdev_info *base_info,
 
 	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
-	if (base_info->remove_scheduled) {
+	if (base_info->remove_scheduled || !base_info->is_configured) {
 		return -ENODEV;
 	}
 
@@ -2435,12 +2435,12 @@ raid_bdev_process_finish_unquiesced(void *ctx, int status)
 	}
 
 	if (process->status != 0) {
-		struct raid_base_bdev_info *target = process->target;
-
-		if (target->is_configured && !target->remove_scheduled) {
-			_raid_bdev_remove_base_bdev(target, raid_bdev_process_finish_target_removed, process);
-			return;
+		status = _raid_bdev_remove_base_bdev(process->target, raid_bdev_process_finish_target_removed,
+						     process);
+		if (status != 0) {
+			raid_bdev_process_finish_target_removed(process, status);
 		}
+		return;
 	}
 
 	spdk_thread_send_msg(process->thread, _raid_bdev_process_finish_done, process);
