@@ -20,7 +20,6 @@ start_monitor_resources() {
 		# collect-bmc-pm requires root privileges
 		sudo -E "$_pmdir/$monitor" -d "$PM_OUTPUTDIR" \
 			-l -p "monitor.${0##*/}.$(date +%s)" &
-		MONITOR_RESOURCES_PIDS["$monitor"]=$!
 	done
 	# Give our monitors some time to setup their traps
 	sleep 1
@@ -43,15 +42,12 @@ signal_monitor_resources() {
 	for monitor in "${MONITOR_RESOURCES[@]}"; do
 		if [[ -e $PM_OUTPUTDIR/$monitor.pid ]]; then
 			pid=$(< "$PM_OUTPUTDIR/$monitor.pid")
-		elif [[ -n ${MONITOR_RESOURCES_PIDS["$monitor"]} ]]; then
-			pid=${MONITOR_RESOURCES_PIDS["$monitor"]}
 		else
 			continue
 		fi
 
 		if ! sudo kill "-$signal" "$pid"; then
 			rm -f "$PM_OUTPUTDIR/$monitor.pid"
-			unset -v "MONITOR_RESOURCES_PIDS[$monitor]"
 		fi 2> /dev/null
 	done
 }
@@ -79,7 +75,5 @@ elif [[ $PM_OS == Linux && $(< /sys/class/dmi/id/chassis_vendor) != QEMU && ! -e
 	MONITOR_RESOURCES+=(collect-cpu-temp)
 	MONITOR_RESOURCES+=(collect-bmc-pm)
 fi
-# For tracking - each monitor should handle its own .pid file
-declare -A MONITOR_RESOURCES_PIDS=()
 
 mkdir -p "$PM_OUTPUTDIR"
