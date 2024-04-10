@@ -602,6 +602,12 @@ nvmf_rdma_request_free_data(struct spdk_nvmf_rdma_request *rdma_req,
 
 	_nvmf_rdma_request_free_data(rdma_req, rdma_req->transfer_wr, rtransport->data_wr_pool);
 
+	if (rdma_req->remaining_tranfer_in_wrs) {
+		_nvmf_rdma_request_free_data(rdma_req, rdma_req->remaining_tranfer_in_wrs,
+					     rtransport->data_wr_pool);
+		rdma_req->remaining_tranfer_in_wrs = NULL;
+	}
+
 	rdma_req->data.wr.next = NULL;
 	rdma_req->rsp.wr.next = NULL;
 }
