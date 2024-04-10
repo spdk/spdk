@@ -2828,14 +2828,19 @@ raid_bdev_channels_start_process_done(struct spdk_io_channel_iter *i, int status
 	struct spdk_thread *thread;
 	char thread_name[RAID_BDEV_SB_NAME_SIZE + 16];
 
+	if (status == 0 &&
+	    (process->target->remove_scheduled || !process->target->is_configured ||
+	     raid_bdev->num_base_bdevs_operational <= raid_bdev->min_base_bdevs_operational)) {
+		/* a base bdev was removed before we got here */
+		status = -ENODEV;
+	}
+
 	if (status != 0) {
 		SPDK_ERRLOG("Failed to start %s on %s: %s\n",
 			    raid_bdev_process_to_str(process->type), raid_bdev->bdev.name,
 			    spdk_strerror(-status));
 		goto err;
 	}
-
-	/* TODO: we may need to abort if a base bdev was removed before we got here */
 
 	snprintf(thread_name, sizeof(thread_name), "%s_%s",
 		 raid_bdev->bdev.name, raid_bdev_process_to_str(process->type));

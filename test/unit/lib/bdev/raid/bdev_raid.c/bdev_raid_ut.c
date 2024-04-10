@@ -2321,6 +2321,7 @@ test_raid_process(void)
 
 	pbdev->module->submit_process_request = submit_process_request;
 	pbdev->module_private = &num_blocks_processed;
+	pbdev->min_base_bdevs_operational = 0;
 
 	CU_ASSERT(raid_bdev_start_rebuild(&pbdev->base_bdev_info[0]) == 0);
 	poll_app_thread();
