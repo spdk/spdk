@@ -1938,6 +1938,9 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     # lvol
     def bdev_lvol_create_lvstore(args):
+        # The default unmap clear method may take over 60.0 sec.
+        if args.timeout is None:
+            args.client.timeout = 90.0
         print_json(rpc.lvol.bdev_lvol_create_lvstore(args.client,
                                                      bdev_name=args.bdev_name,
                                                      lvs_name=args.lvs_name,
