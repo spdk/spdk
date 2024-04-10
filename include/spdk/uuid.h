@@ -73,7 +73,7 @@ void spdk_uuid_generate(struct spdk_uuid *uuid);
  * \param name Arbitrary, binary string.
  * \param len Length of binary string.
  *
- * \return 0 on success, non-zero on failure.
+ * \return 0 on success, or negative errno on failure.
  */
 int spdk_uuid_generate_sha1(struct spdk_uuid *uuid, struct spdk_uuid *ns_uuid, const char *name,
 			    size_t len);
