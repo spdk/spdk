@@ -144,9 +144,9 @@ spdk_trace_parser::build_arg(argument_context *argctx, const spdk_trace_argument
 		}
 
 		curlen = spdk_min(sizeof(buffer->data) - argctx->offset, arg->size - argoff);
-		if (argoff < sizeof(pe->args[0])) {
+		if (argoff < sizeof(pe->args[0].u.string)) {
 			memcpy(&pe->args[argid].u.string[argoff], &buffer->data[argctx->offset],
-			       spdk_min(curlen, sizeof(pe->args[0]) - argoff));
+			       spdk_min(curlen, sizeof(pe->args[0].u.string) - argoff));
 		}
 
 		argctx->offset += curlen;
