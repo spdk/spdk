@@ -1,5 +1,5 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
- *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/env.h"
@@ -13,7 +13,7 @@
 #include "spdk/util.h"
 
 #include "spdk_internal/mlx5.h"
-#include "spdk_internal/rdma.h"
+#include "spdk_internal/rdma_provider.h"
 #include "spdk/accel_module.h"
 #include "spdk_internal/assert.h"
 #include "spdk_internal/sgl.h"

@@ -1,5 +1,5 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
- *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include <rdma/rdma_cma.h>
@@ -12,7 +12,7 @@
 #include "spdk/likely.h"
 #include "spdk/util.h"
 #include "spdk_internal/mlx5.h"
-#include "spdk_internal/rdma.h"
+#include "spdk_internal/rdma_provider.h"
 
 #define MLX5_VENDOR_ID_MELLANOX 0x2c9
 

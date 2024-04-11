@@ -1,6 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (c) Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #ifndef SPDK_RDMA_H
@@ -17,44 +17,44 @@
 #define SPDK_RDMA_RXE_VENDOR_ID_OLD 0
 #define SPDK_RDMA_RXE_VENDOR_ID_NEW 0XFFFFFF
 
-struct spdk_rdma_wr_stats {
+struct spdk_rdma_provider_wr_stats {
 	/* Total number of submitted requests */
 	uint64_t num_submitted_wrs;
 	/* Total number of doorbell updates */
 	uint64_t doorbell_updates;
 };
 
-struct spdk_rdma_qp_stats {
-	struct spdk_rdma_wr_stats send;
-	struct spdk_rdma_wr_stats recv;
+struct spdk_rdma_provider_qp_stats {
+	struct spdk_rdma_provider_wr_stats send;
+	struct spdk_rdma_provider_wr_stats recv;
 };
 
-struct spdk_rdma_qp_init_attr {
+struct spdk_rdma_provider_qp_init_attr {
 	void		       *qp_context;
 	struct ibv_cq	       *send_cq;
 	struct ibv_cq	       *recv_cq;
 	struct ibv_srq	       *srq;
 	struct ibv_qp_cap	cap;
 	struct ibv_pd	       *pd;
-	struct spdk_rdma_qp_stats *stats;
+	struct spdk_rdma_provider_qp_stats *stats;
 };
 
-struct spdk_rdma_send_wr_list {
+struct spdk_rdma_provider_send_wr_list {
 	struct ibv_send_wr	*first;
 	struct ibv_send_wr	*last;
 };
 
-struct spdk_rdma_recv_wr_list {
+struct spdk_rdma_provider_recv_wr_list {
 	struct ibv_recv_wr	*first;
 	struct ibv_recv_wr	*last;
 };
 
-struct spdk_rdma_qp {
+struct spdk_rdma_provider_qp {
 	struct ibv_qp *qp;
 	struct rdma_cm_id *cm_id;
-	struct spdk_rdma_send_wr_list send_wrs;
-	struct spdk_rdma_recv_wr_list recv_wrs;
-	struct spdk_rdma_qp_stats *stats;
+	struct spdk_rdma_provider_send_wr_list send_wrs;
+	struct spdk_rdma_provider_recv_wr_list recv_wrs;
+	struct spdk_rdma_provider_qp_stats *stats;
 	bool shared_stats;
 };
 
@@ -74,16 +74,16 @@ struct spdk_rdma_memory_translation {
 	union spdk_rdma_mr mr_or_key;
 	uint8_t translation_type;
 };
-struct spdk_rdma_srq_init_attr {
+struct spdk_rdma_provider_srq_init_attr {
 	struct ibv_pd *pd;
-	struct spdk_rdma_wr_stats *stats;
+	struct spdk_rdma_provider_wr_stats *stats;
 	struct ibv_srq_init_attr srq_init_attr;
 };
 
-struct spdk_rdma_srq {
+struct spdk_rdma_provider_srq {
 	struct ibv_srq *srq;
-	struct spdk_rdma_recv_wr_list recv_wrs;
-	struct spdk_rdma_wr_stats *stats;
+	struct spdk_rdma_provider_recv_wr_list recv_wrs;
+	struct spdk_rdma_provider_wr_stats *stats;
 	bool shared_stats;
 };
 
@@ -98,7 +98,8 @@ enum spdk_rdma_memory_map_role {
  * \param init_attr Pointer to SRQ init attr
  * \return pointer to srq on success or NULL on failure. errno is updated in failure case.
  */
-struct spdk_rdma_srq *spdk_rdma_srq_create(struct spdk_rdma_srq_init_attr *init_attr);
+struct spdk_rdma_provider_srq *spdk_rdma_provider_srq_create(
+	struct spdk_rdma_provider_srq_init_attr *init_attr);
 
 /**
  * Destroy RDMA SRQ
@@ -106,7 +107,7 @@ struct spdk_rdma_srq *spdk_rdma_srq_create(struct spdk_rdma_srq_init_attr *init_
  * \param rdma_srq Pointer to SRQ
  * \return 0 on succes, errno on failure
  */
-int spdk_rdma_srq_destroy(struct spdk_rdma_srq *rdma_srq);
+int spdk_rdma_provider_srq_destroy(struct spdk_rdma_provider_srq *rdma_srq);
 
 /**
  * Append the given recv wr structure to the SRQ's outstanding recv list.
@@ -116,7 +117,8 @@ int spdk_rdma_srq_destroy(struct spdk_rdma_srq *rdma_srq);
  * \param first pointer to the first Work Request
  * \return true if there were no outstanding WRs before, false otherwise
  */
-bool spdk_rdma_srq_queue_recv_wrs(struct spdk_rdma_srq *rdma_srq, struct ibv_recv_wr *first);
+bool spdk_rdma_provider_srq_queue_recv_wrs(struct spdk_rdma_provider_srq *rdma_srq,
+		struct ibv_recv_wr *first);
 
 /**
  * Submit all queued receive Work Request
@@ -125,7 +127,8 @@ bool spdk_rdma_srq_queue_recv_wrs(struct spdk_rdma_srq *rdma_srq, struct ibv_rec
  * \param bad_wr Stores a pointer to the first failed WR if this function return nonzero value
  * \return 0 on succes, errno on failure
  */
-int spdk_rdma_srq_flush_recv_wrs(struct spdk_rdma_srq *rdma_srq, struct ibv_recv_wr **bad_wr);
+int spdk_rdma_provider_srq_flush_recv_wrs(struct spdk_rdma_provider_srq *rdma_srq,
+		struct ibv_recv_wr **bad_wr);
 
 /**
  * Create RDMA provider specific qpair
@@ -134,8 +137,8 @@ int spdk_rdma_srq_flush_recv_wrs(struct spdk_rdma_srq *rdma_srq, struct ibv_recv
  * \param qp_attr Pointer to qpair init attributes
  * \return Pointer to a newly created qpair on success or NULL on failure
  */
-struct spdk_rdma_qp *spdk_rdma_qp_create(struct rdma_cm_id *cm_id,
-		struct spdk_rdma_qp_init_attr *qp_attr);
+struct spdk_rdma_provider_qp *spdk_rdma_provider_qp_create(struct rdma_cm_id *cm_id,
+		struct spdk_rdma_provider_qp_init_attr *qp_attr);
 
 /**
  * Accept a connection request. Called by the passive side (NVMEoF target)
@@ -144,7 +147,8 @@ struct spdk_rdma_qp *spdk_rdma_qp_create(struct rdma_cm_id *cm_id,
  * \param conn_param Optional information needed to establish the connection
  * \return 0 on success, errno on failure
  */
-int spdk_rdma_qp_accept(struct spdk_rdma_qp *spdk_rdma_qp, struct rdma_conn_param *conn_param);
+int spdk_rdma_provider_qp_accept(struct spdk_rdma_provider_qp *spdk_rdma_qp,
+				 struct rdma_conn_param *conn_param);
 
 /**
  * Complete the connection process, must be called by the active
@@ -153,14 +157,14 @@ int spdk_rdma_qp_accept(struct spdk_rdma_qp *spdk_rdma_qp, struct rdma_conn_para
  * \param spdk_rdma_qp Pointer to SPDK RDMA qpair
  * \return 0 on success, errno on failure
  */
-int spdk_rdma_qp_complete_connect(struct spdk_rdma_qp *spdk_rdma_qp);
+int spdk_rdma_provider_qp_complete_connect(struct spdk_rdma_provider_qp *spdk_rdma_qp);
 
 /**
  * Destroy RDMA provider specific qpair
  *
  * \param spdk_rdma_qp Pointer to SPDK RDMA qpair to be destroyed
  */
-void spdk_rdma_qp_destroy(struct spdk_rdma_qp *spdk_rdma_qp);
+void spdk_rdma_provider_qp_destroy(struct spdk_rdma_provider_qp *spdk_rdma_qp);
 
 /**
  * Disconnect a connection and transition associated qpair to error state.
@@ -168,7 +172,7 @@ void spdk_rdma_qp_destroy(struct spdk_rdma_qp *spdk_rdma_qp);
  *
  * \param spdk_rdma_qp Pointer to qpair to be disconnected
  */
-int spdk_rdma_qp_disconnect(struct spdk_rdma_qp *spdk_rdma_qp);
+int spdk_rdma_provider_qp_disconnect(struct spdk_rdma_provider_qp *spdk_rdma_qp);
 
 /**
  * Append the given send wr structure to the qpair's outstanding sends list.
@@ -178,7 +182,8 @@ int spdk_rdma_qp_disconnect(struct spdk_rdma_qp *spdk_rdma_qp);
  * \param first Pointer to the first Work Request
  * \return true if there were no outstanding WRs before, false otherwise
  */
-bool spdk_rdma_qp_queue_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_send_wr *first);
+bool spdk_rdma_provider_qp_queue_send_wrs(struct spdk_rdma_provider_qp *spdk_rdma_qp,
+		struct ibv_send_wr *first);
 
 /**
  * Submit all queued send Work Request
@@ -187,7 +192,8 @@ bool spdk_rdma_qp_queue_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_s
  * \param bad_wr Stores a pointer to the first failed WR if this function return nonzero value
  * \return 0 on succes, errno on failure
  */
-int spdk_rdma_qp_flush_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_send_wr **bad_wr);
+int spdk_rdma_provider_qp_flush_send_wrs(struct spdk_rdma_provider_qp *spdk_rdma_qp,
+		struct ibv_send_wr **bad_wr);
 
 /**
  * Append the given recv wr structure to the qpair's outstanding recv list.
@@ -197,7 +203,8 @@ int spdk_rdma_qp_flush_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_se
  * \param first Pointer to the first Work Request
  * \return true if there were no outstanding WRs before, false otherwise
  */
-bool spdk_rdma_qp_queue_recv_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_recv_wr *first);
+bool spdk_rdma_provider_qp_queue_recv_wrs(struct spdk_rdma_provider_qp *spdk_rdma_qp,
+		struct ibv_recv_wr *first);
 
 /**
  * Submit all queued recv Work Request
@@ -205,7 +212,8 @@ bool spdk_rdma_qp_queue_recv_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_r
  * \param bad_wr Stores a pointer to the first failed WR if this function return nonzero value
  * \return 0 on succes, errno on failure
  */
-int spdk_rdma_qp_flush_recv_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_recv_wr **bad_wr);
+int spdk_rdma_provider_qp_flush_recv_wrs(struct spdk_rdma_provider_qp *spdk_rdma_qp,
+		struct ibv_recv_wr **bad_wr);
 
 /**
  * Create a memory map which is used to register Memory Regions and perform address -> memory

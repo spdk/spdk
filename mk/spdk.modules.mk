@@ -1,6 +1,6 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2016 Intel Corporation.
-#  Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES.
+#  Copyright (c) 2021-2024 NVIDIA CORPORATION & AFFILIATES.
 #  All rights reserved.
 #
 
@@ -50,7 +50,7 @@ endif
 endif
 
 ifeq ($(CONFIG_RDMA),y)
-BLOCKDEV_MODULES_LIST += rdma
+BLOCKDEV_MODULES_LIST += rdma_provider
 BLOCKDEV_MODULES_PRIVATE_LIBS += -libverbs -lrdmacm
 ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
 BLOCKDEV_MODULES_PRIVATE_LIBS += -lmlx5

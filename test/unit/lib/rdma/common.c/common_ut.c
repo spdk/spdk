@@ -6,7 +6,7 @@
 #include "spdk_internal/cunit.h"
 #include "spdk_internal/mock.h"
 #include "common/lib/test_env.c"
-#include "rdma/common.c"
+#include "rdma_provider/common.c"
 
 DEFINE_STUB(spdk_mem_map_alloc, struct spdk_mem_map *, (uint64_t default_translation,
 		const struct spdk_mem_map_ops *ops, void *cb_ctx), NULL);

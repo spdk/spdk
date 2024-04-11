@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2021 Intel Corporation. All rights reserved.
  *   Copyright (c) 2020, 2021 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include <rdma/rdma_cma.h>
@@ -10,7 +11,7 @@
 #include "spdk/string.h"
 #include "spdk/likely.h"
 
-#include "spdk_internal/rdma.h"
+#include "spdk_internal/rdma_provider.h"
 #include "spdk_internal/assert.h"
 
 struct spdk_rdma_device {
@@ -223,13 +224,13 @@ spdk_rdma_get_translation(struct spdk_rdma_mem_map *map, void *address,
 	return 0;
 }
 
-struct spdk_rdma_srq *
-spdk_rdma_srq_create(struct spdk_rdma_srq_init_attr *init_attr)
+struct spdk_rdma_provider_srq *
+spdk_rdma_provider_srq_create(struct spdk_rdma_provider_srq_init_attr *init_attr)
 {
 	assert(init_attr);
 	assert(init_attr->pd);
 
-	struct spdk_rdma_srq *rdma_srq = calloc(1, sizeof(*rdma_srq));
+	struct spdk_rdma_provider_srq *rdma_srq = calloc(1, sizeof(*rdma_srq));
 
 	if (!rdma_srq) {
 		SPDK_ERRLOG("Can't allocate memory for SRQ handle\n");
@@ -262,7 +263,7 @@ spdk_rdma_srq_create(struct spdk_rdma_srq_init_attr *init_attr)
 }
 
 int
-spdk_rdma_srq_destroy(struct spdk_rdma_srq *rdma_srq)
+spdk_rdma_provider_srq_destroy(struct spdk_rdma_provider_srq *rdma_srq)
 {
 	int rc;
 
@@ -291,8 +292,8 @@ spdk_rdma_srq_destroy(struct spdk_rdma_srq *rdma_srq)
 }
 
 static inline bool
-rdma_queue_recv_wrs(struct spdk_rdma_recv_wr_list *recv_wrs, struct ibv_recv_wr *first,
-		    struct spdk_rdma_wr_stats *recv_stats)
+rdma_queue_recv_wrs(struct spdk_rdma_provider_recv_wr_list *recv_wrs, struct ibv_recv_wr *first,
+		    struct spdk_rdma_provider_wr_stats *recv_stats)
 {
 	struct ibv_recv_wr *last;
 
@@ -315,7 +316,8 @@ rdma_queue_recv_wrs(struct spdk_rdma_recv_wr_list *recv_wrs, struct ibv_recv_wr 
 }
 
 bool
-spdk_rdma_srq_queue_recv_wrs(struct spdk_rdma_srq *rdma_srq, struct ibv_recv_wr *first)
+spdk_rdma_provider_srq_queue_recv_wrs(struct spdk_rdma_provider_srq *rdma_srq,
+				      struct ibv_recv_wr *first)
 {
 	assert(rdma_srq);
 	assert(first);
@@ -324,7 +326,8 @@ spdk_rdma_srq_queue_recv_wrs(struct spdk_rdma_srq *rdma_srq, struct ibv_recv_wr 
 }
 
 int
-spdk_rdma_srq_flush_recv_wrs(struct spdk_rdma_srq *rdma_srq, struct ibv_recv_wr **bad_wr)
+spdk_rdma_provider_srq_flush_recv_wrs(struct spdk_rdma_provider_srq *rdma_srq,
+				      struct ibv_recv_wr **bad_wr)
 {
 	int rc;
 
@@ -341,7 +344,8 @@ spdk_rdma_srq_flush_recv_wrs(struct spdk_rdma_srq *rdma_srq, struct ibv_recv_wr 
 }
 
 bool
-spdk_rdma_qp_queue_recv_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_recv_wr *first)
+spdk_rdma_provider_qp_queue_recv_wrs(struct spdk_rdma_provider_qp *spdk_rdma_qp,
+				     struct ibv_recv_wr *first)
 {
 	assert(spdk_rdma_qp);
 	assert(first);
@@ -350,7 +354,8 @@ spdk_rdma_qp_queue_recv_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_recv_w
 }
 
 int
-spdk_rdma_qp_flush_recv_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_recv_wr **bad_wr)
+spdk_rdma_provider_qp_flush_recv_wrs(struct spdk_rdma_provider_qp *spdk_rdma_qp,
+				     struct ibv_recv_wr **bad_wr)
 {
 	int rc;
 

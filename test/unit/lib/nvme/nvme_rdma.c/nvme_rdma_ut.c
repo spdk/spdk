@@ -1,6 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2018 Intel Corporation. All rights reserved.
- *   Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -195,7 +195,7 @@ test_nvme_rdma_build_sgl_request(void)
 	ctrlr.ioccsz_bytes = 4096;
 
 	rqpair.mr_map = (struct spdk_rdma_mem_map *)0xdeadbeef;
-	rqpair.rdma_qp = (struct spdk_rdma_qp *)0xdeadbeef;
+	rqpair.rdma_qp = (struct spdk_rdma_provider_qp *)0xdeadbeef;
 	rqpair.qpair.ctrlr = &ctrlr;
 	rqpair.cmds = &cmd;
 	cmd.sgl[0].address = 0x1111;
@@ -302,7 +302,7 @@ test_nvme_rdma_build_sgl_inline_request(void)
 	ctrlr.cdata.nvmf_specific.msdbd = 16;
 
 	rqpair.mr_map = (struct spdk_rdma_mem_map *)0xdeadbeef;
-	rqpair.rdma_qp = (struct spdk_rdma_qp *)0xdeadbeef;
+	rqpair.rdma_qp = (struct spdk_rdma_provider_qp *)0xdeadbeef;
 	rqpair.qpair.ctrlr = &ctrlr;
 	rqpair.cmds = &cmd;
 	cmd.sgl[0].address = 0x1111;
@@ -362,7 +362,7 @@ test_nvme_rdma_build_contig_request(void)
 	ctrlr.cdata.nvmf_specific.msdbd = 16;
 
 	rqpair.mr_map = (struct spdk_rdma_mem_map *)0xdeadbeef;
-	rqpair.rdma_qp = (struct spdk_rdma_qp *)0xdeadbeef;
+	rqpair.rdma_qp = (struct spdk_rdma_provider_qp *)0xdeadbeef;
 	rqpair.qpair.ctrlr = &ctrlr;
 	rqpair.cmds = &cmd;
 	cmd.sgl[0].address = 0x1111;
@@ -405,7 +405,7 @@ test_nvme_rdma_build_contig_inline_request(void)
 	ctrlr.cdata.nvmf_specific.msdbd = 16;
 
 	rqpair.mr_map = (struct spdk_rdma_mem_map *)0xdeadbeef;
-	rqpair.rdma_qp = (struct spdk_rdma_qp *)0xdeadbeef;
+	rqpair.rdma_qp = (struct spdk_rdma_provider_qp *)0xdeadbeef;
 	rqpair.qpair.ctrlr = &ctrlr;
 	rqpair.cmds = &cmd;
 	cmd.sgl[0].address = 0x1111;
@@ -508,7 +508,7 @@ test_nvme_rdma_create_rsps(void)
 {
 	struct nvme_rdma_rsp_opts opts = {};
 	struct nvme_rdma_rsps *rsps;
-	struct spdk_rdma_qp *rdma_qp = (struct spdk_rdma_qp *)0xfeedf00d;
+	struct spdk_rdma_provider_qp *rdma_qp = (struct spdk_rdma_provider_qp *)0xfeedf00d;
 	struct nvme_rdma_qpair rqpair = { .rdma_qp = rdma_qp, };
 
 	memset(&g_nvme_hooks, 0, sizeof(g_nvme_hooks));
@@ -818,7 +818,7 @@ test_nvme_rdma_req_init(void)
 	ctrlr.cdata.nvmf_specific.msdbd = 16;
 
 	rqpair.mr_map = (struct spdk_rdma_mem_map *)0xdeadbeef;
-	rqpair.rdma_qp = (struct spdk_rdma_qp *)0xdeadbeef;
+	rqpair.rdma_qp = (struct spdk_rdma_provider_qp *)0xdeadbeef;
 	rqpair.qpair.ctrlr = &ctrlr;
 	rqpair.cmds = &cmd;
 	cmd.sgl[0].address = 0x1111;
@@ -999,7 +999,7 @@ test_nvme_rdma_qpair_submit_request(void)
 	req.payload = NVME_PAYLOAD_CONTIG((void *)0xdeadbeef, NULL);
 	req.payload_size = 0;
 	rqpair.mr_map = (struct spdk_rdma_mem_map *)0xdeadbeef;
-	rqpair.rdma_qp = (struct spdk_rdma_qp *)0xdeadbeef;
+	rqpair.rdma_qp = (struct spdk_rdma_provider_qp *)0xdeadbeef;
 	rqpair.qpair.ctrlr = &ctrlr;
 	rqpair.num_entries = 1;
 	rqpair.qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
@@ -1115,7 +1115,7 @@ static void
 test_rdma_get_memory_translation(void)
 {
 	struct ibv_qp qp = {.pd = (struct ibv_pd *) 0xfeedbeef};
-	struct spdk_rdma_qp rdma_qp = {.qp = &qp};
+	struct spdk_rdma_provider_qp rdma_qp = {.qp = &qp};
 	struct nvme_rdma_qpair rqpair = {.rdma_qp = &rdma_qp};
 	struct spdk_nvme_ns_cmd_ext_io_opts io_opts = {
 		.memory_domain = (struct spdk_memory_domain *) 0xdeaddead
@@ -1175,7 +1175,7 @@ test_get_rdma_qpair_from_wc(void)
 	const uint32_t test_qp_num = 123;
 	struct nvme_rdma_poll_group	group = {};
 	struct nvme_rdma_qpair rqpair = {};
-	struct spdk_rdma_qp rdma_qp = {};
+	struct spdk_rdma_provider_qp rdma_qp = {};
 	struct ibv_qp qp = { .qp_num = test_qp_num };
 	struct ibv_wc wc = { .qp_num = test_qp_num };
 

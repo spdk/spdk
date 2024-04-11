@@ -17,7 +17,7 @@ lib/util/base64_neon
 lib/util/base64_sve
 
 # Not configured for mlx5 dv testing
-lib/rdma/rdma_mlx5_dv
+lib/rdma_provider/rdma_provider_mlx5_dv
 
 # Not configured for kernel idxd
 lib/idxd/idxd_kernel
