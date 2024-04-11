@@ -15,7 +15,7 @@ DEFINE_STUB(spdk_nvme_dhchap_get_dhgroup_name, const char *, (int d), NULL);
 DEFINE_STUB(spdk_nvme_dhchap_get_digest_length, uint8_t, (int d), 0);
 DEFINE_STUB_V(spdk_keyring_put_key, (struct spdk_key *k));
 DEFINE_STUB(nvmf_subsystem_get_dhchap_key, struct spdk_key *,
-	    (struct spdk_nvmf_subsystem *s, const char *h), NULL);
+	    (struct spdk_nvmf_subsystem *s, const char *h, enum nvmf_auth_key_type t), NULL);
 DEFINE_STUB(spdk_nvme_dhchap_generate_dhkey, struct spdk_nvme_dhchap_dhkey *,
 	    (enum spdk_nvmf_dhchap_dhgroup dhgroup), NULL);
 DEFINE_STUB_V(spdk_nvme_dhchap_dhkey_free, (struct spdk_nvme_dhchap_dhkey **key));

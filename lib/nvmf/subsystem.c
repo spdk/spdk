@@ -1254,15 +1254,26 @@ nvmf_subsystem_host_auth_required(struct spdk_nvmf_subsystem *subsystem, const c
 }
 
 struct spdk_key *
-nvmf_subsystem_get_dhchap_key(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
+nvmf_subsystem_get_dhchap_key(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn,
+			      enum nvmf_auth_key_type type)
 {
 	struct spdk_nvmf_host *host;
 	struct spdk_key *key = NULL;
 
 	pthread_mutex_lock(&subsystem->mutex);
 	host = nvmf_subsystem_find_host(subsystem, hostnqn);
-	if (host != NULL && host->dhchap_key != NULL) {
-		key = spdk_key_dup(host->dhchap_key);
+	if (host != NULL) {
+		switch (type) {
+		case NVMF_AUTH_KEY_HOST:
+			key = host->dhchap_key;
+			break;
+		case NVMF_AUTH_KEY_CTRLR:
+			key = host->dhchap_ctrlr_key;
+			break;
+		}
+		if (key != NULL) {
+			key = spdk_key_dup(key);
+		}
 	}
 	pthread_mutex_unlock(&subsystem->mutex);
 

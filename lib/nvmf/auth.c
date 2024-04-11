@@ -353,7 +353,7 @@ nvmf_auth_reply_exec(struct spdk_nvmf_request *req, struct spdk_nvmf_dhchap_repl
 		goto out;
 	}
 
-	key = nvmf_subsystem_get_dhchap_key(ctrlr->subsys, ctrlr->hostnqn);
+	key = nvmf_subsystem_get_dhchap_key(ctrlr->subsys, ctrlr->hostnqn, NVMF_AUTH_KEY_HOST);
 	if (key == NULL) {
 		AUTH_ERRLOG(qpair, "couldn't get DH-HMAC-CHAP key\n");
 		nvmf_auth_request_fail1(req, SPDK_NVMF_AUTH_FAILED);

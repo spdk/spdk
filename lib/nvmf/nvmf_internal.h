@@ -414,7 +414,12 @@ void nvmf_subsystem_remove_all_listeners(struct spdk_nvmf_subsystem *subsystem,
 struct spdk_nvmf_ctrlr *nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 		uint16_t cntlid);
 bool nvmf_subsystem_host_auth_required(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn);
-struct spdk_key *nvmf_subsystem_get_dhchap_key(struct spdk_nvmf_subsystem *subsys, const char *nqn);
+enum nvmf_auth_key_type {
+	NVMF_AUTH_KEY_HOST,
+	NVMF_AUTH_KEY_CTRLR,
+};
+struct spdk_key *nvmf_subsystem_get_dhchap_key(struct spdk_nvmf_subsystem *subsys, const char *nqn,
+		enum nvmf_auth_key_type type);
 struct spdk_nvmf_subsystem_listener *nvmf_subsystem_find_listener(
 	struct spdk_nvmf_subsystem *subsystem,
 	const struct spdk_nvme_transport_id *trid);
