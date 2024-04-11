@@ -1171,7 +1171,7 @@ nvme_rdma_connect_established(struct nvme_rdma_qpair *rqpair, int ret)
 
 	assert(!rqpair->mr_map);
 	rqpair->mr_map = spdk_rdma_utils_create_mem_map(rqpair->rdma_qp->qp->pd, &g_nvme_hooks,
-			 SPDK_RDMA_UTILS_MEMORY_MAP_ROLE_INITIATOR);
+			 IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_WRITE);
 	if (!rqpair->mr_map) {
 		SPDK_ERRLOG("Unable to register RDMA memory translation map\n");
 		return -1;
@@ -2937,7 +2937,7 @@ nvme_rdma_poller_create(struct nvme_rdma_poll_group *group, struct ibv_context *
 		}
 
 		poller->mr_map = spdk_rdma_utils_create_mem_map(poller->pd, &g_nvme_hooks,
-				 SPDK_RDMA_UTILS_MEMORY_MAP_ROLE_INITIATOR);
+				 IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_WRITE);
 		if (poller->mr_map == NULL) {
 			SPDK_ERRLOG("Unable to create memory map.\n");
 			goto fail;

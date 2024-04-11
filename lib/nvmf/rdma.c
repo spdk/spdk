@@ -2560,8 +2560,7 @@ create_ib_device(struct spdk_nvmf_rdma_transport *rtransport, struct ibv_context
 
 	assert(device->map == NULL);
 
-	device->map = spdk_rdma_utils_create_mem_map(device->pd, &g_nvmf_hooks,
-			SPDK_RDMA_UTILS_MEMORY_MAP_ROLE_TARGET);
+	device->map = spdk_rdma_utils_create_mem_map(device->pd, &g_nvmf_hooks, IBV_ACCESS_LOCAL_WRITE);
 	if (!device->map) {
 		SPDK_ERRLOG("Unable to allocate memory map for listen address\n");
 		destroy_ib_device(rtransport, device);

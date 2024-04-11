@@ -29,11 +29,6 @@ struct spdk_rdma_utils_memory_translation {
 	uint8_t translation_type;
 };
 
-enum spdk_rdma_utils_memory_map_role {
-	SPDK_RDMA_UTILS_MEMORY_MAP_ROLE_TARGET,
-	SPDK_RDMA_UTILS_MEMORY_MAP_ROLE_INITIATOR
-};
-
 struct spdk_rdma_utils_mem_map;
 
 /**
@@ -42,12 +37,12 @@ struct spdk_rdma_utils_mem_map;
  *
  * \param pd Protection Domain which will be used to create Memory Regions
  * \param hooks Optional hooks which are used to create Protection Domain or ger RKey
- * \param role Specifies whether this map is used by RDMA target or initiator, determines access flags of registered MRs
+ * \param access_flags Memory access permissions, bitwise combination of values from \b enum ibv_access_flags
  * \return Pointer to memory map or NULL on failure
  */
 struct spdk_rdma_utils_mem_map *
 spdk_rdma_utils_create_mem_map(struct ibv_pd *pd, struct spdk_nvme_rdma_hooks *hooks,
-			       enum spdk_rdma_utils_memory_map_role role);
+			       uint32_t access_flags);
 
 /**
  * Free previously allocated memory map

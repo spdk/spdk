@@ -889,7 +889,7 @@ accel_mlx5_create_cb(void *io_device, void *ctx_buf)
 		 * Divide user defined qp_size by two for simplicity */
 		dev->max_reqs = g_accel_mlx5.attr.qp_size / 2;
 		dev->mmap = spdk_rdma_utils_create_mem_map(dev_ctx->pd, NULL,
-				SPDK_RDMA_UTILS_MEMORY_MAP_ROLE_INITIATOR);
+				IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_WRITE);
 		if (!dev->mmap) {
 			SPDK_ERRLOG("Failed to create memory map\n");
 			accel_mlx5_qp_destroy(dev->qp);

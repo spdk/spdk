@@ -41,7 +41,7 @@ DEFINE_STUB(spdk_rdma_provider_qp_queue_recv_wrs, bool, (struct spdk_rdma_provid
 DEFINE_STUB(spdk_rdma_provider_qp_flush_recv_wrs, int, (struct spdk_rdma_provider_qp *spdk_rdma_qp,
 		struct ibv_recv_wr **bad_wr), 0);
 DEFINE_STUB(spdk_rdma_utils_create_mem_map, struct spdk_rdma_utils_mem_map *, (struct ibv_pd *pd,
-		struct spdk_nvme_rdma_hooks *hooks, enum spdk_rdma_utils_memory_map_role role), NULL);
+		struct spdk_nvme_rdma_hooks *hooks, uint32_t access_flags), NULL)
 DEFINE_STUB_V(spdk_rdma_utils_free_mem_map, (struct spdk_rdma_utils_mem_map **map));
 
 /* used to mock out having to split an SGL over a memory region */
