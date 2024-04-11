@@ -19,7 +19,7 @@ function connect() {
 		-a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -i 4
 	waitforserial "$NVMF_SERIAL" $1
 	ctrl_id=$(nvme list-subsys -o json \
-		| jq -r '.[0].Subsystems[] | select(.NQN=='\"$SUBSYSNQN\"') | .Paths[0].Name')
+		| jq -r '.[].Subsystems[] | select(.NQN=='\"$SUBSYSNQN\"') | .Paths[0].Name')
 }
 
 function disconnect() {
