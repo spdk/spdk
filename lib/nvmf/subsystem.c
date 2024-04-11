@@ -313,13 +313,19 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	return subsystem;
 }
 
+static void
+nvmf_host_free(struct spdk_nvmf_host *host)
+{
+	spdk_keyring_put_key(host->dhchap_key);
+	free(host);
+}
+
 /* Must hold subsystem->mutex while calling this function */
 static void
 nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_host *host)
 {
-	spdk_keyring_put_key(host->dhchap_key);
 	TAILQ_REMOVE(&subsystem->hosts, host, link);
-	free(host);
+	nvmf_host_free(host);
 }
 
 static void
@@ -1000,13 +1006,13 @@ spdk_nvmf_subsystem_add_host_ext(struct spdk_nvmf_subsystem *subsystem,
 		if (!nvmf_auth_is_supported()) {
 			SPDK_ERRLOG("NVMe in-band authentication is unsupported\n");
 			pthread_mutex_unlock(&subsystem->mutex);
-			free(host);
+			nvmf_host_free(host);
 			return -EINVAL;
 		}
 		host->dhchap_key = spdk_key_dup(key);
 		if (host->dhchap_key == NULL) {
 			pthread_mutex_unlock(&subsystem->mutex);
-			free(host);
+			nvmf_host_free(host);
 			return -EINVAL;
 		}
 	}
