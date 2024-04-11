@@ -40,7 +40,7 @@ disclaimer
 # on the enterprise systems, like RHEL.
 if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
 	repos=() enable=("epel" "elrepo" "elrepo-testing") add=()
-	[[ $ID == centos || $ID == rocky ]] && enable+=("extras")
+	#[[ $ID == centos || $ID == rocky ]] && enable+=("extras")
 	if [[ $VERSION_ID == 7* ]]; then
 		repos+=("https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm")
 		repos+=("https://www.elrepo.org/elrepo-release-7.el7.elrepo.noarch.rpm")
