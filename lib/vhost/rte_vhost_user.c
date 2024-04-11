@@ -1111,8 +1111,11 @@ enable_device_vq(struct spdk_vhost_session *vsession, uint16_t qid)
 		}
 	}
 
-	if (spdk_interrupt_mode_is_enabled() && backend->register_vq_interrupt) {
-		backend->register_vq_interrupt(vsession, q);
+	if (backend->enable_vq) {
+		rc = backend->enable_vq(vsession, q);
+		if (rc) {
+			return rc;
+		}
 	}
 
 	q->packed.packed_ring = packed_ring;

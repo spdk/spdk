@@ -1104,11 +1104,14 @@ _vhost_blk_vq_register_interrupt(void *arg)
 	}
 }
 
-static void
-vhost_blk_vq_register_interrupt(struct spdk_vhost_session *vsession,
-				struct spdk_vhost_virtqueue *vq)
+static int
+vhost_blk_vq_enable(struct spdk_vhost_session *vsession, struct spdk_vhost_virtqueue *vq)
 {
-	spdk_thread_send_msg(vsession->vdev->thread, _vhost_blk_vq_register_interrupt, vq);
+	if (spdk_interrupt_mode_is_enabled()) {
+		spdk_thread_send_msg(vsession->vdev->thread, _vhost_blk_vq_register_interrupt, vq);
+	}
+
+	return 0;
 }
 
 static int
@@ -1581,7 +1584,7 @@ static const struct spdk_vhost_user_dev_backend vhost_blk_user_device_backend = 
 	.start_session =  vhost_blk_start,
 	.stop_session = vhost_blk_stop,
 	.alloc_vq_tasks = alloc_vq_task_pool,
-	.register_vq_interrupt = vhost_blk_vq_register_interrupt,
+	.enable_vq = vhost_blk_vq_enable,
 };
 
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
