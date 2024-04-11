@@ -617,6 +617,8 @@ struct spdk_nvmf_host_opts {
 	const struct spdk_json_val	*params;
 	/** DH-HMAC-CHAP key */
 	struct spdk_key			*dhchap_key;
+	/** DH-HMAC-CHAP controller key */
+	struct spdk_key			*dhchap_ctrlr_key;
 };
 
 /**

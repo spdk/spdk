@@ -8527,6 +8527,7 @@ host                    | Required | string      | Host NQN to add to the list o
 tgt_name                | Optional | string      | Parent NVMe-oF target name.
 psk                     | Optional | string      | Path to a file containing PSK for TLS connection
 dhchap_key              | Optional | string      | DH-HMAC-CHAP key name.
+dhchap_ctrlr_key        | Optional | string      | DH-HMAC-CHAP controller key name.
 
 #### Example
 

@@ -317,6 +317,7 @@ static void
 nvmf_host_free(struct spdk_nvmf_host *host)
 {
 	spdk_keyring_put_key(host->dhchap_key);
+	spdk_keyring_put_key(host->dhchap_ctrlr_key);
 	free(host);
 }
 
@@ -1015,6 +1016,20 @@ spdk_nvmf_subsystem_add_host_ext(struct spdk_nvmf_subsystem *subsystem,
 			nvmf_host_free(host);
 			return -EINVAL;
 		}
+		key = SPDK_GET_FIELD(opts, dhchap_ctrlr_key, NULL);
+		if (key != NULL) {
+			host->dhchap_ctrlr_key = spdk_key_dup(key);
+			if (host->dhchap_ctrlr_key == NULL) {
+				pthread_mutex_unlock(&subsystem->mutex);
+				nvmf_host_free(host);
+				return -EINVAL;
+			}
+		}
+	} else if (SPDK_GET_FIELD(opts, dhchap_ctrlr_key, NULL) != NULL) {
+		SPDK_ERRLOG("DH-HMAC-CHAP controller key requires host key to be set\n");
+		pthread_mutex_unlock(&subsystem->mutex);
+		nvmf_host_free(host);
+		return -EINVAL;
 	}
 
 	snprintf(host->nqn, sizeof(host->nqn), "%s", hostnqn);

@@ -2779,7 +2779,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                          host=args.host,
                                          tgt_name=args.tgt_name,
                                          psk=args.psk,
-                                         dhchap_key=args.dhchap_key)
+                                         dhchap_key=args.dhchap_key,
+                                         dhchap_ctrlr_key=args.dhchap_ctrlr_key)
 
     p = subparsers.add_parser('nvmf_subsystem_add_host', help='Add a host to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
@@ -2787,6 +2788,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.add_argument('--psk', help='Path to PSK file for TLS authentication (optional). Only applicable for TCP transport.', type=str)
     p.add_argument('--dhchap-key', help='DH-HMAC-CHAP key name (optional)')
+    p.add_argument('--dhchap-ctrlr-key', help='DH-HMAC-CHAP controller key name (optional)')
     p.set_defaults(func=nvmf_subsystem_add_host)
 
     def nvmf_subsystem_remove_host(args):
