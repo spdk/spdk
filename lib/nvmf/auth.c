@@ -151,6 +151,12 @@ nvmf_auth_rearm_poller(struct spdk_nvmf_qpair *qpair)
 	return 0;
 }
 
+static void
+nvmf_auth_qpair_cleanup(struct spdk_nvmf_qpair_auth *auth)
+{
+	spdk_poller_unregister(&auth->poller);
+}
+
 static int
 nvmf_auth_check_command(struct spdk_nvmf_request *req, uint8_t secp,
 			uint8_t spsp0, uint8_t spsp1, uint32_t len)
@@ -562,7 +568,7 @@ nvmf_auth_recv_success1(struct spdk_nvmf_request *req)
 	nvmf_auth_recv_complete(req, sizeof(*success));
 	nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ENABLED);
 	nvmf_auth_set_state(qpair, NVMF_QPAIR_AUTH_COMPLETED);
-	spdk_poller_unregister(&auth->poller);
+	nvmf_auth_qpair_cleanup(auth);
 
 	return 0;
 }
@@ -668,7 +674,7 @@ nvmf_qpair_auth_destroy(struct spdk_nvmf_qpair *qpair)
 	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
 
 	if (auth != NULL) {
-		spdk_poller_unregister(&auth->poller);
+		nvmf_auth_qpair_cleanup(auth);
 		free(qpair->auth);
 		qpair->auth = NULL;
 	}
