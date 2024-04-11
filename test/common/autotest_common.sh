@@ -219,6 +219,16 @@ leak:libiscsi.so
 # Suppress leaks in libcrypto
 # Below is caused by openssl 3.0.8 leaks
 leak:libcrypto.so
+
+# Suppress leaks in accel-config
+# Versions with unresolved leaks:
+# v3.4.6.4 [Fedora 37]
+leak:add_wq
+leak:add_group
+# v3.5.2 [Fedora 38]
+leak:accfg_get_param_str
+# v4.0 [Fedora 39]
+leak:__scandir64_tail
 EOL
 
 # Suppress leaks in libfuse3
