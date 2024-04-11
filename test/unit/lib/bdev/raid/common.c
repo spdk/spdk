@@ -146,6 +146,7 @@ raid_test_create_raid_bdev(struct raid_params *params, struct raid_bdev_module *
 		SPDK_CU_ASSERT_FATAL(desc != NULL);
 		desc->bdev = bdev;
 
+		base_info->raid_bdev = raid_bdev;
 		base_info->desc = desc;
 		base_info->data_offset = 0;
 		base_info->data_size = bdev->blockcnt;
