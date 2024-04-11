@@ -59,6 +59,7 @@ kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb, spdk_idxd_probe_c
 	struct accfg_ctx *ctx;
 	struct accfg_device *device;
 
+	/* Create a configuration context, incrementing the reference count. */
 	rc = accfg_new(&ctx);
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to allocate accel-config context\n");
@@ -103,6 +104,9 @@ kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb, spdk_idxd_probe_c
 		kernel_idxd->fd = -1;
 		kernel_idxd->idxd.version = accfg_device_get_version(device);
 		kernel_idxd->idxd.pasid_enabled = pasid_enabled;
+
+		/* Increment configuration context reference for each device. */
+		kernel_idxd->ctx = accfg_ref(kernel_idxd->ctx);
 
 		accfg_wq_foreach(device, wq) {
 			enum accfg_wq_state wstate;
@@ -172,6 +176,9 @@ kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb, spdk_idxd_probe_c
 			kernel_idxd_device_destruct(&kernel_idxd->idxd);
 		}
 	}
+
+	/* Release the reference used for configuration. */
+	accfg_unref(ctx);
 
 	return 0;
 }
