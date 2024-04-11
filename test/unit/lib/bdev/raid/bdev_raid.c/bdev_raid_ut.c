@@ -58,24 +58,19 @@ void *g_rpc_req;
 uint32_t g_rpc_req_size;
 TAILQ_HEAD(bdev, spdk_bdev);
 struct bdev g_bdev_list;
-TAILQ_HEAD(waitq, spdk_bdev_io_wait_entry);
-struct waitq g_io_waitq;
 uint32_t g_block_len;
 uint32_t g_strip_size;
 uint32_t g_max_io_size;
 uint8_t g_max_base_drives;
 uint8_t g_max_raids;
-uint8_t g_ignore_io_output;
 uint8_t g_rpc_err;
 char *g_get_raids_output[MAX_RAIDS];
 uint32_t g_get_raids_count;
 uint8_t g_json_decode_obj_err;
 uint8_t g_json_decode_obj_create;
-uint8_t g_config_level_create = 0;
 uint8_t g_test_multi_raids;
 struct raid_io_ranges g_io_ranges[MAX_TEST_IO_RANGE];
 uint32_t g_io_range_idx;
-uint64_t g_lba_offset;
 uint64_t g_bdev_ch_io_device;
 bool g_bdev_io_defer_completion;
 TAILQ_HEAD(, spdk_bdev_io) g_deferred_ios = TAILQ_HEAD_INITIALIZER(g_deferred_ios);
@@ -91,11 +86,8 @@ DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
 DEFINE_STUB(spdk_bdev_flush_blocks, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		uint64_t offset_blocks, uint64_t num_blocks, spdk_bdev_io_completion_cb cb,
 		void *cb_arg), 0);
-DEFINE_STUB(spdk_conf_next_section, struct spdk_conf_section *, (struct spdk_conf_section *sp),
-	    NULL);
 DEFINE_STUB_V(spdk_rpc_register_method, (const char *method, spdk_rpc_method_handler func,
 		uint32_t state_mask));
-DEFINE_STUB_V(spdk_rpc_register_alias_deprecated, (const char *method, const char *alias));
 DEFINE_STUB_V(spdk_jsonrpc_end_result, (struct spdk_jsonrpc_request *request,
 					struct spdk_json_write_ctx *w));
 DEFINE_STUB_V(spdk_jsonrpc_send_bool_response, (struct spdk_jsonrpc_request *request,
@@ -117,7 +109,6 @@ DEFINE_STUB(spdk_json_write_array_begin, int, (struct spdk_json_write_ctx *w), 0
 DEFINE_STUB(spdk_json_write_array_end, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_named_array_begin, int, (struct spdk_json_write_ctx *w,
 		const char *name), 0);
-DEFINE_STUB(spdk_json_write_bool, int, (struct spdk_json_write_ctx *w, bool val), 0);
 DEFINE_STUB(spdk_json_write_null, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_named_uint64, int, (struct spdk_json_write_ctx *w, const char *name,
 		uint64_t val), 0);
@@ -267,18 +258,14 @@ set_globals(void)
 	memset(g_get_raids_output, 0, sizeof(g_get_raids_output));
 	g_get_raids_count = 0;
 	g_io_comp_status = 0;
-	g_ignore_io_output = 0;
-	g_config_level_create = 0;
 	g_rpc_err = 0;
 	g_test_multi_raids = 0;
 	g_child_io_status_flag = true;
 	TAILQ_INIT(&g_bdev_list);
-	TAILQ_INIT(&g_io_waitq);
 	g_rpc_req = NULL;
 	g_rpc_req_size = 0;
 	g_json_decode_obj_err = 0;
 	g_json_decode_obj_create = 0;
-	g_lba_offset = 0;
 	g_bdev_io_defer_completion = false;
 }
 
@@ -470,17 +457,6 @@ complete_deferred_ios(void)
 	}
 }
 
-/* It will cache the split IOs for verification */
-int
-spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-			struct iovec *iov, int iovcnt,
-			uint64_t offset_blocks, uint64_t num_blocks,
-			spdk_bdev_io_completion_cb cb, void *cb_arg)
-{
-	return spdk_bdev_writev_blocks_ext(desc, ch, iov, iovcnt, offset_blocks,
-					   num_blocks, cb, cb_arg, NULL);
-}
-
 int
 spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			    struct iovec *iov, int iovcnt,
@@ -490,10 +466,6 @@ spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel 
 {
 	struct io_output *output = &g_io_output[g_io_output_index];
 	struct spdk_bdev_io *child_io;
-
-	if (g_ignore_io_output) {
-		return 0;
-	}
 
 	if (g_max_io_size < g_strip_size) {
 		SPDK_CU_ASSERT_FATAL(g_io_output_index < 2);
@@ -514,29 +486,11 @@ spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel 
 }
 
 int
-spdk_bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-				struct iovec *iov, int iovcnt, void *md,
-				uint64_t offset_blocks, uint64_t num_blocks,
-				spdk_bdev_io_completion_cb cb, void *cb_arg)
-{
-	struct spdk_bdev_ext_io_opts opts = {
-		.metadata = md
-	};
-
-	return spdk_bdev_writev_blocks_ext(desc, ch, iov, iovcnt, offset_blocks,
-					   num_blocks, cb, cb_arg, &opts);
-}
-
-int
 spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct io_output *output = &g_io_output[g_io_output_index];
 	struct spdk_bdev_io *child_io;
-
-	if (g_ignore_io_output) {
-		return 0;
-	}
 
 	if (g_bdev_io_submit_status == 0) {
 		set_io_output(output, desc, ch, 0, 0, cb, cb_arg, SPDK_BDEV_IO_TYPE_RESET,
@@ -558,10 +512,6 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 {
 	struct io_output *output = &g_io_output[g_io_output_index];
 	struct spdk_bdev_io *child_io;
-
-	if (g_ignore_io_output) {
-		return 0;
-	}
 
 	if (g_bdev_io_submit_status == 0) {
 		set_io_output(output, desc, ch, offset_blocks, num_blocks, cb, cb_arg,
@@ -696,17 +646,6 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 	}
 }
 
-/* It will cache split IOs for verification */
-int
-spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-		       struct iovec *iov, int iovcnt,
-		       uint64_t offset_blocks, uint64_t num_blocks,
-		       spdk_bdev_io_completion_cb cb, void *cb_arg)
-{
-	return spdk_bdev_readv_blocks_ext(desc, ch, iov, iovcnt, offset_blocks,
-					  num_blocks, cb, cb_arg, NULL);
-}
-
 int
 spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			   struct iovec *iov, int iovcnt,
@@ -716,10 +655,6 @@ spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 {
 	struct io_output *output = &g_io_output[g_io_output_index];
 	struct spdk_bdev_io *child_io;
-
-	if (g_ignore_io_output) {
-		return 0;
-	}
 
 	SPDK_CU_ASSERT_FATAL(g_io_output_index <= (g_max_io_size / g_strip_size) + 1);
 	if (g_bdev_io_submit_status == 0) {
@@ -736,21 +671,6 @@ spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 
 	return g_bdev_io_submit_status;
 }
-
-int
-spdk_bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc,	struct spdk_io_channel *ch,
-			       struct iovec *iov, int iovcnt, void *md,
-			       uint64_t offset_blocks, uint64_t num_blocks,
-			       spdk_bdev_io_completion_cb cb, void *cb_arg)
-{
-	struct spdk_bdev_ext_io_opts opts = {
-		.metadata = md
-	};
-
-	return spdk_bdev_readv_blocks_ext(desc, ch, iov, iovcnt, offset_blocks,
-					  num_blocks, cb, cb_arg, &opts);
-}
-
 
 void
 spdk_bdev_module_release_bdev(struct spdk_bdev *bdev)
@@ -1328,7 +1248,6 @@ create_raid_bdev_create_req(struct rpc_bdev_raid_create *r, const char *raid_nam
 	g_rpc_err = 0;
 	g_json_decode_obj_create = 1;
 	g_json_decode_obj_err = json_decode_obj_err;
-	g_config_level_create = 0;
 	g_test_multi_raids = 0;
 }
 
@@ -1355,7 +1274,6 @@ create_raid_bdev_delete_req(struct rpc_bdev_raid_delete *r, const char *raid_nam
 	g_rpc_err = 0;
 	g_json_decode_obj_create = 0;
 	g_json_decode_obj_err = json_decode_obj_err;
-	g_config_level_create = 0;
 	g_test_multi_raids = 0;
 }
 
@@ -1371,7 +1289,6 @@ create_get_raids_req(struct rpc_bdev_raid_get_bdevs *r, const char *category,
 	g_rpc_err = 0;
 	g_json_decode_obj_create = 0;
 	g_json_decode_obj_err = json_decode_obj_err;
-	g_config_level_create = 0;
 	g_test_multi_raids = 1;
 	g_get_raids_count = 0;
 }
@@ -1753,7 +1670,7 @@ raid_bdev_io_generate_by_strips(uint64_t n_strips)
 			for (l = 0; l < 3; l++) {
 				start_bdev_idx = start_bdev_idxs[l];
 				start_bdev_offset = start_bdev_idx * g_strip_size;
-				lba = g_lba_offset + start_bdev_offset + start_offset;
+				lba = start_bdev_offset + start_offset;
 				nblocks = (n_strips - 1) * g_strip_size + end_offset - start_offset + 1;
 
 				g_io_ranges[g_io_range_idx].lba = lba;
