@@ -159,6 +159,8 @@ kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb, spdk_idxd_probe_c
 			kernel_idxd->idxd.total_wq_size = accfg_wq_get_size(wq);
 			kernel_idxd->idxd.chan_per_device = (kernel_idxd->idxd.total_wq_size >= 128) ? 8 : 4;
 
+			kernel_idxd->idxd.batch_size = accfg_wq_get_max_batch_size(wq);
+
 			/* We only use a single WQ, so once we've found one we can stop looking. */
 			break;
 		}
