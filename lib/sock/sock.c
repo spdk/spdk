@@ -12,6 +12,7 @@
 #include "spdk/env.h"
 #include "spdk/util.h"
 #include "spdk/trace.h"
+#include "spdk/thread.h"
 #include "spdk_internal/trace_defs.h"
 
 #define SPDK_SOCK_DEFAULT_PRIORITY 0
@@ -955,6 +956,39 @@ spdk_sock_get_default_impl(void)
 	}
 
 	return NULL;
+}
+
+int
+spdk_sock_group_register_interrupt(struct spdk_sock_group *group, uint32_t events,
+				   spdk_interrupt_fn fn,
+				   void *arg, const char *name)
+{
+	struct spdk_sock_group_impl *group_impl = NULL;
+	int rc;
+
+	assert(group != NULL);
+	assert(fn != NULL);
+
+	STAILQ_FOREACH_FROM(group_impl, &group->group_impls, link) {
+		rc = group_impl->net_impl->group_impl_register_interrupt(group_impl, events, fn, arg, name);
+		if (rc != 0) {
+			return rc;
+		}
+	}
+
+	return 0;
+}
+
+void
+spdk_sock_group_unregister_interrupt(struct spdk_sock_group *group)
+{
+	struct spdk_sock_group_impl *group_impl = NULL;
+
+	assert(group != NULL);
+
+	STAILQ_FOREACH_FROM(group_impl, &group->group_impls, link) {
+		group_impl->net_impl->group_impl_unregister_interrupt(group_impl);
+	}
 }
 
 SPDK_LOG_REGISTER_COMPONENT(sock)

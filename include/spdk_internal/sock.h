@@ -108,6 +108,9 @@ struct spdk_net_impl {
 	int (*group_impl_remove_sock)(struct spdk_sock_group_impl *group, struct spdk_sock *sock);
 	int (*group_impl_poll)(struct spdk_sock_group_impl *group, int max_events,
 			       struct spdk_sock **socks);
+	int (*group_impl_register_interrupt)(struct spdk_sock_group_impl *group, uint32_t events,
+					     spdk_interrupt_fn fn, void *arg, const char *name);
+	void (*group_impl_unregister_interrupt)(struct spdk_sock_group_impl *group);
 	int (*group_impl_close)(struct spdk_sock_group_impl *group);
 
 	int (*get_opts)(struct spdk_sock_impl_opts *opts, size_t *len);
