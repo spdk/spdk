@@ -228,6 +228,13 @@ int
 spdk_fd_group_add(struct spdk_fd_group *fgrp, int efd, spdk_fd_fn fn,
 		  void *arg, const char *name)
 {
+	return spdk_fd_group_add_for_events(fgrp, efd, EPOLLIN, fn, arg, name);
+}
+
+int
+spdk_fd_group_add_for_events(struct spdk_fd_group *fgrp, int efd, uint32_t events,
+			     spdk_fd_fn fn, void *arg, const char *name)
+{
 	struct event_handler *ehdlr = NULL;
 	struct epoll_event epevent = {0};
 	int rc;
@@ -255,7 +262,7 @@ spdk_fd_group_add(struct spdk_fd_group *fgrp, int efd, spdk_fd_fn fn,
 	ehdlr->fn = fn;
 	ehdlr->fn_arg = arg;
 	ehdlr->state = EVENT_HANDLER_STATE_WAITING;
-	ehdlr->events = EPOLLIN;
+	ehdlr->events = events;
 	snprintf(ehdlr->name, sizeof(ehdlr->name), "%s", name);
 
 	if (fgrp->parent) {
@@ -502,6 +509,13 @@ spdk_fd_group_get_epoll_event(struct epoll_event *event)
 int
 spdk_fd_group_add(struct spdk_fd_group *fgrp, int efd, spdk_fd_fn fn,
 		  void *arg, const char *name)
+{
+	return -ENOTSUP;
+}
+
+int
+spdk_fd_group_add_for_events(struct spdk_fd_group *fgrp, int efd, uint32_t events, spdk_fd_fn fn,
+			     void *arg, const char *name)
 {
 	return -ENOTSUP;
 }

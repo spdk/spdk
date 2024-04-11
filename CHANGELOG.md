@@ -2,6 +2,12 @@
 
 ## v24.09: (Upcoming Release)
 
+### util
+
+New function `spdk_fd_group_add_for_events()` was added alongside the existing `spdk_fd_group_add()`.
+Difference is that new API allows for specifying a set of events to be monitored instead of default
+SPDK_INTERRUPT_EVENT_IN.
+
 ### nvmf
 
 Added public API 'spdk_nvmf_subsystem_set_cntlid_range' to set controller ID

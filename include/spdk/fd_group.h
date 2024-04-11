@@ -100,7 +100,9 @@ int spdk_fd_group_nest(struct spdk_fd_group *parent, struct spdk_fd_group *child
 int spdk_fd_group_unnest(struct spdk_fd_group *parent, struct spdk_fd_group *child);
 
 /**
- * Register one event source to specified fgrp.
+ * Register SPDK_INTERRUPT_EVENT_IN event source to specified fgrp.
+ *
+ * Use spdk_fd_group_add_for_events() for other event types.
  *
  * \param fgrp The fgrp registered to.
  * \param efd File descriptor of the event source.
@@ -112,6 +114,24 @@ int spdk_fd_group_unnest(struct spdk_fd_group *parent, struct spdk_fd_group *chi
  */
 int spdk_fd_group_add(struct spdk_fd_group *fgrp, int efd,
 		      spdk_fd_fn fn, void *arg, const char *name);
+
+/**
+ * Register one event source to specified fgrp with specific event types.
+ *
+ * Event types argument is a bit mask composed by ORing together
+ * enum spdk_interrupt_event_types values.
+ *
+ * \param fgrp The fgrp registered to.
+ * \param efd File descriptor of the event source.
+ * \param events Event notification types.
+ * \param fn Called each time there are events in event source.
+ * \param arg Function argument for fn.
+ * \param name Name of the event source.
+ *
+ * \return 0 if success or -errno if failed
+ */
+int spdk_fd_group_add_for_events(struct spdk_fd_group *fgrp, int efd, uint32_t events,
+				 spdk_fd_fn fn, void *arg,  const char *name);
 
 /*
  * \brief Register an event source with the name set to the string of the
