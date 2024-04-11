@@ -4,6 +4,8 @@
 
 ### nvmf
 
+Added support for interrupt mode in the NVMe-of TCP transport.
+
 Enable iobuf based queuing for nvmf requests when there is not enough free buffers available.
 Perspective from the user of the spdk_nvmf_request_get_buffers() API is that whenever all iovecs
 are allocated immediately then nothing changes compared to the previous implementation.

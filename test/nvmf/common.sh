@@ -30,6 +30,10 @@ function build_nvmf_app_args() {
 
 	NVMF_APP+=("${NO_HUGE[@]}")
 
+	if [ "$TEST_INTERRUPT_MODE" -eq 1 ]; then
+		NVMF_APP+=(--interrupt-mode)
+	fi
+
 	if [ -n "$SPDK_HUGE_DIR" ]; then
 		NVMF_APP+=(--huge-dir "$SPDK_HUGE_DIR")
 	elif [ $SPDK_RUN_NON_ROOT -eq 1 ]; then

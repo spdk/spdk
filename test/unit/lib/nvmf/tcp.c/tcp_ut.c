@@ -247,6 +247,10 @@ DEFINE_STUB(spdk_nvme_ns_get_format_index, uint32_t,
 
 DEFINE_STUB(spdk_sock_get_impl_name, const char *, (struct spdk_sock *sock), "");
 
+DEFINE_STUB(spdk_sock_group_register_interrupt, int, (struct spdk_sock_group *group,
+		uint32_t events, spdk_interrupt_fn fn, void *arg, const char *name), 0);
+DEFINE_STUB_V(spdk_sock_group_unregister_interrupt, (struct spdk_sock_group *group));
+
 DEFINE_STUB(spdk_nvmf_subsystem_is_discovery, bool, (struct spdk_nvmf_subsystem *subsystem), false);
 DEFINE_STUB(spdk_nvmf_subsystem_get_nqn, const char *,
 	    (const struct spdk_nvmf_subsystem *subsystem), NULL);

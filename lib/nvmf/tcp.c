@@ -683,6 +683,7 @@ nvmf_tcp_destroy(struct spdk_nvmf_transport *transport,
 	}
 
 	spdk_poller_unregister(&ttransport->accept_poller);
+	spdk_sock_group_unregister_interrupt(ttransport->listen_sock_group);
 	spdk_sock_group_close(&ttransport->listen_sock_group);
 	free(ttransport);
 
@@ -696,12 +697,20 @@ static int nvmf_tcp_accept(void *ctx);
 
 static void nvmf_tcp_accept_cb(void *ctx, struct spdk_sock_group *group, struct spdk_sock *sock);
 
+static void
+nvmf_tcp_poller_set_interrupt_mode_nop(struct spdk_poller *poller, void *cb_arg,
+				       bool interrupt_mode)
+{
+}
+
 static struct spdk_nvmf_transport *
 nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 {
 	struct spdk_nvmf_tcp_transport *ttransport;
 	uint32_t sge_count;
 	uint32_t min_shared_buffers;
+	int rc;
+	uint64_t period;
 
 	ttransport = calloc(1, sizeof(*ttransport));
 	if (!ttransport) {
@@ -817,12 +826,15 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		}
 	}
 
-	ttransport->accept_poller = SPDK_POLLER_REGISTER(nvmf_tcp_accept, &ttransport->transport,
-				    opts->acceptor_poll_rate);
+	period = spdk_interrupt_mode_is_enabled() ? 0 : opts->acceptor_poll_rate;
+	ttransport->accept_poller = SPDK_POLLER_REGISTER(nvmf_tcp_accept, &ttransport->transport, period);
 	if (!ttransport->accept_poller) {
 		free(ttransport);
 		return NULL;
 	}
+
+	spdk_poller_register_interrupt(ttransport->accept_poller, nvmf_tcp_poller_set_interrupt_mode_nop,
+				       NULL);
 
 	ttransport->listen_sock_group = spdk_sock_group_create(NULL);
 	if (ttransport->listen_sock_group == NULL) {
@@ -830,6 +842,18 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		spdk_poller_unregister(&ttransport->accept_poller);
 		free(ttransport);
 		return NULL;
+	}
+
+	if (spdk_interrupt_mode_is_enabled()) {
+		rc = SPDK_SOCK_GROUP_REGISTER_INTERRUPT(ttransport->listen_sock_group,
+							SPDK_INTERRUPT_EVENT_IN | SPDK_INTERRUPT_EVENT_OUT, nvmf_tcp_accept, &ttransport->transport);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to register interrupt for listen socker sock group\n");
+			spdk_sock_group_close(&ttransport->listen_sock_group);
+			spdk_poller_unregister(&ttransport->accept_poller);
+			free(ttransport);
+			return NULL;
+		}
 	}
 
 	return &ttransport->transport;
@@ -1569,17 +1593,26 @@ nvmf_tcp_control_msg_list_free(struct spdk_nvmf_tcp_control_msg_list *list)
 	free(list);
 }
 
+static int nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group);
+
+static int
+nvmf_tcp_poll_group_intr(void *ctx)
+{
+	struct spdk_nvmf_transport_poll_group *group = ctx;
+	int ret = 0;
+
+	ret = nvmf_tcp_poll_group_poll(group);
+
+	return ret != 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
+}
+
 static struct spdk_nvmf_transport_poll_group *
 nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport,
 			   struct spdk_nvmf_poll_group *group)
 {
 	struct spdk_nvmf_tcp_transport	*ttransport;
 	struct spdk_nvmf_tcp_poll_group *tgroup;
-
-	if (spdk_interrupt_mode_is_enabled()) {
-		SPDK_ERRLOG("TCP transport does not support interrupt mode\n");
-		return NULL;
-	}
+	int rc;
 
 	tgroup = calloc(1, sizeof(*tgroup));
 	if (!tgroup) {
@@ -1615,6 +1648,15 @@ nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport,
 	TAILQ_INSERT_TAIL(&ttransport->poll_groups, tgroup, link);
 	if (ttransport->next_pg == NULL) {
 		ttransport->next_pg = tgroup;
+	}
+
+	if (spdk_interrupt_mode_is_enabled()) {
+		rc = SPDK_SOCK_GROUP_REGISTER_INTERRUPT(tgroup->sock_group,
+							SPDK_INTERRUPT_EVENT_IN | SPDK_INTERRUPT_EVENT_OUT, nvmf_tcp_poll_group_intr, &tgroup->group);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to register interrupt for sock group\n");
+			goto cleanup;
+		}
 	}
 
 	return &tgroup->group;
@@ -1668,6 +1710,7 @@ nvmf_tcp_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	struct spdk_nvmf_tcp_transport *ttransport;
 
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
+	spdk_sock_group_unregister_interrupt(tgroup->sock_group);
 	spdk_sock_group_close(&tgroup->sock_group);
 	if (tgroup->control_msg_list) {
 		nvmf_tcp_control_msg_list_free(tgroup->control_msg_list);
@@ -3325,7 +3368,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 }
 
 static void
-nvmf_tcp_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
+tcp_sock_cb(void *arg)
 {
 	struct spdk_nvmf_tcp_qpair *tqpair = arg;
 	int rc;
@@ -3337,6 +3380,12 @@ nvmf_tcp_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *soc
 	if (rc < 0) {
 		nvmf_tcp_qpair_disconnect(tqpair);
 	}
+}
+
+static void
+nvmf_tcp_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
+{
+	tcp_sock_cb(arg);
 }
 
 static int
@@ -3421,9 +3470,11 @@ nvmf_tcp_req_complete(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_tcp_transport *ttransport;
 	struct spdk_nvmf_tcp_req *tcp_req;
+	struct spdk_nvmf_tcp_qpair *tqpair;
 
 	ttransport = SPDK_CONTAINEROF(req->qpair->transport, struct spdk_nvmf_tcp_transport, transport);
 	tcp_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_tcp_req, req);
+	tqpair = SPDK_CONTAINEROF(req->qpair, struct spdk_nvmf_tcp_qpair, qpair);
 
 	switch (tcp_req->state) {
 	case TCP_REQUEST_STATE_EXECUTING:
@@ -3435,6 +3486,15 @@ nvmf_tcp_req_complete(struct spdk_nvmf_request *req)
 		break;
 	case TCP_REQUEST_STATE_AWAITING_ZCOPY_RELEASE:
 		nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_COMPLETED);
+		/* In the interrupt mode it's possible that all responses are already written out over
+		 * the socket but zero-copy buffers are still not released. In that case there won't be
+		 * any event to trigger further socket processing. Send msg to a thread to avoid deadlock.
+		 */
+		if (spdk_unlikely(spdk_interrupt_mode_is_enabled() &&
+				  tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_REQ &&
+				  spdk_nvmf_qpair_is_active(&tqpair->qpair))) {
+			spdk_thread_send_msg(spdk_get_thread(), tcp_sock_cb, tqpair);
+		}
 		break;
 	default:
 		SPDK_ERRLOG("Unexpected request state %d (cntlid:%d, qid:%d)\n",

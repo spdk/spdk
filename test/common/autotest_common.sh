@@ -309,6 +309,9 @@ for i in "$@"; do
 		--no-hugepages)
 			NO_HUGE=(--no-huge -s 1024)
 			;;
+		--interrupt-mode)
+			TEST_INTERRUPT_MODE=1
+			;;
 	esac
 done
 
