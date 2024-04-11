@@ -20,6 +20,14 @@ function connect() {
 	waitforserial "$NVMF_SERIAL" $1
 	ctrl_id=$(nvme list-subsys -o json \
 		| jq -r '.[].Subsystems[] | select(.NQN=='\"$SUBSYSNQN\"') | .Paths[0].Name')
+	if [[ -z "$ctrl_id" ]]; then
+		# The filter returned empty, so dump the raw JSON contents so we
+		# can try to debug why - whether the connect actually failed
+		# or we just aren't filtering the JSON correctly.
+		# We ran into this with issue #3337, which is now resolved, but
+		# leave this here just in case this pops up again in the future.
+		nvme list-subsys -o json
+	fi
 }
 
 function disconnect() {
