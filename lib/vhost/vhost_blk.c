@@ -1195,7 +1195,7 @@ vhost_user_session_bdev_remove_cb(struct spdk_vhost_dev *vdev,
 	bvsession = to_blk_session(vsession);
 	if (bvsession->requestq_poller) {
 		spdk_poller_unregister(&bvsession->requestq_poller);
-		if (vsession->interrupt_mode) {
+		if (spdk_interrupt_mode_is_enabled()) {
 			vhost_blk_session_unregister_interrupts(bvsession);
 			rc = vhost_blk_session_register_no_bdev_interrupts(bvsession);
 			if (rc) {

@@ -149,7 +149,7 @@ vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *reqs,
 
 	spdk_smp_rmb();
 
-	if (virtqueue->vsession && spdk_unlikely(virtqueue->vsession->interrupt_mode)) {
+	if (virtqueue->vsession && spdk_unlikely(spdk_interrupt_mode_is_enabled())) {
 		/* Read to clear vring's kickfd */
 		rc = read(vring->kickfd, &u64_value, sizeof(u64_value));
 		if (rc < 0) {
@@ -174,7 +174,7 @@ vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *reqs,
 
 	virtqueue->last_avail_idx += count;
 	/* Check whether there are unprocessed reqs in vq, then kick vq manually */
-	if (virtqueue->vsession && spdk_unlikely(virtqueue->vsession->interrupt_mode)) {
+	if (virtqueue->vsession && spdk_unlikely(spdk_interrupt_mode_is_enabled())) {
 		/* If avail_idx is larger than virtqueue's last_avail_idx, then there is unprocessed reqs.
 		 * avail_idx should get updated here from memory, in case of race condition with guest.
 		 */
@@ -472,7 +472,7 @@ vhost_vq_used_ring_enqueue(struct spdk_vhost_session *vsession,
 
 	virtqueue->used_req_cnt++;
 
-	if (vsession->interrupt_mode) {
+	if (spdk_unlikely(spdk_interrupt_mode_is_enabled())) {
 		if (virtqueue->vring.desc == NULL || vhost_vq_event_is_suppressed(virtqueue)) {
 			return;
 		}
@@ -1431,11 +1431,6 @@ vhost_user_session_set_interrupt_mode(struct spdk_vhost_session *vsession, bool 
 			if (rc < 0) {
 				SPDK_ERRLOG("failed to kick vring: %s.\n", spdk_strerror(errno));
 			}
-
-			vsession->interrupt_mode = true;
-		} else {
-
-			vsession->interrupt_mode = false;
 		}
 	}
 }
