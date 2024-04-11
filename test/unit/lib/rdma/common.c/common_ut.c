@@ -6,7 +6,7 @@
 #include "spdk_internal/cunit.h"
 #include "spdk_internal/mock.h"
 #include "common/lib/test_env.c"
-#include "rdma_provider/common.c"
+#include "rdma_utils/rdma_utils.c"
 
 DEFINE_STUB(spdk_mem_map_alloc, struct spdk_mem_map *, (uint64_t default_translation,
 		const struct spdk_mem_map_ops *ops, void *cb_ctx), NULL);
@@ -118,10 +118,10 @@ ut_rdma_remove_dev(struct ut_rdma_device *ut_dev)
 	free(ut_dev);
 }
 
-static struct spdk_rdma_device *
+static struct rdma_utils_device *
 _rdma_get_dev(struct ibv_context *context)
 {
-	struct spdk_rdma_device *dev;
+	struct rdma_utils_device *dev;
 
 	TAILQ_FOREACH(dev, &g_dev_list, tailq) {
 		if (dev->context == context) {
@@ -151,9 +151,9 @@ test_spdk_rdma_pd(void)
 	ut_dev2->removed = true;
 
 	/* Call spdk_rdma_get_pd() to non-existent ut_dev2. */
-	pd2 = spdk_rdma_get_pd(ut_dev2->context);
+	pd2 = spdk_rdma_utils_get_pd(ut_dev2->context);
 
-	/* Then, spdk_rdma_get_pd() should return NULL and g_dev_list should have dev0 and dev1. */
+	/* Then, spdk_rdma_utils_get_pd() should return NULL and g_dev_list should have dev0 and dev1. */
 	CU_ASSERT(pd2 == NULL);
 	CU_ASSERT(_rdma_get_dev(ut_dev0->context) != NULL);
 	CU_ASSERT(_rdma_get_dev(ut_dev1->context) != NULL);
@@ -163,10 +163,10 @@ test_spdk_rdma_pd(void)
 	ut_dev0->removed = true;
 	ut_dev2->removed = false;
 
-	/* Call spdk_rdma_get_pd() to ut_dev1. */
-	pd1 = spdk_rdma_get_pd(ut_dev1->context);
+	/* Call spdk_rdma_utils_get_pd() to ut_dev1. */
+	pd1 = spdk_rdma_utils_get_pd(ut_dev1->context);
 
-	/* Then, spdk_rdma_get_pd() should return pd1 and g_dev_list should have dev1 and dev2. */
+	/* Then, spdk_rdma_utils_get_pd() should return pd1 and g_dev_list should have dev1 and dev2. */
 	CU_ASSERT(pd1 != NULL);
 	CU_ASSERT(_rdma_get_dev(ut_dev0->context) == NULL);
 	CU_ASSERT(_rdma_get_dev(ut_dev1->context) != NULL);
@@ -175,38 +175,38 @@ test_spdk_rdma_pd(void)
 	/* Remove ut_dev1. */
 	ut_dev1->removed = true;
 
-	/* Call spdk_rdma_get_pd() again to ut_dev1 which does not exist anymore. */
-	pd1_1 = spdk_rdma_get_pd(ut_dev1->context);
+	/* Call spdk_rdma_utils_get_pd() again to ut_dev1 which does not exist anymore. */
+	pd1_1 = spdk_rdma_utils_get_pd(ut_dev1->context);
 
-	/* Then, spdk_rdma_get_pd() should return NULL and g_dev_list should still have dev1. */
+	/* Then, spdk_rdma_utils_get_pd() should return NULL and g_dev_list should still have dev1. */
 	CU_ASSERT(pd1_1 == NULL);
 	CU_ASSERT(_rdma_get_dev(ut_dev0->context) == NULL);
 	CU_ASSERT(_rdma_get_dev(ut_dev1->context) != NULL);
 	CU_ASSERT(_rdma_get_dev(ut_dev2->context) != NULL);
 
-	/* Call spdk_rdma_put_pd() to pd1. */
-	spdk_rdma_put_pd(pd1);
+	/* Call spdk_rdma_utils_put_pd() to pd1. */
+	spdk_rdma_utils_put_pd(pd1);
 
 	/* Then, dev1 should be removed from g_dev_list. */
 	CU_ASSERT(_rdma_get_dev(ut_dev0->context) == NULL);
 	CU_ASSERT(_rdma_get_dev(ut_dev1->context) == NULL);
 	CU_ASSERT(_rdma_get_dev(ut_dev2->context) != NULL);
 
-	/* Call spdk_rdma_get_pd() to ut_dev2. */
-	pd2 = spdk_rdma_get_pd(ut_dev2->context);
+	/* Call spdk_rdma_utils_get_pd() to ut_dev2. */
+	pd2 = spdk_rdma_utils_get_pd(ut_dev2->context);
 
-	/* spdk_rdma_get_pd() should succeed and g_dev_list should still have dev2
-	 * even after spdk_rdma_put_pd() is called to pd2.
+	/* spdk_rdma_utils_get_pd() should succeed and g_dev_list should still have dev2
+	 * even after spdk_rdma_utils_put_pd() is called to pd2.
 	 */
 	CU_ASSERT(pd2 != NULL);
 
-	spdk_rdma_put_pd(pd2);
+	spdk_rdma_utils_put_pd(pd2);
 
 	CU_ASSERT(_rdma_get_dev(ut_dev0->context) == NULL);
 	CU_ASSERT(_rdma_get_dev(ut_dev1->context) == NULL);
 	CU_ASSERT(_rdma_get_dev(ut_dev2->context) != NULL);
 
-	_rdma_fini();
+	_rdma_utils_fini();
 
 	ut_rdma_remove_dev(ut_dev0);
 	ut_rdma_remove_dev(ut_dev1);

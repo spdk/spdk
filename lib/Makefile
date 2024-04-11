@@ -30,6 +30,7 @@ DIRS-$(CONFIG_VHOST) += vhost
 DIRS-$(CONFIG_VIRTIO) += virtio
 DIRS-$(CONFIG_VBDEV_COMPRESS) += reduce
 DIRS-$(CONFIG_RDMA) += rdma_provider
+DIRS-$(CONFIG_RDMA) += rdma_utils
 DIRS-$(CONFIG_VFIO_USER) += vfu_tgt
 
 ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)

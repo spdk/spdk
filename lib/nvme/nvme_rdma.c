@@ -24,6 +24,7 @@
 
 #include "nvme_internal.h"
 #include "spdk_internal/rdma_provider.h"
+#include "spdk_internal/rdma_utils.h"
 
 #define NVME_RDMA_TIME_OUT_IN_MS 2000
 #define NVME_RDMA_RW_BUFFER_SIZE 131072
@@ -138,7 +139,7 @@ struct nvme_rdma_poller {
 	struct spdk_rdma_provider_srq	*srq;
 	struct nvme_rdma_rsps		*rsps;
 	struct ibv_pd			*pd;
-	struct spdk_rdma_mem_map	*mr_map;
+	struct spdk_rdma_utils_mem_map	*mr_map;
 	uint32_t			refcnt;
 	int				required_num_wc;
 	int				current_num_wc;
@@ -175,7 +176,7 @@ struct nvme_rdma_rsp_opts {
 	uint16_t				num_entries;
 	struct nvme_rdma_qpair			*rqpair;
 	struct spdk_rdma_provider_srq		*srq;
-	struct spdk_rdma_mem_map		*mr_map;
+	struct spdk_rdma_utils_mem_map		*mr_map;
 };
 
 struct nvme_rdma_rsps {
@@ -221,7 +222,7 @@ struct nvme_rdma_qpair {
 	 */
 	struct spdk_nvmf_cmd			*cmds;
 
-	struct spdk_rdma_mem_map		*mr_map;
+	struct spdk_rdma_utils_mem_map		*mr_map;
 
 	TAILQ_HEAD(, spdk_nvme_rdma_req)	free_reqs;
 	TAILQ_HEAD(, spdk_nvme_rdma_req)	outstanding_reqs;
@@ -784,7 +785,7 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 	if (g_nvme_hooks.get_ibv_pd) {
 		attr.pd = g_nvme_hooks.get_ibv_pd(&rctrlr->ctrlr.trid, rqpair->cm_id->verbs);
 	} else {
-		attr.pd = spdk_rdma_get_pd(rqpair->cm_id->verbs);
+		attr.pd = spdk_rdma_utils_get_pd(rqpair->cm_id->verbs);
 	}
 
 	attr.stats =		rqpair->poller ? &rqpair->poller->stats.rdma_stats : NULL;
@@ -913,7 +914,7 @@ static struct nvme_rdma_rsps *
 nvme_rdma_create_rsps(struct nvme_rdma_rsp_opts *opts)
 {
 	struct nvme_rdma_rsps *rsps;
-	struct spdk_rdma_memory_translation translation;
+	struct spdk_rdma_utils_memory_translation translation;
 	uint16_t i;
 	int rc;
 
@@ -954,11 +955,11 @@ nvme_rdma_create_rsps(struct nvme_rdma_rsp_opts *opts)
 		rsp->recv_wr = recv_wr;
 		rsp_sgl->addr = (uint64_t)rsp;
 		rsp_sgl->length = sizeof(struct spdk_nvme_cpl);
-		rc = spdk_rdma_get_translation(opts->mr_map, rsp, sizeof(*rsp), &translation);
+		rc = spdk_rdma_utils_get_translation(opts->mr_map, rsp, sizeof(*rsp), &translation);
 		if (rc) {
 			goto fail;
 		}
-		rsp_sgl->lkey = spdk_rdma_memory_translation_get_lkey(&translation);
+		rsp_sgl->lkey = spdk_rdma_utils_memory_translation_get_lkey(&translation);
 
 		recv_wr->wr_id = (uint64_t)&rsp->rdma_wr;
 		recv_wr->next = NULL;
@@ -1000,7 +1001,7 @@ nvme_rdma_free_reqs(struct nvme_rdma_qpair *rqpair)
 static int
 nvme_rdma_create_reqs(struct nvme_rdma_qpair *rqpair)
 {
-	struct spdk_rdma_memory_translation translation;
+	struct spdk_rdma_utils_memory_translation translation;
 	uint16_t i;
 	int rc;
 
@@ -1032,11 +1033,11 @@ nvme_rdma_create_reqs(struct nvme_rdma_qpair *rqpair)
 
 		rdma_req->id = i;
 
-		rc = spdk_rdma_get_translation(rqpair->mr_map, cmd, sizeof(*cmd), &translation);
+		rc = spdk_rdma_utils_get_translation(rqpair->mr_map, cmd, sizeof(*cmd), &translation);
 		if (rc) {
 			goto fail;
 		}
-		rdma_req->send_sgl[0].lkey = spdk_rdma_memory_translation_get_lkey(&translation);
+		rdma_req->send_sgl[0].lkey = spdk_rdma_utils_memory_translation_get_lkey(&translation);
 
 		/* The first RDMA sgl element will always point
 		 * at this data structure. Depending on whether
@@ -1169,8 +1170,8 @@ nvme_rdma_connect_established(struct nvme_rdma_qpair *rqpair, int ret)
 	}
 
 	assert(!rqpair->mr_map);
-	rqpair->mr_map = spdk_rdma_create_mem_map(rqpair->rdma_qp->qp->pd, &g_nvme_hooks,
-			 SPDK_RDMA_MEMORY_MAP_ROLE_INITIATOR);
+	rqpair->mr_map = spdk_rdma_utils_create_mem_map(rqpair->rdma_qp->qp->pd, &g_nvme_hooks,
+			 SPDK_RDMA_UTILS_MEMORY_MAP_ROLE_INITIATOR);
 	if (!rqpair->mr_map) {
 		SPDK_ERRLOG("Unable to register RDMA memory translation map\n");
 		return -1;
@@ -1428,7 +1429,7 @@ nvme_rdma_get_memory_translation(struct nvme_request *req, struct nvme_rdma_qpai
 {
 	struct spdk_memory_domain_translation_ctx ctx;
 	struct spdk_memory_domain_translation_result dma_translation = {.iov_count = 0};
-	struct spdk_rdma_memory_translation rdma_translation;
+	struct spdk_rdma_utils_memory_translation rdma_translation;
 	int rc;
 
 	assert(req);
@@ -1454,12 +1455,12 @@ nvme_rdma_get_memory_translation(struct nvme_request *req, struct nvme_rdma_qpai
 		_ctx->addr = dma_translation.iov.iov_base;
 		_ctx->length = dma_translation.iov.iov_len;
 	} else {
-		rc = spdk_rdma_get_translation(rqpair->mr_map, _ctx->addr, _ctx->length, &rdma_translation);
+		rc = spdk_rdma_utils_get_translation(rqpair->mr_map, _ctx->addr, _ctx->length, &rdma_translation);
 		if (spdk_unlikely(rc)) {
 			SPDK_ERRLOG("RDMA memory translation failed, rc %d\n", rc);
 			return rc;
 		}
-		if (rdma_translation.translation_type == SPDK_RDMA_TRANSLATION_MR) {
+		if (rdma_translation.translation_type == SPDK_RDMA_UTILS_TRANSLATION_MR) {
 			_ctx->lkey = rdma_translation.mr_or_key.mr->lkey;
 			_ctx->rkey = rdma_translation.mr_or_key.mr->rkey;
 		} else {
@@ -1859,7 +1860,7 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 	struct nvme_rdma_ctrlr *rctrlr;
 	struct nvme_rdma_cm_event_entry *entry, *tmp;
 
-	spdk_rdma_free_mem_map(&rqpair->mr_map);
+	spdk_rdma_utils_free_mem_map(&rqpair->mr_map);
 
 	if (rqpair->evt) {
 		rdma_ack_cm_event(rqpair->evt);
@@ -1883,7 +1884,7 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 
 	if (rqpair->cm_id) {
 		if (rqpair->rdma_qp) {
-			spdk_rdma_put_pd(rqpair->rdma_qp->qp->pd);
+			spdk_rdma_utils_put_pd(rqpair->rdma_qp->qp->pd);
 			spdk_rdma_provider_qp_destroy(rqpair->rdma_qp);
 			rqpair->rdma_qp = NULL;
 		}
@@ -2895,10 +2896,10 @@ nvme_rdma_poller_destroy(struct nvme_rdma_poller *poller)
 		spdk_rdma_provider_srq_destroy(poller->srq);
 	}
 	if (poller->mr_map) {
-		spdk_rdma_free_mem_map(&poller->mr_map);
+		spdk_rdma_utils_free_mem_map(&poller->mr_map);
 	}
 	if (poller->pd) {
-		spdk_rdma_put_pd(poller->pd);
+		spdk_rdma_utils_put_pd(poller->pd);
 	}
 	free(poller);
 }
@@ -2929,14 +2930,14 @@ nvme_rdma_poller_create(struct nvme_rdma_poll_group *group, struct ibv_context *
 			goto fail;
 		}
 
-		poller->pd = spdk_rdma_get_pd(ctx);
+		poller->pd = spdk_rdma_utils_get_pd(ctx);
 		if (poller->pd == NULL) {
 			SPDK_ERRLOG("Unable to get PD.\n");
 			goto fail;
 		}
 
-		poller->mr_map = spdk_rdma_create_mem_map(poller->pd, &g_nvme_hooks,
-				 SPDK_RDMA_MEMORY_MAP_ROLE_INITIATOR);
+		poller->mr_map = spdk_rdma_utils_create_mem_map(poller->pd, &g_nvme_hooks,
+				 SPDK_RDMA_UTILS_MEMORY_MAP_ROLE_INITIATOR);
 		if (poller->mr_map == NULL) {
 			SPDK_ERRLOG("Unable to create memory map.\n");
 			goto fail;

@@ -7,6 +7,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk_internal/rdma_provider.h"
+#include "spdk_internal/rdma_utils.h"
 #include "spdk_internal/mock.h"
 
 #define RDMA_UT_LKEY 123
@@ -39,9 +40,9 @@ DEFINE_STUB(spdk_rdma_provider_qp_queue_recv_wrs, bool, (struct spdk_rdma_provid
 		struct ibv_recv_wr *first), true);
 DEFINE_STUB(spdk_rdma_provider_qp_flush_recv_wrs, int, (struct spdk_rdma_provider_qp *spdk_rdma_qp,
 		struct ibv_recv_wr **bad_wr), 0);
-DEFINE_STUB(spdk_rdma_create_mem_map, struct spdk_rdma_mem_map *, (struct ibv_pd *pd,
-		struct spdk_nvme_rdma_hooks *hooks, enum spdk_rdma_memory_map_role role), NULL);
-DEFINE_STUB_V(spdk_rdma_free_mem_map, (struct spdk_rdma_mem_map **map));
+DEFINE_STUB(spdk_rdma_utils_create_mem_map, struct spdk_rdma_utils_mem_map *, (struct ibv_pd *pd,
+		struct spdk_nvme_rdma_hooks *hooks, enum spdk_rdma_utils_memory_map_role role), NULL);
+DEFINE_STUB_V(spdk_rdma_utils_free_mem_map, (struct spdk_rdma_utils_mem_map **map));
 
 /* used to mock out having to split an SGL over a memory region */
 size_t g_mr_size;
@@ -52,14 +53,14 @@ struct ibv_mr g_rdma_mr = {
 	.rkey = RDMA_UT_RKEY
 };
 
-DEFINE_RETURN_MOCK(spdk_rdma_get_translation, int);
+DEFINE_RETURN_MOCK(spdk_rdma_utils_get_translation, int);
 int
-spdk_rdma_get_translation(struct spdk_rdma_mem_map *map, void *address,
-			  size_t length, struct spdk_rdma_memory_translation *translation)
+spdk_rdma_utils_get_translation(struct spdk_rdma_utils_mem_map *map, void *address,
+				size_t length, struct spdk_rdma_utils_memory_translation *translation)
 {
 	translation->mr_or_key.mr = &g_rdma_mr;
-	translation->translation_type = SPDK_RDMA_TRANSLATION_MR;
-	HANDLE_RETURN_MOCK(spdk_rdma_get_translation);
+	translation->translation_type = SPDK_RDMA_UTILS_TRANSLATION_MR;
+	HANDLE_RETURN_MOCK(spdk_rdma_utils_get_translation);
 
 	if (g_mr_size && length > g_mr_size) {
 		if (g_mr_next_size) {
@@ -71,12 +72,12 @@ spdk_rdma_get_translation(struct spdk_rdma_mem_map *map, void *address,
 	return 0;
 }
 
-DEFINE_RETURN_MOCK(spdk_rdma_get_pd, struct ibv_pd *);
+DEFINE_RETURN_MOCK(spdk_rdma_utils_get_pd, struct ibv_pd *);
 struct ibv_pd *
-spdk_rdma_get_pd(struct ibv_context *context)
+spdk_rdma_utils_get_pd(struct ibv_context *context)
 {
-	HANDLE_RETURN_MOCK(spdk_rdma_get_pd);
+	HANDLE_RETURN_MOCK(spdk_rdma_utils_get_pd);
 	return NULL;
 }
 
-DEFINE_STUB_V(spdk_rdma_put_pd, (struct ibv_pd *pd));
+DEFINE_STUB_V(spdk_rdma_utils_put_pd, (struct ibv_pd *pd));

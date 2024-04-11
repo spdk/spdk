@@ -13,7 +13,7 @@
 #include "spdk/util.h"
 
 #include "spdk_internal/mlx5.h"
-#include "spdk_internal/rdma_provider.h"
+#include "spdk_internal/rdma_utils.h"
 #include "spdk/accel_module.h"
 #include "spdk_internal/assert.h"
 #include "spdk_internal/sgl.h"
@@ -102,7 +102,7 @@ struct accel_mlx5_qp {
 struct accel_mlx5_dev {
 	struct accel_mlx5_qp *qp;
 	struct ibv_cq *cq;
-	struct spdk_rdma_mem_map *mmap;
+	struct spdk_rdma_utils_mem_map *mmap;
 	struct accel_mlx5_crypto_dev_ctx *dev_ctx;
 	uint32_t reqs_submitted;
 	uint32_t max_reqs;
@@ -304,7 +304,7 @@ static inline int
 accel_mlx5_fill_block_sge(struct accel_mlx5_req *req, struct ibv_sge *sge,
 			  struct spdk_iov_sgl *iovs)
 {
-	struct spdk_rdma_memory_translation translation;
+	struct spdk_rdma_utils_memory_translation translation;
 	void *addr;
 	uint32_t remaining = req->task->base.block_size;
 	uint32_t size;
@@ -314,13 +314,13 @@ accel_mlx5_fill_block_sge(struct accel_mlx5_req *req, struct ibv_sge *sge,
 	while (remaining) {
 		size = spdk_min(remaining, iovs->iov->iov_len - iovs->iov_offset);
 		addr = (void *)iovs->iov->iov_base + iovs->iov_offset;
-		rc = spdk_rdma_get_translation(req->task->dev->mmap, addr, size, &translation);
+		rc = spdk_rdma_utils_get_translation(req->task->dev->mmap, addr, size, &translation);
 		if (spdk_unlikely(rc)) {
 			SPDK_ERRLOG("Memory translation failed, addr %p, length %u\n", addr, size);
 			return rc;
 		}
 		spdk_iov_sgl_advance(iovs, size);
-		sge[i].lkey = spdk_rdma_memory_translation_get_lkey(&translation);
+		sge[i].lkey = spdk_rdma_utils_memory_translation_get_lkey(&translation);
 		sge[i].addr = (uint64_t)addr;
 		sge[i].length = size;
 		i++;
@@ -843,7 +843,7 @@ accel_mlx5_destroy_cb(void *io_device, void *ctx_buf)
 			ibv_destroy_cq(dev->cq);
 			dev->cq = NULL;
 		}
-		spdk_rdma_free_mem_map(&dev->mmap);
+		spdk_rdma_utils_free_mem_map(&dev->mmap);
 	}
 	free(ch->devs);
 }
@@ -888,7 +888,8 @@ accel_mlx5_create_cb(void *io_device, void *ctx_buf)
 		/* Each request consumes 2 WQE - MKEY and RDMA_WRITE. MKEY is unsignaled, so we count only RDMA_WRITE completions.
 		 * Divide user defined qp_size by two for simplicity */
 		dev->max_reqs = g_accel_mlx5.attr.qp_size / 2;
-		dev->mmap = spdk_rdma_create_mem_map(dev_ctx->pd, NULL, SPDK_RDMA_MEMORY_MAP_ROLE_INITIATOR);
+		dev->mmap = spdk_rdma_utils_create_mem_map(dev_ctx->pd, NULL,
+				SPDK_RDMA_UTILS_MEMORY_MAP_ROLE_INITIATOR);
 		if (!dev->mmap) {
 			SPDK_ERRLOG("Failed to create memory map\n");
 			accel_mlx5_qp_destroy(dev->qp);
@@ -960,7 +961,7 @@ accel_mlx5_free_resources(void)
 
 	for (i = 0; i < g_accel_mlx5.num_crypto_ctxs; i++) {
 		accel_mlx5_release_reqs(&g_accel_mlx5.crypto_ctxs[i]);
-		spdk_rdma_put_pd(g_accel_mlx5.crypto_ctxs[i].pd);
+		spdk_rdma_utils_put_pd(g_accel_mlx5.crypto_ctxs[i].pd);
 	}
 
 	free(g_accel_mlx5.crypto_ctxs);
@@ -1070,7 +1071,7 @@ accel_mlx5_init(void)
 	for (i = 0; i < num_devs; i++) {
 		crypto_dev_ctx = &g_accel_mlx5.crypto_ctxs[i];
 		dev = rdma_devs[i];
-		pd = spdk_rdma_get_pd(dev);
+		pd = spdk_rdma_utils_get_pd(dev);
 		if (!pd) {
 			SPDK_ERRLOG("Failed to get PD for context %p, dev %s\n", dev, dev->device->name);
 			rc = -EINVAL;

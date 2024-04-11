@@ -12,7 +12,7 @@
 #include "spdk/likely.h"
 #include "spdk/util.h"
 #include "spdk_internal/mlx5.h"
-#include "spdk_internal/rdma_provider.h"
+#include "spdk_internal/rdma_utils.h"
 
 #define MLX5_VENDOR_ID_MELLANOX 0x2c9
 
@@ -144,7 +144,7 @@ spdk_mlx5_crypto_keytag_destroy(struct spdk_mlx5_crypto_keytag *keytag)
 			mlx5dv_dek_destroy(dek->dek_obj);
 		}
 		if (dek->pd) {
-			spdk_rdma_put_pd(dek->pd);
+			spdk_rdma_utils_put_pd(dek->pd);
 		}
 	}
 	spdk_memset_s(keytag->keytag, sizeof(keytag->keytag), 0, sizeof(keytag->keytag));
@@ -223,7 +223,7 @@ spdk_mlx5_crypto_keytag_create(struct spdk_mlx5_crypto_dek_create_attr *attr,
 	for (i = 0; i < num_devs; i++) {
 		keytag->deks_num++;
 		dek = &keytag->deks[i];
-		dek->pd = spdk_rdma_get_pd(devs[i]);
+		dek->pd = spdk_rdma_utils_get_pd(devs[i]);
 		if (!dek->pd) {
 			SPDK_ERRLOG("Failed to get PD on device %s\n", devs[i]->device->name);
 			rc = -EINVAL;

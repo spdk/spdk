@@ -36,6 +36,7 @@ endif
 DEPDIRS-conf := log util
 DEPDIRS-json := log util
 DEPDIRS-rdma_provider := log util
+DEPDIRS-rdma_utils := log util
 DEPDIRS-reduce := log util
 DEPDIRS-thread := log util trace
 DEPDIRS-keyring := log util $(JSON_LIBS)
@@ -45,7 +46,7 @@ ifeq ($(CONFIG_VFIO_USER),y)
 DEPDIRS-nvme += vfio_user
 endif
 ifeq ($(CONFIG_RDMA),y)
-DEPDIRS-nvme += rdma_provider
+DEPDIRS-nvme += rdma_provider rdma_utils
 endif
 
 DEPDIRS-blob := log util thread dma
@@ -74,10 +75,10 @@ DEPDIRS-ublk := log util thread $(JSON_LIBS) bdev
 endif
 DEPDIRS-nvmf := accel log sock util nvme thread $(JSON_LIBS) trace bdev keyring
 ifeq ($(CONFIG_RDMA),y)
-DEPDIRS-nvmf += rdma_provider
+DEPDIRS-nvmf += rdma_provider rdma_utils
 endif
 ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
-DEPDIRS-mlx5 = log rdma_provider util
+DEPDIRS-mlx5 = log rdma_utils util
 endif
 DEPDIRS-scsi := log util thread $(JSON_LIBS) trace bdev
 
@@ -108,7 +109,7 @@ DEPDIRS-accel_dpdk_compressdev := log thread $(JSON_LIBS) accel util
 DEPDIRS-accel_error := accel $(JSON_LIBS) thread util
 
 ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
-DEPDIRS-accel_mlx5 := accel thread log mlx5 rdma_provider util
+DEPDIRS-accel_mlx5 := accel thread log mlx5 rdma_utils util
 endif
 
 # module/env_dpdk

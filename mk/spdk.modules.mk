@@ -50,7 +50,7 @@ endif
 endif
 
 ifeq ($(CONFIG_RDMA),y)
-BLOCKDEV_MODULES_LIST += rdma_provider
+BLOCKDEV_MODULES_LIST += rdma_provider rdma_utils
 BLOCKDEV_MODULES_PRIVATE_LIBS += -libverbs -lrdmacm
 ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
 BLOCKDEV_MODULES_PRIVATE_LIBS += -lmlx5
