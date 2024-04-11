@@ -87,9 +87,16 @@ struct spdk_uring_sock {
 	int					zcopy_send_flags;
 	int					connection_status;
 	int					placement_id;
+	uint8_t                                 reserved[4];
 	uint8_t					buf[SPDK_SOCK_CMG_INFO_SIZE];
 	TAILQ_ENTRY(spdk_uring_sock)		link;
 };
+/* 'struct cmsghdr' is mapped to the buffer 'buf', and while first element
+ * of this control message header has a size of 8 bytes, 'buf'
+ * must be 8-byte aligned.
+ */
+SPDK_STATIC_ASSERT(offsetof(struct spdk_uring_sock, buf) % 8 == 0,
+		   "Incorrect alignment: `buf` must be aligned to 8 bytes");
 
 TAILQ_HEAD(pending_recv_list, spdk_uring_sock);
 
