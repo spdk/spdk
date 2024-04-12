@@ -69,6 +69,7 @@ struct load_json_config_ctx {
 	struct spdk_json_val *subsystems_it; /* current subsystem array position in "subsystems" array */
 
 	struct spdk_json_val *subsystem_name; /* current subsystem name */
+	char subsystem_name_str[128];
 
 	/* Current "config" entry we are processing */
 	struct spdk_json_val *config; /* "config" array */
@@ -356,6 +357,23 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 			/* Invoke later to avoid recursion */
 			ctx->config_it = spdk_json_next(ctx->config_it);
 			spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem_config_entry, ctx);
+		} else if (!spdk_subsystem_exists(ctx->subsystem_name_str)) {
+			/* If the subsystem does not exist, just skip it, even
+			 * if we are supposed to stop_on_error. Users may generate
+			 * a JSON config from one application, and want to use parts
+			 * of it in another application that may not have all of the
+			 * same subsystems linked - for example, nvmf_tgt => bdevperf.
+			 * That's OK, we don't need to throw an error, since any nvmf
+			 * configuration wouldn't be used by bdevperf anyways. That is
+			 * different than if some subsystem does exist in bdevperf and
+			 * one of its RPCs fails.
+			 */
+			SPDK_NOTICELOG("Skipping method '%s' because its subsystem '%s' "
+				       "is not linked into this application.\n",
+				       cfg.method, ctx->subsystem_name_str);
+			/* Invoke later to avoid recursion */
+			ctx->config_it = spdk_json_next(ctx->config_it);
+			spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem_config_entry, ctx);
 		} else {
 			SPDK_ERRLOG("Method '%s' was not found\n", cfg.method);
 			app_json_config_load_done(ctx, rc);
@@ -497,8 +515,10 @@ app_json_config_load_subsystem(void *_ctx)
 		return;
 	}
 
-	SPDK_DEBUG_APP_CFG("Loading subsystem '%.*s' configuration\n", ctx->subsystem_name->len,
-			   (char *)ctx->subsystem_name->start);
+	snprintf(ctx->subsystem_name_str, sizeof(ctx->subsystem_name_str),
+		 "%.*s", ctx->subsystem_name->len, (char *)ctx->subsystem_name->start);
+
+	SPDK_DEBUG_APP_CFG("Loading subsystem '%s' configuration\n", ctx->subsystem_name_str);
 
 	/* Get 'config' array first configuration entry */
 	ctx->config_it = spdk_json_array_first(ctx->config);
