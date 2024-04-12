@@ -966,6 +966,53 @@ test_auth_reply(void)
 	CU_ASSERT_EQUAL(auth->fail_reason, SPDK_NVMF_AUTH_FAILED);
 	MOCK_SET(spdk_nvme_dhchap_dhkey_derive_secret, 0);
 
+	/* Bad cvalid value */
+	g_req_completed = false;
+	auth->state = NVMF_QPAIR_AUTH_REPLY;
+	msg->cvalid = 2;
+
+	nvmf_auth_send_exec(&req);
+	CU_ASSERT(g_req_completed);
+	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_FAILURE1);
+	CU_ASSERT_EQUAL(auth->fail_reason, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
+
+	/* Bad cvalid/seqnum combination */
+	g_req_completed = false;
+	auth->state = NVMF_QPAIR_AUTH_REPLY;
+	msg->cvalid = 1;
+	msg->seqnum = 0;
+
+	nvmf_auth_send_exec(&req);
+	CU_ASSERT(g_req_completed);
+	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_FAILURE1);
+	CU_ASSERT_EQUAL(auth->fail_reason, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
+
+	/* Missing controller key */
+	g_req_completed = false;
+	auth->state = NVMF_QPAIR_AUTH_REPLY;
+	msg->cvalid = 1;
+	msg->seqnum = 1;
+	MOCK_ENQUEUE(nvmf_subsystem_get_dhchap_key, (struct spdk_key *)0xdeadbeef);
+	MOCK_ENQUEUE(nvmf_subsystem_get_dhchap_key, NULL);
+
+	nvmf_auth_send_exec(&req);
+	CU_ASSERT(g_req_completed);
+	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_FAILURE1);
+	CU_ASSERT_EQUAL(auth->fail_reason, SPDK_NVMF_AUTH_FAILED);
+
+	/* Controller challange calcuation failure */
+	g_req_completed = false;
+	auth->state = NVMF_QPAIR_AUTH_REPLY;
+	msg->cvalid = 1;
+	msg->seqnum = 1;
+	MOCK_ENQUEUE(spdk_nvme_dhchap_calculate, 0);
+	MOCK_ENQUEUE(spdk_nvme_dhchap_calculate, -EIO);
+
+	nvmf_auth_send_exec(&req);
+	CU_ASSERT(g_req_completed);
+	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_FAILURE1);
+	CU_ASSERT_EQUAL(auth->fail_reason, SPDK_NVMF_AUTH_FAILED);
+
 	nvmf_qpair_auth_destroy(&qpair);
 }
 
@@ -983,7 +1030,7 @@ test_auth_success1(void)
 	struct spdk_nvmf_qpair_auth *auth;
 	struct spdk_nvmf_dhchap_success1 *msg;
 	struct spdk_nvmf_auth_failure *fail;
-	uint8_t msgbuf[sizeof(*msg)];
+	uint8_t msgbuf[sizeof(*msg) + 48];
 	int rc;
 
 	msg = (void *)msgbuf;
@@ -1010,6 +1057,26 @@ test_auth_success1(void)
 	CU_ASSERT_EQUAL(msg->rvalid, 0);
 	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
 
+	/* Successfully receive a success message w/ bidirectional authentication */
+	ut_prep_recv_cmd(&req, &cmd, msgbuf, sizeof(*msg) + 48);
+	g_req_completed = false;
+	auth->state = NVMF_QPAIR_AUTH_SUCCESS1;
+	auth->cvalid = true;
+	memset(auth->cval, 0xa5, 48);
+	MOCK_SET(spdk_nvme_dhchap_get_digest_length, 48);
+
+	nvmf_auth_recv_exec(&req);
+	CU_ASSERT(g_req_completed);
+	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_SUCCESS2);
+	CU_ASSERT_EQUAL(msg->auth_type, SPDK_NVMF_AUTH_TYPE_DHCHAP);
+	CU_ASSERT_EQUAL(msg->auth_id, SPDK_NVMF_AUTH_ID_DHCHAP_SUCCESS1);
+	CU_ASSERT_EQUAL(msg->t_id, 8);
+	CU_ASSERT_EQUAL(msg->hl, 48);
+	CU_ASSERT_EQUAL(msg->rvalid, 1);
+	CU_ASSERT_EQUAL(memcmp(msg->rval, auth->cval, 48), 0);
+	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
+	auth->cvalid = false;
+
 	/* Bad message length (smaller than success1 message) */
 	ut_prep_recv_cmd(&req, &cmd, msgbuf, sizeof(*msg));
 	g_req_completed = false;
@@ -1026,6 +1093,26 @@ test_auth_success1(void)
 	CU_ASSERT_EQUAL(fail->rc, SPDK_NVMF_AUTH_FAILURE);
 	CU_ASSERT_EQUAL(fail->rce, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
 	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
+
+	/* Bad message length (smaller than msg + hl) */
+	ut_prep_recv_cmd(&req, &cmd, msgbuf, sizeof(*msg));
+	g_req_completed = false;
+	auth->state = NVMF_QPAIR_AUTH_SUCCESS1;
+	auth->cvalid = true;
+	MOCK_SET(spdk_nvme_dhchap_get_digest_length, 48);
+	cmd.al = req.iov[0].iov_len = req.length = sizeof(*msg) + 47;
+
+	nvmf_auth_recv_exec(&req);
+	CU_ASSERT(g_req_completed);
+	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_ERROR);
+	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
+	CU_ASSERT_EQUAL(fail->auth_type, SPDK_NVMF_AUTH_TYPE_COMMON_MESSAGE);
+	CU_ASSERT_EQUAL(fail->auth_id, SPDK_NVMF_AUTH_ID_FAILURE1);
+	CU_ASSERT_EQUAL(fail->t_id, 8);
+	CU_ASSERT_EQUAL(fail->rc, SPDK_NVMF_AUTH_FAILURE);
+	CU_ASSERT_EQUAL(fail->rce, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
+	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
+	auth->cvalid = false;
 	cmd.al = req.iov[0].iov_len = req.length = sizeof(*msg);
 
 	nvmf_qpair_auth_destroy(&qpair);

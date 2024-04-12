@@ -15,12 +15,12 @@ dhgroups=("null" "ffdhe2048" "ffdhe3072" "ffdhe4096" "ffdhe6144" "ffdhe8192")
 subnqn="nqn.2024-03.io.spdk:cnode0"
 hostnqn="$NVME_HOSTNQN"
 hostsock="/var/tmp/host.sock"
-keys=()
+keys=() ckeys=()
 
 cleanup() {
 	killprocess $hostpid || :
 	nvmftestfini || :
-	rm -f "${keys[@]}" "$output_dir"/nvm{e,f}-auth.log
+	rm -f "${keys[@]}" "${ckeys[@]}" "$output_dir"/nvm{e,f}-auth.log
 }
 
 dumplogs() {
@@ -31,14 +31,15 @@ dumplogs() {
 hostrpc() { "$rootdir/scripts/rpc.py" -s "$hostsock" "$@"; }
 
 connect_authenticate() {
-	local digest dhgroup key qpairs
+	local digest dhgroup key ckey qpairs
 
 	digest="$1" dhgroup="$2" key="key$3"
+	ckey=(${ckeys[$3]:+--dhchap-ctrlr-key "ckey$3"})
 
-	rpc_cmd nvmf_subsystem_add_host "$subnqn" "$hostnqn" --dhchap-key "$key"
+	rpc_cmd nvmf_subsystem_add_host "$subnqn" "$hostnqn" --dhchap-key "$key" "${ckey[@]}"
 	hostrpc bdev_nvme_attach_controller -b nvme0 -t "$TEST_TRANSPORT" -f ipv4 \
 		-a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -q "$hostnqn" -n "$subnqn" \
-		--dhchap-key "${key}"
+		--dhchap-key "${key}" "${ckey[@]}"
 
 	[[ $(hostrpc bdev_nvme_get_controllers | jq -r '.[].name') == "nvme0" ]]
 	qpairs=$(rpc_cmd nvmf_subsystem_get_qpairs "$subnqn")
@@ -49,7 +50,8 @@ connect_authenticate() {
 
 	# Force 1 I/O queue to speed up the connection
 	nvme connect -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -n "$subnqn" -i 1 \
-		-q "$hostnqn" --hostid "$NVME_HOSTID" --dhchap-secret "$(< "${keys[$3]}")"
+		-q "$hostnqn" --hostid "$NVME_HOSTID" --dhchap-secret "$(< "${keys[$3]}")" \
+		${ckeys[$3]:+--dhchap-ctrl-secret "$(< "${ckeys[$3]}")"}
 	nvme disconnect -n "$subnqn"
 	rpc_cmd nvmf_subsystem_remove_host "$subnqn" "$hostnqn"
 }
@@ -61,10 +63,11 @@ hostpid=$!
 
 trap "dumplogs; cleanup" SIGINT SIGTERM EXIT
 
-keys[0]=$(gen_dhchap_key "null" 48)
-keys[1]=$(gen_dhchap_key "sha256" 32)
-keys[2]=$(gen_dhchap_key "sha384" 48)
-keys[3]=$(gen_dhchap_key "sha512" 64)
+# Set host/ctrlr key pairs with one combination w/o bidirectional authentication
+keys[0]=$(gen_dhchap_key "null" 48) ckeys[0]=$(gen_dhchap_key "sha512" 64)
+keys[1]=$(gen_dhchap_key "sha256" 32) ckeys[1]=$(gen_dhchap_key "sha384" 48)
+keys[2]=$(gen_dhchap_key "sha384" 48) ckeys[2]=$(gen_dhchap_key "sha256" 32)
+keys[3]=$(gen_dhchap_key "sha512" 64) ckeys[3]=""
 
 waitforlisten "$nvmfpid"
 waitforlisten "$hostpid" "$hostsock"
@@ -78,6 +81,10 @@ CONFIG
 for i in "${!keys[@]}"; do
 	rpc_cmd keyring_file_add_key "key$i" "${keys[i]}"
 	hostrpc keyring_file_add_key "key$i" "${keys[i]}"
+	if [[ -n "${ckeys[i]}" ]]; then
+		rpc_cmd keyring_file_add_key "ckey$i" "${ckeys[i]}"
+		hostrpc keyring_file_add_key "ckey$i" "${ckeys[i]}"
+	fi
 done
 
 # Check all digest/dhgroup/key combinations
@@ -111,6 +118,20 @@ rpc_cmd nvmf_subsystem_add_host "$subnqn" "$hostnqn" --dhchap-key "key1"
 NOT hostrpc bdev_nvme_attach_controller -b nvme0 -t "$TEST_TRANSPORT" -f ipv4 \
 	-a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -q "$hostnqn" -n "$subnqn" \
 	--dhchap-key "key2"
+rpc_cmd nvmf_subsystem_remove_host "$subnqn" "$hostnqn"
+
+# Check that mismatched controller keys result in failed attach
+rpc_cmd nvmf_subsystem_add_host "$subnqn" "$hostnqn" --dhchap-key "key1" --dhchap-ctrlr-key "ckey1"
+NOT hostrpc bdev_nvme_attach_controller -b nvme0 -t "$TEST_TRANSPORT" -f ipv4 \
+	-a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -q "$hostnqn" -n "$subnqn" \
+	--dhchap-key "key1" --dhchap-ctrlr-key "ckey2"
+rpc_cmd nvmf_subsystem_remove_host "$subnqn" "$hostnqn"
+
+# Check that a missing controller key results in a failed attach
+rpc_cmd nvmf_subsystem_add_host "$subnqn" "$hostnqn" --dhchap-key "key1"
+NOT hostrpc bdev_nvme_attach_controller -b nvme0 -t "$TEST_TRANSPORT" -f ipv4 \
+	-a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -q "$hostnqn" -n "$subnqn" \
+	--dhchap-key "key1" --dhchap-ctrlr-key "ckey1"
 rpc_cmd nvmf_subsystem_remove_host "$subnqn" "$hostnqn"
 
 trap - SIGINT SIGTERM EXIT

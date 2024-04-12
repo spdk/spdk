@@ -33,6 +33,7 @@ enum nvmf_qpair_auth_state {
 	NVMF_QPAIR_AUTH_CHALLENGE,
 	NVMF_QPAIR_AUTH_REPLY,
 	NVMF_QPAIR_AUTH_SUCCESS1,
+	NVMF_QPAIR_AUTH_SUCCESS2,
 	NVMF_QPAIR_AUTH_FAILURE1,
 	NVMF_QPAIR_AUTH_COMPLETED,
 	NVMF_QPAIR_AUTH_ERROR,
@@ -48,6 +49,7 @@ struct spdk_nvmf_qpair_auth {
 	uint8_t				cval[NVMF_AUTH_DIGEST_MAX_SIZE];
 	uint32_t			seqnum;
 	struct spdk_nvme_dhchap_dhkey	*dhkey;
+	bool				cvalid;
 };
 
 struct nvmf_auth_common_header {
@@ -77,6 +79,7 @@ nvmf_auth_get_state_name(enum nvmf_qpair_auth_state state)
 		[NVMF_QPAIR_AUTH_CHALLENGE] = "challenge",
 		[NVMF_QPAIR_AUTH_REPLY] = "reply",
 		[NVMF_QPAIR_AUTH_SUCCESS1] = "success1",
+		[NVMF_QPAIR_AUTH_SUCCESS2] = "success2",
 		[NVMF_QPAIR_AUTH_FAILURE1] = "failure1",
 		[NVMF_QPAIR_AUTH_COMPLETED] = "completed",
 		[NVMF_QPAIR_AUTH_ERROR] = "error",
@@ -314,7 +317,7 @@ nvmf_auth_reply_exec(struct spdk_nvmf_request *req, struct spdk_nvmf_dhchap_repl
 	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
 	uint8_t response[NVMF_AUTH_DIGEST_MAX_SIZE];
 	uint8_t dhsec[NVMF_AUTH_DH_KEY_MAX_SIZE];
-	struct spdk_key *key = NULL;
+	struct spdk_key *key = NULL, *ckey = NULL;
 	size_t dhseclen = 0;
 	uint8_t hl;
 	int rc;
@@ -347,8 +350,13 @@ nvmf_auth_reply_exec(struct spdk_nvmf_request *req, struct spdk_nvmf_dhchap_repl
 		nvmf_auth_request_fail1(req, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
 		goto out;
 	}
-	if (msg->cvalid) {
-		AUTH_ERRLOG(qpair, "bidirection authentication isn't supported yet\n");
+	if (msg->cvalid != 0 && msg->cvalid != 1) {
+		AUTH_ERRLOG(qpair, "unexpected cvalid=%d\n", msg->cvalid);
+		nvmf_auth_request_fail1(req, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
+		goto out;
+	}
+	if (msg->cvalid && msg->seqnum == 0) {
+		AUTH_ERRLOG(qpair, "unexpected seqnum=0 with cvalid=1\n");
 		nvmf_auth_request_fail1(req, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
 		goto out;
 	}
@@ -395,6 +403,28 @@ nvmf_auth_reply_exec(struct spdk_nvmf_request *req, struct spdk_nvmf_dhchap_repl
 		goto out;
 	}
 
+	if (msg->cvalid) {
+		ckey = nvmf_subsystem_get_dhchap_key(ctrlr->subsys, ctrlr->hostnqn,
+						     NVMF_AUTH_KEY_CTRLR);
+		if (ckey == NULL) {
+			AUTH_ERRLOG(qpair, "missing DH-HMAC-CHAP ctrlr key\n");
+			nvmf_auth_request_fail1(req, SPDK_NVMF_AUTH_FAILED);
+			goto out;
+		}
+		rc = spdk_nvme_dhchap_calculate(ckey, (enum spdk_nvmf_dhchap_hash)auth->digest,
+						"Controller", msg->seqnum, auth->tid, 0,
+						ctrlr->subsys->subnqn, ctrlr->hostnqn,
+						dhseclen > 0 ? dhsec : NULL, dhseclen,
+						&msg->rval[hl], auth->cval);
+		if (rc != 0) {
+			AUTH_ERRLOG(qpair, "failed to calculate ctrlr challenge response: %s\n",
+				    spdk_strerror(-rc));
+			nvmf_auth_request_fail1(req, SPDK_NVMF_AUTH_FAILED);
+			goto out;
+		}
+		auth->cvalid = true;
+	}
+
 	if (nvmf_auth_rearm_poller(qpair)) {
 		nvmf_auth_request_complete(req, SPDK_NVME_SCT_GENERIC,
 					   SPDK_NVME_SC_INTERNAL_DEVICE_ERROR, 1);
@@ -405,7 +435,37 @@ nvmf_auth_reply_exec(struct spdk_nvmf_request *req, struct spdk_nvmf_dhchap_repl
 	nvmf_auth_set_state(qpair, NVMF_QPAIR_AUTH_SUCCESS1);
 	nvmf_auth_request_complete(req, SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_SUCCESS, 0);
 out:
+	spdk_keyring_put_key(ckey);
 	spdk_keyring_put_key(key);
+}
+
+static void
+nvmf_auth_success2_exec(struct spdk_nvmf_request *req, struct spdk_nvmf_dhchap_success2 *msg)
+{
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
+
+	if (auth->state != NVMF_QPAIR_AUTH_SUCCESS2) {
+		AUTH_ERRLOG(qpair, "invalid state=%s\n", nvmf_auth_get_state_name(auth->state));
+		nvmf_auth_request_fail1(req, SPDK_NVMF_AUTH_INCORRECT_PROTOCOL_MESSAGE);
+		return;
+	}
+	if (req->length != sizeof(*msg)) {
+		AUTH_ERRLOG(qpair, "invalid message length=%"PRIu32"\n", req->length);
+		nvmf_auth_request_fail1(req, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
+		return;
+	}
+	if (msg->t_id != auth->tid) {
+		AUTH_ERRLOG(qpair, "transaction id mismatch: %u != %u\n", msg->t_id, auth->tid);
+		nvmf_auth_request_fail1(req, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
+		return;
+	}
+
+	AUTH_DEBUGLOG(qpair, "controller authentication successful\n");
+	nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ENABLED);
+	nvmf_auth_set_state(qpair, NVMF_QPAIR_AUTH_COMPLETED);
+	nvmf_auth_qpair_cleanup(auth);
+	nvmf_auth_request_complete(req, SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_SUCCESS, 0);
 }
 
 static void
@@ -445,6 +505,9 @@ nvmf_auth_send_exec(struct spdk_nvmf_request *req)
 		switch (header->auth_id) {
 		case SPDK_NVMF_AUTH_ID_DHCHAP_REPLY:
 			nvmf_auth_reply_exec(req, (void *)header);
+			break;
+		case SPDK_NVMF_AUTH_ID_DHCHAP_SUCCESS2:
+			nvmf_auth_success2_exec(req, (void *)header);
 			break;
 		default:
 			AUTH_ERRLOG(qpair, "unexpected auth_id=%u\n", header->auth_id);
@@ -591,26 +654,42 @@ nvmf_auth_recv_success1(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
 	struct spdk_nvmf_dhchap_success1 *success;
+	uint8_t hl;
 
-	success = nvmf_auth_get_message(req, sizeof(*success));
+	hl = spdk_nvme_dhchap_get_digest_length(auth->digest);
+	success = nvmf_auth_get_message(req, sizeof(*success) + auth->cvalid * hl);
 	if (success == NULL) {
 		AUTH_ERRLOG(qpair, "invalid message length: %"PRIu32"\n", req->length);
 		return SPDK_NVMF_AUTH_INCORRECT_PAYLOAD;
 	}
 
+	AUTH_DEBUGLOG(qpair, "host authentication successful\n");
 	success->auth_type = SPDK_NVMF_AUTH_TYPE_DHCHAP;
 	success->auth_id = SPDK_NVMF_AUTH_ID_DHCHAP_SUCCESS1;
 	success->t_id = auth->tid;
 	/* Kernel initiator always expects hl to be set, regardless of rvalid */
-	success->hl = spdk_nvme_dhchap_get_digest_length(auth->digest);
+	success->hl = hl;
 	success->rvalid = 0;
 
-	AUTH_DEBUGLOG(qpair, "host authentication successful\n");
-	nvmf_auth_recv_complete(req, sizeof(*success));
-	nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ENABLED);
-	nvmf_auth_set_state(qpair, NVMF_QPAIR_AUTH_COMPLETED);
-	nvmf_auth_qpair_cleanup(auth);
+	if (!auth->cvalid) {
+		/* Host didn't request to authenticate us, we're done */
+		nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ENABLED);
+		nvmf_auth_set_state(qpair, NVMF_QPAIR_AUTH_COMPLETED);
+		nvmf_auth_qpair_cleanup(auth);
+	} else {
+		if (nvmf_auth_rearm_poller(qpair)) {
+			nvmf_auth_request_complete(req, SPDK_NVME_SCT_GENERIC,
+						   SPDK_NVME_SC_INTERNAL_DEVICE_ERROR, 1);
+			nvmf_auth_disconnect_qpair(qpair);
+			return 0;
+		}
+		AUTH_DEBUGLOG(qpair, "cvalid=1, starting controller authentication\n");
+		nvmf_auth_set_state(qpair, NVMF_QPAIR_AUTH_SUCCESS2);
+		memcpy(success->rval, auth->cval, hl);
+		success->rvalid = 1;
+	}
 
+	nvmf_auth_recv_complete(req, sizeof(*success) + auth->cvalid * hl);
 	return 0;
 }
 
