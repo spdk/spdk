@@ -36,6 +36,7 @@ struct accel_mlx5_crypto_dev_ctx {
 	struct spdk_mempool *requests_pool;
 	struct ibv_context *context;
 	struct ibv_pd *pd;
+	struct spdk_memory_domain *domain;
 	TAILQ_ENTRY(accel_mlx5_crypto_dev_ctx) link;
 };
 
@@ -300,33 +301,72 @@ accel_mlx5_flush_wrs(struct accel_mlx5_dev *dev)
 	return rc;
 }
 
-static inline int
-accel_mlx5_fill_block_sge(struct accel_mlx5_req *req, struct ibv_sge *sge,
-			  struct spdk_iov_sgl *iovs)
+static int
+accel_mlx5_translate_addr(void *addr, size_t size, struct spdk_memory_domain *domain,
+			  void *domain_ctx, struct accel_mlx5_dev *dev, struct ibv_sge *sge)
 {
-	struct spdk_rdma_utils_memory_translation translation;
+	struct spdk_rdma_utils_memory_translation map_translation;
+	struct spdk_memory_domain_translation_result domain_translation;
+	struct spdk_memory_domain_translation_ctx local_ctx;
+	int rc;
+
+	if (domain) {
+		domain_translation.size = sizeof(struct spdk_memory_domain_translation_result);
+		local_ctx.size = sizeof(local_ctx);
+		local_ctx.rdma.ibv_qp = dev->qp->qp;
+		rc = spdk_memory_domain_translate_data(domain, domain_ctx, dev->dev_ctx->domain,
+						       &local_ctx, addr, size, &domain_translation);
+		if (spdk_unlikely(rc || domain_translation.iov_count != 1)) {
+			SPDK_ERRLOG("Memory domain translation failed, addr %p, length %zu, iovcnt %u\n", addr, size,
+				    domain_translation.iov_count);
+			if (rc == 0) {
+				rc = -EINVAL;
+			}
+
+			return rc;
+		}
+		sge->lkey = domain_translation.rdma.lkey;
+		sge->addr = (uint64_t) domain_translation.iov.iov_base;
+		sge->length = domain_translation.iov.iov_len;
+	} else {
+		rc = spdk_rdma_utils_get_translation(dev->mmap, addr, size,
+						     &map_translation);
+		if (spdk_unlikely(rc)) {
+			SPDK_ERRLOG("Memory translation failed, addr %p, length %zu\n", addr, size);
+			return rc;
+		}
+		sge->lkey = spdk_rdma_utils_memory_translation_get_lkey(&map_translation);
+		sge->addr = (uint64_t)addr;
+		sge->length = size;
+	}
+
+	return 0;
+}
+
+static inline int
+accel_mlx5_fill_block_sge(struct accel_mlx5_dev *dev, struct accel_mlx5_req *req,
+			  struct ibv_sge *sge,
+			  struct spdk_iov_sgl *iovs, struct spdk_memory_domain *domain, void *domain_ctx)
+{
 	void *addr;
 	uint32_t remaining = req->task->base.block_size;
 	uint32_t size;
 	int i = 0;
 	int rc;
 
-	while (remaining) {
+	while (remaining && i < (int)ACCEL_MLX5_MAX_SGE) {
 		size = spdk_min(remaining, iovs->iov->iov_len - iovs->iov_offset);
 		addr = (void *)iovs->iov->iov_base + iovs->iov_offset;
-		rc = spdk_rdma_utils_get_translation(req->task->dev->mmap, addr, size, &translation);
+		rc = accel_mlx5_translate_addr(addr, size, domain, domain_ctx, dev, &sge[i]);
 		if (spdk_unlikely(rc)) {
-			SPDK_ERRLOG("Memory translation failed, addr %p, length %u\n", addr, size);
 			return rc;
 		}
 		spdk_iov_sgl_advance(iovs, size);
-		sge[i].lkey = spdk_rdma_utils_memory_translation_get_lkey(&translation);
-		sge[i].addr = (uint64_t)addr;
-		sge[i].length = size;
 		i++;
 		assert(remaining >= size);
 		remaining -= size;
 	}
+	assert(remaining == 0);
 
 	return i;
 }
@@ -404,7 +444,8 @@ accel_mlx5_task_process(struct accel_mlx5_task *mlx5_task)
 
 	while (mlx5_task->cur_req && dev->reqs_submitted < dev->max_reqs) {
 		req = mlx5_task->cur_req;
-		rc = accel_mlx5_fill_block_sge(req, req->src_sg, &mlx5_task->src);
+		rc = accel_mlx5_fill_block_sge(dev, req, req->src_sg, &mlx5_task->src, task->src_domain,
+					       task->src_domain_ctx);
 		if (spdk_unlikely(rc <= 0)) {
 			if (rc == 0) {
 				rc = -EINVAL;
@@ -423,7 +464,8 @@ accel_mlx5_task_process(struct accel_mlx5_task *mlx5_task)
 		if (mlx5_task->inplace) {
 			mlx5dv_wr_set_mkey_layout_list(mqpx, req->src_sg_count, req->src_sg);
 		} else {
-			rc = accel_mlx5_fill_block_sge(req, req->dst_sg, &mlx5_task->dst);
+			rc = accel_mlx5_fill_block_sge(dev, req, req->dst_sg, &mlx5_task->dst, task->dst_domain,
+						       task->dst_domain_ctx);
 			if (spdk_unlikely(rc <= 0)) {
 				if (rc == 0) {
 					rc = -EINVAL;
@@ -892,8 +934,8 @@ accel_mlx5_create_cb(void *io_device, void *ctx_buf)
 				IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_WRITE);
 		if (!dev->mmap) {
 			SPDK_ERRLOG("Failed to create memory map\n");
-			accel_mlx5_qp_destroy(dev->qp);
-			return -ENOMEM;
+			rc = -ENOMEM;
+			goto err_out;
 		}
 	}
 
@@ -943,7 +985,6 @@ accel_mlx5_release_crypto_req(struct spdk_mempool *mp, void *cb_arg, void *_req,
 	}
 }
 
-
 static void
 accel_mlx5_release_reqs(struct accel_mlx5_crypto_dev_ctx *dev_ctx)
 {
@@ -962,6 +1003,7 @@ accel_mlx5_free_resources(void)
 	for (i = 0; i < g_accel_mlx5.num_crypto_ctxs; i++) {
 		accel_mlx5_release_reqs(&g_accel_mlx5.crypto_ctxs[i]);
 		spdk_rdma_utils_put_pd(g_accel_mlx5.crypto_ctxs[i].pd);
+		spdk_rdma_utils_put_memory_domain(g_accel_mlx5.crypto_ctxs[i].domain);
 	}
 
 	free(g_accel_mlx5.crypto_ctxs);
@@ -1079,6 +1121,13 @@ accel_mlx5_init(void)
 		}
 		crypto_dev_ctx->context = dev;
 		crypto_dev_ctx->pd = pd;
+		crypto_dev_ctx->domain = spdk_rdma_utils_get_memory_domain(crypto_dev_ctx->pd);
+		if (!crypto_dev_ctx->domain) {
+			SPDK_ERRLOG("Failed to get memory domain\n");
+			rc = -ENOMEM;
+			goto cleanup;
+		}
+
 		g_accel_mlx5.num_crypto_ctxs++;
 		rc = accel_mlx5_crypto_ctx_mempool_create(crypto_dev_ctx, g_accel_mlx5.attr.num_requests);
 		if (rc) {
@@ -1175,6 +1224,24 @@ accel_mlx5_crypto_supports_cipher(enum spdk_accel_cipher cipher, size_t key_size
 	}
 }
 
+static int
+accel_mlx5_get_memory_domains(struct spdk_memory_domain **domains, int array_size)
+{
+	int i, size;
+
+	if (!domains || !array_size) {
+		return (int)g_accel_mlx5.num_crypto_ctxs;
+	}
+
+	size = spdk_min(array_size, (int)g_accel_mlx5.num_crypto_ctxs);
+
+	for (i = 0; i < size; i++) {
+		domains[i] = g_accel_mlx5.crypto_ctxs[i].domain;
+	}
+
+	return (int)g_accel_mlx5.num_crypto_ctxs;
+}
+
 static struct accel_mlx5_module g_accel_mlx5 = {
 	.module = {
 		.module_init		= accel_mlx5_init,
@@ -1188,6 +1255,7 @@ static struct accel_mlx5_module g_accel_mlx5 = {
 		.crypto_key_init	= accel_mlx5_crypto_key_init,
 		.crypto_key_deinit	= accel_mlx5_crypto_key_deinit,
 		.crypto_supports_cipher	= accel_mlx5_crypto_supports_cipher,
+		.get_memory_domains	= accel_mlx5_get_memory_domains,
 	}
 };
 
