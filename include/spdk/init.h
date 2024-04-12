@@ -123,6 +123,14 @@ typedef void (*spdk_subsystem_fini_fn)(void *ctx);
 void spdk_subsystem_fini(spdk_subsystem_fini_fn cb_fn, void *cb_arg);
 
 /**
+ * Check if the specified subsystem exists in the application.
+ *
+ * \param name Name of the subsystem to look for
+ * \return true if it exists, false if not
+ */
+bool spdk_subsystem_exists(const char *name);
+
+/**
  * Pause polling RPC server with given address.
  *
  * \param listen_addr Address, on which RPC server listens for connections.

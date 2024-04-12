@@ -63,6 +63,12 @@ subsystem_find(const char *name)
 	return _subsystem_find(&g_subsystems, name);
 }
 
+bool
+spdk_subsystem_exists(const char *name)
+{
+	return subsystem_find(name) != NULL;
+}
+
 struct spdk_subsystem *
 subsystem_get_first(void)
 {
