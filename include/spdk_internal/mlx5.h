@@ -1,5 +1,5 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
- *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES.
+ *   Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
  */
 
@@ -7,6 +7,8 @@
 #define SPDK_MLX5_H
 
 #include <infiniband/mlx5dv.h>
+
+#define SPDK_MLX5_DEV_MAX_NAME_LEN 64
 
 struct spdk_mlx5_crypto_dek;
 struct spdk_mlx5_crypto_keytag;
@@ -65,5 +67,22 @@ int spdk_mlx5_crypto_set_attr(struct mlx5dv_crypto_attr *attr_out,
 			      struct spdk_mlx5_crypto_keytag *keytag, struct ibv_pd *pd,
 			      uint32_t block_size, uint64_t iv, bool encrypt_on_tx);
 
+/**
+ * Specify which devices are allowed to be used for crypto operation.
+ *
+ * If the user doesn't call this function then all devices which support crypto will be used.
+ * This function copies devices names. In order to free allocated memory, the user must call
+ * this function with either NULL \b dev_names or with \b devs_count equal 0. This way can also
+ * be used to allow all devices.
+ *
+ * Subsequent calls with non-NULL \b dev_names and non-zero \b devs_count current copied dev_names array.
+ *
+ * This function is not thread safe.
+ *
+ * \param dev_names Array of devices names which are allowed to be used for crypto operations
+ * \param devs_count Size of \b devs_count array
+ * \return 0 on success, negated errno on failure
+ */
+int spdk_mlx5_crypto_devs_allow(const char *const dev_names[], size_t devs_count);
 
 #endif /* SPDK_MLX5_H */

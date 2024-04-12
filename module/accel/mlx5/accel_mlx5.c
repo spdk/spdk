@@ -29,6 +29,9 @@
 #define ACCEL_MLX5_MAX_WC (64u)
 #define ACCEL_MLX5_ALLOC_REQS_IN_BATCH (16u)
 
+/* Assume we have up to 16 devices */
+#define ACCEL_MLX5_ALLOWED_DEVS_MAX_LEN ((SPDK_MLX5_DEV_MAX_NAME_LEN + 1) * 16)
+
 struct accel_mlx5_io_channel;
 struct accel_mlx5_task;
 
@@ -45,6 +48,8 @@ struct accel_mlx5_module {
 	struct accel_mlx5_crypto_dev_ctx *crypto_ctxs;
 	uint32_t num_crypto_ctxs;
 	struct accel_mlx5_attr attr;
+	char **allowed_devs;
+	size_t allowed_devs_count;
 	bool enabled;
 };
 
@@ -955,16 +960,102 @@ accel_mlx5_get_default_attr(struct accel_mlx5_attr *attr)
 
 	attr->qp_size = ACCEL_MLX5_QP_SIZE;
 	attr->num_requests = ACCEL_MLX5_NUM_REQUESTS;
+	attr->allowed_devs = NULL;
+}
+
+static void
+accel_mlx5_allowed_devs_free(void)
+{
+	size_t i;
+
+	if (!g_accel_mlx5.allowed_devs) {
+		return;
+	}
+
+	for (i = 0; i < g_accel_mlx5.allowed_devs_count; i++) {
+		free(g_accel_mlx5.allowed_devs[i]);
+	}
+	free(g_accel_mlx5.attr.allowed_devs);
+	free(g_accel_mlx5.allowed_devs);
+	g_accel_mlx5.attr.allowed_devs = NULL;
+	g_accel_mlx5.allowed_devs = NULL;
+	g_accel_mlx5.allowed_devs_count = 0;
+}
+
+static int
+accel_mlx5_allowed_devs_parse(const char *allowed_devs)
+{
+	char *str, *tmp, *tok;
+	size_t devs_count = 0;
+
+	str = strdup(allowed_devs);
+	if (!str) {
+		return -ENOMEM;
+	}
+
+	accel_mlx5_allowed_devs_free();
+
+	tmp = str;
+	while ((tmp = strchr(tmp, ',')) != NULL) {
+		tmp++;
+		devs_count++;
+	}
+	devs_count++;
+
+	g_accel_mlx5.allowed_devs = calloc(devs_count, sizeof(char *));
+	if (!g_accel_mlx5.allowed_devs) {
+		free(str);
+		return -ENOMEM;
+	}
+
+	devs_count = 0;
+	tok = strtok(str, ",");
+	while (tok) {
+		g_accel_mlx5.allowed_devs[devs_count] = strdup(tok);
+		if (!g_accel_mlx5.allowed_devs[devs_count]) {
+			free(str);
+			accel_mlx5_allowed_devs_free();
+			return -ENOMEM;
+		}
+		tok = strtok(NULL, ",");
+		devs_count++;
+		g_accel_mlx5.allowed_devs_count++;
+	}
+
+	free(str);
+
+	return 0;
 }
 
 int
 accel_mlx5_enable(struct accel_mlx5_attr *attr)
 {
+	int rc;
+
 	if (g_accel_mlx5.enabled) {
 		return -EEXIST;
 	}
 	if (attr) {
 		g_accel_mlx5.attr = *attr;
+		g_accel_mlx5.attr.allowed_devs = NULL;
+
+		if (attr->allowed_devs) {
+			/* Contains a copy of user's string */
+			g_accel_mlx5.attr.allowed_devs = strndup(attr->allowed_devs, ACCEL_MLX5_ALLOWED_DEVS_MAX_LEN);
+			if (!g_accel_mlx5.attr.allowed_devs) {
+				return -ENOMEM;
+			}
+			rc = accel_mlx5_allowed_devs_parse(g_accel_mlx5.attr.allowed_devs);
+			if (rc) {
+				return rc;
+			}
+			rc = spdk_mlx5_crypto_devs_allow((const char *const *)g_accel_mlx5.allowed_devs,
+							 g_accel_mlx5.allowed_devs_count);
+			if (rc) {
+				accel_mlx5_allowed_devs_free();
+				return rc;
+			}
+		}
 	} else {
 		accel_mlx5_get_default_attr(&g_accel_mlx5.attr);
 	}
@@ -1020,6 +1111,10 @@ accel_mlx5_deinit_cb(void *ctx)
 static void
 accel_mlx5_deinit(void *ctx)
 {
+	if (g_accel_mlx5.allowed_devs) {
+		accel_mlx5_allowed_devs_free();
+	}
+	spdk_mlx5_crypto_devs_allow(NULL, 0);
 	if (g_accel_mlx5.crypto_ctxs) {
 		spdk_io_device_unregister(&g_accel_mlx5, accel_mlx5_deinit_cb);
 	} else {
@@ -1159,6 +1254,9 @@ accel_mlx5_write_config_json(struct spdk_json_write_ctx *w)
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_uint16(w, "qp_size", g_accel_mlx5.attr.qp_size);
 		spdk_json_write_named_uint32(w, "num_requests", g_accel_mlx5.attr.num_requests);
+		if (g_accel_mlx5.attr.allowed_devs) {
+			spdk_json_write_named_string(w, "allowed_devs", g_accel_mlx5.attr.allowed_devs);
+		}
 		spdk_json_write_object_end(w);
 		spdk_json_write_object_end(w);
 	}

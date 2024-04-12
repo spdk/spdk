@@ -28,6 +28,9 @@
 /* key1_256b + key2_256b + 64b_keytag */
 #define SPDK_MLX5_AES_XTS_256_DEK_BYTES_WITH_KEYTAG (SPDK_MLX5_AES_XTS_256_DEK_BYTES + SPDK_MLX5_AES_XTS_KEYTAG_SIZE)
 
+static char **g_allowed_devices;
+static size_t g_allowed_devices_count;
+
 struct spdk_mlx5_crypto_dek {
 	struct mlx5dv_dek *dek_obj;
 	struct ibv_pd *pd;
@@ -40,6 +43,68 @@ struct spdk_mlx5_crypto_keytag {
 	bool has_keytag;
 	char keytag[8];
 };
+
+static void
+mlx5_crypto_devs_free(void)
+{
+	size_t i;
+
+	if (!g_allowed_devices) {
+		return;
+	}
+
+	for (i = 0; i < g_allowed_devices_count; i++) {
+		free(g_allowed_devices[i]);
+	}
+	free(g_allowed_devices);
+	g_allowed_devices = NULL;
+	g_allowed_devices_count = 0;
+}
+
+static bool
+mlx5_crypto_dev_allowed(const char *dev)
+{
+	size_t i;
+
+	if (!g_allowed_devices || !g_allowed_devices_count) {
+		return true;
+	}
+
+	for (i = 0; i < g_allowed_devices_count; i++) {
+		if (strcmp(g_allowed_devices[i], dev) == 0) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+int
+spdk_mlx5_crypto_devs_allow(const char *const dev_names[], size_t devs_count)
+{
+	size_t i;
+
+	mlx5_crypto_devs_free();
+
+	if (!dev_names || !devs_count) {
+		return 0;
+	}
+
+	g_allowed_devices = calloc(devs_count, sizeof(char *));
+	if (!g_allowed_devices) {
+		return -ENOMEM;
+	}
+	for (i = 0; i < devs_count; i++) {
+		g_allowed_devices[i] = strndup(dev_names[i], SPDK_MLX5_DEV_MAX_NAME_LEN);
+		if (!g_allowed_devices[i]) {
+			mlx5_crypto_devs_free();
+			return -ENOMEM;
+		}
+		g_allowed_devices_count++;
+	}
+
+	return 0;
+}
 
 struct ibv_context **
 spdk_mlx5_crypto_devs_get(int *dev_num)
@@ -73,6 +138,10 @@ spdk_mlx5_crypto_devs_get(int *dev_num)
 		}
 		if (dev_attr.vendor_id != MLX5_VENDOR_ID_MELLANOX) {
 			SPDK_DEBUGLOG(mlx5, "dev %s is not Mellanox device, skipping\n", dev->device->name);
+			continue;
+		}
+
+		if (!mlx5_crypto_dev_allowed(dev->device->name)) {
 			continue;
 		}
 

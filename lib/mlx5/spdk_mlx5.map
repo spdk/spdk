@@ -6,6 +6,7 @@
     spdk_mlx5_crypto_keytag_create;
     spdk_mlx5_crypto_keytag_destroy;
     spdk_mlx5_crypto_set_attr;
+    spdk_mlx5_crypto_devs_allow;
 
 	local: *;
 };
