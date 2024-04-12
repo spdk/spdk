@@ -184,6 +184,8 @@ class JSONRPCClient(object):
     def call(self, method, params=None):
         self._logger.debug("call('%s')" % method)
         params = {} if params is None else params
+        if self.timeout <= 0:
+            raise JSONRPCException("Timeout value is invalid: %s\n" % self.timeout)
         req_id = self.send(method, params)
         try:
             response = self.recv()
