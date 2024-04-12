@@ -17,6 +17,10 @@ DEFINE_STUB(spdk_mem_map_clear_translation, int, (struct spdk_mem_map *map, uint
 		uint64_t size), 0);
 DEFINE_STUB(spdk_mem_map_translate, uint64_t, (const struct spdk_mem_map *map, uint64_t vaddr,
 		uint64_t *size), 0);
+DEFINE_STUB(spdk_memory_domain_create, int, (struct spdk_memory_domain **_domain,
+		enum spdk_dma_device_type type,
+		struct spdk_memory_domain_ctx *ctx, const char *id), 0);
+DEFINE_STUB_V(spdk_memory_domain_destroy, (struct spdk_memory_domain *domain));
 
 struct ut_rdma_device {
 	struct ibv_context		*context;

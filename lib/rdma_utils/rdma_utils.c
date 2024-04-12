@@ -31,6 +31,15 @@ struct spdk_rdma_utils_mem_map {
 	LIST_ENTRY(spdk_rdma_utils_mem_map)	link;
 };
 
+struct rdma_utils_memory_domain {
+	TAILQ_ENTRY(rdma_utils_memory_domain) link;
+	uint32_t ref;
+	enum spdk_dma_device_type type;
+	struct ibv_pd *pd;
+	struct spdk_memory_domain *domain;
+	struct spdk_memory_domain_rdma_ctx rdma_ctx;
+};
+
 static pthread_mutex_t g_dev_mutex = PTHREAD_MUTEX_INITIALIZER;
 static struct ibv_context **g_ctx_list = NULL;
 static TAILQ_HEAD(, rdma_utils_device) g_dev_list = TAILQ_HEAD_INITIALIZER(g_dev_list);
@@ -38,6 +47,10 @@ static TAILQ_HEAD(, rdma_utils_device) g_dev_list = TAILQ_HEAD_INITIALIZER(g_dev
 static LIST_HEAD(, spdk_rdma_utils_mem_map) g_rdma_utils_mr_maps = LIST_HEAD_INITIALIZER(
 			&g_rdma_utils_mr_maps);
 static pthread_mutex_t g_rdma_mr_maps_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static TAILQ_HEAD(, rdma_utils_memory_domain) g_memory_domains = TAILQ_HEAD_INITIALIZER(
+			g_memory_domains);
+static pthread_mutex_t g_memory_domains_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static int
 rdma_utils_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
@@ -422,4 +435,87 @@ _rdma_utils_fini(void)
 		rdma_free_devices(g_ctx_list);
 		g_ctx_list = NULL;
 	}
+}
+
+struct spdk_memory_domain *
+spdk_rdma_utils_get_memory_domain(struct ibv_pd *pd)
+{
+	struct rdma_utils_memory_domain *domain = NULL;
+	struct spdk_memory_domain_ctx ctx;
+	int rc;
+
+	pthread_mutex_lock(&g_memory_domains_lock);
+
+	TAILQ_FOREACH(domain, &g_memory_domains, link) {
+		if (domain->pd == pd) {
+			domain->ref++;
+			pthread_mutex_unlock(&g_memory_domains_lock);
+			return domain->domain;
+		}
+	}
+
+	domain = calloc(1, sizeof(*domain));
+	if (!domain) {
+		SPDK_ERRLOG("Memory allocation failed\n");
+		pthread_mutex_unlock(&g_memory_domains_lock);
+		return NULL;
+	}
+
+	domain->rdma_ctx.size = sizeof(domain->rdma_ctx);
+	domain->rdma_ctx.ibv_pd = pd;
+	ctx.size = sizeof(ctx);
+	ctx.user_ctx = &domain->rdma_ctx;
+
+	rc = spdk_memory_domain_create(&domain->domain, SPDK_DMA_DEVICE_TYPE_RDMA, &ctx,
+				       SPDK_RDMA_DMA_DEVICE);
+	if (rc) {
+		SPDK_ERRLOG("Failed to create memory domain\n");
+		free(domain);
+		pthread_mutex_unlock(&g_memory_domains_lock);
+		return NULL;
+	}
+
+	domain->pd = pd;
+	domain->ref = 1;
+	TAILQ_INSERT_TAIL(&g_memory_domains, domain, link);
+
+	pthread_mutex_unlock(&g_memory_domains_lock);
+
+	return domain->domain;
+}
+
+int
+spdk_rdma_utils_put_memory_domain(struct spdk_memory_domain *_domain)
+{
+	struct rdma_utils_memory_domain *domain = NULL;
+
+	if (!_domain) {
+		return 0;
+	}
+
+	pthread_mutex_lock(&g_memory_domains_lock);
+
+	TAILQ_FOREACH(domain, &g_memory_domains, link) {
+		if (domain->domain == _domain) {
+			break;
+		}
+	}
+
+	if (!domain) {
+		pthread_mutex_unlock(&g_memory_domains_lock);
+		return -ENODEV;
+	}
+	assert(domain->ref > 0);
+
+	domain->ref--;
+
+	if (domain->ref == 0) {
+		spdk_memory_domain_destroy(domain->domain);
+		TAILQ_REMOVE(&g_memory_domains, domain, link);
+		free(domain);
+	}
+
+	pthread_mutex_unlock(&g_memory_domains_lock);
+
+	return 0;
 }

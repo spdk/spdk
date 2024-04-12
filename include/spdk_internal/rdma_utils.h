@@ -112,6 +112,25 @@ spdk_rdma_utils_get_pd(struct ibv_context *context);
  */
 void spdk_rdma_utils_put_pd(struct ibv_pd *pd);
 
+/**
+ * Get memory domain for the specified protection domain.
+ *
+ * If memory domain does not exist for the specified protection domain, it will be allocated.
+ * If memory domain already exists, reference will be increased.
+ *
+ * \param pd Protection domain of memory domain
+ * \return Pointer to memory domain or NULL;
+ */
+struct spdk_memory_domain *spdk_rdma_utils_get_memory_domain(struct ibv_pd *pd);
+
+/**
+ * Release a reference to a memory domain, which will be destroyed when reference becomes 0.
+ *
+ * \param _domain Pointer to memory domain
+ * \return 0 on success, negated errno on failure
+ */
+int spdk_rdma_utils_put_memory_domain(struct spdk_memory_domain *_domain);
+
 #ifdef __cplusplus
 }
 #endif
