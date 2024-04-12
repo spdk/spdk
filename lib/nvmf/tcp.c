@@ -996,7 +996,8 @@ static void
 nvmf_tcp_qpair_set_state(struct spdk_nvmf_tcp_qpair *tqpair, enum nvme_tcp_qpair_state state)
 {
 	tqpair->state = state;
-	spdk_trace_record(TRACE_TCP_QP_STATE_CHANGE, tqpair->qpair.trace_id, 0, 0, tqpair->state);
+	spdk_trace_record(TRACE_TCP_QP_STATE_CHANGE, tqpair->qpair.trace_id, 0, 0,
+			  (uint64_t)tqpair->state);
 }
 
 static void
@@ -1619,7 +1620,8 @@ nvmf_tcp_qpair_set_recv_state(struct spdk_nvmf_tcp_qpair *tqpair,
 	SPDK_DEBUGLOG(nvmf_tcp, "tqpair(%p) recv state=%d\n", tqpair, state);
 	tqpair->recv_state = state;
 
-	spdk_trace_record(TRACE_TCP_QP_RCV_STATE_CHANGE, tqpair->qpair.trace_id, 0, 0, tqpair->recv_state);
+	spdk_trace_record(TRACE_TCP_QP_RCV_STATE_CHANGE, tqpair->qpair.trace_id, 0, 0,
+			  (uint64_t)tqpair->recv_state);
 }
 
 static int
