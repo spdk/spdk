@@ -352,8 +352,14 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 
 	rc = spdk_rpc_get_method_state_mask(cfg.method, &state_mask);
 	if (rc == -ENOENT) {
-		SPDK_ERRLOG("Method '%s' was not found\n", cfg.method);
-		app_json_config_load_done(ctx, rc);
+		if (!ctx->stop_on_error) {
+			/* Invoke later to avoid recursion */
+			ctx->config_it = spdk_json_next(ctx->config_it);
+			spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem_config_entry, ctx);
+		} else {
+			SPDK_ERRLOG("Method '%s' was not found\n", cfg.method);
+			app_json_config_load_done(ctx, rc);
+		}
 		goto out;
 	}
 	cur_state_mask = spdk_rpc_get_state();
