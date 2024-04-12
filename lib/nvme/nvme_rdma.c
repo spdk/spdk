@@ -76,14 +76,6 @@
 #define NVME_RDMA_POLL_GROUP_CHECK_QPN(_rqpair, qpn)				\
 	((_rqpair)->rdma_qp && (_rqpair)->rdma_qp->qp->qp_num == (qpn))	\
 
-struct nvme_rdma_memory_domain {
-	TAILQ_ENTRY(nvme_rdma_memory_domain) link;
-	uint32_t ref;
-	struct ibv_pd *pd;
-	struct spdk_memory_domain *domain;
-	struct spdk_memory_domain_rdma_ctx rdma_ctx;
-};
-
 enum nvme_rdma_wr_type {
 	RDMA_WR_TYPE_RECV,
 	RDMA_WR_TYPE_SEND,
@@ -227,7 +219,7 @@ struct nvme_rdma_qpair {
 	TAILQ_HEAD(, spdk_nvme_rdma_req)	free_reqs;
 	TAILQ_HEAD(, spdk_nvme_rdma_req)	outstanding_reqs;
 
-	struct nvme_rdma_memory_domain		*memory_domain;
+	struct spdk_memory_domain		*memory_domain;
 
 	/* Count of outstanding send objects */
 	uint16_t				current_num_sends;
@@ -314,79 +306,6 @@ static struct nvme_rdma_poller *nvme_rdma_poll_group_get_poller(struct nvme_rdma
 		struct ibv_context *device);
 static void nvme_rdma_poll_group_put_poller(struct nvme_rdma_poll_group *group,
 		struct nvme_rdma_poller *poller);
-
-static TAILQ_HEAD(, nvme_rdma_memory_domain) g_memory_domains = TAILQ_HEAD_INITIALIZER(
-			g_memory_domains);
-static pthread_mutex_t g_memory_domains_lock = PTHREAD_MUTEX_INITIALIZER;
-
-static struct nvme_rdma_memory_domain *
-nvme_rdma_get_memory_domain(struct ibv_pd *pd)
-{
-	struct nvme_rdma_memory_domain *domain = NULL;
-	struct spdk_memory_domain_ctx ctx;
-	int rc;
-
-	pthread_mutex_lock(&g_memory_domains_lock);
-
-	TAILQ_FOREACH(domain, &g_memory_domains, link) {
-		if (domain->pd == pd) {
-			domain->ref++;
-			pthread_mutex_unlock(&g_memory_domains_lock);
-			return domain;
-		}
-	}
-
-	domain = calloc(1, sizeof(*domain));
-	if (!domain) {
-		SPDK_ERRLOG("Memory allocation failed\n");
-		pthread_mutex_unlock(&g_memory_domains_lock);
-		return NULL;
-	}
-
-	domain->rdma_ctx.size = sizeof(domain->rdma_ctx);
-	domain->rdma_ctx.ibv_pd = pd;
-	ctx.size = sizeof(ctx);
-	ctx.user_ctx = &domain->rdma_ctx;
-
-	rc = spdk_memory_domain_create(&domain->domain, SPDK_DMA_DEVICE_TYPE_RDMA, &ctx,
-				       SPDK_RDMA_DMA_DEVICE);
-	if (rc) {
-		SPDK_ERRLOG("Failed to create memory domain\n");
-		free(domain);
-		pthread_mutex_unlock(&g_memory_domains_lock);
-		return NULL;
-	}
-
-	domain->pd = pd;
-	domain->ref = 1;
-	TAILQ_INSERT_TAIL(&g_memory_domains, domain, link);
-
-	pthread_mutex_unlock(&g_memory_domains_lock);
-
-	return domain;
-}
-
-static void
-nvme_rdma_put_memory_domain(struct nvme_rdma_memory_domain *device)
-{
-	if (!device) {
-		return;
-	}
-
-	pthread_mutex_lock(&g_memory_domains_lock);
-
-	assert(device->ref > 0);
-
-	device->ref--;
-
-	if (device->ref == 0) {
-		spdk_memory_domain_destroy(device->domain);
-		TAILQ_REMOVE(&g_memory_domains, device, link);
-		free(device);
-	}
-
-	pthread_mutex_unlock(&g_memory_domains_lock);
-}
 
 static int nvme_rdma_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair);
@@ -806,7 +725,7 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 		return -1;
 	}
 
-	rqpair->memory_domain = nvme_rdma_get_memory_domain(rqpair->rdma_qp->qp->pd);
+	rqpair->memory_domain = spdk_rdma_utils_get_memory_domain(rqpair->rdma_qp->qp->pd);
 	if (!rqpair->memory_domain) {
 		SPDK_ERRLOG("Failed to get memory domain\n");
 		return -1;
@@ -1443,7 +1362,7 @@ nvme_rdma_get_memory_translation(struct nvme_request *req, struct nvme_rdma_qpai
 
 		rc = spdk_memory_domain_translate_data(req->payload.opts->memory_domain,
 						       req->payload.opts->memory_domain_ctx,
-						       rqpair->memory_domain->domain, &ctx, _ctx->addr,
+						       rqpair->memory_domain, &ctx, _ctx->addr,
 						       _ctx->length, &dma_translation);
 		if (spdk_unlikely(rc) || dma_translation.iov_count != 1) {
 			SPDK_ERRLOG("DMA memory translation failed, rc %d, iov count %u\n", rc, dma_translation.iov_count);
@@ -2138,7 +2057,10 @@ nvme_rdma_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	nvme_rdma_qpair_abort_reqs(qpair, 0);
 	nvme_qpair_deinit(qpair);
 
-	nvme_rdma_put_memory_domain(rqpair->memory_domain);
+	if (spdk_rdma_utils_put_memory_domain(rqpair->memory_domain) != 0) {
+		SPDK_ERRLOG("Failed to release memory domain\n");
+		assert(0);
+	}
 
 	spdk_free(rqpair);
 
@@ -3340,7 +3262,7 @@ nvme_rdma_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
 	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(ctrlr->adminq);
 
 	if (domains && array_size > 0) {
-		domains[0] = rqpair->memory_domain->domain;
+		domains[0] = rqpair->memory_domain;
 	}
 
 	return 1;
