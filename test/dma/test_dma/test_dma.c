@@ -1,5 +1,5 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021, 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -349,8 +349,15 @@ dma_test_translate_memory_cb(struct spdk_memory_domain *src_domain, void *src_do
 	struct dma_test_req *req = src_domain_ctx;
 	struct ibv_qp *dst_domain_qp = (struct ibv_qp *)dst_domain_ctx->rdma.ibv_qp;
 
+	if (spdk_unlikely(addr < req->iov.iov_base ||
+			  (uint8_t *)addr + len > (uint8_t *)req->iov.iov_base + req->iov.iov_len)) {
+		fprintf(stderr, "incorrect data %p, len %zu\n", addr, len);
+		return -1;
+	}
+
 	if (spdk_unlikely(!req->mr)) {
-		req->mr = ibv_reg_mr(dst_domain_qp->pd, addr, len, IBV_ACCESS_LOCAL_WRITE |
+		req->mr = ibv_reg_mr(dst_domain_qp->pd, req->iov.iov_base, req->iov.iov_len,
+				     IBV_ACCESS_LOCAL_WRITE |
 				     IBV_ACCESS_REMOTE_READ |
 				     IBV_ACCESS_REMOTE_WRITE);
 		if (!req->mr) {
