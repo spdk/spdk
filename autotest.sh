@@ -382,6 +382,10 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	if [[ $SPDK_TEST_FUZZER -eq 1 ]]; then
 		run_test "llvm_fuzz" $rootdir/test/fuzz/llvm.sh
 	fi
+
+	if [[ $SPDK_TEST_ACCEL_MLX5 -eq 1 ]]; then
+		run_test "accel_mlx5_crypto" $rootdir/test/accel/mlx5/accel_mlx5_crypto.sh
+	fi
 fi
 
 trap - SIGINT SIGTERM EXIT

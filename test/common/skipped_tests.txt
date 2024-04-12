@@ -74,3 +74,6 @@ keyring_linux
 nvmf_device_removal
 nvmf_device_removal_pci_remove_no_srq
 nvmf_device_removal_pci_remove
+
+# Disabled due to mlx5 HW/build dependency
+accel_mlx5_crypto
