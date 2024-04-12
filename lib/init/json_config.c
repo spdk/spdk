@@ -338,7 +338,7 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 		SPDK_DEBUG_APP_CFG("Subsystem '%.*s': configuration done.\n", ctx->subsystem_name->len,
 				   (char *)ctx->subsystem_name->start);
 		ctx->subsystems_it = spdk_json_next(ctx->subsystems_it);
-		/* Invoke later to avoid recurrence */
+		/* Invoke later to avoid recursion */
 		spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem, ctx);
 		return;
 	}
@@ -359,7 +359,7 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 	cur_state_mask = spdk_rpc_get_state();
 	if ((state_mask & cur_state_mask) != cur_state_mask) {
 		SPDK_DEBUG_APP_CFG("Method '%s' not allowed -> skipping\n", cfg.method);
-		/* Invoke later to avoid recurrence */
+		/* Invoke later to avoid recursion */
 		ctx->config_it = spdk_json_next(ctx->config_it);
 		spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem_config_entry, ctx);
 		goto out;
@@ -368,7 +368,7 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 		/* Some methods are allowed to be run in both STARTUP and RUNTIME states.
 		 * We should not call such methods twice, so ignore the second attempt in RUNTIME state */
 		SPDK_DEBUG_APP_CFG("Method '%s' has already been run in STARTUP state\n", cfg.method);
-		/* Invoke later to avoid recurrence */
+		/* Invoke later to avoid recursion */
 		ctx->config_it = spdk_json_next(ctx->config_it);
 		spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem_config_entry, ctx);
 		goto out;
