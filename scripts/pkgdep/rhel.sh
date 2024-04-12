@@ -210,3 +210,7 @@ if [[ $INSTALL_AVAHI == "true" ]]; then
 	# Additional dependencies for Avahi
 	yum install -y avahi-devel
 fi
+if [[ $INSTALL_IDXD == "true" ]]; then
+	# accel-config-devel is required for kernel IDXD implementation used in DSA accel module
+	yum install -y accel-config-devel
+fi

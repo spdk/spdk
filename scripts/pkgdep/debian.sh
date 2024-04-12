@@ -55,3 +55,11 @@ if [[ $INSTALL_AVAHI == "true" ]]; then
 	# Additional dependencies for Avahi
 	apt-get install -y libavahi-client-dev
 fi
+if [[ $INSTALL_IDXD == "true" ]]; then
+	# accel-config-devel is required for kernel IDXD implementation used in DSA accel module
+	if [[ $ID == "ubuntu" && ${VERSION_ID:0:2} -ge "23" ]]; then
+		apt-get install -y libaccel-config-dev
+	else
+		echo "libaccel-config is only present on Ubuntu 23.04 or higher."
+	fi
+fi

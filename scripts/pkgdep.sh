@@ -25,6 +25,7 @@ function usage() {
 	echo "  -D --daos                   Additional dependencies for DAOS"
 	echo "  -A --avahi                  Additional dependencies for Avahi mDNS Discovery"
 	echo "  -G --golang                 Additional dependencies for go API generation"
+	echo "  -I --idxd                   Additional dependencies for IDXD"
 	echo ""
 	exit 0
 }
@@ -39,6 +40,7 @@ function install_all_dependencies() {
 	INSTALL_DAOS=true
 	INSTALL_AVAHI=true
 	INSTALL_GOLANG=true
+	INSTALL_IDXD=true
 }
 
 INSTALL_CRYPTO=false
@@ -51,8 +53,9 @@ INSTALL_LIBURING=false
 INSTALL_DAOS=false
 INSTALL_AVAHI=false
 INSTALL_GOLANG=false
+INSTALL_IDXD=false
 
-while getopts 'abdfhipruADGR-:' optchar; do
+while getopts 'abdfhipruADGIR-:' optchar; do
 	case "$optchar" in
 		-)
 			case "$OPTARG" in
@@ -67,6 +70,7 @@ while getopts 'abdfhipruADGR-:' optchar; do
 				daos) INSTALL_DAOS=true ;;
 				avahi) INSTALL_AVAHI=true ;;
 				golang) INSTALL_GOLANG=true ;;
+				idxd) INSTALL_IDXD=true ;;
 				*)
 					echo "Invalid argument '$OPTARG'"
 					usage
@@ -84,6 +88,7 @@ while getopts 'abdfhipruADGR-:' optchar; do
 		D) INSTALL_DAOS=true ;;
 		A) INSTALL_AVAHI=true ;;
 		G) INSTALL_GOLANG=true ;;
+		I) INSTALL_IDXD=true ;;
 		*)
 			echo "Invalid argument '$OPTARG'"
 			usage
