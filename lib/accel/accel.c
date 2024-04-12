@@ -3243,4 +3243,18 @@ spdk_accel_get_module(const char *name)
 	return NULL;
 }
 
+int
+spdk_accel_get_opc_memory_domains(enum spdk_accel_opcode opcode,
+				  struct spdk_memory_domain **domains,
+				  int array_size)
+{
+	assert(opcode < SPDK_ACCEL_OPC_LAST);
+
+	if (g_modules_opc[opcode].module->get_memory_domains) {
+		return g_modules_opc[opcode].module->get_memory_domains(domains, array_size);
+	}
+
+	return 0;
+}
+
 SPDK_LOG_REGISTER_COMPONENT(accel)

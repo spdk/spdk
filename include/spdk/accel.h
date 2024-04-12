@@ -854,6 +854,22 @@ uint8_t spdk_accel_get_buf_align(enum spdk_accel_opcode opcode,
 				 const struct spdk_accel_operation_exec_ctx *ctx);
 
 /**
+ * Return memory domains used by specific opcode.
+ *
+ * The returned memory domains depend on the accel module which is assigned to handle the \b opcode
+ *
+ * \param opcode Accel Framework Opcode enum value.
+ * \param domains Pointer to an array of memory domains to be filled by this function. The user should allocate big enough
+  * array to keep all memory domains.
+ * \param array_size size of \b domains array
+ * \return the number of entries in \b domains array or negated errno. If returned value is bigger than \b array_size passed by the user
+  * then the user should increase the size of \b domains array and call this function again. There is no guarantees that
+  * the content of \b domains array is valid in that case.
+ */
+int spdk_accel_get_opc_memory_domains(enum spdk_accel_opcode opcode,
+				      struct spdk_memory_domain **domains, int array_size);
+
+/**
  * Return the name of an operation based on the opcode.
  *
  * \param opcode Opcode.
