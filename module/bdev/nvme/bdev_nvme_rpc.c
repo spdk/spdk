@@ -2373,6 +2373,7 @@ rpc_bdev_nvme_set_multipath_policy(struct spdk_jsonrpc_request *request,
 	}
 
 	ctx->req.rr_min_io = UINT32_MAX;
+	ctx->req.selector = BDEV_NVME_MP_SELECTOR_ROUND_ROBIN;
 
 	if (spdk_json_decode_object(params, rpc_set_multipath_policy_decoders,
 				    SPDK_COUNTOF(rpc_set_multipath_policy_decoders),
