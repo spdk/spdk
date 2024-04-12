@@ -25,6 +25,22 @@ struct raid_params {
 	enum raid_params_md_type md_type;
 };
 
+int raid_test_params_alloc(size_t count);
+void raid_test_params_free(void);
+void raid_test_params_add(struct raid_params *params);
+struct raid_bdev *raid_test_create_raid_bdev(struct raid_params *params,
+		struct raid_bdev_module *module);
+void raid_test_delete_raid_bdev(struct raid_bdev *raid_bdev);
+struct raid_bdev_io_channel *raid_test_create_io_channel(struct raid_bdev *raid_bdev);
+void raid_test_destroy_io_channel(struct raid_bdev_io_channel *raid_ch);
+void raid_test_bdev_io_init(struct raid_bdev_io *raid_io, struct raid_bdev *raid_bdev,
+			    struct raid_bdev_io_channel *raid_ch,
+			    enum spdk_bdev_io_type type, uint64_t offset_blocks,
+			    uint64_t num_blocks, struct iovec *iovs, int iovcnt, void *md_buf);
+
+/* needs to be implemented in module unit test files */
+void raid_test_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status);
+
 struct raid_params *g_params;
 size_t g_params_count;
 size_t g_params_size;
@@ -41,7 +57,7 @@ spdk_bdev_desc_get_bdev(struct spdk_bdev_desc *desc)
 	return desc->bdev;
 }
 
-static int
+int
 raid_test_params_alloc(size_t count)
 {
 	assert(g_params == NULL);
@@ -53,7 +69,7 @@ raid_test_params_alloc(size_t count)
 	return g_params ? 0 : -ENOMEM;
 }
 
-static void
+void
 raid_test_params_free(void)
 {
 	g_params_count = 0;
@@ -61,7 +77,7 @@ raid_test_params_free(void)
 	free(g_params);
 }
 
-static void
+void
 raid_test_params_add(struct raid_params *params)
 {
 	assert(g_params_count < g_params_size);
@@ -70,7 +86,7 @@ raid_test_params_add(struct raid_params *params)
 	g_params_count++;
 }
 
-static struct raid_bdev *
+struct raid_bdev *
 raid_test_create_raid_bdev(struct raid_params *params, struct raid_bdev_module *module)
 {
 	struct raid_bdev *raid_bdev;
@@ -138,7 +154,7 @@ raid_test_create_raid_bdev(struct raid_params *params, struct raid_bdev_module *
 	return raid_bdev;
 }
 
-static void
+void
 raid_test_delete_raid_bdev(struct raid_bdev *raid_bdev)
 {
 	struct raid_base_bdev_info *base_info;
@@ -168,7 +184,7 @@ raid_bdev_channel_get_module_ctx(struct raid_bdev_io_channel *raid_ch)
 	return spdk_io_channel_get_ctx(raid_ch->_module_channel);
 }
 
-static struct raid_bdev_io_channel *
+struct raid_bdev_io_channel *
 raid_test_create_io_channel(struct raid_bdev *raid_bdev)
 {
 	struct raid_bdev_io_channel *raid_ch;
@@ -192,7 +208,7 @@ raid_test_create_io_channel(struct raid_bdev *raid_bdev)
 	return raid_ch;
 }
 
-static void
+void
 raid_test_destroy_io_channel(struct raid_bdev_io_channel *raid_ch)
 {
 	free(raid_ch->_base_channels);
@@ -205,7 +221,7 @@ raid_test_destroy_io_channel(struct raid_bdev_io_channel *raid_ch)
 	free(raid_ch);
 }
 
-static void
+void
 raid_test_bdev_io_init(struct raid_bdev_io *raid_io, struct raid_bdev *raid_bdev,
 		       struct raid_bdev_io_channel *raid_ch,
 		       enum spdk_bdev_io_type type, uint64_t offset_blocks,
@@ -225,10 +241,6 @@ raid_test_bdev_io_init(struct raid_bdev_io *raid_io, struct raid_bdev *raid_bdev
 
 	raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
 }
-
-/* needs to be implemented in module unit test files */
-static void raid_test_bdev_io_complete(struct raid_bdev_io *raid_io,
-				       enum spdk_bdev_io_status status);
 
 void
 raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status)

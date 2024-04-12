@@ -254,7 +254,7 @@ raid_bdev_queue_io_wait(struct raid_bdev_io *raid_io, struct spdk_bdev *bdev,
 	TAILQ_INSERT_TAIL(&io_info->bdev_io_wait_queue, &raid_io->waitq_entry, link);
 }
 
-static void
+void
 raid_test_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status)
 {
 	struct test_raid_bdev_io *test_raid_bdev_io = SPDK_CONTAINEROF(raid_io, struct test_raid_bdev_io,

@@ -148,7 +148,7 @@ raid_bdev_queue_io_wait(struct raid_bdev_io *raid_io, struct spdk_bdev *bdev,
 	cb_fn(raid_io);
 }
 
-static void
+void
 raid_test_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status)
 {
 	CU_ASSERT(status == SPDK_BDEV_IO_STATUS_SUCCESS);
