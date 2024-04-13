@@ -8478,7 +8478,9 @@ nvme_io_path_info_json(struct spdk_json_write_ctx *w, struct nvme_io_path *io_pa
 	struct nvme_ctrlr *nvme_ctrlr = io_path->qpair->ctrlr;
 	const struct spdk_nvme_ctrlr_data *cdata;
 	const struct spdk_nvme_transport_id *trid;
+	const struct nvme_bdev_channel *nbdev_ch;
 	const char *adrfam_str;
+	bool current;
 
 	spdk_json_write_object_begin(w);
 
@@ -8488,8 +8490,13 @@ nvme_io_path_info_json(struct spdk_json_write_ctx *w, struct nvme_io_path *io_pa
 	trid = spdk_nvme_ctrlr_get_transport_id(nvme_ctrlr->ctrlr);
 
 	spdk_json_write_named_uint32(w, "cntlid", cdata->cntlid);
-	spdk_json_write_named_bool(w, "current", io_path->nbdev_ch != NULL &&
-				   io_path == io_path->nbdev_ch->current_io_path);
+	nbdev_ch = io_path->nbdev_ch;
+	if (nbdev_ch == NULL) {
+		current = false;
+	} else {
+		current = (io_path == nbdev_ch->current_io_path);
+	}
+	spdk_json_write_named_bool(w, "current", current);
 	spdk_json_write_named_bool(w, "connected", nvme_qpair_is_connected(io_path->qpair));
 	spdk_json_write_named_bool(w, "accessible", nvme_ns_is_accessible(nvme_ns));
 
