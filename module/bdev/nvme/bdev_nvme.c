@@ -8499,6 +8499,20 @@ nvme_io_path_info_json(struct spdk_json_write_ctx *w, struct nvme_io_path *io_pa
 	nbdev_ch = io_path->nbdev_ch;
 	if (nbdev_ch == NULL) {
 		current = false;
+	} else if (nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE) {
+		struct nvme_io_path *optimized_io_path = NULL;
+
+		STAILQ_FOREACH(optimized_io_path, &nbdev_ch->io_path_list, stailq) {
+			if (optimized_io_path->nvme_ns->ana_state == SPDK_NVME_ANA_OPTIMIZED_STATE) {
+				break;
+			}
+		}
+
+		current = nvme_io_path_is_available(io_path);
+		if (io_path->nvme_ns->ana_state == SPDK_NVME_ANA_NON_OPTIMIZED_STATE) {
+			/* A non-optimized path is only current if there are no optimized paths. */
+			current = current && (optimized_io_path == NULL);
+		}
 	} else {
 		current = (io_path == nbdev_ch->current_io_path);
 	}
