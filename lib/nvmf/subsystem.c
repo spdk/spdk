@@ -230,6 +230,7 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	}
 
 	if (!nvmf_nqn_is_valid(nqn)) {
+		SPDK_ERRLOG("Subsystem NQN '%s' is invalid\n", nqn);
 		return NULL;
 	}
 
@@ -246,10 +247,12 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	/* Find a free subsystem id (sid) */
 	sid = spdk_bit_array_find_first_clear(tgt->subsystem_ids, 0);
 	if (sid == UINT32_MAX) {
+		SPDK_ERRLOG("No free subsystem IDs are available for subsystem creation\n");
 		return NULL;
 	}
 	subsystem = calloc(1, sizeof(struct spdk_nvmf_subsystem));
 	if (subsystem == NULL) {
+		SPDK_ERRLOG("Subsystem memory allocation failed\n");
 		return NULL;
 	}
 
@@ -271,6 +274,7 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	if (subsystem->used_listener_ids == NULL) {
 		pthread_mutex_destroy(&subsystem->mutex);
 		free(subsystem);
+		SPDK_ERRLOG("Listener id array memory allocation failed\n");
 		return NULL;
 	}
 
