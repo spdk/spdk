@@ -277,6 +277,9 @@ struct spdk_nvmf_subsystem {
 	bool						destroying;
 	bool						async_destroy;
 
+	/* FDP related fields */
+	bool						fdp_supported;
+
 	/* Zoned storage related fields */
 	bool						zone_append_supported;
 	uint64_t					max_zone_append_size_kib;

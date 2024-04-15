@@ -1595,6 +1595,12 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 	spdk_bdev_close(ns->desc);
 	free(ns);
 
+	if (subsystem->fdp_supported && !spdk_nvmf_subsystem_get_first_ns(subsystem)) {
+		subsystem->fdp_supported = false;
+		SPDK_DEBUGLOG(nvmf, "Subsystem with id: %u doesn't have FDP capability.\n",
+			      subsystem->id);
+	}
+
 	for (transport = spdk_nvmf_transport_get_first(subsystem->tgt); transport;
 	     transport = spdk_nvmf_transport_get_next(transport)) {
 		if (transport->ops->subsystem_remove_ns) {
@@ -1860,7 +1866,7 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 {
 	struct spdk_nvmf_transport *transport;
 	struct spdk_nvmf_ns_opts opts;
-	struct spdk_nvmf_ns *ns;
+	struct spdk_nvmf_ns *ns, *first_ns;
 	struct spdk_nvmf_ctrlr *ctrlr;
 	struct spdk_nvmf_reservation_info info = {0};
 	int rc;
@@ -1994,6 +2000,22 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 
 		subsystem->zone_append_supported = zone_append_supported;
 		subsystem->max_zone_append_size_kib = max_zone_append_size_kib;
+	}
+
+	first_ns = spdk_nvmf_subsystem_get_first_ns(subsystem);
+	if (!first_ns) {
+		if (spdk_bdev_get_nvme_ctratt(ns->bdev).bits.fdps) {
+			SPDK_DEBUGLOG(nvmf, "Subsystem with id: %u has FDP capability.\n",
+				      subsystem->id);
+			subsystem->fdp_supported = true;
+		}
+	} else {
+		if (spdk_bdev_get_nvme_ctratt(first_ns->bdev).bits.fdps !=
+		    spdk_bdev_get_nvme_ctratt(ns->bdev).bits.fdps) {
+			SPDK_ERRLOG("Subsystem with id: %u can%s FDP namespace.\n", subsystem->id,
+				    spdk_bdev_get_nvme_ctratt(first_ns->bdev).bits.fdps ? " only add" : "not add");
+			goto err;
+		}
 	}
 
 	ns->opts = opts;

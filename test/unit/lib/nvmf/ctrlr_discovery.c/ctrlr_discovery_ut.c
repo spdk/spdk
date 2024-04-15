@@ -84,6 +84,9 @@ DEFINE_STUB(spdk_bdev_is_zoned, bool, (const struct spdk_bdev *bdev), false);
 DEFINE_STUB(spdk_bdev_get_max_zone_append_size, uint32_t,
 	    (const struct spdk_bdev *bdev), 0);
 
+DEFINE_STUB(spdk_bdev_get_nvme_ctratt, union spdk_bdev_nvme_ctratt,
+	    (struct spdk_bdev *bdev), {});
+
 const char *
 spdk_bdev_get_name(const struct spdk_bdev *bdev)
 {

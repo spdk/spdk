@@ -2805,6 +2805,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->cmic.multi_ctrlr = 1;
 		cdata->oaes.ns_attribute_notices = 1;
 		cdata->ctratt.bits.host_id_exhid_supported = 1;
+		cdata->ctratt.bits.fdps = ctrlr->subsys->fdp_supported;
 		/* We do not have any actual limitation to the number of abort commands.
 		 * We follow the recommendation by the NVMe specification.
 		 */

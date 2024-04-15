@@ -196,6 +196,7 @@ nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
 static struct spdk_bdev g_bdevs[] = {
 	{ .name = "bdev1" },
 	{ .name = "bdev2" },
+	{ .name = "bdev3", .ctratt.raw = 0x80000 },
 };
 
 struct spdk_bdev_desc {
@@ -248,6 +249,11 @@ spdk_bdev_get_uuid(const struct spdk_bdev *bdev)
 	return &bdev->uuid;
 }
 
+union spdk_bdev_nvme_ctratt spdk_bdev_get_nvme_ctratt(struct spdk_bdev *bdev)
+{
+	return bdev->ctratt;
+}
+
 static void
 test_spdk_nvmf_subsystem_add_ns(void)
 {
@@ -294,6 +300,56 @@ test_spdk_nvmf_subsystem_add_ns(void)
 
 	rc = spdk_nvmf_subsystem_remove_ns(&subsystem, 5);
 	CU_ASSERT(rc == 0);
+
+	free(subsystem.ns);
+	free(subsystem.ana_group);
+}
+
+static void
+test_spdk_nvmf_subsystem_add_fdp_ns(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem subsystem = {
+		.max_nsid = 1024,
+		.ns = NULL,
+		.tgt = &tgt,
+	};
+	struct spdk_nvmf_ns_opts ns_opts;
+	uint32_t nsid;
+	int rc;
+
+	subsystem.ns = calloc(subsystem.max_nsid, sizeof(struct spdk_nvmf_subsystem_ns *));
+	SPDK_CU_ASSERT_FATAL(subsystem.ns != NULL);
+	subsystem.ana_group = calloc(subsystem.max_nsid, sizeof(uint32_t));
+	SPDK_CU_ASSERT_FATAL(subsystem.ana_group != NULL);
+
+	tgt.max_subsystems = 1024;
+	RB_INIT(&tgt.subsystems);
+
+	CU_ASSERT(subsystem.fdp_supported == false);
+
+	/* Add a FDP supported namespace to the subsystem */
+	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
+	ns_opts.nsid = 3;
+	nsid = spdk_nvmf_subsystem_add_ns_ext(&subsystem, "bdev3", &ns_opts, sizeof(ns_opts), NULL);
+	CU_ASSERT(nsid == 3);
+	CU_ASSERT(subsystem.max_nsid == 1024);
+	SPDK_CU_ASSERT_FATAL(subsystem.ns[nsid - 1] != NULL);
+	CU_ASSERT(subsystem.ns[nsid - 1]->bdev == &g_bdevs[2]);
+	CU_ASSERT(subsystem.fdp_supported == true);
+
+	/* Try to add a non FDP supported namespace to the subsystem */
+	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
+	ns_opts.nsid = 5;
+	nsid = spdk_nvmf_subsystem_add_ns_ext(&subsystem, "bdev2", &ns_opts, sizeof(ns_opts), NULL);
+	CU_ASSERT(nsid == 0);
+	CU_ASSERT(subsystem.max_nsid == 1024);
+	CU_ASSERT(subsystem.fdp_supported == true);
+
+	/* Remove last FDP namespace from the subsystem */
+	rc = spdk_nvmf_subsystem_remove_ns(&subsystem, 3);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(subsystem.fdp_supported == false);
 
 	free(subsystem.ns);
 	free(subsystem.ana_group);
@@ -2151,6 +2207,7 @@ main(int argc, char **argv)
 
 	CU_ADD_TEST(suite, nvmf_test_create_subsystem);
 	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_add_ns);
+	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_add_fdp_ns);
 	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_set_sn);
 	CU_ADD_TEST(suite, test_spdk_nvmf_ns_visible);
 	CU_ADD_TEST(suite, test_reservation_register);
