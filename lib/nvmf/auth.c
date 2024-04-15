@@ -469,6 +469,34 @@ nvmf_auth_success2_exec(struct spdk_nvmf_request *req, struct spdk_nvmf_dhchap_s
 }
 
 static void
+nvmf_auth_failure2_exec(struct spdk_nvmf_request *req, struct spdk_nvmf_auth_failure *msg)
+{
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	struct spdk_nvmf_qpair_auth *auth = qpair->auth;
+
+	/* AUTH_failure2 is only expected when we're waiting for the success2 message */
+	if (auth->state != NVMF_QPAIR_AUTH_SUCCESS2) {
+		AUTH_ERRLOG(qpair, "invalid state=%s\n", nvmf_auth_get_state_name(auth->state));
+		nvmf_auth_request_fail1(req, SPDK_NVMF_AUTH_INCORRECT_PROTOCOL_MESSAGE);
+		return;
+	}
+	if (req->length != sizeof(*msg)) {
+		AUTH_ERRLOG(qpair, "invalid message length=%"PRIu32"\n", req->length);
+		nvmf_auth_request_fail1(req, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
+		return;
+	}
+	if (msg->t_id != auth->tid) {
+		AUTH_ERRLOG(qpair, "transaction id mismatch: %u != %u\n", msg->t_id, auth->tid);
+		nvmf_auth_request_fail1(req, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
+		return;
+	}
+
+	AUTH_ERRLOG(qpair, "ctrlr authentication failed: rc=%d, rce=%d\n", msg->rc, msg->rce);
+	nvmf_auth_set_state(qpair, NVMF_QPAIR_AUTH_ERROR);
+	nvmf_auth_request_complete(req, SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_SUCCESS, 0);
+}
+
+static void
 nvmf_auth_send_exec(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
@@ -494,6 +522,9 @@ nvmf_auth_send_exec(struct spdk_nvmf_request *req)
 		switch (header->auth_id) {
 		case SPDK_NVMF_AUTH_ID_NEGOTIATE:
 			nvmf_auth_negotiate_exec(req, (void *)header);
+			break;
+		case SPDK_NVMF_AUTH_ID_FAILURE2:
+			nvmf_auth_failure2_exec(req, (void *)header);
 			break;
 		default:
 			AUTH_ERRLOG(qpair, "unexpected auth_id=%u\n", header->auth_id);
