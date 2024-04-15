@@ -3578,6 +3578,36 @@ spdk_nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
 			      subsystem_listener_update_done);
 }
 
+int
+spdk_nvmf_subsystem_get_ana_state(struct spdk_nvmf_subsystem *subsystem,
+				  const struct spdk_nvme_transport_id *trid,
+				  uint32_t anagrpid,
+				  enum spdk_nvme_ana_state *ana_state)
+{
+	assert(ana_state != NULL);
+
+	struct spdk_nvmf_subsystem_listener *listener;
+
+	if (!subsystem->flags.ana_reporting) {
+		SPDK_ERRLOG("ANA reporting is disabled\n");
+		return -EINVAL;
+	}
+
+	if (anagrpid <= 0 || anagrpid > subsystem->max_nsid) {
+		SPDK_ERRLOG("ANA group ID %" PRIu32 " is invalid\n", anagrpid);
+		return -EINVAL;
+	}
+
+	listener = nvmf_subsystem_find_listener(subsystem, trid);
+	if (!listener) {
+		SPDK_ERRLOG("Unable to find listener.\n");
+		return -EINVAL;
+	}
+
+	*ana_state = listener->ana_state[anagrpid - 1];
+	return 0;
+}
+
 bool
 spdk_nvmf_subsystem_is_discovery(struct spdk_nvmf_subsystem *subsystem)
 {

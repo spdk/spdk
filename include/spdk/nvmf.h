@@ -913,6 +913,23 @@ void spdk_nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
 				       enum spdk_nvme_ana_state ana_state, uint32_t anagrpid,
 				       spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn, void *cb_arg);
 
+/**
+ * Get Asymmetric Namespace Access (ANA) state for the specified ANA group id.
+ *
+ * \param subsystem Subsystem to operate on
+ * \param trid Address for which the ANA is to be looked up
+ * \param anagrpid The ANA group ID to check for
+ * \param ana_state Output parameter that will contain the ANA state
+ *
+ * \return 0 on success, or negated errno value on failure.
+ *
+ */
+
+int spdk_nvmf_subsystem_get_ana_state(struct spdk_nvmf_subsystem *subsystem,
+				      const struct spdk_nvme_transport_id *trid,
+				      uint32_t anagrpid,
+				      enum spdk_nvme_ana_state *ana_state);
+
 /** NVMe-oF target namespace creation options */
 struct spdk_nvmf_ns_opts {
 	/**

@@ -40,6 +40,9 @@ Added support for namespace masking using new C APIs `spdk_nvmf_ns_add_host` and
 Users must pass new `--no-auto-visible` parameter to `nvmf_subsystem_add_ns` RPC to allow
 namespace masking to be controlled by these new RPCs.
 
+Added `spdk_nvmf_subsystem_get_ana_state` API to get current ANA state of
+a particular ANA group ID.
+
 ### spdk_trace
 
 `spdk_trace` has learned how to use the most recent trace file in /dev/shm when
