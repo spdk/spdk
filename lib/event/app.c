@@ -354,7 +354,7 @@ app_do_spdk_subsystem_init(int rc, void *arg1)
 		}
 		spdk_rpc_server_pause(g_spdk_app.rpc_addr);
 	} else {
-		SPDK_NOTICELOG("RPC server not started\n");
+		SPDK_DEBUGLOG(app_rpc, "RPC server not started\n");
 	}
 	spdk_subsystem_init(app_subsystem_init_done, NULL);
 }

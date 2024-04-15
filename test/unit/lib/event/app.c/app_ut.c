@@ -39,6 +39,8 @@ DEFINE_STUB(spdk_reactors_init, int, (size_t msg_mempool_size), 0);
 DEFINE_STUB_V(spdk_reactors_fini, (void));
 bool g_scheduling_in_progress;
 
+SPDK_LOG_REGISTER_COMPONENT(app_rpc);
+
 static void
 unittest_usage(void)
 {
