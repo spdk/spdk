@@ -758,11 +758,20 @@ nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 		       void *cb_arg, int status)
 {
 	struct nvmf_rpc_listener_ctx *ctx = cb_arg;
+	struct spdk_nvmf_subsystem_listener *listener;
 	int rc;
 
 	switch (ctx->op) {
 	case NVMF_RPC_LISTEN_ADD:
-		if (nvmf_subsystem_find_listener(subsystem, &ctx->trid)) {
+		listener = nvmf_subsystem_find_listener(subsystem, &ctx->trid);
+		if (listener) {
+			if (ctx->listener_opts.secure_channel != listener->opts.secure_channel) {
+				SPDK_ERRLOG("A listener already exists with different secure channel option.");
+				spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+								 "Invalid parameters");
+				ctx->response_sent = true;
+			}
+
 			break;
 		}
 

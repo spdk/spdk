@@ -39,6 +39,9 @@ rpc_cmd << CMD
 	nvmf_subsystem_add_host --psk "$key0path" "$subnqn" "$hostnqn"
 CMD
 
+# Test, if another listener cannot be added, with different secure channel value
+NOT rpc_cmd nvmf_subsystem_add_listener -t tcp -a 127.0.0.1 -s 4420 "$subnqn"
+
 "$rootdir/build/examples/bdevperf" -q 128 -o 4k -w randrw -M 50 -t 1 -m 2 -r "$bperfsock" -z &
 bperfpid=$!
 
