@@ -576,4 +576,13 @@ int nvmf_bdev_ctrlr_zcopy_start(struct spdk_bdev *bdev,
  */
 void nvmf_bdev_ctrlr_zcopy_end(struct spdk_nvmf_request *req, bool commit);
 
+/**
+ * Publishes the mDNS PRR (Pull Registration Request) for the NVMe-oF target.
+ *
+ * \param tgt The NVMe-oF target
+ *
+ * \return 0 on success, negative errno on failure
+ */
+int nvmf_publish_mdns_prr(struct spdk_nvmf_tgt *tgt);
+
 #endif /* __NVMF_INTERNAL_H__ */

@@ -13213,3 +13213,37 @@ Example response:
   "result": true
 }
 ~~~
+
+### nvmf_publish_mdns_prr {#rpc_nvmf_publish_mdns_prr}
+
+This interface is used to publish an NVMf target's service location using mDNS
+(Multicast DNS) protocol. It allows clients to discover the NVMf target using
+the published service location.
+
+#### Parameters
+
+Name                       | Optional | Type        | Description
+-------------------------- | -------- | ----------- | -----------
+tgt_name                   | Optional | string      | Parent NVMe-oF target name.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "nvmf_publish_mdns_prr",
+  "id": 1,
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~

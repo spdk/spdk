@@ -702,3 +702,19 @@ def nvmf_set_crdt(client, crdt1=None, crdt2=None, crdt3=None):
         params['crdt3'] = crdt3
 
     return client.call('nvmf_set_crdt', params)
+
+
+def nvmf_publish_mdns_prr(client, tgt_name=None):
+    """Publish mdns pull registration request
+
+    Args:
+        tgt_name: name of the NVMe-oF target (optional).
+
+    Returns:
+        Success or Fail
+    """
+    params = {}
+    if tgt_name:
+        params['tgt_name'] = tgt_name
+
+    return client.call('nvmf_publish_mdns_prr', params)

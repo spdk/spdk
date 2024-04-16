@@ -13,6 +13,7 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/bit_array.h"
+#include "spdk/config.h"
 
 #include "spdk_internal/assert.h"
 
@@ -2985,3 +2986,55 @@ rpc_nvmf_subsystem_get_listeners(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("nvmf_subsystem_get_listeners", rpc_nvmf_subsystem_get_listeners,
 		  SPDK_RPC_RUNTIME);
+
+struct rpc_mdns_prr {
+	char *tgt_name;
+};
+
+static const struct spdk_json_object_decoder rpc_mdns_prr_decoders[] = {
+	{"tgt_name", offsetof(struct rpc_mdns_prr, tgt_name), spdk_json_decode_string, true},
+};
+
+static void
+rpc_nvmf_publish_mdns_prr(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+#ifndef SPDK_CONFIG_AVAHI
+	SPDK_ERRLOG("nvmf_publish_mdns_prr is supported when SPDK is built with the --with-avahi option.\n");
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 "nvmf_publish_mdns_prr is supported when SPDK is built with the --with-avahi option.");
+	return;
+#endif
+	int rc;
+	struct rpc_mdns_prr req = { 0 };
+	struct spdk_nvmf_tgt *tgt;
+
+	if (params) {
+		if (spdk_json_decode_object(params, rpc_mdns_prr_decoders,
+					    SPDK_COUNTOF(rpc_mdns_prr_decoders),
+					    &req)) {
+			SPDK_ERRLOG("spdk_json_decode_object failed\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+			return;
+		}
+	}
+
+	tgt = spdk_nvmf_get_tgt(req.tgt_name);
+	if (!tgt) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Unable to find a target.");
+		free(req.tgt_name);
+		return;
+	}
+
+	rc = nvmf_publish_mdns_prr(tgt);
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		free(req.tgt_name);
+		return;
+	}
+
+	spdk_jsonrpc_send_bool_response(request, true);
+	free(req.tgt_name);
+}
+SPDK_RPC_REGISTER("nvmf_publish_mdns_prr", rpc_nvmf_publish_mdns_prr, SPDK_RPC_RUNTIME);
