@@ -1900,8 +1900,7 @@ rpc_nvmf_subsystem_add_host(struct spdk_jsonrpc_request *request,
 					    &ctx)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-		nvmf_rpc_host_ctx_free(&ctx);
-		return;
+		goto out;
 	}
 
 	tgt = spdk_nvmf_get_tgt(ctx.tgt_name);
@@ -1909,16 +1908,14 @@ rpc_nvmf_subsystem_add_host(struct spdk_jsonrpc_request *request,
 		SPDK_ERRLOG("Unable to find a target object.\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Unable to find a target.");
-		nvmf_rpc_host_ctx_free(&ctx);
-		return;
+		goto out;
 	}
 
 	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, ctx.nqn);
 	if (!subsystem) {
 		SPDK_ERRLOG("Unable to find subsystem with NQN %s\n", ctx.nqn);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-		nvmf_rpc_host_ctx_free(&ctx);
-		return;
+		goto out;
 	}
 
 	if (ctx.dhchap_key != NULL) {
@@ -1927,8 +1924,7 @@ rpc_nvmf_subsystem_add_host(struct spdk_jsonrpc_request *request,
 			SPDK_ERRLOG("Unable to find DH-HMAC-CHAP key: %s\n", ctx.dhchap_key);
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");
-			nvmf_rpc_host_ctx_free(&ctx);
-			return;
+			goto out;
 		}
 	}
 
@@ -1938,13 +1934,12 @@ rpc_nvmf_subsystem_add_host(struct spdk_jsonrpc_request *request,
 	rc = spdk_nvmf_subsystem_add_host_ext(subsystem, ctx.host, &opts);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
-		nvmf_rpc_host_ctx_free(&ctx);
-		spdk_keyring_put_key(key);
-		return;
+		goto out;
 	}
 
-	spdk_keyring_put_key(key);
 	spdk_jsonrpc_send_bool_response(request, true);
+out:
+	spdk_keyring_put_key(key);
 	nvmf_rpc_host_ctx_free(&ctx);
 }
 SPDK_RPC_REGISTER("nvmf_subsystem_add_host", rpc_nvmf_subsystem_add_host, SPDK_RPC_RUNTIME)
