@@ -962,22 +962,32 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 }
 
+static inline void
+bdevperf_init_ext_io_opts(struct spdk_bdev_ext_io_opts *opts, void *md_buf)
+{
+	memset(opts, 0, sizeof(*opts));
+	opts->size = sizeof(*opts);
+	opts->metadata = md_buf;
+}
+
 static void
 bdevperf_verify_submit_read(void *cb_arg)
 {
 	struct bdevperf_job	*job;
 	struct bdevperf_task	*task = cb_arg;
+	struct spdk_bdev_ext_io_opts opts;
 	int			rc;
 
 	job = task->job;
 
 	task->iov.iov_base = task->verify_buf;
 	task->iov.iov_len = job->buf_size;
+	bdevperf_init_ext_io_opts(&opts, NULL);
 
 	/* Read the data back in */
-	rc = spdk_bdev_readv_blocks_with_md(job->bdev_desc, job->ch, &task->iov, 1, NULL,
-					    task->offset_blocks, job->io_size_blocks,
-					    bdevperf_complete, task);
+	rc = spdk_bdev_readv_blocks_ext(job->bdev_desc, job->ch, &task->iov, 1,
+					task->offset_blocks, job->io_size_blocks,
+					bdevperf_complete, task, &opts);
 
 	if (rc == -ENOMEM) {
 		bdevperf_queue_io_wait_with_cb(task, bdevperf_verify_submit_read);
@@ -1062,6 +1072,7 @@ bdevperf_submit_task(void *arg)
 	struct spdk_io_channel	*ch;
 	spdk_bdev_io_completion_cb cb_fn;
 	uint64_t		offset_in_ios;
+	struct spdk_bdev_ext_io_opts opts;
 	int			rc = 0;
 
 	desc = job->bdev_desc;
@@ -1079,11 +1090,11 @@ bdevperf_submit_task(void *arg)
 				spdk_bdev_zcopy_end(task->bdev_io, true, cb_fn, task);
 				return;
 			} else {
-				rc = spdk_bdev_writev_blocks_with_md(desc, ch, &task->iov, 1,
-								     task->md_buf,
-								     task->offset_blocks,
-								     job->io_size_blocks,
-								     cb_fn, task);
+				bdevperf_init_ext_io_opts(&opts, task->md_buf);
+				rc = spdk_bdev_writev_blocks_ext(desc, ch, &task->iov, 1,
+								 task->offset_blocks,
+								 job->io_size_blocks,
+								 cb_fn, task, &opts);
 			}
 		}
 		break;
@@ -1104,11 +1115,11 @@ bdevperf_submit_task(void *arg)
 			rc = spdk_bdev_zcopy_start(desc, ch, NULL, 0, task->offset_blocks, job->io_size_blocks,
 						   true, bdevperf_zcopy_populate_complete, task);
 		} else {
-			rc = spdk_bdev_readv_blocks_with_md(desc, ch, &task->iov, 1,
-							    task->md_buf,
-							    task->offset_blocks,
-							    job->io_size_blocks,
-							    bdevperf_complete, task);
+			bdevperf_init_ext_io_opts(&opts, task->md_buf);
+			rc = spdk_bdev_readv_blocks_ext(desc, ch, &task->iov, 1,
+							task->offset_blocks,
+							job->io_size_blocks,
+							bdevperf_complete, task, &opts);
 		}
 		break;
 	case SPDK_BDEV_IO_TYPE_ABORT:
