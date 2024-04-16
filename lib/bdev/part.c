@@ -203,7 +203,7 @@ bdev_part_remap_dif(struct spdk_bdev_io *bdev_io, uint32_t offset,
 	int rc;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
 
-	if (spdk_likely(!(bdev->dif_check_flags & SPDK_DIF_FLAGS_REFTAG_CHECK))) {
+	if (spdk_likely(!(bdev_io->u.bdev.dif_check_flags & SPDK_DIF_FLAGS_REFTAG_CHECK))) {
 		return 0;
 	}
 
@@ -211,7 +211,7 @@ bdev_part_remap_dif(struct spdk_bdev_io *bdev_io, uint32_t offset,
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       bdev->blocklen, bdev->md_len, bdev->md_interleave,
-			       bdev->dif_is_head_of_md, bdev->dif_type, bdev->dif_check_flags,
+			       bdev->dif_is_head_of_md, bdev->dif_type, bdev_io->u.bdev.dif_check_flags,
 			       offset, 0, 0, 0, 0, &dif_opts);
 	if (rc != 0) {
 		SPDK_ERRLOG("Initialization of DIF context failed\n");
@@ -284,6 +284,7 @@ bdev_part_init_ext_io_opts(struct spdk_bdev_io *bdev_io, struct spdk_bdev_ext_io
 	opts->memory_domain = bdev_io->u.bdev.memory_domain;
 	opts->memory_domain_ctx = bdev_io->u.bdev.memory_domain_ctx;
 	opts->metadata = bdev_io->u.bdev.md_buf;
+	opts->dif_check_flags_exclude_mask = ~bdev_io->u.bdev.dif_check_flags;
 }
 
 int
