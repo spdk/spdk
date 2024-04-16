@@ -31,12 +31,6 @@ struct raid_bdev_read_sb_ctx {
 	uint32_t buf_size;
 };
 
-static inline uint64_t
-align_ceil(uint64_t val, uint64_t align)
-{
-	return spdk_divide_round_up(val, align) * align;
-}
-
 int
 raid_bdev_alloc_superblock(struct raid_bdev *raid_bdev, uint32_t block_size)
 {
@@ -181,7 +175,8 @@ raid_bdev_read_sb_remainder(struct raid_bdev_read_sb_ctx *ctx)
 	int rc;
 
 	buf_size_prev = ctx->buf_size;
-	ctx->buf_size = align_ceil(sb->length, spdk_bdev_get_block_size(bdev));
+	ctx->buf_size = spdk_divide_round_up(sb->length,
+					     spdk_bdev_get_block_size(bdev)) * spdk_bdev_get_block_size(bdev);
 	buf = spdk_dma_realloc(ctx->buf, ctx->buf_size, spdk_bdev_get_buf_align(bdev), NULL);
 	if (buf == NULL) {
 		SPDK_ERRLOG("Failed to reallocate buffer\n");
@@ -251,7 +246,8 @@ raid_bdev_load_base_bdev_superblock(struct spdk_bdev_desc *desc, struct spdk_io_
 	ctx->ch = ch;
 	ctx->cb = cb;
 	ctx->cb_ctx = cb_ctx;
-	ctx->buf_size = align_ceil(sizeof(struct raid_bdev_superblock), spdk_bdev_get_block_size(bdev));
+	ctx->buf_size = spdk_divide_round_up(sizeof(struct raid_bdev_superblock),
+					     spdk_bdev_get_block_size(bdev)) * spdk_bdev_get_block_size(bdev);
 	ctx->buf = spdk_dma_malloc(ctx->buf_size, spdk_bdev_get_buf_align(bdev), NULL);
 	if (!ctx->buf) {
 		rc = -ENOMEM;
