@@ -963,11 +963,13 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 }
 
 static inline void
-bdevperf_init_ext_io_opts(struct spdk_bdev_ext_io_opts *opts, void *md_buf)
+bdevperf_init_ext_io_opts(struct spdk_bdev_ext_io_opts *opts, void *md_buf,
+			  uint32_t dif_check_flags_exclude_mask)
 {
 	memset(opts, 0, sizeof(*opts));
 	opts->size = sizeof(*opts);
 	opts->metadata = md_buf;
+	opts->dif_check_flags_exclude_mask = dif_check_flags_exclude_mask;
 }
 
 static void
@@ -982,7 +984,7 @@ bdevperf_verify_submit_read(void *cb_arg)
 
 	task->iov.iov_base = task->verify_buf;
 	task->iov.iov_len = job->buf_size;
-	bdevperf_init_ext_io_opts(&opts, NULL);
+	bdevperf_init_ext_io_opts(&opts, NULL, ~job->dif_check_flags);
 
 	/* Read the data back in */
 	rc = spdk_bdev_readv_blocks_ext(job->bdev_desc, job->ch, &task->iov, 1,
@@ -1090,7 +1092,7 @@ bdevperf_submit_task(void *arg)
 				spdk_bdev_zcopy_end(task->bdev_io, true, cb_fn, task);
 				return;
 			} else {
-				bdevperf_init_ext_io_opts(&opts, task->md_buf);
+				bdevperf_init_ext_io_opts(&opts, task->md_buf, ~job->dif_check_flags);
 				rc = spdk_bdev_writev_blocks_ext(desc, ch, &task->iov, 1,
 								 task->offset_blocks,
 								 job->io_size_blocks,
@@ -1115,7 +1117,7 @@ bdevperf_submit_task(void *arg)
 			rc = spdk_bdev_zcopy_start(desc, ch, NULL, 0, task->offset_blocks, job->io_size_blocks,
 						   true, bdevperf_zcopy_populate_complete, task);
 		} else {
-			bdevperf_init_ext_io_opts(&opts, task->md_buf);
+			bdevperf_init_ext_io_opts(&opts, task->md_buf, ~job->dif_check_flags);
 			rc = spdk_bdev_readv_blocks_ext(desc, ch, &task->iov, 1,
 							task->offset_blocks,
 							job->io_size_blocks,
