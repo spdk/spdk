@@ -89,6 +89,9 @@ struct spdk_fio_request {
 	/** Separate metadata buffer pointer */
 	void			*md_buf;
 
+	/** Dataset management range information */
+	struct spdk_nvme_dsm_range *dsm_range;
+
 	struct spdk_fio_thread	*fio_thread;
 	struct spdk_fio_qpair	*fio_qpair;
 };
@@ -415,6 +418,12 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 				     f->file_name);
 		}
 	}
+
+#if FIO_HAS_ZBD
+	if (td_trim(td) && td->o.zone_mode == ZONE_MODE_ZBD) {
+		td->io_ops->flags |= FIO_ASYNCIO_SYNC_TRIM;
+	}
+#endif
 
 	if (fio_options->initial_zone_reset == 1 && spdk_nvme_ns_get_csi(ns) == SPDK_NVME_CSI_ZNS) {
 #if FIO_HAS_ZBD
@@ -765,6 +774,7 @@ spdk_fio_io_u_init(struct thread_data *td, struct io_u *io_u)
 {
 	struct spdk_fio_thread	*fio_thread = td->io_ops_data;
 	struct spdk_fio_request	*fio_req;
+	uint32_t dsm_size;
 
 	io_u->engine_data = NULL;
 
@@ -773,9 +783,19 @@ spdk_fio_io_u_init(struct thread_data *td, struct io_u *io_u)
 		return 1;
 	}
 
+	if (!(td->io_ops->flags & FIO_ASYNCIO_SYNC_TRIM)) {
+		dsm_size = sizeof(struct spdk_nvme_dsm_range);
+		fio_req->dsm_range = calloc(1, dsm_size);
+		if (fio_req->dsm_range == NULL) {
+			free(fio_req);
+			return 1;
+		}
+	}
+
 	fio_req->md_buf = spdk_dma_zmalloc(g_spdk_md_per_io_size, NVME_IO_ALIGN, NULL);
 	if (fio_req->md_buf == NULL) {
 		fprintf(stderr, "Allocate %u metadata failed\n", g_spdk_md_per_io_size);
+		free(fio_req->dsm_range);
 		free(fio_req);
 		return 1;
 	}
@@ -796,6 +816,7 @@ spdk_fio_io_u_free(struct thread_data *td, struct io_u *io_u)
 	if (fio_req) {
 		assert(fio_req->io == io_u);
 		spdk_dma_free(fio_req->md_buf);
+		free(fio_req->dsm_range);
 		free(fio_req);
 		io_u->engine_data = NULL;
 	}
@@ -1057,9 +1078,11 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 #if FIO_HAS_FDP
 	struct spdk_nvme_ns_cmd_ext_io_opts ext_opts;
 #endif
+	struct spdk_nvme_dsm_range *range;
 	uint32_t		block_size;
 	uint64_t		lba;
 	uint32_t		lba_count;
+	uint32_t		num_range;
 
 	fio_qpair = get_fio_qpair(fio_thread, io_u->file);
 	if (fio_qpair == NULL) {
@@ -1153,6 +1176,24 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 									dif_ctx->apptag_mask, dif_ctx->app_tag);
 			}
 		}
+		break;
+	case DDIR_TRIM:
+		if (td->io_ops->flags & FIO_ASYNCIO_SYNC_TRIM) {
+			do_io_u_trim(td, io_u);
+			io_u_mark_submit(td, 1);
+			io_u_mark_complete(td, 1);
+			return FIO_Q_COMPLETED;
+		}
+
+		range = fio_req->dsm_range;
+		range->attributes.raw = 0;
+		range->length = lba_count;
+		range->starting_lba = lba;
+		num_range = 1;
+
+		rc = spdk_nvme_ns_cmd_dataset_management(ns, fio_qpair->qpair,
+				SPDK_NVME_DSM_ATTR_DEALLOCATE, range, num_range,
+				spdk_fio_completion_cb, fio_req);
 		break;
 	default:
 		assert(false);
