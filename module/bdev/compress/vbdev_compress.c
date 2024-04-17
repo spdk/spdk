@@ -96,7 +96,7 @@ _reduce_rw_blocks_cb(void *arg)
 	} else if (io_ctx->status == -ENOMEM) {
 		vbdev_compress_queue_io(spdk_bdev_io_from_ctx(io_ctx));
 	} else {
-		SPDK_ERRLOG("status %d on operation from reduce API\n", io_ctx->status);
+		SPDK_ERRLOG("Failed to execute reduce api. %s\n", spdk_strerror(-io_ctx->status));
 		spdk_bdev_io_complete(io_ctx->orig_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 }
