@@ -33,6 +33,13 @@ function install_qat() {
 		patch --dir="$GIT_REPOS/QAT" -p1
 	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-phys_proc_id.patch"
 
+	if ge "$kernel_ver" 6.8.0; then
+		patch --dir="$GIT_REPOS/QAT" -p1 < \
+			"$rootdir/test/common/config/pkgdep/patches/qat/0001-strlcpy-to-strscpy.patch"
+		patch --dir="$GIT_REPOS/QAT" -p1 < \
+			"$rootdir/test/common/config/pkgdep/patches/qat/0001-missing-prototypes.patch"
+	fi
+
 	patch --dir="$GIT_REPOS/QAT" -p1 \
 		< "$rootdir/test/common/config/pkgdep/patches/qat/0001-no-vmlinux.patch"
 
