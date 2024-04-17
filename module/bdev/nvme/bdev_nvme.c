@@ -5103,14 +5103,27 @@ bdev_nvme_set_multipath_policy(const char *name, enum bdev_nvme_multipath_policy
 
 	assert(cb_fn != NULL);
 
-	if (policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE && selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN) {
-		if (rr_min_io == UINT32_MAX) {
-			rr_min_io = 1;
-		} else if (rr_min_io == 0) {
+	switch (policy) {
+	case BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE:
+		break;
+	case BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE:
+		switch (selector) {
+		case BDEV_NVME_MP_SELECTOR_ROUND_ROBIN:
+			if (rr_min_io == UINT32_MAX) {
+				rr_min_io = 1;
+			} else if (rr_min_io == 0) {
+				rc = -EINVAL;
+				goto exit;
+			}
+			break;
+		case BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH:
+			break;
+		default:
 			rc = -EINVAL;
 			goto exit;
 		}
-	} else if (rr_min_io != UINT32_MAX) {
+		break;
+	default:
 		rc = -EINVAL;
 		goto exit;
 	}
