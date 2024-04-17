@@ -162,7 +162,7 @@ _dsa_alloc_batches(struct spdk_idxd_io_channel *chan, int num_descriptors)
 	chan->batch_base = calloc(num_batches, sizeof(struct idxd_batch));
 	if (chan->batch_base == NULL) {
 		SPDK_ERRLOG("Failed to allocate batch pool\n");
-		goto error_desc;
+		return -ENOMEM;
 	}
 	batch = chan->batch_base;
 	for (i = 0 ; i < num_batches ; i++) {
@@ -211,12 +211,6 @@ error_user:
 		spdk_free(batch->user_desc);
 		batch->user_desc = NULL;
 	}
-	spdk_free(chan->ops_base);
-	chan->ops_base = NULL;
-error_desc:
-	STAILQ_INIT(&chan->ops_pool);
-	spdk_free(chan->desc_base);
-	chan->desc_base = NULL;
 	return rc;
 }
 
