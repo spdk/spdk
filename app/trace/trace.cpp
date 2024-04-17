@@ -321,10 +321,9 @@ print_json(void *cb_ctx, const void *data, size_t size)
 }
 
 static int
-trace_print(void)
+trace_print(int lcore)
 {
 	struct spdk_trace_parser_entry	entry;
-	int		lcore = SPDK_TRACE_MAX_LCORE;
 	int		i;
 	uint64_t	tsc_offset, entry_count;
 	uint64_t	tsc_rate = g_file->tsc_rate;
@@ -518,7 +517,7 @@ main(int argc, char **argv)
 		break;
 	case PRINT_FMT_DEFAULT:
 	default:
-		rc = trace_print();
+		rc = trace_print(lcore);
 		break;
 	}
 
