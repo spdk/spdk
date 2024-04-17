@@ -374,24 +374,48 @@ raid_bdev_base_bdev_slot(struct raid_base_bdev_info *base_info)
 	return base_info - base_info->raid_bdev->base_bdev_info;
 }
 
+int raid_bdev_remap_dix_reftag(void *md_buf, uint64_t num_blocks,
+			       struct spdk_bdev *bdev, uint32_t remapped_offset);
 int raid_bdev_verify_dix_reftag(struct iovec *iovs, int iovcnt, void *md_buf,
 				uint64_t num_blocks, struct spdk_bdev *bdev, uint32_t offset_blocks);
 
 /**
  * Raid bdev I/O read/write wrapper for spdk_bdev_readv_blocks_ext function.
  */
-int raid_bdev_readv_blocks_ext(struct raid_base_bdev_info *base_info, struct spdk_io_channel *ch,
-			       struct iovec *iov, int iovcnt, uint64_t offset_blocks,
-			       uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg,
-			       struct spdk_bdev_ext_io_opts *opts);
+static inline int
+raid_bdev_readv_blocks_ext(struct raid_base_bdev_info *base_info, struct spdk_io_channel *ch,
+			   struct iovec *iov, int iovcnt, uint64_t offset_blocks,
+			   uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg,
+			   struct spdk_bdev_ext_io_opts *opts)
+{
+	return spdk_bdev_readv_blocks_ext(base_info->desc, ch, iov, iovcnt,
+					  base_info->data_offset + offset_blocks, num_blocks, cb, cb_arg, opts);
+}
 
 /**
  * Raid bdev I/O read/write wrapper for spdk_bdev_writev_blocks_ext function.
  */
-int raid_bdev_writev_blocks_ext(struct raid_base_bdev_info *base_info, struct spdk_io_channel *ch,
-				struct iovec *iov, int iovcnt, uint64_t offset_blocks,
-				uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg,
-				struct spdk_bdev_ext_io_opts *opts);
+static inline int
+raid_bdev_writev_blocks_ext(struct raid_base_bdev_info *base_info, struct spdk_io_channel *ch,
+			    struct iovec *iov, int iovcnt, uint64_t offset_blocks,
+			    uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg,
+			    struct spdk_bdev_ext_io_opts *opts)
+{
+	int rc;
+	uint64_t remapped_offset_blocks = base_info->data_offset + offset_blocks;
+
+	if (spdk_unlikely(spdk_bdev_get_dif_type(&base_info->raid_bdev->bdev) != SPDK_DIF_DISABLE &&
+			  (base_info->raid_bdev->bdev.dif_check_flags & SPDK_DIF_FLAGS_REFTAG_CHECK))) {
+		rc = raid_bdev_remap_dix_reftag(opts->metadata, num_blocks, &base_info->raid_bdev->bdev,
+						remapped_offset_blocks);
+		if (rc != 0) {
+			return rc;
+		}
+	}
+
+	return spdk_bdev_writev_blocks_ext(base_info->desc, ch, iov, iovcnt,
+					   remapped_offset_blocks, num_blocks, cb, cb_arg, opts);
+}
 
 /**
  * Raid bdev I/O read/write wrapper for spdk_bdev_unmap_blocks function.

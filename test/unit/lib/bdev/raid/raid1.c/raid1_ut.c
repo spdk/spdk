@@ -42,6 +42,8 @@ DEFINE_STUB_V(raid_bdev_io_init, (struct raid_bdev_io *raid_io,
 				  enum spdk_bdev_io_type type, uint64_t offset_blocks,
 				  uint64_t num_blocks, struct iovec *iovs, int iovcnt, void *md_buf,
 				  struct spdk_memory_domain *memory_domain, void *memory_domain_ctx));
+DEFINE_STUB(raid_bdev_remap_dix_reftag, int, (void *md_buf, uint64_t num_blocks,
+		struct spdk_bdev *bdev, uint32_t remapped_offset), -1);
 
 static int
 test_setup(void)

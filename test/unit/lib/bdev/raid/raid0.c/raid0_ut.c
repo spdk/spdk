@@ -58,18 +58,6 @@ DEFINE_STUB(spdk_bdev_flush_blocks, int, (struct spdk_bdev_desc *desc, struct sp
 DEFINE_STUB(spdk_bdev_is_dif_head_of_md, bool, (const struct spdk_bdev *bdev), false);
 DEFINE_STUB(spdk_bdev_notify_blockcnt_change, int, (struct spdk_bdev *bdev, uint64_t size), 0);
 
-typedef enum spdk_dif_type spdk_dif_type_t;
-
-spdk_dif_type_t
-spdk_bdev_get_dif_type(const struct spdk_bdev *bdev)
-{
-	if (bdev->md_len != 0) {
-		return bdev->dif_type;
-	} else {
-		return SPDK_DIF_DISABLE;
-	}
-}
-
 bool
 spdk_bdev_is_md_interleaved(const struct spdk_bdev *bdev)
 {
@@ -279,6 +267,15 @@ raid_test_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_statu
 }
 
 int
+raid_bdev_remap_dix_reftag(void *md_buf, uint64_t num_blocks,
+			   struct spdk_bdev *bdev, uint32_t remapped_offset)
+{
+	remap_dif(md_buf, num_blocks, bdev, remapped_offset);
+
+	return 0;
+}
+
+int
 raid_bdev_verify_dix_reftag(struct iovec *iovs, int iovcnt, void *md_buf,
 			    uint64_t num_blocks, struct spdk_bdev *bdev, uint32_t offset_blocks)
 {
@@ -355,8 +352,6 @@ spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel 
 	set_io_output(output, desc, ch, offset_blocks, num_blocks, cb, cb_arg,
 		      SPDK_BDEV_IO_TYPE_WRITE, iov, iovcnt, opts->metadata);
 	g_io_output_index++;
-
-	remap_dif(opts->metadata, num_blocks, desc->bdev, offset_blocks);
 
 	child_io = get_child_io(output);
 	child_io_complete(child_io, cb, cb_arg);

@@ -22,6 +22,8 @@ DEFINE_STUB(spdk_bdev_writev_blocks_with_md, int, (struct spdk_bdev_desc *desc,
 		struct iovec *iov, int iovcnt, void *md,
 		uint64_t offset_blocks, uint64_t num_blocks,
 		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+DEFINE_STUB(raid_bdev_remap_dix_reftag, int, (void *md_buf, uint64_t num_blocks,
+		struct spdk_bdev *bdev, uint32_t remapped_offset), -1);
 
 #define BLOCK_LEN (4096)
 
