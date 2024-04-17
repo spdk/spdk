@@ -206,7 +206,7 @@ test_raid_bdev_write_superblock(void)
 	for (i = 0; i < SPDK_COUNTOF(base_info); i++) {
 		base_info[i].raid_bdev = &raid_bdev;
 		if (i > 0) {
-			base_info[i].desc = (void *)0x1;
+			base_info[i].is_configured = true;
 		}
 	}
 

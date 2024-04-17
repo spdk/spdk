@@ -348,7 +348,7 @@ _raid_bdev_write_superblock(void *_ctx)
 	for (i = ctx->submitted; i < raid_bdev->num_base_bdevs; i++) {
 		base_info = &raid_bdev->base_bdev_info[i];
 
-		if (base_info->desc == NULL) {
+		if (!base_info->is_configured || base_info->remove_scheduled) {
 			assert(ctx->remaining > 1);
 			raid_bdev_write_sb_base_bdev_done(0, ctx);
 			ctx->submitted++;
