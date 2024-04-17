@@ -405,6 +405,10 @@ function install_ice() {
 			< "$rootdir/test/common/config/pkgdep/patches/ice/0001-xdp_do_flush_map.patch"
 	fi
 
+	if ge "$kernel_ver" 6.8.0; then
+		patch --dir="$GIT_REPOS/ice-$ICE_VERSION/src"
+	fi < "$rootdir/test/common/config/pkgdep/patches/ice/0001-ethtool-set-get-rxfh-params.patch"
+
 	(
 		cd "$GIT_REPOS/ice-$ICE_VERSION/src"
 		sudo make -j"$(nproc)" install
