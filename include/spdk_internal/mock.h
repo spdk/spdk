@@ -49,8 +49,7 @@
  * Avoid nested macro calls to prevent macro expansion of fn.
  */
 #define DEFINE_WRAPPER(fn, ret, dargs, pargs) \
-	bool ut_ ## fn ## _mocked = false; \
-	ret ut_ ## fn; \
+	DEFINE_WRAPPER_MOCK(fn, ret); \
 	__attribute__((used)) ret __wrap_ ## fn dargs \
 	{ \
 		if (!ut_ ## fn ## _mocked) { \
@@ -59,6 +58,10 @@
 			return ut_ ## fn; \
 		} \
 	}
+
+#define DEFINE_WRAPPER_MOCK(fn, ret) \
+	bool ut_ ## fn ## _mocked = false;	\
+	ret ut_ ## fn
 
 /* DEFINE_STUB is for defining the implementation of stubs for SPDK funcs. */
 #define DEFINE_STUB(fn, ret, dargs, val) \

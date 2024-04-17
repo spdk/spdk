@@ -25,7 +25,7 @@ DEFINE_STUB(spdk_nvme_dhchap_dhkey_derive_secret, int,
 DECLARE_WRAPPER(RAND_bytes, int, (unsigned char *buf, int num));
 
 static uint8_t g_rand_val;
-DEFINE_RETURN_MOCK(RAND_bytes, int) = 1;
+DEFINE_WRAPPER_MOCK(RAND_bytes, int) = 1;
 
 int
 __wrap_RAND_bytes(unsigned char *buf, int num)
