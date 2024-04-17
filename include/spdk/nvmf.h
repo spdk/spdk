@@ -104,8 +104,10 @@ struct spdk_nvmf_transport_opts {
 	uint8_t reserved61[3];
 	/* ACK timeout in milliseconds */
 	uint32_t ack_timeout;
+	/* Size of RDMA data WR pool */
+	uint32_t data_wr_pool_size;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 68, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 72, "Incorrect size");
 
 struct spdk_nvmf_listen_opts {
 	/**

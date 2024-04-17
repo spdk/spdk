@@ -8013,6 +8013,7 @@ disable_adaptive_irq        | Optional | boolean | Disable adaptive interrupt fe
 disable_shadow_doorbells    | Optional | boolean | disable shadow doorbell support (VFIO-USER only)
 zcopy                       | Optional | boolean | Use zero-copy operations if the underlying bdev supports them
 ack_timeout                 | Optional | number  | ACK timeout in milliseconds
+data_wr_pool_size           | Optional | number  | RDMA data WR pool size (RDMA only)
 
 #### Example
 
