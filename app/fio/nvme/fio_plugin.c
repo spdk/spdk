@@ -24,9 +24,11 @@
 #ifdef for_each_rw_ddir
 #define FIO_HAS_ZBD (FIO_IOOPS_VERSION >= 26)
 #define FIO_HAS_FDP (FIO_IOOPS_VERSION >= 32)
+#define FIO_HAS_MRT (FIO_IOOPS_VERSION >= 34)
 #else
 #define FIO_HAS_ZBD (0)
 #define FIO_HAS_FDP (0)
+#define FIO_HAS_MRT (0)
 #endif
 
 /* FreeBSD is missing CLOCK_MONOTONIC_RAW,
@@ -784,7 +786,12 @@ spdk_fio_io_u_init(struct thread_data *td, struct io_u *io_u)
 	}
 
 	if (!(td->io_ops->flags & FIO_ASYNCIO_SYNC_TRIM)) {
+#if FIO_HAS_MRT
+		/* By default number of range is set to 1 */
+		dsm_size = td->o.num_range * sizeof(struct spdk_nvme_dsm_range);
+#else
 		dsm_size = sizeof(struct spdk_nvme_dsm_range);
+#endif
 		fio_req->dsm_range = calloc(1, dsm_size);
 		if (fio_req->dsm_range == NULL) {
 			free(fio_req);
@@ -1186,10 +1193,30 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 		}
 
 		range = fio_req->dsm_range;
+#if FIO_HAS_MRT
+		if (td->o.num_range == 1) {
+			range->attributes.raw = 0;
+			range->length = lba_count;
+			range->starting_lba = lba;
+			num_range = 1;
+		} else {
+			struct trim_range *tr = (struct trim_range *)io_u->xfer_buf;
+			for (uint32_t i = 0; i < io_u->number_trim; i++) {
+				range->attributes.raw = 0;
+				range->length = tr->len / block_size;
+				range->starting_lba = tr->start / block_size;
+				range++;
+				tr++;
+			}
+			num_range = io_u->number_trim;
+			range = fio_req->dsm_range;
+		}
+#else
 		range->attributes.raw = 0;
 		range->length = lba_count;
 		range->starting_lba = lba;
 		num_range = 1;
+#endif
 
 		rc = spdk_nvme_ns_cmd_dataset_management(ns, fio_qpair->qpair,
 				SPDK_NVME_DSM_ATTR_DEALLOCATE, range, num_range,
@@ -1894,7 +1921,11 @@ struct ioengine_ops ioengine = {
 #if FIO_HAS_FDP
 	.fdp_fetch_ruhs		= spdk_fio_fdp_fetch_ruhs,
 #endif
+#if FIO_HAS_MRT
+	.flags			= FIO_RAWIO | FIO_NOEXTEND | FIO_NODISKUTIL | FIO_MEMALIGN | FIO_DISKLESSIO | FIO_MULTI_RANGE_TRIM,
+#else
 	.flags			= FIO_RAWIO | FIO_NOEXTEND | FIO_NODISKUTIL | FIO_MEMALIGN | FIO_DISKLESSIO,
+#endif
 	.options		= options,
 	.option_struct_size	= sizeof(struct spdk_fio_options),
 };
