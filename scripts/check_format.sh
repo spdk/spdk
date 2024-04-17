@@ -499,11 +499,19 @@ function check_golang_style() {
 
 	if hash golangci-lint 2> /dev/null; then
 		echo -n "Checking Golang style..."
-		out=$(find "$rootdir/go" -name go.mod -execdir go fmt \; -execdir golangci-lint run \; 2>&1)
-		if [[ -n "$out" ]]; then
+		gofmtOut=$(gofmt -d . 2>&1)
+		golintOut=$(find "$rootdir/go" -name go.mod -execdir golangci-lint run \; 2>&1)
+		if [[ -n "$gofmtOut" ]] && [[ $gofmtOut == *"diff"* ]]; then
 			cat <<- WARN
 				Golang formatting errors detected:
-				echo "$out"
+				echo "$gofmtOut"
+			WARN
+
+			return 1
+		elif [[ -n "$golintOut" ]]; then
+			cat <<- WARN
+				Golangci lint failed:
+				echo "$golintOut"
 			WARN
 
 			return 1

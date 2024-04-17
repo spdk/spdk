@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	socketAddress    = "/var/tmp/spdk.sock"
-	bDevGetBDevs     = "bdev_get_bdevs"
+	socketAddress   = "/var/tmp/spdk.sock"
+	bDevGetBDevs    = "bdev_get_bdevs"
 	defaultBdevName = ""
 	defaultTimeout  = 0
 )

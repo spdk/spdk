@@ -167,7 +167,7 @@ func CreateClientWithJsonCodec(network, address string) (*Client, error) {
 	case "unix", "unixgram", "unixpacket":
 		conn, err := createConnectionToSocket(address)
 		if err != nil {
-			return nil, fmt.Errorf("error during client creation for Unix socket, " +
+			return nil, fmt.Errorf("error during client creation for Unix socket, "+
 				"err: %w", err)
 		}
 
@@ -175,7 +175,7 @@ func CreateClientWithJsonCodec(network, address string) (*Client, error) {
 	case "tcp", "tcp4", "tcp6":
 		conn, err := createConnectionToTcp(address)
 		if err != nil {
-			return nil, fmt.Errorf("error during client creation for TCP socket, " +
+			return nil, fmt.Errorf("error during client creation for TCP socket, "+
 				"err: %w", err)
 		}
 
@@ -197,7 +197,7 @@ type Request struct {
 func (req *Request) ToString() (string, error) {
 	jsonReq, err := json.Marshal(req)
 	if err != nil {
-		return "", fmt.Errorf("error when creating json string representation " +
+		return "", fmt.Errorf("error when creating json string representation "+
 			"of Request, err: %w", err)
 	}
 
@@ -216,7 +216,7 @@ type Response struct {
 func (resp *Response) ToString() (string, error) {
 	jsonResp, err := json.Marshal(resp)
 	if err != nil {
-		return "", fmt.Errorf("error when creating json string representation " +
+		return "", fmt.Errorf("error when creating json string representation "+
 			"of Response, err: %w", err)
 	}
 
