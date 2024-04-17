@@ -3378,6 +3378,21 @@ nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport,
 	}
 }
 
+static void
+nvmf_rdma_poller_process_pending_buf_queue(struct spdk_nvmf_rdma_transport *rtransport,
+		struct spdk_nvmf_rdma_poller *rpoller)
+{
+	struct spdk_nvmf_request *req, *tmp;
+	struct spdk_nvmf_rdma_request *rdma_req;
+
+	STAILQ_FOREACH_SAFE(req, &rpoller->group->group.pending_buf_queue, buf_link, tmp) {
+		rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
+		if (nvmf_rdma_request_process(rtransport, rdma_req) == false) {
+			break;
+		}
+	}
+}
+
 static inline bool
 nvmf_rdma_can_ignore_last_wqe_reached(struct spdk_nvmf_rdma_device *device)
 {
@@ -4756,6 +4771,13 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 	if (spdk_unlikely(error == true)) {
 		return -1;
+	}
+
+	if (reaped == 0) {
+		/* In some cases we may not receive any CQE but we still may have pending IO requests waiting for
+		 * a resource (e.g. a WR from the data_wr_pool).
+		 * We need to start processing of such requests if no CQE reaped */
+		nvmf_rdma_poller_process_pending_buf_queue(rtransport, rpoller);
 	}
 
 	/* submit outstanding work requests. */
