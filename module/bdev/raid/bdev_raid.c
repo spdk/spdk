@@ -672,7 +672,7 @@ raid_bdev_io_complete_part(struct raid_bdev_io *raid_io, uint64_t completed,
 	assert(raid_io->base_bdev_io_remaining >= completed);
 	raid_io->base_bdev_io_remaining -= completed;
 
-	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
+	if (status != raid_io->base_bdev_io_status_default) {
 		raid_io->base_bdev_io_status = status;
 	}
 
@@ -895,9 +895,10 @@ raid_bdev_io_init(struct raid_bdev_io *raid_io, struct raid_bdev_io_channel *rai
 	raid_io->raid_ch = raid_ch;
 	raid_io->base_bdev_io_remaining = 0;
 	raid_io->base_bdev_io_submitted = 0;
-	raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	raid_io->completion_cb = NULL;
 	raid_io->split.offset = RAID_OFFSET_BLOCKS_INVALID;
+
+	raid_bdev_io_set_default_status(raid_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 }
 
 /*

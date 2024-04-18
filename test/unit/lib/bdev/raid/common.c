@@ -253,7 +253,7 @@ raid_test_bdev_io_init(struct raid_bdev_io *raid_io, struct raid_bdev *raid_bdev
 	raid_io->iovcnt = iovcnt;
 	raid_io->md_buf = md_buf;
 
-	raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	raid_bdev_io_set_default_status(raid_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 }
 
 void
@@ -273,7 +273,7 @@ raid_bdev_io_complete_part(struct raid_bdev_io *raid_io, uint64_t completed,
 	SPDK_CU_ASSERT_FATAL(raid_io->base_bdev_io_remaining >= completed);
 	raid_io->base_bdev_io_remaining -= completed;
 
-	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
+	if (status != raid_io->base_bdev_io_status_default) {
 		raid_io->base_bdev_io_status = status;
 	}
 

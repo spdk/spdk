@@ -144,6 +144,8 @@ struct raid_bdev_io {
 	uint64_t			base_bdev_io_remaining;
 	uint8_t				base_bdev_io_submitted;
 	enum spdk_bdev_io_status	base_bdev_io_status;
+	/* This will be the raid_io completion status unless any base io's status is different. */
+	enum spdk_bdev_io_status	base_bdev_io_status_default;
 
 	/* Private data for the raid module */
 	void				*module_private;
@@ -378,6 +380,14 @@ static inline uint8_t
 raid_bdev_base_bdev_slot(struct raid_base_bdev_info *base_info)
 {
 	return base_info - base_info->raid_bdev->base_bdev_info;
+}
+
+static inline void
+raid_bdev_io_set_default_status(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status)
+{
+	assert(raid_io->base_bdev_io_submitted == 0);
+	raid_io->base_bdev_io_status = status;
+	raid_io->base_bdev_io_status_default = status;
 }
 
 int raid_bdev_remap_dix_reftag(void *md_buf, uint64_t num_blocks,
