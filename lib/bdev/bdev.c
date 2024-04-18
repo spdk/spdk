@@ -10399,14 +10399,14 @@ SPDK_TRACE_REGISTER_FN(bdev_trace, "bdev", TRACE_GROUP_BDEV)
 			"BDEV_IOCH_CREATE", TRACE_BDEV_IOCH_CREATE,
 			OWNER_TYPE_BDEV, OBJECT_NONE, 0,
 			{
-				{ "thread_id", SPDK_TRACE_ARG_TYPE_INT, 8}
+				{ "tid", SPDK_TRACE_ARG_TYPE_INT, 8 }
 			}
 		},
 		{
 			"BDEV_IOCH_DESTROY", TRACE_BDEV_IOCH_DESTROY,
 			OWNER_TYPE_BDEV, OBJECT_NONE, 0,
 			{
-				{ "thread_id", SPDK_TRACE_ARG_TYPE_INT, 8}
+				{ "tid", SPDK_TRACE_ARG_TYPE_INT, 8 }
 			}
 		},
 	};
