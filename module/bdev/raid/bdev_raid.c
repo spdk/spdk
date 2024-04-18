@@ -261,6 +261,14 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 		}
 	}
 
+	if (raid_bdev->module->get_io_channel) {
+		raid_ch->module_channel = raid_bdev->module->get_io_channel(raid_bdev);
+		if (!raid_ch->module_channel) {
+			SPDK_ERRLOG("Unable to create io channel for raid module\n");
+			goto err;
+		}
+	}
+
 	if (raid_bdev->process != NULL) {
 		ret = raid_bdev_ch_process_setup(raid_ch, raid_bdev->process);
 		if (ret != 0) {
@@ -272,18 +280,9 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 	}
 	spdk_spin_unlock(&raid_bdev->base_bdev_lock);
 
-	if (raid_bdev->module->get_io_channel) {
-		raid_ch->module_channel = raid_bdev->module->get_io_channel(raid_bdev);
-		if (!raid_ch->module_channel) {
-			SPDK_ERRLOG("Unable to create io channel for raid module\n");
-			goto err_unlocked;
-		}
-	}
-
 	return 0;
 err:
 	spdk_spin_unlock(&raid_bdev->base_bdev_lock);
-err_unlocked:
 	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		if (raid_ch->base_channel[i] != NULL) {
 			spdk_put_io_channel(raid_ch->base_channel[i]);
