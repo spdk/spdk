@@ -524,16 +524,14 @@ get_fdp_cfg_log_page(struct spdk_nvme_ns *ns)
 
 	outstanding_commands = 0;
 
-	if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_LOG_FDP_CONFIGURATIONS)) {
-		/* Fetch the FDP configurations log page for only 4096 bytes */
-		if (spdk_nvme_ctrlr_cmd_get_log_page_ext(ctrlr, SPDK_NVME_LOG_FDP_CONFIGURATIONS, 0,
-				g_fdp_cfg_log_page, FDP_LOG_PAGE_SIZE, 0, 0, (nsdata->endgid << 16),
-				0, get_log_page_completion, NULL) == 0) {
-			outstanding_commands++;
-		} else {
-			printf("spdk_nvme_ctrlr_cmd_get_log_page_ext(FDP config) failed\n");
-			return -1;
-		}
+	/* Fetch the FDP configurations log page for only 4096 bytes */
+	if (spdk_nvme_ctrlr_cmd_get_log_page_ext(ctrlr, SPDK_NVME_LOG_FDP_CONFIGURATIONS, 0,
+			g_fdp_cfg_log_page, FDP_LOG_PAGE_SIZE, 0, 0, (nsdata->endgid << 16),
+			0, get_log_page_completion, NULL) == 0) {
+		outstanding_commands++;
+	} else {
+		printf("spdk_nvme_ctrlr_cmd_get_log_page_ext(FDP config) failed\n");
+		return -1;
 	}
 
 	while (outstanding_commands) {
@@ -551,16 +549,14 @@ get_fdp_ruhu_log_page(struct spdk_nvme_ns *ns)
 
 	outstanding_commands = 0;
 
-	if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_LOG_RECLAIM_UNIT_HANDLE_USAGE)) {
-		/* Fetch the reclaim unit handle usage log page for only 4096 bytes */
-		if (spdk_nvme_ctrlr_cmd_get_log_page_ext(ctrlr, SPDK_NVME_LOG_RECLAIM_UNIT_HANDLE_USAGE, 0,
-				g_fdp_ruhu_log_page, FDP_LOG_PAGE_SIZE, 0, 0, (nsdata->endgid << 16),
-				0, get_log_page_completion, NULL) == 0) {
-			outstanding_commands++;
-		} else {
-			printf("spdk_nvme_ctrlr_cmd_get_log_page_ext(RUH usage) failed\n");
-			return -1;
-		}
+	/* Fetch the reclaim unit handle usage log page for only 4096 bytes */
+	if (spdk_nvme_ctrlr_cmd_get_log_page_ext(ctrlr, SPDK_NVME_LOG_RECLAIM_UNIT_HANDLE_USAGE, 0,
+			g_fdp_ruhu_log_page, FDP_LOG_PAGE_SIZE, 0, 0, (nsdata->endgid << 16),
+			0, get_log_page_completion, NULL) == 0) {
+		outstanding_commands++;
+	} else {
+		printf("spdk_nvme_ctrlr_cmd_get_log_page_ext(RUH usage) failed\n");
+		return -1;
 	}
 
 	while (outstanding_commands) {
@@ -578,15 +574,13 @@ get_fdp_stats_log_page(struct spdk_nvme_ns *ns)
 
 	outstanding_commands = 0;
 
-	if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_LOG_FDP_STATISTICS)) {
-		if (spdk_nvme_ctrlr_cmd_get_log_page_ext(ctrlr, SPDK_NVME_LOG_FDP_STATISTICS, 0,
-				&g_fdp_stats_log_page, 64, 0, 0, (nsdata->endgid << 16), 0,
-				get_log_page_completion, NULL) == 0) {
-			outstanding_commands++;
-		} else {
-			printf("spdk_nvme_ctrlr_cmd_get_log_page_ext(FDP stats) failed\n");
-			return -1;
-		}
+	if (spdk_nvme_ctrlr_cmd_get_log_page_ext(ctrlr, SPDK_NVME_LOG_FDP_STATISTICS, 0,
+			&g_fdp_stats_log_page, 64, 0, 0, (nsdata->endgid << 16), 0,
+			get_log_page_completion, NULL) == 0) {
+		outstanding_commands++;
+	} else {
+		printf("spdk_nvme_ctrlr_cmd_get_log_page_ext(FDP stats) failed\n");
+		return -1;
 	}
 
 	while (outstanding_commands) {
@@ -604,17 +598,15 @@ get_fdp_events_log_page(struct spdk_nvme_ns *ns)
 
 	outstanding_commands = 0;
 
-	if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_LOG_FDP_EVENTS)) {
-		/* Only fetch FDP host events here */
-		if (spdk_nvme_ctrlr_cmd_get_log_page_ext(ctrlr, SPDK_NVME_LOG_FDP_EVENTS, 0,
-				g_fdp_events_log_page, FDP_LOG_PAGE_SIZE, 0,
-				(SPDK_NVME_FDP_REPORT_HOST_EVENTS << 8), (nsdata->endgid << 16),
-				0, get_log_page_completion, NULL) == 0) {
-			outstanding_commands++;
-		} else {
-			printf("spdk_nvme_ctrlr_cmd_get_log_page_ext(FDP events) failed\n");
-			return -1;
-		}
+	/* Only fetch FDP host events here */
+	if (spdk_nvme_ctrlr_cmd_get_log_page_ext(ctrlr, SPDK_NVME_LOG_FDP_EVENTS, 0,
+			g_fdp_events_log_page, FDP_LOG_PAGE_SIZE, 0,
+			(SPDK_NVME_FDP_REPORT_HOST_EVENTS << 8), (nsdata->endgid << 16),
+			0, get_log_page_completion, NULL) == 0) {
+		outstanding_commands++;
+	} else {
+		printf("spdk_nvme_ctrlr_cmd_get_log_page_ext(FDP events) failed\n");
+		return -1;
 	}
 
 	while (outstanding_commands) {
