@@ -56,6 +56,7 @@ enum spdk_nvmf_tgt_discovery_filter {
 };
 
 struct spdk_nvmf_target_opts {
+	size_t		size;
 	char		name[NVMF_TGT_NAME_MAX_LENGTH];
 	uint32_t	max_subsystems;
 	uint16_t	crdt[3];

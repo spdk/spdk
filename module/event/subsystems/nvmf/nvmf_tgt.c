@@ -330,6 +330,7 @@ static int
 nvmf_tgt_create_target(void)
 {
 	struct spdk_nvmf_target_opts opts = {
+		.size = SPDK_SIZEOF(&opts, discovery_filter),
 		.name = "nvmf_tgt"
 	};
 

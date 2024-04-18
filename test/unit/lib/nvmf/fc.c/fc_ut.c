@@ -12,6 +12,7 @@
 #include "spdk/endian.h"
 #include "spdk/trace.h"
 #include "spdk/log.h"
+#include "spdk/util.h"
 
 #include "ut_multithread.c"
 
@@ -212,6 +213,7 @@ create_transport_test(void)
 	const struct spdk_nvmf_transport_ops *ops = NULL;
 	struct spdk_nvmf_transport_opts opts = { 0 };
 	struct spdk_nvmf_target_opts tgt_opts = {
+		.size = SPDK_SIZEOF(&opts, discovery_filter),
 		.name = "nvmf_test_tgt",
 		.max_subsystems = 0
 	};

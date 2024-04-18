@@ -2180,6 +2180,7 @@ rpc_nvmf_create_target(struct spdk_jsonrpc_request *request,
 
 	snprintf(opts.name, NVMF_TGT_NAME_MAX_LENGTH, "%s", ctx.name);
 	opts.max_subsystems = ctx.max_subsystems;
+	opts.size = SPDK_SIZEOF(&opts, discovery_filter);
 
 	if (spdk_nvmf_get_tgt(opts.name) != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,

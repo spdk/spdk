@@ -354,17 +354,22 @@ nvmf_tgt_destroy_poll_group_qpairs(struct spdk_nvmf_poll_group *group)
 }
 
 struct spdk_nvmf_tgt *
-spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *opts)
+spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *_opts)
 {
 	struct spdk_nvmf_tgt *tgt, *tmp_tgt;
+	struct spdk_nvmf_target_opts opts = {
+		.max_subsystems = SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS,
+		.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY,
+	};
 
-	if (strnlen(opts->name, NVMF_TGT_NAME_MAX_LENGTH) == NVMF_TGT_NAME_MAX_LENGTH) {
+	memcpy(&opts, _opts, _opts->size);
+	if (strnlen(opts.name, NVMF_TGT_NAME_MAX_LENGTH) == NVMF_TGT_NAME_MAX_LENGTH) {
 		SPDK_ERRLOG("Provided target name exceeds the max length of %u.\n", NVMF_TGT_NAME_MAX_LENGTH);
 		return NULL;
 	}
 
 	TAILQ_FOREACH(tmp_tgt, &g_nvmf_tgts, link) {
-		if (!strncmp(opts->name, tmp_tgt->name, NVMF_TGT_NAME_MAX_LENGTH)) {
+		if (!strncmp(opts.name, tmp_tgt->name, NVMF_TGT_NAME_MAX_LENGTH)) {
 			SPDK_ERRLOG("Provided target name must be unique.\n");
 			return NULL;
 		}
@@ -375,30 +380,18 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *opts)
 		return NULL;
 	}
 
-	snprintf(tgt->name, NVMF_TGT_NAME_MAX_LENGTH, "%s", opts->name);
+	snprintf(tgt->name, NVMF_TGT_NAME_MAX_LENGTH, "%s", opts.name);
 
-	if (!opts || !opts->max_subsystems) {
+	if (!opts.max_subsystems) {
 		tgt->max_subsystems = SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS;
 	} else {
-		tgt->max_subsystems = opts->max_subsystems;
+		tgt->max_subsystems = opts.max_subsystems;
 	}
 
-	if (!opts) {
-		tgt->crdt[0] = 0;
-		tgt->crdt[1] = 0;
-		tgt->crdt[2] = 0;
-	} else {
-		tgt->crdt[0] = opts->crdt[0];
-		tgt->crdt[1] = opts->crdt[1];
-		tgt->crdt[2] = opts->crdt[2];
-	}
-
-	if (!opts) {
-		tgt->discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY;
-	} else {
-		tgt->discovery_filter = opts->discovery_filter;
-	}
-
+	tgt->crdt[0] = opts.crdt[0];
+	tgt->crdt[1] = opts.crdt[1];
+	tgt->crdt[2] = opts.crdt[2];
+	tgt->discovery_filter = opts.discovery_filter;
 	tgt->discovery_genctr = 0;
 	TAILQ_INIT(&tgt->transports);
 	TAILQ_INIT(&tgt->poll_groups);

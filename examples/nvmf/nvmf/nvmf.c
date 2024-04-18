@@ -14,6 +14,7 @@
 #include "spdk/rpc.h"
 #include "spdk/nvmf.h"
 #include "spdk/likely.h"
+#include "spdk/util.h"
 
 #include "spdk_internal/event.h"
 
@@ -418,6 +419,7 @@ nvmf_create_nvmf_tgt(void)
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_target_opts tgt_opts = {};
 
+	tgt_opts.size = SPDK_SIZEOF(&tgt_opts, discovery_filter);
 	tgt_opts.max_subsystems = g_nvmf_tgt.max_subsystems;
 	snprintf(tgt_opts.name, sizeof(tgt_opts.name), "%s", "nvmf_example");
 	/* Construct the default NVMe-oF target
