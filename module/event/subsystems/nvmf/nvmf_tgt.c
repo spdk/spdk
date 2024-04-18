@@ -35,13 +35,18 @@ struct nvmf_tgt_poll_group {
 };
 
 struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf = {
+	.opts = {
+		.size = SPDK_SIZEOF(&g_spdk_nvmf_tgt_conf.opts, discovery_filter),
+		.name = "nvmf_tgt",
+		.max_subsystems = 0,
+		.crdt = { 0, 0, 0 },
+		.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY,
+	},
 	.admin_passthru.identify_ctrlr = false
 };
 
 struct spdk_cpuset *g_poll_groups_mask = NULL;
 struct spdk_nvmf_tgt *g_spdk_nvmf_tgt = NULL;
-uint32_t g_spdk_nvmf_tgt_max_subsystems = 0;
-uint16_t g_spdk_nvmf_tgt_crdt[3] = {0, 0, 0};
 
 static enum nvmf_tgt_state g_tgt_state;
 
@@ -329,17 +334,7 @@ nvmf_add_discovery_subsystem(void)
 static int
 nvmf_tgt_create_target(void)
 {
-	struct spdk_nvmf_target_opts opts = {
-		.size = SPDK_SIZEOF(&opts, discovery_filter),
-		.name = "nvmf_tgt"
-	};
-
-	opts.max_subsystems = g_spdk_nvmf_tgt_max_subsystems;
-	opts.crdt[0] = g_spdk_nvmf_tgt_crdt[0];
-	opts.crdt[1] = g_spdk_nvmf_tgt_crdt[1];
-	opts.crdt[2] = g_spdk_nvmf_tgt_crdt[2];
-	opts.discovery_filter = g_spdk_nvmf_tgt_conf.discovery_filter;
-	g_spdk_nvmf_tgt = spdk_nvmf_tgt_create(&opts);
+	g_spdk_nvmf_tgt = spdk_nvmf_tgt_create(&g_spdk_nvmf_tgt_conf.opts);
 	if (!g_spdk_nvmf_tgt) {
 		SPDK_ERRLOG("spdk_nvmf_tgt_create() failed\n");
 		return -1;
@@ -540,15 +535,16 @@ nvmf_subsystem_dump_discover_filter(struct spdk_json_write_ctx *w)
 		"transport,address,svcid"
 	};
 
-	if ((g_spdk_nvmf_tgt_conf.discovery_filter & ~(SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE |
+	if ((g_spdk_nvmf_tgt_conf.opts.discovery_filter & ~(SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE |
 			SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS |
 			SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID)) != 0) {
-		SPDK_ERRLOG("Incorrect discovery filter %d\n", g_spdk_nvmf_tgt_conf.discovery_filter);
+		SPDK_ERRLOG("Incorrect discovery filter %d\n", g_spdk_nvmf_tgt_conf.opts.discovery_filter);
 		assert(0);
 		return;
 	}
 
-	spdk_json_write_named_string(w, "discovery_filter", answers[g_spdk_nvmf_tgt_conf.discovery_filter]);
+	spdk_json_write_named_string(w, "discovery_filter",
+				     answers[g_spdk_nvmf_tgt_conf.opts.discovery_filter]);
 }
 
 static void

@@ -20,7 +20,7 @@ rpc_nvmf_set_max_subsystems(struct spdk_jsonrpc_request *request,
 {
 	uint32_t max_subsystems = 0;
 
-	if (g_spdk_nvmf_tgt_max_subsystems != 0) {
+	if (g_spdk_nvmf_tgt_conf.opts.max_subsystems != 0) {
 		SPDK_ERRLOG("this RPC must not be called more than once.\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Must not call more than once");
@@ -37,7 +37,7 @@ rpc_nvmf_set_max_subsystems(struct spdk_jsonrpc_request *request,
 		}
 	}
 
-	g_spdk_nvmf_tgt_max_subsystems = max_subsystems;
+	g_spdk_nvmf_tgt_conf.opts.max_subsystems = max_subsystems;
 
 	spdk_jsonrpc_send_bool_response(request, true);
 }
@@ -162,7 +162,7 @@ nvmf_decode_poll_groups_mask(const struct spdk_json_val *val, void *out)
 static const struct spdk_json_object_decoder nvmf_rpc_subsystem_tgt_conf_decoder[] = {
 	{"admin_cmd_passthru", offsetof(struct spdk_nvmf_tgt_conf, admin_passthru), decode_admin_passthru, true},
 	{"poll_groups_mask", 0, nvmf_decode_poll_groups_mask, true},
-	{"discovery_filter", offsetof(struct spdk_nvmf_tgt_conf, discovery_filter), decode_discovery_filter, true}
+	{"discovery_filter", offsetof(struct spdk_nvmf_tgt_conf, opts.discovery_filter), decode_discovery_filter, true}
 };
 
 static void
@@ -221,9 +221,9 @@ rpc_nvmf_set_crdt(struct spdk_jsonrpc_request *request,
 		}
 	}
 
-	g_spdk_nvmf_tgt_crdt[0] = rpc_set_crdt.crdt1;
-	g_spdk_nvmf_tgt_crdt[1] = rpc_set_crdt.crdt2;
-	g_spdk_nvmf_tgt_crdt[2] = rpc_set_crdt.crdt3;
+	g_spdk_nvmf_tgt_conf.opts.crdt[0] = rpc_set_crdt.crdt1;
+	g_spdk_nvmf_tgt_conf.opts.crdt[1] = rpc_set_crdt.crdt2;
+	g_spdk_nvmf_tgt_conf.opts.crdt[2] = rpc_set_crdt.crdt3;
 
 	spdk_jsonrpc_send_bool_response(request, true);
 }
