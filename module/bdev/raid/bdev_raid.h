@@ -362,6 +362,8 @@ void raid_bdev_module_stop_done(struct raid_bdev *raid_bdev);
 struct spdk_io_channel *raid_bdev_channel_get_base_channel(struct raid_bdev_io_channel *raid_ch,
 		uint8_t idx);
 void *raid_bdev_channel_get_module_ctx(struct raid_bdev_io_channel *raid_ch);
+struct raid_base_bdev_info *raid_bdev_channel_get_base_info(struct raid_bdev_io_channel *raid_ch,
+		struct spdk_bdev *base_bdev);
 void raid_bdev_process_request_complete(struct raid_bdev_process_request *process_req, int status);
 void raid_bdev_io_init(struct raid_bdev_io *raid_io, struct raid_bdev_io_channel *raid_ch,
 		       enum spdk_bdev_io_type type, uint64_t offset_blocks,

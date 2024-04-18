@@ -137,6 +137,25 @@ raid_bdev_channel_get_module_ctx(struct raid_bdev_io_channel *raid_ch)
 	return spdk_io_channel_get_ctx(raid_ch->module_channel);
 }
 
+struct raid_base_bdev_info *
+raid_bdev_channel_get_base_info(struct raid_bdev_io_channel *raid_ch, struct spdk_bdev *base_bdev)
+{
+	struct spdk_io_channel *ch = spdk_io_channel_from_ctx(raid_ch);
+	struct raid_bdev *raid_bdev = spdk_io_channel_get_io_device(ch);
+	uint8_t i;
+
+	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
+		struct raid_base_bdev_info *base_info = &raid_bdev->base_bdev_info[i];
+
+		if (base_info->is_configured &&
+		    spdk_bdev_desc_get_bdev(base_info->desc) == base_bdev) {
+			return base_info;
+		}
+	}
+
+	return NULL;
+}
+
 /* Function declarations */
 static void	raid_bdev_examine(struct spdk_bdev *bdev);
 static int	raid_bdev_init(void);

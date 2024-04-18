@@ -149,6 +149,7 @@ raid_test_create_raid_bdev(struct raid_params *params, struct raid_bdev_module *
 
 		bdev = calloc(1, sizeof(*bdev));
 		SPDK_CU_ASSERT_FATAL(bdev != NULL);
+		bdev->ctxt = base_info;
 		bdev->blockcnt = params->base_bdev_blockcnt;
 		bdev->blocklen = raid_bdev->bdev.blocklen;
 		bdev->md_len = raid_bdev->bdev.md_len;
@@ -282,4 +283,10 @@ raid_bdev_io_complete_part(struct raid_bdev_io *raid_io, uint64_t completed,
 	} else {
 		return false;
 	}
+}
+
+struct raid_base_bdev_info *
+raid_bdev_channel_get_base_info(struct raid_bdev_io_channel *raid_ch, struct spdk_bdev *base_bdev)
+{
+	return base_bdev->ctxt;
 }
