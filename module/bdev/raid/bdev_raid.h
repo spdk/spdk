@@ -103,6 +103,9 @@ struct raid_base_bdev_info {
 	/* Set to true if this base bdev is the target of a background process */
 	bool			is_process_target;
 
+	/* Set to true to indicate that the base bdev is being removed because of a failure */
+	bool			is_failed;
+
 	/* callback for base bdev configuration */
 	raid_base_bdev_cb	configure_cb;
 
@@ -369,6 +372,7 @@ void raid_bdev_io_init(struct raid_bdev_io *raid_io, struct raid_bdev_io_channel
 		       enum spdk_bdev_io_type type, uint64_t offset_blocks,
 		       uint64_t num_blocks, struct iovec *iovs, int iovcnt, void *md_buf,
 		       struct spdk_memory_domain *memory_domain, void *memory_domain_ctx);
+void raid_bdev_fail_base_bdev(struct raid_base_bdev_info *base_info);
 
 static inline uint8_t
 raid_bdev_base_bdev_slot(struct raid_base_bdev_info *base_info)

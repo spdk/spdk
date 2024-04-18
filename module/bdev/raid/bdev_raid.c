@@ -424,6 +424,7 @@ raid_bdev_free_base_bdev_resource(struct raid_base_bdev_info *base_info)
 	if (raid_bdev->state != RAID_BDEV_STATE_CONFIGURING) {
 		spdk_uuid_set_null(&base_info->uuid);
 	}
+	base_info->is_failed = false;
 
 	if (base_info->desc == NULL) {
 		return;
@@ -1987,8 +1988,11 @@ raid_bdev_remove_base_bdev_on_quiesced(void *ctx, int status)
 
 			if (sb_base_bdev->state == RAID_SB_BASE_BDEV_CONFIGURED &&
 			    sb_base_bdev->slot == slot) {
-				/* TODO: distinguish between failure and intentional removal */
-				sb_base_bdev->state = RAID_SB_BASE_BDEV_FAILED;
+				if (base_info->is_failed) {
+					sb_base_bdev->state = RAID_SB_BASE_BDEV_FAILED;
+				} else {
+					sb_base_bdev->state = RAID_SB_BASE_BDEV_MISSING;
+				}
 
 				raid_bdev_write_superblock(raid_bdev, raid_bdev_remove_base_bdev_write_sb_cb, base_info);
 				return;
@@ -2189,6 +2193,43 @@ raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev, raid_base_bdev_cb cb_fn,
 	}
 
 	return _raid_bdev_remove_base_bdev(base_info, cb_fn, cb_ctx);
+}
+
+static void
+raid_bdev_fail_base_remove_cb(void *ctx, int status)
+{
+	struct raid_base_bdev_info *base_info = ctx;
+
+	if (status != 0) {
+		SPDK_WARNLOG("Failed to remove base bdev %s\n", base_info->name);
+		base_info->is_failed = false;
+	}
+}
+
+static void
+_raid_bdev_fail_base_bdev(void *ctx)
+{
+	struct raid_base_bdev_info *base_info = ctx;
+	int rc;
+
+	if (base_info->is_failed) {
+		return;
+	}
+	base_info->is_failed = true;
+
+	SPDK_NOTICELOG("Failing base bdev in slot %d ('%s') of raid bdev '%s'\n",
+		       raid_bdev_base_bdev_slot(base_info), base_info->name, base_info->raid_bdev->bdev.name);
+
+	rc = _raid_bdev_remove_base_bdev(base_info, raid_bdev_fail_base_remove_cb, base_info);
+	if (rc != 0) {
+		raid_bdev_fail_base_remove_cb(base_info, rc);
+	}
+}
+
+void
+raid_bdev_fail_base_bdev(struct raid_base_bdev_info *base_info)
+{
+	spdk_thread_exec_msg(spdk_thread_get_app_thread(), _raid_bdev_fail_base_bdev, base_info);
 }
 
 static void
