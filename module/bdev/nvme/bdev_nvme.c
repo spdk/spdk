@@ -973,8 +973,7 @@ _bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 
 	io_path = start;
 	do {
-		if (spdk_likely(nvme_qpair_is_connected(io_path->qpair) &&
-				nvme_ns_is_active(io_path->nvme_ns))) {
+		if (spdk_likely(nvme_io_path_is_available(io_path))) {
 			switch (io_path->nvme_ns->ana_state) {
 			case SPDK_NVME_ANA_OPTIMIZED_STATE:
 				nbdev_ch->current_io_path = io_path;
@@ -985,6 +984,7 @@ _bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 				}
 				break;
 			default:
+				assert(false);
 				break;
 			}
 		}
