@@ -12,6 +12,8 @@
 #include "bdev/raid/raid1.c"
 #include "../common.c"
 
+static enum spdk_bdev_io_status g_io_status;
+
 DEFINE_STUB_V(raid_bdev_module_list_add, (struct raid_bdev_module *raid_module));
 DEFINE_STUB_V(raid_bdev_module_stop_done, (struct raid_bdev *raid_bdev));
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
@@ -44,6 +46,12 @@ DEFINE_STUB_V(raid_bdev_io_init, (struct raid_bdev_io *raid_io,
 				  struct spdk_memory_domain *memory_domain, void *memory_domain_ctx));
 DEFINE_STUB(raid_bdev_remap_dix_reftag, int, (void *md_buf, uint64_t num_blocks,
 		struct spdk_bdev *bdev, uint32_t remapped_offset), -1);
+
+void
+raid_bdev_fail_base_bdev(struct raid_base_bdev_info *base_info)
+{
+	base_info->is_failed = true;
+}
 
 static int
 test_setup(void)
@@ -151,7 +159,7 @@ put_raid_io(struct raid_bdev_io *raid_io)
 void
 raid_test_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status)
 {
-	CU_ASSERT(status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	g_io_status = status;
 
 	put_raid_io(raid_io);
 }
@@ -238,6 +246,72 @@ test_raid1_read_balancing(void)
 	run_for_each_raid1_config(_test_raid1_read_balancing);
 }
 
+static void
+_test_raid1_write_error(struct raid_bdev *raid_bdev, struct raid_bdev_io_channel *raid_ch)
+{
+	struct raid1_info *r1_info = raid_bdev->module_private;
+	struct raid_bdev_io *raid_io;
+	struct raid_base_bdev_info *base_info;
+	struct spdk_bdev_io bdev_io = {};
+	bool bdev_io_success;
+
+	/* first completion failed */
+	g_io_status = SPDK_BDEV_IO_STATUS_PENDING;
+	raid_io = get_raid_io(r1_info, raid_ch, SPDK_BDEV_IO_TYPE_WRITE, 64);
+	raid1_submit_write_request(raid_io);
+
+	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
+		base_info->is_failed = false;
+		if (raid_bdev_base_bdev_slot(base_info) == 0) {
+			bdev_io_success = false;
+		} else {
+			bdev_io_success = true;
+		}
+		bdev_io.bdev = base_info->desc->bdev;
+		raid1_write_bdev_io_completion(&bdev_io, bdev_io_success, raid_io);
+		CU_ASSERT(base_info->is_failed == !bdev_io_success);
+	}
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* all except first completion failed */
+	g_io_status = SPDK_BDEV_IO_STATUS_PENDING;
+	raid_io = get_raid_io(r1_info, raid_ch, SPDK_BDEV_IO_TYPE_WRITE, 64);
+	raid1_submit_write_request(raid_io);
+
+	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
+		base_info->is_failed = false;
+		if (raid_bdev_base_bdev_slot(base_info) != 0) {
+			bdev_io_success = false;
+		} else {
+			bdev_io_success = true;
+		}
+		bdev_io.bdev = base_info->desc->bdev;
+		raid1_write_bdev_io_completion(&bdev_io, bdev_io_success, raid_io);
+		CU_ASSERT(base_info->is_failed == !bdev_io_success);
+	}
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* all completions failed */
+	g_io_status = SPDK_BDEV_IO_STATUS_PENDING;
+	raid_io = get_raid_io(r1_info, raid_ch, SPDK_BDEV_IO_TYPE_WRITE, 64);
+	raid1_submit_write_request(raid_io);
+
+	bdev_io_success = false;
+	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
+		base_info->is_failed = false;
+		bdev_io.bdev = base_info->desc->bdev;
+		raid1_write_bdev_io_completion(&bdev_io, bdev_io_success, raid_io);
+		CU_ASSERT(base_info->is_failed == !bdev_io_success);
+	}
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
+}
+
+static void
+test_raid1_write_error(void)
+{
+	run_for_each_raid1_config(_test_raid1_write_error);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -249,6 +323,7 @@ main(int argc, char **argv)
 	suite = CU_add_suite("raid1", test_setup, test_cleanup);
 	CU_ADD_TEST(suite, test_raid1_start);
 	CU_ADD_TEST(suite, test_raid1_read_balancing);
+	CU_ADD_TEST(suite, test_raid1_write_error);
 
 	allocate_threads(1);
 	set_thread(0);
