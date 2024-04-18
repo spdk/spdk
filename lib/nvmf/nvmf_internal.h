@@ -57,7 +57,7 @@ struct spdk_nvmf_tgt {
 
 	uint32_t				max_subsystems;
 
-	enum spdk_nvmf_tgt_discovery_filter	discovery_filter;
+	uint32_t				discovery_filter;
 
 	enum spdk_nvmf_tgt_state                state;
 

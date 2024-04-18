@@ -21,7 +21,7 @@ struct spdk_nvmf_admin_passthru_conf {
 
 struct spdk_nvmf_tgt_conf {
 	struct spdk_nvmf_admin_passthru_conf admin_passthru;
-	enum spdk_nvmf_tgt_discovery_filter discovery_filter;
+	uint32_t discovery_filter;
 };
 
 extern struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;

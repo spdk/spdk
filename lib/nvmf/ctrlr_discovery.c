@@ -65,7 +65,7 @@ nvmf_discovery_compare_tr_svcid(const struct spdk_nvme_transport_id *trid1,
 }
 
 static bool
-nvmf_discovery_compare_trid(const enum spdk_nvmf_tgt_discovery_filter filter,
+nvmf_discovery_compare_trid(uint32_t filter,
 			    const struct spdk_nvme_transport_id *trid1,
 			    const struct spdk_nvme_transport_id *trid2)
 {

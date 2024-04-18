@@ -2107,8 +2107,8 @@ struct nvmf_rpc_target_ctx {
 static int
 decode_discovery_filter(const struct spdk_json_val *val, void *out)
 {
-	enum spdk_nvmf_tgt_discovery_filter *_filter = (enum spdk_nvmf_tgt_discovery_filter *)out;
-	enum spdk_nvmf_tgt_discovery_filter filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY;
+	uint32_t *_filter = out;
+	uint32_t filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY;
 	char *tokens = spdk_json_strdup(val);
 	char *tok;
 	int rc = -EINVAL;
