@@ -128,13 +128,10 @@ struct spdk_trace_file {
 	/** Offset of each trace_history from the beginning of this data structure. */
 	uint64_t			lcore_history_offsets[SPDK_TRACE_MAX_LCORE];
 
-	/**
-	 * struct spdk_trace_history has a dynamic size determined by num_entries
-	 * in spdk_trace_init. Mark array size of per_lcore_history to be 0 in uint8_t
-	 * as a reminder that each per_lcore_history pointer should be gotten by
-	 * proper API, instead of directly referencing by struct element.
+	/** Variable sized data sections are at the end of this data structure,
+	 *  referenced by offsets defined in this structure.
 	 */
-	uint8_t	per_lcore_history[0];
+	uint8_t	data[0];
 };
 extern struct spdk_trace_file *g_trace_file;
 
