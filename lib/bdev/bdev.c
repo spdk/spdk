@@ -7232,8 +7232,8 @@ bdev_io_complete(void *ctx)
 
 	TAILQ_REMOVE(&bdev_ch->io_submitted, bdev_io, internal.ch_link);
 
-	if (bdev_io->internal.ch->histogram) {
-		spdk_histogram_data_tally(bdev_io->internal.ch->histogram, tsc_diff);
+	if (bdev_ch->histogram) {
+		spdk_histogram_data_tally(bdev_ch->histogram, tsc_diff);
 	}
 
 	bdev_io_update_io_stat(bdev_io, tsc_diff);
