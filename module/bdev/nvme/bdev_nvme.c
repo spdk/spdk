@@ -3758,6 +3758,20 @@ nvme_bdev_get_mp_policy_str(struct nvme_bdev *nbdev)
 	}
 }
 
+static const char *
+nvme_bdev_get_mp_selector_str(struct nvme_bdev *nbdev)
+{
+	switch (nbdev->mp_selector) {
+	case BDEV_NVME_MP_SELECTOR_ROUND_ROBIN:
+		return "round_robin";
+	case BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH:
+		return "queue_depth";
+	default:
+		assert(false);
+		return "invalid";
+	}
+}
+
 static int
 bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
@@ -3771,6 +3785,12 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	}
 	spdk_json_write_array_end(w);
 	spdk_json_write_named_string(w, "mp_policy", nvme_bdev_get_mp_policy_str(nvme_bdev));
+	if (nvme_bdev->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE) {
+		spdk_json_write_named_string(w, "selector", nvme_bdev_get_mp_selector_str(nvme_bdev));
+		if (nvme_bdev->mp_selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN) {
+			spdk_json_write_named_uint32(w, "rr_min_io", nvme_bdev->rr_min_io);
+		}
+	}
 	pthread_mutex_unlock(&nvme_bdev->mutex);
 
 	return 0;
