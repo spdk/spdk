@@ -23,23 +23,6 @@ init_cpuset_cgroup() {
 		set_cgroup_attr / cgroup.subtree_control "+cpuset"
 		create_cgroup /cpuset
 		set_cgroup_attr /cpuset cgroup.subtree_control "+cpuset"
-		# On distros which use cgroup-v2 under systemd, each process is
-		# maintained under separate, pre-configured subtree. With the rule of
-		# "internal processes are not permitted" this means that we won't find
-		# ourselves under subsystem's root, rather on the bottom of the cgroup
-		# maintaining user's session. To recreate the simple /cpuset setup from
-		# v1, move all the threads from all the existing cgroups to the top
-		# cgroup / and then migrate it to the /cpuset we created above.
-		for pid in /proc/+([0-9]); do
-			cgroup=$(get_cgroup "${pid##*/}") || continue
-			[[ $cgroup != / ]] || continue
-			cgroups["$cgroup"]=$cgroup
-		done 2> /dev/null
-		for cgroup in "${!cgroups[@]}"; do
-			move_cgroup_procs "$cgroup" /
-		done
-		# Now, move all the threads to the cpuset
-		move_cgroup_procs / /cpuset
 	elif ((cgroup_version == 1)); then
 		set_cgroup_attr /cpuset cgroup.procs "$$"
 	fi
@@ -118,12 +101,18 @@ create_cgroup() {
 }
 
 remove_cgroup() {
-	local root_cgroup
-	root_cgroup=$(dirname "$1")
+	local cgroup=${1#"$sysfs_cgroup"} root_cgroup leaf_cgroup
+	root_cgroup=$(dirname "$cgroup")
 
-	[[ -e $sysfs_cgroup/$1 ]] || return 0
-	move_cgroup_procs "$1" "$root_cgroup"
-	rmdir "$sysfs_cgroup/$1"
+	[[ -e $sysfs_cgroup/$cgroup ]] || return 0
+	# Remove all lingering leaf cgroups if any
+	for leaf_cgroup in "$sysfs_cgroup/$cgroup/"*/; do
+		remove_cgroup "$leaf_cgroup"
+	done
+	# Instead of killing all the potential processes, we play it nice
+	# and move them to the parent cgroup.
+	move_cgroup_procs "$cgroup" "$root_cgroup"
+	rmdir "$sysfs_cgroup/$cgroup"
 }
 
 exec_in_cgroup() {
