@@ -6,14 +6,10 @@
 xtrace_disable
 
 source "$testdir/common.sh"
-export SILENT_CGROUP_DEBUG=yes
 
 restore_cgroups() {
 	xtrace_disable
-	kill_in_cgroup "/cpuset/spdk"
-	remove_cgroup "/cpuset/spdk"
-	remove_cgroup "/cpuset/all" || true
-	remove_cpuset_cgroup || true
+	remove_cpuset_cgroup
 	xtrace_restore
 }
 
@@ -52,14 +48,13 @@ all_cpus_csv=$(fold_array_onto_string "${all_cpus[@]}")
 all_cpumask=$(mask_cpus "${all_cpus[@]}")
 all_cpus_mems=0
 
-# Pin spdk cores to a new cgroup
-create_cgroup "/cpuset/spdk"
-create_cgroup "/cpuset/all"
-set_cgroup_attr "/cpuset/spdk" cpuset.cpus "$spdk_cpus_csv"
-set_cgroup_attr "/cpuset/spdk" cpuset.mems "$spdk_cpus_mems"
-set_cgroup_attr "/cpuset/all" cpuset.cpus "$all_cpus_csv"
-set_cgroup_attr "/cpuset/all" cpuset.mems "$all_cpus_mems"
-move_cgroup_procs "/cpuset" "/cpuset/all"
+# For cgroupv2 it's required we jump first to the root cgroup ...
+move_proc "$$" "/" "" cgroup.procs
+# ... so we can now settle in a dedicated cgroup /cpuset
+move_proc "$$" "/cpuset" "" cgroup.procs
+
+set_cgroup_attr "/cpuset" cpuset.cpus "$spdk_cpus_csv"
+set_cgroup_attr "/cpuset" cpuset.mems "$spdk_cpus_mems"
 
 export \
 	"spdk_cpumask=$spdk_cpumask" \
