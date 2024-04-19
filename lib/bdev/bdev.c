@@ -3554,9 +3554,10 @@ bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	TAILQ_INSERT_TAIL(&ch->io_submitted, bdev_io, internal.ch_link);
 
 	bdev_io->internal.submit_tsc = spdk_get_ticks();
-	spdk_trace_record_tsc(bdev_io->internal.submit_tsc, TRACE_BDEV_IO_START, ch->trace_id, 0,
+	spdk_trace_record_tsc(bdev_io->internal.submit_tsc, TRACE_BDEV_IO_START,
+			      ch->trace_id, bdev_io->u.bdev.num_blocks,
 			      (uintptr_t)bdev_io, (uint64_t)bdev_io->type, bdev_io->internal.caller_ctx,
-			      bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks);
+			      bdev_io->u.bdev.offset_blocks);
 
 	if (bdev_io->internal.split) {
 		bdev_io_split(bdev_io);
@@ -10387,7 +10388,6 @@ SPDK_TRACE_REGISTER_FN(bdev_trace, "bdev", TRACE_GROUP_BDEV)
 				{ "type", SPDK_TRACE_ARG_TYPE_INT, 8 },
 				{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 },
 				{ "offset", SPDK_TRACE_ARG_TYPE_INT, 8 },
-				{ "len", SPDK_TRACE_ARG_TYPE_INT, 8 }
 			}
 		},
 		{
