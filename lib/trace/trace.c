@@ -360,6 +360,8 @@ spdk_trace_cleanup(void)
 		return;
 	}
 
+	trace_flags_fini();
+
 	/*
 	 * Only unlink the shm if there were no trace_entry recorded. This ensures the file
 	 * can be used after this process exits/crashes for debugging.

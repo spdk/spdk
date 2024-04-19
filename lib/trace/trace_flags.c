@@ -470,3 +470,8 @@ trace_flags_init(void)
 
 	return 0;
 }
+
+void
+trace_flags_fini(void)
+{
+}
