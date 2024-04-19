@@ -261,6 +261,8 @@ struct nvmf_subsystem_state_change_ctx {
 
 	enum spdk_nvmf_subsystem_state		original_state;
 	enum spdk_nvmf_subsystem_state		requested_state;
+	int					status;
+	struct spdk_thread			*thread;
 
 	spdk_nvmf_subsystem_state_change_done	cb_fn;
 	void					*cb_arg;
