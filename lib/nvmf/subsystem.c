@@ -560,8 +560,9 @@ nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static void
-nvmf_subsystem_state_change_complete(struct nvmf_subsystem_state_change_ctx *ctx, int status)
+_nvmf_subsystem_state_change_complete(void *_ctx)
 {
+	struct nvmf_subsystem_state_change_ctx *ctx = _ctx;
 	struct spdk_nvmf_subsystem *subsystem = ctx->subsystem;
 
 	pthread_mutex_lock(&subsystem->mutex);
@@ -569,10 +570,17 @@ nvmf_subsystem_state_change_complete(struct nvmf_subsystem_state_change_ctx *ctx
 	pthread_mutex_unlock(&subsystem->mutex);
 
 	if (ctx->cb_fn != NULL) {
-		ctx->cb_fn(subsystem, ctx->cb_arg, status);
+		ctx->cb_fn(subsystem, ctx->cb_arg, ctx->status);
 	}
 
 	free(ctx);
+}
+
+static void
+nvmf_subsystem_state_change_complete(struct nvmf_subsystem_state_change_ctx *ctx, int status)
+{
+	ctx->status = status;
+	spdk_thread_exec_msg(ctx->thread, _nvmf_subsystem_state_change_complete, ctx);
 }
 
 static void
@@ -681,7 +689,13 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 {
 	struct nvmf_subsystem_state_change_ctx *ctx;
 	enum spdk_nvmf_subsystem_state intermediate_state;
+	struct spdk_thread *thread;
 	int rc;
+
+	thread = spdk_get_thread();
+	if (thread == NULL) {
+		return -EINVAL;
+	}
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -693,6 +707,7 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 	ctx->requested_state = requested_state;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
+	ctx->thread = thread;
 
 	pthread_mutex_lock(&subsystem->mutex);
 	if (subsystem->changing_state) {
