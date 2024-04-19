@@ -65,6 +65,7 @@ lvs_grow() {
 	wait $run_test_pid
 	killprocess $bdevperf_pid
 
+	$rpc_py nvmf_subsystem_remove_listener discovery -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 	$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode0
 	free_clusters=$($rpc_py bdev_lvol_get_lvstores -u $lvs | jq -r '.[0].free_clusters')
 
