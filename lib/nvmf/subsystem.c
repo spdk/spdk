@@ -733,9 +733,8 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 	ctx->original_state = subsystem->state;
 	rc = nvmf_subsystem_set_state(subsystem, intermediate_state);
 	if (rc) {
-		ctx->cb_fn = NULL;
 		nvmf_subsystem_state_change_complete(ctx, -1);
-		return rc;
+		return 0;
 	}
 
 	spdk_for_each_channel(subsystem->tgt,
