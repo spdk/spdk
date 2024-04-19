@@ -564,7 +564,10 @@ nvmf_subsystem_state_change_complete(struct nvmf_subsystem_state_change_ctx *ctx
 {
 	struct spdk_nvmf_subsystem *subsystem = ctx->subsystem;
 
+	pthread_mutex_lock(&subsystem->mutex);
 	subsystem->changing_state = false;
+	pthread_mutex_unlock(&subsystem->mutex);
+
 	if (ctx->cb_fn != NULL) {
 		ctx->cb_fn(subsystem, ctx->cb_arg, status);
 	}
@@ -691,10 +694,15 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 
-	if (__sync_val_compare_and_swap(&subsystem->changing_state, false, true)) {
+	pthread_mutex_lock(&subsystem->mutex);
+	if (subsystem->changing_state) {
+		pthread_mutex_unlock(&subsystem->mutex);
 		free(ctx);
 		return -EBUSY;
 	}
+
+	subsystem->changing_state = true;
+	pthread_mutex_unlock(&subsystem->mutex);
 
 	SPDK_DTRACE_PROBE3(nvmf_subsystem_change_state, subsystem->subnqn,
 			   requested_state, subsystem->state);
