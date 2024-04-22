@@ -997,11 +997,8 @@ reactor_run(void *arg)
 				_reactor_remove_lw_thread(reactor, lw_thread);
 				spdk_thread_destroy(thread);
 			} else {
-				if (spdk_unlikely(reactor->in_interrupt)) {
-					reactor_interrupt_run(reactor);
-				} else {
-					spdk_thread_poll(thread, 0, 0);
-				}
+				assert(!reactor->in_interrupt);
+				spdk_thread_poll(thread, 0, 0);
 			}
 		}
 	}
@@ -1106,10 +1103,38 @@ nop(void *arg1, void *arg2)
 {
 }
 
+static void
+_reactors_stop_disable_interrupt(void *ctx)
+{
+	struct spdk_reactor *reactor = ctx;
+	uint32_t lcore;
+	int rc;
+
+	if (reactor == NULL) {
+		lcore = spdk_env_get_first_core();
+	} else {
+		lcore = spdk_env_get_next_core(reactor->lcore);
+	}
+
+	while (lcore < SPDK_ENV_LCORE_ID_ANY) {
+		reactor = spdk_reactor_get(lcore);
+		assert(reactor != NULL);
+		if (reactor->in_interrupt) {
+			rc = spdk_reactor_set_interrupt_mode(lcore, false, _reactors_stop_disable_interrupt, reactor);
+			if (rc == 0) {
+				return;
+			}
+		}
+		lcore = spdk_env_get_next_core(lcore);
+	}
+
+	spdk_for_each_reactor(nop, NULL, NULL, _reactors_stop);
+}
+
 void
 spdk_reactors_stop(void *arg1)
 {
-	spdk_for_each_reactor(nop, NULL, NULL, _reactors_stop);
+	_reactors_stop_disable_interrupt(NULL);
 }
 
 static pthread_mutex_t g_scheduler_mtx = PTHREAD_MUTEX_INITIALIZER;
