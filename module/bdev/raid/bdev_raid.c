@@ -1056,13 +1056,11 @@ void
 raid_bdev_write_info_json(struct raid_bdev *raid_bdev, struct spdk_json_write_ctx *w)
 {
 	struct raid_base_bdev_info *base_info;
-	char uuid_str[SPDK_UUID_STRING_LEN];
 
 	assert(raid_bdev != NULL);
 	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
-	spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &raid_bdev->bdev.uuid);
-	spdk_json_write_named_string(w, "uuid", uuid_str);
+	spdk_json_write_named_uuid(w, "uuid", &raid_bdev->bdev.uuid);
 	spdk_json_write_named_uint32(w, "strip_size_kb", raid_bdev->strip_size_kb);
 	spdk_json_write_named_string(w, "state", raid_bdev_state_to_str(raid_bdev->state));
 	spdk_json_write_named_string(w, "raid_level", raid_bdev_level_to_str(raid_bdev->level));
@@ -1095,8 +1093,7 @@ raid_bdev_write_info_json(struct raid_bdev *raid_bdev, struct spdk_json_write_ct
 		} else {
 			spdk_json_write_null(w);
 		}
-		spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &base_info->uuid);
-		spdk_json_write_named_string(w, "uuid", uuid_str);
+		spdk_json_write_named_uuid(w, "uuid", &base_info->uuid);
 		spdk_json_write_named_bool(w, "is_configured", base_info->is_configured);
 		spdk_json_write_named_uint64(w, "data_offset", base_info->data_offset);
 		spdk_json_write_named_uint64(w, "data_size", base_info->data_size);
@@ -1144,7 +1141,6 @@ raid_bdev_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 {
 	struct raid_bdev *raid_bdev = bdev->ctxt;
 	struct raid_base_bdev_info *base_info;
-	char uuid_str[SPDK_UUID_STRING_LEN];
 
 	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
@@ -1159,8 +1155,7 @@ raid_bdev_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "name", bdev->name);
-	spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &raid_bdev->bdev.uuid);
-	spdk_json_write_named_string(w, "uuid", uuid_str);
+	spdk_json_write_named_uuid(w, "uuid", &raid_bdev->bdev.uuid);
 	spdk_json_write_named_uint32(w, "strip_size_kb", raid_bdev->strip_size_kb);
 	spdk_json_write_named_string(w, "raid_level", raid_bdev_level_to_str(raid_bdev->level));
 	spdk_json_write_named_bool(w, "superblock", raid_bdev->superblock_enabled);

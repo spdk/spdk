@@ -127,6 +127,8 @@ DEFINE_STUB(spdk_bdev_get_memory_domains, int, (struct spdk_bdev *bdev,
 DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "test_bdev");
 DEFINE_STUB(spdk_bdev_is_dif_head_of_md, bool, (const struct spdk_bdev *bdev), false);
 DEFINE_STUB(spdk_bdev_notify_blockcnt_change, int, (struct spdk_bdev *bdev, uint64_t size), 0);
+DEFINE_STUB(spdk_json_write_named_uuid, int, (struct spdk_json_write_ctx *w, const char *name,
+		const struct spdk_uuid *val), 0);
 DEFINE_STUB_V(raid_bdev_init_superblock, (struct raid_bdev *raid_bdev));
 DEFINE_STUB(raid_bdev_alloc_superblock, int, (struct raid_bdev *raid_bdev, uint32_t block_size), 0);
 DEFINE_STUB_V(raid_bdev_free_superblock, (struct raid_bdev *raid_bdev));
