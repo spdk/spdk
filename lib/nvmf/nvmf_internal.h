@@ -281,11 +281,12 @@ struct spdk_nvmf_subsystem {
 
 	uint16_t					next_cntlid;
 	struct {
-		uint8_t					allow_any_host : 1;
 		uint8_t					allow_any_listener : 1;
 		uint8_t					ana_reporting : 1;
-		uint8_t					reserved : 5;
+		uint8_t					reserved : 6;
 	} flags;
+
+	bool						allow_any_host;
 
 	bool						destroying;
 	bool						async_destroy;

@@ -430,7 +430,7 @@ test_discovery_log_with_filters(void)
 
 	subsystem = spdk_nvmf_subsystem_create(&tgt, "nqn.2016-06.io.spdk:subsystem1",
 					       SPDK_NVMF_SUBTYPE_NVME, 0);
-	subsystem->flags.allow_any_host = true;
+	subsystem->allow_any_host = true;
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 
 	TAILQ_INIT(&tgt.referrals);
