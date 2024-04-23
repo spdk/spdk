@@ -104,6 +104,6 @@ function nvmf_host_management() {
 
 nvmftestinit
 
-run_test "nvmf_host_management" nvmf_host_management
+nvmf_host_management
 
 trap - SIGINT SIGTERM EXIT
