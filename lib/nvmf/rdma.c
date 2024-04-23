@@ -1455,8 +1455,7 @@ nvmf_rdma_update_remote_addr(struct spdk_nvmf_rdma_request *rdma_req, uint32_t n
 }
 
 static int
-nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_poll_group *rgroup,
-		      struct spdk_nvmf_rdma_device *device,
+nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_device *device,
 		      struct spdk_nvmf_rdma_request *rdma_req,
 		      struct ibv_send_wr *wr,
 		      uint32_t total_length)
@@ -1504,8 +1503,7 @@ nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_poll_group *rgroup,
 }
 
 static int
-nvmf_rdma_fill_wr_sgl_with_dif(struct spdk_nvmf_rdma_poll_group *rgroup,
-			       struct spdk_nvmf_rdma_device *device,
+nvmf_rdma_fill_wr_sgl_with_dif(struct spdk_nvmf_rdma_device *device,
 			       struct spdk_nvmf_rdma_request *rdma_req,
 			       struct ibv_send_wr *wr,
 			       uint32_t total_length,
@@ -1676,7 +1674,7 @@ nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 			}
 		}
 
-		rc = nvmf_rdma_fill_wr_sgl_with_dif(rgroup, device, rdma_req, wr, length, num_wrs - 1);
+		rc = nvmf_rdma_fill_wr_sgl_with_dif(device, rdma_req, wr, length, num_wrs - 1);
 		if (spdk_unlikely(rc != 0)) {
 			goto err_exit;
 		}
@@ -1685,7 +1683,7 @@ nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 			nvmf_rdma_update_remote_addr(rdma_req, num_wrs);
 		}
 	} else {
-		rc = nvmf_rdma_fill_wr_sgl(rgroup, device, rdma_req, wr, length);
+		rc = nvmf_rdma_fill_wr_sgl(device, rdma_req, wr, length);
 		if (spdk_unlikely(rc != 0)) {
 			goto err_exit;
 		}
@@ -1786,9 +1784,9 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 		}
 
 		if (spdk_likely(!req->dif_enabled)) {
-			rc = nvmf_rdma_fill_wr_sgl(rgroup, device, rdma_req, current_wr, lengths[i]);
+			rc = nvmf_rdma_fill_wr_sgl(device, rdma_req, current_wr, lengths[i]);
 		} else {
-			rc = nvmf_rdma_fill_wr_sgl_with_dif(rgroup, device, rdma_req, current_wr,
+			rc = nvmf_rdma_fill_wr_sgl_with_dif(device, rdma_req, current_wr,
 							    lengths[i], 0);
 		}
 		if (spdk_unlikely(rc != 0)) {
