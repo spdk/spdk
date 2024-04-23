@@ -393,6 +393,8 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *_opts)
 	tgt->crdt[2] = opts.crdt[2];
 	tgt->discovery_filter = opts.discovery_filter;
 	tgt->discovery_genctr = 0;
+	tgt->dhchap_digests = opts.dhchap_digests;
+	tgt->dhchap_dhgroups = opts.dhchap_dhgroups;
 	TAILQ_INIT(&tgt->transports);
 	TAILQ_INIT(&tgt->poll_groups);
 	TAILQ_INIT(&tgt->referrals);

@@ -61,6 +61,8 @@ struct spdk_nvmf_target_opts {
 	uint32_t	max_subsystems;
 	uint16_t	crdt[3];
 	uint32_t	discovery_filter;
+	uint32_t	dhchap_digests;
+	uint32_t	dhchap_dhgroups;
 };
 
 struct spdk_nvmf_transport_opts {

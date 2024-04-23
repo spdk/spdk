@@ -78,6 +78,10 @@ struct spdk_nvmf_tgt {
 	uint16_t				crdt[3];
 	uint16_t				num_poll_groups;
 
+	/* Allowed DH-HMAC-CHAP digests/dhgroups */
+	uint32_t				dhchap_digests;
+	uint32_t				dhchap_dhgroups;
+
 	TAILQ_ENTRY(spdk_nvmf_tgt)		link;
 };
 

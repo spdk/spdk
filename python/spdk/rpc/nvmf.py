@@ -24,13 +24,14 @@ def nvmf_set_max_subsystems(client,
 def nvmf_set_config(client,
                     passthru_identify_ctrlr=None,
                     poll_groups_mask=None,
-                    discovery_filter=None):
+                    discovery_filter=None, dhchap_digests=None, dhchap_dhgroups=None):
     """Set NVMe-oF target subsystem configuration.
 
     Args:
         discovery_filter: Set discovery filter (optional), possible values are: `match_any` (default) or
          comma separated values: `transport`, `address`, `svcid`
-
+        dhchap_digests: List of allowed DH-HMAC-CHAP digests. (optional)
+        dhchap_dhgroups: List of allowed DH-HMAC-CHAP DH groups. (optional)
     Returns:
         True or False
     """
@@ -44,6 +45,10 @@ def nvmf_set_config(client,
         params['poll_groups_mask'] = poll_groups_mask
     if discovery_filter:
         params['discovery_filter'] = discovery_filter
+    if dhchap_digests is not None:
+        params['dhchap_digests'] = dhchap_digests
+    if dhchap_dhgroups is not None:
+        params['dhchap_dhgroups'] = dhchap_dhgroups
 
     return client.call('nvmf_set_config', params)
 

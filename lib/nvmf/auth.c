@@ -123,6 +123,22 @@ nvmf_auth_request_fail1(struct spdk_nvmf_request *req, int reason)
 	nvmf_auth_request_complete(req, SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_SUCCESS, 0);
 }
 
+static bool
+nvmf_auth_digest_allowed(struct spdk_nvmf_qpair *qpair, uint8_t digest)
+{
+	struct spdk_nvmf_tgt *tgt = qpair->group->tgt;
+
+	return tgt->dhchap_digests & SPDK_BIT(digest);
+}
+
+static bool
+nvmf_auth_dhgroup_allowed(struct spdk_nvmf_qpair *qpair, uint8_t dhgroup)
+{
+	struct spdk_nvmf_tgt *tgt = qpair->group->tgt;
+
+	return tgt->dhchap_dhgroups & SPDK_BIT(dhgroup);
+}
+
 static int
 nvmf_auth_timeout_poller(void *ctx)
 {
@@ -259,6 +275,9 @@ nvmf_auth_negotiate_exec(struct spdk_nvmf_request *req, struct spdk_nvmf_auth_ne
 	}
 
 	for (i = 0; i < SPDK_COUNTOF(digests); ++i) {
+		if (!nvmf_auth_digest_allowed(qpair, digests[i])) {
+			continue;
+		}
 		for (j = 0; j < desc->halen; ++j) {
 			if (digests[i] == desc->hash_id_list[j]) {
 				AUTH_DEBUGLOG(qpair, "selected digest: %s\n",
@@ -278,6 +297,9 @@ nvmf_auth_negotiate_exec(struct spdk_nvmf_request *req, struct spdk_nvmf_auth_ne
 	}
 
 	for (i = 0; i < SPDK_COUNTOF(dhgroups); ++i) {
+		if (!nvmf_auth_dhgroup_allowed(qpair, dhgroups[i])) {
+			continue;
+		}
 		for (j = 0; j < desc->dhlen; ++j) {
 			if (dhgroups[i] == desc->dhg_id_list[j]) {
 				AUTH_DEBUGLOG(qpair, "selected dhgroup: %s\n",

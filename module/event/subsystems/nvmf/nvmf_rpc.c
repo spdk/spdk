@@ -159,10 +159,78 @@ nvmf_decode_poll_groups_mask(const struct spdk_json_val *val, void *out)
 	return -1;
 }
 
+static int
+decode_digest(const struct spdk_json_val *val, void *out)
+{
+	uint32_t *flags = out;
+	char *digest = NULL;
+	int rc;
+
+	rc = spdk_json_decode_string(val, &digest);
+	if (rc != 0) {
+		return rc;
+	}
+
+	rc = spdk_nvme_dhchap_get_digest_id(digest);
+	if (rc >= 0) {
+		*flags |= SPDK_BIT(rc);
+		rc = 0;
+	}
+	free(digest);
+
+	return rc;
+}
+
+static int
+decode_digest_array(const struct spdk_json_val *val, void *out)
+{
+	uint32_t *flags = out;
+	size_t count;
+
+	*flags = 0;
+
+	return spdk_json_decode_array(val, decode_digest, out, 32, &count, 0);
+}
+
+static int
+decode_dhgroup(const struct spdk_json_val *val, void *out)
+{
+	uint32_t *flags = out;
+	char *dhgroup = NULL;
+	int rc;
+
+	rc = spdk_json_decode_string(val, &dhgroup);
+	if (rc != 0) {
+		return rc;
+	}
+
+	rc = spdk_nvme_dhchap_get_dhgroup_id(dhgroup);
+	if (rc >= 0) {
+		*flags |= SPDK_BIT(rc);
+		rc = 0;
+	}
+	free(dhgroup);
+
+	return rc;
+}
+
+static int
+decode_dhgroup_array(const struct spdk_json_val *val, void *out)
+{
+	uint32_t *flags = out;
+	size_t count;
+
+	*flags = 0;
+
+	return spdk_json_decode_array(val, decode_dhgroup, out, 32, &count, 0);
+}
+
 static const struct spdk_json_object_decoder nvmf_rpc_subsystem_tgt_conf_decoder[] = {
 	{"admin_cmd_passthru", offsetof(struct spdk_nvmf_tgt_conf, admin_passthru), decode_admin_passthru, true},
 	{"poll_groups_mask", 0, nvmf_decode_poll_groups_mask, true},
-	{"discovery_filter", offsetof(struct spdk_nvmf_tgt_conf, opts.discovery_filter), decode_discovery_filter, true}
+	{"discovery_filter", offsetof(struct spdk_nvmf_tgt_conf, opts.discovery_filter), decode_discovery_filter, true},
+	{"dhchap_digests", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_digests), decode_digest_array, true},
+	{"dhchap_dhgroups", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_dhgroups), decode_dhgroup_array, true},
 };
 
 static void

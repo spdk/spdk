@@ -176,7 +176,7 @@ DEPDIRS-event_nbd := init nbd event_bdev
 ifeq ($(CONFIG_UBLK),y)
 DEPDIRS-event_ublk := init ublk event_bdev
 endif
-DEPDIRS-event_nvmf := init nvmf event_bdev event_scheduler event_sock event_keyring \
+DEPDIRS-event_nvmf := init nvme nvmf event_bdev event_scheduler event_sock event_keyring \
 		      thread log bdev util $(JSON_LIBS)
 DEPDIRS-event_scsi := init scsi event_bdev
 

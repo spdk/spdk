@@ -134,5 +134,41 @@ NOT hostrpc bdev_nvme_attach_controller -b nvme0 -t "$TEST_TRANSPORT" -f ipv4 \
 	--dhchap-key "key1" --dhchap-ctrlr-key "ckey1"
 rpc_cmd nvmf_subsystem_remove_host "$subnqn" "$hostnqn"
 
+# Limit allowed digests/dhgroups on the target
+killprocess "$nvmfpid"
+nvmfappstart --wait-for-rpc -L nvmf_auth &>> "$output_dir/nvmf-auth.log"
+trap "dumplogs; cleanup" SIGINT SIGTERM EXIT
+
+waitforlisten "$nvmfpid"
+rpc_cmd <<- CONFIG
+	nvmf_set_config --dhchap-digests sha384,sha512 --dhchap-dhgroups ffdhe6144,ffdhe8192
+	framework_start_init
+	nvmf_create_transport -t "$TEST_TRANSPORT"
+	nvmf_create_subsystem "$subnqn"
+	nvmf_subsystem_add_listener -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" \
+		-s "$NVMF_PORT" "$subnqn"
+	keyring_file_add_key key3 "${keys[3]}"
+CONFIG
+
+connect_authenticate "sha512" "ffdhe8192" 3
+
+# Check that authentication fails when no common digests are allowed
+rpc_cmd nvmf_subsystem_add_host "$subnqn" "$hostnqn" --dhchap-key key3
+hostrpc bdev_nvme_set_options --dhchap-digests "sha256"
+NOT hostrpc bdev_nvme_attach_controller -b nvme0 -t "$TEST_TRANSPORT" -f ipv4 \
+	-a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -q "$hostnqn" -n "$subnqn" \
+	--dhchap-key "key3"
+
+# Check that authentication fails when no common dhgroups are allowed
+hostrpc bdev_nvme_set_options --dhchap-dhgroups "ffdhe2048" \
+	--dhchap-digests \
+	"$(
+		IFS=,
+		printf "%s" "${digests[*]}"
+	)"
+NOT hostrpc bdev_nvme_attach_controller -b nvme0 -t "$TEST_TRANSPORT" -f ipv4 \
+	-a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -q "$hostnqn" -n "$subnqn" \
+	--dhchap-key "key3"
+
 trap - SIGINT SIGTERM EXIT
 cleanup

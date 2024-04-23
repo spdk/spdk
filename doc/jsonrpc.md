@@ -9034,6 +9034,8 @@ acceptor_poll_rate      | Optional | number      | Polling interval of the accep
 admin_cmd_passthru      | Optional | object      | Admin command passthru configuration
 poll_groups_mask        | Optional | string      | Set cpumask for NVMf poll groups
 discovery_filter        | Optional | string      | Set discovery filter, possible values are: `match_any` (default) or comma separated values: `transport`, `address`, `svcid`
+dhchap_digests          | Optional | list        | List of allowed DH-HMAC-CHAP digests.
+dhchap_dhgroups         | Optional | list        | List of allowed DH-HMAC-CHAP DH groups.
 
 #### admin_cmd_passthru {#spdk_nvmf_admin_passthru_conf}
 

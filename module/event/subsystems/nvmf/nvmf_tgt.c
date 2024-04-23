@@ -36,11 +36,13 @@ struct nvmf_tgt_poll_group {
 
 struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf = {
 	.opts = {
-		.size = SPDK_SIZEOF(&g_spdk_nvmf_tgt_conf.opts, discovery_filter),
+		.size = SPDK_SIZEOF(&g_spdk_nvmf_tgt_conf.opts, dhchap_dhgroups),
 		.name = "nvmf_tgt",
 		.max_subsystems = 0,
 		.crdt = { 0, 0, 0 },
 		.discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY,
+		.dhchap_digests = UINT32_MAX,
+		.dhchap_dhgroups = UINT32_MAX,
 	},
 	.admin_passthru.identify_ctrlr = false
 };

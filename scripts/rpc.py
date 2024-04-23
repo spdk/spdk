@@ -2530,7 +2530,9 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         rpc.nvmf.nvmf_set_config(args.client,
                                  passthru_identify_ctrlr=args.passthru_identify_ctrlr,
                                  poll_groups_mask=args.poll_groups_mask,
-                                 discovery_filter=args.discovery_filter)
+                                 discovery_filter=args.discovery_filter,
+                                 dhchap_digests=args.dhchap_digests,
+                                 dhchap_dhgroups=args.dhchap_dhgroups)
 
     p = subparsers.add_parser('nvmf_set_config', help='Set NVMf target config')
     p.add_argument('-i', '--passthru-identify-ctrlr', help="""Passthrough fields like serial number and model number
@@ -2538,6 +2540,10 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-m', '--poll-groups-mask', help='Set cpumask for NVMf poll groups (optional)', type=str)
     p.add_argument('-d', '--discovery-filter', help="""Set discovery filter (optional), possible values are: `match_any` (default) or
          comma separated values: `transport`, `address`, `svcid`""", type=str)
+    p.add_argument('--dhchap-digests', help='Comma-separated list of allowed DH-HMAC-CHAP digests',
+                   type=lambda d: d.split(','))
+    p.add_argument('--dhchap-dhgroups', help='Comma-separated list of allowed DH-HMAC-CHAP DH groups',
+                   type=lambda d: d.split(','))
     p.set_defaults(func=nvmf_set_config)
 
     def nvmf_create_transport(args):

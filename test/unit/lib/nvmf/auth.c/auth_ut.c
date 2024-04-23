@@ -258,8 +258,10 @@ test_auth_negotiate(void)
 {
 	union nvmf_c2h_msg rsp = {};
 	struct spdk_nvmf_subsystem subsys = {};
+	struct spdk_nvmf_tgt tgt = { .dhchap_digests = UINT32_MAX, .dhchap_dhgroups = UINT32_MAX };
+	struct spdk_nvmf_poll_group group = { .tgt = &tgt };
 	struct spdk_nvmf_ctrlr ctrlr = { .subsys = &subsys };
-	struct spdk_nvmf_qpair qpair = { .ctrlr = &ctrlr };
+	struct spdk_nvmf_qpair qpair = { .ctrlr = &ctrlr, .group = &group };
 	struct spdk_nvmf_request req = { .qpair = &qpair, .rsp = &rsp };
 	struct spdk_nvmf_fabric_auth_send_cmd cmd = {};
 	struct spdk_nvmf_qpair_auth *auth;
@@ -474,6 +476,41 @@ test_auth_negotiate(void)
 	CU_ASSERT_EQUAL(auth->fail_reason, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
 	req.length = cmd.tl = req.iov[0].iov_len = sizeof(*msg) + sizeof(*desc);
 
+	/* No common digests */
+	g_req_completed = false;
+	auth->digest = -1;
+	auth->dhgroup = -1;
+	auth->state = NVMF_QPAIR_AUTH_NEGOTIATE;
+	desc->halen = 1;
+	tgt.dhchap_digests = SPDK_BIT(SPDK_NVMF_DHCHAP_HASH_SHA384) |
+			     SPDK_BIT(SPDK_NVMF_DHCHAP_HASH_SHA512);
+
+	nvmf_auth_send_exec(&req);
+	CU_ASSERT(g_req_completed);
+	CU_ASSERT_EQUAL(auth->digest, -1);
+	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_FAILURE1);
+	CU_ASSERT_EQUAL(auth->fail_reason, SPDK_NVMF_AUTH_HASH_UNUSABLE);
+	tgt.dhchap_digests = UINT32_MAX;
+	desc->halen = 3;
+
+	/* No common dhgroups */
+	g_req_completed = false;
+	auth->state = NVMF_QPAIR_AUTH_NEGOTIATE;
+	desc->dhlen = 1;
+	tgt.dhchap_dhgroups = SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_2048) |
+			      SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_3072) |
+			      SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_4096) |
+			      SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_6144) |
+			      SPDK_BIT(SPDK_NVMF_DHCHAP_DHGROUP_8192);
+
+	nvmf_auth_send_exec(&req);
+	CU_ASSERT(g_req_completed);
+	CU_ASSERT_EQUAL(auth->dhgroup, -1);
+	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_FAILURE1);
+	CU_ASSERT_EQUAL(auth->fail_reason, SPDK_NVMF_AUTH_DHGROUP_UNUSABLE);
+	tgt.dhchap_dhgroups = UINT32_MAX;
+	desc->dhlen = 6;
+
 	nvmf_qpair_auth_destroy(&qpair);
 }
 
@@ -482,8 +519,10 @@ test_auth_timeout(void)
 {
 	union nvmf_c2h_msg rsp = {};
 	struct spdk_nvmf_subsystem subsys = {};
+	struct spdk_nvmf_tgt tgt = { .dhchap_digests = UINT32_MAX, .dhchap_dhgroups = UINT32_MAX };
+	struct spdk_nvmf_poll_group group = { .tgt = &tgt };
 	struct spdk_nvmf_ctrlr ctrlr = { .subsys = &subsys };
-	struct spdk_nvmf_qpair qpair = { .ctrlr = &ctrlr };
+	struct spdk_nvmf_qpair qpair = { .ctrlr = &ctrlr, .group = &group };
 	struct spdk_nvmf_request req = { .qpair = &qpair, .rsp = &rsp };
 	struct spdk_nvmf_fabric_auth_send_cmd cmd = {};
 	struct spdk_nvmf_qpair_auth *auth;
