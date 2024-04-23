@@ -1737,7 +1737,7 @@ int spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  * SPDK_BDEV_IO_STATUS_FAILED indicates any I/O was failed to abort for any reason
  * or no I/O which has bio_cb_arg as its callback context was found.
  *
- * \ingroup bdev_io_submit functions
+ * \ingroup bdev_io_submit_functions
  *
  * \param desc Block device descriptor.
  * \param ch The I/O channel which the I/Os to be aborted are associated with.
