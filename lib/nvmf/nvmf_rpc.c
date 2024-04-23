@@ -922,7 +922,7 @@ rpc_nvmf_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 	ctx->op = NVMF_RPC_LISTEN_ADD;
 	spdk_nvmf_listen_opts_init(&ctx->opts, sizeof(ctx->opts));
 	ctx->opts.transport_specific = params;
-	if (subsystem->flags.allow_any_host == 1 && ctx->listener_opts.secure_channel == true) {
+	if (spdk_nvmf_subsystem_get_allow_any_host(subsystem) && ctx->listener_opts.secure_channel) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Cannot establish secure channel, when 'allow_any_host' is set");
 		nvmf_rpc_listener_ctx_free(ctx);
