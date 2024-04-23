@@ -69,6 +69,124 @@ raid1_write_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void 
 				   SPDK_BDEV_IO_STATUS_FAILED);
 }
 
+static struct raid_base_bdev_info *
+raid1_get_read_io_base_bdev(struct raid_bdev_io *raid_io)
+{
+	assert(raid_io->type == SPDK_BDEV_IO_TYPE_READ);
+	return &raid_io->raid_bdev->base_bdev_info[raid_io->base_bdev_io_submitted];
+}
+
+static void
+raid1_correct_read_error_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct raid_bdev_io *raid_io = cb_arg;
+
+	spdk_bdev_free_io(bdev_io);
+
+	if (!success) {
+		struct raid_base_bdev_info *base_info = raid1_get_read_io_base_bdev(raid_io);
+
+		/* Writing to the bdev that had the read error failed so fail the base bdev
+		 * but complete the raid_io successfully. */
+		raid_bdev_fail_base_bdev(base_info);
+	}
+
+	raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+}
+
+static void
+raid1_correct_read_error(void *_raid_io)
+{
+	struct raid_bdev_io *raid_io = _raid_io;
+	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
+	struct spdk_bdev_ext_io_opts io_opts;
+	struct raid_base_bdev_info *base_info;
+	struct spdk_io_channel *base_ch;
+	uint8_t i;
+	int ret;
+
+	i = raid_io->base_bdev_io_submitted;
+	base_info = &raid_bdev->base_bdev_info[i];
+	base_ch = raid_bdev_channel_get_base_channel(raid_io->raid_ch, i);
+	assert(base_ch != NULL);
+
+	raid1_init_ext_io_opts(&io_opts, raid_io);
+	ret = raid_bdev_writev_blocks_ext(base_info, base_ch, raid_io->iovs, raid_io->iovcnt,
+					  raid_io->offset_blocks, raid_io->num_blocks,
+					  raid1_correct_read_error_completion, raid_io, &io_opts);
+	if (spdk_unlikely(ret != 0)) {
+		if (ret == -ENOMEM) {
+			raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(base_info->desc),
+						base_ch, raid1_correct_read_error);
+		} else {
+			raid_bdev_fail_base_bdev(base_info);
+			raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		}
+	}
+}
+
+static void raid1_read_other_base_bdev(void *_raid_io);
+
+static void
+raid1_read_other_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct raid_bdev_io *raid_io = cb_arg;
+
+	spdk_bdev_free_io(bdev_io);
+
+	if (!success) {
+		assert(raid_io->base_bdev_io_remaining > 0);
+		raid_io->base_bdev_io_remaining--;
+		raid1_read_other_base_bdev(raid_io);
+		return;
+	}
+
+	/* try to correct the read error by writing data read from the other base bdev */
+	raid1_correct_read_error(raid_io);
+}
+
+static void
+raid1_read_other_base_bdev(void *_raid_io)
+{
+	struct raid_bdev_io *raid_io = _raid_io;
+	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
+	struct spdk_bdev_ext_io_opts io_opts;
+	struct raid_base_bdev_info *base_info;
+	struct spdk_io_channel *base_ch;
+	uint8_t i;
+	int ret;
+
+	for (i = raid_bdev->num_base_bdevs - raid_io->base_bdev_io_remaining; i < raid_bdev->num_base_bdevs;
+	     i++) {
+		base_info = &raid_bdev->base_bdev_info[i];
+		base_ch = raid_bdev_channel_get_base_channel(raid_io->raid_ch, i);
+
+		if (base_ch == NULL || i == raid_io->base_bdev_io_submitted) {
+			raid_io->base_bdev_io_remaining--;
+			continue;
+		}
+
+		raid1_init_ext_io_opts(&io_opts, raid_io);
+		ret = raid_bdev_readv_blocks_ext(base_info, base_ch, raid_io->iovs, raid_io->iovcnt,
+						 raid_io->offset_blocks, raid_io->num_blocks,
+						 raid1_read_other_completion, raid_io, &io_opts);
+		if (spdk_unlikely(ret != 0)) {
+			if (ret == -ENOMEM) {
+				raid_bdev_queue_io_wait(raid_io, spdk_bdev_desc_get_bdev(base_info->desc),
+							base_ch, raid1_read_other_base_bdev);
+			} else {
+				break;
+			}
+		}
+		return;
+	}
+
+	base_info = raid1_get_read_io_base_bdev(raid_io);
+	raid_bdev_fail_base_bdev(base_info);
+
+	raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
+}
+
 static void
 raid1_read_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
@@ -79,7 +197,13 @@ raid1_read_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *
 	raid1_channel_dec_read_counters(raid_io->raid_ch, raid_io->base_bdev_io_submitted,
 					raid_io->num_blocks);
 
-	raid_bdev_io_complete(raid_io, success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED);
+	if (!success) {
+		raid_io->base_bdev_io_remaining = raid_io->raid_bdev->num_base_bdevs;
+		raid1_read_other_base_bdev(raid_io);
+		return;
+	}
+
+	raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 }
 
 static void raid1_submit_rw_request(struct raid_bdev_io *raid_io);

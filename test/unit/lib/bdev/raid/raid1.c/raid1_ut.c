@@ -13,30 +13,14 @@
 #include "../common.c"
 
 static enum spdk_bdev_io_status g_io_status;
+static struct spdk_bdev_desc *g_last_io_desc;
+static spdk_bdev_io_completion_cb g_last_io_cb;
 
 DEFINE_STUB_V(raid_bdev_module_list_add, (struct raid_bdev_module *raid_module));
 DEFINE_STUB_V(raid_bdev_module_stop_done, (struct raid_bdev *raid_bdev));
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
 DEFINE_STUB_V(raid_bdev_queue_io_wait, (struct raid_bdev_io *raid_io, struct spdk_bdev *bdev,
 					struct spdk_io_channel *ch, spdk_bdev_io_wait_cb cb_fn));
-DEFINE_STUB(spdk_bdev_readv_blocks_with_md, int, (struct spdk_bdev_desc *desc,
-		struct spdk_io_channel *ch,
-		struct iovec *iov, int iovcnt, void *md,
-		uint64_t offset_blocks, uint64_t num_blocks,
-		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
-DEFINE_STUB(spdk_bdev_writev_blocks_with_md, int, (struct spdk_bdev_desc *desc,
-		struct spdk_io_channel *ch,
-		struct iovec *iov, int iovcnt, void *md,
-		uint64_t offset_blocks, uint64_t num_blocks,
-		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
-DEFINE_STUB(spdk_bdev_readv_blocks_ext, int, (struct spdk_bdev_desc *desc,
-		struct spdk_io_channel *ch,
-		struct iovec *iov, int iovcnt, uint64_t offset_blocks, uint64_t num_blocks,
-		spdk_bdev_io_completion_cb cb, void *cb_arg, struct spdk_bdev_ext_io_opts *opts), 0);
-DEFINE_STUB(spdk_bdev_writev_blocks_ext, int, (struct spdk_bdev_desc *desc,
-		struct spdk_io_channel *ch,
-		struct iovec *iov, int iovcnt, uint64_t offset_blocks, uint64_t num_blocks,
-		spdk_bdev_io_completion_cb cb, void *cb_arg, struct spdk_bdev_ext_io_opts *opts), 0);
 DEFINE_STUB_V(raid_bdev_process_request_complete, (struct raid_bdev_process_request *process_req,
 		int status));
 DEFINE_STUB_V(raid_bdev_io_init, (struct raid_bdev_io *raid_io,
@@ -46,6 +30,30 @@ DEFINE_STUB_V(raid_bdev_io_init, (struct raid_bdev_io *raid_io,
 				  struct spdk_memory_domain *memory_domain, void *memory_domain_ctx));
 DEFINE_STUB(raid_bdev_remap_dix_reftag, int, (void *md_buf, uint64_t num_blocks,
 		struct spdk_bdev *bdev, uint32_t remapped_offset), -1);
+
+int
+spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc,
+			   struct spdk_io_channel *ch,
+			   struct iovec *iov, int iovcnt, uint64_t offset_blocks, uint64_t num_blocks,
+			   spdk_bdev_io_completion_cb cb, void *cb_arg, struct spdk_bdev_ext_io_opts *opts)
+{
+	g_last_io_desc = desc;
+	g_last_io_cb = cb;
+
+	return 0;
+}
+
+int
+spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc,
+			    struct spdk_io_channel *ch,
+			    struct iovec *iov, int iovcnt, uint64_t offset_blocks, uint64_t num_blocks,
+			    spdk_bdev_io_completion_cb cb, void *cb_arg, struct spdk_bdev_ext_io_opts *opts)
+{
+	g_last_io_desc = desc;
+	g_last_io_cb = cb;
+
+	return 0;
+}
 
 void
 raid_bdev_fail_base_bdev(struct raid_base_bdev_info *base_info)
@@ -312,6 +320,187 @@ test_raid1_write_error(void)
 	run_for_each_raid1_config(_test_raid1_write_error);
 }
 
+static void
+_test_raid1_read_error(struct raid_bdev *raid_bdev, struct raid_bdev_io_channel *raid_ch)
+{
+	struct raid1_info *r1_info = raid_bdev->module_private;
+	struct raid_base_bdev_info *base_info = &raid_bdev->base_bdev_info[0];
+	struct raid1_io_channel *raid1_ch = raid_bdev_channel_get_module_ctx(raid_ch);
+	struct raid_bdev_io *raid_io;
+	struct spdk_bdev_io bdev_io = {};
+
+	/* first read fails, the second succeeds */
+	base_info->is_failed = false;
+	g_io_status = SPDK_BDEV_IO_STATUS_PENDING;
+	raid_io = get_raid_io(r1_info, raid_ch, SPDK_BDEV_IO_TYPE_READ, 64);
+	raid1_submit_read_request(raid_io);
+	CU_ASSERT(raid_io->base_bdev_io_submitted == 0);
+	CU_ASSERT(raid_io->base_bdev_io_remaining == 0);
+
+	CU_ASSERT(g_last_io_desc == base_info->desc);
+	CU_ASSERT(g_last_io_cb == raid1_read_bdev_io_completion);
+	raid1_read_bdev_io_completion(&bdev_io, false, raid_io);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT((uint8_t)raid_io->base_bdev_io_remaining == (raid_bdev->num_base_bdevs - 1));
+
+	CU_ASSERT(g_last_io_desc == raid_bdev->base_bdev_info[1].desc);
+	CU_ASSERT(g_last_io_cb == raid1_read_other_completion);
+	raid1_read_other_completion(&bdev_io, true, raid_io);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_PENDING);
+
+	CU_ASSERT(g_last_io_desc == base_info->desc);
+	CU_ASSERT(g_last_io_cb == raid1_correct_read_error_completion);
+	raid1_correct_read_error_completion(&bdev_io, true, raid_io);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(base_info->is_failed == false);
+
+	/* rewrite fails */
+	base_info->is_failed = false;
+	g_io_status = SPDK_BDEV_IO_STATUS_PENDING;
+	raid_io = get_raid_io(r1_info, raid_ch, SPDK_BDEV_IO_TYPE_READ, 64);
+	raid1_submit_read_request(raid_io);
+	CU_ASSERT(raid_io->base_bdev_io_submitted == 0);
+	CU_ASSERT(raid_io->base_bdev_io_remaining == 0);
+
+	CU_ASSERT(g_last_io_desc == base_info->desc);
+	CU_ASSERT(g_last_io_cb == raid1_read_bdev_io_completion);
+	raid1_read_bdev_io_completion(&bdev_io, false, raid_io);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT((uint8_t)raid_io->base_bdev_io_remaining == (raid_bdev->num_base_bdevs - 1));
+
+	CU_ASSERT(g_last_io_desc == raid_bdev->base_bdev_info[1].desc);
+	CU_ASSERT(g_last_io_cb == raid1_read_other_completion);
+	raid1_read_other_completion(&bdev_io, true, raid_io);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_PENDING);
+
+	CU_ASSERT(g_last_io_desc == base_info->desc);
+	CU_ASSERT(g_last_io_cb == raid1_correct_read_error_completion);
+	raid1_correct_read_error_completion(&bdev_io, false, raid_io);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(base_info->is_failed == true);
+
+	/* only the last read succeeds */
+	base_info->is_failed = false;
+	g_io_status = SPDK_BDEV_IO_STATUS_PENDING;
+	raid_io = get_raid_io(r1_info, raid_ch, SPDK_BDEV_IO_TYPE_READ, 64);
+	raid1_submit_read_request(raid_io);
+	CU_ASSERT(raid_io->base_bdev_io_submitted == 0);
+	CU_ASSERT(raid_io->base_bdev_io_remaining == 0);
+
+	CU_ASSERT(g_last_io_desc == base_info->desc);
+	CU_ASSERT(g_last_io_cb == raid1_read_bdev_io_completion);
+	raid1_read_bdev_io_completion(&bdev_io, false, raid_io);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT((uint8_t)raid_io->base_bdev_io_remaining == (raid_bdev->num_base_bdevs - 1));
+
+	while (raid_io->base_bdev_io_remaining > 1) {
+		CU_ASSERT(g_last_io_cb == raid1_read_other_completion);
+		raid1_read_other_completion(&bdev_io, false, raid_io);
+		CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_PENDING);
+	}
+
+	CU_ASSERT(g_last_io_desc == raid_bdev->base_bdev_info[raid_bdev->num_base_bdevs - 1].desc);
+	CU_ASSERT(g_last_io_cb == raid1_read_other_completion);
+	raid1_read_other_completion(&bdev_io, true, raid_io);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_PENDING);
+
+	CU_ASSERT(g_last_io_desc == base_info->desc);
+	CU_ASSERT(g_last_io_cb == raid1_correct_read_error_completion);
+	raid1_correct_read_error_completion(&bdev_io, true, raid_io);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(base_info->is_failed == false);
+
+	/* all reads fail */
+	base_info->is_failed = false;
+	g_io_status = SPDK_BDEV_IO_STATUS_PENDING;
+	raid_io = get_raid_io(r1_info, raid_ch, SPDK_BDEV_IO_TYPE_READ, 64);
+	raid1_submit_read_request(raid_io);
+	CU_ASSERT(raid_io->base_bdev_io_submitted == 0);
+	CU_ASSERT(raid_io->base_bdev_io_remaining == 0);
+
+	CU_ASSERT(g_last_io_desc == base_info->desc);
+	CU_ASSERT(g_last_io_cb == raid1_read_bdev_io_completion);
+	raid1_read_bdev_io_completion(&bdev_io, false, raid_io);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT((uint8_t)raid_io->base_bdev_io_remaining == (raid_bdev->num_base_bdevs - 1));
+
+	while (raid_io->base_bdev_io_remaining > 1) {
+		CU_ASSERT(g_last_io_cb == raid1_read_other_completion);
+		raid1_read_other_completion(&bdev_io, false, raid_io);
+		CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_PENDING);
+	}
+
+	CU_ASSERT(g_last_io_desc == raid_bdev->base_bdev_info[raid_bdev->num_base_bdevs - 1].desc);
+	CU_ASSERT(g_last_io_cb == raid1_read_other_completion);
+	raid1_read_other_completion(&bdev_io, false, raid_io);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(base_info->is_failed == true);
+
+	/* read from base bdev #1 fails, read from #0 succeeds */
+	base_info->is_failed = false;
+	base_info = &raid_bdev->base_bdev_info[1];
+	raid1_ch->read_blocks_outstanding[0] = 123;
+	g_io_status = SPDK_BDEV_IO_STATUS_PENDING;
+	raid_io = get_raid_io(r1_info, raid_ch, SPDK_BDEV_IO_TYPE_READ, 64);
+	raid1_submit_read_request(raid_io);
+	CU_ASSERT(raid_io->base_bdev_io_submitted == 1);
+	CU_ASSERT(raid_io->base_bdev_io_remaining == 0);
+
+	CU_ASSERT(g_last_io_desc == base_info->desc);
+	CU_ASSERT(g_last_io_cb == raid1_read_bdev_io_completion);
+	raid1_read_bdev_io_completion(&bdev_io, false, raid_io);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT((uint8_t)raid_io->base_bdev_io_remaining == raid_bdev->num_base_bdevs);
+
+	CU_ASSERT(g_last_io_desc == raid_bdev->base_bdev_info[0].desc);
+	CU_ASSERT(g_last_io_cb == raid1_read_other_completion);
+	raid1_read_other_completion(&bdev_io, true, raid_io);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_PENDING);
+
+	CU_ASSERT(g_last_io_desc == base_info->desc);
+	CU_ASSERT(g_last_io_cb == raid1_correct_read_error_completion);
+	raid1_correct_read_error_completion(&bdev_io, true, raid_io);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(base_info->is_failed == false);
+
+	/* base bdev #0 is failed, read from #1 fails, read from next succeeds if N > 2 */
+	base_info->is_failed = false;
+	raid_ch->_base_channels[0] = NULL;
+	g_io_status = SPDK_BDEV_IO_STATUS_PENDING;
+	raid_io = get_raid_io(r1_info, raid_ch, SPDK_BDEV_IO_TYPE_READ, 64);
+	raid1_submit_read_request(raid_io);
+	CU_ASSERT(raid_io->base_bdev_io_submitted == 1);
+	CU_ASSERT(raid_io->base_bdev_io_remaining == 0);
+
+	CU_ASSERT(g_last_io_desc == base_info->desc);
+	CU_ASSERT(g_last_io_cb == raid1_read_bdev_io_completion);
+	raid1_read_bdev_io_completion(&bdev_io, false, raid_io);
+	if (raid_bdev->num_base_bdevs > 2) {
+		CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_PENDING);
+		CU_ASSERT((uint8_t)raid_io->base_bdev_io_remaining == (raid_bdev->num_base_bdevs - 2));
+
+		CU_ASSERT(g_last_io_desc == raid_bdev->base_bdev_info[2].desc);
+		CU_ASSERT(g_last_io_cb == raid1_read_other_completion);
+		raid1_read_other_completion(&bdev_io, true, raid_io);
+		CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_PENDING);
+
+		CU_ASSERT(g_last_io_desc == base_info->desc);
+		CU_ASSERT(g_last_io_cb == raid1_correct_read_error_completion);
+		raid1_correct_read_error_completion(&bdev_io, true, raid_io);
+		CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+		CU_ASSERT(base_info->is_failed == false);
+	} else {
+		CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
+		CU_ASSERT(base_info->is_failed == true);
+	}
+}
+
+static void
+test_raid1_read_error(void)
+{
+	run_for_each_raid1_config(_test_raid1_read_error);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -324,6 +513,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_raid1_start);
 	CU_ADD_TEST(suite, test_raid1_read_balancing);
 	CU_ADD_TEST(suite, test_raid1_write_error);
+	CU_ADD_TEST(suite, test_raid1_read_error);
 
 	allocate_threads(1);
 	set_thread(0);
