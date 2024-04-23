@@ -3915,8 +3915,8 @@ test_sequence_crc32(void)
 	CU_ASSERT_EQUAL(crc, spdk_crc32c_update(buf, sizeof(buf), ~0u));
 	g_seq_operations[SPDK_ACCEL_OPC_CRC32C].count = 0;
 
-	/* Now check copy+crc - this should remove the copy operation and change the buffer for the
-	 * crc operation */
+	/* Now check copy+crc - This should not remove the copy. Otherwise the data does not
+	 * end up where the user expected it to be. */
 	seq = NULL;
 	completed = 0;
 	crc = 0;
@@ -3946,12 +3946,13 @@ test_sequence_crc32(void)
 	CU_ASSERT(ut_seq.complete);
 	CU_ASSERT_EQUAL(ut_seq.status, 0);
 	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_CRC32C].count, 1);
-	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_COPY].count, 0);
+	CU_ASSERT_EQUAL(g_seq_operations[SPDK_ACCEL_OPC_COPY].count, 1);
+	CU_ASSERT_EQUAL(memcmp(buf, tmp[0], sizeof(buf)), 0);
 	CU_ASSERT_EQUAL(crc, spdk_crc32c_update(buf, sizeof(buf), ~0u));
 	g_seq_operations[SPDK_ACCEL_OPC_CRC32C].count = 0;
+	g_seq_operations[SPDK_ACCEL_OPC_COPY].count = 0;
 
-	/* Check crc+copy - this time the copy cannot be removed, because there's no operation
-	 * before crc to change the buffer */
+	/* Check crc+copy - Again, the copy cannot be removed. */
 	seq = NULL;
 	completed = 0;
 	crc = 0;
