@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2015 Intel Corporation
+#  Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #  All rights reserved.
 #
 if [[ $(uname -s) == Darwin ]]; then
@@ -822,7 +823,8 @@ function get_files_for_lic() {
 	# Exclude files that may match the above types but should not
 	# fall under SPDX check.
 	exceptions+="include/linux|"
-	exceptions+="include/spdk/queue_extras.h"
+	exceptions+="include/spdk/queue_extras.h|"
+	exceptions+="lib/mlx5/mlx5_ifc.h"
 
 	mapfile -t f_all < <(
 		git ls-files "${f_suffix[@]}" "${f_type[@]}"

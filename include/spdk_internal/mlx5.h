@@ -10,8 +10,37 @@
 
 #define SPDK_MLX5_DEV_MAX_NAME_LEN 64
 
+/* API for low level PRM based mlx5 driver implementation. Some terminology:
+ * PRM - Programming Reference Manual
+ * QP - Queue Pair
+ * SQ - Submission Queue
+ * CQ - Completion Queue
+ * WQE - Work Queue Element
+ * WQEBB - Work Queue Element Build Block (64 bytes)
+ * CQE - Completion Queue Entry
+ */
+
 struct spdk_mlx5_crypto_dek;
 struct spdk_mlx5_crypto_keytag;
+
+enum {
+	/** Error Completion Event - generate CQE on error for every CTRL segment, even one without CQ_UPDATE bit.
+	 * Don't generate CQE in other cases. Default behaviour */
+	SPDK_MLX5_WQE_CTRL_CE_CQ_ECE			= 3 << 2,
+	/** Do not generate IBV_WC_WR_FLUSH_ERR for non-signaled CTRL segments. Completions are generated only for
+	 * signaled (CQ_UPDATE) CTRL segments and the first error */
+	SPDK_MLX5_WQE_CTRL_CE_CQ_NO_FLUSH_ERROR		= 1 << 2,
+	/** Always generate CQE for CTRL segment WQE */
+	SPDK_MLX5_WQE_CTRL_CE_CQ_UPDATE			= MLX5_WQE_CTRL_CQ_UPDATE,
+	SPDK_MLX5_WQE_CTRL_CE_MASK			= 3 << 2,
+	SPDK_MLX5_WQE_CTRL_SOLICITED			= MLX5_WQE_CTRL_SOLICITED,
+	/** WQE starts execution only after all previous Read/Atomic WQEs complete */
+	SPDK_MLX5_WQE_CTRL_FENCE			= MLX5_WQE_CTRL_FENCE,
+	/** WQE starts execution after all local WQEs (memory operation, gather) complete */
+	SPDK_MLX5_WQE_CTRL_INITIATOR_SMALL_FENCE	= MLX5_WQE_CTRL_INITIATOR_SMALL_FENCE,
+	/** WQE starts execution only after all previous WQEs complete */
+	SPDK_MLX5_WQE_CTRL_STRONG_ORDERING		= 3 << 5,
+};
 
 struct spdk_mlx5_crypto_dek_create_attr {
 	/* Data Encryption Key in binary form */
@@ -19,6 +48,82 @@ struct spdk_mlx5_crypto_dek_create_attr {
 	/* Length of the dek */
 	size_t dek_len;
 };
+
+struct spdk_mlx5_cq;
+struct spdk_mlx5_qp;
+
+struct spdk_mlx5_cq_attr {
+	uint32_t cqe_cnt;
+	uint32_t cqe_size;
+	void *cq_context;
+	struct ibv_comp_channel *comp_channel;
+	int comp_vector;
+};
+
+struct spdk_mlx5_qp_attr {
+	struct ibv_qp_cap cap;
+	bool sigall;
+	/* If set then CQ_UPDATE will be cleared for every ctrl WQE and only last ctrl WQE before ringing the doorbell
+	 * will be updated with CQ_UPDATE flag */
+	bool siglast;
+};
+
+struct spdk_mlx5_cq_completion {
+	union {
+		uint64_t wr_id;
+		uint32_t mkey; /* applicable if status == MLX5_CQE_SYNDROME_SIGERR */
+	};
+	int status;
+};
+
+/**
+ * Create Completion Queue
+ *
+ * \note: CQ and all associated qpairs must be accessed in scope of a single thread
+ * \note: CQ size must be enough to hold completions of all connected qpairs
+ *
+ * \param pd Protection Domain
+ * \param cq_attr Attributes to be used to create CQ
+ * \param cq_out Pointer created CQ
+ * \return 0 on success, negated errno on failure. \b cq_out is set only on success result
+ */
+int spdk_mlx5_cq_create(struct ibv_pd *pd, struct spdk_mlx5_cq_attr *cq_attr,
+			struct spdk_mlx5_cq **cq_out);
+
+/**
+ * Destroy Completion Queue
+ *
+ * \param cq CQ created with \ref spdk_mlx5_cq_create
+ */
+int spdk_mlx5_cq_destroy(struct spdk_mlx5_cq *cq);
+
+/**
+ * Create loopback qpair suitable for RDMA operations
+ *
+ * \param pd Protection Domain
+ * \param cq Completion Queue to bind QP to
+ * \param qp_attr Attributes to be used to create QP
+ * \param qp_out Pointer created QP
+ * \return 0 on success, negated errno on failure. \b qp_out is set only on success result
+ */
+int spdk_mlx5_qp_create(struct ibv_pd *pd, struct spdk_mlx5_cq *cq,
+			struct spdk_mlx5_qp_attr *qp_attr, struct spdk_mlx5_qp **qp_out);
+
+/**
+ * Changes internal qpair state to error causing all unprocessed Work Requests to be completed with IBV_WC_WR_FLUSH_ERR
+ * status code.
+ *
+ * \param qp qpair pointer
+ * \return 0 on success, negated errno on failure
+ */
+int spdk_mlx5_qp_set_error_state(struct spdk_mlx5_qp *qp);
+
+/**
+ * Destroy qpair
+ *
+ * \param qp QP created with \ref spdk_mlx5_qp_create
+ */
+void spdk_mlx5_qp_destroy(struct spdk_mlx5_qp *qp);
 
 /**
  * Return a NULL terminated array of devices which support crypto operation on Nvidia NICs

@@ -9,7 +9,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 SO_VER := 3
 SO_MINOR := 0
 
-C_SRCS = mlx5_crypto.c
+C_SRCS = mlx5_crypto.c mlx5_qp.c
 LIBNAME = mlx5
 
 LOCAL_SYS_LIBS += -lmlx5 -libverbs -lrdmacm

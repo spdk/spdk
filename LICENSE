@@ -28,3 +28,5 @@ Exceptions:
   FreeBSD source tree.
 
 * lib/util/base64_neon.c is BSD-2-Clause.
+
+* lib/mlx5/mlx5_ifc.h is BSD-2-Clause .

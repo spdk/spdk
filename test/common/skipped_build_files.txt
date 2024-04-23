@@ -62,6 +62,7 @@ module/bdev/daos/bdev_daos_rpc
 module/accel/mlx5/accel_mlx5
 module/accel/mlx5/accel_mlx5_rpc
 lib/mlx5/mlx5_crypto
+lib/mlx5/mlx5_qp
 
 # Not configured to build hello_gorpc example
 examples/go/hello_gorpc/hello_gorpc.go
