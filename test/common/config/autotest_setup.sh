@@ -32,7 +32,7 @@ function usage() {
 	echo "  -h --help"
 	echo "  -u --upgrade Run $package_manager upgrade"
 	echo "  -i --install-deps Install $package_manager based dependencies"
-	echo "  -t --test-conf List of test configurations to enable (${CONF},irdma,lcov,bpftrace)"
+	echo "  -t --test-conf List of test configurations to enable (${CONF},irdma,lcov,bpftrace,doxygen)"
 	echo "  -c --conf-path Path to configuration file"
 	echo "  -d --dir-git Path to where git sources should be saved"
 	echo "  -s --disable-tsocks Disable use of tsocks"

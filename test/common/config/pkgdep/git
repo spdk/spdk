@@ -456,6 +456,26 @@ function install_bpftrace() {
 	sudo make -C $GIT_REPOS/bpftrace/build install
 }
 
+function install_doxygen() {
+	# Stable, 1.10 commit that works for our docs
+	local release=78422d3905e57acebf0374feefafa6578dbe86aa
+
+	rm -rf "$GIT_REPOS/doxygen"
+
+	git clone "$GIT_REPO_DOXYGEN" "$GIT_REPOS/doxygen"
+	git -C "$GIT_REPOS/doxygen" checkout "$release"
+
+	mkdir -p "$GIT_REPOS/doxygen/build"
+
+	cmake -G "Unix Makefiles" \
+		-B "$GIT_REPOS/doxygen/build" \
+		-S "$GIT_REPOS/doxygen"
+
+	# This build is quite heavy, so let's not go crazy with -j here
+	make -C "$GIT_REPOS/doxygen/build" -j$(($(nproc) / 2))
+	make -C "$GIT_REPOS/doxygen/build" install
+}
+
 function install_sources() {
 	if [[ $ID == centos ]] && (( VERSION_ID == 7 )); then
 		# install proper version of the git first
@@ -484,6 +504,7 @@ function install_sources() {
 			install_ice
 			install_lcov
 			install_bpftrace
+			install_doxygen
 		)
 		install_extra_pkgs
 	fi
@@ -542,6 +563,8 @@ export GIT_REPO_BPFTRACE
 export GIT_REPO_NVME_CLI
 : ${GIT_REPO_ITTAPI=https://github.com/intel/ittapi.git}
 export GIT_REPO_ITTAPI
+: ${GIT_REPO_DOXYGEN="https://github.com/doxygen/doxygen"}
+export GIT_REPO_DOXYGEN
 
 GIT_REPOS=${GIT_REPOS:-$HOME}
 
