@@ -38,16 +38,6 @@ raid1_channel_dec_read_counters(struct raid_bdev_io_channel *raid_ch, uint8_t id
 	raid1_ch->read_blocks_outstanding[idx] -= num_blocks;
 }
 
-static inline void
-raid1_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, struct raid_bdev_io *raid_io)
-{
-	spdk_bdev_free_io(bdev_io);
-
-	raid_bdev_io_complete_part(raid_io, 1, success ?
-				   SPDK_BDEV_IO_STATUS_SUCCESS :
-				   SPDK_BDEV_IO_STATUS_FAILED);
-}
-
 static void
 raid1_write_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
@@ -62,7 +52,11 @@ raid1_write_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void 
 		}
 	}
 
-	raid1_bdev_io_completion(bdev_io, success, raid_io);
+	spdk_bdev_free_io(bdev_io);
+
+	raid_bdev_io_complete_part(raid_io, 1, success ?
+				   SPDK_BDEV_IO_STATUS_SUCCESS :
+				   SPDK_BDEV_IO_STATUS_FAILED);
 }
 
 static void
@@ -70,10 +64,12 @@ raid1_read_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *
 {
 	struct raid_bdev_io *raid_io = cb_arg;
 
+	spdk_bdev_free_io(bdev_io);
+
 	raid1_channel_dec_read_counters(raid_io->raid_ch, raid_io->base_bdev_io_submitted,
 					raid_io->num_blocks);
 
-	raid1_bdev_io_completion(bdev_io, success, raid_io);
+	raid_bdev_io_complete(raid_io, success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED);
 }
 
 static void raid1_submit_rw_request(struct raid_bdev_io *raid_io);
@@ -134,8 +130,6 @@ raid1_submit_read_request(struct raid_bdev_io *raid_io)
 
 	base_info = &raid_bdev->base_bdev_info[idx];
 	base_ch = raid_bdev_channel_get_base_channel(raid_ch, idx);
-
-	raid_io->base_bdev_io_remaining = 1;
 
 	raid1_init_ext_io_opts(&io_opts, raid_io);
 	ret = raid_bdev_readv_blocks_ext(base_info, base_ch, raid_io->iovs, raid_io->iovcnt,
