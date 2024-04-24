@@ -18,7 +18,6 @@
 
 #include "nvmf_internal.h"
 
-static bool g_logged_deprecated_nvmf_get_subsystems = false;
 static bool g_logged_deprecated_decode_rpc_listen_address = false;
 
 static int rpc_ana_state_parse(const char *str, enum spdk_nvme_ana_state *ana_state);
@@ -182,10 +181,6 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 		trid = spdk_nvmf_subsystem_listener_get_trid(listener);
 
 		spdk_json_write_object_begin(w);
-
-		/* NOTE: "transport" is kept for compatibility; new code should use "trtype". */
-		/* TODO: Remove after SPDK v23.09 release. */
-		spdk_json_write_named_string(w, "transport", trid->trstring);
 		nvmf_transport_listen_dump_trid(trid, w);
 		spdk_json_write_object_end(w);
 	}
@@ -258,10 +253,6 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 	spdk_json_write_object_end(w);
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(rpc_nvmf_get_subsystems,
-			      "listener.transport is deprecated in favor of trtype",
-			      "v24.05", 0);
-
 static void
 rpc_nvmf_get_subsystems(struct spdk_jsonrpc_request *request,
 			const struct spdk_json_val *params)
@@ -270,12 +261,6 @@ rpc_nvmf_get_subsystems(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	struct spdk_nvmf_subsystem *subsystem = NULL;
 	struct spdk_nvmf_tgt *tgt;
-
-	/* Log only once */
-	if (!g_logged_deprecated_nvmf_get_subsystems) {
-		SPDK_LOG_DEPRECATED(rpc_nvmf_get_subsystems);
-		g_logged_deprecated_nvmf_get_subsystems = true;
-	}
 
 	if (params) {
 		if (spdk_json_decode_object(params, rpc_get_subsystem_decoders,
