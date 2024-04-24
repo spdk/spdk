@@ -15,3 +15,11 @@ pre_install() {
 		}
 	fi
 }
+
+# Add packages for TLS testing against kernel
+# Limited to fedora as testing is still marked as experimental
+# and need a relatively fresh kernel to work with this tooling
+if [[ $ID == fedora ]] && ((VERSION_ID >= 38)); then
+	packages+=(ktls-utils)
+	packages+=(nvmetcli)
+fi
