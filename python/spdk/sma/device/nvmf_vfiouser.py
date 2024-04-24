@@ -92,8 +92,16 @@ class NvmfVfioDeviceManager(DeviceManager):
             logging.error('Failed to delete subsystem')
         return False
 
+    def _check_addr(self, addr, addrlist):
+        return next(filter(lambda a: (
+            a['trtype'].lower() == 'vfiouser' and
+            a['traddr'].lower() == addr.lower()), addrlist), None) is not None
+
     def _subsystem_add_listener(self, client, subnqn, addr):
         try:
+            listeners = client.call('nvmf_subsystem_get_listeners', {'nqn': subnqn})
+            if self._check_addr(addr, [a['address'] for a in listeners]):
+                return True
             return client.call('nvmf_subsystem_add_listener',
                                {'nqn': subnqn,
                                 'listen_address': {
