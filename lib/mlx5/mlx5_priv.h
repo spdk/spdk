@@ -252,3 +252,24 @@ mlx5_cq_find_qp(struct spdk_mlx5_cq *cq, uint32_t qp_num)
 	}
 	return cq->qps[qpn_upper].table[qpn_mask];
 }
+
+static inline int
+mlx5_get_pd_id(struct ibv_pd *pd, uint32_t *pd_id)
+{
+	struct mlx5dv_pd pd_info;
+	struct mlx5dv_obj obj;
+	int rc;
+
+	if (!pd) {
+		return -EINVAL;
+	}
+	obj.pd.in = pd;
+	obj.pd.out = &pd_info;
+	rc = mlx5dv_init_obj(&obj, MLX5DV_OBJ_PD);
+	if (rc) {
+		return rc;
+	}
+	*pd_id = pd_info.pdn;
+
+	return 0;
+}

@@ -8,6 +8,8 @@
 
 #include <infiniband/mlx5dv.h>
 
+#include "spdk/tree.h"
+
 #define SPDK_MLX5_DEV_MAX_NAME_LEN 64
 
 /* API for low level PRM based mlx5 driver implementation. Some terminology:
@@ -18,6 +20,7 @@
  * WQE - Work Queue Element
  * WQEBB - Work Queue Element Build Block (64 bytes)
  * CQE - Completion Queue Entry
+ * BSF - Byte Stream Format - part of UMR WQ which describes specific data properties such as encryption or signature
  */
 
 struct spdk_mlx5_crypto_dek;
@@ -74,6 +77,32 @@ struct spdk_mlx5_cq_completion {
 		uint32_t mkey; /* applicable if status == MLX5_CQE_SYNDROME_SIGERR */
 	};
 	int status;
+};
+
+struct spdk_mlx5_mkey_pool;
+
+enum spdk_mlx5_mkey_pool_flags {
+	SPDK_MLX5_MKEY_POOL_FLAG_CRYPTO = 1 << 0,
+	/* Max number of pools of different types */
+	SPDK_MLX5_MKEY_POOL_FLAG_COUNT = 1,
+};
+
+struct spdk_mlx5_mkey_pool_param {
+	uint32_t mkey_count;
+	uint32_t cache_per_thread;
+	/* enum spdk_mlx5_mkey_pool_flags */
+	uint32_t flags;
+};
+
+struct spdk_mlx5_mkey_pool_obj {
+	uint32_t mkey;
+	/* Determines which pool the mkey belongs to. See \ref spdk_mlx5_mkey_pool_flags */
+	uint8_t pool_flag;
+	RB_ENTRY(spdk_mlx5_mkey_pool_obj) node;
+	struct {
+		uint32_t sigerr_count;
+		bool sigerr;
+	} sig;
 };
 
 /**
@@ -237,5 +266,67 @@ int spdk_mlx5_crypto_set_attr(struct mlx5dv_crypto_attr *attr_out,
  * \return 0 on success, negated errno on failure
  */
 int spdk_mlx5_crypto_devs_allow(const char *const dev_names[], size_t devs_count);
+
+/**
+ * Creates a pool of memory keys for a given \b PD. If params::flags has SPDK_MLX5_MKEY_POOL_FLAG_CRYPTO enabled,
+ * then a device associated with PD must support crypto operations.
+ *
+ * Can be called several times for different PDs. Has no effect if a pool for \b PD with the same \b flags already exists
+ *
+ * \param params Parameter of the memory pool
+ * \param pd Protection Domain
+ * \return 0 on success, errno on failure
+ */
+int spdk_mlx5_mkey_pool_init(struct spdk_mlx5_mkey_pool_param *params, struct ibv_pd *pd);
+
+/**
+ * Destroy mkey pools with the given \b flags and \b pd which was created by \ref spdk_mlx5_mkey_pool_init.
+ *
+ * The pool reference must be released by \ref spdk_mlx5_mkey_pool_put_ref before calling this function.
+ *
+ * \param pd Protection Domain
+ * \param flags Specifies type of the pool to delete.
+ * \return 0 on success, negated errno on failure
+ */
+int spdk_mlx5_mkey_pool_destroy(uint32_t flags, struct ibv_pd *pd);
+
+/**
+ * Get a reference to mkey pool specified by PD, increment internal reference counter.
+ *
+ * \param pd PD to get a mkey pool for
+ * \param flags Required mkey pool flags, see \ref enum spdk_mlx5_mkey_pool_flags
+ * \return Pointer to the mkey pool on success or NULL on error
+ */
+struct spdk_mlx5_mkey_pool *spdk_mlx5_mkey_pool_get_ref(struct ibv_pd *pd, uint32_t flags);
+
+/**
+ * Put the mkey pool reference.
+ *
+ * The pool is NOT destroyed if even reference counter reaches 0
+ *
+ * \param pool Mkey pool pointer
+ */
+void spdk_mlx5_mkey_pool_put_ref(struct spdk_mlx5_mkey_pool *pool);
+
+/**
+ * Get several mkeys from the pool
+ *
+ * \param pool mkey pool
+ * \param mkeys array of mkey pointers to be filled by this function
+ * \param mkeys_count number of mkeys to get from the pool
+ * \return 0 on success, errno on failure
+ */
+int spdk_mlx5_mkey_pool_get_bulk(struct spdk_mlx5_mkey_pool *pool,
+				 struct spdk_mlx5_mkey_pool_obj **mkeys, uint32_t mkeys_count);
+
+/**
+ * Return mkeys to the pool
+ *
+ * \param pool mkey pool
+ * \param mkeys array of mkey pointers to be returned to the pool
+ * \param mkeys_count number of mkeys to be returned to the pool
+ */
+void spdk_mlx5_mkey_pool_put_bulk(struct spdk_mlx5_mkey_pool *pool,
+				  struct spdk_mlx5_mkey_pool_obj **mkeys, uint32_t mkeys_count);
 
 #endif /* SPDK_MLX5_H */

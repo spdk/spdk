@@ -19,5 +19,12 @@
     spdk_mlx5_crypto_set_attr;
     spdk_mlx5_crypto_devs_allow;
 
+    spdk_mlx5_mkey_pool_init;
+    spdk_mlx5_mkey_pool_destroy;
+    spdk_mlx5_mkey_pool_get_ref;
+    spdk_mlx5_mkey_pool_put_ref;
+    spdk_mlx5_mkey_pool_get_bulk;
+    spdk_mlx5_mkey_pool_put_bulk;
+
 	local: *;
 };

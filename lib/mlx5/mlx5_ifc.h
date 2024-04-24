@@ -888,7 +888,8 @@ struct mlx5_ifc_cmd_hca_cap_bits {
 	u8         qp_data_in_order[0x1];
 	u8         reserved_at_63[0x8];
 	u8         log_dma_mmo_max_size[0x5];
-	u8         reserved_at_70[0x10];
+	u8         relaxed_ordering_write_pci_enabled[0x1];
+	u8         reserved_at_77[0xf];
 
 	u8         log_max_srq_sz[0x8];
 	u8         log_max_qp_sz[0x8];
@@ -905,12 +906,14 @@ struct mlx5_ifc_cmd_hca_cap_bits {
 
 	u8         reserved_at_c0[0x8];
 	u8         log_max_cq_sz[0x8];
-	u8         reserved_at_d0[0xb];
+	u8         relaxed_ordering_write_umr[0x1];
+	u8         relaxed_ordering_read_umr[0x1];
+	u8         reserved_at_d2[0x9];
 	u8         log_max_cq[0x5];
 
 	u8         log_max_eq_sz[0x8];
 	u8         relaxed_ordering_write[0x1];
-	u8         reserved_at_e9[0x1];
+	u8         relaxed_ordering_read[0x1];
 	u8         log_max_mkey[0x6];
 	u8         tunneled_atomic[0x1];
 	u8         as_notify[0x1];
@@ -1611,6 +1614,13 @@ enum {
 enum {
 	MLX5_MKC_ACCESS_MODE_MTT = 0x1,
 	MLX5_MKC_ACCESS_MODE_KLMS = 0x2,
+	MLX5_MKC_ACCESS_MODE_KLMFBS = 0x3,
+};
+
+struct mlx5_ifc_klm_bits {
+	u8	 byte_count[0x20];
+	u8	 mkey[0x20];
+	u8	 address[0x40];
 };
 
 struct mlx5_ifc_mkc_bits {
