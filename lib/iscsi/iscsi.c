@@ -2088,6 +2088,12 @@ iscsi_op_login_rsp_handle_t_bit(struct spdk_iscsi_conn *conn,
 		}
 
 		conn->full_feature = 1;
+		if (conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
+			spdk_trace_owner_append_description(conn->trace_id, "discovery");
+		} else {
+			assert(conn->target != NULL);
+			spdk_trace_owner_append_description(conn->trace_id, conn->target->name);
+		}
 		break;
 
 	default:
@@ -3206,7 +3212,7 @@ iscsi_compare_pdu_bhs_within_existed_r2t_tasks(struct spdk_iscsi_conn *conn,
 void
 iscsi_queue_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 {
-	spdk_trace_record(TRACE_ISCSI_TASK_QUEUE, conn->id, task->scsi.length,
+	spdk_trace_record(TRACE_ISCSI_TASK_QUEUE, conn->trace_id, task->scsi.length,
 			  (uintptr_t)task, (uintptr_t)task->pdu);
 	task->is_queued = true;
 	spdk_scsi_dev_queue_task(conn->dev, &task->scsi);
@@ -4838,7 +4844,7 @@ iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 			}
 
 			/* All data for this PDU has now been read from the socket. */
-			spdk_trace_record(TRACE_ISCSI_READ_PDU, conn->id, pdu->data_valid_bytes,
+			spdk_trace_record(TRACE_ISCSI_READ_PDU, conn->trace_id, pdu->data_valid_bytes,
 					  (uintptr_t)pdu, pdu->bhs.opcode);
 
 			if (!pdu->is_rejected) {
@@ -4847,7 +4853,7 @@ iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 				rc = 0;
 			}
 			if (rc == 0) {
-				spdk_trace_record(TRACE_ISCSI_TASK_EXECUTED, 0, 0, (uintptr_t)pdu);
+				spdk_trace_record(TRACE_ISCSI_TASK_EXECUTED, conn->trace_id, 0, (uintptr_t)pdu);
 				iscsi_put_pdu(pdu);
 				conn->pdu_in_progress = NULL;
 				conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_AWAIT_PDU_READY;

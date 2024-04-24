@@ -258,6 +258,7 @@ iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	}
 
 	conn->pg = pg;
+	conn->trace_id = spdk_trace_register_owner(OWNER_TYPE_ISCSI_CONN, conn->initiator_addr);
 	spdk_thread_send_msg(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(pg)),
 			     iscsi_conn_start, conn);
 	return 0;
@@ -1180,7 +1181,7 @@ iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 	struct spdk_iscsi_conn *conn = task->conn;
 	struct spdk_iscsi_pdu *pdu = task->pdu;
 
-	spdk_trace_record(TRACE_ISCSI_TASK_DONE, conn->id, 0, (uintptr_t)task);
+	spdk_trace_record(TRACE_ISCSI_TASK_DONE, conn->trace_id, 0, (uintptr_t)task);
 
 	task->is_queued = false;
 	primary = iscsi_task_get_primary(task);
@@ -1191,7 +1192,7 @@ iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 		process_non_read_task_completion(conn, task, primary);
 	}
 	if (!task->parent) {
-		spdk_trace_record(TRACE_ISCSI_PDU_COMPLETED, 0, 0, (uintptr_t)pdu);
+		spdk_trace_record(TRACE_ISCSI_PDU_COMPLETED, conn->trace_id, 0, (uintptr_t)pdu);
 	}
 }
 
@@ -1289,7 +1290,7 @@ iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 	ret = spdk_sock_recv(conn->sock, buf, bytes);
 
 	if (ret > 0) {
-		spdk_trace_record(TRACE_ISCSI_READ_FROM_SOCKET_DONE, conn->id, ret, 0);
+		spdk_trace_record(TRACE_ISCSI_READ_FROM_SOCKET_DONE, conn->trace_id, ret, 0);
 		return ret;
 	}
 
@@ -1330,7 +1331,7 @@ iscsi_conn_readv_data(struct spdk_iscsi_conn *conn,
 	ret = spdk_sock_readv(conn->sock, iov, iovcnt);
 
 	if (ret > 0) {
-		spdk_trace_record(TRACE_ISCSI_READ_FROM_SOCKET_DONE, conn->id, ret, 0);
+		spdk_trace_record(TRACE_ISCSI_READ_FROM_SOCKET_DONE, conn->trace_id, ret, 0);
 		return ret;
 	}
 

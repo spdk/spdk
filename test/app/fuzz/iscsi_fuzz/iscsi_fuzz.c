@@ -473,10 +473,6 @@ iscsi_fuzz_read_pdu(struct spdk_iscsi_conn *conn)
 				}
 			}
 
-			/* All data for this PDU has now been read from the socket. */
-			spdk_trace_record(TRACE_ISCSI_READ_PDU, conn->id, pdu->data_valid_bytes,
-					  (uintptr_t)pdu, pdu->bhs.opcode);
-
 			if (!pdu->is_rejected) {
 				rc = iscsi_fuzz_pdu_payload_handle(conn, pdu);
 			} else {

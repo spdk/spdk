@@ -73,6 +73,7 @@ struct spdk_iscsi_conn {
 	int				login_phase;
 	bool				is_logged_out;
 	struct spdk_iscsi_pdu		*login_rsp_pdu;
+	uint16_t			trace_id;
 
 	uint64_t	last_flush;
 	uint64_t	last_fill;
