@@ -8520,7 +8520,8 @@ Example response:
 
 ### nvmf_subsystem_add_host method {#rpc_nvmf_subsystem_add_host}
 
-Add a host NQN to the list of allowed hosts.
+Add a host NQN to the list of allowed hosts.  Adding an already allowed host will result in an
+error.
 
 #### Parameters
 

@@ -1784,9 +1784,9 @@ test_spdk_nvmf_subsystem_add_host(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(!TAILQ_EMPTY(&subsystem->hosts));
 
-	/* Add existing nqn, this function is allowed to be called if the nqn was previously added. */
+	/* Add existing nqn, this function isn't allowed to be called if the nqn was previously added. */
 	rc = spdk_nvmf_subsystem_add_host(subsystem, hostnqn, NULL);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -EINVAL);
 
 	rc = spdk_nvmf_subsystem_remove_host(subsystem, hostnqn);
 	CU_ASSERT(rc == 0);

@@ -993,7 +993,7 @@ spdk_nvmf_subsystem_add_host_ext(struct spdk_nvmf_subsystem *subsystem,
 	if (nvmf_subsystem_find_host(subsystem, hostnqn)) {
 		/* This subsystem already allows the specified host. */
 		pthread_mutex_unlock(&subsystem->mutex);
-		return 0;
+		return -EINVAL;
 	}
 
 	host = calloc(1, sizeof(*host));

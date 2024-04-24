@@ -602,7 +602,8 @@ int spdk_nvmf_ns_remove_host(struct spdk_nvmf_subsystem *subsystem,
 			     uint32_t flags);
 
 /**
- * Allow the given host NQN to connect to the given subsystem.
+ * Allow the given host NQN to connect to the given subsystem.  Adding a host that's already allowed
+ * results in an error.
  *
  * \param subsystem Subsystem to add host to.
  * \param hostnqn The NQN for the host.
