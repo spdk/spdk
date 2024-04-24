@@ -19,6 +19,7 @@
 #include "nvmf_internal.h"
 
 static bool g_logged_deprecated_nvmf_get_subsystems = false;
+static bool g_logged_deprecated_decode_rpc_listen_address = false;
 
 static int rpc_ana_state_parse(const char *str, enum spdk_nvme_ana_state *ana_state);
 
@@ -599,16 +600,28 @@ static const struct spdk_json_object_decoder rpc_listen_address_decoders[] = {
 	{"trsvcid", offsetof(struct rpc_listen_address, trsvcid), spdk_json_decode_string, true},
 };
 
+SPDK_LOG_DEPRECATION_REGISTER(decode_rpc_listen_address,
+			      "[listen_]address.transport is deprecated in favor of trtype",
+			      "v24.09", 0);
+
 static int
 decode_rpc_listen_address(const struct spdk_json_val *val, void *out)
 {
 	struct rpc_listen_address *req = (struct rpc_listen_address *)out;
+
 	if (spdk_json_decode_object(val, rpc_listen_address_decoders,
 				    SPDK_COUNTOF(rpc_listen_address_decoders),
 				    req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		return -1;
 	}
+
+	/* Log only once */
+	if (req->transport && !g_logged_deprecated_decode_rpc_listen_address) {
+		SPDK_LOG_DEPRECATED(decode_rpc_listen_address);
+		g_logged_deprecated_decode_rpc_listen_address = true;
+	}
+
 	return 0;
 }
 
