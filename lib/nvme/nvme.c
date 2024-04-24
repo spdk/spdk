@@ -1054,6 +1054,10 @@ spdk_nvme_transport_id_populate_trstring(struct spdk_nvme_transport_id *trid, co
 {
 	int i = 0;
 
+	if (trid == NULL || trstring == NULL) {
+		return -EINVAL;
+	}
+
 	/* Note: gcc-11 has some false positive -Wstringop-overread warnings with LTO builds if we
 	 * use strnlen here.  So do the trstring copy manually instead.  See GitHub issue #2391.
 	 */
