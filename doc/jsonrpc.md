@@ -8291,7 +8291,7 @@ and for referring to discovery services on other targets.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 trtype                  | Required | string      | Transport type ("RDMA")
-adrfam                  | Required | string      | Address family ("IPv4", "IPv6", "IB", or "FC")
+adrfam                  | Optional | string      | Address family ("IPv4", "IPv6", "IB", or "FC")
 traddr                  | Required | string      | Transport address
 trsvcid                 | Optional | string      | Transport service ID (required for RDMA or TCP)
 
