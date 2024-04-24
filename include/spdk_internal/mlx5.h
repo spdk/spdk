@@ -126,6 +126,54 @@ int spdk_mlx5_qp_set_error_state(struct spdk_mlx5_qp *qp);
 void spdk_mlx5_qp_destroy(struct spdk_mlx5_qp *qp);
 
 /**
+ * Poll Completion Queue, save up to \b max_completions into \b comp array
+ *
+ * \param cq Completion Queue
+ * \param comp Array of completions to be filled by this function
+ * \param max_completions
+ * \return 0 on success, negated errno on failure
+ */
+int spdk_mlx5_cq_poll_completions(struct spdk_mlx5_cq *cq,
+				  struct spdk_mlx5_cq_completion *comp, int max_completions);
+
+/**
+ * Ring Send Queue doorbell, submits all previously posted WQEs to HW
+ *
+ * \param qp qpair pointer
+ */
+void spdk_mlx5_qp_complete_send(struct spdk_mlx5_qp *qp);
+
+/**
+ * Submit RDMA_WRITE operations on the qpair
+ *
+ * \param qp qpair pointer
+ * \param sge Memory layout of the local data to be written
+ * \param sge_count Number of \b sge entries
+ * \param dstaddr Remote address to write \b sge to
+ * \param rkey Remote memory key
+ * \param wrid wrid which is returned in the CQE
+ * \param flags SPDK_MLX5_WQE_CTRL_CE_CQ_UPDATE to have a signaled completion or 0
+ * \return 0 on success, negated errno on failure
+ */
+int spdk_mlx5_qp_rdma_write(struct spdk_mlx5_qp *qp, struct ibv_sge *sge, uint32_t sge_count,
+			    uint64_t dstaddr, uint32_t rkey, uint64_t wrid, uint32_t flags);
+
+/**
+ * Submit RDMA_WRITE operations on the qpair
+ *
+ * \param qp qpair pointer
+ * \param sge Memory layout of the local buffers for reading remote data
+ * \param sge_count Number of \b sge entries
+ * \param dstaddr Remote address to read into \b sge
+ * \param rkey Remote memory key
+ * \param wrid wrid which is returned in the CQE
+ * \param flags SPDK_MLX5_WQE_CTRL_CE_CQ_UPDATE to have a signaled completion or 0
+ * \return 0 on success, negated errno on failure
+ */
+int spdk_mlx5_qp_rdma_read(struct spdk_mlx5_qp *qp, struct ibv_sge *sge, uint32_t sge_count,
+			   uint64_t dstaddr, uint32_t rkey, uint64_t wrid, uint32_t flags);
+
+/**
  * Return a NULL terminated array of devices which support crypto operation on Nvidia NICs
  *
  * \param dev_num The size of the array or 0
