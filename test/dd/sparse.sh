@@ -65,7 +65,7 @@ file_to_bdev() {
 	local -A method_bdev_lvol_create_1=(
 		["lvs_name"]=$lvstore
 		["lvol_name"]=$lvol
-		["size"]=37748736
+		["size_in_mib"]=36
 		["thin_provision"]=true
 	)
 

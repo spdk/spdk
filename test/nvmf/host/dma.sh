@@ -75,7 +75,7 @@ function gen_lvol_nvme_json() {
 		          "method": "bdev_lvol_create",
 		          "params": {
 		            "lvol_name": "lvol${subsystem}",
-		            "size": 134217728,
+		            "size_in_mib": 128,
 		            "thin_provision": true,
 		            "lvs_name": "lvs${subsystem}"
 		          }

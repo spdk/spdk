@@ -10194,8 +10194,7 @@ Create a logical volume on a logical volume store.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 lvol_name               | Required | string      | Name of logical volume to create
-size                    | Optional | number      | Desired size of logical volume in bytes (Deprecated. Please use size_in_mib instead.)
-size_in_mib             | Optional | number      | Desired size of logical volume in MiB
+size_in_mib             | Required | number      | Desired size of logical volume in MiB
 thin_provision          | Optional | boolean     | True to enable thin provisioning
 uuid                    | Optional | string      | UUID of logical volume store to create logical volume on
 lvs_name                | Optional | string      | Name of logical volume store to create logical volume on
@@ -10414,8 +10413,7 @@ Resize a logical volume.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | UUID or alias of the logical volume to resize
-size                    | Optional | number      | Desired size of the logical volume in bytes (Deprecated. Please use size_in_mib instead.)
-size_in_mib             | Optional | number      | Desired size of the logical volume in MiB
+size_in_mib             | Required | number      | Desired size of the logical volume in MiB
 
 #### Example
 
