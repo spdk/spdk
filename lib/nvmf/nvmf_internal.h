@@ -285,9 +285,6 @@ struct spdk_nvmf_subsystem {
 		uint8_t					reserved : 5;
 	} flags;
 
-	/* boolean for state change synchronization */
-	bool						changing_state;
-
 	bool						destroying;
 	bool						async_destroy;
 
