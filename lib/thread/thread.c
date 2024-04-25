@@ -1144,6 +1144,10 @@ _thread_exit(void *ctx)
 	assert(thread->state == SPDK_THREAD_STATE_EXITING);
 
 	thread_exit(thread, spdk_get_ticks());
+
+	if (thread->state != SPDK_THREAD_STATE_EXITED) {
+		spdk_thread_send_msg(thread, _thread_exit, thread);
+	}
 }
 
 int
