@@ -582,9 +582,6 @@ _nvmf_subsystem_state_change_complete(void *_ctx)
 	assert(TAILQ_FIRST(&subsystem->state_changes) == ctx);
 	TAILQ_REMOVE(&subsystem->state_changes, ctx, link);
 	next = TAILQ_FIRST(&subsystem->state_changes);
-	if (next == NULL) {
-		subsystem->changing_state = false;
-	}
 	pthread_mutex_unlock(&subsystem->mutex);
 
 	if (ctx->cb_fn != NULL) {
@@ -742,7 +739,7 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 			    spdk_nvmf_subsystem_state_change_done cb_fn,
 			    void *cb_arg)
 {
-	struct nvmf_subsystem_state_change_ctx *ctx, *prev __attribute__((unused));
+	struct nvmf_subsystem_state_change_ctx *ctx;
 	struct spdk_thread *thread;
 
 	thread = spdk_get_thread();
@@ -763,17 +760,11 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 	ctx->thread = thread;
 
 	pthread_mutex_lock(&subsystem->mutex);
-	prev = TAILQ_FIRST(&subsystem->state_changes);
 	TAILQ_INSERT_TAIL(&subsystem->state_changes, ctx, link);
-
-	if (subsystem->changing_state) {
-		assert(prev != NULL);
+	if (ctx != TAILQ_FIRST(&subsystem->state_changes)) {
 		pthread_mutex_unlock(&subsystem->mutex);
 		return 0;
 	}
-
-	assert(prev == NULL);
-	subsystem->changing_state = true;
 	pthread_mutex_unlock(&subsystem->mutex);
 
 	nvmf_subsystem_do_state_change(ctx);
