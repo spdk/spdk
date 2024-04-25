@@ -93,9 +93,9 @@ struct spdk_accel_task {
 	STAILQ_ENTRY(spdk_accel_task)	link;
 	/* Uses enum spdk_accel_opcode */
 	uint8_t				op_code;
-	uint8_t				flags;
 	bool				has_aux;
 	int16_t				status;
+	uint8_t				reserved[4];
 	struct accel_io_channel		*accel_ch;
 	struct spdk_accel_sequence	*seq;
 	union {

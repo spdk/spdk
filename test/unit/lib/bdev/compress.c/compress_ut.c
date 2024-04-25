@@ -178,7 +178,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 
 int
 spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, uint64_t nbytes,
-			   struct iovec *src_iovs, size_t src_iovcnt, uint32_t *output_size, int flags,
+			   struct iovec *src_iovs, size_t src_iovcnt, uint32_t *output_size,
 			   spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 
@@ -187,7 +187,7 @@ spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, uint64_t nbyte
 
 int
 spdk_accel_submit_decompress(struct spdk_io_channel *ch, struct iovec *dst_iovs, size_t dst_iovcnt,
-			     struct iovec *src_iovs, size_t src_iovcnt, uint32_t *output_size, int flags,
+			     struct iovec *src_iovs, size_t src_iovcnt, uint32_t *output_size,
 			     spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 

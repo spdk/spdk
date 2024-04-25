@@ -568,19 +568,18 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 {
 	int random_num;
 	int rc = 0;
-	int flags = 0;
 
 	assert(worker);
 
 	switch (worker->workload) {
 	case SPDK_ACCEL_OPC_COPY:
 		rc = spdk_accel_submit_copy(worker->ch, task->dst, task->src,
-					    g_xfer_size_bytes, flags, accel_done, task);
+					    g_xfer_size_bytes, accel_done, task);
 		break;
 	case SPDK_ACCEL_OPC_FILL:
 		/* For fill use the first byte of the task->dst buffer */
 		rc = spdk_accel_submit_fill(worker->ch, task->dst, *(uint8_t *)task->src,
-					    g_xfer_size_bytes, flags, accel_done, task);
+					    g_xfer_size_bytes, accel_done, task);
 		break;
 	case SPDK_ACCEL_OPC_CRC32C:
 		rc = spdk_accel_submit_crc32cv(worker->ch, task->crc_dst,
@@ -589,7 +588,7 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 		break;
 	case SPDK_ACCEL_OPC_COPY_CRC32C:
 		rc = spdk_accel_submit_copy_crc32cv(worker->ch, task->dst, task->src_iovs, task->src_iovcnt,
-						    task->crc_dst, g_crc32c_seed, flags, accel_done, task);
+						    task->crc_dst, g_crc32c_seed, accel_done, task);
 		break;
 	case SPDK_ACCEL_OPC_COMPARE:
 		random_num = rand() % 100;
@@ -605,20 +604,20 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 		break;
 	case SPDK_ACCEL_OPC_DUALCAST:
 		rc = spdk_accel_submit_dualcast(worker->ch, task->dst, task->dst2,
-						task->src, g_xfer_size_bytes, flags, accel_done, task);
+						task->src, g_xfer_size_bytes, accel_done, task);
 		break;
 	case SPDK_ACCEL_OPC_COMPRESS:
 		task->src_iovs = task->cur_seg->uncompressed_iovs;
 		task->src_iovcnt = task->cur_seg->uncompressed_iovcnt;
 		rc = spdk_accel_submit_compress(worker->ch, task->dst, task->cur_seg->compressed_len_padded,
 						task->src_iovs,
-						task->src_iovcnt, &task->compressed_sz, flags, accel_done, task);
+						task->src_iovcnt, &task->compressed_sz, accel_done, task);
 		break;
 	case SPDK_ACCEL_OPC_DECOMPRESS:
 		task->src_iovs = task->cur_seg->compressed_iovs;
 		task->src_iovcnt = task->cur_seg->compressed_iovcnt;
 		rc = spdk_accel_submit_decompress(worker->ch, task->dst_iovs, task->dst_iovcnt, task->src_iovs,
-						  task->src_iovcnt, NULL, flags, accel_done, task);
+						  task->src_iovcnt, NULL, accel_done, task);
 		break;
 	case SPDK_ACCEL_OPC_XOR:
 		rc = spdk_accel_submit_xor(worker->ch, task->dst, task->sources, g_xor_src_count,
@@ -1216,7 +1215,7 @@ accel_perf_prep_process_seg(struct accel_perf_prep_ctx *ctx)
 	 * but real applications may want to consider a more sophisticated method.
 	 */
 	rc = spdk_accel_submit_compress(ctx->ch, seg->compressed_data, seg->compressed_len_padded, iov, 1,
-					&seg->compressed_len, 0, accel_perf_prep_process_seg_cpl, ctx);
+					&seg->compressed_len, accel_perf_prep_process_seg_cpl, ctx);
 	if (rc < 0) {
 		fprintf(stderr, "error (%d) on initial compress submission\n", rc);
 		goto error;

@@ -117,7 +117,7 @@ process_accel(void *_ctx)
 			ctx->state = TEST_STATE_WAIT_COMPLETION;
 			/* Submit fill command */
 			rc = spdk_accel_submit_fill(ctx->ch, ctx->buf1, FILL_PATTERN,
-						    TEST_XFER_SIZE, 0, fill_cb, ctx);
+						    TEST_XFER_SIZE, fill_cb, ctx);
 			if (rc) {
 				SPDK_ERRLOG("ERROR running submit fill! exiting.\n");
 				test_ctx_fail(ctx);
@@ -127,7 +127,7 @@ process_accel(void *_ctx)
 			ctx->state = TEST_STATE_WAIT_COMPLETION;
 			/* Submit copy command */
 			rc = spdk_accel_submit_copy(ctx->ch, ctx->buf1, ctx->buf2,
-						    TEST_XFER_SIZE, 0, copy_cb, ctx);
+						    TEST_XFER_SIZE, copy_cb, ctx);
 			if (rc) {
 				SPDK_ERRLOG("ERROR running submit copy! exiting.\n");
 				test_ctx_fail(ctx);

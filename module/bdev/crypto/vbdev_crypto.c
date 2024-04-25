@@ -155,7 +155,7 @@ crypto_encrypt(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io
 				       bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 				       bdev_io->u.bdev.memory_domain,
 				       bdev_io->u.bdev.memory_domain_ctx,
-				       bdev_io->u.bdev.offset_blocks, blocklen, 0,
+				       bdev_io->u.bdev.offset_blocks, blocklen,
 				       NULL, NULL);
 	if (spdk_unlikely(rc != 0)) {
 		spdk_accel_put_buf(crypto_ch->accel_channel, crypto_io->aux_buf_raw,
@@ -284,7 +284,7 @@ crypto_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 				       bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 				       bdev_io->u.bdev.memory_domain,
 				       bdev_io->u.bdev.memory_domain_ctx,
-				       bdev_io->u.bdev.offset_blocks, blocklen, 0,
+				       bdev_io->u.bdev.offset_blocks, blocklen,
 				       NULL, NULL);
 	if (rc != 0) {
 		if (rc == -ENOMEM) {

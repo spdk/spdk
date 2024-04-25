@@ -1265,7 +1265,7 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 						    bdev_io->internal.orig_iovcnt,
 						    bdev_io->internal.memory_domain,
 						    bdev_io->internal.memory_domain_ctx,
-						    0, NULL, NULL);
+						    NULL, NULL);
 		} else {
 			/* We need to reverse the src/dst for reads */
 			assert(bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
@@ -1275,7 +1275,7 @@ bdev_io_pull_data(struct spdk_bdev_io *bdev_io)
 						    bdev_io->internal.memory_domain,
 						    bdev_io->internal.memory_domain_ctx,
 						    bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-						    NULL, NULL, 0, NULL, NULL);
+						    NULL, NULL, NULL, NULL);
 		}
 
 		if (spdk_unlikely(rc != 0 && rc != -ENOMEM)) {

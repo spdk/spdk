@@ -19,13 +19,6 @@ The tags can be matched with the level 4 headers below.
 
 ## Deprecation Notices
 
-### accel
-
-#### `accel_flags`
-
-The `int flags` parameter in various *submit* and *append* accel FW API is not used and deprecated. It will be removed
-in 24.05 release.
-
 ### nvme
 
 #### `spdk_nvme_ctrlr_opts.psk`

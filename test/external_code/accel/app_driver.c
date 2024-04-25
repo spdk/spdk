@@ -94,28 +94,28 @@ start_driver(void *_ctx)
 	 *	fill buf2 <- FILL_PATTERN_2
 	 */
 	rc = spdk_accel_append_copy(&seq, ctx->ch, &ctx->iov1_bck, IOVCNT, NULL, NULL,
-				    &ctx->iov1, IOVCNT, NULL, NULL, 0,
+				    &ctx->iov1, IOVCNT, NULL, NULL,
 				    NULL, NULL);
 	if (rc) {
 		SPDK_ERRLOG("ERROR running append copy 1! exiting.\n");
 		goto error;
 	}
 	rc = spdk_accel_append_fill(&seq, ctx->ch, &ctx->buf1, TEST_XFER_SIZE,
-				    NULL, NULL, FILL_PATTERN_1, 0,
+				    NULL, NULL, FILL_PATTERN_1,
 				    NULL, NULL);
 	if (rc) {
 		SPDK_ERRLOG("ERROR running append fill 1! exiting.\n");
 		goto error;
 	}
 	rc = spdk_accel_append_copy(&seq, ctx->ch, &ctx->iov2_bck, IOVCNT, NULL, NULL,
-				    &ctx->iov2, IOVCNT, NULL, NULL, 0,
+				    &ctx->iov2, IOVCNT, NULL, NULL,
 				    NULL, NULL);
 	if (rc) {
 		SPDK_ERRLOG("ERROR running append copy 2! exiting.\n");
 		goto error;
 	}
 	rc = spdk_accel_append_fill(&seq, ctx->ch, &ctx->buf2, TEST_XFER_SIZE,
-				    NULL, NULL, FILL_PATTERN_2, 0,
+				    NULL, NULL, FILL_PATTERN_2,
 				    NULL, NULL);
 	if (rc) {
 		SPDK_ERRLOG("ERROR running append fill 2! exiting.\n");

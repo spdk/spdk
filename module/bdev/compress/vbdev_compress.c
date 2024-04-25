@@ -135,11 +135,11 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 		assert(dst_iovcnt == 1);
 		rc = spdk_accel_submit_compress(comp_bdev->accel_channel, dst_iovs[0].iov_base, dst_iovs[0].iov_len,
 						src_iovs, src_iovcnt, &reduce_cb_arg->output_size,
-						0, reduce_cb_arg->cb_fn, reduce_cb_arg->cb_arg);
+						reduce_cb_arg->cb_fn, reduce_cb_arg->cb_arg);
 	} else {
 		rc = spdk_accel_submit_decompress(comp_bdev->accel_channel, dst_iovs, dst_iovcnt,
 						  src_iovs, src_iovcnt, &reduce_cb_arg->output_size,
-						  0, reduce_cb_arg->cb_fn, reduce_cb_arg->cb_arg);
+						  reduce_cb_arg->cb_fn, reduce_cb_arg->cb_arg);
 	}
 
 	return rc;
