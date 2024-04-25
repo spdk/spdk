@@ -1509,16 +1509,6 @@ spdk_nvmf_subsystem_allow_any_listener(struct spdk_nvmf_subsystem *subsystem,
 	subsystem->flags.allow_any_listener = allow_any_listener;
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsytem_any_listener_allowed,
-			      "spdk_nvmf_subsytem_any_listener_allowed is deprecated", "v24.05", 0);
-
-bool
-spdk_nvmf_subsytem_any_listener_allowed(struct spdk_nvmf_subsystem *subsystem)
-{
-	SPDK_LOG_DEPRECATED(spdk_nvmf_subsytem_any_listener_allowed);
-	return subsystem->flags.allow_any_listener;
-}
-
 bool
 spdk_nvmf_subsystem_any_listener_allowed(struct spdk_nvmf_subsystem *subsystem)
 {

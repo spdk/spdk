@@ -50,7 +50,6 @@
 	spdk_nvmf_subsystem_get_next_listener;
 	spdk_nvmf_subsystem_listener_get_trid;
 	spdk_nvmf_subsystem_allow_any_listener;
-	spdk_nvmf_subsytem_any_listener_allowed;
 	spdk_nvmf_subsystem_any_listener_allowed;
 	spdk_nvmf_subsystem_listener_opts_init;
 	spdk_nvmf_ns_opts_get_defaults;
