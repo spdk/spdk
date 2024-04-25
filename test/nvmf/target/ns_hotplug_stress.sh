@@ -10,6 +10,15 @@ source $rootdir/test/nvmf/common.sh
 
 rpc_py="$rootdir/scripts/rpc.py"
 
+add_remove() {
+	local nsid=$1 bdev=$2
+
+	for ((i = 0; i < 10; ++i)); do
+		"$rpc_py" nvmf_subsystem_add_ns -n "$nsid" "nqn.2016-06.io.spdk:cnode1" "$bdev"
+		"$rpc_py" nvmf_subsystem_remove_ns "nqn.2016-06.io.spdk:cnode1" "$nsid"
+	done
+}
+
 nvmftestinit
 nvmfappstart -m 0xE
 
@@ -42,6 +51,19 @@ while kill -0 $PERF_PID; do
 done
 
 wait $PERF_PID
+"$rpc_py" nvmf_subsystem_remove_ns nqn.2016-06.io.spdk:cnode1 1
+"$rpc_py" nvmf_subsystem_remove_ns nqn.2016-06.io.spdk:cnode1 2
+
+# Run several subsystem_{add,remove}_ns RPCs in parallel to ensure they'll get queued
+nthreads=8 pids=()
+for ((i = 0; i < nthreads; ++i)); do
+	"$rpc_py" bdev_null_create "null$i" 100 4096
+done
+for ((i = 0; i < nthreads; ++i)); do
+	add_remove $((i + 1)) "null$i" &
+	pids+=($!)
+done
+wait "${pids[@]}"
 
 trap - SIGINT SIGTERM EXIT
 
