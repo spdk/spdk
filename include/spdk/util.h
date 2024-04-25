@@ -186,9 +186,6 @@ spdk_iov_memset(struct iovec *iovs, int iovcnt, int c);
 /**
  * Initialize an iovec with just the single given buffer.
  */
-void
-spdk_iov_one(struct iovec *iov, int *iovcnt, void *buf, size_t buflen);
-
 #define SPDK_IOV_ONE(piov, piovcnt, buf, buflen) do {	\
 	(piov)->iov_base = (buf);			\
 	(piov)->iov_len = (buflen);			\

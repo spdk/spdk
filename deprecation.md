@@ -34,13 +34,6 @@ Passing NVMe/TLS pre-shared keys via `spdk_nvme_ctrlr_opts.psk` is deprecated an
 removed in the v24.09 release.  Instead, a key obtained from the keyring library should be passed
 in `spdk_nvme_ctrlr_opts.tls_psk`.
 
-### util
-
-#### `spdk_iov_one`
-
-The function is deprecated and will be removed in 24.05 release. Please use `SPDK_IOV_ONE`
-macro instead.
-
 ### init
 
 #### `spdk_subsystem_init_from_json_config`

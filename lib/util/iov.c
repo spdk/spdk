@@ -19,18 +19,6 @@ spdk_iov_memset(struct iovec *iovs, int iovcnt, int c)
 	}
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(spdk_iov_one, "spdk_iov_one", "v24.05", 0);
-
-void
-spdk_iov_one(struct iovec *iov, int *iovcnt, void *buf, size_t buflen)
-{
-	SPDK_LOG_DEPRECATED(spdk_iov_one);
-
-	iov->iov_base = buf;
-	iov->iov_len = buflen;
-	*iovcnt = 1;
-}
-
 size_t
 spdk_ioviter_first(struct spdk_ioviter *iter,
 		   struct iovec *siov, size_t siovcnt,
