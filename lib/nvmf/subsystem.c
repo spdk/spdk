@@ -680,6 +680,40 @@ subsystem_state_change_on_pg(struct spdk_io_channel_iter *i)
 	}
 }
 
+static void
+nvmf_subsystem_do_state_change(struct nvmf_subsystem_state_change_ctx *ctx)
+{
+	struct spdk_nvmf_subsystem *subsystem = ctx->subsystem;
+	enum spdk_nvmf_subsystem_state intermediate_state;
+	int rc;
+
+	SPDK_DTRACE_PROBE3(nvmf_subsystem_change_state, subsystem->subnqn,
+			   ctx->requested_state, subsystem->state);
+
+	/* If we are already in the requested state, just call the callback immediately. */
+	if (subsystem->state == ctx->requested_state) {
+		nvmf_subsystem_state_change_complete(ctx, 0);
+		return;
+	}
+
+	intermediate_state = nvmf_subsystem_get_intermediate_state(subsystem->state,
+			     ctx->requested_state);
+	assert(intermediate_state != SPDK_NVMF_SUBSYSTEM_NUM_STATES);
+
+	ctx->original_state = subsystem->state;
+	rc = nvmf_subsystem_set_state(subsystem, intermediate_state);
+	if (rc) {
+		nvmf_subsystem_state_change_complete(ctx, -1);
+		return;
+	}
+
+	spdk_for_each_channel(subsystem->tgt,
+			      subsystem_state_change_on_pg,
+			      ctx,
+			      subsystem_state_change_done);
+}
+
+
 static int
 nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 			    uint32_t nsid,
@@ -688,9 +722,7 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 			    void *cb_arg)
 {
 	struct nvmf_subsystem_state_change_ctx *ctx;
-	enum spdk_nvmf_subsystem_state intermediate_state;
 	struct spdk_thread *thread;
-	int rc;
 
 	thread = spdk_get_thread();
 	if (thread == NULL) {
@@ -719,28 +751,7 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 	subsystem->changing_state = true;
 	pthread_mutex_unlock(&subsystem->mutex);
 
-	SPDK_DTRACE_PROBE3(nvmf_subsystem_change_state, subsystem->subnqn,
-			   requested_state, subsystem->state);
-	/* If we are already in the requested state, just call the callback immediately. */
-	if (subsystem->state == requested_state) {
-		nvmf_subsystem_state_change_complete(ctx, 0);
-		return 0;
-	}
-
-	intermediate_state = nvmf_subsystem_get_intermediate_state(subsystem->state, requested_state);
-	assert(intermediate_state != SPDK_NVMF_SUBSYSTEM_NUM_STATES);
-
-	ctx->original_state = subsystem->state;
-	rc = nvmf_subsystem_set_state(subsystem, intermediate_state);
-	if (rc) {
-		nvmf_subsystem_state_change_complete(ctx, -1);
-		return 0;
-	}
-
-	spdk_for_each_channel(subsystem->tgt,
-			      subsystem_state_change_on_pg,
-			      ctx,
-			      subsystem_state_change_done);
+	nvmf_subsystem_do_state_change(ctx);
 
 	return 0;
 }
