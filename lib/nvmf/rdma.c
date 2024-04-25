@@ -2227,7 +2227,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 					if (rc != 0) {
 						SPDK_ERRLOG("DIF generation failed\n");
 						rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
-						spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
+						spdk_nvmf_qpair_disconnect(&rqpair->qpair);
 						break;
 					}
 				}
@@ -3463,7 +3463,7 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt, bool *event_acked)
 
 	spdk_trace_record(TRACE_RDMA_QP_DISCONNECT, 0, 0, (uintptr_t)rqpair);
 
-	spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
+	spdk_nvmf_qpair_disconnect(&rqpair->qpair);
 
 	return 0;
 }
@@ -3501,7 +3501,7 @@ nvmf_rdma_disconnect_qpairs_on_port(struct spdk_nvmf_rdma_transport *rtransport,
 		TAILQ_FOREACH(rpoller, &rgroup->pollers, link) {
 			RB_FOREACH(rqpair, qpairs_tree, &rpoller->qpairs) {
 				if (rqpair->listen_id == port->id) {
-					spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
+					spdk_nvmf_qpair_disconnect(&rqpair->qpair);
 				}
 			}
 		}
@@ -3795,7 +3795,7 @@ nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 			spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
 					  (uintptr_t)rqpair, event.event_type);
 			rqpair->ibv_in_error_state = true;
-			spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
+			spdk_nvmf_qpair_disconnect(&rqpair->qpair);
 			break;
 		case IBV_EVENT_QP_LAST_WQE_REACHED:
 			/* This event only occurs for shared receive queues. */
@@ -4441,7 +4441,7 @@ _poller_reset_failed_recvs(struct spdk_nvmf_rdma_poller *rpoller, struct ibv_rec
 		rdma_recv->qpair->current_recv_depth++;
 		bad_recv_wr = bad_recv_wr->next;
 		SPDK_ERRLOG("Failed to post a recv for the qpair %p with errno %d\n", rdma_recv->qpair, -rc);
-		spdk_nvmf_qpair_disconnect(&rdma_recv->qpair->qpair, NULL, NULL);
+		spdk_nvmf_qpair_disconnect(&rdma_recv->qpair->qpair);
 	}
 }
 
@@ -4453,7 +4453,7 @@ _qp_reset_failed_recvs(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_recv_wr *
 		bad_recv_wr = bad_recv_wr->next;
 		rqpair->current_recv_depth++;
 	}
-	spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
+	spdk_nvmf_qpair_disconnect(&rqpair->qpair);
 }
 
 static void
@@ -4538,7 +4538,7 @@ _qp_reset_failed_sends(struct spdk_nvmf_rdma_transport *rtransport,
 
 	if (rqpair->qpair.state == SPDK_NVMF_QPAIR_ACTIVE) {
 		/* Disconnect the connection. */
-		spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
+		spdk_nvmf_qpair_disconnect(&rqpair->qpair);
 	}
 
 }
@@ -4687,7 +4687,7 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			if (spdk_likely(!wc[i].status)) {
 				assert(wc[i].opcode == IBV_WC_RECV);
 				if (rqpair->current_recv_depth >= rqpair->max_queue_depth) {
-					spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
+					spdk_nvmf_qpair_disconnect(&rqpair->qpair);
 					break;
 				}
 			}
@@ -4755,7 +4755,7 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 			if (rqpair->qpair.state == SPDK_NVMF_QPAIR_ACTIVE) {
 				/* Disconnect the connection. */
-				spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
+				spdk_nvmf_qpair_disconnect(&rqpair->qpair);
 			} else {
 				nvmf_rdma_destroy_drained_qpair(rqpair);
 			}

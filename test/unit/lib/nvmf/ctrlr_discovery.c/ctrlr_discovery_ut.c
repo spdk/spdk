@@ -38,10 +38,7 @@ DEFINE_STUB(spdk_nvmf_transport_get_next,
 DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
 
 DEFINE_STUB_V(nvmf_ctrlr_async_event_discovery_log_change_notice, (void *ctx));
-
-DEFINE_STUB(spdk_nvmf_qpair_disconnect, int,
-	    (struct spdk_nvmf_qpair *qpair,
-	     nvmf_qpair_disconnect_cb cb_fn, void *ctx), 0);
+DEFINE_STUB(spdk_nvmf_qpair_disconnect, int, (struct spdk_nvmf_qpair *qpair), 0);
 
 DEFINE_STUB(spdk_bdev_open_ext, int,
 	    (const char *bdev_name, bool write,	spdk_bdev_event_cb_t event_cb,

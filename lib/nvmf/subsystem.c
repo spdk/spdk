@@ -1099,7 +1099,7 @@ nvmf_subsystem_disconnect_qpairs_by_host(struct spdk_io_channel_iter *i)
 
 		if (strncmp(ctrlr->hostnqn, ctx->hostnqn, sizeof(ctrlr->hostnqn)) == 0) {
 			/* Right now this does not wait for the queue pairs to actually disconnect. */
-			spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+			spdk_nvmf_qpair_disconnect(qpair);
 		}
 	}
 	spdk_for_each_channel_continue(i, 0);

@@ -2341,7 +2341,7 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		assert(ctrlr->cqs[sq->cqid]->cq_ref);
 		ctrlr->cqs[sq->cqid]->cq_ref--;
 
-		spdk_nvmf_qpair_disconnect(&sq->qpair, NULL, NULL);
+		spdk_nvmf_qpair_disconnect(&sq->qpair);
 		return 0;
 	}
 
@@ -4872,7 +4872,7 @@ _vfio_user_qpair_disconnect(void *ctx)
 {
 	struct nvmf_vfio_user_sq *sq = ctx;
 
-	spdk_nvmf_qpair_disconnect(&sq->qpair, NULL, NULL);
+	spdk_nvmf_qpair_disconnect(&sq->qpair);
 }
 
 /* The function is used when socket connection is destroyed */

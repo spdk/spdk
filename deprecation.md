@@ -50,11 +50,6 @@ The function is deprecated and will be removed in 24.09 release. Please use
 
 ### nvmf
 
-#### `spdk_nvmf_qpair_disconnect`
-
-Parameters `cb_fn` and `ctx` of `spdk_nvmf_qpair_disconnect` API are deprecated. These parameters
-will be removed in 24.05 release.
-
 #### `spdk_nvmf_request_exec_fabrics`
 
 This function is deprecated and will be removed in the 24.09 release.  Instead, users should use

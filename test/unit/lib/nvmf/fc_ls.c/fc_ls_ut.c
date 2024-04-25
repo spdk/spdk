@@ -34,6 +34,7 @@ DEFINE_STUB(spdk_nvmf_subsystem_host_allowed, bool,
 	    (struct spdk_nvmf_subsystem *subsystem, const char *hostnqn), true);
 DEFINE_STUB_V(spdk_nvme_trid_populate_transport, (struct spdk_nvme_transport_id *trid,
 		enum spdk_nvme_transport_type trtype));
+DEFINE_STUB(spdk_nvmf_qpair_disconnect, int, (struct spdk_nvmf_qpair *qpair), 0);
 DEFINE_STUB(rte_hash_del_key, int32_t, (const struct rte_hash *h, const void *key), 0);
 DEFINE_STUB(rte_hash_lookup_data, int, (const struct rte_hash *h, const void *key, void **data),
 	    -ENOENT);
@@ -110,13 +111,6 @@ struct spdk_nvmf_transport *
 spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, const char *transport_name)
 {
 	return &g_nvmf_transport;
-}
-
-int
-spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_cb cb_fn, void *ctx)
-{
-	cb_fn(ctx);
-	return 0;
 }
 
 void

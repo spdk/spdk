@@ -130,7 +130,7 @@ _nvmf_ctrlr_disconnect_qpairs_on_pg(struct spdk_io_channel_iter *i, bool include
 
 	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, link, temp_qpair) {
 		if (qpair->ctrlr == ctrlr && (include_admin || !nvmf_qpair_is_admin_queue(qpair))) {
-			rc = spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+			rc = spdk_nvmf_qpair_disconnect(qpair);
 			if (rc) {
 				if (rc == -EINPROGRESS) {
 					rc = 0;
@@ -1021,7 +1021,7 @@ nvmf_ctrlr_association_remove(void *ctx)
 		      ctrlr->subsys->subnqn);
 
 	if (ctrlr->admin_qpair) {
-		rc = spdk_nvmf_qpair_disconnect(ctrlr->admin_qpair, NULL, NULL);
+		rc = spdk_nvmf_qpair_disconnect(ctrlr->admin_qpair);
 		if (rc < 0 && rc != -EINPROGRESS) {
 			SPDK_ERRLOG("Fail to disconnect admin ctrlr qpair\n");
 			assert(false);

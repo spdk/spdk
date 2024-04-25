@@ -37,6 +37,7 @@ DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid,
 	    int,
 	    (struct spdk_nvmf_qpair *qpair, struct spdk_nvme_transport_id *trid),
 	    0);
+DEFINE_STUB(spdk_nvmf_qpair_disconnect, int, (struct spdk_nvmf_qpair *qpair), 0);
 
 DEFINE_STUB(nvmf_subsystem_add_ctrlr,
 	    int,
@@ -312,12 +313,6 @@ spdk_nvme_transport_id_populate_trstring(struct spdk_nvme_transport_id *trid, co
 	for (i = 0; i < len; i++) {
 		trid->trstring[i] = toupper(trstring[i]);
 	}
-	return 0;
-}
-
-int
-spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_cb cb_fn, void *ctx)
-{
 	return 0;
 }
 

@@ -359,15 +359,12 @@ typedef void (*nvmf_qpair_disconnect_cb)(void *ctx);
  * Disconnect an NVMe-oF qpair
  *
  * \param qpair The NVMe-oF qpair to disconnect.
- * \param cb_fn Deprecated, will be removed in v24.05. The function to call upon completion of the disconnect.
- * \param ctx Deprecated, will be removed in v24.05. The context to pass to the callback function.
  *
  * \return 0 upon success.
  * \return -ENOMEM if the function specific context could not be allocated.
  * \return -EINPROGRESS if the qpair is already in the process of disconnect.
  */
-int spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_cb cb_fn,
-			       void *ctx);
+int spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair);
 
 /**
  * Get the peer's transport ID for this queue pair.

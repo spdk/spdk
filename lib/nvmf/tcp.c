@@ -1012,7 +1012,7 @@ nvmf_tcp_qpair_disconnect(struct spdk_nvmf_tcp_qpair *tqpair)
 		spdk_poller_unregister(&tqpair->timeout_poller);
 
 		/* This will end up calling nvmf_tcp_close_qpair */
-		spdk_nvmf_qpair_disconnect(&tqpair->qpair, NULL, NULL);
+		spdk_nvmf_qpair_disconnect(&tqpair->qpair);
 	}
 }
 
