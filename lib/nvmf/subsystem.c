@@ -267,6 +267,7 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	TAILQ_INIT(&subsystem->listeners);
 	TAILQ_INIT(&subsystem->hosts);
 	TAILQ_INIT(&subsystem->ctrlrs);
+	TAILQ_INIT(&subsystem->state_changes);
 	subsystem->used_listener_ids = spdk_bit_array_create(NVMF_MAX_LISTENERS_PER_SUBSYSTEM);
 	if (subsystem->used_listener_ids == NULL) {
 		pthread_mutex_destroy(&subsystem->mutex);
@@ -355,6 +356,7 @@ _nvmf_subsystem_destroy_msg(void *cb_arg)
 static int
 _nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 {
+	struct nvmf_subsystem_state_change_ctx *ctx;
 	struct spdk_nvmf_ns		*ns;
 	nvmf_subsystem_destroy_cb	async_destroy_cb = NULL;
 	void				*async_destroy_cb_arg = NULL;
@@ -378,6 +380,15 @@ _nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 
 		spdk_nvmf_subsystem_remove_ns(subsystem, ns->opts.nsid);
 		ns = next_ns;
+	}
+
+	while ((ctx = TAILQ_FIRST(&subsystem->state_changes))) {
+		SPDK_WARNLOG("subsystem %s has pending state change requests\n", subsystem->subnqn);
+		TAILQ_REMOVE(&subsystem->state_changes, ctx, link);
+		if (ctx->cb_fn != NULL) {
+			ctx->cb_fn(subsystem, ctx->cb_arg, -ECANCELED);
+		}
+		free(ctx);
 	}
 
 	free(subsystem->ns);
@@ -559,21 +570,31 @@ nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
 	return actual_old_state - expected_old_state;
 }
 
+static void nvmf_subsystem_do_state_change(struct nvmf_subsystem_state_change_ctx *ctx);
+
 static void
 _nvmf_subsystem_state_change_complete(void *_ctx)
 {
-	struct nvmf_subsystem_state_change_ctx *ctx = _ctx;
+	struct nvmf_subsystem_state_change_ctx *next, *ctx = _ctx;
 	struct spdk_nvmf_subsystem *subsystem = ctx->subsystem;
 
 	pthread_mutex_lock(&subsystem->mutex);
-	subsystem->changing_state = false;
+	assert(TAILQ_FIRST(&subsystem->state_changes) == ctx);
+	TAILQ_REMOVE(&subsystem->state_changes, ctx, link);
+	next = TAILQ_FIRST(&subsystem->state_changes);
+	if (next == NULL) {
+		subsystem->changing_state = false;
+	}
 	pthread_mutex_unlock(&subsystem->mutex);
 
 	if (ctx->cb_fn != NULL) {
 		ctx->cb_fn(subsystem, ctx->cb_arg, ctx->status);
 	}
-
 	free(ctx);
+
+	if (next != NULL) {
+		nvmf_subsystem_do_state_change(next);
+	}
 }
 
 static void
@@ -721,7 +742,7 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 			    spdk_nvmf_subsystem_state_change_done cb_fn,
 			    void *cb_arg)
 {
-	struct nvmf_subsystem_state_change_ctx *ctx;
+	struct nvmf_subsystem_state_change_ctx *ctx, *prev __attribute__((unused));
 	struct spdk_thread *thread;
 
 	thread = spdk_get_thread();
@@ -742,12 +763,16 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 	ctx->thread = thread;
 
 	pthread_mutex_lock(&subsystem->mutex);
+	prev = TAILQ_FIRST(&subsystem->state_changes);
+	TAILQ_INSERT_TAIL(&subsystem->state_changes, ctx, link);
+
 	if (subsystem->changing_state) {
+		assert(prev != NULL);
 		pthread_mutex_unlock(&subsystem->mutex);
-		free(ctx);
-		return -EBUSY;
+		return 0;
 	}
 
+	assert(prev == NULL);
 	subsystem->changing_state = true;
 	pthread_mutex_unlock(&subsystem->mutex);
 

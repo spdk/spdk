@@ -250,16 +250,17 @@ struct spdk_nvmf_ctrlr {
 #define NVMF_MAX_LISTENERS_PER_SUBSYSTEM	16
 
 struct nvmf_subsystem_state_change_ctx {
-	struct spdk_nvmf_subsystem		*subsystem;
-	uint16_t				nsid;
+	struct spdk_nvmf_subsystem			*subsystem;
+	uint16_t					nsid;
 
-	enum spdk_nvmf_subsystem_state		original_state;
-	enum spdk_nvmf_subsystem_state		requested_state;
-	int					status;
-	struct spdk_thread			*thread;
+	enum spdk_nvmf_subsystem_state			original_state;
+	enum spdk_nvmf_subsystem_state			requested_state;
+	int						status;
+	struct spdk_thread				*thread;
 
-	spdk_nvmf_subsystem_state_change_done	cb_fn;
-	void					*cb_arg;
+	spdk_nvmf_subsystem_state_change_done		cb_fn;
+	void						*cb_arg;
+	TAILQ_ENTRY(nvmf_subsystem_state_change_ctx)	link;
 };
 
 struct spdk_nvmf_subsystem {
@@ -326,6 +327,8 @@ struct spdk_nvmf_subsystem {
 	 * It will be enough for ANA group to use the same size as namespaces.
 	 */
 	uint32_t					*ana_group;
+	/* Queue of a state change requests */
+	TAILQ_HEAD(, nvmf_subsystem_state_change_ctx)	state_changes;
 };
 
 static int
