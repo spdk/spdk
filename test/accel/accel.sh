@@ -119,7 +119,7 @@ if [[ $CONFIG_ISAL == y ]]; then
 	run_test "accel_decomp_mcore" accel_test -t 1 -w decompress -l $testdir/bib -y -m 0xf
 	run_test "accel_decomp_full_mcore" accel_test -t 1 -w decompress -l $testdir/bib -y -o 0 -m 0xf
 	run_test "accel_decomp_mthread" accel_test -t 1 -w decompress -l $testdir/bib -y -T 2
-	run_test "accel_deomp_full_mthread" accel_test -t 1 -w decompress -l $testdir/bib -y -o 0 -T 2
+	run_test "accel_decomp_full_mthread" accel_test -t 1 -w decompress -l $testdir/bib -y -o 0 -T 2
 fi
 if [[ $CONFIG_DPDK_COMPRESSDEV == y ]]; then
 	COMPRESSDEV=1
@@ -130,7 +130,7 @@ if [[ $CONFIG_DPDK_COMPRESSDEV == y ]]; then
 	run_test "accel_cdev_decomp_mcore" accel_test -t 1 -w decompress -l $testdir/bib -y -m 0xf
 	run_test "accel_cdev_decomp_full_mcore" accel_test -t 1 -w decompress -l $testdir/bib -y -o 0 -m 0xf
 	run_test "accel_cdev_decomp_mthread" accel_test -t 1 -w decompress -l $testdir/bib -y -T 2
-	run_test "accel_cdev_deomp_full_mthread" accel_test -t 1 -w decompress -l $testdir/bib -y -o 0 -T 2
+	run_test "accel_cdev_decomp_full_mthread" accel_test -t 1 -w decompress -l $testdir/bib -y -o 0 -T 2
 	unset COMPRESSDEV
 fi
 
