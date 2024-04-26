@@ -1355,7 +1355,19 @@ raid_bdev_process_to_str(enum raid_process_type value)
 static void
 raid_bdev_fini_start(void)
 {
+	struct raid_bdev *raid_bdev;
+	struct raid_base_bdev_info *base_info;
+
 	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_fini_start\n");
+
+	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
+		if (raid_bdev->state != RAID_BDEV_STATE_ONLINE) {
+			RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
+				raid_bdev_free_base_bdev_resource(base_info);
+			}
+		}
+	}
+
 	g_shutdown_started = true;
 }
 
