@@ -1257,8 +1257,6 @@ int	nvme_ctrlr_get_bpinfo(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_bpinfo_
 int	nvme_ctrlr_set_bprsel(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_bprsel_register *bprsel);
 int	nvme_ctrlr_set_bpmbl(struct spdk_nvme_ctrlr *ctrlr, uint64_t bpmbl_value);
 bool	nvme_ctrlr_multi_iocs_enabled(struct spdk_nvme_ctrlr *ctrlr);
-void    nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr *ctrlr,
-				       const struct spdk_nvme_cpl *cpl);
 void nvme_ctrlr_disconnect_qpair(struct spdk_nvme_qpair *qpair);
 void nvme_ctrlr_complete_queued_async_events(struct spdk_nvme_ctrlr *ctrlr);
 void nvme_ctrlr_abort_queued_aborts(struct spdk_nvme_ctrlr *ctrlr);

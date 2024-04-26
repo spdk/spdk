@@ -3098,7 +3098,7 @@ free_buffer:
 	return rc;
 }
 
-void
+static void
 nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr *ctrlr,
 			       const struct spdk_nvme_cpl *cpl)
 {
