@@ -181,18 +181,20 @@ malloc_done(void *ref, int status)
 	}
 
 	if (bdev_io->bdev->dif_type != SPDK_DIF_DISABLE &&
-	    bdev_io->type == SPDK_BDEV_IO_TYPE_READ &&
 	    task->status == SPDK_BDEV_IO_STATUS_SUCCESS) {
-		rc = malloc_verify_pi(bdev_io);
-		if (rc != 0) {
-			task->status = SPDK_BDEV_IO_STATUS_FAILED;
+		switch (bdev_io->type) {
+		case SPDK_BDEV_IO_TYPE_READ:
+			rc = malloc_verify_pi(bdev_io);
+			break;
+		case SPDK_BDEV_IO_TYPE_UNMAP:
+		case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+			rc = malloc_unmap_write_zeroes_generate_pi(bdev_io);
+			break;
+		default:
+			rc = 0;
+			break;
 		}
-	}
 
-	if (bdev_io->bdev->dif_type != SPDK_DIF_DISABLE &&
-	    (bdev_io->type == SPDK_BDEV_IO_TYPE_UNMAP || bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE_ZEROES) &&
-	    task->status == SPDK_BDEV_IO_STATUS_SUCCESS) {
-		rc = malloc_unmap_write_zeroes_generate_pi(bdev_io);
 		if (rc != 0) {
 			task->status = SPDK_BDEV_IO_STATUS_FAILED;
 		}
