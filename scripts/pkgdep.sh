@@ -104,6 +104,7 @@ trap 'set +e; trap - ERR; echo "Error!"; exit 1;' ERR
 scriptsdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $scriptsdir/..)
 source "$rootdir/scripts/common.sh"
+source "$scriptsdir/pkgdep/helpers.sh"
 
 OS=$(uname -s)
 
