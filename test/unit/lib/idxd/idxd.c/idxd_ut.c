@@ -20,8 +20,8 @@ test_idxd_validate_dif_common_params(void)
 	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
 	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
 
-	/* Check all supported combinations of the block size and metadata size */
-	/* ## supported: block-size = 512, metadata = 8 */
+	/* Check all supported combinations of the data block size and metadata size */
+	/* ## supported: data-block-size = 512, metadata = 8 */
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       DATA_BLOCK_SIZE_512 + METADATA_SIZE_8,
 			       METADATA_SIZE_8,
@@ -35,7 +35,7 @@ test_idxd_validate_dif_common_params(void)
 	rc = idxd_validate_dif_common_params(&dif_ctx);
 	CU_ASSERT(rc == 0);
 
-	/* ## supported: block-size = 512, metadata = 16 */
+	/* ## supported: data-block-size = 512, metadata = 16 */
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       DATA_BLOCK_SIZE_512 + METADATA_SIZE_16,
 			       METADATA_SIZE_16,
@@ -49,7 +49,7 @@ test_idxd_validate_dif_common_params(void)
 	rc = idxd_validate_dif_common_params(&dif_ctx);
 	CU_ASSERT(rc == 0);
 
-	/* ## supported: block-size = 4096, metadata = 8 */
+	/* ## supported: data-block-size = 4096, metadata = 8 */
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       DATA_BLOCK_SIZE_4096 + METADATA_SIZE_8,
 			       METADATA_SIZE_8,
@@ -63,7 +63,7 @@ test_idxd_validate_dif_common_params(void)
 	rc = idxd_validate_dif_common_params(&dif_ctx);
 	CU_ASSERT(rc == 0);
 
-	/* ## supported: block-size = 4096, metadata = 16 */
+	/* ## supported: data-block-size = 4096, metadata = 16 */
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       DATA_BLOCK_SIZE_4096 + METADATA_SIZE_16,
 			       METADATA_SIZE_16,
@@ -153,7 +153,7 @@ test_idxd_validate_dif_common_params(void)
 	CU_ASSERT(rc == -EINVAL);
 
 	/* Check for supported DIF block sizes */
-	/* ## not-supported: block_size (without metadata) != 512,520,4096,4104 */
+	/* ## not-supported: data block_size != 512,520,4096,4104 */
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       DATA_BLOCK_SIZE_512 + 10,
 			       METADATA_SIZE_8,
@@ -312,7 +312,7 @@ test_idxd_validate_dif_check_buf_align(void)
 	rc = idxd_validate_dif_check_buf_align(&dif_ctx, 4 * (512 + 8));
 	CU_ASSERT(rc == 0);
 
-	/* The memory buffer length is not a multiple of block size with metadata */
+	/* The memory buffer length is not a multiple of block size */
 	rc = idxd_validate_dif_check_buf_align(&dif_ctx, 4 * (512 + 8) + 10);
 	CU_ASSERT(rc == -EINVAL);
 }
@@ -342,11 +342,11 @@ test_idxd_validate_dif_insert_buf_align(void)
 	rc = idxd_validate_dif_insert_buf_align(&dif_ctx, 4 * 512, 4 * 520);
 	CU_ASSERT(rc == 0);
 
-	/* The memory source buffer length is not a multiple of block size without metadata */
+	/* The memory source buffer length is not a multiple of data block size */
 	rc = idxd_validate_dif_insert_buf_align(&dif_ctx, 4 * 512 + 10, 4 * 520);
 	CU_ASSERT(rc == -EINVAL);
 
-	/* The memory destination buffer length is not a multiple of block size with metadata */
+	/* The memory destination buffer length is not a multiple of block size */
 	rc = idxd_validate_dif_insert_buf_align(&dif_ctx, 4 * 512, 4 * 520 + 10);
 	CU_ASSERT(rc == -EINVAL);
 

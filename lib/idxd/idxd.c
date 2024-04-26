@@ -1434,7 +1434,6 @@ idxd_validate_dif_common_params(const struct spdk_dif_ctx *ctx)
 static inline int
 idxd_validate_dif_check_params(const struct spdk_dif_ctx *ctx)
 {
-	/* Validate common parameters */
 	int rc = idxd_validate_dif_common_params(ctx);
 	if (rc) {
 		return rc;
@@ -1475,25 +1474,21 @@ spdk_idxd_submit_dif_check(struct spdk_idxd_io_channel *chan,
 	assert(chan != NULL);
 	assert(siov != NULL);
 
-	/* Validate DIF check parameters */
 	rc = idxd_validate_dif_check_params(ctx);
 	if (rc) {
 		return rc;
 	}
 
-	/* Get DIF flags */
 	rc = idxd_get_dif_flags(ctx, &dif_flags);
 	if (rc) {
 		return rc;
 	}
 
-	/* Get source DIF flags */
 	rc = idxd_get_source_dif_flags(ctx, &src_dif_flags);
 	if (rc) {
 		return rc;
 	}
 
-	/* Get AppTag Mask */
 	rc = idxd_get_app_tag_mask(ctx, &app_tag_mask);
 	if (rc) {
 		return rc;
@@ -1558,7 +1553,6 @@ error:
 static inline int
 idxd_validate_dif_insert_params(const struct spdk_dif_ctx *ctx)
 {
-	/* Validate common parameters */
 	int rc = idxd_validate_dif_common_params(ctx);
 	if (rc) {
 		return rc;
@@ -1663,19 +1657,16 @@ spdk_idxd_submit_dif_insert(struct spdk_idxd_io_channel *chan,
 	assert(chan != NULL);
 	assert(siov != NULL);
 
-	/* Validate DIF parameters */
 	rc = idxd_validate_dif_insert_params(ctx);
 	if (rc) {
 		return rc;
 	}
 
-	/* Validate DIF iovec parameters */
 	rc = idxd_validate_dif_insert_iovecs(ctx, diov, diovcnt, siov, siovcnt);
 	if (rc) {
 		return rc;
 	}
 
-	/* Set DIF flags */
 	rc = idxd_get_dif_flags(ctx, &dif_flags);
 	if (rc) {
 		return rc;
@@ -1696,7 +1687,6 @@ spdk_idxd_submit_dif_insert(struct spdk_idxd_io_channel *chan,
 		 * be split (must be multiple of the block size). The destination memory
 		 * size needs to be same as the source memory size + metadata size */
 
-		/* Validate the memory buffer alignment */
 		rc = idxd_validate_dif_insert_buf_align(ctx, src_seg_len, dst_seg_len);
 		if (rc) {
 			goto error;
