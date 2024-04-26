@@ -235,10 +235,8 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 
 		run_test "nvme_rpc" $rootdir/test/nvme/nvme_rpc.sh
 		run_test "nvme_rpc_timeouts" $rootdir/test/nvme/nvme_rpc_timeouts.sh
-		# Only test hotplug without ASAN enabled. Since if it is
-		# enabled, it catches SEGV earlier than our handler which
-		# breaks the hotplug logic.
-		if [ $SPDK_RUN_ASAN -eq 0 ] && [ $(uname -s) = Linux ]; then
+
+		if [ $(uname -s) = Linux ]; then
 			run_test "sw_hotplug" $rootdir/test/nvme/sw_hotplug.sh
 		fi
 
