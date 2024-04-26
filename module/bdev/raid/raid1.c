@@ -39,6 +39,16 @@ raid1_channel_dec_read_counters(struct raid_bdev_io_channel *raid_ch, uint8_t id
 }
 
 static void
+raid1_init_ext_io_opts(struct spdk_bdev_ext_io_opts *opts, struct raid_bdev_io *raid_io)
+{
+	memset(opts, 0, sizeof(*opts));
+	opts->size = sizeof(*opts);
+	opts->memory_domain = raid_io->memory_domain;
+	opts->memory_domain_ctx = raid_io->memory_domain_ctx;
+	opts->metadata = raid_io->md_buf;
+}
+
+static void
 raid1_write_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct raid_bdev_io *raid_io = cb_arg;
@@ -80,16 +90,6 @@ _raid1_submit_rw_request(void *_raid_io)
 	struct raid_bdev_io *raid_io = _raid_io;
 
 	raid1_submit_rw_request(raid_io);
-}
-
-static void
-raid1_init_ext_io_opts(struct spdk_bdev_ext_io_opts *opts, struct raid_bdev_io *raid_io)
-{
-	memset(opts, 0, sizeof(*opts));
-	opts->size = sizeof(*opts);
-	opts->memory_domain = raid_io->memory_domain;
-	opts->memory_domain_ctx = raid_io->memory_domain_ctx;
-	opts->metadata = raid_io->md_buf;
 }
 
 static uint8_t
