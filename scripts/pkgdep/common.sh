@@ -20,6 +20,21 @@ install_liburing() {
 	ldconfig
 }
 
+install_uadk() {
+	local GIT_REPO_UADK=https://github.com/Linaro/uadk
+	local uadk_dir=/usr/local/src/uadk
+
+	if [[ -d $uadk_dir ]]; then
+		echo "uadk source already present, not cloning"
+	else
+		mkdir -p $uadk_dir
+		git clone "${GIT_REPO_UADK}" "$uadk_dir"
+	fi
+	(cd "$uadk_dir" && ./cleanup.sh && ./autogen.sh && ./configure --libdir=/usr/lib64 && make install)
+	echo /usr/lib64 > /etc/ld.so.conf.d/uadk.conf
+	ldconfig
+}
+
 install_shfmt() {
 	# Fetch version that has been tested
 	local shfmt_version=3.1.0
@@ -258,6 +273,10 @@ fi
 
 if [[ $INSTALL_LIBURING == true ]]; then
 	install_liburing
+fi
+
+if [[ $INSTALL_UADK == true ]]; then
+	install_uadk
 fi
 
 if [[ $INSTALL_GOLANG == true ]]; then

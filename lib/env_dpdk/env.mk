@@ -78,6 +78,12 @@ ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_crypto_mlx5.*))
 DPDK_LIB_LIST += rte_crypto_mlx5
 endif
 endif
+
+ifeq ($(CONFIG_DPDK_UADK),y)
+ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_crypto_uadk.*))
+DPDK_LIB_LIST += rte_crypto_uadk
+endif
+endif
 endif
 
 ifeq ($(findstring y,$(CONFIG_DPDK_COMPRESSDEV)$(CONFIG_VBDEV_COMPRESS)),y)

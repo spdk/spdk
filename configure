@@ -107,6 +107,8 @@ function usage() {
 	echo " --without-uring           If an argument is provided, it is considered a directory containing"
 	echo "                           liburing.a and io_uring.h. Otherwise the regular system paths will"
 	echo "                           be searched."
+	echo " --with-dpdk-uadk          Build uadk DPDK module. No path required."
+	echo " --without-dpdk-uadk       Disable uadk DPDK module."
 	echo " --without-uring-zns       Build I/O uring module without ZNS (zoned namespaces) support."
 	echo " --with-openssl[=DIR]      Build OPENSSL with custom path. Otherwise the regular system paths will"
 	echo "                           be searched."
@@ -516,6 +518,12 @@ for i in "$@"; do
 			;;
 		--without-crypto)
 			CONFIG[CRYPTO]=n
+			;;
+		--with-dpdk-uadk)
+			CONFIG[DPDK_UADK]=y
+			;;
+		--without-dpdk-uadk)
+			CONFIG[DPDK_UADK]=n
 			;;
 		--with-vhost)
 			CONFIG[VHOST]=y
@@ -1049,6 +1057,14 @@ if [[ "${CONFIG[UBLK]}" = "y" ]]; then
 		'int main(void) { return 0; }\n' \
 		| "${BUILD_CMD[@]}" -luring - 2> /dev/null; then
 		echo "--with-ublk requires liburing and ublk_drv."
+		echo "Please install then re-run this script."
+		exit 1
+	fi
+fi
+
+if [[ "${CONFIG[DPDK_UADK]}" = "y" ]]; then
+	if ! pkg-config --exists libwd; then
+		echo "--with-dpdk-uadk requires uadk library."
 		echo "Please install then re-run this script."
 		exit 1
 	fi

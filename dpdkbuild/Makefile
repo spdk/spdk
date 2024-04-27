@@ -74,6 +74,10 @@ ifeq ($(findstring y,$(CONFIG_CRYPTO_MLX5)$(CONFIG_VBDEV_COMPRESS_MLX5)),y)
 DPDK_DRIVERS += common/mlx5 bus/auxiliary
 endif
 
+# uadk drivers
+ifeq ($(findstring y,$(CONFIG_DPDK_UADK)),y)
+DPDK_DRIVERS += crypto/uadk
+endif
 ifeq ($(CONFIG_CRYPTO),y)
 DPDK_DRIVERS += crypto
 # aesni_mb is name of the PMD in DPDK 21.08 and earlier

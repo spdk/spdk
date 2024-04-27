@@ -150,6 +150,7 @@ The following ciphers and PMDs are supported:
   (Note: QAT is functional however is marked as experimental until the hardware has
   been fully integrated with the SPDK CI system.)
 - MLX5 Crypto Poll Mode Driver: RTE_CRYPTO_CIPHER_AES256_XTS, RTE_CRYPTO_CIPHER_AES512_XTS
+- UADK Crypto Poll Mode Driver: RTE_CRYPTO_CIPHER_AES256_XTS, RTE_CRYPTO_CIPHER_AES512_XTS
 
 To enable this module, use [`dpdk_cryptodev_scan_accel_module`](https://spdk.io/doc/jsonrpc.html),
 this RPC is available in STARTUP state and the SPDK application needs to be run with `--wait-for-rpc`

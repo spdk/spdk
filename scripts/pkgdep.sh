@@ -22,6 +22,7 @@ function usage() {
 	echo "  -r --rdma                   Additional dependencies for RDMA transport in NVMe over Fabrics"
 	echo "  -b --docs                   Additional dependencies for building docs"
 	echo "  -u --uring                  Additional dependencies for io_uring"
+	echo "     --uadk                   Additional dependencies for UADK"
 	echo "  -D --daos                   Additional dependencies for DAOS"
 	echo "  -A --avahi                  Additional dependencies for Avahi mDNS Discovery"
 	echo "  -G --golang                 Additional dependencies for go API generation"
@@ -41,6 +42,7 @@ function install_all_dependencies() {
 	INSTALL_AVAHI=true
 	INSTALL_GOLANG=true
 	INSTALL_IDXD=true
+	INSTALL_UADK=true
 }
 
 INSTALL_CRYPTO=false
@@ -54,6 +56,7 @@ INSTALL_DAOS=false
 INSTALL_AVAHI=false
 INSTALL_GOLANG=false
 INSTALL_IDXD=false
+INSTALL_UADK=false
 
 while getopts 'abdfhipruADGIR-:' optchar; do
 	case "$optchar" in
@@ -67,6 +70,7 @@ while getopts 'abdfhipruADGIR-:' optchar; do
 				rdma) INSTALL_RDMA=true ;;
 				docs) INSTALL_DOCS=true ;;
 				uring) INSTALL_LIBURING=true ;;
+				uadk) INSTALL_UADK=true ;;
 				daos) INSTALL_DAOS=true ;;
 				avahi) INSTALL_AVAHI=true ;;
 				golang) INSTALL_GOLANG=true ;;

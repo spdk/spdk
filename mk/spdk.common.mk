@@ -343,6 +343,10 @@ SYS_LIBS += -lssl
 SYS_LIBS += -lcrypto
 SYS_LIBS += -lm
 
+ifeq ($(CONFIG_DPDK_UADK),y)
+SYS_LIBS += -lwd -lwd_crypto
+endif
+
 PKGCONF ?= pkg-config
 ifneq ($(strip $(CONFIG_OPENSSL_PATH)),)
 CFLAGS += -I$(CONFIG_OPENSSL_PATH)/include
@@ -353,6 +357,10 @@ else
 ifeq ($(shell $(PKGCONF) --exists libssl11 && echo 1),1)
 CFLAGS  += $(shell $(PKGCONF) --cflags libssl11)
 LDFLAGS += $(shell $(PKGCONF) --libs libssl11)
+endif
+ifeq ($(CONFIG_DPDK_UADK),y)
+CFLAGS  += $(shell $(PKGCONF) --cflags libwd)
+LDFLAGS += $(shell $(PKGCONF) --libs libwd)
 endif
 endif
 
