@@ -73,9 +73,9 @@ move_proc() {
 
 	[[ -n $SILENT_CGROUP_DEBUG ]] && out=/dev/null
 
-	echo "Moving $proc ($(id_proc "$proc" 2>&1)) to $new_cgroup from $old_cgroup" > "$out"
+	echo "Moving $proc ($(id_proc "$proc" 2>&1)) to $new_cgroup from $old_cgroup" >> "$out"
 	if ! write_fail=$(set_cgroup_attr "$new_cgroup" "$attr" "$proc" 2>&1); then
-		echo "Moving $proc failed: ${write_fail##*: }" > "$out"
+		echo "Moving $proc failed: ${write_fail##*: }" >> "$out"
 		return 1
 	fi
 }
