@@ -212,5 +212,9 @@ if [[ $INSTALL_AVAHI == "true" ]]; then
 fi
 if [[ $INSTALL_IDXD == "true" ]]; then
 	# accel-config-devel is required for kernel IDXD implementation used in DSA accel module
-	yum install -y accel-config-devel
+	if [[ $ID == centos && $VERSION_ID == 7* ]]; then
+		echo "Installation of IDXD dependencies not supported under ${ID}${VERSION_ID}"
+	else
+		yum install -y accel-config-devel
+	fi
 fi
