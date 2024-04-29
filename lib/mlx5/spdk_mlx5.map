@@ -1,6 +1,7 @@
 {
 	global:
 
+    spdk_mlx5_device_query_caps;
     spdk_mlx5_cq_create;
     spdk_mlx5_cq_destroy;
     spdk_mlx5_qp_create;

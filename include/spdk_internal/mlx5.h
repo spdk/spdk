@@ -144,6 +144,30 @@ struct spdk_mlx5_umr_crypto_attr {
 	uint64_t keytag; /* Must match DEK's keytag or 0 */
 };
 
+struct spdk_mlx5_device_crypto_caps {
+	bool wrapped_crypto_operational;
+	bool wrapped_crypto_going_to_commissioning;
+	bool wrapped_import_method_aes_xts;
+	bool single_block_le_tweak;
+	bool multi_block_be_tweak;
+	bool multi_block_le_tweak;
+};
+
+struct spdk_mlx5_device_caps {
+	/* Content of this structure is valid only if crypto_supported is true */
+	struct spdk_mlx5_device_crypto_caps crypto;
+	bool crypto_supported;
+};
+
+/**
+ * Query device capabilities
+ *
+ * \param context Context of a device to query
+ * \param caps Device capabilities
+ * \return 0 on success, negated errno on failure.
+ */
+int spdk_mlx5_device_query_caps(struct ibv_context *context, struct spdk_mlx5_device_caps *caps);
+
 /**
  * Create Completion Queue
  *

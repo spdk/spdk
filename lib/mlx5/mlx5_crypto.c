@@ -13,6 +13,7 @@
 #include "spdk/util.h"
 #include "spdk_internal/mlx5.h"
 #include "spdk_internal/rdma_utils.h"
+#include "mlx5_ifc.h"
 
 #define MLX5_VENDOR_ID_MELLANOX 0x2c9
 
@@ -111,7 +112,11 @@ spdk_mlx5_crypto_devs_get(int *dev_num)
 {
 	struct ibv_context **rdma_devs, **rdma_devs_out = NULL, *dev;
 	struct ibv_device_attr dev_attr;
-	struct mlx5dv_context dv_dev_attr;
+	struct ibv_port_attr port_attr;
+	struct spdk_mlx5_device_caps dev_caps;
+	uint8_t in[DEVX_ST_SZ_BYTES(query_nic_vport_context_in)];
+	uint8_t out[DEVX_ST_SZ_BYTES(query_nic_vport_context_out)];
+	uint8_t devx_v;
 	int num_rdma_devs = 0, i, rc;
 	int num_crypto_devs = 0;
 
@@ -130,7 +135,6 @@ spdk_mlx5_crypto_devs_get(int *dev_num)
 
 	for (i = 0; i < num_rdma_devs; i++) {
 		dev = rdma_devs[i];
-
 		rc = ibv_query_device(dev, &dev_attr);
 		if (rc) {
 			SPDK_ERRLOG("Failed to query dev %s, skipping\n", dev->device->name);
@@ -145,30 +149,52 @@ spdk_mlx5_crypto_devs_get(int *dev_num)
 			continue;
 		}
 
-		memset(&dv_dev_attr, 0, sizeof(dv_dev_attr));
-		dv_dev_attr.comp_mask |= MLX5DV_CONTEXT_MASK_CRYPTO_OFFLOAD;
-		rc = mlx5dv_query_device(dev, &dv_dev_attr);
+		rc = ibv_query_port(dev, 1, &port_attr);
+		if (rc) {
+			SPDK_ERRLOG("Failed to query port attributes for device %s, rc %d\n", dev->device->name, rc);
+			continue;
+		}
+
+		if (port_attr.link_layer == IBV_LINK_LAYER_ETHERNET) {
+			/* Port may be ethernet but roce is still disabled */
+			memset(in, 0, sizeof(in));
+			memset(out, 0, sizeof(out));
+			DEVX_SET(query_nic_vport_context_in, in, opcode, MLX5_CMD_OP_QUERY_NIC_VPORT_CONTEXT);
+			rc = mlx5dv_devx_general_cmd(dev, in, sizeof(in), out, sizeof(out));
+			if (rc) {
+				SPDK_ERRLOG("Failed to get VPORT context for device %s. Assuming ROCE is disabled\n",
+					    dev->device->name);
+				continue;
+			}
+
+			devx_v = DEVX_GET(query_nic_vport_context_out, out, nic_vport_context.roce_en);
+			if (!devx_v) {
+				SPDK_ERRLOG("Device %s, RoCE disabled\n", dev->device->name);
+				continue;
+			}
+		}
+
+		memset(&dev_caps, 0, sizeof(dev_caps));
+		rc = spdk_mlx5_device_query_caps(dev, &dev_caps);
 		if (rc) {
 			SPDK_ERRLOG("Failed to query mlx5 dev %s, skipping\n", dev->device->name);
 			continue;
 		}
-		if (!(dv_dev_attr.crypto_caps.flags & MLX5DV_CRYPTO_CAPS_CRYPTO)) {
-			SPDK_DEBUGLOG(mlx5, "dev %s crypto engine doesn't support crypto, skipping\n", dev->device->name);
+		if (!dev_caps.crypto_supported) {
+			SPDK_WARNLOG("dev %s crypto engine doesn't support crypto\n", dev->device->name);
 			continue;
 		}
-		if (!(dv_dev_attr.crypto_caps.crypto_engines & (MLX5DV_CRYPTO_ENGINES_CAP_AES_XTS |
-				MLX5DV_CRYPTO_ENGINES_CAP_AES_XTS_SINGLE_BLOCK))) {
-			SPDK_DEBUGLOG(mlx5, "dev %s crypto engine doesn't support AES_XTS, skipping\n", dev->device->name);
+		if (!(dev_caps.crypto.single_block_le_tweak || dev_caps.crypto.multi_block_le_tweak ||
+		      dev_caps.crypto.multi_block_be_tweak)) {
+			SPDK_WARNLOG("dev %s crypto engine doesn't support AES_XTS\n", dev->device->name);
 			continue;
 		}
-		if (dv_dev_attr.crypto_caps.wrapped_import_method &
-		    MLX5DV_CRYPTO_WRAPPED_IMPORT_METHOD_CAP_AES_XTS) {
-			SPDK_WARNLOG("dev %s uses wrapped import method (0x%x) which is not supported by mlx5 accel module\n",
-				     dev->device->name, dv_dev_attr.crypto_caps.wrapped_import_method);
+		if (dev_caps.crypto.wrapped_import_method_aes_xts) {
+			SPDK_WARNLOG("dev %s uses wrapped import method which is not supported by mlx5 lib\n",
+				     dev->device->name);
 			continue;
 		}
 
-		SPDK_NOTICELOG("Crypto dev %s\n", dev->device->name);
 		rdma_devs_out[num_crypto_devs++] = dev;
 	}
 
@@ -195,6 +221,58 @@ spdk_mlx5_crypto_devs_release(struct ibv_context **rdma_devs)
 	if (rdma_devs) {
 		free(rdma_devs);
 	}
+}
+
+int
+spdk_mlx5_device_query_caps(struct ibv_context *context, struct spdk_mlx5_device_caps *caps)
+{
+	uint16_t opmod = MLX5_SET_HCA_CAP_OP_MOD_GENERAL_DEVICE |
+			 HCA_CAP_OPMOD_GET_CUR;
+	uint32_t out[DEVX_ST_SZ_DW(query_hca_cap_out)] = {};
+	uint32_t in[DEVX_ST_SZ_DW(query_hca_cap_in)] = {};
+	int rc;
+
+	DEVX_SET(query_hca_cap_in, in, opcode, MLX5_CMD_OP_QUERY_HCA_CAP);
+	DEVX_SET(query_hca_cap_in, in, op_mod, opmod);
+
+	rc = mlx5dv_devx_general_cmd(context, in, sizeof(in), out, sizeof(out));
+	if (rc) {
+		return rc;
+	}
+
+	caps->crypto_supported = DEVX_GET(query_hca_cap_out, out, capability.cmd_hca_cap.crypto);
+	if (!caps->crypto_supported) {
+		return 0;
+	}
+
+	caps->crypto.single_block_le_tweak = DEVX_GET(query_hca_cap_out,
+					     out, capability.cmd_hca_cap.aes_xts_single_block_le_tweak);
+	caps->crypto.multi_block_be_tweak = DEVX_GET(query_hca_cap_out, out,
+					    capability.cmd_hca_cap.aes_xts_multi_block_be_tweak);
+	caps->crypto.multi_block_le_tweak = DEVX_GET(query_hca_cap_out, out,
+					    capability.cmd_hca_cap.aes_xts_multi_block_le_tweak);
+
+	opmod = MLX5_SET_HCA_CAP_OP_MOD_CRYPTO | HCA_CAP_OPMOD_GET_CUR;
+	memset(&out, 0, sizeof(out));
+	memset(&in, 0, sizeof(in));
+
+	DEVX_SET(query_hca_cap_in, in, opcode, MLX5_CMD_OP_QUERY_HCA_CAP);
+	DEVX_SET(query_hca_cap_in, in, op_mod, opmod);
+
+	rc = mlx5dv_devx_general_cmd(context, in, sizeof(in), out, sizeof(out));
+	if (rc) {
+		return rc;
+	}
+
+	caps->crypto.wrapped_crypto_operational = DEVX_GET(query_hca_cap_out, out,
+			capability.crypto_caps.wrapped_crypto_operational);
+	caps->crypto.wrapped_crypto_going_to_commissioning = DEVX_GET(query_hca_cap_out, out,
+			capability.crypto_caps .wrapped_crypto_going_to_commissioning);
+	caps->crypto.wrapped_import_method_aes_xts = (DEVX_GET(query_hca_cap_out, out,
+			capability.crypto_caps.wrapped_import_method) &
+			MLX5_CRYPTO_CAPS_WRAPPED_IMPORT_METHOD_AES) != 0;
+
+	return 0;
 }
 
 void

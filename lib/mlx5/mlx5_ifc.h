@@ -1221,7 +1221,8 @@ struct mlx5_ifc_cmd_hca_cap_bits {
 	u8         steering_format_version[0x4];
 	u8         create_qp_start_hint[0x18];
 
-	u8         reserved_at_460[0x9];
+	u8         reserved_at_460[0x8];
+	u8	   aes_xts_multi_block_le_tweak[0x1];
 	u8         crypto[0x1];
 	u8         reserved_at_46a[0x6];
 	u8         max_num_eqs[0x10];
