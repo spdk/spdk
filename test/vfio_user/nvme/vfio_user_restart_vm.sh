@@ -13,7 +13,7 @@ source $rootdir/test/vfio_user/autotest.config
 bdfs=($(get_nvme_bdfs))
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
-trap 'clean_vfio_user "${FUNCNAME}" "${LINENO}"' ERR EXIT
+trap 'clean_vfio_user' EXIT
 
 vhosttestinit
 
@@ -56,9 +56,5 @@ vm_shutdown_all
 
 $rpc_py bdev_nvme_detach_controller Nvme0
 $rpc_py nvmf_delete_subsystem nqn.2019-07.io.spdk:cnode1
-
-vhost_kill 0
-
-trap - ERR EXIT
 
 vhosttestfini

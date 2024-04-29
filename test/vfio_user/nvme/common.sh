@@ -3,13 +3,8 @@
 #  All rights reserved.
 
 function clean_vfio_user() {
-	trap - ERR
-	print_backtrace
-	set +e
-	error "Error on $1 $2"
-	vm_kill_all
-	vhost_kill 0
-	exit 1
+	vm_kill_all || true
+	vhost_kill 0 || true
 }
 
 function vfio_user_run() {

@@ -15,7 +15,7 @@ rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 fio_bin="--fio-bin=$FIO_BIN"
 vm_no="2"
 
-trap 'clean_vfio_user "${FUNCNAME}" "${LINENO}"' ERR
+trap 'clean_vfio_user' EXIT
 vhosttestinit
 
 timing_enter start_vfio_user
