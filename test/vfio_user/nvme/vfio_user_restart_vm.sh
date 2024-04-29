@@ -43,8 +43,14 @@ vm_wait_for_boot 60 1
 
 vm_exec 1 "lsblk"
 
+# First, remove the namespace device from the subsystem to make sure VM shutdown is not blocked. See issue #3322.
+$rpc_py nvmf_subsystem_remove_ns nqn.2019-07.io.spdk:cnode1 1
 # To check target whether core dump when remove subsystem listener while VM is connected, issue #2246
 $rpc_py nvmf_subsystem_remove_listener nqn.2019-07.io.spdk:cnode1 -t vfiouser -a $vm_muser_dir/domain/muser1/1 -s 0
+# The above removal leaves nvme ctrl in a dead state inside the VM. Play nice and remove it from the bus as all
+# attempts to reset it by the VM's kernel will always fail (potentially blocking the shutdown as well). See issue
+# #3322.
+vm_exec 1 "echo 1 > /sys/class/nvme/nvme0/device/remove"
 
 vm_shutdown_all
 
