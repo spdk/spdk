@@ -477,41 +477,34 @@ function vm_kill_all() {
 # Shutdown all VM in $VM_DIR
 #
 function vm_shutdown_all() {
-	# XXX: temporarily disable to debug shutdown issue
-	# xtrace_disable
+	local timeo=${1:-90} vms vm
 
-	local vms
-	vms=$(vm_list_all)
-	local vm
+	vms=($(vm_list_all))
 
-	for vm in $vms; do
-		vm_shutdown $vm
+	for vm in "${vms[@]}"; do
+		vm_shutdown "$vm"
 	done
 
 	notice "Waiting for VMs to shutdown..."
-	local timeo=90
-	while [[ $timeo -gt 0 ]]; do
-		local all_vms_down=1
-		for vm in $vms; do
-			if vm_is_running $vm; then
-				all_vms_down=0
-				break
-			fi
+	while ((timeo-- > 0 && ${#vms[@]} > 0)); do
+		for vm in "${!vms[@]}"; do
+			vm_is_running "${vms[vm]}" || unset -v "vms[vm]"
 		done
-
-		if [[ $all_vms_down == 1 ]]; then
-			notice "All VMs successfully shut down"
-			xtrace_restore
-			return 0
-		fi
-
-		((timeo -= 1))
 		sleep 1
 	done
 
-	rm -rf $VM_DIR
+	if ((${#vms[@]} == 0)); then
+		notice "All VMs successfully shut down"
+		return 0
+	fi
 
-	xtrace_restore
+	warning "Not all VMs were shut down. Leftovers: ${vms[*]}"
+
+	for vm in "${vms[@]}"; do
+		vm_print_logs "$vm"
+	done
+
+	return 1
 }
 
 function vm_setup() {
