@@ -25,7 +25,9 @@
  * DEK - Data Encryption Key
  */
 
-struct spdk_mlx5_crypto_dek;
+#define SPDK_MLX5_VENDOR_ID_MELLANOX 0x2c9
+
+struct spdk_mlx5_crypto_dek_legacy;
 struct spdk_mlx5_crypto_keytag;
 
 enum {
@@ -132,6 +134,13 @@ enum spdk_mlx5_block_size_selector {
 enum spdk_mlx5_crypto_key_tweak_mode {
 	SPDK_MLX5_CRYPTO_KEY_TWEAK_MODE_SIMPLE_LBA_BE	= 0,
 	SPDK_MLX5_CRYPTO_KEY_TWEAK_MODE_SIMPLE_LBA_LE	= 1,
+};
+
+struct spdk_mlx5_crypto_dek_data {
+	/** low level devx obj id which represents the DEK */
+	uint32_t dek_obj_id;
+	/** Crypto key tweak mode */
+	enum spdk_mlx5_crypto_key_tweak_mode tweak_mode;
 };
 
 struct spdk_mlx5_umr_crypto_attr {
@@ -317,7 +326,7 @@ int spdk_mlx5_crypto_keytag_create(struct spdk_mlx5_crypto_dek_create_attr *attr
 void spdk_mlx5_crypto_keytag_destroy(struct spdk_mlx5_crypto_keytag *keytag);
 
 /**
- * Fills attributes used to register UMR with crypto operation
+ * Fills attributes used to register UMR with crypto operation. Deprecated
  *
  * \param attr_out Configured UMR attributes
  * \param keytag Keytag with DEKs
@@ -330,6 +339,18 @@ void spdk_mlx5_crypto_keytag_destroy(struct spdk_mlx5_crypto_keytag *keytag);
 int spdk_mlx5_crypto_set_attr(struct mlx5dv_crypto_attr *attr_out,
 			      struct spdk_mlx5_crypto_keytag *keytag, struct ibv_pd *pd,
 			      uint32_t block_size, uint64_t iv, bool encrypt_on_tx);
+
+/**
+ * Get Data Encryption Key data
+ *
+ * \param keytag Keytag with DEKs
+ * \param pd Protection Domain which is going to be used to register UMR.
+ * \param dek_obj_id Low level DEK ID, can be used to configure crypto UMR
+ * \param data DEK data to be filled by this function
+ * \return 0 on success, negated errno on failure
+ */
+int spdk_mlx5_crypto_get_dek_data(struct spdk_mlx5_crypto_keytag *keytag, struct ibv_pd *pd,
+				  struct spdk_mlx5_crypto_dek_data *data);
 
 /**
  * Specify which devices are allowed to be used for crypto operation.

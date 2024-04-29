@@ -20,6 +20,7 @@
     spdk_mlx5_crypto_keytag_create;
     spdk_mlx5_crypto_keytag_destroy;
     spdk_mlx5_crypto_set_attr;
+    spdk_mlx5_crypto_get_dek_data;
     spdk_mlx5_crypto_devs_allow;
 
     spdk_mlx5_mkey_pool_init;
