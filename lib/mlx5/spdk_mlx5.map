@@ -12,6 +12,8 @@
     spdk_mlx5_qp_rdma_write;
     spdk_mlx5_qp_rdma_read;
 
+    spdk_mlx5_umr_configure_crypto;
+
     spdk_mlx5_crypto_devs_get;
     spdk_mlx5_crypto_devs_release;
     spdk_mlx5_crypto_keytag_create;

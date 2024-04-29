@@ -107,7 +107,21 @@ static uint8_t g_mlx5_ce_map[3][4] = {
 		[2] = SPDK_MLX5_WQE_CTRL_CE_CQ_NO_FLUSH_ERROR,
 		[3] = SPDK_MLX5_WQE_CTRL_CE_CQ_ECE
 	}
+};
 
+struct mlx5_crypto_bsf_seg {
+	uint8_t		size_type;
+	uint8_t		enc_order;
+	uint8_t		rsvd0;
+	uint8_t		enc_standard;
+	__be32		raw_data_size;
+	uint8_t		crypto_block_size_pointer;
+	uint8_t		rsvd1[7];
+	uint8_t		xts_initial_tweak[16];
+	__be32		dek_pointer;
+	uint8_t		rsvd2[4];
+	uint8_t		keytag[8];
+	uint8_t		rsvd3[16];
 };
 
 static inline uint8_t

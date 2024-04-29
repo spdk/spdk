@@ -21,6 +21,8 @@
  * WQEBB - Work Queue Element Build Block (64 bytes)
  * CQE - Completion Queue Entry
  * BSF - Byte Stream Format - part of UMR WQ which describes specific data properties such as encryption or signature
+ * UMR - User Memory Region
+ * DEK - Data Encryption Key
  */
 
 struct spdk_mlx5_crypto_dek;
@@ -105,6 +107,43 @@ struct spdk_mlx5_mkey_pool_obj {
 	} sig;
 };
 
+struct spdk_mlx5_umr_attr {
+	struct ibv_sge *sge;
+	uint32_t mkey; /* User Memory Region key to configure */
+	uint32_t umr_len;
+	uint16_t sge_count;
+};
+
+enum spdk_mlx5_encryption_order {
+	SPDK_MLX5_ENCRYPTION_ORDER_ENCRYPTED_WIRE_SIGNATURE    = 0x0,
+	SPDK_MLX5_ENCRYPTION_ORDER_ENCRYPTED_MEMORY_SIGNATURE  = 0x1,
+	SPDK_MLX5_ENCRYPTION_ORDER_ENCRYPTED_RAW_WIRE          = 0x2,
+	SPDK_MLX5_ENCRYPTION_ORDER_ENCRYPTED_RAW_MEMORY        = 0x3,
+};
+
+enum spdk_mlx5_block_size_selector {
+	SPDK_MLX5_BLOCK_SIZE_SELECTOR_RESERVED	= 0,
+	SPDK_MLX5_BLOCK_SIZE_SELECTOR_512	= 1,
+	SPDK_MLX5_BLOCK_SIZE_SELECTOR_520	= 2,
+	SPDK_MLX5_BLOCK_SIZE_SELECTOR_4096	= 3,
+	SPDK_MLX5_BLOCK_SIZE_SELECTOR_4160	= 4,
+};
+
+enum spdk_mlx5_crypto_key_tweak_mode {
+	SPDK_MLX5_CRYPTO_KEY_TWEAK_MODE_SIMPLE_LBA_BE	= 0,
+	SPDK_MLX5_CRYPTO_KEY_TWEAK_MODE_SIMPLE_LBA_LE	= 1,
+};
+
+struct spdk_mlx5_umr_crypto_attr {
+	uint8_t enc_order; /* see \ref enum spdk_mlx5_encryption_order */
+	uint8_t bs_selector; /* see \ref enum spdk_mlx5_block_size_selector */
+	uint8_t tweak_mode; /* see \ref enum spdk_mlx5_crypto_key_tweak_mode */
+	/* Low level ID of the Data Encryption Key */
+	uint32_t dek_obj_id;
+	uint64_t xts_iv;
+	uint64_t keytag; /* Must match DEK's keytag or 0 */
+};
+
 /**
  * Create Completion Queue
  *
@@ -181,7 +220,7 @@ void spdk_mlx5_qp_complete_send(struct spdk_mlx5_qp *qp);
  * \param dstaddr Remote address to write \b sge to
  * \param rkey Remote memory key
  * \param wrid wrid which is returned in the CQE
- * \param flags SPDK_MLX5_WQE_CTRL_CE_CQ_UPDATE to have a signaled completion or 0
+ * \param flags SPDK_MLX5_WQE_CTRL_CE_CQ_UPDATE to have a signaled completion; Any of SPDK_MLX5_WQE_CTRL_FENCE* or 0
  * \return 0 on success, negated errno on failure
  */
 int spdk_mlx5_qp_rdma_write(struct spdk_mlx5_qp *qp, struct ibv_sge *sge, uint32_t sge_count,
@@ -196,11 +235,30 @@ int spdk_mlx5_qp_rdma_write(struct spdk_mlx5_qp *qp, struct ibv_sge *sge, uint32
  * \param dstaddr Remote address to read into \b sge
  * \param rkey Remote memory key
  * \param wrid wrid which is returned in the CQE
- * \param flags SPDK_MLX5_WQE_CTRL_CE_CQ_UPDATE to have a signaled completion or 0
+ * \param flags SPDK_MLX5_WQE_CTRL_CE_CQ_UPDATE to have a signaled completion; Any of SPDK_MLX5_WQE_CTRL_FENCE* or 0
  * \return 0 on success, negated errno on failure
  */
 int spdk_mlx5_qp_rdma_read(struct spdk_mlx5_qp *qp, struct ibv_sge *sge, uint32_t sge_count,
 			   uint64_t dstaddr, uint32_t rkey, uint64_t wrid, uint32_t flags);
+
+/**
+ * Configure User Memory Region obtained using \ref spdk_mlx5_mkey_pool_get_bulk with crypto capabilities.
+ *
+ * Besides crypto capabilities, it allows to gather memory chunks into virtually contig (from the NIC point of view)
+ * memory space with start address 0. The user must ensure that \b qp's capacity is enough to perform this operation.
+ * It only works if the UMR pool was created with crypto capabilities.
+ *
+ * \param qp Qpair to be used for UMR configuration. If RDMA operation which references this UMR is used on the same \b qp
+ * then it is not necessary to wait for the UMR configuration to complete. Instead, first RDMA operation after UMR
+ * configuration must have flag SPDK_MLX5_WQE_CTRL_INITIATOR_SMALL_FENCE set to 1
+ * \param umr_attr Common UMR attributes, describe memory layout
+ * \param crypto_attr Crypto UMR attributes
+ * \param wr_id wrid which is returned in the CQE
+ * \param flags SPDK_MLX5_WQE_CTRL_CE_CQ_UPDATE to have a signaled completion; Any of SPDK_MLX5_WQE_CTRL_FENCE* or 0
+ * \return 0 on success, negated errno on failure
+ */
+int spdk_mlx5_umr_configure_crypto(struct spdk_mlx5_qp *qp, struct spdk_mlx5_umr_attr *umr_attr,
+				   struct spdk_mlx5_umr_crypto_attr *crypto_attr, uint64_t wr_id, uint32_t flags);
 
 /**
  * Return a NULL terminated array of devices which support crypto operation on Nvidia NICs
