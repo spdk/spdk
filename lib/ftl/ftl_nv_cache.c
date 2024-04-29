@@ -89,6 +89,25 @@ get_chunk_idx(struct ftl_nv_cache_chunk *chunk)
 	return (chunk->offset - first_chunk->offset) / chunk->nv_cache->chunk_blocks;
 }
 
+static void
+ftl_nv_cache_init_update_limits(struct spdk_ftl_dev *dev)
+{
+	struct ftl_nv_cache *nvc = &dev->nv_cache;
+	uint64_t usable_chunks = nvc->chunk_count;
+
+	/* Start compaction when full chunks exceed given % of entire active chunks */
+	nvc->chunk_compaction_threshold = usable_chunks *
+					  dev->conf.nv_cache.chunk_compaction_threshold /
+					  100;
+
+	nvc->throttle.interval_tsc = FTL_NV_CACHE_THROTTLE_INTERVAL_MS *
+				     (spdk_get_ticks_hz() / 1000);
+
+	nvc->chunk_free_target = spdk_divide_round_up(usable_chunks *
+				 dev->conf.nv_cache.chunk_free_target,
+				 100);
+}
+
 int
 ftl_nv_cache_init(struct spdk_ftl_dev *dev)
 {
@@ -156,9 +175,6 @@ ftl_nv_cache_init(struct spdk_ftl_dev *dev)
 	}
 	assert(offset <= nvc_data_offset(nv_cache) + nvc_data_blocks(nv_cache));
 
-	/* Start compaction when full chunks exceed given % of entire chunks */
-	nv_cache->chunk_compaction_threshold = nv_cache->chunk_count *
-					       dev->conf.nv_cache.chunk_compaction_threshold / 100;
 	TAILQ_INIT(&nv_cache->compactor_list);
 	for (i = 0; i < FTL_NV_CACHE_NUM_COMPACTORS; i++) {
 		compactor = compactor_alloc(dev);
@@ -201,12 +217,7 @@ ftl_nv_cache_init(struct spdk_ftl_dev *dev)
 		return -ENOMEM;
 	}
 
-	nv_cache->throttle.interval_tsc = FTL_NV_CACHE_THROTTLE_INTERVAL_MS *
-					  (spdk_get_ticks_hz() / 1000);
-	nv_cache->chunk_free_target = spdk_divide_round_up(nv_cache->chunk_count *
-				      dev->conf.nv_cache.chunk_free_target,
-				      100);
-
+	ftl_nv_cache_init_update_limits(dev);
 	ftl_property_register(dev, "cache_device", NULL, 0, NULL, NULL, ftl_property_dump_cache_dev, NULL,
 			      NULL, true);
 	return 0;
