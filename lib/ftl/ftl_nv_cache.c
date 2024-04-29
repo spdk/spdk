@@ -1494,15 +1494,16 @@ chunk_alloc_p2l_map(struct ftl_nv_cache_chunk *chunk)
 int
 ftl_nv_cache_load_state(struct ftl_nv_cache *nv_cache)
 {
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
 	struct ftl_nv_cache_chunk *chunk;
 	uint64_t chunks_number, offset, i;
 	int status = 0;
-	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
 
 	nv_cache->chunk_current = NULL;
 	TAILQ_INIT(&nv_cache->chunk_free_list);
 	TAILQ_INIT(&nv_cache->chunk_full_list);
-	nv_cache->chunk_full_count = nv_cache->chunk_free_count = 0;
+	nv_cache->chunk_full_count = 0;
+	nv_cache->chunk_free_count = 0;
 
 	assert(nv_cache->chunk_open_count == 0);
 	offset = nvc_data_offset(nv_cache);
@@ -1521,16 +1522,33 @@ ftl_nv_cache_load_state(struct ftl_nv_cache *nv_cache)
 			goto error;
 		}
 
-		if (chunk->md->blocks_written == nv_cache->chunk_blocks) {
-			/* Chunk full, move it on full list */
-			TAILQ_INSERT_TAIL(&nv_cache->chunk_full_list, chunk, entry);
-			nv_cache->chunk_full_count++;
-		} else if (0 == chunk->md->blocks_written) {
+		switch (chunk->md->state) {
+		case FTL_CHUNK_STATE_FREE:
+			if (chunk->md->blocks_written || chunk->md->write_pointer) {
+				status = -EINVAL;
+				goto error;
+			}
 			/* Chunk empty, move it on empty list */
 			TAILQ_INSERT_TAIL(&nv_cache->chunk_free_list, chunk, entry);
 			nv_cache->chunk_free_count++;
-		} else {
+			break;
+		case FTL_CHUNK_STATE_OPEN:
+			/* All chunks needs to closed at this point */
 			status = -EINVAL;
+			goto error;
+			break;
+		case FTL_CHUNK_STATE_CLOSED:
+			if (chunk->md->blocks_written != nv_cache->chunk_blocks) {
+				status = -EINVAL;
+				goto error;
+			}
+			/* Chunk full, move it on full list */
+			TAILQ_INSERT_TAIL(&nv_cache->chunk_full_list, chunk, entry);
+			nv_cache->chunk_full_count++;
+			break;
+		default:
+			status = -EINVAL;
+			FTL_ERRLOG(dev, "Invalid chunk state\n");
 			goto error;
 		}
 
