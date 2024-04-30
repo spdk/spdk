@@ -286,7 +286,7 @@ function gather_supported_nvmf_pci_devs() {
 	cache_pci_bus_sysfs
 	xtrace_restore
 
-	local intel=0x8086 mellanox=0x15b3 pci
+	local intel=0x8086 mellanox=0x15b3 pci net_dev
 
 	local -a pci_devs=()
 	local -a pci_net_devs=()
@@ -381,10 +381,21 @@ function gather_supported_nvmf_pci_devs() {
 	# are any net devices bound to the controllers.
 	for pci in "${pci_devs[@]}"; do
 		pci_net_devs=("/sys/bus/pci/devices/$pci/net/"*)
+
+		# Check if available devices are in proper operational state. If not, remove them from the main list.
+		# This check is valid for TCP only since for RDMA we use infiniband which don't rely on actual UP
+		# state of the device.
+		if [[ $TEST_TRANSPORT == tcp ]]; then
+			for net_dev in "${!pci_net_devs[@]}"; do
+				[[ $(< "${pci_net_devs[net_dev]}/operstate") == up ]] || unset -v "pci_net_devs[net_dev]"
+			done
+		fi
+
 		if ((${#pci_net_devs[@]} == 0)); then
-			echo "No net devices associated with $pci"
+			echo "No operational net devices associated with $pci"
 			continue
 		fi
+
 		pci_net_devs=("${pci_net_devs[@]##*/}")
 		echo "Found net devices under $pci: ${pci_net_devs[*]}"
 		net_devs+=("${pci_net_devs[@]}")
