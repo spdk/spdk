@@ -4678,6 +4678,7 @@ blob_thin_prov_unmap_cluster(void)
 	const uint32_t CLUSTER_COUNT = 3;
 	uint32_t pages_per_cluster;
 	uint32_t i;
+	int err;
 
 	/* Use a very large cluster size for this test. Check how the unmap/release cluster code path behaves when
 	 * clusters are fully used.
@@ -4813,6 +4814,26 @@ blob_thin_prov_unmap_cluster(void)
 	}
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(1 == spdk_bs_free_cluster_count(bs));
+
+	/* Issue #3358 had a bug with concurrent trims to the same cluster causing an assert, check for regressions.
+	 * Send three concurrent unmaps to the same cluster.
+	 */
+	g_bserrno = -1;
+	memset(payload_write, 7, sizeof(payload_write));
+	spdk_blob_io_write(blob, ch, payload_write, 0, 1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(0 == spdk_bs_free_cluster_count(bs));
+
+	g_bserrno = -1;
+	err = -1;
+	spdk_blob_io_unmap(blob, ch, 0, pages_per_cluster, blob_op_complete, NULL);
+	spdk_blob_io_unmap(blob, ch, 0, pages_per_cluster, blob_op_complete, NULL);
+	spdk_blob_io_unmap(blob, ch, 0, pages_per_cluster, blob_op_complete, &err);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(err == 0);
 	CU_ASSERT(1 == spdk_bs_free_cluster_count(bs));
 
 	ut_blob_close_and_delete(bs, blob);

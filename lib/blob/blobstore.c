@@ -8478,6 +8478,13 @@ blob_free_cluster_msg(void *arg)
 	size_t i;
 
 	ctx->cluster = ctx->blob->active.clusters[ctx->cluster_num];
+
+	/* There were concurrent unmaps to the same cluster, only release the cluster on the first one */
+	if (ctx->cluster == 0) {
+		blob_op_cluster_msg_cb(ctx, 0);
+		return;
+	}
+
 	ctx->blob->active.clusters[ctx->cluster_num] = 0;
 	if (ctx->cluster != 0) {
 		ctx->blob->active.num_allocated_clusters--;
