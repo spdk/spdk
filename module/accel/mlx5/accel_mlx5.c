@@ -1094,8 +1094,12 @@ accel_mlx5_free_resources(void)
 
 	for (i = 0; i < g_accel_mlx5.num_crypto_ctxs; i++) {
 		accel_mlx5_release_reqs(&g_accel_mlx5.crypto_ctxs[i]);
-		spdk_rdma_utils_put_pd(g_accel_mlx5.crypto_ctxs[i].pd);
-		spdk_rdma_utils_put_memory_domain(g_accel_mlx5.crypto_ctxs[i].domain);
+		if (g_accel_mlx5.crypto_ctxs[i].pd) {
+			spdk_rdma_utils_put_pd(g_accel_mlx5.crypto_ctxs[i].pd);
+		}
+		if (g_accel_mlx5.crypto_ctxs[i].domain) {
+			spdk_rdma_utils_put_memory_domain(g_accel_mlx5.crypto_ctxs[i].domain);
+		}
 	}
 
 	free(g_accel_mlx5.crypto_ctxs);
@@ -1182,6 +1186,35 @@ accel_mlx5_crypto_ctx_mempool_create(struct accel_mlx5_crypto_dev_ctx *crypto_de
 	return 0;
 }
 
+static int
+accel_mlx5_dev_ctx_init(struct accel_mlx5_crypto_dev_ctx *dev_ctx, struct ibv_context *dev,
+			struct spdk_mlx5_device_caps *caps)
+{
+	struct ibv_pd *pd;
+	int rc;
+
+	pd = spdk_rdma_utils_get_pd(dev);
+	if (!pd) {
+		SPDK_ERRLOG("Failed to get PD for context %p, dev %s\n", dev, dev->device->name);
+		return -EINVAL;
+	}
+	dev_ctx->context = dev;
+	dev_ctx->pd = pd;
+	dev_ctx->domain = spdk_rdma_utils_get_memory_domain(pd);
+	if (!dev_ctx->domain) {
+		return -ENOMEM;
+	}
+
+	if (g_accel_mlx5.crypto_supported) {
+		rc = accel_mlx5_crypto_ctx_mempool_create(dev_ctx, g_accel_mlx5.attr.num_requests);
+		if (rc) {
+			return rc;
+		}
+	}
+
+	return 0;
+}
+
 static struct ibv_context **
 accel_mlx5_get_devices(int *_num_devs)
 {
@@ -1252,10 +1285,8 @@ accel_mlx5_dev_supports_crypto(struct spdk_mlx5_device_caps *caps)
 static int
 accel_mlx5_init(void)
 {
-	struct accel_mlx5_crypto_dev_ctx *crypto_dev_ctx;
 	struct spdk_mlx5_device_caps *caps;
 	struct ibv_context **rdma_devs, *dev;
-	struct ibv_pd *pd;
 	int num_devs = 0,  rc = 0, i;
 	int best_dev = -1, first_dev = 0;
 	bool supports_crypto;
@@ -1333,25 +1364,8 @@ accel_mlx5_init(void)
 	}
 
 	for (i = first_dev; i < first_dev + num_devs; i++) {
-		crypto_dev_ctx = &g_accel_mlx5.crypto_ctxs[g_accel_mlx5.num_crypto_ctxs];
-		dev = rdma_devs[i];
-		pd = spdk_rdma_utils_get_pd(dev);
-		if (!pd) {
-			SPDK_ERRLOG("Failed to get PD for context %p, dev %s\n", dev, dev->device->name);
-			rc = -EINVAL;
-			goto cleanup;
-		}
-		crypto_dev_ctx->context = dev;
-		crypto_dev_ctx->pd = pd;
-		crypto_dev_ctx->domain = spdk_rdma_utils_get_memory_domain(crypto_dev_ctx->pd);
-		if (!crypto_dev_ctx->domain) {
-			SPDK_ERRLOG("Failed to get memory domain\n");
-			rc = -ENOMEM;
-			goto cleanup;
-		}
-
-		g_accel_mlx5.num_crypto_ctxs++;
-		rc = accel_mlx5_crypto_ctx_mempool_create(crypto_dev_ctx, g_accel_mlx5.attr.num_requests);
+		rc = accel_mlx5_dev_ctx_init(&g_accel_mlx5.crypto_ctxs[g_accel_mlx5.num_crypto_ctxs++],
+					     rdma_devs[i], &caps[i]);
 		if (rc) {
 			goto cleanup;
 		}
