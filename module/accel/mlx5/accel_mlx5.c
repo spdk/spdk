@@ -405,6 +405,70 @@ accel_mlx5_task_alloc_mkeys(struct accel_mlx5_task *task)
 }
 
 static inline int
+accel_mlx5_configure_crypto_umr(struct accel_mlx5_task *mlx5_task, struct accel_mlx5_sge *sge,
+				struct mlx5dv_mkey *mkey, uint32_t num_blocks, uint64_t iv)
+{
+	struct mlx5dv_crypto_attr cattr;
+	struct accel_mlx5_dev *dev = mlx5_task->dev;
+	struct accel_mlx5_qp *qp = dev->qp;
+	struct ibv_qp_ex *qpx = qp->qpex;
+	struct mlx5dv_qp_ex *mqpx = qp->mqpx;
+	struct spdk_accel_task *task = &mlx5_task->base;
+	struct mlx5dv_mkey_conf_attr mkey_attr = {};
+	uint32_t length;
+	uint32_t num_setters = 3; /* access flags, layout, crypto */
+	int rc;
+
+	length = num_blocks * task->block_size;
+	SPDK_DEBUGLOG(accel_mlx5, "task %p, src KLM, domain %p, len %u\n", task, task->src_domain, length);
+	rc = accel_mlx5_fill_block_sge(dev, sge->src_sge, &mlx5_task->src, length, task->src_domain,
+				       task->src_domain_ctx);
+	if (spdk_unlikely(rc <= 0)) {
+		if (rc == 0) {
+			rc = -EINVAL;
+		}
+		SPDK_ERRLOG("failed set src sge, rc %d\n", rc);
+		return rc;
+	}
+	sge->src_sge_count = rc;
+
+	/* prepare memory key - destination for WRITE operation */
+	qpx->wr_flags = IBV_SEND_INLINE;
+	qpx->wr_id = (uint64_t)(void *)mlx5_task;
+	mlx5dv_wr_mkey_configure(mqpx, mkey, num_setters, &mkey_attr);
+	mlx5dv_wr_set_mkey_access_flags(mqpx,
+					IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_REMOTE_READ);
+	if (mlx5_task->inplace) {
+		mlx5dv_wr_set_mkey_layout_list(mqpx, sge->src_sge_count, sge->src_sge);
+	} else {
+		rc = accel_mlx5_fill_block_sge(dev, sge->dst_sge, &mlx5_task->dst, length,
+					       task->dst_domain, task->dst_domain_ctx);
+		if (spdk_unlikely(rc <= 0)) {
+			if (rc == 0) {
+				rc = -EINVAL;
+			}
+			SPDK_ERRLOG("failed set dst sge, rc %d\n", rc);
+			mlx5_task->rc = rc;
+			return rc;
+		}
+		sge->dst_sge_count = rc;
+		mlx5dv_wr_set_mkey_layout_list(mqpx, sge->dst_sge_count, sge->dst_sge);
+	}
+	SPDK_DEBUGLOG(accel_mlx5, "task %p crypto_attr: bs %u, iv %"PRIu64", enc_on_tx %d\n", task,
+		      task->block_size, iv, mlx5_task->encrypt_on_tx);
+	rc = spdk_mlx5_crypto_set_attr(&cattr, task->crypto_key->priv, dev->dev_ctx->pd, task->block_size,
+				       iv++, mlx5_task->encrypt_on_tx);
+	if (spdk_unlikely(rc)) {
+		SPDK_ERRLOG("failed to set crypto attr, rc %d\n", rc);
+		mlx5_task->rc = rc;
+		return rc;
+	}
+	mlx5dv_wr_set_mkey_crypto(mqpx, &cattr);
+
+	return 0;
+}
+
+static inline int
 accel_mlx5_task_process(struct accel_mlx5_task *mlx5_task)
 {
 	struct accel_mlx5_sge sges[ACCEL_MLX5_MAX_MKEYS_IN_TASK];
@@ -412,11 +476,8 @@ accel_mlx5_task_process(struct accel_mlx5_task *mlx5_task)
 	struct accel_mlx5_dev *dev = mlx5_task->dev;
 	struct accel_mlx5_qp *qp = dev->qp;
 	struct ibv_qp_ex *qpx = qp->qpex;
-	struct mlx5dv_qp_ex *mqpx = qp->mqpx;
-	struct mlx5dv_mkey_conf_attr mkey_attr = {};
-	struct mlx5dv_crypto_attr cattr;
 	uint64_t iv;
-	uint32_t num_setters = 3, i; /* access flags, layout, crypto */
+	uint32_t i;
 	int rc;
 	uint32_t num_ops = spdk_min(mlx5_task->num_reqs - mlx5_task->num_completed_reqs,
 				    mlx5_task->num_ops);
@@ -434,52 +495,15 @@ accel_mlx5_task_process(struct accel_mlx5_task *mlx5_task)
 
 	SPDK_DEBUGLOG(accel_mlx5, "begin, task, %p, reqs: total %u, submitted %u, completed %u\n",
 		      mlx5_task, mlx5_task->num_reqs, mlx5_task->num_submitted_reqs, mlx5_task->num_completed_reqs);
+	for (i = 0; i < num_ops; i++) {
+		rc = accel_mlx5_configure_crypto_umr(mlx5_task, &sges[i], mlx5_task->mkeys[i]->mkey, 1, iv++);
+		if (spdk_unlikely(rc)) {
+			SPDK_ERRLOG("UMR configure failed with %d\n", rc);
+			goto err_out;
+		}
+	}
 
 	for (i = 0; i < num_ops; i++) {
-		rc = accel_mlx5_fill_block_sge(dev, sges[i].src_sge, &mlx5_task->src, task->block_size,
-					       task->src_domain, task->src_domain_ctx);
-		if (spdk_unlikely(rc <= 0)) {
-			if (rc == 0) {
-				rc = -EINVAL;
-			}
-			SPDK_ERRLOG("failed set src sge, rc %d\n", rc);
-			goto err_out;
-		}
-		sges[i].src_sge_count = rc;
-
-		/* prepare memory key - destination for WRITE operation */
-		qpx->wr_flags = IBV_SEND_INLINE;
-		qpx->wr_id = (uint64_t)(void *)mlx5_task;
-		mlx5dv_wr_mkey_configure(mqpx, mlx5_task->mkeys[i]->mkey, num_setters, &mkey_attr);
-		mlx5dv_wr_set_mkey_access_flags(mqpx,
-						IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_REMOTE_READ);
-		if (mlx5_task->inplace) {
-			mlx5dv_wr_set_mkey_layout_list(mqpx, sges[i].src_sge_count, sges[i].src_sge);
-		} else {
-			rc = accel_mlx5_fill_block_sge(dev, sges[i].dst_sge, &mlx5_task->dst, task->block_size,
-						       task->dst_domain, task->dst_domain_ctx);
-			if (spdk_unlikely(rc <= 0)) {
-				if (rc == 0) {
-					rc = -EINVAL;
-				}
-				SPDK_ERRLOG("failed set dst sge, rc %d\n", rc);
-				mlx5_task->rc = rc;
-				goto err_out;
-			}
-			sges[i].dst_sge_count = rc;
-			mlx5dv_wr_set_mkey_layout_list(mqpx, sges[i].dst_sge_count, sges[i].dst_sge);
-		}
-		SPDK_DEBUGLOG(accel_mlx5, "task %p crypto_attr: bs %u, iv %"PRIu64", enc_on_tx %d\n", task,
-			      task->block_size, iv, mlx5_task->encrypt_on_tx);
-		rc = spdk_mlx5_crypto_set_attr(&cattr, task->crypto_key->priv, dev->dev_ctx->pd, task->block_size,
-					       iv++, mlx5_task->encrypt_on_tx);
-		if (spdk_unlikely(rc)) {
-			SPDK_ERRLOG("failed to set crypto attr, rc %d\n", rc);
-			mlx5_task->rc = rc;
-			goto err_out;
-		}
-		mlx5dv_wr_set_mkey_crypto(mqpx, &cattr);
-
 		/* Prepare WRITE, use rkey from mkey, remote addr is always 0 - start of the mkey */
 		qpx->wr_flags = IBV_SEND_SIGNALED;
 		qpx->wr_id = (uint64_t)(void *)mlx5_task;
