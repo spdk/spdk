@@ -50,6 +50,7 @@ struct accel_mlx5_module {
 	struct accel_mlx5_attr attr;
 	char **allowed_devs;
 	size_t allowed_devs_count;
+	bool initialized;
 	bool enabled;
 	bool crypto_supported;
 };
@@ -1104,6 +1105,7 @@ accel_mlx5_free_resources(void)
 
 	free(g_accel_mlx5.crypto_ctxs);
 	g_accel_mlx5.crypto_ctxs = NULL;
+	g_accel_mlx5.initialized = false;
 }
 
 static void
@@ -1120,7 +1122,7 @@ accel_mlx5_deinit(void *ctx)
 		accel_mlx5_allowed_devs_free();
 	}
 	spdk_mlx5_crypto_devs_allow(NULL, 0);
-	if (g_accel_mlx5.crypto_ctxs) {
+	if (g_accel_mlx5.initialized) {
 		spdk_io_device_unregister(&g_accel_mlx5, accel_mlx5_deinit_cb);
 	} else {
 		spdk_accel_module_finish();
@@ -1374,7 +1376,7 @@ accel_mlx5_init(void)
 	SPDK_NOTICELOG("Accel framework mlx5 initialized, found %d devices.\n", num_devs);
 	spdk_io_device_register(&g_accel_mlx5, accel_mlx5_create_cb, accel_mlx5_destroy_cb,
 				sizeof(struct accel_mlx5_io_channel), "accel_mlx5");
-
+	g_accel_mlx5.initialized = true;
 	free(rdma_devs);
 	free(caps);
 
