@@ -41,6 +41,7 @@ struct accel_mlx5_crypto_dev_ctx {
 	struct ibv_pd *pd;
 	struct spdk_memory_domain *domain;
 	TAILQ_ENTRY(accel_mlx5_crypto_dev_ctx) link;
+	bool crypto_multi_block;
 };
 
 struct accel_mlx5_module {
@@ -73,6 +74,9 @@ struct accel_mlx5_task {
 	uint32_t num_completed_reqs;
 	uint32_t num_submitted_reqs;
 	uint32_t num_ops; /* number of allocated mkeys */
+	uint32_t blocks_per_req;
+	uint32_t num_processed_blocks;
+	uint32_t num_blocks;
 	int rc;
 	struct spdk_iov_sgl src;
 	struct spdk_iov_sgl dst;
@@ -106,6 +110,7 @@ struct accel_mlx5_dev {
 	struct accel_mlx5_crypto_dev_ctx *dev_ctx;
 	uint32_t reqs_submitted;
 	uint32_t max_reqs;
+	bool crypto_multi_block;
 	/* Pending tasks waiting for requests resources */
 	TAILQ_HEAD(, accel_mlx5_task) nomem;
 	/* tasks submitted to HW. We can't complete a task even in error case until we reap completions for all
@@ -357,6 +362,8 @@ accel_mlx5_fill_block_sge(struct accel_mlx5_dev *dev, struct ibv_sge *sge,
 		if (spdk_unlikely(rc)) {
 			return rc;
 		}
+		SPDK_DEBUGLOG(accel_mlx5, "\t sge[%d]: lkey %u, len %u, addr %"PRIx64"\n", i, sge[i].lkey,
+			      sge[i].length, sge[i].addr);
 		spdk_iov_sgl_advance(iovs, size);
 		i++;
 		assert(remaining >= size);
@@ -406,7 +413,7 @@ accel_mlx5_task_alloc_mkeys(struct accel_mlx5_task *task)
 
 static inline int
 accel_mlx5_configure_crypto_umr(struct accel_mlx5_task *mlx5_task, struct accel_mlx5_sge *sge,
-				struct mlx5dv_mkey *mkey, uint32_t num_blocks, uint64_t iv)
+				struct mlx5dv_mkey *mkey, uint32_t num_blocks)
 {
 	struct mlx5dv_crypto_attr cattr;
 	struct accel_mlx5_dev *dev = mlx5_task->dev;
@@ -420,8 +427,9 @@ accel_mlx5_configure_crypto_umr(struct accel_mlx5_task *mlx5_task, struct accel_
 	int rc;
 
 	length = num_blocks * task->block_size;
-	SPDK_DEBUGLOG(accel_mlx5, "task %p, src KLM, domain %p, len %u\n", task, task->src_domain, length);
-	rc = accel_mlx5_fill_block_sge(dev, sge->src_sge, &mlx5_task->src, length, task->src_domain,
+	SPDK_DEBUGLOG(accel_mlx5, "task %p, domain %p, len %u, blocks %u\n", task, task->src_domain, length,
+		      num_blocks);
+	rc = accel_mlx5_fill_block_sge(dev, sge->src_sge, &mlx5_task->src,  length, task->src_domain,
 				       task->src_domain_ctx);
 	if (spdk_unlikely(rc <= 0)) {
 		if (rc == 0) {
@@ -455,14 +463,15 @@ accel_mlx5_configure_crypto_umr(struct accel_mlx5_task *mlx5_task, struct accel_
 		mlx5dv_wr_set_mkey_layout_list(mqpx, sge->dst_sge_count, sge->dst_sge);
 	}
 	SPDK_DEBUGLOG(accel_mlx5, "task %p crypto_attr: bs %u, iv %"PRIu64", enc_on_tx %d\n", task,
-		      task->block_size, iv, mlx5_task->encrypt_on_tx);
+		      task->block_size, task->iv + mlx5_task->num_processed_blocks, mlx5_task->encrypt_on_tx);
 	rc = spdk_mlx5_crypto_set_attr(&cattr, task->crypto_key->priv, dev->dev_ctx->pd, task->block_size,
-				       iv++, mlx5_task->encrypt_on_tx);
+				       task->iv + mlx5_task->num_processed_blocks, mlx5_task->encrypt_on_tx);
 	if (spdk_unlikely(rc)) {
 		SPDK_ERRLOG("failed to set crypto attr, rc %d\n", rc);
 		mlx5_task->rc = rc;
 		return rc;
 	}
+	mlx5_task->num_processed_blocks += num_blocks;
 	mlx5dv_wr_set_mkey_crypto(mqpx, &cattr);
 
 	return 0;
@@ -472,21 +481,18 @@ static inline int
 accel_mlx5_task_process(struct accel_mlx5_task *mlx5_task)
 {
 	struct accel_mlx5_sge sges[ACCEL_MLX5_MAX_MKEYS_IN_TASK];
-	struct spdk_accel_task *task = &mlx5_task->base;
 	struct accel_mlx5_dev *dev = mlx5_task->dev;
 	struct accel_mlx5_qp *qp = dev->qp;
 	struct ibv_qp_ex *qpx = qp->qpex;
-	uint64_t iv;
 	uint32_t i;
 	int rc;
 	uint32_t num_ops = spdk_min(mlx5_task->num_reqs - mlx5_task->num_completed_reqs,
 				    mlx5_task->num_ops);
+	uint32_t num_blocks;
 
 	if (spdk_unlikely(!num_ops)) {
 		return -EINVAL;
 	}
-
-	iv = task->iv + mlx5_task->num_completed_reqs;
 
 	if (!qp->wr_started) {
 		ibv_wr_start(qpx);
@@ -496,7 +502,15 @@ accel_mlx5_task_process(struct accel_mlx5_task *mlx5_task)
 	SPDK_DEBUGLOG(accel_mlx5, "begin, task, %p, reqs: total %u, submitted %u, completed %u\n",
 		      mlx5_task, mlx5_task->num_reqs, mlx5_task->num_submitted_reqs, mlx5_task->num_completed_reqs);
 	for (i = 0; i < num_ops; i++) {
-		rc = accel_mlx5_configure_crypto_umr(mlx5_task, &sges[i], mlx5_task->mkeys[i]->mkey, 1, iv++);
+		if (mlx5_task->num_submitted_reqs + i + 1 == mlx5_task->num_reqs) {
+			/* Last request may consume less than calculated if crypto_multi_block is true */
+			assert(mlx5_task->num_blocks > mlx5_task->num_submitted_reqs);
+			num_blocks = mlx5_task->num_blocks - mlx5_task->num_processed_blocks;
+		} else {
+			num_blocks = mlx5_task->blocks_per_req;
+		}
+
+		rc = accel_mlx5_configure_crypto_umr(mlx5_task, &sges[i], mlx5_task->mkeys[i]->mkey, num_blocks);
 		if (spdk_unlikely(rc)) {
 			SPDK_ERRLOG("UMR configure failed with %d\n", rc);
 			goto err_out;
@@ -604,7 +618,8 @@ accel_mlx5_task_init(struct accel_mlx5_task *mlx5_task, struct accel_mlx5_dev *d
 	mlx5_task->num_completed_reqs = 0;
 	mlx5_task->num_submitted_reqs = 0;
 	mlx5_task->num_ops = 0;
-	mlx5_task->num_reqs = src_nbytes / mlx5_task->base.block_size;
+	mlx5_task->num_processed_blocks = 0;
+	mlx5_task->num_blocks = src_nbytes / mlx5_task->base.block_size;
 	spdk_iov_sgl_init(&mlx5_task->src, task->s.iovs, task->s.iovcnt, 0);
 	if (task->d.iovcnt == 0 || (task->d.iovcnt == task->s.iovcnt &&
 				    accel_mlx5_compare_iovs(task->d.iovs, task->s.iovs, task->s.iovcnt))) {
@@ -614,6 +629,21 @@ accel_mlx5_task_init(struct accel_mlx5_task *mlx5_task, struct accel_mlx5_dev *d
 		spdk_iov_sgl_init(&mlx5_task->dst, task->d.iovs, task->d.iovcnt, 0);
 	}
 
+	if (dev->crypto_multi_block) {
+		if (task->s.iovcnt > ACCEL_MLX5_MAX_SGE || task->d.iovcnt > ACCEL_MLX5_MAX_SGE) {
+			uint32_t max_sge_count = spdk_max(task->s.iovcnt, task->d.iovcnt);
+
+			mlx5_task->num_reqs = SPDK_CEIL_DIV(max_sge_count, ACCEL_MLX5_MAX_SGE);
+			mlx5_task->blocks_per_req = SPDK_CEIL_DIV(mlx5_task->num_blocks, mlx5_task->num_reqs);
+		} else {
+			mlx5_task->num_reqs = 1;
+			mlx5_task->blocks_per_req = mlx5_task->num_blocks;
+		}
+	} else {
+		mlx5_task->num_reqs = mlx5_task->num_blocks;
+		mlx5_task->blocks_per_req = 1;
+	}
+
 	if (spdk_unlikely(!accel_mlx5_task_alloc_mkeys(mlx5_task))) {
 		/* Pool is empty, queue this task */
 		SPDK_DEBUGLOG(accel_mlx5, "no reqs in pool, dev %s\n",
@@ -621,8 +651,9 @@ accel_mlx5_task_init(struct accel_mlx5_task *mlx5_task, struct accel_mlx5_dev *d
 		return -ENOMEM;
 	}
 
-	SPDK_DEBUGLOG(accel_mlx5, "task %p, inplace %d, num_reqs %d\n", mlx5_task, mlx5_task->inplace,
-		      mlx5_task->num_reqs);
+	SPDK_DEBUGLOG(accel_mlx5, "task %p, src_iovs %u, dst_iovs %u, num_reqs %u, "
+		      "blocks/req %u, blocks %u, inplace %d\n", task, task->s.iovcnt, task->d.iovcnt,
+		      mlx5_task->num_reqs, mlx5_task->blocks_per_req, mlx5_task->num_blocks, mlx5_task->inplace);
 
 	return 0;
 }
@@ -680,6 +711,9 @@ accel_mlx5_poll_cq(struct accel_mlx5_dev *dev)
 
 	for (i = 0; i < reaped; i++) {
 		if (spdk_unlikely(!wc[i].wr_id)) {
+			if (wc[i].status) {
+				SPDK_ERRLOG("qp %p, unsignaled WC, status %d\n", dev->qp->qp, wc[i].status);
+			}
 			/* Unsignaled completion with error, ignore */
 			continue;
 		}
@@ -936,6 +970,7 @@ accel_mlx5_create_cb(void *io_device, void *ctx_buf)
 			rc = -ENOMEM;
 			goto err_out;
 		}
+		dev->crypto_multi_block = dev_ctx->crypto_multi_block;
 	}
 
 	ch->poller = SPDK_POLLER_REGISTER(accel_mlx5_poller, ch, 0);
@@ -1199,6 +1234,8 @@ accel_mlx5_dev_ctx_init(struct accel_mlx5_crypto_dev_ctx *dev_ctx, struct ibv_co
 	}
 
 	if (g_accel_mlx5.crypto_supported) {
+		dev_ctx->crypto_multi_block = caps->crypto.multi_block_be_tweak;
+
 		rc = accel_mlx5_crypto_ctx_mkey_pool_create(dev_ctx, g_accel_mlx5.attr.num_requests);
 		if (rc) {
 			return rc;
