@@ -12,6 +12,8 @@ source $rootdir/test/nvmf/common.sh
 allowed_devices=${1:-"mlx5_0"}
 
 function gen_accel_mlx5_crypto_json() {
+	crypto_split_blocks=${1:-0}
+
 	jq . <<- JSON
 		{
 		  "subsystems": [
@@ -21,7 +23,8 @@ function gen_accel_mlx5_crypto_json() {
 		        {
 		          "method": "mlx5_scan_accel_module",
 		          "params": {
-		            "allowed_devs": "${allowed_devices}"
+		            "allowed_devs": "${allowed_devices}",
+		            "crypto_split_blocks": ${crypto_split_blocks}
 		          }
 		        },
 		        {
@@ -65,7 +68,10 @@ function gen_accel_mlx5_crypto_json() {
 	JSON
 }
 
-# Since accel_mlx5 supports memory domains, we can use existing test_dma application for test purpose
+# Test crypto_split_blocks
+"$rootdir/test/dma/test_dma/test_dma" -q 64 -o 16384 -w randrw -M 50 -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json 8) -b "Crypto0" -f -x translate
+
+# Test different modes, qdepth and IO size values
 for mode in randread randwrite randrw; do
 	for qdepth in 64 256; do
 		for io_size in 512 4096 65536 131072; do

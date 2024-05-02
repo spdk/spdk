@@ -110,6 +110,7 @@ struct accel_mlx5_dev {
 	struct accel_mlx5_crypto_dev_ctx *dev_ctx;
 	uint32_t reqs_submitted;
 	uint32_t max_reqs;
+	uint16_t crypto_split_blocks;
 	bool crypto_multi_block;
 	/* Pending tasks waiting for requests resources */
 	TAILQ_HEAD(, accel_mlx5_task) nomem;
@@ -631,14 +632,20 @@ accel_mlx5_task_init(struct accel_mlx5_task *mlx5_task, struct accel_mlx5_dev *d
 	}
 
 	if (dev->crypto_multi_block) {
-		if (task->s.iovcnt > ACCEL_MLX5_MAX_SGE || task->d.iovcnt > ACCEL_MLX5_MAX_SGE) {
-			uint32_t max_sge_count = spdk_max(task->s.iovcnt, task->d.iovcnt);
-
-			mlx5_task->num_reqs = SPDK_CEIL_DIV(max_sge_count, ACCEL_MLX5_MAX_SGE);
-			mlx5_task->blocks_per_req = SPDK_CEIL_DIV(mlx5_task->num_blocks, mlx5_task->num_reqs);
+		if (dev->crypto_split_blocks) {
+			mlx5_task->num_reqs = SPDK_CEIL_DIV(mlx5_task->num_blocks, dev->crypto_split_blocks);
+			/* Last req may consume less blocks */
+			mlx5_task->blocks_per_req = spdk_min(mlx5_task->num_blocks, dev->crypto_split_blocks);
 		} else {
-			mlx5_task->num_reqs = 1;
-			mlx5_task->blocks_per_req = mlx5_task->num_blocks;
+			if (task->s.iovcnt > ACCEL_MLX5_MAX_SGE || task->d.iovcnt > ACCEL_MLX5_MAX_SGE) {
+				uint32_t max_sge_count = spdk_max(task->s.iovcnt, task->d.iovcnt);
+
+				mlx5_task->num_reqs = SPDK_CEIL_DIV(max_sge_count, ACCEL_MLX5_MAX_SGE);
+				mlx5_task->blocks_per_req = SPDK_CEIL_DIV(mlx5_task->num_blocks, mlx5_task->num_reqs);
+			} else {
+				mlx5_task->num_reqs = 1;
+				mlx5_task->blocks_per_req = mlx5_task->num_blocks;
+			}
 		}
 	} else {
 		mlx5_task->num_reqs = mlx5_task->num_blocks;
@@ -972,6 +979,7 @@ accel_mlx5_create_cb(void *io_device, void *ctx_buf)
 			goto err_out;
 		}
 		dev->crypto_multi_block = dev_ctx->crypto_multi_block;
+		dev->crypto_split_blocks = dev_ctx->crypto_multi_block ? g_accel_mlx5.attr.crypto_split_blocks : 0;
 	}
 
 	ch->poller = SPDK_POLLER_REGISTER(accel_mlx5_poller, ch, 0);
@@ -991,6 +999,7 @@ accel_mlx5_get_default_attr(struct accel_mlx5_attr *attr)
 	attr->qp_size = ACCEL_MLX5_QP_SIZE;
 	attr->num_requests = ACCEL_MLX5_NUM_REQUESTS;
 	attr->allowed_devs = NULL;
+	attr->crypto_split_blocks = 0;
 }
 
 static void
@@ -1236,7 +1245,10 @@ accel_mlx5_dev_ctx_init(struct accel_mlx5_crypto_dev_ctx *dev_ctx, struct ibv_co
 
 	if (g_accel_mlx5.crypto_supported) {
 		dev_ctx->crypto_multi_block = caps->crypto.multi_block_be_tweak;
-
+		if (!dev_ctx->crypto_multi_block && g_accel_mlx5.attr.crypto_split_blocks) {
+			SPDK_WARNLOG("\"crypto_split_blocks\" is set but dev %s doesn't support multi block crypto\n",
+				     dev->device->name);
+		}
 		rc = accel_mlx5_crypto_ctx_mkey_pool_create(dev_ctx, g_accel_mlx5.attr.num_requests);
 		if (rc) {
 			return rc;
@@ -1431,6 +1443,7 @@ accel_mlx5_write_config_json(struct spdk_json_write_ctx *w)
 		if (g_accel_mlx5.attr.allowed_devs) {
 			spdk_json_write_named_string(w, "allowed_devs", g_accel_mlx5.attr.allowed_devs);
 		}
+		spdk_json_write_named_uint16(w, "crypto_split_blocks", g_accel_mlx5.attr.crypto_split_blocks);
 		spdk_json_write_object_end(w);
 		spdk_json_write_object_end(w);
 	}

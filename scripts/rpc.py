@@ -3327,12 +3327,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         rpc.mlx5.mlx5_scan_accel_module(args.client,
                                         qp_size=args.qp_size,
                                         num_requests=args.num_requests,
-                                        allowed_devs=args.allowed_devs)
+                                        allowed_devs=args.allowed_devs,
+                                        crypto_split_blocks=args.crypto_split_blocks)
 
     p = subparsers.add_parser('mlx5_scan_accel_module', help='Enable mlx5 accel module.')
     p.add_argument('-q', '--qp-size', type=int, help='QP size')
     p.add_argument('-r', '--num-requests', type=int, help='Size of the shared requests pool')
     p.add_argument('-d', '--allowed-devs', help="Comma separated list of allowed device names, e.g. mlx5_0,mlx5_1")
+    p.add_argument('-s', '--crypto-split-blocks', type=int,
+                   help="Number of data blocks to be processed in 1 crypto UMR. [0-65535], 0 means no limit")
     p.set_defaults(func=mlx5_scan_accel_module)
 
     # accel_error

@@ -11,6 +11,9 @@ struct accel_mlx5_attr {
 	uint32_t num_requests;
 	/* Comma separated list of allowed device names */
 	char *allowed_devs;
+	/* Apply crypto operation for each X data blocks. Works only if multiblock crypto operation is supported by HW.
+	 * 0 means no limit */
+	uint16_t crypto_split_blocks;
 };
 
 void accel_mlx5_get_default_attr(struct accel_mlx5_attr *attr);
