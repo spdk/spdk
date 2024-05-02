@@ -617,7 +617,7 @@ nvmf_poll_groups_create(void)
 	SPDK_ENV_FOREACH_CORE(i) {
 		spdk_cpuset_zero(&tmp_cpumask);
 		spdk_cpuset_set_cpu(&tmp_cpumask, i, true);
-		snprintf(thread_name, sizeof(thread_name), "nvmf_tgt_poll_group_%u", i);
+		snprintf(thread_name, sizeof(thread_name), "nvmf_tgt_poll_group_%03u", i);
 
 		thread = spdk_thread_create(thread_name, &tmp_cpumask);
 		assert(thread != NULL);

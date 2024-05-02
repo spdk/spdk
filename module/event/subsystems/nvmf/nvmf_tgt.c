@@ -193,7 +193,7 @@ nvmf_tgt_create_poll_groups(void)
 		if (g_poll_groups_mask && !spdk_cpuset_get_cpu(g_poll_groups_mask, cpu)) {
 			continue;
 		}
-		snprintf(thread_name, sizeof(thread_name), "nvmf_tgt_poll_group_%u", count++);
+		snprintf(thread_name, sizeof(thread_name), "nvmf_tgt_poll_group_%03u", count++);
 
 		thread = spdk_thread_create(thread_name, g_poll_groups_mask);
 		assert(thread != NULL);

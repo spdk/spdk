@@ -4884,7 +4884,7 @@ Example response:
 	"result": {
 	  "poll_groups": [
 		{
-		  "thread": "nvmf_tgt_poll_group_0",
+		  "thread": "nvmf_tgt_poll_group_000",
 		  "transports": [
 			{
 			  "trname": "RDMA",
@@ -4926,7 +4926,7 @@ Example response:
 		  ]
 		},
 		{
-		  "thread": "nvmf_tgt_poll_group_1",
+		  "thread": "nvmf_tgt_poll_group_001",
 		  "transports": [
 			{
 			  "trname": "RDMA",
