@@ -41,6 +41,7 @@ do {							\
 
 #define ACCEL_MLX5_UPDATE_ON_WR_SUBMITTED_SIGNALED(dev, qp, task)	\
 do {									\
+	assert((dev)->wrs_in_cq < (dev)->wrs_in_cq_max);		\
 	(dev)->wrs_in_cq++;						\
         assert((qp)->wrs_submitted < (qp)->wrs_max);			\
 	(qp)->wrs_submitted++;						\
@@ -126,6 +127,7 @@ struct accel_mlx5_dev {
 	struct spdk_rdma_utils_mem_map *mmap;
 	struct accel_mlx5_crypto_dev_ctx *dev_ctx;
 	uint16_t wrs_in_cq;
+	uint16_t wrs_in_cq_max;
 	uint16_t crypto_split_blocks;
 	bool crypto_multi_block;
 	/* Pending tasks waiting for requests resources */
@@ -266,13 +268,27 @@ accel_mlx5_compare_iovs(struct iovec *v1, struct iovec *v2, uint32_t iovcnt)
 	return true;
 }
 
+static inline uint16_t
+accel_mlx5_dev_get_available_slots(struct accel_mlx5_dev *dev, struct accel_mlx5_qp *qp)
+{
+	assert(qp->wrs_max >= qp->wrs_submitted);
+	assert(dev->wrs_in_cq_max >= dev->wrs_in_cq);
+
+	/* Each time we produce only 1 CQE, so we need 1 CQ slot */
+	if (spdk_unlikely(dev->wrs_in_cq == dev->wrs_in_cq_max)) {
+		return 0;
+	}
+
+	return qp->wrs_max - qp->wrs_submitted;
+}
+
 static inline uint32_t
 accel_mlx5_task_alloc_mkeys(struct accel_mlx5_task *task)
 {
 	struct accel_mlx5_qp *qp = task->qp;
 	struct accel_mlx5_dev *dev = qp->dev;
 	uint32_t num_ops = task->num_reqs - task->num_completed_reqs;
-	uint32_t qp_slot = qp->wrs_max - qp->wrs_submitted;
+	uint32_t qp_slot = accel_mlx5_dev_get_available_slots(dev, qp);
 	int rc;
 
 	assert(task->num_reqs >= task->num_completed_reqs);
@@ -468,7 +484,7 @@ accel_mlx5_task_continue(struct accel_mlx5_task *task)
 {
 	struct accel_mlx5_qp *qp = task->qp;
 	struct accel_mlx5_dev *dev = qp->dev;
-	uint32_t qp_slot = qp->wrs_max - qp->wrs_submitted;
+	uint32_t qp_slot = accel_mlx5_dev_get_available_slots(dev, qp);
 	uint32_t num_ops = task->num_reqs - task->num_completed_reqs;
 
 	if (spdk_unlikely(task->rc)) {
@@ -847,6 +863,7 @@ accel_mlx5_create_cb(void *io_device, void *ctx_buf)
 		}
 		dev->crypto_multi_block = dev_ctx->crypto_multi_block;
 		dev->crypto_split_blocks = dev_ctx->crypto_multi_block ? g_accel_mlx5.attr.crypto_split_blocks : 0;
+		dev->wrs_in_cq_max = g_accel_mlx5.attr.qp_size;
 		TAILQ_INIT(&dev->nomem);
 	}
 
