@@ -96,7 +96,6 @@ struct accel_mlx5_task {
 	uint32_t num_processed_blocks;
 	uint32_t num_blocks;
 	uint32_t num_wrs; /* Number of outstanding operations which consume qp slot */
-	int rc;
 	struct accel_mlx5_iov_sgl src;
 	struct accel_mlx5_iov_sgl dst;
 	uint8_t enc_order;
@@ -180,7 +179,21 @@ accel_mlx5_task_complete(struct accel_mlx5_task *task)
 	if (task->num_ops) {
 		spdk_mlx5_mkey_pool_put_bulk(dev->crypto_mkeys, task->mkeys, task->num_ops);
 	}
-	spdk_accel_task_complete(&task->base, task->rc);
+	spdk_accel_task_complete(&task->base, 0);
+}
+
+static inline void
+accel_mlx5_task_fail(struct accel_mlx5_task *task, int rc)
+{
+	struct accel_mlx5_dev *dev = task->qp->dev;
+
+	assert(task->num_reqs == task->num_completed_reqs);
+	SPDK_DEBUGLOG(accel_mlx5, "Fail task %p, opc %d, rc %d\n", task, task->base.op_code, rc);
+
+	if (task->num_ops) {
+		spdk_mlx5_mkey_pool_put_bulk(dev->crypto_mkeys, task->mkeys, task->num_ops);
+	}
+	spdk_accel_task_complete(&task->base, rc);
 }
 
 static int
@@ -487,10 +500,6 @@ accel_mlx5_task_continue(struct accel_mlx5_task *task)
 	uint32_t qp_slot = accel_mlx5_dev_get_available_slots(dev, qp);
 	uint32_t num_ops = task->num_reqs - task->num_completed_reqs;
 
-	if (spdk_unlikely(task->rc)) {
-		accel_mlx5_task_complete(task);
-		return 0;
-	}
 	if (task->num_ops == 0) {
 		/* No mkeys allocated, try to allocate now */
 		if (spdk_unlikely(!accel_mlx5_task_alloc_mkeys(task))) {
@@ -535,7 +544,6 @@ accel_mlx5_task_init(struct accel_mlx5_task *mlx5_task, struct accel_mlx5_dev *d
 	}
 
 	mlx5_task->qp = &dev->qp;
-	mlx5_task->rc = 0;
 	mlx5_task->num_completed_reqs = 0;
 	mlx5_task->num_submitted_reqs = 0;
 	mlx5_task->num_ops = 0;
@@ -634,6 +642,7 @@ accel_mlx5_poll_cq(struct accel_mlx5_dev *dev)
 	struct accel_mlx5_task *task;
 	struct accel_mlx5_qp *qp;
 	int reaped, i, rc;
+	uint16_t completed;
 
 	reaped = spdk_mlx5_cq_poll_completions(dev->cq, wc, ACCEL_MLX5_MAX_WC);
 	if (spdk_unlikely(reaped < 0)) {
@@ -653,32 +662,35 @@ accel_mlx5_poll_cq(struct accel_mlx5_dev *dev)
 		}
 		task = (struct accel_mlx5_task *)wc[i].wr_id;
 		qp = task->qp;
-
-		if (wc[i].status) {
-			SPDK_ERRLOG("WRITE: qp %p, task %p WC status %d\n", qp, task, wc[i].status);
-			if (!task->rc) {
-				task->rc = -EIO;
-			}
-		}
-
-		task->num_completed_reqs += task->num_submitted_reqs;
+		completed = task->num_submitted_reqs - task->num_completed_reqs;
+		task->num_completed_reqs += completed;
 		assert(qp->wrs_submitted >= task->num_wrs);
 		qp->wrs_submitted -= task->num_wrs;
 		assert(dev->wrs_in_cq > 0);
 		dev->wrs_in_cq--;
+
+		if (wc[i].status) {
+			SPDK_ERRLOG("qp %p, task %p WC status %d\n", qp, task, wc[i].status);
+			if (task->num_completed_reqs == task->num_reqs) {
+				TAILQ_REMOVE(&qp->in_hw, task, link);
+				accel_mlx5_task_fail(task, -EIO);
+			}
+			continue;
+		}
+
 		SPDK_DEBUGLOG(accel_mlx5, "task %p, remaining %u\n", task,
 			      task->num_reqs - task->num_completed_reqs);
 		if (task->num_completed_reqs == task->num_reqs) {
 			TAILQ_REMOVE(&qp->in_hw, task, link);
 			accel_mlx5_task_complete(task);
-		} else if (task->num_completed_reqs == task->num_submitted_reqs) {
+		} else {
 			assert(task->num_submitted_reqs < task->num_reqs);
+			assert(task->num_completed_reqs == task->num_submitted_reqs);
 			TAILQ_REMOVE(&qp->in_hw, task, link);
 			rc = accel_mlx5_task_continue(task);
 			if (spdk_unlikely(rc)) {
 				if (rc != -ENOMEM) {
-					task->rc = rc;
-					accel_mlx5_task_complete(task);
+					accel_mlx5_task_fail(task, rc);
 				}
 			}
 		}
@@ -700,8 +712,7 @@ accel_mlx5_resubmit_nomem_tasks(struct accel_mlx5_dev *dev)
 			if (rc == -ENOMEM) {
 				break;
 			} else {
-				task->rc = rc;
-				accel_mlx5_task_complete(task);
+				accel_mlx5_task_fail(task, rc);
 			}
 		}
 	}
