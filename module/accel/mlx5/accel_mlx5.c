@@ -583,9 +583,11 @@ static inline int
 accel_mlx5_task_init(struct accel_mlx5_task *mlx5_task, struct accel_mlx5_dev *dev)
 {
 	struct spdk_accel_task *task = &mlx5_task->base;
-	size_t src_nbytes = 0, dst_nbytes = 0;
+	uint64_t src_nbytes = task->nbytes;
+#ifdef DEBUG
+	uint64_t dst_nbytes;
 	uint32_t i;
-
+#endif
 	switch (task->op_code) {
 	case SPDK_ACCEL_OPC_ENCRYPT:
 		mlx5_task->encrypt_on_tx = true;
@@ -598,17 +600,6 @@ accel_mlx5_task_init(struct accel_mlx5_task *mlx5_task, struct accel_mlx5_dev *d
 		return -ENOTSUP;
 	}
 
-	for (i = 0; i < task->s.iovcnt; i++) {
-		src_nbytes += task->s.iovs[i].iov_len;
-	}
-
-	for (i = 0; i < task->d.iovcnt; i++) {
-		dst_nbytes += task->d.iovs[i].iov_len;
-	}
-
-	if (spdk_unlikely(src_nbytes != dst_nbytes)) {
-		return -EINVAL;
-	}
 	if (spdk_unlikely(src_nbytes % mlx5_task->base.block_size != 0)) {
 		return -EINVAL;
 	}
@@ -625,6 +616,16 @@ accel_mlx5_task_init(struct accel_mlx5_task *mlx5_task, struct accel_mlx5_dev *d
 				    accel_mlx5_compare_iovs(task->d.iovs, task->s.iovs, task->s.iovcnt))) {
 		mlx5_task->inplace = true;
 	} else {
+#ifdef DEBUG
+		dst_nbytes = 0;
+		for (i = 0; i < task->d.iovcnt; i++) {
+			dst_nbytes += task->d.iovs[i].iov_len;
+		}
+
+		if (spdk_unlikely(src_nbytes != dst_nbytes)) {
+			return -EINVAL;
+		}
+#endif
 		mlx5_task->inplace = false;
 		spdk_iov_sgl_init(&mlx5_task->dst, task->d.iovs, task->d.iovcnt, 0);
 	}
