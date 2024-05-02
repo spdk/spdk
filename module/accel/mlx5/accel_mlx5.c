@@ -67,6 +67,12 @@ struct accel_mlx5_sge {
 	struct ibv_sge dst_sge[ACCEL_MLX5_MAX_SGE];
 };
 
+struct accel_mlx5_iov_sgl {
+	struct iovec	*iov;
+	uint32_t	iovcnt;
+	uint32_t	iov_offset;
+};
+
 struct accel_mlx5_task {
 	struct spdk_accel_task base;
 	struct accel_mlx5_dev *dev;
@@ -78,8 +84,8 @@ struct accel_mlx5_task {
 	uint32_t num_processed_blocks;
 	uint32_t num_blocks;
 	int rc;
-	struct spdk_iov_sgl src;
-	struct spdk_iov_sgl dst;
+	struct accel_mlx5_iov_sgl src;
+	struct accel_mlx5_iov_sgl dst;
 	/* If set, memory data will be encrypted during TX and wire data will be
 	  decrypted during RX.
 	  If not set, memory data will be decrypted during TX and wire data will
@@ -263,6 +269,30 @@ accel_mlx5_get_qp_state(struct ibv_qp *qp) {
 }
 
 static inline void
+accel_mlx5_iov_sgl_init(struct accel_mlx5_iov_sgl *s, struct iovec *iov, uint32_t iovcnt)
+{
+	s->iov = iov;
+	s->iovcnt = iovcnt;
+	s->iov_offset = 0;
+}
+
+static inline void
+accel_mlx5_iov_sgl_advance(struct accel_mlx5_iov_sgl *s, uint32_t step)
+{
+	s->iov_offset += step;
+	while (s->iovcnt > 0) {
+		assert(s->iov != NULL);
+		if (s->iov_offset < s->iov->iov_len) {
+			break;
+		}
+
+		s->iov_offset -= s->iov->iov_len;
+		s->iov++;
+		s->iovcnt--;
+	}
+}
+
+static inline void
 accel_mlx5_task_complete(struct accel_mlx5_task *task)
 {
 	assert(task->num_reqs == task->num_completed_reqs);
@@ -348,7 +378,7 @@ accel_mlx5_translate_addr(void *addr, size_t size, struct spdk_memory_domain *do
 
 static inline int
 accel_mlx5_fill_block_sge(struct accel_mlx5_dev *dev, struct ibv_sge *sge,
-			  struct spdk_iov_sgl *iovs, uint32_t len, struct spdk_memory_domain *domain, void *domain_ctx)
+			  struct accel_mlx5_iov_sgl *iovs, uint32_t len, struct spdk_memory_domain *domain, void *domain_ctx)
 {
 	void *addr;
 	uint32_t remaining = len;
@@ -365,7 +395,7 @@ accel_mlx5_fill_block_sge(struct accel_mlx5_dev *dev, struct ibv_sge *sge,
 		}
 		SPDK_DEBUGLOG(accel_mlx5, "\t sge[%d]: lkey %u, len %u, addr %"PRIx64"\n", i, sge[i].lkey,
 			      sge[i].length, sge[i].addr);
-		spdk_iov_sgl_advance(iovs, size);
+		accel_mlx5_iov_sgl_advance(iovs, size);
 		i++;
 		assert(remaining >= size);
 		remaining -= size;
@@ -612,7 +642,7 @@ accel_mlx5_task_init(struct accel_mlx5_task *mlx5_task, struct accel_mlx5_dev *d
 	mlx5_task->num_ops = 0;
 	mlx5_task->num_processed_blocks = 0;
 	mlx5_task->num_blocks = src_nbytes / mlx5_task->base.block_size;
-	spdk_iov_sgl_init(&mlx5_task->src, task->s.iovs, task->s.iovcnt, 0);
+	accel_mlx5_iov_sgl_init(&mlx5_task->src, task->s.iovs, task->s.iovcnt);
 	if (task->d.iovcnt == 0 || (task->d.iovcnt == task->s.iovcnt &&
 				    accel_mlx5_compare_iovs(task->d.iovs, task->s.iovs, task->s.iovcnt))) {
 		mlx5_task->inplace = true;
@@ -628,7 +658,7 @@ accel_mlx5_task_init(struct accel_mlx5_task *mlx5_task, struct accel_mlx5_dev *d
 		}
 #endif
 		mlx5_task->inplace = false;
-		spdk_iov_sgl_init(&mlx5_task->dst, task->d.iovs, task->d.iovcnt, 0);
+		accel_mlx5_iov_sgl_init(&mlx5_task->dst, task->d.iovs, task->d.iovcnt);
 	}
 
 	if (dev->crypto_multi_block) {
