@@ -220,6 +220,14 @@ int spdk_mlx5_qp_create(struct ibv_pd *pd, struct spdk_mlx5_cq *cq,
 int spdk_mlx5_qp_set_error_state(struct spdk_mlx5_qp *qp);
 
 /**
+ * Get original verbs qp
+ *
+ * \param qp mlx5 qp
+ * \return Pointer to the underlying ibv_verbs qp
+ */
+struct ibv_qp *spdk_mlx5_qp_get_verbs_qp(struct spdk_mlx5_qp *qp);
+
+/**
  * Destroy qpair
  *
  * \param qp QP created with \ref spdk_mlx5_qp_create

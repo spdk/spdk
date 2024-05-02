@@ -6,6 +6,7 @@
     spdk_mlx5_cq_destroy;
     spdk_mlx5_qp_create;
     spdk_mlx5_qp_destroy;
+    spdk_mlx5_qp_get_verbs_qp;
     spdk_mlx5_qp_set_error_state;
     spdk_mlx5_qp_complete_send;
     spdk_mlx5_cq_poll_completions;

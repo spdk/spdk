@@ -636,3 +636,9 @@ spdk_mlx5_qp_set_error_state(struct spdk_mlx5_qp *qp)
 
 	return ibv_modify_qp(qp->verbs_qp, &attr, IBV_QP_STATE);
 }
+
+struct ibv_qp *
+spdk_mlx5_qp_get_verbs_qp(struct spdk_mlx5_qp *qp)
+{
+	return qp->verbs_qp;
+}
