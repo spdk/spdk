@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2021 Intel Corporation
+#  Copyright (c) 2022 Dell Inc, or its subsidiaries.
+#  Copyright (c) 2024 Samsung Electronics Co., Ltd.
 #  All rights reserved.
-#  Copyright (c) 2022 Dell Inc, or its subsidiaries. All rights reserved.
 #
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
@@ -48,7 +49,7 @@ hostpid=$!
 waitforlisten $hostpid $HOST_SOCK
 
 trap 'process_shm --id $NVMF_APP_SHM_ID;exit 1' SIGINT SIGTERM
-trap 'process_shm --id $NVMF_APP_SHM_ID;nvmftestfini;kill $hostpid;kill $avahi_clientpid;kill $avahipid;' EXIT
+trap 'process_shm --id $NVMF_APP_SHM_ID;nvmftestfini;kill $hostpid;kill $avahipid;' EXIT
 
 # Make sure any existing avahi-daemon is killed before we start it with the specified
 # configuration file limiting it to the NVMF_TARGET_INTERFACE.
@@ -119,9 +120,8 @@ $rpc_py nvmf_subsystem_add_listener $DISCOVERY_NQN -t $TEST_TRANSPORT -a $NVMF_S
 	-s $DISCOVERY_PORT
 $rpc_py nvmf_subsystem_add_listener ${NQN2}0 -t $TEST_TRANSPORT -a $NVMF_SECOND_TARGET_IP -s $NVMF_PORT
 
-#Simulate discovery service publishing by the target
-"${NVMF_TARGET_NS_CMD[@]}" /usr/bin/avahi-publish --domain=local --service CDC _nvme-disc._tcp $DISCOVERY_PORT "NQN=$DISCOVERY_NQN" "p=tcp" &
-avahi_clientpid=$!
+#Publish discovery service
+$rpc_py nvmf_publish_mdns_prr
 sleep 5 # Wait a bit to make sure the discovery service has a chance to detect the changes
 
 [[ "$(get_mdns_discovery_svcs)" == "mdns" ]]
@@ -192,12 +192,13 @@ NOT $rpc_py -s $HOST_SOCK bdev_nvme_start_mdns_discovery -b cdc -s _nvme-disc._t
 [[ $(get_bdev_list) == "mdns0_nvme0n1 mdns0_nvme0n2 mdns1_nvme0n1 mdns1_nvme0n2" ]]
 $rpc_py -s $HOST_SOCK bdev_nvme_stop_mdns_discovery -b mdns
 
+$rpc_py nvmf_stop_mdns_prr
+
 trap - SIGINT SIGTERM EXIT
 
 kill $hostpid
 # Now wait for $hostpid to exit, otherwise if it's still running when we try to kill $avahipid, avahi
 # will auto-restart.
 wait $hostpid
-kill $avahi_clientpid
 kill $avahipid
 nvmftestfini
