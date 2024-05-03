@@ -77,6 +77,7 @@ static uint32_t g_io_size;
 static uint32_t g_run_time_sec;
 static uint32_t g_run_count;
 static uint32_t g_test_ops;
+static uint32_t g_corrupt_mkey_counter;
 static bool g_is_random;
 static bool g_force_memory_domains_support;
 
@@ -214,7 +215,7 @@ dma_test_bdev_io_completion_cb(struct spdk_bdev_io *bdev_io, bool success, void 
 	--task->io_inflight;
 	dma_test_task_update_stats(task, req->submit_tsc);
 
-	if (!success) {
+	if (!success && !g_corrupt_mkey_counter) {
 		if (!g_run_rc) {
 			fprintf(stderr, "IO completed with error\n");
 			g_run_rc = -1;
@@ -347,6 +348,7 @@ dma_test_translate_memory_cb(struct spdk_memory_domain *src_domain, void *src_do
 			     void *addr, size_t len, struct spdk_memory_domain_translation_result *result)
 {
 	struct dma_test_req *req = src_domain_ctx;
+	struct dma_test_task *task = req->task;
 	struct ibv_qp *dst_domain_qp = (struct ibv_qp *)dst_domain_ctx->rdma.ibv_qp;
 
 	if (spdk_unlikely(addr < req->iov.iov_base ||
@@ -373,7 +375,14 @@ dma_test_translate_memory_cb(struct spdk_memory_domain *src_domain, void *src_do
 	result->rdma.rkey = req->mr->rkey;
 	result->dst_domain = dst_domain;
 
-	req->task->num_translations++;
+	if (g_corrupt_mkey_counter && task->num_translations > g_corrupt_mkey_counter &&
+	    task->num_translations % g_corrupt_mkey_counter == 0) {
+		SPDK_NOTICELOG("Corrupt mkey on core %u\n", task->lcore);
+		result->rdma.lkey = 0xffffffff;
+		result->rdma.rkey = 0xffffffff;
+	}
+
+	task->num_translations++;
 
 	return 0;
 }
@@ -816,6 +825,7 @@ print_usage(void)
 	printf(" -x <op,op>        Comma separated memory domain operations expected in the test. Values are \"translate\" and \"pull_push\"\n");
 	printf(" -w <str>          io pattern (read, write, randread, randwrite, randrw)\n");
 	printf(" -M <0-100>        rw percentage (100 for reads, 0 for writes)\n");
+	printf(" -Y <val>          Return invalid mkey each <val>th translation\n");
 }
 
 static int
@@ -866,6 +876,7 @@ parse_arg(int ch, char *arg)
 	case 'o':
 	case 't':
 	case 'M':
+	case 'Y':
 		tmp = spdk_strtol(arg, 10);
 		if (tmp < 0) {
 			fprintf(stderr, "Invalid option %c value %s\n", ch, arg);
@@ -884,6 +895,9 @@ parse_arg(int ch, char *arg)
 			break;
 		case 'M':
 			g_rw_percentage = (uint32_t) tmp;
+			break;
+		case 'Y':
+			g_corrupt_mkey_counter = (uint32_t) tmp;
 			break;
 		}
 		break;
@@ -967,7 +981,7 @@ main(int argc, char **argv)
 	opts.shutdown_cb = dma_test_shutdown_cb;
 	opts.rpc_addr = NULL;
 
-	rc = spdk_app_parse_args(argc, argv, &opts, "b:fq:o:t:x:w:M:", NULL, parse_arg, print_usage);
+	rc = spdk_app_parse_args(argc, argv, &opts, "b:fq:o:t:x:w:M:Y:", NULL, parse_arg, print_usage);
 	if (rc != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
 	}
