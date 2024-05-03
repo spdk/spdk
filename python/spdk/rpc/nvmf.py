@@ -718,3 +718,19 @@ def nvmf_publish_mdns_prr(client, tgt_name=None):
         params['tgt_name'] = tgt_name
 
     return client.call('nvmf_publish_mdns_prr', params)
+
+
+def nvmf_stop_mdns_prr(client, tgt_name=None):
+    """Stop publishing mdns pull registration request
+
+    Args:
+        tgt_name: name of the NVMe-oF target (optional).
+
+    Returns:
+        Success or Fail
+    """
+    params = {}
+    if tgt_name:
+        params['tgt_name'] = tgt_name
+
+    return client.call('nvmf_stop_mdns_prr', params)

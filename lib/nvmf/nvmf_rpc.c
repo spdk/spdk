@@ -3038,3 +3038,42 @@ rpc_nvmf_publish_mdns_prr(struct spdk_jsonrpc_request *request,
 	free(req.tgt_name);
 }
 SPDK_RPC_REGISTER("nvmf_publish_mdns_prr", rpc_nvmf_publish_mdns_prr, SPDK_RPC_RUNTIME);
+
+static void
+rpc_nvmf_stop_mdns_prr(struct spdk_jsonrpc_request *request,
+		       const struct spdk_json_val *params)
+{
+#ifndef SPDK_CONFIG_AVAHI
+	SPDK_ERRLOG("nvmf_stop_mdns_prr is supported when SPDK is built with the --with-avahi option.\n");
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 "nvmf_stop_mdns_prr is supported when SPDK is built with the --with-avahi option.");
+	return;
+#endif
+
+	struct rpc_mdns_prr req = { 0 };
+	struct spdk_nvmf_tgt *tgt;
+
+	if (params) {
+		if (spdk_json_decode_object(params, rpc_mdns_prr_decoders,
+					    SPDK_COUNTOF(rpc_mdns_prr_decoders),
+					    &req)) {
+			SPDK_ERRLOG("spdk_json_decode_object failed\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+			return;
+		}
+	}
+
+	tgt = spdk_nvmf_get_tgt(req.tgt_name);
+	if (!tgt) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Unable to find a target.");
+		free(req.tgt_name);
+		return;
+	}
+
+	nvmf_tgt_stop_mdns_prr(tgt);
+
+	spdk_jsonrpc_send_bool_response(request, true);
+	free(req.tgt_name);
+}
+SPDK_RPC_REGISTER("nvmf_stop_mdns_prr", rpc_nvmf_stop_mdns_prr, SPDK_RPC_RUNTIME);

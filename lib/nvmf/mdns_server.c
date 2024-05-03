@@ -93,6 +93,17 @@ nvmf_ctx_stop_mdns_prr(struct mdns_publish_ctx *ctx)
 	ctx->stop = true;
 }
 
+void
+nvmf_tgt_stop_mdns_prr(struct spdk_nvmf_tgt *tgt)
+{
+	if (g_mdns_publish_ctx && g_mdns_publish_ctx->tgt == tgt) {
+		nvmf_ctx_stop_mdns_prr(g_mdns_publish_ctx);
+		return;
+	}
+
+	SPDK_ERRLOG("Failed to stop mDNS PRR. It is not running on target %s.\n", tgt->name);
+}
+
 static int
 publish_pull_registration_request(AvahiClient *client, struct mdns_publish_ctx *publish_ctx)
 {

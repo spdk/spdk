@@ -2877,6 +2877,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-t', '--tgt-name', help='The name of the NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_publish_mdns_prr)
 
+    def nvmf_stop_mdns_prr(args):
+        rpc.nvmf.nvmf_stop_mdns_prr(args.client, args.tgt_name)
+
+    p = subparsers.add_parser('nvmf_stop_mdns_prr',
+                              help='Stop publishing pull registration request through mdns')
+    p.add_argument('-t', '--tgt-name', help='The name of the NVMe-oF target (optional)', type=str)
+    p.set_defaults(func=nvmf_stop_mdns_prr)
+
     # subsystem
     def framework_get_subsystems(args):
         print_dict(rpc.subsystem.framework_get_subsystems(args.client))

@@ -13247,3 +13247,37 @@ Example response:
   "result": true
 }
 ~~~
+
+### nvmf_stop_mdns_prr {#rpc_nvmf_stop_mdns_prr}
+
+This interface is used to stop publishing the NVMf target's service location
+using mDNS (Multicast DNS) protocol. It removes the published service location,
+preventing clients from discovering the NVMf target.
+
+#### Parameters
+
+Name                       | Optional | Type        | Description
+-------------------------- | -------- | ----------- | -----------
+tgt_name                   | Optional | string      | Parent NVMe-oF target name.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "nvmf_stop_mdns_prr",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
