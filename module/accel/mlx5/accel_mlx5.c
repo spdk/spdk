@@ -89,7 +89,10 @@ struct accel_mlx5_iov_sgl {
 
 struct accel_mlx5_task {
 	struct spdk_accel_task base;
+	struct accel_mlx5_iov_sgl src;
+	struct accel_mlx5_iov_sgl dst;
 	struct accel_mlx5_qp *qp;
+	STAILQ_ENTRY(accel_mlx5_task) link;
 	uint16_t num_reqs;
 	uint16_t num_completed_reqs;
 	uint16_t num_submitted_reqs;
@@ -98,11 +101,13 @@ struct accel_mlx5_task {
 	uint16_t num_processed_blocks;
 	uint16_t num_blocks;
 	uint16_t num_wrs; /* Number of outstanding operations which consume qp slot */
-	struct accel_mlx5_iov_sgl src;
-	struct accel_mlx5_iov_sgl dst;
-	uint8_t enc_order;
-	bool inplace;
-	TAILQ_ENTRY(accel_mlx5_task) link;
+	union {
+		uint8_t raw;
+		struct {
+			uint8_t inplace : 1;
+			uint8_t enc_order : 2;
+		};
+	};
 	/* Keep this array last since not all elements might be accessed, this reduces amount of data to be
 	 * cached */
 	struct spdk_mlx5_mkey_pool_obj *mkeys[ACCEL_MLX5_MAX_MKEYS_IN_TASK];
@@ -115,7 +120,7 @@ struct accel_mlx5_qp {
 	struct accel_mlx5_io_channel *ch;
 	/* tasks submitted to HW. We can't complete a task even in error case until we reap completions for all
 	 * submitted requests */
-	TAILQ_HEAD(, accel_mlx5_task) in_hw;
+	STAILQ_HEAD(, accel_mlx5_task) in_hw;
 	uint16_t wrs_submitted;
 	uint16_t wrs_max;
 };
@@ -131,7 +136,7 @@ struct accel_mlx5_dev {
 	uint16_t crypto_split_blocks;
 	bool crypto_multi_block;
 	/* Pending tasks waiting for requests resources */
-	TAILQ_HEAD(, accel_mlx5_task) nomem;
+	STAILQ_HEAD(, accel_mlx5_task) nomem;
 	TAILQ_ENTRY(accel_mlx5_dev) link;
 };
 
@@ -490,7 +495,7 @@ accel_mlx5_task_process(struct accel_mlx5_task *mlx5_task)
 	assert(mlx5_task->num_submitted_reqs < UINT16_MAX);
 	mlx5_task->num_submitted_reqs++;
 	ACCEL_MLX5_UPDATE_ON_WR_SUBMITTED_SIGNALED(dev, qp, mlx5_task);
-	TAILQ_INSERT_TAIL(&qp->in_hw, mlx5_task, link);
+	STAILQ_INSERT_TAIL(&qp->in_hw, mlx5_task, link);
 
 	SPDK_DEBUGLOG(accel_mlx5, "end, task, %p, reqs: total %u, submitted %u, completed %u\n", mlx5_task,
 		      mlx5_task->num_reqs, mlx5_task->num_submitted_reqs, mlx5_task->num_completed_reqs);
@@ -512,14 +517,14 @@ accel_mlx5_task_continue(struct accel_mlx5_task *task)
 		/* No mkeys allocated, try to allocate now */
 		if (spdk_unlikely(!accel_mlx5_task_alloc_mkeys(task))) {
 			/* Pool is empty, queue this task */
-			TAILQ_INSERT_TAIL(&dev->nomem, task, link);
+			STAILQ_INSERT_TAIL(&dev->nomem, task, link);
 			return -ENOMEM;
 		}
 	}
 
 	num_ops = spdk_min(num_ops, task->num_ops);
 	if (spdk_unlikely(num_ops > qp_slot)) {
-		TAILQ_INSERT_TAIL(&dev->nomem, task, link);
+		STAILQ_INSERT_TAIL(&dev->nomem, task, link);
 		return -ENOMEM;
 	}
 
@@ -561,7 +566,7 @@ accel_mlx5_task_init(struct accel_mlx5_task *mlx5_task, struct accel_mlx5_dev *d
 	accel_mlx5_iov_sgl_init(&mlx5_task->src, task->s.iovs, task->s.iovcnt);
 	if (task->d.iovcnt == 0 || (task->d.iovcnt == task->s.iovcnt &&
 				    accel_mlx5_compare_iovs(task->d.iovs, task->s.iovs, task->s.iovcnt))) {
-		mlx5_task->inplace = true;
+		mlx5_task->inplace = 1;
 	} else {
 #ifdef DEBUG
 		dst_nbytes = 0;
@@ -573,7 +578,7 @@ accel_mlx5_task_init(struct accel_mlx5_task *mlx5_task, struct accel_mlx5_dev *d
 			return -EINVAL;
 		}
 #endif
-		mlx5_task->inplace = false;
+		mlx5_task->inplace = 0;
 		accel_mlx5_iov_sgl_init(&mlx5_task->dst, task->d.iovs, task->d.iovcnt);
 	}
 
@@ -637,7 +642,7 @@ accel_mlx5_submit_tasks(struct spdk_io_channel *_ch, struct spdk_accel_task *tas
 		if (rc == -ENOMEM) {
 			SPDK_DEBUGLOG(accel_mlx5, "no reqs to handle new task %p (required %u), put to queue\n", mlx5_task,
 				      mlx5_task->num_reqs);
-			TAILQ_INSERT_TAIL(&dev->nomem, mlx5_task, link);
+			STAILQ_INSERT_TAIL(&dev->nomem, mlx5_task, link);
 			return 0;
 		}
 		return rc;
@@ -673,6 +678,7 @@ accel_mlx5_poll_cq(struct accel_mlx5_dev *dev)
 		}
 		task = (struct accel_mlx5_task *)wc[i].wr_id;
 		qp = task->qp;
+		assert(task == STAILQ_FIRST(&qp->in_hw) && "submission mismatch");
 		assert(task->num_submitted_reqs > task->num_completed_reqs);
 		completed = task->num_submitted_reqs - task->num_completed_reqs;
 		assert((uint32_t)task->num_completed_reqs + completed <= UINT16_MAX);
@@ -685,7 +691,7 @@ accel_mlx5_poll_cq(struct accel_mlx5_dev *dev)
 		if (wc[i].status) {
 			SPDK_ERRLOG("qp %p, task %p WC status %d\n", qp, task, wc[i].status);
 			if (task->num_completed_reqs == task->num_reqs) {
-				TAILQ_REMOVE(&qp->in_hw, task, link);
+				STAILQ_REMOVE_HEAD(&qp->in_hw, link);
 				accel_mlx5_task_fail(task, -EIO);
 			}
 			continue;
@@ -694,12 +700,12 @@ accel_mlx5_poll_cq(struct accel_mlx5_dev *dev)
 		SPDK_DEBUGLOG(accel_mlx5, "task %p, remaining %u\n", task,
 			      task->num_reqs - task->num_completed_reqs);
 		if (task->num_completed_reqs == task->num_reqs) {
-			TAILQ_REMOVE(&qp->in_hw, task, link);
+			STAILQ_REMOVE_HEAD(&qp->in_hw, link);
 			accel_mlx5_task_complete(task);
 		} else {
 			assert(task->num_submitted_reqs < task->num_reqs);
 			assert(task->num_completed_reqs == task->num_submitted_reqs);
-			TAILQ_REMOVE(&qp->in_hw, task, link);
+			STAILQ_REMOVE_HEAD(&qp->in_hw, link);
 			rc = accel_mlx5_task_continue(task);
 			if (spdk_unlikely(rc)) {
 				if (rc != -ENOMEM) {
@@ -718,8 +724,8 @@ accel_mlx5_resubmit_nomem_tasks(struct accel_mlx5_dev *dev)
 	struct accel_mlx5_task *task, *tmp;
 	int rc;
 
-	TAILQ_FOREACH_SAFE(task, &dev->nomem, link, tmp) {
-		TAILQ_REMOVE(&dev->nomem, task, link);
+	STAILQ_FOREACH_SAFE(task, &dev->nomem, link, tmp) {
+		STAILQ_REMOVE_HEAD(&dev->nomem, link);
 		rc = accel_mlx5_task_continue(task);
 		if (rc) {
 			if (rc == -ENOMEM) {
@@ -752,7 +758,7 @@ accel_mlx5_poller(void *ctx)
 				spdk_mlx5_qp_complete_send(dev->qp.qp);
 			}
 		}
-		if (!TAILQ_EMPTY(&dev->nomem)) {
+		if (!STAILQ_EMPTY(&dev->nomem)) {
 			accel_mlx5_resubmit_nomem_tasks(dev);
 		}
 	}
@@ -797,7 +803,7 @@ accel_mlx5_create_qp(struct accel_mlx5_dev *dev, struct accel_mlx5_qp *qp)
 		return rc;
 	}
 
-	TAILQ_INIT(&qp->in_hw);
+	STAILQ_INIT(&qp->in_hw);
 	qp->dev = dev;
 	qp->verbs_qp = spdk_mlx5_qp_get_verbs_qp(qp->qp);
 	assert(qp->verbs_qp);
@@ -888,7 +894,7 @@ accel_mlx5_create_cb(void *io_device, void *ctx_buf)
 		dev->crypto_multi_block = dev_ctx->crypto_multi_block;
 		dev->crypto_split_blocks = dev_ctx->crypto_multi_block ? g_accel_mlx5.attr.crypto_split_blocks : 0;
 		dev->wrs_in_cq_max = g_accel_mlx5.attr.qp_size;
-		TAILQ_INIT(&dev->nomem);
+		STAILQ_INIT(&dev->nomem);
 	}
 
 	ch->poller = SPDK_POLLER_REGISTER(accel_mlx5_poller, ch, 0);
