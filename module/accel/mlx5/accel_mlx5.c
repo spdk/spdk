@@ -296,15 +296,12 @@ accel_mlx5_dev_get_available_slots(struct accel_mlx5_dev *dev, struct accel_mlx5
 static inline uint32_t
 accel_mlx5_task_alloc_mkeys(struct accel_mlx5_task *task)
 {
-	struct accel_mlx5_qp *qp = task->qp;
-	struct accel_mlx5_dev *dev = qp->dev;
-	uint32_t qp_slot = accel_mlx5_dev_get_available_slots(dev, qp);
+	struct accel_mlx5_dev *dev = task->qp->dev;
 	uint32_t num_ops;
 	int rc;
 
 	assert(task->num_reqs > task->num_completed_reqs);
 	num_ops = task->num_reqs - task->num_completed_reqs;
-	num_ops = spdk_min(num_ops, qp_slot);
 	num_ops = spdk_min(num_ops, ACCEL_MLX5_MAX_MKEYS_IN_TASK);
 	if (!num_ops) {
 		return 0;
@@ -413,12 +410,15 @@ accel_mlx5_task_process(struct accel_mlx5_task *mlx5_task)
 	struct accel_mlx5_dev *dev = qp->dev;
 	/* First RDMA after UMR must have a SMALL_FENCE */
 	uint32_t first_rdma_fence = SPDK_MLX5_WQE_CTRL_INITIATOR_SMALL_FENCE;
-	uint32_t num_blocks;
-	uint32_t num_ops = spdk_min(mlx5_task->num_reqs - mlx5_task->num_completed_reqs,
+	uint16_t num_blocks;
+	uint16_t num_ops = spdk_min(mlx5_task->num_reqs - mlx5_task->num_completed_reqs,
 				    mlx5_task->num_ops);
-	uint32_t i;
+	uint16_t qp_slot = accel_mlx5_dev_get_available_slots(dev, qp);
+	uint16_t i;
 	int rc;
 
+	assert(qp_slot > 1);
+	num_ops = spdk_min(num_ops, qp_slot >> 1);
 	if (spdk_unlikely(!num_ops)) {
 		return -EINVAL;
 	}
@@ -500,11 +500,9 @@ accel_mlx5_task_continue(struct accel_mlx5_task *task)
 {
 	struct accel_mlx5_qp *qp = task->qp;
 	struct accel_mlx5_dev *dev = qp->dev;
-	uint32_t qp_slot = accel_mlx5_dev_get_available_slots(dev, qp);
-	uint32_t num_ops;
+	uint16_t qp_slot = accel_mlx5_dev_get_available_slots(dev, qp);
 
 	assert(task->num_reqs > task->num_completed_reqs);
-	num_ops = task->num_reqs - task->num_completed_reqs;
 	if (task->num_ops == 0) {
 		/* No mkeys allocated, try to allocate now */
 		if (spdk_unlikely(!accel_mlx5_task_alloc_mkeys(task))) {
@@ -513,9 +511,9 @@ accel_mlx5_task_continue(struct accel_mlx5_task *task)
 			return -ENOMEM;
 		}
 	}
-
-	num_ops = spdk_min(num_ops, task->num_ops);
-	if (spdk_unlikely(num_ops > qp_slot)) {
+	/* We need to post at least 1 UMR and 1 RDMA operation */
+	if (spdk_unlikely(qp_slot < 2)) {
+		/* QP is full, queue this task */
 		STAILQ_INSERT_TAIL(&dev->nomem, task, link);
 		return -ENOMEM;
 	}
@@ -600,6 +598,12 @@ accel_mlx5_task_init(struct accel_mlx5_task *mlx5_task, struct accel_mlx5_dev *d
 	if (spdk_unlikely(!accel_mlx5_task_alloc_mkeys(mlx5_task))) {
 		/* Pool is empty, queue this task */
 		SPDK_DEBUGLOG(accel_mlx5, "no reqs in pool, dev %s\n", dev->dev_ctx->context->device->name);
+		return -ENOMEM;
+	}
+	if (spdk_unlikely(accel_mlx5_dev_get_available_slots(dev, &dev->qp) < 2)) {
+		/* Queue is full, queue this task */
+		SPDK_DEBUGLOG(accel_mlx5, "dev %s qp %p is full\n", dev->dev_ctx->context->device->name,
+			      mlx5_task->qp);
 		return -ENOMEM;
 	}
 
