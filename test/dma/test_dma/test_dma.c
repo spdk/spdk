@@ -17,11 +17,12 @@
 struct dma_test_task;
 
 struct dma_test_req {
-	struct iovec iov;
+	struct iovec *iovs;
 	struct spdk_bdev_ext_io_opts io_opts;
 	uint64_t submit_tsc;
 	struct ibv_mr *mr;
 	struct dma_test_task *task;
+	void *buffer;
 };
 
 struct dma_test_task_stats {
@@ -78,6 +79,7 @@ static uint32_t g_run_time_sec;
 static uint32_t g_run_count;
 static uint32_t g_test_ops;
 static uint32_t g_corrupt_mkey_counter;
+static uint32_t g_iovcnt = 1;
 static bool g_is_random;
 static bool g_force_memory_domains_support;
 
@@ -351,14 +353,14 @@ dma_test_translate_memory_cb(struct spdk_memory_domain *src_domain, void *src_do
 	struct dma_test_task *task = req->task;
 	struct ibv_qp *dst_domain_qp = (struct ibv_qp *)dst_domain_ctx->rdma.ibv_qp;
 
-	if (spdk_unlikely(addr < req->iov.iov_base ||
-			  (uint8_t *)addr + len > (uint8_t *)req->iov.iov_base + req->iov.iov_len)) {
+	if (spdk_unlikely(addr < req->buffer ||
+			  (uint8_t *)addr + len > (uint8_t *)req->buffer + g_io_size)) {
 		fprintf(stderr, "incorrect data %p, len %zu\n", addr, len);
 		return -1;
 	}
 
 	if (spdk_unlikely(!req->mr)) {
-		req->mr = ibv_reg_mr(dst_domain_qp->pd, req->iov.iov_base, req->iov.iov_len,
+		req->mr = ibv_reg_mr(dst_domain_qp->pd, req->buffer, g_io_size,
 				     IBV_ACCESS_LOCAL_WRITE |
 				     IBV_ACCESS_REMOTE_READ |
 				     IBV_ACCESS_REMOTE_WRITE);
@@ -399,11 +401,11 @@ dma_test_submit_io(struct dma_test_req *req)
 	is_read = dma_test_task_is_read(task);
 	req->submit_tsc = spdk_get_ticks();
 	if (is_read) {
-		rc = spdk_bdev_readv_blocks_ext(task->desc, task->channel, &req->iov, 1,
+		rc = spdk_bdev_readv_blocks_ext(task->desc, task->channel, req->iovs, g_iovcnt,
 						offset_in_ios * task->num_blocks_per_io, task->num_blocks_per_io,
 						dma_test_bdev_io_completion_cb, req, &req->io_opts);
 	} else {
-		rc = spdk_bdev_writev_blocks_ext(task->desc, task->channel, &req->iov, 1,
+		rc = spdk_bdev_writev_blocks_ext(task->desc, task->channel, req->iovs, g_iovcnt,
 						 offset_in_ios * task->num_blocks_per_io, task->num_blocks_per_io,
 						 dma_test_bdev_io_completion_cb, req, &req->io_opts);
 	}
@@ -601,6 +603,33 @@ dma_test_check_bdev_supports_rdma_memory_domain(struct spdk_bdev *bdev)
 }
 
 static int
+req_alloc_buffers(struct dma_test_req *req)
+{
+	size_t iov_len, remainder;
+	uint32_t i;
+
+	iov_len = g_io_size / g_iovcnt;
+	remainder = g_io_size - iov_len * g_iovcnt;
+
+	req->buffer = malloc(g_io_size);
+	if (!req->buffer) {
+		return -ENOMEM;
+	}
+	memset(req->buffer, 0xc, g_io_size);
+	req->iovs = calloc(g_iovcnt, sizeof(struct iovec));
+	if (!req->iovs) {
+		return -ENOMEM;
+	}
+	for (i = 0; i < g_iovcnt; i++) {
+		req->iovs[i].iov_len = iov_len;
+		req->iovs[i].iov_base = (uint8_t *)req->buffer + iov_len * i;
+	}
+	req->iovs[g_iovcnt - 1].iov_len += remainder;
+
+	return 0;
+}
+
+static int
 allocate_task(uint32_t core, const char *bdev_name)
 {
 	char thread_name[32];
@@ -608,6 +637,7 @@ allocate_task(uint32_t core, const char *bdev_name)
 	uint32_t i;
 	struct dma_test_task *task;
 	struct dma_test_req *req;
+	int rc;
 
 	task = calloc(1, sizeof(*task));
 	if (!task) {
@@ -626,13 +656,12 @@ allocate_task(uint32_t core, const char *bdev_name)
 	for (i = 0; i < g_queue_depth; i++) {
 		req = &task->reqs[i];
 		req->task = task;
-		req->iov.iov_len = g_io_size;
-		req->iov.iov_base = malloc(req->iov.iov_len);
-		if (!req->iov.iov_base) {
+		rc = req_alloc_buffers(req);
+		if (rc) {
 			fprintf(stderr, "Failed to allocate request data buffer\n");
-			return -ENOMEM;
+			return rc;
 		}
-		memset(req->iov.iov_base, 0xc, req->iov.iov_len);
+
 		req->io_opts.size = sizeof(req->io_opts);
 		req->io_opts.memory_domain = g_domain;
 		req->io_opts.memory_domain_ctx = req;
@@ -670,7 +699,8 @@ destroy_task(struct dma_test_task *task)
 		if (req->mr) {
 			ibv_dereg_mr(req->mr);
 		}
-		free(req->iov.iov_base);
+		free(req->buffer);
+		free(req->iovs);
 	}
 	free(task->reqs);
 	TAILQ_REMOVE(&g_tasks, task, link);
@@ -825,6 +855,7 @@ print_usage(void)
 	printf(" -x <op,op>        Comma separated memory domain operations expected in the test. Values are \"translate\" and \"pull_push\"\n");
 	printf(" -w <str>          io pattern (read, write, randread, randwrite, randrw)\n");
 	printf(" -M <0-100>        rw percentage (100 for reads, 0 for writes)\n");
+	printf(" -O <val>          iovs count to be used in IO, default 1\n");
 	printf(" -Y <val>          Return invalid mkey each <val>th translation\n");
 }
 
@@ -876,6 +907,7 @@ parse_arg(int ch, char *arg)
 	case 'o':
 	case 't':
 	case 'M':
+	case 'O':
 	case 'Y':
 		tmp = spdk_strtol(arg, 10);
 		if (tmp < 0) {
@@ -895,6 +927,9 @@ parse_arg(int ch, char *arg)
 			break;
 		case 'M':
 			g_rw_percentage = (uint32_t) tmp;
+			break;
+		case 'O':
+			g_iovcnt = (uint32_t) tmp;
 			break;
 		case 'Y':
 			g_corrupt_mkey_counter = (uint32_t) tmp;
@@ -934,6 +969,10 @@ verify_args(void)
 	}
 	if (g_io_size == 0) {
 		fprintf(stderr, "io size (-o) is not set\n");
+		return 1;
+	}
+	if (g_iovcnt == 0) {
+		fprintf(stderr, "iov count (-O) is invalid\n");
 		return 1;
 	}
 	if (g_run_time_sec == 0) {
@@ -981,7 +1020,7 @@ main(int argc, char **argv)
 	opts.shutdown_cb = dma_test_shutdown_cb;
 	opts.rpc_addr = NULL;
 
-	rc = spdk_app_parse_args(argc, argv, &opts, "b:fq:o:t:x:w:M:Y:", NULL, parse_arg, print_usage);
+	rc = spdk_app_parse_args(argc, argv, &opts, "b:fq:o:t:x:w:M:O:Y:", NULL, parse_arg, print_usage);
 	if (rc != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
 	}

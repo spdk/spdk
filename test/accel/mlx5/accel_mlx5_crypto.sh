@@ -71,6 +71,10 @@ function gen_accel_mlx5_crypto_json() {
 # Test crypto_split_blocks
 "$rootdir/test/dma/test_dma/test_dma" -q 64 -o 16384 -w randrw -M 50 -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json 8) -b "Crypto0" -f -x translate
 
+# Test fragmented crypto operation
+"$rootdir/test/dma/test_dma/test_dma" -q 64 -o 4096 -O 17 -w randrw -M 50 -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json) -b "Crypto0" -f -x translate
+"$rootdir/test/dma/test_dma/test_dma" -q 64 -o 4096 -O 33 -w randrw -M 50 -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json) -b "Crypto0" -f -x translate
+
 # Test different modes, qdepth and IO size values
 for mode in randread randwrite randrw; do
 	for qdepth in 64 256; do
