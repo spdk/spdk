@@ -177,6 +177,54 @@ accel_mlx5_iov_sgl_advance(struct accel_mlx5_iov_sgl *s, uint32_t step)
 }
 
 static inline void
+accel_mlx5_iov_sgl_unwind(struct accel_mlx5_iov_sgl *s, uint32_t max_iovs, uint32_t step)
+{
+	SPDK_DEBUGLOG(accel_mlx5, "iov %p, iovcnt %u, max %u, offset %u, step %u\n", s->iov, s->iovcnt,
+		      max_iovs, s->iov_offset, step);
+	while (s->iovcnt <= max_iovs) {
+		assert(s->iov != NULL);
+		if (s->iov_offset >= step) {
+			s->iov_offset -= step;
+			SPDK_DEBUGLOG(accel_mlx5, "\tEND, iov %p, iovcnt %u, offset %u\n", s->iov, s->iovcnt,
+				      s->iov_offset);
+			return;
+		}
+		step -= s->iov_offset;
+		s->iov--;
+		s->iovcnt++;
+		s->iov_offset = s->iov->iov_len;
+		SPDK_DEBUGLOG(accel_mlx5, "\tiov %p, iovcnt %u, offset %u, step %u\n", s->iov, s->iovcnt,
+			      s->iov_offset, step);
+	}
+
+	SPDK_ERRLOG("Can't unwind iovs, remaining  %u\n", step);
+	assert(0);
+}
+
+static inline int
+accel_mlx5_sge_unwind(struct ibv_sge *sge, uint32_t sge_count, uint32_t step)
+{
+	int i;
+
+	assert(sge_count > 0);
+	SPDK_DEBUGLOG(accel_mlx5, "sge %p, count %u, step %u\n", sge, sge_count, step);
+	for (i = (int)sge_count - 1; i >= 0; i--) {
+		if (sge[i].length > step) {
+			sge[i].length -= step;
+			SPDK_DEBUGLOG(accel_mlx5, "\tsge[%u] len %u, step %u\n", i, sge[i].length, step);
+			return (int)i + 1;
+		}
+		SPDK_DEBUGLOG(accel_mlx5, "\tsge[%u] len %u, step %u\n", i, sge[i].length, step);
+		step -= sge[i].length;
+	}
+
+	SPDK_ERRLOG("Can't unwind sge, remaining  %u\n", step);
+	assert(step == 0);
+
+	return 0;
+}
+
+static inline void
 accel_mlx5_task_complete(struct accel_mlx5_task *task)
 {
 	struct accel_mlx5_dev *dev = task->qp->dev;
@@ -248,7 +296,8 @@ accel_mlx5_translate_addr(void *addr, size_t size, struct spdk_memory_domain *do
 
 static inline int
 accel_mlx5_fill_block_sge(struct accel_mlx5_dev *dev, struct ibv_sge *sge,
-			  struct accel_mlx5_iov_sgl *iovs, uint32_t len, struct spdk_memory_domain *domain, void *domain_ctx)
+			  struct accel_mlx5_iov_sgl *iovs, uint32_t len, uint32_t *_remaining,
+			  struct spdk_memory_domain *domain, void *domain_ctx)
 {
 	void *addr;
 	uint32_t remaining = len;
@@ -270,7 +319,7 @@ accel_mlx5_fill_block_sge(struct accel_mlx5_dev *dev, struct ibv_sge *sge,
 		assert(remaining >= size);
 		remaining -= size;
 	}
-	assert(remaining == 0);
+	*_remaining = remaining;
 
 	return i;
 }
@@ -344,14 +393,14 @@ accel_mlx5_configure_crypto_umr(struct accel_mlx5_task *mlx5_task, struct accel_
 	struct accel_mlx5_qp *qp = mlx5_task->qp;
 	struct accel_mlx5_dev *dev = qp->dev;
 	struct spdk_accel_task *task = &mlx5_task->base;
-	uint32_t length;
+	uint32_t length, remaining = 0, block_size = task->block_size;
 	int rc;
 
-	length = num_blocks * task->block_size;
+	length = num_blocks * block_size;
 	SPDK_DEBUGLOG(accel_mlx5, "task %p, domain %p, len %u, blocks %u\n", task, task->src_domain, length,
 		      num_blocks);
-	rc = accel_mlx5_fill_block_sge(dev, sge->src_sge, &mlx5_task->src,  length, task->src_domain,
-				       task->src_domain_ctx);
+	rc = accel_mlx5_fill_block_sge(dev, sge->src_sge, &mlx5_task->src,  length, &remaining,
+				       task->src_domain, task->src_domain_ctx);
 	if (spdk_unlikely(rc <= 0)) {
 		if (rc == 0) {
 			rc = -EINVAL;
@@ -360,6 +409,39 @@ accel_mlx5_configure_crypto_umr(struct accel_mlx5_task *mlx5_task, struct accel_
 		return rc;
 	}
 	sge->src_sge_count = rc;
+	if (spdk_unlikely(remaining)) {
+		uint32_t new_len = length - remaining;
+		uint32_t aligned_len, updated_num_blocks;
+
+		SPDK_DEBUGLOG(accel_mlx5, "Incorrect src iovs, handled %u out of %u bytes\n", new_len, length);
+		if (new_len < block_size) {
+			/* We need to process at least 1 block. If buffer is too fragmented, we can't do
+			 * anything */
+			return -ERANGE;
+		}
+
+		/* Regular integer division, we need to round down to prev block size */
+		updated_num_blocks = new_len / block_size;
+		assert(updated_num_blocks);
+		assert(updated_num_blocks < num_blocks);
+		aligned_len = updated_num_blocks * block_size;
+
+		if (aligned_len < new_len) {
+			uint32_t dt = new_len - aligned_len;
+
+			/* We can't process part of block, need to unwind src iov_sgl and sge to the
+			 * prev block boundary */
+			SPDK_DEBUGLOG(accel_mlx5, "task %p, unwind src sge for %u bytes\n", task, dt);
+			accel_mlx5_iov_sgl_unwind(&mlx5_task->src, task->s.iovcnt, dt);
+			sge->src_sge_count = accel_mlx5_sge_unwind(sge->src_sge, sge->src_sge_count, dt);
+			if (!sge->src_sge_count) {
+				return -ERANGE;
+			}
+		}
+		SPDK_DEBUGLOG(accel_mlx5, "task %p, UMR len %u -> %u\n", task, length, aligned_len);
+		length = aligned_len;
+		num_blocks = updated_num_blocks;
+	}
 
 	cattr.xts_iv = task->iv + mlx5_task->num_processed_blocks;
 	cattr.keytag = 0;
@@ -376,8 +458,8 @@ accel_mlx5_configure_crypto_umr(struct accel_mlx5_task *mlx5_task, struct accel_
 
 	if (!mlx5_task->inplace) {
 		SPDK_DEBUGLOG(accel_mlx5, "task %p, dst sge, domain %p, len %u\n", task, task->dst_domain, length);
-		rc = accel_mlx5_fill_block_sge(dev, sge->dst_sge, &mlx5_task->dst, length, task->dst_domain,
-					       task->dst_domain_ctx);
+		rc = accel_mlx5_fill_block_sge(dev, sge->dst_sge, &mlx5_task->dst, length, &remaining,
+					       task->dst_domain, task->dst_domain_ctx);
 		if (spdk_unlikely(rc <= 0)) {
 			if (rc == 0) {
 				rc = -EINVAL;
@@ -386,6 +468,50 @@ accel_mlx5_configure_crypto_umr(struct accel_mlx5_task *mlx5_task, struct accel_
 			return rc;
 		}
 		sge->dst_sge_count = rc;
+		if (spdk_unlikely(remaining)) {
+			uint32_t new_len = length - remaining;
+			uint32_t aligned_len, updated_num_blocks, dt;
+
+			SPDK_DEBUGLOG(accel_mlx5, "Incorrect dst iovs, handled %u out of %u bytes\n", new_len, length);
+			if (new_len < block_size) {
+				/* We need to process at least 1 block. If buffer is too fragmented, we can't do
+				 * anything */
+				return -ERANGE;
+			}
+
+			/* Regular integer division, we need to round down to prev block size */
+			updated_num_blocks = new_len / block_size;
+			assert(updated_num_blocks);
+			assert(updated_num_blocks < num_blocks);
+			aligned_len = updated_num_blocks * block_size;
+
+			if (aligned_len < new_len) {
+				dt = new_len - aligned_len;
+				assert(dt > 0 && dt < length);
+				/* We can't process part of block, need to unwind src and dst iov_sgl and sge to the
+				 * prev block boundary */
+				SPDK_DEBUGLOG(accel_mlx5, "task %p, unwind dst sge for %u bytes\n", task, dt);
+				accel_mlx5_iov_sgl_unwind(&mlx5_task->dst, task->d.iovcnt, dt);
+				sge->dst_sge_count = accel_mlx5_sge_unwind(sge->dst_sge, sge->dst_sge_count, dt);
+				assert(sge->dst_sge_count > 0 && sge->dst_sge_count <= ACCEL_MLX5_MAX_SGE);
+				if (!sge->dst_sge_count) {
+					return -ERANGE;
+				}
+			}
+			assert(length > aligned_len);
+			dt = length - aligned_len;
+			SPDK_DEBUGLOG(accel_mlx5, "task %p, unwind src sge for %u bytes\n", task, dt);
+			/* The same for src iov_sgl and sge. In worst case we can unwind SRC 2 times */
+			accel_mlx5_iov_sgl_unwind(&mlx5_task->src, task->s.iovcnt, dt);
+			sge->src_sge_count = accel_mlx5_sge_unwind(sge->src_sge, sge->src_sge_count, dt);
+			assert(sge->src_sge_count > 0 && sge->src_sge_count <= ACCEL_MLX5_MAX_SGE);
+			if (!sge->src_sge_count) {
+				return -ERANGE;
+			}
+			SPDK_DEBUGLOG(accel_mlx5, "task %p, UMR len %u -> %u\n", task, length, aligned_len);
+			length = aligned_len;
+			num_blocks = updated_num_blocks;
+		}
 	}
 
 	SPDK_DEBUGLOG(accel_mlx5,
@@ -490,6 +616,18 @@ accel_mlx5_task_process(struct accel_mlx5_task *mlx5_task)
 	mlx5_task->num_submitted_reqs++;
 	ACCEL_MLX5_UPDATE_ON_WR_SUBMITTED_SIGNALED(dev, qp, mlx5_task);
 	STAILQ_INSERT_TAIL(&qp->in_hw, mlx5_task, link);
+
+	if (spdk_unlikely(mlx5_task->num_submitted_reqs == mlx5_task->num_reqs &&
+			  mlx5_task->num_blocks > mlx5_task->num_processed_blocks)) {
+		/* We hit "out of sge
+		 * entries" case with highly fragmented payload. In that case
+		 * accel_mlx5_configure_crypto_umr function handled fewer data blocks than expected
+		 * That means we need at least 1 more request to complete this task, this request will be
+		 * executed once all submitted ones are completed */
+		SPDK_DEBUGLOG(accel_mlx5, "task %p, processed %u/%u blocks, add extra req\n", mlx5_task,
+			      mlx5_task->num_processed_blocks, mlx5_task->num_blocks);
+		mlx5_task->num_reqs++;
+	}
 
 	SPDK_DEBUGLOG(accel_mlx5, "end, task, %p, reqs: total %u, submitted %u, completed %u\n", mlx5_task,
 		      mlx5_task->num_reqs, mlx5_task->num_submitted_reqs, mlx5_task->num_completed_reqs);
