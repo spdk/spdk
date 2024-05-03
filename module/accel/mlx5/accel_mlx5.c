@@ -276,15 +276,7 @@ accel_mlx5_fill_block_sge(struct accel_mlx5_dev *dev, struct ibv_sge *sge,
 static inline bool
 accel_mlx5_compare_iovs(struct iovec *v1, struct iovec *v2, uint32_t iovcnt)
 {
-	uint32_t i;
-
-	for (i = 0; i < iovcnt; i++) {
-		if (v1[i].iov_base != v2[i].iov_base || v1[i].iov_len != v2[i].iov_len) {
-			return false;
-		}
-	}
-
-	return true;
+	return memcmp(v1, v2, sizeof(*v1) * iovcnt) == 0;
 }
 
 static inline uint16_t
