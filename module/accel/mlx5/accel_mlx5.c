@@ -24,7 +24,7 @@
 
 #define ACCEL_MLX5_QP_SIZE (256u)
 #define ACCEL_MLX5_NUM_REQUESTS (2048u - 1)
-
+#define ACCEL_MLX5_RECOVER_POLLER_PERIOD_US (10000)
 #define ACCEL_MLX5_MAX_SGE (16u)
 #define ACCEL_MLX5_MAX_WC (64u)
 #define ACCEL_MLX5_MAX_MKEYS_IN_TASK (16u)
@@ -123,6 +123,8 @@ struct accel_mlx5_qp {
 	STAILQ_HEAD(, accel_mlx5_task) in_hw;
 	uint16_t wrs_submitted;
 	uint16_t wrs_max;
+	bool recovering;
+	struct spdk_poller *recover_poller;
 };
 
 struct accel_mlx5_dev {
@@ -502,6 +504,11 @@ accel_mlx5_task_continue(struct accel_mlx5_task *task)
 	struct accel_mlx5_dev *dev = qp->dev;
 	uint16_t qp_slot = accel_mlx5_dev_get_available_slots(dev, qp);
 
+	if (spdk_unlikely(qp->recovering)) {
+		STAILQ_INSERT_TAIL(&dev->nomem, task, link);
+		return 0;
+	}
+
 	assert(task->num_reqs > task->num_completed_reqs);
 	if (task->num_ops == 0) {
 		/* No mkeys allocated, try to allocate now */
@@ -644,7 +651,76 @@ accel_mlx5_submit_tasks(struct spdk_io_channel *_ch, struct spdk_accel_task *tas
 		return rc;
 	}
 
+	if (spdk_unlikely(mlx5_task->qp->recovering)) {
+		STAILQ_INSERT_TAIL(&dev->nomem, mlx5_task, link);
+		return 0;
+	}
+
 	return accel_mlx5_task_process(mlx5_task);
+}
+
+static void accel_mlx5_recover_qp(struct accel_mlx5_qp *qp);
+
+static int
+accel_mlx5_recover_qp_poller(void *arg)
+{
+	struct accel_mlx5_qp *qp = arg;
+
+	spdk_poller_unregister(&qp->recover_poller);
+	accel_mlx5_recover_qp(qp);
+	return SPDK_POLLER_BUSY;
+}
+
+static void
+accel_mlx5_recover_qp(struct accel_mlx5_qp *qp)
+{
+	struct accel_mlx5_dev *dev = qp->dev;
+	struct spdk_mlx5_qp_attr mlx5_qp_attr = {};
+	int rc;
+
+	SPDK_NOTICELOG("Recovering qp %p, core %u\n", qp, spdk_env_get_current_core());
+	if (qp->qp) {
+		spdk_mlx5_qp_destroy(qp->qp);
+		qp->qp = NULL;
+	}
+
+	mlx5_qp_attr.cap.max_send_wr = g_accel_mlx5.attr.qp_size;
+	mlx5_qp_attr.cap.max_recv_wr = 0;
+	mlx5_qp_attr.cap.max_send_sge = ACCEL_MLX5_MAX_SGE;
+	mlx5_qp_attr.cap.max_inline_data = sizeof(struct ibv_sge) * ACCEL_MLX5_MAX_SGE;
+
+	rc = spdk_mlx5_qp_create(dev->dev_ctx->pd, dev->cq, &mlx5_qp_attr, &qp->qp);
+	if (rc) {
+		SPDK_ERRLOG("Failed to create mlx5 dma QP, rc %d. Retry in %d usec\n",
+			    rc, ACCEL_MLX5_RECOVER_POLLER_PERIOD_US);
+		qp->recover_poller = SPDK_POLLER_REGISTER(accel_mlx5_recover_qp_poller, qp,
+				     ACCEL_MLX5_RECOVER_POLLER_PERIOD_US);
+		return;
+	}
+
+	qp->recovering = false;
+}
+
+static inline void
+accel_mlx5_process_error_cpl(struct spdk_mlx5_cq_completion *wc, struct accel_mlx5_task *task)
+{
+	struct accel_mlx5_qp *qp = task->qp;
+
+	if (wc->status != IBV_WC_WR_FLUSH_ERR) {
+		SPDK_WARNLOG("RDMA: qp %p, task %p, WC status %d, core %u\n",
+			     qp, task, wc->status, spdk_env_get_current_core());
+	} else {
+		SPDK_DEBUGLOG(accel_mlx5,
+			      "RDMA: qp %p, task %p, WC status %d, core %u\n",
+			      qp, task, wc->status, spdk_env_get_current_core());
+	}
+
+	qp->recovering = true;
+	assert(task->num_completed_reqs <= task->num_submitted_reqs);
+	if (task->num_completed_reqs == task->num_submitted_reqs) {
+		STAILQ_REMOVE_HEAD(&qp->in_hw, link);
+		accel_mlx5_task_fail(task, -EIO);
+	}
 }
 
 static inline int64_t
@@ -685,10 +761,10 @@ accel_mlx5_poll_cq(struct accel_mlx5_dev *dev)
 		dev->wrs_in_cq--;
 
 		if (wc[i].status) {
-			SPDK_ERRLOG("qp %p, task %p WC status %d\n", qp, task, wc[i].status);
-			if (task->num_completed_reqs == task->num_reqs) {
-				STAILQ_REMOVE_HEAD(&qp->in_hw, link);
-				accel_mlx5_task_fail(task, -EIO);
+			accel_mlx5_process_error_cpl(&wc[i], task);
+			if (qp->wrs_submitted == 0) {
+				assert(STAILQ_EMPTY(&qp->in_hw));
+				accel_mlx5_recover_qp(qp);
 			}
 			continue;
 		}
@@ -717,18 +793,23 @@ accel_mlx5_poll_cq(struct accel_mlx5_dev *dev)
 static inline void
 accel_mlx5_resubmit_nomem_tasks(struct accel_mlx5_dev *dev)
 {
-	struct accel_mlx5_task *task, *tmp;
+	struct accel_mlx5_task *task, *tmp, *last;
 	int rc;
 
+	last = STAILQ_LAST(&dev->nomem, accel_mlx5_task, link);
 	STAILQ_FOREACH_SAFE(task, &dev->nomem, link, tmp) {
 		STAILQ_REMOVE_HEAD(&dev->nomem, link);
 		rc = accel_mlx5_task_continue(task);
-		if (rc) {
-			if (rc == -ENOMEM) {
-				break;
-			} else {
+		if (spdk_unlikely(rc)) {
+			if (rc != -ENOMEM) {
 				accel_mlx5_task_fail(task, rc);
 			}
+			break;
+		}
+		/* If qpair is recovering, task is added back to the nomem list and 0 is returned. In that case we
+		 * need a special condition to iterate the list once and stop this FOREACH loop */
+		if (task == last) {
+			break;
 		}
 	}
 }
@@ -822,6 +903,7 @@ accel_mlx5_destroy_cb(void *io_device, void *ctx_buf)
 		if (dev->cq) {
 			spdk_mlx5_cq_destroy(dev->cq);
 		}
+		spdk_poller_unregister(&dev->qp.recover_poller);
 		if (dev->crypto_mkeys) {
 			spdk_mlx5_mkey_pool_put_ref(dev->crypto_mkeys);
 		}
