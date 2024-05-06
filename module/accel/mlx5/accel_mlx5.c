@@ -53,19 +53,19 @@ do {									\
 struct accel_mlx5_io_channel;
 struct accel_mlx5_task;
 
-struct accel_mlx5_crypto_dev_ctx {
+struct accel_mlx5_dev_ctx {
 	struct ibv_context *context;
 	struct ibv_pd *pd;
 	struct spdk_memory_domain *domain;
-	TAILQ_ENTRY(accel_mlx5_crypto_dev_ctx) link;
+	TAILQ_ENTRY(accel_mlx5_dev_ctx) link;
 	bool crypto_mkeys;
 	bool crypto_multi_block;
 };
 
 struct accel_mlx5_module {
 	struct spdk_accel_module_if module;
-	struct accel_mlx5_crypto_dev_ctx *crypto_ctxs;
-	uint32_t num_crypto_ctxs;
+	struct accel_mlx5_dev_ctx *dev_ctxs;
+	uint32_t num_ctxs;
 	struct accel_mlx5_attr attr;
 	char **allowed_devs;
 	size_t allowed_devs_count;
@@ -132,7 +132,7 @@ struct accel_mlx5_dev {
 	struct spdk_mlx5_cq *cq;
 	struct spdk_mlx5_mkey_pool *crypto_mkeys;
 	struct spdk_rdma_utils_mem_map *mmap;
-	struct accel_mlx5_crypto_dev_ctx *dev_ctx;
+	struct accel_mlx5_dev_ctx *dev_ctx;
 	uint16_t wrs_in_cq;
 	uint16_t wrs_in_cq_max;
 	uint16_t crypto_split_blocks;
@@ -146,7 +146,7 @@ struct accel_mlx5_io_channel {
 	struct accel_mlx5_dev *devs;
 	struct spdk_poller *poller;
 	uint32_t num_devs;
-	/* Index in \b devs to be used for crypto in round-robin way */
+	/* Index in \b devs to be used for operations in round-robin way */
 	uint32_t dev_idx;
 };
 
@@ -1055,19 +1055,19 @@ accel_mlx5_create_cb(void *io_device, void *ctx_buf)
 {
 	struct spdk_mlx5_cq_attr cq_attr = {};
 	struct accel_mlx5_io_channel *ch = ctx_buf;
-	struct accel_mlx5_crypto_dev_ctx *dev_ctx;
+	struct accel_mlx5_dev_ctx *dev_ctx;
 	struct accel_mlx5_dev *dev;
 	uint32_t i;
 	int rc;
 
-	ch->devs = calloc(g_accel_mlx5.num_crypto_ctxs, sizeof(*ch->devs));
+	ch->devs = calloc(g_accel_mlx5.num_ctxs, sizeof(*ch->devs));
 	if (!ch->devs) {
 		SPDK_ERRLOG("Memory allocation failed\n");
 		return -ENOMEM;
 	}
 
-	for (i = 0; i < g_accel_mlx5.num_crypto_ctxs; i++) {
-		dev_ctx = &g_accel_mlx5.crypto_ctxs[i];
+	for (i = 0; i < g_accel_mlx5.num_ctxs; i++) {
+		dev_ctx = &g_accel_mlx5.dev_ctxs[i];
 		dev = &ch->devs[i];
 		dev->dev_ctx = dev_ctx;
 
@@ -1239,11 +1239,11 @@ accel_mlx5_enable(struct accel_mlx5_attr *attr)
 static void
 accel_mlx5_free_resources(void)
 {
-	struct accel_mlx5_crypto_dev_ctx *dev_ctx;
+	struct accel_mlx5_dev_ctx *dev_ctx;
 	uint32_t i;
 
-	for (i = 0; i < g_accel_mlx5.num_crypto_ctxs; i++) {
-		dev_ctx = &g_accel_mlx5.crypto_ctxs[i];
+	for (i = 0; i < g_accel_mlx5.num_ctxs; i++) {
+		dev_ctx = &g_accel_mlx5.dev_ctxs[i];
 		if (dev_ctx->pd) {
 			if (dev_ctx->crypto_mkeys) {
 				spdk_mlx5_mkey_pool_destroy(SPDK_MLX5_MKEY_POOL_FLAG_CRYPTO, dev_ctx->pd);
@@ -1255,8 +1255,8 @@ accel_mlx5_free_resources(void)
 		}
 	}
 
-	free(g_accel_mlx5.crypto_ctxs);
-	g_accel_mlx5.crypto_ctxs = NULL;
+	free(g_accel_mlx5.dev_ctxs);
+	g_accel_mlx5.dev_ctxs = NULL;
 	g_accel_mlx5.initialized = false;
 }
 
@@ -1294,7 +1294,7 @@ accel_mlx5_mkeys_create(struct ibv_pd *pd, uint32_t num_mkeys, uint32_t flags)
 }
 
 static int
-accel_mlx5_dev_ctx_init(struct accel_mlx5_crypto_dev_ctx *dev_ctx, struct ibv_context *dev,
+accel_mlx5_dev_ctx_init(struct accel_mlx5_dev_ctx *dev_ctx, struct ibv_context *dev,
 			struct spdk_mlx5_device_caps *caps)
 {
 	struct ibv_pd *pd;
@@ -1421,7 +1421,7 @@ accel_mlx5_init(void)
 	}
 
 	g_accel_mlx5.crypto_supported = true;
-	g_accel_mlx5.num_crypto_ctxs = 0;
+	g_accel_mlx5.num_ctxs = 0;
 
 	/* Iterate devices. We support an offload if all devices support it */
 	for (i = 0; i < num_devs; i++) {
@@ -1470,15 +1470,15 @@ accel_mlx5_init(void)
 		goto cleanup;
 	}
 
-	g_accel_mlx5.crypto_ctxs = calloc(num_devs, sizeof(*g_accel_mlx5.crypto_ctxs));
-	if (!g_accel_mlx5.crypto_ctxs) {
+	g_accel_mlx5.dev_ctxs = calloc(num_devs, sizeof(*g_accel_mlx5.dev_ctxs));
+	if (!g_accel_mlx5.dev_ctxs) {
 		SPDK_ERRLOG("Memory allocation failed\n");
 		rc = -ENOMEM;
 		goto cleanup;
 	}
 
 	for (i = first_dev; i < first_dev + num_devs; i++) {
-		rc = accel_mlx5_dev_ctx_init(&g_accel_mlx5.crypto_ctxs[g_accel_mlx5.num_crypto_ctxs++],
+		rc = accel_mlx5_dev_ctx_init(&g_accel_mlx5.dev_ctxs[g_accel_mlx5.num_ctxs++],
 					     rdma_devs[i], &caps[i]);
 		if (rc) {
 			goto cleanup;
@@ -1586,16 +1586,16 @@ accel_mlx5_get_memory_domains(struct spdk_memory_domain **domains, int array_siz
 	int i, size;
 
 	if (!domains || !array_size) {
-		return (int)g_accel_mlx5.num_crypto_ctxs;
+		return (int)g_accel_mlx5.num_ctxs;
 	}
 
-	size = spdk_min(array_size, (int)g_accel_mlx5.num_crypto_ctxs);
+	size = spdk_min(array_size, (int)g_accel_mlx5.num_ctxs);
 
 	for (i = 0; i < size; i++) {
-		domains[i] = g_accel_mlx5.crypto_ctxs[i].domain;
+		domains[i] = g_accel_mlx5.dev_ctxs[i].domain;
 	}
 
-	return (int)g_accel_mlx5.num_crypto_ctxs;
+	return (int)g_accel_mlx5.num_ctxs;
 }
 
 static struct accel_mlx5_module g_accel_mlx5 = {
