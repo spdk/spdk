@@ -504,6 +504,7 @@ main(int argc, char **argv)
 	hello_world();
 
 exit:
+	fflush(stdout);
 	cleanup();
 	if (g_vmd) {
 		spdk_vmd_fini();

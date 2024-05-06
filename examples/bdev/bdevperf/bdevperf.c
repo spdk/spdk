@@ -653,8 +653,6 @@ bdevperf_test_done(void *ctx)
 	}
 	printf(" %10.2f %10.2f %10.2f\n", average_latency, g_stats.min_latency, g_stats.max_latency);
 
-	fflush(stdout);
-
 	if (g_latency_display_level == 0 || g_stats.total_io_completed == 0) {
 		goto clean;
 	}
@@ -687,6 +685,8 @@ bdevperf_test_done(void *ctx)
 	}
 
 clean:
+	fflush(stdout);
+
 	TAILQ_FOREACH_SAFE(job, &g_bdevperf.jobs, link, jtmp) {
 		TAILQ_REMOVE(&g_bdevperf.jobs, job, link);
 

@@ -3327,6 +3327,8 @@ main(int argc, char **argv)
 	pthread_barrier_destroy(&g_worker_sync_barrier);
 
 cleanup:
+	fflush(stdout);
+
 	if (thread_id && pthread_cancel(thread_id) == 0) {
 		pthread_join(thread_id, NULL);
 	}
