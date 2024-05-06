@@ -83,9 +83,9 @@ zero_trailing_bytes(struct spdk_blob_bs_dev *b, struct iovec *iov, int iovcnt,
 
 	/* Figure out how many bytes in the payload will need to be zeroed. */
 	zero_lba_count = spdk_min(*lba_count, lba + *lba_count - b->bs_dev.blockcnt);
-	zero_bytes = zero_lba_count * b->bs_dev.blocklen;
+	zero_bytes = zero_lba_count * (uint64_t)b->bs_dev.blocklen;
 
-	payload_bytes = *lba_count * b->bs_dev.blocklen;
+	payload_bytes = *lba_count * (uint64_t)b->bs_dev.blocklen;
 	valid_bytes = payload_bytes - zero_bytes;
 
 	i = iov;
