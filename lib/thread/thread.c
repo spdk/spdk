@@ -288,14 +288,20 @@ static __thread struct spdk_thread *tls_thread = NULL;
 
 SPDK_TRACE_REGISTER_FN(thread_trace, "thread", TRACE_GROUP_THREAD)
 {
-	spdk_trace_register_description("THREAD_IOCH_GET",
-					TRACE_THREAD_IOCH_GET,
-					OWNER_TYPE_NONE, OBJECT_NONE, 0,
-					SPDK_TRACE_ARG_TYPE_INT, "refcnt");
-	spdk_trace_register_description("THREAD_IOCH_PUT",
-					TRACE_THREAD_IOCH_PUT,
-					OWNER_TYPE_NONE, OBJECT_NONE, 0,
-					SPDK_TRACE_ARG_TYPE_INT, "refcnt");
+	struct spdk_trace_tpoint_opts opts[] = {
+		{
+			"THREAD_IOCH_GET", TRACE_THREAD_IOCH_GET,
+			OWNER_TYPE_NONE, OBJECT_NONE, 0,
+			{{ "refcnt", SPDK_TRACE_ARG_TYPE_INT, 4 }}
+		},
+		{
+			"THREAD_IOCH_PUT", TRACE_THREAD_IOCH_PUT,
+			OWNER_TYPE_NONE, OBJECT_NONE, 0,
+			{{ "refcnt", SPDK_TRACE_ARG_TYPE_INT, 4 }}
+		}
+	};
+
+	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
 }
 
 /*
