@@ -174,6 +174,7 @@ blob_bs_is_zeroes(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_count)
 {
 	struct spdk_blob_bs_dev *b = (struct spdk_blob_bs_dev *)dev;
 	struct spdk_blob *blob = b->blob;
+	bool is_valid_range;
 
 	assert(lba == bs_cluster_to_lba(blob->bs, bs_lba_to_cluster(blob->bs, lba)));
 	assert(lba_count == bs_dev_byte_to_lba(dev, blob->bs->cluster_sz));
@@ -183,9 +184,10 @@ blob_bs_is_zeroes(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_count)
 	}
 
 	assert(blob->back_bs_dev != NULL);
-	return blob->back_bs_dev->is_zeroes(blob->back_bs_dev,
-					    bs_io_unit_to_back_dev_lba(blob, lba),
-					    bs_io_unit_to_back_dev_lba(blob, lba_count));
+	is_valid_range = blob->back_bs_dev->is_range_valid(blob->back_bs_dev, lba, lba_count);
+	return is_valid_range && blob->back_bs_dev->is_zeroes(blob->back_bs_dev,
+			bs_io_unit_to_back_dev_lba(blob, lba),
+			bs_io_unit_to_back_dev_lba(blob, lba_count));
 }
 
 static bool
@@ -220,6 +222,7 @@ blob_bs_translate_lba(struct spdk_bs_dev *dev, uint64_t lba, uint64_t *base_lba)
 {
 	struct spdk_blob_bs_dev *b = (struct spdk_blob_bs_dev *)dev;
 	struct spdk_blob *blob = b->blob;
+	bool is_valid_range;
 
 	assert(base_lba != NULL);
 	if (bs_io_unit_is_allocated(blob, lba)) {
@@ -228,9 +231,14 @@ blob_bs_translate_lba(struct spdk_bs_dev *dev, uint64_t lba, uint64_t *base_lba)
 	}
 
 	assert(blob->back_bs_dev != NULL);
-	return blob->back_bs_dev->translate_lba(blob->back_bs_dev,
-						bs_io_unit_to_back_dev_lba(blob, lba),
-						base_lba);
+	/* Since here we don't get lba_count directly, passing lba_count derived
+	 * from cluster_sz which typically happens for other calls like is_zeroes
+	 * in CoW path. */
+	is_valid_range = blob->back_bs_dev->is_range_valid(blob->back_bs_dev, lba,
+			 bs_dev_byte_to_lba(blob->back_bs_dev, blob->bs->cluster_sz));
+	return is_valid_range && blob->back_bs_dev->translate_lba(blob->back_bs_dev,
+			bs_io_unit_to_back_dev_lba(blob, lba),
+			base_lba);
 }
 
 static bool

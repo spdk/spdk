@@ -9115,8 +9115,8 @@ blob_clone_resize(void)
 {
 	struct spdk_blob_store *bs = g_bs;
 	struct spdk_blob_opts opts;
-	struct spdk_blob *blob, *clone;
-	spdk_blob_id blobid, cloneid, snapshotid;
+	struct spdk_blob *blob, *clone, *snap_blob, *snap_blob_rsz;
+	spdk_blob_id blobid, cloneid, snapid1, snapid2;
 	uint64_t pages_per_cluster;
 	uint8_t payload_read[bs->dev->blocklen];
 	uint8_t payload_write[bs->dev->blocklen];
@@ -9141,9 +9141,9 @@ blob_clone_resize(void)
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
-	snapshotid = g_blobid;
+	snapid1 = g_blobid;
 
-	spdk_bs_create_clone(bs, snapshotid, NULL, blob_op_with_id_complete, NULL);
+	spdk_bs_create_clone(bs, snapid1, NULL, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
@@ -9161,6 +9161,35 @@ blob_clone_resize(void)
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(spdk_blob_get_num_clusters(clone) == 20);
+
+	/* Create another snapshot after resizing the clone */
+	spdk_bs_create_snapshot(bs, cloneid, NULL, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	snapid2 = g_blobid;
+
+	/* Open the snapshot blobs */
+	spdk_bs_open_blob(bs, snapid1, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	snap_blob = g_blob;
+	CU_ASSERT(snap_blob->data_ro == true);
+	CU_ASSERT(snap_blob->md_ro == true);
+	CU_ASSERT(spdk_blob_get_num_clusters(snap_blob) == 10);
+
+	spdk_bs_open_blob(bs, snapid2, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	snap_blob_rsz = g_blob;
+	CU_ASSERT(snap_blob_rsz->data_ro == true);
+	CU_ASSERT(snap_blob_rsz->md_ro == true);
+	CU_ASSERT(spdk_blob_get_num_clusters(snap_blob_rsz) == 20);
+
+	/* Confirm that clone is backed by snap_blob_rsz, and snap_blob_rsz is backed by snap_blob */
+	SPDK_CU_ASSERT_FATAL(snap_blob->back_bs_dev == NULL);
+	SPDK_CU_ASSERT_FATAL(blob->back_bs_dev != NULL);
+	SPDK_CU_ASSERT_FATAL(snap_blob_rsz->back_bs_dev != NULL);
 
 	/* Write and read from pre-resize ranges */
 	g_bserrno = -1;
@@ -9201,6 +9230,14 @@ blob_clone_resize(void)
 	CU_ASSERT(spdk_bs_free_cluster_count(bs) == free_clusters - 18);
 
 	spdk_blob_close(clone, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_blob_close(snap_blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_blob_close(snap_blob_rsz, blob_op_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 
