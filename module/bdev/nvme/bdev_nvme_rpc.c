@@ -2377,7 +2377,7 @@ rpc_bdev_nvme_set_multipath_policy(struct spdk_jsonrpc_request *request,
 	}
 
 	ctx->req.rr_min_io = UINT32_MAX;
-	ctx->req.selector = BDEV_NVME_MP_SELECTOR_ROUND_ROBIN;
+	ctx->req.selector = UINT32_MAX;
 
 	if (spdk_json_decode_object(params, rpc_set_multipath_policy_decoders,
 				    SPDK_COUNTOF(rpc_set_multipath_policy_decoders),
@@ -2389,6 +2389,13 @@ rpc_bdev_nvme_set_multipath_policy(struct spdk_jsonrpc_request *request,
 	}
 
 	ctx->request = request;
+	if (ctx->req.selector == UINT32_MAX) {
+		if (ctx->req.policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE) {
+			ctx->req.selector = BDEV_NVME_MP_SELECTOR_ROUND_ROBIN;
+		} else {
+			ctx->req.selector = 0;
+		}
+	}
 
 	if (ctx->req.policy != BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE && ctx->req.selector > 0) {
 		SPDK_ERRLOG("selector only works in active_active mode\n");
