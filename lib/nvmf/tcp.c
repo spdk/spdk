@@ -120,7 +120,7 @@ SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 	spdk_trace_register_description("TCP_REQ_NEW",
 					TRACE_TCP_REQUEST_STATE_NEW,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NVMF_TCP_IO, 1,
-					SPDK_TRACE_ARG_TYPE_INT, "");
+					SPDK_TRACE_ARG_TYPE_INT, "qd");
 	spdk_trace_register_description("TCP_REQ_NEED_BUFFER",
 					TRACE_TCP_REQUEST_STATE_NEED_BUFFER,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NVMF_TCP_IO, 0,
@@ -168,7 +168,7 @@ SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 	spdk_trace_register_description("TCP_REQ_COMPLETED",
 					TRACE_TCP_REQUEST_STATE_COMPLETED,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NVMF_TCP_IO, 0,
-					SPDK_TRACE_ARG_TYPE_INT, "");
+					SPDK_TRACE_ARG_TYPE_INT, "qd");
 	spdk_trace_register_description("TCP_READ_DONE",
 					TRACE_TCP_READ_FROM_SOCKET_DONE,
 					OWNER_TYPE_NVMF_TCP, OBJECT_NONE, 0,
@@ -441,6 +441,7 @@ nvmf_tcp_req_get(struct spdk_nvmf_tcp_qpair *tqpair)
 
 	TAILQ_REMOVE(&tqpair->tcp_req_free_queue, tcp_req, state_link);
 	TAILQ_INSERT_TAIL(&tqpair->tcp_req_working_queue, tcp_req, state_link);
+	tqpair->qpair.queue_depth++;
 	nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_NEW);
 	return tcp_req;
 }
@@ -452,6 +453,7 @@ nvmf_tcp_req_put(struct spdk_nvmf_tcp_qpair *tqpair, struct spdk_nvmf_tcp_req *t
 
 	TAILQ_REMOVE(&tqpair->tcp_req_working_queue, tcp_req, state_link);
 	TAILQ_INSERT_TAIL(&tqpair->tcp_req_free_queue, tcp_req, state_link);
+	tqpair->qpair.queue_depth--;
 	nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_FREE);
 }
 
@@ -1289,6 +1291,7 @@ nvmf_tcp_qpair_init(struct spdk_nvmf_qpair *qpair)
 	TAILQ_INIT(&tqpair->tcp_req_free_queue);
 	TAILQ_INIT(&tqpair->tcp_req_working_queue);
 	SLIST_INIT(&tqpair->tcp_pdu_free_queue);
+	tqpair->qpair.queue_depth = 0;
 
 	tqpair->host_hdgst_enable = true;
 	tqpair->host_ddgst_enable = true;
@@ -2894,7 +2897,8 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			 * to escape this state. */
 			break;
 		case TCP_REQUEST_STATE_NEW:
-			spdk_trace_record(TRACE_TCP_REQUEST_STATE_NEW, tqpair->qpair.trace_id, 0, (uintptr_t)tcp_req);
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_NEW, tqpair->qpair.trace_id, 0, (uintptr_t)tcp_req,
+					  tqpair->qpair.queue_depth);
 
 			/* copy the cmd from the receive pdu */
 			tcp_req->cmd = tqpair->pdu_in_progress->hdr.capsule_cmd.ccsqe;
@@ -3144,7 +3148,8 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			 * to escape this state. */
 			break;
 		case TCP_REQUEST_STATE_COMPLETED:
-			spdk_trace_record(TRACE_TCP_REQUEST_STATE_COMPLETED, tqpair->qpair.trace_id, 0, (uintptr_t)tcp_req);
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_COMPLETED, tqpair->qpair.trace_id, 0, (uintptr_t)tcp_req,
+					  tqpair->qpair.queue_depth);
 			/* If there's an outstanding PDU sent to the host, the request is completed
 			 * due to the qpair being disconnected.  We must delay the completion until
 			 * that write is done to avoid freeing the request twice. */
