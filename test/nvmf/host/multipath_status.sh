@@ -92,7 +92,7 @@ check_status false true true true true true
 
 set_ANA_state non_optimized inaccessible
 sleep 1
-check_status false false true true true false
+check_status true false true true true false
 
 set_ANA_state inaccessible inaccessible
 sleep 1

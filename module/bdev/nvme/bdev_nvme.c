@@ -8558,7 +8558,22 @@ nvme_io_path_info_json(struct spdk_json_write_ctx *w, struct nvme_io_path *io_pa
 			current = current && (optimized_io_path == NULL);
 		}
 	} else {
-		current = (io_path == nbdev_ch->current_io_path);
+		if (nbdev_ch->current_io_path) {
+			current = (io_path == nbdev_ch->current_io_path);
+		} else {
+			struct nvme_io_path *first_path;
+
+			/* We arrived here as there are no optimized paths for active-passive
+			 * mode. Check if this io_path is the first one available on the list.
+			 */
+			current = false;
+			STAILQ_FOREACH(first_path, &nbdev_ch->io_path_list, stailq) {
+				if (nvme_io_path_is_available(first_path)) {
+					current = (io_path == first_path);
+					break;
+				}
+			}
+		}
 	}
 	spdk_json_write_named_bool(w, "current", current);
 	spdk_json_write_named_bool(w, "connected", nvme_qpair_is_connected(io_path->qpair));
