@@ -87,6 +87,11 @@ struct accel_mlx5_iov_sgl {
 	uint32_t	iov_offset;
 };
 
+enum accel_mlx5_opcode {
+	ACCEL_MLX5_OPC_CRYPTO,
+	ACCEL_MLX5_OPC_LAST
+};
+
 struct accel_mlx5_task {
 	struct spdk_accel_task base;
 	struct accel_mlx5_iov_sgl src;
@@ -106,6 +111,7 @@ struct accel_mlx5_task {
 		struct {
 			uint8_t inplace : 1;
 			uint8_t enc_order : 2;
+			uint8_t mlx5_opcode: 5;
 		};
 	};
 	/* Keep this array last since not all elements might be accessed, this reduces amount of data to be
@@ -148,6 +154,13 @@ struct accel_mlx5_io_channel {
 	uint32_t num_devs;
 	/* Index in \b devs to be used for operations in round-robin way */
 	uint32_t dev_idx;
+};
+
+struct accel_mlx5_task_operations {
+	int (*init)(struct accel_mlx5_task *task);
+	int (*process)(struct accel_mlx5_task *task);
+	int (*cont)(struct accel_mlx5_task *task);
+	void (*complete)(struct accel_mlx5_task *task);
 };
 
 static struct accel_mlx5_module g_accel_mlx5;
@@ -225,16 +238,12 @@ accel_mlx5_sge_unwind(struct ibv_sge *sge, uint32_t sge_count, uint32_t step)
 }
 
 static inline void
-accel_mlx5_task_complete(struct accel_mlx5_task *task)
+accel_mlx5_crypto_task_complete(struct accel_mlx5_task *task)
 {
 	struct accel_mlx5_dev *dev = task->qp->dev;
 
-	assert(task->num_reqs == task->num_completed_reqs);
-	SPDK_DEBUGLOG(accel_mlx5, "Complete task %p, opc %d\n", task, task->base.op_code);
-
-	if (task->num_ops) {
-		spdk_mlx5_mkey_pool_put_bulk(dev->crypto_mkeys, task->mkeys, task->num_ops);
-	}
+	assert(task->num_ops);
+	spdk_mlx5_mkey_pool_put_bulk(dev->crypto_mkeys, task->mkeys, task->num_ops);
 	spdk_accel_task_complete(&task->base, 0);
 }
 
@@ -247,7 +256,9 @@ accel_mlx5_task_fail(struct accel_mlx5_task *task, int rc)
 	SPDK_DEBUGLOG(accel_mlx5, "Fail task %p, opc %d, rc %d\n", task, task->base.op_code, rc);
 
 	if (task->num_ops) {
-		spdk_mlx5_mkey_pool_put_bulk(dev->crypto_mkeys, task->mkeys, task->num_ops);
+		if (task->mlx5_opcode == ACCEL_MLX5_OPC_CRYPTO) {
+			spdk_mlx5_mkey_pool_put_bulk(dev->crypto_mkeys, task->mkeys, task->num_ops);
+		}
 	}
 	spdk_accel_task_complete(&task->base, rc);
 }
@@ -530,7 +541,7 @@ accel_mlx5_configure_crypto_umr(struct accel_mlx5_task *mlx5_task, struct accel_
 }
 
 static inline int
-accel_mlx5_task_process(struct accel_mlx5_task *mlx5_task)
+accel_mlx5_crypto_task_process(struct accel_mlx5_task *mlx5_task)
 {
 	struct accel_mlx5_sge sges[ACCEL_MLX5_MAX_MKEYS_IN_TASK];
 	struct spdk_mlx5_crypto_dek_data dek_data;
@@ -636,16 +647,11 @@ accel_mlx5_task_process(struct accel_mlx5_task *mlx5_task)
 }
 
 static inline int
-accel_mlx5_task_continue(struct accel_mlx5_task *task)
+accel_mlx5_crypto_task_continue(struct accel_mlx5_task *task)
 {
 	struct accel_mlx5_qp *qp = task->qp;
 	struct accel_mlx5_dev *dev = qp->dev;
 	uint16_t qp_slot = accel_mlx5_dev_get_available_slots(dev, qp);
-
-	if (spdk_unlikely(qp->recovering)) {
-		STAILQ_INSERT_TAIL(&dev->nomem, task, link);
-		return 0;
-	}
 
 	assert(task->num_reqs > task->num_completed_reqs);
 	if (task->num_ops == 0) {
@@ -663,39 +669,33 @@ accel_mlx5_task_continue(struct accel_mlx5_task *task)
 		return -ENOMEM;
 	}
 
-	return accel_mlx5_task_process(task);
+	return accel_mlx5_crypto_task_process(task);
 }
 
 static inline int
-accel_mlx5_task_init(struct accel_mlx5_task *mlx5_task, struct accel_mlx5_dev *dev)
+accel_mlx5_crypto_task_init(struct accel_mlx5_task *mlx5_task)
 {
 	struct spdk_accel_task *task = &mlx5_task->base;
+	struct accel_mlx5_dev *dev = mlx5_task->qp->dev;
 	uint64_t src_nbytes = task->nbytes;
 #ifdef DEBUG
 	uint64_t dst_nbytes;
 	uint32_t i;
 #endif
-	switch (task->op_code) {
-	case SPDK_ACCEL_OPC_ENCRYPT:
-		mlx5_task->enc_order = SPDK_MLX5_ENCRYPTION_ORDER_ENCRYPTED_RAW_WIRE;
-		break;
-	case SPDK_ACCEL_OPC_DECRYPT:
-		mlx5_task->enc_order = SPDK_MLX5_ENCRYPTION_ORDER_ENCRYPTED_RAW_MEMORY;
-		break;
-	default:
-		SPDK_ERRLOG("Unsupported accel opcode %d\n", task->op_code);
-		return -ENOTSUP;
-	}
+	bool crypto_key_ok;
 
-	if (spdk_unlikely(src_nbytes % mlx5_task->base.block_size != 0)) {
+	crypto_key_ok = (task->crypto_key && task->crypto_key->module_if == &g_accel_mlx5.module &&
+			 task->crypto_key->priv);
+	if (spdk_unlikely((task->nbytes % mlx5_task->base.block_size != 0) || !crypto_key_ok)) {
+		if (crypto_key_ok) {
+			SPDK_ERRLOG("src length %"PRIu64" is not a multiple of the block size %u\n", task->nbytes,
+				    mlx5_task->base.block_size);
+		} else {
+			SPDK_ERRLOG("Wrong crypto key provided\n");
+		}
 		return -EINVAL;
 	}
 
-	mlx5_task->qp = &dev->qp;
-	mlx5_task->num_completed_reqs = 0;
-	mlx5_task->num_submitted_reqs = 0;
-	mlx5_task->num_ops = 0;
-	mlx5_task->num_processed_blocks = 0;
 	assert(src_nbytes / mlx5_task->base.block_size <= UINT16_MAX);
 	mlx5_task->num_blocks = src_nbytes / mlx5_task->base.block_size;
 	accel_mlx5_iov_sgl_init(&mlx5_task->src, task->s.iovs, task->s.iovcnt);
@@ -759,6 +759,98 @@ accel_mlx5_task_init(struct accel_mlx5_task *mlx5_task, struct accel_mlx5_dev *d
 	return 0;
 }
 
+
+static int
+accel_mlx5_task_op_not_implemented(struct accel_mlx5_task *mlx5_task)
+{
+	SPDK_ERRLOG("wrong function called\n");
+	SPDK_UNREACHABLE();
+}
+
+static void
+accel_mlx5_task_op_not_implemented_v(struct accel_mlx5_task *mlx5_task)
+{
+	SPDK_ERRLOG("wrong function called\n");
+	SPDK_UNREACHABLE();
+}
+
+static int
+accel_mlx5_task_op_not_supported(struct accel_mlx5_task *mlx5_task)
+{
+	SPDK_ERRLOG("Unsupported opcode %d\n", mlx5_task->base.op_code);
+
+	return -ENOTSUP;
+}
+
+static struct accel_mlx5_task_operations g_accel_mlx5_tasks_ops[] = {
+	[ACCEL_MLX5_OPC_CRYPTO] = {
+		.init = accel_mlx5_crypto_task_init,
+		.process = accel_mlx5_crypto_task_process,
+		.cont = accel_mlx5_crypto_task_continue,
+		.complete = accel_mlx5_crypto_task_complete,
+	},
+	[ACCEL_MLX5_OPC_LAST] = {
+		.init = accel_mlx5_task_op_not_supported,
+		.process = accel_mlx5_task_op_not_implemented,
+		.cont = accel_mlx5_task_op_not_implemented,
+		.complete = accel_mlx5_task_op_not_implemented_v
+	},
+};
+
+static inline void
+accel_mlx5_task_complete(struct accel_mlx5_task *task)
+{
+	assert(task->num_reqs == task->num_completed_reqs);
+	SPDK_DEBUGLOG(accel_mlx5, "Complete task %p, opc %d\n", task, task->base.op_code);
+
+	g_accel_mlx5_tasks_ops[task->mlx5_opcode].complete(task);
+}
+
+static inline int
+accel_mlx5_task_continue(struct accel_mlx5_task *task)
+{
+	struct accel_mlx5_qp *qp = task->qp;
+	struct accel_mlx5_dev *dev = qp->dev;
+
+	if (spdk_unlikely(qp->recovering)) {
+		STAILQ_INSERT_TAIL(&dev->nomem, task, link);
+		return 0;
+	}
+
+	return g_accel_mlx5_tasks_ops[task->mlx5_opcode].cont(task);
+}
+static inline void
+accel_mlx5_task_init_opcode(struct accel_mlx5_task *mlx5_task)
+{
+	uint8_t base_opcode = mlx5_task->base.op_code;
+
+	switch (base_opcode) {
+	case SPDK_ACCEL_OPC_ENCRYPT:
+		assert(g_accel_mlx5.crypto_supported);
+		mlx5_task->enc_order = SPDK_MLX5_ENCRYPTION_ORDER_ENCRYPTED_RAW_WIRE;
+		mlx5_task->mlx5_opcode =  ACCEL_MLX5_OPC_CRYPTO;
+		break;
+	case SPDK_ACCEL_OPC_DECRYPT:
+		assert(g_accel_mlx5.crypto_supported);
+		mlx5_task->enc_order = SPDK_MLX5_ENCRYPTION_ORDER_ENCRYPTED_RAW_MEMORY;
+		mlx5_task->mlx5_opcode = ACCEL_MLX5_OPC_CRYPTO;
+		break;
+	default:
+		SPDK_ERRLOG("wrong opcode %d\n", base_opcode);
+		mlx5_task->mlx5_opcode = ACCEL_MLX5_OPC_LAST;
+	}
+}
+
+static inline void
+accel_mlx5_task_reset(struct accel_mlx5_task *mlx5_task)
+{
+	mlx5_task->num_completed_reqs = 0;
+	mlx5_task->num_submitted_reqs = 0;
+	mlx5_task->num_ops = 0;
+	mlx5_task->num_processed_blocks = 0;
+	mlx5_task->raw = 0;
+}
+
 static int
 accel_mlx5_submit_tasks(struct spdk_io_channel *_ch, struct spdk_accel_task *task)
 {
@@ -767,18 +859,20 @@ accel_mlx5_submit_tasks(struct spdk_io_channel *_ch, struct spdk_accel_task *tas
 	struct accel_mlx5_dev *dev;
 	int rc;
 
-	if (!g_accel_mlx5.enabled || !task->crypto_key ||
-	    task->crypto_key->module_if != &g_accel_mlx5.module ||
-	    !task->crypto_key->priv) {
-		return -EINVAL;
-	}
+	/* We should not receive any tasks if the module was not enabled */
+	assert(g_accel_mlx5.enabled);
+
 	dev = &ch->devs[ch->dev_idx];
 	ch->dev_idx++;
 	if (ch->dev_idx == ch->num_devs) {
 		ch->dev_idx = 0;
 	}
 
-	rc = accel_mlx5_task_init(mlx5_task, dev);
+	mlx5_task->qp = &dev->qp;
+	accel_mlx5_task_reset(mlx5_task);
+	accel_mlx5_task_init_opcode(mlx5_task);
+
+	rc = g_accel_mlx5_tasks_ops[mlx5_task->mlx5_opcode].init(mlx5_task);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
 			SPDK_DEBUGLOG(accel_mlx5, "no reqs to handle new task %p (required %u), put to queue\n", mlx5_task,
@@ -786,6 +880,7 @@ accel_mlx5_submit_tasks(struct spdk_io_channel *_ch, struct spdk_accel_task *tas
 			STAILQ_INSERT_TAIL(&dev->nomem, mlx5_task, link);
 			return 0;
 		}
+		SPDK_ERRLOG("Task opc %d init failed, rc %d\n", task->op_code, rc);
 		return rc;
 	}
 
@@ -794,7 +889,7 @@ accel_mlx5_submit_tasks(struct spdk_io_channel *_ch, struct spdk_accel_task *tas
 		return 0;
 	}
 
-	return accel_mlx5_task_process(mlx5_task);
+	return g_accel_mlx5_tasks_ops[mlx5_task->mlx5_opcode].process(mlx5_task);
 }
 
 static void accel_mlx5_recover_qp(struct accel_mlx5_qp *qp);
