@@ -163,6 +163,10 @@ struct spdk_nvmf_qpair {
 	bool					disconnect_started;
 
 	uint16_t				trace_id;
+
+	/* Number of IO outstanding at transport level */
+	uint16_t				queue_depth;
+
 	struct spdk_nvmf_qpair_auth		*auth;
 };
 

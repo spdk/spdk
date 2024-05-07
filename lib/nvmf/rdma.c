@@ -102,9 +102,27 @@ enum spdk_nvmf_rdma_request_state {
 SPDK_TRACE_REGISTER_FN(nvmf_trace, "nvmf_rdma", TRACE_GROUP_NVMF_RDMA)
 {
 	spdk_trace_register_object(OBJECT_NVMF_RDMA_IO, 'r');
-	spdk_trace_register_description("RDMA_REQ_NEW", TRACE_RDMA_REQUEST_STATE_NEW,
-					OWNER_TYPE_NONE, OBJECT_NVMF_RDMA_IO, 1,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+
+	struct spdk_trace_tpoint_opts opts[] = {
+		{
+			"RDMA_REQ_NEW", TRACE_RDMA_REQUEST_STATE_NEW,
+			OWNER_TYPE_NONE, OBJECT_NVMF_RDMA_IO, 1,
+			{
+				{ "qpair", SPDK_TRACE_ARG_TYPE_PTR, 8 },
+				{ "qd", SPDK_TRACE_ARG_TYPE_INT, 4 }
+			}
+		},
+		{
+			"RDMA_REQ_COMPLETED", TRACE_RDMA_REQUEST_STATE_COMPLETED,
+			OWNER_TYPE_NONE, OBJECT_NVMF_RDMA_IO, 0,
+			{
+				{ "qpair", SPDK_TRACE_ARG_TYPE_PTR, 8 },
+				{ "qd", SPDK_TRACE_ARG_TYPE_INT, 4 }
+			}
+		},
+	};
+
+	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
 	spdk_trace_register_description("RDMA_REQ_NEED_BUFFER", TRACE_RDMA_REQUEST_STATE_NEED_BUFFER,
 					OWNER_TYPE_NONE, OBJECT_NVMF_RDMA_IO, 0,
 					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
@@ -146,10 +164,6 @@ SPDK_TRACE_REGISTER_FN(nvmf_trace, "nvmf_rdma", TRACE_GROUP_NVMF_RDMA)
 					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 	spdk_trace_register_description("RDMA_REQ_COMPLETING",
 					TRACE_RDMA_REQUEST_STATE_COMPLETING,
-					OWNER_TYPE_NONE, OBJECT_NVMF_RDMA_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
-	spdk_trace_register_description("RDMA_REQ_COMPLETED",
-					TRACE_RDMA_REQUEST_STATE_COMPLETED,
 					OWNER_TYPE_NONE, OBJECT_NVMF_RDMA_IO, 0,
 					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 
@@ -1031,6 +1045,7 @@ nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	STAILQ_INIT(&rqpair->pending_rdma_read_queue);
 	STAILQ_INIT(&rqpair->pending_rdma_write_queue);
 	STAILQ_INIT(&rqpair->pending_rdma_send_queue);
+	rqpair->qpair.queue_depth = 0;
 
 	return 0;
 
@@ -1973,6 +1988,7 @@ _nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 	rqpair->qd--;
 
 	STAILQ_INSERT_HEAD(&rqpair->resources->free_queue, rdma_req, state_link);
+	rqpair->qpair.queue_depth--;
 	rdma_req->state = RDMA_REQUEST_STATE_FREE;
 }
 
@@ -2083,7 +2099,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			break;
 		case RDMA_REQUEST_STATE_NEW:
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_NEW, 0, 0,
-					  (uintptr_t)rdma_req, (uintptr_t)rqpair);
+					  (uintptr_t)rdma_req, (uintptr_t)rqpair, rqpair->qpair.queue_depth);
 			rdma_recv = rdma_req->recv;
 
 			/* The first element of the SGL is the NVMe command */
@@ -2408,7 +2424,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			break;
 		case RDMA_REQUEST_STATE_COMPLETED:
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_COMPLETED, 0, 0,
-					  (uintptr_t)rdma_req, (uintptr_t)rqpair);
+					  (uintptr_t)rdma_req, (uintptr_t)rqpair, rqpair->qpair.queue_depth);
 
 			rqpair->poller->stat.request_latency += spdk_get_ticks() - rdma_req->receive_tsc;
 			_nvmf_rdma_request_free(rdma_req, rtransport);
@@ -4695,6 +4711,7 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			rdma_recv->receive_tsc = poll_tsc;
 			rpoller->stat.requests++;
 			STAILQ_INSERT_HEAD(&rqpair->resources->incoming_queue, rdma_recv, link);
+			rqpair->qpair.queue_depth++;
 			break;
 		case RDMA_WR_TYPE_DATA:
 			rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, data_wr);
