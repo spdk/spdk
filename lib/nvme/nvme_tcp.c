@@ -297,6 +297,7 @@ nvme_tcp_alloc_reqs(struct nvme_tcp_qpair *tqpair)
 	TAILQ_INIT(&tqpair->send_queue);
 	TAILQ_INIT(&tqpair->free_reqs);
 	TAILQ_INIT(&tqpair->outstanding_reqs);
+	tqpair->qpair.queue_depth = 0;
 	for (i = 0; i < tqpair->num_entries; i++) {
 		tcp_req = &tqpair->tcp_reqs[i];
 		tcp_req->cid = i;
@@ -1019,9 +1020,10 @@ nvme_tcp_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 		return -1;
 	}
 
+	tqpair->qpair.queue_depth++;
 	spdk_trace_record(TRACE_NVME_TCP_SUBMIT, qpair->id, 0, (uintptr_t)req, req->cb_arg,
 			  (uint32_t)req->cmd.cid, (uint32_t)req->cmd.opc,
-			  req->cmd.cdw10, req->cmd.cdw11, req->cmd.cdw12);
+			  req->cmd.cdw10, req->cmd.cdw11, req->cmd.cdw12, tqpair->qpair.queue_depth);
 	TAILQ_INSERT_TAIL(&tqpair->outstanding_reqs, tcp_req, link);
 	return nvme_tcp_qpair_capsule_cmd_send(tqpair, tcp_req);
 }
@@ -1062,8 +1064,9 @@ nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req,
 		}
 	}
 
+	tqpair->qpair.queue_depth--;
 	spdk_trace_record(TRACE_NVME_TCP_COMPLETE, qpair->id, 0, (uintptr_t)req, req->cb_arg,
-			  (uint32_t)req->cmd.cid, (uint32_t)cpl.status_raw);
+			  (uint32_t)req->cmd.cid, (uint32_t)cpl.status_raw, tqpair->qpair.queue_depth);
 	TAILQ_REMOVE(&tcp_req->tqpair->outstanding_reqs, tcp_req, link);
 	nvme_tcp_req_put(tqpair, tcp_req);
 	nvme_complete_request(req->cb_fn, req->cb_arg, req->qpair, req, &cpl);
@@ -3045,7 +3048,8 @@ SPDK_TRACE_REGISTER_FN(nvme_tcp, "nvme_tcp", TRACE_GROUP_NVME_TCP)
 				{ "opc", SPDK_TRACE_ARG_TYPE_INT, 4 },
 				{ "dw10", SPDK_TRACE_ARG_TYPE_PTR, 4 },
 				{ "dw11", SPDK_TRACE_ARG_TYPE_PTR, 4 },
-				{ "dw12", SPDK_TRACE_ARG_TYPE_PTR, 4 }
+				{ "dw12", SPDK_TRACE_ARG_TYPE_PTR, 4 },
+				{ "qd", SPDK_TRACE_ARG_TYPE_INT, 4 }
 			}
 		},
 		{
@@ -3053,7 +3057,8 @@ SPDK_TRACE_REGISTER_FN(nvme_tcp, "nvme_tcp", TRACE_GROUP_NVME_TCP)
 			OWNER_TYPE_NVME_TCP_QP, OBJECT_NVME_TCP_REQ, 0,
 			{	{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 },
 				{ "cid", SPDK_TRACE_ARG_TYPE_INT, 4 },
-				{ "cpl", SPDK_TRACE_ARG_TYPE_PTR, 4 }
+				{ "cpl", SPDK_TRACE_ARG_TYPE_PTR, 4 },
+				{ "qd", SPDK_TRACE_ARG_TYPE_INT, 4 }
 			}
 		},
 	};
