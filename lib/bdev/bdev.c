@@ -304,6 +304,9 @@ struct spdk_bdev_channel {
 
 	uint32_t		flags;
 
+	/* Counts number of bdev_io in the io_submitted TAILQ */
+	uint16_t		queue_depth;
+
 	uint16_t		trace_id;
 
 	struct spdk_histogram_data *histogram;
@@ -442,12 +445,14 @@ static inline void
 bdev_ch_add_to_io_submitted(struct spdk_bdev_io *bdev_io)
 {
 	TAILQ_INSERT_TAIL(&bdev_io->internal.ch->io_submitted, bdev_io, internal.ch_link);
+	bdev_io->internal.ch->queue_depth++;
 }
 
 static inline void
 bdev_ch_remove_from_io_submitted(struct spdk_bdev_io *bdev_io)
 {
 	TAILQ_REMOVE(&bdev_io->internal.ch->io_submitted, bdev_io, internal.ch_link);
+	bdev_io->internal.ch->queue_depth--;
 }
 
 void
@@ -3076,7 +3081,8 @@ bdev_io_split_submit(struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt
 			if (bdev_io->u.bdev.split_outstanding == 0) {
 				bdev_ch_remove_from_io_submitted(bdev_io);
 				spdk_trace_record(TRACE_BDEV_IO_DONE, bdev_io->internal.ch->trace_id,
-						  0, (uintptr_t)bdev_io, bdev_io->internal.caller_ctx);
+						  0, (uintptr_t)bdev_io, bdev_io->internal.caller_ctx,
+						  bdev_io->internal.ch->queue_depth);
 				bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
 			}
 		}
@@ -3203,7 +3209,8 @@ _bdev_rw_split(void *_bdev_io)
 								bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
 								bdev_ch_remove_from_io_submitted(bdev_io);
 								spdk_trace_record(TRACE_BDEV_IO_DONE, bdev_io->internal.ch->trace_id,
-										  0, (uintptr_t)bdev_io, bdev_io->internal.caller_ctx);
+										  0, (uintptr_t)bdev_io, bdev_io->internal.caller_ctx,
+										  bdev_io->internal.ch->queue_depth);
 								bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
 							}
 
@@ -3359,7 +3366,8 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		assert(parent_io->internal.cb != bdev_io_split_done);
 		bdev_ch_remove_from_io_submitted(parent_io);
 		spdk_trace_record(TRACE_BDEV_IO_DONE, parent_io->internal.ch->trace_id,
-				  0, (uintptr_t)parent_io, bdev_io->internal.caller_ctx);
+				  0, (uintptr_t)parent_io, bdev_io->internal.caller_ctx,
+				  parent_io->internal.ch->queue_depth);
 
 		if (spdk_likely(parent_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS)) {
 			if (bdev_io_needs_sequence_exec(parent_io->internal.desc, parent_io)) {
@@ -3568,7 +3576,7 @@ bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	spdk_trace_record_tsc(bdev_io->internal.submit_tsc, TRACE_BDEV_IO_START,
 			      ch->trace_id, bdev_io->u.bdev.num_blocks,
 			      (uintptr_t)bdev_io, (uint64_t)bdev_io->type, bdev_io->internal.caller_ctx,
-			      bdev_io->u.bdev.offset_blocks);
+			      bdev_io->u.bdev.offset_blocks, ch->queue_depth);
 
 	if (bdev_io->internal.split) {
 		bdev_io_split(bdev_io);
@@ -7241,7 +7249,7 @@ bdev_io_complete(void *ctx)
 
 	bdev_ch_remove_from_io_submitted(bdev_io);
 	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_DONE, bdev_ch->trace_id, 0, (uintptr_t)bdev_io,
-			      bdev_io->internal.caller_ctx);
+			      bdev_io->internal.caller_ctx, bdev_ch->queue_depth);
 
 	if (bdev_ch->histogram) {
 		spdk_histogram_data_tally(bdev_ch->histogram, tsc_diff);
@@ -10398,12 +10406,16 @@ SPDK_TRACE_REGISTER_FN(bdev_trace, "bdev", TRACE_GROUP_BDEV)
 				{ "type", SPDK_TRACE_ARG_TYPE_INT, 8 },
 				{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 },
 				{ "offset", SPDK_TRACE_ARG_TYPE_INT, 8 },
+				{ "qd", SPDK_TRACE_ARG_TYPE_INT, 4 }
 			}
 		},
 		{
 			"BDEV_IO_DONE", TRACE_BDEV_IO_DONE,
 			OWNER_TYPE_BDEV, OBJECT_BDEV_IO, 0,
-			{{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 }}
+			{
+				{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 },
+				{ "qd", SPDK_TRACE_ARG_TYPE_INT, 4 }
+			}
 		},
 		{
 			"BDEV_IOCH_CREATE", TRACE_BDEV_IOCH_CREATE,
