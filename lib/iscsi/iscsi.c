@@ -15,8 +15,8 @@
 #include "spdk/sock.h"
 #include "spdk/string.h"
 #include "spdk/queue.h"
+#include "spdk/md5.h"
 
-#include "iscsi/md5.h"
 #include "iscsi/iscsi.h"
 #include "iscsi/param.h"
 #include "iscsi/tgt_node.h"
@@ -904,17 +904,17 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 			goto error_return;
 		}
 
-		md5init(&md5ctx);
+		spdk_md5init(&md5ctx);
 		/* Identifier */
-		md5update(&md5ctx, conn->auth.chap_id, 1);
+		spdk_md5update(&md5ctx, conn->auth.chap_id, 1);
 		/* followed by secret */
-		md5update(&md5ctx, conn->auth.secret,
-			  strlen(conn->auth.secret));
+		spdk_md5update(&md5ctx, conn->auth.secret,
+			       strlen(conn->auth.secret));
 		/* followed by Challenge Value */
-		md5update(&md5ctx, conn->auth.chap_challenge,
-			  conn->auth.chap_challenge_len);
+		spdk_md5update(&md5ctx, conn->auth.chap_challenge,
+			       conn->auth.chap_challenge_len);
 		/* tgtmd5 is expecting Response Value */
-		md5final(tgtmd5, &md5ctx);
+		spdk_md5final(tgtmd5, &md5ctx);
 
 		bin2hex(in_val, ISCSI_TEXT_MAX_VAL_LEN, tgtmd5, SPDK_MD5DIGEST_LEN);
 
@@ -983,17 +983,17 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 				goto error_return;
 			}
 
-			md5init(&md5ctx);
+			spdk_md5init(&md5ctx);
 			/* Identifier */
-			md5update(&md5ctx, conn->auth.chap_mid, 1);
+			spdk_md5update(&md5ctx, conn->auth.chap_mid, 1);
 			/* followed by secret */
-			md5update(&md5ctx, conn->auth.msecret,
-				  strlen(conn->auth.msecret));
+			spdk_md5update(&md5ctx, conn->auth.msecret,
+				       strlen(conn->auth.msecret));
 			/* followed by Challenge Value */
-			md5update(&md5ctx, conn->auth.chap_mchallenge,
-				  conn->auth.chap_mchallenge_len);
+			spdk_md5update(&md5ctx, conn->auth.chap_mchallenge,
+				       conn->auth.chap_mchallenge_len);
 			/* tgtmd5 is Response Value */
-			md5final(tgtmd5, &md5ctx);
+			spdk_md5final(tgtmd5, &md5ctx);
 
 			bin2hex(in_val, ISCSI_TEXT_MAX_VAL_LEN, tgtmd5, SPDK_MD5DIGEST_LEN);
 

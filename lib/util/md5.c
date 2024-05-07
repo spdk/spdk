@@ -5,37 +5,39 @@
  */
 
 #include "spdk/stdinc.h"
-#include "iscsi/md5.h"
+#include "spdk/md5.h"
+#include "spdk/likely.h"
 
 int
-md5init(struct spdk_md5ctx *md5ctx)
+spdk_md5init(struct spdk_md5ctx *md5ctx)
 {
 	int rc;
 
-	if (md5ctx == NULL) {
+	if (spdk_unlikely(md5ctx == NULL)) {
 		return -1;
 	}
 
 	md5ctx->md5ctx = EVP_MD_CTX_create();
-	if (md5ctx->md5ctx == NULL) {
+	if (spdk_unlikely(md5ctx->md5ctx == NULL)) {
 		return -1;
 	}
 
 	rc = EVP_DigestInit_ex(md5ctx->md5ctx, EVP_md5(), NULL);
 	/* For EVP_DigestInit_ex, 1 == success, 0 == failure. */
-	if (rc == 0) {
+	if (spdk_unlikely(rc == 0)) {
 		EVP_MD_CTX_destroy(md5ctx->md5ctx);
 		md5ctx->md5ctx = NULL;
+		rc = -1;
 	}
 	return rc;
 }
 
 int
-md5final(void *md5, struct spdk_md5ctx *md5ctx)
+spdk_md5final(void *md5, struct spdk_md5ctx *md5ctx)
 {
 	int rc;
 
-	if (md5ctx == NULL || md5 == NULL) {
+	if (spdk_unlikely(md5ctx == NULL || md5 == NULL)) {
 		return -1;
 	}
 	rc = EVP_DigestFinal_ex(md5ctx->md5ctx, md5, NULL);
@@ -45,14 +47,14 @@ md5final(void *md5, struct spdk_md5ctx *md5ctx)
 }
 
 int
-md5update(struct spdk_md5ctx *md5ctx, const void *data, size_t len)
+spdk_md5update(struct spdk_md5ctx *md5ctx, const void *data, size_t len)
 {
 	int rc;
 
-	if (md5ctx == NULL) {
+	if (spdk_unlikely(md5ctx == NULL)) {
 		return -1;
 	}
-	if (data == NULL || len == 0) {
+	if (spdk_unlikely(data == NULL || len == 0)) {
 		return 0;
 	}
 	rc = EVP_DigestUpdate(md5ctx->md5ctx, data, len);

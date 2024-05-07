@@ -31,12 +31,6 @@ Support implemented only for the POSIX and SSL sockets.
 New function `spdk_interrupt_register_for_events()` build on top of `spdk_fd_group_add_for_events()`.
 See below for details.
 
-### util
-
-New function `spdk_fd_group_add_for_events()` was added alongside the existing `spdk_fd_group_add()`.
-Difference is that new API allows for specifying a set of events to be monitored instead of default
-SPDK_INTERRUPT_EVENT_IN.
-
 ### env
 
 Added `spdk_env_core_get_smt_cpuset()` API to get the list of SMT sibling
@@ -72,6 +66,14 @@ Each element in `enum spdk_dif_pi_format` was subtracted by 1 to match the defin
 of the Protection Information Format in the NVMe specification. This is necessary change
 but breaks ABI compatibility. Please recompile your application if you added code using
 this enum of older SPDK.
+
+### util
+
+New function `spdk_fd_group_add_for_events()` was added alongside the existing `spdk_fd_group_add()`.
+Difference is that new API allows for specifying a set of events to be monitored instead of default
+SPDK_INTERRUPT_EVENT_IN.
+
+Added API to calculate md5 hash.
 
 ## v24.05
 

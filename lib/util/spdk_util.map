@@ -199,5 +199,10 @@
 	spdk_zipf_free;
 	spdk_zipf_generate;
 
+	# public functions in md5.h
+	spdk_md5init;
+	spdk_md5final;
+	spdk_md5update;
+
 	local: *;
 };
