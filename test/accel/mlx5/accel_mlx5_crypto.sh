@@ -13,6 +13,8 @@ allowed_devices=${1:-"mlx5_0"}
 
 function gen_accel_mlx5_crypto_json() {
 	crypto_split_blocks=${1:-0}
+	accel_qp_size=${2:-256}
+	accel_num_requests=${3:-2047}
 
 	jq . <<- JSON
 		{
@@ -24,6 +26,8 @@ function gen_accel_mlx5_crypto_json() {
 		          "method": "mlx5_scan_accel_module",
 		          "params": {
 		            "allowed_devs": "${allowed_devices}",
+		            "qp_size": ${accel_qp_size},
+		            "num_requests": ${accel_num_requests},
 		            "crypto_split_blocks": ${crypto_split_blocks}
 		          }
 		        },
@@ -69,11 +73,18 @@ function gen_accel_mlx5_crypto_json() {
 }
 
 # Test crypto_split_blocks
-"$rootdir/test/dma/test_dma/test_dma" -q 64 -o 16384 -w randrw -M 50 -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json 8) -b "Crypto0" -f -x translate
+"$rootdir/test/dma/test_dma/test_dma" -q 64 -o 16384 -w verify -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json 8) -b "Crypto0" -f -x translate
 
 # Test fragmented crypto operation
-"$rootdir/test/dma/test_dma/test_dma" -q 64 -o 4096 -O 17 -w randrw -M 50 -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json) -b "Crypto0" -f -x translate
-"$rootdir/test/dma/test_dma/test_dma" -q 64 -o 4096 -O 33 -w randrw -M 50 -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json) -b "Crypto0" -f -x translate
+"$rootdir/test/dma/test_dma/test_dma" -q 64 -o 4096 -O 17 -w verify -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json) -b "Crypto0" -f -x translate
+"$rootdir/test/dma/test_dma/test_dma" -q 64 -o 4096 -O 33 -w verify -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json) -b "Crypto0" -f -x translate
+"$rootdir/test/dma/test_dma/test_dma" -q 64 -o 131072 -O 49 -w verify -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json) -b "Crypto0" -f -x translate
+"$rootdir/test/dma/test_dma/test_dma" -q 64 -o 131072 -O 49 -w verify -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json 5) -b "Crypto0" -f -x translate
+
+# Test lack of resources
+"$rootdir/test/dma/test_dma/test_dma" -q 64 -o 131072 -O 49 -w verify -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json 0 16 2047) -b "Crypto0" -f -x translate
+"$rootdir/test/dma/test_dma/test_dma" -q 64 -o 131072 -O 49 -w verify -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json 0 256 32) -b "Crypto0" -f -x translate
+"$rootdir/test/dma/test_dma/test_dma" -q 64 -o 131072 -O 49 -w verify -t 5 -m 0xc --json <(gen_accel_mlx5_crypto_json 0 16 32) -b "Crypto0" -f -x translate
 
 # Test different modes, qdepth and IO size values
 for mode in randread randwrite randrw; do

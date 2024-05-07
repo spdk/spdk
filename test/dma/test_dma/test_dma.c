@@ -11,6 +11,7 @@
 #include "spdk/likely.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/md5.h"
 
 #include <infiniband/verbs.h>
 
@@ -19,10 +20,13 @@ struct dma_test_task;
 struct dma_test_req {
 	struct iovec *iovs;
 	struct spdk_bdev_ext_io_opts io_opts;
+	uint64_t io_offset;
 	uint64_t submit_tsc;
 	struct ibv_mr *mr;
 	struct dma_test_task *task;
 	void *buffer;
+	uint32_t idx;
+	uint8_t md5_orig[SPDK_MD5DIGEST_LEN];
 };
 
 struct dma_test_task_stats {
@@ -38,6 +42,7 @@ struct dma_test_task {
 	uint64_t cur_io_offset;
 	uint64_t max_offset_in_ios;
 	uint64_t num_blocks_per_io;
+	uint64_t num_blocks_per_core;
 	int rw_percentage;
 	uint32_t seed;
 	uint32_t io_inflight;
@@ -51,6 +56,7 @@ struct dma_test_task {
 	uint64_t num_pull_push;
 	uint64_t num_mem_zero;
 	uint32_t lcore;
+	uint32_t idx; /* sequential number of this task */
 
 	TAILQ_ENTRY(dma_test_task) link;
 };
@@ -80,6 +86,7 @@ static uint32_t g_test_ops;
 static uint32_t g_corrupt_mkey_counter;
 static uint32_t g_iovcnt = 1;
 static bool g_is_random;
+static bool g_verify;
 static bool g_force_memory_domains_support;
 
 static struct spdk_thread *g_main_thread;
@@ -234,13 +241,107 @@ dma_test_bdev_io_completion_cb(struct spdk_bdev_io *bdev_io, bool success, void 
 	dma_test_submit_io(req);
 }
 
+static void
+dma_test_bdev_io_completion_verify_read_done(struct spdk_bdev_io *bdev_io, bool success,
+		void *cb_arg)
+{
+	uint8_t md5_new[SPDK_MD5DIGEST_LEN];
+	struct dma_test_req *req = cb_arg;
+	struct dma_test_task *task = req->task;
+	struct spdk_md5ctx md5ctx;
+
+	assert(task->io_inflight > 0);
+	--task->io_inflight;
+	dma_test_task_update_stats(task, req->submit_tsc);
+
+	if (!success && !g_corrupt_mkey_counter) {
+		if (!g_run_rc) {
+			fprintf(stderr, "IO completed with error\n");
+			g_run_rc = -1;
+		}
+		task->is_draining = true;
+	}
+
+	spdk_bdev_free_io(bdev_io);
+
+	if (spdk_unlikely(task->is_draining)) {
+		dma_test_check_and_signal_task_done(task);
+		return;
+	}
+
+	spdk_md5init(&md5ctx);
+	spdk_md5update(&md5ctx, req->buffer, g_io_size);
+	spdk_md5final(md5_new, &md5ctx);
+
+	if (memcmp(req->md5_orig, md5_new, SPDK_MD5DIGEST_LEN) != 0) {
+		fprintf(stderr, "lcore %u, offset %"PRIu64" md5 mismatch\n", task->lcore, req->io_offset);
+		if (!g_run_rc) {
+			g_run_rc = -1;
+		}
+		task->is_draining = true;
+		dma_test_check_and_signal_task_done(task);
+		return;
+	}
+
+	dma_test_submit_io(req);
+}
+
+static void
+dma_test_bdev_io_completion_verify_write_done(struct spdk_bdev_io *bdev_io, bool success,
+		void *cb_arg)
+{
+	struct dma_test_req *req = cb_arg;
+	struct dma_test_task *task = req->task;
+	int rc;
+
+	assert(task->io_inflight > 0);
+	--task->io_inflight;
+	dma_test_task_update_stats(task, req->submit_tsc);
+
+	if (!success && !g_corrupt_mkey_counter) {
+		if (!g_run_rc) {
+			fprintf(stderr, "IO completed with error\n");
+			g_run_rc = -1;
+		}
+		task->is_draining = true;
+	}
+
+	spdk_bdev_free_io(bdev_io);
+
+	if (spdk_unlikely(task->is_draining)) {
+		dma_test_check_and_signal_task_done(task);
+		return;
+	}
+
+	req->submit_tsc = spdk_get_ticks();
+	rc = spdk_bdev_readv_blocks_ext(task->desc, task->channel, req->iovs, g_iovcnt,
+					req->io_offset, task->num_blocks_per_io,
+					dma_test_bdev_io_completion_verify_read_done, req, &req->io_opts);
+	if (spdk_unlikely(rc)) {
+		if (!g_run_rc) {
+			/* log an error only once */
+			fprintf(stderr, "Failed to submit read IO, rc %d, stop sending IO\n", rc);
+			g_run_rc = rc;
+		}
+		task->is_draining = true;
+		dma_test_check_and_signal_task_done(task);
+		return;
+	}
+
+	task->io_inflight++;
+}
+
 static inline uint64_t
-dma_test_get_offset_in_ios(struct dma_test_task *task)
+dma_test_get_offset_in_ios(struct dma_test_task *task, uint32_t req_offset)
 {
 	uint64_t offset;
 
 	if (g_is_random) {
 		offset = rand_r(&task->seed) % task->max_offset_in_ios;
+		if (g_verify) {
+			offset += task->num_blocks_per_core * task->idx;
+			offset += task->max_offset_in_ios * req_offset;
+		}
 	} else {
 		offset = task->cur_io_offset++;
 		if (spdk_unlikely(task->cur_io_offset == task->max_offset_in_ios)) {
@@ -254,6 +355,9 @@ dma_test_get_offset_in_ios(struct dma_test_task *task)
 static inline bool
 dma_test_task_is_read(struct dma_test_task *task)
 {
+	if (g_verify) {
+		return false;
+	}
 	if (task->rw_percentage == 100) {
 		return true;
 	}
@@ -392,21 +496,22 @@ static int
 dma_test_submit_io(struct dma_test_req *req)
 {
 	struct dma_test_task *task = req->task;
-	uint64_t offset_in_ios;
 	int rc;
 	bool is_read;
 
-	offset_in_ios = dma_test_get_offset_in_ios(task);
-	is_read = dma_test_task_is_read(task);
+	req->io_offset = dma_test_get_offset_in_ios(task, req->idx) * task->num_blocks_per_io;
 	req->submit_tsc = spdk_get_ticks();
+	is_read = dma_test_task_is_read(task);
 	if (is_read) {
 		rc = spdk_bdev_readv_blocks_ext(task->desc, task->channel, req->iovs, g_iovcnt,
-						offset_in_ios * task->num_blocks_per_io, task->num_blocks_per_io,
+						req->io_offset, task->num_blocks_per_io,
 						dma_test_bdev_io_completion_cb, req, &req->io_opts);
 	} else {
 		rc = spdk_bdev_writev_blocks_ext(task->desc, task->channel, req->iovs, g_iovcnt,
-						 offset_in_ios * task->num_blocks_per_io, task->num_blocks_per_io,
-						 dma_test_bdev_io_completion_cb, req, &req->io_opts);
+						 req->io_offset, task->num_blocks_per_io,
+						 g_verify ? dma_test_bdev_io_completion_verify_write_done
+						 : dma_test_bdev_io_completion_cb,
+						 req, &req->io_opts);
 	}
 
 	if (spdk_unlikely(rc)) {
@@ -549,6 +654,26 @@ dma_test_construct_task_on_thread(void *ctx)
 
 	task->max_offset_in_ios = spdk_bdev_get_num_blocks(spdk_bdev_desc_get_bdev(
 					  task->desc)) / task->num_blocks_per_io;
+	if (g_verify) {
+		/* In verify mode each req writes a buffer and then reads its context again. It is possible that
+		 * while some req is reading a buffer, another req from another thread writes a new data to
+		 * the same lba. To prevent it, split lba range among threads and then split a smaller range
+		 * among requests */
+		task->num_blocks_per_core = task->max_offset_in_ios / spdk_env_get_core_count();
+		task->max_offset_in_ios = task->num_blocks_per_core;
+		if (!task->max_offset_in_ios) {
+			fprintf(stderr, "Disk is too small to run on %u cores\n", spdk_env_get_core_count());
+			g_run_rc = -EINVAL;
+			spdk_thread_send_msg(g_main_thread, dma_test_construct_task_done, NULL);
+		}
+		task->max_offset_in_ios /= g_queue_depth;
+		if (!task->max_offset_in_ios) {
+			fprintf(stderr, "Disk is too small to run on %u cores with qdepth %u\n", spdk_env_get_core_count(),
+				g_queue_depth);
+			g_run_rc = -EINVAL;
+			spdk_thread_send_msg(g_main_thread, dma_test_construct_task_done, NULL);
+		}
+	}
 
 	spdk_thread_send_msg(g_main_thread, dma_test_construct_task_done, task);
 }
@@ -604,6 +729,7 @@ dma_test_check_bdev_supports_rdma_memory_domain(struct spdk_bdev *bdev)
 static int
 req_alloc_buffers(struct dma_test_req *req)
 {
+	struct spdk_md5ctx md5ctx;
 	size_t iov_len, remainder;
 	uint32_t i;
 
@@ -614,7 +740,7 @@ req_alloc_buffers(struct dma_test_req *req)
 	if (!req->buffer) {
 		return -ENOMEM;
 	}
-	memset(req->buffer, 0xc, g_io_size);
+	memset(req->buffer, (int)req->idx + 1, g_io_size);
 	req->iovs = calloc(g_iovcnt, sizeof(struct iovec));
 	if (!req->iovs) {
 		return -ENOMEM;
@@ -624,6 +750,11 @@ req_alloc_buffers(struct dma_test_req *req)
 		req->iovs[i].iov_base = (uint8_t *)req->buffer + iov_len * i;
 	}
 	req->iovs[g_iovcnt - 1].iov_len += remainder;
+	if (g_verify) {
+		spdk_md5init(&md5ctx);
+		spdk_md5update(&md5ctx, req->buffer, g_io_size);
+		spdk_md5final(req->md5_orig, &md5ctx);
+	}
 
 	return 0;
 }
@@ -652,9 +783,12 @@ allocate_task(uint32_t core, const char *bdev_name)
 		return -ENOMEM;
 	}
 
+	task->lcore = core;
+	task->seed = core;
 	for (i = 0; i < g_queue_depth; i++) {
 		req = &task->reqs[i];
 		req->task = task;
+		req->idx = i;
 		rc = req_alloc_buffers(req);
 		if (rc) {
 			fprintf(stderr, "Failed to allocate request data buffer\n");
@@ -675,9 +809,7 @@ allocate_task(uint32_t core, const char *bdev_name)
 			spdk_cpuset_fmt(&cpu_set));
 		return -ENOMEM;
 	}
-
-	task->seed = core;
-	task->lcore = core;
+	task->idx = g_num_construct_tasks++;
 	task->bdev_name = bdev_name;
 	task->rw_percentage = g_rw_percentage;
 	task->num_blocks_per_io = g_num_blocks_per_io;
@@ -831,7 +963,6 @@ dma_test_start(void *arg)
 			spdk_app_stop(rc);
 			return;
 		}
-		g_num_construct_tasks++;
 		g_num_complete_tasks++;
 	}
 
@@ -995,8 +1126,14 @@ verify_args(void)
 			fprintf(stderr, "Invalid -M value (%d) must be 0..100\n", g_rw_percentage);
 			return 1;
 		}
+	} else if (strcmp(rw_mode, "verify") == 0) {
+		g_is_random = true;
+		g_verify = true;
+		if (g_rw_percentage > 0) {
+			fprintf(stderr, "Ignoring -M option\n");
+		}
 	} else {
-		fprintf(stderr, "io pattern (-w) one of [read, write, randread, randwrite, rw, randrw]\n");
+		fprintf(stderr, "io pattern (-w) one of [read, write, randread, randwrite, rw, randrw, verify]\n");
 		return 1;
 	}
 	if (!g_bdev_name) {
