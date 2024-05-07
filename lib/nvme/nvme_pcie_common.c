@@ -216,6 +216,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 
 	TAILQ_INIT(&pqpair->free_tr);
 	TAILQ_INIT(&pqpair->outstanding_tr);
+	pqpair->qpair.queue_depth = 0;
 
 	for (i = 0; i < num_trackers; i++) {
 		tr = &pqpair->tr[i];
@@ -629,7 +630,8 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 
 	spdk_trace_record(TRACE_NVME_PCIE_SUBMIT, qpair->id, 0, (uintptr_t)req, req->cb_arg,
 			  (uint32_t)req->cmd.cid, (uint32_t)req->cmd.opc,
-			  req->cmd.cdw10, req->cmd.cdw11, req->cmd.cdw12);
+			  req->cmd.cdw10, req->cmd.cdw11, req->cmd.cdw12,
+			  pqpair->qpair.queue_depth);
 
 	if (req->cmd.fuse) {
 		/*
@@ -674,7 +676,7 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 	req = tr->req;
 
 	spdk_trace_record(TRACE_NVME_PCIE_COMPLETE, qpair->id, 0, (uintptr_t)req, req->cb_arg,
-			  (uint32_t)req->cmd.cid, (uint32_t)cpl->status_raw);
+			  (uint32_t)req->cmd.cid, (uint32_t)cpl->status_raw, pqpair->qpair.queue_depth);
 
 	assert(req != NULL);
 
@@ -698,6 +700,7 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 		nvme_pcie_qpair_submit_tracker(qpair, tr);
 	} else {
 		TAILQ_REMOVE(&pqpair->outstanding_tr, tr, tq_list);
+		pqpair->qpair.queue_depth--;
 
 		/* Only check admin requests from different processes. */
 		if (nvme_qpair_is_admin_queue(qpair) && req->pid != getpid()) {
@@ -1645,6 +1648,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	pqpair->stat->submitted_requests++;
 	TAILQ_REMOVE(&pqpair->free_tr, tr, tq_list); /* remove tr from free_tr */
 	TAILQ_INSERT_TAIL(&pqpair->outstanding_tr, tr, tq_list);
+	pqpair->qpair.queue_depth++;
 	tr->req = req;
 	tr->cb_fn = req->cb_fn;
 	tr->cb_arg = req->cb_arg;
@@ -1826,7 +1830,8 @@ SPDK_TRACE_REGISTER_FN(nvme_pcie, "nvme_pcie", TRACE_GROUP_NVME_PCIE)
 				{ "opc", SPDK_TRACE_ARG_TYPE_INT, 4 },
 				{ "dw10", SPDK_TRACE_ARG_TYPE_PTR, 4 },
 				{ "dw11", SPDK_TRACE_ARG_TYPE_PTR, 4 },
-				{ "dw12", SPDK_TRACE_ARG_TYPE_PTR, 4 }
+				{ "dw12", SPDK_TRACE_ARG_TYPE_PTR, 4 },
+				{ "qd", SPDK_TRACE_ARG_TYPE_INT, 4 }
 			}
 		},
 		{
@@ -1834,7 +1839,8 @@ SPDK_TRACE_REGISTER_FN(nvme_pcie, "nvme_pcie", TRACE_GROUP_NVME_PCIE)
 			OWNER_TYPE_NVME_PCIE_QP, OBJECT_NVME_PCIE_REQ, 0,
 			{	{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 },
 				{ "cid", SPDK_TRACE_ARG_TYPE_INT, 4 },
-				{ "cpl", SPDK_TRACE_ARG_TYPE_PTR, 4 }
+				{ "cpl", SPDK_TRACE_ARG_TYPE_PTR, 4 },
+				{ "qd", SPDK_TRACE_ARG_TYPE_INT, 4 }
 			}
 		},
 	};
