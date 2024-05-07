@@ -114,7 +114,7 @@ ifeq ($(CONFIG_DPDK_COMPRESSDEV),y)
 ACCEL_MODULES_LIST += accel_dpdk_compressdev
 endif
 
-ifeq ($(CONFIG_RDMA_PROV)|$(CONFIG_CRYPTO),mlx5_dv|y)
+ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
 ACCEL_MODULES_LIST += accel_mlx5
 endif
 

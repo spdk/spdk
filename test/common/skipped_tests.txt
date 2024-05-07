@@ -77,3 +77,4 @@ nvmf_device_removal_pci_remove
 
 # Disabled due to mlx5 HW/build dependency
 accel_mlx5_crypto
+accel_mlx5_copy
