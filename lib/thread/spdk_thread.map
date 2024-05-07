@@ -55,6 +55,7 @@
 	spdk_io_channel_iter_get_ctx;
 	spdk_for_each_channel_continue;
 	spdk_interrupt_register;
+	spdk_interrupt_register_for_events;
 	spdk_interrupt_unregister;
 	spdk_interrupt_set_event_types;
 	spdk_thread_get_interrupt_fd;

@@ -7,7 +7,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 SO_VER := 10
-SO_MINOR := 0
+SO_MINOR := 1
 
 C_SRCS = thread.c iobuf.c
 LIBNAME = thread

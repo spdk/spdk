@@ -2,6 +2,11 @@
 
 ## v24.09: (Upcoming Release)
 
+### thread
+
+New function `spdk_interrupt_register_for_events()` build on top of `spdk_fd_group_add_for_events()`.
+See below for details.
+
 ### util
 
 New function `spdk_fd_group_add_for_events()` was added alongside the existing `spdk_fd_group_add()`.
