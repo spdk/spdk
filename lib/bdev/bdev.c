@@ -438,6 +438,18 @@ static void bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch);
 #define bdev_get_ext_io_opt(opts, field, defval) \
 	((opts) != NULL ? SPDK_GET_FIELD(opts, field, defval) : (defval))
 
+static inline void
+bdev_ch_add_to_io_submitted(struct spdk_bdev_io *bdev_io)
+{
+	TAILQ_INSERT_TAIL(&bdev_io->internal.ch->io_submitted, bdev_io, internal.ch_link);
+}
+
+static inline void
+bdev_ch_remove_from_io_submitted(struct spdk_bdev_io *bdev_io)
+{
+	TAILQ_REMOVE(&bdev_io->internal.ch->io_submitted, bdev_io, internal.ch_link);
+}
+
 void
 spdk_bdev_get_opts(struct spdk_bdev_opts *opts, size_t opts_size)
 {
@@ -3062,9 +3074,9 @@ bdev_io_split_submit(struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt
 		} else {
 			bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
 			if (bdev_io->u.bdev.split_outstanding == 0) {
+				bdev_ch_remove_from_io_submitted(bdev_io);
 				spdk_trace_record(TRACE_BDEV_IO_DONE, bdev_io->internal.ch->trace_id,
 						  0, (uintptr_t)bdev_io, bdev_io->internal.caller_ctx);
-				TAILQ_REMOVE(&bdev_io->internal.ch->io_submitted, bdev_io, internal.ch_link);
 				bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
 			}
 		}
@@ -3189,9 +3201,9 @@ _bdev_rw_split(void *_bdev_io)
 							if (bdev_io->u.bdev.split_outstanding == 0) {
 								SPDK_ERRLOG("The first child io was less than a block size\n");
 								bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+								bdev_ch_remove_from_io_submitted(bdev_io);
 								spdk_trace_record(TRACE_BDEV_IO_DONE, bdev_io->internal.ch->trace_id,
 										  0, (uintptr_t)bdev_io, bdev_io->internal.caller_ctx);
-								TAILQ_REMOVE(&bdev_io->internal.ch->io_submitted, bdev_io, internal.ch_link);
 								bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
 							}
 
@@ -3345,9 +3357,9 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	 */
 	if (parent_io->u.bdev.split_remaining_num_blocks == 0) {
 		assert(parent_io->internal.cb != bdev_io_split_done);
+		bdev_ch_remove_from_io_submitted(parent_io);
 		spdk_trace_record(TRACE_BDEV_IO_DONE, parent_io->internal.ch->trace_id,
 				  0, (uintptr_t)parent_io, bdev_io->internal.caller_ctx);
-		TAILQ_REMOVE(&parent_io->internal.ch->io_submitted, parent_io, internal.ch_link);
 
 		if (spdk_likely(parent_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS)) {
 			if (bdev_io_needs_sequence_exec(parent_io->internal.desc, parent_io)) {
@@ -3550,7 +3562,7 @@ bdev_io_submit(struct spdk_bdev_io *bdev_io)
 		}
 	}
 
-	TAILQ_INSERT_TAIL(&ch->io_submitted, bdev_io, internal.ch_link);
+	bdev_ch_add_to_io_submitted(bdev_io);
 
 	bdev_io->internal.submit_tsc = spdk_get_ticks();
 	spdk_trace_record_tsc(bdev_io->internal.submit_tsc, TRACE_BDEV_IO_START,
@@ -6518,8 +6530,7 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	TAILQ_INSERT_TAIL(&channel->queued_resets, bdev_io, internal.link);
 	spdk_spin_unlock(&bdev->internal.spinlock);
 
-	TAILQ_INSERT_TAIL(&bdev_io->internal.ch->io_submitted, bdev_io,
-			  internal.ch_link);
+	bdev_ch_add_to_io_submitted(bdev_io);
 
 	bdev_channel_start_reset(channel);
 
@@ -6884,7 +6895,7 @@ bdev_abort_io(struct spdk_bdev_desc *desc, struct spdk_bdev_channel *channel,
 		 * execution add it to the submitted list here.
 		 */
 		bdev_io->internal.submit_tsc = spdk_get_ticks();
-		TAILQ_INSERT_TAIL(&channel->io_submitted, bdev_io, internal.ch_link);
+		bdev_ch_add_to_io_submitted(bdev_io);
 
 		bdev_abort(bdev_io);
 
@@ -7049,7 +7060,7 @@ spdk_bdev_abort(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	/* Parent abort request is not submitted directly, but to manage its execution,
 	 * add it to the submitted list here.
 	 */
-	TAILQ_INSERT_TAIL(&channel->io_submitted, bdev_io, internal.ch_link);
+	bdev_ch_add_to_io_submitted(bdev_io);
 
 	bdev_abort(bdev_io);
 
@@ -7227,10 +7238,10 @@ bdev_io_complete(void *ctx)
 
 	tsc = spdk_get_ticks();
 	tsc_diff = tsc - bdev_io->internal.submit_tsc;
+
+	bdev_ch_remove_from_io_submitted(bdev_io);
 	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_DONE, bdev_ch->trace_id, 0, (uintptr_t)bdev_io,
 			      bdev_io->internal.caller_ctx);
-
-	TAILQ_REMOVE(&bdev_ch->io_submitted, bdev_io, internal.ch_link);
 
 	if (bdev_ch->histogram) {
 		spdk_histogram_data_tally(bdev_ch->histogram, tsc_diff);
