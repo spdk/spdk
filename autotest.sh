@@ -383,6 +383,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	if [[ $SPDK_TEST_ACCEL_MLX5 -eq 1 ]]; then
 		run_test "accel_mlx5_crypto" $rootdir/test/accel/mlx5/accel_mlx5_crypto.sh
 		run_test "accel_mlx5_copy" $rootdir/test/accel/mlx5/accel_mlx5_copy.sh
+		run_test "accel_mlx5_crc32c" $rootdir/test/accel/mlx5/accel_mlx5_crc32c.sh
 	fi
 fi
 
