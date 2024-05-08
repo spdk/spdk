@@ -35,7 +35,7 @@ _llvm_precompile() {
 	export CC=clang-$clang_num
 	export CXX=clang++-$clang_num
 
-	fuzzer_libs=(/usr/lib*/clang/@("$clang_num"|"$clang_version")/lib/linux/libclang_rt.fuzzer_no_main-x86_64.a)
+	fuzzer_libs=(/usr/lib*/clang/@("$clang_num"|"$clang_version")/lib/*linux*/libclang_rt.fuzzer_no_main?(-x86_64).a)
 	fuzzer_lib=${fuzzer_libs[0]}
 	[[ -e $fuzzer_lib ]]
 
@@ -323,6 +323,8 @@ _build_doc() {
 			# https://github.com/doxygen/doxygen/issues/9552 and
 			# https://github.com/doxygen/doxygen/issues/9678
 			grep -vE '\\ifile|@param'
+		else
+			cat -
 		fi < "$out/doxygen.log" && echo "Doxygen errors found!" && return 1
 
 		echo "Doxygen $doxygenv detected. No warnings except false positives, continuing the test"

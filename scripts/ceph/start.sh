@@ -119,8 +119,11 @@ if [ $update_config = true ]; then
 	fsid=$(ceph -s | grep id | awk '{print $2}')
 	sed -i 's/perf = true/perf = true\n\tfsid = '$fsid' \n/g' $ceph_conf
 
-	# unify the filesystem with the old versions.
-	sed -i 's/perf = true/perf = true\n\tosd objectstore = filestore\n/g' $ceph_conf
+	# filestore backend got deprecated in the Reef release and is no longer supported
+	if ((ceph_maj < 18)); then
+		# unify the filesystem with the old versions.
+		sed -i 's/perf = true/perf = true\n\tosd objectstore = filestore\n/g' $ceph_conf
+	fi
 	cat ${ceph_conf}
 fi
 
