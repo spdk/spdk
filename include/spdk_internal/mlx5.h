@@ -334,21 +334,6 @@ int spdk_mlx5_crypto_keytag_create(struct spdk_mlx5_crypto_dek_create_attr *attr
 void spdk_mlx5_crypto_keytag_destroy(struct spdk_mlx5_crypto_keytag *keytag);
 
 /**
- * Fills attributes used to register UMR with crypto operation. Deprecated
- *
- * \param attr_out Configured UMR attributes
- * \param keytag Keytag with DEKs
- * \param pd Protection Domain which is going to be used to register UMR. This function will find a DEK in \b keytag with the same PD
- * \param block_size Logical block size
- * \param iv Initialization vector or tweak. Usually that is logical block address
- * \param encrypt_on_tx If set, memory data will be encrypted during TX and wire data will be decrypted during RX. If not set, memory data will be decrypted during TX and wire data will be encrypted during RX.
- * \return 0 on success, negated errno on failure
- */
-int spdk_mlx5_crypto_set_attr(struct mlx5dv_crypto_attr *attr_out,
-			      struct spdk_mlx5_crypto_keytag *keytag, struct ibv_pd *pd,
-			      uint32_t block_size, uint64_t iv, bool encrypt_on_tx);
-
-/**
  * Get Data Encryption Key data
  *
  * \param keytag Keytag with DEKs

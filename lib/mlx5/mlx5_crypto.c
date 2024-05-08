@@ -609,60 +609,6 @@ mlx5_crypto_get_dek_by_pd(struct spdk_mlx5_crypto_keytag *keytag, struct ibv_pd 
 }
 
 int
-spdk_mlx5_crypto_set_attr(struct mlx5dv_crypto_attr *attr_out,
-			  struct spdk_mlx5_crypto_keytag *keytag, struct ibv_pd *pd,
-			  uint32_t block_size, uint64_t iv, bool encrypt_on_tx)
-{
-	struct spdk_mlx5_crypto_dek_legacy *dek = NULL;
-	enum mlx5dv_block_size bs;
-	uint32_t i;
-
-	for (i = 0; i < keytag->deks_num; i++) {
-		if (keytag->deks_legacy[i].pd == pd) {
-			dek = &keytag->deks_legacy[i];
-			break;
-		}
-	}
-	if (spdk_unlikely(!dek)) {
-		SPDK_ERRLOG("No DEK for pd %p (dev %s)\n", pd, pd->context->device->name);
-		return -EINVAL;
-	}
-
-	switch (block_size) {
-	case 512:
-		bs = MLX5DV_BLOCK_SIZE_512;
-		break;
-	case 520:
-		bs = MLX5DV_BLOCK_SIZE_520;
-		break;
-	case 4048:
-		bs = MLX5DV_BLOCK_SIZE_4048;
-		break;
-	case 4096:
-		bs = MLX5DV_BLOCK_SIZE_4096;
-		break;
-	case 4160:
-		bs = MLX5DV_BLOCK_SIZE_4160;
-		break;
-	default:
-		SPDK_ERRLOG("Unsupported block size %u\n", block_size);
-		return -EINVAL;
-	}
-
-	memset(attr_out, 0, sizeof(*attr_out));
-	attr_out->dek = dek->dek_obj;
-	attr_out->crypto_standard = MLX5DV_CRYPTO_STANDARD_AES_XTS;
-	attr_out->data_unit_size = bs;
-	attr_out->encrypt_on_tx = encrypt_on_tx;
-	memcpy(attr_out->initial_tweak, &iv, sizeof(iv));
-	if (keytag->has_keytag) {
-		memcpy(attr_out->keytag, keytag->keytag, sizeof(keytag->keytag));
-	}
-
-	return 0;
-}
-
-int
 spdk_mlx5_crypto_get_dek_data(struct spdk_mlx5_crypto_keytag *keytag, struct ibv_pd *pd,
 			      struct spdk_mlx5_crypto_dek_data *data)
 {
