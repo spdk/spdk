@@ -320,6 +320,8 @@ _build_doc() {
 			# https://github.com/doxygen/doxygen/issues/9552 and
 			# https://github.com/doxygen/doxygen/issues/9678
 			grep -vE '\\ifile|@param'
+		else
+			cat -
 		fi < "$out/doxygen.log" && echo "Doxygen errors found!" && return 1
 
 		echo "Doxygen $doxygenv detected. No warnings except false positives, continuing the test"
