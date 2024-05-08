@@ -86,9 +86,20 @@ sleep 2
 # 6: "accessible" for port 2
 
 # Set ANA state to each listener
+# For active/passive, only the first available path should be current
+set_ANA_state optimized optimized
+sleep 1
+check_status true false true true true true
+
 set_ANA_state non_optimized optimized
 sleep 1
 check_status false true true true true true
+
+# For active/passive, if all paths are non_optimized the first available
+# path should be current
+set_ANA_state non_optimized non_optimized
+sleep 1
+check_status true false true true true true
 
 set_ANA_state non_optimized inaccessible
 sleep 1
